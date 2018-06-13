@@ -180,26 +180,17 @@ project typical numbers:
 
 APP TODO:
 
-x do NCC tests
-x look at binning @ histograms better/worse?
-	=> binning by percent seems more accurate
-x optimize scale/rotation agnostically fxn
-
-
-~ '3D' FLAT SIFT
-	-> 3D ANGLES, NOT BINS -> bin %s
-	-> 3 2D vectors:
-		RG
-		RB
-		GB
-
-~ fix SIFT with % binnings
-~ do SIFT/Flat-sift tests
-
-
-
+- compare methods to determine optimal localizations
+	- SAD
+	- SSD
+	- SIFT-vector
+	- SAD-vector
+	- ZNCC
 
 - new dense process
+	- save features
+	- get neighbors best locations
+	- get statistics
 	- belief choosing
 
 

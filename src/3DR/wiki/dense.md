@@ -174,18 +174,20 @@ for each iteration:
 SENSE:
 	- save to graph [as putative ?]
 	- do neighbor calculations [path / best possible score]
-EXPAND:
+
+EXPAND: 
 	- determine best possible next-cells to proceed with
 	- add these to graph
-RETRACT:
+RETRACT: / RELAX:
 	- belief propagation
 		- 4-8 neighbor
 			- relative flow directions [diff vectors] - dot product histogram?
 			- average color diffs
 	- recalculate errors / costs
 	- 
-	- drop worst from graph
+	- drop worst/outliers from graph
 	- mark dropped points so that they aren't retried for a while (until things change enough)
+
 
 COSTS:
 	- average color [R,G,B,Y]
@@ -260,6 +262,10 @@ difference = V2D.distance(expected,actual);
 ENTROPY:
 compare mutual-information
 
+F(GLOBAL):
+error is updated after each addition & outliers are dropped
+
+
 outlier if error is ~ [1-4]*sigma
 
 
@@ -269,6 +275,10 @@ GET VALUES FROM NEIGHBORS
 CALCULATE EXPECTED VALUE
 GET EXPECTED VALUES FROM NEIGHBORS
 CALCULATE IF INLIER OR OUTLIER
+
+
+
+- where does mean filtering go?
 
 
 

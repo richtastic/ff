@@ -18927,16 +18927,17 @@ R3D.normalizedCrossCorrelation = function(needle,needleMask, haystack, isCost){ 
 
 }
 
-R3D.optimumAffineTransform = function(imageA,pointA, imageB,pointB, vectorX,vectorY, sizeA, limits){ // affine = v1(x,y) v2(x,y) + tx,ty
+R3D.optimumAffineTransform = function(imageA,pointA, imageB,pointB, vectorX,vectorY, sizeA, limitPixels,limitVA,limitVB,  limits){ // affine = v1(x,y) v2(x,y) + tx,ty
 	sizeA = Code.valueOrDefault(sizeA, 11); 
 	if(!limits){
 		limits = {};
 	} // default to 
 	// var percent = 1.0;
-	var percent = 0.25;
-	limits["t"] = Code.valueOrDefault(limits["t"], 1); // pixel
-	limits["a"] = Code.valueOrDefault(limits["a"], vectorX.length()*percent);
-	limits["b"] = Code.valueOrDefault(limits["b"], vectorY.length()*percent);
+	var percentA = limitVA!==undefined ? limitVA : 0.25;
+	var percentB = limitVB!==undefined ? limitVB : 0.25;
+	limits["t"] = Code.valueOrDefault(limits["t"], limitPixels!==undefined ? limitPixels : 1.0); // pixel
+	limits["a"] = Code.valueOrDefault(limits["a"], vectorX.length()*percentA);
+	limits["b"] = Code.valueOrDefault(limits["b"], vectorY.length()*percentB);
 	// optimum transform:
 	var compareSize = 11;
 	var scaleCompare = compareSize/sizeA;
@@ -18948,16 +18949,14 @@ R3D.optimumAffineTransform = function(imageA,pointA, imageB,pointB, vectorX,vect
 	var x = new V2D(1,0);
 	var y = new V2D(0,1);
 
-;
-console.log("scaleCompare: "+scaleCompare);
+// console.log("scaleCompare: "+scaleCompare);
 
-
-var iii = h;
-var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
-var d = new DOImage(img);
-d.matrix().scale(4.0);
-d.matrix().translate(1300,400);
-GLOBALSTAGE.addChild(d);
+// var iii = h;
+// var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
+// var d = new DOImage(img);
+// d.matrix().scale(4.0);
+// d.matrix().translate(1300,400);
+// GLOBALSTAGE.addChild(d);
 var index = 0;
 	var compareFxn = function(o,a,b, isUpdate){ // from control points
 		var matrix = R3D.affineMatrixExact([u,x,y],[u,a,b]);
@@ -18966,12 +18965,12 @@ var index = 0;
 		var ncc = R3D.normalizedCrossCorrelation (n,m,h, true);
 if(isUpdate){
 // if(index==0){
-	var iii = n;
-	var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
-	var d = new DOImage(img);
-	d.matrix().scale(4.0);
-	d.matrix().translate(1200,300 + index*50);
-	GLOBALSTAGE.addChild(d);
+	// var iii = n;
+	// var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
+	// var d = new DOImage(img);
+	// d.matrix().scale(4.0);
+	// d.matrix().translate(1200,300 + index*50);
+	// GLOBALSTAGE.addChild(d);
 // }
 ++index;
 }
