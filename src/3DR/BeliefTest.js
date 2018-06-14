@@ -536,6 +536,7 @@ BeliefTest.Cell = function(lattice, i,j, center){
 	this._center = center.copy();
 	this._neighbors = [];
 	this._hasChanged = false;
+	this._votes = [];
 }
 BeliefTest.Cell._LABEL = 0;
 BeliefTest.Cell.nextLabel = function(){
@@ -553,6 +554,23 @@ BeliefTest.Cell.prototype.addNeighbor = function(n){
 }
 BeliefTest.Cell.prototype.neighbors = function(){
 	return this._neighbors;
+}
+BeliefTest.Cell.prototype.addVote = function(v){
+	this._votes.push(v);
+}
+BeliefTest.Cell.prototype.votePercent = function(){
+	var count = this._votes.length;
+	if(count>0){
+		var sum = Code.sum(this._votes);
+		return sum/count;
+	}
+	return 0;
+}
+BeliefTest.Cell.prototype.voteCount = function(){
+	return this._votes.length;
+}
+BeliefTest.Cell.prototype.resetVotes = function(){
+	this._votes = [];
 }
 BeliefTest.Cell.prototype.setSeed = function(pointA,pointB, scaleAtoB,angleAtoB){
 	// if(this.match()){
@@ -637,6 +655,15 @@ BeliefTest.Cell.prototype.match = function(match){
 BeliefTest.Cell.prototype.hasMatch = function(){
 	return this._match!==null;
 }
+BeliefTest.Cell.prototype.dropMatch = function(){
+	if(this._match){
+		this._match = null;
+		this.resetVotes();
+		return true;
+	}
+	return false;
+}
+
 BeliefTest.Cell.prototype.label = function(label){
 	if(label!==undefined){
 		this._label = label;
@@ -953,7 +980,7 @@ BeliefTest.Lattice.prototype.iteration = function(e){
 	var imageA = viewA.image();
 	var imageB = viewB.image();
 	var ccc = 0;
-var compareN = 7;
+var compareN = -1;
 	this.forEachCell(function(cell, i, j, index){
 		if(!found){
 			var hasChanged = cell.hasChanged();
@@ -1114,10 +1141,11 @@ if(show){
 	lattice.cellsChooseMatch();
 
 
-	// process belief
+	// process belief, reset votes
 	var count = 0;
 	lattice.forEachCell(function(cell, i, j, index){
 		if(true){
+			cell.resetVotes();
 			var match = cell.match();
 			if(match){
 
@@ -1175,6 +1203,33 @@ if(show){
 				// console.log("     compare: "+compareNCC);
 				console.log("     compare: "+compareSAD);
 				++count;
+
+
+				// store the data internally
+
+				// calculate MY expected values & error
+			}
+		}
+	});
+
+	// get neighbor's expected values & vote
+	lattice.forEachCell(function(cell, i, j, index){
+	});
+
+	var minimumVotePercentKeep = 0.50;
+	// drop predicted outliers
+	lattice.forEachCell(function(cell, i, j, index){
+		var match = cell.match();
+		if(match){
+			var voteTotal = cell.voteCount();
+			var votePercent = cell.votePercent();
+			if(voteTotal>2){ // minimum = self + 2 others
+				if(votePercent>minimumVotePercentKeep){
+					// keep
+				}else{
+					// drop
+					cell.dropMatch();
+				}
 			}
 		}
 	});

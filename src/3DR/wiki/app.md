@@ -180,12 +180,17 @@ project typical numbers:
 
 APP TODO:
 
+- VOTING
 
 - keep record of compared neighbors / mark changed neighbor
 	-> to prevent recalculating same stats [on match select]
 	-> hasChanged
 		- set when neighbors change or ...
 		- unset when ?
+	-> hasNeighborChanged
+- only care if it's an 'edge' or recently an 'edge' ?
+
+- stopping conditions
 
 - pre-filtering matches
 	- ordering constraint
