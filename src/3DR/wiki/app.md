@@ -180,6 +180,38 @@ project typical numbers:
 
 APP TODO:
 
+
+- keep record of compared neighbors / mark changed neighbor
+	-> to prevent recalculating same stats [on match select]
+	-> hasChanged
+		- set when neighbors change or ...
+		- unset when ?
+
+- pre-filtering matches
+	- ordering constraint
+- post-fitlerting
+	- drop bad matches & mark for not-retrying unless point/transform changes enough
+
+
+
+- LABELING
+	- set on seed create
+	- combine after expand/relax step
+	-> if a group is found to have large error compared to other groups -> drop entire group ?
+
+
+- searching for best matches is off by a lot
+
+
+- using putative matches
+	 - evaluation step
+- pick match from choosing set []
+
+-- comparing affine transforms to indicate similar/non-similar
+	- X & Y vector distances summed / RMS
+
+- try SAD vector that is more color based and not color derivative based
+
 - compare methods to determine optimal localizations
 	- SAD
 	- SSD

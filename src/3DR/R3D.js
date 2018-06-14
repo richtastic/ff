@@ -5975,9 +5975,10 @@ R3D.SADVectorCircular = function(imageMatrix, location,diaNeighborhood,matrix){ 
 		Code.arrayPushArray(vector, b["bins"]);
 	}
 	// normalize
-	var min = Code.minArray(vector);
-	Code.arraySub(vector, min);
+	// var min = Code.minArray(vector);
+	// Code.arraySub(vector, min);
 	Code.normalizeArray(vector);
+	vector = ImageMat.pow(vector,0.5);
 	return vector;
 }
 
@@ -18963,6 +18964,7 @@ var index = 0;
 			matrix = Matrix.transform2DScale(matrix,scaleCompare);
 		var n = imageA.extractRectFromFloatImage(pointA.x+o.x,pointA.y+o.y,1.0,null,compareSize,compareSize, matrix);
 		var ncc = R3D.normalizedCrossCorrelation (n,m,h, true);
+		// var ncc = R3D.searchNeedleHaystackImageFlat(n,m,h);
 if(isUpdate){
 // if(index==0){
 	// var iii = n;

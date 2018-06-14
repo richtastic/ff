@@ -32,9 +32,9 @@ function FeatureTest(){
 // snow
 // new ImageLoader("./images/",["snow1.png", "snow2.png"],this,this.imagesLoadComplete2).load();
 // zoom study:
-new ImageLoader("./images/",["caseStudy1-20.jpg", "caseStudy1-24.jpg"],this,this.imagesLoadComplete2).load(); // typical translation
+// new ImageLoader("./images/",["caseStudy1-20.jpg", "caseStudy1-24.jpg"],this,this.imagesLoadComplete2).load(); // typical translation
 // new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-24.jpg"],this,this.imagesLoadComplete2).load(); // typical - broked first one
-// new ImageLoader("./images/",["caseStudy1-14.jpg", "caseStudy1-20.jpg"],this,this.imagesLoadComplete2).load(); // obscure 
+new ImageLoader("./images/",["caseStudy1-14.jpg", "caseStudy1-20.jpg"],this,this.imagesLoadComplete2).load(); // obscure 
 // new ImageLoader("./images/",["caseStudy1-14.jpg", "caseStudy1-20_rot.jpg"],this,this.imagesLoadComplete2).load(); // obscure & rotated ----------- MVP
 // new ImageLoader("./images/",["caseStudy1-24.jpg", "caseStudy1-26.jpg"],this,this.imagesLoadComplete2).load(); // typical angle
 // new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-20.jpg"],this,this.imagesLoadComplete2).load(); // typical angle
@@ -912,12 +912,12 @@ FeatureTest.prototype.compareVectors = function(objectsA, putativeA, objectsB, p
 
 
 					// var score = scoreSIFT; // ok
-					// var score = scoreSAD; // poor
+					// var score = scoreSAD; // ok
 					// var score = scoreSAD*scoreSIFT;
 
 					// var score = (1.0+scoreSAD)*scoreSIFT;
 					// var score = (scoreSAD)*(1.0+scoreSIFT);
-					var score = (1+scoreSAD)*(1+scoreSIFT) - 1;
+var score = (1+scoreSAD)*(1+scoreSIFT) - 1;
 
 					// (scoreSIFT+1)*(scoreSAD+1)*(scoreSIFT+scoreSAD+1)*0.5 - 1
 
