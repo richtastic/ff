@@ -181,6 +181,7 @@ project typical numbers:
 APP TODO:
 
 - VOTING
+	- cells with poor scores should have less weight --- nonequal voting
 
 - keep record of compared neighbors / mark changed neighbor
 	-> to prevent recalculating same stats [on match select]

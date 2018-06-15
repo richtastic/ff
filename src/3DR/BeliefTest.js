@@ -414,13 +414,22 @@ BeliefTest.prototype.drawLattice = function(e){
 				var center = cell.center();
 				var cellSize = lattice.cellSize();
 				var matrix = match.affine();
-					matrix = Matrix.inverse(matrix);
-				var img = imageB.extractRectFromFloatImage(pointB.x,pointB.y,1.0,null,cellSize,cellSize, matrix);
+					inverse = Matrix.inverse(matrix);
+				// B in A
+				var img = imageB.extractRectFromFloatImage(pointB.x,pointB.y,1.0,null,cellSize,cellSize, inverse);
 				img = GLOBALSTAGE.getFloatRGBAsImage(img.red(),img.grn(),img.blu(), img.width(),img.height());
 				var d = new DOImage(img);
 				d.matrix().scale(displayScale);
 				//d.matrix().scale(2.0);
 				d.matrix().translate((center.x-cellSize*0.5)*displayScale,(center.y-cellSize*0.5)*displayScale);
+				display.addChild(d);
+				// A in B
+				var img = imageA.extractRectFromFloatImage(pointA.x,pointA.y,1.0,null,cellSize,cellSize, matrix);
+				img = GLOBALSTAGE.getFloatRGBAsImage(img.red(),img.grn(),img.blu(), img.width(),img.height());
+				var d = new DOImage(img);
+				d.matrix().scale(displayScale);
+				d.matrix().translate(imageAWidth,0);
+				d.matrix().translate((pointB.x-cellSize*0.5)*displayScale,(pointB.y-cellSize*0.5)*displayScale);
 				display.addChild(d);
 			}else{
 				var d = new DO();
@@ -1142,13 +1151,15 @@ if(show){
 
 
 	// process belief, reset votes
+	var smallerFirst = function(a,b){
+		return a<b ? -1 : 1;
+	}
 	var count = 0;
 	lattice.forEachCell(function(cell, i, j, index){
 		if(true){
 			cell.resetVotes();
 			var match = cell.match();
 			if(match){
-
 				// console.log(count+"  CELL: "+i+","+j+" @ "+cell.center());
 				// console.log("               "+match.pointA());
 				var neighbors = cell.neighbors();
@@ -1195,13 +1206,107 @@ if(show){
 						// ...
 					}
 				}
+				// can include self in some estimates
 				compareNCC.push(match.scoreNCC());
 				compareSAD.push(match.scoreSAD());
 
+				// sort for half-means
+				var halfMeanPercent = 0.5;
+				compareAffine.sort(smallerFirst);
+				compareTranslate.sort(smallerFirst);
+				compareNCC.sort(smallerFirst);
+				compareSAD.sort(smallerFirst);
+
+				var meanAffine = Code.mean(compareAffine);
+				var stdAffine = Code.stdDev(compareAffine,meanAffine);
+				var meanTranslate = Code.mean(compareTranslate);
+				var stdTranslate = Code.stdDev(compareTranslate,meanTranslate);
+				// console.log(Math.ceil(compareAffine.length*halfMeanPercent));
+				var meanHalfAffine = Code.mean(compareAffine,null,Math.ceil(compareAffine.length*halfMeanPercent));
+				
+				var meanNCC = Code.mean(compareNCC);
+				var stdNCC = Code.stdDev(compareNCC,meanNCC);
+				var meanSAD = Code.mean(compareSAD);
+				var stdSAD = Code.stdDev(compareSAD,meanSAD);
+
+
+
+				// one-sided offset
+				// var meanHalfAffine = Code.mean(compareAffine, null, 10);
+
+				// var hist = Code.histogram(compareSAD, null, 10);
+				// var hist = Code.histogram(compareNCC, null, 10);
+				var hist = Code.histogram(compareAffine, null, 10);
+				// var hist = Code.histogram(compareTranslate, null, 10);
+				var infoAffine = Code.infoArray(compareAffine);
+
+// MIRROR:
+console.log("stdAffine: "+stdAffine);
+// meanAffine = Code.meanHalfNormal(compareAffine);
+// stdAffine = Code.stdDevHalfNormal(compareAffine, meanAffine);
+// Code.stdDevHalfNormal(compareAffine, Code.min(compareAffine));
+meanAffine = Code.min(compareAffine);
+stdAffine = Code.stdDev(compareAffine,meanAffine);
+// stdAffine = Code.stdDevHalfNormal(compareAffine, meanAffine);
+// console.log(" ... ")
+// var mirrorAffine = Code.mirrorArray(compareAffine);
+// var doubleAffine = Code.arrayPushArray(mirrorAffine,compareAffine);
+// console.log(doubleAffine);
+/*
+var meanAffine = Code.mean(doubleAffine);
+var stdAffine = Code.stdDev(doubleAffine,meanAffine);
+*/
+console.log("count: "+compareAffine.length+" @ "+meanAffine+" "+" +/- "+stdAffine+"  : ["+infoAffine["min"]+","+infoAffine["max"]+"] ("+infoAffine["range"]+") ");
+				//console.log("count: "+compareAffine.length+" @ "+meanAffine+" @ ("+meanHalfAffine+") "+" +/- "+stdAffine+" : ["+infoAffine["min"]+","+infoAffine["max"]+"] ("+infoAffine["range"]+") ");
+				// console.log("count: "+compareSAD.length+" @ "+meanSAD+" +/- "+stdSAD);
+				Code.printHistogram(hist["histogram"]);
+/*
+cutoff:
+min + sigma / (mean/halfmean) ---- drops too many in equal-distribution
+
+halfmean + sigma ---- not discriminating
+
+min + (mean-halfmean)*2 ---- 
+
+
+
+// different distributions:
+exponential ?
+
+half-normal ----- > sigma multiplier between 1 & 2 .... like 1.414 ~ 1.6
+50.0% = 0.68
+68.0% = 1.00
+84.1% = 1.414
+86.0% = 1.50
+90.0% = 1.65
+95.0% = 2.00
+99.7% = 3.00
+*/
+
+				cell._compareNCC = {
+					"list": compareNCC,
+					"mean": meanNCC,
+					"std": stdNCC,
+				};
+				cell._compareSAD = {
+					"list": compareSAD,
+					"mean": meanSAD,
+					"std": stdSAD,
+				};
+				cell._compareAffine = {
+					"list": compareAffine,
+					"mean": meanAffine,
+					"std": stdAffine,
+				};
+				cell._compareTranslate = {
+					"list": compareTranslate,
+					"mean": meanTranslate,
+					"std": stdTranslate,
+				};
 				// console.log("     compare: "+compareAffine);
 				// console.log("     compare: "+compareTranslate);
 				// console.log("     compare: "+compareNCC);
-				console.log("     compare: "+compareSAD);
+				// console.log("     compare: "+compareSAD);
 				++count;
 
 

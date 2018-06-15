@@ -3169,8 +3169,18 @@ Code._randomSubsetNoScale = function(newArr, count, oldArr){
 	}
 	return newArr;
 }
-
-Code.stdDev = function(list,mean,key){
+Code.mirrorArray = function(array){
+	var min = Code.min(array);
+	// var max = Code.max(array);
+	// var range = max-min;
+	var next = [];
+	for(var i=0; i<array.length; ++i){
+		console.log(array[i], -1*(array[i]-min) + min);
+		next.push( -1*(array[i]-min) + min );
+	}
+	return next;
+}
+Code.stdDev = function(list,mean,key, count){
 	var i, sig=0, item, len=list.length;
 	if(len==0){ return 0; }
 	for(i=len;i--;){
@@ -3182,10 +3192,14 @@ Code.stdDev = function(list,mean,key){
 	}
 	return Math.sqrt(sig / len);
 }
-Code.mean = function(list,key){
+Code.mean = function(list,key, count){
 	var i, mu=0, item, len=list.length;
+	if(count!==undefined){
+		len = Math.min(len,count);
+	}
 	if(len==0){ return 0; }
-	for(i=len;i--;){
+	//for(i=len;i--;){
+	for(i=0;i<len;++i){
 		item = list[i];
 		if(key!==undefined && key!==null){
 			item = item[key];
@@ -3223,6 +3237,34 @@ Code.abs = function(a){
 	}
 	return a;
 }
+// half-normal distribution --- probably not technically correct -- ONE-SIDED NORMAL:
+// Code.meanHalfNormal = function(list,key, count){ 
+// 	return Code.min(list, count); // todo: key not used
+// }
+// Code.stdDevHalfNormal = function(list,mean,key, count){ // TODO: durrr median = middle of set -- assume sorted
+// 	// ===== stdev * 1/sqrt(2)
+// 	// todo: don't double-count minimum (once?)
+// 	var i, sig=0, item, len=list.length;
+// 	if(len==0){ return 0; }
+// 	for(i=len;i--;){
+// 		item = list[i];
+// 		if(key!==undefined && key!==null){
+// 			item = item[key];
+// 		}
+// 		sig += Math.pow(item-mean,2);
+// 		// var meti = mean + -1*(item-mean); // other half
+// 		// console.log(item,meti);
+// 		// sig += Math.pow(meti-mean,2);
+// 	}
+// 	return Math.sqrt(sig/len);
+
+// }
+/*
+
+Math.sqrt(2*sigma/(2*len)) === sigma
+
+*/
+
 Code.arrayVectorSub = function(a,b){
 	var c = Code.newArray(a.length);
 	for(var i=a.length; i--; ){
