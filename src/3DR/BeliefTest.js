@@ -334,12 +334,19 @@ peaks.sort( function(a,b){ return a.z<b.z ? -1 : 1; } );
 		angleAtoB = 0.0;
 		// pointA.scale(imageA.Width,imageAHeight);
 		// pointB.scale(imageBWidth,imageBHeight);
-		// if(i==9){
-		if(i==2){
-		//if(i==4){
+		if(i==9){
+		// if(i<10){
+// if(i==2){
+		// if(i==4){
 		// if(i==6){
 		//if(i==17){ // table - bad
 		// if(i==20){ 
+// if(i==21){
+// if(i==25){
+// if(i==29){
+//if(i==42){
+// if(i==43){
+//if(i==21 || i==25 || i==42){
 			var cell = lattice.cellFromPoint(pointA);
 			cell.setSeed(pointA,pointB,scaleAtoB,angleAtoB);
 		}
@@ -356,7 +363,7 @@ peaks.sort( function(a,b){ return a.z<b.z ? -1 : 1; } );
 	lattice.iteration();
 	
 }
-BeliefTest.prototype.drawLattice = function(e){
+BeliefTest.prototype.drawLattice = function(e){ // TODO: ERROR THROWN -- likely bad looking match -- too close to neighbor ?
 	if(!this._display){
 		this._display = new DO();
 		GLOBALSTAGE.addChild(this._display);
@@ -365,6 +372,7 @@ BeliefTest.prototype.drawLattice = function(e){
 	var displayScale = 1.0;
 	var display = this._display;
 	display.removeAllChildren();
+// console.log(display._children);
 	var lattice = this._lattice;
 	var viewA = lattice.viewA();
 	var viewB = lattice.viewB();
@@ -564,7 +572,7 @@ BeliefTest.Cell.prototype.addNeighbor = function(n){
 BeliefTest.Cell.prototype.neighbors = function(){
 	return this._neighbors;
 }
-BeliefTest.Cell.prototype.addVote = function(v){
+BeliefTest.Cell.prototype.addVote = function(cell, v){
 	this._votes.push(v);
 }
 BeliefTest.Cell.prototype.votePercent = function(){
@@ -647,10 +655,14 @@ BeliefTest.Cell.prototype.applyBestMatch = function(match){
 	var putatives = this._putativeMatches;
 	if(putatives.length>0){
 		// TODO: pick best score within constraints
-		// ordering constraints
 		this._match = putatives[0];
 		Code.emptyArray(putatives);
-		this._hasChanged = true;
+
+		// TODO: make/update a pair for each neighbor
+		console.log(" ... add match -> pair");
+
+		this.hasChanged(true);
+		this.notifyNeighborsChanged();
 		return true;
 	}
 	return false;
@@ -667,12 +679,21 @@ BeliefTest.Cell.prototype.hasMatch = function(){
 BeliefTest.Cell.prototype.dropMatch = function(){
 	if(this._match){
 		this._match = null;
+		this.hasChanged(true);
+		this.notifyNeighborsChanged();
 		this.resetVotes();
+		this._compare = null;
 		return true;
 	}
 	return false;
 }
-
+BeliefTest.Cell.prototype.notifyNeighborsChanged = function(){ // TODO: be more specific on what has changed
+	var neighbors = this.neighbors();
+	for(var i=0; i<neighbors.length; ++i){
+		var neighbor = neighbors[i];
+		neighbor.hasChanged(true);
+	}
+}
 BeliefTest.Cell.prototype.label = function(label){
 	if(label!==undefined){
 		this._label = label;
@@ -766,6 +787,7 @@ BeliefTest.Match = function(){
 	this._vectorSiftScore = null;
 	this._vectorSadScore = null;
 	this._x = null;
+	this._range = null;
 }
 BeliefTest.Match.prototype.pointA = function(pointA){
 	if(pointA!==undefined){
@@ -797,8 +819,11 @@ BeliefTest.Match.prototype.scoreSAD = function(scoreSAD){
 	}
 	return this._scoreSAD;
 }
-BeliefTest.Match.prototype.x = function(point){
-	
+BeliefTest.Match.prototype.range = function(range){
+	if(range!==undefined){
+		this._range = range;
+	}
+	return this._range;
 }
 BeliefTest.Match.prototype.x = function(){
 	
@@ -821,7 +846,9 @@ BeliefTest.Lattice.prototype.generateGraph = function(){
 	var viewWidth = this._viewA.image().width();
 	var viewHeight = this._viewA.image().height();
 	//var cellSize = 25;
+	//var cellSize = 15;
 	var cellSize = 11;
+	// var cellSize = 7;
 	var compareSize = Math.floor(cellSize*1.5);
 	if(compareSize%2==0){ // keep odd
 		compareSize -= 1;
@@ -881,6 +908,7 @@ BeliefTest.Lattice.prototype.generateGraph = function(){
 BeliefTest.Lattice.prototype.newMatchFrom = function(cell, pointA, pointB, matrix){
 	var lattice = this;//cell.lattice();
 	var compareSize = lattice.compareSize();
+	var compareCount = compareSize*compareSize;
 	var imageA = lattice.viewA().image();
 	var imageB = lattice.viewB().image();
 	var needle = imageA.extractRectFromFloatImage(pointA.x,pointA.y,1.0,null,compareSize,compareSize, matrix);
@@ -889,6 +917,7 @@ BeliefTest.Lattice.prototype.newMatchFrom = function(cell, pointA, pointB, matri
 		scoreNCC = scoreNCC["value"][0];
 	var scoreSAD = R3D.searchNeedleHaystackImageFlat(needle,null,haystack);
 		scoreSAD = scoreSAD["value"][0];
+	var range = needle.range()["y"];//(compareCount);
 
 	var match = new BeliefTest.Match();
 		match.pointA(pointA);
@@ -896,23 +925,131 @@ BeliefTest.Lattice.prototype.newMatchFrom = function(cell, pointA, pointB, matri
 		match.affine(matrix);
 		match.scoreNCC(scoreNCC);
 		match.scoreSAD(scoreSAD);
+		match.range(range);
 	return match;
 }
+BeliefTest.Lattice.orientationTest = function(cell, match){
+//	console.log(cell)
+	var neighbors = cell.neighbors();
+	var orderA = [];
+	var orderB = [];
+	var matchA = match.pointA();
+	var matchB = match.pointB();
+	for(var i=0; i<neighbors.length; ++i){
+		var neighbor = neighbors[i];
+		var m = neighbor.match();
+		if(m){
+			var mA = m.pointA();
+			var mB = m.pointB();
+			var angleA = V2D.angleDirection(mA,matchA);
+			var angleB = V2D.angleDirection(mB,matchB);
+				angleA = Code.angleZeroTwoPi(angleA);
+				angleB = Code.angleZeroTwoPi(angleB);
+			orderA.push([angleA,i]);
+			orderB.push([angleB,i]);
+		}
+	}
+	var count = orderA.length;
+	if(count<=2){ // only list of 3 or more have orientation conflicts
+		return true;
+	}
+	// sort by angleB
+	var angle = function(a,b){
+		return a[0]<b[0] ? -1 : 1;
+	}
+	orderA.sort(angle);
+	orderB.sort(angle);
+	var first = orderA[0][1];
+	var last = orderA[orderA.length-1][1];
+	//iterate thru each
+	for(var j=0; j<orderB.length; ++j){
+		var b = orderB[j][1];
+		if(b==first){
+			break;
+		}
+	}
+	for(var i=0; i<orderA.length; ++i){
+		var a = orderA[i][1];
+		var b = orderB[(i+j)%count][1];
+		if(a!=b){
+			// console.log("FOUND INVALID ORDERING: "+a+" | "+b);
+			// console.log(orderA);
+			// console.log(orderB);
+			return false;
+		}
+	}
+	return true;
+}
+
 BeliefTest.Lattice.prototype.matchValidation = function(cell, match){
 	// forward / reverse consistency
 
 	// ordering constraints
+	var ordered = BeliefTest.Lattice.orientationTest(cell,match);
+	if(!ordered){
+		return false;
+	}
+	// TODO: use affine average scale to determine limits
+	// var minDistanceScale = 0.5;
+	// var maxDistanceScale = 2.0;
+	var minDistanceScale = 0.25;
+	var maxDistanceScale = 4.0;
+		/*
+		var affine = match.affine();
+		var vectorX = new V2D(1.0,0.0);
+		var vectorY = new V2D(0.0,1.0);
+		vectorX = affine.multV2DtoV2D(vectorX);
+		vectorY = affine.multV2DtoV2D(vectorY);
+		var maxXY = Math.max(vectorX.length(),vectorY.length());
+		var minXY = Math.min(vectorX.length(),vectorY.length());
+			minXY = Math.min(minXY, 1.0/minXY);
+			maxXY = Math.min(maxXY, 1.0/maxXY);
+		minDistanceScale = Math.max(minXY,minDistanceScale);
+		maxDistanceScale = Math.max(maxXY,maxDistanceScale);
+		*/
+	// min & max distance constraints
+	var neighbors = cell.neighbors();
+	for(var i=0; i<neighbors.length; ++i){
+		var neighbor = neighbors[i];
+		var m = neighbor.match();
+		if(m){
+			var distanceA = V2D.distance(match.pointA(),m.pointA());
+			var distanceB = V2D.distance(match.pointB(),m.pointB());
+			var ratio = distanceB/distanceA;
+			if(ratio>maxDistanceScale || ratio<minDistanceScale){
+				return false;
+			}
+		}
+	}
+	
+
+	// max distance constraint
+
+	// minimum range
+	
+	var minimumRange = 0.05; // TODO: per pixel range 0.01 / 1 is ok, 0.05 / 100 is ok
+	// console.log(match.range());
+	if(match.range()<minimumRange){
+		return false;
+	}
+	
+	// minimum variabliity
+
+	// min uniqueness
+
+	// score constraints
 	var scoreSAD = match.scoreSAD();
-	if(scoreSAD>0.525){
+	//if(scoreSAD>0.525){
+	if(scoreSAD>0.25){
 		return false;
 	}
 	var scoreNCC = match.scoreNCC();
-	if(scoreNCC>0.525){
+	if(scoreNCC>0.25){
 		return false;
 	}
 	/*
 		relative path costs
-		uniqueness
+		
 		F error
 	*/
 	return true;
@@ -980,7 +1117,7 @@ BeliefTest.Lattice.prototype.cellsChooseMatch = function(){
 	});
 }
 BeliefTest.Lattice.prototype.iteration = function(e){
-	// console.log("TODO");
+	console.log("iteration");
 	var lattice = this;
 	var cellSize = this._cellSize;
 	var found = false;
@@ -995,8 +1132,6 @@ var compareN = -1;
 			var hasChanged = cell.hasChanged();
 			var match = cell.match();
 			if(hasChanged && match){
-				// if(ccc==2){
-				// console.log("PROCESS: "+i+","+j);
 				var neighbors = cell.neighbors();
 				var cellCenter = cell.center();
 				for(var n=0; n<neighbors.length; ++n){
@@ -1005,9 +1140,6 @@ var compareN = -1;
 					if(neighbor.match()){
 						continue;
 					}
-					// if(n!=7){
-					// 	continue;
-					// }
 var show = n==compareN;
 					
 					var neighborCenter = neighbor.center();
@@ -1030,7 +1162,7 @@ var show = n==compareN;
 					var bestB = optimumLocation["location"];
 					// TODO: ANY PART IS OUTSIDE IMAGE B
 					if(bestB.x<=0 || bestB.x>=imageB.width() || bestB.y<=0 || bestB.y>=imageB.height()){
-						console.log("OUTSIDE");
+						// console.log("OUTSIDE");
 						return;
 					}
 
@@ -1149,195 +1281,18 @@ if(show){
 	// finish expansion
 	lattice.cellsChooseMatch();
 
+	lattice.updateChangedCells();
 
-	// process belief, reset votes
-	var smallerFirst = function(a,b){
-		return a<b ? -1 : 1;
-	}
-	var count = 0;
+	// reset votes
 	lattice.forEachCell(function(cell, i, j, index){
-		if(true){
-			cell.resetVotes();
-			var match = cell.match();
-			if(match){
-				// console.log(count+"  CELL: "+i+","+j+" @ "+cell.center());
-				// console.log("               "+match.pointA());
-				var neighbors = cell.neighbors();
-				var cellCenter = cell.center();
-				// hists:
-				var compareAffine = [];
-				var compareTranslate = [];
-				var compareNCC = [];
-				var compareSAD = [];
-				for(var n=0; n<neighbors.length; ++n){
-					var neighbor = neighbors[n];
-					var neighborMatch = neighbor.match();
-					if(neighborMatch){
-						// console.log("process match");
-
-						// affine compare
-						var compare = BeliefTest.affineCompare(match.affine(), neighborMatch.affine());
-							compare = compare["error"];
-						compareAffine.push(compare);
-
-						// translation compare
-						var compare = BeliefTest.translationCompare(cell, match, neighbor, neighborMatch);
-							compare = compare["error"];
-
-						compareTranslate.push(compare);
-						//console.log(" "+n+"compare: "+compare);
-
-						// forward-backward-compare - uniticity
-
-						// ordering compare 
-
-						// ncc compare
-						// var compare = BeliefTest.NCCCompare(match, neighborMatch);
-						// 	compare = compare["error"];
-						// compareNCC.push(compare);
-						compareNCC.push(neighborMatch.scoreNCC());
-
-						// sad compare
-						// var compare = BeliefTest.SADCompare(match, neighborMatch);
-						// 	compare = compare["error"];
-						// compareSAD.push(compare);
-						compareSAD.push(neighborMatch.scoreSAD());
-
-						// ...
-					}
-				}
-				// can include self in some estimates
-				compareNCC.push(match.scoreNCC());
-				compareSAD.push(match.scoreSAD());
-
-				// sort for half-means
-				var halfMeanPercent = 0.5;
-				compareAffine.sort(smallerFirst);
-				compareTranslate.sort(smallerFirst);
-				compareNCC.sort(smallerFirst);
-				compareSAD.sort(smallerFirst);
-
-				var meanAffine = Code.mean(compareAffine);
-				var stdAffine = Code.stdDev(compareAffine,meanAffine);
-				var meanTranslate = Code.mean(compareTranslate);
-				var stdTranslate = Code.stdDev(compareTranslate,meanTranslate);
-				// console.log(Math.ceil(compareAffine.length*halfMeanPercent));
-				var meanHalfAffine = Code.mean(compareAffine,null,Math.ceil(compareAffine.length*halfMeanPercent));
-				
-				var meanNCC = Code.mean(compareNCC);
-				var stdNCC = Code.stdDev(compareNCC,meanNCC);
-				var meanSAD = Code.mean(compareSAD);
-				var stdSAD = Code.stdDev(compareSAD,meanSAD);
-
-
-
-				// one-sided offset
-				// var meanHalfAffine = Code.mean(compareAffine, null, 10);
-
-				// var hist = Code.histogram(compareSAD, null, 10);
-				// var hist = Code.histogram(compareNCC, null, 10);
-				var hist = Code.histogram(compareAffine, null, 10);
-				// var hist = Code.histogram(compareTranslate, null, 10);
-				var infoAffine = Code.infoArray(compareAffine);
-
-// MIRROR:
-console.log("stdAffine: "+stdAffine);
-// meanAffine = Code.meanHalfNormal(compareAffine);
-// stdAffine = Code.stdDevHalfNormal(compareAffine, meanAffine);
-// Code.stdDevHalfNormal(compareAffine, Code.min(compareAffine));
-meanAffine = Code.min(compareAffine);
-stdAffine = Code.stdDev(compareAffine,meanAffine);
-// stdAffine = Code.stdDevHalfNormal(compareAffine, meanAffine);
-// console.log(" ... ")
-// var mirrorAffine = Code.mirrorArray(compareAffine);
-// var doubleAffine = Code.arrayPushArray(mirrorAffine,compareAffine);
-// console.log(doubleAffine);
-/*
-var meanAffine = Code.mean(doubleAffine);
-var stdAffine = Code.stdDev(doubleAffine,meanAffine);
-*/
-console.log("count: "+compareAffine.length+" @ "+meanAffine+" "+" +/- "+stdAffine+"  : ["+infoAffine["min"]+","+infoAffine["max"]+"] ("+infoAffine["range"]+") ");
-				//console.log("count: "+compareAffine.length+" @ "+meanAffine+" @ ("+meanHalfAffine+") "+" +/- "+stdAffine+" : ["+infoAffine["min"]+","+infoAffine["max"]+"] ("+infoAffine["range"]+") ");
-				// console.log("count: "+compareSAD.length+" @ "+meanSAD+" +/- "+stdSAD);
-				Code.printHistogram(hist["histogram"]);
-/*
-cutoff:
-min + sigma / (mean/halfmean) ---- drops too many in equal-distribution
-
-halfmean + sigma ---- not discriminating
-
-min + (mean-halfmean)*2 ---- 
-
-
-
-// different distributions:
-exponential ?
-
-half-normal ----- > sigma multiplier between 1 & 2 .... like 1.414 ~ 1.6
-50.0% = 0.68
-68.0% = 1.00
-84.1% = 1.414
-86.0% = 1.50
-90.0% = 1.65
-95.0% = 2.00
-99.7% = 3.00
-*/
-
-				cell._compareNCC = {
-					"list": compareNCC,
-					"mean": meanNCC,
-					"std": stdNCC,
-				};
-				cell._compareSAD = {
-					"list": compareSAD,
-					"mean": meanSAD,
-					"std": stdSAD,
-				};
-				cell._compareAffine = {
-					"list": compareAffine,
-					"mean": meanAffine,
-					"std": stdAffine,
-				};
-				cell._compareTranslate = {
-					"list": compareTranslate,
-					"mean": meanTranslate,
-					"std": stdTranslate,
-				};
-				// console.log("     compare: "+compareAffine);
-				// console.log("     compare: "+compareTranslate);
-				// console.log("     compare: "+compareNCC);
-				// console.log("     compare: "+compareSAD);
-				++count;
-
-
-				// store the data internally
-
-				// calculate MY expected values & error
-			}
-		}
+		cell.resetVotes();
 	});
+	
+	
+	lattice.cellsCastVotes();
 
-	// get neighbor's expected values & vote
-	lattice.forEachCell(function(cell, i, j, index){
-	});
 
-	var minimumVotePercentKeep = 0.50;
-	// drop predicted outliers
-	lattice.forEachCell(function(cell, i, j, index){
-		var match = cell.match();
-		if(match){
-			var voteTotal = cell.voteCount();
-			var votePercent = cell.votePercent();
-			if(voteTotal>2){ // minimum = self + 2 others
-				if(votePercent>minimumVotePercentKeep){
-					// keep
-				}else{
-					// drop
-					cell.dropMatch();
-				}
-			}
-		}
-	});
+	lattice.dropOutliers();
 /*
 	// EXPAND / DILATE
 	for each cell
@@ -1374,6 +1329,245 @@ half-normal ----- > sigma multiplier between 1 & 2 .... like 1.414 ~ 1.6
 
 	*/
 }
+
+BeliefTest.Lattice.prototype.cellsCastVotes = function(){
+	// get neighbor's expected values & vote
+	var lattice = this;
+	lattice.forEachCell(function(cell, i, j, index){
+		var match = cell.match();
+		var compare = cell._compare;
+		if(match && compare){
+			// use compare neighbors -- SHOULD be the same as neighbors w/ matches
+			//var neighbors = cell.neighbors();
+			var compareNeighbors = compare._compareNeighbors;
+			var compareAffine = compare._compareAffine;
+			var compareTranslate = compare._compareTranslate;
+			var compareNCC = compare._compareNCC;
+			var compareSAD = compare._compareSAD;
+
+			var arrayAffine = compareAffine["list"];
+			var meanAffine = compareAffine["mean"];
+			var sigmaAffine = compareAffine["sigma"];
+
+			var arrayTranslate = compareTranslate["list"];
+			var meanTranslate = compareTranslate["mean"];
+			var sigmaTranslate = compareTranslate["sigma"];
+
+			var arraySAD = compareSAD["list"];
+			var meanSAD = compareSAD["mean"];
+			var sigmaSAD = compareSAD["sigma"];
+
+			var arrayNCC = compareNCC["list"];
+			var meanNCC = compareNCC["mean"];
+			var sigmaNCC = compareNCC["sigma"];
+
+			var sigmaLimitAffine = 1.5;
+				//var sigmaLimitAffine = 1.414;
+				// var sigmaLimitAffine = 1.414;
+			var sigmaLimitTranslate = 1.5;
+				// var sigmaLimitTranslate = 1.414;
+			var sigmaLimitNCC = 2.0;
+			var sigmaLimitSAD = 2.0;
+			// var sigmaLimitNCC = 1.5;
+			// var sigmaLimitSAD = 1.5;
+
+			var sigmaLimitGroupAffine = 1.414;
+
+			var separateAffine = Code.separateArrayConstant(arrayAffine, meanAffine + sigmaAffine*sigmaLimitAffine);
+				separateAffine = separateAffine["list"];
+			var separateTranslate = Code.separateArrayConstant(arrayTranslate, meanTranslate + sigmaTranslate*sigmaLimitTranslate);
+				separateTranslate = separateTranslate["list"];
+			var separateNCC = Code.separateArrayConstant(arrayNCC, meanNCC + sigmaNCC*sigmaLimitNCC);
+				separateNCC = separateNCC["list"];
+			var separateSAD = Code.separateArrayConstant(arraySAD, meanSAD + sigmaSAD*sigmaLimitSAD);
+				separateSAD = separateSAD["list"];
+
+			for(var n=0; n<compareNeighbors.length; ++n){
+				var neighbor = compareNeighbors[n];
+				var keepAffine = separateAffine[n];
+				var keepTranslate = separateTranslate[n];
+				var keepNCC = separateNCC[n];
+				var keepSAD = separateSAD[n];
+
+				if(keepAffine && keepTranslate && keepNCC && keepSAD){
+					neighbor.addVote(cell, 1);
+				}else{
+					neighbor.addVote(cell, 0);
+				}
+
+/*
+				var hist = Code.histogram(compareAffine, null, 10);
+					// var hist = Code.histogram(compareTranslate, null, 10);
+					var infoAffine = Code.infoArray(compareAffine);
+
+				console.log("count: "+compareAffine.length+" @ "+meanAffine+" "+" +/- "+stdAffine+"  : ["+infoAffine["min"]+","+infoAffine["max"]+"] ("+infoAffine["range"]+") ");
+					Code.printHistogram(hist["histogram"]);
+*/
+			}
+		}
+	});
+}
+BeliefTest.Lattice.prototype.updateChangedCells = function(){ // update belief / stats 
+	var smallerFirst = function(a,b){
+		return a<b ? -1 : 1;
+	}
+	var lattice = this;
+	lattice.forEachCell(function(cell, i, j, index){
+		if(cell.hasChanged()){
+			cell.hasChanged(false);
+			var match = cell.match();
+			if(match){
+				// console.log(count+"  CELL: "+i+","+j+" @ "+cell.center());
+				// console.log("               "+match.pointA());
+				var neighbors = cell.neighbors();
+				var cellCenter = cell.center();
+				// hists:
+				var compareNeighbors = [];
+				var compareAffine = [];
+				var compareTranslate = [];
+				var compareNCC = [];
+				var compareSAD = [];
+				var compareCostNCC = [];
+				var compareCostSAD = [];
+				for(var n=0; n<neighbors.length; ++n){
+					var neighbor = neighbors[n];
+					var neighborMatch = neighbor.match();
+					if(neighborMatch){
+						// console.log("process match");
+						compareNeighbors.push(neighbor);
+
+						// affine compare
+						var compare = BeliefTest.affineCompare(match.affine(), neighborMatch.affine());
+							compare = compare["error"];
+						compareAffine.push(compare);
+
+						// translation compare
+						var compare = BeliefTest.translationCompare(cell, match, neighbor, neighborMatch);
+							compare = compare["error"];
+						compareTranslate.push(compare);
+
+						// ordering 'spread' --- angles are loosened/tightened?
+						// 
+
+						// forward-backward-compare - uniticity
+
+						// ordering compare 
+
+						// ncc compare
+						compareNCC.push(neighborMatch.scoreNCC());
+						// sad compare
+						compareSAD.push(neighborMatch.scoreSAD());
+						// pair cost NCC
+							// ...
+						// pair cost SAD
+							// ...
+						// group vs single affine compare
+							// ..
+					}
+				}
+				// can include self in some estimates
+				compareNCC.push(match.scoreNCC());
+				compareSAD.push(match.scoreSAD());
+
+				var meanAffine = Code.min(compareAffine);
+				var stdAffine = Code.stdDev(compareAffine,meanAffine);
+				var meanTranslate = Code.min(compareTranslate);
+				var stdTranslate = Code.stdDev(compareTranslate,meanTranslate);
+				
+				var meanNCC = Code.min(compareNCC);
+				var stdNCC = Code.stdDev(compareNCC,meanNCC);
+				var meanSAD = Code.min(compareSAD);
+				var stdSAD = Code.stdDev(compareSAD,meanSAD);
+
+				// var hist = Code.histogram(compareSAD, null, 10);
+				// var hist = Code.histogram(compareNCC, null, 10);
+
+				// group affine
+					// how neighbor cells change (should be unityish)
+				var compareGroupAffine = lattice.groupAffineCompare(cell, match);
+
+				var compare = {};
+				compare._compareNCC = {
+					"list": compareNCC,
+					"mean": meanNCC,
+					"sigma": stdNCC,
+				};
+				compare._compareSAD = {
+					"list": compareSAD,
+					"mean": meanSAD,
+					"sigma": stdSAD,
+				};
+				compare._compareAffine = {
+					"list": compareAffine,
+					"mean": meanAffine,
+					"sigma": stdAffine,
+				};
+				compare._compareTranslate = {
+					"list": compareTranslate,
+					"mean": meanTranslate,
+					"sigma": stdTranslate,
+				};
+				compare._compareGroupAffine = compareGroupAffine;
+				compare._compareNeighbors = compareNeighbors;
+
+				cell._compare = compare;
+			}
+		}
+	});
+
+}
+BeliefTest.Lattice.prototype.dropOutliers = function(){ // drop predicted outliers
+	var minimumVotePercentKeep = 0.50;
+	var lattice = this;
+	lattice.forEachCell(function(cell, i, j, index){
+		var match = cell.match();
+		if(match){
+			var voteTotal = cell.voteCount();
+			var votePercent = cell.votePercent();
+			// console.log(votePercent);
+			if(voteTotal>2){ // minimum = self + 2 others
+				if(votePercent>minimumVotePercentKeep){
+					// keep
+				}else{
+					// drop
+					cell.dropMatch();
+				}
+			}
+			
+		}
+	});
+
+	// drop islands
+	lattice.forEachCell(function(cell, i, j, index){
+		var match = cell.match();
+		if(match){
+			var neighbors = cell.neighbors();
+			var island = 0;
+			for(var n=0; n<neighbors.length; ++n){
+				var neighbor = neighbors[n];
+				if(neighbor.match()){
+					++island;
+				}
+			}
+			if(island<1){
+				cell.dropMatch();
+			}
+		}
+	});
+
+}
+/*
+cutoff:
+half-normal ----- > sigma multiplier between 1 & 2 .... like 1.414 ~ 1.6 ---- 1.5
+50.0% = 0.68
+68.0% = 1.00
+84.1% = 1.414
+86.0% = 1.50
+90.0% = 1.65
+95.0% = 2.00
+99.7% = 3.00
+*/
+
 BeliefTest.affineCompare = function(matrixA, matrixB){ // error in affine transforms
 	var vectorX = new V2D(1.0,0.0);
 	var vectorY = new V2D(0.0,1.0);
@@ -1391,10 +1585,25 @@ BeliefTest.translationCompare = function(cell, match, neighbor, neighborMatch){ 
 	var after = match.affine().multV2DtoV2D(before);
 	var actual = V2D.sub(neighborMatch.pointB(), match.pointB());
 	var diff = V2D.sub(after,actual);
-	// console.log(diff.length()+" / "+before.length());
-	var error = diff.length()/before.length();
-	// var error = diff.length();
+	var error = diff.length()/before.length(); // relative error
+	// var error = diff.length(); // absolute
 	return {"error":error};
+}
+BeliefTest.Lattice.prototype.groupAffineCompare = function(cell, match){ // in same direction
+	// how does actual group move
+	var neighbors = cell.neighbors();
+	var matches = [];
+	for(var i=0; i<neighbors.length; ++i){
+		var neighbor = neighbors[i];
+		var m = neighbor.match();
+		if(m){
+			matches.push(m);
+		}
+	}
+	if(matches.length>2){ // if less than 2 matches, nothing to compare
+		//
+	}
+	return null;
 }
 BeliefTest.orderCompare = function(cell, match, neighbors, neighborMatches){ // in same direction
 	//

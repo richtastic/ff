@@ -180,6 +180,22 @@ project typical numbers:
 
 APP TODO:
 
+- only check for possible match if neighbor doesn't alreay have one / in same area
+
+- ONLY UPDATE/CHECK WHEN SELF/NEIGHBORS CHANGE
+
+- add 'pairing' for each cell link/edge
+
+- group affine check against individual affine check
+
+- if cells are removed and an island becoms small (~1) -- remove it
+
+~ match pre-constraints
+
+- when fronts meet: much better from should force worse front to recede
+
+- for cells with obvious division between them [gap], they can STAY, but they shouldn't add new matches
+
 - VOTING
 	- cells with poor scores should have less weight --- nonequal voting
 

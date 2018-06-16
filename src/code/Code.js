@@ -3237,34 +3237,6 @@ Code.abs = function(a){
 	}
 	return a;
 }
-// half-normal distribution --- probably not technically correct -- ONE-SIDED NORMAL:
-// Code.meanHalfNormal = function(list,key, count){ 
-// 	return Code.min(list, count); // todo: key not used
-// }
-// Code.stdDevHalfNormal = function(list,mean,key, count){ // TODO: durrr median = middle of set -- assume sorted
-// 	// ===== stdev * 1/sqrt(2)
-// 	// todo: don't double-count minimum (once?)
-// 	var i, sig=0, item, len=list.length;
-// 	if(len==0){ return 0; }
-// 	for(i=len;i--;){
-// 		item = list[i];
-// 		if(key!==undefined && key!==null){
-// 			item = item[key];
-// 		}
-// 		sig += Math.pow(item-mean,2);
-// 		// var meti = mean + -1*(item-mean); // other half
-// 		// console.log(item,meti);
-// 		// sig += Math.pow(meti-mean,2);
-// 	}
-// 	return Math.sqrt(sig/len);
-
-// }
-/*
-
-Math.sqrt(2*sigma/(2*len)) === sigma
-
-*/
-
 Code.arrayVectorSub = function(a,b){
 	var c = Code.newArray(a.length);
 	for(var i=a.length; i--; ){
@@ -3325,6 +3297,24 @@ Code.arrayDerivative = function(a){
 		result.push(a[i]-a[i-1]);
 	}
 	return result;
+}
+
+Code.separateArrayConstant = function(list,k){
+	var i, item, len=list.length;
+	var left = [];
+	var right = [];
+	var out = [];
+	for(i=0;i<len;++i){
+		item = list[i];
+		if(item<k){
+			left.push(i);
+			out[i] = true;
+		}else{
+			right.push(i);
+			out[i] = false;
+		}
+	}
+	return {"left":left, "right":right, "list":out};
 }
 /*
 ar vLen = Code.arrayVectorLength(v);
