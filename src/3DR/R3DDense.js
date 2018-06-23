@@ -947,6 +947,7 @@ R3D.Dense.Queue.prototype.remove = function(transform){
 // 	return ImageMat.extractRectWithProjection(source,sW,sH, wid,hei, projection);
 // }
 R3D.Dense.extractRectFromPoints = function(image,pointA,pointB, sizeA,sizeB, width,height){
+	/*
 	var dAB = V2D.sub(pointB,pointA);
 	var mAB = dAB.length();
 	var nAB = dAB.copy().norm();
@@ -983,10 +984,22 @@ R3D.Dense.extractRectFromPoints = function(image,pointA,pointB, sizeA,sizeB, wid
 	var pointBL = pointA.copy().sub(pA).add(botAddA);
 	var pointTR = pointB.copy().add(pB).add(topAddB);
 	var pointBR = pointB.copy().sub(pB).add(botAddB);
+	*/
+	// BASIC:
+	var size = (sizeA+sizeB)*0.5;
+	var dAB = V2D.sub(pointB,pointA);
+	var sAB = dAB.copy().norm().scale(size*0.5);
+	var left = pointA.copy().sub(sAB);
+	var right = pointB.copy().add(sAB);
+	var pAB = dAB.copy().norm().rotate(Math.PI*0.5).scale(size);
+	var pointTL = left.copy().add(pAB);
+	var pointBL = left.copy().sub(pAB);
+	var pointTR = right.copy().add(pAB);
+	var pointBR = right.copy().sub(pAB);
 	return R3D.Dense.extractRectFromRect(image, pointTL,pointTR,pointBR,pointBL, width,height);
 }
 R3D.Dense.extractRectFromRect = function(image,pointTL,pointTR,pointBR,pointBL, width,height){
-	return image.extractRect(pointTL.x,pointTL.y,pointTR.x,pointTR.y,pointBR.x,pointBR.y,pointBL.x,pointBL.y, width,height);
+	return image.extractRect(pointBL.x,pointBL.y,pointBR.x,pointBR.y,pointTR.x,pointTR.y,pointTL.x,pointTL.y, width,height);
 }
 // --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 

@@ -3707,6 +3707,7 @@ R3D.optimumScaleForImageEntropy = function(imageSource){
 	var entropySize = 10
 	var expectedEntropy = 0.25;
 	var scaleTimes = 10;
+		// var scaleTimes = 5;
 	var minScalePower = -1; // 0.125
 	var maxScalePower = 2; // 4
 	//var entropyValues = [];
@@ -18961,6 +18962,8 @@ R3D.optimumAffineTransform = function(imageA,pointA, imageB,pointB, vectorX,vect
 var index = 0;
 	var compareFxn = function(o,a,b, isUpdate){ // from control points
 		var matrix = R3D.affineMatrixExact([u,x,y],[u,a,b]);
+		console.log(" ... "+x+"&"+y+" - "+a+"&"+b);
+		// NaN
 			matrix = Matrix.transform2DScale(matrix,scaleCompare);
 		var n = imageA.extractRectFromFloatImage(pointA.x+o.x,pointA.y+o.y,1.0,null,compareSize,compareSize, matrix);
 		var ncc = R3D.normalizedCrossCorrelation (n,m,h, true);
@@ -19051,7 +19054,7 @@ R3D._gdAffineTransform = function(args, x, isUpdate){
 	var dO = vO.length();
 	var dA = V2D.distance(vX,vA);
 	var dB = V2D.distance(vY,vB);
-	if(	dO>range["t"] || dA>range["a"] || dB>range["b"] ){
+	if(	dO>range["t"] || dA>range["a"] || dB>range["b"] || Code.isNaN(vA) || Code.isNaN(vB)){
 	// if(	x[0]<range["tx"][0] || x[0]>range["tx"][1] ||
 	// 	x[1]<range["ty"][0] || x[1]>range["ty"][1] || 
 	// 	x[2]<range["ax"][0] || x[2]>range["ax"][1] || 

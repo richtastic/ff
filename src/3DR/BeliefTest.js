@@ -19,6 +19,7 @@ GLOBALSTAGE = this._stage;
 	this._views = [];
 
 	var imageLoader = new ImageLoader("./images/",["room0.png","room2.png"], this,this.handleImageLoaded,null);
+	// var imageLoader = new ImageLoader("./images/",["caseStudy1-0.jpg","caseStudy1-20.jpg"], this,this.handleImageLoaded,null);
 	imageLoader.load();
 
 	this._keyboard = new Keyboard();
@@ -89,6 +90,21 @@ BeliefTest.prototype._handleGetMatchesComplete = function(data){
 	var viewB = this._views[1];
 	var imageA = viewA.image();
 	var imageB = viewB.image();
+
+/*
+["caseStudy1-0.jpg","caseStudy1-20.jpg"],
+230,85 => 251,102
+[230,85]./[400,300] => [251,102]./[400,300]
+*/
+/*
+matches = [{
+			"fr": {"x":0.57500,"y":0.28333},
+			"to": {"x":0.62750,"y":0.34000},
+			"s": 1.0,
+			"a": 0.0
+		}];
+
+*/
 
 	// console.log(viewA,viewB);
 	// console.log(matches);
@@ -317,7 +333,7 @@ peaks.sort( function(a,b){ return a.z<b.z ? -1 : 1; } );
 
 	var lattice = new BeliefTest.Lattice(viewA,viewB);
 	this._lattice = lattice;
-
+	var queue = lattice.queue();
 	// add seeds:
 	for(var i=0; i<matches.length; ++i){
 		var match = matches[i];
@@ -334,6 +350,7 @@ peaks.sort( function(a,b){ return a.z<b.z ? -1 : 1; } );
 		angleAtoB = 0.0;
 		// pointA.scale(imageA.Width,imageAHeight);
 		// pointB.scale(imageBWidth,imageBHeight);
+		// if(true){
 		if(i==9){
 		// if(i<10){
 // if(i==2){
@@ -348,16 +365,24 @@ peaks.sort( function(a,b){ return a.z<b.z ? -1 : 1; } );
 // if(i==43){
 //if(i==21 || i==25 || i==42){
 			var cell = lattice.cellFromPoint(pointA);
-			cell.setSeed(pointA,pointB,scaleAtoB,angleAtoB);
+			cell.addSeedMatch(pointA,pointB,scaleAtoB,angleAtoB);
+			queue.push(cell);
 		}
 		// if(i>=10){
 		// // if(i>=8){
 		// 	break;
 		// }
 	}
-	// choose among best matches
-	lattice.cellsChooseMatch();
 
+	// seed choose & set among best matches
+	var list = queue.toArray();
+	queue.clear();
+	console.log("SEED LIST");
+	console.log(list);
+	for(var i=0; i<list.length; ++i){
+		var cell = list[i];
+		cell.applyBestPutativeMatch();
+	}
 	//
 	this.drawLattice();
 	lattice.iteration();
@@ -459,6 +484,34 @@ BeliefTest.prototype.drawLattice = function(e){ // TODO: ERROR THROWN -- likely 
 			}
 		}
 	}
+	// show field -- optical flow
+	for(var j=0; j<countY; ++j){
+		for(var i=0; i<countX; ++i){
+			var cell = lattice.cellFromColRow(i,j);
+			var match = cell.match();
+			if(match){
+				// console.log("DRAW")
+				// crate vector
+				var pA = match.pointA();
+				var pB = match.pointB();
+				var dAB = V2D.sub(pB,pA);
+				// console.log(dAB.length());
+				// draw arrow
+				var d = new DO();
+				d.graphics().setLine(1.0,0x99009900);
+				d.graphics().beginPath();
+				d.graphics().moveTo(0,0);
+				d.graphics().lineTo(dAB.x,dAB.y);
+				d.graphics().strokeLine();
+				d.graphics().endPath();
+				d.matrix().translate(pA.x,pA.y);
+				d.matrix().translate(1200,0);
+				display.addChild(d);
+
+			}
+		}
+	}
+
 	// show matches:
 var dCount = 0;
 	for(var j=0; j<countY; ++j){
@@ -537,37 +590,52 @@ BeliefTest.View = function(image){
 
 BeliefTest.View.prototype.image = function(image){
 	if(image!==undefined){
-		this._image = image;
+		this._imageFlat = image;
 		// generate other fields as necessary
 	}
-	return this._image;
+	return this._imageFlat;
+}
+BeliefTest.View.prototype.gradient = function(gradient){
+	return this._imageGradient;
+}
+BeliefTest.View.prototype.corners = function(corners){
+	return this._imageCorners;
 }
 /// --------------------------------------------------------------------------------------------------------
 BeliefTest.Cell = function(lattice, i,j, center){
+	this._id = (BeliefTest.Cell._ID++)+""; // string lookup id
 	this._putativeMatches = [];
-	this._match = null;
 	this._label = null;
 	this._lattice = lattice;
 	this._col = i;
 	this._row = j;
 	this._center = center.copy();
-	this._neighbors = [];
-	this._hasChanged = false;
-	this._votes = [];
+	this._match = null;
+	this._previousMatch = null;
+	this._neighbors = {};
+	this._paths = {};
+	this._votes = {};
+	this._metrics = null;
 }
+BeliefTest.Cell._ID = 0;
 BeliefTest.Cell._LABEL = 0;
 BeliefTest.Cell.nextLabel = function(){
 	return ++BeliefTest.Cell._LABEL;
 }
-BeliefTest.Cell.prototype.hasChanged = function(hasChanged){
-	if(hasChanged!==undefined){
-		this._hasChanged = hasChanged;
+BeliefTest.Cell.prototype.id = function(){
+	return this._id;
+}
+BeliefTest.Cell.prototype.attempts = function(attempts){
+	if(attempts!==undefined){
+		this._attempts = attempts;
 	}
-	return this._hasChanged;
+	return this._attempts;
 }
 BeliefTest.Cell.prototype.addNeighbor = function(n){
-	this._neighbors.push(n);
-	this._hasChanged = true;
+	var index = n.id();
+	this._neighbors[index] = n;
+	this._paths[index] = null;
+	this._votes[index] = null;
 }
 BeliefTest.Cell.prototype.neighbors = function(){
 	return this._neighbors;
@@ -589,48 +657,10 @@ BeliefTest.Cell.prototype.voteCount = function(){
 BeliefTest.Cell.prototype.resetVotes = function(){
 	this._votes = [];
 }
-BeliefTest.Cell.prototype.setSeed = function(pointA,pointB, scaleAtoB,angleAtoB){
-	// if(this.match()){
-	// 	console.log("match exists .. no seed .. todo: add to list");
-	// 	return null;
-	// }
-	var lattice = this._lattice;
-	var imageA = lattice.viewA().image();
-	var imageB = lattice.viewB().image();
-	var cellSize = lattice.cellSize();
-	var vectorX = new V2D(1.0,0.0);
-	var vectorY = new V2D(0.0,1.0);
-	var matrix = new Matrix(3,3).identity();
-		matrix = Matrix.transform2DScale(matrix,scaleAtoB);
-		matrix = Matrix.transform2DRotate(matrix,angleAtoB);
-	vectorX = matrix.multV2DtoV2D(vectorX);
-	vectorY = matrix.multV2DtoV2D(vectorY);
-	// affine transform
-	// cellSize*0.25
-	var optimum = R3D.optimumAffineTransform(imageA,pointA, imageB,pointB, vectorX,vectorY, cellSize, 1,0.1,0.1);
-	// var u = new V2D(0,0);
-	// var x = new V2D(1,0);
-	// var y = new V2D(0,1);
-	// var o = optimum["O"];
-	// var a = optimum["A"];
-	// var b = optimum["B"];
-	// var matrix = R3D.affineMatrixExact([u,x,y],[u,a,b]);
-	var matrix = BeliefTest.affineFromResult(optimum);
-	// reverse
-	var centerA = this.center();
-	var compareSize = lattice.compareSize();
-	var searchSize = Math.ceil(2*cellSize);
-	var best = BeliefTest.optimumLocation(imageA,centerA, imageB,pointB, compareSize,searchSize, matrix);
-	var bestB = best["location"];
-	// TODO : now find optimal transform at center location
-		vectorX = matrix.multV2DtoV2D(new V2D(1,0));
-		vectorY = matrix.multV2DtoV2D(new V2D(0,1));
-		var optimum = R3D.optimumAffineTransform(imageA,centerA, imageB,bestB, vectorX,vectorY, compareSize, 0);
-		var matrix = BeliefTest.affineFromResult(optimum);
-	
-	// make match
+BeliefTest.Cell.prototype.addSeedMatch = function(pointA,pointB, scaleAtoB,angleAtoB){
 	var cell = this;
-	var match = lattice.newMatchFrom(cell, centerA, bestB, matrix);
+	var lattice = cell._lattice;
+	var match = lattice.matchFromSettings(cell, pointA,pointB,scaleAtoB,angleAtoB);
 	if(lattice.matchValidation(cell,match)){
 		cell.addPutativeMatch(match);
 	}
@@ -651,19 +681,22 @@ BeliefTest.Cell.prototype.label = function(label){
 BeliefTest.Cell.prototype.addPutativeMatch = function(match){
 	this._putativeMatches.push(match);
 }
-BeliefTest.Cell.prototype.applyBestMatch = function(match){
-	var putatives = this._putativeMatches;
-	if(putatives.length>0){
-		// TODO: pick best score within constraints
-		this._match = putatives[0];
-		Code.emptyArray(putatives);
-
-		// TODO: make/update a pair for each neighbor
-		console.log(" ... add match -> pair");
-
-		this.hasChanged(true);
-		this.notifyNeighborsChanged();
-		return true;
+BeliefTest.Cell.prototype.applyBestPutativeMatch = function(match){
+	var matches = this._putativeMatches;
+	if(matches.length>0){
+		var bestMatch = null;
+		for(var i=0; i<matches.length; ++i){
+			var match = matches[i];
+			if(bestMatch==null || match.scoreNCC()<bestMatch.scoreNCC()){ // criteria
+				bestMatch = match;
+			}
+		}
+		if(bestMatch){
+			console.log(" ... add match -> pair : "+bestMatch.scoreNCC()+" & "+bestMatch.scoreSAD());
+			Code.emptyArray(matches);
+			this.setMatch(bestMatch);
+			return true;
+		}
 	}
 	return false;
 }
@@ -673,26 +706,96 @@ BeliefTest.Cell.prototype.match = function(match){
 	}
 	return this._match;
 }
+BeliefTest.Cell.prototype.previousMatch = function(previousMatch){
+	if(previousMatch!==undefined){
+		this._previousMatch = previousMatch;
+	}
+	return this._previousMatch;
+}
+BeliefTest.Cell.prototype.setMatch = function(newMatch){
+	// console.log("setMatch",newMatch);
+	var cell = this;
+	cell._previousMatch = cell._match;
+	cell._match = newMatch;
+	var lattice = cell._lattice;
+	var paths = cell._paths;
+	var neighbors = cell._neighbors;
+	var neighborKeys = Code.keys(neighbors);
+	var queue = lattice.queue();
+	// update / check
+	queue.push(cell);
+	cell.updateMetrics();
+
+	for(var i=0; i<neighborKeys.length; ++i){
+		var index = neighborKeys[i];
+		var neighbor = neighbors[index];
+		// console.log("CENTERS: "+cell.center()+" | "+neighbor.center()+" & "+newMatch.pointA());
+		var pathMatch = lattice.bestMatchFromSettings(newMatch, cell, neighbor);
+		// console.log("  "+i+" => "+pathMatch.scorePathNCC()+" & "+pathMatch.scorePathSAD());//+"   &&& "+pathMatch.s);
+		if(lattice.matchValidation(cell,pathMatch)){
+			paths[index] = pathMatch;
+		}else{
+			paths[index] = null;
+		}
+		// update / check
+		queue.push(neighbor);
+		neighbor.updateMetrics();
+	}
+}
 BeliefTest.Cell.prototype.hasMatch = function(){
 	return this._match!==null;
 }
 BeliefTest.Cell.prototype.dropMatch = function(){
 	if(this._match){
+		var lattice = this._lattice;
+		var neighbors = this._neighbors;
+		var neighborKeys = Code.keys(neighbors);
+		var queue = lattice.queue();
+		this._previousMatch = this._match;
 		this._match = null;
-		this.hasChanged(true);
-		this.notifyNeighborsChanged();
-		this.resetVotes();
-		this._compare = null;
+		for(var i=0; i<neighborKeys.length; ++i){
+			var index = neighborKeys[i];
+			this._paths[index] = null;
+			this._votes[index] = null;
+			this._metrics = null;
+		}
+		// update / check
+//		queue.push(this);
+		for(var i=0; i<neighborKeys.length; ++i){
+			var index = neighborKeys[i];
+			var neighbor = neighbors[index];
+			// update / check
+//			queue.push(neighbor);
+			neighbor.updateMetrics();
+		}
+
 		return true;
 	}
 	return false;
 }
-BeliefTest.Cell.prototype.notifyNeighborsChanged = function(){ // TODO: be more specific on what has changed
-	var neighbors = this.neighbors();
-	for(var i=0; i<neighbors.length; ++i){
-		var neighbor = neighbors[i];
-		neighbor.hasChanged(true);
+BeliefTest.Cell.prototype.voteInfo = function(){
+	var cell = this;
+	var lattice = cell._lattice;
+	var neighbors = cell._neighbors;
+	var neighborKeys = Code.keys(neighbors);
+	var count = 0;
+	var percent = 0;
+	var cellID = cell.id();
+	for(var i=0; i<neighborKeys.length; ++i){
+		var index = neighborKeys[i];
+		var neighbor = neighbors[index];
+		var vote = neighbor._votes[cellID];
+		if(vote===null){
+			// N/A
+		}else{
+			count +=1;
+			percent += vote;
+		}
 	}
+	if(count>0){
+		percent /= count;
+	}
+	return {"count":count, "percent":percent};
 }
 BeliefTest.Cell.prototype.label = function(label){
 	if(label!==undefined){
@@ -700,6 +803,217 @@ BeliefTest.Cell.prototype.label = function(label){
 	}
 	return this._label;
 }
+BeliefTest.Cell.prototype.updateMetrics = function(){
+	var match = this.match();
+	if(!match){
+		return;
+	}
+	var cell = this;
+	var neighbors = cell._neighbors;
+	var neighborKeys = Code.keys(neighbors);
+	var metricAffine = [];
+	var metricTranslate = [];
+	var metricNCC = [];
+	var metricSAD = [];
+	var metricPathNCC = [];
+	var metricPathSAD = [];
+	// append metrics
+	metricNCC.push(match.scoreNCC());
+	metricSAD.push(match.scoreSAD());
+	metricPathNCC.push(match.scorePathNCC());
+	metricPathSAD.push(match.scorePathSAD());
+	for(var i=0; i<neighborKeys.length; ++i){
+		var index = neighborKeys[i];
+		var neighbor = neighbors[index];
+		var neighborMatch = neighbor.match();
+		if(neighborMatch){
+			// affine compare
+			var compare = BeliefTest.affineCompare(match.affine(), neighborMatch.affine());
+				compare = compare["error"];
+			metricAffine.push(compare);
+			// translation compare
+			var compare = BeliefTest.translationCompare(cell, match, neighbor, neighborMatch);
+				compare = compare["error"];
+			metricTranslate.push(compare);
+			// ncc compare
+			metricNCC.push(neighborMatch.scoreNCC());
+			// sad compare
+			metricSAD.push(neighborMatch.scoreSAD());
+			// pair cost NCC
+			metricPathNCC.push(neighborMatch.scorePathNCC());
+			// pair cost SAD
+			metricPathSAD.push(neighborMatch.scorePathSAD());
+		} // TODO: OTHERS = ordering compare, group vs single affine compare, ordering 'spread' --- angles are loosened/tightened?, forward-backward-compare - uniticity
+	}
+
+	// console.log("METRIC AFFINE: ");
+	// Code.printMatlabArray(metricAffine, "a");
+
+	var meanAffine = Code.min(metricAffine);
+	var stdAffine = Code.stdDev(metricTranslate,meanAffine);
+	var meanTranslate = Code.min(metricTranslate);
+	var stdTranslate = Code.stdDev(metricTranslate,meanTranslate);
+	var meanNCC = Code.min(metricNCC);
+	var stdNCC = Code.stdDev(metricNCC,meanNCC);
+	var meanSAD = Code.min(metricSAD);
+	var stdSAD = Code.stdDev(metricSAD,meanSAD);
+	var meanPathNCC = Code.min(metricNCC);
+	var stdPathNCC = Code.stdDev(metricPathNCC,meanPathNCC);
+	var meanPathSAD = Code.min(metricPathSAD);
+	var stdPathSAD = Code.stdDev(metricPathSAD,meanPathSAD);
+	// group affine
+	// var compareGroupAffine = lattice.groupAffineCompare(cell, match);
+	var metrics = {};
+	metrics["affine"] = {
+		"list": metricAffine,
+		"mean": meanAffine,
+		"sigma": stdAffine,
+	};
+	metrics["trans"] = {
+		"list": metricTranslate,
+		"mean": meanTranslate,
+		"sigma": stdTranslate,
+	};
+	metrics["ncc"] = {
+		"list": metricNCC,
+		"mean": meanNCC,
+		"sigma": stdNCC,
+	};
+	metrics["sad"] = {
+		"list": metricSAD,
+		"mean": meanSAD,
+		"sigma": stdSAD,
+	};
+	metrics["nccPath"] = {
+		"list": metricPathNCC,
+		"mean": meanPathNCC,
+		"sigma": stdPathNCC,
+	};
+	metrics["sadPath"] = {
+		"list": metricPathSAD,
+		"mean": meanPathSAD,
+		"sigma": stdPathSAD,
+	};
+	// compare._compareGroupAffine = compareGroupAffine;
+	this._metrics = metrics;
+	this._votes = [];
+	var votes = this._votes;
+	// votes from metrics
+	for(var i=0; i<neighborKeys.length; ++i){
+		var index = neighborKeys[i];
+		var neighbor = neighbors[index];
+		var neighborMatch = neighbor.match();
+		if(neighborMatch){
+			var vote = BeliefTest.voteFromMetric(metrics, neighborMatch, neighbor, match, cell);
+			votes[index] = vote;
+		}else{
+			votes[index] = 0;
+		}
+	}
+}
+BeliefTest.voteFromMetric = function(metrics, neighborMatch, neighborCell, sourceMatch, sourceCell){
+	var metricAffine = metrics["affine"];
+	var metricTranslate = metrics["affine"];
+	var metricNCC = metrics["ncc"];
+	var metricSAD = metrics["sad"];
+	var metricPathNCC = metrics["nccPath"];
+	var metricPathSAD = metrics["sadPath"];
+		var meanAffine = metricAffine["mean"];
+		var sigmaAffine = metricAffine["sigma"];
+		var meanTranslate = metricTranslate["mean"];
+		var sigmaTranslate = metricTranslate["sigma"];
+		var meanSAD = metricSAD["mean"];
+		var sigmaSAD = metricSAD["sigma"];
+		var meanNCC = metricNCC["mean"];
+		var sigmaNCC = metricNCC["sigma"];
+		var meanPathSAD = metricPathSAD["mean"];
+		var sigmaPathSAD = metricPathSAD["sigma"];
+		var meanPathNCC = metricPathNCC["mean"];
+		var sigmaPathNCC = metricPathNCC["sigma"];
+	// var sigmaLimitAffine = 1.414;
+	// var sigmaLimitTranslate = 1.414;
+	var sigmaLimitAffine = 1.9;
+	var sigmaLimitTranslate = 1.9;
+	var sigmaLimitNCC = 2.0;
+	var sigmaLimitSAD = 2.0;
+	var sigmaLimitPathNCC = 3.0;
+	var sigmaLimitPathSAD = 3.0;
+	// var sigmaLimitPathNCC = 1.5;
+	// var sigmaLimitPathSAD = 1.5;
+	// var scoreAffine = neighborMatch.scoreAffine();
+	// var scoreTranslate = neighborMatch.scoreTranslate();
+	var compare = BeliefTest.affineCompare(sourceMatch.affine(), neighborMatch.affine());
+		var scoreAffine = compare["error"];
+	var compare = BeliefTest.translationCompare(sourceCell, sourceMatch, neighborCell, neighborMatch);
+		var scoreTranslate = compare["error"];
+	var scoreNCC = neighborMatch.scoreNCC();
+	var scoreSAD = neighborMatch.scoreSAD();
+	var scorePathNCC = neighborMatch.scorePathNCC();
+	var scorePathSAD = neighborMatch.scorePathSAD();
+	// crossing
+	var keepAffine = true; // var keepAffine = scoreAffine < meanAffine + sigmaAffine*sigmaLimitAffine;
+	var keepTranslate = true; // var keepTranslate = scoreTranslate < meanTranslate + sigmaTranslate*sigmaLimitAffine;
+	var keepNCC = scoreNCC < meanNCC + sigmaNCC*sigmaLimitNCC;
+	var keepSAD = scoreSAD < meanSAD + sigmaSAD*sigmaLimitSAD;
+	var keepPathNCC = scorePathNCC < meanPathNCC + sigmaPathNCC*sigmaLimitPathNCC;
+	var keepPathSAD = scorePathSAD < meanPathSAD + sigmaPathSAD*sigmaLimitPathSAD;
+	if(keepAffine && keepTranslate && keepNCC && keepSAD && keepPathNCC && keepPathSAD){
+		return 1;
+	}
+	return 0;
+}
+/*
+BeliefTest.Cell.prototype.calculateNeighborMatches = function(match){
+	var cell = this;
+	var paths = cell.paths();
+	var neighbors = cell.neighbors();
+	var estimations = cell._neighborEstimations;
+	var cellCenter = cell.center();
+	for(var i=0; i<neighbors.length; ++i){
+		var neighbor = neighbors[i];
+
+		var neighborCenter = neighbor.center();
+		var matrix = match.affine();
+		//var dirA = V2D.sub(cell.center(),n.center());
+		var pointA = match.pointA();
+		var pointB = match.pointB();
+		var dirA = V2D.sub(neighborCenter,cellCenter);
+		// console.log(dirA+"");
+		var dirB = matrix.multV2DtoV2D(dirA);
+		// console.log(dirB+"");
+		var predictB = V2D.add(pointB,dirB);
+		// find expected location of neighbor based on 
+		var inverse = Matrix.inverse(matrix);
+		// move point b around till it fits to point a
+		
+
+		//var optimumLocation = R3D.optimumTranslation(imageB,predictB, imageA,neighborCenter, vectorX,vectorY, cellSize, 1,0.1,0.1);
+		var optimumLocation = BeliefTest.optimumLocation(imageA,neighborCenter, imageB,predictB, cellSize,cellSize*4, matrix,   show);
+		var bestB = optimumLocation["location"];
+		// TODO: ANY PART IS OUTSIDE IMAGE B
+		// if(bestB.x<=0 || bestB.x>=imageB.width() || bestB.y<=0 || bestB.y>=imageB.height()){
+		// 	// console.log("OUTSIDE");
+		// 	return;
+		// }
+
+		// optimum transform
+		var vectorX = inverse.multV2DtoV2D(new V2D(1,0));
+		var vectorY = inverse.multV2DtoV2D(new V2D(0,1));
+		var optimum = R3D.optimumAffineTransform(imageB,bestB, imageA,neighborCenter, vectorX,vectorY, cellSize, cellSize*0.5,0.25,0.25);
+			bestB = V2D.add(optimum["O"], bestB);
+		var bestInverse = BeliefTest.affineFromResult(optimum);
+		var bestMatrix = Matrix.inverse(bestInverse);
+		var pathMatch = lattice.newMatchFrom(neighbor, neighborCenter, bestB, bestMatrix);
+		// if(lattice.matchValidation(cell,match)){
+		// 	// console.log(" - "+neighborCenter);
+		// 	neighbor.addPutativeMatch(match);
+		// }
+
+		paths[i] = pathMatch;
+	}
+	// ...
+}
+*/
 
 BeliefTest.affineFromResult = function(optimum){
 	var u = new V2D(0,0);
@@ -784,9 +1098,12 @@ BeliefTest.Match = function(){
 	this._affine = null;
 	this._scoreSAD = null;
 	this._scoreNCC = null;
-	this._vectorSiftScore = null;
-	this._vectorSadScore = null;
-	this._x = null;
+	this._scorePathSAD = null;
+	this._scorePathNCC = null;
+	// this._vectorSiftScore = null;
+	// this._vectorSadScore = null;
+	this._scoreGrad = null;
+	this._scorePathGrad = null;
 	this._range = null;
 }
 BeliefTest.Match.prototype.pointA = function(pointA){
@@ -819,6 +1136,18 @@ BeliefTest.Match.prototype.scoreSAD = function(scoreSAD){
 	}
 	return this._scoreSAD;
 }
+BeliefTest.Match.prototype.scorePathNCC = function(scorePathNCC){
+	if(scorePathNCC!==undefined){
+		this._scorePathNCC = scorePathNCC;
+	}
+	return this._scorePathNCC;
+}
+BeliefTest.Match.prototype.scorePathSAD = function(scorePathSAD){
+	if(scorePathSAD!==undefined){
+		this._scorePathSAD = scorePathSAD;
+	}
+	return this._scorePathSAD;
+}
 BeliefTest.Match.prototype.range = function(range){
 	if(range!==undefined){
 		this._range = range;
@@ -838,6 +1167,22 @@ BeliefTest.Lattice = function(viewA,viewB){
 	this.viewA(viewA);
 	this.viewB(viewB);
 	this.generateGraph();
+	this._queue = new PriorityQueue(BeliefTest.Lattice._cellOrdering);
+}
+BeliefTest.Lattice._cellOrdering = function(a,b){
+	if(a==b){
+		return 0;
+	}else if(a._row<b._row){
+		return -1;
+	}else if(a._row>b._row){
+		return 1;
+	}else if(a._col<b._col){
+		return -1;
+	}else if(a._col>b._col){
+		return 1;
+	}
+	throw "?";
+	return 0;
 }
 BeliefTest.Lattice.prototype.generateGraph = function(){
 	if(!this._viewA || !this._viewA.image()){
@@ -846,7 +1191,7 @@ BeliefTest.Lattice.prototype.generateGraph = function(){
 	var viewWidth = this._viewA.image().width();
 	var viewHeight = this._viewA.image().height();
 	//var cellSize = 25;
-	//var cellSize = 15;
+	// var cellSize = 15;
 	var cellSize = 11;
 	// var cellSize = 7;
 	var compareSize = Math.floor(cellSize*1.5);
@@ -880,6 +1225,21 @@ BeliefTest.Lattice.prototype.generateGraph = function(){
 		for(var i=0; i<cellCountI; ++i){
 			var cell = cells[j*cellCountI+i];
 			var c;
+			/*
+			// 4 neighbor
+			var pairs = [[-1,0],[1,0],[0,-1],[0,1]];
+			for(var k=0; k<pairs.length; ++k){
+				var pair = pairs[k];
+				var iii = i + pair[0];
+				var jjj = j + pair[1];
+				if(jjj>=0 && jjj<cellCountJ && iii>=0 && iii<cellCountI){
+					c = cells[jjj*cellCountI+iii];
+					cell.addNeighbor(c);
+				}
+			}
+			*/
+			
+			// 8 neighbor
 			for(var jj=-1; jj<=1; ++jj){
 				for(var ii=-1; ii<=1; ++ii){
 					var jjj = jj + j;
@@ -889,24 +1249,85 @@ BeliefTest.Lattice.prototype.generateGraph = function(){
 					}
 					if(jjj>=0 && jjj<cellCountJ && iii>=0 && iii<cellCountI){
 						c = cells[jjj*cellCountI+iii];
-						if(c==cell){
-							console.log(i,j,iii,jjj)
-							console.log(cell);
-							console.log(c);
-							throw "EQUAL"
-						}
 						cell.addNeighbor(c);
 					}
 				}
 			}
+			
 		}
 	}
 	// this._graph = graph;
 	this._cells = cells;
 	// console.log(cells);
 }
-BeliefTest.Lattice.prototype.newMatchFrom = function(cell, pointA, pointB, matrix){
-	var lattice = this;//cell.lattice();
+
+BeliefTest.Lattice.prototype.matchFromSettings = function(cell, pointA,pointB, scaleAtoB,angleAtoB){
+	var lattice = this;
+	var imageA = lattice.viewA().image();
+	var imageB = lattice.viewB().image();
+	var cellSize = lattice.cellSize();
+	var vectorX = new V2D(1.0,0.0);
+	var vectorY = new V2D(0.0,1.0);
+	var matrix = new Matrix(3,3).identity();
+		matrix = Matrix.transform2DScale(matrix,scaleAtoB);
+		matrix = Matrix.transform2DRotate(matrix,angleAtoB);
+	vectorX = matrix.multV2DtoV2D(vectorX);
+	vectorY = matrix.multV2DtoV2D(vectorY);
+	// affine transform
+	// cellSize*0.25
+	var optimum = R3D.optimumAffineTransform(imageA,pointA, imageB,pointB, vectorX,vectorY, cellSize, 1,0.1,0.1);
+	var matrix = BeliefTest.affineFromResult(optimum);
+	// reverse
+	var centerA = cell.center();
+	var compareSize = lattice.compareSize();
+	var searchSize = Math.ceil(2*cellSize);
+	var best = BeliefTest.optimumLocation(imageA,centerA, imageB,pointB, compareSize,searchSize, matrix);
+	var bestB = best["location"];
+	// TODO : now find optimal transform at center location
+		vectorX = matrix.multV2DtoV2D(new V2D(1,0));
+		vectorY = matrix.multV2DtoV2D(new V2D(0,1));
+		var optimum = R3D.optimumAffineTransform(imageA,centerA, imageB,bestB, vectorX,vectorY, compareSize, 0);
+		var matrix = BeliefTest.affineFromResult(optimum);
+	// make match
+	var cell = this;
+	var match = lattice.newMatchFrom(cell, centerA, bestB, matrix);
+	return match;
+}
+BeliefTest.Lattice.prototype.bestMatchFromSettings = function(match, cell, neighbor){
+	var lattice = this;
+	var imageA = lattice.viewA().image();
+	var imageB = lattice.viewB().image();
+	var cellSize = lattice.cellSize();
+	var cellCenter = cell.center();
+	var neighborCenter = neighbor.center();
+	var matrix = match.affine();
+	var pointA = match.pointA();
+	var pointB = match.pointB();
+	var dirA = V2D.sub(neighborCenter,cellCenter);
+	var dirB = matrix.multV2DtoV2D(dirA);
+	var predictB = V2D.add(pointB,dirB);
+	// find expected location of neighbor based on 
+	// console.log(" points: "+dirA+" & "+dirB);
+	var inverse = Matrix.inverse(matrix);
+	// move point b around till it fits to point a
+	// var optimumLocation = R3D.optimumTranslation(imageB,predictB, imageA,neighborCenter, vectorX,vectorY, cellSize, 1,0.1,0.1);
+	var optimumLocation = BeliefTest.optimumLocation(imageA,neighborCenter, imageB,predictB, cellSize,cellSize*4, matrix,   false);
+	var bestB = optimumLocation["location"];
+	// optimum transform
+	var vectorX = inverse.multV2DtoV2D(new V2D(1,0));
+	var vectorY = inverse.multV2DtoV2D(new V2D(0,1));
+	// console.log("B: "+vectorX+" & "+vectorY);
+	var optimum = R3D.optimumAffineTransform(imageB,bestB, imageA,neighborCenter, vectorX,vectorY, cellSize, cellSize*0.5,0.25,0.25);
+		bestB = V2D.add(optimum["O"], bestB);
+	var bestInverse = BeliefTest.affineFromResult(optimum);
+	var bestMatrix = Matrix.inverse(bestInverse);
+	var pathMatch = lattice.newMatchFrom(neighbor, neighborCenter, bestB, bestMatrix, match);
+	return pathMatch;
+}
+CALLED = 0;
+BeliefTest.Lattice.prototype.newMatchFrom = function(cell, pointA, pointB, matrix, originMatch){
+	var lattice = this;
+	var cellSize = lattice.cellSize();
 	var compareSize = lattice.compareSize();
 	var compareCount = compareSize*compareSize;
 	var imageA = lattice.viewA().image();
@@ -917,7 +1338,7 @@ BeliefTest.Lattice.prototype.newMatchFrom = function(cell, pointA, pointB, matri
 		scoreNCC = scoreNCC["value"][0];
 	var scoreSAD = R3D.searchNeedleHaystackImageFlat(needle,null,haystack);
 		scoreSAD = scoreSAD["value"][0];
-	var range = needle.range()["y"];//(compareCount);
+	var range = needle.range()["y"];
 
 	var match = new BeliefTest.Match();
 		match.pointA(pointA);
@@ -926,7 +1347,134 @@ BeliefTest.Lattice.prototype.newMatchFrom = function(cell, pointA, pointB, matri
 		match.scoreNCC(scoreNCC);
 		match.scoreSAD(scoreSAD);
 		match.range(range);
+		var pathA, pathB, baseNCC, baseSAD;
+	if(originMatch){
+		baseNCC = originMatch.scoreNCC();
+		baseSAD = originMatch.scoreSAD();
+		// TODO: THIS SHOULD ACTUALLY BE EXTRACTING PATHS FROM A->A' & B->B`
+		var pointA1 = originMatch.pointA();
+		var pointA2 = match.pointA();
+		var pointB1 = originMatch.pointB();
+		var pointB2 = match.pointB();
+		var paths = BeliefTest.pathTransforms(imageA,pointA1,pointA2, imageB,pointB1,pointB2, compareSize, 1.0);
+		pathA = paths["A"];
+		pathB = paths["B"];
+		// currently ratios:
+		// match.scorePathNCC( scoreNCC/originMatch.scoreNCC() );
+		// match.scorePathSAD( scoreSAD/originMatch.scoreSAD() );
+	}else{ // seed
+		baseNCC = scoreNCC;
+		baseSAD = scoreSAD;
+		pathA = imageA.extractRectFromFloatImage(pointA.x,pointA.y,1.0,null,compareSize*2,compareSize*2, matrix);
+		pathB = imageB.extractRectFromFloatImage(pointB.x,pointB.y,1.0,null,compareSize*2,compareSize*2, null);
+	}
+
+
+// console.log(pathA);
+		// console.log(pathB);
+		// throw "?";
+	//var data = R3D.Dense.comparePathTransforms(imageA,pointA1,pointA2, imageB,pointB1,pointB2, sizeCompare,scaAB, subShow);
+	var scoreNCC = R3D.normalizedCrossCorrelation(pathA,null,pathB,true);
+		scoreNCC = scoreNCC["value"][0];
+	var scoreSAD = R3D.searchNeedleHaystackImageFlat(pathA,null,pathB);
+		scoreSAD = scoreSAD["value"][0];
+	var relativeNCC = scoreNCC/baseNCC;
+	var relativeSAD = scoreSAD/baseSAD;
+		console.log("  PATH SCORES: "+relativeNCC+" & "+relativeSAD+"    of  "+scoreNCC+" & "+scoreSAD);
+	// match.scorePathNCC( relativeNCC );
+	// match.scorePathSAD( relativeSAD );
+	match.scorePathNCC( scoreNCC );
+	match.scorePathSAD( scoreSAD );
+/*
+if(originMatch){
+// var imgA;
+// if(originMatch){
+var imgA1 = imageA.extractRectFromFloatImage(originMatch.pointA().x,originMatch.pointA().y,1.0,null,compareSize*2,compareSize*2, null);
+// }else{
+// var imgA = imageA.extractRectFromFloatImage(match.pointA().x,match.pointA().y,1.0,null,compareSize,compareSize, null);
+// }
+var imgA2 = imageA.extractRectFromFloatImage(match.pointA().x,match.pointA().y,1.0,null,compareSize*2,compareSize*2, null);
+var imgB1 = imageB.extractRectFromFloatImage(originMatch.pointB().x,originMatch.pointB().y,1.0,null,compareSize*2,compareSize*2, null);
+var imgB2 = imageB.extractRectFromFloatImage(match.pointB().x,match.pointB().y,1.0,null,compareSize*2,compareSize*2, null);
+
+var sca = 4.0;
+
+var iii = imgA1;
+var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
+var d = new DOImage(img);
+d.matrix().scale(2.0);
+d.matrix().translate(1000, 100*CALLED);
+GLOBALSTAGE.addChild(d);
+
+var iii = imgA2;
+var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
+var d = new DOImage(img);
+d.matrix().scale(2.0);
+d.matrix().translate(1080, 100*CALLED);
+GLOBALSTAGE.addChild(d);
+
+var iii = imgB1;
+var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
+var d = new DOImage(img);
+d.matrix().scale(2.0);
+d.matrix().translate(1160, 100*CALLED);
+GLOBALSTAGE.addChild(d);
+
+var iii = imgB2;
+var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
+var d = new DOImage(img);
+d.matrix().scale(2.0);
+d.matrix().translate(1240, 100*CALLED);
+GLOBALSTAGE.addChild(d);
+
+
+var iii = pathA;
+var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
+var d = new DOImage(img);
+d.matrix().scale(sca);
+d.matrix().translate(1400, 100*CALLED);
+GLOBALSTAGE.addChild(d);
+
+var iii = pathB;
+var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
+var d = new DOImage(img);
+d.matrix().scale(sca);
+d.matrix().translate(1600, 100*CALLED);
+GLOBALSTAGE.addChild(d);
+
+
+var dd = new DOText(scoreNCC+" | "+scoreSAD, 12, DOText.FONT_ARIAL, 0xFF000000, DOText.ALIGN_LEFT);
+dd.matrix().translate(1800, 20 + 100*CALLED);
+GLOBALSTAGE.addChild(dd);
+
+
+
+++CALLED;
+}
+*/
+
 	return match;
+}
+
+BeliefTest.pathTransforms = function(imageA,pointA1,pointA2, imageB,pointB1,pointB2, inputCompareSize, scaleAtoB){
+	var compareSize = (inputCompareSize!==undefined && inputCompareSize!==null)? inputCompareSize : 11; // size of a cell 
+	scaleAtoB = scaleAtoB!==undefined ? scaleAtoB : 1.0;
+	var sizeA = compareSize;
+	var sizeB = compareSize*scaleAtoB;
+
+	var dirA = V2D.sub(pointA2,pointA1);
+	var dirB = V2D.sub(pointB2,pointB1);
+	var lengthA = dirA.length() + (sizeA + sizeB)*0.5;
+	var lengthB = dirB.length() + (sizeA + sizeB)*0.5;
+
+	var averageLength = (lengthA+lengthB)*0.5;
+	var haystackWidth = Math.round(averageLength);
+	var haystackHeight = 11;
+		haystackWidth = Math.max(haystackWidth,haystackHeight);
+
+	var haystackA = R3D.Dense.extractRectFromPoints(imageA,pointA1,pointA2, sizeA,sizeB, haystackWidth,haystackHeight);
+	var haystackB = R3D.Dense.extractRectFromPoints(imageB,pointB1,pointB2, sizeA,sizeB, haystackWidth,haystackHeight);
+	return {"A":haystackA, "B":haystackB};
 }
 BeliefTest.Lattice.orientationTest = function(cell, match){
 //	console.log(cell)
@@ -982,8 +1530,7 @@ BeliefTest.Lattice.orientationTest = function(cell, match){
 }
 
 BeliefTest.Lattice.prototype.matchValidation = function(cell, match){
-	// forward / reverse consistency
-
+	var lattice = this;
 	// ordering constraints
 	var ordered = BeliefTest.Lattice.orientationTest(cell,match);
 	if(!ordered){
@@ -994,19 +1541,19 @@ BeliefTest.Lattice.prototype.matchValidation = function(cell, match){
 	// var maxDistanceScale = 2.0;
 	var minDistanceScale = 0.25;
 	var maxDistanceScale = 4.0;
-		/*
-		var affine = match.affine();
-		var vectorX = new V2D(1.0,0.0);
-		var vectorY = new V2D(0.0,1.0);
-		vectorX = affine.multV2DtoV2D(vectorX);
-		vectorY = affine.multV2DtoV2D(vectorY);
-		var maxXY = Math.max(vectorX.length(),vectorY.length());
-		var minXY = Math.min(vectorX.length(),vectorY.length());
-			minXY = Math.min(minXY, 1.0/minXY);
-			maxXY = Math.min(maxXY, 1.0/maxXY);
-		minDistanceScale = Math.max(minXY,minDistanceScale);
-		maxDistanceScale = Math.max(maxXY,maxDistanceScale);
-		*/
+	/*
+	var affine = match.affine();
+	var vectorX = new V2D(1.0,0.0);
+	var vectorY = new V2D(0.0,1.0);
+	vectorX = affine.multV2DtoV2D(vectorX);
+	vectorY = affine.multV2DtoV2D(vectorY);
+	var maxXY = Math.max(vectorX.length(),vectorY.length());
+	var minXY = Math.min(vectorX.length(),vectorY.length());
+		minXY = Math.min(minXY, 1.0/minXY);
+		maxXY = Math.min(maxXY, 1.0/maxXY);
+	minDistanceScale = Math.max(minXY,minDistanceScale);
+	maxDistanceScale = Math.max(maxXY,maxDistanceScale);
+	*/
 	// min & max distance constraints
 	var neighbors = cell.neighbors();
 	for(var i=0; i<neighbors.length; ++i){
@@ -1021,13 +1568,21 @@ BeliefTest.Lattice.prototype.matchValidation = function(cell, match){
 			}
 		}
 	}
-	
+	var viewA = lattice.viewA();
+	var viewB = lattice.viewB();
+	var imageA = viewA.image();
+	var imageB = viewB.image();
+	var bestB = match.pointB();
+	if(bestB.x<=0 || bestB.x>=imageB.width() || bestB.y<=0 || bestB.y>=imageB.height()){
+		// console.log("OUTSIDE");
+		return false;
+	}
 
 	// max distance constraint
 
 	// minimum range
 	
-	var minimumRange = 0.05; // TODO: per pixel range 0.01 / 1 is ok, 0.05 / 100 is ok
+	var minimumRange = 0.02; // TODO: per pixel range 0.01 / 1 is ok, 0.05 / 100 is ok
 	// console.log(match.range());
 	if(match.range()<minimumRange){
 		return false;
@@ -1040,13 +1595,37 @@ BeliefTest.Lattice.prototype.matchValidation = function(cell, match){
 	// score constraints
 	var scoreSAD = match.scoreSAD();
 	//if(scoreSAD>0.525){
-	if(scoreSAD>0.25){
+	if(scoreSAD>0.15){
 		return false;
 	}
 	var scoreNCC = match.scoreNCC();
 	if(scoreNCC>0.25){
 		return false;
 	}
+
+	// relative path costs
+	var scorePathSAD = match.scorePathSAD();
+	var scorePathNCC = match.scorePathNCC();
+	var maxPathNCC = 0.50;
+	var maxPathSAD = 0.30;
+	if(scorePathSAD>maxPathSAD){
+		return false;
+	}
+	if(scorePathNCC>maxPathNCC){
+		return false;
+	}
+	// var relativePathSAD = match.scorePathRelativeSAD();
+	// var relativePathNCC = match.scorePathRelativeNCC();
+	// ~2-4
+	// var maxRelativeNCC = 5.0;
+	// var maxRelativeSAD = 2.0;
+	// if(scorePathSAD>maxRelativeSAD){
+	// 	return false;
+	// }
+	// if(scorePathNCC>maxRelativeNCC){
+	// 	return false;
+	// }
+	
 	/*
 		relative path costs
 		
@@ -1111,462 +1690,74 @@ BeliefTest.Lattice.prototype.forEachCell = function(fxn){
 		}
 	}
 }
-BeliefTest.Lattice.prototype.cellsChooseMatch = function(){
-	this.forEachCell(function(cell, i, j, index){
-		cell.applyBestMatch();
-	});
+// BeliefTest.Lattice.prototype.cellsChooseSeedMatch = function(){
+// 	this.forEachCell(function(cell, i, j, index){
+// 		cell.applyBestMatch();
+// 	});
+// }
+BeliefTest.Lattice.prototype.queue = function(){
+	return this._queue;
 }
 BeliefTest.Lattice.prototype.iteration = function(e){
-	console.log("iteration");
 	var lattice = this;
-	var cellSize = this._cellSize;
-	var found = false;
-	var viewA = this.viewA();
-	var viewB = this.viewB();
-	var imageA = viewA.image();
-	var imageB = viewB.image();
-	var ccc = 0;
-var compareN = -1;
-	this.forEachCell(function(cell, i, j, index){
-		if(!found){
-			var hasChanged = cell.hasChanged();
-			var match = cell.match();
-			if(hasChanged && match){
-				var neighbors = cell.neighbors();
-				var cellCenter = cell.center();
-				for(var n=0; n<neighbors.length; ++n){
-					// only create new matches for cells without matches
-					var neighbor = neighbors[n];
-					if(neighbor.match()){
-						continue;
+	var queue = lattice.queue();
+	var list = queue.toArray();
+	queue.clear();
+	console.log("iteration - "+list.length);
+	// setting/replacing best matches
+	for(var i=0; i<list.length; ++i){
+		var cell = list[i];
+		var cellID = cell.id();
+		var neighbors = cell.neighbors();
+		var neighborKeys = Code.keys(neighbors);
+		// finding best match to possibly replace with
+		var bestMatch = cell.match();
+		for(var j=0; j<neighborKeys.length; ++j){
+			var index = neighborKeys[j];
+			var neighbor = neighbors[index];
+			var neighborMatch = neighbor.match();
+			if(neighborMatch){ // has possible path matches
+				var match = neighbor._paths[cellID];
+				if(match){ // valid
+					if(bestMatch==null || match.scoreNCC()<bestMatch.scoreNCC()){ // TODO: LOWEST RELATIVE PATH COSTS
+						bestMatch = match;
 					}
-var show = n==compareN;
-					
-					var neighborCenter = neighbor.center();
-					var matrix = match.affine();
-					//var dirA = V2D.sub(cell.center(),n.center());
-					var pointA = match.pointA();
-					var pointB = match.pointB();
-					var dirA = V2D.sub(neighborCenter,cellCenter);
-					// console.log(dirA+"");
-					var dirB = matrix.multV2DtoV2D(dirA);
-					// console.log(dirB+"");
-					var predictB = V2D.add(pointB,dirB);
-					// find expected location of neighbor based on 
-					var inverse = Matrix.inverse(matrix);
-					// move point b around till it fits to point a
-					
-
-					//var optimumLocation = R3D.optimumTranslation(imageB,predictB, imageA,neighborCenter, vectorX,vectorY, cellSize, 1,0.1,0.1);
-					var optimumLocation = BeliefTest.optimumLocation(imageA,neighborCenter, imageB,predictB, cellSize,cellSize*4, matrix,   show);
-					var bestB = optimumLocation["location"];
-					// TODO: ANY PART IS OUTSIDE IMAGE B
-					if(bestB.x<=0 || bestB.x>=imageB.width() || bestB.y<=0 || bestB.y>=imageB.height()){
-						// console.log("OUTSIDE");
-						return;
-					}
-
-					// optimum transform
-					var vectorX = inverse.multV2DtoV2D(new V2D(1,0));
-					var vectorY = inverse.multV2DtoV2D(new V2D(0,1));
-					var optimum = R3D.optimumAffineTransform(imageB,bestB, imageA,neighborCenter, vectorX,vectorY, cellSize, cellSize*0.5,0.25,0.25);
-						bestB = V2D.add(optimum["O"], bestB);
-					var bestInverse = BeliefTest.affineFromResult(optimum);
-					var bestMatrix = Matrix.inverse(bestInverse);
-					
-					// show it all
-					
-// if(false){
-if(show){
-					// neighbor relationship
-					var d = new DO();
-					d.graphics().setLine(1.0,0x9900FF33);
-					d.graphics().beginPath();
-					d.graphics().moveTo(cellCenter.x,cellCenter.y);
-					d.graphics().lineTo(neighborCenter.x,neighborCenter.y);
-					d.graphics().strokeLine();
-					d.graphics().endPath();
-					GLOBALSTAGE.addChild(d);
-
-					// me
-					var d = new DO();
-					d.graphics().setLine(2.0,0x990033FF);
-					d.graphics().beginPath();
-					d.graphics().drawCircle(imageA.width()+pointB.x,0+pointB.y, 4.0);
-					d.graphics().strokeLine();
-					d.graphics().endPath();
-					GLOBALSTAGE.addChild(d);
-
-					// predicted
-					var d = new DO();
-					d.graphics().setLine(2.0,0x9900FF33);
-					d.graphics().beginPath();
-					d.graphics().drawCircle(imageA.width()+predictB.x,0+predictB.y, 5.0);
-					d.graphics().strokeLine();
-					d.graphics().endPath();
-					GLOBALSTAGE.addChild(d);
-
-					// resulted
-					var d = new DO();
-					d.graphics().setLine(1.0,0x99FF3300);
-					d.graphics().beginPath();
-					d.graphics().drawCircle(imageA.width()+bestB.x,0+bestB.y, 7.0);
-					d.graphics().strokeLine();
-					d.graphics().endPath();
-					GLOBALSTAGE.addChild(d);
-
-					// predicted area
-					var bImage = imageB.extractRectFromFloatImage(predictB.x,predictB.y,1.0,null,cellSize*2,cellSize*2, null);
-					// neighbor
-					var nImage = imageA.extractRectFromFloatImage(neighborCenter.x,neighborCenter.y,1.0,null,cellSize,cellSize, null);
-					// result
-					var oImage = imageB.extractRectFromFloatImage(bestB.x,bestB.y,1.0,null,cellSize,cellSize, bestInverse);
-
-					var iii = bImage;
-					var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
-					var d = new DOImage(img);
-					d.matrix().scale(3.0);
-					d.matrix().translate(1200, 10);
-					GLOBALSTAGE.addChild(d);
-
-
-					var iii = nImage;
-					var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
-					var d = new DOImage(img);
-					d.matrix().scale(3.0);
-					d.matrix().translate(1200, 200);
-					GLOBALSTAGE.addChild(d);
-
-
-					var iii = oImage;
-					var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
-					var d = new DOImage(img);
-					d.matrix().scale(3.0);
-					d.matrix().translate(1400, 200);
-					GLOBALSTAGE.addChild(d);
-
-
-
-
-
-}
-					// console.log("DIFF: "+V2D.distance(predictB,bestB));
-					// console.log(" - "+neighborCenter);
-
-
-					// console.log("    > "+neighbor._col+","+neighbor._row);
-					var match = lattice.newMatchFrom(neighbor, neighborCenter, bestB, bestMatrix);
-					if(lattice.matchValidation(cell,match)){
-						// console.log(" - "+neighborCenter);
-						neighbor.addPutativeMatch(match);
-					}
-
-					// found = true;
-					// break;
 				}
-				// }
-				// ++ccc;
 			}
 		}
-	});
-	
-	// reset ...
-	// this.forEachCell(function(cell, i, j, index){
-	// 	var hasChanged = cell.hasChanged();
-	// 	if(hasChanged){
-	// 		cell.hasChanged(false);
-	// 	}
-	// });
-
-	// finish expansion
-	lattice.cellsChooseMatch();
-
-	lattice.updateChangedCells();
-
-	// reset votes
-	lattice.forEachCell(function(cell, i, j, index){
-		cell.resetVotes();
-	});
-	
-	
-	lattice.cellsCastVotes();
-
-
-	lattice.dropOutliers();
-/*
-	// EXPAND / DILATE
-	for each cell
-		for each neighbor
-			if neighbor does not have a 
-				find best neighbor match
-				append match to neighbor putatives
-	for each cell
-		if has putative matches
-			pick best putative
-	
-	// PROCESS BELIEF
-	for each cell
-		A) GET VALUES FROM NEIGHBORS
-		   CALCULATE EXPECTED VALUE
-    for each cell
-		B) GET EXPECTED VALUES FROM NEIGHBORS
-		   CALCULATE IF INLIER OR OUTLIER
-		C) VOTE ON NEIGHBORS AS TO GOOD/BAD ESTIMATION
-
-	// RELAX/RETRACT
-	calculate globals
-		- F
-	for each cell
-		C) DROP IF OUTLIER
-
-	SET VALUES [when point is created]
-
-*/
-	// reset
-
-	// STOPPING CONDITIONS ?
-	/*
-
-	*/
-}
-
-BeliefTest.Lattice.prototype.cellsCastVotes = function(){
-	// get neighbor's expected values & vote
-	var lattice = this;
-	lattice.forEachCell(function(cell, i, j, index){
-		var match = cell.match();
-		var compare = cell._compare;
-		if(match && compare){
-			// use compare neighbors -- SHOULD be the same as neighbors w/ matches
-			//var neighbors = cell.neighbors();
-			var compareNeighbors = compare._compareNeighbors;
-			var compareAffine = compare._compareAffine;
-			var compareTranslate = compare._compareTranslate;
-			var compareNCC = compare._compareNCC;
-			var compareSAD = compare._compareSAD;
-
-			var arrayAffine = compareAffine["list"];
-			var meanAffine = compareAffine["mean"];
-			var sigmaAffine = compareAffine["sigma"];
-
-			var arrayTranslate = compareTranslate["list"];
-			var meanTranslate = compareTranslate["mean"];
-			var sigmaTranslate = compareTranslate["sigma"];
-
-			var arraySAD = compareSAD["list"];
-			var meanSAD = compareSAD["mean"];
-			var sigmaSAD = compareSAD["sigma"];
-
-			var arrayNCC = compareNCC["list"];
-			var meanNCC = compareNCC["mean"];
-			var sigmaNCC = compareNCC["sigma"];
-
-			var sigmaLimitAffine = 1.5;
-				//var sigmaLimitAffine = 1.414;
-				// var sigmaLimitAffine = 1.414;
-			var sigmaLimitTranslate = 1.5;
-				// var sigmaLimitTranslate = 1.414;
-			var sigmaLimitNCC = 2.0;
-			var sigmaLimitSAD = 2.0;
-			// var sigmaLimitNCC = 1.5;
-			// var sigmaLimitSAD = 1.5;
-
-			var sigmaLimitGroupAffine = 1.414;
-
-			var separateAffine = Code.separateArrayConstant(arrayAffine, meanAffine + sigmaAffine*sigmaLimitAffine);
-				separateAffine = separateAffine["list"];
-			var separateTranslate = Code.separateArrayConstant(arrayTranslate, meanTranslate + sigmaTranslate*sigmaLimitTranslate);
-				separateTranslate = separateTranslate["list"];
-			var separateNCC = Code.separateArrayConstant(arrayNCC, meanNCC + sigmaNCC*sigmaLimitNCC);
-				separateNCC = separateNCC["list"];
-			var separateSAD = Code.separateArrayConstant(arraySAD, meanSAD + sigmaSAD*sigmaLimitSAD);
-				separateSAD = separateSAD["list"];
-
-			for(var n=0; n<compareNeighbors.length; ++n){
-				var neighbor = compareNeighbors[n];
-				var keepAffine = separateAffine[n];
-				var keepTranslate = separateTranslate[n];
-				var keepNCC = separateNCC[n];
-				var keepSAD = separateSAD[n];
-
-				if(keepAffine && keepTranslate && keepNCC && keepSAD){
-					neighbor.addVote(cell, 1);
-				}else{
-					neighbor.addVote(cell, 0);
+		if(bestMatch && bestMatch!=cell.match()){ // match exists and is better
+			var keep = true;
+			var prevMatch = cell.previousMatch();
+			if(!cell.match() && prevMatch){ // 
+				//console.log("measure how different match is from previous match before continuing to prevent loops");
+				var distance = V2D.distance(bestMatch.pointB(), prevMatch.pointB());
+				console.log("      >>> check keep distance: "+distance);
+				if(distance<1){ // 1~2 | <10% size of cell
+					keep = false;
 				}
-
-/*
-				var hist = Code.histogram(compareAffine, null, 10);
-					// var hist = Code.histogram(compareTranslate, null, 10);
-					var infoAffine = Code.infoArray(compareAffine);
-
-				console.log("count: "+compareAffine.length+" @ "+meanAffine+" "+" +/- "+stdAffine+"  : ["+infoAffine["min"]+","+infoAffine["max"]+"] ("+infoAffine["range"]+") ");
-					Code.printHistogram(hist["histogram"]);
-*/
 			}
-		}
-	});
-}
-BeliefTest.Lattice.prototype.updateChangedCells = function(){ // update belief / stats 
-	var smallerFirst = function(a,b){
-		return a<b ? -1 : 1;
+			if(keep){
+				cell.setMatch(bestMatch);
+			}
+		}	
 	}
-	var lattice = this;
-	lattice.forEachCell(function(cell, i, j, index){
-		if(cell.hasChanged()){
-			cell.hasChanged(false);
-			var match = cell.match();
-			if(match){
-				// console.log(count+"  CELL: "+i+","+j+" @ "+cell.center());
-				// console.log("               "+match.pointA());
-				var neighbors = cell.neighbors();
-				var cellCenter = cell.center();
-				// hists:
-				var compareNeighbors = [];
-				var compareAffine = [];
-				var compareTranslate = [];
-				var compareNCC = [];
-				var compareSAD = [];
-				var compareCostNCC = [];
-				var compareCostSAD = [];
-				for(var n=0; n<neighbors.length; ++n){
-					var neighbor = neighbors[n];
-					var neighborMatch = neighbor.match();
-					if(neighborMatch){
-						// console.log("process match");
-						compareNeighbors.push(neighbor);
 
-						// affine compare
-						var compare = BeliefTest.affineCompare(match.affine(), neighborMatch.affine());
-							compare = compare["error"];
-						compareAffine.push(compare);
-
-						// translation compare
-						var compare = BeliefTest.translationCompare(cell, match, neighbor, neighborMatch);
-							compare = compare["error"];
-						compareTranslate.push(compare);
-
-						// ordering 'spread' --- angles are loosened/tightened?
-						// 
-
-						// forward-backward-compare - uniticity
-
-						// ordering compare 
-
-						// ncc compare
-						compareNCC.push(neighborMatch.scoreNCC());
-						// sad compare
-						compareSAD.push(neighborMatch.scoreSAD());
-						// pair cost NCC
-							// ...
-						// pair cost SAD
-							// ...
-						// group vs single affine compare
-							// ..
-					}
-				}
-				// can include self in some estimates
-				compareNCC.push(match.scoreNCC());
-				compareSAD.push(match.scoreSAD());
-
-				var meanAffine = Code.min(compareAffine);
-				var stdAffine = Code.stdDev(compareAffine,meanAffine);
-				var meanTranslate = Code.min(compareTranslate);
-				var stdTranslate = Code.stdDev(compareTranslate,meanTranslate);
-				
-				var meanNCC = Code.min(compareNCC);
-				var stdNCC = Code.stdDev(compareNCC,meanNCC);
-				var meanSAD = Code.min(compareSAD);
-				var stdSAD = Code.stdDev(compareSAD,meanSAD);
-
-				// var hist = Code.histogram(compareSAD, null, 10);
-				// var hist = Code.histogram(compareNCC, null, 10);
-
-				// group affine
-					// how neighbor cells change (should be unityish)
-				var compareGroupAffine = lattice.groupAffineCompare(cell, match);
-
-				var compare = {};
-				compare._compareNCC = {
-					"list": compareNCC,
-					"mean": meanNCC,
-					"sigma": stdNCC,
-				};
-				compare._compareSAD = {
-					"list": compareSAD,
-					"mean": meanSAD,
-					"sigma": stdSAD,
-				};
-				compare._compareAffine = {
-					"list": compareAffine,
-					"mean": meanAffine,
-					"sigma": stdAffine,
-				};
-				compare._compareTranslate = {
-					"list": compareTranslate,
-					"mean": meanTranslate,
-					"sigma": stdTranslate,
-				};
-				compare._compareGroupAffine = compareGroupAffine;
-				compare._compareNeighbors = compareNeighbors;
-
-				cell._compare = compare;
-			}
-		}
-	});
-
-}
-BeliefTest.Lattice.prototype.dropOutliers = function(){ // drop predicted outliers
-	var minimumVotePercentKeep = 0.50;
-	var lattice = this;
-	lattice.forEachCell(function(cell, i, j, index){
+	// dropping bad matches
+	for(var i=0; i<list.length; ++i){
+		var cell = list[i];
 		var match = cell.match();
 		if(match){
-			var voteTotal = cell.voteCount();
-			var votePercent = cell.votePercent();
-			// console.log(votePercent);
-			if(voteTotal>2){ // minimum = self + 2 others
-				if(votePercent>minimumVotePercentKeep){
-					// keep
-				}else{
-					// drop
-					cell.dropMatch();
-				}
-			}
-			
-		}
-	});
-
-	// drop islands
-	lattice.forEachCell(function(cell, i, j, index){
-		var match = cell.match();
-		if(match){
-			var neighbors = cell.neighbors();
-			var island = 0;
-			for(var n=0; n<neighbors.length; ++n){
-				var neighbor = neighbors[n];
-				if(neighbor.match()){
-					++island;
-				}
-			}
-			if(island<1){
+			var info = cell.voteInfo();
+			var count = info["count"];
+			var percent = info["percent"];
+			// console.log("VOTES: "+count+" | "+percent);
+			if(count>1 && percent<0.50){
 				cell.dropMatch();
 			}
 		}
-	});
-
+	}
 }
-/*
-cutoff:
-half-normal ----- > sigma multiplier between 1 & 2 .... like 1.414 ~ 1.6 ---- 1.5
-50.0% = 0.68
-68.0% = 1.00
-84.1% = 1.414
-86.0% = 1.50
-90.0% = 1.65
-95.0% = 2.00
-99.7% = 3.00
-*/
+
 
 BeliefTest.affineCompare = function(matrixA, matrixB){ // error in affine transforms
 	var vectorX = new V2D(1.0,0.0);

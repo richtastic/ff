@@ -88,7 +88,7 @@ MNCC = Cov(X,Y)/[Var(X) + Var(Y)]  ???
 
 
 
-
+this._lattice.queue().push(this);
 
 
 
@@ -312,6 +312,39 @@ GRADIENT-SIMILARITY METRIC
 
 
 diffeomophic transform - PDE fluid
+
+
+
+
+
+Horn-Schunk Optical Flow
+	brightness constancy
+	regularization
+	coarse to fine
+	bayesian flow
+	dI/dx * u + dI/dy * v + dI/dt = 0
+
+	E(x,y) = Ix * u + Iy * v + It + lambda*(ux^2 + uy^2 + vx^2 + vy^2)
+	min: E
+
+	Lukas-Kanade
+	Lucas-Kanade
+
+	https://github.com/benshih/MotionTracking/blob/master/q1/LucasKanade.m
+	https://se.mathworks.com/matlabcentral/fileexchange/24677-lucas-kanade-affine-template-tracking?focused=5139141&tab=function
+	https://www.mathworks.com/matlabcentral/fileexchange/37084-lucas-kanade-optical-flow-method-with-weighted-window-approach-for-3-d-images?focused=5234239&tab=function
+	https://gitlab.oit.duke.edu/dpb6/slurm_iat/blob/84f7be8700f1d843a7e305eae215a696a3b36487/iatool/rigid/iat_LucasKanade.m
+	
+	http://www.cs.toronto.edu/~fleet/research/Papers/flowChapter05.pdf
+	https://github.com/tyleeer/Optical-Flow/tree/master/middlebury
+	http://image.diku.dk/imagecanon/material/HornSchunckOptical_Flow.pdf
+
+
+
+	http://www.sci.utah.edu/~gerig/CS6320-S2013/Materials/CS6320-CV-S2012-OpticalFlow-I.pdf
+	http://image.diku.dk/imagecanon/material/HornSchunckOptical_Flow.pdf
+	http://cs.brown.edu/~dqsun/pubs/eccv2008.pdf
+	https://homes.cs.washington.edu/~shapiro/EE596/notes/Optical_Flow.pdf
 
 
 

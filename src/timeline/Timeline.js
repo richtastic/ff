@@ -17,6 +17,49 @@ function Timeline(){
 	this._keyboard.addFunction(Keyboard.EVENT_KEY_UP, this.keyboardFxnKeyUp, this);
 	this._keyboard.addListeners();
 
+console.log(";pad ///");
+	var fileLoader = new FileLoader("./",["data.yaml"],this,this._handleFilesLoadedFxn);
+	fileLoader.load();
+	// base,arr, ctx,cmp,pro)
+
+}
+Timeline.prototype._handleFilesLoadedFxn = function(e){
+	//console.log(e);
+	var contents = e["contents"][0];
+	var yaml = YAML.parse(contents);
+	console.log(yaml);
+	var timeline = yaml[0]["timeline"];
+	// console.log(timeline);
+	this.renderTimeline(timeline);
+}
+Timeline.prototype.renderTimeline = function(timeline){
+	var minDate = null;
+	var maxDate = null;
+	for(var i=0; i<timeline.length; ++i){
+		var item = timeline[i];
+		var dateStart = item["dateStart"];
+		if(Code.isString(dateStart)){
+			//console.log(dateStart);
+			var broken = dateStart.split("-");
+			// console.log(broken);
+			var year = broken[0];
+			if(year==""){
+				broken.shift();
+				year = broken[0];
+				year = -parseInt(year);
+			}else{
+				year = parseInt(year);
+			}
+			console.log(year);
+			if(minDate===null || year<minDate){
+				minDate = year;
+			}
+			if(maxDate===null || year>maxDate){
+				maxDate = year;
+			}
+		}
+	}
+	console.log(minDate+" => "+maxDate);
 }
 Timeline.prototype.keyboardFxnKeyUp = function(e){
 	// console.log("key up "+e);
