@@ -2213,16 +2213,50 @@ R3D.fundamentalMatrixNonlinear = function(fundamental,pointsA,pointsB){
 }
 
 // F nonlinear
-R3D.fundamentalFromUnnormalized = function(pointsA,pointsB){
+R3D.fundamentalFromUnnormalized = function(pointsA,pointsB, skipNonlinear){
 	var pointsANorm = R3D.calculateNormalizedPoints([pointsA]);
 	var pointsBNorm = R3D.calculateNormalizedPoints([pointsB]);
 	var F = R3D.fundamentalMatrix(pointsANorm.normalized[0],pointsBNorm.normalized[0]);
-
 	F = Matrix.mult(F, pointsANorm.forward[0]);
 	F = Matrix.mult(Matrix.transpose(pointsBNorm.forward[0]), F);
-
-	F = R3D.fundamentalMatrixNonlinear(F, pointsA, pointsB);
+	if(!skipNonlinear){
+		F = R3D.fundamentalMatrixNonlinear(F, pointsA, pointsB);
+	}
 	return F;
+}
+R3D.fundamentalError = function(matrixFfwd,matrixFrev,pointsA,pointsB){
+	var pointA = new V3D();
+	var pointB = new V3D();
+	var errors = [];
+	// var matrixFfwd = F;
+	// var matrixFrev = R3D.fundamentalInverse(matrixFfwd);
+	for(i=0; i<pointsA.length; ++i){
+		var pA = pointsA[i];
+		var pB = pointsB[i];
+		pointA.set(pA.x,pA.y,1.0);
+		pointB.set(pB.x,pB.y,1.0);
+		var lineA = R3D.lineRayFromPointF(matrixFfwd, pointA);
+		var lineB = R3D.lineRayFromPointF(matrixFrev, pointB);
+		var distA = Code.distancePointRay2D(lineA.org,lineA.dir, pointB);
+		var distB = Code.distancePointRay2D(lineB.org,lineB.dir, pointA);
+		var error = distA*distA + distB*distB;
+		error = Math.sqrt(error);
+		errors.push(error);
+	}
+	var mean = Code.min(errors);
+	var sigma = Code.stdDev(errors,mean);
+	return {"mean":mean, "sigma":sigma};
+}
+R3D.fundamentalErrorSingle = function(matrixFfwd,matrixFrev,pA,pB){
+	var pointA = new V3D(pA.x,pA.y,1.0);
+	var pointB = new V3D(pB.x,pB.y,1.0);
+	var lineA = R3D.lineRayFromPointF(matrixFfwd, pointA);
+	var lineB = R3D.lineRayFromPointF(matrixFrev, pointB);
+	var distA = Code.distancePointRay2D(lineA.org,lineA.dir, pointB);
+	var distB = Code.distancePointRay2D(lineB.org,lineB.dir, pointA);
+	var error = distA*distA + distB*distB;
+	error = Math.sqrt(error);
+	return {"error":error};
 }
 // ------------------------------------------------------------------------------------------- drawling utilities
 R3D.drawPointAt = function(pX,pY, r,g,b, rad){

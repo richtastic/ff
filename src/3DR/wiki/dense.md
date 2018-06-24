@@ -94,6 +94,18 @@ this._lattice.queue().push(this);
 
 
 
+half-normal ----- > sigma multiplier between 1 & 2 .... like 1.414 ~ 1.6 ---- 1.5
+50.0% = 0.68
+68.0% = 1.00
+84.1% = 1.414
+86.0% = 1.50
+90.0% = 1.65
+95.0% = 2.00
+99.7% = 3.00
+
+
+
+
 
 
 

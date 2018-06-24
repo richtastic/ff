@@ -181,17 +181,28 @@ project typical numbers:
 
 APP TODO:
 
+x display groupings
+
+- check keep distance ... keep track of other changing things
+
+separate:
+- 4-neighbor matches
+- 8-neighbor voting
+
 - how to prevent/recover from bad estimates when groups meet
+
+- monotonocity
 
 - forward backward validation
 
 - uniquness dropping
 
-- show object flow [image flow | field]
+x show object flow [image flow | field]
 
 - matrix image extract error
 
-- using affing transorm vs prediction for filtering bad points
+- using affing transform vs prediction for filtering bad points
+	=> is this not translation ?
 
 
 - reduce calculation time by only updating based on only changed elements?

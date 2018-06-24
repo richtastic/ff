@@ -78,6 +78,8 @@ BeliefTest.prototype._handleKeyboardDown = function(e){
 		lattice.iteration();
 	}else if(e.keyCode==Keyboard.KEY_ENTER){
 		this.drawLattice();
+	}else if(e.keyCode==Keyboard.KEY_LET_P){
+		this.createLabelGroups();
 	}
 }
 BeliefTest.prototype._handleGetMatchesComplete = function(data){
@@ -351,8 +353,8 @@ peaks.sort( function(a,b){ return a.z<b.z ? -1 : 1; } );
 		// pointA.scale(imageA.Width,imageAHeight);
 		// pointB.scale(imageBWidth,imageBHeight);
 		// if(true){
-		if(i==9){
-		// if(i<10){
+		// if(i==9){
+		if(i<10){
 // if(i==2){
 		// if(i==4){
 		// if(i==6){
@@ -505,12 +507,53 @@ BeliefTest.prototype.drawLattice = function(e){ // TODO: ERROR THROWN -- likely 
 				d.graphics().strokeLine();
 				d.graphics().endPath();
 				d.matrix().translate(pA.x,pA.y);
-				d.matrix().translate(1200,0);
+				d.matrix().translate(imageAWidth+imageBWidth,0);
 				display.addChild(d);
 
 			}
 		}
 	}
+	/*
+	// show labels
+	var colors = [];
+	for(var j=0; j<countY; ++j){
+		for(var i=0; i<countX; ++i){
+			var cell = lattice.cellFromColRow(i,j);
+			var match = cell.match();
+			if(match){
+				var label = cell.label();
+				if(label<0){
+					continue;
+				}
+				while(label>=colors.length){
+					var color = Code.getColARGBFromFloat(1.0, Math.random(),Math.random(),Math.random());
+					colors.push( color );
+				}
+				var color = colors[label];
+				// console.log(label,color);
+				// console.log("DRAW")
+				// crate vector
+				// var pA = match.pointA();
+				// var pB = match.pointB();
+				// var dAB = V2D.sub(pB,pA);
+				// console.log(dAB.length());
+				// draw arrow
+				var d = new DO();
+				// d.graphics().setLine(1.0,0x99000099);
+				d.graphics().setFill(color);
+				d.graphics().beginPath();
+				d.graphics().drawRect(i*cellSize*displayScale,j*cellSize*displayScale, cellSize*displayScale,cellSize*displayScale);
+				d.graphics().fill();
+				// d.graphics().strokeLine();
+				d.graphics().endPath();
+				d.matrix().translate(imageAWidth+imageBWidth+imageBWidth,0);
+				// d.matrix().translate(imageAWidth+imageBWidth,0);
+				display.addChild(d);
+
+			}
+		}
+	}
+	*/
 
 	// show matches:
 var dCount = 0;
@@ -577,6 +620,77 @@ break;
 	}
 	// 
 }
+
+BeliefTest.prototype.createLabelGroups = function(e){
+	var lattice = this._lattice;
+	// var fxnB = function(neighbor, index){
+	// reset all labels
+	lattice.forEachCell(function(cell, i, j, index){
+		cell.label(-1);
+	});
+	BeliefTest.Cell.resetLabel();
+
+	lattice.forEachCell(function(cell, i, j, index){
+		var label = cell.label();
+		var match = cell.match();
+		if(match && label<0){
+			// console.log(label);
+			label = BeliefTest.Cell.nextLabel();
+			console.log("START ..."+label);
+			var queue = []; // TODO: UNIQUE QUEUE
+			queue.push(cell);
+			var iterations = 0;
+			while(queue.length>0){
+				if(iterations%100==0){
+					// console.log("iterations: "+iterations);
+				}
+				var c = queue.shift();
+				var indexC = c.id();
+				if(c.label()<0){ // don't redo
+					c.label(label);
+					c.forEachNeighbor(function(n,indexN){ // try 4-connected
+						if(n.match() && n.label()<0){
+							var voteCN = c._votes[indexN];
+							var voteNC = n._votes[indexC];
+							// console.log(" exists: "+voteCN+" | "+voteNC);
+							if(voteCN==1 && voteNC==1){
+								queue.push(n);
+							}
+						}
+					});
+				}
+				++iterations;
+			}
+			console.log(" total iterations: "+iterations);
+		}
+	});
+	// console.log("out label: "+label);
+	/*
+	
+	lattice.forEachCell(function(cell, i, j, index){
+		var label = cell.label();
+
+		cell.forEachNeighbor(){
+
+		}
+		if(label<-1){
+			label = BeliefTest.Cell.nextLabel();
+		}
+		cell.label(label);
+	});
+	*/
+	// for(var j=0; j<countY; ++j){
+	// 	for(var i=0; i<countX; ++i){
+	// 		var cell = lattice.cellFromColRow(i,j);
+	// 		// good match ?
+	// 		var match = cell.match();
+	// 		if(match){
+	// 			//
+	// 		}
+	// 	}
+	// }
+}
+
 BeliefTest.prototype.handleEnterFrame = function(e){
 	//console.log(e);
 }
@@ -619,8 +733,11 @@ BeliefTest.Cell = function(lattice, i,j, center){
 }
 BeliefTest.Cell._ID = 0;
 BeliefTest.Cell._LABEL = 0;
+BeliefTest.Cell.resetLabel = function(){
+	BeliefTest.Cell._LABEL = 0;
+}
 BeliefTest.Cell.nextLabel = function(){
-	return ++BeliefTest.Cell._LABEL;
+	return BeliefTest.Cell._LABEL++;
 }
 BeliefTest.Cell.prototype.id = function(){
 	return this._id;
@@ -711,6 +828,16 @@ BeliefTest.Cell.prototype.previousMatch = function(previousMatch){
 		this._previousMatch = previousMatch;
 	}
 	return this._previousMatch;
+}
+BeliefTest.Cell.prototype.forEachNeighbor = function(fxn){
+	var cell = this;
+	var neighbors = cell._neighbors;
+	var neighborKeys = Code.keys(neighbors);
+	for(var i=0; i<neighborKeys.length; ++i){
+		var index = neighborKeys[i];
+		var neighbor = neighbors[index];
+		fxn(neighbor, index);
+	}
 }
 BeliefTest.Cell.prototype.setMatch = function(newMatch){
 	// console.log("setMatch",newMatch);
@@ -817,11 +944,15 @@ BeliefTest.Cell.prototype.updateMetrics = function(){
 	var metricSAD = [];
 	var metricPathNCC = [];
 	var metricPathSAD = [];
+	var metricRelativePathNCC = [];
+	var metricRelativePathSAD = [];
 	// append metrics
 	metricNCC.push(match.scoreNCC());
 	metricSAD.push(match.scoreSAD());
 	metricPathNCC.push(match.scorePathNCC());
 	metricPathSAD.push(match.scorePathSAD());
+	metricRelativePathNCC.push(match.scoreRelativePathNCC());
+	metricRelativePathSAD.push(match.scoreRelativePathSAD());
 	for(var i=0; i<neighborKeys.length; ++i){
 		var index = neighborKeys[i];
 		var neighbor = neighbors[index];
@@ -843,6 +974,10 @@ BeliefTest.Cell.prototype.updateMetrics = function(){
 			metricPathNCC.push(neighborMatch.scorePathNCC());
 			// pair cost SAD
 			metricPathSAD.push(neighborMatch.scorePathSAD());
+			// relative cost NCC
+			metricRelativePathNCC.push(neighborMatch.scoreRelativePathNCC());
+			// relative cost SAD
+			metricRelativePathSAD.push(neighborMatch.scoreRelativePathSAD());
 		} // TODO: OTHERS = ordering compare, group vs single affine compare, ordering 'spread' --- angles are loosened/tightened?, forward-backward-compare - uniticity
 	}
 
@@ -861,6 +996,11 @@ BeliefTest.Cell.prototype.updateMetrics = function(){
 	var stdPathNCC = Code.stdDev(metricPathNCC,meanPathNCC);
 	var meanPathSAD = Code.min(metricPathSAD);
 	var stdPathSAD = Code.stdDev(metricPathSAD,meanPathSAD);
+
+	var meanRelativePathSAD = Code.min(metricRelativePathSAD);
+	var stdRelativePathSAD = Code.stdDev(metricRelativePathSAD,meanRelativePathSAD);
+	var meanRelativePathNCC = Code.min(metricRelativePathNCC);
+	var stdRelativePathNCC = Code.stdDev(metricRelativePathNCC,meanRelativePathNCC);
 	// group affine
 	// var compareGroupAffine = lattice.groupAffineCompare(cell, match);
 	var metrics = {};
@@ -894,6 +1034,16 @@ BeliefTest.Cell.prototype.updateMetrics = function(){
 		"mean": meanPathSAD,
 		"sigma": stdPathSAD,
 	};
+	metrics["sadPathRelative"] = {
+		"list": metricRelativePathSAD,
+		"mean": meanRelativePathSAD,
+		"sigma": stdRelativePathSAD,
+	};
+	metrics["nccPathRelative"] = {
+		"list": metricRelativePathNCC,
+		"mean": meanRelativePathNCC,
+		"sigma": stdRelativePathNCC,
+	};
 	// compare._compareGroupAffine = compareGroupAffine;
 	this._metrics = metrics;
 	this._votes = [];
@@ -918,6 +1068,8 @@ BeliefTest.voteFromMetric = function(metrics, neighborMatch, neighborCell, sourc
 	var metricSAD = metrics["sad"];
 	var metricPathNCC = metrics["nccPath"];
 	var metricPathSAD = metrics["sadPath"];
+	var metricRelativePathNCC = metrics["nccPathRelative"];
+	var metricRelativePathSAD = metrics["sadPathRelative"];
 		var meanAffine = metricAffine["mean"];
 		var sigmaAffine = metricAffine["sigma"];
 		var meanTranslate = metricTranslate["mean"];
@@ -930,6 +1082,11 @@ BeliefTest.voteFromMetric = function(metrics, neighborMatch, neighborCell, sourc
 		var sigmaPathSAD = metricPathSAD["sigma"];
 		var meanPathNCC = metricPathNCC["mean"];
 		var sigmaPathNCC = metricPathNCC["sigma"];
+
+		var meanRelativePathNCC = metricRelativePathNCC["mean"];
+		var sigmaRelativePathNCC = metricRelativePathNCC["sigma"];
+		var meanRelativePathSAD = metricRelativePathSAD["mean"];
+		var sigmaRelativePathSAD = metricRelativePathSAD["sigma"];
 	// var sigmaLimitAffine = 1.414;
 	// var sigmaLimitTranslate = 1.414;
 	var sigmaLimitAffine = 1.9;
@@ -940,6 +1097,8 @@ BeliefTest.voteFromMetric = function(metrics, neighborMatch, neighborCell, sourc
 	var sigmaLimitPathSAD = 3.0;
 	// var sigmaLimitPathNCC = 1.5;
 	// var sigmaLimitPathSAD = 1.5;
+	var sigmaLimitRelativePathNCC = 3.0;
+	var sigmaLimitRelativePathSAD = 3.0;
 	// var scoreAffine = neighborMatch.scoreAffine();
 	// var scoreTranslate = neighborMatch.scoreTranslate();
 	var compare = BeliefTest.affineCompare(sourceMatch.affine(), neighborMatch.affine());
@@ -950,6 +1109,8 @@ BeliefTest.voteFromMetric = function(metrics, neighborMatch, neighborCell, sourc
 	var scoreSAD = neighborMatch.scoreSAD();
 	var scorePathNCC = neighborMatch.scorePathNCC();
 	var scorePathSAD = neighborMatch.scorePathSAD();
+	var scoreRelativePathNCC = neighborMatch.scoreRelativePathNCC();
+	var scoreRelativePathSAD = neighborMatch.scoreRelativePathSAD();
 	// crossing
 	var keepAffine = true; // var keepAffine = scoreAffine < meanAffine + sigmaAffine*sigmaLimitAffine;
 	var keepTranslate = true; // var keepTranslate = scoreTranslate < meanTranslate + sigmaTranslate*sigmaLimitAffine;
@@ -957,7 +1118,9 @@ BeliefTest.voteFromMetric = function(metrics, neighborMatch, neighborCell, sourc
 	var keepSAD = scoreSAD < meanSAD + sigmaSAD*sigmaLimitSAD;
 	var keepPathNCC = scorePathNCC < meanPathNCC + sigmaPathNCC*sigmaLimitPathNCC;
 	var keepPathSAD = scorePathSAD < meanPathSAD + sigmaPathSAD*sigmaLimitPathSAD;
-	if(keepAffine && keepTranslate && keepNCC && keepSAD && keepPathNCC && keepPathSAD){
+	var keepRelativePathNCC = scoreRelativePathNCC < meanRelativePathNCC + sigmaRelativePathNCC*sigmaLimitRelativePathNCC;
+	var keepRelativePathSAD = scoreRelativePathSAD < meanRelativePathSAD + sigmaRelativePathSAD*sigmaLimitRelativePathSAD;
+	if(keepAffine && keepTranslate && keepNCC && keepSAD && keepPathNCC && keepPathSAD && keepRelativePathNCC && keepRelativePathSAD){
 		return 1;
 	}
 	return 0;
@@ -1100,6 +1263,8 @@ BeliefTest.Match = function(){
 	this._scoreNCC = null;
 	this._scorePathSAD = null;
 	this._scorePathNCC = null;
+	this._scoreRelativePathNCC = null;
+	this._scoreRelativePathSAD = null;
 	// this._vectorSiftScore = null;
 	// this._vectorSadScore = null;
 	this._scoreGrad = null;
@@ -1148,6 +1313,18 @@ BeliefTest.Match.prototype.scorePathSAD = function(scorePathSAD){
 	}
 	return this._scorePathSAD;
 }
+BeliefTest.Match.prototype.scoreRelativePathNCC = function(scoreRelativePathNCC){
+	if(scoreRelativePathNCC!==undefined){
+		this._scoreRelativePathNCC = scoreRelativePathNCC;
+	}
+	return this._scoreRelativePathNCC;
+}
+BeliefTest.Match.prototype.scoreRelativePathSAD = function(scoreRelativePathSAD){
+	if(scoreRelativePathSAD!==undefined){
+		this._scoreRelativePathSAD = scoreRelativePathSAD;
+	}
+	return this._scoreRelativePathSAD;
+}
 BeliefTest.Match.prototype.range = function(range){
 	if(range!==undefined){
 		this._range = range;
@@ -1164,6 +1341,7 @@ BeliefTest.Lattice = function(viewA,viewB){
 	this._viewB = null;
 	this._graph = null;
 	this._cells = null;
+	this._F = null;
 	this.viewA(viewA);
 	this.viewB(viewB);
 	this.generateGraph();
@@ -1183,6 +1361,62 @@ BeliefTest.Lattice._cellOrdering = function(a,b){
 	}
 	throw "?";
 	return 0;
+}
+BeliefTest.Lattice.prototype.calculateF = function(){
+	var matchedCells = [];
+	this.forEachCell(function(cell, i, j, index){
+		var match = cell.match();
+		if(match){
+			matchedCells.push(cell);
+		}
+	});
+	if(matchedCells.length>16){
+		var pointsA = [];
+		var pointsB = [];
+		for(var i=0; i<matchedCells.length; ++i){
+			var cell = matchedCells[i];
+			var match = cell.match();
+			var pointA = match.pointA();
+			var pointB = match.pointB();
+			pointsA.push(pointA);
+			pointsB.push(pointB);
+		}
+		// console.log(pointsA);
+		// console.log(pointsB);
+		var F = R3D.fundamentalFromUnnormalized(pointsA,pointsB, true);
+		var F2 = R3D.fundamentalInverse(F);
+		// console.log(F);
+		var info = R3D.fundamentalError(F,F2,pointsA,pointsB);
+		console.log("  "+F+"");
+		console.log("  "+info["mean"]+" +/- "+info["sigma"]);
+		this._Ffwd = F;
+		this._Frev = F2;
+		this._Fmean = info["mean"];
+		this._Fsigma = info["sigma"];
+	}else{
+		this._F = null;
+	}
+}
+BeliefTest.Lattice.prototype.dropGlobalMatches = function(){
+	var Ffwd = this._Ffwd;
+	if(Ffwd){
+		var limitErrorSigma = 1.0; // 1-2
+		var maxErrorF = this._Fmean + this._Fsigma*limitErrorSigma;
+		var Frev = this._Frev;
+		this.forEachCell(function(cell, i, j, index){
+			var match = cell.match();
+			if(match){
+				var pointA = match.pointA();
+				var pointB = match.pointB();
+				var info = R3D.fundamentalErrorSingle(Ffwd,Frev,pointA,pointB);
+				var error = info["error"];
+				// console.log("  "+error);
+				if(error>maxErrorF){
+					cell.dropMatch();
+				}
+			}
+		});
+	}
 }
 BeliefTest.Lattice.prototype.generateGraph = function(){
 	if(!this._viewA || !this._viewA.image()){
@@ -1381,8 +1615,8 @@ BeliefTest.Lattice.prototype.newMatchFrom = function(cell, pointA, pointB, matri
 	var relativeNCC = scoreNCC/baseNCC;
 	var relativeSAD = scoreSAD/baseSAD;
 		console.log("  PATH SCORES: "+relativeNCC+" & "+relativeSAD+"    of  "+scoreNCC+" & "+scoreSAD);
-	// match.scorePathNCC( relativeNCC );
-	// match.scorePathSAD( relativeSAD );
+	match.scoreRelativePathNCC( relativeNCC );
+	match.scoreRelativePathSAD( relativeSAD );
 	match.scorePathNCC( scoreNCC );
 	match.scorePathSAD( scoreSAD );
 /*
@@ -1582,7 +1816,7 @@ BeliefTest.Lattice.prototype.matchValidation = function(cell, match){
 
 	// minimum range
 	
-	var minimumRange = 0.02; // TODO: per pixel range 0.01 / 1 is ok, 0.05 / 100 is ok
+	var minimumRange = 0.01; // TODO: per pixel range 0.01 / 1 is ok, 0.05 / 100 is ok
 	// console.log(match.range());
 	if(match.range()<minimumRange){
 		return false;
@@ -1595,11 +1829,11 @@ BeliefTest.Lattice.prototype.matchValidation = function(cell, match){
 	// score constraints
 	var scoreSAD = match.scoreSAD();
 	//if(scoreSAD>0.525){
-	if(scoreSAD>0.15){
+	if(scoreSAD>0.25){
 		return false;
 	}
 	var scoreNCC = match.scoreNCC();
-	if(scoreNCC>0.25){
+	if(scoreNCC>0.35){
 		return false;
 	}
 
@@ -1607,24 +1841,24 @@ BeliefTest.Lattice.prototype.matchValidation = function(cell, match){
 	var scorePathSAD = match.scorePathSAD();
 	var scorePathNCC = match.scorePathNCC();
 	var maxPathNCC = 0.50;
-	var maxPathSAD = 0.30;
+	var maxPathSAD = 0.40;
 	if(scorePathSAD>maxPathSAD){
 		return false;
 	}
 	if(scorePathNCC>maxPathNCC){
 		return false;
 	}
-	// var relativePathSAD = match.scorePathRelativeSAD();
-	// var relativePathNCC = match.scorePathRelativeNCC();
+	var relativePathSAD = match.scoreRelativePathSAD();
+	var relativePathNCC = match.scoreRelativePathNCC();
 	// ~2-4
-	// var maxRelativeNCC = 5.0;
-	// var maxRelativeSAD = 2.0;
-	// if(scorePathSAD>maxRelativeSAD){
-	// 	return false;
-	// }
-	// if(scorePathNCC>maxRelativeNCC){
-	// 	return false;
-	// }
+	var maxRelativeNCC = 3.0;
+	var maxRelativeSAD = 3.0;
+	if(relativePathSAD>maxRelativeSAD){
+		return false;
+	}
+	if(relativePathNCC>maxRelativeNCC){
+		return false;
+	}
 	
 	/*
 		relative path costs
@@ -1732,9 +1966,9 @@ BeliefTest.Lattice.prototype.iteration = function(e){
 				//console.log("measure how different match is from previous match before continuing to prevent loops");
 				var distance = V2D.distance(bestMatch.pointB(), prevMatch.pointB());
 				console.log("      >>> check keep distance: "+distance);
-				if(distance<1){ // 1~2 | <10% size of cell
-					keep = false;
-				}
+				// if(distance<1){ // 1~2 | <10% size of cell
+				// 	keep = false;
+				// }
 			}
 			if(keep){
 				cell.setMatch(bestMatch);
@@ -1756,6 +1990,10 @@ BeliefTest.Lattice.prototype.iteration = function(e){
 			}
 		}
 	}
+
+	// globals
+	lattice.calculateF();
+	lattice.dropGlobalMatches();
 }
 
 
