@@ -183,19 +183,30 @@ APP TODO:
 
 x display groupings
 
+- change voting criteria
+- change
+- add geometric/topology
+	- resolve pinching-ness / match
+
+- uniquness dropping
+
+- do zooming out until 'uniqueness' or variation or range or other is good enough
+
+
+
+- 
+
+
+- use gradient 
+
 - check keep distance ... keep track of other changing things
 
-separate:
-- 4-neighbor matches
-- 8-neighbor voting
 
 - how to prevent/recover from bad estimates when groups meet
 
 - monotonocity
 
 - forward backward validation
-
-- uniquness dropping
 
 x show object flow [image flow | field]
 
@@ -209,73 +220,6 @@ x show object flow [image flow | field]
 
 
 - how do matches work when good seed groups meet up with bad seed groups
-
-NEW ALG:
-	seed init:
-		for each putative match:
-			create match [w/o path costs]
-			add match to seed cell putative matches
-			add cell to queue
-	
-	seed loop:
-		list = queue.toArray()
-		queue.clear()
-		for each cell=seed in list
-			pick best putative match [SSD / SAD / ...]
-			cell.setMatch(best match)
-
-	main loop:
-		list = queue.toArray()
-		queue.clear()
-		for each cell in list
-			for all cell neighbors:
-				if match is valid
-					pick best match for cell [lowest relative path cost]
-			if match exists
-				keep = true
-				if c has no match && c has prevMatch
-					keep = match is different enough in pos/aff
-				else if c has no match | (c has match && best match is better than c current match)
-					keep = true
-				if keep
-					c.setMatch(match)
-
-		for each cell in list
-			if cell has match
-				votes = 0
-				count = 0
-				for all cell neighbors:
-					vote += n.vote(cell);
-					count += neighbor has match
-				if vote/count < 0.5 
-					cell.dropMatch()
-				
-
-	cell.setMatch(match):
-		prevmatch = cell.match
-		cell.match = match
-		paths[] = calculate all path matches for neighbors based on match
-		add self to queue
-		self.updateMetrics()
-		for each neighbor:
-			add neighbor to queue
-			neighbor.updateMetrics(cell)
-	
-	cell.dropMatch():
-		prevMatch = match
-		clear paths
-		clear stats
-		clear votes
-		for each neighbor:
-			add neighbor to queue ?????
-			neighbor.updateMetrics(cell)
-
-	cell.updateMetrics(other): // can other be used to speed up only changed numbers?
-		for each neighbor, populate given metric --- NULL MATCH set
-			eg: SSD:
-			metrics[i] = mean, std
-		for each neighbor, determine vote
-		votes[] = 
 
 
 - use gradient metrics too -> distance errors

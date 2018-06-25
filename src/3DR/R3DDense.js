@@ -1460,7 +1460,25 @@ console.log(pt+"")
 	return {"scale":bestScale, "angle":bestAngle, "from":bestFrom, "to":bestTo, "score":score, "zoomScale":neighborhoodScale, "keep":shouldKeep, "sad":bestScore, "uniqueness":uniqueness, "thisBest":thisBest, "nextBest":nextBest};
 
 }
-
+R3D.Dense.uniquenessFromValueList = function(values, width, height){
+	// console.log(values, width, height);
+	var peaks = Code.findMinima2DFloat(values, width, height, true);
+		peaks.sort( function(a,b){ return a.z<b.z ? -1 : 1; } );
+	var uniqueness = 1.0;
+	var nextBest = 0;
+	var thisBest = 0;
+	if(peaks.length>1){
+		thisBest = peaks[0].z;
+		nextBest = peaks[1].z;
+		// var uniqueness = 1.0/(peaks[1].z-peaks[0].z);
+		// uniqueness = 1-(peaks[1].z-peaks[0].z);
+		uniqueness = (peaks[1].z-peaks[0].z);
+		// uniqeness = Math.pow(uniqueness,0.5);
+		// uniqueness = 1.0 + Math.pow(uniqueness,0.1);
+		// uniqueness = 1.0;
+	}
+	return uniqueness;	
+}
 
 R3D.Dense.rankForTransform2 = function(imageA,cornerA,pointA, imageB,cornerB,pointB, scale,angle,score, inputCompareSize, Ffwd,Frev,fundamentalDistanceErrorMax, dropEarly){
 	// reliability = max(local difference) / avg(neighborhod difference) --- higher is better --- uniqueness  measurement?

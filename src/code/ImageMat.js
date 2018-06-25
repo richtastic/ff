@@ -3424,6 +3424,17 @@ ImageMat.gradientVectorNonIntegerIndex = function(src,wid,hei, x,y, isGrad){
 	var grad = new V2D(gX1.x*pY1 + gX2.x*pY0, gX1.y*pY1 + gX2.y*pY0);
 	return grad;
 }
+ImageMat.prototype.gradientVector = function(){
+	var width = this.width();
+	var height = this.height();
+	var gradientR = ImageMat.gradientVector(this.red(),width,height);
+	var gradientG = ImageMat.gradientVector(this.grn(),width,height);
+	var gradientB = ImageMat.gradientVector(this.blu(),width,height);
+	gradientR = gradientR["value"];
+	gradientG = gradientG["value"];
+	gradientB = gradientB["value"];
+	return {"r":gradientR,"g":gradientG,"b":gradientB,"width":width,"height":height};
+}
 ImageMat.gradientVector = function(src,wid,hei, x,y){ // not consistent with other value/width/height
 	var gradX = ImageMat.derivativeX(src,wid,hei, x,y);
 	var gradY = ImageMat.derivativeY(src,wid,hei, x,y);
