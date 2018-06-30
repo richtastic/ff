@@ -181,7 +181,102 @@ project typical numbers:
 
 APP TODO:
 
-x display groupings
+
+
+UPDATE ALGORITHM
+	 - limit recalculations for cells that are added / dismissed mid-process
+		-> have queue holding all new matches & if they are discarded during the process, than remove them from the queue
+		-> go thru queue and add neighbors when done
+	- don't add 'self' to queue ? or else never gets smaller
+
+
+	SEED:
+
+
+	LOOP:
+		
+
+
+
+
+
+
+- zooming out until uniqueness is good enough / satisfy fwd-bak uniqueness
+
+- fwd-bak validation is strict ...
+	- try just 'in the right cell' limiting
+
+- precondition / pre-pare image
+	- edgeness
+	- histogram expand
+	- ... ?
+
+- if F-B location fails - try using different matching scheme ? SAD / SSD / NCC / .. ?
+
+
+
+
+- test with 3/5/7 ... cell sizes
+
+
+- is gradient more discriminatory / better at comparing?
+
+- alg speedup?
+	- save calc?
+
+x display distance metric - not real depth? 
+- or rotation/flow metric
+
+
+
+Affine Dense Matching method (AM)
+Normal Aided Matching (NAM)
+
+- how should hierarchy be done?
+	- just seeds ?
+- try different pixel sizes (compare size should change too)
+	- 21 pixels => 21
+	- 11 pixels => 15-11
+	- 7 pixels => 11
+	- 3 pixels => 7-5
+	- 1 pixels => 5
+
+- using surface normals to estimate affine transform / homography
+- big changes in normal == edge
+- 
+
+
+CONSTRAINTS:
+- epipolar (F -> line search)
+- brightness (SAD == 0)
+- gradient (dImage == 0)
+- edge gradient (disparity jumps in 3D should match intensity edges)
+- ?disparity limit (disparities along epipolar lines)
+- disparity smoothness (local disparity not have abrubt changes)
+- correlation score smoothness (NCC locally not abrubt change)
+- ordering (pairs along epiolar lines not change order) -------- real 3D scenes can violate this?
+- uniquenes (each pixel has 0 or 1 match in opposite image)
+- mutual correspondence (?)
+
+
+current = 21
+ceil( (current-1)*0.5 + 1)
+
+
+(current-1)*0.5 + 1
+[81, 41, 21, 11, 7, 3, 1]
+~ 80 40 20 10 5 2.5 1
+
+- Accurate, Dense, and Robust Multi-View Stereopsis
+
+
+
+PMVS = Patch‐based Multi‐View Stereopsis
+https://ags.cs.uni-kl.de/fileadmin/inf_ags/3dcv-ws11-12/3DCV_WS11-12_lec10.pdf
+
+
+
+
 
 - change voting criteria
 - change

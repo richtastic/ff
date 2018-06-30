@@ -491,6 +491,29 @@ BeliefTest.prototype.drawLattice = function(e){ // TODO: ERROR THROWN -- likely 
 			}
 		}
 	}
+
+	// show calculated cells:
+	var list = lattice._wasList;
+	// console.log("WAS LIST");
+	// console.log(list);
+	if(list){
+
+		for(var i=0; i<list.length; ++i){
+			var cell = list[i];
+			var center = cell.center();
+			var d = new DO();
+				d.graphics().setLine(1.0,0x9966FF99);
+				d.graphics().setFill(0x6666FF99);
+				d.graphics().beginPath();
+				d.graphics().drawRect((center.x-cellSize*0.5)*displayScale, (center.y-cellSize*0.5)*displayScale, cellSize*displayScale,cellSize*displayScale);
+				d.graphics().fill();
+				d.graphics().strokeLine();
+				d.graphics().endPath();
+				display.addChild(d);
+		}
+	}
+	
+/*
 	// show field -- optical flow
 	for(var j=0; j<countY; ++j){
 		for(var i=0; i<countX; ++i){
@@ -518,7 +541,8 @@ BeliefTest.prototype.drawLattice = function(e){ // TODO: ERROR THROWN -- likely 
 			}
 		}
 	}
-	
+*/
+/*
 	// show labels
 	var colors = [];
 	for(var j=0; j<countY; ++j){
@@ -558,7 +582,63 @@ BeliefTest.prototype.drawLattice = function(e){ // TODO: ERROR THROWN -- likely 
 			}
 		}
 	}
-	
+*/
+/*
+	// show depths
+	var depths = [];
+	var minDistance = null;
+	var maxDistance = null;
+	for(var j=0; j<countY; ++j){
+		for(var i=0; i<countX; ++i){
+			var cell = lattice.cellFromColRow(i,j);
+			var match = cell.match();
+			if(match){
+				var pointA = match.pointA();
+				var pointB = match.pointB();
+				var dirAB = V2D.sub(pointB,pointA);
+				var distance = dirAB.length();
+				if(minDistance==null || distance<minDistance){
+					minDistance = distance;
+				}
+				if(maxDistance==null || distance>maxDistance){
+					maxDistance = distance;
+				}
+				depths.push([pointA,distance]);
+			}
+		}
+	}
+	if(maxDistance && minDistance){
+		var offDX = imageAWidth+imageBWidth+imageBWidth;
+		var offDY = 0;
+		var d = new DO();
+		d.graphics().setFill(0xFF330000);
+		d.graphics().beginPath();
+		d.graphics().drawRect(0,0, imageAWidth,imageAHeight);
+		d.graphics().fill();
+		d.graphics().endPath();
+		d.matrix().translate(offDX,offDY);
+		display.addChild(d);
+
+		var rangeDistance = maxDistance-minDistance;
+		for(var i=0; i<depths.length; ++i){
+			var depth = depths[i];
+			var point = depth[0];
+			var distance = depth[1];
+			var rel = (distance-minDistance)/rangeDistance;
+			var col = Code.getColARGBFromFloat(1.0, rel,rel,rel);
+			var d = new DO();
+			d.graphics().setFill(col);
+			d.graphics().beginPath();
+			// d.graphics().drawRect(cellSize*displayScale,j*cellSize*displayScale, cellSize*displayScale,cellSize*displayScale);
+			d.graphics().drawCircle(point.x,point.y, cellSize);
+			d.graphics().fill();
+			d.graphics().endPath();
+			d.matrix().translate(offDX,offDY);
+			// d.matrix().translate(imageAWidth+imageBWidth,0);
+			display.addChild(d);
+		}
+	}
+*/
 
 	// show matches:
 var dCount = 0;
@@ -796,6 +876,7 @@ BeliefTest.Cell.prototype.addSeedMatch = function(pointA,pointB, scaleAtoB,angle
 	var cell = this;
 	var lattice = cell._lattice;
 	var match = lattice.matchFromSettings(cell, pointA,pointB,scaleAtoB,angleAtoB);
+	console.log("got a match",match);
 	if(lattice.matchValidation(cell,match)){
 		cell.addPutativeMatch(match);
 	}
@@ -818,6 +899,7 @@ BeliefTest.Cell.prototype.addPutativeMatch = function(match){
 }
 BeliefTest.Cell.prototype.applyBestPutativeMatch = function(match){
 	var matches = this._putativeMatches;
+	console.log(matches)
 	if(matches.length>0){
 		var bestMatch = null;
 		for(var i=0; i<matches.length; ++i){
@@ -826,6 +908,7 @@ BeliefTest.Cell.prototype.applyBestPutativeMatch = function(match){
 				bestMatch = match;
 			}
 		}
+		console.log("bestMatch: "+bestMatch);
 		if(bestMatch){
 			console.log(" ... add match -> pair : "+bestMatch.scoreNCC()+" & "+bestMatch.scoreSAD());
 			Code.emptyArray(matches);
@@ -833,7 +916,11 @@ BeliefTest.Cell.prototype.applyBestPutativeMatch = function(match){
 			return true;
 		}
 	}
+	console.log("NO");
 	return false;
+}
+BeliefTest.Cell.prototype.revertMatch = function(){
+	this._match = this._previousMatch;
 }
 BeliefTest.Cell.prototype.match = function(match){
 	if(match!==undefined){
@@ -908,19 +995,19 @@ BeliefTest.Cell.prototype.dropMatch = function(){
 		var queue = lattice.queue();
 		this._previousMatch = this._match;
 		this._match = null;
-		for(var i=0; i<neighborKeys.length; ++i){
-			var index = neighborKeys[i];
-			this._paths[index] = null;
-			this._votes[index] = null;
-			this._metrics = null;
-		}
+		// KEEPING THESE FOR REVERTING
+		// for(var i=0; i<neighborKeys.length; ++i){
+		// 	var index = neighborKeys[i];
+		// 	this._paths[index] = null;
+		// 	this._votes[index] = null;
+		// 	this._metrics = null;
+		// }
 		// update / check
 //		queue.push(this);
 		for(var i=0; i<neighborKeys.length; ++i){
 			var index = neighborKeys[i];
 			var neighbor = neighbors[index];
 			// update / check
-//			queue.push(neighbor);
 			neighbor.updateMetrics();
 		}
 
@@ -1117,8 +1204,8 @@ BeliefTest.voteFromMetric = function(metrics, neighborMatch, neighborCell, sourc
 		var sigmaRelativePathSAD = metricRelativePathSAD["sigma"];
 	// var sigmaLimitAffine = 1.414;
 	// var sigmaLimitTranslate = 1.414;
-	var sigmaLimitAffine = 1.9;
-	var sigmaLimitTranslate = 1.9;
+	var sigmaLimitAffine = 2.0;
+	var sigmaLimitTranslate = 2.0;
 	var sigmaLimitNCC = 2.0;
 	var sigmaLimitSAD = 2.0;
 	var sigmaLimitPathNCC = 3.0;
@@ -1194,7 +1281,13 @@ BeliefTest.optimumLocation = function(imageA,pointA, imageB,pointB, needleSize,h
 	var xLoc = index % valueWidth;
 	var yLoc = (index/valueWidth) | 0;
 	var peak = new V3D(xLoc,yLoc,zLoc);
-	var p = new V2D(pointB.x - (valueWidth*0.5)*cellScale + peak.x*cellScale, pointB.y - (valueHeight*0.5)*cellScale + peak.y*cellScale);
+	//var p = new V2D(pointB.x + 1 - (valueWidth*0.5)*cellScale + peak.x*cellScale, pointB.y + 1 - (valueHeight*0.5)*cellScale + peak.y*cellScale);
+// console.log(needleSize+"/"+haystackSize+" in "+valueWidth+"x"+valueHeight+" ("+cellScale+") ");
+	var p = new V2D(pointB.x + (-valueWidth*0.5 + peak.x)*cellScale, pointB.y + (-valueHeight*0.5 + peak.y)*cellScale);
+
+	// TODO: sub-piel interpolation
+
+	//var p = new V2D(pointB.x - (valueWidth*0.5)*cellScale + peak.x*cellScale, pointB.y - (valueHeight*0.5)*cellScale + peak.y*cellScale);
 
 if(show){
 	var sca = 4.0;
@@ -1408,15 +1501,30 @@ BeliefTest.Lattice.prototype.generateGraph = function(){
 	var viewHeight = this._viewA.image().height();
 	//var cellSize = 25;
 	// var cellSize = 15;
+	
+	// largest:
+	// var cellSize = 21;
+	// var compareSize = 41;
+
+	// average:
 	var cellSize = 11;
-	// var cellSize = 7;
-	var compareSize = Math.floor(cellSize*1.5);
-	if(compareSize%2==0){ // keep odd
-		compareSize -= 1;
-	}
+	var compareSize = 21;
+
+	// var cellSize = 5;
+	// var compareSize = 11;
+
+	// smallest
+	// var cellSize = 1;
+	// var compareSize = 5;
+
+
+	// var compareSize = Math.floor(cellSize*1.5);
+	// if(compareSize%2==0){ // keep odd
+	// 	compareSize -= 1;
+	// }
 	// compareSize = Math.round(cellSize*0.5);
 	// compareSize = cellSize;
-	compareSize = cellSize + 2;
+	// compareSize = cellSize + 2;
 	var cellCountI = Math.floor(viewWidth/cellSize);
 	var cellCountJ = Math.floor(viewHeight/cellSize);
 	var cellCount = cellCountI*cellCountJ;
@@ -1496,7 +1604,9 @@ BeliefTest.Lattice.prototype.matchFromSettings = function(cell, pointA,pointB, s
 	// reverse
 	var centerA = cell.center();
 	var compareSize = lattice.compareSize();
-	var searchSize = Math.ceil(2*cellSize);
+	console.log("compareSize: "+compareSize);
+	console.log("cellSize: "+compareSize);
+	var searchSize = Math.ceil(2*cellSize); // 2-3
 	var best = BeliefTest.optimumLocation(imageA,centerA, imageB,pointB, compareSize,searchSize, matrix);
 	var bestB = best["location"];
 	// TODO : now find optimal transform at center location
@@ -1535,6 +1645,7 @@ BeliefTest.Lattice.prototype.bestMatchFromSettings = function(match, cell, neigh
 	// console.log("B: "+vectorX+" & "+vectorY);
 	var optimum = R3D.optimumAffineTransform(imageB,bestB, imageA,neighborCenter, vectorX,vectorY, cellSize, cellSize*0.5,0.25,0.25);
 		bestB = V2D.add(optimum["O"], bestB);
+		// bestB = V2D.sub(bestB,optimum["O"]);
 	var bestInverse = BeliefTest.affineFromResult(optimum);
 	var bestMatrix = Matrix.inverse(bestInverse);
 	var pathMatch = lattice.newMatchFrom(neighbor, neighborCenter, bestB, bestMatrix, match);
@@ -1548,6 +1659,24 @@ BeliefTest.Lattice.prototype.newMatchFrom = function(cell, pointA, pointB, matri
 	var compareCount = compareSize*compareSize;
 	var imageA = lattice.viewA().image();
 	var imageB = lattice.viewB().image();
+
+
+	// forward-reverse validation: fwd-bak
+	var inverse = Matrix.inverse(matrix);
+	var searchSize = Math.ceil(3*cellSize); // 2-3
+	var optimumLocation = BeliefTest.optimumLocation(imageB,pointB, imageA,pointA, cellSize,searchSize, inverse,   false);
+	var bestA = optimumLocation["location"];
+	// var haystackA = imageA.extractRectFromFloatImage(pointA.x,pointA.y,1.0,null,compareSize,compareSize, matrix);
+	var distanceAB = V2D.distance(bestA,pointA);
+	var maxCrossCheckDistance = 0.5 * cellSize;
+	// var maxCrossCheckDistance = cellSize;
+if(distanceAB>maxCrossCheckDistance){
+	console.log("DROP   "+distanceAB+"  >?>  "+maxCrossCheckDistance+" ("+cellSize+" ) ");
+	return null;
+}
+
+
+
 	var needle = imageA.extractRectFromFloatImage(pointA.x,pointA.y,1.0,null,compareSize,compareSize, matrix);
 	var haystack = imageB.extractRectFromFloatImage(pointB.x,pointB.y,1.0,null,compareSize,compareSize, null);
 	var scoreNCC = R3D.normalizedCrossCorrelation(needle,null,haystack,true);
@@ -1598,6 +1727,10 @@ BeliefTest.Lattice.prototype.newMatchFrom = function(cell, pointA, pointB, matri
 		pathA = imageA.extractRectFromFloatImage(pointA.x,pointA.y,1.0,null,compareSize*2,compareSize*2, matrix);
 		pathB = imageB.extractRectFromFloatImage(pointB.x,pointB.y,1.0,null,compareSize*2,compareSize*2, null);
 	}
+
+
+
+
 
 
 // console.log(pathA);
@@ -1760,6 +1893,9 @@ BeliefTest.Lattice.orientationTest = function(cell, match){
 }
 
 BeliefTest.Lattice.prototype.matchValidation = function(cell, match){
+	if(!match){
+		return false;
+	}
 	var lattice = this;
 	// ordering constraints
 	var ordered = BeliefTest.Lattice.orientationTest(cell,match);
@@ -1935,6 +2071,7 @@ BeliefTest.Lattice.prototype.iteration = function(e){
 	var lattice = this;
 	var queue = lattice.queue();
 	var list = queue.toArray();
+this._wasList = list;
 	queue.clear();
 	console.log("iteration - "+list.length);
 	// setting/replacing best matches
@@ -1970,9 +2107,11 @@ BeliefTest.Lattice.prototype.iteration = function(e){
 				//console.log("measure how different match is from previous match before continuing to prevent loops");
 				var distance = V2D.distance(bestMatch.pointB(), prevMatch.pointB());
 				console.log("      >>> check keep distance: "+distance);
-				// if(distance<1){ // 1~2 | <10% size of cell
-				// 	keep = false;
-				// }
+				if(distance<1){ // 1~2 | <10% size of cell
+					keep = false;
+					cell.revertMatch();
+					//reset cell here from prev match
+				}
 			}
 			if(keep){
 				cell.setMatch(bestMatch);
@@ -1991,9 +2130,9 @@ BeliefTest.Lattice.prototype.iteration = function(e){
 			// console.log("VOTES: "+count+" | "+percent);
 			// if(count>3 && percent<0.50){
 			// if(count>1 && percent<0.75){
-			if(count>6 && percent<0.40 || 
-			   count>4 && percent<0.50 || 
-			   count>2 && percent<0.60 || 
+			if(count>6 && percent<0.50 ||  // 3/7 = 0.42
+			   count>4 && percent<0.41 ||  // 2/5 = .40
+			   count>2 && percent<0.34 // 1/3 = .33
 				){
 				cell.dropMatch();
 				cell._previousMatch = null;
