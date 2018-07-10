@@ -21,10 +21,7 @@ PriorityQueue.prototype.clear = function(){
 	return this._tree.clear();
 }
 PriorityQueue.prototype.pushUnique = function(o){
-	if(!this.exists(o)){
-		return this.push(o);
-	}
-	return false;
+	return this._tree.insertObjectUnique(o);
 }
 PriorityQueue.prototype.push = function(o){
 	var item = this._tree.insertObject(o);

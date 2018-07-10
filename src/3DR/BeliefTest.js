@@ -20,6 +20,7 @@ GLOBALSTAGE = this._stage;
 
 	var imageLoader = new ImageLoader("./images/",["room0.png","room2.png"], this,this.handleImageLoaded,null);
 	// var imageLoader = new ImageLoader("./images/",["caseStudy1-0.jpg","caseStudy1-20.jpg"], this,this.handleImageLoaded,null);
+	// var imageLoader = new ImageLoader("./images/",["room0.png","room0.png"], this,this.handleImageLoaded,null);
 	imageLoader.load();
 
 	this._keyboard = new Keyboard();
@@ -110,7 +111,16 @@ matches = [{
 			"s": 1.0,
 			"a": 0.0
 		}];
+*/
 
+/*
+// SAME:
+matches = [{
+			"fr": {"x":0.40,"y":0.30},
+			"to": {"x":0.40,"y":0.30},
+			"s": 1.0,
+			"a": 0.0
+		}];
 */
 
 	// console.log(viewA,viewB);
@@ -392,6 +402,9 @@ peaks.sort( function(a,b){ return a.z<b.z ? -1 : 1; } );
 	}
 	//
 	this.drawLattice();
+
+//	lattice.seedIteration();
+
 	lattice.iteration();
 	
 }
@@ -502,12 +515,13 @@ BeliefTest.prototype.drawLattice = function(e){ // TODO: ERROR THROWN -- likely 
 			var cell = list[i];
 			var center = cell.center();
 			var d = new DO();
-				d.graphics().setLine(1.0,0x9966FF99);
+				// d.graphics().setLine(1.0,0x9966FF99);
 				d.graphics().setFill(0x6666FF99);
+				// d.graphics().setFill(0xFF66FF99);
 				d.graphics().beginPath();
 				d.graphics().drawRect((center.x-cellSize*0.5)*displayScale, (center.y-cellSize*0.5)*displayScale, cellSize*displayScale,cellSize*displayScale);
 				d.graphics().fill();
-				d.graphics().strokeLine();
+				// d.graphics().strokeLine();
 				d.graphics().endPath();
 				display.addChild(d);
 		}
@@ -900,6 +914,8 @@ BeliefTest.Cell.prototype.addPutativeMatch = function(match){
 BeliefTest.Cell.prototype.applyBestPutativeMatch = function(match){
 	var matches = this._putativeMatches;
 	console.log(matches)
+	var lattice = this._lattice;
+	var queue = lattice.queue();
 	if(matches.length>0){
 		var bestMatch = null;
 		for(var i=0; i<matches.length; ++i){
@@ -909,10 +925,19 @@ BeliefTest.Cell.prototype.applyBestPutativeMatch = function(match){
 			}
 		}
 		console.log("bestMatch: "+bestMatch);
+		// choose best putative match
 		if(bestMatch){
 			console.log(" ... add match -> pair : "+bestMatch.scoreNCC()+" & "+bestMatch.scoreSAD());
 			Code.emptyArray(matches);
+			// compute best 4-neighbor matches
 			this.setMatch(bestMatch);
+			var cell = this;
+			// add cell to Q [this is to update the seed's metrics]
+			queue.push(cell);
+			// add 4-neighbors to Q
+			cell.forEachNeighbor4(function(neighbor,index){
+				queue.push(neighbor);
+			});
 			return true;
 		}
 	}
@@ -965,8 +990,8 @@ BeliefTest.Cell.prototype.setMatch = function(newMatch){
 	var neighborKeys = Code.keys(neighbors);
 	var queue = lattice.queue();
 	// update / check
-	queue.push(cell);
-	cell.updateMetrics();
+	// queue.push(cell);
+	// cell.updateMetrics();
 
 	for(var i=0; i<neighborKeys.length; ++i){
 		var index = neighborKeys[i];
@@ -980,8 +1005,8 @@ BeliefTest.Cell.prototype.setMatch = function(newMatch){
 			paths[index] = null;
 		}
 		// update / check
-		queue.push(neighbor);
-		neighbor.updateMetrics();
+		// queue.push(neighbor);
+		//neighbor.updateMetrics();
 	}
 }
 BeliefTest.Cell.prototype.hasMatch = function(){
@@ -1177,6 +1202,7 @@ BeliefTest.Cell.prototype.updateMetrics = function(){
 	}
 }
 BeliefTest.voteFromMetric = function(metrics, neighborMatch, neighborCell, sourceMatch, sourceCell){
+return 1;
 	var metricAffine = metrics["affine"];
 	var metricTranslate = metrics["affine"];
 	var metricNCC = metrics["ncc"];
@@ -1235,6 +1261,12 @@ BeliefTest.voteFromMetric = function(metrics, neighborMatch, neighborCell, sourc
 	var keepPathSAD = scorePathSAD < meanPathSAD + sigmaPathSAD*sigmaLimitPathSAD;
 	var keepRelativePathNCC = scoreRelativePathNCC < meanRelativePathNCC + sigmaRelativePathNCC*sigmaLimitRelativePathNCC;
 	var keepRelativePathSAD = scoreRelativePathSAD < meanRelativePathSAD + sigmaRelativePathSAD*sigmaLimitRelativePathSAD;
+// keepNCC = true;
+// keepSAD = true;
+// keepPathNCC = true;
+// keepPathSAD = true;
+// keepRelativePathNCC = true;
+// keepRelativePathSAD = true;
 	if(keepAffine && keepTranslate && keepNCC && keepSAD && keepPathNCC && keepPathSAD && keepRelativePathNCC && keepRelativePathSAD){
 		return 1;
 	}
@@ -1281,11 +1313,32 @@ BeliefTest.optimumLocation = function(imageA,pointA, imageB,pointB, needleSize,h
 	var xLoc = index % valueWidth;
 	var yLoc = (index/valueWidth) | 0;
 	var peak = new V3D(xLoc,yLoc,zLoc);
+
+	// sub-pixel interpolation
+	if(0<xLoc && xLoc<valueWidth-1 && 0<yLoc && yLoc<valueHeight-1){
+		var d0 = values[(yLoc-1)*valueWidth + (xLoc-1)];
+		var d1 = values[(yLoc-1)*valueWidth + (xLoc+0)];
+		var d2 = values[(yLoc-1)*valueWidth + (xLoc+1)];
+		var d3 = values[(yLoc+0)*valueWidth + (xLoc-1)];
+		var d4 = values[(yLoc+0)*valueWidth + (xLoc+0)];
+		var d5 = values[(yLoc+0)*valueWidth + (xLoc+1)];
+		var d6 = values[(yLoc+1)*valueWidth + (xLoc-1)];
+		var d7 = values[(yLoc+1)*valueWidth + (xLoc+0)];
+		var d8 = values[(yLoc+1)*valueWidth + (xLoc+1)];
+		var result = Code.extrema2DFloatInterpolate(new V3D(), d0,d1,d2,d3,d4,d5,d6,d7,d8);
+		result.x += xLoc;
+		result.y += yLoc;
+		// console.log(" RESULT: "+peak+" / "+result);
+		peak = result;
+	}
+
 	//var p = new V2D(pointB.x + 1 - (valueWidth*0.5)*cellScale + peak.x*cellScale, pointB.y + 1 - (valueHeight*0.5)*cellScale + peak.y*cellScale);
 // console.log(needleSize+"/"+haystackSize+" in "+valueWidth+"x"+valueHeight+" ("+cellScale+") ");
 	var p = new V2D(pointB.x + (-valueWidth*0.5 + peak.x)*cellScale, pointB.y + (-valueHeight*0.5 + peak.y)*cellScale);
 
-	// TODO: sub-piel interpolation
+	
+
+
 
 	//var p = new V2D(pointB.x - (valueWidth*0.5)*cellScale + peak.x*cellScale, pointB.y - (valueHeight*0.5)*cellScale + peak.y*cellScale);
 
@@ -1472,10 +1525,12 @@ BeliefTest.Lattice.prototype.calculateF = function(){
 		this._F = null;
 	}
 }
-BeliefTest.Lattice.prototype.dropGlobalMatches = function(){
+BeliefTest.Lattice.prototype.dropGlobalMatches = function(remQueue){
 	var Ffwd = this._Ffwd;
+	var lattice = this;
+	var queue = lattice.queue();
 	if(Ffwd){
-		var limitErrorSigma = 2.0; // 1-2   1 stops propagation, 2 introduces lots of error
+		var limitErrorSigma = 3.0; // 1-2   1 stops propagation, 2 introduces lots of error
 		var maxErrorF = this._Fmean + this._Fsigma*limitErrorSigma;
 		var Frev = this._Frev;
 		this.forEachCell(function(cell, i, j, index){
@@ -1488,6 +1543,8 @@ BeliefTest.Lattice.prototype.dropGlobalMatches = function(){
 				// console.log("  "+error);
 				if(error>maxErrorF){
 					cell.dropMatch();
+					remQueue.push(cell);
+//					queue.push(cell);
 				}
 			}
 		});
@@ -1502,13 +1559,16 @@ BeliefTest.Lattice.prototype.generateGraph = function(){
 	//var cellSize = 25;
 	// var cellSize = 15;
 	
+	var cellSize = 41;
+	var compareSize = 81;
+
 	// largest:
 	// var cellSize = 21;
 	// var compareSize = 41;
 
 	// average:
-	var cellSize = 11;
-	var compareSize = 21;
+	// var cellSize = 11;
+	// var compareSize = 21;
 
 	// var cellSize = 5;
 	// var compareSize = 11;
@@ -1604,8 +1664,8 @@ BeliefTest.Lattice.prototype.matchFromSettings = function(cell, pointA,pointB, s
 	// reverse
 	var centerA = cell.center();
 	var compareSize = lattice.compareSize();
-	console.log("compareSize: "+compareSize);
-	console.log("cellSize: "+compareSize);
+	// console.log("compareSize: "+compareSize);
+	// console.log("cellSize: "+compareSize);
 	var searchSize = Math.ceil(2*cellSize); // 2-3
 	var best = BeliefTest.optimumLocation(imageA,centerA, imageB,pointB, compareSize,searchSize, matrix);
 	var bestB = best["location"];
@@ -1652,28 +1712,40 @@ BeliefTest.Lattice.prototype.bestMatchFromSettings = function(match, cell, neigh
 	return pathMatch;
 }
 CALLED = 0;
-BeliefTest.Lattice.prototype.newMatchFrom = function(cell, pointA, pointB, matrix, originMatch){
+BeliefTest.Lattice.prototype.newMatchFrom = function(cell, pointA, pointB, matrix, originMatch, zoomCount){
+zoomCount = zoomCount!==undefined ? zoomCount : 0;
 	var lattice = this;
 	var cellSize = lattice.cellSize();
 	var compareSize = lattice.compareSize();
-	var compareCount = compareSize*compareSize;
+	// var zoomScale = zoomCount + 1;
+	var zoomScale = Math.pow(2,zoomCount);
+// console.log("zoomScale: "+zoomScale);
+	compareSize = Math.round(compareSize * zoomScale);
+	// var compareCount = compareSize*compareSize;
 	var imageA = lattice.viewA().image();
 	var imageB = lattice.viewB().image();
 
 
 	// forward-reverse validation: fwd-bak
 	var inverse = Matrix.inverse(matrix);
-	var searchSize = Math.ceil(3*cellSize); // 2-3
-	var optimumLocation = BeliefTest.optimumLocation(imageB,pointB, imageA,pointA, cellSize,searchSize, inverse,   false);
+	var searchSize = Math.ceil(3*compareSize); // 2-3
+	var optimumLocation = BeliefTest.optimumLocation(imageB,pointB, imageA,pointA, compareSize,searchSize, inverse,   false);
 	var bestA = optimumLocation["location"];
 	// var haystackA = imageA.extractRectFromFloatImage(pointA.x,pointA.y,1.0,null,compareSize,compareSize, matrix);
 	var distanceAB = V2D.distance(bestA,pointA);
 	var maxCrossCheckDistance = 0.5 * cellSize;
+	// var maxCrossCheckDistance = 0.5 * compareSize;
 	// var maxCrossCheckDistance = cellSize;
-if(distanceAB>maxCrossCheckDistance){
-	console.log("DROP   "+distanceAB+"  >?>  "+maxCrossCheckDistance+" ("+cellSize+" ) ");
-	return null;
-}
+	if(distanceAB>maxCrossCheckDistance){
+		var result = null;
+		if(zoomCount<=5){ // 1, 2, 4, 8 OR 1,2,3,4
+			result = this.newMatchFrom(cell, pointA, pointB, matrix, originMatch, zoomCount+1);
+		}
+		// if(zoomCount==3 && !result){
+		// 	// console.log("DROP   "+distanceAB+"  >?>  "+maxCrossCheckDistance+" ("+cellSize+" ) ");
+		// }
+		return result;
+	}
 
 
 
@@ -1743,7 +1815,7 @@ if(distanceAB>maxCrossCheckDistance){
 		scoreSAD = scoreSAD["value"][0];
 	var relativeNCC = scoreNCC/baseNCC;
 	var relativeSAD = scoreSAD/baseSAD;
-		console.log("  PATH SCORES: "+relativeNCC+" & "+relativeSAD+"    of  "+scoreNCC+" & "+scoreSAD);
+//		console.log("  PATH SCORES: "+relativeNCC+" & "+relativeSAD+"    of  "+scoreNCC+" & "+scoreSAD);
 	match.scoreRelativePathNCC( relativeNCC );
 	match.scoreRelativePathSAD( relativeSAD );
 	match.scorePathNCC( scoreNCC );
@@ -1900,6 +1972,7 @@ BeliefTest.Lattice.prototype.matchValidation = function(cell, match){
 	// ordering constraints
 	var ordered = BeliefTest.Lattice.orientationTest(cell,match);
 	if(!ordered){
+		console.log("DROP ORDERING");
 		return false;
 	}
 	// TODO: use affine average scale to determine limits
@@ -1940,6 +2013,7 @@ BeliefTest.Lattice.prototype.matchValidation = function(cell, match){
 	var imageB = viewB.image();
 	var bestB = match.pointB();
 	if(bestB.x<=0 || bestB.x>=imageB.width() || bestB.y<=0 || bestB.y>=imageB.height()){
+		console.log("DROP OUTSIDE");
 		// console.log("OUTSIDE");
 		return false;
 	}
@@ -1948,11 +2022,11 @@ BeliefTest.Lattice.prototype.matchValidation = function(cell, match){
 
 	// minimum range
 	
-	var minimumRange = 0.02; // TODO: per pixel range 0.01 / 1 is ok, 0.05 / 100 is ok
-	// console.log(match.range());
-	if(match.range()<minimumRange){
-		return false;
-	}
+	// var minimumRange = 0.02; // TODO: per pixel range 0.01 / 1 is ok, 0.05 / 100 is ok
+	// // console.log(match.range());
+	// if(match.range()<minimumRange){
+	// 	return false;
+	// }
 	
 	// minimum variabliity
 
@@ -1961,42 +2035,49 @@ BeliefTest.Lattice.prototype.matchValidation = function(cell, match){
 	var uniqueness = match.uniqueness();
 	// console.log("   uniqueness "+uniqueness);
 	if(uniqueness<minUniquenessNCC){
+		console.log("DROP UNIQUENESS");
 		return false;
 	}
 
 	// score constraints
 	var scoreSAD = match.scoreSAD();
 	//if(scoreSAD>0.525){
-	if(scoreSAD>0.3){
+	if(scoreSAD>0.5){
+		console.log("DROP SCORE SAD: "+scoreSAD);
 		return false;
 	}
 	var scoreNCC = match.scoreNCC();
-	if(scoreNCC>0.4){
+	if(scoreNCC>0.5){
+		console.log("DROP SCORE NCC: "+scoreNCC);
 		return false;
 	}
 
 	// relative path costs
 	var scorePathSAD = match.scorePathSAD();
 	var scorePathNCC = match.scorePathNCC();
-	var maxPathNCC = 0.60;
-	var maxPathSAD = 0.50;
+	var maxPathNCC = 0.90;
+	var maxPathSAD = 0.90;
 	if(scorePathSAD>maxPathSAD){
+		console.log("DROP PATH SAD");
 		return false;
 	}
 	if(scorePathNCC>maxPathNCC){
+		console.log("DROP PATH NCC");
 		return false;
 	}
 	var relativePathSAD = match.scoreRelativePathSAD();
 	var relativePathNCC = match.scoreRelativePathNCC();
 	// ~2-4
-	var maxRelativeNCC = 4.0;
-	var maxRelativeSAD = 4.0;
-	if(relativePathSAD>maxRelativeSAD){
-		return false;
-	}
-	if(relativePathNCC>maxRelativeNCC){
-		return false;
-	}
+	// var maxRelativeNCC = 14.0;
+	// var maxRelativeSAD = 14.0;
+	// if(relativePathSAD>maxRelativeSAD){
+	// 	console.log("DROP RELATIVE SAD");
+	// 	return false;
+	// }
+	// if(relativePathNCC>maxRelativeNCC){
+	// 	console.log("DROP RELATIVE NCC");
+	// 	return false;
+	// }
 	/*
 		F error
 	*/
@@ -2067,13 +2148,17 @@ BeliefTest.Lattice.prototype.forEachCell = function(fxn){
 BeliefTest.Lattice.prototype.queue = function(){
 	return this._queue;
 }
+
 BeliefTest.Lattice.prototype.iteration = function(e){
 	var lattice = this;
 	var queue = lattice.queue();
+var addQueue = new PriorityQueue(BeliefTest.Lattice._cellOrdering);
+var remQueue = new PriorityQueue(BeliefTest.Lattice._cellOrdering);
 	var list = queue.toArray();
 this._wasList = list;
 	queue.clear();
 	console.log("iteration - "+list.length);
+// var pushCount = 0;
 	// setting/replacing best matches
 	for(var i=0; i<list.length; ++i){
 		var cell = list[i];
@@ -2091,7 +2176,7 @@ this._wasList = list;
 				if(match){ // valid
 					//if(bestMatch==null || match.scorePathNCC()<bestMatch.scorePathNCC()){
 						if(bestMatch==null ||
-							(match.scoreSAD()<=bestMatch.scoreSAD() && match.scoreNCC()<=bestMatch.scoreNCC())
+							(match.scoreSAD()<bestMatch.scoreSAD() || match.scoreNCC()<bestMatch.scoreNCC())
 							){
 							// match.scorePathNCC()<bestMatch.scorePathNCC() && match.scoreNCC()<bestMatch.scoreNCC() 
 							//match.scoreNCC()<bestMatch.scoreNCC()){ // TODO: LOWEST RELATIVE PATH COSTS
@@ -2101,25 +2186,37 @@ this._wasList = list;
 			}
 		}
 		if(bestMatch && bestMatch!=cell.match()){ // match exists and is better
-			var keep = true;
-			var prevMatch = cell.previousMatch();
-			if(!cell.match() && prevMatch){ // 
-				//console.log("measure how different match is from previous match before continuing to prevent loops");
-				var distance = V2D.distance(bestMatch.pointB(), prevMatch.pointB());
-				console.log("      >>> check keep distance: "+distance);
-				if(distance<1){ // 1~2 | <10% size of cell
-					keep = false;
-					cell.revertMatch();
-					//reset cell here from prev match
-				}
+			var match = cell.match();
+			var prevScore = 0;
+			if(match && bestMatch){
+				var prevScoreSAD = bestMatch.scoreSAD()/match.scoreSAD();
+				var prevScoreNCC = bestMatch.scoreNCC()/match.scoreNCC();
+				prevScore = Math.min(prevScoreSAD,prevScoreNCC);
 			}
-			if(keep){
+			//console.log("  prevScore: "+prevScore);
+			if(prevScore<0.95){
+				// if(match){
+				// 	console.log("UPDATE MATCH: "+match.scoreSAD()+"<"+bestMatch.scoreSAD()+" || "+match.scoreNCC()+"<"+bestMatch.scoreNCC()+" +++++++++ ");
+				// }else{
+				// 	console.log("NEW MATCH:    "+bestMatch.scoreSAD()+" || "+bestMatch.scoreNCC()+" +++++++++ ");
+				// }
+				console.log("  prevScore: "+prevScore);
 				cell.setMatch(bestMatch);
+				// queue.push(cell);
+					addQueue.push(cell);
 			}
 		}	
 	}
+	// 
+	// console.log("PUSH COUNT: "+pushCount);
 
-	// dropping bad matches
+	// update metrics
+	for(var i=0; i<list.length; ++i){
+		var cell = list[i];
+		cell.updateMetrics();
+	}
+
+	// dropping bad matches - check votes
 	for(var i=0; i<list.length; ++i){
 		var cell = list[i];
 		var match = cell.match();
@@ -2130,11 +2227,18 @@ this._wasList = list;
 			// console.log("VOTES: "+count+" | "+percent);
 			// if(count>3 && percent<0.50){
 			// if(count>1 && percent<0.75){
-			if(count>6 && percent<0.50 ||  // 3/7 = 0.42
-			   count>4 && percent<0.41 ||  // 2/5 = .40
-			   count>2 && percent<0.34 // 1/3 = .33
+			// if(count>6 && percent<0.50 ||  // 3/7 = 0.42
+			//    count>4 && percent<0.41 ||  // 2/5 = .40
+			//    count>2 && percent<0.34 // 1/3 = .33
+			// 	){
+			if(count>6 && percent<0.30 ||  // 3/7 = 0.42
+			   count>4 && percent<0.20 ||  // 2/5 = .40
+			   count>2 && percent<0.10 // 1/3 = .33
 				){
+				// console.log("REMOVE CELL ...",cell);
+				// queue.remove(cell);
 				cell.dropMatch();
+				remQueue.push(cell);
 				cell._previousMatch = null;
 			}
 		}
@@ -2142,7 +2246,39 @@ this._wasList = list;
 
 	// globals
 	lattice.calculateF();
-	lattice.dropGlobalMatches();
+	lattice.dropGlobalMatches(remQueue);
+
+	// only include elements that don't toggle between add/remove
+	var addList = addQueue.toArray();
+	var remList = remQueue.toArray();
+	addQueue.clear();
+	remQueue.clear();
+	for(var i=0; i<addList.length; ++i){
+		var cell = addList[i];
+		if(Code.elementExists(remList, cell)){
+			// console.log("EXISTS");
+			Code.removeElement(remList, cell);
+		}else{
+			queue.push(cell);
+		}
+	}
+	for(var i=0; i<remList.length; ++i){
+		var cell = remList[i];
+		queue.push(cell);
+	}
+
+	// add all 4-neighbors of remaining cells
+	var list = queue.toArray();
+	queue.clear();
+	for(var i=0; i<list.length; ++i){
+		var cell = list[i];
+		cell.forEachNeighbor4(function(neighbor,index){
+			queue.push(neighbor);
+		});
+		queue.push(cell);
+	}
+
+	
 }
 
 

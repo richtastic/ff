@@ -183,20 +183,6 @@ APP TODO:
 
 
 
-UPDATE ALGORITHM
-	 - limit recalculations for cells that are added / dismissed mid-process
-		-> have queue holding all new matches & if they are discarded during the process, than remove them from the queue
-		-> go thru queue and add neighbors when done
-	- don't add 'self' to queue ? or else never gets smaller
-
-
-	SEED:
-
-
-	LOOP:
-		
-
-
 
 
 
@@ -205,6 +191,11 @@ UPDATE ALGORITHM
 
 - fwd-bak validation is strict ...
 	- try just 'in the right cell' limiting
+
+
+- F dropping oscillating problem => how to determine if 'done' => terminal case
+
+
 
 - precondition / pre-pare image
 	- edgeness

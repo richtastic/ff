@@ -203,17 +203,38 @@ timeline:
 			summary: 
 			description: ?
 		-
-			dateStart: 
-			dateEnd: 
+			dateStart: -470
+			dateEnd: -399
 			short: 
-			title: 
+			title: Socrates
+			summary: Athenian philosopher
+			description: ethics, socratic irony, socratic method, students: plato, xenophon
+		-
+			dateStart: -427
+			dateEnd: -347
+			short: 
+			title: Plato
 			summary: 
 			description: ?
 		-
-			dateStart: 
-			dateEnd: 
+			dateStart: -384
+			dateEnd: -322
 			short: 
-			title: 
+			title: Aristotle
+			summary: 
+			description: ?
+		-
+			dateStart: -460
+			dateEnd: -370
+			short: 
+			title: Democritus
+			summary: 
+			description: ?
+		-
+			dateStart: -430
+			dateEnd: -354
+			short: 
+			title: Xenophon
 			summary: 
 			description: ?
 		-
