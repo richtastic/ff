@@ -21,9 +21,17 @@ PriorityQueue.prototype.clear = function(){
 	return this._tree.clear();
 }
 PriorityQueue.prototype.pushUnique = function(o){
-	return this._tree.insertObjectUnique(o);
+	var item = this._tree.insertObjectUnique(o);
+	if(this._capacity>=0){
+		if(this._tree.length()>this._capacity){
+			this.popMaximum();
+		}
+	}
+	return item;
 }
 PriorityQueue.prototype.push = function(o){
+	throw "WRONG CALL"
+	// return this.pushUnique(o);
 	var item = this._tree.insertObject(o);
 	if(this._capacity>=0){
 		if(this._tree.length()>this._capacity){

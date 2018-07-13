@@ -383,7 +383,7 @@ peaks.sort( function(a,b){ return a.z<b.z ? -1 : 1; } );
 //if(i==21 || i==25 || i==42){
 			var cell = lattice.cellFromPoint(pointA);
 			cell.addSeedMatch(pointA,pointB,scaleAtoB,angleAtoB);
-			queue.push(cell);
+			queue.pushUnique(cell);
 		}
 		// if(i>=10){
 		// // if(i>=8){
@@ -401,7 +401,7 @@ peaks.sort( function(a,b){ return a.z<b.z ? -1 : 1; } );
 		cell.applyBestPutativeMatch();
 	}
 	//
-	this.drawLattice();
+//	this.drawLattice();
 
 //	lattice.seedIteration();
 
@@ -507,10 +507,9 @@ BeliefTest.prototype.drawLattice = function(e){ // TODO: ERROR THROWN -- likely 
 
 	// show calculated cells:
 	var list = lattice._wasList;
-	// console.log("WAS LIST");
 	// console.log(list);
 	if(list){
-
+// console.log("WAS LIST "+list.length);
 		for(var i=0; i<list.length; ++i){
 			var cell = list[i];
 			var center = cell.center();
@@ -869,6 +868,17 @@ BeliefTest.Cell.prototype.neighbors4 = function(){
 BeliefTest.Cell.prototype.neighbors8 = function(){
 	return this._neighbors8;
 }
+BeliefTest.Cell.prototype.expectedLocation = function(point){
+	var match = this.match();
+	if(match){
+		var pointA = match.pointA();
+		var pointB = match.pointB();
+		var diff = V2D.sub(point,pointA);
+		diff = match.affine().multV2DtoV2D(diff,diff);
+		return diff.add(pointB);
+	}
+	return null;
+}
 BeliefTest.Cell.prototype.addVote = function(cell, v){
 	this._votes.push(v);
 }
@@ -913,7 +923,7 @@ BeliefTest.Cell.prototype.addPutativeMatch = function(match){
 }
 BeliefTest.Cell.prototype.applyBestPutativeMatch = function(match){
 	var matches = this._putativeMatches;
-	console.log(matches)
+	// console.log(matches)
 	var lattice = this._lattice;
 	var queue = lattice.queue();
 	if(matches.length>0){
@@ -933,11 +943,11 @@ BeliefTest.Cell.prototype.applyBestPutativeMatch = function(match){
 			this.setMatch(bestMatch);
 			var cell = this;
 			// add cell to Q [this is to update the seed's metrics]
-			queue.push(cell);
+			queue.pushUnique(cell);
 			// add 4-neighbors to Q
-			cell.forEachNeighbor4(function(neighbor,index){
-				queue.push(neighbor);
-			});
+			// cell.forEachNeighbor4(function(neighbor,index){
+			// 	queue.push(neighbor);
+			// });
 			return true;
 		}
 	}
@@ -982,17 +992,19 @@ BeliefTest.Cell.prototype.forEachNeighbor4 = function(fxn){
 BeliefTest.Cell.prototype.setMatch = function(newMatch){
 	// console.log("setMatch",newMatch);
 	var cell = this;
-	cell._previousMatch = cell._match;
-	cell._match = newMatch;
-	var lattice = cell._lattice;
-	var paths = cell._paths;
-	var neighbors = cell._neighbors4;
-	var neighborKeys = Code.keys(neighbors);
-	var queue = lattice.queue();
+	
+		cell._previousMatch = cell._match;
+		cell._match = newMatch;
+
+	// var lattice = cell._lattice;
+	// var paths = cell._paths;
+	// var neighbors = cell._neighbors4;
+	// var neighborKeys = Code.keys(neighbors);
+	// var queue = lattice.queue();
 	// update / check
 	// queue.push(cell);
 	// cell.updateMetrics();
-
+	/*
 	for(var i=0; i<neighborKeys.length; ++i){
 		var index = neighborKeys[i];
 		var neighbor = neighbors[index];
@@ -1008,6 +1020,7 @@ BeliefTest.Cell.prototype.setMatch = function(newMatch){
 		// queue.push(neighbor);
 		//neighbor.updateMetrics();
 	}
+	*/
 }
 BeliefTest.Cell.prototype.hasMatch = function(){
 	return this._match!==null;
@@ -1202,7 +1215,7 @@ BeliefTest.Cell.prototype.updateMetrics = function(){
 	}
 }
 BeliefTest.voteFromMetric = function(metrics, neighborMatch, neighborCell, sourceMatch, sourceCell){
-return 1;
+//return 1;
 	var metricAffine = metrics["affine"];
 	var metricTranslate = metrics["affine"];
 	var metricNCC = metrics["ncc"];
@@ -1488,7 +1501,7 @@ BeliefTest.Lattice._cellOrdering = function(a,b){
 		return 1;
 	}
 	throw "?";
-	return 0;
+	// return 0;
 }
 BeliefTest.Lattice.prototype.calculateF = function(){
 	var matchedCells = [];
@@ -1515,8 +1528,8 @@ BeliefTest.Lattice.prototype.calculateF = function(){
 		var F2 = R3D.fundamentalInverse(F);
 		// console.log(F);
 		var info = R3D.fundamentalError(F,F2,pointsA,pointsB);
-		console.log("  "+F+"");
-		console.log("  "+info["mean"]+" +/- "+info["sigma"]);
+		// console.log("  "+F+"");
+		console.log("  F: "+info["mean"]+" +/- "+info["sigma"]);
 		this._Ffwd = F;
 		this._Frev = F2;
 		this._Fmean = info["mean"];
@@ -1528,7 +1541,7 @@ BeliefTest.Lattice.prototype.calculateF = function(){
 BeliefTest.Lattice.prototype.dropGlobalMatches = function(remQueue){
 	var Ffwd = this._Ffwd;
 	var lattice = this;
-	var queue = lattice.queue();
+	// var queue = lattice.queue();
 	if(Ffwd){
 		var limitErrorSigma = 3.0; // 1-2   1 stops propagation, 2 introduces lots of error
 		var maxErrorF = this._Fmean + this._Fsigma*limitErrorSigma;
@@ -1543,8 +1556,8 @@ BeliefTest.Lattice.prototype.dropGlobalMatches = function(remQueue){
 				// console.log("  "+error);
 				if(error>maxErrorF){
 					cell.dropMatch();
-					remQueue.push(cell);
-//					queue.push(cell);
+					remQueue.pushUnique(cell);
+//					queue.pushUnique(cell);
 				}
 			}
 		});
@@ -1559,16 +1572,19 @@ BeliefTest.Lattice.prototype.generateGraph = function(){
 	//var cellSize = 25;
 	// var cellSize = 15;
 	
-	var cellSize = 41;
-	var compareSize = 81;
+	// var cellSize = 81;
+	// var compareSize = 161;
+
+	// var cellSize = 41;
+	// var compareSize = 81;
 
 	// largest:
 	// var cellSize = 21;
 	// var compareSize = 41;
 
 	// average:
-	// var cellSize = 11;
-	// var compareSize = 21;
+	var cellSize = 11;
+	var compareSize = 21;
 
 	// var cellSize = 5;
 	// var compareSize = 11;
@@ -1576,6 +1592,9 @@ BeliefTest.Lattice.prototype.generateGraph = function(){
 	// smallest
 	// var cellSize = 1;
 	// var compareSize = 5;
+
+	// var cellSize = 3;
+	// var compareSize = 7;
 
 
 	// var compareSize = Math.floor(cellSize*1.5);
@@ -1725,7 +1744,7 @@ zoomCount = zoomCount!==undefined ? zoomCount : 0;
 	var imageA = lattice.viewA().image();
 	var imageB = lattice.viewB().image();
 
-
+/*
 	// forward-reverse validation: fwd-bak
 	var inverse = Matrix.inverse(matrix);
 	var searchSize = Math.ceil(3*compareSize); // 2-3
@@ -1746,7 +1765,7 @@ zoomCount = zoomCount!==undefined ? zoomCount : 0;
 		// }
 		return result;
 	}
-
+*/
 
 
 	var needle = imageA.extractRectFromFloatImage(pointA.x,pointA.y,1.0,null,compareSize,compareSize, matrix);
@@ -2003,6 +2022,7 @@ BeliefTest.Lattice.prototype.matchValidation = function(cell, match){
 			var distanceB = V2D.distance(match.pointB(),m.pointB());
 			var ratio = distanceB/distanceA;
 			if(ratio>maxDistanceScale || ratio<minDistanceScale){
+				console.log("DROP DISTANCES");
 				return false;
 			}
 		}
@@ -2042,12 +2062,12 @@ BeliefTest.Lattice.prototype.matchValidation = function(cell, match){
 	// score constraints
 	var scoreSAD = match.scoreSAD();
 	//if(scoreSAD>0.525){
-	if(scoreSAD>0.5){
+	if(scoreSAD>0.30){
 		console.log("DROP SCORE SAD: "+scoreSAD);
 		return false;
 	}
 	var scoreNCC = match.scoreNCC();
-	if(scoreNCC>0.5){
+	if(scoreNCC>0.50){
 		console.log("DROP SCORE NCC: "+scoreNCC);
 		return false;
 	}
@@ -2055,29 +2075,29 @@ BeliefTest.Lattice.prototype.matchValidation = function(cell, match){
 	// relative path costs
 	var scorePathSAD = match.scorePathSAD();
 	var scorePathNCC = match.scorePathNCC();
-	var maxPathNCC = 0.90;
-	var maxPathSAD = 0.90;
+	var maxPathNCC = 0.60;
+	var maxPathSAD = 0.40;
 	if(scorePathSAD>maxPathSAD){
 		console.log("DROP PATH SAD");
 		return false;
 	}
 	if(scorePathNCC>maxPathNCC){
-		console.log("DROP PATH NCC");
+		console.log("DROP PATH NCC "+scorePathNCC);
 		return false;
 	}
 	var relativePathSAD = match.scoreRelativePathSAD();
 	var relativePathNCC = match.scoreRelativePathNCC();
 	// ~2-4
-	// var maxRelativeNCC = 14.0;
-	// var maxRelativeSAD = 14.0;
-	// if(relativePathSAD>maxRelativeSAD){
-	// 	console.log("DROP RELATIVE SAD");
-	// 	return false;
-	// }
-	// if(relativePathNCC>maxRelativeNCC){
-	// 	console.log("DROP RELATIVE NCC");
-	// 	return false;
-	// }
+	var maxRelativeNCC = 14.0;
+	var maxRelativeSAD = 14.0;
+	if(relativePathSAD>maxRelativeSAD){
+		console.log("DROP RELATIVE SAD");
+		return false;
+	}
+	if(relativePathNCC>maxRelativeNCC){
+		console.log("DROP RELATIVE NCC");
+		return false;
+	}
 	/*
 		F error
 	*/
@@ -2148,8 +2168,275 @@ BeliefTest.Lattice.prototype.forEachCell = function(fxn){
 BeliefTest.Lattice.prototype.queue = function(){
 	return this._queue;
 }
-
 BeliefTest.Lattice.prototype.iteration = function(e){
+	var lattice = this;
+	var queue = lattice.queue();
+
+console.log("Q SIZE: "+queue.length()+" / "+lattice._cells.length);
+if(queue.length()>2000){
+	throw "???"
+}
+
+	var list = queue.toArray();
+	this._wasList = list;
+	queue.clear();
+
+	//var cG = 0.50;
+	var cG = 1.0; // 10 too high
+	var eG = 1.0;
+	var cN = 1.0;
+	var eN = 1.0;
+	var p = new V2D();
+	var cellSize = lattice.cellSize();
+	var compareSize = lattice.compareSize();
+	var viewA = lattice.viewA();
+	var viewB = lattice.viewB();
+	var imageA = viewA.image();
+	var imageB = viewB.image();
+var addQueue = new PriorityQueue(BeliefTest.Lattice._cellOrdering);
+var remQueue = new PriorityQueue(BeliefTest.Lattice._cellOrdering);
+
+	// calculate error gradient
+
+	for(var i=0; i<list.length; ++i){
+		var cell = list[i];
+		var cellMatch = cell.match();
+		if(!cellMatch){
+			continue;
+		}
+		var pointA = cellMatch.pointA();
+		var pointB = cellMatch.pointB();
+		// var cellCenter = cell.center();
+		// get 3x3 error grid
+var needleSize = 11;
+var cellScale = (needleSize/compareSize);
+var haystackSize = compareSize + 2; // get a 3x3
+//var haystackSize = Math.ceil((haystackRelativeSize/needleSize)*compareSize);
+//var haystackSize = Math.max(haystackSize,compareSize);
+// needle + haystack
+var matrix = cellMatch.affine();
+var needle = imageA.extractRectFromFloatImage(pointA.x,pointA.y,cellScale,null,compareSize,compareSize, null);
+var haystack = imageB.extractRectFromFloatImage(pointB.x,pointB.y,cellScale,null,haystackSize,haystackSize, matrix);
+// find minimum of SAD:
+// var scoresSAD = R3D.searchNeedleHaystackImageFlat(needle, null, haystack);
+var scoresNCC = R3D.normalizedCrossCorrelation(needle,null, haystack, true);
+// console.log(scoresNCC);
+var ncc = scoresNCC["value"];
+// var ncc = scoresSAD["value"]; // worse ?
+		// get geometric error
+		var geo = [];
+		var ind = 0;
+		for(var ii=-1; ii<=1; ++ii){
+			for(var jj=-1; jj<=1; ++jj){
+				var totalError = 0;
+				p.set(pointB.x + ii, pointB.x + jj);
+				var totalCount = 0;
+				cell.forEachNeighbor8(function(neighbor,index){
+					var neighborMatch = neighbor.match()
+					if(neighborMatch){
+						var expectedB = neighbor.expectedLocation(pointA);
+						var diff = V2D.distance(expectedB,p);
+						totalError += diff;
+						totalCount += 1;
+					}
+				});
+				if(totalCount>0){
+					totalError /= cellSize; // normalize for hierarchical comparrision
+					// totalError /= totalCount; // normalize average error ?
+				}
+				geo[ind] = totalError;
+				++ind;
+			}
+		}
+
+		// get total error
+		var error = [];
+		// TODO: should this pre - subtract minimum ?
+		var min = Code.min(geo);
+		for(var j=0; j<geo.length; ++j){
+			geo[j] -= min;
+		}
+		//
+		for(var j=0; j<geo.length; ++j){
+			error[j] = cG*Math.pow(geo[j],eG) + cN*Math.pow(ncc[j],eN);
+		}
+		// console.log(ncc,geo,error);
+// console.log(geo);
+		// estimate gradient
+		var gradient = ImageMat.scharrGradient(error,3,3, 1,1);
+//		console.log(gradient);
+		cell._errorGradient = gradient;
+	}
+
+	// move in direction of gradient
+	var epsilon = 0.10;
+	var maxLen = 1.0;
+	for(var i=0; i<list.length; ++i){
+		var cell = list[i];
+		var cellMatch = cell.match();
+		if(!cellMatch){
+			continue;
+		}
+		var gradient = cell._errorGradient;
+		var gradLen = gradient.length();
+		// console.log("magnitude: "+gradLen);
+		// move toward better location
+		var dir = gradient.copy();
+		if(dir.length()>maxLen){
+			dir.norm().scale(maxLen);
+		}
+		dir.scale(-1); // toward minima
+		cellMatch.pointB().add(dir);
+		// still changing location, keep
+		console.log("   +++++GRAD: "+gradLen);
+		if(gradLen>epsilon){
+			addQueue.pushUnique(cell);
+		}
+		// still changing location, propagate changes [OR too close to neighbors]
+		// if(gradLen>epsilon){
+		// 	cell.forEachNeighbor8(function(neighbor,index){
+		// 		if(neighbor.match()){
+		// 			queue.pushUnique(neighbor);
+		// 		}
+		// 	});
+		// }
+	}
+
+
+	// update metrics
+	for(var i=0; i<list.length; ++i){
+		var cell = list[i];
+		cell.updateMetrics();
+	}
+
+	// dropping bad matches - check votes
+	for(var i=0; i<list.length; ++i){
+		var cell = list[i];
+		var match = cell.match();
+		if(match){
+			var info = cell.voteInfo();
+			var count = info["count"];
+			var percent = info["percent"];
+			if(count>6 && percent<0.60 ||  // 3/7 = 0.42
+			   count>4 && percent<0.50 ||  // 2/5 = .40
+			   count>2 && percent<0.40 // 1/3 = .33
+				){
+				console.log("DROP MATCH");
+				cell.dropMatch();
+				remQueue.pushUnique(cell);
+				// cell._previousMatch = null;
+			}
+		}
+	}
+
+	
+	// add possible neighbors
+	for(var i=0; i<list.length; ++i){
+		var cell = list[i];
+		var match = cell.match();
+		if(match){
+			cell.forEachNeighbor4(function(neighbor,index){
+				var neighborMatch = neighbor.match();
+				if(!neighborMatch){
+					// console.log("try adding new");
+					var prevMatch = neighbor._previousMatch;
+					var pathMatch = null;
+					// TODO - allow new matches if some case ?
+					var setMatch = true;
+					var attempted = false;
+					if(prevMatch){
+						// console.log(prevMatch);
+
+
+						// if score is different ?
+						attempted = true;
+						setMatch = false;
+						pathMatch = lattice.bestMatchFromSettings(match, cell, neighbor);
+						if(pathMatch){
+							// second chance to update match ?
+							// console.log(pathMatch,prevMatch);
+
+							var prevScore = 1;
+							if(match && pathMatch){
+								var prevScoreSAD = pathMatch.scoreSAD()/match.scoreSAD();
+								var prevScoreNCC = pathMatch.scoreNCC()/match.scoreNCC();
+								prevScore = Math.min(prevScoreSAD,prevScoreNCC);
+							}
+							console.log("  prevScore: "+prevScore);
+							if(prevScore<0.95){
+								setMatch = true;
+							}
+						}
+					}
+
+
+					if(setMatch){
+						//console.log("add a neighbor match : "+neighbor._previousMatch);
+						if(!attempted){ // try now
+							pathMatch = lattice.bestMatchFromSettings(match, cell, neighbor);
+						}
+						if(pathMatch){
+							//console.log("add a neighbor match : ");
+							if(lattice.matchValidation(neighbor,pathMatch)){
+								neighbor.setMatch(pathMatch);
+								addQueue.pushUnique(neighbor);
+							}
+						}
+					}
+				}
+			});
+		}
+	}
+
+	/*
+
+for each cell in L
+	for each 4/8-neighbor:
+		if neighbor doesn't have a match
+			if have prior neighbor preduction, use this
+			else predict best matching location for neighbor & store
+			if prediction is much better than neighbor's initial / final score
+				set neighbor match
+				add neighbor to Q (need to validate/adjust)
+
+	*/
+
+	// global criteria evaluation
+	lattice.calculateF();
+	lattice.dropGlobalMatches(remQueue);
+
+	// only include elements that don't toggle between add/remove
+	var addList = addQueue.toArray();
+	var remList = remQueue.toArray();
+	addQueue.clear();
+	remQueue.clear();
+	for(var i=0; i<addList.length; ++i){
+		var cell = addList[i];
+		if(Code.elementExists(remList, cell)){
+			// console.log("EXISTS");
+			Code.removeElement(remList, cell);
+		}else{
+			queue.pushUnique(cell);
+		}
+	}
+	for(var i=0; i<remList.length; ++i){
+		var cell = remList[i];
+		queue.pushUnique(cell);
+	}
+
+	// add all 4-neighbors of remaining cells
+	var list = queue.toArray();
+	queue.clear();
+	for(var i=0; i<list.length; ++i){
+		var cell = list[i];
+		cell.forEachNeighbor8(function(neighbor,index){
+			queue.pushUnique(neighbor);
+		});
+		queue.pushUnique(cell);
+	}
+
+}
+BeliefTest.Lattice.prototype.iterationOLD = function(e){
 	var lattice = this;
 	var queue = lattice.queue();
 var addQueue = new PriorityQueue(BeliefTest.Lattice._cellOrdering);
@@ -2202,8 +2489,8 @@ this._wasList = list;
 				// }
 				console.log("  prevScore: "+prevScore);
 				cell.setMatch(bestMatch);
-				// queue.push(cell);
-					addQueue.push(cell);
+				// queue.pushUnique(cell);
+					addQueue.pushUnique(cell);
 			}
 		}	
 	}
@@ -2238,8 +2525,8 @@ this._wasList = list;
 				// console.log("REMOVE CELL ...",cell);
 				// queue.remove(cell);
 				cell.dropMatch();
-				remQueue.push(cell);
-				cell._previousMatch = null;
+				remQueue.pushUnique(cell);
+//				cell._previousMatch = null;
 			}
 		}
 	}
@@ -2259,12 +2546,12 @@ this._wasList = list;
 			// console.log("EXISTS");
 			Code.removeElement(remList, cell);
 		}else{
-			queue.push(cell);
+			queue.pushUnique(cell);
 		}
 	}
 	for(var i=0; i<remList.length; ++i){
 		var cell = remList[i];
-		queue.push(cell);
+		queue.pushUnique(cell);
 	}
 
 	// add all 4-neighbors of remaining cells
@@ -2273,9 +2560,9 @@ this._wasList = list;
 	for(var i=0; i<list.length; ++i){
 		var cell = list[i];
 		cell.forEachNeighbor4(function(neighbor,index){
-			queue.push(neighbor);
+			queue.pushUnique(neighbor);
 		});
-		queue.push(cell);
+		queue.pushUnique(cell);
 	}
 
 	

@@ -3539,9 +3539,37 @@ ImageMat.sobelX = function(src,wid,hei, w,h){
 	var val = ImageMat.convolve(src,wid,hei, [-1,0,1, -2,0,2, -1,0,1], 3,3);
 	return val;
 }
-ImageMat.sobelX = function(src,wid,hei, w,h){
+ImageMat.sobelY = function(src,wid,hei, w,h){
 	// var val = ImageMat.convolve(src,wid,hei, [1,2,1, 0,0,0, -1,-2,-1], 3,3);
 	var val = ImageMat.convolve(src,wid,hei, [-1,-2,-1, 0,0,0, 1,2,1], 3,3);
+	return val;
+}
+ImageMat.scharrX = function(src,wid,hei, w,h){
+	//var val = ImageMat.convolve(src,wid,hei, [-3,0,3, -10,0,10, -3,0,3], 3,3);
+	var filter = [-3/32,0,3/32, -10/32,0,10/32, -3/32,0,3/32];
+	var val = ImageMat.convolve(src,wid,hei, filter, 3,3);
+	return val;
+}
+ImageMat.scharrY = function(src,wid,hei, w,h){
+	//var val = ImageMat.convolve(src,wid,hei, [-3,-10,-3, 0,0,0, 3,10,3], 3,3);
+	var filter = [-3/32,-10/32,-3/32, 0,0,0, 3/32,10/32,3/32];
+	var val = ImageMat.convolve(src,wid,hei, filter, 3,3);
+	return val;
+}
+ImageMat.scharrGradient = function(src,wid,hei, x,y){
+	var sX = ImageMat.scharrX(src,wid,hei, x,y);
+	var sY = ImageMat.scharrY(src,wid,hei, x,y);
+	sX = sX["value"];
+	sY = sY["value"];
+	if(x!==undefined && y!==undefined){
+		var i = y*wid + x;
+		return new V2D(sX[i],sY[i]);
+	}
+	var val = [];
+	var len = sX.length;
+	for(var i=0; i<len; ++i){
+		val[i] = new V2D(sX[i],sY[i]);
+	}
 	return val;
 }
 ImageMat.meanFilter = function(src,wid,hei, w,h){

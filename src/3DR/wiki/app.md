@@ -182,7 +182,177 @@ project typical numbers:
 APP TODO:
 
 
+- does the affine matrix need to be adjusted as the cell moves ?
 
+-> review flow field to analyze relazation steps
+
+
+=> relaxation | data => local optimize
+
+- error outside cell zone is infinite
+
+criteria for dropping bad cell:
+- best SAD/SSD score is much less than minimum score [self]
+- error in geo is much worse than neighbors [voting]
+- 
+
+
+++++++ ALG .... ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+for each seed:
+	get NCC in area, place at optimal (forward) matching point
+	add seed to Q
+
+
+L = Q
+Q = {}
+
+
+
+
+
+L = Q
+Q = {}
+for each cell in L
+	get local (3x3) NCC scores
+	get local (3x3) forward & backwards edge (GEO) scores for all existing (4/8) neighbors
+	calculate error scores for based on: c1 * NCC^e1  + c2 * GEO^e2
+	calculate sobel gradient: (3x3) or pre-smoothed gradient
+
+for each cell in L
+	move cell in direction of -gradient [only up to 1 pixel?]
+	if gradient > epsilon (~0.1) pixels
+		add cell to Q (need to keep adjusting)
+	if gradient > minimum (0.5~1.0) pixels || [if estimated to be very close]
+		add 4/8 neighbors to Q (need to propagate changes)
+
+for each cell in L
+	update metrics from matched neighbors
+
+for each cell in L
+	update vote estimations for neighbors
+	if bad cell
+		remove match
+		remove from Q
+
+
+for each cell in L
+	for each 4/8-neighbor:
+		if neighbor doesn't have a match
+			if have prior neighbor preduction, use this
+			else predict best matching location for neighbor & store
+			if prediction is much better than neighbor's initial / final score
+				set neighbor match
+				add neighbor to Q (need to validate/adjust)
+
+
+
+
+
+
+
+
+
+.......
+
+order L on highest error first 
+get local (3x3) forward edge (GEO) scores [backwards are opposite of neighbor's cell]
+
+
+
+calculate pixel movement based on 
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+bayesean optimization non convex
+
+
+
+
+
+
+- how to do progressively better cell sizing
+
+=> sub cell algorithm
+
+--- very small cells have no cornerness & can't be localized & fail fwd-bak test
+=> NEED SOME KIND OF GUIDANCE
+- if it doesn't have enough variability it can't continue
+
+
+
+
+minimization w/ criteria:
+- each cell has a 'list' of possible locations + scores [or no location if no scores are good enough]
+- each cell has a 'score' based on how 'smooth' the local topology/geomotry is
+
+- match step: find top best location matches in area [SAD/NCC scores that pass minimum & fwd-bak constraint]
+- relax step: move cells locally to minimize cost:
+	COST: scoreNCC * A + scoreSAD * B + geometry * C
+- geometry has something to do with local angles / distances -> offset from what would be the 'ideal' position
+
+=> idea:
+	NCC gradient for corners would be high in 
+	NCC gradient for edges would be high in single direction
+	NCC gradient for non-unique would be low everywhere
+
+gradient for connected components would be high for non-uniform areas
+	- error cost = distance between expected location/orientation vs current location/orientation
+
+unconnected components have no (edge) cost
+
+-> if cell position goes past available score location => rematch at new location
+
+
+
+-> FWD/BAK relaxed doesn't need 'best' score in same cell, just a 'good enough' score to be in same cell
+
+
+
+
+
+- move cells toward lower-scored points
+- only keep track of cells with high/changing gradients
+
+
+
+
+
+
+=> hierarchical
+- when EVERYTHING or LOCAL areas have become stable => divide cell at mid-point of edges
 
 
 
