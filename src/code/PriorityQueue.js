@@ -30,8 +30,6 @@ PriorityQueue.prototype.pushUnique = function(o){
 	return item;
 }
 PriorityQueue.prototype.push = function(o){
-	throw "WRONG CALL"
-	// return this.pushUnique(o);
 	var item = this._tree.insertObject(o);
 	if(this._capacity>=0){
 		if(this._tree.length()>this._capacity){

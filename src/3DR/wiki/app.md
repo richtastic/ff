@@ -181,8 +181,31 @@ project typical numbers:
 
 APP TODO:
 
+- reattempt matching criteria
+	- keep track of direction / scores?
+
+- gradient descent 
+	- gradient traveling -> not finding minimum & not stopping
+	- needs next destination to be better (not worse), or don't do at all?
+	- 
+
+- reassess affine & translation errors
+
+
+- multiply vs add geo + ncc errors
+
+
+- affine error doesn't seem to be critical enough
+	- do affine matrices have too much leeway ?
 
 - does the affine matrix need to be adjusted as the cell moves ?
+- some logic to stop cells from being closer to eachother than the affine matrices would suggest
+
+
+
+
+
+
 
 -> review flow field to analyze relazation steps
 

@@ -868,10 +868,10 @@ BeliefTest.Cell.prototype.neighbors4 = function(){
 BeliefTest.Cell.prototype.neighbors8 = function(){
 	return this._neighbors8;
 }
-BeliefTest.Cell.prototype.expectedLocation = function(point){
+BeliefTest.Cell.prototype.expectedLocation = function(point, origin){
 	var match = this.match();
 	if(match){
-		var pointA = match.pointA();
+		var pointA = origin!==undefined ? origin : match.pointA();
 		var pointB = match.pointB();
 		var diff = V2D.sub(point,pointA);
 		diff = match.affine().multV2DtoV2D(diff,diff);
@@ -1119,6 +1119,17 @@ BeliefTest.Cell.prototype.updateMetrics = function(){
 			var compare = BeliefTest.translationCompare(cell, match, neighbor, neighborMatch);
 				compare = compare["error"];
 			metricTranslate.push(compare);
+
+
+
+
+
+// THESE ^
+
+
+
+
+
 			// ncc compare
 			metricNCC.push(neighborMatch.scoreNCC());
 			// sad compare
@@ -1243,12 +1254,12 @@ BeliefTest.voteFromMetric = function(metrics, neighborMatch, neighborCell, sourc
 		var sigmaRelativePathSAD = metricRelativePathSAD["sigma"];
 	// var sigmaLimitAffine = 1.414;
 	// var sigmaLimitTranslate = 1.414;
-	var sigmaLimitAffine = 2.0;
-	var sigmaLimitTranslate = 2.0;
-	var sigmaLimitNCC = 2.0;
-	var sigmaLimitSAD = 2.0;
-	var sigmaLimitPathNCC = 3.0;
-	var sigmaLimitPathSAD = 3.0;
+	var sigmaLimitAffine = 1.9;
+	var sigmaLimitTranslate = 1.9;
+	var sigmaLimitNCC = 1.9;
+	var sigmaLimitSAD = 1.9;
+	var sigmaLimitPathNCC = 2.0;
+	var sigmaLimitPathSAD = 2.0;
 	// var sigmaLimitPathNCC = 1.5;
 	// var sigmaLimitPathSAD = 1.5;
 	var sigmaLimitRelativePathNCC = 3.0;
@@ -1266,8 +1277,10 @@ BeliefTest.voteFromMetric = function(metrics, neighborMatch, neighborCell, sourc
 	var scoreRelativePathNCC = neighborMatch.scoreRelativePathNCC();
 	var scoreRelativePathSAD = neighborMatch.scoreRelativePathSAD();
 	// crossing
-	var keepAffine = true; // var keepAffine = scoreAffine < meanAffine + sigmaAffine*sigmaLimitAffine;
-	var keepTranslate = true; // var keepTranslate = scoreTranslate < meanTranslate + sigmaTranslate*sigmaLimitAffine;
+	// var keepAffine = true; // 
+	// var keepTranslate = true; // 
+	var keepAffine = scoreAffine < meanAffine + sigmaAffine*sigmaLimitAffine;
+	var keepTranslate = scoreTranslate < meanTranslate + sigmaTranslate*sigmaLimitAffine;
 	var keepNCC = scoreNCC < meanNCC + sigmaNCC*sigmaLimitNCC;
 	var keepSAD = scoreSAD < meanSAD + sigmaSAD*sigmaLimitSAD;
 	var keepPathNCC = scorePathNCC < meanPathNCC + sigmaPathNCC*sigmaLimitPathNCC;
@@ -1543,7 +1556,7 @@ BeliefTest.Lattice.prototype.dropGlobalMatches = function(remQueue){
 	var lattice = this;
 	// var queue = lattice.queue();
 	if(Ffwd){
-		var limitErrorSigma = 3.0; // 1-2   1 stops propagation, 2 introduces lots of error
+		var limitErrorSigma = 2.0; // 1-2   1 stops propagation, 2 introduces lots of error
 		var maxErrorF = this._Fmean + this._Fsigma*limitErrorSigma;
 		var Frev = this._Frev;
 		this.forEachCell(function(cell, i, j, index){
@@ -2067,7 +2080,7 @@ BeliefTest.Lattice.prototype.matchValidation = function(cell, match){
 		return false;
 	}
 	var scoreNCC = match.scoreNCC();
-	if(scoreNCC>0.50){
+	if(scoreNCC>0.40){
 		console.log("DROP SCORE NCC: "+scoreNCC);
 		return false;
 	}
@@ -2075,7 +2088,7 @@ BeliefTest.Lattice.prototype.matchValidation = function(cell, match){
 	// relative path costs
 	var scorePathSAD = match.scorePathSAD();
 	var scorePathNCC = match.scorePathNCC();
-	var maxPathNCC = 0.60;
+	var maxPathNCC = 0.50;
 	var maxPathSAD = 0.40;
 	if(scorePathSAD>maxPathSAD){
 		console.log("DROP PATH SAD");
@@ -2088,8 +2101,8 @@ BeliefTest.Lattice.prototype.matchValidation = function(cell, match){
 	var relativePathSAD = match.scoreRelativePathSAD();
 	var relativePathNCC = match.scoreRelativePathNCC();
 	// ~2-4
-	var maxRelativeNCC = 14.0;
-	var maxRelativeSAD = 14.0;
+	var maxRelativeNCC = 4.0;
+	var maxRelativeSAD = 4.0;
 	if(relativePathSAD>maxRelativeSAD){
 		console.log("DROP RELATIVE SAD");
 		return false;
@@ -2182,9 +2195,9 @@ if(queue.length()>2000){
 	queue.clear();
 
 	//var cG = 0.50;
-	var cG = 1.0; // 10 too high
+	var cG = 0.10;
 	var eG = 1.0;
-	var cN = 1.0;
+	var cN = 0.90;
 	var eN = 1.0;
 	var p = new V2D();
 	var cellSize = lattice.cellSize();
@@ -2218,8 +2231,8 @@ var matrix = cellMatch.affine();
 var needle = imageA.extractRectFromFloatImage(pointA.x,pointA.y,cellScale,null,compareSize,compareSize, null);
 var haystack = imageB.extractRectFromFloatImage(pointB.x,pointB.y,cellScale,null,haystackSize,haystackSize, matrix);
 // find minimum of SAD:
-// var scoresSAD = R3D.searchNeedleHaystackImageFlat(needle, null, haystack);
-var scoresNCC = R3D.normalizedCrossCorrelation(needle,null, haystack, true);
+var scoresNCC = R3D.searchNeedleHaystackImageFlat(needle, null, haystack);
+// var scoresNCC = R3D.normalizedCrossCorrelation(needle,null, haystack, true);
 // console.log(scoresNCC);
 var ncc = scoresNCC["value"];
 // var ncc = scoresSAD["value"]; // worse ?
@@ -2234,10 +2247,15 @@ var ncc = scoresNCC["value"];
 				cell.forEachNeighbor8(function(neighbor,index){
 					var neighborMatch = neighbor.match()
 					if(neighborMatch){
+						totalCount += 1;
+						// cell->neighbor
 						var expectedB = neighbor.expectedLocation(pointA);
 						var diff = V2D.distance(expectedB,p);
 						totalError += diff;
-						totalCount += 1;
+						// neighbor->cell
+						var expectedA = cell.expectedLocation(neighborMatch.pointA(), p);
+						var diff = V2D.distance(expectedA,neighborMatch.pointB());
+						totalError += diff;
 					}
 				});
 				if(totalCount>0){
@@ -2252,10 +2270,10 @@ var ncc = scoresNCC["value"];
 		// get total error
 		var error = [];
 		// TODO: should this pre - subtract minimum ?
-		var min = Code.min(geo);
-		for(var j=0; j<geo.length; ++j){
-			geo[j] -= min;
-		}
+		// var min = Code.min(geo);
+		// for(var j=0; j<geo.length; ++j){
+		// 	geo[j] -= min;
+		// }
 		//
 		for(var j=0; j<geo.length; ++j){
 			error[j] = cG*Math.pow(geo[j],eG) + cN*Math.pow(ncc[j],eN);
@@ -2263,14 +2281,37 @@ var ncc = scoresNCC["value"];
 		// console.log(ncc,geo,error);
 // console.log(geo);
 		// estimate gradient
-		var gradient = ImageMat.scharrGradient(error,3,3, 1,1);
-//		console.log(gradient);
-		cell._errorGradient = gradient;
+		//var gradient = ImageMat.scharrGradient(error,3,3, 1,1);
+		// var gradient = ImageMat.gradientVector(error,3,3, 1,1);
+		//console.log(ImageMat.gradientVector(error,3,3, 1,1)+" / "+ImageMat.scharrGradient(error,3,3, 1,1));
+		//cell._errorGradient = gradient;
+
+		// var d = error;
+		//var minimum = Code.extrema2DFloatInterpolate(new V3D(), d[0],d[1],d[2],d[3],d[4],d[5],d[6],d[7],d[8]);
+
+		var minimum = Code.findMinima2DFloat(error, 3,3);
+		
+if(minimum && minimum.length==1){
+	minimum = minimum[0];
+	// console.log(" > has minimum");
+	// console.log(minimum);
+	var toMinimum = new V2D(minimum.x - 1, minimum.y - 1);
+	cell._errorGradient = toMinimum;
+	
+}else{
+	// console.log(" > no minimum");
+	var gradient = ImageMat.scharrGradient(error,3,3, 1,1);
+	gradient.scale(-1); // toward minimum
+	gradient.norm(); // always 1 .... 0
+	gradient.scale(0.5);
+	cell._errorGradient = gradient;
+}
+
 	}
 
 	// move in direction of gradient
-	var epsilon = 0.10;
-	var maxLen = 1.0;
+	var epsilon = Math.max(cellSize*0.02,0.20); // ~1/50 of cell size
+	var maxLen = cellSize*0.25;
 	for(var i=0; i<list.length; ++i){
 		var cell = list[i];
 		var cellMatch = cell.match();
@@ -2285,10 +2326,10 @@ var ncc = scoresNCC["value"];
 		if(dir.length()>maxLen){
 			dir.norm().scale(maxLen);
 		}
-		dir.scale(-1); // toward minima
+		// dir.scale(-1); // toward minima
 		cellMatch.pointB().add(dir);
 		// still changing location, keep
-		console.log("   +++++GRAD: "+gradLen);
+		// console.log("   +++++GRAD: "+gradLen);
 		if(gradLen>epsilon){
 			addQueue.pushUnique(cell);
 		}
@@ -2362,7 +2403,7 @@ var ncc = scoresNCC["value"];
 								var prevScoreNCC = pathMatch.scoreNCC()/match.scoreNCC();
 								prevScore = Math.min(prevScoreSAD,prevScoreNCC);
 							}
-							console.log("  prevScore: "+prevScore);
+							// console.log("  prevScore: "+prevScore);
 							if(prevScore<0.95){
 								setMatch = true;
 							}
