@@ -181,13 +181,85 @@ project typical numbers:
 
 APP TODO:
 
-- reattempt matching criteria
-	- keep track of direction / scores?
+- predictive steps JUMP OVER? the correct matching location?
+	- during expansion, match should also include initial translational costs [relax term] along side SAD/NCC costs for better optimal starting prediction
+	- other routes having predictions would be good too ?
+	- incorporate path cost? / lowest relative path cost
+		=> look at path costs for the top n matches ?
+- ability to 'override' matches with better one when found
 
-- gradient descent 
-	- gradient traveling -> not finding minimum & not stopping
+
+- first cell propagating shouldn't be the only decider in what the best location is
+- as cells are added, they should consider alternate locations
+	-> 
+
+
+
+
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+- seed matches pick best match based solely on NCC/SAD score
+
+when a match is set:
+	- for each 4 neighbor:
+		- estimate best next location:
+			- @ predicted center
+			- total error = a*score + b*distance from center
+* distance error is radius @ center w/ linear dropoff
+			- pick location w/ lowest total error
+		- ??? get flat path cost?
+	- for each 4 neighbor:
+		- if no match currently exists:
+			- if a previous match exists (neighbor was dropped)
+				if new match is much better
+					- set match
+			- else no prev match exists
+				- set match
+		- else if new match is much better
+			- ncc_new / ncc_old && sad_new / sad_old
+			- relativeNCC_new/relativeNCC_old < ~0.95
+			- set match
+
+moving of a cell:
+* based on origin cell?
+	- estimate what new match would be
+		- if match is much better than previous error:
+			- update match with new one
+
+match:
+	- original location
+	- original score
+	- origial origin cell
+	- current NCC score
+	- current distance score?
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+
+
+
+
+
+
+
+
+
+
+
+- propagation step should also include affine checking
+	=> limit over-reaching to poorer place
+
+
+
+- letting dropped locations/cells back in the game?
+
+- affine/translation cells are very bad
+
+
+
+- gradient descent not finding minimum & not stopping
 	- needs next destination to be better (not worse), or don't do at all?
-	- 
+	- should affine matrix be updated on pointB update?
 
 - reassess affine & translation errors
 

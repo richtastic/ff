@@ -18,7 +18,8 @@ GLOBALSTAGE = this._stage;
 
 	this._views = [];
 
-	var imageLoader = new ImageLoader("./images/",["room0.png","room2.png"], this,this.handleImageLoaded,null);
+	// var imageLoader = new ImageLoader("./images/",["room0.png","room2.png"], this,this.handleImageLoaded,null);
+	var imageLoader = new ImageLoader("./images/",["F_S_1_1.jpg","F_S_1_2.jpg"], this,this.handleImageLoaded,null);
 	// var imageLoader = new ImageLoader("./images/",["caseStudy1-0.jpg","caseStudy1-20.jpg"], this,this.handleImageLoaded,null);
 	// var imageLoader = new ImageLoader("./images/",["room0.png","room0.png"], this,this.handleImageLoaded,null);
 	imageLoader.load();
@@ -122,230 +123,18 @@ matches = [{
 			"a": 0.0
 		}];
 */
+// FS_i_j:
+// A: [191,133]./[408,306] = 0.46814   0.43464
+// B: [167,150]./[408,306] = 0.40931   0.49020
+matches = [{
+			"fr": {"x":0.46814,"y":0.43464},
+			"to": {"x":0.40931,"y":0.49020},
+			"s": 1.0,
+			"a": 0.0
+		}];
 
 	// console.log(viewA,viewB);
 	// console.log(matches);
-	var needleSize = 21;
-	var featureNeighborhood = needleSize * 3;
-	var haystackSize = 3*needleSize;
-	var needleMask = null;
-		needleMask = ImageMat.circleMask(needleSize);
-
-	for(var i=0; i<matches.length; ++i){
-break;
-		if(i!=22){
-			continue;
-		}
-
-		var match = matches[i];
-		var fr = match["fr"];
-		var to = match["to"];
-		var scaleAtoB = to["s"]/fr["s"];
-		var angleAtoB = to["a"]-fr["a"];
-		var pointA = new V2D(fr["x"],fr["y"]);
-		var pointB = new V2D(to["x"],to["y"]);
-
-		pointA.scale(imageA.width(),imageA.height());
-		pointB.scale(imageB.width(),imageB.height());
-
-
-
-// pointB.add(100.0,100.0);
-// pointB.add(-100.0,100.0);
-// pointB.add(-50.0,0.0);
-// pointB.add(-50.0,120.0);
-
-// pointB.add(100.0,0.0);
-
-var vectorX = new V2D(1.0,0.0);
-var vectorY = new V2D(0.0,1.0);
-var matrix = new Matrix(3,3).identity();
-matrix = Matrix.transform2DScale(matrix,scaleAtoB);
-matrix = Matrix.transform2DRotate(matrix,angleAtoB);
-	vectorX = matrix.multV2DtoV2D(vectorX);
-	vectorY = matrix.multV2DtoV2D(vectorY);
-	console.log(vectorX+"");
-	console.log(vectorY+"");
-
-var optimum = R3D.optimumAffineTransform(imageA,pointA, imageB,pointB, vectorX,vectorY, needleSize);
-var u = new V2D(0,0);
-var x = new V2D(1,0);
-var y = new V2D(0,1);
-var a = optimum["A"];
-var b = optimum["B"];
-var o = optimum["O"];
-var matrix = R3D.affineMatrixExact([o,x,y],[o,a,b]);
-
-
-// old:
-// var matrix = new Matrix(3,3).identity();
-// matrix = Matrix.transform2DScale(matrix,scaleAtoB);
-// matrix = Matrix.transform2DRotate(matrix,angleAtoB);
-// o = new V2D(0,0);
-
-var needle = imageA.extractRectFromFloatImage(pointA.x+o.x,pointA.y+o.y,1.0,null,needleSize,needleSize, matrix);
-var matrix = new Matrix(3,3).identity();
-var haystack = imageB.extractRectFromFloatImage(pointB.x,pointB.y,1.0,null,haystackSize,haystackSize, matrix);
-
-
-/*
-		// NEEDLE
-		var matrix = new Matrix(3,3).identity();
-			matrix = Matrix.transform2DScale(matrix,scaleAtoB);
-			matrix = Matrix.transform2DRotate(matrix,angleAtoB);
-		var needle = imageA.extractRectFromFloatImage(pointA.x,pointA.y,1.0,null,needleSize,needleSize, matrix);
-		var matrix = new Matrix(3,3).identity();
-		var haystack = imageB.extractRectFromFloatImage(pointB.x,pointB.y,1.0,null,haystackSize,haystackSize, matrix);
-*/
-		
-		//var ncc = R3D.normalizedCrossCorrelation(needle,needleMask, haystack);
-		var ncc = R3D.normalizedCrossCorrelation(needle,needleMask, haystack, true); // cost
-		console.log(ncc);
-
-		var nccValues = ncc["value"];
-		var nccSize = ncc["width"];
-		// console.log(haystack);
-
-
-// SIFT
-// var circular = R3D.SIFTVectorCircular(imageA, pointA,featureNeighborhood,?, true);
-// Code.printHistogram(circular, 25);
-// SAD
-// var circular = R3D.SADVectorCircular(imageA, pointA,featureNeighborhood,?, true);
-// Code.printHistogram(circular, 25);
-
-
-
-var matrixA = new Matrix(3,3).identity();
-	matrixA = Matrix.transform2DScale(matrixA,scaleAtoB);
-	matrixA = Matrix.transform2DRotate(matrixA,angleAtoB);
-var matrixB = new Matrix(3,3).identity();
-
-
-
-console.log("SAD test:");
-var vectorA = R3D.SADVectorCircular(imageA, pointA,featureNeighborhood,matrixA, true);
-var vectorB = R3D.SADVectorCircular(imageB, pointB,featureNeighborhood,matrixB, true);
-var compareSADAB = R3D.compareSADVectorCircular(vectorA, vectorB);
-// console.log(vectorA);
-// console.log(vectorB);
-// Code.printHistogram(vectorA, 25);
-// Code.printHistogram(vectorB, 25);
-console.log("SAD:  "+compareSADAB);
-
-var vectorA = R3D.SIFTVectorCircular(imageA, pointA,featureNeighborhood,matrixA, true);
-var vectorB = R3D.SIFTVectorCircular(imageB, pointB,featureNeighborhood,matrixB, true);
-var compareSIFTAB = R3D.compareSIFTVectorCircular(vectorA, vectorB);
-
-// Code.printHistogram(vectorA, 25);
-// Code.printHistogram(vectorB, 25);
-console.log("SIFT: "+compareSIFTAB);
-
-console.log(" -> :  "+(compareSADAB*compareSIFTAB));
-
-
-// var peaks = Code.findMaxima2DFloat(nccValues,nccSize,nccSize, true);
-// peaks.sort( function(a,b){ return a.z>b.z ? -1 : 1; } );
-var peaks = Code.findMinima2DFloat(nccValues,nccSize,nccSize, true);
-peaks.sort( function(a,b){ return a.z<b.z ? -1 : 1; } );
-// console.log(peaks);
-
-		var sca = 6.0;
-		var OFFX = 1200.0;
-		var OFFY = 10.0;
-		var d = new DO();
-			d.graphics().setLine(2.0, 0xFFFF0000);
-			d.graphics().beginPath();
-			d.graphics().drawCircle(pointA.x,pointA.y, 5);
-			d.graphics().strokeLine();
-			d.graphics().endPath();
-			d.matrix().translate(0 + 0, 0 + 0);
-			GLOBALSTAGE.addChild(d);
-		var d = new DO();
-			d.graphics().setLine(2.0, 0xFF0000FF);
-			d.graphics().beginPath();
-			d.graphics().drawCircle(pointB.x,pointB.y, 5);
-			d.graphics().strokeLine();
-			d.graphics().endPath();
-			d.matrix().translate(0 + imageA.width(), 0 + 0);
-			GLOBALSTAGE.addChild(d);
-
-
-			var iii = needle;
-			var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
-			var d = new DOImage(img);
-			d.matrix().scale(sca);
-			d.matrix().translate(OFFX, OFFY);
-			GLOBALSTAGE.addChild(d);
-
-			var iii = haystack;
-			var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
-			var d = new DOImage(img);
-			d.matrix().scale(sca);
-			d.matrix().translate(OFFX + 150, OFFY);
-			GLOBALSTAGE.addChild(d);
-
-
-		var heat = ImageMat.heatImage(nccValues, nccSize, nccSize, true);
-		var img = GLOBALSTAGE.getFloatRGBAsImage(heat.red(), heat.grn(), heat.blu(), nccSize,nccSize);
-		var d = new DOImage(img);
-			d.graphics().alpha(0.1);
-			// d.graphics().alpha(0.5);
-			d.matrix().scale(sca);
-			d.matrix().translate(OFFX + 150, OFFY + 0);
-			d.matrix().translate(Math.floor(needleSize*0.5)*sca,Math.floor(needleSize*0.5)*sca);
-			
-
-		GLOBALSTAGE.addChild(d);
-
-		for(var p=0; p<peaks.length; ++p){
-			var peak = peaks[p];
-			var d = new DO();
-			d.graphics().setLine(2.0, 0xFFFFCCFF);
-			d.graphics().beginPath();
-			//d.graphics().drawCircle(0,0, 8*((peaks.length-i)/peaks.length));
-			// console.log( peak.z )
-			d.graphics().drawCircle(0,0, 8*((peaks.length-p)/peaks.length));
-			d.graphics().strokeLine();
-			d.graphics().endPath();
-			d.matrix().translate(OFFX + 150, OFFY + 0);
-			d.matrix().translate(Math.floor(needleSize*0.5)*sca,Math.floor(needleSize*0.5)*sca);
-			d.matrix().translate(peak.x*sca, peak.y*sca);
-			GLOBALSTAGE.addChild(d);
-		}
-
-
-		/*
-		var siz = 21;
-			var sca = 6.0;
-			var fnt = 15;
-			var matrix = new Matrix(3,3).identity();
-			var frK = imageA.extractRectFromFloatImage(fr.x,fr.y,1.0,null,siz,siz, matrix);
-			var matrix = new Matrix(3,3).identity();
-				matrix = Matrix.transform2DScale(matrix,1.0/sc);
-				matrix = Matrix.transform2DRotate(matrix,-an);
-			var toK = imageB.extractRectFromFloatImage(to.x,to.y,1.0,null,siz,siz, matrix);
-
-
-
-
-			var iii = frK;
-			var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
-			var d = new DOImage(img);
-			d.matrix().scale(sca);
-			d.matrix().translate(1100, 10 + k*siz*sca);
-			GLOBALSTAGE.addChild(d);
-			var iii = toK;
-			var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
-			var d = new DOImage(img);
-			d.matrix().scale(sca);
-			d.matrix().translate(1100 + sca*siz, 10 + k*siz*sca);
-			GLOBALSTAGE.addChild(d);
-
-
-		*/
-		break;
-	}
 
 
 	var lattice = new BeliefTest.Lattice(viewA,viewB);
@@ -367,8 +156,8 @@ peaks.sort( function(a,b){ return a.z<b.z ? -1 : 1; } );
 		angleAtoB = 0.0;
 		// pointA.scale(imageA.Width,imageAHeight);
 		// pointB.scale(imageBWidth,imageBHeight);
-		// if(true){
-		if(i==9){
+		if(true){
+		// if(i==9){
 		// if(i<10){
 // if(i==2){
 		// if(i==4){
@@ -900,7 +689,6 @@ BeliefTest.Cell.prototype.addSeedMatch = function(pointA,pointB, scaleAtoB,angle
 	var cell = this;
 	var lattice = cell._lattice;
 	var match = lattice.matchFromSettings(cell, pointA,pointB,scaleAtoB,angleAtoB);
-	console.log("got a match",match);
 	if(lattice.matchValidation(cell,match)){
 		cell.addPutativeMatch(match);
 	}
@@ -923,10 +711,9 @@ BeliefTest.Cell.prototype.addPutativeMatch = function(match){
 }
 BeliefTest.Cell.prototype.applyBestPutativeMatch = function(match){
 	var matches = this._putativeMatches;
-	// console.log(matches)
-	var lattice = this._lattice;
-	var queue = lattice.queue();
 	if(matches.length>0){
+		var lattice = this._lattice;
+		var queue = lattice.queue();
 		var bestMatch = null;
 		for(var i=0; i<matches.length; ++i){
 			var match = matches[i];
@@ -937,17 +724,10 @@ BeliefTest.Cell.prototype.applyBestPutativeMatch = function(match){
 		console.log("bestMatch: "+bestMatch);
 		// choose best putative match
 		if(bestMatch){
-			console.log(" ... add match -> pair : "+bestMatch.scoreNCC()+" & "+bestMatch.scoreSAD());
-			Code.emptyArray(matches);
-			// compute best 4-neighbor matches
+			console.log(" ... add match -> pair :  NCC: "+bestMatch.scoreNCC()+" &  SAD: "+bestMatch.scoreSAD());
+			Code.emptyArray(this._putativeMatches);
 			this.setMatch(bestMatch);
-			var cell = this;
-			// add cell to Q [this is to update the seed's metrics]
-			queue.pushUnique(cell);
-			// add 4-neighbors to Q
-			// cell.forEachNeighbor4(function(neighbor,index){
-			// 	queue.push(neighbor);
-			// });
+			queue.pushUnique(this);
 			return true;
 		}
 	}
@@ -990,37 +770,29 @@ BeliefTest.Cell.prototype.forEachNeighbor4 = function(fxn){
 	}
 }
 BeliefTest.Cell.prototype.setMatch = function(newMatch){
-	// console.log("setMatch",newMatch);
 	var cell = this;
-	
 		cell._previousMatch = cell._match;
 		cell._match = newMatch;
 
-	// var lattice = cell._lattice;
-	// var paths = cell._paths;
-	// var neighbors = cell._neighbors4;
-	// var neighborKeys = Code.keys(neighbors);
-	// var queue = lattice.queue();
-	// update / check
-	// queue.push(cell);
-	// cell.updateMetrics();
-	/*
+
+//get best prediction for each of neighbors
+	var lattice = cell._lattice;
+	var paths = cell._paths;
+	var neighbors = cell._neighbors4;
+	var neighborKeys = Code.keys(neighbors);
+	var queue = lattice.queue();
 	for(var i=0; i<neighborKeys.length; ++i){
 		var index = neighborKeys[i];
 		var neighbor = neighbors[index];
-		// console.log("CENTERS: "+cell.center()+" | "+neighbor.center()+" & "+newMatch.pointA());
-		var pathMatch = lattice.bestMatchFromSettings(newMatch, cell, neighbor);
+		var pathMatch = lattice.bestMatchFromLocation(cell, newMatch.affine(),newMatch.pointA(),newMatch.pointB(), neighbor.center());
 		// console.log("  "+i+" => "+pathMatch.scorePathNCC()+" & "+pathMatch.scorePathSAD());//+"   &&& "+pathMatch.s);
 		if(lattice.matchValidation(cell,pathMatch)){
 			paths[index] = pathMatch;
 		}else{
 			paths[index] = null;
 		}
-		// update / check
-		// queue.push(neighbor);
-		//neighbor.updateMetrics();
 	}
-	*/
+	
 }
 BeliefTest.Cell.prototype.hasMatch = function(){
 	return this._match!==null;
@@ -1310,6 +1082,25 @@ BeliefTest.affineFromResult = function(optimum){
 }
 
 BeliefTest.XXX = 0;
+BeliefTest.optimumScoresAtLocation = function(imageA,pointA, imageB,pointB, needleSize,haystackRelativeSize, matrix){
+	var compareSize = BeliefTest.COMPARE_SIZE;
+	var cellScale = (needleSize/compareSize);
+	var haystackSize = Math.ceil((haystackRelativeSize/needleSize)*compareSize);
+	var haystackSize = Math.max(haystackSize,compareSize);
+	var haystack = imageB.extractRectFromFloatImage(pointB.x,pointB.y,cellScale,null,haystackSize,haystackSize, null);
+	var needle = imageA.extractRectFromFloatImage(pointA.x,pointA.y,cellScale,null,compareSize,compareSize, matrix);
+	// find minimum of SAD:
+		var scoresSAD = R3D.searchNeedleHaystackImageFlat(needle, null, haystack);
+		var scoresNCC = R3D.normalizedCrossCorrelation(needle,null, haystack, true);
+		// var scoresMult = ImageMat.mulFloat(scoresSAD["value"],scoresNCC["value"]);
+		var scores = {
+			"width": scoresSAD["width"],
+			"height": scoresSAD["height"],
+			// "value": scoresMult
+			"value": scoresSAD["value"]
+		}
+	return scores;
+}
 BeliefTest.optimumLocation = function(imageA,pointA, imageB,pointB, needleSize,haystackRelativeSize, matrix,   show){
 	// sizing
 	var compareSize = 11;
@@ -1696,22 +1487,124 @@ BeliefTest.Lattice.prototype.matchFromSettings = function(cell, pointA,pointB, s
 	// reverse
 	var centerA = cell.center();
 	var compareSize = lattice.compareSize();
-	// console.log("compareSize: "+compareSize);
-	// console.log("cellSize: "+compareSize);
 	var searchSize = Math.ceil(2*cellSize); // 2-3
 	var best = BeliefTest.optimumLocation(imageA,centerA, imageB,pointB, compareSize,searchSize, matrix);
 	var bestB = best["location"];
-	// TODO : now find optimal transform at center location
-		vectorX = matrix.multV2DtoV2D(new V2D(1,0));
-		vectorY = matrix.multV2DtoV2D(new V2D(0,1));
-		var optimum = R3D.optimumAffineTransform(imageA,centerA, imageB,bestB, vectorX,vectorY, compareSize, 0);
-		var matrix = BeliefTest.affineFromResult(optimum);
+	// find optimal transform at center location
+	vectorX = matrix.multV2DtoV2D(new V2D(1,0));
+	vectorY = matrix.multV2DtoV2D(new V2D(0,1));
+	var optimum = R3D.optimumAffineTransform(imageA,centerA, imageB,bestB, vectorX,vectorY, compareSize, 0);
+	var matrix = BeliefTest.affineFromResult(optimum);
 	// make match
 	var cell = this;
 	var match = lattice.newMatchFrom(cell, centerA, bestB, matrix);
 	return match;
 }
-BeliefTest.Lattice.prototype.bestMatchFromSettings = function(match, cell, neighbor){
+BeliefTest.Lattice.prototype.updateMatchFromSettings = function(cell, match){
+	// var optimum = R3D.optimumAffineTransform(imageB,bestB, imageA,neighborCenter, vectorX,vectorY, cellSize, limitPixel,limitVAB,limitVAB);
+		//bestB = V2D.add(optimum["O"], bestB);
+		// bestB = V2D.sub(bestB,optimum["O"]);
+	// var bestInverse = BeliefTest.affineFromResult(optimum);
+	// var bestMatrix = Matrix.inverse(bestInverse);
+
+	// TODO: update affine to better
+	var newMatch = this.newMatchFrom(cell, match.pointA(), match.pointB(), match.affine(), null);
+	return newMatch;
+}
+BeliefTest.Lattice.prototype._errorAffine = function(size){
+	if(!this._errorAffineMatrix){
+		var arr = [];
+		var center = size*0.5;
+		for(var i=0; i<size; ++i){
+			for(var j=0; j<size; ++j){
+				var index = j*size + i;
+				var distance = Math.sqrt( Math.pow(size-i,2) +  Math.pow(size-j,2) );
+				arr[index] = distance;
+			}
+		}
+		this._errorAffineMatrix = arr; // 33 - 11 + 1 = 23
+	}
+	return this._errorAffineMatrix;
+}
+BeliefTest.COMPARE_SIZE = 11;
+BeliefTest.Lattice.prototype.bestMatchFromLocation = function(cell, affine,centerA,centerB, existingA){ // 
+	var locationB = this.bestAffineLocationFromLocation(affine,centerA,centerB, existingA);
+	var compareSize = this.compareSize();
+	// update affine
+	var lattice = this;
+	var imageA = lattice.viewA().image();
+	var imageB = lattice.viewB().image();
+	var vectorX = affine.multV2DtoV2D(new V2D(1,0));
+	var vectorY = affine.multV2DtoV2D(new V2D(0,1));
+	var limitPixel = 0.0;
+	var limitVAB = 0.25;
+	var optimum = R3D.optimumAffineTransform(imageA,existingA, imageB,locationB, vectorX,vectorY, compareSize, limitPixel,limitVAB,limitVAB);
+	var bestInverse = BeliefTest.affineFromResult(optimum);
+	// new match
+	var newMatch = lattice.newMatchFrom(cell, existingA, locationB, affine, null);
+	return newMatch;
+}
+BeliefTest.Lattice.prototype.bestAffineLocationFromLocation = function(affine,centerA,centerB, existingA){ // use affine error + score error to find best location
+	var deltaA = V2D.sub(existingA,centerA); // A to B
+	var deltaB = affine.multV2DtoV2D(deltaA);
+	var predictedB = V2D.add(centerB,deltaB);
+	// get scores
+	var lattice = this;
+	var imageA = lattice.viewA().image();
+	var imageB = lattice.viewB().image();
+	var compareSize = lattice.compareSize();
+	var needleSize = compareSize;
+	var haystackSize = needleSize*3;
+	var cellScale = (needleSize/BeliefTest.COMPARE_SIZE);
+	//var finalSize = 11*3 - 11 + 1; //haystackSize - needleSize + 1;
+	var scores = BeliefTest.optimumScoresAtLocation(imageA,centerA, imageB,predictedB, needleSize,haystackSize,affine);
+	// console.log(scores);
+	var finalSize = scores["width"];
+	var score = scores["value"];
+	var errorAffine = this._errorAffine(finalSize);
+	// console.log(score);
+	// console.log(errorAffine);
+	// combine score error + affine error
+	var cScore = 0.5;
+	var cAffine = 0.5;
+	var error = [];
+	for(var i=0; i<score.length; ++i){
+		error[i] = cScore*score[i] + cAffine*errorAffine[i]*(1.0/compareSize);
+	}
+	// console.log(error);
+	// console.log(predictedB)
+	var minimum = BeliefTest.Lattice.minimumFromValues(error, finalSize, finalSize, predictedB, cellScale);
+	var absoluteLocation = minimum["location"];
+	return absoluteLocation;
+}
+BeliefTest.Lattice.minimumFromValues = function(values, valueWidth, valueHeight, pointB, cellScale){
+	var info = Code.infoArray(values);
+	var index = info["indexMin"];
+	var zLoc = values[index];
+	var xLoc = index % valueWidth;
+	var yLoc = (index/valueWidth) | 0;
+	var peak = new V3D(xLoc,yLoc,zLoc);
+	// sub-pixel interpolation
+	if(0<xLoc && xLoc<valueWidth-1 && 0<yLoc && yLoc<valueHeight-1){
+		var d0 = values[(yLoc-1)*valueWidth + (xLoc-1)];
+		var d1 = values[(yLoc-1)*valueWidth + (xLoc+0)];
+		var d2 = values[(yLoc-1)*valueWidth + (xLoc+1)];
+		var d3 = values[(yLoc+0)*valueWidth + (xLoc-1)];
+		var d4 = values[(yLoc+0)*valueWidth + (xLoc+0)];
+		var d5 = values[(yLoc+0)*valueWidth + (xLoc+1)];
+		var d6 = values[(yLoc+1)*valueWidth + (xLoc-1)];
+		var d7 = values[(yLoc+1)*valueWidth + (xLoc+0)];
+		var d8 = values[(yLoc+1)*valueWidth + (xLoc+1)];
+		var result = Code.extrema2DFloatInterpolate(new V3D(), d0,d1,d2,d3,d4,d5,d6,d7,d8);
+		result.x += xLoc;
+		result.y += yLoc;
+		// console.log(" RESULT: "+peak+" / "+result);
+		peak = result;
+	}
+	var p = new V2D(pointB.x + (-valueWidth*0.5 + peak.x)*cellScale, pointB.y + (-valueHeight*0.5 + peak.y)*cellScale);
+	return {"location":p, "score":peak.z};
+}
+BeliefTest.Lattice.prototype.bestMatchFromSettings = function(match, cell, neighbor, pointBIn){
 	var lattice = this;
 	var imageA = lattice.viewA().image();
 	var imageB = lattice.viewB().image();
@@ -1729,13 +1622,24 @@ BeliefTest.Lattice.prototype.bestMatchFromSettings = function(match, cell, neigh
 	var inverse = Matrix.inverse(matrix);
 	// move point b around till it fits to point a
 	// var optimumLocation = R3D.optimumTranslation(imageB,predictB, imageA,neighborCenter, vectorX,vectorY, cellSize, 1,0.1,0.1);
-	var optimumLocation = BeliefTest.optimumLocation(imageA,neighborCenter, imageB,predictB, cellSize,cellSize*4, matrix,   false);
-	var bestB = optimumLocation["location"];
+	var bestB = null;
+	var limitPixel = cellSize*0.5;
+	var limitVAB = 0.25;
+	// var searchSize = cellSize*4;
+	var searchSize = cellSize*2;
+	// if(pointBIn){
+	// 	bestB = pointBIn;
+	// 	limitPixel = 0;
+	// 	limitVAB = 0.10;
+	// }else{
+		var optimumLocation = BeliefTest.optimumLocation(imageA,neighborCenter, imageB,predictB, cellSize,searchSize, matrix,   false);
+		bestB = optimumLocation["location"];
+	// }
 	// optimum transform
 	var vectorX = inverse.multV2DtoV2D(new V2D(1,0));
 	var vectorY = inverse.multV2DtoV2D(new V2D(0,1));
 	// console.log("B: "+vectorX+" & "+vectorY);
-	var optimum = R3D.optimumAffineTransform(imageB,bestB, imageA,neighborCenter, vectorX,vectorY, cellSize, cellSize*0.5,0.25,0.25);
+	var optimum = R3D.optimumAffineTransform(imageB,bestB, imageA,neighborCenter, vectorX,vectorY, cellSize, limitPixel,limitVAB,limitVAB);
 		bestB = V2D.add(optimum["O"], bestB);
 		// bestB = V2D.sub(bestB,optimum["O"]);
 	var bestInverse = BeliefTest.affineFromResult(optimum);
@@ -1811,7 +1715,8 @@ zoomCount = zoomCount!==undefined ? zoomCount : 0;
 		match.range(range);
 		match.uniqueness(uniqueness);
 		var pathA, pathB, baseNCC, baseSAD;
-	if(originMatch){
+	//if(originMatch){
+	if(false){ // IGNORE RELATIVES
 		baseNCC = originMatch.scoreNCC();
 		baseSAD = originMatch.scoreSAD();
 		// TODO: THIS SHOULD ACTUALLY BE EXTRACTING PATHS FROM A->A' & B->B`
@@ -2062,7 +1967,7 @@ BeliefTest.Lattice.prototype.matchValidation = function(cell, match){
 	// }
 	
 	// minimum variabliity
-
+	/*
 	// min uniqueness
 	var minUniquenessNCC = 0.001;
 	var uniqueness = match.uniqueness();
@@ -2071,6 +1976,10 @@ BeliefTest.Lattice.prototype.matchValidation = function(cell, match){
 		console.log("DROP UNIQUENESS");
 		return false;
 	}
+	*/
+	
+// TODO: SAD * range ???
+
 
 	// score constraints
 	var scoreSAD = match.scoreSAD();
@@ -2084,7 +1993,8 @@ BeliefTest.Lattice.prototype.matchValidation = function(cell, match){
 		console.log("DROP SCORE NCC: "+scoreNCC);
 		return false;
 	}
-
+	
+	/*
 	// relative path costs
 	var scorePathSAD = match.scorePathSAD();
 	var scorePathNCC = match.scorePathNCC();
@@ -2098,6 +2008,8 @@ BeliefTest.Lattice.prototype.matchValidation = function(cell, match){
 		console.log("DROP PATH NCC "+scorePathNCC);
 		return false;
 	}
+	*/
+	/*
 	var relativePathSAD = match.scoreRelativePathSAD();
 	var relativePathNCC = match.scoreRelativePathNCC();
 	// ~2-4
@@ -2111,6 +2023,7 @@ BeliefTest.Lattice.prototype.matchValidation = function(cell, match){
 		console.log("DROP RELATIVE NCC");
 		return false;
 	}
+	*/
 	/*
 		F error
 	*/
@@ -2184,21 +2097,6 @@ BeliefTest.Lattice.prototype.queue = function(){
 BeliefTest.Lattice.prototype.iteration = function(e){
 	var lattice = this;
 	var queue = lattice.queue();
-
-console.log("Q SIZE: "+queue.length()+" / "+lattice._cells.length);
-if(queue.length()>2000){
-	throw "???"
-}
-
-	var list = queue.toArray();
-	this._wasList = list;
-	queue.clear();
-
-	//var cG = 0.50;
-	var cG = 0.10;
-	var eG = 1.0;
-	var cN = 0.90;
-	var eN = 1.0;
 	var p = new V2D();
 	var cellSize = lattice.cellSize();
 	var compareSize = lattice.compareSize();
@@ -2209,140 +2107,65 @@ if(queue.length()>2000){
 var addQueue = new PriorityQueue(BeliefTest.Lattice._cellOrdering);
 var remQueue = new PriorityQueue(BeliefTest.Lattice._cellOrdering);
 
-	// calculate error gradient
-
-	for(var i=0; i<list.length; ++i){
-		var cell = list[i];
-		var cellMatch = cell.match();
-		if(!cellMatch){
-			continue;
-		}
-		var pointA = cellMatch.pointA();
-		var pointB = cellMatch.pointB();
-		// var cellCenter = cell.center();
-		// get 3x3 error grid
-var needleSize = 11;
-var cellScale = (needleSize/compareSize);
-var haystackSize = compareSize + 2; // get a 3x3
-//var haystackSize = Math.ceil((haystackRelativeSize/needleSize)*compareSize);
-//var haystackSize = Math.max(haystackSize,compareSize);
-// needle + haystack
-var matrix = cellMatch.affine();
-var needle = imageA.extractRectFromFloatImage(pointA.x,pointA.y,cellScale,null,compareSize,compareSize, null);
-var haystack = imageB.extractRectFromFloatImage(pointB.x,pointB.y,cellScale,null,haystackSize,haystackSize, matrix);
-// find minimum of SAD:
-var scoresNCC = R3D.searchNeedleHaystackImageFlat(needle, null, haystack);
-// var scoresNCC = R3D.normalizedCrossCorrelation(needle,null, haystack, true);
-// console.log(scoresNCC);
-var ncc = scoresNCC["value"];
-// var ncc = scoresSAD["value"]; // worse ?
-		// get geometric error
-		var geo = [];
-		var ind = 0;
-		for(var ii=-1; ii<=1; ++ii){
-			for(var jj=-1; jj<=1; ++jj){
-				var totalError = 0;
-				p.set(pointB.x + ii, pointB.x + jj);
-				var totalCount = 0;
-				cell.forEachNeighbor8(function(neighbor,index){
-					var neighborMatch = neighbor.match()
-					if(neighborMatch){
-						totalCount += 1;
-						// cell->neighbor
-						var expectedB = neighbor.expectedLocation(pointA);
-						var diff = V2D.distance(expectedB,p);
-						totalError += diff;
-						// neighbor->cell
-						var expectedA = cell.expectedLocation(neighborMatch.pointA(), p);
-						var diff = V2D.distance(expectedA,neighborMatch.pointB());
-						totalError += diff;
-					}
-				});
-				if(totalCount>0){
-					totalError /= cellSize; // normalize for hierarchical comparrision
-					// totalError /= totalCount; // normalize average error ?
-				}
-				geo[ind] = totalError;
-				++ind;
-			}
-		}
-
-		// get total error
-		var error = [];
-		// TODO: should this pre - subtract minimum ?
-		// var min = Code.min(geo);
-		// for(var j=0; j<geo.length; ++j){
-		// 	geo[j] -= min;
-		// }
-		//
-		for(var j=0; j<geo.length; ++j){
-			error[j] = cG*Math.pow(geo[j],eG) + cN*Math.pow(ncc[j],eN);
-		}
-		// console.log(ncc,geo,error);
-// console.log(geo);
-		// estimate gradient
-		//var gradient = ImageMat.scharrGradient(error,3,3, 1,1);
-		// var gradient = ImageMat.gradientVector(error,3,3, 1,1);
-		//console.log(ImageMat.gradientVector(error,3,3, 1,1)+" / "+ImageMat.scharrGradient(error,3,3, 1,1));
-		//cell._errorGradient = gradient;
-
-		// var d = error;
-		//var minimum = Code.extrema2DFloatInterpolate(new V3D(), d[0],d[1],d[2],d[3],d[4],d[5],d[6],d[7],d[8]);
-
-		var minimum = Code.findMinima2DFloat(error, 3,3);
-		
-if(minimum && minimum.length==1){
-	minimum = minimum[0];
-	// console.log(" > has minimum");
-	// console.log(minimum);
-	var toMinimum = new V2D(minimum.x - 1, minimum.y - 1);
-	cell._errorGradient = toMinimum;
-	
-}else{
-	// console.log(" > no minimum");
-	var gradient = ImageMat.scharrGradient(error,3,3, 1,1);
-	gradient.scale(-1); // toward minimum
-	gradient.norm(); // always 1 .... 0
-	gradient.scale(0.5);
-	cell._errorGradient = gradient;
+console.log("Q SIZE: "+queue.length()+" / "+lattice._cells.length);
+if(queue.length()>2000){
+	throw "???"
 }
 
-	}
-
-	// move in direction of gradient
-	var epsilon = Math.max(cellSize*0.02,0.20); // ~1/50 of cell size
-	var maxLen = cellSize*0.25;
+	var list = queue.toArray();
+	this._wasList = list;
+	queue.clear();
+/*
+	// calculate error gradient
 	for(var i=0; i<list.length; ++i){
 		var cell = list[i];
 		var cellMatch = cell.match();
 		if(!cellMatch){
 			continue;
 		}
-		var gradient = cell._errorGradient;
-		var gradLen = gradient.length();
-		// console.log("magnitude: "+gradLen);
-		// move toward better location
+		// get 3x3 error grid
+		var error = this.errorSquare3x3(cell, cellMatch);
+		var minimum = Code.findMinima2DFloat(error, 3,3);
+		var errorCurrent = error[1*3 + 1]; // center error
+		var gradient = null;
+		if(minimum && minimum.length==1){
+			minimum = minimum[0];
+			// console.log(" > has minimum @ "+minimum);
+			// console.log(minimum);
+			gradient = new V2D(minimum.x - 1, minimum.y - 1);
+		}else{
+			gradient = ImageMat.scharrGradient(error,3,3, 1,1);
+			gradient.scale(-1); // toward minimum
+			// console.log(" > gradient "+gradient);
+			gradient.norm(); // always 1 .... 0
+			gradient.scale(0.5);
+		}
 		var dir = gradient.copy();
-		if(dir.length()>maxLen){
-			dir.norm().scale(maxLen);
-		}
-		// dir.scale(-1); // toward minima
-		cellMatch.pointB().add(dir);
-		// still changing location, keep
-		// console.log("   +++++GRAD: "+gradLen);
-		if(gradLen>epsilon){
-			addQueue.pushUnique(cell);
-		}
-		// still changing location, propagate changes [OR too close to neighbors]
-		// if(gradLen>epsilon){
-		// 	cell.forEachNeighbor8(function(neighbor,index){
-		// 		if(neighbor.match()){
-		// 			queue.pushUnique(neighbor);
-		// 		}
-		// 	});
-		// }
-	}
+		// UPDATE NEW POSITION IF BETTER THAN OLD POSITION
+		var oldPointB = cellMatch.pointB();
+		var newPointB = oldPointB.copy().add(dir);
+		cellMatch.pointB(newPointB)
+		var newMatch = lattice.updateMatchFromSettings(cell, cellMatch);
+			cellMatch.pointB(oldPointB);
+		var error = this.errorSquare3x3(cell, newMatch);
+		var errorNext = error[1*3 + 1]; // center error
+		// console.log(newMatch);
+		scoreRatio = newMatch.scoreNCC()/cellMatch.scoreNCC();
 
+		var errorRatio = errorNext/errorCurrent;
+		// console.log("ERRORS: "+errorRatio+" @ "+errorCurrent+" -> "+errorNext);
+		// console.log(scoreRatio);
+		// if(scoreRatio<1.0){
+		//if(errorRatio<1.0){
+// something better?
+		if(errorRatio<0.990){
+			cell._match = newMatch;
+			addQueue.pushUnique(cell);
+		}else{
+			gradLen = 0; // NO MORE
+		}
+	}
+*/
 
 	// update metrics
 	for(var i=0; i<list.length; ++i){
@@ -2358,9 +2181,13 @@ if(minimum && minimum.length==1){
 			var info = cell.voteInfo();
 			var count = info["count"];
 			var percent = info["percent"];
-			if(count>6 && percent<0.60 ||  // 3/7 = 0.42
-			   count>4 && percent<0.50 ||  // 2/5 = .40
-			   count>2 && percent<0.40 // 1/3 = .33
+			if( 
+				count>6 && percent<0.60 ||  // 2/7 = 0.28 | 3/7 = 0.42 | 4/7 = 0.57 | 5/7 = 0.71
+				// count>6 && percent<0.90 || 
+			   count>4 && percent<0.50 ||  // 2/5 = 0.40 | 3/5 = 0.60
+			   // count>4 && percent<0.80 ||  
+			   count>2 && percent<0.40 // 1/3 = .33 | 2/3 = 0.66
+			   // count>2 && percent<0.70
 				){
 				console.log("DROP MATCH");
 				cell.dropMatch();
@@ -2387,8 +2214,6 @@ if(minimum && minimum.length==1){
 					var attempted = false;
 					if(prevMatch){
 						// console.log(prevMatch);
-
-
 						// if score is different ?
 						attempted = true;
 						setMatch = false;
@@ -2404,7 +2229,8 @@ if(minimum && minimum.length==1){
 								prevScore = Math.min(prevScoreSAD,prevScoreNCC);
 							}
 							// console.log("  prevScore: "+prevScore);
-							if(prevScore<0.95){
+							//if(prevScore<0.95){
+							if(true){
 								setMatch = true;
 							}
 						}
@@ -2477,6 +2303,95 @@ for each cell in L
 	}
 
 }
+
+
+BeliefTest.Lattice.prototype.errorSquare3x3 = function(cell, cellMatch){
+	var lattice = this;
+	//
+	var pointA = cellMatch.pointA();
+	var pointB = cellMatch.pointB();
+	//var cG = 0.50;
+	var cG = 0.50;
+	var eG = 1.0;
+	var cN = 0.50;
+	var eN = 1.0;
+	var p = new V2D();
+	var cellSize = lattice.cellSize();
+	var compareSize = lattice.compareSize();
+	var viewA = lattice.viewA();
+	var viewB = lattice.viewB();
+	var imageA = viewA.image();
+	var imageB = viewB.image();
+	
+	var needleSize = 11;
+	var cellScale = (needleSize/compareSize);
+	var haystackSize = compareSize + 2; // get a 3x3
+	// needle + haystack
+	var matrix = cellMatch.affine();
+	var needle = imageA.extractRectFromFloatImage(pointA.x,pointA.y,cellScale,null,compareSize,compareSize, null);
+	var haystack = imageB.extractRectFromFloatImage(pointB.x,pointB.y,cellScale,null,haystackSize,haystackSize, matrix);
+	// find minimum of SAD:
+	var scoresSAD = R3D.searchNeedleHaystackImageFlat(needle, null, haystack);
+	var scoresNCC = R3D.normalizedCrossCorrelation(needle,null, haystack, true);
+	scoresSAD = scoresSAD["value"];
+	scoresNCC = scoresNCC["value"];
+	// console.log(scoresNCC);
+	var ncc = scoresSAD;
+	// get geometric error
+	var geo = [];
+	var ind = 0;
+	for(var ii=-1; ii<=1; ++ii){
+		for(var jj=-1; jj<=1; ++jj){
+			var totalError = 0;
+			p.set(pointB.x + ii, pointB.x + jj);
+			var totalCount = 0;
+			cell.forEachNeighbor8(function(neighbor,index){
+				var neighborMatch = neighbor.match()
+				if(neighborMatch){
+					totalCount += 1;
+					// cell->neighbor
+					var expectedB = neighbor.expectedLocation(pointA);
+					var diff = V2D.distance(expectedB,p);
+					totalError += diff;
+					// neighbor->cell
+					var expectedA = cell.expectedLocation(neighborMatch.pointA(), p);
+					var diff = V2D.distance(expectedA,neighborMatch.pointB());
+					totalError += diff;
+				}
+			});
+			if(totalCount>0){
+				//totalError /= cellSize; // normalize for hierarchical comparrision
+				// totalError /= totalCount; // normalize average error ?
+			}
+			geo[ind] = totalError;
+			++ind;
+		}
+	}
+
+	// get total error
+	var error = [];
+	// TODO: should this pre - subtract minimum ?
+	// var min = Code.min(geo);
+	// for(var j=0; j<geo.length; ++j){
+	// 	geo[j] -= min;
+	// }
+	//
+	for(var j=0; j<geo.length; ++j){
+		error[j] = cG*Math.pow(geo[j],eG) + cN*Math.pow(ncc[j],eN);
+	}
+	// console.log(ncc,geo,error);
+	// console.log(geo);
+	// estimate gradient
+	//var gradient = ImageMat.scharrGradient(error,3,3, 1,1);
+	// var gradient = ImageMat.gradientVector(error,3,3, 1,1);
+	//console.log(ImageMat.gradientVector(error,3,3, 1,1)+" / "+ImageMat.scharrGradient(error,3,3, 1,1));
+	//cell._errorGradient = gradient;
+
+	// var d = error;
+	//var minimum = Code.extrema2DFloatInterpolate(new V3D(), d[0],d[1],d[2],d[3],d[4],d[5],d[6],d[7],d[8]);
+	return error;
+}
+
 BeliefTest.Lattice.prototype.iterationOLD = function(e){
 	var lattice = this;
 	var queue = lattice.queue();
@@ -2502,9 +2417,8 @@ this._wasList = list;
 			if(neighborMatch){ // has possible path matches
 				var match = neighbor._paths[cellID];
 				if(match){ // valid
-					//if(bestMatch==null || match.scorePathNCC()<bestMatch.scorePathNCC()){
 						if(bestMatch==null ||
-							(match.scoreSAD()<bestMatch.scoreSAD() || match.scoreNCC()<bestMatch.scoreNCC())
+							(match.scoreSAD()<bestMatch.scoreSAD() && match.scoreNCC()<bestMatch.scoreNCC())
 							){
 							// match.scorePathNCC()<bestMatch.scorePathNCC() && match.scoreNCC()<bestMatch.scoreNCC() 
 							//match.scoreNCC()<bestMatch.scoreNCC()){ // TODO: LOWEST RELATIVE PATH COSTS
@@ -2515,7 +2429,7 @@ this._wasList = list;
 		}
 		if(bestMatch && bestMatch!=cell.match()){ // match exists and is better
 			var match = cell.match();
-			var prevScore = 0;
+			var prevScore = 1.0;
 			if(match && bestMatch){
 				var prevScoreSAD = bestMatch.scoreSAD()/match.scoreSAD();
 				var prevScoreNCC = bestMatch.scoreNCC()/match.scoreNCC();
@@ -2530,8 +2444,7 @@ this._wasList = list;
 				// }
 				console.log("  prevScore: "+prevScore);
 				cell.setMatch(bestMatch);
-				// queue.pushUnique(cell);
-					addQueue.pushUnique(cell);
+				addQueue.pushUnique(cell);
 			}
 		}	
 	}
