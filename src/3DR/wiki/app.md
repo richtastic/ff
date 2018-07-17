@@ -181,6 +181,31 @@ project typical numbers:
 
 APP TODO:
 
+
+- VISUALIZE A CELL TO FIND OUT WHY BAD
+- lots of overlapping should not be allowed
+=> DROP BASED ON SOME CLOSENESS locallly
+
+
+
+- plot metrics, try to learn:
+	- sad
+	- ncc
+	- Ferror
+	- relativeSAD
+	- relativeNCC
+	- pathScore
+- find out why eg chair corner looks so bad & try to pre/post filter it out
+
+
+
+
+- want to prevent bad matches so that don't have to recover from them
+
+
+
+
+
 - predictive steps JUMP OVER? the correct matching location?
 	- during expansion, match should also include initial translational costs [relax term] along side SAD/NCC costs for better optimal starting prediction
 	- other routes having predictions would be good too ?

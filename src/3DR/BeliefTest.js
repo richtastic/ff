@@ -18,8 +18,8 @@ GLOBALSTAGE = this._stage;
 
 	this._views = [];
 
-	// var imageLoader = new ImageLoader("./images/",["room0.png","room2.png"], this,this.handleImageLoaded,null);
-	var imageLoader = new ImageLoader("./images/",["F_S_1_1.jpg","F_S_1_2.jpg"], this,this.handleImageLoaded,null);
+	var imageLoader = new ImageLoader("./images/",["room0.png","room2.png"], this,this.handleImageLoaded,null);
+	// var imageLoader = new ImageLoader("./images/",["F_S_1_1.jpg","F_S_1_2.jpg"], this,this.handleImageLoaded,null);
 	// var imageLoader = new ImageLoader("./images/",["caseStudy1-0.jpg","caseStudy1-20.jpg"], this,this.handleImageLoaded,null);
 	// var imageLoader = new ImageLoader("./images/",["room0.png","room0.png"], this,this.handleImageLoaded,null);
 	imageLoader.load();
@@ -28,9 +28,178 @@ GLOBALSTAGE = this._stage;
 	// this._keyboard.addFunction(Keyboard.EVENT_KEY_UP,this._handleKeyboardUp,this);
 	this._keyboard.addFunction(Keyboard.EVENT_KEY_DOWN,this._handleKeyboardDown,this);
 	this._keyboard.addListeners();
+
+	if(!this._display){
+		this._display = new DO();
+		GLOBALSTAGE.addChild(this._display);
+		this._insides = new DO();
+		this.resetDisplay();
+	}
+//var displayScale = 1.5;
 }
 BeliefTest.prototype.handleMouseClickFxn = function(e){
-	//console.log(e.x,e.y)
+	var location = e["location"];
+
+	// console.log(e)
+	// console.log(e.x,e.y)
+	var lattice = this._lattice;
+	var display = this._display;
+	if(lattice && display){
+		var OFFX = 1300;
+		var OFFY = 300;
+		var insides = this._insides;
+		insides.removeAllChildren();
+		insides.matrix().identity();
+		// insides.matrix().scale(1,-1);
+		insides.matrix().translate(OFFX,OFFY);
+		var cellSize = lattice.cellSize();
+		var viewA = this._views[0];
+		var viewB = this._views[1];
+		var imageA = viewA.image();
+		var imageB = viewB.image();
+		var widthA = imageA.width();
+		var heightA = imageA.height();
+		var widthB = imageB.width();
+		var heightB = imageB.height();
+		var p = new V2D(location.x % widthA, location.y % heightA);
+		var cell = lattice.cellFromPoint(p);
+		if(cell){
+			//console.log(cell);
+			var match = cell.match();
+
+			if(match){
+				console.log(match);
+				var affine = match.affine();
+				// visualize match:
+				// affine arrows
+				var dirX = new V2D(1,0);
+				var dirY = new V2D(0,1);
+				var vecX = affine.multV2DtoV2D(dirX);
+				var vecY = affine.multV2DtoV2D(dirY);
+				var sss = 100/cellSize;
+				var box = sss*cellSize*0.5;
+				var d = new DO();
+					d.graphics().setLine(1.0,0xFFFF0000);
+					d.graphics().beginPath();
+					d.graphics().moveTo(0,0);
+					d.graphics().lineTo(dirX.x*box,dirX.y*box);
+					d.graphics().strokeLine();
+					d.graphics().endPath();
+
+					d.graphics().setLine(1.0,0xFF0000FF);
+					d.graphics().beginPath();
+					d.graphics().moveTo(0,0);
+					d.graphics().lineTo(dirY.x*box,dirY.y*box);
+					d.graphics().strokeLine();
+					d.graphics().endPath();
+
+
+					insides.addChild(d);
+// console.log(dirX+" & "+dirY);
+// console.log(vecX+" & "+vecY);
+				var d = new DO();
+					d.graphics().setLine(1.0,0xFFCC6600);
+					d.graphics().beginPath();
+					d.graphics().moveTo(0,0);
+					d.graphics().lineTo(vecX.x*box,vecX.y*box);
+					d.graphics().strokeLine();
+					d.graphics().endPath();
+
+					d.graphics().setLine(1.0,0xFF0099CC);
+					d.graphics().beginPath();
+					d.graphics().moveTo(0,0);
+					d.graphics().lineTo(vecY.x*box,vecY.y*box);
+					d.graphics().strokeLine();
+					d.graphics().endPath();
+
+					// d.matrix().translate(2,2);
+					insides.addChild(d);
+
+					// square
+					var d = new DO();
+					d.graphics().setLine(1.0,0xFFFF0000);
+					d.graphics().beginPath();
+					// d.graphics().drawRect(-box*0.5,-box*0.5,box,box);
+					d.graphics().moveTo(-box*vecX.x + -box*vecY.x,-box*vecX.y + -box*vecY.y);
+					d.graphics().lineTo( box*vecX.x + -box*vecY.x, box*vecX.y + -box*vecY.y);
+					d.graphics().lineTo( box*vecX.x +  box*vecY.x, box*vecX.y +  box*vecY.y);
+					d.graphics().lineTo(-box*vecX.x +  box*vecY.x,-box*vecX.y +  box*vecY.y);
+					d.graphics().endPath();
+					d.graphics().strokeLine();
+					
+					insides.addChild(d);
+
+					cell.forEachNeighbor8(function(n,ind){
+						var m = n.match();
+						if(m){
+							var dirA = V2D.sub(m.pointA(),match.pointA());
+							var preB = affine.multV2DtoV2D(dirA);
+							var absB = V2D.add(match.pointB(),preB);
+							var dirB = V2D.sub(m.pointB(),match.pointB());
+							//var difB = V2D.sub();
+// console.log(".   "+dirA+" -> "+preB);
+								// var d = new DO();
+								// d.graphics().setLine(1.0,0xFFFF0000);
+								// d.graphics().beginPath();
+								// //d.graphics().drawRect(-sss*0.5,-sss*0.5,sss,sss);
+								// d.graphics().moveTo(-sss*dirX.x + -sss*dirY.x,-sss*dirX.y + -sss*dirY.y);
+								// d.graphics().lineTo( sss*dirX.x + -sss*dirY.x, sss*dirX.y + -sss*dirY.y);
+								// d.graphics().lineTo( sss*dirX.x +  sss*dirY.x, sss*dirX.y +  sss*dirY.y);
+								// d.graphics().lineTo(-sss*dirX.x +  sss*dirY.x,-sss*dirX.y +  sss*dirY.y);
+								// d.graphics().endPath();
+								// d.graphics().strokeLine();
+								// d.matrix().translate(OFFX,OFFY);
+								// display.addChild(d);
+
+								// expected:
+								var d = new DO();
+								d.graphics().setLine(1.0,0xFF00CC00);
+								d.graphics().beginPath();
+								d.graphics().drawCircle(preB.x*sss,preB.y*sss, 4.0);
+								d.graphics().endPath();
+								d.graphics().strokeLine();
+								insides.addChild(d);
+								// actual:
+								var d = new DO();
+								d.graphics().setLine(1.0,0xFF0000CC);
+								d.graphics().beginPath();
+								d.graphics().drawCircle(dirB.x*sss,dirB.y*sss, 4.0);
+								d.graphics().endPath();
+								d.graphics().strokeLine();
+								insides.addChild(d);
+								// diff
+								var d = new DO();
+								d.graphics().setLine(1.0,0x99000000);
+								d.graphics().beginPath();
+								d.graphics().moveTo(preB.x*sss,preB.y*sss);
+								d.graphics().lineTo(dirB.x*sss,dirB.y*sss);
+								d.graphics().endPath();
+								d.graphics().strokeLine();
+								insides.addChild(d);
+								
+						}
+					});
+				// SQUARE
+
+				// var d = new DO();
+				// 	d.graphics().setLine(1.0,0xFFFFFF00);
+				// 	d.graphics().beginPath();
+				// 	d.graphics().moveTo(0,0);
+				// 	d.graphics().lineTo(vecX.x*sss,vecY.y*sss);
+				// 	d.graphics().strokeLine();
+				// 	d.graphics().endPath();
+				// 	d.matrix().translate(OFFX,OFFY);
+				// 	insides.addChild(d);
+
+				// affine cell
+				// d.graphics().drawRect(i*cellSize*displayScale,j*cellSize*displayScale, cellSize*displayScale,cellSize*displayScale);
+				// position translation
+				// neighbor discrepancies [4 & 8]
+			}
+		}
+	}
+
+
 }
 BeliefTest.prototype.handleImageLoaded = function(imageInfo){
 	var imageList = imageInfo.images;
@@ -83,10 +252,9 @@ BeliefTest.prototype._handleKeyboardDown = function(e){
 	}else if(e.keyCode==Keyboard.KEY_LET_P){
 		this.createLabelGroups();
 	}else if(e.keyCode==Keyboard.KEY_LET_Q){
-		var display = this._display;
-		if(display){
-			display.removeAllChildren();
-		}
+		this.resetDisplay();
+	}else if(e.keyCode==Keyboard.KEY_LET_B){
+		lattice.calcInfo();
 	}
 }
 BeliefTest.prototype._handleGetMatchesComplete = function(data){
@@ -123,12 +291,25 @@ matches = [{
 			"a": 0.0
 		}];
 */
+/*
 // FS_i_j:
-// A: [191,133]./[408,306] = 0.46814   0.43464
+// A: [191,133]./[408,306] = 0.27679   0.47619
 // B: [167,150]./[408,306] = 0.40931   0.49020
 matches = [{
 			"fr": {"x":0.46814,"y":0.43464},
 			"to": {"x":0.40931,"y":0.49020},
+			"s": 1.0,
+			"a": 0.0
+		}];
+*/
+
+// ROOM
+// 0 : [139.5,180.0]./[504,378] = 0.27540   0.47698
+// 1 : [155,137]./[504,378] =  0.30754   0.36243
+// 2 : [161.5,116.5]./[504,378] =   0.32044   0.30820
+matches = [{
+			"fr": {"x":0.27679,"y":0.47619},
+			"to": {"x":0.32044,"y":0.30820},
 			"s": 1.0,
 			"a": 0.0
 		}];
@@ -197,15 +378,15 @@ matches = [{
 	lattice.iteration();
 	
 }
+BeliefTest.prototype.resetDisplay = function(){
+	this._display.removeAllChildren();
+	this._insides.removeAllChildren();
+	this._display.addChild(this._insides);
+}
 BeliefTest.prototype.drawLattice = function(e){ // TODO: ERROR THROWN -- likely bad looking match -- too close to neighbor ?
-	if(!this._display){
-		this._display = new DO();
-		GLOBALSTAGE.addChild(this._display);
-	}
-	//var displayScale = 1.5;
+	this.resetDisplay();
 	var displayScale = 1.0;
 	var display = this._display;
-	display.removeAllChildren();
 // console.log(display._children);
 	var lattice = this._lattice;
 	var viewA = lattice.viewA();
@@ -221,7 +402,7 @@ BeliefTest.prototype.drawLattice = function(e){ // TODO: ERROR THROWN -- likely 
 	var countX = lattice._cellCountX;
 	var countY = lattice._cellCountY;
 	// show images:
-		var alp = 0.50;
+		var alp = 0.250;
 		var iii = imageA;
 		var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
 		var d = new DOImage(img);
@@ -244,6 +425,7 @@ BeliefTest.prototype.drawLattice = function(e){ // TODO: ERROR THROWN -- likely 
 	// 	//d.graphics().alpha(1.0);
 	// 	d.matrix().translate(x,y);
 	// show cells:
+	
 	for(var j=0; j<countY; ++j){
 		for(var i=0; i<countX; ++i){
 			
@@ -251,7 +433,7 @@ BeliefTest.prototype.drawLattice = function(e){ // TODO: ERROR THROWN -- likely 
 			// good match ?
 			var match = cell.match();
 			if(match){
-				var pointA = match.pointA(); // chould be center
+				var pointA = match.pointA(); // should be center
 				var pointB = match.pointB();
 				var center = cell.center();
 				var cellSize = lattice.cellSize();
@@ -293,6 +475,53 @@ BeliefTest.prototype.drawLattice = function(e){ // TODO: ERROR THROWN -- likely 
 			}
 		}
 	}
+	
+	// show outlines in B:
+	for(var j=0; j<countY; ++j){
+		for(var i=0; i<countX; ++i){
+			var cell = lattice.cellFromColRow(i,j);
+			var match = cell.match();
+			if(match){
+				var pointA = match.pointA();
+				var pointB = match.pointB();
+				var center = cell.center();
+				var cellSize = lattice.cellSize();
+				// var matrix = match.affine();
+				// 	inverse = Matrix.inverse(matrix);
+				// // B in A
+				// var img = imageB.extractRectFromFloatImage(pointB.x,pointB.y,1.0,null,cellSize,cellSize, inverse);
+				// img = GLOBALSTAGE.getFloatRGBAsImage(img.red(),img.grn(),img.blu(), img.width(),img.height());
+				// var d = new DOImage(img);
+				// d.matrix().scale(displayScale);
+				// //d.matrix().scale(2.0);
+				// d.matrix().translate((center.x-cellSize*0.5)*displayScale,(center.y-cellSize*0.5)*displayScale);
+				// display.addChild(d);
+				// // A in B
+				// var img = imageA.extractRectFromFloatImage(pointA.x,pointA.y,1.0,null,cellSize,cellSize, matrix);
+				// img = GLOBALSTAGE.getFloatRGBAsImage(img.red(),img.grn(),img.blu(), img.width(),img.height());
+				// var d = new DOImage(img);
+				// d.matrix().scale(displayScale);
+				// d.matrix().translate(imageAWidth,0);
+				// d.matrix().translate((pointB.x-cellSize*0.5)*displayScale,(pointB.y-cellSize*0.5)*displayScale);
+				// display.addChild(d);
+
+
+
+				var d = new DO();
+				d.graphics().beginPath();
+				d.graphics().setLine(1.0,0xFFFF0033);
+				//d.graphics().drawRect(-cellSize*0.5*displayScale,-cellSize*0.5*displayScale,cellSize*displayScale,cellSize*displayScale);
+				d.graphics().drawRect(0,0,cellSize*displayScale,cellSize*displayScale);
+				//i*cellSize*displayScale,j*cellSize*displayScale, cellSize*displayScale,cellSize*displayScale);
+				d.graphics().strokeLine();
+				d.graphics().endPath();
+				display.addChild(d);
+				d.matrix().translate(imageAWidth,0);
+				d.matrix().translate((pointB.x-cellSize*0.5)*displayScale,(pointB.y-cellSize*0.5)*displayScale);
+			}
+		}
+	}
+
 
 	// show calculated cells:
 	var list = lattice._wasList;
@@ -314,7 +543,7 @@ BeliefTest.prototype.drawLattice = function(e){ // TODO: ERROR THROWN -- likely 
 				display.addChild(d);
 		}
 	}
-	
+
 /*
 	// show field -- optical flow
 	for(var j=0; j<countY; ++j){
@@ -771,6 +1000,36 @@ BeliefTest.Cell.prototype.forEachNeighbor4 = function(fxn){
 }
 BeliefTest.Cell.prototype.setMatch = function(newMatch){
 	var cell = this;
+
+//	throw "need to make sure this match is not shitty"
+	
+	// affine cannot be too much different than any of 8 neighbors
+		// dot products of x & y ?
+
+	// actual points must all be within 90-180 deg of predicted line
+		// dot > 0
+
+	// actual points must preserve angle-order
+
+	// any 1 actual points can't have too much error: ~
+
+	//
+
+	// if predicted points are :
+	// check invalid geometry:
+
+	
+
+
+
+
+
+// these all have to be true && all neighbors must agree on new match as well ...
+
+
+// orientationTest
+
+
 		cell._previousMatch = cell._match;
 		cell._match = newMatch;
 
@@ -1092,12 +1351,12 @@ BeliefTest.optimumScoresAtLocation = function(imageA,pointA, imageB,pointB, need
 	// find minimum of SAD:
 		var scoresSAD = R3D.searchNeedleHaystackImageFlat(needle, null, haystack);
 		var scoresNCC = R3D.normalizedCrossCorrelation(needle,null, haystack, true);
-		// var scoresMult = ImageMat.mulFloat(scoresSAD["value"],scoresNCC["value"]);
+		var scoresMult = ImageMat.mulFloat(scoresSAD["value"],scoresNCC["value"]);
 		var scores = {
 			"width": scoresSAD["width"],
 			"height": scoresSAD["height"],
-			// "value": scoresMult
-			"value": scoresSAD["value"]
+			"value": scoresMult
+			// "value": scoresSAD["value"]
 		}
 	return scores;
 }
@@ -1333,6 +1592,7 @@ BeliefTest.Lattice.prototype.calculateF = function(){
 		// console.log(F);
 		var info = R3D.fundamentalError(F,F2,pointsA,pointsB);
 		// console.log("  "+F+"");
+		//console.log(info);
 		console.log("  F: "+info["mean"]+" +/- "+info["sigma"]);
 		this._Ffwd = F;
 		this._Frev = F2;
@@ -1342,15 +1602,82 @@ BeliefTest.Lattice.prototype.calculateF = function(){
 		this._F = null;
 	}
 }
+
+
+BeliefTest.Lattice.prototype.calculateInfo = function(){
+	var matchedCells = [];
+	this.forEachCell(function(cell, i, j, index){
+		var match = cell.match();
+		if(match){
+			matchedCells.push(cell);
+		}
+	});
+	if(matchedCells.length>16){
+		var info = {};
+
+		var listSAD = [];
+		var listNCC = [];
+		var listMUL = [];
+		var listF = [];
+		for(var i=0; i<matchedCells.length; ++i){
+			var cell = matchedCells[i];
+			var match = cell.match();
+			if(match){
+				var scoreSAD = match.scoreSAD();
+				var scoreNCC = match.scoreNCC();
+				var scoreMUL = scoreNCC * scoreSAD;
+				listSAD.push(scoreSAD);
+				listNCC.push(scoreNCC);
+				listMUL.push(scoreMUL);
+				//listSAD.push(match.scoreSAD());
+			}
+		}
+		// var fxnLess = function(a,b){
+		// 	return a<b ? -1 : 1;
+		// };
+		// listSAD.sort(fxnLess);
+		// listNCC.sort(fxnLess);
+		// listMUL.sort(fxnLess);
+		var minSAD = Code.min(listSAD);
+		var minNCC = Code.min(listNCC);
+		var minMUL = Code.min(listMUL);
+		var sigSAD = Code.stdDev(listSAD,minSAD);
+		var sigNCC = Code.stdDev(listNCC,minNCC);
+		var sigMUL = Code.stdDev(listMUL,minMUL);
+		info["SAD"] = {"mean":minSAD, "sigma":sigSAD};
+		info["NCC"] = {"mean":minNCC, "sigma":sigNCC};
+		info["MUL"] = {"mean":minMUL, "sigma":sigMUL};
+
+		this._info = info;
+
+	}else{
+		this._info = null;
+	}
+}
 BeliefTest.Lattice.prototype.dropGlobalMatches = function(remQueue){
 	var Ffwd = this._Ffwd;
 	var lattice = this;
 	// var queue = lattice.queue();
 	if(Ffwd){
 		var limitErrorSigma = 2.0; // 1-2   1 stops propagation, 2 introduces lots of error
-		var maxErrorF = this._Fmean + this._Fsigma*limitErrorSigma;
-		var Frev = this._Frev;
-		this.forEachCell(function(cell, i, j, index){
+		var maxErrorF = lattice._Fmean + lattice._Fsigma*limitErrorSigma;
+		var Frev = lattice._Frev;
+
+		var infoAll = this._info;
+
+		var meanSAD = infoAll["SAD"]["mean"];
+		var meanNCC = infoAll["NCC"]["mean"];
+		var meanMUL = infoAll["MUL"]["mean"];
+		
+		var sigmaSAD = infoAll["SAD"]["sigma"];
+		var sigmaNCC = infoAll["NCC"]["sigma"];
+		var sigmaMUL = infoAll["MUL"]["sigma"];
+
+		var maxErrorSAD = meanSAD + 3.0*sigmaSAD;
+		var maxErrorNCC = meanNCC + 3.0*sigmaNCC;
+		var maxErrorMUL = meanMUL + 3.0*sigmaMUL;
+
+		lattice.forEachCell(function(cell, i, j, index){
 			var match = cell.match();
 			if(match){
 				var pointA = match.pointA();
@@ -1358,10 +1685,16 @@ BeliefTest.Lattice.prototype.dropGlobalMatches = function(remQueue){
 				var info = R3D.fundamentalErrorSingle(Ffwd,Frev,pointA,pointB);
 				var error = info["error"];
 				// console.log("  "+error);
+				var scoreSAD = match.scoreSAD();
+				var scoreNCC = match.scoreNCC();
+				var scoreMUL = scoreNCC * scoreSAD;
 				if(error>maxErrorF){
 					cell.dropMatch();
 					remQueue.pushUnique(cell);
 //					queue.pushUnique(cell);
+				}else if(scoreSAD>maxErrorSAD || scoreNCC>maxErrorNCC || scoreMUL>maxErrorMUL){
+					cell.dropMatch();
+					remQueue.pushUnique(cell);
 				}
 			}
 		});
@@ -1539,6 +1872,7 @@ BeliefTest.Lattice.prototype.bestMatchFromLocation = function(cell, affine,cente
 	var limitPixel = 0.0;
 	var limitVAB = 0.25;
 	var optimum = R3D.optimumAffineTransform(imageA,existingA, imageB,locationB, vectorX,vectorY, compareSize, limitPixel,limitVAB,limitVAB);
+	// console.log(optimum)
 	var bestInverse = BeliefTest.affineFromResult(optimum);
 	// new match
 	var newMatch = lattice.newMatchFrom(cell, existingA, locationB, affine, null);
@@ -1562,14 +1896,13 @@ BeliefTest.Lattice.prototype.bestAffineLocationFromLocation = function(affine,ce
 	var finalSize = scores["width"];
 	var score = scores["value"];
 	var errorAffine = this._errorAffine(finalSize);
-	// console.log(score);
-	// console.log(errorAffine);
-	// combine score error + affine error
-	var cScore = 0.5;
-	var cAffine = 0.5;
+	// var cScore = 0.5;
+	// var cAffine = 0.5;
+	var cScore = 0.01;
+	var cAffine = 0.99;
 	var error = [];
 	for(var i=0; i<score.length; ++i){
-		error[i] = cScore*score[i] + cAffine*errorAffine[i]*(1.0/compareSize);
+		error[i] = cScore * score[i] + cAffine * (errorAffine[i]*(1.0/compareSize));
 	}
 	// console.log(error);
 	// console.log(predictedB)
@@ -1906,6 +2239,16 @@ BeliefTest.Lattice.prototype.matchValidation = function(cell, match){
 		return false;
 	}
 	var lattice = this;
+	// affine matrix has a limit:
+	// get eigenvalues:
+	// maximum scale ratio ~ 4
+	// maximum skew
+	// 
+
+
+
+
+
 	// ordering constraints
 	var ordered = BeliefTest.Lattice.orientationTest(cell,match);
 	if(!ordered){
@@ -1965,6 +2308,7 @@ BeliefTest.Lattice.prototype.matchValidation = function(cell, match){
 	// if(match.range()<minimumRange){
 	// 	return false;
 	// }
+	var range = match.range();
 	
 	// minimum variabliity
 	/*
@@ -1979,20 +2323,41 @@ BeliefTest.Lattice.prototype.matchValidation = function(cell, match){
 	*/
 	
 // TODO: SAD * range ???
+	var scoreSAD = match.scoreSAD();
+	var scoreNCC = match.scoreNCC();
+	var scoreMult = scoreSAD * scoreNCC;
 
+var rangeSAD = scoreSAD/range;
+var rangeNCC = scoreNCC/range;
+// console.log("RANGE CHECK: "+range+" => "+rangeSAD+" & "+rangeNCC);
+	/*
+	if(rangeSAD>1.0){
+		return false;
+	}
+	if(rangeNCC>1.0){
+		return false;
+	}
+	*/
 
 	// score constraints
-	var scoreSAD = match.scoreSAD();
+	
 	//if(scoreSAD>0.525){
-	if(scoreSAD>0.30){
-		console.log("DROP SCORE SAD: "+scoreSAD);
+	if(scoreSAD>0.40){
+		// console.log("DROP SCORE SAD: "+scoreSAD);
 		return false;
 	}
-	var scoreNCC = match.scoreNCC();
-	if(scoreNCC>0.40){
-		console.log("DROP SCORE NCC: "+scoreNCC);
+	
+	if(scoreNCC>0.60){
+		// console.log("DROP SCORE NCC: "+scoreNCC);
 		return false;
 	}
+
+	// // TESTING
+	// if(scoreMult>0.50){ // 0.707^2
+	// 	console.log("DROP SCORE DOU: "+scoreMult);
+	// 	return false;
+	// }
+	
 	
 	/*
 	// relative path costs
@@ -2270,6 +2635,7 @@ for each cell in L
 
 	// global criteria evaluation
 	lattice.calculateF();
+	lattice.calculateInfo();
 	lattice.dropGlobalMatches(remQueue);
 
 	// only include elements that don't toggle between add/remove
@@ -2303,9 +2669,41 @@ for each cell in L
 	}
 
 }
+BeliefTest.Lattice.prototype.calcInfo = function(cell, cellMatch){
+	var lattice = this;
+	var cells = lattice._cells;
+
+	var listSAD = [];
+	var listNCC = [];
+	var listMUL = [];
+	var listF = [];
+	for(var i=0; i<cells.length; ++i){
+		var cell = cells[i];
+		var match = cell.match();
+		if(match){
+			var scoreSAD = match.scoreSAD();
+			var scoreNCC = match.scoreNCC();
+			var scoreMUL = scoreNCC * scoreSAD;
+			listSAD.push(scoreSAD);
+			listNCC.push(scoreNCC);
+			listMUL.push(scoreMUL);
+			//listSAD.push(match.scoreSAD());
+		}
+	}
+	var fxnLess = function(a,b){
+		return a<b ? -1 : 1;
+	};
+	listSAD.sort(fxnLess);
+	listNCC.sort(fxnLess);
+	listMUL.sort(fxnLess);
+	Code.printMatlabArray(listSAD, "sad");
+	Code.printMatlabArray(listNCC, "ncc");
+	Code.printMatlabArray(listMUL, "mul");
+}
 
 
 BeliefTest.Lattice.prototype.errorSquare3x3 = function(cell, cellMatch){
+throw "?";
 	var lattice = this;
 	//
 	var pointA = cellMatch.pointA();

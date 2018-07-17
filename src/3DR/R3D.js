@@ -2245,7 +2245,7 @@ R3D.fundamentalError = function(matrixFfwd,matrixFrev,pointsA,pointsB){
 	}
 	var mean = Code.min(errors);
 	var sigma = Code.stdDev(errors,mean);
-	return {"mean":mean, "sigma":sigma};
+	return {"mean":mean, "sigma":sigma, "values":errors};
 }
 R3D.fundamentalErrorSingle = function(matrixFfwd,matrixFrev,pA,pB){
 	var pointA = new V3D(pA.x,pA.y,1.0);
@@ -18995,8 +18995,9 @@ R3D.optimumAffineTransform = function(imageA,pointA, imageB,pointB, vectorX,vect
 // GLOBALSTAGE.addChild(d);
 var index = 0;
 	var compareFxn = function(o,a,b, isUpdate){ // from control points
+		// console.log("compareFxn ... ");
 		var matrix = R3D.affineMatrixExact([u,x,y],[u,a,b]);
-		console.log(" ... "+x+"&"+y+" - "+a+"&"+b);
+		// console.log(" ... "+x+"&"+y+" - "+a+"&"+b);
 		// NaN
 			matrix = Matrix.transform2DScale(matrix,scaleCompare);
 		var n = imageA.extractRectFromFloatImage(pointA.x+o.x,pointA.y+o.y,1.0,null,compareSize,compareSize, matrix);
@@ -19088,7 +19089,9 @@ R3D._gdAffineTransform = function(args, x, isUpdate){
 	var dO = vO.length();
 	var dA = V2D.distance(vX,vA);
 	var dB = V2D.distance(vY,vB);
-	if(	dO>range["t"] || dA>range["a"] || dB>range["b"] || Code.isNaN(vA) || Code.isNaN(vB)){
+	if(	dO>range["t"] || dA>range["a"] || dB>range["b"]){// || Code.isNaN(vA) || Code.isNaN(vB)){
+		// console.log(range);
+		// console.log("outside ...",dO,dA,dB,vA,vB);
 	// if(	x[0]<range["tx"][0] || x[0]>range["tx"][1] ||
 	// 	x[1]<range["ty"][0] || x[1]>range["ty"][1] || 
 	// 	x[2]<range["ax"][0] || x[2]>range["ax"][1] || 
