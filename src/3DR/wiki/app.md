@@ -181,10 +181,42 @@ project typical numbers:
 
 APP TODO:
 
+- voting metrics
+- score dropping
+- affine & translation scoring reassess
+
+
+
+
+- READ PAPER ON R - MODELING
+-> ALGORITHM FOR THIS
+
+
+
+
+
+- prioritize 'better' affine over possibly already existing 'worse' affine
+	- based on?
+
+- allow bad affine to happen, then pluck them off ?
+
+=> an existing match might be the cause of a newly-created match
+	=> which one to drop ?
+	=> keep track of cause
+- count those who agree / disagree ?
+	=> pick based on votes ?
+
+
+
 
 - VISUALIZE A CELL TO FIND OUT WHY BAD
 - lots of overlapping should not be allowed
 => DROP BASED ON SOME CLOSENESS locallly
+
+
+- and cells w/ affine matrices much worse than parents => drop
+- any cells with opposite-sides predictions => drop
+
 
 
 
@@ -222,6 +254,17 @@ APP TODO:
 
 
 
+if a new affine match has no conflicts => can set
+
+if an affine match has conflicts
+	=> for each conflicting match:
+		if affine is better than all conflicting????
+			- lower delta-predicted errors
+	=> remove all conflicting neighbors
+
+
+
+
 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 - seed matches pick best match based solely on NCC/SAD score
 
@@ -229,8 +272,7 @@ when a match is set:
 	- for each 4 neighbor:
 		- estimate best next location:
 			- @ predicted center
-			- total error = a*score + b*distance from center
-* distance error is radius @ center w/ linear dropoff
+			- total error = a*score + b*distance from center  [* distance error is radius @ center w/ linear dropoff]
 			- pick location w/ lowest total error
 		- ??? get flat path cost?
 	- for each 4 neighbor:

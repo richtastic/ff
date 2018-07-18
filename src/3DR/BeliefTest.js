@@ -69,6 +69,10 @@ BeliefTest.prototype.handleMouseClickFxn = function(e){
 
 			if(match){
 				console.log(match);
+
+				var ordered = BeliefTest.Lattice.orientationTest(cell,match, true);
+				console.log("ORDERED: "+ordered);
+
 				var affine = match.affine();
 				// visualize match:
 				// affine arrows
@@ -1009,14 +1013,15 @@ BeliefTest.Cell.prototype.setMatch = function(newMatch){
 	// actual points must all be within 90-180 deg of predicted line
 		// dot > 0
 
-	// actual points must preserve angle-order
+	// actual points must be close enough to predicted location 
 
-	// any 1 actual points can't have too much error: ~
-
-	//
+	// any 1 actual points can't have too much error: ~ ?
 
 	// if predicted points are :
 	// check invalid geometry:
+
+
+	var ordered = BeliefTest.Lattice.orientationTest(cell,newMatch);
 
 	
 
@@ -1673,9 +1678,9 @@ BeliefTest.Lattice.prototype.dropGlobalMatches = function(remQueue){
 		var sigmaNCC = infoAll["NCC"]["sigma"];
 		var sigmaMUL = infoAll["MUL"]["sigma"];
 
-		var maxErrorSAD = meanSAD + 3.0*sigmaSAD;
-		var maxErrorNCC = meanNCC + 3.0*sigmaNCC;
-		var maxErrorMUL = meanMUL + 3.0*sigmaMUL;
+		var maxErrorSAD = meanSAD + 2.0*sigmaSAD;
+		var maxErrorNCC = meanNCC + 2.0*sigmaNCC;
+		var maxErrorMUL = meanMUL + 2.0*sigmaMUL;
 
 		lattice.forEachCell(function(cell, i, j, index){
 			var match = cell.match();
@@ -2181,28 +2186,63 @@ BeliefTest.pathTransforms = function(imageA,pointA1,pointA2, imageB,pointB1,poin
 	var haystackB = R3D.Dense.extractRectFromPoints(imageB,pointB1,pointB2, sizeA,sizeB, haystackWidth,haystackHeight);
 	return {"A":haystackA, "B":haystackB};
 }
-BeliefTest.Lattice.orientationTest = function(cell, match){
+BeliefTest.Lattice.orientationTest = function(cell, match, verbose){
 //	console.log(cell)
-	var neighbors = cell.neighbors8();
 	var orderA = [];
 	var orderB = [];
 	var matchA = match.pointA();
 	var matchB = match.pointB();
-	for(var i=0; i<neighbors.length; ++i){
-		var neighbor = neighbors[i];
+	var affine = match.affine();
+	var neighbors = [];
+	cell.forEachNeighbor8(function(neighbor,i){
 		var m = neighbor.match();
 		if(m){
+			neighbors.push(neighbor);
 			var mA = m.pointA();
 			var mB = m.pointB();
-			var angleA = V2D.angleDirection(mA,matchA);
-			var angleB = V2D.angleDirection(mB,matchB);
+			var a = V2D.sub(mA,matchA);
+			var b = V2D.sub(mB,matchB);
+			var angleA = V2D.angleDirection(V2D.DIRX,a);
+			var angleB = V2D.angleDirection(V2D.DIRX,b);
 				angleA = Code.angleZeroTwoPi(angleA);
 				angleB = Code.angleZeroTwoPi(angleB);
 			orderA.push([angleA,i]);
 			orderB.push([angleB,i]);
 		}
-	}
+	});
 	var count = orderA.length;
+
+	
+	var maxAngle = Math.PI*0.5; // 90 degrees = half plane | 45 degrees = quadrant
+	var maxDistanceRatio = 4.0; //
+	for(var i=0; i<neighbors.length; ++i){
+		var neighbor = neighbors[i];
+		var m = neighbor.match();
+		var mA = m.pointA();
+		var mB = m.pointB();
+		var a = V2D.sub(mA,matchA);
+		var b = V2D.sub(mB,matchB);
+		var c = affine.multV2DtoV2D(a);
+		var angle = V2D.angle(b,c);
+		// half-plane - angle checking
+		if(angle>maxAngle){
+			return false;
+		}
+		// maximum distance checking
+		var distanceB = b.length();
+		var distanceC = a.length();
+		var ratio = Math.max(distanceB,distanceC) / Math.min(distanceB,distanceC);
+		if(ratio>maxDistanceRatio){
+			return false;
+		}
+		
+	}
+	
+
+
+
+
+
 	if(count<=2){ // only list of 3 or more have orientation conflicts
 		return true;
 	}
@@ -2221,6 +2261,11 @@ BeliefTest.Lattice.orientationTest = function(cell, match){
 			break;
 		}
 	}
+	if(verbose){
+		console.log(orderA);
+		console.log(orderB);
+		console.log(0+" = "+j);
+	}
 	for(var i=0; i<orderA.length; ++i){
 		var a = orderA[i][1];
 		var b = orderB[(i+j)%count][1];
@@ -2233,18 +2278,47 @@ BeliefTest.Lattice.orientationTest = function(cell, match){
 	}
 	return true;
 }
-
+BeliefTest.AffineMetric = function(affine){ // ignores rotation & scale, metric for 'deformation' of a matrix -- skewnessish
+	var a = affine.get(0,0);
+	var b = affine.get(1,0);
+	var c = affine.get(0,1);
+	var d = affine.get(1,1);
+	var eig = Code.eigenValuesAndVectors2D(a,b,c,d);
+	var eigenValues = eig["values"];
+	var valueSma = eigenValues[0];
+	var valueBig = eigenValues[1];
+	var valueRatio = valueBig/valueSma;
+	return valueRatio;
+}
 BeliefTest.Lattice.prototype.matchValidation = function(cell, match){
 	if(!match){
 		return false;
 	}
 	var lattice = this;
-	// affine matrix has a limit:
-	// get eigenvalues:
-	// maximum scale ratio ~ 4
-	// maximum skew
-	// 
 
+	// affine matrix has a limit:
+	var affine = match.affine();
+	var a = affine.get(0,0);
+	var b = affine.get(1,0);
+	var c = affine.get(0,1);
+	var d = affine.get(1,1);
+	var eig = Code.eigenValuesAndVectors2D(a,b,c,d);
+	// console.log(a,b,c,d);
+	var eigenValues = eig["values"];
+	var eigenVectors = eig["vectors"];
+	var valueSma = eigenValues[0];
+	var valueBig = eigenValues[1];
+	var vectorSma = eigenVectors[0];
+	var vectorBig = eigenVectors[1];
+	var valueRatio = valueBig/valueSma;
+	// console.log("RATIO: "+valueRatio+" = "+valueBig+" | "+valueSma);
+	var maxRatio = 2.0;
+	if(valueRatio>maxRatio){
+		// console.log("DROP SCALE RATIO: "+valueRatio);
+		return;
+	}
+	// angle limit
+	//var angle = V2D.angle(vectorSma,vectorBig);
 
 
 
@@ -2252,15 +2326,16 @@ BeliefTest.Lattice.prototype.matchValidation = function(cell, match){
 	// ordering constraints
 	var ordered = BeliefTest.Lattice.orientationTest(cell,match);
 	if(!ordered){
-		console.log("DROP ORDERING");
+		// console.log("DROP ORDERING");
 		return false;
 	}
+	/*
 	// TODO: use affine average scale to determine limits
 	// var minDistanceScale = 0.5;
 	// var maxDistanceScale = 2.0;
 	var minDistanceScale = 0.25;
 	var maxDistanceScale = 4.0;
-	/*
+	
 	var affine = match.affine();
 	var vectorX = new V2D(1.0,0.0);
 	var vectorY = new V2D(0.0,1.0);
@@ -2294,8 +2369,7 @@ BeliefTest.Lattice.prototype.matchValidation = function(cell, match){
 	var imageB = viewB.image();
 	var bestB = match.pointB();
 	if(bestB.x<=0 || bestB.x>=imageB.width() || bestB.y<=0 || bestB.y>=imageB.height()){
-		console.log("DROP OUTSIDE");
-		// console.log("OUTSIDE");
+		// console.log("DROP OUTSIDE");
 		return false;
 	}
 
@@ -2547,12 +2621,12 @@ if(queue.length()>2000){
 			var count = info["count"];
 			var percent = info["percent"];
 			if( 
-				count>6 && percent<0.60 ||  // 2/7 = 0.28 | 3/7 = 0.42 | 4/7 = 0.57 | 5/7 = 0.71
-				// count>6 && percent<0.90 || 
-			   count>4 && percent<0.50 ||  // 2/5 = 0.40 | 3/5 = 0.60
-			   // count>4 && percent<0.80 ||  
-			   count>2 && percent<0.40 // 1/3 = .33 | 2/3 = 0.66
-			   // count>2 && percent<0.70
+				// count>6 && percent<0.60 ||  // 2/7 = 0.28 | 3/7 = 0.42 | 4/7 = 0.57 | 5/7 = 0.71
+				count>6 && percent<0.80 || 
+			   // count>4 && percent<0.50 ||  // 2/5 = 0.40 | 3/5 = 0.60
+			   count>4 && percent<0.70 ||  
+			   // count>2 && percent<0.40 // 1/3 = .33 | 2/3 = 0.66
+			   count>2 && percent<0.60
 				){
 				console.log("DROP MATCH");
 				cell.dropMatch();
@@ -2583,10 +2657,9 @@ if(queue.length()>2000){
 						attempted = true;
 						setMatch = false;
 						pathMatch = lattice.bestMatchFromSettings(match, cell, neighbor);
-						if(pathMatch){
+						if(pathMatch && lattice.matchValidation(neighbor,pathMatch)){
 							// second chance to update match ?
 							// console.log(pathMatch,prevMatch);
-
 							var prevScore = 1;
 							if(match && pathMatch){
 								var prevScoreSAD = pathMatch.scoreSAD()/match.scoreSAD();
@@ -2606,13 +2679,13 @@ if(queue.length()>2000){
 						//console.log("add a neighbor match : "+neighbor._previousMatch);
 						if(!attempted){ // try now
 							pathMatch = lattice.bestMatchFromSettings(match, cell, neighbor);
+							if(!lattice.matchValidation(neighbor,pathMatch)){
+								pathMatch = null;
+							}
 						}
 						if(pathMatch){
-							//console.log("add a neighbor match : ");
-							if(lattice.matchValidation(neighbor,pathMatch)){
-								neighbor.setMatch(pathMatch);
-								addQueue.pushUnique(neighbor);
-							}
+							neighbor.setMatch(pathMatch);
+							addQueue.pushUnique(neighbor);
 						}
 					}
 				}
