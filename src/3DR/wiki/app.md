@@ -181,6 +181,49 @@ project typical numbers:
 
 APP TODO:
 
+x setting up P2D/P3D from seeds
+- creating new P2D from local search
+- initializing patch [from seeds once have enough]
+	- iteritive projection
+- creating new P3D from projections
+	- creating/updating patch on new data
+
+
+
+
+
+H = R3D.affineMatrixLinear(pointsA,pointsB);
+
+
+
+
+
+> how to keep track/optimize of all:
+	- 2D match points: x,y
+	- 2D affine transform between image matches: X,Y
+	- 3D patch plane: center, normal, A,B,C,D
+	-> initialize patch
+		- normal:
+			- project patches, find 4/5 projected median points, approximate plane, approximate square
+			- average of inverted camera normals
+		- center:
+			- closest projected line intersection
+	-> optimize:
+		- normal unit vector (pitch, yaw)
+		- center point (X,Y,Z) [restricted along path to a reference camera to match point]
+		- 
+	
+
+
+> how to transfer 2D orientation between 3D cameras
+	- get UP & RT unit vector for camera A & B
+	- do projection of upA onto upB & rtB
+	- do projection of rtA onto upB & rtB
+	- get angles between projected up & rt vs upB & rtB => average
+
+> how to estimate normal (or projection?) from affine matrix
+
+
 - voting metrics
 - score dropping
 - affine & translation scoring reassess
@@ -304,8 +347,143 @@ match:
 
 
 
+STEREOPSIS:
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+initial matching:
+	Harris and Difference-of-Gaussians
 
 
+match: 
+
+
+REPEAT: 
+
+	expand:
+		- spread matches to nearby pixels
+
+	filter:
+		- visibility constraints
+			- drop bad matches
+		- 3D:
+			- drop points outside surface -> |T(p)| is small & N(p)?
+			- drop points inside surface -> revomputed depth maps result in |T(p)| is small 
+		- regularization: n-adjacent neighbor cells is below some threshold [threshold is lowered as algorithm progresses]
+
+PATCH (p)
+	- center c(p)
+	- normal n(p) [toward camera]
+	- reference image R(p) [image that is most parallel to retinal plane]
+	- should_images S(p) [images patch should be visible - not expected to be occluded by any other patch]
+	- truly_images T(p) [images where patch is truely found - must be at least gamma (2 or 3 in size)]
+
+IMAGE I
+	- cells C(i,j) [beta1xbeta1]
+	- Qt patch list if I is in T(p)
+	- Qf patch list if I is in S(p)\T(p) [in S(p) but not in T(p)]
+	- depth of center patch [from image-camera]
+
+estimating position:
+	- initial guess for c(p): triangulated from putative matches
+	- initial guess for n(p): direction of point to O of reference image
+	
+	NCC = N(p,I,J) for patch in image I and J
+	maximize:  1/(|T(p)| - 1) * SUM(I in T(p), I!=R(p)) N(p,R(p),I)
+		* depth for (reference) (or each? view)
+		* normal pitch & yaw (?wrt reference)
+
+initial guess for visibility is if NCC is above some threshold
+S(p) => later estimate by thresholding is if depth_I(p,i,j) < depth_J(p,i,j) + rho [rho is deth of c(p) at beta displacement in R(p)]
+T(p) => NCC is above some value
+
+
+n-adjacent = |(c(p) - c(p')) * n(p)| + |(c(p) - c(p')) * n(p)'| < 2*rho 	[centers are close & normals are close to parallel] c-c' should be ~ orthogonal to n' and n
+
+retinal plane
+uxu = 5x5 or 7x7
+
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+input:
+	- images 
+	- sparse, putative, initial feature matches across images [pairings] (f_i, f_j)
+		- scale & rotation
+
+expand
+	- look at unmatched adjacent cells
+		- 
+
+filter
+	- global:
+		- NCC * SAD error
+		- R error [distance from reprojected point]
+		- F error [distance from epipolar line]
+		- 3D kNN avg distance @ 3,5,7,9,... [isolated points are unlikely to be good estmiates]
+	- local 2D: [cell voting]
+		- difference in rotation angle [0,pi]
+		- max(eigenvalue)/min(eigenvalue) [1,inf]
+		- NCC
+		- SAD
+		- to-neighbor NCC
+	- local 3D: [grouping voting]
+		- 
+	- visibility?
+		- [depths not consistent]?
+		- [normals not consistent]?
+
+
+CELL:
+	- non actual ?
+
+P3D:
+	-X,Y,Z
+	-NORMAL
+	-P2Ds[]
+
+P2D:
+	-x,y
+	-matches[]
+
+MATCH:
+	-P3D
+	-P2DA
+	-P2DB
+	-
+
+- P3D patch normal will have to be re-estimated as cameras change locations
+
+propagation:
+	- need to keep track of failed attempted locations so that propagation doesn't continue there [for another given image]
+	- square cells?
+regularization
+	- need to allow lowly constrained matches (non-corners) to move a bit as their localization is fuzzy => NON PERMANENT
+
+
+normals will have to be re-estimated as camera positions are refined
+
+
+
+
+
+
+
+
+
+
+
+
+output:
+	- dense image sets [2+ connected image points]
+		- normal3D
+		- point3D
+		- points2D
+			- x,y
+		- affine between each image
+
+
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 
 
 

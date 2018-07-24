@@ -6655,19 +6655,33 @@ if(SHOULD_CORRECT_DISTOTION){
 	/// ....
 }
 
+
+// START STEREOPSIS
+
+var world = new Stereopsis.World();
+//world.addCamera();
+
+
+//throw "HERE - STEREOPSIS";
+
+
+
+
+
+
+
 // locals
 var BACAMS = [];
 var BAVIEWS = [];
 // world
-var world = new R3D.BA.World();
-console.log(world);
+// var world = new R3D.BA.World();
+// console.log(world);
 // cameras
+console.log(cameras)
 var correctedCameras = [];
 for(var i=0; i<cameras.length; ++i){
 	correctedCameras[i] = false;
 	var camera = cameras[i];
-	var c = world.addCamera();
-	console.log(c);
 	var K = camera.K();
 	var distortion = camera.distortion();
 	if(K && distortion){
@@ -6682,18 +6696,20 @@ for(var i=0; i<cameras.length; ++i){
 		var p1 = distortion["p1"];
 		var p2 = distortion["p2"];
 		var K = new Matrix(3,3).fromArray([fx,s,cx, 0,fy,cy, 0,0,1]);
-		c.K(K);
-		c.distortion(distortion);
+		var c = world.addCamera(K, distortion);
+		// c.K(K);
+		// c.distortion(distortion);
 		// var inverted = R3D.getInvertedDistortion(K,distortion);
 		// c.distortionInverted(inverted);
 	}
 	BACAMS.push(c);
 }
+
 var cam = BACAMS[0];
 // views
 for(var i=0; i<views.length; ++i){
 	var view = views[i];
-	var v = world.addView();
+	
 	//var img = view.featuresImage();
 	//var img = view.denseHiImage(); // REPLACE 1
 	var img = view.bundleAdjustImage();
@@ -6706,27 +6722,30 @@ for(var i=0; i<views.length; ++i){
 
 
 		var matrix = R3D.imageMatrixFromImage(img, this._stage);
-
+// correct distortion
 // var info = R3D.invertImageDistortion(matrix, K, distortion,true);
 // var center = info["center"];
 // matrix = info["image"];
 
-
-		v.image(matrix);
+	// SIZING ?
+	//v.image(matrix);
 		// v.images().push(matrix);
 	//var imageSize = new V2D(1.0, 1.0/view.aspectRatio());
-	var imageWidth = v.image().width();
-	var imageHeight = v.image().height();
-	var imageSize = new V2D(imageWidth, imageHeight);
+	// var imageWidth = v.image().width();
+	// var imageHeight = v.image().height();
+	// var imageSize = new V2D(imageWidth, imageHeight);
+
+	var v = world.addView(matrix, cam, view);
+	
 	//v.index(view.id());
-	v.size(imageSize);
-	var corners = R3D.cornerScaleOptimum(matrix.gry(), matrix.width(), matrix.height());
-	v.corners(corners);
-	v.camera(cam);
+	// v.size(imageSize);
+	// var corners = R3D.cornerScaleOptimum(matrix.gry(), matrix.width(), matrix.height());
+	// v.corners(corners);
+	// v.camera(cam);
 		view.temp(v);
-		v.mapping(view.id());
+//		v.mapping(view.id());
 //console.log("MAPPING: "+v.mapping());
-	BAVIEWS.push(c);
+	BAVIEWS.push(v);
 }
 
 
@@ -6746,6 +6765,8 @@ for(var i=0; i<pairs.length; ++i){
 	// 
 	var viewA = this.viewFromID(fromViewID);
 	var viewB = this.viewFromID(toViewID);
+console.log(viewA);
+console.log(viewB);
 	var vA = viewA.temp();
 	var vB = viewB.temp();
 	var imageWidthA = vA.image().width();
@@ -6798,6 +6819,7 @@ for(var i=0; i<pairs.length; ++i){
 	*/
 	//console.log("MATCHES AFTER: "+filteredMatches.length);
 	console.log("MATCHES FOR PAIR "+vA.id()+"+"+vB.id()+" == "+filteredMatches.length);
+	
 	// copy over
 	for(var j=0; j<filteredMatches.length; ++j){
 		var match = filteredMatches[j];
@@ -6823,6 +6845,15 @@ for(var i=0; i<pairs.length; ++i){
 	}
 	// initially get 2-sigma points & only add those from match list
 }
+
+
+
+world.solve();
+
+return;
+throw "HERE";
+
+
 
 
 

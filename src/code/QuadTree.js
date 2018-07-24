@@ -184,43 +184,21 @@ QuadTree.prototype.max = function(){
 QuadTree.prototype.clear = function(){
 	this._root.clear();
 }
+QuadTree.COUNT = 0;
 QuadTree.prototype.insertObject = function(obj){
 	var point = this._toPoint(obj);
 	var min = this.min();
 	var max = this.max();
 	var isInside = min.x<=point.x && point.x<max.x && min.y<=point.y && point.y<max.y;
+	// console.log(". insertObject ------------------------------------------------------------------------------------   "+point);
 	if(isInside){
 		this._root.insertObject(obj,this._toPoint);
 	}else if(this._autoResize){ // is this broke?
-		console.log("need to resize to fit next object: "+min+"/"+max+" = "+point);
 		var objects = this.toArray();
 		objects.push(obj);
-
-
-		// TODO: keep track of previous size and make sure next size is at least covering previous limits
-		
-		// reinit
 		this.clear();
-		var min = this._root.min();
-		var max = this._root.max();
-		min = V2D.min(min,point);
-		max = V2D.max(max,point);
-		var center = V2D.avg(min,max);
-		var size = V2D.sub(max,min);
-console.log("center: "+center);
-console.log("size: "+size);
-console.log("inside: "+min+" to "+max);
-
-throw "? not working";
-
-		this.initWithDimensions(center,size);
-		// readd
-		var i, len=objects.length;
-		for(i=0;i<len;++i){
-			this.insertObject(objects[i]);
-		}
-		
-	}
+		this.initWithObjects(objects, true);
+	} // else drop on floor
 }
 
 
@@ -283,6 +261,12 @@ QuadTree.prototype.initWithObjects = function(objects, force){
 		V2D.max(max,max,point);
 	}
 	var size = QuadTree.twoDivisionRound(min,max, force);
+	if(size.x==0){
+		size.x = 1.0;
+	}
+	if(size.y==0){
+		size.y = 1.0;
+	}
 	var center = V2D.avg(max,min);
 	this.initWithDimensions(center,size);
 	for(i=0;i<len;++i){
@@ -290,6 +274,7 @@ QuadTree.prototype.initWithObjects = function(objects, force){
 	}
 	return true;
 }
+
 QuadTree._sortArxel = function(a,b){
 	return a.temp() < b.temp() ? -1 : 1;
 }

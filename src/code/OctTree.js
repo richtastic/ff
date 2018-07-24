@@ -77,15 +77,11 @@ OctTree.prototype.insertObject = function(obj){
 	if(isInside){
 		this._root.insertObject(obj,this._toPoint);
 	}else if(this._autoResize){
-//		console.log("need to resize to fit next object: "+min+"/"+max+" = "+point);
 		var objects = this.toArray();
 		objects.push(obj);
-
 		this.clear();
 		this.initWithObjects(objects, true);
-		// console.log("NEW SIZE: "+this.count());
-		// console.log(this.min()+" - "+this.max());
-	}
+	} // else drop on floor
 }
 OctTree.prototype.removeObject = function(obj){
 	return this._root.removeObject(obj,this._toPoint);
@@ -131,6 +127,15 @@ OctTree.prototype.initWithObjects = function(objects, force){
 		V3D.max(max,max,point);
 	}
 	var size = OctTree.twoDivisionRound(min,max, force);
+	if(size.x==0){
+		size.x = 1.0;
+	}
+	if(size.y==0){
+		size.y = 1.0;
+	}
+	if(size.z==0){
+		size.z = 1.0;
+	}
 	var center = V3D.avg(max,min);
 	this.initWithDimensions(center,size);
 	//

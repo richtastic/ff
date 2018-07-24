@@ -2621,12 +2621,12 @@ if(queue.length()>2000){
 			var count = info["count"];
 			var percent = info["percent"];
 			if( 
-				// count>6 && percent<0.60 ||  // 2/7 = 0.28 | 3/7 = 0.42 | 4/7 = 0.57 | 5/7 = 0.71
-				count>6 && percent<0.80 || 
-			   // count>4 && percent<0.50 ||  // 2/5 = 0.40 | 3/5 = 0.60
-			   count>4 && percent<0.70 ||  
-			   // count>2 && percent<0.40 // 1/3 = .33 | 2/3 = 0.66
-			   count>2 && percent<0.60
+				count>6 && percent<0.60 ||  // 2/7 = 0.28 | 3/7 = 0.42 | 4/7 = 0.57 | 5/7 = 0.71 | 6/7
+				// count>6 && percent<0.80 || 
+			   count>4 && percent<0.50 ||  // 2/5 = 0.40 | 3/5 = 0.60
+			   // count>4 && percent<0.70 ||  
+			   count>2 && percent<0.40 // 1/3 = .33 | 2/3 = 0.66
+			   // count>2 && percent<0.60
 				){
 				console.log("DROP MATCH");
 				cell.dropMatch();

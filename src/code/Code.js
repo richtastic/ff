@@ -854,6 +854,35 @@ Code.binarySearchArray = function(arr,fxn,needle){ // Code.binarySearchArray([0,
 	return [middle];
 }
 */
+Code.forEach = function(object, fxn){
+	if(Code.isArray(object)){
+		return Code._forEachArray(object,fxn);
+	}else{ // isArray
+		return Code._forEachHash(object,fxn);
+	}
+}
+Code._forEachArray = function(array, fxn){
+	var len = array.length;
+	for(var i=0; i<len; ++i){
+		var value = array[i];
+		var result = fxn(value, i);
+		if(result){
+			break;
+		}
+	}
+}
+Code._forEachHash = function(hash, fxn){
+	var keys = Code.keys(hash);
+	for(var i=0; i<keys.length; ++i){
+		var index = keys[i];
+		var value = hash[index];
+		var result = fxn(value, index);
+		if(result){
+			break;
+		}
+	}
+}
+
 Code.hash = function(string){
 	if(string==null || string.length==0){ return 0; }
 	var i, char, hash = 0;
