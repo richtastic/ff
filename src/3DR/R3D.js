@@ -9058,6 +9058,28 @@ R3D.fundamentalFromRansacImageMatches = function(imageMatrixA,imageMatrixB, matc
 	return {"A":pointsA, "B":pointsB, "F":matrixFfwd};
 }
 
+
+R3D.fError = function(FFwd, FRev, pA, pB){
+	if(!FFwd || !FRev){
+		return null;
+	}
+	var dir = new V2D();
+	var org = new V2D();
+	var a = new V3D();
+	var b = new V3D();
+	a.set(pA.x,pA.y,1.0);
+	b.set(pB.x,pB.y,1.0);
+	var lineB = FFwd.multV3DtoV3D(new V3D(), a);
+		Code.lineOriginAndDirection2DFromEquation(org,dir, lineB.x,lineB.y,lineB.z);
+	var distanceB = Code.distancePointRay2D(org,dir, b);
+	var lineA = FRev.multV3DtoV3D(new V3D(), b);
+		Code.lineOriginAndDirection2DFromEquation(org,dir, lineA.x,lineA.y,lineA.z);
+	var distanceA = Code.distancePointRay2D(org,dir, a);
+	var distance = Math.sqrt( distanceA*distanceA + distanceB*distanceB );
+	return {"error":distance, "distanceA":distanceA, "distanceB":distanceB};
+}
+
+
 R3D.bestPointNeedleInHaystack = function(needle, haystack){ // point in haystack relative to center
 	var i;
 	var scores = Dense.searchNeedleHaystackImage(needle,null, haystack);

@@ -1856,7 +1856,7 @@ BeliefTest.Lattice.prototype._errorAffine = function(size){
 		for(var i=0; i<size; ++i){
 			for(var j=0; j<size; ++j){
 				var index = j*size + i;
-				var distance = Math.sqrt( Math.pow(size-i,2) +  Math.pow(size-j,2) );
+				var distance = Math.sqrt( Math.pow(center-i,2) +  Math.pow(center-j,2) );
 				arr[index] = distance;
 			}
 		}

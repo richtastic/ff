@@ -182,7 +182,12 @@ project typical numbers:
 APP TODO:
 
 x setting up P2D/P3D from seeds
-- creating new P2D from local search
+- 2D local search
+	- creating new P2D/match
+
+- p3D / patch cannot be esimated until all involved transforms have an R => 
+
+
 - initializing patch [from seeds once have enough]
 	- iteritive projection
 - creating new P3D from projections

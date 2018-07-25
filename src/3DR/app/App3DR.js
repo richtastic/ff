@@ -6819,7 +6819,7 @@ console.log(viewB);
 	*/
 	//console.log("MATCHES AFTER: "+filteredMatches.length);
 	console.log("MATCHES FOR PAIR "+vA.id()+"+"+vB.id()+" == "+filteredMatches.length);
-	
+
 	// copy over
 	for(var j=0; j<filteredMatches.length; ++j){
 		var match = filteredMatches[j];
@@ -6839,9 +6839,10 @@ console.log(viewB);
 		}
 		*/
 // // TODO: UNCOMMENT
-// if(j>30){
-// 	break;
-// }
+// if(j>=0){
+if(j>=2){
+	break;
+}
 	}
 	// initially get 2-sigma points & only add those from match list
 }
