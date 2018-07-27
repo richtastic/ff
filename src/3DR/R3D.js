@@ -564,7 +564,6 @@ R3D.transformFromFundamental2 = function(pointsA, pointsB, F, Ka, Kb, M1, forceS
 	Kb = Kb ? Kb : Ka;
 	var KaInv = Matrix.inverse(Ka);
 	var KbInv = Matrix.inverse(Kb);
-
 		// KaInv = Matrix.transpose(Ka);
 		// KbInv = Matrix.transpose(Kb);
 //	console.log("K: \n"+Ka);
@@ -574,6 +573,8 @@ R3D.transformFromFundamental2 = function(pointsA, pointsB, F, Ka, Kb, M1, forceS
 	var KbT = Matrix.transpose(Kb);
 	var E = Matrix.mult(F,Ka);
 		E = Matrix.mult(KbT,E);
+// console.log(KbT+" ");
+// console.log(E+" ");
 //	console.log("INCOMING E [from F]:\n"+E);
 	
 	/*
@@ -665,8 +666,6 @@ R3D.transformFromFundamental2 = function(pointsA, pointsB, F, Ka, Kb, M1, forceS
 	}
 	
 	// find single matrix that results in 3D point in front of both cameras Z>0
-
-
 var projection = null;
 // var countsUnderZero = Code.newArrayZeros(possibles.length);
 // var countsOverZero = Code.newArrayZeros(possibles.length);
@@ -708,6 +707,7 @@ for(index=0; index<pointsA.length; ++index){
 		countsTotal[i] += Math.sign(p1Norm.z) + Math.sign(p2Norm.z);
 	}
 }
+console.log(countsTotal,"of",pointsA.length);
 // console.log("total points: "+pointsA.length);
 // console.log(countsUnderZero);
 // console.log(countsOverZero);
@@ -721,6 +721,8 @@ var maximumTotalCount = pointsA.length * 2;
 var bestTotalCount = Code.max(countsTotal);
 var bestProjections = [];
 
+var minimumTransformMatchCountR = 16;
+forceSolution = (bestTotalCount>=2*minimumTransformMatchCountR && forceSolution);
 for(i=0; i<possibles.length; ++i){
 	var possible = possibles[i];
 	if(countsTotal[i]==bestTotalCount){
@@ -19002,7 +19004,7 @@ R3D.optimumAffineTransform = function(imageA,pointA, imageB,pointB, vectorX,vect
 		var matrix = new Matrix(3,3).identity();
 			matrix = Matrix.transform2DScale(matrix,scaleCompare);
 	var h = imageB.extractRectFromFloatImage(pointB.x,pointB.y,1.0,null,compareSize,compareSize, matrix);
-	var m = needleMask = ImageMat.circleMask(compareSize);
+	var m = ImageMat.circleMask(compareSize);
 	var u = new V2D(0,0);
 	var x = new V2D(1,0);
 	var y = new V2D(0,1);
@@ -19023,8 +19025,8 @@ var index = 0;
 		// NaN
 			matrix = Matrix.transform2DScale(matrix,scaleCompare);
 		var n = imageA.extractRectFromFloatImage(pointA.x+o.x,pointA.y+o.y,1.0,null,compareSize,compareSize, matrix);
-		var ncc = R3D.normalizedCrossCorrelation (n,m,h, true);
-		// var ncc = R3D.searchNeedleHaystackImageFlat(n,m,h);
+		var ncc = R3D.normalizedCrossCorrelation(n,m,h, true);
+		var sad = R3D.searchNeedleHaystackImageFlat(n,m,h);
 if(isUpdate){
 // if(index==0){
 	// var iii = n;
@@ -19036,8 +19038,12 @@ if(isUpdate){
 // }
 ++index;
 }
-
-		return ncc["value"][0];
+		sad = sad["value"][0];
+		ncc = ncc["value"][0];
+		return ncc;
+		// return sad;
+		// return sad*ncc;
+		// return sad+ncc;
 	}
 
 	var result = R3D._affineTransformNonlinearGD(pointA,pointB, vectorX,vectorY,  vectorX,vectorY, compareFxn, limits);

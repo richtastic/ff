@@ -180,8 +180,22 @@ project typical numbers:
 
 
 APP TODO:
+x affine approx from homography
+~ point3D setting location / null
+- match pass criteria first
+- match intersections 2D
 
-x setting up P2D/P3D from seeds
+
+- match / point intersections
+- how to handle point3D without coordinates yet
+- preventing re-search of failed points?
+
+- optimum locations aren't very good
+		-- initial affine estimate
+		-- searching estimates
+	- look at SAD
+	- SAD * NCC
+	- SAD + NCC
 - 2D local search
 	- creating new P2D/match
 

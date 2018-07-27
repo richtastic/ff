@@ -1357,6 +1357,7 @@ BeliefTest.optimumScoresAtLocation = function(imageA,pointA, imageB,pointB, need
 		var scoresSAD = R3D.searchNeedleHaystackImageFlat(needle, null, haystack);
 		var scoresNCC = R3D.normalizedCrossCorrelation(needle,null, haystack, true);
 		var scoresMult = ImageMat.mulFloat(scoresSAD["value"],scoresNCC["value"]);
+		var scoresAdd = ImageMat.addFloat(scoresSAD["value"],scoresNCC["value"]);
 		var scores = {
 			"width": scoresSAD["width"],
 			"height": scoresSAD["height"],
@@ -1896,6 +1897,7 @@ BeliefTest.Lattice.prototype.bestAffineLocationFromLocation = function(affine,ce
 	var haystackSize = needleSize*3;
 	var cellScale = (needleSize/BeliefTest.COMPARE_SIZE);
 	//var finalSize = 11*3 - 11 + 1; //haystackSize - needleSize + 1;
+//throw "is this right: "+centerA+" vs "+existingA;
 	var scores = BeliefTest.optimumScoresAtLocation(imageA,centerA, imageB,predictedB, needleSize,haystackSize,affine);
 	// console.log(scores);
 	var finalSize = scores["width"];
@@ -2187,7 +2189,7 @@ BeliefTest.pathTransforms = function(imageA,pointA1,pointA2, imageB,pointB1,poin
 	return {"A":haystackA, "B":haystackB};
 }
 BeliefTest.Lattice.orientationTest = function(cell, match, verbose){
-//	console.log(cell)
+	//	console.log(cell)
 	var orderA = [];
 	var orderB = [];
 	var matchA = match.pointA();
@@ -2403,7 +2405,7 @@ BeliefTest.Lattice.prototype.matchValidation = function(cell, match){
 
 var rangeSAD = scoreSAD/range;
 var rangeNCC = scoreNCC/range;
-// console.log("RANGE CHECK: "+range+" => "+rangeSAD+" & "+rangeNCC);
+console.log("RANGE CHECK: "+range+" => "+rangeSAD+" & "+rangeNCC);
 	/*
 	if(rangeSAD>1.0){
 		return false;
@@ -2417,14 +2419,17 @@ var rangeNCC = scoreNCC/range;
 	
 	//if(scoreSAD>0.525){
 	if(scoreSAD>0.40){
-		// console.log("DROP SCORE SAD: "+scoreSAD);
+		console.log("DROP SCORE SAD: "+scoreSAD);
 		return false;
 	}
-	
 	if(scoreNCC>0.60){
-		// console.log("DROP SCORE NCC: "+scoreNCC);
+		console.log("DROP SCORE NCC: "+scoreNCC);
 		return false;
 	}
+	// if(scoreMult>0.40*0.40){
+	// 	console.log("DROP SCORE MULT: "+scoreMult);
+	// 	return false;
+	// }
 
 	// // TESTING
 	// if(scoreMult>0.50){ // 0.707^2
