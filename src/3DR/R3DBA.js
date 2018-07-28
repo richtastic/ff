@@ -3782,9 +3782,9 @@ R3D.BA.World.prototype.ransacTransformF = function(transform){
 	var minimumRansacCountF = 24;
 	var minimum3PointCount = 50;
 	var minimumErrorPointCount = 80;
-		var minimumRansacCountF = 99924;
-		var minimum3PointCount = 99950;
-		var minimumErrorPointCount = 99980;
+		// var minimumRansacCountF = 99924;
+		// var minimum3PointCount = 99950;
+		// var minimumErrorPointCount = 99980;
 	
 	var info = transform.toPointArray(0);
 	var viewA = transform.viewA();
@@ -3835,6 +3835,7 @@ R3D.BA.World.prototype.ransacTransformF = function(transform){
 		var bestPointsA = pointsA;
 		var bestPointsB = pointsB;
 		var errorDecay = 0.5;
+		console.log(" TRY RANSAC?: "+pointsA.length+" / "+minimumRansacCountF)
 		if(pointsA.length>minimumRansacCountF){
 			console.log("DOING RANSAC");
 			var errorInfo = R3D.fundamentalMatrixError(F, pointsA,pointsB, true);

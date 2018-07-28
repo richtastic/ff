@@ -7613,6 +7613,60 @@ Code.planeFromPoints = function(center, points, weights){
 	// return plane;
 }
 
+Code.consistentOrientation = function(pointA,pointB, pointsA,pointsB){ // TODO: if duplicated angles => also allow
+	var verbose = false;
+	if(pointsA.length<=2){
+		return true;
+	}
+	var orderA = [];
+	var orderB = [];
+	for(var i=0; i<pointsA.length; ++i){
+		var pA = pointsA[i];
+		var pB = pointsB[i];
+		var a = V2D.sub(pA,pointA);
+		var b = V2D.sub(pB,pointB);
+		var angleA = V2D.angleDirection(V2D.DIRX,a);
+		var angleB = V2D.angleDirection(V2D.DIRX,b);
+			angleA = Code.angleZeroTwoPi(angleA);
+			angleB = Code.angleZeroTwoPi(angleB);
+		orderA.push([angleA,i]);
+		orderB.push([angleB,i]);
+	}
+	// sort by angle
+	var angleFxn = function(a,b){
+		return a[0]<b[0] ? -1 : 1;
+	}
+	orderA.sort(angleFxn);
+	orderB.sort(angleFxn);
+	var first = orderA[0][1];
+	var last = orderA[orderA.length-1][1];
+	//iterate thru each
+	for(var j=0; j<orderB.length; ++j){
+		var b = orderB[j][1];
+		if(b==first){
+			break;
+		}
+	}
+	if(verbose){
+		console.log(orderA);
+		console.log(orderB);
+		console.log(0+" = "+j);
+	}
+	var count = pointsA.length;
+	for(var i=0; i<orderA.length; ++i){
+		var a = orderA[i][1];
+		var b = orderB[(i+j)%count][1];
+		if(a!=b){
+			if(verbose){
+				console.log("FOUND INVALID ORDERING: "+a+" | "+b);
+				// console.log(orderA);
+				// console.log(orderB);
+			}
+			return false;
+		}
+	}
+	return true;
+}
 // ------------------------------------------------------------------------------------------------------------------------------------------------- center of mass / centroid / moment / covariance / ...
 Code.centroid2D = function(image, imageWidth,imageHeight, imageMaskWeights){ // centroid === center of mass
 	var cen = new V2D();

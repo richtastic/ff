@@ -85,6 +85,15 @@ var modeModelReconstruction = false;
 //var modeModelReconstruction = true;
 
 
+
+
+//
+// TO SWITCH ON MODELING:
+modeModelReconstruction = true;
+
+
+
+
 if(modeImageEdit){
 	var app = new App3DR.App.ImageEditor(this._resource);
 	this.setupAppActive(app);
@@ -6642,7 +6651,7 @@ console.log(offX+","+offY);
 
 
 // DON'T RUN
-// return; // don't run
+return; // don't run
 
 
 
@@ -6743,6 +6752,7 @@ for(var i=0; i<views.length; ++i){
 	// v.corners(corners);
 	// v.camera(cam);
 		view.temp(v);
+		v.data(view.id());
 //		v.mapping(view.id());
 //console.log("MAPPING: "+v.mapping());
 	BAVIEWS.push(v);
@@ -6840,7 +6850,8 @@ console.log(viewB);
 		*/
 // // TODO: UNCOMMENT
 // if(j>=0){
-if(j>=2){
+//if(j>=2){
+if(j>=10){
 	break;
 }
 	}
@@ -6849,22 +6860,13 @@ if(j>=2){
 
 
 
-world.solve();
-
-return;
-throw "HERE";
-
-
-
-
 
 
 
 // check
-world.consistencyCheck();
+// world.consistencyCheck();
 
 var completeFxn = function(){
-console.log(this);
 	var str = world.toYAMLString();
 	this.bundleFilename(App3DR.ProjectManager.BUNDLE_INFO_FILE_NAME);
 	this.saveBundleAdjust(str, fxnZ, this);

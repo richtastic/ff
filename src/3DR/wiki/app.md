@@ -182,12 +182,29 @@ project typical numbers:
 APP TODO:
 x affine approx from homography
 ~ point3D setting location / null
-- match pass criteria first
-- match intersections 2D
+~ match pass criteria first
+~ match intersections 2D
+
+x position validation
+x orientation validation
+
+- plot N ? S ? F ? R ERRORS
+
+- try half-dropping rather than sigma dropping
 
 
-- match / point intersections
-- how to handle point3D without coordinates yet
+- F is pretty good, but R is very shitty
+
+
+- sort adding matches by ncc*sad scores before insertion
+- 
+- 2D cell voting
+
+
+- initializing patch [from seeds once have enough]
+	- iteritive projection
+
+
 - preventing re-search of failed points?
 
 - optimum locations aren't very good
@@ -199,11 +216,8 @@ x affine approx from homography
 - 2D local search
 	- creating new P2D/match
 
-- p3D / patch cannot be esimated until all involved transforms have an R => 
 
 
-- initializing patch [from seeds once have enough]
-	- iteritive projection
 - creating new P3D from projections
 	- creating/updating patch on new data
 

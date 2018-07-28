@@ -338,8 +338,8 @@ Stage.prototype.addChild = function(ch){
 Stage.prototype.removeChild = function(ch){
 	this._root.removeChild(ch);
 }
-Stage.prototype.removeAllChilden = function(ch){
-	this._root.removeAllChilden(ch);
+Stage.prototype.removeAllChildren = function(ch){
+	this._root.removeAllChildren(ch);
 }
 Stage.prototype.getCurrentMousePosition = function(){
 	return this._canvas.mousePosition();

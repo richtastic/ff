@@ -704,6 +704,7 @@ for(index=0; index<pointsA.length; ++index){
 		// }else if(p1Norm.z<=0 && p2Norm.z<=0){
 		// 	countsUnderZero[i] += 1;
 		// }
+		// console.log(" ADDING: "+p1Norm.z+" & "+p2Norm.z);
 		countsTotal[i] += Math.sign(p1Norm.z) + Math.sign(p2Norm.z);
 	}
 }
@@ -721,7 +722,7 @@ var maximumTotalCount = pointsA.length * 2;
 var bestTotalCount = Code.max(countsTotal);
 var bestProjections = [];
 
-var minimumTransformMatchCountR = 16;
+var minimumTransformMatchCountR = 10;
 forceSolution = (bestTotalCount>=2*minimumTransformMatchCountR && forceSolution);
 for(i=0; i<possibles.length; ++i){
 	var possible = possibles[i];
@@ -744,7 +745,9 @@ for(i=0; i<possibles.length; ++i){
 	// 	}
 	// }
 }
-	// if mutliple good matches, choose between
+console.log("bestProjections:")
+console.log(bestProjections);
+	// if multiple good matches, choose between
 	if(bestProjections.length>0){
 		if(bestProjections.length==1){
 			return bestProjections[0];
