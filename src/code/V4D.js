@@ -163,6 +163,10 @@ V4D.prototype.qInverse = function(){ // flip rotation angle, keep direction
 	return this;
 }
 V4D.prototype.qRotatePoint = function(b, a){ // b = a * q | assuming V3D
+	if(a===undefined){
+		a = b;
+		b = new V3D();
+	}
 	var q = this;
 	var xx  = q.x*q.x;
 	var xy2 = q.x*q.y*2.0;

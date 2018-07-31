@@ -180,46 +180,24 @@ project typical numbers:
 
 
 APP TODO:
-x affine approx from homography
-~ point3D setting location / null
-~ match pass criteria first
-~ match intersections 2D
 
-x position validation
-x orientation validation
-
-- plot N ? S ? F ? R ERRORS
-
-- try half-dropping rather than sigma dropping
-
-
-- F is pretty good, but R is very shitty
-
-
-- sort adding matches by ncc*sad scores before insertion
-- 
-- 2D cell voting
 
 
 - initializing patch [from seeds once have enough]
 	- iteritive projection
+- 2D translations = affine approx from homography
+=> make into function
+
+
+- actual intersection resolution
+
+
+- 2D cell voting
+
 
 
 - preventing re-search of failed points?
 
-- optimum locations aren't very good
-		-- initial affine estimate
-		-- searching estimates
-	- look at SAD
-	- SAD * NCC
-	- SAD + NCC
-- 2D local search
-	- creating new P2D/match
-
-
-
-- creating new P3D from projections
-	- creating/updating patch on new data
 
 
 

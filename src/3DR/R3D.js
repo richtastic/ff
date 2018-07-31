@@ -21469,6 +21469,19 @@ R3D.projectPoint3DToCamera2DForward = function(in3D, extrinsic, K, distortions, 
 	//console.log(in3D+"->"+v3D+"->"+p3D+" => "+p2D);
 	return p2D;
 }
+R3D.projectPoint2DToCamera3DRay = function(in2D, extrinsic, Kinv, distortions){
+	var dir = new V3D(in2D.x,in2D.y,1);
+	console.log(" A: "+dir);
+	Kinv.multV3DtoV3D(dir,dir);
+	console.log(" B: "+dir);
+	var org = new V3D(0,0,0);
+	extrinsic.multV3DtoV3D(org,org);
+	extrinsic.multV3DtoV3D(dir,dir);
+	console.log(" C: "+dir);
+	dir.sub(org);
+	dir.norm();
+	return {"o":org, "d":dir};
+}
 R3D._gdBAPoints3D_temp_A = new Matrix(4,4);
 R3D._gdBAPoints3D_temp_B = new Matrix(4,4);
 /*

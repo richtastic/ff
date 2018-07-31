@@ -388,6 +388,8 @@ Triangulator.Mesh.prototype.subdivide = function(tri, point){
 	if(!tri){
 		console.log(tri+" @ "+point);
 		Code.printPoints(this.points());
+		console.log("something wrong -- mising tri: ",tri,"@",point);
+return;
 		throw "should have try ... intersection code wrong?";
 	}
 	var edgeA = tri.edgeA();

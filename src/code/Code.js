@@ -2235,6 +2235,57 @@ Code.averageNumbers = function(values, percents){
 	}
 	return sum;
 }
+Code.averageAngleVector3D = function(vectors, percents){ // center of vectors via rotation
+
+
+	throw "eigenvectors ?";
+
+	
+	// quaternions:
+	//V4D.qMul = function(c, a,b);
+	var quaternion = new V4D();
+	quaternion.qClear();
+
+
+	var i, count = vectors.length;
+	var angle;
+	var result = new V3D(0,0,1);
+	var v = new V3D();
+	var d = new V3D();
+	var p = 1.0/count;
+	for(i=0; i<count; ++i){
+		var vector = vectors[i];
+		if(percents){
+			p = percents[i];
+		}
+		v.set(vector.x,vector.y,vector.z);
+		v.norm(); // scale by percent too ?
+		
+		angle = V3D.angle(V3D.DIRZ,v);
+		V3D.cross(d,V3D.DIRZ,v);
+		d.norm();
+		if(d.length()==0){
+			continue;
+		}
+		console.log("  "+i+" : "+d+" @ "+Code.degrees(angle));
+		// V3D.rotateAngle(result,result,d,angle*p);
+		
+		//quaternion.qRotateDir(v.x,v.y,v.x);
+		// quaternion.qRotateDir(d.x,d.y,d.x, angle*p);
+		var q = new V4D();
+		q.qClear();
+		q.qRotateDir(d.x,d.y,d.x, angle);
+		//V4D.qMul(quaternion,quaternion,q); // <0.5825317547305483,0.18301270189221935,0.8750000000000002>
+		// V4D.qMul(quaternion,quaternion,q);
+		//V4D.qMul(quaternion,q,quaternion); // <0.5825317547305483,0.5000000000000001,0.7410254037844388>
+		V4D.qMul(quaternion,quaternion,q);
+	}
+	//qNorm
+	//result = quaternion.qRotatePoint(result);
+	result = quaternion.qRotatePoint(new V3D(0,0,1));
+	console.log(result.length())
+	return result;
+}
 Code.averageAngles = function(angles, percents){
 	var i, count = angles.length;
 	var sumSin = 0;
