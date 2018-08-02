@@ -69,6 +69,7 @@ file:///var/containers/Bundle/Application/9619FBE0-A501-4FB0-8277-74AB3FE38DDC/u
 
 
 
+surface curvature: l0 / (l0 + l1 + l2)
 
 
 

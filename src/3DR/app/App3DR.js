@@ -89,7 +89,7 @@ var modeModelReconstruction = false;
 
 //
 // TO SWITCH ON MODELING:
-// modeModelReconstruction = true;
+modeModelReconstruction = true;
 
 
 
@@ -3419,8 +3419,8 @@ camWid = 0.20;
 			var vertList = [pBL.x,pBL.y,pBL.z, pBR.x,pBR.y,pBR.z, pTR.x,pTR.y,pTR.z,   pTR.x,pTR.y,pTR.z, pTL.x,pTL.y,pTL.z, pBL.x,pBL.y,pBL.z];
 			
 			console.log("SRZ: "+horz+" x "+vert);
-		if(i==0){
-		//if(false){ // none
+		// if(i==0){
+		if(false){ // none
 		//if(true){ // overlapping
 			console.log("CREATE TEXTURES HERE");
 			var triangleInfo = this._triangulateSurface(i);
@@ -6651,7 +6651,7 @@ console.log(offX+","+offY);
 
 
 // DON'T RUN
-// return; // don't run
+return; // don't run
 
 
 

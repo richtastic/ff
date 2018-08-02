@@ -2240,7 +2240,7 @@ Code.averageAngleVector3D = function(vectors, percents){ // center of vectors vi
 
 	throw "eigenvectors ?";
 
-	
+
 	// quaternions:
 	//V4D.qMul = function(c, a,b);
 	var quaternion = new V4D();
@@ -6950,6 +6950,10 @@ Code.intersectRayQuad = function(org,dir, a,b,c,d, nrm){ // finite ray - quad in
 	if( (u>=0 && v>=0 && w>=0 && s>=0) || (u<=0 && v<=0 && w<=0 && s<=0) ){
 		return p;
 	}
+	return null;
+}
+Code.intersectRayDisk = function(org,dir, cen,nrm,rad){ // finite ray - circular-plane intersection [splat / surfel / disk]
+	throw "TODO";
 	return null;
 }
 Code.rayFromPointPerimeter = function(points,hull,forSite){

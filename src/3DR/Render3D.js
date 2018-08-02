@@ -1,0 +1,165 @@
+// Render3D.js
+
+function Render3D(size){
+	this._root = new DO();
+	this._size = new V2D(600,400);
+	this._currentCamera = -1;
+	this._cameras = [];
+	this.size(size);
+	// this.addCamera();
+}
+
+
+// steal
+Render3D.Cam3D = Cam3D;
+
+Render3D.prototype.display = function(){
+	return this._root;
+}
+Render3D.prototype.clear = function(){
+	this._root.removeAllChildren();
+}
+Render3D.prototype.size = function(s){
+	if(s!==undefined){
+		this._size.copy(s);
+	}
+	return this._size;
+}
+Render3D.prototype.addCamera = function(info){
+	
+	var size = this.size();
+
+	var camera = new Cam3D();
+	var cx = size.x*0.5;
+	var cy = size.y*0.5;
+	var fx = 1000;
+	var fy = 1000;
+	var s = 0;
+	var k1 = 1E-10;
+	var k2 = 1E-15;
+	var k3 = 1E-15;
+	var p1 = 1E-20;
+	var p2 = 1E-25;
+	camera.K(cx,cy, fx,fy, s);
+	camera.distortion(k1,k2,k3, p1,p2);
+	// camera.translate(0,5,-15);
+	camera.translate( new V3D(0,0,-15) );
+
+
+	this._cameras.push(camera);
+	if(this._currentCamera==-1){
+		this._currentCamera = 0;
+	}
+	return camera;
+}
+Render3D.prototype.currentCamera = function(){
+	return this._cameras[this._currentCamera];
+}
+Render3D.prototype.renderPoints = function(points,infos){
+	var screen = this.size();
+	var display = this._root;
+	for(var i=0; i<points.length; ++i){
+		var point = points[i];
+		var p = this.toScreenPoint(point);
+		// console.log(point);
+		// console.log(p);
+		// break;
+		if(p){
+			console.log(p+"");
+			var rad = 2.0;
+			var d = new DO();
+			d.graphics().setFill(0xFFFF0000);
+			// d.graphics().setLine(1.0, 0xFFFF0000);
+			d.graphics().beginPath();
+			d.graphics().drawCircle(p.x, p.y, rad);
+			// d.graphics().drawCircle(5,5, rad);
+			d.graphics().fill();
+			// d.graphics().strokeLine();
+			d.graphics().endPath();
+			//dList.push([d,point.z]);
+			display.addChild(d);
+		}
+	}
+	console.log(display)
+}
+Render3D.prototype.renderLines = function(lines,infos){
+	throw "TODO";
+}
+Render3D.prototype.renderPolygons = function(lines,infos){
+	throw "TODO";
+}
+
+Render3D.prototype.toScreenPoint = function(point3D){
+	var camera = this.currentCamera();
+	var cameraK = camera.K();
+	var cameraMatrix = camera.matrix();
+	// console.log(point3D);
+	return this.toScreenPointFull(point3D, camera,cameraMatrix,cameraK, screen.x,screen.y);
+}
+Render3D.prototype.toScreenPointFull = function(point3D, camera,cameraMatrix,cameraK, screenWidth,screenHeight){
+	var local3D = cameraMatrix.multV3D(new V3D(), point3D);
+	// console.log(local3D+"")
+	if(local3D.z>0){
+		var projected3D = cameraK.multV3D(new V3D(), local3D);
+		var image3D = new V3D(projected3D.x/projected3D.z,projected3D.y/projected3D.z,projected3D.z);
+		var screen3D = camera.applyDistortion(new V2D(), image3D);
+		var point = new V3D(screen3D.x,screen3D.y,image3D.z);
+		if(0<=point.x && point.x<screenWidth){
+			if(0<=point.y && point.y<screenHeight){
+				return point;
+			}
+		}
+		return point;
+	}
+	return null;
+}
+
+
+
+
+
+/*
+Cam2D.prototype.position = function(p){
+	if(p!==undefined){
+		this._pos.copy(p);
+	}
+	return this._pos;
+}
+Cam2D.prototype.rotation = function(r){
+	if(r!==undefined){
+		this._rot = r;
+	}
+	return this._rot;
+}
+Cam2D.prototype.focalLength = function(f){
+	if(f!==undefined){
+		this._focalLength = f;
+	}
+	return this._focalLength;
+}
+Cam2D.prototype.fieldOfView = function(f){
+	if(f!==undefined){
+		this._fieldOfView = f;
+	}
+	return this._fieldOfView;
+}
+Cam2D.prototype.screenSize = function(){
+	return 2.0*this._focalLength*Math.tan(this._fieldOfView*0.5);
+}
+Cam2D.prototype.toString = function(){
+	var str = "";
+	str += "[Cam2D: ";
+	str += " "+this._pos.toString();
+	str += " "+(this._rot*(180.0/Math.PI))+"*";
+	str += " "+this._focalLength+", "+(this._fieldOfView*(180.0/Math.PI))+"*";
+	str += "]";
+	return str;
+}
+Cam2D.prototype.kill = function(){
+	this._pos = null;
+	this._angle = undefined;
+	this._focalLength = undefined;
+	this._fieldOfView = undefined;
+}
+
+*/

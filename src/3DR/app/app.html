@@ -8,9 +8,55 @@ function pageLoadedFxn(){
 	var ff = new FF("../../code/",ffLoadedFxn);
 }
 function ffLoadedFxn(){
-	(new ScriptLoader("./",["App3DR.js", "../SIFTDescriptor.js", "../R3D.js","../R3DDense.js","../R3DBA.js","../R3DDense.js","../Cam2D.js","../Cam3D.js","Stereopsis.js"],this,classesLoadedFxn)).load();
+	(new ScriptLoader("./",["App3DR.js", "../SIFTDescriptor.js", "../R3D.js","../R3DDense.js","../R3DBA.js","../R3DDense.js","../Cam2D.js","../Cam3D.js","../Render3D.js","Stereopsis.js"],this,classesLoadedFxn)).load();
 }
 function classesLoadedFxn(){
+	/*
+	var handleEnterFrameFxn = function(e){
+		// console.log(e)
+	}
+
+	var canvas = new Canvas(null,0,0,Canvas.STAGE_FIT_FILL, false,false, true);
+	var stage = new Stage(canvas, 1000/20);
+	var root = new DO();
+	stage.addChild(root);
+	// this._canvas.addFunction(Canvas.EVENT_MOUSE_CLICK,this._handleMouseClickFxn,this);
+	// this._canvas.addFunction(Canvas.EVENT_MOUSE_DOWN,this._handleMouseDownFxn,this);
+	// this._canvas.addFunction(Canvas.EVENT_MOUSE_UP,this._handleMouseUpFxn,this);
+	// this._canvas.addFunction(Canvas.EVENT_MOUSE_EXIT,this._handleMouseUpFxn,this);
+	// this._canvas.addFunction(Canvas.EVENT_MOUSE_MOVE,this._handleMouseMoveFxn,this);
+
+	//this._canvas.addFunction(Canvas.EVENT_MOUSE_CLICK,this._handleMouseClickFxn,this);
+	// this._canvas.addFunction(Canvas.EVENT_TOUCH_START,this._handleMouseDownFxn,this);
+	// this._canvas.addFunction(Canvas.EVENT_TOUCH_END,this._handleMouseUpFxn,this);
+	// this._canvas.addFunction(Canvas.EVENT_TOUCH_MOVE,this._handleMouseMoveFxn,this);
+	// this._canvas.addFunction(Canvas.EVENT_WINDOW_RESIZE,this._handleCanvasResizeFxn,this);
+	stage.addFunction(Stage.EVENT_ON_ENTER_FRAME,handleEnterFrameFxn,this);
+	canvas.addListeners();
+	stage.addListeners();
+	stage.start();
+
+	var renderer = new Render3D(new V2D(600,400));
+	var cam3D = renderer.addCamera();
+	root.addChild(renderer.display());
+	
+	var points = [];
+	var s = 1;
+	for(var i=0; i<100; ++i){
+		var p = new V3D(Math.random()*s,Math.random()*s,Math.random()*s);
+		points.push(p);
+	}
+
+	var info = V3D.infoFromArray(points);
+	cam3D.position();
+	cam3D.position();
+
+	renderer.clear();
+	renderer.renderPoints(points);
+
+
+	return;
+	*/
 /*
 	var angleX = Math.random()*Math.PI2;
 	var angleY = Math.random()*Math.PI2;
@@ -357,7 +403,7 @@ var errorB = averageError;
 	return;
 */
 
-
+	
 	var app = new App3DR();
 }
 </script>

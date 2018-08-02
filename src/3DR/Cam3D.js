@@ -21,7 +21,10 @@ function Cam3D(p, r, l,f, s){
 }
 //Code.inheritClass(Cam3D,Cam2D);
 
-
+Cam3D.prototype.identity = function(p){
+	this._pos.set(0,0,0);
+	this._rot.qClear();
+}
 
 Cam3D.prototype.position = function(p){
 	if(p!==undefined){
@@ -94,6 +97,7 @@ Cam3D.prototype.orientation = function(){
 
 
 Cam3D.prototype.matrix = function(){
+	// console.log(this._pos);
 	var rotation = new Matrix3D();
 	V4D.qMatrix(rotation, this._rot);
 

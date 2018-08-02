@@ -19048,9 +19048,13 @@ if(isUpdate){
 		// return sad*ncc;
 		// return sad+ncc;
 	}
-
+// something breaks ...
+try {
 	var result = R3D._affineTransformNonlinearGD(pointA,pointB, vectorX,vectorY,  vectorX,vectorY, compareFxn, limits);
 	return result;
+} catch(e) {
+	return null;
+}
 }
 
 
@@ -21471,13 +21475,13 @@ R3D.projectPoint3DToCamera2DForward = function(in3D, extrinsic, K, distortions, 
 }
 R3D.projectPoint2DToCamera3DRay = function(in2D, extrinsic, Kinv, distortions){
 	var dir = new V3D(in2D.x,in2D.y,1);
-	console.log(" A: "+dir);
+	// console.log(" A: "+dir);
 	Kinv.multV3DtoV3D(dir,dir);
-	console.log(" B: "+dir);
+	// console.log(" B: "+dir);
 	var org = new V3D(0,0,0);
 	extrinsic.multV3DtoV3D(org,org);
 	extrinsic.multV3DtoV3D(dir,dir);
-	console.log(" C: "+dir);
+	// console.log(" C: "+dir);
 	dir.sub(org);
 	dir.norm();
 	return {"o":org, "d":dir};

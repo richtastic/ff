@@ -218,6 +218,9 @@ V3D.prototype.scale = function(c,d,e){
 	this.x *= c; this.y *= d; this.z *= e;
 	return this;
 }
+V3D.prototype.rotate = function(dir,ang){
+	return V3D.rotateAngle(this,this, dir,ang);
+}
 V3D.prototype.setLength = function(l){
 	this.norm();
 	this.x *= l; this.y *= l;  this.z *= l;

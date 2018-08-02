@@ -181,18 +181,26 @@ project typical numbers:
 
 APP TODO:
 
-
-
-- initializing patch [from seeds once have enough]
-	- iteritive projection
-- 2D translations = affine approx from homography
-=> make into function
-
+x set match error R & error F symmetric
 
 - actual intersection resolution
 
 
-- 2D cell voting
+- display current iteration results 3D visually
+	- rendering 3D class
+		- points
+		- lines
+		- tris
+		- quads
+		- 
+
+- multiple-views
+
+
+- 2D translations = affine approx from homography
+	=> make into function
+
+
 
 
 
@@ -204,6 +212,9 @@ APP TODO:
 
 
 H = R3D.affineMatrixLinear(pointsA,pointsB);
+
+
+- back to surface via front-propagating
 
 
 
