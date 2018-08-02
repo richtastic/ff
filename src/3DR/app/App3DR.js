@@ -89,7 +89,7 @@ var modeModelReconstruction = false;
 
 //
 // TO SWITCH ON MODELING:
-modeModelReconstruction = true;
+// modeModelReconstruction = true;
 
 
 
@@ -6651,7 +6651,7 @@ console.log(offX+","+offY);
 
 
 // DON'T RUN
-return; // don't run
+// return; // don't run
 
 
 

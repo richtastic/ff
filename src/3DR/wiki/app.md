@@ -185,14 +185,13 @@ x set match error R & error F symmetric
 
 - actual intersection resolution
 
+- patch refinement:
+	- reconcile 3D location with projected location with 2D location
+	- set point3D8 to be closest point of projected rays thru 2D points ?
+		=> is it already the midpoint ?
 
-- display current iteration results 3D visually
-	- rendering 3D class
-		- points
-		- lines
-		- tris
-		- quads
-		- 
+
+- filter based on neighbor patch normals
 
 - multiple-views
 
@@ -214,7 +213,7 @@ x set match error R & error F symmetric
 H = R3D.affineMatrixLinear(pointsA,pointsB);
 
 
-- back to surface via front-propagating
+- back to surface via advancing-front propagating
 
 
 

@@ -55,6 +55,13 @@ Stereopsis.World = function(){
 	this._keyboard = new Keyboard();
 	this._keyboard.addFunction(Keyboard.EVENT_KEY_DOWN,this._handleKeyboardDown,this);
 	this._keyboard.addListeners();
+
+
+	var stage = GLOBALSTAGE;
+	var canvas = stage.canvas();
+	this._stage = stage;
+	this._canvas = canvas;
+	this._canvas.addFunction(Canvas.EVENT_MOUSE_WHEEL,this._handleMouseWheelFxn,this);
 }
 Stereopsis.World.prototype._handleKeyboardDown = function(e){
 	// console.log("_handleKeyboardDown");
@@ -71,7 +78,13 @@ Stereopsis.World.prototype._handleKeyboardDown = function(e){
 	}else if(e.keyCode==Keyboard.KEY_LET_R){
 		this.render3D();
 	}
-	
+}
+Stereopsis.World.prototype._handleMouseWheelFxn = function(e){
+	// console.log(e);
+	var scroll = e["scroll"];
+	this._camRotX += scroll.y * 0.001;
+	this._camRotY += scroll.x * 0.001;
+	this.render3D();
 }
 Stereopsis.World.prototype.addCamera = function(K, distortion, data){
 	var camera = new Stereopsis.Camera(K,distortion,data);
@@ -1538,9 +1551,9 @@ Stereopsis.World.prototype.solve = function(completeFxn, completeContext){
 	this._completeContext = completeContext;
 	//var maxIterations = 1;
 	// var maxIterations = 2;
-	var maxIterations = 3;
+	// var maxIterations = 3;
 	// var maxIterations = 4;
-	// var maxIterations = 5;
+	var maxIterations = 5;
 	// var maxIterations = 10;
 	// var maxIterations = 15;
 	// var maxIterations = 20;
@@ -2669,6 +2682,35 @@ Stereopsis.World.prototype.resolveIntersection = function(point3DA,point3DB){ //
 	this.disconnectPoint3D(point3DB);
 
 	// resolve
+	var groupPoints = {};
+	var groupViews = {};
+	var graph = new Graph();
+	var points3D = [point3DA,point3DB];
+	for(var i=0; i<points3D.length; ++i){
+		var point3D = points3D[i];
+		var views = point3D.toViewArray();
+		for(var j=0; j<views.length; ++j){
+			var view = views[j];
+			var index = Stereopsis.indexFromObjectID(view);
+			if(!groupViews[index]){
+				groupViews[index] = view;
+			}
+			if(!groupPoints[index]){
+				groupPoints[index] = [];
+			}
+			groupPoints[index].push(point);
+			...
+		}
+	}
+	for(var i=0; i<points3D.length; ++i){
+		var point3D = points3D[i];
+		var matches = point3D.toMatchArray();
+		for(var j=0; j<matches.length; ++j){
+			var match = matches[j];
+		}
+	}
+
+	throw "HERE";
 /*
 
 
@@ -2677,11 +2719,11 @@ Stereopsis.World.prototype.resolveIntersection = function(point3DA,point3DB){ //
 views = {};
 graph = {};
 points = {};
-for each p3d set:
+for each p3d PAIR:
 	for each view
 		- add point to list of view points for view
 		- add vertex in graph for point
-for each p3d set:
+for each p3d PAIR:
 	for each match
 		- add edge on graph weighted with match score
 
@@ -2847,17 +2889,18 @@ Stereopsis.World.prototype.updatePoint3DLocation = function(point3D,location){
 	this.removePoint3D(point3D);
 		var current = point3D.point();
 		point3D.point(location);
-		/*
+		
 		if(location!=null){
 			if(current!=null){ // already exists
-				this.updateEstimatePatch(point3D,current,location);
+				// this.updateEstimatePatch(point3D,current,location);
+				this.initialEstimatePatch(point3D,location);
 			}else{ // update patch
 				this.initialEstimatePatch(point3D,location);
 			}
 		}else{
-			// set it all to null
+			// point3D.point(location);// set it all to null
 		}
-		*/
+		
 	this.insertPoint3D(point3D);
 }
 /*
@@ -2876,56 +2919,52 @@ Stereopsis.World.prototype.initialEstimatePatch = function(point3D,isLocation){
 	// initial estimate of patch normal = AVG(p(c)->v_i(c))
 	var normal = new V3D();
 	var right = new V3D();
-	var size = 0;
+	var patchSize = 0;
 	for(var i=0; i<visibleViews.length; ++i){
 		var view = visibleViews[i];
-		//var n = view.normal();
 		var c = view.center();
 		var x = view.right();
-		var n = V3D.sub(c,isLocation);
-		n.norm();	
+		// USE AVERAGE OF POINT-TO-CAM NORMALS
+		// var n = V3D.sub(c,isLocation);
+		// n.norm();
+		// USE AVERAGE OV VIEW NORMALS
+		var n = view.normal().copy().scale(-1);
 		normal.add(n); // TODO: BETTER AVERAGING OF ANGLES
 		right.add(x);
-		size += view.cellSize(); // TODO: IS THIS OK?
-
-		// get distance from point to center
-		// size = optimalSize / distance
+		//patchSize += view.cellSize();
+		patchSize += view.compareSize();
 	}
 	normal.norm();
 	right.norm();
-	size /= visibleViews.length;
+	patchSize /= visibleViews.length;
 	var up = V3D.cross(normal,right);
 	up.norm();
-	right = V3D.cross(up,normal); // make sure  90 degrees
+	right = V3D.cross(up,normal); // make sure 90 degrees
 	right.norm();
 
 	// estimate optimal size of patch
-	var optimalSize = size; // 11
+	var optimalSize = patchSize; // 11
 	var currentSize = null;
 	var averageD = 0;
-	// project point in view to match plane to estimate initial start
+	// project point in view to match plane to estimate initial start size
 	for(var i=0; i<visiblePoints.length; ++i){
-		//var view = visibleViews[i];
 		var point2D = visiblePoints[i];
 		var p = point2D.point2D();
 		var v = point2D.view();
-		var rig = p.copy().add(0.5*v.cellSize(),0);
+		//var rig = p.copy().add(0.5*v.cellSize(),0);
+		var rig = p.copy().add(0.5*v.compareSize(),0);
 		//var ray = right
 		var ray = R3D.projectPoint2DToCamera3DRay(rig, v.absoluteTransform(), v.Kinv(), null);
 		// console.log(ray);
 		var o = ray["o"];
 		var d = ray["d"];
 		var intersection = Code.intersectRayPlane(o,d, isLocation,normal);
-		// console.log(intersection);
 		var d = V3D.distance(intersection,isLocation);
 		averageD += d;
-		// console.log("@ "+d);
-		// Code.intersectRayPlane = function(org,dir, pnt,nrm){ 
 	}
 	averageD /= visiblePoints.length;
 	currentSize = averageD;
-	// console.log("currentSize: "+currentSize);
-
+	
 	// iterate to optimum
 	var rangeMin = null;
 	var rangeMax = null;
@@ -2933,18 +2972,20 @@ Stereopsis.World.prototype.initialEstimatePatch = function(point3D,isLocation){
 		// console.log(k+"   currentSize: "+currentSize+"  [ "+rangeMin+","+rangeMax+" ]");
 		// project onto each view
 		var center3D = isLocation.copy();
-		var TL3D = center3D.copy().add( up.copy().scale(currentSize) ).sub( right.copy().scale(currentSize) );
-		var TR3D = center3D.copy().add( up.copy().scale(currentSize) ).add( right.copy().scale(currentSize) );
-		var BL3D = center3D.copy().sub( up.copy().scale(currentSize) ).sub( right.copy().scale(currentSize) );
-		var BR3D = center3D.copy().sub( up.copy().scale(currentSize) ).add( right.copy().scale(currentSize) );
+		var u = up.copy().scale(currentSize);
+		var r = right.copy().scale(currentSize);
+		var TL3D = center3D.copy().add( u ).sub( r );
+		var TR3D = center3D.copy().add( u ).add( r );
+		var BR3D = center3D.copy().sub( u ).add( r );
+		var BL3D = center3D.copy().sub( u ).sub( r );
 		var averageSize = 0;
 		for(var i=0; i<visibleViews.length; ++i){
 			var view = visibleViews[i];
 			var center2D = view.projectPoint3D(center3D);
 			var TL2D = view.projectPoint3D(TL3D);
 			var TR2D = view.projectPoint3D(TR3D);
-			var BL2D = view.projectPoint3D(BL3D);
 			var BR2D = view.projectPoint3D(BR3D);
+			var BL2D = view.projectPoint3D(BL3D);
 			var list = [TL2D,TR2D,BL2D,BR2D];
 			var distance = 0;
 			for(var j=0; j<list.length; ++j){
@@ -2953,11 +2994,9 @@ Stereopsis.World.prototype.initialEstimatePatch = function(point3D,isLocation){
 				distance += d;
 			}
 			distance /= list.length;
-			// console.log("AVG SIZE: "+distance);
 			averageSize += distance;
 		}
 		averageSize /= visibleViews.length;
-
 		if(averageSize>optimalSize){
 			if(rangeMax){
 				rangeMax = Math.min(rangeMax,currentSize);
@@ -2983,53 +3022,49 @@ Stereopsis.World.prototype.initialEstimatePatch = function(point3D,isLocation){
 		if(percent<1.0){
 			percent = 1.0/percent;
 		}
-			// console.log("                 ???   "+percent);
 		if(percent<1.0001){
 			break;
 		}
 	}
-
 	point3D.point(isLocation);
 	point3D.normal(normal);
 	point3D.size(currentSize);
 	point3D.up(up);
 	this.updateP3DPatch(point3D);
-
 }
 Stereopsis.World.prototype.updateEstimatePatch = function(point3D,wasLocation,isLocation){
 	point3D.point(isLocation);
 	// keep: normal, up, size
 	this.updateP3DPatch(point3D);
-	// throw "UPDATE";
 }
 
 Stereopsis.World.prototype.updateP3DPatch = function(point3D){
-throw "...";
 	var visibleViews = point3D.toViewArray();
 	var center = point3D.point();
 	var size = point3D.size();
 	var normal = point3D.normal();
-	
 	var up = point3D.up();
 	var right = V3D.cross(up,normal);
 	// pick direction for distance optimizing:
-	var bestDirection = null;
-	var bestDot = 0;
-	for(var i=0; i<visibleViews.length; ++i){
-		var view = visibleViews[i];
-		var n = view.normal();
-		var c = view.center();
-		var cToC = V3D.sub(c,center);
-		cToC.norm();
-		var dot = V3D.dot(cToC,n);
-		if(bestDirection==null || bestDot>dot){ // want most negative [opposite directions]
-			bestDirection = cToC;
-			bestDot = dot;
-		}
-	}
-	// optimize
-	var moveDirection = bestDirection;
-	var result = Stereopsis.patchNonlinear(center,size,normal,right,up,moveDirection,visibleViews);
+	// var bestDirection = null;
+	// var bestDot = 0;
+	// for(var i=0; i<visibleViews.length; ++i){
+	// 	var view = visibleViews[i];
+	// 	var n = view.normal();
+	// 	var c = view.center();
+	// 	var cToC = V3D.sub(c,center);
+	// 	cToC.norm();
+	// 	var dot = V3D.dot(cToC,n);
+	// 	if(bestDirection==null || bestDot<dot){ // want most negative [opposite directions]
+	// 		bestDirection = cToC;
+	// 		bestDot = dot;
+	// 	}
+	// }
+	// // optimize
+	// var moveDirection = bestDirection;
+	//var moveDirection = normal.copy();
+	var moveDirection = null;
+	var result = Stereopsis.patchNonlinear(center,size,normal,right,up,moveDirection,visibleViews,point3D);
 	point3D.normal(result["normal"]);
 	point3D.point(result["center"]);
 	point3D.up(result["up"]);
@@ -3038,15 +3073,11 @@ throw "...";
 	return;
 	// update matches to reflect new affine transforms
 	console.log("update affine matches in views / update scores");
-	
 }
-
-
-
-Stereopsis.patchNonlinear = function(center,size,directionNormal,directionRight,directionUp,moveDirection, views){
+Stereopsis.patchNonlinear = function(center,size,directionNormal,directionRight,directionUp,moveDirection, views,p3D){
 	var maxIterations = 10;
 	var fxn = Stereopsis._gdPatch;
-	var args = [center,directionNormal,directionRight,directionUp,moveDirection,size,views];
+	var args = [center,directionNormal,directionRight,directionUp,moveDirection,size,views,p3D];
 	var xVals = [0,0,0];
 	result = Code.gradientDescent(fxn, args, xVals, null, maxIterations, 1E-6);
 	x = result["x"];
@@ -3060,7 +3091,8 @@ Stereopsis.patchNonlinear = function(center,size,directionNormal,directionRight,
 	var moveDistance = x[0];
 	var angleX = x[1];
 	var angleY = x[2];
-	var center = startCenter.copy().add( moveNormal.copy().scale(moveDistance) );
+	//var center = startCenter.copy().add( moveNormal.copy().scale(moveDistance) );
+	var center = startCenter.copy();
 	var normal = startNormal.copy().rotate(startRight, angleX).rotate(startUp, angleY);
 	var up = startUp.copy().rotate(startRight, angleX).rotate(startUp, angleY);
 	return {"center":center,"normal":normal,"up":up,"size":size};
@@ -3077,10 +3109,12 @@ Stereopsis._gdPatch = function(args, x, isUpdate, descriptive){
 	var moveNormal = args[4];
 	var size = args[5];
 	var views = args[6];
+	var p3D = args[7];
 	var moveDistance = x[0];
 	var angleX = x[1];
 	var angleY = x[2];
-	var center = startCenter// .copy().add( moveNormal.copy().scale(moveDistance) );
+	// var center = startCenter.copy().add( moveNormal.copy().scale(moveDistance) ); // allow some movement along ray
+	var center = startCenter; // only stay at original predicted location
 	var normal = startNormal.copy().rotate(startRight, angleX).rotate(startUp, angleY);
 	var top = startUp.copy().rotate(startRight, angleX).rotate(startUp, angleY);
 	var right = startRight.copy().rotate(startRight, angleX).rotate(startUp, angleY);
@@ -3100,17 +3134,20 @@ Stereopsis._gdPatch = function(args, x, isUpdate, descriptive){
 		var cen2D = view.projectPoint3D(center);
 		var rig2D = view.projectPoint3D(right);
 		var top2D = view.projectPoint3D(top);
-		// console.log(cen2D+" "+rig2D+" "+top2D+" ");
-		// create affine
 		rig2D.sub(cen2D);
 		top2D.sub(cen2D);
-		// console.log("SIZE: "+rig2D.length()+" x "+top2D.length());
-		// console.log("SIZE: "+xLoc.length()+" x "+yLoc.length());
+// TODO: PROJECTED CENTER AND ACTUAL CENTER ARE DIFFERENT ...
+var p2D = p3D.point2DForView(view);
+var c = p2D.point2D();
+// console.log(c+" | "+cen2D);
+		// create affine
+cen2D = c;
 		var pointsA = [org,rig2D,top2D];
 		var pointsB = [org,xLoc,yLoc];
 		var matrix = R3D.affineMatrixExact(pointsA,pointsB);
 		// extract from affine
 		var needle = image.extractRectFromFloatImage(cen2D.x,cen2D.y,1.0,null,compareSize,compareSize, matrix);
+		// var needle = image.extractRectFromFloatImage(cen2D.x,cen2D.y,2.0,null,compareSize,compareSize, matrix);
 		patches.push(needle);
 // var iii = needle;
 // var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
@@ -3127,17 +3164,16 @@ Stereopsis._gdPatch = function(args, x, isUpdate, descriptive){
 		var patchI = patches[i];
 		for(var j=i+1; j<patches.length; ++j){
 			var patchJ = patches[j];
-			// var scoresSAD = R3D.searchNeedleHaystackImageFlat(patchI, null, patchJ);
-			// scoresSAD = scoresSAD["value"][0];
-			var scoresNCC = R3D.normalizedCrossCorrelation(patchI,null, patchJ, true);
-			scoresNCC = scoresNCC["value"][0];
-			// console.log(scoresNCC);
-			totalCost += scoresNCC;
+			var scoresSAD = R3D.searchNeedleHaystackImageFlat(patchI, null, patchJ);
+			scoresSAD = scoresSAD["value"][0];
+			totalCost += scoresSAD;
+			// var scoresNCC = R3D.normalizedCrossCorrelation(patchI,null, patchJ, true);
+			// scoresNCC = scoresNCC["value"][0];
+			// totalCost += scoresNCC;
 			++compares;
 		}
 	}
 	totalCost /= compares;
-	// console.log("COST: "+totalCost);
 	return totalCost;
 }
 
@@ -3786,23 +3822,29 @@ display.removeAllChildren();
 	*/
 }
 
-Stereopsis.World.prototype.render3D = function(){ 
+Stereopsis.World.prototype.render3D = function(){
+	if(!this._camRotX){
+		this._camRotX = 0;
+	}
+	if(!this._camRotY){
+		this._camRotY = 0;
+	}
 	var display = GLOBALSTAGE;
 	display.removeAllChildren();
-
-
-
+	// 
 	var renderer = new Render3D(new V2D(600,400));
 	var cam3D = renderer.addCamera();
-	display.addChild(renderer.display());
-	
+	var renderDisplay = renderer.display();
+	display.addChild(renderDisplay);
+	//renderer.
+	// /
 	// var points = [];
 	// var s = 1;
 	// for(var i=0; i<100; ++i){
 	// 	var p = new V3D(Math.random()*s,Math.random()*s,Math.random()*s);
 	// 	points.push(p);
 	// }
-
+	// /
 	var points = [];
 	var points3D = this.toPointArray();
 	for(var i=0; i<points3D.length; ++i){
@@ -3813,14 +3855,56 @@ Stereopsis.World.prototype.render3D = function(){
 			points.push(point);
 		}
 	}
-	console.log(points);
-
-	// var info = V3D.infoFromArray(points);
+	var info = V3D.infoFromArray(points);
+	// console.log(info);
+	var size = info["size"];
+	var center = info["center"];
+	// console.log(size);
+	var minSize = Math.min(size.x,size.y,size.z);
+	var maxSize = Math.max(size.x,size.y,size.z);
+	var avgSize = (size.x+size.y+size.z)/3.0;
+	var normSize = avgSize*0.05;
+	var lines = [];
+	var squares = [];
+	var points3D = this.toPointArray();
+	for(var i=0; i<points3D.length; ++i){
+		var point3D = points3D[i];
+		var point = point3D.point();
+		var normal = point3D.normal();
+		var size = point3D.size();
+		// console.log(normal.length());
+		if(point && normal){
+			var a = point.copy();
+			var b = normal.copy().scale(normSize).add(a);
+			// console.log(a+" -> "+b);
+			lines.push([a,b]);
+			var up = point3D.up();
+			var ri = V3D.cross(point3D.up(),point3D.normal());
+			up = up.copy().scale(0.5*size);
+			ri = ri.copy().scale(0.5*size);
+			// var square = [];
+			var tl = point.copy().add(up).sub(ri);
+			var tr = point.copy().add(up).add(ri);
+			var br = point.copy().sub(up).add(ri);
+			var bl = point.copy().sub(up).sub(ri);
+			// square.push(tl);
+			// square.push(tr);
+			// square.push(br);
+			// square.push(bl);
+			squares.push([tl,tr,br,bl]);
+		}
+	}
 	// cam3D.position();
 	cam3D.identity();
+	cam3D.rotate(new V3D(0,1,0), this._camRotY);
+	cam3D.rotate(new V3D(1,0,0), this._camRotX);
+	cam3D.translate( new V3D(center.x,center.y,center.z) );
+	cam3D.translate( new V3D(0,0,-maxSize*1.0) );
 		// move ?
 	renderer.clear();
 	renderer.renderPoints(points);
+	renderer.renderLines(lines);
+	renderer.renderPolygons(squares);
 
 
 	return;

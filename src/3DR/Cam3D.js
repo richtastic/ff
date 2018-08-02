@@ -5,7 +5,7 @@ function Cam3D(p, r, l,f, s){
 	//this._rot = new V3D(0,0,0); // 
 	this._rot = new V4D();
 		this._rot.qClear();
-		console.log("asdadsasdsasasd "+this._rot);
+		// console.log("asdadsasdsasasd "+this._rot);
 	this._pos = new V3D(0,0,0);
 	this._K = new Matrix3D();
 	this._target = new V3D(0,0,0);
