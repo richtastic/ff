@@ -466,7 +466,13 @@ Code.parseJSON = function(str){
 	}else{
 		//var obj = JSON.parse(str);
 		if(Code.isString(obj)){
-			obj = JSON.parse(obj);
+			try{
+				obj = JSON.parse(obj);
+			}catch{
+				console.log("COULD NOT PARSE: ");
+				console.log("\n"+obj);
+				obj = null;
+			}
 		}
 	}
 	return obj;	
@@ -882,7 +888,6 @@ Code._forEachHash = function(hash, fxn){
 		}
 	}
 }
-
 Code.hash = function(string){
 	if(string==null || string.length==0){ return 0; }
 	var i, char, hash = 0;

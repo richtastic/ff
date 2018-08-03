@@ -166,9 +166,15 @@ ClientFile.Operation.prototype._handleCompleteRead = function(result){
 }
 ClientFile.Operation.prototype._handleCompleteWrite = function(result){
 //	console.log(result);
-	var json = Code.parseJSON(result);
-	var success = json["result"] == "success";
+	var success = false;
 	var isDone = false;
+	var json = null;
+	if(result){
+		json = Code.parseJSON(result);
+		if(json){
+			success = json["result"] == "success";
+		}
+	}
 	if(success){
 		var payload = json["payload"];
 		var isDirectory = payload["isDirectory"];
