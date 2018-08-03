@@ -633,7 +633,7 @@ Graph._minPaths = function(graph,source){ // dijkstra ??
 	return paths;
 }
 Graph._minPath = function(graph,source,target){
-	var paths = Graph._minPath(graph,source);
+	var paths = Graph._minPaths(graph,source);
 	for(var i=0; i<paths.length; ++i){
 		var path = paths[i];
 		if(path["vertex"]==target){

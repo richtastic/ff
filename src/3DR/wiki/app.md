@@ -183,7 +183,7 @@ APP TODO:
 
 x set match error R & error F symmetric
 
-- actual intersection resolution
+~ actual intersection resolution
 
 - patch refinement:
 	- reconcile 3D location with projected location with 2D location
