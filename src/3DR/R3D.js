@@ -708,7 +708,7 @@ for(index=0; index<pointsA.length; ++index){
 		countsTotal[i] += Math.sign(p1Norm.z) + Math.sign(p2Norm.z);
 	}
 }
-console.log(countsTotal,"of",pointsA.length);
+// console.log(countsTotal,"of",pointsA.length);
 // console.log("total points: "+pointsA.length);
 // console.log(countsUnderZero);
 // console.log(countsOverZero);
@@ -745,8 +745,8 @@ for(i=0; i<possibles.length; ++i){
 	// 	}
 	// }
 }
-console.log("bestProjections:")
-console.log(bestProjections);
+// console.log("bestProjections:")
+// console.log(bestProjections);
 	// if multiple good matches, choose between
 	if(bestProjections.length>0){
 		if(bestProjections.length==1){

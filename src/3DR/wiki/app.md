@@ -183,7 +183,37 @@ APP TODO:
 
 x set match error R & error F symmetric
 
-~ actual intersection resolution
+- why are 3+ cams location bad ?
+	- R gets pretty low => but combined locations are still VERY off
+-> some logic behind combinging is wrong?
+
+
+
+
+
+
+
+
+
+- remove orientation checking helps?
+
+- patch check again
+
+
+--- need way to force different views to align eachother
+
+
+--- bundle adjustment in groups ?
+	- pick best points after dropping worst group
+
+	--- or just top ~100 from each set & BA to best?
+	....
+
+
+--- 
+
+- 3D projection of low-error points (3D abs location) onto un-searched view
+
 
 - patch refinement:
 	- reconcile 3D location with projected location with 2D location
@@ -203,7 +233,7 @@ x set match error R & error F symmetric
 
 
 
-- preventing re-search of failed points?
+- preventing re-search of failed points? / dropped
 
 
 
