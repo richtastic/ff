@@ -11,6 +11,85 @@ function ffLoadedFxn(){
 	(new ScriptLoader("./",["App3DR.js", "../SIFTDescriptor.js", "../R3D.js","../R3DDense.js","../R3DBA.js","../R3DDense.js","../Cam2D.js","../Cam3D.js","../Render3D.js","Stereopsis.js"],this,classesLoadedFxn)).load();
 }
 function classesLoadedFxn(){
+	console.log("test combining");
+
+
+	var viewA = new Matrix(4,4).identity();
+		viewA = Matrix.transform3DTranslate(viewA, 1,1,1);
+
+	var viewB = new Matrix(4,4).identity();
+		viewB = Matrix.transform3DTranslate(viewB, 1,2,3);
+		viewB = Matrix.transform3DRotateY(viewB, Code.radians(30.0));
+		viewB = Matrix.transform3DRotateX(viewB, Code.radians(15.0));
+
+	var viewC = new Matrix(4,4).identity();
+		viewC = Matrix.transform3DTranslate(viewC, -2,-2,-2);
+		viewC = Matrix.transform3DRotateY(viewC, Code.radians(10.0));
+		viewC = Matrix.transform3DRotateX(viewC, Code.radians(-10.0));
+
+	var invA = Matrix.inverse(viewA);
+	var invB = Matrix.inverse(viewB);
+	var invC = Matrix.inverse(viewC);
+	// var transformAB = Matrix.mult(invA,viewC);
+	// var transformAC = Matrix.mult(invA,viewB);
+	// var transformBC = Matrix.mult(invB,viewC);
+	var transformAB = Matrix.mult(viewB,invA);
+	var transformAC = Matrix.mult(viewC,invA);
+	var transformBC = Matrix.mult(viewC,invB);
+	
+	// ?
+
+	var point1 = new V3D(0,0,0);
+
+	var point1A = invA.multV3DtoV3D(point1);
+	var point1B = invB.multV3DtoV3D(point1);
+	var point1C = invC.multV3DtoV3D(point1);
+
+	console.log(" POINT IN RESPECTIVE FRAMES OF REFERENCE: inv_i(p_abs) = p_i");
+	console.log("point1: "+point1);
+	console.log("point1A: "+point1A);
+	console.log("point1B: "+point1B);
+	console.log("point1C: "+point1C);
+	console.log("...............................");
+
+
+	var point2 = new V3D(0,0,0);
+	var point2A = viewA.multV3DtoV3D(point2);
+	var point2B = viewB.multV3DtoV3D(point2);
+	var point2C = viewC.multV3DtoV3D(point2);
+
+
+	console.log(" POINT IN ABSOLUTE FRAME OF REFERENCE: fwd_i(p_i) = p_abs");
+	console.log("point2: "+point2);
+	console.log("point2A: "+point2A);
+	console.log("point2B: "+point2B);
+	console.log("point2C: "+point2C);
+	console.log("...............................");
+
+	var point3 = new V3D(0,0,0);
+
+	var point3A = viewA.multV3DtoV3D(point3);
+		point3A_AB = transformAB.multV3DtoV3D(point3A);
+		point3A_AC = transformAC.multV3DtoV3D(point3A);
+	var point3B = viewB.multV3DtoV3D(point3);
+		point3B_BC = transformBC.multV3DtoV3D(point3B);
+	
+	console.log(" POINTS VIA RELATIVE PATHS:");
+	console.log("point3: "+point3);
+	console.log("point3A: "+point3A);
+	console.log("point3A_AB: (B) "+point3A_AB);
+	console.log("point3A: "+point3A);
+	console.log("point3A_AC: (C) "+point3A_AC);
+	console.log("point3B: "+point3B);
+	console.log("point3B_BC: (C) "+point3B_BC);
+
+	console.log("...............................");
+
+
+	//console.log("point1AB: "+point1AB);
+
+
+	return;
 	/*
 	var handleEnterFrameFxn = function(e){
 		// console.log(e)

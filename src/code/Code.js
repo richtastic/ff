@@ -468,7 +468,7 @@ Code.parseJSON = function(str){
 		if(Code.isString(obj)){
 			try{
 				obj = JSON.parse(obj);
-			}catch{
+			}catch(e){
 				console.log("COULD NOT PARSE: ");
 				console.log("\n"+obj);
 				obj = null;

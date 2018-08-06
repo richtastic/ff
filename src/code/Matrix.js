@@ -510,7 +510,11 @@ Matrix.transform3DRotateZ = function(a,angle){
 	var b = Matrix._transformTemp3D.setFromArray([c,-s,0.0,0.0, s,c,0.0,0.0, 0.0,0.0,1.0,0.0, 0.0,0.0,0.0,1.0]);
 	return Matrix.mult(b,a);
 }
-
+Matrix.transform3DRotate = function(a,vector,angle){
+	// create rotation matix
+	// multiply
+	throw "TODO";
+}
 
 // 
 Matrix.crossMatrixFromV3D = function(min,vin){ // v*M(u) = v x u      (skew symmetric)

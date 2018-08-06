@@ -1038,10 +1038,11 @@ Stereopsis.P3D.prototype.calculateAbsoluteLocation = function(world){
 		var absA = viewA.absoluteTransform();
 		var absB = viewB.absoluteTransform();
 		if(absA && absB){
+// console.log(absA+"");
 			//var weight = 1.0/transform.graphWeight();
 			var weight = transform.graphWeight();
 			var point = match.estimated3D();
-			point = absA.multV3DtoV3D(point);
+point = absA.multV3DtoV3D(point); // frame of reference is always of view A
 			// absB ?
 			components.push([weight, point]);
 			totalWeight += weight;
@@ -1966,14 +1967,18 @@ Stereopsis.World.prototype.estimate3DViews = function(){ // get absolution of vi
 
 // TODO: REMOVE:
 	// set positions manually:
+	var lookup = this._views;
 	var views = this.toViewArray();
 	for(var i=0; i<views.length; ++i){
+		console.log(i+" = "+view.id()+"");
 		// console.log("POSITION ABSOLUTE SETTING: "+i);
-		// var view = views[i];
-		if(i==0){
+		var view = views[i];
+		var id = view.id()+"";
+		if(id=="0"){
 			view.absoluteTransform(new Matrix(4,4).identity());
 		}else{
-			view.absoluteTransform( transform.R(views[0],views[i]) );
+			var transform = this.transformFromViews(lookup["0"],lookup[id]);
+			view.absoluteTransform( transform.R(lookup["0"],lookup[id].copy() );
 		}
 		/*else if(i==1){
 			// var transform = this.transformFromViews(views[0],views[1]);
