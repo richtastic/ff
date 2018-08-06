@@ -87,7 +87,7 @@ var modeModelReconstruction = false;
 
 
 
-//
+// don't A:
 // TO SWITCH ON MODELING:
 // modeModelReconstruction = true;
 
@@ -3347,6 +3347,8 @@ App3DR.App.Model3D.prototype._bindAfterTexturesLoaded = function(){
 	for(i=0; i<views.length; ++i){
 		var view = views[i];
 		var transform = view["transform"];
+// WHY INVERSE?
+transform = Matrix.inverse(transform);
 		var tx = transform.get(0,3);
 		var ty = transform.get(1,3);
 		var tz = transform.get(2,3);
@@ -3384,7 +3386,9 @@ console.log(texture.width,texture.height);
 			obj["bind"] = bind;
 			this._textures.push(bind);
 
-		
+// TODO: PROJECT TL/TR/BR/BL TO RAY & INTERSECT WITH PLANE+NORM*delta
+// 
+// 
 //console.log(K)
 			var wid = image.width;
 			var hei = image.height;
@@ -5870,7 +5874,7 @@ break; // TODO: remove
 					var triple = triples[l];
 					if(triple.isTriple(idA,idB,idC)){
 						if(triple.hasMatch()){
-							// don't need to do this
+							// dont need to do this
 						}
 						found = true;
 						break;
@@ -6651,6 +6655,7 @@ console.log(offX+","+offY);
 
 
 // DON'T RUN
+// don't B
 // return; // don't run
 
 
@@ -6876,7 +6881,7 @@ var completeFxn = function(){
 
 world.solve(completeFxn, this);
 
-//return; // don't save
+//return; // dont save
 
 //throw "...";
 

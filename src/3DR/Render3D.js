@@ -129,12 +129,10 @@ Render3D.prototype.renderPolygons = function(polys,infos){
 		display.addChild(d);
 	}
 }
-
 Render3D.prototype.toScreenPoint = function(point3D){
 	var camera = this.currentCamera();
 	var cameraK = camera.K();
 	var cameraMatrix = camera.matrix();
-	// console.log(point3D);
 	return this.toScreenPointFull(point3D, camera,cameraMatrix,cameraK, screen.x,screen.y);
 }
 Render3D.prototype.toScreenPointFull = function(point3D, camera,cameraMatrix,cameraK, screenWidth,screenHeight){

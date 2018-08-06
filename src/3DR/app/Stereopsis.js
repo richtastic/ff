@@ -933,6 +933,12 @@ Stereopsis.P3D = function(point){
 	this._matches = {};
 	this.point(point);
 }
+Stereopsis.P3D.prototype.data = function(data){
+	if(data!==undefined){
+		this._data = data;
+	}
+	return this._data;
+}
 Stereopsis.P3D.prototype.point = function(point){
 	if(point!==undefined){
 		this._point = point;
@@ -1032,9 +1038,11 @@ Stereopsis.P3D.prototype.calculateAbsoluteLocation = function(world){
 		var absA = viewA.absoluteTransform();
 		var absB = viewB.absoluteTransform();
 		if(absA && absB){
-			var weight = 1.0/transform.graphWeight();
+			//var weight = 1.0/transform.graphWeight();
+			var weight = transform.graphWeight();
 			var point = match.estimated3D();
 			point = absA.multV3DtoV3D(point);
+			// absB ?
 			components.push([weight, point]);
 			totalWeight += weight;
 		}
@@ -1454,7 +1462,7 @@ Stereopsis.World.prototype.solve = function(completeFxn, completeContext){
 	console.log("SOLVE");
 	this._completeFxn = completeFxn;
 	this._completeContext = completeContext;
-	//var maxIterations = 1;
+	// var maxIterations = 1;
 	// var maxIterations = 2;
 	// var maxIterations = 3;
 	// var maxIterations = 4;
@@ -1475,13 +1483,13 @@ Stereopsis.World.prototype.iteration = function(iterationIndex, maxIterations){
 	console.log("-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ "+iterationIndex+"/"+maxIterations+" ( "+isFirst+" & "+isLast+" ) ");
 	// ESTIMATE 3D
 	// console.log("ESTIMATES");
-		this.estimate3DViews();
-		this.estimate3DErrors(); // errors used after to determine most trustworthy stats
-		this.estimate3DPoints();
+		this.estimate3DErrors(); // find F, P, estimate all errors
+		this.estimate3DViews(); // find absolute view locations
+		this.estimate3DPoints(); // find absolute point locations
 		
 	// EXPAND
 		// 2D NEIGHBORS
-		console.log("EXPAND 2D CELLS");
+		// console.log("EXPAND 2D CELLS");
 		this.probe2D();
 		// 3D PROJECTION
 		// console.log("EXPAND 3D POINTS");
@@ -1512,9 +1520,10 @@ Stereopsis.World.prototype.iteration = function(iterationIndex, maxIterations){
 			// ?
 if(isLast){
 	console.log("LAST");
-	this.estimate3DViews();
 	this.estimate3DErrors();
+	this.estimate3DViews();
 	this.estimate3DPoints();
+	this.bundleAdjust();
 	console.log(" ... done");
 }
 
@@ -1959,21 +1968,24 @@ Stereopsis.World.prototype.estimate3DViews = function(){ // get absolution of vi
 	// set positions manually:
 	var views = this.toViewArray();
 	for(var i=0; i<views.length; ++i){
-// console.log("POSITION ABSOLUTE SETTING: "+i);
-		var view = views[i];
+		// console.log("POSITION ABSOLUTE SETTING: "+i);
+		// var view = views[i];
 		if(i==0){
 			view.absoluteTransform(new Matrix(4,4).identity());
-		}else if(i==1){
-			var transform = this.transformFromViews(views[0],views[1]);
+		}else{
+			view.absoluteTransform( transform.R(views[0],views[i]) );
+		}
+		/*else if(i==1){
+			// var transform = this.transformFromViews(views[0],views[1]);
 			// console.log(transform);
 			// view.absoluteTransform( transform.R(views[1],views[0]) );
 			view.absoluteTransform( transform.R(views[0],views[1]) ); // WRONG ?
 		}else if(i==2){
-			var transform = this.transformFromViews(views[0],views[2]);
+			// var transform = this.transformFromViews(views[0],views[2]);
 			// console.log(transform);
 			// view.absoluteTransform( transform.R(views[2],views[0]) );
 			view.absoluteTransform( transform.R(views[0],views[2]) ); // WRONG ?
-		}
+		}*/
 	}
 
 	// can the routes be averaged ?
@@ -3268,9 +3280,107 @@ cen2D = c;
 }
 
 
+Stereopsis.World.prototype.bundleAdjust = function(){
+return;
+// NOT CHECKED YET
+
+	var matchSortFxn = function(a,b){
+		return a.errorR() < b.errorR() ? -1 : 1;
+	}
+	var views = this.toViewArray();
+	var listK = [];
+	var listA = [];
+	var listPoints2D = Code.newArrayArrays(views.length);
+	var listPoints3D = [];
+	var maxPoint2DCountPair = 200; // 3+
+	// var maxPoint2DCountPair = 1000; // 2
+	for(var i=0; i<views.length; ++i){
+		var viewA = views[i];
+		// console.log("ABS :\n"+viewA.absoluteTransform());
+		listK[i] = viewA.K();
+		listA[i] = viewA.absoluteTransform();
+		for(var j=i+1; j<views.length; ++j){
+			var viewB = views[j];
+			var transform = this.transformFromViews(viewA,viewB);
+			var matches = transform.matches();
+			matches.sort(matchSortFxn); // best approximations first
+			var count = Math.min(matches.length,maxPoint2DCountPair);
+			for(var k=0; k<count; ++k){
+				var match = matches[k];
+				var pointA = match.pointForView(viewA);
+				var pointB = match.pointForView(viewB);
+				var point3D = match.point3D();
+				if(point3D.data()===null){
+					point3D.data(listPoints3D.length);
+					listPoints3D[listPoints3D.length] = point3D;
+				}
+				listPoints2D[i].push({"2D":pointA.point2D().copy(), "3D":point3D.data()});
+				listPoints2D[j].push({"2D":pointB.point2D().copy(), "3D":point3D.data()});
+			}
+		}
+	}
+	var originals3D = [];
+	for(var i=0; i<listPoints3D.length; ++i){
+		var point3D = listPoints3D[i];
+		originals3D[i] = point3D;
+		point3D.data(null);
+		listPoints3D[i] = point3D.point().copy();
+	}
+	// console.log(listK, listA, listPoints2D, listPoints3D);
+	var result = R3D.BundleAdjustFull(listK, listA, listPoints2D, listPoints3D, 100); // "extrinsics" ""
+	// console.log(result);
 
 
+	// attach results to data sources
+	var Ms = result["extrinsics"];
+	var Ps = result["points"];
+	for(var i=0; i<Ms.length; ++i){
+		var M = Ms[i];
+		var view = views[i];
+		view.absoluteTransform(M);
+	}
+	console.log("FORCE BACK: "+Ps.length);
+	for(var i=0; i<Ps.length; ++i){
+		var P3D = Ps[i];
+		var point3D = originals3D[i];
+		//console.log(i+": "+V3D.distance(point3D.point(),P3D));
+		point3D.point(P3D);
+point3D.data(1);
+		var matches = point3D.toMatchArray();
+		for(var j=0; j<matches.length; ++j){
+			var match = matches[j];
+			match.estimated3D(point3D.point().copy());
+		}
+	}
+	var transforms = this.toTransformArray();
+	for(var i=0; i<transforms.length; ++i){
+		var transform = transforms[i];
+		var viewA = transform.viewA();
+		var viewB = transform.viewB();
+		var absA = viewA.absoluteTransform();
+		var absB = viewB.absoluteTransform();
+		var invA = Matrix.inverse(absA);
+		var relativeAtoB = Matrix.mult(invA,absB);
+		var K = viewA.K();
+		var Kinv = viewA.Kinv();
+		var F = R3D.fundamentalFromCamera(relativeAtoB, K, Kinv);
+		transform.R(viewA,viewB,relativeAtoB);
+		transform.F(viewA,viewB,F);
+	}
 
+
+	// remove non-BA P3Ds:
+	var world = this;
+	var points3D = this.toPointArray();
+	for(var i=0; i<points3D.length; ++i){
+		var point3D = points3D[i];
+		if(!point3D.data()){
+			world.disconnectPoint3D(point3D);
+			world.killPoint3D(point3D);
+		}
+	}
+	console.log("remaining points: "+this.point3DCount());
+}
 
 
 

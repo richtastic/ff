@@ -183,9 +183,24 @@ APP TODO:
 
 x set match error R & error F symmetric
 
+
+- prefilter image with high edging / contrast / ...
+
+- do a bundle adjustment step at end of 3-5 iterations
+
+
+- when r error / point3d count is above some threshold, do incremental iteritive nonlinear changes [on absolute transform?]
+
+
+- some iteritive loop method to change each point?
+=> start to only use absolute values: P3D & Ps
+
+
+
 - why are 3+ cams location bad ?
-	- R gets pretty low => but combined locations are still VERY off
--> some logic behind combinging is wrong?
+	- R gets pretty low for each
+	=> but combined locations are still VERY off
+-> some logic behind combining is wrong?
 
 
 
