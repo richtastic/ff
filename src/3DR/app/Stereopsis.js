@@ -1038,11 +1038,11 @@ Stereopsis.P3D.prototype.calculateAbsoluteLocation = function(world){
 		var absA = viewA.absoluteTransform();
 		var absB = viewB.absoluteTransform();
 		if(absA && absB){
-// console.log(absA+"");
+// console.log(viewA.id()+"->"+viewB.id());
 			//var weight = 1.0/transform.graphWeight();
 			var weight = transform.graphWeight();
 			var point = match.estimated3D();
-point = absA.multV3DtoV3D(point); // frame of reference is always of view A
+			point = absA.multV3DtoV3D(point); // frame of reference is always of view A
 			// absB ?
 			components.push([weight, point]);
 			totalWeight += weight;
@@ -1053,13 +1053,16 @@ point = absA.multV3DtoV3D(point); // frame of reference is always of view A
 		return null;
 	}
 	var point = new V3D();
+if(components.length==1){ // TODO: REMOVE
 	for(var i=0; i<components.length; ++i){
 		var component = components[i];
 		var weight = component[0];
 		var pnt = component[1];
 		var percent = weight/totalWeight;
+console.log(i+" = "+percent+"")
 		point.add( pnt.copy().scale(percent) );
 	}
+}
 	world.updatePoint3DLocation(this,point);
 }
 Stereopsis.P3D.prototype.averageNCCError = function(){
@@ -1464,10 +1467,10 @@ Stereopsis.World.prototype.solve = function(completeFxn, completeContext){
 	this._completeFxn = completeFxn;
 	this._completeContext = completeContext;
 	// var maxIterations = 1;
-	// var maxIterations = 2;
+	var maxIterations = 2;
 	// var maxIterations = 3;
 	// var maxIterations = 4;
-	var maxIterations = 5;
+	// var maxIterations = 5;
 	// var maxIterations = 10;
 	// var maxIterations = 15;
 	// var maxIterations = 20;
@@ -1865,6 +1868,7 @@ filtering:
 }
 Stereopsis.World.prototype.estimate3DViews = function(){ // get absolution of views/cameras starting at most certain as reference IDENTITY
 	// find discrete groupings
+/*
 	var views = this.toViewArray();
 	var graph = new Graph();
 	var vertexes = [];
@@ -1964,35 +1968,26 @@ Stereopsis.World.prototype.estimate3DViews = function(){ // get absolution of vi
 	graph.kill();
 	// console.log("created maps");
 	// now have absolute positions from least-error-propagated origin view
-
+*/
 // TODO: REMOVE:
 	// set positions manually:
 	var lookup = this._views;
 	var views = this.toViewArray();
 	for(var i=0; i<views.length; ++i){
-		console.log(i+" = "+view.id()+"");
-		// console.log("POSITION ABSOLUTE SETTING: "+i);
 		var view = views[i];
 		var id = view.id()+"";
+		// console.log(i+" = "+view.id()+"");
 		if(id=="0"){
 			view.absoluteTransform(new Matrix(4,4).identity());
 		}else{
 			var transform = this.transformFromViews(lookup["0"],lookup[id]);
-			view.absoluteTransform( transform.R(lookup["0"],lookup[id].copy() );
+			var matrix = transform.R(lookup["0"], lookup[id]);
+			if(matrix){
+				matrix = matrix.copy();
+			}
+			view.absoluteTransform( matrix );
 		}
-		/*else if(i==1){
-			// var transform = this.transformFromViews(views[0],views[1]);
-			// console.log(transform);
-			// view.absoluteTransform( transform.R(views[1],views[0]) );
-			view.absoluteTransform( transform.R(views[0],views[1]) ); // WRONG ?
-		}else if(i==2){
-			// var transform = this.transformFromViews(views[0],views[2]);
-			// console.log(transform);
-			// view.absoluteTransform( transform.R(views[2],views[0]) );
-			view.absoluteTransform( transform.R(views[0],views[2]) ); // WRONG ?
-		}*/
 	}
-
 	// can the routes be averaged ?
 
 }
@@ -3350,7 +3345,7 @@ return;
 		var point3D = originals3D[i];
 		//console.log(i+": "+V3D.distance(point3D.point(),P3D));
 		point3D.point(P3D);
-point3D.data(1);
+point3D.data(true);
 		var matches = point3D.toMatchArray();
 		for(var j=0; j<matches.length; ++j){
 			var match = matches[j];
@@ -3373,13 +3368,12 @@ point3D.data(1);
 		transform.F(viewA,viewB,F);
 	}
 
-
 	// remove non-BA P3Ds:
 	var world = this;
 	var points3D = this.toPointArray();
 	for(var i=0; i<points3D.length; ++i){
 		var point3D = points3D[i];
-		if(!point3D.data()){
+		if(!(point3D.data()==true)){
 			world.disconnectPoint3D(point3D);
 			world.killPoint3D(point3D);
 		}

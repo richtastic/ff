@@ -188,6 +188,9 @@ x set match error R & error F symmetric
 
 - do a bundle adjustment step at end of 3-5 iterations
 
+----- IS THE POINT COMBINING AT DIFFERENT VIEWS REALLY CORRECT>
+- WHY IS THE CAMERA MATRIX INVERTED FOR DISPLAY ? [is maybe the z direction reversed or something?]
+
 
 - when r error / point3d count is above some threshold, do incremental iteritive nonlinear changes [on absolute transform?]
 
