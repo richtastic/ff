@@ -183,6 +183,12 @@ APP TODO:
 
 x set match error R & error F symmetric
 
+- test 3D combining logic
+
+
+
+
+
 
 - prefilter image with high edging / contrast / ...
 

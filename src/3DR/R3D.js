@@ -3100,6 +3100,7 @@ R3D.triangulatePointDLT = function(fr,to, cameraA,cameraB, KaInv, KbInv){ // get
 	var svd = Matrix.SVD(A);
 	var coeff = svd.V.colToArray(3);
 	var point = new V3D(coeff[0],coeff[1],coeff[2]);
+	// console.log(coeff);
 	point.scale(1.0/coeff[3]);
 	return point;
 }

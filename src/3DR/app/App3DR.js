@@ -89,7 +89,7 @@ var modeModelReconstruction = false;
 
 // don't A:
 // TO SWITCH ON MODELING:
-modeModelReconstruction = true;
+// modeModelReconstruction = true;
 
 
 
@@ -6656,7 +6656,7 @@ console.log(offX+","+offY);
 
 // DON'T RUN
 // don't B
-return; // don't run
+// return; // don't run
 
 
 
@@ -6677,6 +6677,9 @@ var world = new Stereopsis.World();
 
 
 //throw "HERE - STEREOPSIS";
+
+this.testData(world);
+return;
 
 
 
@@ -8392,4 +8395,154 @@ App3DR.ProjectManager._closestPictureSize = function(pictures, desiredPixelCount
 	}
 	return pictures[closestPicture];
 }
+
+
+
+
+
+App3DR.ProjectManager.prototype.testData = function(world){//, completeFxn, completeContext){
+	console.log("testData");
+	var points3D = [];
+	// var siz = new V3D(8,8,0.0);
+	// var off = new V3D(-0.5,-0.5,-0.5 - 10);
+	// for(var i=0; i<200; ++i){
+	// 	var point = new V3D(Math.random()*siz.x+off.x, Math.random()*siz.y+off.y, Math.random()*siz.z+off.z);
+	// 	points3D.push(point);
+	// }
+	for(var i=0; i<=20; ++i){
+		for(var j=0; j<=20; ++j){
+			var point = new V3D((i - 10)*0.5, (j - 10)*0.5, -20);
+			points3D.push(point);
+		}
+	}
+console.log(points3D);
+
+	var fx = 1.0;
+	var fy = 1.0;
+	var s = 0;
+	var cx = 0.5;
+	var cy = 0.5;
+	var distortion = null;
+	var K = new Matrix(3,3).fromArray([fx,s,cx, 0,fy,cy, 0,0,1]);
+	var Kinv = Matrix.inverse(K);
+	var camera = world.addCamera(K, distortion);
+	// var views = [];
+var v = ["R04ZYF8K","UB2GL8EB","9I774XQV"];
+// R04ZYF8K
+// UB2GL8EB
+// 9I774XQV
+	var imageSize = new V2D(400,300);
+	for(var i=0; i<3; ++i){
+	// for(var i=0; i<2; ++i){
+		var matrix = new ImageMat(imageSize.x,imageSize.y);
+		var view = world.addView(matrix, camera, v[i]);
+		// views.push(view);
+		if(i==0){
+			var mat = new Matrix(4,4).identity();
+			view.absoluteTransform(mat);
+		}else if(i==1){
+			var mat = new Matrix(4,4).identity();
+				mat = Matrix.transform3DTranslate(mat, 1,0,0);
+				mat = Matrix.transform3DRotateY(mat, Code.radians(10.0));
+			view.absoluteTransform(mat);
+		}else if(i==2){
+			var mat = new Matrix(4,4).identity();
+				mat = Matrix.transform3DTranslate(mat, -1,0,0);
+				mat = Matrix.transform3DRotateY(mat, Code.radians(-10.0));
+			view.absoluteTransform(mat);
+		}
+	}
+
+	var transforms = world.toTransformArray();
+	for(var i=0; i<transforms.length; ++i){
+		var transform = transforms[i];
+		var viewA = transform.viewA();
+		var viewB = transform.viewB();
+		var absA = viewA.absoluteTransform();
+		var absB = viewB.absoluteTransform();
+		// console.log("A:\n"+absA);
+		// console.log("B:\n"+absB);
+		var invA = Matrix.inverse(absA);
+		var transAB = Matrix.mult(absB,invA);
+		var transBA = Matrix.inverse(transAB);
+		transform.R(viewA,viewB,transAB);
+		var Kab = viewA.K();
+		var KabInv = viewA.Kinv();
+		var Fab = R3D.fundamentalFromCamera(transAB, Kab, KabInv);
+		transform.F(viewA,viewB,Fab);
+		// console.log("transform: "+viewA.id()+" => "+viewB.id());
+	}
+	var views = world.toViewArray();
+	for(var i=0; i<points3D.length; ++i){
+		var point3D = points3D[i];
+		for(var j=0; j<views.length; ++j){
+			var viewA = views[j];
+			var absA = viewA.absoluteTransform();
+			var invA = Matrix.inverse(absA);
+			for(var k=j+1; k<views.length; ++k){
+				var viewB = views[k];
+				var transform = world.transformFromViews(viewA,viewB);
+				var R = transform.R(viewA,viewB);
+				// inv_i(p_abs) = p_i
+				// var estimated3D = absA.multV3DtoV3D(point3D); // in view A
+				// console.log("estimated3D: "+estimated3D);
+				// console.log(R+"");
+				var point2DA = viewA.projectPoint3D(point3D);
+				var point2DB = viewB.projectPoint3D(point3D);
+				// var fr = new V2D();
+				// var to = new V2D();
+				var fr = point2DA;
+				var to = point2DB;
+				// console.log(point2DA+" & "+point2DB);
+				var scaleAB = 1.0;
+				var angleAB = 0.0;
+				var match = world.addMatchForViews(viewA,fr, viewB,to, scaleAB,angleAB, true);
+				// console.log(match);
+				// match.estimated3D(estimated3D);
+			}
+		}
+	}
+	/*
+	var transforms = world.toTransformArray();
+	for(var i=0; i<transforms.length; ++i){
+		var transform = transforms[i];
+		var matches = transform.matches();
+		console.log(matches);
+		for(var j=0; j<matches.length; ++j){
+			var match = matches[j];
+
+		}
+	}
+	console.log("....");
+	world.estimate3DPoints();
+	*/
+
+	console.log("....");
+	world.estimate3DErrors(true);
+	// world.estimate3DErrors();
+	// world.estimate3DViews();
+	world.estimate3DPoints();
+	world.filterGlobal();
+
+
+	// this.estimate3DErrors();
+	// this.estimate3DViews();
+	// this.estimate3DPoints(); 
+	//Stereopsis.World.prototype.addMatchForViews = function(viewA,pointA, viewB,pointB, scaleAtoB, angleAtoB){
+	// 
+
+	// WHEN DONE
+	// var completeFxn = function(){
+	var str = world.toYAMLString();
+	this.bundleFilename(App3DR.ProjectManager.BUNDLE_INFO_FILE_NAME);
+	this.saveBundleAdjust(str, null, this);
+	this.saveProjectFile();
+	// }
+
+	//world.solve(completeFxn, this);
+	// completeFxn.call(this);
+
+}
+
+
 
