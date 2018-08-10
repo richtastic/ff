@@ -763,6 +763,10 @@ Stereopsis.Transform3D.prototype.initialEstimatePoints3D = function(){ // calc m
 	var KbInv = viewB.Kinv();
 	// var pointsA = [];
 	// var pointsB = [];
+cameraA = viewA.absoluteTransform();
+cameraB = viewB.absoluteTransform();
+cameraA = Matrix.inverse(cameraA);
+cameraB = Matrix.inverse(cameraB);
 	for(var i=0; i<matches.length; ++i){
 		var match = matches[i];
 		var pointA = match.pointForView(viewA);
@@ -880,6 +884,7 @@ Stereopsis.Transform3D.prototype.calculateErrorR = function(R){
 		this._errorRSigma = null;
 		return;
 	}
+//R = Matrix.inverse(R);
 	// reproject all 3d points from OWN predicted location [relative]
 	var viewA = this.viewA();
 	var viewB = this.viewB();
@@ -887,6 +892,7 @@ Stereopsis.Transform3D.prototype.calculateErrorR = function(R){
 	var Kb = viewB.K();
 	var cameraA = new Matrix(4,4).identity();
 	var cameraB = R;
+// cameraB = Matrix.inverse(cameraB);
 	var matches = this.matches();
 	var orderedPoints = [];
 	var a = new V3D();
@@ -903,7 +909,21 @@ Stereopsis.Transform3D.prototype.calculateErrorR = function(R){
 			console.log("match not have estimate");
 			continue;
 		}
+
+//R3D.reprojectionError
+cameraA = viewA.absoluteTransform();
+cameraB = viewB.absoluteTransform();
+cameraA = Matrix.inverse(cameraA);
+cameraB = Matrix.inverse(cameraB);
+// cameraA = Matrix.inverse(viewA.absoluteTransform());
+// cameraB = Matrix.inverse(viewB.absoluteTransform());
 		var error = R3D.reprojectionError(estimated3D, pA,pB, cameraA, cameraB, Ka, Kb);
+
+
+
+
+
+		// var error = R3D.reprojectionError(estimated3D, pA,pB, cameraA, cameraB, Ka, Kb);
 		var distanceA = error["distanceA"];
 		var distanceB = error["distanceB"];
 		var distance = error["error"];
@@ -925,7 +945,7 @@ orderedPoints.sort(function(a,b){
 points3D.push(orderedPoints[i][3]);
 	}
 	console.log(rDistances)
-	console.log(points3D)
+	// console.log(points3D)
 	var rMean = Code.min(rDistances);
 	var rSigma = Code.stdDev(rDistances, rMean);
 	this._errorRMean = rMean;
@@ -2125,6 +2145,10 @@ Stereopsis.updateErrorForMatch = function(match){
 	var cameraA = new Matrix(4,4).identity();
 	var cameraB = transform.R(viewA,viewB);
 	if(cameraA && cameraB){
+cameraA = viewA.absoluteTransform();
+cameraB = viewB.absoluteTransform();
+cameraA = Matrix.inverse(cameraA);
+cameraB = Matrix.inverse(cameraB);
 		var Ka = viewA.K();
 		var Kb = viewB.K();
 		var KaInv = viewA.Kinv();
@@ -2133,9 +2157,15 @@ Stereopsis.updateErrorForMatch = function(match){
 		//var estimated3D = match.estimated3D(); // estimated3D may need updating:
 		var estimated3D = R3D.triangulatePointDLT(pA,pB, cameraA,cameraB, KaInv, KbInv);
 		if(estimated3D){
+			
+			//var estimated3D = R3D.triangulatePointDLT(pA,pB, invA,invB, KaInv, KbInv);
+
+
+
 			match.estimated3D(estimated3D);
 			var info = R3D.reprojectionError(estimated3D, pA,pB, cameraA, cameraB, Ka, Kb);
 			var rError = info ? info["error"] : null;
+// console.log(rError)
 			match.errorR(rError);
 		}
 	}

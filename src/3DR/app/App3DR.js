@@ -8466,11 +8466,13 @@ var v = ["R04ZYF8K","UB2GL8EB","9I774XQV"];
 		// console.log("B:\n"+absB);
 		var invA = Matrix.inverse(absA);
 		var transAB = Matrix.mult(absB,invA);
-		// var transBA = Matrix.inverse(transAB);
+		var transBA = Matrix.inverse(transAB);
 		transform.R(viewA,viewB,transAB);
+		// transform.R(viewA,viewB,transBA);
 		var Kab = viewA.K();
 		var KabInv = viewA.Kinv();
 		var Fab = R3D.fundamentalFromCamera(transAB, Kab, KabInv);
+Fab = R3D.fundamentalInverse(Fab);
 		transform.F(viewA,viewB,Fab);
 		// console.log("transform: "+viewA.id()+" => "+viewB.id());
 	}
@@ -8533,12 +8535,13 @@ var v = ["R04ZYF8K","UB2GL8EB","9I774XQV"];
 				var pB = to;
 				//var estimated3D = R3D.triangulatePointDLT(pA,pB, cameraA,cameraB, KaInv, KbInv);
 				var estimated3D = R3D.triangulatePointDLT(pA,pB, invA,invB, KaInv, KbInv);
-				console.log("          ..."+estimated3D+" =?= "+point3D);
+				// console.log("          ..."+estimated3D+" =?= "+point3D);
 				var midpoint3D = R3D.triangulatePointMidpoint(pA,pB, absA,absB, KaInv, KbInv);
 				if(!estimated3D){
 					estimated3D = midpoint3D;
 				}
-
+// var error = R3D.reprojectionError(estimated3D, pA,pB, invA, invB, Ka, Kb);
+// console.log(". error"+error["error"]);
 // fr,to, cameraAInv,cameraBInv, KaInv, KbInv
 
 				//R3D.projectPoint2DToCamera3DRay(in2D, extrinsic, Kinv, distortions){
