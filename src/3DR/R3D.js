@@ -3074,6 +3074,8 @@ R3D.triangulationDLT = function(pointsFr,pointsTo, cameraA,cameraB, Ka, Kb,   Ka
 	}
 	return points3D;
 }
+
+
 R3D.triangulatePointDLT = function(fr,to, cameraA,cameraB, KaInv, KbInv){ // get 3D point from cameras
 	var rows = 4, cols = 4;
 	var A = new Matrix(rows,cols);
@@ -3101,8 +3103,20 @@ R3D.triangulatePointDLT = function(fr,to, cameraA,cameraB, KaInv, KbInv){ // get
 	var coeff = svd.V.colToArray(3);
 	var point = new V3D(coeff[0],coeff[1],coeff[2]);
 	// console.log(coeff);
-	point.scale(1.0/coeff[3]);
+	var den = coeff[3];
+	if(Math.abs(den)<1E-10){ // too close numerically
+		return null;
+	}
+	point.scale(1.0/den);
 	return point;
+}
+R3D.triangulatePointMidpoint = function(fr,to, cameraAInv,cameraBInv, KaInv, KbInv){
+	// TODO: also try epioolar plane
+	var rayA = R3D.projectPoint2DToCamera3DRay(fr, cameraAInv, KaInv, null);
+	var rayB = R3D.projectPoint2DToCamera3DRay(to, cameraBInv, KbInv, null);
+	var closest = Code.closestPointsLines3D(rayA["o"],rayA["d"], rayB["o"],rayB["d"]);
+	var avg = V3D.avg(closest[0],closest[1]);
+	return avg;
 }
 R3D.textureFromTriangles = function(triSource, sameTriList, sameImageList, textureScale){ // get rectangular image texture from 3D tri + 3D tris in images
 	textureScale = textureScale!==undefined ? textureScale : 1.0;
@@ -21471,10 +21485,9 @@ R3D.projectPoint3DToCamera2DForward = function(in3D, extrinsic, K, distortions, 
 		return null;
 	}
 	var p2D = new V2D(p3D.x/p3D.z,p3D.y/p3D.z);
-	//console.log(in3D+"->"+v3D+"->"+p3D+" => "+p2D);
 	return p2D;
 }
-R3D.projectPoint2DToCamera3DRay = function(in2D, extrinsic, Kinv, distortions){
+R3D.projectPoint2DToCamera3DRay = function(in2D, extrinsic, Kinv, distortions){ // TODO: distortions
 	var dir = new V3D(in2D.x,in2D.y,1);
 	// console.log(" A: "+dir);
 	Kinv.multV3DtoV3D(dir,dir);

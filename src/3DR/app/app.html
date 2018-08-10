@@ -12,6 +12,70 @@ function ffLoadedFxn(){
 }
 function classesLoadedFxn(){
 	/*
+	var fx = 1.0;
+	var fy = 1.0;
+	var s = 0;
+	var cx = 0.5;
+	var cy = 0.5;
+	var distortion = null;
+	var K = new Matrix(3,3).fromArray([fx,s,cx, 0,fy,cy, 0,0,1]);
+	var Kinv = Matrix.inverse(K);
+
+	var mat = new Matrix(4,4).identity();
+	var absA = mat;
+	
+		var mat = new Matrix(4,4).identity();
+			mat = Matrix.transform3DTranslate(mat, 1,0,0);
+			mat = Matrix.transform3DRotateY(mat, Code.radians(10.0));
+	var absB = mat;
+
+
+	var invA = Matrix.inverse(absA);
+	var invB = Matrix.inverse(absB);
+	// var cameraBInv = R3D.inverseCameraMatrix(absB);
+
+	var transAB = Matrix.mult(absB,invA);
+
+	var Fab = R3D.fundamentalFromCamera(transAB, K, Kinv);
+	
+	var point3D = new V3D(1,1,-20);
+
+	var point2DA = R3D.projectPoint3DToCamera2DForward(point3D, absA, K, null);
+	var point2DB = R3D.projectPoint3DToCamera2DForward(point3D, absB, K, null);
+
+	var estimated3D = R3D.triangulatePointDLT(point2DA,point2DB, absA,absB, Kinv, Kinv);
+	console.log("          ..."+estimated3D+" =?= "+point3D);
+
+	
+	// var rayA = R3D.projectPoint2DToCamera3DRay(point2DA, absA, Kinv, null);
+	// var rayB = R3D.projectPoint2DToCamera3DRay(point2DB, absB, Kinv, null);
+	var rayA = R3D.projectPoint2DToCamera3DRay(point2DA, invA, Kinv, null);
+	var rayB = R3D.projectPoint2DToCamera3DRay(point2DB, invB, Kinv, null);
+
+	var closest = Code.closestPointsLines3D(rayA["o"],rayA["d"], rayB["o"],rayB["d"]);
+	var avg = V3D.avg(closest[0],closest[1]);
+	console.log(avg+"");
+	console.log(avg.x/point3D.x,avg.y/point3D.y,avg.z/point3D.z);
+
+console.log(Kinv+"")
+
+var distance3D = V3D.distance(estimated3D,point3D);
+console.log("distance3D: "+distance3D);
+if(distance3D>1.0){
+	console.log(closest)
+	console.log(" point2DA: "+point2DA);
+	console.log(" point2DB: "+point2DB);
+	console.log(" point3D: "+point3D);
+	console.log(" estimated3D: "+estimated3D);
+
+	throw "not match";
+}
+
+
+	return;
+	*/
+
+	/*
 	console.log("test combining");
 
 
@@ -93,7 +157,7 @@ function classesLoadedFxn(){
 	return;
 	*/
 
-	
+
 	/*
 	var handleEnterFrameFxn = function(e){
 		// console.log(e)

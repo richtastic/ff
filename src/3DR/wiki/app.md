@@ -185,7 +185,9 @@ x set match error R & error F symmetric
 
 - test 3D combining logic
 
-
+---- use camera inverse for various point calculations
+	=> points go in inverse direction of camera
+- recheck what to do in failing triangulation DLT
 
 
 

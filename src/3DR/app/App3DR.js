@@ -8409,9 +8409,11 @@ App3DR.ProjectManager.prototype.testData = function(world){//, completeFxn, comp
 	// 	var point = new V3D(Math.random()*siz.x+off.x, Math.random()*siz.y+off.y, Math.random()*siz.z+off.z);
 	// 	points3D.push(point);
 	// }
-	for(var i=0; i<=20; ++i){
-		for(var j=0; j<=20; ++j){
-			var point = new V3D((i - 10)*0.5, (j - 10)*0.5, -20);
+	var count = 20;
+	var sca = 0.25;
+	for(var i=0; i<=count; ++i){
+		for(var j=0; j<=count; ++j){
+			var point = new V3D((i - count*0.5)*sca, (j - count*0.5)*sca, -20);
 			points3D.push(point);
 		}
 	}
@@ -8464,7 +8466,7 @@ var v = ["R04ZYF8K","UB2GL8EB","9I774XQV"];
 		// console.log("B:\n"+absB);
 		var invA = Matrix.inverse(absA);
 		var transAB = Matrix.mult(absB,invA);
-		var transBA = Matrix.inverse(transAB);
+		// var transBA = Matrix.inverse(transAB);
 		transform.R(viewA,viewB,transAB);
 		var Kab = viewA.K();
 		var KabInv = viewA.Kinv();
@@ -8479,16 +8481,39 @@ var v = ["R04ZYF8K","UB2GL8EB","9I774XQV"];
 			var viewA = views[j];
 			var absA = viewA.absoluteTransform();
 			var invA = Matrix.inverse(absA);
+			var Ka = viewA.K();
+			var KaInv = viewA.Kinv();
 			for(var k=j+1; k<views.length; ++k){
 				var viewB = views[k];
-				var transform = world.transformFromViews(viewA,viewB);
-				var R = transform.R(viewA,viewB);
+				var absB = viewB.absoluteTransform();
+				var invB = Matrix.inverse(absB);
+				var Kb = viewB.K();
+				var KbInv = viewB.Kinv();
+				// var transform = world.transformFromViews(viewA,viewB);
+				// var R = transform.R(viewA,viewB);
 				// inv_i(p_abs) = p_i
 				// var estimated3D = absA.multV3DtoV3D(point3D); // in view A
 				// console.log("estimated3D: "+estimated3D);
 				// console.log(R+"");
-				var point2DA = viewA.projectPoint3D(point3D);
-				var point2DB = viewB.projectPoint3D(point3D);
+				// var point2DA = viewA.projectPoint3D(point3D);
+				// var point2DB = viewB.projectPoint3D(point3D);
+
+				// var cameraA = absA;
+				// var cameraB = absB;
+				var cameraA = invA;
+				var cameraB = invB;
+
+				// var point2DA = R3D.projectPoint3DToCamera2DForward(point3D, absA, Ka, null);
+				// var point2DB = R3D.projectPoint3DToCamera2DForward(point3D, absB, Kb, null);
+				var point2DA = R3D.projectPoint3DToCamera2DForward(point3D, cameraA, Ka, null);
+				var point2DB = R3D.projectPoint3DToCamera2DForward(point3D, cameraB, Kb, null);
+
+	// 			var K = this._K;
+	// var distortions = null;
+	// var absoluteTransform = this._absoluteTransform;
+	// var projected2D = R3D.projectPoint3DToCamera2DForward(estimated3D, absoluteTransform, K, distortions);
+	// return projected2D;
+
 				// var fr = new V2D();
 				// var to = new V2D();
 				var fr = point2DA;
@@ -8497,6 +8522,53 @@ var v = ["R04ZYF8K","UB2GL8EB","9I774XQV"];
 				var scaleAB = 1.0;
 				var angleAB = 0.0;
 				var match = world.addMatchForViews(viewA,fr, viewB,to, scaleAB,angleAB, true);
+
+				// 
+				// var cameraA = viewA.absoluteTransform();
+				// var cameraB = viewB.absoluteTransform();
+				// var cameraA = new Matrix(4,4).identity();
+				// var cameraB = R;
+				
+				var pA = fr;
+				var pB = to;
+				//var estimated3D = R3D.triangulatePointDLT(pA,pB, cameraA,cameraB, KaInv, KbInv);
+				var estimated3D = R3D.triangulatePointDLT(pA,pB, invA,invB, KaInv, KbInv);
+				console.log("          ..."+estimated3D+" =?= "+point3D);
+				var midpoint3D = R3D.triangulatePointMidpoint(pA,pB, absA,absB, KaInv, KbInv);
+				if(!estimated3D){
+					estimated3D = midpoint3D;
+				}
+
+// fr,to, cameraAInv,cameraBInv, KaInv, KbInv
+
+				//R3D.projectPoint2DToCamera3DRay(in2D, extrinsic, Kinv, distortions){
+					// var cameraBInv = R3D.inverseCameraMatrix(cameraB);
+
+					var rayA = R3D.projectPoint2DToCamera3DRay(pA, absA, KaInv, null);
+					var rayB = R3D.projectPoint2DToCamera3DRay(pB, absB, KbInv, null);
+					// var rayA = R3D.projectPoint2DToCamera3DRay(point2DA, invA, KaInv, null);
+					// var rayB = R3D.projectPoint2DToCamera3DRay(point2DB, invB, KbInv, null);
+
+					// var rayB = R3D.projectPoint2DToCamera3DRay(pB, cameraBInv, KbInv, null);
+					//console.log(rayA,rayB);
+					var closest = Code.closestPointsLines3D(rayA["o"],rayA["d"], rayB["o"],rayB["d"]);
+					var avg = V3D.avg(closest[0],closest[1]);
+					// console.log(avg+"");
+					// console.log(avg.x/point3D.x,avg.y/point3D.y,avg.z/point3D.z);
+
+var distance3D = V3D.distance(estimated3D,point3D);
+if(distance3D>1.0){
+	console.log(closest)
+	console.log(" point2DA: "+point2DA);
+	console.log(" point2DB: "+point2DB);
+	console.log(" point3D: "+point3D);
+	console.log(" midpoint3D: "+midpoint3D);
+	console.log(" estimated3D: "+estimated3D);
+
+	// console.log(" 2: "+R3D.triangulatePointDLT(pA,pB, cameraA,cameraBInv, KaInv, KbInv));
+	// throw "not match";
+}
+// triangulatePointDLT
 				// console.log(match);
 				// match.estimated3D(estimated3D);
 			}
@@ -8522,7 +8594,7 @@ var v = ["R04ZYF8K","UB2GL8EB","9I774XQV"];
 	// world.estimate3DErrors();
 	// world.estimate3DViews();
 	world.estimate3DPoints();
-	world.filterGlobal();
+	// world.filterGlobal();
 
 
 	// this.estimate3DErrors();
