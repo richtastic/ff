@@ -192,6 +192,27 @@ x set match error R & error F symmetric
 
 
 
+- one version of P is for
+	- point direction
+- inverse version of P is for
+	- camera direction
+
+
+=>> point motion is what is derived from the POINT algorithms == FWD
+==> camera motion is therefore the inverse === INV
+
+
+
+- triangulatePointDLT is very off in a few scenarios
+
+
+
+
+
+
+
+
+
 - prefilter image with high edging / contrast / ...
 
 - do a bundle adjustment step at end of 3-5 iterations

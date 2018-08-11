@@ -9351,6 +9351,61 @@ Code.bezier2DCubicLinearN = function(A,B,C,D){
 
 
 
+// Code.generatePoints3DHemisphere
+Code.generateTri3DHemisphere = function(ox,oy,oz, rad, latCount,lonCount, totalAngle){ // triangle point sets -- QUADS
+	latCount = latCount!==undefined ? latCount : 0;
+	lonCount = lonCount!==undefined ? lonCount : 0;
+	totalAngle = totalAngle!==undefined ? totalAngle : Math.PI; // pi = hemisphere, 2pi = sphere
+	var twoPi = Math.PI*2.0;
+	totalAngle = Math.min(totalAngle,twoPi);
+	var fullCircle = totalAngle == twoPi;
+	lonCount = Math.max(lonCount,3);
+	latCount = Math.max(latCount,3);
+	var tris = [];
+	var tri;
+	for(var j=0; j<latCount; ++j){ // up/down
+		var y0 = Math.cos((j/latCount)*Math.PI)*rad;
+		var y1 = Math.cos(((j+1)/latCount)*Math.PI)*rad;
+		var radX0 = Math.sin((j/latCount)*Math.PI)*rad;
+		var radX1 = Math.sin(((j+1)/latCount)*Math.PI)*rad;
+		console.log("radX: "+radX0+" - "+radX1+" ... radY: "+y0+" - "+y1);
+		for(var i=0; i<lonCount; ++i){ // around
+			var sin0 = Math.sin((i/lonCount)*totalAngle);
+			var sin1 = Math.sin(((i+1)/lonCount)*totalAngle);
+			var cos0 = Math.cos((i/lonCount)*totalAngle);
+			var cos1 = Math.cos(((i+1)/lonCount)*totalAngle);
+			var x00 = cos0*radX0;
+			var x01 = cos1*radX0;
+			var x10 = cos0*radX1;
+			var x11 = cos1*radX1;
+			var z00 = sin0*radX0;
+			var z01 = sin1*radX0;
+			var z10 = sin0*radX1;
+			var z11 = sin1*radX1;
+			if(j==0){
+				console.log("   ... top");
+			}else if(j==latCount-1){
+				console.log("   ... bot");
+			}else{
+				var tl = new V3D(x00,y0,z00);
+				var tr = new V3D(x01,y0,z01);
+				var br = new V3D(x10,y1,z10);
+				var bl = new V3D(x11,y1,z11);
+				tl.add(ox,oy,oz);
+				tr.add(ox,oy,oz);
+				bl.add(ox,oy,oz);
+				br.add(ox,oy,oz);
+				tri = new Tri3D(tr,tl,bl);
+				tris.push(tri);
+				tri = new Tri3D(bl,br,tr);
+				tris.push(tri);
+			}
+		}
+	}
+	return tris;
+}
+
+
 
 
 Code.spherePointFrom2DRect = function(originx,originy,width,height, px,py){

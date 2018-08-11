@@ -11,6 +11,7 @@ function ffLoadedFxn(){
 	(new ScriptLoader("./",["App3DR.js", "../SIFTDescriptor.js", "../R3D.js","../R3DDense.js","../R3DBA.js","../R3DDense.js","../Cam2D.js","../Cam3D.js","../Render3D.js","Stereopsis.js"],this,classesLoadedFxn)).load();
 }
 function classesLoadedFxn(){
+
 	/*
 	var fx = 1.0;
 	var fy = 1.0;
@@ -20,8 +21,12 @@ function classesLoadedFxn(){
 	var distortion = null;
 	var K = new Matrix(3,3).fromArray([fx,s,cx, 0,fy,cy, 0,0,1]);
 	var Kinv = Matrix.inverse(K);
+	var identity = new Matrix(4,4).identity();
 
-	var mat = new Matrix(4,4).identity();
+	// actual point movement
+		var mat = new Matrix(4,4).identity();
+		mat = Matrix.transform3DTranslate(mat, -1,0,0);
+			mat = Matrix.transform3DRotateY(mat, Code.radians(-10.0));
 	var absA = mat;
 	
 		var mat = new Matrix(4,4).identity();
@@ -29,22 +34,45 @@ function classesLoadedFxn(){
 			mat = Matrix.transform3DRotateY(mat, Code.radians(10.0));
 	var absB = mat;
 
-
+	// actual camera movement
 	var invA = Matrix.inverse(absA);
 	var invB = Matrix.inverse(absB);
-	// var cameraBInv = R3D.inverseCameraMatrix(absB);
 
+	// point movement
 	var transAB = Matrix.mult(absB,invA);
+	// camera movement
+	var transBA = Matrix.inverse(transAB);
 
 	var Fab = R3D.fundamentalFromCamera(transAB, K, Kinv);
+	var Fba = R3D.fundamentalInverse(Fab);//R3D.fundamentalFromCamera(transBA, K, Kinv);
 	
 	var point3D = new V3D(1,1,-20);
 
 	var point2DA = R3D.projectPoint3DToCamera2DForward(point3D, absA, K, null);
 	var point2DB = R3D.projectPoint3DToCamera2DForward(point3D, absB, K, null);
 
-	var estimated3D = R3D.triangulatePointDLT(point2DA,point2DB, absA,absB, Kinv, Kinv);
+	// ORIGINAL:
+	//var estimated3D = R3D.triangulatePointDLT(point2DA,point2DB, absA,absB, Kinv, Kinv);
+
+	// REPLACE
+	var estimated3D = R3D.triangulatePointDLT(point2DA,point2DB, identity,transAB, Kinv, Kinv);
+
+var error = R3D.reprojectionError(estimated3D, point2DA,point2DB, identity, transAB, K, K);
+console.log("reprojection error: "+error["error"]);
+
+		invA.multV3DtoV3D(estimated3D,estimated3D);
+
+	// NOT WORK:
+	// var estimated3D = R3D.triangulatePointDLT(point2DA,point2DB, identity,transBA, Kinv, Kinv);
+	// 	absA.multV3DtoV3D(estimated3D,estimated3D);
+
+
+			//transAB.multV3DtoV3D(estimated3D,estimated3D);
+
 	console.log("          ..."+estimated3D+" =?= "+point3D);
+
+
+	
 
 	
 	// var rayA = R3D.projectPoint2DToCamera3DRay(point2DA, absA, Kinv, null);
@@ -55,7 +83,7 @@ function classesLoadedFxn(){
 	var closest = Code.closestPointsLines3D(rayA["o"],rayA["d"], rayB["o"],rayB["d"]);
 	var avg = V3D.avg(closest[0],closest[1]);
 	console.log(avg+"");
-	console.log(avg.x/point3D.x,avg.y/point3D.y,avg.z/point3D.z);
+	// console.log(avg.x/point3D.x,avg.y/point3D.y,avg.z/point3D.z);
 
 console.log(Kinv+"")
 
@@ -73,7 +101,9 @@ if(distance3D>1.0){
 
 
 	return;
+
 	*/
+
 
 	/*
 	console.log("test combining");
