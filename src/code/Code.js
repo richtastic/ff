@@ -1762,21 +1762,24 @@ Code.sum = function(a){
 	}
 	return sum;
 }
+// Code.combineErrorMeasurements([4,1,2,3],[0.1,0.3,0.2,0.1])
 Code.combineErrorMeasurements = function(estimates,errors){
 	var i;
 	var N = estimates.length;
 	var sumEstimates = Code.sum(estimates);
 	var sumErrors = Code.sum(estimates);
 	var probErrors = [];
-	// for(i=0; i<N; ++i){
-	// 	probErrors[i] = 1.0 - (errors[i]/sumErrors);
-	// }
+	var eps = 1E-10;
 	var percents = [];
 	var estimateTop = 0;
 	var estimateBot = 0;
 	for(i=0; i<N; ++i){
-		var errI = 1.0/errors[i];
-		estimateTop += estimates[i]/errors[i];
+		var errI = errors[i];
+		if(errI<eps){
+			errI = eps;
+		}
+		estimateTop += estimates[i]/errI;
+		errI = 1.0/errI;
 		estimateBot += errI;
 		percents[i] = errI;
 		//estimate += Math.pow(probErrors[i]*estimates[i], 2);
@@ -1784,7 +1787,31 @@ Code.combineErrorMeasurements = function(estimates,errors){
 	var estimate = estimateTop/estimateBot;
 	//combined = Math.sqrt(combined);
 	var error = 1.0/estimateBot;
-	return {"value":estimate, "error":error, "percents":percents, };
+	return {"value":estimate, "error":error, "percents":percents};
+}
+Code.combineErrorMeasurementsV3D = function(points,errors){
+	var x = [];
+	var y = [];
+	var z = [];
+	for(var i=0; i<points.length; ++i){
+		var p = points[i];
+		x.push(p.x);
+		y.push(p.y);
+		z.push(p.z);
+	}
+	x = Code.combineErrorMeasurements(x,errors);
+	y = Code.combineErrorMeasurements(y,errors);
+	z = Code.combineErrorMeasurements(z,errors);
+	var estimate = new V3D();
+	estimate.x = x["value"];
+	estimate.y = y["value"];
+	estimate.z = z["value"];
+	var error = new V3D();
+	error.x = x["error"];
+	error.y = y["error"];
+	error.z = z["error"];
+	// var percents = [];
+	return {"value":estimate, "error":error};
 }
 // ------------------------------------------------------------------------------------------ 
 Code.isUnique = function(val){ // val, ...array

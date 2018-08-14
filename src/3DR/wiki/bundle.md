@@ -330,6 +330,85 @@ gradient vector:
 
 
 
+BUNDLE ADJUSTMENT / DATA FUSION / STRUCTURE FROM MOTION MORE NOTES:
+
+INCREMENTAL- find an initial pair & add succsssive views incrementally
+GLOBAL- 1) globally consistent rotations 2) structure & translation
+
+RANSAC ON 3D DATA -> PICK MOST CONSISTENT ORIENTATION -> (MAX SUPPORT)
+
+
+
+
+
+
+
+
+
+http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.664.2320&rep=rep1&type=pdf
+https://pdfs.semanticscholar.org/f25c/1dce540e1477066e715d3ad92a5ec6f2491a.pdf
+
+
+
+
+
+
+
+
+
+
+ALG GLOBAL:
+	MAIN LOOP
+		...
+		when a pair has a low enough error / high enough count => send to 'absoluting state' & init transform based on average of all existing transforms
+		...
+		if pair isn't in absolute state, keep probing 2d for new points
+		else if 3D error is low enough  (relative to volume of points < ~1/1000) && reprojection is low enough, 3D projecting for new points
+		...
+		error dropping
+		...
+		for all views in absoluting state
+			- do a bundle-adjust for only a single view at a time, and only reduce error not too extremely
+			- update all changed relative transforms & P3Ds
+
+
+
+ALG LOCAL / INCREMENTAL:
+for each pair
+	- find best 3D relationship or NULL if 2D/3D not successful
+
+for each view sorted on lowest avg reprojection error
+	for each other view:
+		- if first pair:
+			init transforms from pair
+		- if no matching pair already exists
+			skip; recheck on next iteration
+		- else
+			add new view as average location / rotation based on all other view pairs
+			bundle-adjust for all 3D points & camera parameters
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

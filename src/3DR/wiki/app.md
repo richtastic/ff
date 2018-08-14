@@ -183,14 +183,48 @@ APP TODO:
 
 x set match error R & error F symmetric
 
-- test 3D combining logic
 
----- use camera inverse for various point calculations
-	=> points go in inverse direction of camera
+
+>>> SKETCH
+	- what simultaneous-optimality of 3D pose looks like visually
+	- 
+
+- try only outputting 0-1 camera 3D location results
+
+
+- new algorithm for BA/multiview optimizing...
+	- only need to determine view pairs up to some initial first approximation [error is low enough & has enough supportingn points]
+	- subsequent pose estimations should then be 'global' & refined nonlinearlly
+	- may need to only consider best points (lowest avg reprojection error, 3+ views)
+	- may need to set absolute location by some averaginv of all possible locations (& resulting errors from estimated paths)
+
+
+
+- are the 2d-3d matches bad?
+
+- combine graph RELATIVE relationships rather than just from reference camera
+
+
+
+
+- 3D point localization is very off
+
+
+
+
+- BA only on camera pose (& top N points?)
+
+- how to better data fusion ?
+	- combine via error windows
+	- better camera/point localization
+	- reup bundle adjust
+- make bundle adjustment part of the step -- don't re-init camera pose 
+- drop points using 2*median rather than min+/-sig
+- dropping bad 3D points
+
+
+
 - recheck what to do in failing triangulation DLT
-
-
-
 
 - one version of P is for
 	- point direction

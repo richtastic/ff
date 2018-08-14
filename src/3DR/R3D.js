@@ -712,7 +712,7 @@ for(index=0; index<pointsA.length; ++index){
 // console.log("total points: "+pointsA.length);
 // console.log(countsUnderZero);
 // console.log(countsOverZero);
-console.log(countsTotal,pointsA.length);
+// console.log(countsTotal,pointsA.length);
 var minCountUnder = null;
 var maxCountOver = null;
 var minUnder = null;
@@ -746,7 +746,6 @@ for(i=0; i<possibles.length; ++i){
 	// }
 }
 // console.log("bestProjections:")
-console.log(bestProjections);
 	// if multiple good matches, choose between
 	if(bestProjections.length>0){
 		if(bestProjections.length==1){

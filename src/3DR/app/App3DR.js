@@ -89,7 +89,7 @@ var modeModelReconstruction = false;
 
 // don't A:
 // TO SWITCH ON MODELING:
-modeModelReconstruction = true;
+// modeModelReconstruction = true;
 
 
 
@@ -6670,7 +6670,7 @@ console.log(offX+","+offY);
 
 // DON'T RUN
 // don't B
-return; // don't run
+// return; // don't run
 
 
 
@@ -6692,8 +6692,8 @@ var world = new Stereopsis.World();
 
 //throw "HERE - STEREOPSIS";
 
-this.testData(world);
-return;
+// this.testData(world);
+// return;
 
 
 
@@ -8440,6 +8440,14 @@ App3DR.ProjectManager.prototype.testData = function(world){//, completeFxn, comp
 		points3D.push(point);
 	}
 	console.log(points3D);
+
+
+	points3D.push(new V3D(0,10, -20));
+	points3D.push(new V3D(5,5, -20));
+	points3D.push(new V3D(-5,-5, -20));
+	points3D.push(new V3D(2,6, -19));
+	points3D.push(new V3D(-1,-6, -18));
+	points3D.push(new V3D(8,8, -24));
 	// throw "?";
 	// points3D = Code.generatePoints3DHemisphere(0,0,-20, 5);
 
@@ -8640,7 +8648,10 @@ if(distance3D>1.0){
 	world.estimate3DErrors();
 	// world.estimate3DViews();
 	world.estimate3DPoints();
+
+
 	// world.filterGlobal();
+	world.bundleAdjust();
 
 // throw "??";
 	// this.estimate3DErrors();
