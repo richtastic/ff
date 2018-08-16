@@ -19236,7 +19236,130 @@ R3D._costTripleFeatures = function(patchA,patchB,patchC){
 	return cost;
 }
 
+R3D.BundleAdjustCameraExtrinsic = function(intrinsics, inverses, extrinsics, pointList2Ds, pointList3Ds, maxIterations){ // pointList3D
+	maxIterations = (maxIterations!==undefined && maxIterations!==null)? maxIterations : 1;
+	var cameraCount = intrinsics.length;
+	var args = [];
+	var x = [];
+	args.push(intrinsics);
+	args.push(inverses);
+	args.push(pointList2Ds);
+	args.push(pointList3Ds);
+	for(var i=0; i<extrinsics.length; ++i){
+		var extrinsic = extrinsics[i];
+		var ext = R3D.transformMatrixToComponentArray(extrinsic);
+		console.log(i+": = "+ext);
+		Code.arrayPushArray(x,ext);
+	}
+	// run
+	Code.timerStart();
+	var result = Code.gradientDescent(R3D._gd_BACameraExtrinsic, args, x, null, maxIterations, 1E-10);
+	Code.timerStop();
+	x = result["x"];
+	console.log("  POINT COUNT: "+pointList2Ds[0].length+"  ITERATIONS: "+maxIterations+"  SECONDS: "+(Code.timerDifference()/1000.0)+"  ERROR: "+result["cost"]);
+	var pList = [];
+	for(var i=0; i<cameraCount; ++i){
+		var tx = x[i*6 + 0];
+		var ty = x[i*6 + 1];
+		var tz = x[i*6 + 2];
+		var rx = x[i*6 + 3];
+		var ry = x[i*6 + 4];
+		var rz = x[i*6 + 5];
+		var P = new Matrix(4,4);
+		R3D.transform3DFromParameters(P, rx,ry,rz, tx,ty,tz);
+		pList.push(P);
+	}
 
+	return {"extrinsics":pList};
+}
+R3D._gd_BACamera_matrix_A = new Matrix(4,4);
+R3D._gd_BACamera_matrix_B = new Matrix(4,4);
+R3D._gd_BACameraExtrinsic = function(args, x, isUpdate){
+	// if(isUpdate){ return; }
+	var intrinsics = args[0];
+	var inverses = args[1];
+	var pointLists2D = args[2];
+	var pointList3Ds = args[3];
+	var cameraCount = intrinsics.length;
+	var totalError = 0;
+	var tx, ty, tz, rx, ry, rz;
+	for(var i=0; i<cameraCount; ++i){
+		var KA = intrinsics[i];
+		var KAInv = inverses[i];
+		var pointListA = pointLists2D[i];
+		tx = x[i*6 + 0];
+		ty = x[i*6 + 1];
+		tz = x[i*6 + 2];
+		rx = x[i*6 + 3];
+		ry = x[i*6 + 4];
+		rz = x[i*6 + 5];
+		// if(tx!=0 || ty!=0 || tz!=0 || rx!=0 || ry!=0 || rz!=0){ // force identity
+		// 	return 1E10;
+		// }
+		tx = 0;
+		ty = 0;
+		tz = 0;
+		rx = 0;
+		ry = 0;
+		rz = 0;
+		var PA = R3D._gd_BACamera_matrix_A;
+		R3D.transform3DFromParameters(PA, rx,ry,rz, tx,ty,tz);
+		for(var j=i+1; j<cameraCount; ++j){
+			var KB = intrinsics[j];
+			var KBInv = inverses[j];
+			var pointListB = pointLists2D[j];
+			tx = x[j*6 + 0];
+			ty = x[j*6 + 1];
+			tz = x[j*6 + 2];
+			rx = x[j*6 + 3];
+			ry = x[j*6 + 4];
+			rz = x[j*6 + 5];
+			var PB = R3D._gd_BACamera_matrix_B;
+			R3D.transform3DFromParameters(PB, rx,ry,rz, tx,ty,tz);
+var distances = [];
+var avgDistance = 0;
+			for(var k=0; k<pointListA.length; ++k){
+				var p2DA = pointListA[k];
+				var p2DB = pointListB[k];
+				var p3D = pointList3Ds[k];
+				// var p3D = R3D.triangulatePointDLT(p2DA,p2DB, PA,PB, KAInv, KBInv);
+				// if(!p3D){
+				// 	console.log("NOT P3D");
+				// 	// totalError += 1E9;
+				// 	continue;
+				// }
+				// var p3D = point3D.point();
+				// var proj2DA = R3D.projectPoint3DToCamera2D(p3D, absoluteA, Ka, distortionsA);
+				// var proj2DB = R3D.projectPoint3DToCamera2D(p3D, absoluteB, Kb, distortionsB);
+				var projectedA = R3D.projectPoint3DToCamera2DForward(p3D, PA, KA, null);
+				var projectedB = R3D.projectPoint3DToCamera2DForward(p3D, PB, KB, null);
+				
+				// projectPoint3DToCamera2DForward3D => force 'w' == 1 ?
+
+				var errorA = V2D.distanceSquare(p2DA,projectedA);
+				var errorB = V2D.distanceSquare(p2DB,projectedB);
+				var dA = Math.sqrt(errorA);
+				var dB = Math.sqrt(errorB);
+				var avg = (dA+dB)*0.5;
+				avgDistance += avg;
+				distances.push(avg);
+				// TODO: WHICH ?
+				totalError += (errorA + errorB);
+				// totalError += Math.sqrt(errorA + errorB);
+				// totalError += error;
+			}
+			if(isUpdate){
+			// 	console.log(" IS UPDATE ...");
+			// }
+				distances.sort(function(a,b){
+					return a < b ? -1 : 1;
+				});
+				console.log("   medianDistance: "+Code.median(distances)+" | mean: "+(avgDistance/pointListA.length)+"  --  totalError: "+totalError+" @ "+tx+","+ty+","+tz+" ... ");
+			}
+		}
+	}
+	return totalError;
+}
 
 
 R3D.BundleAdjustFull = function(intrinsics, extrinsics, pointLists2D, pointList3D, maxIterations){ // optimal P3D & Extrinsic | 2D points should already be undistorted
@@ -19325,6 +19448,7 @@ var avgDistance = 0;
 			var d = Math.sqrt(error);
 			avgDistance += d;
 			distances.push(d);
+// TODO: WHICH ?
 //totalError += error;
 totalError += d;
 			// if(!R3D.HASRUN){
@@ -21485,6 +21609,11 @@ R3D.projectPoint3DToCamera2DForward = function(in3D, extrinsic, K, distortions, 
 	}
 	var p2D = new V2D(p3D.x/p3D.z,p3D.y/p3D.z);
 	return p2D;
+}
+R3D.projectPoint3DToCamera2DForward3D = function(in3D, extrinsic, K, distortions, dropZ){
+	var v3D = extrinsic.multV3DtoV3D(in3D);
+	var p3D = K.multV3DtoV3D(v3D);
+	return p3D;
 }
 R3D.projectPoint2DToCamera3DRay = function(in2D, extrinsic, Kinv, distortions){ // TODO: distortions
 	var dir = new V3D(in2D.x,in2D.y,1);

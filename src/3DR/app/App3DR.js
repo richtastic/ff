@@ -3550,8 +3550,8 @@ App3DR.App.Model3D.prototype.setLines = function(input){
 		points.push(v.x,v.y,v.z);
 // NEGATIVE Z:
 // points.push(v.x,v.y,-v.z);
-//		colors.push(1.0,1.0,1.0,0.03);
-		colors.push(0.1,0.1,0.1,0.01);
+		colors.push(1.0,1.0,1.0,0.03);
+		// colors.push(0.1,0.1,0.1,0.01);
 	}
 	// create objects
 	this._stage3D.selectProgram(2);

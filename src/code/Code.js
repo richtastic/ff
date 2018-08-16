@@ -1198,8 +1198,17 @@ Code.emptyArray = function(a){
 	while(a.length>0){ a.pop(); }
 };
 Code.truncateArray = function(a,length){
-	// TODO: splice em out
-	while(a.length>length){ a.pop(); }
+	if(a.length>length){
+		a.splice(length,a.length-length);
+	}
+	// while(a.length>length){ a.pop(); }
+	return a;
+};
+Code.preTruncateArray = function(a,length){
+	if(a.length>length){
+		a.splice(0,a.length-length);
+	}
+	// while(a.length>length){ a.shift(); }
 	return a;
 };
 Code.getElements = function(element, fxn, stop, arr){

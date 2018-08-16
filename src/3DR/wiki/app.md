@@ -181,7 +181,21 @@ project typical numbers:
 
 APP TODO:
 
-x set match error R & error F symmetric
+- keep track of changing cells for each view:
+	- workingCellSets:
+		- views:
+			- 1
+				- [{i,j}, ...]
+	- update working set on add/remove point / match
+	- need some 'previous attempted' metric (reprojection error?) to dis/allow retrying match
+
+- only 1-way cell propagating
+
+- nonlinear view camera optimizing:
+	- set absolute camera positions on iteration ~ 3
+	- camera-only BA one at a time for 10~100 iterations
+	-> see if error goes down
+
 
 
 
