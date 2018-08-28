@@ -12,12 +12,15 @@ function ffLoadedFxn(){
 }
 function classesLoadedFxn(){
 
-	/*
-	var fx = 1.0;
-	var fy = 1.0;
+/*
+	var imageWidth = 500;
+	var imageHeight = 350;
+	var f = (imageWidth+imageHeight)*0.5;
+	var fx = f;
+	var fy = f;
 	var s = 0;
-	var cx = 0.5;
-	var cy = 0.5;
+	var cx = 0.5*imageWidth;
+	var cy = 0.5*imageHeight;
 	var distortion = null;
 	var K = new Matrix(3,3).fromArray([fx,s,cx, 0,fy,cy, 0,0,1]);
 	var Kinv = Matrix.inverse(K);
@@ -89,7 +92,7 @@ console.log(Kinv+"")
 
 var distance3D = V3D.distance(estimated3D,point3D);
 console.log("distance3D: "+distance3D);
-if(distance3D>1.0){
+if(distance3D>1E-6){
 	console.log(closest)
 	console.log(" point2DA: "+point2DA);
 	console.log(" point2DB: "+point2DB);
@@ -100,9 +103,146 @@ if(distance3D>1.0){
 }
 
 
+
+
+// NONLINEAR OPTIMIZING:
+	points3D = [];
+	points3D.push(new V3D(0,0,10));
+
+	points3D.push(new V3D(0,-1,7));
+	points3D.push(new V3D(-1,0,7));
+	points3D.push(new V3D(-1,-1,7));
+	
+	points3D.push(new V3D(0,-10,10));
+	points3D.push(new V3D(-10,0,10));
+	points3D.push(new V3D(-10,-10,10));
+
+	points3D.push(new V3D(1,0,12));
+	points3D.push(new V3D(0,1,12));
+	points3D.push(new V3D(1,1,12));
+
+	points3D.push(new V3D(0,10,11));
+	points3D.push(new V3D(10,0,11));
+	points3D.push(new V3D(10,10,11));
+
+	// var errorPixels = 2;
+	var errorPixels = 1;
+	// var errorPixels = 0;
+	// var badCount = 0;
+	// var badCount = 1;
+	var badCount = Math.floor(points3D.length*0.5);
+
+
+console.log("nonlinearness");
+	cameras = [absA,absB];
+	points2DA = [];
+	points2DB = [];
+	points2D = [points2DA,points2DB];
+	for(var i=0; i<points3D.length; ++i){
+		var point3D = points3D[i];
+		var list = [];
+		for(var j=0; j<cameras.length; ++j){
+			var camAbs = cameras[j];
+			var point2D = R3D.projectPoint3DToCamera2DForward(point3D, camAbs, K, null, true);
+			console.log(i+" "+point2D);
+			points2D[j].push(point2D);
+			// console.log(points2D[j])
+			if(point2D){
+				point2D.add(Math.random()*errorPixels,Math.random()*errorPixels);
+				// list.push(point2D);
+			}
+			list.push(point2D);
+		}
+	}
+	console.log("MATCHES BEFORE: "+points2DA.length);
+	// add bad points:
+	for(var i=0; i<badCount; ++i){
+		for(var j=0; j<cameras.length; ++j){
+			points2D[j].push(new V2D(Math.random()*imageWidth,Math.random()*imageHeight) );
+		}
+	}
+	console.log("MATCHES ERROR: "+points2DA.length);
+
+	
+
+	var F = null;
+	var P = null;
+	var Ka = K;
+	var Kb = K;
+	var KaInv = Matrix.inverse(Ka);
+	var KbInv = Matrix.inverse(Kb);
+
+	
+	// TODO: WHERE DOES TRHESHOLD ERROR COME FROM ?
+
+
+	var inlierPixelError = 2;
+	var result = R3D.fundamentalRANSACFromPoints(points2DA,points2DB, inlierPixelError);
+	// console.log(result);
+	F = result["F"];
+	console.log(F+"");
+
+	var matches = result["matches"];
+	points2DA = matches[0];
+	points2DB = matches[1];
+	console.log("MATCHES AFTER: "+points2DA.length);
+	//F = R3D.fundamentalFromUnnormalized(points2DA,points2DB);
+	
+	// F = R3D.fundamentalMatrixNonlinear(F,points2DA,points2DB);
+	// console.log(F+"");
+
+	// TODO: RANSAC P drop points
+
+	//P = R3D.transformFromFundamental(points2DA,points2DB, F, Ka, Kb, null, true);
+
+	// TODO: WHERE DOES TRHESHOLD ERROR COME FROM ?
+	result = R3D.cameraExtrinsicRANSACFromPointsAutomated(points2DA,points2DB,Ka,Kb,KaInv,KbInv);
+
+	P = result["P"];
+	console.log(P+"");
+
+
+	console.log(P);
+
+throw "yerp"
+
+	var Pa = new Matrix(4,4).identity();
+	var Pb = P;
+
+	// NONLINEAR OPTIMIZING:
+		var Ps = [Pa,Pb];
+		var Ks = [Ka,Kb];
+		var Is = [KaInv,KbInv];
+		var points2D = [points2DA,points2DB];
+
+		// TODO:
+		var estimated3D = [];
+		for(i=0; i<points2DA.length; ++i){
+			var pA = points2DA[i];
+			var pB = points2DB[i];
+			var p3D = R3D.triangulatePointDLT(pA,pB, Pa,Pb, KaInv, KbInv);
+			estimated3D.push(p3D);
+		}
+		// // points3D =  estimated
+		// var estimated3D = R3D.triangulatePointDLT(pA,pB, cameraA,cameraB, KaInv, KbInv);
+		// match.estimated3D(estimated3D);
+
+
+		var result = R3D.BundleAdjustCameraExtrinsic(Ks, Is, Ps, points2D, estimated3D, 25);
+		console.log(result);
+		var extrinsics = result["extrinsics"];
+		var absA = extrinsics[0];
+		var absB = extrinsics[1];
+		
+		// var invA = Matrix.inverse(absA);
+		// var relativeAtoB = Matrix.mult(invA,absB);
+		// var absoluteB = Matrix.mult(Pa,relativeAtoB);
+		// viewB.absoluteTransform(absoluteB);
+
+
 	return;
 
-	*/
+*/
 
 
 	/*

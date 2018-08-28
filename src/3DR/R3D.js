@@ -772,7 +772,11 @@ for(i=0; i<possibles.length; ++i){
 	}
 	return null;
 }
-R3D.reprojectionErrorList = function(p3D, pA,pB, cameraA, cameraB, Ka, Kb){
+R3D.reprojectionErrorList = function(p3D, pA,pB, cameraA, cameraB, Ka, Kb, info){
+	var averages = null;
+	if(info){
+		averages = [];
+	}
 	var errorTotal = 0;
 	var countTotal = 0;
 	for(var i=0; i<p3D.length; ++i){
@@ -780,11 +784,19 @@ R3D.reprojectionErrorList = function(p3D, pA,pB, cameraA, cameraB, Ka, Kb){
 		if(error){
 			++countTotal;
 			errorTotal += error["error"];
+			if(info){
+				averages.push(error["average"]);
+			}
 		}
 	}
 	if(countTotal>0){
 		errorTotal /= countTotal;
-		return {"error":errorTotal};
+		var data = {};
+		data["error"] = errorTotal;
+		if(info){
+			data["averages"] = averages;
+		}
+		return data;
 	}
 	return null;
 }
@@ -805,7 +817,8 @@ R3D.reprojectionError = function(p3D, pA,pB, cameraA, cameraB, Ka, Kb){
 		// console.log(distanceA+" & "+distanceB);
 	}
 	var distance = Math.sqrt( distanceA*distanceA + distanceB*distanceB );
-	return {"error":distance, "distanceA":distanceA, "distanceB":distanceB};
+	var average = (distanceA+distanceB)*0.5;
+	return {"error":distance, "distanceA":distanceA, "distanceB":distanceB, "average":average};
 }
 
 
@@ -2320,7 +2333,7 @@ R3D.fundamentalRANSACFromPoints = function(pointsAIn,pointsBIn, errorPosition, i
 	var consensus=[], consensusSet = [];
 	var support, maxSupportCount = 0, maxSupportError = null;
 	var minCount = 7;
-	var epsilon = 1/pointsLength;
+	// var epsilon = 1/pointsLength;
 	var pOutlier = 0.99; // inital assumptions are wrong
 	var pDesired = 0.999; // to have selected a valid subset
 	var errorMinfactor = 2.0;
@@ -2455,6 +2468,224 @@ R3D.fundamentalRANSACFromPoints = function(pointsAIn,pointsBIn, errorPosition, i
 
 	// TODO: are there possible 'duplicated' pointA_i == pointA_j ? => remove ?
 	return {"F":arr, "matches":[pointsKeepA,pointsKeepB]};	
+}
+R3D.cameraExtrinsicRANSACFromPointsAutomated = function(pointsA,pointsB, Ka,Kb,KaInv,KbInv, Pinitial){ // automatically determine inline threshold
+	var P = null;
+	if(Pinitial){
+		P = Pinitial;
+	}else{
+		var F = R3D.fundamentalFromUnnormalized(pointsA,pointsB);
+		P = R3D.transformFromFundamental(pointsA,pointsB, F, Ka, Kb, null, true);
+	}
+	if(!P){
+		console.log("can't model P");
+		return null;
+	}
+	var Pidentity = new Matrix(4,4).identity();
+	var points3D = R3D.triangulationDLT(pointsA,pointsB, Pidentity,P, Ka, Kb);
+	var info = R3D.reprojectionErrorList(points3D, pointsA,pointsB, Pidentity,P, Ka, Kb, true);
+	var averages = info["averages"];
+	// use population distribution to limit estimate to bottom half of group
+	var sortFxn = function(a,b){
+		return a < b ? -1 : 1;
+	}
+	averages.sort(sortFxn);
+	var mean = Code.min(averages);
+	var sigma = Code.stdDev(averages, mean);
+	var half = Code.median(averages);
+		sigma = Math.min(sigma,half)
+	// var inlierPixelError = mean + 2*sigma;
+	var inlierPixelError = mean + 1.0*sigma;
+
+	// no less than these
+	var percentLimit = 0.5;
+	var countLimit = 50;
+	var loop = 0;
+	var result = null;
+	var matches = null;
+	var percent = 0;
+	var previousResult = null;
+	Code.printMatlabArray(averages);
+console.log("R3D.cameraExtrinsicRANSACFromPointsAutomated +++++++++++++++++++++++++++++++++++++");
+	do{
+		console.log("inlierPixelError: "+inlierPixelError);
+		previousResult = result;
+		result = R3D.cameraExtrinsicRANSACFromPoints(pointsA,pointsB,Ka,Kb,KaInv,KbInv, inlierPixelError);
+		matches = result["matches"];
+		percent = matches.length/pointsA.length;
+		console.log(" -> "+matches.length+" / "+pointsA.length+" = "+(percent));
+		inlierPixelError *= 0.5;
+		// TODO: KEEP TRACK OF PREVIOUS MATCHES IN CASE PAST LIMIT
+		++loop;
+	}while(matches.length>countLimit && percent>percentLimit && loop<3);
+	// undo if as limits
+	if(percent<percentLimit && previousResult){
+		result = previousResult;
+	}
+	return result;
+}
+
+R3D.cameraExtrinsicRANSACFromPoints = function(pointsAIn,pointsBIn, Ka,Kb,KaInv,KbInv, errorPosition){
+	var MAX_LIMIT = 1E3; // 1K
+	var minCount = 8;
+	var args = [pointsAIn,pointsBIn, Ka, Kb, KaInv, KbInv];
+
+	var Pidentity = new Matrix(4,4).identity();
+	var fxnError = function(point2DA,point2DB, PB, KA,KB,KAInv,KBInv){
+		var PA = Pidentity;
+		var point3D = R3D.triangulatePointDLT(point2DA,point2DB, PA,PB, KAInv, KBInv);
+		if(!point3D){
+			return false;
+		}
+		var error = R3D.reprojectionError(point3D, point2DA,point2DB, PA,PB, KA,KB);
+		if(!error){
+			return null;
+		}
+		return error["average"];
+		// var projectedA = R3D.projectPoint3DToCamera2DForward(point3D, PA, KA, null);
+		// var projectedB = R3D.projectPoint3DToCamera2DForward(point3D, PB, KB, null);
+		// var errorA = V2D.distanceSquare(point2DA,projectedA);
+		// var errorB = V2D.distanceSquare(point2DB,projectedB);
+		// var dA = Math.sqrt(errorA);
+		// var dB = Math.sqrt(errorB);
+		// var avg = (dA+dB)*0.5;
+		// return avg;
+	}
+	var fxnModel = function(args, sampleIndexes){
+		// create primitive minimal estimate
+		if(sampleIndexes.length<minCount){
+			return null;
+		}
+		var point2DA = args[0][index];
+		var point2DB = args[1][index];
+		var KA = args[2];
+		var KB = args[3];
+		var KAInv = args[4];
+		var KBInv = args[5];
+		var pointsA = [];
+		var pointsB = [];
+		for(var i=0; i<sampleIndexes.length; ++i){
+			var index = sampleIndexes[i];
+			pointsA.push(pointsAIn[index]);
+			pointsB.push(pointsBIn[index]);
+		}
+		var F = R3D.fundamentalFromUnnormalized(pointsA,pointsB);
+		if(!F){
+			return null;
+		}
+		// SHOULD ?
+		// F = R3D.fundamentalMatrixNonlinear(F,points2DA,points2DB);
+		P = R3D.transformFromFundamental(pointsA,pointsB, F, Ka, Kb, null, true);
+		if(!P){
+			return null;
+		}
+		var totalError = 0;
+		for(var i=0; i<pointsA.length; ++i){
+			var error = fxnError(pointsA[i],pointsB[i], P,KA,KB,KAInv,KBInv);
+			if(error!==null){
+				totalError += error;
+			}
+		}
+		totalError /= pointsA.length;
+		var primitive = {"F":F, "P": P,"error": totalError};
+		return primitive;
+	};
+	allowedError = errorPosition; // pixel average reprojection error
+	var fxnInlier = function(args, model, index){ //
+		if(!model){
+			return false;
+		}
+		var F = model["F"];
+		var P = model["P"];
+		if(!P){
+			return false;
+		}
+		var point2DA = args[0][index];
+		var point2DB = args[1][index];
+		var KA = args[2];
+		var KB = args[3];
+		var KAInv = args[4];
+		var KBInv = args[5];
+		
+		var PB = P;
+		error = fxnError(point2DA,point2DB, PB,KA,KB,KAInv,KBInv);
+		if(error==-null){
+			return false;
+		}
+		if(error>allowedError){
+			return false;
+		}
+		return true;
+	};
+	var result = R3D.generalRANSAC(args, fxnModel,fxnInlier, pointsAIn.length,minCount, MAX_LIMIT);
+	var F = null;
+	var P = null;
+	var matches = [];
+	if(result){
+		var model = result["model"];
+		P = model["P"];
+		F = model["F"];
+		var inliers = result["inliers"];
+		for(var i=0; i<inliers.length; ++i){
+			var index = inliers[i];
+			matches.push([pointsAIn[index],pointsBIn[index]]);
+		}
+	}
+	console.log(result);
+	// NONLINEAR P STEP?
+	return {"P":P, "matches":matches};
+}
+R3D.generalRANSAC = function(args, fxnModel,fxnInlier, populationSize,sampleSize, limitIterations){
+	var pOutlier = 0.99; // initial assumptions are wrong
+	var pDesired = 0.999; // to have selected a valid subset
+	var errorMinFactor = 2.0;
+	var bestInliers = null;
+	var bestError = null;
+	var bestModel = null;
+	var maxIterations = errorMinFactor * R3D.iterationsFromProbabilities(pDesired, pOutlier, sampleSize);
+	if(limitIterations!==undefined){
+		maxIterations = Math.min(limitIterations,maxIterations);
+		limitIterations = maxIterations;
+	}
+	for(var i=0; i<maxIterations; ++i){
+		if(i%100==0){
+			console.log("generalRANSAC: "+i+"/"+maxIterations);
+		}
+		var indexes = Code.randomIntervalSet(sampleSize, 0, populationSize-1);
+		var primitive = fxnModel(args,indexes);
+// console.log(primitive)
+		var inliers = [];
+		for(var j=0; j<populationSize; ++j){
+			var isInlier = fxnInlier(args, primitive, j);
+			if(isInlier){
+				inliers.push(j);
+			}
+		}
+		//console.log(i+" === "+inliers.length)
+		if(bestInliers===null || inliers.length>=bestInliers.length){
+			var model = fxnModel(args,inliers);
+			if(model){
+				var error = model["error"];
+				if(bestInliers===null || inliers.length>bestInliers.length || (inliers.length==bestInliers.length && error<bestError)){
+					console.log(i+" === "+inliers.length+" / "+populationSize);
+					bestInliers = inliers;
+					bestError = error;
+					bestModel = model;
+				}
+			}
+		}
+		// update iterations from found:
+		if(bestInliers && bestInliers.length>0){
+			pOutlier = Math.min(pOutlier, (populationSize-bestInliers.length)/populationSize);
+			maxIterations = errorMinFactor * R3D.iterationsFromProbabilities(pDesired, pOutlier, sampleSize);
+			maxIterations = Math.min(limitIterations,maxIterations);
+			// console.log("maxIterations:"+maxIterations);
+		}
+	}
+	if(bestModel){
+		return {"model":bestModel, "inliers":bestInliers, "error":bestError};
+	}
+	return null;
 }
 
 R3D._lmMinFundamentalA = new Matrix(3,3);
@@ -19020,7 +19251,16 @@ R3D.optimumAffineTransform = function(imageA,pointA, imageB,pointB, vectorX,vect
 	var scaleCompare = compareSize/sizeA;
 		var matrix = new Matrix(3,3).identity();
 			matrix = Matrix.transform2DScale(matrix,scaleCompare);
-	var h = imageB.extractRectFromFloatImage(pointB.x,pointB.y,1.0,null,compareSize,compareSize, matrix);
+	var h = null;
+	try{
+		h = imageB.extractRectFromFloatImage(pointB.x,pointB.y,1.0,null,compareSize,compareSize, matrix);
+	}catch(e){
+		console.log("bad matrix extract rect");
+		console.log(""+matrix);
+		console.log(matrix);
+		console.log("@ "+pointB);
+		return null;
+	}
 	var m = ImageMat.circleMask(compareSize);
 	var u = new V2D(0,0);
 	var x = new V2D(1,0);

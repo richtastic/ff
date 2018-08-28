@@ -181,6 +181,54 @@ project typical numbers:
 
 APP TODO:
 
+
+
+- MAYBE TRY NEW DATA SET ?
+- camera location should be some % based on all relative estimations, not just offset from 0th camerat
+- 
+
+
+-> much of the effort goes into removing outliers and troublesome data before the bundle adjustments can find local minima (very good initialization)
+	-> find average of rotations
+	-> find translations
+	-> BA
+
+
+-> SYNTHETIC DATA FIND OUT WHY NONLINEAR SOPT SUCKS ...
+	- can 3D error visualization work?
+-> P RANSACing
+
+- why is nonlinear optimizing failing?
+	- investigate the 2 erroring camera views? []
+	- analyze reprojection error measurements & why squared / linear error would be better or worse in given situation
+		- bad points throwing off?
+		- infinity reprojection is better?
+	- add RANSAC somewhere and only use best inliers?
+	- try LM instead of GD
+
+
+- bundle adjustment : nonlinear camera reprojection error minimizing => pushes points/camera toward infinity
+	- optimize single camera R|t against all other view-pairs
+	- TRACKS
+	- Levenberg-Marquardt
+	- separate rotation & translation optimizing
+	- optimize using normalized image coordinates (F->E)
+	- BUNDLER: https://github.com/snavely/bundler_sfm
+	- S. 7.3-7.5
+	- 
+
+
+
+
+FOR DENSE DEPTH MATCHING
+	- use F/P to come up with homography to line up the images
+	- use lined up rectangular (inner area) as starting point for hierarchical matching
+		- eg imge stitching
+	- hierarchy of optical flow
+		- still wont account for large movements
+
+
+
 - keep track of changing cells for each view:
 	- workingCellSets:
 		- views:

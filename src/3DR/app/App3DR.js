@@ -3434,6 +3434,7 @@ camWid = 0.20;
 			
 			console.log("SRZ: "+horz+" x "+vert);
 		// if(i==0){
+		// if(i==1){
 		if(false){ // none
 		//if(true){ // overlapping
 			console.log("CREATE TEXTURES HERE");
@@ -3573,6 +3574,17 @@ App3DR.App.Model3D.prototype.setPoints = function(input3D, input2D, hasImages){
 	// CREATE POINTS:
 	this._points3D = input3D;
 	this._points2D = input2D;
+	console.log("setPoints ---");
+	console.log(input3D);
+	console.log(input2D);
+	
+	// TRIM SO ONLY POINTS IN 0 & 1 are displayed:
+
+
+	// HERE
+
+
+
 	var points = [];
 	var colors = [];
 	for(var i=0; i<input3D.length; ++i){
@@ -6873,9 +6885,9 @@ console.log(viewB);
 // // TODO: UNCOMMENT
 // if(j>=0){
 //if(j>=2){
-if(j>=10){
-	break;
-}
+// if(j>=10){
+// 	break;
+// }
 	}
 	// initially get 2-sigma points & only add those from match list
 }

@@ -305,6 +305,46 @@ Stereopsis.View.prototype.camera = function(camera){
 	}
 	return this._camera;
 }
+Stereopsis.View._cellOrdering = function(a,b){
+	if(a==b){
+		return 0;
+	}else if(a._row<b._row){
+		return -1;
+	}else if(a._row>b._row){
+		return 1;
+	}else if(a._col<b._col){
+		return -1;
+	}else if(a._col>b._col){
+		return 1;
+	}
+	throw "?";
+	// return 0;
+}
+Stereopsis.View.prototype._probe2DQueues = function(viewID){
+	var probe2DQueues = this._probe2DQueues;
+	if(!probe2DQueues){
+		probe2DQueues = {};
+		this._probe2DQueues = probe2DQueues;
+	}
+	var queues = probe2DQueues[index];
+	if(!queues){
+		var addQueue = new PriorityQueue(Stereopsis.View._cellOrdering);
+		var remQueue = new PriorityQueue(Stereopsis.View._cellOrdering);
+		queues = {"add":addQueue, "remove":remQueue};
+		probe2DQueues = queues;
+	}
+	return queues;
+}
+Stereopsis.View.prototype.addQueue = function(oppositeView){
+	var queues = this._probe2DQueues(oppositeView.id()+"");
+	var addQueue = queues["add"];
+	return addQueue;
+}
+Stereopsis.View.prototype.removeQueue = function(oppositeView){
+	var queues = this._probe2DQueues(oppositeView.id()+"");
+	var removeQueue = queues["remove"];
+	return removeQueue;
+}
 Stereopsis.View.prototype._updateInternalParams = function(){
 	var size = this.size();
 	var camera = this._camera;
@@ -1509,10 +1549,14 @@ Stereopsis.World.prototype.solve = function(completeFxn, completeContext){
 	this._completeFxn = completeFxn;
 	this._completeContext = completeContext;
 	// var maxIterations = 1;
-	// var maxIterations = 2;
+	var maxIterations = 2;
 	// var maxIterations = 3;
 	// var maxIterations = 4;
-	var maxIterations = 5;
+	// var maxIterations = 5;
+	// var maxIterations = 6;
+	// var maxIterations = 7;
+	// var maxIterations = 8;
+	// var maxIterations = 9;
 	// var maxIterations = 10;
 	// var maxIterations = 15;
 	// var maxIterations = 20;
@@ -1529,8 +1573,8 @@ Stereopsis.World.prototype.iteration = function(iterationIndex, maxIterations){
 	console.log("-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ "+iterationIndex+"/"+maxIterations+" ( "+isFirst+" & "+isLast+" ) ");
 	// ESTIMATE 3D
 // HERE
-	var skip = iterationIndex>=2;
-// var skip = false;
+	var skip = iterationIndex>=3;
+var skip = false;
 	// console.log("ESTIMATES");
 		this.estimate3DErrors(skip); // find F, P, estimate all errors
 		if(skip){
@@ -1548,7 +1592,7 @@ Stereopsis.World.prototype.iteration = function(iterationIndex, maxIterations){
 	// EXPAND
 		// 2D NEIGHBORS
 		// console.log("EXPAND 2D CELLS");
-		this.probe2D();
+		this.probe2DStart();
 		// 3D PROJECTION
 		// console.log("EXPAND 3D POINTS");
 		// this.project3D();
@@ -1576,6 +1620,8 @@ Stereopsis.World.prototype.iteration = function(iterationIndex, maxIterations){
 		// LOCAL 3D
 		this.filterLocal3D();
 			// ?
+
+		this.probe2DEnd();
 // this.printInfo();
 // if(isLast){
 // 	console.log("LAST");
@@ -2081,14 +2127,14 @@ Stereopsis.World.prototype.estimate3DViews = function(){ // get absolution of vi
 }
 Stereopsis.World.prototype.estimate3DPoints = function(){
 	var points3D = this.toPointArray();
-	console.log("estimate3DPoints: "+points3D.length);
+	// console.log("estimate3DPoints: "+points3D.length);
 	for(var i=0; i<points3D.length; ++i){
 		var point3D = points3D[i];
 		point3D.calculateAbsoluteLocation(this);
 	}
 }
 Stereopsis.World.prototype.estimate3DTransforms = function(){ // nonlinear camera optimization
-	console.log("estimate3DTransforms");
+	// console.log("estimate3DTransforms");
 	var world = this;
 	var views = world.toViewArray();
 	var P, K;
@@ -2143,7 +2189,7 @@ Stereopsis.World.prototype.estimate3DTransforms = function(){ // nonlinear camer
 			// console.log(Ps);
 			// console.log(points2D);
 			// console.log(points3D);
-			var result = R3D.BundleAdjustCameraExtrinsic(Ks, Is, Ps, points2D, points3D, 10);
+			var result = R3D.BundleAdjustCameraExtrinsic(Ks, Is, Ps, points2D, points3D, 25);
 			// console.log(result);
 			var extrinsics = result["extrinsics"];
 			var absA = extrinsics[0];
@@ -2170,10 +2216,7 @@ Stereopsis.World.prototype.estimate3DTransforms = function(){ // nonlinear camer
 					transform.R(relativeAtoB, viewA,viewB);
 				}
 			}
-			// update all relative transforms ...
-
-
-			// throw " now set ";
+			//
 		}
 	}
 }
@@ -2196,6 +2239,8 @@ Stereopsis.World.prototype.estimate3DErrors = function(skipCalc){ // triangulate
 			var info = Stereopsis.ransacTransformF(transform);
 			F = info["F"];
 			P = info["P"];
+
+			
 		}
 		if(F){
 			transform.F(viewA,viewB,F);
@@ -2313,7 +2358,7 @@ Stereopsis.updateErrorForMatch = function(match){
 
 
 
-Stereopsis.ransacTransformF = function(transform){
+Stereopsis.ransacTransformF = function(transform){ // F & P
 	var minimumTransformMatchCountF = 12;
 	var minimumTransformMatchCountR = 16;
 	var minimumRansacMatchPercent = 0.5;//0.25;
@@ -2465,6 +2510,20 @@ P = R3D.transformFromFundamental(bestPointsA, bestPointsB, F, Ka, Kb, null, forc
 		}
 		//console.log(".    bestPointsA "+bestPointsA.length +" / "+ pointsA.length);
 	}
+	if(P){
+		// TODO: ADD BACK:
+		/*
+		// P FROM RANSAC TO IGNORE OUTLIERS ....
+		var Ka = viewA.K();
+		var Kb = viewB.K();
+		var KaInv = viewA.Kinv();
+		var KbInv = viewB.Kinv();
+		var result = R3D.cameraExtrinsicRANSACFromPointsAutomated(bestPointsA,bestPointsB,Ka,Kb,KaInv,KbInv, P);
+		*/
+		if(result){
+			P = result["P"];
+		}
+	}
 	return {"F":F, "P": P};
 }
 
@@ -2527,6 +2586,16 @@ return;
 
 
 }
+
+Stereopsis.World.prototype.probe2DStart = function(){
+	// throw "?"
+	//
+	this.probe2D();
+}
+
+Stereopsis.World.prototype.probe2DEnd = function(){
+	throw "?"
+}
 Stereopsis.World.prototype.probe2D = function(){
 // this.CHECKCELLS = [];
 	var views = this.toViewArray();
@@ -2534,14 +2603,24 @@ Stereopsis.World.prototype.probe2D = function(){
 	var maxRect = new V2D();
 	var bestMatches = [];
 	for(var i=0; i<views.length; ++i){
-		var view = views[i];
-		var cellSize = view.cellSize();
-		var image = view.image();
-		var imageWidth = image.width();
-		var imageHeight = image.height();
-		var cellMaxX = Math.ceil(imageWidth/cellSize);
-		var cellMaxY = Math.ceil(imageHeight/cellSize);
-		var points2D = view.toPointArray();
+		var viewA = views[i];
+		var cellSizeA = viewA.cellSize();
+		// var image = viewA.image();
+		// var imageWidth = image.width();
+		// var imageHeight = image.height();
+		// var cellMaxX = Math.ceil(imageWidth/cellSize);
+		// var cellMaxY = Math.ceil(imageHeight/cellSize);
+		// var points2DA = viewA.toPointArray();
+		for(var j=0; j<views.length; ++j){
+			var viewB = views[j];
+			var addQueueA = viewA.addQueue(viewB);
+			var removeQueueA = viewA.removeQueue(viewB);
+			var addQueueB = viewB.addQueue(viewA);
+			var removeQueueB = viewB.removeQueue(viewA);
+			console.log(addQueueA,removeQueueA,addQueueB,removeQueueB)
+			throw "wut";
+		}
+/*
 console.log("   probe2D: "+view.id());
 		for(var j=0; j<points2D.length; ++j){
 			var point2DA = points2D[j];
@@ -2593,10 +2672,10 @@ this.validatePoint3D(point3D);
 											if(bestMatch){
 												bestMatches.push(bestMatch);
 											}
-										}/*else{
-											console.log(point3D);
-											throw "why is there no match for: "+viewA.id()+" - "+viewB.id()+" ? ";
-										}*/
+										//}else{
+										//	console.log(point3D);
+										//	throw "why is there no match for: "+viewA.id()+" - "+viewB.id()+" ? ";
+										}
 									}
 								}
 							}
@@ -2607,6 +2686,7 @@ this.validatePoint3D(point3D);
 				}
 			}
 		}
+		*/
 	}
 	// choose better candidates irst
 	bestMatches.sort(function(a,b){
@@ -2828,6 +2908,7 @@ this.validatePoint3D(point3D);
 			}
 		}
 	}
+
 // TODO: REMOVE
 // IGNORE INTERSECTION:
 // this.connectPoint3D(point3D);
@@ -3127,6 +3208,17 @@ Stereopsis.World.prototype.connectPoint3D = function(point3D){
 		var view = point2D.view();
 		view.insertPoint2D(point2D);
 	}
+
+// THIS IS ONLY CALLED IF A) POINT IS INSERTED, B) 2 POINTS MERGED
+???
+connectPoint3D
+addQueue.addUnique(CELL???)
+...
+
+HERE
+
+
+
 	// point3D
 	world.insertPoint3D(point3D);
 

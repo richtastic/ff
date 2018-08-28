@@ -39,9 +39,6 @@ GLOBALSTAGE = this._stage;
 }
 BeliefTest.prototype.handleMouseClickFxn = function(e){
 	var location = e["location"];
-
-	// console.log(e)
-	// console.log(e.x,e.y)
 	var lattice = this._lattice;
 	var display = this._display;
 	if(lattice && display){
@@ -69,10 +66,8 @@ BeliefTest.prototype.handleMouseClickFxn = function(e){
 
 			if(match){
 				console.log(match);
-
 				var ordered = BeliefTest.Lattice.orientationTest(cell,match, true);
-				console.log("ORDERED: "+ordered);
-
+				// console.log("ORDERED: "+ordered);
 				var affine = match.affine();
 				// visualize match:
 				// affine arrows
