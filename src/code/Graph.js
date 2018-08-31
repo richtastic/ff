@@ -642,6 +642,20 @@ Graph._minPath = function(graph,source,target){
 	}
 	return null;
 }
+
+Graph._allPaths = function(graph,source,target){
+	// var paths = Graph._minPaths(graph,source);
+	// return paths
+	// var paths = Graph._minPaths(graph,source);
+	// for(var i=0; i<paths.length; ++i){
+	// 	var path = paths[i];
+	// 	if(path["vertex"]==target){
+	// 		return path;
+	// 	}
+	// }
+	return null;
+}
+
 Graph._minRootPaths = function(graph,source){ // find best vertex to be at root to minimize all paths thru graph
 	var vertexes = graph.vertexes();
 	if(vertexes.length<=1){
@@ -993,11 +1007,45 @@ Graph.prototype.splitWithCut = function(cut){
 Graph.prototype.minPaths = function(source){
 	return Graph._minPaths(this,source);
 }
+Graph.prototype.allPaths = function(source,target){
+	return Graph._allPaths(this,source,target);
+}
 Graph.prototype.minPath = function(source,target){
 	return Graph._minPath(this,source,target);
 }
-Graph.prototype.minSpanningTree = function(source,target){ // maximum spanning tree MST
-	throw "Kruskal";
+Graph.prototype.minSpanningTree = function(){ // minimum spanning tree MST -- assumes bidirectional edges
+// NOT TESTED
+	// sort edges on lower weight
+	var edges = Code.copyArray(this.edges());
+	edges.sort(function(a,b){
+		return a.weight()<b.weight() ? -1 : 1;
+	});
+	// add edges to MST
+	var vertexes = [];
+	// var setB = [];
+	var keep = [];
+	for(var i=0; i<edges.length; ++i){
+		var edge = edges[i];
+		var vertexA = edge.A();
+		var vertexB = edge.B();
+		var existsA = Code.elementExists(vertexes,vertexA);
+		var existsB = Code.elementExists(vertexes,vertexB);
+		// can't create loop
+		//if( (existsA && !existsB) || (!existsA && existsB) || (!existsA && !)){
+		if(!existsA || !existsB){
+			// console.log("ADD EDGE: "+edge);
+			keep.push(edge);
+			if(!existsA){
+				vertexes.push(vertexA);
+			}
+			if(!existsB){
+				vertexes.push(vertexB);
+			}
+		}
+	}
+	return keep;
+	// throw "Kruskal";
+
 }
 Graph.prototype.minRootPaths = function(){
 	return Graph._minRootPaths(this);

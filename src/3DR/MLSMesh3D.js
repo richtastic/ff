@@ -36,9 +36,12 @@ MLSMesh3D.prototype.points = function(points){
 	return this._field.points(points);
 }
 MLSMesh3D.prototype.triangulateSurface = function(){ // main function to create the surface
-	console.log("createSurface")
+	//console.log("createSurface");
+	console.log("... normals");
 	this._estimateNormals();
+	console.log("...extend");
 	this._propagateNormals();
+	console.log("fronts");
 	this._iterateFronts();
 	return false;
 }
@@ -322,14 +325,18 @@ MLSMesh3D.Field.prototype.points = function(points){
 				maxLocation = V3D.max(maxLocation, point);
 			}
 		}
+		console.log("mesh points");
 		this._points = meshPoints;
 		this._octTree.initWithObjects(meshPoints, true);
 
+		console.log("tree made");
 		// double the volume for tris that could go out a ways:
 		var size = V3D.sub(maxLocation,minLocation);
 		minLocation.sub(size);
 		maxLocation.add(size);
+		console.log("start oct space");
 		this._octSpaceTriangles.initWithSize(minLocation,maxLocation); // auto-epsilon
+		console.log("done");
 	}
 	return this._points;
 }
@@ -1468,8 +1475,14 @@ MLSMesh3D.Front.prototype.isBridge = function(edge,edgePoint, point){
 	// var unitA = edgeA.unit();
 	// var unitB = edgeB.unit();
 	// var angle = V3D.angleDirection(unitA,unitB);
-	var angle = V3D.angleDirection(perpA,perpB, up);
+	
+	//var angle = V3D.angleDirection(perpA,perpB, up);
+	var angle = V3D.angle(perpA,perpB);
+
 	var isConvex = angle >=0;
+// TODO: WHAT IS THIS
+
+
 //	console.log("angleDirection: "+Code.degrees(angle)+" vs "+Code.degrees(V3D.angleDirection(perpB,perpA, up)));
 
 	// var cross = V3D.cross(perpA,perpB).norm();
@@ -2157,12 +2170,12 @@ this._tris = field._triangles;
 ITERATIONGLOBAL = 0;
 	
 	var iteration = 0;
-	//var maxIterations = 2000;
+	// var maxIterations = 2000;
 	//var maxIterations = 500;
-	//var maxIterations = 200;
-	//var maxIterations = 100;
+	var maxIterations = 200;
+	// var maxIterations = 100;
 	//var maxIterations = 50;
-var maxIterations = 6000;// 5011 - equal tri
+// var maxIterations = 6000;// 5011 - equal tri
 //var maxIterations = 5005
 //var maxIterations = 12000; // 2690
 //var maxIterations = 4382; // 4382

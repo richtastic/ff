@@ -11,6 +11,497 @@ function ffLoadedFxn(){
 	(new ScriptLoader("./",["App3DR.js", "../SIFTDescriptor.js", "../R3D.js","../R3DDense.js","../R3DBA.js","../R3DDense.js","../Cam2D.js","../Cam3D.js","../Render3D.js","Stereopsis.js"],this,classesLoadedFxn)).load();
 }
 function classesLoadedFxn(){
+/*
+	var vectors = [];
+		vectors.push(new V2D(1,0).rotate(Code.radians(10.0)));
+		vectors.push(new V2D(1,0).rotate(Code.radians(20.0)));
+		vectors.push(new V2D(1,0).rotate(Code.radians(-30.0)));
+		// vectors.push(new V2D(1,0).rotate(Code.radians(-15.0)));
+	var avg2 = Code.averageAngleVector2D(vectors);
+	var angle = V2D.angleDirection(V2D.DIRX,avg2);
+	console.log(avg2+"");
+	console.log(Code.degrees(angle)+"");
+
+
+	vectors = [];
+		vectors.push(new V3D(1,0).rotate( new V3D(0,0,1), Code.radians(10.0)));
+		vectors.push(new V3D(1,0).rotate( new V3D(0,0,1), Code.radians(20.0)));
+		vectors.push(new V3D(1,0).rotate( new V3D(0,0,1), Code.radians(-30.0)));
+		//console.log(vectors+"")
+		// vectors.push(new V2D(1,0).rotate(Code.radians(-15.0)));
+	var avg3 = Code.averageAngleVector3D(vectors);
+	var angle = V2D.angleDirection(V3D.DIRX,avg3);
+	console.log(avg3+"");
+	console.log(Code.degrees(angle)+"");
+
+	return;
+*/
+	// AVERAGING 2D POINTS ITERITIVELY
+// 	var points = [];
+// 		points.push(new V2D(0,0));
+// 		points.push(new V2D(2,0));
+// 		points.push(new V2D(1,3));
+// 	var avg = V2D.meanFromArray(points);
+// 	console.log(avg+"");
+// 	var weight = 1;
+// 	var total = points[0].copy();
+// 	for(var i=1; i<points.length; ++i){
+// 		var point = points[i];
+// 		var dir = V2D.sub(point,total);
+// 		weight += 1;
+// 		total.add( dir.scale(1.0/weight) );
+// 	}
+// 	console.log(total+" ? ");
+// return;
+
+// AVERAGING 3D POINTS 
+
+// STAGE:
+// console.log("BeliefTest");
+	this._canvas = new Canvas(null,0,0,Canvas.STAGE_FIT_FILL, false,false);
+	this._stage = new Stage(this._canvas, 1000/20);
+	this._root = new DO();
+	this._stage.addChild(this._root);
+	this._canvas.addListeners();
+	this._stage.addListeners();
+	this._stage.start();
+	// this._canvas.addFunction(Canvas.EVENT_MOUSE_CLICK,this.handleMouseClickFxn,this);
+	GLOBALSTAGE = this._stage;
+
+	
+	var points = [];
+		// points.push([new V2D(0,0), 0.0]);
+		// points.push([new V2D(2,0), 0.0]);
+		// points.push([new V2D(3,0), 0.0]);
+		// points.push([new V2D(5,0), 0.0]);
+		// points.push([new V2D(7,0), 0.0]);
+		points.push([new V2D(0,0), Code.radians(0.0)]);
+		points.push([new V2D(2,1), Code.radians(20.0)]);
+		points.push([new V2D(3,0), Code.radians(30.0)]);
+		points.push([new V2D(5,2), Code.radians(20.0)]);
+		points.push([new V2D(7,0), Code.radians(40.0)]);
+		points.push([new V2D(1,3), Code.radians(90.0)]);
+	var edges = [];
+		edges.push([0,1, 0.5]);
+		edges.push([0,2, 0.5]);
+			edges.push([0,3, 0.1]);
+			edges.push([0,4, 0.3]);
+			// edges.push([0,5, 0.1]);
+
+		edges.push([1,2, 0.5]);
+		edges.push([1,3, 0.3]);
+			edges.push([1,4, 0.2]);
+			// edges.push([1,5, 0.1]);
+
+		edges.push([2,3, 0.5]);
+			edges.push([2,4, 0.3]);
+			// edges.push([2,5, 0.2]);
+
+		edges.push([3,4, 0.4]);
+			edges.push([3,5, 0.5]);
+
+		// edges.push([4,5, 0.2]);
+
+		
+
+	var graph = new Graph();
+	var vs = [];
+	for(var i=0; i<points.length; ++i){
+		var v = graph.addVertex();
+		v.data([i,points[i],null]);
+		vs[i] = v;
+	}
+	var es = [];
+	for(var i=0; i<edges.length; ++i){
+		var edge = edges[i];
+		var a = edge[0];
+		var b = edge[1];
+		var error = edge[2];
+			error = error;
+		var w = 1.0/Math.max(error,1E-6);
+		var va = vs[a];
+		var vb = vs[b];
+		var pa = points[a][0];
+		var pb = points[b][0];
+		var ra = points[a][1];
+		var rb = points[b][1];
+		var e = graph.addEdge(va,vb, w, Graph.Edge.DIRECTION_DUPLEX);
+		var vector = V2D.sub(pb,pa);
+		var angle = Code.angleDirection(ra,rb);
+var errorAngle = error * 0.5;
+error = 0.0;
+		// var angle = Code.angleDifference(ra,rb);
+		// console.log(Code.degrees(ra)+" & "+Code.degrees(rb)+" = "+Code.degrees(angle));
+		var len = vector.length();
+		len = 1.0;
+		vector.add( Code.randomFloat(-error,error)*len, Code.randomFloat(-error,error)*len );
+		angle += errorAngle;
+		// angle = Code.angleZeroTwoPi(angle);
+		e.data([va,vb,vector,angle,error]);
+		es[i] = e;
+	}
+	console.log(vs);
+	console.log(es);
+
+	// initial estimation:
+	var root = vs[0];
+	var origin = new V2D(0,0);
+	var locations = [];
+	var rotations = [];
+	locations.push(origin);
+	rotations.push(0);
+	for(var i=1; i<vs.length; ++i){
+		var target = vs[i];
+		var path = graph.minPath(root,target);
+		var edges = path["edges"];
+		var vertex = root;
+		var location = origin.copy();
+		var rotation = 0;
+		var sigma = 0;
+		for(var j=0; j<edges.length; ++j){
+			var edge = edges[j];
+			var data = edge.data();
+			var va = data[0];
+			var vb = data[1];
+			var dir = data[2];
+			var angle = data[3];
+			var error = data[4];
+			sigma = sigma + error;
+			if(vb==vertex){ // invert direction
+				angle = -angle;
+				dir = dir.copy().scale(-1);
+			}
+			vertex = edge.opposite(vertex);
+			location.add(dir);
+			rotation += angle;
+		}
+		console.log("LOCATION: "+i+" = "+location+" @ "+Code.degrees(rotation));
+		// console.log("LOCATION: "+i+" = "+location);
+		rotation = Code.angleZeroTwoPi(rotation);
+		locations.push(location);
+		rotations.push(rotation);
+		vertex.data()[2] = location;
+		vertex.data()[3] = rotation;
+	}
+
+	var SCA = 100.0;
+	var OFFX = 30;
+	var OFFY = 60;
+	// actual
+	for(var i=0; i<locations.length; ++i){
+		var location = points[i][0];
+		var angle = points[i][1];
+console.log(location+" @ "+Code.degrees(angle));
+		var rad = 15.0;
+		var d = new DO();
+			d.graphics().setLine(1.0,0xFF004400);
+			d.graphics().setFill(0x6600FF00);
+			d.graphics().beginPath();
+			d.graphics().drawCircle(0,0, rad);
+			d.graphics().moveTo(0,0);
+			d.graphics().lineTo(rad*Math.cos(angle),rad*Math.sin(angle));
+			// d.graphics().fill();
+			d.graphics().strokeLine();
+			d.graphics().endPath();
+		d.matrix().translate(OFFX,OFFY);
+		d.matrix().translate(location.x*SCA,location.y*SCA);
+
+		GLOBALSTAGE.addChild(d);
+	}
+
+	// estimated
+	for(var i=0; i<locations.length; ++i){
+		var location = locations[i];
+		var angle = rotations[i];
+		var rad = 18.0;
+		var d = new DO();
+			d.graphics().setLine(1.0,0xFFFF0000);
+			d.graphics().setFill(0x66FF0000);
+			d.graphics().beginPath();
+			d.graphics().drawCircle(0,0, rad);
+			d.graphics().moveTo(0,0);
+			d.graphics().lineTo(rad*Math.cos(angle),rad*Math.sin(angle));
+			// d.graphics().fill();
+			d.graphics().strokeLine();
+			d.graphics().endPath();
+		d.matrix().translate(OFFX,OFFY);
+		d.matrix().translate(location.x*SCA,location.y*SCA);
+
+		GLOBALSTAGE.addChild(d);
+	}
+
+	// minimize angular error:
+	var angleErrorCostFunction = function(angleA, angleB){
+		var dirA = new V2D(1,0);
+		var dirB = new V2D(1,0);
+		dirA.rotate(angleA);
+		dirB.rotate(angleB);
+		var error = V2D.angle(dirA,dirB);
+		return error*error;
+	}
+	var gdAngleFxn = function(args, x, isUpdate){
+		var vertexes = args[0];
+		var edges = args[1];
+		var totalError = 0;
+		for(var i=0; i<edges.length; ++i){
+			var edge = edges[i];
+			var va = edge.A();
+			var vb = edge.B();
+			var ia = va.data()[0];
+			var ib = vb.data()[0];
+			var dir = edge.data()[2];
+			var rel = edge.data()[3];
+			var errorEdge = edge.data()[4];
+			var ax = x[ia*1];
+			var bx = x[ib*1];
+			if(ia==0){
+				rel = 0;
+			}
+			if(ib==0){
+				rel = 0;
+			}
+			// console.log(ax,bx);
+			abs = Code.angleDirection(ax,bx);
+			// console.log(abs,rel);
+			error = angleErrorCostFunction(rel,abs);
+			// errorEdge = errorEdge*errorEdge;
+			// errorEdge = Math.max(errorEdge,1E-10);
+			errorEdge = 1.0;
+			totalError += error / errorEdge;
+		}
+		if(isUpdate){
+			console.log("totalError: "+totalError);
+		}
+		return totalError;
+	}
+
+	// minimize geometric error:
+	var errorCostFunction = function(relativeDirectionA, relativeDirectionB){
+		var error = V2D.distance(relativeDirectionA, relativeDirectionB);
+		return error*error;
+	}
+	var gdFxn = function(args, x, isUpdate){
+		var vertexes = args[0];
+		var edges = args[1];
+
+		var totalError = 0;
+		for(var i=0; i<edges.length; ++i){
+			var edge = edges[i];
+			var va = edge.A();
+			var vb = edge.B();
+			var ia = va.data()[0];
+			var ib = vb.data()[0];
+			var dir = edge.data()[2];
+			var rel = edge.data()[3];
+			var errorEdge = edge.data()[4];
+			var ax = x[ia*2];
+			var ay = x[ia*2 + 1];
+			var bx = x[ib*2];
+			var by = x[ib*2 + 1];
+			// force root == 0 constraint
+			if(ia==0){
+				ax = 0;
+				ay = 0;
+			}
+			if(ib==0){
+				bx = 0;
+				by = 0;
+			}
+			var abs = new V2D(bx-ax,by-ay);
+			error = errorCostFunction(dir,abs);
+			errorEdge = errorEdge*errorEdge;
+			errorEdge = Math.max(errorEdge,1E-10);
+			//errorEdge = 1.0;
+			totalError += error / errorEdge;
+		}
+		if(isUpdate){
+			console.log("totalError: "+totalError);
+		}
+		return totalError;
+	}
+	/*
+	var args = [];
+	args.push(vs);
+	args.push(es);
+	var xVals = [];
+	for(var i=0; i<locations.length; ++i){
+		var location = locations[i];
+		xVals.push(location.x);
+		xVals.push(location.y);
+	}
+	var result = Code.gradientDescent(gdFxn, args, xVals, null, 10, 1E-10);
+	console.log(result);
+	for(var i=0; i<locations.length; ++i){
+		var location = locations[i];
+		location.set(xVals[i*2],xVals[i*2+1]);
+		console.log("LOCATION: "+i+" = "+location);
+	}
+	// offset absolute to 0
+	for(var i=0; i<locations.length; ++i){
+		var location = locations[i];
+		location.sub(locations[0].x,locations[0].y);
+		console.log("LOCATION: "+i+" = "+location);
+	}
+	*/
+
+	// minimize angle:
+	var args = [];
+	args.push(vs);
+	args.push(es);
+	var xVals = [];
+	for(var i=0; i<rotations.length; ++i){
+		var rotation = rotations[i];
+		xVals.push(rotation);
+	}
+	// console.log(xVals);
+	var result = Code.gradientDescent(gdAngleFxn, args, xVals, null, 10, 1E-10);
+	console.log(result);
+	for(var i=0; i<rotations.length; ++i){
+		// var rotation = rotations[i];
+		rotation = xVals[i];
+		rotations[i] = rotation;
+		console.log("ROTATION: "+i+" = "+Code.degrees(rotation));
+	}
+
+
+
+	// SHOW AGAIN:
+	for(var i=0; i<locations.length; ++i){
+		var location = locations[i];
+		var angle = rotations[i];
+		var rad = 20.0;
+		var d = new DO();
+			d.graphics().setLine(1.0,0xFF0000CC);
+			d.graphics().setFill(0x6600FF00);
+			d.graphics().beginPath();
+			d.graphics().drawCircle(0,0, rad);
+			d.graphics().moveTo(0,0);
+			d.graphics().lineTo(rad*Math.cos(angle),rad*Math.sin(angle));
+			// d.graphics().fill();
+			d.graphics().strokeLine();
+			d.graphics().endPath();
+		d.matrix().translate(OFFX,OFFY);
+		d.matrix().translate(location.x*SCA,location.y*SCA);
+
+		GLOBALSTAGE.addChild(d);
+
+	}
+
+/*
+R3D.cameraDistortionNonlinear = function(pointsFrom,pointsTo, K, d){
+	var xVals = [0,0,0, 0,0]; // k1 k2 k3 p1 p2
+	if(d){
+		xVals = [d["k1"],d["k2"],d["k3"],d["p1"],d["p2"]]; 
+	}
+	var args = [pointsFrom,pointsTo,K];
+	var result = Code.gradientDescent(R3D._gdDist, args, xVals, null, 500, 1E-10);
+	xVals = result["x"];
+	//console.log(xVals);
+	var k1 = xVals[0];
+	var k2 = xVals[1];
+	var k3 = xVals[2];
+	var p1 = xVals[3];
+	var p2 = xVals[4];
+	return {"k1":k1,"k2":k2,"k3":k3,"p1":p1,"p2":p2};
+}
+R3D._gdDist = function(args, x, isUpdate){
+	if(isUpdate){
+		return;
+	}
+	var pointsFrom = args[0];
+	var pointsTo = args[1];
+	var K = args[2];
+	var distortions = {"k1":x[0],"k2":x[1],"k3":x[2],"p1":x[3],"p2":x[4]};
+	var appliedP2D = new V2D();
+	
+	var i, len = pointsFrom.length;
+	var error = 0;
+ 	for(i=0;i<len;++i){
+ 		var fromP2D = pointsFrom[i];
+ 		var toP2D = pointsTo[i];
+ 		//appliedP2D = R3D.applyDistortionParameters(fromP2D, appliedP2D, K, distortions);
+		appliedP2D = R3D.applyDistortionParameters(appliedP2D, fromP2D, K, distortions);
+		//appliedP2D = R3D.applyDistortionParameters(appliedP2D, fromP2D, K, distortions);
+ 		var dist = V2D.distanceSquare(toP2D,appliedP2D);
+ 		//error += dist*dist;
+ 		error += dist;
+ 		//error += Math.pow(dist,2);
+ 		//error += Math.pow(dist,1);
+ 		//error += Math.pow(dist,0.5);
+ 	}
+ 	//console.log(" error: "+error);
+	return error;
+}
+*/
+
+
+
+
+	// minSpanningTree
+	// var edges = graph.minSpanningTree();
+	// console.log(edges);
+
+
+return;
+
+	// paths = graph.minPath(vs[0],vs[3]);
+	// console.log(paths);
+
+	/*
+		graph use squared error as edge weights
+		
+		find root with minimized total error at leaves
+			- get shortest paths to all vertexes & sum all paths
+
+????
+		
+		calculate absolute positions from root
+		
+		iterate till convergence: (GD)
+			relative = edge_ab
+			calculated = (absB-absA) [inverse]
+			
+			error_t = distance from centers
+			
+			error_r = angle ?
+
+
+
+			error += ^2 * sigma
+			=> update absolute positions
+
+		
+	*/
+
+
+	// var vertexes = [];
+	// for(var i=0; i<4; ++i){
+	// 	var v = graph.addVertex();
+	// 	vertexes[i] = v;
+	// }
+	// var a = vertexes[0];
+	// var b = vertexes[1];
+	// var c = vertexes[2];
+	// var d = vertexes[3];
+	// a.data("A");
+	// b.data("B");
+	// c.data("C");
+	// d.data("D");
+	// var ab = graph.addEdge(a,b, 1, Graph.Edge.DIRECTION_DUPLEX);
+	// var bc = graph.addEdge(a,b, 1, Graph.Edge.DIRECTION_DUPLEX);
+	// var bd = graph.addEdge(a,b, 1, Graph.Edge.DIRECTION_DUPLEX);
+	// var ab = graph.addEdge(a,b, 1, Graph.Edge.DIRECTION_DUPLEX);
+	// 	ab.data(new V2D(2,0));
+	// 	bc.data(new V2D(1,0));
+	// 	bd.data(new V2D(1,0));
+	// 	cd.data(new V2D(1,0));
+
+/*
+	error:
+		| relAB - (absA-absB) |^2
+*/
+
+	// return;
 
 /*
 	var imageWidth = 500;

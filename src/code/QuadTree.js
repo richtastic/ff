@@ -260,6 +260,9 @@ QuadTree.prototype.initWithObjects = function(objects, force){
 		V2D.min(min,min,point);
 		V2D.max(max,max,point);
 	}
+	var eps = 1E-6;
+	min.add(-eps,-eps,);
+	max.add(eps,eps);
 	var size = QuadTree.twoDivisionRound(min,max, force);
 	if(size.x==0){
 		size.x = 1.0;
@@ -645,6 +648,7 @@ QuadTree.Arxel.prototype.objectsInsideCircleSquare = function(arr,center,radSqua
 	if(this._datas){
 		for(var i=0; i<this._datas.length; ++i){
 			var point = toPoint(this._datas[i]);
+			// console.log(this._datas[i],point)
 			var distance = V2D.distanceSquare(center,point);
 			if(distance<=radSquare){
 				arr.push(this._datas[i]);

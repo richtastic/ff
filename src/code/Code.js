@@ -2276,9 +2276,69 @@ Code.averageNumbers = function(values, percents){
 	}
 	return sum;
 }
+Code.averageAngleVector2D = function(vectors, percents){ // vectors assumed nonzero
+	if(!vectors){
+		return null;
+	}
+	var count = vectors.length;
+	if(count==0){
+		return null;
+	}
+	var percent = 1.0/count;
+	if(percents){
+		percent = percents[0];
+	}
+	var total = vectors[0].copy();
+	var sumPercent = percent;
+	total.norm();
+	for(var i=1; i<vectors.length; ++i){
+		var vector = vectors[i];
+		if(percents){
+			percent = percents[i];
+		}
+		var angle = V2D.angleDirection(total,vector);
+		sumPercent += percent;
+		var weight = (percent/sumPercent);
+		angle *= weight;
+		total.rotate(angle);
+		total.norm(); // numerical error keep at 1.0
+	}
+	return total;
+}
 Code.averageAngleVector3D = function(vectors, percents){ // center of vectors via rotation
+	if(!vectors){
+		return null;
+	}
+	var count = vectors.length;
+	if(count==0){
+		return null;
+	}
+	var percent = 1.0/count;
+	if(percents){
+		percent = percents[0];
+	}
+	var total = vectors[0].copy();
+	var sumPercent = percent;
+	total.norm();
+	var cross = new V3D();
+	for(var i=1; i<vectors.length; ++i){
+		var vector = vectors[i];
+		if(percents){
+			percent = percents[i];
+		}
+		V3D.cross(cross, total,vector);
+		cross.norm();
+		var angle = V3D.angle(total,vector);
+		sumPercent += percent;
+		var weight = (percent/sumPercent);
+		angle *= weight;
+		total.rotate(cross,angle);
+		total.norm();
+	}
+	return total;
 
 
+/*
 	throw "eigenvectors ?";
 
 
@@ -2326,6 +2386,7 @@ Code.averageAngleVector3D = function(vectors, percents){ // center of vectors vi
 	result = quaternion.qRotatePoint(new V3D(0,0,1));
 	console.log(result.length())
 	return result;
+	*/
 }
 Code.averageAngles = function(angles, percents){
 	var i, count = angles.length;
@@ -2381,6 +2442,11 @@ Code.angleDifference = function(a,b){ // radians between a->b
 		return b-a;
 	}
 	return b + Math.PI*2 - a;
+}
+Code.angleDirection = function(a,b){
+	a = V2D.DIRX.copy().rotate(a);
+	b = V2D.DIRX.copy().rotate(b);
+	return V2D.angleDirection(a,b);
 }
 Code.isAngleInside = function(start,end, a){ // all angles in [0,2pi]
 	var diffE = Code.angleDifference(start,end);

@@ -17,22 +17,28 @@ V3D.angle = function(a,b){ // check
 	return 0;
 }
 V3D.angleDirection = function(a,b, up){
-	var normal = V3D.cross(a,b).norm();
+	throw "angle direction is always positive based on cross-product reference";
+	/*
+	var ab = V3D.sub(b,a);
+	var lenAB = ab.length();
+	if(lenAB==0){
+		return 0;
+	}
+	var cross = V3D.cross(a,b).norm();
+	//var angle = V3D.angle(a,b);
+	var dotAB = V3D.dot(a,b);
+	var dotNB = V3D.dot(n,b);
+	*/
 	var angle = V3D.angle(a,b);
-	if( V3D.dot(normal,up)>=0){
+	console.log(" ANGLE:::: "+Code.degrees(angle));
+	var n = V3D.cross(a,b).norm();
+	var crossNA = V3D.cross(n,a).norm();
+	var dot = V3D.dot(crossNA,b);
+	console.log("  dot: "+dot+"");
+	if(dot>=0){
 		return angle;
 	}
 	return -angle;
-	/*
-	var normal = V3D.cross(a,b).norm();
-	if(normal.length()>0){
-		var a2D = Code.projectTo2DPlane(a, V3D.ZERO, normal);
-		var b2D = Code.projectTo2DPlane(b, V3D.ZERO, normal);
-		var angle = V2D.angleDirection(a2D,b2D);
-		return angle;
-	}
-	return 0;
-	*/
 }
 V3D.cosAngle = function(a,b){
 	var lenA = a.length();

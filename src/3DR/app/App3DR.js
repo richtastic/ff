@@ -89,7 +89,7 @@ var modeModelReconstruction = false;
 
 // don't A:
 // TO SWITCH ON MODELING:
-// modeModelReconstruction = true;
+modeModelReconstruction = true;
 
 
 
@@ -6682,7 +6682,7 @@ console.log(offX+","+offY);
 
 // DON'T RUN
 // don't B
-// return; // don't run
+return; // don't run
 
 
 

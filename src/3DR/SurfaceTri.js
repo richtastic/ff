@@ -438,6 +438,7 @@ SurfaceTri.prototype.onEnterFrameFxn3D = function(e){
 
 	if(!this._mlsMesh){ return; }
 //	console.log("onEnterFrameFxn3D");
+// return;
 
 	this._stage3D.setViewport(StageGL.VIEWPORT_MODE_FULL_SIZE);
 	this._stage3D.clear();
@@ -809,7 +810,7 @@ SurfaceTri.prototype.startPointCloud = function(pts){
 
 
 	
-console.log("trianglate start");
+console.log("trianglate start: "+pts.length);
 var timeStart = Code.getTimeMilliseconds();
 	// TRIANGULATE
 	var p, i;
@@ -817,6 +818,7 @@ var timeStart = Code.getTimeMilliseconds();
 	var colors = [];
 
 	this._mlsMesh.points(pts);
+console.log("points set");
 
 	this._mlsMesh.triangulateSurface();
 var timeEnd = Code.getTimeMilliseconds();

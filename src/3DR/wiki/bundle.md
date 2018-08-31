@@ -394,6 +394,12 @@ for each view sorted on lowest avg reprojection error
 
 
 
+COMBINING GAUSSIAN/NORMAL DISTRIBUTIONS:
+
+s = sigma^2
+k = s0/(s0 + s1)
+u' = u0 + k*(u0 + u1)
+s' = s0 - k*s0
 
 
 
@@ -403,6 +409,19 @@ for each view sorted on lowest avg reprojection error
 
 
 
+KALMAN:
+https://www.bzarg.com/p/how-a-kalman-filter-works-in-pictures/
+https://www.cl.cam.ac.uk/~rmf25/papers/Understanding%20the%20Basis%20of%20the%20Kalman%20Filter.pdf
+https://towardsdatascience.com/kalman-filter-an-algorithm-for-making-sense-from-the-insights-of-various-sensors-fused-together-ddf67597f35e
+x = state (at time t)
+u = control input
+F = state transition
+B = control input matrix
+w = noise terms, from Q = cov
+prediction
+
+
+x = state
 
 
 
@@ -410,6 +429,20 @@ for each view sorted on lowest avg reprojection error
 
 
 
+
+focal length from F:
+
+minimize cost C (nonnegative, 0 for best):
+C = ||EE^t||^2 - 0.5*||E||^4
+E = K'^T * F * K
+pick values for K & minimize
+using a TRIPLET:
+C' = C(F12) + C(F13) + C(F23)
+https://www.cv-foundation.org/openaccess/content_iccv_2015/papers/Sweeney_Optimizing_the_Viewing_ICCV_2015_paper.pdf
+
+
+ROTATION / TRANSLATION SOLVING:
+http://imagine.enpc.fr/~monasse/Stereo/Projects/MartinecPajdla07.pdf
 
 
 

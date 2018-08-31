@@ -182,6 +182,75 @@ project typical numbers:
 APP TODO:
 
 
+- experiment with F-line transfer between images to find location of 3rd point (w/o needing P)
+
+
+
+
+--- is there a way to calculate RELATIVE errors in GD, not requiring absolute initialization?
+	- 
+
+- incremental BA vs some sort of grouping method vs global
+	quasi-local-global-grouping
+		- want to be able to add additional cameras ad hoc
+
+	- initial positions/orientations are estimated based on weighted-averaging of  2-pair estimates
+	- iterate:
+		- A) pick random pair (w/ connection) & optimize 
+		- B) pick random single camera & optimize against all other connected cameras
+		- allow for dropping / adding points
+		=> first final 3DR
+	- add a new view = estimate positions/orientations & repeat iteration with new view
+
+
+
+
+
+- combining normal dist of camera positions / orientations
+- graph combining error to final stable system
+	-> markov states?
+	-> GRAPH BASED SLAM
+
+- tracked features across multiple
+	- determine closest cameras (range of view / overlap)
+
+
+- 3+ combining seems to have underlying flaw
+
+
+- choose best cornerness point when picking probing points
+
+- how to combine multiple poses into initial guess ?
+	- incremetnal?
+	- all-at-once?
+
+- 'representative' graphs for reducing optimization of 'finer' positions till later
+	- combine 'redundant' views
+
+- should optimization happen using E points and not F points?
+
+- speed up searching
+	-> add pairs
+		-> P3D.connect
+	-> get added list for view i + j
+		-> if item still has a point2D w/ point3D @ view j
+			-> add neighbors to search queue
+	-> search neighbors
+
+- do final BUNDLE ADJUST 
+
+- RANSAC PLOT LIKLIHOOD OF GETTING A NEW MATCH (log ) and quit if very non likely (wasted iterations)
+
+
+
+
+
+- use output of lowe-res solution (matches & Ps) as input to nex (x2) higher resolution
+- 
+
+
+
+
 
 - MAYBE TRY NEW DATA SET ?
 - camera location should be some % based on all relative estimations, not just offset from 0th camerat

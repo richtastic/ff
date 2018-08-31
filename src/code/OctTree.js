@@ -126,7 +126,11 @@ OctTree.prototype.initWithObjects = function(objects, force){
 		V3D.min(min,min,point);
 		V3D.max(max,max,point);
 	}
+	var eps = 1E-6;
+	min.add(-eps,-eps,-eps);
+	max.add(eps,eps,eps);
 	var size = OctTree.twoDivisionRound(min,max, force);
+	console.log("init size: "+size);
 	if(size.x==0){
 		size.x = 1.0;
 	}
@@ -138,7 +142,6 @@ OctTree.prototype.initWithObjects = function(objects, force){
 	}
 	var center = V3D.avg(max,min);
 	this.initWithDimensions(center,size);
-	//
 	for(i=0;i<len;++i){
 		this.insertObject(objects[i]);
 	}
