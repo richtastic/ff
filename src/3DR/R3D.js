@@ -17008,6 +17008,248 @@ str = " ("+i+","+j+") " + str;
 //console.log(str);
 	return matching;
 }
+// 2D graph location / rotation optimization -----------------------------------------------------------------------------------------------------------------------------------------------------------
+R3D.optiumGraphLocation2D = function(edges){ // edges: [indexA,indexB,locationAB, error]
+	return R3D._optiumGraph2D(edges, false);
+}
+R3D.optiumGraphAngle2D = function(edges){ // edges: [indexA,indexB,rotationAB, error]
+	return R3D._optiumGraph2D(edges, true);
+}
+R3D._optiumGraph2D = function(edges,isAngles){ // edges: [indexA,indexB,VALUE,ERROR]
+	var maxVertex = -1;
+	for(var i=0; i<edges.length; ++i){
+		var edge = edges[i];
+		maxVertex = Math.max(maxVertex,edge[0]);
+		maxVertex = Math.max(maxVertex,edge[1]);
+	}
+	if(maxVertex<0){
+		return null;
+	}
+	var vertexCount = maxVertex + 1;
+	// create graph
+	var graph = new Graph();
+	var vs = [];
+	for(var i=0; i<vertexCount; ++i){
+		var v = graph.addVertex();
+		v.data(i);
+		vs[i] = v;
+	}
+	var es = [];
+	for(var i=0; i<edges.length; ++i){
+		var edge = edges[i];
+		var a = edge[0];
+		var b = edge[1];
+		var value = edge[2];
+		var error = edge[3];
+		var va = vs[a];
+		var vb = vs[b];
+		var w = 1.0/Math.max(error,1E-6);
+		var e = graph.addEdge(va,vb, w, Graph.Edge.DIRECTION_DUPLEX);
+		e.data({"value":value,"error":error});
+		e.data({"value":value,"error":error});
+		es[i] = e;
+	}
+	// TODO: FIND ROOT OF GRAPH BASED ON LOWEST ERROR
+	var root = vs[0];
+	var values = [];
+	var rootAngle = 0;
+	var rootLocation = new V2D();
+	if(isAngles){
+		values.push(rootAngle);
+	}else{
+		values.push(rootLocation);
+	}
+	// initial guess from graph:
+	for(var i=1; i<vs.length; ++i){
+		var target = vs[i];
+		var paths = graph.minPath(root,target);
+		var path = paths["edges"];
+		var vertex = root;
+		var rotation = rootAngle;
+		var location = rootLocation.copy();
+		var sigma = 0; // (a*a + b*b + ...)^0.5
+		for(var j=0; j<path.length; ++j){
+			var edge = path[j];
+			var data = edge.data();
+			
+			var error = data["error"];
+			var va = edge.A();
+			var vb = edge.B();
+			sigma += error*error;
+			var value = data["value"];
+			if(isAngles){
+				
+				if(vb==vertex){ // invert direction
+					value = -value;
+				}
+				rotation += value;
+			}else{
+				if(vb==vertex){ // invert direction
+					value = value.copy().scale(-1);
+				}
+				location.add(value);
+			}
+			vertex = edge.opposite(vertex);
+		}
+		sigma = Math.sqrt(sigma); // TODO: use this somehow
+		if(isAngles){
+			rotation = Code.angleZeroTwoPi(rotation);
+			values.push(rotation);
+		}else{
+			values.push(location);
+		}
+	}
+	// min squared error:
+	var args = [];
+	args.push(es);
+	var fxn = R3D._gdAngle2D;
+	if(!isAngles){
+		fxn = R3D._gdLocation2D;
+		locations = values;
+		values = [];
+		for(var i=0; i<locations.length; ++i){
+			values[i*2+0] = locations[i].x;
+			values[i*2+1] = locations[i].y;
+		}
+	}
+	var result = Code.gradientDescent(fxn, args, values, null, 10, 1E-10);
+	var output = [];
+	graph.kill();
+	// absolutes:
+	if(isAngles){
+		// already set: value = angles
+	}else{
+		var locations = [];
+		var count = values.length/2;
+		for(var i=0; i<count; ++i){
+			var location = new V2D(values[i*2+0],values[i*2+1]);
+			locations[i] = location;
+			output[i] = [edge[0],edge[1],location,edge[3]];
+		}
+		values = locations;
+	}
+	// relatives:
+	for(var i=0; i<edges.length; ++i){
+		var edge = edges[i];
+		var va = edge[0];
+		var vb = edge[1];
+		var value = edge[2];
+		var error = edge[3];
+		var a = values[va];
+		var b = values[vb];
+		var diff = null;
+		if(isAngles){
+			diff = Code.angleDirection(a,b);
+		}else{
+			diff = V2D.sub(b,a);
+		}
+		output[i] = [va,vb,diff,error];
+	}
+	// done:
+	return {"relative":output, "absolute":values,};
+}
+R3D._gdAngle2D = function(args, x, isUpdate){
+	return R3D._gdAngGrad2D(args, x, isUpdate, true, R3D._gdErrorAngle2DFxn);
+}
+R3D._gdLocation2D = function(args, x, isUpdate){
+	return R3D._gdAngGrad2D(args, x, isUpdate, false, R3D._gdErrorDirection2DFxn);
+}
+R3D._gdErrorAngle2DFxn = function(angleA, angleB){
+	var dirA = new V2D(1,0);
+	var dirB = new V2D(1,0);
+	dirA.rotate(angleA);
+	dirB.rotate(angleB);
+	var error = V2D.angle(dirA,dirB);
+	return error*error;
+}
+R3D._gdErrorDirection2DFxn = function(relativeDirectionA, relativeDirectionB){
+	var error = V2D.distance(relativeDirectionA, relativeDirectionB);
+	return error*error;
+}
+R3D._gdAngGrad2D = function(args, x, isUpdate, isAngles, costFxn){
+	var edges = args[0];
+	var totalError = 0;
+	for(var i=0; i<edges.length; ++i){
+		var edge = edges[i];
+		var va = edge.A();
+		var vb = edge.B();
+		var ia = va.data();
+		var ib = vb.data();
+		var data = edge.data();
+		var rel = data["value"];
+		var errorEdge = data["error"];
+		var abs = null;
+		if(isAngles){
+			var ax = x[ia];
+			var bx = x[ib];
+			if(ia==0){
+				ax = 0;
+			}
+			if(ib==0){
+				bx = 0;
+			}
+			abs = Code.angleDirection(ax,bx);
+		}else{
+			var ax = x[ia*2+0];
+			var bx = x[ib*2+0];
+			var ay = x[ia*2+1];
+			var by = x[ib*2+1];
+			if(ia==0){
+				ax = 0;
+				ay = 0;
+			}
+			if(ib==0){
+				bx = 0;
+				by = 0;
+			}
+			abs = new V2D(bx-ax,by-ay);
+		}
+		error = costFxn(rel,abs);
+		errorEdge = Math.sqrt(errorEdge);
+		errorEdge = Math.max(errorEdge,1E-10);
+		// errorEdge = 1.0;
+		totalError += error/errorEdge;
+	}
+	// if(isUpdate){
+	// 	console.log("totalError: "+totalError);
+	// }
+	return totalError;
+}
+
+
+
+
+
+// 2D graph location / rotation optimization -----------------------------------------------------------------------------------------------------------------------------------------------------------
+R3D.optiumGraphLocation3D = function(edges){
+	return R3D._optiumGraph3D(edges, false);
+}
+R3D.optiumGraphAngle3D = function(edges){
+	return R3D._optiumGraph3D(edges, true);
+}
+R3D._optiumGraph3D = function(edges,isAngles){ // edges: [indexA,indexB,value,error]
+	// ...
+	// create graph
+	throw "HERE"
+}
+R3D._gdErrorAngle3DFxn = function(dirA, dirB){
+	var error = V3D.angle(dirA,dirB);
+	return error*error;
+}
+R3D._gdErrorDirection3DFxn = function(relativeDirectionA, relativeDirectionB){
+	var error = V3D.distance(relativeDirectionA, relativeDirectionB);
+	return error*error;
+}
+R3D._gdAngGrad3D = function(args, x, isUpdate, isAngles, costFxn){
+	// ...
+	throw "HERE"
+}
+
+
+
+
+// -----------------------------------------------------------------------------------------------------------------------------------------------------------
+
 R3D._disparityPixel = function(winA,i, winB,j){
 	//R3D._disparityPixelNCCR(winA,i, winB,j);
 	return R3D._disparityPixelBirchfield(winA,i, winB,j);

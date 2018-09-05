@@ -186,6 +186,13 @@ APP TODO:
 
 
 
+- saving 2-view P locations
+
+- combining 2-views into initial guess & optimize
+	- relook @ why current combination method sucks
+
+
+
 
 --- is there a way to calculate RELATIVE errors in GD, not requiring absolute initialization?
 	- 
