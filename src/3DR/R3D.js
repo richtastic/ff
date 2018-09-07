@@ -17219,6 +17219,57 @@ R3D._gdAngGrad2D = function(args, x, isUpdate, isAngles, costFxn){
 
 
 
+// -----------------------------------------------------------------------------------------------------------------------------------------------------------
+// HERE
+/*
+R3D.optimumGraphAngle3DLeastSquares = function(edges){ // [indexA,indexB,relative translation matrix,error]
+	var maxVertex = -1;
+	for(var i=0; i<edges.length; ++i){
+		var edge = edges[i];
+		maxVertex = Math.max(maxVertex,edge[0]);
+		maxVertex = Math.max(maxVertex,edge[1]);
+	}
+	if(maxVertex<0){
+		return null;
+	}
+	var vertexCount = maxVertex + 1;
+	// create graph
+// assume 0th matrix is 0 ? 
+	var rows = 9*vertexCount;
+	var cols = 9*vertexCount;
+	var A = new Matrix(rows,cols);
+
+// 9 equations for each edge
+// 9 unknowns for each vertex
+// 3e = 9v
+// need 3 edges for every vertex
+
+// paper:
+// need: v-1 edges-> chaining [single solution]
+// need: v edges -> overdetermined
+
+	for(var i=0; i<edges.length; ++i){
+		for(var k=0; k<3; ++k){
+			A.set(?,?, ?);
+			A.set(?,?, ?);
+			A.set(?,?, ?);
+		}
+	}
+	// solve
+
+	// need to force orthonormal -- Frobenius norm via SVD
+	// R = R3D.rotationFromApproximate(R);
+
+	// make 0th rotation identity
+
+	return {"rotations": rotations};
+}
+
+*/
+R3D.optimumGraphLocation3DLeastSquares = function(edges){ // [indexA,indexB,relative translation,error]
+	
+}
+
 
 // 2D graph location / rotation optimization -----------------------------------------------------------------------------------------------------------------------------------------------------------
 R3D.optiumGraphLocation3D = function(edges){

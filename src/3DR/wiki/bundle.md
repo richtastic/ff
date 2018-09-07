@@ -451,6 +451,58 @@ http://imagine.enpc.fr/~monasse/Stereo/Projects/MartinecPajdla07.pdf
 
 
 
+#### rotation averaging - initial estimate
+
+
+**r**<sub>k</sub><sup>i</sup> &isin; **R**<sup>i</sup> = [**r**<sub>1</sub><sup>i</sup> **r**<sub>2</sub><sup>i</sup> **r**<sub>3</sub><sup>i</sup>] ; k &isin; [1,2,3]
+<br/>
+**r**<sub>k</sub><sup>j</sup> - **R**<sup>ij</sup>&middot;**r**<sub>k</sub><sup>i</sup> = **0**<sub>3&times;3</sub>
+<br/>
+&rArr;
+<br/>
+```
+   j          R:ij         i
+[ r1k ]   [ a  b  c ]   [ r1k ]
+[ r2k ] - [ d  e  f ] = [ r2k ]
+[ r3k ]   [ g  h  i ]   [ r3k ]
+```
+
+&rArr;
+
+
+
+**[A]:**
+<br/>
+**r**<sup>j</sup><sub>1,k</sub> - (a&middot;**r**<sup>i</sup><sub>1,k</sub> + b&middot;**r**<sup>i</sup><sub>2,k</sub> + c&middot;**r**<sup>i</sup><sub>3,k</sub>) = 0
+<br/>
+
+**[B]:**
+<br/>
+**r**<sup>j</sup><sub>2,k</sub> - (d&middot;**r**<sup>i</sup><sub>1,k</sub> + e&middot;**r**<sup>i</sup><sub>2,k</sub> + f&middot;**r**<sup>i</sup><sub>3,k</sub>) = 0
+<br/>
+
+**[C]:**
+<br/>
+**r**<sup>j</sup><sub>3,k</sub> - (g&middot;**r**<sup>i</sup><sub>1,k</sub> + h&middot;**r**<sup>i</sup><sub>2,k</sub> + i&middot;**r**<sup>i</sup><sub>3,k</sub>) = 0
+<br/>
+
+**[1,2,3]: k = 1**
+<br/>
+**[4,5,6]: k = 2**
+<br/>
+**[7,8,9]: k = 3**
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

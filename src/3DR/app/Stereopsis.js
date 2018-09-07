@@ -1586,10 +1586,10 @@ Stereopsis.World.prototype.solve = function(completeFxn, completeContext){
 	this._completeFxn = completeFxn;
 	this._completeContext = completeContext;
 	// var maxIterations = 1;
-	// var maxIterations = 2;
+	var maxIterations = 2;
 	// var maxIterations = 3;
 	// var maxIterations = 4;
-	var maxIterations = 5;
+	// var maxIterations = 5;
 	// var maxIterations = 6;
 	// var maxIterations = 7;
 	// var maxIterations = 8;
@@ -1614,6 +1614,7 @@ Stereopsis.World.prototype.iteration = function(iterationIndex, maxIterations){
 var skip = false;
 	// console.log("ESTIMATES");
 		this.estimate3DErrors(skip); // find F, P, estimate all errors
+/*
 		if(skip){
 			this.estimate3DTransforms();
 			// relative transforms have now changed
@@ -1625,7 +1626,7 @@ var skip = false;
 		if(skip){
 			// this.bundleAdjust();
 		}
-		
+*/		
 	// EXPAND
 		// 2D NEIGHBORS
 		// console.log("EXPAND 2D CELLS");
@@ -2177,6 +2178,7 @@ Stereopsis.World.prototype.estimate3DViews = function(){ // get absolution of vi
 	// console.log("created maps");
 	// now have absolute positions from least-error-propagated origin view
 */
+
 // TODO: REMOVE:
 	// set positions manually:
 	var lookup = this._views;
@@ -2312,9 +2314,7 @@ Stereopsis.World.prototype.estimate3DErrors = function(skipCalc){ // triangulate
 		}else{
 			var info = Stereopsis.ransacTransformF(transform);
 			F = info["F"];
-			P = info["P"];
-
-			
+			P = info["P"];	
 		}
 		if(F){
 			transform.F(viewA,viewB,F);

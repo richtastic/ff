@@ -1,37 +1,50 @@
 # App Experience / Capabilities
 
+[ | moments | momento | yao | chumbee]
+
 ### MVP:
 - calibrate camera
 - import picture set
 - run (low res) modeling
 - view (low res) model locally
 - save multiple (limited) models
+- create picture of scene [basic 1920:1080 / panorama]
+...
+- view example / feature projects
+- offload processing jobs to cloud [centralized code to prevent skews]
 - share models [privately]
-	- 
-
+	- read/edit access
 
 ### Extended:
 
 #### share model
-	=> needs to upload to server to share
-		- save preview image & model resources on server
-		- accessible via random hash
-	=> would need moderation?
+	- save preview image & model resources on server
+	- accessible via random hash
+	=> moderation?
+
+#### export to 3D-view scene (oculus, cardboard, ...) [+1]
+
+#### add audio to scene [+1]
+
+#### create video of scene [+1]
+
+#### save unlimited models locally [+1]
+
+#### export as PLY, STL, ... ETC [+1]
+
+#### export texture map (+ model) [+1]
+
+#### medium resolution [+1]
+
+#### high resolution [+2]
+
+#### community interaction (comment, like, sharing)
 
 
-#### save unlimited models locally
-
-#### export as PLY, STL, ... ETC
-
-#### export texture map (+ model)
-
-#### medium resolution
-
-#### high resolution
-
-#### offload processing jobs to cloud
-
-
+- adding features should have free try before buy
+	- A) do it a maximum number of times ever (10)
+	- B) do it a max number of times per n (24) hours
+	- C) 
 
 
 ### Screens:
@@ -76,6 +89,53 @@
 #### image editor
 	- brush size
 	- add / remove toggle mode
+
+
+
+### PITCHING
+	- you're outside alone in a park, meditating, hiking, enjoying yourself, you think to yourself this would be a nice experience to relive later, or share with someone who couldn't make it
+		- you take a dozen snapshots of the scene around you
+		- you record 30 seconds of ambient audio of the area
+		- you upload these to a new project in the app
+		- next week you show your friend (via screen-view or cardboard) and they feel as if they were there
+
+	- you're walking around a neighborhood, you become intrigued by a new kind of flower you've not seen before, but can't appreciate it as much because its so small
+		- you take 6 photos, upload to the app
+		- you zoom in to see the detail
+		- you share a zoomed-in photo on the instagram
+
+	- you're on vacation and you see one of the world wonders
+		- there's tons of people in the way preventing you from getting a great shot
+		- you take a dozen shots from various less-optimal angles/locations
+		- the app allows you to see the wonder from a position you wouldn't be able to in the real world
+
+	- you want to make a 3D print of something you see on the shelf
+		- you take several photos of the object
+		- you export to a 3d-file format
+		- you print on your makerbot
+
+	- you're a 3D modeler and there's a real-world scene you'd like to include in a new video you're making
+		- you take dozens of pictures of the scene
+		- you select some of the items you want removed from the scene, or scaled differently
+		- you export the scene into a 3D studio file
+		- you jumped ahead to a starting place for your video project 
+
+	- you're thinking of painting some walls in your house
+		- you take a few photos of the room
+		- you choose a filter to color part of the scene something else (or draw on it)
+		- you send the picture to your friend to see if she agrees.
+
+	- social sharing
+
+	- measure something?
+
+	- artistic redesign / filter the world
+
+	- export to oculus
+
+
+
+
 
 
 
@@ -158,13 +218,14 @@ project typical numbers:
 - import camera calibration/registration images
 - calculate camera calibration
 - import all source images
-- create mask images @ source resolution for undesired areas (eg people / variates)
-- create feature set for each images
-- n*n image source image matching [higher res]
-- c*n image dense depth matching [lower res] [use camera calibration / inverse distortion]
-- multi-view point following
-- bundle/adjust to refine 3d coordinate positions
-- 3d point generation
+- ? create mask images @ source resolution for undesired areas (eg people / variates) => this should maybe be automatic
+- create feature locations & descriptions for each images
+- n*n image source image matching (pairing) [higher res]
+- ~n*log(n) image pair initial reconstruction / relative camera orientating (lower to higher res iterating too -- divide cell size until cells ~3)
+- initial global camera absolute orientating
+- BA+Track Expanding + point expanding camera absolute optimizing (multi-view point following)
+- final global BA => 3D absolute point generation (structure) & camera geometry (motion)
+- ? bundle/adjust to refine 3d coordinate positions
 - 3d surface triangulation
 - triangle texture mapping
 - model viewing
@@ -179,17 +240,43 @@ project typical numbers:
 
 
 
+
 APP TODO:
+
+
+
+- why does 3+ matching have so much fail
+	- should be on same order as independently 2-view pairing
+	=> combining P2D @ P3d (TRACK) is messing something up
+		- bad concept?
+		- bad implementation?
+
 
 
 - experiment with F-line transfer between images to find location of 3rd point (w/o needing P)
 
 
+- initial scene graph & optimal scene graph
+	- rotation averaging w/ eigs/svd
+	- translation averaging ?
 
-- saving 2-view P locations
+
+- saving 2-view P estimates
 
 - combining 2-views into initial guess & optimize
 	- relook @ why current combination method sucks
+
+
+
+
+
+
+http://www.bmva.org/bmvc/2015/papers/paper046/paper046.pdf
+point-to-ray
+error instead of the reprojection error.
+
+
+
 
 
 

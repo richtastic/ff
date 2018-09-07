@@ -89,7 +89,7 @@ var modeModelReconstruction = false;
 
 // don't A:
 // TO SWITCH ON MODELING:
-modeModelReconstruction = true;
+// modeModelReconstruction = true;
 
 
 
@@ -5190,20 +5190,31 @@ projects/
 					12.5.png
 		pairs/
 			0/
-				matching.yaml 			x,y,z,t[,u,v] <=> ; F [medium matching]
-				dense.yaml 				x,y, relScale,relAng @ density ; F
-				triangulation.yaml 		x,y <=> x,y <=> X,Y,Z ; K ; F ; P ;
+				matches.yaml 			x,y,z,t[,u,v] <=> ; F [initial feature matching]
+				relative.yaml 			relative orientation of camera views w/ matches / triangulated points -- arbitrary density
+					P: (4x4 matrix)
+					cellSizeA: 5 		 [start at whatever size ~ 20x20 cells (odd) => 3 pixels]
+					cellSizeB: 7
+					points:
+						a: x,y
+						b: x,y
+						3D: X,Y,Z
+
+
+				??? dense.yaml 				x,y, relScale,relAng @ density ; F
+				??? triangulation.yaml 		x,y <=> x,y <=> X,Y,Z ; K ; F ; P ;
 				
-				# use bundle adjustment results to init seed points & retain only 1~2-sigma valid results
+				??? # use bundle adjustment results to init seed points & retain only 1~2-sigma valid results
 				???? dense_5x5_800x600.yaml  high dense [after some other process?]
-				dense_forward.yaml
-				dense_reverse.yaml
-				dense_pair.yaml 		# only valid fwd<=>rev mapping within 1~2 sigma of F
+				??? dense_forward.yaml
+				??? dense_reverse.yaml
+				??? dense_pair.yaml 		# only valid fwd<=>rev mapping within 1~2 sigma of F
 
 
-		triples/ tuples
+		??? triples/ tuples
 			0/
 				matches.yaml 			x,y <=> pixel matches among 3 views
+
 		cameras/
 			0/
 				info.yaml 				computed intrinsic properties (K & distortion)
@@ -5252,35 +5263,89 @@ projects/
 									z
 
 		bundle/
-			info.yaml    				result of a bundle adjustment
-				- views
-					- transform / rot, trans
+			info.yaml    				result of global (quasi-local) bundle adjustment iterations 
 				- Ks
 					- fx,fy,s,cx,cy
-				- points2d
-					- x,y
-					- point3d index OR null
-				- points3d
-					- X,Y,Z
-			* could do sparse / dense BA
-
-			
+				- views
+					- ID
+					- K
+					- ...
+				- transforms 								input initial estimated transforms [pairs]
+					- viewA
+					- viewB
+					- relative : rotation / translation
+					- points2dA
+						- x,y
+					- points2dB
+						- x,y
+					- points3d
+						- X,Y,Z (relative)
+				- initial 									least squares initial solution
+					- views
+						- absolute rotation / location
+				- final
+					- iterations: 10
+					- views
+						- absolute rotation / location
+						- cell size
+						- points2d
+							- x,y
+					- points3d
+						- p2d []
+							- viewID
+							- p2D index
+						- X,Y,Z (absolute)
+						- error X/Y/Z?
+				
 			
 
 		reconstruction/					combine bundle adjust with dense => produce 3D model outputs
-			WORKING YAML FILES
-
-			points3d.yaml 				3d points found from pixels
-			surface.yaml 				triangle soup of approximated surface
+			points3d.yaml 				chosen 3d points from final bundle adjust
+				views:
+					- K
+					- P
+				points:
+					- X,Y,Z
+			surface.yaml 				triangle soup of approximated surface & texture mapping
+				textures:
+					- 
+						id: 0
+						file: tex0.png
+						size: 256x256
+				triangles:
+					-
+						A: X,Y,Z
+						B: X,Y,Z
+						C: X,Y,Z
+						a: x,y
+						b: x,y
+						c: x,y
+						tex: texture ID
 			textures/
 				tex0.png
 				tex1.png
 				...
+		
+		
 		scene/
 			info.yaml 					scene info [cameras, background, model(if altered)]
+				views: 					actual real-world picture image source
+					- K
+					- transforms
+				cameras: 				user-created scene views
+					- K
+					- transform
+				triangles: 				scene geometry
+					- A,B,C,a,b,c
+				snapshots: 				user-created photos
+					- ID
+					- name
+					- file
 			textures/
 				tex01.png
-				...
+			snapshots/
+				snapshot_0.png
+				
 
 	*/
 App3DR.ProjectManager = function(relativePath, operatingStage){ // very async heavy
@@ -6682,7 +6747,7 @@ console.log(offX+","+offY);
 
 // DON'T RUN
 // don't B
-return; // don't run
+// return; // don't run
 
 
 
