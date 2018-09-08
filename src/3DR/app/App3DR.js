@@ -89,7 +89,7 @@ var modeModelReconstruction = false;
 
 // don't A:
 // TO SWITCH ON MODELING:
-// modeModelReconstruction = true;
+modeModelReconstruction = true;
 
 
 
@@ -911,12 +911,66 @@ App3DR.prototype._projectBALoaded = function(object, data){
 	var str = Code.binaryToString(data);
 	// console.log(str);
 
-	
-
 	var object = YAML.parse(str);
 	if(Code.isArray(object)){
 		object = object[0];
 	}
+
+
+
+
+
+
+
+
+
+
+
+
+/*
+console.log("CONVERT PROJECT FILE TO MATCH FILE:");
+	var yaml = new YAML();
+	yaml.writeBlank();
+	
+	// OBJECTS
+	var points = object["points"];
+	console.log(points.length);
+	yaml.writeNumber("count", points.length);
+	yaml.writeArrayStart("matches");
+	for(var i=0; i<points.length; ++i){
+		var v = points[i];
+		var views = v["views"];
+		var a = views[0];
+		var b = views[1];
+			var frX = a["x"];
+			var frY = a["y"];
+			var toX = b["x"];
+			var toY = b["y"];
+		yaml.writeObjectStart();
+			yaml.writeObjectStart("fr");
+				yaml.writeNumber("i", 0);
+				yaml.writeNumber("x", frX);
+				yaml.writeNumber("y", frY);
+				yaml.writeNumber("s", 1.0);
+				yaml.writeNumber("a", 0.0);
+			yaml.writeObjectEnd();
+			yaml.writeObjectStart("to");
+				yaml.writeNumber("i", 0);
+				yaml.writeNumber("x", toX);
+				yaml.writeNumber("y", toY);
+				yaml.writeNumber("s", 1.0);
+				yaml.writeNumber("a", 0.0);
+			yaml.writeObjectEnd();
+		yaml.writeObjectEnd();
+	}
+	yaml.writeArrayEnd();
+	var matches = object["matches"];
+	console.log(matches);
+	var str = yaml.toString();
+	console.log(str);
+
+throw "?"
+*/
 
 	var cameras = object["cameras"];
 	var views = object["views"];
@@ -3433,9 +3487,9 @@ camWid = 0.20;
 			var vertList = [pBL.x,pBL.y,pBL.z, pBR.x,pBR.y,pBR.z, pTR.x,pTR.y,pTR.z,   pTR.x,pTR.y,pTR.z, pTL.x,pTL.y,pTL.z, pBL.x,pBL.y,pBL.z];
 			
 			console.log("SRZ: "+horz+" x "+vert);
-		// if(i==0){
+		if(i==0){
 		// if(i==1){
-		if(false){ // none
+		// if(false){ // none
 		//if(true){ // overlapping
 			console.log("CREATE TEXTURES HERE");
 			var triangleInfo = this._triangulateSurface(i);
@@ -3551,8 +3605,8 @@ App3DR.App.Model3D.prototype.setLines = function(input){
 		points.push(v.x,v.y,v.z);
 // NEGATIVE Z:
 // points.push(v.x,v.y,-v.z);
-		colors.push(1.0,1.0,1.0,0.03);
-		// colors.push(0.1,0.1,0.1,0.01);
+		// colors.push(1.0,1.0,1.0,0.03);
+		colors.push(0.1,0.1,0.1,0.01);
 	}
 	// create objects
 	this._stage3D.selectProgram(2);
@@ -6527,6 +6581,7 @@ App3DR.ProjectManager.prototype.calculateBundleAdjust = function(callback, conte
 	var fxnD = function(){
 //		console.log(loadedPairs+" / "+expectedPairs+"  &&  "+loadedViews+" / "+expectedViews+"  &&  "+loadedCameras+" / "+expectedCameras);
 		// normalize everything in width=1, height = htowratio
+
 		if(loadedViews==expectedViews && loadedPairs==expectedPairs && loadedFeatureImages==expectedFeatureImages){
 //			console.log("complete");
 			var i, j, k;
@@ -6747,7 +6802,7 @@ console.log(offX+","+offY);
 
 // DON'T RUN
 // don't B
-// return; // don't run
+return; // don't run
 
 
 

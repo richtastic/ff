@@ -2667,7 +2667,7 @@ R3D.generalRANSAC = function(args, fxnModel,fxnInlier, populationSize,sampleSize
 			if(model){
 				var error = model["error"];
 				if(bestInliers===null || inliers.length>bestInliers.length || (inliers.length==bestInliers.length && error<bestError)){
-					console.log(i+" === "+inliers.length+" / "+populationSize);
+					console.log(i+" === "+inliers.length+" / "+populationSize+" ("+(inliers.length/populationSize)+")");
 					bestInliers = inliers;
 					bestError = error;
 					bestModel = model;
@@ -2938,6 +2938,30 @@ R3D.affineMatrixExact = function(pointsA,pointsB){ // first 3 points of A & B
 	m = Matrix.transform2DRotate(m,-bRo);
 	m = Matrix.transform2DTranslate(m,-bTX,-bTY);
 	return m;
+}
+R3D.offsetFromAffine2D = function(affine){
+	throw "?"
+}
+R3D.scaleFromAffine2D = function(affine){
+	throw "?"
+}
+R3D.angleFromAffine2D = function(affine){
+	throw "?"
+}
+R3D.infoFromAffine2D = function(affine){
+	var o = new V2D(0,0);
+	var x = new V2D(1,0);
+	var y = new V2D(0,1);
+	affine.multV2DtoV3D(o,o);
+	affine.multV2DtoV3D(x,x);
+	affine.multV2DtoV3D(y,y);
+	x.sub(o);
+	y.sub(o);
+	var scale = (x.length() + y.length())*0.5;
+	var z = Code.averageAngleVector2D([x,y]);
+	var angle = V2D.angleDirection(V2D.DIRX,z);
+	return {"offset":o, "scale":scale, "angle":angle};
+
 }
 R3D.DLT2D = function(pointsFr,pointsTo){
 	var i, j, fr, to, len = pointsFr.length;

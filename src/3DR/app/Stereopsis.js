@@ -260,9 +260,9 @@ Stereopsis.View = function(image, camera, data){
 	//var compareSize = cellSize*2 - 1;
 	// var compareSize = cellSize;
 // cellSize = 21;
-cellSize = 11;
+// cellSize = 11;
 // cellSize = 7;
-// cellSize = 5;
+cellSize = 5;
 // compareSize = 31;
 	var compareSize = Math.round(cellSize*1.5);
 	if(compareSize%2==0){
@@ -1586,10 +1586,10 @@ Stereopsis.World.prototype.solve = function(completeFxn, completeContext){
 	this._completeFxn = completeFxn;
 	this._completeContext = completeContext;
 	// var maxIterations = 1;
-	var maxIterations = 2;
+	// var maxIterations = 2;
 	// var maxIterations = 3;
 	// var maxIterations = 4;
-	// var maxIterations = 5;
+	var maxIterations = 5;
 	// var maxIterations = 6;
 	// var maxIterations = 7;
 	// var maxIterations = 8;
@@ -1614,7 +1614,12 @@ Stereopsis.World.prototype.iteration = function(iterationIndex, maxIterations){
 var skip = false;
 	// console.log("ESTIMATES");
 		this.estimate3DErrors(skip); // find F, P, estimate all errors
-/*
+
+// IF WORKING BASED ON ASBOLUTE TRANSFORM - global BA
+// 	- relative updated from absolute
+// IF WORKING BASED ON RELATIVE TRANSFORM - 2 pair
+// 	- absolute is ignored until stable .... ?
+
 		if(skip){
 			this.estimate3DTransforms();
 			// relative transforms have now changed
@@ -1626,7 +1631,8 @@ var skip = false;
 		if(skip){
 			// this.bundleAdjust();
 		}
-*/		
+
+
 	// EXPAND
 		// 2D NEIGHBORS
 		// console.log("EXPAND 2D CELLS");
@@ -1640,8 +1646,8 @@ var skip = false;
 
 	// FILTER
 		// GLOBAL
-// console.log("+++ filterGlobal")
-		this.filterGlobal();
+// console.log("+++ filterGlobalMatches")
+		this.filterGlobalMatches();
 			// F 
 			// R
 			// SAD
@@ -1673,7 +1679,7 @@ if(isLast){
 // this.printInfo();
 	console.log(" ... done");
 }
-this.printInfo();
+// this.printInfo();
 
 }
 Stereopsis.World.prototype.printInfo = function(){ 
@@ -1706,7 +1712,7 @@ Stereopsis.World.prototype.printInfo = function(){
 	console.log("3D ERRORS OF ALL ....");
 	Code.printMatlabArray(listErrors,"E");
 }
-Stereopsis.World.prototype.filterGlobal = function(){ 
+Stereopsis.World.prototype.filterGlobalMatches = function(){ // drops matches from transform (pairwise discarding)
 	var limitMatchSigmaR = 2.0;
 	var limitMatchSigmaF = 2.0; // 1.414;
 	var limitMatchSigmaNCC = 2.0;
@@ -1949,7 +1955,7 @@ Stereopsis.World.prototype.accumulateVotePopulation = function(point1A,point1B,m
 		votes["translate"].push(trans);
 	}
 }
-Stereopsis.World.prototype.filterLocal2D = function(){ 
+Stereopsis.World.prototype.filterLocal2D = function(){ // single view point dropping
 	// filter each view on poorest points
 	var views = this.toViewArray();
 	// reset all voting
@@ -2180,6 +2186,10 @@ Stereopsis.World.prototype.estimate3DViews = function(){ // get absolution of vi
 */
 
 // TODO: REMOVE:
+// want initial estimate for trans | rot
+// want minimize nonlinear error
+// eventually BA semiglobal
+// 
 	// set positions manually:
 	var lookup = this._views;
 	var views = this.toViewArray();
@@ -2198,6 +2208,7 @@ Stereopsis.World.prototype.estimate3DViews = function(){ // get absolution of vi
 			view.absoluteTransform( matrix );
 		}
 	}
+
 	// can the routes be averaged ?
 
 }
@@ -2902,7 +2913,7 @@ Stereopsis.orientationTestMatch = function(match){
 }
 //Stereopsis.World.MIN_DISTANCE_EQUALITY = 0.25;
 Stereopsis.World.MIN_DISTANCE_EQUALITY = 0.0001;
-Stereopsis.World.prototype.embedPoint3D = function(point3D){
+Stereopsis.World.prototype.embedPoint3D = function(point3D){ // insert the P3D into the various views -> checks for intersection first (and calls resolve intersection)
 	var matches = point3D.toMatchArray();
 	for(var i=0; i<matches.length; ++i){
 		var match = matches[i];
@@ -3996,8 +4007,15 @@ Stereopsis.World.prototype.toYAMLString = function(){
 			if(!viewID){
 				viewID = view.id();
 			}
+			var imageSize = view.size();
+			var cellSize = view.cellSize();
 			yaml.writeString("id",viewID+"");
 			yaml.writeString("camera",view.camera().id()+"");
+			yaml.writeObjectStart("imageSize");
+				yaml.writeNumber("x",imageSize.x);
+				yaml.writeNumber("y",imageSize.y);
+			yaml.writeObjectEnd();
+			yaml.writeNumber("cellSize",cellSize);
 			var absoluteTransform = view.absoluteTransform();
 			if(absoluteTransform){
 				yaml.writeObjectStart("transform");
@@ -4089,6 +4107,36 @@ console.log("max match types "+R3D.BA.maxiumMatchesFromViewCount(totalViewCount)
 					}
 					yaml.writeArrayEnd();
 				}
+				/*
+				var matches = point3D.toMatchArray();
+				if(matches.length>0){
+					yaml.writeArrayStart("m"); // matches
+					for(var j=0; j<matches.length; ++j){
+						console.log(j+" / "+matches.length);
+						var match = matches[j];
+						var viewA = match.viewA();
+						var viewB = match.viewB();
+						var affine = match.affine();
+						var info = R3D.infoFromAffine2D(affine);
+						console.log(viewA);
+						console.log(viewB);
+						console.log(info);
+						// var scale = R3D.scaleFromAffine2D(affine);
+						// var angle = R3D.angleFromAffine2D(affine);
+						var scale = info["scale"];
+						var angle = info["angle"];
+						yaml.writeObjectStart();
+							// yaml.writeObjectStart("fr");
+							yaml.writeString("A",viewA.id());
+							yaml.writeString("B",viewB.id());
+							yaml.writeString("s",scale);
+							yaml.writeNumber("a",angle);
+						yaml.writeObjectEnd();
+						// yaml.writeObjectEnd();
+					}
+					yaml.writeArrayEnd();
+				}
+				*/
 				yaml.writeObjectEnd();
 			}
 		}

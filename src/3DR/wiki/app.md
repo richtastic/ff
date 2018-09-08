@@ -261,19 +261,75 @@ APP TODO:
 	- translation averaging ?
 
 
-- saving 2-view P estimates
 
-- combining 2-views into initial guess & optimize
-	- relook @ why current combination method sucks
+NEXT-STEPS-TO-DO:
+
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+
+- individual image feature detection
+	- high-cornereness
+	- get feature absolute size / angle
+	=> image features to compare to other images
+- pairwise image feature matching
+	- generate feature descriptors for each image
+	- find best matching features
+	=> matching feature points w/ relative affine transform
+- pair-view relative orientation transforms
+	- iterate cell size for finer detail (~5 iterations to cell~3 pixels)
+	=> 3D transform
+	=> dense point matches
+-----> HERE <------
+- global absolute orientation initialization
+	- rotation averaging
+	- translation averaging
+	=> initial abs camera locations & orientations
+- global absolute orientation nonlinear minimiztion
+	- use match count / reprojection error as edge weight
+	- nonlinear minimize angle & trans.
+	=> updated abs camera locations & orientations
+(09/10)
+- global absolute orientation bundle adjust
+	- quasi-local-global bundle adjustment
+	- group-bundle adjustment to iterate cameras to more optimal orientations
+		- reupdate scene 3D points?
+	=> final abs camera locations & orientations [motion final]
+(09/17)
+- global multi-view stereopsis
+	- use pairwise matches as initial points
+	- fill out tracks
+	- increase surface patches
+	=> final abs point 3D locations & normals [structure final]
+(09/24)
+- global structure & motion bundle adjust
+	- quasi-local-global bundle adjustment
+	=> final structure & motion
+(10/08)
+- surface triangulation(tesselation)
+	- advancing-front, curvature-based tesselation
+	=> scene triangle model
+(10/22)
+- texturing
+	- view-based surface textureing
+	- blending between triangles
+	=> scene textured model
+(11/05)
+- ..
+
+google app engine project - nodejs
+https://cloud.google.com/appengine/docs/nodejs/
+- hello world
+- routing
+- doc storage DB
+- sample API
+- 
+
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
 
-
-
-
-http://www.bmva.org/bmvc/2015/papers/paper046/paper046.pdf
-point-to-ray
-error instead of the reprojection error.
 
 
 
@@ -430,23 +486,7 @@ FOR DENSE DEPTH MATCHING
 - combine graph RELATIVE relationships rather than just from reference camera
 
 
-
-
-- 3D point localization is very off
-
-
-
-
 - BA only on camera pose (& top N points?)
-
-- how to better data fusion ?
-	- combine via error windows
-	- better camera/point localization
-	- reup bundle adjust
-- make bundle adjustment part of the step -- don't re-init camera pose 
-- drop points using 2*median rather than min+/-sig
-- dropping bad 3D points
-
 
 
 - recheck what to do in failing triangulation DLT
@@ -494,29 +534,12 @@ FOR DENSE DEPTH MATCHING
 -> some logic behind combining is wrong?
 
 
-
-
-
-
-
-
-
 - remove orientation checking helps?
 
 - patch check again
 
 
 --- need way to force different views to align eachother
-
-
---- bundle adjustment in groups ?
-	- pick best points after dropping worst group
-
-	--- or just top ~100 from each set & BA to best?
-	....
-
-
---- 
 
 - 3D projection of low-error points (3D abs location) onto un-searched view
 
@@ -537,21 +560,7 @@ FOR DENSE DEPTH MATCHING
 
 
 
-
-
-- preventing re-search of failed points? / dropped
-
-
-
-
-
-
-H = R3D.affineMatrixLinear(pointsA,pointsB);
-
-
 - back to surface via advancing-front propagating
-
-
 
 
 
