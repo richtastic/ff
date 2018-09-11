@@ -3,10 +3,15 @@
 	"version": "0.0.0",
 	"author": "ff",
 	"description": "server",
-	"main" : "server.js",
+	"main": "server.js",
 	"license": "None",
 	"dependencies": {
-		"express": "4.16.3"
+		"@google-cloud/storage": "^2.0.0",
+		"crypto": "^1.0.1",
+		"express": "4.16.3",
+		"fast-crc32c": "^1.0.4",
+		"mongodb": "^3.1.4",
+		"mongoose": "^5.2.14"
 	},
 	"config": {
 		"something": "here"

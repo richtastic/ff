@@ -320,6 +320,7 @@ google app engine project - nodejs
 https://cloud.google.com/appengine/docs/nodejs/
 - hello world
 - routing
+- returning binary objects (eg images / data)
 - doc storage DB
 - sample API
 - 

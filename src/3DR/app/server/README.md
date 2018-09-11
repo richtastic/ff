@@ -8,12 +8,56 @@ sudo  npm i -g npm  # update node packet manager
 ```
 
 
+#### install mongo
+```
+brew update
+brew install mongodb
+sudo mkdir -p /data/db
+sudo chown -R `id -un` /data/db
+# start
+# shell A:
+mongod
+# shell B
+mongo --host 127.0.0.1:27017
+
+# ex:
+show dbs # all DB
+db # current DB
+use nodejsdb # select / create DB
+
+db.getCollectionNames() # show collections
+db["models"].find()
+
+# create user
+db.createUser(
+	{
+		user: "nodejsuser",
+		pwd: "qwerty",
+		roles: []
+	}
+);
+
+# insert
+db.movie.insert({"name":"tutorials point"})
+# search
+db.movie.find()
+db.movie.find({"name":"tutorials point"})
+# delete
 
 
-#### run server
+
+mongo --port 27017 -u myUserAdmin -p 'abc123' --authenticationDatabase 'admin'
+
+nodejsdb
+
+```
+
+
+#### run server locally
 ```
 cd .../nodejs
 node server.js
+# http://127.0.0.1:8081/
 ````
 
 
@@ -23,7 +67,12 @@ node server.js
 npm search
 npm search express
 npm install express
+npm install mongoose
+npm install mongodb
+npm install crypto
 
+npm install --save @google-cloud/storage
+npm install --save fast-crc32c
 ```
 
 
@@ -48,6 +97,8 @@ setup:
 # change user:
 gcloud auth list
 gcloud config set account <ACCOUNT>
+# because google breaks:
+gcloud auth application-default login
 ```
 
 init:
@@ -67,8 +118,8 @@ gcloud app deploy app.development.yaml
 view:
 ```
 gcloud app browse
-https://YOUR_PROJECT_ID.appspot.com:
-https://nodejs01-215801.appspot.com:
+https://YOUR_PROJECT_ID.appspot.com
+https://nodejs01-215801.appspot.com
 ```
 
 
@@ -83,7 +134,23 @@ BILLING:
 https://console.cloud.google.com/billing
 PROJECT/DASHBOARD:
 https://console.cloud.google.com/appengine
+PROJECT LIST:
+https://console.cloud.google.com/iam-admin/projects
+	SETTINGS > SHUTDOWN
+		> LIEN
+https://console.cloud.google.com/iam-admin/iam/project?project=agafas-85016
 
+
+GLOUD STORAGE:
+https://console.cloud.google.com/storage/browser
+https://github.com/googleapis/nodejs-storage/blob/master/samples/encryption.js
+
+
+
+
+
+
+https://console.dialogflow.com/api-client
 
 
 

@@ -76,12 +76,12 @@ function classesLoadedFxn(){
 		// points.push([new V2D(3,0), 0.0]);
 		// points.push([new V2D(5,0), 0.0]);
 		// points.push([new V2D(7,0), 0.0]);
-		points.push([new V2D(0,0), Code.radians(0.0)]);
-		points.push([new V2D(2,1), Code.radians(20.0)]);
-		points.push([new V2D(3,0), Code.radians(30.0)]);
-		points.push([new V2D(5,2), Code.radians(20.0)]);
-		points.push([new V2D(7,0), Code.radians(40.0)]);
-		points.push([new V2D(1,3), Code.radians(90.0)]);
+		points.push([new V3D(0,0,0), Code.radians(0.0)]);
+		points.push([new V3D(2,1,0), Code.radians(20.0)]);
+		points.push([new V3D(3,0,0), Code.radians(30.0)]);
+		points.push([new V3D(5,2,0), Code.radians(20.0)]);
+		points.push([new V3D(7,0,0), Code.radians(40.0)]);
+		points.push([new V3D(1,3,0), Code.radians(90.0)]);
 	var edges = [];
 		edges.push([0,1, 0.5]);
 		edges.push([0,2, 0.5]);
@@ -131,15 +131,17 @@ var relativeLocations = [];
 		var ra = points[a][1];
 		var rb = points[b][1];
 		var e = graph.addEdge(va,vb, w, Graph.Edge.DIRECTION_DUPLEX);
-		var vector = V2D.sub(pb,pa);
+		var vector = V3D.sub(pb,pa);
 		var angle = Code.angleDirection(ra,rb);
 var errorAngle = error * 3.0;
 var errorLocation = error * 3.0;
+// console.log("errorLocation: "+errorLocation);
+// errorLocation *= 0.1;
 		// var angle = Code.angleDifference(ra,rb);
 		// console.log(Code.degrees(ra)+" & "+Code.degrees(rb)+" = "+Code.degrees(angle));
 		var len = vector.length();
 		len = 1.0;
-		vector.add( Code.randomFloat(-errorLocation,errorLocation)*len, Code.randomFloat(-errorLocation,errorLocation)*len );
+		vector.add( Code.randomFloat(-errorLocation,errorLocation)*len, Code.randomFloat(-errorLocation,errorLocation)*len , Code.randomFloat(-errorLocation,errorLocation)*len*0 );
 		angle += Code.randomFloat(-errorAngle,errorAngle)
 		e.data([va,vb,vector,angle,error]);
 		es[i] = e;
@@ -147,9 +149,10 @@ var errorLocation = error * 3.0;
 		relativeLocations[i] = [a,b,vector,errorLocation];
 	}
 
+
 	// initial estimation:
 	var root = vs[0];
-	var origin = new V2D(0,0);
+	var origin = new V3D(0,0,0);
 	var locations = [];
 	var rotations = [];
 	locations.push(origin);
@@ -238,9 +241,36 @@ var errorLocation = error * 3.0;
 	console.log(results);
 	rotations = results["absolute"];
 
+	
+
+
+
+
 	var results = R3D.optiumGraphLocation2D(relativeLocations);
 	console.log(results);
 	locations = results["absolute"];
+
+
+
+	console.log("relativeLocations");
+	console.log(relativeLocations);
+
+	console.log("locations");
+	console.log(locations);
+
+	var result = R3D.optiumGraphLocation3D(relativeLocations);
+	// var result = R3D.optimumGraphLocation3DLeastSquares(relativeLocations);
+	console.log("result");
+	console.log(result);
+	locations = result["absolute"];
+	console.log("locations");
+	console.log(locations);
+
+
+	var results = R3D.optiumGraphAngle3D(relativeEdges);
+	console.log(results);
+	rotations = results["absolute"];
+
 
 
 	// SHOW AGAIN:
@@ -266,6 +296,7 @@ var errorLocation = error * 3.0;
 	}
 
 
+throw "TESTING";
 // return;
 
 	// paths = graph.minPath(vs[0],vs[3]);

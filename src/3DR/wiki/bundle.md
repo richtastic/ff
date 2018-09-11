@@ -498,6 +498,14 @@ http://imagine.enpc.fr/~monasse/Stereo/Projects/MartinecPajdla07.pdf
 
 
 
+least squares initial absolute position from relative:
+cij x (ci,cj) = 0
+	=> 'fails' at: degenerate for collinear camera motion
+
+
+
+
+
 
 
 

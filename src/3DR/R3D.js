@@ -17102,7 +17102,6 @@ R3D._optiumGraph2D = function(edges,isAngles){ // edges: [indexA,indexB,VALUE,ER
 			sigma += error*error;
 			var value = data["value"];
 			if(isAngles){
-				
 				if(vb==vertex){ // invert direction
 					value = -value;
 				}
@@ -17120,6 +17119,7 @@ R3D._optiumGraph2D = function(edges,isAngles){ // edges: [indexA,indexB,VALUE,ER
 			rotation = Code.angleZeroTwoPi(rotation);
 			values.push(rotation);
 		}else{
+			// location.set(0,0);
 			values.push(location);
 		}
 	}
@@ -17148,7 +17148,6 @@ R3D._optiumGraph2D = function(edges,isAngles){ // edges: [indexA,indexB,VALUE,ER
 		for(var i=0; i<count; ++i){
 			var location = new V2D(values[i*2+0],values[i*2+1]);
 			locations[i] = location;
-			output[i] = [edge[0],edge[1],location,edge[3]];
 		}
 		values = locations;
 	}
@@ -17288,12 +17287,207 @@ R3D.optimumGraphAngle3DLeastSquares = function(edges){ // [indexA,indexB,relativ
 
 	return {"rotations": rotations};
 }
-
 */
+
+
+
 R3D.optimumGraphLocation3DLeastSquares = function(edges){ // [indexA,indexB,relative translation,error]
+	console.log("optimumGraphLocation3DLeastSquares --- not work");
+	console.log(edges)
+	// count vertexes
+	var maxVertex = -1;
+	for(var i=0; i<edges.length; ++i){
+		var edge = edges[i];
+		maxVertex = Math.max(maxVertex,edge[0]);
+		maxVertex = Math.max(maxVertex,edge[1]);
+	}
+	if(maxVertex<0){
+		return null;
+	}
+	var viewCount = maxVertex + 1;
+	var edgeCount = edges.length;
+
+	var rows = 3*edgeCount;
+	// var rows = 3*edgeCount + 3; // add a line
+	var cols = 3*viewCount;
+	var last = cols-1;
+	var A = new Matrix(rows,cols);
+	var bX = new Matrix(rows,1);
+	for(var i=0; i<edgeCount; ++i){
+		var edge = edges[i];
+		var a = edge[0];
+		var b = edge[1];
+		var d = edge[2];
+		console.log(a+" -> "+b+" = "+d+"");
+		var e = edge[3];
+		// x
+		A.set(i*3+0, a*3+0,    1);
+		A.set(i*3+0, b*3+0,   -1);
+		// y
+		A.set(i*3+1, a*3+1,    1);
+		A.set(i*3+1, b*3+1,   -1);
+		// z
+		A.set(i*3+2, a*3+2,    1);
+		A.set(i*3+2, b*3+2,   -1);
+		// = 
+		bX.set(i*3+0,0,  d.x);
+		bX.set(i*3+1,0,  d.y);
+		bX.set(i*3+2,0,  d.z);
+	}
+	/*
+	// add a line:
+		var a = 0;
+		var i = edgeCount;
+		A.set(i*3+0, a*3+0,    1);
+		A.set(i*3+1, a*3+1,    1);
+		A.set(i*3+2, a*3+2,    1);
+		bX.set(i*3+0,0,  0);
+		bX.set(i*3+1,0,  0);
+		bX.set(i*3+2,0,  0);
+	*/
+	var b = bX;
+	// console.log(b);
+	console.log(A+"");
+	console.log(b+"");
+	var inv = Matrix.pseudoInverse(A);
+	// console.log(inv+"");
+
+
+	// var svd = Matrix.SVD(A);
+	// var svd = Matrix.SVD(inv);
+	// var result = svd.V.colToArray(last);
+	// console.log(result);
+
+	var x = Matrix.mult(inv,b);
+	console.log(x+"");
+	var result = x.toArray();
 	
+	// console.log(result+"");
+	// throw "?"
+	
+	var locations = [];
+	for(var i=0; i<viewCount; ++i){
+		locations[i] = new V3D(result[i*3+0],result[i*3+1],result[i*3+2]);
+		// locations[i].scale(-1);
+		// console.log(result[i*3+0]+"")
+		// locations[i].add(1.1,.4,0);
+		// locations[i].scale(4);
+		// locations[i].add(4,1,0);
+		console.log(locations[i]+"")
+	}
+	/*
+	var origin = locations[0].copy();
+	for(var i=0; i<viewCount; ++i){
+		locations[i].sub(origin);
+		console.log(locations[i]+"")
+	}
+	console.log(locations);
+	*/
+	var output = [];
+	for(var i=0; i<edges.length; ++i){
+		var edge = edges[i];
+		var a = edge[0];
+		var b = edge[1];
+		var d = edge[2];
+		var e = edge[3];
+		a = locations[a];
+		b = locations[b];
+		// console.log(a,b);
+		var dir = V3D.sub(b,a);
+		output[i] = [a,b,dir,e];
+	}
+	
+	/*
+	dj = di + dij
+	dj - di - dij = 0
+	dj_x - di_x - dij_x = 0
+	db_x - da_x - dab_x = 0
+	*/
+
+	return {"absolute":locations, "relative":output};
 }
 
+/*
+R3D.optimumGraphLocation3DLeastSquares = function(edges){ // [indexA,indexB,relative translation,error]
+	console.log("optimumGraphLocation3DLeastSquares");
+	console.log(edges)
+	// count vertexes
+	var maxVertex = -1;
+	for(var i=0; i<edges.length; ++i){
+		var edge = edges[i];
+		maxVertex = Math.max(maxVertex,edge[0]);
+		maxVertex = Math.max(maxVertex,edge[1]);
+	}
+	if(maxVertex<0){
+		return null;
+	}
+	var viewCount = maxVertex + 1;
+	var edgeCount = edges.length;
+
+	var rows = 3*edgeCount;
+	var cols = 3*viewCount + 1;
+	// var cols = 3*viewCount;
+	var last = cols-1;
+	var A = new Matrix(rows,cols);
+	var bX = new Matrix(rows,1);
+	for(var i=0; i<edgeCount; ++i){
+		var edge = edges[i];
+		var a = edge[0];
+		var b = edge[1];
+		var d = edge[2];
+		console.log(a+" -> "+b+" = "+d+"");
+		var e = edge[3];
+		// x
+		A.set(i*3+0, a*3+0,    1);
+		A.set(i*3+0, b*3+0,   -1);
+		A.set(i*3+0,  last,  d.x);
+		// y
+		A.set(i*3+1, a*3+1,    1);
+		A.set(i*3+1, b*3+1,   -1);
+		A.set(i*3+1,  last,  d.y);
+		// z
+		A.set(i*3+2, a*3+2,    1);
+		A.set(i*3+2, b*3+2,   -1);
+		A.set(i*3+2,  last,  d.z);
+	}
+	// var b = bX;
+	// console.log(b);
+	// console.log(A);
+	console.log(A+"");
+	// console.log(b+"");
+	var svd = Matrix.SVD(A);
+	var result = svd.V.colToArray(last);
+	var last = result[last];
+	console.log(result+"");
+	console.log(last);
+
+	// result = Code.arrayScale(result,1.0/last);
+	console.log(result);
+
+	var locations = [];
+	for(var i=0; i<viewCount; ++i){
+		locations[i] = new V3D(result[i*3+0],result[i*3+1],result[i*3+2]);
+		// output[i] = [va,vb,diff,error];
+	}
+	console.log(locations);
+
+	var output = [];
+	for(var i=0; i<edges.length; ++i){
+		var edge = edges[i];
+		var a = edge[0];
+		var b = edge[1];
+		var d = edge[2];
+		var e = edge[3];
+		a = locations[a];
+		b = locations[b];
+		console.log(a,b);
+		var dir = V3D.sub(b,a);
+		output[i] = [a,b,dir,e];
+	}
+
+	return {"absolute":locations, "relative":output};
+}
+*/
 
 // 2D graph location / rotation optimization -----------------------------------------------------------------------------------------------------------------------------------------------------------
 R3D.optiumGraphLocation3D = function(edges){
@@ -17303,9 +17497,191 @@ R3D.optiumGraphAngle3D = function(edges){
 	return R3D._optiumGraph3D(edges, true);
 }
 R3D._optiumGraph3D = function(edges,isAngles){ // edges: [indexA,indexB,value,error]
-	// ...
+	// find size of graph
+	var maxVertex = -1;
+	for(var i=0; i<edges.length; ++i){
+		var edge = edges[i];
+		maxVertex = Math.max(maxVertex,edge[0]);
+		maxVertex = Math.max(maxVertex,edge[1]);
+	}
+	if(maxVertex<0){
+		return null;
+	}
+	var vertexCount = maxVertex + 1;
 	// create graph
-	throw "HERE"
+	var graph = new Graph();
+	var vs = [];
+	for(var i=0; i<vertexCount; ++i){
+		var v = graph.addVertex();
+		v.data(i);
+		vs[i] = v;
+	}
+	var es = [];
+	for(var i=0; i<edges.length; ++i){
+		var edge = edges[i];
+		var a = edge[0];
+		var b = edge[1];
+		var value = edge[2];
+		var error = edge[3];
+		var va = vs[a];
+		var vb = vs[b];
+		var w = error;
+		var e = graph.addEdge(va,vb, w, Graph.Edge.DIRECTION_DUPLEX);
+		e.data({"value":value,"error":error});
+		es[i] = e;
+	}
+	// find path from each vertex as starting point
+	var allPaths = [];
+	for(var i=0; i<vs.length; ++i){
+		var v = vs[i];
+		var paths = graph.minPaths(v);
+		var pathGroup = [];
+		var reference = v.data();
+		for(var j=0; j<paths.length; ++j){
+			var path = paths[j];
+			var pathEdges = path["edges"];
+			var vertex = v;
+			var totalError = 0;
+			var value = null;
+			if(isAngles){
+				value = 0;
+			}else{
+				value = new V3D(0,0,0);
+			}
+			for(var k=0; k<pathEdges.length; ++k){
+				var edge = pathEdges[k];
+				var data = edge.data();
+				var direction = data["value"];
+				totalError += error*error;
+				var opposite = edge.opposite(vertex);
+				if(isAngles){
+					throw "?";
+					// isAngles
+					if(edge.A()==vertex){
+						value.add(direction);
+					}else{
+						value.sub(direction);
+					}
+				}else{
+					if(edge.A()==vertex){
+						value.add(direction);
+					}else{
+						value.sub(direction);
+					}
+				}
+				vertex = opposite;
+			}
+			totalError = Math.sqrt(totalError);
+			console.log(" - "+value+" @ "+totalError);
+			pathGroup.push({"value":value, "error":totalError});
+		}
+		allPaths.push(pathGroup);
+	}
+	// calculate paths
+	var allValues = Code.newArrayArrays(vs.length);
+	
+	for(var i=0; i<allPaths.length; ++i){
+		var pathGroup = allPaths[i];
+		var reference = i;
+		for(var j=0; j<pathGroup.length; ++j){
+			if(j==i){
+				continue;
+			} // else
+			// assume 0th vertex is root
+			var reference = pathGroup[0];
+			var group = pathGroup[j];
+			var diff = null;
+			var valueA = group["value"];
+			var valueB = reference["value"];
+			if(isAngles){
+				throw "?"
+				diff = 0;
+			}else{
+				diff = V3D.sub(valueA,valueB);
+			}
+			var error = group["error"];
+			allValues[j].push({"value":diff, "error":error});
+		}
+	}
+	console.log(allValues);
+	var values = [];
+	for(var i=0; i<allValues.length; ++i){
+		var list = allValues[i];
+		var points = [];
+		var errors = [];
+		for(var j=0; j<list.length; ++j){
+			var item = list[j];
+			points.push(item["value"]);
+			errors.push(item["error"]);
+		}
+		var average = null;
+		if(isAngles){
+			throw "?";
+		}else{
+			var info = Code.combineErrorMeasurementsV3D(points,errors);
+			average = info["value"];
+		}
+		// var average = info["error"];
+		// console.log(average)
+		// console.log(average+"")
+		values[i] = average;
+	}
+	// nonlinear error minimize
+	var result = R3D._gdDirectionAngle3D(vs,es,values, isAngles);
+	values = result["values"];
+	// create new edges
+	graph.kill();
+	var output = [];
+	for(var i=0; i<edges.length; ++i){
+		var edge = edges[i];
+		var va = edge[0];
+		var vb = edge[1];
+		var value = edge[2];
+		var error = edge[3];
+		var a = values[va];
+		var b = values[vb];
+		var diff = null;
+		if(isAngles){
+			throw "?"
+			//diff = Code.angleDirection(a,b);
+		}else{
+			diff = V3D.sub(b,a);
+		}
+		output[i] = [va,vb,diff,error];
+	}
+	
+	return {"relative":output, "absolute":values};
+}
+R3D._gdDirectionAngle3D = function(vs,es,values, isAngles){
+	var args = [];
+	args.push(es);
+	var fxn = null;
+	var x = [];
+	if(isAngles){
+		fxn = R3D._gdAngle3D;
+		x = null;
+	}else{
+		fxn = R3D._gdLocation3D;
+		for(var i=0; i<values.length; ++i){
+			var v = values[i];
+			x.push(v.x,v.y,v.z);
+		}
+	}
+	console.log(x);
+	var result = Code.gradientDescent(fxn, args, x, null, 10, 1E-10);
+	var locations = [];
+	var count = values.length;
+	for(var i=0; i<count; ++i){
+		var location = new V3D(x[i*3+0],x[i*3+1],x[i*3+2]);
+		locations[i] = location;
+	}
+	return {"values":locations};
+}
+R3D._gdAngle3D = function(args, x, isUpdate){
+	return R3D._gdAngGrad3D(args, x, isUpdate, true, R3D._gdErrorAngle3DFxn);
+}
+R3D._gdLocation3D = function(args, x, isUpdate){
+	return R3D._gdAngGrad3D(args, x, isUpdate, false, R3D._gdErrorDirection3DFxn);
 }
 R3D._gdErrorAngle3DFxn = function(dirA, dirB){
 	var error = V3D.angle(dirA,dirB);
@@ -17316,11 +17692,59 @@ R3D._gdErrorDirection3DFxn = function(relativeDirectionA, relativeDirectionB){
 	return error*error;
 }
 R3D._gdAngGrad3D = function(args, x, isUpdate, isAngles, costFxn){
-	// ...
-	throw "HERE"
+	var edges = args[0];
+	var totalError = 0;
+	for(var i=0; i<edges.length; ++i){
+		var edge = edges[i];
+		var va = edge.A();
+		var vb = edge.B();
+		var ia = va.data();
+		var ib = vb.data();
+		var data = edge.data();
+		var rel = data["value"];
+		var errorEdge = data["error"];
+		var abs = null;
+		if(isAngles){
+			throw "?";
+			// var ax = x[ia];
+			// var bx = x[ib];
+			// if(ia==0){
+			// 	ax = 0;
+			// }
+			// if(ib==0){
+			// 	bx = 0;
+			// }
+			// abs = Code.angleDirection(ax,bx);
+		}else{
+			var ax = x[ia*3+0];
+			var bx = x[ib*3+0];
+			var ay = x[ia*3+1];
+			var by = x[ib*3+1];
+			var az = x[ia*3+2];
+			var bz = x[ib*3+2];
+			if(ia==0){
+				ax = 0;
+				ay = 0;
+				az = 0;
+			}
+			if(ib==0){
+				bx = 0;
+				by = 0;
+				bz = 0;
+			}
+			abs = new V3D(bx-ax,by-ay,bz-az);
+		}
+		error = costFxn(rel,abs);
+		errorEdge = Math.sqrt(errorEdge);
+		errorEdge = Math.max(errorEdge,1E-10);
+		// errorEdge = 1.0;
+		totalError += error/errorEdge;
+	}
+	if(isUpdate){
+		console.log("totalError: "+totalError);
+	}
+	return totalError;
 }
-
-
 
 
 // -----------------------------------------------------------------------------------------------------------------------------------------------------------

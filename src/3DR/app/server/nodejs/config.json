@@ -1,0 +1,17 @@
+{
+	"networking": {
+		"ip": "127.0.0.1",
+		"port": "8081"
+	},
+	"mongo": {
+		"user": "nodejsuser",
+		"password": "qwerty",
+		"host": "127.0.0.1",
+		"port": "27017",
+		"database": "nodejsdb"
+	},
+	"fileserver": {
+		"project": "nodejs01-215801",
+		"bucket": "nodejs01-bucket-01"
+	}
+}
