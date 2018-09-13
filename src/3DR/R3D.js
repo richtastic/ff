@@ -17544,45 +17544,50 @@ R3D._optiumGraph3D = function(edges,isAngles){ // edges: [indexA,indexB,value,er
 			var totalError = 0;
 			var value = null;
 			if(isAngles){
-				value = 0;
+				value = {"direction":new V3D(0,0,1), "angle": 0};
 			}else{
 				value = new V3D(0,0,0);
 			}
 			for(var k=0; k<pathEdges.length; ++k){
 				var edge = pathEdges[k];
 				var data = edge.data();
-				var direction = data["value"];
+				var join = data["value"];
 				totalError += error*error;
 				var opposite = edge.opposite(vertex);
-				if(isAngles){
-					throw "?";
-					// isAngles
+				if(isAngles){ // average direction + twist
+					// console.log(join);
+					var sumDir = null;
+					var sumTwist = null;
 					if(edge.A()==vertex){
-						value.add(direction);
+						sumDir = Code.addAngleVector3D(value["direction"],join["direction"]);
+						sumTwist = Code.angleZeroTwoPi(value["angle"]+join["angle"]);
 					}else{
-						value.sub(direction);
+						sumDir = Code.subAngleVector3D(value["direction"],join["direction"]);
+						sumTwist = Code.angleZeroTwoPi(value["angle"]-join["angle"]);
 					}
+					value["direction"] = sumDir;
+					value["angle"] = sumTwist;
 				}else{
 					if(edge.A()==vertex){
-						value.add(direction);
+						value.add(join);
 					}else{
-						value.sub(direction);
+						value.sub(join);
 					}
 				}
 				vertex = opposite;
 			}
 			totalError = Math.sqrt(totalError);
-			console.log(" - "+value+" @ "+totalError);
+			// console.log(" - "+value+" @ "+totalError);
 			pathGroup.push({"value":value, "error":totalError});
 		}
 		allPaths.push(pathGroup);
 	}
 	// calculate paths
+	console.log(allPaths)
 	var allValues = Code.newArrayArrays(vs.length);
 	
 	for(var i=0; i<allPaths.length; ++i){
 		var pathGroup = allPaths[i];
-		var reference = i;
 		for(var j=0; j<pathGroup.length; ++j){
 			if(j==i){
 				continue;
@@ -17594,8 +17599,7 @@ R3D._optiumGraph3D = function(edges,isAngles){ // edges: [indexA,indexB,value,er
 			var valueA = group["value"];
 			var valueB = reference["value"];
 			if(isAngles){
-				throw "?"
-				diff = 0;
+				diff = Code.diffTwistVector3D(valueA,valueB);
 			}else{
 				diff = V3D.sub(valueA,valueB);
 			}
@@ -17603,7 +17607,7 @@ R3D._optiumGraph3D = function(edges,isAngles){ // edges: [indexA,indexB,value,er
 			allValues[j].push({"value":diff, "error":error});
 		}
 	}
-	console.log(allValues);
+	// find average for each vertex
 	var values = [];
 	for(var i=0; i<allValues.length; ++i){
 		var list = allValues[i];
@@ -17616,7 +17620,22 @@ R3D._optiumGraph3D = function(edges,isAngles){ // edges: [indexA,indexB,value,er
 		}
 		var average = null;
 		if(isAngles){
-			throw "?";
+			var dirs3D = [];
+			var dirs2D = [];
+			for(var j=0; j<points.length; ++j){
+				var point = points[j];
+				dirs3D.push(point["direction"]);
+				var a2D = point["angle"];
+				var d2D = new V2D(1,0).rotate(a2D);
+				dirs2D.push(d2D);
+			}
+			// console.log(dirs3D);
+			// console.log(dirs2D);
+			var avgDir = Code.averageAngleVector3D(dirs3D); // TODO: percents ~ error
+			var avgAng = Code.averageAngleVector2D(dirs2D); //
+			avgAng = V2D.angleDirection(V2D.DIRX,avgAng);
+			average = {"direction":avgDir, "angle":avgAng};
+			// console.log(average);
 		}else{
 			var info = Code.combineErrorMeasurementsV3D(points,errors);
 			average = info["value"];
@@ -17627,8 +17646,8 @@ R3D._optiumGraph3D = function(edges,isAngles){ // edges: [indexA,indexB,value,er
 		values[i] = average;
 	}
 	// nonlinear error minimize
-	var result = R3D._gdDirectionAngle3D(vs,es,values, isAngles);
-	values = result["values"];
+	// var result = R3D._gdDirectionAngleTranslation3D(vs,es,values, isAngles);
+	// values = result["values"];
 	// create new edges
 	graph.kill();
 	var output = [];
@@ -17642,8 +17661,7 @@ R3D._optiumGraph3D = function(edges,isAngles){ // edges: [indexA,indexB,value,er
 		var b = values[vb];
 		var diff = null;
 		if(isAngles){
-			throw "?"
-			//diff = Code.angleDirection(a,b);
+			diff = Code.diffTwistVector3D(b,a);
 		}else{
 			diff = V3D.sub(b,a);
 		}
@@ -17652,7 +17670,7 @@ R3D._optiumGraph3D = function(edges,isAngles){ // edges: [indexA,indexB,value,er
 	
 	return {"relative":output, "absolute":values};
 }
-R3D._gdDirectionAngle3D = function(vs,es,values, isAngles){
+R3D._gdDirectionAngleTranslation3D = function(vs,es,values, isAngles){
 	var args = [];
 	args.push(es);
 	var fxn = null;
@@ -17660,6 +17678,10 @@ R3D._gdDirectionAngle3D = function(vs,es,values, isAngles){
 	if(isAngles){
 		fxn = R3D._gdAngle3D;
 		x = null;
+		// gd on direction
+		// gd on twist
+
+		throw "need 2D twist & 3D dir"
 	}else{
 		fxn = R3D._gdLocation3D;
 		for(var i=0; i<values.length; ++i){

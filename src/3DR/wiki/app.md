@@ -284,36 +284,36 @@ vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 	- rotation averaging
 	- translation averaging
 	=> initial abs camera locations & orientations
-- global absolute orientation nonlinear minimiztion
+- global absolute orientation nonlinear minimization
 	- use match count / reprojection error as edge weight
 	- nonlinear minimize angle & trans.
 	=> updated abs camera locations & orientations
-(09/10)
+(09/17)
 - global absolute orientation bundle adjust
 	- quasi-local-global bundle adjustment
 	- group-bundle adjustment to iterate cameras to more optimal orientations
 		- reupdate scene 3D points?
 	=> final abs camera locations & orientations [motion final]
-(09/17)
+(09/24)
 - global multi-view stereopsis
 	- use pairwise matches as initial points
 	- fill out tracks
 	- increase surface patches
 	=> final abs point 3D locations & normals [structure final]
-(09/24)
+(10/08)
 - global structure & motion bundle adjust
 	- quasi-local-global bundle adjustment
 	=> final structure & motion
-(10/08)
+(10/22)
 - surface triangulation(tesselation)
 	- advancing-front, curvature-based tesselation
 	=> scene triangle model
-(10/22)
+(11/05)
 - texturing
 	- view-based surface textureing
 	- blending between triangles
 	=> scene textured model
-(11/05)
+(11/19)
 - ..
 
 google app engine project - nodejs

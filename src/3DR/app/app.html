@@ -11,7 +11,25 @@ function ffLoadedFxn(){
 	(new ScriptLoader("./",["App3DR.js", "../SIFTDescriptor.js", "../R3D.js","../R3DDense.js","../R3DBA.js","../R3DDense.js","../Cam2D.js","../Cam3D.js","../Render3D.js","Stereopsis.js"],this,classesLoadedFxn)).load();
 }
 function classesLoadedFxn(){
-	// throw "?";
+/*
+	// rotation averaging
+	var matrix = new Matrix(4,4).identity();
+	matrix = Matrix.transform3DRotateZ(matrix, Code.radians(45));
+	matrix = Matrix.transform3DRotateX(matrix, Code.radians(15));
+	matrix = Matrix.transform3DRotateY(matrix, Code.radians(-15));
+	matrix = Matrix.transform3DRotateZ(matrix, Code.radians(-5));
+	matrix = Matrix.transform3DRotateY(matrix, Code.radians(-10));
+	matrix = Matrix.transform3DRotateX(matrix, Code.radians(-20));
+	matrix = Matrix.transform3DTranslate(matrix, 1,2,3);
+	console.log(matrix+"");
+	var twist = Code.vectorTwistFromMatrix3D(matrix);
+	console.log(twist);
+	var angle = twist["angle"];
+	var direction = twist["direction"];
+	console.log(angle);
+	console.log(direction);
+	throw "?";
+*/
 /*
 	var vectors = [];
 		vectors.push(new V2D(1,0).rotate(Code.radians(10.0)));
@@ -136,7 +154,7 @@ var relativeLocations = [];
 var errorAngle = error * 3.0;
 var errorLocation = error * 3.0;
 // console.log("errorLocation: "+errorLocation);
-// errorLocation *= 0.1;
+// errorLocation *= 0.001;
 		// var angle = Code.angleDifference(ra,rb);
 		// console.log(Code.degrees(ra)+" & "+Code.degrees(rb)+" = "+Code.degrees(angle));
 		var len = vector.length();
@@ -145,7 +163,9 @@ var errorLocation = error * 3.0;
 		angle += Code.randomFloat(-errorAngle,errorAngle)
 		e.data([va,vb,vector,angle,error]);
 		es[i] = e;
-		relativeEdges[i] = [a,b,angle,errorAngle];
+		//relativeEdges[i] = [a,b,angle,errorAngle];
+			var twist = {"direction":new V3D(0,0,1),"angle":angle};
+			relativeEdges[i] = [a,b,twist,errorAngle];
 		relativeLocations[i] = [a,b,vector,errorLocation];
 	}
 
@@ -276,7 +296,9 @@ var errorLocation = error * 3.0;
 	// SHOW AGAIN:
 	for(var i=0; i<locations.length; ++i){
 		var location = locations[i];
-		var angle = rotations[i];
+		var rot = rotations[i];
+		console.log(rot);
+		var angle = rot["angle"];
 		var rad = 30.0;
 		var d = new DO();
 			d.graphics().setLine(1.0,0xFF0000CC);
@@ -296,7 +318,7 @@ var errorLocation = error * 3.0;
 	}
 
 
-throw "TESTING";
+// throw "TESTING";
 // return;
 
 	// paths = graph.minPath(vs[0],vs[3]);

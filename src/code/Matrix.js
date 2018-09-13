@@ -48,6 +48,9 @@ Matrix.prototype.loadFromObject = function(obj){
 	this.fromArray(data, rows,cols);
 	return this;
 }
+Matrix.loadFromObject = function(obj){
+	return new Matrix().loadFromObject(obj);
+}
 // ------------------------------------------------------------------------------------------------------------------------ INSTANCE
 Matrix.prototype.fromArray = function(list, newRow,newCol){
 	if(newRow!==undefined){

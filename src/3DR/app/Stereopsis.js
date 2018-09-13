@@ -260,9 +260,9 @@ Stereopsis.View = function(image, camera, data){
 	//var compareSize = cellSize*2 - 1;
 	// var compareSize = cellSize;
 // cellSize = 21;
-// cellSize = 11;
+cellSize = 11;
 // cellSize = 7;
-cellSize = 5;
+// cellSize = 5;
 // compareSize = 31;
 	var compareSize = Math.round(cellSize*1.5);
 	if(compareSize%2==0){
@@ -1579,6 +1579,12 @@ Stereopsis.Y = function(){
 }
 Stereopsis.Z = function(){
 	//
+}
+
+// ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Stereopsis.World.prototype.solveGlobalAbsoluteTransform = function(completeFxn, completeContext){
+	throw "use given absolute transforms as given"
+	// relative <= absolute
 }
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 Stereopsis.World.prototype.solve = function(completeFxn, completeContext){

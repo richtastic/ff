@@ -89,7 +89,7 @@ var modeModelReconstruction = false;
 
 // don't A:
 // TO SWITCH ON MODELING:
-modeModelReconstruction = true;
+// modeModelReconstruction = true;
 
 
 
@@ -5447,6 +5447,9 @@ App3DR.ProjectManager.CAMERA_MATCHES_FILE_NAME = "matches.yaml";
 App3DR.ProjectManager.BUNDLE_INFO_FILE_NAME = "info.yaml";
 // App3DR.ProjectManager.SPARSE_MATCHES_FILE_NAME = "sparse.yaml"; // sparse points + transform
 // App3DR.ProjectManager.MEDIUM_MATCHES_FILE_NAME = "medium.yaml"; 
+App3DR.ProjectManager.PAIR_RELATIVE_FILE_NAME = "relative.yaml";
+
+
 App3DR.ProjectManager.DENSE_MATCHES_FILE_NAME = "dense.yaml"; 
 App3DR.ProjectManager.TRIPLES_DIRECTORY = "triples";
 
@@ -5632,6 +5635,7 @@ App3DR.ProjectManager.prototype.saveToYAML = function(){
 		}
 		yaml.writeArrayEnd();
 	}
+	/*
 	// triples
 	len = this._triples ? this._triples.length : 0;
 	if(len>0){
@@ -5644,6 +5648,7 @@ App3DR.ProjectManager.prototype.saveToYAML = function(){
 		}
 		yaml.writeArrayEnd();
 	}
+	*/
 	// cameras
 	len = this._cameras ? this._cameras.length : 0;
 	if(len>0){
@@ -5833,7 +5838,12 @@ App3DR.ProjectManager.prototype.loadMatchingDataForPair = function(pair, filenam
 	console.log(path);
 	this.addOperation("GET", {"path":path}, callback, context, object);
 }
-
+App3DR.ProjectManager.prototype.loadRelativeDataForPair = function(pair, filename, callback, context, object){
+	console.log("loadRelativeDataForPair");
+	var path = Code.appendToPath(this._workingPath, App3DR.ProjectManager.PAIRS_DIRECTORY, pair.directory(), filename);
+	console.log(path);
+	this.addOperation("GET", {"path":path}, callback, context, object);
+}
 
 App3DR.ProjectManager.prototype.loadMatchingDataForTriple = function(triple, filename, callback, context, object){
 	console.log("loadMatchingDataForTriple");
@@ -6001,6 +6011,7 @@ App3DR.ProjectManager.prototype.checkPerformNextTask = function(){
 	}
 //return; // TODO: remove
 	// does a triple exist (even a bad one) for all pairs ...
+	/*
 	len = views.length;
 	var triples = this._triples;
 	for(i=0; i<views.length; ++i){
@@ -6033,6 +6044,7 @@ break; // TODO: remove
 			}
 		}
 	}
+	*/
 	// cameras:
 	var cameras = this._cameras;
 	console.log(cameras)
@@ -6051,8 +6063,30 @@ break; // TODO: remove
 		}
 	}
 	console.log("... continue");
-	// dense matching
+	
 
+
+	// assuming all pair matches have run
+	len = views.length;
+	for(i=0; i<len; ++i){
+		var viewA = views[i];
+		var idA = viewA.id();
+		for(j=i+1; j<len; ++j){
+			var viewB = views[j];
+			var idB = viewB.id();
+			var found = false;
+			console.log("CHECK IF RELATIVE EXISTS ... IF NOT, BA THIS: --- PAIR - "+idA+" * "+idB);
+		}
+	}
+
+
+	
+	this.calculateGlobalOrientationInit();
+	
+throw "PAIRS RELATIVE NESS .."
+
+
+throw "calculateBundleAdjust";
 	// bundle adjust
 	if(views.length>1 && pairs.length>0 && cameras.length>0){
 		this.calculateBundleAdjust();
@@ -6062,6 +6096,8 @@ break; // TODO: remove
 	// surface
 
 	// texturing
+
+	// dense matching
 
 	// 
 	// does a camera calibration exist?
@@ -6525,6 +6561,118 @@ inverted:
 }
 
 
+
+App3DR.ProjectManager.prototype.calculateGlobalOrientationInit = function(callback, context, object){
+	console.log("calculateGlobalOrientationInit");
+	// load all relative.yaml
+	// console.log(this._pairs);
+	var pairs = this._pairs;
+	var expectedPairs = pairs.length;
+	var loadedPairs = 0;
+	var fxnLoadedRelativeYAML = function(a,b){
+		++loadedPairs;
+		if(loadedPairs==expectedPairs){
+			console.log("all pair relative data loaded");
+			this._calculateGlobalOrientationInit2(callback, context, object);
+		}
+	}
+	for(var i=0; i<pairs.length; ++i){
+		var pair = pairs[i];
+		var viewA = pair.viewA();
+		var viewB = pair.viewB();
+		pair.loadRelativeData(fxnLoadedRelativeYAML, this);
+	}
+}
+
+App3DR.ProjectManager.prototype._calculateGlobalOrientationInit2 = function(callback, context, object){
+	console.log("_calculateGlobalOrientationInit2");
+	var pairs = this._pairs;
+	var views = this._views;
+	var edgesTranslate = [];
+	var edgesRotate = [];
+	var tableViewIDToIndex = {};
+	for(var i=0; i<views.length; ++i){
+		var view = views[i];
+		tableViewIDToIndex[view.id()+""] = i;
+	}
+
+	for(var i=0; i<pairs.length; ++i){
+		var pair = pairs[i];
+		//console.log(pair)
+		var viewA = pair.viewA();
+		var viewB = pair.viewB();
+		var relativeData = pair.relativeData();
+		// console.log(relativeData)
+		var viewsData = relativeData["views"];
+		var videDataA = viewsData[0];
+		var videDataB = viewsData[1];
+		var transformA = Matrix.loadFromObject(videDataA["transform"]);
+		var transformB = Matrix.loadFromObject(videDataB["transform"]);
+		// console.log(transformA+"");
+		// console.log(transformB+"");
+		var twist = Code.vectorTwistFromMatrix3D(transformB);
+		// console.log(twist);
+		var dir = twist["direction"];
+		var angle = twist["angle"];
+		var offset = twist["offset"];
+		var error = 1; // TODO get error from data: match count | pair reprojection error sigma
+		console.log(offset+"");
+		var indexA = tableViewIDToIndex[viewA.id()+""];
+		var indexB = tableViewIDToIndex[viewB.id()+""];
+		edgesTranslate.push([indexA,indexB, offset, error]);
+		edgesRotate.push([indexA,indexB, {"direction":dir, "angle":angle}, error]);
+		// convert to transform of location & orientation/twist
+
+
+
+		// pair.loadRelativeData(fxnLoadedRelativeYAML, this);
+	}
+	console.log(edgesTranslate);
+	var result = R3D.optiumGraphLocation3D(edgesTranslate);
+	// var result = R3D.optimumGraphLocation3DLeastSquares(relativeLocations);
+	// console.log("result");
+	// console.log(result);
+	var locations = result["absolute"];
+	console.log("locations");
+	console.log(locations);
+
+
+	var results = R3D.optiumGraphAngle3D(edgesRotate);
+	// console.log(results);
+	var rotations = results["absolute"];
+	console.log("rotations");
+	console.log(rotations);
+
+
+	// turn into compiled single grouping
+	var matches = [];
+	// for(var i=0; i<pairs.length; ++i){
+	// 	var pair = pairs[i];
+	// 	// keep matches between views but don't assign absolute positions ?
+	// }
+	// for(var i=0; i<views.length; ++i){
+	// 	var view = views[i];
+	// 	// 
+	// }
+	//
+	var yaml = new YAML();
+
+	// cameras
+	// consolidate
+
+	// views
+
+	// points
+	var str = yaml.toString();
+	this.calculateGlobalOrientationNonlinear(str);
+}
+App3DR.ProjectManager.prototype.calculateGlobalOrientationNonlinear = function(str){
+	var yaml = YAML.parse(str);
+	// create new Steropsis method
+	
+	throw "?";
+}
+
 App3DR.ProjectManager.prototype.calculateBundleAdjust = function(callback, context, object){
 	console.log("calculateBundleAdjust");
 
@@ -6802,7 +6950,7 @@ console.log(offX+","+offY);
 
 // DON'T RUN
 // don't B
-return; // don't run
+// return; // don't run
 
 
 
@@ -7030,9 +7178,6 @@ var completeFxn = function(){
 
 world.solve(completeFxn, this);
 
-//return; // dont save
-
-//throw "...";
 
 return;
 throw "USE NEW BUNDLE ADJUST: R3D.BA";
@@ -7943,9 +8088,10 @@ App3DR.ProjectManager.Pair = function(manager, directory, viewA, viewB){
 	this._matchFeatureScore = null; // median / average of feature scores [some distribution of good scores metric]
 	this._matchFeatureCount = null; // total matched features [above minimum]
 	this._matchingData = null;
-	this._matchingSparse = null;
-	this._matchingMedium = null;
-	this._matchingDense = null;
+	this._relativeData = null;
+	// this._matchingSparse = null;
+	// this._matchingMedium = null;
+	// this._matchingDense = null;
 }
 App3DR.ProjectManager.Pair.prototype.toString = function(){
 	return "[Pair: "+this._viewAID+" : "+this._viewBID+"]";
@@ -7965,7 +8111,9 @@ App3DR.ProjectManager.Pair.prototype.id = function(){
 App3DR.ProjectManager.Pair.prototype.matchingData = function(){
 	return this._matchingData;
 }
-
+App3DR.ProjectManager.Pair.prototype.relativeData = function(){
+	return this._relativeData;
+}
 App3DR.ProjectManager.Pair.prototype.setMatchInfo = function(count, dir){
 	this._matchFeatureCount = count;
 	// TODO: DIR
@@ -8005,8 +8153,23 @@ App3DR.ProjectManager.Pair.prototype.loadMatchingData = function(callback, conte
 App3DR.ProjectManager.Pair.prototype._loadMatchingDataComplete = function(object, data){
 	// TODO: to internal object
 	var yamlObject = Code.binaryToYAMLObject(data);
-//	console.log(yamlObject);
 	this._matchingData = yamlObject;
+	var callback = object["callback"];
+	var context = object["context"];
+	if(callback && context){
+		callback.call(context, this);
+	}
+}
+App3DR.ProjectManager.Pair.prototype.loadRelativeData = function(callback, context, returnObject){
+	var object = {};
+		object["callback"] = callback;
+		object["context"] = context;
+	this._manager.loadRelativeDataForPair(this, App3DR.ProjectManager.PAIR_RELATIVE_FILE_NAME, this._loadRelativeDataComplete, this, object);
+}
+App3DR.ProjectManager.Pair.prototype._loadRelativeDataComplete = function(object, data){
+	// TODO: to internal object
+	var yamlObject = Code.binaryToYAMLObject(data);
+	this._relativeData = yamlObject;
 	var callback = object["callback"];
 	var context = object["context"];
 	if(callback && context){

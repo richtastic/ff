@@ -2305,7 +2305,29 @@ Code.averageAngleVector2D = function(vectors, percents){ // vectors assumed nonz
 	}
 	return total;
 }
-Code.averageAngleVector3D = function(vectors, percents){ // center of vectors via rotation
+Code.diffTwistVector3D = function(valueA,valueB){
+	var diffDir = Code.subAngleVector3D(valueA["direction"],valueB["direction"]);
+	var diffAng = Code.angleZeroTwoPi(valueA["angle"]-valueB["angle"]);
+	var diff = {"direction":diffDir, "angle":diffAng};
+	return diff;
+}
+Code.addAngleVector3D = function(vectorA, vectorB){ 
+	return Code._opAngleVector3D(vectorA, vectorB, 1);
+}
+Code.subAngleVector3D = function(vectorA, vectorB){ 
+	return Code._opAngleVector3D(vectorA, vectorB, -1);
+}
+Code._opAngleVector3D = function(vectorA, vectorB, mag){ // assume Z = default location
+	var vectorC = vectorA.copy();
+	var crossB = V3D.cross(V3D.DIRZ,vectorB);
+	var angleB = V3D.angle(V3D.DIRZ,vectorB);
+	if(angleB>0 && crossB.length()>0){
+		crossB.norm();
+		V3D.rotateAngle(vectorC,vectorC,crossB,angleB*mag);
+	}
+	return vectorC;
+}
+Code.averageAngleVector3D = function(vectors, percents){ // center of vectors via rotation on sphere [ignores twist]
 	if(!vectors){
 		return null;
 	}
@@ -2337,7 +2359,50 @@ Code.averageAngleVector3D = function(vectors, percents){ // center of vectors vi
 	}
 	return total;
 
-
+}
+Code.averageVectorTwist3D = function(twists, percents){ 
+	//
+}
+Code.vectorTwistFromMatrix3D = function(matrix){
+	var o = new V3D(0,0,0);
+	var x = new V3D(1,0,0);
+	var y = new V3D(0,1,0);
+	var z = new V3D(0,0,1);
+	matrix.multV3DtoV3D(o,o);
+	matrix.multV3DtoV3D(x,x);
+	matrix.multV3DtoV3D(y,y);
+	matrix.multV3DtoV3D(z,z);
+	x.sub(o);
+	y.sub(o);
+	z.sub(o);
+	x.norm();
+	y.norm();
+	z.norm();
+	// find the angle Z has made with Z
+	// var undo = matrix.copy();
+	// console.log(undo);
+	var dir = V3D.cross(V3D.DIRZ,z);
+	if(dir.length()==0){
+		throw "...";
+	}
+	dir.norm();
+	// console.log("   DIR:"+dir);
+	var ang = V3D.angle(V3D.DIRZ,z);
+	// undo the z movement
+	V3D.rotateAngle(x,x,dir,-ang);
+	V3D.rotateAngle(y,y,dir,-ang);
+	// console.log(x+"")
+	// console.log(y+"")
+	// find the x & y angles (sould be identical)
+	var angleX = V3D.angle(V3D.DIRX,x);
+	var angleY = V3D.angle(V3D.DIRY,y);
+	// console.log(Code.degrees(angleX)+" && "+Code.degrees(angleY));
+	// twist ?
+	var angle = angleX;
+	var direction = dir;
+	return {"direction":direction, "angle":angle, "offset":o};
+}
+Code.averageQuaternions = function(quaternions, percents){ 
 /*
 	throw "eigenvectors ?";
 
