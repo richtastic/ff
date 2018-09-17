@@ -356,67 +356,7 @@ Stereopsis.View.prototype._updateInternalParams = function(){
 	var camera = this._camera;
 	if(camera && size){
 		var K = camera.K();
-		var k = new Matrix(3,3);
-		var wid = size.x;
-		var hei = size.y;
-		// k.set(0,0, K.get(0,0)*wid ); // fx
-		// // TODO: WHICH IS RIGHT?
-		// k.set(0,1, K.get(0,1) // 0)
-		// //k.set(0,1, K.get(0,1)*(hei/wid) ); // s // a)
-		// //k.set(0,1, K.get(0,1)*(wid/hei) ); // s // b)
-		// //k.set(0,1, K.get(0,1)*hei ); // s         // c)
-		// //k.set(0,1, K.get(0,1)*hei ); // s         // d)
-		// //k.set(0,1, 0 ); // s
-		// k.set(0,2, K.get(0,2)*wid ); // cx
-		// k.set(1,0, 0.0 ); // 0
-		// k.set(1,1, K.get(1,1)*hei ); // fy
-		// k.set(1,2, K.get(1,2)*hei ); // cy
-		// k.set(2,0, 0.0 );
-		// k.set(2,1, 0.0 );
-		// k.set(2,2, 1.0 );
-		
-		k.set(0,0, K.get(0,0)*wid ); // fx
-		k.set(0,1, K.get(0,1) ); // s
-		k.set(0,2, K.get(0,2)*wid ); // cx
-		k.set(1,0, 0 ); // 0
-		k.set(1,1, K.get(1,1)*hei ); // fy
-		k.set(1,2, K.get(1,2)*hei ); // cy
-		k.set(2,0, 0.0 );
-		k.set(2,1, 0.0 );
-		k.set(2,2, 1.0 );
-
-		// marginally best emperically:
-		// k.set(0,0, K.get(0,0)*wid ); // fx
-		// k.set(0,1, K.get(0,1)*(wid/hei) ); // s
-		// k.set(0,2, K.get(0,2)*wid ); // cx
-		// k.set(1,0, 0 ); // 0
-		// k.set(1,1, K.get(1,1)*hei ); // fy
-		// k.set(1,2, K.get(1,2)*hei ); // cy
-		// k.set(2,0, 0.0 );
-		// k.set(2,1, 0.0 );
-		// k.set(2,2, 1.0 );
-
-		// // NO
-		// k.set(0,0, K.get(0,0)*wid ); // fx
-		// k.set(0,1, K.get(0,1) ); // s
-		// k.set(0,2, K.get(0,2)*wid ); // cx
-		// k.set(1,0, 0 ); // 0
-		// k.set(1,1, K.get(1,1)*wid ); // fy
-		// k.set(1,2, K.get(1,2)*wid ); // cy
-		// k.set(2,0, 0.0 );
-		// k.set(2,1, 0.0 );
-		// k.set(2,2, 1.0 );
-		// // NO
-		// k.set(0,0, K.get(0,0) ); // fx
-		// k.set(0,1, K.get(0,1) ); // s
-		// k.set(0,2, K.get(0,2) ); // cx
-		// k.set(1,0, 0 ); // 0
-		// k.set(1,1, K.get(1,1) ); // fy
-		// k.set(1,2, K.get(1,2) ); // cy
-		// k.set(2,0, 0.0 );
-		// k.set(2,1, 0.0 );
-		// k.set(2,2, 1.0 );
-		this._K = k;
+		this._K = R3D.cameraFromScaledImageSize(K, size);
 		this._Kinv = Matrix.inverse(k);
 	}else{
 		this._K = null;

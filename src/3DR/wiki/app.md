@@ -279,11 +279,11 @@ vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 	- iterate cell size for finer detail (~5 iterations to cell~3 pixels)
 	=> 3D transform
 	=> dense point matches
------> HERE <------
 - global absolute orientation initialization
 	- rotation averaging
 	- translation averaging
 	=> initial abs camera locations & orientations
+-----> HERE <------
 - global absolute orientation nonlinear minimization
 	- use match count / reprojection error as edge weight
 	- nonlinear minimize angle & trans.
@@ -331,9 +331,12 @@ https://cloud.google.com/appengine/docs/nodejs/
 
 
 
+- nonlinear location / orientation initialization
 
+- save camera ID inside bundle adjust files
+- save a 'size' and 'rotation' for each p2d in 3d 'points' in bundle info.yaml
 
-
+- bundle adjust for 3 views - using absolute transforms as basis (relatives are DERIVED)
 
 
 

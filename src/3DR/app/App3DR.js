@@ -89,7 +89,7 @@ var modeModelReconstruction = false;
 
 // don't A:
 // TO SWITCH ON MODELING:
-// modeModelReconstruction = true;
+modeModelReconstruction = true;
 
 
 
@@ -1000,7 +1000,7 @@ var max3D = new V3D();
 		viewsLookupIndex[id] = i;
 	}
 
-
+if(points){
 	for(var i=0; i<points.length; ++i){
 		var v = points[i];
 		var point3D = new V3D(v["x"],v["y"],v["z"]);
@@ -1013,6 +1013,7 @@ var max3D = new V3D();
 			for(var j=0; j<viewList.length; ++j){
 				var v = viewList[j];
 				var indexIn = v["view"];
+
 //				console.log(index);
 				var index = viewsLookupIndex[indexIn];
 				var p = {"x":v["x"], "y":v["y"], "3D":point3D}; // new V2D(v["x"],v["y"]);
@@ -1037,12 +1038,14 @@ var max3D = new V3D();
 //console.log("TODO: SCALE ENTIRE SCENE ????? OR INCREASE FRUSTRUM");
 //point3D.scale(0.001);
 	}
+}
 var manager = this._projectManager;
 console.log(manager);
 var projectViews = manager.views();
 	var views3D = [];
 	for(var i=0; i<views.length; ++i){
 		var v = views[i];
+console.log(v)
 		var transform = v["transform"];
 			transform = new Matrix().loadFromObject(transform);
 		var camID = v["camera"]
@@ -1077,7 +1080,12 @@ console.log(points2D);
 	app.setPoints(points3D, points2D);
 
 	app.setViews(views3D);
-
+if(!max3D || !min3D){
+	max3D = new V3D(1,1,1);
+	min3D = new V3D(-1,-1,-1);
+}
+console.log(max3D);
+console.log(min3D);
 var range = V3D.sub(max3D,min3D);
 
 var maxDistance = max3D.length();
@@ -3487,9 +3495,9 @@ camWid = 0.20;
 			var vertList = [pBL.x,pBL.y,pBL.z, pBR.x,pBR.y,pBR.z, pTR.x,pTR.y,pTR.z,   pTR.x,pTR.y,pTR.z, pTL.x,pTL.y,pTL.z, pBL.x,pBL.y,pBL.z];
 			
 			console.log("SRZ: "+horz+" x "+vert);
-		if(i==0){
+		// if(i==0){
 		// if(i==1){
-		// if(false){ // none
+		if(false){ // none
 		//if(true){ // overlapping
 			console.log("CREATE TEXTURES HERE");
 			var triangleInfo = this._triangulateSurface(i);
@@ -6611,6 +6619,7 @@ App3DR.ProjectManager.prototype._calculateGlobalOrientationInit2 = function(call
 		// console.log(transformA+"");
 		// console.log(transformB+"");
 		var twist = Code.vectorTwistFromMatrix3D(transformB);
+// TWIST A
 		// console.log(twist);
 		var dir = twist["direction"];
 		var angle = twist["angle"];
@@ -6643,6 +6652,18 @@ App3DR.ProjectManager.prototype._calculateGlobalOrientationInit2 = function(call
 	console.log("rotations");
 	console.log(rotations);
 
+	var transforms = [];
+	for(var i=0; i<locations.length; ++i){
+		var location = locations[i];
+		var rotation = rotations[i];
+		// console.log(location);
+		// console.log(rotation);
+		var transform = Code.Matrix3DFromVectorTwist(location, rotation);
+		transforms[i] = transform;
+		console.log(transform+"");
+	}
+	// throw "?"
+
 
 	// turn into compiled single grouping
 	var matches = [];
@@ -6655,16 +6676,160 @@ App3DR.ProjectManager.prototype._calculateGlobalOrientationInit2 = function(call
 	// 	// 
 	// }
 	//
+	var timestampNow = Code.getTimeStampFromMilliseconds();
 	var yaml = new YAML();
+	yaml.writeComment("BA Model Grouping");
+	yaml.writeString("created", timestampNow);
+	yaml.writeBlank();
+	// consolidate cameras
+	var thisCameras = this._cameras;
+	// console.log(thisCameras)
+	var allCameras = {};
+	for(var i=0; i<pairs.length; ++i){
+		var pair = pairs[i];
+		var relativeData = pair.relativeData();
+		// console.log(relativeData);
+		var cameras = relativeData["cameras"];
+		for(var j=0; j<cameras.length; ++j){
+			var camera = cameras[j];
+			// console.log(camera);
+			allCameras[camera["id"]] = camera;
+		}
+	}
 
-	// cameras
-	// consolidate
+	
+
+
+	// yaml.writeComment("3DR Features File 0");
+	// 
+	// yaml.writeString("title", "features");
+	// yaml.writeString("created", timestampNow);
+	// yaml.writeString("from", viewA.id());
+	// yaml.writeString("to", viewB.id());
+
+	yaml.writeArrayStart("cameras");
+	var keys = Code.keys(allCameras);
+	for(var i=0; i<keys.length; ++i){
+		var key = keys[i];
+		var cam = allCameras[i];
+		// console.log(cam);
+		yaml.writeObjectStart();
+			yaml.writeString("id", cam["id"]);
+			yaml.writeObjectStart("K");
+				K = Matrix.loadFromObject(cam["K"]);
+				var K = K.saveToYAML(yaml);
+			yaml.writeObjectEnd();
+			yaml.writeObjectStart("distortion");
+				var distortion = cam["distortion"];
+				yaml.writeNumber("k1", distortion["k1"]);
+				yaml.writeNumber("k2", distortion["k2"]);
+				yaml.writeNumber("k3", distortion["k3"]);
+				yaml.writeNumber("p1", distortion["p1"]);
+				yaml.writeNumber("p2", distortion["p2"]);
+			yaml.writeObjectEnd();
+		yaml.writeObjectEnd();
+	}
+	yaml.writeArrayEnd();
+
+
+// TODO: FROM WHERE?:
+	var cameraSize = new V2D(504,378);
+	var cam = allCameras["0"];
+	var K = Matrix.loadFromObject(cam["K"]);
+	K = R3D.cameraFromScaledImageSize(K, cameraSize);
+	console.log(K);
+	var Kinv = Matrix.inverse(K);
+
 
 	// views
+	console.log(locations);
+	console.log(tableViewIDToIndex);
+	yaml.writeArrayStart("views");
+	for(var i=0; i<views.length; ++i){
+		console.log(view);
+		var view = views[i];
+		var index = tableViewIDToIndex[view.id()+""];
+		var transform = transforms[index];
+		// console.log(transform);
+		yaml.writeObjectStart();
+			yaml.writeString("id",view.id());
+			yaml.writeString("camera","0"); // TODO
+			yaml.writeObjectStart("imageSize");
+				yaml.writeNumber("x",cameraSize.x);
+				yaml.writeNumber("y",cameraSize.y);
+			yaml.writeObjectEnd();
+			yaml.writeNumber("cellSize",11);
+			yaml.writeObjectStart("transform");
+				transform.saveToYAML(yaml);
+			yaml.writeObjectEnd();
+		yaml.writeObjectEnd();
+	}
+	yaml.writeArrayEnd();
+
 
 	// points
+	yaml.writeArrayStart("pointsx");
+	for(var i=0; i<pairs.length; ++i){
+		var pair = pairs[i];
+		var relativeData = pair.relativeData();
+		// console.log(relativeData);
+		var points = relativeData["points"];
+		for(var j=0; j<points.length; ++j){
+			point = points[j];
+			var pointViews = point["views"];
+			var pointViewA = pointViews[0];
+			var pointViewB = pointViews[1]
+			var vA = pointViewA["view"];
+			var pA = new V2D(pointViewA["x"],pointViewA["y"]);
+			var vB = pointViewB["view"];
+			var pB = new V2D(pointViewB["x"],pointViewB["y"]);
+			// console.log(vA);
+			var iA = tableViewIDToIndex[vA];
+			// console.log(iA);
+			var tA = transforms[iA];
+			var iB = tableViewIDToIndex[vB];
+			var tB = transforms[iB];
+			// 
+			var KAInv = Kinv;
+			var KBInv = Kinv;
+			var point2DA = pA.copy().scale(cameraSize.x,cameraSize.y);
+			var point2DB = pB.copy().scale(cameraSize.x,cameraSize.y);
+			var PA = tA;
+			var PB = tB;
+			// console.log(point2DA,point2DB, PA,PB, KAInv, KBInv)
+			var p3D = R3D.triangulatePointDLT(point2DA,point2DB, PA,PB, KAInv, KBInv);
+			// console.log(p3D+"");
+			if(p3D){
+				yaml.writeObjectStart();
+					yaml.writeArrayStart("views");
+						yaml.writeObjectStart();
+							yaml.writeString("view", vA);
+							yaml.writeNumber("x", pA.x);
+							yaml.writeNumber("y", pA.y);
+						yaml.writeObjectEnd();
+						yaml.writeObjectStart();
+							yaml.writeString("view", vB);
+							yaml.writeNumber("x", pB.x);
+							yaml.writeNumber("y", pB.y);
+						yaml.writeObjectEnd();
+					yaml.writeArrayEnd();
+					yaml.writeNumber("x",p3D.x);
+					yaml.writeNumber("y",p3D.y);
+					yaml.writeNumber("z",p3D.z);
+				yaml.writeObjectEnd();
+			}
+		}
+		//
+	}
+	yaml.writeArrayEnd();
+
+	yaml.writeBlank();
 	var str = yaml.toString();
-	this.calculateGlobalOrientationNonlinear(str);
+	console.log(str);
+
+	// proceed to optimizing step
+
+	// this.calculateGlobalOrientationNonlinear(str);
 }
 App3DR.ProjectManager.prototype.calculateGlobalOrientationNonlinear = function(str){
 	var yaml = YAML.parse(str);
@@ -6950,7 +7115,7 @@ console.log(offX+","+offY);
 
 // DON'T RUN
 // don't B
-// return; // don't run
+return; // don't run
 
 
 

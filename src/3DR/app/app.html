@@ -26,8 +26,26 @@ function classesLoadedFxn(){
 	console.log(twist);
 	var angle = twist["angle"];
 	var direction = twist["direction"];
+	var location = twist["offset"];
 	console.log(angle);
 	console.log(direction);
+	console.log(location);
+
+	var trans = Code.Matrix3DFromVectorTwist(location, twist);
+
+	console.log(trans);
+
+	var a = new V3D(0,0,1);
+	var b = trans.multV3DtoV3D(a);
+	var c = matrix.multV3DtoV3D(a);
+	console.log(a,b,c);
+	var diff = V3D.sub(b,c);
+	console.log(diff+"");
+
+
+
+
+
 	throw "?";
 */
 /*
@@ -320,6 +338,8 @@ var errorLocation = error * 3.0;
 
 // throw "TESTING";
 // return;
+
+
 
 	// paths = graph.minPath(vs[0],vs[3]);
 	// console.log(paths);

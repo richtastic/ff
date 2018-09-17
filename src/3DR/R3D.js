@@ -15019,7 +15019,69 @@ display.addChild(d);
 
 	return result;
 }
+R3D.cameraFromScaledImageSize = function(K, size){
+	var k = new Matrix(3,3);
+	var wid = size.x;
+	var hei = size.y;
+	// k.set(0,0, K.get(0,0)*wid ); // fx
+	// // TODO: WHICH IS RIGHT?
+	// k.set(0,1, K.get(0,1) // 0)
+	// //k.set(0,1, K.get(0,1)*(hei/wid) ); // s // a)
+	// //k.set(0,1, K.get(0,1)*(wid/hei) ); // s // b)
+	// //k.set(0,1, K.get(0,1)*hei ); // s         // c)
+	// //k.set(0,1, K.get(0,1)*hei ); // s         // d)
+	// //k.set(0,1, 0 ); // s
+	// k.set(0,2, K.get(0,2)*wid ); // cx
+	// k.set(1,0, 0.0 ); // 0
+	// k.set(1,1, K.get(1,1)*hei ); // fy
+	// k.set(1,2, K.get(1,2)*hei ); // cy
+	// k.set(2,0, 0.0 );
+	// k.set(2,1, 0.0 );
+	// k.set(2,2, 1.0 );
+	
+	k.set(0,0, K.get(0,0)*wid ); // fx
+	k.set(0,1, K.get(0,1) ); // s
+	k.set(0,2, K.get(0,2)*wid ); // cx
+	k.set(1,0, 0 ); // 0
+	k.set(1,1, K.get(1,1)*hei ); // fy
+	k.set(1,2, K.get(1,2)*hei ); // cy
+	k.set(2,0, 0.0 );
+	k.set(2,1, 0.0 );
+	k.set(2,2, 1.0 );
 
+	// marginally best emperically:
+	// k.set(0,0, K.get(0,0)*wid ); // fx
+	// k.set(0,1, K.get(0,1)*(wid/hei) ); // s
+	// k.set(0,2, K.get(0,2)*wid ); // cx
+	// k.set(1,0, 0 ); // 0
+	// k.set(1,1, K.get(1,1)*hei ); // fy
+	// k.set(1,2, K.get(1,2)*hei ); // cy
+	// k.set(2,0, 0.0 );
+	// k.set(2,1, 0.0 );
+	// k.set(2,2, 1.0 );
+
+	// // NO
+	// k.set(0,0, K.get(0,0)*wid ); // fx
+	// k.set(0,1, K.get(0,1) ); // s
+	// k.set(0,2, K.get(0,2)*wid ); // cx
+	// k.set(1,0, 0 ); // 0
+	// k.set(1,1, K.get(1,1)*wid ); // fy
+	// k.set(1,2, K.get(1,2)*wid ); // cy
+	// k.set(2,0, 0.0 );
+	// k.set(2,1, 0.0 );
+	// k.set(2,2, 1.0 );
+	// // NO
+	// k.set(0,0, K.get(0,0) ); // fx
+	// k.set(0,1, K.get(0,1) ); // s
+	// k.set(0,2, K.get(0,2) ); // cx
+	// k.set(1,0, 0 ); // 0
+	// k.set(1,1, K.get(1,1) ); // fy
+	// k.set(1,2, K.get(1,2) ); // cy
+	// k.set(2,0, 0.0 );
+	// k.set(2,1, 0.0 );
+	// k.set(2,2, 1.0 );
+	return k;
+}
 R3D.cameraParametersAllNonlinear = function(pointGroups3D,pointGroups2D,listH, K, d){
 	d = {"k1":0,"k2":0,"k3":0,"p1":0,"p2":0};
 	var xVals = [K.get(0,0), K.get(0,1), K.get(0,2), K.get(1,1), K.get(1,2), d["k1"],d["k2"],d["k3"], d["p1"],d["p2"]];
@@ -17646,8 +17708,28 @@ R3D._optiumGraph3D = function(edges,isAngles){ // edges: [indexA,indexB,value,er
 		values[i] = average;
 	}
 	// nonlinear error minimize
-	// var result = R3D._gdDirectionAngleTranslation3D(vs,es,values, isAngles);
-	// values = result["values"];
+	if(isAngles){
+		// normals:
+		console.log("NORMAL MINIMIZE:");
+		var result = R3D._gdDirectionAngleTranslation3D(vs,es,values, 1);
+		var valuesDirections = result["values"];
+		// twists:
+		console.log("TWIST MINIMIZE:");
+		var result = R3D._gdDirectionAngleTranslation3D(vs,es,values, 2);
+		var valuesTwists = result["values"];
+
+		values = [];
+		for(var i=0; i<valuesDirections.length; ++i){
+			var d = valuesDirections[i];
+			var a = valuesTwists[i];
+			values.push({"direction":d, "angle":a});
+		}
+	}else{
+		var result = R3D._gdDirectionAngleTranslation3D(vs,es,values, 0);
+		values = result["values"];
+	}
+
+
 	// create new edges
 	graph.kill();
 	var output = [];
@@ -17675,14 +17757,25 @@ R3D._gdDirectionAngleTranslation3D = function(vs,es,values, isAngles){
 	args.push(es);
 	var fxn = null;
 	var x = [];
-	if(isAngles){
+	var output = [];
+	console.log(isAngles);
+	if(isAngles==2){
+		fxn = R3D._gdAngle3DTwist;
+		// x = null;
+		for(var i=0; i<values.length; ++i){
+			var v = values[i];
+			console.log(v);
+			x.push(v["angle"]);
+		}
+	}else if(isAngles==1){
 		fxn = R3D._gdAngle3D;
-		x = null;
-		// gd on direction
-		// gd on twist
-
-		throw "need 2D twist & 3D dir"
-	}else{
+		for(var i=0; i<values.length; ++i){
+			var v = values[i];
+			var dir = v["direction"];
+			x.push(dir.x,dir.y,dir.z);
+		}
+		// throw "3D dir";
+	}else{ // isAngles==0
 		fxn = R3D._gdLocation3D;
 		for(var i=0; i<values.length; ++i){
 			var v = values[i];
@@ -17691,19 +17784,36 @@ R3D._gdDirectionAngleTranslation3D = function(vs,es,values, isAngles){
 	}
 	console.log(x);
 	var result = Code.gradientDescent(fxn, args, x, null, 10, 1E-10);
-	var locations = [];
+	console.log(result);
 	var count = values.length;
-	for(var i=0; i<count; ++i){
-		var location = new V3D(x[i*3+0],x[i*3+1],x[i*3+2]);
-		locations[i] = location;
+	console.log(isAngles)
+	if(isAngles==2){
+		// twist
+		for(var i=0; i<count; ++i){
+			output[i] = x[i];
+		}
+	}else if(isAngles==1){
+		// normal
+		for(var i=0; i<count; ++i){
+			var location = new V3D(x[i*3+0],x[i*3+1],x[i*3+2]);
+			output[i] = location;
+		}
+	}else{
+		for(var i=0; i<count; ++i){
+			var location = new V3D(x[i*3+0],x[i*3+1],x[i*3+2]);
+			output[i] = location;
+		}
 	}
-	return {"values":locations};
+	return {"values":output};
+}
+R3D._gdAngle3DTwist = function(args, x, isUpdate){
+	return R3D._gdAngGrad3D(args, x, isUpdate, 2, R3D._gdErrorAngle2DFxn);
 }
 R3D._gdAngle3D = function(args, x, isUpdate){
-	return R3D._gdAngGrad3D(args, x, isUpdate, true, R3D._gdErrorAngle3DFxn);
+	return R3D._gdAngGrad3D(args, x, isUpdate, 1, R3D._gdErrorAngle3DFxn);
 }
 R3D._gdLocation3D = function(args, x, isUpdate){
-	return R3D._gdAngGrad3D(args, x, isUpdate, false, R3D._gdErrorDirection3DFxn);
+	return R3D._gdAngGrad3D(args, x, isUpdate, 0, R3D._gdErrorDirection3DFxn);
 }
 R3D._gdErrorAngle3DFxn = function(dirA, dirB){
 	var error = V3D.angle(dirA,dirB);
@@ -17726,18 +17836,40 @@ R3D._gdAngGrad3D = function(args, x, isUpdate, isAngles, costFxn){
 		var rel = data["value"];
 		var errorEdge = data["error"];
 		var abs = null;
-		if(isAngles){
-			throw "?";
-			// var ax = x[ia];
-			// var bx = x[ib];
-			// if(ia==0){
-			// 	ax = 0;
-			// }
-			// if(ib==0){
-			// 	bx = 0;
-			// }
-			// abs = Code.angleDirection(ax,bx);
-		}else{
+		if(isAngles==2){
+			var ax = x[ia];
+			var bx = x[ib];
+			if(ia==0){
+				ax = 0;
+			}
+			if(ib==0){
+				bx = 0;
+			}
+			rel = rel["angle"];
+			abs = Code.angleDirection(ax,bx);
+		}else if(isAngles==1){
+			var ax = x[ia*3+0];
+			var bx = x[ib*3+0];
+			var ay = x[ia*3+1];
+			var by = x[ib*3+1];
+			var az = x[ia*3+2];
+			var bz = x[ib*3+2];
+			if(ia==0){
+				ax = 0;
+				ay = 0;
+				az = 1;
+			}
+			if(ib==0){
+				bx = 0;
+				by = 0;
+				bz = 1;
+			}
+			rel = rel["direction"];
+			// a to b
+			abs = Code.subAngleVector3D(new V3D(bx,by,bz), new V3D(ax,ay,az));
+			// console.log(abs);
+			// throw "normals";
+		}else{ // isAngles==0
 			var ax = x[ia*3+0];
 			var bx = x[ib*3+0];
 			var ay = x[ia*3+1];
