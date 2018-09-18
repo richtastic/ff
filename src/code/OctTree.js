@@ -130,7 +130,7 @@ OctTree.prototype.initWithObjects = function(objects, force){
 	min.add(-eps,-eps,-eps);
 	max.add(eps,eps,eps);
 	var size = OctTree.twoDivisionRound(min,max, force);
-	console.log("init size: "+size);
+	// console.log("init size: "+size);
 	if(size.x==0){
 		size.x = 1.0;
 	}

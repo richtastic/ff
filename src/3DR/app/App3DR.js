@@ -89,7 +89,7 @@ var modeModelReconstruction = false;
 
 // don't A:
 // TO SWITCH ON MODELING:
-modeModelReconstruction = true;
+// modeModelReconstruction = true;
 
 
 
@@ -549,9 +549,9 @@ yaml.writeArrayStart("points");
 for(i=0; i<estimated3D.length; ++i){
 	var e3D = estimated3D[i];
 	yaml.writeObjectStart();
-	yaml.writeNumber("x",e3D.x);
-	yaml.writeNumber("y",e3D.y);
-	yaml.writeNumber("z",e3D.z);
+	yaml.writeNumber("X",e3D.x);
+	yaml.writeNumber("Y",e3D.y);
+	yaml.writeNumber("Z",e3D.z);
 	yaml.writeObjectEnd();
 }
 yaml.writeArrayEnd();
@@ -1003,7 +1003,7 @@ var max3D = new V3D();
 if(points){
 	for(var i=0; i<points.length; ++i){
 		var v = points[i];
-		var point3D = new V3D(v["x"],v["y"],v["z"]);
+		var point3D = new V3D(v["X"],v["Y"],v["Z"]);
 		if(!min3D){
 			min3D = new V3D(point3D.x,point3D.y,point3D.z);
 			max3D = new V3D(point3D.x,point3D.y,point3D.z);
@@ -5484,6 +5484,7 @@ App3DR.ProjectManager.prototype.bundleFilename = function(file){
 }
 App3DR.ProjectManager.prototype.infoPath = function(){
 	var infoPath = Code.appendToPath(this._workingPath,App3DR.ProjectManager.INFO_FILE_NAME);
+	console.log("infoPath: '"+infoPath+"'");
 	return infoPath;
 }
 
@@ -5782,10 +5783,12 @@ App3DR.ProjectManager.prototype.loadFeaturesForView = function(view, filename, c
 	this.addOperation("GET", {"path":path}, callback, context, object);
 }
 
-
+App3DR.ProjectManager.prototype.hasBundleInit = function(){
+	return this._bundleFilename !== null;
+}
 App3DR.ProjectManager.prototype.loadBundleAdjust = function(callback, context, object){
-	
 	var filename = this._bundleFilename;
+	// filename = "info.yaml";
 	console.log("loadBundleAdjust: "+filename);
 	if(filename){
 		var path = Code.appendToPath(this._workingPath, App3DR.ProjectManager.BUNDLE_ADJUST_DIRECTORY, filename);
@@ -5796,6 +5799,7 @@ App3DR.ProjectManager.prototype.loadBundleAdjust = function(callback, context, o
 App3DR.ProjectManager.prototype.saveBundleAdjust = function(string, callback, context, object){
 	console.log("saveBundleAdjust");
 	var filename = this._bundleFilename;
+
 	if(filename){
 		var path = Code.appendToPath(this._workingPath, App3DR.ProjectManager.BUNDLE_ADJUST_DIRECTORY, filename);
 		console.log(path);
@@ -5804,6 +5808,15 @@ App3DR.ProjectManager.prototype.saveBundleAdjust = function(string, callback, co
 	}
 }
 
+App3DR.ProjectManager.prototype.savePairRelative = function(pair,count, string, callback, context, object){
+	console.log("savePairRelative: "+pair.id()+" @ "+count);
+	console.log(this._workingPath, App3DR.ProjectManager.PAIRS_DIRECTORY, pair.directory(), App3DR.ProjectManager.PAIR_RELATIVE_FILE_NAME)
+	var path = Code.appendToPath(this._workingPath, App3DR.ProjectManager.PAIRS_DIRECTORY, pair.directory(), App3DR.ProjectManager.PAIR_RELATIVE_FILE_NAME);
+	console.log(path+" ... ");
+	pair.setRelativeCount(count);
+	var yamlBinary = Code.stringToBinary(string);
+	this.addOperation("SET", {"path":path, "data":yamlBinary}, callback, context, pair);
+}
 
 
 App3DR.ProjectManager.prototype.pair = function(idA,idB){
@@ -6070,9 +6083,6 @@ break; // TODO: remove
 			return;
 		}
 	}
-	console.log("... continue");
-	
-
 
 	// assuming all pair matches have run
 	len = views.length;
@@ -6082,25 +6092,42 @@ break; // TODO: remove
 		for(j=i+1; j<len; ++j){
 			var viewB = views[j];
 			var idB = viewB.id();
-			var found = false;
-			console.log("CHECK IF RELATIVE EXISTS ... IF NOT, BA THIS: --- PAIR - "+idA+" * "+idB);
+			var foundPair = null;
+			for(k=0; k<pairs.length; ++k){
+				var pair = pairs[k];
+				if(pair.isPair(idA,idB)){
+					if(!pair.hasRelative()){
+						foundPair = pair;
+						break;
+					}
+				}
+			}
+			if(foundPair){
+				console.log("NEED TO DO A PAIR : "+idA+" & "+idB+" = "+foundPair.id());
+				this.calculateBundleAdjustPair(viewA,viewB);
+				return;
+			}
 		}
 	}
 
+	if(!this.hasBundleInit()){
+		// global relative => absolute initialization
+		this.calculateGlobalOrientationInit();
+		return;
+	}
 
+	// global absolute finalizing
 	
-	this.calculateGlobalOrientationInit();
-	
-throw "PAIRS RELATIVE NESS .."
+throw "GLOBAL ABS FINALIZING"
 
-
+/*
 throw "calculateBundleAdjust";
 	// bundle adjust
 	if(views.length>1 && pairs.length>0 && cameras.length>0){
 		this.calculateBundleAdjust();
 		return;
 	}
-
+*/
 	// surface
 
 	// texturing
@@ -6610,7 +6637,12 @@ App3DR.ProjectManager.prototype._calculateGlobalOrientationInit2 = function(call
 		var viewA = pair.viewA();
 		var viewB = pair.viewB();
 		var relativeData = pair.relativeData();
-		// console.log(relativeData)
+// console.log(relativeData)
+var transformsSingle = relativeData["transforms"][0];
+var transformMatches = transformsSingle["matches"];
+var transformRSigma = transformsSingle["errorRSigma"];
+var transformRMean = transformsSingle["errorRMean"];
+console.log("ERROR: "+transformRMean+" * "+transformRSigma+" @ "+transformMatches);
 		var viewsData = relativeData["views"];
 		var videDataA = viewsData[0];
 		var videDataB = viewsData[1];
@@ -6619,35 +6651,23 @@ App3DR.ProjectManager.prototype._calculateGlobalOrientationInit2 = function(call
 		// console.log(transformA+"");
 		// console.log(transformB+"");
 		var twist = Code.vectorTwistFromMatrix3D(transformB);
-// TWIST A
-		// console.log(twist);
 		var dir = twist["direction"];
 		var angle = twist["angle"];
 		var offset = twist["offset"];
-		var error = 1; // TODO get error from data: match count | pair reprojection error sigma
-		console.log(offset+"");
+		var error = transformRMean + 1.0*transformRSigma; // TODO get error from data: match count | pair reprojection error sigma
 		var indexA = tableViewIDToIndex[viewA.id()+""];
 		var indexB = tableViewIDToIndex[viewB.id()+""];
 		edgesTranslate.push([indexA,indexB, offset, error]);
 		edgesRotate.push([indexA,indexB, {"direction":dir, "angle":angle}, error]);
-		// convert to transform of location & orientation/twist
-
-
-
-		// pair.loadRelativeData(fxnLoadedRelativeYAML, this);
 	}
-	console.log(edgesTranslate);
+	// console.log(edgesTranslate);
+	// console.log(edgesRotate);
 	var result = R3D.optiumGraphLocation3D(edgesTranslate);
-	// var result = R3D.optimumGraphLocation3DLeastSquares(relativeLocations);
-	// console.log("result");
-	// console.log(result);
 	var locations = result["absolute"];
 	console.log("locations");
 	console.log(locations);
 
-
 	var results = R3D.optiumGraphAngle3D(edgesRotate);
-	// console.log(results);
 	var rotations = results["absolute"];
 	console.log("rotations");
 	console.log(rotations);
@@ -6656,14 +6676,10 @@ App3DR.ProjectManager.prototype._calculateGlobalOrientationInit2 = function(call
 	for(var i=0; i<locations.length; ++i){
 		var location = locations[i];
 		var rotation = rotations[i];
-		// console.log(location);
-		// console.log(rotation);
 		var transform = Code.Matrix3DFromVectorTwist(location, rotation);
 		transforms[i] = transform;
 		console.log(transform+"");
 	}
-	// throw "?"
-
 
 	// turn into compiled single grouping
 	var matches = [];
@@ -6696,10 +6712,7 @@ App3DR.ProjectManager.prototype._calculateGlobalOrientationInit2 = function(call
 			allCameras[camera["id"]] = camera;
 		}
 	}
-
-	
-
-
+	// console.log(allCameras);
 	// yaml.writeComment("3DR Features File 0");
 	// 
 	// yaml.writeString("title", "features");
@@ -6768,7 +6781,7 @@ App3DR.ProjectManager.prototype._calculateGlobalOrientationInit2 = function(call
 
 
 	// points
-	yaml.writeArrayStart("pointsx");
+	yaml.writeArrayStart("points");
 	for(var i=0; i<pairs.length; ++i){
 		var pair = pairs[i];
 		var relativeData = pair.relativeData();
@@ -6813,9 +6826,9 @@ App3DR.ProjectManager.prototype._calculateGlobalOrientationInit2 = function(call
 							yaml.writeNumber("y", pB.y);
 						yaml.writeObjectEnd();
 					yaml.writeArrayEnd();
-					yaml.writeNumber("x",p3D.x);
-					yaml.writeNumber("y",p3D.y);
-					yaml.writeNumber("z",p3D.z);
+					yaml.writeNumber("X",p3D.x);
+					yaml.writeNumber("Y",p3D.y);
+					yaml.writeNumber("Z",p3D.z);
 				yaml.writeObjectEnd();
 			}
 		}
@@ -6825,11 +6838,27 @@ App3DR.ProjectManager.prototype._calculateGlobalOrientationInit2 = function(call
 
 	yaml.writeBlank();
 	var str = yaml.toString();
-	console.log(str);
+	// console.log(str);
 
 	// proceed to optimizing step
 
 	// this.calculateGlobalOrientationNonlinear(str);
+
+
+
+	// SAVE
+	var self = this;
+	var fxnZ = function(){
+		console.log("saved BA Init");
+		// SAVE PROJECT
+		self.saveProjectFile();
+	}
+	// SAVE BA
+	this.bundleFilename(App3DR.ProjectManager.BUNDLE_INFO_FILE_NAME);
+	this.saveBundleAdjust(str, fxnZ, this);
+	
+
+
 }
 App3DR.ProjectManager.prototype.calculateGlobalOrientationNonlinear = function(str){
 	var yaml = YAML.parse(str);
@@ -6837,15 +6866,18 @@ App3DR.ProjectManager.prototype.calculateGlobalOrientationNonlinear = function(s
 	
 	throw "?";
 }
-
-App3DR.ProjectManager.prototype.calculateBundleAdjust = function(callback, context, object){
-	console.log("calculateBundleAdjust");
-
-//return; // TODO: UNCOMMENT
+App3DR.ProjectManager.prototype.calculateBundleAdjustGlobal = function(callback, context, object){
+	throw "calculateBundleAdjustGlobal";
+}
+App3DR.ProjectManager.prototype.calculateBundleAdjustPair = function(viewAIn,viewBIn, callback, context, object){
+	console.log("calculateBundleAdjustPair");
 	var i, j, k;
 	var view, pair, camera;
-	var views = this._views;
-	var pairs = this._pairs;
+	// var views = this._views;
+	// var pairs = this._pairs;
+	var views = [viewAIn,viewBIn];
+	var pairs = [this.pair(viewAIn.id(),viewBIn.id())];
+// throw "...";
 	var expectedViews = views.length;
 	var expectedPairs = pairs.length;
 
@@ -6868,38 +6900,24 @@ App3DR.ProjectManager.prototype.calculateBundleAdjust = function(callback, conte
 	var loadedFeatureImages = 0;
 	var expectedFeatureImages = views.length;
 	var fxnA = function(view){
-//		console.log("loaded view");
 		++loadedViews;
 		fxnD.call(this);
 	}
 	var fxnB = function(pair){
-//		console.log("loaded pair");
 		++loadedPairs;
 		fxnD.call(this);
 	}
 	var fxnC = function(view){
-//		console.log("loaded features image");
 		++loadedFeatureImages;
 		fxnD.call(this);
 	}
-	// var fxnC = function(camera){
-	// 	console.log("loaded camera");
-	// 	++loadedCameras;
-	// 	fxnD();
-	// }
-
 	var fxnZ = function(eh){
-		console.log("saved bundle adjust");
+		console.log("saved relative BA file");
+		this.saveProjectFile();
 	}
 	var fxnD = function(){
-//		console.log(loadedPairs+" / "+expectedPairs+"  &&  "+loadedViews+" / "+expectedViews+"  &&  "+loadedCameras+" / "+expectedCameras);
-		// normalize everything in width=1, height = htowratio
-
 		if(loadedViews==expectedViews && loadedPairs==expectedPairs && loadedFeatureImages==expectedFeatureImages){
-//			console.log("complete");
 			var i, j, k;
-
-
 //var SHOULD_CORRECT_DISTOTION = true;
 var SHOULD_CORRECT_DISTOTION = false;
 
@@ -7115,7 +7133,7 @@ console.log(offX+","+offY);
 
 // DON'T RUN
 // don't B
-return; // don't run
+// return; // don't run
 
 
 
@@ -7131,27 +7149,12 @@ if(SHOULD_CORRECT_DISTOTION){
 
 // START STEREOPSIS
 
+// world
 var world = new Stereopsis.World();
-//world.addCamera();
-
-
-//throw "HERE - STEREOPSIS";
-
-// this.testData(world);
-// return;
-
-
-
-
-
-
 
 // locals
 var BACAMS = [];
 var BAVIEWS = [];
-// world
-// var world = new R3D.BA.World();
-// console.log(world);
 // cameras
 console.log(cameras)
 var correctedCameras = [];
@@ -7173,6 +7176,7 @@ for(var i=0; i<cameras.length; ++i){
 		var p2 = distortion["p2"];
 		var K = new Matrix(3,3).fromArray([fx,s,cx, 0,fy,cy, 0,0,1]);
 		var c = world.addCamera(K, distortion);
+		console.log(c);
 		// c.K(K);
 		// c.distortion(distortion);
 		// var inverted = R3D.getInvertedDistortion(K,distortion);
@@ -7242,8 +7246,6 @@ for(var i=0; i<pairs.length; ++i){
 	// 
 	var viewA = this.viewFromID(fromViewID);
 	var viewB = this.viewFromID(toViewID);
-console.log(viewA);
-console.log(viewB);
 	var vA = viewA.temp();
 	var vB = viewB.temp();
 	var imageWidthA = vA.image().width();
@@ -7274,7 +7276,7 @@ console.log(viewB);
 		to = new V2D(to.x,to.y);
 		//to = R3D.undistortPointCamera(to, K, distortion);
 		to.scale(toImageSize.x,toImageSize.y);
-
+// console.log(fr+" -> "+to);
 		filteredMatches.push([fr,to,relAngle,relScale]);
 	}
 	/*
@@ -7328,23 +7330,29 @@ console.log(viewB);
 
 
 
-
-
 // check
 // world.consistencyCheck();
 
 var completeFxn = function(){
+	console.log("completeFxn");
+	var viewA = BAVIEWS[0];
+	var viewB = BAVIEWS[1];
+	var transform = world.transformFromViews(viewA,viewB);
+	var count = transform.matches().length; // doesn't count if P has 0 matches
 	var str = world.toYAMLString();
+	var pair = this.pair(viewAIn.id(),viewBIn.id());
+	this.savePairRelative(pair,count, str, fxnZ, this);
+	/*
 	this.bundleFilename(App3DR.ProjectManager.BUNDLE_INFO_FILE_NAME);
 	this.saveBundleAdjust(str, fxnZ, this);
-	this.saveProjectFile();
-
+	*/
 }
 
 world.solve(completeFxn, this);
 
 
 return;
+
 throw "USE NEW BUNDLE ADJUST: R3D.BA";
 
 
@@ -7522,19 +7530,7 @@ var beforeCount = matches.length;
 	for(i=0; i<cameras.length; ++i){
 		// camera K is in default camera data
 	}
-/*
-	
-	- get views
-	- load referenced cameras
-	- assign K to V
-	- get view pairs [points2Ds, Fs]
-	- init BA
-		- points3Ds
-		- Ms
-		- ...
-	- 
 
-*/
 }
 
 
@@ -8252,8 +8248,10 @@ App3DR.ProjectManager.Pair = function(manager, directory, viewA, viewB){
 	this._viewBID = viewB;
 	this._matchFeatureScore = null; // median / average of feature scores [some distribution of good scores metric]
 	this._matchFeatureCount = null; // total matched features [above minimum]
+	this._relativeCount = null;
 	this._matchingData = null;
 	this._relativeData = null;
+
 	// this._matchingSparse = null;
 	// this._matchingMedium = null;
 	// this._matchingDense = null;
@@ -8283,6 +8281,9 @@ App3DR.ProjectManager.Pair.prototype.setMatchInfo = function(count, dir){
 	this._matchFeatureCount = count;
 	// TODO: DIR
 }
+App3DR.ProjectManager.Pair.prototype.setRelativeCount = function(count){
+	this._relativeCount = count;
+}
 App3DR.ProjectManager.Pair.prototype.isPair = function(idA,idB){
 	if(idA && idB && this._viewAID && this._viewBID){
 		if( (idA==this._viewAID && idB==this._viewBID) || (idB==this._viewAID && idA==this._viewBID) ){
@@ -8292,7 +8293,10 @@ App3DR.ProjectManager.Pair.prototype.isPair = function(idA,idB){
 	return false;
 }
 App3DR.ProjectManager.Pair.prototype.hasMatch = function(){
-	return this._matchFeatureCount != null || this._matchFeatureCount >= 0;
+	return this._matchFeatureCount !== null || this._matchFeatureCount >= 0;
+}
+App3DR.ProjectManager.Pair.prototype.hasRelative = function(){
+	return this._relativeCount !== null && this._relativeCount >= 0;
 }
 App3DR.ProjectManager.Pair.prototype.saveToYAML = function(yaml){
 	yaml.writeString("directory", this._directory);
@@ -8300,6 +8304,7 @@ App3DR.ProjectManager.Pair.prototype.saveToYAML = function(yaml){
 	yaml.writeString("viewB", this._viewBID);
 	yaml.writeNumber("featureScore", this._matchFeatureScore);
 	yaml.writeNumber("featureCount", this._matchFeatureCount);
+	yaml.writeNumber("relativeCount", this._relativeCount);
 }
 App3DR.ProjectManager.Pair.prototype.readFromObject = function(object){
 	this._directory = object["directory"];
@@ -8307,6 +8312,7 @@ App3DR.ProjectManager.Pair.prototype.readFromObject = function(object){
 	this._viewBID = object["viewB"];
 	this._matchFeatureScore = object["featureScore"];
 	this._matchFeatureCount = object["featureCount"];
+	this._relativeCount = Code.valueOrDefault(object["relativeCount"], null);
 }
 App3DR.ProjectManager.Pair.prototype.loadMatchingData = function(callback, context){
 	var object = {};

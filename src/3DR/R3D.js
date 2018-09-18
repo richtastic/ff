@@ -564,19 +564,10 @@ R3D.transformFromFundamental2 = function(pointsA, pointsB, F, Ka, Kb, M1, forceS
 	Kb = Kb ? Kb : Ka;
 	var KaInv = Matrix.inverse(Ka);
 	var KbInv = Matrix.inverse(Kb);
-		// KaInv = Matrix.transpose(Ka);
-		// KbInv = Matrix.transpose(Kb);
-//	console.log("K: \n"+Ka);
-//	console.log("K^-1: \n"+KaInv);
-
 	// FORWARD: ... looks bad
 	var KbT = Matrix.transpose(Kb);
 	var E = Matrix.mult(F,Ka);
 		E = Matrix.mult(KbT,E);
-// console.log(KbT+" ");
-// console.log(E+" ");
-//	console.log("INCOMING E [from F]:\n"+E);
-	
 	/*
 	// FROM SCRATCH
 	// get screen-normalized image points:
@@ -642,14 +633,6 @@ R3D.transformFromFundamental2 = function(pointsA, pointsB, F, Ka, Kb, M1, forceS
 	possibles.push( Matrix.mult(U,Matrix.mult(W, Vt)).appendColFromArray(tNeg).appendRowFromArray([0,0,0,1]) );
 	possibles.push( Matrix.mult(U,Matrix.mult(Wt,Vt)).appendColFromArray(t   ).appendRowFromArray([0,0,0,1]) );
 	possibles.push( Matrix.mult(U,Matrix.mult(Wt,Vt)).appendColFromArray(tNeg).appendRowFromArray([0,0,0,1]) );
-	
-	/*
-	if both z are negative:
-		t should be negative
-	if one z is positive & one z is negative: 
-		entire E should be negated
-	*/
-	// ? WHERE IS THIS DESCRIBED?
 
 	for(i=0;i<possibles.length;++i){
 		var m = possibles[i];
@@ -666,86 +649,66 @@ R3D.transformFromFundamental2 = function(pointsA, pointsB, F, Ka, Kb, M1, forceS
 	}
 	
 	// find single matrix that results in 3D point in front of both cameras Z>0
-var projection = null;
-// var countsUnderZero = Code.newArrayZeros(possibles.length);
-// var countsOverZero = Code.newArrayZeros(possibles.length);
-var countsTotal = Code.newArrayZeros(possibles.length);
-	
-for(index=0; index<pointsA.length; ++index){
-	var pA = pointsA[index];
-	var pB = pointsB[index];
-	pA = new V3D(pA.x, pA.y, 1.0);
-	pB = new V3D(pB.x, pB.y, 1.0);
-	pA = KaInv.multV3DtoV3D(new V3D(), pA);
-	pB = KbInv.multV3DtoV3D(new V3D(), pB);
-	var pAx = Matrix.crossMatrixFromV3D( pA );
-	var pBx = Matrix.crossMatrixFromV3D( pB );
-
-	for(i=0; i<possibles.length; ++i){
-		var possible = possibles[i];
-		var possibleInv = Matrix.inverse(possible);
-		var M2 = possibleInv.getSubMatrix(0,0, 3,4);
-		var pAM = Matrix.mult(pAx,M1);
-		var pBM = Matrix.mult(pBx,M2);
+	var projection = null;
+	var countsTotal = Code.newArrayZeros(possibles.length);
 		
-		var A = pAM.copy().appendMatrixBottom(pBM);
-		svd = Matrix.SVD(A);
-		var P1 = svd.V.getCol(3);
-		var p1Norm = new V4D().fromArray(P1.toArray());
-		p1Norm.homo(); // THIS IS THE ACTUAL 3D POINT - LOCATION
-		var P1est = new Matrix(4,1).setFromArray( p1Norm.toArray() );
+	for(index=0; index<pointsA.length; ++index){
+		var pA = pointsA[index];
+		var pB = pointsB[index];
+		pA = new V3D(pA.x, pA.y, 1.0);
+		pB = new V3D(pB.x, pB.y, 1.0);
+		pA = KaInv.multV3DtoV3D(new V3D(), pA);
+		pB = KbInv.multV3DtoV3D(new V3D(), pB);
+		var pAx = Matrix.crossMatrixFromV3D( pA );
+		var pBx = Matrix.crossMatrixFromV3D( pB );
 
-		var P2 = Matrix.mult(possibleInv,P1est);
-		var P2 = Matrix.mult(possible,P1est);
-		var p2Norm = new V4D().fromArray(P2.toArray());
-		p2Norm.homo(); // not necessary?
-		// if(p1Norm.z>=0 && p2Norm.z>=0){
-		// 	countsOverZero[i] += 1;
-		// }else if(p1Norm.z<=0 && p2Norm.z<=0){
-		// 	countsUnderZero[i] += 1;
-		// }
-		// console.log(" ADDING: "+p1Norm.z+" & "+p2Norm.z);
-		countsTotal[i] += Math.sign(p1Norm.z) + Math.sign(p2Norm.z);
-	}
-}
-// console.log(countsTotal,"of",pointsA.length);
-// console.log("total points: "+pointsA.length);
-// console.log(countsUnderZero);
-// console.log(countsOverZero);
-// console.log(countsTotal,pointsA.length);
-var minCountUnder = null;
-var maxCountOver = null;
-var minUnder = null;
-var pickedIndex = -1;
+		for(i=0; i<possibles.length; ++i){
+			var possible = possibles[i];
+			var possibleInv = Matrix.inverse(possible);
+			var M2 = possibleInv.getSubMatrix(0,0, 3,4);
+			var pAM = Matrix.mult(pAx,M1);
+			var pBM = Matrix.mult(pBx,M2);
+			
+			var A = pAM.copy().appendMatrixBottom(pBM);
+			svd = Matrix.SVD(A);
+			var P1 = svd.V.getCol(3);
+			var p1Norm = new V4D().fromArray(P1.toArray());
+			p1Norm.homo(); // THIS IS THE ACTUAL 3D POINT - LOCATION
+			var P1est = new Matrix(4,1).setFromArray( p1Norm.toArray() );
 
-var maximumTotalCount = pointsA.length * 2;
-var bestTotalCount = Code.max(countsTotal);
-var bestProjections = [];
-
-var minimumTransformMatchCountR = 10;
-forceSolution = (bestTotalCount>=2*minimumTransformMatchCountR && forceSolution);
-for(i=0; i<possibles.length; ++i){
-	var possible = possibles[i];
-	if(countsTotal[i]==bestTotalCount){
-		if(bestTotalCount==maximumTotalCount || forceSolution){
-			bestProjections.push(possible);
-			// WHY?
-			//var flipped = R3D.inverseCameraMatrix(possible);
-			//bestProjections.push(flipped);
+			var P2 = Matrix.mult(possibleInv,P1est);
+			var P2 = Matrix.mult(possible,P1est);
+			var p2Norm = new V4D().fromArray(P2.toArray());
+			p2Norm.homo(); // not necessary?
+			// if(p1Norm.z>=0 && p2Norm.z>=0){
+			// 	countsOverZero[i] += 1;
+			// }else if(p1Norm.z<=0 && p2Norm.z<=0){
+			// 	countsUnderZero[i] += 1;
+			// }
+			// console.log(" ADDING: "+p1Norm.z+" & "+p2Norm.z);
+			countsTotal[i] += Math.sign(p1Norm.z) + Math.sign(p2Norm.z);
 		}
 	}
-	// if(minCountUnder===null || minCountUnder>countsUnderZero[i] || (minCountUnder>=countsUnderZero[i] && maxCountOver<=countsOverZero[i])){
-	// //if(maxCountOver===null || maxCountOver>countsOverZero[i] || (maxCountOver>=countsOverZero[i] && maxCountUnder<=countsUnderZero[i])){
-	// 	minCountUnder = countsUnderZero[i];
-	// 	maxCountOver = countsOverZero[i];
-	// 	minUnder = possible;
-	// 	pickedIndex = i;
-	// 	if(minCountUnder==0){
-	// 		projection = possible;
-	// 	}
-	// }
-}
-// console.log("bestProjections:")
+	// console.log(countsTotal,"of",pointsA.length);
+	var minCountUnder = null;
+	var maxCountOver = null;
+	var minUnder = null;
+	var pickedIndex = -1;
+
+	var maximumTotalCount = pointsA.length * 2;
+	var bestTotalCount = Code.max(countsTotal);
+	var bestProjections = [];
+
+	var minimumTransformMatchCountR = 10;
+	forceSolution = (bestTotalCount>=2*minimumTransformMatchCountR && forceSolution);
+	for(i=0; i<possibles.length; ++i){
+		var possible = possibles[i];
+		if(countsTotal[i]==bestTotalCount){
+			if(bestTotalCount==maximumTotalCount || forceSolution){
+				bestProjections.push(possible);
+			}
+		}
+	}
 	// if multiple good matches, choose between
 	if(bestProjections.length>0){
 		if(bestProjections.length==1){
@@ -760,14 +723,12 @@ for(i=0; i<possibles.length; ++i){
 			var error = R3D.reprojectionErrorList(points3D, pointsA, pointsB, M1,M2, Ka,Kb);
 			if(error){
 				error = error["error"];
-//				console.log("GOT ERROR: "+i+" : "+error);
 				if(lowestError===null || error<lowestError){
 					lowestError = error;
 					bestProjection = M2;
 				}
 			}
 		}
-//bestProjection = R3D.inverseCameraMatrix(bestProjection); // ?
 		return bestProjection;
 	}
 	return null;
@@ -781,6 +742,8 @@ R3D.reprojectionErrorList = function(p3D, pA,pB, cameraA, cameraB, Ka, Kb, info)
 	var countTotal = 0;
 	for(var i=0; i<p3D.length; ++i){
 		var error = R3D.reprojectionError(p3D[i], pA[i], pB[i], cameraA, cameraB, Ka, Kb);
+		// console.log(i+"\n"+p3D[i]+"\n"+pA[i]+"\n"+pB[i]);
+		// console.log(error);
 		if(error){
 			++countTotal;
 			errorTotal += error["error"];
@@ -807,15 +770,11 @@ R3D.reprojectionError = function(p3D, pA,pB, cameraA, cameraB, Ka, Kb){
 	} // drop -z ?
 	var projected2DA = R3D.projectPoint3DToCamera2DForward(p3D, cameraA, Ka, null);
 	var projected2DB = R3D.projectPoint3DToCamera2DForward(p3D, cameraB, Kb, null);
-	var distanceA;
-	var distanceB;
 	if(!projected2DA || !projected2DB){
 		return null;
-	}else{
-		distanceA = V2D.distance(pA,projected2DA);
-		distanceB = V2D.distance(pB,projected2DB);
-		// console.log(distanceA+" & "+distanceB);
 	}
+	var distanceA = V2D.distance(pA,projected2DA);
+	var distanceB = V2D.distance(pB,projected2DB);
 	var distance = Math.sqrt( distanceA*distanceA + distanceB*distanceB );
 	var average = (distanceA+distanceB)*0.5;
 	return {"error":distance, "distanceA":distanceA, "distanceB":distanceB, "average":average};
@@ -2496,7 +2455,7 @@ R3D.cameraExtrinsicRANSACFromPointsAutomated = function(pointsA,pointsB, Ka,Kb,K
 		sigma = Math.min(sigma,half)
 	// var inlierPixelError = mean + 2*sigma;
 	var inlierPixelError = mean + 1.0*sigma;
-
+	console.log("P START: @ "+mean+" +/- "+sigma+" = "+inlierPixelError);
 	// no less than these
 	var percentLimit = 0.5;
 	var countLimit = 50;
@@ -2506,14 +2465,12 @@ R3D.cameraExtrinsicRANSACFromPointsAutomated = function(pointsA,pointsB, Ka,Kb,K
 	var percent = 0;
 	var previousResult = null;
 	Code.printMatlabArray(averages);
-console.log("R3D.cameraExtrinsicRANSACFromPointsAutomated +++++++++++++++++++++++++++++++++++++");
 	do{
-		console.log("inlierPixelError: "+inlierPixelError);
 		previousResult = result;
 		result = R3D.cameraExtrinsicRANSACFromPoints(pointsA,pointsB,Ka,Kb,KaInv,KbInv, inlierPixelError);
 		matches = result["matches"];
 		percent = matches.length/pointsA.length;
-		console.log(" -> "+matches.length+" / "+pointsA.length+" = "+(percent));
+		console.log(" -> "+matches.length+" / "+pointsA.length+" = "+(percent)+"  @ err: "+inlierPixelError);
 		inlierPixelError *= 0.5;
 		// TODO: KEEP TRACK OF PREVIOUS MATCHES IN CASE PAST LIMIT
 		++loop;
@@ -2526,10 +2483,9 @@ console.log("R3D.cameraExtrinsicRANSACFromPointsAutomated ++++++++++++++++++++++
 }
 
 R3D.cameraExtrinsicRANSACFromPoints = function(pointsAIn,pointsBIn, Ka,Kb,KaInv,KbInv, errorPosition){
-	var MAX_LIMIT = 1E3; // 1K
+	var MAX_LIMIT = 1E3; // 1K - TODO: more empirical
 	var minCount = 8;
 	var args = [pointsAIn,pointsBIn, Ka, Kb, KaInv, KbInv];
-
 	var Pidentity = new Matrix(4,4).identity();
 	var fxnError = function(point2DA,point2DB, PB, KA,KB,KAInv,KBInv){
 		var PA = Pidentity;
@@ -2542,14 +2498,6 @@ R3D.cameraExtrinsicRANSACFromPoints = function(pointsAIn,pointsBIn, Ka,Kb,KaInv,
 			return null;
 		}
 		return error["average"];
-		// var projectedA = R3D.projectPoint3DToCamera2DForward(point3D, PA, KA, null);
-		// var projectedB = R3D.projectPoint3DToCamera2DForward(point3D, PB, KB, null);
-		// var errorA = V2D.distanceSquare(point2DA,projectedA);
-		// var errorB = V2D.distanceSquare(point2DB,projectedB);
-		// var dA = Math.sqrt(errorA);
-		// var dB = Math.sqrt(errorB);
-		// var avg = (dA+dB)*0.5;
-		// return avg;
 	}
 	var fxnModel = function(args, sampleIndexes){
 		// create primitive minimal estimate
@@ -2574,8 +2522,8 @@ R3D.cameraExtrinsicRANSACFromPoints = function(pointsAIn,pointsBIn, Ka,Kb,KaInv,
 			return null;
 		}
 		// SHOULD ?
-		// F = R3D.fundamentalMatrixNonlinear(F,points2DA,points2DB);
-		P = R3D.transformFromFundamental(pointsA,pointsB, F, Ka, Kb, null, true);
+		// F = R3D.fundamentalMatrixNonlinear(F,pointsA,pointsB);
+		P = R3D.transformFromFundamental(pointsA,pointsB, F, KA,KB, Pidentity, true);
 		if(!P){
 			return null;
 		}
@@ -2609,7 +2557,8 @@ R3D.cameraExtrinsicRANSACFromPoints = function(pointsAIn,pointsBIn, Ka,Kb,KaInv,
 		
 		var PB = P;
 		error = fxnError(point2DA,point2DB, PB,KA,KB,KAInv,KBInv);
-		if(error==-null){
+
+		if(error==null){
 			return false;
 		}
 		if(error>allowedError){
@@ -2631,7 +2580,6 @@ R3D.cameraExtrinsicRANSACFromPoints = function(pointsAIn,pointsBIn, Ka,Kb,KaInv,
 			matches.push([pointsAIn[index],pointsBIn[index]]);
 		}
 	}
-	console.log(result);
 	// NONLINEAR P STEP?
 	return {"P":P, "matches":matches};
 }
@@ -2653,7 +2601,6 @@ R3D.generalRANSAC = function(args, fxnModel,fxnInlier, populationSize,sampleSize
 		}
 		var indexes = Code.randomIntervalSet(sampleSize, 0, populationSize-1);
 		var primitive = fxnModel(args,indexes);
-// console.log(primitive)
 		var inliers = [];
 		for(var j=0; j<populationSize; ++j){
 			var isInlier = fxnInlier(args, primitive, j);
@@ -2661,7 +2608,6 @@ R3D.generalRANSAC = function(args, fxnModel,fxnInlier, populationSize,sampleSize
 				inliers.push(j);
 			}
 		}
-		//console.log(i+" === "+inliers.length)
 		if(bestInliers===null || inliers.length>=bestInliers.length){
 			var model = fxnModel(args,inliers);
 			if(model){
@@ -2679,7 +2625,6 @@ R3D.generalRANSAC = function(args, fxnModel,fxnInlier, populationSize,sampleSize
 			pOutlier = Math.min(pOutlier, (populationSize-bestInliers.length)/populationSize);
 			maxIterations = errorMinFactor * R3D.iterationsFromProbabilities(pDesired, pOutlier, sampleSize);
 			maxIterations = Math.min(limitIterations,maxIterations);
-			// console.log("maxIterations:"+maxIterations);
 		}
 	}
 	if(bestModel){
@@ -17758,7 +17703,6 @@ R3D._gdDirectionAngleTranslation3D = function(vs,es,values, isAngles){
 	var fxn = null;
 	var x = [];
 	var output = [];
-	console.log(isAngles);
 	if(isAngles==2){
 		fxn = R3D._gdAngle3DTwist;
 		// x = null;
@@ -17782,11 +17726,11 @@ R3D._gdDirectionAngleTranslation3D = function(vs,es,values, isAngles){
 			x.push(v.x,v.y,v.z);
 		}
 	}
-	console.log(x);
+	// console.log(x);
 	var result = Code.gradientDescent(fxn, args, x, null, 10, 1E-10);
-	console.log(result);
+	// console.log(result);
 	var count = values.length;
-	console.log(isAngles)
+	// console.log(isAngles)
 	if(isAngles==2){
 		// twist
 		for(var i=0; i<count; ++i){

@@ -402,6 +402,7 @@ YAML.prototype.writeString = function(name,value){
 	}else{
 		//value = value.replace(/\\n/g,"\\\\n")
 		if(value){
+			value = value+""; // force to a string in case
 			value = value.replace(/\n/g,"\\n");
 			value = '"'+value+'"';
 		}else{

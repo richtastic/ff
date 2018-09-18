@@ -268,7 +268,7 @@ NEXT-STEPS-TO-DO:
 vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 
 - individual image feature detection
-	- high-cornereness
+	- high-cornerness
 	- get feature absolute size / angle
 	=> image features to compare to other images
 - pairwise image feature matching
@@ -277,18 +277,17 @@ vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 	=> matching feature points w/ relative affine transform
 - pair-view relative orientation transforms
 	- iterate cell size for finer detail (~5 iterations to cell~3 pixels)
-	=> 3D transform
-	=> dense point matches
+	=> pairwise 3D transform
+	=> pairwise dense point matches
 - global absolute orientation initialization
 	- rotation averaging
 	- translation averaging
 	=> initial abs camera locations & orientations
------> HERE <------
 - global absolute orientation nonlinear minimization
 	- use match count / reprojection error as edge weight
 	- nonlinear minimize angle & trans.
 	=> updated abs camera locations & orientations
-(09/17)
+-----> HERE <------
 - global absolute orientation bundle adjust
 	- quasi-local-global bundle adjustment
 	- group-bundle adjustment to iterate cameras to more optimal orientations
@@ -330,8 +329,6 @@ https://cloud.google.com/appengine/docs/nodejs/
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
-
-- nonlinear location / orientation initialization
 
 - save camera ID inside bundle adjust files
 - save a 'size' and 'rotation' for each p2d in 3d 'points' in bundle info.yaml
