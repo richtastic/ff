@@ -40,6 +40,9 @@ Matrix.prototype.saveToYAML = function(yaml){
 	yaml.writeArrayEnd();
 	return this;
 }
+Matrix.prototype.fromObject = function(obj){
+	return this.loadFromObject(obj);
+}
 Matrix.prototype.loadFromObject = function(obj){
 	var DATA = Matrix.YAML;
 	var rows = obj[DATA.ROWS];
@@ -50,6 +53,9 @@ Matrix.prototype.loadFromObject = function(obj){
 }
 Matrix.loadFromObject = function(obj){
 	return new Matrix().loadFromObject(obj);
+}
+Matrix.fromObject = function(obj){
+	return new Matrix().fromObject(obj);
 }
 // ------------------------------------------------------------------------------------------------------------------------ INSTANCE
 Matrix.prototype.fromArray = function(list, newRow,newCol){

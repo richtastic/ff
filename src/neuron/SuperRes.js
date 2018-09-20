@@ -57,7 +57,8 @@ SuperRes.prototype.handleImagesLoaded = function(imageInfo){
 	// 12x12 = 144
 	// 14x14 = 196
 	// 16x16 = 256
-	var NN = new NeuralNetwork({"layers":[64,100,144,196,256]});
+	//var NN = new NeuralNetwork({"layers":[64,100,144,196,256]});
+	var NN = new NeuralNetwork({"layers":[64,256,256,256,256]});
 	NN.init();
 	// generate outputs & inputs
 	

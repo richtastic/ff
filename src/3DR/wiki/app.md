@@ -330,16 +330,10 @@ https://cloud.google.com/appengine/docs/nodejs/
 
 
 
-- save camera ID inside bundle adjust files
-- save a 'size' and 'rotation' for each p2d in 3d 'points' in bundle info.yaml
-
 - bundle adjust for 3 views - using absolute transforms as basis (relatives are DERIVED)
 
 
 
-
---- is there a way to calculate RELATIVE errors in GD, not requiring absolute initialization?
-	- 
 
 - incremental BA vs some sort of grouping method vs global
 	quasi-local-global-grouping

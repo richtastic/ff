@@ -1348,9 +1348,11 @@ Code.removeElement = function(a,o){  // preserves order O(n)
 	var i, len = a.length;
 	for(i=0;i<len;++i){
 		if(a[i]==o){
-			return a.splice(i,1);
+			a.splice(i,1);
+			return o;
 		}
 	}
+	return null;
 }
 Code.removeElementAt = function(a,i){ // preserve order
 	return a.splice(i,1);
@@ -1772,6 +1774,29 @@ Code.sum = function(a){
 	return sum;
 }
 // Code.combineErrorMeasurements([4,1,2,3],[0.1,0.3,0.2,0.1])
+Code.errorsToPercents = function(errors){ // literally just normalized, but with final error approx
+	var percents = [];
+	var N = errors.length;
+	var eps = 1E-10;
+	var estimateBot = 0;
+	var percentsTotal = 0;
+	for(i=0; i<N; ++i){
+		var errI = errors[i];
+		if(errI<eps){
+			errI = eps;
+		}
+		errI = 1.0/errI;
+		estimateBot += errI;
+		percents[i] = errI;
+		percentsTotal += errI;
+	}
+	for(i=0; i<N; ++i){
+		percents[i] = percents[i]/percentsTotal;
+	}
+	var error = 1.0/estimateBot;
+	return {"percents":percents, "errors":errors, "error":error};
+}
+
 Code.combineErrorMeasurements = function(estimates,errors){
 	var i;
 	var N = estimates.length;
@@ -2361,7 +2386,23 @@ Code.averageAngleVector3D = function(vectors, percents){ // center of vectors vi
 
 }
 Code.averageVectorTwist3D = function(twists, percents){ 
-	//
+	var count = twists.length;
+	var locations = [];
+	var angles = [];
+	var directions = [];
+	for(var i=0; i<count; ++i){
+		var twist = twists[i];
+		directions.push(twist["direction"]);
+		var angle = twist["angle"];
+		angles.push(new V2D(1,0).rotate(angle));
+		locations.push(twist["offset"]);
+	}
+	var location = V3D.meanFromArray(locations);
+	var angle = Code.averageAngleVector2D(angles);
+	var direction = Code.averageAngleVector3D(directions);
+		angle = V2D.angleDirection(V2D.DIRX,angle);
+	var average = {"direction":direction, "angle":angle, "offset":location};
+	return average;
 }
 Code.vectorTwistFromMatrix3D = function(matrix){
 	var o = new V3D(0,0,0);

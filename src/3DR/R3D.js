@@ -1066,14 +1066,21 @@ R3D.lmMinHomographyFxn = function(args, xMatrix,yMatrix,eMatrix){ // x:nx1, y:1x
 
 
 // ------------------------------------------------------------------------------------------- F utilities
-R3D.essentialFromFundamental = function(K1, K2, F){  // K maps from 1 to 2  |  E = K2 * F * K1
-	var temp = Matrix.mult(F,K2);
-	//var K1T = Matrix.transpose(K1);
-	var K1T = Matrix.inverse(K1); // WAS TRANSPOSE
-	var E = Matrix.mult(K1T,temp);
-	// var E = Matrix.mult(F,Ka);
-	// E = Matrix.mult(KbT,E);
+R3D.essentialFromFundamental = function(F, Ka, Kb){ //  E = Kb^T * F * Ka
+	// var temp = Matrix.mult(F,Kb);
+	// var KaT = Matrix.inverse(Kb); // WAS TRANSPOSE
+	// var E = Matrix.mult(KaT,temp);
+	var KbT = Matrix.transpose(Kb); // WAS TRANSPOSE
+	var temp = Matrix.mult(F,Ka);
+	var E = Matrix.mult(KbT,temp);
 	return E;
+}
+R3D.fundamentalFromEssential = function(E, Ka, Kb, KaInv, KbInv){ // F = Kb^T^-1 * E * Ka^-1
+	KbInv = KbInv!==undefined ? KbInv : Matrix.inverse(Kb);
+	KaInv = KaInv!==undefined ? KaInv : Matrix.inverse(Ka);
+	var KbInvT = Matrix.transpose(KbInv);
+	var F = Matrix.mult(Matrix.mult(KbInvT, E), KaInv);
+	return F;
 }
 // R3D.cameraFromFundamental = function(K1, K2, F){ // E = R[t]x = [t]xR
 // 	var E = R3D.essentialFromFundamental(K1, K2, F);
@@ -1087,10 +1094,7 @@ R3D.essentialFromFundamental = function(K1, K2, F){  // K maps from 1 to 2  |  E
 // 	var R = U * W * Vt
 // 	R = U * Wt * 
 // }
-R3D.fundamentalFromCamera = function(cam, K, Kinv, optionallyKb){ // find relative transformation matrix  // points use F
-	Kinv = Kinv!==undefined ? Kinv : Matrix.inverse(K);
-	var KinvT = Matrix.transpose(Kinv);
-	var Kt = Matrix.transpose(K);
+R3D.fundamentalFromCamera = function(cam, Ka, Kb){ // find relative transformation matrix  // points use F
 	var r00 = cam.get(0,0);
 	var r01 = cam.get(0,1);
 	var r02 = cam.get(0,2);
@@ -1105,10 +1109,8 @@ R3D.fundamentalFromCamera = function(cam, K, Kinv, optionallyKb){ // find relati
 	var tz = cam.get(2,3);
 	var R = new Matrix(3,3).setFromArray([r00,r01,r02, r10,r11,r12, r20,r21,r22]);
 	var Tx = new Matrix(3,3).setFromArray([0,-tz,ty,  tz,0,-tx,  -ty,tx,0]); // crossMatrixFromV3D
-	// m.setFromArray([0,-v.z,v.y, v.z,0,-v.x, -v.y,v.x,0]);
 	var E = Matrix.mult(Tx,R);
-	//var F = Kt * E * K;
-	var F = Matrix.mult(Matrix.mult(KinvT, E), Kinv);
+	var F = R3D.fundamentalFromEssential(E, Ka, Kb);
 	return F;
 }
 R3D.forceRank2 = function(fundamental){
@@ -17590,7 +17592,7 @@ R3D._optiumGraph3D = function(edges,isAngles){ // edges: [indexA,indexB,value,er
 		allPaths.push(pathGroup);
 	}
 	// calculate paths
-	console.log(allPaths)
+	// console.log(allPaths)
 	var allValues = Code.newArrayArrays(vs.length);
 	
 	for(var i=0; i<allPaths.length; ++i){
@@ -17655,11 +17657,11 @@ R3D._optiumGraph3D = function(edges,isAngles){ // edges: [indexA,indexB,value,er
 	// nonlinear error minimize
 	if(isAngles){
 		// normals:
-		console.log("NORMAL MINIMIZE:");
+		// console.log("NORMAL MINIMIZE:");
 		var result = R3D._gdDirectionAngleTranslation3D(vs,es,values, 1);
 		var valuesDirections = result["values"];
 		// twists:
-		console.log("TWIST MINIMIZE:");
+		// console.log("TWIST MINIMIZE:");
 		var result = R3D._gdDirectionAngleTranslation3D(vs,es,values, 2);
 		var valuesTwists = result["values"];
 
@@ -17708,7 +17710,6 @@ R3D._gdDirectionAngleTranslation3D = function(vs,es,values, isAngles){
 		// x = null;
 		for(var i=0; i<values.length; ++i){
 			var v = values[i];
-			console.log(v);
 			x.push(v["angle"]);
 		}
 	}else if(isAngles==1){
@@ -17839,7 +17840,7 @@ R3D._gdAngGrad3D = function(args, x, isUpdate, isAngles, costFxn){
 		totalError += error/errorEdge;
 	}
 	if(isUpdate){
-		console.log("totalError: "+totalError);
+		// console.log("totalError: "+totalError);
 	}
 	return totalError;
 }
@@ -20315,7 +20316,7 @@ R3D._costTripleFeatures = function(patchA,patchB,patchC){
 	return cost;
 }
 
-R3D.BundleAdjustCameraExtrinsic = function(intrinsics, inverses, extrinsics, pointList2Ds, pointList3Ds, maxIterations){ // pointList3D
+R3D.BundleAdjustCameraExtrinsic = function(intrinsics, inverses, extrinsics, pointList2Ds, pointList3Ds, maxIterations){ // pointList3D -- only tested on pairs
 	maxIterations = (maxIterations!==undefined && maxIterations!==null)? maxIterations : 1;
 	var cameraCount = intrinsics.length;
 	var args = [];
@@ -20324,18 +20325,24 @@ R3D.BundleAdjustCameraExtrinsic = function(intrinsics, inverses, extrinsics, poi
 	args.push(inverses);
 	args.push(pointList2Ds);
 	args.push(pointList3Ds);
+	var firstCamera = [];
+	args.push(firstCamera);
 	for(var i=0; i<extrinsics.length; ++i){
 		var extrinsic = extrinsics[i];
 		var ext = R3D.transformMatrixToComponentArray(extrinsic);
-		console.log(i+": = "+ext);
+		// console.log(i+": = "+ext);
 		Code.arrayPushArray(x,ext);
+		if(i==0){
+			Code.arrayPushArray(firstCamera,ext);
+		}
 	}
 	// run
 	Code.timerStart();
 	var result = Code.gradientDescent(R3D._gd_BACameraExtrinsic, args, x, null, maxIterations, 1E-10);
 	Code.timerStop();
 	x = result["x"];
-	console.log("  POINT COUNT: "+pointList2Ds[0].length+"  ITERATIONS: "+maxIterations+"  SECONDS: "+(Code.timerDifference()/1000.0)+"  ERROR: "+result["cost"]);
+	var cost = result["cost"];
+	// console.log("  POINT COUNT: "+pointList2Ds[0].length+"  ITERATIONS: "+maxIterations+"  SECONDS: "+(Code.timerDifference()/1000.0)+"  ERROR: "+result["cost"]);
 	var pList = [];
 	for(var i=0; i<cameraCount; ++i){
 		var tx = x[i*6 + 0];
@@ -20349,7 +20356,7 @@ R3D.BundleAdjustCameraExtrinsic = function(intrinsics, inverses, extrinsics, poi
 		pList.push(P);
 	}
 
-	return {"extrinsics":pList};
+	return {"extrinsics":pList, "error":cost, "count":pointList3Ds.length};
 }
 R3D._gd_BACamera_matrix_A = new Matrix(4,4);
 R3D._gd_BACamera_matrix_B = new Matrix(4,4);
@@ -20359,6 +20366,7 @@ R3D._gd_BACameraExtrinsic = function(args, x, isUpdate){
 	var inverses = args[1];
 	var pointLists2D = args[2];
 	var pointList3Ds = args[3];
+	var firstCamera = args[4];
 	var cameraCount = intrinsics.length;
 	var totalError = 0;
 	var tx, ty, tz, rx, ry, rz;
@@ -20372,15 +20380,24 @@ R3D._gd_BACameraExtrinsic = function(args, x, isUpdate){
 		rx = x[i*6 + 3];
 		ry = x[i*6 + 4];
 		rz = x[i*6 + 5];
+		// FORCE 1ST IS SAME
 		// if(tx!=0 || ty!=0 || tz!=0 || rx!=0 || ry!=0 || rz!=0){ // force identity
 		// 	return 1E10;
 		// }
-		tx = 0;
-		ty = 0;
-		tz = 0;
-		rx = 0;
-		ry = 0;
-		rz = 0;
+		if(i==0){
+			// tx = 0;
+			// ty = 0;
+			// tz = 0;
+			// rx = 0;
+			// ry = 0;
+			// rz = 0;
+			tx = firstCamera[0];
+			ty = firstCamera[1];
+			tz = firstCamera[2];
+			rx = firstCamera[3];
+			ry = firstCamera[4];
+			rz = firstCamera[5];
+		}
 		var PA = R3D._gd_BACamera_matrix_A;
 		R3D.transform3DFromParameters(PA, rx,ry,rz, tx,ty,tz);
 		for(var j=i+1; j<cameraCount; ++j){
@@ -20427,6 +20444,7 @@ var avgDistance = 0;
 				// totalError += Math.sqrt(errorA + errorB);
 				// totalError += error;
 			}
+			/*
 			if(isUpdate){
 			// 	console.log(" IS UPDATE ...");
 			// }
@@ -20435,6 +20453,7 @@ var avgDistance = 0;
 				});
 				console.log("   medianDistance: "+Code.median(distances)+" | mean: "+(avgDistance/pointListA.length)+"  --  totalError: "+totalError+" @ "+tx+","+ty+","+tz+" ... ");
 			}
+			*/
 		}
 	}
 	return totalError;
@@ -20462,7 +20481,7 @@ R3D.BundleAdjustFull = function(intrinsics, extrinsics, pointLists2D, pointList3
 	var result = Code.gradientDescent(R3D._gd_BAFull, args, x, null, maxIterations, 1E-10);
 	Code.timerStop();
 	x = result["x"];
-	console.log("  POINT COUNT: "+pointList3D.length+"  ITERATIONS: "+maxIterations+"  SECONDS: "+(Code.timerDifference()/1000.0)+"  ERROR: "+result["cost"]);
+	// console.log("  POINT COUNT: "+pointList3D.length+"  ITERATIONS: "+maxIterations+"  SECONDS: "+(Code.timerDifference()/1000.0)+"  ERROR: "+result["cost"]);
 	// deconstruct into original parameters
 	var pList = [];
 	for(var i=0; i<cameraCount; ++i){
@@ -21660,7 +21679,7 @@ here
 */
 
 				// E
-				var E = R3D.essentialFromFundamental(Ka, Kb, F);
+				var E = R3D.essentialFromFundamental(F, Ka, Kb);
 				// E nonlinear?
 				var P = R3D.transformFromFundamental(pointsA, pointsB, F, Ka, Kb);
 
