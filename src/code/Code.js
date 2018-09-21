@@ -1284,21 +1284,34 @@ Code.elementExists = function(a,o){ // O(n)   --- this wont work for an array of
 	}
 	return false;
 }
-Code.removeDuplicates = function(array){
+Code.removeDuplicates = function(arrayA,arrayB){
 	var i,j,a,b;
-	for(i=0; i<array.length; ++i){
-		a = array[i];
-		for(j=i+1; j<array.length; ++j){
-			b = array[j];
-			if(a==b){
-				array[j] = array[array.length-1];
-				array.pop();
-				--j;
+	if(arrayB){ // remove items in B from A
+		for(i=0; i<arrayA.length; ++i){
+			a = arrayA[i];
+			for(j=0; j<arrayB.length; ++j){
+				b = arrayB[j];
+				if(a==b){
+					arrayA.splice(i,1);
+					--i;
+					break;
+				}
+			}
+		}
+	}else{
+		for(i=0; i<arrayA.length; ++i){
+			a = arrayA[i];
+			for(j=i+1; j<arrayA.length; ++j){
+				b = arrayA[j];
+				if(a==b){
+					arrayA[j] = arrayA[arrayA.length-1];
+					arrayA.pop();
+					--j;
+				}
 			}
 		}
 	}
-
-	return array;
+	return arrayA;
 }
 Code.indexOfElement = function(a,o){ // O(n)
 	if( Code.isFunction(o) ){ // function
@@ -1881,6 +1894,28 @@ Code.min = Code.minArray = function(a){
 		min = Math.min(min,a[i]);
 	}
 	return min;
+}
+Code.minIndex = function(a){
+	var min = a[0];
+	var index = 0;
+	for(var i=a.length; i--; ){
+		if(min>a[i]){
+			index = i;
+			min = a[i];
+		}
+	}
+	return index;
+}
+Code.maxIndex = function(a){
+	var max = a[0];
+	var index = 0;
+	for(var i=a.length; i--; ){
+		if(max<a[i]){
+			index = i;
+			max = a[i];
+		}
+	}
+	return index;
 }
 Code.sumArray = function(a){
 	var sum = 0;

@@ -334,19 +334,33 @@ updateP3DPatch
 
 
 
-- do patchings
+
+- patching dropping in-front & behind
+- local 2D neighbor dropping based on 3D distances from center
 
 
+x probe 3d using patches
 
-- 3+ combining seems to have underlying flaw
+- 3+ combining:
 	- check merging code
 	- check removing code (drop matches & drop point)
+
+- can path projections be used to correct affine transforms?
 
 DEBUG:
 x display new matches before added
 - display the lost 3+view points 
 
-- use uniqueness when adding new match
+
+- drop very worst scores
+
+
+- load current BA & increase resolution => output (only need like 2 more iterations for expansions)
+
+
+
+
+- use uniqueness | cornerness when adding new match to limit matching more points in bland areas
 
 
 
