@@ -4983,7 +4983,8 @@ R3D.CORNER_SELECT_RESTRICTED = 0.95; // constrained, restrictive
 R3D.CORNER_SELECT_REGULAR = 0.999; // 0.99-0.9999 average, regular
 R3D.CORNER_SELECT_RELAXED = 0.99999; // relaxed, detailed, loose
 WASCALLED = -1;
-R3D.cornerScaleScores = function(src, width, height){
+R3D.cornerScaleScores = function(src, width, height, skipDrop){
+	skipDrop = skipDrop!==undefined ? skipDrop : false; // not actually used yet
 	var sigma = 1.0;
 	// src = Code.copyArray(src);
 	//src = ImageMat.mulConst(src,256);
@@ -5061,10 +5062,11 @@ R3D.cornerScaleScores = function(src, width, height){
 		}
 	}
 	// H = ImageMat.gaussian2DFrom1DFloat(H, width,height, gauss1D);
-	// console.log(H)
-	for(i=0;i<H.length;++i){
-		if(H[i]<0){
-			H[i] = 0;
+	if(!skipDrop){
+		for(i=0;i<H.length;++i){
+			if(H[i]<0){
+				H[i] = 0;
+			}
 		}
 	}
 	return {"value":H, "width":width, "height":height};

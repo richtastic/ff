@@ -2184,14 +2184,11 @@ Code.stringFilterNumbersOnly = function(str){ // [0-9]+[.[0-9]+][(E|e)[+.-][0-9]
 Code.getTimeStamp = function(year, month, day, hour, min, sec, ms){
 	var str = "";
     if(arguments.length<=1){ // 0 or 1 args
-    	console.log("IN A:");
     	var d;
     	if(year===undefined){ // use NOW
-    		console.log("USE NOW");
     		d = Code.getTimeMilliseconds(true);
     		d = new Date(d);
     	}else{
-    		console.log("YEAR???");
     		d = new Date(year);
     	}
 		year = d.getFullYear();

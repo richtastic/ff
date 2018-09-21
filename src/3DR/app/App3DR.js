@@ -89,7 +89,7 @@ var modeModelReconstruction = false;
 
 // don't A:
 // TO SWITCH ON MODELING:
-modeModelReconstruction = true;
+// modeModelReconstruction = true;
 
 
 
@@ -6129,7 +6129,7 @@ break; // TODO: remove
 
 
 // don't - run
-return;
+// return;
 
 	if(true){
 	//if(!this.hasBundleInit()){
@@ -6699,7 +6699,7 @@ console.log("ERROR: "+transformRMean+" * "+transformRSigma+" @ "+transformMatche
 		var rotation = rotations[i];
 		var transform = Code.Matrix3DFromVectorTwist(location, rotation);
 		transforms[i] = transform;
-		console.log(transform+"");
+		// console.log(transform+"");
 	}
 
 	// turn into compiled single grouping
@@ -6768,7 +6768,7 @@ console.log("ERROR: "+transformRMean+" * "+transformRSigma+" @ "+transformMatche
 	for(var i=0; i<pairs.length; ++i){
 		var pair = pairs[i];
 		var relativeData = pair.relativeData();
-		console.log(relativeData);
+		// console.log(relativeData);
 		var vs = relativeData["views"];
 		for(var j=0; j<vs.length; ++j){
 			var v = vs[j];
@@ -7000,7 +7000,6 @@ App3DR.ProjectManager.prototype._calculateGlobalOrientationNonlinearB = function
 	var WORLDVIEWS = [];
 	for(var i=0; i<views.length; ++i){
 		var view = views[i];
-		console.log(view);
 		//var img = view.featuresImage();
 		//var img = view.denseHiImage(); // REPLACE 1
 		var img = view.bundleAdjustImage();
@@ -7102,9 +7101,15 @@ App3DR.ProjectManager.prototype._calculateGlobalOrientationNonlinearB = function
 
 	// check
 	// world.consistencyCheck();
-
+	var fxnZ = function(){
+		console.log("saved BA");
+	}
+	
 	var completeFxn = function(){
 		console.log("completeFxn");
+		var str = world.toYAMLString();
+		this.bundleFilename(App3DR.ProjectManager.BUNDLE_INFO_FILE_NAME);
+		this.saveBundleAdjust(str, fxnZ, this);
 		// var viewA = BAVIEWS[0];
 		// var viewB = BAVIEWS[1];
 		// var transform = world.transformFromViews(viewA,viewB);

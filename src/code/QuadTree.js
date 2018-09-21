@@ -285,6 +285,7 @@ QuadTree._sortObject = function(a,b){
 	return a["distance"] < b["distance"] ? -1 : 1;
 }
 QuadTree.prototype.kNN = function(p,k, evaluationFxn, maxRadius,   log){
+	// console.log("kNN", p,k, evaluationFxn)
 	var size = this.size();
 	maxRadius = (maxRadius!==undefined && maxRadius!==null) ? maxRadius : Math.max(size.x,size.y);
 	var maxRadiusSquare =  maxRadius*maxRadius;

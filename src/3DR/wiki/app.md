@@ -329,29 +329,38 @@ https://cloud.google.com/appengine/docs/nodejs/
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
-
-- bundle adjust for 3 views - using absolute transforms as basis (relatives are DERIVED)
-
-
-
-
-- incremental BA vs some sort of grouping method vs global
-	quasi-local-global-grouping
-		- want to be able to add additional cameras ad hoc
-
-	- initial positions/orientations are estimated based on weighted-averaging of  2-pair estimates
-	- iterate:
-		- A) pick random pair (w/ connection) & optimize 
-		- B) pick random single camera & optimize against all other connected cameras
-		- allow for dropping / adding points
-		=> first final 3DR
-	- add a new view = estimate positions/orientations & repeat iteration with new view
+updateP3DPatch
 
 
 
 
+- do patchings
 
-- combining normal dist of camera positions / orientations
+
+
+- 3+ combining seems to have underlying flaw
+	- check merging code
+	- check removing code (drop matches & drop point)
+
+DEBUG:
+x display new matches before added
+- display the lost 3+view points 
+
+- use uniqueness when adding new match
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 - graph combining error to final stable system
 	-> markov states?
 	-> GRAPH BASED SLAM
@@ -359,15 +368,7 @@ https://cloud.google.com/appengine/docs/nodejs/
 - tracked features across multiple
 	- determine closest cameras (range of view / overlap)
 
-
-- 3+ combining seems to have underlying flaw
-
-
 - choose best cornerness point when picking probing points
-
-- how to combine multiple poses into initial guess ?
-	- incremetnal?
-	- all-at-once?
 
 - 'representative' graphs for reducing optimization of 'finer' positions till later
 	- combine 'redundant' views
@@ -386,21 +387,7 @@ https://cloud.google.com/appengine/docs/nodejs/
 
 - RANSAC PLOT LIKLIHOOD OF GETTING A NEW MATCH (log ) and quit if very non likely (wasted iterations)
 
-
-
-
-
 - use output of lowe-res solution (matches & Ps) as input to nex (x2) higher resolution
-- 
-
-
-
-
-
-- MAYBE TRY NEW DATA SET ?
-- camera location should be some % based on all relative estimations, not just offset from 0th camerat
-- 
-
 
 -> much of the effort goes into removing outliers and troublesome data before the bundle adjustments can find local minima (very good initialization)
 	-> find average of rotations
