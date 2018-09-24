@@ -349,7 +349,7 @@ PSSTest.prototype._handleEnterFrameFxn = function(t){
 	this.canvasCrap();
 }
 PSSTest.prototype.testMLS2D = function(){
-/*
+
 	var quadTree = new QuadTree();
 
  var size = this._canvas.size();
@@ -388,12 +388,15 @@ PSSTest.prototype.testMLS2D = function(){
 	// for(j=4; j<20;++j){
 	// 	quadTree.removeObject( points[j] );
 	// }
-	var knn = quadTree.kNN(point, 25);
-	//var knn = quadTree.objectsInsideCircle(point, 2);
-	//var knn = quadTree.objectsInsideRect( new V2D(point.x-2,point.y-1), new V2D(point.x+2,point.y+1) );
+	// var knn = quadTree.kNN(point, 25);
+	// var knn = quadTree.objectsInsideCircle(point, 2);
+	// var knn = quadTree.objectsInsideRect( new V2D(point.x-2,point.y-1), new V2D(point.x+2,point.y+1) );
+
+	var knn = quadTree.objectsInsideRay(new V2D(8,13), new V2D(6,-2), 0.50);
+
 	quadTree.visualize(this._root, size.x,size.y, point, knn);
 return;
-*/
+
 GLOBALSTAGE = this._stage;
 	var points = [];
 

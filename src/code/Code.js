@@ -6425,9 +6425,13 @@ Code.distancePointRay2D = function(org,dir, point){ // point and RAY
 	var p = Code.closestPointLine2D(org,dir, point);
 	return V2D.distance(point,p);
 }
-Code.distancePointLine2D_ = function(a,b, point){ // point and RAY
-	var dir = V2D.sub(b,a);
-	return Code.distancePointRay2D(a,dir, point);
+// Code.distancePointLine2D_ = function(a,b, point){ // point and RAY
+// 	var dir = V2D.sub(b,a);
+// 	return Code.distancePointRay2D(a,dir, point);
+// }
+Code.distancePointRayFinite2D = function(org,dir, point){ // point and ray - finite
+	var p = Code.closestPointLineSegment2D(org,dir, point);
+	return V2D.distance(point,p);
 }
 
 Code.closestPointLineSegment2D = function(org,dir, point){ // finite ray and point
@@ -7115,13 +7119,11 @@ Code.closestPointLine3D = function(org,dir, point){ // infinite ray and point
 	var t = (V3D.dot(dir,point)-V3D.dot(org,dir))/V3D.dot(dir,dir);
 	return new V3D(org.x+t*dir.x,org.y+t*dir.y,org.z+t*dir.z);
 }
-Code.distancePointLine3D = function(org,dir, point){ // infinite ray and point
-	//console.log(org,dir, point)
+Code.distancePointLine3D = function(org,dir, point){ // finite ray and point --- distancePointRayFinite3D
 	var closest = Code.closestPointLine3D(org,dir, point);
-	//console.log(closest+" ???");
 	return V3D.distance(point, closest);
 }
-
+Code.distancePointRayFinite3D = Code.distancePointLine3D;
 Code.closestPointLineSegment3D = function(org,dir, point){ // finite ray and point
 	var t = (V3D.dot(dir,point)-V3D.dot(org,dir))/V3D.dot(dir,dir);
 	if(t<=0){
@@ -7131,13 +7133,20 @@ Code.closestPointLineSegment3D = function(org,dir, point){ // finite ray and poi
 	}
 	return new V3D(org.x+t*dir.x,org.y+t*dir.y,org.z+t*dir.z);
 }
-
-Code.intersectRayPlane = function(org,dir, pnt,nrm){ // infinite ray - plane intersection
+Code.intersectRayPlaneFinite = function(org,dir, pnt,nrm){
+	return Code.intersectRayPlane(org,dir, pnt,nrm, 1);
+}
+Code.intersectRayPlane = function(org,dir, pnt,nrm, limit){ // infinite ray - plane intersection
 	var num = nrm.x*(pnt.x-org.x) + nrm.y*(pnt.y-org.y) + nrm.z*(pnt.z-org.z);
 	if(num==0){ return (new V3D()).copy(org); } // point is already in plane (first of possibly infinite intersections)
 	var den = nrm.x*dir.x + nrm.y*dir.y + nrm.z*dir.z;
 	if(den==0){ return null; } // zero or infinite intersections
 	var t = num/den;
+	if(limit===1){
+		if(t<0 || t>1.0){
+			return false;
+		}
+	}
 	return new V3D(org.x+t*dir.x,org.y+t*dir.y,org.z+t*dir.z);
 }
 Code.intersectRayTri = function(org,dir, a,b,c, nrm){ // finite ray - tri intersection (only non-parallel directions [else 2D line intersection])
@@ -7198,7 +7207,13 @@ Code.intersectRayQuad = function(org,dir, a,b,c,d, nrm){ // finite ray - quad in
 	return null;
 }
 Code.intersectRayDisk = function(org,dir, cen,nrm,rad){ // finite ray - circular-plane intersection [splat / surfel / disk]
-	throw "TODO";
+	var intersection = Code.intersectRayPlaneFinite(org,dir, cen,nrm);
+	if(intersection){
+		var d = V3D.distance(intersection,cen); // distanceSquare
+		if(d<rad){
+			return intersection;
+		}
+	}
 	return null;
 }
 Code.rayFromPointPerimeter = function(points,hull,forSite){

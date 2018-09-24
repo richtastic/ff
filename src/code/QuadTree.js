@@ -224,6 +224,11 @@ QuadTree.prototype.objectsInsideLine = function(org,dir,maxDistance, isFinite){
 	// all points within maxDistance of line
 	throw "todo";
 }
+QuadTree.prototype.objectsInsideRay = function(org,dir,radius){ // objects inside cylinder-ray
+	var arr = [];
+	this._root.objectsInsideRay(arr,org,dir,radius,this._toPoint);
+	return arr;
+}
 QuadTree.prototype.convexNeighborhood = function(center, minDesiredCount, epsilon){
 	var minNeighborhood = minDesiredCount!==undefined ? minDesiredCount : 5;
 	var sampleNeighborhood = Math.max(10, minDesiredCount);
@@ -690,4 +695,27 @@ QuadTree.Arxel.prototype.objectsInsideRect = function(arr,min,max,toPoint){
 	}
 }
 
+QuadTree.Arxel.prototype.objectsInsideRay = function(arr,org,dir,rad,toPoint){
+	if(this._datas){
+		for(var i=0; i<this._datas.length; ++i){
+			var p = toPoint(this._datas[i]);
+			var d = Code.distancePointRayFinite2D(org,dir,p);
+			if(d<rad){
+				arr.push(this._datas[i]);
+			}
+		}
+	}else if(this._children){
+		for(var i=0; i<this._children.length; ++i){
+			var child = this._children[i];
+			if(child){
+				var p = child.center();
+				var d = Code.distancePointRayFinite2D(org,dir,p);
+				d -= child.size().length()*0.5; // center-hypotenuse
+				if(d<rad){
+					child.objectsInsideRay(arr,org,dir,rad,toPoint);
+				}
+			}
+		}
+	}
+}
 
