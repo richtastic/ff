@@ -6131,10 +6131,17 @@ break; // TODO: remove
 // don't - run
 // return;
 
-	if(true){
+	if(false){
+	// if(true){
 	//if(!this.hasBundleInit()){
 		// global relative => absolute initialization
 		this.calculateGlobalOrientationInit();
+		return;
+	}
+
+	// increase resolution of BA approx
+	if(true){
+		this.calculateGlobalOrientationHierarchyLoad();
 		return;
 	}
 
@@ -7099,32 +7106,254 @@ App3DR.ProjectManager.prototype._calculateGlobalOrientationNonlinearB = function
 	}
 	console.log("... added points: "+pointCountAdded);
 
-	// check
-	// world.consistencyCheck();
 	var fxnZ = function(){
 		console.log("saved BA");
 	}
-	
+
 	var completeFxn = function(){
 		console.log("completeFxn");
 		var str = world.toYAMLString();
 		this.bundleFilename(App3DR.ProjectManager.BUNDLE_INFO_FILE_NAME);
 		this.saveBundleAdjust(str, fxnZ, this);
-		// var viewA = BAVIEWS[0];
-		// var viewB = BAVIEWS[1];
-		// var transform = world.transformFromViews(viewA,viewB);
-		// var count = transform.matches().length; // doesn't count if P has 0 matches
-		// var str = world.toYAMLString();
-		// var pair = this.pair(viewAIn.id(),viewBIn.id());
-		// this.savePairRelative(pair,count, str, fxnZ, this);
 	}
 
 	world.solveGlobalAbsoluteTransform(completeFxn, this);
-	// world.solve(completeFxn, this);
 }
-App3DR.ProjectManager.prototype.calculateBundleAdjustGlobal = function(callback, context, object){
-	throw "calculateBundleAdjustGlobal";
+App3DR.ProjectManager.prototype.calculateGlobalOrientationHierarchyLoad = function(){ 
+	console.log("load all necessary BA stuff ...");
+
+	var self = this;
+	var views = this._views;
+	var expectedViews = views.length;
+	var loadedViews = 0;
+	var yamlBA = null;
+
+	var checkDone = function(){
+		if(loadedViews==expectedViews && yamlBA){
+			handleDone();
+		}
+	}
+
+	var BAImageLoaded = function(){
+		++loadedViews;
+		checkDone();
+	}
+
+	var views = this._views;
+	for(i=0; i<views.length; ++i){
+		view = views[i];
+		view.loadBundleAdjustImage(BAImageLoaded, this);
+	}
+
+	var BALoaded = function(object, data){
+		var str = Code.binaryToString(data);
+		var object = YAML.parse(str);
+		if(Code.isArray(object)){
+			object = object[0];
+		}
+		yamlBA = object;
+		checkDone();
+	}
+var world = null;
+	var handleDone = function(){
+		var object = yamlBA;
+		var info = App3DR.bundleAdjustObjectToWorld(object, self);
+		//var world = info["world"];
+		world = info["world"];
+		var canRun = App3DR.bundleAdjustWorldCanDoubleResolution(world);
+		console.log(world);
+		console.log(canRun);
+		if(canRun){
+			world.solveGlobalAbsoluteTransform(completeFxn, self, 3);
+		}
+	}
+
+	var fxnZ = function(){
+		console.log("yep");
+	}
+
+	var completeFxn = function(){
+		console.log("completeFxn");
+		var str = world.toYAMLString();
+		self.bundleFilename(App3DR.ProjectManager.BUNDLE_INFO_FILE_NAME);
+		self.saveBundleAdjust(str, fxnZ, self);
+	}
+
+	
+
+	this.loadBundleAdjust(BALoaded,this, null);	
 }
+App3DR.bundleAdjustWorldCanDoubleResolution = function(world){
+	var views = world.toViewArray();
+	var canDouble = true;
+	// var lookup = [];
+	console.log(views);
+	for(var i=0; i<views.length; ++i){
+		var view = views[i];
+		var cellSize = view.cellSize();
+		var nextSize = Math.floor(cellSize/2);
+		console.log(cellSize+" | "+nextSize)
+		if(nextSize%2==0){
+			nextSize += 1;
+		}
+		if(nextSize<=3 || nextSize>=cellSize){
+			canDouble = canDouble & false;
+		}else{
+			view.cellSize(nextSize);
+		}
+	}
+	return canDouble;
+}
+App3DR.bundleAdjustObjectToWorld = function(object, project){
+	console.log(object);
+	var world = new Stereopsis.World();
+	// locals
+	var BACAMS = App3DR.bundleAdjustObjectToCameras(world,object["cameras"], project.cameras());
+	var BAVIEWS = App3DR.bundleAdjustObjectToViews(world,object["views"], project.views(), project._stage);
+	App3DR.bundleAdjustObjectToPoints(world,object["points"]);
+	// cameras
+	// console.log(cameras);
+	return {"world":world, "cameras":BACAMS};
+}
+
+App3DR.bundleAdjustObjectToCameras = function(world, cameras, source){
+	var BACAMS = [];
+	for(var i=0; i<cameras.length; ++i){
+		var camera = cameras[i];
+		// TODO: K is sometimes matrix & soemetimes components
+		var K = camera["K"];
+		var distortion = camera["distortion"];
+		var camID = camera["id"];
+		// console.log(camera);
+		if(K && distortion){
+			K = Matrix.fromObject(K);
+			// var fx = K["fx"];
+			// var fy = K["fy"];
+			// var s = K["s"];
+			// var cx = K["cx"];
+			// var cy = K["cy"];
+			var k1 = distortion["k1"];
+			var k2 = distortion["k2"];
+			var k3 = distortion["k3"];
+			var p1 = distortion["p1"];
+			var p2 = distortion["p2"];
+			// var K = new Matrix(3,3).fromArray([fx,s,cx, 0,fy,cy, 0,0,1]);
+			// console.log(K+"");
+			var c = world.addCamera(K, distortion);
+			c.data(camID);
+			BACAMS.push(c);
+		}
+	}
+	return BACAMS;
+}
+App3DR.bundleAdjustObjectToViews = function(world, views, source, stage){
+	var BAVIEWS = [];
+	var cameras = world.toCameraArray();
+	console.log(cameras);
+	// views
+	for(var i=0; i<views.length; ++i){
+		var view = views[i];
+		var viewID = view["id"]
+		var match = null;
+		for(var j=0; j<source.length; ++j){
+			var v = source[j];
+			if(viewID==v.id()){
+				match = v;
+			}
+			// console.log(v);
+		}
+		if(match){
+			var img = match.bundleAdjustImage();
+			var matrix = R3D.imageMatrixFromImage(img, stage);
+			var cam = null;
+			for(var j=0; j<cameras.length; ++j){
+				var c = cameras[j]
+				if(c.data()==view["camera"]){
+					cam = c;
+				}
+			}
+			// var imageSize = view["imageSize"];
+			var cellSize = view["cellSize"];
+			// TODO: CELL SIZE HAS SOMETHING TO DO WITH THE IMAGE SIZE RATIOS OF SOURCE AND ACTUAL
+			var v = world.addView(matrix, cam);
+				match.temp(v);
+				v.data(match.id());
+			v.cellSize(cellSize);
+
+			// transform
+			var transform = Matrix.fromObject(view["transform"]);
+			v.absoluteTransform(transform);
+
+			BAVIEWS.push(v);
+		}
+	}
+	return BAVIEWS;
+}
+
+
+App3DR.bundleAdjustObjectToPoints = function(world, points){
+	var WORLDVIEWS = world.toViewArray();
+	var WORLDVIEWSLOOKUP = {};
+	for(var i=0; i<WORLDVIEWS.length; ++i){
+		var v = WORLDVIEWS[i];
+		WORLDVIEWSLOOKUP[v.data()] = v;
+	}
+
+	var worldViews = world.toViewArray();
+	var o = new V2D(0,0);
+	var x1 = new V2D();
+	var x2 = new V2D();
+	var y1 = new V2D();
+	var y2 = new V2D();
+	var pointCountAdded = 0;
+	for(var i=0; i<points.length; ++i){
+		var point = points[i];
+		// console.log(point);
+		var point3D = new V3D(point["X"],point["Y"],point["Z"]);
+// console.log(point3D+"")
+		var pointViews = point["views"];
+		pointCountAdded++;
+		for(var j=0; j<pointViews.length; ++j){
+			var viewJ = pointViews[j];
+			var vJ = WORLDVIEWSLOOKUP[viewJ["view"]];
+			for(var k=j+1; k<pointViews.length; ++k){
+				var viewK = pointViews[k];
+				// console.log(viewJ);
+				// console.log(viewK);
+				var vK = WORLDVIEWSLOOKUP[viewK["view"]];
+				// console.log(vJ,vK);
+				var fr = new V2D(viewJ["x"],viewJ["y"]);
+				var to = new V2D(viewK["x"],viewK["y"]);
+				x1.set(viewJ["Xx"],viewJ["Xy"]);
+				y1.set(viewJ["Yx"],viewJ["Yy"]);
+				x2.set(viewK["Xx"],viewK["Xy"]);
+				y2.set(viewK["Yx"],viewK["Yy"]);
+				// to image plane
+				var sizeFr = vJ.size();
+				var sizeTo = vJ.size();
+				fr.scale(sizeFr.x,sizeFr.y);
+				to.scale(sizeTo.x,sizeTo.y);
+				// create
+				var affineAB = R3D.affineMatrixExact([o,x1,y1],[o,x2,y2]);
+// console.log(affineAB);
+				world.addMatchFromInfo(vJ,fr, vK,to, affineAB, point3D);
+				// pointCountAdded++;
+			}
+		}
+	}
+	console.log("... added points: "+pointCountAdded);
+}
+
+App3DR.ProjectManager.prototype.calculateGlobalOrientationHierarchy = function(str){ // increase resolution of current YAML BA file
+	// increase resolution for each view if possible
+
+	// run iterations
+
+	// save new BA file
+}
+// App3DR.ProjectManager.prototype.calculateBundleAdjustGlobal = function(callback, context, object){
+// 	throw "calculateBundleAdjustGlobal";
+// }
 App3DR.ProjectManager.prototype.calculateBundleAdjustPair = function(viewAIn,viewBIn, callback, context, object){
 	console.log("calculateBundleAdjustPair");
 	var i, j, k;

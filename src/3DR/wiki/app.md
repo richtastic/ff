@@ -287,13 +287,12 @@ vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 	- use match count / reprojection error as edge weight
 	- nonlinear minimize angle & trans.
 	=> updated abs camera locations & orientations
------> HERE <------
 - global absolute orientation bundle adjust
 	- quasi-local-global bundle adjustment
 	- group-bundle adjustment to iterate cameras to more optimal orientations
 		- reupdate scene 3D points?
 	=> final abs camera locations & orientations [motion final]
-(09/24)
+-----> HERE <------
 - global multi-view stereopsis
 	- use pairwise matches as initial points
 	- fill out tracks
@@ -302,6 +301,7 @@ vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 (10/08)
 - global structure & motion bundle adjust
 	- quasi-local-global bundle adjustment
+	- increase resolution to finer detail
 	=> final structure & motion
 (10/22)
 - surface triangulation(tesselation)
@@ -328,34 +328,40 @@ https://cloud.google.com/appengine/docs/nodejs/
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-
-updateP3DPatch
-
-
-
-
-
-- patching dropping in-front & behind
-- local 2D neighbor dropping based on 3D distances from center
+- add back validation
+- need to restrict propagation of points into smooth areas
+	- range
+	- uniqueness
+	- cornerness
 
 
-x probe 3d using patches
+
+
+x patching dropping in-front & behind
+x local 2D neighbor dropping based on 3D distances from center
+
+
 
 - 3+ combining:
 	- check merging code
 	- check removing code (drop matches & drop point)
 
 - can path projections be used to correct affine transforms?
+	- affine / projection discrepancy
+
+
 
 DEBUG:
 x display new matches before added
 - display the lost 3+view points 
 
 
+
 - drop very worst scores
 
 
-- load current BA & increase resolution => output (only need like 2 more iterations for expansions)
+- include patch data in BA file?
+	- normal, up, size
 
 
 

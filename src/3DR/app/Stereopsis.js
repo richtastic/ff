@@ -146,6 +146,7 @@ Stereopsis.World.prototype.newMatchFromInfo = function(viewA,pointA,viewB,pointB
 	var info = Stereopsis.infoFromMatrix2D(imageA,pointA,imageB,pointB,affine,compareSize);
 	var ncc = info["ncc"];
 	var sad = info["sad"];
+	var range = info["range"]/compareSize; // range per pixel
 	// var transform = this.transformFromViews(viewA,viewB);
 	var point3D = null;
 	var point2DA = null;
@@ -157,6 +158,7 @@ Stereopsis.World.prototype.newMatchFromInfo = function(viewA,pointA,viewB,pointB
 	}
 	// match
 	var match = new Stereopsis.Match2D(point2DA,point2DB,point3D,affine, ncc, sad);
+	match.range(range);
 	if(noConnect){
 		// point3D
 		point3D.addMatch(match);
@@ -167,9 +169,12 @@ Stereopsis.World.prototype.newMatchFromInfo = function(viewA,pointA,viewB,pointB
 		point2DB.addMatch(match);
 	}
 	// match
+	// console.log(". range: "+range);
 	return match;
 }
 Stereopsis.infoFromMatrix2D = function(imageA,pointA,imageB,pointB,matrix,compareSize){
+
+	// GET CORNERNESS TOO ?
 	var needle = imageA.extractRectFromFloatImage(pointA.x,pointA.y,1.0,null,compareSize,compareSize, matrix);
 	var haystack = imageB.extractRectFromFloatImage(pointB.x,pointB.y,1.0,null,compareSize,compareSize, null);
 	var scoreNCC = R3D.normalizedCrossCorrelation(needle,null,haystack,true);
@@ -203,6 +208,9 @@ Stereopsis.World.prototype.removePoint3D = function(point3D){
 		// // console.log("REMOVE FROM ACTIVE "+result1+" & "+result2+" @ "+before+" - "+after+" - "+again);
 		// // throw "?"
 	}
+}
+Stereopsis.World.prototype.toCameraArray = function(){
+	return Code.arrayFromHash(this._cameras);
 }
 Stereopsis.World.prototype.toViewArray = function(){
 	return Code.arrayFromHash(this._views);
@@ -293,12 +301,8 @@ cellSize = 11;
 // cellSize = 7;
 // cellSize = 5;
 // compareSize = 31;
-	var compareSize = Math.round(cellSize*1.5);
-	if(compareSize%2==0){
-		compareSize += 1;
-	}
 	this.cellSize(cellSize);
-	this.compareSize(compareSize);
+	// this.compareSize(compareSize);
 }
 Stereopsis.View.prototype._resetCacheItems = function(){
 	this._center = null;
@@ -518,6 +522,12 @@ Stereopsis.View.prototype.cellsForView = function(view){
 Stereopsis.View.prototype.cellSize = function(cellSize){
 	if(cellSize!==undefined){
 		this._cellSize = cellSize;
+		var compareSize = Math.round(cellSize*1.5);
+		if(compareSize%2==0){
+			compareSize += 1;
+		}
+		//compareSize = 21; // ... 
+		this.compareSize(compareSize);
 	}
 	return this._cellSize;
 }
@@ -1611,6 +1621,12 @@ Stereopsis.Match2D.prototype.errorSAD = function(sad){
 	}
 	return this._sad;
 }
+Stereopsis.Match2D.prototype.range = function(range){
+	if(range!==undefined){
+		this._range = range;
+	}
+	return this._range;
+}
 Stereopsis.Match2D.prototype.index = function(){
 	return Stereopsis.indexFromObjectIDs(this._point2DA.view(),this._point2DB.view());
 }
@@ -1637,10 +1653,12 @@ Stereopsis.Z = function(){
 }
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-Stereopsis.World.prototype.solveGlobalAbsoluteTransform = function(completeFxn, completeContext){
+Stereopsis.World.prototype.solveGlobalAbsoluteTransform = function(completeFxn, completeContext, iterations){
+	this._maxIterations = 2;
+	iterations = iterations!==undefined ? iterations : 5;
 	this._completeFxn = completeFxn;
 	this._completeContext = completeContext;
-	this._maxIterations = 5;
+	this._maxIterations = iterations;
 	this._currentIteration = 0;
 	this._ticker = new Ticker(1);
 	this._ticker.addFunction(Ticker.EVENT_TICK,this._tickSolveAbs,this);
@@ -1737,7 +1755,7 @@ Stereopsis.World.prototype._iterationSolveAbs = function(iterationIndex, maxIter
 	console.log("-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ "+iterationIndex+"/"+maxIterations+" ( "+isFirst+" & "+isLast+" ) ");
 	
 	this.printPoint3DTrackCount();
-
+if(isFirst){
 	var refineCount = 3;
 	for(var i=0; i<refineCount; ++i){
 		// relative R from absolutes
@@ -1753,7 +1771,12 @@ Stereopsis.World.prototype._iterationSolveAbs = function(iterationIndex, maxIter
 		// STRUCTURE
 		this.refinePoint3DAbsoluteLocation();
 	}
-	
+}else{
+	this.relativeTransformsFromAbsoluteTransforms();
+	this.relativeFfromR();
+	this.estimate3DErrors(true);
+	this.averagePoints3DFromMatches(true);
+}
 	this.printInfo(); // before new points are added
 
 	this.patchInitOrUpdate();
@@ -2762,7 +2785,9 @@ Stereopsis.World.prototype.filterLocal3D = function(){
 	var points3D = this.toPointArray();
 	var views = this.toViewArray();
 	var neighborCount = 9; // 5-9
-	var invNeighborCount = 1.0/neighborCount;
+	var includeSelfPoint = true;
+	// var includeSelfPoint = false;
+	var invNeighborCount = includeSelfPoint ? 1.0/neighborCount : 1.0/(neighborCount-1);
 // var distances = [];
 	var centroid = new V3D();
 	var dropList = [];
@@ -2782,24 +2807,24 @@ Stereopsis.World.prototype.filterLocal3D = function(){
 				centroid.set(0,0,0);
 				for(var k=0; k<neighbors.length; ++k){
 					var neighbor = neighbors[k];
-					// if(neighbor!=point2D){
+					if(includeSelfPoint || neighbor!=point2D){
 						centroid.add(neighbor.point3D().point());
-					// }
+					}
 				}
 				centroid.scale(invNeighborCount);
 				for(var k=0; k<neighbors.length; ++k){
 					var neighbor = neighbors[k];
-					// if(neighbor!=point2D){
+					if(includeSelfPoint || neighbor!=point2D){
 						var dist = V3D.distance(centroid,neighbor.point3D().point());
 						d.push(dist);
-					// }
+					}
 				}
 				var minD = Code.min(d);
 				var avgD = Code.mean(d);
-				var sigD = Code.stdDev(d, minD);
+				var sigD = Code.stdDev(d, minD); // minD vs avgD
 				var point3D = point2D.point3D();
 				var p3D = point3D.point();
-				var maxPointDistance = avgD + sigD*2.0; // 3 gets nothing
+				var maxPointDistance = avgD + sigD*2.5; // 3 gets nothing | 2 gets some
 				var pointDistance = V3D.distance(p3D,centroid);
 // distances.push(avgD/minD);
 				if(pointDistance>maxPointDistance){
@@ -3625,8 +3650,9 @@ var tracking = [];
 				bestMatch.transform(trans);
 				Stereopsis.updateErrorForMatch(bestMatch);
 				bestMatch.transform(null); // may not get added - cleanup
-				var sca = 2.0;
+				// var sca = 2.0;
 				// var sca = 1.0;
+				var sca = 1.5;
 				var isValid = (bestMatch.errorR() <= match.errorR()*sca) && (bestMatch.errorF() <= match.errorF()*sca);
 				// isValid = true;
 				// only add if match is better than reference match
@@ -3737,7 +3763,13 @@ Stereopsis.World.prototype.validateMatch = function(match, special){
 		console.log("DROP SCALE RATIO: "+valueRatio);
 		return false;
 	}
-/*
+	var minRange = 0.04/(5*5);
+	// var minRange = 0.10/(5*5);
+	var range = match.range(); // range per pixel
+	if(range<minRange){
+		return false;
+	}
+
 // if(!special){
 	// ORIENTATION
 	var orientation = Stereopsis.orientationTestMatch(match);
@@ -3746,7 +3778,6 @@ Stereopsis.World.prototype.validateMatch = function(match, special){
 		return false;
 	}
 // }
-*/
 
 	// HALF-ANGLE ORIETNATION CHECKING
 
