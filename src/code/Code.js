@@ -5642,14 +5642,12 @@ Code.findGlobalValue1D = function(array, value){
 	var lm1 = len - 1;
 	var prev;
 	locations = [];
-// TODO: return all matches, nit just first
+// TODO: return all matches, not just first
 	for(i=0; i<lm1; ++i){
 		var a = array[i];
 		var b = array[i+1];
-
-		
 		if((a<=value && value<=b) || (a>=value && value>=b)){
-			//console.log(a+ " <= "+value+" <= "+b)
+			// console.log(a+ " <= "+value+" <= "+b);
 			// linear:
 			var range = b-a;
 			if(range==0){

@@ -3144,6 +3144,13 @@ ImageMat.log = function(data){
 	}
 	return data;
 }
+ImageMat.add = function(data, c){
+	var i, len = data.length;
+	for(i=0;i<len;++i){
+		data[i] = data[i] + c;
+	}
+	return data;
+}
 ImageMat.pow = function(data,power){
 	var i, len = data.length;
 	for(i=0;i<len;++i){

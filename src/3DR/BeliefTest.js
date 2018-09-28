@@ -37,6 +37,314 @@ GLOBALSTAGE = this._stage;
 	}
 //var displayScale = 1.5;
 }
+
+
+BeliefTest.testDisplayZoom = function(image){
+	console.log("testDisplayZoom");
+
+
+	var isRange = false; // cornernes
+	// var isRange = true;
+
+
+	var source = image.gry();
+	var sourceWidth = image.width();
+	var sourceHeight = image.height();
+	console.log(source);
+
+
+
+var gry = source;
+var width = sourceWidth;
+var height = sourceHeight;
+var corners = R3D.harrisCornerDetection(gry, width, height);
+ImageMat.normalFloat01(corners);
+// ImageMat.add(corners,1.0);
+// ImageMat.pow(corners,0.1); // more linear shapes
+ImageMat.pow(corners,0.10);
+// ImageMat.pow(corners,0.25);
+// ImageMat.log(corners);
+// ImageMat.add(corners,1.0);
+// ImageMat.log(corners);
+// ImageMat.add(corners,-1.0);
+
+tmp = Code.copyArray(corners);
+tmp.sort(function(a,b){
+	return a < b ? -1 : 1;
+});
+// Code.printMatlabArray(tmp);
+
+var minimumCornerness = tmp[Math.round(tmp.length*0.333)];
+
+source = corners;
+
+		// var iii = img;
+		// var img = GLOBALSTAGE.getFloatRGBAsImage(source,source,source, sourceWidth,sourceHeight);
+		// var d = new DOImage(img);
+		// d.matrix().scale(1.0);
+		// d.matrix().translate(10 , 10);
+		// GLOBALSTAGE.addChild(d);
+
+		// var sca = 2.0;
+		// var squ = 50;
+		// var spa = 10.0;
+		// var matrix = null;
+		
+		// var p2DA = point2DA.point2D();
+
+		// // SHOW POINT BY ITSELF
+		// var img = imageA.extractRectFromFloatImage(p2DA.x,p2DA.y,1.0,null,squ,squ, null);
+		// console.log(img.range());
+		// var iii = img;
+		// var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
+		// var d = new DOImage(img);
+		// d.matrix().scale(sca);
+		// d.matrix().translate(10 + (sca*squ + spa)*i, 10);
+		// GLOBALSTAGE.addChild(d);
+
+// var wid = 16;
+// var hei = 16;
+// var len = wid*hei
+// source = [];
+// for(var i=0; i<len; ++i){
+// 	var val = Code.randomInt(0,9);
+// 	source.push(val);
+// }
+
+// var str = Code.toStringArray2D(source,wid,hei, 2);
+// console.log(str);
+// sourceWidth = wid;
+// sourceHeight = hei;
+
+// throw "...";
+
+
+	var pixels = sourceWidth*sourceHeight;
+	var records = [];
+	var sizes = [];
+	var recordCurr = [];
+	for(var i=0; i<pixels; ++i){
+		var pixel = source[i];
+		recordCurr[i] = [pixel,pixel];
+	}
+	var sizeCurr = new V2D(sourceWidth,sourceHeight);
+	records.push(recordCurr);
+	sizes.push(sizeCurr);
+	var scaleValues = [];
+	var scales = 6; // 1,2,4,8,16 -- 1 3 9 27 81
+	scaleValues.push(Math.pow(2,0)); // first skipped
+	for(var s=1; s<scales; ++s){
+		var scale = Math.pow(2,-s);
+		var width = Math.ceil(scale*sourceWidth);
+		var height = Math.ceil(scale*sourceHeight);
+		scaleValues.push(scale);
+		// console.log(s+" : "+scale+" = "+width+" x "+height+"   || WAS: "+sizeCurr);
+		var recordNext = [];
+		// for each new pixel
+		for(var j=0; j<height; ++j){
+			for(var i=0; i<width; ++i){
+				var iOld = Math.floor(i*2.0);
+				var jOld = Math.floor(j*2.0);
+				var minI = iOld;
+				var minJ = jOld;
+				var maxI = Math.min(sizeCurr.x-1,iOld+1);
+				var maxJ = Math.min(sizeCurr.y-1,jOld+1);
+				var record = null;
+				// edge case noneven division
+				if(minI>maxI){
+					minI = maxI;
+				}
+				if(minJ>maxJ){
+					minJ = maxJ;
+				}
+				// get max & min in 3x3 area
+				for(var jj=minJ; jj<=maxJ; ++jj){
+					for(var ii=minI; ii<=maxI; ++ii){
+						var ind = jj*sizeCurr.x + ii;
+						var val = recordCurr[ind];
+						if(!record){
+							record = [val[0],val[1]];
+						}else{
+							record[0] = Math.min(record[0],val[0]);
+							record[1] = Math.max(record[1],val[1]);
+						}
+					}
+				}
+				// save
+				var index = j*width + i;
+				recordNext[index] = record;
+			}
+		}
+		sizeCurr = new V2D(width,height);
+		sizes.push(sizeCurr);
+		records.push(recordNext);
+		recordCurr = recordNext;
+	}
+	console.log(records);
+/*
+	for(var i=0; i<records.length; ++i){
+		// var wid = ;
+		// var hei = ;
+		var r = records[i];
+		var s = [];
+		for(var j=0; j<r.length; ++j){
+			s[j] = r[j][0];
+		}
+		var str = Code.toStringArray2D(s,sizes[i].x,sizes[i].y, 2);
+		console.log(str);
+	}
+*/
+	
+	// var targetValue = 0.10;
+	var targetValue = 0.25;
+	// var targetValue = 0.50;
+	// var targetValue = minimumCornerness;
+
+console.log(minimumCornerness)
+
+	var target = [];
+	var xValues = Code.lineSpace(0,scales-1);
+	console.log(xValues);
+	// get graphs:
+	for(var j=0; j<sourceHeight; ++j){
+		for(var i=0; i<sourceWidth; ++i){
+			var index = j*sourceWidth + i;
+			var yValues = [];
+			for(s=0; s<scales; ++s){
+				var scale = scaleValues[s];
+				var size = sizes[s];
+				var record = records[s];
+				var ii = Math.floor(scale*i);
+				var jj = Math.floor(scale*j);
+				var ind = jj*size.x + ii;
+				var val = record[ind];
+				if(isRange){
+					val = val[1] - val[0];
+				}else{
+					val = val[1]; // maximum
+				}
+				yValues.push(val);
+				//if(j==0 && i==0){
+				// if(index==5031){
+				// 	console.log(s,scale,size+"",record.length+"",ii,jj,val)
+				// }
+			}
+			target[index] = yValues;
+		}
+	}
+	console.log(target);
+	// to target range:
+	var targetValues = [];
+	for(var j=0; j<sourceHeight; ++j){
+		for(var i=0; i<sourceWidth; ++i){
+			var index = j*sourceWidth + i;
+			var yValues = target[index];
+			var result = Code.findGlobalValue1D(yValues, targetValue);
+			var scale = result[0];
+			if(scale<0){
+				console.log(scale);
+			}
+			scale = Math.pow(2,scale);
+			targetValues[index] = scale;
+		}
+	}
+
+	console.log(targetValues);
+
+	var x = 275;
+	var y = 100;
+	var scaleValue = ImageMat.getPointInterpolateLinear(targetValues, sourceWidth,sourceHeight, x,y);
+	console.log(scaleValue+" @ "+x+","+y);
+
+
+
+var min = Code.min(targetValues);
+var max = Code.max(targetValues);
+ImageMat.normalFloat01(targetValues);
+
+console.log(min,max);
+
+var s = 0.25;
+var wid = Math.round(s*sourceWidth);
+var hei = Math.round(s*sourceHeight);
+console.log(wid,hei);
+resized = ImageMat.extractRect(targetValues, 0,0, sourceWidth,0, sourceWidth,sourceHeight, 0,sourceHeight, wid,hei, sourceWidth,sourceHeight);
+// console.log(resized);
+
+Code.printMatlabArray(resized,"tz");
+
+
+// throw ">";
+
+
+
+
+	
+	// ImageMat.pow(targetValues,0.1); 
+	// ImageMat.pow(targetValues,0.5);
+	// ImageMat.pow(targetValues,4.0); 
+
+
+
+var heat = ImageMat.heatImage(targetValues, sourceWidth, sourceHeight, true);
+// var img = GLOBALSTAGE.getFloatRGBAsImage(heat.red(), heat.grn(), heat.blu(), sourceWidth, sourceHeight);
+// console.log(img);
+	// ImageMat.normalFloat01(targetValues);
+	// ImageMat.invertFloat01(targetValues);
+	// ImageMat.normalFloat01(corners);
+// ImageMat.add(corners,1.0);
+		//ImageMat.pow(targetValues,0.10); 
+		// ImageMat.pow(targetValues,4.0); 
+		
+		var iii = heat;
+		var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
+		// var wid = sourceWidth;
+		// var hei = sourceHeight;
+		//var img = GLOBALSTAGE.getFloatRGBAsImage(iii,iii,iii, wid,hei);
+		var d = new DOImage(img);
+		// d.matrix().scale(sca);
+		// d.matrix().translate(10 + (sca*squ + spa)*i, 10);
+		GLOBALSTAGE.addChild(d);
+
+	
+	
+
+	/*
+		using flat images : want to keep track of max and min => range
+		using cornerness : want to keep track of max
+	
+		process:
+			source = copy source image [gry]
+			record = formatted source
+			
+			scaleCount = 5 [1=original, 2,4,8,16]
+
+			recordCurr = record
+			for each zoom:
+				recordNext = halved recordCurr
+				for each pixel:
+					do window max operation on record
+					recordNext[pixel] = result
+		
+		plot:
+		for pixel i:
+			location in record j = floor(i*2^-j)
+		
+		interpoloate on exponential scale
+
+
+		plot single pixel & interpolated location
+
+
+
+		plot ENTIRE IMAGE VALUE
+
+	*/
+
+	throw "... testDisplayZoom";
+}
+
+
 BeliefTest.prototype.handleMouseClickFxn = function(e){
 	var location = e["location"];
 	var lattice = this._lattice;
@@ -208,6 +516,7 @@ BeliefTest.prototype.handleImageLoaded = function(imageInfo){
 	var y = 0;
 	var images = [];
 	var imageScale = 1.0;
+	var matrixes = [];
 	for(i=0;i<imageList.length;++i){
 		var file = fileList[i];
 		var img = imageList[i];
@@ -226,10 +535,16 @@ BeliefTest.prototype.handleImageLoaded = function(imageInfo){
 				matrix = new ImageMat(matrix["width"], matrix["height"], matrix["red"], matrix["grn"], matrix["blu"]);
 			var view = new BeliefTest.View(matrix);
 		this._views.push(view);
+		matrixes.push(matrix);
 	}
 	// var display = this._root;
 	// display.matrix().scale(1.5);
 	// GLOBALSTAGE = this._stage;
+
+
+BeliefTest.testDisplayZoom(matrixes[1]);
+throw "testing display zoom";
+
 
 	this.getMatches();
 }

@@ -20077,6 +20077,19 @@ R3D.normalizedCrossCorrelation = function(needle,needleMask, haystack, isCost){ 
 
 }
 
+R3D.affineTransformFromVectors = function(u,a,b){
+	var o = new V2D(0,0);
+	var x = new V2D(1,0);
+	var y = new V2D(0,1);
+	if(a==undefined){
+		a = u["A"];
+		b = u["B"];
+		u = u["O"];
+	}
+	var matrix = R3D.affineMatrixExact([o,x,y],[u,a,b]);
+	return matrix;
+}
+
 R3D.optimumAffineTransform = function(imageA,pointA, imageB,pointB, vectorX,vectorY, sizeA, limitPixels,limitVA,limitVB,  limits){ // affine = v1(x,y) v2(x,y) + tx,ty
 	sizeA = Code.valueOrDefault(sizeA, 11); 
 	if(!limits){

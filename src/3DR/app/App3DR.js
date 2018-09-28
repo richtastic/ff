@@ -3400,9 +3400,8 @@ Code.inheritClass(App3DR.App.Model3D, App3DR.App);
 App3DR.App.Model3D.prototype._loadedViewTexture = function(input){
 	var i;
 	++this._loadedTextures;
-	console.log("_loadedViewTexture: "+this._loadedTextures+"=="+this._expectedTextures);
-
-	console.log(this._loadedTextures==this._expectedTexture);
+	// console.log("_loadedViewTexture: "+this._loadedTextures+"=="+this._expectedTextures);
+	// console.log(this._loadedTextures==this._expectedTexture);
 
 	if(this._loadedTextures!=this._expectedTextures){
 		return;
@@ -3410,7 +3409,7 @@ App3DR.App.Model3D.prototype._loadedViewTexture = function(input){
 	this._bindAfterTexturesLoaded();
 }
 App3DR.App.Model3D.prototype._bindAfterTexturesLoaded = function(){
-	console.log("_bindAfterTexturesLoaded");
+	// console.log("_bindAfterTexturesLoaded");
 	this._textures = [];
 	var nextIndex = 0;
 
@@ -7199,6 +7198,7 @@ App3DR.bundleAdjustWorldCanDoubleResolution = function(world){
 		if(nextSize<=3 || nextSize>=cellSize){
 			canDouble = canDouble & false;
 		}else{
+// halve cell size = double resolution
 			view.cellSize(nextSize);
 		}
 	}
@@ -7614,11 +7614,6 @@ console.log(offX+","+offY);
 			}
 			R3D.applyDistortionParameters(distorted, undistorted, K, distortions);
 */
-
-
-// DON'T RUN
-// don't B
-// return; // don't run
 
 
 

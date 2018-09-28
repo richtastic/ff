@@ -328,11 +328,78 @@ https://cloud.google.com/appengine/docs/nodejs/
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+GOAL: FIND ZOOM/SIZE FOR COMPARING POINTS
+	- find nearest cornerness minimum
+	- 'distance' from nearest corner peak
+	=> corner points are at 0 distance
+		- reverse? down to 50% and up to 50% => this just moves the problem to 50%
+	=> just a minimum size (3 px - 5 px) ...
+	=> neareast peak (over 1 pixel away?)
+
+
+
+PROBLEMS:
+- error is going down but there are a lot of noisy points
+- right-side of image isn't getting expanded probe2d
+
+DEBUG:
+- show example match & affine visuals
+	=> windows for some points are very non-descriptive
+
+- compare stereopsis affine transform with match affine transform
+
+
+
+
+-- maybe bland points are throwing things off?
+	=> try zooming out to get best positioning of point ?
+	=> 
+
+
+
+
+
+- how to find 'lowest' increase of gradient? &&&&&& THE VALUE
+	- get scores
+	- turn each score into: 1/max(diff,eps)
+	- get gradient
+	- HOW TO GET THE VALUE THERE ? => 2D surface ?
+- get uniqueness = lowest gradient per unit cell (@ 1/2 cell distance away)
+
+
+
+
+
+	- only allow propagation of points that are better than the 'average' scores: F, R | NCC, SAD
+	- ...
+
+
+
+- does the new resolution increasing iteration work OK at same resolution?
+	 - may need new FXN that inserts a P3D as-is w no merging-conflict checking
+	 	createP3DWithPointsAndMatches(V3D, [V2D], [affine])
+
+~ final drop all 3D points with errors below 2*midpoint globally
+
+
+
+
+
+- compare stereopsis affine transform with match affine transform
+	=> use whichever has better score ?
+
+
+SINGLE PIXEL UNIQUENESS VS MAXIMUM IN AREA UNIQUENESS
+
+
 - add back validation
 - need to restrict propagation of points into smooth areas
-	- range
-	- uniqueness
+	>< range
+	~ uniqueness
 	- cornerness
+
+
+- use uniqueness | cornerness when adding new match to limit matching more points in bland areas
 
 
 
@@ -364,9 +431,6 @@ x display new matches before added
 	- normal, up, size
 
 
-
-
-- use uniqueness | cornerness when adding new match to limit matching more points in bland areas
 
 
 
