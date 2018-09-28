@@ -336,6 +336,17 @@ GOAL: FIND ZOOM/SIZE FOR COMPARING POINTS
 	=> just a minimum size (3 px - 5 px) ...
 	=> neareast peak (over 1 pixel away?)
 
+SOLN:
+	- cornerSize = find the minimum size that includes minimum cornerness
+	- cellSize = current density cell size
+	- compareSize = max(cornerSize,cellSize) * 1.5
+	- compareSize = compareSize%2==0 ? compareSize+1 : compareSize
+	- needleSize = max(5, compareSize)
+- 5 11 21 41 81 
+
+
+	- compareSize = cellSize * 1.5 = finding 
+
 
 
 PROBLEMS:

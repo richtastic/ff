@@ -3,6 +3,7 @@
 Math.PI2 = Math.PI*2.0;
 Math.TAU = Math.PI*2.0;
 Math.PIO2 = Math.PI*0.5;
+Math.lg = Math.log2;
 // 
 Code.IS_IE = navigator && navigator.appName && (navigator.appName).toLowerCase().indexOf("explorer") >= 0; // (document.body.attachEvent && window.ActiveXObject);
 Code.IS_OPERA = navigator && navigator.appVersion && (navigator.appVersion).toLowerCase().indexOf("opera") >= 0; // guess

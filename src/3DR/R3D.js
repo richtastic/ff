@@ -23040,6 +23040,212 @@ R3D.transformMatrixFromRodriguesElement = function(transform, rx,ry,rz, tx,ty,tz
 	return transform;
 }
 
+
+// find minimum size of point that includes at least one other pixel of cornerness value >= threshold
+R3D.CompareSizeFinder = function(image){
+	this._scales = null;
+	this._width = null;
+	this._height = null;
+	this.image(image);
+}
+R3D.CompareSizeFinder.prototype.image = function(image){
+	if(image){
+		var scales = R3D.minimumSizeToCornerThreshold(image, null, 0.25);
+		scales = ImageMat.getBlurredImage(scales, image.width(), image.height(), 1.0); // smoothing
+		this._scales = scales;
+		this._width = image.width();
+		this._height = image.height();
+	}else{
+		this._scales = null;
+		this._width = null;
+		this._height = null;
+	}
+}
+R3D.CompareSizeFinder.prototype.minSizeForPoint = function(x,y){
+	scales = this._scales;
+	if(scales){
+		var scale = ImageMat.getPointInterpolateLinear(scales, this._width,this._height, x,y);
+		scale = Math.ceil(scale);
+		return scale;
+	}
+	return null;
+}
+R3D.minimumSizeToCornerThreshold = function(image, corners, thresh){
+	thresh = thresh!==undefined ? thresh : 0.25;
+// thresh = 0.05;
+// thresh = 0.10;
+thresh = 0.25;
+// thresh = 0.333;
+// thresh = 0.5;
+// thresh = 0.75;
+// thresh = 0.9;
+	if(!corners){
+		corners = R3D.linearCornersFromImage(image);
+	}
+	var target = R3D.percentFromThresholdImage(corners, thresh);
+// corners = image.gry();
+// target = 0.25;
+// var sizes = R3D.imageScaleFeatureOptimumFind(corners, image.width(), image.height(), target, 0);
+var sizes = R3D.imageScaleFeatureOptimumFind(corners, image.width(), image.height(), target, 2);
+	return sizes;
+}
+R3D.linearCornersFromImage = function(image){
+	var gry = image.gry();
+	var width = image.width();
+	var height = image.height();
+	gry = ImageMat.getBlurredImage(gry, width, height, 1.0);
+	var corners = R3D.harrisCornerDetection(gry, width, height);
+	ImageMat.normalFloat01(corners);
+	// ImageMat.pow(corners,0.1); // more linear shapes
+	// DOUBLE LOG:
+	// for(var i=0; i<1; ++i){
+		ImageMat.add(corners,1E-16);
+		ImageMat.log(corners);
+		ImageMat.normalFloat01(corners);
+	// }
+	return corners;
+}
+R3D.percentFromThresholdImage = function(source, threshold){
+	tmp = Code.copyArray(source);
+	tmp.sort(function(a,b){
+		return a < b ? -1 : 1;
+	});
+	// ignore steep ends:
+	/*
+	var min = tmp[Math.round(tmp.length*0.25)];
+	var max = tmp[Math.round(tmp.length*0.75)];
+	var range = max-min;
+	var yValue = min + range*threshold;
+	yValue = 0.1;
+	*/
+	Code.printMatlabArray(tmp);
+	var yValue = tmp[Math.round(tmp.length*threshold)];
+	console.log("yValue: "+yValue+" ... ");
+	return yValue;
+}
+R3D.imageScaleFeatureOptimumFind = function(source, sourceWidth, sourceHeight, targetValue, mode){
+	mode = mode!==undefined ? mode : 0;
+	var isRange = false;
+	var isMax = false;
+	var isMin = false;
+	var isMid = false;
+	if(mode==0){
+		isRange = true;
+	}else if(mode==1){
+		isMin = true;
+	}else if(mode==1){
+		isMax = true;
+	}else if(mode==2){
+		isMid = true;
+	}else{ // default
+		isRange = true;
+	}
+	var pixelCount = sourceWidth*sourceHeight;
+	// initial record:
+	var records = [];
+	var sizes = [];
+	var recordCurr = [];
+	var scaleValues = [];
+	for(var i=0; i<pixelCount; ++i){
+		var pixel = source[i];
+		recordCurr[i] = [pixel,pixel];
+	}
+	records.push(recordCurr);
+	var sizePrev = new V2D(sourceWidth,sourceHeight);
+	sizes.push(sizePrev);
+	var maxScale = Math.floor(Math.min(Math.log2(sourceWidth), Math.log2(sourceHeight))) - 1; // -1: ignore last size at 1x1
+	var scales = Math.min(10,maxScale);
+	// get values
+	scaleValues.push(Math.pow(2,0)); // first skipped = 1
+	for(var s=1; s<scales; ++s){
+		var scale = Math.pow(2,-s);
+		var width = Math.ceil(scale*sourceWidth);
+		var height = Math.ceil(scale*sourceHeight);
+		scaleValues.push(scale);
+		var recordNext = [];
+		// for each new pixel
+		for(var j=0; j<height; ++j){
+			for(var i=0; i<width; ++i){
+				var iOld = Math.floor(i*2.0);
+				var jOld = Math.floor(j*2.0);
+				var minI = iOld;
+				var minJ = jOld;
+				var maxI = Math.min(sizePrev.x-1,iOld+1);
+				var maxJ = Math.min(sizePrev.y-1,jOld+1);
+				var record = null;
+				// edge case non-even division
+				if(minI>maxI){
+					minI = maxI;
+				}
+				if(minJ>maxJ){
+					minJ = maxJ;
+				}
+				// get max & min in 3x3 area
+				for(var jj=minJ; jj<=maxJ; ++jj){
+					for(var ii=minI; ii<=maxI; ++ii){
+						var ind = jj*sizePrev.x + ii;
+						var val = recordCurr[ind];
+						if(!record){
+							record = [val[0],val[1]];
+						}else{
+							record[0] = Math.min(record[0],val[0]);
+							record[1] = Math.max(record[1],val[1]);
+						}
+					}
+				}
+				// save
+				var index = j*width + i;
+				recordNext[index] = record;
+			}
+		}
+		sizePrev = new V2D(width,height);
+		sizes.push(sizePrev);
+		records.push(recordNext);
+		recordCurr = recordNext;
+	}
+	// find target
+	var target = [];
+	for(var j=0; j<sourceHeight; ++j){
+		for(var i=0; i<sourceWidth; ++i){
+			var index = j*sourceWidth + i;
+			var yValues = [];
+			for(s=0; s<scales; ++s){
+				var scale = scaleValues[s];
+				var size = sizes[s];
+				var record = records[s];
+				var ii = Math.floor(scale*i);
+				var jj = Math.floor(scale*j);
+				var ind = jj*size.x + ii;
+				var val = record[ind];
+				if(isRange){
+					val = val[1] - val[0];
+				}else if(isMid){
+					val = (val[1] - val[0])*0.5 + val[0];
+				}else if(isMin){
+					val = val[0];
+				}else if(isMax){
+					val = val[1];
+				}
+				yValues.push(val);
+			}
+			target[index] = yValues;
+		}
+	}
+	// to target range:
+	var targetValues = [];
+	for(var j=0; j<sourceHeight; ++j){
+		for(var i=0; i<sourceWidth; ++i){
+			var index = j*sourceWidth + i;
+			var yValues = target[index];
+			var result = Code.findGlobalValue1D(yValues, targetValue);
+			var scale = result[0];
+			scale = Math.pow(2,scale);
+			targetValues[index] = scale;
+		}
+	}
+	return targetValues;
+}
+
 /*
 consistency checks:
 

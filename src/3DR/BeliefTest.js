@@ -17,7 +17,9 @@ GLOBALSTAGE = this._stage;
 	// R3D.normalizedCrossCorrelation(needle,needleMask, haystack);
 
 	this._views = [];
-
+	
+	// var imageLoader = new ImageLoader("./images/",["caseStudy1-0.jpg","caseStudy1-0.jpg"], this,this.handleImageLoaded,null);
+	// var imageLoader = new ImageLoader("./images/",["snow1.png","snow2.png"], this,this.handleImageLoaded,null);
 	var imageLoader = new ImageLoader("./images/",["room0.png","room2.png"], this,this.handleImageLoaded,null);
 	// var imageLoader = new ImageLoader("./images/",["F_S_1_1.jpg","F_S_1_2.jpg"], this,this.handleImageLoaded,null);
 	// var imageLoader = new ImageLoader("./images/",["caseStudy1-0.jpg","caseStudy1-20.jpg"], this,this.handleImageLoaded,null);
@@ -43,6 +45,39 @@ BeliefTest.testDisplayZoom = function(image){
 	console.log("testDisplayZoom");
 
 
+
+
+	var finder = new R3D.CompareSizeFinder(image);
+	console.log(finder);
+	var size = finder.minSizeForPoint(125,126);
+	console.log(size);
+
+
+
+	var iii = image;
+	var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
+	var d = new DOImage(img);
+	// d.matrix().scale(1.0);
+	d.matrix().translate(10 , 10);
+	GLOBALSTAGE.addChild(d);
+
+
+	var targetValues = Code.copyArray(finder._scales);
+	var sourceWidth = image.width();
+	var sourceHeight = image.height();
+	ImageMat.normalFloat01(targetValues);
+	ImageMat.pow(targetValues,0.5);
+	var heat = ImageMat.heatImage(targetValues, sourceWidth, sourceHeight, true);
+	var iii = heat;
+	var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
+	var d = new DOImage(img);
+	d.matrix().translate(10 , 10);
+	d.graphics().alpha(0.50);
+	GLOBALSTAGE.addChild(d);
+
+throw "... redone in R3D";
+
+
 	var isRange = false; // cornernes
 	// var isRange = true;
 
@@ -51,6 +86,7 @@ BeliefTest.testDisplayZoom = function(image){
 	var sourceWidth = image.width();
 	var sourceHeight = image.height();
 	console.log(source);
+
 
 
 
@@ -131,7 +167,7 @@ source = corners;
 	records.push(recordCurr);
 	sizes.push(sizeCurr);
 	var scaleValues = [];
-	var scales = 6; // 1,2,4,8,16 -- 1 3 9 27 81
+	var scales = 7; // 1,2,4,8,16 -- max to be based on original image size
 	scaleValues.push(Math.pow(2,0)); // first skipped
 	for(var s=1; s<scales; ++s){
 		var scale = Math.pow(2,-s);
@@ -196,8 +232,8 @@ source = corners;
 */
 	
 	// var targetValue = 0.10;
-	var targetValue = 0.25;
-	// var targetValue = 0.50;
+	// var targetValue = 0.25;
+	var targetValue = 0.50;
 	// var targetValue = minimumCornerness;
 
 console.log(minimumCornerness)
@@ -260,6 +296,7 @@ console.log(minimumCornerness)
 
 var min = Code.min(targetValues);
 var max = Code.max(targetValues);
+var ran = max-min;
 ImageMat.normalFloat01(targetValues);
 
 console.log(min,max);
@@ -270,6 +307,8 @@ var hei = Math.round(s*sourceHeight);
 console.log(wid,hei);
 resized = ImageMat.extractRect(targetValues, 0,0, sourceWidth,0, sourceWidth,sourceHeight, 0,sourceHeight, wid,hei, sourceWidth,sourceHeight);
 // console.log(resized);
+ImageMat.mulConst(resized, ran);
+ImageMat.addConst(resized, min);
 
 Code.printMatlabArray(resized,"tz");
 
@@ -542,7 +581,7 @@ BeliefTest.prototype.handleImageLoaded = function(imageInfo){
 	// GLOBALSTAGE = this._stage;
 
 
-BeliefTest.testDisplayZoom(matrixes[1]);
+BeliefTest.testDisplayZoom(matrixes[0]);
 throw "testing display zoom";
 
 

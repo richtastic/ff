@@ -2970,7 +2970,7 @@ ImageMat.scaleFloat = function(a,b){
 	}
 	return result;
 }
-ImageMat.scaleFloatSame = function(a,b){
+ImageMat.scaleFloatSame = function(a,b){ // = mulConst
 	var i, len = a.length;
 	for(i=0;i<len;++i){
 		a[i] = a[i]*b;
