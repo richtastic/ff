@@ -328,6 +328,14 @@ https://cloud.google.com/appengine/docs/nodejs/
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
+
+
+image where each pixel shows distance to nearest corner with value >= threshold
+	- 
+
+
+
 GOAL: FIND ZOOM/SIZE FOR COMPARING POINTS
 	- find nearest cornerness minimum
 	- 'distance' from nearest corner peak
@@ -367,6 +375,8 @@ DEBUG:
 	=> 
 
 
+
+- DROP / RECOVER FROM AFFINE THAT DOESN'T MATCH AVERAGE PROJECTION
 
 
 

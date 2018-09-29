@@ -60,7 +60,7 @@ Stereopsis.World = function(){
 	var canvas = stage.canvas();
 	this._stage = stage;
 	this._canvas = canvas;
-	this._canvas.addFunction(Canvas.EVENT_MOUSE_WHEEL,this._handleMouseWheelFxn,this);
+	// this._canvas.addFunction(Canvas.EVENT_MOUSE_WHEEL,this._handleMouseWheelFxn,this); // TODO: UNCOMMENT FOR SEEING DOTS HERE
 }
 Stereopsis.World.prototype._handleKeyboardDown = function(e){
 	// console.log("_handleKeyboardDown");
@@ -1695,7 +1695,7 @@ Stereopsis.World.prototype.solveGlobalAbsoluteTransform = function(completeFxn, 
 	this._maxIterations = 2;
 	iterations = iterations!==undefined ? iterations : 5;
 // iterations = 5;
-iterations = 3;
+iterations = 1;
 	this._completeFxn = completeFxn;
 	this._completeContext = completeContext;
 	this._maxIterations = iterations;
@@ -1798,7 +1798,6 @@ Stereopsis.World.prototype._iterationSolveAbs = function(iterationIndex, maxIter
 	// this.testDisplayMatches();
 	// throw "..."
 
-
 	this.printPoint3DTrackCount();
 if(isFirst){ // don't do this for increasing-resolution methods
 	var refineCount = 3;
@@ -1824,7 +1823,15 @@ if(isFirst){ // don't do this for increasing-resolution methods
 }
 	this.printInfo(); // before new points are added
 
-//	this.patchInitOrUpdate();
+	this.patchInitOrUpdate(100);
+	// this.patchInitOrUpdate();
+
+
+	this.patchResolveAffine();
+
+
+
+this.testAffineTransforms();
 
 	// PROBING
 	// this.probe3D(); // before 2D: want good 3D location to project
@@ -1859,6 +1866,168 @@ if(isFirst){ // don't do this for increasing-resolution methods
 		this.printPoint3DTrackCount();
 	}
 	
+}
+
+
+Stereopsis.World.prototype.patchResolveAffine = function(){
+	/*
+		go over all points
+			estimate projectsions => affine
+			go over all matches
+
+				if esetimated and affine have large discrepency
+					drop
+						- scale in X or Y or avg > 2
+						- average angle > 30 deg
+				else (close)
+					take average - based on score weighting ?
+					run thru nonliner optimizing
+
+			MARK as P3D having been checked for affine
+
+	*/
+}
+
+Stereopsis.World.prototype.testAffineTransforms = function(){
+console.log("testAffineTransforms");
+	var points3D = this.toPointArray();
+	var withPatch = [];
+	for(var i=0; i<points3D.length; ++i){
+		var point3D = points3D[i];
+		if(point3D.hasPatch()){
+			withPatch.push(point3D);
+		}
+	}
+	console.log(withPatch.length);
+	var withPatch = Code.randomSubsetFromArray([], 20, withPatch);
+	console.log(withPatch);
+	var maxCount = Math.min(50, withPatch.length);
+	// var index = 0;
+	for(var index=0; index<maxCount; ++index){
+		var point3D = withPatch[index];
+		// 3D locations:
+			var pointCenter = point3D.point();
+			var pointSize = point3D.size();
+			var pointUp = point3D.up();
+			var pointRight = point3D.right();
+				var dirRight = pointRight.copy().scale(pointSize);
+				var dirUp = pointUp.copy().scale(pointSize);
+			var center3D = pointCenter;
+			var right3D = pointCenter.copy().add(dirRight);
+			var up3D = pointCenter.copy().add(dirUp);
+			var left3D = pointCenter.copy().sub(dirRight);
+			var down3D = pointCenter.copy().sub(dirUp);
+
+		// points
+		var points2D = point3D.toPointArray();
+		console.log(points2D);
+		var projections2D = [];
+		var count = 0;
+		for(var i=0; i<points2D.length; ++i){
+			var point2D = points2D[i];
+			var view = point2D.view();
+
+			// project into all views
+				var center2D = view.projectPoint3D(center3D);
+				var right2D = view.projectPoint3D(right3D);
+				var up2D = view.projectPoint3D(up3D);
+				var left2D = view.projectPoint3D(left3D);
+				var down2D = view.projectPoint3D(down3D);
+				pList = [center2D,right2D,up2D,left2D,down2D];
+			projections2D.push(pList);
+		}
+		// transforms
+		for(var i=0; i<points2D.length; ++i){
+			var point2DA = points2D[i];
+			var viewA = point2DA.view();
+			var projA = projections2D[i];
+			// get affine for each
+			for(var j=i+1; j<points2D.length; ++j){
+				var point2DB = points2D[j];
+				var viewB = point2DB.view();
+				var projB = projections2D[j];
+				var affine = R3D.affineMatrixLinear(projA,projB);
+				// remove translation:
+				affine.set(0,2, 0);
+				affine.set(1,2, 0);
+				// 
+				var match = point3D.matchForViews(viewA,viewB);
+				var existing = match.affineForViews(viewA,viewB);
+				// console.log(affine+"");
+				// console.log(existing+"");
+				// display affine from A to others
+
+				var s = 25;
+				var square = [];
+					square.push(new V2D(-s,-s));
+					square.push(new V2D( s,-s));
+					square.push(new V2D( s, s));
+					square.push(new V2D(-s, s));
+
+				var identity = new Matrix(3,3).identity();
+				var trans = [identity,existing,affine];
+				var colors = [0xFF000000,0x99FF0000,0x990000FF];
+				var OFFY = 100 + (i + j-1)*100;
+				var OFFX = 100 + 200*index;
+				for(var t=0; t<trans.length; ++t){
+					var mat = trans[t];
+					console.log(mat+"");
+					var col = colors[t];
+					// draw
+					var d = new DO();
+					d.graphics().setLine(1.0,col);
+					d.graphics().beginPath();
+					
+					for(var k=0; k<square.length; ++k){
+						var squ = square[k];
+						var p = mat.multV2DtoV2D(squ);
+						if(k==0){
+							d.graphics().moveTo(p.x,p.y);
+						}else{
+							d.graphics().lineTo(p.x,p.y);
+						}
+					}
+					d.graphics().endPath();
+					d.graphics().strokeLine();
+					d.matrix().translate(OFFX,OFFY);
+					GLOBALSTAGE.addChild(d);
+				}
+				// TODO: SHOW ACTUAL IMAGES TO SEE HOW ACCURATE IT IS:
+				var imageA = viewA.image();
+				var imageB = viewB.image();
+				var compareSize = 41;
+				var pntA = point2DA.point2D();
+				var pntB = point2DB.point2D();
+				var needleA = imageA.extractRectFromFloatImage(pntA.x,pntA.y,1.0,null,compareSize,compareSize, existing);
+				var needleC = imageA.extractRectFromFloatImage(pntA.x,pntA.y,1.0,null,compareSize,compareSize, affine);
+				var needleB = imageB.extractRectFromFloatImage(pntB.x,pntB.y,1.0,null,compareSize,compareSize, null);
+				var sca = 1.0;
+					var iii = needleB;
+					var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
+					var d = new DOImage(img);
+					d.matrix().scale(sca);
+					d.matrix().translate(OFFX + 50, OFFY);
+					GLOBALSTAGE.addChild(d);
+
+					var iii = needleA;
+					var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
+					var d = new DOImage(img);
+					d.matrix().scale(sca);
+					d.matrix().translate(OFFX + 100, OFFY + 0);
+					GLOBALSTAGE.addChild(d);
+
+					var iii = needleC;
+					var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
+					var d = new DOImage(img);
+					d.matrix().scale(sca);
+					d.matrix().translate(OFFX + 100, OFFY + 50);
+					GLOBALSTAGE.addChild(d);
+
+				// TODO: FIND THE AVERAGE TRANSFORM AND DISPLAY IT
+			}
+		}
+	}
+	throw "..."
 }
 Stereopsis.World.prototype.testDisplayMatches = function(){
 	var points3D = this.toPointArray();
@@ -2204,12 +2373,16 @@ Stereopsis.World.prototype.averagePoints3DFromMatches = function(onlyNull){
 
 }
 
-Stereopsis.World.prototype.patchInitOrUpdate = function(option){
+Stereopsis.World.prototype.patchInitOrUpdate = function(limit){
 	console.log("patchInitOrUpdate");
 	var points3D = this.toPointArrayLocated();
-	for(var i=0; i<points3D.length; ++i){
+	var count = points3D.length;
+	if(limit){
+		count = Math.min(limit,count);
+	}
+	for(var i=0; i<count; ++i){
 		if(i%100==0){
-			console.log(i+" / "+points3D.length);
+			console.log(i+" / "+count+" / "+points3D.length);
 		}
 		var point3D = points3D[i];
 		if(point3D.hasPatch()){
@@ -5112,6 +5285,17 @@ Stereopsis.World.prototype.bestMatch2DFromLocation = function(affine,centerA,cen
 
 
 	var compareSize = (viewA.compareSize()+viewB.compareSize())*0.5;
+
+	// TODO:
+	// compare size based on cell size OR minimum = cornerness distance
+	// large cells will only need to use cell size, as they will likely have lots of corners in them => but will more often return null matches (too many moving things)
+	// small cells will need to zoom out from cell size, as they will likely have lots of plane areas => 
+	// compare size ? minimum zoom size + 1
+
+
+
+
+
 	// update affine
 	var imageA = viewA.image();
 	var imageB = viewB.image();

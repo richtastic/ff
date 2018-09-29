@@ -11,6 +11,94 @@ function ffLoadedFxn(){
 	(new ScriptLoader("./",["App3DR.js", "../SIFTDescriptor.js", "../R3D.js","../R3DDense.js","../R3DBA.js","../R3DDense.js","../Cam2D.js","../Cam3D.js","../Render3D.js","Stereopsis.js"],this,classesLoadedFxn)).load();
 }
 function classesLoadedFxn(){
+
+	// GLOBAL STAGE:
+	// AVERAGING 3D POINTS 
+	this._canvas = new Canvas(null,0,0,Canvas.STAGE_FIT_FILL, false,false);
+	this._stage = new Stage(this._canvas, 1000/20);
+	this._root = new DO();
+	this._stage.addChild(this._root);
+	this._canvas.addListeners();
+	this._stage.addListeners();
+	this._stage.start();
+	// this._canvas.addFunction(Canvas.EVENT_MOUSE_CLICK,this.handleMouseClickFxn,this);
+	GLOBALSTAGE = this._stage;
+
+	// AFFINE AVERAGE TESTING:
+	// 
+	var o = new V2D(0,0);
+	var x = new V2D(1,0);
+	var y = new V2D(0,1);
+	var u, a, b;
+	// A:
+	u = new V2D(0,0);
+	a = new V2D( 2,2).norm().scale(2.0).add(u);
+	b = new V2D(-2,2).norm().scale(1.0).add(u);
+	var affineA = R3D.affineMatrixExact([o,x,y],[u,a,b]);
+	// B:
+	// u = new V2D(40,-5);
+	// a = new V2D(-1,0).norm().scale(1.0).add(u);
+	// b = new V2D(0,1).norm().scale(2.0).add(u);
+	// var affineB = R3D.affineMatrixExact([o,x,y],[u,a,b]);
+	// u = new V2D(40,-5);
+	// a = new V2D(1,1).norm().scale(2.0).add(u);
+	// b = new V2D(4,-1).norm().scale(3.0).add(u);
+	// var affineB = R3D.affineMatrixExact([o,x,y],[u,a,b]);
+
+	u = new V2D(40,-5);
+	a = new V2D(1,-1).norm().scale(2.0).add(u);
+	b = new V2D(1,1).norm().scale(3.0).add(u);
+	var affineB = R3D.affineMatrixExact([o,x,y],[u,a,b]);
+
+	// var ps = [0.9,0.1];
+	// var ps = [0.75,0.25];
+	var ps = [0.5,0.5];
+	// var ps = [0.25,0.75];
+	// var ps = [0.1,0.9];
+	var affineC = Code.averageAffineMatrices([affineA,affineB], ps);
+
+	//
+	var s = 50;
+	var square = [];
+		square.push(new V2D(-s,-s));
+		square.push(new V2D( s,-s));
+		square.push(new V2D( s, s));
+		square.push(new V2D(-s, s));
+
+	var identity = new Matrix(3,3).identity();
+	var trans = [identity,affineA,affineB,affineC];
+	var colors = [0xFF000000,0x99FF0000,0x990000FF,0x9900CC00];
+	var OFFY = 200;
+	var OFFX = 200;
+	for(var t=0; t<trans.length; ++t){
+		var mat = trans[t];
+		console.log(mat+"");
+		var col = colors[t];
+		// draw
+		var d = new DO();
+		d.graphics().setLine(1.0,col);
+		d.graphics().beginPath();
+		
+		for(var k=0; k<square.length; ++k){
+			var squ = square[k];
+			var p = mat.multV2DtoV2D(squ);
+			// console.log(p+"");
+			if(k==0){
+				d.graphics().moveTo(p.x,p.y + Math.random()*5);
+			}else{
+				d.graphics().lineTo(p.x,p.y + Math.random()*5);
+			}
+		}
+		d.graphics().endPath();
+		d.graphics().strokeLine();
+		d.matrix().translate(OFFX,OFFY);
+		GLOBALSTAGE.addChild(d);
+	}
+
+	// show:
+
+
+	throw "affined";
 /*
 	// rotation averaging
 	var matrix = new Matrix(4,4).identity();
@@ -94,16 +182,7 @@ function classesLoadedFxn(){
 
 /*
 
-	// AVERAGING 3D POINTS 
-	this._canvas = new Canvas(null,0,0,Canvas.STAGE_FIT_FILL, false,false);
-	this._stage = new Stage(this._canvas, 1000/20);
-	this._root = new DO();
-	this._stage.addChild(this._root);
-	this._canvas.addListeners();
-	this._stage.addListeners();
-	this._stage.start();
-	// this._canvas.addFunction(Canvas.EVENT_MOUSE_CLICK,this.handleMouseClickFxn,this);
-	GLOBALSTAGE = this._stage;
+	
 
 	
 	var points = [];

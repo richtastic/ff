@@ -2334,6 +2334,20 @@ Code.averageNumbers = function(values, percents){
 	}
 	return sum;
 }
+Code.averageV2D = function(values, percents){
+	var i, count = values.length;
+	var sum = new V2D(0,0);
+	var p = 1.0/count;
+	for(i=0; i<count; ++i){
+		var value = values[i];
+		if(percents){
+			p = percents[i];
+		}
+		sum.x += value.x*p;
+		sum.y += value.y*p;
+	}
+	return sum;
+}
 Code.averageAngleVector2D = function(vectors, percents){ // vectors assumed nonzero
 	if(!vectors){
 		return null;
@@ -2526,6 +2540,51 @@ Code.averageQuaternions = function(quaternions, percents){
 	console.log(result.length())
 	return result;
 	*/
+}
+Code.averageAffineMatrices = function(affines, percents){
+	var i, count = affines.length;
+	if(count==0){
+		return null;
+	}
+	var offsets = [];
+	var directions = [];
+	var interriors = [];
+	var magnitudesX = [];
+	var magnitudesY = [];
+	// collect
+	for(i=0; i<count; ++i){
+		var affine = affines[i];
+		var o = new V2D(0,0);
+		var x = new V2D(1,0);
+		var y = new V2D(0,1);
+		affine.multV2DtoV2D(o,o);
+		affine.multV2DtoV2D(x,x);
+		affine.multV2DtoV2D(y,y);
+		x.sub(o);
+		y.sub(o);
+		var z = Code.averageAngleVector2D([x,y]);
+		var a = V2D.angleDirection(x,y);
+		offsets.push(o);
+		directions.push(z);
+		interriors.push(a);
+		magnitudesX.push(x.length());
+		magnitudesY.push(y.length());
+	}
+	// average
+
+	var offset = Code.averageV2D(offsets,percents);
+	var direction = Code.averageAngleVector2D(directions,percents);
+	var interrior = Code.averageNumbers(interriors,percents);
+	var magnitudeX = Code.averageNumbers(magnitudesX,percents);
+	var magnitudeY = Code.averageNumbers(magnitudesY,percents);
+	var angle = V2D.angleDirection(V2D.DIRX,direction);
+	console.log(offsets+" = "+offset);
+	// final
+	var a = new V2D(1,0).rotate(angle).rotate(-interrior*0.5).scale(magnitudeX).add(offset);
+	var b = new V2D(1,0).rotate(angle).rotate( interrior*0.5).scale(magnitudeY).add(offset);
+	console.log(a+" | "+b);
+	var affine = R3D.affineMatrixExact([V2D.ZERO.copy(),V2D.DIRX.copy(),V2D.DIRY.copy()],[offset,a,b]);
+	return affine;
 }
 Code.averageAngles = function(angles, percents){
 	var i, count = angles.length;

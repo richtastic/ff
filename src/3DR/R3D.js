@@ -2899,9 +2899,9 @@ R3D.infoFromAffine2D = function(affine){
 	var o = new V2D(0,0);
 	var x = new V2D(1,0);
 	var y = new V2D(0,1);
-	affine.multV2DtoV3D(o,o);
-	affine.multV2DtoV3D(x,x);
-	affine.multV2DtoV3D(y,y);
+	affine.multV2DtoV2D(o,o);
+	affine.multV2DtoV2D(x,x);
+	affine.multV2DtoV2D(y,y);
 	x.sub(o);
 	y.sub(o);
 	var scale = (x.length() + y.length())*0.5;
@@ -23051,10 +23051,12 @@ R3D.CompareSizeFinder = function(image){
 R3D.CompareSizeFinder.prototype.image = function(image){
 	if(image){
 		var scales = R3D.minimumSizeToCornerThreshold(image, null, 0.25);
-		scales = ImageMat.getBlurredImage(scales, image.width(), image.height(), 1.0); // smoothing
-		this._scales = scales;
-		this._width = image.width();
-		this._height = image.height();
+		if(scales){
+			scales = ImageMat.getBlurredImage(scales, image.width(), image.height(), 1.0); // post smoothing
+			this._scales = scales;
+			this._width = image.width();
+			this._height = image.height();
+		}
 	}else{
 		this._scales = null;
 		this._width = null;
@@ -23071,55 +23073,67 @@ R3D.CompareSizeFinder.prototype.minSizeForPoint = function(x,y){
 	return null;
 }
 R3D.minimumSizeToCornerThreshold = function(image, corners, thresh){
-	thresh = thresh!==undefined ? thresh : 0.25;
+	thresh = thresh!==undefined ? thresh : 0.50;
 // thresh = 0.05;
 // thresh = 0.10;
-thresh = 0.25;
+// thresh = 0.25;
 // thresh = 0.333;
 // thresh = 0.5;
-// thresh = 0.75;
+thresh = 0.75;
 // thresh = 0.9;
 	if(!corners){
 		corners = R3D.linearCornersFromImage(image);
 	}
-	var target = R3D.percentFromThresholdImage(corners, thresh);
+	// var target = R3D.percentFromThresholdImage(corners, thresh); // this sort can take forever
+	var target = thresh;
+	if(target==null){
+		return null;
+	}
+	console.log("TARGET: "+target);
 // corners = image.gry();
 // target = 0.25;
 // var sizes = R3D.imageScaleFeatureOptimumFind(corners, image.width(), image.height(), target, 0);
-var sizes = R3D.imageScaleFeatureOptimumFind(corners, image.width(), image.height(), target, 2);
+// target = 0.25;
+var sizes = R3D.imageScaleFeatureOptimumFind(corners, image.width(), image.height(), target, 2); // min for some reason, not max
 	return sizes;
 }
 R3D.linearCornersFromImage = function(image){
 	var gry = image.gry();
 	var width = image.width();
 	var height = image.height();
-	gry = ImageMat.getBlurredImage(gry, width, height, 1.0);
+		gry = ImageMat.getBlurredImage(gry, width, height, 1.0); // pre-blur
 	var corners = R3D.harrisCornerDetection(gry, width, height);
 	ImageMat.normalFloat01(corners);
 	// ImageMat.pow(corners,0.1); // more linear shapes
-	// DOUBLE LOG:
-	// for(var i=0; i<1; ++i){
-		ImageMat.add(corners,1E-16);
-		ImageMat.log(corners);
-		ImageMat.normalFloat01(corners);
-	// }
+	ImageMat.add(corners,1E-16);
+	ImageMat.log(corners);
+	ImageMat.normalFloat01(corners);
+	console.log("got corners");
 	return corners;
 }
 R3D.percentFromThresholdImage = function(source, threshold){
+	console.log("percentFromThresholdImage ..");
 	tmp = Code.copyArray(source);
 	tmp.sort(function(a,b){
 		return a < b ? -1 : 1;
 	});
-	// ignore steep ends:
-	/*
-	var min = tmp[Math.round(tmp.length*0.25)];
-	var max = tmp[Math.round(tmp.length*0.75)];
-	var range = max-min;
-	var yValue = min + range*threshold;
-	yValue = 0.1;
-	*/
+	console.log("sorted");
+	// TODO : MORE BINARY-ISH SEARCH:
+	for(var i=0; i<tmp.length; ++i){
+		if(tmp[i]>0){
+			break;
+		}
+	}
+	for(var j=tmp.length; j>=0; --j){
+		if(tmp[j]<1){
+			break;
+		}
+	}
 	Code.printMatlabArray(tmp);
-	var yValue = tmp[Math.round(tmp.length*threshold)];
+	if(i>=j){
+		return null;
+	}
+	var yValue = tmp[Math.round(i + (j-i)*threshold)];
 	console.log("yValue: "+yValue+" ... ");
 	return yValue;
 }
@@ -23133,9 +23147,9 @@ R3D.imageScaleFeatureOptimumFind = function(source, sourceWidth, sourceHeight, t
 		isRange = true;
 	}else if(mode==1){
 		isMin = true;
-	}else if(mode==1){
-		isMax = true;
 	}else if(mode==2){
+		isMax = true;
+	}else if(mode==3){
 		isMid = true;
 	}else{ // default
 		isRange = true;
@@ -23168,8 +23182,8 @@ R3D.imageScaleFeatureOptimumFind = function(source, sourceWidth, sourceHeight, t
 			for(var i=0; i<width; ++i){
 				var iOld = Math.floor(i*2.0);
 				var jOld = Math.floor(j*2.0);
-				var minI = iOld;
-				var minJ = jOld;
+				var minI = Math.max(0,iOld-1);
+				var minJ = Math.max(0,jOld-1);
 				var maxI = Math.min(sizePrev.x-1,iOld+1);
 				var maxJ = Math.min(sizePrev.y-1,jOld+1);
 				var record = null;

@@ -18,12 +18,19 @@ GLOBALSTAGE = this._stage;
 
 	this._views = [];
 	
+	
+	// var imageLoader = new ImageLoader("./images/",["desktop1.png","desktop1.png"], this,this.handleImageLoaded,null);
+	// var imageLoader = new ImageLoader("./images/",["dense_test_a.png","dense_test_a.png"], this,this.handleImageLoaded,null);
+	// var imageLoader = new ImageLoader("./images/",["catHat.jpg","catHat.jpg"], this,this.handleImageLoaded,null);
+	// var imageLoader = new ImageLoader("./images/",["calibration1-0.jpg","calibration1-0.jpg"], this,this.handleImageLoaded,null);
+	// var imageLoader = new ImageLoader("./images/",["xA_small.jpg","xA_small.jpg"], this,this.handleImageLoaded,null);
+	// var imageLoader = new ImageLoader("./images/",["test.png","test.png"], this,this.handleImageLoaded,null);
 	// var imageLoader = new ImageLoader("./images/",["caseStudy1-0.jpg","caseStudy1-0.jpg"], this,this.handleImageLoaded,null);
 	// var imageLoader = new ImageLoader("./images/",["snow1.png","snow2.png"], this,this.handleImageLoaded,null);
-	var imageLoader = new ImageLoader("./images/",["room0.png","room2.png"], this,this.handleImageLoaded,null);
+	// var imageLoader = new ImageLoader("./images/",["room0.png","room2.png"], this,this.handleImageLoaded,null);
 	// var imageLoader = new ImageLoader("./images/",["F_S_1_1.jpg","F_S_1_2.jpg"], this,this.handleImageLoaded,null);
 	// var imageLoader = new ImageLoader("./images/",["caseStudy1-0.jpg","caseStudy1-20.jpg"], this,this.handleImageLoaded,null);
-	// var imageLoader = new ImageLoader("./images/",["room0.png","room0.png"], this,this.handleImageLoaded,null);
+	var imageLoader = new ImageLoader("./images/",["room0.png","room0.png"], this,this.handleImageLoaded,null);
 	imageLoader.load();
 
 	this._keyboard = new Keyboard();
@@ -63,17 +70,39 @@ BeliefTest.testDisplayZoom = function(image){
 
 
 	var targetValues = Code.copyArray(finder._scales);
+var min = Code.min(targetValues);
+var max = Code.max(targetValues);
+var ran = max-min;
 	var sourceWidth = image.width();
 	var sourceHeight = image.height();
 	ImageMat.normalFloat01(targetValues);
-	ImageMat.pow(targetValues,0.5);
-	var heat = ImageMat.heatImage(targetValues, sourceWidth, sourceHeight, true);
+	// ImageMat.pow(targetValues,0.5);
+	// var heat = ImageMat.heatImage(targetValues, sourceWidth, sourceHeight, true, colors);
+		//var colors = [0xFF000000,0xFFFFFFFF];
+		var colors = [0xFFFF0000,0xFFFF00FF,0xFF0000FF];
+		// var colors = null;
+	var heat = ImageMat.heatImage(targetValues, sourceWidth, sourceHeight, true, colors);
 	var iii = heat;
 	var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
 	var d = new DOImage(img);
 	d.matrix().translate(10 , 10);
 	d.graphics().alpha(0.50);
 	GLOBALSTAGE.addChild(d);
+
+
+
+
+
+var s = 0.25;
+var wid = Math.round(s*sourceWidth);
+var hei = Math.round(s*sourceHeight);
+console.log(wid,hei);
+resized = ImageMat.extractRect(targetValues, 0,0, sourceWidth,0, sourceWidth,sourceHeight, 0,sourceHeight, wid,hei, sourceWidth,sourceHeight);
+ImageMat.mulConst(resized, ran);
+ImageMat.addConst(resized, min);
+Code.printMatlabArray(resized,"tz");
+
+
 
 throw "... redone in R3D";
 

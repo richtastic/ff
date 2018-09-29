@@ -4227,9 +4227,12 @@ ImageMat._watershed_neighbors = function(gridList, width, height, i, j, inverseM
 //ImageMat.watershed = ImageMat.watershed_2;
 ImageMat.watershed = ImageMat._watershed_internal;
 
-ImageMat.heatImage = function(image, width, height, inverse){ // expecting normalized greyscale image
+ImageMat.heatImage = function(image, width, height, inverse, inColors){ // expecting normalized greyscale image
 	// white, orange, red, green, light-blue, blue, purple, black
 	var colors = [0xFFFFFFFF, 0xFFFF9900, 0xFFFF0000, 0xFF00FF00, 0xFF3399FF, 0xFF0000FF, 0xFF330066, 0xFF000000];
+	if(inColors){
+		colors = inColors;
+	}
 	if(inverse===true){
 		colors = Code.reverseArray(colors);
 	}
