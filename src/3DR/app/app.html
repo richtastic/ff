@@ -11,7 +11,7 @@ function ffLoadedFxn(){
 	(new ScriptLoader("./",["App3DR.js", "../SIFTDescriptor.js", "../R3D.js","../R3DDense.js","../R3DBA.js","../R3DDense.js","../Cam2D.js","../Cam3D.js","../Render3D.js","Stereopsis.js"],this,classesLoadedFxn)).load();
 }
 function classesLoadedFxn(){
-
+/*
 	// GLOBAL STAGE:
 	// AVERAGING 3D POINTS 
 	this._canvas = new Canvas(null,0,0,Canvas.STAGE_FIT_FILL, false,false);
@@ -24,6 +24,7 @@ function classesLoadedFxn(){
 	// this._canvas.addFunction(Canvas.EVENT_MOUSE_CLICK,this.handleMouseClickFxn,this);
 	GLOBALSTAGE = this._stage;
 
+
 	// AFFINE AVERAGE TESTING:
 	// 
 	var o = new V2D(0,0);
@@ -32,8 +33,8 @@ function classesLoadedFxn(){
 	var u, a, b;
 	// A:
 	u = new V2D(0,0);
-	a = new V2D( 2,2).norm().scale(2.0).add(u);
-	b = new V2D(-2,2).norm().scale(1.0).add(u);
+	a = new V2D(1,0).norm().scale(2.0).add(u);
+	b = new V2D(0,1).norm().scale(2.0).add(u);
 	var affineA = R3D.affineMatrixExact([o,x,y],[u,a,b]);
 	// B:
 	// u = new V2D(40,-5);
@@ -45,9 +46,14 @@ function classesLoadedFxn(){
 	// b = new V2D(4,-1).norm().scale(3.0).add(u);
 	// var affineB = R3D.affineMatrixExact([o,x,y],[u,a,b]);
 
-	u = new V2D(40,-5);
-	a = new V2D(1,-1).norm().scale(2.0).add(u);
-	b = new V2D(1,1).norm().scale(3.0).add(u);
+	// u = new V2D(40,-5);
+	// a = new V2D(1,-1).norm().scale(2.0).add(u);
+	// b = new V2D(1,1).norm().scale(3.0).add(u);
+	// var affineB = R3D.affineMatrixExact([o,x,y],[u,a,b]);
+
+	u = new V2D(40,5);
+	a = new V2D(1,1).norm().scale(2.0).add(u);
+	b = new V2D(0,1).norm().scale(2.0).add(u);
 	var affineB = R3D.affineMatrixExact([o,x,y],[u,a,b]);
 
 	// var ps = [0.9,0.1];
@@ -95,10 +101,14 @@ function classesLoadedFxn(){
 		GLOBALSTAGE.addChild(d);
 	}
 
+	// compare
+	var sim = Stereopsis.affineSimilar(affineA,affineB);
+	console.log("sim: "+sim);
+
 	// show:
-
-
 	throw "affined";
+*/
+	
 /*
 	// rotation averaging
 	var matrix = new Matrix(4,4).identity();

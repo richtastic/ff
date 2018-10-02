@@ -4332,14 +4332,10 @@ App3DR.prototype._handleCanvasResizeFxn = function(r){
 		return;
 	}
 
-
-	
-
-
 	this._updateBackground();
 	
 	var screenSize = new V2D( this._canvas.width(), this._canvas.height() );
-	console.log("screenSize: "+screenSize);
+	// console.log("screenSize: "+screenSize);
 	var screenCenter = screenSize.copy().scale(0.5);
 
 	var grid = this._grid;

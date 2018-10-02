@@ -56,8 +56,8 @@ BeliefTest.testDisplayZoom = function(image){
 
 	var finder = new R3D.CompareSizeFinder(image);
 	console.log(finder);
-	var size = finder.minSizeForPoint(125,126);
-	console.log(size);
+	// var size = finder.minSizeForPoint(125,126);
+	// console.log(size);
 
 
 
@@ -79,7 +79,8 @@ var ran = max-min;
 	// ImageMat.pow(targetValues,0.5);
 	// var heat = ImageMat.heatImage(targetValues, sourceWidth, sourceHeight, true, colors);
 		//var colors = [0xFF000000,0xFFFFFFFF];
-		var colors = [0xFFFF0000,0xFFFF00FF,0xFF0000FF];
+		// var colors = [0xFFFF0000,0xFFFF00FF,0xFF0000FF];
+		var colors = [0xFFFFFFFF,0xFFFF0000,0xFFFF00FF,0xFF0000FF, 0x0];
 		// var colors = null;
 	var heat = ImageMat.heatImage(targetValues, sourceWidth, sourceHeight, true, colors);
 	var iii = heat;
@@ -90,18 +91,52 @@ var ran = max-min;
 	GLOBALSTAGE.addChild(d);
 
 
+	// show size for point:
+	var points = [];
+		points.push(new V2D(347,30));
+		points.push(new V2D(47,50));
+		points.push(new V2D(100,100));
+		points.push(new V2D(125,126));
+		points.push(new V2D(60,300));
+		points.push(new V2D(70,320));
+		points.push(new V2D(90,360));
+		points.push(new V2D(250,150));
+		points.push(new V2D(335,150));
+		points.push(new V2D(350,295));
+		points.push(new V2D(360,300));
+		points.push(new V2D(463,113));
+		points.push(new V2D(450,200));
+		points.push(new V2D(487,290));
+	for(var i=0; i<points.length; ++i){
+		var point = points[i];
+
+		var size = finder.minSizeForPoint(point.x,point.y);
+		// console.log(point+" = "+size);
+		// size = size * 1.25;
+		size = Math.max(size,3.0);
+
+		var d = new DO();
+		d.graphics().setLine(1.0,0xFF00CC66);
+		d.graphics().beginPath();
+		d.graphics().drawRect(point.x-size,point.y-size,size*2,size*2);
+		// d.graphics().drawCircle(point.x,point.y,size);
+		d.graphics().endPath();
+		d.graphics().strokeLine();
+		d.matrix().translate(10 , 10);
+		GLOBALSTAGE.addChild(d);
+	}
 
 
-
+/*
 var s = 0.25;
 var wid = Math.round(s*sourceWidth);
 var hei = Math.round(s*sourceHeight);
-console.log(wid,hei);
+// console.log(wid,hei);
 resized = ImageMat.extractRect(targetValues, 0,0, sourceWidth,0, sourceWidth,sourceHeight, 0,sourceHeight, wid,hei, sourceWidth,sourceHeight);
 ImageMat.mulConst(resized, ran);
 ImageMat.addConst(resized, min);
 Code.printMatlabArray(resized,"tz");
-
+*/
 
 
 throw "... redone in R3D";

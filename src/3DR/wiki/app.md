@@ -328,21 +328,17 @@ https://cloud.google.com/appengine/docs/nodejs/
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+x compare affine matrices limits
+x fill out function to combine/throw out affine matrices - NCC score weighting
+- 
+
 
 
 
 image where each pixel shows distance to nearest corner with value >= threshold
-	- 
+	- for i = 0 to distnace amount:
+		- record max-min & index
 
-
-
-GOAL: FIND ZOOM/SIZE FOR COMPARING POINTS
-	- find nearest cornerness minimum
-	- 'distance' from nearest corner peak
-	=> corner points are at 0 distance
-		- reverse? down to 50% and up to 50% => this just moves the problem to 50%
-	=> just a minimum size (3 px - 5 px) ...
-	=> neareast peak (over 1 pixel away?)
 
 SOLN:
 	- cornerSize = find the minimum size that includes minimum cornerness
@@ -352,10 +348,9 @@ SOLN:
 	- needleSize = max(5, compareSize)
 - 5 11 21 41 81 
 
-
 	- compareSize = cellSize * 1.5 = finding 
 
-
+	- 
 
 PROBLEMS:
 - error is going down but there are a lot of noisy points

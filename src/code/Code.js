@@ -139,7 +139,7 @@ Code.daysOfWeekShort = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]; // get
 Code.daysOfWeekLong = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 // ------------------------------------------------------------------------------------------
 function Code(){
-	this.www = 234;
+	throw "this is a library";
 }
 Code.getType = function(obj){
 	return (typeof obj);
@@ -2578,11 +2578,11 @@ Code.averageAffineMatrices = function(affines, percents){
 	var magnitudeX = Code.averageNumbers(magnitudesX,percents);
 	var magnitudeY = Code.averageNumbers(magnitudesY,percents);
 	var angle = V2D.angleDirection(V2D.DIRX,direction);
-	console.log(offsets+" = "+offset);
+	// console.log(offsets+" = "+offset);
 	// final
 	var a = new V2D(1,0).rotate(angle).rotate(-interrior*0.5).scale(magnitudeX).add(offset);
 	var b = new V2D(1,0).rotate(angle).rotate( interrior*0.5).scale(magnitudeY).add(offset);
-	console.log(a+" | "+b);
+	// console.log(a+" | "+b);
 	var affine = R3D.affineMatrixExact([V2D.ZERO.copy(),V2D.DIRX.copy(),V2D.DIRY.copy()],[offset,a,b]);
 	return affine;
 }

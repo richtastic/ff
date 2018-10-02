@@ -20037,6 +20037,7 @@ R3D.normalizedCrossCorrelation = function(needle,needleMask, haystack, isCost){ 
 			sigmaH.x = Math.sqrt(sigmaH.x);
 			sigmaH.y = Math.sqrt(sigmaH.y);
 			sigmaH.z = Math.sqrt(sigmaH.z);
+
 			// N * H
 			for(var nJ=0; nJ<needleHeight; ++nJ){ // entire needle
 				for(var nI=0; nI<needleWidth; ++nI){ 
@@ -20062,12 +20063,21 @@ R3D.normalizedCrossCorrelation = function(needle,needleMask, haystack, isCost){ 
 					nccB += (nB * hB);
 				}
 			}
-			nccR = nccR / (sigmaN.x*sigmaH.x);
-			nccG = nccG / (sigmaN.y*sigmaH.y);
-			nccB = nccB / (sigmaN.z*sigmaH.z);
+			nccR = nccR / Math.max(sigmaN.x*sigmaH.x, 1E-6);
+			nccG = nccG / Math.max(sigmaN.y*sigmaH.y, 1E-6);
+			nccB = nccB / Math.max(sigmaN.z*sigmaH.z, 1E-6);
 			var nccAvg = (nccR+nccG+nccB)/3.0;
 			if(isCost){
 				nccAvg = (1 - nccAvg)*0.5;
+			}
+			if(Code.isNaN(nccAvg)){
+				console.log(rangeH);
+				console.log(sigmaH);
+				console.log(sigmaN);
+				console.log(maxH);
+				console.log(minH);
+				console.log(nccR,nccG,nccB);
+				throw "bad nccAvg";
 			}
 			result[resultIndex] = nccAvg;
 		}
@@ -20104,13 +20114,16 @@ R3D.optimumAffineTransform = function(imageA,pointA, imageB,pointB, vectorX,vect
 	// optimum transform:
 	var compareSize = 11;
 	var scaleCompare = compareSize/sizeA;
+	// ^ is scaleCompare reversed for matrix?
+	// console.log(compareSize,sizeA,scaleCompare)
+	// throw "?"
 		var matrix = new Matrix(3,3).identity();
 			matrix = Matrix.transform2DScale(matrix,scaleCompare);
 	var h = null;
 	try{
 		h = imageB.extractRectFromFloatImage(pointB.x,pointB.y,1.0,null,compareSize,compareSize, matrix);
 	}catch(e){
-		console.log("bad matrix extract rect");
+		console.log("bad matrix extract rect: "+scaleCompare+" : "+compareSize+" / "+sizeA);
 		console.log(""+matrix);
 		console.log(matrix);
 		console.log("@ "+pointB);
@@ -23050,12 +23063,29 @@ R3D.CompareSizeFinder = function(image){
 }
 R3D.CompareSizeFinder.prototype.image = function(image){
 	if(image){
-		var scales = R3D.minimumSizeToCornerThreshold(image, null, 0.25);
+		// scale down for speed
+		var scale = 0.50;
+		// var scale = 1.0;
+		var imageIn = image;
+			image = imageIn.getScaledImage(scale);
+		var scales = R3D.minimumSizeToCornerThreshold(image, null, 0.75);
 		if(scales){
-			scales = ImageMat.getBlurredImage(scales, image.width(), image.height(), 1.0); // post smoothing
+			var info = Code.infoArray(scales);
+			var min = info["min"];
+			var range = info["range"];
+			// to 0-1
+			ImageMat.normalFloat01(scales);
+			// return to full size scale
+			scales = ImageMat.getScaledImage(scales,image.width(),image.height(), 1.0/scale,null, imageIn.width(),imageIn.height()); // scale up
+			scales = scales["value"];
+			// from 01
+			ImageMat.mulConst(scales, range/scale);
+			ImageMat.addConst(scales, min/scale);
+			// console.log("MAX: "+(info["max"]/scale));
+				// scales = ImageMat.getBlurredImage(scales, imageIn.width(), imageIn.height(), 1.0); // post smoothing -- if pre-scaled doesn't help
 			this._scales = scales;
-			this._width = image.width();
-			this._height = image.height();
+			this._width = imageIn.width();
+			this._height = imageIn.height();
 		}
 	}else{
 		this._scales = null;
@@ -23079,7 +23109,7 @@ R3D.minimumSizeToCornerThreshold = function(image, corners, thresh){
 // thresh = 0.25;
 // thresh = 0.333;
 // thresh = 0.5;
-thresh = 0.75;
+// thresh = 0.75;
 // thresh = 0.9;
 	if(!corners){
 		corners = R3D.linearCornersFromImage(image);
@@ -23089,26 +23119,23 @@ thresh = 0.75;
 	if(target==null){
 		return null;
 	}
-	console.log("TARGET: "+target);
-// corners = image.gry();
-// target = 0.25;
-// var sizes = R3D.imageScaleFeatureOptimumFind(corners, image.width(), image.height(), target, 0);
-// target = 0.25;
-var sizes = R3D.imageScaleFeatureOptimumFind(corners, image.width(), image.height(), target, 2); // min for some reason, not max
+	// console.log("TARGET: "+target);
+// var sizes = R3D.imageScaleFeatureOptimumFind(corners, image.width(), image.height(), target, 2);
+	var sizes = R3D.imageScaleFeatureOptimumFindLinear(corners, image.width(), image.height(), target, 2);
 	return sizes;
 }
 R3D.linearCornersFromImage = function(image){
 	var gry = image.gry();
 	var width = image.width();
 	var height = image.height();
-		gry = ImageMat.getBlurredImage(gry, width, height, 1.0); // pre-blur
+		// gry = ImageMat.getBlurredImage(gry, width, height, 1.0); // pre-blur -- if already pre-scaled down: perhaps over-estimate of size
 	var corners = R3D.harrisCornerDetection(gry, width, height);
 	ImageMat.normalFloat01(corners);
 	// ImageMat.pow(corners,0.1); // more linear shapes
 	ImageMat.add(corners,1E-16);
 	ImageMat.log(corners);
 	ImageMat.normalFloat01(corners);
-	console.log("got corners");
+	// console.log("got corners");
 	return corners;
 }
 R3D.percentFromThresholdImage = function(source, threshold){
@@ -23256,6 +23283,92 @@ R3D.imageScaleFeatureOptimumFind = function(source, sourceWidth, sourceHeight, t
 			scale = Math.pow(2,scale);
 			targetValues[index] = scale;
 		}
+	}
+	return targetValues;
+}
+
+
+R3D.imageScaleFeatureOptimumFindLinear = function(source, sourceWidth, sourceHeight, targetValue, mode){
+	mode = mode!==undefined ? mode : 0;
+	var iterationMax = 64;
+	var isRange = false;
+	var isMax = false;
+	var isMin = false;
+	var isMid = false;
+	if(mode==0){
+		isRange = true;
+	}else if(mode==1){
+		isMin = true;
+	}else if(mode==2){
+		isMax = true;
+	}else if(mode==3){
+		isMid = true;
+	}else{ // default
+		isRange = true;
+	}
+	var pixelCount = sourceWidth*sourceHeight;
+	// initial record:
+	var records = [];
+	var sizes = [];
+	var records = [];
+	var scaleValues = [];
+	for(var i=0; i<pixelCount; ++i){
+		var pixel = source[i];
+		records[i] = [[pixel,pixel]];
+	}
+	var iterations = Math.min(iterationMax, sourceWidth*0.5 | 0, sourceHeight*0.5 | 0);
+	var width = sourceWidth;
+	var height = sourceHeight;
+	var wm1 = width-1;
+	var hm1 = height-1;
+	for(var k=0; k<iterations; ++k){
+		for(var j=0; j<height; ++j){
+			for(var i=0; i<width; ++i){
+				var index = j*width + i;
+				var current = records[index][k];
+				var next = [current[0],current[1]];
+				records[index].push(next);
+				// neighbor propagation
+				var minI = Math.max(0,i-1);
+				var minJ = Math.max(0,j-1);
+				var maxI = Math.min(wm1,i+1);
+				var maxJ = Math.min(hm1,j+1);
+				// get max & min in 3x3 area
+				for(var jj=minJ; jj<=maxJ; ++jj){
+					for(var ii=minI; ii<=maxI; ++ii){
+						var ind = jj*width + ii;
+						var val = records[ind][k];
+						next[0] = Math.min(next[0],val[0]);
+						next[1] = Math.max(next[1],val[1]);
+					}
+				}
+			}
+		}
+	}
+	// convert to type:
+	for(var k=0; k<pixelCount; ++k){
+		var record = records[k];
+		for(var i=0; i<record.length; ++i){
+			var val = record[i];
+			if(isRange){
+				val = val[1] - val[0];
+			}else if(isMid){
+				val = (val[1] - val[0])*0.5 + val[0];
+			}else if(isMin){
+				val = val[0];
+			}else if(isMax){
+				val = val[1];
+			}
+			record[i] = val;
+		}
+	}
+	// to target range:
+	var targetValues = [];
+	for(var k=0; k<pixelCount; ++k){
+		var yValues = records[k];
+		var result = Code.findGlobalValue1D(yValues, targetValue);
+		var scale = result[0];
+		targetValues[k] = scale;
 	}
 	return targetValues;
 }
