@@ -20344,7 +20344,7 @@ R3D._costTripleFeatures = function(patchA,patchB,patchC){
 	return cost;
 }
 
-R3D.BundleAdjustCameraExtrinsic = function(intrinsics, inverses, extrinsics, pointList2Ds, pointList3Ds, maxIterations){ // pointList3D -- only tested on pairs
+R3D.BundleAdjustCameraExtrinsic = function(intrinsics, inverses, extrinsics, pointList2Ds, pointList3Ds, maxIterations){ // pointList3D -- only tested on pairs -- FIRST CAMERA STAYS PUT
 	maxIterations = (maxIterations!==undefined && maxIterations!==null)? maxIterations : 1;
 	var cameraCount = intrinsics.length;
 	var args = [];
@@ -20383,7 +20383,6 @@ R3D.BundleAdjustCameraExtrinsic = function(intrinsics, inverses, extrinsics, poi
 		R3D.transform3DFromParameters(P, rx,ry,rz, tx,ty,tz);
 		pList.push(P);
 	}
-
 	return {"extrinsics":pList, "error":cost, "count":pointList3Ds.length};
 }
 R3D._gd_BACamera_matrix_A = new Matrix(4,4);
@@ -20552,22 +20551,13 @@ R3D._gd_BAFull = function(args, x, isUpdate, testingIndex){ // TODO: can limit p
 		var rz = x[i*6 + 5];
 		var P = R3D._gd_BAFull_matrix;
 		R3D.transform3DFromParameters(P, rx,ry,rz, tx,ty,tz);
-		// if(!R3D.HASRUN){
-		// 	console.log(" "+i+": \n"+P);
-		// }
 var distances = [];
 var avgDistance = 0;
 		for(var j=0; j<pointList.length; ++j){
 			var info = pointList[j];
 			var p2D = info["2D"];
-			// if(!R3D.HASRUN){
-			// 	console.log(" "+j+": "+p2D);
-			// }
 			var index = info["3D"];
 			p3D.set(x[offset3D + index*3 + 0], x[offset3D + index*3 + 1], x[offset3D + index*3 + 2]);
-			// if(!R3D.HASRUN){
-			// 	console.log(" "+j+": "+p3D);
-			// }
 			var projected = R3D.projectPoint3DToCamera2DForward(p3D, P, K, null);
 			var error = V2D.distanceSquare(p2D,projected);
 			//console.log("error:  "+Math.sqrt(error));
@@ -20577,9 +20567,6 @@ var avgDistance = 0;
 // TODO: WHICH ?
 //totalError += error;
 totalError += d;
-			// if(!R3D.HASRUN){
-			// 	console.log(" "+j+": "+p2D+" & "+projected+" @ "+d);
-			// }
 		}
 		if(!R3D.HASRUN || isUpdate){
 			distances.sort(function(a,b){

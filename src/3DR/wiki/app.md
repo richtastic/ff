@@ -328,29 +328,21 @@ https://cloud.google.com/appengine/docs/nodejs/
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-x compare affine matrices limits
-x fill out function to combine/throw out affine matrices - NCC score weighting
-- 
+--- exact center of point isn't good
+	- try using 3d position only as initial location & use PATCH location as optimized location
 
 
 
+-  point 2D merging
+	- need to evaluate how good the additions are before they are combined
+	- need to pick optimal locations
+		- most cornerness point?
+		- best NCC point?
 
 image where each pixel shows distance to nearest corner with value >= threshold
 	- for i = 0 to distnace amount:
 		- record max-min & index
 
-
-SOLN:
-	- cornerSize = find the minimum size that includes minimum cornerness
-	- cellSize = current density cell size
-	- compareSize = max(cornerSize,cellSize) * 1.5
-	- compareSize = compareSize%2==0 ? compareSize+1 : compareSize
-	- needleSize = max(5, compareSize)
-- 5 11 21 41 81 
-
-	- compareSize = cellSize * 1.5 = finding 
-
-	- 
 
 PROBLEMS:
 - error is going down but there are a lot of noisy points

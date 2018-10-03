@@ -2541,6 +2541,17 @@ Code.averageQuaternions = function(quaternions, percents){
 	return result;
 	*/
 }
+Code.averageMatrices3D = function(matrixes, percents){ // average location offset, twist, orientation of matrices
+	var twists = [];
+	for(var i=0; i<matrixes.length; ++i){
+		var matrix = matrixes[i];
+		var twist = Code.vectorTwistFromMatrix3D(matrix);
+		twists.push(twist);
+	}
+	var average = Code.averageVectorTwist3D(twists, percents);
+	var result = Code.Matrix3DFromVectorTwist(average["offset"], average);
+	return result;
+}
 Code.averageAffineMatrices = function(affines, percents){
 	var i, count = affines.length;
 	if(count==0){
@@ -2571,18 +2582,15 @@ Code.averageAffineMatrices = function(affines, percents){
 		magnitudesY.push(y.length());
 	}
 	// average
-
 	var offset = Code.averageV2D(offsets,percents);
 	var direction = Code.averageAngleVector2D(directions,percents);
 	var interrior = Code.averageNumbers(interriors,percents);
 	var magnitudeX = Code.averageNumbers(magnitudesX,percents);
 	var magnitudeY = Code.averageNumbers(magnitudesY,percents);
 	var angle = V2D.angleDirection(V2D.DIRX,direction);
-	// console.log(offsets+" = "+offset);
 	// final
 	var a = new V2D(1,0).rotate(angle).rotate(-interrior*0.5).scale(magnitudeX).add(offset);
 	var b = new V2D(1,0).rotate(angle).rotate( interrior*0.5).scale(magnitudeY).add(offset);
-	// console.log(a+" | "+b);
 	var affine = R3D.affineMatrixExact([V2D.ZERO.copy(),V2D.DIRX.copy(),V2D.DIRY.copy()],[offset,a,b]);
 	return affine;
 }

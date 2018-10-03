@@ -7216,24 +7216,26 @@ App3DR.bundleAdjustObjectToCameras = function(world, cameras, source){
 	var BACAMS = [];
 	for(var i=0; i<cameras.length; ++i){
 		var camera = cameras[i];
-		// TODO: K is sometimes matrix & soemetimes components
+		// TODO: K is sometimes matrix & sometimes components
 		var K = camera["K"];
 		var distortion = camera["distortion"];
 		var camID = camera["id"];
-		// console.log(camera);
-		if(K && distortion){
-			K = Matrix.fromObject(K);
-			// var fx = K["fx"];
-			// var fy = K["fy"];
-			// var s = K["s"];
-			// var cx = K["cx"];
-			// var cy = K["cy"];
+			if(K && distortion){
+				if(K["fx"]){
+				var fx = K["fx"];
+				var fy = K["fy"];
+				var s = K["s"];
+				var cx = K["cx"];
+				var cy = K["cy"];
+				var K = new Matrix(3,3).fromArray([fx,s,cx, 0,fy,cy, 0,0,1]);
+			}else{
+				K = Matrix.fromObject(K);
+			}
 			var k1 = distortion["k1"];
 			var k2 = distortion["k2"];
 			var k3 = distortion["k3"];
 			var p1 = distortion["p1"];
 			var p2 = distortion["p2"];
-			// var K = new Matrix(3,3).fromArray([fx,s,cx, 0,fy,cy, 0,0,1]);
 			// console.log(K+"");
 			var c = world.addCamera(K, distortion);
 			c.data(camID);
