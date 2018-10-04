@@ -89,7 +89,7 @@ var modeModelReconstruction = false;
 
 // don't A:
 // TO SWITCH ON MODELING:
-// modeModelReconstruction = true;
+modeModelReconstruction = true;
 
 
 
@@ -3614,12 +3614,14 @@ App3DR.App.Model3D.prototype.setLines = function(input){
 	var points = [];
 	var colors = [];
 	for(var i=0; i<input.length; ++i){
+break;
 		var v = input[i];
 		points.push(v.x,v.y,v.z);
 // NEGATIVE Z:
 // points.push(v.x,v.y,-v.z);
 		// colors.push(1.0,1.0,1.0,0.03);
-		colors.push(0.1,0.1,0.1,0.02);
+		// colors.push(0.1,0.1,0.1,0.02);
+		colors.push(0.1,0.1,0.1,0.005);
 	}
 	// create objects
 	this._stage3D.selectProgram(2);
@@ -6124,7 +6126,7 @@ break; // TODO: remove
 
 
 // don't - run
-// return;
+return;
 
 	if(false){
 	// if(true){
@@ -7187,11 +7189,12 @@ App3DR.bundleAdjustWorldCanDoubleResolution = function(world){
 		var view = views[i];
 		var cellSize = view.cellSize();
 		var nextSize = Math.floor(cellSize/2);
-		console.log(cellSize+" | "+nextSize)
 		if(nextSize%2==0){
 			nextSize += 1;
 		}
-		if(nextSize<=3 || nextSize>=cellSize){
+		console.log(cellSize+" | "+nextSize)
+		// if(nextSize<=3 || nextSize>=cellSize){
+		if(nextSize<3 || nextSize>=cellSize){
 			canDouble = canDouble & false;
 		}else{
 // halve cell size = double resolution

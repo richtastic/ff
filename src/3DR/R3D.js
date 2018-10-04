@@ -23042,20 +23042,21 @@ R3D.transformMatrixFromRodriguesElement = function(transform, rx,ry,rz, tx,ty,tz
 
 
 // find minimum size of point that includes at least one other pixel of cornerness value >= threshold
-R3D.CompareSizeFinder = function(image){
+R3D.CompareSizeFinder = function(image, cornerness){
 	this._scales = null;
 	this._width = null;
 	this._height = null;
-	this.image(image);
+	this.image(image,cornerness);
 }
-R3D.CompareSizeFinder.prototype.image = function(image){
+R3D.CompareSizeFinder.prototype.image = function(image,cornerness){
 	if(image){
+		cornerness = cornerness!==undefined ? cornerness : 0.50; // 0.5 - 0.666 - 075
 		// scale down for speed
 		var scale = 0.50;
 		// var scale = 1.0;
 		var imageIn = image;
 			image = imageIn.getScaledImage(scale);
-		var scales = R3D.minimumSizeToCornerThreshold(image, null, 0.75);
+		var scales = R3D.minimumSizeToCornerThreshold(image, null, cornerness);
 		if(scales){
 			var info = Code.infoArray(scales);
 			var min = info["min"];

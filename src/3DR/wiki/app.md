@@ -293,11 +293,6 @@ vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 		- reupdate scene 3D points?
 	=> final abs camera locations & orientations [motion final]
 -----> HERE <------
-- global multi-view stereopsis
-	- use pairwise matches as initial points
-	- fill out tracks
-	- increase surface patches
-	=> final abs point 3D locations & normals [structure final]
 (10/08)
 - global structure & motion bundle adjust
 	- quasi-local-global bundle adjustment
@@ -328,9 +323,23 @@ https://cloud.google.com/appengine/docs/nodejs/
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
---- exact center of point isn't good
-	- try using 3d position only as initial location & use PATCH location as optimized location
+- double high-density final interpolation step
+- output points to pts file for surface tessilation
 
+
+- some parts of image aren't getting expanded on (wall, couch side, floor areas)
+
+=----- some probing restriction is stopping
+
+	- as points are dropped, does the probing2d get to keep track of searching?
+
+	- SAD/NCC ?
+	- affine transforms?
+	- zooming out to 'best' cornerness size? - this does have an affect
+
+- good with points seen by all cameras, but not if only visible in few ... ?
+	- when a probe3D is projected onto another view, the point it covers might be a good projectino, but the object might be obscured
+	- 
 
 
 -  point 2D merging
@@ -344,26 +353,26 @@ image where each pixel shows distance to nearest corner with value >= threshold
 		- record max-min & index
 
 
-PROBLEMS:
-- error is going down but there are a lot of noisy points
-- right-side of image isn't getting expanded probe2d
-
-DEBUG:
-- show example match & affine visuals
-	=> windows for some points are very non-descriptive
-
-- compare stereopsis affine transform with match affine transform
 
 
 
 
--- maybe bland points are throwing things off?
-	=> try zooming out to get best positioning of point ?
-	=> 
 
 
+=> double surface points at end by interpolating in IMAGE grid where there are empty cells (at half size)
+	- fixed grid
+	- 
 
-- DROP / RECOVER FROM AFFINE THAT DOESN'T MATCH AVERAGE PROJECTION
+=> ICON
+	- optimal criteria:
+		- original
+		- gives some idea of what app does [but still abstract / not too specific]
+		- obscure physics/math/science root
+		- non-text
+		- simple - solid coloring
+		- cool
+		- double meaning
+
 
 
 
@@ -375,22 +384,11 @@ DEBUG:
 - get uniqueness = lowest gradient per unit cell (@ 1/2 cell distance away)
 
 
-
-
-
-	- only allow propagation of points that are better than the 'average' scores: F, R | NCC, SAD
-	- ...
-
-
-
 - does the new resolution increasing iteration work OK at same resolution?
 	 - may need new FXN that inserts a P3D as-is w no merging-conflict checking
 	 	createP3DWithPointsAndMatches(V3D, [V2D], [affine])
 
 ~ final drop all 3D points with errors below 2*midpoint globally
-
-
-
 
 
 - compare stereopsis affine transform with match affine transform
@@ -412,31 +410,19 @@ SINGLE PIXEL UNIQUENESS VS MAXIMUM IN AREA UNIQUENESS
 
 
 
-x patching dropping in-front & behind
-x local 2D neighbor dropping based on 3D distances from center
 
 
 
-- 3+ combining:
-	- check merging code
-	- check removing code (drop matches & drop point)
-
-- can path projections be used to correct affine transforms?
-	- affine / projection discrepancy
 
 
 
-DEBUG:
-x display new matches before added
-- display the lost 3+view points 
 
 
 
-- drop very worst scores
 
 
-- include patch data in BA file?
-	- normal, up, size
+
+
 
 
 
@@ -513,13 +499,6 @@ x display new matches before added
 
 
 
-FOR DENSE DEPTH MATCHING
-	- use F/P to come up with homography to line up the images
-	- use lined up rectangular (inner area) as starting point for hierarchical matching
-		- eg imge stitching
-	- hierarchy of optical flow
-		- still wont account for large movements
-
 
 
 - keep track of changing cells for each view:
@@ -530,7 +509,6 @@ FOR DENSE DEPTH MATCHING
 	- update working set on add/remove point / match
 	- need some 'previous attempted' metric (reprojection error?) to dis/allow retrying match
 
-- only 1-way cell propagating
 
 - nonlinear view camera optimizing:
 	- set absolute camera positions on iteration ~ 3
@@ -544,39 +522,10 @@ FOR DENSE DEPTH MATCHING
 	- what simultaneous-optimality of 3D pose looks like visually
 	- 
 
-- try only outputting 0-1 camera 3D location results
-
-
-- new algorithm for BA/multiview optimizing...
-	- only need to determine view pairs up to some initial first approximation [error is low enough & has enough supportingn points]
-	- subsequent pose estimations should then be 'global' & refined nonlinearlly
-	- may need to only consider best points (lowest avg reprojection error, 3+ views)
-	- may need to set absolute location by some averaginv of all possible locations (& resulting errors from estimated paths)
 
 
 
-- are the 2d-3d matches bad?
 
-- combine graph RELATIVE relationships rather than just from reference camera
-
-
-- BA only on camera pose (& top N points?)
-
-
-- recheck what to do in failing triangulation DLT
-
-- one version of P is for
-	- point direction
-- inverse version of P is for
-	- camera direction
-
-
-=>> point motion is what is derived from the POINT algorithms == FWD
-==> camera motion is therefore the inverse === INV
-
-
-
-- triangulatePointDLT is very off in a few scenarios
 
 
 
@@ -1651,7 +1600,6 @@ IMAGE PREP:
 
 
 
-- test out stability = scale search point up 2ce and see how far away the new peak location changes
 
 => can uniquely find the optimal location
 	-> if a location DOESN'T EXIST, it finds the best one available, which is wrong but may have a good score
@@ -1692,25 +1640,6 @@ IMAGE PREP:
 
 
 
-- show steps and find out where it breaks
-
-=> WHAT TO DO IF MATCH 'IS NOT FOUND'
-	=> is there a way to tell ?
-		- compare to 'previous' match ?
-		- uniqueness ?
-
-
-- compare to what match would be with ~ 10% noise ?
-
-- 
-- ignore plain areas [low gradient magnitudes]
-- ignore multiple-peaked [nonunique] areas
-- gradient compare?
-
-
--> nearest neighbor blocking @ center rather than position interpolation
-
-- localizing SAD score is good
 
 -> interpolation / prediction might be off
 
@@ -1728,25 +1657,10 @@ IMAGE PREP:
 
 
 
-SAD SCORING:
-
-- step slope
-- low score
-
-
-
-
-
 https://pdfs.semanticscholar.org/ca92/4f6c0fce953f202547212dc19e7e49db3074.pdf
 
 
 https://pdfs.semanticscholar.org/ab62/f870909b606f34f6c5843fa736aea65b06db.pdf
-
-
-- SAD scoring visualization
-
-
-- how do compareSize & cellSize interact in  R3D.BA.infoForPoints(
 
 
 - show steps on demand as alg progresses
