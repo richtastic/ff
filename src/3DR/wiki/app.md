@@ -324,10 +324,24 @@ https://cloud.google.com/appengine/docs/nodejs/
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 - double high-density final interpolation step
-- output points to pts file for surface tessilation
+
+- color derivative @ directions SIFT vector
+
+x output points to pts file for surface tessilation
+
+- patches don't need to be updated if the cameras/matches have not changed much
+	- keep track of:
+		: normal-to-view-angle average
+		: average distance
+
+- still some noisy points at end:
+	- depth discontinuity checks?
+	- need to remove spradic groupings
 
 
 - some parts of image aren't getting expanded on (wall, couch side, floor areas)
+	-> prelimited based on F/R scores
+	-> allowing them to pass anyway brings more error to the scene
 
 =----- some probing restriction is stopping
 

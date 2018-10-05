@@ -7967,23 +7967,29 @@ Code.planeFromPoints = function(center, points, weights){
 	}
 	var covariance = new Matrix(3,3).fromArray([A,B,C, B,E,F, C,F,I]);
 	//console.log(covariance);
-	var eig = Matrix.eigenValuesAndVectors(covariance);
-	var values = eig.values;
-	var vectors = eig.vectors;
-	var vMin = Math.min(values[0],values[1],values[2]); // least direction
 	var v0, v1, v2;
-	var vA = vectors[0].toV3D();
-	var vB = vectors[1].toV3D();
-	var vC = vectors[2].toV3D();
-	if(values[0] == vMin){
-		v0 = vA; v1 = vB; v2 = vC;
-	}else if(values[1] == vMin){
-		v0 = vB; v1 = vA; v2 = vC;
-	}else{
-		v0 = vC; v1 = vA; v2 = vB;
-	}
-	if( V3D.dot(V3D.cross(v1,v2),v0) <0 ){ // consistent orientation
-		var temp = v1; v1 = v2; v2 = temp;
+	try{
+		var eig = Matrix.eigenValuesAndVectors(covariance);
+		var values = eig.values;
+		var vectors = eig.vectors;
+		var vMin = Math.min(values[0],values[1],values[2]); // least direction
+		var vA = vectors[0].toV3D();
+		var vB = vectors[1].toV3D();
+		var vC = vectors[2].toV3D();
+		if(values[0] == vMin){
+			v0 = vA; v1 = vB; v2 = vC;
+		}else if(values[1] == vMin){
+			v0 = vB; v1 = vA; v2 = vC;
+		}else{
+			v0 = vC; v1 = vA; v2 = vB;
+		}
+		if( V3D.dot(V3D.cross(v1,v2),v0) <0 ){ // consistent orientation
+			var temp = v1; v1 = v2; v2 = temp;
+		}
+	}catch(e){ // covariance is likely all the same / not invertable => make something up
+		v0 = new V3D(1,0,0);
+		v1 = new V3D(0,1,0);
+		v2 = new V3D(0,0,1);
 	}
 	//var diff = V3D.sub(center,centerOfMass);
 	//var dN = V3D.dot(v0,diff);

@@ -5420,6 +5420,15 @@ R3D.ANMS_Full = function(imageSource, maxCount, supression){ // adaptive nonmaxi
 }
 
 
+R3D.points3DtoPTSFileString = function(points){
+	var str = "";
+	str += points.length+"\n";
+	for(var i=0; i<points.length; ++i){
+		var point = points[i];
+		str = str + point.x + " " + point.y + " " + point.z + "\n";
+	}
+	return str;
+}
 
 R3D.rangeProfileImagePoint = function(image, location){
 	//var gry = image.gry();
