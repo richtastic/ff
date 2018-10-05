@@ -1099,6 +1099,13 @@ Code.arrayPushArray = function(a,b, start,end){
 	}
 	return a;
 }
+Code.arrayPushArrays = function(a,others){
+	var args = arguments;
+	for(var i=1; i<args.length; ++i){
+		Code.arrayPushArray(a,args[i]);
+	}
+	return a;
+}
 Code.arrayUnshiftArray = function(a,b){
 	var i, len=b.length;
 	for(i=0;i<len;++i){
@@ -1358,7 +1365,6 @@ Code.printPoints = function(points){
 	console.log("\n\n"+str+"\n\n");
 }
 Code.removeElement = function(a,o){  // preserves order O(n)
-	// TODO USE SPLICE
 	var i, len = a.length;
 	for(i=0;i<len;++i){
 		if(a[i]==o){
@@ -2345,6 +2351,21 @@ Code.averageV2D = function(values, percents){
 		}
 		sum.x += value.x*p;
 		sum.y += value.y*p;
+	}
+	return sum;
+}
+Code.averageV3D = function(values, percents){
+	var i, count = values.length;
+	var sum = new V3D(0,0,0);
+	var p = 1.0/count;
+	for(i=0; i<count; ++i){
+		var value = values[i];
+		if(percents){
+			p = percents[i];
+		}
+		sum.x += value.x*p;
+		sum.y += value.y*p;
+		sum.z += value.z*p;
 	}
 	return sum;
 }

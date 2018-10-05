@@ -323,11 +323,11 @@ https://cloud.google.com/appengine/docs/nodejs/
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-- double high-density final interpolation step
+- restart surface tesselation
 
-- color derivative @ directions SIFT vector
 
 x output points to pts file for surface tessilation
+
 
 - patches don't need to be updated if the cameras/matches have not changed much
 	- keep track of:
@@ -339,9 +339,16 @@ x output points to pts file for surface tessilation
 	- need to remove spradic groupings
 
 
+- color derivative @ directions SIFT vector
+	- 9x9 grid
+	- average color
+	- 8 * R/G/B differential
+
+
+
 - some parts of image aren't getting expanded on (wall, couch side, floor areas)
-	-> prelimited based on F/R scores
-	-> allowing them to pass anyway brings more error to the scene
+	-> probe2D = prelimited based on F/R scores
+		-> allowing them to pass anyway brings more error to the scene
 
 =----- some probing restriction is stopping
 

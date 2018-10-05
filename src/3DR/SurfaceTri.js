@@ -691,8 +691,8 @@ SurfaceTri.prototype.loadPointFile = function(){
 	console.log("loadPointFile");
 	 //var sourceFileName = "./images/points/saltdome_1019.pts";
 	// var sourceFileName = "./images/points/foot_5092.pts";
-	//var sourceFileName = "./images/points/bunny_30571.pts";
-	var sourceFileName = "./images/points/test.pts";
+	var sourceFileName = "./images/points/bunny_30571.pts";
+	// var sourceFileName = "./images/points/test.pts";
 	var ajax = new Ajax();
 	ajax.get(sourceFileName,this,function(e){
 		var list = Code.parsePointSetString(e);

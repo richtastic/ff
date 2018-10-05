@@ -89,7 +89,7 @@ var modeModelReconstruction = false;
 
 // don't A:
 // TO SWITCH ON MODELING:
-modeModelReconstruction = true;
+// modeModelReconstruction = true;
 
 
 
@@ -3688,9 +3688,9 @@ App3DR.App.Model3D.prototype.setPoints = function(input3D, input2D, hasImages){
 				colors.push(red,grn,blu,1.0);
 				imageSuccess = true;
 			}else{
-				console.log(hasImages);
-				console.log(hasImages[i]);
-				throw "?";
+				// console.log(hasImages);
+				// console.log(hasImages[i]);
+				// throw "?";
 			}
 		}
 		if(!imageSuccess){
@@ -6126,7 +6126,7 @@ break; // TODO: remove
 
 
 // don't - run
-return;
+// return;
 
 	if(false){
 	// if(true){
@@ -6710,7 +6710,7 @@ console.log("ERROR: "+transformRMean+" * "+transformRSigma+" @ "+transformMatche
 	var matches = [];
 	// for(var i=0; i<pairs.length; ++i){
 	// 	var pair = pairs[i];
-	// 	// keep matches between views but don't assign absolute positions ?
+	// 	// keep matches between views but dont assign absolute positions ?
 	// }
 	// for(var i=0; i<views.length; ++i){
 	// 	var view = views[i];
@@ -7198,7 +7198,7 @@ App3DR.bundleAdjustWorldCanDoubleResolution = function(world){
 			canDouble = canDouble & false;
 		}else{
 // halve cell size = double resolution
-			view.cellSize(nextSize);
+			// view.cellSize(nextSize);
 		}
 	}
 	return canDouble;
