@@ -311,6 +311,9 @@ V3D.meanFromArray = function(pointList){
 	// mean.scale(1.0/len);
 	return V3D.infoFromArray(pointList)["mean"];
 }
+V3D.mean = function(pointList){
+	return V3D.meanFromArray(pointList);
+}
 V3D.infoFromArray = function(pointList){
 	return V3D.extremaFromArray(pointList);
 }

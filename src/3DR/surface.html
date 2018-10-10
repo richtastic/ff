@@ -13,6 +13,439 @@ function ffLoadedFxn(){
 	
 }
 function classesLoadedFxn(){
+
+	// GLOBAL STAGE:
+	// AVERAGING 3D POINTS 
+	this._canvas = new Canvas(null,0,0,Canvas.STAGE_FIT_FILL, false,false);
+	this._stage = new Stage(this._canvas, 1000/20);
+	this._root = new DO();
+	this._stage.addChild(this._root);
+	this._canvas.addListeners();
+	this._stage.addListeners();
+	this._stage.start();
+	// this._canvas.addFunction(Canvas.EVENT_MOUSE_CLICK,this.handleMouseClickFxn,this);
+	GLOBALSTAGE = this._stage;
+
+
+
+	// poisson testing
+	var points = [];
+		points.push([new V3D(1.0,2.0,0),  new V3D(-1,3,0).norm()]);
+		points.push([new V3D(2.0,3.0,0),  new V3D(0,1,0).norm()]);
+		points.push([new V3D(3.0,3.5,0),  new V3D(1,4,0).norm()]);
+		//points.push([new V3D(4.5,3.2,0),  new V3D(-1,4,0).norm()]);
+			points.push([new V3D(4.5,3.2,0),  new V3D(1,4,0).norm()]);
+		points.push([new V3D(6.0,2.5,0),  new V3D(2,2,0).norm()]);
+		points.push([new V3D(6.0,2.0,0),  new V3D(1,0,0).norm()]);
+		points.push([new V3D(6.5,1.0,0),  new V3D(0,1,0).norm()]);
+		points.push([new V3D(7.1,1.2,0),  new V3D(-1,4,0).norm()]);
+
+	var min = null;
+	var max = null;
+	for(var i=0; i<points.length; ++i){
+		var point = points[i];
+		var p = point[0];
+		if(min==null){
+			min = p.copy();
+			max = p.copy();
+		}else{
+			min.x = Math.min(min.x,p.x);
+			min.y = Math.min(min.y,p.y);
+			min.z = Math.min(min.z,p.z);
+			max.x = Math.max(max.x,p.x);
+			max.y = Math.max(max.y,p.y);
+			max.z = Math.max(max.z,p.z);
+		}
+	}
+	console.log(min+"")
+	console.log(max+"")
+	var range = V3D.sub(max,min);
+	console.log(min+" - "+max+" => "+range);
+	var pad = 1.5;
+	// var pad = 1.9;
+	// var pad = 10.0;
+	// var pad = 100.0;
+	var size = new V2D(range.x*pad,range.y*pad);
+	var center = new V2D(min.x+range.x*0.5, min.y+range.y*0.5);
+	var fitSize = new V2D(200,200);
+	// var limitSize = Code.sizeToFitInside(fitSize.x,fitSize.y,size.x,size.y);
+	// Code.preserveAspectRatio2D = function(v,wid,hei,fitWid,fitHei){
+	var limitSize = new V2D();
+	Code.preserveAspectRatio2D(limitSize, size.x,size.y, fitSize.x,fitSize.y);
+	limitSize.x = Math.round(limitSize.x);
+	limitSize.y = Math.round(limitSize.y);
+	console.log(limitSize+"");
+	
+	// var image = new ImageMat(limitSize.x,limitSize.y);
+	//var scale = new V2D(size.x/limitSize.x,size.y/limitSize.y);
+	var scale =(size.x/limitSize.x); // ,size.y/limitSize.y);
+	console.log("scale: "+scale+"");
+
+	var imageScale = scale;
+	// console.log(image);
+	var values = [];
+	// var imageWidth = image.width();
+	// var imageHeight = image.height();
+	var imageWidth = limitSize.x;
+	var imageHeight = limitSize.y;
+var dVectors = new DO();
+	for(var j=0; j<imageHeight; ++j){
+		if(j%10==0){
+			console.log(j+" / "+imageHeight);
+		}
+		for(var i=0; i<imageWidth; ++i){
+			var index = j*imageWidth + i;
+			var value = Math.random();
+			//var v = new V3D(center.x + i*imageScale, center.y + j*imageScale, 0);
+			var v = new V3D((i-imageWidth*0.5)*imageScale + center.x, (j-imageHeight*0.5)*imageScale + center.y, 0);
+
+			// find neighbors:
+			var kNN = 5;
+			var keepNN = 3;
+			var neighbors = Code.copyArray(points);
+			neighbors.sort(function(a,b){
+				var dA = V3D.distance(a[0],v);
+				var dB = V3D.distance(b[0],v);
+				return dA < dB ? -1 : 1;
+			});
+			Code.truncateArray(neighbors,kNN);
+
+			// find average weighting:
+			var distances = [];
+			for(var k=0; k<neighbors.length; ++k){
+				var point = neighbors[k];
+				var p = point[0];
+				// var n = point[1];
+				distances.push(V3D.distance(v,p));
+			}
+			Code.truncateArray(distances,keepNN);
+			var dMin = Code.min(distances);
+			var dMean = Code.mean(distances);
+				// dMin = dMean;
+			var dSigma = Code.stdDev(distances,dMin);
+				// dSigma = distances[1] - distances[0];
+				// console.log(dSigma);
+			var dTotal = 0;
+			var bot = 2*dSigma*dSigma;
+// bot = bot * 2.0;
+bot = bot * 0.50;
+// bot = bot * 0.10;
+			//var fnt = 1.0 / ();
+			for(var k=0; k<neighbors.length; ++k){
+				// var d = distances[k];
+				
+				var point = neighbors[k];
+				var p = point[0];
+				var d = V3D.distance(v,p);
+
+				// c = 1/(2*pi*ss).^0.5;
+				d = 1.0 * Math.exp(-Math.pow((d-dMin),2) / bot ); // smoother
+				// d = 1.0 * Math.exp(-Math.pow((d-dMin),1) / bot ); // smoother
+				// var d = 1.0/(d*d + dMin);
+				distances[k] = d;
+				dTotal += d;
+			}
+			//value = 1E12;
+			var value = new V3D(0,0,0);
+			var normAverage = new V3D();
+			for(var k=0; k<neighbors.length; ++k){
+				var point = neighbors[k];
+				var p = point[0];
+				var n = point[1];
+				var pTov = V3D.sub(v,p);
+				var dist = pTov.length();
+				// pTov.norm();
+				var dot = V3D.dot(pTov,n);
+					// dot = Math.abs(dot);
+				// weight:
+				var d = distances[k];
+				var w = d/dTotal;
+				value.add(w*dot*n.x, w*dot*n.y, w*dot*n.z);
+				// value.add(w*dot*pTov.x, w*dot*pTov.y, w*dot*pTov.z);
+				normAverage.add(w*n.x, w*n.y, w*n.z);
+			}
+			// SIGNED DISTANCE FOR GRADIENT
+			var dot = V3D.dot(value,normAverage);
+			var dist = value.length();
+			// DISPLAY SIGNED-NESS ???
+
+			values[index] = dist;
+
+
+			// vectors
+			// if(j%10==0 && i%10==0){
+			// if(j==70 && i==175){
+			// if(j==50 && i==190){
+			// if(j==10 && i==90){
+			// if(j==30 && i==100){
+			// if(j==50 && i==110){
+			if(j==66 && i==115){
+				var q = v.copy().add( value.copy().scale(-1.0) );
+				// var q = v.copy().add( value.copy().scale(-1.0).scale(0.25) );
+				// var q = v.copy().add( value.copy().scale(-1.0).scale(2.0) );
+				//q.scale(0.1);
+				var ii = (q.x-center.x)/scale + imageWidth*0.5;
+				var jj = (q.y-center.y)/scale + imageHeight*0.5;
+				
+				var e = dVectors;
+				e.graphics().setLine(1.0,0xFFFFFFFF);
+				e.graphics().beginPath();
+				e.graphics().moveTo(i,j);
+				e.graphics().lineTo(ii,jj);
+				e.graphics().strokeLine();
+				e.graphics().endPath();
+				// circle
+				e.graphics().beginPath();
+				e.graphics().drawCircle(i,j, 0.5);
+				e.graphics().strokeLine();
+				e.graphics().endPath();
+				// d.addChild(e);
+				
+			}
+
+
+			//value += V3D.distance(p,v);
+			//value = Math.min(value,V3D.distance(p,v));
+		}
+	}
+	console.log(values);
+	values = ImageMat.normalFloat01(values);
+		// visualizing 0 very fine:
+		values = ImageMat.pow(values,0.5);
+console.log(values.length,imageWidth,imageHeight,imageWidth*imageHeight);
+	// var image = new ImageMat(limitSize.x,limitSize.y);
+	var heat = ImageMat.heatImage(values, imageWidth, imageHeight, true);
+	var img = GLOBALSTAGE.getFloatRGBAsImage(heat.red(), heat.grn(), heat.blu(), imageWidth, imageHeight);
+	var d = new DOImage(img);
+// d.graphics().alpha(0.25);
+	d.matrix().scale(1.0,-1.0);
+	d.matrix().translate(0, imageHeight);
+		d.matrix().scale(4.0);
+		d.matrix().translate(10, 10);
+
+d.addChild(dVectors);
+
+	GLOBALSTAGE.addChild(d);
+console.log("loop");
+	value = 0;
+	for(var k=0; k<points.length; ++k){
+		var point = points[k];
+		var p = point[0];
+		var n = point[1];
+		// var v = new V2D(p.x/scale + imageWidth*0.5, p.x/scale + imageHeight*0.5);
+		var i = (p.x-center.x)/scale + imageWidth*0.5;
+		var j = (p.y-center.y)/scale + imageHeight*0.5;
+		// var index = j*imageWidth + i;
+		var e = new DO();
+		e.graphics().setLine(1.0,0xFF000000);
+		e.graphics().setFill(0xFFFFFFFF);
+		e.graphics().beginPath();
+		e.graphics().drawCircle(i,j, 1);
+		e.graphics().strokeLine();
+		e.graphics().endPath();
+		e.graphics().fill();
+		d.addChild(e);
+		//
+		// var rot = V3D.angle(V3D.DIRX,n);
+		var rot = V2D.angleDirection(V3D.DIRX,n);
+		var e = new DO();
+		e.graphics().setLine(1.0,0xFFFFFFFF);
+		e.graphics().setFill(0xFF000000);
+		e.graphics().beginPath();
+		e.graphics().drawRect(0,-0.5, 5,1);
+		e.graphics().strokeLine();
+		e.graphics().endPath();
+		e.graphics().fill();
+		e.matrix().rotate(rot);
+		e.matrix().translate(i,j);
+		d.addChild(e);
+	}
+throw "?"
+	// show circles:
+	for(var k=0; k<points.length; ++k){
+		var point = points[k];
+		var p = point[0];
+		var n = point[1];
+		// var radius = 1;
+		var kNN = 5;
+		// Code.sphereFromPoints
+		var neighbors = Code.copyArray(points);
+		neighbors.sort(function(a,b){
+			var dA = V3D.distance(a[0],p);
+			var dB = V3D.distance(b[0],p);
+			return dA < dB ? -1 : 1;
+		});
+		Code.truncateArray(neighbors,kNN);
+		var pnts = [];
+		for(var l=0; l<neighbors.length; ++l){
+			var neighbor = neighbors[l];
+			pnts.push(neighbor[0]);
+		}
+		// console.log(pnts);
+		// var sphere = Code.sphereAlgebraic(pnts, p);
+		// var sphere = Code.sphereAlgebraic(pnts);
+		// var sphere = Code.sphereFromPoints(pnts);
+		// var sphere = Code.sphereFromPoints(pnts[0],pnts[1],pnts[2],pnts[3]);
+		for(var l=0; l<pnts.length; ++l){
+			pnts[l] = new V2D(pnts[l].x,pnts[l].y);
+		}
+		var sphere = Code.circleFromPoints(pnts[0],pnts[1],pnts[2]);
+		point[2] = sphere;
+		// console.log(sphere);
+		var radius = sphere["radius"];
+		if(radius){
+			var cen = sphere["center"];
+			// var dd = -V3D.dot(n,V3D.sub(cen,p));
+			// var dd = V2D.dot(n,V2D.sub(cen,p));
+			// var ss = dd<0 ? -1 : 1;
+			// var q = p.copy().add(n.copy().norm().scale(ss*radius));
+			var q = cen;
+			var i = (q.x-center.x)/scale + imageWidth*0.5;
+			var j = (q.y-center.y)/scale + imageHeight*0.5;
+			var r = radius/scale;
+			var e = new DO();
+			e.graphics().setLine(1.0,0x99FF0000);
+			e.graphics().beginPath();
+			e.graphics().drawCircle(i,j, r);
+			e.graphics().strokeLine();
+			e.graphics().endPath();
+			d.addChild(e);
+		}
+	}
+
+	// projection:
+	// var v = new V3D(0.0,2.5);
+	// var v = new V3D(4.0,4.5);
+	var v = new V3D(5.0,4.5);
+	var lim = 10;
+	for(var iter=0; iter<lim; ++iter){
+		console.log(iter+" = "+v);
+		var i = (v.x-center.x)/scale + imageWidth*0.5;
+		var j = (v.y-center.y)/scale + imageHeight*0.5;
+		var e = new DO();
+		var r = 0;
+		if(iter<lim-1){
+			e.graphics().setLine(1.0,0x99000000);
+			r = 1;
+		}else{
+			e.graphics().setLine(2.0,0xFF009900);
+			r = 5;
+		}
+		e.graphics().beginPath();
+		e.graphics().drawCircle(i,j, r);
+		e.graphics().strokeLine();
+		e.graphics().endPath();
+		e.graphics().fill();
+		d.addChild(e);
+		// project:
+
+
+// find neighbors:
+var kNN = 3;
+var keepNN = 3;
+var neighbors = Code.copyArray(points);
+neighbors.sort(function(a,b){
+	var dA = V3D.distance(a[0],v);
+	var dB = V3D.distance(b[0],v);
+	return dA < dB ? -1 : 1;
+});
+Code.truncateArray(neighbors,kNN);
+// find average weighting:
+var distances = [];
+for(var k=0; k<neighbors.length; ++k){
+	var point = neighbors[k];
+	var p = point[0];
+	distances.push(V3D.distance(v,p));
+}
+Code.truncateArray(distances,keepNN);
+var dMin = Code.min(distances);
+var dMean = Code.mean(distances);
+	dMin = dMean;
+var dSigma = Code.stdDev(distances,dMin);
+var dTotal = 0;
+var bot = 2*dSigma*dSigma;
+
+
+
+
+		// var kNN = 5;
+		// var neighbors = Code.copyArray(points);
+		// neighbors.sort(function(a,b){
+		// 	var dA = V3D.distance(a[0],p);
+		// 	var dB = V3D.distance(b[0],p);
+		// 	return dA < dB ? -1 : 1;
+		// });
+		// Code.truncateArray(neighbors,kNN);
+		var weightTotal = 0;
+		var averagePoint = new V2D();
+		for(var l=0; l<neighbors.length; ++l){
+			var neighbor = neighbors[l];
+			var p = neighbor[0];
+
+			var n = neighbor[1];
+			var sphere = neighbor[2];
+			var rad = sphere["radius"];
+			var cen = sphere["center"];
+			var pToV = V2D.sub(v,p);
+				pToV.norm();
+			var dp = V2D.distance(p,v);
+
+			// var dot = V2D.dot(pToV,n);
+			var dot = 1.0;
+
+			//var w = 1.0 * Math.exp(-Math.pow((dp-dMin),2) / bot );
+			var w = Math.abs(dot) * 1.0 / (dp*dp + dMin);
+
+
+			console.log(p+" - "+v+" = "+dp+" @ "+w);
+			
+			var isOpposite = false;
+			if(isOpposite && dp>rad){
+				console.log("TOO FAR");
+			}else{
+				var closest = Code.circleClosestPointToPoint(cen,rad, v);
+				averagePoint.add(closest.x*w, closest.y*w);
+			}
+			weightTotal += w;
+
+					// var i = (closest.x-center.x)/scale + imageWidth*0.5;
+					// var j = (closest.y-center.y)/scale + imageHeight*0.5;
+					// var e = new DO();
+					// e.graphics().setLine(1.0,0xFF009900);
+					// e.graphics().beginPath();
+					// e.graphics().drawCircle(i,j, 2);
+					// e.graphics().strokeLine();
+					// e.graphics().endPath();
+					// e.graphics().fill();
+					// d.addChild(e);
+		}
+		averagePoint.scale(1.0/weightTotal);
+
+
+var i = (v.x-center.x)/scale + imageWidth*0.5;
+var j = (v.y-center.y)/scale + imageHeight*0.5;
+		v.set(averagePoint.x, averagePoint.y, 0);
+var ii = (v.x-center.x)/scale + imageWidth*0.5;
+var jj = (v.y-center.y)/scale + imageHeight*0.5;
+
+					e.graphics().setLine(1.0,0xFF000000);
+					e.graphics().beginPath();
+					e.graphics().moveTo(i,j);
+					e.graphics().lineTo(ii,jj);
+					e.graphics().strokeLine();
+					e.graphics().endPath();
+					e.graphics().fill();
+					d.addChild(e);
+	}
+
+
+	
+
+
+throw "?"
+
+
+	return;
 /*
 	var data = ["testing data blob"];
 	var type = "text/plain";
@@ -193,6 +626,7 @@ console.log(points);
 var sur = new BivariateSurface();
 sur.fromPoints(points, 4);
 */
+
 /*
 console.log("triangulate surface");
 

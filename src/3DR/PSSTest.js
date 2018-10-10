@@ -349,7 +349,7 @@ PSSTest.prototype._handleEnterFrameFxn = function(t){
 	this.canvasCrap();
 }
 PSSTest.prototype.testMLS2D = function(){
-
+/*
 	var quadTree = new QuadTree();
 
  var size = this._canvas.size();
@@ -396,7 +396,7 @@ PSSTest.prototype.testMLS2D = function(){
 
 	quadTree.visualize(this._root, size.x,size.y, point, knn);
 return;
-
+*/
 GLOBALSTAGE = this._stage;
 	var points = [];
 

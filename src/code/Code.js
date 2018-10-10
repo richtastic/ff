@@ -7039,6 +7039,7 @@ Code.sphereAlgebraic = function(points, location){
 	if(W!=null){
 		A = Matrix.mult(W,A);
 	}
+console.log("OUT A");
 	// SVD projection closest
 	var svd = Matrix.SVD(A);
 	var best = svd.V.colToArray(4);
@@ -7047,6 +7048,8 @@ Code.sphereAlgebraic = function(points, location){
 	var b2 = best[2];
 	var b3 = best[3];
 	var c = best[4];
+console.log("OUT B");
+console.log(best);
 	if(a===0){ // plane
 		var plane = Code.planeFromPoints(location, points, weights);
 		return plane;

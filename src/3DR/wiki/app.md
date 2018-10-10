@@ -245,20 +245,8 @@ APP TODO:
 
 
 
-- why does 3+ matching have so much fail
-	- should be on same order as independently 2-view pairing
-	=> combining P2D @ P3d (TRACK) is messing something up
-		- bad concept?
-		- bad implementation?
-
-
-
 - experiment with F-line transfer between images to find location of 3rd point (w/o needing P)
-
-
-- initial scene graph & optimal scene graph
-	- rotation averaging w/ eigs/svd
-	- translation averaging ?
+-> similar to projection from 3D point
 
 
 
@@ -324,6 +312,26 @@ https://cloud.google.com/appengine/docs/nodejs/
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 - restart surface tesselation
+	- how to do projection onto surface
+		- how to avoid 'falling' over an edge?
+
+- PROJECT TO SURFACE:
+	- closes sphere points
+	- poisson gradient
+		- bisector to minima [double gradient]
+		- normal calculation from rolling sphere/circle
+		- normal averaging (to smooth out normals for gradient descent)
+	- 
+
+- sphere iteritive:
+	- if less than radius: move toward closest sphere point
+	- if beyond radius: toward point [points very far from surface]
+		- if between radius & 2r: ignore ?
+		- if beyond 2r: toward point
+
+
+- smooth normals ?
+
 
 
 x output points to pts file for surface tessilation
