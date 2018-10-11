@@ -81,7 +81,7 @@ Matrix2D.prototype.rotate = function(theta){
 }
 Matrix2D.prototype.scale = function(sx,sy){
 	var mat = Matrix2D.temp;
-	if(sy == null){
+	if(sy===undefined || sy==null){
 		sy = sx;
 	}
 	mat.set(sx,0,0,sy,0,0);

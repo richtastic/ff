@@ -160,6 +160,11 @@ V2D.fromMagnitudeAndAngle = function(mag, ang){
 	v.rotate(ang);
 	return v;
 }
+V2D.fromArray = function(a){
+	v = new V2D(a[0],a[1]);
+	return v;
+}
+
 function V2D(xP,yP){
 	this.x = xP==undefined?0.0:xP;
 	this.y = yP==undefined?0.0:yP;
@@ -322,6 +327,9 @@ V2D.meanFromArray = function(pointList, weights){
 	return mean;
 }
 V2D.extremaFromArray = function(pointList){
+	// if(pointList.length==0){
+	// 	return null;
+	// }
 	var i, len=pointList.length, pt;
 	var minImageX = null, minImageY = null;
 	var maxImageX = null, maxImageY = null;
@@ -346,6 +354,9 @@ V2D.extremaFromArray = function(pointList){
 	return {"min":minPoint, "max":maxPoint, "size":size};
 }
 V2D.minX = function(pointList){
+	if(pointList.length==0){
+		return null;
+	}
 	var i, p;
 	var minP = pointList[0];
 	for(i=pointList.length-1; i>=0; i--){
@@ -357,6 +368,9 @@ V2D.minX = function(pointList){
 	return minP;
 }
 V2D.maxX = function(pointList){
+	if(pointList.length==0){
+		return null;
+	}
 	var i, p;
 	var minP = pointList[0];
 	for(i=pointList.length-1; i>=0; i--){
@@ -368,6 +382,9 @@ V2D.maxX = function(pointList){
 	return minP;
 }
 V2D.minY = function(pointList){
+	if(pointList.length==0){
+		return null;
+	}
 	var i, p;
 	var minP = pointList[0];
 	for(i=pointList.length-1; i>=0; i--){
@@ -379,6 +396,9 @@ V2D.minY = function(pointList){
 	return minP;
 }
 V2D.maxY = function(pointList){
+	if(pointList.length==0){
+		return null;
+	}
 	var i, p;
 	var minP = pointList[0];
 	for(i=pointList.length-1; i>=0; i--){
@@ -389,16 +409,23 @@ V2D.maxY = function(pointList){
 	}
 	return minP;
 }
-
 V2D.infoArray = function(pointList){
 	var i, p;
-	var min = pointList[0].copy();
-	var max = min.copy();
-	for(i=pointList.length-1; i>=0; i--){
-		p = pointList[i];
-		V2D.min(min,min,p);
-		V2D.max(max,max,p);
+	var min = null;
+	var max = null;
+	var center = null;
+	var size = new V2D(0,0);
+	if(pointList.length>0){
+		min = pointList[0].copy();
+		max = min.copy();
+		for(i=pointList.length-1; i>=0; i--){
+			p = pointList[i];
+			V2D.min(min,min,p);
+			V2D.max(max,max,p);
+		}
+		size = V2D.sub(max,min);
+		center = V2D.avg(max,min);
 	}
-	return {"min":min, "max":max};
+	return {"min":min, "max":max, "size":size, "center":center};
 }
 

@@ -250,6 +250,7 @@ QuadTree.prototype.initWithDimensions = function(center,size){
 	this._root.size(size);
 }
 QuadTree.prototype.initWithObjects = function(objects, force){
+	force = force!==undefined ? force : true;
 	this.clear();
 	if(objects.length==0){
 		return false;
@@ -293,7 +294,8 @@ QuadTree.prototype.kNN = function(p,k, evaluationFxn, maxRadius,   log){
 	// console.log("kNN", p,k, evaluationFxn)
 	var size = this.size();
 	maxRadius = (maxRadius!==undefined && maxRadius!==null) ? maxRadius : Math.max(size.x,size.y);
-	var maxRadiusSquare =  maxRadius*maxRadius;
+	//var maxRadiusSquare =  maxRadius*maxRadius*2;
+	var maxRadiusSquare = 1E9;
 	var toPoint = this._toPoint;
 	var axelQueue = new PriorityQueue(QuadTree._sortArxel);
 	var objectQueue = new PriorityQueue(QuadTree._sortObject, k);
@@ -312,6 +314,8 @@ QuadTree.prototype.kNN = function(p,k, evaluationFxn, maxRadius,   log){
 					distanceCenter = Math.sqrt(distanceCenter);
 					distanceRadius = Math.sqrt(distanceRadius);
 					var distance = Math.max(0,distanceCenter-distanceRadius);
+					// var distance = Math.max(0,distanceCenter+distanceRadius);
+					// var distance = distanceRadius;
 					distance = distance*distance;
 					child.temp(distance);
 					axelQueue.push(child);
@@ -339,18 +343,22 @@ QuadTree.prototype.kNN = function(p,k, evaluationFxn, maxRadius,   log){
 		// can quit if too far away
 		if(axelQueue.length()>0 && axelQueue.minimum().temp()>maxRadiusSquare ){
 			//console.log(axelQueue.minimum().temp()+" / "+maxRadiusSquare);
+			// console.log("b1");
 			break;
 		}
 		// can quit if already have k && nearby cells are further away than best k
 		if(objectQueue.length()>=k && (axelQueue.length()==0 || axelQueue.minimum().temp()>objectQueue.maximum()["distance"])){
 			//console.log(axelQueue.length()+" / "+k+" ");
+			// console.log("b2");
 			break;
 		}
 	}
+	// console.log(objectQueue.length()+" ... ")
 	var objects = objectQueue.toArray();
 	var output = [];
 	objectQueue.kill();
 	axelQueue.kill();
+
 	for(var i=0; i<objects.length; ++i){
 		var object = objects[i];
 		if(object["distance"]<maxRadiusSquare){

@@ -513,7 +513,6 @@ MLSMesh2D.prototype._maxCurvature = function(location, radius){
 	return maxCurvature;
 }
 MLSMesh2D.prototype._projectPointToSurface = function(location, data){
-	//(points, normals, location, log)
 	var points = this._points;
 // 	// ...
 // 	var gradient = null;

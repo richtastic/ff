@@ -378,14 +378,14 @@ DO.prototype.removeChild = function(ch){
 	Code.removeElement(this._children,ch);
 	DO.removedFromStageRecursive(ch);
 }
-DO.prototype.removeAllChildren = function(ch){
+DO.prototype.removeAllChildren = function(){
 	var i, len = this._children.length;
 	for(i=0;i<len;++i){
 		this._children[i].parent(null);
 	}
 	Code.emptyArray(this._children);
 }
-DO.prototype.moveBackward = function(ch){
+DO.prototype.moveBackward = function(){
 	var parent = this._parent;
 	if(parent){
 		var i = parent.indexOfChild(this);
@@ -393,7 +393,7 @@ DO.prototype.moveBackward = function(ch){
 		parent.addChildAtIndex(this,i-1);
 	}
 }
-DO.prototype.moveForward = function(ch){
+DO.prototype.moveForward = function(){
 	var parent = this._parent;
 	if(parent){
 		var i = parent.indexOfChild(this);
@@ -401,14 +401,14 @@ DO.prototype.moveForward = function(ch){
 		parent.addChildAtIndex(this,i+1);
 	}
 }
-DO.prototype.moveToBack = function(ch){
+DO.prototype.moveToBack = function(){
 	var parent = this._parent;
 	if(parent){
 		parent.removeChild(this);
 		parent.addChildAtIndex(this,0);
 	}
 }
-DO.prototype.moveToFront = function(ch){
+DO.prototype.moveToFront = function(){
 	var parent = this._parent;
 	if(parent){
 		parent.removeChild(this);

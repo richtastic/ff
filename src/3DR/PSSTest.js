@@ -349,6 +349,21 @@ PSSTest.prototype._handleEnterFrameFxn = function(t){
 	this.canvasCrap();
 }
 PSSTest.prototype.testMLS2D = function(){
+	var points = [];
+	points.push(new V2D(0.0,0.0));
+	points.push(new V2D(1.0,0.0));
+	points.push(new V2D(2.1,0.0));
+	points.push(new V2D(2.0,2.0));
+	points.push(new V2D(1.0,2.0));
+	points.push(new V2D(0.0,2.0));
+	points.push(new V2D(0.0,1.0));
+
+
+	var mesh = new Mesh2D(points);
+	mesh.generateSurfaces();
+	mesh.visualize(GLOBALSTAGE);
+
+	throw "... NEW";
 /*
 	var quadTree = new QuadTree();
 

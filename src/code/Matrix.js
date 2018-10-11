@@ -121,6 +121,15 @@ Matrix.prototype.toV3D = function(){
 	}
 	return v;
 }
+Matrix.prototype.toV2D = function(){
+	var i, j, v = new V2D();
+	if(this._rows.length==1){ // row vector
+		v.set(this._rows[0][0],this._rows[0][1]);
+	}else{ // column vector
+		v.set(this._rows[0][0],this._rows[1][0]);
+	}
+	return v;
+}
 Matrix.prototype.toArray = function(a){
 	var i, j, row = this._rowCount, col = this._colCount, index = 0;
 	if(!a){

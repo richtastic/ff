@@ -6940,12 +6940,22 @@ Code._circleGeometricGD = function(args,vals, isUpdate){
 Code.circleGeometric = function(points, location, maxIterations){
 	maxIterations = maxIterations!==undefined ? maxIterations : 50;
 	var circle = Code.circleAlgebraic(points, location);
+	if(!circle){ // plane:
+		// TODO: 2D-LINE  FROM POINTS:
+		// var pts3D = [];
+		// for(var i=0; i<points.length; ++i){
+		// 	pts3D[i] = new V2D(points[i].x,points[i].y, 0);
+		// }
+		// var location3D = new V3D(location.x,location.y, 0);
+		// console.log(location3D, pts3D);
+		//var plane = Code.planeFromPoints(location3D, pts3D);
+		var plane = Code.planeFromPoints2D(location, points);
+		return plane;
+	}
 	var weights = circle["weights"];
 	var center = circle["center"];
 	var radius = circle["radius"];
-
 	var result = Code.gradientDescent(Code._circleGeometricGD, [points, weights], [center.x,center.y,radius], null, maxIterations, 1E-8);
-	
 	var x = result["x"];
 	center = new V2D(x[0],x[1]);
 	radius = x[2];
@@ -8023,6 +8033,83 @@ Code.planeFromPoints = function(center, points, weights){
 	// var plane = Code.planeEquationFromPointNormal(centerOfMass,nrm);
 	// return plane;
 }
+Code.planeFromPoints2D = function(center, points, weights){
+	if(!center){
+		center = V2D.mean(points);
+	}
+	var i, point, weight, distanceSquare;
+	var len = points.length;
+	var weightTotal=0;
+	var centerOfMass = new V2D(0.0,0.0);
+	var A=0,B=0,D=0;
+	var dx,dy;
+	if(!weights){ // make up own weights
+		weights = [];
+		var weightAvg = 0;
+		for(i=0; i<len; ++i){
+			point = points[i];
+			weights[i] = V2D.distance(point,center);
+			weightAvg += weights[i];
+		}
+		weightAvg /= len;
+		for(i=0; i<len; ++i){
+			point = points[i];
+			weight = weights[i];
+			weight = Math.exp(-weight/weightAvg);
+			weights[i] = weight;
+		}
+	}
+	for(i=0; i<len; ++i){
+		point = points[i];
+		weight = weights[i];
+		centerOfMass.add(weight*point.x, weight*point.y);
+		weightTotal += weight;
+	}
+	if(weightTotal>0){
+		centerOfMass.scale(1.0/weightTotal);
+	}
+	for(i=0; i<len; ++i){
+		point = points[i];
+		distanceSquare = V3D.distanceSquare(point, center);
+		weight = weights[i];
+		dx = point.x-centerOfMass.x;
+		dy = point.y-centerOfMass.y;
+		A += weight*dx*dx;
+		B += weight*dx*dy;
+		D += weight*dy*dy;
+	}
+	var covariance = new Matrix(2,2).fromArray([A,B,B,D]);
+	// console.log(covariance);
+	var v0, v1;
+	try{
+		// TODO: NOT ALWAYS WORK:
+		// var eig = Code.eigenValuesAndVectors2D(A,B,B,D);
+		// var values = eig["values"];
+		// var vectors = eig["vectors"];
+		// var vA = V2D.fromArray(vectors[0]);
+		// var vB = V2D.fromArray(vectors[1]);
+		var eig = Matrix.eigenValuesAndVectors(covariance);
+		// console.log(eig.vectors[0].toV2D()+" ? "+eig.vectors[1].toV2D()+" : "+eig.values[0]+" ? "+eig.values[1]);
+		var values = eig.values;
+		var vectors = eig.vectors;
+		var vA = vectors[0].toV2D();
+		var vB = vectors[1].toV2D();
+		// console.log(vA+" | "+vB+" : "+values[0]+" / "+values[1]);
+		var vMin = Math.min(values[0],values[1]); // least direction
+		if(values[0] == vMin){
+			v0 = vA; v1 = vB;
+		}else{
+			v0 = vB; v1 = vA;
+		}
+		if( V2D.dot(v0,v1) < 0 ){ // consistent orientation - CCW 90 degrees
+			v1.mult(-1.0);
+		}
+	}catch(e){ // covariance is likely all the same / not invertable => make something up
+		console.log(e)
+		throw "what?"
+	}
+	return {"point":centerOfMass, "normal":v0, "x":v1};
+}
 
 Code.consistentOrientation = function(pointA,pointB, pointsA,pointsB){ // TODO: if duplicated angles => also allow
 	var verbose = false;
@@ -8152,10 +8239,9 @@ Code.eigenValuesAndVectors2D = function(a,b,c,d){
 	var inside = trace*trace*0.25 - det;
 	inside = Math.max(0,inside);
 	var right = Math.sqrt(inside);
-	// console.log(inside,left,right);
 	var l1 = left - right;
 	var l2 = left + right;
-
+// TODO: VALUES / VECTORS CAN BE REVERSED:
 	var a1 = (a-l1);
 	var v1x = 0, v1y = 1;
 	if(a1!=0){
@@ -8169,7 +8255,6 @@ Code.eigenValuesAndVectors2D = function(a,b,c,d){
 		}
 	}
 	var m1 = Math.sqrt(v1x*v1x + v1y*v1y);
-
 	var a2 = (a-l2);
 	var v2x = 0, v2y = 1;
 	if(a2!=0){
