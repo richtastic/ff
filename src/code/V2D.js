@@ -309,7 +309,25 @@ V2D.max = function(out, a,b){
 	out.y = Math.max(a.y,b.y);
 	return out;
 }
-
+V2D.removeDuplicates = function(points){
+	var i, j, p, l, len=points.length;
+	var list = [];
+	for(i=0; i<len; ++i){
+		p = points[i];
+		var found = false;
+		for(j=0; j<list.length; ++j){
+			l = list[j];
+			if(V2D.equal(p,l)){
+				found = true;
+				break;
+			}
+		}
+		if(!found){
+			list.push(p);
+		}
+	}
+	return list;
+}
 V2D.meanFromArray = function(pointList, weights){
 	var i, len=pointList.length, pt;
 	var mean = new V2D();

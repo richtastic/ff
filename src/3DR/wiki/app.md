@@ -315,6 +315,16 @@ https://cloud.google.com/appengine/docs/nodejs/
 	- how to do projection onto surface
 		- how to avoid 'falling' over an edge?
 
+- field (projection) curvature is different from point curvature?
+
+- how to get both curvatures at a (surface)point ?
+	k1 / k2 ?
+-> curvature = derivative of normal 
+
+- which radius to choose in point curvature estimation (smallest ?)
+
+
+
 - PROJECT TO SURFACE:
 	- closes sphere points
 	- poisson gradient
