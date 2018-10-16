@@ -2,8 +2,8 @@
 Mesh2D.X = 0;
 
 function Mesh2D(points, angle){
-	// this._angle = Math.PI*0.1; // 18 degrees
-angle = Math.PI*0.1;
+	this._angle = Math.PI*0.1; // 18 degrees
+// angle = Math.PI*0.5; // 45 is most
 // angle = Math.PI*0.01;
 	this._pointSpace = new QuadTree(Mesh2D._pointToPoint);
 	this._edgeSpace = new QuadSpace(Mesh2D._triToCuboid);
@@ -106,6 +106,10 @@ Mesh2D.Point2D = function(point){
 	this._temp = null;
 	this.point(point);
 }
+Mesh2D.Point2D.prototype.toString = function(){
+	var str = "[P2D: "+(this._visited?"V":"-")+"";
+	return str;
+}
 Mesh2D.Point2D.prototype.point = function(point){
 	if(point!==undefined){
 		if(point){
@@ -182,16 +186,23 @@ Mesh2D.Edge2D = function(pointA,pointB, ideaLength){
 	this._prev = null;
 	this._next = null;
 	this._ideaLength = null;
-	this._end = false;
+	this._endA = false;
+	this._endB = false;
 	this.pointA(pointA);
 	this.pointB(pointB);
 	this.ideaLength(ideaLength);
 }
-Mesh2D.Edge2D.prototype.end = function(){
-	this._end = true;
+Mesh2D.Edge2D.prototype.endA = function(){
+	this._endA = true;
 }
-Mesh2D.Edge2D.prototype.isEnd = function(){
-	return this._end;
+Mesh2D.Edge2D.prototype.endB = function(){
+	this._endB = true;
+}
+Mesh2D.Edge2D.prototype.isEndA = function(){
+	return this._endA;
+}
+Mesh2D.Edge2D.prototype.isEndB = function(){
+	return this._endB;
 }
 Mesh2D.Edge2D.prototype._calculateDerived = function(){
 	var pointA = this._pointA;
@@ -279,9 +290,10 @@ Mesh2D.Front2D.prototype.bestEdge = function(){
 	if(this._edges.length>0){
 		var endLeft = this._edges[0];
 		var endRight = this._edges[this._edges.length-1];
-		var isEndLeft = endLeft.isEnd();
-		var isEndRight = endRight.isEnd();
+		var isEndLeft = endLeft.isEndA();
+		var isEndRight = endRight.isEndB();
 		if(isEndLeft && isEndRight){
+			console.log("BOTH ENDED");
 			return null;
 		}else if(isEndLeft){
 			return endRight;
@@ -599,31 +611,29 @@ var xxx = 0;
 	while(!allQueue.isEmpty()){
 		// start at optimal point
 		var seedPoint = allQueue.pop();
+		console.log("seedPoint: "+seedPoint);
 		var seedEdge = this.seedEdgeFromPoint(seedPoint.point());
 		// create first front
 		var front = new Mesh2D.Front2D(seedEdge);
 		this._fronts.push(front);
 		this.markPointsAlongEdgeAsVisited(seedEdge,allQueue);
-
-// TODO: IF ANY POINTS ALREADY VISITIED -> CONTINUE ...
-
 		// iterate:
-		var maxIter = 1E5;
+		var maxIter = 1000;
 		for(var i=0; i<maxIter; ++i){
 			// next best edge
 			var edge = front.bestEdge();
 			if(edge == null){ // 2 dead ends
-				// console.log("dead ended front");
+				console.log("dead ended front");
 				break;
 			}
 			var toNext = null;
 			var point = null;
 			var direction = null;
-			if(!edge.next()){
+			if(!edge.next() && !edge.isEndB()){
 				toNext = true;
 				point = edge.pointB();
 				direction = edge.abNorm();
-			}else if(!edge.prev()){
+			}else if(!edge.prev() && !edge.isEndA()){
 				toNext = false;
 				point = edge.pointA();
 				direction = edge.baNorm();
@@ -632,15 +642,17 @@ var xxx = 0;
 			}
 			// size edge
 			var idealLength = this.iteritiveEdgeSizeFromPoint(point); // USE CURRENT EDGE SIZE ?
-			// console.log("idealLength: "+idealLength);
 			direction.scale(idealLength);
 			var next = V2D.add(point,direction);
 			next = this._projectPointToSurface(next);
 			// check if outside valid area
 			var isInside = this.isPointNearSurface(next);
 			if(!isInside){
-				// console.log("IS NOT VALID");
-				edge.end();
+				if(toNext){
+					edge.endB();
+				}else{
+					edge.endA();
+				}
 				continue;
 			}
 			next = this.iteritiveEdgeToSizeAtPoint(point,next, idealLength);
@@ -663,11 +675,11 @@ var xxx = 0;
 			}
 			this.markPointsAlongEdgeAsVisited(nextEdge,allQueue);
 		}
-		console.log("REMAINING: "+allQueue.length());
-if(xxx>10){
+		console.log("REMAINING: "+allQueue.length()+" X "+xxx);
+++xxx;
+if(xxx>2){
 	break;
 }
-++xxx;
 	}
 }
 Mesh2D.prototype.markPointsAlongEdgeAsVisited = function(edge, allQueue){
@@ -1041,9 +1053,9 @@ Mesh2D.prototype._X_SOMETHING_ELSE = function(location){
 Mesh2D.prototype.visualize = function(stage){
 	var canvas = stage.canvas();
 	// console.log(canvas.size())
-	var displaySize = new V2D(250,200);
-	// var displaySize = new V2D(400,200);
-	// var displaySize = new V2D(600,400);
+	// var displaySize = new V2D(250,200);
+	var displaySize = new V2D(400,200);
+	// var displaySize = new V2D(800,400);
 	// var displayPadding = 4.0;
 	var displayPadding = 2.0;
 	// var displayPadding = 1.5;
@@ -1195,8 +1207,8 @@ Mesh2D.prototype.visualize = function(stage){
 			display.addChild(d);
 		}
 		// draw field  +++++++++++++++++++++++++++++++++++++++++++++++++++++++
-		var drawField = true;
-		// var drawField = false;
+		// var drawField = true;
+		var drawField = false;
 		if(drawField){
 		var values = [];
 		var imageWidth = limitSize.x;
@@ -1294,7 +1306,6 @@ Mesh2D.prototype.visualize = function(stage){
 	// //d.graphics().fill();
 	// d.graphics().strokeLine();
 	// stage.addChild(d);
-	throw "?";
 }
 
 

@@ -311,15 +311,18 @@ https://cloud.google.com/appengine/docs/nodejs/
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
+- 3D oct-tree objects within distance of circular plane & triangular plane
+
+- Mesh3D
+
+
 - restart surface tesselation
 	- how to do projection onto surface
 		- how to avoid 'falling' over an edge?
 
-- field (projection) curvature is different from point curvature?
-
-- how to get both curvatures at a (surface)point ?
+- how to get 2.5D both curvatures at a (surface)point ?
 	k1 / k2 ?
--> curvature = derivative of normal 
 
 - which radius to choose in point curvature estimation (smallest ?)
 

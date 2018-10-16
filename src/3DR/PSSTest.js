@@ -359,9 +359,9 @@ PSSTest.prototype.testMLS2D = function(){
 	points.push(new V2D(0.0,1.0));
 
 	points.push(new V2D(3.0,0.0));
-	points.push(new V2D(4.0,0.0));
-	points.push(new V2D(5.0,0.0));
-	points.push(new V2D(6.0,0.0));
+	points.push(new V2D(4.0,0.1));
+	points.push(new V2D(5.0,-0.1));
+	points.push(new V2D(6.0,0.1));
 	points.push(new V2D(7.0,0.0));
 	points.push(new V2D(8.0,0.0));
 
@@ -371,10 +371,18 @@ PSSTest.prototype.testMLS2D = function(){
 
 	points.push(new V2D(5.0 ,5.0));
 	points.push(new V2D(4.0 ,4.0));
+
+	// connect 3
+	points.push(new V2D(3.0 ,2.5));
+	points.push(new V2D(6.5 ,5.5));
 	
+	// points.push(new V2D(4.0 ,4.0));
+
 
 	var mesh = new Mesh2D(points);
-	mesh.generateSurfaces();
+	var poly = mesh.generateSurfaces();
+
+	console.log(poly);
 	mesh.visualize(GLOBALSTAGE);
 
 	throw "... NEW";

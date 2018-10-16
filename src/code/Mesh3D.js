@@ -6,6 +6,7 @@ function Mesh3D(angle, points){
 	this._pointSpace = new OctTree(Mesh2D._pointToPoint);
 	this._triangleSpace = new OctSpace(Mesh2D._triToCuboid);
 	this._points = null;
+	this._fronts = [];
 	this.angle(angle);
 	this.points(points);
 }
