@@ -1,3 +1,4 @@
+
 # nodejs server README
 
 
@@ -151,6 +152,20 @@ https://github.com/googleapis/nodejs-storage/blob/master/samples/encryption.js
 
 
 https://console.dialogflow.com/api-client
+
+
+GAE PROJECTS PAGE - DELETE:
+https://console.cloud.google.com/cloud-resource-manager?_ga=2.52150575.-784592155.1539794025
+
+The project has a lien against it.
+
+Tracking Number: 5012888763351835771
+
+
+
+gcloud alpha resource-manager liens list
+
+
 
 
 

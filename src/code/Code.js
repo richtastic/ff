@@ -808,6 +808,7 @@ Code.log = function log(o){
 }
 
 Code.objectHasProperty = function(o,p){
+	// p in o
 	return o.hasOwnProperty(p);
 }
 Code.subProperty = function(o,list){ // Code.subProperty({"a":{"b":[{"c":666}]}},["a","b","0","c"])
@@ -6874,15 +6875,26 @@ Code.circleAlgebraic = function(points, location){
 	var i, p;
 	// W
 	if(location){
+		var distanceTotal = 0;
 		weights = [];
 		for(i=0; i<N; ++i){
 			p = points[i];
-			var dist = V2D.distance(location,p);
-			var weight = 1.0/(1.0 + dist*dist);
+			var dist = V3D.distance(location,p);
+			distanceTotal += dist;
+			weights[i] = dist;
+		}
+		for(i=0; i<N; ++i){
+			p = points[i];
+			var dist = weights[i];
+			// var dist = V2D.distance(location,p);
+			// var weight = 1.0/(1.0 + dist*dist);
 			//var weight = Math.exp(-dist*dist);
 			//weight = Math.pow(weight,2);
 			//weight = Math.pow(dist,-2);
-			weights.push(weight);
+// TODO: PICK A WEIGHT
+			var weight = Math.exp(-dist);
+			// weights.push(weight);
+			weights[i] = weight;
 		}
 		W = new Matrix(N,N);
 		for(i=0; i<N; ++i){
@@ -7003,15 +7015,13 @@ Code.sphereCoefficientsToSphere = function(a,b1,b2,b3,c){
 	return {"radius":radius,"center":center};
 }
 
-
-
 Code.sphereAlgebraic = function(points, location){
 	var N = points.length;
 	var W = null;
 	var weights = null;
 	var i, p;
 	// W
-	//if(false){
+	// if(false){
 	if(location){
 		var distanceTotal = 0;
 		weights = [];
@@ -7022,12 +7032,18 @@ Code.sphereAlgebraic = function(points, location){
 			weights[i] = dist;
 		}
 		var distanceAverage = distanceTotal/N;
+		var sigma = Code.stdDev(weights,distanceAverage);
+		// var bot = distanceAverage*distanceAverage;
+		var bot = sigma*sigma;
 		for(i=0; i<N; ++i){ // gaussian weight
 			var dist = weights[i];
-//			var weight = Math.exp(-dist/distanceAverage);
-			var weight = Math.exp(-dist/(distanceAverage*distanceAverage));
+			// var weight = Math.exp(-dist/distanceAverage);
+			// var weight = Math.exp(-dist/(distanceAverage*distanceAverage));
 			//var weight = 1.0/(1.0 + dist*dist);
-//weight = 1.0;
+// weight = 1.0;
+			//var weight = Math.exp(-dist/distanceAverage);
+			var top = dist*dist;
+			var weight = Math.exp(-top/bot);
 			weights[i] = weight;
 		}
 		W = new Matrix(N,N);
@@ -7049,7 +7065,6 @@ Code.sphereAlgebraic = function(points, location){
 	if(W!=null){
 		A = Matrix.mult(W,A);
 	}
-console.log("OUT A");
 	// SVD projection closest
 	var svd = Matrix.SVD(A);
 	var best = svd.V.colToArray(4);
@@ -7058,9 +7073,9 @@ console.log("OUT A");
 	var b2 = best[2];
 	var b3 = best[3];
 	var c = best[4];
-console.log("OUT B");
-console.log(best);
+// console.log(best);
 	if(a===0){ // plane
+		// console.log("PLANE");
 		var plane = Code.planeFromPoints(location, points, weights);
 		return plane;
 	}
@@ -7095,6 +7110,7 @@ Code.sphereGeometric = function(points, location, maxIterations){
 	maxIterations = maxIterations!==undefined ? maxIterations : 50;
 	var sphere = Code.sphereAlgebraic(points, location);
 	if(!sphere){
+		console.log("what ?");
 		return null;
 	}
 	var center = sphere["center"];
@@ -7363,7 +7379,95 @@ Code.isCCW = function(a,b,c){
 	// strictly inside
 	return cross >= 0;
 }
-Code.convexNeighborhood = function(center, points, knn, minNeighborhood){ // points are closest relevant neighbors
+Code.convexNeighborhood3D = function(center, points, knn, minNeighborhood){ // points are closest relevant neighbors
+	knn = knn!==undefined ? knn : points;
+	minNeighborhood = minNeighborhood!==undefined ? minNeighborhood : 5;
+	var collection = [];
+	var minDistance = null;
+	var maxDistance = null;
+	for(i=0; i<points.length; ++i){
+		var distanceSquare = V3D.distanceSquare(points[i],center);
+		collection[i] = {"source":knn[i], "point":points[i], "distance":distanceSquare};
+		if(minDistance==null || minDistance>distanceSquare){
+			minDistance = distanceSquare;
+		}
+		if(maxDistance==null || maxDistance<distanceSquare){
+			maxDistance = distanceSquare;
+		}
+	}
+	collection = collection.sort(function(a,b){
+		return a["distance"] < b["distance"] ? -1 : 1;
+	});
+	// remove all points~@ center for more circular neighborhood
+	var centerRemoved = [];
+	var minDistanceEquality = maxDistance!==null ? (minDistance+maxDistance)*0.5 * 0.01 : 0.0; // 1/10th the average size
+	while(collection.length>0 && collection[0]["distance"]<=minDistanceEquality){
+		centerRemoved.push( collection[0] );
+		collection.shift();
+	}
+	var halfPlaneInfo = Code.halfPlaneSubsetPoints3D(center, collection, "point");
+	var halfPlaneKeep = halfPlaneInfo["yes"];
+	var halfPlaneDrop = halfPlaneInfo["no"];
+	var neighborhood = [];
+	// middle points
+	for(i=0; i<centerRemoved.length; ++i){
+		neighborhood.push(centerRemoved[i]["source"]);
+	}
+	// half plane points
+	for(i=0; i<halfPlaneKeep.length; ++i){
+		neighborhood.push(halfPlaneKeep[i]["source"]);
+	}
+	// necessary extras
+	for(i=0; i<halfPlaneDrop.length && neighborhood.length<minNeighborhood; ++i){
+		neighborhood.push(halfPlaneDrop[i]["source"]);
+	}
+	return neighborhood;
+}
+
+Code.halfPlaneSubsetPoints3D = function(location, points, keyPoint){ // points already sorted
+	var i, j, halfPlanes = [];
+	var N = points.length;
+	var setKeep = [];
+	var setDrop = [];
+	for(i=0; i<N; ++i){
+		var point = points[i];
+		if(keyPoint){
+			point = point[keyPoint];
+		}
+		var dir = V3D.sub(point,location);
+		// var distPoint = dir.length();
+		var isBehind = false;
+		for(j=0; j<halfPlanes.length; ++j){
+			var plane = halfPlanes[j];
+			var o = plane["o"];
+			var d = plane["d"];
+			var pos = Code.pointOnPositiveSidePlane3D(point, o,d);
+			if(!pos){
+			//Code.intersectRayPlane (org,dir, pnt,nrm
+			// var intersect = Code.intersectRayPlaneFinite(location,dir, o,d);
+			// if(intersect){
+				isBehind = true;
+				break;
+			}
+		}
+		if(!isBehind){
+			var d = dir;
+			d.scale(-1);
+			d.norm();
+			var o = point;
+			var plane = {"o":o, "d":d, "data":points[i]};
+			halfPlanes.push(plane);
+			setKeep.push(points[i]);
+		}else{
+			setDrop.push(points[i]);
+		}
+	}
+	return {"yes":setKeep, "no":setDrop};
+}
+
+
+
+Code.convexNeighborhood2D = function(center, points, knn, minNeighborhood){ // points are closest relevant neighbors
 	knn = knn!==undefined ? knn : points;
 	minNeighborhood = minNeighborhood!==undefined ? minNeighborhood : 3;
 	var collection = [];
@@ -7425,11 +7529,13 @@ Code.halfPlaneSubsetPoints2D = function(location, points, keyPoint){ // points a
 			var plane = halfPlanes[j];
 			var o = plane["o"];
 			var d = plane["d"];
-			var d2 = d.copy().scale(-1);
-			var intersectA = Code.rayIntersect2D(o,d, location,dir);
-			var intersectB = Code.rayIntersect2D(o,d2, location,dir);
-			var intersect = intersectA ? intersectA : intersectB;
-			if(intersect && V2D.distance(intersect,location)<distPoint ){
+			// var d2 = d.copy().scale(-1);
+			// var intersectA = Code.rayIntersect2D(o,d, location,dir);
+			// var intersectB = Code.rayIntersect2D(o,d2, location,dir);
+			// var intersect = intersectA ? intersectA : intersectB;
+			// if(intersect && V2D.distance(intersect,location)<distPoint ){
+			var pos = Code.pointOnPositiveSidePlane2D(point, o,d);
+			if(!pos){
 				isBehind = true;
 				break;
 			}
@@ -9443,36 +9549,88 @@ Code.valuesIn = function(array, value){
 }
 
 // CURVATURE:
-Code.curvature3D = function(a,b,c, d,e,f, g,h,i){// x0-y0-z0
-	var epsilon = null;
-
-	var info = {};
-	return info;
-}
-Code.curvature2D = function(a,b,c){ // |dT/ds|
-	var tangent = V2D.sub(c,a);
-	var t1 = V2D.sub(b,a);
-	var t2 = V2D.sub(c,b);
-	// var epsilon = tangent.length()*0.5;
-	var epsilon = (t1.length() + t2.length())*0.5;
-	if(epsilon==0){
-		return null;
+Code.curvature3D = function(a,b,c, d,e,f, g,h,i){ // assumed on a plane projected to height-field
+	// average of distances ~ dx & dy
+	var dx = (f.x-d.x)*0.5;
+	var dy = (h.y-b.y)*0.5;
+	// derivatives
+	var dzdx = (f.z-d.z)*0.5;
+	var dzdy = (h.z-b.z)*0.5;
+	// second derivatives
+	var dzdxx = (f.z - 2.0*e.z + d.z);
+	var dzdyy = (h.z - 2.0*e.z + b.z);
+	var dzdxy = (i.z - c.z - g.z + a.z)*0.25;
+	// tangent vectors
+	var tangentA = new V3D(dx,0,dzdx);
+	var tangentB = new V3D(0,dy,dzdy);
+	// normal vectors
+	var normal = V3D.cross(tangentA,tangentB);
+	var unitNormal = normal.copy().norm();
+	// (I)
+	var E = V3D.dot(tangentA,tangentA);
+	var F = V3D.dot(tangentA,tangentB);
+	var G = V3D.dot(tangentB,tangentB);
+	// (II)
+	var L = dzdxx*unitNormal.z;
+	var M = dzdxy*unitNormal.z;
+	var N = dzdyy*unitNormal.z;
+	// curvatures
+	var den = E*G - F*F;
+	var K = (L*N - M*M)/den;
+	var H = (E*N + G*L - 2.0*F*M)/(2.0*den);
+	var inside = H*H - K;
+	var sqin = Math.sqrt(inside);
+	var pMin = H - sqin;
+	var pMax = H + sqin;
+	// radius of curvature
+	var rA = 1.0/pMin;
+	var rB = 1.0/pMax;
+	// primary curvature directions
+	var a = L*G-F*M;
+	var b = M*G-F*N;
+	var c = E*M-F*L;
+	var d = E*N-F*M;
+	var scale = 1.0/(E*G-F*F);
+	var eig = Matrix.eigenValuesAndVectors2D(a,b,c,d);
+	var eigenValues = eig.values;
+	var eigenVectors = eig.vectors;
+	// primary curvatures in 3D frame
+	var eigA = new V3D(eigenVectors[0][0],eigenVectors[0][1],0);
+	var eigB = new V3D(eigenVectors[1][0],eigenVectors[1][1],0);
+	if(eigenValues[1]>eigenValues[0]){
+		var temp = eigA; eigA = eigB; eigB = temp;
 	}
-	t1.norm();
-	t2.norm();
-	var dt = V2D.sub(t2,t1);
-		normal = dt.copy();
-		normal.norm();
-	dt.scale(1.0/epsilon);
-	var kappa = dt.length();
-	var radius = null;
-	if(kappa!=0){
-		radius = 1.0/kappa;
+	// perpendicular vector:
+	var twist = V3D.cross(unitNormal,V3D.DIRZ); twist.norm();
+	var angle = V3D.angle(V3D.DIRZ,unitNormal);
+	// rotate vectors to match z axis
+	var twistX = V3D.rotateAngle(new V3D(),V3D.DIRX,twist,-angle);
+	var twistY = V3D.rotateAngle(new V3D(),V3D.DIRY,twist,-angle);
+	// find angle between axes
+	var angleX = V3D.angle(tangentA,V3D.DIRX);
+	var angleY = V3D.angle(tangentB,V3D.DIRY);
+	if( Math.abs(angleX-angleY)>1E-6 ){ // roundoff error
+		angleX = V3D.angle(tangentA,V3D.DIRY);
+		angleY = V3D.angle(tangentB,V3D.DIRX);
 	}
-	var info = {"normal":normal, "tangent":tangent, "radius":radius, "curvature":kappa};
-	return info;
+	// repeat process for eigenvectors
+	var twistEigA = V3D.rotateAngle(new V3D(),eigA,twist,-angle);
+	var twistEigB = V3D.rotateAngle(new V3D(),eigB,twist,-angle);
+	var frameEigA = V3D.rotateAngle(new V3D(),twistEigA,unitNormal,-angleX);
+	var frameEigB = V3D.rotateAngle(new V3D(),twistEigB,unitNormal,-angleX);
+	frameEigA.norm();
+	frameEigB.norm();
+	var curveMin = Math.abs(pMin);
+	var curveMax = Math.abs(pMax);
+	if( curveMin>curveMax ){
+		var temp = curveMin; curveMin = curveMax; curveMax = temp;
+//		console.log("FLIP B :"+pMin+" "+pMax);
+	}
+	// unitNormal.scale(-1.0); // flip from direction of curvature to direction of exterior
+	return {"min":curveMin, "max":curveMax, "directionMax":frameEigA, "directionMin":frameEigB, "normal":unitNormal};
 }
 /*
+
 BivariateSurface.prototype.curvatureAt = function(x1,y1){
 	var temp;
 	var dx = dy = 1E-6;
@@ -9585,8 +9743,31 @@ BivariateSurface.prototype.curvatureAt = function(x1,y1){
 	unitNormal.scale(-1.0); // flip from direction of curvature to direction of exterior
 	return {min:curveMin, max:curveMax, directionMax:frameEigA, directionMin:frameEigB, normal:unitNormal};
 }
-*/
 
+*/
+Code.curvature2D = function(a,b,c){ // |dT/ds|
+	var tangent = V2D.sub(c,a);
+	var t1 = V2D.sub(b,a);
+	var t2 = V2D.sub(c,b);
+	// var epsilon = tangent.length()*0.5;
+	var epsilon = (t1.length() + t2.length())*0.5;
+	if(epsilon==0){
+		return null;
+	}
+	t1.norm();
+	t2.norm();
+	var dt = V2D.sub(t2,t1);
+		normal = dt.copy();
+		normal.norm();
+	dt.scale(1.0/epsilon);
+	var kappa = dt.length();
+	var radius = null;
+	if(kappa!=0){
+		radius = 1.0/kappa;
+	}
+	var info = {"normal":normal, "tangent":tangent, "radius":radius, "curvature":kappa};
+	return info;
+}
 
 // // bezier curves:
 // Code.bezier2DQuadraticExtrema = function(A, B, C){

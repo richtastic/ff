@@ -787,7 +787,8 @@ Mesh2D.prototype._projectPointToSurface = function(startingLocation){ // assumpt
 			// var inside = 1.0 - Math.pow(ex,0.5);
 			var inside = 1.0 - x2;
 				inside = Math.min(Math.max(inside,0.0),1.0);
-			var weight2 = inside*inside*inside;
+			// var weight2 = inside*inside*inside;
+			var weight2 = Math.pow(inside,4);
 			// weight2 = Math.pow(weight2,2);
 
 			// weight2 = weight2 * weight2;

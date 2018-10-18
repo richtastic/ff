@@ -889,6 +889,9 @@ function Graph(){
 	this._vertexes = [];
 	this._edges = [];
 }
+Graph.prototype.toString = function(){
+	return "[Graph V:"+this._vertexes.length+" E:"+this._edges.length+"]";
+}
 Graph.prototype.clearEdgeTemps = function(){
 	for(var i=this._vertexes.length; i--;){
 		this._vertexes[i].temp(null);
@@ -1013,39 +1016,52 @@ Graph.prototype.allPaths = function(source,target){
 Graph.prototype.minPath = function(source,target){
 	return Graph._minPath(this,source,target);
 }
+Graph._ufHashing = function(obj){
+	return obj.id()+"";
+}
 Graph.prototype.minSpanningTree = function(){ // minimum spanning tree MST -- assumes bidirectional edges
-// NOT TESTED
-	// sort edges on lower weight
 	var edges = Code.copyArray(this.edges());
-	edges.sort(function(a,b){
-		return a.weight()<b.weight() ? -1 : 1;
-	});
-	// add edges to MST
-	var vertexes = [];
-	// var setB = [];
 	var keep = [];
-	for(var i=0; i<edges.length; ++i){
-		var edge = edges[i];
-		var vertexA = edge.A();
-		var vertexB = edge.B();
-		var existsA = Code.elementExists(vertexes,vertexA);
-		var existsB = Code.elementExists(vertexes,vertexB);
-		// can't create loop
-		//if( (existsA && !existsB) || (!existsA && existsB) || (!existsA && !)){
-		if(!existsA || !existsB){
-			// console.log("ADD EDGE: "+edge);
-			keep.push(edge);
-			if(!existsA){
-				vertexes.push(vertexA);
-			}
-			if(!existsB){
-				vertexes.push(vertexB);
+	var included = [];
+	var excluded = [];
+	if(edges.length>0){
+		// add vertexes to union-find
+		var toHash = function(o){ return o.id()+"" };
+		var uf = new UnionFind(toHash);
+		var vertexes = this.vertexes();
+		for(var i=0; i<vertexes.length; ++i){
+			uf.addSet(vertexes[i]);
+		}
+		// sort edges on lower weight
+		edges.sort(function(a,b){
+			return a.weight()<b.weight() ? -1 : 1;
+		});
+		// pick best edges first
+		for(var i=0; i<edges.length; ++i){
+			var edge = edges[i];
+			var vertexA = edge.A();
+			var vertexB = edge.B();
+			var isSame = uf.isSameSet(vertexA,vertexB);
+			// console.log(" "+i+": "+isSame);
+			if(!isSame){
+				var joined = uf.union(vertexA,vertexB);
+				keep.push(edge);
 			}
 		}
+		var sets = uf.allSets();
+		var set0 = uf.setFromObject(edges[0].A());
+		included = set0.allObjects();
+		for(var i=0; i<sets.length; ++i){
+			var set = sets[i];
+			if(set!=set0){
+				var arr = set.allObjects();
+				Code.arrayPushArray(excluded, arr);
+			}
+		}
+		uf.kill();
 	}
-	return keep;
-	// throw "Kruskal";
-
+	// TODO: included / excluded
+	return {"edges":keep, "included":included, "excluded":excluded};
 }
 Graph.prototype.minRootPaths = function(){
 	return Graph._minRootPaths(this);

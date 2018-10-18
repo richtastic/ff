@@ -311,20 +311,28 @@ https://cloud.google.com/appengine/docs/nodejs/
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+- surface normals aren't in consistent orientation
+	- propagation?
+		- complicated algorithm
+
+
+- determine normal from averaging estimates from neighbors?
+
+
+- is there a way to detect 'failure' scenarios ?
+	- then B) adjust accortingly
+		- 'adaptive sampling'
+
+=> if any perimeter-neighbor's normals are > theta (45~90 degrees)?
+	=> smooth?
+
+
 
 - 3D oct-tree objects within distance of circular plane & triangular plane
 
-- Mesh3D
 
 
-- restart surface tesselation
-	- how to do projection onto surface
-		- how to avoid 'falling' over an edge?
 
-- how to get 2.5D both curvatures at a (surface)point ?
-	k1 / k2 ?
-
-- which radius to choose in point curvature estimation (smallest ?)
 
 
 

@@ -108,6 +108,16 @@ OctTree.prototype.objectsInsideRay = function(org,dir,radius){ // objects inside
 	this._root.objectsInsideRay(arr,org,dir,radius,this._toPoint);
 	return arr;
 }
+OctTree.prototype.objectsNearCircularPlane = function(center,normal,radius,distance){
+	var arr = [];
+	this._root.objectsNearCircularPlane(arr,center,normal,radius,distance,this._toPoint);
+	return arr;
+}
+OctTree.prototype.objectsNearTrianglePlane = function(a,b,c,normal,distance){
+	var arr = [];
+	this._root.objectsNearTrianglePlane(arr,a,b,c,normal,distance,this._toPoint);
+	return arr;
+}
 OctTree.prototype.toString = function(){
 	var str = "[OctTree]:\n";
 	str += this._root.toString()+"";
@@ -532,7 +542,6 @@ OctTree.Voxel.prototype.objectsInsideCuboid = function(arr,min,max,toPoint){
 		}
 	}
 }
-
 OctTree.Voxel.prototype.objectsInsideRay = function(arr,org,dir,rad,toPoint){
 	if(this._datas){
 		for(var i=0; i<this._datas.length; ++i){
@@ -556,7 +565,32 @@ OctTree.Voxel.prototype.objectsInsideRay = function(arr,org,dir,rad,toPoint){
 		}
 	}
 }
-
+OctTree.Voxel.prototype.objectsNearCircularPlane = function(arr,center,normal,radius,distance,toPoint){ // near = offset from plane < distance
+	if(this._datas){
+		for(var i=0; i<this._datas.length; ++i){
+			// var p = toPoint(this._datas[i]);
+			// var d = Code.distancePointRayFinite3D(org,dir,p);
+			// if(d<rad){
+			// 	arr.push(this._datas[i]);
+			// }
+		}
+	}else if(this._children){
+		for(var i=0; i<this._children.length; ++i){
+			var child = this._children[i];
+			if(child){
+				// var p = child.center();
+				// var d = Code.distancePointRayFinite3D(org,dir,p);
+				// d -= child.size().length()*0.5; // center-hypotenuse
+				// if(d<rad){
+				// 	child.objectsInsideRay(arr,org,dir,rad,toPoint);
+				// }
+			}
+		}
+	}
+}
+OctTree.Voxel.prototype.objectsNearTrianglePlane = function(arr,a,b,c,normal,distance,toPoint){ // near = offset from plane < distance
+	//
+}
 
 
 

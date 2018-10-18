@@ -277,7 +277,25 @@ V3D.DIRX = new V3D(1.0,0.0,0.0);
 V3D.DIRY = new V3D(0.0,1.0,0.0);
 V3D.DIRZ = new V3D(0.0,0.0,1.0);
 
-
+V3D.removeDuplicates = function(points){
+	var i, j, p, l, len=points.length;
+	var list = [];
+	for(i=0; i<len; ++i){
+		p = points[i];
+		var found = false;
+		for(j=0; j<list.length; ++j){
+			l = list[j];
+			if(V3D.equal(p,l)){
+				found = true;
+				break;
+			}
+		}
+		if(!found){
+			list.push(p);
+		}
+	}
+	return list;
+}
 V3D.min = function(out, a,b){
 	if(b===undefined){
 		b = a;
@@ -313,6 +331,19 @@ V3D.meanFromArray = function(pointList){
 }
 V3D.mean = function(pointList){
 	return V3D.meanFromArray(pointList);
+}
+V3D.average = function(pointList, weights){
+	var N = pointList.length;
+	var p = 1.0/N;
+	var avg = new V3D(0,0,0);
+	for(var i=0; i<N; ++i){
+		var v = pointList[i];
+		if(weights){
+			p = weights[i];
+		}
+		avg.add(p*v.x,p*v.y,p*v.z);
+	}
+	return avg;
 }
 V3D.infoFromArray = function(pointList){
 	return V3D.extremaFromArray(pointList);
