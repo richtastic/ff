@@ -703,7 +703,8 @@ SurfaceTri.prototype.loadPointFile = function(){
 		// Code.subSampleArray(list,20000);
 		// this.subSampleArray(list,5000);
 		// this.subSampleArray(list,1000);
-		this.subSampleArray(list,1000);
+		// this.subSampleArray(list,1000);
+		this.subSampleArray(list,500);
 		var i, v, len = list.length;
 		var max = list[0].copy();
 		var min = list[0].copy();
@@ -730,8 +731,8 @@ SurfaceTri.prototype.loadPointFile = function(){
 			// }
 		}
 		// TODO: UNCOMMENT
-		this.startPointCloud(list);
-		// this.setupSphere3D(100);
+		// this.startPointCloud(list);
+		this.setupSphere3D(100);
 		// this.setupSphere3D(500);
 		// this.setupSphere3D(1000);
 		// this.setupTorus3D(500);
@@ -842,6 +843,12 @@ SurfaceTri.prototype.startPointCloud = function(pts){
 
 	//surfacePoints = triangles;
 	var surfacePoints = [];
+
+
+	var fronts = mesh._fronts;
+	console.log(fronts);
+	var allTriangles = fronts._triangleSpace.toArray();
+	console.log(allTriangles);
 
 
 /*
@@ -991,8 +998,8 @@ var tris = [];
 
 
 // var indexes = [100, 200, 250, 900, 1000, 1200, 1500, 1700, 2000, 2500, 3000, 4000, 4200, 4300, 4400, 4500, 4600, 4900, 4901];
-var indexes = [0, 100, 200, 300, 400, 500, 600, 700, 800, 900];
-// var indexes = [];
+// var indexes = [0, 100, 200, 300, 400, 500, 600, 700, 800, 900];
+var indexes = [];
 for(i=0; i<indexes.length; ++i){
 // break;
 	var index = indexes[i];
@@ -1152,7 +1159,11 @@ colorsT.push(1.00, 0.00, 0.00, 0.95);
 // }
 
 // var tris = this._mlsMesh._front.triangles();
-// console.log("TRIANGLES: "+tris.length);
+
+
+
+var tris = allTriangles;
+console.log("TRIANGLES: "+tris.length);
 /*
 var front = this._mlsMesh._front;
 front._validateFronts();

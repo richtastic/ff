@@ -78,7 +78,13 @@ OctSpace.prototype.clear = function(){
 OctSpace.prototype.insertObject = function(object){
 	var package = new OctSpace.Package(object);
 	var cube = this._toCuboidFxn(object);
-	this._root.insertObject(package, cube, this._toCuboidFxn, this._epsilon);
+	console.log(cube);
+	var root = this._root;
+	if(!root.overlap(cube)){
+		throw "need to resize";
+	}
+	
+	root.insertObject(package, cube, this._toCuboidFxn, this._epsilon);
 }
 OctSpace.prototype.containsObject = function(object){
 	var package = this.findPackage(object);
@@ -219,6 +225,7 @@ OctSpace.Voxel.prototype._recheckExtrema = function(){
 OctSpace.Voxel.prototype.insertObject = function(package, cube, toCubeFxn, epsilon){
 	var overlap = this.overlap(cube);
 	if(!overlap){
+		console.log("no overlap");
 		return null;
 	}
 	var overlapSize = overlap.size();
