@@ -810,25 +810,7 @@ Mesh3D.Front3D.prototype.count = function(){
 	return this._fronts.length;
 }
 
-Mesh3D.Front3D.prototype.merge = function(frontA,frontB){
-	throw "?";
-}
 
-Mesh3D.Front3D.prototype.split = function(front){
-	throw "?";
-}
-
-Mesh3D.EdgeFront3D.prototype.close = function(front){
-	throw "?";
-}
-
-Mesh3D.EdgeFront3D.prototype.topologicalEvent = function(front){
-	throw "?";
-}
-
-Mesh3D.EdgeFront3D.prototype.growTriangle = function(front){
-	throw "?";
-}
 
 
 
@@ -1247,17 +1229,15 @@ var xxx = 0;
 			// check if too close to triangulation
 			var closeInfo = this.isPointTooClose(front, edge, point);
 			if(closeInfo){ // try to defer
-
-				throw "defer";
-
-				if(edge.canDefer()){
-					front.deferEdge(edge);
-					continue;
-				}
+				// ignore deferments
+				// throw "defer";
+				// if(edge.canDefer()){
+				// 	front.deferEdge(edge);
+				// 	continue;
+				// }
 				var conflictFront = closeInfo["front"];
 				var conflictEdge = closeInfo["edge"];
 				var conflictPoint = closeInfo["point"];
-
 				var repeatInfo = this.repeatTooClose(front, edge, conflictFront, conflictEdge, conflictPoint);
 				if(repeatInfo){
 					var conflictFront = repeatInfo["front"];
@@ -1265,7 +1245,9 @@ var xxx = 0;
 					var conflictPoint = repeatInfo["point"];
 					// else topological event with triangulation
 					//this.topologicalEvent(closeInfo["frontA"],closeInfo["edgeA"], closeInfo["frontB"],closeInfo["edgeB"]);
-					this.topologicalEvent(front,edge, conflictFront,conflictEdge,conflictPoint);
+					this.topologicalEvent(edge, conflictEdge,conflictPoint);
+				}else{
+					throw "should always get something back ... "
 				}
 				continue;
 			}
@@ -1855,9 +1837,7 @@ Mesh3D.prototype.cutEar = function(front, edgeA,edgeB){ // new edges/tri
 }
 
 Mesh3D.prototype.isPointTooClose = function(front, edge, point){ // to edge [ TODO: too close to Triangulation ? ]
-	console.log("?");
 	var eta = this._eta;
-	var result = null;
 	var prev = edge.prev();
 	var next = edge.next();
 	var idealLengthP = this.iteritiveEdgeSizeFromPoint(point);
@@ -1880,7 +1860,8 @@ Mesh3D.prototype.isPointTooClose = function(front, edge, point){ // to edge [ TO
 	// var searchRadius = maxLength*2; // x2?
 	var searchRadius = midToPoint.length()*2; // x2?
 	var localEdges = this._edgeSpace.objectsInsideSphere(centroid,searchRadius);
-	console.log(localEdges);
+	var closestInfo = null;
+	var closestDistance = null;
 	// check if intersecting non-neighbor edges
 	for(var i=0; i<localEdges.length; ++i){
 		var localEdge = localEdges[i];
@@ -1888,21 +1869,24 @@ Mesh3D.prototype.isPointTooClose = function(front, edge, point){ // to edge [ TO
 			continue;
 		}
 		var crossInfo = this.crossesEdge(edge, point, localEdge);
-		if(crossesEdge){ // choose edge with closest midpoint-midpoint distance
-
-			throw "?"
+		if(crossInfo){ // choose edge with closest midpoint-midpoint distance
+			var mp = crossInfo["point"];
+			var distance = V3D.distance(midpoint,mp);
+			if(!closestDistance || closestDistance>distance){
+				closestDistance = distance;
+				var info = this.pointWithSmallerTri(A,B,localEdge);
+				var pointUse = info["point"];
+				closestInfo = {"front":localEdge.front(), "edge":localEdge,"point":pointUse};
+			}
 		}
-		// // FENCE INTERSECTION:
-		// var fenceHeight = 0.5*localEdge.idealLength(); // TODO: from where?
-		// var fenceNormal = localEdge.perpendicular();
-		// // var fenceParallel = localEdge.unit();
-		// var p = localEdge.prev();
-		// var n = localEdge.next();
-		// var fenceA = localEdge.A();
-		// var fenceB = localEdge.B();
-		// TODO - triangle-aligned fencing
+	}
+	if(closestInfo){
+		return closestInfo;
 	}
 	// check if close to any edges
+	var closestPoint = null;
+	var closestEdge = null;
+	var closestArea = null;
 	for(var i=0; i<localEdges.length; ++i){
 		var localEdge = localEdges[i];
 		if(localEdge==edge){
@@ -1911,64 +1895,83 @@ Mesh3D.prototype.isPointTooClose = function(front, edge, point){ // to edge [ TO
 		var edgeA = localEdge.A();
 		var edgeRay = localEdge.direction();
 		var closest = Code.closestPointLineSegment3D(edgeA,edgeRay, point);
-		// console.log(closest);
 		var distance = V3D.distance(closest,point);
 		if(distance<distanceMinimum){ // choose point resulting in smaller triangle -- (with nonzero area)
-			console.log("TOO CLOSE");
-			// c
+// console.log("TOO CLOSE");
+			var info = this.pointWithSmallerTri(A,B,localEdge);
+			var areaUse = info["area"];
+			if(!closestArea || closestArea>areaUse){
+				closestArea = areaUse;
+				closestEdge = localEdge
+				closestPoint = info["point"];
+			}
 		}
 	}
-	// ...
-
-
-	result = {"front":newEdgeFront, "edge":newEdge, "point":newEdgePoint};
-
-
-	throw "?";
-
-	return result;
+	if(closestPoint){
+		console.log("TOO CLOSE PT: "+closestArea);
+		// return {"front":closestEdge.front(), "edge":closestEdge, "point":closestPoint};
+	}
+	return null;
 }
-
+Mesh3D.prototype.pointWithSmallerTri = function(A,B,localEdge){
+	var localA = localEdge.A();
+	var localB = localEdge.B();
+	var areaA = V3D.areaTri(A,B,localA);
+	var areaB = V3D.areaTri(A,B,localB);
+	var pointUse = localA;
+	var areaUse = areaA;
+	console.log("AREAS: "+areaA+" | "+areaB);
+	if(areaB<areaA || areaA<1E-12){ // smaller non-zero-area tri
+		pointUse = localB;
+		areaUse = areaB;
+	}
+	return {"area":areaUse, "point":pointUse};
+}
 Mesh3D.prototype.repeatTooClose = function(front, edge, conflictFront, conflictEdge, conflictPoint, count){ // RECHECK ADJUSTED TRIANGLE UNTIL SATISFIED
-	throw "repeat checks";
 	count = count!==undefined?count : 3;
 	if(count===0){
 		throw "too many rechecks";
 	}
+	console.log("repeatTooClose: "+count);
 	// intersect with neighbor?
 	var cutInfo = this.tooCloseNeighbor(front, edge, conflictPoint);
 	if(cutInfo){
+		
 		// if same point OK, else
 		var edgeA = cutInfo["A"];
 		var edgeB = cutInfo["B"];
 		var vertex = cutInfo["point"];
 		var isSame = V3D.equal(vertex,conflictPoint);
+		var e = edgeA!==edge ? edgeA : edgeB;
 		if(isSame){
-			console.log("verified");
-		}else{
-			// some kind of change?
-			throw "what?";
+			console.log("verified cut");
+			// var conflictFront = repeatInfo["front"];
+			// var conflictEdge = repeatInfo["edge"];
+			// var conflictPoint = repeatInfo["point"];
+			return {"front":e.front(), "edge":e, "point":vertex};
+		}else{ // some kind of change
+			throw "CHANGED ... REPEAT";
+			return this.repeatTooClose(front, edge, e.front(), e, vertex, count-1);
 		}
-
 		// force an ear cut
 		throw "CUT 2";
-		
 		return null;
 	}
 	// intersect with others?
 	var closeInfo = this.isPointTooClose(front, edge, point);
 	if(closeInfo){
+		console.log("got a too close");
 		// if points are all the same then OK, else
 		var conflictFront2 = closeInfo["front"];
 		var conflictEdge2 = closeInfo["edge"];
 		var conflictPoint2 = closeInfo["point"];
 		var isSame = V3D.equal(conflictPoint,conflictPoint2);
 		if(isSame){
-			console.log("verified");
+			console.log("verified close");
 			return closeInfo;
 		}else{ // changed to (closer?) point
-			console.log("changed to different point");
-			console.log("DISTANCES: ?");
+			throw "CHANGED ... REPEAT";
+			console.log("DISTANCES: ?"); // verify that at least the distance has shrunk / area ?
 			return this.repeatTooClose(front, edge, conflictFront2, conflictEdge2, conflictPoint2, count-1);
 		}
 	}else{
@@ -1976,30 +1979,32 @@ Mesh3D.prototype.repeatTooClose = function(front, edge, conflictFront, conflictE
 	}
 }
 Mesh3D.prototype.crossesEdge = function(edge,point, edgeFence){
-	return false;
+	// would-be triangle
+	var triPointA = edge.A();
+	var triPointB = edge.B();
+	var triPointC = point;
+	var triAB = V3D.sub(triPointB,triPointA);
+	var triAC = V3D.sub(triPointC,triPointA);
+	var triNormal = V3D.cross(triAB,triAC);
+	return this.crossesEdgeTriangle(triPointA,triPointB,triPointC,triNormal, edgeFence);
 }
-/*
-MLSMesh3D.Front.prototype.crossesEdge = function(edge, edgeFrontAux, edgeAux, pointAux){
-++CROSS_EDGE_COUNT;
-	var triPointA = edgeAux.A();
-	var triPointB = edgeAux.B();
-	var triPointC = pointAux;
-	var triNormal = V3D.cross(V3D.sub(triPointB,triPointA),V3D.sub(triPointC,triPointA));
+Mesh3D.prototype.crossesEdgeTriangle = function(triPointA,triPointB,triPointC,triNormal, edgeFence){
+	// fence
+	var fenceHeight = edgeFence.idealLength() * 0.5// fences that are big intersect with opposite sides of object
+	var fenceEdgeDirection = edgeFence.unit();
 	// find fence directions -- edge points A-B, end points C-D & E-F
-	var fenceHeight = edge.length() * 0.5;// * 1E0; // fences that are big intersect with opposite sides of object
-	var fenceEdgeDirection = edge.unit();
-	var fenceTri = edge.tri();
+	var fenceTri = edgeFence.tri();
 	var fenceTriNormal = fenceTri.normal();
 	var fenceEdgeNormal = fenceTriNormal.copy().scale(fenceHeight);
-	var fenceA = edge.A();
-	var fenceB = edge.B();
+	var fenceA = edgeFence.A();
+	var fenceB = edgeFence.B();
 	var fenceC = V3D.add(fenceA,fenceEdgeNormal);
 	var fenceD = V3D.add(fenceB,fenceEdgeNormal);
 	var fenceE = V3D.sub(fenceA,fenceEdgeNormal);
 	var fenceF = V3D.sub(fenceB,fenceEdgeNormal);
 	var fenceAB = [fenceA,fenceB];
 	var fencePlaneNormal = V3D.cross(fenceEdgeNormal,fenceEdgeDirection).norm();
-
+// TODO: TRIANGLE-AVERAGE-ALIGNED FENCE
 	// find intersections not close to edge corners
 	var intersections, nullOrEnds;
 	var fencesTris = [];
@@ -2011,14 +2016,31 @@ MLSMesh3D.Front.prototype.crossesEdge = function(edge, edgeFrontAux, edgeAux, po
 		var fC = fencesTris[i][2];
 		var fN = fencesTris[i][3];
 		intersections = Code.triTriIntersection3D(triPointA,triPointB,triPointC,triNormal, fA,fB,fC,fN);
-		nullOrEnds = Code.pointsNullOrCloseToLine3D(intersections, fenceA, fenceB);
-		if(!nullOrEnds){
-			return true;
+		// nullOrEnds = Code.pointsNullOrCloseToLine3D(intersections, fenceA, fenceB);
+		if(intersections){
+			var midpoint = edgeFence.midpoint();
+			return {"point":midpoint};
 		}
 	}
-	return false;
+	return null;
 }
-*/
+Mesh3D.prototype.topologicalEvent = function(edge, conflictEdge,conflictPoint){
+	var front = edge.front();
+	var conflictFront = conflictEdge.front();
+	if(front==conflictFront){
+		this.split();
+	}else{
+		this.merge();
+	}
+	throw "?";
+}
+Mesh3D.prototype.merge = function(frontA,frontB){
+	throw "?";
+}
+
+Mesh3D.prototype.split = function(front){
+	throw "?";
+}
 Mesh3D.prototype.growTriangle = function(front, edge, vertex){
 	var link, node;
 	// create new triangle with new edges (reverse orientation of edge)
