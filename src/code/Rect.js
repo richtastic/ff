@@ -187,6 +187,10 @@ Rect.isIntersect = function(a,b){
 Rect.intersect = function(a,b){
 	return Code.rectIntersect(a.min(),a.max(),b.min(),b.max());
 }
+Rect.inside = function(a,b){
+	return Code.rectInside(a.min(),a.max(),b.min(),b.max());
+}
+
 function Rect(xPos,yPos, w,h, d){
 	this._x = 0;
 	this._y = 0;

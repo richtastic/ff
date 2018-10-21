@@ -54,14 +54,17 @@ QuadSpace.prototype.clear = function(){
 QuadSpace.prototype.insertObject = function(object){
 	var package = new QuadSpace.Package(object);
 	var rect = this._toRectFxn(object);
-	var result = this._root.insertObject(package, rect, this._toRectFxn, this._epsilon);
-	if(!result && this._autoResize){
-		console.log("need to resize to fit object");
-		var items = this.toArray();
-		items.push(object);
+	var root = this._root;
+	// root.overlap(cube)
+	var fitsInside = root.inside(rect); // full contained
+	if(fitsInside){
+		root.insertObject(package, rect, this._toRectFxn, this._epsilon);
+	}else if(this._autoResize){
+		var objects = this.toArray();
+		objects.push(object);
 		this.clear();
-		throw("TODO: insertObject");
-	}
+		this.initWithObjects(objects, true);
+	} // drop on floor
 }
 QuadSpace.prototype.containsObject = function(object){
 	var package = this.findPackage(object);
@@ -115,98 +118,6 @@ QuadSpace.prototype.toArray = function(){
 	this._root.toArray(arr);
 	return arr
 }
-/*
-QuadTree.prototype.initWithObjects = function(objects, force){
-	this.clear();
-	if(objects.length==0){
-		return false;
-	}
-	var i, len = objects.length;
-	var obj, point, min = new V3D(), max = new V3D();
-	point = this._toPoint(objects[0]);
-	min.copy(point);
-	max.copy(point);
-	for(i=1;i<len;++i){
-		obj = objects[i];
-		point = this._toPoint(obj);
-		V2D.min(min,min,point);
-		V2D.max(max,max,point);
-	}
-	var size = QuadTree.twoDivisionRound(min,max, force);
-	var center = V3D.avg(max,min);
-	this.initWithDimensions(center,size);
-	for(i=0;i<len;++i){
-		this.insertObject(objects[i]);
-	}
-	return true;
-}
-*/
-/*
-QuadSpace._sortArxel = function(a,b){
-	return a.temp() < b.temp() ? -1 : 1;
-}
-QuadSpace._sortObject = function(a,b){
-	return a["distance"] < b["distance"] ? -1 : 1;
-}
-QuadSpace.prototype.kNN = function(p,k){
-	var toPoint = this._toPoint;
-	var axelQueue = new PriorityQueue(QuadSpace._sortArxel);
-	var objectQueue = new PriorityQueue(QuadSpace._sortObject, k);
-	var axel = this._root;
-	axel.temp(0); // 0 distance
-	axelQueue.push(axel);
-	while(axelQueue.length()>0){
-		var axel = axelQueue.popMinimum();
-		var children = axel.children();
-		if(children){
-			for(var i=0; i<children.length; ++i){
-				var child = children[i];
-				if(child){
-					??
-
-					var distanceCenter = child.centerDistanceToPointSquare(p);
-					var distanceRadius = child.maxRadiusSquare();
-					distanceCenter = Math.sqrt(distanceCenter);
-					distanceRadius = Math.sqrt(distanceRadius);
-					var distance = Math.max(0,distanceCenter-distanceRadius);
-					distance = distance*distance;
-					child.temp(distance);
-					axelQueue.push(child);
-				}
-			}
-		}else{
-			var objects = axel.datas();
-			if(objects){
-				for(var i=0; i<objects.length; ++i){
-					var object = objects[i];
-					var q = toPoint(object);
-					var distance = V2D.distanceSquare(p,q);
-					object = {"object":object, "distance":distance};
-					objectQueue.push(object);
-				}
-			}
-		}
-		// can quit if already have k && nearby cells are further away than best k
-		if(objectQueue.length()>=k && (axelQueue.length()==0 || axelQueue.minimum().temp()>objectQueue.maximum()["distance"]) ){
-			break;
-		}
-	}
-	var objects = objectQueue.toArray();
-	objectQueue.kill();
-	axelQueue.kill();
-	for(var i=0; i<objects.length; ++i){
-		objects[i] = objects[i]["object"];
-	}
-	return objects;
-}
-QuadSpace.prototype.closestObject = function(point){
-	var objects = this.kNN(point, 1);
-	if(objects.length>0){
-		return objects[0];
-	}
-	return null;
-}
-*/
 // --------------------------------------------------------------------------------------------------------- 
 QuadSpace.Package = function(object){
 	this._object = null;
@@ -243,6 +154,7 @@ QuadSpace.Arxel = function(){
 	this._size = new V2D();
 	this._min = new V2D();
 	this._max = new V2D();
+	this._rect = new Rect();
 }
 QuadSpace.Arxel.newChildFromParent = function(arxel, index){
 	var child = new QuadSpace.Arxel();
@@ -266,6 +178,7 @@ QuadSpace.Arxel.prototype.kill = function(){
 	this._temp = null;
 	this._children = null;
 	this._objects = null;
+	this._rect = null;
 }
 QuadSpace.Arxel.prototype.setCenterAndSize = function(cen,siz){
 	this._center.copy(cen);
@@ -290,6 +203,7 @@ QuadSpace.Arxel.prototype._recheckExtrema = function(){
 	var cen = this._center, siz = this._size;
 	this._min.set(cen.x-0.5*siz.x,cen.y-0.5*siz.y);
 	this._max.set(cen.x+0.5*siz.x,cen.y+0.5*siz.y);
+	this._rect.set(this._min.x,this._min.y, this._size.x,this._size.y);
 }
 // --------------------------------------------------------------------------------------------------------- 
 QuadSpace.Arxel.prototype.insertObject = function(package, rect, toRectFxn, epsilon){
@@ -402,14 +316,18 @@ QuadSpace.Arxel.prototype._removedItem = function(removed, removeArray){
 	}
 }
 QuadSpace.Arxel.prototype.rect = function(){
-	var min = this.min();
-	var size = this.size();
-	return new Rect(min.x,min.y, size.x,size.y);
+	return this._rect;
+	// var min = this.min();
+	// var size = this.size();
+	// return new Rect(min.x,min.y, size.x,size.y);
 }
 QuadSpace.Arxel.prototype.overlap = function(rect){
 	var intersection = Rect.intersect(this.rect(), rect);
 	return intersection;
 	// !Code.rectsSeparate(rect.min(),rect.max(), this._min,this._max)
+}
+QuadSpace.Arxel.prototype.inside = function(rect){
+	return Rect.inside(this.rect(), rect);
 }
 QuadSpace.Arxel.prototype.clear = function(){
 	var i;

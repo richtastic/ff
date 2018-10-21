@@ -7239,7 +7239,7 @@ Code.distancePointLine3D = function(org,dir, point){ // finite ray and point ---
 	var closest = Code.closestPointLine3D(org,dir, point);
 	return V3D.distance(point, closest);
 }
-Code.distancePointRayFinite3D = Code.distancePointLine3D;
+Code.distancePointRayFinite3D = Code.distancePointLine3D; // NOT TRUE ?
 Code.closestPointLineSegment3D = function(org,dir, point){ // finite ray and point
 	var t = (V3D.dot(dir,point)-V3D.dot(org,dir))/V3D.dot(dir,dir);
 	if(t<=0){
@@ -8134,7 +8134,7 @@ Code.planeFromPoints = function(center, points, weights){
 	//var diff = V3D.sub(center,centerOfMass);
 	//var dN = V3D.dot(v0,diff);
 	//var proj = new V3D( center.x-dN*v0.x, center.y-dN*v0.y, center.z-dN*v0.z ); // center plane under point's projection
-	return {"point":centerOfMass,"normal":v0, "x":v1, "y":v2};
+	return {"point":centerOfMass, "normal":v0, "x":v1, "y":v2};
 	// var normal = v0; // ||v0|| === 1
 	// var plane = Code.planeEquationFromPointNormal(centerOfMass,nrm);
 	// return plane;
@@ -8889,7 +8889,9 @@ Code.nextExponentialTwoRounded = function(d){
 	var e = Math.ceil(Math.log(n)/Math.log(2));
 	return Math.pow(2,e);
 }
-
+Code.cuboidInside = function(aMin,aMax, bMin,bMax){ // b inside A
+	return aMin.x<=bMin.x && aMin.y<=bMin.y && aMin.z<bMin.z && aMax.x>=bMax.x && aMax.y>bMax.y && aMax.z>bMax.z;
+}
 Code.cuboidsSeparate = function(aMin,aMax, bMin,bMax){
 	return aMax.x<bMin.x || aMax.y<bMin.y || aMax.z<bMin.z || aMin.x>bMax.x || aMin.y>bMax.y || aMin.z>bMax.z;
 }
@@ -8928,7 +8930,9 @@ Code.rectIntersect = function(aMin,aMax, bMin,bMax){
 	var rect = new Rect(left,bottom,width,height);
 	return rect;
 }
-
+Code.rectInside = function(aMin,aMax, bMin,bMax){ // b inside A
+	return aMin.x<=bMin.x && aMin.y<=bMin.y && aMax.x>=bMax.x && aMax.y>bMax.y;
+}
 // ------------------------------------------------------------------------------------------------------------------------------------------------- 
 Code.parsePointSetString = function(data, max){
 	var lines = data.split("\n");

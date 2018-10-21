@@ -280,13 +280,11 @@ vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 	- group-bundle adjustment to iterate cameras to more optimal orientations
 		- reupdate scene 3D points?
 	=> final abs camera locations & orientations [motion final]
------> HERE <------
-(10/08)
 - global structure & motion bundle adjust
 	- quasi-local-global bundle adjustment
 	- increase resolution to finer detail
 	=> final structure & motion
-(10/22)
+-----> HERE <------
 - surface triangulation(tesselation)
 	- advancing-front, curvature-based tesselation
 	=> scene triangle model
@@ -296,7 +294,10 @@ vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 	- blending between triangles
 	=> scene textured model
 (11/19)
-- ..
+- viewing output
+	- locally
+	- VR device
+(12/17)
 
 google app engine project - nodejs
 https://cloud.google.com/appengine/docs/nodejs/
@@ -305,18 +306,14 @@ https://cloud.google.com/appengine/docs/nodejs/
 - returning binary objects (eg images / data)
 - doc storage DB
 - sample API
-- 
+- authentication
+- compression
+- encryption
 
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-- surface normals aren't in consistent orientation
-	- propagation?
-		- complicated algorithm
-
-
-- determine normal from averaging estimates from neighbors?
 
 
 - is there a way to detect 'failure' scenarios ?
@@ -329,6 +326,26 @@ https://cloud.google.com/appengine/docs/nodejs/
 
 
 - 3D oct-tree objects within distance of circular plane & triangular plane
+
+
+
+
+- texture - mapping algorithm.........
+
+- for each triangle
+	- find all points near triangle [list of potential views]
+	- find all predicted visible views of each triangle
+	- drop views that have projected triangle intersections with other triangles
+	- want view with optimized size vs deformation
+	=> paper for grouping tris ith best projected views & feathering between
+	- plot distribution of PROJECTED triangle sizes (triangles at inf could be huge but have small projection)
+	- limit size to mean + 1*sigma OR 512/1024 [fit onto single page]
+		- for L/M/H resolutions - try scaling so that surface area of sum of triangles ~ P x [image size]
+	- subdivide all large triangles until they satisfy projected size limit
+	- map all triangles to texture atlas map pages (try spatially-coherient-surfaces on each atlas)
+		- fit onto page, if not fit spill out to next pages
+	- do texture extraction
+	- save to files
 
 
 

@@ -76,6 +76,9 @@ Cuboid.copy = function(a,b){ // a = b
 Cuboid.intersect = function(a,b){
 	return Code.cuboidIntersect(a.min(),a.max(),b.min(),b.max());
 }
+Cuboid.inside = function(a,b){
+	return Code.cuboidInside(a.min(),a.max(),b.min(),b.max());
+}
 function Cuboid(pos,siz,dat){
 	this._pos = new V3D();
 	this._size = new V3D();

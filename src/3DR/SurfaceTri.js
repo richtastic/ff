@@ -731,8 +731,8 @@ SurfaceTri.prototype.loadPointFile = function(){
 			// }
 		}
 		// TODO: UNCOMMENT
-		// this.startPointCloud(list);
-		this.setupSphere3D(100);
+		this.startPointCloud(list);
+		// this.setupSphere3D(100);
 		// this.setupSphere3D(500);
 		// this.setupSphere3D(1000);
 		// this.setupTorus3D(500);
@@ -826,6 +826,8 @@ console.log("maxP: "+maxP);
 }
 SurfaceTri.prototype.startPointCloud = function(pts){
 	console.log("start point cloud")
+
+GLOBAL_LASTTRI = null;
 	// console.log(pts);
 	var mesh = new Mesh3D(pts);
 	var triangles = mesh.generateSurfaces();
@@ -847,7 +849,7 @@ SurfaceTri.prototype.startPointCloud = function(pts){
 
 	var fronts = mesh._fronts;
 	console.log(fronts);
-	var allTriangles = fronts._triangleSpace.toArray();
+	var allTriangles = mesh._triangleSpace.toArray();
 	console.log(allTriangles);
 
 
@@ -1046,8 +1048,8 @@ for(i=0; i<indexes.length; ++i){
 
 // 	// TRIANGLES:
 	// var meshTris = this._mlsMesh._tris;
-	var meshTris = [];
-	Code.arrayPushArray(tris,meshTris);
+	
+	Code.arrayPushArray(tris,allTriangles);
 //console.log("tris: "+tris.length);
 
 /*
@@ -1137,8 +1139,9 @@ colorsT.push(0.0,0.0, 0.75, 0.5);
 colorsT.push(0.0,0.0, 1.00, 0.5);
 }
 
-GLOBAL_LASTTRI = null;
+// GLOBAL_LASTTRI = null;
 if(GLOBAL_LASTTRI){
+	console.log(GLOBAL_LASTTRI);
 var tri = GLOBAL_LASTTRI;
 V3D.pushToArray(pointsT,tri.A());
 V3D.pushToArray(pointsT,tri.B());
@@ -1162,18 +1165,15 @@ colorsT.push(1.00, 0.00, 0.00, 0.95);
 
 
 
-var tris = allTriangles;
-console.log("TRIANGLES: "+tris.length);
-/*
-var front = this._mlsMesh._front;
-front._validateFronts();
-*/
-/*
-var edgeFronts = front._fronts;
+// console.log("TRIANGLES: "+tris.length);
+
+var fronts = mesh._fronts;
+// front._validateFronts();
+var edgeFronts = fronts._fronts;
 console.log("FRONTS: "+edgeFronts.length);
 for(var i=0; i<edgeFronts.length; ++i){
 	var edgeFront = edgeFronts[i];
-	//console.log(edgeFront);
+	console.log(edgeFront);
 	var edgeList = edgeFront._edgeList;
 	var edgeListLength = edgeList.length();
 	console.log("   "+i+" : "+edgeListLength);
@@ -1188,18 +1188,18 @@ for(var i=0; i<edgeFronts.length; ++i){
 		V3D.pushToArray(pointsT,tri.C());
 		for(k=0; k<3; ++k){
 			if(i%4==0){
-				colorsT.push(0.00, 0.50, 0.50, 0.50);
+				colorsT.push(0.00, 0.50, 0.50, 0.80);
 			}else if(i%4==1){
-				colorsT.push(0.50, 0.00, 0.50, 0.50);
+				colorsT.push(0.50, 0.00, 0.50, 0.80);
 			}else if(i%4==2){
-				colorsT.push(0.50, 0.00, 0.50, 0.50);
+				colorsT.push(0.50, 0.00, 0.50, 0.80);
 			}else if(i%4==3){
-				colorsT.push(0.50, 0.50, 0.00, 0.50);
+				colorsT.push(0.50, 0.50, 0.00, 0.80);
 			}
 		}
 	}
 }
-*/
+
 /*
 // pointsT = [];
 // colorsT = [];

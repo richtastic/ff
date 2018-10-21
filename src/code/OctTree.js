@@ -68,12 +68,10 @@ OctTree.prototype.clear = function(){
 	this._root.clear();
 }
 OctTree.prototype.insertObject = function(obj){
-
 	var point = this._toPoint(obj);
 	var min = this.min();
 	var max = this.max();
 	var isInside = min.x<=point.x && point.x<max.x && min.y<=point.y && point.y<max.y && min.z<=point.z && point.z<max.z;
-	//console.log("isInside: "+isInside+" ... "+max+min+point)
 	if(isInside){
 		this._root.insertObject(obj,this._toPoint);
 	}else if(this._autoResize){
@@ -145,7 +143,6 @@ OctTree.prototype.initWithObjects = function(objects, force){
 	min.add(-eps,-eps,-eps);
 	max.add(eps,eps,eps);
 	var size = OctTree.twoDivisionRound(min,max, force);
-	// console.log("init size: "+size);
 	if(size.x==0){
 		size.x = 1.0;
 	}
@@ -161,8 +158,6 @@ OctTree.prototype.initWithObjects = function(objects, force){
 		this.insertObject(objects[i]);
 	}
 }
-
-
 OctTree._sortVoxel = function(a,b){
 	return a.temp() < b.temp() ? -1 : 1;
 }
