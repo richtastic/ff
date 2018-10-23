@@ -99,11 +99,15 @@ Poly2D.prototype.area = function(){
 	var i, j, lm2, points;
 	var a, b, c, area=0;
 	var len = this._pointSets.length;
+	if(len<2){
+		return 0;
+	}
 	for(i=len; i--;){
 		points = this._pointSets[i];
 		lm2 = points.length-2;
-		for(j=0; j<lm2 ;j++){
+		for(j=0; j<lm2; j++){
 			cross = V2D.areaTri(points[0],points[j+1],points[j+2]);
+			// console.log(cross);
 			area += cross;
 		}
 	}

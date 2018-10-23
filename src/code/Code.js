@@ -7651,10 +7651,7 @@ Code.triTriIntersection2D = function(a1,b1,c1, a2,b2,c2){ // polygonal intersect
 		if(temp.length>0){
 			if(temp.length>1){
 				temp.sort(tempSort);
-//console.log("--------------");
-				//for(j=temp.length;j--;){
 				for(j=0;j<temp.length;++j){
-//console.log(temp[j][1]+": "+temp[j][0]+"");
 					polygon.push(temp[j][0]);
 				}
 			}else{
@@ -7662,6 +7659,14 @@ Code.triTriIntersection2D = function(a1,b1,c1, a2,b2,c2){ // polygonal intersect
 			}
 		}
 	}
+	// remove dupliated points
+	// var espilon = 1E-16;
+	// for(var i=0; i<polygon.length; ++i){
+	// 	if(V2D.equal(polygon[i], polygon[(i+1)%polygon.length], espilon)){
+	// 		polygon.splice(i,1);
+	// 		--i;
+	// 	}
+	// }
 	return polygon; // remove duplicate (end) points ?
 	// this is a double-copy for exactly the same triangles
 }
@@ -8725,6 +8730,7 @@ Code.polygonXOR2D = function(polyA,polyB, _iteration){
 }
 Code.polygonArea2D = function(polyArray){
 	var polygon = Poly2D.poly2DfromArray(polyArray);
+	// console.log(polygon);
 	var area = polygon.area();
 	polygon.kill();
 	return area;

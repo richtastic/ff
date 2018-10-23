@@ -435,6 +435,7 @@ Mesh3D.Point3D.prototype.toString = function(){
 // --------------------------------------------------------------------------------------------------------
 Mesh3D.Tri3D = function(a,b,c){ // group of 3 edges
 	Mesh3D.Tri3D._.constructor.call(this);
+	this._id = Mesh3D.Tri3D._id++;
 	this._edgeAB = null;
 	this._edgeBC = null;
 	this._edgeCA = null;
@@ -442,6 +443,10 @@ Mesh3D.Tri3D = function(a,b,c){ // group of 3 edges
 	this.setEdges(a,b,c);
 }
 Code.inheritClass(Mesh3D.Tri3D, Tri3D);
+Mesh3D.Tri3D._id = 0;
+Mesh3D.Tri3D.prototype.id = function(){
+	return this._id;
+}
 Mesh3D.Tri3D.prototype.edgeAB = function(e){
 	if(e!==undefined){
 		this._edgeAB = e;
@@ -1172,7 +1177,10 @@ var xxx = 0;
 		// iterate:
 		// var maxIter = 1354;
 		//var maxIter = 1342; // 1340, 1343
-		var maxIter = 1340;
+		//var maxIter = 1340;
+		//var maxIter = 1341;
+		var maxIter = 1342;
+		// var maxIter = 128; // 
 		// var recheckPoint = null;
 		for(var i=0; i<maxIter; ++i){
 			console.log("+------------------------------------------------------------------------------------------------------------------------------------------------------+ ITERATION "+i+" ");
@@ -1975,35 +1983,152 @@ Mesh3D.prototype.closestTooCloseEdge = function(edge, point, localEdges){ // clo
 
 
 
-Mesh3D.prototype.tooCloseProjection = function(edge, point, localEdges){  // localEdges ~ edges with tris in sphere ~ R from barycenter
+Mesh3D.prototype.tooCloseProjection = function(edge, vertex, localEdges){  // localEdges ~ edges with tris in sphere ~ R from barycenter
+
+	var centroid = new V3D(0,0,0);
+	var normal = new V3D(0,0,1);
+	// points2D[j] = Code.projectTo2DPlane(, centroid, normal);
+
+	var a1 = new V2D(3,6);
+	var b1 = new V2D(1,3);
+	var c1 = new V2D(5,2);
+	var a2 = new V2D(7,3);
+	var b2 = new V2D(6,5);
+	var c2 = new V2D(3,1);
+	var intersect = Code.triTriIntersection2D(a1,b1,c1, a2,b2,c2);
+	console.log(intersect);
+	var info = V2D.extremaFromArray(intersect);
+	var size = info["size"];
+	var area = size.x*size.y;
+	console.log(area);
+	// var boundingBox = boundingBox.;
+
+	// not quite working
+	var area = Code.polygonArea2D(intersect);
+	console.log("area: "+area);
+	throw "?";
+
+
+
+	var triA = edge.tri();
 	var tris = {}; // keep track of tested tries
-	throw "HERE";
-
-	
-
+	var A = edge.A();
+	var B = edge.B();
+	var C = vertex;
+	var midpoint = edge.midpoint();
+	var normalA = triA.normal();
 	var closestIntersection = null;
 	var closestEdge = null;
 	var closestPoint = null;
+	var intersection = false;
+	var closestInfo = null;
 	for(var i=0; i<localEdges.length; ++i){
 		var localEdge = localEdges[i];
-
 		if(localEdge==edge){
 			continue;
 		}
-		// get 2 tris
-
+		var triB = localEdge.tri();
+		if(triA==triB){
+			continue;
+		}
+		var index = triB.id()+"";
+		if(tris[index]){
+			continue;
+		}
+		tris[index] = true;
+		var normalB = triB.normal();
 		// find common plane of 2 tris
-
+		var a = triB.A();
+		var b = triB.B();
+		var c = triB.C();
+		var points3D = [A,B,C, a,b,c];
+		// var normal = Code.averageAngleVector3D([normalA,normalB]);
+		// normal = normalB;
+		normal = normalA;
+		var centroid = V3D.average(points3D);
 		// project 6 points onto plane
-
+		var points2D = [];
+		var dirX = null;
+		for(var j=0; j<points3D.length; ++j){
+			points2D[j] = Code.projectTo2DPlane(points3D[j], centroid, normal);
+		}
+		// console.log(points2D);
 		// find first intersection: A-a, A-b, B-a, B-b
+		// var combos = [];
+		// 	combos.push([points2D[0],points2D[2], points2D[],points2D[0]]);
+		// for(var j=0; j<combos.length; ++j){
+		// 	var intersect = Code.rayFiniteIntersect2D;
+		// }
+		var a1 = points2D[0];
+		var b1 = points2D[1];
+		var c1 = points2D[2];
+		// var a2 = points2D[3];
+		// var b2 = points2D[4];
+		// var c2 = points2D[5];
+		var b2 = points2D[3];
+		var a2 = points2D[4];
+		var c2 = points2D[5];
+		var triIntersect = Code.triTriIntersection2D(a1,b1,c1, a2,b2,c2);
+		var eps = 1E-10;
+		if(triIntersect && triIntersect.length>0){
+			console.log(triIntersect);
+			if(triIntersect.length>2){
+				// HACK AREA:
+				// var info = V2D.extremaFromArray(triIntersect);
+				// var size = info["size"];
+				// var area = size.x*size.y;
+				// console.log("area: "+area);
+				var area = Code.polygonArea2D([triIntersect]);
+				console.log("area: "+area);
+				if(area>eps){
+					console.log("area: "+area);
+					var dist;
+					var ends = [localEdge.A(),localEdge.B()];
+					for(var j=0; j<ends; ++j){
+						area = V3D.areaTri(A,B,ends[j]);
+						if(area>eps){
+							dist = V3D.distance(midpoint,ends[j]);
+							if(!closestDistance || closestDistance>dist){
+								// intersection = true;
+								closestDistance = dist;
+								closestPoint = ends[j];
+								closestEdge = localEdge;
+							}
+						}
+					}
+					throw "?";
+					// dist = V3D.distance(midpoint,localEdge.B());
+					// console.log(triIntersect);
 
+					// throw "wut";
+					// break;
+				}
+			}
+			/*
+			for(var j=0; j<triIntersect.length; ++j){
+				var distA1 = V2D.distance(a1,triIntersect[j]);
+				var distB1 = V2D.distance(b1,triIntersect[j]);
+				var distC1 = V2D.distance(c1,triIntersect[j]);
+				var distA2 = V2D.distance(a2,triIntersect[j]);
+				var distB2 = V2D.distance(b2,triIntersect[j]);
+				var distC2 = V2D.distance(c2,triIntersect[j]);
+				if(distA1>eps && distB1>eps && distC1>eps && distA2>eps && distB2>eps && distC2>eps){
+					intersect = true;
+					console.log(distA1,distB1,distA2,distB2);
+					console.log(triIntersect);
+					console.log(points2D);
+					throw "wut";
+					break;
+				}
+			}
+			*/
+		}
 		// 3D location of intersection = % along ray
 
 		// keep intersection closest to edge mp
 	}
 
-	return null;
+	return {"intersection":intersection, "info":closestInfo};
 }
 
 
@@ -2246,6 +2371,11 @@ Mesh3D.prototype.isPointTooClose = function(edge, point){ // to edge [ TODO: too
 	// repeat until no intersection
 	if(intersection){
 		console.log(" ---- repeat ----");
+
+
+		var fun = this.tooCloseProjection(edge,point,localEdges, false);
+
+
 if(!info["info"]){
 	console.log(info);
 	// ...
