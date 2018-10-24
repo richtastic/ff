@@ -7601,12 +7601,191 @@ Code.minimumTriAngle = function(a,b,c){ // CCW
 	var angleC = V2D.angle(ca,cb);
 	return Math.min(angleA,angleB,angleC);
 }
-Code.triTriIntersection2D = function(a1,b1,c1, a2,b2,c2){ // polygonal intersection
-	// var ab1 = V2D.sub(a1,b1); // CW
-	// var bc1 = V2D.sub(c1,a1);
-	// var ca1 = V2D.sub(b1,c1);
-	// var arrOrgA = [b1,a1,c1]; // CW
-	// var arrDirA = [ab1,bc1,ca1];
+
+Code.triTriIntersection2D = function(a1,b1,c1, a2,b2,c2){
+	var ab1 = V2D.sub(b1,a1);
+	var bc1 = V2D.sub(c1,b1);
+	var ca1 = V2D.sub(a1,c1);
+	var arrOrgA = [a1,b1,c1];
+	var arrDirA = [ab1,bc1,ca1];
+	var ab2 = V2D.sub(b2,a2);
+	var bc2 = V2D.sub(c2,b2);
+	var ca2 = V2D.sub(a2,c2);
+	var arrOrgB = [a2,b2,c2];
+	var arrDirB = [ab2,bc2,ca2];
+	var hasIn = false;
+	var hasOut = false;
+	var startIndex = null;
+	// keep track of in/out end points
+	var arrOutA = Code._triTriInsides(arrOrgA,arrDirA,arrOrgB,arrDirB);
+	var arrOutB = Code._triTriInsides(arrOrgB,arrDirB,arrOrgA,arrDirA);
+	var arrInts = [];
+	var hasOutA = false;
+	for(var i=0; i<arrOutA.length; ++i){
+		var isOut = arrOutA[i];
+		hasOutA = hasOutA || isOut;
+		if(!isOut){
+			arrInts.push(arrOrgA[i].copy());
+		}
+	}
+	var hasOutB = false;
+	for(var i=0; i<arrOutB.length; ++i){
+		var isOut = arrOutB[i];
+		hasOutB = hasOutB || isOut;
+		if(!isOut){
+			arrInts.push(arrOrgB[i].copy());
+		}
+	}
+	if(!hasOutA || !hasOutB){
+		return arrInts;
+	}
+	var tempSort = function(a,b){
+		return a[1] < b[1] ? -1 : 1;
+	}
+	// find all intersections
+	for(var i=0; i<arrOrgA.length; ++i){
+		var orgA = arrOrgA[i];
+		var dirA = arrDirA[i];
+		for(j=0;j<arrOrgB.length;++j){
+			orgB = arrOrgB[j];
+			dirB = arrDirB[j];
+			p = Code.rayFiniteIntersect2D(orgA,dirA,orgB,dirB);
+			if(p){
+				arrInts.push(p);
+			}
+		}
+	}
+	// find COM
+	if(arrInts.length>1){
+		var c = V2D.average(arrInts);
+		var v = new V2D();
+		// sort on angle
+		for(var i=0; i<arrInts.length; ++i){
+			var p = arrInts[i];
+			v.set(p.x-c.x,p.y-c.y);
+			var a = V2D.angleDirection(V2D.DIRX,v);
+			arrInts[i] = [p,a];
+		}
+		arrInts.sort(tempSort);
+		for(var i=0; i<arrInts.length; ++i){
+			arrInts[i] = arrInts[i][0];
+		}
+	}
+	return arrInts;
+}
+Code._triTriInsides = function(arrOrgA,arrDirA,arrOrgB,arrDirB){
+	var arrOutA = [];
+	for(var i=0; i<arrOrgA.length; ++i){
+		var oA = arrOrgA[i];
+		var positives = 0;
+		for(var j=0; j<arrOrgB.length; ++j){
+			var oB = arrOrgB[j];
+			var dB = arrDirB[j];
+			var dBA = V2D.sub(oA,oB);
+			var cross = V2D.cross(dB,dBA);
+			// console.log(j+" = "+cross);
+			if(cross>0){
+				positives++;
+			}
+		}
+		var isIn = positives==arrOrgB.length;
+		var isOut = !isIn;
+		arrOutA[i] = isOut;
+	}
+	return arrOutA;
+}
+
+
+Code.triTriIntersection2D_BAD = function(a1,b1,c1, a2,b2,c2){ 
+	return Code._triTriIntersection2D(a1,b1,c1, a2,b2,c2, true);
+}
+Code._triTriIntersection2D = function(a1,b1,c1, a2,b2,c2, retry){ // convex polygon intersection
+	var ab1 = V2D.sub(b1,a1);
+	var bc1 = V2D.sub(c1,b1);
+	var ca1 = V2D.sub(a1,c1);
+	var arrOrgA = [a1,b1,c1];
+	var arrDirA = [ab1,bc1,ca1];
+	var arrOutA = [];
+	var ab2 = V2D.sub(b2,a2);
+	var bc2 = V2D.sub(c2,b2);
+	var ca2 = V2D.sub(a2,c2);
+	var arrOrgB = [a2,b2,c2];
+	var arrDirB = [ab2,bc2,ca2];
+	var hasIn = false;
+	var hasOut = false;
+	var startIndex = null;
+	
+	for(var i=0; i<arrOrgA.length; ++i){
+		var oA = arrOrgA[i];
+		var positives = 0;
+		for(var j=0; j<arrOrgB.length; ++j){
+			var oB = arrOrgB[j];
+			var dB = arrDirB[j];
+			var dBA = V2D.sub(oA,oB);
+			var cross = V2D.cross(dB,dBA);
+			console.log(j+" = "+cross);
+			if(cross>0){
+				positives++;
+			}
+		}
+		var isIn = positives==arrOrgB.length;
+		var isOut = !isIn;
+		// var isOut = positives==arrOrgB.length;
+		arrOutA[i] = isOut;
+		hasIn |= isIn;
+		hasOut |= isOut;
+		if(isOut){
+			startIndex = i;
+		}
+	}
+	console.log(arrOutA);
+	if(hasIn && !hasOut){ // all inside
+		console.log("all inside");
+		return [a1,b1,c1];
+		
+	}else if(!hasIn && hasOut){ // all outside - possibly try opposite
+		console.log("all outside");
+		if(retry){
+			return Code._triTriIntersection2D(a2,b2,c2, a1,b1,c1, false);
+		}
+	} // some in and some out
+	var polygon = [];
+	var tempSort = function(a,b){ return a[1] < b[1] ? -1 : 1; } // largest at beginning, smallest at end
+	// start outside:
+	for(var i=0; i<arrOrgA.length; ++i){
+		var index = (i+startIndex)%arrOrgA.length;
+		var orgA = arrOrgA[index];
+		var dirA = arrDirA[index];
+		var isOut = arrOutA[index];
+		console.log(""+index+" = "+isOut+" | "+orgA);
+		// get all intersections:
+		var temp = [];
+		for(j=0;j<arrOrgB.length;++j){
+			orgB = arrOrgB[j];
+			dirB = arrDirB[j];
+			p = Code.rayFiniteIntersect2D(orgA,dirA,orgB,dirB);
+			if(p){
+				dist = V2D.distanceSquare(orgA,p);
+				console.log("  "+i+"-"+j+" = "+p+"  ("+dist+") ");//" % "+percent);
+				temp.push([p,dist]);
+			}else{
+				console.log("  "+i+"-"+j+" = "+null);
+			}
+		}
+		// check add starting point
+		if(!isOut){
+			console.log("is in => ");
+			polygon.push(orgA.copy());
+		}
+		// add all intersections
+		temp.sort(tempSort);
+		for(j=0;j<temp.length;++j){
+			polygon.push(temp[j][0]);
+		}
+	}
+	return polygon;
+}
+Code.triTriIntersection2D_OLD = function(a1,b1,c1, a2,b2,c2){
 	var ab1 = V2D.sub(b1,a1);
 	var bc1 = V2D.sub(c1,b1);
 	var ca1 = V2D.sub(a1,c1);
@@ -7619,32 +7798,61 @@ Code.triTriIntersection2D = function(a1,b1,c1, a2,b2,c2){ // polygonal intersect
 	var arrDirB = [ab2,bc2,ca2];
 	var cross1, cross2, cross3;
 	var i, j, orgA, dirA, orgB, dirB, temp, p, dist;
+	var v1, v2, v3;
 	var polygon = [];
-	var tempSort = function(a,b){ return b[1]-a[1]; } // largest at beginning, smallest at end
+	var tempSort = function(a,b){ return a[1] < b[1] ? -1 : 1; } // largest at beginning, smallest at end
+	// console.log("  ---   ");
 	for(i=0;i<3;++i){
 		orgA = arrOrgA[i];
 		dirA = arrDirA[i];
 		// orgA inside B
-		cross1 = V2D.cross(ab2,V2D.sub(orgA,a2));
-		cross2 = V2D.cross(bc2,V2D.sub(orgA,b2));
-		cross3 = V2D.cross(ca2,V2D.sub(orgA,c2));
+		// cross1 = V2D.cross(ab2,V2D.sub(orgA,a2));
+		// cross2 = V2D.cross(bc2,V2D.sub(orgA,b2));
+		// cross3 = V2D.cross(ca2,V2D.sub(orgA,c2));
+		v1 = V2D.sub(a2,orgA);
+		v2 = V2D.sub(b2,orgA);
+		v3 = V2D.sub(c2,orgA);
+		cross1 = V2D.cross(ab2,v1);
+		cross2 = V2D.cross(bc2,v2);
+		cross3 = V2D.cross(ca2,v3);
+		// var dot1 = V2D.dot(ab2,v1);
+		// var dot2 = V2D.dot(bc2,v2);
+		// var dot3 = V2D.dot(ca2,v3);
 		// strictly inside
 		if( (cross1>0&&cross2>0&&cross3>0) || (cross1<0&&cross2<0&&cross3<0) ){ // CCW / CW
-			polygon.push(V2D.copy(orgA));
+			// if(dot1>0 && dot2>0 && dot3>0){
+				// console.log("   "+i+":  = "+orgA);
+				polygon.push(V2D.copy(orgA));
+			// }
 		}
 		// any intersections along 
 		temp = []; // clear
 		for(j=0;j<3;++j){
 			orgB = arrOrgB[j];
 			dirB = arrDirB[j];
-			p = Code.rayFiniteInfinitePositiveIntersect2D(orgA,dirA, orgB,dirB);
+			//p = Code.rayFiniteInfinitePositiveIntersect2D(orgA,dirA, orgB,dirB);
+			//p = Code.rayFiniteInfinitePositiveIntersect2D(orgB,dirB, orgA,dirA);
+			p = Code.rayFiniteIntersect2D(orgA,dirA,orgB,dirB);
 			if(p){
-				dist = V2D.distanceSquare(orgB,p);
-				if(dist>dirB.lengthSquare()){ // use end point = next point
-					p.copy( arrOrgB[(j+1)%3] );
+				// dist = V2D.distanceSquare(orgB,p);
+				// if(dist>dirB.lengthSquare()){ // use end point = next point
+				// 	p.copy( arrOrgB[(j+1)%3] );
+				// }
+				// order on distance from infinite ray
+
+				var percent = 0;
+
+				var dB1 = V2D.distance(orgB,p);
+				var dB2 = dirB.length();
+				if(dB2>0){
+					percent = dB1/dB2;
 				}
-				//dist = V2D.distanceSquare(orgA,p);
+
+				dist = V2D.distanceSquare(orgA,p);
+				// console.log(" "+i+"-"+j+" = "+p+"  ("+dist+") % "+percent);
 				temp.push([p,dist]);
+			}else{
+				// console.log(" "+i+"-"+j+" = "+null);
 			}
 		}
 		// sort on closest intersection
@@ -7659,14 +7867,14 @@ Code.triTriIntersection2D = function(a1,b1,c1, a2,b2,c2){ // polygonal intersect
 			}
 		}
 	}
-	// remove dupliated points
-	// var espilon = 1E-16;
-	// for(var i=0; i<polygon.length; ++i){
-	// 	if(V2D.equal(polygon[i], polygon[(i+1)%polygon.length], espilon)){
-	// 		polygon.splice(i,1);
-	// 		--i;
-	// 	}
-	// }
+	// remove duplicated points
+	var espilon = 1E-16;
+	for(var i=0; i<polygon.length; ++i){
+		if(V2D.equal(polygon[i], polygon[(i+1)%polygon.length], espilon)){
+			polygon.splice(i,1);
+			--i;
+		}
+	}
 	return polygon; // remove duplicate (end) points ?
 	// this is a double-copy for exactly the same triangles
 }
@@ -8036,16 +8244,23 @@ Code.projectPointToPlane3D = function(location, point,normal){
 	var dN = V3D.dot(normal,diff);
 	return new V3D(location.x-dN*normal.x, location.y-dN*normal.y, location.z-dN*normal.z);
 }
-Code.projectTo2DPlane = function(location, planePoint, planeNormal){
-	var offsetNormal = V3D.cross(V3D.DIRZ,planeNormal).norm();
-	var offsetAngle = V3D.angle(V3D.DIRZ,planeNormal);
-	var projection = Code.projectPointToPlane3D(location, planePoint, planeNormal);
-	projection = V3D.sub(projection,planePoint)
-	if( Math.abs(offsetAngle) > 1E-10 ){
-		projection = V3D.rotateAngle(projection, offsetNormal, -offsetAngle);
+Code.projectPointsTo2DPlane = function(points, planePoint, planeNormal){ // x & y directions are after rotation
+	var projections = [];
+	for(var i=0; i<points.length; ++i){
+		var location = points[i];
+		var offsetAngle = V3D.angle(V3D.DIRZ,planeNormal);
+		var projection = V3D.sub(location,planePoint);
+		if(Math.abs(offsetAngle) > 0){ // else ~ already on plane
+			var offsetNormal = V3D.cross(V3D.DIRZ,planeNormal).norm();
+			projection = V3D.rotateAngle(projection, offsetNormal, -offsetAngle);
+		}
+		projection = new V2D(projection.x,projection.y);
+		projections[i] = projection;
 	}
-	projection = new V2D(projection.x,projection.y);
-	return projection;
+	return projections;
+}
+Code.projectTo2DPlane = function(location, planePoint, planeNormal){
+	return Code.projectPointsTo2DPlane([location],planePoint, planeNormal)[0];
 }
 Code.pointOnPositiveSidePlane2D = function(location, planePoint, planeNormal, error){
 	error = error!==undefined ? error : -1E-8;
@@ -8730,7 +8945,6 @@ Code.polygonXOR2D = function(polyA,polyB, _iteration){
 }
 Code.polygonArea2D = function(polyArray){
 	var polygon = Poly2D.poly2DfromArray(polyArray);
-	// console.log(polygon);
 	var area = polygon.area();
 	polygon.kill();
 	return area;

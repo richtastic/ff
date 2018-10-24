@@ -81,7 +81,10 @@ V3D.norm = function(a,b){
 V3D.areaTri = function(a,b,c){ // 1/2 cross
 	return V3D.crossTriMag(a,b,c)*0.5;
 }
-V3D.crossTriMag = function(a,b,c){ // ||ab x bc||
+V3D.normTri = function(a,b,c){
+	return V3D.crossTri(a,b,c).norm();
+}
+V3D.crossTri = function(a,b,c){ // ||ab x bc||
 	var abX = b.x-a.x;
 	var abY = b.y-a.y;
 	var abZ = b.z-a.z;
@@ -91,7 +94,10 @@ V3D.crossTriMag = function(a,b,c){ // ||ab x bc||
 	var x = abY*acZ - abZ*acY;
 	var y = abZ*acX - abX*acZ;
 	var z = abX*acY - abY*acX;
-	return Math.sqrt(x*x + y*y + z*z);
+	return new V3D(x,y,z);
+}
+V3D.crossTriMag = function(a,b,c){ // ||ab x bc||
+	return V3D.crossTri(a,b,c).length();
 }
 V3D.rotateAngle = function(b,a,dir,ang){ // b = a.rotate(dir,ang)
 	if(ang===undefined){

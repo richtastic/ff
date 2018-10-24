@@ -309,6 +309,19 @@ V2D.max = function(out, a,b){
 	out.y = Math.max(a.y,b.y);
 	return out;
 }
+V2D.average = function(pointList, weights){
+	var N = pointList.length;
+	var p = 1.0/N;
+	var avg = new V2D(0,0);
+	for(var i=0; i<N; ++i){
+		var v = pointList[i];
+		if(weights){
+			p = weights[i];
+		}
+		avg.add(p*v.x,p*v.y);
+	}
+	return avg;
+}
 V2D.removeDuplicates = function(points){
 	var i, j, p, l, len=points.length;
 	var list = [];

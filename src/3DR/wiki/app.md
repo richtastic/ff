@@ -315,7 +315,12 @@ https://cloud.google.com/appengine/docs/nodejs/
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 FRONT:
-	- singel plane fence checking
+
+
+---- prev / next edges must be mistaken / broken ?
+	- visually show prev / next for the edge before TOPO
+
+	
 
 - is there a way to detect 'failure' scenarios ?
 	- then B) adjust accortingly
@@ -324,6 +329,9 @@ FRONT:
 => if any perimeter-neighbor's normals are > theta (45~90 degrees)?
 	=> smooth?
 
+
+- if an edge-triangle intersection is not solvable -> set as boundary
+	- to stop?
 
 
 - 3D oct-tree objects within distance of circular plane & triangular plane

@@ -95,23 +95,19 @@ Poly2D.prototype.copy = function(c){
 		return Poly2D.copy( c, this);
 	}
 }
-Poly2D.prototype.area = function(){
+Poly2D.prototype.area = function(){ // separate into tris & add positive & negative areas
 	var i, j, lm2, points;
 	var a, b, c, area=0;
 	var len = this._pointSets.length;
-	if(len<2){
-		return 0;
-	}
 	for(i=len; i--;){
 		points = this._pointSets[i];
 		lm2 = points.length-2;
 		for(j=0; j<lm2; j++){
 			cross = V2D.areaTri(points[0],points[j+1],points[j+2]);
-			// console.log(cross);
 			area += cross;
 		}
 	}
-	return area;
+	return Math.abs(area);
 }
 Poly2D.prototype.kill = function(){
 	if(this._pointSets){
