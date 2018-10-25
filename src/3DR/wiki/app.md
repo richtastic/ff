@@ -314,17 +314,36 @@ https://cloud.google.com/appengine/docs/nodejs/
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-FRONT:
+
+- local curvature seems wrong
+	- seems to also change with sampling density
 
 
----- prev / next edges must be mistaken / broken ?
-	- visually show prev / next for the edge before TOPO
+- bad triangles being made as a result of comprimize
+- prioritize lowest-angle tris instead?
 
-	
 
-- is there a way to detect 'failure' scenarios ?
-	- then B) adjust accortingly
-		- 'adaptive sampling'
+
+- get triangle edges / orientations straight
+	- front edges are 'pending' and latch on to 'current' tris
+	- when a new tri is made, there are a net 6 half-edges involved
+
+
+new Mesh3D.Tri3D(
+
+
+TRIANGLE: CW
+EDGE: CCW
+
+- seed
+- cut ear
+- grow
+- split
+- merge
+- close
+
+
+
 
 => if any perimeter-neighbor's normals are > theta (45~90 degrees)?
 	=> smooth?

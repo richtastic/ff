@@ -8,6 +8,14 @@ V3D.EPSILON = 1E-10;
 V3D.dot = function(a,b){
 	return a.x*b.x + a.y*b.y + a.z*b.z;
 }
+V3D.dotNormal = function(a,b){
+	var lenA = a.length();
+	var lenB = b.length();
+	if(lenA!=0 && lenB!=0){
+		return (a.x*b.x + a.y*b.y + a.z*b.z)/(lenA*lenB);
+	}
+	return 0;
+}
 V3D.angle = function(a,b){ // check
 	var lenA = a.length();
 	var lenB = b.length();

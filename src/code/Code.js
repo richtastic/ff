@@ -2631,6 +2631,19 @@ Code.averageAngles = function(angles, percents){
 	}
 	return Math.atan2(sumSin,sumCos);
 }
+Code.maxTriAngle = function(A,B,C){
+	var ab = new V3D();
+	var bc = new V3D();
+	var ca = new V3D();
+	V3D.sub(ab,B,A);
+	V3D.sub(bc,C,B);
+	V3D.sub(ca,A,C);
+	a = Math.PI - V3D.angle(ab,ca);
+	b = Math.PI - V3D.angle(bc,ab);
+	c = Math.PI - V3D.angle(ca,bc);
+	var maxAngle = Math.max(a,b,c);
+	return maxAngle;
+}
 Code.minAngle = function(a,b){ // [0,2pi] => [-pi,pi]
 	// a = Code.angleZeroTwoPi(a);
 	// b = Code.angleZeroTwoPi(b);
@@ -8717,6 +8730,83 @@ Code.closestPointsLines3D = function(oa,da, ob,db){ // infinite ray-ray closet p
 	var A = new V3D(oa.x+ta*da.x, oa.y+ta*da.y, oa.z+ta*da.z);
 	var B = new V3D(ob.x+tb*db.x, ob.y+tb*db.y, ob.z+tb*db.z);
 	return [A,B];
+}
+Code.closestPointsFiniteRays3D = function(oa,da, ob,db){
+	var closest = Code.closestPointsLines3D(oa,da, ob,db);
+	var A, B;
+	if(closest){
+		A = closest[0];
+		B = closest[1];
+	}else{ // parallel - pick one inside
+		var ea = V3D.add(oa,da);
+		var eb = V3D.add(ob,db);
+		var tryAo = Code.closestPointLineSegment3D(oa,da, ob);
+		var tryAe = Code.closestPointLineSegment3D(oa,da, eb);
+		var tryBo = Code.closestPointLineSegment3D(ob,db, oa);
+		var tryBe = Code.closestPointLineSegment3D(ob,db, ea);
+		var dist1 = V3D.distance(ob,tryAo);
+		var dist2 = V3D.distance(eb,tryAe);
+		var dist3 = V3D.distance(oa,tryBo);
+		var dist4 = V3D.distance(ea,tryBe);
+		var dist = dist1;
+		A = tryAo;
+		B = ob;
+		if(dist2<dist){
+			dist = dist2;
+			A = tryAe;
+			B = eb;
+		}
+		if(dist3<dist){
+			dist = dist3;
+			A = oa;
+			B = tryBo;
+		}
+		if(dist4<dist){
+			dist = dist4;
+			A = ea;
+			B = tryBe;
+		}
+		return [A,B];
+	}
+	// return [A,B];
+	var lenA = da.length();
+	var lenB = db.length();
+	var dirA = V3D.sub(A,oa);
+	var dirB = V3D.sub(B,ob);
+	var dotA = V3D.dot(da,dirA);
+	var dotB = V3D.dot(db,dirB);
+	var lenA2 = dirA.length();
+	var lenB2 = dirB.length();
+// console.log(dotA+" | "+dotB);
+	if(dotA<0){
+		A = oa.copy();
+	}else if(lenA2>lenA){
+		A = oa.copy().add(da);
+	}
+	if(dotB<0){
+		B = ob.copy();
+	}else if(lenB2>lenB){
+		B = ob.copy().add(db);
+	}
+	// if endpoints changed, so could new closest point
+	var oppB = Code.closestPointLineSegment3D(ob,db, A);
+	var oppA = Code.closestPointLineSegment3D(oa,da, B);
+	var distA = V3D.distance(A,oppA);
+	var distB = V3D.distance(B,oppB);
+	// console.log(distA+" | "+distB);
+	if(distA>0){
+		A = oppA;
+	}
+	if(distB>0){
+		B = oppB;
+	}
+	return [A,B];
+}
+Code.closestDistanceFiniteRays3D = function(oa,da, ob,db){
+	var closest = Code.closestPointsFiniteRays3D(oa,da, ob,db);
+	var A = closest[0];
+	var B = closest[1];
+	return V3D.distance(A,B);
 }
 Code.medianPointLines3D = function(lines){ // list of o+d lines
 	// if 2 lines => return Code.closestPointsLines3D

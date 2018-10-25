@@ -25,7 +25,84 @@ function classesLoadedFxn(){
 	this._stage.start();
 	// this._canvas.addFunction(Canvas.EVENT_MOUSE_CLICK,this.handleMouseClickFxn,this);
 	GLOBALSTAGE = this._stage;
+
+	// close points:
+
+
+
+	var oa = new V3D(0,0,0);
+	var da = new V3D(50,10,0);
+
+	// var ob = new V3D(2,6,0);
+	// var db = new V3D(10,50,0);
+
+	// var ob = new V3D(-10,50,0);
+	// var db = new V3D(10,-10,0);
+	// var ob = new V3D(10,50,0);
+
+	// parallels
+	// var ob = new V3D(-70,10,0);
+	// var ob = new V3D(-40,10,0);
+	// var ob = new V3D(20,20,0);
+	// var ob = new V3D(60,50,0);
+	// var db = new V3D(50,10,0);
+
+
+	// var ob = new V3D(2,6,0);
+	// var db = new V3D(20,1,0);
+
+	// + z
+	var ob = new V3D(2,6,0);
+	var db = new V3D(50,5,10);
+
+	var closest = Code.closestPointsFiniteRays3D(oa,da, ob,db);
+
+var A = closest[0];
+var B = closest[1];
+
+
+
+	var display = new DO();
+		display.matrix().scale(5);
+		display.matrix().scale(1,-1);
+		display.matrix().translate(200,400);
+		GLOBALSTAGE.addChild(display);
+
+	var d = new DO();
+	d.graphics().setLine(1.0,0xFFFF0000);
+	d.graphics().setFill(0x66FF0000);
+	d.graphics().beginPath();
+	d.graphics().drawPolygon([oa,V3D.add(oa,da)]);
+	d.graphics().endPath();
+	d.graphics().strokeLine();
+	d.graphics().fill();
+	display.addChild(d);
+
+	var d = new DO();
+	d.graphics().setLine(1.0,0xFF0000FF);
+	d.graphics().setFill(0x660000FF);
+	d.graphics().beginPath();
+	d.graphics().drawPolygon([ob,V3D.add(ob,db)]);
+	d.graphics().endPath();
+	d.graphics().strokeLine();
+	d.graphics().fill();
+	display.addChild(d);
+
+	var d = new DO();
+	d.graphics().setLine(1.0,0xFFCCCC00);
+	d.graphics().setFill(0x33CCCC00);
+	d.graphics().beginPath();
+	d.graphics().drawCircle(A.x,A.y,3);
+	d.graphics().drawCircle(B.x,B.y,3);
+	d.graphics().endPath();
+	d.graphics().strokeLine();
+	d.graphics().fill();
+	display.addChild(d);
+
+return;
+
 */
+
 /*
 	// tri-tri
 	// Code.triTriIntersection2D = function(a1,b1,c1, a2,b2,c2);

@@ -1843,7 +1843,6 @@ MLSMesh3D.EdgeFront.prototype.closestEdgePoint = function(vertex,edgesIgnore){
 	}
 	return {"edge":minEdge, "distance":Math.sqrt(minDistance), "point":minPoint};
 }
-
 MLSMesh3D.EdgeFront.prototype.addNodeLinkEdgeBefore = function(edgeA,edgeB){
 	var node = this._edgeQueue.push(edgeB);
 	var link = this._edgeList.addBefore(edgeA.link(),edgeB);

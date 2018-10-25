@@ -702,7 +702,7 @@ SurfaceTri.prototype.loadPointFile = function(){
 		// Code.subSampleArray(list,10000);
 		// Code.subSampleArray(list,20000);
 		// this.subSampleArray(list,5000);
-		// this.subSampleArray(list,1000);
+		// this.subSampleArray(list,2000);
 		// this.subSampleArray(list,1000);
 		this.subSampleArray(list,500);
 		var i, v, len = list.length;
@@ -828,6 +828,9 @@ SurfaceTri.prototype.startPointCloud = function(pts){
 	console.log("start point cloud")
 
 GLOBAL_LASTTRI = null;
+GLOBAL_LAST_PREV = null;
+GLOBAL_LAST_NEXT = null;
+GLOBAL_RAYS = null;
 	// console.log(pts);
 	var mesh = new Mesh3D(pts);
 	var triangles = mesh.generateSurfaces();
@@ -992,9 +995,6 @@ for(i=0; i<lines.length; ++i){
 	V3D.pushToArray(pointsL, b);
 }
 */
-	this._linePointBuffer = this._stage3D.getBufferFloat32Array(pointsL,3);
-	this._lineColorBuffer = this._stage3D.getBufferFloat32Array(colorsL,4);
-
 
 var tris = [];
 
@@ -1151,6 +1151,39 @@ colorsT.push(1.00, 0.00, 0.00, 0.95);
 colorsT.push(1.00, 0.00, 0.00, 0.95);
 }
 
+if(GLOBAL_LAST_PREV){
+	// var edges = [GLOBAL_LAST_PREV,GLOBAL_LAST_NEXT];
+	// var edges = [GLOBAL_LAST_PREV];
+	var edges = [GLOBAL_LAST_NEXT];
+	for(var e=0; e<edges.length; ++e){
+		var edge = edges[e];
+
+		var M = edge.midpoint();
+		var C = edge.tri().normal().scale(edge.length()).scale(1.0).add(M);
+		var tri = new Tri3D(edge.A(),edge.B(),C);
+
+		V3D.pushToArray(pointsT,tri.A());
+		V3D.pushToArray(pointsT,tri.B());
+		V3D.pushToArray(pointsT,tri.C());
+		for(var i=0; i<3; ++i){
+			colorsT.push(0.00, 0.50, 0.00, 0.90);
+		}
+		//
+	}
+}
+if(GLOBAL_RAYS && GLOBAL_RAYS.length>0){
+	console.log(GLOBAL_RAYS);
+	for(var i=0; i<GLOBAL_RAYS.length; i+=2){
+		var a = GLOBAL_RAYS[0+i];
+		var d = GLOBAL_RAYS[1+i];
+		var b = a.copy().add(d.copy().scale(1.0));
+		colorsL.push(0.0,0.0,0.0,1.0);
+		colorsL.push(0.0,0.0,0.0,1.0);
+		V3D.pushToArray(pointsL, a);
+		V3D.pushToArray(pointsL, b);
+	}
+}
+
 // var tri = GLOBAL_DEAD;
 // if(tri){
 // V3D.pushToArray(pointsT,tri.A());
@@ -1187,14 +1220,18 @@ for(var i=0; i<edgeFronts.length; ++i){
 		V3D.pushToArray(pointsT,tri.B());
 		V3D.pushToArray(pointsT,tri.C());
 		for(k=0; k<3; ++k){
-			if(i%4==0){
-				colorsT.push(0.00, 0.50, 0.50, 0.80);
-			}else if(i%4==1){
-				colorsT.push(0.50, 0.00, 0.50, 0.80);
-			}else if(i%4==2){
-				colorsT.push(0.50, 0.00, 0.50, 0.80);
-			}else if(i%4==3){
-				colorsT.push(0.50, 0.50, 0.00, 0.80);
+			if(edge.boundary()){
+				colorsT.push(0.50, 0.50, 0.50, 0.80);
+			}else{
+				if(i%4==0){
+					colorsT.push(0.00, 0.50, 0.50, 0.80);
+				}else if(i%4==1){
+					colorsT.push(0.50, 0.00, 0.50, 0.80);
+				}else if(i%4==2){
+					colorsT.push(0.50, 0.00, 0.50, 0.80);
+				}else if(i%4==3){
+					colorsT.push(0.50, 0.50, 0.00, 0.80);
+				}
 			}
 		}
 	}
@@ -1266,6 +1303,11 @@ if(GLOB_FENCE){
 	}
 }
 */
+
+
+	this._linePointBuffer = this._stage3D.getBufferFloat32Array(pointsL,3);
+	this._lineColorBuffer = this._stage3D.getBufferFloat32Array(colorsL,4);
+
 		this._planeTriangleVertexList = this._stage3D.getBufferFloat32Array(pointsT,3);
 		this._planeTriangleColorsList = this._stage3D.getBufferFloat32Array(colorsT,4);
 	}
