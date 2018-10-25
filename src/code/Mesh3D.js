@@ -4,7 +4,8 @@ Mesh3D.X = 0;
 function Mesh3D(points, angle){
 	// this._angle = Math.PI*0.1; // 18 degrees
 	// this._angle = Math.PI*0.25; // 45 degrees
-	this._angle = Math.PI*0.50;
+	// this._angle = Math.PI*0.50;
+	this._angle = Math.PI*1.0;
 	this._beta = Code.radians(55.0); // base angle
 		var beta = this._beta;
 	this._eta = Math.sin(2*beta)/Math.sin(3*beta); // search distance multiplier
@@ -1179,6 +1180,9 @@ var xxx = 0;
 		// var maxIter = 4000;
 		// var maxIter = 6000;
 		var maxIter = 10000;
+		// var maxIter = 20000;
+		// var maxIter = 40000;
+		// 8630
 		for(var i=0; i<maxIter; ++i){
 			console.log("+------------------------------------------------------------------------------------------------------------------------------------------------------+ ITERATION "+i+" ");
 			// next best front
@@ -1653,7 +1657,7 @@ Mesh3D.prototype.vertexPredict = function(edge, edgeFront){
 
 Mesh3D.prototype.projectedMaxNeighborhoodAngle = function(location, length, normal){ // use normal 
 	var space = this._pointSpace;
-	var minSamples = 10; // ?
+	var minSamples = 16; // ?
 	var knn = space.objectsInsideSphere(location,length);
 	if(knn.length<minSamples){ // need larger neighborhood of samples
 		knn = space.kNN(location, minSamples);
@@ -1689,11 +1693,12 @@ Mesh3D.prototype.projectedMaxNeighborhoodAngle = function(location, length, norm
 Mesh3D.prototype.isBorderPoint = function(edge, p){
 	// use tri normal, not p neighborhood
 	var normal = V3D.normTri(edge.A(),edge.B(),p);
-	var maxAngleNeighbors = this.projectedMaxNeighborhoodAngle(p, edge.length()*2, normal);
+	var maxAngleNeighbors = this.projectedMaxNeighborhoodAngle(p, edge.length()*4, normal);
 	// var maximumNeighborAngle = Code.radians(150.0);
-	var maximumNeighborAngle = Code.radians(180.0);
+	//var maximumNeighborAngle = Code.radians(180.0);
+	var maximumNeighborAngle = Code.radians(200.0);
 	if(maxAngleNeighbors>maximumNeighborAngle){
-		console.log("isBorderPoint: "+Code.degrees(maxAngleNeighbors));
+		// console.log("isBorderPoint: "+Code.degrees(maxAngleNeighbors));
 		return true;
 	}
 	return false;
@@ -2232,15 +2237,14 @@ Mesh3D.prototype.isPointTooClose = function(edge, point){ // to edge [ TODO: too
 	}
 	// repeat until no current intersection -- but once an intersection, intersection === TRUE
 	if(intersection){
-		console.log(" ---- repeat ----");
+		// console.log(" ---- repeat ----");
 		// JUST REDO:
 
 		// info = this.intersectAnyFences(edge,vertex,localEdges, true);
 
 		// var fun = this.tooCloseProjection(edge,point,localEdges, false);
 		if(!info["info"]){
-			console.log("no resolution A");
-			// throw "?";
+			// console.log("no resolution A");
 		}else{
 			vertex = info["info"]["point"];
 			// console.log("     start = "+vertex);
@@ -2253,26 +2257,19 @@ Mesh3D.prototype.isPointTooClose = function(edge, point){ // to edge [ TODO: too
 				// console.log(info);
 				intersection = info["intersection"];
 				if(!intersection){
-					// if(!info["info"]){
-					// 	console.log("no resolution B");
-					// }
 					break;
 				}
 				if(!info["info"]){
-					console.log("no resolution B");
+					// console.log("no resolution B");
 					break;
 				}
 				vertex = info["info"]["point"];
-				// if(!vertex){
-				// 	break;
-				// }
 				prevInfo = info;
 			}
 			info = prevInfo; // use previous intersection point as info
 			if(i==maxIterations && intersection){
 				throw "INTERSECTION PERSISTS";
 			}
-			// console.log(info);
 		}
 	}
 	// check projection overlap
@@ -2283,9 +2280,6 @@ Mesh3D.prototype.isPointTooClose = function(edge, point){ // to edge [ TODO: too
 		var intersect = overlapInfo["intersection"];
 		if(intersect){
 			console.log("OVERLAP - PROJECTED");
-			// if(info){
-			// 	info[""];
-			// }
 			return overlapInfo;
 		}
 	}
@@ -2409,7 +2403,7 @@ Mesh3D.prototype.merge = function(edge, conflictEdge,conflictPoint){
 	}else{ // edgeTo.next().A()===edgeTo.B()
 		lastEdge = conflictEdge.next();
 	}
-	var edgeNext = edge.next();
+	// var edgeNext = edge.next();
 	// edges
 	var a = edge.A();
 	var b = edge.B();
@@ -2428,22 +2422,28 @@ Mesh3D.prototype.merge = function(edge, conflictEdge,conflictPoint){
 	this.addEdge(edgeAC);
 	this.addEdge(edgeCB);
 	// combine edges into front
-	var nodeEnd = lastEdge.prev();
+
+	var edgeEnd = lastEdge.prev();
 	front.pushEdgeBefore(edge, edgeAC);
-	for(var e=lastEdge; edge!=nodeEnd; ){
+var count = 0;
+	for(var e=lastEdge; e!=edgeEnd; ){
 		var n = e.next();
 		conflictFront.popEdge(e);
 		front.pushEdgeBefore(edge,e);
 		e.front(front);
 		e = n;
+++count;
+if(count>10000){
+	throw "whoops";
+}
 	}
-	conflictFront.popEdge(nodeEnd);
-	front.addNodeLinkEdgeBefore(edge,nodeEnd);
-	front.addNodeLinkEdgeBefore(edge,edgeCB);
-	front.removeNodeLinkEdge(edge);
-	nodeEnd.front(front);
-	edgeBC.front(front);
-	edgeCA.front(front);
+	conflictFront.popEdge(edgeEnd);
+	front.pushEdgeBefore(edge,edgeEnd);
+	front.pushEdgeBefore(edge,edgeCB);
+	front.popEdge(edge);
+	edgeEnd.front(front);
+	edgeAC.front(front);
+	edgeBA.front(front);
 	// remove now empty front
 	this._fronts.removeFront(conflictFront);
 }
