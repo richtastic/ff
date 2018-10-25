@@ -1174,11 +1174,11 @@ var xxx = 0;
 		this.seedTriFromPoint(fronts, seedPoint.point());
 
 		// iterate:
-		var maxIter = 100;
+		// var maxIter = 1000;
 		// var maxIter = 2000;
 		// var maxIter = 4000;
 		// var maxIter = 6000;
-		// var maxIter = 1553;
+		var maxIter = 10000;
 		for(var i=0; i<maxIter; ++i){
 			console.log("+------------------------------------------------------------------------------------------------------------------------------------------------------+ ITERATION "+i+" ");
 			// next best front
@@ -1476,27 +1476,21 @@ Mesh3D.prototype.seedTriFromPoint = function(fronts, seed){
 	var edgeAB = new Mesh3D.Edge3D(a,b, edgeSize);
 	var edgeBC = new Mesh3D.Edge3D(b,c, edgeSize);
 	var edgeCA = new Mesh3D.Edge3D(c,a, edgeSize);
-	var edgeBA = new Mesh3D.Edge3D(b,a, edgeSize);
-	var edgeCB = new Mesh3D.Edge3D(c,b, edgeSize);
-	var edgeAC = new Mesh3D.Edge3D(a,c, edgeSize);
 	// tri
 	var tri = new Mesh3D.Tri3D(edgeAB,edgeBC,edgeCA);
-	edgeCB.tri(tri);
-	edgeBA.tri(tri);
-	edgeAC.tri(tri);
 	this.addTri(tri);
 	// create first front
 	var edgeFront = fronts.newFront();
 	// edges
-	this.addEdge(edgeCB);
-	this.addEdge(edgeBA);
-	this.addEdge(edgeAC);
-	edgeFront.pushEdge(edgeAC);
-	edgeFront.pushEdge(edgeCB);
-	edgeFront.pushEdge(edgeBA);
-	edgeAC.front(edgeFront);
-	edgeCB.front(edgeFront);
-	edgeBA.front(edgeFront);
+	this.addEdge(edgeAB);
+	this.addEdge(edgeBC);
+	this.addEdge(edgeCA);
+	edgeFront.pushEdge(edgeAB);
+	edgeFront.pushEdge(edgeBC);
+	edgeFront.pushEdge(edgeCA);
+	edgeAB.front(edgeFront);
+	edgeBC.front(edgeFront);
+	edgeCA.front(edgeFront);
 }
 Mesh3D.prototype._projectPointToSurface = function(startingLocation){ // assumption near surface
 	var space = this._pointSpace;
@@ -1696,8 +1690,8 @@ Mesh3D.prototype.isBorderPoint = function(edge, p){
 	// use tri normal, not p neighborhood
 	var normal = V3D.normTri(edge.A(),edge.B(),p);
 	var maxAngleNeighbors = this.projectedMaxNeighborhoodAngle(p, edge.length()*2, normal);
-	var maximumNeighborAngle = Code.radians(150.0);
-	// var maximumNeighborAngle = Code.radians(180.0);
+	// var maximumNeighborAngle = Code.radians(150.0);
+	var maximumNeighborAngle = Code.radians(180.0);
 	if(maxAngleNeighbors>maximumNeighborAngle){
 		console.log("isBorderPoint: "+Code.degrees(maxAngleNeighbors));
 		return true;
@@ -1987,9 +1981,8 @@ Mesh3D.prototype.closestTooCloseEdge = function(edge, point, localEdges){ // clo
 			distance = Math.min(distanceA,distanceB);
 		}
 		if(distance<distanceMinimum){ // choose point resulting in smaller triangle -- (with nonzero area)
-			
 			// TODO: TRI A & TRY B: ?
-			console.log(A+" | "+B+" ... ")
+			// console.log(A+" | "+B+" ... ")
 			var info = this.pointWithSmallerTri(A,B,localEdge);
 			if(info){ // null for 3-edge front 
 
@@ -2082,17 +2075,16 @@ Mesh3D.prototype.tooCloseProjection = function(edge, vertex, localEdges, localTr
 		var a = triB.A();
 		var b = triB.B();
 		var c = triB.C();
-		// AVERAGE ?
+		/*
 		var dot = V3D.dot(normalA,normalB);
 		// console.log("DOT: "+dot);
 		if(dot<0){
 			normalB = normalB.scale(-1);
 		}
 		var normal = Code.averageAngleVector3D([normalA,normalB]);
+		*/
 		// var normal = normalB;
-		// var normal = normalA;
-		// var normal = new V3D(0,0,1);
-		// console.log(normal+" "+normal.length());
+		var normal = normalA;
 		var intersection = this.localTriProjection(A,B,C,a,b,c, normal);
 		if(intersection){ // first intersection?
 			var info = null;
@@ -2192,21 +2184,22 @@ for(var j=0; j<pts.length; ++j){
 	return false;
 }
 Mesh3D.prototype.cutEar = function(edgeA,edgeB){ // new edges/tri
-	console.log("cutEar");
 	var front = edgeA.front();
 	var A = edgeA.A();
 	var B = edgeA.B();
 	var C = edgeB.B();
 	var midpoint = V3D.midpoint(A,C);
-	var idealAC = this.iteritiveEdgeSizeFromPoint(midpoint);
-	var edgeAC = new Mesh3D.Edge3D(A,C, idealAC, front); // new edge
-	var edgeCA = new Mesh3D.Edge3D(C,A, idealAC, front); 
 	var edgeAB = edgeA;
 	var edgeBC = edgeB;
+	var idealAB = edgeAB.idealLength();
+	var idealBC = edgeBC.idealLength();
+	var idealAC = this.iteritiveEdgeSizeFromPoint(midpoint);
+	var edgeAC = new Mesh3D.Edge3D(A,C, idealAC, front); // new edge
+	var edgeCB = new Mesh3D.Edge3D(C,B, idealBC, front); // opposite
+	var edgeBA = new Mesh3D.Edge3D(B,A, idealAB, front); // opposite
 	// new triangle
-	var tri = new Mesh3D.Tri3D(edgeAB,edgeBC,edgeCA);
+	var tri = new Mesh3D.Tri3D(edgeAC,edgeCB,edgeBA);
 	this.addTri(tri);
-	edgeAC.tri(tri);
 	// edges
 	this.removeEdge(edgeA);
 	this.removeEdge(edgeB);
@@ -2226,15 +2219,15 @@ Mesh3D.prototype.isPointTooClose = function(edge, point){ // to edge [ TODO: too
 	// check intersection
 	var info = this.intersectAnyFences(edge,vertex,localEdges, false);
 	var intersection = info["intersection"];
-	if(intersection){
-		console.log("A: INT EDGE");
-	}
+	// if(intersection){
+	// 	console.log("A: INT EDGE");
+	// }
 	// check nearby distance
 	if(!intersection){
 		info = this.closestTooCloseEdge(edge,vertex,localEdges, false);
 		intersection = info["intersection"];
 		if(intersection){
-			console.log("B: CLOSE EDGE");
+			// console.log("B: CLOSE EDGE");
 		}
 	}
 	// repeat until no current intersection -- but once an intersection, intersection === TRUE
@@ -2306,11 +2299,10 @@ Mesh3D.prototype.pointWithSmallerTri = function(A,B,localEdge){
 	var areaB = V3D.areaTri(A,B,localB);
 	var pointUse = localA;
 	var areaUse = areaA;
-	console.log("AREAS: "+areaA+" | "+areaB);
+	// console.log("AREAS: "+areaA+" | "+areaB);
 	if((areaB<areaA || areaA<=eps) && areaB>eps){ 
 		pointUse = localB;
 		areaUse = areaB;
-		// console.log("     => "+areaA+" => "+areaB);
 	}
 	if(areaUse<=eps){
 		return null;
@@ -2346,6 +2338,10 @@ Mesh3D.prototype.crossesEdgeTriangle = function(triPointA,triPointB,triPointC,tr
 	var fenceF = V3D.sub(fenceB,fenceEdgeNormal);
 	var fenceAB = [fenceA,fenceB];
 	var fencePlaneNormal = V3D.cross(fenceEdgeNormal,fenceEdgeDirection).norm();
+// if(fencePlaneNormal.length()==0){
+// 	console.log("bad normal");
+// 	return null;
+// }
 // TODO: TRIANGLE-AVERAGE-ALIGNED FENCE
 	// find intersections not close to edge corners
 	var intersections, nullOrEnds;
@@ -2361,12 +2357,9 @@ Mesh3D.prototype.crossesEdgeTriangle = function(triPointA,triPointB,triPointC,tr
 		if(intersections){
 			var point = V3D.average(intersections);
 			var isSame = false;
-
 			// ignore base points @ intersections:
 			isSame |= V3D.distance(triPointA,point) < eps;
 			isSame |= V3D.distance(triPointB,point) < eps;
-
-
 			// console.log("DIST: "+V3D.distance(vertex,point)+" @ "+ignoreEqualPoints);
 			if(ignoreEqualPoints){
 				isSame |= V3D.distance(vertex,point) < eps;
@@ -2421,11 +2414,15 @@ Mesh3D.prototype.merge = function(edge, conflictEdge,conflictPoint){
 	var a = edge.A();
 	var b = edge.B();
 	var c = conflictPoint;
-	// var idealAB = edge.idealLength();
+	var idealAB = edge.idealLength();
 	var idealBC = this.iteritiveEdgeSizeFromPoint(V3D.midpoint(b,c));
-	var idealCA = this.iteritiveEdgeSizeFromPoint(V3D.midpoint(c,a));
+	var idealAC = this.iteritiveEdgeSizeFromPoint(V3D.midpoint(a,c));
 	var edgeAC = new Mesh3D.Edge3D(a,c, idealAC); // new
 	var edgeCB = new Mesh3D.Edge3D(c,b, idealBC); // new
+	var edgeBA = new Mesh3D.Edge3D(b,a, idealAB); // opposite
+	// triangle
+	var tri = new Mesh3D.Tri3D(edgeAC,edgeCB,edgeBA);
+	this.addTri(tri);
 	// space
 	this.removeEdge(edge);
 	this.addEdge(edgeAC);
@@ -2438,7 +2435,7 @@ Mesh3D.prototype.merge = function(edge, conflictEdge,conflictPoint){
 		conflictFront.popEdge(e);
 		front.pushEdgeBefore(edge,e);
 		e.front(front);
-		e = next;
+		e = n;
 	}
 	conflictFront.popEdge(nodeEnd);
 	front.addNodeLinkEdgeBefore(edge,nodeEnd);
@@ -2449,17 +2446,6 @@ Mesh3D.prototype.merge = function(edge, conflictEdge,conflictPoint){
 	edgeCA.front(front);
 	// remove now empty front
 	this._fronts.removeFront(conflictFront);
-	// triangle
-	var edgeAB = edge;
-	var edgeBC = new Mesh3D.Edge3D(b,c, idealBC); // opposite
-	var edgeCA = new Mesh3D.Edge3D(c,a, idealCA); // opposite
-	var tri = new Mesh3D.Tri3D(edgeAB,edgeBC,edgeCA);
-	edgeAC.tri(tri);
-	edgeCB.tri(tri);
-	this.addTri(tri);
-
-	console.log("merge");
-	// throw "merge";
 }
 
 Mesh3D.prototype.split = function(edge, conflictEdge,conflictPoint){
@@ -2478,11 +2464,15 @@ Mesh3D.prototype.split = function(edge, conflictEdge,conflictPoint){
 	var a = edge.A();
 	var b = edge.B();
 	var c = conflictPoint;
-	// var idealAB = edge.idealLength();
+	var idealAB = edge.idealLength();
 	var idealBC = this.iteritiveEdgeSizeFromPoint(V3D.midpoint(b,c));
 	var idealAC = this.iteritiveEdgeSizeFromPoint(V3D.midpoint(a,c));
 	var edgeAC = new Mesh3D.Edge3D(a,c, idealAC); // new
 	var edgeCB = new Mesh3D.Edge3D(c,b, idealBC); // new
+	var edgeBA = new Mesh3D.Edge3D(b,a, idealAB); // opposite
+	// tri
+	var tri = new Mesh3D.Tri3D(edgeAC,edgeCB,edgeBA);
+	this.addTri(tri);
 	// space
 	this.removeEdge(edge);
 	this.addEdge(edgeAC);
@@ -2504,16 +2494,6 @@ Mesh3D.prototype.split = function(edge, conflictEdge,conflictPoint){
 	this._fronts.addFront(newFront);
 	this.checkDropEmptyFront(front);
 	this.checkDropEmptyFront(newFront);
-	// triangle
-	var edgeAB = edge;
-	var edgeBC = new Mesh3D.Edge3D(b,c, idealBC); // opposite
-	var edgeCA = new Mesh3D.Edge3D(c,a, idealAC); // opposite
-	var tri = new Mesh3D.Tri3D(edgeAB,edgeBC,edgeCA);
-	edgeAC.tri(tri);
-	edgeCB.tri(tri);
-	this.addTri(tri);
-	console.log("split");
-	// throw "split";
 }
 Mesh3D.prototype.checkDropEmptyFront = function(front){
 	// console.log("checkDropEmptyFront: "+front.edgeCount());
@@ -2532,112 +2512,6 @@ Mesh3D.prototype.removeFrontEdges = function(front){
 		}
 	}
 }
-/*
-MLSMesh3D.Front.prototype.split = function(edgeFrontFrom,edgeFrom,edgeTo,vertexFrom, field){ // same front divides into two
-	var tri, edge, next, edgeAB, edgeBC, edgeCA, inAB, dA, dB;
-	if( V3D.equal(vertexFrom,edgeTo.A()) ){
-		lastEdge = edgeTo;
-	}else{ // edgeTo.next().A()===edgeTo.B()
-		lastEdge = edgeTo.next();
-	}
-	// edges
-	edgeAB = new MLSMesh3D.Edge(edgeFrom.B(),edgeFrom.A()); // edgeFrom opposite
-	edgeBC = new MLSMesh3D.Edge(edgeFrom.A(),vertexFrom); // new
-	edgeCA = new MLSMesh3D.Edge(vertexFrom,edgeFrom.B()); // new
-	edgeAB.idealLength( field.necessaryMinLength(edgeAB) );
-	edgeBC.idealLength( field.necessaryMinLength(edgeBC) );
-	edgeCA.idealLength( field.necessaryMinLength(edgeCA) );
-	// triangle
-	tri = new MLSMesh3D.Tri(edgeAB.A(),edgeBC.A(),edgeCA.A());
-	tri.setEdges(edgeAB, edgeBC, edgeCA);
-tri.SPLIT = true;
-	edgeAB.tri(tri);
-	edgeBC.tri(tri);
-	edgeCA.tri(tri);
-	this.removeEdge(edgeFrom);
-	this.addEdge(edgeBC);
-	this.addEdge(edgeCA);
-	field.addTri(tri);
-//console.log("   -> old size: "+edgeFrontFrom.count());
-	// remove old edges from existing front, add to new front
-	var newFront = new MLSMesh3D.EdgeFront(); // this.newEdgeFront(); // 
-	for(edge=edgeFrom.next(); edge!=lastEdge; ){
-		next = edge.next();
-		edgeFrontFrom.removeNodeLinkEdge(edge);
-		newFront.addNodeLinkEdgePush(edge);
-		edge.front(newFront);
-		edge = next;
-	}
-	newFront.addNodeLinkEdgePush(edgeCA);
-	edgeFrontFrom.addNodeLinkEdgeAfter(edgeFrom, edgeBC);
-	edgeFrontFrom.removeNodeLinkEdge(edgeFrom);
-	edgeBC.front(edgeFrontFrom);
-	edgeCA.front(newFront);
-	// front may be a two-edge front if lastEdge==edgeFrom
-//console.log("   -> new size: "+newFront.count());
-	if(newFront.count()<=2){
-//		console.log("KILL A FRONT 1: "+newFront.count());
-		this.removeFrontEdges(newFront);
-		newFront.kill();
-		newFront = null;
-	}else{
-		this.addFront(newFront);
-	}
-	// this might be a two-edge front if edgeFrom.next().next()==edgeTo
-	if(edgeFrontFrom.count()<=2){
-///		console.log("KILL A FRONT 2: "+edgeFrontFrom.count());
-		this.removeFront(edgeFrontFrom);
-		edgeFrontFrom.kill();
-	}
-	return newFront;
-}
-MLSMesh3D.Front.prototype.merge = function(edgeFrontFrom,edgeFrom, edgeFrontTo,edgeTo, vertexFrom,  field){
-	var tri, edge, lastEdge, next, edgeAB, edgeBC, edgeCA, inAB, dA, dB;
-	if( V3D.equal(vertexFrom,edgeTo.A()) ){
-		lastEdge = edgeTo;
-	}else{ // edgeTo.next().A()===edgeTo.B()
-		lastEdge = edgeTo.next();
-	}
-	// edges
-	edgeAB = new MLSMesh3D.Edge(edgeFrom.B(),edgeFrom.A()); // edgeFrom opposite
-	edgeBC = new MLSMesh3D.Edge(edgeFrom.A(),vertexFrom); // new
-	edgeCA = new MLSMesh3D.Edge(vertexFrom,edgeFrom.B()); // new
-	edgeAB.idealLength( field.necessaryMinLength(edgeAB) );
-	edgeBC.idealLength( field.necessaryMinLength(edgeBC) );
-	edgeCA.idealLength( field.necessaryMinLength(edgeCA) );
-	tri = new MLSMesh3D.Tri(edgeAB.A(),edgeBC.A(),edgeCA.A());
-		tri.MERGE = true;
-	tri.setEdges(edgeAB, edgeBC, edgeCA);
-	edgeAB.tri(tri);
-	edgeBC.tri(tri);
-	edgeCA.tri(tri);
-	this.removeEdge(edgeFrom);
-	this.addEdge(edgeBC);
-	this.addEdge(edgeCA);
-	field.addTri(tri);
-	// TODO: if fronts have opposite orientation, need to go thru edges in reverse
-	// front
-	var nodeStart = lastEdge.prev();
-	edgeFrontFrom.addNodeLinkEdgeBefore(edgeFrom, edgeBC);
-	for(edge=lastEdge; edge!=nodeStart; ){
-		next = edge.next();
-		edgeFrontTo.removeNodeLinkEdge(edge);
-		edgeFrontFrom.addNodeLinkEdgeBefore(edgeFrom,edge);
-		edge.front(edgeFrontFrom);
-		edge = next;
-	}
-	edgeFrontTo.removeNodeLinkEdge(nodeStart);
-	edgeFrontFrom.addNodeLinkEdgeBefore(edgeFrom,nodeStart);
-	edgeFrontFrom.addNodeLinkEdgeBefore(edgeFrom,edgeCA);
-	edgeFrontFrom.removeNodeLinkEdge(edgeFrom);
-	nodeStart.front(edgeFrontFrom);
-	edgeBC.front(edgeFrontFrom);
-	edgeCA.front(edgeFrontFrom);
-	//console.log("NEW FRONTS COUNT: "+edgeFrontFrom.count()+" | "+edgeFrontTo.count());
-	this.removeFront( edgeFrontTo );
-	return edgeFrontTo;
-}
-*/
 Mesh3D.prototype.growTriangle = function(front, edge, vertex){
 	var a = edge.A();
 	var b = edge.B();
@@ -2648,13 +2522,10 @@ Mesh3D.prototype.growTriangle = function(front, edge, vertex){
 	var idealAC = this.iteritiveEdgeSizeFromPoint(V3D.midpoint(c,a));
 	var edgeAC = new Mesh3D.Edge3D(a,c, idealAC); // new
 	var edgeCB = new Mesh3D.Edge3D(c,b, idealBC); // new
-	var edgeBC = new Mesh3D.Edge3D(b,c, idealBC); // inside
-	var edgeCA = new Mesh3D.Edge3D(c,a, idealAC); // inside
+	var edgeBA = new Mesh3D.Edge3D(b,a, idealAB); // opposite
 	// triangle
-	var tri = new Mesh3D.Tri3D(edgeAB,edgeBC,edgeCA);
+	var tri = new Mesh3D.Tri3D(edgeAC,edgeCB,edgeBA);
 	this.addTri(tri);
-	edgeAC.tri(tri);
-	edgeCB.tri(tri);
 	// edges
 	this.removeEdge(edge);
 	this.addEdge(edgeAC);
@@ -2662,8 +2533,8 @@ Mesh3D.prototype.growTriangle = function(front, edge, vertex){
 	// add new edges to front
 	edgeAC.front(front);
 	edgeCB.front(front);
-	front.pushEdgeAfter(edge,edgeAC);
 	front.pushEdgeAfter(edge,edgeCB);
+	front.pushEdgeAfter(edge,edgeAC);
 	// remove old edge
 	front.popEdge(edge);
 }

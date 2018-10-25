@@ -315,32 +315,20 @@ https://cloud.google.com/appengine/docs/nodejs/
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
+-> if small triangles are used => lots of holes
+-> if large triangles are used => loose detail
+
+
 - local curvature seems wrong
 	- seems to also change with sampling density
+		=> auto minimum size the angle such that the curvature results in a triangle size minimum of 2*(cellNeighborhood)
+			=> rho = curvature / neighborhoodsize
 
 
 - bad triangles being made as a result of comprimize
 - prioritize lowest-angle tris instead?
 
 
-
-- get triangle edges / orientations straight
-	- front edges are 'pending' and latch on to 'current' tris
-	- when a new tri is made, there are a net 6 half-edges involved
-
-
-new Mesh3D.Tri3D(
-
-
-TRIANGLE: CW
-EDGE: CCW
-
-- seed
-- cut ear
-- grow
-- split
-- merge
-- close
 
 
 

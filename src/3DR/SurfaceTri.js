@@ -704,7 +704,7 @@ SurfaceTri.prototype.loadPointFile = function(){
 		// this.subSampleArray(list,5000);
 		// this.subSampleArray(list,2000);
 		// this.subSampleArray(list,1000);
-		this.subSampleArray(list,500);
+		// this.subSampleArray(list,500);
 		var i, v, len = list.length;
 		var max = list[0].copy();
 		var min = list[0].copy();
