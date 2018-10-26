@@ -696,9 +696,9 @@ SurfaceTri.prototype.subSampleArray = function(array, count){
 }
 SurfaceTri.prototype.loadPointFile = function(){
 	console.log("loadPointFile");
-	 var sourceFileName = "./images/points/saltdome_1019.pts";
+	 // var sourceFileName = "./images/points/saltdome_1019.pts";
 	// var sourceFileName = "./images/points/foot_5092.pts";
-	// var sourceFileName = "./images/points/bunny_30571.pts";
+	var sourceFileName = "./images/points/bunny_30571.pts";
 	// var sourceFileName = "./images/points/test.pts";
 	var ajax = new Ajax();
 	ajax.get(sourceFileName,this,function(e){
@@ -708,8 +708,8 @@ SurfaceTri.prototype.loadPointFile = function(){
 		// Code.subSampleArray(list,10000);
 		// this.subSampleArray(list,5000);
 		// this.subSampleArray(list,2000);
-		this.subSampleArray(list,1000);
-		// this.subSampleArray(list,500);
+		// this.subSampleArray(list,1000);
+		this.subSampleArray(list,500);
 		var i, v, len = list.length;
 		var max = list[0].copy();
 		var min = list[0].copy();

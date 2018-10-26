@@ -2,10 +2,10 @@
 Mesh3D.X = 0;
 
 function Mesh3D(points, angle){
-	// this._angle = Math.PI*0.1; // 18 degrees
+	this._angle = Math.PI*0.1; // 18 degrees
 	// this._angle = Math.PI*0.25; // 45 degrees
 	// this._angle = Math.PI*0.50;
-	this._angle = Math.PI*1.0;
+	// this._angle = Math.PI*1.0;
 	// this._angle = Math.PI*2.0;
 	this._beta = Code.radians(55.0); // base angle
 		var beta = this._beta;
@@ -18,9 +18,13 @@ function Mesh3D(points, angle){
 	this.angle(angle);
 	this.points(points);
 	console.log("MESH3D: a: "+Code.degrees(this._angle)+" | b: "+Code.degrees(this._beta)+" | n: "+this._eta+" | ");
+
+	// this._reconstructionMethod = Mesh3D.RECONSTRUCTION_METHOD_MLS;
+	this._reconstructionMethod = Mesh3D.RECONSTRUCTION_METHOD_APSS;
 }
 
-
+Mesh3D.RECONSTRUCTION_METHOD_APSS = 1; // APSS / poisson
+Mesh3D.RECONSTRUCTION_METHOD_MLS = 2;
 // --------------------------------------------------------------------------------------------------------
 Mesh3D._pointToPoint = function(point){
 	return point.point();
@@ -132,14 +136,21 @@ Mesh3D.prototype.generateSurfaces = function(){
 	// for(var i=0; i<5; ++i){
 	// 	this._smoothSurface();
 	// }
-	this._estimateNormals();
-	// for(var i=0; i<5; ++i){
-	// 	this._smoothNormals();
-	// }
-	// // TODO: smooth normals?
-	this._propagateNormals();
-	// // TODO: subsample?
-	this._setCurvaturePoints();
+	if(this._reconstructionMethod==Mesh3D.RECONSTRUCTION_METHOD_APSS){
+		this._projectPointToSurface = this._projectPointToSurface_APSS;
+		this._estimateNormals();
+		// for(var i=0; i<5; ++i){
+		// 	this._smoothNormals();
+		// }
+		// // TODO: smooth normals?
+		this._propagateNormals();
+		// // TODO: subsample?
+		this._setCurvaturePoints_APSS();
+	}
+	if(this._reconstructionMethod==Mesh3D.RECONSTRUCTION_METHOD_MLS){
+		this._projectPointToSurface = this._projectPointToSurface_MLS;
+		this._setCurvaturePoints_MLS();
+	}
 	this._iterateFronts();
 	// var triangles = this.toTriangleList();
 	// return triangles;
@@ -1109,11 +1120,13 @@ Mesh3D.prototype.convexNeighborhoodEdges = function(point){
 	}
 	return edges;
 }
-Mesh3D.prototype._setCurvaturePoints = function(){
+Mesh3D.prototype._setCurvaturePoints_MLS = function(){
 // if(!this._bivariate){
 // 	this._bivariate = new BivariateSurface(3);
 // }
-
+throw "MLS";
+}
+Mesh3D.prototype._setCurvaturePoints_APSS = function(){
 	// find ideal edge lengths at each input point:
 	var space = this._pointSpace;
 	var points = space.toArray();
@@ -1129,8 +1142,8 @@ Mesh3D.prototype._setCurvaturePoints = function(){
 		var neighbor = neighbors[1];
 		var localSize = V3D.distance(location,neighbor.point());
 		// var epsilon = localSize*0.001; // 0.001 ->
-		var epsilon = localSize*0.1;
-		// var epsilon = localSize*0.5;
+		// var epsilon = localSize*0.1;
+		var epsilon = localSize*0.5;
 		// var epsilon = localSize*1E-6;
 		// var epsilon = localSize*1.0;
 		// find local plane @ point
@@ -1264,7 +1277,7 @@ var groupIndex = 0;
 
 		// iterate:
 		// var maxIter = 10;
-		// var maxIter = 100;
+		var maxIter = 100;
 		// var maxIter = 1000;
 		// var maxIter = 2000;
 		// var maxIter = 4000;
@@ -1273,7 +1286,7 @@ var groupIndex = 0;
 		// var maxIter = 15000;
 		// var maxIter = 20000;
 		// var maxIter = 40000;
-		var maxIter = 60000;
+		// var maxIter = 60000;
 		for(var i=0; i<maxIter; ++i){
 			console.log("+---------------------------------------------------------------------------------------------+ GROUP: "+groupIndex+" +------------------+ ITERATION "+i+" / "+fronts.count()+" ("+this._triangleSpace.count()+")");
 			// next best front
@@ -1306,7 +1319,6 @@ var groupIndex = 0;
 
 			// find ideal projected location
 			var point = this.vertexPredict(edge);
-
 			if( Code.isNaN(point.x) || Code.isNaN(point.y) || Code.isNaN(point.z) ){
 				console.log("FOUND NAN POINT");
 				front.deferBoundaryEdge(edge);
@@ -1575,7 +1587,10 @@ Mesh3D.prototype.seedTriFromPoint = function(fronts, seed){
 	edgeBC.front(edgeFront);
 	edgeCA.front(edgeFront);
 }
-Mesh3D.prototype._projectPointToSurface = function(startingLocation){ // assumption near surface
+Mesh3D.prototype._projectPointToSurface_MLS = function(startingLocation){
+
+}
+Mesh3D.prototype._projectPointToSurface_APSS = function(startingLocation){ // assumption near surface
 	var space = this._pointSpace;
 	var kNNEstimate = 8;
 	var kNNWindow = 4;

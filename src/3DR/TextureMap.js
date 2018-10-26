@@ -1,5 +1,5 @@
 // TextureMap.js
-
+// packs disjoint UV triangles into single images
 function TextureMap(){
 	this._atlas = []; // list of textures
 	//this._textures = []; // ?

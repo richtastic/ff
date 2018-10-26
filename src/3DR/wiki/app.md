@@ -290,8 +290,11 @@ vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 	=> scene triangle model
 (11/05)
 - texturing
-	- view-based surface textureing
+	- view-based surface texturing
 	- blending between triangles
+		- 
+	- separate triangles into texture lookup / files
+		- TextureMap (from textures to atlas)
 	=> scene textured model
 (11/19)
 - viewing output
@@ -317,6 +320,11 @@ https://cloud.google.com/appengine/docs/nodejs/
 
 
 - format of triangle / texture files
+
+
+
+- texture triangles alg start
+
 
 
 
