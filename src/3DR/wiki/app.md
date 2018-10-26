@@ -315,6 +315,20 @@ https://cloud.google.com/appengine/docs/nodejs/
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
+
+- format of triangle / texture files
+
+
+
+- better 'edge point' determining
+- curvature calc is wrong
+
+- try projection via plane MLS surface for curvature estimates
+
+
+- if projected location is much different than projected size (eg 2.0), then mark as dead end
+
+
 -> if small triangles are used => lots of holes
 -> if large triangles are used => loose detail
 

@@ -9863,7 +9863,10 @@ Code.valuesIn = function(array, value){
 }
 
 // CURVATURE:
-Code.curvature3D = function(a,b,c, d,e,f, g,h,i){ // assumed on a plane projected to height-field
+Code.curvature3D = function(a,b,c, d,e,f, g,h,i){ 
+	return Code._curvature3D(a,b,c, d,e,f, g,h,i, true);
+}
+Code._curvature3D = function(a,b,c, d,e,f, g,h,i, simple){ // assumed on a plane projected to height-field
 	// average of distances ~ dx & dy
 	var dx = (f.x-d.x)*0.5;
 	var dy = (h.y-b.y)*0.5;
@@ -9893,9 +9896,20 @@ Code.curvature3D = function(a,b,c, d,e,f, g,h,i){ // assumed on a plane projecte
 	var K = (L*N - M*M)/den;
 	var H = (E*N + G*L - 2.0*F*M)/(2.0*den);
 	var inside = H*H - K;
+		inside = Math.max(inside,0);
 	var sqin = Math.sqrt(inside);
 	var pMin = H - sqin;
 	var pMax = H + sqin;
+	if(simple){
+		var min = Math.abs(pMax);
+		var max = Math.abs(pMin);
+		if(max<min){
+			temp = max;
+			max = min;
+			min = temp;
+		}
+		return {"min":min, "max":max, "normal":unitNormal};
+	}
 	// radius of curvature
 	var rA = 1.0/pMin;
 	var rB = 1.0/pMax;
@@ -9916,6 +9930,9 @@ Code.curvature3D = function(a,b,c, d,e,f, g,h,i){ // assumed on a plane projecte
 	}
 	// perpendicular vector:
 	var twist = V3D.cross(unitNormal,V3D.DIRZ); twist.norm();
+	if(twist.length()==0){
+		twist.set(0,0,1);
+	}
 	var angle = V3D.angle(V3D.DIRZ,unitNormal);
 	// rotate vectors to match z axis
 	var twistX = V3D.rotateAngle(new V3D(),V3D.DIRX,twist,-angle);

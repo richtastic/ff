@@ -127,7 +127,7 @@ OctSpace.prototype.removeObject = function(object){
 	// remove from leaves
 	for(i=0; i<voxels.length; ++i){
 		voxel = voxels[i];
-		voxel.removeObject(package, rect, this._toCuboidFxn, this._epsilon, clearArray);
+		var removed = voxel.removeObject(package, rect, this._toCuboidFxn, this._epsilon, clearArray);
 	}
 	// remove temp var
 	for(i=0; i<clearArray.length; ++i){
@@ -323,7 +323,7 @@ OctSpace.Voxel.prototype.removeObject = function(package, rect, toCubeFxn, epsil
 	return contains;
 }
 OctSpace.Voxel.prototype._removedItem = function(removed, removeArray){
-	if(!this._temp){ // already addressed a removal
+	if(this._temp){ // already addressed a removal
 		return;
 	}
 	removeArray.push(this);

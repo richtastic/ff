@@ -26,10 +26,55 @@ function classesLoadedFxn(){
 	// this._canvas.addFunction(Canvas.EVENT_MOUSE_CLICK,this.handleMouseClickFxn,this);
 	GLOBALSTAGE = this._stage;
 
+	
+*/
+
+console.log("surface.html");
+// return;
+
+/*
+
+	// 3D curvature
+
+	var origin = new V3D(0,0,0);
+	var radius = 20;
+	var delta = 0.1;
+	var s = [];
+	var index = 0;
+	for(var j=-1; j<=1; ++j){
+		for(var i=-1; i<=1; ++i){
+			var p = new V2D(i*delta, j*delta);
+			var x = p.length();
+			var z = Math.sqrt(radius*radius - x*x);
+z = 1.0;
+			var v = new V3D(p.x,p.y,z);
+			console.log(index+": "+v+"");
+			s[index] = v;
+			++index;
+		}
+	}
+	console.log(s);
+
+	var a = s[0];
+	var b = s[1];
+	var c = s[2];
+	var d = s[3];
+	var e = s[4];
+	var f = s[5];
+	var g = s[6];
+	var h = s[7];
+	var i = s[8];
+
+	var curvature = Code.curvature3D(a,b,c, d,e,f, g,h,i);
+	console.log(curvature);
+
+
+	return;
+
+*/
+/*
+
 	// close points:
-
-
-
 	var oa = new V3D(0,0,0);
 	var da = new V3D(50,10,0);
 

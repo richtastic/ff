@@ -51,6 +51,7 @@ return;
 //this.setupLineTest();
 this._displayPoints = true;
 this._displayTriangles = true;
+this._displayLines= true;
 this._seeThru = false;
 	//
 	this._userMatrix = new Matrix3D().identity();
@@ -468,7 +469,7 @@ SurfaceTri.prototype.onEnterFrameFxn3D = function(e){
 			this._stage3D.drawTriangles(this._vertexPositionAttrib, this._planeTriangleVertexList);
 		}
 		// lines
-		if(this._linePointBuffer){
+		if(this._linePointBuffer && this._displayLines){
 			this._stage3D.bindArrayFloatBuffer(this._vertexPositionAttrib, this._linePointBuffer);
 			this._stage3D.bindArrayFloatBuffer(this._vertexColorAttrib, this._lineColorBuffer);
 			this._stage3D.setLineWidth(2.0);
@@ -499,6 +500,9 @@ SurfaceTri.prototype.keyboardKeyDown = function(e){
 	}
 	if(key==Keyboard.KEY_LET_X){
 		this._displayPoints = !this._displayPoints;
+	}
+	if(key==Keyboard.KEY_LET_C){
+		this._displayLines = !this._displayLines;
 	}
 	if(key==Keyboard.KEY_LET_A){
 		this.resetTris();
@@ -692,18 +696,19 @@ SurfaceTri.prototype.subSampleArray = function(array, count){
 }
 SurfaceTri.prototype.loadPointFile = function(){
 	console.log("loadPointFile");
-	 // var sourceFileName = "./images/points/saltdome_1019.pts";
+	 var sourceFileName = "./images/points/saltdome_1019.pts";
 	// var sourceFileName = "./images/points/foot_5092.pts";
-	var sourceFileName = "./images/points/bunny_30571.pts";
+	// var sourceFileName = "./images/points/bunny_30571.pts";
 	// var sourceFileName = "./images/points/test.pts";
 	var ajax = new Ajax();
 	ajax.get(sourceFileName,this,function(e){
 		var list = Code.parsePointSetString(e);
+		console.log("source count: "+list.length);
 		// Code.subSampleArray(list,20000);
 		// Code.subSampleArray(list,10000);
-		this.subSampleArray(list,5000);
+		// this.subSampleArray(list,5000);
 		// this.subSampleArray(list,2000);
-		// this.subSampleArray(list,1000);
+		this.subSampleArray(list,1000);
 		// this.subSampleArray(list,500);
 		var i, v, len = list.length;
 		var max = list[0].copy();
@@ -731,7 +736,7 @@ SurfaceTri.prototype.loadPointFile = function(){
 			// }
 		}
 		// TODO: UNCOMMENT
-		this.startPointCloud(list);
+		// this.startPointCloud(list);
 		// this.setupSphere3D(100);
 		// this.setupSphere3D(500);
 		// this.setupSphere3D(1000);
@@ -739,7 +744,7 @@ SurfaceTri.prototype.loadPointFile = function(){
 		// this.setupTorus3D(1000);
 		// this.setupTorus3D(2000);
 		// this.setupTorus3D(5000);
-		// this.startPointCloud(list);
+		this.startPointCloud(list);
 	});
 }
 SurfaceTri.prototype.setupTorus3D = function(count,radiusA,radiusB,error){
@@ -1151,7 +1156,7 @@ colorsT.push(1.00, 0.00, 0.00, 0.95);
 colorsT.push(1.00, 0.00, 0.00, 0.95);
 }
 
-if(GLOBAL_LAST_PREV){
+if(false){//GLOBAL_LAST_PREV){
 	// var edges = [GLOBAL_LAST_PREV,GLOBAL_LAST_NEXT];
 	// var edges = [GLOBAL_LAST_PREV];
 	var edges = [GLOBAL_LAST_NEXT];
