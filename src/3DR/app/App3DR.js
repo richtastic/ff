@@ -5385,18 +5385,33 @@ projects/
 			surface.yaml 				triangle soup of approximated surface & texture mapping
 				textures:
 					- 
-						id: 0
+						id: "0"
 						file: tex0.png
-						size: 256x256
+						width: 512
+						height: 512
 				triangles:
 					-
-						A: X,Y,Z
-						B: X,Y,Z
-						C: X,Y,Z
-						a: x,y
-						b: x,y
-						c: x,y
-						tex: texture ID
+						A:
+							i: # vertex index
+							x: # 2D location
+							y: 
+						B:
+							i:
+							x:
+							y:
+						C: 
+							i:
+							x:
+							y:
+						t: "0" # texture atlas id
+				vertexes:
+					- 
+						X: # position
+						Y:
+						Z:
+						x: # normal
+						y:
+						z:
 			textures/
 				tex0.png
 				tex1.png
@@ -5411,7 +5426,7 @@ projects/
 				cameras: 				user-created scene views
 					- K
 					- transform
-				triangles: 				scene geometry
+				triangles: 				scene geometry -> SHOULD THIS JUST BE THE RECONSTRUCTION ?
 					- A,B,C,a,b,c
 				snapshots: 				user-created photos
 					- ID
@@ -5421,6 +5436,35 @@ projects/
 				tex01.png
 			snapshots/
 				snapshot_0.png
+
+
+	
+
+
+			- format of triangle / texture files
+
+			textures
+				- 
+					- id: "0123"
+					- file: "tex_0123.png"
+					- width: 1024
+					- height: 1024
+				- ...
+
+			triangles:
+				- 
+					- t:
+					- A
+						- i # vertex index
+						- x # [0-1]
+						- y # [0-1]
+					- B
+						- ...
+					- C
+						- ...
+
+
+
 				
 
 	*/

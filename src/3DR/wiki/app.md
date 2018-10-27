@@ -125,6 +125,11 @@
 		- you choose a filter to color part of the scene something else (or draw on it)
 		- you send the picture to your friend to see if she agrees.
 
+	- you're a museum historian and want to make public heratige artefacts available 
+		- you set up your artefact
+		- take several photos from various angles
+		- you put the model up on the museum website
+
 	- social sharing
 
 	- measure something?
@@ -318,13 +323,19 @@ https://cloud.google.com/appengine/docs/nodejs/
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
+- subdividing tris if necessary
+	- use largest projected edge
+- map to atlas
+- render to atlas one image at a time
 
-- format of triangle / texture files
 
 
+- HOW TO OPTIMIZE VERTEX POSITION IF IMAGE NOT IN MEMORY
+	- try to group vertexes by scene regions
+		=> optimize 
 
-- texture triangles alg start
 
+=> image matrix cache to hold most last used ~10 / 32MB
 
 
 
@@ -347,10 +358,16 @@ https://cloud.google.com/appengine/docs/nodejs/
 			=> rho = curvature / neighborhoodsize
 
 
-- bad triangles being made as a result of comprimize
-- prioritize lowest-angle tris instead?
+
+- AFTER SURFACE IS TRIANGULATED/TESSELATED: NEED TO MAKE SURE TRIANGLES ARE ALL ORIENTED WITH SAMPLE POINTS
+	-> CLOSEST POINT(s) + dot NORMAL
+	-> GRAPH + PROPAGATING 
 
 
+
+- surface illumination-invariant (un-shaded) coloring processing of images
+	- Lambertian surface
+	- BRDF
 
 
 

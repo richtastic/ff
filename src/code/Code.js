@@ -8202,6 +8202,31 @@ Code.triTriIntersection3DBoolean = function(a1,b1,c1,n1, a2,b2,c2,n2){ // n = b-
 // intersections, fenceA-B
 
 
+
+Code.triSizeWithBase = function(a,b,c){
+	var dAB = V3D.sub(b,a);
+	var lAB = dAB.length();
+	var dAC = V3D.sub(c,a);
+	var lAC = dAC.length();
+	if(lAB==0 || lAC==0){
+		return null;
+	}
+	dAB.scale(1.0/lAB);
+	dAC.scale(1.0/lAC);
+	var dotAB = V3D.dot(dAB,dAC);
+	var width = lAB;
+	if(dotAB<0){ // opposite direction
+		width -= dotAB*lAC; // add a negative
+	}
+	var norm = V3D.cross(dAB,dAC);
+	dAB.rotate(norm,Math.PIO2);
+	dotAB = V3D.dot(dAB,dAC); // orthogonal direction
+	var height = Math.abs(dotAB);
+	return new V2D(width,height);
+};
+
+
+
 Code.pointsNullOrCloseToLine3D = function(intersectionPoints, lineA, lineB){
 	if(!intersectionPoints){
 		return true;

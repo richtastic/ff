@@ -24,7 +24,7 @@ function Mesh3D(points, angle){
 }
 
 Mesh3D.RECONSTRUCTION_METHOD_APSS = 1; // APSS / poisson
-Mesh3D.RECONSTRUCTION_METHOD_MLS = 2;
+Mesh3D.RECONSTRUCTION_METHOD_MLS = 2; // local plane + bivariate surface
 // --------------------------------------------------------------------------------------------------------
 Mesh3D._pointToPoint = function(point){
 	return point.point();

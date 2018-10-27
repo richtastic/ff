@@ -147,6 +147,11 @@ OctSpace.prototype.objectsInsideCuboid = function(min,max){
 	this._root.objectsInsideCuboid(arr,min,max,this._toCuboidFxn);
 	return arr;
 }
+OctTree.prototype.objectsInsideRay = function(org,dir,radius){ // objects inside cylinder-ray
+	var arr = [];
+	this._root.objectsInsideRay(arr,org,dir,radius,this._toPoint);
+	return arr;
+}
 // --------------------------------------------------------------------------------------------------------- 
 OctSpace.Package = function(object){
 	this._object = null;

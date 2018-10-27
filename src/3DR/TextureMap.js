@@ -1,9 +1,11 @@
 // TextureMap.js
 // packs disjoint UV triangles into single images
-function TextureMap(){
+function TextureMap(maxTextureSize){
+	maxTextureSize = maxTextureSize!==undefined ? maxTextureSize : 512;
 	this._atlas = []; // list of textures
 	//this._textures = []; // ?
 	this._mappings = []; // list of all texture triangles
+	this._maximumTextureSize = maxTextureSize;
 }
 
 TextureMap.prototype.addTriangle = function(tri3D, triList, imageList){
@@ -19,11 +21,12 @@ TextureMap.prototype.addTriangle = function(tri3D, triList, imageList){
 
 	return map;
 }
-TextureMap.prototype.pack = function(){
+TextureMap.prototype.pack = function(andRender){
+	andRender = andRender!==undefined ? andRender : false;
 	var i, j, k;
 	console.log("PACKING ...");
 	// go thru individual triangles & combine into texture
-	var maxTextureSize = 512;
+	var maxTextureSize = this._maximumTextureSize;
 	var textureWidth = maxTextureSize;
 	var textureHeight = maxTextureSize;
 	var bounds = new Rect(0,0, textureWidth, textureHeight);
@@ -41,6 +44,9 @@ console.log(" 0 ");
 	//var packed = Rect.pack(rects, bounds);
 	var packing = Rect.pack(rects, bounds, true);
 console.log(packing);
+console.log(andRender);
+throw "HOW TO ATLAS TIME ... ";
+
 	var dead = packing["invalid"]; // TODO: something with unmapped tris => convert to multiple tris ? do this beforehand ?
 	var bins = packing["bins"];
 	var textures = [];
