@@ -32,22 +32,31 @@ function classesLoadedFxn(){
 console.log("surface.html");
 // return;
 
-/*
+
 
 	// 3D curvature
 
 	var origin = new V3D(0,0,0);
-	var radius = 20;
-	var delta = 0.1;
+	// var radius = new V3D(1,1,1);
+	var radius = new V3D(1,1,2);
+	// var radius = new V3D(5,10,20);
+	// var off = new V2D(0.0,0.0);
+	var off = new V2D(0.1,0.1);
+	var delta = 0.001;
 	var s = [];
 	var index = 0;
 	for(var j=-1; j<=1; ++j){
 		for(var i=-1; i<=1; ++i){
-			var p = new V2D(i*delta, j*delta);
-			var x = p.length();
-			var z = Math.sqrt(radius*radius - x*x);
-z = 1.0;
-			var v = new V3D(p.x,p.y,z);
+			var x = i*delta;
+			var y = j*delta;
+			x += off.x;
+			y += off.y;
+			var z = Math.sqrt( (1.0 - Math.pow(x/radius.x,2) - Math.pow(y/radius.y,2))*Math.pow(radius.z,2) );
+			// var p = new V2D(i*delta, j*delta);
+			// var rad = radius*(2-Math.abs(j));
+			// var x = p.length();
+			// var z = Math.sqrt(rad*rad - x*x);
+			var v = new V3D(x,y,z);
 			console.log(index+": "+v+"");
 			s[index] = v;
 			++index;
@@ -67,11 +76,46 @@ z = 1.0;
 
 	var curvature = Code.curvature3D(a,b,c, d,e,f, g,h,i);
 	console.log(curvature);
+	var min = curvature["min"];
+	var max = curvature["max"];
+	var rMin = 1.0/max;
+	var rMax = 1.0/min;
 
+	console.log("radius: "+rMin+" | "+rMax);
+
+
+
+
+	// eigen way:
+
+
+	// var C = new Matrix(2,2);
+	// dNdx = 0;
+	// c.set(0,0, dNxdx);
+	// c.set(0,0, dNxdy);
+	// c.set(0,0, dNxdz);
+	// c.set(0,0, dNdx);
+	// c.set(0,0, dNdx);
+	// c.set(0,0, dNdx);
+	// c.set(0,0, 0);
+	// c.set(0,0, 0);
+	// c.set(0,0, 0);
+	// console.log(C+"");
+
+	var curvature = Code.curvature3D5(e, d,f, b,h);
+	console.log(curvature)
+
+	var min = curvature["min"];
+	var max = curvature["max"];
+	var rMin = 1.0/max;
+	var rMax = 1.0/min;
+
+	console.log("radius: "+rMin+" | "+rMax);
 
 	return;
 
-*/
+
+
 /*
 
 	// close points:

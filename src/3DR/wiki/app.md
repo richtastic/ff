@@ -323,6 +323,17 @@ https://cloud.google.com/appengine/docs/nodejs/
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
+- why does decreasing the curvature epsilon value cause the curvature to INCREASE ?
+	x discontinuity in surface from sampling?
+	x projection pushes off into odd directions?
+		=> projected plane looks pretty smooth
+
+- how does method work:
+	- ellipse?
+	- off-centered ellipse??
+
+
+
 - subdividing tris if necessary
 	- use largest projected edge
 - map to atlas

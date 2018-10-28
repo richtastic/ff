@@ -696,9 +696,9 @@ SurfaceTri.prototype.subSampleArray = function(array, count){
 }
 SurfaceTri.prototype.loadPointFile = function(){
 	console.log("loadPointFile");
-	 // var sourceFileName = "./images/points/saltdome_1019.pts";
-	// var sourceFileName = "./images/points/foot_5092.pts";
-	var sourceFileName = "./images/points/bunny_30571.pts";
+	// var sourceFileName = "./images/points/saltdome_1019.pts";
+	var sourceFileName = "./images/points/foot_5092.pts";
+	// var sourceFileName = "./images/points/bunny_30571.pts";
 	// var sourceFileName = "./images/points/test.pts";
 	var ajax = new Ajax();
 	ajax.get(sourceFileName,this,function(e){
@@ -708,8 +708,8 @@ SurfaceTri.prototype.loadPointFile = function(){
 		// Code.subSampleArray(list,10000);
 		// this.subSampleArray(list,5000);
 		// this.subSampleArray(list,2000);
-		// this.subSampleArray(list,1000);
-		this.subSampleArray(list,500);
+		this.subSampleArray(list,1000);
+		// this.subSampleArray(list,500);
 		var i, v, len = list.length;
 		var max = list[0].copy();
 		var min = list[0].copy();
@@ -856,9 +856,9 @@ GLOBAL_RAYS = null;
 
 
 	var fronts = mesh._fronts;
-	console.log(fronts);
+	// console.log(fronts);
 	var allTriangles = mesh._triangleSpace.toArray();
-	console.log(allTriangles);
+	// console.log(allTriangles);
 
 
 /*
@@ -1206,36 +1206,38 @@ if(GLOBAL_RAYS && GLOBAL_RAYS.length>0){
 // console.log("TRIANGLES: "+tris.length);
 
 var fronts = mesh._fronts;
-// front._validateFronts();
-var edgeFronts = fronts._fronts;
-console.log("FRONTS: "+edgeFronts.length);
-for(var i=0; i<edgeFronts.length; ++i){
-	var edgeFront = edgeFronts[i];
-	console.log(edgeFront);
-	var edgeList = edgeFront._edgeList;
-	var edgeListLength = edgeList.length();
-	console.log("   "+i+" : "+edgeListLength);
-	//console.log(edgeList);
-	for(var j=0, edge=edgeList.head().data(); j<edgeListLength; ++j, edge=edge.next()){ 
-		var M = edge.midpoint();
-		var C = edge.tri().normal().scale(edge.length()).scale(0.5).add(M);
-		var tri = new Tri3D(edge.A(),edge.B(),C);
+	if(fronts){
+	// front._validateFronts();
+	var edgeFronts = fronts._fronts;
+	console.log("FRONTS: "+edgeFronts.length);
+	for(var i=0; i<edgeFronts.length; ++i){
+		var edgeFront = edgeFronts[i];
+		console.log(edgeFront);
+		var edgeList = edgeFront._edgeList;
+		var edgeListLength = edgeList.length();
+		console.log("   "+i+" : "+edgeListLength);
+		//console.log(edgeList);
+		for(var j=0, edge=edgeList.head().data(); j<edgeListLength; ++j, edge=edge.next()){ 
+			var M = edge.midpoint();
+			var C = edge.tri().normal().scale(edge.length()).scale(0.5).add(M);
+			var tri = new Tri3D(edge.A(),edge.B(),C);
 
-		V3D.pushToArray(pointsT,tri.A());
-		V3D.pushToArray(pointsT,tri.B());
-		V3D.pushToArray(pointsT,tri.C());
-		for(k=0; k<3; ++k){
-			if(edge.boundary()){
-				colorsT.push(0.50, 0.50, 0.50, 0.80);
-			}else{
-				if(i%4==0){
-					colorsT.push(0.00, 0.50, 0.50, 0.80);
-				}else if(i%4==1){
-					colorsT.push(0.50, 0.00, 0.50, 0.80);
-				}else if(i%4==2){
-					colorsT.push(0.50, 0.00, 0.50, 0.80);
-				}else if(i%4==3){
-					colorsT.push(0.50, 0.50, 0.00, 0.80);
+			V3D.pushToArray(pointsT,tri.A());
+			V3D.pushToArray(pointsT,tri.B());
+			V3D.pushToArray(pointsT,tri.C());
+			for(k=0; k<3; ++k){
+				if(edge.boundary()){
+					colorsT.push(0.50, 0.50, 0.50, 0.80);
+				}else{
+					if(i%4==0){
+						colorsT.push(0.00, 0.50, 0.50, 0.80);
+					}else if(i%4==1){
+						colorsT.push(0.50, 0.00, 0.50, 0.80);
+					}else if(i%4==2){
+						colorsT.push(0.50, 0.00, 0.50, 0.80);
+					}else if(i%4==3){
+						colorsT.push(0.50, 0.50, 0.00, 0.80);
+					}
 				}
 			}
 		}

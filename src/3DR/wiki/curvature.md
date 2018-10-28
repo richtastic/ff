@@ -31,3 +31,12 @@ http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.413.3008&rep=rep1&type=
 
 
 
+if the calculated normal of surface is not what was sampled at, can use the difference in angle:
+
+
+k_actual = kappa * cos(theta) = dot(normal,N)
+
+
+
+
+

@@ -357,7 +357,9 @@ TextureViewBlend.prototype._calculatePacking = function(){ // keep triangles und
 			size2D = sizeAC;
 			area2D = areaAC;
 		}
-		tri.
+		
+HERE
+
 		var map = atlas.addRectMapping(size2D, {});
 		tri.temp(map);
 	}

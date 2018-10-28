@@ -9888,6 +9888,89 @@ Code.valuesIn = function(array, value){
 }
 
 // CURVATURE:
+
+Code.curvature3D5 = function(e, d,f, b,h){ // center, xlow,xhigh, ylow,yhigh -- assumes normal estimated at 0,0,1
+	if(!Code.curvature3D5._C){
+		Code.curvature3D5._C = new Matrix(3,3);
+		Code.curvature3D5._n = new V3D();
+		Code.curvature3D5._n0 = new V3D();
+		Code.curvature3D5._n1 = new V3D();
+		Code.curvature3D5._n2 = new V3D();
+		Code.curvature3D5._n3 = new V3D();
+		Code.curvature3D5._eb = new V3D();
+		Code.curvature3D5._ed = new V3D();
+		Code.curvature3D5._ef = new V3D();
+		Code.curvature3D5._eh = new V3D();
+	}
+	var df = V3D.sub(f,d);
+	var bh = V3D.sub(h,b);
+	var normal = V3D.cross(df,bh).norm();
+	var normDot = V3D.dot(V3D.DIRZ,normal); // inaccurate normal sampling error == cos(theta)
+// console.log("normDot: "+normDot);
+normDot = 1;
+	// assumed flat:
+	var dx = Math.abs((f.x-d.x)*0.5);
+	var dy = Math.abs((h.y-b.y)*0.5);
+	// actual chord length:
+	// var dx = df.length()*0.5;
+	// var dy = bh.length()*0.5;
+	var eb = V3D.sub(Code.curvature3D5._eb,b,e);
+	var ed = V3D.sub(Code.curvature3D5._ed,d,e);
+	var ef = V3D.sub(Code.curvature3D5._ef,f,e);
+	var eh = V3D.sub(Code.curvature3D5._eh,h,e);
+	var N0 = V3D.cross(Code.curvature3D5._n0,eb,ed).norm();
+	var N1 = V3D.cross(Code.curvature3D5._n1,ef,eb).norm();
+	var N2 = V3D.cross(Code.curvature3D5._n2,ed,eh).norm();
+	var N3 = V3D.cross(Code.curvature3D5._n3,eh,ef).norm();
+// console.log(N0.length(),N1.length(),N2.length(),N3.length());
+	var dNxdx = 0.5*( (N1.x-N0.x) + (N3.x-N2.x) ) / dx;
+	var dNydx = 0.5*( (N1.y-N0.y) + (N3.y-N2.y) ) / dx;
+	var dNzdx = 0.5*( (N1.z-N0.z) + (N3.z-N2.z) ) / dx;
+	var dNxdy = 0.5*( (N2.x-N0.x) + (N3.x-N1.x) ) / dy;
+	var dNydy = 0.5*( (N2.y-N0.y) + (N3.y-N1.y) ) / dy;
+	var dNzdy = 0.5*( (N2.z-N0.z) + (N3.z-N1.z) ) / dy;
+	// var dNxdz = 0;
+	// var dNydz = 0;
+	// var dNzdz = 0;
+	var C = Code.curvature3D5._C;
+	C.set(0,0, dNxdx);
+	C.set(0,1, dNxdy);
+	// C.set(0,2, dNxdz);
+	C.set(1,0, dNydx);
+	C.set(1,1, dNydy);
+	// C.set(1,2, dNydz);
+	C.set(2,0, dNzdx);
+	C.set(2,1, dNzdy);
+	// C.set(2,2, dNzdz);
+	var eig = Matrix.eigenValuesAndVectors(C);
+
+	// 	console.log(dNxdx);
+	// console.log(dNxdy);
+	// console.log(dNydx);
+	// 	console.log(dNydy);
+	// console.log(dNzdx);
+	// console.log(dNzdy);
+
+	var values = eig["values"];
+	// console.log(values)
+	var kappaA = values[0];
+	var kappaB = values[1];
+	var kappaC = values[2];
+	if(kappaA<0 || kappaB<0 || kappaC<0){
+		normal.scale(-1);
+	}
+	if(kappaA==0){
+		kappaA = C;
+	}else if(kappaB==0){
+		kappaB = kappaC;
+	}
+	kappaA = Math.abs(kappaA*normDot);
+	kappaB = Math.abs(kappaB*normDot);
+	var min = Math.min(kappaA,kappaB);
+	var max = Math.max(kappaA,kappaB);
+	return {"min":min, "max":max, "normal":normal};
+}
+Code.curvature3D5._C = null;
 Code.curvature3D = function(a,b,c, d,e,f, g,h,i){ 
 	return Code._curvature3D(a,b,c, d,e,f, g,h,i, true);
 }
