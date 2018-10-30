@@ -323,21 +323,44 @@ https://cloud.google.com/appengine/docs/nodejs/
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
-- why does decreasing the curvature epsilon value cause the curvature to INCREASE ?
-	x discontinuity in surface from sampling?
-	x projection pushes off into odd directions?
-		=> projected plane looks pretty smooth
-
-- how does method work:
-	- ellipse?
-	- off-centered ellipse??
-
-
+TRIANGLE TEXTURING::::::
 
 - subdividing tris if necessary
-	- use largest projected edge
-- map to atlas
-- render to atlas one image at a time
+	- how to reference a parent triangle when doing rendering ....
+
+
+- output triangle model into file -- original 3D space should not be transformed at output
+
+
+
+- MLS surface projection
+	- variable sample size
+		- 'scale larger than noise level'
+		- 
+	- minimize energy fxn: Sum_i:  (dot(normal,pi) - dot(normal,POINT))^2 * THETA(||pi-q||)
+	- THETA = smooth, radial monotone decreasing fxn, positive in whole space
+		- theta(d) = exp(-d^2/h^2) ; h = variance
+	- then minimize bivariate least squares error
+
+
+
+- what is an adaptive sampling count mean - around areas of different sampling densities / error rates
+	 - not a constant neighbor count
+	 - not a constant distance
+		 - start with minimum amount [5-7]
+		 - increase radius until containing ellipsoid sigma0 & sigma1 are 2x as big as sigma3 [ensure some amount of planarness]
+
+	- pre-op on data to find best K sampling for each point
+		- start at (random?) point
+		- determine K linearly from ~5 to ~100
+			- set K
+			- recursive op on neighbors, using self as reference
+		- [repeat for other 'seed' points]
+
+
+
+- search radius | curvature | ideal-lengths --- something is wrong & smoothness between triangles nonexistant
+
 
 
 
@@ -351,9 +374,7 @@ https://cloud.google.com/appengine/docs/nodejs/
 
 
 - better 'edge point' determining
-- curvature calc is wrong
 
-- try projection via plane MLS surface for curvature estimates
 
 
 - if projected location is much different than projected size (eg 2.0), then mark as dead end

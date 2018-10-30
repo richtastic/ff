@@ -862,6 +862,17 @@ Code.binarySearchArray = function(arr,fxn,needle){ // Code.binarySearchArray([0,
 	return [middle];
 }
 */
+Code.objectToArray = function(object){
+	return Object.values(object);
+	// var arr = [];
+	// var keys = Code.keys(hash);
+	// for(var i=0; i<keys.length; ++i){
+	// 	var index = keys[i];
+	// 	var value = hash[index];
+	// 	arr.push(value);
+	// }
+	// return arr;
+}
 Code.forEach = function(object, fxn){
 	if(Code.isArray(object)){
 		return Code._forEachArray(object,fxn);
@@ -1244,21 +1255,20 @@ Code.getElementsWithFunction = function(element, fxn, stop, arr){
 	}
 	return arr;
 };
-
-Code.arrayIntersect = function(c,a,b){ // c = a && b
-	if(b===undefined){
-		b = a;
-		a = c;
-		c = [];
-	}
-	var i;
-	for(i=0; i<a.length; ++i){
-		if(Code.elementExists(b, a[i])){
-			c.push(a[i]);
-		}
-	}
-	return c;
-};
+// Code.arrayIntersect = function(c,a,b, equalFxn, combineFxn){ // c = a && b
+// 	if(b===undefined){
+// 		b = a;
+// 		a = c;
+// 		c = [];
+// 	}
+// 	var i;
+// 	for(i=0; i<a.length; ++i){
+// 		if(Code.elementExists(b, a[i])){
+// 			c.push(a[i]);
+// 		}
+// 	}
+// 	return c;
+// };
 Code.arrayPushNotEqual = function(a,o,v){
 	if(o!==v){
 		a.push(o);
@@ -1268,7 +1278,7 @@ Code.arrayPushNotEqual = function(a,o,v){
 Code.arrayPushNotNull = function(a,o){
 	Code.arrayPushNotEqual(a,o,null);
 }
-Code.arrayUnion = function(c,a,b){ // c = a + b
+Code.arrayUnion = function(c,a,b){ // c = a || b
 	if(b===undefined){
 		b = a;
 		a = c;
@@ -1278,6 +1288,40 @@ Code.arrayUnion = function(c,a,b){ // c = a + b
 	var i;
 	for(i=0; i<b.length; ++i){
 		Code.addUnique(c, b[i]);
+	}
+	return c;
+};
+Code.arrayIntersect = function(c,a,b, equalFxn, combineFxn){
+	if(b===undefined){
+		b = a;
+		a = c;
+		c = [];
+	}
+	if(c==a || c==b){
+		throw "need independent array";
+	}
+	for(var i=0; i<a.length; ++i){
+		var found = false;
+		var itemA = a[i];
+		for(j=0; j<b.length; ++j){
+			var itemB = b[j];
+			var equal = false;
+			if(equalFxn){
+				equal = equalFxn(itemA,itemB);
+			}else{
+				equal = itemA==itemB;
+			}
+			if(equal){
+				found = true;
+				break;
+			}
+		}
+		if(found){
+			if(combineFxn){
+				itemA = combineFxn(itemA,itemB);
+			}
+			c.push(itemA);
+		}
 	}
 	return c;
 };
@@ -8201,8 +8245,6 @@ Code.triTriIntersection3DBoolean = function(a1,b1,c1,n1, a2,b2,c2,n2){ // n = b-
 }
 // intersections, fenceA-B
 
-
-
 Code.triSizeWithBase = function(a,b,c){
 	var dAB = V3D.sub(b,a);
 	var lAB = dAB.length();
@@ -8215,18 +8257,24 @@ Code.triSizeWithBase = function(a,b,c){
 	dAC.scale(1.0/lAC);
 	var dotAB = V3D.dot(dAB,dAC);
 	var width = lAB;
+	var oWid = Math.abs(dotAB*lAC);
 	if(dotAB<0){ // opposite direction
-		width -= dotAB*lAC; // add a negative
+		width += oWid;
 	}
-	var norm = V3D.cross(dAB,dAC);
-	dAB.rotate(norm,Math.PIO2);
-	dotAB = V3D.dot(dAB,dAC); // orthogonal direction
-	var height = Math.abs(dotAB);
+	// var norm = V3D.cross(dAB,dAC);
+	// dAB.rotate(norm,Math.PIO2);
+	// dotAB = V3D.dot(dAB,dAC); // orthogonal direction
+	// var height = Math.abs(dotAB);
+	var height = Math.sqrt(Math.abs(lAC*lAC - oWid*oWid));
 	return new V2D(width,height);
 };
-
-
-
+Code.triBarycentricCoordinate2D = function(v, a,b,c, p){
+	if(){ // inside
+		//
+	}else{ // outside
+		//
+	}
+};
 Code.pointsNullOrCloseToLine3D = function(intersectionPoints, lineA, lineB){
 	if(!intersectionPoints){
 		return true;

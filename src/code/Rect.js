@@ -92,7 +92,7 @@ Rect.pack = function(rectList, bound, isList){
 		}
 		return {"invalid":unpackable, "bins":bins};
 	}else{
-		return Rect._packSingle(rectList, bound)
+		return Rect._packSingle(rectList, bound);
 	}
 }
 Rect._packSingle = function(rectList, bound, iterationsMax){ // updates rectList to locations inside bound

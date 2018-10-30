@@ -706,9 +706,9 @@ SurfaceTri.prototype.loadPointFile = function(){
 		console.log("source count: "+list.length);
 		// Code.subSampleArray(list,20000);
 		// Code.subSampleArray(list,10000);
-		// this.subSampleArray(list,5000);
+		this.subSampleArray(list,5000);
 		// this.subSampleArray(list,2000);
-		this.subSampleArray(list,1000);
+		// this.subSampleArray(list,1000);
 		// this.subSampleArray(list,500);
 		var i, v, len = list.length;
 		var max = list[0].copy();
@@ -738,13 +738,16 @@ SurfaceTri.prototype.loadPointFile = function(){
 		// TODO: UNCOMMENT
 		// this.startPointCloud(list);
 		// this.setupSphere3D(100);
-		// this.setupSphere3D(500);
+		this.setupSphere3D(500);
 		// this.setupSphere3D(1000);
+		// this.setupSphere3D(1500);
+		// this.setupSphere3D(4000);
+		// this.setupSphere3D(6000);
 		// this.setupTorus3D(500);
 		// this.setupTorus3D(1000);
 		// this.setupTorus3D(2000);
 		// this.setupTorus3D(5000);
-		this.startPointCloud(list);
+		// this.startPointCloud(list);
 	});
 }
 SurfaceTri.prototype.setupTorus3D = function(count,radiusA,radiusB,error){

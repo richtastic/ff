@@ -200,8 +200,19 @@ V2D.prototype.set = function(x,y){
 	}
 	return this;
 }
+V2D.prototype.ceil = function(a){
+	this.x = Math.ceil(this.x);
+	this.y = Math.ceil(this.y);
+	return this;
+}
+V2D.prototype.floor = function(a){
+	this.x = Math.floor(this.x);
+	this.y = Math.floor(this.y);
+	return this;
+}
 V2D.prototype.flip = function(a){
-	this.x = -this.x; this.y = -this.y;
+	this.x = -this.x;
+	this.y = -this.y;
 	return this;
 }
 V2D.prototype.min = function(a){

@@ -308,6 +308,13 @@ ImageMat.prototype.subImage = function(offX,offY,wid,hei){
 	return image;
 }
 ImageMat.prototype.insert = function(imageB, offX,offY){
+	return this._insertAdd(imageB, offX,offY, true);
+}
+ImageMat.prototype.insertAdd = function(imageB, offX,offY){
+	return this._insertAdd(imageB, offX,offY, true);
+}
+ImageMat.prototype._insertAdd = function(imageB, offX,offY, add){
+	add = add!==undefined ? add : false;
 	var iA, iB, jA, jB;
 	var imageA = this;
 	var widthA = imageA.width();
@@ -330,11 +337,18 @@ ImageMat.prototype.insert = function(imageB, offX,offY){
 		for(iB=0, iA=startX; iB<widthB && iA<endX; ++iB, ++iA){
 			indexA = jA*widthA + iA;
 			indexB = jB*widthB + iB;
-			redA[indexA] = redB[indexB];
-			grnA[indexA] = grnB[indexB];
-			bluA[indexA] = bluB[indexB];
+			if(add){
+				redA[indexA] += redB[indexB];
+				grnA[indexA] += grnB[indexB];
+				bluA[indexA] += bluB[indexB];
+			}else{
+				redA[indexA] = redB[indexB];
+				grnA[indexA] = grnB[indexB];
+				bluA[indexA] = bluB[indexB];
+			}
 		}
 	}
+	return this;
 }
 ImageMat.prototype.to01 = function(){ // each channel separate 0 to 1
 	ImageMat.normalFloat01(this._r);

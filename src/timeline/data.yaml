@@ -87,12 +87,42 @@ timeline:
 			summary: 
 			description: ?
 		-
+			dateStart: -79
+			dateEnd:   
+			short: Pompeii
+			title: Eruption of Mount Vesuvius ~ Pompeii
+			summary: 
+			description: ?
+		-
 			dateStart: 
 			dateEnd:   
 			short: 
 			title: 
 			summary: 
 			description: ?
+		-
+			dateStart: 
+			dateEnd:   
+			short: 
+			title: 
+			summary: 
+			description: ?
+		-
+			dateStart: 
+			dateEnd:   
+			short: 
+			title: 
+			summary: 
+			description: ?
+		-
+			dateStart: 
+			dateEnd:   
+			short: 
+			title: 
+			summary: 
+			description: ?
+
+
 # famous
 		-
 			dateStart: 1879-03-14
@@ -166,7 +196,7 @@ timeline:
 			title: 
 			summary: 
 			description: ?
-# anchients
+# ancients
 		-
 			dateStart: 100-00-00
 			dateEnd:   170-00-00
