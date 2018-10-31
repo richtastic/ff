@@ -1814,6 +1814,8 @@ if(true){
 	// this.dropGlobalWorst(5.0);
 
 	if(isLast){
+		this.patchInitOnly(); // new points may not have patches
+
 		this.printPoint3DTrackCount();
 		this.estimate3DErrors(true);
 		this.averagePoints3DFromMatches(true);
@@ -1829,14 +1831,19 @@ if(true){
 	// print out surface points
 	if(isLast){
 		var points3D = this.toPointArray();
+		var normals3D = [];
 		for(var i=0; i<points3D.length; ++i){
-			points3D[i] = points3D[i].point();
+			var p = points3D[i];
+			points3D[i] = p.point();
+			normals3D[i] = p.normal();
 		}
-
-		this.insertDoubleResolution();
-
+		// this.insertDoubleResolution();
+		console.log("PTS:");
 		var pts = R3D.points3DtoPTSFileString(points3D);
 		console.log(pts);
+		console.log("NORMALS:");
+		var nrm = R3D.points3DtoPTSFileString(normals3D);
+		console.log(nrm);
 	}
 
 }
@@ -5648,14 +5655,22 @@ console.log("max match types "+R3D.BA.maxiumMatchesFromViewCount(totalViewCount)
 					throw "no points 2d ? ";
 				}
 				yaml.writeObjectStart();
+				// position
 				yaml.writeNumber("X",point.x);
 				yaml.writeNumber("Y",point.y);
 				yaml.writeNumber("Z",point.z);
+				// normal
+				var normal = point3D.normal();
+				if(normal){
+					yaml.writeNumber("x",normal.x);
+					yaml.writeNumber("y",normal.y);
+					yaml.writeNumber("z",normal.z);
+				}
+				// 2D
 				var refO = new V2D(0,0);
 				var refX = new V2D(1,0);
 				var refY = new V2D(0,1);
 				var refP = null;
-				
 				if(points2D.length>0){
 					yaml.writeArrayStart("views");
 					for(var j=0; j<points2D.length; ++j){

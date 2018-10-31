@@ -697,13 +697,34 @@ SurfaceTri.prototype.subSampleArray = function(array, count){
 SurfaceTri.prototype.loadPointFile = function(){
 	console.log("loadPointFile");
 	// var sourceFileName = "./images/points/saltdome_1019.pts";
-	var sourceFileName = "./images/points/foot_5092.pts";
-	// var sourceFileName = "./images/points/bunny_30571.pts";
+	// var sourceFileName = "./images/points/foot_5092.pts";
+	var sourceFileName = "./images/points/bunny_30571.pts";
 	// var sourceFileName = "./images/points/test.pts";
+	var hasNormals = false;
+	// var sourceFileName = "./images/points/test_normals.pts";
+	// var sourceFileName = "./images/points/test_normals_1314.pts";
+	// var sourceFileName = "./images/points/test_normals_2468.pts";
+	// var hasNormals = true;
 	var ajax = new Ajax();
 	ajax.get(sourceFileName,this,function(e){
 		var list = Code.parsePointSetString(e);
 		console.log("source count: "+list.length);
+		var originalLength = list.length;
+		var nrms = null;
+		if(hasNormals){
+			var halfLength = originalLength/2;
+			var pts = [];
+			nrms = [];
+			for(var i=0; i<halfLength; ++i){
+				pts.push(list[i]);
+				nrms.push(list[i+halfLength]);
+			}
+			list = pts;
+			console.log(list);
+			console.log(pts);
+		}
+		nrms = null;
+// throw "?";
 		// Code.subSampleArray(list,20000);
 		// Code.subSampleArray(list,10000);
 		this.subSampleArray(list,5000);
@@ -736,9 +757,9 @@ SurfaceTri.prototype.loadPointFile = function(){
 			// }
 		}
 		// TODO: UNCOMMENT
-		// this.startPointCloud(list);
+		this.startPointCloud(list);
 		// this.setupSphere3D(100);
-		this.setupSphere3D(500);
+		// this.setupSphere3D(500);
 		// this.setupSphere3D(1000);
 		// this.setupSphere3D(1500);
 		// this.setupSphere3D(4000);
@@ -747,7 +768,7 @@ SurfaceTri.prototype.loadPointFile = function(){
 		// this.setupTorus3D(1000);
 		// this.setupTorus3D(2000);
 		// this.setupTorus3D(5000);
-		// this.startPointCloud(list);
+		// this.startPointCloud(list,nrms);
 	});
 }
 SurfaceTri.prototype.setupTorus3D = function(count,radiusA,radiusB,error){
@@ -832,7 +853,7 @@ console.log("maxP: "+maxP);
 	this.startPointCloud(list);
 
 }
-SurfaceTri.prototype.startPointCloud = function(pts){
+SurfaceTri.prototype.startPointCloud = function(pts,nrms){
 	console.log("start point cloud")
 
 GLOBAL_LASTTRI = null;
@@ -840,7 +861,7 @@ GLOBAL_LAST_PREV = null;
 GLOBAL_LAST_NEXT = null;
 GLOBAL_RAYS = null;
 	// console.log(pts);
-	var mesh = new Mesh3D(pts);
+	var mesh = new Mesh3D(pts,nrms);
 	var triangles = mesh.generateSurfaces();
 	// console.log(triangles);
 
@@ -860,8 +881,14 @@ GLOBAL_RAYS = null;
 
 	var fronts = mesh._fronts;
 	// console.log(fronts);
-	var allTriangles = mesh._triangleSpace.toArray();
-	// console.log(allTriangles);
+	// var allTriangles = mesh._triangleSpace.toArray();
+	
+
+	// IF ORIGINAL POINTS HAVE NORMALS -> SET CONSISTENT WITH THEM
+	var allTriangles = mesh.outputTriangles();
+	var yaml = R3D.outputTriangleModel(allTriangles);
+	// console.log(yaml);
+
 
 
 /*
@@ -967,6 +994,9 @@ if(showPoints){
 		p = spherePoints[i];
 		var point = p.point();
 		var normal = p.normal();
+		if(!normal){
+			continue;
+		}
 		var a = point.copy();
 		//var b = point.copy();
 		//var b = a;

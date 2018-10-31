@@ -6171,38 +6171,39 @@ break; // TODO: remove
 
 // don't - run
 return;
-
+	
+	// first run with limited points
 	if(false){
 	// if(true){
 	//if(!this.hasBundleInit()){
 		// global relative => absolute initialization
-		this.calculateGlobalOrientationInit();
+		this.calculateGlobalOrientationInit(); // CREATES info.yaml
 		return;
 	}
 
 	// increase resolution of BA approx
 	if(true){
-		this.calculateGlobalOrientationHierarchyLoad();
+		this.calculateGlobalOrientationHierarchyLoad(); // UPDATES info.yaml
 		return;
 	}
 
 	// global absolute finalizing
-	
-throw "GLOBAL ABS FINALIZING"
+		// final BA with all data w/o making new points
+	// throw "GLOBAL ABS FINALIZING";
 
-/*
-throw "calculateBundleAdjust";
-	// bundle adjust
-	if(views.length>1 && pairs.length>0 && cameras.length>0){
-		this.calculateBundleAdjust();
-		return;
-	}
-*/
 	// surface
+	if(false){
+		// currently done separately in surface.html
+		throw "SURFACE"
+	}
 
 	// texturing
+	if(true){
+		// ... 
+	}
 
-	// dense matching
+
+	// dense ?
 
 	// 
 	// does a camera calibration exist?
@@ -6211,6 +6212,7 @@ throw "calculateBundleAdjust";
 
 	// does each (good) pair have a low-q dense depth match? [sort by best feature match count/score]
 
+throw "OTHER ?"
 
 	// does each (good) pair have a high-q dense depth match?
 	console.log("NO TASKS TO PERFORM");
@@ -7242,7 +7244,7 @@ App3DR.bundleAdjustWorldCanDoubleResolution = function(world){
 			canDouble = canDouble & false;
 		}else{
 // halve cell size = double resolution
-			// view.cellSize(nextSize);
+			view.cellSize(nextSize);
 		}
 	}
 	return canDouble;

@@ -325,22 +325,44 @@ https://cloud.google.com/appengine/docs/nodejs/
 
 TRIANGLE TEXTURING::::::
 
-- subdividing tris if necessary
-	- how to reference a parent triangle when doing rendering ....
+
+- stereopsis patch normals are clearly wrong
+- import / display normals in viewing app
 
 
-- output triangle model into file -- original 3D space should not be transformed at output
+
+- consistent normals (single-sided) propagation using MLS
+
+
+
+- VERIFY minimum edge size reasoning & search radius
 
 
 
 - MLS surface projection
 	- variable sample size
 		- 'scale larger than noise level'
-		- 
-	- minimize energy fxn: Sum_i:  (dot(normal,pi) - dot(normal,POINT))^2 * THETA(||pi-q||)
-	- THETA = smooth, radial monotone decreasing fxn, positive in whole space
-		- theta(d) = exp(-d^2/h^2) ; h = variance
-	- then minimize bivariate least squares error
+		- figure out best nearest-neighbors to use
+	- PLANE:
+		- minimize energy fxn: Sum_i:  (dot(normal,pi) - dot(normal,POINT))^2 * THETA(||pi-q||)
+		- THETA = smooth, radial monotone decreasing fxn, positive in whole space
+			- theta(d) = exp(-d^2/h^2) ; h = variance
+
+
+- need at least OK model of scene
+		- maybe hack = point toward average camera locations ...
+	- triangles are still often too small
+
+
+
+
+
+
+
+- App: import 'model' file
+- App: import all required assets & start TexVieBln
+
+
 
 
 
@@ -373,27 +395,13 @@ TRIANGLE TEXTURING::::::
 
 
 
-- better 'edge point' determining
-
-
-
 - if projected location is much different than projected size (eg 2.0), then mark as dead end
 
 
--> if small triangles are used => lots of holes
--> if large triangles are used => loose detail
+EDGES:
+	-> if small triangles are used => lots of holes
+	-> if large triangles are used => loose detail
 
-
-- local curvature seems wrong
-	- seems to also change with sampling density
-		=> auto minimum size the angle such that the curvature results in a triangle size minimum of 2*(cellNeighborhood)
-			=> rho = curvature / neighborhoodsize
-
-
-
-- AFTER SURFACE IS TRIANGULATED/TESSELATED: NEED TO MAKE SURE TRIANGLES ARE ALL ORIENTED WITH SAMPLE POINTS
-	-> CLOSEST POINT(s) + dot NORMAL
-	-> GRAPH + PROPAGATING 
 
 
 
@@ -417,27 +425,6 @@ TRIANGLE TEXTURING::::::
 
 
 
-- texture - mapping algorithm.........
-
-- for each triangle
-	- find all points near triangle [list of potential views]
-	- find all predicted visible views of each triangle
-	- drop views that have projected triangle intersections with other triangles
-	- want view with optimized size vs deformation
-	=> paper for grouping tris ith best projected views & feathering between
-	- plot distribution of PROJECTED triangle sizes (triangles at inf could be huge but have small projection)
-	- limit size to mean + 1*sigma OR 512/1024 [fit onto single page]
-		- for L/M/H resolutions - try scaling so that surface area of sum of triangles ~ P x [image size]
-	- subdivide all large triangles until they satisfy projected size limit
-	- map all triangles to texture atlas map pages (try spatially-coherient-surfaces on each atlas)
-		- fit onto page, if not fit spill out to next pages
-	- do texture extraction
-	- save to files
-
-
-
-
-
 
 
 - PROJECT TO SURFACE:
@@ -453,13 +440,6 @@ TRIANGLE TEXTURING::::::
 	- if beyond radius: toward point [points very far from surface]
 		- if between radius & 2r: ignore ?
 		- if beyond 2r: toward point
-
-
-- smooth normals ?
-
-
-
-x output points to pts file for surface tessilation
 
 
 - patches don't need to be updated if the cameras/matches have not changed much

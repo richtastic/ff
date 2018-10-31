@@ -10915,6 +10915,106 @@ R3D.output3DPoints = function(points3D, pointLists){ // imageA,imageB transforms
 	yaml.writeDocument();
 	return yaml.toString();
 }
+
+R3D.outputTriangleModel = function(triangles3D, triangles2D, textureIndexes, textures, views){
+	if(triangles3D && triangles3D.length>0){
+		var vertexes3D = [];
+		var vertexSpace = new OctTree();
+		// convert to local triangles
+		var point, index;
+		var tris3D = [];
+		for(var i=0; i<triangles3D.length; ++i){
+			var tri3D = triangles3D[i];
+				tri3D = [tri3D.A(),tri3D.B(),tri3D.C()];
+			tris3D[i] = tri3D;
+		}
+		for(var i=0; i<tris3D.length; ++i){
+			var tri3D = tris3D[i];
+			for(var j=0; j<tri3D.length; ++j){
+				var p = tri3D[j];
+				var v = vertexSpace.closestObject(p);
+				if(v===null || !V3D.equal(p,v)){
+					v = new V3D(p.x,p.y,p.z);
+					v["index"] = vertexes3D.length;
+					vertexes3D.push(v);
+				}
+				tri3D[j] = v;
+			}
+		}
+		vertexSpace.kill();
+		// write
+		var yaml = new YAML();
+		yaml.writeComment("model");
+		yaml.writeComment("created: "+Code.getTimeStamp());
+		yaml.writeBlank();
+		// 3D vertexes:
+		yaml.writeArrayStart("vertexes");
+		for(var i=0; i<vertexes3D.length; ++i){
+			var vertex = vertexes3D[i];
+			yaml.writeObjectStart();
+				yaml.writeNumber("X",vertex.x);
+				yaml.writeNumber("Y",vertex.y);
+				yaml.writeNumber("Z",vertex.z);
+			yaml.writeObjectEnd();
+		}
+		yaml.writeArrayEnd();
+		// 3D triangles
+		yaml.writeArrayStart("triangles");
+		for(var i=0; i<tris3D.length; ++i){
+			var tri3D = tris3D[i];
+			yaml.writeObjectStart();
+				yaml.writeObjectStart("A");
+					yaml.writeNumber("i",tri3D[0]["index"]);
+					if(triangles2D&& triangles2D[i]){
+						var tri2D = triangles2D[i];
+						yaml.writeNumber("x",tri2D.A().x);
+						yaml.writeNumber("y",tri2D.A().y);
+					}
+				yaml.writeObjectEnd();
+				yaml.writeObjectStart("B");
+					yaml.writeNumber("i",tri3D[1]["index"]);
+					if(triangles2D && triangles2D[i]){
+						var tri2D = triangles2D[i];
+						yaml.writeNumber("x",tri2D.B().x);
+						yaml.writeNumber("y",tri2D.B().y);
+					}
+				yaml.writeObjectEnd();
+				yaml.writeObjectStart("C");
+					yaml.writeNumber("i",tri3D[2]["index"]);
+					if(triangles2D && triangles2D[i]){
+						var tri2D = triangles2D[i];
+						yaml.writeNumber("x",tri2D.C().x);
+						yaml.writeNumber("y",tri2D.C().y);
+					}
+				yaml.writeObjectEnd();
+				if(textureIndexes && textureIndexes[i]){
+					yaml.writeNumber("t",textureIndexes[i]);
+				}
+			yaml.writeObjectEnd();
+		}
+		yaml.writeArrayEnd();
+	}
+
+	// textures
+	if(textures){
+		/*
+			textures:
+				- 
+					id: "0"
+					file: tex0.png
+					width: 512
+					height: 512
+		*/
+	}
+	
+	// views
+	if(views){
+		// ...
+	}
+
+	return yaml.toString();
+}
+
 R3D.output3dModel = function(points3D, others){ // imageA,imageB transforms, matrixFfwd, imageInfoA, imageInfoB){
 	console.log(pointsA,pointsB,transforms);
 	var yaml = new YAML();

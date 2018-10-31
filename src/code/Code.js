@@ -3654,6 +3654,9 @@ Code.mirrorArray = function(array){
 }
 Code.stdDev = function(list,mean,key, count){
 	var i, sig=0, item, len=list.length;
+	if(count!==undefined){
+		len = Math.min(len,count);
+	}
 	if(len==0){ return 0; }
 	for(i=len;i--;){
 		item = list[i];
@@ -3680,19 +3683,26 @@ Code.mean = function(list,key, count){
 	}
 	return mu / len;
 }
-Code.median = function(list,key){ // TODO: durrr median = middle of set -- assume sorted
+Code.median = function(list,key,count){ // TODO: durrr median = middle of set -- assume sorted
 	if(list.length==0){
 		return null;
 	}
-	var lo = Math.floor(list.length*0.5);
-	if(list.length%2==0){
+	var len = list.length;
+	if(count!==undefined){
+		len = Math.min(len,count);
+	}
+	var lo = Math.floor(len*0.5);
+	if(len%2==0){
 		var hi = lo + 1;
 		return (list[lo] + list[hi])*0.5;
 	}
 	return list[lo];
 }
-Code.sum = function(list,key){
+Code.sum = function(list,key,count){
 	var i, sum=0, item, len=list.length;
+	if(count!==undefined){
+		len = Math.min(len,count);
+	}
 	if(len==0){ return 0; }
 	for(i=len;i--;){
 		item = list[i];
@@ -8269,10 +8279,92 @@ Code.triSizeWithBase = function(a,b,c){
 	return new V2D(width,height);
 };
 Code.triBarycentricCoordinate2D = function(v, a,b,c, p){
-	if(){ // inside
-		//
+	var ab = V2D.sub(b,a);
+	var bc = V2D.sub(c,b);
+	var ca = V2D.sub(a,c);
+	return Code.triBarycentricCoordinate2DFast(v, a,b,c, ab,bc,ca, p);
+}
+Code.triBarycentricCoordinate2DFast = function(v, a,b,c, ab,bc,ca, p){
+	var closestAB = Code.closestPointLineSegment2D(a,ab,p);
+	var closestBC = Code.closestPointLineSegment2D(b,bc,p);
+	var closestCA = Code.closestPointLineSegment2D(c,ca,p);
+	var ap = V2D.sub(p,a);
+	var bp = V2D.sub(p,b);
+	var cp = V2D.sub(p,c);
+	var crossA = V2D.cross(ab,ap);
+	var crossB = V2D.cross(bc,bp);
+	var crossC = V2D.cross(ca,cp);
+	var inside = (crossA<=0 && crossB<=0 && crossC<=0) || (crossA>=0 && crossB>=0 && crossC>=0);
+	if(inside){ // inside
+		/*
+		var lenAB = ab.length();
+		var lenBC = bc.length();
+		var lenCA = ca.length();
+		var aToAB = V2D.sub(a,closestAB);
+		var bToBC = V2D.sub(b,closestBC);
+		var cToCA = V2D.sub(c,closestCA);
+		var lenAB_C = aToAB.length();
+		var lenBC_C = bToBC.length();
+		var lenCA_C = cToCA.length();
+		var pA_1 = lenAB_C/lenAB;
+		var pB_1 = 1.0 - pA_1;
+		var pB_2 = lenBC_C/lenBC;
+		var pC_2 = 1.0 - pB_2;
+		var pC_3 = lenCA_C/lenCA;
+		var pA_3 = 1.0 - pC_3;
+// console.log(pA_1,pB_1,pB_2,pC_2,pC_3,pA_3);
+		var pA = pB_1*pC_3;
+		var pB = pA_1*pC_2;
+		var pC = pB_2*pA_3;
+		var pTotal = pA + pB + pC;
+// console.log(pA/pTotal,pB/pTotal,pC/pTotal);
+		v.set(pA/pTotal,pB/pTotal,pC/pTotal);
+		*/
+		var areaABP = Math.abs(crossA);
+		var areaBCP = Math.abs(crossB);
+		var areaCAP = Math.abs(crossC);
+		var areaTot = areaABP+areaBCP+areaCAP;
+// console.log(areaBCP/areaTot,areaCAP/areaTot,areaABP/areaTot);
+		v.set(areaBCP/areaTot,areaCAP/areaTot,areaABP/areaTot);
+
 	}else{ // outside
-		//
+		// find closest point
+		var dAB = V2D.distanceSquare(p,closestAB);
+		var dBC = V2D.distanceSquare(p,closestBC);
+		var dCA = V2D.distanceSquare(p,closestCA);
+		var close = 0;
+		var distance = dAB;
+		var cat;
+		if(dBC<distance){
+			close = 1;
+			distance = dBC;
+		}
+		if(dCA<distance){
+			close = 2;
+			distance = dCA;
+		}
+		if(close==0){ // AB
+			var aToAB = V2D.sub(a,closestAB);
+			var lenAB_C = aToAB.length();
+			var lenAB = ab.length();
+			var pA_1 = lenAB_C/lenAB;
+			var pB_1 = 1.0 - pA_1;
+			v.set(pB_1,pA_1,0);
+		}else if(close==1){ // BC
+			var bToBC = V2D.sub(b,closestBC);
+			var lenBC_C = bToBC.length();
+			var lenBC = bc.length();
+			var pB_2 = lenBC_C/lenBC;
+			var pC_2 = 1.0 - pB_2;
+			v.set(0,pC_2,pB_2);
+		}else if(close==2){ // CA
+			var cToCA = V2D.sub(c,closestCA);
+			var lenCA_C = cToCA.length();
+			var lenCA = ca.length();
+			var pC_3 = lenCA_C/lenCA;
+			var pA_3 = 1.0 - pC_3;
+			v.set(pC_3,0,pA_3);
+		}
 	}
 };
 Code.pointsNullOrCloseToLine3D = function(intersectionPoints, lineA, lineB){
@@ -9042,12 +9134,12 @@ Code.isPointInsideTri2DFast = function(p, a,b,c){
 	return Code.isPointInsidePolygon2D(p, [a,b,c]);
 }
 Code.isPointInsideTri2D = function(p, a,b,c){
-	var ab = V2D.sub(b,a); 
-	var bc = V2D.sub(c,b); 
-	var ca = V2D.sub(a,c); 
-	var ap = V2D.sub(p,a); 
-	var bp = V2D.sub(p,b); 
-	var cp = V2D.sub(p,c); 
+	var ab = V2D.sub(b,a);
+	var bc = V2D.sub(c,b);
+	var ca = V2D.sub(a,c);
+	var ap = V2D.sub(p,a);
+	var bp = V2D.sub(p,b);
+	var cp = V2D.sub(p,c);
 	var angleA = V2D.angleDirection(ab,ap);
 	var angleB = V2D.angleDirection(bc,bp);
 	var angleC = V2D.angleDirection(ca,cp);

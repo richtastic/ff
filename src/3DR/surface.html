@@ -9,10 +9,15 @@ function pageLoadedFxn(){
 }
 function ffLoadedFxn(){
 	//(new ScriptLoader("./",["PointCloud.js","BivariateSurface.js","MLSPoint.js","MLSEdge.js","MLSTri.js","MLSEdgeFront.js","MLSFront.js","MLSField.js","MLSMesh.js","SurfaceTri.js"],this,classesLoadedFxn)).load();
-	(new ScriptLoader("./",["MLSMesh3D.js","SurfaceTri.js"],this,classesLoadedFxn)).load();
+	(new ScriptLoader("./",["R3D.js",   "MLSMesh3D.js","SurfaceTri.js"],this,classesLoadedFxn)).load();
 	
 }
 function classesLoadedFxn(){
+
+	console.log("surface.html");
+	// return;
+
+
 /*
 	// GLOBAL STAGE:
 	// AVERAGING 3D POINTS 
@@ -26,14 +31,100 @@ function classesLoadedFxn(){
 	// this._canvas.addFunction(Canvas.EVENT_MOUSE_CLICK,this.handleMouseClickFxn,this);
 	GLOBALSTAGE = this._stage;
 
-	
+*/	
+
+/*
+
+// console.log(Code.arrayIntersect( [0,1,2,5], [2,3,4,5] ));
+
+
+// barycentric coords
+var v = new V3D();
+var a = new V2D(  0.0,  0.0);
+var b = new V2D(150.0,  0.0);
+var c = new V2D( 0.0, 150.0);
+// var a = new V2D(  100.0,  100.0);
+// var b = new V2D(100.0,  -20.0);
+// var c = new V2D( -50.0, 100.0);
+var p = new V2D( 50.0,  20.0);
+Code.triBarycentricCoordinate2D(v, a,b,c, p);
+console.log(v+"");
+
+// return;
+
+
+
+	var display = new DO();
+		display.matrix().scale(2);
+		display.matrix().scale(1,-1);
+		display.matrix().translate(200,400);
+		GLOBALSTAGE.addChild(display);
+
+var colorA = new V3D(1.0,0.0,0.0);
+var colorB = new V3D(0.0,1.0,0.0);
+var colorC = new V3D(0.0,0.0,1.0);
+
+
+var info = V2D.infoArray([a,b,c]);
+var min = info["min"];
+var max = info["max"];
+var size = info["size"];
+var pp = 0.25;
+min.sub(size.x*pp,size.y*pp);
+size.scale((1.0 + pp*2));
+var countX = 70;
+var countY = 70;
+var v = new V3D();
+var p = new V2D();
+var color = new V3D();
+	for(var j=0; j<=countY; ++j){
+		var pJ = j/countY;
+		for(var i=0; i<=countX; ++i){
+			var pI = i/countX;
+
+			p.set(min.x + size.x*pI, min.y + size.y*pJ);
+
+			Code.triBarycentricCoordinate2D(v, a,b,c, p);
+			color.set(
+					v.x*colorA.x+v.y*colorB.x+v.z*colorC.x,
+					v.x*colorA.y+v.y*colorB.y+v.z*colorC.y,
+					v.x*colorA.z+v.y*colorB.z+v.z*colorC.z
+				);
+
+
+			
+			var col = Code.getColARGBFromFloat(1.0, color.x,color.y,color.z);
+				var d = new DO();
+				d.graphics().setFill(col);
+				// d.graphics().setLine(1.0,0xFFCCCC00);
+				// d.graphics().setFill(0x66CCCC00);
+				d.graphics().beginPath();
+				d.graphics().drawCircle(p.x,p.y,3);
+				// d.graphics().drawCircle(B.x,B.y,3);
+				d.graphics().endPath();
+				// d.graphics().strokeLine();
+				d.graphics().fill();
+				display.addChild(d);
+		}
+	}
+
+
+	var d = new DO();
+	d.graphics().setLine(1.0,0xFF000000);
+	// d.graphics().setFill(0x66FF0000);
+	d.graphics().beginPath();
+	d.graphics().drawPolygon([a,b,c]);
+	d.graphics().endPath();
+	d.graphics().strokeLine();
+	// d.graphics().fill();
+	display.addChild(d);
+
+return;
+
 */
 
 
-console.log(Code.arrayIntersect( [0,1,2,5], [2,3,4,5] ));
 
-console.log("surface.html");
-return;
 
 /*
 
