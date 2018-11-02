@@ -323,12 +323,32 @@ https://cloud.google.com/appengine/docs/nodejs/
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
-TRIANGLE TEXTURING::::::
+
+- smooth points out before triangulating ?
+
+
+
+
+- with a lot of noise, need larger sample size (~10 => ~25) so the planes are more gradual and not crazy projecting
+	- also curvature is assumed too small with all the wild flailing
+
+
+* why is APSS curvature wrong?
+* why can't plane sampling size be small (or why is sparse sampled areas poor)
+	- show local projected plane @ area
+* how to find optimal sampling size for area? -- read paper
+
+
+
+
+MLS surface projection -- bad at ears / low sample areas
+	- how to get 
 
 
 - stereopsis patch normals are clearly wrong
-- import / display normals in viewing app
-
+	- try homography instead of affine
+	- larger patch size
+	- 
 
 
 - consistent normals (single-sided) propagation using MLS
@@ -347,13 +367,6 @@ TRIANGLE TEXTURING::::::
 		- minimize energy fxn: Sum_i:  (dot(normal,pi) - dot(normal,POINT))^2 * THETA(||pi-q||)
 		- THETA = smooth, radial monotone decreasing fxn, positive in whole space
 			- theta(d) = exp(-d^2/h^2) ; h = variance
-
-
-- need at least OK model of scene
-		- maybe hack = point toward average camera locations ...
-	- triangles are still often too small
-
-
 
 
 

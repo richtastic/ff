@@ -7244,7 +7244,7 @@ App3DR.bundleAdjustWorldCanDoubleResolution = function(world){
 			canDouble = canDouble & false;
 		}else{
 // halve cell size = double resolution
-			view.cellSize(nextSize);
+			// view.cellSize(nextSize);
 		}
 	}
 	return canDouble;

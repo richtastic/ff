@@ -776,7 +776,7 @@ R3D.reprojectionError = function(p3D, pA,pB, cameraA, cameraB, Ka, Kb){
 	var distanceA = V2D.distance(pA,projected2DA);
 	var distanceB = V2D.distance(pB,projected2DB);
 	var distance = Math.sqrt( distanceA*distanceA + distanceB*distanceB );
-	var average = (distanceA+distanceB)*0.5;
+	var average = (distanceA+distanceB); // removed 0.5
 	return {"error":distance, "distanceA":distanceA, "distanceB":distanceB, "average":average};
 }
 
@@ -10917,6 +10917,11 @@ R3D.output3DPoints = function(points3D, pointLists){ // imageA,imageB transforms
 }
 
 R3D.outputTriangleModel = function(triangles3D, triangles2D, textureIndexes, textures, views){
+	// write
+	var yaml = new YAML();
+	yaml.writeComment("model");
+	yaml.writeComment("created: "+Code.getTimeStamp());
+	yaml.writeBlank();
 	if(triangles3D && triangles3D.length>0){
 		var vertexes3D = [];
 		var vertexSpace = new OctTree();
@@ -10942,11 +10947,7 @@ R3D.outputTriangleModel = function(triangles3D, triangles2D, textureIndexes, tex
 			}
 		}
 		vertexSpace.kill();
-		// write
-		var yaml = new YAML();
-		yaml.writeComment("model");
-		yaml.writeComment("created: "+Code.getTimeStamp());
-		yaml.writeBlank();
+		
 		// 3D vertexes:
 		yaml.writeArrayStart("vertexes");
 		for(var i=0; i<vertexes3D.length; ++i){

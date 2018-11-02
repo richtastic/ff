@@ -698,13 +698,13 @@ SurfaceTri.prototype.loadPointFile = function(){
 	console.log("loadPointFile");
 	// var sourceFileName = "./images/points/saltdome_1019.pts";
 	// var sourceFileName = "./images/points/foot_5092.pts";
-	var sourceFileName = "./images/points/bunny_30571.pts";
+	// var sourceFileName = "./images/points/bunny_30571.pts";
 	// var sourceFileName = "./images/points/test.pts";
-	var hasNormals = false;
-	// var sourceFileName = "./images/points/test_normals.pts";
+	// var hasNormals = false;
+	var sourceFileName = "./images/points/test_normals.pts";
 	// var sourceFileName = "./images/points/test_normals_1314.pts";
 	// var sourceFileName = "./images/points/test_normals_2468.pts";
-	// var hasNormals = true;
+	var hasNormals = true;
 	var ajax = new Ajax();
 	ajax.get(sourceFileName,this,function(e){
 		var list = Code.parsePointSetString(e);
@@ -717,17 +717,18 @@ SurfaceTri.prototype.loadPointFile = function(){
 			nrms = [];
 			for(var i=0; i<halfLength; ++i){
 				pts.push(list[i]);
+				// nrms.push(new V3D(1,0,0).norm());
 				nrms.push(list[i+halfLength]);
 			}
 			list = pts;
 			console.log(list);
 			console.log(pts);
 		}
-		nrms = null;
+		// nrms = null;
 // throw "?";
 		// Code.subSampleArray(list,20000);
 		// Code.subSampleArray(list,10000);
-		this.subSampleArray(list,5000);
+		// this.subSampleArray(list,5000);
 		// this.subSampleArray(list,2000);
 		// this.subSampleArray(list,1000);
 		// this.subSampleArray(list,500);
@@ -757,7 +758,7 @@ SurfaceTri.prototype.loadPointFile = function(){
 			// }
 		}
 		// TODO: UNCOMMENT
-		this.startPointCloud(list);
+		// this.startPointCloud(list);
 		// this.setupSphere3D(100);
 		// this.setupSphere3D(500);
 		// this.setupSphere3D(1000);
@@ -768,7 +769,7 @@ SurfaceTri.prototype.loadPointFile = function(){
 		// this.setupTorus3D(1000);
 		// this.setupTorus3D(2000);
 		// this.setupTorus3D(5000);
-		// this.startPointCloud(list,nrms);
+		this.startPointCloud(list,nrms);
 	});
 }
 SurfaceTri.prototype.setupTorus3D = function(count,radiusA,radiusB,error){
@@ -863,6 +864,7 @@ GLOBAL_RAYS = null;
 	// console.log(pts);
 	var mesh = new Mesh3D(pts,nrms);
 	var triangles = mesh.generateSurfaces();
+	// var triangles = [];
 	// console.log(triangles);
 
 // var pts = spherePoints;
@@ -886,6 +888,7 @@ GLOBAL_RAYS = null;
 
 	// IF ORIGINAL POINTS HAVE NORMALS -> SET CONSISTENT WITH THEM
 	var allTriangles = mesh.outputTriangles();
+	console.log(allTriangles);
 	var yaml = R3D.outputTriangleModel(allTriangles);
 	// console.log(yaml);
 
@@ -990,7 +993,7 @@ if(showPoints){
 	// var pts = this._mlsMesh._field.points();
 	
 	for(i=0;i<spherePoints.length;++i){
-// break;
+break; // no normals
 		p = spherePoints[i];
 		var point = p.point();
 		var normal = p.normal();
@@ -1022,6 +1025,27 @@ if(showPoints){
 		V3D.pushToArray(pointsL, b);
 		*/
 	}
+
+
+// AXES:
+lines = [];
+lines.push([new V3D(0,0,0),new V3D(1,0,0)]);
+lines.push([new V3D(0,0,0),new V3D(0,1,0)]);
+lines.push([new V3D(0,0,0),new V3D(0,0,1)]);
+var colors = [];
+colors.push([1.0,0,0]);
+colors.push([  0,1,0]);
+colors.push([  0,0,1.0]);
+for(i=0; i<lines.length; ++i){
+	var a = lines[i][0];
+	var b = lines[i][1];
+	var c = colors[i];
+	colorsL.push(c[0],c[1],c[2], 1.0 );
+	colorsL.push(c[0],c[1],c[2], 1.0 );
+	V3D.pushToArray(pointsL, a);
+	V3D.pushToArray(pointsL, b);
+}
+
 /*
 var lines = GLOBAL_LINES;
 for(i=0; i<lines.length; ++i){

@@ -8455,7 +8455,7 @@ Code.pointOnPositiveSidePlane3D = function(location, planePoint, planeNormal, er
 	}
 	return dot>=error;
 }
-Code.planeFromPoints = function(center, points, weights){
+Code.planeFromPoints = function(center, points, weights, cov){
 	if(!center){
 		center = V3D.mean(points);
 	}
@@ -8495,7 +8495,7 @@ Code.planeFromPoints = function(center, points, weights){
 	}
 	for(i=0; i<len; ++i){
 		point = points[i];
-		distanceSquare = V3D.distanceSquare(point, center);
+		// distanceSquare = V3D.distanceSquare(point, center);
 		weight = weights[i];
 		dx = point.x-centerOfMass.x;
 		dy = point.y-centerOfMass.y;
@@ -8511,6 +8511,9 @@ Code.planeFromPoints = function(center, points, weights){
 		var values = eig.values;
 		var vectors = eig.vectors;
 		var vMin = Math.min(values[0],values[1],values[2]); // least direction
+		if(cov){
+			return values;
+		}
 		var vA = vectors[0].toV3D();
 		var vB = vectors[1].toV3D();
 		var vC = vectors[2].toV3D();

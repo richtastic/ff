@@ -1233,6 +1233,9 @@ Stereopsis.P3D.prototype.calculateAbsoluteLocation = function(world, transformIn
 		var transform = match.transform();
 		var error = transform.rMean() + 1.0*transform.rSigma();
 		var location3D = match.estimated3D(); // relative
+		// if(!location3D){
+		// 	continue;
+		// }
 		var transform = match.transform();
 		var viewA = transform.viewA();
 		var invA = viewA.absoluteTransformInverse();
@@ -1669,7 +1672,8 @@ Stereopsis.World.prototype.solveGlobalAbsoluteTransform = function(completeFxn, 
 // iterations = 7;
 // iterations = 5;
 // iterations = 3;
-iterations = 1;
+iterations = 2;
+// iterations = 1;
 	this._completeFxn = completeFxn;
 	this._completeContext = completeContext;
 	this._maxIterations = iterations;
@@ -1792,8 +1796,8 @@ if(true){
 	this.printInfo(); // before new points are added
 
 	// this.patchInitOrUpdate();
-	this.patchInitOnly();
-	this.patchResolveAffine();
+	// this.patchInitOnly();
+	// this.patchResolveAffine();
 
 	// PROBING
 	this.probe3D(); // before 2D: want good 3D location to project -- requires patches
@@ -1815,7 +1819,6 @@ if(true){
 
 	if(isLast){
 		this.patchInitOnly(); // new points may not have patches
-
 		this.printPoint3DTrackCount();
 		this.estimate3DErrors(true);
 		this.averagePoints3DFromMatches(true);
@@ -1874,6 +1877,9 @@ Stereopsis.World.prototype.patchResolveAffine = function(){
 Stereopsis.affinesFromPatch = function(point3D){
 	// 3D locations:
 	var pointCenter = point3D.point();
+	if(!pointCenter){
+		return null;
+	}
 	var pointSize = point3D.size();
 	var pointUp = point3D.up();
 	var pointRight = point3D.right();
@@ -1929,6 +1935,9 @@ Stereopsis.World.prototype.patchResolveAffineSinglePoint3D = function(P3D){
 	var resolveByAverage = false;
 	// get affines from patchs
 	var info = Stereopsis.affinesFromPatch(P3D);
+	if(!info){
+		return;
+	}
 	var affines = info["affines"];
 	var matches = [];
 	// compare affine & existing
@@ -2693,8 +2702,8 @@ Stereopsis.World.prototype.solve = function(completeFxn, completeContext){
 	console.log("SOLVE");
 	this._completeFxn = completeFxn;
 	this._completeContext = completeContext;
-	// var maxIterations = 1;
-	var maxIterations = 2;
+	var maxIterations = 1;
+	// var maxIterations = 2;
 	// var maxIterations = 3;
 	// var maxIterations = 4;
 	// var maxIterations = 5;
@@ -4713,20 +4722,31 @@ Stereopsis.World.prototype.initialEstimatePatch = function(point3D){
 	// initial estimate of patch normal = AVG(p(c)->v_i(c))
 	var normals = [];
 	var rights = [];
+	var percents = []; // based on orthogonality to camera
 	var patchSize = 0;
+	var percentTotal = 0;
 	for(var i=0; i<visibleViews.length; ++i){
 		var view = visibleViews[i];
-		var x = view.right().scale(-1);
+		var x = view.right().copy().scale(-1);
 		var c = view.center();
+		var n = view.normal().copy().scale(-1);
 		var pc = V3D.sub(c,isLocation);
 		pc.norm();
 		normals.push(pc);
 		rights.push(x);
+		var p = V3D.dot(n,pc);
+		percents.push(p);
+		percentTotal += p;
 		patchSize += view.compareSize();
 	}
-	var normal = Code.averageAngleVector3D(normals); // TODO: percents
-	var right = Code.averageAngleVector3D(rights); // TODO: percents
+	for(var i=0; i<percents.length; ++i){
+		percents[i] /= percentTotal;
+	}
+	var normal = Code.averageAngleVector3D(normals,percents);
+	var right = Code.averageAngleVector3D(rights,percents);
 	patchSize /= visibleViews.length;
+// console.log(normal,right,patchSize);
+// throw "?"
 
 	// make sure 90 degrees
 	var up = V3D.cross(normal,right);
@@ -4859,6 +4879,11 @@ Stereopsis.patchNonlinear = function(center,size,directionNormal,directionRight,
 	var up = startUp.copy().rotate(startRight, angleX).rotate(startUp, angleY);
 	return {"center":center,"normal":normal,"up":up,"size":size};
 }
+// Stereopsis._gdPatch_SIZE = 11; // slow
+Stereopsis._gdPatch_SIZE = 9;
+// Stereopsis._gdPatch_SIZE = 7;
+// Stereopsis._gdPatch_SIZE = 5; // too small
+Stereopsis._gdPatch_MASK = ImageMat.circleMask(Stereopsis._gdPatch_SIZE);
 Stereopsis._gdPatch = function(args, x, isUpdate, descriptive){
 	if(isUpdate){
 		return;
@@ -4869,6 +4894,7 @@ Stereopsis._gdPatch = function(args, x, isUpdate, descriptive){
 	var startUp = args[3];
 	var moveNormal = args[4];
 	var size = args[5];
+size *= 4; // forces to not change much
 	var views = args[6];
 	var p3D = args[7];
 	var moveDistance = x[0];
@@ -4881,13 +4907,15 @@ Stereopsis._gdPatch = function(args, x, isUpdate, descriptive){
 	var right = startRight.copy().rotate(startRight, angleX).rotate(startUp, angleY);
 		top.scale(size).add(center);
 		right.scale(size).add(center);
+// don't reverse normal direction
+var dot = V3D.dot(normal,startNormal);
+if(dot<=0){
+	return 1E12;
+}
 	// patches
 	var patches = [];
-	// var compareSize = 11; // slow
-	var compareSize = 9;
-	// var compareSize = 7;
-	// var compareSize = 5; // too small
-	var needleMask = ImageMat.circleMask(compareSize);
+	var compareSize = Stereopsis._gdPatch_SIZE;
+	var needleMask = Stereopsis._gdPatch_MASK;
 	var org = V2D.ZERO;
 	var xLoc = new V2D(compareSize*0.5,0);
 	var yLoc = new V2D(0,compareSize*0.5);
