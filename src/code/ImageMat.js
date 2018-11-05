@@ -4044,6 +4044,7 @@ ImageMat.extractRectFromFloatImage = function(x,y,scale,sigma, w,h, imgSource,im
 		matrix = Matrix.inverse(matrix);
 		var center1 = ImageMat._center1; center1.set(fullX,fullY);
 		var center2 = ImageMat._center2; center2.set(0,0);
+// console.log(matinv);
 		matinv.multV2DtoV2D(center2,center1);
 		// to origin
 		var m = new Matrix(3,3);

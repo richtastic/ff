@@ -115,6 +115,16 @@ Mesh3D.prototype.outputTriangles = function(){
 	for(var i=0; i<triangles.length; ++i){
 		var tri = triangles[i];
 		var t = new Tri3D(tri.A().copy(),tri.B().copy(),tri.C().copy());
+		// filtering out triangles after the fact ... EG: some bad seeds
+		var lengthAB = t.lengthAB();
+		var lengthBC = t.lengthBC();
+		var lengthCA = t.lengthCA();
+		var minLength = Math.min(lengthAB,lengthBC,lengthCA);
+		var maxLength = Math.max(lengthAB,lengthBC,lengthCA);
+		var lengthRatio = maxLength/minLength;
+		if(lengthRatio>10){
+			continue;
+		}
 		output.push(t);
 	}
 	return output;
@@ -124,20 +134,39 @@ Mesh3D.prototype.consistentTriangleOrientationsFromPoints = function(){
 	var triSpace = this._triangleSpace;
 	var pointSpace = this._pointSpace;
 	var triangles = triSpace.toArray();
-	console.log("pointSpace: "+pointSpace.count());
-	for(var i=0; i<triangles.length; ++i){
-		var tri = triangles[i];
-		var center = tri.center();
-		var nearest = pointSpace.closestObject(center);
-		if(!nearest){
-			console.log(i,nearest);
-			break;
-		}
-		var normal = nearest.sourceNormal();
-		if(normal){
-			var norm = tri.normal();
-			if(V3D.dot(normal,normal)<0){
-				tri.flipDirection();
+	var pointCount = pointSpace.count()
+	console.log("pointSpace: "+pointCount);
+	if(pointCount>0){
+		for(var i=0; i<triangles.length; ++i){
+			var tri = triangles[i];
+			var center = tri.center();
+			var radius = tri.radius();
+			// var nearest = pointSpace.closestObject(center);
+			var neighbors = pointSpace.objectsInsideSphere(center,radius);
+			if(neighbors.length==0){
+				var nearest = pointSpace.closestObject(center);
+				neighbors.push(nearest);
+			}
+			// if(!nearest){
+			// 	throw "what?";
+			// 	console.log(i,nearest);
+			// 	break;
+			// }
+
+			var normals = [];
+			for(var j=0; j<neighbors.length; ++j){
+				var nearest = neighbors[j];
+				var normal = nearest.sourceNormal();
+				if(normal){
+					normals.push(normal);
+				}
+			}
+			if(normals.length>0){
+				var normal = Code.averageAngleVector3D(normals);
+				var norm = tri.normal();
+				if(V3D.dot(normal,norm)<0){
+					tri.flipDirection();
+				}
 			}
 		}
 	}
@@ -160,12 +189,12 @@ Mesh3D.prototype._visitPointsNearTri = function(tri){ // distance from tri ~ max
 	var points = this._pointSpace.objectsInsideSphere(center,searchRadius);
 	for(var i=0; i<points.length; ++i){
 		var point = points[i];
-		var p = point.point();
-		var closest = Code.closestPointOnTri3D(p, a,b,c,normal);
-		var dist = V3D.distance(closest,p);
-		if(dist<maxDistance){ // TO SIMPLIFY: just set to true inside sphere
+		// var p = point.point();
+		// var closest = Code.closestPointOnTri3D(p, a,b,c,normal);
+		// var dist = V3D.distance(closest,p);
+		// if(dist<maxDistance){ // TO SIMPLIFY: just set to true inside sphere
 			point.visited(true);
-		}
+		// }
 	}
 }
 Mesh3D.prototype.addEdge = function(edge){
@@ -176,9 +205,10 @@ Mesh3D.prototype.removeEdge = function(edge){
 }
 Mesh3D.prototype.generateSurfaces = function(){
 	this._sizeSpaces();
-	for(var i=0; i<1; ++i){
-		this._smoothSurface();
-	}
+	// for(var i=0; i<1; ++i){
+	// 	this._smoothSurface();
+	// 	// this._smoothSurfacePush();
+	// }
 	if(this._reconstructionMethod==Mesh3D.RECONSTRUCTION_METHOD_APSS){
 		// this._projectPointToSurface = this._projectPointToSurface_APSS;
 		var haveNormals = false;//this._pointsHaveNormals();
@@ -372,7 +402,7 @@ var windowCount = 10;
 
 		// var perimeter = space.objectsInsideSphere(location, size*5.0); 
 		var distances = [];
-		var perimeter = space.kNN(location, 20);
+		var perimeter = space.kNN(location, totalCount);
 		for(var i=0; i<perimeter.length; ++i){
 			perimeter[i] = perimeter[i].point();
 			distances[i] = V3D.distance(perimeter[i],location);
@@ -403,14 +433,14 @@ var windowCount = 10;
 		for(var i=0; i<weights.length; ++i){
 			weights[i] = weights[i]/weightTotal;
 		}
-	
+		
 		// var perimeter = space.kNN(location, 3);
 		// for(var i=0; i<perimeter.length; ++i){
 		// 	perimeter[i] = perimeter[i].point();
 		// }
 
 
-		/*
+		/*		
 		// VIA PLANE
 		var neighbors = space.kNN(location, 10);
 		var neighs = [];
@@ -421,10 +451,26 @@ var windowCount = 10;
 		for(var i=0; i<perimeter.length; ++i){
 			perimeter[i] = perimeter[i].point();
 		}
-		
 		*/
 
-		var avg = V3D.average(perimeter, weights);
+		var plane = Code.planeFromPoints(location, perimeter, weights);
+		// move point toward center:
+		var normal = plane["normal"];
+		var center = plane["point"];
+		var cToL = V3D.sub(location,center);
+		var dot = V3D.dot(cToL,normal);
+
+		// set to ~ plane
+		var reduced = normal.copy().scale(dot).add(center);
+		var avg = V3D.average([location,reduced]);
+		point.temp(avg);
+
+		// console.log(plane);
+		// throw "?"
+		
+
+		// average all local points:
+		// var avg = V3D.average(perimeter, weights);
 		point.temp(avg);
 	}
 	// remove all & readd
@@ -438,6 +484,103 @@ var windowCount = 10;
 		space.insertObject(point);
 	}
 }
+
+
+
+Mesh3D.prototype._smoothSurfacePush = function(){
+	console.log("_smoothSurfacePush");
+	var space = this._pointSpace;
+	var points = space.toArray();
+	
+var totalCount = 20;
+var windowCount = 10;
+	var surface = [];
+	// zero
+	for(var p=0; p<points.length; ++p){
+		var point = points[p];
+		point.temp(new V3D(0,0,0));
+	}
+	// planes
+	for(var p=0; p<points.length; ++p){
+		var point = points[p];
+		var location = point.point();
+		var distances = [];
+		var neighbors = space.kNN(location, totalCount);
+		var perimeter = [];
+		for(var i=0; i<neighbors.length; ++i){
+			perimeter[i] = neighbors[i].point();
+			distances[i] = V3D.distance(perimeter[i],location);
+		}
+
+		var dMin = Code.min(distances,null, windowCount);
+		var dMean = Code.mean(distances,null, windowCount);
+		var dSigma = Code.stdDev(distances,dMin,null, windowCount);
+		var bot = dSigma*dSigma;
+		// WEIGHT BY DISTANCE
+		var weights = [];
+		var weightTotal = 0.0;
+		for(var i=0; i<perimeter.length; ++i){
+			var v = perimeter[i];
+			var d = V3D.distance(location,v);
+			var dd = d*d;
+			var weight = Math.exp(-dd/dSigma);
+			// var weight = Math.exp(-d/size);
+			// var weight = Math.exp(-d/dSigma);
+			weights[i] = weight;
+			weightTotal += weight;
+		}
+		for(var i=0; i<weights.length; ++i){
+			weights[i] = weights[i]/weightTotal;
+		}
+
+		var plane = Code.planeFromPoints(location, perimeter, weights);
+		// move points away center:
+		var normal = plane["normal"];
+		var center = plane["point"];
+
+		for(var i=0; i<neighbors.length; ++i){
+			var n = neighbors[i];
+			if(n==point){
+				continue;
+			}
+			var l = n.point();
+			var cToP = V3D.sub(l,center);
+			var dot = V3D.dot(cToP,normal);
+			var perp = normal.copy().scale(dot);
+			var parallel = cToP.copy().sub(perp);
+			var w = weights[i];
+			var push = parallel.copy().norm().scale(w);
+			// push.scale(10.0);
+			n.temp().add(push);
+		}
+
+		// console.log(plane);
+		// throw "?"
+		
+
+		// average all local points:
+		// var avg = V3D.average(perimeter, weights);
+		// point.temp(avg);
+	}
+	// remove all & readd
+	space.clear();
+	for(var p=0; p<points.length; ++p){
+		var point = points[p];
+		// var mid = V3D.midpoint(point.point(),point.temp());
+		// point.point(mid);
+		var l = point.point();
+		var t = point.temp();
+			t.scale(0.01);
+		l = l.copy().add(t);
+		// console.log(p+" "+t+" / "+l)
+		// var avg = V3D.average([l,reduced]);
+		point.point(l);
+		point.temp(null);
+		space.insertObject(point);
+	}
+}
+
+
 
 Mesh3D.prototype.testPoints = function(){
 	console.log("testPoints");
@@ -1218,11 +1361,14 @@ Mesh3D.prototype.convexNeighborhoodEdges = function(point){
 	return edges;
 }
 Mesh3D.prototype._setCurvaturePoints_MLS = function(){
+var limitCurvatureToNeighborhood = true;
 	var space = this._pointSpace;
 	var points = space.toArray();
 	var minPlaneNeighborCount = 7;
-var planeNeighborCount = 7;
-var planeNeighborCount = 12;
+// var planeNeighborCount = 7;
+// var planeNeighborCount = 12;
+var planeNeighborCount = 10;
+var planeNeighborCount = 15;
 	var minimumCurvature = null;
 	var maximumCurvature = null;
 	var list = [];
@@ -1238,10 +1384,17 @@ var planeNeighborCount = 12;
 		// console.log(info);
 		var normal = info["normal"];
 		var kMax = info["max"];
-
+		if(limitCurvatureToNeighborhood){
+			var localSize = info["localSize"];
+			var localCurv = 1.0/localSize;
+			localCurv = 0.1 * 0.5 * localCurv; //. half distance
+			if(kMax>localCurv){
+				kMax = localCurv;
+			}
+		}
 
 // TODO: UNCOMMENT:
-kMax *= 0.1;
+// kMax *= 0.1;
 
 
 		var kappa = kMax;
@@ -1650,7 +1803,9 @@ Mesh3D.prototype._iterateFronts = function(){
 
 // seedPoint = space.closestObject(new V3D(0,0,0));
 // seedPoint = space.closestObject(new V3D(0.3,0.0,-0.2));
-seedPoint = space.closestObject(new V3D(0.1,0.15,-0.7) );
+
+
+// seedPoint = space.closestObject(new V3D(0.1,0.15,-0.7) );
 
 		// part of previously triangulated region
 		if(seedPoint.visited()){
@@ -1665,8 +1820,8 @@ seedPoint = space.closestObject(new V3D(0.1,0.15,-0.7) );
 		// var maxIter = 5;
 		// var maxIter = 10;
 		// var maxIter = 100;
-		// var maxIter = 1000;
-		var maxIter = 2000;
+		var maxIter = 1000;
+		// var maxIter = 2000;
 		// var maxIter = 3000;
 		// var maxIter = 4000;
 		// var maxIter = 6000;
@@ -1804,10 +1959,12 @@ seedPoint = space.closestObject(new V3D(0.1,0.15,-0.7) );
 
 
 ++groupIndex;
-// if(groupIndex>=20){
+// if(groupIndex>=200){
+// if(groupIndex>=100){
+if(groupIndex>=20){
 // if(groupIndex>=10){
 // if(groupIndex>=3){
-if(groupIndex>=1){
+// if(groupIndex>=1){
 	break;
 }
 	}
@@ -2050,8 +2207,10 @@ if( Code.isNaN(startingLocation.x) ){
 // console.log("startingLocation: "+startingLocation);
 	var maxIterations = 10;
 // var kNNEstimate = 15;
-var kNNEstimate = 30;
-var kNNWindow = 20;
+// var kNNEstimate = 30;
+// var kNNWindow = 20;
+var kNNEstimate = 40;
+var kNNWindow = 30;
 	var minPlaneNeighborCount = 9;
 	var location = startingLocation.copy();
 	for(var iteration=0; iteration<maxIterations; ++iteration){
@@ -2138,6 +2297,7 @@ var kNNWindow = 20;
 				reverse.multV3D(normal,normal); // just want rotation
 				normal.sub(planeOrigin);
 			curvature["normal"] = normal;
+			curvature["localSize"] = localSize;
 			return curvature;
 		}
 

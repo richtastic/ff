@@ -954,6 +954,7 @@ var showPoints = true;
 if(showPoints){
 	// show source points
 	for(i=0;i<pts.length;++i){
+// break;
 		var p = pts[i];
 		points.push(p.x,p.y,p.z);
 		colors.push(0.0,0.0,1.0,0.90);
@@ -991,7 +992,11 @@ if(showPoints){
 	var pointsL = [];
 	var colorsL = [];
 	// var pts = this._mlsMesh._field.points();
+
+
+	// TRIANGLE NORMALS:
 	
+	// POINT NORMALS:
 	for(i=0;i<spherePoints.length;++i){
 break; // no normals
 		p = spherePoints[i];
@@ -1171,6 +1176,18 @@ tris = inCube;
 				colorsT.push(0.0,0.90,0.0, 1.0);
 				colorsT.push(0.0,0.0,0.90, 1.0);
 			}
+
+
+			// TRIANGLE NORMALS:
+			var normalScale = 0.03;
+			var normal = tri.normal();
+			var center = tri.center();
+			var a = center;
+			var b = a.copy().add(normal.copy().scale(normalScale));
+			colorsL.push(0.0,0.0,0.5,1.0);
+			colorsL.push(0.0,0.0,0.5,1.0);
+			V3D.pushToArray(pointsL, a);
+			V3D.pushToArray(pointsL, b);
 			
 		}
 

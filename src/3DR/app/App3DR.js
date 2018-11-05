@@ -6315,8 +6315,7 @@ App3DR.ProjectManager.prototype.calculatePairMatch = function(viewA, viewB, pair
 		// var objectsB = R3D.generateSIFTObjects(objectsB, imageMatrixB);
 		var objectsA = R3D.generateSIFTObjects(featuresA, imageMatrixA);
 		var objectsB = R3D.generateSIFTObjects(featuresB, imageMatrixB);
-
-
+		// use most distinct features only
 		objectsA = R3D.siftObjectsToUnique(objectsA);
 		objectsB = R3D.siftObjectsToUnique(objectsB);
 

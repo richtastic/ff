@@ -75,8 +75,25 @@ Tri3D.prototype.area = function(){
 	V3D.cross(AB, AB,AC);
 	return AB.length() * 0.5; // ?
 }
+Tri3D.prototype.lengthAB = function(){
+	return V3D.distance(this._b,this._a);
+}
+Tri3D.prototype.lengthBC = function(){
+	return V3D.distance(this._c,this._b);
+}
+Tri3D.prototype.lengthCA = function(){
+	return V3D.distance(this._a,this._c);
+}
 Tri3D.prototype.center = function(){ // barycenter
 	return new V3D((this._a.x+this._b.x+this._c.x)/3.0, (this._a.y+this._b.y+this._c.y)/3.0, (this._a.z+this._b.z+this._c.z)/3.0);
+}
+Tri3D.prototype.radius = function(){
+	var center = this.center();
+	var ca = V3D.sub(this._a,center).length();
+	var cb = V3D.sub(this._b,center).length();
+	var cc = V3D.sub(this._c,center).length();
+	var radius = Math.max(ca,cb,cc);
+	return radius;
 }
 Tri3D.prototype.boundingBox = function(){
 	var min = null;

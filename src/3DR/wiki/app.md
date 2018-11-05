@@ -322,10 +322,64 @@ https://cloud.google.com/appengine/docs/nodejs/
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+---- TYPES OF MATCHES:
+	- corners
+		: corners (point) ; SIFT OR gradient => (angle) ; assume => (size)
+	- corners w/ geometry
+	- SIFT blobs
+	- MSER
+	- MSER+corners
+NEED:
+	- POSITION
+	- ROTATION
+	- SCALE
+
+convert to objects: DENORMALIZED:
+- object:
+	center: V2D
+	angle: number
+	size: pixels
+
+
+
+
+
+- are the corners sized correctly?
+- is the object
+
+
+- start process over with new set: 5-7
+
+- 
+
+
+- get basic triangles processed
+	~ filter out odd-shaped ones
+	- set patch normals to just be averge of views of 2D points
+	- output to file
+
+
+- smoothing on the projection
+
+- optimizing plane via minimizing energy fxn
+
+- voronoi point upsampling
+
+
+- bilateral filtering for smoothing
+
+=> curvature of area shouldn't be more than the minimum neighbor distance
 
 
 - smooth points out before triangulating ?
+	- groups items into clusters
+	=> push away from a location rather than pull towards?
+		- initialize all deltas = 0
+		- for all points:
+			- find all neighbors on a local plane
+			- push the neighbors away on the plane based on distance falloff & first-neighbor-distance
 
+- spherical projection ...
 
 
 

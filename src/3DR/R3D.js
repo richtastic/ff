@@ -2259,6 +2259,8 @@ R3D.iterationsFromProbabilities = function(pDesired, pOutlier, minCount, multipl
 	multiplier = multiplier!==undefined ? multiplier : 1.0;
 	var maxIterations = Math.ceil(Math.log(1.0-pDesired)/Math.log(1.0 - Math.pow(1.0-pOutlier,minCount)));
 	maxIterations *= multiplier;
+	maxIterations = Math.min(maxIterations,1E4);
+	// 1 026 134 196
 // console.log("pOutlier: "+pOutlier);
 // console.log("pDesired: "+pDesired);
 // console.log("MAX ITERATIONS: "+maxIterations);
@@ -2295,8 +2297,10 @@ R3D.fundamentalRANSACFromPoints = function(pointsAIn,pointsBIn, errorPosition, i
 	var support, maxSupportCount = 0, maxSupportError = null;
 	var minCount = 7;
 	// var epsilon = 1/pointsLength;
+	// var pOutlier = 0.99; // inital assumptions are wrong
+	// var pDesired = 0.999; // to have selected a valid subset
 	var pOutlier = 0.99; // inital assumptions are wrong
-	var pDesired = 0.999; // to have selected a valid subset
+	var pDesired = 0.99; // to have selected a valid subset
 	var errorMinfactor = 2.0;
 	//var maxIterationMultiplier = 10;
 	var maxIterations = errorMinfactor * R3D.iterationsFromProbabilities(pDesired, pOutlier, minCount);
@@ -2362,7 +2366,7 @@ R3D.fundamentalRANSACFromPoints = function(pointsAIn,pointsBIn, errorPosition, i
 				//if(maxSupportError == null || (support>=maxSupportCount && totalTransferError < maxSupportError)){ // FORCE LESS ERROR
 				//if(support>=maxSupportCount && (maxSupportError==null || avgTransferError < maxSupportError)){ // ? trade lower average error for higher support count ?
 					//console.log(i+": "+totalTransferError+"/"+maxSupportError+" support: "+support+" / "+maxSupportCount +"     avg:"+(totalTransferError/support));
-					//console.log("maxIterations: "+maxIterations);
+					console.log("  maxIterations: "+i+" / "+maxIterations);
 						//console.log(feedback+"");
 					maxSupportCount = support;
 					maxSupportError = totalTransferError;
@@ -3947,6 +3951,32 @@ R3D.filterFeatureListSimilarRGB = function(originalList, r,g,b, wid,hei, range){
 	 	console.log(newList[i].z);
 	}
 	return newList;
+}
+
+R3D.cornerToFeatureObject = function(corner, isAngle){ // V2D, V3D, V4D
+	var object = {"point":null, "size":null, "angle":null};
+	if(Code.isa(corner,V2D)){
+		object["point"] = new V2D(corner.x,corner.y);
+	}else if(Code.isa(corner,V3D)){
+		object["point"] = new V2D(corner.x,corner.y);
+		if(isAngle){
+			object["angle"] = corner.z;
+		}else{
+			object["size"] = corner.z;
+		}
+	}else if(Code.isa(corner,V4D)){
+		object["point"] = new V2D(corner.x,corner.y);
+		if(isAngle){
+			object["angle"] = corner.z;
+		}else{
+			object["size"] = corner.z;
+		}
+		object["score"] = corner.t;
+		// object["center"] = new V2D(corner.x,corner.y);
+		// object["size"] = corner.z;
+		// object["angle"] = corner.t;
+	}
+	return object
 }
 
 R3D.optimumAffineScaleForImage = function(imageSource){
@@ -6122,6 +6152,7 @@ R3D._SIFTchannelMatrix = function(source,width,height, insideSet, location, scal
 
 
 R3D.SIFTVectorCircular = function(imageMatrix, location,diaNeighborhood,matrix, colors){
+// R3D.SIFTVectorCircular(image, center,neighborhoodSize,matrix, useColors);
 	colors = colors!==undefined ? colors : true;
 	var colorCount = colors ? 3 : 1;
 	var binMask = R3D._defaultCircularSIFTBinMask();
@@ -6134,6 +6165,14 @@ R3D.SIFTVectorCircular = function(imageMatrix, location,diaNeighborhood,matrix, 
 	var vectorGroups = Code.newArrayArrays(vectorLen*colorCount);
 	var scale = diaNeighborhood/binWidth;
 	var gradientR, gradientG, gradientB, gradientY;
+// // var matrix = null;
+// if(ANGLE!==undefined){
+// 	matrix = new Matrix(3,3);
+// 	matrix.identity();
+// 	// matrix = Matrix.transform2DTranslate(matrix, -location.x , -location.y );
+// 	// matrix = Matrix.transform2DScale(matrix, scaleDouble);
+// 	matrix = Matrix.transform2DRotate(matrix,ANGLE);
+// }
 	if(colors){
 		gradientR = R3D._SIFTchannelMatrix(imageMatrix.red(), imageMatrix.width(),imageMatrix.height(), binWidth, location, scale, matrix);
 		gradientG = R3D._SIFTchannelMatrix(imageMatrix.grn(), imageMatrix.width(),imageMatrix.height(), binWidth, location, scale, matrix);
@@ -6188,6 +6227,11 @@ R3D.SADVectorCircular = function(imageMatrix, location,diaNeighborhood,matrix){ 
 	var zoom = 1.0;
 	var scale = diaNeighborhood/outerSize;
 	var image = imageMatrix.extractRectFromFloatImage(location.x,location.y,scale,null,paddedSize,paddedSize, matrix);
+	var averageColor = new V3D();
+	var vR = image.red();
+	var vG = image.grn();
+	var vB = image.blu();
+	var v = new V3D();
 	// console.log(image)
 		// var img = GLOBALSTAGE.getFloatRGBAsImage(image.red(),image.grn(),image.blu(), paddedSize,paddedSize);
 		// var d = new DOImage(img);
@@ -6195,12 +6239,33 @@ R3D.SADVectorCircular = function(imageMatrix, location,diaNeighborhood,matrix){ 
 		// d.matrix().translate(R3D.XXX*50, R3D.XXX*50);
 		// GLOBALSTAGE.addChild(d);
 		// ++R3D.XXX;
-	var vR = image.red();
-	var vG = image.grn();
-	var vB = image.blu();
-	var averageColor = new V3D();
-	var v = new V3D();
+
+
+// AVERAGE COLOR
+var averageColorBase = new V3D();
+averageColorBase.set(0,0,0);
+var nonzeroCount = 0;
+for(var j=0; j<outerSize; ++j){
+	for(var i=0; i<outerSize; ++i){
+		var index = j*outerSize + i;
+		var binGroup = binLookup[index];
+		if(binGroup<0){
+			continue;
+		}
+		++nonzeroCount;
+		var x = i;
+		var y = j;
+		var ind = y*paddedSize + x;
+		var r = vR[ind];
+		var g = vG[ind];
+		var b = vB[ind];
+		averageColor.add(r,g,b);
+	}
+}
+averageColorBase.scale(1.0/nonzeroCount);
+
 	var delta = new V3D();
+	var del = new V3D();
 	for(var j=0; j<outerSize; ++j){
 		for(var i=0; i<outerSize; ++i){
 			var index = j*outerSize + i;
@@ -6230,7 +6295,19 @@ R3D.SADVectorCircular = function(imageMatrix, location,diaNeighborhood,matrix){ 
 			var g = vG[index];
 			var b = vB[index];
 			v.set(r,g,b);
-			V3D.sub(delta, v,averageColor);
+			
+			
+			V3D.sub(del, v, averageColor);
+			// V3D.sub(delta, v, averageColor); // POOR
+			V3D.sub(delta, v, averageColorBase); // BAD
+			// V3D.sub(delta, averageColor, averageColorBase); // BAD
+			// delta.x *= del.x;
+			// delta.y *= del.y;
+			// delta.z *= del.z;
+			delta.add(del);
+			// var dot = V3D.dot(delta,del);
+			// delta.scale(dot);
+			// delta.set(0,0,0);
 			vectorGroups[binGroup].push(delta.copy());
 		}
 	}
@@ -6323,7 +6400,7 @@ R3D.SIFTVAngleMeasurement = function(imageMatrix,location,diaNeighborhood, singl
 }
 
 
-R3D.cornerFeaturesAddAngles = function(imageMatrix, features){
+R3D.cornerFeaturesAddAngles = function(imageMatrix, features, toObject){
 	var updated = [];
 	var i, j;
 	var checkSize = 5;
@@ -6369,8 +6446,14 @@ if( Code.ofa(feature,V2D) ){
 		var angle = V2D.angleDirection(V2D.DIRX,direction);
 		//console.log(angle);
 
-		//throw "?"
-		var changed = new V4D(feature.x,feature.y,size,angle);
+		//throw "?"\
+		var changed = null;
+		if(toObject){
+			changed = {"point":location.copy(), "size":size, "angle":angle};
+		}else{
+			changed = new V4D(feature.x,feature.y,size,angle);
+			
+		}
 		updated.push(changed);
 	}
 	return updated;
@@ -7162,18 +7245,18 @@ R3D.extractCornerGeometryFeatures = function(imageMatrixA){
 	var maxCount = 2000;
 	// R3D.CORNER_SELECT_RELAXED
 	var featuresA = R3D.testExtract1(imageMatrixA, 1.0, maxCount, true);
-	//console.log(featuresA);
 	// // NMS
 	//maxCount = 500;
 //	maxCount = Math.min(maxCount, Math.round(featuresA.length*0.5));
-featuresA = R3D.ANMS(imageMatrixA, featuresA, maxCount);
+	featuresA = R3D.ANMS(imageMatrixA, featuresA, maxCount);
 	// featuresA = R3D.ANMS_Full(imageMatrixA, maxCount);
 	//featuresA = R3D.featureCornersToPSA(featuresA, imageMatrixA);
 	//console.log(featuresA);
 	featuresA = R3D.featureCornersToLines(featuresA, imageMatrixA);
 	return featuresA;
 }
-R3D.testExtract1 = function(imageSource, type, maxCount, single){
+
+R3D.extractImageCorners = function(imageSource, type, maxCount, single){
 	maxCount = (maxCount!==undefined && maxCount!==null) ? maxCount : 500; 
 	type = (type!==undefined && type!==null) ? type : R3D.CORNER_SELECT_RELAXED;
 	var sourceWidth = imageSource.width();
@@ -7183,9 +7266,7 @@ R3D.testExtract1 = function(imageSource, type, maxCount, single){
 	var wm1 = sourceWidth-1;
 	var hm1 = sourceHeight-1;
 	var features = [];
-	var defaultRadius = hypotenuse*0.004; // radius = 1% of image size .. TODO: scale based.   1~4
-	defaultRadius *= 4.0;
-	var offsetRadius = defaultRadius;
+	var defaultRadius = hypotenuse*0.020; // radius = 1% of image size .. TODO: scale based.   1~4
 	//var scales = [2.0,1.0,0.5,0.25];
 	var scales = [1.0,0.5,0.25,0.125];
 	if(single){
@@ -7196,7 +7277,7 @@ R3D.testExtract1 = function(imageSource, type, maxCount, single){
 		scales[k] = Math.pow(2,scales[k]);
 	}
 
-	console.log("defaultRadius: "+defaultRadius);
+	// console.log("defaultRadius: "+defaultRadius);
 	for(k=0; k<scales.length; ++k){
 		var scale = scales[k];
 		var image = imageSource.getScaledImage(scale);
@@ -7268,6 +7349,9 @@ R3D.testExtract1 = function(imageSource, type, maxCount, single){
 	// TODO: INCLUDE SCORE DISTRIBUTION INFO
 	return featuresOut;
 }
+
+R3D.testExtract1 = R3D.extractImageCorners;
+
 R3D.cornerScaleSpaceExtract = function(imageSource, typo){
 	//typo = typo!==undefined ? typo : R3D.CORNER_SELECT_RESTRICTED;
 	typo = typo!==undefined ? typo : R3D.CORNER_SELECT_REGULAR;
@@ -7723,11 +7807,14 @@ var imageBlurred = imageMatrix.getBlurredImage(1.0);
 				rad = point.z;
 			}else{
 				isObject = true;
-				hasAngle = point["angle"]!==undefined;
+				var a = point["angle"];
+				hasAngle = a!==undefined && a!==null;
 				angle = point["angle"];
 				score = point["score"];
 				location = point["point"];
 				rad = point["size"];
+				// console.log("IS OBJECT");
+				// throw "?"
 			}
 			// var dia = 2.0*rad; // full area
 			// var diaNeighborhood = dia * 2.0; // area around feature
@@ -7784,7 +7871,8 @@ var imageBlurred = imageMatrix.getBlurredImage(1.0);
 					GLOBALSTAGE.addChild(img);
 				}
 				*/
-
+// console.log(imageMatrix, imageBlurred, location, diaNeighborhood, pointAngle);
+// throw "?";
 				//var vector = R3D.SIFTVector(imageMatrix, location, diaNeighborhood, pointAngle);
 				var vector = null;
 				//var image = R3D.SADVector(imageMatrix, location, diaNeighborhood, pointAngle);
@@ -8901,7 +8989,7 @@ if(neighbor){
 //angle = null;
 //radius = 10;
 //angle = A;
-radius = 0.01;
+radius = 0.01 * imageWidth;
 				var feature = {"point": new V2D(point.x,point.y), "size":radius, "angle":angle, "score":cornerScore};
 				output.push( feature );
 				++cnt;
@@ -9727,17 +9815,18 @@ var blobImage = [blobImageA,blobImageB,blobImageC];
 			region.recordPixels(blobImage, width, height, i/regions.length);
 		}
 	}
+/*
 var sca = 1.5;
 var img = GLOBALSTAGE.getFloatRGBAsImage(blobImageA,blobImageB,blobImageC, width, height);
 var d = new DOImage(img);
 //d.graphics().alpha(0.5);
-d.graphics().alpha(0.1);
+d.graphics().alpha(0.333);
 d.matrix().scale(sca);
 d.matrix().translate(0 + R3D.XCOUNT*width*sca, 0);
 //d.matrix().translate(10 + (i%counting)*width, 10 + (i/counting | 0)*height + ((R3D.XCOUNT/counting | 0)*height) );
 GLOBALSTAGE.addChild(d);
 ++R3D.XCOUNT;
-
+*/
 	return features;
 }
 R3D.MSER = function(delta, minArea, maxArea, maxVariation, minDiversity){ // 8-connected
@@ -9746,7 +9835,6 @@ R3D.MSER = function(delta, minArea, maxArea, maxVariation, minDiversity){ // 8-c
 	// maxArea = Code.valueOrDefault(maxArea, 0.1);
 	// maxVariation = Code.valueOrDefault(maxVariation, 0.5);
 	// minDiversity = Code.valueOrDefault(minDiversity, 0.5);
-
 	delta = Code.valueOrDefault(delta, 1.0);
 	minArea = Code.valueOrDefault(minArea, 0.0002);
 	maxArea = Code.valueOrDefault(maxArea, 0.10);
