@@ -322,6 +322,19 @@ https://cloud.google.com/appengine/docs/nodejs/
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+- max iterations isn't capping 1E4
+- SIFT blobs seem not in all avail places
+
+- explore SIFT 'curves'
+
+
+
+
+
+- put all feature types into same pipeline
+
+
+
 ---- TYPES OF MATCHES:
 	- corners
 		: corners (point) ; SIFT OR gradient => (angle) ; assume => (size)
@@ -333,6 +346,10 @@ NEED:
 	- POSITION
 	- ROTATION
 	- SCALE
+
+
+- sif points still suck
+
 
 convert to objects: DENORMALIZED:
 - object:

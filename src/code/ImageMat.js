@@ -2435,6 +2435,20 @@ ImageMat.cooccurrenceMatrixCorrelation = function(com, levels){
 	return result;
 }
 
+ImageMat.scaleByInteger = function(image,imageWidth,imageHeight, skipCount){ // grabs every nth pixel into new
+	var scaledWidth = imageWidth/skipCount | 0;
+	var scaledHeight = imageHeight/skipCount | 0;
+	var scaledImage = [];
+	for(var j=0; j<scaledHeight; ++j){
+		for(var i=0; i<scaledWidth; ++i){
+			var index = (j*skipCount)*imageWidth + (i*skipCount);
+			var ind = j*scaledWidth + i;
+			scaledImage[ind] = image[index];
+		}
+	}
+	return {"value":scaledImage, "width":scaledWidth, "height":scaledHeight};
+}
+
 ImageMat.convolve = function(image,imageWidth,imageHeight, operator,operatorWidth,operatorHeight){
 	var total = imageWidth*imageHeight;
 	var i, j, n, m, sum, staN, endN, staM, endM;

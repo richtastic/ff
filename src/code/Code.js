@@ -6274,6 +6274,7 @@ Code.findExtrema3DVolume = function(volume, wid,hei){ // list of 2D images
 			for(i=1; i<wm1; ++i){
 				var isExtrema = Code.isExtrema3D(volume,wid,hei,i,j,k);
 				if(isExtrema){
+					// console.log("isExtrema: "+i+","+j+","+k)
 					var point = Code.extrema3DInterpolateRecursive(volume,wid,hei,i,j,k);
 					if(point){
 						list.push(point);

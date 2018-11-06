@@ -56,11 +56,11 @@ function FeatureTest(){
 
 // new ImageLoader("./images/flowers_1/",["7131.png", "7133.png"],this,this.imagesLoadComplete2).load();
 // new ImageLoader("./images/flowers_1/",["7120.png", "7144.png"],this,this.imagesLoadComplete2).load(); // obscure 
-// new ImageLoader("./images/flowers_1/",["7120.png", "7127.png"],this,this.imagesLoadComplete2).load();
+new ImageLoader("./images/flowers_1/",["7120.png", "7127.png"],this,this.imagesLoadComplete2).load();
 // new ImageLoader("./images/flowers_1/",["7127.png", "7131.png"],this,this.imagesLoadComplete2).load();
 // new ImageLoader("./images/flowers_1/",["7133.png", "7140.png"],this,this.imagesLoadComplete2).load();
 // new ImageLoader("./images/flowers_1/",["7140.png", "7141.png"],this,this.imagesLoadComplete2).load();
-new ImageLoader("./images/flowers_1/",["7141.png", "7144.png"],this,this.imagesLoadComplete2).load();
+// new ImageLoader("./images/flowers_1/",["7141.png", "7144.png"],this,this.imagesLoadComplete2).load();
 
 
 }
@@ -429,6 +429,29 @@ FeatureTest._SIFTchannel = function(source,width,height, insideSet, location, sc
 // 	var vectors = [];
 // }
 
+FeatureTest.prototype.MSERtoFeatures = function(image, features){
+	var featureScale = 0.5;
+	var vectors = [];
+	var featureObjects = [];
+	for(var i=0; i<features.length; ++i){
+		var feature = features[i];
+		var center = feature["center"];
+		var dirX = feature["x"];
+		var dirY = feature["y"];
+		var bestAngles = feature["bestAngles"];
+		var sizeX = dirX.length();
+		var sizeY = dirY.length();
+		var firstAngle = bestAngles[0][0];
+		var sizeAverage = (sizeX+sizeY)*0.5;
+		var object = {};
+		object["point"] = center;
+		object["angle"] = firstAngle;
+		object["size"] = sizeAverage;
+		featureObjects.push(object);
+	}
+	return featureObjects;
+}
+
 FeatureTest.prototype.processMSERfeatures = function(image, corners, gradient, features, offY){
 //var featureScale = 1.0;
 var featureScale = 0.5;
@@ -759,7 +782,12 @@ console.log(offY);
 	for(var i=0; i<matches.length; ++i){
 		var match = matches[i];
 		// console.log(match);
-		var pairs = [match["A"],match["B"]];
+		var pairs = null;
+		if( Code.isObject(match["A"])){
+			pairs = [match["A"],match["B"]];
+		}else{
+			pairs = [match["from"],match["to"]];
+		}
 // draw matches:
 var ssss = 1.5;
 var c = new DO();
@@ -768,8 +796,14 @@ c.graphics().beginPath();
 		for(var j=0; j<pairs.length; ++j){
 			var item = pairs[j];
 // console.log(item);
-			var feature = item["feature"];
+			var feature = item;
+			if(item["feature"]){
+				feature = item["feature"];
+			}
 			var center = feature["center"];
+			if(!center){
+				center = feature["point"];
+			}
 			var dirX = feature["x"];
 			var dirY = feature["y"];
 
@@ -780,6 +814,12 @@ c.graphics().beginPath();
 				var sizeX = bestSize;
 				var sizeY = bestSize;
 				var angleX = 0;
+if(bestAngle===undefined){
+	bestAngle = feature["angle"];
+	bestSize = feature["size"];
+	sizeX = bestSize;
+	sizeY = bestSize;
+}
 			// var sizeX = dirX.length();
 			// var sizeY = dirY.length();
 			// var angleX = V2D.angleDirection(V2D.DIRX,dirX);
@@ -922,8 +962,8 @@ FeatureTest.prototype.compareVectors = function(objectsA, putativeA, objectsB, p
 
 					// var score = (1.0+scoreSAD)*scoreSIFT;
 					// var score = (scoreSAD)*(1.0+scoreSIFT);
-// var score = (1+scoreSAD)*(1+scoreSIFT) - 1;
-var score = scoreSAD;
+var score = (1+scoreSAD)*(1+scoreSIFT) - 1;
+// var score = scoreSAD;
 // var score = scoreSIFT;
 //(1+scoreSAD)*(1+scoreSIFT);
 
@@ -1413,18 +1453,19 @@ return;
 */
 
 
-
-
-var useCorners = false; // SIFT points are still more poor than corners
 // var useCorners = true;
-var useSIFT = false;
-// var useSIFT = true;
+var useCorners = false;
+
+var useSIFT = true;
+// var useSIFT = false;
+
 // var useCornerGeometry = true;
 var useCornerGeometry = false;
 
+// var useBlobs = true;
+var useBlobs = false;
 
-var useBlobs = true;
-// var useBlobs = false;
+
 
 var featuresA = null;
 var featuresB = null;
@@ -1441,9 +1482,16 @@ if(useCorners){
 	for(var i=0; i<featuresB.length; ++i){
 		featuresB[i] = R3D.cornerToFeatureObject(featuresB[i]);
 	}
-// console.log(featuresA);
-// console.log(featuresB);
-// throw "V?"
+
+
+	var scale = 4.0;
+	for(var i=0; i<featuresA.length; ++i){
+		featuresA[i]["size"] *= scale;
+	}
+	for(var i=0; i<featuresB.length; ++i){
+		featuresB[i]["size"] *= scale;
+	}
+
 	// GET ANGLE
 	// var featuresA = R3D.generateSIFTObjects(featuresA, imageMatrixA);
 	// var featuresB = R3D.generateSIFTObjects(featuresB, imageMatrixB);
@@ -1455,14 +1503,35 @@ if(useCorners){
 // console.log(featuresB);
 // throw "V?"
 }else if(useSIFT){
-	featuresA = R3D.SIFTExtractTest1(imageMatrixA);
-	featuresB = R3D.SIFTExtractTest1(imageMatrixB);
+	featuresA = R3D.SIFTExtractTest2(imageMatrixA);
+
+
+	// featuresB = R3D.SIFTExtractTest2(imageMatrixB);
+	console.log(featuresA);
+	// console.log(featuresB);
+	// var scale = 2.0;
+	// for(var i=0; i<featuresA.length; ++i){
+	// 	featuresA[i].z *= scale;
+	// }
+	// for(var i=0; i<featuresB.length; ++i){
+	// 	featuresB[i].z *= scale;
+	// }
+	featuresA = R3D.cornerFeaturesAddAngles(imageMatrixA, featuresA, true);
+	// featuresB = R3D.cornerFeaturesAddAngles(imageMatrixB, featuresB, true);
+
+
+	this.showCorners(featuresA, display, 0,0, c1);
+	// this.showCorners(featuresB, display, imageMatrixA.width(),0, c1);
+
+	throw "...";
 	// featuresA = R3D.featureCornersToPSA(featuresA, imageMatrixA);
 	// featuresB = R3D.featureCornersToPSA(featuresB, imageMatrixB);
 }else if(useCornerGeometry){
 	console.log("useCornerGeometry");
 	featuresA = R3D.extractCornerGeometryFeatures(imageMatrixA, true);
 	featuresB = R3D.extractCornerGeometryFeatures(imageMatrixB, true);
+	console.log(featuresA);
+	console.log(featuresB);
 	// var imageAWidth = imageMatrixA.width();
 	// var imageBWidth = imageMatrixB.width();
 	// for(var i=0; i<featuresA.length; ++i){
@@ -1547,11 +1616,10 @@ var cornersB = null;
 
 	// Code.truncateArray(cornersA,10);
 	// Code.truncateArray(cornersB,10);
+if(false){
 	this.showCorners(cornersA, display, 0,0, c1);
 	this.showCorners(cornersB, display, imageMatrixA.width(),0, c1);
-	// console.log(cornersA);
-
-
+}
 
 
 	// convert corners to features:
@@ -1564,10 +1632,20 @@ var cornersB = null;
 
 	var cornersA = null;
 	var cornersB = null;
+	
+
+	var vectorsA = this.processMSERfeatures(imageMatrixA, cornersA, gradientA, featuresA, 0);
+	var vectorsB = this.processMSERfeatures(imageMatrixB, cornersB, gradientB, featuresB, 50);
+
+	featuresA = this.MSERtoFeatures(imageMatrixA, featuresA);
+	featuresB = this.MSERtoFeatures(imageMatrixB, featuresB);
+
+	console.log(featuresA);
+	console.log(featuresB);
+/*
 	var vectorsA = this.processMSERfeatures(imageMatrixA, cornersA, gradientA, featuresA, 0);
 	var vectorsB = this.processMSERfeatures(imageMatrixB, cornersB, gradientB, featuresB, 50);
 	console.log("vectors: "+vectorsA.length+"  "+vectorsB.length);
-
 	console.log(vectorsA);
 	console.log(vectorsB);
 	// throw "...."
@@ -1627,6 +1705,7 @@ R3D.showRansac(pointsA,pointsB, matrixFfwd, matrixFrev, display, imageMatrixA,im
 	// var vectorsB = this.processCornerFeatures(imageMatrixB, cornersB, 50);
 
 	throw "HERE";
+*/
 }
 
 // OVERWRITE: / ADD:
@@ -1634,8 +1713,9 @@ R3D.showRansac(pointsA,pointsB, matrixFfwd, matrixFrev, display, imageMatrixA,im
 // featuresB = R3D.cornerFeaturesAddAngles(imageMatrixB, featuresB);
 
 console.log(featuresA.length+" | "+featuresB.length);
+console.log(featuresA);
+console.log(featuresB);
 
-console.log(featuresA)
 // // group by corners
 // //if(false){
 // if(true){
@@ -1660,8 +1740,8 @@ console.log(featuresA)
 // }
 
 // show initial feature sites
-if(true){
-// if(false){
+// if(true){
+if(false){
 	// show points:
 	var lists = [featuresA,featuresB];
 	for(var f=0; f<lists.length; ++f){
@@ -1886,12 +1966,6 @@ console.log("matching ... ");
 // 	}
 
 
-
-// var objectsA = objectList[0];
-// var objectsB = objectList[1];
-
-console.log(featuresA);
-
 // featuresA = R3D.keepGoodCornerFeatures(featuresA);
 // featuresB = R3D.keepGoodCornerFeatures(featuresB);
 
@@ -1901,7 +1975,6 @@ console.log(featuresA.length+" v "+featuresB.length);
 // featuresA = R3D.denormalizeSIFTObjects(featuresA, imageMatrixA.width(), imageMatrixA.height());
 // featuresB = R3D.denormalizeSIFTObjects(featuresB, imageMatrixB.width(), imageMatrixB.height());
 
-console.log(featuresA);
 var objectsA = R3D.generateSIFTObjects(featuresA, imageMatrixA);
 var objectsB = R3D.generateSIFTObjects(featuresB, imageMatrixB);
 
@@ -1916,6 +1989,7 @@ objectsA = R3D.siftObjectsToUnique(objectsA);
 objectsB = R3D.siftObjectsToUnique(objectsB);
 console.log(objectsA.length+" & "+objectsB.length);
 }
+
 
 /*
 
@@ -2060,7 +2134,6 @@ var matching = R3D.matchObjectsSubset(objectsA, objectsB, objectsB, objectsA);
 var best = matching["best"];
 
 
-
 // var matchData = R3D.fullMatchesForObjects(objectsA, imageMatrixA, objectsB, imageMatrixB, maxFeatures);
 // var F = matchData["F"];
 // var matches = matchData["matches"];
@@ -2103,6 +2176,9 @@ return;
 
 }else{ // old vs new stuff
 
+console.log(objectsA);
+console.log(objectsB);
+// throw "BEFORE";
 
 //NEW:
 
@@ -2115,6 +2191,16 @@ console.log(matchData)
 
 var matrixFfwd = F;
 var matrixFrev = R3D.fundamentalInverse(matrixFfwd);
+
+
+
+console.log("best ... ");
+console.log(best);
+
+this.showMSERmatches(matches, imageMatrixA, imageMatrixB);
+
+
+
 
 var pointsA = [];
 var pointsB = [];

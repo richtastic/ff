@@ -6049,7 +6049,10 @@ R3D.SIFVectorGrayCircular = function(imageMatrix, location,diaNeighborhood,point
 	return R3D.SIFTVectorCircular(imageMatrix, location,diaNeighborhood,pointAngle, false);
 }
 R3D.SIFVectorRGBCircular = function(imageMatrix, location,diaNeighborhood,pointAngle){
-	return R3D.SIFTVectorCircular(imageMatrix, location,diaNeighborhood,pointAngle, true);
+	var matrix = new Matrix(3,3);
+		matrix.identity();
+		matrix = Matrix.transform2DRotate(matrix,pointAngle);
+	return R3D.SIFTVectorCircular(imageMatrix, location,diaNeighborhood,matrix, true);
 }
 R3D.SIFTVectorCircularOLD = function(imageMatrix, location,diaNeighborhood,pointAngle, colors){
 	diaNeighborhood = diaNeighborhood * 1;
@@ -6297,14 +6300,14 @@ averageColorBase.scale(1.0/nonzeroCount);
 			v.set(r,g,b);
 			
 			
-			V3D.sub(del, v, averageColor);
+			// V3D.sub(del, v, averageColor);
 			// V3D.sub(delta, v, averageColor); // POOR
 			V3D.sub(delta, v, averageColorBase); // BAD
 			// V3D.sub(delta, averageColor, averageColorBase); // BAD
 			// delta.x *= del.x;
 			// delta.y *= del.y;
 			// delta.z *= del.z;
-			delta.add(del);
+			// delta.add(del);
 			// var dot = V3D.dot(delta,del);
 			// delta.scale(dot);
 			// delta.set(0,0,0);
@@ -8088,15 +8091,6 @@ var limitScoreRatio = null;
 
 
 
-
-
-
-
-
-
-
-
-
 	// TODO: use exiting matches to find sigma 1.0 additions
 	var matches = result["matches"];
 	var ptsA = matches[0];
@@ -8149,7 +8143,9 @@ var cntI = 0;
 		var put = putativeA[p];
 		if(put.length>0){
 			var s = put[0]["score"];
-			scoresA.push(s);
+			if(s!==undefined){
+				scoresA.push(s);
+			}
 		}
 	}
 	var scoresB = [];
@@ -8157,7 +8153,9 @@ var cntI = 0;
 		var put = putativeB[p];
 		if(put.length>0){
 			var s = put[0]["score"];
-			scoresB.push(s);
+			if(s!==undefined){
+				scoresB.push(s);
+			}
 		}
 	}
 
@@ -8203,6 +8201,8 @@ limitScoreRatio = Math.max(limitScoreRatio,0.5);
 ++cntI;
 		var matching = R3D.matchObjectsSubset(objectsA, putativeA, objectsB, putativeB, limitScoreRatio, limitScoreSearch);
 		var matchesBest = matching["best"];
+console.log("SUBSET: ");
+console.log(matchesBest);
 //		console.log(matchesBest)
 		// 
 		// add distance error term to each match
@@ -8319,8 +8319,11 @@ limitScoreRatio = Math.max(limitScoreRatio,0.5);
 	}
 console.log("out");
 	best = maximumSamplingList;
+console.log(best);
 	bestMatchCount = maximumSamplingCount;
+console.log(bestMatchCount);
 	matrixFfwd = maximumSamplingF;
+console.log(matrixFfwd);
 	matrixFrev = R3D.fundamentalInverse(matrixFfwd);
 	console.log("BEST:");
 	console.log(best);
@@ -12374,7 +12377,7 @@ GLOBALSTAGE.addChild(d);
 			imageCurrentGry = imageCurrentGry["value"];
 
 	var differenceGaussianCount = 5; // 5
-	var octaveCount = 5; // octaves = 4
+	var octaveCount = 4; // octaves = 4
 	var gaussianCount = differenceGaussianCount+1;
 	var sigmaPrefix = 1.0;//1.0;//0.6; // 1.6
 	var nextImage = null;
@@ -12624,6 +12627,355 @@ if(false){
 	// keep radius in line with corner feature sizing:
 	for(i=0; i<siftPoints.length; ++i){
 		siftPoints[i].z *= 0.5;
+	}
+	return siftPoints;
+}
+
+
+
+
+
+
+CALLED_SIFT = -1;
+R3D.SIFTExtractTest2 = function(imageSource){
+	console.log("SIFTExtractTest2");
+CALLED_SIFT += 1;
+	
+	// settings
+	var octaves = 4;
+	var samplesPerOctave = 5;
+	var differencesPerOctave = samplesPerOctave - 2;
+	var sigmaPerOctave = Math.sqrt(2); // k
+	var sigmaBase = 1.0;
+	// output
+	var siftPoints = [];
+	// get gray
+	var originalGray = imageSource.gry();
+	var originalWidth = imageSource.width();
+	var originalHeight = imageSource.height();
+	var currentGray = originalGray;
+	var currentWidth = originalWidth;
+	var currentHeight = originalHeight;
+var OFFX = 0;
+var OFFY = 0;
+	for(var i=0; i<octaves; ++i){
+/*
+var img = GLOBALSTAGE.getFloatRGBAsImage(currentGray, currentGray, currentGray, currentWidth, currentHeight);
+var d = new DOImage(img);
+d.matrix().translate(OFFX, OFFY);
+GLOBALSTAGE.addChild(d);
+*/
+		var differenceImages = [];
+		for(var j=0; j<samplesPerOctave-1; ++j){
+
+/*
+var img = GLOBALSTAGE.getFloatRGBAsImage(currentGray, currentGray, currentGray, currentWidth, currentHeight);
+var d = new DOImage(img);
+d.matrix().translate(OFFX, OFFY);
+GLOBALSTAGE.addChild(d);
+OFFX += currentWidth;
+*/
+			var k = (j+1)*sigmaPerOctave;
+			var sigma = sigmaBase*k; // ?
+console.log(" "+j+" :   k: "+k+"   sigma:"+sigma);
+			var imageNextGray = ImageMat.getBlurredImage(currentGray,currentWidth,currentHeight, sigma);
+			var imageDiffGray = ImageMat.subFloat(imageNextGray,currentGray);
+			differenceImages.push(imageDiffGray);
+
+
+imageDiffGray = ImageMat.absFloat(imageDiffGray);
+imageDiffGray = ImageMat.getNormalFloat01(imageDiffGray);
+var img = GLOBALSTAGE.getFloatRGBAsImage(imageDiffGray, imageDiffGray, imageDiffGray, currentWidth, currentHeight);
+var d = new DOImage(img);
+d.matrix().translate(OFFX+j*currentWidth,600.0);
+GLOBALSTAGE.addChild(d);
+
+
+
+			//currentGray = imageNextGray;
+		}
+console.log(differenceImages.length);
+		// for(var j=0; j<differencesPerOctave; ++j){
+		// 	var diff0 = differenceImages[j+0];
+		// 	var diff1 = differenceImages[j+1];
+		// 	var diff2 = differenceImages[j+2];
+		// 	extrema = Code.findExtrema3DVolume(differenceImages, originalWid,originalHei);
+		// }
+console.log(differenceImages)
+		extrema = Code.findExtrema3DVolume(differenceImages, currentWidth,currentHeight);
+console.log(extrema);
+for(var j=0; j<extrema.length; ++j){
+	var e = extrema[j];
+	// console.log(e.z);
+	var scale = Math.pow(2,i + e.z/samplesPerOctave); // 1-4
+	var point = new V4D(e.x,e.y, scale, e.t);
+	siftPoints.push(point);
+}
+return siftPoints;
+throw "?";
+		if(i<octaves-1){
+			var result = ImageMat.scaleByInteger(currentGray,currentWidth,currentHeight, 2);
+			console.log(result);
+OFFX += currentWidth;
+			currentGray = result["value"];
+			currentWidth = result["width"];
+			currentHeight = result["height"];
+		}
+	}
+	
+
+return null;
+
+
+/*
+	var extremumLowContrastMinimum = 0.00; // 0.03
+
+	//siftPoints = Code.findExtrema3DVolume(differenceImages, imageSource.width(), imageSource.height());
+	var imageCurrentGry = imageSource.gry();
+	var imageCurrentWid = imageSource.width();
+	var imageCurrentHei = imageSource.height();
+	var gaussStart = 1.6;
+	var gauss = gaussStart;
+	var gaussImages =[];
+	for(var i=0; i<6; ++i){
+		gaussImages.push(imageCurrentGry);
+		//gauss = gauss * gaussStart;
+		gauss = gauss * 1.6;
+		//gauss = gauss + 0.5;
+		imageCurrentGry = ImageMat.getBlurredImage(imageCurrentGry,imageCurrentWid,imageCurrentHei, gauss);
+	}
+	gaussImages.push(imageCurrentGry);
+	// var differenceImages = [];
+	// for(var i=1; i<gaussImages.length; ++i){
+	// 	var nextGauss = gaussImages[i];
+	// 	var prevGauss = gaussImages[i-1];
+	// 	var differenceImage = ImageMat.subFloat(nextGauss,prevGauss);
+	// 	differenceImages.push(differenceImage);
+	// }
+
+	var differenceImages = [];
+	for(var i=0; i<gaussImages.length; ++i){
+		var image = gaussImages[i];
+		var laplace = ImageMat.laplacian(image, imageCurrentWid,imageCurrentHei).value;
+		differenceImages.push(laplace);
+
+//var show = ImageMat.extractRectSimple(image, imageCurrentWid,imageCurrentHei, 0,0,imageCurrentWid,imageCurrentHei, imageCurrentWid,imageCurrentHei);
+//var show = ImageMat.extractRectSimple(image, imageCurrentWid,imageCurrentHei, 0,0,40,40*(imageCurrentHei/imageCurrentWid), imageCurrentWid,imageCurrentHei);
+
+// var show = ImageMat.getNormalFloat01(laplace);
+// 	show = ImageMat.pow(show,0.5);
+var show = image;
+
+var OFFX = 0;// + i*imageSource.width();
+var OFFY = 0 + i*imageSource.height();
+img = GLOBALSTAGE.getFloatRGBAsImage(show, show, show, imageCurrentWid, imageCurrentHei);
+d = new DOImage(img);
+d.matrix().translate(OFFX, OFFY);
+GLOBALSTAGE.addChild(d);
+
+	}
+
+*/
+console.log("start");
+	var i, j, k;
+	// first image
+	var extremumLowContrastMinimum = 0.01; // 0.03
+	var hessianThreshold = 10; // 10 // maximum allowable
+	hessianThreshold = 20;
+	var preSigma = 1.0; // TODO: 0.5 ?
+	var preScale = 1.0;
+	var originalGray = imageSource.gry();
+	var originalWid = imageSource.width();
+	var originalHei = imageSource.height();
+	var scaleStart = 1.0;
+	originalGray = ImageMat.extractRectSimple(originalGray, originalWid,originalHei, 0,0,originalWid,originalHei, originalWid*scaleStart,originalHei*scaleStart);
+	originalWid = scaleStart * originalWid;
+	originalHei = scaleStart * originalHei;
+console.log("scaled");
+	var imageCurrentGry = originalGray;
+	var imageCurrentWid = originalWid;
+	var imageCurrentHei = originalHei;
+		imageCurrentGry = ImageMat.getScaledImage(imageCurrentGry, imageCurrentWid,imageCurrentHei, preScale, preSigma);
+			imageCurrentWid = imageCurrentGry["width"];
+			imageCurrentHei = imageCurrentGry["height"];
+			imageCurrentGry = imageCurrentGry["value"];
+
+	var differenceGaussianCount = 5; // 5
+	var octaveCount = 4; // octaves = 4
+	var gaussianCount = differenceGaussianCount+1;
+	var sigmaPrefix = 2.0;//1.0;//0.6; // 1.6
+	var nextImage = null;
+	var differenceImages = [];
+	var differenceImageSets = [];
+console.log("octaves");
+	for(i=0; i<octaveCount; ++i){
+		var gaussianImages = [];
+		var loopImageGry = imageCurrentGry;
+		var diffSet = [];
+		differenceImageSets.push(diffSet);
+		for(j=0; j<gaussianCount; ++j){
+			var currentGaussPercent = (j/(gaussianCount-1));
+		  	var gaussianSigma = sigmaPrefix * Math.pow(2, currentGaussPercent);
+		  	// console.log(j+" @ currentGaussPercent: "+currentGaussPercent+" = "+gaussianSigma);
+			//var gaussianSigma = sigmaPrefix * Math.pow(2, currentGaussPercent*2 - 0.5 );
+			var totalLocation = gaussianSigma * Math.pow(2,i);
+			console.log(i+" / "+j+" / "+gaussianCount+": "+gaussianSigma+"      =  "+totalLocation);
+			var imageToBlur = imageCurrentGry;
+			//var imageToBlur = loopImageGry;
+			var gaussianImage = ImageMat.getBlurredImage(imageToBlur,imageCurrentWid,imageCurrentHei, gaussianSigma);
+			imageCurrentGry = gaussianImage;
+			gaussianImages.push(gaussianImage);
+			// gaussian pyramid
+			if(gaussianImages.length==2){
+				var prevGauss = gaussianImages[0];
+				var nextGauss = gaussianImages[1];
+				var differenceImage = ImageMat.subFloat(nextGauss,prevGauss);
+				// differenceImage is wrong size for searching > upsample
+				var scaled = Math.pow(2,i);
+				//var differenceImageSame = differenceImage;
+				diffSet.push(differenceImage);
+				var differenceImageSame = ImageMat.getScaledImage(differenceImage,imageCurrentWid,imageCurrentHei, scaled, null, originalWid,originalHei);
+					differenceImageSame = differenceImageSame["value"];
+					differenceImages.push(differenceImageSame);
+				nextImage = gaussianImages.shift(); // on last iteration keep 2nd from top
+			}
+		}
+
+		// prep for next loop
+		if(i<octaveCount-1){
+			nextImage = imageCurrentGry;
+//nextImage = loopImageGry;
+			imageCurrentGry = ImageMat.getScaledImage(nextImage, imageCurrentWid, imageCurrentHei, 0.5); nextImage = null;
+				imageCurrentWid = imageCurrentGry["width"];
+				imageCurrentHei = imageCurrentGry["height"];
+				imageCurrentGry = imageCurrentGry["value"];
+		}else{
+			//scaleSpaceImages.push(gaussianImage);
+		}
+	}
+
+	var siftPoints = [];
+	var extrema;
+// if(true){
+if(false){
+console.log("A");
+if(true){
+// if(false){
+	var totalFound = 0;
+	var extremaIndy = [];
+	var i, j;
+	for(i=0; i<differenceImageSets.length; ++i){
+		var set = differenceImageSets[i];
+		// console.log(set);
+		var scale = Math.pow(2,i);
+		var extrema = Code.findExtrema3DVolume(set, originalWid/scale,originalHei/scale);
+		console.log(i+": "+scale+""+extrema.length);
+		for(j=0; j<extrema.length; ++j){
+			extrema[j].x *= scale;
+			extrema[j].y *= scale;
+			// console.log(extrema[j].z+" ...");
+			extrema[j].z += i*octaveCount; // from full stack
+			extremaIndy.push(extrema[j]);
+			console.log(Math.pow(2,i))
+		}
+		//Code.arrayPushArray(extremaIndy,extrema);
+		totalFound += extrema.length;
+		console.log("totalFound: "+totalFound);
+		extrema = extremaIndy;
+	}
+}else{
+	extrema = Code.findExtrema3DVolume(differenceImages, originalWid,originalHei);
+	console.log("EXTREMA LEN: "+extrema.length);
+}
+
+
+	
+	//hessianThreshold = Math.pow(hessianThreshold+1,2)/hessianThreshold;
+	var dogOffset = 1.0/(differenceGaussianCount*differenceGaussianCount);
+	var imageWidth = originalWid;
+	var imageHeight = originalHei;
+	for(var i=0; i<extrema.length; ++i){
+		var ext = extrema[i];
+/*
+		// // HESSIAN EDGE CHECK -- remove edges, keep points
+		var depth = Math.min(Math.max(Math.round(ext.z),0),differenceImages.length-1);
+		var dog = differenceImages[depth];
+		var x = Math.floor(ext.x);
+		var y = Math.floor(ext.y);
+		var x0 = x - 1;
+		var x1 = x + 0;
+		var x2 = x + 1;
+		var y0 = y - 1;
+		var y1 = y + 0;
+		var y2 = y + 1;
+		var dxx = dog[y1*imageWidth + x0] + dog[y1*imageWidth + x2] - 2.0*dog[y1*imageWidth + x1];
+		var dyy = dog[y0*imageWidth + x1] + dog[y2*imageWidth + x1] - 2.0*dog[y1*imageWidth + x1];
+		var dxy = (dog[y0*imageWidth + x0] + dog[y2*imageWidth + x2] - dog[y2*imageWidth + x0] - dog[y0*imageWidth + x2])*0.25;
+		var tra = dxx + dyy;
+		var det = dxx*dyy - dxy*dxy;
+		if(det<=0){
+			continue;
+		}
+		var hessianScore = Math.abs(tra*tra/det);
+		//console.log(hessianScore+" < "+hessianThreshold)
+		if(hessianScore>hessianThreshold){
+			continue;
+		}
+*/
+			//var point = new V4D(ext.x/originalWid, ext.y/originalHei, Math.abs(ext.z)*1.0, 0);
+			var point = new V4D(ext.x/scaleStart, ext.y/scaleStart, Math.abs(ext.z)*1.0, 0);
+			var z = point.z;
+			point.z = (dogOffset + z*2)/2;
+			//console.log(z+" => "+point.z);
+
+			var edgeLimit = 0.05;
+			// if( Math.abs(ext.t) > extremumLowContrastMinimum ){ // contrast threshold
+			if(true){
+				// var hessianScore = hessianScores[ Math.floor(point.y*imageCurrentHei)*imageCurrentWid + Math.floor(point.x*imageCurrentWid) ];
+				// console.log(point.x+","+point.y+" = "+hessianScore)
+				// console.log(hessianScore+" >?> "+hessianThreshold)
+				// if (hessianScore > hessianThreshold) { // edge threshold
+//							if(edgeLimit<=point.x && point.x<=(1.0-edgeLimit) && edgeLimit<=point.y && point.y<=(1.0-edgeLimit)){
+						siftPoints.push(point);	
+//							}
+				//}
+			}
+					
+	}
+
+}else{
+	console.log("B: "+differenceImages.length);
+	for(var i=0; i<differenceImages.length; ++i){
+		var diffs = differenceImages[i];
+		// console.log(i);
+		var extrema = Code.findExtrema2DFloat(diffs, originalWid,originalHei,   false);
+var oct = i/differenceGaussianCount | 0;
+var rem = i - differenceGaussianCount*oct;
+// console.log(oct+" / "+rem);
+// console.log(Math.pow(2,oct + rem/differenceGaussianCount));
+console.log(diffs.length+"");
+		for(var j=0; j<extrema.length; ++j){
+			var point = extrema[j];
+			// point = new V3D(point.x/originalWid, point.y/originalHei, i);
+			// var size = Math.pow(2,i + j/extrema.length);
+			// var size = 1.0 + i + point.z;///diffs.length;
+			// var size = 1.0 + i;
+			var size = Math.pow(2,oct + rem/differenceGaussianCount);
+			point = new V3D(point.x, point.y, size);
+			siftPoints.push(point);
+		}
+	}
+}
+
+
+
+	// keep radius in line with corner feature sizing:
+	for(i=0; i<siftPoints.length; ++i){
+		// console.log(siftPoints[i]);
+		// siftPoints[i].z *= 0.5;
+		// siftPoints[i].z + 0.5;
+		// console.log(siftPoints[i].z);
+		// siftPoints[i].z = Math.pow(2,siftPoints[i].z);
 	}
 	return siftPoints;
 }
