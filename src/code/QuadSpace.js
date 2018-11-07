@@ -60,10 +60,13 @@ QuadSpace.prototype.insertObject = function(object){
 	if(fitsInside){
 		root.insertObject(package, rect, this._toRectFxn, this._epsilon);
 	}else if(this._autoResize){
+		console.log("OUTSIDE: "+object.rect());
 		var objects = this.toArray();
 		objects.push(object);
 		this.clear();
 		this.initWithObjects(objects, true);
+		// this.initWithSize(min,max, this._epsilon);
+	
 	} // drop on floor
 }
 QuadSpace.prototype.containsObject = function(object){
@@ -116,7 +119,15 @@ QuadSpace.prototype.objectsInsideRect = function(min,max){
 QuadSpace.prototype.toArray = function(){
 	var arr = [];
 	this._root.toArray(arr);
-	return arr
+	var items = [];
+	for(var i=0; i<arr.length; ++i){
+		var package = arr[i];
+		var object = package.object();
+		if(object){
+			Code.addUnique(items,object); // TODO: RBTree
+		}
+	}
+	return items;
 }
 // --------------------------------------------------------------------------------------------------------- 
 QuadSpace.Package = function(object){
@@ -263,9 +274,11 @@ QuadSpace.Arxel.prototype.findObject = function(object, rect, toRectFxn){
 	}
 	var i, p, children = this._children, objects = this._objects;
 	if(children==null){ // leaf
-		for(i=0; i<objects.length; ++i){
-			if(objects[i].object()==object){
-				return objects[i];
+		if(objects){ // might be empty
+			for(i=0; i<objects.length; ++i){
+				if(objects[i].object()==object){
+					return objects[i];
+				}
 			}
 		}
 	}else{ // parent

@@ -9717,11 +9717,13 @@ Code.fuzzyTruncate = function(a,b){
 	return (a>b)?a:0;
 }
 
-Code.dropOutliers = function(list, valueFxn, sigmas, rightOnly){
-	rightOnly = rightOnly!==undefined ? rightOnly : true;
+Code.dropOutliers = function(list, valueFxn, sigmas, rightOnly, useMin){
+	rightOnly = rightOnly!==undefined && rightOnly!==null ? rightOnly : true;
+	useMin = useMin!==undefined && useMin!==null ? useMin : false;
 	if(list.length<=1){
 		return {"outliers":[], "inliers":Code.copyArray(list)};
 	}
+	var min = null;
 	var mean = 0;
 	var sigma = 0;
 	var i;
@@ -9733,14 +9735,21 @@ Code.dropOutliers = function(list, valueFxn, sigmas, rightOnly){
 		value = valueFxn(item);
 		values[i] = value;
 		mean += value;
+		if(min===null){
+			min = value;
+		}else{
+			min = Math.min(min,value);
+		}
 	}
 	mean /= count;
+	if(useMin){
+		mean = min;
+	}
 	for(i=0; i<count; ++i){
 		value = values[i];
 		sigma += Math.pow(value - mean,2);
 	}
 	sigma = Math.sqrt( sigma / count );
-//	console.log("sigma: "+sigma);
 	var maxValue = sigmas * sigma;
 	var keep = [];
 	var outliers = [];
@@ -9750,9 +9759,7 @@ Code.dropOutliers = function(list, valueFxn, sigmas, rightOnly){
 		if(rightOnly){
 			shouldKeep = value < maxValue;
 		} // left only: -value 
-//		console.log("i: "+values[i]+" / "+mean+" = |"+value+"|  <?<  "+maxValue);
 		if(shouldKeep){
-//			console.log(". YES: "+value+" < "+maxValue);
 			keep.push(list[i]);
 		}else{
 			outliers.push(list[i]);

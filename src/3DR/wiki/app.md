@@ -322,10 +322,21 @@ https://cloud.google.com/appengine/docs/nodejs/
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-- max iterations isn't capping 1E4
+- use smaller subset for initial match
+- use larger data for full (more lean) subsequent matching
+
+
+- use match scores when choosing points
+
+
+- is there a way to follow corners around at different scales?
+
 - SIFT blobs seem not in all avail places
 
 - explore SIFT 'curves'
+
+
+- try using corner points and assigning them the scale of the closest sift circle
 
 
 
