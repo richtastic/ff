@@ -1,7 +1,7 @@
 // PriorityQueue.js
 
 function PriorityQueue(fxn, capacity){
-	capacity = capacity!==undefined ? capacity : -1;
+	capacity = capacity!==undefined && capacity!==null ? capacity : -1;
 	this._tree = new RedBlackTree();
 	this.sorting(fxn);
 	this._tree.sortOnData(true);

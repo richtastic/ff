@@ -29,7 +29,7 @@ function Filter(){
 	var fxn = function(){
 		//
 	};
-
+if(false){
 var sync = new FF.SyncData();
 	var fxnPrint = function(){
 		var timestamp = Code.getTimeMilliseconds();
@@ -82,7 +82,7 @@ var sync = new FF.SyncData();
 		///
 	});
 	this._keyboard.addListeners();
-	
+}
 
 /*
 var tracker = new giau.Tracker();
@@ -113,8 +113,6 @@ get source at 110 								S: 110  L:   0  P:   0   V: 110
 
 
 
-
-console.log("out");
 return;
 
 
@@ -907,7 +905,7 @@ Filter.filterHistogramExpandAll = function(imageSourceRed, imageSourceGrn, image
 		// imageSourceGrn[i] = grn;
 		// imageSourceBlu[i] = blu;
 	}
-
+/*
 	// visualization
 	var graphWidth = 200;
 	var graphHeight = 100;
@@ -924,8 +922,7 @@ Filter.filterHistogramExpandAll = function(imageSourceRed, imageSourceGrn, image
 		// THIS._root.addChild(dPDFRed);
 		// THIS._root.addChild(dCDFRed);
 	}, THIS);
-
-	
+*/
 	
 }
 // Window
@@ -1132,7 +1129,6 @@ Filter.prototype.applyFilterFunction = function(fxn, args, red,grn,blu, width, h
 
 Filter.filterHue = function(imageSourceRed, imageSourceGrn, imageSourceBlu, width,height, percent){ // RGB -> HSV, rotate/shift colors around rainbow
 	Filter.filterOperation(imageSourceRed, imageSourceGrn, imageSourceBlu, width,height, Filter._filterHueFxn, percent);
-	console.log(percent)
 }
 Filter._filterHueFxn = function(v, args){
 	var percent = args;
@@ -1268,20 +1264,20 @@ Filter._filterVibranceFxn = function(v, args){
 	return v;
 }
 
-// Filter.filterContrast = function(imageSourceRed, imageSourceGrn, imageSourceBlu, width,height, scale){ // RGB -> darks darker, lights lighter
-// 	Filter.filterOperation(imageSourceRed, imageSourceGrn, imageSourceBlu, width,height, Filter._filterContrastFxn, scale);
-// }
-// Filter._filterContrastFxn = function(v, args){
-// 	var scale = args;
-// 	var avg = 0.5;
-// 	v.x = scale * (v.x - avg) + avg;
-// 	v.y = scale * (v.y - avg) + avg;
-// 	v.z = scale * (v.z - avg) + avg;
-// 	v.x = Math.min(Math.max(v.x, 0.0),1.0);
-// 	v.y = Math.min(Math.max(v.y, 0.0),1.0);
-// 	v.z = Math.min(Math.max(v.z, 0.0),1.0);
-// 	return v;
-// }
+Filter.filterContrast = function(imageSourceRed, imageSourceGrn, imageSourceBlu, width,height, scale){ // RGB -> darks darker, lights lighter
+	Filter.filterOperation(imageSourceRed, imageSourceGrn, imageSourceBlu, width,height, Filter._filterContrastFxn, scale);
+}
+Filter._filterContrastFxn = function(v, args){
+	var scale = args;
+	var avg = 0.5;
+	v.x = scale * (v.x - avg) + avg;
+	v.y = scale * (v.y - avg) + avg;
+	v.z = scale * (v.z - avg) + avg;
+	v.x = Math.min(Math.max(v.x, 0.0),1.0);
+	v.y = Math.min(Math.max(v.y, 0.0),1.0);
+	v.z = Math.min(Math.max(v.z, 0.0),1.0);
+	return v;
+}
 
 // Filter.filterGamma = function(imageSourceRed, imageSourceGrn, imageSourceBlu, width,height, gamma){ // brightness with nonlinear scaling
 // 	if(gamma>0.0){
@@ -1485,14 +1481,12 @@ Filter.filterAverage = function(imageSourceRed, imageSourceGrn, imageSourceBlu, 
 }
 
 Filter.filterMedianSort = function(a,b){
-	if(a<b){
-		return -1;
-	}
-	return 1;
+	return a<b ? -1 : 1;
 }
 
 Filter.filterMedian = function(imageSourceRed, imageSourceGrn, imageSourceBlu, width,height, args){ //
 	var percent = args["percent"];
+		percent = percent ? percent : 1.0;
 	var windowPercent = args["window"];
 		windowPercent = windowPercent ? windowPercent : 0.05;
 	var windowSize = Math.floor(windowPercent * width);
@@ -1503,6 +1497,9 @@ Filter.filterMedian = function(imageSourceRed, imageSourceGrn, imageSourceBlu, w
 	var grnCopy = Code.copyArray(imageSourceGrn);
 	var bluCopy = Code.copyArray(imageSourceBlu);
 	var i, j, ii, jj, len = width*height;
+	var redList = new PriorityQueue(Filter.filterMedianSort);
+	var grnList = new PriorityQueue(Filter.filterMedianSort);
+	var bluList = new PriorityQueue(Filter.filterMedianSort);
 	for(j=0; j<height; ++j){
 		console.log(j+"/"+height+"  --- "+(j/height));
 		for(i=0; i<width; ++i){
@@ -1510,9 +1507,9 @@ Filter.filterMedian = function(imageSourceRed, imageSourceGrn, imageSourceBlu, w
 			var red = redCopy[index];
 			var grn = grnCopy[index];
 			var blu = bluCopy[index];
-			var redList = [];
-			var grnList = [];
-			var bluList = [];
+			// var redList = [];
+			// var grnList = [];
+			// var bluList = [];
 			for(jj=j-win2; jj<j+win2; ++jj){
 				for(ii=i-win2; ii<i+win2; ++ii){
 					if(jj>=0 && jj<height && ii>=0 && ii<width){
@@ -1526,18 +1523,22 @@ Filter.filterMedian = function(imageSourceRed, imageSourceGrn, imageSourceBlu, w
 					}
 				}
 			}
-			redList.sort(Filter.filterMedianSort);
-			grnList.sort(Filter.filterMedianSort);
-			bluList.sort(Filter.filterMedianSort);
-
-			var redMed = redList[Math.floor(redList.length/2)];
-			var grnMed = grnList[Math.floor(grnList.length/2)];
-			var bluMed = bluList[Math.floor(bluList.length/2)];
+			// redList.sort(Filter.filterMedianSort);
+			// grnList.sort(Filter.filterMedianSort);
+			// bluList.sort(Filter.filterMedianSort);
+			var r = redList.toArray();
+			var g = grnList.toArray();
+			var b = bluList.toArray();
+			redList.clear();
+			grnList.clear();
+			bluList.clear();
+			var redMed = r[Math.floor(r.length/2)];
+			var grnMed = g[Math.floor(g.length/2)];
+			var bluMed = b[Math.floor(b.length/2)];
 
 			var red2 = redMed;
 			var grn2 = grnMed;
 			var blu2 = bluMed;
-			
 			imageSourceRed[index] = red*oneMP + red2*percent;
 			imageSourceGrn[index] = grn*oneMP + grn2*percent;
 			imageSourceBlu[index] = blu*oneMP + blu2*percent;

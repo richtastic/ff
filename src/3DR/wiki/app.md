@@ -200,17 +200,21 @@ project typical numbers:
 	10~100  number of images
 		each image has ~ 0.2 other matched images
 	~N*(1 + 0.2) pairs
-		~N! pairs of images
 	20~200 pairs
 	
-	[max 4032 x 3024 ]
+	[max 4032 x 3024]
 	2016x1512 image @ hi res
 	1920x1080 image @ med res
 	960x540 image @ lo res
+	500x375 working res [features]
 
 	1.2192768E7 pixels @ high res
 	2.073600E6 pixels @ med res
 	5.18400E5 pixels @ lo res
+
+	100~1000 initial features
+	50~100 matched pair features
+
 
 	~100 medium feature points [medium]
 	~0.25 * pixels * (1/25) match points [dense]
@@ -289,11 +293,10 @@ vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 	- quasi-local-global bundle adjustment
 	- increase resolution to finer detail
 	=> final structure & motion
------> HERE <------
 - surface triangulation(tesselation)
 	- advancing-front, curvature-based tesselation
 	=> scene triangle model
-(11/05)
+-----> HERE <------
 - texturing
 	- view-based surface texturing
 	- blending between triangles
@@ -322,27 +325,15 @@ https://cloud.google.com/appengine/docs/nodejs/
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-- use smaller subset for initial match
-- use larger data for full (more lean) subsequent matching
+
+IMPEMENT: corner - scales
+
+- unstable corner angles ?
 
 
-- use match scores when choosing points
-
-
-- is there a way to follow corners around at different scales?
-
-- SIFT blobs seem not in all avail places
-
-- explore SIFT 'curves'
 
 
 - try using corner points and assigning them the scale of the closest sift circle
-
-
-
-
-
-- put all feature types into same pipeline
 
 
 
@@ -369,16 +360,8 @@ convert to objects: DENORMALIZED:
 	size: pixels
 
 
-
-
-
-- are the corners sized correctly?
-- is the object
-
-
 - start process over with new set: 5-7
 
-- 
 
 
 - get basic triangles processed
