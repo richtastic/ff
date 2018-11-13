@@ -276,8 +276,8 @@ Stereopsis.View = function(image, camera, data){
 
 
 // cellSize = 21;
-cellSize = 11;
-// cellSize = 7;
+// cellSize = 11;
+cellSize = 7;
 // cellSize = 5;
 // compareSize = 31;
 	this.cellSize(cellSize);
@@ -2751,12 +2751,12 @@ return;
 	// var maxIterations = 2;
 	// var maxIterations = 3;
 	// var maxIterations = 4;
-	// var maxIterations = 5;
+	var maxIterations = 5;
 	// var maxIterations = 6;
 	// var maxIterations = 7;
 	// var maxIterations = 8;
 	// var maxIterations = 9;
-	var maxIterations = 10;
+	// var maxIterations = 10;
 	// var maxIterations = 15;
 	// var maxIterations = 20;
 	// var maxIterations = 25;
@@ -2765,7 +2765,7 @@ return;
 	for(var i=0; i<maxIterations; ++i){
 		this.iteration(i, maxIterations);
 	}
-// throw "..."
+// throw "...";
 	if(this._completeFxn){
 		this._completeFxn.call(this._completeContext);
 	}
@@ -2833,7 +2833,7 @@ console.log("estimate3DErrors ... 2");
 // console.log("+++ filterGlobalMatches")
 		this.filterGlobalMatches();
 
-		// this.dropNegative3D();
+		// this.dropNegative3D();	// .......
 			// F 
 			// R
 			// SAD
@@ -3466,22 +3466,22 @@ console.log(transform);
 		}
 	}
 
-	var transforms = this.toTransformArray();
-	// console.log(transforms);
-	var transform = transforms[0];
-	// console.log(transform);
-	var possible = transform.R();
-	if(possible){
-		possible = transform._Rrev;
-		var org = new V3D(0,0,0);
-		var dir = new V3D(0,0,1);
-		possible.multV3DtoV3D(org,org);
-		possible.multV3DtoV3D(dir,dir);
-		dir.sub(org);
-		var angle = V3D.angle(V3D.DIRZ,dir);
-		console.log("R: \n"+possible+"\n");
-		console.log(dir+" : "+dir.length()+" @ "+Code.degrees(angle));
-	}
+	// var transforms = this.toTransformArray();
+	// // console.log(transforms);
+	// var transform = transforms[0];
+	// // console.log(transform);
+	// var possible = transform.R();
+	// if(possible){
+	// 	possible = transform._Rrev;
+	// 	var org = new V3D(0,0,0);
+	// 	var dir = new V3D(0,0,1);
+	// 	possible.multV3DtoV3D(org,org);
+	// 	possible.multV3DtoV3D(dir,dir);
+	// 	dir.sub(org);
+	// 	var angle = V3D.angle(V3D.DIRZ,dir);
+	// 	console.log("R: \n"+possible+"\n");
+	// 	console.log(dir+" : "+dir.length()+" @ "+Code.degrees(angle));
+	// }
 
 }
 Stereopsis.World.prototype.estimate3DPoints = function(){

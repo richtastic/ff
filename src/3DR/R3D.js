@@ -801,22 +801,20 @@ R3D.transformFromFundamental3 = function(pointsA, pointsB, F, Ka,KaInv, Kb,KbInv
 	var M1Full = M1.copy().appendRowFromArray([0,0,0,1]);
 	Kb = Kb ? Kb : Ka;
 	KbInv = KbInv ? KbInv : KaInv;
-	// var KaInv = Matrix.inverse(Ka);
-	// var KbInv = Matrix.inverse(Kb);
+	// E from F + K
 	var KbT = Matrix.transpose(Kb);
 	var E = Matrix.mult(F,Ka);
 		E = Matrix.mult(KbT,E);
-	var diag110 = new Matrix(3,3).setFromArray([1,0,0, 0,1,0, 0,0,0]);
-	var svd, U, S, V, Vt;
-	
-	// force D = 1,1,0 ----------------------
-	svd = Matrix.SVD(E);
-	U = svd.U;
-	S = svd.S;
-	V = svd.V;
-	Vt = Matrix.transpose(V);
+	// to components
+	var svd = Matrix.SVD(E);
+	var U = svd.U;
+	var S = svd.S;
+	var V = svd.V;
+	var Vt = Matrix.transpose(V);
 	/*
 	// // RE-GET matrix
+	// force D = 1,1,0 ----------------------
+	var diag110 = new Matrix(3,3).setFromArray([1,0,0, 0,1,0, 0,0,0]);
 	E = Matrix.mult(diag110,Vt);
 	E = Matrix.mult(U,E);
 	// new decomposition
@@ -878,8 +876,7 @@ R3D.transformFromFundamental3 = function(pointsA, pointsB, F, Ka,KaInv, Kb,KbInv
 		var M2 = possibleInv.getSubMatrix(0,0, 3,4);
 		M2s[i] = M2;
 	}
-
-
+	// get positives / negatives of estimated 3D point 
 	var pAx = new Matrix(3,3);
 	var pBx = new Matrix(3,3);
 	var pA3 = new V3D();
@@ -895,21 +892,20 @@ R3D.transformFromFundamental3 = function(pointsA, pointsB, F, Ka,KaInv, Kb,KbInv
 		Matrix.crossMatrixFromV3D(pBx,pB3);
 		for(var i=0; i<possibles.length; ++i){
 			var possible = possibles[i];
-			// var possibleInv = possibleInvs[i];
 			var M2 = M2s[i];
 			var pAM = Matrix.mult(pAx,M1);
 			var pBM = Matrix.mult(pBx,M2);
 			// AP=0 
-			var A = pAM.copy().appendMatrixBottom(pBM);
+			var A = pAM.appendMatrixBottom(pBM);
 			svd = Matrix.SVD(A);
 			var P1 = svd.V.getCol(3);
 			var p1Norm = new V4D().fromArray(P1.toArray());
 			p1Norm.homo(); // THIS IS THE ACTUAL 3D POINT - LOCATION
 			var P1est = new Matrix(4,1).setFromArray( p1Norm.toArray() );
-			// var P2 = Matrix.mult(possibleInv,P1est);
-			var P2 = Matrix.mult(possible,P1est);
+var P2 = Matrix.mult(possibleInv,P1est); // M2
+// var P2 = Matrix.mult(possible,P1est);
 			var p2Norm = new V4D().fromArray(P2.toArray());
-			p2Norm.homo(); // not necessary?
+			// p2Norm.homo(); // not necessary?
 			countsTotal[i] += Math.sign(p1Norm.z) + Math.sign(p2Norm.z);
 		}
 	}
@@ -919,77 +915,41 @@ R3D.transformFromFundamental3 = function(pointsA, pointsB, F, Ka,KaInv, Kb,KbInv
 		var possible = possibles[i];
 		var possibleInv = possibleInvs[i];
 		var M1 = M1Full;
-		var M2 = possibleInv;
-		// var M2 = possible;
+// var M2 = possibleInv;
+var M2 = possible; // F-POINTS
 		var points3D = R3D.triangulationDLT(pointsA,pointsB, M1,M2, Ka, Kb, KaInv, KbInv);
 		for(var j=0; j<points3D.length; ++j){
 			var point3D = points3D[j];
 			countsTotal2[i] += Math.sign(point3D.z);
 		}
 	}
-	
-
-
-// ????
-
-	// countsTotal = countsTotal2;
-
-
-
-// if(log){
-// for(var i=0; i<possibles.length; ++i){
-// 	var M1 = M1Full;
-// 	var M2 = possibles[i];
-// 	var points3D = R3D.triangulationDLT(pointsA,pointsB, M1,M2, Ka, Kb, KaInv, KbInv);
-// 	var error = R3D.reprojectionErrorList(points3D, pointsA, pointsB, M1,M2, Ka,Kb);
-// 	if(error){
-// 		error = error["error"];
-// 		console.log(i+": "+error);
-// 	}
-// }
-// }
-
-
 if(log){
-console.log(countsTotal,"of",pointsA.length);
-console.log(countsTotal2);
-// console.log(track);
+console.log(countsTotal,"of",pointsA.length*2);
+console.log(countsTotal2,"of",pointsA.length);
 }
+countsTotal2 = countsTotal;
 
-
-
-	var minCountUnder = null;
-	var maxCountOver = null;
-	var minUnder = null;
-	var pickedIndex = -1;
-
-	var maximumTotalCount = pointsA.length * 2;
+	// var maximumTotalCount = pointsA.length * 2;
 	var bestTotalCount = Code.max(countsTotal);
 	var bestProjections = [];
 if(log){
 console.log("bestTotalCount: "+bestTotalCount);
 }
 	var minimumTransformMatchCountR = 10;
-	forceSolution = (bestTotalCount>=2*minimumTransformMatchCountR && forceSolution);
+	// forceSolution = (bestTotalCount>=2*minimumTransformMatchCountR && forceSolution);
 	for(var i=0; i<possibles.length; ++i){
 		var possible = possibles[i];
 		var possibleInv = possibleInvs[i];
 		if(countsTotal[i]==bestTotalCount){
-			if(bestTotalCount==maximumTotalCount || forceSolution){
+			// if(bestTotalCount==maximumTotalCount || forceSolution){
 if(log){
 console.log(" => use: "+i+" ... ");
 }
-				// bestProjections.push(possible);
-				bestProjections.push(possibleInv);
-			}
+bestProjections.push(possibleInv); // IF F-POINTS
+// bestProjections.push(possible); // IF E-POINTS
+			// }
 		}
 	}
-if(log){
-	console.log(countsTotal);
-	console.log(bestProjections.length);
-	console.log(bestProjections);
-}
-	
 	if(bestProjections.length>0){
 		var bestProjection = bestProjections[0];
 		return bestProjection;

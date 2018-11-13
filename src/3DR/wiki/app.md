@@ -327,12 +327,18 @@ https://cloud.google.com/appengine/docs/nodejs/
 
 - initial feature matches are poor [scale / skew / orientation assignment]
 
+- try minimizing error using GRADIENT DESCENT
+	- 2nd view's roatation (from starting point) & translation [separate?]
+
+
 - points behind camera in PAIR: 
 	R3D.cameraExtrinsicRANSACFromPoints sometimes has a null P ?
 		- R3D.transformFromFundamental
 		- transformFromFundamental3 wrong in particular scenarios
 
 
+- point3d from match3d.estimate3d should also be combined based on depth error based on view positioning
+	-> frustrum-projected-pixel
 
 - after orientation is established and outliers are reduced=> [after pair-wise or after global merge]
 	- should try to expore high-cornerness areas 
