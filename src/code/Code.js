@@ -9229,6 +9229,36 @@ Code.rectContainingRectAtTangent = function(a,b,c,d, tan){
 	}
 	return points;
 }
+Code.smallestCircle = function(points){
+	throw "TODO";
+}
+Code.smallestCircleCircles = function(centers,radiuses){
+	// TODO: this simply finds A circle - not necessarily optimal?
+	if(centers.length==0){
+		return null;
+	}
+	var center = centers[0].copy();
+	var radius = radiuses[0];
+	var AB = new V2D();
+	var A = new V2D();
+	var B = new V2D();
+	for(var i=1; i<centers.length; ++i){
+		var cen = centers[i];
+		var rad = radiuses[i];
+		V2D.sub(AB,cen,center);
+		var lAB = AB.length();
+		if(lAB>0){
+			AB.norm();
+			A.copy(AB).scale(-radius).add(center);
+			B.copy(AB).scale(rad).add(cen);
+			radius = V2D.distance(A,B)*0.5;
+			V2D.midpoint(center,A,B);
+		}else{
+			radius = Math.max(radius,rad);
+		}
+	}
+	return {"center":center, "radius":radius};
+}
 // ------------------------------------------------------------------------------------------------------------------------------------------------- 
 Code.parabolaFromDirectrix = function(a,b, c, x){ // y = focus, directrix, x
 	return ((x-a)*(x-a) + b*b - c*c)/(2*(b-c));

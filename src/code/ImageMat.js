@@ -278,13 +278,6 @@ ImageMat.prototype.getSubImageIndex = function(colSta,colEnd, rowSta,rowEnd){
 ImageMat.prototype.getSubImage = function(px,py, wid,hei){
 	return ImageMat.extractRect(this, px-wid/2.0,py-hei/2.0, px+wid/2.0,py-hei/2.0, px+wid/2.0,py+hei/2.0, px-wid/2.0,py+hei/2.0, wid,hei);
 }
-// ImageMat.prototype.getScaledImage = function(scale, sigma){
-// 	var finalWidth = Math.floor(scale*this.width());
-// 	var finalHeight = Math.floor(scale*this.height());
-// 	var centerX = this.width()*0.5;
-// 	var centerY = this.height()*0.5;
-// 	return this.extractRectFromFloatImage(centerX,centerY,1.0/scale,sigma, finalWidth,finalHeight, null);
-// }
 ImageMat.subImage = function(image,width,height, offX,offY,wid,hei){ // include 
 	var sub = [wid*hei];
 	var i, j;

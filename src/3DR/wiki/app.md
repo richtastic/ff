@@ -325,21 +325,60 @@ https://cloud.google.com/appengine/docs/nodejs/
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+- initial feature matches are poor [scale / skew / orientation assignment]
+
+- points behind camera in PAIR: 
+	R3D.cameraExtrinsicRANSACFromPoints sometimes has a null P ?
+		- R3D.transformFromFundamental
+		- transformFromFundamental3 wrong in particular scenarios
+
+
+
+- after orientation is established and outliers are reduced=> [after pair-wise or after global merge]
+	- should try to expore high-cornerness areas 
+
+
+- plane seems to take over & not propagate to other areas
+	=> possibly from RANSAC only grabbing the planar points as max fitting
+- allow cell propagating always?
+	- TEST
+
+- faster failing on 3D steropsis : if R error is really high with lots of matches => fail
+	matches: cellCount [width * height] * 25% 
+	R error: > 10.0
+	F error: > 5.0
+
+
+- pairs of cameras with transforms > 90 degrees are invalid
+
+
+try to speed up: transformFromFundamental2 -- used a lot
+
+
+
+* really bad matches need low cellsize to allow good groups to grow and push out the poor group
+* bad matches exceed good matches & takeover F-RANSACing [9OC9F69F & H1DXVCYR = 94SG6X20]
+	- local iteration minima?
+	- too much of a skew
+	- too much of a scale
+* really poor R pairs can be used to estimate relative locations but MATCHES should not be used
+
+
+- IGNORE PROCESS FOR MATCHES OVER CERTAIN PIXEL ERROR | MATCH COUNT
+
+
+
+
 
 IMPEMENT: corner - scales
 
 - unstable corner angles ?
 
-
-
-
 - try using corner points and assigning them the scale of the closest sift circle
-
-
 
 ---- TYPES OF MATCHES:
 	- corners
-		: corners (point) ; SIFT OR gradient => (angle) ; assume => (size)
+		- corners (point) ; SIFT OR gradient => (angle) ; assume => (size)
 	- corners w/ geometry
 	- SIFT blobs
 	- MSER
@@ -350,7 +389,7 @@ NEED:
 	- SCALE
 
 
-- sif points still suck
+- sift points still suck
 
 
 convert to objects: DENORMALIZED:
@@ -359,8 +398,6 @@ convert to objects: DENORMALIZED:
 	angle: number
 	size: pixels
 
-
-- start process over with new set: 5-7
 
 
 

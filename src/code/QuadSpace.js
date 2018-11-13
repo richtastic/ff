@@ -32,7 +32,7 @@ QuadSpace.prototype.initWithSize = function(min,max, epsilon){
 	size.set(square,square);
 	epsilon = (epsilon!==undefined && eps!==null) ? epsilon : Math.max(square) * Math.pow(2,-6); // 2^6 = 64
 	this._epsilon = epsilon;
-	console.log("   "+center+" & "+size);
+	// console.log("   "+center+" & "+size);
 	this._root.setCenterAndSize(center,size);
 }
 

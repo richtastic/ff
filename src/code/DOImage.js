@@ -91,7 +91,7 @@ DOImage.prototype.drawTilePattern = function(pX,pY,w,h){
 }
 DOImage.prototype._renderRect = function(canvas){
 	var context = canvas.context();
-	if(!this._pattern){
+	if(!this._pattern && this._image){
 		var pattern = context.createPattern(this._image,'repeat'); // repeat, repeat-x, repeat-y no-repeat
 		this._pattern = pattern;
 		this.graphicsIllustration().clear();
