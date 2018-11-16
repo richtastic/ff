@@ -77,8 +77,8 @@ var modeImageUpload = false;
 	// var modeImageUploadCamera = true;
 	var modeImageUploadCamera = false;
 
-// var modeImageCompare = true;
-var modeImageCompare = false;
+var modeImageCompare = true;
+// var modeImageCompare = false;
 
 
 var modeModelReconstruction = false;
@@ -89,7 +89,7 @@ var modeModelReconstruction = false;
 
 // don't A:
 // TO SWITCH ON MODELING:
-modeModelReconstruction = true;
+// modeModelReconstruction = true;
 
 
 
@@ -1322,17 +1322,47 @@ App3DR.App.MatchCompare.prototype.handleKeyDown = function(e){
 		}
 	}else if(keyCode == Keyboard.KEY_LET_F){
 		this.calculateF();
+	}else if(keyCode == Keyboard.KEY_LET_M){
+		this.findMatchF();
 	}
 }
-App3DR.App.MatchCompare.prototype.calculateF = function(){
-	console.log("calculateF");
+App3DR.App.MatchCompare.prototype.findMatchF = function(){
+	console.log("findMatchF");
+	var pair = this._matchingPair;
+	if(pair){
+		var keys = Code.keys(pair);
+		// console.log(keys);
+		// console.log(pair);
+		if(keys.length==2){
+			var imageA = pair[keys[0]];
+			var imageB = pair[keys[1]];
+			pair = null;
+			var locationA = imageA["location"];
+			var locationB = imageB["location"];
+			var dataA = imageA["image"];
+			var dataB = imageB["image"];
+			var matrixA = dataA["matrix"];
+			var matrixB = dataB["matrix"];
+			var F = this.calculateF(false);
+			var Finv = R3D.fundamentalInverse(F);
+			console.log(F);
+			R3D.findMatchingPointF(matrixA,matrixB,F,Finv, locationA);
+
+		}
+	}
+	console.log("out");
+
+}
+App3DR.App.MatchCompare.prototype.calculateF = function(log){
+	log = log!==undefined ? log : true;
+	// console.log("calculateF");
 	var index = 0;
 	var matchList = this._matchList[index]["match"];
-	console.log(matchList);
+	// console.log(matchList);
 	var sizeFr = matchList["fromSize"];
 	var sizeTo = matchList["toSize"];
 	var matches = matchList["matches"];
-	console.log(matches);
+	// console.log(matches);
 	// R3D.fundamentalFromUnnormalized = function(pointsA,pointsB, skipNonlinear){
 	var pointsA = [];
 	var pointsB = [];
@@ -1347,16 +1377,24 @@ App3DR.App.MatchCompare.prototype.calculateF = function(){
 		pointsB.push(pointB);
 	}
 	var F = R3D.fundamentalFromUnnormalized(pointsA,pointsB);
-	console.log(F);
+	var widA = sizeFr.x;
+	var heiA = sizeFr.y;
+	var widB = sizeTo.x;
+	var heiB = sizeTo.y;
+	var Fnorm = R3D.fundamentalNormalize(F, Matrix.transform2DScale(Matrix.transform2DIdentity(),1.0/widA,1.0/heiA), Matrix.transform2DScale(Matrix.transform2DIdentity(),1.0/widB,1.0/heiB));
 	var yaml = new YAML();
 	yaml.writeObjectStart("F");
-		F.saveToYAML(yaml);
+		Fnorm.saveToYAML(yaml);
 	yaml.writeObjectEnd();
 	var str = yaml.toString();
-	console.log("\n"+str+"\n");
 	var Finv = R3D.fundamentalInverse(F);
 	var info = R3D.fErrorList(F, Finv, pointsA, pointsB);
-	console.log(info);
+	if(log){
+		console.log(F);
+		console.log("\n"+str+"\n");
+		console.log(info);
+	}
+	return F;
 }
 App3DR.App.MatchCompare.prototype.checkMatchPairs = function(){
 	var pair = this._matchingPair;
@@ -6089,7 +6127,7 @@ App3DR.ProjectManager.prototype._backgroundTaskTick = function(){
 }
 App3DR.ProjectManager.prototype.checkPerformNextTask = function(){
 // don't 1 - run
-// return;
+return;
 console.log("checkPerformNextTask");
 	this.pauseBackgroundTasks();
 	this._taskBusy = true;

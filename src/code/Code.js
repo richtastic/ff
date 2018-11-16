@@ -6527,7 +6527,7 @@ Code.lineSegLineIntersect2D = function(a,b, c,d){ // x,y = point | z = %ab : lin
 	var num2 = dcX*caY - dcY*caX;
 	var t2 = num2/den;
 	if(t2 < 0 || t2 > 1){ return null; }
-	return new V4D( a.x+t2*baX, a.y+t2*baY, t2);
+	return new V3D( a.x+t2*baX, a.y+t2*baY, t2);
 }
 
 Code.rayLineIntersect2D = function(a,b, c,d){ // two infinite lines
@@ -6536,6 +6536,14 @@ Code.rayLineIntersect2D = function(a,b, c,d){ // two infinite lines
 	var num = (d.x*(c.y-a.y) + d.y*(a.x-c.x));
 	var t = num/den;
 	return new V2D(a.x+t*b.x, a.y+t*b.y); // num = (b.x*(c.y-a.y) + b.y*(a.x-c.x)); return new V2D(c.x+t2*d.x, c.y+t2*d.y);
+}
+Code.rayInfiniteIntersect2D = function(a,b, c,d){ // intersections of two infinite rays
+	var den = b.y*d.x - b.x*d.y;
+	if(den == 0){ return null; }
+	var num1 = (d.x*(c.y-a.y) + d.y*(a.x-c.x));
+	var num2 = (b.x*(c.y-a.y) + b.y*(a.x-c.x));
+	var t1 = num1/den;
+	return new V2D(a.x+t1*b.x, a.y+t1*b.y);
 }
 Code.rayIntersect2D = function(a,b, c,d){ // positive intersections of two infinite rays
 	var den = b.y*d.x - b.x*d.y;
@@ -6569,6 +6577,18 @@ Code.rayFiniteInfinitePositiveIntersect2D = function(a,b, c,d){ // finite ray an
 	var t1 = num1/den;
 	var t2 = num2/den;
 	if(t1>=0 && t1<=1.0 && t2>=0){
+		return new V2D(a.x+t1*b.x, a.y+t1*b.y);
+	}
+	return null;
+}
+Code.rayFiniteInfiniteIntersect2D = function(a,b, c,d){ // finite ray and infinite ray
+	var den = b.y*d.x - b.x*d.y;
+	if(den == 0){ return null; }
+	var num1 = (d.x*(c.y-a.y) + d.y*(a.x-c.x));
+	var num2 = (b.x*(c.y-a.y) + b.y*(a.x-c.x));
+	var t1 = num1/den;
+	// var t2 = num2/den;
+	if(t1>=0 && t1<=1.0){
 		return new V2D(a.x+t1*b.x, a.y+t1*b.y);
 	}
 	return null;
@@ -7669,7 +7689,27 @@ Code.minimumTriAngle = function(a,b,c){ // CCW
 	var angleC = V2D.angle(ca,cb);
 	return Math.min(angleA,angleB,angleC);
 }
-
+Code.clipRayRect2D = function(org,dir, a,b,c,d){
+	var ints = [];
+	var ab = V2D.sub(b,a);
+	var bc = V2D.sub(c,b);
+	var cd = V2D.sub(d,c);
+	var da = V2D.sub(a,d);
+	var lines = [];
+	lines.push([a,ab],[b,bc],[c,cd],[d,da]);
+	// console.log(lines);
+	for(var i=0; i<lines.length; ++i){
+		var o = lines[i][0];
+		var d = lines[i][1];
+		var intersection = Code.rayFiniteInfiniteIntersect2D(o,d,org,dir);
+		// console.log(intersection);
+		if(intersection){
+			ints.push(intersection);
+		}
+	}
+	// TODO: edge case where there are repeated intersections
+	return {"a":ints[0], "b":ints[1]}
+}
 Code.triTriIntersection2D = function(a1,b1,c1, a2,b2,c2){
 	var ab1 = V2D.sub(b1,a1);
 	var bc1 = V2D.sub(c1,b1);

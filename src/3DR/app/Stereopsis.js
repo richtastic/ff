@@ -2413,8 +2413,8 @@ Stereopsis.relativeTransformFromViews = function(viewA,viewB){
 	var relativeAtoB = Matrix.mult(invA,absB);
 	return relativeAtoB;
 }
-Stereopsis.World.prototype.refineCameraAbsoluteOrientation = function(){
-	var minimumMatches = 16; // maybe also PERCENTAGE of average nonzer / kNN | eg: ~10%
+Stereopsis.World.prototype.refineCameraAbsoluteOrientation = function(minimumPoints, isRelative){
+	var minimumMatches = minimumPoints!==undefined && minimumPoints!==null ? minimumPoints : 16; // maybe also PERCENTAGE of average nonzer / kNN | eg: ~10%
 	var views = this.toViewArray();
 	var viewNewLocations = [];
 	for(var i=0; i<views.length; ++i){
@@ -2428,15 +2428,16 @@ Stereopsis.World.prototype.refineCameraAbsoluteOrientation = function(){
 			var transform = this.transformFromViews(viewA,viewB);
 			var matches = transform.matches();
 			var matchCount = matches.length;
+// console.log(viewA.id()+" & "+viewB.id());
 			if(matchCount>minimumMatches){
 				var estimate = this.bundleAdjustViewPair(viewB,viewA); // viewB doesn't move, viewA moves
-// throw "HEREHRHEHREHREHRHE";
-// ????
 				// var estimate = this.bundleAdjustViewPair(viewA,viewB);
-					// var mat = estimate["P"];
-					// mat = Matrix.inverse(mat); /// ?????
-					// estimate["P"] = mat;
-				estimates.push(estimate);
+				// var mat = estimate["P"];
+				// mat = Matrix.inverse(mat); /// ?????
+				// estimate["P"] = mat;
+				if(estimate){
+					estimates.push(estimate);
+				}
 			}
 		}
 		var matrixes = [];
@@ -2445,6 +2446,7 @@ Stereopsis.World.prototype.refineCameraAbsoluteOrientation = function(){
 			matrixes.push(estimates[j]["P"]);
 			errors.push(estimates[j]["error"]);
 		}
+		// console.log(estimates);
 		var estimate = Stereopsis.averageMatrixEstimates(matrixes, errors);
 		viewNewLocations.push(estimate);
 	}
@@ -2452,13 +2454,40 @@ Stereopsis.World.prototype.refineCameraAbsoluteOrientation = function(){
 	for(var i=0; i<views.length; ++i){
 		var viewA = views[i];
 		var estimate = viewNewLocations[i];
-		viewA.absoluteTransform(estimate);
+		if(estimate){
+			// console.log(i+" estimate: \n"+estimate);
+			viewA.absoluteTransform(estimate);
+		}
+	}
+	if(isRelative){
+		for(var i=0; i<views.length; ++i){
+			var viewA = views[i];
+			for(var j=0; j<views.length; ++j){
+				if(i==j){
+					continue;
+				}
+				var viewB = views[j];
+				var transform = this.transformFromViews(viewA,viewB);
+				var vA = transform.viewA();
+				var vB = transform.viewB();
+				var absA = vA.absoluteTransform();
+				var absB = vB.absoluteTransform();
+				if(absA && absB){
+					// var cameraA = new Matrix(4,4).identity();
+					var cameraB = Stereopsis.relativeTransformFromViews(viewA,viewB);
+					transform.R(viewA,viewB,cameraB);
+				}
+			}
+		}
 	}
 }
 Stereopsis.averageMatrixEstimates = function(matrixes, errors){ // average location offset, twist, orientation of matrices
-	var percents = Code.errorsToPercents(errors);
-	percents = percents["percents"];
-	return Code.averageMatrices3D(matrixes, percents);
+	if(matrixes.length>0){
+		var percents = Code.errorsToPercents(errors);
+		percents = percents["percents"];
+		return Code.averageMatrices3D(matrixes, percents);
+	}
+	return null;
 }
 Stereopsis.World.prototype.bundleAdjustViewPair = function(viewA,viewB){ // where viewB should be using viewA + relative tansform points
 	var maxIterations = 25;
@@ -2486,6 +2515,9 @@ Stereopsis.World.prototype.bundleAdjustViewPair = function(viewA,viewB){ // wher
 	}
 	var Pa = viewA.absoluteTransform();
 	var Pb = viewB.absoluteTransform();
+	if(!Pa || !Pb){
+		return null;
+	}
 	var Ka = viewA.K();
 	var Kb = viewB.K();
 	var KaInv = viewA.Kinv();
@@ -2495,6 +2527,7 @@ Stereopsis.World.prototype.bundleAdjustViewPair = function(viewA,viewB){ // wher
 	var Is = [KaInv,KbInv];
 	var points2D = [points2DA,points2DB];
 	var result = R3D.BundleAdjustCameraExtrinsic(Ks, Is, Ps, points2D, points3D, maxIterations);
+console.log(result);
 	var error = result["error"];
 	var count = result["count"];
 	var extrinsics = result["extrinsics"];
@@ -2748,10 +2781,10 @@ return;
 	this._completeFxn = completeFxn;
 	this._completeContext = completeContext;
 	// var maxIterations = 1;
-	// var maxIterations = 2;
+	var maxIterations = 2;
 	// var maxIterations = 3;
 	// var maxIterations = 4;
-	var maxIterations = 5;
+	// var maxIterations = 5;
 	// var maxIterations = 6;
 	// var maxIterations = 7;
 	// var maxIterations = 8;
@@ -2812,8 +2845,13 @@ console.log("estimate3DPoints ... ");
 		// if(skip){
 		// 	// this.bundleAdjust();
 		// }
-
-		
+/*
+console.log("refineCameraAbsoluteOrientation...")
+		//var fError = R3D.fErrorList(F, Finv, pointsA, pointsB);
+		this.showReprojectionError();
+		this.refineCameraAbsoluteOrientation(100, true);
+		this.showReprojectionError();
+*/
 	// EXPAND
 		// 2D NEIGHBORS
 		// console.log("EXPAND 2D CELLS");
@@ -2833,6 +2871,8 @@ console.log("estimate3DErrors ... 2");
 // console.log("+++ filterGlobalMatches")
 		this.filterGlobalMatches();
 
+		// ...
+		
 		// this.dropNegative3D();	// .......
 			// F 
 			// R
@@ -2867,6 +2907,47 @@ if(isLast){
 }
 // this.printInfo();
 
+}
+
+Stereopsis.World.prototype.showReprojectionError = function(){ 
+	var transforms = this.toTransformArray();
+	var dropList = [];
+	var M1 = new Matrix(4,4).identity();
+	for(var i=0; i<transforms.length; ++i){
+		var transform = transforms[i];
+		var matches = transform.matches();
+		var viewA = transform.viewA();
+		var viewB = transform.viewB();
+		var Ka = viewA.K();
+		var Kb = viewB.K();
+		var M2 = transform.R(viewA,viewB);
+		var points3D = [];
+		var pointsA = [];
+		var pointsB = [];
+		for(var j=0; j<matches.length; ++j){
+			var match = matches[j];
+			var point3D = match.estimated3D();
+			if(point3D){
+				var vA = match.viewA();
+				var vB = match.viewB();
+				var pointA = match.point2DA();
+				var pointB = match.point2DB();
+				pointA = pointA.point2D();
+				pointB = pointB.point2D();
+				points3D.push(point3D);
+				if(vA==viewA){
+					pointsA.push(pointA);
+					pointsB.push(pointB);
+				}else{
+					pointsA.push(pointB);
+					pointsB.push(pointA);
+				}
+			}
+		}
+		// console.log(points3D,pointsA,pointsB)
+		var error = R3D.reprojectionErrorList(points3D, pointsA, pointsB, M1,M2, Ka,Kb);
+		console.log(error);
+	}
 }
 Stereopsis.World.prototype.printInfo = function(){ 
 return;
@@ -3596,7 +3677,7 @@ Stereopsis.World.prototype.estimate3DErrors = function(skipCalc){ // triangulate
 			F = info["F"];
 			P = info["P"];	
 		}
-		// console.log("GOT F: "+F+"\n GOT P:"+P+"\n");
+		console.log("GOT F: "+F+"\n GOT P:"+P+"\n");
 		if(F){
 			transform.F(viewA,viewB,F);
 			transform.calculateErrorF();
