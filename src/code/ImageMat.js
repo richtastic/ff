@@ -2166,7 +2166,8 @@ ImageMat.prototype.applyGaussianMask = function(){
 	ImageMat.applyGaussianMask(this.grn(), this.width(), this.height());
 	ImageMat.applyGaussianMask(this.blu(), this.width(), this.height());
 }
-ImageMat.calculateCentroid = function(image, imageWidth,imageHeight){
+ImageMat.calculateCentroid = function(image, imageWidth,imageHeight,inMask){
+	var mask = 1.0;
 	var cen = new V2D();
 	var length = imageWidth * imageHeight;
 	var totalWeight = 0;
@@ -2174,6 +2175,12 @@ ImageMat.calculateCentroid = function(image, imageWidth,imageHeight){
 	for(j=0; j<imageHeight; ++j){
 		for(i=0; i<imageWidth; ++i){
 			index = j*imageWidth + i;
+			if(inMask){
+				mask = inMask[index];
+			}
+			if(mask==0){
+				continue;
+			}
 			value = image[index];
 			totalWeight += value;
 			cen.x += i*value;
@@ -2254,14 +2261,21 @@ ImageMat.calculateCovariance = function(gry, width, height, mean, mask){
 	return [ev1,ev2];
 	//return [ev1,ev2,ev3];
 }
-ImageMat.calculateRawMoment = function(image, imageWidth,imageHeight, expX, expY, mean){
+ImageMat.calculateRawMoment = function(image, imageWidth,imageHeight, expX, expY, mean, inMask){
 	mean = mean!==undefined ? mean : ImageMat.calculateCentroid(image, imageWidth,imageHeight);
 	var i, j, x, y, index, value;
 	var moment = 0;
 	var totalWeight = 0;
+	var mask = 1.0;
 	for(j=0; j<imageHeight; ++j){
 		for(i=0; i<imageWidth; ++i){
 			index = j*imageWidth + i;
+			if(inMask){
+				mask = inMask[index];
+			}
+			if(mask!=1){
+				continue;
+			}
 			value = image[index];
 			totalWeight += value;
 			x = i - mean.x;
@@ -2273,19 +2287,22 @@ ImageMat.calculateRawMoment = function(image, imageWidth,imageHeight, expX, expY
 	}
 	return moment/totalWeight;
 }
-ImageMat.prototype.calculateMoment = function(mean){
+ImageMat.prototype.calculateMoment = function(mean,mask){
 	var gry = this.gry();
 	var wid = this.width();
 	var hei = this.height();
+	return ImageMat.calculateMoment(gry,wid,hei,mean,mask);
+}
+ImageMat.calculateMoment = function(gry,wid,hei,mean,mask){
 	mean = mean!==undefined ? mean : ImageMat.calculateCentroid(gry, wid,hei);
 	
 	//var totalWeight = ImageMat.sumFloat(gry);
 	// var m01 = ImageMat.calculateRawMoment(gry,wid,hei,0,1,mean);
 	// var m10 = ImageMat.calculateRawMoment(gry,wid,hei,1,0,mean);
 
-	var m11 = ImageMat.calculateRawMoment(gry,wid,hei,1,1,mean);
-	var m20 = ImageMat.calculateRawMoment(gry,wid,hei,2,0,mean);
-	var m02 = ImageMat.calculateRawMoment(gry,wid,hei,0,2,mean);
+	var m11 = ImageMat.calculateRawMoment(gry,wid,hei,1,1,mean,mask);
+	var m20 = ImageMat.calculateRawMoment(gry,wid,hei,2,0,mean,mask);
+	var m02 = ImageMat.calculateRawMoment(gry,wid,hei,0,2,mean,mask);
 	var matrix = new Matrix(2,2,[m20,m11,m11,m02]);
 
 	var eigens = Matrix.eigenValuesAndVectors(matrix);
@@ -2302,7 +2319,6 @@ ImageMat.prototype.calculateMoment = function(mean){
 	}
 	return [ev1,ev2];
 }
-
 ImageMat.prototype.calculateX = function(){
 	
 }

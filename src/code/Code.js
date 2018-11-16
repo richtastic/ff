@@ -1221,7 +1221,6 @@ Code.truncateArray = function(a,length){
 	if(a.length>length){
 		a.splice(length,a.length-length);
 	}
-	// while(a.length>length){ a.pop(); }
 	return a;
 };
 Code.preTruncateArray = function(a,length){

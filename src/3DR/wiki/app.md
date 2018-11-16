@@ -325,15 +325,8 @@ https://cloud.google.com/appengine/docs/nodejs/
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-- REPEATED MATCHING POINTS.... ?
-	- where is this first happening?
-		- are the features duped?
-		- RANSAC
 
-
-
-- WANT F-RANSAC TO TAKE INTO ACCOUNT MATCH SCORES [don't include pairs that line up but don't have a good score]
-
+- try to add affine restoration to points by getting center point and assessing the min/max directions & unscaling
 
 
 
@@ -341,29 +334,7 @@ https://cloud.google.com/appengine/docs/nodejs/
 
 - GET PEAK PROMINANCE IN PCT OF TOTAL > DROP PROMINANCE < 50%
 
-- SCALED points & corners
-	- get corners at all scales
-	- for each corner
-		- for each scale:
-			- check if corner is maxima
-			- check if strongest gradient
 
-- want SINGLE PEAK & not at ends
-
-STEPS:
-	FOR SCALES: 2x, 1x, 1/2x, 1/4x
-		GET MOST PROMINANT CORNERS
-	LOCAL MAXIMAL SUPPRESSION TO KEEP ONLY BEST CORNERISH POINTS
-	FOR ALL POINTS:
-		FOR ~10 SCALES:
-			GET CORNER SCORE
-		IF CORNER SCORE REACHES GLOBAL MAXIMA:
-			KEEP CORNER, RECORD SCALE
-
-
-	VERY GOOD CORNERS:
-		- have a corner peak
-		- have a gradient peak [different from corner peak]
 
 
 

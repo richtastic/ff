@@ -1067,7 +1067,8 @@ R3D.calculatePrinciple = function(points){
 	var ratio = Math.sqrt(eigVal[0]/eigVal[1]);
 	return {direction:dirEigA, angle:angle, scale:ratio}
 }
-R3D.calculateNormalizedPoints = function(inputPoints){ // array of arrays ---- 2D
+R3D.calculateNormalizedPoints = function(inputPoints, ignoreZ){ // array of arrays ---- 2D
+	ignoreZ = ignoreZ!==undefined ? ignoreZ : true; // ALWAYS IGNORING THE Z VALUE
 	//if(!Code.isArray(inputPoints)){ inputPoints = [inputPoints]; }
 	var i, j, len, T, cenX, cenY, rmsX, rmsY;
 	var dirInfo, angle, ratio, tmp = new V2D(), v = new V3D();
@@ -1111,16 +1112,17 @@ R3D.calculateNormalizedPoints = function(inputPoints){ // array of arrays ---- 2
 		inputPointInverseTransforms[i] = Tinv;
 	}
 	// save normalized points
+	var tempV = new V3D();
 	for(i=0;i<inputPoints.length;++i){
 		len = inputPoints[i].length;
 		T = inputPointTransforms[i];
 		normalizedPoints[i] = new Array(len);
 		for(j=0;j<len;++j){
 			v = inputPoints[i][j];
-			if(v.z===undefined){
-				v = new V3D(v.x,v.y,1.0);
-			}
-			normalizedPoints[i][j] = T.multV3DtoV3D(new V3D(),v);
+			// if(v.z===undefined){
+			tempV.set(v.x,v.y,1.0);
+			// }
+			normalizedPoints[i][j] = T.multV3DtoV3D(new V3D(),tempV);
 		}
 	}
 	return {"normalized":normalizedPoints, "forward":inputPointTransforms, "reverse":inputPointInverseTransforms};
@@ -2416,6 +2418,7 @@ R3D.fundamentalMatrixNonlinear = function(fundamental,pointsA,pointsB){
 
 // F nonlinear
 R3D.fundamentalFromUnnormalized = function(pointsA,pointsB, skipNonlinear){
+	skipNonlinear = skipNonlinear!==undefined ? skipNonlinear : false;
 	var pointsANorm = R3D.calculateNormalizedPoints([pointsA]);
 	var pointsBNorm = R3D.calculateNormalizedPoints([pointsB]);
 	var F = R3D.fundamentalMatrix(pointsANorm.normalized[0],pointsBNorm.normalized[0]);
@@ -2491,39 +2494,33 @@ R3D.iterationsFromProbabilities = function(pDesired, pOutlier, minCount, multipl
 	return maxIterations
 }
 R3D.fundamentalRANSACFromPoints = function(pointsAIn,pointsBIn, errorPosition, initialF){ 
-	var pointsA = Code.copyArray(pointsAIn);
-	var pointsB = Code.copyArray(pointsBIn);
+	var pointsA = pointsAIn;
+	var pointsB = pointsBIn;
+	// var pointsA = Code.copyArray(pointsAIn);
+	// var pointsB = Code.copyArray(pointsBIn);
 	// TODO: use initial F estimate in some capacity
 	if(!pointsA || !pointsB || pointsA.length<7 || pointsB.length<7){
 		return null;
 	}
 	var pointsLength = Math.min(pointsA.length, pointsB.length);
-	for(var i=0; i<pointsA.length; ++i){
-		pointsA[i] = new V3D(pointsA[i].x, pointsA[i].y, 1.0);
-		pointsB[i] = new V3D(pointsB[i].x, pointsB[i].y, 1.0);
-	}
-
-	// var imageSize = new V2D(400,300); // TODO: pass
-	// var imageHypotenuse = imageSize.length();
-	// var maxErrorDistance = (1.0/100.0) * imageHypotenuse;
+	// for(var i=0; i<pointsA.length; ++i){
+	// 	pointsA[i] = new V3D(pointsA[i].x, pointsA[i].y, 1.0);
+	// 	pointsB[i] = new V3D(pointsB[i].x, pointsB[i].y, 1.0);
+	// }
+	var maxErrorDistance = 1.0;
 	if(errorPosition!==undefined){
 		maxErrorDistance = errorPosition;
 	}
 	var maxErrorDistanceA = maxErrorDistance;
 	var maxErrorDistanceB = maxErrorDistance;
-	//var maxErrorTransfer = maxErrorDistance*maxErrorDistance;
-
-	var i, j, k, p, arr, fxn, args, xVals, yVals, result, fundamental;
+	var i, j, k;
 	var ptA=new V3D(), ptB=new V3D(), pointA, pointB, distanceA, distanceB;
 	var lineA=new V3D(), lineB=new V3D();
 	var subsetPointsA=[], subsetPointsB=[];
 	var consensus=[], consensusSet = [];
 	var support, maxSupportCount = 0, maxSupportError = null;
 	var minCount = 7;
-	// var epsilon = 1/pointsLength;
-	// var pOutlier = 0.99; // inital assumptions are wrong
-	// var pDesired = 0.999; // to have selected a valid subset
-	var pOutlier = 0.99; // inital assumptions are wrong
+	var pOutlier = 0.99; // initial assumptions are wrong
 	var pDesired = 0.999; // to have selected a valid subset
 	var errorMinfactor = 2.0;
 	//var maxIterationMultiplier = 10;
@@ -2532,7 +2529,7 @@ R3D.fundamentalRANSACFromPoints = function(pointsAIn,pointsBIn, errorPosition, i
 		// reset for iteration
 		Code.emptyArray(subsetPointsA);
 		Code.emptyArray(subsetPointsB);
-		//  
+		// subset of 7 points
 		var indexes = Code.randomIntervalSet(minCount, 0, pointsLength-1);
 		//console.log(" ___ RANSAC ___ "+i+" ---- ---- ---- ---- ---- ---- ---- ---- ---- "+indexes.length+"");
 		Code.copyArrayIndexes(subsetPointsA, pointsA, indexes);
@@ -2542,11 +2539,9 @@ R3D.fundamentalRANSACFromPoints = function(pointsAIn,pointsBIn, errorPosition, i
 		var m = R3D.fundamentalMatrix(pointsANorm.normalized[0],pointsBNorm.normalized[0]);
 		if(!Code.isArray(m)){ m = [m]; } // if have 7 => multiple possible
 		for(k=0; k<m.length; ++k){
-				arr = m[k];
+				var arr = m[k];
 				arr = Matrix.mult(arr, pointsANorm.forward[0]);
 				arr = Matrix.mult(Matrix.transpose(pointsBNorm.forward[0]), arr);
-		 		//arr = R3D.fundamentalMatrix(subsetPointsA,subsetPointsB);
-		 			//arr = R3D.fundamentalMatrixNonlinear(arr, subsetPointsA, subsetPointsB);
 				var FFwd = arr;
 				var FRev = Matrix.inverse(FFwd);
 				var FRev = R3D.fundamentalInverse(FFwd);
@@ -2556,15 +2551,15 @@ R3D.fundamentalRANSACFromPoints = function(pointsAIn,pointsBIn, errorPosition, i
 				var totalTransferError = 0;
 				consensus = [];
 				for(j=0; j<pointsA.length; ++j){
-					a = pointsA[j];
-					b = pointsB[j];
-					a = new V3D(a.x,a.y,1.0);
-					b = new V3D(b.x,b.y,1.0);
-					lineB = FFwd.multV3DtoV3D(new V3D(), a);
+					var a = pointsA[j];
+					var b = pointsB[j];
+					ptA.set(a.x,a.y,1.0);
+					ptB.set(b.x,b.y,1.0);
+					lineB = FFwd.multV3DtoV3D(lineB, ptA);
 					Code.lineOriginAndDirection2DFromEquation(org,dir, lineB.x,lineB.y,lineB.z);
 					distanceB = Code.distancePointRay2D(org,dir, b);
 					// B
-					lineA = FRev.multV3DtoV3D(new V3D(), b);
+					lineA = FRev.multV3DtoV3D(lineA, ptB);
 					Code.lineOriginAndDirection2DFromEquation(org,dir, lineA.x,lineA.y,lineA.z);
 					distanceA = Code.distancePointRay2D(org,dir, a);
 					// error
@@ -2579,39 +2574,21 @@ R3D.fundamentalRANSACFromPoints = function(pointsAIn,pointsBIn, errorPosition, i
 					return a[2];
 				}
 				var items = Code.dropOutliers(consensus, errorFxn, 2.0);
-				//console.log(items);
 				consensus = items["inliers"];
-				//throw "?"
 				support = consensus.length;
-
-
-
 				if(support>maxSupportCount || (support==maxSupportCount && totalTransferError < maxSupportError)){
-				//if(maxSupportError == null || (support>=maxSupportCount && totalTransferError < maxSupportError)){ // FORCE LESS ERROR
-				//if(support>=maxSupportCount && (maxSupportError==null || avgTransferError < maxSupportError)){ // ? trade lower average error for higher support count ?
-					//console.log(i+": "+totalTransferError+"/"+maxSupportError+" support: "+support+" / "+maxSupportCount +"     avg:"+(totalTransferError/support));
-					// console.log("  maxIterations: "+i+" / "+maxIterations);
-						//console.log(feedback+"");
 					maxSupportCount = support;
 					maxSupportError = totalTransferError;
-					//maxSupportError = avgTransferError;
 					Code.emptyArray(consensusSet);
 					Code.copyArray(consensusSet, consensus);
 					// TODO: use all of new consensus points & try to refine F approximation
 					// if support count has increased, 
 				}
-				if(support>0){
-					// console.log(i+": "+totalTransferError+"/"+maxSupportError+" support: "+support+" / "+maxSupportCount);
-				}
 		}
 		// update iterations from found:
 		pOutlier = Math.min(pOutlier, (pointsLength-maxSupportCount)/pointsLength);
 		maxIterations = errorMinfactor * R3D.iterationsFromProbabilities(pDesired, pOutlier, minCount);
-		// if(maxSupportCount<8){
-		// 	maxIterations *= 10;
-		// }
 	}
-//	console.log("MAX CONSENSUS: "+maxSupportCount);
 	// f using all inliers
 	Code.emptyArray(subsetPointsA);
 	Code.emptyArray(subsetPointsB);
@@ -2619,48 +2596,33 @@ R3D.fundamentalRANSACFromPoints = function(pointsAIn,pointsBIn, errorPosition, i
 		subsetPointsA.push( consensusSet[i][0] );
 		subsetPointsB.push( consensusSet[i][1] );
 	}
-	// console.log("POINT MATCHES "+subsetPointsA.length+" @ ERROR: "+maxErrorDistanceA);
 	if(subsetPointsA.length<8){
 		return null;
 	}
-	//return {"F":bestF, "matches":[subsetPointsA,subsetPointsB]};
-	if(!arr){
-		return null;
-	}
-//	console.log("MINIMIZING");
-	// F FROM NORMALIZED POINTS:
-	var pointsANorm = R3D.calculateNormalizedPoints([subsetPointsA]);
-	var pointsBNorm = R3D.calculateNormalizedPoints([subsetPointsB]);
-	arr = R3D.fundamentalMatrix(pointsANorm.normalized[0],pointsBNorm.normalized[0]);
-	arr = Matrix.mult(arr, pointsANorm.forward[0]);
-	arr = Matrix.mult(Matrix.transpose(pointsBNorm.forward[0]), arr);
-	// NONLINEAR F
-	arr = R3D.fundamentalMatrixNonlinear(arr, subsetPointsA, subsetPointsB);
-	var FFwd = arr;
+	// f using all inliers
+	var FFwd = R3D.fundamentalFromUnnormalized(subsetPointsA,subsetPointsB);
 	var FRev = R3D.fundamentalInverse(FFwd);
 	var pointsKeepA = [];
 	var pointsKeepB = [];
 	for(i=0; i<pointsAIn.length; ++i){
 		var a = pointsAIn[i];
 		var b = pointsBIn[i];
-		a = new V3D(a.x,a.y,1.0);
-		b = new V3D(b.x,b.y,1.0);
-		lineB = FFwd.multV3DtoV3D(new V3D(), a);
+		ptA.set(a.x,a.y,1.0);
+		ptB.set(b.x,b.y,1.0);
+		lineB = FFwd.multV3DtoV3D(lineB, ptA);
 		Code.lineOriginAndDirection2DFromEquation(org,dir, lineB.x,lineB.y,lineB.z);
 		distanceB = Code.distancePointRay2D(org,dir, b);
-		// B
-		lineA = FRev.multV3DtoV3D(new V3D(), b);
+		lineA = FRev.multV3DtoV3D(lineB, ptB);
 		Code.lineOriginAndDirection2DFromEquation(org,dir, lineA.x,lineA.y,lineA.z);
 		distanceA = Code.distancePointRay2D(org,dir, a);
-		// error
 		if(distanceA<maxErrorDistanceA && distanceB<maxErrorDistanceB){
 			pointsKeepA.push(pointsAIn[i]);
 			pointsKeepB.push(pointsBIn[i]);
 		}
 	}
-	// TODO: are there possible 'duplicated' pointA_i == pointA_j ? => remove ?
-	return {"F":arr, "matches":[pointsKeepA,pointsKeepB]};	
+	return {"F":FFwd, "matches":[pointsKeepA,pointsKeepB]};	
 }
+
 R3D.cameraExtrinsicRANSACFromPointsAutomated = function(pointsA,pointsB, Ka,Kb,KaInv,KbInv, Pinitial){ // automatically determine inline threshold
 	var P = null;
 	if(Pinitial){
@@ -4214,7 +4176,7 @@ R3D.calculateFlatCornerFeatures = function(imageMatrix, maxCount){
 	return featuresPointSizeAngle;
 }
 R3D.calculateScaleCornerFeatures = function(imageMatrix, maxCount){
-	var featureWindowScale = 11.0; // 7-11
+	var featureWindowScale = 13.0; // 7-15
 	var suppressionDistanceScale = 0.005; // 1% ~ 6 0.5% ~ 3
 	var imageGray = imageMatrix.gry();
 	var imageWidth = imageMatrix.width();
@@ -4227,11 +4189,12 @@ R3D.calculateScaleCornerFeatures = function(imageMatrix, maxCount){
 	// 	sampleScales[i] = Math.pow(2,sampleScales[i]);
 	// }
 	// var sampleScales = [1.0,0.5,0.25];
-	var sampleScales = [1.0,0.666,0.333];
-	// var sampleScales = [1.0,0.75,0.50,0.25];
+	// var sampleScales = [1.0,0.666,0.333];
+	var sampleScales = [1.0,0.75,0.50,0.25];
 	// var sampleScales = [1.0,0.8,0.6,0.4,0.2]; // too many
 	// var sampleScales = [2.0,1.0,0.5]; // bigger images are slower & 3x too many points ~ 20x processing time [but double starter points]
 	// var sampleScales = [1.0];
+	// var sampleScales = [2.0];
 	var accumulatorCorners = [];
 	var sigma = null;
 	for(var i=0; i<sampleScales.length; ++i){
@@ -4269,8 +4232,8 @@ R3D.calculateScaleCornerFeatures = function(imageMatrix, maxCount){
 	console.log("unique locations: "+accumulatorCorners.length);
 	// calculate maximum location:
 	var peakedCorners = [];
-	var scales = Code.divSpace(2,-3, 14);
-	// var scales = Code.divSpace(2,-2, 10);
+	// var scales = Code.divSpace(2,-3, 14);
+	var scales = Code.divSpace(2,-2, 10);
 	var matrixes = [];
 	for(var i=0; i<scales.length; ++i){
 		var scale = scales[i];
@@ -4283,10 +4246,17 @@ R3D.calculateScaleCornerFeatures = function(imageMatrix, maxCount){
 	}
 	var compareSize = 9; // 7-11
 	var center = compareSize*0.5 | 0;
-	var gradScale = 0.50;
+	var gradScale = 7;
 	var gradSize = 7; // 5-7 : large enough for gradient & smoothing
 	var c2 = gradSize*0.5 | 0;
 	var sigmaBlur = 1.0;
+	//
+	//var affineSize = 11;
+	var affineSize = 9;
+	var affineScale = 15;
+	var c2 = affineSize*0.5 | 0;
+	var affineMean = new V2D(c2,c2);
+	var affineMask = ImageMat.circleMask(affineSize,affineSize);
 	for(var i=0; i<accumulatorCorners.length; ++i){
 		var corner = accumulatorCorners[i];
 		var point = corner;
@@ -4296,8 +4266,9 @@ R3D.calculateScaleCornerFeatures = function(imageMatrix, maxCount){
 			var gry = ImageMat.extractRectFromFloatImage(point.x,point.y,1.0,null,compareSize,compareSize, imageGray,imageWidth,imageHeight, matrix);
 			var blur = ImageMat.getBlurredImage(gry, compareSize,compareSize, sigmaBlur);
 			// SPEEDUP - ONLY CARE ABOUT CENTER
-			var H = R3D.cornerScaleScores(blur,compareSize,compareSize)["value"];
-			var score = H[center*compareSize + center];
+			//var H = R3D.cornerScaleScores(blur,compareSize,compareSize)["value"];
+			//var score = H[center*compareSize + center];
+				var score = R3D.cornerScaleScores(blur,compareSize,compareSize, null,true);
 			scores.push(score);
 		}
 		var peaks = Code.findGlobalExtrema1D(scores, true);
@@ -4311,15 +4282,50 @@ R3D.calculateScaleCornerFeatures = function(imageMatrix, maxCount){
 				var pc1 = 1.0 - pct;
 				var val = scales[lo]*pc1 + scales[hi]*pct;
 				var p = new V2D(point.x,point.y);
-				var s = 1.0/val;
+				var sca = 1.0/val;
 				// extract angle at size:
-				var blur = ImageMat.extractRectFromFloatImage(point.x,point.y,gradScale*val,2.0,gradSize,gradSize, imageGray,imageWidth,imageHeight, matrix);
-				// var blur = ImageMat.getBlurredImage(gry, compareSize,compareSize, sigma);
-					// var blur = ImageMat.extractRectFromFloatImage(point.x,point.y,1.0,sigma,compareSize,compareSize, imageGray,imageWidth,imageHeight, matrix);
-				var grad = ImageMat.gradientVector(blur, gradSize,gradSize, c2,c2);
-				// var mag = grad.length();
+
+				// gradient angle
+				var gry = ImageMat.extractRectFromFloatImage(point.x,point.y,gradScale/sca,2.0,gradSize,gradSize, imageGray,imageWidth,imageHeight, null);
+				var grad = ImageMat.gradientVector(gry, gradSize,gradSize, c2,c2);
 				var ang = V2D.angle(V2D.DIRX,grad);
-				var best = {"point":point, "score":peak, "scale":s, "size":(s*featureWindowScale), "angle":ang};
+
+
+				// MOMENT:
+				var gry = ImageMat.extractRectFromFloatImage(point.x,point.y,affineScale/sca,2.0,affineSize,affineSize, imageGray,imageWidth,imageHeight, null);
+				// var moment = ImageMat.calculateCovariance(gry, affineSize, affineSize, mean, circleMask);
+				var moment = ImageMat.calculateMoment(gry, affineSize, affineSize, affineMean, affineMask);
+				var momentA = moment[0];
+				var momentB = moment[1];
+				// var momentRatio = momentA.length()/momentB.length();
+				var momentRatio = momentA.z/momentB.z;
+				if(momentRatio<1){
+					momentRatio = 1.0/momentRatio;
+					momentA = moment[1];
+					momentB = moment[0];
+				}
+				momentA = new V2D(momentA.x,momentA.y);
+
+				// var dotGradMoment = V2D.dot(grad,momentA); // for weak oriented direction?
+				// if(dotGradMoment){
+				// 	momentA.scale(-1.0);
+				// }
+
+
+COVARIANCE?
+
+
+				// momentA = new V2D(momentA.x,momentA.y).norm();
+				// momentB = new V2D(momentB.x,momentB.y).norm();
+				var momentAngle = V2D.angle(V2D.DIRX,momentA);
+
+				
+				
+				var affineAngle = momentAngle;
+				var affineScale = Math.sqrt(momentRatio);
+				affineAngle = 0.0;
+				affineScale = 1.0;
+				var best = {"point":p, "score":peak, "scale":sca, "size":(sca*featureWindowScale), "angle":momentAngle, "affineAngle":affineAngle,"affineScale":affineScale};
 				peakedCorners.push(best);
 			}
 		}
@@ -4355,18 +4361,23 @@ R3D.calculateScaleCornerFeatures = function(imageMatrix, maxCount){
 	space.kill();
 	console.log("maximal points: "+maximalCorners.length);
 	var largePoints = maximalCorners;
-	/*
+	
 	var largePoints = [];
-	var minimumFeatureSize = 3.0;
+	var minimumFeatureSize = 3.0; // pixels
+	// var maximumFeatureSize = 55.0;
+	var maximumFeatureSize = 1E9;
 	for(var i=0; i<maximalCorners.length; ++i){
 		var corner = maximalCorners[i];
-		if(corner["size"]>=minimumFeatureSize){
+		var size = corner["size"];
+		if(minimumFeatureSize<=size && size<=maximumFeatureSize){
 			largePoints.push(corner);
 		}
 	}
+	largePoints.sort(function(a,b){
+		return a.z > b.z ? -1 : 1;
+	});
+	Code.truncateArray(largePoints,maxCount);
 	console.log("large points: "+largePoints.length);
-	*/
-	
 	return largePoints;
 }
 R3D.optimumAffineScaleForImage = function(imageSource){
@@ -5403,8 +5414,9 @@ R3D.CORNER_SELECT_RESTRICTED = 0.95; // constrained, restrictive
 R3D.CORNER_SELECT_REGULAR = 0.999; // 0.99-0.9999 average, regular
 R3D.CORNER_SELECT_RELAXED = 0.99999; // relaxed, detailed, loose
 WASCALLED = -1;
-R3D.cornerScaleScores = function(src, width, height, skipDrop){
-	skipDrop = skipDrop!==undefined ? skipDrop : false; // not actually used yet
+R3D.cornerScaleScores = function(src, width, height, skipDrop, centerOnly){
+centerOnly = centerOnly!==undefined ? centerOnly : false;
+	skipDrop = skipDrop!==undefined && skipDrop!==null ? skipDrop : false; // not actually used yet
 	var sigma = 1.0;
 	// src = Code.copyArray(src);
 	//src = ImageMat.mulConst(src,256);
@@ -5457,6 +5469,10 @@ R3D.cornerScaleScores = function(src, width, height, skipDrop){
 	
 	for(j=0;j<height;++j){
 		for(i=0;i<width;++i){
+if(centerOnly){
+	i = width*0.5 | 0;
+	j = height*0.5 | 0;
+}
 			index = j*width + i;
 			a = dxdx[index];
 			b = dxdy[index];
@@ -5469,7 +5485,7 @@ R3D.cornerScaleScores = function(src, width, height, skipDrop){
         	
         	var pv = val;
 
-        	var eig = Code.eigenValues2D(a,b,c,d);
+        	var eig = Code.eigenValues2D(a,b,c,d); // isn't this sometimes wrong ?
         	var l1 = eig[0];
         	var l2 = eig[1];
         	l1 = Math.max(0,l1);
@@ -5477,6 +5493,9 @@ R3D.cornerScaleScores = function(src, width, height, skipDrop){
         	val = l1*l2 - 0.03*Math.pow(l1+l2,2);
         	// 
         	// val = Math.sqrt(l1*l1 + l2*l2);
+if(centerOnly){
+	return val;
+}
         	H[index] = val;
         	//hessianValue[index] = Math.abs(hessianValue[index]);
 		}
@@ -8426,6 +8445,8 @@ var imageBlurred = imageMatrix.getBlurredImage(1.0);
 			var location =  null;
 			var rad = null;
 			var angle = null;
+var affineAngle = 0.0;
+var affineRatio = 1.0;
 			if(Code.isa(point,V4D)){
 				hasAngle = point.t!==undefined;
 				angle = point.t;
@@ -8441,6 +8462,15 @@ var imageBlurred = imageMatrix.getBlurredImage(1.0);
 				rad = point["size"];
 				// console.log("IS OBJECT");
 				// throw "?"
+				var aa = point["affineAngle"];
+				var as = point["affineScale"];
+				if(aa){
+					affineAngle = aa;
+				}
+				if(as){
+					affineRatio = as;
+				}
+
 			}
 			// var dia = 2.0*rad; // full area
 			// var diaNeighborhood = dia * 2.0; // area around feature
@@ -8492,6 +8522,12 @@ var imageBlurred = imageMatrix.getBlurredImage(1.0);
 // console.log(diaNeighborhood)
 				var matrix = new Matrix(3,3).identity();
 					matrix = Matrix.transform2DRotate(matrix, -pointAngle);
+					// AFFINE:
+					matrix = Matrix.transform2DRotate(matrix, -affineAngle);
+					matrix = Matrix.transform2DScale(matrix, 1.0/affineRatio,affineRatio);
+					matrix = Matrix.transform2DRotate(matrix, affineAngle);
+
+					affineAngle
 				var useColors = true;
 				var vectorSAD = R3D.SADVectorCircular(imageMatrix, location,diaNeighborhood,matrix);
 				var vectorSIFT = R3D.SIFTVectorCircular(imageMatrix, location,diaNeighborhood,matrix, true);
@@ -8547,14 +8583,19 @@ R3D.fullMatchesForObjects = function(objectsAIn, imageMatrixA, objectsBIn, image
 		return a<b ? -1 : 1;
 	};
 	// if too many features: use unique subset for initial match
-	// objectsUniqueA = R3D.siftObjectsToUnique(objectsAIn);
-	// objectsUniqueB = R3D.siftObjectsToUnique(objectsBIn);
-	// console.log("unique: "+objectsUniqueA.length+" & "+objectsUniqueB.length);
-	// objectsA = objectsUniqueA;
-	// objectsB = objectsUniqueB;
+	var maximumPointsBeforeUnique = 1000; // about halves the set
+	var objectsUniqueA = objectsA;
+	var objectsUniqueB = objectsB;
+	
+	// the unique points put on the wrong trail --- maybe just try best corner-score points ?
 
+	// if(objectsA.length>maximumPointsBeforeUnique || objectsB.length>maximumPointsBeforeUnique){
+	// 	objectsUniqueA = R3D.siftObjectsToUnique(objectsA);
+	// 	objectsUniqueB = R3D.siftObjectsToUnique(objectsB);
+	// 	console.log("unique: "+objectsUniqueA.length+" & "+objectsUniqueB.length);
+	// }
 	// get some high-error set of possible matches
-	var matching = R3D.matchObjectsSubset(objectsA, objectsB, objectsB, objectsA);
+	var matching = R3D.matchObjectsSubset(objectsUniqueA, objectsUniqueB, objectsUniqueB, objectsUniqueA);
 	var best = matching["best"];
 	console.log("INITIAL SCORE-MATCH COUNT: "+best.length);
 	var bestLength = best.length;
@@ -8565,7 +8606,7 @@ R3D.fullMatchesForObjects = function(objectsAIn, imageMatrixA, objectsBIn, image
 
 	var keepCount = Math.min(Math.round(best.length/2),20); // use best of best only
 	keepCount = best.length;
-	// // INITIAL MATCH:
+	// INITIAL MATCH:
 	var pointsA = [];
 	var pointsB = [];
 	for(var i=0; i<keepCount; ++i){
@@ -8577,7 +8618,6 @@ R3D.fullMatchesForObjects = function(objectsAIn, imageMatrixA, objectsBIn, image
 		pointsA.push(A);
 		pointsB.push(B);
 	}
-
 	console.log("INITIAL RANSAC ");
 	var result = R3D.fundamentalRANSACFromPoints(pointsA,pointsB, initialAveragePixelError);
 	var matches = result["matches"];
@@ -8596,52 +8636,6 @@ R3D.fullMatchesForObjects = function(objectsAIn, imageMatrixA, objectsBIn, image
 
 	console.log("initialPixelError: "+initialPixelError);
 
-
-
-/*
-var matrixFfwd = F;
-var matrixFrev = Finv;
-var matches = best;
-var scoreList = [];
-var fErrorList = [];
-var pointsA = [];
-var pointsB = [];
-for(var j=0; j<matches.length; ++j){
-	var match = matches[j];
-	var score = match["score"];
-	var A = match["A"];
-	var B = match["B"];
-	var pointA = A["point"];
-	var pointB = B["point"];
-	var info = R3D.fError(matrixFfwd,matrixFrev,pointA,pointB);
-	var fError = info["error"];
-	match["f"] = fError;
-	scoreList.push(score);
-	fErrorList.push(fError);
-	pointsA.push(pointA);
-	pointsB.push(pointB);
-}
-scoreList.sort(orderFxn);
-fErrorList.sort(orderFxn);
-Code.printMatlabArray(fErrorList,"f");
-Code.printMatlabArray(scoreList,"s");
-
-var limitF = initialPixelError*2;
-for(var j=0; j<matches.length; ++j){
-	var match = matches[j];
-	var errorF = match["f"];
-	if(errorF>limitF){
-		matches.splice(j,1);
-		--j;
-	}
-}
-console.log("FILTERED LENGTH: "+matches.length);
-// throw "?"
-*/
-
-// return {"F":F, "matches":best};
-
-// initialPixelError *= 2;
 	if(initialPixelError>maximumPixelErrorForFail){
 		console.log("very poor first F approximation: "+initialPixelError);
 		return null;
@@ -8683,20 +8677,6 @@ console.log("FILTERED LENGTH: "+matches.length);
 	for(var i=0; i<maxIterations; ++i){
 		var putativeA = R3D.limitedObjectSearchFromF(objectsA,imageMatrixA,objectsB,imageMatrixB,matrixFfwd, pixelErrorB*2, minimumFCount);
 		var putativeB = R3D.limitedObjectSearchFromF(objectsB,imageMatrixB,objectsA,imageMatrixA,matrixFrev, pixelErrorA*2, minimumFCount);
-		/*
-		var putativeCountA = 0;
-		var putativeCountB = 0;
-		for(var j=0; j<putativeA.length; ++j){
-			putativeCountA += putativeA[j].length;
-		}
-		for(var j=0; j<putativeB.length; ++j){
-			putativeCountB += putativeB[j].length;
-		}
-		putativeCountA /= putativeA.length;
-		putativeCountB /= putativeB.length;
-		// console.log(" AVERAGE PUTATIVE: "+putativeCountA+" | "+putativeCountB);
-// PUTATIVE AVERAGE NEEDS TO STAY ABOVE SOME AMOUNT OR ELSE THERE COULD BE A LOT OF BIAS
-		*/
 		var matching = R3D.matchObjectsSubset(objectsA, putativeA, objectsB, putativeB, limitScoreRatio, limitScoreSearch);
 		var matches = matching["best"];
 		var matchCount = matches.length;
@@ -8704,8 +8684,6 @@ console.log("FILTERED LENGTH: "+matches.length);
 		// get population data
 		var scoreList = [];
 		var fErrorList = [];
-		// var pointsA = [];
-		// var pointsB = [];
 		for(var j=0; j<matches.length; ++j){
 			var match = matches[j];
 			var score = match["score"];
@@ -8718,13 +8696,7 @@ console.log("FILTERED LENGTH: "+matches.length);
 			match["f"] = fError;
 			scoreList.push(score);
 			fErrorList.push(fError);
-			// pointsA.push(pointA);
-			// pointsB.push(pointB);
 		}
-// scoreList.sort(orderFxn);
-// fErrorList.sort(orderFxn);
-// Code.printMatlabArray(fErrorList,"f");
-// Code.printMatlabArray(scoreList,"s");
 		var sMin = Code.minArray(scoreList);
 		var sSig = Code.stdDev(scoreList,sMin);
 		var fMin = Code.minArray(fErrorList);
@@ -8733,8 +8705,6 @@ console.log("FILTERED LENGTH: "+matches.length);
 		var sigmaS = 2.0;
 		var limitS = sMin + sSig*sigmaS;
 		var limitF = fMin + fSig*sigmaF;
-		// console.log("   "+sMin+" +/- "+sSig+" ["+limitS+"] "+" | "+fMin+" +/- "+fSig+" ["+limitF+"] ");
-		
 		// DROP OUTLIERS
 		var pointsA = [];
 		var pointsB = [];
@@ -8787,7 +8757,6 @@ console.log("FILTERED LENGTH: "+matches.length);
 			stagnantCount = 0;
 		}
 
-
 		// keep the RANSAC results INSTEAD
 		var keeps = [];
 		for(var j=0; j<matches.length; ++j){
@@ -8806,7 +8775,7 @@ console.log("FILTERED LENGTH: "+matches.length);
 			}
 		}
 		if(bestMatchSet===null || nextPixelErrorAB<bestError){
-			console.log("KEEPS: "+keeps.length);
+			console.log("KEEPS: "+keeps.length+" : "+nextPixelErrorAB);
 			bestMatchSet = keeps;
 			bestF = resultF;
 			bestError = pixelErrorAB;
@@ -8824,10 +8793,10 @@ console.log("FILTERED LENGTH: "+matches.length);
 			console.log("STAGNANT");
 			break;
 		}
-		if(increaseCount>=3){
-			console.log("INCREASING");
-			break;
-		}
+		// if(increaseCount>=3){
+		// 	console.log("INCREASING");
+		// 	break;
+		// }
 	}
 	bestMatchSet.sort(function(a,b){
 		return a["score"] < b["score"] ? -1 : 1;
@@ -9996,7 +9965,7 @@ R3D.siftObjectsToUnique = function(objects){
 		var scores = group["s"];
 		scores.sort(sorting);
 		var ratio = scores[0]/scores[1];
-		if(ratio<0.95){
+		if(ratio<0.99){
 			group["r"] = ratio;
 			keep.push(group);
 		}
