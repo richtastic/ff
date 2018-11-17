@@ -304,11 +304,11 @@ vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 	- separate triangles into texture lookup / files
 		- TextureMap (from textures to atlas)
 	=> scene textured model
-(11/19)
+(11/26)
 - viewing output
 	- locally
 	- VR device
-(12/17)
+(12/31)
 
 google app engine project - nodejs
 https://cloud.google.com/appengine/docs/nodejs/
@@ -326,22 +326,20 @@ https://cloud.google.com/appengine/docs/nodejs/
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
-- try to add affine restoration to points by getting center point and assessing the min/max directions & unscaling
-
-
-
-
-
-- GET PEAK PROMINANCE IN PCT OF TOTAL > DROP PROMINANCE < 50%
-
-
-
-
 
 
 - pick high-corner points from scene, use F & keep most unique ones
 	=> is F direction perpendicular & oriented consistently from epipole ?
 TEST
+
+
+- medium density
+	- fwd-bak match:
+		- a corner may have multiple mapped-to
+	- how to remove outliers?
+	- visualize 3D clustering? rank | score | ratio
+-
+
 
 image a:
 	known point
@@ -354,15 +352,39 @@ image b:
 	extract rect
 
 
+- MEDIUM MATCHING
+	- pick out corners & match along F lines
+		- high gradient values (corner or edge)
+	in: 50-100
+	out: 100-1000
+
+
+
+
+- try to add affine restoration to points by getting center point and assessing the min/max directions & unscaling
+- moment
+- COM
+- COV
+
+
+
+- rotate moment by additional cov angle
+
+- check cov and mom sizes
+
+
+
+
+- GET PEAK PROMINANCE IN PCT OF TOTAL > DROP PROMINANCE < 50%
+
+
+
+
 
 - image compare epipole / line search testing - experiments
 
 
 
-
-
-- want more and better matches
-- initial feature matches are poor [scale / skew / orientation assignment]
 
 x try minimizing error using GRADIENT DESCENT
 	- 2nd view's roatation (from starting point) & translation [separate?]

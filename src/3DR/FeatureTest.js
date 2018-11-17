@@ -55,11 +55,11 @@ function FeatureTest(){
 // new ImageLoader("./images/",["room0.png", "room1.png"],this,this.imagesLoadComplete2).load(); // real / close scenario
 // new ImageLoader("./images/",["room0.png", "room2.png"],this,this.imagesLoadComplete2).load();
 
-// new ImageLoader("./images/",["bench_A.png", "bench_B.png"],this,this.imagesLoadComplete2).load(); // small skew
+new ImageLoader("./images/",["bench_A.png", "bench_B.png"],this,this.imagesLoadComplete2).load(); // small skew
 // new ImageLoader("./images/",["bench_B.png", "bench_C.png"],this,this.imagesLoadComplete2).load(); // large skew
 // new ImageLoader("./images/",["bench_C.png", "bench_D.png"],this,this.imagesLoadComplete2).load(); // offset, slight zoom
 // new ImageLoader("./images/",["bench_D.png", "bench_E.png"],this,this.imagesLoadComplete2).load(); // small zoom, skew
-new ImageLoader("./images/",["bench_D.png", "bench_F.png"],this,this.imagesLoadComplete2).load(); // big zoom, skew
+// new ImageLoader("./images/",["bench_D.png", "bench_F.png"],this,this.imagesLoadComplete2).load(); // big zoom, skew
 // new ImageLoader("./images/",["bench_C.png", "bench_F.png"],this,this.imagesLoadComplete2).load(); // camera centers coincide
 
 
@@ -1557,9 +1557,8 @@ throw "?"
 
 */
 
-/*
 
-
+if(false){
 var cornersA = R3D.pointsCornerMaxima(imageMatrixA.gry(), imageMatrixA.width(), imageMatrixA.height(),  R3D.CORNER_SELECT_RELAXED);
 cornersA.sort(function(a,b){
 	return a.z > b.z ? -1 : 1;
@@ -1884,9 +1883,95 @@ display.addChild(c);
 		}
 	}
 }
+}
 
 
 
+
+var Ffwd = [-3.571391689049042e-7,-0.000013042588388787455,0.001892709101181543,-0.0000013077195547260747,-0.0000017799854182444378,0.01261326470689081,-0.00007645234417652562,-0.008180748615404762,-0.26087920605817905];
+	Ffwd = new Matrix(3,3).fromArray(Ffwd);
+
+
+
+
+// var locationA = new V2D(200,200);
+// var locationA = new V2D(150,100);
+// var locationA = new V2D(350,200);
+// var locationA = new V2D(370,220);
+// var locationA = new V2D(50,220);
+// var locationA = new V2D(200,180);
+var locationA = new V2D(250,170);
+
+
+var F = Ffwd;
+var Finv = R3D.fundamentalInverse(F);
+// console.log(F);
+// console.log(Finv);
+// var info = R3D.findMatchingPointF(imageMatrixA,imageMatrixB,F,Finv, locationA);
+// console.log(info);
+// var locationB = info["point"];
+// R3D.findMatchingPointF()
+
+
+
+
+
+var corners = R3D.pointsCornerMaxima(imageMatrixA.gry(), imageMatrixA.width(), imageMatrixA.height(),  R3D.CORNER_SELECT_RELAXED);
+console.log(corners.length);
+for(var i=0; i<corners.length; ++i){
+	var corner = corners[i];
+	// console.log(corner);
+	var c = new DO();
+	c.graphics().setLine(1.0,0xFF00FF00);
+	c.graphics().beginPath();
+	c.graphics().moveTo(0,0);
+	c.graphics().drawCircle(corner.x,corner.y, 3.0);
+	c.graphics().strokeLine();
+	c.graphics().endPath();
+	display.addChild(c);
+	// if(i==5){// bad
+	// if(i==100){ // close
+	// if(i==200){ // good
+	// if(i==250){ // clear
+	// if(i==655){ // bad
+	// if(i==656){ // edge
+	if(i==656){ 
+		var info = R3D.findMatchingPointF(imageMatrixA,imageMatrixB,F,Finv, corner);
+		console.log(info);
+	}
+// 
+/*
+GOOD: 	S 		R 		R/S
+		0.102 	0.129	1.258
+		0.089 	0.366 	4.100
+		0.141 	0.042 	0.298
+		0.129 	
+
+CORRECT:
+		0.061 	0.001 	0.017
+		0.110 	0.016 	0.151
+		0.097 	0.069 	0.710
+		0.113 	0.052 	0.459
+		0.089 	0.006 	0.072
+		0.096 	0.068 	0.712
+		0.127 	0.051 	0.400
+		0.105 	0.010 	0.100
+BAD:
+		0.158 	0.028 	0.177
+		0.202 	0.101	0.501
+		0.068 	0.005 	0.068
+		0.129 	0.037 	0.289
+		0.142 	0.003 	0.023
+		0.158 	0.001 	0.008
+		0.144 	0.016 	0.111
+		0.041	0.049 	1.119
+
+
+
+
+*/
+}
+R3D.findMatchingCornersF(imageMatrixA,imageMatrixB, F,Finv, 21);
 
 
 
@@ -1895,7 +1980,7 @@ throw "?";
 
 
 
-*/
+
 
 
 
@@ -2747,6 +2832,7 @@ if(!matchData){
 	throw "could not find full matches";
 }
 var F = matchData["F"];
+console.log(F.toArray()+"");
 var matches = matchData["matches"];
 console.log(matchData)
 

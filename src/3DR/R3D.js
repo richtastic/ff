@@ -4251,12 +4251,28 @@ R3D.calculateScaleCornerFeatures = function(imageMatrix, maxCount){
 	var c2 = gradSize*0.5 | 0;
 	var sigmaBlur = 1.0;
 	//
-	//var affineSize = 11;
-	var affineSize = 9;
-	var affineScale = 15;
+	var affineSize = 11;
+	// var affineSize = 9;
+	// var affineScale = 9;
+	// var affineScale = 18;
+	// var affineScale = 11; // 50 @ 0.6
+	var affineScale = 22; // 55 @ 0.6
+	// var affineScale = 33;
+	// var affineScale = 44;
+	// var affineScale = 55;
+	// var affineScale = 99;
 	var c2 = affineSize*0.5 | 0;
 	var affineMean = new V2D(c2,c2);
 	var affineMask = ImageMat.circleMask(affineSize,affineSize);
+
+	var covarianceSize = 11;
+	// var covarianceScale = 11;
+	var covarianceScale = 33;
+	// var covarianceScale = 55;
+	var c2 = covarianceSize*0.5 | 0;
+	var covarianceMean = new V2D(c2,c2);
+	var covarianceMask = ImageMat.circleMask(covarianceSize,covarianceSize);
+
 	for(var i=0; i<accumulatorCorners.length; ++i){
 		var corner = accumulatorCorners[i];
 		var point = corner;
@@ -4305,26 +4321,44 @@ R3D.calculateScaleCornerFeatures = function(imageMatrix, maxCount){
 					momentB = moment[0];
 				}
 				momentA = new V2D(momentA.x,momentA.y);
+				var momentAngle = V2D.angle(V2D.DIRX,momentA);
 
 				// var dotGradMoment = V2D.dot(grad,momentA); // for weak oriented direction?
 				// if(dotGradMoment){
 				// 	momentA.scale(-1.0);
 				// }
 
-
-COVARIANCE?
-
-
+				// COVARIANCE:
+				
+				var gry = ImageMat.extractRectFromFloatImage(point.x,point.y,covarianceScale/sca,1.0,covarianceSize,covarianceSize, imageGray,imageWidth,imageHeight, null);
+				var covariance = ImageMat.calculateCovariance(gry, covarianceSize, covarianceSize, covarianceMean, covarianceMask);
+				var covarianceA = covariance[0];
+				var covarianceB = covariance[1];
+				var covarianceRatio = covarianceA.z/covarianceB.z;
+				if(covarianceRatio<1.0){
+					covarianceRatio = 1.0/covarianceRatio;
+					covarianceA = covariance[1];
+					covarianceB = covariance[0];
+				}
+				covarianceA = new V2D(covarianceA.x,covarianceA.y);
+				var covarianceAngle = V2D.angle(V2D.DIRX,covarianceA);
+				// throw "?";
 				// momentA = new V2D(momentA.x,momentA.y).norm();
 				// momentB = new V2D(momentB.x,momentB.y).norm();
-				var momentAngle = V2D.angle(V2D.DIRX,momentA);
-
 				
+
+				// TODO: SCALING COVARIANCE CHANGES THE ANGLE
 				
 				var affineAngle = momentAngle;
 				var affineScale = Math.sqrt(momentRatio);
-				affineAngle = 0.0;
-				affineScale = 1.0;
+				var affineAngle = covarianceAngle;
+				var affineScale = Math.sqrt(covarianceRatio);
+				var affineAngle = covarianceAngle;
+				var affineScale = covarianceRatio;
+// console.log(covarianceRatio);
+				// affineAngle = 0.0;
+				// affineScale = 1.0;
+				
 				var best = {"point":p, "score":peak, "scale":sca, "size":(sca*featureWindowScale), "angle":momentAngle, "affineAngle":affineAngle,"affineScale":affineScale};
 				peakedCorners.push(best);
 			}
@@ -8589,13 +8623,13 @@ R3D.fullMatchesForObjects = function(objectsAIn, imageMatrixA, objectsBIn, image
 	
 	// the unique points put on the wrong trail --- maybe just try best corner-score points ?
 
-	// if(objectsA.length>maximumPointsBeforeUnique || objectsB.length>maximumPointsBeforeUnique){
-	// 	objectsUniqueA = R3D.siftObjectsToUnique(objectsA);
-	// 	objectsUniqueB = R3D.siftObjectsToUnique(objectsB);
-	// 	console.log("unique: "+objectsUniqueA.length+" & "+objectsUniqueB.length);
-	// }
+	if(objectsA.length>maximumPointsBeforeUnique || objectsB.length>maximumPointsBeforeUnique){
+		objectsUniqueA = R3D.siftObjectsToUnique(objectsA);
+		objectsUniqueB = R3D.siftObjectsToUnique(objectsB);
+		console.log("unique: "+objectsUniqueA.length+" & "+objectsUniqueB.length);
+	}
 	// get some high-error set of possible matches
-	var matching = R3D.matchObjectsSubset(objectsUniqueA, objectsUniqueB, objectsUniqueB, objectsUniqueA);
+	var matching = R3D.matchObjectsSubset(objectsUniqueA, objectsUniqueB, objectsUniqueB, objectsUniqueA, 0.95, 0.20);
 	var best = matching["best"];
 	console.log("INITIAL SCORE-MATCH COUNT: "+best.length);
 	var bestLength = best.length;
@@ -8667,7 +8701,7 @@ R3D.fullMatchesForObjects = function(objectsAIn, imageMatrixA, objectsBIn, image
 	var pixelErrorB = initialPixelError;
 	var pixelErrorAB = Math.max(pixelErrorA,pixelErrorB);
 	var limitScoreRatio = 0.90; // 0.90 - 0.95
-	var limitScoreSearch = 0.15; // 0.10 - 0.20
+	var limitScoreSearch = 0.20; // 0.10 - 0.20
 	var minimumFCount = 10; // 5-10
 	var bestMatchSet = null;
 	var bestF = null;
@@ -8778,7 +8812,8 @@ R3D.fullMatchesForObjects = function(objectsAIn, imageMatrixA, objectsBIn, image
 			console.log("KEEPS: "+keeps.length+" : "+nextPixelErrorAB);
 			bestMatchSet = keeps;
 			bestF = resultF;
-			bestError = pixelErrorAB;
+			// bestError = pixelErrorAB;
+			bestError = nextPixelErrorAB;
 		}
 
 		// move on
@@ -8789,7 +8824,7 @@ R3D.fullMatchesForObjects = function(objectsAIn, imageMatrixA, objectsBIn, image
 		pixelErrorAB = nextPixelErrorAB;
 
 		// IF ERROR IS STEADY / IF ERROR CONTINUALLY INCREASES => EXIT EARLY
-		if(stagnantCount>=2){
+		if(stagnantCount>=5){
 			console.log("STAGNANT");
 			break;
 		}
@@ -9965,12 +10000,12 @@ R3D.siftObjectsToUnique = function(objects){
 		var scores = group["s"];
 		scores.sort(sorting);
 		var ratio = scores[0]/scores[1];
-		if(ratio<0.99){
+		if(ratio<0.95){
 			group["r"] = ratio;
 			keep.push(group);
 		}
 	}
-	var limitCount = 1200;
+	var limitCount = 2000;
 	keep.sort(function(a,b){
 		a["ratio"] < b["ratio"] ? -1 : 1;
 	});
@@ -9988,75 +10023,91 @@ R3D.siftObjectsToUnique = function(objects){
 R3D.findMatchingPointF = function(imageMatrixA,imageMatrixB, F,Finv, locationA, sizeA){
 	sizeA = sizeA!==undefined ? sizeA : 21;
 
-// DISPLAY INFO:
-var pageSize = Code.getPageSize();
-console.log(pageSize);
-var scale = imageMatrixA.height()/pageSize["height"];
-scale = scale * 0.8225;
-console.log(scale);
+// // DISPLAY INFO:
+// var pageSize = Code.getPageSize();
+// console.log(pageSize);
+// var scale = imageMatrixA.height()/pageSize["height"];
+// scale = scale * 0.8225;
+// console.log(scale);
+var scale = 1.5;
 
 
-	var padding = 4; // max(1,ceil(1 sigma))
+var LL = new V2D(0,0);
+var LR = new V2D(imageMatrixB.width(),0);
+var UR = new V2D(imageMatrixB.width(),imageMatrixB.height());
+var UL = new V2D(0,imageMatrixB.height());
+
+// var line = Code.clipRayRect2D(orgMid,dirMid,LL,LR,UR,UL);
+// var lA = line["a"];
+// var lB = line["b"];
+
+	var padding = 0; // max(1,ceil(1 sigma))
 	var sizeB = sizeA + padding*2;
 
 	var epipoles = R3D.getEpipolesFromF(F);
 	var epipoleA = epipoles["A"];
 	var epipoleB = epipoles["B"];
 
+console.log("EPIPOLE A: "+epipoleA);
+console.log("EPIPOLE B: "+epipoleB);
+
 	var epipoleAtoA = V2D.sub(locationA,epipoleA);
 	var epipoleAtoANorm = epipoleAtoA.copy().norm();
 	
-	var pA = locationA;
+	// var pA = locationA;
 	// var upA = new V2D(0,1);
 	// var rightA = new V2D(1,0);
 	// var upA = nEAP.copy().rotate(-Math.PIO2);
 	// var rightA = V2D.rotate(upA,-Math.PIO2);
+
+console.log(imageMatrixB.width(),imageMatrixB.height());
+// show POINT IN A:
+var d = new DO();
+d.graphics().beginPath();
+d.graphics().setLine(1.0,0xFFFF0000);
+d.graphics().drawCircle(locationA.x,locationA.y, 5);
+d.graphics().endPath();
+d.graphics().strokeLine();
+d.matrix().scale(scale);
+GLOBALSTAGE.addChild(d);
+
 	
-	var rightA = epipoleAtoANorm.copy()
+	var rightA = epipoleAtoANorm.copy();
 	var upA = V2D.rotate(rightA,Math.PIO2).norm();
 	var angleEpipoleAX = V2D.angleDirection(V2D.DIRX,rightA);
 	var angleEpipoleAY = V2D.angleDirection(V2D.DIRX,upA);
-	var topA = upA.copy().scale(sizeA*0.5).add(pA);
-	var botA = upA.copy().scale(-sizeA*0.5).add(pA);
+	var topA = upA.copy().scale(sizeA*0.5).add(locationA);
+	var botA = upA.copy().scale(-sizeA*0.5).add(locationA);
 
 	// needle
 	var matrix = new Matrix(3,3);
 		matrix.identity();
 		matrix = Matrix.transform2DRotate(matrix, -angleEpipoleAX);
-	var needle = imageMatrixA.extractRectFromFloatImage(locationA.x,locationA.y, 1.0,null,sizeA,sizeA,matrix);
-
+	var needle = imageMatrixA.extractRectFromFloatImage(locationA.x,locationA.y, 1.0,null,sizeA,sizeA, matrix);
+	// 
+	// 
+var line = Code.clipRayRect2D(locationA,epipoleAtoA,LL,LR,UR,UL);
+var lA = line["a"];
+var lB = line["b"];
 
 // show epipole line A
-	var d = new DO();
-	d.graphics().beginPath();
-	d.graphics().setLine(2.0,0xFFFF0000);
-	// d.graphics().setFill(0x4400FF33);
-	d.graphics().moveTo(epipoleA.x,epipoleA.y);
-	d.graphics().lineTo(locationA.x,locationA.y);
-	d.graphics().endPath();
-	// d.graphics().fill();
-	d.graphics().strokeLine();
-	d.matrix().scale(scale);
-	d.matrix().translate(0,0);
-	GLOBALSTAGE.addChild(d);
+var d = new DO();
+d.graphics().beginPath();
+d.graphics().setLine(2.0,0xFFFF0000);
+d.graphics().moveTo(lA.x,lA.y);
+d.graphics().lineTo(lB.x,lB.y);
+d.graphics().endPath();
+d.graphics().strokeLine();
+d.matrix().scale(scale);
+GLOBALSTAGE.addChild(d);
 
 // show needle 
 var img = GLOBALSTAGE.getFloatRGBAsImage(needle.red(), needle.grn(), needle.blu(), needle.width(), needle.height());
 	var d = new DOImage(img);
 	d.matrix().scale(scale);
-	d.matrix().scale(2.0);
-	d.matrix().translate(1400,100);
+	d.matrix().scale(1.0);
+	d.matrix().translate(1600,100);
 	GLOBALSTAGE.addChild(d);
-// show POINT IN A:
-	var d = new DO();
-	d.graphics().beginPath();
-	d.graphics().setLine(1.0,0xFFFF0000);
-	d.graphics().drawCircle(pA.x,pA.y, 3);
-	d.graphics().endPath();
-	d.graphics().strokeLine();
-	d.matrix().scale(scale);
-	GLOBALSTAGE.addChild(d);
-
 
 
 
@@ -10066,8 +10117,8 @@ var img = GLOBALSTAGE.getFloatRGBAsImage(needle.red(), needle.grn(), needle.blu(
 	var dir = new V3D();
 		a.set(locationA.x,locationA.y,1.0);
 	var lineBMid = F.multV3DtoV3D(new V3D(), a);
-		a.set(topA.x,topA.y,1.0);
-	var lineBTop = F.multV3DtoV3D(new V3D(), a);
+	// 	a.set(topA.x,topA.y,1.0);
+	// var lineBTop = F.multV3DtoV3D(new V3D(), a);
 	// 	a.set(bA.x,bA.y,1.0);
 	// var lineBBot = F.multV3DtoV3D(new V3D(), a);
 
@@ -10075,21 +10126,30 @@ var img = GLOBALSTAGE.getFloatRGBAsImage(needle.red(), needle.grn(), needle.blu(
 	Code.lineOriginAndDirection2DFromEquation(org,dir, lineBMid.x,lineBMid.y,lineBMid.z);
 	var orgMid = org.copy();
 	var dirMid = dir.copy();
-	Code.lineOriginAndDirection2DFromEquation(org,dir, lineBTop.x,lineBTop.y,lineBTop.z);
-	var orgTop = org.copy();
-	var dirTop = dir.copy();
+	// Code.lineOriginAndDirection2DFromEquation(org,dir, lineBTop.x,lineBTop.y,lineBTop.z);
+	// var orgTop = org.copy();
+	// var dirTop = dir.copy();
 	// Code.lineOriginAndDirection2DFromEquation(org,dir, lineBBot.x,lineBBot.y,lineBBot.z);
 	// var orgBot = org.copy();
 	// var dirBot = dir.copy();
-
-	var LL = new V2D(0,0);
-	var LR = new V2D(imageMatrixB.width(),0);
-	var UR = new V2D(imageMatrixB.width(),imageMatrixB.height());
-	var UL = new V2D(0,imageMatrixB.height());
 	
 	var line = Code.clipRayRect2D(orgMid,dirMid,LL,LR,UR,UL);
 	var lA = line["a"];
 	var lB = line["b"];
+
+// show epipole line B
+var d = new DO();
+d.graphics().beginPath();
+d.graphics().setLine(2.0,0xFF0000FF);
+d.graphics().moveTo(lA.x,lA.y);
+d.graphics().lineTo(lB.x,lB.y);
+d.graphics().endPath();
+d.graphics().strokeLine();
+d.matrix().translate(imageMatrixA.width(),0);
+d.matrix().scale(scale);
+GLOBALSTAGE.addChild(d);
+
+	var centerB = V2D.avg(lA,lB);
 	var epipoleBToA = V2D.sub(lA,epipoleB);
 	var epipoleBToB = V2D.sub(lB,epipoleB);
 	var dotA = V2D.dot(epipoleBToA,dirMid);
@@ -10099,14 +10159,96 @@ var img = GLOBALSTAGE.getFloatRGBAsImage(needle.red(), needle.grn(), needle.blu(
 		dirMid.scale(-1);
 	} // if BOTH => inside
 	// line direction
-	var lineAtoB = V2D.sub(lA,lB);
-	var dotAB = V2D.dot(lineAtoB,dirMid);
-	console.log("dotAB: "+dotAB);
+	// var lineAtoB = V2D.sub(lA,lB);
+	// var dotAB = V2D.dot(lineAtoB,dirMid);
+	// console.log("dotAB: "+dotAB);
 	// if(dotAB<0){
 	// 	lA = line["b"];
 	// 	lB = line["a"];
 	// }
+	var rightB = epipoleBToA.copy().norm().scale(-1.0);
+	var upB = V2D.rotate(rightB,Math.PIO2).norm();
+	var angleEpipoleBX = V2D.angleDirection(V2D.DIRX,rightB);
+	var haystackWidth = Math.ceil(V2D.distance(lA,lB));
+	// var hei = sizeB;
+	// haystack
+	var matrix = new Matrix(3,3);
+		matrix.identity();
+		matrix = Matrix.transform2DRotate(matrix, -angleEpipoleBX);
+	var haystack = imageMatrixB.extractRectFromFloatImage(centerB.x,centerB.y, 1.0,null,haystackWidth,sizeB, matrix);
 
+// show haystack 
+var img = GLOBALSTAGE.getFloatRGBAsImage(haystack.red(), haystack.grn(), haystack.blu(), haystack.width(), haystack.height());
+	var d = new DOImage(img);
+	d.matrix().scale(scale);
+	d.matrix().scale(1.0);
+	d.matrix().translate(1600,200);
+	GLOBALSTAGE.addChild(d);
+
+
+	var compare = R3D.searchNeedleHaystackImageFlat(needle,null, haystack);
+	var value = compare["value"];
+	var valueWidth = compare["width"];
+	var valueHeight = compare["height"];
+
+// Code.printMatlabArray(value,"score");
+	
+	var minimum = null;
+	var locationB = null;
+	var ratio = null;
+	var score = null;
+	if(valueHeight==1){
+		minimum = Code.findMinima1D(value);
+		minimum.sort(function(a,b){
+			return a.y<b.y ? -1 : 1;
+		});
+		var min = minimum[0];
+		var nex = minimum[1];
+		if(min&&nex){
+			var info = Code.infoArray(value);
+			var infoMin = info["min"];
+			var infoMax = info["max"];
+			var infoRange = info["range"];
+console.log(info);
+			diff = nex.y - min.y;
+			var x = min.x-valueWidth*0.5;
+			var y = 0;
+			locationB = new V2D().add( rightB.copy().scale(x) ).add( upB.copy().scale(y) ).add(centerB);
+			ratio = diff/infoRange;
+			score = min.y;
+		}
+	}else{
+		minimum = Code.findMinima2DFloat(value, valueWidth,valueHeight);
+		minimum.sort(function(a,b){
+			return a.z<b.z ? -1 : 1;
+		});
+		var min = minimum[0];
+// bad: 0.01
+// good: 0.02
+// texture: 0.04
+// corner: 0.06
+	}
+	console.log(minimum);
+	console.log(min+" @ "+ratio);
+
+// show POINT IN B:
+var d = new DO();
+d.graphics().beginPath();
+d.graphics().setLine(1.0,0xFF0000FF);
+d.graphics().drawCircle(locationB.x,locationB.y, 5);
+d.graphics().endPath();
+d.graphics().strokeLine();
+d.matrix().translate(imageMatrixA.width(),0);
+d.matrix().scale(scale);
+GLOBALSTAGE.addChild(d);
+
+	if(locationB){
+		var rank = ratio/score;
+		return {"point":locationB, "score":score, "ratio":ratio, "rank":rank};
+	}
+
+
+return null;
 
 	
 
@@ -10264,33 +10406,77 @@ return;
 		GLOBALSTAGE.addChild(d);
 	}
 
-
-
-	
-	// POINT IN A:
-	var d = new DO();
-	d.graphics().beginPath();
-	d.graphics().setLine(1.0,0xFFFF0000);
-	// d.graphics().setFill(0x4400FF33);
-	d.graphics().drawCircle(pA.x,pA.y, 3);
-	d.graphics().endPath();
-	// d.graphics().fill();
-	d.graphics().strokeLine();
-	d.matrix().scale(scale);
-	d.matrix().translate(0,0);
-	GLOBALSTAGE.addChild(d);
-	
-// a.set(pA.x,pA.y,1.0);
-	// var lineA = FRev.multV3DtoV3D(new V3D(), b);
-	// 	Code.lineOriginAndDirection2DFromEquation(org,dir, lineA.x,lineA.y,lineA.z);
-	// var distanceA = Code.distancePointRay2D(org,dir, a);
-
-// console.log(pA.x,pA.y,scale);
-
-
-
 	throw "?";
 	return {"point":locationB, "size":sizeB, "up":upB};
+}
+R3D.findMatchingCornersF = function(imageMatrixA,imageMatrixB, F,Finv, sizeA){
+	var cornersA = R3D.pointsCornerMaxima(imageMatrixA.gry(), imageMatrixA.width(), imageMatrixA.height(),  R3D.CORNER_SELECT_RELAXED);
+	var cornersB = R3D.pointsCornerMaxima(imageMatrixB.gry(), imageMatrixB.width(), imageMatrixB.height(),  R3D.CORNER_SELECT_RELAXED);
+	// strict
+	// var minimumRank = 0.50; // 0.5-
+	// var maximumScore = 0.15; // -0.15
+	// var minimumRatio = 0.10; // 0.10-
+	// lax (rely on FWD-BAK validation)
+	var minimumRank = 0.10; // 0.5-
+	var maximumScore = 0.15; // -0.15
+	var minimumRatio = 0.01; // 0.10-
+	var sizeCompare = 21;
+	var scaleCompare = 1.0;
+	var toPoint = function(a){
+		return a["fr"];
+	}
+	var spaceA = new QuadSpace(toPoint, new V2D(0,0), imageMatrixA.size());
+	var spaceB = new QuadSpace(toPoint, new V2D(0,0), imageMatrixB.size());
+	var list = [[imageMatrixA,imageMatrixB,F,Finv,cornersA,spaceA],[imageMatrixB,imageMatrixA,Finv,F,cornersB,spaceB]];
+	var matchGroups = [[],[]];
+	for(var j=0; j<list.length; ++j){
+		var item = list[j];
+		var imageA = item[0];
+		var imageB = item[1];
+		var F1 = item[2];
+		var F2 = item[3];
+		var corners = item[4];
+		var space = item[5];
+		console.log(corners.length);
+		var matches = matchGroups[j];
+		for(var i=0; i<corners.length; ++i){
+			var corner = corners[i];
+			break;
+			var info = R3D.findMatchingPointF(imageA,imageB,F1,F2, corner, sizeCompare);
+			if(info){
+				var score = info["score"];
+				var rank = info["rank"];
+				var ratio = info["ratio"];
+				if(score<maximumScore && ratio>minimumRatio && rank>minimumRank){
+					var source = new V2D(corner.x,corner.y);
+					var point = info["point"];
+					var match = {"fr":source, "to":point};
+					matches.push(match);
+					space.insertObject(match);
+				}
+			}
+			break;
+		}
+	}
+	// check FWD-BACK matching
+	var bestCorners = [];
+	var matchesA = matchGroups[0];
+	var matchesB = matchGroups[1];
+	for(var i=0; i<matchesA.length; ++i){
+		var matchA = matchesA[i];
+		var pointAA = match["fr"];
+		var pointAB = match["to"];
+		var closestB = spaceB.closestObject(pointAA);
+		console.log(closestB);
+		bestCorners.push({"A":pointAA,"B":pointBB});
+	}
+	spaceA.kill();
+	spaceB.kill();
+	// drop outliers ?
+	for(var i=0; i<bestCorners.length; ++i){
+
+	}
+	return {"best":bestCorners};
 }
 R3D.fundamentalMatrixError = function(F, pointsAin,pointsBin, both){
 	both = both!==undefined ? both : false;

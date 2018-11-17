@@ -21,6 +21,7 @@ function ImageMat(wid, hei, r,g,b){
 ImageMat.prototype.init = function(wid,hei,r,g,b){
 	this._width = wid;
 	this._height = hei;
+	this._size = new V2D(wid,hei);
 	this._y = null; // hold for reuse
 	if(wid>0 && hei>0){
 		var len = wid*hei;
@@ -225,16 +226,13 @@ ImageMat.prototype.gry = function(){
 	}
 	return this._y;
 }
+ImageMat.prototype.size = function(){
+	return this._size; // new V2D(this._width,this._height);
+}
 ImageMat.prototype.width = function(w){
-	// if(w!==undefined){
-	// 	this._width = w;
-	// }
 	return this._width;
 }
 ImageMat.prototype.height = function(h){
-	// if(h!==undefined){
-	// 	this._height = h;
-	// }
 	return this._height;
 }
 ImageMat.prototype.getRedFloat = function(){
