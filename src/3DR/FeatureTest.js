@@ -1900,23 +1900,26 @@ var Ffwd = [-3.571391689049042e-7,-0.000013042588388787455,0.001892709101181543,
 // var locationA = new V2D(370,220);
 // var locationA = new V2D(50,220);
 // var locationA = new V2D(200,180);
-var locationA = new V2D(250,170);
+// var locationA = new V2D(250,170);
+var locationA = new V2D(317,254);
 
 
 var F = Ffwd;
 var Finv = R3D.fundamentalInverse(F);
 // console.log(F);
 // console.log(Finv);
-// var info = R3D.findMatchingPointF(imageMatrixA,imageMatrixB,F,Finv, locationA);
+// var info = R3D.findMatchingPointF(imageMatrixA,imageMatrixB,F,Finv, locationA, 21, 1.0, 1, true);
 // console.log(info);
 // var locationB = info["point"];
 // R3D.findMatchingPointF()
 
 
+// var locationB = new V3D();
 
 
-
-var corners = R3D.pointsCornerMaxima(imageMatrixA.gry(), imageMatrixA.width(), imageMatrixA.height(),  R3D.CORNER_SELECT_RELAXED);
+// var cornerType = R3D.CORNER_SELECT_RELAXED;
+var cornerType = R3D.CORNER_SELECT_REGULAR;
+var corners = R3D.pointsCornerMaxima(imageMatrixA.gry(), imageMatrixA.width(), imageMatrixA.height(),  cornerType);
 console.log(corners.length);
 for(var i=0; i<corners.length; ++i){
 	var corner = corners[i];
@@ -1935,10 +1938,10 @@ for(var i=0; i<corners.length; ++i){
 	// if(i==250){ // clear
 	// if(i==655){ // bad
 	// if(i==656){ // edge
-	if(i==656){ 
-		var info = R3D.findMatchingPointF(imageMatrixA,imageMatrixB,F,Finv, corner);
-		console.log(info);
-	}
+	// if(i==680){ 
+	// 	var info = R3D.findMatchingPointF(imageMatrixA,imageMatrixB,F,Finv, corner, 11, 1.0, 1, true);
+	// 	console.log(info);
+	// }
 // 
 /*
 GOOD: 	S 		R 		R/S
@@ -1965,15 +1968,100 @@ BAD:
 		0.158 	0.001 	0.008
 		0.144 	0.016 	0.111
 		0.041	0.049 	1.119
+		0.053 	0.002 	0.056
 
 
 
 
 */
 }
-R3D.findMatchingCornersF(imageMatrixA,imageMatrixB, F,Finv, 21);
 
 
+var corners = R3D.pointsCornerMaxima(imageMatrixB.gry(), imageMatrixB.width(), imageMatrixB.height(), cornerType);
+console.log(corners.length);
+for(var i=0; i<corners.length; ++i){
+	var corner = corners[i];
+	var c = new DO();
+	c.graphics().setLine(1.0,0xFF00FF00);
+	c.graphics().beginPath();
+	c.graphics().moveTo(0,0);
+	c.graphics().drawCircle(corner.x,corner.y, 3.0);
+	c.graphics().strokeLine();
+	c.graphics().endPath();
+	c.matrix().translate(imageMatrixA.width(),0);
+	display.addChild(c);
+}
+
+
+// throw "...";
+
+// throw "..."
+var info = R3D.findMatchingCornersF(imageMatrixA,imageMatrixB, F,Finv);
+var matches = info["best"];
+// var matches = info["A"];
+// var matches = info["B"];
+
+var pointsA = [];
+var pointsB = [];
+
+for(var i=0; i<matches.length; ++i){
+	var match = matches[i];
+// console.log(match);
+	var pointA = match["fr"];
+	var pointB = match["to"];
+	if(!pointA){
+		pointA = match["A"];
+		pointB = match["B"];
+	}
+// var flip = true;
+var flip = false;
+if(flip){
+	var temp = pointA;
+	pointA = pointB;
+	pointB = temp;
+}
+pointsA.push(pointA);
+pointsB.push(pointB);
+	// console.log(corner);
+	var c = new DO();
+	c.graphics().setLine(1.0,0xFFFF0000);
+	c.graphics().beginPath();
+	c.graphics().drawCircle(pointA.x,pointA.y, 3.0);
+	c.graphics().strokeLine();
+	c.graphics().endPath();
+	display.addChild(c);
+
+	var c = new DO();
+	c.graphics().setLine(1.0,0xFF0000FF);
+	c.graphics().beginPath();
+	c.graphics().drawCircle(pointB.x,pointB.y, 3.0);
+	c.graphics().strokeLine();
+	c.graphics().endPath();
+	c.matrix().translate(imageMatrixA.width(),0);
+	display.addChild(c);
+
+	var c = new DO();
+	c.graphics().setLine(1.0,0xFFCC00CC);
+	c.graphics().beginPath();
+	c.graphics().moveTo(pointA.x,pointA.y,0);
+	c.graphics().lineTo(imageMatrixA.width()+pointB.x,pointB.y,0);
+	c.graphics().drawCircle();
+	c.graphics().strokeLine();
+	c.graphics().endPath();
+	display.addChild(c);
+
+}
+
+
+
+
+
+var newF =  R3D.fundamentalFromUnnormalized(pointsA,pointsB);
+console.log(newF);
+var newInv = R3D.fundamentalInverse(newF);
+// var error = R3D.fundamentalMatrixError(newF, pointsA,pointsB);
+var error = R3D.fundamentalError(newF,newInv,pointsA,pointsB);
+console.log(error);
 
 throw "?";
 

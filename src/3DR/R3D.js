@@ -10020,8 +10020,10 @@ R3D.siftObjectsToUnique = function(objects){
 }
 
 
-R3D.findMatchingPointF = function(imageMatrixA,imageMatrixB, F,Finv, locationA, sizeA){
+R3D.findMatchingPointF = function(imageMatrixA,imageMatrixB, F,Finv, locationA, sizeA, scaleA, padding, show){
 	sizeA = sizeA!==undefined ? sizeA : 21;
+	scaleA = scaleA!==undefined ? scaleA : 1.0;
+	padding = padding!==undefined ? padding : 0;
 
 // // DISPLAY INFO:
 // var pageSize = Code.getPageSize();
@@ -10041,15 +10043,15 @@ var UL = new V2D(0,imageMatrixB.height());
 // var lA = line["a"];
 // var lB = line["b"];
 
-	var padding = 0; // max(1,ceil(1 sigma))
+	// var padding = 0; // max(1,ceil(1 sigma))
 	var sizeB = sizeA + padding*2;
 
 	var epipoles = R3D.getEpipolesFromF(F);
 	var epipoleA = epipoles["A"];
 	var epipoleB = epipoles["B"];
 
-console.log("EPIPOLE A: "+epipoleA);
-console.log("EPIPOLE B: "+epipoleB);
+// console.log("EPIPOLE A: "+epipoleA);
+// console.log("EPIPOLE B: "+epipoleB);
 
 	var epipoleAtoA = V2D.sub(locationA,epipoleA);
 	var epipoleAtoANorm = epipoleAtoA.copy().norm();
@@ -10059,7 +10061,7 @@ console.log("EPIPOLE B: "+epipoleB);
 	// var rightA = new V2D(1,0);
 	// var upA = nEAP.copy().rotate(-Math.PIO2);
 	// var rightA = V2D.rotate(upA,-Math.PIO2);
-
+if(show){
 console.log(imageMatrixB.width(),imageMatrixB.height());
 // show POINT IN A:
 var d = new DO();
@@ -10070,7 +10072,7 @@ d.graphics().endPath();
 d.graphics().strokeLine();
 d.matrix().scale(scale);
 GLOBALSTAGE.addChild(d);
-
+}
 	
 	var rightA = epipoleAtoANorm.copy();
 	var upA = V2D.rotate(rightA,Math.PIO2).norm();
@@ -10083,13 +10085,14 @@ GLOBALSTAGE.addChild(d);
 	var matrix = new Matrix(3,3);
 		matrix.identity();
 		matrix = Matrix.transform2DRotate(matrix, -angleEpipoleAX);
-	var needle = imageMatrixA.extractRectFromFloatImage(locationA.x,locationA.y, 1.0,null,sizeA,sizeA, matrix);
+	var needle = imageMatrixA.extractRectFromFloatImage(locationA.x,locationA.y, scaleA,null,sizeA,sizeA, matrix);
 	// 
 	// 
 var line = Code.clipRayRect2D(locationA,epipoleAtoA,LL,LR,UR,UL);
 var lA = line["a"];
 var lB = line["b"];
 
+if(show){
 // show epipole line A
 var d = new DO();
 d.graphics().beginPath();
@@ -10100,15 +10103,16 @@ d.graphics().endPath();
 d.graphics().strokeLine();
 d.matrix().scale(scale);
 GLOBALSTAGE.addChild(d);
-
+}
+if(show){
 // show needle 
 var img = GLOBALSTAGE.getFloatRGBAsImage(needle.red(), needle.grn(), needle.blu(), needle.width(), needle.height());
-	var d = new DOImage(img);
-	d.matrix().scale(scale);
-	d.matrix().scale(1.0);
-	d.matrix().translate(1600,100);
-	GLOBALSTAGE.addChild(d);
-
+var d = new DOImage(img);
+d.matrix().scale(scale);
+d.matrix().scale(1.0);
+d.matrix().translate(1600,100);
+GLOBALSTAGE.addChild(d);
+}
 
 
 	// lines
@@ -10136,8 +10140,13 @@ var img = GLOBALSTAGE.getFloatRGBAsImage(needle.red(), needle.grn(), needle.blu(
 	var line = Code.clipRayRect2D(orgMid,dirMid,LL,LR,UR,UL);
 	var lA = line["a"];
 	var lB = line["b"];
+	// console.log(lA,lB)
+	if(!lA || !lB){
+		return null;
+	}
 
 // show epipole line B
+if(show){
 var d = new DO();
 d.graphics().beginPath();
 d.graphics().setLine(2.0,0xFF0000FF);
@@ -10148,13 +10157,13 @@ d.graphics().strokeLine();
 d.matrix().translate(imageMatrixA.width(),0);
 d.matrix().scale(scale);
 GLOBALSTAGE.addChild(d);
-
+}
 	var centerB = V2D.avg(lA,lB);
 	var epipoleBToA = V2D.sub(lA,epipoleB);
 	var epipoleBToB = V2D.sub(lB,epipoleB);
 	var dotA = V2D.dot(epipoleBToA,dirMid);
 	var dotB = V2D.dot(epipoleBToB,dirMid);
-	console.log("DOTS: "+dotA+" & "+dotB);
+	// console.log("DOTS: "+dotA+" & "+dotB);
 	if(dotA<0 && dotB<0){
 		dirMid.scale(-1);
 	} // if BOTH => inside
@@ -10176,7 +10185,7 @@ GLOBALSTAGE.addChild(d);
 		matrix.identity();
 		matrix = Matrix.transform2DRotate(matrix, -angleEpipoleBX);
 	var haystack = imageMatrixB.extractRectFromFloatImage(centerB.x,centerB.y, 1.0,null,haystackWidth,sizeB, matrix);
-
+if(show){
 // show haystack 
 var img = GLOBALSTAGE.getFloatRGBAsImage(haystack.red(), haystack.grn(), haystack.blu(), haystack.width(), haystack.height());
 	var d = new DOImage(img);
@@ -10184,9 +10193,12 @@ var img = GLOBALSTAGE.getFloatRGBAsImage(haystack.red(), haystack.grn(), haystac
 	d.matrix().scale(1.0);
 	d.matrix().translate(1600,200);
 	GLOBALSTAGE.addChild(d);
-
+}
 
 	var compare = R3D.searchNeedleHaystackImageFlat(needle,null, haystack);
+	if(!compare){
+		return null;
+	}
 	var value = compare["value"];
 	var valueWidth = compare["width"];
 	var valueHeight = compare["height"];
@@ -10202,35 +10214,51 @@ var img = GLOBALSTAGE.getFloatRGBAsImage(haystack.red(), haystack.grn(), haystac
 		minimum.sort(function(a,b){
 			return a.y<b.y ? -1 : 1;
 		});
-		var min = minimum[0];
-		var nex = minimum[1];
-		if(min&&nex){
-			var info = Code.infoArray(value);
-			var infoMin = info["min"];
-			var infoMax = info["max"];
-			var infoRange = info["range"];
-console.log(info);
-			diff = nex.y - min.y;
-			var x = min.x-valueWidth*0.5;
-			var y = 0;
-			locationB = new V2D().add( rightB.copy().scale(x) ).add( upB.copy().scale(y) ).add(centerB);
-			ratio = diff/infoRange;
-			score = min.y;
-		}
+		
 	}else{
 		minimum = Code.findMinima2DFloat(value, valueWidth,valueHeight);
 		minimum.sort(function(a,b){
 			return a.z<b.z ? -1 : 1;
 		});
-		var min = minimum[0];
+		// var min = minimum[0];
+		// var nex = minimum[1];
+		// console.log(minimum);
+		// console.log(min);
+		// console.log(nex);
+		// if(min&&nex){
+		// 	var info = Code.infoArray(value);
+		// 	var infoMin = info["min"];
+		// 	var infoMax = info["max"];
+		// 	var infoRange = info["range"];
+		
+		// }
+		// throw "HERE"
 // bad: 0.01
 // good: 0.02
 // texture: 0.04
 // corner: 0.06
 	}
-	console.log(minimum);
-	console.log(min+" @ "+ratio);
 
+	var min = minimum[0];
+	var nex = minimum[1];
+	if(min&&nex){
+		var info = Code.infoArray(value);
+		var infoMin = info["min"];
+		var infoMax = info["max"];
+		var infoRange = info["range"];
+		// console.log(info);
+		diff = nex.y - min.y;
+		var x = min.x-valueWidth*0.5;
+		var y = 0;
+		locationB = new V2D().add( rightB.copy().scale(x) ).add( upB.copy().scale(y) ).add(centerB);
+		ratio = diff/infoRange;
+		score = min.y;
+	}
+
+
+	// console.log(minimum);
+	// console.log(min+" @ "+ratio);
+if(show){
 // show POINT IN B:
 var d = new DO();
 d.graphics().beginPath();
@@ -10241,12 +10269,11 @@ d.graphics().strokeLine();
 d.matrix().translate(imageMatrixA.width(),0);
 d.matrix().scale(scale);
 GLOBALSTAGE.addChild(d);
-
-	if(locationB){
-		var rank = ratio/score;
-		return {"point":locationB, "score":score, "ratio":ratio, "rank":rank};
-	}
-
+}
+if(locationB){
+	var rank = ratio/score;
+	return {"point":locationB, "score":score, "ratio":ratio, "rank":rank};
+}
 
 return null;
 
@@ -10409,24 +10436,29 @@ return;
 	throw "?";
 	return {"point":locationB, "size":sizeB, "up":upB};
 }
-R3D.findMatchingCornersF = function(imageMatrixA,imageMatrixB, F,Finv, sizeA){
-	var cornersA = R3D.pointsCornerMaxima(imageMatrixA.gry(), imageMatrixA.width(), imageMatrixA.height(),  R3D.CORNER_SELECT_RELAXED);
-	var cornersB = R3D.pointsCornerMaxima(imageMatrixB.gry(), imageMatrixB.width(), imageMatrixB.height(),  R3D.CORNER_SELECT_RELAXED);
+R3D.findMatchingCornersF = function(imageMatrixA,imageMatrixB, F,Finv, sizeA,scaleA,errorA){
+	console.log("findMatchingCornersF")
+	var type = R3D.CORNER_SELECT_RELAXED;
+	// var type = R3D.CORNER_SELECT_REGULAR;
+	var cornersA = R3D.pointsCornerMaxima(imageMatrixA.gry(), imageMatrixA.width(), imageMatrixA.height(), type);
+	var cornersB = R3D.pointsCornerMaxima(imageMatrixB.gry(), imageMatrixB.width(), imageMatrixB.height(), type);
 	// strict
-	// var minimumRank = 0.50; // 0.5-
-	// var maximumScore = 0.15; // -0.15
-	// var minimumRatio = 0.10; // 0.10-
-	// lax (rely on FWD-BAK validation)
-	var minimumRank = 0.10; // 0.5-
+	var minimumRank = 0.50; // 0.5-
 	var maximumScore = 0.15; // -0.15
-	var minimumRatio = 0.01; // 0.10-
-	var sizeCompare = 21;
+	var minimumRatio = 0.10; // 0.10-
+	// lax (rely on FWD-BAK validation)
+	// var minimumRank = 0.10; // 0.5-
+	// var maximumScore = 0.15; // -0.15
+	// var minimumRatio = 0.01; // 0.10-
+	var sizeCompare = 11;
 	var scaleCompare = 1.0;
+	var errorPixels = 0; // F: error + sigma
 	var toPoint = function(a){
 		return a["fr"];
 	}
-	var spaceA = new QuadSpace(toPoint, new V2D(0,0), imageMatrixA.size());
-	var spaceB = new QuadSpace(toPoint, new V2D(0,0), imageMatrixB.size());
+// TODO: START AT 11, 21, 31, ... 
+	var spaceA = new QuadTree(toPoint, new V2D(0,0), imageMatrixA.size());
+	var spaceB = new QuadTree(toPoint, new V2D(0,0), imageMatrixB.size());
 	var list = [[imageMatrixA,imageMatrixB,F,Finv,cornersA,spaceA],[imageMatrixB,imageMatrixA,Finv,F,cornersB,spaceB]];
 	var matchGroups = [[],[]];
 	for(var j=0; j<list.length; ++j){
@@ -10437,12 +10469,12 @@ R3D.findMatchingCornersF = function(imageMatrixA,imageMatrixB, F,Finv, sizeA){
 		var F2 = item[3];
 		var corners = item[4];
 		var space = item[5];
-		console.log(corners.length);
+		console.log(j+": "+corners.length);
 		var matches = matchGroups[j];
 		for(var i=0; i<corners.length; ++i){
 			var corner = corners[i];
-			break;
-			var info = R3D.findMatchingPointF(imageA,imageB,F1,F2, corner, sizeCompare);
+			// break;
+			var info = R3D.findMatchingPointF(imageA,imageB,F1,F2, corner, sizeCompare,scaleCompare, errorPixels);
 			if(info){
 				var score = info["score"];
 				var rank = info["rank"];
@@ -10451,32 +10483,58 @@ R3D.findMatchingCornersF = function(imageMatrixA,imageMatrixB, F,Finv, sizeA){
 					var source = new V2D(corner.x,corner.y);
 					var point = info["point"];
 					var match = {"fr":source, "to":point};
+					// console.log(match);
 					matches.push(match);
 					space.insertObject(match);
 				}
 			}
-			break;
+			// if(i>10){
+			// 	break;
+			// }
 		}
+		// break;
 	}
 	// check FWD-BACK matching
 	var bestCorners = [];
 	var matchesA = matchGroups[0];
 	var matchesB = matchGroups[1];
+	console.log(matchesA);
+	console.log(matchesB);
+	console.log(spaceA.count());
+	console.log(spaceB.count());
+	var validDistance = 2.0;
+	// var validDistance = 10.0;
 	for(var i=0; i<matchesA.length; ++i){
 		var matchA = matchesA[i];
-		var pointAA = match["fr"];
-		var pointAB = match["to"];
-		var closestB = spaceB.closestObject(pointAA);
-		console.log(closestB);
-		bestCorners.push({"A":pointAA,"B":pointBB});
+		var pointAA = matchA["fr"];
+		var pointAB = matchA["to"];
+		var matchB = spaceB.closestObject(pointAB);
+		if(!matchB){
+			continue;
+		}
+		// var matchB = closestB;
+		// console.log(matchB);
+		var pointBB = matchB["fr"];
+		var pointBA = matchB["to"];
+		var distanceB = V2D.distance(pointAB,pointBB);
+		// console.log(distanceB);
+		if(distanceB<validDistance){
+			var distanceA = V2D.distance(pointAA,pointBA);
+			// console.log(distanceA+" & "+distanceB);
+			if(distanceA<validDistance){
+				bestCorners.push({"A":pointAA,"B":pointBB});
+			}
+		}
 	}
 	spaceA.kill();
 	spaceB.kill();
 	// drop outliers ?
+	// console.log(bestCorners);
 	for(var i=0; i<bestCorners.length; ++i){
-
+		var corner = bestCorners[i];
+		// console.log(corner);
 	}
-	return {"best":bestCorners};
+	return {"best":bestCorners, "A":matchesA, "B":matchesB};
 }
 R3D.fundamentalMatrixError = function(F, pointsAin,pointsBin, both){
 	both = both!==undefined ? both : false;
