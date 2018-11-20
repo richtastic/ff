@@ -32,6 +32,12 @@ Grid2D.prototype.cellCount = function(){
 	}
 	return 0;
 }
+Grid2D.prototype.cols = function(){
+	return this._cols;
+}
+Grid2D.prototype.rows = function(){
+	return this._rows;
+}
 Grid2D.prototype.size = function(){
 	return this._size.copy();
 }
@@ -85,6 +91,9 @@ Grid2D.prototype.cellFromPoint = function(x,y){
 		}
 	}
 	return null;
+}
+Grid2D.prototype.cellSize = function(){
+	return this._cellSize;
 }
 Grid2D.prototype._colRowFromPoint = function(x,y){
 	var size = this._size;
@@ -145,6 +154,7 @@ Grid2D.prototype.toArray = function(){
 	var cells = this._cells;
 	for(var i=0; i<cells.length; ++i){
 		var cell = cells[i];
+		Code.arrayPushArray(list,cell.toArray());
 	}
 	return list;
 }
@@ -237,6 +247,9 @@ Grid2D.Cell.prototype.count = function(){
 		return this._objects.length;
 	}
 	return 0;
+}
+Grid2D.Cell.prototype.objects = function(){
+	return this._objects;
 }
 Grid2D.prototype.kill = function(){
 	this.clear();

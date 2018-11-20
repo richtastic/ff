@@ -324,8 +324,39 @@ https://cloud.google.com/appengine/docs/nodejs/
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+- WHEN TO ROTATE NEEDLE / HAYSTACK FOR COMPARISONS
 
-- start at ~11x11 & scale up to ~31 to find matches
+
+
+- convert from F corner matches to relative size/angle [keep track of epipole angle]
+	- get optimal corner scale size ?
+		: for each match:
+			- 
+
+- get back to how well steropsis estimations are
+
+
+- how to do dense matching wth F
+	- rectify
+	- map lines together
+	- 
+		- 1D epipolar search
+		- brightness constancy
+		- uniqueness: 1 to 1 matching
+
+		- monotonic ordering: [not preserved in all scenarios wih large disparity]
+			- occlusions
+		- smooth depth of field
+		- continuity:
+		- disparity limits:
+		- grouping: structure/connectivity is consistent
+	- hierarchy ordering
+	- incorporate scale difference from source points
+
+
+- best points use variable search size 
+	- start at ~11x11 & scale up to ~31 to find matches
+
 
 
 - pick high-corner points from scene, use F & keep most unique ones
