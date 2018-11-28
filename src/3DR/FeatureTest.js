@@ -56,8 +56,8 @@ function FeatureTest(){
 // new ImageLoader("./images/",["room0.png", "room2.png"],this,this.imagesLoadComplete2).load();
 
 // new ImageLoader("./images/",["bench_A.png", "bench_B.png"],this,this.imagesLoadComplete2).load(); // small skew
-// new ImageLoader("./images/",["bench_B.png", "bench_C.png"],this,this.imagesLoadComplete2).load(); // large skew 
-new ImageLoader("./images/",["bench_C.png", "bench_D.png"],this,this.imagesLoadComplete2).load(); // offset, slight zoom
+new ImageLoader("./images/",["bench_B.png", "bench_C.png"],this,this.imagesLoadComplete2).load(); // large skew 
+// new ImageLoader("./images/",["bench_C.png", "bench_D.png"],this,this.imagesLoadComplete2).load(); // offset, slight zoom
 // new ImageLoader("./images/",["bench_D.png", "bench_E.png"],this,this.imagesLoadComplete2).load(); // small zoom, skew
 // new ImageLoader("./images/",["bench_D.png", "bench_F.png"],this,this.imagesLoadComplete2).load(); // big zoom, skew
 // new ImageLoader("./images/",["bench_C.png", "bench_F.png"],this,this.imagesLoadComplete2).load(); // camera centers coincide
@@ -1887,16 +1887,47 @@ display.addChild(c);
 
 if(true){
 // if(false){
-// A & B ?
-	// var Ffwd = [-3.571391689049042e-7,-0.000013042588388787455,0.001892709101181543,-0.0000013077195547260747,-0.0000017799854182444378,0.01261326470689081,-0.00007645234417652562,-0.008180748615404762,-0.26087920605817905];
+// // A & B 
+// var Ffwd = [-3.571391689049042e-7,-0.000013042588388787455,0.001892709101181543,-0.0000013077195547260747,-0.0000017799854182444378,0.01261326470689081,-0.00007645234417652562,-0.008180748615404762,-0.26087920605817905];
+// B & C
+var Ffwd = [0.000002013249261209153,0.000001645940254062098,-0.0026444724671507193,0.000005900553643260778,-0.000035737692495968216,-0.00644621770487909,-0.0006133437275814031,0.018498240053680608,0.194665889621448]; // 1.75 error
 // C & D:
-var Ffwd = [1.2923077167778718e-7,-0.000015210309521419073,0.0003225931824088563,0.000015455480205002085,-0.0000035166362871189797,-0.016435830563042004,0.0003540730779861093,0.01791803394067048,-0.9219367268540336]; // 0.75 error
+// var Ffwd = [1.2923077167778718e-7,-0.000015210309521419073,0.0003225931824088563,0.000015455480205002085,-0.0000035166362871189797,-0.016435830563042004,0.0003540730779861093,0.01791803394067048,-0.9219367268540336]; // 0.75 error
+
+
+// ?
 // var Ffwd = [-7.031196456267838e-8,0.000010253690001353676,0.0002318396457950314,-0.000010216328522843017,0.000004967153612612358,0.01484599060987892,-0.0007333970607677728,-0.016347528750610102,0.8538040766231116];
 
 	Ffwd = new Matrix(3,3).fromArray(Ffwd);
 
+
+var pointA = new V2D(46,280);
+var pointB = new V2D(200,201);
+// var c = new DO();
+// c.graphics().setLine(1.0,0xFF00FF00);
+// c.graphics().beginPath();
+// c.graphics().moveTo(0,0);
+// c.graphics().drawCircle(pointA.x,pointA.y, 3.0);
+// c.graphics().strokeLine();
+// c.graphics().endPath();
+// display.addChild(c);
+// var c = new DO();
+// c.graphics().setLine(1.0,0xFF00FF00);
+// c.graphics().beginPath();
+// c.graphics().moveTo(0,0);
+// c.graphics().drawCircle(pointB.x,pointB.y, 3.0);
+// c.graphics().strokeLine();
+// c.graphics().endPath();
+// c.matrix().translate(imageMatrixA.width(),0);
+// display.addChild(c);
+// Ffwd.scale(-1); // PREEMPT ....
+// var F = R3D.orientatedFundamentalMatrix(Ffwd, pointA, pointB);
+// console.log(F);
+
+
 var F = Ffwd;
 var Finv = R3D.fundamentalInverse(F);
+
 
 // R3D.denseFundamentalMatching(imageMatrixA,imageMatrixB,F,Finv);
 // throw "...";
@@ -1909,19 +1940,20 @@ var Finv = R3D.fundamentalInverse(F);
 // var locationA = new V2D(50,220);
 // var locationA = new V2D(200,180);
 // var locationA = new V2D(250,170);
-// var locationA = new V2D(317,254);
-var locationA = new V2D(300,294);
+var locationA = new V2D(317,254);
+
+// var locationA = new V2D(300,294);
+// var locationA = new V2D(270,301);
 
 
 
 // // console.log(F);
 // // console.log(Finv)
-// var info = R3D.findMatchingPointF(imageMatrixA,imageMatrixB,F,Finv, locationA, 21, 2.0, 0, true);
+// var info = R3D.findMatchingPointF(imageMatrixA,imageMatrixB,F,Finv, locationA, 21, 2.0, 0, true);//, pointA,pointB);
 // console.log(info);
 // // var locationB = info["point"];
 // // R3D.findMatchingPointF()
-
-// throw "?";
+// throw "...";
 
 
 // var locationB = new V3D();

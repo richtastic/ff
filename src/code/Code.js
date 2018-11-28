@@ -6023,9 +6023,9 @@ Code.findGlobalExtrema1D = function(yVals, noEnds){
 	}
 	if(minIndex!=0&&minIndex!=lenM1){ // find local minima
 		min = Code.interpolateExtrema1D(new V2D(), yVals[minIndex-1], yVals[minIndex], yVals[minIndex+1]);
+		min.x += minIndex;
 	}else if( !(noEnds===true) ){
 		min = new V2D(minIndex,yVals[minIndex]);
-		min.x += minIndex;
 	}else{
 		min = null;
 	}
@@ -8744,20 +8744,29 @@ Code.centroid2D = function(image, imageWidth,imageHeight, imageMaskWeights){ // 
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------- equation coefficients
 Code.lineOriginAndDirection2DFromEquation = function(org,dir, a,b,c){
-	if(c==0){
-		org.x = 0;
-		org.y = 0;
-		dir.x = 0;
-		dir.y = 0;
-	}else{
+	// if(c==0){
+	// 	org.x = 0;
+	// 	org.y = 0;
+	// 	dir.x = 0;
+	// 	dir.y = 0;
+	// }else{
 		len = Math.sqrt(a*a+b*b);
 		len = len*len;
-		org.x = -a*c/len;
-		org.y = -b*c/len;
-		dir.x = -b;
-		dir.y = a;
-		dir.norm();
-	}
+		if(len==0){
+			org.x = 0;
+			org.y = 0;
+			dir.x = 0;
+			dir.y = 0;
+		}else{
+			org.x = -a*c/len;
+			org.y = -b*c/len;
+			dir.x = -b;
+			dir.y = a;
+			// var ab = new V2D(a,b);
+			// V2D.rotate(dir, ab,Math.PIO2);
+			dir.norm();
+		}
+	// }
 }
 Code.lineEquationFromPoints2D = function(a,b){ // 
 	dir = V2D.sub(b,a);

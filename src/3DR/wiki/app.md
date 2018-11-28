@@ -304,11 +304,11 @@ vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 	- separate triangles into texture lookup / files
 		- TextureMap (from textures to atlas)
 	=> scene textured model
-(11/26)
+(12/10)
 - viewing output
 	- locally
 	- VR device
-(12/31)
+(01/14)
 
 google app engine project - nodejs
 https://cloud.google.com/appengine/docs/nodejs/
@@ -324,8 +324,26 @@ https://cloud.google.com/appengine/docs/nodejs/
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-- WHEN TO ROTATE NEEDLE / HAYSTACK FOR COMPARISONS
 
+- re-check affine matching --- display features on image for viz
+	- try to add affine restoration to points by getting center point and assessing the min/max directions & unscaling
+	- moment
+	- COM
+	- COV
+
+
+- re-check using F-corner points for additional seed points
+
+- re-export features for views
+- get back to how well steropsis estimations are
+
+
+
+
+
+
+- stero matching:
+	- path costs with vertical / horizontal neighbor costs
 
 
 - convert from F corner matches to relative size/angle [keep track of epipole angle]
@@ -333,8 +351,7 @@ https://cloud.google.com/appengine/docs/nodejs/
 		: for each match:
 			- 
 
-- get back to how well steropsis estimations are
-
+- image rectification re-do [direction matters]
 
 - how to do dense matching wth F
 	- rectify
@@ -354,34 +371,6 @@ https://cloud.google.com/appengine/docs/nodejs/
 	- incorporate scale difference from source points
 
 
-- best points use variable search size 
-	- start at ~11x11 & scale up to ~31 to find matches
-
-
-
-- pick high-corner points from scene, use F & keep most unique ones
-	=> is F direction perpendicular & oriented consistently from epipole ?
-TEST
-
-
-- medium density
-	- fwd-bak match:
-		- a corner may have multiple mapped-to
-	- how to remove outliers?
-	- visualize 3D clustering? rank | score | ratio
--
-
-
-image a:
-	known point
-	known epipole
-image b:
-	line top
-	line mid
-	line bot
-	create rect: perpendicular ends of line mid & intersection with infinite rays of line top & line bot
-	extract rect
-
 
 - MEDIUM MATCHING
 	- pick out corners & match along F lines
@@ -390,12 +379,6 @@ image b:
 	out: 100-1000
 
 
-
-
-- try to add affine restoration to points by getting center point and assessing the min/max directions & unscaling
-- moment
-- COM
-- COV
 
 
 
