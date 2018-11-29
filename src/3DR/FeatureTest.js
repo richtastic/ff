@@ -48,31 +48,31 @@ function FeatureTest(){
 //new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-20_rot.jpg"],this,this.imagesLoadComplete2).load(); // rotated
 // new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-0_rot.jpg"],this,this.imagesLoadComplete2).load(); // rotated
 // new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-0_big.jpg"],this,this.imagesLoadComplete2).load(); // zoom difference x2
-// new ImageLoader("./images/",["xA_small.jpg", "xB_small.jpg"],this,this.imagesLoadComplete2).load(); // ex bad --------------------------------- MVP
-// new ImageLoader("./images/",["yA_small.jpg", "yB_small.jpg"],this,this.imagesLoadComplete2).load(); // ex poor
-// new ImageLoader("./images/",["zA_small.jpg", "zB_small.jpg"],this,this.imagesLoadComplete2).load(); // ex ok
+// new ImageLoader("./images/",["xA_small.jpg", "xB_small.jpg"],this,this.imagesLoadComplete2).load(); // ex bad --------------------------------- MVP 19 @ 0.53
+// new ImageLoader("./images/",["yA_small.jpg", "yB_small.jpg"],this,this.imagesLoadComplete2).load(); // ex poor : 52 @ 0.45
+// new ImageLoader("./images/",["zA_small.jpg", "zB_small.jpg"],this,this.imagesLoadComplete2).load(); // ex ok : 64 @ 0.74
 
 // new ImageLoader("./images/",["room0.png", "room1.png"],this,this.imagesLoadComplete2).load(); // real / close scenario
-// new ImageLoader("./images/",["room0.png", "room2.png"],this,this.imagesLoadComplete2).load();
+new ImageLoader("./images/",["room0.png", "room2.png"],this,this.imagesLoadComplete2).load(); // 66 @ 0.57
 
-// new ImageLoader("./images/",["bench_A.png", "bench_B.png"],this,this.imagesLoadComplete2).load(); // small skew
-new ImageLoader("./images/",["bench_B.png", "bench_C.png"],this,this.imagesLoadComplete2).load(); // large skew 
-// new ImageLoader("./images/",["bench_C.png", "bench_D.png"],this,this.imagesLoadComplete2).load(); // offset, slight zoom
-// new ImageLoader("./images/",["bench_D.png", "bench_E.png"],this,this.imagesLoadComplete2).load(); // small zoom, skew
-// new ImageLoader("./images/",["bench_D.png", "bench_F.png"],this,this.imagesLoadComplete2).load(); // big zoom, skew
-// new ImageLoader("./images/",["bench_C.png", "bench_F.png"],this,this.imagesLoadComplete2).load(); // camera centers coincide
-
-
+// new ImageLoader("./images/",["bench_A.png", "bench_B.png"],this,this.imagesLoadComplete2).load(); // small skew ----- OK : 54 @ 0.65
+// new ImageLoader("./images/",["bench_B.png", "bench_C.png"],this,this.imagesLoadComplete2).load(); // large skew ----- POOR : 31 * 1.5 [24 @ 1.8 - WRONG]
+// new ImageLoader("./images/",["bench_C.png", "bench_D.png"],this,this.imagesLoadComplete2).load(); // offset, slight zoom ----- GOOD : 74 @ 0.8
+// new ImageLoader("./images/",["bench_D.png", "bench_E.png"],this,this.imagesLoadComplete2).load(); // small zoom, skew ----- POOR : 35 @ 0.9 [31 @ 1.3 - BAD]
+// new ImageLoader("./images/",["bench_D.png", "bench_F.png"],this,this.imagesLoadComplete2).load(); // big zoom, skew ----- OK : 47 @ 1.0 [27 @ 1.0 - BAD]
+// new ImageLoader("./images/",["bench_C.png", "bench_F.png"],this,this.imagesLoadComplete2).load(); // camera centers coincide ----- GOOD : 54 @ 0.71
 
 
 
-// new ImageLoader("./images/flowers_1/",["7131.png", "7133.png"],this,this.imagesLoadComplete2).load(); // [5%]
-// new ImageLoader("./images/flowers_1/",["7120.png", "7144.png"],this,this.imagesLoadComplete2).load(); // obscure  [fail]
-// new ImageLoader("./images/flowers_1/",["7120.png", "7127.png"],this,this.imagesLoadComplete2).load(); // partial [50% error]
-// new ImageLoader("./images/flowers_1/",["7127.png", "7131.png"],this,this.imagesLoadComplete2).load(); // [5%]
-// new ImageLoader("./images/flowers_1/",["7133.png", "7140.png"],this,this.imagesLoadComplete2).load(); // [20%]
-// new ImageLoader("./images/flowers_1/",["7140.png", "7141.png"],this,this.imagesLoadComplete2).load(); // [50%]
-// new ImageLoader("./images/flowers_1/",["7141.png", "7144.png"],this,this.imagesLoadComplete2).load(); // [10%]
+
+
+// new ImageLoader("./images/flowers_1/",["7131.png", "7133.png"],this,this.imagesLoadComplete2).load(); // OK : 39 @ 0.96
+// new ImageLoader("./images/flowers_1/",["7120.png", "7144.png"],this,this.imagesLoadComplete2).load(); // FAIL 
+// new ImageLoader("./images/flowers_1/",["7120.png", "7127.png"],this,this.imagesLoadComplete2).load(); // FAIL
+// new ImageLoader("./images/flowers_1/",["7127.png", "7131.png"],this,this.imagesLoadComplete2).load(); // OK : 51 @ 1.0
+// new ImageLoader("./images/flowers_1/",["7133.png", "7140.png"],this,this.imagesLoadComplete2).load(); // POOR : 23 @ 1.7
+// new ImageLoader("./images/flowers_1/",["7140.png", "7141.png"],this,this.imagesLoadComplete2).load(); // FAIL
+// new ImageLoader("./images/flowers_1/",["7141.png", "7144.png"],this,this.imagesLoadComplete2).load(); // POOR : 27 @ 1.6
 
 
 }
@@ -80,7 +80,21 @@ FeatureTest.prototype.showCorners = function(features, display, offsetX, offsetY
 	color = color!==undefined ? color : 0xFFFF0000;
 	for(k=0; k<features.length; ++k){
 		var point = features[k];
+
+		var angle = 0;
+		var affineAngle = 0.0;
+		var affineScale = 1.0;
 		if(!Code.isa(point,V4D)){
+			var aA = point["affineAngle"];
+			var aS = point["affineScale"];
+			if(aA!==undefined){
+				affineAngle = aA;
+			}
+			if(aS!==undefined){
+				affineScale = aS;
+			}
+
+			angle = point["angle"]
 			point = new V4D(point["point"].x,point["point"].y, point["size"],point["angle"]);
 		}
 		//console.log(""+point)
@@ -90,15 +104,32 @@ FeatureTest.prototype.showCorners = function(features, display, offsetX, offsetY
 			var x = point.x;
 			var y = point.y;
 			var z = point.z;
-			var a = point.t;
+			// var a = point.t;
 		var c = new DO();
+
+// affineScale = Math.sqrt(affineScale);
+
+		var v = new V2D(z,0);
+		v.rotate(angle);
 			//color = Code.getColARGBFromFloat(1.0,1.0 * Math.pow((point.t-min) / (max-min), .5),0,0);
 			//color = 0xFF000000;
-			c.graphics().setLine(0.50, color);
+			c.graphics().setLine(1.0, color);
+
+			// size
 			c.graphics().beginPath();
-			c.graphics().drawCircle(x, y, z);
+			c.graphics().drawCircle(0, 0, z);
 			c.graphics().strokeLine();
 			c.graphics().endPath();
+
+			// angle
+			c.graphics().beginPath();
+			c.graphics().moveTo(0,0);
+			c.graphics().lineTo(0+v.x,0+v.y);
+			c.graphics().strokeLine();
+			c.graphics().endPath();
+
+			// affine
+
 
 // 			var v = new V2D(z,0);
 // 			v.rotate(a);
@@ -109,6 +140,15 @@ FeatureTest.prototype.showCorners = function(features, display, offsetX, offsetY
 // 			c.graphics().endPath();
 // //			c.matrix().scale(GLOBALSCALE);
 // 			//c.matrix().translate(0 + f*imageMatrixA.width()*GLOBALSCALE, 0);
+
+			// UNDO COV SCALING:
+			c.matrix().rotate(-affineAngle);
+
+			c.matrix().scale(affineScale, 1.0/affineScale);
+			// c.matrix().scale(1.0/affineScale, affineScale);
+			c.matrix().rotate(affineAngle);
+
+			c.matrix().translate(x, y);
 			c.matrix().translate(offsetX, offsetY);
 			display.addChild(c);
 	}
@@ -1885,8 +1925,8 @@ display.addChild(c);
 }
 
 
-if(true){
-// if(false){
+// if(true){
+if(false){
 // // A & B 
 // var Ffwd = [-3.571391689049042e-7,-0.000013042588388787455,0.001892709101181543,-0.0000013077195547260747,-0.0000017799854182444378,0.01261326470689081,-0.00007645234417652562,-0.008180748615404762,-0.26087920605817905];
 // B & C
@@ -2164,7 +2204,11 @@ this.showCorners(featuresB, display, imageMatrixA.width(),0, c1);
 
 	var featuresA = R3D.calculateScaleCornerFeatures(imageMatrixA, maxCount);
 	var featuresB = R3D.calculateScaleCornerFeatures(imageMatrixB, maxCount);
-
+var sortFxn = function(a,b){
+	return a["score"] > b["score"] ? -1 : 1;
+};
+featuresA.sort(sortFxn);
+featuresB.sort(sortFxn);
 
 /*
 	// featuresA = R3D.testExtract1(imageMatrixA, R3D.CORNER_SELECT_REGULAR, null, true);
@@ -2187,8 +2231,7 @@ this.showCorners(featuresB, display, imageMatrixA.width(),0, c1);
 	for(var i=0; i<featuresB.length; ++i){
 		featuresB[i] = R3D.cornerToFeatureObject(featuresB[i]);
 	}
-	// console.log(featuresA);
-	// console.log(featuresB);
+	
 	// 
 	// var scale = 4.0;
 	// var scale = 1.0;
@@ -2204,6 +2247,11 @@ this.showCorners(featuresB, display, imageMatrixA.width(),0, c1);
 	featuresA = R3D.cornerFeaturesAddAngles(imageMatrixA, featuresA, true);
 	featuresB = R3D.cornerFeaturesAddAngles(imageMatrixB, featuresB, true);
 */
+
+// Code.truncateArray(featuresA,200);
+// Code.truncateArray(featuresB,200);
+	console.log(featuresA);
+	console.log(featuresB);
 	// var featuresA = R3D.testExtract1(imageMatrixGA, null, null, true);
 	// var featuresB = R3D.testExtract1(imageMatrixGB, null, null, true);
 	// this.showCorners(featuresA, display, 0,0, c1);
@@ -2966,6 +3014,12 @@ if(true){
 R3D.drawMatches(matches, 0,0, imageMatrixA.width(),0, display);
 R3D.showRansac(pointsA,pointsB, matrixFfwd, matrixFrev, display, imageMatrixA,imageMatrixB);
 }
+
+console.log("pointsA:");
+Code.printPoints(pointsA);
+
+console.log("pointsB:");
+Code.printPoints(pointsB);
 
 return;
 

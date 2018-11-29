@@ -117,6 +117,9 @@ Matrix2D.prototype.multV2D = function(aV,bV){ // a = trans(b)
 	aV.x = ax;
 	return aV;
 }
+
+Matrix2D.prototype.multV2DtoV2D = Matrix2D.prototype.multV2D;
+
 Matrix2D.prototype.multV3D = function(aV,bV){ // a = trans(b)
 	if(bV==undefined){
 		bV = aV;

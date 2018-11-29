@@ -330,6 +330,24 @@ https://cloud.google.com/appengine/docs/nodejs/
 	- moment
 	- COM
 	- COV
+	=> DOES THIS REQUIRE ITERITIVE SEEKING ? 
+
+- saving corner affine to yaml / loading from yaml
+
+- polar rectification
+	- rotate image if necessary?
+		-> point in A
+			=> line in A
+			=> line in B
+		-> next line in increasing angle in A
+			=> line in B
+		=> line
+
+
+	- offset image by starting line points
+	- allow MODULAR SAERCHING FOR WHEN EPIPOLE IS INSIDE
+
+
 
 
 - re-check using F-corner points for additional seed points

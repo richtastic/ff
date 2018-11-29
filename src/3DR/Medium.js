@@ -18,8 +18,11 @@ function Medium(){
 	// this._ticker.addFunction(Ticker.EVENT_TICK, this.handleTickerFxn, this);
 	// this._tickCount = 0;
 	
-	var imageList = ["caseStudy1-0.jpg", "caseStudy1-9.jpg"];
+	// var imageList = ["caseStudy1-0.jpg", "caseStudy1-9.jpg"];
 	var imageLoader = new ImageLoader("./images/",imageList, this,this.handleImagesLoaded,null);
+
+	var imageList = ["room0.png", "room2.png"];
+	var imageLoader = new ImageLoader("./images/",imageList, this,this.handleImagesLoadedRectify,null);
 	imageLoader.load();
 }
 
@@ -348,42 +351,294 @@ return;
 
 
 
+}
 
-/*
+Medium.prototype.handleImagesLoadedRectify = function(imageInfo){
+
+	var imageList = imageInfo.images;
+	var fileList = imageInfo.files;
+	var i, j, k, list = [];
+	var x = 0;
+	var y = 0;
+	var images = [];
+	for(i=0;i<imageList.length;++i){
+		var file = fileList[i];
+		var img = imageList[i];
+		images[i] = img;
+		var d = new DOImage(img);
+		this._root.addChild(d);
+		d.graphics().alpha(0.1);
+		// d.graphics().alpha(1.0);
+		d.matrix().translate(x,y);
+		x += img.width;
+	}
+
+	GLOBALSTAGE = this._stage;
+
+	var imageSourceA = images[0];
+	var imageFloatA = GLOBALSTAGE.getImageAsFloatRGB(imageSourceA);
+	var imageMatrixA = new ImageMat(imageFloatA["width"],imageFloatA["height"], imageFloatA["red"], imageFloatA["grn"], imageFloatA["blu"]);
+
+	var imageSourceB = images[1];
+	var imageFloatB = GLOBALSTAGE.getImageAsFloatRGB(imageSourceB);
+	var imageMatrixB = new ImageMat(imageFloatB["width"],imageFloatB["height"], imageFloatB["red"], imageFloatB["grn"], imageFloatB["blu"]);
+
+var points;
+
+var pointsA = [];
+points = pointsA;
+points.push( new V2D(157.00123897822408,117.99654507138962) ); // 0
+points.push( new V2D(443.1484653609749,126.19073901368628) ); // 1
+points.push( new V2D(221.1468444196387,158.79321513882613) ); // 2
+points.push( new V2D(491.99438359511606,189.99524633931225) ); // 3
+points.push( new V2D(111.99977848842428,128.99976311726115) ); // 4
+points.push( new V2D(202.14890202303147,131.8189183267216) ); // 5
+points.push( new V2D(390.99999402522263,159.9999154466707) ); // 6
+points.push( new V2D(217.98577342208978,174.03861057084063) ); // 7
+points.push( new V2D(103.00011297055039,132.999910347573) ); // 8
+points.push( new V2D(192.86672649088848,182.07019010516458) ); // 9
+points.push( new V2D(158.82815216208544,154.0614258306045) ); // 10
+points.push( new V2D(409.9222177254667,212.11857967337374) ); // 11
+points.push( new V2D(156.99456726056067,189.00292498647372) ); // 12
+points.push( new V2D(64.99815963038198,182.00291322212362) ); // 13
+points.push( new V2D(31.999972052730524,335.999748925472) ); // 14
+points.push( new V2D(139.9927528454267,161.0065827140237) ); // 15
+points.push( new V2D(391.99994483861116,143.99998950145067) ); // 16
+points.push( new V2D(199.69179752263028,159.90832852846896) ); // 17
+points.push( new V2D(110.00006045963997,210.00175459077374) ); // 18
+points.push( new V2D(138.66622384204868,193.3374233467617) ); // 19
+points.push( new V2D(327.00069558078144,217.99966352090428) ); // 20
+points.push( new V2D(391.1883461896124,224.85589061123193) ); // 21
+points.push( new V2D(395.99999702890653,93.99999747969858) ); // 22
+points.push( new V2D(389.999868260874,174.99998098442782) ); // 23
+points.push( new V2D(257.00455890734844,172.0035808592512) ); // 24
+points.push( new V2D(54.99999256055244,186.0014194041345) ); // 25
+points.push( new V2D(139.8035931270595,179.9950870847713) ); // 26
+points.push( new V2D(280.0000108040066,130.00001690748368) ); // 27
+points.push( new V2D(41.32992738817255,237.32668325085396) ); // 28
+points.push( new V2D(252.9176800240253,104.05730798237428) ); // 29
+points.push( new V2D(13.000467414695603,225.00391367341004) ); // 30
+points.push( new V2D(58.000090040716906,343.9986268335392) ); // 31
+points.push( new V2D(462.9991269118981,268.9995865540776) ); // 32
+points.push( new V2D(239.99881402965678,168.99680765325346) ); // 33
+points.push( new V2D(466.00027610525507,345.99992156873384) ); // 34
+points.push( new V2D(282.000014846007,179.0000050571566) ); // 35
+points.push( new V2D(380.9999965198589,166.00000147329138) ); // 36
+points.push( new V2D(284.0018722771952,284.00093519698765) ); // 37
+points.push( new V2D(178.00034086718753,255.999844050441) ); // 38
+points.push( new V2D(248.99139324731098,168.99970130811812) ); // 39
+points.push( new V2D(94.00017093557582,326.999580850823) ); // 40
+points.push( new V2D(196.00006399797243,322.9998192430231) ); // 41
+points.push( new V2D(316.99771662753614,288.99982501703914) ); // 42
+points.push( new V2D(310.99974983547196,319.9998451051207) ); // 43
+points.push( new V2D(293.3332921272273,93.33334354788512) ); // 44
+points.push( new V2D(393.00009455649706,128.00003712502328) ); // 45
+points.push( new V2D(257.9988795148508,183.00216980934118) ); // 46
+points.push( new V2D(380.99999854476863,173.00000004387678) ); // 47
+points.push( new V2D(171.99989952115223,320.0003235237201) ); // 48
+points.push( new V2D(401.3332958307844,321.3333362518387) ); // 49
+points.push( new V2D(324.0004522159073,326.6662099530253) ); // 50
+points.push( new V2D(384.00000104164855,119.00000056636856) ); // 51
+points.push( new V2D(326.99915908172875,324.99969679859083) ); // 52
+points.push( new V2D(467.9982999877891,309.99906324120434) ); // 53
+points.push( new V2D(412.00001250778854,81.33335582599041) ); // 54
+points.push( new V2D(144.9999950752251,283.0000409116242) ); // 55
+points.push( new V2D(169.99998807308046,260.99989740627865) ); // 56
+points.push( new V2D(407.9999909119138,118.0000280255259) ); // 57
+points.push( new V2D(303.0000007191145,90.00000236026952) ); // 58
+points.push( new V2D(381.9999958242321,150.00000087514732) ); // 59
+
+
+var pointsB = [];
+points = pointsB;
+points.push( new V2D(217.9982927965369,58.99719157922153) ); // 0
+points.push( new V2D(497.1700170222337,70.18907252258552) ); // 1
+points.push( new V2D(241.0677252849458,100.05012002200628) ); // 2
+points.push( new V2D(493.09868384933105,146.93858558948276) ); // 3
+points.push( new V2D(168.0001225806397,68.99916640717299) ); // 4
+points.push( new V2D(231.89378039022273,72.79677943616001) ); // 5
+points.push( new V2D(420.9999563810089,107.99983547146284) ); // 6
+points.push( new V2D(230.94840977727426,115.08688479167982) ); // 7
+points.push( new V2D(157.9994540025899,73.0001166111837) ); // 8
+points.push( new V2D(204.00075358572522,122.00935112350248) ); // 9
+points.push( new V2D(189.11136542650874,93.39665876319494) ); // 10
+points.push( new V2D(437.9471759645499,167.96884493131296) ); // 11
+points.push( new V2D(170.99587864701195,126.00349316926943) ); // 12
+points.push( new V2D(83.00174559420928,115.00180234778998) ); // 13
+points.push( new V2D(36.0002280625699,236.00066617276457) ); // 14
+points.push( new V2D(168.7839684704845,100.03765888141596) ); // 15
+points.push( new V2D(422.9997994192055,89.99985704439774) ); // 16
+points.push( new V2D(220.06906149737412,100.80869543655747) ); // 17
+points.push( new V2D(115.99972288448886,141.99975057075142) ); // 18
+points.push( new V2D(151.99643911776437,129.33507547068504) ); // 19
+points.push( new V2D(301.9997935275872,163.99976609064592) ); // 20
+points.push( new V2D(423.00098379446456,180.99941544163332) ); // 21
+points.push( new V2D(429.9999994263959,30.99998628550891) ); // 22
+points.push( new V2D(419.000005103147,125.00000330330845) ); // 23
+points.push( new V2D(283.99979746962913,116.00216412099864) ); // 24
+points.push( new V2D(74.0021113107963,117.99994429886043) ); // 25
+points.push( new V2D(160.98543152929994,116.9155444690823) ); // 26
+points.push( new V2D(310.9999968465321,72.00004707162638) ); // 27
+points.push( new V2D(28.002302620320112,157.32655867930436) ); // 28
+points.push( new V2D(287.00139355537584,44.00033163106939) ); // 29
+points.push( new V2D(18.029852948409154,146.94710633386123) ); // 30
+points.push( new V2D(33.999858055192995,241.99969034687214) ); // 31
+points.push( new V2D(425.33335549301233,229.33336296142625) ); // 32
+points.push( new V2D(257.99997597678333,110.99720980228683) ); // 33
+points.push( new V2D(386.6665259662911,304.0002931190142) ); // 34
+points.push( new V2D(312.00000415477746,123.99999171752857) ); // 35
+points.push( new V2D(410.9999975649486,114.99999986708295) ); // 36
+points.push( new V2D(228.0044730470489,219.99653787800824) ); // 37
+points.push( new V2D(180.9991140392407,188.99960773837532) ); // 38
+points.push( new V2D(280.0024846084654,111.99455903756001) ); // 39
+points.push( new V2D(81.99848639722644,236.00032410223548) ); // 40
+points.push( new V2D(156.99974948545324,244.99999959938424) ); // 41
+points.push( new V2D(247.9963715527518,227.99975999439485) ); // 42
+points.push( new V2D(251.00004347554307,256.9999047880389) ); // 43
+points.push( new V2D(323.99995220202646,32.00000746245024) ); // 44
+points.push( new V2D(424.0002883751363,71.00011661587054) ); // 45
+points.push( new V2D(285.00155262094677,127.00257296756783) ); // 46
+points.push( new V2D(411.000000130309,122.99999949463273) ); // 47
+points.push( new V2D(132.9999872947233,238.9999817950458) ); // 48
+points.push( new V2D(340.0002355207096,271.9998286487727) ); // 49
+points.push( new V2D(285.99703510537285,268.0007218622504) ); // 50
+points.push( new V2D(412.9999998955282,61.00000232967291) ); // 51
+points.push( new V2D(261.9997487694299,262.99989310651404) ); // 52
+points.push( new V2D(417.99524037984213,271.9954874317487) ); // 53
+points.push( new V2D(302.6666674863311,18.66666772650611) ); // 54
+points.push( new V2D(139.9999618316551,208.00005750742355) ); // 55
+points.push( new V2D(171.00006618904337,191.99986216027332) ); // 56
+points.push( new V2D(441.99998689799884,60.00004037512646) ); // 57
+points.push( new V2D(333.00000315916094,27.99999960876695) ); // 58
+points.push( new V2D(411.9999963323768,96.99999813008753) ); // 59
+
+	F = [8.81121731206021e-8,0.000010114343292779635,-0.0012512115388550813,1.0539861656966728e-7,-0.000004023737922070967,-0.01313862645804628,0.00009352376307345056,0.011747687492820876,-0.597184751416662];
+
+	var matrixFfwd = new Matrix(3,3).fromArray(F);
+	// console.log("F = "+matrixFfwd.toArray()+"; ");
+	var matrixFrev = R3D.fundamentalInverse(matrixFfwd);
+	// console.log(matrixFrev+"");
+
+
 	var epipole = R3D.getEpipolesFromF(matrixFfwd);
 	var epipoleA = epipole["A"];
 	var epipoleB = epipole["B"];
 
 	var rectified = R3D.polarRectification(imageMatrixA,epipoleA);
+	console.log(rectified);
 		var rectifiedInfoA = rectified;
+		var rotationA = rectifiedInfoA["rotation"];
 		var rectifiedA = new ImageMat(rectified.width,rectified.height, rectified.red,rectified.grn,rectified.blu);
 			rectified = rectifiedA;
 		var img = GLOBALSTAGE.getFloatRGBAsImage(rectified.red(), rectified.grn(), rectified.blu(), rectified.width(), rectified.height());
 		var d = new DOImage(img);
-		
+		console.log(rotationA)
+		if(rotationA!=0){
+			d.matrix().translate(-rectifiedA.width()*0.5, -rectifiedA.height()*0.5);
+			d.matrix().rotate( Code.radians(rotationA) );
+			d.matrix().translate(rectifiedA.width()*0.5, rectifiedA.height()*0.5);
+		}
 		//d.matrix().scale(1.0);
 		d.matrix().translate(0, 0);
-		//GLOBALSTAGE.addChild(d);
+		GLOBALSTAGE.addChild(d);
 
-console.log(rectifiedInfoA);
+
 
 	var rectified = R3D.polarRectification(imageMatrixB,epipoleB);
+	console.log(rectified);
 		var rectifiedInfoB = rectified;
+		var rotationB = rectifiedInfoB["rotation"];
 		var rectifiedB = new ImageMat(rectified.width,rectified.height, rectified.red,rectified.grn,rectified.blu);
 			rectified = rectifiedB;
 		var img = GLOBALSTAGE.getFloatRGBAsImage(rectified.red(), rectified.grn(), rectified.blu(), rectified.width(), rectified.height());
 		var d = new DOImage(img);
+		if(rotationB!=0){
+			d.matrix().translate(-rectifiedB.width()*0.5, -rectifiedB.height()*0.5);
+			d.matrix().rotate( Code.radians(rotationB) );
+			d.matrix().translate(rectifiedB.width()*0.5, rectifiedB.height()*0.5);
+		}
 		//d.matrix().scale(1.0);
 		d.matrix().translate(0+rectifiedA.width(), 0);
-		//GLOBALSTAGE.addChild(d);
+		GLOBALSTAGE.addChild(d);
 
+// find common areas - overlap
+	var imageA = imageMatrixA;
+	var imageB = imageMatrixB;
+
+var rowSets = R3D.polarRectificationRowSets(rectifiedInfoB, matrixFfwd, imageA,imageB);
+	var minRowB = rowSets[0];
+	var maxRowB = rowSets[1];
+	console.log(minRowB,maxRowB);
+var rowSets = R3D.polarRectificationRowSets(rectifiedInfoA, matrixFrev, imageB,imageA);
+	var minRowA = rowSets[0];
+	var maxRowA = rowSets[1];
+	console.log(minRowA,maxRowA);
+
+// line in A is not single line in B ; it is interpolated -> round
+
+
+var offsetRectA = ( rotationA==0 ? -minRowA : (rectifiedA.height()-maxRowA) );
+var offsetRectB = ( rotationB==0 ? -minRowB : (rectifiedB.height()-minRowB) );
+
+
+	// A SECTION:
+	var d = new DO();
+	d.graphics().setLine(1.0,0xFFFF00FF);
+	d.graphics().beginPath();
+	d.graphics().drawRect(0,offsetRectA,rectifiedA.width(), maxRowA-minRowA);
+	d.graphics().strokeLine();
+	d.graphics().endPath();
+	GLOBALSTAGE.addChild(d);
+
+	// B SECTION:
+	var d = new DO();
+	d.graphics().setLine(1.0,0xFFFF00FF);
+	d.graphics().beginPath();
+	d.graphics().drawRect(0,offsetRectB,rectifiedB.width(), maxRowB-minRowB);
+	d.graphics().strokeLine();
+	d.graphics().endPath();
+	d.matrix().translate(0+rectifiedA.width(), 0);
+	GLOBALSTAGE.addChild(d);
+
+
+
+/*
+	scale:
+		angles
+		radius
+		radiusMin
+		radiusMax
+		F ?
+	involve:
+		rotation
+	
+	row in scaled A
+	row in A
+	row in B
+	row in scaled B
+*/
+
+R3D._stereoBlockMatch(rectifiedA, null, rectifiedB, null, null,null);
+
+	// if(rotationB==0){
+	// 	d.matrix().translate(1100 + rectifiedA.width() + 10, offsetRectB + minRowB);
+	// }else{
+	// 	d.matrix().translate(1100 + rectifiedA.width() + 10, offsetRectB + rectifiedA.height() - maxRowB);
+	// }
+	
+	
+
+
+
+
+/*
 	console.log("features...")
 	// var featuresA = R3D.entropyExtract(imageMatrixA);
 	// var featuresB = R3D.entropyExtract(imageMatrixB);
 	// var featuresA = R3D.SIFTExtract(imageMatrixA);
 	// var featuresB = R3D.SIFTExtract(imageMatrixB);
-	var featuresA = R3D.harrisExtract(imageMatrixA);
-	var featuresB = R3D.harrisExtract(imageMatrixB);
+	// var featuresA = R3D.harrisExtract(imageMatrixA);
+	// var featuresB = R3D.harrisExtract(imageMatrixB);
 
 
 var transformA = function(p){
@@ -398,6 +653,9 @@ console.log(featuresB[0]+"");
 	R3D.removeDuplicatePoints(featuresB, false, null, transformB);
 */
 
+
+
+	throw " ? ";
 
 
 // SHOW FEATURE POINTS
