@@ -54,7 +54,9 @@ GLOBALSTAGE.root().matrix().scale(2.0);
 }
 StereoTest.hierarchyMatch = function(imageMatrixA,imageMatrixB){
 var OFFY = 0;
-	var miniumSize = 16;
+	// var miniumSize = 16;
+	// var miniumSize = 32;
+	var miniumSize = 64;
 	var widthA = imageMatrixA.width();
 	var heightA = imageMatrixA.height();
 	var widthB = imageMatrixB.width();
@@ -85,7 +87,7 @@ var OFFY = 0;
 
 		var dOffset = null;
 		var dRange = null;
-		dRange = miniumSize;
+		// dRange = miniumSize;
 		// dRange = miniumSize/2;
 		// dRange = Math.ceil(widA * 0.5);
 		if(disparity){
@@ -107,7 +109,13 @@ var OFFY = 0;
 			}
 			console.log(dOffset);
 		}
-		disparity = StereoTest.blockMatch(imgA,imgB, dOffset,dRange);
+		// disparity = StereoTest.blockMatch(imgA,imgB, dOffset,dRange);
+		var info = StereoTest.blockMatchCells(imgA,imgB, dOffset,dRange);
+
+		console.log(info);
+
+		// var disparity = null;
+		var confidence = info["confidence"];
 
 		// TODO:
 		// voting / belief propagation
@@ -119,9 +127,13 @@ var OFFY = 0;
 
 		pWidA = widA;
 		pHeiA = heiA;
-		var depths = Code.copyArray(disparity);
-		depths = ImageMat.absFloat(depths);
+		var depths = Code.copyArray(confidence);
+		// var depths = Code.copyArray(disparity);
+		// depths = ImageMat.absFloat(depths);
 		depths = ImageMat.getNormalFloat01(depths);
+		
+		// depths = ImageMat.pow(depths,0.25);
+
 			ImageMat.invertFloat01(depths);
 			// console.log(depths);
 			var colors = [0xFF000099,0xFF0000FF,0xFF00FFFF,0xFF00FF00,0xFFFFFF00,0xFFFF0000,0xFFCC0000,0xFF990000,0xFF660000];
@@ -129,19 +141,163 @@ var OFFY = 0;
 			var heat = ImageMat.heatImage(depths, widA, heiA, true, colors); // R O C B
 				img = GLOBALSTAGE.getFloatRGBAsImage(heat.red(), heat.grn(), heat.blu(), widA, heiA);
 				d = new DOImage(img);
+				// d.graphics().alpha(0.25);
+				d.graphics().alpha(0.5);
 				// d.matrix().scale(displayScale*currentScale);
-				d.matrix().scale(1.0);
+				d.matrix().scale(2.0);
 				// d.matrix().translate(500, 10 + 50*i);
-				d.matrix().translate(600, 10*(i+1) + OFFY);
+				// d.matrix().translate(600, 10*(i+1) + OFFY);
 				GLOBALSTAGE.addChild(d);
 				OFFY += heiA;
-// if(i==1){
-// 	break;
-// }
+if(i==0){
+	break;
+}
 	}
 
 	throw "?"
 }
+
+StereoTest.blockMatchCells = function(imageMatrixA,imageMatrixB,  inputDisparity, disparityRange){
+	var halfBlockSize = 3;
+	var blockSize = 2*halfBlockSize + 1;
+	var widthA = imageMatrixA.width();
+	var heightA = imageMatrixA.height();
+	var widthB = imageMatrixB.width();
+	var heightB = imageMatrixB.height();
+	var totalPixels = widthA*heightA;
+	// var disparity = Code.newArrayZeros(totalPixels);
+	disparityRange = disparityRange!==undefined && disparityRange!==null ? disparityRange : Math.round(widthA*0.25); // 30
+console.log(widthA,disparityRange)
+	// var disparityRange = Math.min(disparityRange,widthA);
+	// for each row:
+
+	var cells = [];
+	for(var i=0; i<totalPixels; ++i){
+		cells[i] = new StereoTest.Cell();
+	}
+	console.log(cells);
+
+	var disparityStart = 0;
+	for(var m=0; m<heightA; ++m){
+		// if(m%10==0){
+		// 	console.log(m+" / "+heightA);
+		// }
+  		var minr = m-halfBlockSize;
+    	var maxr = m+halfBlockSize;
+    	minr = Math.min(heightA-1,Math.max(0,minr));
+        maxr = Math.min(heightA-1,Math.max(0,maxr));
+    	// for each col:
+    	for(var n=0; n<widthA; ++n){
+    		// needle
+      		var minc = n-halfBlockSize;
+        	var maxc = n+halfBlockSize;
+        	minc = Math.min(widthA-1,Math.max(0,minc));
+        	maxc = Math.min(widthA-1,Math.max(0,maxc));
+        	// var wid = maxc-minc+1;
+        	// var hei = maxr-minr+1;
+
+
+			// var needle = imageMatrixA.extractRect(minc,minr, maxc,minr, maxc,maxr, minc,maxr, wid,hei);
+			// use previous offsets
+			if(inputDisparity){
+				var index = m*widthA + n;
+				disparityStart = inputDisparity[index];
+				disparityStart = Math.round(disparityStart);
+			}
+			// haystack
+        	var roiMinC = n-disparityRange+disparityStart;
+        	var roiMaxC = n+disparityRange+disparityStart;
+        	var roiMinR = minr;
+        	var roiMaxR = maxr;
+        	// var wid = roiMaxC-roiMinC+1;
+        	// var hei = roiMaxR-roiMinR+1;
+        	// limits haystack
+        	roiMinC = Math.min(widthB-1,Math.max(0,roiMinC));
+        	roiMaxC = Math.min(widthB-1,Math.max(0,roiMaxC));
+        	roiMinR = Math.min(heightB-1,Math.max(0,roiMinR));
+        	roiMaxR = Math.min(heightB-1,Math.max(0,roiMaxR));
+        	// limits needle
+        	
+        	// ...
+        	var disparityOffset = -(n-roiMinC);
+			// var haystack = imageMatrixB.extractRect(roiMinC,roiMinR, roiMaxC,roiMinR, roiMaxC,roiMaxR, roiMinC,roiMaxR, wid,hei);
+        	// var solution = R3D.searchNeedleHaystackImageFlatSAD(needle,null, haystack);
+        	// imageA,startAX,endAX,startAY,endAY, imageB,startBX,endBX,startAY,endAY
+        	var solution = R3D.inPlaceOperation(imageMatrixB,roiMinC,roiMaxC,roiMinR,roiMaxR, imageMatrixA,minc,maxc,minr,maxr, R3D.inPlaceOperationSADRGB, []);
+        	var values = solution["value"];
+        	var valueWidth = solution["width"];
+        	var valueHeight = solution["height"];
+/*
+var img = GLOBALSTAGE.getFloatRGBAsImage(needle.red(), needle.grn(), needle.blu(), needle.width(), needle.height());
+var d = new DOImage(img);
+// d.matrix().scale(scale);
+d.matrix().scale(5.0);
+d.matrix().translate(100,100);
+GLOBALSTAGE.addChild(d);
+
+var img = GLOBALSTAGE.getFloatRGBAsImage(haystack.red(), haystack.grn(), haystack.blu(), haystack.width(), haystack.height());
+var d = new DOImage(img);
+// d.matrix().scale(scale);
+d.matrix().scale(5.0);
+d.matrix().translate(100,200);
+GLOBALSTAGE.addChild(d);
+*/
+			
+			var index = m*widthA + n;
+			var cell = cells[index];
+
+			// A
+    		// var ext = Code.findGlobalExtrema1D(values, false);
+    		// if(!ext){
+    		// 	continue;
+    		// }
+    		// var minima = [ext["min"]];
+
+    		// B
+    		var minima = Code.findMinima1D(values);
+
+
+    		if(minima.length==0){
+    			var info = Code.infoArray(values);
+    			var minIndex = info["indexMin"];
+    			var minValue = info["min"];
+    			minima.push(new V2D(minIndex,minValue));
+				// Code.printMatlabArray(values,"v");
+    		}
+    		var min = Code.min(values);
+    		var max = Code.max(values);
+    		cell.setRange(min,max);
+    		// console.log(minima);
+    		for(var k=0; k<minima.length; ++k){
+    			var min = minima[k];
+    			var d = min.x + disparityOffset;
+    			var score = min.y;
+    			cell.addOption(d, score);
+    		}
+        	cell.sortOptions();
+// OR RATIO?
+
+        	// if(minima.y>0.01){
+        	// 	// console.log("TOO LARGE: "+minima.y);
+        	// 	d = 0;
+        	// }
+        	// disparity[index] = d;
+
+        	// TODO: HANDLE NO-MATCH
+
+    	}
+	}
+	var conf = [];
+	for(var i=0; i<cells.length; ++i){
+		var cell = cells[i];
+		// conf[i] = cell.getConfidence(0);
+		// conf[i] = cell.getMinimum();
+		conf[i] = cell.getDisparity(0);
+	}
+	return {"cells":cells, "width":widthA, "height":heightA, "confidence":conf};
+}
+
+
 StereoTest.blockMatch = function(imageMatrixA,imageMatrixB,  inputDisparity, disparityRange){ // ,inputDisparityWidth,inputDisparityHeight,
 	var halfBlockSize = 3;
 	var blockSize = 2*halfBlockSize + 1;
@@ -163,12 +319,19 @@ StereoTest.blockMatch = function(imageMatrixA,imageMatrixB,  inputDisparity, dis
 		// }
   		var minr = m-halfBlockSize;
     	var maxr = m+halfBlockSize;
+    	minr = Math.min(heightA-1,Math.max(0,minr));
+        maxr = Math.min(heightA-1,Math.max(0,maxr));
     	// for each col:
     	for(var n=0; n<widthA; ++n){
+    		// needle
       		var minc = n-halfBlockSize;
         	var maxc = n+halfBlockSize;
-        	var wid = maxc-minc+1;
-        	var hei = maxr-minr+1;
+        	minc = Math.min(widthA-1,Math.max(0,minc));
+        	maxc = Math.min(widthA-1,Math.max(0,maxc));
+        	// var wid = maxc-minc+1;
+        	// var hei = maxr-minr+1;
+
+
 			// var needle = imageMatrixA.extractRect(minc,minr, maxc,minr, maxc,maxr, minc,maxr, wid,hei);
 			// use previous offsets
 			if(inputDisparity){
@@ -189,10 +352,7 @@ StereoTest.blockMatch = function(imageMatrixA,imageMatrixB,  inputDisparity, dis
         	roiMinR = Math.min(heightB-1,Math.max(0,roiMinR));
         	roiMaxR = Math.min(heightB-1,Math.max(0,roiMaxR));
         	// limits needle
-        	minc = Math.min(widthA-1,Math.max(0,minc));
-        	maxc = Math.min(widthA-1,Math.max(0,maxc));
-        	minr = Math.min(heightA-1,Math.max(0,minr));
-        	maxr = Math.min(heightA-1,Math.max(0,maxr));
+        	
         	// ...
         	var disparityOffset = -(n-roiMinC);
 			// var haystack = imageMatrixB.extractRect(roiMinC,roiMinR, roiMaxC,roiMinR, roiMaxC,roiMaxR, roiMinC,roiMaxR, wid,hei);
@@ -257,3 +417,64 @@ video.TemplateMatcher('ROIInputPort',true);
         Dbasic(m,n) = loc(2) ‐ roi(2) + mind;
 end end
 */
+
+
+StereoTest.Cell = function(){
+	this._options = [];
+	this._min = null;
+	this._max = null;
+};
+StereoTest.Cell.OptionSort = function(a,b){
+	return a[0] < b[0] ? -1 : 1;
+	// return a[0] < b[0] ? 1 : -1;
+};
+StereoTest.Cell.prototype.addOption = function(delta, score){
+	this._options.push([score, delta]);
+};
+StereoTest.Cell.prototype.setRange = function(min, max){
+	this._min = min;
+	this._max = max;
+};
+StereoTest.Cell.prototype.sortOptions = function(){
+	this._options.sort(StereoTest.Cell.OptionSort);
+};
+StereoTest.Cell.prototype.getMinimum = function(){
+	var options = this._options;
+	if(options.length>0){
+		var opt0 = options[0];
+		var score0 = opt0[0];
+		return score0;
+	}
+	console.log("no minimum");
+	return 0.0;
+};
+StereoTest.Cell.prototype.getDisparity = function(index){
+	var options = this._options;
+	if(options.length>0){
+		var opt0 = options[0];
+		var disp0 = opt0[1];
+		return disp0;
+	}
+	console.log("no minimum");
+	return 0.0;
+};
+StereoTest.Cell.prototype.getConfidence = function(index){
+	var options = this._options;
+	if(options.length>1){
+		var opt0 = options[0];
+		var opt1 = options[1];
+		var score0 = opt0[0];
+		var score1 = opt1[0];
+		var range = this._max - this._min;
+		var diff = score1-score0;
+		return diff/range;
+	}
+	return 0;
+}
+
+
+
+
+
+
+

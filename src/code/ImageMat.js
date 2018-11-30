@@ -3959,7 +3959,69 @@ ImageMat.prototype.getScaledImage = function(scale){
 	var image = new ImageMat(newWidth,newHeight, red,grn,blu);
 	return image;
 }
-
+ImageMat.prototype.getRotatedImage = function(angle){
+	var red = this.red();
+	var grn = this.grn();
+	var blu = this.blu();
+	var wid = this.width();
+	var hei = this.height();
+	red = ImageMat.getRotatedImage(red,wid,hei, angle);
+	grn = ImageMat.getRotatedImage(grn,wid,hei, angle);
+	blu = ImageMat.getRotatedImage(blu,wid,hei, angle);
+	var newWidth = red["width"];
+	var newHeight = red["height"];
+	red = red["value"];
+	grn = grn["value"];
+	blu = blu["value"];
+	var image = new ImageMat(newWidth,newHeight, red,grn,blu);
+	return image;
+}
+ImageMat.getRotatedImage = function(channel,width,height, angle){
+	var newChannel = [];
+	var pixels = width*height;
+	var wid = null;
+	var hei = null;
+	if(angle==0){
+		wid = width;
+		hei = height;
+		for(var i=0; i<pixels; ++i){
+			newChannel[i] = channel[i];
+		}
+	}else if(angle==90 || angle==-270){
+		wid = height;
+		hei = width;
+		for(var j=0; j<hei; ++j){
+			for(var i=0; i<wid; ++i){
+				var ind = j*wid + i;
+				var index = i*width + (hei-j-1);
+				newChannel[ind] = channel[index];
+			}
+		}
+	}else if(angle==180 || angle==-180){
+		wid = width;
+		hei = height;
+		for(var j=0; j<hei; ++j){
+			for(var i=0; i<wid; ++i){
+				var ind = j*wid + i;
+				var index = (hei-j-1)*width + (wid-i-1);
+				newChannel[ind] = channel[index];
+			}
+		}
+	}else if(angle==270 || angle==-90){
+		wid = height;
+		hei = width;
+		for(var j=0; j<hei; ++j){
+			for(var i=0; i<wid; ++i){
+				var ind = j*wid + i;
+				var index = (wid-i)*width + j;
+				newChannel[ind] = channel[index];
+			}
+		}
+	}else{ // radians
+		throw "TODO";
+	} // 
+	return {"width":wid, "height":hei, "value":newChannel};
+}
 ImageMat.getScaledImage = function(source,wid,hei, scale, sigma, forceWidth,forceHeight){
 	var newWid = Math.round(scale*wid);
 	var newHei = Math.round(scale*hei);

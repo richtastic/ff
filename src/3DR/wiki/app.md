@@ -325,6 +325,26 @@ https://cloud.google.com/appengine/docs/nodejs/
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+- F MATCHING
+	- optimal locations:
+		- local belief propagation
+			- 9-neighborhood dist
+			- L / M / R neighbor dists
+		- how to allow for occluded pixels?
+
+	- vizualize confidence areas
+		- different confidence measures
+
+- polar rectification
+- polar F-matching
+	- offset image by starting line points
+	- allow MODULAR SAERCHING FOR WHEN EPIPOLE IS INSIDE
+
+
+
+
+
+
 - re-check affine matching --- display features on image for viz
 	- try to add affine restoration to points by getting center point and assessing the min/max directions & unscaling
 	- moment
@@ -333,19 +353,6 @@ https://cloud.google.com/appengine/docs/nodejs/
 	=> DOES THIS REQUIRE ITERITIVE SEEKING ? 
 
 - saving corner affine to yaml / loading from yaml
-
-- polar rectification
-	- rotate image if necessary?
-		-> point in A
-			=> line in A
-			=> line in B
-		-> next line in increasing angle in A
-			=> line in B
-		=> line
-
-
-	- offset image by starting line points
-	- allow MODULAR SAERCHING FOR WHEN EPIPOLE IS INSIDE
 
 
 

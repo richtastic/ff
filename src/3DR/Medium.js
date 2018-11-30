@@ -578,7 +578,7 @@ var rowSets = R3D.polarRectificationRowSets(rectifiedInfoA, matrixFrev, imageB,i
 
 
 var offsetRectA = ( rotationA==0 ? -minRowA : (rectifiedA.height()-maxRowA) );
-var offsetRectB = ( rotationB==0 ? -minRowB : (rectifiedB.height()-minRowB) );
+var offsetRectB = ( rotationB==0 ? -minRowB : (rectifiedB.height()-maxRowB) );
 
 
 	// A SECTION:
@@ -602,6 +602,14 @@ var offsetRectB = ( rotationB==0 ? -minRowB : (rectifiedB.height()-minRowB) );
 
 
 
+	// var img = imageMatrixA.getRotatedImage(270);
+	// console.log(img);
+	// var img = GLOBALSTAGE.getFloatRGBAsImage(img.red(), img.grn(), img.blu(), img.width(), img.height());
+	// var d = new DOImage(img);
+	// d.matrix().translate(1200, 0);
+	// GLOBALSTAGE.addChild(d);
+
+
 /*
 	scale:
 		angles
@@ -618,7 +626,7 @@ var offsetRectB = ( rotationB==0 ? -minRowB : (rectifiedB.height()-minRowB) );
 	row in scaled B
 */
 
-R3D._stereoBlockMatch(rectifiedA, null, rectifiedB, null, null,null);
+R3D._stereoBlockMatch(imageMatrixA,imageMatrixB, rectifiedA,rectifiedInfoA, rectifiedB,rectifiedInfoB, matrixFfwd, null,null);
 
 	// if(rotationB==0){
 	// 	d.matrix().translate(1100 + rectifiedA.width() + 10, offsetRectB + minRowB);

@@ -1575,7 +1575,7 @@ R3D.cameraMatricesFromTFT = function(T){
 	// https://cseweb.ucsd.edu/classes/sp17/cse252C-a/CSE252C_20170510.pdf  p 10/44
 	/*
 	 https://cseweb.ucsd.edu/classes/sp17/cse252C-a/
-	 https://cseweb.ucsd.edu/classes/sp17/
+	 https://cseweb.ucsd.edu/classes/sp17/z
 	*/
 }
 R3D.TFTFromCameraMatrices = function(T){
@@ -1619,6 +1619,106 @@ R3D.monotonicAngleArray = function(angles){ // convert to always increasing or a
 		}
 	}
 	return {max:max, min:min, angles:angles, increasing:(angles[0]<angles[1])};
+}
+R3D.polarRectificationRowMatch = function(rectificationA, rectificationB, FFwd, source,destination){
+	var imageWidthB = destination.width();
+	var imageHeightB = destination.height();
+
+	console.log("destination: "+imageWidthB+"x"+imageHeightB);
+	var epipoles = R3D.getEpipolesFromF(FFwd);
+	var eA = epipoles["A"];
+	var eB = epipoles["B"];
+
+	var anglesB = rectificationB["angles"];
+
+	var anglesA = rectificationA["angles"];
+	var radiusA = rectificationA["radius"];
+	var radiusMinA = rectificationA["radiusMin"];
+	var radiusMaxA = rectificationA["radiusMax"];
+	var lA = new V3D();
+	var lB = new V3D();
+	var orgA = new V2D();
+	var dirA = new V2D();
+var lookup =  Code.newArrayConstant(anglesA.length, -1);
+	for(var j=0; j<anglesA.length; ++j){
+		var angA = anglesA[j];
+		var radA = radiusA[j];
+// console.log(j+" .... ");
+		// var dA = new V2D( Math.cos(angA), Math.sin(angA) );
+		// var lineA = Code.lineEquationFromRay2D(eA,dA);
+		// console.log(lineA);
+		// lA.set(lineA["a"],lineA["b"],lineA["c"]);
+		// FFwd.multV3DtoV3D(lB, lA);
+		// console.log(lA);
+		// console.log(lB);
+
+		var rA = (radA[0]+radA[1])*0.5 + radiusMinA;
+		var pointA = new V3D( rA*Math.cos(angA), rA*Math.sin(angA), 1.0 );
+		pointA.x += eA.x;
+		pointA.y += eA.y;
+		// var rayB = 
+		var lineA = new V3D();
+		FFwd.multV3DtoV3D(lineA, pointA);
+		// console.log(lineA+"")
+		// Frev.multV3DtoV3D(lineB, pointB);
+		Code.lineOriginAndDirection2DFromEquation(orgA,dirA, lineA.x,lineA.y,lineA.z);
+		// Code.lineOriginAndDirection2DFromEquation(orgB,dirB, lineB.x,lineB.y,lineB.z);
+		// onA = Code.closestPointLine2D(orgA,dirA, pointB);
+		// onB = Code.closestPointLine2D(orgB,dirB, pointA);
+		// console.log(orgA,dirA);
+			var clipped = Code.clipLine2DToRect(orgA,dirA, 0,0,imageWidthB,imageHeightB);
+		// console.log(clipped);
+		if(!clipped || clipped.length==0){
+			// console.log("no int");
+			continue;
+		}
+		var pA = clipped[0];
+		var pB = clipped[1];
+		var dA = V2D.distance(pA,eB);
+		var dB = V2D.distance(pB,eB);
+		// console.log(dA,dB);
+		var p = null;
+		if(dA<dB){
+			p = pA;
+		}else{
+			p = pB;
+		}
+		var d = V2D.sub(p,eB);
+
+		// need direction that intersects with image plane:
+		var aB = V2D.angleDirection(V2D.DIRX,d);
+		// console.log(aB);
+		// aB = Code.angleZeroTwoPi(aB);
+		// console.log(aB);
+
+// TODO: NEED SURE-LOOKUP - ANGLES AROUND -PI | PI
+
+		var binaryF = function(value){
+			if(aB==value){
+				return 0;
+			}
+			return aB < value ? -1 : 1;
+		}
+
+		var result = Code.binarySearch(anglesB, binaryF);
+		if(result){
+			// console.log(result);
+			if(result.length>1){
+				var d0 = Math.abs(aB-anglesB[result[0]]);
+				var d1 = Math.abs(aB-anglesB[result[1]]);
+				if(d0<d1){
+					lookup[j] = result[0];
+				}else{
+					lookup[j] = result[1];
+				}
+			}else{
+				lookup[j] = result[0];
+			}
+		}
+	}
+
+	// throw "?";
+	return {"mapping":lookup};
 }
 R3D.polarRectificationRowSets = function(rectification, FFwd, source,destination){
 	var epipoles = R3D.getEpipolesFromF(FFwd);
@@ -2364,16 +2464,264 @@ R3D.stereoMatch = function(imageMatrixA,imageMatrixB,F,pointsA,pointsB){
 R3D._stereoHierarchyMatch = function(imageMatrixA,imageMatrixB){
 	//
 }
-R3D._stereoBlockMatch = function(imageMatrixA,mappingsA, imageMatrixB,mappingsB, inputDisparity, disparityRange){
-	//
+R3D._stereoBlockMatch = function(sourceImageA,sourceImageB, imageMatrixA,infoA, imageMatrixB,infoB, FFwd, inputDisparity, disparityRange){
 	console.log("_stereoBlockMatch");
+	// 
+	var anglesA = infoA["angles"];
+	var anglesB = infoB["angles"];
+	var radiusA = infoA["radius"];
+	var radiusB = infoB["radius"];
+	var radiusMinA = infoA["radiusMin"];
+	var radiusMinB = infoB["radiusMin"];
+	var radiusMaxA = infoA["radiusMax"];
+	var radiusMaxB = infoB["radiusMax"];
+	var rotationA = infoA["rotation"];
+	var rotationB = infoB["rotation"];
+	// 
 // FOR EACH LINE IN A
 // FIND LINE IN B TO SEARCH
 // 
 // ...
+	// scale:
+	var scale = 0.5;
+	var radFxn = function(a,b,p){
+		var A0 = a[0];
+		var A1 = a[1];
+		var B0 = b[0];
+		var B1 = b[1];
+		var q = 1.0 - p;
+		var A = A0*q + B0*p;
+		var B = A1*q + B1*p;
+		return [A,B];
+	}
+	// image
+	var imageA = imageMatrixA.getScaledImage(scale);
+	var imageB = imageMatrixB.getScaledImage(scale);
+	var angsA = Code.getScaledArray(anglesA,scale);
+	var radsA = Code.getScaledArray(radiusA,scale, radFxn);
+	var angsB = Code.getScaledArray(anglesB,scale);
+	var radsB = Code.getScaledArray(radiusB,scale, radFxn);
+	if(rotationA){
+		imageA = imageA.getRotatedImage(180);
+		angsA = Code.reverseArray(angsA);
+		radsA = Code.reverseArray(radsA);
+	}
+	if(rotationB){
+		imageB = imageB.getRotatedImage(180);
+		angsB = Code.reverseArray(angsB);
+		radsB = Code.reverseArray(radsB);
+	}
+	// mapping
+	var info = R3D.polarRectificationRowMatch(infoA,infoB,FFwd, sourceImageA,sourceImageB);
+	var mappingAB = info["mapping"];
+	console.log(mappingAB);
+	// if(rotationA && rotationB){
+	// 	throw "A & B";
+	if(rotationA){ // flip A = vertically
+		mappingAB = Code.reverseArray(mappingAB);
+	}
+	if(rotationB){ // flip B = flip lookups
+		for(var i=0; i<mappingAB.length; ++i){
+			var map = mappingAB[i];
+			if(map>=0){
+				mappingAB[i] = anglesB.length - map - 1;
+			}
+		}
+	}
+	console.log(mappingAB);
+	mappingAB = Code.getScaledArray(mappingAB,scale);
+	console.log(mappingAB);
+	// scale lookup items:
+	for(var i=0; i<mappingAB.length; ++i){
+		var map = mappingAB[i];
+		if(map>=0){
+			mappingAB[i] = Math.round(map*scale);
+		}
+	}
+	// console.log(mappingAB);
+	// var img = imageMatrixA.getRotatedImage(270);
+	var img = imageA;
+	var img = GLOBALSTAGE.getFloatRGBAsImage(img.red(), img.grn(), img.blu(), img.width(), img.height());
+	var d = new DOImage(img);
+	d.matrix().translate(1200, 0);
+	GLOBALSTAGE.addChild(d);
+
+	var img = imageB;
+	var img = GLOBALSTAGE.getFloatRGBAsImage(img.red(), img.grn(), img.blu(), img.width(), img.height());
+	var d = new DOImage(img);
+	d.matrix().translate(1500, 0);
+	GLOBALSTAGE.addChild(d);
 
 
-// HOW TO DO SCALING ...
+	var widthA = imageA.width();
+	var heightA = imageA.height();
+	var widthB = imageB.width();
+	var heightB = imageB.height();
+
+var halfBlockSize = 3;
+var blockSize = 2*halfBlockSize + 1;
+// var disparityOffset = 0;
+var disparityStart = 0
+// var disparityRange = 16;
+var disparityRange = 32;
+// var disparityRange = 64;
+var disparityRange = 128;
+var disparity = Code.newArrayZeros(widthA*heightA);
+	for(var j=0; j<mappingAB.length; ++j){
+		var rowB = mappingAB[j];
+		if(rowB<0){
+			continue;
+		}
+//console.log(j+" = "+rowB);
+		var angA = angsA[j];
+		var radA = radsA[j];
+		var radStartA = Math.ceil(radA[0]*scale);
+		var radEndA = Math.floor(radA[1]*scale);
+
+		var angB = angsB[rowB];
+		var radB = radsB[rowB];
+		var radStartB = Math.ceil(radB[0]*scale);
+		var radEndB = Math.floor(radB[1]*scale);
+
+		// console.log(radStartA,radEndA);
+		// console.log(radStartB,radEndB);
+		// console.log();
+
+		// needle:
+        var minNeedleJ = j-halfBlockSize;
+    	var maxNeedleJ = j+halfBlockSize;
+        // haystack:
+        var minHaystackJ = rowB-halfBlockSize;
+    	var maxHaystackJ = rowB+halfBlockSize;
+    	// mutual clip J
+    		if(minNeedleJ<0 || minHaystackJ<0){
+    			var biggest = Math.min(minNeedleJ,minHaystackJ);
+    			minNeedleJ -= biggest;
+    			minHaystackJ -= biggest;
+    		}
+    		var diffNeedleMaxJ = heightA-1-maxNeedleJ;
+    		var diffHaystackMaxJ = heightB-1-maxHaystackJ;
+    		if(diffNeedleMaxJ<0 || diffHaystackMaxJ<0){
+    			var biggest = Math.min(diffNeedleMaxJ,diffHaystackMaxJ);
+    			maxNeedleJ += biggest;
+    			maxHaystackJ += biggest;
+    		}
+// minNeedleJ = Math.min(heightA-1,Math.max(0,minNeedleJ));
+//   	maxNeedleJ = Math.min(heightA-1,Math.max(0,maxNeedleJ));
+//   	minHaystackJ = Math.min(heightB-1,Math.max(0,minHaystackJ));
+//   	maxHaystackJ = Math.min(heightB-1,Math.max(0,maxHaystackJ));
+		var countA = radEndA-radStartA+1;
+		for(var i=0; i<countA; ++i){
+		// for(var i=radStartA; i<=radEndA; ++i){
+			var nI = i+radStartA;
+			var hI = i+radStartB;
+			// needle:
+      		var minNeedleI = nI-halfBlockSize;
+        	var maxNeedleI = nI+halfBlockSize;
+        	// haystack:
+        	var minHaystackI = hI-disparityRange+disparityStart;
+        	var maxHaystackI = hI+disparityRange+disparityStart;
+        	// mutual clip I
+   //      	var diffNeedleMinI = radEndA-maxNeedleI;
+   //  		var diffHaystackMinI = radEndB-maxHaystackI;
+			// if(diffNeedleMinI<0 || diffHaystackMinI<0){
+   //  			var biggest = Math.min(diffNeedleMinI,diffHaystackMinI);
+   //  			minNeedleI += biggest;
+   //  			minHaystackI += biggest;
+   //  		}
+   //  		var diffNeedleMaxI = radStartA-maxNeedleI;
+   //  		var diffHaystackMaxI = radStartB-maxHaystackI;
+			// if(diffNeedleMaxI<0 || diffHaystackMaxI<0){
+   //  			var biggest = Math.min(diffNeedleMaxI,diffHaystackMaxI);
+   //  			minNeedleI += biggest;
+   //  			minHaystackI += biggest;
+   //  		}
+        	minNeedleI = Math.min(radEndA,Math.max(radStartA,minNeedleI));
+        	maxNeedleI = Math.min(radEndA,Math.max(radStartA,maxNeedleI));
+        	minHaystackI = Math.min(radEndB,Math.max(radStartB,minHaystackI));
+        	maxHaystackI = Math.min(radEndB,Math.max(radStartB,maxHaystackI));
+        	if(maxNeedleI-minNeedleI > maxHaystackI-minHaystackI){
+        		// console.log(maxNeedleI-minNeedleI, maxHaystackI-minHaystackI);
+        		continue;
+        		console.log("HAY ",minHaystackI,maxHaystackI,minHaystackJ,maxHaystackJ);
+				console.log("NED ",minNeedleI,maxNeedleI,minNeedleJ,maxNeedleJ);
+        		throw "can't search";
+        	}
+// console.log("HAY ",minHaystackI,maxHaystackI,minHaystackJ,maxHaystackJ);
+// console.log("NED ",minNeedleI,maxNeedleI,minNeedleJ,maxNeedleJ);
+			var disparityOffset = -(i-minHaystackI);
+
+			var solution = R3D.inPlaceOperation(imageB,minHaystackI,maxHaystackI,minHaystackJ,maxHaystackJ,
+												imageA,minNeedleI,maxNeedleI,minNeedleJ,maxNeedleJ,
+												R3D.inPlaceOperationSADRGB, []);
+			// console.log(solution);
+			var values = solution["value"];
+			var valueWidth = solution["width"];
+			var valueHeight = solution["height"];
+
+			var index = j*widthA + i;
+    		var ext = Code.findGlobalExtrema1D(values, false);
+    		var minima = ext["min"];
+    		if(!ext || !minima){
+    			throw "what?";
+    		}
+        	var d = minima.x + disparityOffset;
+        	// console.log(d);
+// OR RATIO?
+// if(minima.y>0.01){
+// 	// console.log("TOO LARGE: "+minima.y);
+// 	d = 0;
+// }
+        	disparity[index] = d;
+		}
+		// var radMin = rad[0];
+		// var radMax = rad[1];
+		// MATCHING ROW IN B:
+		// break;
+		// console.log(angle);
+
+		// var solution = R3D.inPlaceOperation(imageMatrixB,roiMinC,roiMaxC,roiMinR,roiMaxR, imageMatrixA,minc,maxc,minr,maxr, R3D.inPlaceOperationSADRGB, []);
+    	// var values = solution["value"];
+    	// var valueWidth = solution["width"];
+    	// var valueHeight = solution["height"];
+
+    	// break;
+	}
+	console.log(disparity);
+	// 
+	// console.log(anglesA);
+	// console.log(angsA);
+	// 
+	// console.log(imageA);
+	// console.log(imageB);
+	// angles
+	// console.log(radiusA);
+	// console.log(radsA);
+	// rows
+
+	// 
+	// var n = [0,1,2,3,4,5,6,7,8,9]
+	// var m = Code.getScaledArray(n,0.5);
+	// console.log(n);
+	// console.log(m);
+
+
+
+var depths = Code.copyArray(disparity);
+depths = ImageMat.absFloat(depths);
+depths = ImageMat.getNormalFloat01(depths);
+ImageMat.invertFloat01(depths);
+// console.log(depths);
+var colors = [0xFF000099,0xFF0000FF,0xFF00FFFF,0xFF00FF00,0xFFFFFF00,0xFFFF0000,0xFFCC0000,0xFF990000,0xFF660000];
+// var colors = [0xFF000000, 0xFFFFFFFF];
+var heat = ImageMat.heatImage(depths, widthA, heightA, true, colors); // R O C B
+img = GLOBALSTAGE.getFloatRGBAsImage(heat.red(), heat.grn(), heat.blu(), widthA, heightA);
+d = new DOImage(img);
+// d.matrix().scale(displayScale*currentScale);
+d.matrix().scale(1.0);
+// d.matrix().translate(500, 10 + 50*i);
+d.matrix().translate(1000, 200);
+GLOBALSTAGE.addChild(d);
 
 }
 // ------------------------------------------------------------------------------------------- nonlinearness
@@ -21992,6 +22340,7 @@ R3D.inPlaceOperation = function(imageA,startAX,endAX,startAY,endAY, imageB,start
 	if(endBY>=heightB){
 		endBY = heightB-1;
 	}
+	
 	// counts
 	var countAX = endAX-startAX+1;
 	var countAY = endAY-startAY+1;
@@ -22002,6 +22351,9 @@ R3D.inPlaceOperation = function(imageA,startAX,endAX,startAY,endAY, imageB,start
 	var totalBX = (countAX-countBX+1);
 	var totalB = totalBX*totalBY;
 	if(totalB<0){
+		console.log("haystack",startAX,endAX,startAY,endAY);
+		console.log("needle",startBX,endBX,startBY,endBY);
+		console.log(totalBY,totalBX);
 		throw "reverse needle & haystack ? ";
 	}
 	operationFxn(args,false,totalBX,totalBY);

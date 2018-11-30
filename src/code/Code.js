@@ -911,7 +911,7 @@ Code.hash = function(string){
 	}
 	return hash;
 }
-Code.binarySearch = function(a, f){ // assumed increasing | if AT INDEX: return index, if BETWEEN INDEX: return [a,b], if OUTSIDE: return [end]
+Code.binarySearch = function(a, f, noEnds){ // assumed increasing | if AT INDEX: return index, if BETWEEN INDEX: return [a,b], if OUTSIDE: return [end]
 	if(a.length==0){
 		return null;
 	}
@@ -931,9 +931,15 @@ Code.binarySearch = function(a, f){ // assumed increasing | if AT INDEX: return 
 		}
 	}
 	if(minIndex==a.length){ // return [a.length]
+		if(noEnds){
+			return null;
+		}
 		return [a.length-1];
 	}
 	if(maxIndex==-1){ // return [-1]
+		if(noEnds){
+			return null;
+		}
 		return [0];
 	}
 	return [maxIndex,minIndex];
@@ -1227,9 +1233,43 @@ Code.preTruncateArray = function(a,length){
 	if(a.length>length){
 		a.splice(0,a.length-length);
 	}
-	// while(a.length>length){ a.shift(); }
 	return a;
 };
+Code.getScaledArray = function(array, scale, fxn){ // ENDS MATCH UP
+	var a = [];
+	var inLength = array.length;
+	var lm1 = inLength-1;
+	var length = Math.round(inLength*scale);
+	var s = (length-1)/(inLength-1);
+	// console.log("S: "+s)
+	if(fxn){ // perform merging op
+		for(var i=0; i<length; ++i){
+			var p = i/s;
+			var A = Math.floor(p);
+			var B = Math.ceil(p);
+			p = p - A;
+			// var q = 1.0-p;
+			A = Math.min(A,lm1);
+			B = Math.min(B,lm1);
+			var val = fxn(array[A],array[B],p);
+			a[i] = val;
+		}
+	}else{
+		for(var i=0; i<length; ++i){
+			var p = i/s;
+			// console.log(p);
+			var A = Math.floor(p);
+			var B = Math.ceil(p);
+			p = p - A;
+			var q = 1.0-p;
+			A = Math.min(A,lm1);
+			B = Math.min(B,lm1);
+			// console.log(p,A,B);
+			a[i] = array[A]*q + array[B]*p; // TODO: POSSIBLY OPTION TO INTERPOLATE BETWEEN POINTS USING POLYNOMIAL
+		}
+	}
+	return a;
+}
 Code.getElements = function(element, fxn, stop, arr){
 	return Code.getElementsWithFunction(element, fxn, stop, arr);
 };
@@ -5889,6 +5929,12 @@ Code.interpolate1D = function(locOut, locIn, a, b, c, d){ // list of V2D
 }
 Code.findMaxima1D = function(d){
 	var i, lenM1 = d.length-1, a,b,c, v, list = [];
+	if(d.length>1 &&d[0]>=d[1]){
+		list.push( new V2D(0,d[0]) );
+	}
+	if(d.length>1 &&d[d.length-1]>=d[d.length-2]){
+		list.push( new V2D(d.length-1,d[d.length-1]) );
+	}
 	for(i=1;i<lenM1;++i){
 		a = d[i-1]; b = d[i]; c = d[i+1];
 		if(b>=a&&b>=c){
@@ -5900,6 +5946,12 @@ Code.findMaxima1D = function(d){
 }
 Code.findMinima1D = function(d){
 	var i, lenM1 = d.length-1, a,b,c, v, list = [];
+	if(d.length>1 &&d[0]<=d[1]){
+		list.push( new V2D(0,d[0]) );
+	}
+	if(d.length>1 &&d[d.length-1]<=d[d.length-2]){
+		list.push( new V2D(d.length-1,d[d.length-1]) );
+	}
 	for(i=1;i<lenM1;++i){
 		a = d[i-1]; b = d[i]; c = d[i+1];
 		if(b<=a&&b<=c){
@@ -8768,12 +8820,18 @@ Code.lineOriginAndDirection2DFromEquation = function(org,dir, a,b,c){
 		}
 	// }
 }
+Code.lineEquationFromRay2D = function(org,dir){
+	var closest = Code.closestPointLine2D(org,dir, V2D.ZERO);
+	var len = closest.length();
+	closest.norm();
+	return {"a":closest.x, "b":closest.y, "c":-len};
+}
 Code.lineEquationFromPoints2D = function(a,b){ // 
 	dir = V2D.sub(b,a);
 	var closest = Code.closestPointLine2D(a,dir, V2D.ZERO);
 	var len = closest.length();
 	closest.norm();
-	return {a:closest.x, b:closest.y, c:-len};
+	return {"a":closest.x, "b":closest.y, "c":-len};
 }
 Code.homoIntersectionFromLines2D = function(a1,b1,c1, a2,b2,c2){ // [A]x B
 	return new V3D(b1*c2-c1*b2, c1*a2-a1*c2, a1*b2-b1*a2); // 
