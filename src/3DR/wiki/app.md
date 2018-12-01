@@ -325,12 +325,23 @@ https://cloud.google.com/appengine/docs/nodejs/
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+- HOW TO DO CELL BELIEF PROPAGATION
+	- there are confident cells & less confident cells
+		- confident ones are pinned down
+		- non-confident ones can float around
+
+- does being the LEFT or RIGHT MATTER ?
+	- -1 vs +1
+
 - F MATCHING
 	- optimal locations:
 		- local belief propagation
 			- 9-neighborhood dist
 			- L / M / R neighbor dists
+			- 
 		- how to allow for occluded pixels?
+			- pinching in left or right image ?
+				- along with poor matching scores
 
 	- vizualize confidence areas
 		- different confidence measures
@@ -339,6 +350,10 @@ https://cloud.google.com/appengine/docs/nodejs/
 - polar F-matching
 	- offset image by starting line points
 	- allow MODULAR SAERCHING FOR WHEN EPIPOLE IS INSIDE
+
+
+---- look at how many / good the top / best corners are if selecting subset of F matches
+
 
 
 
