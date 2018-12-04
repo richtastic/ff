@@ -19,9 +19,12 @@ function Medium(){
 	// this._tickCount = 0;
 	
 	// var imageList = ["caseStudy1-0.jpg", "caseStudy1-9.jpg"];
-	var imageLoader = new ImageLoader("./images/",imageList, this,this.handleImagesLoaded,null);
+	// var imageLoader = new ImageLoader("./images/",imageList, this,this.handleImagesLoaded,null);
 
-	var imageList = ["room0.png", "room2.png"];
+	// var imageList = ["room0.png", "room2.png"];
+	// var imageList = ["bench_A.png", "bench_B.png"];
+	// var imageList = ["snow1.png", "snow2.png"];
+	var imageList = ["caseStudy1-20.jpg", "caseStudy1-24.jpg"];
 	var imageLoader = new ImageLoader("./images/",imageList, this,this.handleImagesLoadedRectify,null);
 	imageLoader.load();
 }
@@ -367,8 +370,8 @@ Medium.prototype.handleImagesLoadedRectify = function(imageInfo){
 		images[i] = img;
 		var d = new DOImage(img);
 		this._root.addChild(d);
-		d.graphics().alpha(0.1);
-		// d.graphics().alpha(1.0);
+		// d.graphics().alpha(0.1);
+		d.graphics().alpha(1.0);
 		d.matrix().translate(x,y);
 		x += img.width;
 	}
@@ -384,6 +387,11 @@ Medium.prototype.handleImagesLoadedRectify = function(imageInfo){
 	var imageMatrixB = new ImageMat(imageFloatB["width"],imageFloatB["height"], imageFloatB["red"], imageFloatB["grn"], imageFloatB["blu"]);
 
 var points;
+
+
+
+// var imageList = ["room0.png", "room2.png"];
+
 
 var pointsA = [];
 points = pointsA;
@@ -514,6 +522,308 @@ points.push( new V2D(411.9999963323768,96.99999813008753) ); // 59
 
 	F = [8.81121731206021e-8,0.000010114343292779635,-0.0012512115388550813,1.0539861656966728e-7,-0.000004023737922070967,-0.01313862645804628,0.00009352376307345056,0.011747687492820876,-0.597184751416662];
 
+
+
+
+// var imageList = ["bench_A.png", "bench_B.png"];
+
+
+
+var pointsA = [];
+points = pointsA;
+points.push( new V2D(301.85233375298054,126.81585618302164) ); // 0
+points.push( new V2D(192.51212376899417,117.34596338776937) ); // 1
+points.push( new V2D(189.14252707489138,135.9283746654506) ); // 2
+points.push( new V2D(277.9991344369155,152.0010537634594) ); // 3
+points.push( new V2D(104.9974201235626,219.00153052064994) ); // 4
+points.push( new V2D(190.7907292177242,107.14967185324349) ); // 5
+points.push( new V2D(240.93796922708682,203.0723761862269) ); // 6
+points.push( new V2D(213.1185704241555,198.94653473049775) ); // 7
+points.push( new V2D(293.99971220414847,144.00002592836464) ); // 8
+points.push( new V2D(326.0821869926279,114.03312515010711) ); // 9
+points.push( new V2D(33.326596344676695,230.674634920461) ); // 10
+points.push( new V2D(219.92571512310678,162.96533025584844) ); // 11
+points.push( new V2D(330.99773940696434,239.00143695303643) ); // 12
+points.push( new V2D(371.99555031862695,287.99900691790657) ); // 13
+points.push( new V2D(61.246773313036385,108.16893730747164) ); // 14
+points.push( new V2D(92.69329076756864,36.9213061481344) ); // 15
+points.push( new V2D(189.9999992230732,330.99998328703515) ); // 16
+points.push( new V2D(322.99208158258523,250.9967811509704) ); // 17
+points.push( new V2D(54.99860741518554,48.99412201550241) ); // 18
+points.push( new V2D(331.99484649552693,148.00235941567854) ); // 19
+points.push( new V2D(216.9056878880334,239.01887809295908) ); // 20
+points.push( new V2D(477.9631564781131,332.75460420345814) ); // 21
+points.push( new V2D(162.99793469974074,94.99877617398107) ); // 22
+points.push( new V2D(359.0006724752813,285.9931626233931) ); // 23
+points.push( new V2D(340.00017534702425,250.9984474610082) ); // 24
+points.push( new V2D(368.06004560118987,262.9898337286153) ); // 25
+points.push( new V2D(429.9988071729879,306.9928356073862) ); // 26
+points.push( new V2D(134.0987584511251,81.93831464887654) ); // 27
+points.push( new V2D(251.00059142535298,175.0011656257351) ); // 28
+points.push( new V2D(182.0000818395097,335.0000195396564) ); // 29
+points.push( new V2D(444.99913705487813,284.99759935744476) ); // 30
+points.push( new V2D(252.99995244369595,343.00007346020595) ); // 31
+points.push( new V2D(173.0001517552526,214.99524076857156) ); // 32
+points.push( new V2D(80.99955872664623,257.00050407095443) ); // 33
+points.push( new V2D(43.99969758209072,324.0006375209427) ); // 34
+points.push( new V2D(166.9979173224859,114.99917568017302) ); // 35
+points.push( new V2D(337.99995117889296,313.9997133579294) ); // 36
+points.push( new V2D(341.9981185340081,138.99977763337574) ); // 37
+points.push( new V2D(369.99976472135495,253.99668628394963) ); // 38
+points.push( new V2D(443.9997281925473,197.99640228606606) ); // 39
+points.push( new V2D(170.0041343768243,235.00557612022612) ); // 40
+points.push( new V2D(301.00009762290716,303.0001450477586) ); // 41
+points.push( new V2D(431.9985673493198,214.0004402847297) ); // 42
+points.push( new V2D(222.9998528412367,345.0000091123191) ); // 43
+points.push( new V2D(433.99983724114935,149.9998499822969) ); // 44
+points.push( new V2D(298.99999936487563,334.9999986871341) ); // 45
+points.push( new V2D(383.9999547670035,315.99996695384476) ); // 46
+points.push( new V2D(331.0001371167643,319.0001763156921) ); // 47
+points.push( new V2D(458.99964291818594,241.99918051710026) ); // 48
+points.push( new V2D(202.00056019905617,258.9998595388774) ); // 49
+points.push( new V2D(101.99999907211225,280.99998931408) ); // 50
+points.push( new V2D(194.9999897073696,295.99999828821853) ); // 51
+
+
+var pointsB = [];
+points = pointsB;
+points.push( new V2D(318.9403301170212,107.01383706747959) ); // 0
+points.push( new V2D(234.46694901540658,96.0917981757531) ); // 1
+points.push( new V2D(231.89813630360305,113.9408476919225) ); // 2
+points.push( new V2D(296.99879721451975,133.00029836577647) ); // 3
+points.push( new V2D(152.99457874751687,182.99937920343706) ); // 4
+points.push( new V2D(233.1978820393625,86.3277678829524) ); // 5
+points.push( new V2D(238.90507140443654,179.80452591595844) ); // 6
+points.push( new V2D(220.60580275978137,173.5832712307657) ); // 7
+points.push( new V2D(311,125.00000476372301) ); // 8
+points.push( new V2D(338.8632561435061,93.75393945371337) ); // 9
+points.push( new V2D(107.94617597393223,186.62411441288438) ); // 10
+points.push( new V2D(313.9463384746919,139.96192088011668) ); // 11
+points.push( new V2D(325.9951769433653,227.99963055096984) ); // 12
+points.push( new V2D(323.9999295935838,283.00328461779765) ); // 13
+points.push( new V2D(180.99989565472043,86.00200948292417) ); // 14
+points.push( new V2D(176.00085411708739,24.999741013811413) ); // 15
+points.push( new V2D(136.99999413713815,282.00000199858886) ); // 16
+points.push( new V2D(307.00723901980865,238.00156290298827) ); // 17
+points.push( new V2D(166.99992287325037,35.99997140872975) ); // 18
+points.push( new V2D(342.0081252793434,131.04115775677164) ); // 19
+points.push( new V2D(231.00157244326687,212.00228433594785) ); // 20
+points.push( new V2D(395.00127357178104,355.56557674554386) ); // 21
+points.push( new V2D(214.00057828262385,74.9966952057434) ); // 22
+points.push( new V2D(314.00387886588294,277.99511483175297) ); // 23
+points.push( new V2D(325.99779147450175,240.99874823491413) ); // 24
+points.push( new V2D(343.0294785329164,258.04901629097196) ); // 25
+points.push( new V2D(366.08727779032637,316.03003656802264) ); // 26
+points.push( new V2D(204.1603175393547,63.02868203296922) ); // 27
+points.push( new V2D(249.00629305976744,154.0034572021561) ); // 28
+points.push( new V2D(172.00001024953974,289.00004875767286) ); // 29
+points.push( new V2D(392.00038640101803,295.998854437447) ); // 30
+points.push( new V2D(171.9991507661323,304.000386418374) ); // 31
+points.push( new V2D(210.0447974154887,185.9359423241878) ); // 32
+points.push( new V2D(116.99974843973858,210.99978476142087) ); // 33
+points.push( new V2D(55.99989186785712,254.0000494609982) ); // 34
+points.push( new V2D(214.99850437863643,94.00074212029128) ); // 35
+points.push( new V2D(267.99990866517203,298.99963453794874) ); // 36
+points.push( new V2D(473.0013902965536,119.00592632457676) ); // 37
+points.push( new V2D(353.9312522091528,249.08106219978987) ); // 38
+points.push( new V2D(442.00144690926754,197.99236267393346) ); // 39
+points.push( new V2D(197.9975384001033,203.00034336290875) ); // 40
+points.push( new V2D(243.99988819110268,281.0000514187518) ); // 41
+points.push( new V2D(492.99874843304246,218.00537246808165) ); // 42
+points.push( new V2D(148.99988625530023,298.9999217762466) ); // 43
+points.push( new V2D(484.00054425809196,138.00107619636393) ); // 44
+points.push( new V2D(213.999999767295,307.999995327955) ); // 45
+points.push( new V2D(309.9999954496515,311.9999353885016) ); // 46
+points.push( new V2D(256.99995657143154,301.999965746372) ); // 47
+points.push( new V2D(448.99366985413775,253.00098813676007) ); // 48
+points.push( new V2D(199.00027038665027,226.9998609578905) ); // 49
+points.push( new V2D(68.00028322425376,227.9996371664038) ); // 50
+points.push( new V2D(164.99999956654503,255.9999986085836) ); // 51
+
+F = [-6.037043098929525e-7,-0.00000970730106456997,0.0018040397976300374,-0.000004613167521603573,0.000001299728959578859,0.012972252880251627,0.00011338592089076502,-0.009458817818843748,-0.21727587142219504];
+
+
+
+
+// "snow1.png", "snow2.png"
+
+var pointsA = [];
+points = pointsA;
+points.push( new V2D(130.9999022735318,281.9998853538) ); // 0
+points.push( new V2D(359.7710073339663,161.0885336976837) ); // 1
+points.push( new V2D(344.04594799124067,201.954530666448) ); // 2
+points.push( new V2D(90.99515343907262,161.05300729592688) ); // 3
+points.push( new V2D(93.33324460849661,103.99631302230905) ); // 4
+points.push( new V2D(111.99943542387528,221.99966157588136) ); // 5
+points.push( new V2D(381.05425534704705,166.9245466028069) ); // 6
+points.push( new V2D(321.99940028105624,248.06347589587037) ); // 7
+points.push( new V2D(118.99667497413772,160.00560818486994) ); // 8
+points.push( new V2D(241.00986567761856,222.07224159010826) ); // 9
+points.push( new V2D(233.91789964747406,166.8759999655412) ); // 10
+points.push( new V2D(316.0008358519483,113.99751522312634) ); // 11
+points.push( new V2D(112.00073787053256,123.99758126236742) ); // 12
+points.push( new V2D(379.00000116723294,282.9999992883623) ); // 13
+points.push( new V2D(382.01122603734495,191.7261244132719) ); // 14
+points.push( new V2D(379.00126228944015,146.00070197431805) ); // 15
+points.push( new V2D(199.00001684611482,203.9999985705574) ); // 16
+points.push( new V2D(378.79907199104207,198.7424764841121) ); // 17
+points.push( new V2D(187.00211268432645,113.99878657762919) ); // 18
+points.push( new V2D(339.9999705516257,128.00000877829987) ); // 19
+points.push( new V2D(185.33178562795527,134.66831605037098) ); // 20
+points.push( new V2D(257.39292388026723,214.5842889906127) ); // 21
+points.push( new V2D(330.79442487684184,157.02063877979322) ); // 22
+points.push( new V2D(215.00007696294324,123.00059646593296) ); // 23
+points.push( new V2D(336.00291808231145,155.99506794135212) ); // 24
+points.push( new V2D(264.99685776245553,137.99835406119143) ); // 25
+points.push( new V2D(225.99976568355285,104.99469226337654) ); // 26
+points.push( new V2D(233.99973349108615,119.99492716815605) ); // 27
+points.push( new V2D(182.99487571946815,120.99938924962763) ); // 28
+points.push( new V2D(152.00377123297136,160.00298782311182) ); // 29
+points.push( new V2D(180.00807992575966,283.0001671355863) ); // 30
+points.push( new V2D(220.96926619517043,155.07625555845405) ); // 31
+points.push( new V2D(227.99929180428745,135.99800914747726) ); // 32
+points.push( new V2D(103.99369668742946,119.99689795506595) ); // 33
+points.push( new V2D(163.99992449095433,290.9998893451493) ); // 34
+points.push( new V2D(218.66628799469513,114.66642915347218) ); // 35
+points.push( new V2D(251.99481877573385,215.998628865105) ); // 36
+points.push( new V2D(318.99957591532194,139.00091188399617) ); // 37
+points.push( new V2D(203.91279748453545,157.09368148273762) ); // 38
+points.push( new V2D(162.00419792976112,137.9961623828845) ); // 39
+points.push( new V2D(193.99861220720445,249.99892461191862) ); // 40
+
+
+
+points.push( new V2D(60.99988332014943,271.9998915040789) ); // 0
+points.push( new V2D(283.7704106285922,140.10292015047756) ); // 1
+points.push( new V2D(269.99598053467685,181.85180063741282) ); // 2
+points.push( new V2D(15.01013016754697,153.05239197507595) ); // 3
+points.push( new V2D(14.666206035220016,95.9976293365947) ); // 4
+points.push( new V2D(38.99962144539531,212.9996838863147) ); // 5
+points.push( new V2D(305.06738956190674,144.9265554804068) ); // 6
+points.push( new V2D(250.00183893106407,229.00917310425072) ); // 7
+points.push( new V2D(43.00646018004075,151.0014983468511) ); // 8
+points.push( new V2D(168.0018992839143,206.99260680000455) ); // 9
+points.push( new V2D(157.9462082142645,151.9581414389743) ); // 10
+points.push( new V2D(238.000587499814,94.99735309954927) ); // 11
+points.push( new V2D(34.66968617154291,114.6670642395095) ); // 12
+points.push( new V2D(308.0000054920573,261.00000631411723) ); // 13
+points.push( new V2D(306.9562145803035,169.71969814440826) ); // 14
+points.push( new V2D(302.00142021042217,124.00066597712657) ); // 15
+points.push( new V2D(125.00001609639656,190.99999700867974) ); // 16
+points.push( new V2D(304.8218356435196,176.79908278123094) ); // 17
+points.push( new V2D(107.99947213940868,101.00089643872792) ); // 18
+points.push( new V2D(263.9999289007101,108.00009799304068) ); // 19
+points.push( new V2D(107.99923498665588,122.66660383200688) ); // 20
+points.push( new V2D(184.40024356888523,199.7050830219114) ); // 21
+points.push( new V2D(254.6656887618656,137.87611055991167) ); // 22
+points.push( new V2D(137.00112357075554,109.00112678997483) ); // 23
+points.push( new V2D(259.99900473594874,135.99537871477543) ); // 24
+points.push( new V2D(186.67195720678868,121.32865575552053) ); // 25
+points.push( new V2D(146.99796903517748,89.99465101577235) ); // 26
+points.push( new V2D(155.9972304803221,105.00233049912946) ); // 27
+points.push( new V2D(104.99813254071164,109.00046564000026) ); // 28
+points.push( new V2D(76.05444925026248,147.9732970752933) ); // 29
+points.push( new V2D(110.04500382637575,270.9656607168208) ); // 30
+points.push( new V2D(144.92206971816552,141.12146952441188) ); // 31
+points.push( new V2D(151.00069478082455,121.995310457925) ); // 32
+points.push( new V2D(25.32447125499739,111.99657436074837) ); // 33
+points.push( new V2D(93.99832550110617,278.9987982556524) ); // 34
+points.push( new V2D(139.00045999586752,100.00170100386156) ); // 35
+points.push( new V2D(178.06777930501565,199.95554881304912) ); // 36
+points.push( new V2D(241.99934704658432,120.00138029459964) ); // 37
+points.push( new V2D(128.00441055359997,144.8742805505896) ); // 38
+points.push( new V2D(85.00190511892403,126.99551518777697) ); // 39
+points.push( new V2D(121.99995462155192,236.00103543906792) ); // 40
+
+
+F = [0.000005462227931478416,-0.00011006854725708874,0.008098590287009702,0.00010948467270919531,0.000005349907912003559,-0.017733821547636006,-0.008103769297990681,0.008222796396283668,0.6108835938091672];
+
+
+
+
+
+// "caseStudy1-20.jpg", "caseStudy1-24.jpg"
+
+
+var pointsA = [];
+points = pointsA;
+points.push( new V2D(335.903758127633,165.15831870188708) ); // 0
+points.push( new V2D(338.0713934580369,143.89395257585554) ); // 1
+points.push( new V2D(206.0008299339135,77.00083242033242) ); // 2
+points.push( new V2D(336.2385818105674,162.46228339319146) ); // 3
+points.push( new V2D(234.00012390040234,16.00001715478541) ); // 4
+points.push( new V2D(264.15405030358176,97.74104836712851) ); // 5
+points.push( new V2D(244.10500612922192,117.00494856029802) ); // 6
+points.push( new V2D(331.8789305404579,156.89010901870083) ); // 7
+points.push( new V2D(218.00003492010129,202.0008191737316) ); // 8
+points.push( new V2D(248.33031838535314,108.00871495137537) ); // 9
+points.push( new V2D(247.81968182744762,96.91675556488728) ); // 10
+points.push( new V2D(133.0001647514299,108.99889143916859) ); // 11
+points.push( new V2D(249.9893325740045,198.88378662370354) ); // 12
+points.push( new V2D(330.0109447331388,175.9341473338008) ); // 13
+points.push( new V2D(209.99989734557118,122.99987243186509) ); // 14
+points.push( new V2D(249.96622232216887,205.08747294191159) ); // 15
+points.push( new V2D(263.10860120061045,107.99424092637098) ); // 16
+points.push( new V2D(214.9977920337619,178.00092409299484) ); // 17
+points.push( new V2D(247.07429833249986,126.90209025315502) ); // 18
+points.push( new V2D(59.91829222414294,180.98063437034432) ); // 19
+points.push( new V2D(61.99747767089701,159.99313278021359) ); // 20
+points.push( new V2D(234.99983871619332,110.9996700926249) ); // 21
+points.push( new V2D(232.99870363501543,200.9995245453885) ); // 22
+points.push( new V2D(305.00264453641626,204.99883945608605) ); // 23
+points.push( new V2D(343.1104673384145,174.93139366672446) ); // 24
+points.push( new V2D(64.04366072219939,167.0463555733784) ); // 25
+points.push( new V2D(283.0042545242387,205.00079868240343) ); // 26
+points.push( new V2D(222.99604190738788,125.99368652301239) ); // 27
+points.push( new V2D(144.00012654647082,165.99982916369717) ); // 28
+points.push( new V2D(241.99998792655614,177.99998950190079) ); // 29
+points.push( new V2D(263.0209346830309,198.88229740664426) ); // 30
+points.push( new V2D(202.61200459921488,112.04213431666476) ); // 31
+points.push( new V2D(85.99795989182842,108.00365627788788) ); // 32
+points.push( new V2D(97.9998656368151,156.99986471728835) ); // 33
+
+
+
+points.push( new V2D(383.91497919815293,175.14174954236242) ); // 0
+points.push( new V2D(386.9877859278775,154.88384177561076) ); // 1
+points.push( new V2D(186.0006292680722,85.00114137847044) ); // 2
+points.push( new V2D(384.2804960687915,172.45387783839175) ); // 3
+points.push( new V2D(226.00009212181646,26.000239174160985) ); // 4
+points.push( new V2D(278.7854449253789,109.00853301724713) ); // 5
+points.push( new V2D(256.99307135712564,127.99509286453524) ); // 6
+points.push( new V2D(379.78012134201475,167.18670144554835) ); // 7
+points.push( new V2D(297.00006564839356,216.00010810727196) ); // 8
+points.push( new V2D(261.02560924386745,118.16901978984583) ); // 9
+points.push( new V2D(262.85787683065917,107.65306997327492) ); // 10
+points.push( new V2D(144.9982705673391,116.9982656924064) ); // 11
+points.push( new V2D(327.949396338422,210.958545221617) ); // 12
+points.push( new V2D(376.0023782333833,185.99103205814228) ); // 13
+points.push( new V2D(189.99965245340667,133.9995018508209) ); // 14
+points.push( new V2D(327.9129592575868,218.06261412116973) ); // 15
+points.push( new V2D(275.7816875979958,120.07337858258323) ); // 16
+points.push( new V2D(256.99646365597096,192.00243836095777) ); // 17
+points.push( new V2D(259.0077101761052,138.00553567125934) ); // 18
+points.push( new V2D(97.20899977073957,199.95013602631718) ); // 19
+points.push( new V2D(101.9971475651407,173.99717002496837) ); // 20
+points.push( new V2D(241.99897968480394,121.99732372194954) ); // 21
+points.push( new V2D(310.9985993534537,213.99976650920948) ); // 22
+points.push( new V2D(376.0000958698556,215.00081594438936) ); // 23
+points.push( new V2D(391.066863519563,184.90582219255208) ); // 24
+points.push( new V2D(103.97822655532562,183.06108827057102) ); // 25
+points.push( new V2D(357.0008652552156,215.99941727217563) ); // 26
+points.push( new V2D(205.99827565232488,137.98883682936656) ); // 27
+points.push( new V2D(205.00004164469118,179.99957005842094) ); // 28
+points.push( new V2D(306.99996669299514,190.00004271356332) ); // 29
+points.push( new V2D(339.06365764386834,210.9135857853359) ); // 30
+points.push( new V2D(181.04791934691605,122.955257634879) ); // 31
+points.push( new V2D(89.33303126797597,114.66558430788173) ); // 32
+points.push( new V2D(120.00004345553876,171.00001236808265) ); // 33
+
+var F = [-3.352712743715355e-7,-0.000013179191740391743,0.0014644355870591895,-0.0000031702316777767065,0.000008588003127220183,-0.02194915505542336,0.0010194085236254263,0.02466134581182565,-0.3114138743008315];
+
+
+
+
 	var matrixFfwd = new Matrix(3,3).fromArray(F);
 	// console.log("F = "+matrixFfwd.toArray()+"; ");
 	var matrixFrev = R3D.fundamentalInverse(matrixFfwd);
@@ -540,7 +850,7 @@ points.push( new V2D(411.9999963323768,96.99999813008753) ); // 59
 		}
 		//d.matrix().scale(1.0);
 		d.matrix().translate(0, 0);
-		GLOBALSTAGE.addChild(d);
+GLOBALSTAGE.addChild(d);
 
 
 
@@ -559,7 +869,7 @@ points.push( new V2D(411.9999963323768,96.99999813008753) ); // 59
 		}
 		//d.matrix().scale(1.0);
 		d.matrix().translate(0+rectifiedA.width(), 0);
-		GLOBALSTAGE.addChild(d);
+GLOBALSTAGE.addChild(d);
 
 // find common areas - overlap
 	var imageA = imageMatrixA;
@@ -626,7 +936,46 @@ var offsetRectB = ( rotationB==0 ? -minRowB : (rectifiedB.height()-maxRowB) );
 	row in scaled B
 */
 
-R3D._stereoBlockMatch(imageMatrixA,imageMatrixB, rectifiedA,rectifiedInfoA, rectifiedB,rectifiedInfoB, matrixFfwd, null,null);
+// R3D._stereoBlockMatch(imageMatrixA,imageMatrixB, rectifiedA,rectifiedInfoA, rectifiedB,rectifiedInfoB, matrixFfwd, null,null);
+var result = R3D.stereoMatch(imageMatrixA,imageMatrixB, rectifiedA,rectifiedInfoA, rectifiedB,rectifiedInfoB, matrixFfwd, null,null);
+console.log(result);
+var matches = result["matches"];
+
+for(var i=0; i<100; ++i){
+	var index = Math.floor(Math.random()*matches.length);
+	var match = matches[index];
+	// console.log(match);
+	var a = match["A"];
+	var b = match["B"];
+	console.log(a+" => "+b);
+
+	var c = new DO();
+	c.graphics().setLine(1.0, 0xFFFF0000);
+	c.graphics().beginPath();
+	c.graphics().drawCircle(a.x,a.y, 5);
+	c.graphics().strokeLine();
+	c.graphics().endPath();
+
+	c.graphics().setLine(1.0, 0xFFFF0000);
+	c.graphics().beginPath();
+	c.graphics().drawCircle(imageMatrixA.width()+ b.x,b.y, 5);
+	c.graphics().strokeLine();
+	c.graphics().endPath();
+
+	c.graphics().setLine(1.0, 0x99FF3366);
+	c.graphics().beginPath();
+	c.graphics().moveTo(a.x,a.y);
+	c.graphics().lineTo(imageMatrixA.width() + b.x,b.y);
+	c.graphics().strokeLine();
+	c.graphics().endPath();
+	
+	c.matrix().translate(0, 0);
+	GLOBALSTAGE.addChild(c);
+
+
+}
+
+// R3D.stereoMatch = function(sourceImageA,sourceImageB, imageMatrixA,infoA, imageMatrixB,infoB, FFwd, inputDisparity, disparityRange){
 
 	// if(rotationB==0){
 	// 	d.matrix().translate(1100 + rectifiedA.width() + 10, offsetRectB + minRowB);

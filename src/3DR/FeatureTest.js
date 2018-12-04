@@ -36,7 +36,7 @@ function FeatureTest(){
 // snow
 // new ImageLoader("./images/",["snow1.png", "snow2.png"],this,this.imagesLoadComplete2).load();
 // zoom study:
-// new ImageLoader("./images/",["caseStudy1-20.jpg", "caseStudy1-24.jpg"],this,this.imagesLoadComplete2).load(); // typical translation
+new ImageLoader("./images/",["caseStudy1-20.jpg", "caseStudy1-24.jpg"],this,this.imagesLoadComplete2).load(); // typical translation
 // new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-24.jpg"],this,this.imagesLoadComplete2).load(); // typical - broked first one
 // new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-20.jpg"],this,this.imagesLoadComplete2).load(); // obscure 
 // new ImageLoader("./images/",["caseStudy1-14.jpg", "caseStudy1-20.jpg"],this,this.imagesLoadComplete2).load(); // obscure
@@ -53,7 +53,7 @@ function FeatureTest(){
 // new ImageLoader("./images/",["zA_small.jpg", "zB_small.jpg"],this,this.imagesLoadComplete2).load(); // ex ok : 64 @ 0.74
 
 // new ImageLoader("./images/",["room0.png", "room1.png"],this,this.imagesLoadComplete2).load(); // real / close scenario
-new ImageLoader("./images/",["room0.png", "room2.png"],this,this.imagesLoadComplete2).load(); // 66 @ 0.57
+// new ImageLoader("./images/",["room0.png", "room2.png"],this,this.imagesLoadComplete2).load(); // 66 @ 0.57
 
 // new ImageLoader("./images/",["bench_A.png", "bench_B.png"],this,this.imagesLoadComplete2).load(); // small skew ----- OK : 54 @ 0.65
 // new ImageLoader("./images/",["bench_B.png", "bench_C.png"],this,this.imagesLoadComplete2).load(); // large skew ----- POOR : 31 * 1.5 [24 @ 1.8 - WRONG]

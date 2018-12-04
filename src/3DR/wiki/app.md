@@ -324,21 +324,30 @@ https://cloud.google.com/appengine/docs/nodejs/
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+- use discrete hierarchy F point matching
+	- convert from F-line matches into image matches [pike random ~100 to show match]
 
-- HOW TO DO CELL BELIEF PROPAGATION
-	- there are confident cells & less confident cells
-		- confident ones are pinned down
-		- non-confident ones can float around
+- HOW TO COMBINE POINTS W/ AFFINE MATCH VS DENSE MATCH POINTS
+	- closest point?
+	- closest N points & average?
+	- local:
+		- relative angle comes epipolar line directions
+		- scale cam be an optimized check (~3 sizes w/ maxima check?)
 
-- does being the LEFT or RIGHT MATTER ?
-	- -1 vs +1
+
+
 
 - F MATCHING
+	- line but start at best match point for each line and go left & right
 	- optimal locations:
-		- local belief propagation
+		
+		- HOW TO DO CELL BELIEF PROPAGATION
+			- there are confident cells & less confident cells
+				- confident ones are pinned down
+				- non-confident ones can float around
 			- 9-neighborhood dist
 			- L / M / R neighbor dists
-			- 
+			- keep track of 'confidences / locations' at previous scales
 		- how to allow for occluded pixels?
 			- pinching in left or right image ?
 				- along with poor matching scores
@@ -352,12 +361,6 @@ https://cloud.google.com/appengine/docs/nodejs/
 	- allow MODULAR SAERCHING FOR WHEN EPIPOLE IS INSIDE
 
 
----- look at how many / good the top / best corners are if selecting subset of F matches
-
-
-
-
-
 
 
 - re-check affine matching --- display features on image for viz
@@ -368,6 +371,8 @@ https://cloud.google.com/appengine/docs/nodejs/
 	=> DOES THIS REQUIRE ITERITIVE SEEKING ? 
 
 - saving corner affine to yaml / loading from yaml
+
+
 
 
 

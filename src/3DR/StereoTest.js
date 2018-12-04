@@ -11,12 +11,11 @@ function StereoTest(){
 	// new ImageLoader("./images/",["stereo_1_left.png", "stereo_1_right.png"],this,this.imagesLoadComplete).load(); // BIG CONES
 	// new ImageLoader("./images/",["stereo_0_left.png", "stereo_0_right.png"],this,this.imagesLoadComplete).load(); // SMALL CONES
 	// new ImageLoader("./images/",["stereo_2_left.png", "stereo_2_right.png"],this,this.imagesLoadComplete).load(); // DESKS - OFFICE
-	// new ImageLoader("./images/",["stereo_3_left.png", "stereo_3_right.png"],this,this.imagesLoadComplete).load(); // MEETING - OFFICE
-
-	// REVERSE:
-	// new ImageLoader("./images/",["stereo_0_right.png", "stereo_0_left.png"],this,this.imagesLoadComplete).load();
-	// 
-	new ImageLoader("./images/",["stereo_teddy_2.png", "stereo_teddy_6.png"],this,this.imagesLoadComplete).load(); // 
+	new ImageLoader("./images/",["stereo_3_left.png", "stereo_3_right.png"],this,this.imagesLoadComplete).load(); // MEETING - OFFICE
+	// REVERSE: - BAD FOR SEQUENTIAL
+	// new ImageLoader("./images/",["stereo_0_right.png", "stereo_0_left.png"],this,this.imagesLoadComplete).load(); // 
+	// MORE:
+	// new ImageLoader("./images/",["stereo_teddy_2.png", "stereo_teddy_6.png"],this,this.imagesLoadComplete).load(); // 
 	// new ImageLoader("./images/",["stereo_tsukuba_1.png", "stereo_tsukuba_5.png"],this,this.imagesLoadComplete).load(); // 
 }
 StereoTest.prototype.imagesLoadComplete = function(imageInfo){
@@ -54,7 +53,9 @@ GLOBALSTAGE.root().matrix().scale(2.0);
 		var imageFloatB = GLOBALSTAGE.getImageAsFloatRGB(imageSourceB);
 		var imageMatrixB = new ImageMat(imageFloatB["width"],imageFloatB["height"], imageFloatB["red"], imageFloatB["grn"], imageFloatB["blu"]);
 
-	StereoTest.hierarchyMatch(imageMatrixA,imageMatrixB);
+	// StereoTest.hierarchyMatch(imageMatrixA,imageMatrixB);
+	// R3D._stereoBlockMatch(sourceImageA,sourceImageB, imageMatrixA,infoA, imageMatrixB,infoB, FFwd, inputDisparity, disparityRange){
+		R3D.stereoMatch(imageMatrixA,imageMatrixB, null,null, null,null, null, null,null);
 }
 StereoTest.hierarchyMatch = function(imageMatrixA,imageMatrixB){
 var OFFY = 0;
@@ -62,6 +63,7 @@ var OFFY = 0;
 	var miniumSize = 16;
 	// var miniumSize = 32;
 	// var miniumSize = 64;
+	// var miniumSize = 128;
 	var widthA = imageMatrixA.width();
 	var heightA = imageMatrixA.height();
 	var widthB = imageMatrixB.width();
@@ -93,9 +95,10 @@ var OFFY = 0;
 		var dOffset = null;
 		var dRange = null;
 // dRange =20;
-		// dRange = miniumSize;
-		dRange = miniumSize/2;
+		dRange = miniumSize;
+		// dRange = miniumSize/2;
 		dRange = Math.max(dRange,8);
+		dRange = Math.min(dRange,32);
 		// dRange = Math.ceil(widA * 0.5);
 		if(disparity){
 			// WANT SCALING AVERAGING W/O 0-1 clipping
@@ -132,30 +135,11 @@ dOffset = blur;
 
 			// console.log(dOffset);
 		}
-		disparity = StereoTest.blockMatch(imgA,imgB, dOffset,dRange);
-		// disparity = StereoTest.blockMatchOrdering(imgA,imgB, dOffset,dRange);
+		// disparity = StereoTest.blockMatch(imgA,imgB, dOffset,dRange);
+		disparity = StereoTest.blockMatchOrdering(imgA,imgB, dOffset,dRange);
 		// console.log(disparity)
 		
 		var depths = Code.copyArray(disparity);
-		/*
-		var info = StereoTest.blockMatchCells(imgA,imgB, dOffset,dRange);
-
-		console.log(info);
-
-		// var disparity = null;
-		var confidence = info["confidence"];
-
-		// TODO:
-		// voting / belief propagation
-		
-			each cell's 9 population points
-			- identify outliers
-				- pick next-best-fit
-		
-
-		
-		var depths = Code.copyArray(confidence);
-		*/
 		pWidA = widA;
 		pHeiA = heiA;
 		
@@ -169,7 +153,7 @@ dOffset = blur;
 			// console.log(depths);
 			var colors = [0xFF000099,0xFF0000FF,0xFF00FFFF,0xFF00FF00,0xFFFFFF00,0xFFFF0000,0xFFCC0000,0xFF990000,0xFF660000];
 			// var colors = [0xFF000000, 0xFFFFFFFF];
-			var heat = ImageMat.heatImage(depths, widA, heiA, true, colors); // R O C B
+			var heat = ImageMat.heatImage(depths, widA, heiA, false, colors); // R O C B
 				img = GLOBALSTAGE.getFloatRGBAsImage(heat.red(), heat.grn(), heat.blu(), widA, heiA);
 				d = new DOImage(img);
 				// d.graphics().alpha(0.25);
@@ -186,12 +170,9 @@ dOffset = blur;
 				}
 				GLOBALSTAGE.addChild(d);
 				OFFY += heiA;
-// if(i==1){
-// 	break;
-// }
 	}
 
-	throw "?"
+	throw "?";
 }
 
 StereoTest.blockMatchCells = function(imageMatrixA,imageMatrixB,  inputDisparity, disparityRange){
@@ -204,7 +185,7 @@ StereoTest.blockMatchCells = function(imageMatrixA,imageMatrixB,  inputDisparity
 	var totalPixels = widthA*heightA;
 	// var disparity = Code.newArrayZeros(totalPixels);
 	disparityRange = disparityRange!==undefined && disparityRange!==null ? disparityRange : Math.round(widthA*0.25); // 30
-console.log(widthA,disparityRange)
+console.log(widthA,disparityRange);
 	// var disparityRange = Math.min(disparityRange,widthA);
 	// for each row:
 
@@ -215,26 +196,17 @@ console.log(widthA,disparityRange)
 	console.log(cells);
 
 	var disparityStart = 0;
-	for(var m=0; m<heightA; ++m){
-		// if(m%10==0){
-		// 	console.log(m+" / "+heightA);
-		// }
+	for(var m=0; m<heightA; ++m){ // row
 		var minr = m-halfBlockSize;
 		var maxr = m+halfBlockSize;
 		minr = Math.min(heightA-1,Math.max(0,minr));
 		maxr = Math.min(heightA-1,Math.max(0,maxr));
-		// for each col:
-		for(var n=0; n<widthA; ++n){
+		for(var n=0; n<widthA; ++n){ // for each col:
 			// needle
 			var minc = n-halfBlockSize;
 			var maxc = n+halfBlockSize;
 			minc = Math.min(widthA-1,Math.max(0,minc));
 			maxc = Math.min(widthA-1,Math.max(0,maxc));
-			// var wid = maxc-minc+1;
-			// var hei = maxr-minr+1;
-
-
-			// var needle = imageMatrixA.extractRect(minc,minr, maxc,minr, maxc,maxr, minc,maxr, wid,hei);
 			// use previous offsets
 			if(inputDisparity){
 				var index = m*widthA + n;
@@ -246,20 +218,13 @@ console.log(widthA,disparityRange)
 			var roiMaxC = n+disparityRange+disparityStart;
 			var roiMinR = minr;
 			var roiMaxR = maxr;
-			// var wid = roiMaxC-roiMinC+1;
-			// var hei = roiMaxR-roiMinR+1;
 			// limits haystack
 			roiMinC = Math.min(widthB-1,Math.max(0,roiMinC));
 			roiMaxC = Math.min(widthB-1,Math.max(0,roiMaxC));
 			roiMinR = Math.min(heightB-1,Math.max(0,roiMinR));
 			roiMaxR = Math.min(heightB-1,Math.max(0,roiMaxR));
-			// limits needle
-			
-			// ...
+			// 
 			var disparityOffset = -(n-roiMinC);
-			// var haystack = imageMatrixB.extractRect(roiMinC,roiMinR, roiMaxC,roiMinR, roiMaxC,roiMaxR, roiMinC,roiMaxR, wid,hei);
-			// var solution = R3D.searchNeedleHaystackImageFlatSAD(needle,null, haystack);
-			// imageA,startAX,endAX,startAY,endAY, imageB,startBX,endBX,startAY,endAY
 			var solution = R3D.inPlaceOperation(imageMatrixB,roiMinC,roiMaxC,roiMinR,roiMaxR, imageMatrixA,minc,maxc,minr,maxr, R3D.inPlaceOperationSADRGB, []);
 			var values = solution["value"];
 			var valueWidth = solution["width"];
@@ -355,9 +320,12 @@ StereoTest.blockMatchOrdering = function(imageMatrixA,imageMatrixB,  inputDispar
 	// var costOcclusion = 0.1;
 	// var costOcclusion = 0.0001;
 	// var costOcclusion = 0.00000001;
-	var costInf = 1E5;
-	var costOcclusion = 0.0000; // around the minimum cost for a comparrison in a row
+	var costOcclusion = 0.0001; // nominally
+	// var costOcclusion = 0.0002;
+	// var costOcclusion = 0.00005; // around the minimum cost for a comparrison in a row
 	var disparityStart = 0;
+	var minDispartyOffset = null;
+	var maxDispartyOffset = null;
 	for(var m=0; m<heightA; ++m){
 		var minr = m-halfBlockSize;
 		var maxr = m+halfBlockSize;
@@ -379,6 +347,7 @@ StereoTest.blockMatchOrdering = function(imageMatrixA,imageMatrixB,  inputDispar
 				var index = m*widthA + n;
 				disparityStart = inputDisparity[index];
 				disparityStart = Math.round(disparityStart);
+				
 			}
 			// haystack
 			var roiMinC = n-disparityRange+disparityStart;
@@ -388,30 +357,47 @@ StereoTest.blockMatchOrdering = function(imageMatrixA,imageMatrixB,  inputDispar
 			roiMinC = Math.min(widthB-1,Math.max(0,roiMinC));
 			roiMaxC = Math.min(widthB-1,Math.max(0,roiMaxC));
 			
-
 			var disparityOffset = -(n-roiMinC-halfBlockSize);
-				if(disparityOffset>0){
-					disparityOffset = 0;
+			if(disparityOffset>0){
+				disparityOffset = 0;
+			}
+			var values = null;
+			if(maxc-minc > roiMaxC-roiMinC){
+				console.log("bad search sizes");
+				values = [0];
+			}else{
+				try{
+					var solution = R3D.inPlaceOperation(imageMatrixB,roiMinC,roiMaxC,roiMinR,roiMaxR, imageMatrixA,minc,maxc,minr,maxr, R3D.inPlaceOperationSADRGB, []);
+				}catch(e){
+					console.log(disparityStart,index,widthA,heightA,m,n);
+					console.log(inputDisparity);
+					throw e;
 				}
-			var solution = R3D.inPlaceOperation(imageMatrixB,roiMinC,roiMaxC,roiMinR,roiMaxR, imageMatrixA,minc,maxc,minr,maxr, R3D.inPlaceOperationSADRGB, []);
-			var values = solution["value"];
-			var valueWidth = solution["width"];
-			var valueHeight = solution["height"];
-			//
+				values = solution["value"];
+			}
 			var absDisparity = [];
 			var pathCosts = [];
 			var previousIndexes = [];
 			for(var d=0; d<values.length; ++d){
-				absDisparity[d] = d + disparityOffset;
+				var disp = d + disparityOffset;
+				if(minDispartyOffset===null){
+					minDispartyOffset = disp;
+					maxDispartyOffset = disp;
+				}else{
+					minDispartyOffset = Math.min(minDispartyOffset,disp);
+					maxDispartyOffset = Math.max(maxDispartyOffset,disp);
+				}
+				absDisparity[d] = disp;
 				pathCosts[d] = null;
 				previousIndexes[d] = null;
 			}
+			
 			disparities.push({"costs":values, "disparities":absDisparity, "pathCosts":pathCosts, "previous":previousIndexes});
 			//
 		}
-		// optimal path searching
-var startM = 100;
-var endM = 0;
+var startM = 60;
+var endM = 70;
+startM = 1E9;
 		// start at left and fill in predecessor based on best score
 		for(var n=0; n<widthA; ++n){
 			var current = disparities[n];
@@ -430,41 +416,40 @@ var endM = 0;
 					var disparityMinCost = 0;
 					for(var p=0; p<previous.costs.length; ++p){
 						var prevDisp = previous.disparities[p];
+						var diffDisp = Math.abs(currentDisp-prevDisp);
 						var prevCost = previous.pathCosts[p];
-						// console.log(p+": "+prevDisp+" <= "+currentDisp);
-						if(prevDisp<=currentDisp){ // can only point to previous disparities
-							
+							prevCost += diffDisp*costOcclusion;
+						// TODO: KEEP WITHIN LIMITED DISPARITY RANGE (+/- 3)
+						// TODO: ENFORCE UNIQUENESS?
+						if(true){
+						// if(diffDisp<=3){
+						// if(diffDisp<=1){
+						// if(prevDisp<=currentDisp){ // can only point to previous disparities
 							if(previousMinIndex===null || prevCost<previousMinCost){
 								previousMinIndex = p;
 								previousMinCost = prevCost;
-								var diffDisp = Math.abs(currentDisp-prevDisp);
-								disparityMinCost = diffDisp*costOcclusion;
 							}
 						}
 					}
-					// console.log(previousMinIndex);
 					if(previousMinIndex!==null){
 						previousIndex = previousMinIndex;
 						previousCost = previousMinCost;
-						// console.log(c+": "+previousIndex);
+					}else{
+						// throw "why null?";
+						previousCost = n*costOcclusion;
 					}
-					var endCost = 0;//costInf*Math.abs(currentDisp);
-					var totalCost = currentCost + previousCost + disparityMinCost + endCost;
+					var totalCost = currentCost + previousCost + disparityMinCost;
 					current.pathCosts[c] = totalCost;
 					current.previous[c] = previousIndex;
 					// console.log("   "+n+":"+c+" = "+currentCost+" + "+previousCost+" + "+disparityMinCost+" = "+totalCost+"     @ "+previousIndex);
 				}else{
-					current.pathCosts[c] = costInf*Math.abs(currentDisp);
+					current.pathCosts[c] = currentCost;
 					current.previous[c] = null;
 				}
-				
 			}
-			// console.log(current);
 		}
-		
-		// console.log(disparities);
 
-		// start at right and work back to find best predecessor
+		// find last list best predecessor path cost:
 		var current = disparities[widthA-1];
 		var currentMinPathCost = null;
 		var currentMinPathIndex = null;
@@ -476,42 +461,42 @@ var endM = 0;
 					currentMinPathIndex = c;
 					currentMinPathCost = currentPathCost;
 					currentMinPreviousIndex = current.previous[c];
+					if(currentMinPathIndex==undefined){
+						console.log(current);
+						console.log(current.previous);
+						console.log(c);
+						console.log(currentMinPathIndex);
+						throw "?";
+					}
 				}
 			}
 		}
-// console.log(disparities);
-// console.log(current);
-// console.log(currentMinPathIndex);
-// console.log(currentMinPathCost);
-// console.log(currentMinPreviousIndex);
-// console.log("MINIMUM END: "+currentMinPathIndex+" => previous: "+currentMinPreviousIndex);
 		var disparityList = [];
-		// disparityList.unshift( current.disparities[currentMinPathIndex] );
-		// currentMinPathIndex = current.previous[currentMinPathIndex];
-		// currentMinPathIndex = currentMinPreviousIndex;
-
-// console.log(disparities);
-var lastValue = null;
+		var lastValue = null;
+		// start at right and work back to find best predecessor
 		for(var n=widthA-1; n>=0; --n){
 			var current = disparities[n];
 			var disp = lastValue;
-if(currentMinPathIndex){
-			var value = StereoTest.interpolateMinima( current.costs, currentMinPathIndex);
-
-			disp = current.disparities[currentMinPathIndex];
-			if(disp===undefined){
-				disp = 0;
+			// console.log(n+": "+lastValue);
+			if(currentMinPathIndex!==null && currentMinPathIndex!==undefined){
+				disp = current.disparities[currentMinPathIndex];
+				if(disp===undefined){
+					disp = lastValue;
+				}
+				// interpolate
+				if(!current.costs){
+					console.log("current.costs");
+					console.log(current.costs);
+				}
+				var value = StereoTest.interpolateMinima( current.costs, currentMinPathIndex);
+				var next = disp + (value.x-currentMinPathIndex);
+				if(Code.isNaN(next)){
+					console.log(value,next,disp,currentMinPathIndex);
+					throw "BAD ?"
+				}
+				disp = next;
+				
 			}
-			
-
-			// console.log(value);
-			// console.log(disp);
-			var next = disp + (value.x-currentMinPathIndex);
-if(m==60){
-			console.log(disp , value.x, currentMinPathIndex, next);
-}
-			disp = next;
-}
 			if(disp===null){
 				throw "why null?";
 			}else{
@@ -519,27 +504,26 @@ if(m==60){
 			}
 			disparityList.unshift(disp);
 			currentMinPathIndex = current.previous[currentMinPathIndex];
+			// console.log(n,currentMinPathIndex);
 		}
-
+		// console.log(disparityList);
 		// save
 		for(var n=0; n<widthA; ++n){
 			var disparity = disparityList[n];
-			if(disparity===undefined || disparity===null){
+			if(disparity===undefined || disparity===null || Code.isNaN(disparity)){
+				console.log(disparity)
 				throw "BAD ?"
 			}
 			// var disparity = disparities[n];
 			var index = m*widthA + n;
 			finalDisparity[index] = disparity;
 		}
-		
-// console.log(m);
-
 // var startM = 1000;
 // var endM = 0;
 if(startM<=m && m<=endM){
 	// console.log("SHOW");
-console.log(disparityList);
-console.log(disparities);
+// console.log(disparityList);
+// console.log(disparities);
 
 		// SHOW LINE:
 		var temp = [];
@@ -556,7 +540,9 @@ var best = disparityList[n];
 			for(var i=0; i<disparity.disparities.length; ++i){
 				var cost = disparity.costs[i];
 				var disp = disparity.disparities[i];
-if(disp==best){
+					// disp = Math.round(disp);
+// console.log(disp,best);
+if(Math.round(disp)==Math.round(best)){
 	cost = 0.001;
 	// cost = -0.00001;
 }
@@ -582,13 +568,12 @@ if(disp==best){
 		d.matrix().scale(1.5);
 		d.matrix().translate(10 + 70*(m-startM), 10);
 		GLOBALSTAGE.addChild(d);
-}
 
 		// if(m>20){
 		// 	throw "out";
 		// }
 
-
+		}
 	}
 	// throw "out";
 
@@ -680,10 +665,24 @@ GLOBALSTAGE.addChild(d);
 */
 			// TODO: BACKUP PEAKS TOO
 			var index = m*widthA + n;
-			var ext = Code.findGlobalExtrema1D(values, false);
-			var minima = ext["min"];
-			if(!ext || !minima){
-				throw "what?";
+
+
+			var minima = Code.findMinima1D(values);
+			if(minima.length>0){
+				minima.sort(function(a,b){
+					return a.y < b.y ? -1 : 1;
+				});
+				minima = minima[0];
+			}else{
+				minima = null;
+			}
+
+			if(!minima){
+				var ext = Code.findGlobalExtrema1D(values, false);
+				var minima = ext["min"];
+				if(!ext || !minima){
+					throw "what?";
+				}
 			}
 			var d = minima.x + disparityOffset;
 
@@ -693,8 +692,24 @@ GLOBALSTAGE.addChild(d);
 					// console.log(diff+" / "+disparityRange);
 					d = inputDisparity[index];
 				}
+				/*
+// USE RATIO TO LIMIT
+				var minima = Code.findMinima1D(values);
+				if(minima.length>1){
+					minima.sort(function(a,b){
+						return a.y < b.y ? -1 : 1;
+					});
+					var min0 = minima[0];
+					var min1 = minima[1];
+					var diff = (min1-min0);
+					if(diff>0.1){
+						d = inputDisparity[index];
+					}
+				}
+				*/
+
 			}
-// OR RATIO?
+
 
 			if(minima.y>0.01){
 				// console.log("TOO LARGE: "+minima.y);
@@ -829,10 +844,15 @@ StereoTest.interpolateMinima = function(array, index){
 		var m = array[index+0];
 		var r = array[index+1];
 		if(l>=m && m<=r){
-			v = Code.interpolateExtrema1D(new V2D(), l,m,r);
-			v.x += index;
-			// console.log(v);
-			// throw "find min";
+			if(l==m && m==r){
+				v = new V2D(index,array[index]);
+			}else{
+				v = Code.interpolateExtrema1D(new V2D(), l,m,r);
+				if(!v){
+					console.log(l,m,r)
+				}
+				v.x += index;
+			}
 			return v;
 		}
 	}
