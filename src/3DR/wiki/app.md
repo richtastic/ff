@@ -324,6 +324,34 @@ https://cloud.google.com/appengine/docs/nodejs/
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+- searching circular array
+
+
+
+
+- test oriented F matrix (F0) with test data example
+	- make some 3D points
+	- make K
+	- make 3D extrinsic cameras
+	- project to 2 views
+	- test various points & angles in 2D
+		- half-lines
+
+- instead of binary searching by ABSOLUTE angle
+	=> binary search by DIFF ANGLE
+		-> allow circular searching around 
+
+
+
+
+
+
+
+
+- mapping between rectification and points
+...
+
 - use discrete hierarchy F point matching
 	- convert from F-line matches into image matches [pike random ~100 to show match]
 

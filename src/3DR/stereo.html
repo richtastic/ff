@@ -11,9 +11,409 @@ function ffLoadedFxn(){
 	(new ScriptLoader("./",["R3D.js", "StereoTest.js"],this,classesLoadedFxn)).load();
 }
 function classesLoadedFxn(){
-	console.log("...")
+	console.log("...");
+
 	var stereo = new StereoTest();
 	return;
+
+
+
+	// GLOBAL STAGE:
+	this._canvas = new Canvas(null,0,0,Canvas.STAGE_FIT_FILL, false,false);
+	this._stage = new Stage(this._canvas, 1000/20);
+	this._root = new DO();
+	this._stage.addChild(this._root);
+	this._canvas.addListeners();
+	this._stage.addListeners();
+	this._stage.start();
+	GLOBALSTAGE = this._stage;
+
+
+
+
+	var points3D = [];
+		points3D.push(new V3D(0,0,0));
+		points3D.push(new V3D(1,0,0));
+		points3D.push(new V3D(0,1,0));
+		points3D.push(new V3D(0,0,1));
+		points3D.push(new V3D(1,1,0));
+		points3D.push(new V3D(1,0,1));
+		points3D.push(new V3D(0,1,1));
+		points3D.push(new V3D(1,1,1));
+		points3D.push(new V3D(0,2,0));
+		points3D.push(new V3D(3,0,0));
+		points3D.push(new V3D(0,0,4));
+		// points3D.push(new V3D(0,0,0));
+		points3D.push(new V3D(-1,-1,-1));
+	var matrix;
+	var extrinsics = [];
+		matrix = new Matrix(4,4).identity();
+			matrix = Matrix.transform3DRotateY(matrix, -Math.PI*0.3);
+			matrix = Matrix.transform3DRotateX(matrix, -Math.PI*0.3);
+			matrix = Matrix.transform3DTranslate(matrix, 5,1,4);
+
+			// matrix = Matrix.transform3DRotateZ(matrix, Math.PI*0.5);
+		extrinsics.push(matrix);
+		matrix = new Matrix(4,4).identity();
+			matrix = Matrix.transform3DRotateY(matrix, Math.PI*0.2);
+			matrix = Matrix.transform3DRotateX(matrix, Math.PI*0.01);
+			matrix = Matrix.transform3DTranslate(matrix, -1,1,3);
+		extrinsics.push(matrix);
+	var imageWidth = 400;
+	var imageHeight = 300;
+	var fx = 100;
+	var fy = fx;
+	var s = 0;
+	var cx = imageWidth*0.5;
+	var cy = imageWidth*0.5;
+	var K = new Matrix(3,3).fromArray([fx,s,cx, 0,fy,cy, 0,0,1]);
+	var distortions = null;
+		var extrinsic0 = extrinsics[0];
+		var extrinsic1 = extrinsics[1];
+	var ar = new V2D(0,0);
+	var br = new V2D(imageWidth,0);
+	var cr = new V2D(imageWidth,imageHeight);
+	var dr = new V2D(0,imageHeight);
+	var points2DA = [];
+	var points2DB = [];
+	for(var i=0; i<points3D.length; ++i){
+		var point3D = points3D[i];
+		// console.log(point3D);
+		var projected2DA = R3D.projectPoint3DToCamera2DForward(point3D, extrinsic0, K, distortions);
+		var projected2DB = R3D.projectPoint3DToCamera2DForward(point3D, extrinsic1, K, distortions);
+		// console.log(projected2D);
+		// console.log(projected2DA+" | "+projected2DB);
+		if(projected2DA && projected2DB){
+			// console.log(projected2DA+" | "+projected2DB);
+			var pA = projected2DA;
+			var pB = projected2DB;
+			if( Code.isPointInsideRect2D(pA, ar,br,cr,dr) && Code.isPointInsideRect2D(pB, ar,br,cr,dr) ){
+				console.log(pA+" | "+pB);
+				var d = new DO();
+					d.graphics().clear();
+					d.graphics().setLine(1.0, 0xFFFF0000);
+					d.graphics().beginPath();
+					d.graphics().drawCircle(pA.x,pA.y, 3);
+					d.graphics().endPath();
+					d.graphics().strokeLine();
+				d.matrix().translate(0,0);
+				GLOBALSTAGE.addChild(d);
+
+				var d = new DO();
+					d.graphics().clear();
+					d.graphics().setLine(1.0, 0xFF0000FF);
+					d.graphics().beginPath();
+					d.graphics().drawCircle(pB.x,pB.y, 3);
+					d.graphics().endPath();
+					d.graphics().strokeLine();
+				d.matrix().translate(imageWidth,0);
+				GLOBALSTAGE.addChild(d);
+
+				points2DA.push(pA);
+				points2DB.push(pB);
+			}
+		}
+	}
+	var F = R3D.fundamentalFromUnnormalized(points2DA,points2DB);
+	console.log(F);
+	var matrixFfwd = F;
+	var matrixFrev = R3D.fundamentalInverse(matrixFfwd);
+	var display = GLOBALSTAGE;
+
+	var imageMatrixA = null;
+	var imageMatrixB = null;
+
+	R3D.showFundamental(points2DA, points2DB, matrixFfwd, matrixFrev, display, imageMatrixA,imageMatrixB);
+
+
+
+	// lines
+// 	var a = new V3D();
+// 	var org = new V3D();
+// 	var dir = new V3D();
+// 		a.set(locationA.x,locationA.y,1.0);
+// 	var lineBMid = F.multV3DtoV3D(new V3D(), a);
+// // console.log(lineBMid);
+// 		a.set(topA.x,topA.y,1.0);
+// 	var lineBTop = F.multV3DtoV3D(new V3D(), a);
+// 	// 	a.set(bA.x,bA.y,1.0);
+// 	// var lineBBot = F.multV3DtoV3D(new V3D(), a);
+
+// 	// rays
+// 	Code.lineOriginAndDirection2DFromEquation(org,dir, lineBMid.x,lineBMid.y,lineBMid.z);
+// 	var orgMid = org.copy();
+// 	var dirMid = dir.copy();
+// 	Code.lineOriginAndDirection2DFromEquation(org,dir, lineBTop.x,lineBTop.y,lineBTop.z);
+// 	var orgTop = org.copy();
+// 	var dirTop = dir.copy();
+
+	var index = 0;
+	var pA = points2DA[index];
+	var pB = points2DB[index];
+
+// a candidate point is not perpendicular (and not parallel) 
+// use several of best points to create concensus 
+// var otherI = 2;
+var otherI = 5;
+var oA = points2DA[otherI];
+var oB = points2DB[otherI];
+
+var epipoles = R3D.getEpipolesFromF(matrixFfwd);
+var epipoleA = epipoles["A"];
+var epipoleB = epipoles["B"];
+var eA = epipoleA;
+var eB = epipoleB;
+
+
+	// point in A to half-line in B
+	var a = new V3D();
+	a.set(pA.x,pA.y,1.0);
+	var lineB = F.multV3DtoV3D(new V3D(), a);
+	console.log(lineB);
+
+
+	var org = new V2D();
+	var dir = new V2D();
+	Code.lineOriginAndDirection2DFromEquation(org,dir, lineB.x,lineB.y,lineB.z);
+
+	var oA3 = new V3D(oA.x,oA.y,1.0);
+	var oB3 = new V3D(oB.x,oB.y,1.0);
+	var dotB3 = V3D.dot(lineB,oB3);
+	// var dotA3 = V3D.dot(?,oA3);
+	// console.log(dotA3,dotB3);
+
+
+	// show:
+	var LL = new V2D(0,0);
+	var LR = new V2D(imageWidth,0);
+	var UR = new V2D(imageWidth,imageHeight);
+	var UL = new V2D(0,imageHeight);
+	var line = Code.clipRayRect2D(org,dir,LL,LR,UR,UL);
+	var lA = line["a"];
+	var lB = line["b"];
+
+console.log(lA);
+console.log(lB);
+
+// IF EPIPOLE IS OUTSIDE IMAGE: USE RAY-IMAGE INTERSECTION TO ISOLATE HALF-LINE DIRECTION
+// IF EPIPOLE IS IN IMAGE: NEED TO DISCRIMINIATE HALF-LINES BASED ON OTHER PAIR CROSS DIRECTIONS:
+// WHAT IS EPIPOLE AT INFINITY LOOK LIKE?
+
+	var d = new DO();
+		d.graphics().clear();
+		d.graphics().setLine(3.0, 0xFFCC0066);
+		d.graphics().beginPath();
+		d.graphics().drawCircle(pA.x,pA.y, 5);
+		d.graphics().endPath();
+		d.graphics().strokeLine();
+	d.matrix().translate(0,0);
+	GLOBALSTAGE.addChild(d);
+
+	var d = new DO();
+		d.graphics().clear();
+		d.graphics().setLine(3.0, 0xFF0066FF);
+		d.graphics().beginPath();
+		d.graphics().drawCircle(oA.x,oA.y, 5);
+		d.graphics().endPath();
+		d.graphics().strokeLine();
+	d.matrix().translate(0,0);
+	GLOBALSTAGE.addChild(d);
+
+	var o = new V2D(eA.x,eA.y);
+	var d = V2D.sub(oA,o).norm();
+	var l2 = Code.clipRayRect2D(o,d,LL,LR,UR,UL);
+	var l2A = l2["a"];
+	var l2B = l2["b"];
+
+	var d = new DO();
+		d.graphics().clear();
+		d.graphics().setLine(3.0, 0xFF0066FF);
+		d.graphics().beginPath();
+		d.graphics().moveTo(l2A.x,l2A.y);
+		d.graphics().lineTo(l2B.x,l2B.y);
+		d.graphics().endPath();
+		d.graphics().strokeLine();
+	d.matrix().translate(0,0);
+	GLOBALSTAGE.addChild(d);
+
+
+
+
+
+	var d = new DO();
+		d.graphics().clear();
+		d.graphics().setLine(3.0, 0xFFCC0066);
+		d.graphics().beginPath();
+		d.graphics().drawCircle(pB.x,pB.y, 5);
+		d.graphics().endPath();
+		d.graphics().strokeLine();
+	d.matrix().translate(imageWidth,0);
+	GLOBALSTAGE.addChild(d);
+
+	var d = new DO();
+		d.graphics().clear();
+		d.graphics().setLine(3.0, 0xFF0066FF);
+		d.graphics().beginPath();
+		d.graphics().drawCircle(oB.x,oB.y, 5);
+		d.graphics().endPath();
+		d.graphics().strokeLine();
+	d.matrix().translate(imageWidth,0);
+	GLOBALSTAGE.addChild(d);
+
+	var d = new DO();
+		d.graphics().clear();
+		d.graphics().setLine(3.0, 0xFFCC0066);
+		d.graphics().beginPath();
+		d.graphics().moveTo(lA.x,lA.y);
+		d.graphics().lineTo(lB.x,lB.y);
+		d.graphics().endPath();
+		d.graphics().strokeLine();
+	d.matrix().translate(imageWidth,0);
+	GLOBALSTAGE.addChild(d);
+
+
+	var rA = V2D.sub(oA,eA);
+	var rB = V2D.sub(oB,eB);
+	var dotA = V2D.dot( rA, V2D.sub(pA,eA) );
+	var dotB = V2D.dot( rB, dir);
+	console.log(dotA);
+	console.log(dotB);
+	if(dotA>0&&dotB<0 || dotA<0&&dotB>0){
+		dir.scale(-1);
+	}
+
+	// CORRECT HALF-LINE DIRECTION:
+	var sss = 500;
+	var d = new DO();
+		d.graphics().clear();
+		d.graphics().setLine(3.0, 0xFF006600);
+		d.graphics().beginPath();
+		d.graphics().moveTo(eB.x,eB.y);
+		d.graphics().lineTo(eB.x + dir.x*sss,eB.y + dir.y*sss);
+		d.graphics().endPath();
+		d.graphics().strokeLine();
+	d.matrix().translate(imageWidth,0);
+	GLOBALSTAGE.addChild(d);
+
+
+	var val, arr;
+	// 			0. 1. 2. 3. 4. 5. 6.  7.  8.  9. 
+
+	// T0 == [9,0]
+	// val = 180;
+	// arr = [20,19,18,17,16,15,10,-10,-30,-90];
+
+	// T1 == [5,6]
+	// val = 135;
+	// arr = [0,-5,-10,-15,-20,-25,90,40,30,20];
+
+	// T2 == [6,7]
+	// val = 150;
+	// arr = [-90,-100,-110,-120,-130, -170,170,135,100,90];
+
+	// T3 == [9,0]
+	// val = 30;
+	// arr = [10,-10,-30,-50,-60,-90,-110,-130,180,160];
+
+	// T4 == [14,15]
+	// val = 90;
+	// arr = [60,50,30,20,10,0,-45,-70,-95,-130,-160,-170,130,120,110,80];
+
+	// DYNAMICS: 
+
+	// T5 == [1,2]
+	// arr = [8, 96, 135, 154, 219, 249, 250, 256, 266, 266];
+	// val = 104;
+
+	// T6 = [1,2]
+	// arr = [55, 46, 298, 270, 192, 161, 143, 121, 90, 65];
+	// val = 4;
+
+	// T7 = [3];
+	// arr = [105, 105, 103, 102, 101, 85, 82, 75, 50, 48, 44, 356, 352, 341, 336, 328, 297, 280, 265, 254, 251, 232, 228, 215, 208, 191, 184, 179, 166, 156];
+	// val = 102;
+
+	// dynamic test:
+	var count = 30;
+	arr = [];
+	for(var i=0; i<count; ++i){
+		var a = Math.random()*Math.PI*2;
+		a = Code.angleZeroTwoPi(a);
+		a = Code.degrees(a);
+		a = Math.round(a);
+		arr.push( a );
+	}
+	arr.sort(function(a,b){ // CW orientation
+		return a>b ? -1 : 1;
+	});
+	var shift = Math.round(Math.random()*count);
+	console.log("SHIFT: "+shift);
+	for(var i=0; i<shift; ++i){
+		arr.push(arr.shift());
+	}
+	val = Math.random()*Math.PI*2;
+	val = Code.degrees(val);
+	val = Math.round(val);
+
+
+	// arr = [105, 105, 103, 102, 101, 85, 82, 75, 50, 48, 44, 356, 352, 341, 336, 328, 297, 280, 265, 254, 251, 232, 228, 215, 208, 191, 184, 179, 166, 156];
+	// val = 102;
+
+
+
+	console.log(arr);
+	var fxn = function(a){
+		var vRad = Code.radians(val);
+		var aRad = Code.radians(a);
+		var vVec = new V2D(1,0).rotate(vRad);
+		var aVec = new V2D(1,0).rotate(aRad);
+		var angle = V2D.angleDirection(aVec,vVec);
+		angle = -angle; // left is negative
+		// var angle = Code.minAngle(aRad,vRad);
+		return Code.degrees(angle);
+	};
+	var strI = "";
+	var strA = "";
+	var strD = "";
+	for(var i=0; i<arr.length; ++i){
+		strI = strI + Code.prependFixed(""+i," ",5);
+		strA = strA + Code.prependFixed(""+arr[i]," ",5);
+		strD = strD + Code.prependFixed(""+Math.round(fxn(arr[i]))," ",5);
+	}
+	console.log(strI);
+	console.log(strA);
+	console.log(strD);
+	console.log(" search: "+val);
+	// 
+	var indexes = Code.binarySearchCircular(arr, fxn, true);
+	console.log(indexes);
+	if(!indexes){
+		console.log("none");
+	}else if(indexes.length==1){ // found
+		var index = indexes[0];
+		console.log(" found: "+index);
+	}else{
+		var indexA = indexes[0];
+		var indexB = indexes[1];
+		console.log(" between: ["+indexA+","+indexB+"] = ["+arr[indexA]+","+arr[indexB]+"]  ("+val+") ");
+	}
+
+
+	//
+
+
+	// R3D.fundamentalPointToLine(F,referenceA,referenceB,sizeA,sizeB, pA); // RETURN A RAY IN DIRECTION OF HALF-LINE VALID SEARCH DIRECTION
+
+/*
+	oriented F0
+
+	TRANSLATING BETWEEN ANGLES & TABLES
+
+		- rectify at same time?
+*/
+
+	throw "?";
+	
 }
 </script>
 <body onload="pageLoadedFxn();">

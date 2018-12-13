@@ -22,9 +22,9 @@ function Medium(){
 	// var imageLoader = new ImageLoader("./images/",imageList, this,this.handleImagesLoaded,null);
 
 	// var imageList = ["room0.png", "room2.png"];
-	// var imageList = ["bench_A.png", "bench_B.png"];
+	var imageList = ["bench_A.png", "bench_B.png"];
 	// var imageList = ["snow1.png", "snow2.png"];
-	var imageList = ["caseStudy1-20.jpg", "caseStudy1-24.jpg"];
+	// var imageList = ["caseStudy1-20.jpg", "caseStudy1-24.jpg"];
 	var imageLoader = new ImageLoader("./images/",imageList, this,this.handleImagesLoadedRectify,null);
 	imageLoader.load();
 }
@@ -643,7 +643,7 @@ points.push( new V2D(164.99999956654503,255.9999986085836) ); // 51
 F = [-6.037043098929525e-7,-0.00000970730106456997,0.0018040397976300374,-0.000004613167521603573,0.000001299728959578859,0.012972252880251627,0.00011338592089076502,-0.009458817818843748,-0.21727587142219504];
 
 
-
+/*
 
 // "snow1.png", "snow2.png"
 
@@ -692,7 +692,8 @@ points.push( new V2D(162.00419792976112,137.9961623828845) ); // 39
 points.push( new V2D(193.99861220720445,249.99892461191862) ); // 40
 
 
-
+var pointsB = [];
+points = pointsB;
 points.push( new V2D(60.99988332014943,271.9998915040789) ); // 0
 points.push( new V2D(283.7704106285922,140.10292015047756) ); // 1
 points.push( new V2D(269.99598053467685,181.85180063741282) ); // 2
@@ -738,9 +739,9 @@ points.push( new V2D(121.99995462155192,236.00103543906792) ); // 40
 
 F = [0.000005462227931478416,-0.00011006854725708874,0.008098590287009702,0.00010948467270919531,0.000005349907912003559,-0.017733821547636006,-0.008103769297990681,0.008222796396283668,0.6108835938091672];
 
+*/
 
-
-
+/*
 
 // "caseStudy1-20.jpg", "caseStudy1-24.jpg"
 
@@ -783,7 +784,8 @@ points.push( new V2D(85.99795989182842,108.00365627788788) ); // 32
 points.push( new V2D(97.9998656368151,156.99986471728835) ); // 33
 
 
-
+var pointsB = [];
+points = pointsB;
 points.push( new V2D(383.91497919815293,175.14174954236242) ); // 0
 points.push( new V2D(386.9877859278775,154.88384177561076) ); // 1
 points.push( new V2D(186.0006292680722,85.00114137847044) ); // 2
@@ -821,6 +823,7 @@ points.push( new V2D(120.00004345553876,171.00001236808265) ); // 33
 
 var F = [-3.352712743715355e-7,-0.000013179191740391743,0.0014644355870591895,-0.0000031702316777767065,0.000008588003127220183,-0.02194915505542336,0.0010194085236254263,0.02466134581182565,-0.3114138743008315];
 
+*/
 
 
 
@@ -871,6 +874,9 @@ GLOBALSTAGE.addChild(d);
 		d.matrix().translate(0+rectifiedA.width(), 0);
 GLOBALSTAGE.addChild(d);
 
+
+// throw "...";
+
 // find common areas - overlap
 	var imageA = imageMatrixA;
 	var imageB = imageMatrixB;
@@ -884,6 +890,8 @@ var rowSets = R3D.polarRectificationRowSets(rectifiedInfoA, matrixFrev, imageB,i
 	var maxRowA = rowSets[1];
 	console.log(minRowA,maxRowA);
 
+
+// throw "NOW ?"
 // line in A is not single line in B ; it is interpolated -> round
 
 

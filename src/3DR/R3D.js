@@ -1621,6 +1621,7 @@ R3D.monotonicAngleArray = function(angles){ // convert to always increasing or a
 	return {max:max, min:min, angles:angles, increasing:(angles[0]<angles[1])};
 }
 R3D.polarRectificationRowMatch = function(rectificationA, rectificationB, FFwd, source,destination){
+	console.log("polarRectificationRowMatch")
 	var imageWidthB = destination.width();
 	var imageHeightB = destination.height();
 
@@ -1630,7 +1631,8 @@ R3D.polarRectificationRowMatch = function(rectificationA, rectificationB, FFwd, 
 	var eB = epipoles["B"];
 
 	var anglesB = rectificationB["angles"];
-
+console.log("anglesB: ");
+console.log(anglesB);
 	var anglesA = rectificationA["angles"];
 	var radiusA = rectificationA["radius"];
 	var radiusMinA = rectificationA["radiusMin"];
@@ -1685,6 +1687,8 @@ var lookup =  Code.newArrayConstant(anglesA.length, -1);
 		}
 		var d = V2D.sub(p,eB);
 
+// TODO NEED HALF-LINE DIRECTION / ANGLE
+
 		// need direction that intersects with image plane:
 		var aB = V2D.angleDirection(V2D.DIRX,d);
 		// console.log(aB);
@@ -1700,6 +1704,22 @@ var lookup =  Code.newArrayConstant(anglesA.length, -1);
 			return aB < value ? -1 : 1;
 		}
 
+
+		var aVec = new V2D(1,0);
+		var vVec = new V2D(1,0);
+		var value = aB;
+		vVec.set(1,0).rotate(value);
+		var circularF = function(a){
+			// console.log(value);
+			// throw "?";
+			aVec.set(1,0).rotate(a);
+			var angle = V2D.angleDirection(aVec,vVec);
+			// angle = -angle;
+			return angle;
+		}
+
+
+/*
 		var result = Code.binarySearch(anglesB, binaryF);
 		if(result){
 			// console.log(result);
@@ -1715,7 +1735,36 @@ var lookup =  Code.newArrayConstant(anglesA.length, -1);
 				lookup[j] = result[0];
 			}
 		}
+		*/
+		// TODO: ADD HINT TO START EVEN CLOSER FOR CONSTANT TIME LOOKUP?
+		var indexes = Code.binarySearchCircular(anglesB, circularF, false);
+		// console.log("SERACHING FOR: "+value,indexes);
+		if(indexes){
+			if(indexes.length==1){
+				var indexA = indexes[0];
+				console.log(anglesB[indexA]+"  / "+value);
+				lookup[j] = indexA;
+			}else if(indexes.length==2){
+				var indexA = indexes[0];
+				var indexB = indexes[1];
+				console.log(anglesB[indexA]+" | "+anglesB[indexB]+"  / "+value);
+
+
+
+				// PICK CLOSEST LINE
+				lookup[j] = indexA;
+			}else{
+				throw "?";
+			}
+		}else{
+			throw "?"
+		}
+if(j>1020){
+	throw "CIRCULAR BINARY SEARCH";
+}
+		
 	}
+	// throw "YEPPERS ..."
 	// clip?
 	// var hm1 = imageHeightB-1;
 	// for(var i=0; i<lookup.length; ++i){
@@ -1724,7 +1773,8 @@ var lookup =  Code.newArrayConstant(anglesA.length, -1);
 	// throw "?";
 	return {"mapping":lookup};
 }
-R3D.polarRectificationRowSets = function(rectification, FFwd, source,destination){
+R3D.polarRectificationRowSets = function(rectification, FFwd, source,destination){ // get a corresponding ROW value  for each row in destination
+	console.log("polarRectificationRowSets: ")
 	var epipoles = R3D.getEpipolesFromF(FFwd);
 	var epipoleA = epipoles["A"];
 	var visibleAngle = rectification["rotation"];
@@ -1806,7 +1856,7 @@ R3D.polarRectificationRowSets = function(rectification, FFwd, source,destination
 	//var radiusA = rectification["radius"];
 	var minRow = null;
 	var maxRow = null;
-//	console.log(anglesB);
+	console.log(anglesB);
 	for(var i=0; i<anglesB.length; ++i){
 		var index = i;
 		// if(opposite){
@@ -1914,25 +1964,6 @@ R3D.polarRectificationAbsoluteRotation = function(source,epipole){ // TODO: TEST
 		return 180;
 	}
 }
-// R3D._polarRectificationRelativeRotationMinMax = function(regionMin,regionMax){ // not entirely sure about these
-// 	if(regionMin==0 && (regionMax==5 || regionMax==7 || regionMax==8)){
-// 		return 180;
-// 	}
-// 	if(regionMin==1 && (regionMax==6 || regionMax==7 || regionMax==8)){
-// 		return 180;
-// 	}
-// 	if(regionMin==2 && (regionMax==3 || regionMax==6 || regionMax==7)){
-// 		return 180;
-// 	}
-// 	if(regionMin==3 && (regionMax==2 || regionMax==5 || regionMax==8)){
-// 		return 180;
-// 	}
-// 	if(regionMin==5 && (regionMax==0 || regionMax==3 || regionMax==6)){
-// 		return 180;
-// 	}
-// 	//console.log(regionMin,regionMax);
-// 	return 0;
-// }
 R3D._rectifyRegionAll = function(source,epipole, region){ // convention is always CW & seamless border-interface
 	var image, width, height;
 	if( source && Code.isa(source,ImageMat) ){ // is already imagemat
@@ -1947,8 +1978,10 @@ R3D._rectifyRegionAll = function(source,epipole, region){ // convention is alway
 		image.setGrnFromFloat(source.grn);
 		image.setBluFromFloat(source.blu);
 	}
+	var wm1 = width - 1;
+	var hm1 = height - 1;
 	var TL = new V2D(0,0), BL = new V2D(0,height-1), BR = new V2D(width-1,height-1), TR = new V2D(width-1,0);
-	var dir = new V2D(), edge = new V2D(), next = new V2D(), ray = new V2D(), point = new V3D();
+	var dir = new V2D(), prev = new V2D(), curr = new V2D(), next = new V2D(), ray1 = new V2D(), ray2 = new V2D(), ray = new V2D(), point = new V3D();
 	var corners, theta, radius, thetaMin = 0, thetaMax = 0, radiusMin = 0, radiusMax = 0, color = new V3D(), i, j, index, len;
 	var radiusCount, thetaCount, intersect;
 	var rectifiedR, rectifiedG, rectifiedB;
@@ -1959,35 +1992,34 @@ R3D._rectifyRegionAll = function(source,epipole, region){ // convention is alway
 		corners = [TR,BR,BL, TL];
 		radiusMin = Math.floor( V2D.distance(epipole,TL) );
 		radiusMax = Math.ceil( V2D.distance(epipole,BR) );
-		thetaCount = width + height - 2;
+		thetaCount = hm1 + wm1-1;
 	}else if(region==1){
 		corners = [TR,BR,BL,TL, TR];
 		radiusMin = Math.floor( -epipole.y );
 		radiusMax = Math.ceil( Math.max( V2D.distance(epipole,BL), V2D.distance(epipole,BR) ) );
-		thetaCount = width + 2.0*height - 3;
+		thetaCount = hm1 + wm1-1 + hm1-1;
 	}else if(region==2){
 		corners = [BR,BL,TL, TR];
 		radiusMin = Math.floor( V2D.distance(epipole,TR) );
 		radiusMax = Math.ceil( V2D.distance(epipole,BL) );
-		thetaCount = width + height - 2;
-		//regionAngleOffset = -Math.PI;
-		//regionAngleOffset = 2*Math.PI;
+		thetaCount = wm1 + hm1-1;
 	}else if(region==3){
 		corners = [TL,TR,BR,BL, TL];
 		radiusMin = Math.floor( -epipole.x );
 		radiusMax = Math.ceil( Math.max( V2D.distance(epipole,TR), V2D.distance(epipole,BR) ) );
-		thetaCount = 2.0*width + height - 3;
+		thetaCount = wm1 + hm1-1 + wm1-1;
 	}else if(region==4){
 		radiusMin = 0.0;
 		radiusMax = Math.ceil( Math.max( V2D.distance(epipole,TL), V2D.distance(epipole,TR), V2D.distance(epipole,BR), V2D.distance(epipole,BL) ) );
-		thetaCount = 2.0*width + 2.0*height - 4;
+		thetaCount = wm1 + hm1-1 + wm1-1 + hm1-1;
 		// setup dividing at closest point
 		var m1 = epipole.x; // left
 		var m2 = width-epipole.x; // right
 		var m3 = epipole.y; // top
-		var m4 = height-epipole.y; // botom
+		var m4 = height-epipole.y; // bottom
 		var min = Math.min(m1,m2,m3,m4);
 		var pt = new V2D(), end = new V2D();
+// WIDTH/HEIGHT MINUS ONE ?
 		if(min==m1){ // left
 			pt.set(0,epipole.y);
 			end.set(width,epipole.y);
@@ -2010,87 +2042,54 @@ R3D._rectifyRegionAll = function(source,epipole, region){ // convention is alway
 		corners = [BR,BL,TL,TR, BR];
 		radiusMin = Math.floor( epipole.x-width );
 		radiusMax = Math.ceil( Math.max( V2D.distance(epipole,TL), V2D.distance(epipole,BL) ) );
-		thetaCount = 2.0*width + height - 3;
+		thetaCount = wm1 + hm1-1 + wm1-1;
 	}else if(region==6){
 		corners = [TL,TR,BR, BL];
 		radiusMin = Math.floor( V2D.distance(epipole,BL) );
 		radiusMax = Math.ceil( V2D.distance(epipole,TR) );
-		thetaCount = width + height - 2;
+		thetaCount = wm1 + hm1-1;
 		regionAngleOffset = Math.PI;
 	}else if(region==7){
 		corners = [BL,TL,TR,BR, BL];
 		radiusMin = Math.floor( epipole.y-height );
 		radiusMax = Math.ceil( Math.max( V2D.distance(epipole,TL), V2D.distance(epipole,TR) ) );
-		thetaCount = width + 2.0*height - 3;
+		thetaCount = hm1 + wm1-1 + hm1-1;
 		regionAngleOffset = Math.PI;
 	}else if(region==8){
 		corners = [BL,TL,TR, BR];
 		radiusMin = Math.floor( V2D.distance(epipole,BR) );
 		radiusMax = Math.ceil( V2D.distance(epipole,TL) );
-		thetaCount = width + height - 2;
+		thetaCount = hm1 + wm1-1;
 		regionAngleOffset = Math.PI;
 	}
-	//regionAngleOffset = 0;
-	// TODO: thetaCount can be calculated exactly from vectors
 	radiusCount = radiusMax-radiusMin + 1;
 	len = thetaCount*radiusCount; // maximum length - TODO: predict exact length
 	rectifiedR = Code.newArrayZeros(len);
 	rectifiedG = Code.newArrayZeros(len);
 	rectifiedB = Code.newArrayZeros(len);
-
-	edge.copy(corners.shift());
-	V2D.sub(dir, corners[0],edge);
+	// init iterations
+	var start = corners.shift()
+	prev.copy(start);
+	V2D.sub(dir, corners[0],prev);
+	var dirLen = dir.length();
 	dir.norm();
-var lookupTable = [];
-// var prevTheta = null;
-	for(j=0;j<thetaCount;++j){ // for each border pixel
-		//console.log(edge+"");
-		V2D.sub(ray, edge,epipole);
-		//var theta = V2D.angle(ray, dir);
-		var theta = V2D.angleDirection(ray, dir);
+	for(j=0;j<thetaCount;++j){ // each perimeter/border pixel [row] up to max
+		V2D.sub(ray1, prev,epipole);
+		ray1.norm();
+		var theta = V2D.angleDirection(ray1, dir);
 		var phi = Math.PIO2 - theta;
-		var l = (0.5/Math.sin(theta)); // * 1.0
-		var m = (0.5/Math.sin(theta))*Math.sin(phi);
-		var mid = new V2D();
-			mid.set(dir.x*l + edge.x, dir.y*l + edge.y);
-		ray.norm();
-		var up = new V2D();
-			up.set(edge.x + ray.x*m, edge.y + ray.y*m);
-		var down = new V2D();
-			V2D.sub(down,mid,up);
-			down.norm(); down.scale(0.5); // numerical exacting
-			down.set(mid.x+down.x,mid.y+down.y);
-		var ray2 = new V2D();
-			V2D.sub(ray2,down,epipole);
-			ray2.norm();
-		var gamma = V2D.angle(ray,ray2);
-		var delta = Math.PIO2-gamma;
-		var alpha = (delta-phi);
-		var beta = Math.PI - phi - alpha;
-		var n = Math.abs( (0.5/Math.sin(alpha))*Math.sin(beta) );
-		next.set(dir.x*n + mid.x, dir.y*n + mid.y);
-		V2D.sub(ray, mid,epipole);
-		len = Math.floor(ray.length());
-		ray.norm();
-		//angleTable.push(V2D.angleDirection(ray,V2D.DIRX));
-		//var direction = V2D.angleDirection(V2D.DIRX, ray);
-		var direction = V2D.angleDirection(V2D.DIRX, ray);
-
-// if( Code.angleDifference(prevTheta,direction)<0 ){
-// 	console.log(direction,prevTheta);
-// 	throw "thetas";
-// }
-// prevTheta = direction;
-		//direction += regionAngleOffset;
-		// console.log("ray: "+ray);
-		// console.log(Code.degrees(direction));
+		var hyp = 1.0/Math.cos(phi);
+		next.set(dir.x*hyp     + prev.x, dir.y*hyp     + prev.y);
+		curr.set(dir.x*hyp*0.5 + prev.x, dir.y*hyp*0.5 + prev.y);
+		//
+		var direction = V2D.angleDirection(V2D.DIRX, ray1);
 		angleTable.push(direction);
 		var radiusStart = null;
 		var radiusEnd = null;
-		for(i=radiusMax;i>=radiusMin;--i){
+		for(i=radiusMax;i>=radiusMin;--i){ // for each pixel along ray [col]
 			var relativeRadius = i-radiusMin;
 			index = radiusCount*j + relativeRadius; // 7 needs +1, 5 needs none
-			point.set(epipole.x+i*ray.x, epipole.y+i*ray.y, 1);
+			point.set(epipole.x+i*ray1.x, epipole.y+i*ray1.y, 1);
 			var isInside = point.x>=0 && point.x<width && point.y>=0 && point.y<height;
 			if(!isInside && radiusEnd!==null && radiusStart===null){
 				radiusStart = relativeRadius;
@@ -2098,53 +2097,47 @@ var lookupTable = [];
 			if(isInside && radiusEnd===null){
 				radiusEnd = relativeRadius;
 			}
-
-			// INDEX = point.y * width + point.x; ... rounded
-			// lookupTable[INDEX] += 
-			// radiusCount*j + relativeRadius
-			//  -- this may be accessed multiple times ..
-			// console.log(point+" @ "+i+" "+epipole+" | "+ray);
-
-			image.getPointInterpolateLinear(color,point.x,point.y);
-			// image.getPointInterpolateCubic(color,point.x,point.y);
+			image.getPointInterpolateLinear(color,point.x,point.y); // image.getPointInterpolateCubic(color,point.x,point.y);
+			// if(!isInside){ // TESTING: KEEP BLACK
+			// 	color.x = 0;
+			// 	color.y = 0;
+			// 	color.z = 0;
+			// }
 			rectifiedR[index] = color.x;
 			rectifiedG[index] = color.y;
 			rectifiedB[index] = color.z;
 		}
+		// save recorded stats
 		radiusStart = radiusStart!==null ? radiusStart : 0;
-		radiusEnd = radiusEnd!==null ? radiusEnd : 0;
+		radiusEnd = radiusEnd!==null ? radiusEnd : 0; // -1?
 		radiusTable.push([radiusStart,radiusEnd]);
-		if(corners.length>1){
-			var dd = new V2D(corners[0].x-corners[1].x,corners[0].y-corners[1].y);
-			dd.set(corners[0].x + dd.x, corners[0].y + dd.y);
-			intersect = Code.lineSegIntersect2D(edge,next, dd,corners[1]);
-			//intersect = Code.lineSegIntersect2D(edge,next, corners[0],corners[1]);
-		}
+
+		// check if passed perimeter segment
+		intersect = V2D.sub(next,start).length() > dirLen;
+		
 		// increment perimeter
-		edge.copy(next);
+		prev.copy(next);
 		if(corners.length>1){
-			if( intersect ){
+			if(intersect){
 				V2D.sub(dir, corners[1],corners[0]);
+				dirLen = dir.length();
 				dir.norm();
-				//corners.shift();
-				//edge.set(intersect.x,intersect.y);
-				edge.copy(corners.shift());
-				intersect = null;
+				start = corners.shift()
+				prev.copy(start);
 			}
-		}else{
+		}else{ // done early
+			++j; // keep this line
 			break;
 		}
+		
 	}
-	radiusTable.pop(); // ?
-	angleTable.pop(); // one extra ...
-	// console.log("OFF BY: "+j+" / "+thetaCount);
 	thetaCount = j; // actual resulting length
 	len = thetaCount*radiusCount;
 	rectifiedR = rectifiedR.slice(0,len);
 	rectifiedG = rectifiedG.slice(0,len);
 	rectifiedB = rectifiedB.slice(0,len);
 	var rotatedAngle = R3D.polarRectificationAbsoluteRotation(region);
-	// var rotatedAngle = 0;
+
 	// angleTable = R3D.monotonicAngleArray(angleTable);
 	// TODO: want a reverse-lookup array -> or at least a method to do this later
 
@@ -2464,6 +2457,7 @@ R3D.stereoMatch = function(sourceImageA,sourceImageB, imageMatrixA,infoA, imageM
 }
 
 R3D._stereoHierarchyMatch = function(sourceImageA,sourceImageB, imageMatrixA,infoA, imageMatrixB,infoB, FFwd, inputDisparity, disparityRange){
+	console.log("_stereoHierarchyMatch");
 	console.log(infoA);
 	// var miniumSize = 8;
 	// var miniumSize = 16; // poor
@@ -2478,10 +2472,6 @@ R3D._stereoHierarchyMatch = function(sourceImageA,sourceImageB, imageMatrixA,inf
 		var q = 1.0 - p;
 		var A = A0*q + B0*p;
 		var B = A1*q + B1*p;
-		// if(Code.isNaN(A) || Code.isNaN(B) || B>604){
-		// 	console.log(a,b,p,A0,B0,A1,B1,A,B);
-		// 	throw "?"
-		// }
 		return [A,B];
 	}
 	
@@ -2504,6 +2494,10 @@ R3D._stereoHierarchyMatch = function(sourceImageA,sourceImageB, imageMatrixA,inf
 		// derived - mapping
 		var info = R3D.polarRectificationRowMatch(infoA,infoB,FFwd, sourceImageA,sourceImageB);
 		mappingAB = info["mapping"];
+		console.log("mappingAB: ");
+		console.log(mappingAB);
+
+// throw " .... "
 		// if(rotationA && rotationB){ // TODO: IS THIS SOMETHING?
 		if(rotationA){ // flip A = vertically
 			mappingAB = Code.reverseArray(mappingAB);
@@ -2651,7 +2645,7 @@ GLOBALSTAGE.addChild(d);
 				// var corners = R3D.pointsCornerMaxima(imageA.gry(), imageA.width(), imageA.height(),  0.999999);
 
 				var corners = R3D.cornerScaleScores(imageA.gry(), imageA.width(), imageA.height()).value;
-				console.log(corners);
+				// console.log(corners);
 				var roundedCorners = [];
 				var len = imageA.width() * imageA.height();
 				for(var i=0; i<len; ++i){
@@ -18900,7 +18894,12 @@ for(i=0; i<matches.length; ++i){
 	var distanceA = rayA.length();
 	var angleA = V2D.angleDirection(V2D.DIRX,rayA);
 	var rectifiedAngleA = null;
-	rectifiedAngleA = Code.binarySearch(anglesA, function(a){ return a==angleA ? 0 : (a>angleA ? -1 : 1) });
+		rectifiedAngleA = Code.binarySearch(anglesA, function(a){ return a==angleA ? 0 : (a>angleA ? -1 : 1) });
+throw "HERE - SEARCHING";
+
+	rectifiedAngleA = Code.binarySearchCircular(arr, fxn, true);
+
+
 	if(Code.isArray(rectifiedAngleA)){
 		rectifiedAngleA = rectifiedAngleA[0];
 	}
@@ -20583,6 +20582,7 @@ R3D.rectificationLineFromrectificationPoint = function(rectPointA,what){
 }
 
 R3D.rectificationLine = function(pointA, Ffwd, epipoleA, radiusMinA, radiusB, anglesB, angleOffset){ // point in image A to line in image B
+	throw "?";
 	pointA = new V3D(pointA.x,pointA.y,1.0);
 	var lineA = R3D.lineRayFromPointF(Ffwd, pointA);
 		var orgA = lineA["org"];

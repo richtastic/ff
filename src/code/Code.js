@@ -911,6 +911,184 @@ Code.hash = function(string){
 	}
 	return hash;
 }
+Code._adjacentCircularArrayIndexes = function(a,l,r){
+	if(Math.abs(l-r)==1){
+		return true;
+	}
+	if(l==a.length-1 && r==0){
+		return true;
+	}
+	if(r==a.length-1 && l==0){
+		return true;
+	}
+	return false;
+}
+Code._middleCircularArrayIndexes = function(a,l,r){
+	if(r<l){ // wrap around
+		return ((l+r+a.length)*0.5 | 0) % a.length;
+	} // else mid
+	return (l+r)*0.5 | 0;
+}
+// to search in CCW orientation: new angle = zeroTo2Pi(2pi - old angle)
+Code.binarySearchCircular = function(a, f, log){ // f returns a direction LEFT or RIGHT or EQUAL and a MAGNITUDE for better/worse
+	if(a.length==0){
+		return null;
+	}
+	if(a.length==1){
+		return [0];
+	}
+	var temp, mIndex, mValue;
+	var aIndex = 0;
+	var bIndex = a.length/2 | 0;
+	var aValue = f(a[aIndex]);
+	var bValue = f(a[bIndex]);
+	// endpoint checks
+	if(aValue==0){
+		return [aIndex];
+	}
+	if(bValue==0){
+		return [bIndex];
+	}
+	// pick initial interval/direction to search between
+	var isOppsite = false;
+	if(aValue>0 && bValue>0){ // + + 
+		if(aValue>=bValue){
+			isOppsite = true;
+		}
+	}else if(aValue<0 && bValue<0){ // - - 
+		if(aValue>=bValue){
+			isOppsite = true;
+		}
+	}else if(aValue<=0 && bValue>=0){ // - + 
+		isOppsite = true;
+	}
+
+
+	if(isOppsite){
+if(log){
+console.log("SEARCH OPPOSITE");
+}
+		temp = aIndex;
+		aIndex = bIndex;
+		bIndex = temp;
+		temp = aValue;
+		aValue = bValue;
+		bValue = temp;
+	} // else: + - => left
+if(log){
+console.log("START SEARCH: "+aIndex,bIndex);
+}
+var i = 100;
+while(i>0){
+	// console.log(" -------------------------------------------- "+aIndex+": "+aValue+" | "+bIndex+": "+bValue+" / "+a.length, Code._adjacentCircularArrayIndexes(a,aIndex,bIndex));
+	if( Code._adjacentCircularArrayIndexes(a,aIndex,bIndex) ){ // adjacent
+if(log){
+console.log("END ADJACENT: "+aIndex,bIndex);
+}
+		return [aIndex,bIndex];
+	}
+	mIndex = Code._middleCircularArrayIndexes(a,aIndex,bIndex);
+	mValue = f(a[mIndex]);
+if(log){
+console.log("  ["+aIndex+": "+aValue+" | "+mIndex+": "+mValue+" | "+bIndex+": "+bValue+" ] ");
+}
+	// found
+	if(mValue==0){ // midpoint check
+if(log){
+console.log("MID FOUND: "+mIndex);
+}
+		return [mIndex];
+	}
+
+	var isARight = aValue>=0;
+	var isMRight = mValue>=0;
+	var isBRight = bValue>=0;
+	if( aValue==mValue && mValue==bValue){ 
+		throw "UN-HANDLE EQUAL?";
+	}
+	var direction = 0;
+	if( isARight &&  isMRight &&  isBRight){ // + + + 7
+if(log){
+console.log("  + + + ");
+}
+		// compare magnitures
+		var sma = Math.min(aValue,mValue,bValue);
+		var lar = Math.max(aValue,mValue,bValue);
+		if(sma==aValue && lar==mValue){
+			direction = -1; // => left
+		}else if(sma==mValue && lar==bValue){
+			direction = 1; // => right
+		}else{
+			throw "?";
+		}
+	}else if(!isARight && !isMRight && !isBRight){ // - - - 0
+if(log){
+console.log("  - - - ");
+}
+		// compare magnitures
+		var sma = Math.max(aValue,mValue,bValue);
+		var lar = Math.min(aValue,mValue,bValue);
+		if(lar==aValue && sma==mValue){
+			direction = -1; // => left
+		}else if(lar==mValue && sma==bValue){
+			direction = 1; // => right
+		}else{
+			throw "?";
+		}
+	}else if(!isARight && !isMRight &&  isBRight){ // - - + 1
+if(log){
+console.log("  - - + ");
+}
+		throw "DNE";
+	}else if(!isARight &&  isMRight && !isBRight){ // - + - 2
+if(log){
+console.log("  - + - ");
+}
+		direction = 1; // => right
+	}else if(!isARight &&  isMRight &&  isBRight){ // - + + 3
+if(log){
+console.log("  - + + ");
+}
+		throw "DNE";
+	}else if( isARight && !isMRight && !isBRight){ // + - - 4
+if(log){
+console.log("  + - - ");
+}
+		direction = -1; // => left
+	}else if( isARight && !isMRight &&  isBRight){ // + - + 5
+if(log){
+console.log("  + - + ");
+}
+		direction = -1; // => left
+	}else if( isARight &&  isMRight && !isBRight){ // + + - 6
+if(log){
+console.log("  + + - ");
+}
+		direction = 1; // => right
+	}else{
+		throw "N/A";
+	}
+	// move
+	if(direction==-1){ // left
+		bIndex = mIndex;
+		bValue = mValue;
+if(log){
+console.log("    => L");
+}
+	}else if(direction==1){ // right
+		aIndex = mIndex;
+		aValue = mValue;
+if(log){
+console.log("    => R");
+}
+	}else{
+		throw "can't go nowhere";
+	}
+--i;
+}
+
+throw "bad";
+}
 Code.binarySearch = function(a, f, noEnds){ // assumed increasing | if AT INDEX: return index, if BETWEEN INDEX: return [a,b], if OUTSIDE: return [end]
 	if(a.length==0){
 		return null;
