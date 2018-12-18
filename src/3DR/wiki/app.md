@@ -44,7 +44,7 @@
 - adding features should have free try before buy
 	- A) do it a maximum number of times ever (10)
 	- B) do it a max number of times per n (24) hours
-	- C) 
+	- C)
 
 
 ### Screens:
@@ -71,7 +71,7 @@
 			- 3d point projection [colored cloud]
 			- texturing
 	- view model
-	- 
+	-
 #### model viewer
 	- 3d orientable/navigating
 	- change camera settings [multiple cameras / views]
@@ -118,14 +118,14 @@
 		- you take dozens of pictures of the scene
 		- you select some of the items you want removed from the scene, or scaled differently
 		- you export the scene into a 3D studio file
-		- you jumped ahead to a starting place for your video project 
+		- you jumped ahead to a starting place for your video project
 
 	- you're thinking of painting some walls in your house
 		- you take a few photos of the room
 		- you choose a filter to color part of the scene something else (or draw on it)
 		- you send the picture to your friend to see if she agrees.
 
-	- you're a museum historian and want to make public heratige artefacts available 
+	- you're a museum historian and want to make public heratige artefacts available
 		- you set up your artefact
 		- take several photos from various angles
 		- you put the model up on the museum website
@@ -152,7 +152,7 @@
 	- surface model mesh (OUTPUT)
 	- cameras[]
 	- interactive experience
-		- cameras[] 
+		- cameras[]
 		- background
 
 - camera
@@ -201,7 +201,7 @@ project typical numbers:
 		each image has ~ 0.2 other matched images
 	~N*(1 + 0.2) pairs
 	20~200 pairs
-	
+
 	[max 4032 x 3024]
 	2016x1512 image @ hi res
 	1920x1080 image @ med res
@@ -252,13 +252,6 @@ project typical numbers:
 
 APP TODO:
 
-
-
-- experiment with F-line transfer between images to find location of 3rd point (w/o needing P)
--> similar to projection from 3D point
-
-
-
 NEXT-STEPS-TO-DO:
 
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -300,7 +293,7 @@ vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 - texturing
 	- view-based surface texturing
 	- blending between triangles
-		- 
+		-
 	- separate triangles into texture lookup / files
 		- TextureMap (from textures to atlas)
 	=> scene textured model
@@ -325,7 +318,10 @@ https://cloud.google.com/appengine/docs/nodejs/
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-- searching circular array
+- allow 'loop' around for scenes with epipole interrior
+	- (copy) top / bottom explicitly
+	- modulo 0 when -1 or +hei
+
 
 
 
@@ -340,7 +336,7 @@ https://cloud.google.com/appengine/docs/nodejs/
 
 - instead of binary searching by ABSOLUTE angle
 	=> binary search by DIFF ANGLE
-		-> allow circular searching around 
+		-> allow circular searching around
 
 
 
@@ -368,7 +364,7 @@ https://cloud.google.com/appengine/docs/nodejs/
 - F MATCHING
 	- line but start at best match point for each line and go left & right
 	- optimal locations:
-		
+
 		- HOW TO DO CELL BELIEF PROPAGATION
 			- there are confident cells & less confident cells
 				- confident ones are pinned down
@@ -396,7 +392,7 @@ https://cloud.google.com/appengine/docs/nodejs/
 	- moment
 	- COM
 	- COV
-	=> DOES THIS REQUIRE ITERITIVE SEEKING ? 
+	=> DOES THIS REQUIRE ITERITIVE SEEKING ?
 
 - saving corner affine to yaml / loading from yaml
 
@@ -422,14 +418,14 @@ https://cloud.google.com/appengine/docs/nodejs/
 - convert from F corner matches to relative size/angle [keep track of epipole angle]
 	- get optimal corner scale size ?
 		: for each match:
-			- 
+			-
 
 - image rectification re-do [direction matters]
 
 - how to do dense matching wth F
 	- rectify
 	- map lines together
-	- 
+	-
 		- 1D epipolar search
 		- brightness constancy
 		- uniqueness: 1 to 1 matching
@@ -478,7 +474,7 @@ x try minimizing error using GRADIENT DESCENT
 
 
 
-- points behind camera in PAIR: 
+- points behind camera in PAIR:
 	R3D.cameraExtrinsicRANSACFromPoints sometimes has a null P ?
 		- R3D.transformFromFundamental
 		- transformFromFundamental3 wrong in particular scenarios
@@ -488,7 +484,7 @@ x try minimizing error using GRADIENT DESCENT
 	-> frustrum-projected-pixel
 
 - after orientation is established and outliers are reduced=> [after pair-wise or after global merge]
-	- should try to expore high-cornerness areas 
+	- should try to expore high-cornerness areas
 
 
 - plane seems to take over & not propagate to other areas
@@ -497,7 +493,7 @@ x try minimizing error using GRADIENT DESCENT
 	- TEST
 
 - faster failing on 3D steropsis : if R error is really high with lots of matches => fail
-	matches: cellCount [width * height] * 25% 
+	matches: cellCount [width * height] * 25%
 	R error: > 10.0
 	F error: > 5.0
 
@@ -597,13 +593,13 @@ convert to objects: DENORMALIZED:
 
 
 MLS surface projection -- bad at ears / low sample areas
-	- how to get 
+	- how to get
 
 
 - stereopsis patch normals are clearly wrong
 	- try homography instead of affine
 	- larger patch size
-	- 
+	-
 
 
 - consistent normals (single-sided) propagation using MLS
@@ -656,7 +652,7 @@ MLS surface projection -- bad at ears / low sample areas
 
 - HOW TO OPTIMIZE VERTEX POSITION IF IMAGE NOT IN MEMORY
 	- try to group vertexes by scene regions
-		=> optimize 
+		=> optimize
 
 
 => image matrix cache to hold most last used ~10 / 32MB
@@ -701,7 +697,7 @@ EDGES:
 		- bisector to minima [double gradient]
 		- normal calculation from rolling sphere/circle
 		- normal averaging (to smooth out normals for gradient descent)
-	- 
+	-
 
 - sphere iteritive:
 	- if less than radius: move toward closest sphere point
@@ -741,7 +737,7 @@ EDGES:
 
 - good with points seen by all cameras, but not if only visible in few ... ?
 	- when a probe3D is projected onto another view, the point it covers might be a good projectino, but the object might be obscured
-	- 
+	-
 
 
 -  point 2D merging
@@ -763,7 +759,7 @@ image where each pixel shows distance to nearest corner with value >= threshold
 
 => double surface points at end by interpolating in IMAGE grid where there are empty cells (at half size)
 	- fixed grid
-	- 
+	-
 
 => ICON
 	- optimal criteria:
@@ -863,7 +859,7 @@ SINGLE PIXEL UNIQUENESS VS MAXIMUM IN AREA UNIQUENESS
 			-> add neighbors to search queue
 	-> search neighbors
 
-- do final BUNDLE ADJUST 
+- do final BUNDLE ADJUST
 
 - RANSAC PLOT LIKLIHOOD OF GETTING A NEW MATCH (log ) and quit if very non likely (wasted iterations)
 
@@ -896,7 +892,7 @@ SINGLE PIXEL UNIQUENESS VS MAXIMUM IN AREA UNIQUENESS
 	- optimize using normalized image coordinates (F->E)
 	- BUNDLER: https://github.com/snavely/bundler_sfm
 	- S. 7.3-7.5
-	- 
+	-
 
 
 
@@ -922,7 +918,7 @@ SINGLE PIXEL UNIQUENESS VS MAXIMUM IN AREA UNIQUENESS
 
 >>> SKETCH
 	- what simultaneous-optimality of 3D pose looks like visually
-	- 
+	-
 
 
 
@@ -1002,8 +998,8 @@ SINGLE PIXEL UNIQUENESS VS MAXIMUM IN AREA UNIQUENESS
 	-> optimize:
 		- normal unit vector (pitch, yaw)
 		- center point (X,Y,Z) [restricted along path to a reference camera to match point]
-		- 
-	
+		-
+
 
 
 > how to transfer 2D orientation between 3D cameras
@@ -1082,7 +1078,7 @@ SINGLE PIXEL UNIQUENESS VS MAXIMUM IN AREA UNIQUENESS
 
 - first cell propagating shouldn't be the only decider in what the best location is
 - as cells are added, they should consider alternate locations
-	-> 
+	->
 
 
 
@@ -1144,10 +1140,10 @@ initial matching:
 	Harris and Difference-of-Gaussians
 
 
-match: 
+match:
 
 
-REPEAT: 
+REPEAT:
 
 	expand:
 		- spread matches to nearby pixels
@@ -1157,7 +1153,7 @@ REPEAT:
 			- drop bad matches
 		- 3D:
 			- drop points outside surface -> |T(p)| is small & N(p)?
-			- drop points inside surface -> revomputed depth maps result in |T(p)| is small 
+			- drop points inside surface -> revomputed depth maps result in |T(p)| is small
 		- regularization: n-adjacent neighbor cells is below some threshold [threshold is lowered as algorithm progresses]
 
 PATCH (p)
@@ -1176,7 +1172,7 @@ IMAGE I
 estimating position:
 	- initial guess for c(p): triangulated from putative matches
 	- initial guess for n(p): direction of point to O of reference image
-	
+
 	NCC = N(p,I,J) for patch in image I and J
 	maximize:  1/(|T(p)| - 1) * SUM(I in T(p), I!=R(p)) N(p,R(p),I)
 		* depth for (reference) (or each? view)
@@ -1198,13 +1194,13 @@ uxu = 5x5 or 7x7
 
 >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 input:
-	- images 
+	- images
 	- sparse, putative, initial feature matches across images [pairings] (f_i, f_j)
 		- scale & rotation
 
 expand
 	- look at unmatched adjacent cells
-		- 
+		-
 
 filter
 	- global:
@@ -1219,7 +1215,7 @@ filter
 		- SAD
 		- to-neighbor NCC
 	- local 3D: [grouping voting]
-		- 
+		-
 	- visibility?
 		- [depths not consistent]?
 		- [normals not consistent]?
@@ -1325,7 +1321,7 @@ output:
 criteria for dropping bad cell:
 - best SAD/SSD score is much less than minimum score [self]
 - error in geo is much worse than neighbors [voting]
-- 
+-
 
 
 ++++++ ALG .... ++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -1387,12 +1383,12 @@ for each cell in L
 
 .......
 
-order L on highest error first 
+order L on highest error first
 get local (3x3) forward edge (GEO) scores [backwards are opposite of neighbor's cell]
 
 
 
-calculate pixel movement based on 
+calculate pixel movement based on
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -1455,7 +1451,7 @@ minimization w/ criteria:
 - geometry has something to do with local angles / distances -> offset from what would be the 'ideal' position
 
 => idea:
-	NCC gradient for corners would be high in 
+	NCC gradient for corners would be high in
 	NCC gradient for edges would be high in single direction
 	NCC gradient for non-unique would be low everywhere
 
@@ -1516,7 +1512,7 @@ unconnected components have no (edge) cost
 - alg speedup?
 	- save calc?
 
-x display distance metric - not real depth? 
+x display distance metric - not real depth?
 - or rotation/flow metric
 
 
@@ -1535,7 +1531,7 @@ Normal Aided Matching (NAM)
 
 - using surface normals to estimate affine transform / homography
 - big changes in normal == edge
-- 
+-
 
 
 CONSTRAINTS:
@@ -1581,10 +1577,10 @@ https://ags.cs.uni-kl.de/fileadmin/inf_ags/3dcv-ws11-12/3DCV_WS11-12_lec10.pdf
 
 
 
-- 
+-
 
 
-- use gradient 
+- use gradient
 
 - check keep distance ... keep track of other changing things
 
@@ -1618,7 +1614,7 @@ x show object flow [image flow | field]
 	- keep calculated:
 		my: position, affine
 		neighbor: position, affine
-	- if 
+	- if
 
 
 X:
@@ -1631,7 +1627,7 @@ X:
 	- 'previoius attemps' marks
 - lattice connections not serious enough
 
-- LOOK AT OPTICAL FLOW SOLUTIONS --- seem very setero based 
+- LOOK AT OPTICAL FLOW SOLUTIONS --- seem very setero based
  - Horn-Schunk
  - Lukas-Kanade
 
@@ -1721,13 +1717,13 @@ X:
 
 - restrict before queuing / after popping:
 	- is-homogeneous (close) matrix transform
-	- 
+	-
 
 ---- keep queue from getting real big -> ignore scores that are lower than existing minimum scores (asigned to a cell)
 
 - Q with no ordering ?
 	> only get score initially
-	> 
+	>
 	> prne after the fact
 
 
@@ -1748,19 +1744,19 @@ NO IDEA ON HOW TO ORDER CHOICES
 	- find cost of match
 	- for each neighbor [L/R/U/D]:
 		- find next possible match / cost / path-cost
-		- 
+		-
 
 Cost Volume
 
 => be able to not match cells who don't have matches
-=> 
+=>
 
 
 
 
 
 semi-global matching SGM
-filters: LoG, rank, mean, 
+filters: LoG, rank, mean,
 mutial information
 entropy of the histograms
 graph cutting
@@ -1787,13 +1783,13 @@ https://www.cs.cmu.edu/~epxing/Class/10708-14/scribe_notes/scribe_note_lecture13
 https://cseweb.ucsd.edu/classes/sp06/cse151/lectures/belief-propagation.pdf
 
 - belief update
-- reliability 
-- 
+- reliability
+-
 
 Loopy Belief Propagation - Turbo Code
 - Bethe approximation
 - Gibbs Free energy
-- cost computation, cost-volume filtering, winner-take-all 
+- cost computation, cost-volume filtering, winner-take-all
 
 
 
@@ -1801,7 +1797,7 @@ if bipartite -- what are the cuts?
 - directional weights ?
 
 
-graph iteitive ? 
+graph iteitive ?
 	 - expand
 	 	- relative weights
 	 - pick
@@ -1809,7 +1805,7 @@ graph iteitive ?
 	 => repeat
 
 - keep track of 'candidates' in graph, not in queue
-- 
+-
 
 graph-queue-iteritive
 	- go over all 'seeds', finding costs, constructing graph
@@ -1896,7 +1892,7 @@ graph-queue-iteritive
 	- half-plan ordering x
 	- radial ordering x
 	- angular ordering ? ... OK -> TEST
-	
+
 
 
 INPUT:
@@ -1919,7 +1915,7 @@ while queue is not empty:
 		- if match still satisfies constraints [ordering, ..?]
 			- add matchA->B to final match set
 			- TODO: PRUNING IN CONNECTED NEIGHBORHOOD
-				- 
+				-
 			- for each neighbor of A and of B [4-or-8-neighbor]
 				- interpolate best location as search starting point
 				- vary affine transformation to find best local transform & location
@@ -1959,7 +1955,7 @@ RE-ASSESS INDIvIDUAL POINTS OF ALGORITHM:
 
 IMAGE PREP:
 - contrast stretching
-- adaptive histogram equalisation 
+- adaptive histogram equalisation
 - sharpening
 
 
@@ -2006,7 +2002,7 @@ IMAGE PREP:
 => can uniquely find the optimal location
 	-> if a location DOESN'T EXIST, it finds the best one available, which is wrong but may have a good score
 => SAD scores between optimal locations are not easily comparable
-=> NEED WAY TO DIFFERENTIATE GOOD RESULTS / BAD RESULTS 
+=> NEED WAY TO DIFFERENTIATE GOOD RESULTS / BAD RESULTS
 
 -> secondary score metrics ?
 -> test what a good result would be with addition of noise
@@ -2028,17 +2024,17 @@ IMAGE PREP:
 - how to enforce uniqueness / direction
 
 
------- other methods to determing good / bad 
+------ other methods to determing good / bad
 
 - direction from pointA to pointB can be used in location A & B to determine separate SAD scores
 - line from A to B can itself be tested as a SAD score
 	- compare in segments ?
-	- 
+	-
 - poorly localized points could still have good scores
 
 -> score is now a 'path' score from getting from A to B [or some combination of the path]
 - seed points wont have a path-score & might offset things
-- 
+-
 
 
 
@@ -2259,7 +2255,7 @@ A) see how distortion-correcting helps R/F in current 100-500 iteration process
 B) implement kNN dropping to output ~1000 best match points
 	-
 C) save pair match data in some format [F | P | 2d points | 3D points]
-	- 
+	-
 
 
 D) import pair match data & do real BA on 3 views / 3 pairs
@@ -2338,7 +2334,7 @@ steps:
 - HOW TO COMBINE: / WORK WITH
 	- multi-scaled dense matching
 		- start with lower-res image
-		- restrict higher-res searching 
+		- restrict higher-res searching
 	- relative extrinsic matrix determination
 		- use most well placed dense matches [highest uniqueness & lowest F / R error]
 		- determine top N points between pair
@@ -2382,7 +2378,7 @@ steps:
 
 
 - DENSE MATCHING:
-	- all low separate distance for neighbor SEARCHING vs neighbor 
+	- all low separate distance for neighbor SEARCHING vs neighbor
 	- larger patch size means search window would need to be different than just radial / angular saerch
 		- masking of areas around found points / vs / unsearched area COMs
 
@@ -2410,7 +2406,7 @@ R3D.searchNeedleHaystackImageFlat
 
 
 
-- 
+-
 
 
 
@@ -2422,33 +2418,33 @@ R3D.searchNeedleHaystackImageFlat
 - more opportunities to drop match because of bad rank
 
 - use corner in metrics
-- 
+-
 - sub-pixel accuracy using surface estimation
 
 
 - why would combining / merging / overlap be breaking things?
 
-- 
+-
 
 
 
 
 - multiple views don't all reduce in error as iteration increases
 	- view match counts peaks ~300-400
-		-> around 80-90 the R error went down to 
+		-> around 80-90 the R error went down to
 
 	-> see how views do individually ... 1 & 3, 2 & 3
 		- 1 & 2 -> F:3, R:2å
 
 - how to combine views' absolute transforms
-	- 
+	-
 
 - with sparse matches on an image how to go to dense matches?
-	- 
+	-
 	- pick lowest-error points to get best P relation ? @ end
 	- look at directional errors ?
 	- only include points with 3+ matches ?
-	- 
+	-
 	- use best points as seeds & double resolution & search there
 
 - drop points with 'possibility' of higher error ?
@@ -2472,7 +2468,7 @@ R3D.searchNeedleHaystackImageFlat
 
 
 - what does a full bundle adjust method look like?
-	- 
+	-
 
 
 ----- overview entire logic again all through
@@ -2512,7 +2508,7 @@ info = transform.calculateErrorR(true);
 
 - need to remove bad matches from queues too, not just final matches array
 - as old matches are dropped, the area needs to be filled as good matches might be skipped over
-	- 
+	-
 
 
 
@@ -2527,7 +2523,7 @@ algorithm with RANSAC
 		- at least ~50 groups of 3
 	- get initial F
 	- pixelError = record current average error with initial F [+ sigma]
-	- inliers & inlierCounts = 
+	- inliers & inlierCounts =
 	- minimumInlierCount = ~50% of starting OR 15
 	- while next-inlier-count > minimumInlierCount
 		best inlier group = []
@@ -2558,10 +2554,10 @@ http://www.robots.ox.ac.uk/~vgg/data1.html
 	- calc T from point correspondences
 	- get F-,A,V,C from T
 	- calc P-A,B,C from T / Fi
-	- 
+	-
 	- how to 'combine' these T / P into algorithm ?
 		-> graph again ?
-	- 
+	-
 
 
 
@@ -2585,7 +2581,7 @@ http://www.robots.ox.ac.uk/~vgg/data1.html
 	- getting triplets of points doesn't seem to help all that much...
 		- only use triplets of points when possible to determine relative camera matrices
 		- only keep very 'best' point3Ds for extrinsic matrix calculation
-		- 
+		-
 		- leave out putatives
 
 - print out stats for only P3D with 3 nonputative matches
@@ -2609,7 +2605,7 @@ http://www.robots.ox.ac.uk/~vgg/data1.html
 
 
 - 'probing' around P3D results
-	- if a neighbor 
+	- if a neighbor
 
 
 
@@ -2635,7 +2631,7 @@ http://www.robots.ox.ac.uk/~vgg/data1.html
 --- match isn't being added / removed from list
 -> a match has a point3D who's match is not it
 
-- SHOULD there be a case where a match is replaced on a p3d (projection) ? 
+- SHOULD there be a case where a match is replaced on a p3d (projection) ?
 	[cause there is]
 
 
@@ -2651,7 +2647,7 @@ x lower error drop rates
 
 
 3D-neighbor probing
-	- for each unknown view in P3D 
+	- for each unknown view in P3D
 		- look for closest P2D neighbor that has a P3D with 'unknown' view [within some radius]
 			=> if found:
 				- use transform to look for matching point [neighborhood = radius * 2]
@@ -2705,7 +2701,7 @@ MERGING:
 
 
 x POPPING PUTATIVE:
-	- remove next-best putative match from 
+	- remove next-best putative match from
 	- BEFORE insert:
 		- if match is purely putative
 			- set to nonputative
@@ -2759,7 +2755,7 @@ MERGING PROCESS:
 			- relative angle / scale = AVERAGE of all 'points' involved [if a point is in BOTH views it can/should be counted twice]
 				- if a
 				- > if any relative angles/scales are off: drop?
-		- get match score using averaged position/angles/scales 
+		- get match score using averaged position/angles/scales
 		- if match score is too poor => drop match
 			=> else add to match array
 
@@ -2810,10 +2806,10 @@ how to merge putative with nonputative P3D
 					- for pointA & pointB
 						- if has only 1 match ok
 							- remove point2D from P3D point list
-						- else 
+						- else
 							- duplicate point location and attach to match
 					- remove match from P3D match list
-					- create new P3D with same match core points, but new 
+					- create new P3D with same match core points, but new
 				- set match points as nonputative
 				- insert (now) standalone match
 
@@ -2851,7 +2847,7 @@ how to merge putative with nonputative P3D
 	=> check for collision
 	=> add self [non-putatives]
 - collision:
-	- ignore putative points in combining, replace any putatives in 
+	- ignore putative points in combining, replace any putatives in
 
 INTERSECTION / COLLISION:
 	- remove putative match from P3D if P3D has more than 1 match
@@ -2861,7 +2857,7 @@ INTERSECTION / COLLISION:
 
 - projection of known P3D into unknown views & making matches in queue
 
-- dropping known matches due to P3D changes, P2D changes, 
+- dropping known matches due to P3D changes, P2D changes,
 
 - dropping pending matches to allow for P3D re-projection to possibly better points
 
@@ -2890,16 +2886,16 @@ x keep a queue of matches ordered on rank
 x on init, add matches to queue
 - each 'iteration' is a series of:
 	- pop M matches off queue, and attempt to add
-		- insert match 
+		- insert match
 		- search 2D neighborhood to create more matches, until no more space exists
 	- go thru all P3D
 		- project point to unknown views, create 'temp' match add to queue
 	- drop bad matches
-		- if count > ~16 & and aspects are too far worse from mean 
+		- if count > ~16 & and aspects are too far worse from mean
 			- drop
 			- use points A & B from dropped match points as P2D neighborhood search
 
-	- 
+	-
 
 - use corner score as best way to choose base P3D on merging, instead of score / rank
 
@@ -2935,7 +2931,7 @@ x on init, add matches to queue
 - can dense match allow for dropping points ?
 	- if it is very different than neighbors ?
 	- if score is much worse than neighbors ?
-	- 
+	-
 
 - output dense results & import to BA
 
@@ -2958,7 +2954,7 @@ fx / fy / s ?
 ~ if initial projection errors are very big, 3d-point-projection cost may not be worth it
 
 
-- matching is not robust enough ... 
+- matching is not robust enough ...
 
 
 - progressively drop more points with higher criteria (sigma: 4->3->2->1)
@@ -2994,7 +2990,7 @@ fx / fy / s ?
 	- error windows, not just percent averaging
 
 
-- 
+-
 projecting:
 		- ERROR SOURCES:
 			- projection location far off
@@ -3011,7 +3007,7 @@ projecting:
 	 - ignore points if optimal location is on border of search location
 
 - NEED GOOD UNIQUENESS SCORES FOR PROJECTIONS & PROBINGS
-	
+
 	- uniqieness?
 
 
@@ -3037,7 +3033,7 @@ CONSERVATION OF SCALE AND ANGLE [ACCURACY IS ONLY WITHIN .1s & 10deg]
 	-> linear distortion is very bad for reprojection points
 		- try nonlinear?
 		- try nonlinear with K + dist.
-		- 
+		-
 
 
 - dynamic dense:
@@ -3055,7 +3051,7 @@ CONSERVATION OF SCALE AND ANGLE [ACCURACY IS ONLY WITHIN .1s & 10deg]
 			- record error statistics
 		- as error gets less, recalculate less often
 			- stop ~100 ? or error < 1 pixel [or % of cell radius]
-	
+
 	- how to drop points afterwards when F is more accurate ?
 		retro dropping
 -> not using F actually results in better results
@@ -3108,10 +3104,10 @@ CHI-SQUARE DISTRIBUTIONS FOR ERROR:
 
 
 - intermediary step:
-	- pick cell points that look good at higher & higher scales 
+	- pick cell points that look good at higher & higher scales
 	1 * cellScore @ 1
 	0.5 * cellScore @ 2
-	0.25 * cellScore @ 4 
+	0.25 * cellScore @ 4
 	...
 
 https://piazza-resources.s3.amazonaws.com/hz5ykuetdmr53k/i2c8h15sptx3kq/16.2_MOPS_Descriptor.pdf?AWSAccessKeyId=AKIAIEDNRLJ4AZKBW6HA&Expires=1519952044&Signature=ngbvKO9ykNMyu98oMKS4AgWucrg%3D
@@ -3151,7 +3147,7 @@ x			- get descriptor at each of 2 points
 x				- record score
 x		- for each view match
 x			- create transform: R + F
-x			- calculate F 
+x			- calculate F
 	REMOVE CLOSE POINTS:
 x		- repeat until no pair is found:
 x			- for each 2D point
@@ -3168,11 +3164,11 @@ x			- R
 x		- calculate METRICS:
 x			- points: F, R
 x			- pair: F, R
-			
+
 x	- GROUPS [GRAPH]:
 x		- estimate absolute positions of each item
 x			- error of relation ~ RMS / mean reprojection error
-	
+
 x	- SETUP:
 x		prioritize projection queue with 3d points based on:
 x			- possible projection exists [not already 'failed'] [if failed attempt is stale, set back to possible proj exsts (r changed less, f changed less)]
@@ -3190,7 +3186,7 @@ x			- for each P3D un-matched view:
 								- search for several combinations of scale/orientation to find peak match in neighborhood ~ min(rError*2, maxNeighborhoodRadius)
 								- scale offset [0.9,1.0,1.1]
 								- angle offset [-10,  0, 10]
-							- choose best location for other view 
+							- choose best location for other view
 						- best point = average of individual other view best points
 						- create decriptor at best point
 						- if descriptor passes criteria: [minimum range, minimum variability, ?]
@@ -3229,7 +3225,7 @@ x		- for P2D in queue:
 						- create descriptor at points in each view with optimum relative scaling [ie larger item is scaled down]
 						- if match score is good for both view's local point matches around:
 							- create match between two views & 3D point
-						- else 
+						- else
 							- create dead-end point in view (not opposite view?)
 								- record:
 									- m score
@@ -3267,7 +3263,7 @@ x		- for P2D in queue:
 			- for each P2D-Fail
 				- if any F error has changed [~ half of failed's recorded value] => remove from view point space [to allow new neighbor attempt]
 
-	
+
 
 INIT COMBINING POINTS:
 	- P3DA already exists
@@ -3340,7 +3336,7 @@ point2D
 	- isDeadEnd
 		- matches will hold the views attempted
 
-	
+
 match2D
 	- viewA
 	- viewB
@@ -3392,7 +3388,7 @@ world
 	- DROP:
 		- 2D points with poor F-distance error (relative to group)
 		- 2D points with poor R-distance error (relative to group)
-		- 2D points with poor match score 
+		- 2D points with poor match score
 		- low variability (just don't include)
 - USE THESE MATCHES AS BASE FOR BA
 - IN BA, ALLOW FOR NON-PREDEFINED POINTS TO MATCH
@@ -3406,7 +3402,7 @@ COMBINING POINTS IN BA:
 			- iteritively pic location ? wiggle?
 	- if good match:
 		- average the best points into single point
-		
+
 		- if not near anything
 			- create new point
 		- if near other points
@@ -3482,7 +3478,7 @@ RMS error
 
 
 GOAL: limiting F error => force to use more-correct points
-	FAIL: lose existing match in 
+	FAIL: lose existing match in
 GOAL: choose scores with lower error => choose more-correct points
 	FAIL: a mildly better score might be a worse match [non-unique or bad matching]
 
@@ -3557,12 +3553,12 @@ x move-any direction at multiple scales [per pixel or static size] peaks
 			- radius size (pixels)
 			- r1 = entire inner circle
 			- r2 = segmented portion outside r1
-				- divide angles by % area in 
+				- divide angles by % area in
 					- r1 = pi*r^2
 					- r2 = pi*(r*3)^2
 					- diff = pi*r^2*(9 - 1)
 					- r^(i+2) / r^(i) => divide by FLOOR of difference
-					: eg: 
+					: eg:
 r1 = 4
 areaR1 = pi*r1^2
 r2 = 2*r1
@@ -3587,16 +3583,16 @@ GLOH:
 1 : 8 : 8
 1
 
-			- r3 
+			- r3
 			... up to some outer r
 
 - METRICS FOR THE ITERITIVE IMPROVEMENT OF 3D MODEL:
 	- F point-line distance error
 	- 3D->2d reprojection error distance
 	- 3D location 'error volume'
-	
+
 	- average/mean error
-	- 
+	-
 
 	- adding a point/pair/3D should reduce error in some way
 	- removing a match should reduce error in some way (don't want to remove everything)
@@ -3630,16 +3626,16 @@ IMG_7523.JPG
 
 -- 3DR refininig
 	- initial 3-pair views are lined up bad
-		- 
-		
+		-
+
 	- switch from SIFT comparrison to SAD comparrision
 
 	- pair F-related try to aquire more neighbor matches
 
 	- how to do point comparrisons if each point can have multiple scales
 		... compare each ? take best score?
-	- 
-	- 
+	-
+	-
 	- color 3D dots the color of the pixel(s) it subsumes
 
 
@@ -3678,8 +3674,8 @@ x) SIFT histogram using gray-center RGB 8 quadrants w/ mag = gray-offset vector 
 x) color gradient histogram [average-color delta] 8-color quadrant
 x) SIFT histogram using hue angle & grayscale-RGB-length as magnitude
 x) SIFT histogram R/G/B values
--) 
--) 
+-)
+-)
 
 
 
@@ -3724,8 +3720,8 @@ try to combine colors in same way SIFT adds gradients:
 	- rgb/hsv/..
 	- clamp high grads
 	- 2D vs 6d gradient vectors
-	- offsets from 0, min, averages, 
-	- 
+	- offsets from 0, min, averages,
+	-
 	other proprerties:
 	2nd derivative
 
@@ -3757,14 +3753,14 @@ try to combine colors in same way SIFT adds gradients:
 
 
 ===== performance eval:
-	pick a single feature & see the scores among a various bunch of other features 
+	pick a single feature & see the scores among a various bunch of other features
 
 -- plot entropy profiles / values at different scales along with picture of area
 
 -- angle select: most prominant direction
 	- high mass vs low mass [from average?]
 	- gradients
-	- 
+	-
 
 
 - compare SAD scores
@@ -3855,7 +3851,7 @@ isolate R & t
 P = K[R|t]
 	PC = 0
 	M = KR
-	QR decompose 
+	QR decompose
 	=> if know K:
 		R = Kinv * M ?
 => force orthonormal?
@@ -3866,7 +3862,7 @@ numeric.QRFrancis
 
 - upload camera images
 	- camera double-check point location checks
-	
+
 
 - how to derive TFT minimization equations [4]
 - trifocal tensor how-to-calculate (from points) / robust iterate
@@ -3879,8 +3875,8 @@ numeric.QRFrancis
 	- larger cells are bette:
 		- connect space
 		- discard mismatching seeds
-	- 
-	- some SAD scores have to be horrible ??? 
+	-
+	- some SAD scores have to be horrible ???
 	- does dense use SAD scores at different scales? eg: 1,2,4 ?
 
 - corner feature size should be based on something ...
@@ -3914,7 +3910,7 @@ fullMatchesForObjects
 	- 2-view dense match [texture-show]
 	- cameras in 3D space along with projections to 3d points
 		- filter display by pair or tuple or ALL
-	- 
+	-
 
 
 ALGORITHM TODO:
@@ -3946,7 +3942,7 @@ BUNDLE ADJUST:
 					- use BEST data [knee point / min count] as population to estimate stddev
 		- total error = sum of individual triplet error
 
-	variables: 
+	variables:
 
 - data:
 	Camera Matrix K:
@@ -3983,7 +3979,7 @@ output can be used to:
 	- only keep tripled/optimized 3D points [ignore many more ]
 	- reproject 2D points to 3D (keep as-is 2d dense matches)
 	- reuse triple 3D points as dense matching seeds, to reiterate bundle adjustment
-	- 
+	-
 
 
 
@@ -3995,15 +3991,3 @@ SPEEDUPS:
 	- 2x+ using matrix libraries
 	- 10x+ using file i/o [some places]
 	- 2x+ using caching [some places]
-
-
-
-
-
-
-
-
-
-
-
-

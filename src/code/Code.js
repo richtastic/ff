@@ -1,10 +1,10 @@
-// Code.js 
+// Code.js
 // OVERRIDES:
 Math.PI2 = Math.PI*2.0;
 Math.TAU = Math.PI*2.0;
 Math.PIO2 = Math.PI*0.5;
 Math.lg = Math.log2;
-// 
+//
 Code.IS_IE = navigator && navigator.appName && (navigator.appName).toLowerCase().indexOf("explorer") >= 0; // (document.body.attachEvent && window.ActiveXObject);
 Code.IS_OPERA = navigator && navigator.appVersion && (navigator.appVersion).toLowerCase().indexOf("opera") >= 0; // guess
 Code.IS_SAFARI = navigator && navigator.appVersion && (navigator.appVersion).toLowerCase().indexOf("safari") >= 0;
@@ -82,7 +82,7 @@ Code.JS_EVENT_TEXT_INPUT = "textinput";
 
 
 Code.JS_CURSOR_STYLE_NONE = "none";						// hides cursor
-Code.JS_CURSOR_STYLE_DEFAULT = "auto";					// 
+Code.JS_CURSOR_STYLE_DEFAULT = "auto";					//
 Code.JS_CURSOR_STYLE_DEFAULT = "default";				// ^
 Code.JS_CURSOR_STYLE_CROSSHAIR = "crosshair";			// +
 Code.JS_CURSOR_STYLE_RESIZE_TOP = "n-resize";			// ^|
@@ -232,11 +232,11 @@ Code.parseURL = function(url){ // https://tools.ietf.org/html/rfc3986#section-4.
 	// SPACE = %20
 	// & sepraates
 	// ; also separates
-	// + = 
+	// + =
 	// multivalued: field1=a&field2=b&field3=...
 	//          OR: field=a,b,...
 	//          OR: field[0]=1&field[1]=b&...
-	// 
+	//
 	// eg: https://video.google.co.uk/site/home?basic=123&arr[]=0&arr[]=1&arr[]=2;list[0]=a;list[1]=b;list[2]=c&items=first,second,third#end
 	//url = "https://video.google.co.uk/site/home?basic=123&arr[]=0&arr[]=1&arr[]=2;list[0]=a;list[1]=b;list[2]=c&items=first,second,third#end";
 	// http://localhost/wordpress/wp-admin/admin.php?page=giau-plugin-submenu-data-entry&table=languages
@@ -410,7 +410,7 @@ Code.printHistogram = function(bins, displayMax){
 	var str = "";
 	var info = Code.infoArray(bins);
 	var max = info["max"];
-	
+
 	var scale = displayMax/max;
 	for(var i=0; i<bins.length; ++i){
 		str += "\n";
@@ -476,7 +476,7 @@ Code.parseJSON = function(str){
 			}
 		}
 	}
-	return obj;	
+	return obj;
 }
 Code.StringFromJSON = function(obj){
 	var str = JSON.stringify(obj);
@@ -649,7 +649,7 @@ if(containerArray==null){
 	}
 	console.log(returnData);
 	return returnData;
-	
+
 }
 Code._nextJSONParseCharFromString = function(str,index){
 	var i, ch, len=str.length;
@@ -775,9 +775,9 @@ Code.methodClass = function(subClass, self, method){
 	}
 	// this._.kill.call(this);
 	var fxn = subClass._[method].apply(self, params);
-	// 
+	//
 	// subClass._.constructor.apply(self, params); // constructor
-	// 
+	//
 }
 Code.isa = function(obj, klass){ // only this?
 	return (obj && obj.constructor && obj.constructor==klass);
@@ -951,15 +951,15 @@ Code.binarySearchCircular = function(a, f, log){ // f returns a direction LEFT o
 	}
 	// pick initial interval/direction to search between
 	var isOppsite = false;
-	if(aValue>0 && bValue>0){ // + + 
+	if(aValue>0 && bValue>0){ // + +
 		if(aValue>=bValue){
 			isOppsite = true;
 		}
-	}else if(aValue<0 && bValue<0){ // - - 
+	}else if(aValue<0 && bValue<0){ // - -
 		if(aValue>=bValue){
 			isOppsite = true;
 		}
-	}else if(aValue<=0 && bValue>=0){ // - + 
+	}else if(aValue<=0 && bValue>=0){ // - +
 		isOppsite = true;
 	}
 
@@ -1003,7 +1003,7 @@ console.log("MID FOUND: "+mIndex);
 	var isARight = aValue>=0;
 	var isMRight = mValue>=0;
 	var isBRight = bValue>=0;
-	if( aValue==mValue && mValue==bValue){ 
+	if( aValue==mValue && mValue==bValue){
 		throw "UN-HANDLE EQUAL?";
 	}
 	var direction = 0;
@@ -1149,7 +1149,7 @@ Code.stringReplaceAll = function(haystack,needle,replacement){
 	return haystack.replace(regex,replacement);
 }
 // ------------------------------------------------------------------------------------------ ARRAY
-Code.commaSeparatedStringFromArray = function(arr){ 
+Code.commaSeparatedStringFromArray = function(arr){
 	var str = "";
 	var i, s;
 	var len = arr.length;
@@ -1777,7 +1777,7 @@ Code.sad_cc = function(a,b){ // smaller is better
 	if(sad==0){
 		sad = 1E-6;
 	}
-	// sad 
+	// sad
 	// -cc
 	return -cc/sad;
 	//return -cc*sad;
@@ -2129,7 +2129,7 @@ Code.combineErrorMeasurementsV3D = function(points,errors){
 	// var percents = [];
 	return {"value":estimate, "error":error};
 }
-// ------------------------------------------------------------------------------------------ 
+// ------------------------------------------------------------------------------------------
 Code.isUnique = function(val){ // val, ...array
 	for(i=1;i<arguments.length;++i){
 		if(val==arguments[i]){
@@ -2271,9 +2271,9 @@ Code.minimizedAssignmentProblem = function(costMatrix){ // hungarian solution to
 	var slackX = Code.newArrayZeros(N); // label(slackX[y]) + label(y) - w(slackX[y],y) = slack[y]
 	var xy = Code.newArrayZeros(N); // vertex matched with i [Xi]
 	var yx = Code.newArrayZeros(N); // vertex matched with j [Yi]
-	var S = Code.newArrayZeros(N); // 
-	var T = Code.newArrayZeros(N); // 
-	var prev = Code.newArrayZeros(N); // 
+	var S = Code.newArrayZeros(N); //
+	var T = Code.newArrayZeros(N); //
+	var prev = Code.newArrayZeros(N); //
 	var i, j, n, maxMatch;
 
 	var hungarian = function(){
@@ -2308,8 +2308,8 @@ Code.minimizedAssignmentProblem = function(costMatrix){ // hungarian solution to
 		var i, j, root;
 		var q = Code.newArrayZeros(N); // queue
 		var rd = 0, wr = 0; // read / write flags
-		Code.setArrayConstant(S, false); // 
-		Code.setArrayConstant(T, false); // 
+		Code.setArrayConstant(S, false); //
+		Code.setArrayConstant(T, false); //
 		Code.setArrayConstant(prev, -1);
 		for(i=0; i<N; ++i){ // find root of tree
 			if(xy[i] == -1){
@@ -2320,11 +2320,11 @@ Code.minimizedAssignmentProblem = function(costMatrix){ // hungarian solution to
 				break;
 			}
 		}
-		for(j=0; j<N; ++j){ // init delta array: 
+		for(j=0; j<N; ++j){ // init delta array:
 			slack[j] = labelsX[root] + labelsY[j] - costMatrix[root][j];
 			slackX[j] = root;
 		}
-		// 
+		//
 var loopLimit = 0;
 		while(true){ // improve labels
 loopLimit++;
@@ -2456,7 +2456,7 @@ Code.timerDifference = function(){
 Code.timerDifferenceSeconds = function(){
 	return Code.timerDifference()/1000.0;
 }
-Code.getTimeMilliseconds = function(utc){ 
+Code.getTimeMilliseconds = function(utc){
 	utc = utc!==undefined ? utc : true;
     var d = new Date();
     var t = d.getTime();
@@ -2551,7 +2551,7 @@ Code.getAMPMFromDate = function(date){
 Code.getHourStringFromDate = function(date){
 	hour = date.getHours();
 	if(hour>12){
-		hour -= 12; 
+		hour -= 12;
 	}
 	if(hour==0){ // 12 AM || PM
 		hour = 12;
@@ -2666,10 +2666,10 @@ Code.diffTwistVector3D = function(valueA,valueB){
 	var diff = {"direction":diffDir, "angle":diffAng};
 	return diff;
 }
-Code.addAngleVector3D = function(vectorA, vectorB){ 
+Code.addAngleVector3D = function(vectorA, vectorB){
 	return Code._opAngleVector3D(vectorA, vectorB, 1);
 }
-Code.subAngleVector3D = function(vectorA, vectorB){ 
+Code.subAngleVector3D = function(vectorA, vectorB){
 	return Code._opAngleVector3D(vectorA, vectorB, -1);
 }
 Code._opAngleVector3D = function(vectorA, vectorB, mag){ // assume Z = default location
@@ -2715,7 +2715,7 @@ Code.averageAngleVector3D = function(vectors, percents){ // center of vectors vi
 	return total;
 
 }
-Code.averageVectorTwist3D = function(twists, percents){ 
+Code.averageVectorTwist3D = function(twists, percents){
 	var count = twists.length;
 	var locations = [];
 	var angles = [];
@@ -2773,7 +2773,7 @@ Code.Matrix3DFromVectorTwist = function(location, rotation){
 	transform = Matrix3D.matrixFromMatrix3D(transform);
 	return transform;
 }
-Code.averageQuaternions = function(quaternions, percents){ 
+Code.averageQuaternions = function(quaternions, percents){
 /*
 	throw "eigenvectors ?";
 
@@ -2797,7 +2797,7 @@ Code.averageQuaternions = function(quaternions, percents){
 		}
 		v.set(vector.x,vector.y,vector.z);
 		v.norm(); // scale by percent too ?
-		
+
 		angle = V3D.angle(V3D.DIRZ,v);
 		V3D.cross(d,V3D.DIRZ,v);
 		d.norm();
@@ -2806,7 +2806,7 @@ Code.averageQuaternions = function(quaternions, percents){
 		}
 		console.log("  "+i+" : "+d+" @ "+Code.degrees(angle));
 		// V3D.rotateAngle(result,result,d,angle*p);
-		
+
 		//quaternion.qRotateDir(v.x,v.y,v.x);
 		// quaternion.qRotateDir(d.x,d.y,d.x, angle*p);
 		var q = new V4D();
@@ -3191,7 +3191,7 @@ Code.interpolateColorGradientARGB = function(percent, colors,locations){
 	}
 	return null; // error?
 }
-// Code.grayscaleFloatToHeatMapFloat = function(gry){ 
+// Code.grayscaleFloatToHeatMapFloat = function(gry){
 // 	var colors = [0xFF000000, 0xFF330066, 0xFF0000FF, 0xFF3399FF, 0xFF00FF00, 0xFFFF0000, 0xFFFF9900, 0xFFFFFFFF];
 // 	var color = Code.interpolateColorGradientARGB(gry[i], colors);
 // 	var a = Code.getFloatAlpARGB(color);
@@ -3201,7 +3201,7 @@ Code.interpolateColorGradientARGB = function(percent, colors,locations){
 // 	return {"alp":a, "red":r, "grn":g, "blu":b};
 // }
 Code.grayscaleFloatToHeatMapFloat = function(gry, colors){ // in [0,1]
-	// 0xFFFF0000, 
+	// 0xFFFF0000,
 	colors = colors!==undefined ? colors : [0xFF000000, 0xFF330066, 0xFF0000FF, 0xFF3399FF, 0xFF00FF00, 0xFFFF0000, 0xFFFF9900, 0xFFFFFFFF]; // 0->1: black, purple, blue, turquoise, green, red, yellow, white
 	var i, len = gry.length;
 	var a = Code.newArray(len);
@@ -3520,7 +3520,7 @@ Code.RGBFromYUV = function(y,u,v){
 	return Code.getColARGB(0x0, r,g,b);
 }
 Code.HSLFromRGB = function(rgb){
-	// 
+	//
 }
 Code.LUVFromRGB = function(){ // CIE / LUV. : L=[0,100] U=[-134,220], V=[-140,122]
 
@@ -3815,7 +3815,7 @@ Code.randomizeArray = function(arr, guarantee){
 	// guarantee non-repeats
     var isFirstIndex = arr[0];
     if(guarantee){
-	    if(wasLastIndex==isFirstIndex){ 
+	    if(wasLastIndex==isFirstIndex){
 	        indexA = 0;
 	        indexB = Math.floor(Math.random()*(len-1))+1;
 	        temp = arr[indexA];
@@ -4226,10 +4226,10 @@ Code.newTableRow = function(){
 Code.newTableCol = function(){
 	return Code.newElement("td");
 };
-Code.getSelected = function(select){ 
+Code.getSelected = function(select){
 	return Code.getProperty(select.options[select.selectedIndex],"value");
 }
-Code.setSelected = function(select,value){ 
+Code.setSelected = function(select,value){
 	var i, len = Code.numChildren(select);
 	for(i=0; i<len; ++i){
 		var child = Code.getChild(select,i);
@@ -5105,7 +5105,7 @@ Code.removeStyle = function(ele,sty){
 	s = s.replace(/^ /,"");
 	ele.setAttribute("style",s);
 }
-// - 
+// -
 Code.getContent = function(ele){
 	return ele.innerHTML;
 }
@@ -5117,7 +5117,7 @@ Code.copyHTML = function(ele){
 	return null;
 }
 
-// hiding 
+// hiding
 // ele.setAttribute("display","none");
 Code.hide = function(ele){
 	ele.style.display = "none";
@@ -5843,7 +5843,7 @@ Code.bestFitLine2DWeights = function(points, count, weights){ // weighted least 
 	var beta = Matrix.mult(A,B);
 	console.log("....");
 	console.log(beta+"");
-	// 
+	//
 	// A = X^T * W * X
 	// B = X^T * W * Y
 	// argmin = Ainv * B
@@ -5895,7 +5895,7 @@ Code.imageNonlinearTransform = function(source, mappingFxn, samplesX, samplesY){
 		var p = points[i];
 		pointSpace.insertObject(p);
 	}
-	// fill in 
+	// fill in
 	var weights = [];
 	var val = new V3D();
 	var org = new V2D();
@@ -7487,8 +7487,8 @@ Code.interpolateP2D = function(pointX, pointsA, pointsB, weights){ // TODO: conv
 		}
 	}
 	// return the point if at center:
-	// 
-	// 
+	//
+	//
 	var position = new V2D();
 	var ao = new V2D();
 	var bo = new V2D();
@@ -7512,7 +7512,7 @@ Code.interpolateP2D = function(pointX, pointsA, pointsB, weights){ // TODO: conv
 		var lenAX = ax.length();
 		var lenAO = ao.length();
 		var lenBO = bo.length();
-		if(lenAX<1E-10){ 
+		if(lenAX<1E-10){
 			return b.copy();
 		}
 		if(lenAO<1E-10){ // basically at center
@@ -7886,7 +7886,7 @@ Code.minRectFromPolygon = function(points){ // min-area-rect: epects convex hull
 		angle = V2D.angleDirection(V2D.DIRX,ab);
 		min = null;
 		max = null;
-		for(j=0; j<len; ++j){ // find rect of 
+		for(j=0; j<len; ++j){ // find rect of
 			p = points[j];
 			V2D.rotate(q, p,-angle);
 			if(!min){
@@ -8033,7 +8033,7 @@ Code._triTriInsides = function(arrOrgA,arrDirA,arrOrgB,arrDirB){
 }
 
 
-Code.triTriIntersection2D_BAD = function(a1,b1,c1, a2,b2,c2){ 
+Code.triTriIntersection2D_BAD = function(a1,b1,c1, a2,b2,c2){
 	return Code._triTriIntersection2D(a1,b1,c1, a2,b2,c2, true);
 }
 Code._triTriIntersection2D = function(a1,b1,c1, a2,b2,c2, retry){ // convex polygon intersection
@@ -8051,7 +8051,7 @@ Code._triTriIntersection2D = function(a1,b1,c1, a2,b2,c2, retry){ // convex poly
 	var hasIn = false;
 	var hasOut = false;
 	var startIndex = null;
-	
+
 	for(var i=0; i<arrOrgA.length; ++i){
 		var oA = arrOrgA[i];
 		var positives = 0;
@@ -8079,7 +8079,7 @@ Code._triTriIntersection2D = function(a1,b1,c1, a2,b2,c2, retry){ // convex poly
 	if(hasIn && !hasOut){ // all inside
 		console.log("all inside");
 		return [a1,b1,c1];
-		
+
 	}else if(!hasIn && hasOut){ // all outside - possibly try opposite
 		console.log("all outside");
 		if(retry){
@@ -8162,7 +8162,7 @@ Code.triTriIntersection2D_OLD = function(a1,b1,c1, a2,b2,c2){
 				polygon.push(V2D.copy(orgA));
 			// }
 		}
-		// any intersections along 
+		// any intersections along
 		temp = []; // clear
 		for(j=0;j<3;++j){
 			orgB = arrOrgB[j];
@@ -8216,7 +8216,7 @@ Code.triTriIntersection2D_OLD = function(a1,b1,c1, a2,b2,c2){
 	// this is a double-copy for exactly the same triangles
 }
 
-Code.quadQuadIntersection2DBoolean = function(a1,b1,c1,d1, a2,b2,c2,d2){ 
+Code.quadQuadIntersection2DBoolean = function(a1,b1,c1,d1, a2,b2,c2,d2){
 	var checkA = Code.triTriIntersection2DBoolean(a1,b1,c1, a2,b2,c2);
 	var checkB = Code.triTriIntersection2DBoolean(a1,b1,c1, a2,c2,d2);
 	var checkC = Code.triTriIntersection2DBoolean(a1,c1,d1, a2,b2,c2);
@@ -9004,7 +9004,7 @@ Code.lineEquationFromRay2D = function(org,dir){
 	closest.norm();
 	return {"a":closest.x, "b":closest.y, "c":-len};
 }
-Code.lineEquationFromPoints2D = function(a,b){ // 
+Code.lineEquationFromPoints2D = function(a,b){ //
 	dir = V2D.sub(b,a);
 	var closest = Code.closestPointLine2D(a,dir, V2D.ZERO);
 	var len = closest.length();
@@ -9012,7 +9012,7 @@ Code.lineEquationFromPoints2D = function(a,b){ //
 	return {"a":closest.x, "b":closest.y, "c":-len};
 }
 Code.homoIntersectionFromLines2D = function(a1,b1,c1, a2,b2,c2){ // [A]x B
-	return new V3D(b1*c2-c1*b2, c1*a2-a1*c2, a1*b2-b1*a2); // 
+	return new V3D(b1*c2-c1*b2, c1*a2-a1*c2, a1*b2-b1*a2); //
 }
 Code.homoLineFromPoints2D = function(a1,b1,c1, a2,b2,c2){ // [A]x B - dual
 	return new V3D(b1*c2-c1*b2, c1*a2-a1*c2, a1*b2-b1*a2);
@@ -9270,7 +9270,7 @@ Code.medianPointLines3D = function(lines){ // list of o+d lines
 	// SUMi=0_to_m: l - o - d*[(l-o)*d]/||d||
 }
 
-Code.closestPointPlane3D = function(q,n, p){ // 
+Code.closestPointPlane3D = function(q,n, p){ //
 	var t = ((q.x-p.x)*n.x + (q.y-p.y)*n.y + (q.z-p.z)*n.z)/(n.x*n.x+n.y*n.y+n.z*n.z);
 	return new V3D(p.x+t*n.x,p.y+t*n.y,p.z+t*n.z);
 }
@@ -9406,7 +9406,7 @@ Code.digits = function(value, d){
 	return value.toExponential(d);
 }
 
-Code.isPointInsideTri2DFast = function(p, a,b,c){ 
+Code.isPointInsideTri2DFast = function(p, a,b,c){
 	if(p.x < Math.min(a.x,b.x,c.x)){
 		return false;
 	}
@@ -9444,11 +9444,19 @@ Code.isPointInsideTri2D = function(p, a,b,c){
 	// var dotAA = V2D.dot(ab);
 	// var dotAA = V2D.dot(ab);
 	// var dotAA = V2D.dot(ab);
-} 
+}
 // Code.isPointInsideTri2D = function(p, a,b,c){ /// not correct at borders for whatever reason
 // 	return Code.isPointInsidePolygon2D(p, [a,b,c]);
 // }
-Code.isPointInsideRect2D = function(p, a,b,c,d){ 
+Code.isPointInsideRect2D = function(p, a,b,c,d){
+	if(arguments.length<5){
+		var w = a;
+		var h = b;
+		a = new V2D(0,0);
+		b = new V2D(w,0);
+		c = new V2D(w,h);
+		d = new V2D(0,h);
+	}
 	return Code.isPointInsidePolygon2D(p, [a,b,c,d]);
 }
 Code.isPointInsidePolygon2D = function(p, polygonArray){ // http://alienryderflex.com/polygon/   || return: intersections % 2 != 0
@@ -9543,7 +9551,7 @@ Code.smallestCircleCircles = function(centers,radiuses){
 	}
 	return {"center":center, "radius":radius};
 }
-// ------------------------------------------------------------------------------------------------------------------------------------------------- 
+// -------------------------------------------------------------------------------------------------------------------------------------------------
 Code.parabolaFromDirectrix = function(a,b, c, x){ // y = focus, directrix, x
 	return ((x-a)*(x-a) + b*b - c*c)/(2*(b-c));
 }
@@ -9551,7 +9559,7 @@ Code.parabolaAlgebraic = function(points, location, intercept){ // 2d list of po
 	// TODO: intercept force y = location = ?
 	// a*x*x + b*x + c = 0
 	// (x - h)^2 = 4*p(y-k)
-	// 
+	//
 	if(points.length<3){
 		return null;
 	}
@@ -9606,7 +9614,7 @@ Code.parabolaAlgebraic = function(points, location, intercept){ // 2d list of po
 	parabola["weights"] = weights;
 	return parabola;
 }
-// ------------------------------------------------------------------------------------------------------------------------------------------------- 
+// -------------------------------------------------------------------------------------------------------------------------------------------------
 Code.ssdWindow = function(needle,widN,heiN, haystack,widH,heiH){
 	return ImageMat.ssd(image,imageWidth,imageHeight, operator,operatorWidth,operatorHeight);
 }
@@ -9628,17 +9636,17 @@ Code.SSDEqual = function(a,b){
 	}
 	return ssd;
 }
-// ------------------------------------------------------------------------------------------------------------------------------------------------- 
+// -------------------------------------------------------------------------------------------------------------------------------------------------
 //Code.subRect = function(image,width,height, point,newWidth,newHeight, matrix){
 	// var newWidth = Math.round(width*scale);
 	// var newHeight = Math.round(height*scale);
-	//var sigma = 
+	//var sigma =
 	// matrix = new Matrix(3,3).identity();
 	// var scale = matrix.getScale();
 	// if(scale>1.0){ // zoom in
 	// 	//
 	// }else{ // zoom out
-	// 	// 
+	// 	//
 	// }
 	/*
 	find extent of resulting rect, extract only that, gaussian blur that, transfer from that
@@ -9676,7 +9684,7 @@ Code.pointInterpolate2DLinear = function(array, wid,hei, x,y){
 	}
 	return val;
 }
-// ------------------------------------------------------------------------------------------------------------------------------------------------- 
+// -------------------------------------------------------------------------------------------------------------------------------------------------
 Code.nextExponentialTwoRounded = function(d){
 	var n = Math.abs(d);
 	var e = Math.ceil(Math.log(n)/Math.log(2));
@@ -9726,7 +9734,7 @@ Code.rectIntersect = function(aMin,aMax, bMin,bMax){
 Code.rectInside = function(aMin,aMax, bMin,bMax){ // b inside A
 	return aMin.x<=bMin.x && aMin.y<=bMin.y && aMax.x>=bMax.x && aMax.y>bMax.y;
 }
-// ------------------------------------------------------------------------------------------------------------------------------------------------- 
+// -------------------------------------------------------------------------------------------------------------------------------------------------
 Code.parsePointSetString = function(data, max){
 	var lines = data.split("\n");
 	var i, v, line, nums, x, y, z, list = [], len = lines.length;
@@ -9800,7 +9808,7 @@ Code.getHex = function(intVal, ignore){
 }
 
 // -------------------------------------------------------- images
-Code.generateBMPImageHeader = function(w,h){ // 
+Code.generateBMPImageHeader = function(w,h){ //
     var imgWidth = parseInt(width);
     var imgHeight = parseInt(height);
     var imageData = new Array();
@@ -9917,7 +9925,7 @@ Code.base64StringToBinary = function(stringData, check, final){
 			break;
 		}else{
 			var c = lookupTable[char];
-			currentByte <<= 6; 
+			currentByte <<= 6;
 			currentByte |= c;
 			currentLength += 6;
 			if(currentLength>8){
@@ -10012,7 +10020,7 @@ Code.fuzzyAnd = function(a,b){ // intersection
 Code.fuzzyOr = function(a,b){ // union
 	return Math.max(a,b);
 }
-Code.fuzzyXor = function(a,b){ // 
+Code.fuzzyXor = function(a,b){ //
 	return Math.min( Math.max(a,b), Math.max(1-a,1-b) ); // === Math.max( Math.min(a,1-b), Math.min(1-a,b) );
 }
 Code.fuzzyProbOr = function(a,b){
@@ -10072,7 +10080,7 @@ Code.dropOutliers = function(list, valueFxn, sigmas, rightOnly, useMin){
 		var shouldKeep = Math.abs(value) < maxValue;
 		if(rightOnly){
 			shouldKeep = value < maxValue;
-		} // left only: -value 
+		} // left only: -value
 		if(shouldKeep){
 			keep.push(list[i]);
 		}else{
@@ -10166,7 +10174,7 @@ Code.variabilityImageDiffs = function(data, width, height){
 	}
 	return result;
 }
-Code.variabilityImageColorGradient = function(data, width, height){ // 
+Code.variabilityImageColorGradient = function(data, width, height){ //
 	var i, j, x, y, m, len = data.length;
 	var wm1 = width - 1;
 	var hm1 = height - 1;
@@ -10208,7 +10216,7 @@ Code.variabilityImageColorGradient = function(data, width, height){ //
 			avg /= mCount;
 			var diff = Math.abs(value-avg);
 			result[index] = diff;
-			
+
 		}
 	}
 	return result;
@@ -10273,7 +10281,7 @@ Code.variability = function(data, width, height, masking, isMin){ // roughness m
 						*/
 					}
 				}
-				
+
 				avg /= mCount;
 				var diff = Math.abs(value-avg);
 				total += diff;
@@ -10436,7 +10444,7 @@ normDot = 1;
 	return {"min":min, "max":max, "normal":normal};
 }
 Code.curvature3D5._C = null;
-Code.curvature3D = function(a,b,c, d,e,f, g,h,i){ 
+Code.curvature3D = function(a,b,c, d,e,f, g,h,i){
 	return Code._curvature3D(a,b,c, d,e,f, g,h,i, true);
 }
 Code._curvature3D = function(a,b,c, d,e,f, g,h,i, simple){ // assumed on a plane projected to height-field
@@ -10747,7 +10755,7 @@ Code.curvature2D = function(a,b,c){ // |dT/ds|
 //   var tr = -Math.sqrt(-a*(c-d) + b*b - b*(c+d) +c*c);
 //   var dn = -a+3*b-3*c+d;
 //     if(dn!=0) { ret[0] = (tl+tr)/dn; ret[1] = (tl-tr)/dn; }
-//     return ret; 
+//     return ret;
 // }
 
 // console.log(A.y,B.y,C.y,D.y);
@@ -10758,14 +10766,14 @@ Code.curvature2D = function(a,b,c){ // |dT/ds|
 // 	t = z0;
 // 	// ?
 // 	t = z1;
-// 	// 
+// 	//
 // 	t1 = 1-t;
 // 	return new V2D( );
 // }
 
 Code.bezier2DExtrema = function(){ // arguments = list of coefficients
 	// Newton Raphson
-	// 
+	//
 }
 
 
@@ -10855,7 +10863,7 @@ Code.bezier2DCubicSplit = function(A, B, C, D, t){ // De Casteljau's algorithm
 	return [[A,AB,X,Q], [Q,Y,CD,D]];
 }
 Code.bezier2DSplit = function(){ // arguments = list of coefficients | cut point
-	// 
+	//
 }
 
 
@@ -11010,7 +11018,7 @@ Code.bezier2DCubicLength = function(A,B,C,D, intervals){
 }
 
 Code.bezier2DCubicLinearN = function(A,B,C,D){
-	
+
 }
 
 
@@ -11138,7 +11146,7 @@ Code.charStringFromByteArray = function(binaryArray,offset, count){
 		}
 		return {"value":str,"count":read};
 	}
-	
+
 }
 Code.stringStartsWith = function(str,beg){
 	if(str.length>=beg.length){
@@ -11253,6 +11261,3 @@ Array.prototype.last = function(){
 	}
 	return undefined;
 }
-
-
-
