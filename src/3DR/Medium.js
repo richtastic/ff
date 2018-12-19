@@ -21,9 +21,9 @@ function Medium(){
 	// var imageList = ["caseStudy1-0.jpg", "caseStudy1-9.jpg"];
 	// var imageLoader = new ImageLoader("./images/",imageList, this,this.handleImagesLoaded,null);
 
-	// var imageList = ["room0.png", "room2.png"];
+	var imageList = ["room0.png", "room2.png"];
 	// var imageList = ["bench_A.png", "bench_B.png"];
-	var imageList = ["snow1.png", "snow2.png"];
+	// var imageList = ["snow1.png", "snow2.png"];
 	// var imageList = ["caseStudy1-20.jpg", "caseStudy1-24.jpg"];
 	var imageLoader = new ImageLoader("./images/",imageList, this,this.handleImagesLoadedRectify,null);
 	imageLoader.load();
@@ -390,11 +390,9 @@ Medium.prototype.handleImagesLoadedRectify = function(imageInfo){
 var points;
 
 
-/*
+
 
 // var imageList = ["room0.png", "room2.png"];
-
-
 var pointsA = [];
 points = pointsA;
 points.push( new V2D(157.00123897822408,117.99654507138962) ); // 0
@@ -524,16 +522,13 @@ points.push( new V2D(411.9999963323768,96.99999813008753) ); // 59
 
 	F = [8.81121731206021e-8,0.000010114343292779635,-0.0012512115388550813,1.0539861656966728e-7,-0.000004023737922070967,-0.01313862645804628,0.00009352376307345056,0.011747687492820876,-0.597184751416662];
 
-*/
 
 
 
 
 /*
+
 // var imageList = ["bench_A.png", "bench_B.png"];
-
-
-
 var pointsA = [];
 points = pointsA;
 points.push( new V2D(301.85233375298054,126.81585618302164) ); // 0
@@ -652,9 +647,8 @@ F = [-6.037043098929525e-7,-0.00000970730106456997,0.0018040397976300374,-0.0000
 
 
 
-
+/*
 // "snow1.png", "snow2.png"
-
 var pointsA = [];
 points = pointsA;
 points.push( new V2D(130.9999022735318,281.9998853538) ); // 0
@@ -746,13 +740,15 @@ points.push( new V2D(121.99995462155192,236.00103543906792) ); // 40
 
 
 F = [0.000005462227931478416,-0.00011006854725708874,0.008098590287009702,0.00010948467270919531,0.000005349907912003559,-0.017733821547636006,-0.008103769297990681,0.008222796396283668,0.6108835938091672];
+*/
+
+
+
 
 
 
 
 /*
-
-
 // "caseStudy1-20.jpg", "caseStudy1-24.jpg"
 
 
@@ -834,13 +830,29 @@ points.push( new V2D(120.00004345553876,171.00001236808265) ); // 33
 var F = [-3.352712743715355e-7,-0.000013179191740391743,0.0014644355870591895,-0.0000031702316777767065,0.000008588003127220183,-0.02194915505542336,0.0010194085236254263,0.02466134581182565,-0.3114138743008315];
 
 
+
 */
+
+
 
 
 	var matrixFfwd = new Matrix(3,3).fromArray(F);
 	// console.log("F = "+matrixFfwd.toArray()+"; ");
 	var matrixFrev = R3D.fundamentalInverse(matrixFfwd);
 	// console.log(matrixFrev+"");
+
+var reverse = false;
+// reverse = true;
+if(reverse){
+	var temp = null;
+	temp = matrixFfwd;
+	matrixFfwd = matrixFrev;
+	matrixFrev = temp;
+
+	temp = imageMatrixA;
+	imageMatrixA = imageMatrixB;
+	imageMatrixB = temp;
+}
 
 
 	var epipole = R3D.getEpipolesFromF(matrixFfwd);
