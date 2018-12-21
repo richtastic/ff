@@ -297,11 +297,11 @@ vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 	- separate triangles into texture lookup / files
 		- TextureMap (from textures to atlas)
 	=> scene textured model
-(12/10)
+(01/14)
 - viewing output
 	- locally
 	- VR device
-(01/14)
+(01/30)
 
 google app engine project - nodejs
 https://cloud.google.com/appengine/docs/nodejs/
@@ -319,6 +319,14 @@ https://cloud.google.com/appengine/docs/nodejs/
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
+- is point in A need reversing ? row / col => theta / rho
+
+
+
+- rectified to original points thinking
+
+- on rotation -> circular array search needs to reverse directional search
+
 
 - do forward/backward & keep only the points within +/- 1 pixel of eachother
 	=> then average?
@@ -335,7 +343,7 @@ https://cloud.google.com/appengine/docs/nodejs/
 		- relative angle comes epipolar line directions
 		- scale cam be an optimized check (~3 sizes w/ maxima check?)
 
-
+- MAPPING ROW LINES -> ON ROLL-AROUND SHOULD GO TO FIRST ACTUALLY USED ROW
 
 
 - F MATCHING

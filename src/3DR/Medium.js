@@ -371,7 +371,7 @@ Medium.prototype.handleImagesLoadedRectify = function(imageInfo){
 		var d = new DOImage(img);
 		this._root.addChild(d);
 		// d.graphics().alpha(0.1);
-		d.graphics().alpha(0.5);
+		// d.graphics().alpha(0.5);
 		// d.graphics().alpha(1.0);
 		d.matrix().translate(x,y);
 		x += img.width;
@@ -841,8 +841,8 @@ var F = [-3.352712743715355e-7,-0.000013179191740391743,0.0014644355870591895,-0
 	var matrixFrev = R3D.fundamentalInverse(matrixFfwd);
 	// console.log(matrixFrev+"");
 
-var reverse = false;
-// reverse = true;
+// var reverse = false;
+var reverse = true;
 if(reverse){
 	var temp = null;
 	temp = matrixFfwd;
@@ -855,11 +855,31 @@ if(reverse){
 }
 
 
+var img = imageMatrixA;
+var img = GLOBALSTAGE.getFloatRGBAsImage(img.red(), img.grn(), img.blu(), img.width(), img.height());
+var d = new DOImage(img);
+d.matrix().translate(0, 0);
+GLOBALSTAGE.addChild(d);
+
+
+var img = imageMatrixB;
+var img = GLOBALSTAGE.getFloatRGBAsImage(img.red(), img.grn(), img.blu(), img.width(), img.height());
+var d = new DOImage(img);
+d.matrix().translate(imageMatrixA.width(), 0);
+GLOBALSTAGE.addChild(d);
+
+
+
+
+
+
+
 	var epipole = R3D.getEpipolesFromF(matrixFfwd);
 	var epipoleA = epipole["A"];
 	var epipoleB = epipole["B"];
 
 	var rectified = R3D.polarRectification(imageMatrixA,epipoleA);
+rectified["rotation"] = 0;
 	console.log(rectified);
 		var rectifiedInfoA = rectified;
 		var rotationA = rectifiedInfoA["rotation"];
@@ -867,19 +887,23 @@ if(reverse){
 			rectified = rectifiedA;
 		var img = GLOBALSTAGE.getFloatRGBAsImage(rectified.red(), rectified.grn(), rectified.blu(), rectified.width(), rectified.height());
 		var d = new DOImage(img);
-		console.log(rotationA)
-		if(rotationA!=0){
+		// console.log(rotationA)
+		// if(rotationA!=0){
+		if(true){
 			d.matrix().translate(-rectifiedA.width()*0.5, -rectifiedA.height()*0.5);
-			d.matrix().rotate( Code.radians(rotationA) );
+			// d.matrix().rotate( Code.radians(rotationA) );
+			d.matrix().rotate( Math.PI );
 			d.matrix().translate(rectifiedA.width()*0.5, rectifiedA.height()*0.5);
 		}
 		//d.matrix().scale(1.0);
 		d.matrix().translate(0, 0);
+d.matrix().translate(0, 400);
 GLOBALSTAGE.addChild(d);
 
 
 
 	var rectified = R3D.polarRectification(imageMatrixB,epipoleB);
+rectified["rotation"] = 0;
 	console.log(rectified);
 		var rectifiedInfoB = rectified;
 		var rotationB = rectifiedInfoB["rotation"];
@@ -887,13 +911,15 @@ GLOBALSTAGE.addChild(d);
 			rectified = rectifiedB;
 		var img = GLOBALSTAGE.getFloatRGBAsImage(rectified.red(), rectified.grn(), rectified.blu(), rectified.width(), rectified.height());
 		var d = new DOImage(img);
-		if(rotationB!=0){
+		// if(rotationB!=0){
+		if(false){
 			d.matrix().translate(-rectifiedB.width()*0.5, -rectifiedB.height()*0.5);
 			d.matrix().rotate( Code.radians(rotationB) );
 			d.matrix().translate(rectifiedB.width()*0.5, rectifiedB.height()*0.5);
 		}
 		//d.matrix().scale(1.0);
 		d.matrix().translate(0+rectifiedA.width(), 0);
+d.matrix().translate(0, 400);
 GLOBALSTAGE.addChild(d);
 
 
@@ -906,11 +932,11 @@ GLOBALSTAGE.addChild(d);
 var rowSets = R3D.polarRectificationRowSets(rectifiedInfoB, matrixFfwd, imageA,imageB);
 	var minRowB = rowSets[0];
 	var maxRowB = rowSets[1];
-	console.log(minRowB,maxRowB);
+	// console.log(minRowB,maxRowB);
 var rowSets = R3D.polarRectificationRowSets(rectifiedInfoA, matrixFrev, imageB,imageA);
 	var minRowA = rowSets[0];
 	var maxRowA = rowSets[1];
-	console.log(minRowA,maxRowA);
+	// console.log(minRowA,maxRowA);
 
 
 // throw "NOW ?"
@@ -949,33 +975,64 @@ var offsetRectB = ( rotationB==0 ? -minRowB : (rectifiedB.height()-maxRowB) );
 	// d.matrix().translate(1200, 0);
 	// GLOBALSTAGE.addChild(d);
 
-
-/*
-	scale:
-		angles
-		radius
-		radiusMin
-		radiusMax
-		F ?
-	involve:
-		rotation
-
-	row in scaled A
-	row in A
-	row in B
-	row in scaled B
-*/
-
 // R3D._stereoBlockMatch(imageMatrixA,imageMatrixB, rectifiedA,rectifiedInfoA, rectifiedB,rectifiedInfoB, matrixFfwd, null,null);
 
-var bestMatches = {"A":pointsA,"B":pointsB};
+console.log("SIZE: "+imageMatrixA.width()+"x"+imageMatrixA.height());
 
+// FORWARD
+var bestMatches = {"A":pointsA,"B":pointsB};
 var result = R3D.stereoMatch(imageMatrixA,imageMatrixB, rectifiedA,rectifiedInfoA, rectifiedB,rectifiedInfoB, matrixFfwd,bestMatches, null,null);
+// REVERSE
+// bestMatches = {"A":pointsB,"B":pointsA};
+// var result = R3D.stereoMatch(imageMatrixB,imageMatrixA, rectifiedB,rectifiedInfoB, rectifiedA,rectifiedInfoA, matrixFrev,bestMatches, null,null);
+// throw "?";
+
+
+/*
+var bestMatches = {"A":pointsA,"B":pointsB};
+var result = R3D.stereoMatchMatching(imageMatrixA,imageMatrixB, rectifiedA,rectifiedInfoA, rectifiedB,rectifiedInfoB, matrixFfwd,bestMatches, null,null);
 console.log(result);
 var matches = result["matches"];
+console.log(matches);
+
+throw "?";
+*/
+// var matches = result["matches"];
+
+var mapping = result["mapping"];
+// console.log(mapping)
+var widA = imageMatrixA.width();
+var heiA = imageMatrixA.height();
+// for(var count=0; count<40; ++count){
+// 	var i = Math.floor(Math.random()*widA);
+// 	var j = Math.floor(Math.random()*heiA);
+// 	i = Math.min(Math.max(i,0),widA-1);
+// 	j = Math.min(Math.max(j,0),heiA-1);
+// for(var j=0; j<heiA; j+=80){
+// 	for(var i=0; i<widA; i+=80){
+for(var j=0; j<heiA; j++){
+	for(var i=0; i<widA; i++){
+		var index = j*widA + i;
+		var pixel = mapping[index];
+		if(pixel){
+console.log(pixel);
+			var d = new DO();
+			d.graphics().setLine(1.0, 0xFFFF0000);
+			d.graphics().beginPath();
+			d.graphics().moveTo(i,j);
+			d.graphics().lineTo(pixel.x + widA,pixel.y);
+			d.graphics().endPath();
+			d.graphics().strokeLine();
+			GLOBALSTAGE.addChild(d);
+		}
+	}
+}
+
+
+var matches = [];
 
 for(var i=0; i<100; ++i){
-// break;
+break;
 	var index = Math.floor(Math.random()*matches.length);
 // index = i;
 	var match = matches[index];
