@@ -21,10 +21,10 @@ function Medium(){
 	// var imageList = ["caseStudy1-0.jpg", "caseStudy1-9.jpg"];
 	// var imageLoader = new ImageLoader("./images/",imageList, this,this.handleImagesLoaded,null);
 
-	var imageList = ["room0.png", "room2.png"];
+	// var imageList = ["room0.png", "room2.png"];
 	// var imageList = ["bench_A.png", "bench_B.png"];
 	// var imageList = ["snow1.png", "snow2.png"];
-	// var imageList = ["caseStudy1-20.jpg", "caseStudy1-24.jpg"];
+	var imageList = ["caseStudy1-20.jpg", "caseStudy1-24.jpg"];
 	var imageLoader = new ImageLoader("./images/",imageList, this,this.handleImagesLoadedRectify,null);
 	imageLoader.load();
 }
@@ -391,7 +391,7 @@ var points;
 
 
 
-
+/*
 // var imageList = ["room0.png", "room2.png"];
 var pointsA = [];
 points = pointsA;
@@ -521,13 +521,13 @@ points.push( new V2D(333.00000315916094,27.99999960876695) ); // 58
 points.push( new V2D(411.9999963323768,96.99999813008753) ); // 59
 
 	F = [8.81121731206021e-8,0.000010114343292779635,-0.0012512115388550813,1.0539861656966728e-7,-0.000004023737922070967,-0.01313862645804628,0.00009352376307345056,0.011747687492820876,-0.597184751416662];
+*/
 
 
 
 
 
 /*
-
 // var imageList = ["bench_A.png", "bench_B.png"];
 var pointsA = [];
 points = pointsA;
@@ -641,9 +641,9 @@ points.push( new V2D(68.00028322425376,227.9996371664038) ); // 50
 points.push( new V2D(164.99999956654503,255.9999986085836) ); // 51
 
 F = [-6.037043098929525e-7,-0.00000970730106456997,0.0018040397976300374,-0.000004613167521603573,0.000001299728959578859,0.012972252880251627,0.00011338592089076502,-0.009458817818843748,-0.21727587142219504];
-
-
 */
+
+
 
 
 
@@ -748,7 +748,7 @@ F = [0.000005462227931478416,-0.00011006854725708874,0.008098590287009702,0.0001
 
 
 
-/*
+
 // "caseStudy1-20.jpg", "caseStudy1-24.jpg"
 
 
@@ -831,7 +831,7 @@ var F = [-3.352712743715355e-7,-0.000013179191740391743,0.0014644355870591895,-0
 
 
 
-*/
+
 
 
 
@@ -841,8 +841,8 @@ var F = [-3.352712743715355e-7,-0.000013179191740391743,0.0014644355870591895,-0
 	var matrixFrev = R3D.fundamentalInverse(matrixFfwd);
 	// console.log(matrixFrev+"");
 
-// var reverse = false;
-var reverse = true;
+var reverse = false;
+// var reverse = true;
 if(reverse){
 	var temp = null;
 	temp = matrixFfwd;
@@ -898,7 +898,7 @@ rectified["rotation"] = 0;
 		//d.matrix().scale(1.0);
 		d.matrix().translate(0, 0);
 d.matrix().translate(0, 400);
-GLOBALSTAGE.addChild(d);
+// GLOBALSTAGE.addChild(d);
 
 
 
@@ -920,7 +920,7 @@ rectified["rotation"] = 0;
 		//d.matrix().scale(1.0);
 		d.matrix().translate(0+rectifiedA.width(), 0);
 d.matrix().translate(0, 400);
-GLOBALSTAGE.addChild(d);
+// GLOBALSTAGE.addChild(d);
 
 
 // throw "...";
@@ -946,7 +946,7 @@ var rowSets = R3D.polarRectificationRowSets(rectifiedInfoA, matrixFrev, imageB,i
 var offsetRectA = ( rotationA==0 ? -minRowA : (rectifiedA.height()-maxRowA) );
 var offsetRectB = ( rotationB==0 ? -minRowB : (rectifiedB.height()-maxRowB) );
 
-
+/*
 	// A SECTION:
 	var d = new DO();
 	d.graphics().setLine(1.0,0xFFFF00FF);
@@ -965,7 +965,7 @@ var offsetRectB = ( rotationB==0 ? -minRowB : (rectifiedB.height()-maxRowB) );
 	d.graphics().endPath();
 	d.matrix().translate(0+rectifiedA.width(), 0);
 	GLOBALSTAGE.addChild(d);
-
+*/
 
 
 	// var img = imageMatrixA.getRotatedImage(270);
@@ -980,29 +980,64 @@ var offsetRectB = ( rotationB==0 ? -minRowB : (rectifiedB.height()-maxRowB) );
 console.log("SIZE: "+imageMatrixA.width()+"x"+imageMatrixA.height());
 
 // FORWARD
-var bestMatches = {"A":pointsA,"B":pointsB};
-var result = R3D.stereoMatch(imageMatrixA,imageMatrixB, rectifiedA,rectifiedInfoA, rectifiedB,rectifiedInfoB, matrixFfwd,bestMatches, null,null);
+// var bestMatches = {"A":pointsA,"B":pointsB};
+// var result = R3D.stereoMatch(imageMatrixA,imageMatrixB, rectifiedA,rectifiedInfoA, rectifiedB,rectifiedInfoB, matrixFfwd,bestMatches, null,null);
 // REVERSE
 // bestMatches = {"A":pointsB,"B":pointsA};
 // var result = R3D.stereoMatch(imageMatrixB,imageMatrixA, rectifiedB,rectifiedInfoB, rectifiedA,rectifiedInfoA, matrixFrev,bestMatches, null,null);
+// var matches = result["matches"];
+// console.log(result)
+// var mapping = result["mapping"];
 // throw "?";
 
 
-/*
+
 var bestMatches = {"A":pointsA,"B":pointsB};
 var result = R3D.stereoMatchMatching(imageMatrixA,imageMatrixB, rectifiedA,rectifiedInfoA, rectifiedB,rectifiedInfoB, matrixFfwd,bestMatches, null,null);
-console.log(result);
 var matches = result["matches"];
-console.log(matches);
 
-throw "?";
-*/
-// var matches = result["matches"];
-
-var mapping = result["mapping"];
 // console.log(mapping)
 var widA = imageMatrixA.width();
 var heiA = imageMatrixA.height();
+
+// console.log(matches);
+
+// TESTING MAPPING:
+/*
+var tests = [];
+	tests.push(new V2D(140,160));
+	tests.push(new V2D(160,200));
+	tests.push(new V2D(270,110));
+	tests.push(new V2D(348,80));
+	tests.push(new V2D(450,270));
+	tests.push(new V2D(425,210));
+for(var i=0; i<tests.length; ++i){
+break;
+	var point = tests[i];
+	var iA = point.x;
+	var jA = point.y;
+	var index = jA*widA + iA;
+	var valueA = mapping[index];
+	console.log(valueA);
+	if(valueA){
+		var iB = valueA.x;
+		var jB = valueA.y;
+		var d = new DO();
+		d.graphics().setLine(1.0, 0xCCFF0000);
+		d.graphics().beginPath();
+		d.graphics().moveTo(iA,jA);
+		d.graphics().lineTo(widA + iB,jB);
+		d.graphics().endPath();
+		d.graphics().strokeLine();
+		d.matrix().translate(0, 0);
+		GLOBALSTAGE.addChild(d);
+	}
+}
+*/
+
+
+
+
 // for(var count=0; count<40; ++count){
 // 	var i = Math.floor(Math.random()*widA);
 // 	var j = Math.floor(Math.random()*heiA);
@@ -1012,10 +1047,11 @@ var heiA = imageMatrixA.height();
 // 	for(var i=0; i<widA; i+=80){
 for(var j=0; j<heiA; j++){
 	for(var i=0; i<widA; i++){
+break;
 		var index = j*widA + i;
 		var pixel = mapping[index];
 		if(pixel){
-console.log(pixel);
+// console.log(pixel);
 			var d = new DO();
 			d.graphics().setLine(1.0, 0xFFFF0000);
 			d.graphics().beginPath();
@@ -1029,18 +1065,15 @@ console.log(pixel);
 }
 
 
-var matches = [];
-
-for(var i=0; i<100; ++i){
-break;
+// var matches = [];
+var count = Math.min(10,matches.length);
+for(var i=0; i<count; ++i){
 	var index = Math.floor(Math.random()*matches.length);
-// index = i;
+	// var index = i;
 	var match = matches[index];
-	// console.log(match);
 	var a = match["A"];
 	var b = match["B"];
 	// console.log(a+" => "+b);
-
 	var c = new DO();
 	c.graphics().setLine(1.0, 0xFFFF0000);
 	c.graphics().beginPath();
@@ -1050,16 +1083,14 @@ break;
 
 	c.graphics().setLine(1.0, 0xFFFF0000);
 	c.graphics().beginPath();
-	// c.graphics().drawCircle(imageMatrixA.width()+ b.x,b.y, 5);
-	c.graphics().drawCircle(rectifiedA.width()+ b.x,b.y, 5);
+	c.graphics().drawCircle(widA + b.x,b.y, 5);
 	c.graphics().strokeLine();
 	c.graphics().endPath();
 
 	c.graphics().setLine(1.0, 0x99FF3366);
 	c.graphics().beginPath();
 	c.graphics().moveTo(a.x,a.y);
-	// c.graphics().lineTo(imageMatrixA.width() + b.x,b.y);
-	c.graphics().lineTo(rectifiedA.width() + b.x,b.y);
+	c.graphics().lineTo(widA + b.x,b.y);
 
 	c.graphics().strokeLine();
 	c.graphics().endPath();

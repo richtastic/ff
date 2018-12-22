@@ -1,4 +1,18 @@
 // ByteData
+
+// NODEJS INCLUSION
+isBrowser = false;
+isNode = false;
+if (typeof module !== 'undefined' && module.exports) { isNode = true; }
+if (typeof window !== 'undefined' && window.navigator) { isBrowser = true; }
+if(isNode){
+	var Code = require("./Code.js");
+}
+
+
+
+
+
 ByteData.BITS_PER_INT = 32;
 ByteData.CRC_32_A = 0x04C11DB7;
 ByteData.CRC_32_B = 0xEDB88320;
@@ -649,7 +663,14 @@ ByteData.AES_RCON = [ // key scheduler ... AES uses few of these | can also gene
 
 // expects operations in byte arrays
 ByteData.AESencrypt = function(key, message, type, size, useSalting, isDecrypt){ // TODO: how SSL does salting, TODO: pass initVector
+// TODO:
+// SALTING is 2 items:
+// 1) salt the key (xor?) before usage
+// 2) initialization vector 
+
+
 	var outputArray = [];
+	isDecrypt = isDecrypt!==null && isDecrypt!==undefined ? isDecrypt : false;
 	type = type!==undefined ? type : ByteData.AES_TYPE_CBC;
 	size = size!==undefined ? size : ByteData.AES_SIZE_256;
 	var roundCount; // N_r
@@ -687,14 +708,18 @@ ByteData.AESencrypt = function(key, message, type, size, useSalting, isDecrypt){
 
 	// setup state
 	var state = Code.newArrayZeros(blockLength);
-	var initVector = Code.newArrayZeros(keyLengthBytes);
-	
+	//var initVector = Code.newArrayZeros(keyLengthBytes);
+	var initVector = Code.newArrayZeros(blockLength);
+
 	var iterations = Math.ceil(message.length/blockLength);
+	var salt = null;
 	if(!isDecrypt){
 		
 		if(useSalting){
-			var salt = Code.randomIntArray(8, 0,0xFF);
-			var header = ByteData._AESgenerateSaltHeader(salt);
+			salt = Code.randomIntArray(16, 0,0xFF);
+			for(var i=0; i<initVector.length; ++i){
+				initVector[i] = salt[i];
+			}
 		}
 		
 		for(var i=0; i<iterations; ++i){ // message loop: for each block
@@ -725,9 +750,32 @@ ByteData.AESencrypt = function(key, message, type, size, useSalting, isDecrypt){
 			Code.copyArray(block, state);
 			Code.arrayPushArray(outputArray,block);
 		}
+
+		if(useSalting){
+			// Code.truncateArray(outputArray,outputArray.length-block.length);
+			// var salt = Code.copyArray(state);
+			// var salt = Code.copyArray(initVector);
+			header = ByteData._AESgenerateSaltHeader(salt);
+			// console.log("   outp   : "+Code.printArrayHex(outputArray,2));
+			// console.log("   salt   : "+Code.printArrayHex(salt,2));
+			for(var i=0; i<header.length; ++i){
+				// outputArray.unshift(header[i]);
+				outputArray.unshift(header[header.length-1-i]);
+			}
+		}
+
 	}else{
 		if(useSalting){
+			var header = ByteData._AESgetSaltHeader(message);
 			var salt = ByteData._AESgetSalt(message);
+			for(var i=0; i<initVector.length; ++i){
+				initVector[i] = salt[i];
+			}
+			// console.log(" initVect : "+Code.printArrayHex(initVector,2));
+			for(var i=0; i<header.length; ++i){
+				message.shift();
+			}
+			// console.log(" message  : "+Code.printArrayHex(message,2));
 		}
 		
 		var output = [];
@@ -755,9 +803,12 @@ ByteData.AESencrypt = function(key, message, type, size, useSalting, isDecrypt){
 				}
 				Code.copyArray(initVector, input);
 			}
-			Code.arrayPushArray(outputArray,output);
+			// if(!useSalting || (useSalting && i<iterations-1) ){
+				Code.arrayPushArray(outputArray,output);
+			// }
 		}
 	}
+	// return {"cyphertext":outputArray, "salt":header};
 	return outputArray;
 }
 ByteData.AESdecrypt = function(key, cyphertext, type, size, useSalting){
@@ -766,29 +817,42 @@ ByteData.AESdecrypt = function(key, cyphertext, type, size, useSalting){
 ByteData._AESgenerateSaltHeader = function(bytesOfSalt){ // 16 byte salt prefix
 	var salt = Code.copyArray(ByteData._AES_SALT_BYTES);
 	for(var i=0; i<bytesOfSalt.length; ++i){
-		salt.push(bytesOfSalt);
+		salt.push(bytesOfSalt[i]);
 	}
 	return salt;
 }
 ByteData._AES_SALT_BYTES = [0x53,0x61,0x6c,0x74,0x65,0x64,0x5f,0x5f]; // Salted__
-ByteData._AESgetSalt = function(message){
-	if(message && message.length>16){
-		var expected = ByteData._AES_SALT_BYTES;
+// 6153 746c 6465 5f5f
+ByteData._AESgetSaltHeader = function(message){
+	var expected = ByteData._AES_SALT_BYTES;
+	totalHeaderSize = expected.length + 16;
+	if(message && message.length>totalHeaderSize){
 		var failed = false;
 		var i;
 		for(i=0; i<expected.length; ++i){
-			if(message[i]=!expected[i]){
+			if(message[i]!=expected[i]){
 				failed = true;
 				break;
 			}
 		}
 		if(!failed){
-			var salt = [];
-			for(; i<8; ++i){
-				salt.push(message[i+expected.length]);
+			var header = [];
+			for(i=0; i<totalHeaderSize; ++i){
+				header.push(message[i]);
 			}
-			return salt;
+			return header;
 		}
+	}
+	return null;
+}
+ByteData._AESgetSalt = function(message){
+	var header = ByteData._AESgetSaltHeader(message);
+	if(header){
+		var expected = ByteData._AES_SALT_BYTES;
+		for(var i=0; i<expected.length; ++i){ // split
+			header.shift();
+		}
+		return header;
 	}
 	return null;
 }
@@ -1399,3 +1463,12 @@ ByteData.RSA = function(pub,pri){
 // }
 
 // ByteData.temp = new ByteData();
+
+
+// NODE JS INCLUSION:
+if(isNode){
+	module.exports = ByteData;
+}
+
+
+

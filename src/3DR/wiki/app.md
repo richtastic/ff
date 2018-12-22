@@ -318,22 +318,35 @@ https://cloud.google.com/appengine/docs/nodejs/
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-
-- is point in A need reversing ? row / col => theta / rho
-
-
-
-- rectified to original points thinking
-
-- on rotation -> circular array search needs to reverse directional search
+- HOW TO HANDLE CAMERA IMAGE ROTATIONS?
+	-> pre-rotate to langscape before all ops ?
+		-> need metadata for
 
 
-- do forward/backward & keep only the points within +/- 1 pixel of eachother
-	=> then average?
+- any way to make initial F estimates more consistent?
+	- adaptive matching error limits (shitty matching conditions allow for more error)
 
-	- allow 'loop' around for scenes with epipole interrior
-		- (copy) top / bottom explicitly
-		- modulo 0 when -1 or +hei
+- even with lower error F, matched points < 10% of image
+- solution varies a lot based on starting F ....
+- fix all the approximations in rectification/matching
+- maybe allow more leniency in matching F/B distance
+
+=> anything less than 2 pixel average error and <10~16 point matches should be ignored
+
+----> go thru view uploading again with medium dense images
+
+
+- get affine transforms for dense points:
+	- divide image into cells [20-30]
+	 	- for each cell:
+			- get some sample of points inside cell [~10]
+			- assign affine to cell
+	- for each point
+		- assign affine as combination of nearby cells OR just nearest cell
+
+-
+
+
 
 
 - HOW TO COMBINE POINTS W/ AFFINE MATCH VS DENSE MATCH POINTS
@@ -344,6 +357,14 @@ https://cloud.google.com/appengine/docs/nodejs/
 		- scale cam be an optimized check (~3 sizes w/ maxima check?)
 
 - MAPPING ROW LINES -> ON ROLL-AROUND SHOULD GO TO FIRST ACTUALLY USED ROW
+
+
+
+
+- allow 'loop' around for scenes with epipole interrior [or some lines wont get matched]
+	- (copy) top / bottom explicitly
+	- modulo 0 when -1 or +hei
+
 
 
 - F MATCHING

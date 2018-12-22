@@ -1,15 +1,42 @@
 // Code.js
+// isBrowser = false;
+// isNode = false;
+// (function () {
+// 	// var root = this;
+// 	if (typeof module !== 'undefined' && module.exports) {
+// 		isNode = true;
+// 	}
+// 	if (typeof window !== 'undefined' && window.navigator) {
+// 		isBrowser = true;
+// 	}
+// })();
+// console.log("STATUS: "+isNode+" | "+isBrowser);
+
+// NODEJS INCLUSION
+isBrowser = false;
+isNode = false;
+if (typeof module !== 'undefined' && module.exports) { isNode = true; }
+if (typeof window !== 'undefined' && window.navigator) { isBrowser = true; }
+if(isNode){
+	var Code = require("./Code.js");
+}
+
+
+
+
 // OVERRIDES:
 Math.PI2 = Math.PI*2.0;
 Math.TAU = Math.PI*2.0;
 Math.PIO2 = Math.PI*0.5;
 Math.lg = Math.log2;
 //
+if(isBrowser){
 Code.IS_IE = navigator && navigator.appName && (navigator.appName).toLowerCase().indexOf("explorer") >= 0; // (document.body.attachEvent && window.ActiveXObject);
 Code.IS_OPERA = navigator && navigator.appVersion && (navigator.appVersion).toLowerCase().indexOf("opera") >= 0; // guess
 Code.IS_SAFARI = navigator && navigator.appVersion && (navigator.appVersion).toLowerCase().indexOf("safari") >= 0;
 Code.IS_FF = navigator && navigator.appVersion && (navigator.appVersion).toLowerCase().indexOf("mozilla") >= 0; // guess
 Code.IS_CHROME = navigator && navigator.appVersion && (navigator.appVersion).toLowerCase().indexOf("chrome") >= 0;
+}
 
 Code.TYPE_OBJECT = "object";
 Code.TYPE_ARRAY = 'array';
@@ -11248,6 +11275,11 @@ Code.assert = function(boolCheck, comment){
 		throw comment ? comment : "assert bool check";
 	}
 }
+
+
+
+
+
 // -------------------------------------------------------------------------------------------------------------------------------------------- Array
 Array.prototype.first = function(){
 	if(this.length>0){
@@ -11261,3 +11293,13 @@ Array.prototype.last = function(){
 	}
 	return undefined;
 }
+
+
+
+
+
+// NODE JS INCLUSION:
+if(isNode){
+	module.exports = Code;
+}
+
