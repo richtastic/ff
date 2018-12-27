@@ -268,6 +268,97 @@ timeline:
 			summary: 
 			description: ?
 		-
+			dateStart: -100-07-12
+			dateEnd: 44-03-12
+			short: 
+			title: Julius Caesar
+			summary: 
+			description: ?
+		-
+			dateStart: -63-09-23
+			dateEnd: 14-08-19
+			short: 
+			title: Augustus
+			summary: 
+			description: ?
+		-
+			dateStart: -42-11-16
+			dateEnd: 37-03-16
+			short: 
+			title: Tiberius
+			summary: 
+			description: ?
+		-
+			dateStart: 12-08-31
+			dateEnd: 41-01-24
+			short: 
+			title: Caligula
+			summary: 
+			description: ?
+		-
+			dateStart: -10-08-01
+			dateEnd: 54-10-13
+			short: 
+			title: Claudius
+			summary: 
+			description: ?
+		-
+			dateStart: 37-12-15
+			dateEnd: 68-06-09
+			short: 
+			title: Nero
+			summary: 
+			description: ?
+		-
+			dateStart: 3-12-24
+			dateEnd: 69-01-15
+			short: 
+			title: Galba
+			summary: 
+			description: ?
+		-
+			dateStart: 32-04-28
+			dateEnd: 69-04-16
+			short: 
+			title: Otho
+			summary: 
+			description: ?
+		-
+			dateStart: 15-09-24
+			dateEnd: 69-12-22
+			short: 
+			title: Vitellius
+			summary: 
+			description: ?
+		-
+			dateStart: 09-11-17
+			dateEnd: 79-06-24
+			short: 
+			title: Vespasian
+			summary: 
+			description: ?
+		-
+			dateStart: 39-12-30
+			dateEnd: 81-09-13
+			short: 
+			title: Titus
+			summary: 
+			description: ?
+		-
+			dateStart: 51-10-24
+			dateEnd: 96-09-18
+			short: 
+			title: Domitian
+			summary: 
+			description: ?
+		-
+			dateStart: 30-11-08
+			dateEnd: 98-01-27
+			short: 
+			title: Nerva
+			summary: 
+			description: ?
+		-
 			dateStart: 
 			dateEnd: 
 			short: 
@@ -281,8 +372,104 @@ timeline:
 			title: 
 			summary: 
 			description: ?
-
-
+		-
+			dateStart: 
+			dateEnd: 
+			short: 
+			title: 
+			summary: 
+			description: ?
+		-
+			dateStart: 
+			dateEnd: 
+			short: 
+			title: 
+			summary: 
+			description: ?
+		-
+			dateStart: 
+			dateEnd: 
+			short: 
+			title: 
+			summary: 
+			description: ?
+		-
+			dateStart: 
+			dateEnd: 
+			short: 
+			title: 
+			summary: 
+			description: ?
+		-
+			dateStart: 
+			dateEnd: 
+			short: 
+			title: 
+			summary: 
+			description: ?
+		-
+			dateStart: 
+			dateEnd: 
+			short: 
+			title: 
+			summary: 
+			description: ?
+		-
+			dateStart: 
+			dateEnd: 
+			short: 
+			title: 
+			summary: 
+			description: ?
+		-
+			dateStart: 
+			dateEnd: 
+			short: 
+			title: 
+			summary: 
+			description: ?
+		-
+			dateStart: 
+			dateEnd: 
+			short: 
+			title: 
+			summary: 
+			description: ?
+		-
+			dateStart: 
+			dateEnd: 
+			short: 
+			title: 
+			summary: 
+			description: ?
+		-
+			dateStart: 
+			dateEnd: 
+			short: 
+			title: 
+			summary: 
+			description: ?
+		-
+			dateStart: 
+			dateEnd: 
+			short: 
+			title: 
+			summary: 
+			description: ?
+		-
+			dateStart: 
+			dateEnd: 
+			short: 
+			title: 
+			summary: 
+			description: ?
+		-
+			dateStart: 
+			dateEnd: 
+			short: 
+			title: 
+			summary: 
+			description: ?
 end: 0
 
 

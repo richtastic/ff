@@ -317,6 +317,17 @@ https://cloud.google.com/appengine/docs/nodejs/
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+- is something wrong with dense matching F - directional passes ?
+
+
+
+
+- coinciding center matches have lots of systematic error around center
+
+
+
+
+- fix approximations on pixel matching locations
 
 - HOW TO HANDLE CAMERA IMAGE ROTATIONS?
 	-> pre-rotate to langscape before all ops ?

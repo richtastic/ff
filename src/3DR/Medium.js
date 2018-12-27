@@ -23,8 +23,8 @@ function Medium(){
 
 	// var imageList = ["room0.png", "room2.png"];
 	// var imageList = ["bench_A.png", "bench_B.png"];
-	// var imageList = ["snow1.png", "snow2.png"];
-	var imageList = ["caseStudy1-20.jpg", "caseStudy1-24.jpg"];
+	var imageList = ["snow1.png", "snow2.png"];
+	// var imageList = ["caseStudy1-20.jpg", "caseStudy1-24.jpg"];
 	var imageLoader = new ImageLoader("./images/",imageList, this,this.handleImagesLoadedRectify,null);
 	imageLoader.load();
 }
@@ -368,13 +368,16 @@ Medium.prototype.handleImagesLoadedRectify = function(imageInfo){
 		var file = fileList[i];
 		var img = imageList[i];
 		images[i] = img;
+		/*
 		var d = new DOImage(img);
 		this._root.addChild(d);
 		// d.graphics().alpha(0.1);
 		// d.graphics().alpha(0.5);
 		// d.graphics().alpha(1.0);
 		d.matrix().translate(x,y);
+		d.matrix().scale(1.5);
 		x += img.width;
+		*/
 	}
 
 	GLOBALSTAGE = this._stage;
@@ -388,6 +391,7 @@ Medium.prototype.handleImagesLoadedRectify = function(imageInfo){
 	var imageMatrixB = new ImageMat(imageFloatB["width"],imageFloatB["height"], imageFloatB["red"], imageFloatB["grn"], imageFloatB["blu"]);
 
 var points;
+
 
 
 
@@ -521,13 +525,13 @@ points.push( new V2D(333.00000315916094,27.99999960876695) ); // 58
 points.push( new V2D(411.9999963323768,96.99999813008753) ); // 59
 
 	F = [8.81121731206021e-8,0.000010114343292779635,-0.0012512115388550813,1.0539861656966728e-7,-0.000004023737922070967,-0.01313862645804628,0.00009352376307345056,0.011747687492820876,-0.597184751416662];
+
 */
 
 
 
-
-
 /*
+
 // var imageList = ["bench_A.png", "bench_B.png"];
 var pointsA = [];
 points = pointsA;
@@ -647,7 +651,7 @@ F = [-6.037043098929525e-7,-0.00000970730106456997,0.0018040397976300374,-0.0000
 
 
 
-/*
+
 // "snow1.png", "snow2.png"
 var pointsA = [];
 points = pointsA;
@@ -740,7 +744,10 @@ points.push( new V2D(121.99995462155192,236.00103543906792) ); // 40
 
 
 F = [0.000005462227931478416,-0.00011006854725708874,0.008098590287009702,0.00010948467270919531,0.000005349907912003559,-0.017733821547636006,-0.008103769297990681,0.008222796396283668,0.6108835938091672];
-*/
+
+
+// TESTING MIDDLE
+F = [0.000009389775797123158,-0.00019531653411502848,0.037193821046155005,0.0001951931152761979,0.000009346262749639674,-0.04286228578509858,-0.03773970757559966,0.024737981158461538,2.964324957428991];
 
 
 
@@ -749,6 +756,7 @@ F = [0.000005462227931478416,-0.00011006854725708874,0.008098590287009702,0.0001
 
 
 
+/*
 // "caseStudy1-20.jpg", "caseStudy1-24.jpg"
 
 
@@ -827,10 +835,14 @@ points.push( new V2D(181.04791934691605,122.955257634879) ); // 31
 points.push( new V2D(89.33303126797597,114.66558430788173) ); // 32
 points.push( new V2D(120.00004345553876,171.00001236808265) ); // 33
 
-var F = [-3.352712743715355e-7,-0.000013179191740391743,0.0014644355870591895,-0.0000031702316777767065,0.000008588003127220183,-0.02194915505542336,0.0010194085236254263,0.02466134581182565,-0.3114138743008315];
+// var F = [-3.352712743715355e-7,-0.000013179191740391743,0.0014644355870591895,-0.0000031702316777767065,0.000008588003127220183,-0.02194915505542336,0.0010194085236254263,0.02466134581182565,-0.3114138743008315];
 
 
-
+// 2 & 5:
+var F = [2.041322467847871e-7,0.000014304778253234078,-0.0016910858521905143,-0.0000021465269183805225,-0.00001003739246648299,0.019402193354383566,-0.00004247026281761891,-0.020592074595533316,0.14857516866839532];
+// 6 & 5:
+// var F = [-1.784090451419415e-7,-0.000013020782987040853,0.0016120179945628193,-3.230597393634094e-7,0.00000914859807342786,-0.018689137516568616,0.0003367817297606405,0.02027708806075786,-0.20241726528578685];
+*/
 
 
 
@@ -854,11 +866,12 @@ if(reverse){
 	imageMatrixB = temp;
 }
 
-
+var sca = 1.5;
 var img = imageMatrixA;
 var img = GLOBALSTAGE.getFloatRGBAsImage(img.red(), img.grn(), img.blu(), img.width(), img.height());
 var d = new DOImage(img);
 d.matrix().translate(0, 0);
+d.matrix().scale(sca);
 GLOBALSTAGE.addChild(d);
 
 
@@ -866,6 +879,7 @@ var img = imageMatrixB;
 var img = GLOBALSTAGE.getFloatRGBAsImage(img.red(), img.grn(), img.blu(), img.width(), img.height());
 var d = new DOImage(img);
 d.matrix().translate(imageMatrixA.width(), 0);
+d.matrix().scale(sca);
 GLOBALSTAGE.addChild(d);
 
 
@@ -890,6 +904,7 @@ rectified["rotation"] = 0;
 		// console.log(rotationA)
 		// if(rotationA!=0){
 		if(true){
+		// if(false){
 			d.matrix().translate(-rectifiedA.width()*0.5, -rectifiedA.height()*0.5);
 			// d.matrix().rotate( Code.radians(rotationA) );
 			d.matrix().rotate( Math.PI );
@@ -897,8 +912,8 @@ rectified["rotation"] = 0;
 		}
 		//d.matrix().scale(1.0);
 		d.matrix().translate(0, 0);
-d.matrix().translate(0, 400);
-// GLOBALSTAGE.addChild(d);
+d.matrix().translate(1200, 0);
+GLOBALSTAGE.addChild(d);
 
 
 
@@ -919,8 +934,8 @@ rectified["rotation"] = 0;
 		}
 		//d.matrix().scale(1.0);
 		d.matrix().translate(0+rectifiedA.width(), 0);
-d.matrix().translate(0, 400);
-// GLOBALSTAGE.addChild(d);
+d.matrix().translate(1200, 0);
+GLOBALSTAGE.addChild(d);
 
 
 // throw "...";
@@ -996,6 +1011,13 @@ var bestMatches = {"A":pointsA,"B":pointsB};
 var result = R3D.stereoMatchMatching(imageMatrixA,imageMatrixB, rectifiedA,rectifiedInfoA, rectifiedB,rectifiedInfoB, matrixFfwd,bestMatches, null,null);
 var matches = result["matches"];
 
+
+// return;
+
+// var affines = R3D.stereoMatchAverageAffine(imageMatrixA,imageMatrixB,matches);
+// console.log(affines);
+
+
 // console.log(mapping)
 var widA = imageMatrixA.width();
 var heiA = imageMatrixA.height();
@@ -1066,8 +1088,9 @@ break;
 
 
 // var matches = [];
-var count = Math.min(10,matches.length);
+var count = Math.min(25,matches.length);
 for(var i=0; i<count; ++i){
+	// break;
 	var index = Math.floor(Math.random()*matches.length);
 	// var index = i;
 	var match = matches[index];
@@ -1097,6 +1120,7 @@ for(var i=0; i<count; ++i){
 
 	c.matrix().translate(0, 0);
 	GLOBALSTAGE.addChild(c);
+c.matrix().scale(1.5);
 
 
 }
