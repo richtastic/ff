@@ -34,7 +34,7 @@ function FeatureTest(){
 // pool
 // new ImageLoader("./images/",["F_S_1_1.jpg", "F_S_1_2.jpg"],this,this.imagesLoadComplete2).load();
 // snow
-new ImageLoader("./images/",["snow1.png", "snow2.png"],this,this.imagesLoadComplete2).load(); // centers coincident
+// new ImageLoader("./images/",["snow1.png", "snow2.png"],this,this.imagesLoadComplete2).load(); // centers coincident
 // zoom study:
 // new ImageLoader("./images/",["caseStudy1-20.jpg", "caseStudy1-24.jpg"],this,this.imagesLoadComplete2).load(); // typical translation
 // new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-24.jpg"],this,this.imagesLoadComplete2).load(); // typical small: trans + rot + scale
@@ -73,6 +73,12 @@ new ImageLoader("./images/",["snow1.png", "snow2.png"],this,this.imagesLoadCompl
 // new ImageLoader("./images/flowers_1/",["7133.png", "7140.png"],this,this.imagesLoadComplete2).load(); // POOR : 23 @ 1.7
 // new ImageLoader("./images/flowers_1/",["7140.png", "7141.png"],this,this.imagesLoadComplete2).load(); // FAIL
 // new ImageLoader("./images/flowers_1/",["7141.png", "7144.png"],this,this.imagesLoadComplete2).load(); // POOR : 27 @ 1.6
+
+
+// MORE
+// new ImageLoader("./images/",["graffiti_1.png", "graffiti_2.png"],this,this.imagesLoadComplete2).load();
+// new ImageLoader("./images/",["temple_1.png", "temple_2.png"],this,this.imagesLoadComplete2).load();
+// new ImageLoader("./images/",["?.png", "?.png"],this,this.imagesLoadComplete2).load();
 
 
 }

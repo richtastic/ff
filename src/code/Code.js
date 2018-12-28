@@ -3499,7 +3499,7 @@ Code.linear2DColorARGB = function(x,y, colA,colB,colC,colD){
 Code.clampRound0255 = function(n){
 	return Math.min(Math.max(Math.round(n),0),255);
 }
-Code.clamp = function(n, a,b){
+Code.clamp = function(n, a,b){ // TODO: BETTWER WORD
 	return Math.min(Math.max(n,a),b);
 }
 Code.array01To0255 = function(array){
@@ -11302,4 +11302,3 @@ Array.prototype.last = function(){
 if(isNode){
 	module.exports = Code;
 }
-

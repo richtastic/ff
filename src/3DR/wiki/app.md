@@ -317,34 +317,8 @@ https://cloud.google.com/appengine/docs/nodejs/
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-- is something wrong with dense matching F - directional passes ?
 
-
-
-
-- coinciding center matches have lots of systematic error around center
-
-
-
-
-- fix approximations on pixel matching locations
-
-- HOW TO HANDLE CAMERA IMAGE ROTATIONS?
-	-> pre-rotate to langscape before all ops ?
-		-> need metadata for
-
-
-- any way to make initial F estimates more consistent?
-	- adaptive matching error limits (shitty matching conditions allow for more error)
-
-- even with lower error F, matched points < 10% of image
-- solution varies a lot based on starting F ....
-- fix all the approximations in rectification/matching
-- maybe allow more leniency in matching F/B distance
-
-=> anything less than 2 pixel average error and <10~16 point matches should be ignored
-
-----> go thru view uploading again with medium dense images
+- ransac affine translation is absurd
 
 
 - get affine transforms for dense points:
@@ -355,7 +329,26 @@ https://cloud.google.com/appengine/docs/nodejs/
 	- for each point
 		- assign affine as combination of nearby cells OR just nearest cell
 
--
+=> DOING EACH POINT SEPARATELY TAKES TOO LONG
+
+
+----> go thru view uploading again with medium dense images
+- make sure affine state is saved / loaded
+- play with worst common views
+
+
+
+- any way to make initial F estimates more consistent?
+	- adaptive matching error limits (shitty matching conditions allow for more error)
+
+
+
+- HOW TO HANDLE CAMERA IMAGE ROTATIONS?
+	-> IMAGE METADATA:
+	identify -verbose ~/image.jpg
+		Orientation: TopLeft | TopRight | BottomRight | LeftBottom
+  		Properties . exif:Orientation: 1 | 6 | 3 | 8
+
 
 
 
@@ -366,8 +359,6 @@ https://cloud.google.com/appengine/docs/nodejs/
 	- local:
 		- relative angle comes epipolar line directions
 		- scale cam be an optimized check (~3 sizes w/ maxima check?)
-
-- MAPPING ROW LINES -> ON ROLL-AROUND SHOULD GO TO FIRST ACTUALLY USED ROW
 
 
 
@@ -409,7 +400,7 @@ https://cloud.google.com/appengine/docs/nodejs/
 	- moment
 	- COM
 	- COV
-	=> DOES THIS REQUIRE ITERITIVE SEEKING ?
+	=> DOES THIS REQUIRE ITERATIVE SEEKING ?
 
 - saving corner affine to yaml / loading from yaml
 
@@ -421,7 +412,7 @@ https://cloud.google.com/appengine/docs/nodejs/
 - re-check using F-corner points for additional seed points
 
 - re-export features for views
-- get back to how well steropsis estimations are
+- get back to how well stereopsis estimations are
 
 
 
