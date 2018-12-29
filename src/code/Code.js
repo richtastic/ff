@@ -1373,6 +1373,16 @@ Code.arrayInsertArray = function(a, i, b){
 	}
 	return a;
 }
+Code.arrayRemoveIndexes = function(a, list){
+	list = Code.copyArray(list);
+	list.sort(function(a,b){return a<b ? -1 : 1});
+	var r = 0;
+	for(var j=list.length-1;j>=0;--j){
+		a.splice(list[j], 1);
+	}
+	return a;
+}
+
 // Array.prototype.insert = function(i, o){ this.splice(i, 0, o); }
 // Code.copyArray(array)
 // Code.copyArray(arrayTo, arrayFrom)
@@ -2950,6 +2960,17 @@ Code.angleZeroTwoPi = function(ang){ // [-inf,inf] => [0,2pi]
 		ang -= pi2;
 	}
 	while(ang<0){
+		ang += pi2;
+	}
+	return ang;
+}
+Code.anglePi = function(ang){ // [-inf,inf] => [0,2pi]
+	var pi = Math.PI;
+	var pi2 = Math.PI*2;
+	while(ang>=pi){
+		ang -= pi2;
+	}
+	while(ang<-pi){
 		ang += pi2;
 	}
 	return ang;

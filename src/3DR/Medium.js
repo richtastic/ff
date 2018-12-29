@@ -23,8 +23,8 @@ function Medium(){
 
 	// var imageList = ["room0.png", "room2.png"];
 	// var imageList = ["bench_A.png", "bench_B.png"];
-	// var imageList = ["snow1.png", "snow2.png"];
-	var imageList = ["caseStudy1-20.jpg", "caseStudy1-24.jpg"];
+	var imageList = ["snow1.png", "snow2.png"];
+	// var imageList = ["caseStudy1-20.jpg", "caseStudy1-24.jpg"];
 	var imageLoader = new ImageLoader("./images/",imageList, this,this.handleImagesLoadedRectify,null);
 	imageLoader.load();
 }
@@ -651,7 +651,7 @@ F = [-6.037043098929525e-7,-0.00000970730106456997,0.0018040397976300374,-0.0000
 
 
 
-/*
+
 // "snow1.png", "snow2.png"
 var pointsA = [];
 points = pointsA;
@@ -748,7 +748,6 @@ F = [0.000005462227931478416,-0.00011006854725708874,0.008098590287009702,0.0001
 
 // TESTING MIDDLE
  F = [0.000009389775797123158,-0.00019531653411502848,0.037193821046155005,0.0001951931152761979,0.000009346262749639674,-0.04286228578509858,-0.03773970757559966,0.024737981158461538,2.964324957428991];
-*/
 
 
 
@@ -757,6 +756,7 @@ F = [0.000005462227931478416,-0.00011006854725708874,0.008098590287009702,0.0001
 
 
 
+/*
 // "caseStudy1-20.jpg", "caseStudy1-24.jpg"
 
 
@@ -843,7 +843,7 @@ var F = [2.041322467847871e-7,0.000014304778253234078,-0.0016910858521905143,-0.
 // 6 & 5: -- opposite dir
 // var F = [-1.784090451419415e-7,-0.000013020782987040853,0.0016120179945628193,-3.230597393634094e-7,0.00000914859807342786,-0.018689137516568616,0.0003367817297606405,0.02027708806075786,-0.20241726528578685];
 
-
+*/
 
 
 
@@ -893,11 +893,12 @@ GLOBALSTAGE.addChild(d);
 	var epipoleB = epipole["B"];
 
 	var rectified = R3D.polarRectification(imageMatrixA,epipoleA);
-rectified["rotation"] = 0;
+// rectified["rotation"] = 0;
 	console.log(rectified);
 		var rectifiedInfoA = rectified;
 		var rotationA = rectifiedInfoA["rotation"];
 		var rectifiedA = new ImageMat(rectified.width,rectified.height, rectified.red,rectified.grn,rectified.blu);
+/*
 			rectified = rectifiedA;
 		var img = GLOBALSTAGE.getFloatRGBAsImage(rectified.red(), rectified.grn(), rectified.blu(), rectified.width(), rectified.height());
 		var d = new DOImage(img);
@@ -914,15 +915,16 @@ rectified["rotation"] = 0;
 		d.matrix().translate(0, 0);
 d.matrix().translate(1200, 0);
 GLOBALSTAGE.addChild(d);
-
+*/
 
 
 	var rectified = R3D.polarRectification(imageMatrixB,epipoleB);
-rectified["rotation"] = 0;
+// rectified["rotation"] = 0;
 	console.log(rectified);
 		var rectifiedInfoB = rectified;
 		var rotationB = rectifiedInfoB["rotation"];
 		var rectifiedB = new ImageMat(rectified.width,rectified.height, rectified.red,rectified.grn,rectified.blu);
+/*
 			rectified = rectifiedB;
 		var img = GLOBALSTAGE.getFloatRGBAsImage(rectified.red(), rectified.grn(), rectified.blu(), rectified.width(), rectified.height());
 		var d = new DOImage(img);
@@ -936,6 +938,7 @@ rectified["rotation"] = 0;
 		d.matrix().translate(0+rectifiedA.width(), 0);
 d.matrix().translate(1200, 0);
 GLOBALSTAGE.addChild(d);
+*/
 
 console.log(epipoleA+"");
 console.log(epipoleB+"");
@@ -1036,18 +1039,30 @@ console.log("SIZE: "+imageMatrixA.width()+"x"+imageMatrixA.height());
 // throw "?";
 
 
-
 var bestMatches = {"A":pointsA,"B":pointsB};
 var result = R3D.stereoMatchMatching(imageMatrixA,imageMatrixB, rectifiedA,rectifiedInfoA, rectifiedB,rectifiedInfoB, matrixFfwd,bestMatches, null,null);
 var matches = result["matches"];
 
-
-// return;
-
+// orientations
 var affines = R3D.stereoMatchAverageAffine(imageMatrixA,imageMatrixB,matches);
-console.log(affines);
+
+
+// SAVE TO PAIR FILE ...
+var matching = R3D.stereoToMatchPairArray(imageMatrixA,imageMatrixB,matches);
+
+var yaml = new YAML();
+R3D.outputMatchPoints(imageMatrixA, imageMatrixB, matrixFfwd, matching, yaml);
+var str = yaml.toString();
+console.log("chars of yaml: "+str.length);
+console.log(str+"\n");
+// 10%-50% of pixels match
+// 62650
+
 
 throw "...";
+
+
+
 
 // console.log(mapping)
 var widA = imageMatrixA.width();

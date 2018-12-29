@@ -77,7 +77,21 @@ function FeatureTest(){
 
 // MORE
 // new ImageLoader("./images/",["graffiti_1.png", "graffiti_2.png"],this,this.imagesLoadComplete2).load();
+
 // new ImageLoader("./images/",["temple_1.png", "temple_2.png"],this,this.imagesLoadComplete2).load();
+
+// new ImageLoader("./images/",["castle.000.jpg", "castle.009.jpg"],this,this.imagesLoadComplete2).load();
+// new ImageLoader("./images/",["castle.009.jpg", "castle.018.jpg"],this,this.imagesLoadComplete2).load();
+// new ImageLoader("./images/",["castle.018.jpg", "castle.027.jpg"],this,this.imagesLoadComplete2).load();
+// new ImageLoader("./images/",["castle.009.jpg", "castle.027.jpg"],this,this.imagesLoadComplete2).load();
+
+// new ImageLoader("./images/",["medusa_1.png", "medusa_2.png"],this,this.imagesLoadComplete2).load();
+// new ImageLoader("./images/",["medusa_2.png", "medusa_3.png"],this,this.imagesLoadComplete2).load();
+new ImageLoader("./images/",["medusa_3.png", "medusa_4.png"],this,this.imagesLoadComplete2).load();
+// new ImageLoader("./images/",["medusa_4.png", "medusa_5.png"],this,this.imagesLoadComplete2).load();
+// new ImageLoader("./images/",["medusa_1.png", "medusa_4.png"],this,this.imagesLoadComplete2).load();
+// new ImageLoader("./images/",["medusa_2.png", "medusa_4.png"],this,this.imagesLoadComplete2).load();
+
 // new ImageLoader("./images/",["?.png", "?.png"],this,this.imagesLoadComplete2).load();
 
 

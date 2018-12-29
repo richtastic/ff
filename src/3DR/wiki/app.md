@@ -318,23 +318,21 @@ https://cloud.google.com/appengine/docs/nodejs/
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-- ransac affine translation is absurd
 
+TESTING: A & C
 
-- get affine transforms for dense points:
-	- divide image into cells [20-30]
-	 	- for each cell:
-			- get some sample of points inside cell [~10]
-			- assign affine to cell
-	- for each point
-		- assign affine as combination of nearby cells OR just nearest cell
-
-=> DOING EACH POINT SEPARATELY TAKES TOO LONG
 
 
 ----> go thru view uploading again with medium dense images
 - make sure affine state is saved / loaded
 - play with worst common views
+
+
+
+- corner features ANGLES are not aligned so well ...
+- STUDY WHAT A MOMENT IS
+- WHY IS GRADIENT NOT AS GOOD (shouldn't this be good?)
+=> could be related to anisotropy (need to asymmetrically scale area?)
 
 
 

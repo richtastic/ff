@@ -276,7 +276,7 @@ ImageMat.prototype.getSubImageIndex = function(colSta,colEnd, rowSta,rowEnd){
 ImageMat.prototype.getSubImage = function(px,py, wid,hei){
 	return ImageMat.extractRect(this, px-wid/2.0,py-hei/2.0, px+wid/2.0,py-hei/2.0, px+wid/2.0,py+hei/2.0, px-wid/2.0,py+hei/2.0, wid,hei);
 }
-ImageMat.subImage = function(image,width,height, offX,offY,wid,hei){ // include 
+ImageMat.subImage = function(image,width,height, offX,offY,wid,hei){ // include
 	var sub = [wid*hei];
 	var i, j;
 	for(j=0; j<hei; ++j){
@@ -657,7 +657,7 @@ ImageMat.getGaussianWindow = function(width,height, sigmaX, sigmaY, normCenter, 
 	var ho2 = Math.floor(height*0.5);
 	var i, j, x, y, xx, yy, sum = 0;
 	for(j=0;j<height;++j){
-		y = ho2 - j; yy = y*y; 
+		y = ho2 - j; yy = y*y;
 		for(i=0;i<width;++i){
 			x = wo2 - i; xx = x*x;
 			val = Math.exp(-(xx*cX+yy*cY));
@@ -686,7 +686,7 @@ ImageMat.getGaussianWindowSimple = function(width,height, sigma){ // === ImageMa
 	var ho2 = Math.floor(height*0.5);
 	var i, j, x, y, xx, yy, sum = 0;
 	for(j=0;j<height;++j){
-		y = ho2 - j; yy = y*y; 
+		y = ho2 - j; yy = y*y;
 		for(i=0;i<width;++i){
 			x = wo2 - i; xx = x*x;
 			val = Math.exp(-(xx+yy)*c);
@@ -754,7 +754,7 @@ var timeB = Code.getTimeMilliseconds();
 console.log("toFrequencyDomain" + " end "+ ((timeB-timeA)/1000)); // 44 seconds to 4-loop | (0.4s per loop)*300*400 = 48000s = 800min = 13.3hr
 	return frequencies;
 }
-ImageMat.toImageDomain = function(frequencies, wid,hei){ 
+ImageMat.toImageDomain = function(frequencies, wid,hei){
 	var image = new Array(wid*hei);
 	var i, j, k, l;
 	var cmp = new Complex(), a = new Complex(), b = new Complex();
@@ -1242,7 +1242,7 @@ ImageMat.fillBlobs = function(info){
 	var blobs = info["blobs"];
 	var width = info["width"];
 	var height = info["height"];
-	
+
 	var fillColor = -2;
 	var maxWidth = -1;
 	var maxHeight = -1;
@@ -1544,7 +1544,7 @@ ImageMat.cdf = function(data, mask){ // cumulative distribution function | range
 	}
 	return {"x":xValues, "y":cdf};
 }
-ImageMat.probabilityFromCDF = function(cdf,value){ 
+ImageMat.probabilityFromCDF = function(cdf,value){
 	var x = cdf["x"];
 	var y = cdf["y"];
 	var len = x.length;
@@ -1577,7 +1577,7 @@ ImageMat.probabilityFromCDF = function(cdf,value){
 }
 
 
-ImageMat.valueFromCDF = function(cdf,value){ 
+ImageMat.valueFromCDF = function(cdf,value){
 	var x = cdf["x"];
 	var y = cdf["y"];
 	var len = x.length;
@@ -1677,7 +1677,7 @@ var totalP = 0;
 	//return -entropy/Math.pow(wid,1/2);
 	// MAX ENTROPY @ ?
 	// MIN ENTROPY @ ?
-	
+
 	// return -entropy/maxE;
 	//return -entropy/wid; // NO
 	//return -entropy/entropyCount; // NO
@@ -1741,7 +1741,7 @@ ImageMat.entropyResidualX = function(data, wid, hei, maskOutCenter){
 
 ImageMat.entropyInWindow = function(data, wid,hei, winX,winY, useWin){
 	if(winX==undefined || winY==undefined){
-		return 
+		return
 	}
 	var testSizeX = winX*2 + 1;
 	var testSizeY = winY*2 + 1;
@@ -1763,7 +1763,7 @@ ImageMat.entropyInWindow = function(data, wid,hei, winX,winY, useWin){
 			var jStart = j - winY;
 			var jEnd = j + winY;
 			for(nJ=jStart; nJ<=jEnd; ++nJ){
-				for(nI=iStart; nI<=iEnd; ++nI){ 
+				for(nI=iStart; nI<=iEnd; ++nI){
 					var ii = Math.min(Math.max(nI,0),wm1);
 					var jj = Math.min(Math.max(nJ,0),hm1);
 					var iIndex = jj*wid + ii;
@@ -1782,7 +1782,7 @@ ImageMat.entropyInWindow = function(data, wid,hei, winX,winY, useWin){
 
 ImageMat.entropyInPixelArea = function(data, wid,hei, pointX,pointY, winX,winY, mask, bins){
 	if(winX==undefined || winY==undefined){
-		return 
+		return
 	}
 	var winXLeft = Math.floor(winX/2.0);
 	var winXRight = winX - winXLeft;
@@ -1797,7 +1797,7 @@ ImageMat.entropyInPixelArea = function(data, wid,hei, pointX,pointY, winX,winY, 
 	var jStart = pointY - winY;
 	var jEnd = pointY + winY;
 	for(j=jStart; j<=jEnd; ++j){
-		for(i=iStart; i<=iEnd; ++i){ 
+		for(i=iStart; i<=iEnd; ++i){
 			var ii = Math.min(Math.max(i,0),wm1);
 			var jj = Math.min(Math.max(j,0),hm1);
 			var index = jj*wid + ii;
@@ -1823,7 +1823,7 @@ ImageMat.entropyInPixelArea = function(data, wid,hei, pointX,pointY, winX,winY, 
 
 ImageMat.rangeInPixelArea = function(data, wid,hei, pointX,pointY, winX,winY, mask){
 	if(winX==undefined || winY==undefined){
-		return 
+		return
 	}
 	var winXLeft = Math.floor(winX/2.0);
 	var winXRight = winX - winXLeft;
@@ -1838,7 +1838,7 @@ ImageMat.rangeInPixelArea = function(data, wid,hei, pointX,pointY, winX,winY, ma
 	var jStart = pointY - winY;
 	var jEnd = pointY + winY;
 	for(j=jStart; j<=jEnd; ++j){
-		for(i=iStart; i<=iEnd; ++i){ 
+		for(i=iStart; i<=iEnd; ++i){
 			var ii = Math.min(Math.max(i,0),wm1);
 			var jj = Math.min(Math.max(j,0),hm1);
 			var index = jj*wid + ii;
@@ -1858,7 +1858,7 @@ ImageMat.prototype.mean = function(){
 	var y = (r+g+b)/3.0;
 	return {"r":r,"g":g,"b":b,"y":y};
 }
-		
+
 ImageMat.prototype.range = function(){
 	var r = ImageMat.range(this.red());
 	var g = ImageMat.range(this.grn());
@@ -1889,7 +1889,7 @@ ImageMat.range = function(data, wid,hei){
 }
 ImageMat.rangeInWindow = function(data, wid,hei, winX,winY){ // win = 1/2 actual window
 	if(winX==undefined || winY==undefined){
-		return 
+		return
 	}
 	var variation = Code.newArrayZeros(wid*hei);
 	var i, j, nJ, nI, index, range;
@@ -1904,7 +1904,7 @@ ImageMat.rangeInWindow = function(data, wid,hei, winX,winY){ // win = 1/2 actual
 			var minValue = null;
 			var maxValue = null;
 			for(nJ=jStart; nJ<jEnd; ++nJ){
-				for(nI=iStart; nI<iEnd; ++nI){ 
+				for(nI=iStart; nI<iEnd; ++nI){
 					var iIndex = nJ*wid + nI;
 					var value = data[iIndex];
 					if(minValue==null || value<minValue){
@@ -1921,7 +1921,7 @@ ImageMat.rangeInWindow = function(data, wid,hei, winX,winY){ // win = 1/2 actual
 	}
 	return {"value":variation, "width":wid, "height":hei};
 }
-ImageMat.totalRangeInWindow = function(r,g,b, wid,hei, winX,winY){ 
+ImageMat.totalRangeInWindow = function(r,g,b, wid,hei, winX,winY){
 	var len = wid*hei;
 	var total = Code.newArrayZeros(len);
 	var i;
@@ -1971,7 +1971,7 @@ ImageMat.totalCostToMoveAny = function(image, g,b,wid,hei){
 		// 	num = 1.0;
 		// }
 		// sum[i] = den/num;
-		
+
 	}
 	//return sum;
 	return {"value":sum, "width":wid, "height":hei};
@@ -2293,7 +2293,7 @@ ImageMat.prototype.calculateMoment = function(mean,mask){
 }
 ImageMat.calculateMoment = function(gry,wid,hei,mean,mask){
 	mean = mean!==undefined ? mean : ImageMat.calculateCentroid(gry, wid,hei);
-	
+
 	//var totalWeight = ImageMat.sumFloat(gry);
 	// var m01 = ImageMat.calculateRawMoment(gry,wid,hei,0,1,mean);
 	// var m10 = ImageMat.calculateRawMoment(gry,wid,hei,1,0,mean);
@@ -2318,7 +2318,7 @@ ImageMat.calculateMoment = function(gry,wid,hei,mean,mask){
 	return [ev1,ev2];
 }
 ImageMat.prototype.calculateX = function(){
-	
+
 }
 ImageMat.cooccurrenceMatrix = function(image, wid, hei, imageMask, levels, offX, offY, dontNormalize){
 	if(offX===undefined || offY===undefined){
@@ -2559,7 +2559,7 @@ ImageMat.convolveSSDFloat = function(haystack,haystackWidth,haystackHeight, need
 	if(resultCount<=0){
 		return [];
 	}
-	
+
 	var minN = Math.min.apply(this,needle);
 	var maxN = Math.max.apply(this,needle);
 	var rangeN = maxN-minN;
@@ -2575,7 +2575,7 @@ ImageMat.convolveSSDFloat = function(haystack,haystackWidth,haystackHeight, need
 			var maxH = null;
 			var minH = null;
 			for(var nJ=0; nJ<needleHeight; ++nJ){ // entire needle
-				for(var nI=0; nI<needleWidth; ++nI){ 
+				for(var nI=0; nI<needleWidth; ++nI){
 					var nIndex = nJ*needleWidth + nI;
 					var hIndex = (j+nJ)*haystackWidth + (i+nI);
 					var n = needle[nIndex];
@@ -2588,7 +2588,7 @@ ImageMat.convolveSSDFloat = function(haystack,haystackWidth,haystackHeight, need
 			var midH = minH + rangeH*0.5;
 			var invRangeH = rangeH != 0 ? rangeH : 1.0;
 			for(var nJ=0; nJ<needleHeight; ++nJ){ // entire needle
-				for(var nI=0; nI<needleWidth; ++nI){ 
+				for(var nI=0; nI<needleWidth; ++nI){
 					var nIndex = nJ*needleWidth + nI;
 					var hIndex = (j+nJ)*haystackWidth + (i+nI);
 					var n = needle[nIndex];
@@ -2679,7 +2679,7 @@ ImageMat.SADFloatSimple = function(imageA,wid,hei, imageB, maskArea){
 //		range = Math.sqrt(range);
 //console.log("RANGE: "+range);
 //	console.log("RANGE: "+sad+" / "+range+" = "+(sad/range));
-// higher range is better score 0---- 
+// higher range is better score 0----
 //sad = sad / range; // worse results
 	return sad;
 }
@@ -2840,7 +2840,7 @@ ImageMat.historize0255 = function(data){
 	for(i=0;i<256;++i){
 		bins[i] = Math.round(255.0*(bins[i]-min)/range);
 	}
-	for(i=0;i<len;++i){ 
+	for(i=0;i<len;++i){
 		result[i] = bins[ data[i] ];
 	}
 	return result;
@@ -2854,7 +2854,7 @@ ImageMat.rangeStretch0255 = function(data){
 		max = Math.max(max,data[i]);
 	}
 	var range = max-min;
-	for(i=0;i<len;++i){ 
+	for(i=0;i<len;++i){
 		result[i] = Math.round(255.0*(data[i]-min)/range);
 	}
 	return result;
@@ -3169,7 +3169,7 @@ ImageMat.randomAdd = function(data,mag,off){
 	}
 	return result;
 }
-ImageMat.flipAbsFxn = function(f){ 
+ImageMat.flipAbsFxn = function(f){
 	return Math.abs(f-0.5);
 }
 ImageMat.log = function(data){
@@ -3415,13 +3415,17 @@ ImageMat.prototype.derivativeY = function(){
 }
 ImageMat.derivativeX = function(src,wid,hei, x,y){
 	if(x!==undefined && y!==undefined){
-		return -0.5*src[wid*y+(x-1)] + 0.5*src[wid*y+(x+1)];
+		var xm1 = Math.max(x-1,0);
+		var xp1 = Math.min(x+1,wid-1);
+		return -0.5*src[wid*y+xm1] + 0.5*src[wid*y+xp1];
 	}
 	return ImageMat.convolve(src,wid,hei, [-0.5,0,0.5], 3,1);
 }
 ImageMat.derivativeY = function(src,wid,hei, x,y){
 	if(x!==undefined && y!==undefined){
-		return -0.5*src[wid*(y-1)+x] + 0.5*src[wid*(y+1)+x];
+		var ym1 = Math.max(y-1,0);
+		var yp1 = Math.min(y+1,hei-1);
+		return -0.5*src[wid*ym1+x] + 0.5*src[wid*yp1+x];
 	}
 	return ImageMat.convolve(src,wid,hei, [-0.5,0,0.5], 1,3);
 }
@@ -3439,7 +3443,7 @@ ImageMat.mean3x3 = function(src,wid,hei){
 ImageMat.mean5x5 = function(src,wid,hei){
 	return ImageMat.convolve(src,wid,hei, [1,1,1,1,1, 1,1,1,1,1, 1,1,1,1,1, 1,1,1,1,1, 1,1,1,1,1,], 5,5);
 }
-ImageMat.gradientVectorNonIntegerIndex = function(src,wid,hei, x,y, isGrad){ 
+ImageMat.gradientVectorNonIntegerIndex = function(src,wid,hei, x,y, isGrad){
 	//console.log(isGrad)
 	var xMin = Math.floor(x);
 	var xMax = Math.ceil(x);
@@ -3519,13 +3523,17 @@ ImageMat.gradientAngle = function(src,wid,hei, x,y){
 }
 ImageMat.secondDerivativeX = function(src,wid,hei, x,y){
 	if(x!==undefined && y!==undefined){
-		return src[wid*y+(x-1)] - 2.0*src[wid*y+x] + src[wid*y+(x+1)];
+		var xm1 = Math.max(x-1,0);
+		var xp1 = Math.min(x+1,wid-1);
+		return src[wid*y+xm1] - 2.0*src[wid*y+x] + src[wid*y+xp1];
 	}
 	return ImageMat.convolve(src,wid,hei, [1.0,-2,1.0], 3,1);
 }
 ImageMat.secondDerivativeY = function(src,wid,hei, x,y){
 	if(x!==undefined && y!==undefined){
-		return src[wid*(y-1)] - 2.0*src[wid*y+x] + src[wid*(y+1)+x];
+		var ym1 = Math.max(y-1,0);
+		var yp1 = Math.min(y+1,hei-1);
+		return src[wid*(ym1)] - 2.0*src[wid*y+x] + src[wid*yp1+x];
 	}
 	return ImageMat.convolve(src,wid,hei, [1.0,-2,1.0], 1,3);
 }
@@ -3620,7 +3628,7 @@ ImageMat.meanFilter = function(src,wid,hei, w,h){
 		var num = 1.0/len;
 		var filter = new Array(len);
 		for(i=0;i<len;++i){ filter[i] = num; }
-		ImageMat.convolve(src,wid,hei, filter, w,h);	
+		ImageMat.convolve(src,wid,hei, filter, w,h);
 	}
 	return ImageMat.convolve(src,wid,hei, [1/9,1/9,1/9, 1/9,1/9,1/9, 1/9,1/9,1/9], 3,3);
 }
@@ -3711,7 +3719,7 @@ ImageMat.corners = function(image, width, height){
 		return Math.abs(a.z)>Math.abs(b.z) ? -1 : 1;
 	});
 	// TODO add padding and trim edge corners
-	
+
 	return corners;
 }
 
@@ -4019,7 +4027,7 @@ ImageMat.getRotatedImage = function(channel,width,height, angle){
 		}
 	}else{ // radians
 		throw "TODO";
-	} // 
+	} //
 	return {"width":wid, "height":hei, "value":newChannel};
 }
 ImageMat.getScaledImage = function(source,wid,hei, scale, sigma, forceWidth,forceHeight){
@@ -4063,7 +4071,7 @@ ImageMat.getScaledImageInteger = function(src,wid,hei, scale, forceWidth,forceHe
 				ind = j*newWid + i;
 				value = 0;
 				for(var k=0; k<size; ++k){ // blocks
-					for(var l=0; l<size; ++l){ 
+					for(var l=0; l<size; ++l){
 						index = (j*size+k)*wid + (i*size+l); // TODO: FORCE END TRUNCATION
 						value += src[index];
 					}
@@ -4091,13 +4099,13 @@ ImageMat.getBlurredImage = function(source,wid,hei, sigma){ // does auto padding
 	source = ImageMat.unpadFloat(source, totWid,totHei, padding,padding,padding,padding);
 	return source;
 }
-ImageMat.prototype.getBlurredImage = function(sigma){ 
+ImageMat.prototype.getBlurredImage = function(sigma){
 	var red = ImageMat.getBlurredImage(this.red(),this.width(),this.height(), sigma);
 	var grn = ImageMat.getBlurredImage(this.grn(),this.width(),this.height(), sigma);
 	var blu = ImageMat.getBlurredImage(this.blu(),this.width(),this.height(), sigma);
 	return new ImageMat(this.width(),this.height(), red,grn,blu);
 }
-ImageMat.extractRectFromFloatImage = function(x,y,scale,sigma, w,h, imgSource,imgWid,imgHei, matrix){ // scale=opposite behavior, w/h=destination width/height, 
+ImageMat.extractRectFromFloatImage = function(x,y,scale,sigma, w,h, imgSource,imgWid,imgHei, matrix){ // scale=opposite behavior, w/h=destination width/height,
 	var blurr = (sigma!==undefined) && (sigma!=null);
 	var gaussSize, gauss1D, padding=0;// fullX=(imgWid*x), fullY=(imgHei*y); // wtf
 	var img;
@@ -4110,7 +4118,7 @@ ImageMat.extractRectFromFloatImage = function(x,y,scale,sigma, w,h, imgSource,im
 		gauss1D = ImageMat.getGaussianWindow(gaussSize,1, sigma);
 		padding = Math.ceil(gaussSize/2.0);
 	}
-	
+
 	var left = fullX - (w*0.5)*scale - padding*scale;
 	var right = fullX + (w*0.5)*scale + padding*scale;
 	var top = fullY - (h*0.5)*scale - padding*scale;
@@ -4238,7 +4246,7 @@ ImageMat._watershed_internal = function(heightMap,width,height, inverseMask){
 			groupRects[group] = new Rect(i,j,1,1);
 			highestGroup = group;
 			++group;
-		}else{ // pixel borders labeled neighbor(s) 
+		}else{ // pixel borders labeled neighbor(s)
 			groupMap[j*width + i] = highestGroup; // => assign it to group with largest _peak_ height
 			groupRects[highestGroup].union(new Rect(i,j,1,1));
 		}
@@ -4348,21 +4356,21 @@ ImageMat.heatImage = function(image, width, height, inverse, inColors){ // expec
 
 /*
 this.colorQuadrantCubic = function(colA,colB,colC,colD, colE,colF,colG,colH, colI,colJ,colK,colL, colM,colN,colO,colP, x,y){
-	var r = this.quadric2D(x,y, Code.getRedRGBA(colA), Code.getRedRGBA(colB), Code.getRedRGBA(colC), Code.getRedRGBA(colD), 
-						Code.getRedRGBA(colE), Code.getRedRGBA(colF), Code.getRedRGBA(colG), Code.getRedRGBA(colH), 
-						Code.getRedRGBA(colI), Code.getRedRGBA(colJ), Code.getRedRGBA(colK), Code.getRedRGBA(colL), 
+	var r = this.quadric2D(x,y, Code.getRedRGBA(colA), Code.getRedRGBA(colB), Code.getRedRGBA(colC), Code.getRedRGBA(colD),
+						Code.getRedRGBA(colE), Code.getRedRGBA(colF), Code.getRedRGBA(colG), Code.getRedRGBA(colH),
+						Code.getRedRGBA(colI), Code.getRedRGBA(colJ), Code.getRedRGBA(colK), Code.getRedRGBA(colL),
 						Code.getRedRGBA(colM), Code.getRedRGBA(colN), Code.getRedRGBA(colO), Code.getRedRGBA(colP) );
-	var g = this.quadric2D(x,y, Code.getGrnRGBA(colA), Code.getGrnRGBA(colB), Code.getGrnRGBA(colC), Code.getGrnRGBA(colD), 
-						Code.getGrnRGBA(colE), Code.getGrnRGBA(colF), Code.getGrnRGBA(colG), Code.getGrnRGBA(colH), 
-						Code.getGrnRGBA(colI), Code.getGrnRGBA(colJ), Code.getGrnRGBA(colK), Code.getGrnRGBA(colL), 
+	var g = this.quadric2D(x,y, Code.getGrnRGBA(colA), Code.getGrnRGBA(colB), Code.getGrnRGBA(colC), Code.getGrnRGBA(colD),
+						Code.getGrnRGBA(colE), Code.getGrnRGBA(colF), Code.getGrnRGBA(colG), Code.getGrnRGBA(colH),
+						Code.getGrnRGBA(colI), Code.getGrnRGBA(colJ), Code.getGrnRGBA(colK), Code.getGrnRGBA(colL),
 						Code.getGrnRGBA(colM), Code.getGrnRGBA(colN), Code.getGrnRGBA(colO), Code.getGrnRGBA(colP) );
-	var b = this.quadric2D(x,y, Code.getBluRGBA(colA), Code.getBluRGBA(colB), Code.getBluRGBA(colC), Code.getBluRGBA(colD), 
-						Code.getBluRGBA(colE), Code.getBluRGBA(colF), Code.getBluRGBA(colG), Code.getBluRGBA(colH), 
-						Code.getBluRGBA(colI), Code.getBluRGBA(colJ), Code.getBluRGBA(colK), Code.getBluRGBA(colL), 
+	var b = this.quadric2D(x,y, Code.getBluRGBA(colA), Code.getBluRGBA(colB), Code.getBluRGBA(colC), Code.getBluRGBA(colD),
+						Code.getBluRGBA(colE), Code.getBluRGBA(colF), Code.getBluRGBA(colG), Code.getBluRGBA(colH),
+						Code.getBluRGBA(colI), Code.getBluRGBA(colJ), Code.getBluRGBA(colK), Code.getBluRGBA(colL),
 						Code.getBluRGBA(colM), Code.getBluRGBA(colN), Code.getBluRGBA(colO), Code.getBluRGBA(colP) );
-	var a = this.quadric2D(x,y, Code.getAlpRGBA(colA), Code.getAlpRGBA(colB), Code.getAlpRGBA(colC), Code.getAlpRGBA(colD), 
-						Code.getAlpRGBA(colE), Code.getAlpRGBA(colF), Code.getAlpRGBA(colG), Code.getAlpRGBA(colH), 
-						Code.getAlpRGBA(colI), Code.getAlpRGBA(colJ), Code.getAlpRGBA(colK), Code.getAlpRGBA(colL), 
+	var a = this.quadric2D(x,y, Code.getAlpRGBA(colA), Code.getAlpRGBA(colB), Code.getAlpRGBA(colC), Code.getAlpRGBA(colD),
+						Code.getAlpRGBA(colE), Code.getAlpRGBA(colF), Code.getAlpRGBA(colG), Code.getAlpRGBA(colH),
+						Code.getAlpRGBA(colI), Code.getAlpRGBA(colJ), Code.getAlpRGBA(colK), Code.getAlpRGBA(colL),
 						Code.getAlpRGBA(colM), Code.getAlpRGBA(colN), Code.getAlpRGBA(colO), Code.getAlpRGBA(colP) );
 	r = Code.color255(r); g = Code.color255(g); b = Code.color255(b); a = Code.color255(a);
 	return Code.getColRGBA(r,g,b,a);
@@ -4432,7 +4440,7 @@ ImageMat.filterGrayContrast = function(imageSourceRed, imageSourceGrn, imageSour
 }
 ImageMat._filterGrayContrastFxn = function(v, scale){
 	var mid = 0.5;
-	var gry = (v.x+v.y+v.z)/3.0; 
+	var gry = (v.x+v.y+v.z)/3.0;
 	var diff = gry-mid;
 	var sca = Math.pow(Math.abs(diff), scale);
 	if(diff<0){
@@ -4692,7 +4700,7 @@ ImageMat.adaptiveThreshold = function(src, wid, hei, size, threshold, rangeMin){
 		look at neighbors, pick first color
 	else
 		-
-	
+
 	increment size
 	if all:
 		center-size <0
@@ -4714,31 +4722,9 @@ ImageMat.colorFilter = function(srcR,srcG,srcB, wid, hei, colorTarget, colorDist
 	//   hue = [color base]
 	//   sat = [white,color]
 	// value = [black,white]
-	// 
+	//
 	// RGB sphere Euclidean Color
 	// radius ?
 	var mask;
 	return {"value":mask, "width":wid, "height":hei};
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
