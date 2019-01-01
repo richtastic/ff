@@ -534,7 +534,7 @@ Matrix.transform3DRotate = function(a,vector,angle){
 	throw "TODO";
 }
 
-// 
+//
 Matrix.crossMatrixFromV3D = function(min,vin){ // v*M(u) = v x u      (skew symmetric)
 	var v = vin, m = min;
 	if(vin===undefined){
@@ -545,13 +545,13 @@ Matrix.crossMatrixFromV3D = function(min,vin){ // v*M(u) = v x u      (skew symm
 	return m;
 }
 // ------------------------------------------------------------------------------------------------------------------------ STATS
-Matrix.matrixFromVectors = function(array){ // 
+Matrix.matrixFromVectors = function(array){ //
 	var i, j;
 	var cols = array.length;
 	var rows = array[0].cols();
 	var m = new Matrix();
 	for(i=0;i<N;++i){
-		// 
+		//
 	}
 	return m;
 }
@@ -652,7 +652,7 @@ for each col
 		c = first-cell / pivot-cell
 		for each col at and left of pivot col
 			cell = cell - c * pivot[pivotRow,col]
-		
+
 
 
 
@@ -706,13 +706,13 @@ Matrix.RREF = function(B, A){ // B = rowReducedEchelonForm(A)
 var det = 1.0;
 	for(pivotCol=0,pivotRow=0;pivotCol<col&&pivotRow<row;++pivotCol){ // ,++pivotRow
 		for(j=pivotRow;j<row;++j){ // swap rows so first pivot-row entry is not zero
-			if( Math.abs(B._rows[j][pivotCol]) > Matrix.epsilon ){ // 
+			if( Math.abs(B._rows[j][pivotCol]) > Matrix.epsilon ){ //
 				if(j>pivotRow){
 					B.swapRows(j,pivotRow);
 det *= -1; // row swapping
 				}
 				pivotCell = B._rows[pivotRow][pivotCol];
-				for(j=pivotRow+1;j<row;++j){ // 
+				for(j=pivotRow+1;j<row;++j){ //
 					c = B._rows[j][pivotCol]/pivotCell;
 					//if(c!=0){ // skip useless iterations
 						for(i=pivotCol;i<col;++i){
@@ -760,13 +760,13 @@ Matrix.RREF2 = function(B, A){ // B = rowReducedEchelonForm(A)
 var det = 1.0;
 	for(pivotCol=0,pivotRow=0;pivotCol<col&&pivotRow<row;++pivotCol){ // ,++pivotRow
 		for(j=pivotRow;j<row;++j){ // swap rows so first pivot-row entry is not zero
-			if( Math.abs(B._rows[j][pivotCol]) > Matrix.epsilon ){ // 
+			if( Math.abs(B._rows[j][pivotCol]) > Matrix.epsilon ){ //
 				if(j>pivotRow){
 					B.swapRows(j,pivotRow);
 det *= -1; // row swapping
 				}
 				pivotCell = B._rows[pivotRow][pivotCol];
-				for(j=pivotRow+1;j<row;++j){ // 
+				for(j=pivotRow+1;j<row;++j){ //
 					c = B._rows[j][pivotCol]/pivotCell;
 					if(c!=0){ // skip useless iterations
 						for(i=pivotCol;i<col;++i){
@@ -810,7 +810,7 @@ Matrix.backPropagate = function(A,b){ // A*b = b0 => start with bottom-most vari
 			val -= A._rows[i][j] * b._rows[j][0];
 		}
 		if( Math.abs(A._rows[i][j]) > Matrix.epsilon ){
-			val /= A._rows[i][j]; // pivot if not 1.0 ... 
+			val /= A._rows[i][j]; // pivot if not 1.0 ...
 		}
 		b._rows[i][0] = val;
 	}
@@ -915,13 +915,13 @@ Matrix.solve = function(A,b){ // Ax = b => solve for x
 	return Matrix.mult(Matrix.pseudoInverse(A), b);
 }
 Matrix.nullSpace = function(A){ // nul(A)
-	
+
 }
 // Matrix.eigenValuesAndVectors = function(A){
 // 	var values = new Array(), vectors = new Array();
 // 	var arr = new Array(values,vectors);
 // 	var rows = A.rows(), cols = A.cols();
-// 	// 
+// 	//
 // 	var x = new Matrix(cols,1), y = new Matrix(cols,1);
 // 	var i, len=15, temp, lambda, p, convergence;
 // 	x.set(0,0, 1);
@@ -973,7 +973,7 @@ Matrix.eigenValues = function(A){ // eigenValues[]
 	return Matrix.eigenValuesAndVectors(A).values;
 	/*var arr = new Array();
 	// upper hessian
-	// QR 
+	// QR
 	return arr;*/
 }
 Matrix.eigenVectorsFromValues = function(A,values){ // eigenVectors[ [] ]
@@ -1006,7 +1006,7 @@ Matrix.eigenVectorsFromValues = function(A,values){ // eigenVectors[ [] ]
 		vector = new Matrix(rows,1);
 		// do this once for every zero row
 		vector.set(rows-1-repeated,0, 1.0); //  this assumes only one value to set - wont work for repeated eigenvalues`
-		// http://tutorial.math.lamar.edu/Classes/DE/RepeatedEigenvalues.aspx 
+		// http://tutorial.math.lamar.edu/Classes/DE/RepeatedEigenvalues.aspx
 		Matrix.backPropagate(AI,vector);
 		vector.normalize();
 		console.log( AI.toString() );
@@ -1049,7 +1049,7 @@ Matrix.eigenValuesAndVectors = function(A){
 	return [values, vectors];
 	*/
 }
-Matrix.trace = function(){ // 
+Matrix.trace = function(){ //
 	// = sum of main diagonals
 }
 Matrix.SVD = function(A){ // A = UEV^t  //  Amxn = Umxm * Smxn * Vnxn
@@ -1066,13 +1066,13 @@ return Matrix.nonShittySVD(A);
 	V.cleanCheck();
 	return {U:U, S:S, V:V};
 	// REQUIRES FINDING EIGEN VECTORS
-	// ui of U = kth singular value = 
+	// ui of U = kth singular value =
 	// s1 >= s2 >= s3 >= .. sn/m
-	// 
+	//
 	//
 }
 // numeric.QRFrancis
-Matrix.QRCore = function(){ // 
+Matrix.QRCore = function(){ //
 // Q = normal basis for col(A)
 // Q^t * A = R
 	// gram-schmidt process (less precise - and time)
@@ -1086,7 +1086,7 @@ Matrix.QR = function(A){ // rows >= cols
 	var Q = new Matrix(rowsA,rowsA); // orthogonal - basis for A cols
 	var R = new Matrix(rowsA,colsA); // upper triangular
 	for(t=0;t<maxT;++t){
-		// 
+		//
 	}
 	// Q = Q1' * Q2' * ... * Qt'
 	// R = Qt * ... * Q2 * Q1 = Q' * A
@@ -1096,7 +1096,7 @@ Matrix.QRP = function(A){ // (nearly) rank defecit
 }
 Matrix.houseHolder = function(A){
 	// reflect = x - 2*dot(x,v)*v
-	// 
+	//
 }
 Matrix.eig = function(A){
 	// upper hessenberg(tri-diagonal)
@@ -1167,7 +1167,7 @@ Matrix.LU = function(P,L,U, A, pivot){ // [P,L,U] = A : LU Decomposition (Factor
 	if a pivot is ~0, then row interchange must be done
 	*/
 }
-Matrix.mult = function(r, ain,bin){ // c = a*b 
+Matrix.mult = function(r, ain,bin){ // c = a*b
 	var b = bin, a = ain, c = Matrix._temp;
 	if(bin===undefined){
 		a = r; b = ain;
@@ -1240,7 +1240,7 @@ Matrix.abs = function(a,b){ // a = abs(b)
 }
 
 Matrix.cp2tform = function(c, a){ // control points to transform - projective 3D transform
-	// 
+	//
 }
 Matrix._temp = new Matrix(1,1);
 
@@ -1282,7 +1282,7 @@ Matrix.get2DProjectiveMatrix = function(fromPoints, toPoints){
 		matB.set(2*i+1,0, to.y);
 	}
 	//var x = Matrix.solve(matA,matB);
-	var x = Matrix.mult(Matrix.pseudoInverseSimple(matA), matB); // 
+	var x = Matrix.mult(Matrix.pseudoInverseSimple(matA), matB); //
 	var projection = (new Matrix(3,3)).setFromArray([x.get(0,0),x.get(1,0),x.get(2,0), x.get(3,0),x.get(4,0),x.get(5,0), x.get(6,0),x.get(7,0),1.0]);
 	// var pt = new V3D(0,0,0);
 	// projection.multV2DtoV3D(pt,pt);
@@ -1332,7 +1332,7 @@ Matrix.eigenValues2D = function(a,b,c,d){
 Matrix.eigenVectors2D = function(a,b,c,d){
 	return Matrix.eigenValuesAndVectors2D(a,b,c,d).vectors;
 }
-Matrix.eigen = function(A){ // eigenValues[], eigenVectors[[]] 
+Matrix.eigen = function(A){ // eigenValues[], eigenVectors[[]]
 	var ret = numeric.eig(A._rows);
 	var lambda = ret.lambda.x;
 	var v = ret.E.x;
@@ -1398,7 +1398,7 @@ Matrix.power = function(A,power){
 /*
 array -only calculations
 */
-Matrix.matrixArrayMultiply = function(A,m,n, B,nn,p){ // 
+Matrix.matrixArrayMultiply = function(A,m,n, B,nn,p){ //
 	if(n!=nn){
 		return null;
 	}
@@ -1416,7 +1416,7 @@ Matrix.matrixArrayMultiply = function(A,m,n, B,nn,p){ //
 	return C;
 }
 
-Matrix.matrixArrayTranspose = function(A,m,n){ // 
+Matrix.matrixArrayTranspose = function(A,m,n){ //
 	var i, j, C = new Array(m*n);
 	for(j=0;j<n;++j){ // rowsC
 		for(i=0;i<m;++i){ // colsC
@@ -1474,7 +1474,7 @@ Matrix.matrixArrayToString = function(A, m,n){
 		for(i=0;i<n;++i){ // cols
 			index = j*n + i;
 			num = A[index];
-			if(num>=0){ 
+			if(num>=0){
 				val = " "+num.toExponential(exp);
 			}else{
 				val = num.toExponential(exp);
@@ -1501,7 +1501,7 @@ Matrix.lmMinimize = function(fxn,args, m, n, xInitial, yFinal, maxIterations, fT
 	// gTol = ...
 	// maxIterations = halt if loop is greater or equal to this
 	// diag is scaling array length = m
-	// 	
+	//
 try{
 	maxIterations = maxIterations!==undefined?maxIterations:50;
 	fTolerance = fTolerance!==undefined?fTolerance:1E-10;
@@ -1517,7 +1517,7 @@ try{
 	var yTemp = new Matrix(m,1);
 	var dy = new Matrix(m,1);
 	var error = new Matrix(m,1);
-	var jacobian = new Matrix(m,n); 
+	var jacobian = new Matrix(m,n);
 	var L = new Matrix(n,n);
 	var errorPrev = -1, errorNext, errorCurr;
 	var lambda = 1E-3;
@@ -1641,7 +1641,7 @@ Matrix.prototype.inverse = function(m){ // http://www.dr-lex.be/random/matrix_in
 RANK: actual dimension the matrix can produce
 NULL SPACE: KERNEL SPACE: all x : Ax = 0
 COL SPACE: volume that can be produced
-ROW SPACE: 
+ROW SPACE:
 IMAGE:
 PREIMAGE:
 
@@ -1701,15 +1701,15 @@ Matrix._solveAXB = function(matrixA, matrixX){ // LU + backsub is better for fin
 	//
 }
 
-Matrix._ = function(){ 
+Matrix._ = function(){
 	//
 }
 
-Matrix._ = function(){ 
+Matrix._ = function(){
 	//
 }
 
-Matrix._ = function(){ 
+Matrix._ = function(){
 	//
 }
 
@@ -1775,7 +1775,7 @@ Matrix._inverseSquareGaussJordan = function(matrixA,rows, matrixB,cols){ // set 
 		for(l=0;l<cols;++l){
 			matrixB[maxCol][l] *= inv;
 		}
-		// reduce non-pivot rows 
+		// reduce non-pivot rows
 		for(ll=0;ll<rows;++ll){
 			if(ll!=maxCol){
 				val = matrixA[ll][maxCol];
@@ -1896,7 +1896,7 @@ Matrix._LUBackSubstitution = function(matrixLU, index, vectorB){ // solves A*X =
 	}
 }
 // _
-Matrix._solveAXBbyLU = function(matrixA,rows, vectorB,cols){ 
+Matrix._solveAXBbyLU = function(matrixA,rows, vectorB,cols){
 	// float **a, *b, d;
 	// int n, *index;
 	ludcmp(a,n,index,d);
@@ -1947,7 +1947,7 @@ Matrix._singularValueDecomposition = function(matrixA, rows,cols, vectorW, matri
 	// m = rows
 	// n = cols
 }
-// 
+//
 
 
 // 2.7 Sparse
@@ -1958,7 +1958,7 @@ Matrix._singularValueDecomposition = function(matrixA, rows,cols, vectorW, matri
 // sprstp(sa,ija,sb,ijb)
 // svbksb(u,w,v,m,n,b,x)
 
-// 3: 
+// 3:
 
 // 11: Eigensystems
 
@@ -2073,133 +2073,3 @@ Tensor.prototype.toString = function(){
 	str += " : "+this.count()+"]";
 	return str;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -72,8 +72,8 @@ GLOBALSTAGE = this._stage;
 // var modeImageEdit = true;
 var modeImageEdit = false;
 
-var modeImageUpload = true; //  uploadImageTypeCamera
-// var modeImageUpload = false;
+// var modeImageUpload = true; //  uploadImageTypeCamera
+var modeImageUpload = false;
 	// var modeImageUploadCamera = true;
 	var modeImageUploadCamera = false;
 
@@ -89,7 +89,7 @@ var modeModelReconstruction = false;
 
 // don't A:
 // TO SWITCH ON MODELING:
-// modeModelReconstruction = true;
+modeModelReconstruction = true;
 
 
 
@@ -1050,6 +1050,20 @@ var projectViews = manager.views();
 console.log(v)
 		var transform = v["transform"];
 			transform = new Matrix().loadFromObject(transform);
+
+console.log(transform);
+var o1 = new V3D(0,0,0);
+var z1 = new V3D(0,0,1);
+var o2 = transform.multV3DtoV3D(o1);
+var z2 = transform.multV3DtoV3D(z1);
+z2.sub(o2);
+
+var dot = V3D.dot(z1,z2);
+var angle = V3D.angle(z1,z2);
+
+console.log(" -> "+o1+" / "+o2);
+console.log(" possible: "+i+" = "+dot+" @ "+Code.degrees(angle)+" : "+o1+"/"+o2);
+
 		var camID = v["camera"]
 		var camera = cameraLookup[camID];
 		var K = camera["K"];
@@ -6127,7 +6141,7 @@ App3DR.ProjectManager.prototype._backgroundTaskTick = function(){
 }
 App3DR.ProjectManager.prototype.checkPerformNextTask = function(){
 // don't 1 - run
-// return;
+return;
 console.log("checkPerformNextTask");
 	this.pauseBackgroundTasks();
 	this._taskBusy = true;
@@ -6197,7 +6211,7 @@ console.log("checkPerformNextTask");
 		}
 	}
 // don't 2 - run
-return;
+// return;
 	// assuming all pair matches have run
 	len = views.length;
 	for(i=0; i<len; ++i){
@@ -6225,24 +6239,24 @@ return;
 	}
 
 // don't 3 - run
-return;
+// return;
 
 
 	// first run with limited points
-	if(false){
-	// if(true){
+	// if(false){
+	if(true){
 	//if(!this.hasBundleInit()){
 		// global relative => absolute initialization
 		this.calculateGlobalOrientationInit(); // CREATES info.yaml
 		return;
 	}
-
+return;
 	// increase resolution of BA approx
 	if(true){
 		this.calculateGlobalOrientationHierarchyLoad(); // UPDATES info.yaml
 		return;
 	}
-
+return;
 	// global absolute finalizing
 		// final BA with all data w/o making new points
 	// throw "GLOBAL ABS FINALIZING";
@@ -6381,11 +6395,7 @@ App3DR.ProjectManager.prototype.calculatePairMatch = function(viewA, viewB, pair
 		// var pointsA = R3D.generatePointsFromSIFTObjects(featuresA);
 		// var pointsB = R3D.generatePointsFromSIFTObjects(featuresB);
 		// TO SIFT OBJECTS
-		var maxFeatures = 1000;
-		//var maxFeatures = 500; // PREVIOUS
-		//var maxFeatures = 200; // TESTING
-		// var objectsA = R3D.generateSIFTObjects(objectsA, imageMatrixA);
-		// var objectsB = R3D.generateSIFTObjects(objectsB, imageMatrixB);
+		var maxFeatures = 2000;
 		var objectsA = R3D.generateSIFTObjects(featuresA, imageMatrixA);
 		var objectsB = R3D.generateSIFTObjects(featuresB, imageMatrixB);
 		// use most distinct features only
@@ -6400,10 +6410,7 @@ App3DR.ProjectManager.prototype.calculatePairMatch = function(viewA, viewB, pair
 		var matches = matchData["matches"];
 		matchCount = matches.length;
 		console.log(matches);
-
-
-		// TO CORRECT FORMAT:
-
+		// TO CORRECT FORMAT FOR MEDIUM DENSITY = POINT PAIRS
 		var pointsA = [];
 		var pointsB = [];
 		for(var i=0; i<matches.length; ++i){
@@ -6420,18 +6427,17 @@ App3DR.ProjectManager.prototype.calculatePairMatch = function(viewA, viewB, pair
 
 		// MEDIUM-DENSITY:
 		var matches = R3D.stereoHighConfidenceMatches(imageMatrixA,imageMatrixB, pointsA,pointsB,F);
-
+		// add affine info:
+		R3D.stereoMatchAverageAffine(imageMatrixA,imageMatrixB,matches);
+		// convert to object structure
+		matches = R3D.stereoToMatchPairArray(imageMatrixA,imageMatrixB,matches);
 		console.log(matches);
-
-
-throw "..."
-
-
 		var str = self._matchesToYAML(matches, F, viewA, viewB, imageMatrixA, imageMatrixB);
+// console.log(str+"");
 		var binary = Code.stringToBinary(str);
 		yamlBinary = binary;
 // // TODO: REMOVE
-// return;
+// throw "...";
 		console.log("HAVE PAIR? "+(pair!==null));
 		if(pair){
 			fxnG(pair);
@@ -6447,7 +6453,7 @@ throw "..."
 		self.addOperation("SET", {"path":path, "data":yamlBinary}, fxnH, self, pair);
 	}
 	var fxnH = function(object, data){
-throw "HUH";
+// throw "HUH";
 		self.saveProjectFile(); // TODO: add completion here
 		return;
 		// return to checking
@@ -6843,12 +6849,12 @@ console.log("ERROR: "+transformRMean+" * "+transformRSigma+" @ "+transformMatche
 	var locations = result["absolute"];
 	// console.log("locations");
 	// console.log(locations);
-
+	//
 	var results = R3D.optiumGraphAngle3D(edgesRotate);
 	var rotations = results["absolute"];
 	// console.log("rotations");
 	// console.log(rotations);
-
+	//
 	var transforms = [];
 	for(var i=0; i<locations.length; ++i){
 		var location = locations[i];
@@ -6857,7 +6863,7 @@ console.log("ERROR: "+transformRMean+" * "+transformRSigma+" @ "+transformMatche
 		transforms[i] = transform;
 		// console.log(transform+"");
 	}
-
+	//
 	// turn into compiled single grouping
 	var matches = [];
 	// for(var i=0; i<pairs.length; ++i){
@@ -7076,7 +7082,7 @@ console.log("ERROR: "+transformRMean+" * "+transformRSigma+" @ "+transformMatche
 	// console.log(str);
 
 	// proceed to optimizing step
-
+	console.log("CALCULATED OPTIMUM STARTING ORIENTATIONS");
 	this.calculateGlobalOrientationNonlinear(str);
 
 
@@ -7212,6 +7218,7 @@ App3DR.ProjectManager.prototype._calculateGlobalOrientationNonlinearB = function
 	// matches
 	//for(var i=0; i<pairs.length; ++i){
 	var points = yaml["points"];
+	console.log("adding points from yaml: "+points.length);
 	var o = new V2D(0,0);
 	var x1 = new V2D();
 	var x2 = new V2D();
@@ -7266,7 +7273,7 @@ App3DR.ProjectManager.prototype._calculateGlobalOrientationNonlinearB = function
 		this.saveBundleAdjust(str, fxnZ, this);
 	}
 
-	world.solveGlobalAbsoluteTransform(completeFxn, this);
+	world.solveGlobalAbsoluteTransform(completeFxn, this,      false);
 }
 App3DR.ProjectManager.prototype.calculateGlobalOrientationHierarchyLoad = function(){
 	console.log("load all necessary BA stuff ...");
@@ -7508,15 +7515,10 @@ App3DR.ProjectManager.prototype.calculateGlobalOrientationHierarchy = function(s
 // 	throw "calculateBundleAdjustGlobal";
 // }
 App3DR.ProjectManager.prototype.calculateBundleAdjustPair = function(viewAIn,viewBIn, callback, context, object){
-	console.log("calculateBundleAdjustPair");
 	var i, j, k;
 	var view, pair, camera;
-
-	// var views = this._views;
-	// var pairs = this._pairs;
 	var views = [viewAIn,viewBIn];
 	var pairs = [this.pair(viewAIn.id(),viewBIn.id())];
-// throw "...";
 	var expectedViews = views.length;
 	var expectedPairs = pairs.length;
 
@@ -7782,7 +7784,7 @@ if(SHOULD_CORRECT_DISTOTION){
 
 
 // START STEREOPSIS
-
+console.log(" > CREATE WORLD");
 // world
 var world = new Stereopsis.World();
 
@@ -7872,7 +7874,7 @@ for(var i=0; i<views.length; ++i){
 
 
 
-
+console.log(" > READ/FILTER MATCHES");
 // matches
 for(var i=0; i<pairs.length; ++i){
 	var pair = pairs[i];
@@ -7939,8 +7941,12 @@ for(var i=0; i<pairs.length; ++i){
 	//console.log("MATCHES AFTER: "+filteredMatches.length);
 	console.log("MATCHES FOR PAIR "+vA.id()+"+"+vB.id()+" == "+filteredMatches.length);
 
+var skip = true; // SKIP AFFINE SEQUENCE - OK FOR ~1000 not for ~10,000+
 	// copy over
 	for(var j=0; j<filteredMatches.length; ++j){
+	if(j%1000==0){
+		console.log(" "+j+"/"+filteredMatches.length);
+	}
 		var match = filteredMatches[j];
 //		console.log(match);
 		var fr = match[0];
@@ -7948,7 +7954,7 @@ for(var i=0; i<pairs.length; ++i){
 		var angleAB = match[2];
 		var scaleAB = match[3]; // THIS DEPENDS ON ABSOLUTE SIZE ...
 //		console.log(fr+" & "+to+" & "+angleAB+" | "+scaleAB);
-		world.addMatchForViews(vA,fr, vB,to, scaleAB,angleAB);
+		world.addMatchForViews(vA,fr, vB,to, scaleAB,angleAB, skip);
 		/*
 		var pointA = vA.closestPoint2D(fr.x,fr.y);
 		var pointB = vB.closestPoint2D(to.x,to.y);
@@ -7989,10 +7995,7 @@ var completeFxn = function(){
 }
 
 world.solve(completeFxn, this);
-
-
 return;
-
 throw "USE NEW BUNDLE ADJUST: R3D.BA";
 
 
@@ -8170,7 +8173,10 @@ var beforeCount = matches.length;
 	for(i=0; i<cameras.length; ++i){
 		// camera K is in default camera data
 	}
-
+// */
+//
+// }
+// }
 }
 
 

@@ -2257,9 +2257,14 @@ Code.gradientDescent = function(fxn, args, x, dx, iter, diff){
 			tx[i] += dx[i];
 			c = fxn(args, tx, false, i);
 			dy[i] = c - cost;
+			// if(Code.isNaN(dy[0])){
+			// 	console.log(tx);
+			// 	console.log(c);
+			// 	console.log(cost);
+			// 	throw "dy is NaN";
+			// }
 			tx[i] = 0;
 		}
-
 		// initial best guess:
 		for(i=0; i<sizeX; ++i){
 			nextX[i] = prevX[i] - lambda*dy[i];
@@ -3115,11 +3120,34 @@ Code.getAlpRGBA = function(col){
 }
 
 // color functions ----------------------------------------------------
+Code.randomIndexes = function(count, range){
+	var i, set = [];
+	var rm1 = range-1;
+	for(i=0; i<count; ++i){
+		set[i] = Code.randomInt(rm1);
+	}
+	return set;
+}
+// Code.randomIndexes = function(count){
+// 	var i, set = [];
+// 	var cm1 = count-1;
+// 	for(i=0; i<count; ++i){
+// 		set[i] = i;
+// 	}
+// 	// swap
+// 	for(i=0; i<count; ++i){
+// 		var j = Code.randomInt(cm1);
+// 		var t = set[i];
+// 		set[i] = set[j];
+// 		set[j] = t;
+// 	}
+// 	return set;
+// }
 // Code.randomIntervalSet(5, 0, 10);
 Code.randomIntervalSet = function(count, min,max){
 	if(max===undefined){ max = min; min = 0; }
 	var maxMinusMin = max-min;
-	var maxMinusMinP1 = maxMinusMin + 1;
+	// var maxMinusMinP1 = maxMinusMin + 1;
 	if(maxMinusMin < count){
 		return []; // impossible
 	}
@@ -6871,7 +6899,11 @@ Code.rayFiniteInfiniteIntersect2D = function(a,b, c,d){ // finite ray and infini
 	return null;
 }
 Code.closestPointLine2D = function(org,dir, point){ // infinite ray and point
-	var t = (V2D.dot(dir,point)-V2D.dot(org,dir))/V2D.dot(dir,dir);
+	var bot = V2D.dot(dir,dir);
+	if(bot==0){
+		return new V2D(point.x,point.y);
+	}
+	var t = (V2D.dot(dir,point)-V2D.dot(org,dir))/bot;
 	return new V2D(org.x+t*dir.x,org.y+t*dir.y);
 }
 Code.distancePointRay2D = function(org,dir, point){ // point and RAY

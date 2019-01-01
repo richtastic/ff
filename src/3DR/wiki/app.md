@@ -320,7 +320,19 @@ https://cloud.google.com/appengine/docs/nodejs/
 
 
 TESTING: A & C
+- pairwise solution isn't doing well
+	- drop -z points?
+	- check iteration process
+	- is just dropping sets of points ...
 
+
+
+
+- maybe only used best points w/ best:  corner score  &  match score  & F score
+
+-
+
+- pre-remove duplcate points in match pair file (loose 47560/36705)
 
 
 ----> go thru view uploading again with medium dense images

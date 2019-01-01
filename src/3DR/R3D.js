@@ -510,7 +510,7 @@ for(index=0; index<pointsA.length; ++index){
 		p1Norm.homo(); // THIS IS THE ACTUAL 3D POINT - LOCATION
 		var P1est = new Matrix(4,1).setFromArray( p1Norm.toArray() );
 
-		var P2 = Matrix.mult(possibleInv,P1est);
+		// var P2 = Matrix.mult(possibleInv,P1est);
 		var P2 = Matrix.mult(possible,P1est);
 		var p2Norm = new V4D().fromArray(P2.toArray());
 		p2Norm.homo(); // not necessary?
@@ -855,6 +855,19 @@ R3D.transformFromFundamental3 = function(pointsA, pointsB, F, Ka,KaInv, Kb,KbInv
 	}
 	R1 = R3D.rotationFromApproximate(R1);
 	R2 = R3D.rotationFromApproximate(R2);
+console.log("F (in):\n"+F+"");
+var reduced = Matrix.RREF(F);
+console.log("F:\n"+reduced+"");
+var reduced = Matrix.RREF(E);
+console.log("E:\n"+reduced+"");
+var rod = R3D.rotationMatrixToEulerRodriguez(R1);
+console.log("R1:\n"+rod+"");
+var rod = R3D.rotationMatrixToEulerRodriguez(R2);
+console.log("R2:\n"+rod+"");
+
+console.log("t1:\n"+t);
+console.log("t2:\n"+tNeg);
+
 	// one of 4 possible solutions
 	var possibles = []; // U*W*V | t
 	var bottom = [0,0,0,1];
@@ -876,6 +889,20 @@ R3D.transformFromFundamental3 = function(pointsA, pointsB, F, Ka,KaInv, Kb,KbInv
 		var M2 = possibleInv.getSubMatrix(0,0, 3,4);
 		M2s[i] = M2;
 	}
+// show all possible matrices:
+for(var i=0; i<possibles.length; ++i){
+	var possible = possibles[i];
+	//var rotation = possible
+	var dirAZ = new V3D(0,0,1);
+	var orgA = new V3D(0,0,0);
+	var orgB = possible.multV3DtoV3D(orgA);
+	var dirBZ = possible.multV3DtoV3D(dirAZ);
+	dirBZ.sub(orgB);
+	var dot = V3D.dot(dirAZ,dirBZ);
+	var angle = V3D.angle(dirAZ,dirBZ);
+	console.log(" possible: "+i+" = "+dot+" @ "+Code.degrees(angle)+" : "+orgA+"/"+orgB);
+}
+
 	// get positives / negatives of estimated 3D point
 	var pAx = new Matrix(3,3);
 	var pBx = new Matrix(3,3);
@@ -911,6 +938,12 @@ var P2 = Matrix.mult(possibleInv,P1est); // M2 // E-POINTS
 		}
 	}
 
+
+
+
+
+
+// COUNT POINTS IN FRONT OF BOTH CAMERAS:
 	var countsTotal2 = Code.newArrayZeros(possibles.length);
 	for(var i=0; i<possibles.length; ++i){
 		var possible = possibles[i];
@@ -919,9 +952,26 @@ var P2 = Matrix.mult(possibleInv,P1est); // M2 // E-POINTS
 // var M2 = possibleInv;
 var M2 = possible; // F-POINTS
 		var points3D = R3D.triangulationDLT(pointsA,pointsB, M1,M2, Ka, Kb, KaInv, KbInv);
+		var distortions = null;
 		for(var j=0; j<points3D.length; ++j){
 			var point3D = points3D[j];
-			countsTotal2[i] += Math.sign(point3D.z);
+			// countsTotal2[i] += Math.sign(point3D.z);
+			// countsTotal2[i] += Math.sign(point3D.z);
+			// project point to both cameras:
+			var p2D1 = R3D.projectPoint3DToCamera2DForward(point3D, M1, Ka, distortions, true);
+			var p2D2 = R3D.projectPoint3DToCamera2DForward(point3D, M2, Kb, distortions, true);
+			countsTotal2[i] += p2D1 ? 1 : -1;
+			countsTotal2[i] += p2D2 ? 1 : -1;
+			// if(p2D1==null){
+			// 	countsTotal2[i] -= 1;
+			// }else{
+			// 	countsTotal2[i] += 1;
+			// }
+			// if(p2D2==null){
+			// 	countsTotal2[i] -= 1;
+			// }else{
+			// 	countsTotal2[i] += 1;
+			// }
 		}
 	}
 if(log){
@@ -930,9 +980,12 @@ console.log(countsTotal2,"of",pointsA.length);
 }
 // 2)
 // countsTotal2 = countsTotal;
+countsTotal = countsTotal2;
 
 	// var maximumTotalCount = pointsA.length * 2;
 	var bestTotalCount = Code.max(countsTotal);
+	console.log(Code.max(countsTotal));
+	console.log(Code.max(countsTotal2));
 if(bestTotalCount>=8){
 	var bestProjections = [];
 if(log){
@@ -1401,17 +1454,31 @@ R3D.fundamentalMatrix8 = function(pointsA,pointsB){
 	return F;
 }
 R3D.forceRank2F = function(F){ // force rank 2: epipolar lines meet at epipole, eigenvalue = 0
+	if(Code.isNaN(F.get(0,0))){
+		throw "F is NaN"
+	}
 	try{
 		var svd = Matrix.SVD(F);
 		var U = svd.U;
 		var S = svd.S;
 		var V = svd.V;
-		if(S.get(0,0)==0 || S.get(1,1)==0){
+		// console.log(" FORCE RANK == "+S.get(0,0)+","+S.get(1,1)+","+S.get(2,2));
+		if(S.get(0,0)==0 || S.get(1,1)==0){ // OR 2,2 ?
+			// console.log(" FORCE RANK ALREADY 0");
 			return F.copy();
 		}
+		// console.log(" FORCE RANK SUCCESS ");
 		S.set(2,2, 0.0);
 		return Matrix.fromSVD(U,S,V);
 	}catch(e){
+		// console.log("FORCE RANK FAIL ... "+e);
+		console.log("FORCE RANK FAIL: "+F);
+		console.log("FORCE RANK FAIL: "+Matrix.RREF(F));
+
+		throw "?";
+		// WHERE ARE THE EPIPOLES
+		// DOF ?
+		//
 		return F.copy();
 	}
 }
@@ -3707,6 +3774,9 @@ R3D.essentialMatrixNonlinear = function(E,pointsA,pointsB){ // nonlinearLeastSqu
 R3D._gdFun_A = new Matrix(3,3);
 R3D._gdFun_B = new Matrix(3,3);
 R3D._gdFun = function(args, x, isUpdate, descriptive){
+	if(Code.isNaN(x[0])){
+		throw "x is NaN";
+	}
 	if(isUpdate){
 		var Ffwd = new Matrix(3,3).fromArray(x);
 		Ffwd = R3D.forceRank2F(Ffwd);
@@ -3726,9 +3796,15 @@ R3D._gdFun = function(args, x, isUpdate, descriptive){
 
 	var errorA = 0;
 	var errorB = 0;
+var pntA = new V3D();
+var pntB = new V3D();
 	for(i=0;i<len;++i){
 		pointA = pointsA[i];
 		pointB = pointsB[i];
+pntA.set(pointA.x,pointA.y,1.0);
+pntB.set(pointB.x,pointB.y,1.0);
+pointA = pntA;
+pointB = pntB;
 		Ffwd.multV3DtoV3D(lineA, pointA);
 		Frev.multV3DtoV3D(lineB, pointB);
 		Code.lineOriginAndDirection2DFromEquation(orgA,dirA, lineA.x,lineA.y,lineA.z);
@@ -3741,7 +3817,7 @@ R3D._gdFun = function(args, x, isUpdate, descriptive){
 		errorB += distB*distB;
 	}
 	var error = errorA + errorB;
-	if(descriptive){
+	if(descriptive===true){
 		return {"error":error, "A":errorA, "B":errorB}
 	}
 	return error;
@@ -3749,10 +3825,18 @@ R3D._gdFun = function(args, x, isUpdate, descriptive){
 R3D.fundamentalMatrixNonlinearGD = function(fundamental,pointsA,pointsB){ // nonlinearLeastSquares : input normalized points
 	var xVals = fundamental.toArray();
 	var args = [pointsA,pointsB];
-	result = Code.gradientDescent(R3D._gdFun, args, xVals, null, 100, 1E-10);
+	try {
+		result = Code.gradientDescent(R3D._gdFun, args, xVals, null, 100, 1E-10);
+	}catch(e){
+		throw "got e: "+e;
+	}
 	xVals = result["x"];
 	fundamental = new Matrix(3,3).fromArray(xVals);
-	fundamental = R3D.forceRank2F(fundamental);
+	try {
+		fundamental = R3D.forceRank2F(fundamental);
+	}catch(e){
+		console.log("force rank fail: R3D.fundamentalMatrixNonlinearGD "+xVals);
+	}
 	return fundamental;
 }
 
@@ -3776,6 +3860,7 @@ R3D.fundamentalMatrixNonlinear = function(fundamental,pointsA,pointsB){
 	try{
 		fundamental = R3D.fundamentalMatrixNonlinearGD(fundamental,pointsA,pointsB);
 	}catch(e){
+		console.log("error GD: "+e+"\n"+fundamental);
 		fundamental = R3D.fundamentalMatrixNonlinearLM(fundamental,pointsA,pointsB);
 	}
 	return fundamental;
