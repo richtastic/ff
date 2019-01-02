@@ -961,7 +961,7 @@ var M2 = possible; // F-POINTS
 			var p2D1 = R3D.projectPoint3DToCamera2DForward(point3D, M1, Ka, distortions, true);
 			var p2D2 = R3D.projectPoint3DToCamera2DForward(point3D, M2, Kb, distortions, true);
 			countsTotal2[i] += p2D1 ? 1 : -1;
-			countsTotal2[i] += p2D2 ? 1 : -1;
+			countsTotal2[i] += p2D1 ? 1 : -1;
 			// if(p2D1==null){
 			// 	countsTotal2[i] -= 1;
 			// }else{
@@ -3126,11 +3126,14 @@ R3D.stereoMatchMatching = function(sourceImageA,sourceImageB, rectifiedA,infoA, 
 				pixB.set(iB,jB);
 				distanceA = V2D.distance(pixA,valueB);
 				distanceB = V2D.distance(pixB,valueA);
+				var scoreA = valueA.z;
+				var scoreB = valueB.z;
+				var avgScore = (scoreA+scoreB)*0.5;
 				if(distanceA<maxEqualDistance && distanceB<maxEqualDistance){
 					var avgA = V2D.avg(pixA,valueB);
 					var avgB = V2D.avg(pixB,valueA);
 					// matches.push({"A":pixA.copy(),"B":valueA.copy()});
-					matches.push({"A":avgA,"B":avgB});
+					matches.push({"A":avgA,"B":avgB, "score":avgScore});
 				}
 			}
 		}
@@ -3526,6 +3529,7 @@ if(show && !HAS_SHOWN){
 			if(dis==null){
 				continue;
 			}
+			var score = scoreSAD[indA];
 			// get mapped opposite rectified location
 			var rowB = mappingAB[rowA];
 			var colB = colA + dis;
@@ -3559,7 +3563,8 @@ if(show && !HAS_SHOWN){
 			*/
 
 			var radB = radiusMinB + colB;
-			pixB = new V2D(radB*Math.cos(theB),radB*Math.sin(theB));
+			// pixB = new V2D(radB*Math.cos(theB),radB*Math.sin(theB));
+pixB = new V3D(radB*Math.cos(theB),radB*Math.sin(theB), score);
 			pixB.add(eB);
 			index = j*widA + i;
 			pixelsMatchingAB[index] = pixB;

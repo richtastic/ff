@@ -1042,11 +1042,10 @@ console.log("SIZE: "+imageMatrixA.width()+"x"+imageMatrixA.height());
 var bestMatches = {"A":pointsA,"B":pointsB};
 var result = R3D.stereoMatchMatching(imageMatrixA,imageMatrixB, rectifiedA,rectifiedInfoA, rectifiedB,rectifiedInfoB, matrixFfwd,bestMatches, null,null);
 
-
-
-
+// var result = R3D.
+// R3D.
 // var corners = R3D.totalHarrisCornerDetection(r,g,b,wid,hei);
-// HOW BOUT ONLY CORNERS / MATCHING SCORES / F-ERROR SCORES
+throw("HOW BOUT ONLY CORNERS / MATCHING SCORES / F-ERROR SCORES");
 
 
 

@@ -89,7 +89,7 @@ var modeModelReconstruction = false;
 
 // don't A:
 // TO SWITCH ON MODELING:
-modeModelReconstruction = true;
+// modeModelReconstruction = true;
 
 
 
@@ -6141,7 +6141,7 @@ App3DR.ProjectManager.prototype._backgroundTaskTick = function(){
 }
 App3DR.ProjectManager.prototype.checkPerformNextTask = function(){
 // don't 1 - run
-return;
+// return;
 console.log("checkPerformNextTask");
 	this.pauseBackgroundTasks();
 	this._taskBusy = true;
@@ -6427,6 +6427,19 @@ App3DR.ProjectManager.prototype.calculatePairMatch = function(viewA, viewB, pair
 
 		// MEDIUM-DENSITY:
 		var matches = R3D.stereoHighConfidenceMatches(imageMatrixA,imageMatrixB, pointsA,pointsB,F);
+console.log(matches);
+// remove close duplicates
+	R3D.matchesRemoveClosePairs(matches);
+// drop lower SAD scores
+	R3D.matchesDropHighZ(matches);
+// drop lower corners
+	R3D.matchesDropLowCorners(imageMatrixA,imageMatrixB);
+// drop lower F error
+	R3D.matchesDropHighFError(matches,F);
+
+HERE
+
+throw "matches";
 		// add affine info:
 		R3D.stereoMatchAverageAffine(imageMatrixA,imageMatrixB,matches);
 		// convert to object structure
