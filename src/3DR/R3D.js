@@ -2545,6 +2545,120 @@ R3D.interpolate1DFillArray = function(array){
 // 	return {"score":bestScore, "offset":bestOffset, "other":null, "list":list};
 // }
 
+
+R3D.matchesRemoveClosePairs = function(matches,imageMatrixA,imageMatrixB, distance){
+	distance = distance!==undefined ? distance : 1.0;
+	matches.sort(function(a,b){
+		return a["score"] < b["score"] ? -1 : 1;
+	});
+	var newMatches = [];
+	var toPointA = function(m){
+		return m["A"];
+	}
+	var toPointB = function(m){
+		return m["B"];
+	}
+	var spaceA = new QuadTree(toPointA, new V2D(0,0), new V2D(imageMatrixA.width(),imageMatrixA.height()));
+	var spaceB = new QuadTree(toPointB, new V2D(0,0), new V2D(imageMatrixB.width(),imageMatrixB.height()));
+	var a = new V2D();
+	var b = new V2D();
+	for(var i=0; i<matches.length; ++i){
+		var match = matches[i];
+		a.set(match["A"].x,match["A"].y);
+		var nA = spaceA.objectsInsideCircle(a, distance);
+		if(nA.length==0){
+			b.set(match["B"].x,match["B"].y);
+			var nB = spaceB.objectsInsideCircle(b, distance);
+			if(nB.length==0){
+				spaceA.insertObject(match);
+				spaceB.insertObject(match);
+				newMatches.push(match);
+			}
+		}
+	}
+	spaceA.kill();
+	spaceB.kill();
+	return newMatches;
+}
+
+R3D.matchesDropHighZ = function(matches, sigma){
+	sigma = sigma!==undefined ? sigma : 2.0;
+	var zValues = [];
+	for(var i=0; i<matches.length; ++i){
+		var match = matches[i];
+		zValues.push(match["score"]);
+	}
+	var zMin = Code.min(zValues);
+	var zSig = Code.stdDev(zValues,zMin);
+	var zLim = zMin + zSig*sigma;
+	var newMatches = [];
+	for(var i=0; i<matches.length; ++i){
+		var match = matches[i];
+		if(match["score"]<zLim){
+			newMatches.push(match);
+		}
+	}
+	return newMatches;
+}
+
+R3D.matchesDropLowCorners = function(matches, imageMatrixA,imageMatrixB, sigma){
+	sigma = sigma!==undefined ? sigma : 2.0;
+	var newMatches = [];
+	var cornersA = R3D.totalHarrisCornerDetection(imageMatrixA.red(),imageMatrixA.grn(),imageMatrixA.blu(),imageMatrixA.width(),imageMatrixA.height());
+	var cornersB = R3D.totalHarrisCornerDetection(imageMatrixB.red(),imageMatrixB.grn(),imageMatrixB.blu(),imageMatrixB.width(),imageMatrixB.height());
+	var widA = imageMatrixA.width();
+	var heiA = imageMatrixA.height();
+	var widB = imageMatrixB.width();
+	var heiB = imageMatrixB.height();
+	var zValues = [];
+	for(var i=0; i<matches.length; ++i){
+		var match = matches[i];
+		var a = match["A"];
+		var b = match["B"];
+		var zA = cornersA[Math.round(a.y)*widA+Math.round(a.x)];
+		var zB = cornersB[Math.round(b.y)*widB+Math.round(b.x)];
+		var z = (zA+zB)*0.5;
+		z = Math.log(z);
+		zValues.push(z);
+		match["corner"] = z;
+	}
+	var zMen = Code.mean(zValues);
+	var zSig = Code.stdDev(zValues,zMen);
+	var zLim = zMen - zSig*sigma;
+	var newMatches = [];
+	for(var i=0; i<matches.length; ++i){
+		var match = matches[i];
+		if(match["corner"]>zLim){
+			newMatches.push(match);
+		}
+	}
+	return newMatches;
+}
+
+R3D.matchesDropHighFError = function(matches, FFwd,FRev, sigma){
+	var newMatches = [];
+	var fValues = [];
+	for(var i=0; i<matches.length; ++i){
+		var match = matches[i];
+		var a = match["A"];
+		var b = match["B"];
+		var e = R3D.fError(FFwd, FRev, a, b);
+			e = e["error"];
+		match["fError"] = e;
+		fValues.push(e);
+	}
+	var fMin = Code.min(fValues);
+	var fSig = Code.stdDev(fValues,fMin);
+	var fLim = fMin + fSig*sigma;
+	for(var i=0; i<matches.length; ++i){
+		var match = matches[i];
+		if(match["fError"]>fLim){
+			newMatches.push(match);
+		}
+	}
+	return newMatches;
+}
+
 R3D.ransacAffine = function(pointsAIn,pointsBIn){
 	var MAX_LIMIT = 1E3; // 1K - TODO: more empirical
 	var minCount = 3;

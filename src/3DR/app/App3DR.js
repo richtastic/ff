@@ -6427,19 +6427,24 @@ App3DR.ProjectManager.prototype.calculatePairMatch = function(viewA, viewB, pair
 
 		// MEDIUM-DENSITY:
 		var matches = R3D.stereoHighConfidenceMatches(imageMatrixA,imageMatrixB, pointsA,pointsB,F);
-console.log(matches);
+
+console.log(matches.length);
 // remove close duplicates
-	R3D.matchesRemoveClosePairs(matches);
+	matches = R3D.matchesRemoveClosePairs(matches,imageMatrixA,imageMatrixB, 1.0);
+console.log(matches.length);
+// HIGHLY LIMIT FOR TESTING - ~10%
 // drop lower SAD scores
-	R3D.matchesDropHighZ(matches);
+	matches = R3D.matchesDropHighZ(matches, 1.0);
+console.log(matches.length);
 // drop lower corners
-	R3D.matchesDropLowCorners(imageMatrixA,imageMatrixB);
+	matches = R3D.matchesDropLowCorners(matches, imageMatrixA,imageMatrixB, 1.0);
+console.log(matches.length);
 // drop lower F error
-	R3D.matchesDropHighFError(matches,F);
+	var Finv = R3D.fundamentalInverse(F);
+	matches = R3D.matchesDropHighFError(matches,F,Finv, 1.0);
+console.log(matches.length);
 
-HERE
-
-throw "matches";
+// throw "matches";
 		// add affine info:
 		R3D.stereoMatchAverageAffine(imageMatrixA,imageMatrixB,matches);
 		// convert to object structure

@@ -324,6 +324,8 @@ TESTING: A & C
 	- drop -z points?
 	- check iteration process
 	- is just dropping sets of points ...
+		- further z items?
+		 	-just inherently have more error ?
 
 
 
@@ -332,7 +334,7 @@ TESTING: A & C
 
 -
 
-- pre-remove duplcate points in match pair file (loose 47560/36705)
+- pre-remove duplicate points in match pair file (loose 47560/36705)
 
 
 ----> go thru view uploading again with medium dense images
