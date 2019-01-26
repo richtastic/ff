@@ -297,11 +297,11 @@ vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 	- separate triangles into texture lookup / files
 		- TextureMap (from textures to atlas)
 	=> scene textured model
-(01/14)
+(01/28)
 - viewing output
 	- locally
 	- VR device
-(01/30)
+(02/25)
 
 google app engine project - nodejs
 https://cloud.google.com/appengine/docs/nodejs/
@@ -319,14 +319,20 @@ https://cloud.google.com/appengine/docs/nodejs/
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
-TESTING: A & C
-- pairwise solution isn't doing well
-	- drop -z points?
-	- check iteration process
-	- is just dropping sets of points ...
-		- further z items?
-		 	-just inherently have more error ?
+TESTING AGAIN
 
+
+
+=> WAYS TO SPREAD THE ERROR IN A BUNDLE AGJUST OF JUST CAMERAS:
+	A)
+		1) find optimal relative location of each neighbor view & just use as is
+		2) find optimal relative location from moving i) view A and ii) view B
+			-> combine to get an average relative location
+				-> further optimize again starting at the average point [using either A-B or B-A]
+	B) USE RELATIVE ORIENTATIONS & ERRORS TO FIND SIMULTANEOUS BEST CASE
+	C) CONVERT FROM RELATIVE TO ABSOLUTE
+
+	?) OPTIMIZE ALL LOCATION SIMULTANEOUSLY WITH MINIMIZATION LIST
 
 
 

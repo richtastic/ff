@@ -4006,6 +4006,57 @@ Code.sum = function(list,key,count){
 	}
 	return sum;
 }
+
+Code.runningInfos = function(list, windowSize){
+	var halfSize = windowSize*0.5 | 0;
+	var middleSize = halfSize+1;
+	var sum = 0;
+	var averages = [];
+	// var squareds = [];
+	var sigmas = [];
+	for(var i=0; i<middleSize && i<list.length; ++i){
+		sum += list[i];
+	}
+	var counts = [];
+	var maxCountCheck = list.length-halfSize-1;
+	for(var i=0; i<list.length; ++i){
+		var countA = windowSize;
+		var countB = windowSize;
+		if(i<=halfSize){
+			countA = i+halfSize;
+		}
+		if(i>=maxCountCheck){
+			countB = maxCountCheck-i+windowSize-1;
+		}
+		var count = Math.min(countA,countB);
+		counts.push(count);
+		var avg = sum/count;
+		averages[i] = avg;
+		// averages[i] = sum;
+		var minI = Math.max(0,i-halfSize);
+		var maxI = Math.min(list.length-1,i+halfSize);
+		// console.log(minI,maxI);
+		var std = 0;
+		for(var ii=minI; ii<=maxI; ++ii){
+			std += Math.pow(list[ii] - avg, 2);
+		}
+		// console.log(std);
+		sigmas[i] = Math.sqrt(std/count);
+		// sigmas[i] = ;
+		if(i>=halfSize){
+			sum -= list[i-halfSize];
+			// console.log("drop: "+list[i-halfSize]);
+		}
+		if(i+middleSize<list.length){
+			sum += list[i+middleSize];
+			// console.log("add : "+list[i+middleSize]);
+		}
+	}
+	// console.log(counts);
+
+	return {"mean":averages, "sigma":sigmas};
+};
+
 Code.abs = function(a){
 	for(var i=a.length; i--; ){
 		a[i] = Math.abs(a[i]);

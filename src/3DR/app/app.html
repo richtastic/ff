@@ -11,6 +11,45 @@ function ffLoadedFxn(){
 	(new ScriptLoader("./",["App3DR.js", "../SIFTDescriptor.js", "../R3D.js","../R3DDense.js","../R3DBA.js","../R3DDense.js","../Cam2D.js","../Cam3D.js","../Render3D.js","Stereopsis.js"],this,classesLoadedFxn)).load();
 }
 function classesLoadedFxn(){
+	// var array = [1,2,3,4,5];//,6,7,8,9,10,11,12];
+	// var info = Code.runningInfos(array, 7);
+	// var means = info["mean"];
+	// var sigmas = info["sigma"];
+	// console.log(array);
+	// console.log(means);
+	// console.log(sigmas);
+	// Code.printMatlabArray(array,"d");
+	// Code.printMatlabArray(means,"a");
+	// Code.printMatlabArray(sigmas,"s");
+	// return;
+/*
+	var array = [];
+	var count = 1000;
+	for(var i=0; i<count; ++i){
+		var x = (i-count*0.5)*0.01; //
+		var y = x*x*x*0.001 + -x*x*0.10 + x*0.25 + 1.25;
+		array[i] = Math.random()*1.0 + y;
+	}
+	var windowSize = Math.min(11,array.length*0.1 | 0);
+	windowSize = 21;
+	console.log(array);
+	var info = Code.runningInfos(array, windowSize);
+	var means = info["mean"];
+	var sigmas = info["sigma"];
+	console.log(array);
+	console.log(means);
+	console.log(sigmas);
+
+	//var sigma = Code.runningStddev(array, windowSize);
+
+	// Code.runningStddev(array, windowSize);
+
+	Code.printMatlabArray(array,"d");
+	Code.printMatlabArray(means,"a");
+	Code.printMatlabArray(sigmas,"s");
+
+	return;
+*/
 	/*
 	var grid = new Grid2D();
 	grid.setFromSizeAndCellSize(100,80, 10,10);
@@ -59,9 +98,9 @@ function classesLoadedFxn(){
 	var Pw = invA.multV3DtoV3D(Pa);
 	console.log("Pw: "+Pw+"");
 
-	
+
 		// var relativeAtoB = Matrix.mult(invA,absB);
-	
+
 
 
 
@@ -69,7 +108,7 @@ function classesLoadedFxn(){
 	*/
 /*
 	// GLOBAL STAGE:
-	// AVERAGING 3D POINTS 
+	// AVERAGING 3D POINTS
 	this._canvas = new Canvas(null,0,0,Canvas.STAGE_FIT_FILL, false,false);
 	this._stage = new Stage(this._canvas, 1000/20);
 	this._root = new DO();
@@ -82,7 +121,7 @@ function classesLoadedFxn(){
 
 
 	// AFFINE AVERAGE TESTING:
-	// 
+	//
 	var o = new V2D(0,0);
 	var x = new V2D(1,0);
 	var y = new V2D(0,1);
@@ -140,7 +179,7 @@ function classesLoadedFxn(){
 		var d = new DO();
 		d.graphics().setLine(1.0,col);
 		d.graphics().beginPath();
-		
+
 		for(var k=0; k<square.length; ++k){
 			var squ = square[k];
 			var p = mat.multV2DtoV2D(squ);
@@ -164,7 +203,7 @@ function classesLoadedFxn(){
 	// show:
 	throw "affined";
 */
-	
+
 /*
 	// rotation averaging
 	var matrix = new Matrix(4,4).identity();
@@ -248,9 +287,9 @@ function classesLoadedFxn(){
 
 /*
 
-	
 
-	
+
+
 	var points = [];
 		// points.push([new V2D(0,0), 0.0]);
 		// points.push([new V2D(2,0), 0.0]);
@@ -271,7 +310,7 @@ function classesLoadedFxn(){
 			edges.push([0,5, 0.1]);
 // edges.push([0,5, 0.5]);
 // edges.push([0,5, 0.001]);
-	
+
 		edges.push([1,2, 0.5]);
 		edges.push([1,3, 0.3]);
 			edges.push([1,4, 0.2]);
@@ -286,7 +325,7 @@ function classesLoadedFxn(){
 
 		edges.push([4,5, 0.2]);
 
-		
+
 
 	var graph = new Graph();
 	var vs = [];
@@ -423,7 +462,7 @@ var errorLocation = error * 3.0;
 	console.log(results);
 	rotations = results["absolute"];
 
-	
+
 
 
 
@@ -490,20 +529,20 @@ var errorLocation = error * 3.0;
 
 	/*
 		graph use squared error as edge weights
-		
+
 		find root with minimized total error at leaves
 			- get shortest paths to all vertexes & sum all paths
 
 ????
-		
+
 		calculate absolute positions from root
-		
+
 		iterate till convergence: (GD)
 			relative = edge_ab
 			calculated = (absB-absA) [inverse]
-			
+
 			error_t = distance from centers
-			
+
 			error_r = angle ?
 
 
@@ -511,7 +550,7 @@ var errorLocation = error * 3.0;
 			error += ^2 * sigma
 			=> update absolute positions
 
-		
+
 	*/
 
 
@@ -563,7 +602,7 @@ var errorLocation = error * 3.0;
 		mat = Matrix.transform3DTranslate(mat, -1,0,0);
 			mat = Matrix.transform3DRotateY(mat, Code.radians(-10.0));
 	var absA = mat;
-	
+
 		var mat = new Matrix(4,4).identity();
 			mat = Matrix.transform3DTranslate(mat, 1,0,0);
 			mat = Matrix.transform3DRotateY(mat, Code.radians(10.0));
@@ -580,7 +619,7 @@ var errorLocation = error * 3.0;
 
 	var Fab = R3D.fundamentalFromCamera(transAB, K, Kinv);
 	var Fba = R3D.fundamentalInverse(Fab);//R3D.fundamentalFromCamera(transBA, K, Kinv);
-	
+
 	var point3D = new V3D(1,1,-20);
 
 	var point2DA = R3D.projectPoint3DToCamera2DForward(point3D, absA, K, null);
@@ -607,9 +646,9 @@ console.log("reprojection error: "+error["error"]);
 	console.log("          ..."+estimated3D+" =?= "+point3D);
 
 
-	
 
-	
+
+
 	// var rayA = R3D.projectPoint2DToCamera3DRay(point2DA, absA, Kinv, null);
 	// var rayB = R3D.projectPoint2DToCamera3DRay(point2DB, absB, Kinv, null);
 	var rayA = R3D.projectPoint2DToCamera3DRay(point2DA, invA, Kinv, null);
@@ -644,7 +683,7 @@ if(distance3D>1E-6){
 	points3D.push(new V3D(0,-1,7));
 	points3D.push(new V3D(-1,0,7));
 	points3D.push(new V3D(-1,-1,7));
-	
+
 	points3D.push(new V3D(0,-10,10));
 	points3D.push(new V3D(-10,0,10));
 	points3D.push(new V3D(-10,-10,10));
@@ -695,7 +734,7 @@ console.log("nonlinearness");
 	}
 	console.log("MATCHES ERROR: "+points2DA.length);
 
-	
+
 
 	var F = null;
 	var P = null;
@@ -704,7 +743,7 @@ console.log("nonlinearness");
 	var KaInv = Matrix.inverse(Ka);
 	var KbInv = Matrix.inverse(Kb);
 
-	
+
 	// TODO: WHERE DOES TRHESHOLD ERROR COME FROM ?
 
 
@@ -719,7 +758,7 @@ console.log("nonlinearness");
 	points2DB = matches[1];
 	console.log("MATCHES AFTER: "+points2DA.length);
 	//F = R3D.fundamentalFromUnnormalized(points2DA,points2DB);
-	
+
 	// F = R3D.fundamentalMatrixNonlinear(F,points2DA,points2DB);
 	// console.log(F+"");
 
@@ -765,7 +804,7 @@ throw "yerp"
 		var extrinsics = result["extrinsics"];
 		var absA = extrinsics[0];
 		var absB = extrinsics[1];
-		
+
 		// var invA = Matrix.inverse(absA);
 		// var relativeAtoB = Matrix.mult(invA,absB);
 		// var absoluteB = Matrix.mult(Pa,relativeAtoB);
@@ -803,7 +842,7 @@ throw "yerp"
 	var transformAB = Matrix.mult(viewB,invA);
 	var transformAC = Matrix.mult(viewC,invA);
 	var transformBC = Matrix.mult(viewC,invB);
-	
+
 	// ?
 
 	var point1 = new V3D(0,0,0);
@@ -840,7 +879,7 @@ throw "yerp"
 		point3A_AC = transformAC.multV3DtoV3D(point3A);
 	var point3B = viewB.multV3DtoV3D(point3);
 		point3B_BC = transformBC.multV3DtoV3D(point3B);
-	
+
 	console.log(" POINTS VIA RELATIVE PATHS:");
 	console.log("point3: "+point3);
 	console.log("point3A: "+point3A);
@@ -888,7 +927,7 @@ throw "yerp"
 	var renderer = new Render3D(new V2D(600,400));
 	var cam3D = renderer.addCamera();
 	root.addChild(renderer.display());
-	
+
 	var points = [];
 	var s = 1;
 	for(var i=0; i<100; ++i){
@@ -910,7 +949,7 @@ throw "yerp"
 	var angleX = Math.random()*Math.PI2;
 	var angleY = Math.random()*Math.PI2;
 	var angleZ = Math.random()*Math.PI2;
-	// 
+	//
 	var R, Q, transform;
 	transform = new Matrix(4,4).identity();
 	transform = Matrix.transform3DRotateX(transform, angleX);
@@ -918,7 +957,7 @@ throw "yerp"
 	transform = Matrix.transform3DRotateZ(transform, angleZ);
 	R = transform.getSubMatrix(0,0, 3,3);
 	R = R3D.rotationFromApproximate(R);
-	
+
 	var rodrigues = R3D.rotationMatrixToEulerRodriguez(R);
 	var transform = R3D.rotationEulerRodriguezToMatrix(rodrigues);
 	var Q = transform.getSubMatrix(0,0, 3,3);
@@ -959,7 +998,7 @@ throw "yerp"
 	var set = sets[0];
 
 	var paths = Graph._minPaths(g, v[0]);
-	
+
 	console.log(paths);
 
 	for(i=0; i<paths.length; ++i){
@@ -1011,7 +1050,7 @@ throw "yerp"
 				new V2D(361,183), // mouse eye
 				new V2D(18,225), // bic corner left
 				new V2D(37,216), // bic corner right
-				new V2D(65,169), // cup 
+				new V2D(65,169), // cup
 				new V2D(226,87), // face BL
 				new V2D(219,66), // glasses TL
 				new V2D(250,72), // glasses TR
@@ -1046,7 +1085,7 @@ var pointsB = [
 				new V2D(278,241),
 				new V2D(52,179), // left
 				new V2D(64,172), // right//new V2D(18,225), // right
-				new V2D(94,124), 
+				new V2D(94,124),
 				new V2D(225,98), // face BL
 				new V2D(221,80), // glasses TL
 				new V2D(246,95), // glasses TR
@@ -1082,13 +1121,13 @@ var pointsBin = pointsB;
 		pointsA[i] = new V3D(pointsAin[i].x,pointsAin[i].y,1.0);
 		pointsB[i] = new V3D(pointsBin[i].x,pointsBin[i].y,1.0);
 	}
-	
+
 	var pointsANorm = R3D.calculateNormalizedPoints([pointsA]);
 	var pointsBNorm = R3D.calculateNormalizedPoints([pointsB]);
 	var pA = pointsANorm.normalized[0];
 	var pB = pointsBNorm.normalized[0];
 
-	
+
 
 	var Fnrm = R3D.fundamentalMatrix(pA,pB);
 	var Floc = Fnrm.copy();
@@ -1104,8 +1143,8 @@ var pointsBin = pointsB;
 var errorA = averageError;
 
 
-	
-	
+
+
 	var Fnext = Fnrm;
 	//var Fnext = R3D.fundamentalMatrixNonlinearGD(Fnrm, pA, pB);
 	//Fnext = R3D.forceRank2F(Fnext);
@@ -1144,7 +1183,7 @@ var errorA = averageError;
 	var averageError = error/pointsA.length;
 	console.log("2 F AVG ERROR: "+error+" == "+averageError);
 var errorB = averageError;
-	
+
 	console.log(" DELTA ERROR: "+(errorB/errorA));
 	return;
 */
@@ -1177,7 +1216,7 @@ var errorB = averageError;
 	// var client = new ClientFile();
 	// client.set("projects/0");
 	// return;
-	
+
 
 // 	client.get("projects/test1.png");
 // return;
@@ -1211,11 +1250,11 @@ var errorB = averageError;
 		var p = new V2D( Code.randomFloat(-1,1), Code.randomFloat(-1,1) );
 		pointsB.push(p);
 	}
-	
+
 	var pointsA = [new V2D( 2, 3),new V2D(6,4),new V2D(3,6)];
 	//var pointsB = [new V2D(-1,-1),new V2D(1,0),new V2D(2,3)];
 	var pointsB = [new V2D(-1,-1),new V2D(1,0),new V2D(2,-3)];
-	
+
 	var m = R3D.affineMatrixExact(pointsA,pointsB);
 	var n = R3D.affineMatrixExact(pointsB,pointsA);
 
@@ -1252,7 +1291,7 @@ var errorB = averageError;
 	return;
 */
 
-	
+
 	var app = new App3DR();
 }
 </script>

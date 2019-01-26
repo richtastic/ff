@@ -6145,7 +6145,6 @@ App3DR.ProjectManager.prototype.checkPerformNextTask = function(){
 console.log("checkPerformNextTask");
 	this.pauseBackgroundTasks();
 	this._taskBusy = true;
-// return; // TODO: uncomment this
 	var i, j, k, len;
 	console.log("next task?");
 	var views = this._views;
@@ -6239,7 +6238,7 @@ console.log("checkPerformNextTask");
 	}
 
 // don't 3 - run
-// return;
+return;
 
 
 	// first run with limited points
