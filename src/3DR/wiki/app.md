@@ -319,29 +319,34 @@ https://cloud.google.com/appengine/docs/nodejs/
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
-TESTING AGAIN
+PAIRS: error goes up each iteration
+GROUPS: F error are very high after deriving from R
+		- should these be independent ?
+		- should these have a FWD/BACK component (iterate)?
+		- should F be involved in the minimizing R-error (+F-error) calculations?
+	- need to do full BA
+
 
 
 
 => WAYS TO SPREAD THE ERROR IN A BUNDLE AGJUST OF JUST CAMERAS:
-	A)
-		1) find optimal relative location of each neighbor view & just use as is
-		2) find optimal relative location from moving i) view A and ii) view B
-			-> combine to get an average relative location
-				-> further optimize again starting at the average point [using either A-B or B-A]
-	B) USE RELATIVE ORIENTATIONS & ERRORS TO FIND SIMULTANEOUS BEST CASE
-	C) CONVERT FROM RELATIVE TO ABSOLUTE
+	PAIRWISE:
+		A)
+			1) find optimal relative location of each neighbor view & just use as is
+			2) find optimal relative location from moving i) view A and ii) view B
+				-> combine to get an average relative location
+					-> further optimize again starting at the average point [using either A-B or B-A]
+		B) USE RELATIVE ORIENTATIONS & ERRORS TO FIND SIMULTANEOUS BEST CASE
+		C) CONVERT FROM RELATIVE TO ABSOLUTE
 
-	?) OPTIMIZE ALL LOCATION SIMULTANEOUSLY WITH MINIMIZATION LIST
+	SIMULTANEOUS:
+		OPTIMIZE ALL LOCATION SIMULTANEOUSLY WITH MINIMIZATION LIST
 
 
 
 - maybe only used best points w/ best:  corner score  &  match score  & F score
 
 -
-
-- pre-remove duplicate points in match pair file (loose 47560/36705)
-
 
 ----> go thru view uploading again with medium dense images
 - make sure affine state is saved / loaded

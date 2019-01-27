@@ -24052,7 +24052,44 @@ R3D._gdAffineTransform = function(args, x, isUpdate){
 
 
 
-
+R3D.absoluteOrientationsFromRelativeOrientations = function(relativePairs, errorPairs){ // 1: [2...N] ; 2: [3...N] ; ... N:[]
+	var viewCount = relativePairs.length;
+	var edgesTranslate = [];
+	var edgesRotate = [];
+	// turn transforms into twists
+	for(var i=0; i<viewCount; ++i){
+		var pairs = relativePairs[i];
+		for(var j=0; j<pairs.length; ++j){
+			var relative = pairs[j];
+			console.log(relative);
+			if(relative){
+				var twist = Code.vectorTwistFromMatrix3D(relative);
+				var dir = twist["direction"];
+				var angle = twist["angle"];
+				var offset = twist["offset"];
+				var error = errorPairs ? errorPairs[i][j] : 1.0; // TODO WHICH ERROR TO USE? : match count | pair reprojection error sigma
+				var indexA = i;
+				var indexB = j+i+1;
+				edgesTranslate.push([indexA,indexB, offset, error]);
+				edgesRotate.push([indexA,indexB, {"direction":dir, "angle":angle}, error]);
+			}
+		}
+	}
+	// solve optimum position + orientation
+	var result = R3D.optiumGraphLocation3D(edgesTranslate);
+	var locations = result["absolute"];
+	var result = R3D.optiumGraphAngle3D(edgesRotate);
+	var rotations = result["absolute"];
+	// turn twists into transforms
+	var transforms = [];
+	for(var i=0; i<locations.length; ++i){
+		var location = locations[i];
+		var rotation = rotations[i];
+		var transform = Code.Matrix3DFromVectorTwist(location, rotation);
+		transforms[i] = transform;
+	}
+	return {"absolute":transforms};
+}
 
 
 
@@ -24145,7 +24182,7 @@ R3D.BundleAdjustCameraExtrinsic = function(intrinsics, inverses, extrinsics, pai
 	Code.timerStop();
 	x = result["x"];
 	var cost = result["cost"];
-console.log("  POINT COUNT: "+pairPointList2D[0].length+"  ITERATIONS: "+maxIterations+"  SECONDS: "+(Code.timerDifference()/1000.0)+"  ERROR: "+result["cost"]);
+console.log("  POINT COUNT: "+pairPointList3D[0].length+"  ITERATIONS: "+maxIterations+"  SECONDS: "+(Code.timerDifference()/1000.0)+"  ERROR: "+result["cost"]);
 	var pList = [];
 	for(var i=0; i<cameraCount; ++i){
 		var tx = x[i*6 + 0];
@@ -24213,9 +24250,9 @@ R3D._gd_BACameraExtrinsic = function(args, x, isUpdate){
 			}
 			pairError /= pointCount; // AVERAGE POINT ERROR FOR VIEW PAIR [MORE POINTS ~ LESS POINTS @ SAME SCALE]
 			totalError += pairError;
-			if(isUpdate){
-				console.log("    --  totalError: "+totalError+" @ "+tx+","+ty+","+tz+" ... ");
-			}
+			// if(isUpdate){
+			// 	console.log("    --  totalError: "+totalError+" @ "+tx+","+ty+","+tz+" ... ");
+			// }
 			++pairIndex;
 		}
 	}

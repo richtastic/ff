@@ -6238,7 +6238,7 @@ console.log("checkPerformNextTask");
 	}
 
 // don't 3 - run
-return;
+// return;
 
 
 	// first run with limited points
@@ -6823,74 +6823,54 @@ App3DR.ProjectManager.prototype._calculateGlobalOrientationInit2 = function(call
 	console.log("_calculateGlobalOrientationInit2");
 	var pairs = this._pairs;
 	var views = this._views;
+	var viewCount = views.length;
 	var edgesTranslate = [];
 	var edgesRotate = [];
 	var tableViewIDToIndex = {};
-	for(var i=0; i<views.length; ++i){
+	// A-B pair lists (transforms and errors): each is of length i-1
+	var relativePairs = [];
+	var errorPairs = [];
+	for(var i=0; i<viewCount; ++i){
 		var view = views[i];
 		tableViewIDToIndex[view.id()+""] = i;
+		relativePairs[i] = Code.newArrayNulls(viewCount-i-1);
+		errorPairs[i] = Code.newArrayNulls(viewCount-i-1);
 	}
-
+	// get relative transform+error
 	for(var i=0; i<pairs.length; ++i){
 		var pair = pairs[i];
-		//console.log(pair)
 		var viewA = pair.viewA();
 		var viewB = pair.viewB();
 		var relativeData = pair.relativeData();
-// console.log(relativeData)
 var transformsSingle = relativeData["transforms"][0];
 var transformMatches = transformsSingle["matches"];
 var transformRSigma = transformsSingle["errorRSigma"];
 var transformRMean = transformsSingle["errorRMean"];
 console.log("ERROR: "+transformRMean+" * "+transformRSigma+" @ "+transformMatches);
 		var viewsData = relativeData["views"];
-		var videDataA = viewsData[0];
-		var videDataB = viewsData[1];
-		var transformA = Matrix.loadFromObject(videDataA["transform"]);
-		var transformB = Matrix.loadFromObject(videDataB["transform"]);
-		// console.log(transformA+"");
-		// console.log(transformB+"");
-		var twist = Code.vectorTwistFromMatrix3D(transformB);
-		var dir = twist["direction"];
-		var angle = twist["angle"];
-		var offset = twist["offset"];
-		var error = transformRMean + 1.0*transformRSigma; // TODO get error from data: match count | pair reprojection error sigma
+		var viewDataA = viewsData[0];
+		var viewDataB = viewsData[1];
+		var transformA = Matrix.loadFromObject(viewDataA["transform"]);
+		var transformB = Matrix.loadFromObject(viewDataB["transform"]);
+		var relativeAtoB = R3D.relativeTransformMatrix(transformA,transformB);
+		var errorAB = transformRMean + 1.0*transformRSigma;
+// console.log(transformA+"");
+// console.log(transformB+"");
+// console.log(relativeAtoB+"");
 		var indexA = tableViewIDToIndex[viewA.id()+""];
 		var indexB = tableViewIDToIndex[viewB.id()+""];
-		edgesTranslate.push([indexA,indexB, offset, error]);
-		edgesRotate.push([indexA,indexB, {"direction":dir, "angle":angle}, error]);
+		var indexMin = Math.min(indexA,indexB);
+		var indexMax = Math.max(indexA,indexB);
+		indexA = indexMin;
+		indexB = indexMax-indexMin-1;
+		relativePairs[indexA][indexB] = relativeAtoB;
+		errorPairs[indexA][indexB] = errorAB;
 	}
-	// console.log(edgesTranslate);
-	// console.log(edgesRotate);
-	var result = R3D.optiumGraphLocation3D(edgesTranslate);
-	var locations = result["absolute"];
-	// console.log("locations");
-	// console.log(locations);
-	//
-	var results = R3D.optiumGraphAngle3D(edgesRotate);
-	var rotations = results["absolute"];
-	// console.log("rotations");
-	// console.log(rotations);
-	//
-	var transforms = [];
-	for(var i=0; i<locations.length; ++i){
-		var location = locations[i];
-		var rotation = rotations[i];
-		var transform = Code.Matrix3DFromVectorTwist(location, rotation);
-		transforms[i] = transform;
-		// console.log(transform+"");
-	}
-	//
-	// turn into compiled single grouping
-	var matches = [];
-	// for(var i=0; i<pairs.length; ++i){
-	// 	var pair = pairs[i];
-	// 	// keep matches between views but dont assign absolute positions ?
-	// }
-	// for(var i=0; i<views.length; ++i){
-	// 	var view = views[i];
-	// 	//
-	// }
+	// get result
+	var result = R3D.absoluteOrientationsFromRelativeOrientations(relativePairs, errorPairs);
+	var transforms = result["absolute"];
+	console.log(transforms);
+
 	//
 	var timestampNow = Code.getTimeStampFromMilliseconds();
 	var yaml = new YAML();
@@ -6989,7 +6969,6 @@ console.log("ERROR: "+transformRMean+" * "+transformRSigma+" @ "+transformMatche
 	console.log(maxResolutions);
 
 	// views
-	console.log(locations);
 	console.log(tableViewIDToIndex);
 	yaml.writeArrayStart("views");
 	for(var i=0; i<views.length; ++i){
@@ -7098,13 +7077,13 @@ console.log("ERROR: "+transformRMean+" * "+transformRSigma+" @ "+transformMatche
 	var str = yaml.toString();
 	// console.log(str);
 
+
 	// proceed to optimizing step
 	console.log("CALCULATED OPTIMUM STARTING ORIENTATIONS");
 	this.calculateGlobalOrientationNonlinear(str);
 
-
 	/*
-	// SAVE
+	// SAVE --- before actual calculation ?
 	var self = this;
 	var fxnZ = function(){
 		console.log("saved BA Init");
@@ -8010,6 +7989,7 @@ var completeFxn = function(){
 	this.saveBundleAdjust(str, fxnZ, this);
 	*/
 }
+console.log(world);
 
 world.solve(completeFxn, this);
 return;
