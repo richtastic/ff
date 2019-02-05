@@ -318,8 +318,52 @@ https://cloud.google.com/appengine/docs/nodejs/
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+- TEST INITIALIZATION OF 3+ MATRICES TO SEE IF GOOD ESTIMATE?
+	=> OPTIMIZED CALCULATION IS BAD WHEN ROTATION & TRANSLATION COMBINED
+		=> visualize components to find why not working
+
+
+=> CHECK THAT ARBIRARY ORDER OF TWISTS HAS SAME OUTCOME
+
+1) trans(AB) == Bo - Ao ?
+2) mat.inv = r3d.caminv ?
+
+
+check what matrix and direction is used for camera in visualizer
+	=> inverse + 0,0,1
+
+
+COMPARE MANUAL LOCATIONS / TRANSFORMS TO TEST BED
+
+
+NEED TO VISUALIZE ALGORITHM IN 3D TO BE SURE IT IS OPTIMIZING
+
+
+INVERSE IN
+=> OPERATION
+INVERSE OUT
+
+
+--- keep F from previous calcs
+	=> relative.yaml needs to save F
+		-> each view pair has entry
+		setupModel3DProjectManager
+		projectBALoad
+
+=> IMPORT
+
+
+
+=> update all up.left/right/center calculations with simple row/col vector grabbing
+
+
+- should F be derived from R?
+
 
 PAIRS: error goes up each iteration
+	- different error metric (see if same as transform calculation)
+	-
+
 GROUPS: F error are very high after deriving from R
 		- should these be independent ?
 		- should these have a FWD/BACK component (iterate)?
@@ -327,7 +371,7 @@ GROUPS: F error are very high after deriving from R
 	- need to do full BA
 
 
-
+SUBSTITUTE BACK IN: inverseCameraMatrix
 
 => WAYS TO SPREAD THE ERROR IN A BUNDLE AGJUST OF JUST CAMERAS:
 	PAIRWISE:

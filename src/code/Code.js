@@ -2702,9 +2702,25 @@ Code.averageAngleVector2D = function(vectors, percents){ // vectors assumed nonz
 	}
 	return total;
 }
+Code.twistIdentity = function(){
+	return {"direction":new V3D(0,0,1), "angle":0};
+}
+Code.twistCopy = function(twist){
+	return {"direction":twist["direction"].copy(), "angle":twist["angle"]};
+}
+Code.twistInvert = function(value){
+	var diffDir = Code.subAngleVector3D(V3D.DIRZ,value["direction"]);
+	return {"direction":diffDir, "angle":-value["angle"]};
+}
+Code.addTwistVector3D = function(valueA,valueB){
+	var sumDir = Code.addAngleVector3D(valueA["direction"],valueB["direction"]);
+	var sumAng = Code.angleZeroTwoPi(valueA["angle"]+valueB["angle"]);
+	var sum = {"direction":sumDir, "angle":sumAng};
+	return sum;
+}
 Code.diffTwistVector3D = function(valueA,valueB){
 	var diffDir = Code.subAngleVector3D(valueA["direction"],valueB["direction"]);
-	var diffAng = Code.angleZeroTwoPi(valueA["angle"]-valueB["angle"]);
+	var diffAng = -V2D.angleDirection(new V2D(1,0).rotate(valueA["angle"]),new V2D(1,0).rotate(valueB["angle"]));
 	var diff = {"direction":diffDir, "angle":diffAng};
 	return diff;
 }
@@ -2718,7 +2734,7 @@ Code._opAngleVector3D = function(vectorA, vectorB, mag){ // assume Z = default l
 	var vectorC = vectorA.copy();
 	var crossB = V3D.cross(V3D.DIRZ,vectorB);
 	var angleB = V3D.angle(V3D.DIRZ,vectorB);
-	if(angleB>0 && crossB.length()>0){
+	if(crossB.length()>0){
 		crossB.norm();
 		V3D.rotateAngle(vectorC,vectorC,crossB,angleB*mag);
 	}
@@ -2811,8 +2827,11 @@ Code.Matrix3DFromVectorTwist = function(location, rotation){
 		if(attitude.length()>0){
 			transform.rotateVector(attitude, angle);
 		}
+		// console.log("BEFORE: \n"+transform);
 		transform.translate(location.x,location.y,location.z);
+		// console.log(" AFTER: \n"+transform);
 	transform = Matrix3D.matrixFromMatrix3D(transform);
+	// console.log("OUT: \n"+transform);
 	return transform;
 }
 Code.averageQuaternions = function(quaternions, percents){

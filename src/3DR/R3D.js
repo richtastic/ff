@@ -1072,10 +1072,9 @@ R3D.reprojectionErrorSingle = function(p3D, pA, cameraA, Ka){ // SINGLE CAMERA R
 R3D.inverseCameraMatrix = function(P){
 	var R = P.getSubMatrix(0,0,3,3);
 	var t = P.getSubMatrix(0,3,3,1);
+	R = Matrix.transpose(R); // inverse
+	t = Matrix.mult(R,t);
 	t.scale(-1);
-//	console.log(R+"")
-	//R = Matrix.transpose(R); // inverse
-	R = Matrix.inverse(R);
 	P = R.copy().appendColFromArray(t.toArray()).appendRowFromArray([0,0,0,1]);
 	return P;
 }
@@ -4234,7 +4233,7 @@ R3D.cameraExtrinsicRANSACFromPointsAutomated = function(pointsA,pointsB, Ka,Kb,K
 	var matches = null;
 	var percent = 0;
 	var previousResult = null;
-	Code.printMatlabArray(averages);
+	// Code.printMatlabArray(averages);
 	do{
 		previousResult = result;
 		result = R3D.cameraExtrinsicRANSACFromPoints(pointsA,pointsB,Ka,Kb,KaInv,KbInv, inlierPixelError);
@@ -4287,16 +4286,14 @@ R3D.cameraExtrinsicRANSACFromPoints = function(pointsAIn,pointsBIn, Ka,Kb,KaInv,
 			pointsA.push(pointsAIn[index]);
 			pointsB.push(pointsBIn[index]);
 		}
-		var F = R3D.fundamentalFromUnnormalized(pointsA,pointsB);
+		var F = R3D.fundamentalFromUnnormalized(pointsA,pointsB); // also does nonlinear
 		if(!F){
-			console.log("cameraExtrinsicRANSACFromPoints - transformFromFundamental - FAIL - F");
+			// console.log("cameraExtrinsicRANSACFromPoints - transformFromFundamental - FAIL - F");
 			return null;
 		}
-		// SHOULD ?
-		// F = R3D.fundamentalMatrixNonlinear(F,pointsA,pointsB);
 		P = R3D.transformFromFundamental(pointsA,pointsB, F, KA,KAInv,KB,KBInv, Pidentity, true);
 		if(!P){
-			console.log("cameraExtrinsicRANSACFromPoints - transformFromFundamental - FAIL - P");
+			// console.log("cameraExtrinsicRANSACFromPoints - transformFromFundamental - FAIL - P");
 			return null;
 		}
 		var totalError = 0;
@@ -4386,7 +4383,7 @@ R3D.generalRANSAC = function(args, fxnModel,fxnInlier, populationSize,sampleSize
 			if(model){
 				var error = model["error"];
 				if(bestInliers===null || inliers.length>bestInliers.length || (inliers.length==bestInliers.length && error<bestError)){
-					console.log(i+" === "+inliers.length+" / "+populationSize+" ("+(inliers.length/populationSize)+")");
+					// console.log(i+" === "+inliers.length+" / "+populationSize+" ("+(inliers.length/populationSize)+")");
 					bestInliers = inliers;
 					bestError = error;
 					bestModel = model;
@@ -9998,10 +9995,10 @@ R3D.optimalFeatureMatchesInImages = function(imageMatrixA,imageMatrixB, features
 		matchScores.push(value);
 	}
 
-	matchScores = matchScores.sort(function(a,b){
-		return a < b ? -1 : 1;
-	});
-	Code.printMatlabArray(matchScores,"x");
+	// matchScores = matchScores.sort(function(a,b){
+	// 	return a < b ? -1 : 1;
+	// });
+	// Code.printMatlabArray(matchScores,"x");
 
 	matchSADs = matchSADs.sort(function(a,b){
 		return a[0] < b[0] ? -1 : 1;
@@ -20914,7 +20911,7 @@ R3D._optiumGraph3D = function(edges,isAngles){ // edges: [indexA,indexB,value,er
 			var totalError = 0;
 			var value = null;
 			if(isAngles){
-				value = {"direction":new V3D(0,0,1), "angle": 0};
+				value = Code.twistIdentity();
 			}else{
 				value = new V3D(0,0,0);
 			}
@@ -20922,6 +20919,7 @@ R3D._optiumGraph3D = function(edges,isAngles){ // edges: [indexA,indexB,value,er
 				var edge = pathEdges[k];
 				var data = edge.data();
 				var join = data["value"];
+				var error = data["error"];
 				totalError += error*error;
 				var opposite = edge.opposite(vertex);
 				if(isAngles){ // average direction + twist
@@ -20929,14 +20927,13 @@ R3D._optiumGraph3D = function(edges,isAngles){ // edges: [indexA,indexB,value,er
 					var sumDir = null;
 					var sumTwist = null;
 					if(edge.A()==vertex){
-						sumDir = Code.addAngleVector3D(value["direction"],join["direction"]);
-						sumTwist = Code.angleZeroTwoPi(value["angle"]+join["angle"]);
+						// console.log("SAME")
+						value = Code.addTwistVector3D(value, join);
 					}else{
-						sumDir = Code.subAngleVector3D(value["direction"],join["direction"]);
-						sumTwist = Code.angleZeroTwoPi(value["angle"]-join["angle"]);
+						// console.log("FLIP")
+						var inv = Code.twistInvert(join);
+						value = Code.addTwistVector3D(value, inv);
 					}
-					value["direction"] = sumDir;
-					value["angle"] = sumTwist;
 				}else{
 					if(edge.A()==vertex){
 						value.add(join);
@@ -20947,7 +20944,6 @@ R3D._optiumGraph3D = function(edges,isAngles){ // edges: [indexA,indexB,value,er
 				vertex = opposite;
 			}
 			totalError = Math.sqrt(totalError);
-			// console.log(" - "+value+" @ "+totalError);
 			pathGroup.push({"value":value, "error":totalError});
 		}
 		allPaths.push(pathGroup);
@@ -20955,7 +20951,6 @@ R3D._optiumGraph3D = function(edges,isAngles){ // edges: [indexA,indexB,value,er
 	// calculate paths
 	// console.log(allPaths)
 	var allValues = Code.newArrayArrays(vs.length);
-
 	for(var i=0; i<allPaths.length; ++i){
 		var pathGroup = allPaths[i];
 		for(var j=0; j<pathGroup.length; ++j){
@@ -20988,44 +20983,40 @@ R3D._optiumGraph3D = function(edges,isAngles){ // edges: [indexA,indexB,value,er
 			points.push(item["value"]);
 			errors.push(item["error"]);
 		}
+		var percents = Code.errorsToPercents(errors);
+		percents = percents["percents"];
 		var average = null;
 		if(isAngles){
 			var dirs3D = [];
 			var dirs2D = [];
 			for(var j=0; j<points.length; ++j){
 				var point = points[j];
+// console.log(point["direction"]);
 				dirs3D.push(point["direction"]);
 				var a2D = point["angle"];
 				var d2D = new V2D(1,0).rotate(a2D);
 				dirs2D.push(d2D);
 			}
-			// console.log(dirs3D);
-			// console.log(dirs2D);
-			var avgDir = Code.averageAngleVector3D(dirs3D); // TODO: percents ~ error
-			var avgAng = Code.averageAngleVector2D(dirs2D); //
+console.log(dirs3D);
+			var avgDir = Code.averageAngleVector3D(dirs3D,percents);
+			var avgAng = Code.averageAngleVector2D(dirs2D,percents);
 			avgAng = V2D.angleDirection(V2D.DIRX,avgAng);
 			average = {"direction":avgDir, "angle":avgAng};
-			// console.log(average);
 		}else{
-			var info = Code.combineErrorMeasurementsV3D(points,errors);
-			average = info["value"];
+			average = V3D.average(points,percents);
 		}
-		// var average = info["error"];
-		// console.log(average)
-		// console.log(average+"")
 		values[i] = average;
 	}
 	// nonlinear error minimize
+	/*
 	if(isAngles){
 		// normals:
-		// console.log("NORMAL MINIMIZE:");
 		var result = R3D._gdDirectionAngleTranslation3D(vs,es,values, 1);
 		var valuesDirections = result["values"];
 		// twists:
-		// console.log("TWIST MINIMIZE:");
 		var result = R3D._gdDirectionAngleTranslation3D(vs,es,values, 2);
 		var valuesTwists = result["values"];
-
+		// combine
 		values = [];
 		for(var i=0; i<valuesDirections.length; ++i){
 			var d = valuesDirections[i];
@@ -21036,8 +21027,7 @@ R3D._optiumGraph3D = function(edges,isAngles){ // edges: [indexA,indexB,value,er
 		var result = R3D._gdDirectionAngleTranslation3D(vs,es,values, 0);
 		values = result["values"];
 	}
-
-
+	*/
 	// create new edges
 	graph.kill();
 	var output = [];
@@ -21057,7 +21047,6 @@ R3D._optiumGraph3D = function(edges,isAngles){ // edges: [indexA,indexB,value,er
 		}
 		output[i] = [va,vb,diff,error];
 	}
-
 	return {"relative":output, "absolute":values};
 }
 R3D._gdDirectionAngleTranslation3D = function(vs,es,values, isAngles){
@@ -22231,9 +22220,9 @@ if(i>130){
 		// do another score rejection if too bad ? Dense.SAD SCORE ?
 	}
 
-console.log(errors);
-console.log(results);
-Code.printMatlabArray(errors);
+// console.log(errors);
+// console.log(results);
+// Code.printMatlabArray(errors);
 var valueFxn = function(a){
 	var value = a["error"];
 	//return Math.exp(value); // more normal looking
@@ -24061,8 +24050,8 @@ R3D.absoluteOrientationsFromRelativeOrientations = function(relativePairs, error
 		var pairs = relativePairs[i];
 		for(var j=0; j<pairs.length; ++j){
 			var relative = pairs[j];
-			console.log(relative);
 			if(relative){
+// relative = Matrix.inverse(relative);
 				var twist = Code.vectorTwistFromMatrix3D(relative);
 				var dir = twist["direction"];
 				var angle = twist["angle"];
@@ -24070,16 +24059,28 @@ R3D.absoluteOrientationsFromRelativeOrientations = function(relativePairs, error
 				var error = errorPairs ? errorPairs[i][j] : 1.0; // TODO WHICH ERROR TO USE? : match count | pair reprojection error sigma
 				var indexA = i;
 				var indexB = j+i+1;
+				console.log("offset: "+offset+" @ "+error);
+// offset.scale(-1);
 				edgesTranslate.push([indexA,indexB, offset, error]);
 				edgesRotate.push([indexA,indexB, {"direction":dir, "angle":angle}, error]);
 			}
 		}
 	}
+	// console.log(edgesTranslate);
+	// console.log(edgesRotate);
 	// solve optimum position + orientation
 	var result = R3D.optiumGraphLocation3D(edgesTranslate);
+console.log(result)
 	var locations = result["absolute"];
+for(var i=0; i<locations.length; ++i){
+console.log(" "+i+" = "+locations[i]+"");
+}
 	var result = R3D.optiumGraphAngle3D(edgesRotate);
 	var rotations = result["absolute"];
+for(var i=0; i<rotations.length; ++i){
+	console.log(rotations[i]);
+console.log(" "+i+" = "+rotations[i]+"");
+}
 	// turn twists into transforms
 	var transforms = [];
 	for(var i=0; i<locations.length; ++i){
@@ -26339,7 +26340,8 @@ R3D.cameraMatricesFromF
 R3D.relativeTransformMatrix = function(absA,invA,absB,invB){
 	if(arguments.length==2){ // assume forward
 		absB = invA;
-		invA = R3D.inverseCameraMatrix(absA);
+		// invA = R3D.inverseCameraMatrix(absA);
+		invA = Matrix.inverse(absA);
 	}
 	var relativeAtoB = Matrix.mult(invA,absB);
 	return relativeAtoB;

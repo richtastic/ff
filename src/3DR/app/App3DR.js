@@ -918,62 +918,6 @@ App3DR.prototype._projectBALoaded = function(object, data){
 		object = object[0];
 	}
 
-
-
-
-
-
-
-
-
-
-
-
-/*
-console.log("CONVERT PROJECT FILE TO MATCH FILE:");
-	var yaml = new YAML();
-	yaml.writeBlank();
-
-	// OBJECTS
-	var points = object["points"];
-	console.log(points.length);
-	yaml.writeNumber("count", points.length);
-	yaml.writeArrayStart("matches");
-	for(var i=0; i<points.length; ++i){
-		var v = points[i];
-		var views = v["views"];
-		var a = views[0];
-		var b = views[1];
-			var frX = a["x"];
-			var frY = a["y"];
-			var toX = b["x"];
-			var toY = b["y"];
-		yaml.writeObjectStart();
-			yaml.writeObjectStart("fr");
-				yaml.writeNumber("i", 0);
-				yaml.writeNumber("x", frX);
-				yaml.writeNumber("y", frY);
-				yaml.writeNumber("s", 1.0);
-				yaml.writeNumber("a", 0.0);
-			yaml.writeObjectEnd();
-			yaml.writeObjectStart("to");
-				yaml.writeNumber("i", 0);
-				yaml.writeNumber("x", toX);
-				yaml.writeNumber("y", toY);
-				yaml.writeNumber("s", 1.0);
-				yaml.writeNumber("a", 0.0);
-			yaml.writeObjectEnd();
-		yaml.writeObjectEnd();
-	}
-	yaml.writeArrayEnd();
-	var matches = object["matches"];
-	console.log(matches);
-	var str = yaml.toString();
-	console.log(str);
-
-throw "?"
-*/
-
 	var cameras = object["cameras"];
 	var views = object["views"];
 	var points = object["points"];
@@ -1050,10 +994,11 @@ var projectViews = manager.views();
 console.log(v)
 		var transform = v["transform"];
 			transform = new Matrix().loadFromObject(transform);
-
+// var inverse = Matrix.inverse(transform);
 console.log(transform);
 var o1 = new V3D(0,0,0);
 var z1 = new V3D(0,0,1);
+// var z1 = new V3D(0,0,-1);
 var o2 = transform.multV3DtoV3D(o1);
 var z2 = transform.multV3DtoV3D(z1);
 z2.sub(o2);
@@ -3523,6 +3468,7 @@ App3DR.App.Model3D.prototype._bindAfterTexturesLoaded = function(){
 		var view = views[i];
 		var transform = view["transform"];
 // WHY INVERSE?
+// FROM EXTRINIC TO CAMERA MATRIX
 transform = Matrix.inverse(transform);
 		var tx = transform.get(0,3);
 		var ty = transform.get(1,3);
@@ -3531,6 +3477,7 @@ transform = Matrix.inverse(transform);
 		var x = new V3D(1,0,0);
 		var y = new V3D(0,1,0);
 		var z = new V3D(0,0,1);
+		// var z = new V3D(0,0,-1);
 		o = transform.multV3DtoV3D(o);
 		x = transform.multV3DtoV3D(x);
 		y = transform.multV3DtoV3D(y);
@@ -3712,14 +3659,14 @@ App3DR.App.Model3D.prototype.setLines = function(input){
 	var points = [];
 	var colors = [];
 	for(var i=0; i<input.length; ++i){
-break;
+// break;
 		var v = input[i];
 		points.push(v.x,v.y,v.z);
 // NEGATIVE Z:
 // points.push(v.x,v.y,-v.z);
-		// colors.push(1.0,1.0,1.0,0.03);
-		// colors.push(0.1,0.1,0.1,0.02);
-		colors.push(0.1,0.1,0.1,0.005);
+		// colors.push(1.0,1.0,1.0,0.05);
+		colors.push(0.1,0.1,0.1,0.02);
+		// colors.push(0.1,0.1,0.1,0.005);
 	}
 	// create objects
 	this._stage3D.selectProgram(2);
@@ -6837,10 +6784,13 @@ App3DR.ProjectManager.prototype._calculateGlobalOrientationInit2 = function(call
 		errorPairs[i] = Code.newArrayNulls(viewCount-i-1);
 	}
 	// get relative transform+error
+
 	for(var i=0; i<pairs.length; ++i){
 		var pair = pairs[i];
 		var viewA = pair.viewA();
 		var viewB = pair.viewB();
+// console.log(pair);
+// throw "?"
 		var relativeData = pair.relativeData();
 var transformsSingle = relativeData["transforms"][0];
 var transformMatches = transformsSingle["matches"];
@@ -6852,8 +6802,20 @@ console.log("ERROR: "+transformRMean+" * "+transformRSigma+" @ "+transformMatche
 		var viewDataB = viewsData[1];
 		var transformA = Matrix.loadFromObject(viewDataA["transform"]);
 		var transformB = Matrix.loadFromObject(viewDataB["transform"]);
+
+// // extrinsic to camera
+// var transformA = Matrix.inverse(transformA);
+// var transformB = Matrix.inverse(transformB);
 		var relativeAtoB = R3D.relativeTransformMatrix(transformA,transformB);
+// to camera
+// var inverseA = R3D.inverseCameraMatrix(transformA);
+// var inverseB = R3D.inverseCameraMatrix(transformB);
+var inverseA = Matrix.inverse(transformA);
+var inverseB = Matrix.inverse(transformB);
+// var relativeAtoB = R3D.relativeTransformMatrix(inverseA,inverseB);
+
 		var errorAB = transformRMean + 1.0*transformRSigma;
+errorAB = 1.0;
 // console.log(transformA+"");
 // console.log(transformB+"");
 // console.log(relativeAtoB+"");
@@ -6861,17 +6823,76 @@ console.log("ERROR: "+transformRMean+" * "+transformRSigma+" @ "+transformMatche
 		var indexB = tableViewIDToIndex[viewB.id()+""];
 		var indexMin = Math.min(indexA,indexB);
 		var indexMax = Math.max(indexA,indexB);
+		// console.log("RELATIVE: "+indexA+"("+indexMin+") - "+indexB+" ("+indexMax+") = "+errorAB);
+		if(indexA==indexMin){
+			// forward
+		}else{
+			console.log("FLIP DIRECTION ....");
+			relativeAtoB = Matrix.inverse(relativeAtoB);
+			// var relativeAtoB = R3D.relativeTransformMatrix(transformB,transformA);
+		}
 		indexA = indexMin;
 		indexB = indexMax-indexMin-1;
 		relativePairs[indexA][indexB] = relativeAtoB;
 		errorPairs[indexA][indexB] = errorAB;
+console.log(""+relativeAtoB.toArray());
 	}
 	// get result
 	var result = R3D.absoluteOrientationsFromRelativeOrientations(relativePairs, errorPairs);
+	console.log(result);
 	var transforms = result["absolute"];
-	console.log(transforms);
 
-	//
+console.log(relativePairs);
+console.log(transforms);
+
+
+
+
+for(var i=0; i<transforms.length; ++i){
+	var transform = transforms[i];
+	var inverse = Matrix.inverse(transform);
+	// var matrix = inverse;
+	var matrix = transform;
+	var center = matrix.multV3DtoV3D(new V3D(0,0,0));
+	console.log("CANERA CENTER 1: "+center);
+}
+
+
+
+/*
+// OVERRIDE KNOWN 3
+var m01 = relativePairs[0][0];
+var m02 = relativePairs[0][1];
+var m12 = relativePairs[1][0];
+
+var m0 = new Matrix(4,4).identity();
+var m1 = Matrix.mult(m01,m0);
+// var m2 = Matrix.mult(m02,m0);
+var m2 = Matrix.mult(m12,m01);
+transforms = [m0,m1,m2];
+
+// throw "..."
+// to extrinsic
+for(var i=0; i<transforms.length; ++i){
+	var transform = transforms[i];
+	// var inverse = R3D.inverseCameraMatrix(transform);
+	var inverse = Matrix.inverse(transform);
+	// transforms[i] = inverse;
+}
+
+*/
+
+for(var i=0; i<transforms.length; ++i){
+	var transform = transforms[i];
+	var inverse = Matrix.inverse(transform);
+	// var matrix = inverse;
+	var matrix = transform;
+	var center = matrix.multV3DtoV3D(new V3D(0,0,0));
+	console.log("CANERA CENTER 2: "+center);
+}
+
+// throw "HERE";
+
 	var timestampNow = Code.getTimeStampFromMilliseconds();
 	var yaml = new YAML();
 	yaml.writeComment("BA Model Grouping");
@@ -6890,6 +6911,7 @@ console.log("ERROR: "+transformRMean+" * "+transformRSigma+" @ "+transformMatche
 			allCameras[camera["id"]] = camera;
 		}
 	}
+
 	// console.log(allCameras);
 	// yaml.writeComment("3DR Features File 0");
 	//

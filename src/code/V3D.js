@@ -284,6 +284,9 @@ V3D.prototype.wiggle = function(a,b,c){
 	this.z += (Math.random()-0.5)*c;
 	return this;
 }
+V3D.prototype.random = function(a,b,c){
+	return this.wiggle(a,b,c);
+}
 V3D.prototype.toArray = function(){
 	return Code.newArray(this.x,this.y,this.z);
 }
@@ -399,5 +402,3 @@ V3D.extremaFromArray = function(pointList){
 	var center = size.copy().scale(0.5).add(minPoint);
 	return {"min":minPoint, "max":maxPoint, "size":size, "mean":mean, "center":center };
 }
-
-

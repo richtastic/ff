@@ -504,6 +504,11 @@ Matrix.scale2D = function(a){
 //
 Matrix._transformTemp3D = new Matrix(4,4);
 Matrix.transform3DTranslate = function(a,tX,tY,tZ){
+	if(tZ===undefined){
+		tZ = tX.z;
+		tY = tX.y;
+		tX = tX.x;
+	}
 	var b = Matrix._transformTemp3D.setFromArray([1.0,0.0,0.0,tX, 0.0,1.0,0.0,tY, 0.0,0.0,1.0,tZ, 0.0,0.0,0.0,1.0]);
 	return Matrix.mult(b,a);
 }
