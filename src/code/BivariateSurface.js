@@ -80,7 +80,7 @@ BivariateSurface.prototype.fromPoints = function(points,degree, weightPoint,h){
 	bi = new Matrix(coeff,1);
 	biT = new Matrix(1,coeff);
 	b = new Matrix(coeff,1);
-	// 
+	//
 	len = points.length;
 	for(i=0;i<len;++i){
 		point = points[i];
@@ -232,11 +232,3 @@ BivariateSurface.prototype.curvatureAt = function(x1,y1){
 	unitNormal.scale(-1.0); // flip from direction of curvature to direction of exterior
 	return {min:curveMin, max:curveMax, directionMax:frameEigA, directionMin:frameEigB, normal:unitNormal};
 }
-
-
-
-
-
-
-
-

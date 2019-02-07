@@ -234,7 +234,12 @@ V3D.prototype.fromArray = function(a){
 	this.set(a[0],a[1],a[2]);
 	return this;
 }
-V3D.prototype.length = function(){
+V3D.prototype.length = function(l){
+	if(l!==undefined){
+		this.norm();
+		this.scale(l);
+		return l;
+	}
 	return Math.sqrt(this.x*this.x+this.y*this.y+this.z*this.z);
 }
 V3D.prototype.lengthSquare = function(){

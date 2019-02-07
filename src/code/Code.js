@@ -2702,6 +2702,56 @@ Code.averageAngleVector2D = function(vectors, percents){ // vectors assumed nonz
 	}
 	return total;
 }
+
+
+
+
+Code.twistAdd = function(a,b){
+	var direction = a["direction"].copy();
+	var addition = b["direction"];
+	var cross = V3D.cross(V3D.DIRZ,addition);
+	var angle = V3D.angle(V3D.DIRZ,addition);
+		console.log("   "+cross+" @ "+Code.degrees(angle));
+	if(cross.length()>0){
+		cross.norm();
+		V3D.rotateAngle(direction,direction,cross,angle);
+	}
+	// var sumDir = Code.addAngleVector3D(valueA["direction"],valueB["direction"]);
+	var angle = Code.angleZeroTwoPi(a["angle"]+b["angle"]);
+	var sum = {"direction":direction, "angle":angle};
+	return sum;
+}
+Code.twistInverse = function(value){
+	var direction = value["direction"].copy();
+	var cross = V3D.cross(V3D.DIRZ,direction);
+	var angle = V3D.angle(V3D.DIRZ,direction);
+	if(cross.length()>0){
+		cross.norm();
+		V3D.rotateAngle(direction,direction,cross,-2*angle);
+	}
+	// var diffDir = Code.subAngleVector3D(V3D.DIRZ,value["direction"]);
+	return {"direction":direction, "angle":-value["angle"]};
+}
+Code.twistRelative = function(a,b){
+	var aDir = a["direction"];
+	var bDir = b["direction"];
+	var aAng = a["angle"];
+	var bAng = b["angle"];
+	var crossAB = V3D.cross(aDir,bDir);
+		crossAB.norm();
+	var angleAB = V3D.angle(aDir,bDir);
+		console.log("   "+crossAB+" @ "+Code.degrees(angleAB));
+	var dir = new V3D(0,0,1);
+		dir = V3D.rotateAngle(dir,crossAB,angleAB);
+	var ang = Code.angleZeroTwoPi(bAng-aAng);
+console.log(V3D.DIRZ+"")
+		console.log("   "+V3D.cross(V3D.DIRZ,dir)+" @ "+Code.degrees(V3D.angle(V3D.DIRZ,dir)));
+	// {"normal":dir, "twist":angleAB, "angle":ang};
+	throw "yup";
+	return {"direction":dir, "angle":ang};
+}
+
+
 Code.twistIdentity = function(){
 	return {"direction":new V3D(0,0,1), "angle":0};
 }
@@ -2709,9 +2759,11 @@ Code.twistCopy = function(twist){
 	return {"direction":twist["direction"].copy(), "angle":twist["angle"]};
 }
 Code.twistInvert = function(value){
-	var diffDir = Code.subAngleVector3D(V3D.DIRZ,value["direction"]);
+	throw "...";
+	var diffDir = Code._opAngleVector3D(V3D.DIRZ,value["direction"] -2);
 	return {"direction":diffDir, "angle":-value["angle"]};
 }
+
 Code.addTwistVector3D = function(valueA,valueB){
 	var sumDir = Code.addAngleVector3D(valueA["direction"],valueB["direction"]);
 	var sumAng = Code.angleZeroTwoPi(valueA["angle"]+valueB["angle"]);
@@ -2792,6 +2844,20 @@ Code.averageVectorTwist3D = function(twists, percents){
 	var average = {"direction":direction, "angle":angle, "offset":location};
 	return average;
 }
+Code.vectorTwistFromQuaternion = function(q){
+	var o = new V3D(0,0,0);
+	var x = new V3D(1,0,0);
+	var y = new V3D(0,1,0);
+	var z = new V3D(0,0,1);
+	// q.qMulPoint(o,o);
+	q.qMulPoint(x,x);
+	q.qMulPoint(y,y);
+	q.qMulPoint(z,z);
+	// x.sub(o).norm();
+	// y.sub(o).norm();
+	// z.sub(o).norm();
+	return Code._vectorTwistFromCanonical(o,x,y,z);
+}
 Code.vectorTwistFromMatrix3D = function(matrix){
 	var o = new V3D(0,0,0);
 	var x = new V3D(1,0,0);
@@ -2804,6 +2870,9 @@ Code.vectorTwistFromMatrix3D = function(matrix){
 	x.sub(o).norm();
 	y.sub(o).norm();
 	z.sub(o).norm();
+	return Code._vectorTwistFromCanonical(o,x,y,z);
+}
+Code._vectorTwistFromCanonical = function(o,x,y,z){
 	// find the angle Z has made with Z
 	var dir = V3D.cross(V3D.DIRZ,z).norm();
 	var ang = V3D.angle(V3D.DIRZ,z);
@@ -2814,7 +2883,7 @@ Code.vectorTwistFromMatrix3D = function(matrix){
 	var angleX = V3D.angle(V3D.DIRX,x);
 	var angleY = V3D.angle(V3D.DIRY,y);
 	var angle = angleX; // TODO: average small error ?
-	var direction = z;
+	var direction = z.copy();
 	return {"direction":direction, "angle":angle, "offset":o};
 }
 Code.Matrix3DFromVectorTwist = function(location, rotation){
@@ -2884,6 +2953,50 @@ Code.averageQuaternions = function(quaternions, percents){
 	console.log(result.length())
 	return result;
 	*/
+}
+
+Code.rotationMatrixToQuaternion = function(a00,a01,a02, a10,a11,a12, a20,a21,a22){ // assuming top 3x3 of rotation matrix
+	if(a01===undefined){ // array
+		a22 = a00[8];
+		a21 = a00[7];
+		a20 = a00[6];
+		a12 = a00[5];
+		a11 = a00[4];
+		a10 = a00[3];
+		a02 = a00[2];
+		a01 = a00[1];
+		a00 = a00[0];
+	} // else as-is
+	var trace = a00 + a11 + a22;
+	var w, x, y, z, s;
+	if(trace>0) {
+		s = 0.5 / Math.sqrt(trace + 1.0);
+		w = 0.25 / s;
+		x = (a21-a12) * s;
+		y = (a02-a20) * s;
+		z = (a10-a01) * s;
+	}else{
+		if(a00>a11 && a00>a22){
+			s = 2.0 * Math.sqrt(1.0+a00-a11-a22);
+			w = (a21-a12) / s;
+			x = 0.25 * s;
+			y = (a01+a10) / s;
+			z = (a02+a20) / s;
+		}else if(a11>a22){
+			s = 2.0 * Math.sqrt(1.0+a11-a00-a22);
+			w = (a02-a20) / s;
+			x = (a01+a10) / s;
+			y = 0.25 * s;
+			z = (a12+a21) / s;
+		}else{
+			s = 2.0 * Math.sqrt(1.0+a22-a00-a11);
+			w = (a10-a01) / s;
+			x = (a02+a20) / s;
+			y = (a12+a21) / s;
+			z = 0.25 * s;
+		}
+	}
+	return new V4D(x,y,z,w);
 }
 Code.averageMatrices3D = function(matrixes, percents){ // average location offset, twist, orientation of matrices
 	var twists = [];

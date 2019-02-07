@@ -165,39 +165,7 @@ Matrix3D.prototype.toTranslation = function(v){
 }
 
 Matrix3D.prototype.toQuaternion = function(){
-	var a00 = this.a, a01 = this.b, a02 = this.c;
-	var a10 = this.e, a11 = this.f, a12 = this.g;
-	var a20 = this.i, a21 = this.j, a22 = this.k;
-	var trace = a00 + a11 + a22;
-	var w, x, y, z, s;
-	if(trace>0) {
-		s = 0.5 / Math.sqrt(trace + 1.0);
-		w = 0.25 / s;
-		x = (a21-a12) * s;
-		y = (a02-a20) * s;
-		z = (a10-a01) * s;
-	}else{
-		if(a00>a11 && a00>a22){
-			s = 2.0 * Math.sqrt(1.0+a00-a11-a22);
-			w = (a21-a12) / s;
-			x = 0.25 * s;
-			y = (a01+a10) / s;
-			z = (a02+a20) / s;
-		}else if(a11>a22){
-			s = 2.0 * Math.sqrt(1.0+a11-a00-a22);
-			w = (a02-a20) / s;
-			x = (a01+a10) / s;
-			y = 0.25 * s;
-			z = (a12+a21) / s;
-		}else{
-			s = 2.0 * Math.sqrt(1.0+a22-a00-a11);
-			w = (a10-a01) / s;
-			x = (a02+a20) / s;
-			y = (a12+a21) / s;
-			z = 0.25 * s;
-		}
-	}
-	return new V4D(x,y,z,w);
+	return Code.rotationMatrixToQuaternion(this.a,this.b,this.c,this.e,this.f,this.g,this.i,this.j,this.k);
 }
 Matrix3D.prototype.fromQuaternion = function(v){
 	V4D.qMatrix(this,v);
@@ -320,6 +288,9 @@ Matrix3D.prototype.multV3D = function(aV,bV){ // a = trans(b)
 	aV.x = ax;
 	return aV;
 }
+Matrix3D.prototype.multV3DtoV3D = function(aV,bV){
+	return this.multV3D(aV,bV);
+}
 Matrix3D.prototype.multV4D = function(aV,bV){ // a = trans(b)
 	if(bV===undefined){ bV = aV; aV = new V4D(); }
 	var ax = this.a*bV.x + this.b*bV.y + this.c*bV.z + this.d*bV.t;
@@ -359,7 +330,7 @@ Matrix3D.prototype.inverse = function(m){ // http://www.cg.info.hiroshima-cu.ac.
 	this.a = a; this.b = b; this.c = c; this.d = d; this.e = e; this.f = f; this.g = g; this.h = h; this.i = i; this.j = j; this.k = k; this.l = l;
 	return this;
 }
-Matrix3D.prototype.get = function(r,c){
+Matrix3D.prototype.get = function(r,c){ // TODO: faster implementation
 	var a = new Array(this.a,this.b,this.c,this.d,this.e,this.f,this.g,this.h,this.i,this.j,this.k,this.l);
 	if(r!==undefined){
 		return a[r*4+c];
@@ -392,7 +363,7 @@ Matrix3D.TEMP = new Matrix3D(); // external
 
 Matrix3D.matrix3DFromMatrix = function(mat){
 	var m3D = new Matrix3D();
-	m3D.set(mat.get(0,0),mat.get(0,1),mat.get(0,2),mat.get(0,3), 
+	m3D.set(mat.get(0,0),mat.get(0,1),mat.get(0,2),mat.get(0,3),
 			mat.get(1,0),mat.get(1,1),mat.get(1,2),mat.get(1,3),
 			mat.get(2,0),mat.get(2,1),mat.get(2,2),mat.get(2,3));
 	return m3D;
@@ -400,4 +371,3 @@ Matrix3D.matrix3DFromMatrix = function(mat){
 Matrix3D.matrixFromMatrix3D = function(mat){
 	return new Matrix(4,4).fromArray([mat.a,mat.b,mat.c,mat.d, mat.e,mat.f,mat.g,mat.h, mat.i,mat.j,mat.k,mat.l, 0,0,0,1]);
 }
-

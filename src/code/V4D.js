@@ -46,7 +46,7 @@ V4D.qDiv = function(c, a,b){ // c = a/b // non-unit
 	temp.qScale(1.0/temp.qLength());
 	return V4D.qMul(c,a,temp);
 }
-V4D.qMul = function(c, a,b){ // c = a*b // non-unit
+V4D.qMul = function(c, a,b){ // c = a*b // non-unit  == a x b
 	if(b===undefined){ b = a; a = c; c = new V4D(); }
 	var x = a.t*b.x + a.x*b.t + a.y*b.z - a.z*b.y;
 	var y = a.t*b.y - a.x*b.z + a.y*b.t + a.z*b.x;
@@ -71,6 +71,22 @@ V4D.qMatrix = function (m,q){
 		   (xy2+zt2), (tt-xx+yy-zz), (yz2-xt2), 0,
 		   (xz2-yt2), (yz2+xt2), (tt-xx-yy+zz), 0 );
 	return m;
+}
+V4D.qFromMatrix = function(m){
+	var array = [];
+	if(Code.isArray(m)){
+		array = m;
+	}else if(Code.isa(m,Matrix) || Code.isa(m,Matrix3D)){ // 3x3 or 4x4
+		for(var j=0; j<3; ++j){
+			for(var i=0; i<3; ++i){
+				array.push(m.get(j,i));
+			}
+		}
+	}else{
+		throw "?";
+	}
+	var q = Code.rotationMatrixToQuaternion(array);
+	return q;
 }
 V4D.prototype.eulerAngles = function(){ // x=[-pi,pi]  y=[-pi/2,-pi/2], z=[-pi,pi]
 	var m = new Matrix3D();
@@ -113,26 +129,59 @@ V4D.prototype.eulerAngles = function(){ // x=[-pi,pi]  y=[-pi/2,-pi/2], z=[-pi,p
 	}
 	return new V3D(x,y,z);
 }
+V4D.qIdentity = function(){
+	return new V4D().qIdentity();
+}
+V4D.prototype.qIdentity = function(){
+	this.qClear();
+	return this;
+}
+V4D.qEqual = function(a,b,eps){ // a ~ b || a ~ -b
+	if(eps===undefined){
+		eps = 1E-10;
+	}
+	var eqA = Math.abs(a.x-b.x)<eps && Math.abs(a.y-b.y)<eps && Math.abs(a.z-b.z)<eps && Math.abs(a.t-b.t)<eps;
+	if(eqA){
+		return true;
+	}
+	var eqB = Math.abs(a.x+b.x)<eps && Math.abs(a.y+b.y)<eps && Math.abs(a.z+b.z)<eps && Math.abs(a.t+b.t)<eps;
+	return eqB;
+}
 V4D.prototype.qClear = function(){ // init to identity
 	this.set(0,0,0,1);
 	return this;
 }
 V4D.prototype.qRotateDir = function(x,y,z, angle){ // quaternion version of vector twist by angle
-	if(angle===undefined){ // vector, angle
-		angle = y;
+	if(angle===undefined){ // fewer args
+		if(y===undefined){ // vector & length = angle
+			angle = x.length();
+		}else{ // vector, angle
+			angle = y;
+		}
 		z = x.z;
 		y = x.y;
 		x = x.x;
 	}
+	// make sure unit vector
+	var len = Math.sqrt(x*x + y*y + z*z);
+	if(len==0){
+		return null;
+	}
+	x /= len;
+	y /= len;
+	z /= len;
+	// fill out
 	angle *= 0.5;
 	var sin = Math.sin(angle);
 	this.x = x * sin;
 	this.y = y * sin;
 	this.z = z * sin;
 	this.t = Math.cos(angle);
+	this.qNorm(); // roundoff error
 	return this;
 }
 V4D.prototype.qRotation = function(angle){
+	throw "?";
 	angle *= 0.5;
 	var sin = Math.sin(angle);
 	this.x = this.x*sin;
@@ -142,25 +191,29 @@ V4D.prototype.qRotation = function(angle){
 }
 V4D.prototype.qNorm = function(){
 	dist = Math.sqrt(this.x*this.x+this.y*this.y+this.z*this.z+this.t*this.t);
-	if(dist==0){ return this; }
-	this.x /= dist; this.y /= dist; this.z /= dist; this.t /= dist;
+	if(dist!=0){
+		this.x /= dist; this.y /= dist; this.z /= dist; this.t /= dist;
+	}
 	return this;
 }
-// V4D.prototype.qDir = function(x,y,z){
-// 	this.x = x;
-// 	this.y = y;
-// 	this.z = z;
-// 	this.t = 0;
-// }
 V4D.prototype.qLength = function(){
 	return Math.sqrt(this.x*this.x+this.y*this.y+this.z*this.z+this.t*this.t);
+}
+V4D.prototype.qLengthSquare = function(){
+	return this.x*this.x+this.y*this.y+this.z*this.z+this.t*this.t;
 }
 V4D.prototype.qScale = function(s){
 	this.x *= s; this.y *= s; this.z *= s; this.t *= s;
 }
 V4D.prototype.qInverse = function(){ // flip rotation angle, keep direction
-	this.x = -this.x; this.y = -this.y; this.z = -this.z;
+	this.x = -this.x; this.y = -this.y; this.z = -this.z; // conj
+	// ASSUMING UNIT LENGTH ??? (save some operations)
+	var nrm = this.qLengthSquare();
+	this.qScale(1.0/nrm); // abs --- should be 1
 	return this;
+}
+V4D.prototype.qMulPoint = function(b, a){
+	return this.qRotatePoint(b,a);
 }
 V4D.prototype.qRotatePoint = function(b, a){ // b = a * q | assuming V3D
 	if(a===undefined){
@@ -184,6 +237,26 @@ V4D.prototype.qRotatePoint = function(b, a){ // b = a * q | assuming V3D
 	b.set(x,y,z);
 	return b;
 }
+// V4D.prototype.qRotatePoint = function(b, a){ // faster
+// 	if(a===undefined){
+// 		a = b;
+// 		b = new V3D();
+// 	}
+// 	var vec = [a.x,a.y,a.z];
+// 	var q = [this.t,this.x,this.y,this.z];
+// 	// var rot = function (vec, q) {
+//     var qv0 = -q[1] * vec[0] - q[2] * vec[1] - q[3] * vec[2];
+//     var qv1 =  q[0] * vec[0] + q[2] * vec[2] - q[3] * vec[1];
+//     var qv2 =  q[0] * vec[1] + q[3] * vec[0] - q[1] * vec[2];
+//     var qv3 =  q[0] * vec[2] + q[1] * vec[1] - q[2] * vec[0];
+//     var r1 = qv0 * -q[1] + qv1 * q[0] + qv2 * -q[3] - qv3 * -q[2];
+//     var r2 = qv0 * -q[2] + qv2 * q[0] + qv3 * -q[1] - qv1 * -q[3];
+//     var r3 = qv0 * -q[3] + qv3 * q[0] + qv1 * -q[2] - qv2 * -q[1];
+//     b.x = r1;
+// 	b.y = r2;
+// 	b.z = r3;
+// 	return b;
+// }
 // ---------------------------------------------------------------------------------------------------------------------
 V4D.prototype.copy = function(a){
 	if(!a){ return new V4D(this.x, this.y, this.z, this.t); };
@@ -195,9 +268,6 @@ V4D.prototype.set = function(xV,yV,zV,tV){
 	this.y = yV;
 	this.z = zV;
 	this.t = tV;
-}
-V4D.prototype.setFromArray = function(a){
-	throw "don't call"
 }
 V4D.prototype.fromArray = function(a){
 	this.set(a[0],a[1],a[2],a[3]);

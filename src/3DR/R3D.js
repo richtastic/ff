@@ -20902,8 +20902,11 @@ R3D._optiumGraph3D = function(edges,isAngles){ // edges: [indexA,indexB,value,er
 	for(var i=0; i<vs.length; ++i){
 		var v = vs[i];
 		var paths = graph.minPaths(v);
-		var pathGroup = [];
+		var pathGroup = []; // cummulative path to each vertex
 		var reference = v.data();
+if(isAngles){
+console.log(paths);
+}
 		for(var j=0; j<paths.length; ++j){
 			var path = paths[j];
 			var pathEdges = path["edges"];
@@ -20911,7 +20914,7 @@ R3D._optiumGraph3D = function(edges,isAngles){ // edges: [indexA,indexB,value,er
 			var totalError = 0;
 			var value = null;
 			if(isAngles){
-				value = Code.twistIdentity();
+				value = V4D.qIdentity();
 			}else{
 				value = new V3D(0,0,0);
 			}
@@ -20920,20 +20923,19 @@ R3D._optiumGraph3D = function(edges,isAngles){ // edges: [indexA,indexB,value,er
 				var data = edge.data();
 				var join = data["value"];
 				var error = data["error"];
-				totalError += error*error;
+				totalError += error*error; // should errors just be multiplied ?
 				var opposite = edge.opposite(vertex);
-				if(isAngles){ // average direction + twist
-					// console.log(join);
+				if(isAngles){
 					var sumDir = null;
 					var sumTwist = null;
 					if(edge.A()==vertex){
-						// console.log("SAME")
-						value = Code.addTwistVector3D(value, join);
+						// same
 					}else{
-						// console.log("FLIP")
-						var inv = Code.twistInvert(join);
-						value = Code.addTwistVector3D(value, inv);
+						join = join.copy().qInverse().qNorm();
 					}
+// WHY DOESN'T ORDER MATTER HERE?
+					value = V4D.qMul(join,value);
+					// value = V4D.qMul(value,join);
 				}else{
 					if(edge.A()==vertex){
 						value.add(join);
@@ -20943,16 +20945,23 @@ R3D._optiumGraph3D = function(edges,isAngles){ // edges: [indexA,indexB,value,er
 				}
 				vertex = opposite;
 			}
+// if(isAngles){
+// console.log("V "+i+" => "+value);
+// }
 			totalError = Math.sqrt(totalError);
 			pathGroup.push({"value":value, "error":totalError});
 		}
 		allPaths.push(pathGroup);
 	}
+// if(isAngles){
+// console.log(allPaths);
+// }
+
 	// calculate paths
-	// console.log(allPaths)
 	var allValues = Code.newArrayArrays(vs.length);
 	for(var i=0; i<allPaths.length; ++i){
 		var pathGroup = allPaths[i];
+// console.log(pathGroup[0]);
 		for(var j=0; j<pathGroup.length; ++j){
 			if(j==i){
 				continue;
@@ -20964,7 +20973,14 @@ R3D._optiumGraph3D = function(edges,isAngles){ // edges: [indexA,indexB,value,er
 			var valueA = group["value"];
 			var valueB = reference["value"];
 			if(isAngles){
-				diff = Code.diffTwistVector3D(valueA,valueB);
+// console.log(i+" "+j+" @ "+valueA+" -> "+valueB);
+				var invA = valueA.copy().qInverse().qNorm();
+				var rab = V4D.qMul(valueB,invA).qNorm();
+				diff = rab;
+				// diff = diff.qInverse().qNorm();
+				// var invB = valueB.copy().qInverse().qNorm();
+				// var rba = V4D.qMul(valueA,invB);
+				// diff = rba;
 			}else{
 				diff = V3D.sub(valueA,valueB);
 			}
@@ -20972,6 +20988,10 @@ R3D._optiumGraph3D = function(edges,isAngles){ // edges: [indexA,indexB,value,er
 			allValues[j].push({"value":diff, "error":error});
 		}
 	}
+if(isAngles){
+console.log(allValues);
+// throw "?"
+}
 	// find average for each vertex
 	var values = [];
 	for(var i=0; i<allValues.length; ++i){
@@ -20991,43 +21011,83 @@ R3D._optiumGraph3D = function(edges,isAngles){ // edges: [indexA,indexB,value,er
 			var dirs2D = [];
 			for(var j=0; j<points.length; ++j){
 				var point = points[j];
-// console.log(point["direction"]);
-				dirs3D.push(point["direction"]);
-				var a2D = point["angle"];
+				var twist = Code.vectorTwistFromQuaternion(point);
+				dirs3D.push(twist["direction"]);
+				var a2D = twist["angle"];
 				var d2D = new V2D(1,0).rotate(a2D);
 				dirs2D.push(d2D);
 			}
-console.log(dirs3D);
+			console.log(i+"..........")
+			// console.log(percents);
+			// console.log(points);
+			console.log(dirs3D);
+			// console.log(dirs2D);
 			var avgDir = Code.averageAngleVector3D(dirs3D,percents);
 			var avgAng = Code.averageAngleVector2D(dirs2D,percents);
 			avgAng = V2D.angleDirection(V2D.DIRX,avgAng);
-			average = {"direction":avgDir, "angle":avgAng};
+			console.log("AVG: "+avgDir);
+			var twist = {"direction":avgDir, "angle":avgAng};
+			// back to quaternion
+			var matrix = Code.Matrix3DFromVectorTwist(V3D.ZERO, twist);
+			average = V4D.qFromMatrix(matrix);
+
+
+
+// WHY ARE VALUES INVERSED?
+average.qInverse().qNorm();
+
+var t = Code.vectorTwistFromQuaternion(average);
+console.log("ABS?: "+t["direction"]);
+
+	var m = Code.Matrix3DFromVectorTwist(V3D.ZERO, t);
+	var p = V4D.qFromMatrix(m);
+	var u = Code.vectorTwistFromQuaternion(p);
+	console.log("    : "+u["direction"]);
+
+
+
+
+// average.qInverse().qNorm();
+
+
+
 		}else{
 			average = V3D.average(points,percents);
 		}
 		values[i] = average;
 	}
+if(isAngles){
+console.log("VALUES:");
+console.log(values);
+// throw "..."
+}
 	// nonlinear error minimize
-	/*
+/*
 	if(isAngles){
-		// normals:
-		var result = R3D._gdDirectionAngleTranslation3D(vs,es,values, 1);
-		var valuesDirections = result["values"];
-		// twists:
-		var result = R3D._gdDirectionAngleTranslation3D(vs,es,values, 2);
-		var valuesTwists = result["values"];
+	// NEED TO CONVERT QUATERNIONS INTO TWISTS IN ORDER TO MINIMIZE, THEN BACK
+		// // normals:
+		// var result = R3D._gdDirectionAngleTranslation3D(vs,es,values, 1);
+		// var valuesDirections = result["values"];
+		// // twists:
+		// var result = R3D._gdDirectionAngleTranslation3D(vs,es,values, 2);
+		// var valuesTwists = result["values"];
 		// combine
-		values = [];
-		for(var i=0; i<valuesDirections.length; ++i){
-			var d = valuesDirections[i];
-			var a = valuesTwists[i];
-			values.push({"direction":d, "angle":a});
-		}
+		// values = [];
+		// for(var i=0; i<valuesDirections.length; ++i){
+		// 	var d = valuesDirections[i];
+		// 	var a = valuesTwists[i];
+		// 	values.push({"direction":d, "angle":a});
+		// }
+		// quaternions
+		var result = R3D._gdDirectionAngleTranslation3D(vs,es,values, 3);
+		var values = result["values"];
 	}else{
 		var result = R3D._gdDirectionAngleTranslation3D(vs,es,values, 0);
 		values = result["values"];
 	}
-	*/
+*/
+
+
 	// create new edges
 	graph.kill();
 	var output = [];
@@ -21041,7 +21101,8 @@ console.log(dirs3D);
 		var b = values[vb];
 		var diff = null;
 		if(isAngles){
-			diff = Code.diffTwistVector3D(b,a);
+			var ainv = a.copy().qInverse().qNorm();
+			diff = V4D.qMul(b,ainv);
 		}else{
 			diff = V3D.sub(b,a);
 		}
@@ -21055,7 +21116,15 @@ R3D._gdDirectionAngleTranslation3D = function(vs,es,values, isAngles){
 	var fxn = null;
 	var x = [];
 	var output = [];
-	if(isAngles==2){
+	if(isAngles==3){
+		fxn = R3D._gdAngleQuaternion;
+		// x = null;
+		for(var i=0; i<values.length; ++i){
+			var v = values[i];
+			x.push(v.x,v.y,v.z,v.t);
+			throw "????";
+		}
+	}else if(isAngles==2){
 		fxn = R3D._gdAngle3DTwist;
 		// x = null;
 		for(var i=0; i<values.length; ++i){
@@ -21101,6 +21170,9 @@ R3D._gdDirectionAngleTranslation3D = function(vs,es,values, isAngles){
 	}
 	return {"values":output};
 }
+R3D._gdAngle3DQuaternion = function(args, x, isUpdate){
+	return R3D._gdAngGrad3D(args, x, isUpdate, 2, R3D._gdErrorQuaternion3DFxn);
+}
 R3D._gdAngle3DTwist = function(args, x, isUpdate){
 	return R3D._gdAngGrad3D(args, x, isUpdate, 2, R3D._gdErrorAngle2DFxn);
 }
@@ -21117,6 +21189,13 @@ R3D._gdErrorAngle3DFxn = function(dirA, dirB){
 R3D._gdErrorDirection3DFxn = function(relativeDirectionA, relativeDirectionB){
 	var error = V3D.distance(relativeDirectionA, relativeDirectionB);
 	return error*error;
+}
+R3D._gdErrorQuaternion3DFxn = function(qA,qB){
+	var tA = Code.vectorTwistFromQuaternion(qA);
+	var tB = Code.vectorTwistFromQuaternion(qB);
+	var errorA = V3D.angle(tA["direction"], tB["direction"]);
+	var errorB = R3D._gdErrorAngle2DFxn(tA["angle"],tB["angle"]);
+	var error = errorA + errorB;
 }
 R3D._gdAngGrad3D = function(args, x, isUpdate, isAngles, costFxn){
 	var edges = args[0];

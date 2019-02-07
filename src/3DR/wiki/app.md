@@ -318,15 +318,50 @@ https://cloud.google.com/appengine/docs/nodejs/
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
+DOES QUATERNION FROM MATRIX === TWIST (DIR CORRECT) ???
+
+
+
+WHY IS ANGLE ERROR STILL NON ~0 ?
+
+
+- there HAS to be a way to do a twist DIFF - may be different operation than twist
+
+
+
+
+
+
+=> CONVERT TWIST TO QUATERNION: TEST => APP
+	=> use quaternions in calculation summation along edges
+	=> convert quaternions into twist AT END
+		Code.averageAngleVector3D
+
+
+HOW TO MINIMIZE ERROR ON A QUATERNION ?
+	=> convert to something else first?
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 - TEST INITIALIZATION OF 3+ MATRICES TO SEE IF GOOD ESTIMATE?
 	=> OPTIMIZED CALCULATION IS BAD WHEN ROTATION & TRANSLATION COMBINED
 		=> visualize components to find why not working
 
-
-=> CHECK THAT ARBIRARY ORDER OF TWISTS HAS SAME OUTCOME
-
-1) trans(AB) == Bo - Ao ?
-2) mat.inv = r3d.caminv ?
 
 
 check what matrix and direction is used for camera in visualizer
