@@ -2872,6 +2872,11 @@ Code.vectorTwistFromMatrix3D = function(matrix){
 	z.sub(o).norm();
 	return Code._vectorTwistFromCanonical(o,x,y,z);
 }
+Code.quaternionFromVectorTwist = function(twist){
+	var matrix = Code.Matrix3DFromVectorTwist(V3D.ZERO, twist);
+	var quaternion = V4D.qFromMatrix(matrix);
+	return quaternion;
+}
 Code._vectorTwistFromCanonical = function(o,x,y,z){
 	// find the angle Z has made with Z
 	var dir = V3D.cross(V3D.DIRZ,z).norm();

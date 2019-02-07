@@ -21025,7 +21025,7 @@ console.log(allValues);
 			var avgDir = Code.averageAngleVector3D(dirs3D,percents);
 			var avgAng = Code.averageAngleVector2D(dirs2D,percents);
 			avgAng = V2D.angleDirection(V2D.DIRX,avgAng);
-			console.log("AVG: "+avgDir);
+			console.log("AVG: "+avgDir+" @ "+Code.degrees(avgAng));
 			var twist = {"direction":avgDir, "angle":avgAng};
 			// back to quaternion
 			var matrix = Code.Matrix3DFromVectorTwist(V3D.ZERO, twist);
@@ -21035,9 +21035,9 @@ console.log(allValues);
 
 // WHY ARE VALUES INVERSED?
 average.qInverse().qNorm();
-
+console.log("   Q: "+average);
 var t = Code.vectorTwistFromQuaternion(average);
-console.log("ABS?: "+t["direction"]);
+console.log("ABS?: "+t["direction"]+" @ "+Code.degrees(t["angle"]));
 
 	var m = Code.Matrix3DFromVectorTwist(V3D.ZERO, t);
 	var p = V4D.qFromMatrix(m);
@@ -21062,31 +21062,57 @@ console.log(values);
 // throw "..."
 }
 	// nonlinear error minimize
-/*
+
 	if(isAngles){
-	// NEED TO CONVERT QUATERNIONS INTO TWISTS IN ORDER TO MINIMIZE, THEN BACK
-		// // normals:
-		// var result = R3D._gdDirectionAngleTranslation3D(vs,es,values, 1);
-		// var valuesDirections = result["values"];
-		// // twists:
-		// var result = R3D._gdDirectionAngleTranslation3D(vs,es,values, 2);
-		// var valuesTwists = result["values"];
+		// quaternions to twists:
+		for(var i=0; i<values.length; ++i){
+			var quaternion = values[i];
+			var twist = Code.vectorTwistFromQuaternion(quaternion);
+			values[i] = twist;
+			console.log(twist);
+		}
+		console.log(values);
+		// normals:
+		console.log("BEFORE 1:");
+		var result = R3D._gdDirectionAngleTranslation3D(vs,es,values, 1);
+		var valuesDirections = result["values"];
+		// twists:
+		console.log("BEFORE 2:");
+		var result = R3D._gdDirectionAngleTranslation3D(vs,es,values, 2);
+		var valuesTwists = result["values"];
 		// combine
-		// values = [];
-		// for(var i=0; i<valuesDirections.length; ++i){
-		// 	var d = valuesDirections[i];
-		// 	var a = valuesTwists[i];
-		// 	values.push({"direction":d, "angle":a});
-		// }
+		values = [];
+		for(var i=0; i<valuesDirections.length; ++i){
+			var d = valuesDirections[i];
+			var a = valuesTwists[i];
+			values.push({"direction":d, "angle":a});
+		}
+console.log(values);
+throw "?";
+		// twists to quaternions:
+		for(var i=0; i<values.length; ++i){
+			var twist = values[i];
+			// var matrix = Code.Matrix3DFromVectorTwist(V3D.ZERO, twist);
+			// var quaternion = V4D.qFromMatrix(matrix);
+			var quaternion = Code.quaternionFromVectorTwist(twist);
+			// var quaternion = Code.vectorTwistFromQuaternion(quaternion);
+// WHY INVERSE?:
+// quaternion.qInverse();
+			values[i] = quaternion;
+		}
 		// quaternions
-		var result = R3D._gdDirectionAngleTranslation3D(vs,es,values, 3);
-		var values = result["values"];
+		// var result = R3D._gdDirectionAngleTranslation3D(vs,es,values, 3);
+		// var values = result["values"];
 	}else{
 		var result = R3D._gdDirectionAngleTranslation3D(vs,es,values, 0);
 		values = result["values"];
 	}
-*/
 
+if(isAngles){
+console.log("VALUES 2:");
+console.log(values);
+// throw "..."
+}
 
 	// create new edges
 	graph.kill();
@@ -21116,7 +21142,8 @@ R3D._gdDirectionAngleTranslation3D = function(vs,es,values, isAngles){
 	var fxn = null;
 	var x = [];
 	var output = [];
-	if(isAngles==3){
+	/*if(isAngles==3){
+		throw "NO QUATS";
 		fxn = R3D._gdAngleQuaternion;
 		// x = null;
 		for(var i=0; i<values.length; ++i){
@@ -21124,7 +21151,9 @@ R3D._gdDirectionAngleTranslation3D = function(vs,es,values, isAngles){
 			x.push(v.x,v.y,v.z,v.t);
 			throw "????";
 		}
-	}else if(isAngles==2){
+	}else
+	*/if(isAngles==2){
+		console.log("2");
 		fxn = R3D._gdAngle3DTwist;
 		// x = null;
 		for(var i=0; i<values.length; ++i){
@@ -21132,13 +21161,13 @@ R3D._gdDirectionAngleTranslation3D = function(vs,es,values, isAngles){
 			x.push(v["angle"]);
 		}
 	}else if(isAngles==1){
+		console.log("1");
 		fxn = R3D._gdAngle3D;
 		for(var i=0; i<values.length; ++i){
 			var v = values[i];
 			var dir = v["direction"];
 			x.push(dir.x,dir.y,dir.z);
 		}
-		// throw "3D dir";
 	}else{ // isAngles==0
 		fxn = R3D._gdLocation3D;
 		for(var i=0; i<values.length; ++i){
@@ -21170,9 +21199,10 @@ R3D._gdDirectionAngleTranslation3D = function(vs,es,values, isAngles){
 	}
 	return {"values":output};
 }
-R3D._gdAngle3DQuaternion = function(args, x, isUpdate){
-	return R3D._gdAngGrad3D(args, x, isUpdate, 2, R3D._gdErrorQuaternion3DFxn);
-}
+// R3D._gdAngle3DQuaternion = function(args, x, isUpdate){
+// 	throw "?";
+// 	//return R3D._gdAngGrad3D(args, x, isUpdate, 3, R3D._gdErrorQuaternion3DFxn);
+// }
 R3D._gdAngle3DTwist = function(args, x, isUpdate){
 	return R3D._gdAngGrad3D(args, x, isUpdate, 2, R3D._gdErrorAngle2DFxn);
 }
@@ -21190,14 +21220,18 @@ R3D._gdErrorDirection3DFxn = function(relativeDirectionA, relativeDirectionB){
 	var error = V3D.distance(relativeDirectionA, relativeDirectionB);
 	return error*error;
 }
-R3D._gdErrorQuaternion3DFxn = function(qA,qB){
-	var tA = Code.vectorTwistFromQuaternion(qA);
-	var tB = Code.vectorTwistFromQuaternion(qB);
-	var errorA = V3D.angle(tA["direction"], tB["direction"]);
-	var errorB = R3D._gdErrorAngle2DFxn(tA["angle"],tB["angle"]);
-	var error = errorA + errorB;
-}
+// R3D._gdErrorQuaternion3DFxn = function(qA,qB){
+// 	var tA = Code.vectorTwistFromQuaternion(qA);
+// 	var tB = Code.vectorTwistFromQuaternion(qB);
+// 	var errorA = V3D.angle(tA["direction"], tB["direction"]);
+// 	var errorB = R3D._gdErrorAngle2DFxn(tA["angle"],tB["angle"]);
+// 	var error = errorA + errorB;
+// }
 R3D._gdAngGrad3D = function(args, x, isUpdate, isAngles, costFxn){
+// if(isAngles==1){
+// 	console.log(x);
+// }
+	// console.log("_gdAngGrad3D");
 	var edges = args[0];
 	var totalError = 0;
 	for(var i=0; i<edges.length; ++i){
@@ -21219,8 +21253,11 @@ R3D._gdAngGrad3D = function(args, x, isUpdate, isAngles, costFxn){
 			if(ib==0){
 				bx = 0;
 			}
-			rel = rel["angle"];
-			abs = Code.angleDirection(ax,bx);
+		abs = Code.angleDirection(ax,bx);
+		var twist = Code.vectorTwistFromQuaternion(rel);
+		rel = twist["angle"];
+// console.log(abs,rel);
+// throw "1";
 		}else if(isAngles==1){
 			var ax = x[ia*3+0];
 			var bx = x[ib*3+0];
@@ -21238,11 +21275,28 @@ R3D._gdAngGrad3D = function(args, x, isUpdate, isAngles, costFxn){
 				by = 0;
 				bz = 1;
 			}
-			rel = rel["direction"];
-			// a to b
-			abs = Code.subAngleVector3D(new V3D(bx,by,bz), new V3D(ax,ay,az));
-			// console.log(abs);
-			// throw "normals";
+			var ang = 0;
+// rel = rel.copy().qInverse();
+			// turn rel into a twist -
+// var qAbs = ?
+var ang = 0;
+var qRel = rel;
+			var twist = Code.vectorTwistFromQuaternion(rel);
+			// var ang = twist["angle"];
+			rel = twist["direction"];
+			// turn a & b into quaternions, get diff, turn into twist
+			var qA = Code.quaternionFromVectorTwist({"direction":new V3D(ax,ay,az), "angle":0});
+			var qB = Code.quaternionFromVectorTwist({"direction":new V3D(bx,by,bz), "angle":0.14368214856557068});
+			var qAinv = qA.copy().qInverse().qNorm();
+			var qAB = V4D.qMul(qB,qAinv);
+			var tAB = Code.vectorTwistFromQuaternion(qAB);
+			abs = tAB["direction"];
+console.log("     "+ia+" -> "+ib+" = "+qRel);
+console.log(qA+" && "+qB);
+console.log(new V3D(ax,ay,az)+" && "+new V3D(bx,by,bz));
+			// console.log(qAbs+"\n"+qAB+"\n"+qRel);
+			console.log(abs,rel);
+// throw "2";
 		}else{ // isAngles==0
 			var ax = x[ia*3+0];
 			var bx = x[ib*3+0];
@@ -21267,6 +21321,15 @@ R3D._gdAngGrad3D = function(args, x, isUpdate, isAngles, costFxn){
 		errorEdge = Math.max(errorEdge,1E-10);
 		// errorEdge = 1.0;
 		totalError += error/errorEdge;
+if(isAngles==1){
+	console.log(error);
+	// throw "2";
+}
+	}
+	if(isAngles==1){
+		console.log(totalError);
+		// this should be exact ...
+		throw "2";
 	}
 	if(isUpdate){
 		// console.log("totalError: "+totalError);

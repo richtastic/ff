@@ -1110,7 +1110,7 @@ for(var i=0; i<points.length; ++i){
 	console.log("ABS: "+i+": "+points[i][1]);
 	var q = points[i][1];
 	var t = Code.vectorTwistFromQuaternion(q);
-	console.log("    "+t["direction"]+"");
+	console.log("    "+t["direction"]+" @ "+Code.degrees(t["angle"]));
 }
 // throw "?"
 	var edges = [];
@@ -1175,6 +1175,13 @@ var relativeLocations = [];
 		//
 		var rainv = ra.copy().qInverse().qNorm();
 		var rab = V4D.qMul(rb,rainv);
+console.log("EDGE: "+a+"->"+b+" = "+rab);
+var tt = Code.vectorTwistFromQuaternion(rab);
+console.log("   "+ra+" && "+rb);
+var ta = Code.vectorTwistFromQuaternion(ra);
+var tb = Code.vectorTwistFromQuaternion(rb);
+console.log("   "+ta["direction"]+" @ "+Code.degrees(ta["angle"])+" && "+tb["direction"]+" @ "+Code.degrees(tb["angle"]));
+console.log("       TWIST: "+tt["direction"]+" @ "+Code.degrees(tt["angle"]));
 		// var b = V4D.qMul(rab,ra);
 		// console.log(rb+"");
 		// console.log(b+"");
