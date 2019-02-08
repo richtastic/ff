@@ -20904,9 +20904,6 @@ R3D._optiumGraph3D = function(edges,isAngles){ // edges: [indexA,indexB,value,er
 		var paths = graph.minPaths(v);
 		var pathGroup = []; // cummulative path to each vertex
 		var reference = v.data();
-if(isAngles){
-console.log(paths);
-}
 		for(var j=0; j<paths.length; ++j){
 			var path = paths[j];
 			var pathEdges = path["edges"];
@@ -20933,7 +20930,7 @@ console.log(paths);
 					}else{
 						join = join.copy().qInverse().qNorm();
 					}
-// WHY DOESN'T ORDER MATTER HERE?
+					// WHY DOESN'T ORDER MATTER HERE?
 					value = V4D.qMul(join,value);
 					// value = V4D.qMul(value,join);
 				}else{
@@ -20945,53 +20942,36 @@ console.log(paths);
 				}
 				vertex = opposite;
 			}
-// if(isAngles){
-// console.log("V "+i+" => "+value);
-// }
 			totalError = Math.sqrt(totalError);
 			pathGroup.push({"value":value, "error":totalError});
 		}
 		allPaths.push(pathGroup);
 	}
-// if(isAngles){
-// console.log(allPaths);
-// }
 
 	// calculate paths
 	var allValues = Code.newArrayArrays(vs.length);
 	for(var i=0; i<allPaths.length; ++i){
 		var pathGroup = allPaths[i];
-// console.log(pathGroup[0]);
+		var reference = pathGroup[0]; // assume 0th vertex is root
+		var valueA = reference["value"];
 		for(var j=0; j<pathGroup.length; ++j){
 			if(j==i){
 				continue;
 			} // else
-			// assume 0th vertex is root
-			var reference = pathGroup[0];
 			var group = pathGroup[j];
 			var diff = null;
-			var valueA = group["value"];
-			var valueB = reference["value"];
+			var valueB = group["value"];
 			if(isAngles){
-// console.log(i+" "+j+" @ "+valueA+" -> "+valueB);
 				var invA = valueA.copy().qInverse().qNorm();
 				var rab = V4D.qMul(valueB,invA).qNorm();
 				diff = rab;
-				// diff = diff.qInverse().qNorm();
-				// var invB = valueB.copy().qInverse().qNorm();
-				// var rba = V4D.qMul(valueA,invB);
-				// diff = rba;
 			}else{
-				diff = V3D.sub(valueA,valueB);
+				diff = V3D.sub(valueB,valueA);
 			}
 			var error = group["error"];
 			allValues[j].push({"value":diff, "error":error});
 		}
 	}
-if(isAngles){
-console.log(allValues);
-// throw "?"
-}
 	// find average for each vertex
 	var values = [];
 	for(var i=0; i<allValues.length; ++i){
@@ -21009,60 +20989,37 @@ console.log(allValues);
 		if(isAngles){
 			var dirs3D = [];
 			var dirs2D = [];
+			var keep = null;
 			for(var j=0; j<points.length; ++j){
 				var point = points[j];
 				var twist = Code.vectorTwistFromQuaternion(point);
+if(j==0){
+	keep = point;
+}
 				dirs3D.push(twist["direction"]);
 				var a2D = twist["angle"];
 				var d2D = new V2D(1,0).rotate(a2D);
 				dirs2D.push(d2D);
+				console.log("     "+twist["direction"]+" @ "+Code.degrees(a2D)+"");
 			}
-			console.log(i+"..........")
-			// console.log(percents);
-			// console.log(points);
-			console.log(dirs3D);
-			// console.log(dirs2D);
 			var avgDir = Code.averageAngleVector3D(dirs3D,percents);
 			var avgAng = Code.averageAngleVector2D(dirs2D,percents);
-			avgAng = V2D.angleDirection(V2D.DIRX,avgAng);
+				avgAng = V2D.angleDirection(V2D.DIRX,avgAng);
 			console.log("AVG: "+avgDir+" @ "+Code.degrees(avgAng));
 			var twist = {"direction":avgDir, "angle":avgAng};
 			// back to quaternion
-			var matrix = Code.Matrix3DFromVectorTwist(V3D.ZERO, twist);
-			average = V4D.qFromMatrix(matrix);
-
-
-
-// WHY ARE VALUES INVERSED?
-average.qInverse().qNorm();
-console.log("   Q: "+average);
-var t = Code.vectorTwistFromQuaternion(average);
-console.log("ABS?: "+t["direction"]+" @ "+Code.degrees(t["angle"]));
-
-	var m = Code.Matrix3DFromVectorTwist(V3D.ZERO, t);
-	var p = V4D.qFromMatrix(m);
-	var u = Code.vectorTwistFromQuaternion(p);
-	console.log("    : "+u["direction"]);
-
-
-
-
-// average.qInverse().qNorm();
-
-
-
+			var q = Code.quaternionFromVectorTwist(twist);
+			average = q;
+average = keep;
+			console.log("   = "+average);
 		}else{
 			average = V3D.average(points,percents);
 		}
 		values[i] = average;
 	}
-if(isAngles){
-console.log("VALUES:");
-console.log(values);
-// throw "..."
-}
+/*
 	// nonlinear error minimize
-
+if(false){
 	if(isAngles){
 		// quaternions to twists:
 		for(var i=0; i<values.length; ++i){
@@ -21107,13 +21064,14 @@ throw "?";
 		var result = R3D._gdDirectionAngleTranslation3D(vs,es,values, 0);
 		values = result["values"];
 	}
-
-if(isAngles){
-console.log("VALUES 2:");
-console.log(values);
-// throw "..."
 }
-
+//
+// if(isAngles){
+// console.log("VALUES 2:");
+// console.log(values);
+// // throw "..."
+// }
+*/
 	// create new edges
 	graph.kill();
 	var output = [];

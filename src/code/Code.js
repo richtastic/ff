@@ -2872,10 +2872,28 @@ Code.vectorTwistFromMatrix3D = function(matrix){
 	z.sub(o).norm();
 	return Code._vectorTwistFromCanonical(o,x,y,z);
 }
+// Code.quaternionFromVectorTwist = function(twist){
+// 	var matrix = Code.Matrix3DFromVectorTwist(V3D.ZERO, twist);
+// 	var quaternion = V4D.qFromMatrix(matrix);
+// 	return quaternion;
+// }
 Code.quaternionFromVectorTwist = function(twist){
-	var matrix = Code.Matrix3DFromVectorTwist(V3D.ZERO, twist);
-	var quaternion = V4D.qFromMatrix(matrix);
-	return quaternion;
+	var dir = twist["direction"];
+	var ang = twist["angle"];
+	var rotZ = V4D.qIdentity().qRotateDir(V3D.DIRZ,ang);
+		var cross = V3D.cross(V3D.DIRZ,dir);
+		if(!cross || cross.length()==0){
+			cross = new V3D(0,0,1);
+		}
+		cross.norm();
+		var angle = V3D.angle(V3D.DIRZ,dir);
+	var rotX = V4D.qIdentity().qRotateDir(cross,angle);
+	var q = V4D.qIdentity();
+		q = V4D.qMul(rotZ,q).qNorm();
+		q = V4D.qMul(rotX,q).qNorm();
+		// q = V4D.qMul(q,rotZ).qNorm();
+		// q = V4D.qMul(q,rotX).qNorm();
+	return q;
 }
 Code._vectorTwistFromCanonical = function(o,x,y,z){
 	// find the angle Z has made with Z

@@ -52,6 +52,16 @@ V4D.qMul = function(c, a,b){ // c = a*b // non-unit  == a x b
 	var y = a.t*b.y - a.x*b.z + a.y*b.t + a.z*b.x;
 	var z = a.t*b.z + a.x*b.y - a.y*b.x + a.z*b.t;
 	var t = a.t*b.t - a.x*b.x - a.y*b.y - a.z*b.z;
+	// 1
+	// var x = b.t*a.x + b.x*a.t - b.y*a.z + b.z*a.y;
+	// var y = b.t*a.y + b.x*a.z + b.y*a.t - b.z*a.x;
+	// var z = b.t*a.z - b.x*a.y + b.y*a.x + b.z*a.t;
+	// var t = b.t*a.t - b.x*a.x - b.y*a.y - b.z*a.z;
+	// 2
+	// var x = a.x*b.t + a.t*b.x + a.y*b.z - a.z*b.y;
+	// var y = a.y*b.t + a.t*b.y + a.z*b.x - a.x*b.z;
+	// var z = a.z*b.t + a.t*b.z + a.x*b.y - a.y*b.x;
+	// var t = a.t*b.t - a.x*b.x - a.y*b.y - a.z*b.z;
 	c.set(x,y,z,t);
 	return c;
 }

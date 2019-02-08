@@ -317,21 +317,13 @@ https://cloud.google.com/appengine/docs/nodejs/
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
-WHY IS TRANSFORM IN REVERSE?
-- add error to rot
-- optimizing with twists
-
-
-
-DOES QUATERNION FROM MATRIX === TWIST (DIR CORRECT) ???
+CONVERTING BETWEEN QUATERNION AND TWIST BREAKS STUFF ...
+	- AVERAGE QUATERNIONS ? ....
+	- ROTOR ?
+	- SPECIFICALLY WHY DON'T TWISTS WORK?
 
 
 
-WHY IS ANGLE ERROR STILL NON ~0 ?
-
-
-- there HAS to be a way to do a twist DIFF - may be different operation than twist
 
 
 
