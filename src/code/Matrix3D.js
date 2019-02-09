@@ -18,19 +18,31 @@ function Matrix3D(){
 }
 Matrix3D.prototype.fromArray = function(a){
 	if(!a){ return; }
-	var i, len=a.length;
-	if(len>0){ this.a = a[0]; }
-	if(len>1){ this.b = a[1]; }
-	if(len>2){ this.c = a[2]; }
-	if(len>3){ this.d = a[3]; }
-	if(len>4){ this.e = a[4]; }
-	if(len>5){ this.f = a[5]; }
-	if(len>6){ this.g = a[6]; }
-	if(len>7){ this.h = a[7]; }
-	if(len>8){ this.i = a[8]; }
-	if(len>9){ this.j = a[9]; }
-	if(len>10){ this.k = a[10]; }
-	if(len>11){ this.l = a[11]; }
+	if(a.length==9){ // rotation only
+		this.a = a[0];
+		this.b = a[1];
+		this.c = a[2];
+		this.e = a[3];
+		this.f = a[4];
+		this.g = a[5];
+		this.i = a[6];
+		this.j = a[7];
+		this.k = a[8];
+	}else{
+		var i, len=a.length;
+		if(len>0){ this.a = a[0]; }
+		if(len>1){ this.b = a[1]; }
+		if(len>2){ this.c = a[2]; }
+		if(len>3){ this.d = a[3]; }
+		if(len>4){ this.e = a[4]; }
+		if(len>5){ this.f = a[5]; }
+		if(len>6){ this.g = a[6]; }
+		if(len>7){ this.h = a[7]; }
+		if(len>8){ this.i = a[8]; }
+		if(len>9){ this.j = a[9]; }
+		if(len>10){ this.k = a[10]; }
+		if(len>11){ this.l = a[11]; }
+	}
 	return this;
 }
 Matrix3D.prototype.fromArrayRotation = function(a){ // 3x3 rotation values

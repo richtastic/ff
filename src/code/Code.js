@@ -2926,56 +2926,34 @@ Code.Matrix3DFromVectorTwist = function(location, rotation){
 	// console.log("OUT: \n"+transform);
 	return transform;
 }
-Code.averageQuaternions = function(quaternions, percents){
-/*
-	throw "eigenvectors ?";
-
-
-	// quaternions:
-	//V4D.qMul = function(c, a,b);
-	var quaternion = new V4D();
-	quaternion.qClear();
-
-
-	var i, count = vectors.length;
-	var angle;
-	var result = new V3D(0,0,1);
-	var v = new V3D();
-	var d = new V3D();
-	var p = 1.0/count;
-	for(i=0; i<count; ++i){
-		var vector = vectors[i];
-		if(percents){
-			p = percents[i];
+Code.averageQuaternions = function(quaternions, weights){
+	var count = quaternions.length;
+	var A = new Matrix(4,4);
+	var Q = new Matrix(4,4);
+	if(weights){
+		var weight = 0;
+		for(var i=0; i<count; ++i){
+			var q = quaternions[i];
+			var a = [q.t,q.x,q.y,q.z];
+			Matrix.outerArrays(Q, a,a);
+			Q.scale(weights[i]);
+			Matrix.add(A, A,Q);
+			weight += weights[i];
 		}
-		v.set(vector.x,vector.y,vector.z);
-		v.norm(); // scale by percent too ?
-
-		angle = V3D.angle(V3D.DIRZ,v);
-		V3D.cross(d,V3D.DIRZ,v);
-		d.norm();
-		if(d.length()==0){
-			continue;
+		A.scale(1.0/weight);
+	}else{
+		for(var i=0; i<count; ++i){
+			var q = quaternions[i];
+			var a = [q.t,q.x,q.y,q.z];
+			Matrix.outerArrays(Q, a,a);
+			Matrix.add(A, A,Q);
 		}
-		console.log("  "+i+" : "+d+" @ "+Code.degrees(angle));
-		// V3D.rotateAngle(result,result,d,angle*p);
-
-		//quaternion.qRotateDir(v.x,v.y,v.x);
-		// quaternion.qRotateDir(d.x,d.y,d.x, angle*p);
-		var q = new V4D();
-		q.qClear();
-		q.qRotateDir(d.x,d.y,d.x, angle);
-		//V4D.qMul(quaternion,quaternion,q); // <0.5825317547305483,0.18301270189221935,0.8750000000000002>
-		// V4D.qMul(quaternion,quaternion,q);
-		//V4D.qMul(quaternion,q,quaternion); // <0.5825317547305483,0.5000000000000001,0.7410254037844388>
-		V4D.qMul(quaternion,quaternion,q);
+		A.scale(1.0/count);
 	}
-	//qNorm
-	//result = quaternion.qRotatePoint(result);
-	result = quaternion.qRotatePoint(new V3D(0,0,1));
-	console.log(result.length())
-	return result;
-	*/
+	var eigen = Matrix.eigenValuesAndVectors(A);
+	var v = eigen["vectors"][0].toArray();
+	var q = new V4D(v[0],v[1],v[2],v[3]);
+	return q;
 }
 
 Code.rotationMatrixToQuaternion = function(a00,a01,a02, a10,a11,a12, a20,a21,a22){ // assuming top 3x3 of rotation matrix

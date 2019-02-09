@@ -65,8 +65,8 @@ V4D.qMul = function(c, a,b){ // c = a*b // non-unit  == a x b
 	c.set(x,y,z,t);
 	return c;
 }
-V4D.qMatrix = function (m,q){
-	if(q===undefined){ q = m; m = new Matrix3D(); }
+V4D.qMatrix = function (q,m){
+	if(m===undefined){ m = new Matrix3D(); }
 	var xx  = q.x*q.x;
 	var xy2 = q.x*q.y*2.0;
 	var xz2 = q.x*q.z*2.0;
@@ -77,11 +77,16 @@ V4D.qMatrix = function (m,q){
 	var zz  = q.z*q.z;
 	var zt2 = q.z*q.t*2.0;
 	var tt  = q.t*q.t;
-	m.set( (tt+xx-yy-zz), (xy2-zt2), (xz2+yt2), 0,
-		   (xy2+zt2), (tt-xx+yy-zz), (yz2-xt2), 0,
-		   (xz2-yt2), (yz2+xt2), (tt-xx-yy+zz), 0 );
+	var array = [ (tt+xx-yy-zz), (xy2-zt2), (xz2+yt2),  (xy2+zt2), (tt-xx+yy-zz), (yz2-xt2),  (xz2-yt2), (yz2+xt2), (tt-xx-yy+zz)];
+	m.fromArray(array);
+	// m.set( (tt+xx-yy-zz), (xy2-zt2), (xz2+yt2), 0,
+	// 	   (xy2+zt2), (tt-xx+yy-zz), (yz2-xt2), 0,
+	// 	   (xz2-yt2), (yz2+xt2), (tt-xx-yy+zz), 0 );
 	return m;
 }
+// V4D.prototype.qMatrix = function(m){
+// 	return V4D.qMatrix(m,this);
+// }
 V4D.qFromMatrix = function(m){
 	var array = [];
 	if(Code.isArray(m)){

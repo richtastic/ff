@@ -6815,7 +6815,7 @@ var inverseB = Matrix.inverse(transformB);
 // var relativeAtoB = R3D.relativeTransformMatrix(inverseA,inverseB);
 
 		var errorAB = transformRMean + 1.0*transformRSigma;
-errorAB = 1.0;
+// errorAB = 1.0;
 // console.log(transformA+"");
 // console.log(transformB+"");
 // console.log(relativeAtoB+"");
@@ -6831,6 +6831,7 @@ errorAB = 1.0;
 			relativeAtoB = Matrix.inverse(relativeAtoB);
 			// var relativeAtoB = R3D.relativeTransformMatrix(transformB,transformA);
 		}
+// relativeAtoB = Matrix.inverse(relativeAtoB);
 		indexA = indexMin;
 		indexB = indexMax-indexMin-1;
 		relativePairs[indexA][indexB] = relativeAtoB;
@@ -6841,6 +6842,13 @@ console.log(""+relativeAtoB.toArray());
 	var result = R3D.absoluteOrientationsFromRelativeOrientations(relativePairs, errorPairs);
 	console.log(result);
 	var transforms = result["absolute"];
+
+	// // INVERT TO EXTRINSIC:
+	// for(var i=0; i<transforms.length; ++i){
+	// 	var transform = transforms[i];
+	// 	var inverse = Matrix.inverse(transform);
+	// 	transforms[i] = inverse;
+	// }
 
 console.log(relativePairs);
 console.log(transforms);
@@ -6858,8 +6866,8 @@ for(var i=0; i<transforms.length; ++i){
 }
 
 
-
 /*
+
 // OVERRIDE KNOWN 3
 var m01 = relativePairs[0][0];
 var m02 = relativePairs[0][1];
@@ -6867,8 +6875,8 @@ var m12 = relativePairs[1][0];
 
 var m0 = new Matrix(4,4).identity();
 var m1 = Matrix.mult(m01,m0);
-// var m2 = Matrix.mult(m02,m0);
-var m2 = Matrix.mult(m12,m01);
+var m2 = Matrix.mult(m02,m0);
+// var m2 = Matrix.mult(m12,m01);
 transforms = [m0,m1,m2];
 
 // throw "..."

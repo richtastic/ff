@@ -1175,6 +1175,27 @@ Matrix.LU = function(P,L,U, A, pivot){ // [P,L,U] = A : LU Decomposition (Factor
 	if a pivot is ~0, then row interchange must be done
 	*/
 }
+Matrix.outerV3D = function(u,v){
+	var u = [u.x,u.y,u.z];
+	var v = [v.x,v.y,v.z];
+	return Matrix.outerArrays(u,v);
+}
+Matrix.outerArrays = function(M,u,v){
+	if(v==undefined){ // reuse M
+		v = u;
+		u = M;
+		M = new Matrix(rows,cols);
+	}
+	var rows = u.length;
+	var cols = v.length;
+	for(var j=0; j<rows; ++j){
+		for(var i=0; i<cols; ++i){
+			var value = u[j]*v[i];
+			M.set(j,i, value);
+		}
+	}
+	return M;
+}
 Matrix.mult = function(r, ain,bin){ // c = a*b
 	var b = bin, a = ain, c = Matrix._temp;
 	if(bin===undefined){

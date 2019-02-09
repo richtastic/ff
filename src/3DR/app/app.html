@@ -603,6 +603,56 @@ console.log(" "+i+" DIFF: "+orgDiff.length()+" @ "+Code.degrees(dirDiff));
 
 function classesLoadedFxn(){
 
+
+/*
+abs rotation/orientation of view A & B [quaternion,rodrigues,matrix,rotor,twist]
+absA
+absB
+
+rel orientation of edge AB [quaternion]
+relAB
+
+*/
+
+
+	// throw "rotation errors";
+
+
+/*
+
+
+	// var b0 = new Bivector();
+
+	// var r0 = Rotor.fromTwist( Math.radians(10.0), V3D.DIRZ, new V3D(1,1,1).norm() );
+
+	var twistAngle = Code.radians(20.0);
+	var twistA = new V3D(0,0,1).norm();
+	var twistB = new V3D(1,1,1).norm();
+	var rotor = Rotor.fromTwist(twistAngle,twistA,twistB);
+	var twist = rotor.toTwist(rotor);
+	console.log(twist["direction"]+" @ "+Code.degrees(twist["angle"]));
+	var start = new V3D(0,0,1).norm();
+	var end = new V3D(1,1,1).norm();
+	var result = rotor.rotateV3D(start);
+	console.log("FROM : "+start+" => "+result);
+
+	var inv = rotor.copy().reverse();
+	var result = inv.rotateV3D(end);
+	console.log("FROM : "+result+" <= "+end);
+
+	// var iden = Rotor.mul(rotor,inv);
+	console.log(rotor,inv);
+	var iden = rotor.rotateRotor(inv);
+	// var iden = inv.rotateRotor(rotor);
+	console.log(iden+"")
+	var result = iden.rotateV3D(start);
+	console.log("FROM : "+start+" ? "+result);
+
+	throw "THIS SHOULD BE IDENTITY";
+
+	throw "BIVECTOR";
+*/
+
 	// var array = [1,2,3,4,5];//,6,7,8,9,10,11,12];
 	// var info = Code.runningInfos(array, 7);
 	// var means = info["mean"];
@@ -1098,8 +1148,8 @@ for(var i=0; i<t.length; ++i){
 	points.push([new V3D(2, 1,0), V4D.qFromMatrix(m1) ]);
 	points.push([new V3D(3, 0,0), V4D.qFromMatrix(m2) ]);
 	points.push([new V3D(1, 0,1), V4D.qFromMatrix(m3) ]);
-	points.push([new V3D(4,-1,3), V4D.qFromMatrix(m4) ]);
-	points.push([new V3D(1,2,-1), V4D.qFromMatrix(m5) ]);
+	points.push([new V3D(4,2,3), V4D.qFromMatrix(m4) ]);
+	// points.push([new V3D(1,2,-1), V4D.qFromMatrix(m5) ]);
 		// points.push([new V3D(0,1,1), {"direction":new V3D(1,2,3).norm(), "angle":Code.radians(10.0)}]);
 		// points.push([new V3D(2,1,0), {"direction":new V3D(1,1,-1).norm(), "angle":Code.radians(20.0)}]);
 		// points.push([new V3D(3,0,0), {"direction":new V3D(0,-3,-3).norm(), "angle":Code.radians(-30.0)}]);
@@ -1194,26 +1244,32 @@ console.log("       TWIST: "+tt["direction"]+" @ "+Code.degrees(tt["angle"]));
 
 var errorAngle = error * 3.0;
 var errorDirection = error * 3.0;
-var errorLocation = error * 3.0;
-// errorAngle = 0.1;
-// errorDirection = 0.1;
+var errorLocation = error * 5.0;
+errorAngle = 0.1;
+errorDirection = 0.1;
 // errorLocation = 0.1;
+// errorLocation = 1.0;
 // errorAngle = 0.0001;
 // errorDirection = 0.0001;
 // errorLocation = 0.0001;
-errorAngle = 1;
-errorDirection = 1;
-errorLocation = 1;
+// errorAngle = 1;
+// errorDirection = 1;
+// errorLocation = 1;
 		// location
-		// vector.add( Code.randomFloat(-errorLocation,errorLocation), Code.randomFloat(-errorLocation,errorLocation) , Code.randomFloat(-errorLocation,errorLocation) );
+error = errorLocation;
+		vector.add( Code.randomFloat(-errorLocation,errorLocation), Code.randomFloat(-errorLocation,errorLocation) , Code.randomFloat(-errorLocation,errorLocation) );
 
-		// direction
-		// var angle = diff["angle"] + Code.randomFloat(-errorAngle,errorAngle);
-		// 	angle = Code.angleZeroTwoPi(angle);
-		// var direction = V3D.add(diff["direction"], new V3D().random(errorDirection));
-		// console.log("DOT: "+V3D.dot(diff["direction"],direction));
+		// console.log(rab);
+		// // direction
+		// var angle = rab["angle"] + Code.randomFloat(-errorAngle,errorAngle);
+		// var direction = V3D.add(rab["direction"], new V3D().random(errorDirection));
 		// direction.norm();
-		// 	var twist = {"direction":direction, "angle":angle};
+		// var twist = {"direction":direction, "angle":angle};
+		// console.log(twist);
+		//
+
+		// var q = V4D.qIdentity().qRotateDir( new V3D().random(1.0).norm(), Code.randomFloat(-errorAngle,errorAngle) );
+		// rab = V4D.qMul(q,rab);
 
 		var twist = rab;
 
@@ -1273,7 +1329,7 @@ var rotationsA = rotations;
 	var SCA = 100.0;
 	var OFFX = 40;
 	var OFFY = 60;
-	// actual
+	// actual - GREEN
 	for(var i=0; i<locations.length; ++i){
 		var location = points[i][0];
 		// var angle = points[i][1];
@@ -1295,7 +1351,7 @@ var rotationsA = rotations;
 		GLOBALSTAGE.addChild(d);
 	}
 
-	// estimated
+	// estimated (initial naive guess) - RED
 	for(var i=0; i<locations.length; ++i){
 		var location = locations[i];
 		// var angle = rotations[i];
@@ -1329,6 +1385,24 @@ var rotationsA = rotations;
 	rotations = results["absolute"];
 	console.log(rotations);
 
+
+/*
+// convert to MATRICES
+
+relativePairs
+
+// convert to relative matrices
+
+
+// get errors
+
+
+R3D.absoluteOrientationsFromRelativeOrientations(relativePairs, errorPairs);
+
+throw "./././."
+
+*/
+
 	// INITIAL OFFSET FOR COMPARISON
 	var root = points[0];
 	var rootLocation = root[0];
@@ -1343,6 +1417,28 @@ console.log(rootQuaternion+".....");
 for(var i=0; i<rotations.length; ++i){
 	var absolute = rotationsA[i];
 	var rotation = rotations[i];
+
+
+
+/*
+console.log("  Q: ");
+	var twist = Code.vectorTwistFromQuaternion(absolute);
+	console.log("  t: "+twist["direction"]+" @ "+Code.degrees(twist["angle"]));
+	var twist = Code.vectorTwistFromQuaternion(rotation);
+	console.log("  t: "+twist["direction"]+" @ "+Code.degrees(twist["angle"]));
+continue;
+*/
+
+	// var twistAngle = Code.radians(20.0);
+	// var twistA = new V3D(0,0,1).norm();
+	// var twistB = new V3D(1,1,1).norm();
+	// var rotor = Rotor.fromTwist(twistAngle,twistA,twistB);
+	// var twist = rotor.toTwist(rotor);
+	// console.log(twist["direction"]+" @ "+Code.degrees(twist["angle"]));
+	// var start = new V3D(0,0,1);
+	// var result = rotor.rotateV3D(start);
+	// console.log("FROM : "+start+" => "+result);
+	// throw "BIVECTOR";
 
 	// var rInv = absolute.copy().qInverse().qNorm();
 	// // var rot = V4D.qMul(rotation,rInv);
@@ -1410,18 +1506,18 @@ for(var i=0; i<rotations.length; ++i){
 	console.log("  ");
 }
 
-throw "..."
+// throw "..."
 
 // INTERNAL LOCATION INITIAL ESTIMATE FOR COMPARISON
 // locations = locationsA;
 // rotations = rotationsA;
 // console.log(rotationsA);
 
-	// FINAL ESTIMATION
+	// FINAL ESTIMATION - BLUE
 	for(var i=0; i<locations.length; ++i){
 		var location = locations[i];
 		var rotation = rotations[i];
-		// location = V3D.add(location, rootLocation);
+		location = V3D.add(location, rootLocation);
 		// rotation = V4D.qMul(rotation, rootQuaternion);
 		var angle = 0; //
 		var rad = 30.0;
@@ -1459,19 +1555,23 @@ rotation = V4D.qMul(rotation, rootQuaternion.copy().qInverse());
 		var rainv = ra.copy().qInverse().qNorm();
 		var rab = V4D.qMul(rb,rainv);
 		// var rab = V4D.qMul(rb,rainv);
-console.log("A: "+rotation);
-console.log("B: "+rot);
+// console.log("A: "+rotation);
+// console.log("B: "+rot);
 // console.log(rab+" ?");
 			// Code.diffTwistVector3D(rotation,rot);
 		// var diff = rab.qRotatePoint(V3D.DIRZ);
 		// var diffA = V3D.angle(V3D.DIRZ,diff);
 
-		var twist = Code.vectorTwistFromQuaternion(rotation);
+	var twistA = Code.vectorTwistFromQuaternion(rotation);
+	twist = twistA
 	console.log("  t: "+twist["direction"]+" @ "+Code.degrees(twist["angle"]));
-	twist = Code.vectorTwistFromQuaternion(rot);
+	var twistB = Code.vectorTwistFromQuaternion(rot);
+	twist = twistB;
 	console.log("  t: "+twist["direction"]+" @ "+Code.degrees(twist["angle"]));
 
 // need the difference in terms of orientation AND twist
+	var diffDir = V3D.angle(twistA["direction"],twistB["direction"]);
+	var diffAng = Code.minAngle(twistA["angle"],twistB["angle"]);
 
 // console.log(diff);
 // console.log(diffA);
@@ -1479,7 +1579,7 @@ console.log("B: "+rot);
 		//var diffDir = V3D.angle(diff["direction"],rot["direction"]);// V3D.dot(twist["direction"],rot["direction"]);
 		// var diffB = V3D.angle(V3D.DIRZ,diff["direction"]);
 			// diffB = Code.degrees(diffB);
-		// console.log("TWIST: "+Code.degrees(diffA)+" deg   --- DISTANCE: "+distance);
+		console.log("TWIST: "+Code.degrees(diffDir)+" & "+Code.degrees(diffAng)+"   --- DISTANCE: "+distance);
 		// @  dot: "+diffB+" deg
 	}
 

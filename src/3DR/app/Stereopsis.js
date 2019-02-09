@@ -1827,7 +1827,7 @@ console.log(".......");
 		// this.patchInitOnly();
 		this.patchResolveAffine();
 	}
-// throw "? ...";
+throw "? ...";
 	// PROBING
 	if(this._CALCULATE_PATCHES){
 		this.probe3D(); // before 2D: want good 3D location to project -- requires patches
