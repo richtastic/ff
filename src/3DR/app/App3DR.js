@@ -6815,6 +6815,7 @@ var inverseB = Matrix.inverse(transformB);
 // var relativeAtoB = R3D.relativeTransformMatrix(inverseA,inverseB);
 
 		var errorAB = transformRMean + 1.0*transformRSigma;
+		errorAB /= transformMatches; // AVERAGE ERROR
 // errorAB = 1.0;
 // console.log(transformA+"");
 // console.log(transformB+"");
@@ -6866,18 +6867,35 @@ for(var i=0; i<transforms.length; ++i){
 }
 
 
-/*
 
+/*
 // OVERRIDE KNOWN 3
 var m01 = relativePairs[0][0];
 var m02 = relativePairs[0][1];
 var m12 = relativePairs[1][0];
 
-var m0 = new Matrix(4,4).identity();
-var m1 = Matrix.mult(m01,m0);
-var m2 = Matrix.mult(m02,m0);
+// BAD
+// var m0 = new Matrix(4,4).identity();
+// var m1 = Matrix.mult(m01,m0);
+// var m2 = Matrix.mult(m02,m0);
+
+// // FOUND BEST:
+// var m0 = new Matrix(4,4).identity();
+// var m1 = Matrix.mult(m01,m0);
 // var m2 = Matrix.mult(m12,m01);
+
+// BAD:
+// var m1 = Matrix.mult(Matrix.inverse(m12),m02);
+// var m2 = Matrix.mult(m12,m01);
+
+// LOGICALLY BEST (BAD)
+// var m2 = new Matrix(4,4).identity();
+// var m1 = Matrix.mult(Matrix.inverse(m12),m2);
+// var m0 = Matrix.mult(Matrix.inverse(m02),m2);
+
 transforms = [m0,m1,m2];
+
+*/
 
 // throw "..."
 // to extrinsic
@@ -6888,7 +6906,7 @@ for(var i=0; i<transforms.length; ++i){
 	// transforms[i] = inverse;
 }
 
-*/
+
 
 for(var i=0; i<transforms.length; ++i){
 	var transform = transforms[i];

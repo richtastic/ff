@@ -653,6 +653,282 @@ relAB
 	throw "BIVECTOR";
 */
 
+var matrix;
+
+
+// transform3DRotateX
+
+	matrix = new Matrix(4,4).identity();
+	matrix = Matrix.transform3DRotateX(matrix, Code.radians(50));
+	matrix = Matrix.transform3DRotateY(matrix, Code.radians(30));
+	matrix = Matrix.transform3DRotateZ(matrix, Code.radians(10));
+	matrix = Matrix.transform3DTranslate(matrix, new V3D(1,2,3));
+	// matrix.set(0,3, 1);
+	// matrix.set(1,3, 2);
+	// matrix.set(2,3, 3);
+var transformA = matrix;
+
+	matrix = new Matrix(4,4).identity();
+	matrix = Matrix.transform3DRotateX(matrix, Code.radians(20));
+	matrix = Matrix.transform3DRotateY(matrix, Code.radians(-30));
+	matrix = Matrix.transform3DRotateZ(matrix, Code.radians(-10));
+	matrix = Matrix.transform3DTranslate(matrix, new V3D(1,-1,1));
+	// matrix.set(0,3, 1);
+	// matrix.set(1,3, -1);
+	// matrix.set(2,3, 1);
+var transformB = matrix;
+
+
+	matrix = new Matrix(4,4).identity();
+	matrix = Matrix.transform3DRotateX(matrix, Code.radians(-20));
+	matrix = Matrix.transform3DRotateY(matrix, Code.radians(30));
+	matrix = Matrix.transform3DRotateZ(matrix, Code.radians(20));
+	matrix = Matrix.transform3DTranslate(matrix, new V3D(-1,0,2));
+	// matrix.set(0,3, 1);
+	// matrix.set(1,3, -1);
+	// matrix.set(2,3, 1);
+var transformC = matrix;
+
+matrix = new Matrix(4,4).identity();
+matrix = Matrix.transform3DRotateX(matrix, Code.radians(30));
+matrix = Matrix.transform3DRotateY(matrix, Code.radians(10));
+matrix = Matrix.transform3DRotateZ(matrix, Code.radians(10));
+matrix = Matrix.transform3DTranslate(matrix, new V3D(2,3,4));
+// matrix.set(0,3, 1);
+// matrix.set(1,3, -1);
+// matrix.set(2,3, 1);
+var transformD = matrix;
+
+// transformA = Matrix.inverse(transformA);
+// transformB = Matrix.inverse(transformB);
+
+console.log("A:\n"+transformA+"");
+console.log("B:\n"+transformB+"");
+
+
+// RELATIVE:
+
+// var inverseA = R3D.inverseCameraMatrix(transformA);
+// var inverseB = R3D.inverseCameraMatrix(transformB);
+// var inverseA = Matrix.inverse(transformA);
+// var inverseB = Matrix.inverse(transformB);
+var absolutes = [transformA,transformB,transformC,transformD];
+
+
+// for(var i=0; i<absolutes.length; ++i){
+// 	var tA = absolutes[i];
+// 	var invA = Matrix.inverse(tA);
+// 	absolutes[i] = invA;
+// }
+
+
+var edges = [];
+for(var i=0; i<absolutes.length; ++i){
+	var tA = absolutes[i];
+	var translation = tA.multV3DtoV3D(new V3D(0,0,0));
+		console.log("CAMERA TRANSLATION: "+translation);
+	var invA = Matrix.inverse(tA);
+	for(var j=i+1; j<absolutes.length; ++j){
+		var tB = absolutes[j];
+		var invB = Matrix.inverse(tB);
+
+
+		// var rAB = Matrix.mult(invA,tB);
+		//
+		// var R = rAB.getSubMatrix(0,0,3,3);
+		// var T = new V3D().fromArray(rAB.getSubMatrix(0,3,3,1).toArray());
+		// // var T = tAB.getSubMatrix(0,3,3,1);
+		// console.log(R+"")
+		// console.log(T+"")
+		// R = Matrix.transpose(R);
+		// var C = R.multV3DtoV3D(T).scale(-1);
+		// console.log(C+"")
+
+
+		// var tA = Matrix.inverse(tA);
+		// var tB = Matrix.inverse(tB);
+
+		//var relativeAtoB = Matrix.mult(invA,absB);
+// var mA = Matrix.mult(tB,invA);
+// console.log(mA+"");
+
+		var centerA = tA.multV3DtoV3D(new V3D(0,0,0));
+		var centerB = tB.multV3DtoV3D(new V3D(0,0,0));
+		var translation = V3D.sub(centerB,centerA);
+
+		var rotationA = V4D.qFromMatrix(tA);
+		var rotationB = V4D.qFromMatrix(tB);
+		var reverseA = rotationA.copy().qInverse().qNorm();
+		var quaternion = V4D.qMul(rotationB,reverseA);
+
+
+		// var what = Matrix.mult(tB,invA);
+
+
+		var iAB = R3D.relativeTransformMatrix(invA,invB);
+		// var iAB = R3D.relativeTransformMatrix(tA,tB);
+
+
+		var tAB = R3D.relativeTransformMatrix(tA,tB);
+
+
+		// var what = Matrix.mult(tAB,invA);
+		var what = Matrix.mult(invA,tAB);
+
+		// console.log("A: "+( Matrix.mult(tAB,invA) ));
+		// console.log("B: "+( Matrix.mult(tAB,invB) ));
+		// console.log("C: "+( Matrix.mult(invA,tAB) ));
+		// console.log("D: "+( Matrix.mult(invB,tAB) ));
+		// console.log("A: "+( Matrix.mult(tAB,tA) ));
+		// console.log("B: "+( Matrix.mult(tAB,tB) ));
+		// console.log("C: "+( Matrix.mult(tA,tAB) ));
+		// console.log("D: "+( Matrix.mult(tB,tAB) ));
+
+
+		// var tAB = R3D.relativeTransformMatrix(tB,tA);
+		console.log(i+"->"+j+":");
+		console.log("translation: "+translation);
+		console.log("rotation: "+quaternion);
+
+// var testB = V4D.qMul(quaternion,rotationA);
+// 		console.log("B1: "+rotationB);
+// 		console.log("B2: "+testB);
+
+		// console.log(""+( Matrix.mult(tA,invB) ));
+		// console.log(""+( Matrix.mult(invB,tA) ));
+		// console.log(""+( Matrix.mult(invA,tB) ));
+		// console.log(""+( Matrix.mult(tB,invA) ));
+		/*
+		console.log("A:\n"+tA);
+		console.log("B:\n"+tB);
+		console.log("A-B:\n"+tAB);
+		console.log("iA-iB:\n"+iAB);
+		console.log("iA-iB:\n"+Matrix.inverse(iAB));
+		// console.log("B-A:\n"+Matrix.inverse(tAB));
+		// var b = Matrix.mult(tAB,tA);
+		var b = Matrix.mult(tA,tAB);
+		console.log("B2:\n"+b);
+		// console.log(i+"->"+j+":\n"+tAB+"");
+		*/
+
+
+/*
+// tAB = Matrix.inverse(tAB);
+		var R = tAB.getSubMatrix(0,0,3,3);
+		var T = new V3D().fromArray(tAB.getSubMatrix(0,3,3,1).toArray());
+		// var T = tAB.getSubMatrix(0,3,3,1);
+		console.log(R+"")
+		console.log(T+"")
+		R = Matrix.transpose(R);
+		var C = R.multV3DtoV3D(T).scale(-1);
+		console.log(C+"")
+
+
+		var translation = tAB.multV3DtoV3D(new V3D(0,0,0));
+			console.log("CAMERA TRANSLATION: "+translation);
+
+*/
+
+		var edge = [i,j, {"quaternion":quaternion, "translation":translation}, 1.0];
+		edges.push(edge);
+	}
+}
+
+// throw "..."
+console.log("EDGES:");
+console.log(edges);
+
+R3D.optimumTransform3D(edges);
+
+
+
+throw "...";
+
+
+
+
+var matrix = transformAB;
+var translation = matrix.multV3DtoV3D(new V3D(0,0,0));
+console.log("CAMERA TRANSLATION: "+translation);
+var rotation = V4D.qFromMatrix(matrix);
+console.log("CAMERA ROTATION: "+rotation);
+
+
+
+// AVERAGING:
+
+var twist = Code.vectorTwistFromQuaternion(rotation);
+console.log("TWIST:");
+console.log(twist);
+// averaging code here:
+
+
+// BACK TO FINAL ABSOLUTE POSITION
+var rotation = Code.quaternionFromVectorTwist(twist);
+console.log("ABSOLUTE ROTATION: "+rotation);
+
+
+// ERROR MINIMIZING
+var matrix = V4D.qMatrix(rotation,new Matrix(3,3));
+// console.log(matrix);
+var rodrigues = R3D.rotationMatrixToEulerRodriguez(matrix);
+console.log("RODRIGUES ROTATION: "+rodrigues);
+
+
+
+// BACK TO ABSOLUTE POSITION:
+var matrix = R3D.rotationEulerRodriguezToMatrix(new Matrix(3,3), rodrigues);
+var rotation = V4D.qFromMatrix(matrix);
+console.log("ABSOLUTE ROTATION: "+rotation);
+
+
+
+
+
+
+
+// convert back:
+
+
+
+console.log("TO ABSOULTE: ");
+
+// var transform = new Matrix(4,4).identity();
+var tra = translation.copy();
+var transform = new Matrix(3,3);
+V4D.qMatrix(rotation, transform);
+console.log(transform+"")
+transform.appendColFromArray([tra.x,tra.y,tra.z]);
+transform.appendRowFromArray([0,0,0,1]);
+console.log(transform+"")
+
+
+
+
+/*
+// separate into translation & rotation
+TRANSLATION: x,y,z
+ROTATION: quaternion
+
+// separate into averaging variables:
+TRANSLATION: x,y,z
+ROTATION: quaternion => twist => quaternion
+
+// separate into optimizing absolute variables
+TRANSLATION: x,y,z
+ROTATION: quaternion => rodrigues
+
+// error metrics:
+TRANSLATION: x,y,z & X,Y,Z
+quaternion (REL) => x-y-z
+rodrigues (ABS) => X-Y-Z
+	error = angle(X,x) + angle(Y,y) + angle(Z,z) +
+
+*/
+
+
+throw "ERROR METRIXING";
+
 	// var array = [1,2,3,4,5];//,6,7,8,9,10,11,12];
 	// var info = Code.runningInfos(array, 7);
 	// var means = info["mean"];

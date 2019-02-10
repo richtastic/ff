@@ -20857,6 +20857,395 @@ R3D.optimumGraphLocation3DLeastSquares = function(edges){ // [indexA,indexB,rela
 }
 */
 
+
+
+R3D.optimumTransform3D = function(edges){ // edges: [indexA,indexB, transform,error]
+	var nonlinear = true;
+	// find size of graph
+	var maxVertex = -1;
+	for(var i=0; i<edges.length; ++i){
+		var edge = edges[i];
+		maxVertex = Math.max(maxVertex,edge[0]);
+		maxVertex = Math.max(maxVertex,edge[1]);
+	}
+	if(maxVertex<0){
+		return null;
+	}
+	var vertexCount = maxVertex + 1;
+	// create graph
+	var graph = new Graph();
+	var vs = [];
+	for(var i=0; i<vertexCount; ++i){
+		var v = graph.addVertex();
+		v.data(i);
+		vs[i] = v;
+	}
+	var es = [];
+	for(var i=0; i<edges.length; ++i){
+		var edge = edges[i];
+		var a = edge[0];
+		var b = edge[1];
+		var transform = edge[2];
+		var error = edge[3];
+		console.log("FROM: "+a+" TO "+b);
+		var translation = transform["translation"];
+		var quaternion = transform["quaternion"];
+		console.log("        : "+translation);
+		console.log("        : "+quaternion);
+
+// twists mess up quaternions ...
+var twist = Code.vectorTwistFromQuaternion(quaternion);
+quaternion = Code.quaternionFromVectorTwist(twist);
+
+		var value = {"translation":translation, "quaternion":quaternion};
+		var va = vs[a];
+		var vb = vs[b];
+		var w = error;
+		var e = graph.addEdge(va,vb, w, Graph.Edge.DIRECTION_DUPLEX);
+		e.data({"value":value,"error":error});
+		es[i] = e;
+	}
+// throw "..."
+	// find path from each vertex to each other vertex
+	var allPaths = [];
+	for(var i=0; i<vs.length; ++i){
+		var v = vs[i];
+		var paths = graph.minPaths(v);
+		var pathGroup = []; // cummulative path to each vertex
+		var reference = v.data();
+		for(var j=0; j<paths.length; ++j){
+			var path = paths[j];
+			var pathEdges = path["edges"];
+			var vertex = v;
+			var totalError = 0;
+			// var totalError = 1;
+			// var transformCumulative = new Matrix(4,4).identity();
+			var translationCumulative = new V3D();
+			var rotationCumulative = V4D.qIdentity();
+			for(var k=0; k<pathEdges.length; ++k){
+				var edge = pathEdges[k];
+				var data = edge.data();
+				var value = data["value"];
+				var error = data["error"];
+				//var transform = value["transform"];
+				console.log(value);
+				var translation = value["translation"];
+				var quaternion = value["quaternion"];
+				totalError += error;
+				// totalError += error*error; // should errors just be multiplied ?
+				// totalError = totalError*error;
+				var opposite = edge.opposite(vertex);
+				if(edge.A()!=vertex){
+					quaternion = quaternion.copy().qInverse().qNorm();
+					translation = translation.copy().scale(-1);
+				}
+				// why does order not matter?
+				// transformCumulative = Matrix.mult(transform,transformCumulative);
+// transformCumulative = Matrix.mult(transformCumulative,transform);
+				translationCumulative.add(translation);
+				// WHY ORDER NOT MATTER
+				// rotationCumulative = V4D.qMul(quaternion,rotationCumulative);
+				rotationCumulative = V4D.qMul(rotationCumulative,quaternion);
+				vertex = opposite;
+			}
+			totalError = Math.sqrt(totalError);
+			pathGroup.push({"value":{"quaternion":rotationCumulative, "translation":translationCumulative}, "error":totalError});
+		}
+		allPaths.push(pathGroup);
+	}
+	console.log(allPaths);
+	// find best vertex to keep at origin
+	var rootIndex = -1;
+	var rootError = 0;
+	for(var i=0; i<allPaths.length; ++i){
+		var pathGroup = allPaths[i];
+		var totalError = 0;
+		for(var j=0; j<pathGroup.length; ++j){
+			var group = pathGroup[j];
+			var error = group["error"];
+			totalError += error;
+		}
+		if(rootIndex<0 || rootError>totalError){
+			rootIndex = i;
+			rootError = totalError;
+		}
+	}
+	console.log("root index:"+rootIndex+" @ "+rootError);
+	// calculate absolute transforms based on root location
+	var allValues = Code.newArrayArrays(vs.length);
+	for(var i=0; i<allPaths.length; ++i){
+		var pathGroup = allPaths[i];
+		var reference = pathGroup[rootIndex];
+		var transformA = reference["value"];
+		var translationA = transformA["translation"];
+		var quaternionA = transformA["quaternion"];
+		var invQuaternionA = quaternionA.copy().qInverse().qNorm();
+		for(var j=0; j<pathGroup.length; ++j){
+			if(j==i){//} || j==rootIndex){ // ignore self & root
+				continue;
+			} // else calculate absolute orientation of neighbor
+			var group = pathGroup[j];
+			var transformB = group["value"];
+			var translationB = transformB["translation"];
+			var quaternionB = transformB["quaternion"];
+			var translationAB = V3D.sub(translationB,translationA);
+			var quaternionAB = V4D.qMul(quaternionB,invQuaternionA).qNorm();
+			var error = group["error"];
+			allValues[j].push({"value":{"quaternion":quaternionAB, "translation":translationAB}, "error":error});
+		}
+	}
+	console.log(allValues);
+	// find average for each vertex
+	var values = [];
+	for(var i=0; i<allValues.length; ++i){
+		var list = allValues[i];
+		var transforms = [];
+		var errors = [];
+		for(var j=0; j<list.length; ++j){
+			var item = list[j];
+			transforms.push(item["value"]);
+			errors.push(item["error"]);
+		}
+		var percents = Code.errorsToPercents(errors);
+			percents = percents["percents"];
+		var translations = [];
+		var dirs3D = [];
+		var dirs2D = [];
+// var remember;
+		// transform into averagable qualities
+		for(var j=0; j<transforms.length; ++j){
+			var transform = transforms[j];
+			var translation = transform["translation"];
+			var quaternion = transform["quaternion"];
+			var twist = Code.vectorTwistFromQuaternion(quaternion);
+			console.log("  "+j+": "+translation+" & "+twist["direction"]+" @ "+Code.degrees(twist["angle"]));
+			translations.push(translation);
+			dirs3D.push(twist["direction"]);
+			dirs2D.push(new V2D(1,0).rotate(twist["angle"]));
+// if(j==0){
+// 	remember = quaternion;
+// }
+		}
+		// do averaging
+		var avgTra = V3D.average(translations,percents);
+		var avgDir = Code.averageAngleVector3D(dirs3D,percents);
+		var avgAng = Code.averageAngleVector2D(dirs2D,percents);
+			avgAng = V2D.angleDirection(V2D.DIRX,avgAng);
+		console.log("AVG: "+avgTra+" & "+avgDir+" @ "+Code.degrees(avgAng));
+		// to absolute qualities
+		var twist = {"direction":avgDir, "angle":avgAng};
+		var quaternion = Code.quaternionFromVectorTwist(twist);
+// quaternion = remember;
+		var translation = avgTra;
+		values[i] = {"translation":translation, "quaternion":quaternion, "transform":null};
+	}
+	console.log(values);
+	// nonlinear error minimize
+	if(nonlinear){
+		// translations
+		var result = R3D._gdTranslationRotation3D(vs,es,values,rootIndex, 0);
+		translations = result["values"];
+		// console.log(translations);
+		// rotations
+		var result = R3D._gdTranslationRotation3D(vs,es,values,rootIndex, 1);
+		rotations = result["values"];
+		console.log(rotations);
+		// convert into transforms
+		var transforms = [];
+		for(var i=0; i<translations.length; ++i){
+			// TODO: concat translations & rotations
+			transforms[i] = null;
+		}
+	}
+	throw "...";
+
+	return {"absolute":transforms};
+	// care about relative ?
+/*
+	// create new edges
+	graph.kill();
+	var output = [];
+	for(var i=0; i<edges.length; ++i){
+		var edge = edges[i];
+		var va = edge[0];
+		var vb = edge[1];
+		var value = edge[2];
+		var error = edge[3];
+		var a = values[va];
+		var b = values[vb];
+		var diff = null;
+		if(isAngles){
+			var ainv = a.copy().qInverse().qNorm();
+			diff = V4D.qMul(b,ainv);
+		}else{
+			diff = V3D.sub(b,a);
+		}
+		output[i] = [va,vb,diff,error];
+	}
+	return {"relative":output, "absolute":values};
+	*/
+}
+R3D._gdErrorLocation3DFxn = function(locationA, locationB){
+	var distanceSquare = V3D.distanceSquare(locationA, locationB);
+	return distanceSquare;
+}
+R3D._gdErrorAxisAngles3D = function(xA,yA,zA, xB,yB,zB){
+	var angleX = V3D.angle(xA,xB);
+	var angleY = V3D.angle(yA,yB);
+	var angleZ = V3D.angle(zA,zB);
+	return angleX*angleX + angleY*angleY + angleZ*angleZ;
+}
+R3D._gdTranslationRotation3D = function(vs,es,values,rootIndex, type){
+	var args = [];
+	args.push(es);
+	args.push(rootIndex);
+	var fxn = null;
+	var x = [];
+	var output = [];
+	// convert args based on purpose
+	if(type==0){ // location
+		fxn = R3D._gdLocationOperation3D
+		for(var i=0; i<values.length; ++i){
+			var v = values[i];
+			var t = v["translation"];
+			x.push(t.x,t.y,t.z);
+		}
+	}else{ // rotation
+		fxn = R3D._gdRotationOperation3D;
+		for(var i=0; i<values.length; ++i){
+			var v = values[i];
+			var q = v["quaternion"];
+			var matrix = V4D.qMatrix(q,new Matrix(3,3));
+			var r = R3D.rotationMatrixToEulerRodriguez(matrix);
+			console.log("RODRIGUES: "+r);
+			// var m = R3D.rotationEulerRodriguezToMatrix(new Matrix(3,3), r);
+			// var setA = Code.axisFromMatrix3D(matrix);
+			// var setB = Code.axisFromMatrix3D(m);
+			// console.log(setA);
+			// console.log(setB);
+			// throw "?";
+			x.push(r.x,r.y,r.z);
+		}
+	}
+	// guts
+	var iterations = 1;
+	var result = Code.gradientDescent(fxn, args, x, null, iterations, 1E-10);
+	console.log(result);
+	// parse result into objects
+	var values = result["x"];
+	var vectors = [];
+	for(var i=0; i<values.length; i+=3){
+		var x = values[i+0];
+		var y = values[i+1];
+		var z = values[i+2];
+		vectors.push(new V3D(x,y,z));
+	}
+	// convert to output type
+	if(type==0){ // location
+		// as-is vector
+	}else{ // rotation
+		for(var i=0; i<values.length; ++i){
+			var matrix = R3D.rotationEulerRodriguezToMatrix(new Matrix(3,3), values[i]);
+			var quaternion = V4D.qFromMatrix(matrix);
+			vectors[i] = quaternion;
+		}
+	}
+	// object
+	console.log(vectors);
+	return {"values":vectors};
+}
+
+
+R3D._gdLocationOperation3D = function(args, x, isUpdate){
+	return R3D._gdLocationRotationOperation3D(args, x, isUpdate, 0);
+}
+R3D._gdRotationOperation3D = function(args, x, isUpdate){
+	return R3D._gdLocationRotationOperation3D(args, x, isUpdate, 1);
+}
+R3D._gdLocationRotationOperation3D = function(args, x, isUpdate, type){
+	var edges = args[0];
+	var rootVertex = args[1];
+	var totalError = 0;
+	for(var i=0; i<edges.length; ++i){
+		var edge = edges[i];
+		var va = edge.A();
+		var vb = edge.B();
+		var ia = va.data();
+		var ib = vb.data();
+		var data = edge.data();
+		var value = data["value"];
+		var errorEdge = data["error"];
+		var error = null;
+		var rel = null;
+		var abs = null; // absolute-relative parameter
+			// get params - same for trans or rot
+			var ax = x[ia*3+0];
+			var bx = x[ib*3+0];
+			var ay = x[ia*3+1];
+			var by = x[ib*3+1];
+			var az = x[ia*3+2];
+			var bz = x[ib*3+2];
+			// force root x to alway be at origin
+			if(ia==rootVertex){
+				ax = 0;
+				ay = 0;
+				az = 0;
+			}else if(ib==rootVertex){
+				bx = 0;
+				by = 0;
+				bz = 0;
+			}
+		if(type==0){ // location
+			abs = new V3D(bx-ax,by-ay,bz-az);
+			rel = value["translation"];
+			error = R3D._gdErrorLocation3DFxn(rel,abs);
+		}else{ // rotation
+			var matrixA = R3D.rotationEulerRodriguezToMatrix(new Matrix(3,3), new V3D(ax,ay,az));
+			var matrixB = R3D.rotationEulerRodriguezToMatrix(new Matrix(3,3), new V3D(bx,by,bz));
+			var matrixAB = R3D.relativeTransformMatrix(matrixA,matrixB);
+			// var matrixAB = R3D.relativeTransformMatrix(matrixB,matrixA);
+			// var invA = Matrix.inverse(matrixA);
+			// var matrixAB = Matrix.mult(invA,matrixB);
+			// var matrixAB = Matrix.mult(matrixB,invA);
+				// matrixAB = Matrix.inverse(matrixAB);
+			abs = Code.axisFromMatrix3D(matrixAB);
+			var quaternion = value["quaternion"];
+			// quaternion = quaternion.copy().qInverse().qNorm();
+			rel = Code.axisFromQuaternion(quaternion);
+			// console.log(abs);
+			// console.log(rel);
+			error = R3D._gdErrorAxisAngles3D(rel[0],rel[1],rel[2],abs[0],abs[1],abs[2]);
+			// console.log(error)
+			// throw "?";
+		}
+		console.log("ERROR: "+ia+"-"+ib+" "+error);
+		// errorEdge = Math.sqrt(errorEdge);
+		// errorEdge = Math.max(errorEdge,1E-10);
+		// errorEdge = 1.0;
+		totalError += error/errorEdge;
+	}
+	if(type!=0){
+		throw "?";
+	}
+	if(isUpdate){
+		// console.log("totalError: "+totalError);
+	}
+	return totalError;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // 2D graph location / rotation optimization -----------------------------------------------------------------------------------------------------------------------------------------------------------
 R3D.optiumGraphLocation3D = function(edges){
 	return R3D._optiumGraph3D(edges, false);
@@ -20910,8 +21299,8 @@ R3D._optiumGraph3D = function(edges,isAngles){ // edges: [indexA,indexB,value,er
 			var path = paths[j];
 			var pathEdges = path["edges"];
 			var vertex = v;
-			// var totalError = 0;
-			var totalError = 1;
+			var totalError = 0;
+			// var totalError = 1;
 			var value = null;
 			if(isAngles){
 				value = V4D.qIdentity();
@@ -20924,8 +21313,8 @@ R3D._optiumGraph3D = function(edges,isAngles){ // edges: [indexA,indexB,value,er
 				var join = data["value"];
 				var error = data["error"];
 				// totalError += error;
-				// totalError += error*error; // should errors just be multiplied ?
-				totalError = totalError*error;
+				totalError += error*error; // should errors just be multiplied ?
+				// totalError = totalError*error;
 				// console.log("totalError: "+totalError+" | "+error);
 
 				var opposite = edge.opposite(vertex);
@@ -20949,7 +21338,7 @@ R3D._optiumGraph3D = function(edges,isAngles){ // edges: [indexA,indexB,value,er
 				}
 				vertex = opposite;
 			}
-			// totalError = Math.sqrt(totalError);
+			totalError = Math.sqrt(totalError);
 			// console.log("total error path: "+totalError);
 			pathGroup.push({"value":value, "error":totalError});
 		}
@@ -21007,12 +21396,17 @@ console.log(average+" ===");
 console.log(Code.vectorTwistFromQuaternion(points[0])["direction"]+" 1");
 console.log(Code.vectorTwistFromQuaternion(average)["direction"]+" 2");
 */
+var maxPercent = 0;
+var keep = null;
 			for(var j=0; j<points.length; ++j){
 				var point = points[j];
+				var percent = percents[j];
 				var twist = Code.vectorTwistFromQuaternion(point);
-if(j==0){
-	keep = point;
-}
+// if(j==0){
+// if(percent>maxPercent){
+// 	keep = point;
+// 	maxPercent = percent;
+// }
 				dirs3D.push(twist["direction"]);
 				var a2D = twist["angle"];
 				var d2D = new V2D(1,0).rotate(a2D);
@@ -21027,8 +21421,9 @@ if(j==0){
 			// back to quaternion
 			var q = Code.quaternionFromVectorTwist(twist);
 			average = q;
-// average = keep;
 
+// average = keep;
+// console.log("maxPercent: "+maxPercent);
 			console.log("   = "+average);
 		}else{
 			average = V3D.average(points,percents);
@@ -21057,18 +21452,22 @@ if(false){
 		var result = R3D._gdDirectionAngleTranslation3D(vs,es,values, 1);
 		var valuesDirections = result["values"];
 		// twists:
-		console.log("BEFORE 2:");
-		var result = R3D._gdDirectionAngleTranslation3D(vs,es,values, 2);
-		var valuesTwists = result["values"];
+		// console.log("BEFORE 2:");
+		// var result = R3D._gdDirectionAngleTranslation3D(vs,es,values, 2);
+		// var valuesTwists = result["values"];
+		// console.log(values);
+		var valuesOld = values;
+		// throw "HERE ?"
 		// combine
 		values = [];
 		for(var i=0; i<valuesDirections.length; ++i){
 			var d = valuesDirections[i];
-			var a = valuesTwists[i];
+			// var a = valuesTwists[i];
+				var a = valuesOld[i]["angle"];
 			values.push({"direction":d, "angle":a});
 		}
-console.log(values);
-throw "?";
+// console.log(values);
+// throw "?";
 		// twists to quaternions:
 		for(var i=0; i<values.length; ++i){
 			var twist = values[i];
@@ -21125,7 +21524,7 @@ R3D._gdDirectionAngleTranslation3D = function(vs,es,values, isAngles){
 	var fxn = null;
 	var x = [];
 	var output = [];
-	if(isAngles==3){
+	/*if(isAngles==3){
 		var rodrigues = R3D.rotationMatrixToEulerRodriguez(R);
 		// throw "NO QUATS";
 		// fxn = R3D._gdAngleQuaternion;
@@ -21136,7 +21535,7 @@ R3D._gdDirectionAngleTranslation3D = function(vs,es,values, isAngles){
 			throw "????";
 		}
 	}else
-	if(isAngles==2){
+	*/if(isAngles==2){
 		console.log("...2");
 		fxn = R3D._gdAngle3DTwist;
 		// x = null;
@@ -26508,7 +26907,7 @@ R3D.cameraMatricesFromF
 R3D.relativeTransformMatrix = function(absA,invA,absB,invB){
 	if(arguments.length==2){ // assume forward
 		absB = invA;
-		// invA = R3D.inverseCameraMatrix(absA);
+		// invA = R3D.inverseCameraMatrix(absA); // WHAT IF 3x3 OR 4x4 ?
 		invA = Matrix.inverse(absA);
 	}
 	var relativeAtoB = Matrix.mult(invA,absB);

@@ -297,11 +297,11 @@ vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 	- separate triangles into texture lookup / files
 		- TextureMap (from textures to atlas)
 	=> scene textured model
-(01/28)
+(02/28)
 - viewing output
 	- locally
 	- VR device
-(02/25)
+(03/31)
 
 google app engine project - nodejs
 https://cloud.google.com/appengine/docs/nodejs/
@@ -317,6 +317,69 @@ https://cloud.google.com/appengine/docs/nodejs/
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+INITIAL ESTIMATE SHOULD BE AT LEAST AS GOOD AS FLAT GUESS
+
+
+TEST WITH ITERATIONS > 1
+
+
+... over-iterating error refinement shoots up after a few iterations
+
+
+
+
+
+
+
+
+initial guess:
+find best path between each vertex [lowest error]
+	for each vertex:
+		find path to all other vertexes
+		record total error for vertex v = sum(path error)
+	use vertex with lowest total path error as ROOT
+	initial estimate =
+		A) concatenated path from starting vertex [error AS-IS]
+		B) error/percent-averaged paths from each vertex based on initial estimate
+	nonlinear optimizing:
+		start with initial estimate of absolute transform for each vertex
+		move each vertex to minimize error:
+			- relative edge orientation vs relative absolute orientation
+				TRANSFORM:
+					- need way to compare both translation error and rotation error in same terms ...
+				ROTATION:
+					orientation angle + twist angle
+					- sum of angles in X Y Z
+				TRANSLATION:
+					- vector distance length
+
+			- error should be based on INPUT EDGES, not derived edges
+				- want weight based: error / edge-weight
+
+
+
+- need to also divide error (sigma) by total number of matches (average error)
+
+
+IF F IS KEPT SEPARATE: [2-pair]
+- have absolute R and a predicted R
+.....
+
+
+
+
+
+=> other methods work on optimizing F, not R
+
+
+
+
+NONLINEAR MINIMIZING
+
+- error for edge should be weighted by some ratio of 1/weight
+
+
 CONVERTING BETWEEN QUATERNION AND TWIST BREAKS STUFF ...
 	- AVERAGE QUATERNIONS ? ....
 	- ROTOR ?
@@ -324,6 +387,10 @@ CONVERTING BETWEEN QUATERNION AND TWIST BREAKS STUFF ...
 
 ERROR MINIMIZING
 
+
+
+
+initial pair estimate: drop points until under 1 px sigmaA
 
 
 

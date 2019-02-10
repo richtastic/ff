@@ -2844,6 +2844,33 @@ Code.averageVectorTwist3D = function(twists, percents){
 	var average = {"direction":direction, "angle":angle, "offset":location};
 	return average;
 }
+Code.axisFromQuaternion = function(q){
+	var x = new V3D(1,0,0);
+	var y = new V3D(0,1,0);
+	var z = new V3D(0,0,1);
+	q.qMulPoint(x,x);
+	q.qMulPoint(y,y);
+	q.qMulPoint(z,z);
+	return [x,y,z];
+}
+Code.axisFromMatrix3D = function(m){
+	// var o = new V3D(0,0,0);
+	// var x = new V3D(1,0,0);
+	// var y = new V3D(0,1,0);
+	// var z = new V3D(0,0,1);
+	// matrix.multV3DtoV3D(o,o);
+	// matrix.multV3DtoV3D(x,x);
+	// matrix.multV3DtoV3D(y,y);
+	// matrix.multV3DtoV3D(z,z);
+	// x.sub(o).norm();
+	// y.sub(o).norm();
+	// z.sub(o).norm();
+	// return [x,y,z];
+	var x = new V3D(m.get(0,0),m.get(1,0),m.get(2,0));
+	var y = new V3D(m.get(0,1),m.get(1,1),m.get(2,1));
+	var z = new V3D(m.get(0,2),m.get(1,2),m.get(2,2));
+	return [x,y,z];
+}
 Code.vectorTwistFromQuaternion = function(q){
 	var o = new V3D(0,0,0);
 	var x = new V3D(1,0,0);

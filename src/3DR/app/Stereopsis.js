@@ -1800,8 +1800,9 @@ console.log(".......");
 		// if(isFirst){ // don't do this for increasing-resolution methods ????
 		if(true){
 		// if(false){
-			var refineCount = 3;
+			var refineCount = 1;
 			for(var i=0; i<refineCount; ++i){
+				console.log('refine: '+i+" / "+refineCount);
 				this.relativeTransformsFromAbsoluteTransforms(); // relative R from absolutes
 				this.relativeFfromR(); // relative F derived from relative R
 				this.estimate3DErrors(true);
