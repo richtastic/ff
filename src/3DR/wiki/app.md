@@ -320,46 +320,15 @@ https://cloud.google.com/appengine/docs/nodejs/
 
 INITIAL ESTIMATE SHOULD BE AT LEAST AS GOOD AS FLAT GUESS
 
+TRY NOT DERIVING F FROM R
 
-TEST WITH ITERATIONS > 1
-
-
-... over-iterating error refinement shoots up after a few iterations
+x TRY USING EDGE WITH LEAST ERROR ONLY (no averaging)
 
 
-
+TRY DROPPING WORST ~50% corner score matches
 
 
 
-
-
-initial guess:
-find best path between each vertex [lowest error]
-	for each vertex:
-		find path to all other vertexes
-		record total error for vertex v = sum(path error)
-	use vertex with lowest total path error as ROOT
-	initial estimate =
-		A) concatenated path from starting vertex [error AS-IS]
-		B) error/percent-averaged paths from each vertex based on initial estimate
-	nonlinear optimizing:
-		start with initial estimate of absolute transform for each vertex
-		move each vertex to minimize error:
-			- relative edge orientation vs relative absolute orientation
-				TRANSFORM:
-					- need way to compare both translation error and rotation error in same terms ...
-				ROTATION:
-					orientation angle + twist angle
-					- sum of angles in X Y Z
-				TRANSLATION:
-					- vector distance length
-
-			- error should be based on INPUT EDGES, not derived edges
-				- want weight based: error / edge-weight
-
-
-
-- need to also divide error (sigma) by total number of matches (average error)
 
 
 IF F IS KEPT SEPARATE: [2-pair]

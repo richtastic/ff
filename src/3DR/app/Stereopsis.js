@@ -1711,6 +1711,7 @@ Stereopsis.World.prototype._tickSolveAbs = function(){
 	this._iterationSolveAbs(this._currentIteration,this._maxIterations);
 	this._currentIteration += 1;
 	if(this._currentIteration==this._maxIterations){
+throw "don't save";
 		if(this._completeFxn){
 			this._completeFxn.call(this._completeContext);
 		}
@@ -1790,7 +1791,8 @@ this._CALCULATE_PATCHES = false;
 
 console.log("INITIAL:");
 this.relativeTransformsFromAbsoluteTransforms();
-this.relativeFfromR();
+// this.relativeFfromR();
+this.relativeFFromSamples();
 this.estimate3DErrors(true);
 // this.printInfo();
 console.log(".......");
@@ -1800,11 +1802,12 @@ console.log(".......");
 		// if(isFirst){ // don't do this for increasing-resolution methods ????
 		if(true){
 		// if(false){
-			var refineCount = 1;
+			var refineCount = 3;
 			for(var i=0; i<refineCount; ++i){
 				console.log('refine: '+i+" / "+refineCount);
 				this.relativeTransformsFromAbsoluteTransforms(); // relative R from absolutes
-				this.relativeFfromR(); // relative F derived from relative R
+				// this.relativeFfromR(); // relative F derived from relative R
+				this.relativeFFromSamples();
 				this.estimate3DErrors(true);
 				this.averagePoints3DFromMatches(true);
 				// MOTION
@@ -1828,7 +1831,7 @@ console.log(".......");
 		// this.patchInitOnly();
 		this.patchResolveAffine();
 	}
-throw "? ...";
+// throw "? ...";
 	// PROBING
 	if(this._CALCULATE_PATCHES){
 		this.probe3D(); // before 2D: want good 3D location to project -- requires patches
@@ -2395,6 +2398,9 @@ Stereopsis.World.prototype.relativeTransformsFromAbsoluteTransforms = function()
 		var relative = Stereopsis.relativeTransformFromViews(viewA,viewB);
 		transform.R(viewA,viewB,relative);
 	}
+}
+Stereopsis.World.prototype.relativeFFromSamples = function(){
+	throw "HERE";
 }
 Stereopsis.World.prototype.relativeFfromR = function(){
 	var transforms = this.toTransformArray();

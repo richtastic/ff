@@ -653,6 +653,9 @@ relAB
 	throw "BIVECTOR";
 */
 
+
+
+/*
 var matrix;
 
 
@@ -760,6 +763,8 @@ for(var i=0; i<absolutes.length; ++i){
 		var rotationB = V4D.qFromMatrix(tB);
 		var reverseA = rotationA.copy().qInverse().qNorm();
 		var quaternion = V4D.qMul(rotationB,reverseA);
+		// var quaternion = V4D.qMul(reverseA,quaternion);
+		// var quaternion = V4D.qMul(reverseA,rotationB);
 
 
 		// var what = Matrix.mult(tB,invA);
@@ -787,8 +792,35 @@ for(var i=0; i<absolutes.length; ++i){
 
 		// var tAB = R3D.relativeTransformMatrix(tB,tA);
 		console.log(i+"->"+j+":");
-		console.log("translation: "+translation);
-		console.log("rotation: "+quaternion);
+		// console.log("translation: "+translation);
+		// console.log("rotation: "+quaternion);
+
+
+		// checking:
+		// relative quaternion->axis != rodrigues->matrix->axis
+		var relTwist = Code.vectorTwistFromQuaternion(quaternion);
+		var relQuat = Code.quaternionFromVectorTwist(relTwist);
+		var relTwist2 = Code.vectorTwistFromQuaternion(relQuat);
+		// console.log("   T1: "+relTwist["direction"]+" @ "+Code.degrees(relTwist["angle"]));
+		// console.log("   T2: "+relTwist2["direction"]+" @ "+Code.degrees(relTwist2["angle"]));
+		var relAxis = Code.axisFromQuaternion(relQuat);
+
+		// var relMatrix = Code.Matrix3DFromVectorTwist(relTwist);
+		// var relAxis = Code.axisFromMatrix3D(relMatrix);
+		//
+		var absMatA = V4D.qMatrix(rotationA, new Matrix(3,3));
+		var absMatB = V4D.qMatrix(rotationB, new Matrix(3,3));
+		var invMatA = Matrix.inverse(absMatA);
+		// var absMatAB = Matrix.mult(invMatA,absMatB);
+		var absMatAB = Matrix.mult(absMatB,invMatA);
+		var absAxis = Code.axisFromMatrix3D(absMatAB);
+		// quaternion.qInverse();
+		// var absAxis = Code.axisFromQuaternion(quaternion);
+		//
+		console.log("   AXIS A: "+relAxis);
+		console.log("   AXIS B: "+absAxis);
+
+
 
 // var testB = V4D.qMul(quaternion,rotationA);
 // 		console.log("B1: "+rotationB);
@@ -798,36 +830,7 @@ for(var i=0; i<absolutes.length; ++i){
 		// console.log(""+( Matrix.mult(invB,tA) ));
 		// console.log(""+( Matrix.mult(invA,tB) ));
 		// console.log(""+( Matrix.mult(tB,invA) ));
-		/*
-		console.log("A:\n"+tA);
-		console.log("B:\n"+tB);
-		console.log("A-B:\n"+tAB);
-		console.log("iA-iB:\n"+iAB);
-		console.log("iA-iB:\n"+Matrix.inverse(iAB));
-		// console.log("B-A:\n"+Matrix.inverse(tAB));
-		// var b = Matrix.mult(tAB,tA);
-		var b = Matrix.mult(tA,tAB);
-		console.log("B2:\n"+b);
-		// console.log(i+"->"+j+":\n"+tAB+"");
-		*/
 
-
-/*
-// tAB = Matrix.inverse(tAB);
-		var R = tAB.getSubMatrix(0,0,3,3);
-		var T = new V3D().fromArray(tAB.getSubMatrix(0,3,3,1).toArray());
-		// var T = tAB.getSubMatrix(0,3,3,1);
-		console.log(R+"")
-		console.log(T+"")
-		R = Matrix.transpose(R);
-		var C = R.multV3DtoV3D(T).scale(-1);
-		console.log(C+"")
-
-
-		var translation = tAB.multV3DtoV3D(new V3D(0,0,0));
-			console.log("CAMERA TRANSLATION: "+translation);
-
-*/
 
 		var edge = [i,j, {"quaternion":quaternion, "translation":translation}, 1.0];
 		edges.push(edge);
@@ -841,8 +844,6 @@ console.log(edges);
 R3D.optimumTransform3D(edges);
 
 
-
-throw "...";
 
 
 
@@ -903,6 +904,8 @@ transform.appendRowFromArray([0,0,0,1]);
 console.log(transform+"")
 
 
+*/
+
 
 
 /*
@@ -924,10 +927,13 @@ quaternion (REL) => x-y-z
 rodrigues (ABS) => X-Y-Z
 	error = angle(X,x) + angle(Y,y) + angle(Z,z) +
 
-*/
+
 
 
 throw "ERROR METRIXING";
+
+*/
+
 
 	// var array = [1,2,3,4,5];//,6,7,8,9,10,11,12];
 	// var info = Code.runningInfos(array, 7);
@@ -1488,6 +1494,7 @@ console.log(edges.length);
 	var es = [];
 var relativeEdges = [];
 var relativeLocations = [];
+var pairs = [];
 	for(var i=0; i<edges.length; ++i){
 		var edge = edges[i];
 		var a = edge[0];
@@ -1533,7 +1540,8 @@ errorDirection = 0.1;
 // errorLocation = 1;
 		// location
 error = errorLocation;
-		vector.add( Code.randomFloat(-errorLocation,errorLocation), Code.randomFloat(-errorLocation,errorLocation) , Code.randomFloat(-errorLocation,errorLocation) );
+
+		// vector.add( Code.randomFloat(-errorLocation,errorLocation), Code.randomFloat(-errorLocation,errorLocation) , Code.randomFloat(-errorLocation,errorLocation) );
 
 		// console.log(rab);
 		// // direction
@@ -1555,6 +1563,12 @@ error = errorLocation;
 		es[i] = e;
 			relativeEdges[i] = [a,b,twist,errorAngle]; // actually 1-2 x error
 		relativeLocations[i] = [a,b,vector,errorLocation];
+
+		// var transform = Code.quaternionFromVectorTwist(twist, new Matrix(3,3));
+		var transform = V4D.qMatrix(twist,new Matrix(3,3));
+		transform.appendColFromArray(vector.toArray());
+		transform.appendRowFromArray([0,0,0,1]);
+		pairs[i] = [a,b,transform, error];
 	}
 
 	// initial estimation:
@@ -1649,16 +1663,30 @@ var rotationsA = rotations;
 		GLOBALSTAGE.addChild(d);
 	}
 
-	var result = R3D.optiumGraphLocation3D(relativeLocations);
-	// var result = R3D.optimumGraphLocation3DLeastSquares(relativeLocations);
-	// console.log("result");
-	// console.log(result);
-	locations = result["absolute"];
-	// console.log("locations");
+var result = R3D.optimumTransform3DFromRelativePairTransforms(pairs);
+console.log(result);
+var absolutes = result["absolute"];
+// throw "?";
+var locations = [];
+var rotations = [];
+for(var i=0; i<absolutes.length; ++i){
+	var absolute = absolutes[i];
+console.log(absolute)
+	var location = absolute.multV3DtoV3D(new V3D(0,0,0));
+	var rotation = V4D.qFromMatrix(absolute);
+	rotations.push(rotation);
+	locations.push(location);
+}
+	// var result = R3D.optiumGraphLocation3D(relativeLocations);
+	// // var result = R3D.optimumGraphLocation3DLeastSquares(relativeLocations);
+	// // console.log("result");
+	// // console.log(result);
+	// locations = result["absolute"];
+	// // console.log("locations");
 	// console.log(locations);
-	var results = R3D.optiumGraphAngle3D(relativeEdges);
-	// console.log(results);
-	rotations = results["absolute"];
+	// var results = R3D.optiumGraphAngle3D(relativeEdges);
+	// // console.log(results);
+	// rotations = results["absolute"];
 	console.log(rotations);
 
 
@@ -1860,8 +1888,8 @@ rotation = V4D.qMul(rotation, rootQuaternion.copy().qInverse());
 	}
 
 
-throw "TESTING";
-return;
+// throw "TESTING";
+// return;
 
 
 

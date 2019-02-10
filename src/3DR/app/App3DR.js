@@ -6784,18 +6784,16 @@ App3DR.ProjectManager.prototype._calculateGlobalOrientationInit2 = function(call
 		errorPairs[i] = Code.newArrayNulls(viewCount-i-1);
 	}
 	// get relative transform+error
-
+var listPairs = [];
 	for(var i=0; i<pairs.length; ++i){
 		var pair = pairs[i];
 		var viewA = pair.viewA();
 		var viewB = pair.viewB();
-// console.log(pair);
-// throw "?"
 		var relativeData = pair.relativeData();
-var transformsSingle = relativeData["transforms"][0];
-var transformMatches = transformsSingle["matches"];
-var transformRSigma = transformsSingle["errorRSigma"];
-var transformRMean = transformsSingle["errorRMean"];
+		var transformsSingle = relativeData["transforms"][0];
+		var transformMatches = transformsSingle["matches"];
+		var transformRSigma = transformsSingle["errorRSigma"];
+		var transformRMean = transformsSingle["errorRMean"];
 console.log("ERROR: "+transformRMean+" * "+transformRSigma+" @ "+transformMatches);
 		var viewsData = relativeData["views"];
 		var viewDataA = viewsData[0];
@@ -6806,7 +6804,12 @@ console.log("ERROR: "+transformRMean+" * "+transformRSigma+" @ "+transformMatche
 // // extrinsic to camera
 // var transformA = Matrix.inverse(transformA);
 // var transformB = Matrix.inverse(transformB);
-		var relativeAtoB = R3D.relativeTransformMatrix(transformA,transformB);
+		// var relativeAtoB = R3D.relativeTransformMatrix(transformA,transformB);
+		var relativeAtoB = R3D.componentwiseRelativeCameraMatrix(transformA,transformB);
+
+
+
+
 // to camera
 // var inverseA = R3D.inverseCameraMatrix(transformA);
 // var inverseB = R3D.inverseCameraMatrix(transformB);
@@ -6816,12 +6819,17 @@ var inverseB = Matrix.inverse(transformB);
 
 		var errorAB = transformRMean + 1.0*transformRSigma;
 		errorAB /= transformMatches; // AVERAGE ERROR
-// errorAB = 1.0;
-// console.log(transformA+"");
-// console.log(transformB+"");
-// console.log(relativeAtoB+"");
+// errorAB = 1.0; // BETTER
+// errorAB = 1.0/errorAB; // OK
+// var errorAB = transformRSigma/transformMatches; // BAD
+var errorAB = 1.0;
+
+
+
 		var indexA = tableViewIDToIndex[viewA.id()+""];
 		var indexB = tableViewIDToIndex[viewB.id()+""];
+var sourceA = indexA;
+var sourceB = indexB;
 		var indexMin = Math.min(indexA,indexB);
 		var indexMax = Math.max(indexA,indexB);
 		// console.log("RELATIVE: "+indexA+"("+indexMin+") - "+indexB+" ("+indexMax+") = "+errorAB);
@@ -6837,11 +6845,21 @@ var inverseB = Matrix.inverse(transformB);
 		indexB = indexMax-indexMin-1;
 		relativePairs[indexA][indexB] = relativeAtoB;
 		errorPairs[indexA][indexB] = errorAB;
+		listPairs.push([sourceA,sourceB,relativeAtoB,errorAB]);
 console.log(""+relativeAtoB.toArray());
 	}
 	// get result
-	var result = R3D.absoluteOrientationsFromRelativeOrientations(relativePairs, errorPairs);
+	// var result = R3D.absoluteOrientationsFromRelativeOrientations(relativePairs, errorPairs);
+	// console.log(result);
+
+console.log(listPairs);
+	// var result = R3D.optimumTransform3DFromRelativePairTransforms(relativePairs, errorPairs);
+	var result = R3D.optimumTransform3DFromRelativePairTransforms(listPairs);
 	console.log(result);
+
+// throw result
+	// throw "?";
+
 	var transforms = result["absolute"];
 
 	// // INVERT TO EXTRINSIC:

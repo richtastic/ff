@@ -2876,13 +2876,9 @@ Code.vectorTwistFromQuaternion = function(q){
 	var x = new V3D(1,0,0);
 	var y = new V3D(0,1,0);
 	var z = new V3D(0,0,1);
-	// q.qMulPoint(o,o);
 	q.qMulPoint(x,x);
 	q.qMulPoint(y,y);
 	q.qMulPoint(z,z);
-	// x.sub(o).norm();
-	// y.sub(o).norm();
-	// z.sub(o).norm();
 	return Code._vectorTwistFromCanonical(o,x,y,z);
 }
 Code.vectorTwistFromMatrix3D = function(matrix){
@@ -2927,16 +2923,28 @@ Code._vectorTwistFromCanonical = function(o,x,y,z){
 	var dir = V3D.cross(V3D.DIRZ,z).norm();
 	var ang = V3D.angle(V3D.DIRZ,z);
 	// undo the z movement
-	V3D.rotateAngle(x,x,dir,-ang);
-	V3D.rotateAngle(y,y,dir,-ang);
+	x = V3D.rotateAngle(x,dir,-ang);
+	// y = V3D.rotateAngle(y,dir,-ang);
 	// find the x & y angles (sould be identical)
+	var crossX = V3D.cross(V3D.DIRX,x);
+	// var crossY = V3D.cross(V3D.DIRY,y);
 	var angleX = V3D.angle(V3D.DIRX,x);
-	var angleY = V3D.angle(V3D.DIRY,y);
-	var angle = angleX; // TODO: average small error ?
+	// var angleY = V3D.angle(V3D.DIRY,y);
+	var angle = angleX; // (angleX+angleY)*0.5; // TODO: average small error ?
+	if(crossX.z<0){
+		angle = -angle;
+	}
 	var direction = z.copy();
 	return {"direction":direction, "angle":angle, "offset":o};
 }
 Code.Matrix3DFromVectorTwist = function(location, rotation){
+	if(rotation===undefined){
+		rotation = location;
+		location = rotation["offset"];
+		if(!location){
+			location = new V3D(0,0,0);
+		}
+	}
 	var twist = rotation["angle"];
 	var dir = rotation["direction"];
 	var attitude = V3D.cross(V3D.DIRZ,dir).norm();

@@ -8,10 +8,10 @@ function pageLoadedFxn(){
 	var ff = new FF("../code/",ffLoadedFxn);
 }
 function ffLoadedFxn(){
-	(new ScriptLoader("./",["Filter.js"],this,funLoadedFxn)).load();
+	(new ScriptLoader("./",["FFF.js"],this,funLoadedFxn)).load();
 }
 function funLoadedFxn(){
-	var filter = new Filter();
+	var filter = new FFF();
 }
 </script>
 <body onload="pageLoadedFxn();">
