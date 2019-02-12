@@ -6817,12 +6817,12 @@ var inverseA = Matrix.inverse(transformA);
 var inverseB = Matrix.inverse(transformB);
 // var relativeAtoB = R3D.relativeTransformMatrix(inverseA,inverseB);
 
-		var errorAB = transformRMean + 1.0*transformRSigma;
-		errorAB /= transformMatches; // AVERAGE ERROR
-// errorAB = 1.0; // BETTER
-// errorAB = 1.0/errorAB; // OK
-// var errorAB = transformRSigma/transformMatches; // BAD
-var errorAB = 1.0;
+		// var errorAB = transformRMean + 1.0*transformRSigma;
+		// var errorAB = transformRSigma/transformMatches; // AVERAGE ERROR
+		// var errorAB = Math.sqrt(transformRSigma);
+		// var errorAB = 1.0/Math.sqrt(transformRSigma); // OK
+		var errorAB = 1.0; // BEST
+		// var errorAB = transformRSigma/transformMatches; // BAD
 
 
 
@@ -6856,10 +6856,6 @@ console.log(listPairs);
 	// var result = R3D.optimumTransform3DFromRelativePairTransforms(relativePairs, errorPairs);
 	var result = R3D.optimumTransform3DFromRelativePairTransforms(listPairs);
 	console.log(result);
-
-// throw result
-	// throw "?";
-
 	var transforms = result["absolute"];
 
 	// // INVERT TO EXTRINSIC:

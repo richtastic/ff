@@ -318,30 +318,50 @@ https://cloud.google.com/appengine/docs/nodejs/
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-INITIAL ESTIMATE SHOULD BE AT LEAST AS GOOD AS FLAT GUESS
+- plot corner score vs r error
+	=> no real correlation?
 
-TRY NOT DERIVING F FROM R
+INITIAL ESTIMATE SHOULD BE AT LEAST AS GOOD AS FLAT GUESS
+- test error metrics
+
+=> the error that's being minimized may not be an accurate comparison?
+	- it DOES LOOK LIKe there is correlation:
+		-> at high R error, the graph error is high
+		-> at it's lowest R error, the graph error is ~0
+	-> the initial estimate isn't in a good approximation
+		-> is error used wrong?
+		-> is error weight calculated wrong?
+
+
+
+- try to reduce error in first match to lower than 1 pixel
+
+=> ADD BACK:
+	- corner-point propagation
+		[find all corner points & project to other views]
+	- patches
+
+
+=> pairs with low error might be good enough to return to texturing
+
+
+IS IT POSSIBLE TO DIRECT ABSOLUTE R IN DIRECTIONS THAT ARE BASED ON RELATIVE R - DERIVED FROM F ?
+
 
 x TRY USING EDGE WITH LEAST ERROR ONLY (no averaging)
-
-
-TRY DROPPING WORST ~50% corner score matches
-
+TRY DROPPING WORST ~50% corner score matches or until R error < 1 px
 
 
 
+TRY NOT DERIVING F FROM R
+-> F IS INHERENT in the point matches already
 
 IF F IS KEPT SEPARATE: [2-pair]
 - have absolute R and a predicted R
 .....
 
 
-
-
-
-=> other methods work on optimizing F, not R
-
-
+=> other BA methods work on optimizing F, not R
 
 
 NONLINEAR MINIMIZING
@@ -363,17 +383,6 @@ initial pair estimate: drop points until under 1 px sigmaA
 
 
 
-
-
-
-=> CONVERT TWIST TO QUATERNION: TEST => APP
-	=> use quaternions in calculation summation along edges
-	=> convert quaternions into twist AT END
-		Code.averageAngleVector3D
-
-
-HOW TO MINIMIZE ERROR ON A QUATERNION ?
-	=> convert to something else first?
 
 
 
