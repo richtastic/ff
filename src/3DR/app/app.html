@@ -603,6 +603,134 @@ console.log(" "+i+" DIFF: "+orgDiff.length()+" @ "+Code.degrees(dirDiff));
 
 function classesLoadedFxn(){
 
+	
+	var app = new App3DR();
+		return;
+
+
+	// GLOBAL STAGE:
+	// AVERAGING 3D POINTS
+	this._canvas = new Canvas(null,0,0,Canvas.STAGE_FIT_FILL, false,false);
+	this._stage = new Stage(this._canvas, 1000/20);
+	this._root = new DO();
+	this._stage.addChild(this._root);
+	this._canvas.addListeners();
+	this._stage.addListeners();
+	this._stage.start();
+	// this._canvas.addFunction(Canvas.EVENT_MOUSE_CLICK,this.handleMouseClickFxn,this);
+	GLOBALSTAGE = this._stage;
+
+
+/*
+Matrix.transform2DTranslate = function(a,tX,tY){
+	var b = Matrix._transformTemp2D.setFromArray([1.0,0.0,tX, 0.0,1.0,tY, 0.0,0.0,1.0]);
+	return Matrix.mult(b,a);
+}
+Matrix.transform2DScale = function(a,sX,sY){
+	sY = sY!==undefined?sY:sX;
+	var b = Matrix._transformTemp2D.setFromArray([sX,0.0,0.0, 0.0,sY,0.0, 0.0,0.0,1.0]);
+	return Matrix.mult(b,a);
+}
+Matrix.transform2DRotate = function(a,ang){
+	var b = Matrix._transformTemp2D.setFromArray([Math.cos(ang),-Math.sin(ang),0.0, Math.sin(ang),Math.cos(ang),0.0, 0.0,0.0,1.0]);
+	return Matrix.mult(b,a);
+}
+Matrix.transform2DSkewX = function(a,ang, isAngle){ // give an angle
+	if(isAngle){
+		ang = Math.tan(ang);
+	}
+	var b = Matrix._transformTemp2D.setFromArray([1.0,ang,0.0, 0.0,1.0,0.0, 0.0,0.0,1.0]);
+	return Matrix.mult(b,a);
+}
+Matrix.transform2DSkewY
+*/
+var affine = new Matrix(3,3).identity();
+affine = Matrix.transform2DScale(affine, 1.5,2.0);
+affine = Matrix.transform2DRotate(affine, Code.radians(45));
+affine = Matrix.transform2DTranslate(affine, 2,1);
+
+
+var error = 1.0;
+var pointCount = 10;
+var outlierCount = 3;
+
+var pointsA = [];
+var pointsB = [];
+for(var i=0; i<pointCount; ++i){
+	var a = new V2D();
+	a.x = Math.random()*100;
+	a.y = Math.random()*100;
+	var b = affine.multV2DtoV2D(a);
+	b.x += Code.randomFloat(-error,error);
+	b.y += Code.randomFloat(-error,error);
+if(i>pointCount-outlierCount-1){
+	// b.x += Code.randomFloat(-10,10);
+	// b.y += Code.randomFloat(-10,10);
+	// b.x += 2*error + 112;
+	// b.y += 2*error + 12;
+	// b.x += 2*error;
+	// b.y += 2*error;
+	// b.x += Code.randomFloat(-10,10);
+	// b.y += Code.randomFloat(-10,10);
+	b.x += Code.randomFloat(-2*error,2*error);
+	b.y += Code.randomFloat(-2*error,2*error);
+	console.log("outlier: "+b);
+}
+	pointsA.push(a);
+	pointsB.push(b);
+
+}
+
+// var matrix = R3D.affineMatrixLinear(pointsA,pointsB);
+// console.log(matrix);
+
+
+var affine = R3D.ransacAffine(pointsA,pointsB, error*1.0 );
+console.log(affine);
+matrix = affine["affine"];
+
+
+// DRAW:
+var OFFX = 200;
+var OFFY = 100;
+for(var i=0; i<pointCount; ++i){
+	var a = pointsA[i];
+	var b = pointsB[i];
+	var c = matrix.multV2DtoV2D(a);
+
+	var d = new DO();
+	d.graphics().setLine(2.0,0xFFFF0000);
+	d.graphics().beginPath();
+	d.graphics().drawCircle(a.x,a.y, 3.0);
+	d.graphics().strokeLine();
+	d.graphics().endPath();
+if(i>pointCount-outlierCount-1){
+	d.graphics().setLine(2.0,0xFFFF00FF);
+}else{
+	d.graphics().setLine(2.0,0xFF006699);
+}
+	d.graphics().beginPath();
+	d.graphics().drawCircle(b.x,b.y, 4.0);
+	d.graphics().strokeLine();
+	d.graphics().endPath();
+
+	d.graphics().setLine(2.0,0xFF00CC00);
+	d.graphics().beginPath();
+	d.graphics().drawCircle(c.x,c.y, 5.0);
+	d.graphics().strokeLine();
+	d.graphics().endPath();
+
+	d.matrix().translate(OFFX,OFFY);
+	//d.matrix().translate(location.x*SCA,location.y*SCA);
+
+	GLOBALSTAGE.addChild(d);
+}
+
+
+
+return;
+
+
 
 /*
 abs rotation/orientation of view A & B [quaternion,rodrigues,matrix,rotor,twist]
@@ -1200,17 +1328,6 @@ throw "ERROR METRIXING";
 
 
 
-// GLOBAL STAGE:
-// AVERAGING 3D POINTS
-this._canvas = new Canvas(null,0,0,Canvas.STAGE_FIT_FILL, false,false);
-this._stage = new Stage(this._canvas, 1000/20);
-this._root = new DO();
-this._stage.addChild(this._root);
-this._canvas.addListeners();
-this._stage.addListeners();
-this._stage.start();
-// this._canvas.addFunction(Canvas.EVENT_MOUSE_CLICK,this.handleMouseClickFxn,this);
-GLOBALSTAGE = this._stage;
 
 
 //
@@ -2736,7 +2853,7 @@ var errorB = averageError;
 */
 
 
-	var app = new App3DR();
+	// var app = new App3DR();
 }
 </script>
 <body onload="pageLoadedFxn();" style="padding:0; margin:0; border:0;">

@@ -908,6 +908,7 @@ App3DR.prototype._projectBALoad = function(projectManager){
 }
 App3DR.prototype._projectBALoaded = function(object, data){
 	console.log("_projectBALoaded")
+	console.log(object,data)
 	// console.log(data);
 	// console.log(object);
 	var str = Code.binaryToString(data);
@@ -3910,6 +3911,8 @@ App3DR.App.Model3D.prototype.onMouseMoveFxn3D = function(e){
 App3DR.App.Model3D.prototype.onMouseWheelFxn3D = function(e){
 
 Code.eventPreventDefault(e);
+
+
 
 if(this._keyboard.isKeyDown(Keyboard.KEY_LET_O)){ // left/right
 	if(!this._XXX){

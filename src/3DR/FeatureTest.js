@@ -52,7 +52,7 @@ function FeatureTest(){
 // new ImageLoader("./images/",["yA_small.jpg", "yB_small.jpg"],this,this.imagesLoadComplete2).load(); // ex poor : 52 @ 0.45
 // new ImageLoader("./images/",["zA_small.jpg", "zB_small.jpg"],this,this.imagesLoadComplete2).load(); // ex ok : 64 @ 0.74
 
-// new ImageLoader("./images/",["room0.png", "room1.png"],this,this.imagesLoadComplete2).load(); // real / close scenario
+new ImageLoader("./images/",["room0.png", "room1.png"],this,this.imagesLoadComplete2).load(); // real / close scenario
 // new ImageLoader("./images/",["room0.png", "room2.png"],this,this.imagesLoadComplete2).load(); // 66 @ 0.57
 
 // new ImageLoader("./images/",["bench_A.png", "bench_B.png"],this,this.imagesLoadComplete2).load(); // small skew ----- OK : 54 @ 0.65
@@ -87,7 +87,7 @@ function FeatureTest(){
 
 // new ImageLoader("./images/",["medusa_1.png", "medusa_2.png"],this,this.imagesLoadComplete2).load();
 // new ImageLoader("./images/",["medusa_2.png", "medusa_3.png"],this,this.imagesLoadComplete2).load();
-new ImageLoader("./images/",["medusa_3.png", "medusa_4.png"],this,this.imagesLoadComplete2).load();
+// new ImageLoader("./images/",["medusa_3.png", "medusa_4.png"],this,this.imagesLoadComplete2).load();
 // new ImageLoader("./images/",["medusa_4.png", "medusa_5.png"],this,this.imagesLoadComplete2).load();
 // new ImageLoader("./images/",["medusa_1.png", "medusa_4.png"],this,this.imagesLoadComplete2).load();
 // new ImageLoader("./images/",["medusa_2.png", "medusa_4.png"],this,this.imagesLoadComplete2).load();

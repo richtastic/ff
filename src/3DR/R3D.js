@@ -2665,13 +2665,16 @@ R3D.matchesDropHighFError = function(matches, FFwd,FRev, sigma){
 	return newMatches;
 }
 
-R3D.ransacAffine = function(pointsAIn,pointsBIn){
+R3D.ransacAffine = function(pointsAIn,pointsBIn, maxErrorPixels){
+	if(maxErrorPixels===undefined){
+		throw "maxErrorPixels";
+	}
 	var MAX_LIMIT = 1E3; // 1K - TODO: more empirical
 	var minCount = 3;
 	var args = [pointsAIn,pointsBIn];
 	var a = new V2D();
 	var b = new V2D();
-	var fxnError = function(points2DA,points2DB, affine,inverse, single){
+	var fxnError = function(points2DA,points2DB, affine,inverse, single, limitCount){
 		var errorTotal = 0;
 		var errors = [];
 		var errorMin = null;
@@ -2682,11 +2685,10 @@ R3D.ransacAffine = function(pointsAIn,pointsBIn){
 			inverse.multV2DtoV2D(a,pointB);
 			var distanceAB = V2D.distance(b,pointB);
 			var distanceBA = V2D.distance(a,pointA);
-			// var error = distance*distance;
-			// var error = (distanceAB + distanceBA)/2;
-			var error = (distanceAB*distanceAB + distanceBA*distanceBA);
+			var error = (distanceAB + distanceBA)/2;
+			// var error = (distanceAB*distanceAB + distanceBA*distanceBA);
 			if(i>0){
-				errorMin = Math.max(errorMin,error);
+				errorMin = Math.min(errorMin,error);
 			}else{
 				errorMin = error;
 			}
@@ -2696,7 +2698,19 @@ R3D.ransacAffine = function(pointsAIn,pointsBIn){
 		if(single){
 			return errorTotal;
 		}
+		// errorMin = 0;
+		errors.sort(function(a,b){ return a<b ? -1 : 1; });
+		console.log(errors);
+		// if(limitCount!==undefined){
+		// 	errors.sort(function(a,b){ return a<b ? -1 : 1; });
+		// 	Code.truncateArray(errors,limitCount); //
+		// }
+
 		var errorSigma = Code.stdDev(errors,errorMin);
+		// if(errors.length>4){
+		// 	errorSigma = errors[4];
+		// }
+		// console.log(errorSigma);
 		return {"total":errorTotal, "sigma":errorSigma, "min":errorMin};
 	}
 	var fxnModel = function(args, sampleIndexes){ // create primitive minimal estimate
@@ -2710,21 +2724,38 @@ R3D.ransacAffine = function(pointsAIn,pointsBIn){
 			pointsA.push(pointsAIn[index]);
 			pointsB.push(pointsBIn[index]);
 		}
-		var affine = R3D.affineMatrixExact(pointsA,pointsB);
+		//var affine = R3D.affineMatrixExact(pointsA,pointsB);
+		var affine = R3D.affineMatrixLinear(pointsA,pointsB);
 		if(!affine){
 			console.log("ransacAffine - transformFromFundamental - FAIL - affine");
 			return null;
 		}
 		var inverse = Matrix.inverse(affine);
-		var error = fxnError(pointsA,pointsB,affine,inverse);
+		var error = fxnError(pointsA,pointsB,affine,inverse); // NO ERRORS ONLY KEEPS BOTTOM 3
+		// NEED TO INCLUDE AT LEAST ONE NON-BASE TO MAKE ERROR NOT SO BAD
+		// var error = fxnError(pointsAIn,pointsBIn,affine,inverse); // bad errors throw off sigma
+		// var error = fxnError(pointsAIn,pointsBIn,affine,inverse, false, 4);
 		var totalError = error["total"];
 		var averageError = totalError/pointsA.length;
 		var minError = error["min"];
 		var sigmaError = error["sigma"];
-		var sigma = 2.0; //  1 = 68 | 2=95
+		var sigma = 2.0; //  1 = 68 | 2=95 | 3=99
 		var limitError = minError + sigma*sigmaError;
+			// limitError = 1.0;
+			limitError = maxErrorPixels;
+			/*
+
+			how to emperically determine this number?:
+
+			if all inliers are selected:
+				outliers are highly outside first few error metrics
+			if some/all outilers are selected:
+				everything looks like an inlier
+				* but everything has similar higher error
+
+
+			*/
 		var primitive = {"affine":affine, "inverse":inverse, "limit":limitError, "error":averageError};
-// GET REVERSE AFFINE TO DO SYMMETRIC ERROR ?
 		return primitive;
 	};
 	var fxnInlier = function(args, model, index){ // need constant distance metric ?
@@ -4378,12 +4409,14 @@ R3D.generalRANSAC = function(args, fxnModel,fxnInlier, populationSize,sampleSize
 				inliers.push(j);
 			}
 		}
+		// console.log(" => "+inliers.length);
 		if(bestInliers===null || inliers.length>=bestInliers.length){
 			var model = fxnModel(args,inliers);
 			if(model){
 				var error = model["error"];
 				if(bestInliers===null || inliers.length>bestInliers.length || (inliers.length==bestInliers.length && error<bestError)){
 					// console.log(i+" === "+inliers.length+" / "+populationSize+" ("+(inliers.length/populationSize)+")");
+					console.log(" NEW BEST");
 					bestInliers = inliers;
 					bestError = error;
 					bestModel = model;

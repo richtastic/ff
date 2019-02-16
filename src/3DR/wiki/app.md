@@ -318,8 +318,80 @@ https://cloud.google.com/appengine/docs/nodejs/
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-- plot corner score vs r error
-	=> no real correlation?
+- how should patch normal be initialized / optimized?
+
+- add needle-haystack searching for when point is projected 3D to other view
+
+- see how final added matches look
+- reasons why are other matches dropped [and can this be lightened up?]
+-
+
+
+- a lot of initial matches wrong immediately -- in vague areas
+
+- something that works in F but is very wrong might be able to be obviously removed in R ? very very close or
+
+
+=> see how it works on CORRECT points ...
+
+=> if there's a bad zooming problem maybe REMOVE
+	[if eg size is much larger or smaller than expected based on average camera distance]
+
+
+
+- add step at end of medium match:
+ 	- that compares elements NCC/SAD
+	- ignores low corner scores
+	- drop highest F-error points
+	- drop points with very high secondary choice (non-unique) -- difference larger than window size
+
+
+- when update patch should be called (if is has a patch but NOT checked update (need a var))
+	-- or of view structure has changed enough:
+		- R error in any of possible views
+		- relative distance to any cameras of possible views >> some ratio (1.5-4)
+- if a patch IS CHANGED, it should require RE-APPROXIMATING THE PATCH/ NORMAL
+
+
+? DENSE F MATCHES - plot pairwise matches for 1 & 2
+? extracted probe3d points are flipped?
+
+
+looks like initial F-Match is quite wrong image 0-2 ...
+	- best match fwd / bak maybe needs larger windows
+		- maybe drop matches that have minimal cornerness /
+
+possiblyVisibleViews == wrong ?
+
+initialEstimatePatch
+
+
+
+for each pair:
+	- pick 100 best canidate points to project to other views
+		- avg corner score
+		- lower R error
+	- do projection to each other view and see if match is good enough
+		- R / F / M
+	-
+
+
+bundleAdjustViews - BundleAdjustCameraExtrinsic working?
+
+
+focus combining code on merging points to more force multi-way alignment
+
+-- SEE what dropping worst corner points looks like
+	- 'random', or more depth-based?
+
+- drop worst corners from pairwise solution:
+	-> drop any corner score worse than bottom ~10% of images
+
+- add back patch-3D projection in group solution
+- check 2D expansion algorithm
+- outlier rejection algorithm from local 2D affine error
+	=> CAN'T USE SIGMA because outliers trap data ... need some kind of sigma-finder
+
 
 INITIAL ESTIMATE SHOULD BE AT LEAST AS GOOD AS FLAT GUESS
 - test error metrics
@@ -345,11 +417,14 @@ INITIAL ESTIMATE SHOULD BE AT LEAST AS GOOD AS FLAT GUESS
 => pairs with low error might be good enough to return to texturing
 
 
+HOW TO OPTIMIZE Fs GLOBALLY RATHER THAN Rs?
+
+
 IS IT POSSIBLE TO DIRECT ABSOLUTE R IN DIRECTIONS THAT ARE BASED ON RELATIVE R - DERIVED FROM F ?
 
 
-x TRY USING EDGE WITH LEAST ERROR ONLY (no averaging)
-TRY DROPPING WORST ~50% corner score matches or until R error < 1 px
+
+* IF STILL CORNER MATCH DROPPING = MOVE INTO CENTRAL LOCATION SO PROBED POINTS ARE DISREGARDED IF WANTED TO ADD
 
 
 

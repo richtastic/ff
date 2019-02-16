@@ -2,10 +2,9 @@
 
 function Cam3D(p, r, l,f, s){
 //	Cam3D._.constructor.call(this,  p, r, l,f, s); // Code.constructorClass(Cam3D, this);
-	//this._rot = new V3D(0,0,0); // 
+	//this._rot = new V3D(0,0,0); //
 	this._rot = new V4D();
-		this._rot.qClear();
-		// console.log("asdadsasdsasasd "+this._rot);
+	this._rot.qClear();
 	this._pos = new V3D(0,0,0);
 	this._K = new Matrix3D();
 	this._target = new V3D(0,0,0);
@@ -59,15 +58,10 @@ Cam3D.prototype.distortion = function(k1,k2,k3,p1,p2){
 
 
 Cam3D.prototype.rotate = function(vector, angle){
-//	console.log(this._rot+" ... ROTATE BY: "+vector+" @ "+Code.degrees(angle));
 	var q = new V4D().qClear();
-	q.qRotateDir(vector.x,vector.y,vector.z, angle);
-	//console.log("q: "+q)
-
-	//V4D.qMul(this._rot, this._rot, q);
+	q.qRotateDir(vector, angle);
 	this._rot = V4D.qMul(q, this._rot);
 	this._rot.qNorm();
-
 	return this;
 }
 Cam3D.prototype.translate = function(t){
@@ -97,9 +91,8 @@ Cam3D.prototype.orientation = function(){
 
 
 Cam3D.prototype.matrix = function(){
-	// console.log(this._pos);
 	var rotation = new Matrix3D();
-	V4D.qMatrix(rotation, this._rot);
+	V4D.qMatrix(this._rot,rotation);
 
 	var translation = new Matrix3D();
 	translation.translate(-this._pos.x,-this._pos.y,-this._pos.z);
