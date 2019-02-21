@@ -30,67 +30,69 @@ function FeatureTest(){
 // new ImageLoader("./images/",["calib_test/A.png", "calib_test/B.png"],this,this.imagesLoadComplete2).load();
 
 // main study
-// new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-9.jpg"],this,this.imagesLoadComplete2).load();
+// new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-9.jpg"],this,this.imagesLoadComplete2).load(); // [17 @ 1.1 | 16 @ 1.0]
 // pool
-// new ImageLoader("./images/",["F_S_1_1.jpg", "F_S_1_2.jpg"],this,this.imagesLoadComplete2).load();
+// new ImageLoader("./images/",["F_S_1_1.jpg", "F_S_1_2.jpg"],this,this.imagesLoadComplete2).load(); // [50 @ 0.5]
 // snow
-// new ImageLoader("./images/",["snow1.png", "snow2.png"],this,this.imagesLoadComplete2).load(); // centers coincident
+// new ImageLoader("./images/",["snow1.png", "snow2.png"],this,this.imagesLoadComplete2).load(); // centers coincident  // [28 @ 0.3]
+
 // zoom study:
-// new ImageLoader("./images/",["caseStudy1-20.jpg", "caseStudy1-24.jpg"],this,this.imagesLoadComplete2).load(); // typical translation
-// new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-24.jpg"],this,this.imagesLoadComplete2).load(); // typical small: trans + rot + scale
-// new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-20.jpg"],this,this.imagesLoadComplete2).load(); // obscure
+// new ImageLoader("./images/",["caseStudy1-20.jpg", "caseStudy1-24.jpg"],this,this.imagesLoadComplete2).load(); // typical translation    [20 @ 0.63 | 18 : 0.64]
+// new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-24.jpg"],this,this.imagesLoadComplete2).load(); // typical small: trans + rot + scale  [16 @ 1.25 | ]
+// new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-20.jpg"],this,this.imagesLoadComplete2).load(); // obscure [23 @ 0.70 | 20 @ 0.6504]
 // new ImageLoader("./images/",["caseStudy1-14.jpg", "caseStudy1-20.jpg"],this,this.imagesLoadComplete2).load(); // obscure -- FAIL
 // new ImageLoader("./images/",["caseStudy1-14.jpg", "caseStudy1-20_rot.jpg"],this,this.imagesLoadComplete2).load(); // obscure & rotated ----------- MVP  -- FAIL
-// new ImageLoader("./images/",["caseStudy1-24.jpg", "caseStudy1-26.jpg"],this,this.imagesLoadComplete2).load(); // typical angle - cameras coincide
-// new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-20.jpg"],this,this.imagesLoadComplete2).load(); // typical angle
-// new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-12.jpg"],this,this.imagesLoadComplete2).load(); // actual big scale difference -- FAIL
+// new ImageLoader("./images/",["caseStudy1-24.jpg", "caseStudy1-26.jpg"],this,this.imagesLoadComplete2).load(); // typical angle - cameras coincide [18 @ 0.720 | ]
+// new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-20.jpg"],this,this.imagesLoadComplete2).load(); // typical angle [20 @ 0.72 |  22 @ 0.76]
+// new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-12.jpg"],this,this.imagesLoadComplete2).load(); // actual big scale difference -- FAIL [10 @ 2.6]
 //
 // new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-20_rot.jpg"],this,this.imagesLoadComplete2).load(); // rotated
 // new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-0_rot.jpg"],this,this.imagesLoadComplete2).load(); // rotated
 // new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-0_big.jpg"],this,this.imagesLoadComplete2).load(); // zoom difference x2
-// new ImageLoader("./images/",["xA_small.jpg", "xB_small.jpg"],this,this.imagesLoadComplete2).load(); // ex bad --------------------------------- MVP 19 @ 0.53
-// new ImageLoader("./images/",["yA_small.jpg", "yB_small.jpg"],this,this.imagesLoadComplete2).load(); // ex poor : 52 @ 0.45
-// new ImageLoader("./images/",["zA_small.jpg", "zB_small.jpg"],this,this.imagesLoadComplete2).load(); // ex ok : 64 @ 0.74
+// new ImageLoader("./images/",["xA_small.jpg", "xB_small.jpg"],this,this.imagesLoadComplete2).load(); // ex bad --------------------------------- OK: [20 @ 0.73 | 16 @ 0.54]
+// new ImageLoader("./images/",["yA_small.jpg", "yB_small.jpg"],this,this.imagesLoadComplete2).load(); // ex poor : GOOD: [34 @ 0.463 | 33 @ 0.45]
+// new ImageLoader("./images/",["zA_small.jpg", "zB_small.jpg"],this,this.imagesLoadComplete2).load(); // ex ok : GOOD: [36 @ 0.548 | 40 @ 0.588]
 
-new ImageLoader("./images/",["room0.png", "room1.png"],this,this.imagesLoadComplete2).load(); // real / close scenario
+// new ImageLoader("./images/",["room0.png", "room1.png"],this,this.imagesLoadComplete2).load(); // real / close scenario
 // new ImageLoader("./images/",["room0.png", "room2.png"],this,this.imagesLoadComplete2).load(); // 66 @ 0.57
 
-// new ImageLoader("./images/",["bench_A.png", "bench_B.png"],this,this.imagesLoadComplete2).load(); // small skew ----- OK : 54 @ 0.65
-// new ImageLoader("./images/",["bench_B.png", "bench_C.png"],this,this.imagesLoadComplete2).load(); // large skew ----- POOR : 31 * 1.5 [24 @ 1.8 - WRONG]
-// new ImageLoader("./images/",["bench_C.png", "bench_D.png"],this,this.imagesLoadComplete2).load(); // offset, slight zoom ----- GOOD : 74 @ 0.8
-// new ImageLoader("./images/",["bench_D.png", "bench_E.png"],this,this.imagesLoadComplete2).load(); // small zoom, skew ----- POOR : 35 @ 0.9 [31 @ 1.3 - BAD]
-// new ImageLoader("./images/",["bench_D.png", "bench_F.png"],this,this.imagesLoadComplete2).load(); // big zoom, skew ----- OK : 47 @ 1.0 [27 @ 1.0 - BAD]
-// new ImageLoader("./images/",["bench_C.png", "bench_F.png"],this,this.imagesLoadComplete2).load(); // camera centers coincide ----- GOOD : 54 @ 0.71
+// new ImageLoader("./images/",["bench_A.png", "bench_B.png"],this,this.imagesLoadComplete2).load(); // small skew ----- GOOD :  [24 @ 0.476 | 44 @ 0.61]
+// new ImageLoader("./images/",["bench_B.png", "bench_C.png"],this,this.imagesLoadComplete2).load(); // large skew ----- POOR : [34 : 1.32 | 39 @ 1.72]
+// new ImageLoader("./images/",["bench_C.png", "bench_D.png"],this,this.imagesLoadComplete2).load(); // offset, slight zoom ----- GOOD : [34 : 0.59 | 43 @ 0.72]
+// new ImageLoader("./images/",["bench_D.png", "bench_E.png"],this,this.imagesLoadComplete2).load(); // small zoom, skew ----- OK : [35 @ 1.22 | 32 @ 0.97]
+// new ImageLoader("./images/",["bench_D.png", "bench_F.png"],this,this.imagesLoadComplete2).load(); // big zoom, skew ----- OK : [35 @ 0.81 | 27 @ 0.706]
+// new ImageLoader("./images/",["bench_C.png", "bench_F.png"],this,this.imagesLoadComplete2).load(); // camera centers coincide ----- GOOD : [28 @ 0.56 | 33 @ 0.51 | 42 : 0.546]
 
 
 
 
 
-// new ImageLoader("./images/flowers_1/",["7131.png", "7133.png"],this,this.imagesLoadComplete2).load(); // OK : 39 @ 0.96
+// new ImageLoader("./images/flowers_1/",["7131.png", "7133.png"],this,this.imagesLoadComplete2).load(); // POOR : [28 @ 1.54 | 30 @ 1.57]
 // new ImageLoader("./images/flowers_1/",["7120.png", "7144.png"],this,this.imagesLoadComplete2).load(); // FAIL
-// new ImageLoader("./images/flowers_1/",["7120.png", "7127.png"],this,this.imagesLoadComplete2).load(); // FAIL
-// new ImageLoader("./images/flowers_1/",["7127.png", "7131.png"],this,this.imagesLoadComplete2).load(); // OK : 51 @ 1.0
-// new ImageLoader("./images/flowers_1/",["7133.png", "7140.png"],this,this.imagesLoadComplete2).load(); // POOR : 23 @ 1.7
+// new ImageLoader("./images/flowers_1/",["7120.png", "7127.png"],this,this.imagesLoadComplete2).load(); // BAD [16 @ 2.8 | FAIL]
+// new ImageLoader("./images/flowers_1/",["7127.png", "7131.png"],this,this.imagesLoadComplete2).load(); // FAIL
+// new ImageLoader("./images/flowers_1/",["7133.png", "7140.png"],this,this.imagesLoadComplete2).load(); // OK : [31 @ 1.05  | 19 @ 1.8]
 // new ImageLoader("./images/flowers_1/",["7140.png", "7141.png"],this,this.imagesLoadComplete2).load(); // FAIL
-// new ImageLoader("./images/flowers_1/",["7141.png", "7144.png"],this,this.imagesLoadComplete2).load(); // POOR : 27 @ 1.6
+// new ImageLoader("./images/flowers_1/",["7141.png", "7144.png"],this,this.imagesLoadComplete2).load(); // POOR : [18 @ 1.29 | 5 @ 0.937]
 
 
 // MORE
-// new ImageLoader("./images/",["graffiti_1.png", "graffiti_2.png"],this,this.imagesLoadComplete2).load();
+// new ImageLoader("./images/",["graffiti_1.png", "graffiti_2.png"],this,this.imagesLoadComplete2).load(); // GOOD : [62 @ 0.46 | 63 : 0.43]
 
-// new ImageLoader("./images/",["temple_1.png", "temple_2.png"],this,this.imagesLoadComplete2).load();
+// new ImageLoader("./images/",["temple_1.png", "temple_2.png"],this,this.imagesLoadComplete2).load(); // GOOD : [21 @ 0.4473 | 35 @ 1.23]
 
-// new ImageLoader("./images/",["castle.000.jpg", "castle.009.jpg"],this,this.imagesLoadComplete2).load();
-// new ImageLoader("./images/",["castle.009.jpg", "castle.018.jpg"],this,this.imagesLoadComplete2).load();
-// new ImageLoader("./images/",["castle.018.jpg", "castle.027.jpg"],this,this.imagesLoadComplete2).load();
-// new ImageLoader("./images/",["castle.009.jpg", "castle.027.jpg"],this,this.imagesLoadComplete2).load();
+// new ImageLoader("./images/",["castle.000.jpg", "castle.009.jpg"],this,this.imagesLoadComplete2).load(); // GOOD: [48 @ 0.59 | 39 @ 0.66]
+// new ImageLoader("./images/",["castle.009.jpg", "castle.018.jpg"],this,this.imagesLoadComplete2).load(); // GOOD : [33 @ 0.58 | 31 @ 0.49]
+// new ImageLoader("./images/",["castle.018.jpg", "castle.027.jpg"],this,this.imagesLoadComplete2).load(); // GOOD : [38 @ 0.59 | 47 @ 0.43]
+// new ImageLoader("./images/",["castle.009.jpg", "castle.027.jpg"],this,this.imagesLoadComplete2).load(); // GOOD : [16 @ 0.59 | 27 @ 0.67]
+// new ImageLoader("./images/",["castle.000.jpg", "castle.027.jpg"],this,this.imagesLoadComplete2).load(); // BAD : [20 @ 0.94 | 11 @ 1.49] -- WRONG
 
-// new ImageLoader("./images/",["medusa_1.png", "medusa_2.png"],this,this.imagesLoadComplete2).load();
-// new ImageLoader("./images/",["medusa_2.png", "medusa_3.png"],this,this.imagesLoadComplete2).load();
-// new ImageLoader("./images/",["medusa_3.png", "medusa_4.png"],this,this.imagesLoadComplete2).load();
-// new ImageLoader("./images/",["medusa_4.png", "medusa_5.png"],this,this.imagesLoadComplete2).load();
-// new ImageLoader("./images/",["medusa_1.png", "medusa_4.png"],this,this.imagesLoadComplete2).load();
-// new ImageLoader("./images/",["medusa_2.png", "medusa_4.png"],this,this.imagesLoadComplete2).load();
+// new ImageLoader("./images/",["medusa_1.png", "medusa_2.png"],this,this.imagesLoadComplete2).load(); // GOOD : [23 @ 0.40 | 25 @ 0.550]
+// new ImageLoader("./images/",["medusa_2.png", "medusa_3.png"],this,this.imagesLoadComplete2).load(); // GOOD : [32 @ 0.32 | 35 @ 0.34]
+// new ImageLoader("./images/",["medusa_3.png", "medusa_4.png"],this,this.imagesLoadComplete2).load(); // GOOD : [50 @ 0.44 | 53 @ 0.51]
+// new ImageLoader("./images/",["medusa_4.png", "medusa_5.png"],this,this.imagesLoadComplete2).load(); // GOOD : [29 @ 0.36 | 32 : 0.36]
+// new ImageLoader("./images/",["medusa_1.png", "medusa_4.png"],this,this.imagesLoadComplete2).load(); // BAD: [17 @ 1.24 | 17 @ 1.23] -- WRONG
+// new ImageLoader("./images/",["medusa_2.png", "medusa_4.png"],this,this.imagesLoadComplete2).load(); // GOOD : [26 : 0.61 | 31 @ 0.71]
 
 // new ImageLoader("./images/",["?.png", "?.png"],this,this.imagesLoadComplete2).load();
 
@@ -3043,6 +3045,7 @@ R3D.showRansac(pointsA,pointsB, matrixFfwd, matrixFrev, display, imageMatrixA,im
 // matrixFfwd = new Matrix(3,3).fromArray(matrixFfwd);
 
 // MEDIUM / DENSISH:
+console.log("stereoHighConfidenceMatches");
 var matches = R3D.stereoHighConfidenceMatches(imageMatrixA,imageMatrixB, pointsA,pointsB,matrixFfwd);
 console.log(matches);
 

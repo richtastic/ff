@@ -1705,6 +1705,7 @@ Code.subSampleArray = function(a,count){
 		index = Math.floor(Math.random()*a.length);
 		a[index] = a.pop();
 	}
+	return a;
 }
 Code.arrayLimit = function(arr,min,max){
 	var i, len = arr.length;
@@ -3919,6 +3920,12 @@ Code.RGBFromCMYK = function(c,m,y,k){
 	return Code.getColARGB(0x0, r,g,b);
 }
 // formatting functions ----------------------------------------------
+Code.fixed = function(start,count){
+	if(start && start.length>count){
+		return start.substring(0,count-1);
+	}
+	return start;
+}
 Code.prependFixed = function(start,pad,count){
 	var str = start;
 	while(str.length<count){
@@ -6784,6 +6791,17 @@ Code.extrema2DFloatInterpolate = function(loc, d0,d1,d2,d3,d4,d5,d6,d7,d8){ // w
 	Code.mult2x2by2x1toV2D(loc, Hinv,dD);
 	loc.x = -loc.x; loc.y = -loc.y;
 	loc.z = d4 + 0.5*(dx*loc.x + dy*loc.y);
+	// if(Code.isNaN(loc.x) || Code.isNaN(loc.y)){
+	// 	console.log(dx);
+	// 	console.log(dy);
+	// 	console.log(dxdx);
+	// 	console.log(dxdy);
+	// 	console.log(dydy);
+	// 	console.log(dD);
+	// 	console.log(loc);
+	// 	console.log(d0,d1,d2,d3,d4,d5,d6,d7,d8)
+	// 	throw "?";
+	// }
 	return loc;
 }
 //------------------------------------------------------------------------------------------------------------------------------------------------- interpolation - 3D

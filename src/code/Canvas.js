@@ -5,7 +5,7 @@ Canvas.STAGE_FIT_SCALE = 2;
 
 // TODO: REMOVE CURSOR TO CODE:
 Canvas.CURSOR_STYLE_NONE = "none";						// hides cursor
-Canvas.CURSOR_STYLE_DEFAULT = "auto";					// 
+Canvas.CURSOR_STYLE_DEFAULT = "auto";					//
 Canvas.CURSOR_STYLE_DEFAULT = "default";				// ^
 Canvas.CURSOR_STYLE_CROSSHAIR = "crosshair";			// +
 Canvas.CURSOR_STYLE_RESIZE_TOP = "n-resize";			// ^|
@@ -77,7 +77,7 @@ Canvas.MOUSE_EVENT_KEY_LOCATION = "location";
 Canvas.MOUSE_EVENT_KEY_SCROLL = "scroll";
 Canvas.MOUSE_EVENT_KEY_BUTTON = "button";
 Canvas.MOUSE_EVENT_MOUSE_DOWN = "mouseDown";
-// 
+//
 Canvas.EVENT_WINDOW_RESIZE = 'canwinrez';
 Canvas.IMAGE_TYPE_PNG = "png";
 Canvas.IMAGE_TYPE_JPG = "jpg";
@@ -248,7 +248,7 @@ Canvas.prototype.clipStart = function(){
 	//var t = this.currentTransform();
 	//this._context.transform(t[0],t[1],t[2],t[3],t[4],t[5]);
 	var clip = this._context.clip();
-	
+
 	return clip;
 // void ctx.clip();
 // void ctx.clip(fillRule);
@@ -289,6 +289,7 @@ Canvas.prototype.clearViewport = function(){
 }
 Canvas.prototype.bindArrayFloatBuffer = function(attr, buffer, lengthOfIndividual){
 	this._context.bindBuffer(this._context.ARRAY_BUFFER, buffer);
+	// vertexAttribPointer: location, numComponents, typeOfData, normalizeFlag, strideToNextPieceOfData, offsetIntoBuffer
 	this._context.vertexAttribPointer(attr, lengthOfIndividual, this._context.FLOAT, false, 0,0);
 }
 Canvas.prototype.bindElementArrayBuffer = function(buffer, lengthOfIndividual){
@@ -422,7 +423,7 @@ Canvas.prototype.pushComposite = function(c){
 	"source-over" = source is layerd in-front-of dest [default]
 	"darker" = source-dest (sub) REMOVED FROM SPEC
 	"lighter" = source+dest (add)
-	"xor" = 
+	"xor" =
 	*/
 	this._context.globalCompositeOperation = "source-over";
 }
@@ -445,7 +446,7 @@ Canvas.prototype.getColorArrayARGB = function(pX,pY,wid,hei){
 	matrix.identity();
 	matrix.scale(1.0/this.presentationScale());
 	this.contextTransform(matrix);
-	
+
 	var imgData = this._context.getImageData(pX,pY,wid,hei).data;
 	var i, j, w=wid, h=hei, index, jw, jw4;
 	var colList = new Array(w*h);
@@ -573,11 +574,11 @@ Canvas.prototype.endPath = function(){
 Canvas.prototype.drawRect = function(sX,sY,wX,hY){
 	this._context.rect(sX,sY,wX,hY);
 }
-// ------------------------------------------------------------------------------------------------------------------------ 
+// ------------------------------------------------------------------------------------------------------------------------
 Canvas.prototype.clear = function(){
 	var wid = this._canvas.width; var hei = this._canvas.height; this._canvas.width = 0; this._canvas.height = 0; this._canvas.width = wid; this._canvas.height = hei;
 	this._context.clearRect( 0, 0, this._context.width, this._context.height);
-	
+
 }
 Canvas.prototype.createLinearGradient = function(sX,sY,eX,eY, locations, colors){ // locations || percentsAndColors
 	var gra = this._context.createLinearGradient(sX,sY,eX,eY);
@@ -863,7 +864,7 @@ Canvas.prototype.kill = function(e){
   }
   if (fill) {
     ctx.fill();
-  }        
+  }
 }
 	*/
 

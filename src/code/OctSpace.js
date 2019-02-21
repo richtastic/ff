@@ -10,7 +10,7 @@ function OctSpace(toCube,min,max,eps){
 OctSpace.objectToCuboid = function(p){
 	throw "need cuboid function";
 }
-// --------------------------------------------------------------------------------------------------------- 
+// ---------------------------------------------------------------------------------------------------------
 OctSpace.prototype.kill = function(){
 	this.clear();
 	this._root = null;
@@ -152,7 +152,7 @@ OctTree.prototype.objectsInsideRay = function(org,dir,radius){ // objects inside
 	this._root.objectsInsideRay(arr,org,dir,radius,this._toPoint);
 	return arr;
 }
-// --------------------------------------------------------------------------------------------------------- 
+// ---------------------------------------------------------------------------------------------------------
 OctSpace.Package = function(object){
 	this._object = null;
 	this._voxels = [];
@@ -177,7 +177,7 @@ OctSpace.Package.prototype.kill = function(){
 	this._object = null;
 	this._voxels = null;
 }
-// --------------------------------------------------------------------------------------------------------- 
+// ---------------------------------------------------------------------------------------------------------
 OctSpace.Voxel = function(){
 	this._count = 0;
 	this._parent = null;
@@ -242,7 +242,7 @@ OctSpace.Voxel.prototype._recheckExtrema = function(){
 	this._max.set(cen.x+0.5*siz.x,cen.y+0.5*siz.y,cen.z+0.5*siz.z);
 	this._cuboid.set(this._min,this._size);
 }
-// --------------------------------------------------------------------------------------------------------- 
+// ---------------------------------------------------------------------------------------------------------
 OctSpace.Voxel.prototype.insertObject = function(package, cube, toCubeFxn, epsilon){
 	var overlap = this.overlap(cube);
 	if(!overlap){
@@ -563,5 +563,3 @@ OctSpace.Voxel.prototype.allObjects = function(arr){
 		}
 	}
 }
-
-

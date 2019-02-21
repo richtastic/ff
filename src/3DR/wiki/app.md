@@ -318,32 +318,97 @@ https://cloud.google.com/appengine/docs/nodejs/
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-- how should patch normal be initialized / optimized?
+- medium matching:
+	- some way to drop NON-UNIQUE MATCHES (along F-line ?)
+	- kNN and find distances between all features n O(1)?
+		- flat pixel values (pixel color 0-1)
+			- 5x5 => 9x9 = 25=>81
+		- SIFT dimensions
+	=> ANN / HAMMING DISTANCE
 
-- add needle-haystack searching for when point is projected 3D to other view
+	- go thru each point
+		- extract object = 5x5 pixel cell around point
+	- get rectified mapping
+	- map points to F-row/(don't even care about col)
+	- go thru each object
+		- go thru each object in opposite F-row [+/- 1/2 pixels]
+			- calc similarity sum a_i - b_i
+			- keep track of 2 most similar
+		- uniqueness = 1st/2nd
 
-- see how final added matches look
-- reasons why are other matches dropped [and can this be lightened up?]
--
+	- uniqueness = log(uniqueness)
+	- graph
+	
+	- drop points with most similar matchings [least unique]
 
+- get F with large sample size
+- drop the points with worst error (+1 sigma)
 
-- a lot of initial matches wrong immediately -- in vague areas
-
-- something that works in F but is very wrong might be able to be obviously removed in R ? very very close or
-
-
-=> see how it works on CORRECT points ...
-
-=> if there's a bad zooming problem maybe REMOVE
-	[if eg size is much larger or smaller than expected based on average camera distance]
+... add in more haystack area searching ...
 
 
 
+POINT IN IMAGE => ANGLE IN F
+
+
+SAD/SIFT compare of matches rather than NCC
+
+- maybe there are other errors - camera ? radial distortion ?
+
+=> try to get a set of pairs that have very low (<1px) error initially
+=> then also need absolute estimate to have very low error
+
+
+
+- a lot of initial matches wrong immediately -- in vague areas [from Medium V]
 - add step at end of medium match:
  	- that compares elements NCC/SAD
 	- ignores low corner scores
 	- drop highest F-error points
 	- drop points with very high secondary choice (non-unique) -- difference larger than window size
+
+
+
+
+
+
+
+
+
+- drop points that are very isolated (not around MEAN locations)?
+
+- maybe point3D 3-way matches not working as expected?
+	=> show some 3-way pairs / scores and see what what
+
+
+
+
+- how should patch normal be initialized / optimized?
+	- camera normals and camera-center-to-point vectors
+
+
+- newly added 3-pair points are not being kept: <10% keep ratio ????
+	-> linear dropping is too much/fast
+=> show some of the items being dropped (& WHY?)
+	=> RERROR: [2-12]
+		- very far away from existing solutions
+
+
+- prevent patches from being re-evaluated in probe3d (checked:)
+
+
+
+- something that works in F but is very wrong might be able to be obviously removed in R ? very very close or
+
+
+- add sub-pixel precision in several places along pipeline
+
+
+
+
+=> if there's a bad zooming problem maybe REMOVE
+	[if eg size is much larger or smaller than expected based on average camera distance]
+
 
 
 - when update patch should be called (if is has a patch but NOT checked update (need a var))

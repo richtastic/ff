@@ -1,0 +1,156 @@
+<html>
+<head>
+<title>Shaders</title>
+<script src="../code/FF.js"></script>
+</head>
+<script type="text/javascript">
+function pageLoadedFxn(){
+	var ff = new FF("../code/",ffLoadedFxn);
+}
+/*
+lines:
+	color[s]
+vertexes:
+	color
+background:
+	colors to fade between
+
+
+*/
+function ffLoadedFxn(){
+	// (new ScriptLoader("./",["AreaMap.js","R3D.js","SIFTDescriptor.js","Dense.js","Medium.js"],this,classesLoadedFxn)).load();
+	function Test(){
+		var frameRate = 30;
+		this._canvas = new Canvas(null,1,1,Canvas.STAGE_FIT_FILL,false,true);
+		this._stage = new StageGL(this._canvas, frameRate, this.getVertexShaders1(), this.getFragmentShaders1());
+		this._canvas.addListeners();
+		this._stage.setBackgroundColor(1.0,1.0,1.0,1.0);
+		this._stage.frustrumAngle(35);
+		this._stage.enableDepthTest();
+		this._stage.setViewport(0,0,this._canvas.width(),this._canvas.height());
+		this._canvas.addListeners();
+		this._stage.addListeners();
+		// CREATE OBJECTS
+		this.setupObjects();
+		// START
+	    this._stage.addFunction(StageGL.EVENT_ON_ENTER_FRAME, this.onEnterFrameFxn, this);
+	    this._stage.start();
+	}
+	Test.prototype.getVertexShaders1 = function(){
+		return ["\
+			attribute vec3 aVertexPosition; \
+			attribute vec4 aVertexColor; \
+			varying vec4 vColor; \
+			uniform mat4 uMVMatrix; \
+			uniform mat4 uPMatrix; \
+			void main(void) { \
+				gl_Position = uPMatrix * uMVMatrix * vec4(aVertexPosition, 1.0); \
+				vColor = aVertexColor; \
+			} \
+	    "];
+
+	}
+	Test.prototype.getFragmentShaders1 = function(){
+	    return ["\
+			precision mediump float; \
+			varying vec4 vColor; \
+			void main(void){ \
+				gl_FragColor = vColor; \
+			} \
+	    "];
+
+	}
+
+	Test.prototype.setupObjects = function(e){
+		//this._angleTri = 0;
+		this._vertexPositionAttrib = this._stage.enableVertexAttribute("aVertexPosition");
+		this._vertexColorAttrib = this._stage.enableVertexAttribute("aVertexColor");
+
+		// var i, j, len;
+		// // HEAD
+		// ret = this.bufferTrisAndColors(this.icosidodecahedron(), this.colorsHead());
+		// this._headTriBuffer = ret.tris;
+		// this._headTriColorBuffer = ret.cols;
+		// // PINK EAR
+		// ret = this.bufferTrisAndColors(this.icosahedron(), this.colorsEarPink());
+		// this._pinkTriBuffer = ret.tris;
+		// this._pinkTriColorBuffer = ret.cols;
+		// // RED EAR
+		// ret = this.bufferTrisAndColors(this.icosahedron(), this.colorsEarRed());
+		// this._redTriBuffer = ret.tris;
+		// this._redTriColorBuffer = ret.cols;
+
+	}
+	Test.prototype.onEnterFrameFxn = function(count){
+		// console.log("onEnterFrameFxn");
+		/*
+		var e = count * 10;
+		var rateBase = 0.0004;
+		var rateHead = rateBase*1.0;
+		var rateEar1 = rateBase*2.0;
+		var sca, zDistHead = zDistEars = -10.0;
+		var rateEar2 = -Math.PI*(1.0/14.0);
+		var earTilt = Math.PI*(1.0/7.0);
+		var earRotOffset = Math.PI*(1.0/18.0);
+		var rateHead2 = -Math.PI*(1.0/4.0);
+		var headOffset = Math.PI*(1.0/30.0);
+		var earOffsetX = 2.2;
+		var earOffsetY = 1.50;
+		var bodyOffsetY = -0.50;
+		// RESET
+		this._stage.setViewport(StageGL.VIEWPORT_MODE_FULL_SIZE);
+		this._stage.clear();
+
+		// BODY
+		this._stage.matrixIdentity();
+		this._stage.matrixTranslate(0.0,bodyOffsetY,zDistHead);
+		this._stage.matrixRotate(-headOffset - e*rateHead, 0,1,0);
+		this._stage.matrixRotate(-rateHead2, 0,1,0);
+		sca = 1.95; this._stage.matrixScale(sca,sca,sca);
+		this._stage.bindArrayFloatBuffer(this._vertexPositionAttrib, this._headTriBuffer);
+		this._stage.bindArrayFloatBuffer(this._vertexColorAttrib, this._headTriColorBuffer);
+		this._stage.matrixReset();
+		this._stage.drawTriangles(this._vertexPositionAttrib, this._headTriBuffer);
+		// PINK EAR
+		this._stage.matrixIdentity();
+		this._stage.matrixTranslate(-earOffsetX,earOffsetY,zDistEars);
+		this._stage.matrixRotate(e*rateEar1, 0,1,0);
+		this._stage.matrixRotate(-rateEar2, 0,0,1);
+		this._stage.matrixRotate(earTilt, 1,0,0);
+		this._stage.matrixRotate(Math.PI + earRotOffset, 0,1,0);
+		sca = 1.0; this._stage.matrixScale(sca,sca,sca);
+		this._stage.bindArrayFloatBuffer(this._vertexPositionAttrib, this._pinkTriBuffer);
+		this._stage.bindArrayFloatBuffer(this._vertexColorAttrib, this._pinkTriColorBuffer);
+		this._stage.matrixReset();
+		this._stage.drawTriangles(this._vertexPositionAttrib, this._pinkTriBuffer);
+
+		// RED EAR
+		this._stage.matrixIdentity();
+		this._stage.matrixTranslate(earOffsetX,earOffsetY,zDistEars);
+		this._stage.matrixRotate(-e*rateEar1, 0,1,0);
+		this._stage.matrixRotate(rateEar2, 0,0,1);
+		this._stage.matrixRotate(earTilt, 1,0,0);
+		this._stage.matrixRotate(Math.PI - earRotOffset, 0,1,0);
+		sca = 1.0; this._stage.matrixScale(sca,sca,sca);
+		this._stage.bindArrayFloatBuffer(this._vertexPositionAttrib, this._redTriBuffer);
+		this._stage.bindArrayFloatBuffer(this._vertexColorAttrib, this._redTriColorBuffer);
+		this._stage.matrixReset();
+		this._stage.drawTriangles(this._vertexPositionAttrib, this._redTriBuffer);
+
+		// OUT
+		this._stage.matrixReset();
+		*/
+	}
+	// classesLoadedFxn();
+
+	// console.log(Test);
+	var test = new Test();
+}
+function classesLoadedFxn(){
+	// console.log(Test);
+	// var test = new Test();
+}
+</script>
+<body onload="pageLoadedFxn();">
+</body>
+</html>

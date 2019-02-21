@@ -21,9 +21,10 @@ function Medium(){
 	// var imageList = ["caseStudy1-0.jpg", "caseStudy1-9.jpg"];
 	// var imageLoader = new ImageLoader("./images/",imageList, this,this.handleImagesLoaded,null);
 
-	// var imageList = ["room0.png", "room2.png"];
+	var imageList = ["room0.png", "room2.png"];
+	// var imageList = ["room1.png", "room2.png"];
 	// var imageList = ["bench_A.png", "bench_B.png"];
-	var imageList = ["snow1.png", "snow2.png"];
+	// var imageList = ["snow1.png", "snow2.png"];
 	// var imageList = ["caseStudy1-20.jpg", "caseStudy1-24.jpg"];
 	var imageLoader = new ImageLoader("./images/",imageList, this,this.handleImagesLoadedRectify,null);
 	imageLoader.load();
