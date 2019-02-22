@@ -318,40 +318,79 @@ https://cloud.google.com/appengine/docs/nodejs/
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-- medium matching:
-	- some way to drop NON-UNIQUE MATCHES (along F-line ?)
-	- kNN and find distances between all features n O(1)?
-		- flat pixel values (pixel color 0-1)
-			- 5x5 => 9x9 = 25=>81
-		- SIFT dimensions
-	=> ANN / HAMMING DISTANCE
+color coat 3D points with R-error (green-blue-red) in APP visualizer
+	- find out where problematic points are
 
-	- go thru each point
-		- extract object = 5x5 pixel cell around point
-	- get rectified mapping
-	- map points to F-row/(don't even care about col)
-	- go thru each object
-		- go thru each object in opposite F-row [+/- 1/2 pixels]
-			- calc similarity sum a_i - b_i
-			- keep track of 2 most similar
-		- uniqueness = 1st/2nd
 
-	- uniqueness = log(uniqueness)
-	- graph
-	
-	- drop points with most similar matchings [least unique]
-
-- get F with large sample size
-- drop the points with worst error (+1 sigma)
-
-... add in more haystack area searching ...
+1/3 of points are initially dropped because of poor NCC
+- display these
 
 
 
-POINT IN IMAGE => ANGLE IN F
+- drop2d:
+	A) 3D distances metric / ratio of 2D-3D distance ?
+		- order on 3D distance,
+		- plot delta-distance
+		- find 2+ groups & vote
+	B) local R-error
+	C) local F-error
+	- voting based on 2Dneighborhood
+	- weight vote by R-error (const + Rerror)
+	-
+
+- probe2d:
+	- fit local affine
+	- search needle / haystack
+
+
+
+WITHOUT DOING ANYTHING, 0-2 pair:
+directory: "OE32OIQ4"
+viewA: "914UQJ51"
+viewB: "7Z85UKMI"
+Stereopsis.js:4018       matches: 35404
+Stereopsis.js:4021  T 0 0->1  F : 0.000005462766033058402 +/- 0.193691222774259
+Stereopsis.js:4022  T 0 0->1  R : 0.000005601195360165843 +/- 0.25907895272738657
+(although actually somewhat bad and clustery)
+
+
+
+
+- make sure initial state is getting correctly passed to steropsis (eg affine transform)
+
+
+- can points be 'shifted' in 2D space if they have high error?
+	- get a haystack for one of the views and look for better location?
+		- rotate slightly / zoom slightly / ...
+
+
+
+- when requiring eg 1000 point estimations, maybe use bottom 1/2 of points ordered on lower F error ? (not whole population)
+
+criteria for dropping points has to be improved
+- can't use global well, need local solutions
+	- 2d grid ...
+		=> check logic in prob2d
+			=> better corner localizing ?
+
+
+- back to how pairs are performing
+	[does the cell size need to be smaller?]
+
+- back to how initial view orientations are (error)
+
+	=> do simulation and see where approx fails
+		-> need a 3D scene model ....
+
+
+
+... why is uniqueness dropping so bad ?
+
 
 
 SAD/SIFT compare of matches rather than NCC
+	- 10x longer
+
 
 - maybe there are other errors - camera ? radial distortion ?
 

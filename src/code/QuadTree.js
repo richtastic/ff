@@ -39,7 +39,7 @@ QuadTree.twoDivisionRound = function(min,max, force){ // force dimensions equal
 	}
 	return dif;
 }
-// --------------------------------------------------------------------------------------------------------- 
+// ---------------------------------------------------------------------------------------------------------
 QuadTree.prototype.kill = function(){
 	this.clear();
 	this._root = null;
@@ -76,7 +76,7 @@ QuadTree.prototype.visualize = function(display, availableWidth,availableHeight,
 		if(points){
 			for(var j=0; j<points.length; ++j){
 				var point = toPoint(points[j]);
-				// 
+				//
 				var d = new DO();
 					d.graphics().setLine(1.0,0xFF990000);
 					d.graphics().setFill(0xFFCC0000);
@@ -224,9 +224,9 @@ QuadTree.prototype.objectsInsideLine = function(org,dir,maxDistance, isFinite){
 	// all points within maxDistance of line
 	throw "todo";
 }
-QuadTree.prototype.objectsInsideRay = function(org,dir,radius){ // objects inside cylinder-ray
+QuadTree.prototype.objectsInsideRay = function(org,dir,radius,isInfinite){ // objects inside cylinder-ray
 	var arr = [];
-	this._root.objectsInsideRay(arr,org,dir,radius,this._toPoint);
+	this._root.objectsInsideRay(arr,org,dir,radius,isInfinite,this._toPoint);
 	return arr;
 }
 QuadTree.prototype.convexNeighborhood = function(center, minDesiredCount, epsilon){
@@ -375,12 +375,12 @@ QuadTree.prototype.closestObject = function(point){
 	return null;
 }
 QuadTree.prototype.findObject = function(obj,equality){
-	// find cell that would contain object, 
+	// find cell that would contain object,
 	// findClosest ?
 	// 	this._root.findObject(obj,this._toPoint);
 	return null;
 }
-// --------------------------------------------------------------------------------------------------------- 
+// ---------------------------------------------------------------------------------------------------------
 QuadTree.Arxel = function(){
 	this._parent = null;
 	this._children = null;
@@ -408,7 +408,7 @@ QuadTree.Arxel.newChildFromParentAndPoint = function(arxel,v){
 	child.parent(arxel);
 	return child;
 }
-// --------------------------------------------------------------------------------------------------------- 
+// ---------------------------------------------------------------------------------------------------------
 QuadTree.Arxel.prototype.toString = function(tab,nex){
 	tab = tab!==undefined?tab:"";
 	nex = nex!==undefined?nex:"  ";
@@ -703,11 +703,16 @@ QuadTree.Arxel.prototype.objectsInsideRect = function(arr,min,max,toPoint){
 	}
 }
 
-QuadTree.Arxel.prototype.objectsInsideRay = function(arr,org,dir,rad,toPoint){
+QuadTree.Arxel.prototype.objectsInsideRay = function(arr,org,dir,rad,isInfinite,toPoint){
 	if(this._datas){
 		for(var i=0; i<this._datas.length; ++i){
 			var p = toPoint(this._datas[i]);
-			var d = Code.distancePointRayFinite2D(org,dir,p);
+			var d = null;
+			if(isInfinite){
+				d = Code.distancePointRay2D(org,dir,p);
+			}else{
+				d = Code.distancePointRayFinite2D(org,dir,p);
+			}
 			if(d<rad){
 				arr.push(this._datas[i]);
 			}
@@ -717,13 +722,17 @@ QuadTree.Arxel.prototype.objectsInsideRay = function(arr,org,dir,rad,toPoint){
 			var child = this._children[i];
 			if(child){
 				var p = child.center();
-				var d = Code.distancePointRayFinite2D(org,dir,p);
+				var d = null;
+				if(isInfinite){
+					d = Code.distancePointRay2D(org,dir,p);
+				}else{
+					d = Code.distancePointRayFinite2D(org,dir,p);
+				}
 				d -= child.size().length()*0.5; // center-hypotenuse
 				if(d<rad){
-					child.objectsInsideRay(arr,org,dir,rad,toPoint);
+					child.objectsInsideRay(arr,org,dir,rad,isInfinite,toPoint);
 				}
 			}
 		}
 	}
 }
-

@@ -1683,6 +1683,19 @@ Code.removeElementAt = function(a,i){ // preserve order
 	// a.pop();
 	// return;
 }
+Code.removeElementsAt = function(a,list){
+	list.sort(function(a,b){return a<b ? -1 : 1});
+	var prev = -1;
+	var off = 0;
+	for(var i=0; i<list.length; ++i){
+		var next = list[i];
+		if(prev!=next){
+			Code.removeElementAt(a,next-off);
+			prev = next;
+			++off;
+		}
+	}
+}
 Code.removeElementSimple = function(a,o){ // not preserve order O(n/2)
 	var i, len = a.length;
 	for(i=0;i<len;++i){

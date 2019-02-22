@@ -3262,8 +3262,8 @@ R3D.subPixelMinimumNCC = function(imageA,imageB, a,b, matrixAB,matrixBA, cellSiz
 	var d7 = values[7];
 	var d8 = values[8];
 	var loc = new V3D();
-	Code.extrema2DFloatInterpolate(loc, d0,d1,d2,d3,d4,d5,d6,d7,d8);
-	if(Math.abs(loc.x)>1 || Math.abs(loc.y)>1){ // too far
+	var result = Code.extrema2DFloatInterpolate(loc, d0,d1,d2,d3,d4,d5,d6,d7,d8);
+	if(!result || Math.abs(loc.x)>1 || Math.abs(loc.y)>1){ // too far
 		loc.x = b.x;
 		loc.y = b.y;
 		loc.z = d4;
@@ -3339,11 +3339,13 @@ R3D.iteritiveBestPointsF = function(pointsAIn,pointsBIn, limitError){
 
 	// TODO:
 	// USE ALL POINTS WITH FINAL F & KEEP ALL ABOVE LIMIT/SIGMA
+	var ferrors = [];
 	if(F){
+// pointsAIn = pointsA;
+// pointsBIn = pointsB;
 		maxError = limitError;
 		var pointsA = [];
 		var pointsB = [];
-		var ferrors = [];
 		for(var j=0; j<pointsAIn.length; ++j){
 			var a = pointsAIn[j];
 			var b = pointsBIn[j];
@@ -3358,7 +3360,7 @@ R3D.iteritiveBestPointsF = function(pointsAIn,pointsBIn, limitError){
 		Code.printMatlabArray(ferrors,"fLast");
 	}
 
-	return {"A":pointsA, "B":pointsB};
+	return {"A":pointsA, "B":pointsB, "F":F, "error":ferrors};
 }
 R3D.stereoMatchMatching = function(sourceImageA,sourceImageB, rectifiedA,infoA, rectifiedB,infoB, FFwd,bestMatchesList, inputDisparity, disparityRange){
 	var maxEqualDistance = 2.0; // 2.0 is about min
@@ -3375,15 +3377,20 @@ R3D.stereoMatchMatching = function(sourceImageA,sourceImageB, rectifiedA,infoA, 
 	var mappingBA = resultBackward["mapping"];
 
 
-console.log(resultForward);
-console.log(resultBackward);
-var rowsAB = resultForward["rows"];
-var rowsBA = resultBackward["rows"];
-var sameDirection = true;
-if(rowsAB){
-	console.log(rowsAB);
-	sameDirection = rowsAB["direction"];
-}
+// GLOBALSTAGE.removeAllChildren();
+// console.log(mappingAB);
+
+// 	console.log(resultForward);
+// 	console.log(resultBackward);
+// throw "...";
+
+	var rowsAB = resultForward["rows"];
+	var rowsBA = resultBackward["rows"];
+	var sameDirection = true;
+	if(rowsAB){
+		console.log(rowsAB);
+		sameDirection = rowsAB["direction"];
+	}
 
 // 	console.log(mappingAB);
 // 	console.log(mappingBA);
@@ -3450,7 +3457,7 @@ for(var i=0; i<matches.length; ++i){
 		cornerA = Math.log(cornerA);
 		cornerB = Math.log(cornerB);
 	var score = -(cornerA+cornerB)*0.5;
-	if(Code.isNaN(score)){
+	if(Code.isNaN(score) || score==Infinity || score==-Infinity){
 		Code.removeElementAt(matches,i);
 		--i;
 	}else{
@@ -3499,8 +3506,6 @@ var OFFX = 10;
 var OFFY = 10;
 var imageA = sourceImageA;
 var imageB = sourceImageB;
-// var matrix = new Matrix3D();
-
 var scores = [];
 var pointsA = [];
 var pointsB = [];
@@ -3525,18 +3530,16 @@ for(var i=0; i<matches.length; ++i){
 	var matrix = new Matrix(3,3).identity();
 	matrix = Matrix.transform2DRotate(matrix, angleAB);
 	inverse = Matrix.inverse(matrix);
-var result = R3D.subPixelMinimumNCC(imageA,imageB, a,b, matrix,inverse, cellSize);
-// var del = V2D.sub(result,b);
-// console.log(del+"");
-b = new V2D(result.x,result.y);
-var s = result.z;
-if(Code.isNaN(s)){
-	console.log("NaN");
-	throw "?";
-}else{
-	picked.push([a,b,s]);
-	scores.push(s);
-}
+	var result = R3D.subPixelMinimumNCC(imageA,imageB, a,b, matrix,inverse, cellSize);
+	b = new V2D(result.x,result.y);
+	var s = result.z;
+	if(Code.isNaN(s)){
+		console.log("NaN");
+		throw "?";
+	}else{
+		picked.push([a,b,s]);
+		scores.push(s);
+	}
 
 
 // DRAW
@@ -3580,10 +3583,8 @@ picked.sort(function(a,b){
 var scoresMin = Code.min(scores);
 var scoresSig = Code.stdDev(scores,scoresMin);
 var scoresLimit = scoresMin + 2.0*scoresSig;
-// console.log(scores);
 console.log("BEGINNING LENGTH: "+picked.length+" | LIMIT: "+scoresLimit+" | "+scoresMin+" | "+scoresSig);
 
-// DROP WORST SCORES
 // DROP WORST CORNER SCORES: [TODO: BINARY SEARCH]
 for(var i=0; i<picked.length; ++i){
 	var match = picked[i];
@@ -3596,11 +3597,6 @@ for(var i=0; i<picked.length; ++i){
 console.log("LIMITED LENGTH: "+picked.length);
 
 
-// var count = Math.min(matches.length,100000);
-// Code.truncateArray(picked,picked.length*0.5 | 0);
-// Code.truncateArray(picked,picked.length*0.9 | 0);
-//TODO:
-// ITERITIVELY DROP WORST F SCORES UNTIL ERROR IS < 1 px
 
 for(var i=0; i<picked.length; ++i){
 	var match = picked[i];
@@ -3611,18 +3607,294 @@ for(var i=0; i<picked.length; ++i){
 }
 
 
-// GET LOWEST ERROR POINTS:
-var info = R3D.iteritiveBestPointsF(pointsA,pointsB, 0.50);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// ITERITIVELY DROP WORST F SCORES UNTIL ERROR IS < 1 px
+var info = R3D.iteritiveBestPointsF(pointsA,pointsB, 0.50); // 0.25 | 0.5
 console.log(info);
 
 var pointsA = info["A"];
 var pointsB = info["B"];
+var errors = info["error"];
+console.log(errors);
+FFwd = info["F"];
+FRev = Matrix.inverse(FFwd);
 matches = [];
 for(var i=0; i<pointsA.length; ++i){
 	var pointA = pointsA[i];
 	var pointB = pointsB[i];
-	matches.push({"A":pointA,"B":pointB});
+	var error = errors[i];
+	matches.push({"A":pointA,"B":pointB,"score":error});
 }
+console.log("FFwd:");
+console.log(FFwd.toArray());
+
+
+
+
+
+
+
+
+
+
+/*
+
+// REMOVE HIGH-SIMILARITY POINTS:
+
+doesn't seem to work ...
+
+
+
+
+var epipoles = R3D.getEpipolesFromF(FFwd);
+eA = epipoles["A"];
+eB = epipoles["B"];
+
+
+
+console.log("CREATING OBJECTS");
+
+// toPoint, min, max
+var toPoint = function(q){
+	return q["point"];
+};
+var imageA = sourceImageA;
+var imageB = sourceImageB;
+var qA = new QuadTree(toPoint, new V2D(0,0), new V2D(widthA,heightA));
+var qB = new QuadTree(toPoint, new V2D(0,0), new V2D(widthB,heightB));
+var objectsA = [];
+var objectsB = [];
+var rowsA = [];
+var rowsB = [];
+// var cellSize = ; // already defined cellSize
+// var cellSize = 21; // fairly big to allow differentiation
+var cellSize = 41;
+var compareSize = 5; // 5,7,9
+var zoom = cellSize/compareSize;
+var objectFromImage = function(image,size,point,index){
+	var a = [];
+	var l = size*size;
+	var r = image.red();
+	var g = image.grn();
+	var b = image.blu();
+	for(var i=0; i<l; ++i){
+		a.push(r[i],g[i],b[i]);
+	}
+	return {"a":a,"point":point,"index":index,"best":[]};
+}
+for(var i=0; i<pointsA.length; ++i){
+	var a = pointsA[i];
+	var b = pointsB[i];
+		V2D.sub(eToA, a,eA);
+		V2D.sub(eToB, b,eB);
+		if(!sameDirection){ // TODO: IS THIS VALIDATED?
+			eToB.scale(-1);
+		}
+		var angleA = -V2D.angle(V2D.DIRX, eToB);
+		var matrix = new Matrix(3,3).identity();
+		matrix = Matrix.transform2DRotate(matrix, angleA);
+		var needleA = imageA.extractRectFromFloatImage(a.x,a.y,zoom,null,compareSize,compareSize, matrix);
+
+		var angleB = -V2D.angle(V2D.DIRX, eToB);
+		var matrix = new Matrix(3,3).identity();
+		matrix = Matrix.transform2DRotate(matrix, angleB);
+		var needleB = imageB.extractRectFromFloatImage(b.x,b.y,zoom,null,compareSize,compareSize, matrix);
+// console.log(needleA);
+// console.log(needleB);
+	var objectA = objectFromImage(needleA,compareSize,a,i);
+	var objectB = objectFromImage(needleB,compareSize,b,i);
+	objectsA.push(objectA);
+	objectsB.push(objectB);
+}
+
+
+//
+
+console.log(objectsA);
+console.log(objectsB);
+
+console.log("COMPARING OBJECTS");
+
+for(var i=0; i<objectsA.length; ++i){
+	qA.insertObject(objectsA[i]);
+	qB.insertObject(objectsB[i]);
+}
+
+var compareObjectsFxn = function(a,b){
+	a = a["a"];
+	b = b["a"];
+	var score = 0;
+	for(var i=0; i<a.length; ++i){
+		score += Math.abs(a[i]-b[i]);
+	}
+	score /= a.length;
+	return score;
+}
+var insertObjectScore = function(a,b,s){ // keep 2 smallest scores
+	var list = a["best"];
+	var n = {"object":b,"score":s};
+	if(list.length==0){
+		list.push(n);
+	}else if(list.length==1){
+		var e0 = list[0];
+		if(e0["score"]<s){ // to back
+			list.push(n);
+		}else{ // to front
+			list.unshift(n);
+		}
+	}else{ // 2
+		var e0 = list[0];
+		var e1 = list[1];
+		if(s < e0["score"]){
+			list[0] = n;
+			list[1] = e0;
+		}else if(s < e1["score"]){
+			list[1] = n;
+		} // else too big
+	}
+}
+var calcObjectScore = function(o){
+	var list = o["best"];
+	var score = null;
+	if(list.length==2){
+		// score = list[1]["score"]/list[0]["score"]; // larger better
+		//score = list[0]["score"]/list[1]["score"]; // smaller better
+		score = list[1]["score"] - list[0]["score"]; // larger better
+		score = -Math.log(score);
+
+		// handle ininifty cases
+		//  - log(diff)
+		// if score == 0 ?
+		// score = Math.log(score);
+	}
+	o["score"] = score;
+}
+
+var errorPixels = 2.0;
+var org = new V2D();
+var dir = new V2D();
+
+
+var pt = new V3D(0,0,0);
+var line = new V3D(0,0,0);
+var listO = [objectsA,objectsB];
+var listQ = [qB,qA]; // the space that the point's LINE should be checked in
+for(var k=0; k<listQ.length; ++k){
+	var q = listQ[k];
+	var objects = listO[k];
+	for(var i=0; i<objects.length; ++i){
+		var object = objects[i];
+		var p = object["point"];
+			pt.set(p.x,p.y,1.0);
+			line = FFwd.multV3DtoV3D(line, pt);
+		Code.lineOriginAndDirection2DFromEquation(org,dir, line.x,line.y,line.z);
+		var nearest = q.objectsInsideRay(org,dir,errorPixels, true);
+		for(var j=0; j<nearest.length; ++j){
+			var near = nearest[j];
+			var score = compareObjectsFxn(object,near);
+			insertObjectScore(object,near,score);
+		}
+	}
+}
+
+console.log("SCORING OBJECTS");
+// go thru each object, calculate score, find limits
+var scores = [];
+for(var k=0; k<listQ.length; ++k){
+	var objects = listO[k];
+	for(var i=0; i<objects.length; ++i){
+		var object = objects[i];
+		calcObjectScore(object);
+		var score = object["score"];
+		if(score!==null){
+			// score = Math.log(score);
+			if(score!==Infinity && score!==-Infinity){
+				scores.push(score);
+			}
+		}
+	}
+}
+console.log(scores);
+
+Code.printMatlabArray(scores,"s");
+var scoresMin = Code.min(scores);
+var scoresMean = Code.mean(scores);
+var scoresMedian = Code.median(scores);
+var scoresSig = Code.stdDev(scores,scoresMean);
+// var scoresSig = Code.stdDev(scores,scoresMean);
+var scoresLimit = scoresMean; // + 1.0*scoresSig; // 1-2
+
+
+
+console.log("REMOVING OBJECTS : "+scoresMin+" | "+scoresMean+" | "+scoresMedian+" | "+scoresSig);
+
+// want to remove objects with a low score
+var removeList = [];
+for(var k=0; k<listQ.length; ++k){
+	var objects = listO[k];
+	for(var i=0; i<objects.length; ++i){
+		var object = objects[i];
+		var score = object["score"];
+		var index = object["index"];
+			// score = Math.log(score);
+		if(score!==null && score>scoresLimit){
+			removeList.push(index);
+		}
+	}
+}
+console.log(removeList);
+
+Code.removeElementsAt(matches,removeList);
+
+
+console.log("FINAL SIZE: "+matches.length);
+// Code.removeElementsAt(pointsA,removeList);
+// Code.removeElementsAt(pointsB,removeList);
+
+pointsA = [];
+pointsB = [];
+for(var i=0; i<matches.length; ++i){
+	var match = matches[i];
+	var pointA = match["A"];
+	var pointB = match["B"];
+	pointsA.push(pointA);
+	pointsB.push(pointB);
+}
+
+
+
+// GLOBALSTAGE.removeAllChildren();
+// throw "...";
+
+*/
+
+
+
+
 
 
 
@@ -6141,11 +6413,12 @@ R3D.subPixelCornerMaximum = function(values, width,height, point){
 	var d7 = values[row2 + col1];
 	var d8 = values[row2 + col2];
 	var loc = new V3D();
-	Code.extrema2DFloatInterpolate(loc, d0,d1,d2,d3,d4,d5,d6,d7,d8);
-	if(Math.abs(loc.x)>1 || Math.abs(loc.y)>1){
+	var result = Code.extrema2DFloatInterpolate(loc, d0,d1,d2,d3,d4,d5,d6,d7,d8);
+	if(!result || Math.abs(loc.x)>1 || Math.abs(loc.y)>1){
 		// too far interpolated ...
 		loc.x = 0;
 		loc.y = 0;
+		loc.z = d4;
 	}
 	loc.x += point.x;
 	loc.y += point.y;
@@ -13691,6 +13964,7 @@ R3D.outputMatchPoints = function(imageMatrixA, imageMatrixB, F, matches, yaml){
 	yaml.writeNumber("count", matches.length);
 	yaml.writeArrayStart("matches");
 	var i, len=matches.length;
+console.log("FOUND MATCHES: "+matches.length);
 	for(i=0; i<len; ++i){
 		var match = matches[i];
 		var score = match["score"];
@@ -16459,8 +16733,10 @@ R3D.matchObjectsSubset = function(objectsA, putativeA, objectsB, putativeB, mini
 					matchFound = true;
 				}
 			}else{
-				console.log("NO MATCH");
+				console.log("NO MATCH 2");
 			}
+		}else{
+			console.log("NO MATCH 1");
 		}
 	}
 	bestMatches = bestMatches.sort(function(a,b){

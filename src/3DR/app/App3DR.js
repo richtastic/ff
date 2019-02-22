@@ -3660,7 +3660,7 @@ App3DR.App.Model3D.prototype.setLines = function(input){
 	var points = [];
 	var colors = [];
 	for(var i=0; i<input.length; ++i){
-// break;
+break;
 		var v = input[i];
 		points.push(v.x,v.y,v.z);
 // NEGATIVE Z:
@@ -6188,7 +6188,7 @@ console.log("checkPerformNextTask");
 	}
 
 // don't 3 - run
-// return;
+return;
 
 
 	// first run with limited points
@@ -6377,28 +6377,35 @@ App3DR.ProjectManager.prototype.calculatePairMatch = function(viewA, viewB, pair
 		// MEDIUM-DENSITY:
 		var matches = R3D.stereoHighConfidenceMatches(imageMatrixA,imageMatrixB, pointsA,pointsB,F);
 
+// stereoHighConfidenceMatches
+console.log(matches);
+
+
+
 console.log(matches.length);
 // remove close duplicates
 	matches = R3D.matchesRemoveClosePairs(matches,imageMatrixA,imageMatrixB, 1.0);
+	// matches = R3D.matchesRemoveClosePairs(matches,imageMatrixA,imageMatrixB, 0.5);
 console.log(matches.length);
 // HIGHLY LIMIT FOR TESTING - ~10%
-// drop lower SAD scores
-	matches = R3D.matchesDropHighZ(matches, 1.0);
-console.log(matches.length);
-// drop lower corners
-	matches = R3D.matchesDropLowCorners(matches, imageMatrixA,imageMatrixB, 1.0);
-console.log(matches.length);
-// drop lower F error
-	var Finv = R3D.fundamentalInverse(F);
-	matches = R3D.matchesDropHighFError(matches,F,Finv, 1.0);
-console.log(matches.length);
+// drop lower SAD scores -- score is f error now
+	// matches = R3D.matchesDropHighZ(matches, 1.0);
+// console.log(matches.length);
+// drop lower corners -- this should mostly be done already
+// 	matches = R3D.matchesDropLowCorners(matches, imageMatrixA,imageMatrixB, 1.0);
+// console.log(matches.length);
+// drop lower F error -- mostly done now
+// 	var Finv = R3D.fundamentalInverse(F);
+// 	matches = R3D.matchesDropHighFError(matches,F,Finv, 1.0);
+// console.log(matches.length);
 
-// throw "matches";
 		// add affine info:
 		R3D.stereoMatchAverageAffine(imageMatrixA,imageMatrixB,matches);
 		// convert to object structure
 		matches = R3D.stereoToMatchPairArray(imageMatrixA,imageMatrixB,matches);
 		console.log(matches);
+
+// throw "matches";
 		var str = self._matchesToYAML(matches, F, viewA, viewB, imageMatrixA, imageMatrixB);
 // console.log(str+"");
 		var binary = Code.stringToBinary(str);

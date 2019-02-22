@@ -49,12 +49,13 @@ function FeatureTest(){
 // new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-20_rot.jpg"],this,this.imagesLoadComplete2).load(); // rotated
 // new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-0_rot.jpg"],this,this.imagesLoadComplete2).load(); // rotated
 // new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-0_big.jpg"],this,this.imagesLoadComplete2).load(); // zoom difference x2
-// new ImageLoader("./images/",["xA_small.jpg", "xB_small.jpg"],this,this.imagesLoadComplete2).load(); // ex bad --------------------------------- OK: [20 @ 0.73 | 16 @ 0.54]
+// new ImageLoader("./images/",["xA_small.jpg", "xB_small.jpg"],this,this.imagesLoadComplete2).load(); // ex bad : OK: [20 @ 0.73 | 16 @ 0.54]
 // new ImageLoader("./images/",["yA_small.jpg", "yB_small.jpg"],this,this.imagesLoadComplete2).load(); // ex poor : GOOD: [34 @ 0.463 | 33 @ 0.45]
-// new ImageLoader("./images/",["zA_small.jpg", "zB_small.jpg"],this,this.imagesLoadComplete2).load(); // ex ok : GOOD: [36 @ 0.548 | 40 @ 0.588]
+new ImageLoader("./images/",["zA_small.jpg", "zB_small.jpg"],this,this.imagesLoadComplete2).load(); // ex ok : GOOD: [36 @ 0.548 | 40 @ 0.588]  -- theres a patch of incorrect matching on the tower
 
-// new ImageLoader("./images/",["room0.png", "room1.png"],this,this.imagesLoadComplete2).load(); // real / close scenario
-// new ImageLoader("./images/",["room0.png", "room2.png"],this,this.imagesLoadComplete2).load(); // 66 @ 0.57
+// new ImageLoader("./images/",["room0.png", "room1.png"],this,this.imagesLoadComplete2).load(); // real / close scenario : GREAT : [63 @ 0.58 |  66 @ 0.59]
+// new ImageLoader("./images/",["room1.png", "room2.png"],this,this.imagesLoadComplete2).load(); // GREAT : [74 @ 0.45 | 65 @ 0.44]
+// new ImageLoader("./images/",["room0.png", "room2.png"],this,this.imagesLoadComplete2).load(); // GOOD : [46 @ 0.83 | 45 @ 0.78]
 
 // new ImageLoader("./images/",["bench_A.png", "bench_B.png"],this,this.imagesLoadComplete2).load(); // small skew ----- GOOD :  [24 @ 0.476 | 44 @ 0.61]
 // new ImageLoader("./images/",["bench_B.png", "bench_C.png"],this,this.imagesLoadComplete2).load(); // large skew ----- POOR : [34 : 1.32 | 39 @ 1.72]
@@ -3043,6 +3044,14 @@ R3D.showRansac(pointsA,pointsB, matrixFfwd, matrixFrev, display, imageMatrixA,im
 
 // var matrixFfwd = [2.041322467847871e-7,0.000014304778253234078,-0.0016910858521905143,-0.0000021465269183805225,-0.00001003739246648299,0.019402193354383566,-0.00004247026281761891,-0.020592074595533316,0.14857516866839532];
 // matrixFfwd = new Matrix(3,3).fromArray(matrixFfwd);
+
+
+// var matrixFfwd = [-0.0000041576723316428, -0.00005882120633163811, 0.008730780225219698, 0.00004167019132862216, -0.0000020442702939101748, -0.025987525163972135, -0.004339999775773085, 0.02644111516518665, -0.02076316997976102];
+// 	matrixFfwd = new Matrix(3,3).fromArray(matrixFfwd);
+// var matrixFfwd = [-0.000004139363896986988, -0.00005863702537626256, 0.008705674476541317, 0.00004131342313242088, -0.0000018824489333730404, -0.025913976364139904, -0.004291507571148334, 0.02638087842817162, -0.027575659232469817];
+// 	matrixFfwd = new Matrix(3,3).fromArray(matrixFfwd);
+// var matrixFfwd = [-0.000003486663949059767, -0.000046789577223311455, 0.006911118081526229, 0.0000328596065195337, -0.0000036611058428955012, -0.02273586780312925, -0.0031370534738073396, 0.02335622033036775, -0.023247364225031944];
+// 	matrixFfwd = new Matrix(3,3).fromArray(matrixFfwd);
 
 // MEDIUM / DENSISH:
 console.log("stereoHighConfidenceMatches");

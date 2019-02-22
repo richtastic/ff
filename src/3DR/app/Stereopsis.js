@@ -286,12 +286,13 @@ Stereopsis.View = function(image, camera, data){
 	//var compareSize = cellSize*2 - 1;
 	// var compareSize = cellSize;
 
+// ORIGINALLY: points are now on the order of 1 pixel: ... 3 to 11 -- may want larger compare size
 
-
-cellSize = 21;
+// cellSize = 21;
 // cellSize = 11;
 // cellSize = 7;
 // cellSize = 5;
+cellSize = 3;
 // compareSize = 31;
 	this.cellSize(cellSize);
 	// this.compareSize(compareSize);
@@ -584,8 +585,8 @@ Stereopsis.View.prototype.cellsForView = function(view){
 Stereopsis.View.prototype.cellSize = function(cellSize){
 	if(cellSize!==undefined){
 		this._cellSize = cellSize;
-		var compareSize = Math.round(cellSize*1.5);
-		// var compareSize = Math.round(cellSize*2.0);
+		// var compareSize = Math.round(cellSize*1.5);
+		var compareSize = Math.round(cellSize*2.0);
 		if(compareSize%2==0){
 			compareSize += 1;
 		}
@@ -3064,7 +3065,7 @@ return;
 	console.log("SOLVE");
 	this._completeFxn = completeFxn;
 	this._completeContext = completeContext;
-	// var maxIterations = 1;
+	var maxIterations = 1;
 	// var maxIterations = 2;
 	// var maxIterations = 3;
 	// var maxIterations = 4;
@@ -3072,7 +3073,7 @@ return;
 	// var maxIterations = 6;
 	// var maxIterations = 7;
 	// var maxIterations = 8;
-	var maxIterations = 9;
+	// var maxIterations = 9;
 	// var maxIterations = 10;
 	// var maxIterations = 15;
 	// var maxIterations = 20;
@@ -3101,8 +3102,17 @@ Stereopsis.World.prototype.iteration = function(iterationIndex, maxIterations){
 		// this.bundleAdjustFull();
 	// EXPAND
 		// 2D NEIGHBORS
-		// console.log("probe2D ... ");
-		this.probe2D(); // THIS CAUSES CLUSTERING AROUND LIKE-MINDED ONES
+		console.log("probe2D ... ");
+		// this.probe2D();
+		// SOMETHING WRONG WITH THIS ^
+
+		this.probe2D2();
+
+
+
+
+
+
 
 		// 3D PROJECTION - only for 3+ views
 		// console.log("EXPAND 3D POINTS");
@@ -3118,7 +3128,7 @@ Stereopsis.World.prototype.iteration = function(iterationIndex, maxIterations){
 		// GLOBAL - pairwise M F R
 // if iterations are toward end, and R sigma error > 1 => start to drop more
 		this.filterGlobalMatches(true, iterationIndex);
-		// this.dropNegative3D();	// .......
+		this.dropNegative3D();	// .......
 			// F
 			// R
 			// SAD
@@ -3130,7 +3140,7 @@ Stereopsis.World.prototype.iteration = function(iterationIndex, maxIterations){
 		// this.dropCornersWorst(0.50); // 0.0 - 0.25
 		// LOCAL 2D [CELLS]
 // console.log("+++ filterLocal2D")
-		// this.filterLocal2D(); // ....... DOES THIS MAKE MUCH OF A DIFFERENCE ?
+		// this.filterLocal2D(); // ....... DOES THIS MAKE MUCH OF A DIFFERENCE ? --- NEEEED THIS FOR SINGLE PAIR
 			// F
 			// R
 			// NCC
@@ -3420,8 +3430,8 @@ Stereopsis.World.prototype.filterGlobalMatches = function(relax, iterationIndex)
 	// var limitMatchSigmaNCC = 2.0;
 	// var limitMatchSigmaSAD = 2.0;
 
-	// limitMatchSigmaR = 3.0;
-	// limitMatchSigmaF = 3.0;
+	limitMatchSigmaR = 3.0;
+	limitMatchSigmaF = 3.0;
 	limitMatchSigmaNCC = 3.0;
 	limitMatchSigmaSAD = 3.0;
 
@@ -3535,6 +3545,7 @@ listMatchR.sort(numerical);
 listMatchF.sort(numerical);
 
 if(false){
+// if(true){
 // LINEAR DROPPING:
 if(listMatchF.length>minCount){
 	var mid = Code.median(listMatchF);
@@ -4835,7 +4846,9 @@ Stereopsis.World.prototype.probeCorners = function(){
 	// 	}
 	// }
 }
-
+Stereopsis.World.prototype.probe2D2 = function(){
+	throw "?";
+}
 Stereopsis.World.prototype.probe2D = function(){
 	var views = this.toViewArray();
 	var minRect = new V2D();
@@ -5002,8 +5015,24 @@ throw "..."
 		this.embedPoint3D(match.point3D());
 	}
 }
+VALIDATED_COUNT = 50;
 Stereopsis.World.prototype.validateMatch = function(match, special){
+	var result = this.validateMatch2(match, special);
+	if(!result){
+		console.log(match);
+
+// draw items ...
+
+		--VALIDATED_COUNT;
+		if(VALIDATED_COUNT<0){
+			throw "?";
+		}
+	}
+	return result;
+}
+Stereopsis.World.prototype.validateMatch2 = function(match, special){
 	special = special!==undefined ? special : false;
+// return true;
 	// OUTSIDE:
 	var point2DA = match.point2DA();
 	var point2DB = match.point2DB();
@@ -5039,7 +5068,7 @@ Stereopsis.World.prototype.validateMatch = function(match, special){
 
 	//var minRange = 0.04/(5*5);
 	// var minRange = 0.10/(5*5)
-	var minRange = 0.01; // based on size?
+	var minRange = 0.001; // based on size?
 	var range = match.range(); // range per pixel
 	if(range<minRange){
 		console.log("DROP RANGE: "+range);
@@ -5072,9 +5101,9 @@ Stereopsis.World.prototype.validateMatch = function(match, special){
 	var maximumScoreNCC = 0.50;
 	var maximumScoreMult = 0.40*0.40; // 0.16
 
-	// var maximumScoreSAD = 0.30;
-	// var maximumScoreNCC = 0.40;
-	// var maximumScoreMult = 0.30*0.30; // 0.16
+	// var maximumScoreSAD = 0.60;
+	// var maximumScoreNCC = 0.60;
+	// var maximumScoreMult = 0.50;
 
 	// if(special){
 	// 	maximumScoreSAD = 0.20;
