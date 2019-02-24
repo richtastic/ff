@@ -318,8 +318,187 @@ https://cloud.google.com/appengine/docs/nodejs/
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-color coat 3D points with R-error (green-blue-red) in APP visualizer
-	- find out where problematic points are
+
+
+- VISUALIZE POINTS WITH HIGH 3D/2D distance ratios
+	-> depth discontinuities
+		- genuine:
+			- for BOTH POINTS: path in A & B w/ resp. predicted points are all poor [p-q,p'-q,p-q']
+		- artifical
+			- path p-q in one image matches one of: p'-q, p-q' well
+			- (if p-q is matched then it is a good correspondence)
+	=> can be found in 2D w/o more info
+	=> completely isolated 'islands' can't be corrected in 2D
+
+
+for 2D case:
+	- want coverage for seed points [doesn't need to be EVERY pixel, one match per 3x3-11x1l is OK]
+	- want good initialization of pairwise orientation
+	- want to remove obvious noise outliers
+	NICE:
+	- expand good areas to fill in
+	- find optimal / more accurate location of point matches ?
+		- need to iterate on affine transform & point location
+
+	=> CAN'T USE PATCH-REJECTION FOR ONLY PAIRWISE CASE
+		- F & R are constructed in such a way that overlap DNE
+
+
+WANT WAY TO:
+	- remove less 'obvious' error points [smooth out noisy areas]
+
+
+
+
+
+
+
+
+
+
+3) test voting removal of points by P3D-distance or P2D/P3D distance ratios
+	- see how it affects valid and invalid discontinuities
+
+4) test addition projection of 'cells' by affine estimation
+	- display some example projections & heatmaps & final decisions
+
+5) test fluid-movement point2D
+	- see if R-error is useful for repositioning point (and if 3D destination point is good)
+
+
+
+- only keep best NCC/corner per cell (3x3-11x11) ?
+	- reduce processing
+
+
+
+
+SO I HAVE A PATCH OF POINTS THAT HAVE GOOD:
+	- NCC SCORE
+	- R-ERROR
+	- F-ERROR
+BUT WRONG, BECAUSE THEY ARE MAPPING INCORRECT SIMILAR SPACES TOGETHER [EG because a tree is in the way in one picture but not another]
+- artificial/ incorrect discontinuity
+
+=> for 2 cameras .. might be hard to differentiate
+	=> availablity of alternative points ?
+		- might be possible that this is not the case
+	=>
+
+=> for 3+ cameras:
+	projecting from a correct 3D point will result in more matches for a point
+	projecting from a wrong 3D point will limit that point to only 2 matches
+	=> number of matches a point2D().point3D.matches.length) has can weight against correct/incorrect when voting
+
+=>
+
+SPORATICALLY BAD POINTS (ERROR) - can be voted out fairly unanumously
+- small groups can be iteritively picked at until they are all removed
+
+
+
+
+
+
+
+
+3D case try 3-F planes to validate / find new TRACKS
+
+
+
+
+
+might be coincidence that the incorrect error metric is nearest & farthest points are bad ...
+
+
+
+-- error seems to be only a function of y from the center (~epipolar lines?)
+	- makes it useless in other calculations
+
+--
+
+
+
+
+
+ANOTHER METHOD TO REDUCE R ERROR:
+	- move a point in A/B to reduce reprojection error
+		- needs to take into account NCC / distance to limit maximum relocation
+
+
+
+
+is REPROJECTION ERROR BACKWARDS?
+R3D.reprojectionError
+
+a transform I->P is EXTRINSIC MATRIX
+
+
+- some super low-R-error points, but are obviously wrong in 3D
+
+
+
+- relative camera poses is not the same as inverse ....
+
+http://www.cs.cmu.edu/~16385/s17/Slides/11.1_Camera_matrix.pdf
+
+
+STEPS:
+estimate3DErrors
+	Stereopsis.ransacTransformF
+		F = R3D.fundamentalFromUnnormalized(pointsA,pointsB);
+			F = R3D.fundamentalMatrix(pointsA, pointsB) == Linear DLT
+			F = R3D.fundamentalMatrixNonlinear(F, pointsA, pointsB); == distance from projected line error
+		P = R3D.transformFromFundamental(bestPointsA, bestPointsB, F, Ka,KaInv, Kb,KbInv, null, force, true);
+			E =  KbT*F*Ka
+		transform.calculateErrorF();
+		transform.relativeEstimatePoints3D();
+		transform.calculateErrorR();
+...
+this.estimate3DViews(); // find absolute view locations
+this.estimate3DPoints(); // find absolute point locations
+	P3D.prototype.calculateAbsoluteLocation
+this.estimate3DErrors(true, true);
+
+
+
+TRANSFORM WILL HOLD EXTRINSIC MATRICES
+	- relationship between PKR
+VIEWS WILL HOLD ABSOLUTE MATRICES
+	- ?
+
+
+
+
+
+
+R3D.inverseCameraMatrix = function(P){
+
+
+R3D.componentwiseRelativeCameraMatrix = function(transformA,transformB){
+
+
+
+
+
+
+
+
+
+
+
+R3D.projectPoint3DToCamera2DForward:
+	x = K * [P = R|t] * X
+	P = EXTRINSIC CAMERA MATRIX [inversISH of camera location matrix?]
+
+
+
+var projected2DA = R3D.projectPoint3DToCamera2DForward(estimated3D, transformInverseA, Ka, null, true);
+var projected2DB = R3D.projectPoint3DToCamera2DForward(estimated3D, transformInverseB, Kb, null, true);
+
+
+
+
 
 
 1/3 of points are initially dropped because of poor NCC

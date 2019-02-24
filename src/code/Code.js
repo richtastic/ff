@@ -2658,6 +2658,7 @@ Code.averageNumbers = function(values, percents){
 	}
 	return sum;
 }
+Code.avg = Code.averageNumbers;
 Code.averageV2D = function(values, percents){
 	var i, count = values.length;
 	var sum = new V2D(0,0);

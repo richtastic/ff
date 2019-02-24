@@ -3276,6 +3276,7 @@ App3DR.App.ImageEditor.prototype.moveAreaCancel = function(){
 	this._areaInterfaceMove.removeFunction(Canvas.EVENT_MOUSE_MOVE, this.moveAreaHandleMouseMove, this, true);
 }
 App3DR.App.ImageEditor.prototype.moveAreaHandleMouseMove = function(e){
+	Code.eventPreventDefault(e);
 	var move = this._editingMode === App3DR.App.ImageEditor.EDIT_MODE_MOVE;
 	if(move){
 		var data = e["data"];
@@ -3325,6 +3326,7 @@ App3DR.App.ImageEditor.prototype.rotateAreaHandleMouseDown = function(e){
 // 	this._areaInterfaceMove.removeFunction(Canvas.EVENT_MOUSE_MOVE, this.moveAreaHandleMouseMove, this, true);
 // }
 App3DR.App.ImageEditor.prototype.rotateAreaHandleMouseMove = function(e){
+	Code.eventPreventDefault(e);
 	var rotate = this._rotationAngleStart!=null;
 	if(rotate){
 		var data = e["data"];
@@ -3470,7 +3472,7 @@ App3DR.App.Model3D.prototype._bindAfterTexturesLoaded = function(){
 		var transform = view["transform"];
 // WHY INVERSE?
 // FROM EXTRINIC TO CAMERA MATRIX
-transform = Matrix.inverse(transform);
+// transform = Matrix.inverse(transform);
 		var tx = transform.get(0,3);
 		var ty = transform.get(1,3);
 		var tz = transform.get(2,3);
@@ -3693,24 +3695,90 @@ App3DR.App.Model3D.prototype.setPoints = function(input3D, input2D, hasImages){
 	console.log(input3D);
 	console.log(input2D);
 
+	var colors = [];
+// ONLY WORKS FOR PAIR OF IMAGES
+	// var useErrors = true;
+var useErrors = false;
+	useErrors = useErrors && hasImages;
+	if(useErrors ){
+		var views = this._views;
+// console.log(views);
+// throw "?";
+		var viewA = views[0];
+		var viewB = views[1];
+		// ...
+		var pointsA = input2D[0];
+		var pointsB = input2D[1];
+		var points3D = input3D;
+		var F = R3D.fundamentalFromLargeDataset(pointsA,pointsB,1000);
+		var Finv = R3D.fundamentalInverse(F);
+		// var fError = R3D.fErrorList(F, Finv, pointsA, pointsB);
+		var cameraA = viewA["transform"];
+		var cameraB = viewB["transform"];
+		var extrinsicA = R3D.extrinsicMatrixFromCameraMatrix(cameraA);
+		var extrinsicB = R3D.extrinsicMatrixFromCameraMatrix(cameraB);
+
+		var imageA = viewA["matrix"];
+		var imageB = viewB["matrix"];
+
+		var imageSizeA = imageA.size().copy();
+		var imageSizeB = imageB.size().copy();
+
+		var Ka = viewA["K"];
+		var Kb = viewB["K"];
+
+			Ka = R3D.cameraFromScaledImageSize(Ka, imageSizeA);
+			Kb = R3D.cameraFromScaledImageSize(Kb, imageSizeB);
+
+
+
+		var errors = [];
+		// console.log(pointsA);
+		// throw "?";
+		for(var i=0; i<pointsA.length; ++i){
+			var pointA = pointsA[i];
+			var pointB = pointsB[i];
+				pointA = new V2D(pointA.x,pointA.y);
+				pointB = new V2D(pointB.x,pointB.y);
+				pointA = pointA.copy().scale(imageSizeA.x,imageSizeA.y);
+				pointB = pointB.copy().scale(imageSizeB.x,imageSizeB.y);
+			var point3D = points3D[i];
+			// var error = R3D.fError(F, Finv, pointA, pointB);
+			var error = R3D.reprojectionError(point3D, pointA,pointB, extrinsicA, extrinsicB, Ka, Kb);
+			// var error = R3D.reprojectionError(point3D, pointA,pointB, cameraA, cameraB, Ka, Kb);
+			errors.push(error["error"]);
+		}
+		// Code.printMatlabArray(errors,"errors");
+		// console.log(errors);
+		ImageMat.normalFloat01(errors);
+		// exaggerate
+		// ImageMat.pow(errors, 2); // fewer red
+		// ImageMat.pow(errors, 0.5); // more red
+		var colorList = [0xFF0000FF, 0xFFFF0000];
+		var locationList = [0.0,1.0];
+		for(var i=0; i<errors.length; ++i){
+			var err = errors[i];
+			var col = Code.interpolateColorGradientARGB(err, colorList,locationList);
+				col = Code.getFloatARGB(col);
+			colors.push(col[1],col[2],col[3],col[0]);
+		}
+	}
+	console.log("COLORED");
+
+
+
 	// TRIM SO ONLY POINTS IN 0 & 1 are displayed:
 
-
-	// HERE
-
-
-
 	var points = [];
-	var colors = [];
+
 	for(var i=0; i<input3D.length; ++i){
-		//var v = new V3D( Math.random()*10 - 5.0, Math.random()*10 -5.0, Math.random()*10 -5.0 );
 		var v = input3D[i];
-//		console.log(v+"")
 		points.push(v.x,v.y,v.z);
-// points.push(1,1,1);
 
 
 // NEGATIVE Z:
+if(useErrors){
+}else{
 //		points.push(v.x,v.y,-v.z);
 		var imageSuccess = false;
 		if(hasImages){
@@ -3742,6 +3810,7 @@ App3DR.App.Model3D.prototype.setPoints = function(input3D, input2D, hasImages){
 		if(!imageSuccess){
 			colors.push(0.5,0.5,0.5,0.5);
 		}
+}
 		// if(i>33){
 		// 	console.log(v+"");
 		// 	break;
@@ -3906,7 +3975,7 @@ App3DR.App.Model3D.prototype.onMouseUpFxn3D = function(e){
 
 }
 App3DR.App.Model3D.prototype.onMouseMoveFxn3D = function(e){
-
+	Code.eventPreventDefault(e);
 }
 App3DR.App.Model3D.prototype.onMouseWheelFxn3D = function(e){
 
@@ -4491,6 +4560,7 @@ App3DR.prototype._handleMouseUpFxn = function(e){
 	}
 }
 App3DR.prototype._handleMouseMoveFxn = function(e){
+	Code.eventPreventDefault(e);
 	if(this._activeApp){
 		this._activeApp.handleMouseMove(e);
 		return;

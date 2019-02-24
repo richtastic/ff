@@ -604,6 +604,12 @@ console.log(" "+i+" DIFF: "+orgDiff.length()+" @ "+Code.degrees(dirDiff));
 function classesLoadedFxn(){
 
 
+
+// want best affine WITHOUT TRANSLATION
+
+// R3D.stereoMatchAverageAffine(imageMatrixA,imageMatrixB,matches);
+
+
 	var app = new App3DR();
 		return;
 
@@ -621,10 +627,10 @@ function classesLoadedFxn(){
 	GLOBALSTAGE = this._stage;
 
 
-
+/*
 
 	throw "KD TREE";
-
+*/
 
 /*
 Matrix.transform2DTranslate = function(a,tX,tY){
@@ -654,8 +660,14 @@ affine = Matrix.transform2DScale(affine, 1.5,2.0);
 affine = Matrix.transform2DRotate(affine, Code.radians(45));
 affine = Matrix.transform2DTranslate(affine, 2,1);
 
+console.log("START:");
+console.log(affine+"");
+console.log( R3D.infoFromAffine2D(affine) );
 
+// var error = 0.0;
+// var error = 0.10;
 var error = 1.0;
+// var error = 5.0;
 var pointCount = 10;
 var outlierCount = 3;
 
@@ -690,9 +702,17 @@ if(i>pointCount-outlierCount-1){
 // console.log(matrix);
 
 
-var affine = R3D.ransacAffine(pointsA,pointsB, error*1.0 );
+// var affine = R3D.ransacAffine(pointsA,pointsB, error*1.0 );
+var affine = R3D.ransacAffineIterate(pointsA,pointsB,);
+// console.log(affine);
+
+
 console.log(affine);
 matrix = affine["affine"];
+console.log(" END :");
+console.log(""+matrix);
+console.log( R3D.infoFromAffine2D(matrix) );
+// console.log(""+Matrix.inverse(matrix));
 
 
 // DRAW:

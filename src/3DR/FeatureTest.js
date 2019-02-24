@@ -51,9 +51,9 @@ function FeatureTest(){
 // new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-0_big.jpg"],this,this.imagesLoadComplete2).load(); // zoom difference x2
 // new ImageLoader("./images/",["xA_small.jpg", "xB_small.jpg"],this,this.imagesLoadComplete2).load(); // ex bad : OK: [20 @ 0.73 | 16 @ 0.54]
 // new ImageLoader("./images/",["yA_small.jpg", "yB_small.jpg"],this,this.imagesLoadComplete2).load(); // ex poor : GOOD: [34 @ 0.463 | 33 @ 0.45]
-new ImageLoader("./images/",["zA_small.jpg", "zB_small.jpg"],this,this.imagesLoadComplete2).load(); // ex ok : GOOD: [36 @ 0.548 | 40 @ 0.588]  -- theres a patch of incorrect matching on the tower
+// new ImageLoader("./images/",["zA_small.jpg", "zB_small.jpg"],this,this.imagesLoadComplete2).load(); // ex ok : GOOD: [36 @ 0.548 | 40 @ 0.588]  -- theres a patch of incorrect matching on the tower
 
-// new ImageLoader("./images/",["room0.png", "room1.png"],this,this.imagesLoadComplete2).load(); // real / close scenario : GREAT : [63 @ 0.58 |  66 @ 0.59]
+new ImageLoader("./images/",["room0.png", "room1.png"],this,this.imagesLoadComplete2).load(); // real / close scenario : GREAT : [63 @ 0.58 |  66 @ 0.59]
 // new ImageLoader("./images/",["room1.png", "room2.png"],this,this.imagesLoadComplete2).load(); // GREAT : [74 @ 0.45 | 65 @ 0.44]
 // new ImageLoader("./images/",["room0.png", "room2.png"],this,this.imagesLoadComplete2).load(); // GOOD : [46 @ 0.83 | 45 @ 0.78]
 
@@ -3056,6 +3056,12 @@ R3D.showRansac(pointsA,pointsB, matrixFfwd, matrixFrev, display, imageMatrixA,im
 // MEDIUM / DENSISH:
 console.log("stereoHighConfidenceMatches");
 var matches = R3D.stereoHighConfidenceMatches(imageMatrixA,imageMatrixB, pointsA,pointsB,matrixFfwd);
+console.log(matches);
+
+matches = R3D.matchesRemoveClosePairs(matches,imageMatrixA,imageMatrixB, 1.0);
+console.log(matches);
+
+R3D.stereoMatchAverageAffine(imageMatrixA,imageMatrixB,matches);
 console.log(matches);
 
 

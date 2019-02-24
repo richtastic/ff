@@ -5,14 +5,18 @@ function KDTree(dimensions,mins,maxs,eps){
     this._root = new KDTree.Node();
 	// this.initWithSize(min,max,eps);
 }
-KDTree.prototype.insertObjects = function(pairList){
+KDTree.prototype.clear = function(){
+    throw "...";
+}
+KDTree.prototype.insertObjects = function(objects){
     // find mean / median
+    // for axis i
+    // sort objects OR random selection of objects to estimate median
+    // create left / right arrays
+    // create center = all values equal to median
+    // insert to left & right
+    throw "...";
 }
-KDTree.prototype._insertObject = function(object, array){
-    var item = new KDTree.Object(object,array);
-    return this._root.insertObject(item);
-}
-
 KDTree.prototype.removeObject = function(object){
     //
 }
@@ -35,12 +39,6 @@ KDTree.Node = function(){
     this._objects = [];
     this._left = null;
     this._right = null;
-}
-KDTree.Node.prototype.insertObject = function(){
-    if(this._objects.length>0){
-        return this._objects[0];
-    }
-    return null;
 }
 KDTree.Node.prototype.firstObject = function(){
     if(this._objects.length>0){
