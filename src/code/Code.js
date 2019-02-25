@@ -4346,7 +4346,14 @@ ar vLen = Code.arrayVectorLength(v);
 	var s = fall/vLen;
 	Code.arrayScale(vLen);
 */
-
+Code.diff1D = function(array){
+	var lm1 = array.length - 1;
+	var deltas = [];
+	for(var i=0; i<lm1; ++i){
+		deltas.push(array[i+1]-array[i]);
+	}
+	return deltas;
+}
 Code.gaussianWindow = function(sigma, len, unit){ // to simplify: mirror
 	len = len!==undefined ? len : (Math.round(sigma*1.5)*2 + 1);
 	unit = unit!==undefined ? unit : true;

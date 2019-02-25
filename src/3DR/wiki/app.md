@@ -324,7 +324,7 @@ https://cloud.google.com/appengine/docs/nodejs/
 	-> depth discontinuities
 		- genuine:
 			- for BOTH POINTS: path in A & B w/ resp. predicted points are all poor [p-q,p'-q,p-q']
-		- artifical
+		- artificial:
 			- path p-q in one image matches one of: p'-q, p-q' well
 			- (if p-q is matched then it is a good correspondence)
 	=> can be found in 2D w/o more info

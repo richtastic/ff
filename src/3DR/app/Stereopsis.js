@@ -1395,10 +1395,27 @@ Stereopsis.P2D = function(view,point2D,point3D){
 	this._view = null;
 	this._point3D = null;
 	this._matches = {};
+this._votes = [];
 	this.view(view);
 	this.point2D(point2D);
 	this.point3D(point3D);
 }
+Stereopsis.P2D.prototype.vote = function(value){
+	this._votes.push(value);
+}
+Stereopsis.P2D.prototype.votePercent = function(){
+	var len = this._votes.length;
+	if(len>0){
+		var sum = Code.sum(this._votes);
+		var percent = sum/len;
+		return percent;
+	}
+	return 0;
+}
+Stereopsis.P2D.prototype.voteClear = function(){
+	this._votes = [];
+}
+this._votes = [];
 Stereopsis.P2D.prototype.kill = function(){
 	this._view = null;
 	this._point = null;
@@ -4895,7 +4912,7 @@ Stereopsis.World.prototype.probeCorners = function(){
 	// }
 }
 Stereopsis.World.prototype.probe2D2 = function(){
-	// throw "?";
+	throw "here";
 	/*
 	for each transform
 		for each viewA,viewB --- need to do A->B & B->A
@@ -4913,21 +4930,156 @@ Stereopsis.World.prototype.probe2D2 = function(){
 	*/
 }
 Stereopsis.World.prototype.filter2D2 = function(){
-	console.log("VISUALIZE POINTS WITH HIGH 3D/2D");
+	// console.log("VISUALIZE POINTS WITH HIGH 3D/2D");
+	var world = this;
 	var transforms = this.toTransformArray();
+	var sortDistances = function(a,b){
+		return a[0]<b[0] ? -1 : 1;
+	};
 	for(var i=0; i<transforms.length; ++i){
 		var transform = transforms[i];
 		var viewA = transform.viewA();
 		var viewB = transform.viewB();
-		var spaceA = viewA.pointSpace();
-		var spaceB = viewB.pointSpace();
-		var points2DA = spaceA.toArray();
-		console.log(points2DA);
-		for(var j=0; j<points2DA.length; ++j){
-			var point2DA = points2DA[j];
+		var viewList = [viewA,viewB];
+		for(var v=0; v<viewList.length; ++v){
+			var viewA = viewList[v];
+			var spaceA = viewA.pointSpace();
+			var points2DA = spaceA.toArray();
+			var cellSizeA = viewA.cellSize();
+			var searchSizeA = cellSizeA*3.0; // 2-4
+			var countPeak = 0;
+			for(var j=0; j<points2DA.length; ++j){
+				var point2DA = points2DA[j];
+				var pA2D = point2DA.point2D();
+				var pA3D = point2DA.point3D().point();
+				var neighbors = spaceA.objectsInsideCircle(pA2D,searchSizeA);
+				var distances = [];
+				for(k=0; k<neighbors.length; ++k){
+					var neighbor = neighbors[k];
+					if(neighbor==point2DA){
+						continue;
+					}
+					var pN2D = neighbor.point2D();
+					var pN3D = neighbor.point3D().point();
+					var d2D = V2D.distance(pA2D,pN2D);
+					var d3D = V3D.distance(pA3D,pN3D);
+					var ratio = d3D/d2D;
+					distances.push([ratio,neighbor]);
+					// console.log(d2D,d3D);
+				}
+				distances.sort(sortDistances);
+				// console.log(distances);
+				var distances2 = [];
+				for(k=0; k<distances.length; ++k){
+					distances2[k] = distances[k][0];
+				}
+				var deltas = Code.diff1D(distances2);
+				// Code.printMatlabArray(distances2,"distances");
+				// Code.printMatlabArray(deltas,"deltas");
+				ImageMat.normalFloat01(deltas);
+				var lm1 = deltas.length-1;
+				// var sig = 2.0;
+				var sig = 4.0;
+				var peakIndex = null;
+				for(var k=1; k<lm1; ++k){
+					var b = deltas[k];
+					if(b!=1){ // normalized peak is always? 1.0
+						continue;
+					}
+					var a = deltas[k-1];
+					var c = deltas[k+1];
+					b -= (1.0-1.0/sig); // 2=0.5 | 3 = 0.333 | 4 = 0.25
+					// console.log("RATIO: "+(b/a)+" & "+(b/c))
+					// b /= sig;
+					if(b>a && b>c){
+						peakIndex = k;
+						// Code.printMatlabArray(distances2,"distances");
+						// Code.printMatlabArray(deltas,"deltas");
+						// console.log(": "+);
+						// throw "yeah";
+						countPeak += 1;
+						break;
+					}
+				}
+				if(peakIndex===null){ // vote to keep all
+					peakIndex = distances.length;
+				}else{
+					// found discontinuity
+					// everything before index = vote keep
+					// everything after index = vote remove
+				}
+				for(var k=0; k<distances.length; ++k){
+					var item = distances[k];
+					var neighbor = item[1];
+					if(k<=peakIndex){ // keep
+						neighbor.vote(0);
+					}else{ // drop
+						neighbor.vote(1);
+					}
+				}
+				// ...
+				// throw "...";
+			}
+			var imageA = viewA.image();
+			var widthA = imageA.width();
+			var heightA = imageA.height();
+			var collection = Code.newArrayZeros(widthA*heightA);
+			// var votes = [];
+			var dropList = [];
+			for(var j=0; j<points2DA.length; ++j){
+				var point2DA = points2DA[j];
+				var vote = point2DA.votePercent();
+
+				point2DA.voteClear();
+				var p = point2DA.point2D();
+				// votes.push([point2DA.point2D(),vote]);
+				var x = Math.floor(p.x);
+				var y = Math.floor(p.y);
+				var ind = y*widthA + x;
+				// collection[ind] = vote;
+				// if(vote>0.50){
+				if(vote>0.25){
+					dropList.push(point2DA);
+					// collection[ind] = 1.0;
+					collection[ind] = vote;
+				}
+			}
+			ImageMat.normalFloat01(collection);
+			// console.log(dropList.length+" ... ");
+			/*
+			var sss = 2.0;
+
+			var iii = imageA;
+			var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
+			var d = new DOImage(img);
+			d.matrix().scale(sss);
+			d.matrix().translate(sss*widthA*v,0);
+			GLOBALSTAGE.addChild(d);
+
+			// var img = GLOBALSTAGE.getFloatRGBAsImage(collection,collection,collection, widthA,heightA);
+			var heat = Code.grayscaleFloatToHeatMapFloat(collection);
+			var img = GLOBALSTAGE.getFloatRGBAsImage(heat["red"],heat["grn"],heat["blu"], widthA,heightA);
+			var d = new DOImage(img);
+			d.graphics().alpha(0.80);
+			d.matrix().scale(sss);
+			d.matrix().translate(sss*widthA*v,0);
+			GLOBALSTAGE.addChild(d);
+			*/
+			// console.log(countPeak);
+			console.log("DROP COUNT: "+dropList.length);
+			for(var j=0; j<dropList.length; ++j){
+				var point = dropList[j];
+				var matches = point.toMatchArray();
+				for(var k=0; k<matches.length; ++k){
+					var match = matches[k];
+					world.removeMatchFromPoint3D(match);
+				}
+			}
 		}
 	}
-throw "...";
+// ...
+
+// throw "...";
 	/*
 	for each cell in transform
 		get points inside cell rect
