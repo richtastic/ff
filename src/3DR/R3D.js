@@ -845,19 +845,6 @@ log = false;
 	}
 	R1 = R3D.rotationFromApproximate(R1);
 	R2 = R3D.rotationFromApproximate(R2);
-/*
-// console.log("F (in):\n"+F+"");
-var reduced = Matrix.RREF(F);
-// console.log("F:\n"+reduced+"");
-var reduced = Matrix.RREF(E);
-// console.log("E:\n"+reduced+"");
-var rod = R3D.rotationMatrixToEulerRodriguez(R1);
-// console.log("R1:\n"+rod+"");
-var rod = R3D.rotationMatrixToEulerRodriguez(R2);
-// console.log("R2:\n"+rod+"");
-// console.log("t1:\n"+t);
-// console.log("t2:\n"+tNeg);
-*/
 	// one of 4 possible solutions
 	var possibles = []; // U*W*V | t
 	var bottom = [0,0,0,1];
@@ -905,9 +892,9 @@ var rod = R3D.rotationMatrixToEulerRodriguez(R2);
 			var p1Norm = new V4D().fromArray(P1.toArray());
 			p1Norm.homo(); // THIS IS THE ACTUAL 3D POINT - LOCATION
 			var P1est = new Matrix(4,1).setFromArray( p1Norm.toArray() );
-// 1)
-var P2 = Matrix.mult(possibleInv,P1est); // M2 // E-POINTS
-// var P2 = Matrix.mult(possible,P1est);
+			// 1)
+			var P2 = Matrix.mult(possibleInv,P1est); // M2 // E-POINTS
+			// var P2 = Matrix.mult(possible,P1est);
 			var p2Norm = new V4D().fromArray(P2.toArray());
 			// p2Norm.homo(); // not necessary?
 			countsTotal[i] += Math.sign(p1Norm.z) + Math.sign(p2Norm.z);
@@ -920,8 +907,7 @@ var P2 = Matrix.mult(possibleInv,P1est); // M2 // E-POINTS
 		var possible = possibles[i];
 		var possibleInv = possibleInvs[i];
 		var M1 = M1Full;
-// var M2 = possibleInv;
-var M2 = possible; // F-POINTS
+		var M2 = possible; // F-POINTS
 		var points3D = R3D.triangulationDLT(pointsA,pointsB, M1,M2, Ka, Kb, KaInv, KbInv);
 		var distortions = null;
 		for(var j=0; j<points3D.length; ++j){
@@ -935,26 +921,21 @@ var M2 = possible; // F-POINTS
 	}
 // 2)
 // countsTotal2 = countsTotal;
+console.log(countsTotal,countsTotal2);
 	countsTotal = countsTotal2;
 	var bestTotalCount = Code.max(countsTotal);
-if(bestTotalCount>=8){
-	var bestProjections = [];
+	if(bestTotalCount>=8){
+		var bestProjections = [];
 		var minimumTransformMatchCountR = 10;
-		// forceSolution = (bestTotalCount>=2*minimumTransformMatchCountR && forceSolution);
 		for(var i=0; i<possibles.length; ++i){
 			var possible = possibles[i];
 			var possibleInv = possibleInvs[i];
 			if(countsTotal[i]==bestTotalCount){
-				// if(bestTotalCount==maximumTotalCount || forceSolution){
-	// 3)
-	// bestProjections.push(possibleInv); // IF F-POINTS
-	bestProjections.push(possible); // IF E-POINTS
-				// }
+				bestProjections.push(possible);
 			}
 		}
 		if(bestProjections.length>0){
 			var bestProjection = bestProjections[0];
-// bestProjection = Matrix.inverse(bestProjection); /////////////////////////// REMOVE
 			return bestProjection;
 		}
 	}
@@ -21638,17 +21619,19 @@ R3D.optimumGraphLocation3DLeastSquares = function(edges){ // [indexA,indexB,rela
 // R3D.inverseCameraMatrix = function(P){
 
 R3D.cameraMatrixFromExtrinsicMatrix = function(extrinsic){
-	var camera = R3D.inverseCameraMatrix(extrinsic);
-	return camera;
+	// var camera = R3D.inverseCameraMatrix(extrinsic);
+	// return camera;
+	return Matrix.inverse(extrinsic);
 }
 R3D.extrinsicMatrixFromCameraMatrix = function(camera){
-	var extrinsic = R3D.inverseCameraMatrix(camera);
-	return extrinsic;
+	// var extrinsic = R3D.inverseCameraMatrix(camera);
+	// return extrinsic;
+	return Matrix.inverse(camera);
 }
 
 R3D.componentwiseRelativeCameraMatrix = function(transformA,transformB){
-	console.log("A: \n"+transformA);
-	console.log("B: \n"+transformB);
+	// console.log("A: \n"+transformA);
+	// console.log("B: \n"+transformB);
 	var centerA = transformA.multV3DtoV3D(new V3D(0,0,0));
 	var centerB = transformB.multV3DtoV3D(new V3D(0,0,0));
 	var translation = V3D.sub(centerB,centerA);
@@ -25252,7 +25235,7 @@ R3D.affineTransformFromVectors = function(u,a,b){
 	var o = new V2D(0,0);
 	var x = new V2D(1,0);
 	var y = new V2D(0,1);
-	if(a==undefined){
+	if(a===undefined){
 		a = u["A"];
 		b = u["B"];
 		u = u["O"];
@@ -25266,7 +25249,6 @@ R3D.optimumAffineTransform = function(imageA,pointA, imageB,pointB, vectorX,vect
 	if(!limits){
 		limits = {};
 	} // default to
-	// var percent = 1.0;
 	var percentA = limitVA!==undefined ? limitVA : 0.25;
 	var percentB = limitVB!==undefined ? limitVB : 0.25;
 	limits["t"] = Code.valueOrDefault(limits["t"], limitPixels!==undefined ? limitPixels : 1.0); // pixel
@@ -25275,14 +25257,10 @@ R3D.optimumAffineTransform = function(imageA,pointA, imageB,pointB, vectorX,vect
 	// optimum transform:
 	var compareSize = 11;
 	var scaleCompare = compareSize/sizeA;
-	// ^ is scaleCompare reversed for matrix?
-	// console.log(compareSize,sizeA,scaleCompare)
-	// throw "?"
 		var matrix = new Matrix(3,3).identity();
-			matrix = Matrix.transform2DScale(matrix,scaleCompare);
 	var h = null;
 	try{
-		h = imageB.extractRectFromFloatImage(pointB.x,pointB.y,1.0,null,compareSize,compareSize, matrix);
+		h = imageB.extractRectFromFloatImage(pointB.x,pointB.y,scaleCompare,null,compareSize,compareSize, matrix);
 	}catch(e){
 		console.log("bad matrix extract rect: "+scaleCompare+" : "+compareSize+" / "+sizeA);
 		console.log(""+matrix);
@@ -25294,61 +25272,24 @@ R3D.optimumAffineTransform = function(imageA,pointA, imageB,pointB, vectorX,vect
 	var u = new V2D(0,0);
 	var x = new V2D(1,0);
 	var y = new V2D(0,1);
-
-// console.log("scaleCompare: "+scaleCompare);
-
-// var iii = h;
-// var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
-// var d = new DOImage(img);
-// d.matrix().scale(4.0);
-// d.matrix().translate(1300,400);
-// GLOBALSTAGE.addChild(d);
-var index = 0;
 	var compareFxn = function(o,a,b, isUpdate){ // from control points
-		// console.log("compareFxn ... ");
 		var matrix = R3D.affineMatrixExact([u,x,y],[u,a,b]);
-		// console.log(" ... "+x+"&"+y+" - "+a+"&"+b);
-		// NaN
-			matrix = Matrix.transform2DScale(matrix,scaleCompare);
-		var n = imageA.extractRectFromFloatImage(pointA.x+o.x,pointA.y+o.y,1.0,null,compareSize,compareSize, matrix);
+		var n = imageA.extractRectFromFloatImage(pointA.x+o.x,pointA.y+o.y,scaleCompare,null,compareSize,compareSize, matrix);
+		// var n = imageA.extractRectFromFloatImage(pointA.x,pointA.y,scaleCompare,null,compareSize,compareSize, matrix);
 		var ncc = R3D.normalizedCrossCorrelation(n,m,h, true);
-		var sad = R3D.searchNeedleHaystackImageFlat(n,m,h);
-if(isUpdate){
-// if(index==0){
-	// var iii = n;
-	// var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
-	// var d = new DOImage(img);
-	// d.matrix().scale(4.0);
-	// d.matrix().translate(1200,300 + index*50);
-	// GLOBALSTAGE.addChild(d);
-// }
-++index;
-}
-		sad = sad["value"][0];
 		ncc = ncc["value"][0];
 		return ncc;
-		// return sad;
-		// return sad*ncc;
-		// return sad+ncc;
 	}
-// something breaks ...
-try {
-	var result = R3D._affineTransformNonlinearGD(pointA,pointB, vectorX,vectorY,  vectorX,vectorY, compareFxn, limits);
-	return result;
-} catch(e) {
-	return null;
+	// something breaks ...
+	try {
+		var result = R3D._affineTransformNonlinearGD(pointA,pointB, vectorX,vectorY,  vectorX,vectorY, compareFxn, limits);
+		return result;
+	} catch(e) {
+		return null;
+	}
 }
-}
-
-
 
 R3D._affineTransformNonlinearGD = function(imageFlatA,pointA, imageFlatB,pointB,  vectorX,vectorY, compareFxn, limits){
-	// var limitAx = 0;
-	// var limitAy = 0;
-	// var limitBx = 0;
-	// var limitBy = 0;
-	// var limitTx = 0;
-	// var limitTy = 0;
 	var limitA = 0;
 	var limitB = 0;
 	var limitT = 0;
@@ -25356,23 +25297,9 @@ R3D._affineTransformNonlinearGD = function(imageFlatA,pointA, imageFlatB,pointB,
 		limitT = limits["t"];
 		limitA = limits["a"];
 		limitB = limits["b"];
-		// limitAx = limits["ax"];
-		// limitAy = limits["ay"];
-		// limitBx = limits["bx"];
-		// limitBy = limits["by"];
-		// limitTx = limits["tx"];
-		// limitTy = limits["ty"];
 	}
 	var xVals = [0,0, vectorX.x,vectorX.y, vectorY.x,vectorY.y];
-	// var imageGradA = null;
-	// var imageGradB = null;
 	var ranges = {};
-		// ranges["tx"] = [0-limitTx, 0+limitTx];
-		// ranges["ty"] = [0-limitTx, 0+limitTy];
-		// ranges["ax"] = [vectorX.x-limitAx, vectorX.x+limitAx];
-		// ranges["ay"] = [vectorX.y-limitAy, vectorY.y+limitAy];
-		// ranges["bx"] = [vectorY.x-limitBx, vectorX.x+limitBx];
-		// ranges["by"] = [vectorY.y-limitBy, vectorX.y+limitBy];
 		ranges["t"] = limitT;
 		ranges["a"] = limitA;
 		ranges["b"] = limitB;
@@ -25391,10 +25318,6 @@ R3D._gdAffineTransform = function(args, x, isUpdate){
 		// return;
 	}
 	// args
-	// var imageFlatA = args[0];
-	// var imageGradA = args[1];
-	// var imageFlatB = args[2];
-	// var imageGradB = args[3];
 	var range = args[0];
 	var compareFxn = args[1];
 	var vX = args[2];
@@ -25404,29 +25327,17 @@ R3D._gdAffineTransform = function(args, x, isUpdate){
 	var vO = new V2D(x[0],x[1]);
 	var vA = new V2D(x[2],x[3]);
 	var vB = new V2D(x[4],x[5]);
+	/*
 	var dO = vO.length();
 	var dA = V2D.distance(vX,vA);
 	var dB = V2D.distance(vY,vB);
 	if(	dO>range["t"] || dA>range["a"] || dB>range["b"]){// || Code.isNaN(vA) || Code.isNaN(vB)){
-		// console.log(range);
-		// console.log("outside ...",dO,dA,dB,vA,vB);
-	// if(	x[0]<range["tx"][0] || x[0]>range["tx"][1] ||
-	// 	x[1]<range["ty"][0] || x[1]>range["ty"][1] ||
-	// 	x[2]<range["ax"][0] || x[2]>range["ax"][1] ||
-	// 	x[3]<range["ay"][0] || x[3]>range["ay"][1] ||
-	// 	x[4]<range["bx"][0] || x[4]>range["bx"][1] ||
-	// 	x[5]<range["by"][0] || x[5]>range["by"][1] ){
-		// console.log("IS OUTSIDE: "+x);
-		// console.log("       ",range);
+		// console.log(" OVER RANGE");
 		return maxValue;
 	}
-	// var o = new V2D(x[0],x[1]);
-	// var vA = new V2D(x[2],x[3]);
-	// var vB = new V2D(x[4],x[5]);
+	*/
 	var error = compareFxn(vO,vA,vB, isUpdate);
-	// if(isUpdate){
-	// 	console.log("    => "+error);
-	// }
+	// console.log(" error: "+error);
 	return error;
 }
 
@@ -27739,7 +27650,39 @@ R3D.cameraMatricesFromF
 
 
 // R3D.relativeTransformMatrix = function(absA,invA,absB,invB){
+
+R3D.relativeTransformMatrix2 = function(absA,absB){
+
+	// throw "..."
+	//
+	// // REMOVE ?
+	// var invA = Matrix.inverse(absA);
+	// var relativeAtoB = Matrix.mult(invA,absB);
+	// return relativeAtoB;
+
+
+	var invA = Matrix.inverse(absA);
+	var relativeAtoB = Matrix.mult(absB,invA);
+	return relativeAtoB;
+	// NOPE
+	// var T1 = new V3D(absA.get(0,3),absA.get(1,3),absA.get(2,3));
+	// var T2 = new V3D(absB.get(0,3),absB.get(1,3),absB.get(2,3));
+	// var T12 = V3D.sub(T1,T2);
+	// var R1 = absA.getSubMatrix(0,0,3,3);
+	// var R2 = absB.getSubMatrix(0,0,3,3);
+	// var R2T = Matrix.transpose(R2);
+	// 	R2T.multV3DtoV3D(T12,T12);
+	// var R = Matrix.mult(R2T,R1);
+	// R.appendColFromArray(T12.toArray());
+	// R.appendRowFromArray([0,0,0,1]);
+	// return R;
+}
 R3D.relativeTransformMatrix = function(absA,invA,absB,invB){
+// R3D.relativeTransformMatrix = function(absA,absB){
+	// var invA = Matrix.inverse(absA);
+	// var relativeAtoB = Matrix.mult(invA,absB);
+	// return relativeAtoB;
+	// throw "use something else for now";
 	if(arguments.length==2){ // assume forward
 		absB = invA;
 		// invA = R3D.inverseCameraMatrix(absA); // WHAT IF 3x3 OR 4x4 ?

@@ -6258,7 +6258,7 @@ console.log("checkPerformNextTask");
 	}
 
 // don't 3 - run
-return;
+// return;
 
 
 	// first run with limited points
@@ -6878,14 +6878,25 @@ console.log("ERROR: "+transformRMean+" * "+transformRSigma+" @ "+transformMatche
 		var viewsData = relativeData["views"];
 		var viewDataA = viewsData[0];
 		var viewDataB = viewsData[1];
-		var transformA = Matrix.loadFromObject(viewDataA["transform"]);
-		var transformB = Matrix.loadFromObject(viewDataB["transform"]);
+		// var transformA = Matrix.loadFromObject(viewDataA["transform"]);
+		// var transformB = Matrix.loadFromObject(viewDataB["transform"]);
+
+		var cameraA = Matrix.loadFromObject(viewDataA["transform"]);
+		var cameraB = Matrix.loadFromObject(viewDataB["transform"]);
+
+
+		// ...
+
+
+
+
 
 // // extrinsic to camera
 // var transformA = Matrix.inverse(transformA);
 // var transformB = Matrix.inverse(transformB);
-		// var relativeAtoB = R3D.relativeTransformMatrix(transformA,transformB);
-		var relativeAtoB = R3D.componentwiseRelativeCameraMatrix(transformA,transformB);
+		// var relativeAtoB = R3D.relativeTransformMatrix(cameraA,cameraB);
+		//var relativeAtoB = R3D.componentwiseRelativeCameraMatrix(cameraA,cameraB);
+		var relativeAtoB = R3D.relativeTransformMatrix2(cameraA,cameraB);
 
 
 
@@ -6893,8 +6904,8 @@ console.log("ERROR: "+transformRMean+" * "+transformRSigma+" @ "+transformMatche
 // to camera
 // var inverseA = R3D.inverseCameraMatrix(transformA);
 // var inverseB = R3D.inverseCameraMatrix(transformB);
-var inverseA = Matrix.inverse(transformA);
-var inverseB = Matrix.inverse(transformB);
+// var inverseA = Matrix.inverse(transformA);
+// var inverseB = Matrix.inverse(transformB);
 // var relativeAtoB = R3D.relativeTransformMatrix(inverseA,inverseB);
 
 		// var errorAB = transformRMean + 1.0*transformRSigma;
@@ -6916,7 +6927,7 @@ var sourceB = indexB;
 		if(indexA==indexMin){
 			// forward
 		}else{
-			console.log("FLIP DIRECTION ....");
+			// console.log("FLIP DIRECTION ....");
 			relativeAtoB = Matrix.inverse(relativeAtoB);
 			// var relativeAtoB = R3D.relativeTransformMatrix(transformB,transformA);
 		}
@@ -6926,7 +6937,7 @@ var sourceB = indexB;
 		relativePairs[indexA][indexB] = relativeAtoB;
 		errorPairs[indexA][indexB] = errorAB;
 		listPairs.push([sourceA,sourceB,relativeAtoB,errorAB]);
-console.log(""+relativeAtoB.toArray());
+// console.log(""+relativeAtoB.toArray());
 	}
 	// get result
 	// var result = R3D.absoluteOrientationsFromRelativeOrientations(relativePairs, errorPairs);
@@ -6953,7 +6964,7 @@ console.log(transforms);
 
 for(var i=0; i<transforms.length; ++i){
 	var transform = transforms[i];
-	var inverse = Matrix.inverse(transform);
+	// var inverse = Matrix.inverse(transform);
 	// var matrix = inverse;
 	var matrix = transform;
 	var center = matrix.multV3DtoV3D(new V3D(0,0,0));
@@ -6961,17 +6972,17 @@ for(var i=0; i<transforms.length; ++i){
 }
 
 
-
 /*
+
 // OVERRIDE KNOWN 3
 var m01 = relativePairs[0][0];
 var m02 = relativePairs[0][1];
 var m12 = relativePairs[1][0];
 
 // BAD
-// var m0 = new Matrix(4,4).identity();
-// var m1 = Matrix.mult(m01,m0);
-// var m2 = Matrix.mult(m02,m0);
+var m0 = new Matrix(4,4).identity();
+var m1 = Matrix.mult(m01,m0);
+var m2 = Matrix.mult(m02,m0);
 
 // // FOUND BEST:
 // var m0 = new Matrix(4,4).identity();
@@ -6991,20 +7002,26 @@ transforms = [m0,m1,m2];
 
 */
 
+
+
+
+
+/*
 // throw "..."
 // to extrinsic
 for(var i=0; i<transforms.length; ++i){
 	var transform = transforms[i];
 	// var inverse = R3D.inverseCameraMatrix(transform);
-	var inverse = Matrix.inverse(transform);
+	// var inverse = Matrix.inverse(transform);
 	// transforms[i] = inverse;
 }
+*/
 
 
 
 for(var i=0; i<transforms.length; ++i){
 	var transform = transforms[i];
-	var inverse = Matrix.inverse(transform);
+	// var inverse = Matrix.inverse(transform);
 	// var matrix = inverse;
 	var matrix = transform;
 	var center = matrix.multV3DtoV3D(new V3D(0,0,0));

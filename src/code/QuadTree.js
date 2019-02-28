@@ -291,11 +291,14 @@ QuadTree._sortObject = function(a,b){
 	return a["distance"] < b["distance"] ? -1 : 1;
 }
 QuadTree.prototype.kNN = function(p,k, evaluationFxn, maxRadius,   log){
-	// console.log("kNN", p,k, evaluationFxn)
 	var size = this.size();
-	maxRadius = (maxRadius!==undefined && maxRadius!==null) ? maxRadius : Math.max(size.x,size.y);
-	//var maxRadiusSquare =  maxRadius*maxRadius*2;
-	var maxRadiusSquare = 1E9;
+	var maxRadiusSquare = null; // default to very big --
+	if(maxRadius!==undefined && maxRadius!==null){
+		// maxRadius =  ? maxRadius : Math.max(size.x,size.y);
+		maxRadiusSquare = maxRadius*maxRadius;
+	}else{
+		maxRadiusSquare = 1E9*Math.max(size.x,size.y); // infinity
+	}
 	var toPoint = this._toPoint;
 	var axelQueue = new PriorityQueue(QuadTree._sortArxel);
 	var objectQueue = new PriorityQueue(QuadTree._sortObject, k);

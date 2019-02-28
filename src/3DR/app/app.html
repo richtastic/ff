@@ -604,6 +604,113 @@ console.log(" "+i+" DIFF: "+orgDiff.length()+" @ "+Code.degrees(dirDiff));
 function classesLoadedFxn(){
 
 
+/*
+	var cameraA = new Matrix(4,4).identity();
+	var cameraB = new Matrix(4,4).identity();
+		cameraB = Matrix.transform3DRotateX(cameraB, Code.radians(-10));
+		cameraB = Matrix.transform3DRotateY(cameraB, Code.radians(45));
+		cameraB = Matrix.transform3DRotateZ(cameraB, Code.radians(20));
+		cameraB = Matrix.transform3DTranslate(cameraB, 1,2,3);
+
+	var cameraC = new Matrix(4,4).identity();
+		cameraC = Matrix.transform3DRotateX(cameraC, Code.radians(10));
+		cameraC = Matrix.transform3DRotateY(cameraC, Code.radians(25));
+		cameraC = Matrix.transform3DRotateZ(cameraC, Code.radians(60));
+		cameraC = Matrix.transform3DTranslate(cameraB, -1,-1,1);
+
+	// TRUE:
+	var extrinsicA = R3D.extrinsicMatrixFromCameraMatrix(cameraA);
+	var extrinsicB = R3D.extrinsicMatrixFromCameraMatrix(cameraB);
+	var extrinsicC = R3D.extrinsicMatrixFromCameraMatrix(cameraC);
+	var cameraA2 = R3D.cameraMatrixFromExtrinsicMatrix(extrinsicA);
+	var cameraB2 = R3D.cameraMatrixFromExtrinsicMatrix(extrinsicB);
+	var cameraC2 = R3D.cameraMatrixFromExtrinsicMatrix(extrinsicC);
+
+	// TRUE:
+	// var extrinsicA = Matrix.inverse(cameraA);
+	// var extrinsicB = Matrix.inverse(cameraB);
+	// var extrinsicC = Matrix.inverse(cameraC);
+	// var cameraA2 = Matrix.inverse(extrinsicA);
+	// var cameraB2 = Matrix.inverse(extrinsicB);
+	// var cameraC2 = Matrix.inverse(extrinsicC);
+
+
+console.log(cameraA+"");
+console.log(extrinsicA+"");
+console.log(cameraA2+"");
+console.log(" ... ");
+console.log(cameraB+"");
+console.log(extrinsicB+"");
+console.log(cameraB2+"");
+console.log(" ... ");
+console.log(cameraC+"");
+console.log(extrinsicC+"");
+console.log(cameraC2+"");
+
+	// RELATIVE
+	var cameraBtoC = R3D.componentwiseRelativeCameraMatrix(cameraB,cameraC);
+	var cameraCtoB = R3D.componentwiseRelativeCameraMatrix(cameraC,cameraB);
+
+	// CORRECT
+	var cameraBtoC = R3D.relativeTransformMatrix2(cameraB,cameraC);
+	var cameraCtoB = R3D.relativeTransformMatrix2(cameraC,cameraB);
+
+	// WRONG:
+	// var cameraBtoC = R3D.relativeTransformMatrix(cameraB,cameraC);
+	// var cameraCtoB = R3D.relativeTransformMatrix(cameraC,cameraB);
+
+
+
+
+
+
+
+
+console.log(" OFFSET ");
+	// NOT EQUAL:
+	// console.log(R3D.componentwiseRelativeCameraMatrix(cameraA,cameraB)+"");
+	// console.log(Matrix.inverse(cameraB)+"");
+
+	// NOT WORK:
+	// var cameraBtoC = R3D.relativeTransformMatrix(cameraB,cameraC);
+	// var cameraCtoB = R3D.relativeTransformMatrix(cameraC,cameraB);
+
+	var estimatedCFromB = Matrix.mult(cameraBtoC,cameraB);
+	var estimatedBFromC = Matrix.mult(cameraCtoB,cameraC);
+
+	console.log("C: "+cameraC+"");
+	console.log("C: "+estimatedCFromB+"");
+	console.log(" ... ");
+	console.log("B: "+cameraB+"");
+	console.log("B: "+estimatedBFromC+"");
+
+
+
+	return
+
+*/
+
+
+	/*
+		this IS right:
+		var relativeAtoB = Matrix.mult(invA,absB);
+
+		why does this LOOK right here:
+		var relativeAtoB = Matrix.mult(absB,invA);
+	*/
+
+
+
+
+	// R3D.cameraMatrixFromExtrinsicMatrix = function(extrinsic){
+	// R3D.extrinsicMatrixFromCameraMatrix = function(camera){
+
+
+	// R3D.inverseCameraMatrix(camera);
+
+	// R3D.relativeTransformMatrix = function(absA,invA,absB,invB){
+
+
 
 // want best affine WITHOUT TRANSLATION
 

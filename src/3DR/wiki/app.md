@@ -297,11 +297,12 @@ vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 	- separate triangles into texture lookup / files
 		- TextureMap (from textures to atlas)
 	=> scene textured model
-(02/28)
+(03/31)
 - viewing output
 	- locally
 	- VR device
-(03/31)
+(04/30)
+
 
 google app engine project - nodejs
 https://cloud.google.com/appengine/docs/nodejs/
@@ -318,34 +319,22 @@ https://cloud.google.com/appengine/docs/nodejs/
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+1-2 pair has a huge initial R error: 3 +/- 6
 
 
-- VISUALIZE POINTS WITH HIGH 3D/2D distance ratios
-	-> depth discontinuities
-		- genuine:
-			- for BOTH POINTS: path in A & B w/ resp. predicted points are all poor [p-q,p'-q,p-q']
-		- artificial:
-			- path p-q in one image matches one of: p'-q, p-q' well
-			- (if p-q is matched then it is a good correspondence)
-	=> can be found in 2D w/o more info
-	=> completely isolated 'islands' can't be corrected in 2D
+
+THE EXTRINSIC CAMERA MATRIX IS THE INVERSE OF THE WORLD-CAMERA MATRIX
+THE RELATIVE CAMERA-A-B MATRIX IS INVA * ABSB
 
 
-for 2D case:
-	- want coverage for seed points [doesn't need to be EVERY pixel, one match per 3x3-11x1l is OK]
-	- want good initialization of pairwise orientation
-	- want to remove obvious noise outliers
-	NICE:
-	- expand good areas to fill in
-	- find optimal / more accurate location of point matches ?
-		- need to iterate on affine transform & point location
-
-	=> CAN'T USE PATCH-REJECTION FOR ONLY PAIRWISE CASE
-		- F & R are constructed in such a way that overlap DNE
+---- RECHECK ALL AND OFFS BETWEEN TRANSFORMS (EXT & ABS)
 
 
-WANT WAY TO:
-	- remove less 'obvious' error points [smooth out noisy areas]
+
+) back to 3-views stereo
+
+--
+-- initial estimate is very bad
 
 
 
@@ -353,14 +342,35 @@ WANT WAY TO:
 
 
 
+transforms.length: 3
+Stereopsis.js:4098       matches: 31538
+Stereopsis.js:4101  T 0 0->1  F : 0.00002031370591020239 +/- 0.1788554299079353
+Stereopsis.js:4102  T 0 0->1  R : 26.031161184072374 +/- 34.156927518683744
+Stereopsis.js:4098       matches: 22475
+Stereopsis.js:4101  T 1 0->2  F : 0.0000020879862926111194 +/- 0.17385255424220863
+Stereopsis.js:4102  T 1 0->2  R : 43.11158180060302 +/- 51.096199855740444
+Stereopsis.js:4098       matches: 33892
+Stereopsis.js:4101  T 2 1->2  F : 0.00001575468196350596 +/- 0.16784721456813256
+Stereopsis.js:4102  T 2 1->2  R : 14.172625296456317 +/- 20.776264619627774
 
 
 
-3) test voting removal of points by P3D-distance or P2D/P3D distance ratios
-	- see how it affects valid and invalid discontinuities
 
-4) test addition projection of 'cells' by affine estimation
-	- display some example projections & heatmaps & final decisions
+
+
+) How to get rid of very isolated points?
+	- each point track it's neighborhood distance
+	- vote
+
+
+----- add a step at end of median to improve points by getting a ZOOMED OUT affine, then ZOOMED IN affine (1/20 ~ 21) (1/100 ~ 11)
+- take a while ... 1E4 * dozens
+
+
+
+(test optimizing each point pair by another corner-point refinement (should do as part of MEDIUM, but can test in STEREO)
+
+
 
 5) test fluid-movement point2D
 	- see if R-error is useful for repositioning point (and if 3D destination point is good)
@@ -373,6 +383,12 @@ WANT WAY TO:
 
 
 
+
+
+
+
+
+
 SO I HAVE A PATCH OF POINTS THAT HAVE GOOD:
 	- NCC SCORE
 	- R-ERROR
@@ -381,7 +397,7 @@ BUT WRONG, BECAUSE THEY ARE MAPPING INCORRECT SIMILAR SPACES TOGETHER [EG becaus
 - artificial/ incorrect discontinuity
 
 => for 2 cameras .. might be hard to differentiate
-	=> availablity of alternative points ?
+	=> availability of alternative points ?
 		- might be possible that this is not the case
 	=>
 
@@ -392,7 +408,7 @@ BUT WRONG, BECAUSE THEY ARE MAPPING INCORRECT SIMILAR SPACES TOGETHER [EG becaus
 
 =>
 
-SPORATICALLY BAD POINTS (ERROR) - can be voted out fairly unanumously
+SPORADICALLY BAD POINTS (ERROR) - can be voted out fairly unanumously
 - small groups can be iteritively picked at until they are all removed
 
 
@@ -407,20 +423,6 @@ SPORATICALLY BAD POINTS (ERROR) - can be voted out fairly unanumously
 
 
 
-
-might be coincidence that the incorrect error metric is nearest & farthest points are bad ...
-
-
-
--- error seems to be only a function of y from the center (~epipolar lines?)
-	- makes it useless in other calculations
-
---
-
-
-
-
-
 ANOTHER METHOD TO REDUCE R ERROR:
 	- move a point in A/B to reduce reprojection error
 		- needs to take into account NCC / distance to limit maximum relocation
@@ -428,14 +430,8 @@ ANOTHER METHOD TO REDUCE R ERROR:
 
 
 
-is REPROJECTION ERROR BACKWARDS?
-R3D.reprojectionError
-
-a transform I->P is EXTRINSIC MATRIX
-
-
 - some super low-R-error points, but are obviously wrong in 3D
-
+	- how to identify these?
 
 
 - relative camera poses is not the same as inverse ....
@@ -472,19 +468,8 @@ VIEWS WILL HOLD ABSOLUTE MATRICES
 
 
 
-R3D.inverseCameraMatrix = function(P){
-
-
-R3D.componentwiseRelativeCameraMatrix = function(transformA,transformB){
-
-
-
-
-
-
-
-
-
+R3D.inverseCameraMatrix = function(P)
+R3D.componentwiseRelativeCameraMatrix = function(transformA,transformB)
 
 
 R3D.projectPoint3DToCamera2DForward:
@@ -496,46 +481,6 @@ R3D.projectPoint3DToCamera2DForward:
 var projected2DA = R3D.projectPoint3DToCamera2DForward(estimated3D, transformInverseA, Ka, null, true);
 var projected2DB = R3D.projectPoint3DToCamera2DForward(estimated3D, transformInverseB, Kb, null, true);
 
-
-
-
-
-
-1/3 of points are initially dropped because of poor NCC
-- display these
-
-
-
-- drop2d:
-	A) 3D distances metric / ratio of 2D-3D distance ?
-		- order on 3D distance,
-		- plot delta-distance
-		- find 2+ groups & vote
-	B) local R-error
-	C) local F-error
-	- voting based on 2Dneighborhood
-	- weight vote by R-error (const + Rerror)
-	-
-
-- probe2d:
-	- fit local affine
-	- search needle / haystack
-
-
-
-WITHOUT DOING ANYTHING, 0-2 pair:
-directory: "OE32OIQ4"
-viewA: "914UQJ51"
-viewB: "7Z85UKMI"
-Stereopsis.js:4018       matches: 35404
-Stereopsis.js:4021  T 0 0->1  F : 0.000005462766033058402 +/- 0.193691222774259
-Stereopsis.js:4022  T 0 0->1  R : 0.000005601195360165843 +/- 0.25907895272738657
-(although actually somewhat bad and clustery)
-
-
-
-
-- make sure initial state is getting correctly passed to steropsis (eg affine transform)
 
 
 - can points be 'shifted' in 2D space if they have high error?

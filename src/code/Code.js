@@ -3101,6 +3101,17 @@ Code.averageAffineMatrices = function(affines, percents){
 	var b = new V2D(1,0).rotate(angle).rotate( interrior*0.5).scale(magnitudeY).add(offset);
 	var affine = R3D.affineMatrixExact([V2D.ZERO.copy(),V2D.DIRX.copy(),V2D.DIRY.copy()],[offset,a,b]);
 	return affine;
+	/*
+	ALT:
+	for each matrix:
+	get offset exact
+	get xscale
+	get yscale
+	get xdir & ydir & average
+	// AVERAGE:
+	offset = p2D
+
+	*/
 }
 Code.averageAngles = function(angles, percents){
 	var i, count = angles.length;

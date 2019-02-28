@@ -149,6 +149,7 @@ StageGL.prototype.bindArrayFloatBuffer = function(attr,buffer){
 	this._canvas.bindArrayFloatBuffer(attr,buffer,buffer.sizeX);
 }
 StageGL.prototype.bindElementArrayBuffer = function(attr,buffer){
+	// ??
 	this._canvas.bindElementArrayBuffer(attr,buffer,buffer.sizeX);
 }
 StageGL.prototype.drawElementArrayUint16Buffer = function(buffer){
@@ -230,7 +231,6 @@ StageGL.prototype.removeListeners = function(){
 // 	this._canvas.removeFunction(Canvas.EVENT_MOUSE_CLICK,this._canvasMouseClick,this);
 // 	this._canvas.removeFunction(Canvas.EVENT_MOUSE_MOVE,this._canvasMouseMove,this);
 }
-// ------------------------------------------------------------------------------------------------------------------------ 
+// ------------------------------------------------------------------------------------------------------------------------
 
-// ------------------------------------------------------------------------------------------------------------------------ 
-
+// ------------------------------------------------------------------------------------------------------------------------

@@ -5,7 +5,7 @@ function DILogo(){
 	var frameRate = 1000/50;
   	this._canvas = new Canvas(null,40,40,Canvas.STAGE_FIT_FILL,false,true);
   	//this._canvas = new Canvas(null,600,500,Canvas.STAGE_FIT_FIXED,false,true);
-  	console.log(this._canvas, frameRate, this.getVertexShaders1(), this.getFragmentShaders1());
+  	// console.log(this._canvas, frameRate, this.getVertexShaders1(), this.getFragmentShaders1());
     this._stage = new StageGL(this._canvas, frameRate, this.getVertexShaders1(), this.getFragmentShaders1());
     this._canvas.addListeners();
   	this._stage.setBackgroundColor(1.0,1.0,1.0,1.0);
@@ -13,7 +13,7 @@ function DILogo(){
 	this._stage.enableDepthTest();
 this._stage.setViewport(0,0,this._canvas.width(),this._canvas.height());
 	this.loadResources();
-} 
+}
 DILogo.prototype.loadResources = function(e){
 	//var loader = new ImageLoader("http://learningwebgl.com/",["lessons/lesson05/nehe.gif"],this,this.handleResourcesLoaded,null);
 	//var loader = new ImageLoader("./",["mickey.png"],this,this.handleResourcesLoaded,null);
@@ -276,8 +276,35 @@ DILogo.prototype.onEnterFrameFxn = function(count){
 	this._stage.setViewport(StageGL.VIEWPORT_MODE_FULL_SIZE);
 	this._stage.clear();
 
+/*
+	var cameraMatrix = mat4.create();
+		// mat4.identity(cameraMatrix);
+		mat4.translate(cameraMatrix, [1,0,0]);
+		// mat4.rotate(cameraMatrix, Code.radians(5.0), [0,1,0]);
+		mat4.rotate(cameraMatrix, Code.radians(45.0), [1,1,1]);
+		*/
+	var cameraMatrix = new Matrix3D();
+	cameraMatrix.identity();
+/*
+	cameraMatrix.translate(3,-3,1);
+	// cameraMatrix.rotateVector(new V3D(1,1,1), Code.radians(25.0) );
+	// cameraMatrix.rotateVector(new V3D(0,0,1),Code.radians(5.0) );
+	cameraMatrix.rotateVector(new V3D(1,0,0),Code.radians(20.0) );
+	cameraMatrix.rotateVector(new V3D(0,1,0),Code.radians(25.0) );
+*/
+
+	// console.log(cameraMatrix);
+
+	// this._stage.matrixIdentity();
+	// this._stage.matrixTranslate(0.0,0.0,0.0);
+	// this._stage.matrixRotate(Code.radians(25.0), 0,1,0);
+	// this._stage.matrixRotate(-rateHead2, 0,1,0);
+// matrixMultM3D
+// matrixMultM3DPre
+
 	// BODY
 	this._stage.matrixIdentity();
+	this._stage.matrixMultM3D(cameraMatrix);
 	this._stage.matrixTranslate(0.0,bodyOffsetY,zDistHead);
 	this._stage.matrixRotate(-headOffset - e*rateHead, 0,1,0);
 	this._stage.matrixRotate(-rateHead2, 0,1,0);
@@ -286,6 +313,9 @@ DILogo.prototype.onEnterFrameFxn = function(count){
 	this._stage.bindArrayFloatBuffer(this._vertexColorAttrib, this._headTriColorBuffer);
 	this._stage.matrixReset();
 	this._stage.drawTriangles(this._vertexPositionAttrib, this._headTriBuffer);
+
+	// this._stage.matrixIdentity();
+
 /*
 		thisStage.matrixTranslate(3.0, 0.0, 0.0);
 
@@ -295,6 +325,7 @@ DILogo.prototype.onEnterFrameFxn = function(count){
 */
 	// PINK EAR
 	this._stage.matrixIdentity();
+	this._stage.matrixMultM3D(cameraMatrix);
 	this._stage.matrixTranslate(-earOffsetX,earOffsetY,zDistEars);
 	this._stage.matrixRotate(e*rateEar1, 0,1,0);
 	this._stage.matrixRotate(-rateEar2, 0,0,1);
@@ -308,6 +339,7 @@ DILogo.prototype.onEnterFrameFxn = function(count){
 
 	// RED EAR
 	this._stage.matrixIdentity();
+	this._stage.matrixMultM3D(cameraMatrix);
 	this._stage.matrixTranslate(earOffsetX,earOffsetY,zDistEars);
 	this._stage.matrixRotate(-e*rateEar1, 0,1,0);
 	this._stage.matrixRotate(rateEar2, 0,0,1);
@@ -320,6 +352,7 @@ DILogo.prototype.onEnterFrameFxn = function(count){
 	this._stage.drawTriangles(this._vertexPositionAttrib, this._redTriBuffer);
 
 	// OUT
+	// this._stage.matrixPop();
 	this._stage.matrixReset();
 }
 DILogo.prototype.getVertexShaders1 = function(){
@@ -334,7 +367,7 @@ DILogo.prototype.getVertexShaders1 = function(){
 			vColor = aVertexColor; \
 		} \
     "];
-    
+
 }
 DILogo.prototype.getFragmentShaders1 = function(){
     return ["\
@@ -344,10 +377,5 @@ DILogo.prototype.getFragmentShaders1 = function(){
 			gl_FragColor = vColor; \
 		} \
     "];
-    
+
 }
-
-
-
-
-

@@ -55,7 +55,7 @@ function ffLoadedFxn(){
 			precision mediump float; \
 			varying vec4 vColor; \
 			void main(void){ \
-				gl_FragColor = vColor; \
+				gl_FragColor = vec4(1.0,0.0,0.0,1.0); \
 			} \
 	    "];
 
@@ -65,6 +65,12 @@ function ffLoadedFxn(){
 		//this._angleTri = 0;
 		this._vertexPositionAttrib = this._stage.enableVertexAttribute("aVertexPosition");
 		this._vertexColorAttrib = this._stage.enableVertexAttribute("aVertexColor");
+
+		this._triangleBuffer = this._stage.getBufferFloat32Array([],3);
+		this._colorBuffer = this._stage.getBufferFloat32Array([],4);
+
+		// this._stage.bindArrayFloatBuffer(this._vertexPositionAttrib, this._triangleBuffer);
+		// this._stage.bindArrayFloatBuffer(this._vertexColorAttrib, this._colorBuffer);
 
 		// var i, j, len;
 		// // HEAD
@@ -83,6 +89,21 @@ function ffLoadedFxn(){
 	}
 	Test.prototype.onEnterFrameFxn = function(count){
 		// console.log("onEnterFrameFxn");
+
+		this._stage.setViewport(StageGL.VIEWPORT_MODE_FULL_SIZE);
+		this._stage.clear();
+
+		this._stage._canvas._context.clearColor(0.0,0.0,0.5,1.0);
+
+		this._stage.matrixIdentity();
+		this._stage.matrixReset();
+
+
+		// RENDER:
+		this._stage.bindArrayFloatBuffer(this._vertexPositionAttrib, this._triangleBuffer);
+		this._stage.bindArrayFloatBuffer(this._vertexColorAttrib, this._colorBuffer);
+		this._stage.drawTriangles(this._vertexPositionAttrib, this._triangleBuffer);
+
 		/*
 		var e = count * 10;
 		var rateBase = 0.0004;
