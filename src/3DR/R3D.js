@@ -852,84 +852,37 @@ log = false;
 	possibles.push( R1.copy().appendColFromArray(tNeg).appendRowFromArray(bottom) );
 	possibles.push( R2.copy().appendColFromArray(t   ).appendRowFromArray(bottom) );
 	possibles.push( R2.copy().appendColFromArray(tNeg).appendRowFromArray(bottom) );
-
 	// find single matrix that results in 3D point in front of both cameras Z>0
 	var projection = null;
 	var countsTotal = Code.newArrayZeros(possibles.length);
-	// ... inverses
-	var possibleInvs = [];
 	var M2s = [];
 	for(var i=0; i<possibles.length; ++i){
 		var possible = possibles[i];
-		var possibleInv = Matrix.inverse(possible);
-		possibleInvs[i] = possibleInv;
-		var M2 = possibleInv.getSubMatrix(0,0, 3,4);
+		var M2 = possible.getSubMatrix(0,0, 3,4);
 		M2s[i] = M2;
 	}
-	// get positives / negatives of estimated 3D point
-	var pAx = new Matrix(3,3);
-	var pBx = new Matrix(3,3);
-	var pA3 = new V3D();
-	var pB3 = new V3D();
-	for(var index=0; index<pointsA.length; ++index){
-		var pA = pointsA[index];
-		var pB = pointsB[index];
-		pA3.set(pA.x, pA.y, 1.0);
-		pB3.set(pB.x, pB.y, 1.0);
-		KaInv.multV3DtoV3D(pA3, pA3);
-		KbInv.multV3DtoV3D(pB3, pB3);
-		Matrix.crossMatrixFromV3D(pAx,pA3);
-		Matrix.crossMatrixFromV3D(pBx,pB3);
-		for(var i=0; i<possibles.length; ++i){
-			var possible = possibles[i];
-			var M2 = M2s[i];
-			var pAM = Matrix.mult(pAx,M1);
-			var pBM = Matrix.mult(pBx,M2);
-			// AP=0
-			var A = pAM.appendMatrixBottom(pBM);
-			svd = Matrix.SVD(A);
-			var P1 = svd.V.getCol(3);
-			var p1Norm = new V4D().fromArray(P1.toArray());
-			p1Norm.homo(); // THIS IS THE ACTUAL 3D POINT - LOCATION
-			var P1est = new Matrix(4,1).setFromArray( p1Norm.toArray() );
-			// 1)
-			var P2 = Matrix.mult(possibleInv,P1est); // M2 // E-POINTS
-			// var P2 = Matrix.mult(possible,P1est);
-			var p2Norm = new V4D().fromArray(P2.toArray());
-			// p2Norm.homo(); // not necessary?
-			countsTotal[i] += Math.sign(p1Norm.z) + Math.sign(p2Norm.z);
-		}
-	}
-
-// COUNT POINTS IN FRONT OF BOTH CAMERAS:
-	var countsTotal2 = Code.newArrayZeros(possibles.length);
+	// COUNT POINTS IN FRONT OF BOTH CAMERAS:
 	for(var i=0; i<possibles.length; ++i){
 		var possible = possibles[i];
-		var possibleInv = possibleInvs[i];
 		var M1 = M1Full;
 		var M2 = possible; // F-POINTS
-		var points3D = R3D.triangulationDLT(pointsA,pointsB, M1,M2, Ka, Kb, KaInv, KbInv);
+		var points3D = R3D.triangulationDLT(pointsA,pointsB, M1,M2, Ka, Kb, KaInv, KbInv); // possibles are EXTRINSIC MATRICES
 		var distortions = null;
-		for(var j=0; j<points3D.length; ++j){
+		for(var j=0; j<points3D.length; ++j){ // project point to both cameras:
 			var point3D = points3D[j];
-			// project point to both cameras:
 			var p2D1 = R3D.projectPoint3DToCamera2DForward(point3D, M1, Ka, distortions, true);
 			var p2D2 = R3D.projectPoint3DToCamera2DForward(point3D, M2, Kb, distortions, true);
-			countsTotal2[i] += p2D1 ? 1 : -1;
-			countsTotal2[i] += p2D1 ? 1 : -1;
+			countsTotal[i] += p2D1 ? 1 : -1;
+			countsTotal[i] += p2D2 ? 1 : -1;
 		}
 	}
-// 2)
-// countsTotal2 = countsTotal;
-console.log(countsTotal,countsTotal2);
-	countsTotal = countsTotal2;
+	// console.log(countsTotal);
 	var bestTotalCount = Code.max(countsTotal);
 	if(bestTotalCount>=8){
 		var bestProjections = [];
 		var minimumTransformMatchCountR = 10;
 		for(var i=0; i<possibles.length; ++i){
 			var possible = possibles[i];
-			var possibleInv = possibleInvs[i];
 			if(countsTotal[i]==bestTotalCount){
 				bestProjections.push(possible);
 			}
@@ -986,13 +939,13 @@ R3D.reprojectionError = function(p3D, pA,pB, extrinsicA, extrinsicB, Ka, Kb){ //
 	var average = (distanceA+distanceB); // removed 0.5
 	return {"error":distance, "errorA":distanceSquareA, "errorB":distanceSquareB, "distanceA":distanceA, "distanceB":distanceB, "average":average};
 }
-R3D.reprojectionErrorSingle = function(p3D, pA, extrinsicA, Ka){ // SINGLE CAMERA REPROJECTION ERROR
-	var projected2DA = R3D.projectPoint3DToCamera2DForward(p3D, extrinsicA, Ka, null);
-	if(!projected2DA){
+R3D.reprojectionErrorSingle = function(p3D, p2D, extrinsic, Ka){ // SINGLE CAMERA REPROJECTION ERROR
+	var projected2D = R3D.projectPoint3DToCamera2DForward(p3D, extrinsic, Ka, null);
+	if(!projected2D){
 		return null;
 	}
-	var distanceA = V2D.distanceSquare(pA,projected2DA);
-	return distanceA;
+	var distance = V2D.distanceSquare(p2D,projected2D);
+	return distance;
 }
 
 R3D.inverseCameraMatrix = function(P){
@@ -5713,6 +5666,7 @@ R3D.cameraExternalMatrixFromParameters = function(K,points3D,pointsImage, imageW
 	return cam;
 }
 R3D.triangulationDLT = function(pointsFr,pointsTo, cameraA,cameraB, Ka, Kb,   KaInv, KbInv){ // 3D points : find 3D location based on cameras (projective or euclidean) - but not projective invariant
+//  -- these are EXTRINSIC?
 	if(Ka || Kb){
 		if(Kb===undefined){
 			Kb = Ka;
@@ -5733,7 +5687,7 @@ R3D.triangulationDLT = function(pointsFr,pointsTo, cameraA,cameraB, Ka, Kb,   Ka
 }
 
 
-R3D.triangulatePointDLT = function(fr,to, cameraA,cameraB, KaInv, KbInv){ // get 3D point from cameras
+R3D.triangulatePointDLT = function(fr,to, cameraA,cameraB, KaInv, KbInv){ // get 3D point from cameras -- these are EXTRINSIC?
 	var rows = 4, cols = 4;
 	var A = new Matrix(rows,cols);
 	fr = KaInv.multV3DtoV3D(new V3D(), new V3D(fr.x,fr.y,1.0));
@@ -21649,7 +21603,6 @@ R3D.componentwiseRelativeCameraMatrix = function(transformA,transformB){
 }
 
 R3D.optimumTransform3DFromRelativePairTransforms = function(pairs){
-	console.log(pairs);
 	var edges = [];
 	for(var i=0; i<pairs.length; ++i){
 		var pair = pairs[i];
@@ -21661,7 +21614,6 @@ R3D.optimumTransform3DFromRelativePairTransforms = function(pairs){
 		if(pair.length>3){
 			error = pair[3];
 		}
-		console.log(transform);
 		var translation = transform.multV3DtoV3D(new V3D(0,0,0));
 		var quaternion = V4D.qFromMatrix(transform);
 		var edge = [a,b, {"quaternion":quaternion, "translation":translation}, error];
@@ -27649,18 +27601,7 @@ R3D.cameraMatricesFromF
 }
 
 
-// R3D.relativeTransformMatrix = function(absA,invA,absB,invB){
-
 R3D.relativeTransformMatrix2 = function(absA,absB){
-
-	// throw "..."
-	//
-	// // REMOVE ?
-	// var invA = Matrix.inverse(absA);
-	// var relativeAtoB = Matrix.mult(invA,absB);
-	// return relativeAtoB;
-
-
 	var invA = Matrix.inverse(absA);
 	var relativeAtoB = Matrix.mult(absB,invA);
 	return relativeAtoB;
@@ -27678,6 +27619,7 @@ R3D.relativeTransformMatrix2 = function(absA,absB){
 	// return R;
 }
 R3D.relativeTransformMatrix = function(absA,invA,absB,invB){
+	throw "NOT THIS";
 // R3D.relativeTransformMatrix = function(absA,absB){
 	// var invA = Matrix.inverse(absA);
 	// var relativeAtoB = Matrix.mult(invA,absB);
@@ -27692,6 +27634,7 @@ R3D.relativeTransformMatrix = function(absA,invA,absB,invB){
 	return relativeAtoB;
 }
 R3D.relativeTransformMatrixInvAAbsB = function(invA,absB){
+	throw "NOT THIS";
 	return R3D.relativeTransformMatrix(null,invA,absB,null);
 }
 

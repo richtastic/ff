@@ -647,6 +647,11 @@ console.log(cameraC+"");
 console.log(extrinsicC+"");
 console.log(cameraC2+"");
 
+
+// cameraA = extrinsicA;
+// cameraB = extrinsicB;
+// cameraC = extrinsicC;
+
 	// RELATIVE
 	var cameraBtoC = R3D.componentwiseRelativeCameraMatrix(cameraB,cameraC);
 	var cameraCtoB = R3D.componentwiseRelativeCameraMatrix(cameraC,cameraB);

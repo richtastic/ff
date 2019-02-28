@@ -319,24 +319,13 @@ https://cloud.google.com/appengine/docs/nodejs/
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-1-2 pair has a huge initial R error: 3 +/- 6
-
-
-
-THE EXTRINSIC CAMERA MATRIX IS THE INVERSE OF THE WORLD-CAMERA MATRIX
-THE RELATIVE CAMERA-A-B MATRIX IS INVA * ABSB
-
-
----- RECHECK ALL AND OFFS BETWEEN TRANSFORMS (EXT & ABS)
-
-
 
 ) back to 3-views stereo
 
 --
 -- initial estimate is very bad
 
-
+		-- are the poit3d absolute / inversion correct when calculating errrrrrrrrors relative ?
 
 
 
