@@ -322,13 +322,52 @@ https://cloud.google.com/appengine/docs/nodejs/
 
 ) back to 3-views stereo
 
---
--- initial estimate is very bad
+-- initial orientation is bad (have 2 overlapping views?)
+-- ALL 3 PAIRS HAVE THE SAME X-OFFSET ~ <1,0,0>
+
+	- 0-2 distance should be ... double 0-1 distance ...
+		-> is maybe an absolute size unknown ???
+			- is this not included in the K parameter?
+
+
+	- E is determined at baseline assumed to be unit length
+	- E has similarity ambiguity
+
+	- need to figure out how to get relative scale between different stereo pairs
+		- combine multiple stereo camera matrix
+		- relative scale camera matrix
+		- multi view geometry unknown scale
+
+	- get an initial estimate of camera PAIR relative 'world' scales
+
+	- SEQUENTIAL METHOD: start with best pair, and gradually add views as parameters are more-well-defined (error minimized)
+
+	- FACTORIZATION ?
+
+	- TRIFOCAL TENSOR?
+
+	- sample-point scalings:
+		- random pairwise matches in 2D
+			- limit to top corner match points
+			- satisfy NCC @ each end?
+			- get 3D distance [use error of each 3D point as weight]
+		- plot distribution ; pick mean size w/ sigma error
+
+	- multiple F1-F2-F3 to find 3-way matchings?
+
+	=> only need an initial approximate scale [~1% error ] to get initial location estimates correct
+
+
+	- reversed ?
+	- depth in negative?
+
+-- iterating error goes up
+
 
 		-- are the poit3d absolute / inversion correct when calculating errrrrrrrrors relative ?
 
 
-
+- maybe some methods don't work correctly when one R is not identity ?
 
 
 transforms.length: 3
@@ -346,6 +385,7 @@ Stereopsis.js:4102  T 2 1->2  R : 14.172625296456317 +/- 20.776264619627774
 
 
 
+) estimating R / F error should use sample subset to limit processing
 
 ) How to get rid of very isolated points?
 	- each point track it's neighborhood distance

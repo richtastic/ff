@@ -6858,6 +6858,8 @@ App3DR.ProjectManager.prototype._calculateGlobalOrientationInit2 = function(call
 	}
 	// get relative transform+error
 	var listPairs = [];
+console.log(views);
+console.log(pairs);
 	for(var i=0; i<pairs.length; ++i){
 		var pair = pairs[i];
 		var viewA = pair.viewA();
@@ -6867,7 +6869,7 @@ App3DR.ProjectManager.prototype._calculateGlobalOrientationInit2 = function(call
 		var transformMatches = transformsSingle["matches"];
 		var transformRSigma = transformsSingle["errorRSigma"];
 		var transformRMean = transformsSingle["errorRMean"];
-console.log("ERROR: "+transformRMean+" * "+transformRSigma+" @ "+transformMatches);
+console.log("ERROR: "+transformRMean+" * "+transformRSigma+" @ "+transformMatches+" : "+viewA.id()+" -> "+viewB.id());
 		var viewsData = relativeData["views"];
 		var viewDataA = viewsData[0];
 		var viewDataB = viewsData[1];
@@ -6877,9 +6879,41 @@ console.log("ERROR: "+transformRMean+" * "+transformRSigma+" @ "+transformMatche
 		//var relativeAtoB = R3D.componentwiseRelativeCameraMatrix(cameraA,cameraB);
 		var relativeAtoB = R3D.relativeTransformMatrix2(cameraA,cameraB);
 
+
+
+
+		// THIS MAKES THE INITIAL LOCATION GOOD, BUT THE ABSOLUTES ARE BAD ????
+		// relativeAtoB = Matrix.inverse(relativeAtoB);
+
+/*
+		// TEST:
+		var relAB = R3D.relativeTransformMatrix2(cameraA,cameraB);
+		var relBA = R3D.relativeTransformMatrix2(cameraB,cameraA);
+		var conB = Matrix.mult(relAB,cameraA);
+		var conA = Matrix.mult(relBA,cameraB);
+
+		console.log("A1: \n"+cameraA);
+		console.log("A2: \n"+conA);
+		console.log("B1: \n"+cameraB);
+		console.log("B2: \n"+conB);
+
+*/
+		console.log("   CENTER A: "+cameraA.multV3DtoV3D(new V3D(0,0,0)));
+		console.log("   CENTER B: "+cameraB.multV3DtoV3D(new V3D(0,0,0)));
+		var center = relativeAtoB.multV3DtoV3D(new V3D(0,0,0));
+		console.log("     RELATIVE CENTER : "+center+" -> "+center.length());
+
+
+
+
+		// var testB = Matrix.mult(relativeAtoB, cameraA);
+		// console.log("cameraB: \n"+cameraB);
+		// console.log("testB: \n"+testB);
+
 		// ERROR
-		var errorAB = 1.0; // BEST
-		// var errorAB = transformRMean + 1.0*transformRSigma;
+		var errorAB = transformRMean + 1.0*transformRSigma;
+			// errorAB = Math.pow(errorAB,2);
+			errorAB = errorAB / transformMatches;
 		// var errorAB = transformRSigma/transformMatches; // AVERAGE ERROR
 		// var errorAB = Math.sqrt(transformRSigma);
 		// var errorAB = 1.0/Math.sqrt(transformRSigma); // OK
@@ -6887,50 +6921,21 @@ console.log("ERROR: "+transformRMean+" * "+transformRSigma+" @ "+transformMatche
 
 		var indexA = tableViewIDToIndex[viewA.id()+""];
 		var indexB = tableViewIDToIndex[viewB.id()+""];
-		var sourceA = indexA;
-		var sourceB = indexB;
-		var indexMin = Math.min(indexA,indexB);
-		var indexMax = Math.max(indexA,indexB);
-		// console.log("RELATIVE: "+indexA+"("+indexMin+") - "+indexB+" ("+indexMax+") = "+errorAB);
-		if(indexA==indexMin){
-			// forward
-		}else{
-			console.log("FLIP DIRECTION ....");
-			relativeAtoB = Matrix.inverse(relativeAtoB);
-		}
-		indexA = indexMin;
-		indexB = indexMax-indexMin-1;
-		listPairs.push([sourceA,sourceB,relativeAtoB,errorAB]);
-// console.log(""+relativeAtoB.toArray());
+		listPairs.push([indexA,indexB,relativeAtoB,errorAB]);
 	}
+
 	console.log(listPairs);
 	var result = R3D.optimumTransform3DFromRelativePairTransforms(listPairs);
-	console.log(result);
 	var transforms = result["absolute"];
+	console.log(transforms);
 
-	// // INVERT TO EXTRINSIC:
-	// for(var i=0; i<transforms.length; ++i){
-	// 	var transform = transforms[i];
-	// 	var inverse = Matrix.inverse(transform);
-	// 	transforms[i] = inverse;
-	// }
+	for(var i=0; i<transforms.length; ++i){
+	       var transform = transforms[i];
+	       var matrix = transform;
+	       var center = matrix.multV3DtoV3D(new V3D(0,0,0));
+	       console.log("CANERA CENTER 1: "+center);
+	}
 
-console.log(transforms);
-
-
-
-
-for(var i=0; i<transforms.length; ++i){
-	var transform = transforms[i];
-	// var inverse = Matrix.inverse(transform);
-	// var matrix = inverse;
-	var matrix = transform;
-	var center = matrix.multV3DtoV3D(new V3D(0,0,0));
-	console.log("CANERA CENTER 1: "+center);
-}
-
-
-/*
 
 // OVERRIDE KNOWN 3
 var m01 = listPairs[0][2];
@@ -6938,14 +6943,14 @@ var m02 = listPairs[1][2];
 var m12 = listPairs[2][2];
 
 // BAD
-// var m0 = new Matrix(4,4).identity();
-// var m1 = Matrix.mult(m01,m0);
-// var m2 = Matrix.mult(m02,m0);
-
-// // FOUND BEST:
 var m0 = new Matrix(4,4).identity();
 var m1 = Matrix.mult(m01,m0);
-var m2 = Matrix.mult(m12,m01);
+var m2 = Matrix.mult(m02,m0);
+
+// // FOUND BEST:
+// var m0 = new Matrix(4,4).identity();
+// var m1 = Matrix.mult(m01,m0);
+// var m2 = Matrix.mult(m12,m01);
 
 // BAD:
 // var m1 = Matrix.mult(Matrix.inverse(m12),m02);
@@ -6958,34 +6963,22 @@ var m2 = Matrix.mult(m12,m01);
 
 transforms = [m0,m1,m2];
 
-*/
-
-
-
-
-/*
-// throw "..."
-// to extrinsic
 for(var i=0; i<transforms.length; ++i){
-	var transform = transforms[i];
-	// var inverse = R3D.inverseCameraMatrix(transform);
-	// var inverse = Matrix.inverse(transform);
-	// transforms[i] = inverse;
-}
-*/
-
-
-
-for(var i=0; i<transforms.length; ++i){
-	var transform = transforms[i];
-	// var inverse = Matrix.inverse(transform);
-	// var matrix = inverse;
-	var matrix = transform;
-	var center = matrix.multV3DtoV3D(new V3D(0,0,0));
-	console.log("CANERA CENTER 2: "+center);
+	   var transform = transforms[i];
+	   var matrix = transform;
+	   var center = matrix.multV3DtoV3D(new V3D(0,0,0));
+	   console.log("CANERA CENTER 2: "+center);
 }
 
-// throw "HERE";
+
+
+
+throw "?????";
+
+
+
+
+
 
 	var timestampNow = Code.getTimeStampFromMilliseconds();
 	var yaml = new YAML();
@@ -7303,16 +7296,16 @@ App3DR.ProjectManager.prototype._calculateGlobalOrientationNonlinearB = function
 		var yamlViews = yaml["views"];
 		for(var j=0; j<yamlViews.length; ++j){
 			yamlView = yamlViews[j];
-			// console.log(yamlView);
 			viewID = yamlView["id"];
 			if(viewID==view.id()){
 				transform = Matrix.fromObject(yamlView["transform"]);
 				break;
 			}
 		}
-		// console.log(transform+"");
-
-		// console.log(matrix);
+// TODO: REMOVE
+// if(transform){
+// 	transform = Matrix.inverse(transform);
+// }
 		var v = world.addView(matrix, cam);
 		v.absoluteTransform(transform);
 		view.temp(v);

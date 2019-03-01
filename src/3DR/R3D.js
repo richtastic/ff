@@ -21606,7 +21606,6 @@ R3D.optimumTransform3DFromRelativePairTransforms = function(pairs){
 	var edges = [];
 	for(var i=0; i<pairs.length; ++i){
 		var pair = pairs[i];
-		console.log(pair);
 		var a = pair[0];
 		var b = pair[1];
 		var transform = pair[2];
@@ -21651,7 +21650,6 @@ R3D.optimumTransform3D = function(edges){ // edges: [indexA,indexB, transform,er
 		var b = edge[1];
 		var transform = edge[2];
 		var error = edge[3];
-		// console.log("FROM: "+a+" TO "+b);
 		var translation = transform["translation"];
 		var quaternion = transform["quaternion"];
 		var value = {"translation":translation, "quaternion":quaternion};
@@ -21703,7 +21701,7 @@ R3D.optimumTransform3D = function(edges){ // edges: [indexA,indexB, transform,er
 		}
 		allPaths.push(pathGroup);
 	}
-	console.log(allPaths);
+	// console.log(allPaths);
 	// find best vertex to keep at origin
 	var rootIndex = -1;
 	var rootError = 0;
@@ -21722,7 +21720,7 @@ R3D.optimumTransform3D = function(edges){ // edges: [indexA,indexB, transform,er
 		}
 	}
 	// rootIndex = 0;
-	console.log("root index:"+rootIndex+" @ "+rootError);
+	// console.log("root index:"+rootIndex+" @ "+rootError);
 	// calculate absolute transforms based on root location
 	var allValues = Code.newArrayArrays(vs.length);
 	for(var i=0; i<allPaths.length; ++i){
@@ -21816,7 +21814,7 @@ console.log(percents)
 // }
 		values[i] = {"translation":translation, "quaternion":quaternion, "transform":null};
 	}
-	console.log(values);
+	// console.log(values);
 	// nonlinear error minimize
 	if(nonlinear){
 		// var iterations = 1;

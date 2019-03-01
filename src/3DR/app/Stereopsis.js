@@ -692,7 +692,7 @@ Stereopsis.View.prototype.closestPoint2D = function(point2D){
 }
 Stereopsis.View.prototype.absoluteTransform = function(camera){
 	if(camera){
-		this._absoluteTransform = camera;
+		this._absoluteTransform = camera.copy();
 		this._absoluteTransformInverse = Matrix.inverse(camera);
 		this._resetCacheItems();
 	}
@@ -703,7 +703,7 @@ Stereopsis.View.prototype.absoluteTransformInverse = function(){
 }
 Stereopsis.View.prototype.extrinsicTransform = function(extrinsic){
 	if(extrinsic){
-		this._absoluteTransformInverse = extrinsic;
+		this._absoluteTransformInverse = extrinsic.copy();
 		this._absoluteTransform = Matrix.inverse(extrinsic); // R3D.extrinsicMatrixFromCameraMatrix
 		this._resetCacheItems();
 	}
@@ -2060,11 +2060,11 @@ this.relativeTransformsFromAbsoluteTransforms();
 
 // do the P3D need to be calculated?
 
-
 this.relativeFFromSamples();
 this.estimate3DErrors(true);
 console.log(".......");
-throw "here"
+// throw "here"
+if(false){
 	if(this._CALCULATE_TRANSFORMS_FROM_MATCHES){ // STARTING WITH MATCHES
 		throw "THIS IS WHERE THE PAIR STUFF GOES";
 	}else{ // STARTING WITH ABSOLUTE
@@ -2095,7 +2095,7 @@ throw "here"
 			this.averagePoints3DFromMatches(true);
 		}
 	}
-
+}
 	// this.printInfo(); // before new points are added
 
 // this._testShowInitialImages();
@@ -2118,6 +2118,8 @@ throw "here"
 	}
 
 // throw "... YEPPERS";
+
+	this.probe2DF();
 
 	// this.probe2D2(); // nearby SAD|NCC matches - GRID BASED
 	// new 3D points from un-mapped locations
@@ -2180,6 +2182,15 @@ throw "here"
 
 
 }
+
+Stereopsis.World.prototype.probe2DF = function(){
+	// TODO ...
+	/*
+		use pairs of transforms & F to find point  in other images ????
+
+	*/
+}
+
 Stereopsis.World.prototype.patchResolveAffine = function(){
 	var points3D = this.toPointArray();
 	var withPatch = [];
@@ -2687,6 +2698,7 @@ Stereopsis.World.prototype.relativeTransformsFromAbsoluteTransforms = function()
 		var viewB = transform.viewB();
 		var relative = Stereopsis.relativeTransformFromViews(viewA,viewB);
 		var extrinsic = R3D.extrinsicMatrixFromCameraMatrix(relative);
+		// extrinsic = relative;
 		transform.R(viewA,viewB,extrinsic);
 	}
 }
@@ -3107,12 +3119,12 @@ return;
 	// var maxIterations = 2;
 	// var maxIterations = 3;
 	// var maxIterations = 4;
-	var maxIterations = 5;
+	// var maxIterations = 5;
 	// var maxIterations = 6;
 	// var maxIterations = 7;
 	// var maxIterations = 8;
 	// var maxIterations = 9;
-	// var maxIterations = 10;
+	var maxIterations = 10;
 	// var maxIterations = 15;
 	// var maxIterations = 20;
 	// var maxIterations = 25;
@@ -3476,11 +3488,11 @@ Stereopsis.World.prototype.filterGlobalMatches = function(relax, iterationIndex)
 	// var limitMatchSigmaNCC = 2.0;
 	// var limitMatchSigmaSAD = 2.0;
 
-	// limitMatchSigmaR = 3.0;
-	// limitMatchSigmaF = 3.0;
-	// limitMatchSigmaNCC = 3.0;
-	// limitMatchSigmaSAD = 3.0;
-limitMatchSigmaR = 1.5;
+	limitMatchSigmaR = 3.0;
+	limitMatchSigmaF = 3.0;
+	limitMatchSigmaNCC = 3.0;
+	limitMatchSigmaSAD = 3.0;
+	// limitMatchSigmaR = 1.5;
 
 // limitMatchSigmaR = 4.0;
 
