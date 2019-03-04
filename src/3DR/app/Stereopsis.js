@@ -561,7 +561,8 @@ Stereopsis.View.prototype.projectPoint3D = function(point3D){
 	var K = this._K;
 	var distortions = null;
 	// var absoluteTransform = this._absoluteTransform;
-	var projected2D = R3D.projectPoint3DToCamera2DForward(point3D, this.extrinsicTransform(), K, distortions);
+	//var projected2D = R3D.projectPoint3DToCamera2DForward(point3D, this.extrinsicTransform(), K, distortions);
+	var projected2D = R3D.projectPoint3DToCamera2DForward(point3D, this.absoluteTransform(), K, distortions);
 	return projected2D;
 }
 Stereopsis.View.prototype.compareSize = function(compareSize){
@@ -709,17 +710,17 @@ Stereopsis.View.prototype.absoluteTransform = function(camera){
 Stereopsis.View.prototype.absoluteTransformInverse = function(){
 	return this._absoluteTransformInverse;
 }
-Stereopsis.View.prototype.extrinsicTransform = function(extrinsic){
-	if(extrinsic){
-		this._absoluteTransformInverse = extrinsic.copy();
-		this._absoluteTransform = Matrix.inverse(extrinsic); // R3D.extrinsicMatrixFromCameraMatrix
-		this._resetCacheItems();
-	}
-	return this._absoluteTransformInverse;
-}
-Stereopsis.View.prototype.extrinsicTransformInverse = function(){
-	return this._absoluteTransform;
-}
+// Stereopsis.View.prototype.extrinsicTransform = function(extrinsic){
+// 	if(extrinsic){
+// 		this._absoluteTransformInverse = extrinsic.copy();
+// 		this._absoluteTransform = Matrix.inverse(extrinsic); // R3D.extrinsicMatrixFromCameraMatrix
+// 		this._resetCacheItems();
+// 	}
+// 	return this._absoluteTransformInverse;
+// }
+// Stereopsis.View.prototype.extrinsicTransformInverse = function(){
+// 	return this._absoluteTransform;
+// }
 
 
 Stereopsis.View.prototype.pointsInsideCellPoint = function(point){
@@ -995,8 +996,10 @@ Stereopsis.Transform3D.prototype.searchCorners = function(){
 Stereopsis.Transform3D.prototype.relativeEstimatePoints3D = function(){ // calc match 3D location from local transform
 	var viewA = this.viewA();
 	var viewB = this.viewB();
-	var extrinsicA = new Matrix(4,4).identity();
-	var extrinsicB = this.R(viewA,viewB);
+	// var extrinsicA = new Matrix(4,4).identity();
+	// var extrinsicB = this.R(viewA,viewB);
+	var cameraA = new Matrix(4,4).identity();
+	var cameraB = this.R(viewA,viewB);
 	var matches = this.matches();
 	var KaInv = viewA.Kinv();
 	var KbInv = viewB.Kinv();
@@ -1007,7 +1010,8 @@ Stereopsis.Transform3D.prototype.relativeEstimatePoints3D = function(){ // calc 
 		var pA = pointA.point2D();
 		var pB = pointB.point2D();
 		var p3D = match.point3D();
-		var point3D = R3D.triangulatePointDLT(pA,pB, extrinsicA,extrinsicB, KaInv, KbInv);
+		//var point3D = R3D.triangulatePointDLT(pA,pB, extrinsicA,extrinsicB, KaInv, KbInv);
+		var point3D = R3D.triangulatePointDLT(pA,pB, cameraA,cameraB, KaInv, KbInv);
 		match.estimated3D(point3D); // relative
 	}
 }
@@ -1122,8 +1126,10 @@ Stereopsis.Transform3D.prototype.calculateErrorR = function(R){
 	var viewB = this.viewB();
 	var Ka = viewA.K();
 	var Kb = viewB.K();
-	var extrinsicA = new Matrix(4,4).identity();
-	var extrinsicB = R;
+	// var extrinsicA = new Matrix(4,4).identity();
+	// var extrinsicB = R;
+	var cameraA = new Matrix(4,4).identity();
+	var cameraB = R;
 	var matches = this.matches();
 	var orderedPoints = [];
 	var a = new V3D();
@@ -1139,7 +1145,8 @@ Stereopsis.Transform3D.prototype.calculateErrorR = function(R){
 			console.log("match not have estimate");
 			continue;
 		}
-		var error = R3D.reprojectionError(estimated3D, pA,pB, extrinsicA, extrinsicB, Ka, Kb);
+		//var error = R3D.reprojectionError(estimated3D, pA,pB, extrinsicA, extrinsicB, Ka, Kb);
+		var error = R3D.reprojectionError(estimated3D, pA,pB, cameraA, cameraB, Ka, Kb);
 		var distanceA = error["distanceA"];
 		var distanceB = error["distanceB"];
 		var distance = error["error"];
@@ -2722,8 +2729,8 @@ Stereopsis.World.prototype.relativeTransformsFromAbsoluteTransforms = function()
 		var viewA = transform.viewA();
 		var viewB = transform.viewB();
 		var relative = Stereopsis.relativeTransformFromViews(viewA,viewB);
-		var extrinsic = R3D.extrinsicMatrixFromCameraMatrix(relative);
-		transform.R(viewA,viewB,extrinsic);
+		// var extrinsic = R3D.extrinsicMatrixFromCameraMatrix(relative);
+		transform.R(viewA,viewB,relative);
 	}
 }
 Stereopsis.World.prototype.relativeFFromSamples = function(){
@@ -2767,7 +2774,8 @@ Stereopsis.World.prototype.refineCameraAbsoluteOrientation = function(minimumPoi
 	for(var i=0; i<views.length; ++i){
 		var view = views[i];
 		var ext = extrinsics[i];
-		view.extrinsicTransform(ext);
+		//view.extrinsicTransform(ext);
+		view.absoluteTransform(ext);
 	}
 	this.copyRelativeTransformsFromAbsolute();
 }
@@ -2787,8 +2795,9 @@ Stereopsis.World.prototype.copyRelativeTransformsFromAbsolute = function(){
 			var absB = vB.absoluteTransform();
 			if(absA && absB){
 				var cameraAtoB = R3D.relativeTransformMatrix2(vA.absoluteTransform(),vB.absoluteTransform());
-				var extrinsicAtoB = R3D.extrinsicMatrixFromCameraMatrix(cameraAtoB);
-				transform.R(vA,vB,extrinsicAtoB);
+				transform.R(vA,vB,cameraAtoB);
+				//var extrinsicAtoB = R3D.extrinsicMatrixFromCameraMatrix(cameraAtoB);
+				//transform.R(vA,vB,extrinsicAtoB);
 			}
 		}
 	}
@@ -2829,7 +2838,8 @@ Stereopsis.World.prototype.bundleAdjustViews = function(views, minimumPoints){
 		var viewA = views[i];
 		var Ka = viewA.K();
 		var KaInv = viewA.Kinv();
-		var Pa = viewA.extrinsicTransform();
+		// var Pa = viewA.extrinsicTransform();
+		var Pa = viewA.absoluteTransform();
 		Ps.push(Pa);
 		Ks.push(Ka);
 		Is.push(KaInv);
@@ -2880,11 +2890,12 @@ Stereopsis.World.prototype.refinePoint3DAbsoluteLocation = function(){
 		var KbInv = viewB.Kinv();
 	var cameraA = new Matrix(4,4).identity();
 	var cameraB = Stereopsis.relativeTransformFromViews(viewA,viewB);
-	var extrinsicA = R3D.extrinsicMatrixFromCameraMatrix(cameraA);
-	var extrinsicB = R3D.extrinsicMatrixFromCameraMatrix(cameraB);
+	// var extrinsicA = R3D.extrinsicMatrixFromCameraMatrix(cameraA);
+	// var extrinsicB = R3D.extrinsicMatrixFromCameraMatrix(cameraB);
+	// console.log("refinePoint3DAbsoluteLocation: \n"+extrinsicA+"\n"+extrinsicB);
 // var extrinsicA = new Matrix(4,4).identity();
 // var extrinsicB = transform.R();
-console.log("refinePoint3DAbsoluteLocation: \n"+extrinsicA+"\n"+extrinsicB);
+
 		var matches = transform.matches();
 		for(var j=0; j<matches.length; ++j){
 			var match = matches[j];
@@ -2892,7 +2903,8 @@ console.log("refinePoint3DAbsoluteLocation: \n"+extrinsicA+"\n"+extrinsicB);
 			var p2DB = match.pointForView(viewB);
 			var pA = p2DA.point2D();
 			var pB = p2DB.point2D();
-			var location3D = R3D.triangulatePointDLT(pA,pB, extrinsicA,extrinsicB, KaInv, KbInv);
+			//var location3D = R3D.triangulatePointDLT(pA,pB, extrinsicA,extrinsicB, KaInv, KbInv);
+			var location3D = R3D.triangulatePointDLT(pA,pB, cameraA,cameraB, KaInv, KbInv);
 			match.estimated3D(location3D); // relative
 		}
 	}
@@ -4090,9 +4102,10 @@ Stereopsis.World.prototype.estimate3DViews = function(){ // get absolution of vi
 			var transform = this.transformFromViews(viewA,viewB);
 			var vA = transform.viewA();
 			var vB = transform.viewB();
-			var extrinsicAtoB = transform.R();
+			//var extrinsicAtoB = transform.R();
 			// var extrinsicAtoB = transform.R(viewA,viewB);
-			var cameraAtoB = R3D.cameraMatrixFromExtrinsicMatrix(extrinsicAtoB);
+			var cameraAtoB = transform.R();
+			// var cameraAtoB = R3D.cameraMatrixFromExtrinsicMatrix(extrinsicAtoB);
 			var errorRMean = transform.rMean();
 			var errorRSigma = transform.rSigma();
 			var errorAB = errorRMean + 1.0*errorRSigma; // TODO: r error | match count |
@@ -6773,7 +6786,7 @@ if(dot<=0){
 
 Stereopsis.World.prototype.bundleAdjustFull = function(){ // for each pair, pick points at random to optimize the 3D camera location | ???
 console.log("bundleAdjustFull");
-
+throw "used?"
 
 // THIS DESTROYS F ERROR .......
 

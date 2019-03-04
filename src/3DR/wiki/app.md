@@ -286,10 +286,11 @@ vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 	- quasi-local-global bundle adjustment
 	- increase resolution to finer detail
 	=> final structure & motion
+-----> HERE <------
 - surface triangulation(tesselation)
 	- advancing-front, curvature-based tesselation
 	=> scene triangle model
------> HERE <------
+(03/25)
 - texturing
 	- view-based surface texturing
 	- blending between triangles
@@ -297,12 +298,16 @@ vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 	- separate triangles into texture lookup / files
 		- TextureMap (from textures to atlas)
 	=> scene textured model
-(03/31)
+(04/15)
 - viewing output
 	- locally
 	- VR device
-(04/30)
-
+(05/06)
+- pipelining
+	- use tracks
+	- automated
+	- MVP
+(06/03)
 
 google app engine project - nodejs
 https://cloud.google.com/appengine/docs/nodejs/
@@ -318,39 +323,18 @@ https://cloud.google.com/appengine/docs/nodejs/
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
-.... EXTINRSIC / CAMERA MATRICES ARE MIXED UP
-
-- if camera matrixes are kept constant: then the points are in the wrong place, BUT the error is low
-- if 3 camera matrixes are in INVERSED: then the points are in the correct place, BUT the error is very high
+- get optimizing working for multi-view
+	refineCameraAbsoluteOrientation
 
 
-- maybe only want a single extrinsic=camera?
-- maybe chosen P is opposite of desired?
-- -Z axis wrong camera direction?
+- get back to surface tesselation (once points are stable at surface)
 
+- get back to texturing
 
-
-
-- with baseline scales, initial guess is good, BUT subsequent refinements make it worse
-	- investigate optimizing code:
-		refineCameraAbsoluteOrientation
-
-
-K:
-	F: 0.181 -> 0.456 | R: 0.175 -> 0.464 | M: 29683 -> 31267
-A:
-	F: 0.175 -> 0.485 | R: 0.212 -> 0.386 | M: 21857 -> 23674
-O:
-	F: 0.166 -> 0.420 | R: 1.20 -> 1.129 | M: 31750 -> 33325
-
-
-
-
-x TEST MATCHING/TRANSFERRING POINTS USING F for 3 IMAGES
-x TEST getting E baseline from view pairing
 
 - TFT MATH
+	- testing requires TRACK POINTS, not dense
+
 - Track point logistics
 
 - TEST getting track points iteratively

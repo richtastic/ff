@@ -89,7 +89,7 @@ var modeModelReconstruction = false;
 
 // don't A:
 // TO SWITCH ON MODELING:
-// modeModelReconstruction = true;
+modeModelReconstruction = true;
 
 
 
@@ -995,8 +995,10 @@ var projectViews = manager.views();
 console.log(v)
 		var transform = v["transform"];
 			transform = new Matrix().loadFromObject(transform);
-// var inverse = Matrix.inverse(transform);
-console.log(transform);
+ // extrinsic to camera matrix
+var inverse = Matrix.inverse(transform);
+transform = inverse;
+
 var o1 = new V3D(0,0,0);
 var z1 = new V3D(0,0,1);
 // var z1 = new V3D(0,0,-1);
@@ -5384,7 +5386,7 @@ projects/
 		pairs/
 			0/
 				matches.yaml 			x,y,z,t[,u,v] <=> ; F [initial feature matching]
-				relative.yaml 			relative orientation of camera views w/ matches / triangulated points -- arbitrary density
+				relative.yaml 			relative orientation of camera views w/ matches / triangulated points -- medium/high density
 					P: (4x4 matrix)
 					cellSizeA: 5 		 [start at whatever size ~ 20x20 cells (odd) => 3 pixels]
 					cellSizeB: 7
@@ -5392,21 +5394,15 @@ projects/
 						a: x,y
 						b: x,y
 						3D: X,Y,Z
+				tracks.yaml 				optimum seed track points [best points]
 
-
-				??? dense.yaml 				x,y, relScale,relAng @ density ; F
-				??? triangulation.yaml 		x,y <=> x,y <=> X,Y,Z ; K ; F ; P ;
-
-				??? # use bundle adjustment results to init seed points & retain only 1~2-sigma valid results
-				???? dense_5x5_800x600.yaml  high dense [after some other process?]
-				??? dense_forward.yaml
-				??? dense_reverse.yaml
-				??? dense_pair.yaml 		# only valid fwd<=>rev mapping within 1~2 sigma of F
-
-
-		??? triples/ tuples
+		triples/tuples
 			0/
-				matches.yaml 			x,y <=> pixel matches among 3 views
+				info.yaml 			x,y <=> pixel matches among 3 views
+					- TFT
+					- relative scalings between separate pairs
+				tracks.yaml
+					- optimum seed track points [best points]
 
 		cameras/
 			0/
@@ -5438,8 +5434,6 @@ projects/
 									X: .
 									Y: .
 									Z: .
-
-
 				pictures/
 					0.png
 					1.png
@@ -5456,7 +5450,15 @@ projects/
 									z
 
 		bundle/
-			info.yaml    				result of global (quasi-local) bundle adjustment iterations
+			tracks.yaml - accumulated global track points across images
+				- ???
+			graph.yaml - view graph of scene
+				- views
+					- transforms
+				- graph
+				- basic/compressed graph
+
+			info.yaml    				result of global (quasi-local) bundle adjustment iterations on TRACK POINTS
 				- Ks
 					- fx,fy,s,cx,cy
 				- views
@@ -5489,23 +5491,22 @@ projects/
 							- p2D index
 						- X,Y,Z (absolute)
 						- error X/Y/Z?
-
-
+			dense.yaml 								global SFM with dense points - TERSE
+				- Views
+					- ID
+					- transforms
+				- P3D
+					- P2D
+						- V index
 
 		reconstruction/					combine bundle adjust with dense => produce 3D model outputs
-			points3d.yaml 				chosen 3d points from final bundle adjust
+			points3d.yaml 				chosen 3d points from dense yaml
 				views:
 					- K
 					- P
 				points:
 					- X,Y,Z
 			surface.yaml 				triangle soup of approximated surface & texture mapping
-				textures:
-					-
-						id: "0"
-						file: tex0.png
-						width: 512
-						height: 512
 				triangles:
 					-
 						A:
@@ -5529,11 +5530,17 @@ projects/
 						x: # normal
 						y:
 						z:
+			textures.yaml
+				textures:
+					-
+						id: "0"
+						file: tex0.png
+						width: 512
+						height: 512
 			textures/
 				tex0.png
 				tex1.png
 				...
-
 
 		scene/
 			info.yaml 					scene info [cameras, background, model(if altered)]
@@ -6158,7 +6165,7 @@ App3DR.ProjectManager.prototype._backgroundTaskTick = function(){
 }
 App3DR.ProjectManager.prototype.checkPerformNextTask = function(){
 // don't 1 - run
-// return;
+return;
 console.log("checkPerformNextTask");
 	this.pauseBackgroundTasks();
 	this._taskBusy = true;
@@ -7033,6 +7040,10 @@ console.log("ERROR: "+transformRMean+" * "+transformRSigma+" @ "+transformMatche
 		var viewDataB = viewsData[1];
 		var cameraA = Matrix.loadFromObject(viewDataA["transform"]);
 		var cameraB = Matrix.loadFromObject(viewDataB["transform"]);
+// THIS MIGHT NEED TO INVERT FROM EXT TO CAM
+
+		cameraA = Matrix.inverse(cameraA);
+		cameraB = Matrix.inverse(cameraB);
 
 
 var scaler = 1;
@@ -7043,15 +7054,15 @@ if(i==0){ // 0-1
 }else if(i==2){ // 1-2
 	scaler = 1.05;
 }
-console.log("scaler:"+scaler);
-cameraB.set(0,3, cameraB.get(0,3)*scaler);
-cameraB.set(1,3, cameraB.get(1,3)*scaler);
-cameraB.set(2,3, cameraB.get(2,3)*scaler);
 
 		// var relativeAtoB = R3D.relativeTransformMatrix(cameraA,cameraB);
 		//var relativeAtoB = R3D.componentwiseRelativeCameraMatrix(cameraA,cameraB);
 		var relativeAtoB = R3D.relativeTransformMatrix2(cameraA,cameraB);
 
+		console.log("scaler:"+scaler);
+		relativeAtoB.set(0,3, relativeAtoB.get(0,3)*scaler);
+		relativeAtoB.set(1,3, relativeAtoB.get(1,3)*scaler);
+		relativeAtoB.set(2,3, relativeAtoB.get(2,3)*scaler);
 
 
 		// THIS MAKES THE INITIAL LOCATION GOOD, BUT THE ABSOLUTES ARE BAD ????
@@ -7101,11 +7112,13 @@ cameraB.set(2,3, cameraB.get(2,3)*scaler);
 	var transforms = result["absolute"];
 	console.log(transforms);
 
-	for(var i=0; i<transforms.length; ++i){
-	       var transform = transforms[i];
-	       var matrix = transform;
-	       transforms[i] = Matrix.inverse(matrix);
-	}
+
+// from camera to extrinsic
+for(var i=0; i<transforms.length; ++i){
+   var transform = transforms[i];
+   var matrix = transform;
+   transforms[i] = Matrix.inverse(matrix);
+}
 
 	for(var i=0; i<transforms.length; ++i){
 	       var transform = transforms[i];
