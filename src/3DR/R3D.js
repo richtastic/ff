@@ -1355,35 +1355,6 @@ R3D.fundamentalMatrix8 = function(pointsA,pointsB){
 	F = R3D.forceRank2F(F);
 	return F;
 }
-R3D.forceRank2F = function(F){ // force rank 2: epipolar lines meet at epipole, eigenvalue = 0
-	if(Code.isNaN(F.get(0,0))){
-		throw "F is NaN"
-	}
-	try{
-		var svd = Matrix.SVD(F);
-		var U = svd.U;
-		var S = svd.S;
-		var V = svd.V;
-		// console.log(" FORCE RANK == "+S.get(0,0)+","+S.get(1,1)+","+S.get(2,2));
-		if(S.get(0,0)==0 || S.get(1,1)==0){ // OR 2,2 ?
-			// console.log(" FORCE RANK ALREADY 0");
-			return F.copy();
-		}
-		// console.log(" FORCE RANK SUCCESS ");
-		S.set(2,2, 0.0);
-		return Matrix.fromSVD(U,S,V);
-	}catch(e){
-		// console.log("FORCE RANK FAIL ... "+e);
-		console.log("FORCE RANK FAIL: "+F);
-		console.log("FORCE RANK FAIL: "+Matrix.RREF(F));
-
-		throw "?";
-		// WHERE ARE THE EPIPOLES
-		// DOF ?
-		//
-		return F.copy();
-	}
-}
 R3D.fundamentalMatrix7 = function(pointsA,pointsB){ // b * F * a = 0
 	if(pointsA.length<7){ return null; }
 	var i, a, b, svd, U, S, V, len = pointsA.length;
@@ -1419,6 +1390,46 @@ R3D.fundamentalMatrix7 = function(pointsA,pointsB){ // b * F * a = 0
 		list.push(F);
 	}
 	return list;
+}
+R3D.fundamentalMatrix6 = function(pointsA,pointsB){
+	// Pizarro | Philip
+	throw "?";
+}
+R3D.fundamentalMatrix5 = function(pointsA,pointsB){ // assumes AFFINE ?
+	// Nister |
+	// 10 3rd order polynomials : E
+	//
+	throw "?";
+}
+
+R3D.forceRank2F = function(F){ // force rank 2: epipolar lines meet at epipole, eigenvalue = 0
+	if(Code.isNaN(F.get(0,0))){
+		throw "F is NaN"
+	}
+	try{
+		var svd = Matrix.SVD(F);
+		var U = svd.U;
+		var S = svd.S;
+		var V = svd.V;
+		// console.log(" FORCE RANK == "+S.get(0,0)+","+S.get(1,1)+","+S.get(2,2));
+		if(S.get(0,0)==0 || S.get(1,1)==0){ // OR 2,2 ?
+			// console.log(" FORCE RANK ALREADY 0");
+			return F.copy();
+		}
+		// console.log(" FORCE RANK SUCCESS ");
+		S.set(2,2, 0.0);
+		return Matrix.fromSVD(U,S,V);
+	}catch(e){
+		// console.log("FORCE RANK FAIL ... "+e);
+		console.log("FORCE RANK FAIL: "+F);
+		console.log("FORCE RANK FAIL: "+Matrix.RREF(F));
+
+		throw "?";
+		// WHERE ARE THE EPIPOLES
+		// DOF ?
+		//
+		return F.copy();
+	}
 }
 R3D.orientatedFundamentalMatrixVotes = function(F,pointsA,pointsB){ // voting based oriented F matrix
 	var maxCount = Math.min(pointsA.length, 10);
@@ -1553,12 +1564,212 @@ R3D.cameraMatricesFromMatches = function(pointsA2D,pointsB2D,points3D){ // not i
 }
 
 // ------------------------------------------------------------------------------------------- trifocal tensor
+
+R3D.TFTRANSACFromPoints = function(pointsAIn,pointsBIn, errorPosition, initialF, pOutlier, pDesired){
+	throw "TODO";
+/*
+	pOutlier = pOutlier!==undefined ? pOutlier : 0.99; // initial assumptions are wrong
+	pDesired = pDesired!==undefined ? pDesired : 0.999; // to have selected a valid subset
+	var pointsA = pointsAIn;
+	var pointsB = pointsBIn;
+	// var pointsA = Code.copyArray(pointsAIn);
+	// var pointsB = Code.copyArray(pointsBIn);
+	// TODO: use initial F estimate in some capacity
+	if(!pointsA || !pointsB || pointsA.length<7 || pointsB.length<7){
+		return null;
+	}
+	var pointsLength = Math.min(pointsA.length, pointsB.length);
+	// for(var i=0; i<pointsA.length; ++i){
+	// 	pointsA[i] = new V3D(pointsA[i].x, pointsA[i].y, 1.0);
+	// 	pointsB[i] = new V3D(pointsB[i].x, pointsB[i].y, 1.0);
+	// }
+	var maxErrorDistance = 1.0;
+	if(errorPosition!==undefined){
+		maxErrorDistance = errorPosition;
+	}
+	var maxErrorDistanceA = maxErrorDistance;
+	var maxErrorDistanceB = maxErrorDistance;
+	var i, j, k;
+	var ptA=new V3D(), ptB=new V3D(), pointA, pointB, distanceA, distanceB;
+	var lineA=new V3D(), lineB=new V3D();
+	var subsetPointsA=[], subsetPointsB=[];
+	var consensus=[], consensusSet = [];
+	var support, maxSupportCount = 0, maxSupportError = null;
+	var minCount = 7;
+	var errorMinfactor = 1.0; // 2.0
+	var maxIterations = errorMinfactor * R3D.iterationsFromProbabilities(pDesired, pOutlier, minCount);
+	for(i=0;i<maxIterations;++i){
+		// if(i%100==0){
+		// 	console.log(" - "+i+" / "+maxIterations+" @ "+maxSupportCount);
+		// }
+		// reset for iteration
+		Code.emptyArray(subsetPointsA);
+		Code.emptyArray(subsetPointsB);
+		// subset of 7 points
+		var indexes = Code.randomIntervalSet(minCount, 0, pointsLength-1);
+		//console.log(" ___ RANSAC ___ "+i+" ---- ---- ---- ---- ---- ---- ---- ---- ---- "+indexes.length+"");
+		Code.copyArrayIndexes(subsetPointsA, pointsA, indexes);
+		Code.copyArrayIndexes(subsetPointsB, pointsB, indexes);
+		var pointsANorm = R3D.calculateNormalizedPoints([subsetPointsA]);
+		var pointsBNorm = R3D.calculateNormalizedPoints([subsetPointsB]);
+		var m = R3D.fundamentalMatrix(pointsANorm.normalized[0],pointsBNorm.normalized[0]);
+		if(!Code.isArray(m)){ m = [m]; } // if have 7 => multiple possible
+		for(k=0; k<m.length; ++k){
+				var arr = m[k];
+				arr = Matrix.mult(arr, pointsANorm.forward[0]);
+				arr = Matrix.mult(Matrix.transpose(pointsBNorm.forward[0]), arr);
+				var FFwd = arr;
+				var FRev = Matrix.inverse(FFwd);
+				var FRev = R3D.fundamentalInverse(FFwd);
+				var dir = new V2D();
+				var org = new V2D();
+				var transferError;
+				var totalTransferError = 0;
+				consensus = [];
+				for(j=0; j<pointsA.length; ++j){
+					var a = pointsA[j];
+					var b = pointsB[j];
+					ptA.set(a.x,a.y,1.0);
+					ptB.set(b.x,b.y,1.0);
+					lineB = FFwd.multV3DtoV3D(lineB, ptA);
+					Code.lineOriginAndDirection2DFromEquation(org,dir, lineB.x,lineB.y,lineB.z);
+					distanceB = Code.distancePointRay2D(org,dir, b);
+					// B
+					lineA = FRev.multV3DtoV3D(lineA, ptB);
+					Code.lineOriginAndDirection2DFromEquation(org,dir, lineA.x,lineA.y,lineA.z);
+					distanceA = Code.distancePointRay2D(org,dir, a);
+					// error
+					transferError = distanceA*distanceA + distanceB*distanceB;
+					if(distanceA<maxErrorDistanceA && distanceB<maxErrorDistanceB){
+						totalTransferError += transferError;
+						consensus.push([a,b, transferError]);
+					}
+				}
+				var avgTransferError = totalTransferError / support; // if AVERAGE ERROR GOES DOWN ?
+				var errorFxn = function(a){
+					return a[2];
+				}
+				var items = Code.dropOutliers(consensus, errorFxn, 2.0);
+				consensus = items["inliers"];
+				support = consensus.length;
+				if(support>maxSupportCount || (support==maxSupportCount && totalTransferError < maxSupportError)){
+					maxSupportCount = support;
+					maxSupportError = totalTransferError;
+					Code.emptyArray(consensusSet);
+					Code.copyArray(consensusSet, consensus);
+					// TODO: use all of new consensus points & try to refine F approximation
+					// if support count has increased,
+				}
+		}
+		// update iterations from found:
+		pOutlier = Math.min(pOutlier, (pointsLength-maxSupportCount)/pointsLength);
+		maxIterations = errorMinfactor * R3D.iterationsFromProbabilities(pDesired, pOutlier, minCount);
+	}
+	// f using all inliers
+	Code.emptyArray(subsetPointsA);
+	Code.emptyArray(subsetPointsB);
+	for(i=0;i<maxSupportCount;++i){
+		subsetPointsA.push( consensusSet[i][0] );
+		subsetPointsB.push( consensusSet[i][1] );
+	}
+	if(subsetPointsA.length<8){
+		return null;
+	}
+	// f using all inliers
+	var FFwd = R3D.fundamentalFromUnnormalized(subsetPointsA,subsetPointsB);
+	var FRev = R3D.fundamentalInverse(FFwd);
+	var pointsKeepA = [];
+	var pointsKeepB = [];
+	for(i=0; i<pointsAIn.length; ++i){
+		var a = pointsAIn[i];
+		var b = pointsBIn[i];
+		ptA.set(a.x,a.y,1.0);
+		ptB.set(b.x,b.y,1.0);
+		lineB = FFwd.multV3DtoV3D(lineB, ptA);
+		Code.lineOriginAndDirection2DFromEquation(org,dir, lineB.x,lineB.y,lineB.z);
+		distanceB = Code.distancePointRay2D(org,dir, b);
+		lineA = FRev.multV3DtoV3D(lineB, ptB);
+		Code.lineOriginAndDirection2DFromEquation(org,dir, lineA.x,lineA.y,lineA.z);
+		distanceA = Code.distancePointRay2D(org,dir, a);
+		if(distanceA<maxErrorDistanceA && distanceB<maxErrorDistanceB){
+			pointsKeepA.push(pointsAIn[i]);
+			pointsKeepB.push(pointsBIn[i]);
+		}
+	}
+	return {"F":FFwd, "matches":[pointsKeepA,pointsKeepB]};
+*/
+}
+
+
+R3D.TFTNonlinearGD = function(TFT,pointsA,pointsB,pointsC){
+	throw "TODO";
+}
+R3D.TFTNonlinear = function(TFT,pointsA,pointsB,pointsC){
+	try{
+		TFT = R3D.TFTNonlinearGD(TFT,pointsA,pointsB,pointsC);
+	}catch(e){
+		console.log("error GD: "+e+"\n"+TFT);
+		// fundamental = R3D.fundamentalMatrixNonlinearLM(fundamental,pointsA,pointsB);
+	}
+	// fundamental = R3D.fundamentalMatrixNonlinearLM(fundamental,pointsA,pointsB);
+	return TFT;
+}
+
+R3D.TFTFromUnnormalized = function(pointsA,pointsB,pointsC, skipNonlinear){
+	skipNonlinear = skipNonlinear!==undefined ? skipNonlinear : false;
+	var pointsANorm = R3D.calculateNormalizedPoints([pointsA]);
+	var pointsBNorm = R3D.calculateNormalizedPoints([pointsB]);
+	var pointsCNorm = R3D.calculateNormalizedPoints([pointsC]);
+	var T = R3D.trifocalTensor(pointsANorm.normalized[0],pointsBNorm.normalized[0],pointsCNorm.normalized[0]);
+	// de-normalize T
+	// var T1 = T.toArray(0, 9);
+	// var T2 = T.toArray(9, 9);
+	// var T3 = T.toArray(18,9);
+	var T1 = T.subArray([0]);
+	var T2 = T.subArray([1]);
+	var T3 = T.subArray([2]);
+		T1 = new Matrix(3,3).fromArray(T1);
+		T2 = new Matrix(3,3).fromArray(T2);
+		T3 = new Matrix(3,3).fromArray(T3);
+
+	var M1 = pointsANorm.forward[0];
+	var M2 = pointsBNorm.forward[0];
+	var M3 = pointsCNorm.forward[0];
+	var M1i = pointsANorm.reverse[0];
+	var M2i = pointsBNorm.reverse[0];
+	var M3i = pointsCNorm.reverse[0];
+	var a, b, c;
+		a = Matrix.mult(M2i, T1.copy().scale(M1.get(0,0)));
+		b = T2.copy().scale(M1.get(1,0));
+		c = Matrix.mult(T3.copy().scale(M1.get(0,0)), M3i);
+	var newT1 = Matrix.add(Matrix.add(a, b), c);
+		a = Matrix.mult(M2i, T1.copy().scale(M1.get(0,0)));
+		b = T2.copy().scale(M1.get(1,0));
+		c = Matrix.mult(T3.copy().scale(M1.get(0,0)), M3i);
+	var newT2 = Matrix.add(Matrix.add(a, b), c);
+		a = Matrix.mult(M2i, T1.copy().scale(M1.get(0,0)));
+		b = T2.copy().scale(M1.get(1,0));
+		c = Matrix.mult(T3.copy().scale(M1.get(0,0)), M3i);
+	var newT3 = Matrix.add(Matrix.add(a, b), c);
+
+	/// M2i=inv(M2); M3i=inv(M3); T_new=zeros(3,3,3);
+    // T_new(:,:,1)=M2i*(M1(1,1)*T_old(:,:,1) + M1(2,1)*T_old(:,:,2) + M1(3,1)*T_old(:,:,3) )*M3i.';
+    // T_new(:,:,2)=M2i*(M1(1,2)*T_old(:,:,1) + M1(2,2)*T_old(:,:,2) + M1(3,2)*T_old(:,:,3) )*M3i.';
+    // T_new(:,:,3)=M2i*(M1(1,3)*T_old(:,:,1) + M1(2,3)*T_old(:,:,2) + M1(3,3)*T_old(:,:,3) )*M3i.';
+
+
+	if(!skipNonlinear){
+		T = R3D.TFTNonlinear(T, pointsA, pointsB, pointsC);
+	}
+	return T;
+}
+
 R3D.trifocalTensor7 = function(pointsA,pointsB,pointsC){ // pre-normalize points before using this, only operates on 2D points
 	if(pointsA.length<7){ return null; }
 	var a, b, c, i, svd, U, S, V;
 	var len = pointsA.length;
 	var rows = len*4;
-	var A = new Matrix(len,27);
+	var A = new Matrix(rows,27);
 	var T = new Tensor([3,3,3]);
 	for(i=0; i<len; ++i){
 		a = pointsA[i];
@@ -1570,22 +1781,26 @@ R3D.trifocalTensor7 = function(pointsA,pointsB,pointsC){ // pre-normalize points
 		var by = b.y;
 		var cx = c.x;
 		var cy = c.y;
+		A.setRowFromArray(i*4+0, [ax,0,-ax*bx, 0,0,0,       -ax*cx,0,ax*bx*cx,  ay,0,-bx*ay, 0,0,0,       -cx*ay,0,bx*cx*ay,  1,0,-bx, 0,0,0,   -cx,0,bx*cx]);
+		A.setRowFromArray(i*4+1, [0,ax,-ax*by, 0,0,0,       0,-ax*cx,ax*cx*by,  0,ay,-ay*by, 0,0,0,       0,-cx*ay,cx*ay*by,  0,1,-by, 0,0,0,   0,-cx,cx*by]);
+		A.setRowFromArray(i*4+2, [0,0,0,       ax,0,-ax*bx, -ax*cy,0,ax*bx*cy,  0,0,0,       ay,0,-bx*ay, -ay*cy,0,bx*ay*cy,  0,0,0,   1,0,-bx, -cy,0,bx*cy]);
+		A.setRowFromArray(i*4+3, [0,0,0,       0,ax,-ax*by, 0,-ax*cy,ax*by*cy,  0,0,0,       0,ay,-ay*by, 0,-ay*cy,ay*by*cy,  0,0,0,   0,1,-by, 0,-cy,by*cy]);
 
 
-		A.setRowFromArray(i*4+0, 1);
-		A.setRowFromArray(i*4+1, 2);
-		A.setRowFromArray(i*4+2, 3);
-		A.setRowFromArray(i*4+3, 4);
+
+
+
+/*
+		A(4*(i-1)+1,:)=[x1,0,-x1*x2, 0,0,0, -x1*x3,0,x1*x2*x3,  ...  y1,0,-x2*y1,  0,0,0, -x3*y1,0,x2*x3*y1,...  1,0,-x2, 0,0,0, -x3,0,x2*x3];
+
+	    A(4*(i-1)+2,:)=[0,x1,-x1*y2, 0,0,0, 0,-x1*x3,x1*x3*y2,... 0,y1,-y1*y2, 0,0,0, 0,-x3*y1,x3*y1*y2,... 0,1,-y2, 0,0,0, 0,-x3,x3*y2];
+
+		A(4*(i-1)+3,:)=[0,0,0, x1,0,-x1*x2, -x1*y3,0,x1*x2*y3,... 0,0,0, y1,0,-x2*y1, -y1*y3,0,x2*y1*y3,... 0,0,0, 1,0,-x2, -y3,0,x2*y3];
+
+		A(4*(i-1)+4,:)=[0,0,0, 0,x1,-x1*y2, 0,-x1*y3,x1*y2*y3,... 0,0,0, 0,y1,-y1*y2, 0,-y1*y3,y1*y2*y3,... 0,0,0, 0,1,-y2, 0,-y3,y2*y3];
+*/
+
 	}
-	//
-	// var i, a, b, svd, U, S, V, len = pointsA.length, F = new Matrix(3,3),
-	// for(i=0;i<len;++i){
-	// 	a = pointsA[i];
-	// 	b = pointsB[i];
-	// 	var az = a.z ? a.z : 1.0;
-	// 	var bz = b.z ? b.z : 1.0;
-	// 	A.setRowFromArray(i,[a.x*b.x, a.y*b.x, az*b.x, a.x*b.y, a.y*b.y, az*b.y, a.x*bz, a.y*bz, az*bz]);
-
 	// get the 27 parameters for T
 	svd = Matrix.SVD(A);
 	U = svd.U;
@@ -1595,17 +1810,21 @@ R3D.trifocalTensor7 = function(pointsA,pointsB,pointsC){ // pre-normalize points
 
 	console.log(T);
 
+	// T may be invlaid .. needs to be upgraded
+
+	console.log(T);
+
 	return T;
-	// F.setFromArray( V.colToArray(8) );
-	// F = R3D.forceRank2F(F);
-	// return F;
-	/*
-	*/
 }
 R3D.trifocalTensor6 = function(pointsA,pointsB,pointsC){
-	// akin to fundamental 7-point algorithm
+
+
+	throw "..."
 }
 R3D.trifocalTensor = function(pointsA,pointsB,pointsC){
+	if(pointsA.length==6){
+		return R3D.trifocalTensor6(pointsA,pointsB,pointsC);
+	}
 	return R3D.trifocalTensor7(pointsA,pointsB,pointsC);
 }
 R3D.cameraMatricesFromTFT = function(T){
@@ -5690,26 +5909,52 @@ R3D.triangulationDLT = function(pointsFr,pointsTo, cameraA,cameraB, Ka, Kb,   Ka
 R3D.triangulatePointDLT = function(fr,to, cameraA,cameraB, KaInv, KbInv){ // get 3D point from cameras -- these are EXTRINSIC?
 	var rows = 4, cols = 4;
 	var A = new Matrix(rows,cols);
-	fr = KaInv.multV3DtoV3D(new V3D(), new V3D(fr.x,fr.y,1.0));
-	to = KbInv.multV3DtoV3D(new V3D(), new V3D(to.x,to.y,1.0));
+	fr = new V3D(fr.x,fr.y,1.0);
+	to = new V3D(to.x,to.y,1.0);
+	fr = KaInv.multV3DtoV3D(fr,fr);
+	to = KbInv.multV3DtoV3D(to,to);
+	var A00 = cameraA.get(0,0);
+	var A01 = cameraA.get(0,1);
+	var A02 = cameraA.get(0,2);
+	var A03 = cameraA.get(0,3);
+	var A10 = cameraA.get(1,0);
+	var A11 = cameraA.get(1,1);
+	var A12 = cameraA.get(1,2);
+	var A13 = cameraA.get(1,3);
+	var A20 = cameraA.get(2,0);
+	var A21 = cameraA.get(2,1);
+	var A22 = cameraA.get(2,2);
+	var A23 = cameraA.get(2,3);
+	var B00 = cameraB.get(0,0);
+	var B01 = cameraB.get(0,1);
+	var B02 = cameraB.get(0,2);
+	var B03 = cameraB.get(0,3);
+	var B10 = cameraB.get(1,0);
+	var B11 = cameraB.get(1,1);
+	var B12 = cameraB.get(1,2);
+	var B13 = cameraB.get(1,3);
+	var B20 = cameraB.get(2,0);
+	var B21 = cameraB.get(2,1);
+	var B22 = cameraB.get(2,2);
+	var B23 = cameraB.get(2,3);
 	// fr
-	A.set(0,0, fr.x*cameraA.get(2,0) - cameraA.get(0,0) ); // X
-	A.set(0,1, fr.x*cameraA.get(2,1) - cameraA.get(0,1) ); // Y
-	A.set(0,2, fr.x*cameraA.get(2,2) - cameraA.get(0,2) ); // Z
-	A.set(0,3, fr.x*cameraA.get(2,3) - cameraA.get(0,3) ); // W
-	A.set(1,0, fr.y*cameraA.get(2,0) - cameraA.get(1,0) ); // X
-	A.set(1,1, fr.y*cameraA.get(2,1) - cameraA.get(1,1) ); // Y
-	A.set(1,2, fr.y*cameraA.get(2,2) - cameraA.get(1,2) ); // Z
-	A.set(1,3, fr.y*cameraA.get(2,3) - cameraA.get(1,3) ); // W
+	A.set(0,0, fr.x*A20 - A00 ); // X
+	A.set(0,1, fr.x*A21 - A01 ); // Y
+	A.set(0,2, fr.x*A22 - A02 ); // Z
+	A.set(0,3, fr.x*A23 - A03 ); // W
+	A.set(1,0, fr.y*A20 - A10 ); // X
+	A.set(1,1, fr.y*A21 - A11 ); // Y
+	A.set(1,2, fr.y*A22 - A12 ); // Z
+	A.set(1,3, fr.y*A23 - A13 ); // W
 	// to
-	A.set(2,0, to.x*cameraB.get(2,0) - cameraB.get(0,0) ); // X
-	A.set(2,1, to.x*cameraB.get(2,1) - cameraB.get(0,1) ); // Y
-	A.set(2,2, to.x*cameraB.get(2,2) - cameraB.get(0,2) ); // Z
-	A.set(2,3, to.x*cameraB.get(2,3) - cameraB.get(0,3) ); // W
-	A.set(3,0, to.y*cameraB.get(2,0) - cameraB.get(1,0) ); // X
-	A.set(3,1, to.y*cameraB.get(2,1) - cameraB.get(1,1) ); // Y
-	A.set(3,2, to.y*cameraB.get(2,2) - cameraB.get(1,2) ); // Z
-	A.set(3,3, to.y*cameraB.get(2,3) - cameraB.get(1,3) ); // W
+	A.set(2,0, to.x*B20 - B00 ); // X
+	A.set(2,1, to.x*B21 - B01 ); // Y
+	A.set(2,2, to.x*B22 - B02 ); // Z
+	A.set(2,3, to.x*B23 - B03 ); // W
+	A.set(3,0, to.y*B20 - B10 ); // X
+	A.set(3,1, to.y*B21 - B11 ); // Y
+	A.set(3,2, to.y*B22 - B12 ); // Z
+	A.set(3,3, to.y*B23 - B13 ); // W
 	var svd = Matrix.SVD(A);
 	var coeff = svd.V.colToArray(3);
 	var point = new V3D(coeff[0],coeff[1],coeff[2]);
@@ -14484,7 +14729,8 @@ R3D.imageFromParameters = function(imageMatrix, point,scale,angle,skewX,skewY, s
 			matrix = Matrix.transform2DRotate(matrix, angle);
 			matrix = Matrix.transform2DSkewX(matrix, skewX);
 			matrix = Matrix.transform2DSkewY(matrix, skewY);
-		matrix = Matrix.transform2DTranslate(matrix, point.x, point.y);
+		matrix = Matrix.transform2DTr
+		anslate(matrix, point.x, point.y);
 	var image = imageMatrix.extractRectFromMatrix(sizeWidth,sizeHeight, matrix);
 	return image;
 }
@@ -14494,6 +14740,119 @@ R3D.scoreSADFromPoints = function(){
 }
 
 
+R3D.fundamentalTransferPoint = function(pointA,pointB, Fab,Fac,Fbc, epipolesAC,epipolesBC, doError){//}, Fca,Fcb, eA,eB, rotationAB,rotationAC,rotationBC){ // fails along epipolar plane or high error
+doError = true;
+	var lineAC = R3D.lineFromF(Fac,pointA);
+	var lineBC = R3D.lineFromF(Fbc,pointB);
+	var intersect = Code.rayInfiniteIntersect2D(lineAC["org"],lineAC["dir"], lineBC["org"],lineBC["dir"]);
+	var pointC = null;
+	var angleA = null;
+	var angleB = null;
+	var error = null;
+	if(intersect){
+		if(!epipolesAC){
+			epipolesAC = R3D.getEpipolesFromF(Fac);
+			epipolesBC = R3D.getEpipolesFromF(Fbc);
+		}
+		// A
+		var eAC = epipolesAC["A"];
+		// B
+		var eBC = epipolesBC["A"];
+		// C
+		var eCA = epipolesAC["B"];
+		var eCB = epipolesBC["B"];
+		// find location & orientation
+		var pointC = intersect;
+		var relatedAC = R3D.fundamentalRelatedDir(pointA,pointC, Fac,R3D.fundamentalInverse(Fac)); // TODO: move this outside as is repetitive
+		var relatedBC = R3D.fundamentalRelatedDir(pointB,pointC, Fbc,R3D.fundamentalInverse(Fbc));
+		var vAA = V2D.sub(pointA,eAC);
+		var vBB = V2D.sub(pointB,eBC);
+		var vAC = V2D.sub(pointC,eCA);
+		var vBC = V2D.sub(pointC,eCB);
+		vAC.scale(relatedAC);
+		vBC.scale(relatedBC);
+		angleA = V2D.angle(vAA,vAC);
+		angleB = V2D.angle(vBB,vBC);
+		if(doError){
+			/*
+			var siz = 0.5;
+			var orthA = vAA.copy().rotate(Math.PI*0.5).norm().scale(siz);
+			var orthB = vBB.copy().rotate(Math.PI*0.5).norm().scale(siz);
+			// var orthA = vAA.copy().norm();
+			// var orthB = vBB.copy().norm();
+			var a0 = V2D.add(pointA,orthA);
+			var a1 = V2D.sub(pointA,orthA);
+			var b0 = V2D.add(pointB,orthB);
+			var b1 = V2D.sub(pointB,orthB);
+			var lineA0 = R3D.lineFromF(Fac,a0);
+			var lineA1 = R3D.lineFromF(Fac,a1);
+			var lineB0 = R3D.lineFromF(Fbc,b0);
+			var lineB1 = R3D.lineFromF(Fbc,b1);
+			var intA0 = Code.rayInfiniteIntersect2D(lineA0["org"],lineA0["dir"], lineBC["org"],lineBC["dir"]);
+			var intA1 = Code.rayInfiniteIntersect2D(lineA1["org"],lineA1["dir"], lineBC["org"],lineBC["dir"]);
+			var intB0 = Code.rayInfiniteIntersect2D(lineAC["org"],lineAC["dir"], lineB0["org"],lineB0["dir"]);
+			var intB1 = Code.rayInfiniteIntersect2D(lineAC["org"],lineAC["dir"], lineB1["org"],lineB1["dir"]);
+			var dA0 = V2D.distance(pointC,intA0);
+			var dA1 = V2D.distance(pointC,intA1);
+			var dB0 = V2D.distance(pointC,intB0);
+			var dB1 = V2D.distance(pointC,intB1);
+			console.log(dA0,dA1,dB0,dB1);
+			var avgA = (dA0+dA1)*0.5;
+			var avgB = (dB0+dB1)*0.5;
+			// error = Math.sqrt(avgA*avgA + avgB*avgB);
+			error = (avgA+avgB)*0.5;
+			*/
+			// project C to other views:
+			var Fca = R3D.fundamentalInverse(Fac);
+			var Fcb = R3D.fundamentalInverse(Fbc);
+			var Fba = R3D.fundamentalInverse(Fab);
+			var lineCA = R3D.lineFromF(Fca,pointC);
+			var lineCB = R3D.lineFromF(Fcb,pointC);
+			var lineAB = R3D.lineFromF(Fab,pointA);
+			var lineBA = R3D.lineFromF(Fba,pointB);
+			var intCA = Code.rayInfiniteIntersect2D(lineBA["org"],lineBA["dir"], lineCA["org"],lineCA["dir"]);
+			var intCB = Code.rayInfiniteIntersect2D(lineAB["org"],lineAB["dir"], lineCB["org"],lineCB["dir"]);
+			var dA = V2D.distance(pointA,intCA);
+			var dB = V2D.distance(pointB,intCB);
+			console.log(dA,dB);
+			error = (dA+dB)*0.5;
+		}
+	}
+	return {"point":pointC, "angleA":angleA, "angleB":angleB, "error":error};
+}
+R3D.fundamentalRelatedDir = function(pointA,pointB, Fab,Fba,eA,eB){//}, Fca,Fcb, eA,eB, rotationAB,rotationAC,rotationBC){ // fails along epipolar plane or high error
+	var eps = Code.radians(1.0);
+	if(!eA){
+		epipoles = R3D.getEpipolesFromF(Fab);
+		eA = epipoles["A"];
+		eB = epipoles["B"];
+	}
+	var dirEA = V2D.sub(pointA,eA);
+	var dirEB = V2D.sub(pointB,eB);
+	// rotate to close point
+	var dirRA = V2D.rotate(dirEA,eps);
+	var dirRB = V2D.rotate(dirEB,eps);
+	var pA = V2D.add(dirRA,eA);
+	var pB = V2D.add(dirRB,eB);
+	var lineA = R3D.lineFromF(Fab,pA);
+	var lineB = R3D.lineFromF(Fba,pB);
+	var dirB = lineA["dir"]; // IN IMAGE B
+	var dirA = lineB["dir"]; // IN IMAGE A
+	//
+	var angleA = V2D.angleDirection(dirEA,dirA);
+	var angleB = V2D.angleDirection(dirEB,dirB);
+	// console.log(angleA,angleB);
+	if(angleA>0 && angleB>0 || angleA<0 && angleB<0){
+		return -1;
+	}
+	// if(angleA<0 && angleB>0){
+	// 	return 1;
+	// }
+	// console.log(angleA,angleB);
+	return 1;
+	throw "inconsistent results";
+	return 0;
+}
 
 
 
@@ -25426,7 +25785,15 @@ R3D._costTripleFeatures = function(patchA,patchB,patchC){
 	return cost;
 }
 
-R3D.BundleAdjustCameraExtrinsic = function(intrinsics, inverses, extrinsics, pairPointList2D, pairPointList3D, maxIterations){ // pointList3D -- only tested on pairs
+R3D.BundleAdjustCameraExtrinsic = function(intrinsics, inverses, extrinsics, pairPointList2D, pairPointList3D, maxIterations){
+
+
+
+	// pointList3D -- only tested on pairs
+
+	// WHAT DOES THIS DO ON NON PAIRS
+
+
 	maxIterations = (maxIterations!==undefined && maxIterations!==null)? maxIterations : 1;
 	var cameraCount = intrinsics.length;
 	var args = [];

@@ -7198,6 +7198,7 @@ Code.closestPointLineSegment2D = function(org,dir, point){ // finite ray and poi
 	return new V2D(org.x+t*dir.x,org.y+t*dir.y);
 }
 Code.clipLine2DToRect = function(org,dir, x,y,w,h){
+// Code.clipRayRect2D 
 	var eps = 1E-6;
 	var poly = [new V2D(x,y), new V2D(x+w,y), new V2D(x+w,y+h), new V2D(x,y+h)];
 	var inv = dir.copy().scale(-1);
@@ -8268,6 +8269,7 @@ Code.minimumTriAngle = function(a,b,c){ // CCW
 	return Math.min(angleA,angleB,angleC);
 }
 Code.clipRayRect2D = function(org,dir, a,b,c,d){
+// Code.clipLine2DToRect
 	var ints = [];
 	var ab = V2D.sub(b,a);
 	var bc = V2D.sub(c,b);

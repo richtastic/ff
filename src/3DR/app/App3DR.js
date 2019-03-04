@@ -6254,6 +6254,17 @@ console.log("checkPerformNextTask");
 		}
 	}
 
+/*
+console.log("need relative sizing - TFT / scale approx");
+	var viewA = views[0];
+	var viewB = views[1];
+	var viewC = views[2];
+	this.calculateTripleMatch(viewA,viewB,viewC);
+throw "..."
+*/
+// return;
+
+
 // don't 3 - run
 // return;
 
@@ -6530,32 +6541,53 @@ App3DR.ProjectManager.prototype.calculateTripleMatch = function(viewA, viewB, vi
 				viewB.loadFeaturesImage(fxnC, self);
 			}
 			var fxnC = function(){
-				pair1.loadMatchingData(fxnD, self);
+				viewC.loadFeaturesImage(fxnD, self);
 			}
 			var fxnD = function(){
-				viewC.loadFeaturesImage(fxnE, self);
+				// pair1.loadMatchingData(fxnD, self);
+				pair1.loadRelativeData(fxnE, self);
 			}
 			var fxnE = function(){
-				pair2.loadMatchingData(fxnF, self);
+				// pair2.loadMatchingData(fxnF, self);
+				pair2.loadRelativeData(fxnF, self);
 			}
 			var fxnF = function(){
-				pair3.loadMatchingData(fxnX, self);
+				// pair3.loadMatchingData(fxnX, self);
+				pair3.loadRelativeData(fxnX, self);
+				// fxnX();
 			}
 			var fxnX = function(){
-				imageA = viewA.featuresImage();
-				imageB = viewB.featuresImage();
-				matchAB = pair1.matchingData();
-
-				matchAC = pair2.matchingData();
-				imageC = viewC.featuresImage();
-
-				matchBC = pair3.matchingData();
+				// TODO: if it turns out views down have enough (or any) overlap -- skip ?
+				console.log("LOADED ALL DATA");
+				var imageA = viewA.featuresImage();
+				var imageB = viewB.featuresImage();
+				var imageC = viewC.featuresImage();
 
 				var stage = self._stage;
 				var imageMatrixA = R3D.imageMatrixFromImage(imageA, stage);
 				var imageMatrixB = R3D.imageMatrixFromImage(imageB, stage);
 				var imageMatrixC = R3D.imageMatrixFromImage(imageC, stage);
-				//
+
+				var matchAB = pair1.relativeData();
+				var matchAC = pair2.relativeData();
+				var matchBC = pair3.relativeData();
+				console.log(matchAB);
+
+				// console.log(viewA.id()+" - "+viewB.id()+" - "+viewC.id());
+
+
+				var result = App3DR.tripleInfo(imageMatrixA,imageMatrixB,imageMatrixC, viewA,viewB,viewC, matchAB,matchAC,matchBC);
+				// viewA.id(),viewB.id(),viewC.id()
+				console.log(result);
+
+				/*
+					need 3D points w 2d location
+
+				*/
+
+
+
+				/*
 				var tripleInfo = R3D.triplePointMatches(matchAB,matchAC,matchBC, imageMatrixA,imageMatrixB,imageMatrixC);
 				console.log(tripleInfo);
 				// TODO: trifocal tensor from best point matches
@@ -6575,7 +6607,9 @@ App3DR.ProjectManager.prototype.calculateTripleMatch = function(viewA, viewB, vi
 				}else{
 					self.addTriple(viewA,viewB,viewC, fxnY, this);
 				}
+				*/
 			}
+			/*
 			var fxnY = function(triple){
 				console.log("save triple data");
 				return;
@@ -6589,9 +6623,133 @@ App3DR.ProjectManager.prototype.calculateTripleMatch = function(viewA, viewB, vi
 				manager.saveProjectFile();
 				this.checkPerformNextTask();
 			}
+			*/
 			fxnA();
 		}
 	}
+}
+App3DR.tripleInfo = function(imageMatrixA,imageMatrixB,imageMatrixC, viewA,viewB,viewC, matchAB,matchAC,matchBC){
+	var world = new Stereopsis.World();
+	world.checkForIntersections(false);
+	// console.log(viewA);
+	// console.log(matchAB);
+	var imageSizeA = imageMatrixA.size();
+
+
+	var WORLDCAMS = [];
+	var WORLDVIEWS = [];
+
+	var camera = matchAB["cameras"][0];
+	console.log(camera);
+	var K = camera["K"];
+		K = Matrix.loadFromObject(K);
+		// K = R3D.cameraFromScaledImageSize(K, imageSizeA);
+	console.log(K);
+	var distortion = null;
+	var c = world.addCamera(K, distortion);
+	console.log(c);
+	// c.data(camera.id()+"");
+	// camera.temp(c);
+	WORLDCAMS.push(c);
+
+	var views = [viewA,viewB,viewC];
+	var images = [imageMatrixA,imageMatrixB,imageMatrixC];
+	for(var i=0; i<views.length; ++i){
+		var view = views[i];
+		var matrix = images[i];
+		var cam = WORLDCAMS[0];
+
+		var K = cam.K();
+		var distortion = cam.distortion();
+		var v = world.addView(matrix, cam);
+		// v.absoluteTransform(transform);
+		view.temp(v);
+		v.data(view.id());
+		WORLDVIEWS.push(v);
+	}
+
+	var vA = WORLDVIEWS[0];
+	var vB = WORLDVIEWS[1];
+	var vC = WORLDVIEWS[2];
+
+	// quick world-view lookup
+	var WORLDVIEWSLOOKUP = {};
+	for(var i=0; i<WORLDVIEWS.length; ++i){
+	    var v = WORLDVIEWS[i];
+	    WORLDVIEWSLOOKUP[v.data()] = v;
+	}
+
+
+	// TEMPS
+	var o = new V2D(0,0);
+	var x1 = new V2D();
+	var x2 = new V2D();
+	var y1 = new V2D();
+	var y2 = new V2D();
+
+	// points for match AB
+	var matches = [];
+
+		// matches.push([vA,vB, matchAB["points"]]);
+		// matches.push([vA,vC, matchAC["points"]]);
+
+		// matches.push([vA,vB, matchAB["points"]]);
+		// matches.push([vB,vC, matchBC["points"]]);
+
+		matches.push([vA,vC, matchAC["points"]]);
+		matches.push([vB,vC, matchBC["points"]]);
+
+	var pointCountAdded = 0;
+	for(var i=0; i<matches.length; ++i){
+		var match = matches[i];
+		// var vA = match[0];
+		// var vB = match[1];
+		var points = match[2];
+		for(var p=0; p<points.length; ++p){
+			var point = points[p];
+			var point3D = new V3D(point["X"],point["Y"],point["Z"]);
+			var pointViews = point["views"];
+
+			for(var j=0; j<pointViews.length; ++j){
+				var viewJ = pointViews[j];
+				var vJ = WORLDVIEWSLOOKUP[viewJ["view"]];
+				for(var k=j+1; k<pointViews.length; ++k){
+					var viewK = pointViews[k];
+					var vK = WORLDVIEWSLOOKUP[viewK["view"]];
+					var fr = new V2D(viewJ["x"],viewJ["y"]);
+					var to = new V2D(viewK["x"],viewK["y"]);
+					x1.set(viewJ["Xx"],viewJ["Xy"]);
+					y1.set(viewJ["Yx"],viewJ["Yy"]);
+					x2.set(viewK["Xx"],viewK["Xy"]);
+					y2.set(viewK["Yx"],viewK["Yy"]);
+					// to image plane
+					var sizeFr = vJ.size();
+					var sizeTo = vJ.size();
+					fr.scale(sizeFr.x,sizeFr.y);
+					to.scale(sizeTo.x,sizeTo.y);
+					var affineAB = R3D.affineMatrixExact([o,x1,y1],[o,x2,y2]);
+					// add
+					world.addMatchFromInfo(vJ,fr, vK,to, affineAB, point3D);
+					pointCountAdded++;
+				}
+			}
+// if(pointCountAdded>1000){
+// 	break;
+// }
+		}
+	}
+	console.log("pointCountAdded: "+pointCountAdded);
+
+	world.printPoint3DTrackCount();
+
+
+	var completeFxn = function(){
+		console.log("completeFxn");
+	}
+	world.solveTriple(completeFxn, null);
+
+	var result = {};
+	return result;
 }
 
 
@@ -6875,10 +7033,24 @@ console.log("ERROR: "+transformRMean+" * "+transformRSigma+" @ "+transformMatche
 		var viewDataB = viewsData[1];
 		var cameraA = Matrix.loadFromObject(viewDataA["transform"]);
 		var cameraB = Matrix.loadFromObject(viewDataB["transform"]);
+
+
+var scaler = 1;
+if(i==0){ // 0-1
+	scaler = 1;
+}else if(i==1){ // 0-2
+	scaler = 2.38;
+}else if(i==2){ // 1-2
+	scaler = 1.05;
+}
+console.log("scaler:"+scaler);
+cameraB.set(0,3, cameraB.get(0,3)*scaler);
+cameraB.set(1,3, cameraB.get(1,3)*scaler);
+cameraB.set(2,3, cameraB.get(2,3)*scaler);
+
 		// var relativeAtoB = R3D.relativeTransformMatrix(cameraA,cameraB);
 		//var relativeAtoB = R3D.componentwiseRelativeCameraMatrix(cameraA,cameraB);
 		var relativeAtoB = R3D.relativeTransformMatrix2(cameraA,cameraB);
-
 
 
 
@@ -6932,15 +7104,38 @@ console.log("ERROR: "+transformRMean+" * "+transformRSigma+" @ "+transformMatche
 	for(var i=0; i<transforms.length; ++i){
 	       var transform = transforms[i];
 	       var matrix = transform;
+	       transforms[i] = Matrix.inverse(matrix);
+	}
+
+	for(var i=0; i<transforms.length; ++i){
+	       var transform = transforms[i];
+	       var matrix = transform;
 	       var center = matrix.multV3DtoV3D(new V3D(0,0,0));
 	       console.log("CANERA CENTER 1: "+center);
 	}
 
+/*
 
 // OVERRIDE KNOWN 3
+var scale = 2.38; //  2.0 = 1.68  2.2 = 1.414  2.3=1.38   2.5 = 1.4...
+// EMPERICALLY: 2.38
 var m01 = listPairs[0][2];
 var m02 = listPairs[1][2];
+	// m02 = Matrix.transform3DScale(m02, 2.0);
+	// m02 = Matrix.transform3DScale(m02, 3.0);
+	m02.set(0,3, m02.get(0,3)*scale);
+	m02.set(1,3, m02.get(1,3)*scale);
+	m02.set(2,3, m02.get(2,3)*scale);
+
+var scale = 1.05;
+// EMPERICALLY: 0.95 ?OR? 1.05
 var m12 = listPairs[2][2];
+	m12.set(0,3, m02.get(0,3)*scale);
+	m12.set(1,3, m02.get(1,3)*scale);
+	m12.set(2,3, m02.get(2,3)*scale);
+
+
+// EMPERICALLY AC/BC = 2.25???
 
 // BAD
 var m0 = new Matrix(4,4).identity();
@@ -6963,6 +7158,8 @@ var m2 = Matrix.mult(m02,m0);
 
 transforms = [m0,m1,m2];
 
+*/
+
 for(var i=0; i<transforms.length; ++i){
 	   var transform = transforms[i];
 	   var matrix = transform;
@@ -6973,7 +7170,7 @@ for(var i=0; i<transforms.length; ++i){
 
 
 
-throw "?????";
+// throw "?????";
 
 
 
@@ -7302,10 +7499,6 @@ App3DR.ProjectManager.prototype._calculateGlobalOrientationNonlinearB = function
 				break;
 			}
 		}
-// TODO: REMOVE
-// if(transform){
-// 	transform = Matrix.inverse(transform);
-// }
 		var v = world.addView(matrix, cam);
 		v.absoluteTransform(transform);
 		view.temp(v);

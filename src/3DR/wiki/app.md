@@ -319,8 +319,163 @@ https://cloud.google.com/appengine/docs/nodejs/
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+.... EXTINRSIC / CAMERA MATRICES ARE MIXED UP
 
-) back to 3-views stereo
+- if camera matrixes are kept constant: then the points are in the wrong place, BUT the error is low
+- if 3 camera matrixes are in INVERSED: then the points are in the correct place, BUT the error is very high
+
+
+- maybe only want a single extrinsic=camera?
+- maybe chosen P is opposite of desired?
+- -Z axis wrong camera direction?
+
+
+
+
+- with baseline scales, initial guess is good, BUT subsequent refinements make it worse
+	- investigate optimizing code:
+		refineCameraAbsoluteOrientation
+
+
+K:
+	F: 0.181 -> 0.456 | R: 0.175 -> 0.464 | M: 29683 -> 31267
+A:
+	F: 0.175 -> 0.485 | R: 0.212 -> 0.386 | M: 21857 -> 23674
+O:
+	F: 0.166 -> 0.420 | R: 1.20 -> 1.129 | M: 31750 -> 33325
+
+
+
+
+x TEST MATCHING/TRANSFERRING POINTS USING F for 3 IMAGES
+x TEST getting E baseline from view pairing
+
+- TFT MATH
+- Track point logistics
+
+- TEST getting track points iteratively
+	- initially have dense image pairs
+		- global list of tracks [or built up hierarchically]
+			tracks.yaml
+		- ROOT = PAIRS:
+			- pair A-B:
+				- top candidates:
+					- good corner score
+					- low F error
+					- low R error
+				=> NONMAXIMAL SUPRESSION @ 1%-5% of image size
+				=> use local affine matrices to figure out 'patch' projection?
+				- create track entry for all matching points in A-B
+					- SIZE in each image? [extent of feature?]
+							-- can look at how far out NCC / SIFT looks until GOES DOWN?
+						- AFFINE relationship between track points
+					- 2D LOCATION
+			- pair B-C:
+				- top candidates same as before
+			- ...
+		- NEXT: GROUP PAIRS:
+			- pair B-C with pair A-B: (common: B)
+				- if a track from A-B coincides with point track from B-C
+					- points are very close to each other
+					- have good NCC / SIFT scores
+				- search non-overlapping spaces as guess for continuing
+		- MERGE TRACKS WHERE NECESSARY
+			- point collisions among separate tracks
+				- might require choosing among conflicting choices
+		- SPLIT TRACKS WHERE NECESSARY
+			- image in sequence found to be worse than rest of data
+		- keep record of attempted merges
+
+- TODO: EXAMPLE YAML FILE(s)
+
+- USE TRACK POINTS [100~1000 per pair] to initialize global solution [Pi]
+	- throw outliers out
+	- possibly obtain new track entries?
+
+- TODO: EXAMPLE YAML FILE
+
+- USE OPTIMIZED VIEW GRAPH to break the problem up where possible
+	- prefer lower error pairs
+	- prune repetitive views
+	- ...
+
+- TODO: EXAMPLE YAML FILE(s)
+
+- PERIODICALLY:
+	- SOLVE DENSE LOCAL areas separately
+	- MERGE NEIGHBORHOOD AFTER SIGNIFICANT CHANGES
+
+- WHEN A NEW VIEW IS ADDED:
+	- for each pair (~10)
+		- PAIR F
+		- PAIR P
+		- PAIR SIZE
+		- TRACK ADDITIONS
+	- TRACK UPDATES
+	- INIT SKELETON GRAPH ONLY WHERE EDGES CONNECT
+	- UPDATE DENSE LOCAL-GLOBAL SOLVE
+
+- REMESH TRIANGLES AT EXTENT OF POINTS
+
+- MESH CAN ALSO BE DONE PROGRESSIVE - INITIAL APPROX HAS
+- SEGMENT AND DO PORTIONS INDEPENDENTLY [MARK REGIONS/EDGES OF NO-PROGRESS]
+	- may then need to iterate on inverse?
+
+
+
+
+TOPICS:
+	- point tracks
+	- optimized scene graphs
+	- TFT
+	- optimizing
+
+- can point collisions in 2D be assumed to be good tracks ?
+
+
+
+- have not yet applied nonlinear triangulation (choose X to minimize x_i and x_j reprojection)
+	- 6 degree polynomial solution
+
+
+
+-- start thinking about processing multiple views (10+) at same time
+	- may want only most salient points [with high visible view count]
+		- ~1K per view/pair [currently ~10K]
+	- assume can't keep all images or all points in memory
+		- loading & unloading ?
+
+	- optimal graph divide problem into sections that can be done independently
+		- possibly ignore repetitive views (keep most necessary backbone views)
+
+-- look at keeping track of TRACKS
+	- TFT becomes useful again
+
+
+
+- initial view seems INVERSED?
+
+- overlapping points in 2D don't seem to be merged into a single point for 3D ?
+
+- refine absolute increases error
+
+- test app with self-made initialization (double size of translation for 0-2)
+	- see if errors can be minimized
+
+
+- make sure points and errors are initially calculated [not using old pairwise-values]?
+
+
+
+
+- add set after each pair is made:
+	- not 'triple' - but pair-pair - pairings
+		- pairA
+		- pairB
+		- relativeScale: 2.0
+		- relativeSigma: 0.15
+
+
 
 -- initial orientation is bad (have 2 overlapping views?)
 -- ALL 3 PAIRS HAVE THE SAME X-OFFSET ~ <1,0,0>
