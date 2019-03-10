@@ -754,6 +754,58 @@ console.log(" OFFSET ");
 	GLOBALSTAGE = this._stage;
 
 
+	var org = new V2D(40,20);
+	var dir = new V2D(200,300);
+	// var org = new V2D(40,60);
+	// var dir = new V2D(400,0);
+
+	var cen = new V2D(100,100);
+	var rad = 40.0;
+
+	// circle
+	var d = new DO();
+	d.graphics().setLine(1.0,0xFFFF0000);
+	d.graphics().beginPath();
+	d.graphics().drawCircle(cen.x,cen.y, rad);
+	d.graphics().strokeLine();
+	d.graphics().endPath();
+	GLOBALSTAGE.addChild(d);
+	// line
+	var d = new DO();
+	d.graphics().setLine(1.0,0xFF0000FF);
+	d.graphics().beginPath();
+	d.graphics().moveTo(org.x,org.y);
+	d.graphics().lineTo(org.x+dir.x,org.y+dir.y);
+	d.graphics().strokeLine();
+	d.graphics().endPath();
+	GLOBALSTAGE.addChild(d);
+
+	var intersect = Code.intersectRayCircle2D(org,dir, cen,rad);
+	console.log(intersect);
+	if(intersect){
+		for(var i=0; i<intersect.length; ++i){
+			var p = intersect[i];
+			var d = new DO();
+			d.graphics().setLine(2.0,0xFFFF00FF);
+			d.graphics().beginPath();
+			d.graphics().drawCircle(p.x,p.y, 5);
+			d.graphics().strokeLine();
+			d.graphics().endPath();
+			GLOBALSTAGE.addChild(d);
+		}
+	}
+
+
+
+/*
+
+
+*/
+
+
+throw "intersections";
+
+
 /*
 
 	throw "KD TREE";

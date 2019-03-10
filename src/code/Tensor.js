@@ -7,7 +7,19 @@ Tensor.YAML = {
 }
 
 
-function Tensor(dimensions, values){
+function Tensor(dimensions, values){ // [3,3,3] | [3,3,3], [...] | 3,3,3 | 3,3,3, [...]
+	if(!Code.isArray(dimensions)){
+		var temp = [];
+		for(var i=0; i<arguments.length; ++i){
+			var d = arguments[i];
+			if(Code.isArray(d)){
+				values = d;
+			}else{
+				temp.push(d);
+			}
+		}
+		dimensions = temp;
+	}
 	this._values = null;
 	this._init(dimensions);
 	if(values){
@@ -77,7 +89,22 @@ Tensor.prototype.subArray = function(dimension){
 	Tensor._iterate(fxn, value, this._dimensions, dimension.length);
 	return a;
 }
+// Tensor.prototype.get = function(location){
+// 	var value = this._values;
+// 	var len = location.length;
+// 	for(var i=0; i<len; ++i){
+// 		value = value[location[i]];
+// 	}
+// 	return value;
+// }
 Tensor.prototype.get = function(location){
+	if(!Code.isArray(location)){
+		var temp = [];
+		for(var i=0; i<arguments.length; ++i){
+			temp.push(arguments[i]);
+		}
+		location = temp;
+	}
 	var value = this._values;
 	var len = location.length;
 	for(var i=0; i<len; ++i){
@@ -85,6 +112,7 @@ Tensor.prototype.get = function(location){
 	}
 	return value;
 }
+
 Tensor.prototype.set = function(location, val){
 	var value = this._values;
 	var len = location.length;
@@ -123,5 +151,9 @@ Tensor.prototype.toString = function(){
 		}
 	}
 	str += " : "+this.count()+"]";
+	var arr = this.toArray();
+	if(arr.length<100){
+		str += "\n["+arr+"]";
+	}
 	return str;
 }

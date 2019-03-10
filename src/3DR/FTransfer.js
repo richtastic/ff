@@ -67,7 +67,7 @@ FTransfer.prototype.imagesLoadComplete = function(o){
 		0.00003158673414377659,
 		-0.18403660983845793,
 		]);
-
+console.log("HERE");
 	// normalize to size:
 	var Fs = [F01,F02,F12];
 	for(var i=0; i<Fs.length; ++i){
@@ -117,6 +117,7 @@ FTransfer.prototype.imagesLoadComplete = function(o){
 		correspondences.push([{"index":0, "point": new V2D(379,85)},{"index":1, "point": new V2D(405.5,48)}]);
 		correspondences.push([{"index":0, "point": new V2D(472,311)},{"index":1, "point": new V2D(452,289)}]);
 	for(var i=0; i<correspondences.length; ++i){
+break;
 		var c = correspondences[i];
 		var indexA = c[0]["index"];
 		var a = c[0]["point"];
@@ -163,7 +164,7 @@ FTransfer.prototype.imagesLoadComplete = function(o){
 		var angleA = result["angleA"];
 		var angleB = result["angleB"];
 		var c = result["point"];
-		
+
 		var u, v;
 		var lAB = Code.clipLine2DToRect(lineAB["org"],lineAB["dir"],0,0,width,height);
 		var lBA = Code.clipLine2DToRect(lineBA["org"],lineBA["dir"],0,0,width,height);
@@ -290,8 +291,190 @@ FTransfer.prototype.imagesLoadComplete = function(o){
 			GLOBALSTAGE.addChild(d);
 		}
 
-
 	}
+
+
+
+	// TFT TESTING:
+	console.log("TFT");
+	var points = [];
+		// points.push([new V2D(),new V2D(),new V2D()]);
+		points.push([new V2D(202.5,131),new V2D(224.5,92),new V2D(232,73)]);
+		points.push([new V2D(247.5,255),new V2D(225,213.5),new V2D(198,190)]);
+		points.push([new V2D(413,212),new V2D(434,185),new V2D(442,168)]);
+		points.push([new V2D(87.5,333.5),new V2D(82,271),new V2D(72,239)]);
+		points.push([new V2D(379,85),new V2D(405.5,48),new V2D(412,21)]);
+		points.push([new V2D(472,311),new V2D(452,289),new V2D(420,274)]);
+		//points.push([new V2D(143,197),new V2D(154,151),new V2D(158,133)]);
+
+
+	var pointsA = [];
+	var pointsB = [];
+	var pointsC = [];
+	for(var i=0; i<points.length; ++i){
+		var list = points[i];
+		pointsA.push(list[0]);
+		pointsB.push(list[1]);
+		pointsC.push(list[2]);
+	}
+console.log(pointsA,pointsB,pointsC)
+	// show:
+	for(var i=0; i<pointsA.length; ++i){
+		var a = pointsA[i];
+		var b = pointsB[i];
+		var c = pointsC[i];
+
+		var indexA = 0;
+		var indexB = 1;
+		var indexC = 2;
+
+		var color = 0xFFFF0000;
+		// A
+		var d = new DO();
+		d.graphics().setLine(2.0,color);
+		d.graphics().beginPath();
+		d.graphics().drawCircle(a.x,a.y, 5);
+		d.graphics().strokeLine();
+		d.graphics().endPath();
+		d.matrix().translate(indexA*width,0);
+		GLOBALSTAGE.addChild(d);
+		// B
+		var d = new DO();
+		d.graphics().setLine(2.0,color);
+		d.graphics().beginPath();
+		d.graphics().drawCircle(b.x,b.y, 5);
+		d.graphics().strokeLine();
+		d.graphics().endPath();
+		d.matrix().translate(indexB*width,0);
+		GLOBALSTAGE.addChild(d);
+		// C
+		var d = new DO();
+		d.graphics().setLine(2.0,color);
+		d.graphics().beginPath();
+		d.graphics().drawCircle(c.x,c.y, 5);
+		d.graphics().strokeLine();
+		d.graphics().endPath();
+		d.matrix().translate(indexC*width,0);
+		GLOBALSTAGE.addChild(d);
+		// CONNECT:
+		color = 0x99FF0000;
+		var d = new DO();
+		d.graphics().setLine(1.0,color);
+		d.graphics().beginPath();
+		d.graphics().moveTo(a.x,a.y);
+		d.graphics().lineTo(b.x + width,b.y);
+		d.graphics().lineTo(c.x + 2*width,c.y);
+		d.graphics().strokeLine();
+		d.graphics().endPath();
+		d.matrix().translate(0,0);
+		GLOBALSTAGE.addChild(d);
+
+		// show points:
+		var imageMatrixA = images[indexA];
+		var imageMatrixB = images[indexB];
+		var imageMatrixC = images[indexC];
+		var infos = [
+			[imageMatrixA,0,a],
+			[imageMatrixB,0,b],
+			[imageMatrixC,0,c],
+			];
+		var OFFX = 10;
+		var OFFY = 10;
+		var sss = 0.50;
+		var sca = 1.0;
+		var compareSize = 49;
+		for(var j=0; j<infos.length; ++j){
+			var image = infos[j][0];
+			var ang = infos[j][1];
+			var p = infos[j][2];
+			var matrix = new Matrix(3,3).identity();
+				matrix = Matrix.transform2DRotate(matrix, ang);
+			var needle = image.extractRectFromFloatImage(p.x,p.y,sss,null,compareSize,compareSize, matrix);
+			var iii = needle;
+			var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
+			var d = new DOImage(img);
+			d.matrix().scale(sca);
+			d.matrix().translate(OFFX + 50*i, OFFY + 400 + 50*j);
+			GLOBALSTAGE.addChild(d);
+		}
+	}
+
+// throw "here";
+	// throw "here";
+	var T = R3D.TFTFromUnnormalized(pointsA,pointsB,pointsC, true);
+
+	console.log(T);
+	var a = new V2D(202.5,131);
+	var b = new V2D(224.5,92);
+	// var c = new V2D(420,274)
+
+//points.push([new V2D(),new V2D(),new V2D()]);
+
+	// var a = new V2D(143,197);
+	// var b = new V2D(154,151);
+	// var c = new V2D(158,133);
+
+
+	// var a = new V2D(472,311);
+	// var b = new V2D(452,289);
+	// var c = new V2D(420,274);
+
+
+	// var c = R3D.TFTtransfer(T, a, b);
+	console.log(a);
+	console.log(b);
+	console.log(c);
+
+	var c = R3D.TFTtransfer(T, a, b);
+	console.log(c+"?");
+
+	// var result = R3D.TFTtransferUnknown(T, a, b, c);
+	// a = R3D.TFTtransferUnknown(T, null, b, c);
+	b = R3D.TFTtransferUnknown(T, a, null, c);
+	// c = R3D.TFTtransferUnknown(T, a, b, null);
+
+	// var result = R3D.TFTtransferUnknown(T, c, b, null);
+
+
+// c = result;
+
+var indexA = 0;
+var indexB = 1;
+var indexC = 2;
+
+var color = 0xFF00FF00;
+	var d = new DO();
+	d.graphics().setLine(2.0,color);
+	d.graphics().beginPath();
+	d.graphics().drawCircle(a.x,a.y, 5);
+	d.graphics().strokeLine();
+	d.graphics().endPath();
+	d.matrix().translate(indexA*width,0);
+	GLOBALSTAGE.addChild(d);
+	// B
+	var d = new DO();
+	d.graphics().setLine(2.0,color);
+	d.graphics().beginPath();
+	d.graphics().drawCircle(b.x,b.y, 5);
+	d.graphics().strokeLine();
+	d.graphics().endPath();
+	d.matrix().translate(indexB*width,0);
+	GLOBALSTAGE.addChild(d);
+	// C
+	var d = new DO();
+	d.graphics().setLine(2.0,color);
+	d.graphics().beginPath();
+	d.graphics().drawCircle(c.x,c.y, 5);
+	d.graphics().strokeLine();
+	d.graphics().endPath();
+	d.matrix().translate(indexC*width,0);
+	GLOBALSTAGE.addChild(d);
+
+
+	// console.log(result);
+
+
+throw "here";
 
 	/*
 	var data;
@@ -299,7 +482,7 @@ FTransfer.prototype.imagesLoadComplete = function(o){
 	this._scene = new Scene3DR();
 	var scene = this._scene;
 	// view 1
-	
+
 	var viewA = new View3DR();
 	viewA.putativePoints([ new V3D(0.235,0.075), new V3D(0.587,0.085), new V3D(0.836,0.0336), new V3D(0.430,0.440), new V3D(0.795,0.330), new V3D(0.805,0.430), new V3D(0.215,0.555), new V3D(0.880,0.580), new V3D(0.750,0.670), new V3D(0.235,0.733) ]);
 	data = this._stage.getImageAsFloatRGB(this._inputImages[0]);
@@ -313,9 +496,8 @@ FTransfer.prototype.imagesLoadComplete = function(o){
 	scene.addView(viewB);
 	// link
 	scene.addLink(viewA, viewB);
-	// 
+	//
 	this.all();
 	this.displayData();
 	*/
 }
-

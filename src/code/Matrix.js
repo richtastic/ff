@@ -86,7 +86,9 @@ Matrix.prototype.setDiagonalsFromArray = function(list){
 	return this;
 }
 Matrix.prototype.setSize = function(rows,cols){
-	this._init(rows,cols);
+	if(this._rows!=rows || this._cols!=cols){ // don't do anything if already sized correctly
+		this._init(rows,cols);
+	}
 	return this;
 }
 Matrix.prototype.rows = function(){
@@ -103,11 +105,19 @@ Matrix.prototype.get = function(row,col){
 }
 Matrix.prototype.scale = function(s){
 	var i, j, row = this._rowCount, col = this._colCount;
-	var index = 0, len = list.length;
+	var index = 0;
 	for(j=0;j<row;++j){
-		for(i=0;i<col && index<len;++i){
+		for(i=0;i<col;++i){
 			this._rows[j][i] = this._rows[j][i]*s;
-			++index;
+		}
+	}
+	return this;
+}
+Matrix.prototype.add = function(m){ // assume valid sizes ...
+	var i, j, row = this._rowCount, col = this._colCount;
+	for(j=0;j<row;++j){
+		for(i=0;i<col;++i){
+			this._rows[j][i] = this._rows[j][i] + m._rows[j][i];
 		}
 	}
 	return this;
@@ -682,6 +692,17 @@ Matrix.transpose = function(B, Ain){ // B = A^T
 	if(Ain==undefined){ return C.copy(); }
 	B.copy(C);
 	return B;
+}
+Matrix.prototype.transposeSquare = function(){ // transpose self .. only valid if square
+	var i, j, temp, row = this._rowCount, col = this._colCount;
+	var rows = this._rows;
+	var cols = this._rows;
+	for(j=0;j<row;++j){
+		for(i=j+1;i<col;++i){
+			rows[i][j] = rows[j][i];
+		}
+	}
+	return this;
 }
 Matrix.augment = function(A,B){
 	var rowsA = A._rowCount, rowsB = B._rowCount, colsA = A._colCount, colsB = B._colCount;
@@ -1992,5 +2013,3 @@ Matrix._singularValueDecomposition = function(matrixA, rows,cols, vectorW, matri
 // 11: Eigensystems
 
 // n = rows, m = cols
-
-

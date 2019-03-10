@@ -323,19 +323,53 @@ https://cloud.google.com/appengine/docs/nodejs/
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+- test: Code.intersectRayCircle2D
+
+Code.closestPointLine2D = function(org,dir, point){ // infinite ray and point
+	var bot = V2D.dot(dir,dir);
+	if(bot==0){
+		return new V2D(point.x,point.y);
+	}
+	var t = (V2D.dot(dir,point)-V2D.dot(org,dir))/bot;
+	return new V2D(org.x+t*dir.x,org.y+t*dir.y);
+}
+
+- TFT:
+	- 7 point
+		- last part to get T from P1 P2 P3
+	- nonlinear
+		- e->T
+		- T->e
+	- 6 point
+		- verify?
+	- all Fs?
+		- F23 from 8 points ?
+
+
+- TEST TFTs on test image
+	- 7 point linear
+	- RANSAC
+	- nonlinear?
+		- move epipoles e2 & e3 (e1?)
+		- recompute T from e2 & e3 [6 variables]
+		- check error
+
+
 - get optimizing working for multi-view
 	refineCameraAbsoluteOrientation
 
 
-- get back to surface tesselation (once points are stable at surface)
+- get back to surface tessellation (once points are stable at surface)
 
 - get back to texturing
 
 
-- TFT MATH
-	- testing requires TRACK POINTS, not dense
-
 - Track point logistics
+- MODELING A TRACK
+	- merging / splitting
+	- zooming in / out ?
+	- ...
 
 - TEST getting track points iteratively
 	- initially have dense image pairs

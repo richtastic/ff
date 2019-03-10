@@ -1382,6 +1382,19 @@ Code.arrayRemoveIndexes = function(a, list){
 	}
 	return a;
 }
+Code.subArray = function(b, a, start, count){ // b = a[start,...start+count-1]
+	if(count==undefined){ // a, start, count
+		count = start;
+		start = a;
+		a = b;
+		b = [];
+	}
+	count = Math.min(a.length-start,count);
+	for(var i=0; i<count; ++i){
+		b[i] = a[i+start];
+	}
+	return b;
+}
 
 // Array.prototype.insert = function(i, o){ this.splice(i, 0, o); }
 // Code.copyArray(array)
@@ -4263,29 +4276,45 @@ Code.abs = function(a){
 	}
 	return a;
 }
-Code.arrayVectorSub = function(a,b){
-	var c = Code.newArray(a.length);
+Code.arrayVectorSub = function(c,a,b){
+	if(b===undefined){
+		b = a;
+		a = c;
+		c = Code.newArray(a.length);
+	}
 	for(var i=a.length; i--; ){
 		c[i] = a[i] - b[i];
 	}
 	return c;
 }
-Code.arrayVectorAdd = function(a,b){
-	var c = Code.newArray(a.length);
+Code.arrayVectorAdd = function(c,a,b){ // c = a + b
+	if(b===undefined){
+		b = a;
+		a = c;
+		c = Code.newArray(a.length);
+	}
 	for(var i=a.length; i--; ){
 		c[i] = a[i] + b[i];
 	}
 	return c;
 }
-Code.arrayVectorMul = function(a,b){
-	var c = Code.newArray(a.length);
+Code.arrayVectorMul = function(c,a,b){
+	if(b===undefined){
+		b = a;
+		a = c;
+		c = Code.newArray(a.length);
+	}
 	for(var i=a.length; i--; ){
 		c[i] = a[i] * b[i];
 	}
 	return c;
 }
-Code.arrayVectorDiv = function(a,b){
-	var c = Code.newArray(a.length);
+Code.arrayVectorDiv = function(c,a,b){
+	if(b===undefined){
+		b = a;
+		a = c;
+		c = Code.newArray(a.length);
+	}
 	for(var i=a.length; i--; ){
 		c[i] = a[i] / b[i];
 	}
@@ -4298,18 +4327,20 @@ Code.arrayVectorLength = function(a){
 	}
 	return Math.sqrt(s);
 }
-Code.arrayScale = function(a, s){
+Code.arrayVectorScale = function(a, s){
+	var c = Code.newArray(a.length);
 	for(var i=a.length; i--; ){
-		a[i] = s*a[i];
+		c[i] = s*a[i];
 	}
-	return a;
-}
-Code.arraySub = function(a, s){
-	for(var i=a.length; i--; ){
-		a[i] = a[i] - s;
-	}
-	return a;
-}
+	return c;
+};
+// Code.arrayScale = Code.arrayVectorScale;
+// Code.arraySub = function(a, s){
+// 	for(var i=a.length; i--; ){
+// 		a[i] = a[i] - s;
+// 	}
+// 	return a;
+// }
 Code.arrayClip = function(a, min, max){
 	for(var i=a.length; i--; ){
 		a[i] = Math.min(Math.max(a[i], min),max);
@@ -6045,7 +6076,7 @@ Code.quadraticSolution = function(a,b,c){ // a*x^2 + b*x + c = 0
 		if(b==0){ // singular (vertical)
 			return null;
 		}
-		return -c/b;
+		return [-c/b];
 	}
 	var inside = b*b - 4.0*a*c;
 	if(inside<0){ // complex
@@ -6061,7 +6092,11 @@ Code.quadraticSolution = function(a,b,c){ // a*x^2 + b*x + c = 0
 }
 Code.cubicSolution = function(a,b,c,d){ // a*x^3 + b*x^2 + c*x + d = 0
 	if(a==0){ // quadratic
-		return Code.quadraticSolution(b,c,d);
+		var value = Code.quadraticSolution(b,c,d);
+		if(!Code.isArray(value)){
+			value = [value];
+		}
+		return value;
 	}
 	var A = b/a;
 	var B = c/a;
@@ -7198,7 +7233,7 @@ Code.closestPointLineSegment2D = function(org,dir, point){ // finite ray and poi
 	return new V2D(org.x+t*dir.x,org.y+t*dir.y);
 }
 Code.clipLine2DToRect = function(org,dir, x,y,w,h){
-// Code.clipRayRect2D 
+// Code.clipRayRect2D
 	var eps = 1E-6;
 	var poly = [new V2D(x,y), new V2D(x+w,y), new V2D(x+w,y+h), new V2D(x,y+h)];
 	var inv = dir.copy().scale(-1);
@@ -8035,6 +8070,53 @@ Code.planePlaneIntersection = function(pA,nA, pB,nB){ // infinite plane intersec
 	var b = new V3D(V3D.dot(pA,nA), V3D.dot(pB,nB), V3D.dot(pA,dir));
 	Code.matrix3x3xV3D(b, A, b);
 	return [b, dir];
+}
+Code.intersectRayCircle2D = function(org,dir, cen,rad){ // infinite ray & circle
+	var a = dir.x*dir.x + dir.y*dir.y;
+	var b = 2*(dir.x*org.x + dir.y*org.y - dir.x*cen.x - dir.y*cen.y);
+	var c = org.x*org.x + org.y*org.y + cen.x*cen.x + cen.y*cen.y - 2*(org.x*cen.x + org.y*cen.y) - rad*rad;
+	var r = Code.quadraticSolution(a,b,c);
+	if(r===null){ // imaginary / no
+		return null;
+	}
+	if(r.length==2){
+		a = r[0];
+		b = r[1];
+		if(a!=b){
+			a = new V2D(org.x + a*dir.x, org.y + a*dir.y);
+			b = new V2D(org.x + b*dir.x, org.y + b*dir.y);
+			return [a, b];
+		} // continue to returning non-repeated solution
+	}
+	r = r[0];
+	return [new V2D(org.x + r*dir.x, org.y + r*dir.y)];
+}
+Code.intersectRayCircle2DBoolean = function(org,dir, cen,rad){ // infinite ray & circle checker
+	var p = closestPointLine2D(org,dir, cen);
+	if(p){
+		p = V2D.distanceSquare(p,cen);
+		if(p<=rad*rad){
+			return true;
+		}
+	}
+	return false;
+}
+
+Code.intersectFiniteRayCircle2DBoolean = function(org,dir, cen,rad){ // infinite ray & circle checker
+	var p = closestPointLineSegment2D(org,dir, cen);
+	if(p){
+		// let oToP = V2D.sub(p, org);
+		// let lenDir = dir.length();
+		// let dot = V2D.dot(direction, oToP)/(lenDir*lenDir);
+		// if(dot<0.0 || dot>1.0){ // outside finite ray size
+		// 	return false
+		// }
+		p = V2D.distanceSquare(p,cen);
+		if(p<=rad*rad){
+			return true;
+		}
+	}
+	return false;
 }
 Code.isCCW = function(a,b,c){
 	var ab = V2D.sub(b,a);
