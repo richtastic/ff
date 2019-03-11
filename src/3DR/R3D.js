@@ -386,18 +386,10 @@ R3D.PFromKRT = function(K,R,t){
 R3D.transformFromFundamental = function(pointsA, pointsB, F, Ka,KaInv, Kb,KbInv, M1, forceSolution, log){ // find relative transformation matrix  // points use Fg
 
 return R3D.transformFromFundamental3(pointsA, pointsB, F, Ka,KaInv, Kb,KbInv, M1, forceSolution, log);
-
-
 	M1 = M1 ? M1.getSubMatrix(0,0, 3,4) : new Matrix(3,4).setFromArray([1,0,0,0, 0,1,0,0, 0,0,1,0]);
-	//console.log("M1: \n"+M1);
 	Kb = Kb ? Kb : Ka;
 	var KaInv = Matrix.inverse(Ka);
 	var KbInv = Matrix.inverse(Kb);
-
-		// KaInv = Matrix.transpose(Ka);
-		// KbInv = Matrix.transpose(Kb);
-//	console.log("K: \n"+Ka);
-//	console.log("K^-1: \n"+KaInv);
 
 	/*
 	// FORWARD: ... looks bad
@@ -428,6 +420,7 @@ return R3D.transformFromFundamental3(pointsA, pointsB, F, Ka,KaInv, Kb,KbInv, M1
 		//E = R3D.essentialMatrixNonlinear(E,norm.normalized[0],norm.normalized[1]);
 	E = Matrix.mult(E,norm.forward[1]);
 	E = Matrix.mult(Matrix.transpose(norm.forward[0]),E);
+
 
 //	console.log("INCOMING E [self]:\n"+E);
 
@@ -558,244 +551,6 @@ if(forceSolution){
 	return projection;
 }
 
-
-
-
-
-R3D.transformFromFundamental2 = function(pointsA, pointsB, F, Ka,KaInv, Kb,KbInv, M1, forceSolution, log){ // find relative transformation matrix  // points use F
-	M1 = M1 ? M1.getSubMatrix(0,0, 3,4) : new Matrix(3,4).setFromArray([1,0,0,0, 0,1,0,0, 0,0,1,0]);
-	var M1Full = M1.copy().appendRowFromArray([0,0,0,1]);
-	Kb = Kb ? Kb : Ka;
-	KbInv = KbInv ? KbInv : KaInv;
-	// var KaInv = Matrix.inverse(Ka);
-	// var KbInv = Matrix.inverse(Kb);
-	// FORWARD: ... looks bad
-	var KbT = Matrix.transpose(Kb);
-	var E = Matrix.mult(F,Ka);
-		E = Matrix.mult(KbT,E);
-	/*
-	// FROM SCRATCH
-	// get screen-normalized image points:
-	var eA = [];
-	var eB = [];
-	for(var i=0; i<pointsA.length; ++i){
-		var a = pointsA[i];
-		var b = pointsB[i];
-		a = new V3D(a.x,a.y,1.0);
-		b = new V3D(b.x,b.y,1.0);
-		a = KaInv.multV3DtoV3D(new V3D(), a);
-		b = KbInv.multV3DtoV3D(new V3D(), b);
-		eA[i] = new V2D(a.x,a.y);
-		eB[i] = new V2D(b.x,b.y);
-	}
-
-	// get dimension-normalized. points
-	var norm = R3D.calculateNormalizedPoints([eA,eB]);
-	E = R3D.essentialMatrix(norm.normalized[0],norm.normalized[1]);
-
-		//E = R3D.essentialMatrixNonlinear(E,norm.normalized[0],norm.normalized[1]);
-	E = Matrix.mult(E,norm.forward[1]);
-	E = Matrix.mult(Matrix.transpose(norm.forward[0]),E);
-	*/
-//	console.log("INTERNAL E [self]:\n"+E);
-
-	var diag110 = new Matrix(3,3).setFromArray([1,0,0, 0,1,0, 0,0,0]);
-	var svd, U, S, V, Vt;
-
-	// force D = 1,1,0 ----------------------
-	svd = Matrix.SVD(E);
-	U = svd.U;
-	S = svd.S;
-	V = svd.V;
-	Vt = Matrix.transpose(V);
-
-	// // RE-GET matrix
-	// E = Matrix.mult(diag110,Vt);
-	// E = Matrix.mult(U,E);
-	// // new decomposition
-	// svd = Matrix.SVD(E);
-	// U = svd.U;
-	// S = svd.S;
-	// V = svd.V;
-	// Vt = Matrix.transpose(V);
-
-
-	var W = new Matrix(3,3).setFromArray([0.0, -1.0, 0.0,  1.0, 0.0, 0.0,  0.0, 0.0, 1.0]);
-	var Wt = Matrix.transpose(W);
-	var t = U.getCol(2);
-	var tNeg = t.copy().scale(-1.0);
-	t = t.toArray();
-	tNeg = tNeg.toArray();
-
-
-	// var Z = new Matrix(3,3).setFromArray([0.0, 1.0, 0.0,  -1.0, 0.0, 0.0,  0.0, 0.0, 0.0]);
-
-	// var R1 = Matrix.mult(W, Vt); // U * W * V'
-	// 	R1 = Matrix.mult(U, R1);
-	// var R2 = Matrix.mult(Wt, Vt); // U * W' * V'
-	// 	R2 = Matrix.mult(U, R2);
-
-	// one of 4 possible solutions
-	var possibles = []; // U*W*V | t
-	possibles.push( Matrix.mult(U,Matrix.mult(W, Vt)).appendColFromArray(t   ).appendRowFromArray([0,0,0,1]) );
-	possibles.push( Matrix.mult(U,Matrix.mult(W, Vt)).appendColFromArray(tNeg).appendRowFromArray([0,0,0,1]) );
-	possibles.push( Matrix.mult(U,Matrix.mult(Wt,Vt)).appendColFromArray(t   ).appendRowFromArray([0,0,0,1]) );
-	possibles.push( Matrix.mult(U,Matrix.mult(Wt,Vt)).appendColFromArray(tNeg).appendRowFromArray([0,0,0,1]) );
-
-	for(var i=0;i<possibles.length;++i){
-		var m = possibles[i];
-		var r = m.getSubMatrix(0,0, 3,3);
-		var t = m.getSubMatrix(0,3, 3,1);
-		var det = r.det();
-		if(det<0){ // ONLY WANT TO FLIP ROTATION MATRIX - NOT FULL MATRIX
-			r.scale(-1.0);
-		}
-		var r = R3D.rotationFromApproximate(r);
-		var trans = r.copy().appendColFromArray(t.toArray());
-		trans.appendRowFromArray([0,0,0,1]);
-		possibles[i] = trans;
-	}
-
-	// find single matrix that results in 3D point in front of both cameras Z>0
-	var projection = null;
-	var countsTotal = Code.newArrayZeros(possibles.length);
-
-
-
-
-
-
-var track = [[],[],[],[]];
-	var pAx = new Matrix(3,3);
-	var pBx = new Matrix(3,3);
-	var pA3 = new V3D();
-	var pB3 = new V3D();
-	for(var index=0; index<pointsA.length; ++index){
-		var pA = pointsA[index];
-		var pB = pointsB[index];
-		pA3.set(pA.x, pA.y, 1.0);
-		pB3.set(pB.x, pB.y, 1.0);
-		KaInv.multV3DtoV3D(pA3, pA3);
-		KbInv.multV3DtoV3D(pB3, pB3);
-		Matrix.crossMatrixFromV3D(pAx,pA3);
-		Matrix.crossMatrixFromV3D(pBx,pB3);
-		for(var i=0; i<possibles.length; ++i){
-			var possible = possibles[i];
-			var possibleInv = Matrix.inverse(possible);
-			var M2 = possibleInv.getSubMatrix(0,0, 3,4);
-			var pAM = Matrix.mult(pAx,M1);
-			var pBM = Matrix.mult(pBx,M2);
-
-			var A = pAM.copy().appendMatrixBottom(pBM);
-			svd = Matrix.SVD(A);
-			var P1 = svd.V.getCol(3);
-			var p1Norm = new V4D().fromArray(P1.toArray());
-			p1Norm.homo(); // THIS IS THE ACTUAL 3D POINT - LOCATION
-			var P1est = new Matrix(4,1).setFromArray( p1Norm.toArray() );
-			var P1est = P1;
-			// var P2 = Matrix.mult(possibleInv,P1est);
-			var P2 = Matrix.mult(possible,P1est);
-			var p2Norm = new V4D().fromArray(P2.toArray());
-			p2Norm.homo(); // not necessary?
-			countsTotal[i] += Math.sign(p1Norm.z) + Math.sign(p2Norm.z);
-
-
-
-track[i].push(p1Norm);
-		}
-	}
-
-	var countsTotal2 = [0,0,0,0];
-	for(var i=0; i<possibles.length; ++i){
-		var possible = possibles[i];
-		var possibleInv = Matrix.inverse(possible);
-		var M1 = M1Full;
-		// var M2 = possibleInv;
-		var M2 = possible;
-		var points3D = R3D.triangulationDLT(pointsA,pointsB, M1,M2, Ka, Kb, KaInv, KbInv);
-		for(var j=0; j<points3D.length; ++j){
-			var point3D = points3D[j];
-			countsTotal2[i] += Math.sign(point3D.z);
-		}
-		// console.log(points3D);
-	}
-
-
-
-
-	countsTotal = countsTotal2;
-if(log){
-console.log(countsTotal,"of",pointsA.length);
-console.log(countsTotal2);
-console.log(track);
-}
-
-
-
-	var minCountUnder = null;
-	var maxCountOver = null;
-	var minUnder = null;
-	var pickedIndex = -1;
-
-	var maximumTotalCount = pointsA.length * 2;
-	var bestTotalCount = Code.max(countsTotal);
-	var bestProjections = [];
-if(log){
-console.log("bestTotalCount: "+bestTotalCount);
-}
-	var minimumTransformMatchCountR = 10;
-	forceSolution = (bestTotalCount>=2*minimumTransformMatchCountR && forceSolution);
-	for(var i=0; i<possibles.length; ++i){
-		var possible = possibles[i];
-		if(countsTotal[i]==bestTotalCount){
-			if(bestTotalCount==maximumTotalCount || forceSolution){
-if(log){
-console.log(" => use: "+i);
-}
-				bestProjections.push(possible);
-				// var possibleInv = Matrix.inverse(possible);
-				// bestProjections.push(possibleInv);
-			}
-		}
-	}
-if(log){
-	console.log(countsTotal);
-	console.log(bestProjections.length);
-	console.log(bestProjections);
-}
-	// if multiple good matches, choose between
-	if(bestProjections.length>0){
-		// if(bestProjections.length==1){
-		// 	return bestProjections[0];
-		// }
-		var lowestError = null;
-		var bestProjection = null;
-		for(var i=0; i<bestProjections.length; ++i){
-			var M1 = M1Full;
-			var M2 = bestProjections[i];
-			var points3D = R3D.triangulationDLT(pointsA,pointsB, M1,M2, Ka, Kb, KaInv, KbInv);
-if(log){
-	// console.log(M1+"");
-	// console.log(M2+"");
-console.log(points3D); // NEGATIVE HERE
-}
-			var error = R3D.reprojectionErrorList(points3D, pointsA, pointsB, M1,M2, Ka,Kb);
-			if(error){
-				error = error["error"];
-				if(lowestError===null || error<lowestError){
-					lowestError = error;
-					bestProjection = M2;
-				}
-			}
-		}
-		return bestProjection;
-	}
-	return null;
-}
-
-
-
-
 R3D.transformFromFundamental3 = function(pointsA, pointsB, F, Ka,KaInv, Kb,KbInv, M1, forceSolution, log){ // find relative transformation matrix  // points use F
 log = false;
 	M1 = M1 ? M1.getSubMatrix(0,0, 3,4) : new Matrix(3,4).setFromArray([1,0,0,0, 0,1,0,0, 0,0,1,0]);
@@ -867,6 +622,7 @@ log = false;
 		var M1 = M1Full;
 		var M2 = possible; // F-POINTS
 		var points3D = R3D.triangulationDLT(pointsA,pointsB, M1,M2, Ka, Kb, KaInv, KbInv); // possibles are EXTRINSIC MATRICES
+// console.log(points3D)
 		var distortions = null;
 		for(var j=0; j<points3D.length; ++j){ // project point to both cameras:
 			var point3D = points3D[j];
@@ -876,11 +632,11 @@ log = false;
 			countsTotal[i] += p2D2 ? 1 : -1;
 		}
 	}
-	// console.log(countsTotal);
+	console.log(countsTotal);
 	var bestTotalCount = Code.max(countsTotal);
-	if(bestTotalCount>=8){
+	if(bestTotalCount>=0){ // ?
 		var bestProjections = [];
-		var minimumTransformMatchCountR = 10;
+		// var minimumTransformMatchCountR = 10; // ?
 		for(var i=0; i<possibles.length; ++i){
 			var possible = possibles[i];
 			if(countsTotal[i]==bestTotalCount){
@@ -892,6 +648,7 @@ log = false;
 			return bestProjection;
 		}
 	}
+	console.log("none");
 	return null;
 }
 
@@ -1712,81 +1469,69 @@ R3D.TFTRANSACFromPoints = function(pointsAIn,pointsBIn,pointsCIn, errorPosition,
 
 R3D._gdTFT = function(args, x, isUpdate, descriptive){
 	if(isUpdate){
-		///
-		return;
+		// return;
 	}
-	/*
-	if(Code.isNaN(x[0])){
-		throw "x is NaN";
-	}
-	if(isUpdate){
-		var Ffwd = new Matrix(3,3).fromArray(x);
-		Ffwd = R3D.forceRank2F(Ffwd);
-		Code.copyArray(x,Ffwd.toArray());
-		return;
-	}
+	// args
 	var pointsA = args[0];
 	var pointsB = args[1];
-
-	var i, len = pointsA.length;
-	var pointA, pointB, lineA=new V3D(), lineB=new V3D();
-	var Frev = R3D._gdFun_B, Ffwd = R3D._gdFun_A;
-	var orgA = new V2D(), orgB = new V2D(), dirA = new V2D(), dirB = new V2D();
-	Ffwd.setFromArray(x);
-	Ffwd = R3D.forceRank2F(Ffwd);
-	Matrix.transpose(Frev, Ffwd);
-
-	var errorA = 0;
-	var errorB = 0;
-var pntA = new V3D();
-var pntB = new V3D();
-	for(i=0;i<len;++i){
-		pointA = pointsA[i];
-		pointB = pointsB[i];
-pntA.set(pointA.x,pointA.y,1.0);
-pntB.set(pointB.x,pointB.y,1.0);
-pointA = pntA;
-pointB = pntB;
-		Ffwd.multV3DtoV3D(lineA, pointA);
-		Frev.multV3DtoV3D(lineB, pointB);
-		Code.lineOriginAndDirection2DFromEquation(orgA,dirA, lineA.x,lineA.y,lineA.z);
-		Code.lineOriginAndDirection2DFromEquation(orgB,dirB, lineB.x,lineB.y,lineB.z);
-		onA = Code.closestPointLine2D(orgA,dirA, pointB);
-		onB = Code.closestPointLine2D(orgB,dirB, pointA);
-		var distA = V2D.distance(onB,pointA);
-		var distB = V2D.distance(onA,pointB);
-		errorA += distA*distA;
-		errorB += distB*distB;
+	var pointsC = args[2];
+	var A = args[3];
+	// x
+	var epipole21 = new V3D(x[0],x[1],x[2]);
+	var epipole31 = new V3D(x[3],x[4],x[5]);
+	//var T = R3D.TFTFromEpipoles(epipole21,epipole31);
+	var t = R3D._TFTinfoEpipoles(A,epipole21,epipole31);
+		t = t["T"];
+	// find error:
+	var error = R3D.tftErrorList(t,pointsA,pointsB,pointsC);
+		error = error["error"];
+	if(isUpdate){
+	console.log(error);
 	}
-	var error = errorA + errorB;
-	if(descriptive===true){
-		return {"error":error, "A":errorA, "B":errorB}
-	}
-	*/
 	return error;
 }
-R3D.TFTNonlinearGD = function(TFT,pointsA,pointsB,pointsC){
-	var epipoles = R3D.getEpipolesFromTFT(TFT);
-	var xVals = [epipoles,go,here];
-	var args = [pointsA,pointsB,pointsC];
+
+R3D.TFTNonlinearGD = function(TFT,pointsA,pointsB,pointsC){ // not really useful to call this with an existing T, because it has to be un-normalized? & re-approximated ...
+	// turn into A matrix -- can be VERY BIG with all points .. may want subsampling
+	var pointsANorm = R3D.calculateNormalizedPoints([pointsA]);
+	var pointsBNorm = R3D.calculateNormalizedPoints([pointsB]);
+	var pointsCNorm = R3D.calculateNormalizedPoints([pointsC]);
+	var H1 = pointsANorm.forward[0];
+	var H2 = pointsBNorm.forward[0];
+	var H3 = pointsCNorm.forward[0];
+	var H1i = pointsANorm.reverse[0];
+	var H2i = pointsBNorm.reverse[0];
+	var H3i = pointsCNorm.reverse[0];
+	// normalize T:
+	var T = R3D.TFTforwardMultiply(TFT, H1,H2,H3, H1i,H2i,H3i);
+	var info = R3D.trifocalTensor7(pointsANorm.normalized[0],pointsBNorm.normalized[0],pointsCNorm.normalized[0], true);
+	var A = info["A"];
+	// initial variable points
+	var epipoles = R3D.getEpipolesFromTFT(T);
+	var epipole21 = epipoles["B"];
+	var epipole31 = epipoles["C"];
+	// input data
+	var xVals = [epipole21.x,epipole21.y,epipole21.z, epipole31.x,epipole31.y,epipole31.z];
+	var args = [pointsANorm["normalized"][0],pointsBNorm["normalized"][0],pointsCNorm["normalized"][0], A];
+	var result = null;
 	try {
-		result = Code.gradientDescent(R3D._gdTFT, args, xVals, null, 100, 1E-10);
+		result = Code.gradientDescent(R3D._gdTFT, args, xVals, null, 100, 1E-16); // normalized data is smaller
 	}catch(e){
 		throw "got e: "+e;
 	}
-	xVals = result["x"];
-	epipoles = fromArray(xVals);
-	var T = R3D.TFTFromEpipoles(epipoles);
+	var x = result["x"];
+	var epipole21 = new V3D(x[0],x[1],x[2]);
+    var epipole31 = new V3D(x[3],x[4],x[5]);
+    var t = R3D._TFTinfoEpipoles(A,epipole21,epipole31);
+		t = t["T"];
+	T = new Tensor(3,3,3,t);
+	// de-normalize T
+	T = R3D.TFTreverseMultiply(T, H1,H2,H3, H1i,H2i,H3i);
 	return T;
 }
 R3D.TFTNonlinear = function(TFT,pointsA,pointsB,pointsC){
-	try{
-		TFT = R3D.TFTNonlinearGD(TFT,pointsA,pointsB,pointsC);
-	}catch(e){
-		console.log("error GD: "+e+"\n"+TFT);
-		// fundamental = R3D.fundamentalMatrixNonlinearLM(fundamental,pointsA,pointsB);
-	}
-	// fundamental = R3D.fundamentalMatrixNonlinearLM(fundamental,pointsA,pointsB);
+	TFT = R3D.TFTNonlinearGD(TFT,pointsA,pointsB,pointsC);
+	// TFT = R3D.TFTMatrixNonlinearLM(fundamental,pointsA,pointsB);
 	return TFT;
 }
 R3D.TFTto3 = function(T){
@@ -1807,9 +1552,9 @@ R3D.TFTforwardMultiply = function(T, H1,H2,H3, H1i,H2i,H3i){ // FORWARD: Ti = H2
 	var T2 = info["T2"];
 	var T3 = info["T3"];
 	var H3T = Matrix.transpose(H3);
-	var Z1 = R3D._TFToriginalPoints(H2, H1i.get(1,1),H1i.get(2,1),H1i.get(3,1), T1,T2,T3, H3T);
-	var Z2 = R3D._TFToriginalPoints(H2, H1i.get(1,2),H1i.get(2,2),H1i.get(3,2), T1,T2,T3, H3T);
-	var Z3 = R3D._TFToriginalPoints(H2, H1i.get(1,3),H1i.get(2,3),H1i.get(3,3), T1,T2,T3, H3T);
+	var Z1 = R3D._TFToriginalPoints(H2, H1i.get(0,0),H1i.get(1,0),H1i.get(2,0), T1,T2,T3, H3T);
+	var Z2 = R3D._TFToriginalPoints(H2, H1i.get(0,1),H1i.get(1,1),H1i.get(2,1), T1,T2,T3, H3T);
+	var Z3 = R3D._TFToriginalPoints(H2, H1i.get(0,2),H1i.get(1,2),H1i.get(2,2), T1,T2,T3, H3T);
 	return R3D.TFTnormalizeScale(Z1,Z2,Z3);
 }
 R3D.TFTreverseMultiply = function(T, H1,H2,H3, H1i,H2i,H3i){ // INVERSE: Ti = H2^-1 * Sum_j( H1(j,i) * Tj ) * H3^-1^T
@@ -1819,23 +1564,14 @@ R3D.TFTreverseMultiply = function(T, H1,H2,H3, H1i,H2i,H3i){ // INVERSE: Ti = H2
 	if(!H3i){
 		H3i = Matrix.inverse(H3);
 	}
-
 	var info = R3D.TFTto3(T);
 	var T1 = info["T1"];
 	var T2 = info["T2"];
 	var T3 = info["T3"];
-	console.log("T BEFORE: ");
-	console.log(T1+"\n",T2+"\n",T3+"\n");
 	var H3iT = Matrix.transpose(H3i);
-
-	console.log("H BEFORE: ");
-	console.log(H1+"\n",H2i+"\n",H3iT+"\n");
-
 	var Z1 = R3D._TFToriginalPoints(H2i, H1.get(0,0),H1.get(1,0),H1.get(2,0), T1,T2,T3, H3iT);
 	var Z2 = R3D._TFToriginalPoints(H2i, H1.get(0,1),H1.get(1,1),H1.get(2,1), T1,T2,T3, H3iT);
 	var Z3 = R3D._TFToriginalPoints(H2i, H1.get(0,2),H1.get(1,2),H1.get(2,2), T1,T2,T3, H3iT);
-	console.log("Z AFTER: ");
-	console.log(Z1+"\n",Z2+"\n",Z3+"\n");
 	return R3D.TFTnormalizeScale(Z1,Z2,Z3);
 }
 R3D._TFToriginalPoints = function(A,s1,s2,s3,T1,T2,T3,B){
@@ -1860,7 +1596,6 @@ R3D.TFTnormalizeScale = function(Z1,Z2,Z3){
 	// normalize to 1.0 = largest element ... does sign matter ?
 	var max = Code.max(elements);
 	Code.arrayVectorScale(elements,1.0/max);
-	console.log(elements);
 	var T = new Tensor(3,3,3).fromArray(elements);
 	return T;
 }
@@ -1869,7 +1604,6 @@ R3D.TFTFromUnnormalized = function(pointsA,pointsB,pointsC, skipNonlinear){
 	var pointsANorm = R3D.calculateNormalizedPoints([pointsA]);
 	var pointsBNorm = R3D.calculateNormalizedPoints([pointsB]);
 	var pointsCNorm = R3D.calculateNormalizedPoints([pointsC]);
-// console.log(pointsANorm,pointsBNorm,pointsCNorm)
 	var T = R3D.trifocalTensor(pointsANorm.normalized[0],pointsBNorm.normalized[0],pointsCNorm.normalized[0]);
 	// de-normalize T
 	var H1 = pointsANorm.forward[0];
@@ -1878,22 +1612,23 @@ R3D.TFTFromUnnormalized = function(pointsA,pointsB,pointsC, skipNonlinear){
 	var H1i = pointsANorm.reverse[0];
 	var H2i = pointsBNorm.reverse[0];
 	var H3i = pointsCNorm.reverse[0];
-	console.log("BEFORE :\n"+T);
-	console.log(H1+"\n"+H2+"\n"+H3+"\n"+H1i+"\n"+H2i+"\n"+H3i+"\n")
+	// console.log("BEFORE :\n"+T);
+	// console.log(H1+"\n"+H2+"\n"+H3+"\n"+H1i+"\n"+H2i+"\n"+H3i+"\n")
 	// combine:
 	T = R3D.TFTreverseMultiply(T, H1,H2,H3, H1i,H2i,H3i);
-	console.log("AFTER :\n"+T);
+	// console.log("AFTER :\n"+T);
 	if(!skipNonlinear){
 		T = R3D.TFTNonlinear(T, pointsA, pointsB, pointsC);
 	}
 	return T;
 }
 
-R3D.trifocalTensor7 = function(pointsA,pointsB,pointsC){ // pre-normalize points before using this, only operates on 2D points
+R3D.trifocalTensor7 = function(pointsA,pointsB,pointsC, getInfo){ // pre-normalize points before using this, only operates on 2D points
 	if(pointsA.length<7){ return null; }
 	var a, b, c, i, svd, U, S, V;
 	var len = pointsA.length;
-	var rows = len*4;
+	// var rows = len*4;
+	var rows = len*9;
 	var A = new Matrix(rows,27);
 	for(i=0; i<len; ++i){
 		a = pointsA[i];
@@ -1905,35 +1640,70 @@ R3D.trifocalTensor7 = function(pointsA,pointsB,pointsC){ // pre-normalize points
 		var by = b.y;
 		var cx = c.x;
 		var cy = c.y;
+						// T1_00 | T1_01 | T1_02 | T1_10 | T1_11 | T1_12 | T1_20 | T1_21 | T1_22  -  T2_00 | T2_01 | T2_02 | T2_10 | T2_11 | T2_12 | T2_20 | T2_21 | T2_22  -  T3_00 | T3_01 | T3_02 | T3_10 | T3_11 | T3_12 | T3_20 | T3_21 | T3_22  -
+A.setRowFromArray(i*9+0, [ 0,      0,      0,      0,     -ax,     cy*ax,  0,      by*ax, -by*cy*ax, 0,      0,      0,      0,     -ay,     cy*ay,  0,      by*ay, -by*cy*ay, 0,      0,      0,      0,     -1,      cy,     0,      by,    -by*cy  ]); // 0,0
+A.setRowFromArray(i*9+1, [ 0,      0,      0,      ax,     0,     -cx*ax, -by*ax,  0,     by*cx*ax,  0,      0,      0,      ay,     0,     -cx*ay, -by*ay,  0,      by*cx*ay, 0,      0,      0,      1,      0,     -cx,     -by,    0,      by*cx  ]); // 0,1
+A.setRowFromArray(i*9+2, [ 0,      0,      0,     -cy*ax,  cx*ax,  0,    by*cy*ax,-by*cx*ax,0,       0,      0,      0,     -cy*ay,  cx*ay,  0,    by*cy*ay,-by*cx*ay,0,       0,      0,      0,      -cy,    cx,     0,      by*cy, -by*cx,  0      ]); // 0,2
+A.setRowFromArray(i*9+3, [ 0,      ax,    -cy*ax,  0,      0,      0,      0,     -bx*ax,bx*cy*ax,   0,      ay,   -cy*ay,   0,      0,      0,      0,     -bx*ay, bx*cy*ay,  0,     1,      -cy,     0,      0,      0,      0,     -bx,     bx*cy  ]); // 1,0
+A.setRowFromArray(i*9+4, [-ax,     0,      cx*ax,  0,      0,      0,      bx*ax,  0,    -bx*cx*ax, -ay,     0,     cx*ay,   0,      0,      0,      bx*ay,  0,    -bx*cx*ay, -1,      0,      cx,     0,      0,      0,      bx,     0,     -bx*cx  ]); // 1,1
+A.setRowFromArray(i*9+5, [ cy*ax, -cx*ax,  0,      0,      0,      0,    -bx*cy*ax,bx*cx*ax,0,        cy*ay,  -cx*ay, 0,     0,      0,      0,   -bx*cy*ay,bx*cx*ay,0,        cy,    -cx,     0,      0,      0,      0,     -bx*cy,  bx*cx,  0      ]); // 1,2
+A.setRowFromArray(i*9+6, [ 0,     -by*ax, by*cy*ax,0,      bx*ax,-bx*cy*ax,0,      0,      0,        0,     -by*ay, by*cy*ay,0,      bx*ay,-bx*cy*ay,0,      0,      0,        0,     -by,     by*cy,  0,      bx,    -bx*cy,  0,      0,      0      ]); // 2,0
+A.setRowFromArray(i*9+7, [ by*ax,  0,   -by*cx*ax,-bx*ax,  0,     bx*cx*ax,0,      0,      0,        by*ay,  0,    -by*cx*ay,-bx*ay, 0,     bx*cx*ay,0,      0,      0,        by,     0,     -by*cx, -bx,     0,      bx*cx,  0,      0,      0      ]); // 2,1
+A.setRowFromArray(i*9+8, [-by*cy*ax,by*cx*ax,0,    bx*cy*ax,-bx*cx*ax,0,   0,      0,      0,      -by*cy*ay,by*cx*ay,0,   bx*cy*ay,-bx*cx*ay,0,     0,      0,      0,       -by*cy, by*cx,   0,      bx*cy, -bx*cx,  0,      0,      0,      0      ]); // 2,2
+/*
 		A.setRowFromArray(i*4+0, [ax,0,-ax*bx, 0,0,0,       -ax*cx,0,ax*bx*cx,  ay,0,-bx*ay, 0,0,0,       -cx*ay,0,bx*cx*ay,  1,0,-bx, 0,0,0,   -cx,0,bx*cx]);
 		A.setRowFromArray(i*4+1, [0,ax,-ax*by, 0,0,0,       0,-ax*cx,ax*cx*by,  0,ay,-ay*by, 0,0,0,       0,-cx*ay,cx*ay*by,  0,1,-by, 0,0,0,   0,-cx,cx*by]);
 		A.setRowFromArray(i*4+2, [0,0,0,       ax,0,-ax*bx, -ax*cy,0,ax*bx*cy,  0,0,0,       ay,0,-bx*ay, -ay*cy,0,bx*ay*cy,  0,0,0,   1,0,-bx, -cy,0,bx*cy]);
 		A.setRowFromArray(i*4+3, [0,0,0,       0,ax,-ax*by, 0,-ax*cy,ax*by*cy,  0,0,0,       0,ay,-ay*by, 0,-ay*cy,ay*by*cy,  0,0,0,   0,1,-by, 0,-cy,by*cy]);
+*/
 	} // get the 27 parameters for T
+	var T = null;
+	if(getInfo){ // only need A
+		return {"T":T, "A":A};
+	}
 	var svd = Matrix.SVD(A);
 	var t = svd["V"].colToArray(26);
-	var T = new Tensor(3,3,3).fromArray(t);
+	var T = new Tensor(3,3,3,t);
 	// T may be inconsistent: needs to be upgraded to valid TFT
 	var epipoles = R3D.getEpipolesFromTFT(T);
 	var epipole21 = epipoles["B"];
 	var epipole31 = epipoles["C"];
-
-	//
-	throw "here";
-// ????
-/*
-epi31 = [1;2;3];
-epi21 = [4;5;6];
-E=[  kron(  eye(3), kron(epi31,eye(3))  ),    -kron(eye(9),epi21)];
-
-// 27 x 18
-*/
-
-	// create tensor
-	var T = new Tensor([3,3,3]);
-	// T.fromArray(???);
-	console.log(T);
+	var t = R3D._TFTinfoEpipoles(A,epipole21,epipole31);
+		t = t["T"];
+	T.fromArray(t);
 	return T;
+}
+R3D._TFTinfoEpipoles = function(A,epipole21,epipole31){
+	var e21 = epipole21.toArray();
+	var e31 = epipole31.toArray();
+	// E : 27x18 | t = E*a
+	var E = new Matrix(27,18);
+	for(var i=0; i<3; ++i){
+		for(var j=0; j<3; ++j){
+			for(var k=0; k<3; ++k){
+				E.set(9*i + 3*j + k,     3*i + j,  e31[k]);
+				E.set(9*i + 3*j + k, 9 + 3*i + k, -e21[j]);
+			}
+		}
+	}
+	// minimize || A*E*a || ; eps = A*E*a
+	var t = R3D._leastSquaresAB(A,E, 18);
+	return {"T":t};
+}
+R3D._leastSquaresAB = function(A,B,cols){ // min ||A*x|| ; ||x|| = 1 & x = ||G(x)||
+	var svd = Matrix.SVD(B);
+	var U = svd["U"];
+	if(cols!==undefined && U.cols()>cols){
+		U = U.getSubMatrix(0,0, U.rows(),cols);
+	}
+	var C = Matrix.mult(A,U);
+	svd = Matrix.SVD(C);
+	var V = svd["V"];
+	var last = V.getColAsArray(V.cols()-1);
+	last = new Matrix(last.length,1).fromArray(last);
+	var a = Matrix.mult(U, last);
+		a = a.toArray();
+	return a;
 }
 R3D.trifocalTensor6 = function(pointsA,pointsB,pointsC){
 	if(pointsA.length<6 || pointsB.length<6 || pointsC.length<6){
@@ -2039,15 +1809,15 @@ R3D.trifocalTensor6 = function(pointsA,pointsB,pointsC){
 		Code.arrayVectorAdd(sum,sum, v5);
 		Code.arrayVectorAdd(sum,sum, v6);
 	// solve for alpha beta gamma delta for each view's camera
-console.log(sum);
+// console.log(sum);
 	var roots = Code.cubicSolution(sum[0],sum[1],sum[2],sum[3]); // a*x^3 + b*x^2 + c*x + d = 0
-console.log("CUBIC: "+roots);
+// console.log("CUBIC: "+roots);
 	var TFTs = [];
 	for(var s=0; s<roots.length; ++s){ // up to 3 solutions
 		var alpha = roots[s];
 		console.log(s+": "+alpha);
 		var T = Code.arrayVectorAdd(t1,Code.arrayVectorScale(t2,alpha));
-console.log("T: "+T);
+// console.log("T: "+T);
 		// TODO: DIVISION CHECKS
 		var X = (T[3]-T[4])/(T[1]-T[2]);
 		var Y = (T[3])/(T[0]-T[2]);
@@ -2083,10 +1853,6 @@ console.log("T: "+T);
 		var P1 = Ps[0];
 		var P2 = Ps[1];
 		var P3 = Ps[2];
-		// console.log("P1: ");
-		// console.log(P1+"");
-		// console.log(P2+"");
-		// console.log(P3+"");
 		// convert from local P1 frame to canonical P1 = [I|0]
 		var H = P1.copy();
 		H.appendRowFromArray( cross4(H.rowToArray(0), H.rowToArray(1), H.rowToArray(2)) );
@@ -2094,10 +1860,6 @@ console.log("T: "+T);
 		P1 = Matrix.mult(P1,H);
 		P2 = Matrix.mult(P2,H);
 		P3 = Matrix.mult(P3,H);
-		// console.log("P2: ");
-		// console.log(P1+"");
-		// console.log(P2+"");
-		// console.log(P3+"");
 		var TFT = R3D.TFTFromCameraMatrices(P1,P2,P3);
 		TFTs.push(TFT);
 	}
@@ -2124,7 +1886,7 @@ R3D.trifocalTensor = function(pointsA,pointsB,pointsC){
 	}
 	return R3D.trifocalTensor7(pointsA,pointsB,pointsC);
 }
-
+/*
 R3D.TFTtransfer = function(T, pA, pB){ // pC = T ... pA, pB
 	// TODO: SIMPLIFY to like 9 lines of code w/o loops
 	pA = [pA.x,pA.y,1.0];
@@ -2146,6 +1908,7 @@ R3D.TFTtransfer = function(T, pA, pB){ // pC = T ... pA, pB
 	}
 	return new V2D(pC[0]/pC[2],pC[1]/pC[2]);
 }
+*/
 R3D.TFTtransferBCtoA = function(T, b, c){
 	return R3D.TFTtransferUnknown(T,null,b,c);
 }
@@ -2159,7 +1922,10 @@ R3D.TFTtransferUnknown = function(T, a, b, c){ // solve for missing item using l
 	var A = null;
 	var rows = 9;
 	var cols = 3;
-	var t = T.toArray();
+	var t = T;
+	if(!Code.isArray(t)){
+		t = t.toArray();
+	}
 	// T1
 	var T1_00 = t[0];  var T1_01 = t[1];  var T1_02 = t[2];
 	var T1_10 = t[3];  var T1_11 = t[4];  var T1_12 = t[5];
@@ -2207,9 +1973,7 @@ R3D.TFTtransferUnknown = function(T, a, b, c){ // solve for missing item using l
 		return null;
 	}
 	var svd = Matrix.SVD(A);
-	var x = svd.V.colToArray(2);
-	// console.log(svd.V+"")
-	// console.log(x+"")
+	var x = svd["V"].colToArray(2);
 	if(x[2]==0){
 		return null;
 	}
@@ -2225,7 +1989,7 @@ R3D.tftErrorList = function(T,pointsA,pointsB,pointsC, summary){
 		var pA = pointsA[i];
 		var pB = pointsB[i];
 		var pC = pointsC[i];
-		var error = R3D.tftError(T, pA, pB, pC)
+		var error = R3D.tftError(T, pA, pB, pC);
 		if(error){
 			errorTotal += error["error"];
 			if(summary){
@@ -2244,22 +2008,107 @@ R3D.tftErrorList = function(T,pointsA,pointsB,pointsC, summary){
 }
 //R3D.tftError = function(Fab,Fba, Fac,Fca, Fbc,Fcb, pA, pB, pC){ // T: 3-way F errors
 R3D.tftError = function(T, pA, pB, pC){ // T: 3-way F errors
-	var c = R3D.TFTtransfer(T,pA,pB);
-	if(!c){
+	var a = R3D.TFTtransferBCtoA(T, pB, pC);
+	var b = R3D.TFTtransferACtoB(T, pA, pC);
+	var c = R3D.TFTtransferABtoC(T, pA, pB);
+	if(!a || !b || !c){
 		return null;
 	}
-	var distance = V2D.distance(c,pC); 	// var dd = V2D.distanceSquare(c,pC);
+	// var distanceA = V2D.distance(a,pA);
+	// var distanceB = V2D.distance(b,pB);
+	// var distanceC = V2D.distance(c,pC);
+	var distanceA = V2D.distanceSquare(a,pA);
+	var distanceB = V2D.distanceSquare(b,pB);
+	var distanceC = V2D.distanceSquare(c,pC);
+	// var distance = (distanceA + distanceB + distanceC)/3.0;
+	var distance = (distanceA + distanceB + distanceC);
 	return {"error":distance};
 }
-R3D.cameraMatricesFromTFT = function(T, Ka,Kb,Kc, Kai,Kbi,Kci){ // EXTRINSICS
-
-	var T = R3D.TFTreverseMultiply(T, Ka,Kb,Kc, Kai,Kbi,Kci);
-
+R3D.projectiveCameraMatricesFromTFT = function(T){
 	var epipoles = R3D.getEpipolesFromTFT(T);
 	var epipole21 = epipoles["B"];
 	var epipole31 = epipoles["C"];
+	// A
+	var P1 = new Matrix(3,4);
+		P1.set(0,0, 1.0);
+		P1.set(1,1, 1.0);
+		P1.set(2,2, 1.0);
+	// B
+	var P2 = new Matrix(3,4);
 
-	throw "HERE"
+	// C
+	var P3 = new Matrix(3,4);
+
+	throw "TODO";
+	return {"A":P1, "B":P2, "C":P3};
+}
+R3D.cameraMatricesFromTFT = function(T, pointsA,pointsB,pointsC, Ka,Kb,Kc, Kai,Kbi,Kci){
+	var KaInv = Kai!==undefined ? Kai : Matrix.inverse(Ka);
+	var KbInv = Kbi!==undefined ? Kbi : Matrix.inverse(Kb);
+	var KcInv = Kci!==undefined ? Kci : Matrix.inverse(Kc);
+	// var T = R3D.TFTreverseMultiply(T, Ka,Kb,Kc, Kai,Kbi,Kci);
+	// R3D.projectiveCameraMatricesFromTFT
+	var fun = R3D.fundamentalsFromTFT(T);
+	var Fab = fun["AB"];
+	var Fac = fun["AC"];
+	console.log(Fab+"");
+	console.log(Fac+"");
+	// Fac.scale(-1);
+	// TODO: only use some subset of points to estimate best one:
+
+	var Pa = new Matrix(4,4).identity();
+	var Pb = R3D.transformFromFundamental(pointsA,pointsB, Fab, Ka,KaInv, Kb,KbInv);
+	var Pc = R3D.transformFromFundamental(pointsA,pointsC, Fac, Ka,KaInv, Kc,KcInv);
+	var tb = R3D.translationFromCamera(Pb);
+	var tc = R3D.translationFromCamera(Pc);
+	var Rb = Pb.getSubMatrix(0,0,3,3);
+	var Rc = Pc.getSubMatrix(0,0,3,3);
+// console.log(tb.length(),tc.length())
+
+	// Pab & Pac have (likely) different baseline scale, scale Pac to match Pab
+	// var i = 0;
+	var sumTop = 0;
+	var sumBot = 0;
+console.log("summing");
+	for(var i=0; i<pointsA.length; ++i){
+		var pointA = pointsA[i];
+		var pointB = pointsB[i];
+		var pointC = pointsC[i];
+		//var point3D =  R3D.triangulationDLT(pointsA,pointsB, M1,M2, Ka, Kb, KaInv, KbInv);
+		var point3DAB = R3D.triangulatePointDLT(pointA,pointB, Pa,Pb, KaInv, KbInv);
+		// console.log(point3DAB);
+		var point3DAC = Rc.multV3DtoV3D(point3DAB);
+		// var point3DAC = R3D.triangulatePointDLT(pointA,pointC, Pa,Pc, KaInv, KcInv);
+		// console.log(point3DAC);
+		var p3 = new V3D(pointA.x,pointA.y,1.0);
+		var crs1 = V3D.cross( p3, point3DAC );
+		var crs2 = V3D.cross( p3, tc );
+		var dot = V3D.dot(crs1,crs2);
+		var len = Math.pow(crs2.length(), 2);
+		sumTop += dot;
+		sumBot += len;
+		// var ratio = crs1/crs2;
+		// var scale = point3DAC.length()/point3DAB.length();
+		// console.log(scale);
+		console.log(dot+" / "+len+" = "+(dot/len));
+	}
+// TODO: SHOULD DO NORMAL DISTRIBUTION & KEEP MEDIAN ONLY W/O OUTLIERS
+	var ratio = sumTop/sumBot;
+	console.log("ratio: "+ratio);
+
+
+	// scale tc by ratio:
+	tc.scale(1.0/ratio);
+	console.log(tc.length()+"");
+	Pc.setColFromArray(3, tc.toArray().push(1.0));
+
+	console.log(Pa+"");
+	console.log(Pb+"");
+	console.log(Pc+"");
+
+	throw "HERE";
+
+	return {"A":P1, "B":P2, "C":P3};
 	// E21=crossM(epi21)*[T(:,:,1)*epi31 T(:,:,2)*epi31 T(:,:,3)*epi31];
 	// E31=-crossM(epi31)*[T(:,:,1).'*epi21 T(:,:,2).'*epi21 T(:,:,3).'*epi21];
 
@@ -2285,10 +2134,23 @@ R3D.cameraMatricesFromTFT = function(T, Ka,Kb,Kc, Kai,Kbi,Kci){ // EXTRINSICS
 
 	*/
 }
+R3D.translationFromCamera = function(Pb){
+	var x = Pb.get(0,3);
+	var y = Pb.get(1,3);
+	var z = Pb.get(2,3);
+	return new V3D(x,y,z);
+}
 R3D.getEpipolesFromTFT = function(T){
-	var t1 = T.subArray([0]);
-	var t2 = T.subArray([1]);
-	var t3 = T.subArray([2]);
+	var t1, t2, t3;
+	if(Code.isArray(T)){
+		t1 = Code.subArray(T,0,9);
+		t2 = Code.subArray(T,9,9);
+		t3 = Code.subArray(T,18,9);
+	}else{
+		t1 = T.subArray([0]);
+		t2 = T.subArray([1]);
+		t3 = T.subArray([2]);
+	}
 	var temp = new Matrix(3,3);
 	var v1, v2, v3, v;
 	// epipole 1-to-3
@@ -2304,6 +2166,7 @@ R3D.getEpipolesFromTFT = function(T){
 	v = new Matrix(3,3).fromArray( Code.arrayPushArrays([],v1,v2,v3) );
 	svd = Matrix.SVD(v);
 	var epipole31 = new V3D().fromArray( svd["V"].colToArray(2) );
+		// TODO: scale by largest term => 1 ?
 	// epipole 1-to-2
 	temp.fromArray(t1).transposeSquare();
 	svd = Matrix.SVD(temp);
@@ -2317,7 +2180,7 @@ R3D.getEpipolesFromTFT = function(T){
 	v = new Matrix(3,3).fromArray( Code.arrayPushArrays([],v1,v2,v3) );
 	svd = Matrix.SVD(v);
 	var epipole21 = new V3D().fromArray( svd["V"].colToArray(2) );
-
+		// TODO: scale by largest term => 1 ?
 	return {"A":null, "B":epipole21, "C":epipole31};
 }
 R3D.TFTFromEpipoles = function(e1,e2,e3){ // only 1 & 2 ?
@@ -2330,7 +2193,7 @@ R3D.TFTFromCameraMatrices = function(P1,P2,P3){
 	// T from Ps
 	var arr = [];
 	var mat = new Matrix(4,4);
-	/*
+	// if P1 is not [I|0]
 	for(var i=0; i<3; ++i){
 		for(var j=0; j<3; ++j){
 			for(var k=0; k<3; ++k){
@@ -2340,7 +2203,6 @@ R3D.TFTFromCameraMatrices = function(P1,P2,P3){
 				mat.setRowFromArray(1,P1.rowToArray(index1)); // 2,2,1
 				mat.setRowFromArray(2,P2.rowToArray(j));
 				mat.setRowFromArray(3,P3.rowToArray(k));
-				// console.log(mat+"")
 				var v = (i%2==0 ? 1 : -1) * mat.determinant();
 				// var index = j*9 + k*3 + i; // T(j,k,i) //// BUT IF: i,j,k ?
 				var index = i*9 + j*3 + k; // T(i,j,k) ?
@@ -2348,8 +2210,8 @@ R3D.TFTFromCameraMatrices = function(P1,P2,P3){
 			}
 		}
 	}
-	*/
 
+/*
 	// if P1 is identity -- canonical matrices
 	for(var i=0; i<3; ++i){
 		for(var j=0; j<3; ++j){
@@ -2359,63 +2221,45 @@ R3D.TFTFromCameraMatrices = function(P1,P2,P3){
 			}
 		}
 	}
+*/
 	var TFT = new Tensor(3,3,3, arr);
 	return TFT;
 }
 R3D.fundamentalsFromTFT = function(T){
-
+	var info = R3D.TFTto3(T);
+	var T1 = info["T1"];
+	var T2 = info["T2"];
+	var T3 = info["T3"];
 	var epipoles = R3D.getEpipolesFromTFT(T);
-
-
-	/*
-	TFT => e2 & e3
-
-	left & right null vectors of T:
-	ui^T * Ti = 0^T
-	Ti * vi^T = 0^T
-
-	e2^T = [u1,u2,u3] = 0
-	e3^T = [v1,v2,v3] = 0
-
-
-	if A = U * S * V^T
-
-
-	then last col/row? of U should be left null vector
-	& last col/row of V should be right null vector ?
-
-	*/
-
-
-	/*
-
-// FROMEPIPOLES AND T:
-	F21 = [e21]_x * [T1,T2,T3] * e31
-	F31 = [e31]_x * [T1^T,T2^T,T3^T] * e21
-	F23 = ?
-
-
-// FROM ALL EPIPOLES
-	F12*e13 = e23 × e21
-	F23*e21 = e31 × e32
-	F31*e32 = e12 × e13.
-
-// FROM CAMERAS:
-	F21 = [a4]_x * A
-	F31 = [4]_x * B
-	F32 = [b4 - (B*A^-1) * a4]_x * (B*A^-1)
-
-
-	e13^T F12 e23 = e21^T F23 e31 = e32^T F31 e12 = 0
-
-	??? F12 * F13 === ?
-
-	*/
-	throw "TODO";
-	var Fab = null;
-	var Fac = null;
-	var Fbc = null;
-	return {"AB":Fab, "AB":Fab, "BC":Fbc};
+	var epipole21 = epipoles["B"];
+	var epipole31 = epipoles["C"];
+	var temp = new V3D();
+	var cross = new Matrix(3,3);
+	var F12 = new Matrix(3,3);
+		T1.multV3DtoV3D(temp,epipole31);
+		F12.setColFromArray(0,temp.toArray());
+		T2.multV3DtoV3D(temp,epipole31);
+		F12.setColFromArray(1,temp.toArray());
+		T3.multV3DtoV3D(temp,epipole31);
+		F12.setColFromArray(2,temp.toArray());
+		Matrix.crossMatrixFromV3D(cross, epipole21);
+		F12 = Matrix.mult(cross,F12);
+	T1.transposeSquare();
+	T2.transposeSquare();
+	T3.transposeSquare();
+	var F13 = new Matrix(3,3);
+		T1.multV3DtoV3D(temp,epipole21);
+		F13.setColFromArray(0,temp.toArray());
+		T2.multV3DtoV3D(temp,epipole21);
+		F13.setColFromArray(1,temp.toArray());
+		T3.multV3DtoV3D(temp,epipole21);
+		F13.setColFromArray(2,temp.toArray());
+		Matrix.crossMatrixFromV3D(cross, epipole31);
+		F13 = Matrix.mult(cross,F13);
+	var F21 = R3D.fundamentalInverse(F12);
+// TODO: correct F23
+var F23 = Matrix.mult(F21,F13);
+	return {"AB":F12, "AC":F13, "BC":F23};
 }
 // ------------------------------------------------------------------------------------------- rectification
 R3D.angleInLimits = function(angle,min,max){
@@ -15319,9 +15163,14 @@ R3D.scoreSADFromPoints = function(){
 
 R3D.fundamentalTransferPoint = function(pointA,pointB, Fab,Fac,Fbc, epipolesAC,epipolesBC, doError){//}, Fca,Fcb, eA,eB, rotationAB,rotationAC,rotationBC){ // fails along epipolar plane or high error
 doError = true;
-	var lineAC = R3D.lineFromF(Fac,pointA);
-	var lineBC = R3D.lineFromF(Fbc,pointB);
-	var intersect = Code.rayInfiniteIntersect2D(lineAC["org"],lineAC["dir"], lineBC["org"],lineBC["dir"]);
+	// var lineAC = R3D.lineFromF(Fac,pointA);
+	// var lineBC = R3D.lineFromF(Fbc,pointB);
+	// var intersect = Code.rayInfiniteIntersect2D(lineAC["org"],lineAC["dir"], lineBC["org"],lineBC["dir"]);
+	var ac = Fac.multV3DtoV3D(new V3D(pointA.x,pointA.y,1.0));
+	var bc = Fbc.multV3DtoV3D(new V3D(pointB.x,pointB.y,1.0));
+	var intersect = V3D.cross(ac,bc); // cross of 2 lines = point
+		intersect.homo();
+		intersect = new V2D(intersect.x,intersect.y);
 	var pointC = null;
 	var angleA = null;
 	var angleB = null;
@@ -15350,7 +15199,7 @@ doError = true;
 		vBC.scale(relatedBC);
 		angleA = V2D.angle(vAA,vAC);
 		angleB = V2D.angle(vBB,vBC);
-		if(doError){
+		if(doError){ // so far not very accurate
 			/*
 			var siz = 0.5;
 			var orthA = vAA.copy().rotate(Math.PI*0.5).norm().scale(siz);
@@ -15379,16 +15228,31 @@ doError = true;
 			// error = Math.sqrt(avgA*avgA + avgB*avgB);
 			error = (avgA+avgB)*0.5;
 			*/
+
 			// project C to other views:
 			var Fca = R3D.fundamentalInverse(Fac);
 			var Fcb = R3D.fundamentalInverse(Fbc);
 			var Fba = R3D.fundamentalInverse(Fab);
-			var lineCA = R3D.lineFromF(Fca,pointC);
-			var lineCB = R3D.lineFromF(Fcb,pointC);
-			var lineAB = R3D.lineFromF(Fab,pointA);
-			var lineBA = R3D.lineFromF(Fba,pointB);
-			var intCA = Code.rayInfiniteIntersect2D(lineBA["org"],lineBA["dir"], lineCA["org"],lineCA["dir"]);
-			var intCB = Code.rayInfiniteIntersect2D(lineAB["org"],lineAB["dir"], lineCB["org"],lineCB["dir"]);
+			// var lineCA = R3D.lineFromF(Fca,pointC);
+			// var lineCB = R3D.lineFromF(Fcb,pointC);
+			// var lineAB = R3D.lineFromF(Fab,pointA);
+			// var lineBA = R3D.lineFromF(Fba,pointB);
+			// var intCA = Code.rayInfiniteIntersect2D(lineBA["org"],lineBA["dir"], lineCA["org"],lineCA["dir"]);
+			// var intCB = Code.rayInfiniteIntersect2D(lineAB["org"],lineAB["dir"], lineCB["org"],lineCB["dir"]);
+
+			var ca = Fca.multV3DtoV3D(new V3D(pointC.x,pointC.y,1.0));
+			var cb = Fcb.multV3DtoV3D(new V3D(pointC.x,pointC.y,1.0));
+			var ab = Fab.multV3DtoV3D(new V3D(pointA.x,pointA.y,1.0));
+			var ba = Fba.multV3DtoV3D(new V3D(pointB.x,pointB.y,1.0));
+
+			var intersect = V3D.cross(ba,ca);
+				intersect.homo();
+			var intCA = new V2D(intersect.x,intersect.y);
+
+			var intersect = V3D.cross(ab,cb);
+				intersect.homo();
+			var intCB = new V2D(intersect.x,intersect.y);
+
 			var dA = V2D.distance(pointA,intCA);
 			var dB = V2D.distance(pointB,intCB);
 			console.log(dA,dB);

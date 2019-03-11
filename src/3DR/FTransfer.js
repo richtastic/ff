@@ -292,20 +292,24 @@ break;
 		}
 
 	}
-
+// throw "yup";
 
 
 	// TFT TESTING:
 	console.log("TFT");
 	var points = [];
 		// points.push([new V2D(),new V2D(),new V2D()]);
-		points.push([new V2D(202.5,131),new V2D(224.5,92),new V2D(232,73)]);
-		points.push([new V2D(247.5,255),new V2D(225,213.5),new V2D(198,190)]);
-		points.push([new V2D(413,212),new V2D(434,185),new V2D(442,168)]);
+		points.push([new V2D(202.5,131),new V2D(224.5,92),new V2D(232,72)]);
+		points.push([new V2D(247.5,255),new V2D(225.5,213.5),new V2D(198,190)]);
+		points.push([new V2D(413,212),new V2D(434,185),new V2D(441,168)]);
 		points.push([new V2D(87.5,333.5),new V2D(82,271),new V2D(72,239)]);
 		points.push([new V2D(379,85),new V2D(405.5,48),new V2D(412,21)]);
-		points.push([new V2D(472,311),new V2D(452,289),new V2D(420,274)]);
-		//points.push([new V2D(143,197),new V2D(154,151),new V2D(158,133)]);
+		points.push([new V2D(472,311),new V2D(452,289),new V2D(420,274.5)]);
+		points.push([new V2D(144,197),new V2D(156,154),new V2D(157,133)]);
+		points.push([new V2D(55,187),new V2D(71,139),new V2D(74.5,118)]);
+		points.push([new V2D(104,130),new V2D(138.5,90),new V2D(159,70)]);
+		points.push([new V2D(244,65),new V2D(268,26),new V2D(287.5,3)]);
+		points.push([new V2D(254,172),new V2D(275,136),new V2D(283,115)]);
 
 
 	var pointsA = [];
@@ -317,7 +321,7 @@ break;
 		pointsB.push(list[1]);
 		pointsC.push(list[2]);
 	}
-console.log(pointsA,pointsB,pointsC)
+// console.log(pointsA,pointsB,pointsC)
 	// show:
 	for(var i=0; i<pointsA.length; ++i){
 		var a = pointsA[i];
@@ -380,7 +384,8 @@ console.log(pointsA,pointsB,pointsC)
 			];
 		var OFFX = 10;
 		var OFFY = 10;
-		var sss = 0.50;
+		// var sss = 0.50;
+		var sss = 0.2;
 		var sca = 1.0;
 		var compareSize = 49;
 		for(var j=0; j<infos.length; ++j){
@@ -399,16 +404,32 @@ console.log(pointsA,pointsB,pointsC)
 		}
 	}
 
-// throw "here";
 	// throw "here";
 	var T = R3D.TFTFromUnnormalized(pointsA,pointsB,pointsC, true);
+	console.log(T);
+
+	var T = R3D.TFTNonlinear(T,pointsA,pointsB,pointsC);
 
 	console.log(T);
-	var a = new V2D(202.5,131);
-	var b = new V2D(224.5,92);
+	// var a = new V2D(202.5,131);
+	// var b = new V2D(224.5,92);
 	// var c = new V2D(420,274)
 
 //points.push([new V2D(),new V2D(),new V2D()]);
+
+for(var ind=0; ind<points.length; ++ind){
+// var ind = 0;
+// var ind = 1;// off a bit
+// var ind = 2; // all 3 off
+// var ind = 3;
+// var ind = 4;
+// var ind = 5;
+// var ind = 6;
+// var ind = 7; // DNE
+var row = points[ind];
+var a = row[0];
+var b = row[1];
+var c = row[2];
 
 	// var a = new V2D(143,197);
 	// var b = new V2D(154,151);
@@ -421,18 +442,29 @@ console.log(pointsA,pointsB,pointsC)
 
 
 	// var c = R3D.TFTtransfer(T, a, b);
-	console.log(a);
-	console.log(b);
-	console.log(c);
+	// console.log(a);
+	// console.log(b);
+	// console.log(c);
 
-	var c = R3D.TFTtransfer(T, a, b);
-	console.log(c+"?");
+	// var c = R3D.TFTtransfer(T, a, b);
+	// console.log(c+"?");
 
-	// var result = R3D.TFTtransferUnknown(T, a, b, c);
-	// a = R3D.TFTtransferUnknown(T, null, b, c);
-	b = R3D.TFTtransferUnknown(T, a, null, c);
-	// c = R3D.TFTtransferUnknown(T, a, b, null);
 
+
+	var a2 = R3D.TFTtransferUnknown(T, null, b, c);
+	var b2 = R3D.TFTtransferUnknown(T, a, null, c);
+	var c2 = R3D.TFTtransferUnknown(T, a, b, null);
+a = a2;
+b = b2;
+c = c2;
+
+// var a = R3D.TFTtransferUnknown(T, null, b, c);
+// var b = R3D.TFTtransferUnknown(T, a, null, c);
+// var c = R3D.TFTtransferUnknown(T, a, b, null);
+
+// console.log(a+"");
+// console.log(b+"");
+// console.log(c+"");
 	// var result = R3D.TFTtransferUnknown(T, c, b, null);
 
 
@@ -469,10 +501,35 @@ var color = 0xFF00FF00;
 	d.graphics().endPath();
 	d.matrix().translate(indexC*width,0);
 	GLOBALSTAGE.addChild(d);
-
+}
 
 	// console.log(result);
 
+// throw "here";
+
+
+var info = R3D.fundamentalsFromTFT(T);
+console.log(info);
+var Fab = info["AB"];
+var Fac = info["AC"];
+var Fbc = info["BC"];
+console.log(Fab+"");
+console.log(Fac+"");
+console.log(Fbc+"");
+
+var fx = 0.8565143769157422;
+var fy =  1.1625998022448123;
+var s = -0.012439315192795274;
+var cx = 0.4781381185245835;
+var cy = 0.4746370298801608;
+var K = new Matrix(3,3).fromArray([fx, s, cx, 0, fy, cy, 0, 0, 1]);
+K = R3D.cameraFromScaledImageSize(K, new V2D(width,height));
+var Ka = K;
+var Kb = K;
+var Kc = K;
+
+var cameras = R3D.cameraMatricesFromTFT(T, pointsA,pointsB,pointsC, Ka,Kb,Kc);
+	console.log(cameras);
 
 throw "here";
 

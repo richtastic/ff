@@ -323,38 +323,31 @@ https://cloud.google.com/appengine/docs/nodejs/
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+- T  RANSAC
+	- more points for better T
+	- add a few bad points
+	- assume error ~ pixels
+	- use tft6
+	
 
-- test: Code.intersectRayCircle2D
+- finding track seeds
+	- want some relative size / rotation between each view in record
+		- maximumly stable size
 
-Code.closestPointLine2D = function(org,dir, point){ // infinite ray and point
-	var bot = V2D.dot(dir,dir);
-	if(bot==0){
-		return new V2D(point.x,point.y);
-	}
-	var t = (V2D.dot(dir,point)-V2D.dot(org,dir))/bot;
-	return new V2D(org.x+t*dir.x,org.y+t*dir.y);
-}
+- determine if a tri-image set is good?:
+	- A-B & A-C & B-C matches are all above some minimum count / error
 
-- TFT:
-	- 7 point
-		- last part to get T from P1 P2 P3
-	- nonlinear
-		- e->T
-		- T->e
-	- 6 point
-		- verify?
-	- all Fs?
-		- F23 from 8 points ?
+- initializing trifocal:
 
-
-- TEST TFTs on test image
-	- 7 point linear
-	- RANSAC
-	- nonlinear?
-		- move epipoles e2 & e3 (e1?)
-		- recompute T from e2 & e3 [6 variables]
-		- check error
-
+	- 3 point spaces: for each view
+		- drop points that are too close to existing point (<1px) [order on corner score / etc on insertion]
+	- search radius ~ 2*Ferror [of Fab or Fac]
+		for each seed point:
+			- each point has list of potential matches for each other view
+				- point
+				- rotation [from F]
+				- scale [init from affine / refine from NCC]
+				- score (NCC / SIFT)
 
 - get optimizing working for multi-view
 	refineCameraAbsoluteOrientation

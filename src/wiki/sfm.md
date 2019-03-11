@@ -156,6 +156,26 @@ SURF
 
 DAISY
 
+ORB
+
+BRIEF
+
+BRISK
+
+BGM
+
+LATCH
+
+KVLD
+
+CODE
+
+GMS
+
+LDA-HASH
+
+BINBOOST - Binary
+
 ...
 
 
@@ -306,5 +326,25 @@ iteratively solved
 
 
 #### ...
+
+
+
+#### Author/ities:
+
+
+Marc Pollefeys
+Luc Van Gool
+
+Richard Hartley
+Andrew Zisserman
+Philip Torr
+
+Olivier Faugeras
+
+Carlo Tomasi
+Takeo Kanade
+Zhengyou Zhang
+
+
 
 ...

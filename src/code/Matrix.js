@@ -376,6 +376,12 @@ Matrix.prototype.setColFromCol = function(i, mat,j){
 		this._rows[r][i] = mat._rows[r][j];
 	}
 }
+Matrix.prototype.setColFromArray = function(i, arr){
+	var r, rows = Math.min(this.rows(),arr.length);
+	for(r=0;r<rows;++r){
+		this._rows[r][i] = arr[r];
+	}
+}
 Matrix.prototype.setRowFromArray = function(i, arr){
 	while(this._rows.length<=i){
 		this._rows.push([]); // needs to be filled in
