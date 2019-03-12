@@ -1327,149 +1327,159 @@ R3D.cameraMatricesFromMatches = function(pointsA2D,pointsB2D,points3D){ // not i
 }
 
 // ------------------------------------------------------------------------------------------- trifocal tensor
-
+R3D.TFTRANSACFromPointsAuto = function(pointsAIn,pointsBIn,pointsCIn, errorPosition, initialT, desiredPercent){
+	// iteritively solve for errorPosition, starting at some large value ~ 10
+	var currentError = errorPosition;
+	desiredPercent = desiredPercent!==undefined ? desiredPercent : 0.1;
+	var bestResult = null;
+	var desiredCountMin = Math.round(desiredPercent*pointsAIn.length);
+		desiredCountMin = Math.max(desiredCountMin, 6);
+	for(var i=0; i<10; ++i){
+		var result = R3D.TFTRANSACFromPoints(pointsAIn,pointsBIn,pointsCIn, currentError, initialT);
+		if(result){
+			var matches = result["matches"];
+			var matchCount = matches[0].length;
+			console.log(i+" : "+matchCount+"/"+desiredCountMin+" @ "+currentError);
+			if(matches && (bestResult===null || matchCount>=desiredCountMin)){
+				bestResult = result;
+				bestResult["error"] = currentError;
+			}else{ // too far
+				console.log("too far");
+				break;
+			}
+		}
+		// currentError = currentError * 0.75;
+		currentError = currentError * 0.5;
+	}
+	return bestResult;
+}
 R3D.TFTRANSACFromPoints = function(pointsAIn,pointsBIn,pointsCIn, errorPosition, initialT, pOutlier, pDesired){
 	pOutlier = pOutlier!==undefined ? pOutlier : 0.99; // initial assumptions are wrong
 	pDesired = pDesired!==undefined ? pDesired : 0.999; // to have selected a valid subset
 	var pointsA = pointsAIn;
 	var pointsB = pointsBIn;
 	var pointsC = pointsCIn;
-
-	throw "TODO";
-/*
-
-
-	// var pointsA = Code.copyArray(pointsAIn);
-	// var pointsB = Code.copyArray(pointsBIn);
+	var minCount = 6;
+	// var minCount = 7;
 	// TODO: use initial F estimate in some capacity
-	if(!pointsA || !pointsB || pointsA.length<7 || pointsB.length<7){
+	if(!pointsA || !pointsB || !pointsC || pointsA.length<minCount || pointsB.length<minCount || pointsC.length<minCount){
 		return null;
 	}
-	var pointsLength = Math.min(pointsA.length, pointsB.length);
-	// for(var i=0; i<pointsA.length; ++i){
-	// 	pointsA[i] = new V3D(pointsA[i].x, pointsA[i].y, 1.0);
-	// 	pointsB[i] = new V3D(pointsB[i].x, pointsB[i].y, 1.0);
-	// }
+	var pointsLength = Math.min(pointsA.length, pointsB.length, pointsC.length);
 	var maxErrorDistance = 1.0;
 	if(errorPosition!==undefined){
 		maxErrorDistance = errorPosition;
 	}
-	var maxErrorDistanceA = maxErrorDistance;
+	var maxErrorDistanceA = maxErrorDistance; // TODO : 3 different values?
 	var maxErrorDistanceB = maxErrorDistance;
+	var maxErrorDistanceC = maxErrorDistance;
 	var i, j, k;
-	var ptA=new V3D(), ptB=new V3D(), pointA, pointB, distanceA, distanceB;
-	var lineA=new V3D(), lineB=new V3D();
-	var subsetPointsA=[], subsetPointsB=[];
+	var subsetPointsA=[], subsetPointsB=[], subsetPointsC=[];
 	var consensus=[], consensusSet = [];
 	var support, maxSupportCount = 0, maxSupportError = null;
-	var minCount = 7;
-	var errorMinfactor = 1.0; // 2.0
+	var errorMinfactor = 10.0; // 2.0
+	var bestT = T;
 	var maxIterations = errorMinfactor * R3D.iterationsFromProbabilities(pDesired, pOutlier, minCount);
 	for(i=0;i<maxIterations;++i){
-		// if(i%100==0){
-		// 	console.log(" - "+i+" / "+maxIterations+" @ "+maxSupportCount);
-		// }
 		// reset for iteration
 		Code.emptyArray(subsetPointsA);
 		Code.emptyArray(subsetPointsB);
+		Code.emptyArray(subsetPointsC);
 		// subset of 7 points
 		var indexes = Code.randomIntervalSet(minCount, 0, pointsLength-1);
-		//console.log(" ___ RANSAC ___ "+i+" ---- ---- ---- ---- ---- ---- ---- ---- ---- "+indexes.length+"");
 		Code.copyArrayIndexes(subsetPointsA, pointsA, indexes);
 		Code.copyArrayIndexes(subsetPointsB, pointsB, indexes);
+		Code.copyArrayIndexes(subsetPointsC, pointsC, indexes);
 		var pointsANorm = R3D.calculateNormalizedPoints([subsetPointsA]);
 		var pointsBNorm = R3D.calculateNormalizedPoints([subsetPointsB]);
-		var m = R3D.fundamentalMatrix(pointsANorm.normalized[0],pointsBNorm.normalized[0]);
-		if(!Code.isArray(m)){ m = [m]; } // if have 7 => multiple possible
-		for(k=0; k<m.length; ++k){
-				var arr = m[k];
-				arr = Matrix.mult(arr, pointsANorm.forward[0]);
-				arr = Matrix.mult(Matrix.transpose(pointsBNorm.forward[0]), arr);
-				var FFwd = arr;
-				var FRev = Matrix.inverse(FFwd);
-				var FRev = R3D.fundamentalInverse(FFwd);
-				var dir = new V2D();
-				var org = new V2D();
-				var transferError;
-				var totalTransferError = 0;
-				consensus = [];
-				for(j=0; j<pointsA.length; ++j){
-					var a = pointsA[j];
-					var b = pointsB[j];
-					ptA.set(a.x,a.y,1.0);
-					ptB.set(b.x,b.y,1.0);
-					lineB = FFwd.multV3DtoV3D(lineB, ptA);
-					Code.lineOriginAndDirection2DFromEquation(org,dir, lineB.x,lineB.y,lineB.z);
-					distanceB = Code.distancePointRay2D(org,dir, b);
-					// B
-					lineA = FRev.multV3DtoV3D(lineA, ptB);
-					Code.lineOriginAndDirection2DFromEquation(org,dir, lineA.x,lineA.y,lineA.z);
-					distanceA = Code.distancePointRay2D(org,dir, a);
-					// error
-					transferError = distanceA*distanceA + distanceB*distanceB;
-					if(distanceA<maxErrorDistanceA && distanceB<maxErrorDistanceB){
-						totalTransferError += transferError;
-						consensus.push([a,b, transferError]);
-					}
-				}
-				var avgTransferError = totalTransferError / support; // if AVERAGE ERROR GOES DOWN ?
-				var errorFxn = function(a){
-					return a[2];
-				}
-				var items = Code.dropOutliers(consensus, errorFxn, 2.0);
-				consensus = items["inliers"];
-				support = consensus.length;
-				if(support>maxSupportCount || (support==maxSupportCount && totalTransferError < maxSupportError)){
-					maxSupportCount = support;
-					maxSupportError = totalTransferError;
-					Code.emptyArray(consensusSet);
-					Code.copyArray(consensusSet, consensus);
-					// TODO: use all of new consensus points & try to refine F approximation
-					// if support count has increased,
-				}
+		var pointsCNorm = R3D.calculateNormalizedPoints([subsetPointsC]);
+		var T = R3D.trifocalTensor(pointsANorm.normalized[0],pointsBNorm.normalized[0],pointsCNorm.normalized[0]);
+		var H1 = pointsANorm.forward[0];
+		var H2 = pointsBNorm.forward[0];
+		var H3 = pointsCNorm.forward[0];
+		var H1i = pointsANorm.reverse[0];
+		var H2i = pointsBNorm.reverse[0];
+		var H3i = pointsCNorm.reverse[0];
+		T = R3D.TFTreverseMultiply(T, H1,H2,H3, H1i,H2i,H3i);
+		var totalTransferError = 0;
+		consensus = [];
+		for(j=0; j<pointsA.length; ++j){
+			var a = pointsA[j];
+			var b = pointsB[j];
+			var c = pointsC[j];
+			var pA = R3D.TFTtransferBCtoA(T,b,c);
+			var pB = R3D.TFTtransferACtoB(T,a,c);
+			var pC = R3D.TFTtransferABtoC(T,a,b);
+			var distanceA = V2D.distance(a,pA);
+			var distanceB = V2D.distance(b,pB);
+			var distanceC = V2D.distance(c,pC);
+			var transferError = distanceA*distanceA + distanceB*distanceB + distanceC*distanceC;
+			if(distanceA<maxErrorDistanceA && distanceB<maxErrorDistanceB && distanceC<maxErrorDistanceC){
+				totalTransferError += transferError;
+				consensus.push([a,b,c, transferError]);
+			}
+		}
+		// var avgTransferError = totalTransferError / support; // if AVERAGE ERROR GOES DOWN ?
+		var errorFxn = function(a){
+			return a[3];
+		}
+		var items = Code.dropOutliers(consensus, errorFxn, 2.0);
+		consensus = items["inliers"];
+		support = consensus.length;
+		if(support>maxSupportCount || (support==maxSupportCount && totalTransferError < maxSupportError)){
+			maxSupportCount = support;
+			maxSupportError = totalTransferError;
+			bestT = T;
+			Code.emptyArray(consensusSet);
+			Code.copyArray(consensusSet, consensus);
+			console.log("new support count: "+maxSupportCount+" @ "+maxSupportError+" = "+(Math.sqrt(maxSupportError)/maxSupportCount));
 		}
 		// update iterations from found:
 		pOutlier = Math.min(pOutlier, (pointsLength-maxSupportCount)/pointsLength);
 		maxIterations = errorMinfactor * R3D.iterationsFromProbabilities(pDesired, pOutlier, minCount);
+// maxIterations = Math.max(maxIterations,20000);
 	}
-	// f using all inliers
+	// T using all inliers
 	Code.emptyArray(subsetPointsA);
 	Code.emptyArray(subsetPointsB);
+	Code.emptyArray(subsetPointsC);
 	for(i=0;i<maxSupportCount;++i){
 		subsetPointsA.push( consensusSet[i][0] );
 		subsetPointsB.push( consensusSet[i][1] );
+		subsetPointsC.push( consensusSet[i][2] );
 	}
-	if(subsetPointsA.length<8){
+	if(subsetPointsA.length<minCount){
 		return null;
 	}
-	// f using all inliers
-	var FFwd = R3D.fundamentalFromUnnormalized(subsetPointsA,subsetPointsB);
-	var FRev = R3D.fundamentalInverse(FFwd);
-	var pointsKeepA = [];
-	var pointsKeepB = [];
+	console.log(subsetPointsA,subsetPointsB,subsetPointsC);
+	// T using all inliers
+	var T = bestT;
+	// var T = R3D.TFTFromUnnormalized(subsetPointsA,subsetPointsB,subsetPointsC, true);
+	var pointsKeepA = [], pointsKeepB = [], pointsKeepC = [];
+	console.log("maxErrorDistance: "+maxErrorDistanceA+" | "+maxErrorDistanceB+" | "+maxErrorDistanceC);
 	for(i=0; i<pointsAIn.length; ++i){
 		var a = pointsAIn[i];
 		var b = pointsBIn[i];
-		ptA.set(a.x,a.y,1.0);
-		ptB.set(b.x,b.y,1.0);
-		lineB = FFwd.multV3DtoV3D(lineB, ptA);
-		Code.lineOriginAndDirection2DFromEquation(org,dir, lineB.x,lineB.y,lineB.z);
-		distanceB = Code.distancePointRay2D(org,dir, b);
-		lineA = FRev.multV3DtoV3D(lineB, ptB);
-		Code.lineOriginAndDirection2DFromEquation(org,dir, lineA.x,lineA.y,lineA.z);
-		distanceA = Code.distancePointRay2D(org,dir, a);
-		if(distanceA<maxErrorDistanceA && distanceB<maxErrorDistanceB){
+		var c = pointsCIn[i];
+		var pA = R3D.TFTtransferBCtoA(T,b,c);
+		var pB = R3D.TFTtransferACtoB(T,a,c);
+		var pC = R3D.TFTtransferABtoC(T,a,b);
+		var distanceA = V2D.distance(a,pA);
+		var distanceB = V2D.distance(b,pB);
+		var distanceC = V2D.distance(c,pC);
+		if(distanceA<maxErrorDistanceA && distanceB<maxErrorDistanceB && distanceC<maxErrorDistanceC){
 			pointsKeepA.push(pointsAIn[i]);
 			pointsKeepB.push(pointsBIn[i]);
+			pointsKeepC.push(pointsCIn[i]);
 		}
 	}
-	return {"F":FFwd, "matches":[pointsKeepA,pointsKeepB]};
-*/
-}
 
+	var T = R3D.TFTFromUnnormalized(pointsKeepA,pointsKeepB,pointsKeepC);
+	return {"T":T, "matches":[pointsKeepA,pointsKeepB,pointsKeepC]};
+}
 R3D._gdTFT = function(args, x, isUpdate, descriptive){
 	if(isUpdate){
-		// return;
+		return;
 	}
 	// args
 	var pointsA = args[0];
@@ -1485,9 +1495,9 @@ R3D._gdTFT = function(args, x, isUpdate, descriptive){
 	// find error:
 	var error = R3D.tftErrorList(t,pointsA,pointsB,pointsC);
 		error = error["error"];
-	if(isUpdate){
-	console.log(error);
-	}
+	// if(isUpdate){
+	// 	console.log(error);
+	// }
 	return error;
 }
 
@@ -1815,7 +1825,7 @@ R3D.trifocalTensor6 = function(pointsA,pointsB,pointsC){
 	var TFTs = [];
 	for(var s=0; s<roots.length; ++s){ // up to 3 solutions
 		var alpha = roots[s];
-		console.log(s+": "+alpha);
+		// console.log(s+": "+alpha);
 		var T = Code.arrayVectorAdd(t1,Code.arrayVectorScale(t2,alpha));
 // console.log("T: "+T);
 		// TODO: DIVISION CHECKS
@@ -1870,7 +1880,7 @@ R3D.trifocalTensor6 = function(pointsA,pointsB,pointsC){
 		var TFT = TFTs[i];
 		var error = R3D.tftErrorList(TFT, pointsA,pointsB,pointsC);
 		error = error["error"];
-		console.log("error: "+error);
+		// console.log("error: "+error);
 		// TODO: OR IS THIS REPROJECTION ERROR OF '3D' POINT: X,Y,Z,W ?
 		if(minError===null || error<minError){
 			minError = error;
@@ -1940,6 +1950,9 @@ R3D.TFTtransferUnknown = function(T, a, b, c){ // solve for missing item using l
 	var T3_20 = t[24]; var T3_21 = t[25]; var T3_22 = t[26];
 	var A = new Matrix(rows,cols);
 	if(a==null){ // solve for pA
+// var rows = 6;
+// var cols = 3;
+// var A = new Matrix(rows,cols);
 		A.setRowFromArray(0,[b.y*T1_21 - b.y*c.y*T1_22 - T1_11 + c.y*T1_12,   b.y*T2_21 - b.y*c.y*T2_22 - T2_11 + c.y*T2_12,   b.y*T3_21 - b.y*c.y*T3_22 - T3_11 + c.y*T3_12]); // 0,0
 		A.setRowFromArray(1,[b.y*c.x*T1_22 - b.y*T1_20 - c.x*T1_12 + T1_10,   -b.y*T2_20 + b.y*c.x*T2_22 - c.x*T2_12 + T2_10,   b.y*c.x*T2_22 - b.y*T3_20 - c.x*T3_12 + T3_10]); // 0,1
 		A.setRowFromArray(2,[b.y*c.y*T1_20 - b.y*c.x*T1_21 - c.y*T1_10 + c.x*T1_11,  b.y*c.y*T2_20 - c.y*T2_10 - b.y*c.x*T2_21 + c.x*T2_11,   b.y*c.y*T3_20 - b.y*c.x*T3_21 - c.y*T3_10 + c.x*T3_11]); // 0,2
@@ -2024,6 +2037,11 @@ R3D.tftError = function(T, pA, pB, pC){ // T: 3-way F errors
 	var distance = (distanceA + distanceB + distanceC);
 	return {"error":distance};
 }
+R3D.tftReprojectionError = function(T, pA, pB, pC){
+	// triangulate point X
+	// project point X
+	throw "TODO";
+}
 R3D.projectiveCameraMatricesFromTFT = function(T){
 	var epipoles = R3D.getEpipolesFromTFT(T);
 	var epipole21 = epipoles["B"];
@@ -2067,22 +2085,39 @@ R3D.cameraMatricesFromTFT = function(T, pointsA,pointsB,pointsC, Ka,Kb,Kc, Kai,K
 
 	// Pab & Pac have (likely) different baseline scale, scale Pac to match Pab
 	// var i = 0;
+
 	var sumTop = 0;
 	var sumBot = 0;
+	var u3 = Kc.multV3DtoV3D(tc); // projection of tc on non-offset C camera matrix
 console.log("summing");
+var ratios = [];
+
 	for(var i=0; i<pointsA.length; ++i){
 		var pointA = pointsA[i];
 		var pointB = pointsB[i];
 		var pointC = pointsC[i];
 		//var point3D =  R3D.triangulationDLT(pointsA,pointsB, M1,M2, Ka, Kb, KaInv, KbInv);
+		// reconstructed location based on views A-B
 		var point3DAB = R3D.triangulatePointDLT(pointA,pointB, Pa,Pb, KaInv, KbInv);
-		// console.log(point3DAB);
+		// projected location using C camera matrix without translation
 		var point3DAC = Rc.multV3DtoV3D(point3DAB);
+			point3DAC = Kc.multV3DtoV3D(point3DAC);
+
 		// var point3DAC = R3D.triangulatePointDLT(pointA,pointC, Pa,Pc, KaInv, KcInv);
 		// console.log(point3DAC);
-		var p3 = new V3D(pointA.x,pointA.y,1.0);
-		var crs1 = V3D.cross( p3, point3DAC );
-		var crs2 = V3D.cross( p3, tc );
+		//var p3 = new V3D(pointA.x,pointA.y,1.0);
+/*
+lam=-sum(dot(cross(x3,X3),cross(x3,u3))
+	/
+    sum(sum(cross(x3,u3).^2));
+	a = [1,2,3];
+	b = [2,1,2];
+	cross(a,b)
+	cross(a,b,1)
+*/
+		var x3 = new V3D(pointC.x,pointC.y,1.0);
+		var crs1 = V3D.cross( x3, point3DAC );
+		var crs2 = V3D.cross( x3, u3 );
 		var dot = V3D.dot(crs1,crs2);
 		var len = Math.pow(crs2.length(), 2);
 		sumTop += dot;
@@ -2091,10 +2126,66 @@ console.log("summing");
 		// var scale = point3DAC.length()/point3DAB.length();
 		// console.log(scale);
 		console.log(dot+" / "+len+" = "+(dot/len));
+		ratios.push(-dot/len);
 	}
 // TODO: SHOULD DO NORMAL DISTRIBUTION & KEEP MEDIAN ONLY W/O OUTLIERS
-	var ratio = sumTop/sumBot;
+	var ratio = -sumTop/sumBot;
+Code.dropOutliers(ratios,function(a){ return a; }, 2.0);
+
 	console.log("ratio: "+ratio);
+
+	Code.printMatlabArray(ratios);
+	var mean = Code.mean(ratios);
+	console.log("mean 1: "+ratio);
+
+
+	// DEPTH RATIOS
+
+
+
+	// OWN IDEA: DISTANCE RATIOS
+	var pAB = [];
+	var pAC = [];
+	var depths = [];
+	for(var i=0; i<pointsA.length; ++i){
+		var pointA = pointsA[i];
+		var pointB = pointsB[i];
+		var pointC = pointsC[i];
+		var point3DAB = R3D.triangulatePointDLT(pointA,pointB, Pa,Pb, KaInv, KbInv);
+		var point3DAC = R3D.triangulatePointDLT(pointA,pointC, Pa,Pc, KaInv, KcInv);
+		pAB.push(point3DAB);
+		pAC.push(point3DAC);
+		//depths.push(point3DAB.z/point3DAC.z);
+		depths.push(point3DAB.length()/point3DAC.length());
+	}
+Code.dropOutliers(depths,function(a){ return a; }, 2.0);
+	Code.printMatlabArray(depths);
+	depths = Code.mean(depths);
+	console.log("depths: "+depths);
+
+	var ratios = [];
+	for(var i=0; i<100; ++i){
+		var indexA = Code.randomInt(0,pAB.length-1);
+		var indexB = Code.randomInt(0,pAB.length-1);
+		if(indexA!=indexB){
+			var pA1 = pAB[indexA];
+			var pB1 = pAC[indexA];
+			var pA2 = pAB[indexB];
+			var pB2 = pAC[indexB];
+			var d1 = V3D.distance(pA1,pA2);
+			var d2 = V3D.distance(pB1,pB2);
+			//var ratio = d2/d1;
+			var ratio = d1/d2;
+			ratios.push(ratio);
+		}
+	}
+	// console.log(ratios);
+Code.dropOutliers(ratios,function(a){ return a; }, 2.0);
+	// TODO: drop outliers
+	var mean = Code.mean(ratios);
+	Code.printMatlabArray(ratios);
+	console.log("mean 2: "+mean);
+var ratio = mean;
 
 
 	// scale tc by ratio:
@@ -2111,14 +2202,6 @@ console.log("summing");
 	return {"A":P1, "B":P2, "C":P3};
 	// E21=crossM(epi21)*[T(:,:,1)*epi31 T(:,:,2)*epi31 T(:,:,3)*epi31];
 	// E31=-crossM(epi31)*[T(:,:,1).'*epi21 T(:,:,2).'*epi21 T(:,:,3).'*epi21];
-
-
-	// https://cseweb.ucsd.edu/classes/sp17/cse252C-a/CSE252C_20170510.pdf  p 10/44
-	/*
-	 https://cseweb.ucsd.edu/classes/sp17/cse252C-a/
-	 https://cseweb.ucsd.edu/classes/sp17/z
-	*/
-
 	/*
 	a4 = epipole of camera 1 in image 2
 	b4 = epipole of camera 1 in image 3

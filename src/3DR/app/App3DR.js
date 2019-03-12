@@ -5375,6 +5375,12 @@ HexMenu.prototype.x = function(){
 projects/
 	0/
 		info.yaml
+			...
+			cameras
+			views
+			pairs
+			triples
+
 		views/
 			0/
 				features.yaml 			all possible feature points w/ score
@@ -5395,14 +5401,26 @@ projects/
 						b: x,y
 						3D: X,Y,Z
 				tracks.yaml 				optimum seed track points [best points]
+					views:
+						-
+							id: "A"
+						...
+					tracks:
+						-
+							p:
+								v: INDEX-OF-VIEW
+								x: [0-1]
+								y: [0-1]
+						...
 
 		triples/tuples
 			0/
 				info.yaml 			x,y <=> pixel matches among 3 views
 					- TFT
 					- relative scalings between separate pairs
-				tracks.yaml
-					- optimum seed track points [best points]
+						A-B : A-C
+						B-A : B-C
+						C-A : C-B
 
 		cameras/
 			0/
@@ -5450,63 +5468,86 @@ projects/
 									z
 
 		bundle/
-			tracks.yaml - accumulated global track points across images
-				- ???
-			graph.yaml - view graph of scene
-				- views
-					- transforms
-				- graph
-				- basic/compressed graph
+A			tracks.yaml - accumulated global track points across images: grows till all pair-seeds are merged
+				views:
+					-
+						id: "A"
+				tracks:
+					-
+						list:
+							-
+								i: INDEX-OF-VIEW
+								x: [0,1]
+								y: [0,1]
 
-			info.yaml    				result of global (quasi-local) bundle adjustment iterations on TRACK POINTS
+B			graph.yaml - view graph of scene - result of global (quasi-local) bundle adjustment iterations on TRACK POINTS
+				- views
+					-
+						T: MATRIX ABSOLUTE TRANSFORM
+				- graph
+					-
+						A: INDEX-OF-VIEW
+						B: INDEX-OF-VIEW
+						T: MATRIX RELATIVE TRANSFORM
+				- skeleton --- basic/compressed/critical/backbone/skeletal/central graph
+					-
+						A: INDEX-OF-VIEW
+						B: INDEX-OF-VIEW
+						T: MATRIX RELATIVE TRANSFORM
+				- tracks:
+					-
+						list:
+							-
+								...
+C			points.yaml - global 3D point list
+				views:
+					...
+				points:
+					-
+						X: position
+						Y
+						Z
+						x: normal
+						y
+						z
+						s: size (patch - world scale)
+						v:
+							-
+								i: VIEW INDEX
+								x: [0-1]
+								y: [0-1]
+					...
+
+D			info.yaml - dense point reconstruction info
 				- Ks
 					- fx,fy,s,cx,cy
 				- views
-					- ID
-					- K
-					- ...
-				- transforms 								input initial estimated transforms [pairs]
-					- viewA
-					- viewB
-					- relative : rotation / translation
-					- points2dA
-						- x,y
-					- points2dB
-						- x,y
-					- points3d
-						- X,Y,Z (relative)
-				- initial 									least squares initial solution
-					- views
-						- absolute rotation / location
-				- final
-					- iterations: 10
-					- views
-						- absolute rotation / location
-						- cell size
-						- points2d
-							- x,y
-					- points3d
-						- p2d []
-							- viewID
-							- p2D index
-						- X,Y,Z (absolute)
-						- error X/Y/Z?
-			dense.yaml 								global SFM with dense points - TERSE
-				- Views
-					- ID
-					- transforms
-				- P3D
-					- P2D
-						- V index
+					-
+						id: ID
+						camera: K index
+						transform: ABS TRANSFORM
+						points: count of all 3D points that project to this view == 2D point count
+						errorR: avg reprojection error [over all P3D that project to view]
+						deltaErrorR: null / change since last
+						updated: timestamp for last update
+					...
+				- pairs
+					-
+						A: ID
+						B: ID
+						errorF: avg f error
+						deltaErrorF: null / change since last
+						updated: timestamp for last update
+					... [MIGHT NEED TO ADD NEW PAIRS ON THE FLY?]
+				- triples
+					- ?
 
-		reconstruction/					combine bundle adjust with dense => produce 3D model outputs
-			points3d.yaml 				chosen 3d points from dense yaml
-				views:
-					- K
-					- P
+			triangles.yaml - triangle reconstruction - triangle soup of approximated surface & texture mapping
 				points:
-					- X,Y,Z
-			surface.yaml 				triangle soup of approximated surface & texture mapping
+					-
+						X: ...
+						Y: ...
+						Z: ...
 				triangles:
 					-
 						A:
@@ -5522,14 +5563,18 @@ projects/
 							x:
 							y:
 						t: "0" # texture atlas id
-				vertexes:
+					...
+
+			packing.yaml -- bin packing planning for construction of textures
+				- views # remaining views to be loaded
 					-
-						X: # position
-						Y:
-						Z:
-						x: # normal
-						y:
-						z:
+						id: ID (to info.yaml)
+				- triangles:
+					-
+						i: # triangle index (to triangles.yaml)
+						A: # view ID (to info.yaml)
+						B: # view ID
+
 			textures.yaml
 				textures:
 					-
@@ -5537,29 +5582,44 @@ projects/
 						file: tex0.png
 						width: 512
 						height: 512
+					...
 			textures/
 				tex0.png
 				tex1.png
 				...
 
 		scene/
-			info.yaml 					scene info [cameras, background, model(if altered)]
-				views: 					actual real-world picture image source
-					- K
-					- transforms
-				cameras: 				user-created scene views
-					- K
-					- transform
-				triangles: 				scene geometry -> SHOULD THIS JUST BE THE RECONSTRUCTION ?
-					- A,B,C,a,b,c
-				snapshots: 				user-created photos
-					- ID
-					- name
-					- file
+			info.yaml 														# scene info [cameras, background, model(if altered)]
+				cameras:													# copied
+					-
+						id: ID
+						K: fx,fy,s,cx,cy
+					...
+				views: 														# copied - actual real-world picture image source
+					-
+						camera: camera index / ID
+						transform: ABS TRANS
+						preview: image0.png									# preview sized image for visualizing ~ 178x100
+					...
+				vantages: 													# user-created scene views
+					-
+						K: fx,fy,s,cx,cy
+						transform: ABS TRANS
+					...
+				snapshots: 													# user-created photos of scene
+					-
+						id: ID
+						name: My Screenshot
+						file: snapshot0.png
+					...
+			surface.yaml													# initially a copy of triangles.yaml
+			textures.yaml													# initially a copy of textures.yaml
 			textures/
-				tex01.png
+				tex0.png
 			snapshots/
-				snapshot_0.png
+				snapshot0.png
+			views/
+				view0.png
 
 
 

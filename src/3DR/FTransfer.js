@@ -105,7 +105,7 @@ console.log("HERE");
 		var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
 		var d = new DOImage(img);
 		d.matrix().translate(0 + i*iii.width(), 0 + 0);
-		GLOBALSTAGE.addChild(d);
+		// GLOBALSTAGE.addChild(d);
 	}
 
 
@@ -310,6 +310,19 @@ break;
 		points.push([new V2D(104,130),new V2D(138.5,90),new V2D(159,70)]);
 		points.push([new V2D(244,65),new V2D(268,26),new V2D(287.5,3)]);
 		points.push([new V2D(254,172),new V2D(275,136),new V2D(283,115)]);
+		points.push([new V2D(421,136.5),new V2D(452,105),new V2D(464,82)]);
+		points.push([new V2D(387,229),new V2D(386,198),new V2D(370.5,178)]);
+
+	// outliers
+	var outlierCount = 5;
+	for(var i=0; i<outlierCount; ++i){
+		points.push([
+			new V2D(Code.randomFloat(0,width),Code.randomFloat(0,height)),
+			new V2D(Code.randomFloat(0,width),Code.randomFloat(0,height)),
+			new V2D(Code.randomFloat(0,width),Code.randomFloat(0,height)),
+		]);
+	}
+	// points.push([new V2D(100,100),new V2D(126,200),new V2D(300,100)]);
 
 
 	var pointsA = [];
@@ -403,14 +416,43 @@ break;
 			GLOBALSTAGE.addChild(d);
 		}
 	}
-
+/*
 	// throw "here";
 	var T = R3D.TFTFromUnnormalized(pointsA,pointsB,pointsC, true);
-	console.log(T);
-
+	// console.log(T);
 	var T = R3D.TFTNonlinear(T,pointsA,pointsB,pointsC);
-
+	// console.log(T);
+*/
+// RANSAC:
+var errorPosition = 20.0;
+console.log(pointsA.length)
+// var T = R3D.TFTRANSACFromPoints(pointsA,pointsB,pointsC, errorPosition, null);
+var T = R3D.TFTRANSACFromPointsAuto(pointsA,pointsB,pointsC, errorPosition, null, 0.50);
+console.log(T);
+var matches = T["matches"];
+// console.log(matches);
+	T = T["T"];
 	console.log(T);
+
+for(var i=0; i<matches.length; ++i){
+	var match = matches[i];
+	var color = 0x99FF00FF;
+	for(var j=0; j<match.length; ++j){
+		var a = match[j];
+// console.log(i+" : "+j+" = "+a)
+		var d = new DO();
+		d.graphics().setLine(2.0,color);
+		d.graphics().beginPath();
+		d.graphics().drawCircle(a.x,a.y, 10);
+		d.graphics().strokeLine();
+		d.graphics().endPath();
+		d.matrix().translate(i*width,0);
+		GLOBALSTAGE.addChild(d);
+	}
+}
+
+// throw "done ransac";
+
 	// var a = new V2D(202.5,131);
 	// var b = new V2D(224.5,92);
 	// var c = new V2D(420,274)
@@ -418,14 +460,9 @@ break;
 //points.push([new V2D(),new V2D(),new V2D()]);
 
 for(var ind=0; ind<points.length; ++ind){
-// var ind = 0;
-// var ind = 1;// off a bit
-// var ind = 2; // all 3 off
-// var ind = 3;
-// var ind = 4;
-// var ind = 5;
-// var ind = 6;
-// var ind = 7; // DNE
+	if(ind>=points.length-outlierCount){
+		break;
+	}
 var row = points[ind];
 var a = row[0];
 var b = row[1];
@@ -528,7 +565,10 @@ var Ka = K;
 var Kb = K;
 var Kc = K;
 
-var cameras = R3D.cameraMatricesFromTFT(T, pointsA,pointsB,pointsC, Ka,Kb,Kc);
+//var cameras = R3D.cameraMatricesFromTFT(T, pointsA,pointsB,pointsC, Ka,Kb,Kc);
+
+// without outliers:
+var cameras = R3D.cameraMatricesFromTFT(T, matches[0],matches[1],matches[2], Ka,Kb,Kc);
 	console.log(cameras);
 
 throw "here";

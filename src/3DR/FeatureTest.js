@@ -53,7 +53,7 @@ function FeatureTest(){
 // new ImageLoader("./images/",["yA_small.jpg", "yB_small.jpg"],this,this.imagesLoadComplete2).load(); // ex poor : GOOD: [34 @ 0.463 | 33 @ 0.45]
 // new ImageLoader("./images/",["zA_small.jpg", "zB_small.jpg"],this,this.imagesLoadComplete2).load(); // ex ok : GOOD: [36 @ 0.548 | 40 @ 0.588]  -- theres a patch of incorrect matching on the tower
 
-new ImageLoader("./images/",["room0.png", "room1.png"],this,this.imagesLoadComplete2).load(); // real / close scenario : GREAT : [63 @ 0.58 |  66 @ 0.59]
+// new ImageLoader("./images/",["room0.png", "room1.png"],this,this.imagesLoadComplete2).load(); // real / close scenario : GREAT : [63 @ 0.58 |  66 @ 0.59]
 // new ImageLoader("./images/",["room1.png", "room2.png"],this,this.imagesLoadComplete2).load(); // GREAT : [74 @ 0.45 | 65 @ 0.44]
 // new ImageLoader("./images/",["room0.png", "room2.png"],this,this.imagesLoadComplete2).load(); // GOOD : [46 @ 0.83 | 45 @ 0.78]
 
@@ -80,7 +80,7 @@ new ImageLoader("./images/",["room0.png", "room1.png"],this,this.imagesLoadCompl
 // MORE
 // new ImageLoader("./images/",["graffiti_1.png", "graffiti_2.png"],this,this.imagesLoadComplete2).load(); // GOOD : [62 @ 0.46 | 63 : 0.43]
 
-// new ImageLoader("./images/",["temple_1.png", "temple_2.png"],this,this.imagesLoadComplete2).load(); // GOOD : [21 @ 0.4473 | 35 @ 1.23]
+// new ImageLoader("./images/",["temple_1.png", "temple_2.png"],this,this.imagesLoadComplete2).load(); // GOOD : [21 @ 0.4473 | 35 @ 1.23 | 14 @ 1.4512737]
 
 // new ImageLoader("./images/",["castle.000.jpg", "castle.009.jpg"],this,this.imagesLoadComplete2).load(); // GOOD: [48 @ 0.59 | 39 @ 0.66]
 // new ImageLoader("./images/",["castle.009.jpg", "castle.018.jpg"],this,this.imagesLoadComplete2).load(); // GOOD : [33 @ 0.58 | 31 @ 0.49]
@@ -94,6 +94,16 @@ new ImageLoader("./images/",["room0.png", "room1.png"],this,this.imagesLoadCompl
 // new ImageLoader("./images/",["medusa_4.png", "medusa_5.png"],this,this.imagesLoadComplete2).load(); // GOOD : [29 @ 0.36 | 32 : 0.36]
 // new ImageLoader("./images/",["medusa_1.png", "medusa_4.png"],this,this.imagesLoadComplete2).load(); // BAD: [17 @ 1.24 | 17 @ 1.23] -- WRONG
 // new ImageLoader("./images/",["medusa_2.png", "medusa_4.png"],this,this.imagesLoadComplete2).load(); // GOOD : [26 : 0.61 | 31 @ 0.71]
+
+//
+// new ImageLoader("./images/",["bt.000.png", "bt.002.png"],this,this.imagesLoadComplete2).load(); //  :  : [56 @ 0.37259 |  ? @ ?]
+
+// new ImageLoader("./images/",["chapel00.png", "chapel01.png"],this,this.imagesLoadComplete2).load(); //  :  : [37 @ 0.44  |  ? @ ?]
+
+// new ImageLoader("./images/",["keble.000.png", "keble.003.png"],this,this.imagesLoadComplete2).load(); //  :  : [46 @ 0.420 |  ? @ ?]
+
+new ImageLoader("./images/",["study1.png", "study3.png"],this,this.imagesLoadComplete2).load(); //  :  : [43 : 0.26640 |  ? @ ?]
+
 
 // new ImageLoader("./images/",["?.png", "?.png"],this,this.imagesLoadComplete2).load();
 

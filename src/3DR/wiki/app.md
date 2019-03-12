@@ -323,12 +323,14 @@ https://cloud.google.com/appengine/docs/nodejs/
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-- T  RANSAC
-	- more points for better T
-	- add a few bad points
-	- assume error ~ pixels
-	- use tft6
-	
+
+enumerating all possible triples
+	- n^2/2 -n/2 - 2 : n>3
+
+- optimum absolute 'sizes' from relative scales (baselines)
+	- input: pair scalings [transforms I-J & I-K]
+	- output: scaled absolute sizes
+
 
 - finding track seeds
 	- want some relative size / rotation between each view in record
@@ -338,7 +340,6 @@ https://cloud.google.com/appengine/docs/nodejs/
 	- A-B & A-C & B-C matches are all above some minimum count / error
 
 - initializing trifocal:
-
 	- 3 point spaces: for each view
 		- drop points that are too close to existing point (<1px) [order on corner score / etc on insertion]
 	- search radius ~ 2*Ferror [of Fab or Fac]
@@ -349,11 +350,14 @@ https://cloud.google.com/appengine/docs/nodejs/
 				- scale [init from affine / refine from NCC]
 				- score (NCC / SIFT)
 
+
+
 - get optimizing working for multi-view
 	refineCameraAbsoluteOrientation
 
 
 - get back to surface tessellation (once points are stable at surface)
+
 
 - get back to texturing
 
@@ -397,24 +401,54 @@ https://cloud.google.com/appengine/docs/nodejs/
 			- image in sequence found to be worse than rest of data
 		- keep record of attempted merges
 
-- TODO: EXAMPLE YAML FILE(s)
-
 - USE TRACK POINTS [100~1000 per pair] to initialize global solution [Pi]
 	- throw outliers out
 	- possibly obtain new track entries?
-
-- TODO: EXAMPLE YAML FILE
 
 - USE OPTIMIZED VIEW GRAPH to break the problem up where possible
 	- prefer lower error pairs
 	- prune repetitive views
 	- ...
 
-- TODO: EXAMPLE YAML FILE(s)
+- DENSE POINTS INIT
+	- all pairwise points accumulated to single file
+	- track points also
 
-- PERIODICALLY:
-	- SOLVE DENSE LOCAL areas separately
-	- MERGE NEIGHBORHOOD AFTER SIGNIFICANT CHANGES
+- MAIN REFINEMENT ITERATION:
+	- load ALL P3D from file
+	- load 3 views - prioritize by views with fastest error reduction (how to calculate?)
+	- include P3D that are relevant to view grouping (in front, inside viewing angle, not facing different direction, not too far??? [what about BG])
+	- iterate on:
+		- adding/dropping 2D points
+		- projecting 3D points not yet visible in views
+		- BUNDLE ADJUST points & views [points might need some lag on their change, as only max 3 views are used to approx. location]
+	- save update P3D file
+		- keep track of UPDATED | ADDED | REMOVED points
+
+						- SKELETON:
+							- PERIODICALLY:
+								- SOLVE DENSE LOCAL areas separately
+								- MERGE NEIGHBORHOOD AFTER SIGNIFICANT CHANGES
+
+
+	- MIGHT BE THE CASE THAT VIEWS NOT ORIGINALLY PAIRED NOW LIKELY HAVE A PAIR []
+		- keep a lookout for points that might project into view have opportunity to try
+		- or if there are now many 3D points they both share, then add an entry
+
+- TRIANGULATION:
+	- load ALL P3D from file
+	- triangulate surface
+	- save to triangle file
+
+- TEXTURING:
+	- load triangles
+	- optimize viewing angles
+	- mark which triangles/vertexes are needed for each view
+	- load view one-by-one
+		- load texture_i & add alpha
+		- all pixels start at: 0x0
+		- pixel i = alpha*A + beta*B + gamma*C : A + B + C = 1.0 | values will be quantized to nearest [0-255] if using a PNG to store ...
+
 
 - WHEN A NEW VIEW IS ADDED:
 	- for each pair (~10)
@@ -426,11 +460,14 @@ https://cloud.google.com/appengine/docs/nodejs/
 	- INIT SKELETON GRAPH ONLY WHERE EDGES CONNECT
 	- UPDATE DENSE LOCAL-GLOBAL SOLVE
 
-- REMESH TRIANGLES AT EXTENT OF POINTS
 
-- MESH CAN ALSO BE DONE PROGRESSIVE - INITIAL APPROX HAS
-- SEGMENT AND DO PORTIONS INDEPENDENTLY [MARK REGIONS/EDGES OF NO-PROGRESS]
-	- may then need to iterate on inverse?
+
+
+	- reprojection error:
+		A) estimate 3D points (reprojective)
+			Points3D_est=triangulation3D(ProjM,Corresp);
+			project 3d point to 2D image planes
+			error = sqrt( distanceA + dB + dC )
 
 
 

@@ -2257,10 +2257,11 @@ Code.sumArray = function(a){
 	}
 	return sum;
 }
-Code.gradientDescent = function(fxn, args, x, dx, iter, diff){
+Code.gradientDescent = function(fxn, args, x, dx, iter, diff, epsilon){
 	var i, j, k, c;
 	var sizeX = x.length;
-	var epsilon = 1E-6;
+	// var epsilon = 1E-6;
+	epsilon = epsilon!==undefined ? epsilon : 1E-6;
 	var cost = fxn(args, x, false, -1); // current cost
 	var currCost, nextCost;
 	var maxIterations = iter!=null ? iter : 50;
@@ -3352,6 +3353,7 @@ Code.randomIndexes = function(count, range){
 // }
 // Code.randomIntervalSet(5, 0, 10);
 Code.randomIntervalSet = function(count, min,max){
+// TODO: OPTIMIZATIONS FOR DIFFERENT COUNT CASES
 	if(max===undefined){ max = min; min = 0; }
 	var maxMinusMin = max-min;
 	// var maxMinusMinP1 = maxMinusMin + 1;
@@ -3362,7 +3364,7 @@ Code.randomIntervalSet = function(count, min,max){
 	for(i=0; i<=maxMinusMin; ++i){
 		set[i] = i + min;
 	}
-	Code.randomizeArray(set); // unnecessaru
+	Code.randomizeArray(set); // unnecessary
 	while(set.length>count){ // remove a random index
 		set.splice( Math.min(Math.floor(Math.random()*set.length),set.length-1), 1);
 	}
@@ -4334,13 +4336,9 @@ Code.arrayVectorScale = function(a, s){
 	}
 	return c;
 };
-// Code.arrayScale = Code.arrayVectorScale;
-// Code.arraySub = function(a, s){
-// 	for(var i=a.length; i--; ){
-// 		a[i] = a[i] - s;
-// 	}
-// 	return a;
-// }
+Code.arraySub = Code.arrayVectorSub;
+Code.arrayAdd = Code.arrayVectorAdd;
+Code.arrayScale = Code.arrayVectorScale;
 Code.arrayClip = function(a, min, max){
 	for(var i=a.length; i--; ){
 		a[i] = Math.min(Math.max(a[i], min),max);
