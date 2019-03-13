@@ -1811,9 +1811,9 @@ Stereopsis.World.prototype.solveGlobalAbsoluteTransform = function(completeFxn, 
 // iterations = 9;
 // iterations = 7;
 // iterations = 5;
-// iterations = 3;
+iterations = 3;
 // iterations = 2;
-iterations = 1;
+// iterations = 1;
 	this._completeFxn = completeFxn;
 	this._completeContext = completeContext;
 	this._maxIterations = iterations;
@@ -2074,12 +2074,12 @@ this._CALCULATE_PATCHES = false;
 	console.log("-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ "+iterationIndex+"/"+maxIterations+" ( "+isFirst+" & "+isLast+" ) ");
 	this.printPoint3DTrackCount();
 
-
+/*
 	this.relativeTransformsFromAbsoluteTransforms();
 	this.relativeFFromSamples();
 	this.estimate3DErrors(true);
 	this.averagePoints3DFromMatches(true);
-return;
+*/
 
 // console.log("INITIAL:");
 // this.relativeTransformsFromAbsoluteTransforms();
@@ -2113,7 +2113,7 @@ if(true){
 				this.averagePoints3DFromMatches(true);
 // should the 3D points be further optimized to minimize reprojection error to each view it's included in?
 				// MOTION
-				// this.refineCameraAbsoluteOrientation();
+				this.refineCameraAbsoluteOrientation();
 				// NEW ERROR: this.estimate3DErrors(true);
 				// STRUCTURE
 				// this.refinePoint3DAbsoluteLocation(); // ?
@@ -2173,8 +2173,8 @@ if(true){
 
 	// 2D NEIGHBORHOOD VOTING
 	// TOSO: fitler local 2D affine
-	// this.filterLocal2D(); //
-	// this.filterLocal3D(); //
+	this.filterLocal2D(); //
+	this.filterLocal3D(); //
 	// this.dropGlobalWorst(5.0);
 
 

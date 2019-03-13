@@ -56,7 +56,7 @@ K:
 <br/>
 *s* is the x-y axis skew, how far a line of pixels shifts compared to the line below it
 <br/>
-*cx* & *cy* are where in the image the camera center (focal point, primary point) projects to.
+*cx* & *cy* are where in the image the camera center (focal point, principle/primary/center point) projects to.
 <br/>
 
 

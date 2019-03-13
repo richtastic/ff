@@ -199,7 +199,8 @@ storage / memory info
 project typical numbers:
 	10~100  number of images
 		each image has ~ 0.2 other matched images
-	~N*(1 + 0.2) pairs
+	~N*N(0.2) pairs [ (n*)/2 - 2 pairs possible ]		CURRENT GUESS OF AVERAGE GRAPH CONNECTIVITY
+	~N*N(0.1) triples [(n^2 -n)/2 - 2 triples possible]
 	20~200 pairs
 
 	[max 4032 x 3024]
@@ -214,11 +215,26 @@ project typical numbers:
 
 	100~1000 initial features
 	50~100 matched pair features
+	~10k matched dense pairs
+	100~1000 track points per pair
+	2-5 avg track length CURRENT GUESS OF AVG TRACK LENGTH
+
+	[100-1000] * N track points total
+	10K * N 2D dense points total
+	10K * N/3 3D dense points total
+
+	10 images:
+		20 pairs
+		10 triples
+		1E3-1E4 track points [10,000]
+		1E5 2D dense points [100,000]
+	100 images:
+		2000 pairs
+		1000 triples
+		1E4-1E5 track points [100,000]
+		1E6 dense points [1,000,000]
 
 
-	~100 medium feature points [medium]
-	~0.25 * pixels * (1/25) match points [dense]
-		0.25 * (1920*1080) * (1/25) = 2.0736E4 dense matches [20k per image pair]
 
 
 
@@ -324,13 +340,21 @@ https://cloud.google.com/appengine/docs/nodejs/
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-enumerating all possible triples
-	- n^2/2 -n/2 - 2 : n>3
+- filter to 3x3 grid so processing is manageable
+- import from filtered-dense file
+
+
+
+- how to use TFT in stereopsis
+	- figure out a TFT for every 3 views: A, B, C
+		- include only subset of points that already have 3-way-matches
+		- estimate TFT linearly (up to 100-1000 lowest-F/P-error scores)
+		- shoe-horn in other possibly good 3-way matches ?
+		x calculate relative PA-PB-PC
 
 - optimum absolute 'sizes' from relative scales (baselines)
 	- input: pair scalings [transforms I-J & I-K]
 	- output: scaled absolute sizes
-
 
 - finding track seeds
 	- want some relative size / rotation between each view in record
@@ -350,17 +374,12 @@ enumerating all possible triples
 				- scale [init from affine / refine from NCC]
 				- score (NCC / SIFT)
 
-
-
 - get optimizing working for multi-view
 	refineCameraAbsoluteOrientation
 
-
 - get back to surface tessellation (once points are stable at surface)
 
-
 - get back to texturing
-
 
 - Track point logistics
 - MODELING A TRACK
@@ -412,28 +431,41 @@ enumerating all possible triples
 
 - DENSE POINTS INIT
 	- all pairwise points accumulated to single file
-	- track points also
+		- limit dense points by some corner / range / error limit
+		- limit dense points by image cell grid size [~3x3 = 1/9th resolution]
+			- ie: drop all points within (3/2) pixels away from established points when adding
+	- track points also ?
+	- P3D location & [patch] normal are initialized by a sum across all pairs [calculated linear solution without need of loading view images]
+		- location: using sum of estimated locations * ABS_a * 1/error
+		- normal: using
+
+
 
 - MAIN REFINEMENT ITERATION:
 	- load ALL P3D from file
-	- load 3 views - prioritize by views with fastest error reduction (how to calculate?)
+	- CHOOSE  - prioritize by views with fastest error reduction (how to calculate?)
+		- load 3 views (proj 3D points + BA)
+		- load 2 views (BA) -
+
 	- include P3D that are relevant to view grouping (in front, inside viewing angle, not facing different direction, not too far??? [what about BG])
 	- iterate on:
 		- adding/dropping 2D points
 		- projecting 3D points not yet visible in views
 		- BUNDLE ADJUST points & views [points might need some lag on their change, as only max 3 views are used to approx. location]
+	- convert new absolute locations into relative w/ least error relating to old locations
+	- new P3D locations/normals & view ABS transforms =
+		(%OLD) x old  + (%NEW) x new
+		- old error = all view error not including pair_i | new error = pair_i
+		- merged points are same as updated points
+		- added points are added ABSOLUTELY
+		- removed points are only entirely removed if 1 (or less) views now reference it
 	- save update P3D file
-		- keep track of UPDATED | ADDED | REMOVED points
-
-						- SKELETON:
-							- PERIODICALLY:
-								- SOLVE DENSE LOCAL areas separately
-								- MERGE NEIGHBORHOOD AFTER SIGNIFICANT CHANGES
 
 
 	- MIGHT BE THE CASE THAT VIEWS NOT ORIGINALLY PAIRED NOW LIKELY HAVE A PAIR []
 		- keep a lookout for points that might project into view have opportunity to try
-		- or if there are now many 3D points they both share, then add an entry
+		- or if there are now many 3D points they both share, then add an entry [edge?]
+		-
 
 - TRIANGULATION:
 	- load ALL P3D from file
@@ -454,10 +486,13 @@ enumerating all possible triples
 	- for each pair (~10)
 		- PAIR F
 		- PAIR P
-		- PAIR SIZE
-		- TRACK ADDITIONS
-	- TRACK UPDATES
-	- INIT SKELETON GRAPH ONLY WHERE EDGES CONNECT
+		- TRI = relative SIZES
+	- if change is MINOR:
+		- inject into existing solution with best estimate
+	- else
+		- TRACK ADDITIONS ?
+		- TRACK UPDATES ?
+		- INIT SKELETON GRAPH ONLY WHERE EDGES CONNECT ?
 	- UPDATE DENSE LOCAL-GLOBAL SOLVE
 
 

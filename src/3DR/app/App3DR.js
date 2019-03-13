@@ -5375,11 +5375,73 @@ HexMenu.prototype.x = function(){
 projects/
 	0/
 		info.yaml
-			...
-			cameras
-			views
-			pairs
-			triples
+			title: "New Project 11/9/18 9:12AM"
+			created: "2018-11-09 09:12:31.9000"
+			modified: "2019-03-03 16:59:33.2690"
+			cameras:
+				-
+					directory: "LA8ADU8H"
+					title: "New Camera LA8ADU8H"
+					calculatedCount: 10					# number of images used to calculate K parameters (if not matching images.length -> needs processing)
+					K:
+						fx: 0.8565143769157422
+						fy: 1.1625998022448123
+						s: -0.012439315192795274
+						cx: 0.4781381185245835
+						cy: 0.4746370298801608
+					distortion:
+						k1: -0.012203124117497414
+						k2: 0.0007660455391699547
+						k3: 0.0005320068206907417
+						p1: 0.017459785333744926
+						p2: 0.014415011981151046
+					images:
+						-
+							directory: "L9THUQ4M"
+							matches: 81
+							aspectRatio: 1.3333333333333333
+							pictures:
+								-
+									file: "100.png"
+									width: 1008
+									height: 756
+									scale: 1
+								...
+						...
+			views:
+				-
+					title: "New View 7Z85UKMI"
+					directory: "7Z85UKMI"
+					camera: null
+					aspectRatio: 1.3333333333333333
+					mask: null # image file name of mask -- mask.png
+					pictures:
+						-
+							file: "100.png"
+							width: 504
+							height: 378
+							scale: 1
+						...
+					features:
+						file: "features.yaml"	# found features for image
+
+			pairs:
+				-
+					directory: "KF398BC7"
+					viewA: "2DWWPMNZ"
+					viewB: "914UQJ51"
+					featureScore: 0			# NOT USED
+					featureCount: 42		# 2S match count
+					relativeCount: 29683	# 3D match count
+				...
+			triples:
+				-
+					directory: "KF398BC7"
+					viewA: "2DWWPMNZ"
+					viewB: "914UQJ51"
+					viewC: "CCCCCCCC"
+					relativeCount: 29683	# 3D match count
+				...
 
 		views/
 			0/
@@ -5416,11 +5478,42 @@ projects/
 		triples/tuples
 			0/
 				info.yaml 			x,y <=> pixel matches among 3 views
-					- TFT
-					- relative scalings between separate pairs
-						A-B : A-C
-						B-A : B-C
-						C-A : C-B
+					cameras:
+						... # camera data used
+					views:
+						-
+							id: # CAMERA ID
+							camera: "0" # INDEX TO CAMERAS
+							imageSize:	# SIZE OF IMAGE USED
+								x: 504
+								y: 378
+							cellSize: 3 # SIZE OF CELLS USED
+							transform: ABS TRANSFORM
+
+					TFT:
+						matches: 21857 ????? POINTS THAT SATISFY THIS ?
+						errorTFTMean:
+						errorTFTSigma:
+						TFT: 27-PARAM MATRIX
+					gauge: - relative scalings between separate pairs -- coordinate system gauge
+						AB-AC: 2.0		# from AB to AC
+						BA-BC: 0.9		# from BA to BC
+						CA-CB: 0.6		# from CA to CB
+
+					transforms: # data on view transforms (1:1 parallel array to views) -- SAME AS PAIR
+						-
+							matches: 21857
+							errorRMean: 0.00000103378302308721
+							errorRSigma: 0.3029725132265945
+							errorFMean: 0.0000018490823274523024
+							errorFSigma: 0.24309154400461266
+							errorNCCMean: 0.002385297852253665
+							errorNCCSigma: 0.1671777117177186
+							errorSADMean: 0.004033203176232317
+							errorSADSigma: 0.06777955317617489
+					points:
+						-
+							SAME AS PAIR
 
 		cameras/
 			0/
@@ -5516,6 +5609,13 @@ C			points.yaml - global 3D point list
 								i: VIEW INDEX
 								x: [0-1]
 								y: [0-1]
+						m: # NO - THIS IS ALL DERIVABLE DATA
+							-
+								i: VIEW INDEX
+								j: VIEW INDEX
+								r: R ERROR - can be recalculated
+								f: F ERROR - can be recalculated
+								n: NCC SCORE - SLOWLY recaclulated
 					...
 
 D			info.yaml - dense point reconstruction info
@@ -5535,12 +5635,26 @@ D			info.yaml - dense point reconstruction info
 					-
 						A: ID
 						B: ID
+						- total/change in 3-way points?
 						errorF: avg f error
+						errorP: avg 3D reprojection error (for both 2-way 3D matched points)
 						deltaErrorF: null / change since last
+						deltaErrorP: null / change since last
 						updated: timestamp for last update
 					... [MIGHT NEED TO ADD NEW PAIRS ON THE FLY?]
 				- triples
-					- ?
+					-
+						A: ID
+						B: ID
+						C: ID
+						-
+						- total/change in 3-way points?
+						errorT: avg t error
+						errorP: avg 3D reprojection error (for all 3-way 3D matched points)
+						deltaErrorT: null / change since last
+						deltaErrorP: null / change since last
+						updated: timestamp for last update
+					... [MIGHT NEED TO ADD NEW PAIRS ON THE FLY?]
 
 			triangles.yaml - triangle reconstruction - triangle soup of approximated surface & texture mapping
 				points:
@@ -6233,6 +6347,7 @@ console.log("checkPerformNextTask");
 	console.log("next task?");
 	var views = this._views;
 	var pairs = this._pairs;
+	var triples = this._triples;
 	// do all views have images sized down to 150x100?
 		// ASSUMED DONE ...
 	// do all views have features detected?
@@ -6320,7 +6435,46 @@ console.log("checkPerformNextTask");
 			}
 		}
 	}
-
+// return;
+	// assuming all pairs have run
+if(false){
+	len = views.length;
+	for(i=0; i<len; ++i){
+		var viewA = views[i];
+		var idA = viewA.id();
+		for(j=i+1; j<len; ++j){
+			var viewB = views[j];
+			var idB = viewB.id();
+			for(k=j+1; k<len; ++k){
+				var viewC = views[k];
+				var idC = viewC.id();
+				var found = false;
+				var foundTriple = null;
+				for(t=0; t<triples.length; ++t){
+					var triple = triples[k];
+					if(triple.isTriple(idA,idB,idC)){
+						found = true;
+						if(!triple.hasRelative()){
+							foundTriple = triple;
+							break;
+						}
+					}
+				}
+				if(!found){
+					console.log("NEED TO CREATE A TRIPLE : "+idA+" & "+idB+" & "+idC+" ");
+					foundTriple = null;
+					throw "yep";
+				}
+				if(foundTriple){
+					console.log("NEED TO DO TRIPLE MATCH: "+idA+" & "+idB+" & "+idC+" = "+foundTriple.id());
+					throw "YEP";
+					this.calculateBundleAdjustTriple(viewA,viewB,viewC);
+					return;
+				}
+			}
+		}
+	}
+}
 /*
 console.log("need relative sizing - TFT / scale approx");
 	var viewA = views[0];
@@ -7100,11 +7254,9 @@ console.log("ERROR: "+transformRMean+" * "+transformRSigma+" @ "+transformMatche
 		var viewDataB = viewsData[1];
 		var cameraA = Matrix.loadFromObject(viewDataA["transform"]);
 		var cameraB = Matrix.loadFromObject(viewDataB["transform"]);
-// THIS MIGHT NEED TO INVERT FROM EXT TO CAM
-
+		// INVERT FROM EXT TO CAM
 		cameraA = Matrix.inverse(cameraA);
 		cameraB = Matrix.inverse(cameraB);
-
 
 var scaler = 1;
 if(i==0){ // 0-1
@@ -7114,9 +7266,6 @@ if(i==0){ // 0-1
 }else if(i==2){ // 1-2
 	scaler = 1.05;
 }
-
-		// var relativeAtoB = R3D.relativeTransformMatrix(cameraA,cameraB);
-		//var relativeAtoB = R3D.componentwiseRelativeCameraMatrix(cameraA,cameraB);
 		var relativeAtoB = R3D.relativeTransformMatrix2(cameraA,cameraB);
 
 		console.log("scaler:"+scaler);
@@ -7497,6 +7646,7 @@ App3DR.ProjectManager.prototype.calculateGlobalOrientationNonlinear = function(s
 
 
 App3DR.ProjectManager.prototype._calculateGlobalOrientationNonlinearB = function(str){
+console.log("_calculateGlobalOrientationNonlinearB");
 	var yaml = YAML.parse(str);
 	yaml = yaml[0];
 	console.log(yaml);
@@ -7598,7 +7748,9 @@ App3DR.ProjectManager.prototype._calculateGlobalOrientationNonlinearB = function
 	var pointCountAdded = 0;
 	for(var i=0; i<points.length; ++i){
 		var point = points[i];
-		// console.log(point);
+		if(i%1000==0){
+			console.log(i+" of "+points.length);
+		}
 		var point3D = new V3D(point["X"],point["Y"],point["Z"]);
 		var pointViews = point["views"];
 		for(var j=0; j<pointViews.length; ++j){
@@ -7885,6 +8037,14 @@ App3DR.ProjectManager.prototype.calculateGlobalOrientationHierarchy = function(s
 // App3DR.ProjectManager.prototype.calculateBundleAdjustGlobal = function(callback, context, object){
 // 	throw "calculateBundleAdjustGlobal";
 // }
+
+App3DR.ProjectManager.prototype.calculateBundleAdjustTriple = function(viewAIn,viewBIn,viewCIn, callback, context, object){
+	throw "calculateBundleAdjustTriple";
+	/*
+	load view data & pair data for all 3
+	*/
+}
+
 App3DR.ProjectManager.prototype.calculateBundleAdjustPair = function(viewAIn,viewBIn, callback, context, object){
 	var i, j, k;
 	var view, pair, camera;
@@ -9377,9 +9537,13 @@ App3DR.ProjectManager.Triple = function(manager, directory, viewA, viewB, viewC)
 	this._viewAID = viewA;
 	this._viewBID = viewB;
 	this._viewCID = viewC;
+	// MATCHING - 2D
 	this._matchFeatureCount = null;
 	this._matchFeatureScore = null;
 	this._matchingData = null;
+	// RELATIVE - 3D
+	this._relativeCount = null;
+	this._relativeData = null;
 }
 App3DR.ProjectManager.Triple.prototype.toString = function(){
 	return "[Triple: "+this._viewAID+" : "+this._viewBID+" : "+this._viewCID+"]";
@@ -9418,6 +9582,9 @@ App3DR.ProjectManager.Triple.prototype.isTriple = function(idA,idB,idC){
 }
 App3DR.ProjectManager.Triple.prototype.hasMatch = function(){
 	return this._matchFeatureCount != null || this._matchFeatureCount >= 0;
+}
+App3DR.ProjectManager.Triple.prototype.hasRelative = function(){
+	return this._relativeCount !== null && this._relativeCount >= 0;
 }
 App3DR.ProjectManager.Triple.prototype.saveToYAML = function(yaml){
 	yaml.writeString("directory", this._directory);
