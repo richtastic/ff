@@ -89,7 +89,7 @@ var modeModelReconstruction = false;
 
 // don't A:
 // TO SWITCH ON MODELING:
-modeModelReconstruction = true;
+// modeModelReconstruction = true;
 
 
 
@@ -5826,6 +5826,20 @@ App3DR.ProjectManager.prototype.views = function(){
 App3DR.ProjectManager.prototype.pairs = function(){
 	return this._pairs;
 }
+App3DR.ProjectManager.prototype.pairFromViewIDs = function(viewAID,viewBID){
+	var pairs = this._pairs;
+	for(var i=0; i<pairs.length; ++i){
+		var pair = pairs[i];
+		var viewA = pair.viewA();
+		var viewB = pair.viewB();
+		var idA = viewA.id();
+		var idB = viewB.id();
+		if( (idA==viewAID && idB==viewBID) || (idA==viewBID && idB==viewAID) ){
+			return pair;
+		}
+	}
+	return null;
+}
 App3DR.ProjectManager.prototype.triples = function(){
 	return this._triples;
 }
@@ -6339,7 +6353,7 @@ App3DR.ProjectManager.prototype._backgroundTaskTick = function(){
 }
 App3DR.ProjectManager.prototype.checkPerformNextTask = function(){
 // don't 1 - run
-return;
+// return;
 console.log("checkPerformNextTask");
 	this.pauseBackgroundTasks();
 	this._taskBusy = true;
@@ -6418,26 +6432,26 @@ console.log("checkPerformNextTask");
 		for(j=i+1; j<len; ++j){
 			var viewB = views[j];
 			var idB = viewB.id();
-			var foundPair = null;
 			for(k=0; k<pairs.length; ++k){
 				var pair = pairs[k];
 				if(pair.isPair(idA,idB)){
 					if(!pair.hasRelative()){
-						foundPair = pair;
-						break;
+						console.log("NEED TO DO A DENSE BA PAIR : "+idA+" & "+idB+" = "+pair.id());
+						this.calculateBundleAdjustPair(viewA,viewB);
+						return;
+					}
+					if(!pair.hasTracks()){
+						console.log("NEED TO DO A TRACK PAIR : "+idA+" & "+idB+" = "+pair.id());
+						this.calculatePairTracks(viewA,viewB);
+						return;
 					}
 				}
-			}
-			if(foundPair){
-				console.log("NEED TO DO A PAIR : "+idA+" & "+idB+" = "+foundPair.id());
-				this.calculateBundleAdjustPair(viewA,viewB);
-				return;
 			}
 		}
 	}
 // return;
 	// assuming all pairs have run
-if(false){
+// if(false){
 	len = views.length;
 	for(i=0; i<len; ++i){
 		var viewA = views[i];
@@ -6474,7 +6488,8 @@ if(false){
 			}
 		}
 	}
-}
+// }
+return;
 /*
 console.log("need relative sizing - TFT / scale approx");
 	var viewA = views[0];
@@ -8044,6 +8059,207 @@ App3DR.ProjectManager.prototype.calculateBundleAdjustTriple = function(viewAIn,v
 	load view data & pair data for all 3
 	*/
 }
+App3DR.ProjectManager.prototype.calculatePairTracks = function(viewAIn,viewBIn, callback, context, object){
+	var pair = this.pairFromViewIDs(viewAIn.id(),viewBIn.id());
+	// backwards order:
+
+// save project file
+
+// save to track file
+	var worldTracksCompleted = function(a){
+		console.log("worldTracksCompleted");
+	}
+
+// convert to WORLD objects
+	var createWorld = function(a){
+		// make images:
+		var images = [viewAIn.bundleAdjustImage(),viewBIn.bundleAdjustImage()];
+		for(var i=0; i<images.length; ++i){
+			var image = images[i];
+			var matrix = GLOBALSTAGE.getImageAsFloatRGB(image);
+				matrix = new ImageMat(matrix["width"], matrix["height"], matrix["red"], matrix["grn"], matrix["blu"]);
+			images[i] = matrix;
+		}
+		// fill world in
+		var world = new Stereopsis.World();
+		var relativeData = pair.relativeData();
+		App3DR.ProjectManager.addCamerasToWorld(world, relativeData["cameras"]);
+		App3DR.ProjectManager.addViewsToWorld(world, relativeData["views"], images);
+		App3DR.ProjectManager.addPointsToWorld(world, relativeData["points"]);
+		// solve for tracks
+		var results = world.solveForTracks(worldTracksCompleted, this, null);
+	}
+
+	// done loading
+	var fxnPairsLoaded = function(a){
+		console.log("loaded pairs");
+		createWorld();
+	}
+
+	// load pair data
+	var fxnImagesLoaded = function(a){
+		console.log("loaded images");
+		App3DR.ProjectManager.loadPairsRelativeData([pair], fxnPairsLoaded, this, null);
+	};
+
+	// load all view images
+	App3DR.ProjectManager.loadViewsImages([viewAIn,viewBIn], fxnImagesLoaded, this, null);
+}
+App3DR.ProjectManager.addCamerasToWorld = function(world, cameras){
+	var WORLDCAMS = [];
+	for(var i=0; i<cameras.length; ++i){
+		var camera = cameras[i];
+		var camID = camera["camera"]; // ...
+		var K = camera["K"];
+			if(K["fx"]!==undefined){
+				K = new Matrix(3,3).fromArray([K["fx"],K["s"],K["cx"], 0,K["fy"],K["cy"], 0,0,1]);
+			}else{
+				K = Matrix.loadFromObject(K);
+			}
+		var distortion = camera["distortion"];
+		// if(distortion!==undefined){
+		// 	// distortion =
+		// }
+		var c = world.addCamera(K, distortion);
+		c.data(camID);
+		/*
+			var distortion = camera.distortion();
+			var fx = K["fx"];
+			var fy = K["fy"];
+			var s = K["s"];
+			var cx = K["cx"];
+			var cy = K["cy"];
+			var k1 = distortion["k1"];
+			var k2 = distortion["k2"];
+			var k3 = distortion["k3"];
+			var p1 = distortion["p1"];
+			var p2 = distortion["p2"];
+			var K = new Matrix(3,3).fromArray([fx,s,cx, 0,fy,cy, 0,0,1]);
+			var c = world.addCamera(K, distortion);
+			console.log(c);
+			*/
+		// camera.temp(c);
+		WORLDCAMS.push(c);
+	}
+	return WORLDCAMS;
+}
+App3DR.ProjectManager.addViewsToWorld = function(world, views, images){
+	var WORLDVIEWS = [];
+	var cameras = world.toCameraArray();
+	var cameraLookup = {};
+	for(var i=0; i<cameras.length; ++i){
+		var c = cameras[i];
+		var temp = c.data(); // id
+		cameraLookup[temp] = c;
+	}
+	for(var i=0; i<views.length; ++i){
+		var view = views[i];
+		var image = images[i];
+		var viewID = view["id"];
+		var camID = view["camera"];
+		var transform = view["transform"];
+			transform = new Matrix(4,4).fromObject(transform);
+		var cam = cameraLookup[camID];
+		if(!cam){
+			cam = cameras[0];
+		}
+		var v = world.addView(image, cam);
+		v.absoluteTransform(transform);
+		v.image(image);
+		v.data(viewID);
+		WORLDVIEWS.push(v);
+	}
+	return WORLDVIEWS;
+}
+App3DR.ProjectManager.addPointsToWorld = function(world, points){
+	var viewLookup = {};
+	var views = world.toViewArray();
+	for(var i=0; i<views.length; ++i){
+	    var view = views[i];
+	    viewLookup[view.data()] = view;
+	}
+	var o = new V2D(0,0);
+	var x1 = new V2D();
+	var x2 = new V2D();
+	var y1 = new V2D();
+	var y2 = new V2D();
+	var arr1 = [o,x1,y1];
+	var arr2 = [o,x2,y2];
+	var pointCountAdded = 0;
+	for(var i=0; i<points.length; ++i){
+		var point = points[i];
+		var point3D = new V3D(point["X"],point["Y"],point["Z"]);
+		var pointViews = point["views"];
+		// connect to view
+		for(var j=0; j<pointViews.length; ++j){
+			var viewJ = pointViews[j];
+			var vJ = viewLookup[viewJ["view"]];
+			for(var k=j+1; k<pointViews.length; ++k){
+				var viewK = pointViews[k];
+				var vK = viewLookup[viewK["view"]];
+				var fr = new V2D(viewJ["x"],viewJ["y"]);
+				var to = new V2D(viewK["x"],viewK["y"]);
+				x1.set(viewJ["Xx"],viewJ["Xy"]);
+				y1.set(viewJ["Yx"],viewJ["Yy"]);
+				x2.set(viewK["Xx"],viewK["Xy"]);
+				y2.set(viewK["Yx"],viewK["Yy"]);
+				// to image plane
+				var sizeFr = vJ.size();
+				var sizeTo = vJ.size();
+				fr.scale(sizeFr.x,sizeFr.y);
+				to.scale(sizeTo.x,sizeTo.y);
+				var affineAB = R3D.affineMatrixExact(arr1,arr2);
+				// add
+				world.addMatchFromInfo(vJ,fr, vK,to, affineAB, point3D);
+				pointCountAdded++;
+			}
+		}
+		// if(pointCountAdded>1000){
+		// 	break;
+		// }
+	}
+	console.log("ADDED POINTS: "+pointCountAdded);
+}
+App3DR.ProjectManager.loadPairsRelativeData = function(pairs, callback, context, object){
+	var expectedPairs = pairs.length;
+	var pair;
+	var loadedPairs = 0;
+	var fxnPairLoaded = function(pair){
+		++loadedPairs;
+		checkLoadedAllPairs();
+	}
+	var checkLoadedAllPairs = function(){
+		if(loadedPairs==expectedPairs){
+			callback.call(context, object);
+		}
+	}
+	for(i=0; i<pairs.length; ++i){
+		pair = pairs[i];
+		//pair.loadMatchingData(fxnPairLoaded, this);
+		pair.loadRelativeData(fxnPairLoaded, this);
+	}
+}
+App3DR.ProjectManager.loadViewsImages = function(views, callback, context, object){
+	var view;
+	var expectedViews = views.length;
+	var loadedFeatureImages = 0;
+	var expectedFeatureImages = views.length;
+
+	var fxnFeatureImageLoaded = function(view){
+		++loadedFeatureImages;
+		checkLoadedAllImages.call(this);
+	}
+	var checkLoadedAllImages = function(){
+		if(loadedFeatureImages==expectedFeatureImages){
+			callback.call(context, object);
+		}
+	}
+	for(i=0; i<views.length; ++i){
+		view = views[i];
+		view.loadBundleAdjustImage(fxnFeatureImageLoaded, this);
+	}
+}
+
 
 App3DR.ProjectManager.prototype.calculateBundleAdjustPair = function(viewAIn,viewBIn, callback, context, object){
 	var i, j, k;
@@ -8402,9 +8618,6 @@ for(var i=0; i<views.length; ++i){
 	BAVIEWS.push(v);
 }
 
-
-
-
 console.log(" > READ/FILTER MATCHES");
 // matches
 for(var i=0; i<pairs.length; ++i){
@@ -8427,8 +8640,6 @@ for(var i=0; i<pairs.length; ++i){
 	var imageHeightB = vB.image().height();
 		var aspectA = viewA.aspectRatio();
 		var aspectB = viewB.aspectRatio();
-		// var fromImageSize = new V2D(1.0,1.0/aspectA);
-		// var toImageSize = new V2D(1.0,1.0/aspectB);
 		var fromImageSize = new V2D(imageWidthA,imageHeightA);
 		var toImageSize = new V2D(imageWidthB,imageHeightB);
 
@@ -8449,26 +8660,8 @@ for(var i=0; i<pairs.length; ++i){
 		to = new V2D(to.x,to.y);
 		//to = R3D.undistortPointCamera(to, K, distortion);
 		to.scale(toImageSize.x,toImageSize.y);
-// console.log(fr+" -> "+to);
 		filteredMatches.push([fr,to,relAngle,relScale]);
 	}
-	/*
-	// remove duplicates
-	// TODO: keep best dups
-	var eps = 1E-10;
-	for(j=0; j<filteredMatches.length; ++j){
-		var matchA = filteredMatches[j];
-		for(k=j+1; k<filteredMatches.length; ++k){
-			var matchB = filteredMatches[k];
-			if( (Math.abs(matchA[0].x-matchB[0].x)<eps && Math.abs(matchA[0].y-matchB[0].y)<eps) ||
-			    (Math.abs(matchA[1].x-matchB[1].x)<eps && Math.abs(matchA[1].y-matchB[1].y)<eps) ){
-				filteredMatches.splice(j,1);
-				--j; // retry
-				break;
-			}
-		}
-	}
-	*/
 	//console.log("MATCHES AFTER: "+filteredMatches.length);
 	console.log("MATCHES FOR PAIR "+vA.id()+"+"+vB.id()+" == "+filteredMatches.length);
 
@@ -8486,20 +8679,6 @@ var skip = true; // SKIP AFFINE SEQUENCE - OK FOR ~1000 not for ~10,000+
 		var scaleAB = match[3]; // THIS DEPENDS ON ABSOLUTE SIZE ...
 //		console.log(fr+" & "+to+" & "+angleAB+" | "+scaleAB);
 		world.addMatchForViews(vA,fr, vB,to, scaleAB,angleAB, skip);
-		/*
-		var pointA = vA.closestPoint2D(fr.x,fr.y);
-		var pointB = vB.closestPoint2D(to.x,to.y);
-		if(pointA && pointB){
-			BA.matchPoints2D(pointA, pointB);
-			++matchesCount;
-		}
-		*/
-// // TODO: UNCOMMENT
-// if(j>=0){
-//if(j>=2){
-// if(j>=10){
-// 	break;
-// }
 	}
 	// initially get 2-sigma points & only add those from match list
 }
@@ -8525,6 +8704,9 @@ var completeFxn = function(){
 	*/
 }
 console.log(world);
+
+
+throw "do world thing here";
 
 world.solve(completeFxn, this);
 return;
@@ -9430,6 +9612,7 @@ App3DR.ProjectManager.Pair = function(manager, directory, viewA, viewB){
 	this._relativeCount = null;
 	this._matchingData = null;
 	this._relativeData = null;
+	this._trackCount = null;
 
 	// this._matchingSparse = null;
 	// this._matchingMedium = null;
@@ -9463,6 +9646,9 @@ App3DR.ProjectManager.Pair.prototype.setMatchInfo = function(count, dir){
 App3DR.ProjectManager.Pair.prototype.setRelativeCount = function(count){
 	this._relativeCount = count;
 }
+App3DR.ProjectManager.Pair.prototype.setTrackCount = function(count){
+	this._trackCount = count;
+}
 App3DR.ProjectManager.Pair.prototype.isPair = function(idA,idB){
 	if(idA && idB && this._viewAID && this._viewBID){
 		if( (idA==this._viewAID && idB==this._viewBID) || (idB==this._viewAID && idA==this._viewBID) ){
@@ -9477,6 +9663,9 @@ App3DR.ProjectManager.Pair.prototype.hasMatch = function(){
 App3DR.ProjectManager.Pair.prototype.hasRelative = function(){
 	return this._relativeCount !== null && this._relativeCount >= 0;
 }
+App3DR.ProjectManager.Pair.prototype.hasTracks = function(){
+	return this._trackCount !== null && this._trackCount >= 0;
+}
 App3DR.ProjectManager.Pair.prototype.saveToYAML = function(yaml){
 	yaml.writeString("directory", this._directory);
 	yaml.writeString("viewA", this._viewAID);
@@ -9484,6 +9673,7 @@ App3DR.ProjectManager.Pair.prototype.saveToYAML = function(yaml){
 	yaml.writeNumber("featureScore", this._matchFeatureScore ? this._matchFeatureScore : 0);
 	yaml.writeNumber("featureCount", this._matchFeatureCount);
 	yaml.writeNumber("relativeCount", this._relativeCount);
+	yaml.writeNumber("trackCount", this._trackCount);
 }
 App3DR.ProjectManager.Pair.prototype.readFromObject = function(object){
 	this._directory = object["directory"];
@@ -9492,6 +9682,7 @@ App3DR.ProjectManager.Pair.prototype.readFromObject = function(object){
 	this._matchFeatureScore = object["featureScore"];
 	this._matchFeatureCount = object["featureCount"];
 	this._relativeCount = Code.valueOrDefault(object["relativeCount"], null);
+	this._trackCount = Code.valueOrDefault(object["trackCount"], null);
 }
 App3DR.ProjectManager.Pair.prototype.loadMatchingData = function(callback, context){
 	var object = {};

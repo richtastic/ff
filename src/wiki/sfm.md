@@ -9,6 +9,7 @@
 0) [Camera Calibration](#CALIBRATION)
 0) [Feature Matching](#MATCHING)
 0) [Fundamental Matrix](#FUNDAMENTAL)
+0) [Trifocal Tensor](#TRIFOCAL)
 0) [Stereo Matching](#STEREO)
 0) [Pair Reconstruction](#PAIRS)
 0) [Triplet Reconstruction](#TRIPLES)
@@ -60,7 +61,7 @@ K:
 <br/>
 
 
-Cameras that vary significantly from the linear model are said to have _distortion_, modeled using polynomials:
+Cameras that vary from the linear model are said to have (nonlinear) _distortion_, modeled using polynomials:
 
 
 *Radial Distortion*:
@@ -130,7 +131,7 @@ This is a less documented area seems people prefer to spend effort on the easier
 *TODO: research methods*
 
 
-#### Iteritive Solving
+#### Iterative Solving
 
 The intrinsic camera (K) and distortion parameters are first approximated using a linear solution, then further refined using iterative algorithms (solvers), which minimize some calculated error (cost) to move the values toward more correct ones.
 
@@ -179,7 +180,7 @@ BINBOOST - Binary
 ...
 
 
-
+failure points: repeated objects,
 
 
 
@@ -188,6 +189,19 @@ BINBOOST - Binary
 
 
 
+Projective camera extrinsic matrices:
+<br/>
+P<sub>A</sub> = [I|0]
+<br/>
+P<sub>B</sub> = [[e<sub>A</sub>]<sub>&times;</sub>&midot;F|e<sub>B</sub>]
+<br/>
+
+<a name="TRIFOCAL"></a>
+### Trifocal Tensor (T)
+
+
+
+---
 
 <a name="STEREO"></a>
 ### Stereo Matching
@@ -207,7 +221,10 @@ hierarchical matching
 ### Pair Reconstruction
 
 # Essential Matrix E
+convert from image coordinates to camera coordinates
 
+E = K<sub>B</sub><sup>-T</sup>&middot;F&middot;K<sub>A</sub><sup>-1</sup>
+E = [t]<sub>&times;</sub>&middot;R
 
 
 
@@ -216,34 +233,74 @@ hierarchical matching
 ### Triplet Reconstruction
 
 
+#### Gauge Ambiguity
+Goal: Find relative scale between pair transforms
 
+- Pairwise camera matrixes are solved only up to scale
+- The baseline recovered from E is unit length
 
-# Trifocal Tensor (T)
+Method 1:
+- Assume Overlapping points in a common view have same 3D point (A-B & A-C have A in common)
+- randomly pick 2 overlapping points in common view & their corresponding 3D points in both pairs
+- calculate distances: AB.a-AB.b and AC.a AC.b and ratio: ACdistance / ABdistance
+- some ratios will be obscurely very high or very low, but follow a narrow normal distribution
+- drop outliers (+/- 1-2 sigma) and use mean ratio. [100-1K samples seems to be enough]
 
+_TFT METHOD_
 
+TFT camera matrices have same E -> P baseline unity problem
+but it is assumed that the TFT has correctly calculated 3-way matches and is more correct than simply overlapping checks
+
+Method 2:
+- something to do with projecting the translation vector of AC onto AB after applying rotationAC
+- then comparing various cross-product ratios and summing up / averaging (might also have outliers)
+
+Method 3:
+- something to do with solving an SVD related to the Pab and Pac
 
 
 <a name="MULTIVIEW"></a>
 ### Multi View Reconstruction
 
 
-graph relating transforms
-- separate pairwise unknown base
+graph relating transforms - "image connectivity" - "view graph" - ""
+- separate pairwise unknown baseline scale (gauge / ...)
 
 - translation / rotation averaging
 
-- skeletal graph
 
 
 
 
+#### Tracks
+
+sequence of a single point tracked along multiple images
+
+#### Skeletal Graph
+- time complexity should depend on complexity of scene geometry not the number of photos
+- simplify possibly complicated connected view graph that narrows calculations to more critical paths
+    - "maximize accuracy (minimize uncertainty) & minimize computation time"
+
+- minimum connected dominating set . . == maximum leaf spanning tree
+
+
+#### Surface Patches
+
+normal, size
+
+
+
+#### Bundle Adjust
+- minimize cost function
+    - camera - 6 params = MOTION
+    - 3d points - 3 params  = STRUCTURE
 Dense:
 
-patches
+
+#### Distributed / Large Scale
+(can't fit all in memory)
 
 
-
-distributed (can't fit all in memory)
 
 - load views with highest potential for error reduction first
 
@@ -286,6 +343,39 @@ iteratively solved
 
 
 *TODO: EXAMPLE IMAGES*
+
+
+
+
+### Other Info:
+
+Data normalization - avoid hugely different magnitude of numbers that introduce rounding errors
+
+Nonliner Estimation
+Newton/'s method
+Levenberg-Marquardt - need to construct/solve (large) matrix formulas for eg jacobian / hessian
+Gradient Descent - do wtf you want [not necessarily as precise ]
+
+
+Error:
+    - propagation: add normal distributions?
+        &sigma;<sub>measurements</sub><sup>2</sup> =  1/ (&Sigma;<sub>i</sub> 1/&sigma;<sup>2</sup><sub>i</sub>)
+        <br/>
+        &mu;<sub>1</sub> + &mu;<sub>2</sub> = &mu;<sub>3</sub>
+        <br/>
+
+
+    - combining measurements to increase estimate confidence:
+        &sigma;<sup>2</sup><sub>1</sub> + &sigma;<sup>2</sup><sub>2</sub> = &sigma;<sup>2</sup><sub>3</sub>
+        <br/>
+        x_avg = sum(x./w) ./ sum(1./w);
+
+
+
+
+
+
+
 
 
 ---
@@ -345,6 +435,10 @@ Carlo Tomasi
 Takeo Kanade
 Zhengyou Zhang
 
+Lowe - 2004
+
+
+Keith N. Snavely - 2008
 
 
 ...

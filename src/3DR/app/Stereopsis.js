@@ -799,6 +799,7 @@ Stereopsis.View.prototype.neighborCells = function(cellX,cellY){
 Stereopsis.Camera = function(K, distortion, data){
 	this._id = Stereopsis.Camera.ID++;
 	this._data = null;
+	this._temp = null;
 	this._K = null;
 	this._Kinv = null;
 	this._distortion = null;
@@ -818,6 +819,12 @@ Stereopsis.Camera.prototype.data = function(data){
 		this._data = data;
 	}
 	return this._data;
+}
+Stereopsis.Camera.prototype.temp = function(temp){
+	if(temp!==undefined){
+		this._temp = temp;
+	}
+	return this._temp;
 }
 Stereopsis.Camera.prototype.K = function(K){
 	if(K!==undefined){
@@ -3268,6 +3275,79 @@ if(iterationIndex==0){ // subsequent approximations are always worse than the re
 this.printInfo();
 }
 
+
+// ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Stereopsis.World.prototype.solveForTracks = function(completeFxn, completeContext){
+	// do error estimation:
+	this.relativeTransformsFromAbsoluteTransforms();
+	this.relativeFFromSamples();
+	this.estimate3DErrors(true);
+	this.averagePoints3DFromMatches(true);
+	// this.estimate3DErrors(true);
+
+	var world = this;
+	// ...
+console.log("solveForTracks");
+	var views = this.toViewArray();
+	for(var i=0; i<views.length; ++i){
+		var view = views[i];
+		var corners = view.corners();
+		var image = view.image();
+		var imageWidth = image.width();
+		var imageHeight = image.height();
+		var maxSampleSize = 2000;
+		var randomSampleSize = 1000;
+		var cornerSample = null;
+		if(corners.length<maxSampleSize){
+			cornerSample = Code.copyArray(corners);
+		}else{
+			cornerSample = Code.randomSampleRepeats(corners,randomSampleSize);
+		}
+		cornerSample.sort(function(a,b){ return a<b ? -1 : 1 });
+		var limitCornerValue = Code.median(cornerSample);
+		var points = view.toPointArray();
+		//var list = [];
+		var dropPoints = [];
+		for(var j=0; j<points.length; ++j){
+			var point = points[j];
+			var p2D = point.point2D();
+			var corner = corners[ Math.floor(p2D.y)*imageWidth + Math.floor(p2D.x) ];
+			if(corner<limitCornerValue){
+				dropPoints.push(point.point3D());
+			}
+		}
+		// DROP R & F
+		console.log("DROP COUNT: "+dropPoints.length+" / "+points.length);
+		for(var j=0; j<dropPoints.length; ++j){
+			var point3D = dropPoints[j];
+			world.disconnectPoint3D(point3D);
+			world.killPoint3D(point3D);
+		}
+	}
+	// for each view:
+		// drop worst corner scores
+		// drop worst R error
+		// drop worst F error
+
+	var transforms = this.toTransformArray();
+	for(var i=0; i<transforms.length; ++i){
+		var transform = transforms[i];
+		var viewA = transform.viewA();
+		var viewB = transform.viewB();
+		// view.
+	}
+	// for each transform/pair
+		// order on best average corner score
+		// keep only top 100-1000
+
+
+
+	if(completeFxn){
+		completeFxn.call(completeContext);
+	}
+
+	return null;
+}
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 Stereopsis.World.prototype.solveTriple = function(completeFxn, completeContext){

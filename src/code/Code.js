@@ -3352,6 +3352,15 @@ Code.randomIndexes = function(count, range){
 // 	return set;
 // }
 // Code.randomIntervalSet(5, 0, 10);
+Code.randomSampleRepeats = function(array, count){
+	var len = array.length;
+	var random = [];
+	for(var i=0; i<count; ++i){
+		var index = Math.floor(Math.random()*len);
+		random.push(array[index]);
+	}
+	return random;
+}
 Code.randomIntervalSet = function(count, min,max){
 // TODO: OPTIMIZATIONS FOR DIFFERENT COUNT CASES
 	if(max===undefined){ max = min; min = 0; }
@@ -4191,7 +4200,8 @@ Code.mean = function(list,key, count){
 	}
 	return mu / len;
 }
-Code.median = function(list,key,count){ // TODO: durrr median = middle of set -- assume sorted
+Code.median = function(list,key,count, doSort){ // median = middle of set: assume sorted
+// TODO: key unused
 	if(list.length==0){
 		return null;
 	}
