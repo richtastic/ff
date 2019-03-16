@@ -7496,6 +7496,54 @@ R3D.optimumAffineScaleForImage = function(imageSource){
 	// calculate primary gradient & secondary gradient & magnitude differences
 }
 
+R3D.maximallyStableArea = function(imageMatrixA,pointA, imageMatrixB,pointB, affine){
+	affine = affine!==undefined ? affine : new Matrix(3,3).identity();
+
+	var matrix = affine;
+	//var scales = [0.25,0.5,0.75,1.0,1.5,2.0,3.0,4.0];
+	var scales = [];
+	for(var i=0; i<10; ++i){
+		//scales.push( Math.pow(1.5,i-3) );
+		scales.push( i+1 );
+	}
+	var scores = [];
+	var compareSize = 9;
+	var maskCompare = ImageMat.circleMask(compareSize,compareSize);
+	for(var i=0; i<scales.length; ++i){
+		var scale = scales[i];
+		var imageA = imageMatrixA.extractRectFromFloatImage(pointA.x,pointA.y,scale,null, compareSize,compareSize, matrix);
+		var imageB = imageMatrixB.extractRectFromFloatImage(pointB.x,pointB.y,scale,null, compareSize,compareSize, null);
+		// console.log(imageA,imageB);
+		var scoreNCC = R3D.normalizedCrossCorrelation(imageA,compareSize,imageB,true);
+			scoreNCC = scoreNCC["value"][0];
+		var score = scoreNCC;
+		// scales.push(scale);m
+		scores.push(score);
+
+
+		// display
+		var sca = 4.0;
+		var iii = imageA;
+		var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
+		var d = new DOImage(img);
+		d.matrix().scale(sca);
+		d.matrix().translate(0 + i*100, 0 + 0);
+		GLOBALSTAGE.addChild(d);
+
+
+		var iii = imageB;
+		var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
+		var d = new DOImage(img);
+		d.matrix().scale(sca);
+		d.matrix().translate(0 + i*100, 0 + 50);
+		GLOBALSTAGE.addChild(d);
+
+	}
+	// extract at several sizes and graph the NCC scores
+
+	Code.printMatlabArray(scales,"scale");
+	Code.printMatlabArray(scores,"score");
+}
 
 R3D.optimumScaleForImageEntropy = function(imageSource){
 	var wid = imageSource.width();

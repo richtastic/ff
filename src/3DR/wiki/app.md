@@ -125,8 +125,8 @@
 		- you choose a filter to color part of the scene something else (or draw on it)
 		- you send the picture to your friend to see if she agrees.
 
-	- you're a museum historian and want to make public heratige artefacts available
-		- you set up your artefact
+	- you're a museum historian and want to make public heritage artifacts available
+		- you set up your artifact
 		- take several photos from various angles
 		- you put the model up on the museum website
 
@@ -306,7 +306,7 @@ vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 - surface triangulation(tesselation)
 	- advancing-front, curvature-based tesselation
 	=> scene triangle model
-(03/25)
+(04/15)
 - texturing
 	- view-based surface texturing
 	- blending between triangles
@@ -314,16 +314,16 @@ vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 	- separate triangles into texture lookup / files
 		- TextureMap (from textures to atlas)
 	=> scene textured model
-(04/15)
+(05/06)
 - viewing output
 	- locally
 	- VR device
-(05/06)
+(05/27)
 - pipelining
 	- use tracks
 	- automated
 	- MVP
-(06/03)
+(06/17)
 
 google app engine project - nodejs
 https://cloud.google.com/appengine/docs/nodejs/
@@ -341,6 +341,53 @@ https://cloud.google.com/appengine/docs/nodejs/
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 - experiment maximally stable match size
+	- not too successful
+
+
+----------------- S
+
+- 3-way views get relative scales / other data
+	- relative-scale optimal linear estimates
+- graph initialization w/ absolute view locations
+	- patch sizes need to be rescaled after relative scales are found -- save this data somewhere - 'pair' scale
+----------------- U
+
+- iterative 3-way track aggregation from individual pair views [or triples?]
+
+- track global BA to optimize view locations
+
+
+----------------- M
+
+- dense initialization of points
+	[1.5 rad pixel distances between p2d - to limit NOT EVERY PIXEL - 3x3 neighborhood]
+	[patches ~ nearest patch averaging 2d neighbors & 3d distances]
+
+- iterative 3-way dense BA to eliminate spurious points
+
++++++++++++++
+
+
+- optimizing on dense data (to get ready for tessellation)
+	- need patches for discarding some spurious points ?
+	- can't use the patches on dense data (takes too long to init)
+
+
+
+
+
+
+- view-view covariance matrix means WHAT?
+	Covariance Matrix:
+	Correlation Matrix: ...
+		- problem with covariance matrix is sigmas/values need to be in some ABSOLUTE scale to compare
+		-
+
+
+- want to save quick access info in main yaml file (camera)
+	- or also start loading camera async too
+
+
 
 - add pair - tracks step & parameter
 

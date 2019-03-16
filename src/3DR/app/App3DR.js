@@ -5431,8 +5431,10 @@ projects/
 					viewA: "2DWWPMNZ"
 					viewB: "914UQJ51"
 					featureScore: 0			# NOT USED
-					featureCount: 42		# 2S match count
+					featureCount: 42		# 2D match count
 					relativeCount: 29683	# 3D match count
+					F-DATA HERE?
+					R-DATA HERE?
 				...
 			triples:
 				-
@@ -5441,11 +5443,15 @@ projects/
 					viewB: "914UQJ51"
 					viewC: "CCCCCCCC"
 					relativeCount: 29683	# 3D match count
+					R-DATA HERE?
+					RELATIVE-SCALE-DATA-HERE?
+					TFT-DATA-HERE?
 				...
 
 		views/
 			0/
 				features.yaml 			all possible feature points w/ score
+					# ?
 				pictures/
 					100.png
 					50.png
@@ -5562,12 +5568,17 @@ projects/
 
 		bundle/
 A			tracks.yaml - accumulated global track points across images: grows till all pair-seeds are merged
-				views:
+				views:				# lsit of views resulted
 					-
 						id: "A"
+				pairs:				# list of pairs attempted
+					-
+						id: "A"
+						viewA: "ID"
+						viewB: "ID"
 				tracks:
 					-
-						list:
+						v:
 							-
 								i: INDEX-OF-VIEW
 								x: [0,1]
@@ -5588,11 +5599,27 @@ B			graph.yaml - view graph of scene - result of global (quasi-local) bundle adj
 						B: INDEX-OF-VIEW
 						T: MATRIX RELATIVE TRANSFORM
 				- tracks:
-					-
-						list:
-							-
-								...
-C			points.yaml - global 3D point list
+					v:
+						-
+							i: INDEX-OF-VIEW
+							x: [0,1]
+							y: [0,1]
+												# THE POINTS ARE BUILD UP VIA 3-WAY ADDITION INITIAL .. MIGHT NOT NEED THSE
+						X: # position
+						Y:
+						Z:
+						x: # normal
+						y:
+						z:
+						s: # size
+
+C			points_sparse.yaml - global 3D point list - sparse TRACK Data
+				...
+
+C			info_sparse.yaml - dense point reconstruction info
+				...
+
+D			points_dense.yaml - global 3D point list
 				views:
 					...
 				points:
@@ -5618,9 +5645,16 @@ C			points.yaml - global 3D point list
 								n: NCC SCORE - SLOWLY recaclulated
 					...
 
-D			info.yaml - dense point reconstruction info
-				- Ks
-					- fx,fy,s,cx,cy
+D			info_dense.yaml - dense point reconstruction info
+
+				- cameras
+					-
+						id: ID
+						fx:
+						fy:
+						s:
+						cx:
+						cy:
 				- views
 					-
 						id: ID
@@ -5802,19 +5836,28 @@ App3DR.ProjectManager.VIEWS_DIRECTORY = "views";
 App3DR.ProjectManager.PICTURES_DIRECTORY = "pictures";
 App3DR.ProjectManager.PICTURE_MASK_FILE_NAME = "mask.png";
 App3DR.ProjectManager.CAMERAS_DIRECTORY = "cameras";
+	App3DR.ProjectManager.CAMERA_MATCHES_FILE_NAME = "matches.yaml";
 App3DR.ProjectManager.PAIRS_DIRECTORY = "pairs";
+	App3DR.ProjectManager.INITIAL_MATCHES_FILE_NAME = "matches.yaml"; // points
+	App3DR.ProjectManager.PAIR_RELATIVE_FILE_NAME = "relative.yaml";
+	App3DR.ProjectManager.PAIR_TRACKS_FILE_NAME = "tracks.yaml";
 App3DR.ProjectManager.TRIPLES_DIRECTORY = "triples";
+	App3DR.ProjectManager.TRIPLE_MATCHES_FILE_NAME = "matches.yaml"; // points
+
+
 App3DR.ProjectManager.BUNDLE_ADJUST_DIRECTORY = "bundle";
-App3DR.ProjectManager.INITIAL_MATCHES_FILE_NAME = "matches.yaml"; // points
-App3DR.ProjectManager.TRIPLE_MATCHES_FILE_NAME = "matches.yaml"; // points
-App3DR.ProjectManager.CAMERA_MATCHES_FILE_NAME = "matches.yaml";
-App3DR.ProjectManager.BUNDLE_INFO_FILE_NAME = "info.yaml";
+	App3DR.ProjectManager.BUNDLE_INFO_FILE_NAME = "info.yaml"; // TBD
+
+// TODO:
+App3DR.ProjectManager.BUNDLE_TRACKS_FILE_NAME = "tracks.yaml";
+App3DR.ProjectManager.BUNDLE_GRAPH_FILE_NAME = "graph.yaml";
+App3DR.ProjectManager.BUNDLE_SPARSE_POINTS_FILE_NAME = "points_sparse.yaml";
+App3DR.ProjectManager.BUNDLE_SPARSE_INFO_FILE_NAME = "info_sparse.yaml";
+App3DR.ProjectManager.BUNDLE_DENSE_POINTS_FILE_NAME = "points_dense.yaml";
+App3DR.ProjectManager.BUNDLE_DENSE_INFO_FILE_NAME = "info_dense.yaml";
 // App3DR.ProjectManager.SPARSE_MATCHES_FILE_NAME = "sparse.yaml"; // sparse points + transform
 // App3DR.ProjectManager.MEDIUM_MATCHES_FILE_NAME = "medium.yaml";
-App3DR.ProjectManager.PAIR_RELATIVE_FILE_NAME = "relative.yaml";
-
-
-App3DR.ProjectManager.DENSE_MATCHES_FILE_NAME = "dense.yaml";
+// App3DR.ProjectManager.DENSE_MATCHES_FILE_NAME = "dense.yaml";
 App3DR.ProjectManager.TRIPLES_DIRECTORY = "triples";
 
 App3DR.ProjectManager.prototype.isLoaded = function(){
@@ -6014,7 +6057,7 @@ App3DR.ProjectManager.prototype.saveToYAML = function(){
 		}
 		yaml.writeArrayEnd();
 	}
-	/*
+
 	// triples
 	len = this._triples ? this._triples.length : 0;
 	if(len>0){
@@ -6027,7 +6070,7 @@ App3DR.ProjectManager.prototype.saveToYAML = function(){
 		}
 		yaml.writeArrayEnd();
 	}
-	*/
+
 	// cameras
 	len = this._cameras ? this._cameras.length : 0;
 	if(len>0){
@@ -6188,6 +6231,14 @@ App3DR.ProjectManager.prototype.savePairRelative = function(pair,count, string, 
 	this.addOperation("SET", {"path":path, "data":yamlBinary}, callback, context, pair);
 }
 
+App3DR.ProjectManager.prototype.savePairTracks = function(pair, string, callback, context, object){
+	console.log("savePairTracks: "+pair.id());
+	console.log(this._workingPath, App3DR.ProjectManager.PAIRS_DIRECTORY, pair.directory(), App3DR.ProjectManager.PAIR_TRACKS_FILE_NAME)
+	var path = Code.appendToPath(this._workingPath, App3DR.ProjectManager.PAIRS_DIRECTORY, pair.directory(), App3DR.ProjectManager.PAIR_TRACKS_FILE_NAME);
+	var yamlBinary = Code.stringToBinary(string);
+	this.addOperation("SET", {"path":path, "data":yamlBinary}, callback, context, pair);
+}
+
 
 App3DR.ProjectManager.prototype.pair = function(idA,idB){
 	var pairs = this._pairs;
@@ -6212,6 +6263,7 @@ App3DR.ProjectManager.prototype.addPair = function(viewA, viewB, callback, conte
 		object["context"] = context;
 		object["pair"] = pair;
 	this.addOperation("SET", {"path":path}, this._addPairComplete, this, object);
+	return pair;
 }
 App3DR.ProjectManager.prototype._addPairComplete = function(object, data){
 	console.log("_addPairComplete");
@@ -6258,6 +6310,7 @@ App3DR.ProjectManager.prototype.addTriple = function(viewA, viewB, viewC, callba
 		object["context"] = context;
 		object["triple"] = triple;
 	this.addOperation("SET", {"path":path}, this._addTripleComplete, this, object);
+	return triple;
 }
 App3DR.ProjectManager.prototype._addTripleComplete = function(object, data){
 	console.log("_addPairComplete");
@@ -6374,7 +6427,6 @@ console.log("checkPerformNextTask");
 			return;
 		}
 	}
-
 	// does a feature-match pair exist (even a bad match) between every view?
 	len = views.length;
 	console.log(pairs)
@@ -6465,7 +6517,7 @@ console.log("checkPerformNextTask");
 				var found = false;
 				var foundTriple = null;
 				for(t=0; t<triples.length; ++t){
-					var triple = triples[k];
+					var triple = triples[t];
 					if(triple.isTriple(idA,idB,idC)){
 						found = true;
 						if(!triple.hasRelative()){
@@ -6476,12 +6528,14 @@ console.log("checkPerformNextTask");
 				}
 				if(!found){
 					console.log("NEED TO CREATE A TRIPLE : "+idA+" & "+idB+" & "+idC+" ");
-					foundTriple = null;
-					throw "yep";
+					foundTriple = this.addTriple(viewA,viewB,viewC, function(a){
+						console.log("triple created");
+						this.saveProjectFile();
+					}, this);
+					return;
 				}
 				if(foundTriple){
 					console.log("NEED TO DO TRIPLE MATCH: "+idA+" & "+idB+" & "+idC+" = "+foundTriple.id());
-					throw "YEP";
 					this.calculateBundleAdjustTriple(viewA,viewB,viewC);
 					return;
 				}
@@ -8056,21 +8110,42 @@ App3DR.ProjectManager.prototype.calculateGlobalOrientationHierarchy = function(s
 App3DR.ProjectManager.prototype.calculateBundleAdjustTriple = function(viewAIn,viewBIn,viewCIn, callback, context, object){
 	throw "calculateBundleAdjustTriple";
 	/*
-	load view data & pair data for all 3
+	load view images
+
+	if dense data count is low, set triple as done and unable to complete
+
+ 	load pair dense data
+	load
 	*/
 }
 App3DR.ProjectManager.prototype.calculatePairTracks = function(viewAIn,viewBIn, callback, context, object){
 	var pair = this.pairFromViewIDs(viewAIn.id(),viewBIn.id());
+	var world = null;
+	var project = this;
 	// backwards order:
 
-// save project file
-
-// save to track file
-	var worldTracksCompleted = function(a){
-		console.log("worldTracksCompleted");
+	// save project file
+	var savePairCompleted = function(a){
+		console.log("savePairCompleted");
+		project.saveProjectFile();
 	}
 
-// convert to WORLD objects
+	// save to track file
+	var worldTracksCompleted = function(a){
+		console.log("worldTracksCompleted");
+		var viewA = world.viewFromData(viewAIn.id());
+		var viewB = world.viewFromData(viewBIn.id());
+		console.log(viewA,viewB);
+		var transform = world.transformFromViews(viewA,viewB);
+		var count = transform.matches().length;
+		var str = world.toYAMLString();
+		var pair = project.pair(viewAIn.id(),viewBIn.id());
+		pair.setTrackCount(count);
+		console.log("pair track: "+pair.trackCount())
+		project.savePairTracks(pair, str, savePairCompleted, project);
+	}
+
+	// convert to WORLD objects & find tracks
 	var createWorld = function(a){
 		// make images:
 		var images = [viewAIn.bundleAdjustImage(),viewBIn.bundleAdjustImage()];
@@ -8081,13 +8156,13 @@ App3DR.ProjectManager.prototype.calculatePairTracks = function(viewAIn,viewBIn, 
 			images[i] = matrix;
 		}
 		// fill world in
-		var world = new Stereopsis.World();
+		world = new Stereopsis.World();
 		var relativeData = pair.relativeData();
 		App3DR.ProjectManager.addCamerasToWorld(world, relativeData["cameras"]);
 		App3DR.ProjectManager.addViewsToWorld(world, relativeData["views"], images);
 		App3DR.ProjectManager.addPointsToWorld(world, relativeData["points"]);
 		// solve for tracks
-		var results = world.solveForTracks(worldTracksCompleted, this, null);
+		world.solveForTracks(worldTracksCompleted, project, null);
 	}
 
 	// done loading
@@ -8122,6 +8197,9 @@ App3DR.ProjectManager.addCamerasToWorld = function(world, cameras){
 		// }
 		var c = world.addCamera(K, distortion);
 		c.data(camID);
+// this is an object ...
+// camera.temp(c);
+
 		/*
 			var distortion = camera.distortion();
 			var fx = K["fx"];
@@ -8167,6 +8245,8 @@ App3DR.ProjectManager.addViewsToWorld = function(world, views, images){
 		v.absoluteTransform(transform);
 		v.image(image);
 		v.data(viewID);
+// this is an object
+//		view.temp(v);
 		WORLDVIEWS.push(v);
 	}
 	return WORLDVIEWS;
@@ -8235,7 +8315,6 @@ App3DR.ProjectManager.loadPairsRelativeData = function(pairs, callback, context,
 	}
 	for(i=0; i<pairs.length; ++i){
 		pair = pairs[i];
-		//pair.loadMatchingData(fxnPairLoaded, this);
 		pair.loadRelativeData(fxnPairLoaded, this);
 	}
 }
@@ -8705,8 +8784,6 @@ var completeFxn = function(){
 }
 console.log(world);
 
-
-throw "do world thing here";
 
 world.solve(completeFxn, this);
 return;
@@ -9607,12 +9684,15 @@ App3DR.ProjectManager.Pair = function(manager, directory, viewA, viewB){
 	this._directory = directory;
 	this._viewAID = viewA;
 	this._viewBID = viewB;
-	this._matchFeatureScore = null; // median / average of feature scores [some distribution of good scores metric]
+	// this._matchFeatureScore = null; // median / average of feature scores [some distribution of good scores metric]
 	this._matchFeatureCount = null; // total matched features [above minimum]
 	this._relativeCount = null;
+	// MATCHES - 3D
 	this._matchingData = null;
 	this._relativeData = null;
+	// TRACKS - 3D
 	this._trackCount = null;
+	this._trackData = null;
 
 	// this._matchingSparse = null;
 	// this._matchingMedium = null;
@@ -9649,6 +9729,9 @@ App3DR.ProjectManager.Pair.prototype.setRelativeCount = function(count){
 App3DR.ProjectManager.Pair.prototype.setTrackCount = function(count){
 	this._trackCount = count;
 }
+App3DR.ProjectManager.Pair.prototype.trackCount = function(){
+	return this._trackCount;
+}
 App3DR.ProjectManager.Pair.prototype.isPair = function(idA,idB){
 	if(idA && idB && this._viewAID && this._viewBID){
 		if( (idA==this._viewAID && idB==this._viewBID) || (idB==this._viewAID && idA==this._viewBID) ){
@@ -9670,7 +9753,7 @@ App3DR.ProjectManager.Pair.prototype.saveToYAML = function(yaml){
 	yaml.writeString("directory", this._directory);
 	yaml.writeString("viewA", this._viewAID);
 	yaml.writeString("viewB", this._viewBID);
-	yaml.writeNumber("featureScore", this._matchFeatureScore ? this._matchFeatureScore : 0);
+	// yaml.writeNumber("featureScore", this._matchFeatureScore ? this._matchFeatureScore : 0);
 	yaml.writeNumber("featureCount", this._matchFeatureCount);
 	yaml.writeNumber("relativeCount", this._relativeCount);
 	yaml.writeNumber("trackCount", this._trackCount);
@@ -9679,7 +9762,7 @@ App3DR.ProjectManager.Pair.prototype.readFromObject = function(object){
 	this._directory = object["directory"];
 	this._viewAID = object["viewA"];
 	this._viewBID = object["viewB"];
-	this._matchFeatureScore = object["featureScore"];
+	// this._matchFeatureScore = object["featureScore"];
 	this._matchFeatureCount = object["featureCount"];
 	this._relativeCount = Code.valueOrDefault(object["relativeCount"], null);
 	this._trackCount = Code.valueOrDefault(object["trackCount"], null);
@@ -9730,11 +9813,14 @@ App3DR.ProjectManager.Triple = function(manager, directory, viewA, viewB, viewC)
 	this._viewCID = viewC;
 	// MATCHING - 2D
 	this._matchFeatureCount = null;
-	this._matchFeatureScore = null;
+	// this._matchFeatureScore = null;
 	this._matchingData = null;
 	// RELATIVE - 3D
 	this._relativeCount = null;
 	this._relativeData = null;
+	// // TRACKS - 3D
+	// this._trackCount = null;
+	// this._trackData = null;
 }
 App3DR.ProjectManager.Triple.prototype.toString = function(){
 	return "[Triple: "+this._viewAID+" : "+this._viewBID+" : "+this._viewCID+"]";
@@ -9782,7 +9868,7 @@ App3DR.ProjectManager.Triple.prototype.saveToYAML = function(yaml){
 	yaml.writeString("viewA", this._viewAID);
 	yaml.writeString("viewB", this._viewBID);
 	yaml.writeString("viewC", this._viewCID);
-	yaml.writeNumber("featureScore", this._matchFeatureScore);
+	// yaml.writeNumber("featureScore", this._matchFeatureScore);
 	yaml.writeNumber("featureCount", this._matchFeatureCount);
 }
 App3DR.ProjectManager.Triple.prototype.readFromObject = function(object){
@@ -9790,7 +9876,7 @@ App3DR.ProjectManager.Triple.prototype.readFromObject = function(object){
 	this._viewAID = object["viewA"];
 	this._viewBID = object["viewB"];
 	this._viewCID = object["viewC"];
-	this._matchFeatureScore = object["featureScore"];
+	// this._matchFeatureScore = object["featureScore"];
 	this._matchFeatureCount = object["featureCount"];
 }
 App3DR.ProjectManager.Triple.prototype.loadMatchingData = function(callback, context){

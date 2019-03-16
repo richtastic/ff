@@ -1395,7 +1395,12 @@ Code.subArray = function(b, a, start, count){ // b = a[start,...start+count-1]
 	}
 	return b;
 }
-
+Code.transformArray = function(a,f){
+	for(var i=a.length; i--; ){
+		a[i] = f(a[i]);
+	}
+	return a;
+}
 // Array.prototype.insert = function(i, o){ this.splice(i, 0, o); }
 // Code.copyArray(array)
 // Code.copyArray(arrayTo, arrayFrom)
@@ -3352,6 +3357,15 @@ Code.randomIndexes = function(count, range){
 // 	return set;
 // }
 // Code.randomIntervalSet(5, 0, 10);
+Code.randomSampleRepeatsMaximum = function(array, maximumCount, randomCount){ // use array as-is if too small, else subsample
+	var samples = null;
+	if(array.length<maximumCount){
+		samples = Code.copyArray(array);
+	}else{
+		samples = Code.randomSampleRepeats(array,randomCount);
+	}
+	return samples;
+}
 Code.randomSampleRepeats = function(array, count){
 	var len = array.length;
 	var random = [];
@@ -4215,6 +4229,12 @@ Code.median = function(list,key,count, doSort){ // median = middle of set: assum
 		return (list[lo] + list[hi])*0.5;
 	}
 	return list[lo];
+}
+Code.percentile = function(list, percent){ // not statistics percentile .. more just linear array percent index
+	var count = list.length;
+	var indexA = Math.floor(count*percent);
+	var indexB = Math.min(Math.ceil(count*percent),count-1);
+	return (list[indexA] + list[indexB])*0.5;
 }
 Code.sum = function(list,key,count){
 	var i, sum=0, item, len=list.length;

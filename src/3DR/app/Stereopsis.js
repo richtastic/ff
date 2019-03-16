@@ -240,6 +240,27 @@ Stereopsis.World.prototype.toCameraArray = function(){
 Stereopsis.World.prototype.toViewArray = function(){
 	return Code.arrayFromHash(this._views);
 }
+
+
+
+
+
+Stereopsis.World.prototype.viewFromData = function(data){
+	var views = Code.arrayFromHash(this._views);
+	for(var i=0; i<views.length; ++i){
+		var view = views[i];
+		if(view.data()==data){
+			return view;
+		}
+	}
+	return null;
+}
+
+
+
+
+
+
 Stereopsis.World.prototype.toTransformArray = function(){
 	return Code.arrayFromHash(this._transforms);
 }
@@ -3278,6 +3299,8 @@ this.printInfo();
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 Stereopsis.World.prototype.solveForTracks = function(completeFxn, completeContext){
+	console.log("solveForTracks");
+	var world = this;
 	// do error estimation:
 	this.relativeTransformsFromAbsoluteTransforms();
 	this.relativeFFromSamples();
@@ -3285,28 +3308,84 @@ Stereopsis.World.prototype.solveForTracks = function(completeFxn, completeContex
 	this.averagePoints3DFromMatches(true);
 	// this.estimate3DErrors(true);
 
-	var world = this;
+	var maxSampleSize = 2000;
+	var randomSampleSize = 1000;
+	var distanceMinimumRelative = 0.005; // 500x300 ~3
+	var limitPointsKeepMax = 1000;
+	var fxnSortNumeric = function(a,b){
+		return a<b ? -1 : 1
+	};
+	var fxnMatchToR = function(match){
+		return match.errorR();
+	};
+	var fxnMatchToF = function(match){
+		return match.errorF();
+	};
+	var fxnSortArray0Corner = function(a,b){
+		return a[0]>b[0] ? -1 : 1 ; // largest corner scores first
+	}
 	// ...
-console.log("solveForTracks");
+
+	// remove all points from each view & readd as long as far enough away from existing points
 	var views = this.toViewArray();
+	for(var i=0; i<views.length; ++i){
+		var view = views[i];
+		var corners = view.corners();
+		var points2D = view.toPointArray();
+		var sortedPoints = [];
+		for(var j=0; j<points2D.length; ++j){
+			var point2D = points2D[j];
+			var p2D = point2D.point2D();
+			var index = Math.floor(p2D.y)*imageWidthA + Math.floor(p2D.x);
+			var corner = corners[index];
+			view.removePoint2D(point2D);
+			sortedPoints.push([corner, point2D]);
+		}
+		sortedPoints.sort(fxnSortArray0Corner);
+		// add points back as long as not too close to existing points
+		var image = view.image();
+		var imageWidth = image.width();
+		var imageHeight = image.height();
+		var hyp = Math.sqrt(imageWidth*imageWidth + imageHeight*imageHeight);
+		var closestDistance = hyp*distanceMinimumRelative;
+		var dropPoints = [];
+		for(var j=0; j<sortedPoints.length; ++j){
+			var sorted = sortedPoints[j];
+			var point2D = sorted[1];
+			var p2D = point2D.point2D();
+			var closest = view.pointSpace().kNN(p2D,1); // point could be from ANY VIEW
+			var shouldAdd = true;
+			if(closest && closest.length==1){
+				closest = closest[0];
+				var distance = V2D.distance(p2D,closest.point2D());
+				// console.log(distance,closestDistance);
+				shouldAdd = distance>closestDistance;
+			}
+			if(shouldAdd){
+				view.insertPoint2D(point2D);
+			}else{
+				dropPoints.push(point2D.point3D());
+			}
+		}
+		console.log("DROP COUNT TOO CLOSE: "+dropPoints.length);
+		for(var j=0; j<dropPoints.length; ++j){
+			var point3D = dropPoints[j];
+			world.disconnectPoint3D(point3D);
+			world.killPoint3D(point3D);
+		}
+	}
+	// remove worst based on corner scores
 	for(var i=0; i<views.length; ++i){
 		var view = views[i];
 		var corners = view.corners();
 		var image = view.image();
 		var imageWidth = image.width();
 		var imageHeight = image.height();
-		var maxSampleSize = 2000;
-		var randomSampleSize = 1000;
-		var cornerSample = null;
-		if(corners.length<maxSampleSize){
-			cornerSample = Code.copyArray(corners);
-		}else{
-			cornerSample = Code.randomSampleRepeats(corners,randomSampleSize);
-		}
-		cornerSample.sort(function(a,b){ return a<b ? -1 : 1 });
-		var limitCornerValue = Code.median(cornerSample);
+		var cornerSample = Code.randomSampleRepeatsMaximum(corners,maxSampleSize,randomSampleSize);
+			cornerSample.sort(fxnSortNumeric);
+		var limitCornerValue = Code.percentile(cornerSample, 0.5);
 		var points = view.toPointArray();
-		//var list = [];
+		// drop on low corner score
 		var dropPoints = [];
 		for(var j=0; j<points.length; ++j){
 			var point = points[j];
@@ -3316,7 +3395,6 @@ console.log("solveForTracks");
 				dropPoints.push(point.point3D());
 			}
 		}
-		// DROP R & F
 		console.log("DROP COUNT: "+dropPoints.length+" / "+points.length);
 		for(var j=0; j<dropPoints.length; ++j){
 			var point3D = dropPoints[j];
@@ -3324,30 +3402,121 @@ console.log("solveForTracks");
 			world.killPoint3D(point3D);
 		}
 	}
-	// for each view:
-		// drop worst corner scores
-		// drop worst R error
-		// drop worst F error
-
+	// drop worst based on R and F errors
 	var transforms = this.toTransformArray();
+	var limitsR = [];
+	var limitsF = [];
+	for(var i=0; i<transforms.length; ++i){
+		var transform = transforms[i];
+		var matches = transform.matches();
+		// sample R / F
+		var samplesR = Code.randomSampleRepeatsMaximum(matches,maxSampleSize,randomSampleSize);
+			samplesR = Code.transformArray(samplesR,fxnMatchToR);
+			samplesR.sort(fxnSortNumeric);
+		var samplesF = Code.randomSampleRepeatsMaximum(matches,maxSampleSize,randomSampleSize);
+			samplesF = Code.transformArray(samplesF,fxnMatchToF);
+			samplesF.sort(fxnSortNumeric);
+		var limitR = Code.percentile(samplesR,0.50);
+		var limitF = Code.percentile(samplesF,0.50);
+		limitsF.push(limitF);
+		limitsR.push(limitR);
+	}
+	// keep only best in remaining set based on corner
+	for(var i=0; i<transforms.length; ++i){
+		var transform = transforms[i];
+		var limitR = limitsR[i];
+		var limitF = limitsF[i];
+		var matches = transform.matches();
+		var dropPoints = [];
+		for(var j=0; j<matches.length; ++j){
+			var match = matches[j];
+			var errorR = match.errorR();
+			var errorF = match.errorF();
+			if(errorR>limitR || errorF>limitF){
+				dropPoints.push(match.point3D());
+			}
+		}
+		console.log("DROP COUNT: "+dropPoints.length+" / "+matches.length);
+		for(var j=0; j<dropPoints.length; ++j){
+			var point3D = dropPoints[j];
+			world.disconnectPoint3D(point3D);
+			world.killPoint3D(point3D);
+		}
+	}
+	// drop all non-marked P3Ds
+	var points3D = world.toPointArray();
+	for(var i=0; i<points3D.length; ++i){
+		var point3D = points3D[i];
+		point3D.temp(null);
+	}
+	console.log("REMAINING POINTS: "+points3D.length);
+	// keep top 100-1000 best track points for each pair
 	for(var i=0; i<transforms.length; ++i){
 		var transform = transforms[i];
 		var viewA = transform.viewA();
 		var viewB = transform.viewB();
-		// view.
+		//
+		var cornersA = viewA.corners();
+		var imageA = viewA.image();
+		var imageWidthA = imageA.width();
+		var imageHeightA = imageA.height();
+		var cornersB = viewB.corners();
+		var imageB = viewB.image();
+		var imageWidthB = imageB.width();
+		var imageHeightB = imageB.height();
+		//
+		var matches = transform.matches();
+		var sortedMatches = [];
+		for(var j=0; j<matches.length; ++j){
+			var match = matches[j];
+			var point2DA = match.point2DA();
+			var point2DB = match.point2DB();
+			var p2DA = point2DA.point2D();
+			var p2DB = point2DA.point2D();
+			var indexA = Math.floor(p2DA.y)*imageWidthA + Math.floor(p2DA.x);
+			var indexB = Math.floor(p2DB.y)*imageWidthB + Math.floor(p2DB.x);
+			var cornerA = cornersA[indexA];
+			var cornerB = cornersB[indexB];
+				// cornerA = Math.log(cornerA);
+				// cornerB = Math.log(cornerB);
+			var score = (cornerA+cornerB)*0.5;
+			sortedMatches.push([score,match]);
+		}
+		sortedMatches.sort(fxnSortArray0Corner);
+		var count = Math.min(sortedMatches.length,limitPointsKeepMax);
+		for(var j=0; j<count; ++j){
+			var match = matches[j];
+			match.point3D().temp(true);
+		}
 	}
-	// for each transform/pair
-		// order on best average corner score
-		// keep only top 100-1000
-
-
-
+	console.log("REMAINING POINTS: "+world.toPointArray().length);
+	// drop all non-marked P3Ds
+	var points3D = world.toPointArray();
+	var dropPoints = [];
+	for(var i=0; i<points3D.length; ++i){
+		var point3D = points3D[i];
+		if(!point3D.temp()){
+			dropPoints.push(point3D);
+		}
+		point3D.temp(null);
+	}
+	for(var j=0; j<dropPoints.length; ++j){
+		var point3D = dropPoints[j];
+		world.disconnectPoint3D(point3D);
+		world.killPoint3D(point3D);
+	}
+	console.log("FINAL POINTS: "+world.toPointArray().length);
+	// accurate error for tracks
+	this.estimate3DErrors(true);
+	// estimate patches:
+	world.patchInitOnly();
+	// done
 	if(completeFxn){
 		completeFxn.call(completeContext);
 	}
-
 	return null;
 }
+
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 Stereopsis.World.prototype.solveTriple = function(completeFxn, completeContext){
@@ -7629,6 +7798,8 @@ console.log("max match types "+R3D.BA.maxiumMatchesFromViewCount(totalViewCount)
 					yaml.writeNumber("x",normal.x);
 					yaml.writeNumber("y",normal.y);
 					yaml.writeNumber("z",normal.z);
+					var size = point3D.size();
+					yaml.writeNumber("s",size);
 				}
 				// 2D
 				var refO = new V2D(0,0);
