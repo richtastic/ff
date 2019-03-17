@@ -201,6 +201,9 @@ P<sub>B</sub> = [[e<sub>A</sub>]<sub>&times;</sub>&midot;F|e<sub>B</sub>]
 
 
 
+### Quadrifocal [not used]
+
+
 ---
 
 <a name="STEREO"></a>
@@ -257,6 +260,10 @@ Method 2:
 
 Method 3:
 - something to do with solving an SVD related to the Pab and Pac
+
+
+
+
 
 
 <a name="MULTIVIEW"></a>

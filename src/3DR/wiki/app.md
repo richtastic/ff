@@ -340,14 +340,16 @@ https://cloud.google.com/appengine/docs/nodejs/
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-- experiment maximally stable match size
-	- not too successful
+
+- adjust differences in image lighting to match eachother [move A toward B and B toward A OR just match]
+	- color space
 
 
 ----------------- S
+- need to save relative pair F/R/error in main file
+- need to save relative triple in main file
+- need to save triple data to triple file
 
-- 3-way views get relative scales / other data
-	- relative-scale optimal linear estimates
 - graph initialization w/ absolute view locations
 	- patch sizes need to be rescaled after relative scales are found -- save this data somewhere - 'pair' scale
 ----------------- U

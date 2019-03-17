@@ -1353,7 +1353,8 @@ R3D.TFTRANSACFromPointsAuto = function(pointsAIn,pointsBIn,pointsCIn, errorPosit
 	}
 	return bestResult;
 }
-R3D.TFTRANSACFromPoints = function(pointsAIn,pointsBIn,pointsCIn, errorPosition, initialT, pOutlier, pDesired){
+R3D.TFTRANSACFromPoints = function(pointsAIn,pointsBIn,pointsCIn, errorPosition, initialT, pOutlier, pDesired, totalMaxIterations){
+	totalMaxIterations = totalMaxIterations!==undefined ? totalMaxIterations : 1000; // 1000 is like a minute for 1000 points
 	pOutlier = pOutlier!==undefined ? pOutlier : 0.99; // initial assumptions are wrong
 	pDesired = pDesired!==undefined ? pDesired : 0.999; // to have selected a valid subset
 	var pointsA = pointsAIn;
@@ -1373,14 +1374,14 @@ R3D.TFTRANSACFromPoints = function(pointsAIn,pointsBIn,pointsCIn, errorPosition,
 	var maxErrorDistanceA = maxErrorDistance; // TODO : 3 different values?
 	var maxErrorDistanceB = maxErrorDistance;
 	var maxErrorDistanceC = maxErrorDistance;
-	var i, j, k;
 	var subsetPointsA=[], subsetPointsB=[], subsetPointsC=[];
 	var consensus=[], consensusSet = [];
 	var support, maxSupportCount = 0, maxSupportError = null;
-	var errorMinfactor = 10.0; // 2.0
+	var errorMinfactor = 1.0; // 10.0; // 2.0
 	var bestT = T;
 	var maxIterations = errorMinfactor * R3D.iterationsFromProbabilities(pDesired, pOutlier, minCount);
-	for(i=0;i<maxIterations;++i){
+		maxIterations = Math.min(maxIterations,totalMaxIterations);
+	for(var i=0;i<maxIterations;++i){
 		// reset for iteration
 		Code.emptyArray(subsetPointsA);
 		Code.emptyArray(subsetPointsB);
@@ -1403,7 +1404,7 @@ R3D.TFTRANSACFromPoints = function(pointsAIn,pointsBIn,pointsCIn, errorPosition,
 		T = R3D.TFTreverseMultiply(T, H1,H2,H3, H1i,H2i,H3i);
 		var totalTransferError = 0;
 		consensus = [];
-		for(j=0; j<pointsA.length; ++j){
+		for(var j=0; j<pointsA.length; ++j){
 			var a = pointsA[j];
 			var b = pointsB[j];
 			var c = pointsC[j];
@@ -1437,7 +1438,8 @@ R3D.TFTRANSACFromPoints = function(pointsAIn,pointsBIn,pointsCIn, errorPosition,
 		// update iterations from found:
 		pOutlier = Math.min(pOutlier, (pointsLength-maxSupportCount)/pointsLength);
 		maxIterations = errorMinfactor * R3D.iterationsFromProbabilities(pDesired, pOutlier, minCount);
-// maxIterations = Math.max(maxIterations,20000);
+		console.log("new max iterations: "+i+" / "+maxIterations+" p(pOutlier)="+pOutlier);
+			maxIterations = Math.min(maxIterations,totalMaxIterations);
 	}
 	// T using all inliers
 	Code.emptyArray(subsetPointsA);
@@ -1456,8 +1458,10 @@ R3D.TFTRANSACFromPoints = function(pointsAIn,pointsBIn,pointsCIn, errorPosition,
 	var T = bestT;
 	// var T = R3D.TFTFromUnnormalized(subsetPointsA,subsetPointsB,subsetPointsC, true);
 	var pointsKeepA = [], pointsKeepB = [], pointsKeepC = [];
+	var distancesKeep = [];
 	console.log("maxErrorDistance: "+maxErrorDistanceA+" | "+maxErrorDistanceB+" | "+maxErrorDistanceC);
-	for(i=0; i<pointsAIn.length; ++i){
+	var error = 0;
+	for(var i=0; i<pointsAIn.length; ++i){
 		var a = pointsAIn[i];
 		var b = pointsBIn[i];
 		var c = pointsCIn[i];
@@ -1471,11 +1475,37 @@ R3D.TFTRANSACFromPoints = function(pointsAIn,pointsBIn,pointsCIn, errorPosition,
 			pointsKeepA.push(pointsAIn[i]);
 			pointsKeepB.push(pointsBIn[i]);
 			pointsKeepC.push(pointsCIn[i]);
+			var avgDistance = (distanceA+distanceB+distanceC)/3.0;
+			distancesKeep.push(avgDistance);
+			error += (avgDistance);
 		}
 	}
-
-	var T = R3D.TFTFromUnnormalized(pointsKeepA,pointsKeepB,pointsKeepC);
-	return {"T":T, "matches":[pointsKeepA,pointsKeepB,pointsKeepC]};
+	if(pointsKeepA.length){
+		error /= pointsKeepA.length;
+	}
+	console.log("calculate T linearly:");
+	var maximumPoints = 200; // IF TOO MANY POINTS: NEED TO DO A SUBSET : 100 starts to be too much
+	var calcA = pointsKeepA;
+	var calcB = pointsKeepB;
+	var calcC = pointsKeepC;
+	if(pointsKeepA.length>maximumPoints){ // choose top points with lowest error
+		var sorting = [];
+		for(var i=0; i<pointsKeepA.length; ++i){
+			sorting.push([distancesKeep[i], pointsKeepA[i],pointsKeepB[i],pointsKeepC[i]]);
+		}
+		sorting.sort(function(a,b){ return a[0] < b[0] ? -1 : 1});
+		calcA = [];
+		calcB = [];
+		calcC = [];
+		for(var i=0; i<maximumPoints; ++i){
+			var item = sorting[i];
+			calcA.push(item[1]);
+			calcB.push(item[2]);
+			calcC.push(item[3]);
+		}
+	}
+	var T = R3D.TFTFromUnnormalized(calcA,calcB,calcC, true);
+	return {"T":T, "matches":[pointsKeepA,pointsKeepB,pointsKeepC], "error":error};
 }
 R3D._gdTFT = function(args, x, isUpdate, descriptive){
 	if(isUpdate){
@@ -1628,6 +1658,7 @@ R3D.TFTFromUnnormalized = function(pointsA,pointsB,pointsC, skipNonlinear){
 	T = R3D.TFTreverseMultiply(T, H1,H2,H3, H1i,H2i,H3i);
 	// console.log("AFTER :\n"+T);
 	if(!skipNonlinear){
+		console.log("DO TFTNonlinear");
 		T = R3D.TFTNonlinear(T, pointsA, pointsB, pointsC);
 	}
 	return T;
@@ -5422,7 +5453,7 @@ R3D.iterationsFromProbabilities = function(pDesired, pOutlier, minCount, multipl
 	multiplier = multiplier!==undefined ? multiplier : 1.0;
 	var maxIterations = Math.ceil(Math.log(1.0-pDesired)/Math.log(1.0 - Math.pow(1.0-pOutlier,minCount)));
 	maxIterations *= multiplier;
-	maxIterations = Math.min(maxIterations,1E5);;
+	maxIterations = Math.min(maxIterations,1E5);
 	return maxIterations
 }
 R3D.fundamentalRANSACFromPoints = function(pointsAIn,pointsBIn, errorPosition, initialF, pOutlier, pDesired){
@@ -5473,51 +5504,51 @@ R3D.fundamentalRANSACFromPoints = function(pointsAIn,pointsBIn, errorPosition, i
 		var m = R3D.fundamentalMatrix(pointsANorm.normalized[0],pointsBNorm.normalized[0]);
 		if(!Code.isArray(m)){ m = [m]; } // if have 7 => multiple possible
 		for(k=0; k<m.length; ++k){
-				var arr = m[k];
-				arr = Matrix.mult(arr, pointsANorm.forward[0]);
-				arr = Matrix.mult(Matrix.transpose(pointsBNorm.forward[0]), arr);
-				var FFwd = arr;
-				var FRev = Matrix.inverse(FFwd);
-				var FRev = R3D.fundamentalInverse(FFwd);
-				var dir = new V2D();
-				var org = new V2D();
-				var transferError;
-				var totalTransferError = 0;
-				consensus = [];
-				for(j=0; j<pointsA.length; ++j){
-					var a = pointsA[j];
-					var b = pointsB[j];
-					ptA.set(a.x,a.y,1.0);
-					ptB.set(b.x,b.y,1.0);
-					lineB = FFwd.multV3DtoV3D(lineB, ptA);
-					Code.lineOriginAndDirection2DFromEquation(org,dir, lineB.x,lineB.y,lineB.z);
-					distanceB = Code.distancePointRay2D(org,dir, b);
-					// B
-					lineA = FRev.multV3DtoV3D(lineA, ptB);
-					Code.lineOriginAndDirection2DFromEquation(org,dir, lineA.x,lineA.y,lineA.z);
-					distanceA = Code.distancePointRay2D(org,dir, a);
-					// error
-					transferError = distanceA*distanceA + distanceB*distanceB;
-					if(distanceA<maxErrorDistanceA && distanceB<maxErrorDistanceB){
-						totalTransferError += transferError;
-						consensus.push([a,b, transferError]);
-					}
+			var arr = m[k];
+			arr = Matrix.mult(arr, pointsANorm.forward[0]);
+			arr = Matrix.mult(Matrix.transpose(pointsBNorm.forward[0]), arr);
+			var FFwd = arr;
+			var FRev = Matrix.inverse(FFwd);
+			var FRev = R3D.fundamentalInverse(FFwd);
+			var dir = new V2D();
+			var org = new V2D();
+			var transferError;
+			var totalTransferError = 0;
+			consensus = [];
+			for(j=0; j<pointsA.length; ++j){
+				var a = pointsA[j];
+				var b = pointsB[j];
+				ptA.set(a.x,a.y,1.0);
+				ptB.set(b.x,b.y,1.0);
+				lineB = FFwd.multV3DtoV3D(lineB, ptA);
+				Code.lineOriginAndDirection2DFromEquation(org,dir, lineB.x,lineB.y,lineB.z);
+				distanceB = Code.distancePointRay2D(org,dir, b);
+				// B
+				lineA = FRev.multV3DtoV3D(lineA, ptB);
+				Code.lineOriginAndDirection2DFromEquation(org,dir, lineA.x,lineA.y,lineA.z);
+				distanceA = Code.distancePointRay2D(org,dir, a);
+				// error
+				transferError = distanceA*distanceA + distanceB*distanceB;
+				if(distanceA<maxErrorDistanceA && distanceB<maxErrorDistanceB){
+					totalTransferError += transferError;
+					consensus.push([a,b, transferError]);
 				}
-				var avgTransferError = totalTransferError / support; // if AVERAGE ERROR GOES DOWN ?
-				var errorFxn = function(a){
-					return a[2];
-				}
-				var items = Code.dropOutliers(consensus, errorFxn, 2.0);
-				consensus = items["inliers"];
-				support = consensus.length;
-				if(support>maxSupportCount || (support==maxSupportCount && totalTransferError < maxSupportError)){
-					maxSupportCount = support;
-					maxSupportError = totalTransferError;
-					Code.emptyArray(consensusSet);
-					Code.copyArray(consensusSet, consensus);
-					// TODO: use all of new consensus points & try to refine F approximation
-					// if support count has increased,
-				}
+			}
+			var avgTransferError = totalTransferError / support; // if AVERAGE ERROR GOES DOWN ?
+			var errorFxn = function(a){
+				return a[2];
+			}
+			var items = Code.dropOutliers(consensus, errorFxn, 2.0);
+			consensus = items["inliers"];
+			support = consensus.length;
+			if(support>maxSupportCount || (support==maxSupportCount && totalTransferError < maxSupportError)){
+				maxSupportCount = support;
+				maxSupportError = totalTransferError;
+				Code.emptyArray(consensusSet);
+				Code.copyArray(consensusSet, consensus);
+				// TODO: use all of new consensus points & try to refine F approximation
+				// if support count has increased,
+			}
 		}
 		// update iterations from found:
 		pOutlier = Math.min(pOutlier, (pointsLength-maxSupportCount)/pointsLength);
@@ -22503,6 +22534,25 @@ R3D.optimumGraphLocation3DLeastSquares = function(edges){ // [indexA,indexB,rela
 
 // R3D.inverseCameraMatrix = function(P){
 
+
+R3D.relativeScaleFromCameraMatrices = function(Pab,Pac,Pbc){
+	var Rbc = Pbc.getSubMatrix(0,0,3,3);
+	var tab = new V3D( Pab.get(0,3), Pab.get(1,3), Pab.get(2,3) );
+	var tac = new V3D( Pac.get(0,3), Pac.get(1,3), Pac.get(2,3) );
+	var tbc = new V3D( Pbc.get(0,3), Pbc.get(1,3), Pbc.get(2,3) );
+	tab.norm();
+	tac.norm();
+	tbc.norm();
+	var mid = Rbc.multV3DtoV3D(tab);
+	var crossA = V3D.cross(tac,tbc);
+	var crossB = V3D.cross(mid,tbc);
+	var bottom = crossB.lengthSquare();
+	var dotAB = V3D.dot(crossA,crossB);
+	var scale = dotAB/bottom;
+		// scale = Math.abs(scale);
+	return 1.0/scale;
+}
+
 R3D.cameraMatrixFromExtrinsicMatrix = function(extrinsic){
 	// var camera = R3D.inverseCameraMatrix(extrinsic);
 	// return camera;
@@ -22549,9 +22599,159 @@ R3D.optimumTransform3DFromRelativePairTransforms = function(pairs){
 		var edge = [a,b, {"quaternion":quaternion, "translation":translation}, error];
 		edges.push(edge);
 	}
-	return R3D.optimumTransform3D(edges);
+	return R3D.optimumTransform3D(edges); // nodeA, nodeB, scale, error
 }
-
+R3D.optimumScaling1D = function(edges){
+	// var nonlinear = true;
+	nonlinear = false;
+	// find size of graph
+	var maxVertex = -1;
+	for(var i=0; i<edges.length; ++i){
+		var edge = edges[i];
+		maxVertex = Math.max(maxVertex,edge[0]);
+		maxVertex = Math.max(maxVertex,edge[1]);
+	}
+	if(maxVertex<0){
+		return null;
+	}
+	var vertexCount = maxVertex + 1;
+	// create graph
+	var graph = new Graph();
+	var vs = [];
+	for(var i=0; i<vertexCount; ++i){
+		var v = graph.addVertex();
+		v.data(i);
+		vs[i] = v;
+	}
+	var es = [];
+	for(var i=0; i<edges.length; ++i){
+		var edge = edges[i];
+		var a = edge[0];
+		var b = edge[1];
+		var scale = edge[2];
+			scale = Math.log(scale); // operate on adding logarithms
+		var error = edge[3];
+		var value = {"scale":scale};
+		var va = vs[a];
+		var vb = vs[b];
+		var w = error;
+		var e = graph.addEdge(va,vb, w, Graph.Edge.DIRECTION_DUPLEX);
+		e.data({"value":value,"error":error});
+		es[i] = e;
+	}
+	// find path from each vertex to each other vertex
+	var allPaths = [];
+	for(var i=0; i<vs.length; ++i){
+		var v = vs[i];
+		var paths = graph.minPaths(v);
+		var pathGroup = []; // cummulative path to each vertex
+		var reference = v.data();
+		for(var j=0; j<paths.length; ++j){
+			var path = paths[j];
+			var pathEdges = path["edges"];
+			var vertex = v;
+			var totalError = 0;
+			var scaleCumulative = 0;
+			for(var k=0; k<pathEdges.length; ++k){
+				var edge = pathEdges[k];
+				var data = edge.data();
+				var value = data["value"];
+				var error = data["error"];
+				var scale = value["scale"];
+				totalError += error;
+				var opposite = edge.opposite(vertex);
+				if(edge.A()!=vertex){
+					scale = -scale;
+				}
+				scaleCumulative += scale;
+				vertex = opposite;
+			}
+// console.log("scaleCumulative "+scaleCumulative)
+			// totalError = Math.sqrt(totalError);
+			pathGroup.push({"value":{"scale":scaleCumulative}, "error":totalError});
+		}
+		allPaths.push(pathGroup);
+	}
+	// find best vertex to keep at origin
+	var rootIndex = -1;
+	var rootError = 0;
+	for(var i=0; i<allPaths.length; ++i){
+		var pathGroup = allPaths[i];
+		var totalError = 0;
+		for(var j=0; j<pathGroup.length; ++j){
+			var group = pathGroup[j];
+			var error = group["error"];
+			totalError += error;
+		}
+		// console.log("INDEX: "+i+" = "+totalError);
+		if(rootIndex<0 || rootError>totalError){
+			rootIndex = i;
+			rootError = totalError;
+		}
+	}
+// rootIndex = 0;
+// console.log("rootIndex: "+rootIndex);
+	// calculate absolute scale based on root
+	var allValues = Code.newArrayArrays(vs.length);
+	for(var i=0; i<allPaths.length; ++i){
+		var pathGroup = allPaths[i];
+		var reference = pathGroup[rootIndex];
+		var valueA = reference["value"];
+		var scaleA = valueA["scale"];
+		for(var j=0; j<pathGroup.length; ++j){
+			if(j==i){
+				continue;
+			} // else calculate absolute orientation of neighbor
+			var group = pathGroup[j];
+			var valueB = group["value"];
+			var scaleB = valueB["scale"];
+			var scaleAB = scaleB - scaleA;
+			var error = group["error"];
+			allValues[j].push({"value":{"scale":scaleAB}, "error":error});
+		}
+	}
+	graph.kill();
+	// find average for each vertex
+	var values = [];
+	for(var i=0; i<allValues.length; ++i){
+		var list = allValues[i];
+		var scales = [];
+		var errors = [];
+		for(var j=0; j<list.length; ++j){
+			var item = list[j];
+			scales.push(item["value"]["scale"]);
+			errors.push(item["error"]);
+		}
+		var percents = Code.errorsToPercents(errors);
+			percents = percents["percents"];
+		var list = [];
+		// do averaging
+		var scale = Code.mean(scales);
+		values[i] = {"scale":scale};
+	}
+	var scales = [];
+	if(nonlinear){
+console.log("NONLINEAR");
+		var iterations = 100;
+		var result = R3D._gdScales1D(vs,es,values,rootIndex,iterations, 0);
+		var values = result["values"];
+		for(var i=0; i<values.length; ++i){
+			var scale = values[i];
+			scales[i] = scale;
+		}
+	}else{
+		console.log("LINEAR");
+		var rootScale = values[rootIndex]["scale"];
+		for(var i=0; i<values.length; ++i){
+			var value = values[i];
+			var scale = value["scale"];
+				scale -= rootScale;
+				scale = Math.exp(scale);
+			scales[i] = scale;
+		}
+	}
+	return {"absolute":scales, "root":rootIndex};
+}
 R3D.optimumTransform3D = function(edges){ // edges: [indexA,indexB, transform,error]
 	var nonlinear = true;
 	// nonlinear = false;
@@ -22747,6 +22947,7 @@ console.log(percents)
 	}
 	// console.log(values);
 	// nonlinear error minimize
+	var transforms = [];
 	if(nonlinear){
 		// var iterations = 1;
 		// var iterations = 10;
@@ -22758,7 +22959,6 @@ console.log(percents)
 		var result = R3D._gdTranslationRotation3D(vs,es,values,rootIndex,iterations, 1);
 		rotations = result["values"];
 		// convert into transforms
-		var transforms = [];
 		for(var i=0; i<translations.length; ++i){
 			var translation = translations[i];
 			var rotation = rotations[i];
@@ -22768,7 +22968,6 @@ console.log(percents)
 			transforms[i] = matrix;
 		}
 	}else{
-		transforms = [];
 		for(var i=0; i<values.length; ++i){
 			var transform = values[i];
 			var translation = transform["translation"];
@@ -22864,8 +23063,6 @@ R3D._gdTranslationRotation3D = function(vs,es,values,rootIndex,iterations, type)
 	// object
 	return {"values":vectors};
 }
-
-
 R3D._gdLocationOperation3D = function(args, x, isUpdate){
 	return R3D._gdLocationRotationOperation3D(args, x, isUpdate, 0);
 }
@@ -22933,9 +23130,70 @@ R3D._gdLocationRotationOperation3D = function(args, x, isUpdate, type){
 	}
 	return totalError;
 }
+R3D._gdScaleOperation1D = function(args, x, isUpdate, type){
+	var edges = args[0];
+	var rootVertex = args[1];
+	var totalError = 0;
+	for(var i=0; i<edges.length; ++i){
+		var edge = edges[i];
+		var va = edge.A();
+		var vb = edge.B();
+		var ia = va.data();
+		var ib = vb.data();
+		var data = edge.data();
+		var value = data["value"];
+		var errorEdge = data["error"];
+		var error = null;
+		var rel = null;
+		var abs = value["scale"];
+			// get params - same for trans or rot
+			var as = x[ia];
+			var bs = x[ib];
+			// force root x to alway be at origin
+			if(ia==rootVertex){
+				as = 0;
+			}else if(ib==rootVertex){
+				bs = 0;
+			}
+			rel = bs - as;
+			var diff = Math.abs(abs-rel);
+			error = Math.exp(diff);
+		totalError += error/errorEdge;
+	}
+// enforce consistency: all loops sum to 0
+// pick a random loop = pick random vertex a & random vertex b & path between them : pathAB != pathBC
+// find the total error & spread along path
 
+	if(isUpdate){
+		console.log(" "+type+" totalError: "+totalError);
+	}
+	return totalError;
+}
 
-
+R3D._gdScales1D = function(vs,es,values,rootIndex,iterations){
+	var args = [];
+	args.push(es);
+	args.push(rootIndex);
+	var x = [];
+	var output = [];
+	var fxn = R3D._gdScaleOperation1D;
+	for(var i=0; i<values.length; ++i){
+		var v = values[i];
+		var scale = v["scale"];
+		x.push(scale);
+	}
+	// guts
+	var result = Code.gradientDescent(fxn, args, x, null, iterations, 1E-10);
+	// parse result into objects
+	var values = result["x"];
+	var scales = [];
+	for(var i=0; i<values.length; ++i){
+		var s = values[i];
+		scales.push(s);
+	}
+	// object
+	return {"values":scales};
+}
 
 
 

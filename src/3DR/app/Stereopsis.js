@@ -304,30 +304,6 @@ Stereopsis.View = function(image, camera, data){
 	this.image(image);
 	this.camera(camera);
 	this.data(data);
-	// bleu
-	var width = this._image.width();
-	var height = this._image.height();
-	var size = Math.round( Math.sqrt(width*height) * 0.05);
-	if(size%2==0){
-		size -= 1;
-	}
-	size = Math.max(size,3);
-	var cellSize = size;
-
-// cellSize = 11;
-	//var compareSize = cellSize*2 - 1;
-	// var compareSize = cellSize;
-
-// ORIGINALLY: points are now on the order of 1 pixel: ... 3 to 11 -- may want larger compare size
-
-// cellSize = 21;
-// cellSize = 11;
-// cellSize = 7;
-// cellSize = 5;
-cellSize = 3;
-// compareSize = 31;
-	this.cellSize(cellSize);
-	// this.compareSize(compareSize);
 }
 Stereopsis.View.prototype._resetCacheItems = function(){
 	this._center = null;
@@ -353,6 +329,34 @@ Stereopsis.View.prototype.image = function(image){
 		this._image = image;
 		this._cornersFromImage();
 		this._updateInternalParams();
+		if(image){
+			// DOES THIS GO HERE?
+
+			// bleu
+			var width = this._image.width();
+			var height = this._image.height();
+			var size = Math.round( Math.sqrt(width*height) * 0.05);
+			if(size%2==0){
+				size -= 1;
+			}
+			size = Math.max(size,3);
+			var cellSize = size;
+
+			// cellSize = 11;
+				//var compareSize = cellSize*2 - 1;
+				// var compareSize = cellSize;
+
+			// ORIGINALLY: points are now on the order of 1 pixel: ... 3 to 11 -- may want larger compare size
+
+			// cellSize = 21;
+			// cellSize = 11;
+			// cellSize = 7;
+			// cellSize = 5;
+			cellSize = 3;
+			// compareSize = 31;
+			this.cellSize(cellSize);
+			// this.compareSize(compareSize);
+		}
 	}
 	return this._image;
 }
@@ -927,6 +931,16 @@ Stereopsis.Transform3D.prototype.F = function(viewA,viewB, F){
 	}
 	return null;
 }
+Stereopsis.Transform3D.prototype.scaleR = function(scale){
+	var R = this._Rfwd;
+	var t = new V3D(R.get(0,3),R.get(1,3),R.get(2,3));
+	t.scale(scale);
+	R.set(0,3, t.x);
+	R.set(1,3, t.y);
+	R.set(2,3, t.z);
+	this.R(R);
+}
+
 Stereopsis.Transform3D.prototype.R = function(viewA,viewB, R){
 	if(arguments.length==0){
 		return this._Rfwd;
@@ -1271,6 +1285,9 @@ Stereopsis.P3D.prototype.toViewArray = function(){
 		views.push(point.view());
 	});
 	return views;
+}
+Stereopsis.P3D.prototype.point2DCount = function(){
+	return Code.keys(this._points2D).length;
 }
 Stereopsis.P3D.prototype.addPoint2D = function(point2D){
 	if(point2D!==undefined){
@@ -3171,7 +3188,7 @@ Stereopsis.World.prototype.x = function(){
 }
 // globalBundleAdjust
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-Stereopsis.World.prototype.solve = function(completeFxn, completeContext){
+Stereopsis.World.prototype.solve = function(completeFxn, completeContext){ // pairwise
 /*
 	this._CALCULATE_PATCHES = false;
 	this._CALCULATE_TRANSFORMS_FROM_MATCHES = true;
@@ -3298,7 +3315,7 @@ this.printInfo();
 
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-Stereopsis.World.prototype.solveForTracks = function(completeFxn, completeContext){
+Stereopsis.World.prototype.solveForTracks = function(completeFxn, completeContext){ // tracks (pairwise tested)
 	console.log("solveForTracks");
 	var world = this;
 	// do error estimation:
@@ -3519,12 +3536,294 @@ Stereopsis.World.prototype.solveForTracks = function(completeFxn, completeContex
 
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-Stereopsis.World.prototype.solveTriple = function(completeFxn, completeContext){
+Stereopsis.World.prototype.solveTriple = function(completeFxn, completeContext){ // only tested for single triple system
 	console.log("solveTriple");
+	// absolute locations aren't known yet
+	// relative locations are not transferrable yet
+	// this.relativeTransformsFromAbsoluteTransforms();
+	// this.relativeFFromSamples();
+	// this.estimate3DErrors(true);
 
 
+// this.estimate3DErrors(false);
+
+	// assuming the relative transformations have already been set
+	this.relativeFFromSamples();
+	this.estimate3DErrors(true);
+
+	// ????
+
+	this.printPoint3DTrackCount();
+
+	// triple for relative scaling:
+	console.log("relative scale using relative transforms");
+	var transforms = this.toTransformArray();
+	var views = this.toViewArray();
+	for(var i=0; i<views.length; ++i){
+		var viewI = views[i];
+		for(var j=i+1; j<views.length; ++j){
+			var viewJ = views[j];
+			for(var k=j+1; k<views.length; ++k){
+				var viewK = views[k];
+				var transformIJ = this.transformFromViews(viewI,viewJ);
+				var transformIK = this.transformFromViews(viewI,viewK);
+				var transformJK = this.transformFromViews(viewJ,viewK);
+				var RIJ = transformIJ.R(viewI,viewJ);
+				var RIK = transformIK.R(viewI,viewK);
+				var RJK = transformJK.R(viewJ,viewK);
+				var RJI = R3D.inverseCameraMatrix(RIJ);
+				var RKI = R3D.inverseCameraMatrix(RIK);
+				var RKJ = R3D.inverseCameraMatrix(RJK);
+				// var RJI = Matrix.inverse(RIJ);
+				// var RKI = Matrix.inverse(RIK);
+				// var RKJ = Matrix.inverse(RJK);
+				// ...
+				// var scaleIJtoIK = R3D.relativeScaleFromCameraMatrices(RIJ,RIK,RJK);
+				// var scaleJKtoJI = R3D.relativeScaleFromCameraMatrices(RJK,RJI,RKI);
+				// // var scaleJItoJK = R3D.relativeScaleFromCameraMatrices(RJI,RJK,RIK);
+				// var scaleKItoKJ = R3D.relativeScaleFromCameraMatrices(RKI,RKJ,RIJ);
+				// console.log(scaleIJtoIK);
+				// console.log(scaleJKtoJI);
+				// console.log(scaleKItoKJ);
+
+
+				var scaleIJtoIK = R3D.relativeScaleFromCameraMatrices(RIJ,RIK,RJK);
+				var scaleJKtoJI = R3D.relativeScaleFromCameraMatrices(RJK,RJI,RKI);
+				var scaleKItoKJ = R3D.relativeScaleFromCameraMatrices(RKI,RKJ,RIJ);
+				console.log(scaleIJtoIK);
+				console.log(scaleJKtoJI);
+				console.log(scaleKItoKJ);
+			}
+		}
+	}
+
+	// triple relative scaling
+var tripleScale = null;
+	console.log("relative scale using random ratios");
+	for(var i=0; i<views.length; ++i){
+		var viewA = views[i];
+		for(var j=i+1; j<views.length; ++j){
+			var viewB = views[j];
+			for(var k=j+1; k<views.length; ++k){
+				var viewC = views[k];
+				// var scaleIJtoIK = this.relativeScaleFromSampleRatios(viewI,viewJ,viewK); // AB/AC
+				// // var scaleJItoJK = this.relativeScaleFromSampleRatios(viewJ,viewI,viewK);
+				// var scaleJKtoJI = this.relativeScaleFromSampleRatios(viewJ,viewK,viewI); // BC/BA
+				// var scaleKItoKJ = this.relativeScaleFromSampleRatios(viewK,viewI,viewJ); // CA/CB
+				// console.log(scaleIJtoIK);
+				// // console.log(scaleJItoJK);
+				// console.log(scaleJKtoJI);
+				// console.log(scaleKItoKJ);
+
+				var transformAB = this.transformFromViews(viewA,viewB);
+				var transformAC = this.transformFromViews(viewA,viewC);
+				var transformBC = this.transformFromViews(viewB,viewC);
+				var errorAB = transformAB.rSigma();
+				var errorAC = transformAC.rSigma();
+				var errorBC = transformBC.rSigma();
+				var errorA = viewA.rSigma();
+				var errorB = viewB.rSigma();
+				var errorC = viewC.rSigma();
+
+				var scaleABtoAC = this.relativeScaleFromSampleRatios(viewA,viewB,viewC); // AB/AC
+				var scaleACtoBC = this.relativeScaleFromSampleRatios(viewC,viewA,viewB); // AC/BC
+				var scaleBCtoAB = this.relativeScaleFromSampleRatios(viewB,viewC,viewA); // BC/AB
+				scaleABtoAC = 1.0/scaleABtoAC;
+				scaleACtoBC = 1.0/scaleACtoBC;
+				scaleBCtoAB = 1.0/scaleBCtoAB;
+				console.log(scaleABtoAC);
+				console.log(scaleACtoBC);
+				console.log(scaleBCtoAB);
+
+
+				// create semi-consistent scaling:
+				var edges = [];
+				edges.push([0,1, scaleABtoAC, errorAB + errorAC]);
+				edges.push([1,2, scaleACtoBC, errorAC + errorBC]);
+				edges.push([2,0, scaleBCtoAB, errorBC + errorAB]);
+				var result = R3D.optimumScaling1D(edges);
+				var abs = result["absolute"];
+				// console.log(abs+"");
+				// distribute the error around for consistent scaling
+				var abs0 = abs[0];
+				var abs1 = abs[1];
+				var abs2 = abs[2];
+					var log01 = Math.log(abs1/abs0);
+					var log12 = Math.log(abs2/abs1);
+					var log20 = Math.log(abs0/abs2);
+					var totalError = log01 + log12 + log20;
+					// console.log("totalError: "+totalError);
+					var errors = [errorA,errorB,errorC];
+					var percents = Code.errorsToPercents(errors);
+						percents = percents["percents"];
+					log01 += percents[0]*totalError;
+					log12 += percents[1]*totalError;
+					log20 += percents[2]*totalError;
+					abs0 = 1.0;
+					abs1 = Math.exp(0 + log01);
+					//abs2 = Math.exp(0 + log01 + log12);
+					abs2 = Math.exp(0 - log20);
+				abs = [abs0,abs1,abs2];
+				console.log(abs+"");
+				// save scales somewhere
+				tripleScale = {"AB":abs0,"AC":abs1,"BC":abs2, "A":viewA, "B":viewB, "C":viewC};
+			}
+		}
+	}
+	// record the scalings somewhere ...
+
+	// apply the scaling to get transforms in same coordinate system
+	var viewA = tripleScale["A"];
+	var viewB = tripleScale["B"];
+	var viewC = tripleScale["C"];
+	var scaleAB = tripleScale["AB"];
+	var scaleAC = tripleScale["AC"];
+	var scaleBC = tripleScale["BC"];
+	var transformAB = this.transformFromViews(viewA,viewB);
+	var transformAC = this.transformFromViews(viewA,viewC);
+	var transformBC = this.transformFromViews(viewB,viewC);
+	transformAB.scaleR(scaleAB);
+	transformAC.scaleR(scaleAC);
+	transformBC.scaleR(scaleBC);
+
+	// use only overlapping 3D points
+	var points3D = this.toPointArray();
+	var group2 = []; // keep for later matching
+	var group3 = [];
+	for(var i=0; i<points3D.length; ++i){
+		var point3D = points3D[i];
+		var count = point3D.point2DCount();
+		if(count==3){
+			group3.push(point3D);
+		}else{
+			this.disconnectPoint3D(point3D);
+			group2.push(point3D);
+		}
+	}
+	console.log("3-pairs: "+group3.length);
+
+	// construct T
+	var matches = [];
+	var pointsA = [];
+	var pointsB = [];
+	var pointsC = [];
+	for(var i=0; i<group3.length; ++i){
+		var point3D = group3[i];
+		var point2DA = point3D.pointForView(viewA);
+		var point2DB = point3D.pointForView(viewB);
+		var point2DC = point3D.pointForView(viewC);
+		var p2DA = point2DA.point2D();
+		var p2DB = point2DB.point2D();
+		var p2DC = point2DC.point2D();
+		// matches.push({"A":point2DA, "B":point2DB, "C":point2DC});
+		// matches.push({"A":p2DA, "B":p2DB, "C":p2DC});
+		pointsA.push(p2DA);
+		pointsB.push(p2DB);
+		pointsC.push(p2DC);
+	}
+	// console.log(pointsA,pointsB,pointsC);
+	var errorPosition = ((transformAB.rSigma() + transformAC.rSigma() + transformBC.rSigma())/3.0) * 1.0;
+
+	//var T = R3D.TFTRANSACFromPointsAuto(pointsA,pointsB,pointsC, errorPosition, null, 0.10);
+	var T = R3D.TFTRANSACFromPoints(pointsA,pointsB,pointsC, errorPosition, null, 0.50, 0.99);
+	console.log(T);
+	var TFT = T["T"];
+	console.log(TFT);
+	// var error = T["error"];
+	// drop outliers
+	var errors = [];
+	var errorPoints = [];
+	for(var i=0; i<group3.length; ++i){
+		var point3D = group3[i];
+		var point2DA = point3D.pointForView(viewA);
+		var point2DB = point3D.pointForView(viewB);
+		var point2DC = point3D.pointForView(viewC);
+		var p2DA = point2DA.point2D();
+		var p2DB = point2DB.point2D();
+		var p2DC = point2DC.point2D();
+		var error = R3D.tftError(TFT, p2DA, p2DB, p2DC);
+			error = error["error"];
+		errors.push(error);
+		errorPoints.push([error, point3D]);
+	}
+	console.log(errors);
+	var errorMean = Code.mean(errors);
+	var errorSigma = Code.stdDev(errors,errorMean);
+	console.log("T ERROR: "+errorMean+" +/- "+errorSigma);
+	var maxErrorLimit = errorMean + 2.0*errorSigma;
+	var dropPoints = [];
+Code.printMatlabArray(errors,"tError");
+	for(var i=0; i<errorPoints.length; ++i){
+		var point = errorPoints[i];
+		var error = point[0];
+		if(error>maxErrorLimit){
+			dropPoints.push(point[1]);
+		}
+	}
+	console.log(" dropPoints: "+dropPoints.length+" / "+errorPoints.length);
+	for(var i=0; i<dropPoints.length; ++i){
+		var point3D = dropPoints[i];
+		world.disconnectPoint3D(point3D);
+		world.killPoint3D(point3D);
+	}
+
+	console.log(this.toPointArray());
+
+
+	// get new P1 P2 P3 DIRECTLY FROM TFT ?
+
+	// var Plist = ;
+
+
+	// just optimize on current transforms
+	console.log("optimize transforms using current relative(scaled) and TFT-valid points");
+	// convert relative transforms to absolute transforms
+	listPairs = [];
+	listPairs.push([0,1,transformAB.R(viewA,viewB),transformAB.rSigma()]);
+	listPairs.push([0,2,transformAC.R(viewA,viewC),transformAC.rSigma()]);
+	listPairs.push([1,2,transformBC.R(viewB,viewC),transformBC.rSigma()]);
+	var result = R3D.optimumTransform3DFromRelativePairTransforms(listPairs);
+	console.log(result);
+
+	// set absolute transforms
+
+
+	// refine / BA 
+
+	// set
+
+	/*
+	// this.relativeTransformsFromAbsoluteTransforms(); // relative R from absolutes
+	// this.relativeFfromR(); // relative F derived from relative R
+	this.relativeFFromSamples();
+	this.estimate3DErrors(true);
+// this.refinePoint3DAbsoluteLocation(); // ?
+	this.averagePoints3DFromMatches(true);
+// should the 3D points be further optimized to minimize reprojection error to each view it's included in?
+	// MOTION
+	this.refineCameraAbsoluteOrientation();
+	*/
+
+
+
+	// get new points => use existing pairwise matches?
+
+	// for all P3D with exactly 2 matches
+		// find 3rd location in 3rd image
+		// may need a search area
+		// if NCC is good => set as triple
+
+
+
+	//
+
+	// this.averagePoints3DFromMatches(true);
+	// this.estimate3DErrors(true);
+
+
+	return {"scales":tripleScale, "T":TFT};
 	// TFT TEST
-
+/*
 	// need to have 3 views & correspondences matched
 	var views = this.toViewArray();
 	var viewA = views[0];
@@ -3539,18 +3838,22 @@ Stereopsis.World.prototype.solveTriple = function(completeFxn, completeContext){
 	}
 	R3D.TFTFromUnnormalized(pointsA,pointsB,pointsC);
 	// R3D.trifocalTensor(pointsA,pointsB,pointsC);
+*/
+// 5620 / 71404 ~ 10%
+	/*
+	if(completeFxn){
+		completeFxn.call(completeContext);
+	}
 
-	return ;
+
+	if(completeFxn){
+		completeFxn();
+	}
+	*/
+}
 
 
-
-	// SCALING TEST
-
-
-	// A) TFT [use 3 matches then]
-	// B) scaling
-	var views = this.toViewArray();
-
+Stereopsis.World.prototype.relativeScaleFromSampleRatios = function(viewA,viewB,viewC){ // AC/AB
 	// COMMON = A
 	// var viewA = views[0];
 	// var viewB = views[1];
@@ -3562,10 +3865,9 @@ Stereopsis.World.prototype.solveTriple = function(completeFxn, completeContext){
 	// var viewC = views[2];
 
 	// COMMON = C
-	var viewA = views[2];
-	var viewB = views[0];
-	var viewC = views[1];
-
+	// var viewA = views[2];
+	// var viewB = views[0];
+	// var viewC = views[1];
 
 	var imageA = viewA.image();
 	var widthA = imageA.width();
@@ -3577,25 +3879,24 @@ Stereopsis.World.prototype.solveTriple = function(completeFxn, completeContext){
 	var fxnC = function(p2D){
 		return p2D.point3D().point2DForView(viewC) != null;
 	}
-
-	// var samples = 10;
 	// var samples = 100;
-	// var samples = 1000; // - probably enough
-	var samples = 1E4;
+	var samples = 1000; // - probably enough
+	// var samples = 1E4;
 	var loc2D = new V2D();
-	var maxDistance = 2.0; // might need to be error-size dependent ?
+	var maxDistance = 2.0; // might need to be error-size dependent  - reprojection error in AB / AC
 	var ratios = [];
+	var pointSpace = viewA.pointSpace();
 	for(var s=0; s<samples; ++s){
 		var pairs = [];
-		if(s%100==0){
-			console.log(s+" / "+samples);
-		}
+		// if(s%100==0){
+		// 	console.log(s+" / "+samples);
+		// }
 		for(var j=0; j<10; ++j){ // max tries to get pair of points
 			// pick random points
 			loc2D.set( Math.random()*widthA, Math.random()*heightA );
-			var closestB1 = viewA.pointSpace().kNN(loc2D,1, fxnB);
+			var closestB1 = pointSpace.kNN(loc2D,1, fxnB);
 				closestB1 = closestB1[0];
-			var closestC1 = viewA.pointSpace().kNN(loc2D,1, fxnC);
+			var closestC1 = pointSpace.kNN(loc2D,1, fxnC);
 				closestC1 = closestC1[0];
 			var distance = V2D.distance(closestB1.point2D(),closestC1.point2D());
 			if(distance<maxDistance){
@@ -3623,30 +3924,54 @@ Stereopsis.World.prototype.solveTriple = function(completeFxn, completeContext){
 					ratios.push(ratio);
 				}
 		}
-		// var list = this._pointSpace.kNN(point, 2);;
-		// console.log(loc2D+"");
-		// console.log(closest);
-
-/*
-pointA in B
-pointA in C
-
-pointB in B
-pointC in C
-
-*/
-
 		// break;
 	}
-	ratios.sort(function(a,b){
-		return a<b ? -1 : 1;
-	})
-	Code.printMatlabArray(ratios,"ratios");
-
-
-	if(completeFxn){
-		completeFxn();
+	// // cleanup:
+	// var next = [];
+	// // var maxScale = 1E10;
+	// // var minScale = 1.0/maxScale;
+	// for(var i=0; i<ratios.length; ++i){
+	// 	var value = ratios[i];
+	// 	if( !Code.isNaN(value) && Code.isNumber(value) ){
+	// 		next.push(value);
+	// 	}
+	// }
+	// ratios = next;
+// ratios.sort(function(a,b){
+// 	return a<b ? -1 : 1;
+// })
+// Code.printMatlabArray(ratios,"ratios");
+	// repeatidly drop outliers:
+	for(var s=0; s<10; ++s){
+		var lim = 1.0;
+		var mean = Code.mean(ratios);
+		var sigma = Code.stdDev(ratios,mean);
+		var limitMin = mean - lim*sigma;
+		var limitMax = mean + lim*sigma;
+		// console.log(s+" MEAN START: "+mean+" +/- "+sigma+" / "+ratios.length);
+		var next = [];
+		for(var i=0; i<ratios.length; ++i){
+			if(limitMin<=ratios[i] && ratios[i]<=limitMax){
+				next.push(ratios[i]);
+			}
+		}
+		if(next.length>3){
+			ratios = next;
+		}else{
+			break;
+		}
+		var nextMean = Code.mean(ratios);
+		var rat = nextMean>mean ? nextMean/mean : mean/nextMean;
+		if(rat<1.00001){
+			break;
+		}
 	}
+	var scale = Code.mean(ratios);
+// ratios.sort(function(a,b){
+// 	return a<b ? -1 : 1;
+// })
+// Code.printMatlabArray(ratios,"ratios");
+	return scale;
 }
 
 Stereopsis.World.prototype.showReprojectionError = function(){

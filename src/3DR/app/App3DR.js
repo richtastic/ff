@@ -5433,8 +5433,12 @@ projects/
 					featureScore: 0			# NOT USED
 					featureCount: 42		# 2D match count
 					relativeCount: 29683	# 3D match count
-					F-DATA HERE?
-					R-DATA HERE?
+
+#### ADD:
+					F-DATA HERE
+					R-DATA HERE
+					ERROR DATA HERE
+
 				...
 			triples:
 				-
@@ -5444,8 +5448,14 @@ projects/
 					viewC: "CCCCCCCC"
 					relativeCount: 29683	# 3D match count
 					R-DATA HERE?
-					RELATIVE-SCALE-DATA-HERE?
-					TFT-DATA-HERE?
+#### ADD:
+
+					F-DATA HERE
+					R-DATA HERE
+					TFT-DATA-HERE
+					RELATIVE-SCALE-DATA-HERE
+
+					ERROR DATA HERE
 				...
 
 		views/
@@ -5503,8 +5513,8 @@ projects/
 						TFT: 27-PARAM MATRIX
 					gauge: - relative scalings between separate pairs -- coordinate system gauge
 						AB-AC: 2.0		# from AB to AC
-						BA-BC: 0.9		# from BA to BC
-						CA-CB: 0.6		# from CA to CB
+						AC-BC: 0.9		# from AC to BC
+						BC-AB: 0.6		# from BC to AB
 
 					transforms: # data on view transforms (1:1 parallel array to views) -- SAME AS PAIR
 						-
@@ -5567,24 +5577,7 @@ projects/
 									z
 
 		bundle/
-A			tracks.yaml - accumulated global track points across images: grows till all pair-seeds are merged
-				views:				# lsit of views resulted
-					-
-						id: "A"
-				pairs:				# list of pairs attempted
-					-
-						id: "A"
-						viewA: "ID"
-						viewB: "ID"
-				tracks:
-					-
-						v:
-							-
-								i: INDEX-OF-VIEW
-								x: [0,1]
-								y: [0,1]
-
-B			graph.yaml - view graph of scene - result of global (quasi-local) bundle adjustment iterations on TRACK POINTS
+A			graph.yaml - view graph of scene - result of global (quasi-local) bundle adjustment iterations on TRACK POINTS -- initialized using PAIR TRANSFORMS & TRIPLE SCALES
 				- views
 					-
 						T: MATRIX ABSOLUTE TRANSFORM
@@ -5612,11 +5605,27 @@ B			graph.yaml - view graph of scene - result of global (quasi-local) bundle adj
 						y:
 						z:
 						s: # size
+B			tracks.yaml - accumulated global track points across images: grows till all pair-seeds are merged
+				views:				# lsit of views resulted
+					-
+						id: "A"
+				pairs:				# list of pairs attempted
+					-
+						id: "A"
+						viewA: "ID"
+						viewB: "ID"
+				tracks:
+					-
+						v:
+							-
+								i: INDEX-OF-VIEW
+								x: [0,1]
+								y: [0,1]
 
 C			points_sparse.yaml - global 3D point list - sparse TRACK Data
 				...
 
-C			info_sparse.yaml - dense point reconstruction info
+C			info_sparse.yaml - sparse point reconstruction info
 				...
 
 D			points_dense.yaml - global 3D point list
@@ -7271,6 +7280,15 @@ inverted:
 
 App3DR.ProjectManager.prototype.calculateGlobalOrientationInit = function(callback, context, object){
 	console.log("calculateGlobalOrientationInit");
+
+
+throw "HERE - PAIR TRANSFORMS SHOULD BE SAVED ON PAIR OBJECTS SO THAT LOADING ISN'T NECESSARY";
+
+throw "NEED TO ALSO USE TRIPLE RELATIVE SCALE INFO"
+
+// load all
+
+
 	// load all relative.yaml
 	// console.log(this._pairs);
 	var pairs = this._pairs;
@@ -7305,6 +7323,21 @@ App3DR.ProjectManager.prototype._calculateGlobalOrientationInit2 = function(call
 		tableViewIDToIndex[view.id()+""] = i;
 	}
 	// get relative transform+error
+
+
+
+	throw "need to do optimum scaling using all triples"
+
+
+	var results = R3D.optimumScaling1D(what);
+
+
+
+
+
+
+
+
 	var listPairs = [];
 console.log(views);
 console.log(pairs);
@@ -8108,15 +8141,110 @@ App3DR.ProjectManager.prototype.calculateGlobalOrientationHierarchy = function(s
 // }
 
 App3DR.ProjectManager.prototype.calculateBundleAdjustTriple = function(viewAIn,viewBIn,viewCIn, callback, context, object){
-	throw "calculateBundleAdjustTriple";
-	/*
-	load view images
+	console.log("calculateBundleAdjustTriple");
+	var views = [viewAIn,viewBIn,viewCIn];
+	var pairAB = this.pairFromViewIDs(viewAIn.id(),viewBIn.id());
+	var pairAC = this.pairFromViewIDs(viewAIn.id(),viewCIn.id());
+	var pairBC = this.pairFromViewIDs(viewBIn.id(),viewCIn.id());
+	var pairs = [pairAB,pairAC,pairBC];
+	var cameras = this.cameras();
 
-	if dense data count is low, set triple as done and unable to complete
+	var project = this;
+	var world = null;
+	var asboluteScales = null;
 
- 	load pair dense data
-	load
-	*/
+	// var images = [null,null,null];
+	// world = new Stereopsis.World();
+	// App3DR.ProjectManager.addCamerasToWorld(world, cameras);
+	// App3DR.ProjectManager.addViewsToWorld(world, views, images);
+	// throw "..."
+
+	// save project file
+	var savePairCompleted = function(a){
+		console.log("savePairCompleted");
+		// project.saveProjectFile();
+	}
+
+	// save to track file
+	var worldTripleCompleted = function(a){
+		console.log("worldTripleCompleted");
+		console.log(""+asboluteScales);
+
+		// save relative scales to triple object
+
+		// save TFT info tooooooo
+
+		// save scene info to triple file
+
+		/*
+		var viewA = world.viewFromData(viewAIn.id());
+		var viewB = world.viewFromData(viewBIn.id());
+		console.log(viewA,viewB);
+		var transform = world.transformFromViews(viewA,viewB);
+		var count = transform.matches().length;
+		var str = world.toYAMLString();
+		var pair = project.pair(viewAIn.id(),viewBIn.id());
+		pair.setTrackCount(count);
+		console.log("pair track: "+pair.trackCount())
+		project.savePairTracks(pair, str, savePairCompleted, project);
+		*/
+	}
+
+	// convert to WORLD objects & find tracks
+	var createWorld = function(a){
+		console.log("create world ...");
+		// make images:
+		var images = [];
+		for(var i=0; i<views.length; ++i){
+			var image = views[i].bundleAdjustImage();
+			images.push(image);
+		}
+		for(var i=0; i<images.length; ++i){
+			var image = images[i];
+			var matrix = GLOBALSTAGE.getImageAsFloatRGB(image);
+				matrix = new ImageMat(matrix["width"], matrix["height"], matrix["red"], matrix["grn"], matrix["blu"]);
+			images[i] = matrix;
+		}
+		// fill world in
+		world = new Stereopsis.World();
+		// cameras
+		App3DR.ProjectManager.addCamerasToWorld(world, cameras);
+		// views
+		App3DR.ProjectManager.addViewsToWorld(world, views, images);
+		// matching points
+		console.log("add matching points");
+		for(var i=0; i<pairs.length; ++i){
+			var pair = pairs[i];
+			var relativeData = pair.relativeData();
+			App3DR.ProjectManager.addPointsToWorld(world, relativeData["points"]);
+			var idA = relativeData["views"][0]["id"];
+			var idB = relativeData["views"][1]["id"];
+			var transformA = relativeData["views"][0]["transform"];
+			var transformB = relativeData["views"][1]["transform"];
+				transformA = new Matrix().fromObject(transformA);
+				transformB = new Matrix().fromObject(transformB);
+			var transformAB = R3D.relativeTransformMatrix2(transformA,transformB);
+			console.log(transformAB+"")
+			App3DR.ProjectManager.addTransformToWorld(world, transformAB, idA, idB);
+		}
+		// solve for relative scalings & whatnot
+		asboluteScales = world.solveTriple(worldTripleCompleted, project, null);
+	}
+
+	// done loading
+	var fxnPairsLoaded = function(a){
+		createWorld();
+	}
+
+	// load pair data
+	var fxnImagesLoaded = function(a){
+		console.log("load pairs ...");
+		App3DR.ProjectManager.loadPairsRelativeData(pairs, fxnPairsLoaded, this, null);
+	};
+
+	// load all view images
+	console.log("load images ...");
+	App3DR.ProjectManager.loadViewsImages(views, fxnImagesLoaded, this, null);
 }
 App3DR.ProjectManager.prototype.calculatePairTracks = function(viewAIn,viewBIn, callback, context, object){
 	var pair = this.pairFromViewIDs(viewAIn.id(),viewBIn.id());
@@ -8182,40 +8310,28 @@ App3DR.ProjectManager.prototype.calculatePairTracks = function(viewAIn,viewBIn, 
 }
 App3DR.ProjectManager.addCamerasToWorld = function(world, cameras){
 	var WORLDCAMS = [];
+	console.log(cameras);
 	for(var i=0; i<cameras.length; ++i){
 		var camera = cameras[i];
-		var camID = camera["camera"]; // ...
-		var K = camera["K"];
-			if(K["fx"]!==undefined){
-				K = new Matrix(3,3).fromArray([K["fx"],K["s"],K["cx"], 0,K["fy"],K["cy"], 0,0,1]);
-			}else{
-				K = Matrix.loadFromObject(K);
-			}
-		var distortion = camera["distortion"];
-		// if(distortion!==undefined){
-		// 	// distortion =
-		// }
+		var K = null;
+		var distortion = null;
+		var camID = null;
+		if(Code.ofa(camera, App3DR.ProjectManager.Camera)){
+			camID = camera.id();
+			K = camera.K();
+			distortion = camera.distortion();
+		}else{ // object
+			camID = camera["camera"]; // ...
+			K = camera["K"];
+			distortion = camera["distortion"];
+		}
+		if(K["fx"]!==undefined){
+			K = new Matrix(3,3).fromArray([K["fx"],K["s"],K["cx"], 0,K["fy"],K["cy"], 0,0,1]);
+		}else{
+			K = Matrix.loadFromObject(K);
+		}
 		var c = world.addCamera(K, distortion);
 		c.data(camID);
-// this is an object ...
-// camera.temp(c);
-
-		/*
-			var distortion = camera.distortion();
-			var fx = K["fx"];
-			var fy = K["fy"];
-			var s = K["s"];
-			var cx = K["cx"];
-			var cy = K["cy"];
-			var k1 = distortion["k1"];
-			var k2 = distortion["k2"];
-			var k3 = distortion["k3"];
-			var p1 = distortion["p1"];
-			var p2 = distortion["p2"];
-			var K = new Matrix(3,3).fromArray([fx,s,cx, 0,fy,cy, 0,0,1]);
-			var c = world.addCamera(K, distortion);
-			console.log(c);
-			*/
 		// camera.temp(c);
 		WORLDCAMS.push(c);
 	}
@@ -8233,10 +8349,19 @@ App3DR.ProjectManager.addViewsToWorld = function(world, views, images){
 	for(var i=0; i<views.length; ++i){
 		var view = views[i];
 		var image = images[i];
-		var viewID = view["id"];
-		var camID = view["camera"];
-		var transform = view["transform"];
+		var viewID = null;
+		var camID = null;
+		var transform = null;
+		if(Code.ofa(view, App3DR.ProjectManager.View)){
+			viewID = view.id();
+			camID = view.cameraID();
+			transform = new Matrix(4,4).identity();
+		}else{
+			viewID = view["id"];
+			camID = view["camera"];
+			transform = view["transform"];
 			transform = new Matrix(4,4).fromObject(transform);
+		}
 		var cam = cameraLookup[camID];
 		if(!cam){
 			cam = cameras[0];
@@ -8245,11 +8370,15 @@ App3DR.ProjectManager.addViewsToWorld = function(world, views, images){
 		v.absoluteTransform(transform);
 		v.image(image);
 		v.data(viewID);
-// this is an object
-//		view.temp(v);
 		WORLDVIEWS.push(v);
 	}
 	return WORLDVIEWS;
+}
+App3DR.ProjectManager.addTransformToWorld = function(world, matrix, viewAID, viewBID){
+	var viewA = world.viewFromData(viewAID);
+	var viewB = world.viewFromData(viewBID);
+	var transform = world.transformFromViews(viewA,viewB);
+	transform.R(viewA,viewB,matrix);
 }
 App3DR.ProjectManager.addPointsToWorld = function(world, points){
 	var viewLookup = {};
