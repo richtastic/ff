@@ -3637,6 +3637,49 @@ ImageMat.medianFilter = function(src,wid,hei, w,h){
 	return ImageMat.convolve(src,wid,hei, [0], 1,1);
 }
 
+ImageMat.chromaticAberation = function(image, direction, percent, radial){ // nonlinear/polygonal ?
+	// direction = new V2D(3,3);
+	// percent = 0.5;
+	// radial = 10.0;
+	var pm1 = 1.0-percent;
+	var red = image._r;
+	var grn = image._g;
+	var blu = image._b;
+	var wid = image._width;
+	var hei = image._height;
+	var hyp = Math.sqrt(wid*wid + hei*hei);
+	var cenX = wid*0.5 | 0;
+	var cenY = hei*0.5 | 0;
+
+	radial /= hyp; // percent of image size
+
+	var r = [];
+	var g = [];
+	var b = [];
+	var colP = new V3D();
+	var colN = new V3D();
+	for(var j=0; j<hei; ++j){
+		for(var i=0; i<wid; ++i){
+			var index = j*wid + i;
+			var dx = i-cenX;
+			var dy = j-cenY;
+			var rad = Math.sqrt(dx*dx + dy*dy);
+			rad = 1.0 + rad*radial;
+			image.getPointInterpolateLinear(colN, i-direction.x*rad,j-direction.y*rad);
+			image.getPointInterpolateLinear(colP, i+direction.x*rad,j+direction.y*rad);
+			var r1 = red[index];
+			var g1 = grn[index];
+			var b1 = blu[index];
+			r[index] = r1*pm1 + colN.x*percent;
+			//g[index] = g1*pm1;
+			g[index] = g1;
+			b[index] = b1*pm1 + colP.z*percent
+		}
+	}
+	next = new ImageMat(wid,hei,r,g,b);
+	return next;
+}
+
 ImageMat.laplaceOfGaussian = function(src,wid,hei, sigma, w,h){
 	sigma = sigma!==undefined?sigma:1.6;
 	w = w!==undefined?(Math.ceil(1+sigma*3)*2+1):3;

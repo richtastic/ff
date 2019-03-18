@@ -37,6 +37,20 @@ MaxRegion.prototype.imagesLoadComplete = function(o){
 	}
 
 
+// testing out
+	var image = images[0];
+	var next = ImageMat.chromaticAberation(image, new V2D(2,-2), 0.5, 1.0);
+// next = image
+console.log(next)
+	var iii = next;
+	var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
+	var d = new DOImage(img);
+	d.matrix().translate(image.width(), 0);
+	GLOBALSTAGE.addChild(d);
+
+throw "chromatic Aberration"
+
+
 
 
 	var correspondences = [];

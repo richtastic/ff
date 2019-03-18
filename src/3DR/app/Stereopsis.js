@@ -2768,7 +2768,7 @@ Stereopsis.World.prototype.checkTransformMatches = function(){
 	}
 }
 Stereopsis.World.prototype.relativeTransformsFromAbsoluteTransforms = function(){
-	var transforms = this.toTransformArray ();
+	var transforms = this.toTransformArray();
 	for(var i=0; i<transforms.length; ++i){
 		var transform = transforms[i];
 		var viewA = transform.viewA();
@@ -3544,14 +3544,11 @@ Stereopsis.World.prototype.solveTriple = function(completeFxn, completeContext){
 	// this.relativeFFromSamples();
 	// this.estimate3DErrors(true);
 
-
-// this.estimate3DErrors(false);
+	var world = this;
 
 	// assuming the relative transformations have already been set
 	this.relativeFFromSamples();
 	this.estimate3DErrors(true);
-
-	// ????
 
 	this.printPoint3DTrackCount();
 
@@ -3685,6 +3682,9 @@ var tripleScale = null;
 	transformAB.scaleR(scaleAB);
 	transformAC.scaleR(scaleAC);
 	transformBC.scaleR(scaleBC);
+	// transformAB.scaleR(1.0/scaleAB);
+	// transformAC.scaleR(1.0/scaleAC);
+	// transformBC.scaleR(1.0/scaleBC);
 
 	// use only overlapping 3D points
 	var points3D = this.toPointArray();
@@ -3696,7 +3696,9 @@ var tripleScale = null;
 		if(count==3){
 			group3.push(point3D);
 		}else{
-			this.disconnectPoint3D(point3D);
+// TODO: KEEP ?
+continue;
+this.disconnectPoint3D(point3D);
 			group2.push(point3D);
 		}
 	}
@@ -3715,18 +3717,16 @@ var tripleScale = null;
 		var p2DA = point2DA.point2D();
 		var p2DB = point2DB.point2D();
 		var p2DC = point2DC.point2D();
-		// matches.push({"A":point2DA, "B":point2DB, "C":point2DC});
-		// matches.push({"A":p2DA, "B":p2DB, "C":p2DC});
 		pointsA.push(p2DA);
 		pointsB.push(p2DB);
 		pointsC.push(p2DC);
 	}
 	// console.log(pointsA,pointsB,pointsC);
-	var errorPosition = ((transformAB.rSigma() + transformAC.rSigma() + transformBC.rSigma())/3.0) * 1.0;
+	var errorPosition = ((transformAB.rSigma() + transformAC.rSigma() + transformBC.rSigma())/3.0) * 2.0 * 2.0; /// ... extra 2.0 ...
 
 	//var T = R3D.TFTRANSACFromPointsAuto(pointsA,pointsB,pointsC, errorPosition, null, 0.10);
-	var T = R3D.TFTRANSACFromPoints(pointsA,pointsB,pointsC, errorPosition, null, 0.50, 0.99);
-	console.log(T);
+	var T = R3D.TFTRANSACFromPoints(pointsA,pointsB,pointsC, errorPosition, null, 0.50, 0.99, 100); // 0.50 / 0.99
+	// console.log(T);
 	var TFT = T["T"];
 	console.log(TFT);
 	// var error = T["error"];
@@ -3743,14 +3743,18 @@ var tripleScale = null;
 		var p2DC = point2DC.point2D();
 		var error = R3D.tftError(TFT, p2DA, p2DB, p2DC);
 			error = error["error"];
+			error = Math.log(error);
 		errors.push(error);
 		errorPoints.push([error, point3D]);
 	}
-	console.log(errors);
-	var errorMean = Code.mean(errors);
+	//var errorMean = Code.mean(errors);
+	var errorMean = Code.min(errors);
 	var errorSigma = Code.stdDev(errors,errorMean);
+
+var TFTmean = errorMean;
+var TFTsigma = errorSigma;
 	console.log("T ERROR: "+errorMean+" +/- "+errorSigma);
-	var maxErrorLimit = errorMean + 2.0*errorSigma;
+	var maxErrorLimit = errorMean + 1.0*errorSigma; // 1.0 ~ 30% | 1.5 ~ % | 2.0 ~ 0%
 	var dropPoints = [];
 Code.printMatlabArray(errors,"tError");
 	for(var i=0; i<errorPoints.length; ++i){
@@ -3762,35 +3766,73 @@ Code.printMatlabArray(errors,"tError");
 	}
 	console.log(" dropPoints: "+dropPoints.length+" / "+errorPoints.length);
 	for(var i=0; i<dropPoints.length; ++i){
+// TODO: ADD BACK
+break;
 		var point3D = dropPoints[i];
 		world.disconnectPoint3D(point3D);
 		world.killPoint3D(point3D);
 	}
-
+	//
 	console.log(this.toPointArray());
 
 
 	// get new P1 P2 P3 DIRECTLY FROM TFT ?
-
-	// var Plist = ;
 
 
 	// just optimize on current transforms
 	console.log("optimize transforms using current relative(scaled) and TFT-valid points");
 	// convert relative transforms to absolute transforms
 	listPairs = [];
-	listPairs.push([0,1,transformAB.R(viewA,viewB),transformAB.rSigma()]);
-	listPairs.push([0,2,transformAC.R(viewA,viewC),transformAC.rSigma()]);
-	listPairs.push([1,2,transformBC.R(viewB,viewC),transformBC.rSigma()]);
+	var extAB = transformAB.R(viewA,viewB);
+	var extAC = transformAC.R(viewA,viewC);
+	var extBC = transformBC.R(viewB,viewC);
+	var relAB = Matrix.inverse(extAB);
+	var relAC = Matrix.inverse(extAC);
+	var relBC = Matrix.inverse(extBC);
+	listPairs.push([0,1,relAB,transformAB.rSigma()]);
+	listPairs.push([0,2,relAC,transformAC.rSigma()]);
+	listPairs.push([1,2,relBC,transformBC.rSigma()]);
 	var result = R3D.optimumTransform3DFromRelativePairTransforms(listPairs);
 	console.log(result);
+	var abs = result["absolute"];
+	var absA = abs[0];
+	var absB = abs[1];
+	var absC = abs[2];
+	console.log(absA+"")
+	console.log(absB+"")
+	console.log(absC+"")
+	var extA = Matrix.inverse(absA);
+	var extB = Matrix.inverse(absB);
+	var extC = Matrix.inverse(absC);
+	// set absolute extrinsic transforms
+	viewA.absoluteTransform(extA);
+	viewB.absoluteTransform(extB);
+	viewC.absoluteTransform(extC);
+	this.relativeTransformsFromAbsoluteTransforms();
+	// refine / BA
 
-	// set absolute transforms
+
+// why does error go up ?
+	for(var i=0; i<2; ++i){
+		this.estimate3DErrors(true);
+		this.refineCameraAbsoluteOrientation();
+		this.relativeTransformsFromAbsoluteTransforms();
+		// this.relativeFFromSamples();
+		this.estimate3DErrors(true);
+		this.averagePoints3DFromMatches(true);
 
 
-	// refine / BA 
+		// filtering ...
+		this.filterGlobalMatches();
+		this.dropNegative3D();
+		this.updatePoints3DNullLocations();
+		this.filterLocal2D(); //
+		this.filterLocal3D(); //
+	}
+	this.estimate3DErrors(true);
+	// TODO: BA
 
-	// set
+	//
 
 	/*
 	// this.relativeTransformsFromAbsoluteTransforms(); // relative R from absolutes
@@ -3801,7 +3843,7 @@ Code.printMatlabArray(errors,"tError");
 	this.averagePoints3DFromMatches(true);
 // should the 3D points be further optimized to minimize reprojection error to each view it's included in?
 	// MOTION
-	this.refineCameraAbsoluteOrientation();
+
 	*/
 
 
@@ -3816,40 +3858,14 @@ Code.printMatlabArray(errors,"tError");
 
 
 	//
-
+throw "HERE";
 	// this.averagePoints3DFromMatches(true);
 	// this.estimate3DErrors(true);
-
-
-	return {"scales":tripleScale, "T":TFT};
-	// TFT TEST
-/*
-	// need to have 3 views & correspondences matched
-	var views = this.toViewArray();
-	var viewA = views[0];
-	var viewB = views[1];
-	var viewC = views[2];
-	var points3D = this.toPointArray();
-	var pointsA = [];
-	var pointsB = [];
-	var pointsC = [];
-	for(var i=0; i<points3D.length; ++i){
-		// ...
-	}
-	R3D.TFTFromUnnormalized(pointsA,pointsB,pointsC);
-	// R3D.trifocalTensor(pointsA,pointsB,pointsC);
-*/
-// 5620 / 71404 ~ 10%
-	/*
-	if(completeFxn){
-		completeFxn.call(completeContext);
-	}
-
+	var payload = {"scales":tripleScale, "T":TFT, "errorTMean":TFTmean, "errorTSigma":TFTsigma};
 
 	if(completeFxn){
-		completeFxn();
+		completeFxn.call(completeContext, payload);
 	}
-	*/
 }
 
 
@@ -7062,6 +7078,13 @@ Stereopsis.World.prototype.initialEstimatePatch = function(point3D){
 	var isLocation = point3D.point();
 	var visibleViews = point3D.toViewArray();
 	var visiblePoints = point3D.toPointArray();
+
+// console.log(isLocation);
+// if(!isLocation){
+// console.log(point3D);
+// throw "?";
+// }
+
 	// initial estimate of patch normal = AVG(p(c)->v_i(c))
 	var normals = [];
 	var rights = [];

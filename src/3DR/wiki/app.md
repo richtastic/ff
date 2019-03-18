@@ -303,27 +303,29 @@ vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 	- increase resolution to finer detail
 	=> final structure & motion
 -----> HERE <------
-- surface triangulation(tesselation)
-	- advancing-front, curvature-based tesselation
-	=> scene triangle model
-(04/15)
-- texturing
-	- view-based surface texturing
-	- blending between triangles
-		-
-	- separate triangles into texture lookup / files
-		- TextureMap (from textures to atlas)
-	=> scene textured model
-(05/06)
-- viewing output
-	- locally
-	- VR device
-(05/27)
 - pipelining
 	- use tracks
 	- automated
-	- MVP
+(04/15)
+- surface triangulation(tesselation)
+	- advancing-front, curvature-based tesselation
+	=> scene triangle model
+(05/06)
+- texturing
+	- view-based surface texturing
+	- blending between triangles
+	- separate triangles into texture lookup / files
+		- TextureMap (from textures to atlas)
+	=> scene textured model
+(05/27)
+- viewing output
+	- locally
+	- VR device
 (06/17)
+- MVP
+	- example models
+	- example screens
+(07/01)
 
 google app engine project - nodejs
 https://cloud.google.com/appengine/docs/nodejs/
@@ -341,25 +343,36 @@ https://cloud.google.com/appengine/docs/nodejs/
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
+- triple results are very bad - error not decreasing
+	- bad for all points or just 3-way points
+	-? abs matrices ? [only difference is scale]
+
+
+
+
 - adjust differences in image lighting to match eachother [move A toward B and B toward A OR just match]
 	- color space
+- ADAPTIVE COLOR COMPENSATION - color balance [gray balance, neutral balance, white balance]
+	- global adj of color intensities (RGB)
+		- neutral colors correctly rendered
+	=> 3D mapping:
+		- each 3D->2D point set gives list of colors to be matched
+		- different regions can be mapped differently
 
 
------------------ S
-- need to save relative pair F/R/error in main file
-- need to save relative triple in main file
-- need to save triple data to triple file
 
-- graph initialization w/ absolute view locations
-	- patch sizes need to be rescaled after relative scales are found -- save this data somewhere - 'pair' scale
------------------ U
+x simulate chromatic aberration
 
-- iterative 3-way track aggregation from individual pair views [or triples?]
+
+- track propagation step before BA
+	- find views most likely to benefit from
 
 - track global BA to optimize view locations
 
 
------------------ M
+
+
+
 
 - dense initialization of points
 	[1.5 rad pixel distances between p2d - to limit NOT EVERY PIXEL - 3x3 neighborhood]
@@ -385,15 +398,6 @@ https://cloud.google.com/appengine/docs/nodejs/
 		- problem with covariance matrix is sigmas/values need to be in some ABSOLUTE scale to compare
 		-
 
-
-- want to save quick access info in main yaml file (camera)
-	- or also start loading camera async too
-
-
-
-- add pair - tracks step & parameter
-
-
 - filter to 3x3 grid so processing is manageable
 - import from filtered-dense file
 
@@ -405,14 +409,6 @@ https://cloud.google.com/appengine/docs/nodejs/
 		- estimate TFT linearly (up to 100-1000 lowest-F/P-error scores)
 		- shoe-horn in other possibly good 3-way matches ?
 		x calculate relative PA-PB-PC
-
-- optimum absolute 'sizes' from relative scales (baselines)
-	- input: pair scalings [transforms I-J & I-K]
-	- output: scaled absolute sizes
-
-- finding track seeds
-	- want some relative size / rotation between each view in record
-		- maximumly stable size
 
 - determine if a tri-image set is good?:
 	- A-B & A-C & B-C matches are all above some minimum count / error
@@ -435,53 +431,18 @@ https://cloud.google.com/appengine/docs/nodejs/
 
 - get back to texturing
 
-- Track point logistics
-- MODELING A TRACK
-	- merging / splitting
-	- zooming in / out ?
-	- ...
-
-- TEST getting track points iteratively
-	- initially have dense image pairs
-		- global list of tracks [or built up hierarchically]
-			tracks.yaml
-		- ROOT = PAIRS:
-			- pair A-B:
-				- top candidates:
-					- good corner score
-					- low F error
-					- low R error
-				=> NONMAXIMAL SUPRESSION @ 1%-5% of image size
-				=> use local affine matrices to figure out 'patch' projection?
-				- create track entry for all matching points in A-B
-					- SIZE in each image? [extent of feature?]
-							-- can look at how far out NCC / SIFT looks until GOES DOWN?
-						- AFFINE relationship between track points
-					- 2D LOCATION
-			- pair B-C:
-				- top candidates same as before
-			- ...
-		- NEXT: GROUP PAIRS:
-			- pair B-C with pair A-B: (common: B)
-				- if a track from A-B coincides with point track from B-C
-					- points are very close to each other
-					- have good NCC / SIFT scores
-				- search non-overlapping spaces as guess for continuing
-		- MERGE TRACKS WHERE NECESSARY
-			- point collisions among separate tracks
-				- might require choosing among conflicting choices
-		- SPLIT TRACKS WHERE NECESSARY
-			- image in sequence found to be worse than rest of data
-		- keep record of attempted merges
 
 - USE TRACK POINTS [100~1000 per pair] to initialize global solution [Pi]
-	- throw outliers out
-	- possibly obtain new track entries?
+	- BA step to reduce global errors [no images needed]
+	- propagation step to [yes images]
+		- loop:
+			- load view groups [3-5] most likely to result in more overlap
+			- propagate 2D-3D to fill out open areas/gaps
+			- try init new points
+				- [3D] using corners in open areas
+				- 2D: TFT
+	- drop outliers out [no images needed]
 
-- USE OPTIMIZED VIEW GRAPH to break the problem up where possible
-	- prefer lower error pairs
-	- prune repetitive views
-	- ...
 
 - DENSE POINTS INIT
 	- all pairwise points accumulated to single file
@@ -494,8 +455,12 @@ https://cloud.google.com/appengine/docs/nodejs/
 		- normal: using
 
 
+- USE OPTIMIZED VIEW GRAPH to break the problem up where possible
+	- prefer lower error pairs
+	- prune repetitive views
+	- ...
 
-- MAIN REFINEMENT ITERATION:
+- MAIN SPARSE/DENSE REFINEMENT ITERATION:
 	- load ALL P3D from file
 	- CHOOSE  - prioritize by views with fastest error reduction (how to calculate?)
 		- load 3 views (proj 3D points + BA)

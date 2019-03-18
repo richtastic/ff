@@ -1,9 +1,8 @@
 // Tensor.js
 
 Tensor.YAML = {
-	// ROWS:"row",
-	// COLS:"col",
-	// DATA:"data"
+	DIMENSIONS:"dim",
+	DATA:"data"
 }
 
 
@@ -26,6 +25,42 @@ function Tensor(dimensions, values){ // [3,3,3] | [3,3,3], [...] | 3,3,3 | 3,3,3
 		this.fromArray(values);
 	}
 }
+
+
+
+Tensor.prototype.copy = function(t){ // this = t || return copy
+	if(t!==undefined){
+		this._init(t._dimensions);
+		this.fromArray(t.toArray());
+		return this;
+	}else{
+		var t = new Tensor(this._dimensions, this.toArray());
+		return t;
+	}
+}
+// ---------------------------------------------------------------------------------------------------
+
+Tensor.prototype.saveToYAML = function(yaml){
+	var DATA = Tensor.YAML;
+	yaml.writeArrayNumbers(DATA.DIMENSIONS, this._dimensions);
+	yaml.writeArrayNumbers(DATA.DATA, this.toArray());
+	return this;
+}
+Tensor.prototype.fromObject = function(obj){
+	var DATA = Tensor.YAML;
+	var dims = obj[DATA.DIMENSIONS];
+	var data = obj[DATA.DATA];
+	this._init(dims);
+	this.fromArray(data);
+	return this;
+}
+Tensor.fromObject = function(obj){
+	return new Tensor().fromObject(obj);
+}
+
+// ---------------------------------------------------------------------------------------------------
+
+
 Tensor.prototype._init = function(dims){
 	this._dimensions = Code.copyArray(dims);
 	this._values = Tensor._subArray([], this._dimensions, 0);

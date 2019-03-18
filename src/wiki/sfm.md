@@ -364,18 +364,30 @@ Levenberg-Marquardt - need to construct/solve (large) matrix formulas for eg jac
 Gradient Descent - do wtf you want [not necessarily as precise ]
 
 
-Error:
-    - propagation: add normal distributions?
-        &sigma;<sub>measurements</sub><sup>2</sup> =  1/ (&Sigma;<sub>i</sub> 1/&sigma;<sup>2</sup><sub>i</sub>)
-        <br/>
-        &mu;<sub>1</sub> + &mu;<sub>2</sub> = &mu;<sub>3</sub>
-        <br/>
+#### Error:
+
+#### Propagation: add normal distributions
+
+&sigma;<sup>2</sup><sub>cummulative</sub>  = &Sigma;<sub>i</sub> &sigma;<sup>2</sup><sub>i</sub>
+<br/>
+
+&mu;<sub>cummulative</sub> = &Sigma; f( &mu;<sub>i</sub> )
+<br/>
 
 
-    - combining measurements to increase estimate confidence:
-        &sigma;<sup>2</sup><sub>1</sub> + &sigma;<sup>2</sup><sub>2</sub> = &sigma;<sup>2</sup><sub>3</sub>
-        <br/>
-        x_avg = sum(x./w) ./ sum(1./w);
+#### Combining: measurements to increase estimate confidence:
+
+&mu;<sub>cummulative</sub> = [ &Sigma;<sub>i</sub>(&mu;<sub>i</sub>/&sigma;<sup>2</sup><sub>i</sub>) ] / [&Sigma;<sub>i</sub> (1/&sigma;<sup>2</sup><sub>i</sub>) ]
+<br/>
+
+&sigma;<sup>2</sup><sub>cummulative</sub> =  1 / (&Sigma;<sub>i</sub> 1/&sigma;<sup>2</sup><sub>i</sub>)
+<br/>
+
+(1/&sigma;<sup>2</sup><sub>i</sub>) ~ is like the percentage (weight)
+<br/>
+
+&Sigma;<sub>i</sub> (1/&sigma;<sup>2</sup><sub>i</sub>) ~ is a scale by the total weight, so that the total percent = 1
+<br/>
 
 
 
