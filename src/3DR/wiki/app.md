@@ -341,11 +341,19 @@ https://cloud.google.com/appengine/docs/nodejs/
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+- want to keep affine 2D-relation in graph tracks
 
+- add repeat-till-convergence (error doesn't change) using direct edges for each vertex ON scale/translate/rotate optimum strategy
 
 - triple results are very bad - error not decreasing
 	- bad for all points or just 3-way points
 	-? abs matrices ? [only difference is scale]
+		-- different error metrics are being used ?
+
+
+		WHY IS THIS NOT THE SAME :
+		this.estimate3DPoints();
+		this.averagePoints3DFromMatches(true);
 
 
 
@@ -523,6 +531,18 @@ x simulate chromatic aberration
 			project 3d point to 2D image planes
 			error = sqrt( distanceA + dB + dC )
 
+
+
+
+- will eventually need outlier detection in large scene/view graphs
+
+	- inconsistent location/orientations - alternate path tests
+	- rotational consistency
+		- if error is much more than calculated ()
+		- voting?
+		- spanning tree inliers
+	- loop statistics
+	- baysian inference
 
 
 

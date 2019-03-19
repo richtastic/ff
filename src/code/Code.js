@@ -177,6 +177,9 @@ Code.isUndefined = function(obj){
 Code.isNaN = function(obj){
 	return isNaN(obj);
 }
+Code.isNull = function(obj){
+	return obj === null;
+}
 Code.isNumber = function(obj){
 	return (typeof obj)==Code.TYPE_NUMBER;
 }

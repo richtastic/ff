@@ -1386,7 +1386,7 @@ R3D.TFTRANSACFromPoints = function(pointsAIn,pointsBIn,pointsCIn, errorPosition,
 		Code.emptyArray(subsetPointsA);
 		Code.emptyArray(subsetPointsB);
 		Code.emptyArray(subsetPointsC);
-		// subset of 7 points
+		// subset of minCount (6) points
 		var indexes = Code.randomIntervalSet(minCount, 0, pointsLength-1);
 		Code.copyArrayIndexes(subsetPointsA, pointsA, indexes);
 		Code.copyArrayIndexes(subsetPointsB, pointsB, indexes);
@@ -1395,6 +1395,10 @@ R3D.TFTRANSACFromPoints = function(pointsAIn,pointsBIn,pointsCIn, errorPosition,
 		var pointsBNorm = R3D.calculateNormalizedPoints([subsetPointsB]);
 		var pointsCNorm = R3D.calculateNormalizedPoints([subsetPointsC]);
 		var T = R3D.trifocalTensor(pointsANorm.normalized[0],pointsBNorm.normalized[0],pointsCNorm.normalized[0]);
+		if(!T){
+			console.log("could not get a T");
+			continue;
+		}
 		var H1 = pointsANorm.forward[0];
 		var H2 = pointsBNorm.forward[0];
 		var H3 = pointsCNorm.forward[0];
@@ -1922,10 +1926,17 @@ R3D.trifocalTensor6 = function(pointsA,pointsB,pointsC){
 }
 
 R3D.trifocalTensor = function(pointsA,pointsB,pointsC){
-	if(pointsA.length==6){
-		return R3D.trifocalTensor6(pointsA,pointsB,pointsC);
+	try{
+		if(pointsA.length==6){
+			return R3D.trifocalTensor6(pointsA,pointsB,pointsC);
+		}
+		return R3D.trifocalTensor7(pointsA,pointsB,pointsC);
+	}catch(e){
+		console.log(pointsA,pointsB,pointsC)
+		console.log("R3D.trifocalTensor error");
+		console.log(e);
 	}
-	return R3D.trifocalTensor7(pointsA,pointsB,pointsC);
+	return null;
 }
 /*
 R3D.TFTtransfer = function(T, pA, pB){ // pC = T ... pA, pB
@@ -26705,6 +26716,7 @@ R3D._gd_BACameraExtrinsic = function(args, x, isUpdate){
 				var p3D = pointList3D[k];
 				var info = R3D.reprojectionError(p3D, p2DA,p2DB, PA, PB, KA, KB);
 				var error = info["error"];
+				
 					//error = Math.sqrt(error);
 					// error = error * error;
 				pairError += error;

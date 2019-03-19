@@ -89,7 +89,7 @@ var modeModelReconstruction = false;
 
 // don't A:
 // TO SWITCH ON MODELING:
-// modeModelReconstruction = true;
+modeModelReconstruction = true;
 
 
 
@@ -6542,7 +6542,7 @@ App3DR.ProjectManager.prototype._backgroundTaskTick = function(){
 }
 App3DR.ProjectManager.prototype.checkPerformNextTask = function(){
 // don't 1 - run
-// return;
+return;
 console.log("checkPerformNextTask");
 	this.pauseBackgroundTasks();
 	this._taskBusy = true;
@@ -7589,24 +7589,10 @@ console.log(""+relativeAtoB);
 		var transformRMean = pair.errorRMean();
 		var transformRSigma = pair.errorRSigma();
 		var transformMatches = pair.relativeCount();
-		// var relativeData = pair.relativeData();
-		// var transformsSingle = relativeData["transforms"][0];
-		// var transformMatches = transformsSingle["matches"];
-		// var transformRSigma = transformsSingle["errorRSigma"];
-		// var transformRMean = transformsSingle["errorRMean"];
-// console.log("ERROR: "+transformRMean+" * "+transformRSigma+" @ "+transformMatches+" : "+viewA.id()+" -> "+viewB.id());
-		// var viewsData = relativeData["views"];
-		// var viewDataA = viewsData[0];
-		// var viewDataB = viewsData[1];
-		// var cameraA = Matrix.loadFromObject(viewDataA["transform"]);
-		// var cameraB = Matrix.loadFromObject(viewDataB["transform"]);
-		// INVERT FROM EXT TO CAM
-		// cameraA = Matrix.inverse(cameraA);
-		// cameraB = Matrix.inverse(cameraB);
-		// var relativeAtoB = R3D.relativeTransformMatrix2(cameraA,cameraB);
 		var indexPair = tablePairIDToIndex[pairID];
 		var scaler = absoluteScales[indexPair];
-		//var relativeAtoB = R3D.relativeTransformMatrix2(cameraA,cameraB);
+
+// HERE
 
 		// scale 'pair' local scale to match universe scale
 		console.log("scaler:"+scaler);
@@ -8049,9 +8035,18 @@ v:
 	}else{
 		startIndexI = previousPair["A"];
 		startIndexJ = previousPair["B"];
+		// goto next
+		if(startIndexJ==graphViews.length-1){
+			startIndexI += 1;
+			startIndexJ = startIndexI+1;
+		}else{
+			startIndexJ += 1;
+		}
 	}
 	startIndexJ = Math.max(startIndexJ,startIndexI+1);
+console.log("START AT: "+startIndexI+" | "+startIndexJ);
 	var foundPair = null;
+	var newPreviousPair = null;
 	for(var i=startIndexI; i<graphViews.length; ++i){
 		var viewI = graphViews[i];
 		var idI = viewI["id"];
@@ -8065,6 +8060,7 @@ v:
 			var pair = pairLookup[ minimumStringFirst(idI,idJ) ];
 			if(pair.hasRelative()){
 				foundPair = pair;
+				newPreviousPair = [i,j];
 				break;
 			}
 		}
@@ -8080,6 +8076,8 @@ v:
 
 	console.log(foundPair);
 	if(foundPair){
+		graphData["previousPair"] = {"A":newPreviousPair[0], "B":newPreviousPair[1]};
+		console.log(graphPoints)
 		var pair = foundPair;
 		var viewA = pair.viewA();
 		var viewB = pair.viewB();
@@ -8089,15 +8087,15 @@ v:
 			var point3D = graphPoints[i];
 			var vs = point3D["v"];
 			for(var j=0; j<vs.length; ++j){
-				var v = vs[j];
+				var v = vs[j]["i"];
 				for(var k=j+1; k<vs.length; ++k){
-					var u = vs[k];
+					var u = vs[k]["i"];
 					viewPointCounts[v][u]++;
 					viewPointCounts[u][v]++;
 				}
 			}
 		}
-		console.log(viewPointCounts);
+		// console.log(viewPointCounts);
 		// get highest counted pair for relevant views
 		var indexA = viewGraphLookupIndex[viewA.id()];
 		var indexB = viewGraphLookupIndex[viewB.id()];
@@ -8109,8 +8107,6 @@ v:
 		}
 		pointsA.sort(sortLargerArray0);
 		pointsB.sort(sortLargerArray0);
-		console.log(pointsA);
-		console.log(pointsB);
 		// select top
 		var selectArrays = [pointsA,pointsB];
 		var maximumViews = 4;
@@ -8128,7 +8124,7 @@ v:
 							--i;
 							break;
 						}else{
-							Code.addUnique( loadViews.push(item[1]) ); // view
+							Code.addUnique(loadViews, item[1]); // view
 						}
 					}
 				}
@@ -8164,8 +8160,11 @@ App3DR.ProjectManager.prototype._iterateGraphTracksTick = function(pair,viewsLoa
 	var existingPoints = Code.valueOrDefault(graphData["points"],[]);
 
 	var graphViewLookup = {};
+	var graphViewLookupIndex = {};
 	for(var i=0; i<graphViews.length; ++i){
-		graphViewLookup[graphViews[i]["id"]] = graphViews[i];
+		var vid = graphViews[i]["id"];
+		graphViewLookup[vid] = graphViews[i];
+		graphViewLookupIndex[vid] = i;
 	}
 
 	var trackData = pair.trackData();
@@ -8192,6 +8191,8 @@ App3DR.ProjectManager.prototype._iterateGraphTracksTick = function(pair,viewsLoa
 	for(var i=0; i<views.length; ++i){
 		viewLookup[views[i].id()] = views[i];
 	}
+
+
 	// console.log(cameras);
 	// console.log(viewsLoad);
 	// console.log(images);
@@ -8202,8 +8203,7 @@ App3DR.ProjectManager.prototype._iterateGraphTracksTick = function(pair,viewsLoa
 		worldViewLookup[worldViews[i].data()] = worldViews[i];
 	}
 
-	// App3DR.ProjectManager.addPointsToWorld(world, relativeData["points"]);
-// throw "?";
+	// from model objects to JS instances
 	var o = new V2D(0,0);
 	var x1 = new V2D();
 	var x2 = new V2D();
@@ -8266,6 +8266,8 @@ App3DR.ProjectManager.prototype._iterateGraphTracksTick = function(pair,viewsLoa
 		var existing = existingPoints[i];
 		console.log(existing);
 		console.log("TODO");
+
+
 		throw "...";
 		// TODO: allow for no pre-processing : just trust imput data is right -- speed up
 	}
@@ -8275,6 +8277,7 @@ App3DR.ProjectManager.prototype._iterateGraphTracksTick = function(pair,viewsLoa
 		var point3D = newPoints[i];
 		world.embedPoint3D(point3D);
 	}
+
 	/*
 	- if collision:
 		- for all views of colliding P3D THAT ARE LOADED (at least 1, up to 3)
@@ -8294,13 +8297,57 @@ App3DR.ProjectManager.prototype._iterateGraphTracksTick = function(pair,viewsLoa
 	*/
 
 	// all points to tracks
-	var newPoints = world.toPointArray();
-	console.log(newPoints);
+	var allPoints = world.toPointArray();
+	console.log(allPoints);
 
 
+	// update points on graph:
+	var points3D = allPoints;
+	var graphPoints = [];
+	for(var i=0; i<points3D.length; ++i){
+		var point3D = points3D[i];
+		var loc = point3D.point();
+		var nor = point3D.normal();
+		var siz = point3D.size();
+		var v = [];
+		var points2D = point3D.toPointArray();
+		for(var j=0; j<points2D.length; ++j){
+			var point2D = points2D[j];
+			var p = point2D.point2D();
+			var pv = point2D.view();
+			var ps = pv.size();
+			var wid = ps.x;
+			var hei = ps.y;
+			var vID = pv.data();
+			var vIndex = graphViewLookupIndex[vID];
+			var o = {"i":vIndex, "x": p.x/wid, "y": p.y/hei};
+			v.push(o);
+		}
+		var object = {"X":loc.x, "Y":loc.y, "Z":loc.z, "x":nor.x, "y":nor.y, "z":nor.z, "s":siz, "v":v};
+		graphPoints.push(object);
+	}
+	graphData["points"] = graphPoints;
+	// graphData["previousPair"] // already updated
+	console.log("save / update graph data");
+	console.log(graphData);
 
-	
-	throw "HERE";
+	this.saveGraphFromData(graphData);
+}
+App3DR.ProjectManager.prototype.saveGraphFromData = function(graphData){
+	var yaml = new YAML();
+	var object = graphData;
+	var timestampNow = Code.getTimeStampFromMilliseconds();
+		graphData["modified"] = timestampNow;
+	yaml.writeComment("Graph");
+	yaml.writeObjectLiteral(graphData);
+	var graphString = yaml.toString();
+	console.log(graphString);
+
+	throw "... save";
+	var fxnSavedGraph = function(){
+		console.log("fxnSavedGraph");
+	}
+	this.saveGraph(graphString, this.graphFilename(), fxnSavedGraph, this);
 }
 
 
@@ -8748,6 +8795,7 @@ App3DR.ProjectManager.prototype.calculateBundleAdjustTriple = function(viewAIn,v
 		var TFT = payload["T"];
 		var meanTFT = payload["errorTMean"];
 		var sigmaTFT = payload["errorTSigma"];
+		// TODO: TFT NEEDS TO BE SCALED TO UNITY BEFORE STORAGE
 
 		var idA = viewAIn.id();
 		var idB = viewBIn.id();

@@ -275,6 +275,10 @@ graph relating transforms - "image connectivity" - "view graph" - ""
 
 - translation / rotation averaging
 
+- outlier detection / rejection:
+    - inconsistent rotation / translation
+
+
 
 
 

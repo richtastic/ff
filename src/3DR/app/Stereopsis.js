@@ -1036,6 +1036,7 @@ Stereopsis.Transform3D.prototype.searchCorners = function(){
 	return this._searchCorners;
 }
 Stereopsis.Transform3D.prototype.relativeEstimatePoints3D = function(){ // calc match 3D location from local transform
+console.log("relativeEstimatePoints3D - triangulate points");
 	var viewA = this.viewA();
 	var viewB = this.viewB();
 	// var extrinsicA = new Matrix(4,4).identity();
@@ -1170,8 +1171,8 @@ Stereopsis.Transform3D.prototype.calculateErrorR = function(R){
 	var Kb = viewB.K();
 	// var extrinsicA = new Matrix(4,4).identity();
 	// var extrinsicB = R;
-	var cameraA = new Matrix(4,4).identity();
-	var cameraB = R;
+	var extrinsicA = new Matrix(4,4).identity();
+	var extrinsicB = R;
 	var matches = this.matches();
 	var orderedPoints = [];
 	var a = new V3D();
@@ -1187,8 +1188,7 @@ Stereopsis.Transform3D.prototype.calculateErrorR = function(R){
 			console.log("match not have estimate");
 			continue;
 		}
-		//var error = R3D.reprojectionError(estimated3D, pA,pB, extrinsicA, extrinsicB, Ka, Kb);
-		var error = R3D.reprojectionError(estimated3D, pA,pB, cameraA, cameraB, Ka, Kb);
+		var error = R3D.reprojectionError(estimated3D, pA,pB, extrinsicA, extrinsicB, Ka, Kb);
 		var distanceA = error["distanceA"];
 		var distanceB = error["distanceB"];
 		var distance = error["error"];
@@ -2812,6 +2812,10 @@ Stereopsis.relativeTransformFromViews = function(viewA,viewB){
 	// return R3D.relativeTransformMatrixInvAAbsB(viewA.absoluteTransformInverse(),viewB.absoluteTransform());
 }
 
+Stereopsis.World.prototype.refineCameraAbsoluteOrientationSubset = function(){
+	throw "pick lowest error subset of points (also of highest connectivity degree) to do calculations on"
+}
+
 Stereopsis.World.prototype.refineCameraAbsoluteOrientation = function(minimumPoints){ // get updated camera positions with less error
 	var views = this.toViewArray();
 	var result = this.bundleAdjustViews(views, minimumPoints);
@@ -2868,11 +2872,9 @@ throw "is this used?"
 
 	return {"relative":relAtoB, "error":error};
 }
-Stereopsis.World.prototype.bundleAdjustViews = function(views, minimumPoints){
+Stereopsis.World.prototype.bundleAdjustViews = function(views, minimumPoints, maxIterations){
 // TODO: minimumPoints
-	var maxIterations = 25;
-	// var maxIterations = 50;
-	// var maxIterations = 100;
+	maxIterations = maxIterations!==undefined ? maxIterations : 50;
 	var viewCount = views.length;
 	var Ps = [];
 	var Ks = [];
@@ -3252,7 +3254,7 @@ if(iterationIndex==0){ // subsequent approximations are always worse than the re
 		this.estimate3DViews(); // find absolute view locations
 		this.estimate3DPoints(); // find absolute point locations
 }
-		this.estimate3DErrors(true, true); // update errors using absolute-relative transforms
+		this.estimate3DErrors(true); // update errors using absolute-relative transforms
 		// try to distribute the error between depths
 		this.refineCameraAbsoluteOrientation(100); // refine initial absolute camera locations
 		this.estimate3DPoints(); // camera orientions have changed => points have new locations
@@ -3582,8 +3584,6 @@ Stereopsis.World.prototype.solveTriple = function(completeFxn, completeContext){
 				// console.log(scaleIJtoIK);
 				// console.log(scaleJKtoJI);
 				// console.log(scaleKItoKJ);
-
-
 				var scaleIJtoIK = R3D.relativeScaleFromCameraMatrices(RIJ,RIK,RJK);
 				var scaleJKtoJI = R3D.relativeScaleFromCameraMatrices(RJK,RJI,RKI);
 				var scaleKItoKJ = R3D.relativeScaleFromCameraMatrices(RKI,RKJ,RIJ);
@@ -3603,15 +3603,6 @@ var tripleScale = null;
 			var viewB = views[j];
 			for(var k=j+1; k<views.length; ++k){
 				var viewC = views[k];
-				// var scaleIJtoIK = this.relativeScaleFromSampleRatios(viewI,viewJ,viewK); // AB/AC
-				// // var scaleJItoJK = this.relativeScaleFromSampleRatios(viewJ,viewI,viewK);
-				// var scaleJKtoJI = this.relativeScaleFromSampleRatios(viewJ,viewK,viewI); // BC/BA
-				// var scaleKItoKJ = this.relativeScaleFromSampleRatios(viewK,viewI,viewJ); // CA/CB
-				// console.log(scaleIJtoIK);
-				// // console.log(scaleJItoJK);
-				// console.log(scaleJKtoJI);
-				// console.log(scaleKItoKJ);
-
 				var transformAB = this.transformFromViews(viewA,viewB);
 				var transformAC = this.transformFromViews(viewA,viewC);
 				var transformBC = this.transformFromViews(viewB,viewC);
@@ -3621,7 +3612,7 @@ var tripleScale = null;
 				var errorA = viewA.rSigma();
 				var errorB = viewB.rSigma();
 				var errorC = viewC.rSigma();
-
+				// calculate scale ratios
 				var scaleABtoAC = this.relativeScaleFromSampleRatios(viewA,viewB,viewC); // AB/AC
 				var scaleACtoBC = this.relativeScaleFromSampleRatios(viewC,viewA,viewB); // AC/BC
 				var scaleBCtoAB = this.relativeScaleFromSampleRatios(viewB,viewC,viewA); // BC/AB
@@ -3631,8 +3622,6 @@ var tripleScale = null;
 				console.log(scaleABtoAC);
 				console.log(scaleACtoBC);
 				console.log(scaleBCtoAB);
-
-
 				// create semi-consistent scaling:
 				var edges = [];
 				edges.push([0,1, scaleABtoAC, errorAB + errorAC]);
@@ -3640,7 +3629,6 @@ var tripleScale = null;
 				edges.push([2,0, scaleBCtoAB, errorBC + errorAB]);
 				var result = R3D.optimumScaling1D(edges);
 				var abs = result["absolute"];
-				// console.log(abs+"");
 				// distribute the error around for consistent scaling
 				var abs0 = abs[0];
 				var abs1 = abs[1];
@@ -3649,7 +3637,6 @@ var tripleScale = null;
 					var log12 = Math.log(abs2/abs1);
 					var log20 = Math.log(abs0/abs2);
 					var totalError = log01 + log12 + log20;
-					// console.log("totalError: "+totalError);
 					var errors = [errorA,errorB,errorC];
 					var percents = Code.errorsToPercents(errors);
 						percents = percents["percents"];
@@ -3669,6 +3656,10 @@ var tripleScale = null;
 	}
 	// record the scalings somewhere ...
 
+
+
+
+
 	// apply the scaling to get transforms in same coordinate system
 	var viewA = tripleScale["A"];
 	var viewB = tripleScale["B"];
@@ -3686,6 +3677,11 @@ var tripleScale = null;
 	// transformAC.scaleR(1.0/scaleAC);
 	// transformBC.scaleR(1.0/scaleBC);
 
+
+
+
+
+
 	// use only overlapping 3D points
 	var points3D = this.toPointArray();
 	var group2 = []; // keep for later matching
@@ -3697,7 +3693,7 @@ var tripleScale = null;
 			group3.push(point3D);
 		}else{
 // TODO: KEEP ?
-continue;
+// continue;
 this.disconnectPoint3D(point3D);
 			group2.push(point3D);
 		}
@@ -3721,15 +3717,16 @@ this.disconnectPoint3D(point3D);
 		pointsB.push(p2DB);
 		pointsC.push(p2DC);
 	}
-	// console.log(pointsA,pointsB,pointsC);
-	var errorPosition = ((transformAB.rSigma() + transformAC.rSigma() + transformBC.rSigma())/3.0) * 2.0 * 2.0; /// ... extra 2.0 ...
-
+	var errorPosition = ((transformAB.rSigma() + transformAC.rSigma() + transformBC.rSigma())/3.0) * 2.0 * 2.0; /// ... extra 2.0 ... reprojection & TFT error arent necessarily comparable metrics ...
 	//var T = R3D.TFTRANSACFromPointsAuto(pointsA,pointsB,pointsC, errorPosition, null, 0.10);
+
 	var T = R3D.TFTRANSACFromPoints(pointsA,pointsB,pointsC, errorPosition, null, 0.50, 0.99, 100); // 0.50 / 0.99
-	// console.log(T);
+	if(!T){
+		console.log("did not get a T ...");
+		console.log(pointsA,pointsB,pointsC);
+		throw "? pointsA,pointsB,pointsC ?"
+	}
 	var TFT = T["T"];
-	console.log(TFT);
-	// var error = T["error"];
 	// drop outliers
 	var errors = [];
 	var errorPoints = [];
@@ -3750,7 +3747,6 @@ this.disconnectPoint3D(point3D);
 	//var errorMean = Code.mean(errors);
 	var errorMean = Code.min(errors);
 	var errorSigma = Code.stdDev(errors,errorMean);
-
 var TFTmean = errorMean;
 var TFTsigma = errorSigma;
 	console.log("T ERROR: "+errorMean+" +/- "+errorSigma);
@@ -3767,7 +3763,7 @@ Code.printMatlabArray(errors,"tError");
 	console.log(" dropPoints: "+dropPoints.length+" / "+errorPoints.length);
 	for(var i=0; i<dropPoints.length; ++i){
 // TODO: ADD BACK
-break;
+// break;
 		var point3D = dropPoints[i];
 		world.disconnectPoint3D(point3D);
 		world.killPoint3D(point3D);
@@ -3778,14 +3774,21 @@ break;
 
 	// get new P1 P2 P3 DIRECTLY FROM TFT ?
 
+// ...
 
 	// just optimize on current transforms
 	console.log("optimize transforms using current relative(scaled) and TFT-valid points");
 	// convert relative transforms to absolute transforms
 	listPairs = [];
+// relative transforms are initial source of orientations
 	var extAB = transformAB.R(viewA,viewB);
 	var extAC = transformAC.R(viewA,viewC);
 	var extBC = transformBC.R(viewB,viewC);
+
+// R3D.relativeTransformMatrix2 = function(absA,absB){
+// var invA = Matrix.inverse(absA);
+// var relativeAtoB = Matrix.mult(absB,invA);
+// return relativeAtoB;
 	var relAB = Matrix.inverse(extAB);
 	var relAC = Matrix.inverse(extAC);
 	var relBC = Matrix.inverse(extBC);
@@ -3811,23 +3814,41 @@ break;
 	this.relativeTransformsFromAbsoluteTransforms();
 	// refine / BA
 
+	// need initial point estimates with new properties
+	// this.estimate3DErrors(true);
+	// this.averagePoints3DFromMatches(true);
 
-// why does error go up ?
-	for(var i=0; i<2; ++i){
+
+	var maxLoops = 10;
+	for(var i=0; i<maxLoops; ++i){
+		// add back all points for last round
+		if(i==maxLoops-1){
+			console.log("RE-EMBEDDING ALL 2D PAIRS");
+			for(var j=0; j<group2.length; ++j){
+				// this.connectPoint3D(group2[j]);
+				this.embedPoint3D(group2[j]);
+			}
+		}
+
 		this.estimate3DErrors(true);
+		this.estimate3DPoints();
+		// averagePoints3DFromMatches
+		// this.averagePoints3DFromMatches(true); // WHY IS THIS NOT THE SAME ?
 		this.refineCameraAbsoluteOrientation();
 		this.relativeTransformsFromAbsoluteTransforms();
 		// this.relativeFFromSamples();
-		this.estimate3DErrors(true);
-		this.averagePoints3DFromMatches(true);
+		// this.estimate3DErrors(true);
+// relativeEstimatePoints3D
+		// this.averagePoints3DFromMatches(true); // only need for abs error
 
 
-		// filtering ...
-		this.filterGlobalMatches();
-		this.dropNegative3D();
-		this.updatePoints3DNullLocations();
-		this.filterLocal2D(); //
-		this.filterLocal3D(); //
+		// // filtering ...
+		// this.filterGlobalMatches();
+		// this.dropNegative3D();
+		// this.updatePoints3DNullLocations();
+		// this.filterLocal2D(); //
+		// this.filterLocal3D(); //
+
 	}
 	this.estimate3DErrors(true);
 	// TODO: BA
@@ -3858,7 +3879,7 @@ break;
 
 
 	//
-throw "HERE";
+// throw "HERE";
 	// this.averagePoints3DFromMatches(true);
 	// this.estimate3DErrors(true);
 	var payload = {"scales":tripleScale, "T":TFT, "errorTMean":TFTmean, "errorTSigma":TFTsigma};
@@ -4814,7 +4835,7 @@ throw "IS THIS WHAT YOU REALLY WANT?"
 		}
 	}
 }
-Stereopsis.World.prototype.estimate3DErrors = function(skipCalc, log){ // triangulate locations for matches (P3D) & get errors from this
+Stereopsis.World.prototype.estimate3DErrors = function(skipCalc){ // triangulate locations for matches (P3D) & get errors from this
 	// TRANSFORMS
 	var transforms = this.toTransformArray();
 	// console.log("transforms.length: "+transforms.length);
@@ -4947,7 +4968,6 @@ Stereopsis.World.prototype.estimate3DErrors = function(skipCalc, log){ // triang
 if(false){
 // if(skipCalc){
 // if(!skipCalc){
-// if(log){
 	// Code.printMatlabArray(distances,"distances");
 	Code.printMatlabArray(errorsR,"errorsR");
 	// Code.printMatlabArray(errorsF,"errorsF");
