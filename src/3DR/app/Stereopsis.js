@@ -911,6 +911,9 @@ Stereopsis.Transform3D.prototype.world = function(world){
 Stereopsis.Transform3D.prototype.matches = function(){
 	return this._matches;
 }
+Stereopsis.Transform3D.prototype.matchCount = function(){
+	return this._matches.length;
+}
 Stereopsis.Transform3D.prototype.graphWeight = function(){
 	return 1.0;
 	// return 1.0/this._errorRMean;
@@ -3819,10 +3822,11 @@ Code.printMatlabArray(errors,"tError");
 	// this.averagePoints3DFromMatches(true);
 
 
-	var maxLoops = 10;
+	var maxLoops = 3;
 	for(var i=0; i<maxLoops; ++i){
 		// add back all points for last round
 		if(i==maxLoops-1){
+break;
 			console.log("RE-EMBEDDING ALL 2D PAIRS");
 			for(var j=0; j<group2.length; ++j){
 				// this.connectPoint3D(group2[j]);
@@ -3878,8 +3882,20 @@ Code.printMatlabArray(errors,"tError");
 
 
 
-	//
-// throw "HERE";
+
+
+
+
+
+
+
+				// WHY IS THIS NOT THE SAME :
+				// this.estimate3DPoints();
+				// this.averagePoints3DFromMatches(true);
+
+	// normalize TFT:
+		TFT = R3D.normalizeTFTfromSizes(TFT, viewA.image().size(), viewB.image().size(), viewB.image().size());
+
 	// this.averagePoints3DFromMatches(true);
 	// this.estimate3DErrors(true);
 	var payload = {"scales":tripleScale, "T":TFT, "errorTMean":TFTmean, "errorTSigma":TFTsigma};
@@ -8033,7 +8049,7 @@ Stereopsis.World.prototype.toYAMLString = function(){
 			var K = camera.K();
 			if(K){
 				yaml.writeObjectStart("K");
-				K.saveToYAML(yaml);
+				K.toYAML(yaml);
 				yaml.writeObjectEnd();
 			}
 			var distortion = camera.distortion();
@@ -8076,7 +8092,7 @@ Stereopsis.World.prototype.toYAMLString = function(){
 			if(absoluteTransform){
 console.log(absoluteTransform);// .......
 				yaml.writeObjectStart("transform");
-				absoluteTransform.saveToYAML(yaml);
+				absoluteTransform.toYAML(yaml);
 				yaml.writeObjectEnd();
 			}
 			/*

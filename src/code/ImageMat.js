@@ -30,9 +30,9 @@ ImageMat.prototype.init = function(wid,hei,r,g,b){
 		this._b = new Array(len);
 		if(r!=undefined){
 			if(g!==undefined && b!==undefined){
-				this.setFromFloats(r,g,b);
+				this.fromFloats(r,g,b);
 			}else{
-				this.setFromFloats(r,r,r);
+				this.fromFloats(r,r,r);
 			}
 		}else{
 			this.zeroAll();
@@ -270,7 +270,7 @@ ImageMat.prototype.getSubImageIndex = function(colSta,colEnd, rowSta,rowEnd){
 		}
 	}
 	var image = new ImageMat(wid,hei);
-	image.setFromFloats(r,g,b);
+	image.fromFloats(r,g,b);
 	return image;
 }
 ImageMat.prototype.getSubImage = function(px,py, wid,hei){
@@ -366,7 +366,7 @@ ImageMat.prototype.addRandom = function(magR, magG, magB){  // each channel sepa
 // 	ImageMat.scaleFloatSame(this.blu(), scale);
 // }
 // ------------------------------------------------------------------------------------------------------------------------ set
-ImageMat.prototype.setFromArrayARGB = function(data){
+ImageMat.prototype.fromArrayARGB = function(data){
 	var i, len = this._r.length;
 	for(i=0;i<len;++i){
 		this._r[i] = Code.getRedARGB(data[i])/255.0;
@@ -389,7 +389,7 @@ ImageMat.prototype.setBluFromFloat = function(a){
 	for(i=0;i<len1;++i){ this._b[i] = a[i]; }
 	for(;i<len2;++i){ this._b[i] = 0.0; }
 }
-ImageMat.prototype.setFromFloats = function(r,g,b){
+ImageMat.prototype.fromFloats = function(r,g,b){
 	this.setRedFromFloat(r);
 	this.setGrnFromFloat(g);
 	this.setBluFromFloat(b);
@@ -4182,10 +4182,10 @@ ImageMat.extractRectFromFloatImage = function(x,y,scale,sigma, w,h, imgSource,im
 		matinv.multV2DtoV2D(center2,center1);
 		// to origin
 		var m = new Matrix(3,3);
-		m.setFromArray([1,0, -center1.x, 0,1, -center1.y, 0,0,1]);
+		m.fromArray([1,0, -center1.x, 0,1, -center1.y, 0,0,1]);
 		matrix = Matrix.mult(matrix,m);
 		// to updated center
-		m.setFromArray([1,0, center2.x, 0,1, center2.y, 0,0,1]);
+		m.fromArray([1,0, center2.x, 0,1, center2.y, 0,0,1]);
 		matrix = Matrix.mult(matrix,m);
 		// apply to all points
 		matrix.multV2DtoV2D(TL,TL);

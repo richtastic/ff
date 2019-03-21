@@ -9,7 +9,7 @@ function SurfaceTri(){
 	this._stage2D.start();
 	this._root = new DO();
 	this._stage2D.root().addChild(this._root);
-	// var 
+	// var
 	this._canvas3D = new Canvas(null,0,0,Canvas.STAGE_FIT_FILL,false,true);
 	this._stage3D = new StageGL(this._canvas3D, 1000.0/20.0, this.getVertexShaders1(), this.getFragmentShaders1());
   	this._stage3D.setBackgroundColor(0x00000000);
@@ -224,9 +224,9 @@ SurfaceTri.prototype.visualize = function(space, display, objects, circleCenter,
 	var availableSize = this._canvas2D.size();
 	var availableWidth = availableSize.x;
 	var availableHeight = availableSize.y;
-	// 
+	//
 	availableSize = Math.min(availableWidth,availableHeight);
-	// 
+	//
 	var root = space._root;
 	var min = root.min();
 	var getArxels = function(arx, array){
@@ -250,7 +250,7 @@ SurfaceTri.prototype.visualize = function(space, display, objects, circleCenter,
 	var i, j, d, p, o, t;
 	var scale = availableSize / root.size().x;
 	var offset = new V2D(-min.x*scale, -min.y*scale);
-	
+
 	for(i=0; i<arxels.length; ++i){
 		arxel = arxels[i];
 		var c = arxel.center();
@@ -270,9 +270,9 @@ var packages = arxel.objects();
 			}
 			d.graphics().endPath();
 			d.graphics().strokeLine();
-			
-			
-			
+
+
+
 
 
 
@@ -289,8 +289,8 @@ var packages = arxel.objects();
 
 
 
-		
-		
+
+
 		if(packages){
 			for(j=0; j<packages.length; ++j){
 				p = packages[j];
@@ -395,7 +395,7 @@ SurfaceTri.prototype.getFragmentShaders1 = function(){
     // vec4(vColor.rgb*vLightWeighting, vColor.a*uAlpha); \
     // vec4(vColor.r, vColor.g, vColor.b, vColor.a); \
 }
-// ------------------------------------------------------------------------------------------------------------------------ 
+// ------------------------------------------------------------------------------------------------------------------------
 SurfaceTri.prototype.onMouseDownFxn3D = function(e){
 	var location = e["location"];
 	this._mouseIsDown = true;
@@ -443,7 +443,7 @@ SurfaceTri.prototype.onEnterFrameFxn3D = function(e){
 
 	this._stage3D.setViewport(StageGL.VIEWPORT_MODE_FULL_SIZE);
 	this._stage3D.clear();
-	// 
+	//
 	//this._userMatrix.rotateY(0.03);
 	this._stage3D.matrixIdentity();
 	this._stage3D.matrixTranslate(0.0,0.0,-3.0*Math.pow(2,this._userScale) );
@@ -884,7 +884,7 @@ GLOBAL_RAYS = null;
 	var fronts = mesh._fronts;
 	// console.log(fronts);
 	// var allTriangles = mesh._triangleSpace.toArray();
-	
+
 
 	// IF ORIGINAL POINTS HAVE NORMALS -> SET CONSISTENT WITH THEM
 	var allTriangles = mesh.outputTriangles();
@@ -971,7 +971,7 @@ if(showPoints){
 	for(i=0;i<spherePoints.length;++i){
 		var p = spherePoints[i];
 		p = p.point();
-		
+
 		points.push(p.x,p.y,p.z);
 		colors.push(0.5*Math.random()+0.5,0.0,0.5*Math.random(),0.90);
 
@@ -995,7 +995,7 @@ if(showPoints){
 
 
 	// TRIANGLE NORMALS:
-	
+
 	// POINT NORMALS:
 	for(i=0;i<spherePoints.length;++i){
 break; // no normals
@@ -1022,7 +1022,7 @@ break; // no normals
 		V3D.pushToArray(pointsL, b);
 
 		/*
-		// both - reverse: 
+		// both - reverse:
 		var b = point.copy().add(normal.copy().scale(-normalScale));
 		colorsL.push(0.5,0.5,0.5,1.0);
 		colorsL.push(0.5,0.5,0.5,1.0);
@@ -1097,7 +1097,7 @@ for(i=0; i<indexes.length; ++i){
 	// console.log(cen+"");
 
 	console.log(rad,k,cen,nrm,pnt);
-	
+
 	var sphere = Tri3D.generateSphere(1.0, 8, 12);
 	var matrix = new Matrix(4,4);
 	matrix.identity();
@@ -1115,7 +1115,7 @@ for(i=0; i<indexes.length; ++i){
 
 // 	// TRIANGLES:
 	// var meshTris = this._mlsMesh._tris;
-	
+
 	Code.arrayPushArray(tris,allTriangles);
 //console.log("tris: "+tris.length);
 
@@ -1188,7 +1188,7 @@ tris = inCube;
 			colorsL.push(0.0,0.0,0.5,1.0);
 			V3D.pushToArray(pointsL, a);
 			V3D.pushToArray(pointsL, b);
-			
+
 		}
 
 
@@ -1291,7 +1291,7 @@ var fronts = mesh._fronts;
 		var edgeListLength = edgeList.length();
 		console.log("   "+i+" : "+edgeListLength);
 		//console.log(edgeList);
-		for(var j=0, edge=edgeList.head().data(); j<edgeListLength; ++j, edge=edge.next()){ 
+		for(var j=0, edge=edgeList.head().data(); j<edgeListLength; ++j, edge=edge.next()){
 			var M = edge.midpoint();
 			var C = edge.tri().normal().scale(edge.length()).scale(0.5).add(M);
 			var tri = new Tri3D(edge.A(),edge.B(),C);
@@ -1438,7 +1438,7 @@ surfacePoints.push(surface);
 		}
 	}
 	// SURFACE PROJECTION:
-	
+
 	var points = [];
 	var colors = [];
 	for(i=0;i<surfacePoints.length;++i){
@@ -1449,7 +1449,7 @@ surfacePoints.push(surface);
 	this._spherePointBuffer = this._stage3D.getBufferFloat32Array(points,3);
 	this._sphereColorBuffer = this._stage3D.getBufferFloat32Array(colors,4);
 
-	
+
 	/*
 	// POTENTIAL FIELD
 	var sampleValueRange = sampleValueMax-sampleValueMin;
@@ -1484,7 +1484,7 @@ SurfaceTri.prototype.resetTris = function(){
 
 	fronts = [];//Code.copyArray(this._mlsMesh.crap.fronts._fronts);
 	if(this._mlsMesh.crap.fronts){
-		fronts.push(this._mlsMesh.crap.fronts); // 
+		fronts.push(this._mlsMesh.crap.fronts); //
 	}
 var alphaT = this._seeThru?0.75:1.0;
 	var triCount = 0;
@@ -1656,10 +1656,10 @@ SurfaceTri.prototype.pointPlaneFromPoints = function(r, points){
 			M.set(j,k, val);
 		}
 	}
-	// M.setFromArray([A,B,C, B,E,F, C,F,I]);
-	// n = eigenvector for smallest eigenvalue of 
-	n.set(); // 
-	
+	// M.fromArray([A,B,C, B,E,F, C,F,I]);
+	// n = eigenvector for smallest eigenvalue of
+	n.set(); //
+
 	// for(iter=0;iter<maxIter;++iter){
 	// 	for(i=0;i<len;++i){
 	// 		point = points[i];
@@ -1672,7 +1672,7 @@ SurfaceTri.prototype.pointPlaneFromPoints = function(r, points){
 	// ...
 	return {normal:n, origin:q};
 }
-// find surface approximation from 
+// find surface approximation from
 SurfaceTri.prototype.surfaceFromPlanePoints = function(r, normal,origin, points){
 	return {};
 }
@@ -1716,7 +1716,7 @@ SurfaceTri.prototype.covarianceFromPoints = function(points){
 		F += dy*dz;
 		I += dz*dz;
 	}
-	var cov = new Matrix(3,3).setFromArray([A,B,C, B,E,F, C,F,I]);
+	var cov = new Matrix(3,3).fromArray([A,B,C, B,E,F, C,F,I]);
 	var eig = Matrix.eigenValuesAndVectors(cov);
 	var svd = Matrix.SVD(cov);
 	console.log(cov.toString());
@@ -1734,13 +1734,13 @@ SurfaceTri.prototype.covarianceFromPoints = function(points){
 	var U = svd.U;
 	var S = svd.S;
 	var V = svd.V;
-	
+
 	console.log(U.toString());
 	console.log(S.toString());
 	console.log(V.toString());
 
-	var minDir = new V3D().setFromArray(V.colToArray(2));
-	var N = new Matrix(3,1).setFromArray(V.colToArray(2));
+	var minDir = new V3D().fromArray(V.colToArray(2));
+	var N = new Matrix(3,1).fromArray(V.colToArray(2));
 	console.log(minDir+"");
 	console.log(N+"");
 	//
@@ -1748,8 +1748,8 @@ SurfaceTri.prototype.covarianceFromPoints = function(points){
 	// A = Matrix.mult(Matrix.transpose(N),A);
 	// console.log(A+"");
 
-	var inPlane0 = new V3D().setFromArray(V.colToArray(0));
-	var inPlane1 = new V3D().setFromArray(V.colToArray(1));
+	var inPlane0 = new V3D().fromArray(V.colToArray(0));
+	var inPlane1 = new V3D().fromArray(V.colToArray(1));
 	var com = new V3D(a,b,c);
 	var edge = new V3D();
 
@@ -1811,7 +1811,7 @@ var r;
 	}
 	return list;
 }
-// ------------------------------------------------------------------------------------------------------------------------ 
+// ------------------------------------------------------------------------------------------------------------------------
 SurfaceTri.prototype.plot1D = function(){
 	var fxn1D = function(x){ return (x-200)*(x-100)*(x+200)*0.00001; } // (-1.0*x*x*x + 2.0*x*x - 5*x - 1.0)
 	var minX = -400, maxX = 400;
@@ -1936,7 +1936,4 @@ radius *= 1E-1; // display purposes
 	// 1D binormal
 }
 
-// ------------------------------------------------------------------------------------------------------------------------ 
-
-
-
+// ------------------------------------------------------------------------------------------------------------------------

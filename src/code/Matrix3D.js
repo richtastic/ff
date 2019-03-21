@@ -131,19 +131,27 @@ COL MAJOR:
 [d h l ?]
 */
 //}
-Matrix3D.prototype.saveToYAML = function(yaml){
-	yaml.writeNumber(DATA.A, this.a);
-	yaml.writeNumber(DATA.B, this.b);
-	yaml.writeNumber(DATA.C, this.c);
-	yaml.writeNumber(DATA.D, this.d);
-	yaml.writeNumber(DATA.E, this.e);
-	yaml.writeNumber(DATA.F, this.f);
-	yaml.writeNumber(DATA.G, this.g);
-	yaml.writeNumber(DATA.H, this.h);
-	yaml.writeNumber(DATA.I, this.i);
-	yaml.writeNumber(DATA.J, this.j);
-	yaml.writeNumber(DATA.K, this.k);
-	yaml.writeNumber(DATA.L, this.l);
+Matrix3D.prototype.toYAML = function(yaml){
+	var obj = this.toObject();
+	yaml.writeObjectLiteral(obj);
+	return this;
+}
+Matrix3D.prototype.toObject = function(){
+	var DATA = Matrix3D.YAML;
+	var object = {};
+	object[DATA.A] = this.a;
+	object[DATA.B] = this.b;
+	object[DATA.C] = this.c;
+	object[DATA.D] = this.d;
+	object[DATA.E] = this.e;
+	object[DATA.F] = this.f;
+	object[DATA.G] = this.g;
+	object[DATA.H] = this.h;
+	object[DATA.I] = this.i;
+	object[DATA.J] = this.j;
+	object[DATA.K] = this.k;
+	object[DATA.L] = this.l;
+	return object;
 }
 Matrix3D.prototype.loadFromObject = function(obj){
 	var DATA = Matrix3D.YAML;

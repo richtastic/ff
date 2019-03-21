@@ -497,11 +497,23 @@ YAML.prototype._writeUnknownLiteral = function(key,val, startObject){
 		}else{
 			this.writeNull();
 		}
+	}else if(Code.isInstance(val) && Code.isFunction(val.toObject)){
+		var obj = val.toObject();
+		if(key){
+			this.writeObjectLiteral(key,obj);
+		}else{
+			if(startObject){ // from array needs indent
+				this.writeObjectStart();
+					this.writeObjectLiteral(obj);
+				this.writeObjectEnd();
+			}else{
+				this.writeObjectLiteral(obj);
+			}
+		}
 	}else{
 		console.log("ignoring: "+key);
 		console.log(val);
-		// Code.isFunction
-		// Code.isInstance
+		throw "?";
 	}
 }
 

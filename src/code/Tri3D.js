@@ -1,4 +1,10 @@
 // Tri3D.js
+Tri3D.YAML = {
+	A:"a",
+	B:"b",
+	C:"c"
+};
+
 function Tri3D(a,b,c){ // CCW+
 	Tri3D._.constructor.call(this,a,b,c);
 }
@@ -8,6 +14,14 @@ Tri3D.fromPoints = function(a,b,c){
 }
 Tri3D.fromList = function(ax,ay,az, bx,by,bz, cx,cy,cz){
 	return new Tri3D(new V3D(ax,ay,az), new V3D(bx,by,bz), new V3D(cx,cy,cz));
+}
+Tri3D.prototype.toObject = function(){
+	var DATA = Tri3D.YAML;
+	var object = {};
+	object[DATA.A] = this.A().toObject();
+	object[DATA.B] = this.B().toObject();
+	object[DATA.C] = this.C().toObject();
+	return object;
 }
 Tri3D.prototype.min = function(){
 	var v = this.A().copy();
@@ -21,7 +35,7 @@ Tri3D.prototype.max = function(){
 	V3D.max(v, v,this.C());
 	return v;
 }
-// -------------------------------------------------------------------------------------------------------------------- 
+// --------------------------------------------------------------------------------------------------------------------
 Tri3D.prototype.isEqual = function(tri){
 	var a1 = tri.A();
 	var b1 = tri.B();
@@ -109,7 +123,7 @@ Tri3D.prototype.copy = function(a){
 	this.C(a.C().copy());
 	return this;
 }
-// -------------------------------------------------------------------------------------------------------------------- 
+// --------------------------------------------------------------------------------------------------------------------
 Tri3D.prototype.jitter = function(amplitude){
 	this._a = this._a.copy();
 	this._b = this._b.copy();
@@ -124,7 +138,7 @@ Tri3D.prototype.jitter = function(amplitude){
 	this._c.y += Math.random()*amplitude - amplitude*0.5;
 	this._c.z += Math.random()*amplitude - amplitude*0.5;
 }
-// -------------------------------------------------------------------------------------------------------------------- 
+// --------------------------------------------------------------------------------------------------------------------
 Tri3D.prototype.toString = function(){
 	var str = "";
 	str += "[Tri3D: ";
@@ -225,6 +239,3 @@ Tri3D.applyTransform = function(list, matrix){
 	}
 	return list;
 }
-
-
-

@@ -21,7 +21,7 @@ function classesLoadedFxn(){
 	var lineB = Code.lineEquationFromPoints2D(c,d);
 	console.log(lineB)
 	var intAB = Code.homoIntersectionFromLines2D(lineA.a,lineA.b,lineA.c, lineB.a,lineB.b,lineB.c);
-	//var intAB = Code.homoIntersectionFromLines2D(lineB.a,lineB.b,lineB.c, lineA.a,lineA.b,lineA.c); 
+	//var intAB = Code.homoIntersectionFromLines2D(lineB.a,lineB.b,lineB.c, lineA.a,lineA.b,lineA.c);
 	console.log(intAB.toString())
 	intAB.homo()
 	console.log(intAB.toString())
@@ -65,7 +65,7 @@ console.log(line.a*p.x + line.b*p.y + line.c);
 // trans.translate(translation.x,translation.y,translation.z);
 
 // // convert over
-// matrix.setFromArray( trans.toArray() );
+// matrix.fromArray( trans.toArray() );
 
 // var axisAngle = trans.rotationToAxis();
 // var transVect = trans.translationToVector();

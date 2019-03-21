@@ -11,8 +11,8 @@ function ffLoadedFxn(){
 	(new ScriptLoader("./",["R3D.js","Panorama.js"],this,panLoadedFxn)).load();
 }
 function panLoadedFxn(){
-// var A = new Matrix(4,4).setFromArray([16,4,4,-4, 4,10,4,2, 4,4,6,-2, -4,2,-2,4]);
-// var A = new Matrix(3,3).setFromArray([25,15,-5, 15,18, 0,-5, 0,11]);
+// var A = new Matrix(4,4).fromArray([16,4,4,-4, 4,10,4,2, 4,4,6,-2, -4,2,-2,4]);
+// var A = new Matrix(3,3).fromArray([25,15,-5, 15,18, 0,-5, 0,11]);
 // var ret = Matrix.choleskyDecomposition(A);
 // console.log(ret.toString());
 
@@ -34,7 +34,7 @@ function panLoadedFxn(){
 // delta = Matrix.mult(Jinv, eNow);
 // Matrix.add(h, h,delta);
 // 	}
-// 	H.setFromArray( h.toArray() );
+// 	H.fromArray( h.toArray() );
 // 	console.log(H.toString(10));
 
 

@@ -5,7 +5,6 @@ Tensor.YAML = {
 	DATA:"data"
 }
 
-
 function Tensor(dimensions, values){ // [3,3,3] | [3,3,3], [...] | 3,3,3 | 3,3,3, [...]
 	if(!Code.isArray(dimensions)){
 		var temp = [];
@@ -40,11 +39,17 @@ Tensor.prototype.copy = function(t){ // this = t || return copy
 }
 // ---------------------------------------------------------------------------------------------------
 
-Tensor.prototype.saveToYAML = function(yaml){
-	var DATA = Tensor.YAML;
-	yaml.writeArrayNumbers(DATA.DIMENSIONS, this._dimensions);
-	yaml.writeArrayNumbers(DATA.DATA, this.toArray());
+Tensor.prototype.toYAML = function(yaml){
+	var obj = this.toObject();
+	yaml.writeObjectLiteral(obj);
 	return this;
+}
+Tensor.prototype.toObject = function(){
+	var DATA = Tensor.YAML;
+	var object = {};
+	object[DATA.DIMENSIONS] = Code.copyArray(this._dimensions);
+	object[DATA.DATA] = this.toArray();
+	return object;
 }
 Tensor.prototype.fromObject = function(obj){
 	var DATA = Tensor.YAML;

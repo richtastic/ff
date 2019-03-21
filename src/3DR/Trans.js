@@ -155,7 +155,7 @@ console.log("vars: "+a+" "+b+" "+c+" "+d+" "+e+" "+f)
 
 // construct infinite conic
 var infinConic = new Matrix(3,3);
-infinConic.setFromArray([a,b*0.5,d*0.5, b*0.5,c,e*0.5, d*0.5,e*0.5,f]);
+infinConic.fromArray([a,b*0.5,d*0.5, b*0.5,c,e*0.5, d*0.5,e*0.5,f]);
 console.log(infinConic.toString());
 
 
@@ -187,16 +187,16 @@ var lambda0 = svd.S.get(0,0);
 var lambda1 = svd.S.get(1,1);
 var lambda2 = svd.S.get(2,2);
 
-//var D = new Matrix(3,3).setFromArray([Math.sqrt(lambda0),0,0, 0,Math.sqrt(lambda1),0, 0,0,Math.sqrt(lambda2)]);
-var D = new Matrix(3,3).setFromArray([Math.sqrt(lambda0),0,0, 0,Math.sqrt(lambda1),0, 0,0,10]);
-var E = new Matrix(3,3).setFromArray([1,0,0, 0,1,0, 0,0,1]);
+//var D = new Matrix(3,3).fromArray([Math.sqrt(lambda0),0,0, 0,Math.sqrt(lambda1),0, 0,0,Math.sqrt(lambda2)]);
+var D = new Matrix(3,3).fromArray([Math.sqrt(lambda0),0,0, 0,Math.sqrt(lambda1),0, 0,0,10]);
+var E = new Matrix(3,3).fromArray([1,0,0, 0,1,0, 0,0,1]);
 
 var U = svd.U;
 var S = svd.S;
 var V = svd.V;
 U = Matrix.mult(U,D);
 // more accurate:
-// U.setFromArray([
+// U.fromArray([
 //   -3.9936e+02, -5.2657e+01, -2.0606e-05,
 //   -4.2094e+02, 4.9958e+01, -2.4337e-04,
 //   -9.9889e-01, 9.9942e-02, 1.1080e-01]);
@@ -222,7 +222,7 @@ console.log("...");
 
 
 /*
-var D = new Matrix(3,3).setFromArray([Math.sqrt(lambda0),0,0, 0,Math.sqrt(lambda1),0, 0,0,10]);
+var D = new Matrix(3,3).fromArray([Math.sqrt(lambda0),0,0, 0,Math.sqrt(lambda1),0, 0,0,10]);
 U = Matrix.mult(U,D);
 U_T = Matrix.transpose(U);
 var A = Matrix.mult(U,Matrix.mult(S,U_T));
@@ -247,8 +247,8 @@ homography = Matrix.transform2DTranslate(homography,-400,-100);
 /*
 var U = svd.U;
 
-///degenSigma = new Matrix(3,3).setFromArray([lambda0,0,0, 0,lambda1,0, 0,0,lambda2]);
-degenSigma = new Matrix(3,3).setFromArray([1,0,0, 0,1,0, 0,0,0]);
+///degenSigma = new Matrix(3,3).fromArray([lambda0,0,0, 0,lambda1,0, 0,0,lambda2]);
+degenSigma = new Matrix(3,3).fromArray([1,0,0, 0,1,0, 0,0,0]);
 var Nconic = Matrix.mult(U,Matrix.mult(degenSigma, Matrix.transpose(U) ));
 console.log(Nconic.toString());
 
@@ -383,13 +383,13 @@ lineInf.c = lineInf2.z;
 	// unknown homography
 	var homography = new Matrix(3,3).identity(); // current image
 	Ha = new Matrix(3,3).identity();
-	
+
 	//console.log(homography.toString());
 	var lInf = new V3D(lineInf.a,lineInf.b,lineInf.c);
 lInf.homo();
 // lInf.x = -lInf.x;
 // lInf.y = -lInf.y;
-	var lineMatrix = (new Matrix(3,3)).setFromArray([1,0,0, 0,1,0, lInf.x,lInf.y,lInf.z]);
+	var lineMatrix = (new Matrix(3,3)).fromArray([1,0,0, 0,1,0, lInf.x,lInf.y,lInf.z]);
 	console.log("lineMatrix")
 	console.log(lineMatrix.toString())
 //	var lmInv = Matrix.inverse(lineMatrix);
@@ -401,8 +401,8 @@ lInf.homo();
 	homography = Matrix.mult(Ha,lineMatrix);
 	console.log(homography.toString())
 
-// find conic at infinity in original image: 
-// l*C*m = 0 
+// find conic at infinity in original image:
+// l*C*m = 0
 // a*l1*m1
 // b*(l1*m2+l2*m1)/2
 // c*l2m2
@@ -416,7 +416,7 @@ lInf.homo();
 */
 
 
-	// 
+	//
 	//homography = Ha
 	//homography = lineMatrix
 	//homography = lmInv;
@@ -460,7 +460,7 @@ homography = Matrix.transform2DTranslate(homography,100,2200);
 	// var tX = -200, tY = -50;
 	// //var tX = pt.x, tY = pt.y;
 	// var b;
-	// b = Matrix._transformTemp.setFromArray([1.0,0.0,tX, 0.0,1.0,tY, 0.0,0.0,1.0]);
+	// b = Matrix._transformTemp.fromArray([1.0,0.0,tX, 0.0,1.0,tY, 0.0,0.0,1.0]);
 	// //homography = Matrix.mult(b,homography);
 	// homography = Matrix.mult(homography,b);
 
@@ -476,7 +476,7 @@ homography = Matrix.transform2DTranslate(homography,100,2200);
 	this._root.addChild(d);
 	console.log(".........");
 	/*
-	
+
 
 find line@inf
 get affine from projective
@@ -488,5 +488,3 @@ Trans.prototype.handleEnterFrame = function(e){
 Trans.prototype.a = function(){
 	//
 }
-
-

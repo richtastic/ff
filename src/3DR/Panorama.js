@@ -103,7 +103,7 @@ var eN=0,eP=0;
 	H = this.directLinearTransformH();
 	h = new Matrix(9,1);
 	he = new Matrix(9,1);
-	h.setFromArray( H.toArray() );
+	h.fromArray( H.toArray() );
 	jacobian = new Matrix(dataCount,9);
 // var t = new Matrix(9,1);
 // t.randomize(0.01);
@@ -146,13 +146,13 @@ var newError = this.absoluteErrorFromHColumn(potentialH,pointsA,pointsB).errors.
 if(newError<err){
 	//console.log("GOTO NEXT: "+newError+" < "+err);
 	Matrix.add(h, h,delta);
-	lambda *= lambdaScale; // more 
+	lambda *= lambdaScale; // more
 }else{
 	//console.log("BAD, SKIP: "+newError+" > "+err);
 	lambda /= lambdaScale; // less
 }
 
-		// 
+		//
 		// dx: next h values
 		// delta = Matrix.mult(Jinv, error);
 		// // x += dx
@@ -195,11 +195,11 @@ var newError = this.sampsonsFromHColumn(he,pointsA,pointsB);
 if(newError<err){
 	//console.log("GOTO NEXT: "+newError+" < "+err);
 	Matrix.add(h, h,delta);
-	lambda *= lambdaScale; // more 
+	lambda *= lambdaScale; // more
 }else{
 	//console.log("BAD, SKIP: "+newError+" > "+err);
 	lambda /= lambdaScale; // less
-}		
+}
 		// next H
 		// delta = Matrix.mult(Jinv, eNow);
 		// Matrix.add(h, h,delta);
@@ -211,11 +211,11 @@ gold standard:
 */
 
 	}
-	// normal:  average error: 0.20110955268203262 
+	// normal:  average error: 0.20110955268203262
 	// sampson: average error: 0.20111007855590562 // way faster convergence
-	H.setFromArray( h.toArray() );
+	H.fromArray( h.toArray() );
 	console.log(H.toString(10));
-	
+
 	// error = ;
 	// sampsonError = ;
 	// epsilon
@@ -240,7 +240,7 @@ Panorama.prototype.sampsonFromCorrespondence = function(h,pointsA,pointsB, k){
 	var JI = Matrix.inverse(JJ);
 	// console.log("inverse J:");
 	// console.log(JI.toString());
-	var Ch = new Matrix(2,1).setFromArray([e.get(k*2+0,0), e.get(k*2+1,0)]);
+	var Ch = new Matrix(2,1).fromArray([e.get(k*2+0,0), e.get(k*2+1,0)]);
 	var Ct = Matrix.transpose(Ch);
 	// console.log("CH COST: ");
 	// console.log(Ch.toString());
@@ -258,7 +258,7 @@ Panorama.prototype.sampsonsFromHColumn = function(h,pointsA,pointsB){
 	return {errors:error};
 }
 Panorama.prototype.locationsFromHColumn = function(h,pointsA,pointsB){
-	var H = new Matrix(3,3).setFromArray(h.toArray());
+	var H = new Matrix(3,3).fromArray(h.toArray());
 	var Hinv = Matrix.inverse(H);
 	var dataLength = pointsA.length*2*2;
 	var results = new Matrix(dataLength,1);
@@ -278,7 +278,7 @@ Panorama.prototype.locationsFromHColumn = function(h,pointsA,pointsB){
 	return {points:results};
 }
 Panorama.prototype.absoluteErrorFromHColumn = function(h,pointsA,pointsB){
-	var H = new Matrix(3,3).setFromArray(h.toArray());
+	var H = new Matrix(3,3).fromArray(h.toArray());
 	var Hinv = Matrix.inverse(H);
 	var dataLength = pointsA.length*2*2;
 	var error = new Matrix(dataLength,1);
@@ -311,7 +311,7 @@ Panorama.prototype.jacobianDLT = function(h,a,b){ // df(x,y,x',y')/di
 	var A = h.get(0,0), B = h.get(1,0), C = h.get(2,0);
 	var D = h.get(3,0), E = h.get(4,0), F = h.get(5,0);
 	var G = h.get(6,0), H = h.get(7,0), I = h.get(8,0);
-	J.setFromArray([ -b.z*D+b.y*G, -b.z*E+b.y*H, 0, a.x*G+a.y*H+a.z*I,   b.z*A-b.x*G, b.z*B-b.x*H, -a.x*G-a.y*H-a.z*I, 0 ]);
+	J.fromArray([ -b.z*D+b.y*G, -b.z*E+b.y*H, 0, a.x*G+a.y*H+a.z*I,   b.z*A-b.x*G, b.z*B-b.x*H, -a.x*G-a.y*H-a.z*I, 0 ]);
 	// 3rd row?
 	return J;
 }
@@ -344,7 +344,7 @@ Panorama.prototype.directLinearTransformH = function(){
 	var S = svd.S;
 	var V = svd.V;
 	x = V.getCol(8); // last column = min(sigma)
-	H = new Matrix(3,3).setFromArray([x.get(0,0),x.get(1,0),x.get(2,0), x.get(3,0),x.get(4,0),x.get(5,0), x.get(6,0),x.get(7,0),x.get(8,0)]);
+	H = new Matrix(3,3).fromArray([x.get(0,0),x.get(1,0),x.get(2,0), x.get(3,0),x.get(4,0),x.get(5,0), x.get(6,0),x.get(7,0),x.get(8,0)]);
 	// H := inv(T')*H*T
 	// H = Matrix.mult(H,pointAT);
 	// H = Matrix.mult(pointBinvT,H);
@@ -363,13 +363,13 @@ Panorama.prototype.sampsonError = function(){
 	// maximum likelyhood estimation of H
 }
 Panorama.prototype.x = function(){
-	// 
+	//
 }
 /*
 gold standard algorithm
 
 error/cost functions:
-* algebraic - difference from zero of: Ht = 0 
+* algebraic - difference from zero of: Ht = 0
 * geometric - distance from image points
 * reprojection
 * comparison

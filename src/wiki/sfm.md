@@ -26,7 +26,7 @@
 Computer Vision
 - Structure From Motion
 - 3D Reconstruction
-- ...
+- Multiple View Geometry
 
 
 

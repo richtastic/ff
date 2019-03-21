@@ -63,7 +63,7 @@ Stage.prototype.time = function(){
 Stage.prototype.setCursorStyle = function(style){
 	this._canvas.setCursorStyle(style);
 }
-// ------------------------------------------------------------------------------------------------------------------------ 
+// ------------------------------------------------------------------------------------------------------------------------
 Stage.prototype.alertAll = function(str,obj){
 	//console.log(Stage._.alertAll)
 	Stage._.alertAll.call(this,str,obj);
@@ -167,7 +167,7 @@ Stage.prototype.getImageAsFloatRGB = function(originalImage, expand){
 	var doImage = new DOImage(originalImage);
 	dat = this.getDOAsARGB(doImage, wid,hei);
 	img = new ImageMat(wid,hei);
-	img.setFromArrayARGB(dat);
+	img.fromArrayARGB(dat);
 	var red = img.getRedFloat();
 	var grn = img.getGrnFloat();
 	var blu = img.getBluFloat();
@@ -184,7 +184,7 @@ Stage.prototype.getImageAsFloatRGBA = function(originalImage, expand){
 	var doImage = new DOImage(originalImage);
 	dat = this.getDOAsARGB(doImage, wid,hei);
 	img = new ImageMat(wid,hei);
-	img.setFromArrayARGB(dat);
+	img.fromArrayARGB(dat);
 	var red = img.getRedFloat();
 	var grn = img.getGrnFloat();
 	var blu = img.getBluFloat();
@@ -237,7 +237,7 @@ Stage.prototype.textureBase2FromImage = function(texture, onLoadFxn){
 	return {"texture":texture,"width":horz,"height":vert};
 }
 
-Stage.prototype.renderImage = function(wid,hei,obj, matrix, type, onloadFxn){ // get a base-64(src) image from OBJ 
+Stage.prototype.renderImage = function(wid,hei,obj, matrix, type, onloadFxn){ // get a base-64(src) image from OBJ
 	this._setupRenderCanvas(wid,hei, matrix);
 	obj.render(this._renderCanvas);
 	return this._toImage(wid,hei, type, onloadFxn);
@@ -256,7 +256,7 @@ Stage.prototype._setupRenderCanvas = function(wid,hei,matrix){
 	if(matrix){
 		upMatrix.mult(upMatrix,matrix); // AFTER?
 	}
-	this._renderCanvas.contextTransform(upMatrix); 
+	this._renderCanvas.contextTransform(upMatrix);
 }
 Stage.prototype._toImage = function(wid,hei, type, onloadFxn){
 	var image = new Image();
@@ -391,7 +391,7 @@ Stage.prototype.canvasMouseEventPropagate = function(eventName,eventData){ // PO
 // console.log(" hierarchy: \n");
 // this._root.print();
 // console.log(" \n");
-	
+
 	if(list){ // OUTSIDE ALERTING
 		for(var i=0;i<list.length;++i){
 			item = list[i];
@@ -422,7 +422,7 @@ Stage.prototype.canvasMouseEventPropagate = function(eventName,eventData){ // PO
 			obj = obj.parent();
 		}
 		cum.identity();
-		while(path.length>0){ // run path 
+		while(path.length>0){ // run path
 			obj = path.pop();
 			cum.mult(cum,obj.matrix());
 			evtObj = Stage._objectFrom(intersection, cum, pos, eventData);
@@ -513,5 +513,3 @@ this._mouseOver = false;
 // var can = this._tempCanvas.getCanvas();
 // document.body.appendChild(can);
 // can.style.position="absolute"; can.style.left="0px"; can.style.top="300px";
-
-

@@ -39,7 +39,7 @@ Conic2D.prototype.handleLoaded = function(){
 	var d = 3.0; // x*z | x
 	var e = -1.0; // y*z | y
 	var f = -1.0; // z*z | c
-	C.setFromArray([a,b*0.5,d*0.5, b*0.5,c,e*0.5, d*0.5,e*0.5,f]);
+	C.fromArray([a,b*0.5,d*0.5, b*0.5,c,e*0.5, d*0.5,e*0.5,f]);
 	console.log( a+", "+b+", "+c+", "+d+", "+e+", "+f);
 	console.log( C.toString() );
 
@@ -56,9 +56,9 @@ Conic2D.prototype.handleLoaded = function(){
 			//var q = new V3D();
 			//C.multV3DtoV3D(q,p);
 			//q.homo();
-			//x.setFromArray([p.x,p.y,p.z]);
-			x.setFromArray([p.x,p.y,p.z]);
-			y.setFromArray([p.x,p.y,p.z]);
+			//x.fromArray([p.x,p.y,p.z]);
+			x.fromArray([p.x,p.y,p.z]);
+			y.fromArray([p.x,p.y,p.z]);
 			v = Matrix.mult(y,Matrix.mult(C,x));
 			val = v.get(0,0);
 			minVal = Math.min(minVal,val);
@@ -94,7 +94,7 @@ console.log(p.toString()+" -> "+q.toString())
 	//d.matrix().translate(wid,0);
 	this._root.addChild(d);
 	console.log(".........");
-	
+
 console.log(minVal)
 
 	/*
@@ -112,7 +112,3 @@ console.log(minVal)
 Conic2D.prototype.handleEnterFrame = function(e){
 	//console.log(e);
 }
-
-
-
-

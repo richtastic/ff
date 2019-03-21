@@ -15,7 +15,7 @@ Recon2D.pointFromLineIntersection = function(lineA,lineB){
 	return point;
 }
 
-Recon2D.lineFromPointJoin = function(pointA,pointB){ // 
+Recon2D.lineFromPointJoin = function(pointA,pointB){ //
 	var line = new V3D();
 	return line;
 }
@@ -41,7 +41,7 @@ Recon2D.lineTangentToConicPoint = function(point,conic){ // l = C * x
 }
 
 Recon2D.pointFromConicTangentLine = function(line,conic){ // x = inv(C) * l
-	// 
+	//
 }
 
 Recon2D.isLineOnDualOfConic = function(line,conic){
@@ -103,7 +103,7 @@ Conic2D.prototype.setFromMatrix = function(matrix){
 	this._f = matrix.get(2,2);
 }
 Conic2D.prototype.matrix = function(){
-	return new Matrix(3,3).setFromArray([a,0.5*b,0.5*d, 0.5*b,c,0.5*e, 0.5*d,0.5*e,f]);
+	return new Matrix(3,3).fromArray([a,0.5*b,0.5*d, 0.5*b,c,0.5*e, 0.5*d,0.5*e,f]);
 }
 Conic2D.prototype.dualMatrix = function(){
 	var matrix = Matrix.inverse(this.matrix());
@@ -125,5 +125,3 @@ Conic2D.fromDualConic = function(dual){
 	var conic = new Conic2D().setFromMatrix(matrix);
 }
 */
-
-

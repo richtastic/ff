@@ -198,14 +198,20 @@ function V3D(xP,yP,zP){
 	// }
 }
 Code.inheritClass(V3D, V2D);
-V3D.prototype.saveToYAML = function(yaml){
-	var DATA = V3D.YAML;
-	yaml.writeNumber(DATA.X, this.x);
-	yaml.writeNumber(DATA.Y, this.y);
-	yaml.writeNumber(DATA.Z, this.z);
+V3D.prototype.toYAML = function(yaml){
+	var obj = this.toObject();
+	yaml.writeObjectLiteral(obj);
 	return this;
 }
-V3D.prototype.loadFromObject = function(obj){
+V3D.prototype.toObject = function(){
+	var DATA = V3D.YAML;
+	var object = {};
+	object[DATA.X] = this.x;
+	object[DATA.Y] = this.y;
+	object[DATA.Z] = this.z;
+	return object;
+}
+V3D.prototype.fromObject = function(obj){
 	var DATA = V3D.YAML;
 	this.set(obj[DATA.X],obj[DATA.Y],obj[DATA.Z]);
 	return this;
@@ -226,9 +232,6 @@ V3D.prototype.set = function(xV,yV,zV){
 		this.x = xV; this.y = yV; this.z = zV;
 	}
 	return this;
-}
-V3D.prototype.setFromArray = function(a){
-	throw "not this";
 }
 V3D.prototype.fromArray = function(a){
 	this.set(a[0],a[1],a[2]);

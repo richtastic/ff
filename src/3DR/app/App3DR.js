@@ -89,7 +89,7 @@ var modeModelReconstruction = false;
 
 // don't A:
 // TO SWITCH ON MODELING:
-modeModelReconstruction = true;
+// modeModelReconstruction = true;
 
 
 
@@ -521,7 +521,7 @@ yaml.writeArrayStart("cameras");
 	yaml.writeObjectStart();
 		yaml.writeString("id","0");
 		yaml.writeObjectStart("K");
-			K.saveToYAML(yaml);
+			K.toYAML(yaml);
 		yaml.writeObjectEnd();
 	yaml.writeObjectEnd();
 yaml.writeArrayEnd();
@@ -532,14 +532,14 @@ yaml.writeArrayStart("views");
 		yaml.writeString("id","R04ZYF8K");
 		yaml.writeString("camera","0");
 		yaml.writeObjectStart("transform");
-			camIdentity.saveToYAML(yaml);
+			camIdentity.toYAML(yaml);
 		yaml.writeObjectEnd();
 	yaml.writeObjectEnd();
 	yaml.writeObjectStart();
 		yaml.writeString("id","UB2GL8EB");
 		yaml.writeString("camera","0");
 		yaml.writeObjectStart("transform");
-			camAtoB.saveToYAML(yaml);
+			camAtoB.toYAML(yaml);
 		yaml.writeObjectEnd();
 	yaml.writeObjectEnd();
 yaml.writeArrayEnd();
@@ -1346,7 +1346,7 @@ App3DR.App.MatchCompare.prototype.calculateF = function(log){
 	var Fnorm = R3D.fundamentalNormalize(F, Matrix.transform2DScale(Matrix.transform2DIdentity(),1.0/widA,1.0/heiA), Matrix.transform2DScale(Matrix.transform2DIdentity(),1.0/widB,1.0/heiB));
 	var yaml = new YAML();
 	yaml.writeObjectStart("F");
-		Fnorm.saveToYAML(yaml);
+		Fnorm.toYAML(yaml);
 	yaml.writeObjectEnd();
 	var str = yaml.toString();
 	var Finv = R3D.fundamentalInverse(F);
@@ -6069,7 +6069,7 @@ App3DR.ProjectManager.prototype.setFromYAML = function(object){
 	this._tracksFilename = Code.valueOrDefault(tracks, null);
 	this._trackCount = Code.valueOrDefault(trackCount, null);
 }
-App3DR.ProjectManager.prototype.saveToYAML = function(){
+App3DR.ProjectManager.prototype.toYAML = function(){
 	var modified = Code.getTimeStampFromMilliseconds();
 	this._modifiedTimestamp = modified;
 	var i, len;
@@ -6087,7 +6087,7 @@ App3DR.ProjectManager.prototype.saveToYAML = function(){
 		for(i=0; i<len; ++i){
 			var view = this._views[i];
 			yaml.writeObjectStart();
-				view.saveToYAML(yaml);
+				view.toYAML(yaml);
 			yaml.writeObjectEnd();
 		}
 		yaml.writeArrayEnd();
@@ -6100,7 +6100,7 @@ App3DR.ProjectManager.prototype.saveToYAML = function(){
 		for(i=0; i<len; ++i){
 			var pair = this._pairs[i];
 			yaml.writeObjectStart();
-				pair.saveToYAML(yaml);
+				pair.toYAML(yaml);
 			yaml.writeObjectEnd();
 		}
 		yaml.writeArrayEnd();
@@ -6113,7 +6113,7 @@ App3DR.ProjectManager.prototype.saveToYAML = function(){
 		for(i=0; i<len; ++i){
 			var triple = this._triples[i];
 			yaml.writeObjectStart();
-				triple.saveToYAML(yaml);
+				triple.toYAML(yaml);
 			yaml.writeObjectEnd();
 		}
 		yaml.writeArrayEnd();
@@ -6127,7 +6127,7 @@ App3DR.ProjectManager.prototype.saveToYAML = function(){
 			var camera = this._cameras[i];
 			console.log(camera);
 			yaml.writeObjectStart();
-				camera.saveToYAML(yaml);
+				camera.toYAML(yaml);
 			yaml.writeObjectEnd();
 		}
 		yaml.writeArrayEnd();
@@ -6169,7 +6169,7 @@ App3DR.ProjectManager.prototype.loadProjectFile = function(){
 App3DR.ProjectManager.prototype.saveProjectFile = function(){
 	console.log("saveProjectFile");
 	this._operation = App3DR.ProjectManager.OPERATION_SAVE_PROJECT;
-	var str = this.saveToYAML();
+	var str = this.toYAML();
 	var binary = Code.stringToBinary(str);
 	this.addOperation("SET", {"path":this.infoPath(),"data":binary}, this._saveProjectCallback, this, null);
 }
@@ -6542,7 +6542,7 @@ App3DR.ProjectManager.prototype._backgroundTaskTick = function(){
 }
 App3DR.ProjectManager.prototype.checkPerformNextTask = function(){
 // don't 1 - run
-return;
+// return;
 console.log("checkPerformNextTask");
 	this.pauseBackgroundTasks();
 	this._taskBusy = true;
@@ -7638,7 +7638,7 @@ console.log(""+relativeAtoB);
 		yaml.writeObjectStart();
 			yaml.writeString("id",view.id());
 			yaml.writeObjectStart("R");
-				transform.saveToYAML(yaml);
+				transform.toYAML(yaml);
 			yaml.writeObjectEnd();
 		yaml.writeObjectEnd();
 	}
@@ -7750,7 +7750,7 @@ return;
 			yaml.writeString("id", cam["id"]);
 			yaml.writeObjectStart("K");
 				K = Matrix.loadFromObject(cam["K"]);
-				var K = K.saveToYAML(yaml);
+				var K = K.toYAML(yaml);
 			yaml.writeObjectEnd();
 			yaml.writeObjectStart("distortion");
 				var distortion = cam["distortion"];
@@ -7831,7 +7831,7 @@ return;
 			yaml.writeObjectEnd();
 			yaml.writeNumber("cellSize",cellSize);
 			yaml.writeObjectStart("transform");
-				transform.saveToYAML(yaml);
+				transform.toYAML(yaml);
 			yaml.writeObjectEnd();
 		yaml.writeObjectEnd();
 	}
@@ -8836,7 +8836,38 @@ App3DR.ProjectManager.prototype.calculateBundleAdjustTriple = function(viewAIn,v
 		triple.setTFT(TFT);
 		triple.setTFTInfo(meanTFT,sigmaTFT);
 		triple.setRelativeCount(pointCount);
-
+		// get all relative transforms:
+		var relatives = [];
+			var vs = [viewA,viewB,viewC];
+			for(var i=0; i<vs.length; ++i){
+				var vA = vs[i];
+				for(var j=i+1; j<vs.length; ++j){
+					var vB = vs[j];
+					var transform = world.transformFromViews(vA,vB);
+					var errorRSigma = transform.rSigma();
+					var errorRMean = transform.rMean();
+					var errorFSigma = transform.fSigma();
+					var errorFMean = transform.fMean();
+					var matchCount = transform.matchCount();
+					// ..
+					var F = transform.F(vA,vB);
+					var R = transform.R(vA,vB);
+					var r = {
+						"A": vA.data(),
+						"B": vB.data(),
+						"relativeCount": matchCount,
+						"errorFMean": errorFMean,
+						"errorFSigma": errorFSigma,
+						"errorRMean": errorRMean,
+						"errorRSigma": errorRSigma,
+						"R": R,
+						"F": F,
+					};
+					relatives.push(r);
+				}
+			}
+			triple.setRelativeTransforms(relatives);
+		console.log(triple);
 		// relative file
 		var str = world.toYAMLString();
 		project.saveTripleRelative(triple, str, saveTripleCompleted, project);
@@ -9829,7 +9860,7 @@ App3DR.ProjectManager.prototype._matchesToYAML = function(matches, F, viewA, vie
 // 		var Fnorm = F.copy();
 // 			Fnorm = Matrix.mult(Fnorm, Matrix.transform2DScale(Matrix.transform2DIdentity(),1.0/widA,1.0/heiA));
 // 			Fnorm = Matrix.mult(Matrix.transform2DScale(Matrix.transform2DIdentity(),1.0/widB,1.0/heiB), Fnorm);
-// 		Fnorm.saveToYAML(yaml);
+// 		Fnorm.toYAML(yaml);
 // 	yaml.writeObjectEnd();
 // 	yaml.writeNumber("count", matches.length);
 // 	yaml.writeArrayStart("matches");
@@ -10064,7 +10095,7 @@ App3DR.ProjectManager.View.prototype.temp = function(t){
 App3DR.ProjectManager.View.prototype.hasFeatures = function(){
 	return this._featureInfo != null;
 }
-App3DR.ProjectManager.View.prototype.saveToYAML = function(yaml){
+App3DR.ProjectManager.View.prototype.toYAML = function(yaml){
 	var i, len;
 	yaml.writeString("title", this._title);
 	yaml.writeString("directory", this._directory);
@@ -10612,7 +10643,7 @@ App3DR.ProjectManager.Pair.prototype.hasRelative = function(){
 App3DR.ProjectManager.Pair.prototype.hasTracks = function(){
 	return this._trackCount !== null && this._trackCount >= 0;
 }
-App3DR.ProjectManager.Pair.prototype.saveToYAML = function(yaml){
+App3DR.ProjectManager.Pair.prototype.toYAML = function(yaml){
 	yaml.writeString("directory", this._directory);
 	yaml.writeString("viewA", this._viewAID);
 	yaml.writeString("viewB", this._viewBID);
@@ -10626,7 +10657,7 @@ App3DR.ProjectManager.Pair.prototype.saveToYAML = function(yaml){
 	var F = this._F;
 	if(F){
 		yaml.writeObjectStart("F");
-			F.saveToYAML(yaml);
+			F.toYAML(yaml);
 		yaml.writeObjectEnd();
 	}else{
 		yaml.writeNumber("F", null);
@@ -10634,7 +10665,7 @@ App3DR.ProjectManager.Pair.prototype.saveToYAML = function(yaml){
 	var R = this._R;
 	if(R){
 		yaml.writeObjectStart("R");
-			R.saveToYAML(yaml);
+			R.toYAML(yaml);
 		yaml.writeObjectEnd();
 	}else{
 		yaml.writeNumber("R", null);
@@ -10724,10 +10755,7 @@ App3DR.ProjectManager.Triple = function(manager, directory, viewA, viewB, viewC)
 	this._viewBID = viewB;
 	this._viewCID = viewC;
 	this._relativeScales = null;
-	// MATCHING - 2D
-	// this._matchFeatureCount = null; // NOT USED
-	// this._matchFeatureScore = null;
-	// this._matchingData = null; // NOT USED
+	// MATCHING - 2D -- not used
 	// RELATIVE - 3D
 	this._relativeCount = null;
 	this._relativeData = null;
@@ -10756,9 +10784,6 @@ App3DR.ProjectManager.Triple.prototype.directory = function(){
 App3DR.ProjectManager.Triple.prototype.id = function(){
 	return this.directory();
 }
-// App3DR.ProjectManager.Triple.prototype.setMatchInfo = function(count){
-// 	this._matchFeatureCount = count;
-// }
 App3DR.ProjectManager.Triple.prototype.setRelativeCount = function(count){
 	this._relativeCount = count;
 }
@@ -10782,6 +10807,9 @@ App3DR.ProjectManager.Triple.prototype.setTFTInfo = function(mean,sigma){
 	this._TFTerrorMean = mean;
 	this._TFTerrorSigma = sigma;
 }
+App3DR.ProjectManager.Triple.prototype.setRelativeTransforms = function(transforms){
+	this._relativeTransforms = transforms;
+}
 App3DR.ProjectManager.Triple.prototype.isTriple = function(idA,idB,idC){
 	if(idA && idB && idC && this._viewAID && this._viewBID && this._viewCID){
 		if( (idA==this._viewAID && idB==this._viewBID && idC==this._viewCID) ||
@@ -10802,7 +10830,7 @@ App3DR.ProjectManager.Triple.prototype.hasMatch = function(){
 App3DR.ProjectManager.Triple.prototype.hasRelative = function(){
 	return this._relativeCount !== null && this._relativeCount >= 0;
 }
-App3DR.ProjectManager.Triple.prototype.saveToYAML = function(yaml){
+App3DR.ProjectManager.Triple.prototype.toYAML = function(yaml){
 	yaml.writeString("directory", this._directory);
 	yaml.writeString("viewA", this._viewAID);
 	yaml.writeString("viewB", this._viewBID);
@@ -10824,12 +10852,13 @@ App3DR.ProjectManager.Triple.prototype.saveToYAML = function(yaml){
 	var T = this._TFT;
 	if(T){
 		yaml.writeObjectStart("T");
-			T.saveToYAML(yaml);
+			T.toYAML(yaml);
 		yaml.writeObjectEnd();
 	}else{
 		yaml.writeNumber("T", null);
 	}
-
+	// yaml.writeBlank();
+	yaml.writeArrayLiteral("relative", this._relativeTransforms);
 }
 App3DR.ProjectManager.Triple.prototype.readFromObject = function(object){
 	this._directory = object["directory"];
@@ -10847,6 +10876,13 @@ App3DR.ProjectManager.Triple.prototype.readFromObject = function(object){
 	}else{
 		this._TFT = null;
 	}
+	var relative = Code.valueOrDefault(object["relative"], []);;
+	this._relativeTransforms = relative;
+	for(var i=0; i<relative.length; ++i){
+		relative[i]["F"] = new Matrix().fromObject(relative[i]["F"]);
+		relative[i]["R"] = new Matrix().fromObject(relative[i]["R"]);
+	}
+	console.log(this._relativeTransforms);
 }
 App3DR.ProjectManager.Triple.prototype.loadMatchingData = function(callback, context){
 	var object = {};
@@ -10978,7 +11014,7 @@ App3DR.ProjectManager.Camera.prototype.K = function(){
 	return K;
 }
 
-App3DR.ProjectManager.Camera.prototype.saveToYAML = function(yaml){
+App3DR.ProjectManager.Camera.prototype.toYAML = function(yaml){
 	var i, j, len;
 	yaml.writeString("directory", this._directory);
 	yaml.writeString("title", this._title);
@@ -11011,7 +11047,7 @@ App3DR.ProjectManager.Camera.prototype.saveToYAML = function(yaml){
 	for(i=0; i<len; ++i){
 		var image = this._images[i];
 		yaml.writeObjectStart();
-			image.saveToYAML(yaml);
+			image.toYAML(yaml);
 		yaml.writeObjectEnd();
 	}
 	yaml.writeArrayEnd();
@@ -11116,7 +11152,7 @@ App3DR.ProjectManager.Camera.CalibrationImage.prototype.readFromObject = functio
 		}
 	}
 }
-App3DR.ProjectManager.Camera.CalibrationImage.prototype.saveToYAML = function(yaml){
+App3DR.ProjectManager.Camera.CalibrationImage.prototype.toYAML = function(yaml){
 	var i, len;
 	yaml.writeString("directory", this._directory);
 	yaml.writeNumber("matches", this._matchesCount);

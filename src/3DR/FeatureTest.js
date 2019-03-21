@@ -3897,7 +3897,7 @@ for(i=0;i<len;++i){
 
 // FOUND VIA MANUAL3DR
 var F = fundamental;
-var K = new Matrix(3,3).setFromArray([3.7610E+2, -4.3992E-1, 2.0162E+2, 0.0000E+0, 3.7674E+2, 1.5226E+2, 0.0000E+0, 0.0000E+0, 1.0000E+0]);
+var K = new Matrix(3,3).fromArray([3.7610E+2, -4.3992E-1, 2.0162E+2, 0.0000E+0, 3.7674E+2, 1.5226E+2, 0.0000E+0, 0.0000E+0, 1.0000E+0]);
 var Kt = Matrix.transpose(K);
 var E = Matrix.mult(Kt,Matrix.mult(F,K));
 //fundamental = E;

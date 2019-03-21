@@ -40,7 +40,7 @@ MLSField.prototype.preCalculations = function(){
 		// 	--len;
 		// 	--i;
 		// }
-		
+
 	} // record bivariate coefficients?
 }
 MLSField.prototype.maxCurvatureInSphere = function(center, radius){ // maximum curvature = minimum arc length
@@ -67,7 +67,7 @@ MLSField.prototype.idealEdgeLengthAtPoint = function(p){
 	console.log(closest);
 	return this._rho/closest.curvature();
 }
-MLSField.prototype.minimumInSphere = function(center, radius){ 
+MLSField.prototype.minimumInSphere = function(center, radius){
 	return this._rho/this.maxCurvatureInSphere(center, radius);
 }
 MLSField.prototype.rho = function(rho){
@@ -136,7 +136,7 @@ closestPoint = MLSField.sortMLSPoint(closestPoint);
 	reverse.multV3D(dirMax,dirMax);
 	reverse.multV3D(dirNorm,dirNorm);
 	dirMin.sub(zero); dirMax.sub(zero); dirNorm.sub(zero);
-	// 
+	//
 	return {min:curvatures.min, max:curvatures.max, directionMin:dirMin, directionMax:dirMax, point:projectedPoint, normal:dirNorm, length:idealLength};
 }
 MLSField.prototype.neighborhoodPoints = function(p,k){ // find k nearest neighbors
@@ -185,7 +185,7 @@ var weightSum = 0;
 		E += w*dy*dy; F += w*dy*dz; I += w*dz*dz;
 		weightSum += w;
 	}
-	var cov = new Matrix(3,3).setFromArray([A,B,C, B,E,F, C,F,I]);
+	var cov = new Matrix(3,3).fromArray([A,B,C, B,E,F, C,F,I]);
 //	cov.scale(1/weightSum); // unnecessary
 //console.log(cov)
 	var eig = Matrix.eigenValuesAndVectors(cov);
@@ -243,10 +243,3 @@ MLSField.transformMatricesFromSpaceToPlane = function(forward,reverse, origin, n
 	reverse.translate(origin.x,origin.y,origin.z);
 	return {forward:forward, reverse:reverse};
 }
-
-
-
-
-
-
-

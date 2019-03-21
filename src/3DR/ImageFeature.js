@@ -35,7 +35,7 @@ function ImageFeature(x,y,scale,ssValue, matrix){
 	// this._colorBase = new ColorFloat();
 	// this._colorGradient = new ColorGradient(); // R,G,B,A -inf,+inf
 }
-ImageFeature.prototype.saveToYAML = function(yaml){
+ImageFeature.prototype.toYAML = function(yaml){
 	var DATA = ImageFeature.YAML;
 	yaml.writeNumber(DATA.X, this._x );
 	yaml.writeNumber(DATA.Y, this._y );

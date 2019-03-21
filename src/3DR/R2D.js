@@ -1,13 +1,13 @@
 // R2D.js
 
 function R2D(){
-	// 
+	//
 	this.simulatePoints();
 }
 R2D.prototype.simulatePoints = function(){
 	var fieldOfView = 90*(Math.PI/180);
 	var focalLength = 1.0;
-	// 
+	//
 	var points2D = new Array();
 	points2D.push( new V2D(-3,3) );
 	points2D.push( new V2D(-1,4) );
@@ -17,7 +17,7 @@ R2D.prototype.simulatePoints = function(){
 	points2D.push( new V2D(3,5) );
 	points2D.push( new V2D(4,4) );
 	points2D.push( new V2D(5,3) );
-	// 
+	//
 	var cams2D = new Array();
 	cams2D.push( new Cam2D(0,0, 0*Math.PI, focalLength,fieldOfView) );
 	cams2D.push( new Cam2D(3,0, 0*Math.PI, focalLength,fieldOfView) );
@@ -97,7 +97,7 @@ R2D.prototype.simulatePoints = function(){
 			}
 			A = new Matrix(A.length,6).setFromArrayMatrix(A);
 			b = new Array(0,0,0,0,0,0);
-			b = new Matrix(6,1).setFromArray(b);
+			b = new Matrix(6,1).fromArray(b);
 			console.log(A.toString());
 			console.log(b.toString());
 			//x = Matrix.solve(A,b);

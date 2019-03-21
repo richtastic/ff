@@ -118,7 +118,7 @@ Match.prototype.saveDescriptorToYAML = function(descriptor, yaml){
 	yaml.startWrite();
 	yaml.writeComment("Match: "+descriptor.imageFileName());
 	yaml.writeObjectStart("descriptor");
-		descriptor.saveToYAML(yaml);
+		descriptor.toYAML(yaml);
 	yaml.writeObjectEnd();
 	var str = yaml.toString();
 	return yaml;

@@ -38,7 +38,7 @@ console.log(e.images.length)
 		widths.push(img.width);
 		heights.push(img.height);
 	}
-	// 
+	//
 	var points = [];
 	points.push([new V2D(234,9), new V2D(199,293)]);
 	points.push([new V2D(342,42), new V2D(82,249)]);
@@ -86,16 +86,16 @@ console.log(e.images.length)
 	var transformTo = R3D.normalizePoints2D(pointsTo,pointsToNormalized,null);
 	var pointsFrNormalized = [];
 	var transformFr = R3D.normalizePoints2D(pointsFr,pointsFrNormalized,null);
-	// 
+	//
 	H = R3D.projectiveDLT(pointsFrNormalized,pointsToNormalized);
-	// 
+	//
 	transformToInverse = new Matrix2D().inverse(transformTo);
 	transformFrInverse = new Matrix2D().inverse(transformFr);
 	// convert to Matrix from Matrix2D
-	transformTo = new Matrix(3,3).setFromArray(transformTo.toArray());
-	transformFr = new Matrix(3,3).setFromArray(transformFr.toArray());
-	transformToInverse = new Matrix(3,3).setFromArray(transformToInverse.toArray());
-	transformFrInverse = new Matrix(3,3).setFromArray(transformFrInverse.toArray());
+	transformTo = new Matrix(3,3).fromArray(transformTo.toArray());
+	transformFr = new Matrix(3,3).fromArray(transformFr.toArray());
+	transformToInverse = new Matrix(3,3).fromArray(transformToInverse.toArray());
+	transformFrInverse = new Matrix(3,3).fromArray(transformFrInverse.toArray());
 	// denormalize
 	H = Matrix.mult(H,transformFr);
 	H = Matrix.mult(transformToInverse,H);
@@ -130,7 +130,3 @@ console.log(e.images.length)
 DLT2D.prototype.handleEnterFrame = function(e){
 	//console.log(e);
 }
-
-
-
-

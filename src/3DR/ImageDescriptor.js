@@ -71,7 +71,7 @@ ImageDescriptor.prototype.blueFlat = function(){
 ImageDescriptor.prototype.grayFlat = function(){
 	return this._flatGry;
 }
-ImageDescriptor.prototype.saveToYAML = function(yaml){
+ImageDescriptor.prototype.toYAML = function(yaml){
 	var i, len, feature, DATA = ImageDescriptor.YAML;
 	yaml.writeString(DATA.FILENAME,this._filename);
 	yaml.writeString(DATA.CREATED,""+Code.getTimeStamp());
@@ -80,7 +80,7 @@ ImageDescriptor.prototype.saveToYAML = function(yaml){
 		for(i=0;i<len;++i){
 			feature = this._features[i];
 			yaml.writeObjectStart();
-				feature.saveToYAML(yaml);
+				feature.toYAML(yaml);
 			yaml.writeObjectEnd();
 		}
 	yaml.writeArrayEnd();
@@ -141,7 +141,7 @@ var images = [];
 	var gaussSizeBase = 5;
 	var gaussSizeIncrement = 1.5;
 	var gauss1D, gaussSize;
-	var currentWid = Math.round(startScale*wid), currentHei = Math.round(startScale*hei); //  first double size of image for +sized 
+	var currentWid = Math.round(startScale*wid), currentHei = Math.round(startScale*hei); //  first double size of image for +sized
 	var currentImage = ImageMat.extractRect(sourceImageData, 0,0, wid-1,0, wid-1,hei-1, 0,hei-1, currentWid,currentHei, wid,hei);
 	var prevImage, nextImage, nextWid, nextHei, dog, img, ext, sig, padding, tmp;
 	var temp = new Array();
@@ -159,7 +159,7 @@ tmp = ImageMat.padFloat(currentImage, currentWid,currentHei, padding,padding,pad
 tmp = ImageMat.gaussian2DFrom1DFloat(tmp, currentWid+2.0*padding,currentHei+2.0*padding, gauss1D);
 currentImage = ImageMat.unpadFloat(tmp, currentWid+2.0*padding,currentHei+2.0*padding, padding,padding,padding,padding);
 
-	
+
 
 var _vizWid = Math.floor(currentWid/Math.pow(2,totalOctaves));
 var _vizHei = Math.floor(currentHei/Math.pow(2,totalOctaves));
@@ -183,7 +183,7 @@ var _vizMaxScale = ImageMat.newZeroFloat(_vizWid,_vizHei);
 //sig = sigma*Math.pow(2, j/scalesPerOctave );
 //sig = sigma*Math.pow(2, j/(scalesPerOctave-1) );
 //sig = sigma*Math.pow(2.0,j/kConstant);// ok
-sig = sigma*Math.pow(2,j); // 
+sig = sigma*Math.pow(2,j); //
 //sig = sigma*Math.pow(kConstant,j);
 //sig = sigma*Math.pow(2.0*kConstant,j);
 //sig = sigma*Math.pow(2.0,j/scalesPerOctave); // no results
@@ -199,7 +199,7 @@ sig = sigma*Math.pow(2,j); //
 			// difference of images
 			//dog = ImageMat.subFloat(currentImage, nextImage);
 			dog = ImageMat.subFloat(nextImage,prevImage);
-//dog = ImageMat.gaussian2DFrom1DFloat(dog, currentWid,currentHei, gauss1D);			
+//dog = ImageMat.gaussian2DFrom1DFloat(dog, currentWid,currentHei, gauss1D);
 //ImageMat.normalFloat01(dog);
 			dogList.push(dog);
 
@@ -307,7 +307,7 @@ ss = prevImage; // ss is blurry
 	for(i=0;i<temp.length;++i){
 		var s = Math.pow(temp[i].z,0.5);
 		// too close to edge
-		// 
+		//
 		// low contrast
 		rangeSize = Math.floor(featureImageSizeBase*s*sigma);
 		win = this.getScaleSpacePoint(temp[i].x,temp[i].y,temp[i].z,null, rangeSize,rangeSize, null);
@@ -316,7 +316,7 @@ ss = prevImage; // ss is blurry
 			Code.removeElementAtSimple(temp,i);
 			--i; continue;
 		}
-		// 
+		//
 		//win = this.getScaleSpacePoint(temp[i].x,temp[i].y,temp[i].z,null, winSize,winSize, null); // zoom in
 		//win = ImageMat.gaussian2DFrom1DFloat(win, winSize,winSize, gauss1D); // gaussian
 		Lxx = ImageMat.secondDerivativeX(win,winSize,winSize, center,center);
@@ -341,7 +341,7 @@ ss = prevImage; // ss is blurry
 	}
 	console.log(" contrast/SMM count: "+temp.length);
 	// sort on extrema value
-	temp.sort(function(a,b){ if(a.t<b.t){return 1;}else if(a.t>b.t){return -1;} return 0; }); // 
+	temp.sort(function(a,b){ if(a.t<b.t){return 1;}else if(a.t>b.t){return -1;} return 0; }); //
 	len = temp.length;
 	//len = Math.min(temp.length,300);
 	for(i=0;i<len;++i){
@@ -492,7 +492,7 @@ gray = ImageMat.gaussian2DFrom1DFloat(gray, wid,hei, gaussWin);
 			peaks.push(peak);
 		}
 	}
-	
+
 	// for(i=0;i<peaks.length;++i){
 	// 	var peak = peaks[i];
 	// 	console.log(peak.value);
@@ -534,7 +534,7 @@ console.log(pt.toString());
 }catch(e){
 	console.log(e);
 }finally{
-	// 
+	//
 }
 	}
 // drop low-contrast points
@@ -563,7 +563,7 @@ ImageDescriptor.prototype.describeFeatures = function(){ // features are now ful
 // 		}
 // 	}
 // }
-ImageDescriptor.prototype.dropNonUniqueFeatures = function(){ 
+ImageDescriptor.prototype.dropNonUniqueFeatures = function(){
 	var matcher = new ImageMatcher();
 	matcher.matchDescriptors(this,this);
 	var i, j;
@@ -677,9 +677,9 @@ images.push(d4);
 	// want: global maxima that:
 	// has only a [single - tricky with noise...] peak, that is NOT the ends
 	// OR ditto minima
-	// can look at relative intensities for peak: walk the value left/rigth until there is another peak and record the difference in VALUE or in POINTS 
+	// can look at relative intensities for peak: walk the value left/rigth until there is another peak and record the difference in VALUE or in POINTS
 	// can exclude start/end points of first loop - that seems to tbe where the most noise is
-	// diffs: 0.00015, 0.002, 0.003, 
+	// diffs: 0.00015, 0.002, 0.003,
 	for(i=1;i<values.length;++i){
 		if(values[i]>max){
 			max = values[i];
@@ -825,7 +825,7 @@ ImageDescriptor.prototype.detectPoint1 = function(inPoint){
  		//val = this.getClosestHarrisMaxima(W,winWid,winHei, sigmaI, sigmaD);
 		// 6. compute u_i_k = [u(x_w_k,sI,sD)]^(-1/2)
 		u = this.getMewFromWin(W,winWid,winHei, sigmaI, sigmaD);
-		// 7. concatenate transformation U_k = u_i_k * U_k-1 and normalize U_k to lambaMax(U_k) = 
+		// 7. concatenate transformation U_k = u_i_k * U_k-1 and normalize U_k to lambaMax(U_k) =
 		val = this.getAffineIncrementFromMew(u,transform, decay,decayRate, eigenList);
 		transform = val.affine;
 		decay = val.decay;
@@ -939,7 +939,7 @@ octave2 += "hold on;\n";
 // 		}
 		// 6. compute u_i_k = [u(x_w_k,sI,sD)]^(-1/2)
 		u = this.getMewFromWin(W,winWid,winHei, sigmaI, sigmaD);
-		// 7. concatenate transformation U_k = u_i_k * U_k-1 and normalize U_k to lambaMax(U_k) = 
+		// 7. concatenate transformation U_k = u_i_k * U_k-1 and normalize U_k to lambaMax(U_k) =
 		val = this.getAffineIncrementFromMew(u,transform, decay,decayRate, eigenList);
 if(i>0){
 transform = val.affine;
@@ -1099,8 +1099,8 @@ ImageDescriptor.prototype.getMewFromWin = function(win,winWid,winHei, sigmaI, si
 		return smm;
 	}
 	i = center;
-	smm = [sDD*blurredLxLx[i], sDD*blurredLxLy[i], sDD*blurredLxLy[i], sDD*blurredLyLy[i]]; 
-	var u = (new Matrix(2,2)).setFromArray(smm);
+	smm = [sDD*blurredLxLx[i], sDD*blurredLxLy[i], sDD*blurredLxLy[i], sDD*blurredLyLy[i]];
+	var u = (new Matrix(2,2)).fromArray(smm);
 	return u;
 }
 ImageDescriptor.prototype.getClosestScaleSpaceMaxima = function(x,y,s, transform){
@@ -1177,16 +1177,16 @@ ImageDescriptor.prototype.getClosestScaleSpaceMaxima = function(x,y,s, transform
 	return {offset:o, delta:(o.x!=0&&o.y!=0)};
 }
 /*
-@ sca=0.25: 
+@ sca=0.25:
 @ sca=0.5:  is basically blurred
 @ sca=1.0:  base image
-@ sca=2.0: 
+@ sca=2.0:
 @ sca=4.0: is sub-sapled
 
 
 WHAT DOES SIFT scale space translate to ?
 	- small single point
-	- 
+	-
 
 */
 /* speed up:
@@ -1228,7 +1228,7 @@ ImageDescriptor.prototype.getScaleSpaceInfo = function(x,y,s, transform){ // bas
 		win = Code.subArray2D(win,windowWid,windowHei, cenX-1,cenX+1, cenY-1,cenY+1);
 		Lxx = ImageMat.secondDerivativeX(win, 3,3); // Lxx = ImageMat.secondDerivativeX(win, windowWid,windowHei);
 		Lyy = ImageMat.secondDerivativeY(win, 3,3); // Lyy = ImageMat.secondDerivativeY(win, windowWid,windowHei);
-		Lxy = ImageMat.secondDerivativeXY(win, 3,3); 
+		Lxy = ImageMat.secondDerivativeXY(win, 3,3);
 		// cenX = Math.floor(windowWid*0.5);
 		// cenY = Math.floor(windowHei*0.5);
 		// center = windowWid*cenY + cenX;
@@ -1301,7 +1301,7 @@ ImageDescriptor.prototype.getAffineIncrementFromMew = function(u,transform, scal
 	// non-proportional scaling
 	cum.identity();
 	ang = -angleYMax;
-	rot.setFromArray([Math.cos(ang),Math.sin(ang),0, -Math.sin(ang),Math.cos(ang),0, 0,0,1.0]);
+	rot.fromArray([Math.cos(ang),Math.sin(ang),0, -Math.sin(ang),Math.cos(ang),0, 0,0,1.0]);
 	cum = Matrix.mult(cum,rot);
 	amt = Math.pow(ratio,0.25*scaler); // stable points
 
@@ -1314,10 +1314,10 @@ ImageDescriptor.prototype.getAffineIncrementFromMew = function(u,transform, scal
 
 	//amt = Math.pow(ratio,0.05*scaler);
 	scaler *= decayRate;
-	sca.setFromArray([amt,0,0, 0,1.0,0, 0,0,1.0]);
+	sca.fromArray([amt,0,0, 0,1.0,0, 0,0,1.0]);
 	cum = Matrix.mult(cum,sca);
 	ang = angleYMax;
-	rot.setFromArray([Math.cos(ang),Math.sin(ang),0, -Math.sin(ang),Math.cos(ang),0, 0,0,1.0]);
+	rot.fromArray([Math.cos(ang),Math.sin(ang),0, -Math.sin(ang),Math.cos(ang),0, 0,0,1.0]);
 	cum = Matrix.mult(cum,rot);
 	transform = Matrix.mult(tra,cum);
 	// preoportional scalre restoring
@@ -1325,14 +1325,14 @@ ImageDescriptor.prototype.getAffineIncrementFromMew = function(u,transform, scal
 	//console.log("SEPARATED: "+separation.scaleX+" "+separation.scaleY);
 	if(separation.scaleX<separation.scaleY){
 		amt = 1/separation.scaleX;
-		sca.setFromArray([amt,0,0, 0,1.0,0, 0,0,1]);
+		sca.fromArray([amt,0,0, 0,1.0,0, 0,0,1]);
 	}else{
 		amt = 1/separation.scaleY;
-		sca.setFromArray([1.0,0,0, 0,amt,0, 0,0,1]);
+		sca.fromArray([1.0,0,0, 0,amt,0, 0,0,1]);
 	}
 	amt = 1.0/(separation.scaleX+separation.scaleY)*0.5;
 	//amt = Math.max(1.0/separation.scaleX,1.0/separation.scaleY);
-	sca.setFromArray([amt,0,0, 0,amt,0, 0,0,1]);
+	sca.fromArray([amt,0,0, 0,amt,0, 0,0,1]);
 	transform = Matrix.mult(sca,transform);
 	return {affine:transform, decay:scaler, ratio:ratio, scale:((separation.scaleX+separation.scaleY)*0.5)};
 }
@@ -1435,6 +1435,3 @@ this._bestPoints = ImageMat.newZeroFloat(wid,hei);
 	}
 	this._features = featureList;
 }
-
-
-

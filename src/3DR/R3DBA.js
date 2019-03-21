@@ -3949,12 +3949,12 @@ R3D.BA.World.prototype._outputPair = function(transform){
 	yaml.writeObjectEnd();
 	if(Ffwd){
 		yaml.writeObjectStart("F");
-			Ffwd.saveToYAML(yaml);
+			Ffwd.toYAML(yaml);
 		yaml.writeObjectEnd();
 	}
 	if(Rfwd){
 		yaml.writeObjectStart("R");
-			Rfwd.saveToYAML(yaml);
+			Rfwd.toYAML(yaml);
 		yaml.writeObjectEnd();
 	}
 	yaml.writeNumber("errorRMean",transform.rMean());
@@ -5937,7 +5937,7 @@ R3D.BA.World.prototype.toYAMLString = function(){
 			var K = camera.K();
 			if(K){
 				yaml.writeObjectStart("K");
-				K.saveToYAML(yaml);
+				K.toYAML(yaml);
 				yaml.writeObjectEnd();
 			}
 			var distortion = camera.distortion();
@@ -5972,7 +5972,7 @@ R3D.BA.World.prototype.toYAMLString = function(){
 			var absoluteTransform = view.absoluteTransform();
 			if(absoluteTransform){
 				yaml.writeObjectStart("transform");
-				absoluteTransform.saveToYAML(yaml);
+				absoluteTransform.toYAML(yaml);
 				yaml.writeObjectEnd();
 			}
 			/*

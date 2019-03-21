@@ -22,7 +22,7 @@ Ransac.prototype.handleLoaded = function(e){
 	var i, j, d, x, y, p, len, scale, offX, offY;
 	var svd, coeff, m, b, y, L, A;
 	var points = [];
-	// 
+	//
 	var sigma = 0.1;
 	// inliers
 	for(i=0;i<7;++i){
@@ -93,7 +93,7 @@ Ransac.prototype.handleLoaded = function(e){
 		y = coeff[2]; // deviates from 1
 		m /= y;
 		b /= y;
-		//L = new Matrix(1,2).setFromArray([m,b]);
+		//L = new Matrix(1,2).fromArray([m,b]);
 		// find consensus set
 		consensus = [];
 // sum distances and rate based on inverse of average/total distance?
@@ -129,7 +129,7 @@ this._root.addChild(d);
 			// update max iterations based on known min inliers
 			var pInlier = maxSupport*1.0/len;
 			pOutlier = 1 - pInlier;
-var maxIterations = Math.ceil(Math.log(1.0-pDesired)/Math.log( 1 - Math.pow(pOutlier,minCount) )); 
+var maxIterations = Math.ceil(Math.log(1.0-pDesired)/Math.log( 1 - Math.pow(pOutlier,minCount) ));
 			console.log("NEW MAX: "+maxIterations);
 		}
 
@@ -178,7 +178,3 @@ var maxIterations = Math.ceil(Math.log(1.0-pDesired)/Math.log( 1 - Math.pow(pOut
 Ransac.prototype.handleEnterFrame = function(e){
 	//console.log(e);
 }
-
-
-
-

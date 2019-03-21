@@ -20,15 +20,21 @@ function V4D(xP,yP,zP,tP){
 	// }
 }
 Code.inheritClass(V4D, V3D);
-V4D.prototype.saveToYAML = function(yaml){
-	var DATA = V4D.YAML;
-	yaml.writeNumber(DATA.X, this.x);
-	yaml.writeNumber(DATA.Y, this.y);
-	yaml.writeNumber(DATA.Z, this.z);
-	yaml.writeNumber(DATA.T, this.t);
+V4D.prototype.toYAML = function(yaml){
+	var obj = this.toObject();
+	yaml.writeObjectLiteral(obj);
 	return this;
 }
-V4D.prototype.loadFromObject = function(obj){
+V4D.prototype.toObject = function(){
+	var DATA = V4D.YAML;
+	var object = {};
+	object[DATA.X] = this.x;
+	object[DATA.Y] = this.y;
+	object[DATA.Z] = this.z;
+	object[DATA.T] = this.t;
+	return object;
+}
+V4D.prototype.fromObject = function(obj){
 	var DATA = V4D.YAML;
 	this.set(obj[DATA.X],obj[DATA.Y],obj[DATA.Z],obj[DATA.T]);
 	return this;

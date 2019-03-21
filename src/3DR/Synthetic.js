@@ -40,7 +40,7 @@ Synthetic.prototype.defineCameras = function(){
 		cam = {};
 		cam.width = width;
 		cam.height = height;
-		cam.K = new Matrix(3,3).setFromArray([fx, s, cx,  0.0, fy, cy,  0.0, 0.0, 1.0]);
+		cam.K = new Matrix(3,3).fromArray([fx, s, cx,  0.0, fy, cy,  0.0, 0.0, 1.0]);
 		cam.M = new Matrix(4,4).identity();
 //cam.M = Matrix.transform3DTranslate(cam.M, -0.1, 0.0, 0.0);
 		cam.M = Matrix.transform3DRotateZ(cam.M, Math.TAU/10.0);
@@ -54,7 +54,7 @@ Synthetic.prototype.defineCameras = function(){
 		cam = {};
 		cam.width = width;
 		cam.height = height;
-		cam.K = new Matrix(3,3).setFromArray([fx, s, cx,  0.0, fy, cy,  0.0, 0.0, 1.0]);
+		cam.K = new Matrix(3,3).fromArray([fx, s, cx,  0.0, fy, cy,  0.0, 0.0, 1.0]);
 		cam.M = new Matrix(4,4).identity();
 //cam.M = Matrix.transform3DTranslate(cam.M, -0.5, 0.0, -0.5);
 		cam.M = Matrix.transform3DRotateZ(cam.M, Math.TAU/10.0);
@@ -80,7 +80,7 @@ Synthetic.prototype.generate3DPoints = function(){
 	points3D.push(new V3D(0.0, 1.0, 1.0));
 	points3D.push(new V3D(0.5, 0.0, 1.5)); // roof
 	points3D.push(new V3D(0.5, 1.0, 1.5));
-	// 
+	//
 	this._points3D = points3D;
 }
 Synthetic.prototype.projectPointsTo2D = function(){
@@ -90,7 +90,7 @@ Synthetic.prototype.projectPointsTo2D = function(){
 	for(j=0; j<cams.length; ++j){
 		cam = cams[j];
 		var points2D = [];
-		var M = new Matrix(3,4).setFromArray(cam.M.toArray());
+		var M = new Matrix(3,4).fromArray(cam.M.toArray());
 		var K = cam.K.copy();
 		var P = Matrix.mult( K, M );
 			P.appendRowFromArray([0.0, 0.0, 0.0, 1.0]);
@@ -277,7 +277,7 @@ for(var k=0;k<pointsA.length;++k){
 	var lineA = new V3D();
 	var lineB = new V3D();
 
-	
+
 	fundamental.multV3DtoV3D(lineA, pointA);
 	fundamentalInverse.multV3DtoV3D(lineB, pointB);
 
@@ -334,7 +334,7 @@ for(var k=0;k<pointsA.length;++k){
 // 	var pAx = Matrix.crossMatrixFromV3D( pA );
 // 	var pBx = Matrix.crossMatrixFromV3D( pB );
 
-// 	var M1 = new Matrix(3,4).setFromArray([1,0,0,0, 0,1,0,0, 0,0,1,0]);
+// 	var M1 = new Matrix(3,4).fromArray([1,0,0,0, 0,1,0,0, 0,0,1,0]);
 // //M1 = camA.M.getSubMatrix(0,0, 3,4);
 // //M1 = camB.M.getSubMatrix(0,0, 3,4);
 // //console.log("M1:\n"+M1.toString());
@@ -346,22 +346,22 @@ for(var k=0;k<pointsA.length;++k){
 // 		var M2 = possibleInv.getSubMatrix(0,0, 3,4);
 // 		var pAM = Matrix.mult(pAx,M1);
 // 		var pBM = Matrix.mult(pBx,M2);
-		
+
 // 		var A = pAM.copy().appendMatrixBottom(pBM);
 
 // 		svd = Matrix.SVD(A);
 // 		var P1 = svd.V.getCol(3);
-// 		var p1Norm = new V4D().setFromArray(P1.toArray());
+// 		var p1Norm = new V4D().fromArray(P1.toArray());
 // 		p1Norm.homo(); // THIS IS THE ACTUAL 3D POINT - LOCATION
 // 		//console.log("p1Norm:"+p1Norm.toString());
-// 		var P1est = new Matrix(4,1).setFromArray( p1Norm.toArray() );
+// 		var P1est = new Matrix(4,1).fromArray( p1Norm.toArray() );
 
 // 		var P2 = Matrix.mult(possibleInv,P1est);
 // 		//var P2 = Matrix.mult(possible,P1est);
-// 		var p2Norm = new V4D().setFromArray(P2.toArray());
+// 		var p2Norm = new V4D().fromArray(P2.toArray());
 // 		//p2Norm.homo(); // not necessary?
 // 		//console.log("p2Norm:"+p2Norm.toString());
-		
+
 // 		if(p1Norm.z>0 && p2Norm.z>0){
 // 		//if(p1Norm.z<=0 && p2Norm.z<=0){
 // 			console.log(".......................>>XXX");
@@ -435,9 +435,9 @@ console.log("REAL DELTA: \n",delta.toString());
 // //cam.M = net;
 
 	cams.push(cam);
-	
+
 	this.projectPointsTo2D();
-	
+
 		//
 		break;
 	}
@@ -457,19 +457,19 @@ return;
 
 	M.rotateX(Math.TAU/6.0);
 	q = M.toQuaternion();
-	
-	console.log("M:\n"+M.toString());
-	console.log("q:\n"+q.toString());
-
-	M.fromQuaternion(q);
-	q = M.toQuaternion();
 
 	console.log("M:\n"+M.toString());
 	console.log("q:\n"+q.toString());
 
 	M.fromQuaternion(q);
 	q = M.toQuaternion();
-	
+
+	console.log("M:\n"+M.toString());
+	console.log("q:\n"+q.toString());
+
+	M.fromQuaternion(q);
+	q = M.toQuaternion();
+
 	console.log("M:\n"+M.toString());
 	console.log("q:\n"+q.toString());
 
@@ -506,25 +506,3 @@ return;
 	console.log("R: "+R.toString());
 
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

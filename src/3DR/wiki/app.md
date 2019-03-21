@@ -341,45 +341,37 @@ https://cloud.google.com/appengine/docs/nodejs/
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-- want to keep affine 2D-relation in graph tracks
-
-- add repeat-till-convergence (error doesn't change) using direct edges for each vertex ON scale/translate/rotate optimum strategy
-
-- triple results are very bad - error not decreasing
-	- bad for all points or just 3-way points
-	-? abs matrices ? [only difference is scale]
-		-- different error metrics are being used ?
-
 
 		WHY IS THIS NOT THE SAME :
 		this.estimate3DPoints();
 		this.averagePoints3DFromMatches(true);
 
 
+- update output in triple match:
+	x T normalized
+	- abs matrixes
 
 
-- adjust differences in image lighting to match eachother [move A toward B and B toward A OR just match]
-	- color space
-- ADAPTIVE COLOR COMPENSATION - color balance [gray balance, neutral balance, white balance]
-	- global adj of color intensities (RGB)
-		- neutral colors correctly rendered
-	=> 3D mapping:
-		- each 3D->2D point set gives list of colors to be matched
-		- different regions can be mapped differently
-
-
-
-x simulate chromatic aberration
+- track aggregation:
+	- want to keep affine 2D-relation in graph tracks
 
 
 - track propagation step before BA
-	- find views most likely to benefit from
-
-- track global BA to optimize view locations
-
+	- find views most likely to benefit from BA
+	- load these view groups (3-5)
 
 
 
+- track/sparse: global BA to optimize view locations
+
+
+PLANAR STRUCTURE:
+	=> 4 point algorithm for when all 3D points are found to be on a plane only
+		- planar epipolar constraints
+
+
+- adding point-camera edges in view graph processing ?
+	- pick some subset of points to keep processing low
 
 
 - dense initialization of points
@@ -434,6 +426,8 @@ x simulate chromatic aberration
 
 - get optimizing working for multi-view
 	refineCameraAbsoluteOrientation
+
+is the translation averaging: tij = Tj - Rij*Ti ? or are just the Ts involved ?
 
 - get back to surface tessellation (once points are stable at surface)
 
@@ -525,11 +519,31 @@ x simulate chromatic aberration
 
 
 
-	- reprojection error:
-		A) estimate 3D points (reprojective)
-			Points3D_est=triangulation3D(ProjM,Corresp);
-			project 3d point to 2D image planes
-			error = sqrt( distanceA + dB + dC )
+- reprojection error:
+	A) estimate 3D points (reprojective)
+		Points3D_est=triangulation3D(ProjM,Corresp);
+		project 3d point to 2D image planes
+		error = sqrt( distanceA + dB + dC )
+
+
+
+		- add repeat-till-convergence (error doesn't change) using direct edges for each vertex ON scale/translate/rotate optimum strategy
+
+
+		- TRIPLE PAIRWISE RESULTS IS MORE LIKELY MORE ACCURATE THAN PAIR RESULTS:
+			- WANT TO USE THESE RELATIVE PAIRS IN INITAL GLOBAL LOCATION?
+				- how would scaling work then?
+
+
+
+		- adjust differences in image lighting to match each other [move A toward B and B toward A OR just match]
+			- color space
+		- ADAPTIVE COLOR COMPENSATION - color balance [gray balance, neutral balance, white balance]
+			- global adj of color intensities (RGB)
+				- neutral colors correctly rendered
+			=> 3D mapping:
+				- each 3D->2D point set gives list of colors to be matched
+				- different regions can be mapped differently
 
 
 
@@ -646,17 +660,12 @@ TOPICS:
 
 - maybe some methods don't work correctly when one R is not identity ?
 
+notes:
+projection / extrinsic camera matrix:
+P = K[R, -RC]
 
-transforms.length: 3
-Stereopsis.js:4098       matches: 31538
-Stereopsis.js:4101  T 0 0->1  F : 0.00002031370591020239 +/- 0.1788554299079353
-Stereopsis.js:4102  T 0 0->1  R : 26.031161184072374 +/- 34.156927518683744
-Stereopsis.js:4098       matches: 22475
-Stereopsis.js:4101  T 1 0->2  F : 0.0000020879862926111194 +/- 0.17385255424220863
-Stereopsis.js:4102  T 1 0->2  R : 43.11158180060302 +/- 51.096199855740444
-Stereopsis.js:4098       matches: 33892
-Stereopsis.js:4101  T 2 1->2  F : 0.00001575468196350596 +/- 0.16784721456813256
-Stereopsis.js:4102  T 2 1->2  R : 14.172625296456317 +/- 20.776264619627774
+
+
 
 
 

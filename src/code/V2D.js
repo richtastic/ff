@@ -169,13 +169,19 @@ function V2D(xP,yP){
 	this.x = xP==undefined?0.0:xP;
 	this.y = yP==undefined?0.0:yP;
 }
-V2D.prototype.saveToYAML = function(yaml){
-	var DATA = V2D.YAML;
-	yaml.writeNumber(DATA.X, this.x);
-	yaml.writeNumber(DATA.Y, this.y);
+V2D.prototype.toYAML = function(yaml){
+	var obj = this.toObject();
+	yaml.writeObjectLiteral(obj);
 	return this;
 }
-V2D.prototype.loadFromObject = function(obj){
+V2D.prototype.toObject = function(){
+	var DATA = V2D.YAML;
+	var object = {};
+	object[DATA.X] = this.x;
+	object[DATA.Y] = this.y;
+	return object;
+}
+V2D.prototype.fromObject = function(obj){
 	var DATA = V2D.YAML;
 	this.set(obj[DATA.X],obj[DATA.Y]);
 	return this;
@@ -238,9 +244,6 @@ V2D.prototype.max = function(a){
 V2D.prototype.rotate = function(a){
 	V2D.rotate(this,this,a);
 	return this;
-}
-V2D.prototype.setFromArray = function(a){
-	throw "dont use";
 }
 V2D.prototype.fromArray = function(a){
 	this.set(a[0],a[1]);

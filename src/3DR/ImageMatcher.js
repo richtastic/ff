@@ -9,8 +9,8 @@ function ImageMatcher(){
 	this._descriptorB = null;
 	this._matches = new Array();
 }
-ImageMatcher.prototype.saveToYAML = function(yaml){
-	//
+ImageMatcher.prototype.toYAML = function(yaml){
+	throw "..."
 }
 ImageMatcher.prototype.loadFromYAML = function(yaml){
 	//

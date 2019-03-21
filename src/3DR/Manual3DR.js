@@ -59,7 +59,7 @@ function Manual3DR(){
 // 	this._canvas3D.addFunction(Canvas.EVENT_MOUSE_MOVE, this.onMouseMoveFxn3D, this);
 // 	this._canvas3D.addFunction(Canvas.EVENT_MOUSE_WHEEL, this.onMouseWheelFxn3D, this);
 // 	this._canvas3D.addFunction(Canvas.EVENT_MOUSE_CLICK, this.onMouseClickFxn3D, this);
-	
+
 	// REVERSE TESTS
 	// this._simulate3D();
 	// return;
@@ -153,7 +153,7 @@ function Manual3DR(){
 					"A" : { "p2D" : {"x":142, "y":76.5} },
 					"B" : { "p2D" : {"x":178.5, "y":26} },
 					"C" : { "p2D" : {"x":50, "y":87.5} },
-					// 
+					//
 					"E" : { "p2D" : {"x":178, "y":116} },
 					"F" : { "p2D" : {"x":162, "y":125} },
 					"G" : { "p2D" : {"x":87.5, "y":113} }
@@ -183,7 +183,7 @@ function Manual3DR(){
 					"G" : { "p2D" : {"x":140, "y":206.5} }
 				}
 			},
-			// 
+			//
 			{
 				"p3D" : null,
 				"entries" : {
@@ -238,7 +238,7 @@ Manual3DR.prototype.handleImagesLoadedDenseTest = function(imageInfo){
 	for(i=0;i<imageList.length;++i){
 		var file = fileList[i];
 		var img = imageList[i];
-		
+
 		var d = new DOImage(img);
 		this._root.addChild(d);
 		d.graphics().alpha(0.05);
@@ -282,10 +282,10 @@ var matrix = null;
 var needleSize = 11;
 var haystackSizeWidth = 250;
 var haystackSizeHeight = 150;
-// 7/2 = 3 
-// 11/2 = 5 
-// 72,47 + 3 = 75,50 
-// 70,45 + 5 = 75,50 
+// 7/2 = 3
+// 11/2 = 5
+// 72,47 + 3 = 75,50
+// 70,45 + 5 = 75,50
 var needle = imageMatA.extractRectFromFloatImage(pointsA[0].x,pointsA[0].y,scale,sigma,needleSize,needleSize,matrix);
 var haystack = imageMatB.extractRectFromFloatImage(pointsB[0].x,pointsB[0].y,scale,sigma,haystackSizeWidth,haystackSizeHeight,matrix);
 
@@ -452,7 +452,7 @@ Manual3DR.prototype._simulate3D = function(){ // FORWARD
 						new V3D(0,0,6),
 					];
 	// generate extrinsic camera matrix
-	var matrixAForward = new Matrix(4,4).setFromArray([1,0,0,0,  0,1,0,0,  0,0,1,0,  0,0,0,1]);
+	var matrixAForward = new Matrix(4,4).fromArray([1,0,0,0,  0,1,0,0,  0,0,1,0,  0,0,0,1]);
 	matrixAForward = Matrix.transform3DScale(matrixAForward,camScaX,camScaY,camScaZ); // metric scale test
 	matrixAForward = Matrix.transform3DRotateX(matrixAForward,(camRotXa/180.0)*Math.PI);
 	matrixAForward = Matrix.transform3DRotateY(matrixAForward,(camRotYa/180.0)*Math.PI);
@@ -461,13 +461,13 @@ Manual3DR.prototype._simulate3D = function(){ // FORWARD
 	matrixAForward = Matrix.transform3DRotateX(matrixAForward,(camRotXb/180.0)*Math.PI);
 	matrixAForward = Matrix.transform3DRotateY(matrixAForward,(camRotYb/180.0)*Math.PI);
 	matrixAForward = Matrix.transform3DRotateZ(matrixAForward,(camRotZb/180.0)*Math.PI);
-	
+
 	// move world in opposite direction
 	var matrixAReverse = Matrix.inverse(matrixAForward);
 
 
 // MADE UP:
-matrixCalc = new Matrix(4,4).setFromArray([ 0.9357297476395247,-0.19151111077974317,0.29619813272602386,-0.18301270189222013,0.026626377985028142,0.8757166128173102,0.48209070726490355,-0.2998018525454951,-0.3517113523585383,-0.4432199324079264,0.8245333323392322,1.1732967229803393,0,0,0,1]);
+matrixCalc = new Matrix(4,4).fromArray([ 0.9357297476395247,-0.19151111077974317,0.29619813272602386,-0.18301270189222013,0.026626377985028142,0.8757166128173102,0.48209070726490355,-0.2998018525454951,-0.3517113523585383,-0.4432199324079264,0.8245333323392322,1.1732967229803393,0,0,0,1]);
 
 // A
 // YES:
@@ -482,7 +482,7 @@ matrixCalc = new Matrix(4,4).setFromArray([ 0.9357297476395247,-0.19151111077974
 	console.log("cameraCenter: "+cameraCenter.toString());
 
 	// generate intrinsic camera matrix
-	var matrixK = new Matrix(3,3).setFromArray([fx,s,cx,  0,fy,cy,  0,0,1]);
+	var matrixK = new Matrix(3,3).fromArray([fx,s,cx,  0,fy,cy,  0,0,1]);
 	console.log("Af: \n "+matrixAForward.toString());
 	console.log("Ar: \n "+matrixAReverse.toString());
 	console.log("K: \n "+matrixK.toString());
@@ -528,12 +528,12 @@ matrixCalc = new Matrix(4,4).setFromArray([ 0.9357297476395247,-0.19151111077974
 		var point3D_E = points3D[i];
 		console.log("X_E = "+point3D_E.toString());
 		// orientate from world 3D point to camera 3D point
-		var vector = new Matrix(4,1).setFromArray([point3D_E.x,point3D_E.y,point3D_E.z,1.0]);
+		var vector = new Matrix(4,1).fromArray([point3D_E.x,point3D_E.y,point3D_E.z,1.0]);
 		vector = Matrix.mult(matrixAReverse,vector);
-		var point3D_A = new V3D().setFromArray(vector.toArray());
+		var point3D_A = new V3D().fromArray(vector.toArray());
 		console.log("X_A = "+point3D_A.toString());
 		vector = Matrix.mult(matrixK,vector); // projection onto camera 2D plane can be done before or after multiplication by K
-		var point2D_a = new V3D().setFromArray(vector.toArray());
+		var point2D_a = new V3D().fromArray(vector.toArray());
 		points2DCamera.push(point2D_a.copy());
 		console.log("point2D_a: "+point2D_a.toString());
 		if(point2D_a.z!=0 && point2D_a.z>0) { // not at infinity && not behind camera
@@ -679,7 +679,7 @@ matrixCalc = new Matrix(4,4).setFromArray([ 0.9357297476395247,-0.19151111077974
 		p = V3D.add(cameraCenter,cameraDirectionZA);
 		linPnt.push(p.x,p.y,p.z);
 		linCol.push(0.0, 0.0, 0.0, 1.0);
-	
+
 	// set globals
 	this._renderLinePointsList = linPnt;
 	this._renderLineColorsList = linCol;
@@ -884,7 +884,7 @@ matrixCalc = new Matrix(4,4).setFromArray([ 0.9357297476395247,-0.19151111077974
 	var V = svd.V;
 	var x = V.getCol(cols-1); // V.cols() == cols
 	x = x.toArray();
-	var calculatedA = new Matrix(4,4).identity().setFromArray(x);
+	var calculatedA = new Matrix(4,4).identity().fromArray(x);
 	var euclideanScaleA = R3D.euclieanScaleFromMatrix(calculatedA);
 	calculatedA = Matrix.transform3DScale(calculatedA,euclideanScaleA,euclideanScaleA,euclideanScaleA);
 	var r00 = calculatedA.get(0,0);
@@ -900,8 +900,8 @@ matrixCalc = new Matrix(4,4).setFromArray([ 0.9357297476395247,-0.19151111077974
 	var r22 = calculatedA.get(2,2);
 	var tz  = calculatedA.get(2,3);
 	//
-	var calcA2 = new Matrix(4,4).identity().setFromArray( Matrix.SVD(A2).V.getCol(cols-1).toArray() );
-	
+	var calcA2 = new Matrix(4,4).identity().fromArray( Matrix.SVD(A2).V.getCol(cols-1).toArray() );
+
 	// ...
 	var matrixKinv = Matrix.inverse(matrixK);
 	var matrixK_A = Matrix.mult(matrixK,matrixAReverse);
@@ -951,8 +951,8 @@ console.log("............");
 */
 //this._stage3D.matrixRotate(e*0.01, 0,1,0);
 	// transformation = absolute + sphere interaction
-	// 
-	// 
+	//
+	//
 	//this._stage3D.matrixMultM3D(this._translateMatrix);
 	//this._stage3D.matrixMultM3D(this._sphereMatrix);
 	//this._stage3D.matrixMultM3D(this._userInteractionMatrix);
@@ -1009,7 +1009,7 @@ Manual3DR.prototype._eff = function(e){
 			this._stage3D.bindArrayFloatBuffer(this._vertexPositionAttrib, this._textureVertexPoints[i]);
 			this._canvas3D._context.activeTexture(this._canvas3D._context.TEXTURE0);
 			this._canvas3D._context.bindTexture(this._canvas3D._context.TEXTURE_2D,this._textures[i]);
-			this._canvas3D._context.uniform1i(this._canvas3D._program.samplerUniform, 0); // 
+			this._canvas3D._context.uniform1i(this._canvas3D._program.samplerUniform, 0); //
 			this._stage3D.drawTriangles(this._vertexPositionAttrib, this._textureVertexPoints[i]);
 		}
 	}
@@ -1311,7 +1311,7 @@ return;
 				break;
 			}
 		}
-		
+
 		var d = new DOImage(img);
 if(i==0 || i==1){
 this._root.addChild(d);
@@ -1361,7 +1361,7 @@ var imageHeightB = imageSourceB.height;
 
 var imageFloatA = GLOBALSTAGE.getImageAsFloatRGB(imageSourceA);
 var imageFloatB = GLOBALSTAGE.getImageAsFloatRGB(imageSourceB);
-	
+
 	var original = new ImageMat(imageFloatB["width"],imageFloatB["height"], imageFloatB["red"], imageFloatB["grn"], imageFloatB["blu"]);
 	var testing = new ImageMat(imageFloatA["width"],imageFloatA["height"], imageFloatA["red"], imageFloatA["grn"], imageFloatA["blu"]);
 
@@ -1382,7 +1382,7 @@ var imageFloatB = GLOBALSTAGE.getImageAsFloatRGB(imageSourceB);
 	// 	imageGradMagR = imageGradMagR.value;
 	// 	imageGradMagG = imageGradMagG.value;
 	// 	imageGradMagB = imageGradMagB.value;
-	
+
 	var originalGrad = new ImageMat(original.width(), original.height(), imageGradAngR, imageGradAngG, imageGradAngR);
 
 	imageGradAngR = ImageMat.normalFloat01(imageGradAngR);
@@ -1455,7 +1455,7 @@ var imageFloatB = GLOBALSTAGE.getImageAsFloatRGB(imageSourceB);
 	//show = R3D.cornerDetection(gry,original.width(),original.height());
 	//show = R3D.hessianCornerDetection(gry,original.width(),original.height());
 	show = R3D.harrisCornerDetection(gry,original.width(),original.height());
-	
+
 	console.log(show)
 	show = ImageMat.normalFloat01(show);
 	//ImageMat.normalFloat01(show);
@@ -1498,9 +1498,9 @@ return;
 			var point = new V2D(364,174); // mouse
 			//var point = new V2D(190,160); // corner tankman
 //var point = new V2D(225,100);
-			nextPoint = new V2D(281,236); // 
+			nextPoint = new V2D(281,236); //
 //var point = new V2D(50 + Math.random()*300, 50 + Math.random()*200); // random
-//var point = new V2D(323,175); // 
+//var point = new V2D(323,175); //
 	// .5 is exact
 	var scale = 1.0;
 	var newWidth = 11;
@@ -1556,7 +1556,7 @@ return;
 	// locations = locations.sort(function(a,b){
 	// 	return Math.abs(a.z)>Math.abs(b.z) ? -1 : 1;
 	// });
-	
+
 	displayValues = Code.copyArray(scores.value);
 	displayValues = ImageMat.normalFloat01(displayValues);
 	displayValues = ImageMat.invertFloat01(displayValues);
@@ -1573,7 +1573,7 @@ return;
 	GLOBALSTAGE.addChild(d);
 
 	console.log("loc");
-	
+
 
 	var i, c;
 	var sca = 1.0;
@@ -1624,12 +1624,12 @@ return;
 		c.graphics().fill();
 			c.matrix().translate(400 + newWidth*0.5,0 + newHeight*0.5);
 		GLOBALSTAGE.addChild(c);
-	
+
 return;
 var feature1, feature2;
 var rangeA = new AreaMap.Range(testing,testing.width(),testing.height(), 10,10); // "B"
 var rangeB = new AreaMap.Range(original,original.width(),original.height(), 10,10); // "A"
-//var point = 
+//var point =
 console.log(point+"");
 
 	// create a feature to describe each of the features @ potential locations
@@ -1695,7 +1695,7 @@ var ratioSize = gridX;//gridX;
 
 
 
-	
+
 
 	sca = ratioSize;
 	for(i=0;i<locations.length;++i){
@@ -1747,7 +1747,7 @@ console.log("done")
 
 			// var a = Code.minAngle(Math.PI*2 - Math.PI*0.25, Math.PI*0.25);
 			// console.log(a*180/Math.PI);
-	
+
 
 	// SSD:
 
@@ -1826,7 +1826,7 @@ return ; // HERE
 					var p2DA = point.entries[keyA]["p2D"];
 					//var p2DB = point.entries[keyB]["p2D"];
 					var r = k*2;
-					//                            a       b       c     d       e       f       g     h             i             j             k       l 
+					//                            a       b       c     d       e       f       g     h             i             j             k       l
 					A.setRowFromArray(r+0, [ -p3D.x, -p3D.y, -p3D.z, -1.0,    0.0,    0.0,    0.0,  0.0, p2DA.x*p3D.x, p2DA.x*p3D.y, p2DA.x*p3D.z, p2DA.x ]); // -Xa - Yb - Zc - 1d + xXi + xYj + xZk + xl = 0
 					A.setRowFromArray(r+1, [   -1.0,    0.0,    0.0,  0.0, -p3D.x, -p3D.y, -p3D.z, -1.0, p2DA.y*p3D.x, p2DA.y*p3D.y, p2DA.y*p3D.z, p2DA.y ]); // -Xe - Yf - Zg - 1h + yXi + yYj + yZk + yl = 0
 					// A.setRowFromArray(r+2, [ -p3D.x, -p3D.y, -p3D.z, -1.0,    0.0,    0.0,    0.0,  0.0, p2DB.x*p3D.x, p2DB.x*p3D.y, p2DB.x*p3D.z, p2DB.x ]);
@@ -1840,7 +1840,7 @@ return ; // HERE
 				var V = svd.V;
 				var x = V.getCol(cols-1); // V.cols() == cols
 				//console.log(x.toString())
-				var transform = new Matrix(4,4).setFromArray([x.get(0,0),x.get(1,0),x.get(2,0),x.get(3,0), x.get(4,0),x.get(5,0),x.get(6,0),x.get(7,0), x.get(8,0),x.get(9,0),x.get(10,0),x.get(11,0), 0,0,0,1]);
+				var transform = new Matrix(4,4).fromArray([x.get(0,0),x.get(1,0),x.get(2,0),x.get(3,0), x.get(4,0),x.get(5,0),x.get(6,0),x.get(7,0), x.get(8,0),x.get(9,0),x.get(10,0),x.get(11,0), 0,0,0,1]);
 				console.log(transform.toString());
 				//var inverse = Matrix.inverse(transform);
 				//console.log(inverse.toString());
@@ -1914,7 +1914,7 @@ var s  = -0.4399151157738108;
 var cx = 201.61665699519267;
 var cy = 152.26370698493383;
 
-var K = new Matrix(3,3).setFromArray([fx,s,cx, 0,fy,cy, 0,0,1]);
+var K = new Matrix(3,3).fromArray([fx,s,cx, 0,fy,cy, 0,0,1]);
 	// find position of cameras in world
 	for(i=0; i<keys.length; ++i){
 		var keyA = keys[i];
@@ -1979,7 +1979,7 @@ var K = new Matrix(3,3).setFromArray([fx,s,cx, 0,fy,cy, 0,0,1]);
 				var F_BA = R3D.fundamentalInverse(F_AB);
 				FlistB[keyA] = F_BA;
 			}
-			
+
 			// if(pointsAB.length>7){
 			// 	//
 			// 	//R3D.fundamentalMatrix(pointsA,pointsB);
@@ -2020,14 +2020,14 @@ this._finishStage3D();
 //	F ?
 // project pixels backwards to find closest intersection (or robust algorithm)
 // put colored tri/quad at 3D location with pixel color
-// 
+//
 
 }
 
 
 /*
 
-get transform A, B 
+get transform A, B
 
 
 
@@ -2179,12 +2179,12 @@ p2 = 0.0;
 	errorMinimum = 1E-10;
 	error = new Matrix();
 var unknowns = 8;
-var h = new Matrix(unknowns,1); // 
-var he = new Matrix(unknowns,1); // 
+var h = new Matrix(unknowns,1); //
+var he = new Matrix(unknowns,1); //
 var jacobian = new Matrix(pts.length,unknowns); // k1,k2,k3
 var lambda = 1E10;
 var lambdaScale = 10.0;
-h.setFromArray([xc,yc,k0,k1,k2,k3,p1,p2]);
+h.fromArray([xc,yc,k0,k1,k2,k3,p1,p2]);
 	for(i=0;i<iterationsMax;++i){
 		// y
 		currentResult = this.cameraResultsFromSet(pts,nxt, wid,hei,maxDim, h.toArray()).result;
@@ -2272,8 +2272,8 @@ matA.setFromArrayARGB(disArr);
 
 	//d = new DOImage(img);
 	//console.log(arr)
-	// 
-	
+	//
+
 	// this._root.addChild(d);
 	//
 }
@@ -2384,7 +2384,7 @@ Manual3DR.prototype.getFragmentShaders1 = function(){
 		void main(void){ \
 			gl_FragColor = vColor; \
 		} \
-		", // 
+		", //
 		"\
 		precision mediump float; \
 		varying vec2 vTextureCoord; \
@@ -2392,21 +2392,21 @@ Manual3DR.prototype.getFragmentShaders1 = function(){
 		void main(void){ \
 			gl_FragColor = texture2D(uSampler, vec2(vTextureCoord.s, vTextureCoord.t)); \
 		} \
-    	", // 
+    	", //
     	"\
 		precision highp float; \
 		varying vec4 vColor; \
 		void main(void){ \
 			gl_FragColor = vColor; \
 		} \
-		", // 
+		", //
     	"\
 		precision highp float; \
 		varying vec4 vColor; \
 		void main(void){ \
 			gl_FragColor = vColor; \
 		} \
-    	"]; // 
+    	"]; //
 }
 Manual3DR.prototype.onEnterFrameFxn3D = function(e){
 	this.render3DScene();
@@ -2617,14 +2617,14 @@ gl.bindTexture(gl.TEXTURE_2D, null);
 //gl.deleteTexture(texture);
 
 // capturing a different rect than I think I am
-	
+
 	var i, j, index, inde2, temp, wo2=Math.floor(wid/2), ho2=Math.floor(hei/2);
 	// // flip horizontal
 	// for(j=0;j<hei;++j){
 	// 	for(i=0;i<wo2;++i){
 	// 		index = j*wid + i;
 	// 		inde2 = j*wid + wid-1 - i;
-	// 		temp = data[index]; 
+	// 		temp = data[index];
 	// 		data[index] = data[inde2];
 	// 		data[inde2] = temp;
 	// 	}
@@ -2635,24 +2635,24 @@ gl.bindTexture(gl.TEXTURE_2D, null);
 			index = j*wid*4 + i*4;
 			inde2 = (hei-1-j)*wid*4 + i*4;
 			// R
-			temp = data[index]; 
+			temp = data[index];
 			data[index] = data[inde2];
 			data[inde2] = temp;
 			// G
-			temp = data[index+1]; 
+			temp = data[index+1];
 			data[index+1] = data[inde2+1];
 			data[inde2+1] = temp;
 			// B
-			temp = data[index+2]; 
+			temp = data[index+2];
 			data[index+2] = data[inde2+2];
 			data[inde2+2] = temp;
 			// A
-			temp = data[index+3]; 
+			temp = data[index+3];
 			data[index+3] = data[inde2+3];
 			data[inde2+3] = temp;
 		}
 	}
-	// 
+	//
 	// var context = this._canvas.context();
 	// var imageData = context.createImageData(wid,hei);
  //    imageData.data.set(data);
@@ -2964,7 +2964,7 @@ points2.norm = R3D.calculateNormalizedPoints([points2.pos3D,points2.pos2D]);
 	args = [ points2.norm.normalized[0], points2.norm.normalized[1] ];
 	yVals = Code.newArrayZeros(args[0].length*4);
 	Matrix.lmMinimize( fxn, args, yVals.length,xVals.length, xVals, yVals ); // NEED TO PASS TRUE ?
-	
+
 	// unnormalize:
 	var H, forward, reverse;
 	// 0
@@ -3023,7 +3023,7 @@ points2.norm = R3D.calculateNormalizedPoints([points2.pos3D,points2.pos2D]);
 		V.set(i*2+1,3, 2.0*(h20*h00 - h21*h01) );
  		V.set(i*2+1,4, 2.0*(h20*h10 - h21*h11) );
  		V.set(i*2+1,5, h20*h20 - h21*h21 );
-// normalize row ? 
+// normalize row ?
 	}
 	//console.log("V.toString()");
 	//console.log(V.toString());
@@ -3059,7 +3059,7 @@ points2.norm = R3D.calculateNormalizedPoints([points2.pos3D,points2.pos2D]);
 	var u0 = ((s*v0)/fx) - ((b02*fx*fx)/lambda);
 	//console.log(lambda,b00,den1,fx,fy)
 	// construct K
-	var K = new Matrix(3,3).setFromArray([fx,s,u0, 0,fy,v0, 0,0,1]);
+	var K = new Matrix(3,3).fromArray([fx,s,u0, 0,fy,v0, 0,0,1]);
 	console.log("K: ");
 	console.log(K.toString());
 	this._intrinsicK = K;
@@ -3074,7 +3074,7 @@ points2.norm = R3D.calculateNormalizedPoints([points2.pos3D,points2.pos2D]);
 	var s = 0;
 	var fx = 480; // 300~500
 	var fy = fx;
-	var testK = (new Matrix(3,3).setFromArray([fx,s,cx, 0,fy,cy, 0,0,1]));
+	var testK = (new Matrix(3,3).fromArray([fx,s,cx, 0,fy,cy, 0,0,1]));
 	// FOUND VALUES:
 	fx = 372.76047221810444
 	fy = 372.1358082506365
@@ -3154,7 +3154,7 @@ Manual3DR.vRowFromCols = function(hi0,hi1,hi2, hj0,hj1,hj2){
 	arr.push( Matrix.dot(hi2,hj0) + Matrix.dot(hi0,hj2) );
 	arr.push( Matrix.dot(hi2,hj1) + Matrix.dot(hi1,hj2) );
 	arr.push( Matrix.dot(hi2,hj2) );
-	return new Matrix(1,6).setFromArray(arr);
+	return new Matrix(1,6).fromArray(arr);
 }
 Manual3DR.prototype.handleLoaded = function(){
 	console.log("handleLoaded");
@@ -3273,11 +3273,11 @@ Manual3DR.prototype.handleLoaded = function(){
 		pointsNormB.push( v );
 	}
 
-	// 
-	var W = new Matrix(3,3).setFromArray([0,-1,0, 1,0,0, 0,0,1]);
+	//
+	var W = new Matrix(3,3).fromArray([0,-1,0, 1,0,0, 0,0,1]);
 	var Wt = Matrix.transpose(W);
-	//var Z = new Matrix(3,3).setFromArray([0,1,0, -1,0,0, 0,0,0]);
-	var diag110 = new Matrix(3,3).setFromArray([1,0,0, 0,1,0, 0,0,0]);
+	//var Z = new Matrix(3,3).fromArray([0,1,0, -1,0,0, 0,0,0]);
+	var diag110 = new Matrix(3,3).fromArray([1,0,0, 0,1,0, 0,0,0]);
 
 	// force D = 1,1,0
 	var svd = Matrix.SVD(essential);
@@ -3321,7 +3321,7 @@ Manual3DR.prototype.handleLoaded = function(){
 	var pAx = Matrix.crossMatrixFromV3D( pA );
 	var pBx = Matrix.crossMatrixFromV3D( pB );
 
-var M1 = new Matrix(3,4).setFromArray([1,0,0,0, 0,1,0,0, 0,0,1,0]);
+var M1 = new Matrix(3,4).fromArray([1,0,0,0, 0,1,0,0, 0,0,1,0]);
 	var projection = null;
 	len = possibles.length;
 	for(i=0;i<len;++i){
@@ -3340,17 +3340,17 @@ var M1 = new Matrix(3,4).setFromArray([1,0,0,0, 0,1,0,0, 0,0,1,0]);
 		svd = Matrix.SVD(A);
 		//console.log(svd);
 		//console.log(svd.V.toString());
-		
+
 		var P1 = svd.V.getCol(3);
-		var p1Norm = new V4D().setFromArray(P1.toArray());
+		var p1Norm = new V4D().fromArray(P1.toArray());
 		//console.log(p1Norm.toString());
 		p1Norm.homo();
 		//console.log(p1Norm.toString());
-		var P2 = new Matrix(4,1).setFromArray( p1Norm.toArray() );
+		var P2 = new Matrix(4,1).fromArray( p1Norm.toArray() );
 		//console.log(P2.toString());
 		P2 = Matrix.mult(M2,P2);
 		//console.log(P2.toString());
-		var p2Norm = new V4D().setFromArray(P2.toArray());
+		var p2Norm = new V4D().fromArray(P2.toArray());
 		//console.log(p2Norm.toString());
 		p2Norm.homo();
 		//console.log(p1Norm.z+" && "+p2Norm.z);
@@ -3415,7 +3415,7 @@ Manual3DR.prototype.addCameraVisual = function(matrix, textureUVPoints, textureV
 	var cy = K.get(1,2);
 	var imageWidth = 400;
 	var imageHeight = 300;
-	// 
+	//
 	focalLength = focalLength!==undefined? focalLength : 0.0001; // scales universe?
 	var px = focalLength/fx;
 	var py = focalLength/fy;
@@ -3452,7 +3452,7 @@ Manual3DR.prototype.addCameraVisual = function(matrix, textureUVPoints, textureV
 		// do stuff
 	this._vertexPositionAttrib = this._stage3D.enableVertexAttribute("aVertexPosition");
 	this._vertexColorAttrib = this._stage3D.enableVertexAttribute("aVertexColor");
-	// 
+	//
 	var i, j, len, tri, col;
 	var c = [];
 	var t = [];
@@ -3531,7 +3531,7 @@ if(this._booleanCam){ // 2 // = test image 0
 		linePoints.push(v.x,v.y,v.z);
 		lineColors.push( Code.getFloatRedARGB(col),Code.getFloatGrnARGB(col),Code.getFloatBluARGB(col),Code.getFloatAlpARGB(col) );
 	}
-	
+
 	len = tVert.length;
 	for(i=0;i<len;++i){
 		tri = tVert[i];
@@ -3550,14 +3550,14 @@ if(this._booleanCam){ // 2 // = test image 0
 		v = tri.C();
 		textureUVPoints.push(v.x,v.y);
 	}
-	
+
 }
 Manual3DR.prototype.render3DScene = function(){
 	var e = this.e?this.e:0;
 	this.e = e; ++this.e;
 	this._stage3D.setViewport(StageGL.VIEWPORT_MODE_FULL_SIZE);
 	this._stage3D.clear();
-	// 
+	//
 	//this._userMatrix.rotateY(0.03);
 this._stage3D.matrixIdentity();
 	//this._stage3D.matrixRotate(e*0.01, 0,1,0);
@@ -3609,7 +3609,7 @@ this._stage3D.matrixReset();
 
 		this._canvas3D._context.activeTexture(this._canvas3D._context.TEXTURE0);
 		this._canvas3D._context.bindTexture(this._canvas3D._context.TEXTURE_2D,this._textures[i]);
-		this._canvas3D._context.uniform1i(this._canvas3D._program.samplerUniform, 0); // 
+		this._canvas3D._context.uniform1i(this._canvas3D._program.samplerUniform, 0); //
 		this._stage3D.drawTriangles(this._vertexPositionAttrib, this._textureVertexPoints[i]);
 	}
 //
@@ -3754,10 +3754,10 @@ pts.push(new V3D(260.87733075780915,143.79496980598387,1.7108730704311286));
 pts.push(new V3D(1241.805865411691,435.6391395412944,7.963382839814098));
 
 var prs = [];
-prs.push( [11, 12] ); 
-prs.push( [14, 15] ); 
-prs.push( [11, 14] ); 
-prs.push( [12, 15] ); 
+prs.push( [11, 12] );
+prs.push( [14, 15] );
+prs.push( [11, 14] );
+prs.push( [12, 15] );
 
 
 
@@ -3855,7 +3855,3 @@ Manual3DR.prototype.textureBase2FromImage = function(texture){
 Manual3DR.prototype.handleEnterFrame = function(e){ // 2D canvas
 	//console.log(e);
 }
-
-
-
-

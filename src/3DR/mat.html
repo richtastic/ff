@@ -36,7 +36,7 @@ function classesLoadedFxn(){
 	console.log( "\n=>\n\n" );
 
 	matrixA = new Matrix(rows,rows);
-	matrixA.setFromArray(array);
+	matrixA.fromArray(array);
 	console.log( matrixA.toString() );
 	inverse = Matrix._inverseMatrixNew(matrixA);
 	console.log( "..." );
@@ -67,7 +67,7 @@ function classesLoadedFxn(){
 	console.log( "\n=>\n\n" );
 
 	matrixA = new Matrix(rows,rows);
-	matrixA.setFromArray(array);
+	matrixA.fromArray(array);
 	console.log( matrixA.toString() );
 	result = Matrix._luDecomposeNew(matrixA);
 	console.log( "..." );
@@ -85,7 +85,7 @@ function classesLoadedFxn(){
 		console.log( result.toString() );
 		console.log( "..." );
 	}
-	// 
+	//
 
 // A = [1,2,3; 2,2,5; 2,3,3]
 // [L, U] = lu(A)
@@ -96,10 +96,10 @@ function classesLoadedFxn(){
 
 /*
 	mat = new Matrix(3,3);
-	mat.setFromArray([1,2,3, 2,2,5, 2,3,3]);
+	mat.fromArray([1,2,3, 2,2,5, 2,3,3]);
 	console.log( mat.toString() );
 		b = new Matrix(3,1);
-		b.setFromArray([1,2,3]);
+		b.fromArray([1,2,3]);
 		console.log( b.toString() );
 	inv = Matrix._inverseSquareGaussJordan(mat, b);
 	console.log( inv.toString() );
@@ -107,7 +107,7 @@ function classesLoadedFxn(){
 	console.log( "..." );
 
 	// gauss-jordan inverse - singular ====================================================================
-	mat.setFromArray([1,2,3, 2,2,5, 3,4,8]);
+	mat.fromArray([1,2,3, 2,2,5, 3,4,8]);
 	console.log( mat.toString() );
 	inv = Matrix._inverseSquareGaussJordan(mat);
 	if(inv){
@@ -120,7 +120,7 @@ function classesLoadedFxn(){
 /*
 	// LU factorixation/decomposition- singular ====================================================================
 	mat = new Matrix(4,4);
-	mat.setFromArray([0,2,0,1, 2,2,3,2, 4,-3,0,1, 6,1,-6,-5]);
+	mat.fromArray([0,2,0,1, 2,2,3,2, 4,-3,0,1, 6,1,-6,-5]);
 	console.log( mat.toString() );
 	mat = Matrix._LUDecompositionCrout(mat);
 	console.log( "..." );

@@ -105,7 +105,7 @@ console.log("HERE");
 		var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
 		var d = new DOImage(img);
 		d.matrix().translate(0 + i*iii.width(), 0 + 0);
-		GLOBALSTAGE.addChild(d);
+		// GLOBALSTAGE.addChild(d);
 	}
 
 
@@ -429,10 +429,30 @@ console.log(pointsA.length)
 // var T = R3D.TFTRANSACFromPoints(pointsA,pointsB,pointsC, errorPosition, null);
 var T = R3D.TFTRANSACFromPointsAuto(pointsA,pointsB,pointsC, errorPosition, null, 0.50);
 console.log(T);
+
 var matches = T["matches"];
 // console.log(matches);
 	T = T["T"];
 	console.log(T);
+
+
+	// testing normalizing
+	var sizeA = new V2D(width,height);
+	var sizeB = new V2D(width,height);
+	var sizeC = new V2D(width,height);
+	T = R3D.normalizeTFTfromSizes(T,sizeA,sizeB,sizeC);
+	console.log(T);
+
+	// fake system
+	var sizeX = new V2D(100,200);
+	T = R3D.denormalizeTFTtoSizes(T,sizeX,sizeX,sizeX);
+	T = R3D.normalizeTFTfromSizes(T,sizeX,sizeX,sizeX);
+
+	T = R3D.denormalizeTFTtoSizes(T,sizeA,sizeB,sizeC);
+
+	console.log(T);
+	//
+	// throw "..."
 
 for(var i=0; i<matches.length; ++i){
 	var match = matches[i];

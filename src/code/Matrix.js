@@ -3,7 +3,7 @@ Matrix.YAML = {
 	ROWS:"row",
 	COLS:"col",
 	DATA:"data"
-}
+};
 function Matrix(r,c, vals){
 	if(vals){
 		this.fromArray(vals,r,c);
@@ -25,20 +25,26 @@ Matrix.prototype._init = function(r,c){
 		}
 	}
 }
-Matrix.prototype.saveToYAML = function(yaml){
+Matrix.prototype.toYAML = function(yaml){
+	var obj = this.toObject();
+	yaml.writeObjectLiteral(obj);
+	return this;
+}
+Matrix.prototype.toObject = function(){
+	var obj = {};
 	var i, j, r, row=this._rowCount, col=this._colCount;
 	var DATA = Matrix.YAML;
-	yaml.writeNumber(DATA.ROWS, this._rowCount);
-	yaml.writeNumber(DATA.COLS, this._colCount);
-	yaml.writeArrayStart(DATA.DATA);
-		for(j=0;j<row;++j){
-			r = this._rows[j];
-			for(i=0;i<col;++i){
-				yaml.writeNumber(r[i]);
-			}
+	obj[DATA.ROWS] = this._rowCount;
+	obj[DATA.COLS] = this._colCount;
+	var arr = [];
+	for(j=0;j<row;++j){
+		r = this._rows[j];
+		for(i=0;i<col;++i){
+			arr.push(r[i]);
 		}
-	yaml.writeArrayEnd();
-	return this;
+	}
+	obj[DATA.DATA] = arr;
+	return obj;
 }
 Matrix.prototype.fromObject = function(obj){
 	return this.loadFromObject(obj);
@@ -65,18 +71,12 @@ Matrix.prototype.fromArray = function(list, newRow,newCol){
 	Code.setArray2DFromArray(this._rows,this._rowCount,this._colCount, list);
 	return this;
 }
-Matrix.prototype.setFromArray = function(list, newRow,newCol){
-	return this.fromArray(list, newRow,newCol);
-}
 Matrix.prototype.fromArrayMatrix = function(list, newRow,newCol){
 	if(newRow!==undefined){
 		this.setSize(newRow,newCol);
 	}
 	Code.copyArray2DFromArray2D(this._rows,this._rowCount,this._colCount, list);
 	return this;
-}
-Matrix.prototype.setFromArrayMatrix = function(list, newRow,newCol){
-	return this.fromArrayMatrix(list, newRow,newCol);
 }
 Matrix.prototype.setDiagonalsFromArray = function(list){
 	var i, len = Math.min(this.rows(), this.cols(), list.length);
@@ -362,13 +362,13 @@ Matrix.prototype.getColAsArray = function(col){
 	return a;
 }
 Matrix.prototype.getCol = function(col){
-	return new Matrix(this.rows(),1).setFromArray(this.getColAsArray(col));
+	return new Matrix(this.rows(),1).fromArray(this.getColAsArray(col));
 }
 Matrix.prototype.getRowAsArray = function(row){
 	return Code.copyArray( this._rows[row] );
 }
 Matrix.prototype.getRow = function(row){
-	return new Matrix(1,this.rows()).setFromArray(this._rows[row]);
+	return new Matrix(1,this.rows()).fromArray(this._rows[row]);
 }
 Matrix.prototype.setColFromCol = function(i, mat,j){
 	var r, rows = Math.min(this.rows(),mat.rows());
@@ -472,30 +472,30 @@ Matrix.transform2DIdentity = function(){
 	return new Matrix(3,3).identity();
 }
 Matrix.transform2DTranslate = function(a,tX,tY){
-	var b = Matrix._transformTemp2D.setFromArray([1.0,0.0,tX, 0.0,1.0,tY, 0.0,0.0,1.0]);
+	var b = Matrix._transformTemp2D.fromArray([1.0,0.0,tX, 0.0,1.0,tY, 0.0,0.0,1.0]);
 	return Matrix.mult(b,a);
 }
 Matrix.transform2DScale = function(a,sX,sY){
 	sY = sY!==undefined?sY:sX;
-	var b = Matrix._transformTemp2D.setFromArray([sX,0.0,0.0, 0.0,sY,0.0, 0.0,0.0,1.0]);
+	var b = Matrix._transformTemp2D.fromArray([sX,0.0,0.0, 0.0,sY,0.0, 0.0,0.0,1.0]);
 	return Matrix.mult(b,a);
 }
 Matrix.transform2DRotate = function(a,ang){
-	var b = Matrix._transformTemp2D.setFromArray([Math.cos(ang),-Math.sin(ang),0.0, Math.sin(ang),Math.cos(ang),0.0, 0.0,0.0,1.0]);
+	var b = Matrix._transformTemp2D.fromArray([Math.cos(ang),-Math.sin(ang),0.0, Math.sin(ang),Math.cos(ang),0.0, 0.0,0.0,1.0]);
 	return Matrix.mult(b,a);
 }
 Matrix.transform2DSkewX = function(a,ang, isAngle){ // give an angle
 	if(isAngle){
 		ang = Math.tan(ang);
 	}
-	var b = Matrix._transformTemp2D.setFromArray([1.0,ang,0.0, 0.0,1.0,0.0, 0.0,0.0,1.0]);
+	var b = Matrix._transformTemp2D.fromArray([1.0,ang,0.0, 0.0,1.0,0.0, 0.0,0.0,1.0]);
 	return Matrix.mult(b,a);
 }
 Matrix.transform2DSkewY = function(a,ang, isAngle){ // give an angle
 	if(isAngle){
 		ang = Math.tan(ang);
 	}
-	var b = Matrix._transformTemp2D.setFromArray([1.0,0.0,0.0, ang,1.0,0.0, 0.0,0.0,1.0]);
+	var b = Matrix._transformTemp2D.fromArray([1.0,0.0,0.0, ang,1.0,0.0, 0.0,0.0,1.0]);
 	return Matrix.mult(b,a);
 }
 Matrix.angle2D = function(a){
@@ -525,28 +525,28 @@ Matrix.transform3DTranslate = function(a,tX,tY,tZ){
 		tY = tX.y;
 		tX = tX.x;
 	}
-	var b = Matrix._transformTemp3D.setFromArray([1.0,0.0,0.0,tX, 0.0,1.0,0.0,tY, 0.0,0.0,1.0,tZ, 0.0,0.0,0.0,1.0]);
+	var b = Matrix._transformTemp3D.fromArray([1.0,0.0,0.0,tX, 0.0,1.0,0.0,tY, 0.0,0.0,1.0,tZ, 0.0,0.0,0.0,1.0]);
 	return Matrix.mult(b,a);
 }
 Matrix.transform3DScale = function(a,sX,sY,sZ){
 	sY = sY!==undefined?sY:sX;
 	sZ = sZ!==undefined?sZ:sY;
-	var b = Matrix._transformTemp3D.setFromArray([sX,0.0,0.0,0.0, 0.0,sY,0.0,0.0, 0.0,0.0,sZ,0.0, 0.0,0.0,0.0,1.0]);
+	var b = Matrix._transformTemp3D.fromArray([sX,0.0,0.0,0.0, 0.0,sY,0.0,0.0, 0.0,0.0,sZ,0.0, 0.0,0.0,0.0,1.0]);
 	return Matrix.mult(b,a);
 }
 Matrix.transform3DRotateX = function(a,angle){
 	var c = Math.cos(angle), s = Math.sin(angle);
-	var b = Matrix._transformTemp3D.setFromArray([1.0,0.0,0.0,0.0, 0.0,c,-s,0.0, 0.0,s,c,0.0, 0.0,0.0,0.0,1.0]);
+	var b = Matrix._transformTemp3D.fromArray([1.0,0.0,0.0,0.0, 0.0,c,-s,0.0, 0.0,s,c,0.0, 0.0,0.0,0.0,1.0]);
 	return Matrix.mult(b,a);
 }
 Matrix.transform3DRotateY = function(a,angle){
 	var c = Math.cos(angle), s = Math.sin(angle);
-	var b = Matrix._transformTemp3D.setFromArray([c,0.0,s,0.0, 0.0,1.0,0.0,0.0, -s,0.0,c,0.0, 0.0,0.0,0.0,1.0]);
+	var b = Matrix._transformTemp3D.fromArray([c,0.0,s,0.0, 0.0,1.0,0.0,0.0, -s,0.0,c,0.0, 0.0,0.0,0.0,1.0]);
 	return Matrix.mult(b,a);
 }
 Matrix.transform3DRotateZ = function(a,angle){
 	var c = Math.cos(angle), s = Math.sin(angle);
-	var b = Matrix._transformTemp3D.setFromArray([c,-s,0.0,0.0, s,c,0.0,0.0, 0.0,0.0,1.0,0.0, 0.0,0.0,0.0,1.0]);
+	var b = Matrix._transformTemp3D.fromArray([c,-s,0.0,0.0, s,c,0.0,0.0, 0.0,0.0,1.0,0.0, 0.0,0.0,0.0,1.0]);
 	return Matrix.mult(b,a);
 }
 Matrix.transform3DRotate = function(a,vector,angle){
@@ -562,7 +562,7 @@ Matrix.crossMatrixFromV3D = function(min,vin){ // v*M(u) = v x u      (skew symm
 		v = min;
 		m = new Matrix(3,3);
 	}
-	m.setFromArray([0,-v.z,v.y, v.z,0,-v.x, -v.y,v.x,0]);
+	m.fromArray([0,-v.z,v.y, v.z,0,-v.x, -v.y,v.x,0]);
 	return m;
 }
 // ------------------------------------------------------------------------------------------------------------------------ STATS
@@ -884,7 +884,7 @@ Matrix.normInfinite = function(x){ // x is a vector
 	return maxAbs; // return max;
 }
 Matrix.inverse = function(A){ // assumed square
-	//return new Matrix(A.rows(),A.cols()).setFromArrayMatrix( numeric.inv(A._rows) );
+	//return new Matrix(A.rows(),A.cols()).fromArrayMatrix( numeric.inv(A._rows) );
 	C = Matrix.augment(A,(new Matrix(A._rowCount,A._colCount)).identity());
 	Matrix.RREF(C,C);
 	B = C.getSubMatrix(0,0, A._rowCount,A._colCount);
@@ -901,7 +901,7 @@ Matrix.inverse = function(A){ // assumed square
 		// console.log(C.toString())
 	}
 	return C;
-	// return new Matrix(A.rows(),A.cols()).setFromArrayMatrix( numeric.inv(A._rows) );
+	// return new Matrix(A.rows(),A.cols()).fromArrayMatrix( numeric.inv(A._rows) );
 }
 // RIGHT INVERSE n<=m: A^T[(A*A^T)^-1]
 // LEFT INVERSE m<=n: [(A^T*A)^-1]A^T
@@ -1075,7 +1075,7 @@ Matrix.eigenValuesAndVectors = function(A){
 		}
 	}
 	// for(var i = vectors.length; i--;){
-	// 	//vectors[i] = new Matrix(1,vectors.length).setFromArray(vectors[i]);
+	// 	//vectors[i] = new Matrix(1,vectors.length).fromArray(vectors[i]);
 	// }
 	return {values:values, vectors:vects};
 	/*
@@ -1093,9 +1093,9 @@ if(A.rows()<A.cols()){
 return Matrix.nonShittySVD(A);
 }
 	var val = numeric.svd(A._rows);
-	var U = new Matrix(A.rows(),A.rows()).setFromArrayMatrix(val.U);
+	var U = new Matrix(A.rows(),A.rows()).fromArrayMatrix(val.U);
 	var S = new Matrix(A.rows(),A.cols()).zero().setDiagonalsFromArray(val.S);
-	var V = new Matrix(A.cols(),A.cols()).setFromArrayMatrix(val.V);
+	var V = new Matrix(A.cols(),A.cols()).fromArrayMatrix(val.V);
 	U.cleanCheck();
 	S.cleanCheck();
 	V.cleanCheck();
@@ -1339,7 +1339,7 @@ Matrix.get2DProjectiveMatrix = function(fromPoints, toPoints){
 	}
 	//var x = Matrix.solve(matA,matB);
 	var x = Matrix.mult(Matrix.pseudoInverseSimple(matA), matB); //
-	var projection = (new Matrix(3,3)).setFromArray([x.get(0,0),x.get(1,0),x.get(2,0), x.get(3,0),x.get(4,0),x.get(5,0), x.get(6,0),x.get(7,0),1.0]);
+	var projection = (new Matrix(3,3)).fromArray([x.get(0,0),x.get(1,0),x.get(2,0), x.get(3,0),x.get(4,0),x.get(5,0), x.get(6,0),x.get(7,0),1.0]);
 	// var pt = new V3D(0,0,0);
 	// projection.multV2DtoV3D(pt,pt);
 	// console.log(pt.toString());
@@ -1435,8 +1435,8 @@ Matrix.power = function(A,power){
 		}
 	}
 	// convert to matrix problem
-	var matB = (new Matrix(len,len)).setFromArrayMatrix(B);
-	var matb = (new Matrix(len,1)).setFromArrayMatrix(b);
+	var matB = (new Matrix(len,len)).fromArrayMatrix(B);
+	var matb = (new Matrix(len,1)).fromArrayMatrix(b);
 	// res = Matrix.mult(Matrix.pseudoInverse(matB), matb);
 	res = Matrix.solve(matB,matb);
 	var Apow = new Array(hei);
@@ -1448,7 +1448,7 @@ Matrix.power = function(A,power){
 			++index;
 		}
 	}
-	return (new Matrix(A.rows(),A.cols())).setFromArrayMatrix(Apow);
+	return (new Matrix(A.rows(),A.cols())).fromArrayMatrix(Apow);
 }
 
 /*
@@ -1566,7 +1566,7 @@ try{
 	lambdaScaleFlip = lambdaScaleFlip!==undefined?lambdaScaleFlip:false;
 
 	var i, j;
-	var x = new Matrix(n,1).setFromArray(xInitial);
+	var x = new Matrix(n,1).fromArray(xInitial);
 	var xTemp = new Matrix(n,1);
 	var dx = new Matrix(n,1);
 	var y = new Matrix(m,1);

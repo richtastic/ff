@@ -1,4 +1,10 @@
 // Tri2D.js
+Tri2D.YAML = {
+	A:"a",
+	B:"b",
+	C:"c"
+};
+
 function Tri2D(a,b,c){ // CCW+
 	this._a = null;
 	this._b = null;
@@ -13,7 +19,15 @@ Tri2D.fromPoints = function(a,b,c){
 Tri2D.fromList = function(ax,ay, bx,by, cx,cy){
 	return new Tri2D(new V2D(ax,ay), new V2D(bx,by), new V2D(cx,cy));
 }
-// -------------------------------------------------------------------------------------------------------------------- 
+Tri2D.prototype.toObject = function(){
+	var DATA = Tri2D.YAML;
+	var object = {};
+	object[DATA.A] = this.A().toObject();
+	object[DATA.B] = this.B().toObject();
+	object[DATA.C] = this.C().toObject();
+	return object;
+}
+// --------------------------------------------------------------------------------------------------------------------
 Tri2D.prototype.rotate = function(origin,angle){
 	if(angle===undefined){
 		angle = origin;
@@ -107,7 +121,7 @@ Tri2D.prototype.copy = function(a){
 	this.C(a.C());
 	return this;
 }
-// -------------------------------------------------------------------------------------------------------------------- 
+// --------------------------------------------------------------------------------------------------------------------
 Tri2D.prototype.jitter = function(amplitude){
 	amplitude = amplitude!==undefined ? amplitude : 1.0;
 	this._a = this._a.copy();
@@ -120,7 +134,7 @@ Tri2D.prototype.jitter = function(amplitude){
 	this._c.x += Math.random()*amplitude - amplitude*0.5;
 	this._c.y += Math.random()*amplitude - amplitude*0.5;
 }
-// -------------------------------------------------------------------------------------------------------------------- 
+// --------------------------------------------------------------------------------------------------------------------
 Tri2D.prototype.toString = function(){
 	var str = "";
 	str += "[Tri2D: ";

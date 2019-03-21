@@ -12,15 +12,23 @@ function Matrix2D(a){
 	this.identity();
 	//this.fromArray(a);
 }
-Matrix2D.prototype.saveToYAML = function(yaml){
-	yaml.writeNumber(DATA.A, this.a);
-	yaml.writeNumber(DATA.B, this.b);
-	yaml.writeNumber(DATA.C, this.c);
-	yaml.writeNumber(DATA.D, this.d);
-	yaml.writeNumber(DATA.X, this.x);
-	yaml.writeNumber(DATA.Y, this.y);
+Matrix2D.prototype.toObject = function(){
+	var DATA = Matrix2D.YAML;
+	var object = {};
+	object[DATA.A] = this.a;
+	object[DATA.B] = this.b;
+	object[DATA.C] = this.c;
+	object[DATA.D] = this.d;
+	object[DATA.X] = this.x;
+	object[DATA.Y] = this.y;
+	return object;
 }
-Matrix2D.prototype.readFromObject = function(obj){
+Matrix2D.prototype.toYAML = function(yaml){
+	var obj = this.toObject();
+	yaml.writeObjectLiteral(obj);
+	return this;
+}
+Matrix2D.prototype.fromObject = function(obj){
 	var DATA = Matrix2D.YAML;
 	this.set(obj[DATA.A],obj[DATA.B],obj[DATA.C],obj[DATA.D], obj[DATA.X],obj[DATA.Y]);
 }
@@ -191,5 +199,3 @@ Matrix2D.decomposeMatrix = function(m){
 	var ty = m.f;
 	var rotation = skewX; // ?
 }
-
-
