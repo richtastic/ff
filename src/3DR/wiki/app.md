@@ -342,19 +342,17 @@ https://cloud.google.com/appengine/docs/nodejs/
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-		WHY IS THIS NOT THE SAME :
-		this.estimate3DPoints();
-		this.averagePoints3DFromMatches(true);
+- patches generating 'up' from normal (random?)
+
+- point2D sizes need to have some min / max range enforced after P3D size calculations
+	- at least ~7x7 average size (~1% of image)
+	- at most ~50x50 size (~10% of image)
+	- otherwise scale up/down smallest/largest
+		- or drop of discrepancy between largest differences is too large [keep largest?]
+-
 
 
-- update output in triple match:
-	x T normalized
-	- abs matrixes
-
-
-- track aggregation:
-	- want to keep affine 2D-relation in graph tracks
-
+- track/point collision resolution double check
 
 - track propagation step before BA
 	- find views most likely to benefit from BA

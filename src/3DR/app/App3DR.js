@@ -7942,7 +7942,7 @@ return;
 
 }
 
-App3DR.ProjectManager.prototype.iterateGraphTracks = function(){
+App3DR.ProjectManager.prototype.iterateGraphTracks = function(){ // aggregate / accumulate tracks
 	console.log("iterateGraphTracks");
 
 	var project = this;
@@ -8161,10 +8161,12 @@ App3DR.ProjectManager.prototype._iterateGraphTracksTick = function(pair,viewsLoa
 
 	var graphViewLookup = {};
 	var graphViewLookupIndex = {};
+	var graphViewLookupID = {};
 	for(var i=0; i<graphViews.length; ++i){
 		var vid = graphViews[i]["id"];
 		graphViewLookup[vid] = graphViews[i];
 		graphViewLookupIndex[vid] = i;
+		graphViewLookupID[i] = vid;
 	}
 
 	var trackData = pair.trackData();
@@ -8262,14 +8264,56 @@ App3DR.ProjectManager.prototype._iterateGraphTracksTick = function(pair,viewsLoa
 		world.disconnectPoint3D(point3D);
 	}
 	// add existing tracks
+	var dirXJ = new V2D();
+	var dirYJ = new V2D();
+	var dirXK = new V2D();
+	var dirYK = new V2D();
+	var dirO = new V2D(0,0);
 	for(var i=0; i<existingPoints.length; ++i){
 		var existing = existingPoints[i];
 		console.log(existing);
 		console.log("TODO");
+		var pnt = new V3D(existing["X"],existing["Y"],existing["Z"]);
+		var nrm = new V3D(existing["x"],existing["y"],existing["z"]);
+		var siz = existing["s"];
+		var vs = existing["v"];
+		var ps = [];
+		var ms = [];
+		var p3 = new Stereopsis.P3D(pt,nrm,siz);
+
+		for(var j=0; j<vs.length; ++j){
+			var v = vs[j];
+			var vI = v["i"];
+				vI = graphViewLookupID[vI];
+			dirXJ.set(v["Xx"],v["Xy"]);
+			dirYJ.set(v["Yx"],v["Yy"]);
+			// p2 = new V2D();
+			var p2 = new Stereopsis.P2D(?);
+
+p2 = new Stereopsis.P2D(vI,p2,p3);
+p3.addPoint2D(p2);
 
 
+
+			for(var k=j+1; k<vs.length; ++k){
+				var u = vs[k];
+				var uI = U["i"];
+					uI = graphViewLookupID[uI];
+				dirXK.set(v["Xx"],v["Xy"]);
+				dirYK.set(v["Yx"],v["Yy"]);
+				var aff = R3D.affineMatrixExact([dirO,dirXJ,dirYJ],[dirO,dirXK,dirYK]);
+				var m = new Stereopsis.Match2D(?);
+
+m = new Stereopsis.Match2D(p2J,p2K,p3, aff, ncc, sad);
+p2J.addMatch(m);
+p2K.addMatch(m);
+p3.addMatch(m);
+
+			}
+		}
 		throw "...";
-		// TODO: allow for no pre-processing : just trust imput data is right -- speed up
+		// TODO: allow for no pre-processing : just trust input data is right -- speed up
+		newPoints.push(p3);
 	}
 
 	// add back new points
@@ -8304,6 +8348,9 @@ App3DR.ProjectManager.prototype._iterateGraphTracksTick = function(pair,viewsLoa
 	// update points on graph:
 	var points3D = allPoints;
 	var graphPoints = [];
+	var dirX = new V2D();
+	var dirY = new V2D();
+	var dirO = new V2D();
 	for(var i=0; i<points3D.length; ++i){
 		var point3D = points3D[i];
 		var loc = point3D.point();
@@ -8311,16 +8358,33 @@ App3DR.ProjectManager.prototype._iterateGraphTracksTick = function(pair,viewsLoa
 		var siz = point3D.size();
 		var v = [];
 		var points2D = point3D.toPointArray();
+		var vA = null;
+		var vB = null;
 		for(var j=0; j<points2D.length; ++j){
 			var point2D = points2D[j];
 			var p = point2D.point2D();
+			var s = point2D.size();
 			var pv = point2D.view();
 			var ps = pv.size();
+			dirX.set(1,0);
+			dirY.set(0,1);
+			if(j==0){
+				vA = pv;
+			}else{
+				vB = pv;
+				var match = point3D.matchForViews(vA,vB);
+				var affine = match.affineForViews(vA,vB);
+				affine.multV2DtoV2D(dirO,dirO);
+				affine.multV2DtoV2D(dirX,dirX);
+				affine.multV2DtoV2D(dirY,dirY);
+				dirX.sub(dirO);
+				dirY.sub(dirO);
+			}
 			var wid = ps.x;
 			var hei = ps.y;
 			var vID = pv.data();
 			var vIndex = graphViewLookupIndex[vID];
-			var o = {"i":vIndex, "x": p.x/wid, "y": p.y/hei};
+			var o = {"i":vIndex, "s":(s/wid) ,"x":(p.x/wid), "y":(p.y/hei), "Xx":dirX.x, "Xy":dirX.y, "Yx":dirY.x, "Yy":dirY.y};
 			v.push(o);
 		}
 		var object = {"X":loc.x, "Y":loc.y, "Z":loc.z, "x":nor.x, "y":nor.y, "z":nor.z, "s":siz, "v":v};
@@ -8342,7 +8406,6 @@ App3DR.ProjectManager.prototype.saveGraphFromData = function(graphData){
 	yaml.writeObjectLiteral(graphData);
 	var graphString = yaml.toString();
 	console.log(graphString);
-
 	throw "... save";
 	var fxnSavedGraph = function(){
 		console.log("fxnSavedGraph");
@@ -8849,7 +8912,6 @@ App3DR.ProjectManager.prototype.calculateBundleAdjustTriple = function(viewAIn,v
 					var errorFSigma = transform.fSigma();
 					var errorFMean = transform.fMean();
 					var matchCount = transform.matchCount();
-					// ..
 					var F = transform.F(vA,vB);
 					var R = transform.R(vA,vB);
 					var r = {

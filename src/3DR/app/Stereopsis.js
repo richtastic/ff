@@ -585,8 +585,6 @@ Stereopsis.View.prototype.center = function(){
 Stereopsis.View.prototype.projectPoint3D = function(point3D){
 	var K = this._K;
 	var distortions = null;
-	// var absoluteTransform = this._absoluteTransform;
-	//var projected2D = R3D.projectPoint3DToCamera2DForward(point3D, this.extrinsicTransform(), K, distortions);
 	var projected2D = R3D.projectPoint3DToCamera2DForward(point3D, this.absoluteTransform(), K, distortions);
 	return projected2D;
 }
@@ -1214,7 +1212,7 @@ Stereopsis.Transform3D.prototype.calculateErrorR = function(R){
 	this._errorRSigma = rSigma;
 }
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-Stereopsis.P3D = function(point){
+Stereopsis.P3D = function(point,normal,size){
 	this._data = null;
 	this._point = null;
 	this._normal = null;
@@ -1224,6 +1222,8 @@ Stereopsis.P3D = function(point){
 	this._matches = {};
 	this._temp = null;
 	this.point(point);
+	this.normal(normal);
+	this.size(size);
 }
 Stereopsis.P3D.prototype.data = function(data){
 	if(data!==undefined){
@@ -1249,7 +1249,7 @@ Stereopsis.P3D.prototype.up = function(up){
 	}
 	return this._up;
 }
-Stereopsis.P3D.prototype.right = function(up){
+Stereopsis.P3D.prototype.right = function(){
 	if(this._normal){
 		return V3D.cross(this._normal,this._up);
 	}
@@ -1268,7 +1268,7 @@ Stereopsis.P3D.prototype.size = function(size){
 	return this._size;
 }
 Stereopsis.P3D.prototype.hasPatch = function(){
-	return this._normal!=null;
+	return this._normal!=null; // && this._up!=null
 }
 Stereopsis.P3D.prototype.hasPatchResolvedAffine = function(){
 	return false;
@@ -1441,6 +1441,7 @@ Stereopsis.P2D = function(view,point2D,point3D){
 	this._point = null;
 	this._view = null;
 	this._point3D = null;
+	// this._size = null;
 	this._matches = {};
 this._votes = [];
 	this.view(view);
@@ -1492,6 +1493,12 @@ Stereopsis.P2D.prototype.point3D = function(point3D){
 		this._point3D = point3D;
 	}
 	return this._point3D;
+}
+Stereopsis.P2D.prototype.size = function(size){
+	if(size!==undefined){
+		this._size = size;
+	}
+	return this._size;
 }
 Stereopsis.P2D.prototype.addMatch = function(match){
 	if(match!==undefined){
@@ -3832,12 +3839,13 @@ break;
 				// this.connectPoint3D(group2[j]);
 				this.embedPoint3D(group2[j]);
 			}
+
 		}
 
 		this.estimate3DErrors(true);
 		this.estimate3DPoints();
 		// averagePoints3DFromMatches
-		// this.averagePoints3DFromMatches(true); // WHY IS THIS NOT THE SAME ?
+		// this.averagePoints3DFromMatches(true); // DOES ONLY TRUE
 		this.refineCameraAbsoluteOrientation();
 		this.relativeTransformsFromAbsoluteTransforms();
 		// this.relativeFFromSamples();
@@ -7294,11 +7302,12 @@ Stereopsis.World.prototype.updateP3DPatch = function(point3D){
 		var view = views[i];
 		var image = view.image();
 		var point2D = point3D.pointForView(view);
-
 		if(!point2D){
 			console.log(point3D);
 			throw "what?"
 		}
+		var size2D = this.projectPoint3DForPoint2D(point2D);
+		point2D.sizer(size2D);
 /*
 		var point = point2D.point2D();
 		var compareSize = 49;
@@ -7314,7 +7323,40 @@ Stereopsis.World.prototype.updateP3DPatch = function(point3D){
 	}
 
 
+	throw "set projected size onto view i";
+
 }
+Stereopsis.prototype.projectPoint3DForPoint2D = function(point2D){
+	var point3D = point2D.point3D();
+	var view = point2D.view();
+	var size3D = point3D.size();
+	var center3D = point3D.point();
+	var up3D = point3D.up();
+	var ri3D = point3D.right();
+	up3D = up3D.copy().scale(size3D);
+	ri3D = ri3D.copy().scale(size3D);
+	// left/right are reversed from view
+	var TL3D = center3D.copy().add( u ).add( r );
+	var TR3D = center3D.copy().add( u ).sub( r );
+	var BR3D = center3D.copy().sub( u ).sub( r );
+	var BL3D = center3D.copy().sub( u ).add( r );
+	var center2D = view.projectPoint3D(center3D);
+	var TL2D = view.projectPoint3D(TL3D);
+	var TR2D = view.projectPoint3D(TR3D);
+	var BR2D = view.projectPoint3D(BR3D);
+	var BL2D = view.projectPoint3D(BL3D);
+	// find average size
+	var list = [TL2D,TR2D,BL2D,BR2D];
+	var distance = 0;
+	for(var j=0; j<list.length; ++j){
+		var p2D = list[j];
+		var d = V2D.distance(p2D,center3D);
+		distance += d;
+	}
+	distance /= list.length;
+	point2D.size(distance);
+}
+
 Stereopsis.patchNonlinear = function(center,size,directionNormal,directionRight,directionUp,moveDirection, views,p3D){
 	var maxIterations = 10;
 	var fxn = Stereopsis._gdPatch;
