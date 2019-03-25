@@ -594,6 +594,13 @@ Stereopsis.View.prototype.compareSize = function(compareSize){
 	}
 	return this._compareSize;
 }
+Stereopsis.View.prototype.patchSize = function(){
+	var idealPercent = 0.01; // 1% - 5% of image : @ 500x400&0.01 = 6.4 pixels
+	var hypotenuse = this.size().length();
+	var patchSize = hypotenuse*idealPercent;
+	return patchSize;
+}
+
 Stereopsis.View.prototype.compareSizeForPoint = function(point){
 // return this._compareSize; // discount
 	var finder = this._sizeFinder;
@@ -6722,9 +6729,9 @@ Stereopsis.World.prototype.embedPoint3D = function(point3D, validCheck){ // inse
 		return point3D;
 	}
 }
-
-
-
+// Stereopsis.World.prototype.connectPoint3D = function(point3DA){
+//
+// }
 Stereopsis.World.prototype.resolveIntersection = function(point3DA,point3DB){ // merge / split conflicting points
 // console.log("resolveIntersection: "+point3DA.point()+" | "+point3DB.point());
 	var world = this;
@@ -7122,14 +7129,7 @@ Stereopsis.World.prototype.initialEstimatePatch = function(point3D){
 	var isLocation = point3D.point();
 	var visibleViews = point3D.toViewArray();
 	var visiblePoints = point3D.toPointArray();
-
-// console.log(isLocation);
-// if(!isLocation){
-// console.log(point3D);
-// throw "?";
-// }
-
-	// initial estimate of patch normal = AVG(p(c)->v_i(c))
+``	// initial estimate of patch normal = AVG(p(c)->v_i(c))
 	var normals = [];
 	var rights = [];
 	var percents = []; // based on orthogonality to camera
@@ -7147,7 +7147,7 @@ Stereopsis.World.prototype.initialEstimatePatch = function(point3D){
 		var p = V3D.dot(n,pc);
 		percents.push(p);
 		percentTotal += p;
-		patchSize += view.compareSize();
+		patchSize += view.patchSize();
 	}
 	for(var i=0; i<percents.length; ++i){
 		percents[i] /= percentTotal;
@@ -7155,8 +7155,6 @@ Stereopsis.World.prototype.initialEstimatePatch = function(point3D){
 	var normal = Code.averageAngleVector3D(normals,percents);
 	var right = Code.averageAngleVector3D(rights,percents);
 	patchSize /= visibleViews.length;
-	// console.log(normal,right,patchSize);
-	// console.log("patchSize (image): "+patchSize);
 	// make sure 90 degrees
 	var up = V3D.cross(normal,right);
 	up.norm();
@@ -7170,7 +7168,7 @@ Stereopsis.World.prototype.initialEstimatePatch = function(point3D){
 		var point2D = visiblePoints[i];
 		var p = point2D.point2D();
 		var v = point2D.view();
-		var rig = p.copy().add(0.5*v.compareSize(),0);
+		var rig = p.copy().add(0.5*v.patchSize(),0);
 		var ray = R3D.projectPoint2DToCamera3DRay(rig, v.absoluteTransform(), v.Kinv(), null);
 		var o = ray["o"];
 		var d = ray["d"];
@@ -7179,7 +7177,6 @@ Stereopsis.World.prototype.initialEstimatePatch = function(point3D){
 		currentSize += d;
 	}
 	currentSize /= visiblePoints.length;
-	// console.log("currentSize (world): "+currentSize);
 	// iterate to optimum
 	var rangeMin = null;
 	var rangeMax = null;

@@ -342,17 +342,25 @@ https://cloud.google.com/appengine/docs/nodejs/
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-- patches generating 'up' from normal (random?)
+x patches generating 'up' from normal (random?)
+x patch size (2D) is image resolution dependant
 
-- point2D sizes need to have some min / max range enforced after P3D size calculations
+x point2D sizes need to have some min / max range enforced after P3D size calculations
 	- at least ~7x7 average size (~1% of image)
 	- at most ~50x50 size (~10% of image)
 	- otherwise scale up/down smallest/largest
 		- or drop of discrepancy between largest differences is too large [keep largest?]
--
+
+- NCC & SAD need to be recorded/validated ?
+	- for now record in track yaml
+
+- verify inputing existing points works
+	- P3Ds
+	- P2Ds
+	- matches
 
 
-- track/point collision resolution double check
+- track/point collision resolution check
 
 - track propagation step before BA
 	- find views most likely to benefit from BA

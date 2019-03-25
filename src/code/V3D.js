@@ -187,6 +187,16 @@ V3D.max = function(a,b,c){ // a = max(b,c)
 V3D.pushToArray = function(a,v){
 	a.push(v.x,v.y,v.z);
 }
+V3D.orthogonal = function(v){ // find direction perpendicular to vector
+	var d = new V3D(1,1,1);
+	var dot = V3D.dot(d,v);
+	if(dot==0){
+		d.x = 0;
+	}
+	V3D.cross(d, v,d);
+	d.norm();
+	return d;
+}
 function V3D(xP,yP,zP){
 	V3D._.constructor.call(this,xP,yP);
 	// if( Code.isa(xP,V3D) ){

@@ -8263,6 +8263,7 @@ App3DR.ProjectManager.prototype._iterateGraphTracksTick = function(pair,viewsLoa
 		var point3D = newPoints[i];
 		world.disconnectPoint3D(point3D);
 	}
+HERE
 	// add existing tracks
 	var dirXJ = new V2D();
 	var dirYJ = new V2D();
@@ -8280,7 +8281,7 @@ App3DR.ProjectManager.prototype._iterateGraphTracksTick = function(pair,viewsLoa
 		var ps = [];
 		var ms = [];
 		var p3 = new Stereopsis.P3D(pt,nrm,siz);
-
+		//
 		for(var j=0; j<vs.length; ++j){
 			var v = vs[j];
 			var vI = v["i"];
@@ -8288,7 +8289,7 @@ App3DR.ProjectManager.prototype._iterateGraphTracksTick = function(pair,viewsLoa
 			dirXJ.set(v["Xx"],v["Xy"]);
 			dirYJ.set(v["Yx"],v["Yy"]);
 			// p2 = new V2D();
-			var p2 = new Stereopsis.P2D(?);
+			// var p2 = new Stereopsis.P2D(?);
 
 p2 = new Stereopsis.P2D(vI,p2,p3);
 p3.addPoint2D(p2);
@@ -8302,7 +8303,7 @@ p3.addPoint2D(p2);
 				dirXK.set(v["Xx"],v["Xy"]);
 				dirYK.set(v["Yx"],v["Yy"]);
 				var aff = R3D.affineMatrixExact([dirO,dirXJ,dirYJ],[dirO,dirXK,dirYK]);
-				var m = new Stereopsis.Match2D(?);
+				// var m = new Stereopsis.Match2D(?);
 
 m = new Stereopsis.Match2D(p2J,p2K,p3, aff, ncc, sad);
 p2J.addMatch(m);
@@ -8320,6 +8321,7 @@ p3.addMatch(m);
 	for(var i=0; i<newPoints.length; ++i){
 		var point3D = newPoints[i];
 		world.embedPoint3D(point3D);
+		// world.connectPoint3D(point3D); // no questions asked
 	}
 
 	/*
