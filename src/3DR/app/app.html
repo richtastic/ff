@@ -602,6 +602,70 @@ console.log(" "+i+" DIFF: "+orgDiff.length()+" @ "+Code.degrees(dirDiff));
 
 
 function classesLoadedFxn(){
+
+/*
+	var error = 0.1;
+	var size = 1.0;
+	// var samples = 3;
+	var samples = 10;
+	var matrix = new Matrix(3,3).identity();
+		matrix = Matrix.transform2DScale(matrix, 1.0,2.0);
+		matrix = Matrix.transform2DRotate(matrix, Code.radians(30.0));
+		matrix = Matrix.transform2DSkewX(matrix, 0.5);
+		matrix = Matrix.transform2DSkewY(matrix, 2.0);
+	console.log("matrix:\n"+matrix);
+	// var pointsA = [new V2D(0,0),new V2D(1,0),new V2D(0,1)];
+	// var pointsA = [new V2D(1,0),new V2D(0,1)];
+	var pointsA = [];
+	for(var i=0; i<samples; ++i){
+		var pointA = new V2D(Code.randomFloat(-size,size), Code.randomFloat(-size,size));
+		pointsA.push(pointA);
+	}
+	var pointsB = [];
+	for(var i=0; i<pointsA.length; ++i){
+		var pointA = pointsA[i];
+		var pointB = matrix.multV2DtoV2D(pointA);
+		pointB.add( Code.randomFloat(-error,error), Code.randomFloat(-error,error) );
+		pointsB.push(pointB);
+	}
+	console.log(pointsA);
+	console.log(pointsB);
+	var affine = R3D.affineCornerDLT(pointsA,pointsB);
+	console.log("affine:\n"+affine);
+
+	// error:
+	var error = 0;
+	for(var i=0; i<pointsA.length; ++i){
+		var pointA = pointsA[i];
+		var pointB = pointsB[i];
+		var pointC = affine.multV2DtoV2D(pointA);
+		var d = V2D.distance(pointC,pointB);
+		error += d;
+	}
+	error /= pointsA.length;
+	console.log(error);
+
+
+	affine = R3D.affineCornerNonlinearGD(affine, pointsA,pointsB);
+	console.log(affine);
+	console.log("affine:\n"+affine);
+	var error = 0;
+	for(var i=0; i<pointsA.length; ++i){
+		var pointA = pointsA[i];
+		var pointB = pointsB[i];
+		var pointC = affine.multV2DtoV2D(pointA);
+		var d = V2D.distance(pointC,pointB);
+		error += d;
+	}
+	error /= pointsA.length;
+	console.log(error);
+
+	
+	throw "AFFFINE";
+
+*/
+
+
 /*
 	var v = new V3D(0,1,0);
 		v.norm();

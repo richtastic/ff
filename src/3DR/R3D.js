@@ -844,6 +844,12 @@ R3D.screenNormalizedPointsFromPixelPoints = function(points,width,height){
 	return list;
 }
 // ------------------------------------------------------------------------------------------- H utilities
+R3D.affineCornerMatrixLinear = function(pointsA,pointsB){
+	if (pointsA && pointsB && pointsA.length>=2 && pointsB.length>=2){
+		return R3D.affineCornerDLT(pointsA,pointsB);
+	}
+	return null;
+}
 R3D.affineMatrixLinear = function(pointsA,pointsB){
 	if (pointsA && pointsB && pointsA.length>=3 && pointsB.length>=3){
 		return R3D.affineDLT(pointsA,pointsB);
@@ -6158,32 +6164,29 @@ R3D.DLT2D = function(pointsFr,pointsTo){
 }
 
 
-R3D.affineDLT = function(pointsFr,pointsTo){ // 3 points = affine matrix tranformation.  // TODO: numerical stability eg: 100,100,  150,100,  100,150
+R3D.affineDLT = function(pointsFr,pointsTo){ // 3 points = affine matrix transformation.  // TODO: numerical stability eg: 100,100,  150,100,  100,150
 	var i, j, fr, to, len = pointsFr.length;
-	var v = new V3D(), u = new V3D();
 	var rows = len*2;
 	var cols = 7;
 	var A = new Matrix(rows,cols);
 	for(i=0;i<len;++i){
 		fr = pointsFr[i];
 		to = pointsTo[i];
-		u.x=fr.x; u.y=fr.y;
-		v.x=to.x; v.y=to.y;
-		A.set(i*2+0,0, u.x);
-		A.set(i*2+0,1, u.y);
+		A.set(i*2+0,0, fr.x);
+		A.set(i*2+0,1, fr.y);
 		A.set(i*2+0,2, 1.0);
 		A.set(i*2+0,3, 0.0);
 		A.set(i*2+0,4, 0.0);
 		A.set(i*2+0,5, 0.0);
-		A.set(i*2+0,6, -v.x);
+		A.set(i*2+0,6, -to.x);
 		//
 		A.set(i*2+1,0, 0.0);
 		A.set(i*2+1,1, 0.0);
 		A.set(i*2+1,2, 0.0);
-		A.set(i*2+1,3, u.x);
-		A.set(i*2+1,4, u.y);
+		A.set(i*2+1,3, fr.x);
+		A.set(i*2+1,4, fr.y);
 		A.set(i*2+1,5, 1.0);
-		A.set(i*2+1,6, -v.y);
+		A.set(i*2+1,6, -to.y);
 	}
 	var svd = Matrix.SVD(A);
 	var coeff = svd.V.colToArray(6);
@@ -6192,6 +6195,74 @@ R3D.affineDLT = function(pointsFr,pointsTo){ // 3 points = affine matrix tranfor
 	var H = new Matrix(3,3).fromArray(coeff);
 	return H;
 }
+
+R3D.affineCornerDLT = function(pointsFr,pointsTo){
+	var i, j, fr, to, len = pointsFr.length;
+	var rows = len*2;
+	var cols = 5;
+	var A = new Matrix(rows,cols);
+	for(i=0;i<len;++i){
+		fr = pointsFr[i];
+		to = pointsTo[i];
+		A.set(i*2+0,0, fr.x);
+		A.set(i*2+0,1, fr.y);
+		A.set(i*2+0,2, 0.0);
+		A.set(i*2+0,3, 0.0);
+		A.set(i*2+0,4, -to.x);
+		//
+		A.set(i*2+1,0, 0.0);
+		A.set(i*2+1,1, 0.0);
+		A.set(i*2+1,2, fr.x);
+		A.set(i*2+1,3, fr.y);
+		A.set(i*2+1,4, -to.y);
+	}
+	var svd = Matrix.SVD(A);
+	var coeff = svd.V.colToArray(4);
+	coeff = [ coeff[0]/coeff[4], coeff[1]/coeff[4], 0, coeff[2]/coeff[4], coeff[3]/coeff[4], 0, 0,0,1];
+	var H = new Matrix(3,3).fromArray(coeff);
+	return H;
+}
+R3D.affineCornerNonlinearGD = function(affine, pointsA,pointsB){ // with few params in very linear case this is only helpful for a few % error reduction
+		var xVals = [affine.get(0,0), affine.get(0,1), affine.get(1,0), affine.get(1,1)];
+		var args = [pointsA,pointsB, new Matrix(3,3).identity(), new V2D()];
+		var maxIterations = 10;
+		var result = Code.gradientDescent(R3D._gdAffineCornerGD, args, xVals, null, maxIterations, 1E-6);
+		var x = result["x"];
+		var matrix = new Matrix(3,3).fromArray([x[0],x[1],0, x[2],x[3],0, 0,0,1]);
+		return matrix;
+}
+
+R3D._gdAffineCornerGD = function(args, x, isUpdate){
+	if(isUpdate){
+		return;
+	}
+	// args
+	var pointsA = args[0];
+	var pointsB = args[1];
+	var affine = args[2];
+	var pointC = args[3];
+	var error = 0;
+	affine.set(0,0, x[0]);
+	affine.set(0,1, x[1]);
+	affine.set(1,0, x[2]);
+	affine.set(1,1, x[3]);
+	for(var i=0; i<pointsA.length; ++i){
+		var pointA = pointsA[i];
+		var pointB = pointsB[i];
+		affine.multV2DtoV2D(pointC,pointA);
+		// var distance = V2D.distanceSquare(pointB,pointC);
+		var distance = V2D.distance(pointB,pointC); // better
+		error += distance;
+	}
+	// if(isUpdate){
+	// 	console.log(error);
+	// }
+	return error;
+}
+
+
+
+
 R3D.projectiveDLT = function(pointsFr,pointsTo, weights){ // R3D.projectiveDLTWeights
 	if(weights){
 		return R3D._projectiveDLTWeights(pointsFr,pointsTo, weights);

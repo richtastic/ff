@@ -342,8 +342,38 @@ https://cloud.google.com/appengine/docs/nodejs/
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-x patches generating 'up' from normal (random?)
-x patch size (2D) is image resolution dependant
+
+x SAVE VIEW SIZES IN GRAPH.YAML
+	=> when a track is loaded, remember the size of the image loaded
+
+x GENERATE 2D SIZE / AFFINE FROM PATCHES:
+	- project P3D into all (loaded) views
+	- alc size from idividual avg points
+	- calc all affine from points
+
+x COLLISION
+	on collision: coll view & other view
+	if BOTH VIEWS OVERLAP: [2 points 2 views]
+		if other view has point in almost same place as existing view: ~1 px difference
+			- this is a duplicate found point
+			=> ignore new match
+		else: there is a troublesome point that is mapping to 2 different/repeated features
+			=> ignore new match
+			=> remove repeated point from existing P3D [drop P3D if only singe point remains]
+	ELSE: possibly good point:
+		- for all views that are loaded:
+			- map affine matrices of both (all) new points to all existing points
+			- do NCC & SAD scoring
+		if all loaded-view-score are ok (below ~0.5) & not much worse than the existing match population (min + sig [or 2x min if only 2 points exist])
+			=> average the P3D location percentage-wize based on counts
+			=> average patch normal also based on count/percent
+			=> add single (all) new view points
+
+		else: these are not likely the same pait / bad match
+			=> ignore new match
+
+x UPDATING PATCHES
+	- using only loaded views
 
 x point2D sizes need to have some min / max range enforced after P3D size calculations
 	- at least ~7x7 average size (~1% of image)
@@ -351,24 +381,88 @@ x point2D sizes need to have some min / max range enforced after P3D size calcul
 	- otherwise scale up/down smallest/largest
 		- or drop of discrepancy between largest differences is too large [keep largest?]
 
-- NCC & SAD need to be recorded/validated ?
-	- for now record in track yaml
 
-- verify inputing existing points works
-	- P3Ds
-	- P2Ds
-	- matches
+PROPAGATING TRACKS: [may have few initial multi-way tracks]
+	- edge counts are based on P3D point pairs
+	- for each view:
+		- calculate bridging ratio for each existing (count between views is above min [eg 16]) pair:
+			A-B(count) / A-C(count)
+	- sort each triple based on highest bridging ratio
+	=> load each triple in sequence
+		- aux views = next largest edge for each view [3 and up to 3 more]
+		- for each view:
+			- project point into not-yet-connected loaded views
+
+=> can start a sparse: points/views separate yaml files
+
+INITIAL TRACK BA:
+	- generate 'edges' using P3D info & add entries to graph:
+		- errorR, errorF, count, deltaR, deltaF, deltaCount
+	- sort edges on:
+		a) deltas not yet known
+		b) higher edge count
+	- each iteration:
+		a) pick top edge on list
+		b) next pair in list (with minimum edge count [eg 16])
+		- aux views = most shared points [A,B,C] (up to 6)
+	=> MAIN BA FXN
+	- deltas = amounts at beginning of iteration TO amounts at end
+	- update all edges & possibly drop / add edges [above / below min counts {eg 32 & 16}]
+
+CONTINUING BA: [all deltas known]
+	- sort edges on larger deltaR [edge count above some minimum]
+	 	a) pick edge at top of list
+		b) pick next edge with view in common with (a)
+		c) aux views = next pair with most shared points [A,B,C] (up to 6)
+	=> MAIN BA FXN
+	- repeat until: deltaR < ~0.001  /or/  max iterations: 10*viewCount
+
+BA MAIN FXN:
+	- move only single view with:
+	 	?) most P2Ds
+		?)
+	- for each view:
+		- try propagating tracks into loaded views
+	- drop P2Ds with very high error
+	- trop tracks with very high error
 
 
-- track/point collision resolution check
-
-- track propagation step before BA
-	- find views most likely to benefit from BA
-	- load these view groups (3-5)
+...
 
 
+DENSE LOGISTICS: [dense points + image]
 
-- track/sparse: global BA to optimize view locations
+- load each [semi-]dense pair at a time
+- use R-pair from sparse result
+- filter poor P3D based on R-error
+- init each P3D patch with nearest patch(1-3) from sparse result [or init regularly if too far away from a sparse result]
+- filter poor patches based on intersection inconsistencies
+=> export final best dense points to file
+
+DENSE AGGREGATION: [points and views only]
+- import all final best dense points at same time
+- import best view orientations
+- filter points based on R-error
+- filter points based on patch inconsistencies
+- final iterative randomized BA using only views & points
+	- views change based on random point sampling error reduction
+	- P3D locations individually changed to reduce R-error
+	- filter P3D on patch
+	- filter P3D on R error
+=> keep final best points & views
+
+...
+
+TESSELATION LOGISTICS:
+
+...
+
+
+
+
+
+
+
 
 
 PLANAR STRUCTURE:

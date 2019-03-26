@@ -1404,6 +1404,15 @@ Code.transformArray = function(a,f){
 	}
 	return a;
 }
+Code.filterArray = function(a, f){
+	filtered = [];
+	for(var i=0; i<a.length; ++i){
+		if(f(a[i])){
+			filtered.push(a[i]);
+		}
+	}
+	return filtered;
+}
 // Array.prototype.insert = function(i, o){ this.splice(i, 0, o); }
 // Code.copyArray(array)
 // Code.copyArray(arrayTo, arrayFrom)

@@ -8136,6 +8136,8 @@ console.log("START AT: "+startIndexI+" | "+startIndexJ);
 		var fxnViewsLoaded = function(){
 			console.log("loaded images");
 			console.log(loadViews);
+
+// also want to add ALL views
 			project._iterateGraphTracksTick(pair,loadViews);
 		}
 		// load the track data for this pair
@@ -8180,12 +8182,21 @@ App3DR.ProjectManager.prototype._iterateGraphTracksTick = function(pair,viewsLoa
 	var transforms = [];
 	for(var i=0; i<views.length; ++i){
 		var view = views[i];
+		var gv = graphViewLookup[view.id()];
+console.log(gv)
 		var image = view.bundleAdjustImage();
-		var matrix = R3D.imageMatrixFromImage(image, stage);
-			var gv = graphViewLookup[view.id()];
-			var transform = gv["R"];
-				transform = Matrix.fromObject(transform);
-		transforms.push(transform);
+		var matrix = null;
+		if(image){ // try image
+			matrix = R3D.imageMatrixFromImage(image, stage);
+		}else{ // try size
+		 	matrix = gv["size"];
+			if(matrix){
+				matrix = new V2D(matrix["x"],matrix["y"]);
+			}
+		}
+		var transform = gv["R"];
+			transform = Matrix.fromObject(transform);
+			transforms.push(transform);
 		images.push(matrix);
 	}
 	// project view lookup
@@ -8193,8 +8204,6 @@ App3DR.ProjectManager.prototype._iterateGraphTracksTick = function(pair,viewsLoa
 	for(var i=0; i<views.length; ++i){
 		viewLookup[views[i].id()] = views[i];
 	}
-
-
 	// console.log(cameras);
 	// console.log(viewsLoad);
 	// console.log(images);
@@ -8263,7 +8272,6 @@ App3DR.ProjectManager.prototype._iterateGraphTracksTick = function(pair,viewsLoa
 		var point3D = newPoints[i];
 		world.disconnectPoint3D(point3D);
 	}
-HERE
 	// add existing tracks
 	var dirXJ = new V2D();
 	var dirYJ = new V2D();
@@ -8272,57 +8280,80 @@ HERE
 	var dirO = new V2D(0,0);
 	for(var i=0; i<existingPoints.length; ++i){
 		var existing = existingPoints[i];
-		console.log(existing);
-		console.log("TODO");
 		var pnt = new V3D(existing["X"],existing["Y"],existing["Z"]);
 		var nrm = new V3D(existing["x"],existing["y"],existing["z"]);
 		var siz = existing["s"];
 		var vs = existing["v"];
 		var ps = [];
 		var ms = [];
-		var p3 = new Stereopsis.P3D(pt,nrm,siz);
-		//
+		var p3D = new Stereopsis.P3D(pnt,nrm,siz);
+		p3D.up(V3D.orthogonal(nrm));
+		// create P2Ds
+		var p2Ds = [];
 		for(var j=0; j<vs.length; ++j){
+			var v = vs[j];
+			var p2 = new V2D(v["x"],v["y"]);
+			var s = v["s"];
+			var vI = v["i"];
+				vI = graphViewLookupID[vI];
+				vI = world.viewFromData(vI);
+			// scale
+			var siz = vI.size();
+			s *= siz.x;
+			p2.scale(siz.x,siz.y);
+s = null;
+			var p2D = new Stereopsis.P2D(vI,p2,p3D,s);
+			p3D.addPoint2D(p2D);
+			p2Ds.push(p2D);
+		}
+		// match points
+		for(var j=0; j<vs.length; ++j){
+			var p2DJ = p2Ds[j];
 			var v = vs[j];
 			var vI = v["i"];
 				vI = graphViewLookupID[vI];
+				vI = world.viewFromData(vI);
 			dirXJ.set(v["Xx"],v["Xy"]);
 			dirYJ.set(v["Yx"],v["Yy"]);
-			// p2 = new V2D();
-			// var p2 = new Stereopsis.P2D(?);
-
-p2 = new Stereopsis.P2D(vI,p2,p3);
-p3.addPoint2D(p2);
-
-
-
 			for(var k=j+1; k<vs.length; ++k){
+				var p2DK = p2Ds[k];
 				var u = vs[k];
-				var uI = U["i"];
-					uI = graphViewLookupID[uI];
+				var uI = u["i"];
+					uI = graphViewLookup[uI];
+					uI = world.viewFromData(uI);
 				dirXK.set(v["Xx"],v["Xy"]);
 				dirYK.set(v["Yx"],v["Yy"]);
-				var aff = R3D.affineMatrixExact([dirO,dirXJ,dirYJ],[dirO,dirXK,dirYK]);
-				// var m = new Stereopsis.Match2D(?);
-
-m = new Stereopsis.Match2D(p2J,p2K,p3, aff, ncc, sad);
-p2J.addMatch(m);
-p2K.addMatch(m);
-p3.addMatch(m);
-
+				// var aff = R3D.affineMatrixExact([dirO,dirXJ,dirYJ],[dirO,dirXK,dirYK]);
+				var aff = null;
+// ...........
+var m = new Stereopsis.Match2D(p2DJ,p2DK,p3D, aff); // , ncc, sad);
+p2DJ.addMatch(m);
+p2DK.addMatch(m);
+p3D.addMatch(m);
+// world.updateMatchInfo(m);
+// var m = world.newMatchFromInfo(vJ,pJ,viewB,pointB, aff, noConnect, display){
 			}
 		}
-		throw "...";
+if(!p3D.up()){
+	throw "no up"
+}
+world.generateMatchAffineFromPatches(p3D);
+		// newPoints.push(p3D);
+		world.embedPoint3D(p3D, false);
 		// TODO: allow for no pre-processing : just trust input data is right -- speed up
-		newPoints.push(p3);
+		// world.connectPoint3D(point3D); // no questions asked
 	}
 
 	// add back new points
 	for(var i=0; i<newPoints.length; ++i){
 		var point3D = newPoints[i];
 		world.embedPoint3D(point3D);
-		// world.connectPoint3D(point3D); // no questions asked
 	}
+
+
+// throw "...";
+
+
 
 	/*
 	- if collision:
@@ -8345,7 +8376,6 @@ p3.addMatch(m);
 	// all points to tracks
 	var allPoints = world.toPointArray();
 	console.log(allPoints);
-
 
 	// update points on graph:
 	var points3D = allPoints;
@@ -8389,14 +8419,31 @@ p3.addMatch(m);
 			var o = {"i":vIndex, "s":(s/wid) ,"x":(p.x/wid), "y":(p.y/hei), "Xx":dirX.x, "Xy":dirX.y, "Yx":dirY.x, "Yy":dirY.y};
 			v.push(o);
 		}
+		// console.log(loc,nor,siz);
+		if(!nor){
+			console.log(point3D);
+			throw "nrm";
+		}
 		var object = {"X":loc.x, "Y":loc.y, "Z":loc.z, "x":nor.x, "y":nor.y, "z":nor.z, "s":siz, "v":v};
 		graphPoints.push(object);
 	}
 	graphData["points"] = graphPoints;
 	// graphData["previousPair"] // already updated
 	console.log("save / update graph data");
+	// update view transforms:
+console.log(graphViews);
+	for(var i=0; i<graphViews.length; ++i){
+		var gv = graphViews[i];
+		var gid = gv["id"];
+		var view = world.viewFromData(gid);
+console.log(view);
+		var R = view.absoluteTransform();
+		var size = view.size();
+		gv["R"] = R.copy();
+		gv["size"] = size; // replace / update
+	}
 	console.log(graphData);
-
+throw "TO SAVE ..."
 	this.saveGraphFromData(graphData);
 }
 App3DR.ProjectManager.prototype.saveGraphFromData = function(graphData){
@@ -8407,17 +8454,11 @@ App3DR.ProjectManager.prototype.saveGraphFromData = function(graphData){
 	yaml.writeComment("Graph");
 	yaml.writeObjectLiteral(graphData);
 	var graphString = yaml.toString();
-	console.log(graphString);
-	throw "... save";
 	var fxnSavedGraph = function(){
 		console.log("fxnSavedGraph");
 	}
 	this.saveGraph(graphString, this.graphFilename(), fxnSavedGraph, this);
 }
-
-
-
-
 
 
 
@@ -9116,9 +9157,15 @@ App3DR.ProjectManager.addViewsToWorld = function(world, views, images, transform
 		if(!cam){
 			cam = cameras[0];
 		}
-		var v = world.addView(image, cam);
+		var v = world.addView(null,cam);
 		v.absoluteTransform(transform);
-		v.image(image);
+		if(image){
+			if(Code.isa(image, V2D)){
+				v.size(image);
+			}else{
+				v.image(image);
+			}
+		}
 		v.data(viewID);
 		WORLDVIEWS.push(v);
 	}
