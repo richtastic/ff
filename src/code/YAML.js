@@ -416,22 +416,18 @@ YAML.prototype.writeString = function(name,value){ // if intending to write null
 	}
 }
 YAML.prototype.writeArrayLiteral = function(name,value){
-	// console.log("WRITE ARRAY LITERAL ",name,value);
-	if(value!==undefined){ // has name
-		this.writeArrayStart(name);
-			this.writeArrayLiteral(value);
-		this.writeArrayEnd();
-	}else{ // already at write location
+	if(value===undefined){
 		value = name;
-		// console.log("WRITING ARRAY: ",value,value.length)
-		for(var i=0; i<value.length; ++i){
-			this._writeUnknownLiteral(value[i],undefined, true);
-		}
+		name = null;
 	}
+	this.writeArrayStart(name);
+	for(var i=0; i<value.length; ++i){
+		this._writeUnknownLiteral(value[i],undefined, true);
+	}
+	this.writeArrayEnd();
 }
 YAML.prototype.writeObjectLiteral = function(name,value){
-	// console.log("WRITE OBJECT LITERAL ",name,value);
-	if(value!==undefined){ // has name
+	if(value!==undefined && value!==null){ // has name
 		this.writeObjectStart(name);
 			this.writeObjectLiteral(value);
 		this.writeObjectEnd();
@@ -451,7 +447,6 @@ YAML.prototype._writeUnknownLiteral = function(key,val, startObject){
 		key = null;
 	}
 	if(Code.isObject(val)){
-		// console.log("object",key,val);
 		if(key){
 			this.writeObjectLiteral(key,val);
 		}else{
@@ -464,34 +459,26 @@ YAML.prototype._writeUnknownLiteral = function(key,val, startObject){
 			}
 		}
 	}else if(Code.isArray(val)){
-		// console.log("array",key,val);
-		if(key){
-			this.writeArrayLiteral(key,val);
-		}else{
-			if(startObject){ // from array needs indent
-				this.writeArrayStart();
-					this.writeArrayLiteral(val);
-				this.writeArrayEnd();
-			}else{
-				this.writeArrayLiteral(val);
-			}
-		}
+		this.writeArrayLiteral(key,val);
 	}else if(Code.isString(val)){
-		// console.log("string",key,val);
 		if(key){
 			this.writeString(key,val);
 		}else{
 			this.writeString(val);
 		}
 	}else if(Code.isNumber(val)){
-		// console.log("number",key,val);
 		if(key){
 			this.writeNumber(key,val);
 		}else{
 			this.writeNumber(val);
 		}
+	}else if(Code.isBoolean(val)){
+		if(key){
+			this.writeBoolean(key,val);
+		}else{
+			this.writeBoolean(val);
+		}
 	}else if(Code.isNull(val)){
-		// console.log("null",key,val);
 		if(key){
 			this.writeNull(key);
 		}else{
@@ -569,7 +556,11 @@ YAML.prototype.writeArrayStrings = function(name, array){
 	this.writeArrayEnd();
 }
 YAML.prototype.writeArrayStart = function(name){
-	this._lines[this._lineNumber++] = this._prefixIndent()+name+YAML.SEPARATOR;
+	if(name!==undefined && name!==null){
+		this._lines[this._lineNumber++] = this._prefixIndent()+name+YAML.SEPARATOR;
+	}else{ // no name, start of something
+		this._lines[this._lineNumber++] = this._prefixIndent()+YAML.ARRAY_SEPARATOR;
+	}
 	this._stack.push(YAML.STACK_ARRAY);
 	this._indent++;
 }

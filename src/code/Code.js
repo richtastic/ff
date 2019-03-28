@@ -43,6 +43,7 @@ Code.TYPE_ARRAY = 'array';
 Code.TYPE_FUNCTION = "function";
 Code.TYPE_NUMBER = "number";
 Code.TYPE_STRING = "string";
+Code.TYPE_BOOLEAN = "boolean";
 Code.TYPE_UNDEFINED = "undefined";
 
 // http://www.quirksmode.org/dom/events/index.html
@@ -191,6 +192,9 @@ Code.isObject = function(obj){
 }
 Code.isFunction = function(obj){
 	return (typeof obj)==Code.TYPE_FUNCTION;
+}
+Code.isBoolean = function(obj){
+	return (typeof obj)==Code.TYPE_BOOLEAN;
 }
 Code.isArray = function(obj){
 	return (obj && (typeof obj)==Code.TYPE_OBJECT && obj.constructor==Array); // instanceofArray

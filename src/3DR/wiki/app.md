@@ -342,56 +342,15 @@ https://cloud.google.com/appengine/docs/nodejs/
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+- is the patch p3d merge dropping a lot of points?
 
-x SAVE VIEW SIZES IN GRAPH.YAML
-	=> when a track is loaded, remember the size of the image loaded
-
-x GENERATE 2D SIZE / AFFINE FROM PATCHES:
-	- project P3D into all (loaded) views
-	- alc size from idividual avg points
-	- calc all affine from points
-
-x COLLISION
-	on collision: coll view & other view
-	if BOTH VIEWS OVERLAP: [2 points 2 views]
-		if other view has point in almost same place as existing view: ~1 px difference
-			- this is a duplicate found point
-			=> ignore new match
-		else: there is a troublesome point that is mapping to 2 different/repeated features
-			=> ignore new match
-			=> remove repeated point from existing P3D [drop P3D if only singe point remains]
-	ELSE: possibly good point:
-		- for all views that are loaded:
-			- map affine matrices of both (all) new points to all existing points
-			- do NCC & SAD scoring
-		if all loaded-view-score are ok (below ~0.5) & not much worse than the existing match population (min + sig [or 2x min if only 2 points exist])
-			=> average the P3D location percentage-wize based on counts
-			=> average patch normal also based on count/percent
-			=> add single (all) new view points
-
-		else: these are not likely the same pait / bad match
-			=> ignore new match
-
-x UPDATING PATCHES
-	- using only loaded views
-
-x point2D sizes need to have some min / max range enforced after P3D size calculations
-	- at least ~7x7 average size (~1% of image)
-	- at most ~50x50 size (~10% of image)
-	- otherwise scale up/down smallest/largest
-		- or drop of discrepancy between largest differences is too large [keep largest?]
+- when patch matches are initialized, they are assigned a transform, but not necessarily inserted ...
 
 
-PROPAGATING TRACKS: [may have few initial multi-way tracks]
-	- edge counts are based on P3D point pairs
-	- for each view:
-		- calculate bridging ratio for each existing (count between views is above min [eg 16]) pair:
-			A-B(count) / A-C(count)
-	- sort each triple based on highest bridging ratio
-	=> load each triple in sequence
-		- aux views = next largest edge for each view [3 and up to 3 more]
-		- for each view:
-			- project point into not-yet-connected loaded views
+- viz projected patch successes vs existing matches
+
+
+
 
 => can start a sparse: points/views separate yaml files
 

@@ -660,7 +660,7 @@ function classesLoadedFxn(){
 	error /= pointsA.length;
 	console.log(error);
 
-	
+
 	throw "AFFFINE";
 
 */
@@ -678,7 +678,9 @@ function classesLoadedFxn(){
 	console.log(d+"");
 
 */
+
 /*
+
 	var yaml = new YAML();
 	// var object = {
 	// 	"A": 3.141,
@@ -770,16 +772,35 @@ function classesLoadedFxn(){
 		"v4d": new V4D(2,1,3,4),
 	}
 
+	object = {
+		"propagateGroups":
+		[
+			[0,1,2],
+			[2,3,4],
+		],
+		"propagateIndex": -1,
+		"object": {
+			"a": {
+				"b": 1,
+			},
+			"arr": [
+				"a", 2, 3.1, false
+			]
+		},
+	}
+
 
 	yaml.writeObjectLiteral(object);
+	yaml.writeBlank();
+
 	// mat.toYAML(yaml);
 	var str = yaml.toString();
 	console.log(object);
 	console.log(str);
 throw "?";
+
+
 */
-
-
 
 	//
 /*
