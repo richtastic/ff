@@ -26719,15 +26719,10 @@ R3D._costTripleFeatures = function(patchA,patchB,patchC){
 	return cost;
 }
 
-R3D.BundleAdjustCameraExtrinsic = function(intrinsics, inverses, extrinsics, pairPointList2D, pairPointList3D, maxIterations){
-
-
-
-	// pointList3D -- only tested on pairs
-
-	// WHAT DOES THIS DO ON NON PAIRS
-
-
+R3D.BundleAdjustCameraExtrinsic = function(intrinsics, inverses, extrinsics, pairPointList2D, pairPointList3D, maxIterations, intrinsicsOthers, inversesOthers, extrinsicsOthers){ // keep
+	intrinsicsOthers = extrinsicsOthers!==undefined ? intrinsicsOthers : [];
+	inversesOthers = inversesOthers!==undefined ? inversesOthers : [];
+	extrinsicsOthers = extrinsicsOthers!==undefined ? extrinsicsOthers : [];
 	maxIterations = (maxIterations!==undefined && maxIterations!==null)? maxIterations : 1;
 	var cameraCount = intrinsics.length;
 	var args = [];
@@ -26736,6 +26731,9 @@ R3D.BundleAdjustCameraExtrinsic = function(intrinsics, inverses, extrinsics, pai
 	args.push(inverses);
 	args.push(pairPointList2D);
 	args.push(pairPointList3D);
+	args.push(intrinsicsOthers);
+	args.push(inversesOthers);
+	args.push(extrinsicsOthers);
 	for(var i=0; i<extrinsics.length; ++i){
 		var extrinsic = extrinsics[i];
 		var ext = R3D.transformMatrixToComponentArray(extrinsic);
@@ -26765,42 +26763,64 @@ console.log("  POINT COUNT: "+pairPointList3D[0].length+"  ITERATIONS: "+maxIter
 R3D._gd_BACamera_matrix_A = new Matrix(4,4);
 R3D._gd_BACamera_matrix_B = new Matrix(4,4);
 R3D._gd_BACameraExtrinsic = function(args, x, isUpdate){
-	// if(isUpdate){ return; }
+	if(isUpdate){ return; }
 	var intrinsics = args[0];
 	var inverses = args[1];
 	var pairPointLists2D = args[2];
 	var pairPointLists3D = args[3];
-	var firstCamera = args[4];
-	var cameraCount = intrinsics.length;
+	var otherIntrinsics = args[4];
+	var otherInverses = args[5];
+	var otherExtrinsics = args[6];
+	var variableCount = intrinsics.length;
+	var fixedCount = otherIntrinsics.length;
+	var cameraCount = variableCount + fixedCount;
 	var totalError = 0;
 	var tx, ty, tz, rx, ry, rz;
 	var pairIndex = 0;
 	for(var i=0; i<cameraCount; ++i){
-		var KA = intrinsics[i];
-		var KAInv = inverses[i];
-		tx = x[i*6 + 0];
-		ty = x[i*6 + 1];
-		tz = x[i*6 + 2];
-		rx = x[i*6 + 3];
-		ry = x[i*6 + 4];
-		rz = x[i*6 + 5];
-		var PA = R3D._gd_BACamera_matrix_A;
-		R3D.transform3DFromParameters(PA, rx,ry,rz, tx,ty,tz);
+		var PA, KA, KAInv;
+		var ii = i;
+		if(i<variableCount){
+			KA = intrinsics[i];
+			KAInv = inverses[i];
+			tx = x[i*6 + 0];
+			ty = x[i*6 + 1];
+			tz = x[i*6 + 2];
+			rx = x[i*6 + 3];
+			ry = x[i*6 + 4];
+			rz = x[i*6 + 5];
+			PA = R3D._gd_BACamera_matrix_A;
+			R3D.transform3DFromParameters(PA, rx,ry,rz, tx,ty,tz);
+		}else{
+			ii = i-variableCount;
+			KA = otherIntrinsics[ii];
+			KAInv = otherIntrinsics[ii];
+			PA = otherIntrinsics[ii];
+		}
 		for(var j=i+1; j<cameraCount; ++j){
-			var KB = intrinsics[j];
-			var KBInv = inverses[j];
+			var jj = j;
+			var KB, KBInv, PB;
+			if(j<variableCount){
+				KB = intrinsics[j];
+				KBInv = inverses[j];
+				tx = x[j*6 + 0];
+				ty = x[j*6 + 1];
+				tz = x[j*6 + 2];
+				rx = x[j*6 + 3];
+				ry = x[j*6 + 4];
+				rz = x[j*6 + 5];
+				PB = R3D._gd_BACamera_matrix_B;
+				R3D.transform3DFromParameters(PB, rx,ry,rz, tx,ty,tz);
+			}else{
+				jj = j-variableCount;
+				KA = otherIntrinsics[jj];
+				KAInv = otherIntrinsics[jj];
+				PA = otherIntrinsics[jj];
+			}
 			var pointLists2D = pairPointLists2D[pairIndex];
 			var pointList3D =  pairPointLists3D[pairIndex];
 			var pointListA = pointLists2D[0];
 			var pointListB = pointLists2D[1];
-			tx = x[j*6 + 0];
-			ty = x[j*6 + 1];
-			tz = x[j*6 + 2];
-			rx = x[j*6 + 3];
-			ry = x[j*6 + 4];
-			rz = x[j*6 + 5];
-			var PB = R3D._gd_BACamera_matrix_B;
-			R3D.transform3DFromParameters(PB, rx,ry,rz, tx,ty,tz);
 			var pointCount = pointListA.length;
 			var pairError = 0;
 			for(var k=0; k<pointCount; ++k){
@@ -26809,7 +26829,6 @@ R3D._gd_BACameraExtrinsic = function(args, x, isUpdate){
 				var p3D = pointList3D[k];
 				var info = R3D.reprojectionError(p3D, p2DA,p2DB, PA, PB, KA, KB);
 				var error = info["error"];
-
 					//error = Math.sqrt(error);
 					// error = error * error;
 				pairError += error;

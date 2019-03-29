@@ -8413,16 +8413,76 @@ App3DR.ProjectManager.prototype._iterateGraphTracksPropagateTick = function(trip
 	console.log(points);
 
 	// world fxns to:
-
+world.printPoint3DTrackCount();
 		// propagate tracks
 		console.log("errors initial");
 		world.relativeTransformsFromAbsoluteTransforms();
 		// world.relativeFFromSamples();
 		world.estimate3DErrors(true);
-		// this.averagePoints3DFromMatches(true);
 		console.log("probe3D");
 		world.probe3D();
+
+
+for(var t=0; t<2; ++t){
+world.printPoint3DTrackCount();
 		world.averagePoints3DFromMatches(true);
+
+		console.log("errors update");
+		world.estimate3DErrors(true);
+		world.filterGlobalMatches(null,null, 2.0);
+
+		world.estimate3DPoints();
+		//world.refineCameraAbsoluteOrientation();
+		world.refineSelectCameraAbsoluteOrientation(triple);
+		console.log(" update patches");
+		var listP3D = world.toPointArray();
+		for(var p=0; p<listP3D.length; ++p){
+			if(p%100==0){
+				console.log("    "+p+"/"+listP3D.length);
+			}
+			var p3D = listP3D[p];
+
+			if(!p3D.point()){
+				console.log("null point - why?")
+				world.disconnectPoint3D(p3D);
+				world.killPoint3D(p3D);
+				continue;
+			}
+			if(p3D.toPointArray().length<2){
+				console.log("how is this possible?")
+				continue;
+			}
+
+
+			world.updateP3DPatch(p3D, true);
+
+			// var matches =
+		}
+		// world.dropNegative3D
+		world.probe3D();
+
+}
+
+
+HERE
+
+		// ...
+		// world.averagePoints3DFromMatches(true);
+
+
+		// console.log("errors update");
+		// world.estimate3DErrors(true);
+		// world.filterGlobalMatches(null,null, 2.0);
+		//
+		// world.estimate3DPoints();
+		// world.refineCameraAbsoluteOrientation();
+		// world.probe3D();
+
+
+
+
+// update all affected patches ?
+
 		console.log("errors final");
 		world.estimate3DErrors(true);
 

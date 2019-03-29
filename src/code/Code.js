@@ -2511,7 +2511,7 @@ break;
 	return hungarian();
 }
 // ------------------------------------------------------------------------------------------ TIME
-Code.scientificNotation = function(number, count){
+Code.scientificNotation = function(number, count){ // significant digits exponent
 	return number.toExponential(count);
 }
 Code.getTimeDivisionsFromMilliseconds = function(value){
@@ -11727,7 +11727,28 @@ Code.assert = function(boolCheck, comment){
 }
 
 
-
+// -------------------------------------------------------------------------------------------------------------------------------------------- Sorting
+Code.bubbleSort = function(a,f){ // n -> n^2
+	throw "todo";
+}
+Code.selectionSort = function(a,f){ // n -> n^2
+	throw "todo";
+}
+Code.mergeSort = function(a,f){ // n -> n*lg(n)
+	throw "todo";
+}
+Code.heapSort = function(a,f){ // n*lg(n)
+	throw "todo";
+}
+Code.quickSort = function(a,f){ // n*lg(n) -> n^2
+	throw "todo";
+}
+Code.insertionSort = function(a,f){ // n -> n^2
+	throw "todo";
+}
+Code.radixSort = function(a,f){ // n*k
+	throw "todo";
+}
 
 
 // -------------------------------------------------------------------------------------------------------------------------------------------- Array

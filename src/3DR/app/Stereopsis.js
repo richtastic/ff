@@ -2853,15 +2853,21 @@ Stereopsis.relativeTransformFromViews = function(viewA,viewB){
 Stereopsis.World.prototype.refineCameraAbsoluteOrientationSubset = function(){
 	throw "pick lowest error subset of points (also of highest connectivity degree) to do calculations on"
 }
-
-Stereopsis.World.prototype.refineCameraAbsoluteOrientation = function(minimumPoints){ // get updated camera positions with less error
+Stereopsis.World.prototype.refineSelectCameraAbsoluteOrientation = function(viewsChange, minimumPoints){
 	var views = this.toViewArray();
-	var result = this.bundleAdjustViews(views, minimumPoints);
+	Code.removeDuplicates(views,viewsChange);
+	this._refineCameraAbs(views, [], minimumPoints);
+}
+Stereopsis.World.prototype.refineCameraAbsoluteOrientation = function(minimumPoints){
+	var views = this.toViewArray();
+	this._refineCameraAbs(views, [], minimumPoints);
+}
+Stereopsis.World.prototype._refineCameraAbs = function(viewsChange, viewsConstant,minimumPoints){ // get updated camera positions with less error
+	var result = this.bundleAdjustViews(viewsChange, viewsConstant, minimumPoints);
 	var extrinsics = result["extrinsics"];
-	for(var i=0; i<views.length; ++i){
-		var view = views[i];
+	for(var i=0; i<viewsChange.length; ++i){
+		var view = viewsChange[i];
 		var ext = extrinsics[i];
-		//view.extrinsicTransform(ext);
 		view.absoluteTransform(ext);
 	}
 	this.copyRelativeTransformsFromAbsolute();
@@ -2897,42 +2903,53 @@ Stereopsis.averageMatrixEstimates = function(matrixes, errors){ // average locat
 	}
 	return null;
 }
-Stereopsis.World.prototype.bundleAdjustViewPair = function(viewA,viewB){ // where viewB should be using viewA + relative tansform points
-throw "is this used?"
-	var result = this.bundleAdjustViews([viewA,viewB]);
-	var error = result["error"];
-	var extrinsics = result["extrinsics"];
-	var absA = extrinsics[0];
-	var absB = extrinsics[1];
-
-	var relAtoB = R3D.relativeTransformMatrix2(absA,absB);
-	// var relAtoB = R3D.relativeTransformMatrix(absA,absB);
-
-	return {"relative":relAtoB, "error":error};
-}
-Stereopsis.World.prototype.bundleAdjustViews = function(views, minimumPoints, maxIterations){
+// Stereopsis.World.prototype.bundleAdjustViewPair = function(viewA,viewB){ // where viewB should be using viewA + relative tansform points
+// throw "is this used?"
+// 	var result = this.bundleAdjustViews([viewA,viewB]);
+// 	var error = result["error"];
+// 	var extrinsics = result["extrinsics"];
+// 	var absA = extrinsics[0];
+// 	var absB = extrinsics[1];
+//
+// 	var relAtoB = R3D.relativeTransformMatrix2(absA,absB);
+// 	// var relAtoB = R3D.relativeTransformMatrix(absA,absB);
+// 	return {"relative":relAtoB, "error":error};
+// }
+Stereopsis.World.prototype.bundleAdjustViews = function(viewsChange, viewsConstant, minimumPoints, maxIterations){
 // TODO: minimumPoints
 	maxIterations = maxIterations!==undefined ? maxIterations : 50;
-	var viewCount = views.length;
+	var allViews = Code.copyArray(viewsChange);
+	Code.arrayPushArray(allViews,viewsConstant);
+	var viewCount = allViews.length;
+	var changeCount = viewsChange.length;
 	var Ps = [];
 	var Ks = [];
 	var Is = [];
+	var P2s = [];
+	var K2s = [];
+	var I2s = [];
 	var pairPoints2D = [];
 	var pairPoints3D = [];
 	for(var i=0; i<viewCount; ++i){
-		var viewA = views[i];
+		var viewA = allViews[i];
 		var Ka = viewA.K();
 		var KaInv = viewA.Kinv();
-		// var Pa = viewA.extrinsicTransform();
 		var Pa = viewA.absoluteTransform();
-		Ps.push(Pa);
-		Ks.push(Ka);
-		Is.push(KaInv);
+		if(i<changeCount){
+			Ps.push(Pa);
+			Ks.push(Ka);
+			Is.push(KaInv);
+		}else{
+			P2s.push(Pa);
+			K2s.push(Ka);
+			I2s.push(KaInv);
+		}
 		if(!Pa){
+			throw "this probably needs to be set";
 			continue;
 		}
 		for(var j=i+1; j<viewCount; ++j){
-			var viewB = views[j];
+			var viewB = allViews[j];
 			var transform = this.transformFromViews(viewA,viewB);
 			var matches = transform.matches();
 			var points2DA = [];
@@ -2960,7 +2977,7 @@ Stereopsis.World.prototype.bundleAdjustViews = function(views, minimumPoints, ma
 			}
 		}
 	}
-	var result = R3D.BundleAdjustCameraExtrinsic(Ks, Is, Ps, pairPoints2D, pairPoints3D, maxIterations);
+	var result = R3D.BundleAdjustCameraExtrinsic(Ks,Is,Ps, pairPoints2D, pairPoints3D, maxIterations, K2s,I2s,P2s);
 	return result;
 }
 
@@ -4310,7 +4327,12 @@ Stereopsis.World.prototype.dropNegative3D = function(){
 }
 
 
-Stereopsis.World.prototype.filterGlobalMatches = function(relax, iterationIndex){ // drops matches from transform (pairwise discarding)
+Stereopsis.World.prototype.filterGlobalMatches = function(relax, iterationIndex, R,F,N,S){ // drops matches from transform (pairwise discarding)
+console.log("filterGlobalMatches");
+	R = R!==undefined ? R : 3.0;
+	F = F!==undefined ? F : 3.0;
+	N = N!==undefined ? N : 3.0;
+	S = S!==undefined ? S : 3.0;
 // relax = true;
 	var limitMatchSigmaR = 2.0;
 	var limitMatchSigmaF = 2.0; // 1.414;
@@ -4322,17 +4344,22 @@ Stereopsis.World.prototype.filterGlobalMatches = function(relax, iterationIndex)
 	// var limitMatchSigmaNCC = 2.0;
 	// var limitMatchSigmaSAD = 2.0;
 
-	limitMatchSigmaR = 3.0;
-	limitMatchSigmaF = 3.0;
-	limitMatchSigmaNCC = 3.0;
-	limitMatchSigmaSAD = 3.0;
+	limitMatchSigmaR = R;
+	limitMatchSigmaF = F;
+	limitMatchSigmaNCC = N;
+	limitMatchSigmaSAD = S;
+
+	// limitMatchSigmaR = 3.0;
+	// limitMatchSigmaF = 3.0;
+	// limitMatchSigmaNCC = 3.0;
+	// limitMatchSigmaSAD = 3.0;
 	// limitMatchSigmaR = 1.5;
 
 // limitMatchSigmaR = 4.0;
-
+/*
 	var dropPixelsR = 10.0;
 
-	if(iterationIndex!==undefined){
+	if(iterationIndex!==undefined && iterationIndex!==null){
 		if(iterationIndex>5){
 			// var s = 1.0 + 1.5/(iterationIndex-5);
 			// s = 1.0;
@@ -4341,7 +4368,7 @@ Stereopsis.World.prototype.filterGlobalMatches = function(relax, iterationIndex)
 			dropPixelsR = 1.0;
 		}
 	}
-
+*/
 
 	if(relax){
 		// limitMatchSigmaR = 3.0;
@@ -4479,7 +4506,9 @@ if(listMatchR.length>minCount){
 			//  || (limitSAD && errorSAD>limitSAD)
 			// ){
 			// TODO: UNDO
-			if( (limitR && errorR>limitR)
+			var dropR = R ? (limitR && errorR>limitR) : false;
+			if(
+				(dropR)
 			){
 				dropList.push(match);
 				var point3D = match.point3D();
@@ -5279,7 +5308,9 @@ Stereopsis.World.prototype.possiblyVisibleViews = function(pointCenter, pointNor
 	}
 	return list;
 }
+var PROBE_CALL = 0;
 Stereopsis.World.prototype.probe3D = function(){ // requires patches to orientate projections
+var NEEDLE_COUNT = 50;
 	var world = this;
 	var imageLoadedBoolFxn = function(a){
 		return a.image()!==null;
@@ -5288,21 +5319,25 @@ Stereopsis.World.prototype.probe3D = function(){ // requires patches to orientat
 	var newMatches = [];
 	var badMatches = [];
 	var allViews = this.toViewArray();
-	var allImageViews = Code.filterArray(allViews, imageLoadedBoolFxn); // only compare to
+	var allImageViews = Code.filterArray(allViews, imageLoadedBoolFxn); // only compare to views with images present
 	// common
 	var compareSize = 9;
-	var haystackSize = compareSize * 2; // pixel error ~
-	// var haystackSize = compareSize * 3;
+	var viewCompareScale = 2.0;
+	// var viewCompareScale = 1.0;
+	var haystackSize = compareSize + 2; // pixel error ~ min(ceil(min + sig),~3) // 2-4
+	// var haystackSize = compareSize * 2;
 	var needleMask = ImageMat.circleMask(compareSize);
 	var org = V2D.ZERO;
 	var xLoc = new V2D(compareSize*0.5,0);
 	var yLoc = new V2D(0,compareSize*0.5);
-	// console.log("probe3D: "+points3D.length);
-var checked = 0;
+	var xNeg = new V2D(-compareSize*0.5,0);
+	var yNeg = new V2D(0,-compareSize*0.5);
+	var checked = 0;
+	var added = 0;
 	for(var i=0; i<points3D.length; ++i){
 		var point3D = points3D[i];
 		if(point3D.hasPatch()){
-checked++;
+			checked++;
 			// need hysteresis to prevent researching repeatidly tested & failed P3Ds ...
 			var pointNormal = point3D.normal();
 			var pointCenter = point3D.point();
@@ -5324,9 +5359,13 @@ checked++;
 				var pointRight = point3D.right();
 					var dirRight = pointRight.copy().scale(pointSize*0.5);
 					var dirUp = pointUp.copy().scale(pointSize*0.5);
+					var dirLeft = dirRight.copy().scale(-1);
+					var dirDown = dirRight.copy().scale(-1);
 				var center3D = pointCenter;
 				var right3D = pointCenter.copy().add(dirRight);
 				var up3D = pointCenter.copy().add(dirUp);
+				var left3D = pointCenter.copy().add(dirLeft);
+				var down3D = pointCenter.copy().add(dirDown);
 				// get needles
 				var needles = [];
 				var affines = [];
@@ -5336,26 +5375,34 @@ checked++;
 					var view = fullList[j];
 					var image = view.image();
 					var viewCompareSize = view.patchSize();
-					var needleZoom = compareSize/viewCompareSize;
+					//var needleZoom = compareSize/viewCompareSize;
+					var needleZoom = viewCompareScale*compareSize/viewCompareSize;
 					// need rhombus area
 					var area = viewCompareSize*viewCompareSize;
 					var minArea = area * 0.50; // 0.5
 					var maxArea = area * 2.0; // 2.0
+					// abs
 					var center2D = view.projectPoint3D(center3D);
 					var right2D = view.projectPoint3D(right3D);
 					var up2D = view.projectPoint3D(up3D);
+					var left2D = view.projectPoint3D(left3D);
+					var down2D = view.projectPoint3D(down3D);
+					// rel
 					var dirRight2D = V2D.sub(right2D,center2D);
 					var dirUp2D = V2D.sub(up2D,center2D);
-					// projected patch can't be too big -- TODO: high skew throws this off?
-					var area = dirRight2D.length()*dirUp2D.length()*4;
+					var dirLeft2D = V2D.sub(left2D,center2D);
+					var dirDown2D = V2D.sub(down2D,center2D);
+					// area
+					var area = (dirRight2D.length() + dirUp2D.length() + dirLeft2D.length() + dirDown2D.length()); // each is 1/2 of square side
+						area = area*area*0.25;
 					// console.log("AREA: "+area+" / "+viewCompareSize+" IN: "+minArea+" - "+maxArea);
 					var needle = null;
 					var matrix = null;
 					var isExisting = j<visibleCount;
 					if(isExisting || (minArea<area && area<maxArea)){ // EXISTING VIEW NEED TO DO ANYWAY
-						var pointsA = [org,dirRight2D,dirUp2D];
-						var pointsB = [org,xLoc,yLoc];
-						matrix = R3D.affineMatrixExact(pointsA,pointsB);
+						var pointsA = [dirRight2D,dirUp2D,dirLeft2D,dirDown];
+						var pointsB = [xLoc,yLoc,xNeg,yNeg];
+						var matrix = R3D.affineCornerMatrixLinear(pointsA,pointsB);
 						if(j>=visibleCount){ // search a small area around predicted point, compensate for reprojection error
 							var haystack = image.extractRectFromFloatImage(center2D.x,center2D.y,needleZoom,null,haystackSize,haystackSize, matrix);
 							var aNCC;
@@ -5376,7 +5423,6 @@ checked++;
 								}
 								aNCC = scoresNCC;
 							}
-
 							if(newCenters.length>0){
 								center2D = V2D.average(newCenters);
 								// TODO: if there are multiple centers: uniqueness = ratio of scores above some min difference
@@ -5421,12 +5467,16 @@ checked++;
 				}
 				// calculate current infos
 				var minCurr = Code.min(scoresCurrent);
+				if(minCurr>0.5){ // really bad
+					continue;
+				}
 				var sigCurr = minCurr*0.5; // assume a sigma
 				if(scoresCurrent.length>1){ // guarantee a sigma
 					sigCurr = Code.stdDev(scoresCurrent,minCurr);
 				}
 				var limNext = minCurr + sigCurr*1.0;
 				limNext = Math.min(limNext,0.5);
+limNext = Math.min(limNext,0.3333); // 0.2-0.5
 				// console.log(scoresCurrent,minCurr,sigCurr,limNext);
 				for(var j=0; j<possibleCount; ++j){
 					var indexNew = visibleCount+j;
@@ -5453,7 +5503,6 @@ checked++;
 						var imageA = viewA.image();
 						var imageB = viewB.image();
 						var blockSize = 11;
-						//var match = this.newMatchFromInfo(viewA,pointA,viewB,pointB, affine, false);
 						// TODO: don't copy, use calculated values ?
 						var pnt = point3D.point().copy();
 						var nrm = point3D.normal().copy();
@@ -5468,17 +5517,49 @@ checked++;
 						p2DA.addMatch(match);
 						p2DB.addMatch(match);
 						p3D.addMatch(match);
+						// needs match for merging
 						match.transform(this.transformFromViews(viewA,viewB)); // ...
-						newMatches.push(match);
+						// init patch
+						world.generateMatchAffineFromPatches(p3D);
+						// try insertion now
+						var result = world.embedPoint3D(match.point3D(), false); // don't validate
+						if(result){ // combined
+							Stereopsis.updateErrorForMatch(match);
+							++added;
+						}
+
+if(NEEDLE_COUNT>=0){
+var m = NEEDLE_COUNT;
+						// show result:
+						for(var n=0; n<needles.length; ++n){
+// compareSize
+							var needle = needles[n];
+							var iii = needle;
+							var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
+							var d = new DOImage(img);
+							d.matrix().scale(4.0);
+							d.matrix().translate(10 + 45*m, 10 + 45*n + PROBE_CALL*200);
+							GLOBALSTAGE.addChild(d);
+						}
+						var t = Code.scientificNotation(Code.mean(scoresCurrent),3,false)+"/"+Code.scientificNotation(avgNext,3,false);
+						var d = new DOText(""+t, 10, DOText.FONT_ARIAL, 0xFFCC0099, DOText.ALIGN_LEFT);
+						d.matrix().translate(10 + 45*m, 10 + 45*3+10 + (m%3)*12 + PROBE_CALL*200);
+						GLOBALSTAGE.addChild(d);
+--NEEDLE_COUNT;
+// if(NEEDLE_COUNT<0){
+// 	throw NEEDLE_COUNT;
+// }
+}
+
 					}
 				}
 			}
 		} // else no patch
 	}
-
-	// console.log(" => PROBE3D REMOVING OLD MATCHES: "+badMatches.length); // a result of ?
-	console.log(" => PROBE3D ADDING NEW MATCHES: "+newMatches.length);
-
+++PROBE_CALL;
+	// c.fromArray(log(" => PROBE3D REMOVING OLD MATCHES: "+badMatches.length); // a result of ?
+	// console.log(" => PROBE3D ADDING NEW MATCHES: "+newMatches.length+" | "+PROBE_CALL);
+/*
 	// add matches
 	var addedPoints = [];
 	for(var i=0; i<newMatches.length; ++i){
@@ -5496,15 +5577,17 @@ checked++;
 		var wasNCC = match.errorNCC();
 		var wasSAD = match.errorSAD();
 		// console.log(match);
-		// init patch
-		world.generateMatchAffineFromPatches(point3D);
 		var result = this.embedPoint3D(match.point3D());
 		if(result){ // combined
+			Stereopsis.updateErrorForMatch(match);
 			addedPoints.push(result);
 		}
 	}
+*/
+	console.log(" => PROBE3D ADDING NEW MATCHES:");
 	console.log("checked: "+checked);
-	console.log("addedPoints: "+addedPoints.length);
+	console.log("added: "+added);
+	// console.log("addedPoints: "+addedPoints.length);
 }
 Stereopsis.World.prototype.probeCorners = function(){
 	/*
@@ -6513,16 +6596,7 @@ Stereopsis.World.prototype.embedPoint3D = function(point3D, validCheck){ // inse
 			var match = matches[i];
 			var valid = this.validateMatch(match);
 			if(!valid){
-				// console.log("INVALID MATCH");
 				this.disconnectPoint3D(point3D);
-				// var points2D = point3D.toPointArray();
-				// for(var j=0; j<points2D,length; ++j){
-				// 	var point2D = points2D[j];
-				// 	var view =
-				// }
-				// this.checkNullP2D();
-				// this.killPoint3D(point3D);
-				// console.log("NOT VALID");
 				return null;
 			}
 		}
@@ -6633,10 +6707,17 @@ Stereopsis.World.prototype._resolveIntersectionPatch = function(point3DA,point3D
 		var result = null;
 		if(point3DA.point2DCount()>1){
 			result = this.embedPoint3D(point3DA);
+		}else{
+			world.disconnectPoint3D(point3DA);
+			world.killPoint3D(point3DA);
 		}
 		if(point3DB.point2DCount()>1){
 			result = this.embedPoint3D(point3DB);
+		}else{
+			world.disconnectPoint3D(point3DB);
+			world.killPoint3D(point3DB);
 		}
+		console.log("inconsistent views");
 		return result;
 	}else if(intersectViews.length==viewsB.length){ // one match subsumes the other
 		console.log("repeat point B");
@@ -6653,6 +6734,7 @@ Stereopsis.World.prototype._resolveIntersectionPatch = function(point3DA,point3D
 	// requirements for calculations
 	//if( !(loadedViewsA.length>0 && loadedViewsB.length>0 && loadedViewsAll.length>1) ){ // bare minimum to get a single ncc score to limit
 	if( !(loadedViewsA.length>1 && loadedViewsB.length>1) ){
+		console.log("not enough loaded views to compare");
 		return world._addBackDroppingIntersections(point3DA,point3DB,intersectViews);
 	}
 	// create new P3D to estimate next locations
@@ -6704,20 +6786,19 @@ Stereopsis.World.prototype._resolveIntersectionPatch = function(point3DA,point3D
 	var scoresB = Stereopsis.World._nccMatchPopulation(point3DB,loadedViewsB);
 	var scoresC = Stereopsis.World._nccMatchPopulation(point3DC,loadedViewsAll);
 	var checkA = scoresA["min"];
-	var checkB = scoresA["min"];
-	var limitA = scoresA["min"] + scoresA["sigma"] * 1.0;
-	var limitB = scoresB["min"] + scoresB["sigma"] * 1.0;
+	var checkB = scoresB["min"];
+	var limitA = scoresA["mean"] + scoresA["sigma"] * 1.0;
+	var limitB = scoresB["mean"] + scoresB["sigma"] * 1.0;
 	var checkC = scoresC["mean"];
-	// console.log(limitA,limitB,checkA,checkB,checkC);
+	var minimumCut = 0.10; // TODO: REALLY GOOD PAIRS CAN BE OVER-PROTECTIVE
+	limitB = Math.max(limitB,minimumCut);
+	limitA = Math.max(limitA,minimumCut);
 	// keep separate if: result is worse than either original | OR | one set has much worse errors
 	if(checkC>limitA || checkC>limitB || checkA>limitB || checkB>limitA){
-		// console.log("drop");
-		// console.log(point3DC);
-		// point3DC.kill();
+		// console.log("not pass limits: "+" "+checkA+" "+checkB+" "+checkC+" OF "+limitA+" "+limitB+" ");
 		world.killPoint3D(point3DC);
 		return world._addBackDroppingIntersections(point3DA,point3DB,intersectViews);
-	}
-	// console.log(point3DC);
+	} // success
 	return this.embedPoint3D(point3DC);
 }
 Stereopsis.World._nccMatchPopulation = function(point3DA,loadedViewsA){
@@ -7326,7 +7407,8 @@ Stereopsis.World.prototype.updateEstimatePatch = function(point3D,wasLocation,is
 	this.updateP3DPatch(point3D);
 }
 HASCOUNT = 0;
-Stereopsis.World.prototype.updateP3DPatch = function(point3D){
+Stereopsis.World.prototype.updateP3DPatch = function(point3D, doTranslate){
+	doTranslate = doTranslate!==undefined ? doTranslate : false;
 	var visibleViews = point3D.toViewArray();
 	// filter on views that are loaded
 	for(var i=0; i<visibleViews.length; ++i){
@@ -7335,13 +7417,22 @@ Stereopsis.World.prototype.updateP3DPatch = function(point3D){
 			--i;
 		}
 	}
+	// if(!point3D.hasPatch()){
+	// 	console.log("missing ... patch");
+	// }
 	var center = point3D.point();
 	var size = point3D.size();
 	var normal = point3D.normal();
 	var up = point3D.up();
+	if(!center || !normal || !up){
+		console.log(point3D);
+		throw "missing ..."
+	}
 	var right = V3D.cross(normal,up);
-	var moveDirection = null;
-	var result = Stereopsis.patchNonlinear(center,size,normal,right,up,moveDirection,visibleViews,point3D);
+	// var moveDirection = null;
+	var moveDirection = normal;
+	var result = Stereopsis.patchNonlinear(center,size,normal,right,up,moveDirection,visibleViews,point3D,doTranslate);
+// if translation move point very far -- bad match .. like 50% of average camera distance or more
 	point3D.normal(result["normal"]);
 	point3D.point(result["center"]);
 	point3D.up(result["up"]);
@@ -7429,10 +7520,11 @@ Stereopsis.projectPoint3DForPoint2DSize = function(point2D){
 	throw "?"
 }
 
-Stereopsis.patchNonlinear = function(center,size,directionNormal,directionRight,directionUp,moveDirection, views,p3D){
+Stereopsis.patchNonlinear = function(center,size,directionNormal,directionRight,directionUp,moveDirection, views,p3D,doTranslate){
+	// TODO: doTranslate = allow movement of P3D along original normal line [depth]
 	var maxIterations = 10;
 	var fxn = Stereopsis._gdPatch;
-	var args = [center,directionNormal,directionRight,directionUp,moveDirection,size,views,p3D];
+	var args = [center,directionNormal,directionRight,directionUp,moveDirection,size,views,p3D,doTranslate];
 	var xVals = [0,0,0];
 	result = Code.gradientDescent(fxn, args, xVals, null, maxIterations, 1E-6,  1E-10);
 	x = result["x"];
@@ -7446,8 +7538,15 @@ Stereopsis.patchNonlinear = function(center,size,directionNormal,directionRight,
 	var moveDistance = x[0];
 	var angleX = x[1];
 	var angleY = x[2];
-	//var center = startCenter.copy().add( moveNormal.copy().scale(moveDistance) );
-	var center = startCenter.copy();
+	var center = null;
+	if(doTranslate){
+		center = startCenter.copy().add( moveNormal.copy().scale(moveDistance) );
+	}else{
+		center = startCenter.copy();
+	}
+	// if(doTranslate){
+	// 	console.log("doTranslate: "+(V3D.distance(center,startCenter))); // if this is VERY FAR ... probs have bad point
+	// }
 	var normal = startNormal.copy().rotate(startRight, angleX).rotate(startUp, angleY);
 	var up = startUp.copy().rotate(startRight, angleX).rotate(startUp, angleY);
 	return {"center":center,"normal":normal,"up":up,"size":size};
@@ -7471,11 +7570,16 @@ Stereopsis._gdPatch = function(args, x, isUpdate, descriptive){
 	var halfSize = size*0.5; //
 	var views = args[6];
 	var p3D = args[7];
+	var doTranslate = args[8];
 	var moveDistance = x[0];
 	var angleX = x[1];
 	var angleY = x[2];
-	// var center = startCenter.copy().add( moveNormal.copy().scale(moveDistance) ); // allow some movement along ray
-	var center = startCenter; // only stay at original predicted location
+	var center = null;
+	if(doTranslate){ // allow some movement along ray
+		center = startCenter.copy().add( moveNormal.copy().scale(moveDistance) );
+	}else{ // only stay at original predicted location
+		center = startCenter;
+	}
 	var normal = startNormal.copy().rotate(startRight, angleX).rotate(startUp, angleY);
 	var top = startUp.copy().rotate(startRight, angleX).rotate(startUp, angleY);
 	var right = startRight.copy().rotate(startRight, angleX).rotate(startUp, angleY);
@@ -7483,7 +7587,7 @@ Stereopsis._gdPatch = function(args, x, isUpdate, descriptive){
 		right.scale(halfSize).add(center);
 // don't reverse normal direction
 var dot = V3D.dot(normal,startNormal);
-if(dot<=0){
+if(dot<=0){ // is this a problem?
 	return 1E12;
 }
 	// patches

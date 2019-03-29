@@ -342,14 +342,16 @@ https://cloud.google.com/appengine/docs/nodejs/
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
 - is the patch p3d merge dropping a lot of points?
 
-- when patch matches are initialized, they are assigned a transform, but not necessarily inserted ...
+
+- BA / refinement of only a single view orientation, but using all loaded views / points
 
 
-- viz projected patch successes vs existing matches
-
-
+- allow patch refinement to change the P3D of the point (mildly?)
+	- why do some points go to 0 & 1 matches ?
+	- poor points go crazy -- can this be used to drop bad points ?
 
 
 => can start a sparse: points/views separate yaml files
@@ -377,28 +379,28 @@ CONTINUING BA: [all deltas known]
 	- repeat until: deltaR < ~0.001  /or/  max iterations: 10*viewCount
 
 BA MAIN FXN:
-	- move only single view with:
-	 	?) most P2Ds
-		?)
-	- for each view:
-		- try propagating tracks into loaded views
-	- drop P2Ds with very high error
-	- trop tracks with very high error
+	- move only 2 views in main pair (2 main + up to 4 aux)
+	- update all P3D patches in pair
+	- propagate P3D among loaded views
+	- drop P2Ds with very high F error
+	- drop P3Ds with very high R error
+	- 2nd BA ?
 
 
 ...
 
 
-DENSE LOGISTICS: [dense points + image]
+DENSE LOGISTICS: [pair-dense-points + image]
 
 - load each [semi-]dense pair at a time
 - use R-pair from sparse result
 - filter poor P3D based on R-error
 - init each P3D patch with nearest patch(1-3) from sparse result [or init regularly if too far away from a sparse result]
 - filter poor patches based on intersection inconsistencies
-=> export final best dense points to file
+=> export final best dense points to (pair?) file
+	- P3D, N3D, SIZE, V[]: I, P2D
 
-DENSE AGGREGATION: [points and views only]
+DENSE AGGREGATION: [points and views data only]
 - import all final best dense points at same time
 - import best view orientations
 - filter points based on R-error
@@ -419,7 +421,11 @@ TESSELATION LOGISTICS:
 
 
 
-
+- view/match/triplet/epipolar - graph  consistency:
+	- a separate pseudo-reconstruction can take place before final reconstruction (sequential/iterative)
+		- reveal/prune bad pairs/triplets
+		- possibly relative not need absolute locations
+		- start at most reliable edges and work out from there
 
 
 
