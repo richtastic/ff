@@ -5605,15 +5605,16 @@ B			tracks.yaml - accumulated global track points across images: grows till all 
 								x: [0,1]
 								y: [0,1]
 
-C			points_sparse.yaml - global 3D point list - sparse TRACK Data
+C			sparse_points..yaml - global 3D point list - sparse TRACK Data
 				...
 
-C			info_sparse.yaml - sparse point reconstruction info
+C			sparse_views.yaml - sparse point reconstruction info
 				...
 
-D			points_dense.yaml - global 3D point list
+D			dense_points.yaml - global 3D point list
 				views:
-					...
+					-
+						id: ID
 				points:
 					-
 						X: position
@@ -5628,18 +5629,10 @@ D			points_dense.yaml - global 3D point list
 								i: VIEW INDEX
 								x: [0-1]
 								y: [0-1]
-						m: # NO - THIS IS ALL DERIVABLE DATA
-							-
-								i: VIEW INDEX
-								j: VIEW INDEX
-								r: R ERROR - can be recalculated
-								f: F ERROR - can be recalculated
-								n: NCC SCORE - SLOWLY recaclulated
 					...
 
-D			info_dense.yaml - dense point reconstruction info
-
-				- cameras
+D			dense_views.yaml - dense point reconstruction info
+				cameras:
 					-
 						id: ID
 						fx:
@@ -5647,7 +5640,7 @@ D			info_dense.yaml - dense point reconstruction info
 						s:
 						cx:
 						cy:
-				- views
+				views:
 					-
 						id: ID
 						camera: K index
@@ -5657,10 +5650,10 @@ D			info_dense.yaml - dense point reconstruction info
 						deltaErrorR: null / change since last
 						updated: timestamp for last update
 					...
-				- pairs
+				pairs:
 					-
-						A: ID
-						B: ID
+						A: index
+						B: index
 						- total/change in 3-way points?
 						errorF: avg f error
 						errorP: avg 3D reprojection error (for both 2-way 3D matched points)
@@ -5668,19 +5661,7 @@ D			info_dense.yaml - dense point reconstruction info
 						deltaErrorP: null / change since last
 						updated: timestamp for last update
 					... [MIGHT NEED TO ADD NEW PAIRS ON THE FLY?]
-				- triples
-					-
-						A: ID
-						B: ID
-						C: ID
-						-
-						- total/change in 3-way points?
-						errorT: avg t error
-						errorP: avg 3D reprojection error (for all 3-way 3D matched points)
-						deltaErrorT: null / change since last
-						deltaErrorP: null / change since last
-						updated: timestamp for last update
-					... [MIGHT NEED TO ADD NEW PAIRS ON THE FLY?]
+
 
 E			triangles.yaml - triangle reconstruction - triangle soup of approximated surface & texture mapping
 				points:
@@ -8004,29 +7985,13 @@ App3DR.ProjectManager.prototype._iterateGraphTracksStart = function(){
 	console.log(viewLookup);
 	console.log(pairLookup);
 
-/*
-v:
-	-
-		i: INDEX-OF-VIEW
-		x: [0,1]
-		y: [0,1]
-							# THE POINTS ARE BUILD UP VIA 3-WAY ADDITION INITIAL .. MIGHT NOT NEED THSE
-	X: # position
-	Y:
-	Z:
-	x: # normal
-	y:
-	z:
-	s: # size
-*/
-
-
 	var graphData = this.graphData();
 		var tracksData = this.tracksData(); // this might go away
 	console.log(graphData);
 	// console.log(tracksData);
 	var graphViews = graphData["views"];
 	var graphPoints = Code.valueOrDefault(graphData["points"], []);
+	console.log("graphPoints: "+graphPoints.length);
 
 	var viewGraphLookupIndex = {};
 	var viewGraphLookup = {};
@@ -8086,11 +8051,10 @@ console.log("START AT: "+startIndexI+" | "+startIndexJ);
 
 	console.log(foundPair);
 	if(foundPair){
-
-
-
-
-
+		var pair = foundPair;
+		var viewA = pair.viewA();
+		var viewB = pair.viewB();
+		//
 		var indexA = viewGraphLookupIndex[viewA.id()];
 		var indexB = viewGraphLookupIndex[viewB.id()];
 		var loadViews = this.auxilaryViewsToLoadForSet([indexA,indexB],graphData, 4); // 4-6
@@ -8098,72 +8062,14 @@ console.log("START AT: "+startIndexI+" | "+startIndexJ);
 			loadViews[i] = viewLookup[graphViews[loadViews[i]]["id"]];
 		}
 
-
-
-		/*
 		graphData["previousPair"] = {"A":newPreviousPair[0], "B":newPreviousPair[1]};
-		var pair = foundPair;
-		var viewA = pair.viewA();
-		var viewB = pair.viewB();
-		var loadViews = [viewA,viewB];
-		// find which other views should be loaded
-		for(var i=0; i<graphPoints.length; ++i){
-			var point3D = graphPoints[i];
-			var vs = point3D["v"];
-			for(var j=0; j<vs.length; ++j){
-				var v = vs[j]["i"];
-				for(var k=j+1; k<vs.length; ++k){
-					var u = vs[k]["i"];
-					viewPointCounts[v][u]++;
-					viewPointCounts[u][v]++;
-				}
-			}
-		}
-		// console.log(viewPointCounts);
-		// get highest counted pair for relevant views
-		var indexA = viewGraphLookupIndex[viewA.id()];
-		var indexB = viewGraphLookupIndex[viewB.id()];
-		var pointsA = viewPointCounts[indexA];
-		var pointsB = viewPointCounts[indexB];
-		for(var i=0; i<graphViews.length; ++i){
-			pointsA[i] = [pointsA[i], viewGraphLookup[graphViews[i]["id"]]];
-			pointsB[i] = [pointsB[i], viewGraphLookup[graphViews[i]["id"]]];
-		}
-		pointsA.sort(sortLargerArray0);
-		pointsB.sort(sortLargerArray0);
-		// select top
-		var selectArrays = [pointsA,pointsB];
-		var maximumViews = 4;
-		while(loadViews.length<maximumViews && selectArrays.length>0){
-			for(var i=0; i<selectArrays.length; ++i){
-				var list = selectArrays[i];
-				if(list.length==0){
-					Code.removeElementAt(selectArrays,i);
-					--i;
-				}else{
-					for(var j=0; j<list.length; ++j){
-						var item = list[j];
-						if(item[0]==0){ // count
-							Code.removeElementAt(selectArrays,i);
-							--i;
-							break;
-						}else{
-							Code.addUnique(loadViews, item[1]); // view
-						}
-					}
-				}
-			}
-		}
-		console.log("loadViews: ");
-		console.log(loadViews);
 
-		*/
 		// load the view images
 		var fxnViewsLoaded = function(){
 			console.log("loaded images");
 			console.log(loadViews);
 
-// also want to add ALL views
+			// also want to add ALL views
 			project._iterateGraphTracksTick(pair,loadViews);
 		}
 		// load the track data for this pair
@@ -8315,7 +8221,7 @@ App3DR.ProjectManager.prototype.auxilaryViewsToLoadForSet = function(loadViews,g
 	var sortLargerArray0 = function(a,b){
 		return a[0] > b[0] ? -1 : 1;
 	}
-	var graphPoints = graphData["points"];
+	var graphPoints = Code.valueOrDefault(graphData["points"], []);
 	var graphViews = graphData["views"];
 	viewPointCounts = [];
 	for(var i=0; i<graphViews.length; ++i){
@@ -8347,8 +8253,15 @@ App3DR.ProjectManager.prototype.auxilaryViewsToLoadForSet = function(loadViews,g
 	}
 	loadViews = Code.copyArray(loadViews);
 	var i = 0;
+	console.log("selectArrays");
+	console.log(selectArrays);
 	while(loadViews.length<maximumViews && selectArrays.length>0){
+		if(i>=selectArrays.length){
+			i = 0;
+		}
+
 		var currentSelect = selectArrays[i];
+		console.log(currentSelect);
 		if(currentSelect.length==0){
 			Code.removeElementAt(selectArrays,i);
 			continue;
@@ -8362,10 +8275,6 @@ App3DR.ProjectManager.prototype.auxilaryViewsToLoadForSet = function(loadViews,g
 		} // else found valid edge
 		Code.addUnique(loadViews, view); // view
 		++i; // to next
-		if(i>=selectArrays.length){
-			i = 0;
-		}
-		// break;
 	}
 	console.log(loadViews);
 	return loadViews;
@@ -8406,6 +8315,13 @@ App3DR.ProjectManager.prototype._iterateGraphTracksPropagateTick = function(trip
 	for(var i=0; i<worldViews.length; ++i){
 		worldViewLookup[worldViews[i].data()] = worldViews[i];
 	}
+	// to world triple
+	var worldTriple = [];
+	for(var i=0; i<triple.length; ++i){
+		var view = world.viewFromData(triple[i].id());
+		worldTriple.push(view);
+	}
+
 	// load existingPoints
 	console.log("embed");
 	this._embedTrackPoints(world, graphData, graphViewLookupID, graphViewLookup);
@@ -8423,17 +8339,16 @@ world.printPoint3DTrackCount();
 		world.probe3D();
 
 
-for(var t=0; t<2; ++t){
+for(var t=0; t<3; ++t){
+		world.probe3D();
 world.printPoint3DTrackCount();
 		world.averagePoints3DFromMatches(true);
-
 		console.log("errors update");
 		world.estimate3DErrors(true);
 		world.filterGlobalMatches(null,null, 2.0);
-
 		world.estimate3DPoints();
-		//world.refineCameraAbsoluteOrientation();
-		world.refineSelectCameraAbsoluteOrientation(triple);
+		world.refineSelectCameraAbsoluteOrientation(worldTriple);
+		var listP3D = world.toPointArrayFromViews(worldTriple);
 		console.log(" update patches");
 		var listP3D = world.toPointArray();
 		for(var p=0; p<listP3D.length; ++p){
@@ -8441,55 +8356,17 @@ world.printPoint3DTrackCount();
 				console.log("    "+p+"/"+listP3D.length);
 			}
 			var p3D = listP3D[p];
-
-			if(!p3D.point()){
-				console.log("null point - why?")
-				world.disconnectPoint3D(p3D);
-				world.killPoint3D(p3D);
-				continue;
-			}
-			if(p3D.toPointArray().length<2){
-				console.log("how is this possible?")
-				continue;
-			}
-
-
-			world.updateP3DPatch(p3D, true);
-
-			// var matches =
+			world.updateP3DPatch(p3D, false); // keep at linear location
+			// world.updateP3DPatch(p3D, true);
 		}
 		// world.dropNegative3D
-		world.probe3D();
 
 }
+world.printPoint3DTrackCount();
+world.estimate3DErrors(true);
 
 
-HERE
-
-		// ...
-		// world.averagePoints3DFromMatches(true);
-
-
-		// console.log("errors update");
-		// world.estimate3DErrors(true);
-		// world.filterGlobalMatches(null,null, 2.0);
-		//
-		// world.estimate3DPoints();
-		// world.refineCameraAbsoluteOrientation();
-		// world.probe3D();
-
-
-
-
-// update all affected patches ?
-
-		console.log("errors final");
-		world.estimate3DErrors(true);
-
-		// drop poor tracks
-
-
-
+// save views & points to graph file
 	//
 	throw "done";
 }
@@ -8519,7 +8396,7 @@ App3DR.ProjectManager.prototype._addGraphViews = function(world, graphViewLookup
 	return {"transforms":transforms, "images":images};
 }
 
-App3DR.ProjectManager.prototype._embedMatchPoints = function(world, rackData){
+App3DR.ProjectManager.prototype._embedMatchPoints = function(world, trackData, worldViewLookup){
 	// from model objects to JS instances
 	var o = new V2D(0,0);
 	var x1 = new V2D();
@@ -8528,7 +8405,8 @@ App3DR.ProjectManager.prototype._embedMatchPoints = function(world, rackData){
 	var y2 = new V2D();
 	//
 	var pointCountAdded = 0;
-	var points3D = trackData["points"];
+	console.log(trackData);
+	var points3D = Code.valueOrDefault(trackData["points"], []);
 	console.log("points3D: "+points3D.length);
 	for(var i=0; i<points3D.length; ++i){
 		var p3D = points3D[i];
@@ -8658,11 +8536,14 @@ App3DR.ProjectManager.prototype._iterateGraphTracksTick = function(pair,viewsLoa
 	}
 	// project view lookup
 	var viewLookup = {};
+	var views = this.views();
+	console.log(views)
 	for(var i=0; i<views.length; ++i){
 		viewLookup[views[i].id()] = views[i];
 	}
 
 	var trackData = pair.trackData();
+	console.log("trackData");
 	console.log(trackData);
 
 	// create world
@@ -8681,7 +8562,7 @@ App3DR.ProjectManager.prototype._iterateGraphTracksTick = function(pair,viewsLoa
 		worldViewLookup[worldViews[i].data()] = worldViews[i];
 	}
 
-	var points3D = this._embedMatchPoints(world, graphData);
+	var points3D = this._embedMatchPoints(world, trackData, worldViewLookup);
 
 	// initialize world
 	world.relativeTransformsFromAbsoluteTransforms();
@@ -8701,38 +8582,17 @@ App3DR.ProjectManager.prototype._iterateGraphTracksTick = function(pair,viewsLoa
 	}
 
 	this._embedTrackPoints(world, graphData, graphViewLookupID, graphViewLookup);
-
+console.log("EMBED NEW POINTS ...: ");
 	// add back new points
 	for(var i=0; i<newPoints.length; ++i){
 		var point3D = newPoints[i];
-		world.embedPoint3D(point3D);
+		// world.embedPoint3D(point3D, false);
+		world.embedPoint3D(point3D); // these points SHOULD have been validated beforehand
 	}
-
-
-// throw "...";
-
-
-
-	/*
-	- if collision:
-		- for all views of colliding P3D THAT ARE LOADED (at least 1, up to 3)
-			- possibly duplicated points in same view
-				A) drop both points from track (reliability is comprimized)
-				B) keep better NCC one
-			- else
-				- get SIFT / NCC scores for all involved collisions
-				- if OK: keep new pair
-	- else, add
-- propagate existing points between views with loaded images [3D project]
-	- same collision logic
-
-- if no more pairs to try loading => done:
-	save track count to main file
-
-	*/
 
 	// all points to tracks
 	var allPoints = world.toPointArray();
+	console.log("allPoints: "+allPoints.length);
 	console.log(allPoints);
 
 	// update points on graph:
@@ -8788,22 +8648,27 @@ App3DR.ProjectManager.prototype._iterateGraphTracksTick = function(pair,viewsLoa
 	graphData["points"] = graphPoints;
 	// graphData["previousPair"] // already updated
 	console.log("save / update graph data");
-	// update view transforms:
-console.log(graphViews);
+	// . update view transforms:
+	console.log(graphViews);
+	// .
 	for(var i=0; i<graphViews.length; ++i){
 		var gv = graphViews[i];
 		var gid = gv["id"];
 		var view = world.viewFromData(gid);
-console.log(view);
 		var R = view.absoluteTransform();
 		var size = view.size();
 		gv["R"] = R.copy();
 		gv["size"] = size; // replace / update
 	}
+	// .
+	world.printPoint3DTrackCount();
+	// .
 	console.log(graphData);
-throw "TO SAVE ..."
+	// throw "TO SAVE ...";
+	// .
 	this.saveGraphFromData(graphData);
 }
+
 App3DR.ProjectManager.prototype.saveGraphFromData = function(graphData){
 	var yaml = new YAML();
 	var object = graphData;

@@ -342,19 +342,15 @@ https://cloud.google.com/appengine/docs/nodejs/
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+- lots of DROP SCALE RATIO: AFTER previously validated ... why?
 
-- is the patch p3d merge dropping a lot of points?
-
-
-- BA / refinement of only a single view orientation, but using all loaded views / points
-
-
-- allow patch refinement to change the P3D of the point (mildly?)
-	- why do some points go to 0 & 1 matches ?
-	- poor points go crazy -- can this be used to drop bad points ?
 
 
 => can start a sparse: points/views separate yaml files
+	=> save graph points / views
+	=> init points & views sparse yaml
+		=> create edge entry for every pair (enough points)
+		=>
 
 INITIAL TRACK BA:
 	- generate 'edges' using P3D info & add entries to graph:
