@@ -344,6 +344,7 @@ https://cloud.google.com/appengine/docs/nodejs/
 
 - lots of DROP SCALE RATIO: AFTER previously validated ... why?
 
+- divide R error by the number of points in track to allow for some sympathy for multi-connected components
 
 
 => can start a sparse: points/views separate yaml files

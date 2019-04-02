@@ -5605,7 +5605,7 @@ B			tracks.yaml - accumulated global track points across images: grows till all 
 								x: [0,1]
 								y: [0,1]
 
-C			sparse_points..yaml - global 3D point list - sparse TRACK Data
+C			sparse_points.yaml - global 3D point list - sparse TRACK Data
 				...
 
 C			sparse_views.yaml - sparse point reconstruction info
@@ -8082,14 +8082,17 @@ console.log("START AT: "+startIndexI+" | "+startIndexJ);
 
 	}else{ // propagate tracks
 		var groups = graphData["propagateGroups"]; // triples for
+		console.log(groups);
 		if(groups){
-			console.log(graphData)
+			// convert to
 			propagateIndex = graphData["propagateIndex"];
-			console.log(propagateIndex);
 			var nextGroup = propagateIndex+1;
 			if(nextGroup<groups.length){//if(edges.length>0){
 				var triple = groups[nextGroup];
+				// // make copy of original groups
+				triple = Code.copyArray(triple);
 				console.log(triple);
+// throw "what"
 				// get auxilary views
 				var loadViews = this.auxilaryViewsToLoadForSet(triple,graphData, 6);
 				var views = this.views();
@@ -8106,8 +8109,8 @@ console.log("START AT: "+startIndexI+" | "+startIndexJ);
 					loadViews[i] = viewLookup[graphViews[loadViews[i]]["id"]];
 				}
 				console.log(loadViews);
-
-
+				//
+				//
 				// load images and proceed
 				var fxnViewsLoaded = function(){
 					console.log("loaded images");
@@ -8116,9 +8119,77 @@ console.log("START AT: "+startIndexI+" | "+startIndexJ);
 				}
 				// load the track data for this pair
 				App3DR.ProjectManager.loadViewsImages(loadViews,fxnViewsLoaded, project);
-				throw "load next set of 3"
+				throw "load next set of 3";
 			}else{
-				console.log("done loading tracks");
+				console.log("done loading/propagating tracks");
+				// ..
+				var sparseCameras = [];
+				var sparseViews = [];
+				var sparsePoints = [];
+				var spareseCameraLookup = {};
+				var graphViews = graphData["views"];
+				var graphPoints = graphData["points"];
+				var cameras = this.cameras();
+				var views = this.views();
+				for(var i=0; i<cameras.length; ++i){
+					var camera = cameras[i];
+					console.log(camera);
+					var c = {
+						"id":camera.id(),
+						"fx":"",
+						"fy":"",
+						"s":"",
+						"cx":"",
+						"cy":"",
+					};
+					sparseCameras.push(c);
+					spareseCameraLookup[c["id"]] = c;
+				}
+				for(var i=0; i<graphViews.length; ++i){
+					var view = graphViews[i];
+					console.log(view);
+					var v = {
+						"id":view["id"],
+						"size":view["size"],
+						"camera":"",
+						"transform":view["R"],
+						"points":null,
+						"errorR":null,
+						"deltaR":null,
+						"updated":"",
+					};
+					sparseCameras.push(v);
+					spareseCameraLookup[v["id"]] = v;
+				}
+				throw "."
+				for(var i=0; i<graphPoints.length; ++i){
+					var point = graphPoints[i];
+					var p3D = point.point();
+					var p = {
+						"X":"",
+						"Y":"",
+						"Z":"",
+						"x":"",
+						"y":"",
+						"z":"",
+						"s":"",
+						"v":[
+							{
+								"i":"",
+								"x":"",
+								"y":"",
+							}
+						],
+					};
+					throw "?";
+					sparseCameras.push(p);
+				}
+				console.log(graphData);
+				var sparseData = {
+					"cameras":sparseCameras,
+					"views":sparseViews,
+					"points":sparsePoints,
+				}
 				throw "save total track count to project file"
 			}
 		}else{ // create edge counts
@@ -8286,10 +8357,10 @@ App3DR.ProjectManager.prototype._iterateGraphTracksPropagateTick = function(trip
 	var cameras = this.cameras();
 	var views = this.views();
 	var graphData = this.graphData();
-	console.log(graphData);
+	// console.log(graphData);
 	var graphViews = graphData["views"];
 	var stage = GLOBALSTAGE;
-
+	//
 	var graphViewLookup = {};
 	var graphViewLookupIndex = {};
 	var graphViewLookupID = {};
@@ -8329,7 +8400,7 @@ App3DR.ProjectManager.prototype._iterateGraphTracksPropagateTick = function(trip
 	console.log(points);
 
 	// world fxns to:
-world.printPoint3DTrackCount();
+	world.printPoint3DTrackCount();
 		// propagate tracks
 		console.log("errors initial");
 		world.relativeTransformsFromAbsoluteTransforms();
@@ -8339,7 +8410,7 @@ world.printPoint3DTrackCount();
 		world.probe3D();
 
 
-for(var t=0; t<3; ++t){
+for(var t=0; t<1; ++t){
 		world.probe3D();
 world.printPoint3DTrackCount();
 		world.averagePoints3DFromMatches(true);
@@ -8362,13 +8433,19 @@ world.printPoint3DTrackCount();
 		// world.dropNegative3D
 
 }
-world.printPoint3DTrackCount();
-world.estimate3DErrors(true);
+	world.printPoint3DTrackCount();
+	world.estimate3DErrors(true);
 
+	// save points
+	var graphPoints = this._getGraphPointsFromWorld(world, graphViewLookupIndex);
+	var graphViews = this._updateGraphViewsFromWorld(world, graphData["views"]);
+	graphData["views"] = graphViews;
+	graphData["points"] = graphPoints;
+	graphData["propagateIndex"] += 1;
+	console.log(graphData);
+	// save
+	this.saveGraphFromData(graphData);
 
-// save views & points to graph file
-	//
-	throw "done";
 }
 App3DR.ProjectManager.prototype._addGraphViews = function(world, graphViewLookup, stage){
 	var views = this.views();
@@ -8591,6 +8668,27 @@ console.log("EMBED NEW POINTS ...: ");
 	}
 
 	// all points to tracks
+
+
+	var graphPoints = this._getGraphPointsFromWorld(world, graphViewLookupIndex);
+	graphData["points"] = graphPoints;
+	// graphData["previousPair"] // already updated
+	console.log("save / update graph data");
+	// . update view transforms:
+	console.log(graphViews);
+
+	var graphViews = this._updateGraphViewsFromWorld(world, graphData["views"]);
+	graphData["views"] = graphViews;
+	world.printPoint3DTrackCount();
+	// .
+	console.log(graphData);
+	// throw "TO SAVE ...";
+	// .
+	this.saveGraphFromData(graphData);
+}
+
+
+App3DR.ProjectManager.prototype._getGraphPointsFromWorld = function(world, graphViewLookupIndex){
 	var allPoints = world.toPointArray();
 	console.log("allPoints: "+allPoints.length);
 	console.log(allPoints);
@@ -8645,31 +8743,28 @@ console.log("EMBED NEW POINTS ...: ");
 		var object = {"X":loc.x, "Y":loc.y, "Z":loc.z, "x":nor.x, "y":nor.y, "z":nor.z, "s":siz, "v":v};
 		graphPoints.push(object);
 	}
-	graphData["points"] = graphPoints;
-	// graphData["previousPair"] // already updated
-	console.log("save / update graph data");
-	// . update view transforms:
-	console.log(graphViews);
-	// .
+	return graphPoints;
+}
+
+App3DR.ProjectManager.prototype._updateGraphViewsFromWorld = function(world, graphViews){
+	var updatedViews = [];
 	for(var i=0; i<graphViews.length; ++i){
 		var gv = graphViews[i];
 		var gid = gv["id"];
 		var view = world.viewFromData(gid);
 		var R = view.absoluteTransform();
 		var size = view.size();
-		gv["R"] = R.copy();
-		gv["size"] = size; // replace / update
+		updatedViews[i] = {
+			"id": gid,
+			"R": R.copy(),
+			"size": size,
+		};
 	}
-	// .
-	world.printPoint3DTrackCount();
-	// .
-	console.log(graphData);
-	// throw "TO SAVE ...";
-	// .
-	this.saveGraphFromData(graphData);
+	return updatedViews;
 }
 
 App3DR.ProjectManager.prototype.saveGraphFromData = function(graphData){
+	console.log(graphData);
 	var yaml = new YAML();
 	var object = graphData;
 	var timestampNow = Code.getTimeStampFromMilliseconds();
