@@ -202,11 +202,12 @@ project typical numbers:
 	~N*N(0.2) pairs [ (n*)/2 - 2 pairs possible ]		CURRENT GUESS OF AVERAGE GRAPH CONNECTIVITY
 	~N*N(0.1) triples [(n^2 -n)/2 - 2 triples possible]
 	20~200 pairs
+	10~100 triples
 
 	[max 4032 x 3024]
-	2016x1512 image @ hi res
+	2016x1512 image @ hi res [triangles]
 	1920x1080 image @ med res
-	960x540 image @ lo res
+	960x540 image @ lo res [BA]
 	500x375 working res [features]
 
 	1.2192768E7 pixels @ high res
@@ -302,13 +303,14 @@ vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 	- quasi-local-global bundle adjustment
 	- increase resolution to finer detail
 	=> final structure & motion
------> HERE <------
 - pipelining
-	- use tracks
-	- automated
+	- graph init
+	- sparse tracks
+	- dense points
+-----> HERE <------
 (04/15)
-- surface triangulation(tesselation)
-	- advancing-front, curvature-based tesselation
+- surface triangulation(tessellation)
+	- advancing-front, curvature-based tessellation
 	=> scene triangle model
 (05/06)
 - texturing
@@ -343,49 +345,11 @@ https://cloud.google.com/appengine/docs/nodejs/
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 - lots of DROP SCALE RATIO: AFTER previously validated ... why?
-
+- propagating points doesn't seem to add much / they are pruned quickly
 - divide R error by the number of points in track to allow for some sympathy for multi-connected components
 
 
-=> can start a sparse: points/views separate yaml files
-	=> save graph points / views
-	=> init points & views sparse yaml
-		=> create edge entry for every pair (enough points)
-		=>
-
-INITIAL TRACK BA:
-	- generate 'edges' using P3D info & add entries to graph:
-		- errorR, errorF, count, deltaR, deltaF, deltaCount
-	- sort edges on:
-		a) deltas not yet known
-		b) higher edge count
-	- each iteration:
-		a) pick top edge on list
-		b) next pair in list (with minimum edge count [eg 16])
-		- aux views = most shared points [A,B,C] (up to 6)
-	=> MAIN BA FXN
-	- deltas = amounts at beginning of iteration TO amounts at end
-	- update all edges & possibly drop / add edges [above / below min counts {eg 32 & 16}]
-
-CONTINUING BA: [all deltas known]
-	- sort edges on larger deltaR [edge count above some minimum]
-	 	a) pick edge at top of list
-		b) pick next edge with view in common with (a)
-		c) aux views = next pair with most shared points [A,B,C] (up to 6)
-	=> MAIN BA FXN
-	- repeat until: deltaR < ~0.001  /or/  max iterations: 10*viewCount
-
-BA MAIN FXN:
-	- move only 2 views in main pair (2 main + up to 4 aux)
-	- update all P3D patches in pair
-	- propagate P3D among loaded views
-	- drop P2Ds with very high F error
-	- drop P3Ds with very high R error
-	- 2nd BA ?
-
-
-...
-
+INIT DENSE FILE
 
 DENSE LOGISTICS: [pair-dense-points + image]
 
@@ -411,10 +375,23 @@ DENSE AGGREGATION: [points and views data only]
 
 ...
 
-TESSELATION LOGISTICS:
+additional fuzzy-error point dropping ?
+	- patch
 
 ...
 
+TESSELATION LOGISTICS:
+- load final dense point set
+- up-sample points?
+- iterative surface front-propagation
+- save to triangle file
+...
+
+
+- TRIANGULATION:
+	- load ALL P3D from file
+	- triangulate surface
+	- save to triangle file
 
 
 
@@ -508,52 +485,12 @@ is the translation averaging: tij = Tj - Rij*Ti ? or are just the Ts involved ?
 	- drop outliers out [no images needed]
 
 
-- DENSE POINTS INIT
-	- all pairwise points accumulated to single file
-		- limit dense points by some corner / range / error limit
-		- limit dense points by image cell grid size [~3x3 = 1/9th resolution]
-			- ie: drop all points within (3/2) pixels away from established points when adding
-	- track points also ?
-	- P3D location & [patch] normal are initialized by a sum across all pairs [calculated linear solution without need of loading view images]
-		- location: using sum of estimated locations * ABS_a * 1/error
-		- normal: using
-
 
 - USE OPTIMIZED VIEW GRAPH to break the problem up where possible
 	- prefer lower error pairs
 	- prune repetitive views
 	- ...
 
-- MAIN SPARSE/DENSE REFINEMENT ITERATION:
-	- load ALL P3D from file
-	- CHOOSE  - prioritize by views with fastest error reduction (how to calculate?)
-		- load 3 views (proj 3D points + BA)
-		- load 2 views (BA) -
-
-	- include P3D that are relevant to view grouping (in front, inside viewing angle, not facing different direction, not too far??? [what about BG])
-	- iterate on:
-		- adding/dropping 2D points
-		- projecting 3D points not yet visible in views
-		- BUNDLE ADJUST points & views [points might need some lag on their change, as only max 3 views are used to approx. location]
-	- convert new absolute locations into relative w/ least error relating to old locations
-	- new P3D locations/normals & view ABS transforms =
-		(%OLD) x old  + (%NEW) x new
-		- old error = all view error not including pair_i | new error = pair_i
-		- merged points are same as updated points
-		- added points are added ABSOLUTELY
-		- removed points are only entirely removed if 1 (or less) views now reference it
-	- save update P3D file
-
-
-	- MIGHT BE THE CASE THAT VIEWS NOT ORIGINALLY PAIRED NOW LIKELY HAVE A PAIR []
-		- keep a lookout for points that might project into view have opportunity to try
-		- or if there are now many 3D points they both share, then add an entry [edge?]
-		-
-
-- TRIANGULATION:
-	- load ALL P3D from file
-	- triangulate surface
-	- save to triangle file
 
 - TEXTURING:
 	- load triangles
@@ -570,7 +507,7 @@ is the translation averaging: tij = Tj - Rij*Ti ? or are just the Ts involved ?
 		- PAIR F
 		- PAIR P
 		- TRI = relative SIZES
-	- if change is MINOR:
+	- if change is MINOR: [near a lot of existing matches, 'surrounded' (initial location estimate is reliable)]
 		- inject into existing solution with best estimate
 	- else
 		- TRACK ADDITIONS ?
@@ -622,69 +559,9 @@ is the translation averaging: tij = Tj - Rij*Ti ? or are just the Ts involved ?
 
 
 
-TOPICS:
-	- point tracks
-	- optimized scene graphs
-	- TFT
-	- optimizing
-
-- can point collisions in 2D be assumed to be good tracks ?
-
-
-
 - have not yet applied nonlinear triangulation (choose X to minimize x_i and x_j reprojection)
 	- 6 degree polynomial solution
 
-
-
--- start thinking about processing multiple views (10+) at same time
-	- may want only most salient points [with high visible view count]
-		- ~1K per view/pair [currently ~10K]
-	- assume can't keep all images or all points in memory
-		- loading & unloading ?
-
-	- optimal graph divide problem into sections that can be done independently
-		- possibly ignore repetitive views (keep most necessary backbone views)
-
--- look at keeping track of TRACKS
-	- TFT becomes useful again
-
-
-
-- initial view seems INVERSED?
-
-- overlapping points in 2D don't seem to be merged into a single point for 3D ?
-
-- refine absolute increases error
-
-- test app with self-made initialization (double size of translation for 0-2)
-	- see if errors can be minimized
-
-
-- make sure points and errors are initially calculated [not using old pairwise-values]?
-
-
-
-
-- add set after each pair is made:
-	- not 'triple' - but pair-pair - pairings
-		- pairA
-		- pairB
-		- relativeScale: 2.0
-		- relativeSigma: 0.15
-
-
-
--- initial orientation is bad (have 2 overlapping views?)
--- ALL 3 PAIRS HAVE THE SAME X-OFFSET ~ <1,0,0>
-
-	- 0-2 distance should be ... double 0-1 distance ...
-		-> is maybe an absolute size unknown ???
-			- is this not included in the K parameter?
-
-
-	- E is determined at baseline assumed to be unit length
-	- E has similarity ambiguity
 
 	- need to figure out how to get relative scale between different stereo pairs
 		- combine multiple stereo camera matrix
@@ -711,27 +588,9 @@ TOPICS:
 	=> only need an initial approximate scale [~1% error ] to get initial location estimates correct
 
 
-	- reversed ?
-	- depth in negative?
-
--- iterating error goes up
-
-
-		-- are the poit3d absolute / inversion correct when calculating errrrrrrrrors relative ?
-
-
-- maybe some methods don't work correctly when one R is not identity ?
-
 notes:
 projection / extrinsic camera matrix:
 P = K[R, -RC]
-
-
-
-
-
-
-
 
 ) estimating R / F error should use sample subset to limit processing
 
@@ -766,12 +625,6 @@ P = K[R, -RC]
 
 
 
-SO I HAVE A PATCH OF POINTS THAT HAVE GOOD:
-	- NCC SCORE
-	- R-ERROR
-	- F-ERROR
-BUT WRONG, BECAUSE THEY ARE MAPPING INCORRECT SIMILAR SPACES TOGETHER [EG because a tree is in the way in one picture but not another]
-- artificial/ incorrect discontinuity
 
 => for 2 cameras .. might be hard to differentiate
 	=> availability of alternative points ?
@@ -787,15 +640,6 @@ BUT WRONG, BECAUSE THEY ARE MAPPING INCORRECT SIMILAR SPACES TOGETHER [EG becaus
 
 SPORADICALLY BAD POINTS (ERROR) - can be voted out fairly unanumously
 - small groups can be iteritively picked at until they are all removed
-
-
-
-
-
-
-
-
-3D case try 3-F planes to validate / find new TRACKS
 
 
 
@@ -832,16 +676,6 @@ this.estimate3DViews(); // find absolute view locations
 this.estimate3DPoints(); // find absolute point locations
 	P3D.prototype.calculateAbsoluteLocation
 this.estimate3DErrors(true, true);
-
-
-
-TRANSFORM WILL HOLD EXTRINSIC MATRICES
-	- relationship between PKR
-VIEWS WILL HOLD ABSOLUTE MATRICES
-	- ?
-
-
-
 
 
 
@@ -998,47 +832,12 @@ focus combining code on merging points to more force multi-way alignment
 	=> CAN'T USE SIGMA because outliers trap data ... need some kind of sigma-finder
 
 
-INITIAL ESTIMATE SHOULD BE AT LEAST AS GOOD AS FLAT GUESS
-- test error metrics
-
-=> the error that's being minimized may not be an accurate comparison?
-	- it DOES LOOK LIKe there is correlation:
-		-> at high R error, the graph error is high
-		-> at it's lowest R error, the graph error is ~0
-	-> the initial estimate isn't in a good approximation
-		-> is error used wrong?
-		-> is error weight calculated wrong?
-
-
-
-- try to reduce error in first match to lower than 1 pixel
-
-=> ADD BACK:
-	- corner-point propagation
-		[find all corner points & project to other views]
-	- patches
-
-
-=> pairs with low error might be good enough to return to texturing
-
-
 HOW TO OPTIMIZE Fs GLOBALLY RATHER THAN Rs?
 
 
 IS IT POSSIBLE TO DIRECT ABSOLUTE R IN DIRECTIONS THAT ARE BASED ON RELATIVE R - DERIVED FROM F ?
 
-
-
 * IF STILL CORNER MATCH DROPPING = MOVE INTO CENTRAL LOCATION SO PROBED POINTS ARE DISREGARDED IF WANTED TO ADD
-
-
-
-TRY NOT DERIVING F FROM R
--> F IS INHERENT in the point matches already
-
-IF F IS KEPT SEPARATE: [2-pair]
-- have absolute R and a predicted R
-.....
 
 
 => other BA methods work on optimizing F, not R
@@ -1078,80 +877,6 @@ initial pair estimate: drop points until under 1 px sigmaA
 
 
 
-
-
-- TEST INITIALIZATION OF 3+ MATRICES TO SEE IF GOOD ESTIMATE?
-	=> OPTIMIZED CALCULATION IS BAD WHEN ROTATION & TRANSLATION COMBINED
-		=> visualize components to find why not working
-
-
-
-check what matrix and direction is used for camera in visualizer
-	=> inverse + 0,0,1
-
-
-COMPARE MANUAL LOCATIONS / TRANSFORMS TO TEST BED
-
-
-NEED TO VISUALIZE ALGORITHM IN 3D TO BE SURE IT IS OPTIMIZING
-
-
-INVERSE IN
-=> OPERATION
-INVERSE OUT
-
-
---- keep F from previous calcs
-	=> relative.yaml needs to save F
-		-> each view pair has entry
-		setupModel3DProjectManager
-		projectBALoad
-
-=> IMPORT
-
-
-
-=> update all up.left/right/center calculations with simple row/col vector grabbing
-
-
-- should F be derived from R?
-
-
-PAIRS: error goes up each iteration
-	- different error metric (see if same as transform calculation)
-	-
-
-GROUPS: F error are very high after deriving from R
-		- should these be independent ?
-		- should these have a FWD/BACK component (iterate)?
-		- should F be involved in the minimizing R-error (+F-error) calculations?
-	- need to do full BA
-
-
-SUBSTITUTE BACK IN: inverseCameraMatrix
-
-=> WAYS TO SPREAD THE ERROR IN A BUNDLE AGJUST OF JUST CAMERAS:
-	PAIRWISE:
-		A)
-			1) find optimal relative location of each neighbor view & just use as is
-			2) find optimal relative location from moving i) view A and ii) view B
-				-> combine to get an average relative location
-					-> further optimize again starting at the average point [using either A-B or B-A]
-		B) USE RELATIVE ORIENTATIONS & ERRORS TO FIND SIMULTANEOUS BEST CASE
-		C) CONVERT FROM RELATIVE TO ABSOLUTE
-
-	SIMULTANEOUS:
-		OPTIMIZE ALL LOCATION SIMULTANEOUSLY WITH MINIMIZATION LIST
-
-
-
-- maybe only used best points w/ best:  corner score  &  match score  & F score
-
--
-
-----> go thru view uploading again with medium dense images
-- make sure affine state is saved / loaded
-- play with worst common views
 
 
 
@@ -1227,16 +952,6 @@ SUBSTITUTE BACK IN: inverseCameraMatrix
 	=> DOES THIS REQUIRE ITERATIVE SEEKING ?
 
 - saving corner affine to yaml / loading from yaml
-
-
-
-
-
-
-- re-check using F-corner points for additional seed points
-
-- re-export features for views
-- get back to how well stereopsis estimations are
 
 
 

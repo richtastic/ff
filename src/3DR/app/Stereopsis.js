@@ -2866,17 +2866,17 @@ Stereopsis.relativeTransformFromViews = function(viewA,viewB){
 Stereopsis.World.prototype.refineCameraAbsoluteOrientationSubset = function(){
 	throw "pick lowest error subset of points (also of highest connectivity degree) to do calculations on"
 }
-Stereopsis.World.prototype.refineSelectCameraAbsoluteOrientation = function(viewsChange, minimumPoints){
+Stereopsis.World.prototype.refineSelectCameraAbsoluteOrientation = function(viewsChange, minimumPoints, maxIterations){
 	var views = this.toViewArray();
 	Code.removeDuplicates(views,viewsChange);
-	this._refineCameraAbs(viewsChange, views, minimumPoints);
+	this._refineCameraAbs(viewsChange, views, minimumPoints, maxIterations);
 }
-Stereopsis.World.prototype.refineCameraAbsoluteOrientation = function(minimumPoints){
+Stereopsis.World.prototype.refineCameraAbsoluteOrientation = function(minimumPoints, maxIterations){
 	var views = this.toViewArray();
-	this._refineCameraAbs(views, [], minimumPoints);
+	this._refineCameraAbs(views, [], minimumPoints, maxIterations);
 }
-Stereopsis.World.prototype._refineCameraAbs = function(viewsChange, viewsConstant,minimumPoints){ // get updated camera positions with less error
-	var result = this.bundleAdjustViews(viewsChange, viewsConstant, minimumPoints);
+Stereopsis.World.prototype._refineCameraAbs = function(viewsChange, viewsConstant,minimumPoints, maxIterations){ // get updated camera positions with less error
+	var result = this.bundleAdjustViews(viewsChange, viewsConstant, minimumPoints, maxIterations);
 	var extrinsics = result["extrinsics"];
 	for(var i=0; i<viewsChange.length; ++i){
 		var view = viewsChange[i];
@@ -2928,7 +2928,7 @@ Stereopsis.averageMatrixEstimates = function(matrixes, errors){ // average locat
 // }
 Stereopsis.World.prototype.bundleAdjustViews = function(viewsChange, viewsConstant, minimumPoints, maxIterations){
 // TODO: minimumPoints
-	maxIterations = maxIterations!==undefined ? maxIterations : 50;
+	maxIterations = maxIterations!==undefined && maxIterations!==null ? maxIterations : 50;
 	var allViews = Code.copyArray(viewsChange);
 	Code.arrayPushArray(allViews,viewsConstant);
 	var viewCount = allViews.length;
@@ -2988,7 +2988,7 @@ Stereopsis.World.prototype.bundleAdjustViews = function(viewsChange, viewsConsta
 			}
 		}
 	}
-	console.log(Ks,Is,Ps, pairPoints2D, pairPoints3D, maxIterations, K2s,I2s,P2s)
+	// console.log(Ks,Is,Ps, pairPoints2D, pairPoints3D, maxIterations, K2s,I2s,P2s)
 	var result = R3D.BundleAdjustCameraExtrinsic(Ks,Is,Ps, pairPoints2D, pairPoints3D, maxIterations, K2s,I2s,P2s);
 	return result;
 }
@@ -6414,6 +6414,7 @@ var showLog = false;
 	// affine matrix has a limit:
 // TODO: TEST THIS AGAIN
 	var affine = match.affine();
+if(affine){
 	var a = affine.get(0,0);
 	var b = affine.get(1,0);
 	var c = affine.get(0,1);
@@ -6434,7 +6435,7 @@ var showLog = false;
 		}
 		return false;
 	}
-
+}
 	//var minRange = 0.04/(5*5);
 	// var minRange = 0.10/(5*5)
 	var minRange = 0.001; // based on size?

@@ -5799,12 +5799,17 @@ App3DR.ProjectManager = function(relativePath, operatingStage){ // very async he
 	this._tracksFilename = null;
 		this._tracksData = null;
 	this._trackCount = null;
-	this._sparseInfo = null;
-	this._sparsePoints = null;
+
+	this._sparseFilename = null;
+		this._sparseData = null;
 	this._sparseCount = null;
-	this._denseInfo = null;
-	this._densePoints = null;
+
 	this._denseCount = null;
+
+	// this._sparseInfo = null;
+	// this._sparsePoints = null;
+	// this._denseInfo = null;
+	// this._densePoints = null;
 	this._triangles = null;
 	this._triangleCount = null;
 	this._packing = null;
@@ -5848,10 +5853,12 @@ App3DR.ProjectManager.BUNDLE_ADJUST_DIRECTORY = "bundle";
 App3DR.ProjectManager.RECONSTRUCT_DIRECTORY = "reconstruct";
 App3DR.ProjectManager.RECONSTRUCT_TRACKS_FILE_NAME = "tracks.yaml";
 App3DR.ProjectManager.RECONSTRUCT_GRAPH_FILE_NAME = "graph.yaml";
-App3DR.ProjectManager.BUNDLE_SPARSE_POINTS_FILE_NAME = "points_sparse.yaml";
-App3DR.ProjectManager.BUNDLE_SPARSE_INFO_FILE_NAME = "info_sparse.yaml";
-App3DR.ProjectManager.BUNDLE_DENSE_POINTS_FILE_NAME = "points_dense.yaml";
-App3DR.ProjectManager.BUNDLE_DENSE_INFO_FILE_NAME = "info_dense.yaml";
+// App3DR.ProjectManager.BUNDLE_SPARSE_POINTS_FILE_NAME = "points_sparse.yaml";
+// App3DR.ProjectManager.BUNDLE_SPARSE_INFO_FILE_NAME = "info_sparse.yaml";
+// App3DR.ProjectManager.BUNDLE_DENSE_POINTS_FILE_NAME = "points_dense.yaml";
+App3DR.ProjectManager.BUNDLE_SPARSE_FILE_NAME = "sparse.yaml";
+App3DR.ProjectManager.BUNDLE_DENSE_FILE_NAME = "dense.yaml";
+// App3DR.ProjectManager.BUNDLE_DENSE_INFO_FILE_NAME = "info_dense.yaml";
 // App3DR.ProjectManager.SPARSE_MATCHES_FILE_NAME = "sparse.yaml"; // sparse points + transform
 // App3DR.ProjectManager.MEDIUM_MATCHES_FILE_NAME = "medium.yaml";
 // App3DR.ProjectManager.DENSE_MATCHES_FILE_NAME = "dense.yaml";
@@ -5910,6 +5917,42 @@ App3DR.ProjectManager.prototype.setTracksFilename = function(track){
 App3DR.ProjectManager.prototype.tracksData = function(){
 	return this._tracksData;
 }
+App3DR.ProjectManager.prototype.setTrackCount = function(count){
+	this._trackCount = count;
+}
+
+App3DR.ProjectManager.prototype.sparseFilename = function(){
+	return this._sparseFilename;
+}
+App3DR.ProjectManager.prototype.setSparseFilename = function(sparse){
+	this._sparseFilename = sparse;
+}
+App3DR.ProjectManager.prototype.sparseData = function(){
+	return this._sparseData;
+}
+App3DR.ProjectManager.prototype.setSparseCount = function(count){
+	this._sparseCount = count;
+}
+App3DR.ProjectManager.prototype.sparseDone = function(){
+	return this._sparseCount != null;
+}
+
+App3DR.ProjectManager.prototype.denseFilename = function(){
+	return this._denseFilename;
+}
+App3DR.ProjectManager.prototype.setDenseFilename = function(dense){
+	this._denseFilename = dense;
+}
+App3DR.ProjectManager.prototype.denseData = function(){
+	return this._denseData;
+}
+App3DR.ProjectManager.prototype.setDenseCount = function(count){
+	this._denseCount = count;
+}
+App3DR.ProjectManager.prototype.denseDone = function(){
+	return this._denseCount != null;
+}
+
 App3DR.ProjectManager.prototype.bundleFilename = function(file){
 	if(file!==undefined){
 		this._bundleFilename = file;
@@ -6001,6 +6044,10 @@ App3DR.ProjectManager.prototype.setFromYAML = function(object){
 	var graph = object["graph"];
 	var tracks = object["tracks"];
 	var trackCount = object["trackCount"];
+	var sparse = object["sparse"];
+	var sparseCount = object["sparseCount"];
+	var dense = object["dense"];
+	var denseCount = object["denseCount"];
 
 	this._titleName = title;
 	this._createdTimestamp = created;
@@ -6048,7 +6095,11 @@ App3DR.ProjectManager.prototype.setFromYAML = function(object){
 	this._bundleFilename = bundle ? bundle : null;
 	this._graphFilename = Code.valueOrDefault(graph, null);
 	this._tracksFilename = Code.valueOrDefault(tracks, null);
+	this._sparseFilename = Code.valueOrDefault(sparse, null);
+	this._denseFilename = Code.valueOrDefault(dense, null);
 	this._trackCount = Code.valueOrDefault(trackCount, null);
+	this._sparseCount = Code.valueOrDefault(sparseCount, null);
+	this._denseCount = Code.valueOrDefault(denseCount, null);
 }
 App3DR.ProjectManager.prototype.toYAML = function(){
 	var modified = Code.getTimeStampFromMilliseconds();
@@ -6122,8 +6173,16 @@ App3DR.ProjectManager.prototype.toYAML = function(){
 	yaml.writeString("graph",this._graphFilename);
 	yaml.writeBlank();
 
-	yaml.writeString("tracks",this._tracksFilename);
-	yaml.writeString("trackCount",this._trackCount);
+	yaml.writeString("tracks",this._tracksFilename); // not using
+	yaml.writeNumber("trackCount",this._trackCount);
+	yaml.writeBlank();
+	// sparse
+	yaml.writeString("sparse",this._sparseFilename);
+	yaml.writeNumber("sparseCount",this._sparseCount);
+	yaml.writeBlank();
+	// dense
+	yaml.writeString("dense",this._denseFilename);
+	yaml.writeNumber("denseCount",this._denseCount);
 	yaml.writeBlank();
 	// points
 
@@ -6470,6 +6529,66 @@ App3DR.ProjectManager.prototype._loadTracksComplete = function(object, data){
 		callback.call(context, this);
 	}
 }
+
+
+
+
+
+
+App3DR.ProjectManager.prototype.saveSparse = function(string, filename, callback, context, object){
+	console.log("saveSparse: ");
+	var path = Code.appendToPath(this._workingPath, App3DR.ProjectManager.RECONSTRUCT_DIRECTORY, filename);
+	var yamlBinary = Code.stringToBinary(string);
+	this.addOperation("SET", {"path":path, "data":yamlBinary}, callback, context);
+}
+App3DR.ProjectManager.prototype.loadSparse = function(callback, context, object){
+	var path = Code.appendToPath(this._workingPath, App3DR.ProjectManager.RECONSTRUCT_DIRECTORY, this.sparseFilename());
+	console.log("loadSparse: "+path);
+	var object = {};
+		object["callback"] = callback;
+		object["context"] = context;
+	this.addOperation("GET", {"path":path}, this._loadSparseComplete, this, object);
+}
+App3DR.ProjectManager.prototype._loadSparseComplete = function(object, data){
+	console.log("_loadTracksComplete");
+	var callback = object["callback"];
+	var context = object["context"];
+	this._sparseData = this.dataToObject(data);
+	if(callback && context){
+		callback.call(context, this);
+	}
+}
+
+
+
+
+App3DR.ProjectManager.prototype.saveDense = function(string, filename, callback, context, object){
+	console.log("saveDense: ");
+	var path = Code.appendToPath(this._workingPath, App3DR.ProjectManager.RECONSTRUCT_DIRECTORY, filename);
+	var yamlBinary = Code.stringToBinary(string);
+	this.addOperation("SET", {"path":path, "data":yamlBinary}, callback, context);
+}
+App3DR.ProjectManager.prototype.loadDense = function(callback, context, object){
+	var path = Code.appendToPath(this._workingPath, App3DR.ProjectManager.RECONSTRUCT_DIRECTORY, this.denseFilename());
+	console.log("loadDense: "+path);
+	var object = {};
+		object["callback"] = callback;
+		object["context"] = context;
+	this.addOperation("GET", {"path":path}, this._loadDenseComplete, this, object);
+}
+App3DR.ProjectManager.prototype._loadDenseComplete = function(object, data){
+	console.log("_loadTracksComplete");
+	var callback = object["callback"];
+	var context = object["context"];
+	this._denseData = this.dataToObject(data);
+	if(callback && context){
+		callback.call(context, this);
+	}
+}
+
+
+
+
 App3DR.ProjectManager.prototype.dataToObject = function(data){
 	var str = Code.binaryToString(data);
 	var object = YAML.parse(str);
@@ -6676,11 +6795,19 @@ console.log("checkPerformNextTask");
 
 // this.saveProjectFile();
 
-throw " more todo ";
+if(!this.sparseDone()){
+	console.log("sparse not done");
+	this.iterateSparseTracks();
+	return;
+}
 
-throw "sparse BA";
 
-throw "dense BA";
+if(!this.denseDone()){
+	console.log("dense not done");
+	this.iterateDenseTracks();
+	return;
+}
+
 
 throw "surface - triangles";
 
@@ -8122,75 +8249,122 @@ console.log("START AT: "+startIndexI+" | "+startIndexJ);
 				throw "load next set of 3";
 			}else{
 				console.log("done loading/propagating tracks");
-				// ..
 				var sparseCameras = [];
 				var sparseViews = [];
 				var sparsePoints = [];
-				var spareseCameraLookup = {};
+				var sparseCameraLookup = {};
+				var cameraLookupIndex = {};
+				var sparseViewLookup = {};
+				var sparseViewLookupIndex = {};
+				var viewLookup = {};
 				var graphViews = graphData["views"];
 				var graphPoints = graphData["points"];
 				var cameras = this.cameras();
 				var views = this.views();
+				for(var i=0; i<views.length; ++i){
+					var v = views[i];
+					viewLookup[v.id()] = v;
+				}
 				for(var i=0; i<cameras.length; ++i){
 					var camera = cameras[i];
 					console.log(camera);
+					var K = camera.K();
+					var d = camera.distortion();
 					var c = {
 						"id":camera.id(),
-						"fx":"",
-						"fy":"",
-						"s":"",
-						"cx":"",
-						"cy":"",
+						"fx":K["fx"],
+						"fy":K["fy"],
+						"s":K["s"],
+						"cx":K["cx"],
+						"cy":K["cy"],
+						"k1":d["k1"],
+						"k2":d["k2"],
+						"k3":d["k3"],
+						"p1":d["p1"],
+						"p2":d["p2"],
 					};
+					var cid = c["id"];
 					sparseCameras.push(c);
-					spareseCameraLookup[c["id"]] = c;
+					sparseCameraLookup[cid] = c;
+					cameraLookupIndex[cid] = i;
 				}
 				for(var i=0; i<graphViews.length; ++i){
 					var view = graphViews[i];
-					console.log(view);
+					var v = viewLookup[view["id"]];
+					var cid = v.cameraID();
+					var cindex = cameraLookupIndex[cid];
 					var v = {
 						"id":view["id"],
 						"size":view["size"],
-						"camera":"",
-						"transform":view["R"],
-						"points":null,
-						"errorR":null,
-						"deltaR":null,
+						"camera":cindex,
+						// "transform":view["R"],
+						"R":view["R"],
+						// "points":null,
+						// "errorR":null,
+						// "deltaR":null,
 						"updated":"",
 					};
-					sparseCameras.push(v);
-					spareseCameraLookup[v["id"]] = v;
+					sparseViews.push(v);
+					sparseViewLookup[v["id"]] = v;
 				}
-				throw "."
 				for(var i=0; i<graphPoints.length; ++i){
-					var point = graphPoints[i];
-					var p3D = point.point();
+					var p3D = graphPoints[i];
+					// var p3D = point.point();
+					var vs = p3D["v"];
+					var vList = [];
+					for(var j=0; j<vs.length; ++j){
+						var v = vs[j];
+						v = {
+							"i":v["i"],
+							"x":v["x"],
+							"y":v["y"],
+						}
+						vList.push(v);
+					}
 					var p = {
-						"X":"",
-						"Y":"",
-						"Z":"",
-						"x":"",
-						"y":"",
-						"z":"",
-						"s":"",
-						"v":[
-							{
-								"i":"",
-								"x":"",
-								"y":"",
-							}
-						],
+						"X":p3D["X"],
+						"Y":p3D["Y"],
+						"Z":p3D["Z"],
+						"x":p3D["x"],
+						"y":p3D["y"],
+						"z":p3D["z"],
+						"s":p3D["s"],
+						"v":vList,
 					};
-					throw "?";
-					sparseCameras.push(p);
+					sparsePoints.push(p);
 				}
-				console.log(graphData);
+				// console.log(sparsePoints);
+				var sparsePairs = this._pairEdgesFromPoints(sparsePoints);
+				// console.log(sparsePairs);
+					sparsePairs = this._consolidatePairEdges([],sparsePairs);
+				// console.log(sparsePairs);
+				// throw "..."
+				// console.log(sparseCameras);
+				// console.log(sparseViews);
+				// console.log(sparsePoints);
+				// console.log(graphData);
 				var sparseData = {
 					"cameras":sparseCameras,
 					"views":sparseViews,
+					"pairs":sparsePairs,
 					"points":sparsePoints,
 				}
-				throw "save total track count to project file"
+				console.log(sparseData);
+
+				// SAVE PROJECT FILE
+				var fxnSavedProject = function(){
+					console.log("fxnSavedProject");
+				}
+				var fxnSavedSparse = function(){
+					console.log("fxnSavedSparse");
+					this.saveProjectFile(fxnSavedProject, this);
+				}
+				// SAVE
+				console.log(graphPoints.length)
+				this.setTrackCount(graphPoints.length);
+				this.setSparseFilename(App3DR.ProjectManager.BUNDLE_SPARSE_FILE_NAME);
+				this.saveSparseFromData(sparseData, fxnSavedSparse, this);
+
 			}
 		}else{ // create edge counts
 			console.log("create triple groups to propagate tracks");
@@ -8287,6 +8461,95 @@ console.log("START AT: "+startIndexI+" | "+startIndexJ);
 		}
 	}
 }
+App3DR.ProjectManager.prototype._pairEdgesFromPoints = function(sparsePoints){
+	var sortSmaller = function(a,b){
+		return a < b ? -1 : 1;
+	}
+	var minimumStringFirst = function(a,b){
+		return a < b ? (a+"-"+b) : (b+"-"+a);
+	}
+	var edges = {};
+	for(var i=0; i<sparsePoints.length; ++i){
+		var point = sparsePoints[i];
+		var vs = point["v"];
+		for(var j=0; j<vs.length; ++j){
+			var v = vs[j];
+			var vi = v["i"];
+			for(var k=j+1; k<vs.length; ++k){
+				var u = vs[k];
+				var ui = u["i"];
+				var index = minimumStringFirst(ui,vi);
+				var edge = edges[index];
+				if(!edge){ // first time
+					var minI = Math.min(ui,vi);
+					var maxI = Math.max(ui,vi);
+					edge = {"count":0, "A":minI, "B":maxI};
+					edges[index] = edge;
+				}
+				edge["count"] += 1;
+			}
+		}
+	}
+	return edges;
+}
+App3DR.ProjectManager.prototype._consolidatePairEdges = function(existing,edges){ // create if not exist, update if exists, remove if not exist
+	// helpers:
+	var minimumStringFirst = function(a,b){
+		return a < b ? (a+"-"+b) : (b+"-"+a);
+	}
+	// make lookups:
+	var lookupExisting = {};
+	for(var i=0; i<existing.length; ++i){
+		var exist = existing[i];
+		var indexA = exist["A"];
+		var indexB = exist["B"];
+		var index = minimumStringFirst(indexA,indexB);
+		lookupExisting[index] = exist;
+	}
+	var lookupEdges = edges;
+		edges = Code.objectToArray(edges);
+	// for(var i=0; i<edges.length; ++i){
+	// 	var edge = edges[i];
+	// 	var indexA = edge["A"];
+	// 	var indexB = edge["B"];
+	// 	var index = minimumStringFirst(indexA,indexB);
+	// 	lookupEdges[index] = exist;
+	// }
+	// remove nonexistant
+	// for(var i=0; i<existing.length; ++i){
+	// 	var exist = existing[i];
+	// 	var indexA = exist["A"];
+	// 	var indexB = exist["B"];
+	// 	var index = minimumStringFirst(indexA,indexB);
+	// 	var edge = lookupEdges[index];
+	// 	if(!edge){ // remove
+	// 		throw "DNE";
+	// 	}
+	// }
+	var total = [];
+	// add existing
+	for(var i=0; i<edges.length; ++i){
+		var edge = edges[i];
+		var indexA = edge["A"];
+		var indexB = edge["B"];
+		var index = minimumStringFirst(indexA,indexB);
+		var exist = lookupExisting[index];
+		if(!exist){ // make new
+			exist = {};
+			exist["A"] = indexA;
+			exist["B"] = indexB;
+			exist["errorF"] = null;
+			exist["errorR"] = null;
+			exist["deltaErrorF"] = null;
+			exist["deltaErrorR"] = null;
+			exist["updated"] = null;
+			lookupExisting[index] = exist;
+		} // update
+		exist["count"] = edge["count"];
+		total.push(exist);
+	}
+	return total;
+}
 App3DR.ProjectManager.prototype.auxilaryViewsToLoadForSet = function(loadViews,graphData,maximumViews){ // load UP TO limit total views for SET group
 	maximumViews = maximumViews!==undefined ? maximumViews : 5;
 	var sortLargerArray0 = function(a,b){
@@ -8324,15 +8587,13 @@ App3DR.ProjectManager.prototype.auxilaryViewsToLoadForSet = function(loadViews,g
 	}
 	loadViews = Code.copyArray(loadViews);
 	var i = 0;
-	console.log("selectArrays");
-	console.log(selectArrays);
+	// console.log("selectArrays");
+	// console.log(selectArrays);
 	while(loadViews.length<maximumViews && selectArrays.length>0){
 		if(i>=selectArrays.length){
 			i = 0;
 		}
-
 		var currentSelect = selectArrays[i];
-		console.log(currentSelect);
 		if(currentSelect.length==0){
 			Code.removeElementAt(selectArrays,i);
 			continue;
@@ -8395,7 +8656,7 @@ App3DR.ProjectManager.prototype._iterateGraphTracksPropagateTick = function(trip
 
 	// load existingPoints
 	console.log("embed");
-	this._embedTrackPoints(world, graphData, graphViewLookupID, graphViewLookup);
+	this._embedTrackPoints(world, graphData, graphViewLookupID);//, graphViewLookup);
 	var points = world.toPointArray();
 	console.log(points);
 
@@ -8407,7 +8668,7 @@ App3DR.ProjectManager.prototype._iterateGraphTracksPropagateTick = function(trip
 		// world.relativeFFromSamples();
 		world.estimate3DErrors(true);
 		console.log("probe3D");
-		world.probe3D();
+		// world.probe3D();
 
 
 for(var t=0; t<1; ++t){
@@ -8447,6 +8708,362 @@ world.printPoint3DTrackCount();
 	this.saveGraphFromData(graphData);
 
 }
+
+App3DR.ProjectManager.prototype.iterateDenseTracks = function(){
+	console.log("iterateDenseTracks");
+	var project = this;
+	// backwards:
+	// do operations
+	var fxnTracksLoaded = function(){
+		console.log("fxnTracksLoaded");
+		project._iterateDenseTracksStart();
+	}
+	// load sparse file
+	project.loadDense(fxnTracksLoaded, project);
+}
+App3DR.ProjectManager.prototype._iterateDenseTracksStart = function(){
+	var project = this;
+	console.log("Dense");
+	console.log(this.denseData());
+	var denseData = this.denseData();
+	var denseCameras = denseData["cameras"];
+	var denseViews = denseData["views"];
+	var densePairs = denseData["pairs"];
+	var currentPair = denseData["currentPair"];
+	currentPair++;
+	if(currentPair>=densePairs.length){
+		throw "reached end ... BA";
+	}
+	var densePair = densePairs[currentPair];
+
+	var denseViewLookup = {};
+	var denseViewLookupIndex = {};
+	for(var i=0; i<denseViews.length; ++i){
+		var v = denseViews[i];
+		var vid = v["id"];
+		denseViewLookup[vid] = v;
+		denseViewLookupIndex[vid] = i;
+
+	}
+
+	console.log(densePair);
+	var pair = this.pairFromID(densePair["id"]);
+	var viewA = pair.viewA();
+	var viewB = pair.viewB();
+	// ...
+	console.log(pair)
+	console.log(viewA)
+	console.log(viewB)
+	var viewAIndex = denseViewLookupIndex[viewA.id()];
+	var viewBIndex = denseViewLookupIndex[viewB.id()];
+
+	var loadViews = project.auxilaryViewsToLoadForSet([viewAIndex,viewBIndex],denseData, 6);
+	console.log(loadViews);
+	for(var i=0; i<loadViews.length; ++i){
+		loadViews[i] = project.viewFromID(denseViews[loadViews[i]]["id"]);
+	}
+
+	// console.log(viewA,viewB);
+	var fxnViewsLoaded = function(){
+		console.log("fxnViewsLoaded");
+		App3DR.ProjectManager.loadPairsRelativeData([pair], fxnPairLoaded, project, null);
+	}
+	var fxnPairLoaded = function(){
+		console.log("fxnPairLoaded");
+		var relativeData = pair.relativeData();
+		console.log(denseData);
+		console.log(denseViews);
+		// utils
+		var stage = GLOBALSTAGE;
+		// create world
+		var world = new Stereopsis.World();
+		var cameras = project.cameras();
+		var views = project.views();
+		// ?
+		var info = project._addGraphViews(world, denseViewLookup, stage);
+		var images = info["images"];
+		var transforms = info["transforms"];
+		// ?
+		App3DR.ProjectManager.addCamerasToWorld(world, cameras);
+		var worldViews = App3DR.ProjectManager.addViewsToWorld(world, views, images, transforms);
+		var denseViewLookupViewFromID = {};
+		console.log(worldViews)
+		for(var i=0; i<worldViews.length; ++i){
+			var v = worldViews[i];
+			denseViewLookupViewFromID[v.data()] = v;
+		}
+		console.log(denseViewLookupViewFromID);
+		// sort dense points on corner score
+		this._embedTrackPoints(world, relativeData, denseViewLookupViewFromID);
+
+		var points = world.toPointArray();
+		console.log(points);
+
+/*
+		// add dense points limited by ~3px distance to nearest existing pixel
+			// (remove)
+		// add sparse points that have view A || view B in common
+			var usePointData = {};
+				usePointData["points"] = [];
+			var sparseViewLookupIndex = [];
+			for(var i=0; i<worldViews.length; ++i){
+				var view = worldViews[i];
+				sparseViewLookupIndex[i] = view;
+				view.id(i);
+			}
+			this._embedTrackPoints(world, relativeData, sparseViewLookupIndex);
+*/
+			// (remove)
+		// calc dense 3D patch based on ~3 neighbors - init dense points with nearest ~3 sparse points [or if TOO far? ...]
+
+		// edtimate linear dense point location
+
+		// drop dense points with 3-4 sigma error
+
+		// fix loop
+		/*
+			LOOP START
+
+				project patches to loaded views
+
+				drop points with 2-3 sigma error
+
+				drop points with patch inconsistencies
+
+				BA each dense point location (nonlinear location)
+
+			LOOP END
+		*/
+
+
+		// // update points
+		// var sparsePoints = project._getGraphPointsFromWorld(world, sparseViewLookupIndexIndex, false);
+		// sparseData["points"] = sparsePoints;
+
+		// save to dense/pair/dense.yaml
+
+		throw "?";
+	}
+	App3DR.ProjectManager.loadViewsImages(loadViews,fxnViewsLoaded, project);
+}
+
+App3DR.ProjectManager.prototype.iterateSparseTracks = function(){
+	console.log("iterateSparseTracks");
+	var project = this;
+	// backwards:
+	// do operations
+	var fxnTracksLoaded = function(){
+		console.log("fxnTracksLoaded");
+		project._iterateSparseTracksStart();
+	}
+	// load sparse file
+	project.loadSparse(fxnTracksLoaded, project);
+}
+App3DR.ProjectManager.prototype._iterateSparseTracksStart = function(){ // keep going until delta errors are all below some amount
+	var project = this;
+	var minimumDeltaError = 0.01; // change in pixels
+	var sparseData = this.sparseData();
+	var sparseEdgeSort = function(a,b){
+		var aErrorDelta = a["deltaErrorR"];
+		var bErrorDelta = b["deltaErrorR"];
+		var aHasDelta = aErrorDelta != null;
+		var bHasDelta = bErrorDelta != null;
+		if(!aHasDelta && !bHasDelta){
+			var aCount = a["count"];
+			var bCount = b["count"];
+			return aCount > bCount ? -1 : 1;
+		}else if (aHasDelta && !bHasDelta){
+			return 1; // B
+		}else if (!aHasDelta && bHasDelta){
+			return -1; // A
+		}
+		return aErrorDelta > bErrorDelta ? -1 : 1;
+	}
+	var sparsePoints = sparseData["points"];
+	var sparseViews = sparseData["views"];
+	var sparsePairs = sparseData["pairs"];
+	var orderedPairs = Code.copyArray(sparsePairs);
+	orderedPairs.sort(sparseEdgeSort);
+	// console.log(sparsePairs);
+	console.log(orderedPairs);
+	// pick edge to load
+	var topPair = orderedPairs[0];
+	var isDone = false;
+	var topError = topPair["deltaErrorR"];
+	if(topError!==null){
+		isDone = topError < minimumDeltaError;
+	}
+	if(isDone){ // no more
+		var pointCount = sparsePoints.length;
+// save sparese data over to dense data & start loading dense points
+	console.log("FINAL POINTS: "+pointCount);
+		// get a list of all pairs dense needs to load
+		var pairs = project.pairs();
+		console.log(pairs);
+		var loadPairList = [];
+		for(var i=0; i<pairs.length; ++i){
+			var pair = pairs[i];
+			var p = {};
+			p["id"] = pair.id();
+			loadPairList.push(p);
+		}
+		// save
+		var denseData = {};
+		denseData["cameras"] = sparseData["cameras"];
+		denseData["views"] = sparseViews;
+		denseData["points"] = sparsePoints;
+		denseData["pairs"] = loadPairList;
+		denseData["currentPair"] = -1;
+		console.log(denseData);
+		// SAVE PROJECT FILE
+		var fxnSavedProject = function(){
+			console.log("fxnSavedProject");
+		}
+		var fxnSavedDense = function(){
+			console.log("fxnSavedDense");
+			project.saveProjectFile(fxnSavedProject, project);
+		}
+		// SAVE
+		project.setSparseCount(pointCount);
+		project.setDenseFilename(App3DR.ProjectManager.BUNDLE_DENSE_FILE_NAME);
+		project.saveDenseFromData(denseData, fxnSavedDense, this);
+		return;
+	}
+	var viewAIndex = topPair["A"];
+	var viewBIndex = topPair["B"];
+	var sparseViewA = sparseViews[viewAIndex];
+	var sparseViewB = sparseViews[viewBIndex];
+	// pick additional views to load
+	var loadViews = this.auxilaryViewsToLoadForSet([viewAIndex,viewBIndex],sparseData, 6);
+	for(var i=0; i<loadViews.length; ++i){
+		loadViews[i] = this.viewFromID(sparseViews[loadViews[i]]["id"]);
+	}
+
+	// console.log(viewA,viewB);
+	var fxnViewsLoaded = function(){
+		console.log("fxnViewsLoaded");
+		console.log(sparseData);
+		console.log(sparseViews);
+		var sparseViewLookup = {};
+		for(var i=0; i<sparseViews.length; ++i){
+			var vid = sparseViews[i]["id"];
+			sparseViewLookup[vid] = sparseViews[i];
+		}
+		var stage = GLOBALSTAGE;
+		// create world
+		var world = new Stereopsis.World();
+		var cameras = project.cameras();
+		var views = project.views();
+
+		var info = project._addGraphViews(world, sparseViewLookup, stage);
+		var images = info["images"];
+		var transforms = info["transforms"];
+
+		App3DR.ProjectManager.addCamerasToWorld(world, cameras);
+		var worldViews = App3DR.ProjectManager.addViewsToWorld(world, views, images, transforms);
+		console.log(worldViews);
+
+		var sparseViewLookupIndex = [];
+		var sparseViewLookupIndexIndex = [];
+		var sparseViewLookupIndexToID = {};
+		for(var i=0; i<worldViews.length; ++i){
+			var view = worldViews[i];
+			var index = i;
+			// console.log(view);
+			sparseViewLookupIndex[index] = view;
+			sparseViewLookupIndexToID[index] = view.data();
+			sparseViewLookupIndexIndex[index] = index;
+			view.data(i);
+		}
+		// var points3D = this._embedMatchPoints(world, sparseData, sparseViewLookupIndex);
+		this._embedTrackPoints(world, sparseData, sparseViewLookupIndex);
+		var points3D = world.toPointArray();
+		// var viewA = world.viewFromData(sparseViewA["id"]);
+		// var viewB = world.viewFromData(sparseViewB["id"]);
+		var viewA = world.viewFromData(viewAIndex);
+		var viewB = world.viewFromData(viewBIndex);
+		var pairWorldViews = [viewA,viewB];
+
+		// do refinement
+		console.log("refine");
+		world.relativeTransformsFromAbsoluteTransforms();
+		world.printPoint3DTrackCount();
+		world.relativeFFromSamples();
+		world.estimate3DErrors(true);
+
+		// RECORD INITIAL ERROR BETWEEN 2 VIEWS
+		var transform = world.transformFromViews(viewA,viewB);
+		var errorRStart = transform.rMean() + transform.rSigma();
+		var errorFStart = transform.fMean() + transform.fSigma();
+
+		world.averagePoints3DFromMatches(true);
+		console.log("errors update");
+		for(var iter=0; iter<1; ++iter){
+		console.log("ITERATION: "+iter+" ............ ");
+				world.relativeFFromSamples();
+				// world.estimate3DErrors(true);
+				world.estimate3DPoints();
+		console.log("refineSelectCameraAbsoluteOrientation");
+		// for(var i=0; i<1; ++i){
+				world.refineSelectCameraAbsoluteOrientation(pairWorldViews, null, 1000);
+				// world.refineCameraAbsoluteOrientation();
+		// }
+		console.log("probe3D");
+			world.probe3D();
+			world.estimate3DErrors(true);
+			// world.filterGlobalMatches(null,null, 2.0);
+			world.filterGlobalMatches(null,null, 3.0);
+			world.estimate3DErrors(true);
+		}
+		world.printPoint3DTrackCount();
+
+		// update ++++++++
+
+		// cameras stay same
+
+		// update points
+		var sparsePoints = project._getGraphPointsFromWorld(world, sparseViewLookupIndexIndex, false);
+		sparseData["points"] = sparsePoints;
+
+		// replace is with data:
+		for(var i=0; i<worldViews.length; ++i){
+			var view = worldViews[i];
+			var data = sparseViewLookupIndexToID[i];
+			view.data(data);
+		}
+		// update views
+		sparseViews = project._updateGraphViewsFromWorld(world, sparseViews);
+		sparseData["views"] = sparseViews;
+
+		// update selected pair
+		var transform = world.transformFromViews(viewA,viewB);
+		var errorREnd = transform.rMean() + transform.rSigma();
+		var errorFEnd = transform.fMean() + transform.fSigma();
+
+		var deltaR = errorRStart - errorREnd;
+		var deltaF = errorFStart - errorFEnd;
+		console.log(deltaR,deltaF);
+		console.log(topPair);
+		topPair["errorR"] = errorREnd;
+		topPair["errorF"] = errorFEnd;
+		topPair["deltaErrorR"] = deltaR;
+		topPair["deltaErrorF"] = deltaF;
+		// topPair["updated"] = Code.getTimeStampFromMilliseconds();
+		topPair["updated"] = Code.getTimeMilliseconds();
+// if R error goes up ... ????
+if(deltaR<0){
+	console.log("ERROR WENT UP");
+	// throw "?";
+}
+		// save
+		console.log(sparseData);
+// throw "NO SAVE"
+		this.saveSparseFromData(sparseData);
+	}
+
+	App3DR.ProjectManager.loadViewsImages(loadViews,fxnViewsLoaded, project);
+}
+
 App3DR.ProjectManager.prototype._addGraphViews = function(world, graphViewLookup, stage){
 	var views = this.views();
 	var images = [];
@@ -8466,6 +9083,9 @@ App3DR.ProjectManager.prototype._addGraphViews = function(world, graphViewLookup
 			}
 		}
 		var transform = gv["R"];
+		if(!transform){
+			transform = gv["transform"];
+		}
 			transform = Matrix.fromObject(transform);
 			transforms.push(transform);
 		images.push(matrix);
@@ -8486,33 +9106,72 @@ App3DR.ProjectManager.prototype._embedMatchPoints = function(world, trackData, w
 	var points3D = Code.valueOrDefault(trackData["points"], []);
 	console.log("points3D: "+points3D.length);
 	for(var i=0; i<points3D.length; ++i){
+		var worldP3D = null;
 		var p3D = points3D[i];
 		var point3D = new V3D(p3D["X"],p3D["Y"],p3D["Z"]);
 		var vs = p3D["views"];
+		if(!vs){
+			vs = p3D["v"];
+		}
+		var p2Ds = [];
 		for(var j=0; j<vs.length; ++j){
 			var viewJ = vs[j];
 			var viewJID = viewJ["view"];
-			var vJ = worldViewLookup[viewJID];
-			for(var k=j+1; k<vs.length; ++k){
-				var viewK = vs[k];
-				var viewKID = viewK["view"];
-				var vK = worldViewLookup[viewKID];
-				var fr = new V2D(viewJ["x"],viewJ["y"]);
-				var to = new V2D(viewK["x"],viewK["y"]);
-				x1.set(viewJ["Xx"],viewJ["Xy"]);
-				y1.set(viewJ["Yx"],viewJ["Yy"]);
-				x2.set(viewK["Xx"],viewK["Xy"]);
-				y2.set(viewK["Yx"],viewK["Yy"]);
-				// to image plane
-				var sizeFr = vJ.size();
-				var sizeTo = vK.size();
-				fr.scale(sizeFr.x,sizeFr.y);
-				to.scale(sizeTo.x,sizeTo.y);
-				// console.log(fr+" "+to);
-				var affineAB = R3D.affineMatrixExact([o,x1,y1],[o,x2,y2]);
-				world.addMatchFromInfo(vJ,fr, vK,to, affineAB, point3D);
-				pointCountAdded++;
+			if(!viewJID){
+				viewJID = viewJ["i"];
 			}
+			var vJ = worldViewLookup[viewJID];
+			if(!viewJ["Xx"]){
+				if(!worldP3D){
+					var pnt = point3D;
+					var nrm = new V3D(p3D["x"],p3D["y"],p3D["z"]);
+					var siz = p3D["s"];
+					worldP3D = new Stereopsis.P3D(pnt,nrm,siz);
+					// var p3D = new Stereopsis.P3D(pnt,nrm,siz);
+				}
+				var pJ = new V2D(viewJ["x"],viewJ["y"]);
+				var sJ = vJ.size();
+				pJ.scale(sJ.x,sJ.y);
+				var p2D = new Stereopsis.P2D(vJ,pJ,p3D);
+				worldP3D.addPoint2D(p2D);
+				p2Ds.push(p2D);
+			}else{
+				for(var k=j+1; k<vs.length; ++k){
+					var viewK = vs[k];
+					var viewKID = viewK["view"];
+					if(!viewKID){
+						viewKID = viewK["i"];
+					}
+					var vK = worldViewLookup[viewKID];
+					// if(viewJ["Xx"]){
+						var fr = new V2D(viewJ["x"],viewJ["y"]);
+						var to = new V2D(viewK["x"],viewK["y"]);
+						// to image plane
+						var sizeFr = vJ.size();
+						var sizeTo = vK.size();
+						fr.scale(sizeFr.x,sizeFr.y);
+						to.scale(sizeTo.x,sizeTo.y);
+						var affineAB = null;
+						x1.set(viewJ["Xx"],viewJ["Xy"]);
+						y1.set(viewJ["Yx"],viewJ["Yy"]);
+						x2.set(viewK["Xx"],viewK["Xy"]);
+						y2.set(viewK["Yx"],viewK["Yy"]);
+						// console.log(fr+" "+to);
+						affineAB = R3D.affineMatrixExact([o,x1,y1],[o,x2,y2]);
+						world.addMatchFromInfo(vJ,fr, vK,to, affineAB, point3D);
+					// }else{
+					// 	// no match data ...
+					// }
+					pointCountAdded++;
+				}
+			}
+		}
+		if(worldP3D && p2Ds.length>0){ // make a P3D at once
+			console.log(worldP3D);
+			console.log(p2Ds);
+			// make matches for each?
+			// ???
+			throw "HERE ... _embedMatchPoints"
 		}
 	}
 	console.log("pointCountAdded: "+pointCountAdded);
@@ -8520,7 +9179,7 @@ App3DR.ProjectManager.prototype._embedMatchPoints = function(world, trackData, w
 }
 
 App3DR.ProjectManager.prototype._embedTrackPoints = function(world,graphData, graphViewLookupID, graphViewLookup){
-
+	console.log("_embedTrackPoints");
 	// add existing tracks
 	var existingPoints = Code.valueOrDefault(graphData["points"],[]);
 	var dirXJ = new V2D();
@@ -8534,6 +9193,10 @@ App3DR.ProjectManager.prototype._embedTrackPoints = function(world,graphData, gr
 		var nrm = new V3D(existing["x"],existing["y"],existing["z"]);
 		var siz = existing["s"];
 		var vs = existing["v"];
+		if(!vs){
+			vs = ["views"];
+		}
+// console.log(vs);
 		var ps = [];
 		var ms = [];
 		var p3D = new Stereopsis.P3D(pnt,nrm,siz);
@@ -8545,13 +9208,18 @@ App3DR.ProjectManager.prototype._embedTrackPoints = function(world,graphData, gr
 			var p2 = new V2D(v["x"],v["y"]);
 			var s = v["s"];
 			var vI = v["i"];
+// console.log(vI);
 				vI = graphViewLookupID[vI];
+// console.log(vI);
+			if(!Code.ofa(vI, Stereopsis.View)){
 				vI = world.viewFromData(vI);
+// console.log(vI);
+			}
 			// scale
 			var siz = vI.size();
 			s *= siz.x;
 			p2.scale(siz.x,siz.y);
-	s = null;
+			s = null;
 			var p2D = new Stereopsis.P2D(vI,p2,p3D,s);
 			p3D.addPoint2D(p2D);
 			p2Ds.push(p2D);
@@ -8562,17 +9230,26 @@ App3DR.ProjectManager.prototype._embedTrackPoints = function(world,graphData, gr
 			var v = vs[j];
 			var vI = v["i"];
 				vI = graphViewLookupID[vI];
+			if(!Code.ofa(vI, Stereopsis.View)){
 				vI = world.viewFromData(vI);
-			dirXJ.set(v["Xx"],v["Xy"]);
-			dirYJ.set(v["Yx"],v["Yy"]);
+			}
+			if(v["Xx"]){
+				dirXJ.set(v["Xx"],v["Xy"]);
+				dirYJ.set(v["Yx"],v["Yy"]);
+			}
 			for(var k=j+1; k<vs.length; ++k){
 				var p2DK = p2Ds[k];
 				var u = vs[k];
 				var uI = u["i"];
-					uI = graphViewLookup[uI];
+					uI = graphViewLookupID[uI];
 					uI = world.viewFromData(uI);
-				dirXK.set(v["Xx"],v["Xy"]);
-				dirYK.set(v["Yx"],v["Yy"]);
+					if(!Code.ofa(uI, Stereopsis.View)){
+						uI = world.viewFromData(uI);
+					}
+				if(u["Xx"]){
+					dirXK.set(u["Xx"],u["Xy"]);
+					dirYK.set(u["Yx"],u["Yy"]);
+				}
 				// var aff = R3D.affineMatrixExact([dirO,dirXJ,dirYJ],[dirO,dirXK,dirYK]);
 				var aff = null;
 	// ...........
@@ -8658,7 +9335,7 @@ App3DR.ProjectManager.prototype._iterateGraphTracksTick = function(pair,viewsLoa
 		world.disconnectPoint3D(point3D);
 	}
 
-	this._embedTrackPoints(world, graphData, graphViewLookupID, graphViewLookup);
+	this._embedTrackPoints(world, graphData, graphViewLookupID);//, graphViewLookup);
 console.log("EMBED NEW POINTS ...: ");
 	// add back new points
 	for(var i=0; i<newPoints.length; ++i){
@@ -8688,7 +9365,8 @@ console.log("EMBED NEW POINTS ...: ");
 }
 
 
-App3DR.ProjectManager.prototype._getGraphPointsFromWorld = function(world, graphViewLookupIndex){
+App3DR.ProjectManager.prototype._getGraphPointsFromWorld = function(world, graphViewLookupIndex, includeAffine){
+	includeAffine = includeAffine!==undefined && includeAffine!==null ? includeAffine : true;
 	var allPoints = world.toPointArray();
 	console.log("allPoints: "+allPoints.length);
 	console.log(allPoints);
@@ -8732,7 +9410,14 @@ App3DR.ProjectManager.prototype._getGraphPointsFromWorld = function(world, graph
 			var hei = ps.y;
 			var vID = pv.data();
 			var vIndex = graphViewLookupIndex[vID];
-			var o = {"i":vIndex, "s":(s/wid) ,"x":(p.x/wid), "y":(p.y/hei), "Xx":dirX.x, "Xy":dirX.y, "Yx":dirY.x, "Yy":dirY.y};
+			var o = {"i":vIndex,"x":(p.x/wid), "y":(p.y/hei)};
+			if(includeAffine){
+				o["s"] = (s/wid);
+				o["Xx"] = dirX.x;
+				o["Xy"] = dirX.y;
+				o["Yx"] = dirY.x;
+				o["Yy"] = dirY.y;
+			}
 			v.push(o);
 		}
 		// console.log(loc,nor,siz);
@@ -8763,7 +9448,7 @@ App3DR.ProjectManager.prototype._updateGraphViewsFromWorld = function(world, gra
 	return updatedViews;
 }
 
-App3DR.ProjectManager.prototype.saveGraphFromData = function(graphData){
+App3DR.ProjectManager.prototype.saveGraphFromData = function(graphData, fxn, ctx){
 	console.log(graphData);
 	var yaml = new YAML();
 	var object = graphData;
@@ -8774,10 +9459,46 @@ App3DR.ProjectManager.prototype.saveGraphFromData = function(graphData){
 	var graphString = yaml.toString();
 	var fxnSavedGraph = function(){
 		console.log("fxnSavedGraph");
+		if(fxn){
+			fxn.call(ctx);
+		}
 	}
 	this.saveGraph(graphString, this.graphFilename(), fxnSavedGraph, this);
 }
 
+App3DR.ProjectManager.prototype.saveSparseFromData = function(sparseData, fxn, ctx){
+	console.log(sparseData);
+	var yaml = new YAML();
+	var timestampNow = Code.getTimeStampFromMilliseconds();
+		sparseData["modified"] = timestampNow;
+	yaml.writeComment("Sparse");
+	yaml.writeObjectLiteral(sparseData);
+	var sparseString = yaml.toString();
+	var fxnSavedSparse = function(){
+		console.log("fxnSavedSparse");
+		if(fxn){
+			fxn.call(ctx);
+		}
+	}
+	this.saveSparse(sparseString, this.sparseFilename(), fxnSavedSparse, this);
+}
+
+App3DR.ProjectManager.prototype.saveDenseFromData = function(denseData, fxn, ctx){
+	console.log(denseData);
+	var yaml = new YAML();
+	var timestampNow = Code.getTimeStampFromMilliseconds();
+		denseData["modified"] = timestampNow;
+	yaml.writeComment("Dense Data");
+	yaml.writeObjectLiteral(denseData);
+	var denseString = yaml.toString();
+	var fxnSavedDense = function(){
+		console.log("fxnSavedDense");
+		if(fxn){
+			fxn.call(ctx);
+		}
+	}
+	this.saveDense(denseString, this.denseFilename(), fxnSavedDense, this);
+}
 
 
 
@@ -10484,6 +11205,18 @@ App3DR.ProjectManager.prototype.cameraFromID = function(cameraID){
 			var camera = cameras[i];
 			if(camera.id()==cameraID){
 				return camera;
+			}
+		}
+	}
+	return null;
+}
+App3DR.ProjectManager.prototype.pairFromID = function(pairID){
+	if(pairID){
+		var pairs = this._pairs;
+		for(var i=0; i<pairs.length; ++i){
+			var pair = pairs[i];
+			if(pair.id()==pairID){
+				return pair;
 			}
 		}
 	}
