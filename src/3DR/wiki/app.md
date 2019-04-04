@@ -348,6 +348,10 @@ https://cloud.google.com/appengine/docs/nodejs/
 - propagating points doesn't seem to add much / they are pruned quickly
 - divide R error by the number of points in track to allow for some sympathy for multi-connected components
 
+nonlinear 3d point locations
+- each MATCH would also need one ????
+
+
 
 INIT DENSE FILE
 

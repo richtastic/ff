@@ -2,7 +2,7 @@
 TTT.PLAYER_EMPTY = -1;
 TTT.PLAYER_COMPUTER = 0;
 TTT.PLAYER_HUMAN = 1;
-// 
+//
 TTT.RESULT_NONE = -2;
 TTT.RESULT_HUMAN_WIN = -1;
 TTT.RESULT_DRAW = 0;
@@ -44,6 +44,7 @@ console.log(tree.data());
 	console.log(next.toString());
 	tree = this.makeMove(tree, board, next);
 
+	console.log(this._tree)
 }
 TTT.prototype.makeMove = function(tree, board, move){
 	board.push(move);
@@ -217,7 +218,7 @@ TTT.prototype.generateChildNodes = function(tree,player, board){
 			// }
 		}else{// if(result==TTT.RESULT_DRAW || result==TTT.RESULT_COMPUTER_WIN || result==TTT.RESULT_HUMAN_WIN){ // end
 			// if(player==TTT.PLAYER_HUMAN){
-			// 	result = 
+			// 	result =
 			// }
 			node.data().min = result;
 			node.data().max = result;
@@ -263,7 +264,3 @@ TTT.boardsEqual = function(boardA,boardB){
 	return true;
 }
 // -----------------------------------------------------------------------------------------------
-
-
-
-

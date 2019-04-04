@@ -5605,33 +5605,10 @@ B			tracks.yaml - accumulated global track points across images: grows till all 
 								x: [0,1]
 								y: [0,1]
 
-C			sparse_points.yaml - global 3D point list - sparse TRACK Data
-				...
+C			sparse.yaml -
+				global 3D point list - sparse TRACK Data
+				sparse point reconstruction info
 
-C			sparse_views.yaml - sparse point reconstruction info
-				...
-
-D			dense_points.yaml - global 3D point list
-				views:
-					-
-						id: ID
-				points:
-					-
-						X: position
-						Y
-						Z
-						x: normal
-						y
-						z
-						s: size (patch - world scale)
-						v:
-							-
-								i: VIEW INDEX
-								x: [0-1]
-								y: [0-1]
-					...
-
-D			dense_views.yaml - dense point reconstruction info
 				cameras:
 					-
 						id: ID
@@ -5661,6 +5638,44 @@ D			dense_views.yaml - dense point reconstruction info
 						deltaErrorP: null / change since last
 						updated: timestamp for last update
 					... [MIGHT NEED TO ADD NEW PAIRS ON THE FLY?]
+				points:
+					-
+						X: position
+						Y
+						Z
+						x: normal
+						y
+						z
+						s: size (patch - world scale)
+						v:
+							-
+								i: VIEW INDEX
+								x: [0-1]
+								y: [0-1]
+					...
+
+D			dense.yaml - global 3D point list -- SPARSE COPY WITH CURRENT TRACKS KEPT
+				cameras:
+					...
+				views:
+					...
+				points:
+					...
+
+D			dense/PAIR/dense.yaml - pair optimized dense points with patches
+				points:
+					...
+
+
+
+E			points.yaml - dense point reconstruction info
+				cameras:
+					...
+				views:
+					...
+				points:
+					...
+				ACCUMULATED DENSE POINTS
 
 
 E			triangles.yaml - triangle reconstruction - triangle soup of approximated surface & texture mapping
@@ -5858,6 +5873,9 @@ App3DR.ProjectManager.RECONSTRUCT_GRAPH_FILE_NAME = "graph.yaml";
 // App3DR.ProjectManager.BUNDLE_DENSE_POINTS_FILE_NAME = "points_dense.yaml";
 App3DR.ProjectManager.BUNDLE_SPARSE_FILE_NAME = "sparse.yaml";
 App3DR.ProjectManager.BUNDLE_DENSE_FILE_NAME = "dense.yaml";
+App3DR.ProjectManager.RECONSTRUCT_DENSE_DIRECTORY = "dense";
+App3DR.ProjectManager.RECONSTRUCT_DENSE_FILENAME = "dense.yaml";
+
 // App3DR.ProjectManager.BUNDLE_DENSE_INFO_FILE_NAME = "info_dense.yaml";
 // App3DR.ProjectManager.SPARSE_MATCHES_FILE_NAME = "sparse.yaml"; // sparse points + transform
 // App3DR.ProjectManager.MEDIUM_MATCHES_FILE_NAME = "medium.yaml";
@@ -8729,10 +8747,16 @@ App3DR.ProjectManager.prototype._iterateDenseTracksStart = function(){
 	var denseCameras = denseData["cameras"];
 	var denseViews = denseData["views"];
 	var densePairs = denseData["pairs"];
+	var densePoints = denseData["points"];
 	var currentPair = denseData["currentPair"];
 	currentPair++;
 	if(currentPair>=densePairs.length){
 		throw "reached end ... BA";
+
+		// load all pair files at same time
+		// append all pair files to single file
+		// save file
+
 	}
 	var densePair = densePairs[currentPair];
 
@@ -8747,13 +8771,16 @@ App3DR.ProjectManager.prototype._iterateDenseTracksStart = function(){
 	}
 
 	console.log(densePair);
-	var pair = this.pairFromID(densePair["id"]);
+	var densePairID = densePair["id"];
+	var pair = this.pairFromID(densePairID);
 	var viewA = pair.viewA();
 	var viewB = pair.viewB();
 	// ...
 	console.log(pair)
 	console.log(viewA)
 	console.log(viewB)
+	var viewAID = viewA.id();
+	var viewBID = viewB.id();
 	var viewAIndex = denseViewLookupIndex[viewA.id()];
 	var viewBIndex = denseViewLookupIndex[viewB.id()];
 
@@ -8771,8 +8798,6 @@ App3DR.ProjectManager.prototype._iterateDenseTracksStart = function(){
 	var fxnPairLoaded = function(){
 		console.log("fxnPairLoaded");
 		var relativeData = pair.relativeData();
-		console.log(denseData);
-		console.log(denseViews);
 		// utils
 		var stage = GLOBALSTAGE;
 		// create world
@@ -8787,62 +8812,201 @@ App3DR.ProjectManager.prototype._iterateDenseTracksStart = function(){
 		App3DR.ProjectManager.addCamerasToWorld(world, cameras);
 		var worldViews = App3DR.ProjectManager.addViewsToWorld(world, views, images, transforms);
 		var denseViewLookupViewFromID = {};
-		console.log(worldViews)
+		var denseViewLookupViewFromIndex = {};
+		var denseViewLookupIndexFromID = {};
+		console.log(worldViews);
 		for(var i=0; i<worldViews.length; ++i){
 			var v = worldViews[i];
 			denseViewLookupViewFromID[v.data()] = v;
+			denseViewLookupViewFromIndex[i] = v;
+			denseViewLookupIndexFromID[v.data()] = i;
 		}
-		console.log(denseViewLookupViewFromID);
+		var worldViewA = world.viewFromData(viewAID);
+		var worldViewB = world.viewFromData(viewBID);
+		// init
+		world.relativeTransformsFromAbsoluteTransforms();
+		world.printPoint3DTrackCount();
+
 		// sort dense points on corner score
-		this._embedTrackPoints(world, relativeData, denseViewLookupViewFromID);
+		//this._embedTrackPoints(world, relativeData, denseViewLookupViewFromID);
+		this._embedMatchPoints(world, relativeData, denseViewLookupViewFromID);
 
-		var points = world.toPointArray();
-		console.log(points);
+		world.relativeFFromSamples();
+		world.estimate3DErrors(true);
+		// world.averagePoints3DFromMatches(true);
 
-/*
+		// optimize location nonlinearly
+		world.refinePoint3DAbsoluteLocation();
+		// drop the worst error points globally
+		world.filterGlobalPoints(3.0);
+		// world.filterGlobalPoints(1.0);
+
+		world.estimate3DErrors(true);
+
+		// limit dense points spatially to most prevalent local corners
 		// add dense points limited by ~3px distance to nearest existing pixel
-			// (remove)
-		// add sparse points that have view A || view B in common
-			var usePointData = {};
-				usePointData["points"] = [];
-			var sparseViewLookupIndex = [];
-			for(var i=0; i<worldViews.length; ++i){
-				var view = worldViews[i];
-				sparseViewLookupIndex[i] = view;
-				view.id(i);
+		// var distancePixelsTrim = 3;
+		// world.trimSpatialCorners(worldViewA, distancePixelsTrim);
+		// world.trimSpatialCorners(worldViewB, distancePixelsTrim);
+
+		// remove dense points
+		var densePoints3D = world.toPointArray();
+		world.disconnectPoints3D(densePoints3D);
+
+		// trim dense points into ones with viewA & viewB in common
+		var commonPoints = [];
+		for(var i=0; i<densePoints.length; ++i){
+			var point = densePoints[i];
+			var views = point["v"];
+			var keep = false;
+			for(var j=0; j<views.length; ++j){
+				var view = views[j];
+				var index = view["i"];
+				if(index==viewAIndex || index==viewBIndex){
+					keep = true;
+					break;
+				}
 			}
-			this._embedTrackPoints(world, relativeData, sparseViewLookupIndex);
-*/
-			// (remove)
-		// calc dense 3D patch based on ~3 neighbors - init dense points with nearest ~3 sparse points [or if TOO far? ...]
+			if(keep){
+				commonPoints.push(point);
+			}
+		}
+		console.log(densePoints);
+		console.log(commonPoints);
+		// add sparse points that have view A || view B in common
+		this._embedTrackPoints(world, commonPoints, denseViewLookupViewFromIndex);
 
-		// edtimate linear dense point location
+		// init patches for each dense points based on neighbors -- faster than initting patches 1 by 1
+		for(var i=0; i<densePoints3D.length; ++i){
+			if(i>0 && i%1000==0){
+				console.log(i+" / "+densePoints3D.length);
+			}
+			var densePoint3D = densePoints3D[i];
+			var locP3D = densePoint3D.point();
+			var densePoints2D = densePoint3D.toPointArray();
+			var neighborPoints3D = [];
+			for(var j=0; j<densePoints2D.length; ++j){
+				var densePoint2D = densePoints2D[j];
+				var view = densePoint2D.view();
+				var p2D = densePoint2D.point2D();
+				var knn = view.kNN(p2D, 3);
+				for(var k=0; k<knn.length; ++k){
+					var neighbor = knn[k];
+					var p3D = neighbor.point3D();
+					Code.addUnique(neighborPoints3D,p3D);
+				}
+			}
+			if(neighborPoints3D.length<3){
+				console.log(densePoint3D);
+				console.log(locP3D);
+				console.log(densePoints2D);
+				console.log(neighborPoints3D);
+				throw "?";
+			}
+			// console.log(neighborPoints3D);
+			var distances = [];
+			var normals = [];
+			var sizes = [];
+			for(var j=0; j<neighborPoints3D.length; ++j){
+				var p3D = neighborPoints3D[j];
+				var nrm = p3D.normal();
+				normals.push(nrm);
+				var siz = p3D.size();
+				sizes.push(siz);
+				var distance = V3D.distance(locP3D,p3D.point());
+				distances.push(distance);
+			}
+			//var percents = Code.countsToPercents(scores);
+			var percents = Code.numbersToWindownNormalPercents(distances);
+			var nrm = Code.averageAngleVector3D(normals,percents);
+			var siz = Code.averageNumbers(sizes,percents);
+			// console.log(percents,normals,sizes,nrm,siz)
+			densePoint3D.size(siz);
+			densePoint3D.normal(nrm);
+			densePoint3D.up(V3D.orthogonal(nrm));
+			// console.log(distances);
+			// console.log(percents);
+			// console.log(densePoint3D);
+			// throw "...";
+		}
+		console.log(densePoints3D);
 
-		// drop dense points with 3-4 sigma error
+		// remove sparse points
+		var sparsePoints3D = world.toPointArray();
+		world.disconnectPoints3D(sparsePoints3D);
 
-		// fix loop
-		/*
-			LOOP START
+		// add back dense points:
+		world.embedPoints3DNoValidation(densePoints3D);
 
-				project patches to loaded views
+		// VERY LONG:
+		// console.log("patch updates");
+		// world.patchUpdateOnly();
+		// TODO: AVERAGING ... ?
 
-				drop points with 2-3 sigma error
+		// main loop:
+		var maxIterations = 1;
+		for(var iteration=0; iteration<maxIterations; ++iteration){
+			// add new points
+			// console.log("probe3D");
+			// world.probe3D();
+			// world.refinePoint3DAbsoluteLocation(); // TODO: only update newly added points
+			// TODO: LIMIT TO TOP CORNER POINTS ONLY -- with ~3x3 added locations
 
-				drop points with patch inconsistencies
+			// filter patch inconsistencies
+			console.log("filterPatch3D");
+			world.filterPatch3D();
 
-				BA each dense point location (nonlinear location)
+			// pairs
+			// console.log("filter PAIRS");
+			// world.estimate3DErrors(true);
+			// world.filterGlobalMatches(null,null, 2.0);
 
-			LOOP END
-		*/
+			console.log("filter 3D");
+			world.filterGlobalPoints(3.0); // 2 - 3
+
+			// just for printing
+			world.estimate3DErrors(true);
+		}
 
 
-		// // update points
-		// var sparsePoints = project._getGraphPointsFromWorld(world, sparseViewLookupIndexIndex, false);
-		// sparseData["points"] = sparsePoints;
+		// var denseViewLookupViewIndexFromID = {};
+		// for(var i=0; i<worldViews.length; ++i){
+		// 	var view = worldViews[i];
+		// 	denseViewLookupViewIndexFromID[view.id()] = i;
+		// 	// denseViewLookupViewIndexFromID[i] = i;
+		// }
+		// console.log(denseViewLookupViewIndexFromID);
 
-		// save to dense/pair/dense.yaml
+		// var str = world.toYAMLString();
+		// console.log(str);
 
-		throw "?";
+		// save dense file : dense/pair/dense.yaml
+		var justPoints = project._getGraphPointsFromWorld(world, denseViewLookupIndexFromID, false);
+		console.log(justPoints);
+		var justData = [];
+		justData["pair"] = densePairID;
+		justData["points"] = justPoints;
+		console.log(justData);
+
+		var path = Code.appendToPath(this._workingPath, App3DR.ProjectManager.RECONSTRUCT_DIRECTORY, App3DR.ProjectManager.RECONSTRUCT_DENSE_DIRECTORY, densePairID, App3DR.ProjectManager.RECONSTRUCT_DENSE_FILENAME);
+		console.log("dense pair: "+densePairID+" = "+path);
+
+
+		var callback = function(){
+			console.log("saved dense data");
+		}
+		var context = this;
+		var object = {};
+		var yaml = new YAML();
+		yaml.writeComment("Dense");
+		yaml.writeObjectLiteral(justData);
+		var str = yaml.toString();
+		var binary = Code.stringToBinary(str);
+		this.addOperation("SET", {"path":path,"data":binary}, callback, context, object);
+
+		// save working file
+		denseData["currentPair"] += 1;
+		this.saveDenseFromData(denseData);
 	}
 	App3DR.ProjectManager.loadViewsImages(loadViews,fxnViewsLoaded, project);
 }
@@ -9122,6 +9286,7 @@ App3DR.ProjectManager.prototype._embedMatchPoints = function(world, trackData, w
 			}
 			var vJ = worldViewLookup[viewJID];
 			if(!viewJ["Xx"]){
+				throw "tested?";
 				if(!worldP3D){
 					var pnt = point3D;
 					var nrm = new V3D(p3D["x"],p3D["y"],p3D["z"]);
@@ -9178,10 +9343,15 @@ App3DR.ProjectManager.prototype._embedMatchPoints = function(world, trackData, w
 	return points3D;
 }
 
-App3DR.ProjectManager.prototype._embedTrackPoints = function(world,graphData, graphViewLookupID, graphViewLookup){
+App3DR.ProjectManager.prototype._embedTrackPoints = function(world,graphData, graphViewLookupID){
 	console.log("_embedTrackPoints");
 	// add existing tracks
-	var existingPoints = Code.valueOrDefault(graphData["points"],[]);
+	var existingPoints = null;
+	if(Code.isArray(graphData)){
+		existingPoints = graphData;
+	}else{
+		existingPoints = Code.valueOrDefault(graphData["points"],[]);
+	}
 	var dirXJ = new V2D();
 	var dirYJ = new V2D();
 	var dirXK = new V2D();
@@ -9194,9 +9364,8 @@ App3DR.ProjectManager.prototype._embedTrackPoints = function(world,graphData, gr
 		var siz = existing["s"];
 		var vs = existing["v"];
 		if(!vs){
-			vs = ["views"];
+			vs = existing["views"];
 		}
-// console.log(vs);
 		var ps = [];
 		var ms = [];
 		var p3D = new Stereopsis.P3D(pnt,nrm,siz);
@@ -9209,12 +9378,16 @@ App3DR.ProjectManager.prototype._embedTrackPoints = function(world,graphData, gr
 			var s = v["s"];
 			var vI = v["i"];
 // console.log(vI);
+			// if(vI===null || vI===undefined){
+			// 	vI = v["view"];
+			// }
+// console.log(vI);
 				vI = graphViewLookupID[vI];
 // console.log(vI);
 			if(!Code.ofa(vI, Stereopsis.View)){
 				vI = world.viewFromData(vI);
-// console.log(vI);
 			}
+// console.log(vI);
 			// scale
 			var siz = vI.size();
 			s *= siz.x;

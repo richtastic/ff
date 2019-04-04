@@ -2680,6 +2680,38 @@ Code.reverseBits = function(value,bits){
 	return rev;
 }
 // angles ----------------------------------------------------
+Code.numbersToWindownNormalPercents = function(distances){
+	if(distances.length==0){
+		return null;
+	}
+	if(distances.length==1){
+		return [1];
+	}
+	var min = Code.min(distances);
+	var sigma = Code.stdDev(distances,min);
+	var values = [];
+	var den = 2*sigma*sigma; // prefix = 1 /( sig*Math.sqrt(2*Math.pi) )
+	for(var i=0; i<distances.length; ++i){
+		var x = distances[i] - min;
+		var v = Math.exp(-x*x/den);
+		values.push(v);
+	}
+	return Code.countsToPercents(values);
+}
+Code.countsToPercents = function(values){
+	var total = 0;
+	for(var i=0; i<values.length; ++i){
+		total += values[i];
+	}
+	if(total<=0){
+		return null;
+	}
+	var percents = [];
+	for(var i=0; i<values.length; ++i){
+		percents[i] = values[i]/total;
+	}
+	return percents;
+}
 Code.averageNumbers = function(values, percents){
 	var i, count = values.length;
 	var sum = 0;

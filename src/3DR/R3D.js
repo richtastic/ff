@@ -26718,6 +26718,43 @@ R3D._costTripleFeatures = function(patchA,patchB,patchC){
 	cost = score;
 	return cost;
 }
+R3D.BundleAdjustPoint3D = function(point3D, points2D, intrinsics, inverses, extrinsics, maxIterations){
+	maxIterations = maxIterations!==null && maxIterations!==undefined ? maxIterations : 10;
+	var args = [];
+		args.push(points2D,intrinsics, inverses, extrinsics);
+	var x = [point3D.x,point3D.y,point3D.z];
+	var result = Code.gradientDescent(R3D._gd_BAPointExtrinsic, args, x, null, maxIterations, 1E-10);
+	x = result["x"];
+	var cost = result["cost"];
+	var point = new V3D(x[0],x[1],x[2]);
+	// console.log("COST: "+cost);
+	return {"point":point, "error":cost};
+}
+R3D._gd_BAPointV3D = new V3D();
+R3D._gd_BAPointExtrinsic = function(args, x, isUpdate){
+	if(isUpdate){ return; }
+	var points2D = args[0];
+	var intrinsics = args[1];
+	var inverses = args[2];
+	var extrinsics = args[3];
+	var cameraCount = points2D.length;
+	var totalError = 0;
+	var p3D = R3D._gd_BAPointV3D;
+	p3D.x = x[0];
+	p3D.y = x[1];
+	p3D.z = x[2];
+	for(var i=0; i<cameraCount; ++i){
+		var p2D = points2D[i];
+		var extrinsic = extrinsics[i];
+		var K = intrinsics[i];
+		var distanceSquare = R3D.reprojectionErrorSingle(p3D,p2D,extrinsic,K);
+		totalError += distanceSquare;
+		// var distance = Math.sqrt( distanceSquare );
+	}
+	return totalError;
+}
+
+
 
 R3D.BundleAdjustCameraExtrinsic = function(intrinsics, inverses, extrinsics, pairPointList2D, pairPointList3D, maxIterations, intrinsicsOthers, inversesOthers, extrinsicsOthers){ // keep
 	intrinsicsOthers = extrinsicsOthers!==undefined ? intrinsicsOthers : [];
