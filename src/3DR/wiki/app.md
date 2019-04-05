@@ -343,6 +343,18 @@ https://cloud.google.com/appengine/docs/nodejs/
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+- track data isn't as spread about as hoped
+	- favoring random carpet locations
+
+- not enough overlapping points during process
+	- work backwards, make sure dense aggregation works first
+	- check why multi-tracks are not added / trimmed
+
+- points merged in world are not keeping mult-way points ... only pair point matches are making it thru
+
+
+- keep track points too alongside dense items
+
 
 - lots of DROP SCALE RATIO: AFTER previously validated ... why?
 - propagating points doesn't seem to add much / they are pruned quickly
@@ -352,37 +364,26 @@ nonlinear 3d point locations
 - each MATCH would also need one ????
 
 
+- initial points locations are very separate
+	- is this somewhat expected?
 
-INIT DENSE FILE
 
-DENSE LOGISTICS: [pair-dense-points + image]
 
-- load each [semi-]dense pair at a time
-- use R-pair from sparse result
-- filter poor P3D based on R-error
-- init each P3D patch with nearest patch(1-3) from sparse result [or init regularly if too far away from a sparse result]
-- filter poor patches based on intersection inconsistencies
-=> export final best dense points to (pair?) file
-	- P3D, N3D, SIZE, V[]: I, P2D
 
-DENSE AGGREGATION: [points and views data only]
-- import all final best dense points at same time
-- import best view orientations
-- filter points based on R-error
-- filter points based on patch inconsistencies
-- final iterative randomized BA using only views & points
-	- views change based on random point sampling error reduction
-	- P3D locations individually changed to reduce R-error
-	- filter P3D on patch
-	- filter P3D on R error
-=> keep final best points & views
+- check single-view logic for:
+  .... gd_BACameraExtrinsic
 
-...
 
-additional fuzzy-error point dropping ?
-	- patch
 
-...
+
+
+DENSE POINT BA:
+	- update views
+	- update patches
+	- update points
+- upsampling ?
+
+=> OUTPUT TO file
 
 TESSELATION LOGISTICS:
 - load final dense point set

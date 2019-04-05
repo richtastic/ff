@@ -26850,10 +26850,15 @@ R3D._gd_BACameraExtrinsic = function(args, x, isUpdate){
 				R3D.transform3DFromParameters(PB, rx,ry,rz, tx,ty,tz);
 			}else{
 				jj = j-variableCount;
-				KA = otherIntrinsics[jj];
-				KAInv = otherIntrinsics[jj];
-				PA = otherIntrinsics[jj];
+				KB = otherIntrinsics[jj];
+				KBInv = otherIntrinsics[jj];
+				PB = otherIntrinsics[jj];
 			}
+// don't care about double-static
+if(i>=variableCount && j>=variableCount){
+	++pairIndex;
+	continue;
+}
 			var pointLists2D = pairPointLists2D[pairIndex];
 			var pointList3D =  pairPointLists3D[pairIndex];
 			var pointListA = pointLists2D[0];
