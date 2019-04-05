@@ -8956,7 +8956,8 @@ App3DR.ProjectManager.prototype.iterateDenseTracks = function(){
 	// load sparse file
 	project.loadDense(fxnTracksLoaded, project);
 }
-App3DR.ProjectManager.prototype._iterateDenseTracksEnd = function(object, data){ // check loaded
+App3DR.ProjectManager.prototype._iterateDenseTracksEnd = function(object, data){ // all pair's dense points are loaded
+console.log("_iterateDenseTracksEnd");
 	var project = this;
 	var str = Code.binaryToString(data);
 	var yaml = YAML.parse(str);
@@ -9007,17 +9008,32 @@ for(var i=0; i<worldViews.length; ++i){
 }
 
 		world.relativeTransformsFromAbsoluteTransforms(); // transforms avail
-
+console.log("COMBINING ALL TRACK POINTS");
+world.printPoint3DTrackCount();
 		for(var i=0; i<datas.length; ++i){
 			var data = datas[i];
 			var dataPoints = data["points"];
 			console.log(dataPoints.length);
 			project._embedTrackPoints(world, dataPoints, lookupViewFromIndex);
+world.printPoint3DTrackCount();
 		}
 		var worldPoints = world.toPointArray();
-		// console.log(pointPoints);
+		// ...
+		project._embedTrackPoints(world, densePoints, lookupViewFromIndex);
+		world.printPoint3DTrackCount();
+
+	// console.log("adding sparse points");
+	// world.printPoint3DTrackCount();
+	// for(var i=0; i<sparsePoints3D.length; ++i){
+	// 	var p3D = sparsePoints3D[i];
+	// 	world.embedPoint3D(p3D);
+	// }
+	// world.printPoint3DTrackCount();
 
 
+
+
+throw "embedded count up?";
 
 		var pointPoints = project._getGraphPointsFromWorld(world, lookupIndexFromID, false);
 		console.log(pointPoints);
@@ -9052,7 +9068,7 @@ App3DR.ProjectManager.prototype._iterateDenseTracksStart = function(){
 	var currentPair = denseData["currentPair"];
 	currentPair++;
 	if(currentPair>=densePairs.length){
-throw "dense about done";
+// throw "dense about done";
 		var loadPairFiles = [];
 		for(var i=0; i<densePairs.length; ++i){
 			var pair = densePairs[i];
@@ -9249,6 +9265,7 @@ throw "dense about done";
 
 		// add back dense points:
 		world.embedPoints3DNoValidation(densePoints3D);
+		// TODO: POSSIBLY ONLY ADD POINTS @ 1-3 pixel radius distance prioritized on corner
 
 		// VERY LONG:
 		// console.log("patch updates");
@@ -9279,7 +9296,8 @@ throw "dense about done";
 			// just for printing
 			world.estimate3DErrors(true);
 		}
-throw "dense iteration end";
+
+// throw "dense iteration end";
 
 		// var denseViewLookupViewIndexFromID = {};
 		// for(var i=0; i<worldViews.length; ++i){

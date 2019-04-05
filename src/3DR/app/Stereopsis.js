@@ -7089,22 +7089,44 @@ Stereopsis.World.prototype._addBackResolvingIntersections = function(point3DA,po
 			}
 		}
 	}
+
 	// combine or drop duplicated view points
 	for(var i=0; i<intersectViews.length; ++i){
 		var view = intersectViews[i];
-		var point2DA = point3DB.pointForView(view);
+		var point2DA = point3DA.pointForView(view);
 		var point2DB = point3DB.pointForView(view);
 		var p2DA = point2DA.point2D();
 		var p2DB = point2DB.point2D();
 		var distance = V2D.distance(p2DA,p2DB);
 		if(distance<maxDistance){
-			var location = V2D.average(p2DA,p2DB);
+			var location = V2D.avg(p2DA,p2DB);
 			var point2D = new Stereopsis.P2D(view,location,point3DC);
 			point3DC.addPoint2D(point2D);
 		} // can't resolve -- don't add
 	}
+/*
+var allViews = this.toViewArray();
+for(var i=0; i<allViews.length; ++i){
+	var view = allViews[i];
+	var list = [point3DA,point3DB,point3DC];
+	console.log(" "+view.id()+" : ");
+	for(var j=0; j<list.length; ++j){
+		var p = list[j];
+		p = p.pointForView(view);
+		if(p){
+			p = p.point2D();
+		}
+		console.log(" => "+p+"");
+	}
+
+}
+console.log(point3DA);
+console.log(point3DB);
+console.log(point3DC);
+throw "yerp";
+*/
 	var points2D = point3DC.toPointArray();
-	if(points2D.length>0){
+	if(points2D.length>1){ // 2+
 		// average patch
 		var location = V3D.average([point3DA.point(),point3DB.point()]);
 		var normal = Code.averageAngleVector3D([point3DA.normal(),point3DB.normal()]);
