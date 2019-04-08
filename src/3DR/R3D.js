@@ -3241,7 +3241,7 @@ R3D.interpolate1DFillArray = function(array){
 // }
 
 
-R3D.matchesRemoveClosePairs = function(matches,imageMatrixA,imageMatrixB, distance){
+R3D.matchesRemoveClosePairs = function(matches,imageMatrixA,imageMatrixB, distance){ //
 	distance = distance!==undefined ? distance : 1.0;
 	matches.sort(function(a,b){
 		return a["score"] < b["score"] ? -1 : 1;
@@ -5539,6 +5539,10 @@ R3D.fundamentalRANSACFromPoints = function(pointsAIn,pointsBIn, errorPosition, i
 		Code.copyArrayIndexes(subsetPointsB, pointsB, indexes);
 		var pointsANorm = R3D.calculateNormalizedPoints([subsetPointsA]);
 		var pointsBNorm = R3D.calculateNormalizedPoints([subsetPointsB]);
+if(!pointsANorm.forward[0]){
+	console.log("? pointsANorm.forward[0]");
+	continue;
+}
 		var m = R3D.fundamentalMatrix(pointsANorm.normalized[0],pointsBNorm.normalized[0]);
 		if(!Code.isArray(m)){ m = [m]; } // if have 7 => multiple possible
 		for(k=0; k<m.length; ++k){
@@ -7320,7 +7324,11 @@ R3D.subPixelCornerMaximum = function(values, width,height, point){
 
 R3D.calculateScaleCornerFeatures = function(imageMatrix, maxCount){
 	var featureWindowScale = 13.0; // 7-15
+// larger scale = more correct
+	// featureWindowScale = 10.0;
 	// featureWindowScale = 15.0;
+	// featureWindowScale = 20.0;
+	featureWindowScale = 15.0;
 	var suppressionDistanceScale = 0.005; // 1% ~ 6 0.5% ~ 3
 	var imageGray = imageMatrix.gry();
 	var imageWidth = imageMatrix.width();
@@ -7342,14 +7350,14 @@ R3D.calculateScaleCornerFeatures = function(imageMatrix, maxCount){
 		var width = image["width"];
 		var height = image["height"];
 		var value = image["value"];
-		var corners = R3D.pointsCornerMaxima(value, width, height,  R3D.CORNER_SELECT_RELAXED);
+		// var corners = R3D.pointsCornerMaxima(value, width, height,  R3D.CORNER_SELECT_RELAXED);
+		// var corners = R3D.pointsCornerMaxima(value, width, height,  0.99999);
+		   var corners = R3D.pointsCornerMaxima(value, width, height,  0.999999);
+
 		var cornerScores = R3D.harrisCornerDetection(value, width, height);
 		// to original image location
 		for(var j=0; j<corners.length; ++j){
 			var corner = corners[j];
-			if(Code.isNaN(corner.y)){
-				throw "?";
-			}
 			var better = R3D.subPixelCornerMaximum(cornerScores,width,height,corner);
 				corner.x = better.x;
 				corner.y = better.y;
@@ -7360,36 +7368,25 @@ R3D.calculateScaleCornerFeatures = function(imageMatrix, maxCount){
 		// var cornersA = R3D.pointsCornerMaxima(imageMatrixA.gry(), imageMatrixA.width(), imageMatrixA.height(),  R3D.CORNER_SELECT_RELAXED);
 	}
 
-	// EXACT LOCALIZATIONS - AFTER
-	// var cornerScores = R3D.harrisCornerDetection(imageGray, imageWidth, imageHeight);
-	// for(var j=0; j<accumulatorCorners.length; ++j){
-	// 	var corner = accumulatorCorners[j];
-	// 	var better = R3D.subPixelCornerMaximum(cornerScores,width,height,corner);
-	// 	accumulatorCorners[j] = better;
-	// 	if(Code.isNaN(better.x) || Code.isNaN(better.y)){
-	// 		throw "?";
-	// 	}
-	// }
-
-
-
-
-
 	// REMOVE DULICATED POINTS BEFOREHAND -- within ~ 1 pixel
 	var toPoint = function(a){
 		return a;
 	}
 	var space = new QuadTree(toPoint, new V2D(0,0), new V2D(imageWidth,imageHeight));
+	/*
+	// ONLY NEED THIS FOR ZOOMED IN
 	console.log(accumulatorCorners.length);
 	for(var i=0; i<accumulatorCorners.length; ++i){
 		var corner = accumulatorCorners[i];
 		var neighbors = space.objectsInsideCircle(corner,1.0);
-		if(neighbors.length==0){
+		// if(neighbors.length==0){
+		if(true){
 			space.insertObject(corner);
 		}
 	}
 	accumulatorCorners = space.toArray();
 	space.clear();
+	*/
 	console.log("unique locations: "+accumulatorCorners.length);
 	// calculate maximum location:
 	var peakedCorners = [];
@@ -7414,7 +7411,8 @@ R3D.calculateScaleCornerFeatures = function(imageMatrix, maxCount){
 	// var sigmaBlur = 1.0;
 	// AFFINE & COVARIANT SIZE
 	var affineSize = 9;
-	var affineScale = affineSize*4; // 3-7
+	// var affineScale = affineSize*4; // 3-7
+	var affineScale = affineSize*5; // 3-7
 	var c2 = affineSize*0.5 | 0;
 	var affineMean = new V2D(c2,c2);
 	var affineMask = ImageMat.circleMask(affineSize,affineSize);
@@ -7431,15 +7429,19 @@ var MAT = new Matrix2D();
 		var scores = [];
 		for(var j=0; j<scales.length; ++j){
 			var matrix = matrixes[j];
-			var gry = ImageMat.extractRectFromFloatImage(point.x,point.y,1.0,null,compareSize,compareSize, imageGray,imageWidth,imageHeight, matrix);
-			var blur = ImageMat.getBlurredImage(gry, compareSize,compareSize, 1.0);
+			var sig = null;
+				sig = 1.0;
+			var gry = ImageMat.extractRectFromFloatImage(point.x,point.y,1.0,sig,compareSize,compareSize, imageGray,imageWidth,imageHeight, matrix);
+			// var blur = ImageMat.getBlurredImage(gry, compareSize,compareSize, 1.0);
+			var blur = gry;
 			// SPEEDUP - ONLY CARE ABOUT CENTER
-			//var H = R3D.cornerScaleScores(blur,compareSize,compareSize)["value"];
-			//var score = H[center*compareSize + center];
-				var score = R3D.cornerScaleScores(blur,compareSize,compareSize, null,true);
+			var H = R3D.cornerScaleScores(blur,compareSize,compareSize)["value"];
+			var score = H[center*compareSize + center];
+				// var score = R3D.cornerScaleScores(blur,compareSize,compareSize, null,true);
 			scores.push(score);
 		}
 		var peaks = Code.findGlobalExtrema1D(scores, true);
+// peaks = {"max":new V2D(0,1)};
 		if(peaks){
 			var max = peaks["max"];
 			if(max){
@@ -7449,8 +7451,11 @@ var MAT = new Matrix2D();
 				var pct = max.x-lo;
 				var pc1 = 1.0 - pct;
 				var val = scales[lo]*pc1 + scales[hi]*pct;
+// val = 1.0;
+
 				var p = new V2D(point.x,point.y);
 				var sca = 1.0/val;
+/*
 				// FIND MORE PRECISE OPTIMAL LOCATION:
 				var scas = Code.divSpace(scales[Math.max(lo-1,0)],scales[Math.min(hi+1,scales.length-1)], 9); // 7-9
 				scores = [];
@@ -7461,6 +7466,7 @@ var MAT = new Matrix2D();
 					var score = R3D.cornerScaleScores(blur,compareSize,compareSize, null,true);
 					scores.push(score);
 				}
+
 				var peaks = Code.findGlobalExtrema1D(scores, true);
 				// console.log(peaks);
 				if(peaks){
@@ -7474,9 +7480,9 @@ var MAT = new Matrix2D();
 						var val = scas[lo]*pc1 + scas[hi]*pct;
 						var p = new V2D(point.x,point.y);
 						var sca = 1.0/val;
-			// console.log("IS: "+sca);
 					}
 				}
+*/
 				// SCA IS OPTIMAL SIZE
 				// extract angle at size:
 
@@ -7486,7 +7492,11 @@ var MAT = new Matrix2D();
 				// var ang = V2D.angle(V2D.DIRX,grad);
 
 				// MOMENT:
-				var gry = ImageMat.extractRectFromFloatImage(point.x,point.y,affineScale/sca,2.0,affineSize,affineSize, imageGray,imageWidth,imageHeight, null);
+
+				// PREBLURR
+
+
+				var gry = ImageMat.extractRectFromFloatImage(point.x,point.y,affineScale/sca,1.0,affineSize,affineSize, imageGray,imageWidth,imageHeight, null);
 				// var moment = ImageMat.calculateCovariance(gry, affineSize, affineSize, mean, circleMask);
 				// IS AVERAGING THE R/G/B SEPARATELY MORE STABLE ?
 				var moment = ImageMat.calculateMoment(gry, affineSize, affineSize, affineMean, affineMask);
@@ -11720,8 +11730,11 @@ R3D.generateSIFTObjects = function(featuresA, imageMatrixA){
 
 		var imageWidth = imageMatrix.width();
 		var imageHeight = imageMatrix.height();
-var imageBlurred = imageMatrix.getBlurredImage(1.0);
-//var imageBlurred = imageMatrix.getBlurredImage(2.0);
+// var imageBlurred = imageMatrix.getBlurredImage(1.0);
+// var imageBlurred = imageMatrix.getBlurredImage(2.0);
+
+var imageBlurred = imageMatrix.getBlurredImage(4.0); // TODO: base on size of feature scaling?
+
 //var imageGradient = ImageMat.gradientVector(imageBlurred,imageWidth,imageHeight).value;
 		// var imageCorners = corners[i];
 		// var imageGradients = gradients[i];
@@ -11878,20 +11891,34 @@ R3D.fullMatchesForObjects = function(objectsAIn, imageMatrixA, objectsBIn, image
 		return a<b ? -1 : 1;
 	};
 	// if too many features: use unique subset for initial match
-	var maximumPointsBeforeUnique = 1000; // about halves the set
+	var maximumPointsBeforeUnique = 2000; // about halves the set
 	var objectsUniqueA = objectsA;
 	var objectsUniqueB = objectsB;
 
 	// the unique points put on the wrong trail --- maybe just try best corner-score points ?
 
-	if(objectsA.length>maximumPointsBeforeUnique || objectsB.length>maximumPointsBeforeUnique){
-		objectsUniqueA = R3D.siftObjectsToUnique(objectsA);
-		objectsUniqueB = R3D.siftObjectsToUnique(objectsB);
+	if(objectsA.length>maximumPointsBeforeUnique || objectsB.length>maximumPointsBeforeUnique){ // this butchers a lot -- still want ~1000, but gives back only like 300-400
+		objectsUniqueA = R3D.siftObjectsToUnique(objectsA, maximumPointsBeforeUnique);
+		objectsUniqueB = R3D.siftObjectsToUnique(objectsB, maximumPointsBeforeUnique);
 		console.log("unique: "+objectsUniqueA.length+" & "+objectsUniqueB.length);
 	}
 	// get some high-error set of possible matches
-	var matching = R3D.matchObjectsSubset(objectsUniqueA, objectsUniqueB, objectsUniqueB, objectsUniqueA, 0.95, 0.15); // 0.95 , 0.20
+	var matching = R3D.matchObjectsSubset(objectsUniqueA, objectsUniqueB, objectsUniqueB, objectsUniqueA, 0.95, 0.20); // 0.95 , 0.20
 	var best = matching["best"];
+	console.log(best)
+
+
+
+
+
+
+// TODO: REMOVE TEST
+return {"F":null, "matches":best, "error":0};
+
+
+
+
+
 	console.log("INITIAL SCORE-MATCH COUNT: "+best.length);
 	var bestLength = best.length;
 	if(best.length<10){
@@ -11924,18 +11951,36 @@ R3D.fullMatchesForObjects = function(objectsAIn, imageMatrixA, objectsBIn, image
 
 	// initial guess to get inlier pixel error & good starting F
 	console.log("INITIAL RANSAC ");
-	var result = R3D.fundamentalRANSACFromPoints(pointsA,pointsB, initialAveragePixelError, null, 0.50, 0.99);
+	var tries = 4;
+	var result = null;
+	for(var i=0; i<tries; ++i){
+		result = R3D.fundamentalRANSACFromPoints(pointsA,pointsB, initialAveragePixelError, null, 0.50, 0.99);
+		console.log(result)
+		if(result){
+			var matches = result["matches"];
+			pointsA = matches[0];
+			pointsB = matches[1];
+			console.log("INITIAL RANSAC-MATCH COUNT: "+pointsA.length);
+			if(pointsA.length<10){
+				console.log("not enough ransac matches: "+pointsA.length);
+				result = null;
+			}else{
+				break;
+			}
+		}
+	}
 	if(!result){
+		console.log("do something ...");
 		return null;
 	}
-	var matches = result["matches"];
-	pointsA = matches[0];
-	pointsB = matches[1];
-	console.log("INITIAL RANSAC-MATCH COUNT: "+pointsA.length);
-	if(pointsA.length<10){
-		console.log("not enough ransac matches");
-		return null;
-	}
+	// var matches = result["matches"];
+	// pointsA = matches[0];
+	// pointsB = matches[1];
+	// console.log("INITIAL RANSAC-MATCH COUNT: "+pointsA.length);
+	// if(pointsA.length<10){
+	// 	console.log("not enough ransac matches: "+pointsA.length);
+	// 	return null;
+	// }
 
 	var F = R3D.fundamentalRefineFromPoints(pointsA,pointsB, null);
 	var Finv = R3D.fundamentalInverse(F);
@@ -11967,6 +12012,7 @@ R3D.fullMatchesForObjects = function(objectsAIn, imageMatrixA, objectsBIn, image
 	}
 	// iteritive F adjustments
 	var maxIterations = 20;
+	// var maxIterations = 30;
 	var matrixFfwd = F;
 	var matrixFrev = Finv;
 	var pixelErrorA = initialPixelError * 2.0;

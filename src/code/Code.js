@@ -3473,6 +3473,25 @@ Code.randomID = function(len){
 	}
 	return str;
 }
+Code.randomPointOnSphere = function(radius){
+	throw "done somewhere";
+}
+Code.randomPointInSphere = function(radius){
+	radius = radius!==undefind ? radius : 1.0;
+    var u = Math.random();
+    var v = Math.random();
+    var theta = 2.0*u*Math.PI;
+    var phi = Math.acos(2.0*v - 1.0);
+    var r = Code.cubeRoot(Math.random());
+    var sinTheta = Math.sin(theta);
+    var cosTheta = Math.cos(theta);
+    var sinPhi = Math.sin(phi);
+    var cosPhi = Math.cos(phi);
+    var x = r*sinPhi*cosTheta;
+    var y = r*sinPhi*sinTheta;
+    var z = r*cosPhi;
+    return new V3D(x,y,z);
+}
 Code.divSpace = function(start,end,count){ // start+end / count
 	count -= 1;
 	var range = end-start;
@@ -6165,6 +6184,9 @@ Code.quadraticSolution = function(a,b,c){ // a*x^2 + b*x + c = 0
 	}
 	var root = Math.sqrt(inside);
 	return [(-b+root)/(2.0*a), (-b-root)/(2.0*a)];
+}
+Code.cubicRoot = function(n){
+	return Math.cbrt(n);
 }
 Code.cubicSolution = function(a,b,c,d){ // a*x^3 + b*x^2 + c*x + d = 0
 	if(a==0){ // quadratic

@@ -90,6 +90,7 @@
 |  |  |  |
 |  |  |  |
 |  |  |  |
+| hören | whore-in | hear |
 |  |  |  |
 |  |  |  |
 |  |  |  |
@@ -98,12 +99,11 @@
 |  |  |  |
 |  |  |  |
 |  |  |  |
+| Lebensmittel | leibensmittle | food |
 |  |  |  |
-|  |  |  |
-|  |  |  |
-|  |  |  |
-|  |  |  |
-|  |  |  |
+| Frühstück | froo-stook | breakfast |
+| Mittagessen | mee-tahg-essen | lunch |
+| Abendessen | abbend-essen | dinner |
 |  |  |  |
 |  |  |  |
 |  |  |  |

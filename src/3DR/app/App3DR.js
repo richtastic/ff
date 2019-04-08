@@ -6780,7 +6780,10 @@ console.log("checkPerformNextTask");
 			return;
 		}
 	}
-// return;
+	if(views.length<2){
+		return;
+	}
+// throw "task dense pair";
 	// assuming all pair matches have run
 	len = views.length;
 	for(i=0; i<len; ++i){
@@ -6806,7 +6809,8 @@ console.log("checkPerformNextTask");
 			}
 		}
 	}
-// return;
+
+// throw "task triples";
 	// assuming all pairs have run
 	console.log(triples);
 	len = views.length;
@@ -6849,37 +6853,32 @@ console.log("checkPerformNextTask");
 			}
 		}
 	}
-// return;
+throw "task graph";
 	if(!this.hasGraph()){
 		console.log("has no graph");
 		this.calculateGlobalOrientationInit();
 		return;
 	}
-// return;
+throw "task tracks";
 	if(!this.tracksDone()){
 		console.log("tracks not done");
 		this.iterateGraphTracks();
 		return;
 	}
-
-
-// throw "wait";
-
+throw "task sparse";
 if(!this.sparseDone()){
 	console.log("sparse not done");
 	this.iterateSparseTracks();
 	return;
 }
-
-// throw "wait";
-
+throw "task dense";
 if(!this.denseDone()){
 	console.log("dense not done");
 	this.iterateDenseTracks();
 	return;
 }
 
-throw "wait";
+// throw "wait";
 
 if(!this.pointsDone()){
 	this.iteratePointsFullBA();
@@ -7075,6 +7074,10 @@ App3DR.ProjectManager.prototype.calculatePairMatch = function(viewA, viewB, pair
 
 		// fat matching (no prior knowledge)
 		var matchData = R3D.fullMatchesForObjects(objectsA, imageMatrixA, objectsB, imageMatrixB, maxFeatures);
+console.log(matchData);
+
+if(matchData){
+
 		var F = matchData["F"];
 		var matches = matchData["matches"];
 		matchCount = matches.length;
@@ -7099,9 +7102,6 @@ App3DR.ProjectManager.prototype.calculatePairMatch = function(viewA, viewB, pair
 
 // stereoHighConfidenceMatches
 console.log(matches);
-
-
-
 console.log(matches.length);
 // remove close duplicates
 	matches = R3D.matchesRemoveClosePairs(matches,imageMatrixA,imageMatrixB, 1.0);
@@ -7138,6 +7138,10 @@ console.log(matches.length);
 		}else{
 			self.addPair(viewA, viewB, fxnG, self);
 		}
+}else{
+	matches = [];
+	throw "no matches";
+}
 	}
 	var yamlBinary = null;
 	// var matchCount = -1;
@@ -8855,63 +8859,70 @@ console.log(worldViews);
 	maxIterations = 5;
 	// maxIterations = 7;
 	var views = world.toViewArray();
-	for(var iterations=0; iterations<maxIterations; ++iterations){
+	for(var iterations=0; iterations<maxIterations; ++iterations){ // LINEAR until P3D is stable enough to do nonlinear
 		// world.estimate3DErrors(true);
-		// until P3D is stable enough to do nonlinear:
-
-
 		console.log("refine views");
 		world.refineCameraAbsoluteOrientation(null,100); // 100-200
 /*
-		// ...
+		// simgle camera
 		for(var i=0; i<views.length; ++i){
 			view = views[i];
 			world.refineSelectCameraAbsoluteOrientation([view], null, 50); // 10-100
 		}
 */
 
-	// world.relativeTransformsFromAbsoluteTransforms(); // SHOULD ALREADY BE DONE
-	world.estimate3DErrors(true);
-	// world.averagePoints3DFromMatches();
-	world.estimate3DPoints();
-
-	//	console.log("refine points");
-	//	world.refinePoint3DAbsoluteLocation(null,10);
+		// world.relativeTransformsFromAbsoluteTransforms(); // SHOULD ALREADY BE DONE
+		world.estimate3DErrors(true);
+		// world.averagePoints3DFromMatches();
+		world.estimate3DPoints();
 
 		// clean
 		console.log("clean");
-		//
-		// world.filterGlobalPoints(3.0);
-		// world.filterPatch3D();
-		world.estimate3DErrors(true);
-		world.filterGlobalMatches(null,null, 2.0);
+		world.filterGlobalMatches(null,null, 3.0);
 
 		world.printPoint3DTrackCount();
 		world.relativeFFromSamples();
 		world.estimate3DErrors(true, true);
 	}
-console.log("NONLINEAR POINTS");
+
+
+
+
+
 	// NONLINEAR POINTS3D
-	maxIterations = 3;
+	console.log("NONLINEAR POINTS");
+	maxIterations = 5;
 	for(var iterations=0; iterations<maxIterations; ++iterations){
-break;
-		world.refineCameraAbsoluteOrientation(null,100);
+		// reesimate points
 		world.refinePoint3DAbsoluteLocation(null,10);
-
-		world.relativeTransformsFromAbsoluteTransforms(); // need for match clipping
-
-		world.estimate3DErrors(true);
-		world.filterGlobalPoints(3.0);
-		world.filterPatch3D();
-		world.filterGlobalMatches(null,null, 2.5);
-
-		world.printPoint3DTrackCount();
+		world.copyPoint3DToMatchEstimates();
 		world.estimate3DErrors(true, true);
 
+		// filter pairwise
+		world.filterGlobalMatches(null,null, 3.0,3.0,null,null, false); // 2 = many | 3 = no dropping
+		// filter bad points
+		world.filterGlobalPoints(4.0); // 3 medium
+		world.filterPatch3D(4.0); // 3 medium
+
+		// local
+		world.filterLocal3D(4.0); // 3 medium
+		//world.filterLocal2D(); 2D neighbor voting: F / R / ...
+
+		// reestimate cameras
+			/*
+			// single camera
+			for(var i=0; i<views.length; ++i){
+				view = views[i];
+				world.refineSelectCameraAbsoluteOrientation([view], null, 50); // 10-100
+			}
+			*/
+		world.refineCameraAbsoluteOrientation(null,100);
+
+		//
+		world.printPoint3DTrackCount();
 	}
 
-
-	// ...
+// throw "...";
 
 
 	// BA loop
@@ -8921,9 +8932,6 @@ break;
 	// patch drop inconsistencies
 	// point drop MATCH-BASED R ERROR
 	// point drop WORLD-BASED R ERROR
-
-
-
 
 
 	// var worldPoints = world.toPointArray();
@@ -9017,23 +9025,15 @@ world.printPoint3DTrackCount();
 			project._embedTrackPoints(world, dataPoints, lookupViewFromIndex);
 world.printPoint3DTrackCount();
 		}
-		var worldPoints = world.toPointArray();
-		// ...
+		console.log(densePoints.length);
 		project._embedTrackPoints(world, densePoints, lookupViewFromIndex);
-		world.printPoint3DTrackCount();
-
-	// console.log("adding sparse points");
-	// world.printPoint3DTrackCount();
-	// for(var i=0; i<sparsePoints3D.length; ++i){
-	// 	var p3D = sparsePoints3D[i];
-	// 	world.embedPoint3D(p3D);
-	// }
-	// world.printPoint3DTrackCount();
+world.printPoint3DTrackCount();
 
 
+// var worldPoints = world.toPointArray();
+// console.log("total points: "+worldPoints.length);
 
-
-throw "embedded count up?";
+// throw "embedded count up?";
 
 		var pointPoints = project._getGraphPointsFromWorld(world, lookupIndexFromID, false);
 		console.log(pointPoints);
@@ -12592,7 +12592,12 @@ App3DR.ProjectManager.Triple.prototype.toYAML = function(yaml){
 		yaml.writeNumber("T", null);
 	}
 	// yaml.writeBlank();
-	yaml.writeArrayLiteral("relative", this._relativeTransforms);
+	var trans = this._relativeTransforms
+	if(trans){
+		yaml.writeArrayLiteral("relative", trans);
+	}else{
+		yaml.writeNull("relative", null);
+	}
 }
 App3DR.ProjectManager.Triple.prototype.readFromObject = function(object){
 	this._directory = object["directory"];

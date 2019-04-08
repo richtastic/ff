@@ -102,7 +102,10 @@ function FeatureTest(){
 
 // new ImageLoader("./images/",["keble.000.png", "keble.003.png"],this,this.imagesLoadComplete2).load(); //  :  : [46 @ 0.420 |  ? @ ?]
 
-new ImageLoader("./images/",["study1.png", "study3.png"],this,this.imagesLoadComplete2).load(); //  :  : [43 : 0.26640 |  ? @ ?]
+// new ImageLoader("./images/",["study1.png", "study3.png"],this,this.imagesLoadComplete2).load(); //  :  : [43 : 0.26640 |  ? @ ?]
+
+
+new ImageLoader("./images/iowa/",["0.JPG", "1.JPG"],this,this.imagesLoadComplete2).load();
 
 
 // new ImageLoader("./images/",["?.png", "?.png"],this,this.imagesLoadComplete2).load();
@@ -2780,15 +2783,6 @@ console.log(featuresA.length+" v "+featuresB.length);
 var objectsA = R3D.generateSIFTObjects(featuresA, imageMatrixA);
 var objectsB = R3D.generateSIFTObjects(featuresB, imageMatrixB);
 
-// console.log(objectsA);
-// console.log(featuresA);
-
-// throw "?";
-
-// for(var i=0; i<featuresA.length; ++i){
-// 	console.log(featuresA[i]["angle"]+"|"+objectsA[i]["angle"])
-// }
-
 var objectsAllA = objectsA;
 var objectsAllB = objectsB;
 // if(false){
@@ -2954,6 +2948,7 @@ if(doFatMatch){
 var oldStuff = false;
 
 if(oldStuff){
+/*
 // DO UNKNOWN-ALL FAT MATCHING
 console.log("FAT MATCH");
 var matching = R3D.matchObjectsSubset(objectsA, objectsB, objectsB, objectsA);
@@ -2999,7 +2994,7 @@ if(true){
 R3D.drawMatches(best, 0,0, imageMatrixA.width(),0, display);
 return;
 }
-
+*/
 }else{ // old vs new stuff
 
 // console.log(objectsA);
@@ -3015,12 +3010,13 @@ if(!matchData){
 	throw "could not find full matches";
 }
 var F = matchData["F"];
-console.log(F.toArray()+"");
 var matches = matchData["matches"];
-console.log(matchData)
 
 var matrixFfwd = F;
-var matrixFrev = R3D.fundamentalInverse(matrixFfwd);
+if(matrixFfwd){
+	console.log(F.toArray()+"");
+	var matrixFrev = R3D.fundamentalInverse(matrixFfwd);
+}
 
 // console.log("best ... ");
 // console.log(best);
@@ -3047,8 +3043,12 @@ for(var i=0; i<matches.length; ++i){
 //if(false){
 if(true){
 R3D.drawMatches(matches, 0,0, imageMatrixA.width(),0, display);
+if(matrixFfwd){
 R3D.showRansac(pointsA,pointsB, matrixFfwd, matrixFrev, display, imageMatrixA,imageMatrixB);
 }
+}
+
+throw "HERE"
 
 
 
@@ -3067,6 +3067,9 @@ R3D.showRansac(pointsA,pointsB, matrixFfwd, matrixFrev, display, imageMatrixA,im
 console.log("stereoHighConfidenceMatches");
 var matches = R3D.stereoHighConfidenceMatches(imageMatrixA,imageMatrixB, pointsA,pointsB,matrixFfwd);
 console.log(matches);
+
+
+throw "HERE"
 
 matches = R3D.matchesRemoveClosePairs(matches,imageMatrixA,imageMatrixB, 1.0);
 console.log(matches);

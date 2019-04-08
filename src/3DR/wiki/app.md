@@ -343,29 +343,101 @@ https://cloud.google.com/appengine/docs/nodejs/
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-- track data isn't as spread about as hoped
-	- favoring random carpet locations
-
-- not enough overlapping points during process
-	- work backwards, make sure dense aggregation works first
-	- check why multi-tracks are not added / trimmed
-
-- points merged in world are not keeping mult-way points ... only pair point matches are making it thru
 
 
-- keep track points too alongside dense items
+- test different image/scene data set
+
+	=> TEST ALGORITHMS SEPARATELY:
+
+		- originating SIFT objects are not matching well
+			-> branches have lots of noise
+			-> medium change in perspective hides lots of matcheable areas
+			-> not a lot of overlapping features to allow correct match opportunities
+				-> try to get more initial points
+					-> more initial points requires better approx of UNIQUE features to limit n^2 matching
+		=> VISUALIZE ALL STEPS OF ALG IN NEW DOC
+
+				=> better scaling/blurring : not just interpolation but pre/post blur for scaling
+				=> larger blurring to get 'bigger' features and ignore noise
+				=> better angle selection accuracy [try only centermost ?]
+					- vizualize moments / COM
+				=> better windowing / check: center more important than edges
+
+	=> downstream results are trash
+
+
+
+
+R3D.calculateScaleCornerFeatures(imageMatrixA, maxCount);
+
+R3D.generateSIFTObjects
+
+R3D.compareSIFTSADVector
+
+R3D.matchObjectsSubset
+
+
+
+
+
+- initial affine matrix approx needs some taming
+- 2D pairing needs to attempt propagating
+
+
+
+
+
+
+
+- SEVERAL METRIC NEED TO CONSIDER FOR PROGRESS:
+	- reprojection error - MATCH
+	- reprojection error - ABS
+	- PATCH COVERING
+	- F?
+	- R?
+
+- uniform sampling inside sphere
+
+- final BA still has high error & sporadic points
+
+- nonlinear 3d point locations
+ 	- each MATCH would also need one ????
+
+- increase samples - upsample [for tesselation]
+	- TRIANGLES IN 2D [smallest] - delauny triangulation ?
+	- hot spot - each pixel = minimum distance to nearest neighbor
+	- ...
+
+
+
+---- another step to re-sample pairs & get dense points from
+
+
+
+- surface tesselation:
+	- need dynamic local size count
+		- some minimum number of point to start with (>>3)
+			- & some max ...
+		- some 'graph' to estimate when 'peak'/optimal sample size is achieved
+=> instead of getting EVERY POINT to calculate, use some sampling count, eg inside a radius
+
 
 
 - lots of DROP SCALE RATIO: AFTER previously validated ... why?
 - propagating points doesn't seem to add much / they are pruned quickly
 - divide R error by the number of points in track to allow for some sympathy for multi-connected components
 
-nonlinear 3d point locations
-- each MATCH would also need one ????
+
 
 
 - initial points locations are very separate
 	- is this somewhat expected?
+
+
+
+
+- if a point has a poor reprojection error, see what the 'better' match location would yield in a change of position in 2d
+
 
 
 
