@@ -40,7 +40,55 @@
 | sieben | seebeen | 7 |
 | acht | ah(ch)t | 8 |
 | neun | noin | 9 |
-| zehn | seen | 10 |
+| zehn | sden | 10 |
+| elf |  | 11 |
+|  |  | 12 |
+|  |  | 13 |
+|  |  | 14 |
+|  |  | 15 |
+|  |  | 16 |
+|  |  | 17 |
+|  |  | 18 |
+|  |  | 19 |
+|  |  | 20 |
+|  |  | 30 |
+|  |  | 40 |
+|  |  | 50 |
+|  |  | 60 |
+|  |  | 70 |
+|  |  | 80 |
+|  |  | 90 |
+|  |  | 100 |
+|  |  | 1000 |
+|  |  | 1E6 |
+|  |  | 1E9 |
+
+11 – elf
+12 – zwölf
+13 – dreizehn
+14 – vierzehn
+15 – fünfzehn
+16 – sechzehn
+17 – siebzehn
+18 – achtzehn
+19 – neunzehn
+20 – zwanzig
+30 – dreißig
+40 – vierzig
+50 – fünfzig
+60 – sechzig
+70 – siebzig
+80 – achtzig
+90 – neunzig
+100 – hundert
+1,000 – tausend
+one million – eine Million
+one billion – eine Milliarde
+one trillion – eine Billion
+
+|  |  |  |
+|  |  |  |
+|  |  |  |
 |  |  |  |
 |  |  |  |
 | Montag | mohn-tag | mon |

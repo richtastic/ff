@@ -105,6 +105,120 @@ console.log(img);
 }
 
 
+
+// pick 2 pair points:
+
+// var pointA = new V2D(300,200);
+// var pointB = new V2D(400,100);
+
+
+// // sign
+// var pointA = new V2D(126,267);
+// var pointB = new V2D(124.5,147);
+
+// // top right window
+var pointA = new V2D(286,219);
+var pointB = new V2D(428,108);
+
+// win bottom
+// var pointA = new V2D(178,259);
+// var pointB = new V2D(248,144);
+
+// tree hole
+// var pointA = new V2D(159,248);
+// var pointB = new V2D(309,139);
+
+// sill corner
+// var pointA = new V2D(49,296.5);
+// var pointB = new V2D(16.5,175);
+
+// sign
+// var pointA = new V2D(126,267);
+// var pointB = new V2D(124.5,147);
+
+var featureSize = 21.0;
+
+
+var peakA = {"point": pointA, "covAngle":0, "covScale":1.0};
+var peakB = {"point": pointB, "covAngle":0, "covScale":1.0};
+
+// var peakA = this.peakScaleForPoint(pointA, imageMatrixA);
+// var peakB = this.peakScaleForPoint(pointB, imageMatrixB);
+
+// 2nd:
+var peaks = [peakA,peakB];
+var mats = [imageMatrixA,imageMatrixB];
+for(var i=0; i<peaks.length; ++i){
+	var peak = peaks[i];
+	var mat = mats[i];
+	console.log("...");
+	var refine = {"point":peak["point"], "dirX":new V2D(1,0), "dirY":new V2D(0,1), "scale":null};
+	for(var j=0; j<12; ++j){
+		this.testCornerness(peak["point"], mat);
+		throw " .. ."
+		// var refine = this.iterateAffineTransform(refine, mat);
+		// peak = this.peakScaleForPoint(peak["point"], mat, peak["covAngle"], peak["covScale"]);
+	}
+	// break;
+	peaks[i] = peak;
+}
+// throw " .... "
+
+peakA = peaks[0];
+peakB = peaks[1];
+
+//peakB = this.peakScaleForPoint(peakB["point"], imageMatrixB, peakB["covAngle"], peakB["covScale"]);
+
+
+// console.log(peakA);
+// console.log(peakB);
+
+var featureA = peakA;
+var featureB = peakB;
+
+
+// TODO: MOMENT
+// if(featureA && featureB){
+// featureA["angle"] = featureA["covAngle"];
+// featureB["angle"] = featureB["covAngle"];
+// }
+// featureA["angle"] = featureA["covScale"];
+
+//
+// var angleA = 0;
+// var sizeA = peakA ? peakA["scale"] : 10;
+// var angleB = 0;
+// var sizeB = peakB ? peakB["scale"] : 10;
+//
+// var featureA = {"point":pointA, "angle":angleA, "size":sizeA};
+// var featureB = {"point":pointB, "angle":angleB, "size":sizeB};
+
+var featuresA = [featureA];
+var featuresB = [featureB];
+
+
+var featureSize = 21.0;
+
+this.showFeatures(featuresA, 0,0, display, 0x990000FF);
+this.showFeatures(featuresB, imageMatrixA.width(),0, display, 0x990000FF);
+
+
+var d = this.extractFeature(featureA, imageMatrixA, featureSize);
+d.matrix().translate(1100, 100);
+display.addChild(d);
+
+var d = this.extractFeature(featureB, imageMatrixB, featureSize);
+d.matrix().translate(1200, 100);
+display.addChild(d);
+
+
+
+
+
+throw "..."
+
+
+
 // throw "?";
 
 
@@ -221,6 +335,227 @@ throw "..."
 
 
 }
+RiftTest.prototype.peakScaleForPoint = function(point, imageMatrix, covAngle,covScale){
+	covAngle = covAngle!==undefined ? covAngle : 0.0;
+	covScale = covScale!==undefined ? covScale : 1.0;
+	// console.log("INPUT: "+covAngle+" @ "+covScale);
+
+	var imageGray = imageMatrix.gry();
+	var imageWidth = imageMatrix.width();
+	var imageHeight = imageMatrix.height();
+
+	var compareSize = 9;
+	var center = compareSize*0.5 | 0;
+
+	var scales = Code.divSpace(2,-2, 10);
+	var matrixes = [];
+	for(var i=0; i<scales.length; ++i){
+		var scale = scales[i];
+		scale = Math.pow(2,scale);
+		scales[i] = scale;
+		var matrix = new Matrix(3,3);
+		matrix.identity();
+		matrix = Matrix.transform2DScale(matrix,scale);
+		matrixes[i] = matrix;
+	}
+
+	var scores = [];
+	for(var j=0; j<scales.length; ++j){
+		var matrix = matrixes[j];
+
+		var cov = new Matrix(3,3);
+			cov.identity();
+			cov = Matrix.transform2DRotate(cov,-covAngle);
+			cov = Matrix.transform2DScale(cov, 1.0/covScale,covScale);
+			// matrix = Matrix.transform2DScale(matrix, covScale, 1.0/covScale);
+			cov = Matrix.transform2DRotate(cov,covAngle);
+			// matrix = Matrix.mult(matrix,cov);
+			// matrix = Matrix.mult(cov,matrix);
+
+		var sig = null;
+			sig = 1.0;
+		var gry = ImageMat.extractRectFromFloatImage(point.x,point.y,1.0,sig,compareSize,compareSize, imageGray,imageWidth,imageHeight, matrix);
+		// var blur = ImageMat.getBlurredImage(gry, compareSize,compareSize, 1.0);
+		var blur = gry;
+		// SPEEDUP - ONLY CARE ABOUT CENTER
+		var H = R3D.cornerScaleScores(blur,compareSize,compareSize)["value"];
+		var score = H[center*compareSize + center];
+		scores.push(score);
+	}
+
+	// Code.printMatlabArray(scales,"scales");
+	// Code.printMatlabArray(scores,"scores");
+
+	var peaks = Code.findGlobalExtrema1D(scores, true);
+
+
+	// peaks = {"max":new V2D(0,1)};
+	if(peaks && peaks.length>0){
+
+	}else{
+		// peaks = {"max":new V2D(0,1)};
+	}
+	// console.log(peaks)
+		var max = peaks["max"];
+		if(max){
+			var peak = max.y;
+			var lo = Math.floor(max.x);
+			var hi = Math.ceil(max.x);
+			var pct = max.x-lo;
+			var pc1 = 1.0 - pct;
+			var val = scales[lo]*pc1 + scales[hi]*pct;
+			var p = new V2D(point.x,point.y);
+			var sca = 1.0/val;
+
+			// FIND MORE PRECISE OPTIMAL LOCATION:
+			var scas = Code.divSpace(scales[Math.max(lo-1,0)],scales[Math.min(hi+1,scales.length-1)], 9); // 7-9
+			scores = [];
+			for(var j=0; j<scas.length; ++j){
+				var sc = scas[j];
+				var gry = ImageMat.extractRectFromFloatImage(point.x,point.y,1.0/sc,null,compareSize,compareSize, imageGray,imageWidth,imageHeight, null);
+				var blur = ImageMat.getBlurredImage(gry, compareSize,compareSize, 1.0);
+				var score = R3D.cornerScaleScores(blur,compareSize,compareSize, null,true);
+				scores.push(score);
+			}
+
+			var peaks = Code.findGlobalExtrema1D(scores, true);
+			// console.log(peaks);
+			if(peaks){
+				// Code.printMatlabArray(scas,"scales");
+				// Code.printMatlabArray(scores,"scores");
+				var max = peaks["max"];
+				if(max){
+					var peak = max.y;
+					var lo = Math.floor(max.x);
+					var hi = Math.ceil(max.x);
+					var pct = max.x-lo;
+					var pc1 = 1.0 - pct;
+					var val = scas[lo]*pc1 + scas[hi]*pct;
+					var p = new V2D(point.x,point.y);
+					var sca = 1.0/val;
+				}
+			}
+
+			var point = p;
+
+
+			// COVARIANCE:
+
+			var covarianceSize = 9;
+			var covarianceScale = covarianceSize*2; // 1-5
+			var c2 = covarianceSize*0.5 | 0;
+			var covarianceMean = new V2D(c2,c2);
+			var covarianceMask = ImageMat.circleMask(covarianceSize,covarianceSize);
+
+			var matrix = new Matrix(3,3);
+				matrix.identity();
+			var cov = new Matrix(3,3);
+				cov.identity();
+				cov = Matrix.transform2DRotate(cov,-covAngle);
+				// cov = Matrix.transform2DScale(cov, 1.0/covScale,covScale);
+				cov = Matrix.transform2DScale(cov, covScale, 1.0/covScale);
+				cov = Matrix.transform2DRotate(cov,covAngle);
+				// matrix = Matrix.mult(matrix,cov);
+				matrix = Matrix.mult(cov,matrix);
+
+			var gry = ImageMat.extractRectFromFloatImage(point.x,point.y,covarianceScale/sca,2.0,covarianceSize,covarianceSize, imageGray,imageWidth,imageHeight, matrix);
+			var covariance = ImageMat.calculateCovariance(gry, covarianceSize, covarianceSize, covarianceMean, covarianceMask);
+			var covarianceA = covariance[0];
+			var covarianceB = covariance[1];
+			var covarianceRatio = covarianceA.z/covarianceB.z;
+			if(covarianceRatio<1.0){
+			// if(covarianceRatio>1.0){
+				covarianceRatio = 1.0/covarianceRatio;
+				covarianceA = covariance[1];
+				covarianceB = covariance[0];
+			}
+			covarianceA = new V2D(covarianceA.x,covarianceA.y);
+			var covarianceAngle = V2D.angleDirection(V2D.DIRX,covarianceA);
+			// console.log(covarianceAngle,"@",covarianceRatio);
+			// covarianceRatio = Math.sqrt(covarianceRatio);
+
+			covarianceAngle = (covarianceAngle+covAngle);
+			// covarianceRatio = (covarianceRatio*covScale);
+			covarianceRatio = (covScale/covarianceRatio);
+			// covarianceRatio = (covarianceRatio/covScale);
+			console.log(covarianceAngle,"@",covarianceRatio);
+
+
+
+
+			// moment angle: ...
+
+
+
+
+			return {"point": p, "scale": sca, "angle":covarianceAngle, "covAngle":covarianceAngle, "covScale":covarianceRatio};
+		}
+		return null;
+
+}
+
+RiftTest.prototype.extractFeature = function(feature, imageMatrix, featureSize){
+	var center = feature["point"];
+	var angle = feature["angle"];
+	var scale = feature["scale"];
+
+	var covAngle = feature["covAngle"];
+	var covScale = feature["covScale"];
+
+console.log(feature)
+	var imageSize = featureSize;
+
+console.log(imageSize,scale,angle)
+	// var scale = size/imageSize;
+	var matrix = new Matrix(3,3).identity();
+
+		matrix = Matrix.transform2DTranslate(matrix, -imageSize*0.5, -imageSize*0.5);
+		matrix = Matrix.transform2DScale(matrix, scale);
+		// matrix = Matrix.transform2DTranslate(matrix, center.x, center.y );
+
+
+		var cov = new Matrix(3,3);
+			cov.identity();
+			cov = Matrix.transform2DRotate(cov,-covAngle);
+			cov = Matrix.transform2DScale(cov, 1.0/covScale,covScale);
+			// cov = Matrix.transform2DScale(cov, covScale, 1.0/covScale);
+			cov = Matrix.transform2DRotate(cov,covAngle);
+			// matrix = Matrix.mult(matrix,cov);
+			matrix = Matrix.mult(cov,matrix);
+
+	matrix = Matrix.transform2DTranslate(matrix, center.x, center.y );
+
+
+
+	var image = imageMatrix.extractRectFromMatrix(imageSize,imageSize, matrix);
+
+	var sca = 4.0;
+	var img = GLOBALSTAGE.getFloatRGBAsImage(image.red(), image.grn(), image.blu(), image.width(), image.height());
+	var d = new DOImage(img);
+	//d.matrix().scale(2.0);
+	d.matrix().scale(sca);
+	// d.matrix().translate(0 + i*50, 0 + k*50);
+	// GLOBALSTAGE.addChild(d);
+
+
+var ang = 0;
+var rat = covScale;
+	var c = new DO();
+		color = 0xFFFF0000;
+		c.graphics().setLine(1, color);
+		c.graphics().beginPath();
+		c.graphics().moveTo(0,0);
+		c.graphics().lineTo(imageSize*0.5*Math.cos(ang),imageSize*0.5*Math.sin(ang));
+		c.graphics().drawCircle(0,0, imageSize*0.5);
+		c.graphics().strokeLine();
+		c.graphics().endPath();
+		c.matrix().scale(1.0/rat,rat);
+		c.matrix().translate(imageSize*0.5,imageSize*0.5);
+		d.addChild(c);
+
+
+	return d;
+}
 
 
 RiftTest.prototype.showFeatures = function(features, offsetX, offsetY, display, color){
@@ -231,7 +566,7 @@ RiftTest.prototype.showFeatures = function(features, offsetX, offsetY, display, 
 		var x = center.x;
 		var y = center.y;
 		var angle = feature["angle"];
-		var size = feature["size"];;
+		var size = feature["size"];
 
 		var c = new DO();
 
@@ -382,6 +717,547 @@ GLOBALSTAGE.addChild(c);
 
 	}
 }
+
+
+
+
+
+RiftTest.prototype.testCornerness = function(point, imageMatrix){
+	var imageGray = imageMatrix.gry();
+	var imageWidth = imageMatrix.width();
+	var imageHeight = imageMatrix.height();
+	var compareSize = 21;
+	var halfSize = compareSize*0.5 | 0;
+	var center = new V2D(halfSize,halfSize);
+	var circleMask = ImageMat.circleMask(compareSize,compareSize);
+	var sigma = 1.0;
+	// var sigma = null;
+	var scale = 5.0;
+	//
+var doInvert = true;
+// var doInvert = false;
+	var matrix = new Matrix(3,3);
+		matrix.identity();
+		matrix = Matrix.transform2DScale(matrix, scale);
+
+
+	var gry = ImageMat.extractRectFromFloatImage(point.x,point.y,1.0,sigma,compareSize,compareSize, imageGray,imageWidth,imageHeight, matrix);
+if(doInvert){
+ImageMat.invertFloat01(gry);
+}
+ImageMat.normalFloat01(gry);
+	var gradientVector = ImageMat.gradientVector(gry,compareSize,compareSize);
+		gradientVector = gradientVector["value"];
+
+	img = GLOBALSTAGE.getFloatRGBAsImage(gry,gry,gry, compareSize,compareSize);
+	var d = new DOImage(img);
+	GLOBALSTAGE.root().addChild(d);
+	// d.graphics().alpha(0.50);
+	// d.graphics().alpha(1.0);
+	d.matrix().scale(4.0);
+	d.matrix().translate(10,10);
+	// x += img.width*GLOBALSCALE;
+
+
+	// show moment
+	var moment = ImageMat.calculateMoment(gry, compareSize, compareSize, center, circleMask);
+	// var moment = ImageMat.calculateCovariance(gry, compareSize, compareSize, center, circleMask);
+	var momentA = moment[0];
+	var momentB = moment[1];
+	var momentRatio = momentA.z/momentB.z;
+	if(momentRatio>1.0){
+		momentRatio = 1.0/momentRatio;
+		momentA = moment[1];
+		momentB = moment[0];
+	}
+	var mom = new V2D(momentA.x,momentA.y);
+	var ang = V2D.angleDirection(V2D.DIRX,mom);
+	console.log(mom+" ?")
+	console.log(momentA+" ?")
+
+	var directionMoment = mom.copy().norm();
+
+// console.log(gradientVector);
+
+	// var direction = this.calculateDirection(gry, compareSize, compareSize, center, circleMask);
+	var gradient = this.calculateDirection(gradientVector, circleMask);
+	// gradient.norm();
+	console.log(gradient+"");
+	// var ang = V2D.angle(V2D.DIRX,gradient);
+
+	var directionGradient = gradient.copy().norm();
+
+
+
+
+var imageSize = 10.0
+	var c = new DO();
+
+		c.graphics().setLine(1, 0xCC00CC00);
+		c.graphics().beginPath();
+		c.graphics().moveTo(0,0);
+		c.graphics().lineTo(imageSize*directionGradient.x,imageSize*directionGradient.y);
+		c.graphics().strokeLine();
+		c.graphics().endPath();
+
+		c.graphics().setLine(1, 0xCCFF0000);
+		c.graphics().beginPath();
+		c.graphics().moveTo(0,0);
+		c.graphics().lineTo(imageSize*directionMoment.x,imageSize*directionMoment.y);
+		c.graphics().strokeLine();
+		c.graphics().endPath();
+
+
+		c.matrix().translate(compareSize*0.5,compareSize*0.5);
+		d.addChild(c);
+
+
+		// get rotated image
+		var ang = V2D.angleDirection(V2D.DIRX,directionGradient);
+
+
+	var matrix = new Matrix(3,3);
+		matrix.identity();
+		matrix = Matrix.transform2DScale(matrix, scale);
+		matrix = Matrix.transform2DRotate(matrix, -ang);
+
+
+	var gry = ImageMat.extractRectFromFloatImage(point.x,point.y,1.0,sigma,compareSize,compareSize, imageGray,imageWidth,imageHeight, matrix);
+if(doInvert){
+ImageMat.invertFloat01(gry);
+}
+ImageMat.normalFloat01(gry);
+
+	var gradientVector = ImageMat.gradientVector(gry,compareSize,compareSize);
+		gradientVector = gradientVector["value"];
+
+	img = GLOBALSTAGE.getFloatRGBAsImage(gry,gry,gry, compareSize,compareSize);
+	var d = new DOImage(img);
+	GLOBALSTAGE.root().addChild(d);
+	d.matrix().scale(4.0);
+	d.matrix().translate(110,10);
+
+
+	var qA = [];
+	var qB = [];
+	var qC = [];
+	var qD = [];
+	var count = compareSize*compareSize;
+	var index = 0;
+	var grd = gradientVector;
+	for(var j=0; j<compareSize; ++j){
+		for(var i=0; i<compareSize; ++i){
+			var m = circleMask[index];
+			if(m){
+				if(j<halfSize){
+					if(i<halfSize){
+						qA.push(grd[index]);
+					}else if(i>halfSize){
+						qB.push(grd[index]);
+					}
+				}else if(j>halfSize){
+					if(i<halfSize){
+						qC.push(grd[index]);
+					}else if(i>halfSize){
+						qD.push(grd[index]);
+					}
+				}
+			}
+			++index;
+		}
+	}
+	var dirs = [qA,qB,qC,qD];
+	var gnds = [];
+	var mags = [];
+	for(var i=0; i<dirs.length; ++i){
+		var g = this.calculateDirection(dirs[i], null);
+		// console.log(g);
+		gnds[i] = g;
+		mags[i] = g.length();
+	}
+	var min = Code.min(mags);
+
+	for(var i=0; i<mags.length; ++i){
+		mags[i] = mags[i]/min;
+	}
+	console.log(mags);
+	var mA = mags[0];
+	var mB = mags[1];
+	var mC = mags[2];
+	var mD = mags[3];
+	var left = mA+mC;
+	var right = mB+mD;
+	var ratio = left/right;
+	console.log(ratio);
+
+var L = null;
+	if(ratio>1.0){
+		console.log("left");
+		// var angleA = V2D.angleDirection(V2D.DIRX,gnds[0]);
+		// var angleC = V2D.angleDirection(V2D.DIRX,gnds[2]);
+		var angleA =  V2D.angleDirection(new V2D(1,-1),gnds[0]);
+		var angleC = V2D.angleDirection(new V2D(1,1),gnds[2]);
+		console.log(angleA,angleC);
+		var avg = (angleA - angleC*0.5);
+		console.log(" move toward: "+avg);
+		var phi = Code.radians(45) + avg;
+		L = Math.tan(phi);
+
+
+		if(avg>0){ // too straight
+			// CW
+		}else{ // too narrow
+			// CCW
+		}
+	}else{
+		console.log("right");
+		// var angleB = V2D.angleDirection(V2D.DIRX,gnds[1]);
+		// var angleD = V2D.angleDirection(V2D.DIRX,gnds[3]);
+		var angleB = V2D.angleDirection(new V2D(1,1),gnds[1]);
+		var angleD = V2D.angleDirection(new V2D(1,-1),gnds[3]);
+		console.log(angleB,angleD);
+		var avg = (angleB - angleD)*0.5;
+		console.log(" move toward: "+avg);
+		var phi = Code.radians(45) - avg;
+		L = Math.tan(phi);
+
+
+		if(avg>0){ // too ?
+			// CW
+		}else{ // too ?
+			// CCW
+		}
+	}
+
+// TODO: L IS TOO MUCH
+
+
+	console.log(L);
+	// console.log(qA,qB,qC,qD);
+
+
+// colors
+var col = [0xCCFF0000,0xCC00CC00,0xCC0000CC,0xCCCC00CC];
+var l = [new V2D(compareSize*0.25,compareSize*0.25), new V2D(compareSize*0.75,compareSize*0.25), new V2D(compareSize*0.25,compareSize*0.75), new V2D(compareSize*0.75,compareSize*0.75)];
+	for(var i=0; i<gnds.length; ++i){
+		var dir = gnds[i];
+//dir = dir.copy().norm();
+dir = dir.copy().scale(1.0/min);
+		var sca = 6.0
+			var c = new DO();
+
+			c.graphics().setLine(1, col[i]);
+			c.graphics().beginPath();
+			c.graphics().moveTo(0,0);
+			c.graphics().lineTo(sca*dir.x,sca*dir.y);
+			c.graphics().strokeLine();
+			c.graphics().endPath();
+			c.matrix().translate(l[i].x,l[i].y);
+			d.addChild(c);
+	}
+
+
+
+
+
+	var matrix = new Matrix(3,3);
+		matrix.identity();
+		matrix = Matrix.transform2DScale(matrix, scale);
+		matrix = Matrix.transform2DRotate(matrix, -ang);
+		matrix = Matrix.transform2DScale(matrix, 1.0, 1.0/L);
+
+
+	var gry = ImageMat.extractRectFromFloatImage(point.x,point.y,1.0,sigma,compareSize,compareSize, imageGray,imageWidth,imageHeight, matrix);
+	if(doInvert){
+	ImageMat.invertFloat01(gry);
+	}
+	ImageMat.normalFloat01(gry);
+
+	img = GLOBALSTAGE.getFloatRGBAsImage(gry,gry,gry, compareSize,compareSize);
+	var d = new DOImage(img);
+	GLOBALSTAGE.root().addChild(d);
+	d.matrix().scale(4.0);
+	d.matrix().translate(210,10);
+
+
+/*
+for(var i = ){
+	var index = j* + i;
+	var v = gradientVector[];
+	var c = new DO();
+	color = 0xFFFF0000;
+	c.graphics().setLine(1, color);
+	c.graphics().beginPath();
+	c.graphics().moveTo(0,0);
+	c.graphics().lineTo(s*Math.cos(ang),s*Math.sin(ang));
+	// c.graphics().drawCircle(0,0, imageSize*0.5);
+	c.graphics().strokeLine();
+	c.graphics().endPath();
+	// c.matrix().scale(1.0/rat,rat);
+	c.matrix().translate(compareSize*0.5,compareSize*0.5);
+	d.addChild(c);
+}
+*/
+
+
+	// show gradient
+
+
+	throw "..."
+}
+
+//RiftTest.prototype.calculateDirection = function(source, width, height, center, mask){
+RiftTest.prototype.calculateDirection = function(source, mask){
+	var sum = new V2D();
+	var count = 0;
+	var len = source.length;
+	var m = 1.0;
+	for(var i=0; i<len; ++i){
+		if(mask){
+			m = mask[i];
+		}
+		if(m != 0){
+			var v = source[i];
+			sum.x += v.x;
+			sum.y += v.y;
+			++count;
+		}
+	}
+	sum.scale(1.0/count);
+	return sum;
+}
+
+
+RiftTest.prototype.optimumCornerScale = function(point, imageMatrix, prependMatrix, startScale){
+	// TODO: if scale is defined, can use a smaller range to search
+	var imageGray = imageMatrix.gry();
+	var imageWidth = imageMatrix.width();
+	var imageHeight = imageMatrix.height();
+
+	var compareSize = 9;
+	var center = compareSize*0.5 | 0;
+
+	var scales = Code.divSpace(2,-2, 20);
+	var matrixes = [];
+	for(var i=0; i<scales.length; ++i){
+		var scale = scales[i];
+		scale = Math.pow(2,scale);
+		scales[i] = scale;
+		var matrix = new Matrix(3,3);
+		matrix.identity();
+		matrix = Matrix.transform2DScale(matrix,scale);
+		matrixes[i] = matrix;
+	}
+
+	var scores = [];
+	for(var j=0; j<scales.length; ++j){
+		var matrix = matrixes[j];
+		if(prependMatrix){
+			matrix = Matrix.mult(matrix,prependMatrix);
+		}
+		var sig = null;
+			sig = 2.0;
+		var gry = ImageMat.extractRectFromFloatImage(point.x,point.y,1.0,sig,compareSize,compareSize, imageGray,imageWidth,imageHeight, matrix);
+		// var blur = ImageMat.getBlurredImage(gry, compareSize,compareSize, 1.0);
+		var blur = gry;
+		// SPEEDUP - ONLY CARE ABOUT CENTER
+		var H = R3D.cornerScaleScores(blur,compareSize,compareSize)["value"];
+		var score = H[center*compareSize + center];
+		scores.push(score);
+	}
+
+	// Code.printMatlabArray(scales,"scales");
+	// Code.printMatlabArray(scores,"scores");
+
+	var peaks = Code.findGlobalExtrema1D(scores, true);
+/*
+	// peaks = {"max":new V2D(0,1)};
+	if(peaks && peaks.length>0){
+
+	}else{
+		// peaks = {"max":new V2D(0,1)};
+	}
+*/
+	// console.log(peaks)
+	var max = peaks["max"];
+	if(max){
+		var peak = max.y;
+		var lo = Math.floor(max.x);
+		var hi = Math.ceil(max.x);
+		var pct = max.x-lo;
+		var pc1 = 1.0 - pct;
+		var val = scales[lo]*pc1 + scales[hi]*pct;
+		var p = new V2D(point.x,point.y);
+		var sca = 1.0/val;
+
+		// FIND MORE PRECISE OPTIMAL LOCATION:
+		var scas = Code.divSpace(scales[Math.max(lo-1,0)],scales[Math.min(hi+1,scales.length-1)], 9); // 7-9
+		scores = [];
+		for(var j=0; j<scas.length; ++j){
+			var sc = scas[j];
+			var gry = ImageMat.extractRectFromFloatImage(point.x,point.y,1.0/sc,null,compareSize,compareSize, imageGray,imageWidth,imageHeight, null);
+			var blur = ImageMat.getBlurredImage(gry, compareSize,compareSize, 1.0);
+			var score = R3D.cornerScaleScores(blur,compareSize,compareSize, null,true);
+			scores.push(score);
+		}
+
+		var peaks = Code.findGlobalExtrema1D(scores, true);
+		// console.log(peaks);
+		if(peaks){
+			// Code.printMatlabArray(scas,"scales");
+			// Code.printMatlabArray(scores,"scores");
+			var max = peaks["max"];
+			if(max){
+				var peak = max.y;
+				var lo = Math.floor(max.x);
+				var hi = Math.ceil(max.x);
+				var pct = max.x-lo;
+				var pc1 = 1.0 - pct;
+				var val = scas[lo]*pc1 + scas[hi]*pct;
+				var p = new V2D(point.x,point.y);
+				var sca = 1.0/val;
+			}
+		}
+		return {"point": p, "scale": sca};
+	}
+	return null;
+}
+
+
+RiftTest.transformFromAffineDirections = function(dirX, dirY){
+	var matrix = R3D.affineCornerDLT([V2D.DIRX,V2D.DIRY],[dirX,dirY]);
+	return matrix;
+}
+CALLED_COUNT = 0;
+RiftTest.prototype.iterateAffineTransform = function(info, imageMatrix){
+++CALLED_COUNT;
+	var point = info["point"];
+	var dirX = info["dirX"];
+	var dirY = info["dirY"];
+	var startScale = info["scale"];
+	var prependMatrix = RiftTest.transformFromAffineDirections(dirX, dirY);
+	var optimum = this.optimumCornerScale(point, imageMatrix, prependMatrix, startScale);
+	// console.log(optimum);
+	var scale = startScale;
+	if(!optimum){
+		// return null;
+		console.log("no optimum ...");
+	}else{
+		scale = optimum["scale"];
+	}
+	var imageGray = imageMatrix.gry();
+	var imageWidth = imageMatrix.width();
+	var imageHeight = imageMatrix.height();
+	// COVARIANCE SAMPLE:
+	var covarianceSize = 9;
+	var covarianceScale = 9/covarianceSize;
+	var c2 = covarianceSize*0.5 | 0;
+	var covarianceMean = new V2D(c2,c2);
+	var covarianceMask = ImageMat.circleMask(covarianceSize,covarianceSize);
+
+	var matrix = new Matrix(3,3);
+		matrix.identity();
+		matrix = Matrix.transform2DScale(matrix, scale);
+		matrix = Matrix.mult(matrix,prependMatrix);
+
+	var sss = 2.0;
+	var gry = ImageMat.extractRectFromFloatImage(point.x,point.y,covarianceScale*2,null,covarianceSize*sss,covarianceSize*sss, imageGray,imageWidth,imageHeight, matrix);
+		img = GLOBALSTAGE.getFloatRGBAsImage(gry,gry,gry, covarianceSize*sss,covarianceSize*sss);
+	var d = new DOImage(img);
+	GLOBALSTAGE.root().addChild(d);
+	// d.graphics().alpha(0.50);
+	// d.graphics().alpha(1.0);
+	d.matrix().scale(4.0);
+	d.matrix().translate(CALLED_COUNT*80 + 10,10);
+	// x += img.width*GLOBALSCALE;
+
+
+	var sigma = 1.0;
+	var gry = ImageMat.extractRectFromFloatImage(point.x,point.y,covarianceScale,sigma,covarianceSize,covarianceSize, imageGray,imageWidth,imageHeight, matrix);
+
+
+	// var covariance = ImageMat.calculateCovariance(gry, covarianceSize, covarianceSize, covarianceMean, covarianceMask);
+
+	var covariance = ImageMat.calculateMoment(gry, covarianceSize, covarianceSize, covarianceMean, covarianceMask);
+
+	// console.log(covariance);
+	// throw "?"
+
+
+	// console.log(covariance);
+	var covarianceA = covariance[0];
+	var covarianceB = covariance[1];
+	var covarianceRatio = covarianceA.z/covarianceB.z;
+	if(covarianceRatio>1.0){
+		covarianceRatio = 1.0/covarianceRatio;
+		covarianceA = covariance[1];
+		covarianceB = covariance[0];
+	}
+	// console.log(covarianceA);
+	// console.log(covarianceB);
+	console.log(covarianceRatio);
+	var covScale = Math.sqrt(covarianceRatio);
+		// covScale = 1.0/covScale;
+	// var covScale = covarianceRatio;
+	covarianceA = new V2D(covarianceA.x,covarianceA.y);
+	var covAngle = V2D.angleDirection(V2D.DIRX,covarianceA);
+
+	// transform
+	var cov = new Matrix(3,3).identity();
+	cov = Matrix.transform2DRotate(cov,-covAngle);
+	cov = Matrix.transform2DScale(cov, 1.0/covScale,covScale); // symmetric: undo direction A, apply directionB
+	cov = Matrix.transform2DRotate(cov,covAngle);
+	// apply current transform to get total
+	cov = Matrix.mult(cov,prependMatrix);
+
+	// new affine directions
+	var dirA = cov.multV2DtoV2D(new V2D(1,0));
+	var dirB = cov.multV2DtoV2D(new V2D(0,1));
+
+	var refine = {"point":point, "dirX":dirA, "dirY":dirB, "scale":scale, "ratio":covarianceRatio};
+	return refine;
+
+
+/*
+		var covariance = ImageMat.calculateCovariance(gry, covarianceSize, covarianceSize, covarianceMean, covarianceMask);
+		var covarianceA = covariance[0];
+		var covarianceB = covariance[1];
+		var covarianceRatio = covarianceA.z/covarianceB.z;
+		if(covarianceRatio<1.0){
+		// if(covarianceRatio>1.0){
+			covarianceRatio = 1.0/covarianceRatio;
+			covarianceA = covariance[1];
+			covarianceB = covariance[0];
+		}
+		covarianceA = new V2D(covarianceA.x,covarianceA.y);
+		var covarianceAngle = V2D.angleDirection(V2D.DIRX,covarianceA);
+		// console.log(covarianceAngle,"@",covarianceRatio);
+		// covarianceRatio = Math.sqrt(covarianceRatio);
+
+		covarianceAngle = (covarianceAngle+covAngle);
+		// covarianceRatio = (covarianceRatio*covScale);
+		covarianceRatio = (covScale/covarianceRatio);
+		// covarianceRatio = (covarianceRatio/covScale);
+		*/
+
+
+throw "...";
+
+			// moment angle: ...
+
+
+
+
+		return {"point": p, "scale": sca, "angle":covarianceAngle, "covAngle":covarianceAngle, "covScale":covarianceRatio};
+}
+
+
+
+
+
+
+
+
 
 
 // ...

@@ -3474,10 +3474,25 @@ Code.randomID = function(len){
 	return str;
 }
 Code.randomPointOnSphere = function(radius){
-	throw "done somewhere";
+	radius = radius!==undefind ? radius : 1.0;
+	var u = Math.random(), v = Math.random();
+	var the = 2*Math.PI*u;
+	var phi = Math.acos(2*v-1);
+	var cp = Math.sin(phi), sp = Math.sin(phi);
+	var ct = Math.sin(the), st = Math.sin(the);
+	var x = radius*sp*ct;
+	var y = radius*sp*st;
+	var z = radius*cp;
+	return new V3D(x,y,z);
 }
 Code.randomPointInSphere = function(radius){
 	radius = radius!==undefind ? radius : 1.0;
+	var c = Math.random(), x = Math.random(), y = Math.random(), z = Math.random();
+	var len = Math.sqrt(x*x + y*y + z*z);
+	x /= len; y /= len; z /= len;
+	c = radius*Code.cubeRoot(c);
+	return new V3D(x*c,y*c,z*c);
+	/*
     var u = Math.random();
     var v = Math.random();
     var theta = 2.0*u*Math.PI;
@@ -3491,6 +3506,7 @@ Code.randomPointInSphere = function(radius){
     var y = r*sinPhi*sinTheta;
     var z = r*cosPhi;
     return new V3D(x,y,z);
+	*/
 }
 Code.divSpace = function(start,end,count){ // start+end / count
 	count -= 1;

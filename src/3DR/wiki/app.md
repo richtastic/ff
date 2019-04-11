@@ -344,7 +344,22 @@ https://cloud.google.com/appengine/docs/nodejs/
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+AFFINE FEATURES ...
 
+
+CORNERS WITH CLEAR CORNERNESS:
+A) need a very zoomed in image to find overall gradient of corner
+B) need a medium zoomed in image to get angleness of corners
+C) need a low zoomed in image for moment estimation
+D) need a zoomed out image to get differntiating features
+
+CORNERS THAT ARE MORE OF A DOT:
+---- this is more of a blob ... are these picked up?
+- gradient at center ~0
+
+
+
+..........
 - test different image/scene data set
 
 	=> TEST ALGORITHMS SEPARATELY:
@@ -365,7 +380,16 @@ https://cloud.google.com/appengine/docs/nodejs/
 
 	=> downstream results are trash
 
+DECISIONS:
 
+- how to LIMIT features
+
+- how big the corner feature should be around point for MOMENT
+- how much blurring should go on for MOMENT (ANGLE) extraction
+- how big the corner feature should be around point for SIFT
+- how much blurring should go on for SIFT extraction
+- how to window SIFT importance [gaussian] tapering
+- how to determine ASYMM angles/directions
 
 
 R3D.calculateScaleCornerFeatures(imageMatrixA, maxCount);

@@ -418,6 +418,9 @@ Gradient Descent - do wtf you want [not necessarily as precise ]
 #### Feature Matching
 
 
+Scale & Affine Invariant Interest Point Detectors : KRYSTIAN MIKOLAJCZYK AND CORDELIA SCHMID
+
+
 #### Fundamental Matrix
 
 
