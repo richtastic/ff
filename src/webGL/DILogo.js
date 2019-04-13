@@ -10,6 +10,7 @@ function DILogo(){
     this._canvas.addListeners();
   	this._stage.setBackgroundColor(1.0,1.0,1.0,1.0);
   	this._stage.frustrumAngle(35);
+	// this._stage.frustrumAngle(20);
 	this._stage.enableDepthTest();
 this._stage.setViewport(0,0,this._canvas.width(),this._canvas.height());
 	this.loadResources();
@@ -152,7 +153,7 @@ DILogo.COLOR_RED_BOT_LOW = 0xFFA5190A;
 DILogo.COLOR_RED_BOT_DAR = 0xFF00FF00;//0xFF990000;
 // PINK EAR
 DILogo.COLOR_PIN_TOP_BRI = 0xFFF05090; // x
-DILogo.COLOR_PIN_TOP_HIG = 0xFF00FF00;//0xFFFF77DD;
+DILogo.COLOR_PIN_TOP_HIG = 0xFFF00090;//0xFFFF77DD; /////
 DILogo.COLOR_PIN_TOP_MED = 0xFFEE437F;
 DILogo.COLOR_PIN_TOP_AVG = 0xFFEF5F7F;
 DILogo.COLOR_PIN_TOP_LOW = 0xFFEC7A8C;//0xFFFF55AA;
@@ -259,6 +260,11 @@ DILogo.prototype.setupFxn = function(e){
     this._stage.start();
 }
 DILogo.prototype.onEnterFrameFxn = function(count){
+
+if(this.RAN){
+	return;
+}
+// this.RAN = true;
 	var e = count * 10;
 	var rateBase = 0.0004;
 	var rateHead = rateBase*1.0;
@@ -286,11 +292,13 @@ DILogo.prototype.onEnterFrameFxn = function(count){
 	var cameraMatrix = new Matrix3D();
 	cameraMatrix.identity();
 /*
-	cameraMatrix.translate(3,-3,1);
+	cameraMatrix.translate(-5,2,-10);
+
 	// cameraMatrix.rotateVector(new V3D(1,1,1), Code.radians(25.0) );
 	// cameraMatrix.rotateVector(new V3D(0,0,1),Code.radians(5.0) );
-	cameraMatrix.rotateVector(new V3D(1,0,0),Code.radians(20.0) );
-	cameraMatrix.rotateVector(new V3D(0,1,0),Code.radians(25.0) );
+	cameraMatrix.rotateVector(new V3D(0,0,1),Code.radians(-25.0) );
+	cameraMatrix.rotateVector(new V3D(1,0,0),Code.radians(-10.0) );
+	cameraMatrix.rotateVector(new V3D(0,1,0),Code.radians(-5.0) );
 */
 
 	// console.log(cameraMatrix);

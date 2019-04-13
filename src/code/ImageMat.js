@@ -2460,7 +2460,7 @@ ImageMat.convolve = function(image,imageWidth,imageHeight, operator,operatorWidt
 	var total = imageWidth*imageHeight;
 	var i, j, n, m, sum, staN, endN, staM, endM;
 	var oW2F = Math.floor(operatorWidth/2); oH2F = Math.floor(operatorHeight/2);
-	var oW2C = Math.ceil(operatorWidth/2); oH2C = Math.ceil(operatorHeight/2);
+	// var oW2C = Math.ceil(operatorWidth/2); oH2C = Math.ceil(operatorHeight/2);
 	var result = new Array(total);
 	for(j=0;j<imageHeight;++j){
 		jIW = j*imageWidth;
@@ -2471,8 +2471,10 @@ ImageMat.convolve = function(image,imageWidth,imageHeight, operator,operatorWidt
 			endM = Math.min(operatorHeight,oH2F+imageHeight-j);
 			sum = 0.0;
 			for(m=staM;m<endM;++m){
+				var mW = m*operatorWidth;
+				var jW = (j+m-oH2F)*imageWidth;
 				for(n=staN;n<endN;++n){
-					sum += image[(j+m-oH2F)*imageWidth+(i+n-oW2F)]*operator[m*operatorWidth+n];
+					sum += image[jW+(i+n-oW2F)] * operator[mW+n];
 				}
 			}
 			result[jIW+i] = sum;

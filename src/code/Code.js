@@ -9572,6 +9572,7 @@ Code.quadricFromCoefficients = function(a,b,c,d,e,f,g,h,i,j){ // M4D?
 }
 // ------------------------------------------------------------------------------------------------------------------------------------------------- Array Matrix Math
 Code.eigenValuesAndVectors2D = function(a,b,c,d){
+// TODO: WAS THIS WORKING OR WHAT?
 	var trace = a + d;
 	var det = a*d - b*c;
 	var left = trace*0.5;
@@ -9622,7 +9623,7 @@ Code.eigenValues2D = function(a,b,c,d){
 	return [l1, l2];
 }
 Code.eigenVectors2D = function(a,b,c,d){
-	return eigenValuesAndVectors2D(a,b,c,d).vectors;
+	return Code.eigenValuesAndVectors2D(a,b,c,d).vectors;
 }
 Code.matrix3x3xV3D = function(z,m,x){ // z = matrix*x
 	if(!x){ x=m; m=z; z=new V3D(); }

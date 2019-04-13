@@ -249,7 +249,12 @@ V2D.prototype.fromArray = function(a){
 	this.set(a[0],a[1]);
 	return this;
 }
-V2D.prototype.length = function(){
+V2D.prototype.length = function(l){
+	if(l!==undefined){
+		this.norm();
+		this.scale(l);
+		return l;
+	}
 	return Math.sqrt(this.x*this.x+this.y*this.y);
 }
 V2D.prototype.lengthSquare = function(){

@@ -884,7 +884,7 @@ console.log(offY);
 		var score = match["score"];
 		// console.log(match);
 		var pairs = null;
-		if( Code.isObject(match["A"])){
+		if( Code.isObject(match["A"]) ){
 			pairs = [match["A"],match["B"]];
 		}else{
 			pairs = [match["from"],match["to"]];
@@ -907,7 +907,7 @@ c.graphics().beginPath();
 			}
 			var dirX = feature["x"];
 			var dirY = feature["y"];
-
+			
 			//var bestAngle = feature["angle"];
 			//var bestAngle = item["angle"];
 				var bestAngle = j==0 ? match["angleA"] : match["angleB"]; // TODO: GET FROM BEST MATCH YEAH

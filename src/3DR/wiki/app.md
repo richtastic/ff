@@ -344,13 +344,58 @@ https://cloud.google.com/appengine/docs/nodejs/
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+- after finding initial corners, move to nearest peak gradient
+
+- other moment-like measurements
+
+
+
+- score goes up, then shoots down ...
+
+
+
+- if over 0.99 => done
+- show all stable affine points
+- drop affines that are over some maximal skew ratio
+	- angle is too close -- skew
+	- relative scaling is too akward?
+
+
+- try using source points that are from maximally-changing locations
+	=> fast way to process these?
+
+
+
+- try moving point toward location with more equal-covariance ratio ...
+
+
+
+
+
+--- sometimes peak view is a featureless blurr ...
+
+--- look back at maximally change in any direction points ?
+
+
+--- starting point doesn't seem to quite be 'center'/closest of corner?
+=> use actual corner sample points to learn about behaviors
+
+- problem:
+	- following gradient sometimes results in a LINE ... not predictable
+
+
+--- what if gradient changes directions ?
+--- should sweep in ~?45 degree radius and pick largest gradient position
+--- maybe not follow PEAK GRADIENT, but 'CURRENT' GRADIENT
+
+
 AFFINE FEATURES ...
 
 
 CORNERS WITH CLEAR CORNERNESS:
 A) need a very zoomed in image to find overall gradient of corner
 B) need a medium zoomed in image to get angleness of corners
-C) need a low zoomed in image for moment estimation
+C) need a low zoomed in image for moment estimation OR USE GRADIENT ??? -- what is most stable?
 D) need a zoomed out image to get differntiating features
 
 CORNERS THAT ARE MORE OF A DOT:
