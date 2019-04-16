@@ -308,26 +308,27 @@ vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 	- sparse tracks
 	- dense points
 -----> HERE <------
-(04/15)
+	- redo affine features
+(05/06)
 - surface triangulation(tessellation)
 	- advancing-front, curvature-based tessellation
 	=> scene triangle model
-(05/06)
+(05/27)
 - texturing
 	- view-based surface texturing
 	- blending between triangles
 	- separate triangles into texture lookup / files
 		- TextureMap (from textures to atlas)
 	=> scene textured model
-(05/27)
+(06/17)
 - viewing output
 	- locally
 	- VR device
-(06/17)
+(07/01)
 - MVP
 	- example models
 	- example screens
-(07/01)
+(07/15)
 
 google app engine project - nodejs
 https://cloud.google.com/appengine/docs/nodejs/
@@ -343,6 +344,43 @@ https://cloud.google.com/appengine/docs/nodejs/
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+- affine corner does not scale with image -- only with local area ->
+- extract / visualize oval at scale
+
+x USE CORNER BLOBNESS ... need to undo log tho
+
+- quick way to remove points that are very similar
+
+- if only so little can be matched:
+	- add step between feature matching & dense?
+	 	- get 2x~10x more corners, but restrict search to F line +/- Ferror
+		- use general size scalings from first step to get 'features' at relative scalings
+
+
+... need to look at blobs ?
+	- areas divoid of features ... minimum of corners
+	-
+
+- WHAT TO USE FOR PRIMARY DIRECTION CHOICE ?
+	- different scales -> most dominant ?
+
+- COM from center @ zoom?
+- gradient direction @ zoom ?
+- gradient binning @ zoom ?
+
+
+
+- move toward COM ?
+- move toward PEAK?
+
+- eXPERIMENT WIHT ABS(x-u)
+- experiment with skewness, kurtosis, ...
+
+
+
+
+
 
 - after finding initial corners, move to nearest peak gradient
 

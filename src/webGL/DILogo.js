@@ -26,6 +26,107 @@ DILogo.prototype.handleResourcesLoaded = function(e){
 	// this._resourceAImage = images[0];
 	this.setupFxn();
 }
+DILogo.prototype.tetrahedron = function(isDouble){  // 4 sided triangle -- all edges = unit = 1
+	var list = [];
+	var ang60 = Code.radians(60.0);
+	var lenA = 1.0;
+	var lenO = Math.tan(ang60)*0.5;
+	var alt = lenO*Math.sqrt(0.5);
+	// base
+	if(isDouble){
+		var sq2 = Math.sqrt(0.5);
+		var a = new V3D(        0, lenO*0.5,0);
+		var b = new V3D(-lenA*0.5,-lenO*0.5,0);
+		var c = new V3D( lenA*0.5,-lenO*0.5,0);
+		var d = new V3D(0,0,alt*sq2); // top
+		var e = new V3D(0,0,-alt*sq2); // bot
+		list.push( new Tri3D(a,b,d) );
+		list.push( new Tri3D(b,c,d) );
+		list.push( new Tri3D(c,a,d) );
+		list.push( new Tri3D(b,a,e) );
+		list.push( new Tri3D(c,b,e) );
+		list.push( new Tri3D(a,c,e) );
+	}else{
+		var a = new V3D(        0, lenO*0.5,-alt*0.5);
+		var b = new V3D(-lenA*0.5,-lenO*0.5,-alt*0.5);
+		var c = new V3D( lenA*0.5,-lenO*0.5,-alt*0.5);
+		var d = new V3D(0,0,alt*0.5); // top
+		list.push( new Tri3D(a,c,b) );
+		list.push( new Tri3D(a,b,d) );
+		list.push( new Tri3D(b,c,d) );
+		list.push( new Tri3D(c,a,d) );
+	}
+	return list;
+}
+DILogo.prototype.cube = function(){  // 6 sided cube - SQUARES
+	//
+}
+DILogo.prototype.triangularBipyramid = function(){  // 6 sided triangles
+	return this.tetrahedron(true);
+}
+DILogo.prototype.octahedron = function(){  // 8 sided triangles - square bipyramid
+	var list = [];
+	var lenA = 1.0;
+	var alt = lenA*Math.sqrt(2);
+	// base
+	var a = new V3D(-lenA*0.5, lenA*0.5, 0);
+	var b = new V3D(-lenA*0.5,-lenA*0.5, 0);
+	var c = new V3D( lenA*0.5,-lenA*0.5, 0);
+	var d = new V3D( lenA*0.5, lenA*0.5, 0);
+	// ends
+	var e = new V3D(0,0,alt*0.5);
+	var f = new V3D(0,0,-alt*0.5);
+	list.push( new Tri3D(a,b,e) );
+	list.push( new Tri3D(b,c,e) );
+	list.push( new Tri3D(c,d,e) );
+	list.push( new Tri3D(d,a,e) );
+	list.push( new Tri3D(b,a,f) );
+	list.push( new Tri3D(c,b,f) );
+	list.push( new Tri3D(d,c,f) );
+	list.push( new Tri3D(a,d,f) );
+	return list;
+}
+DILogo.prototype.tri12Gon = function(){ // 10-12 ? --- pentagonal bipyramid = 12
+	throw "?"
+}
+DILogo.prototype.squareBipyramid = function(){  // 16 triangles - 
+		var list = [];
+	var lenA = 1.0;
+	var alt = lenA*Math.sqrt(2);
+	var sep = Math.sqrt(0.5)*0.5; // 0.707
+	var pek = lenA*Math.sqrt(2)*0.5;
+	// base
+	var a1 = new V3D(-lenA*0.5, lenA*0.5, sep);
+	var b1 = new V3D(-lenA*0.5,-lenA*0.5, sep);
+	var c1 = new V3D( lenA*0.5,-lenA*0.5, sep);
+	var d1 = new V3D( lenA*0.5, lenA*0.5, sep);
+	var a2 = new V3D( -alt*0.5,        0, -sep);
+	var b2 = new V3D(        0, -alt*0.5, -sep);
+	var c2 = new V3D(  alt*0.5,        0, -sep);
+	var d2 = new V3D(        0,  alt*0.5, -sep);
+	// ends
+	var e1 = new V3D(0,0,pek*0.5 + sep);
+	var e2 = new V3D(0,0,-pek*0.5 - sep);
+	// ends
+	list.push( new Tri3D(a1,b1,e1) );
+	list.push( new Tri3D(b1,c1,e1) );
+	list.push( new Tri3D(c1,d1,e1) );
+	list.push( new Tri3D(d1,a1,e1) );
+	list.push( new Tri3D(b2,a2,e2) );
+	list.push( new Tri3D(c2,b2,e2) );
+	list.push( new Tri3D(d2,c2,e2) );
+	list.push( new Tri3D(a2,d2,e2) );
+	// betweens
+	list.push( new Tri3D(a1,a2,b1) );
+	list.push( new Tri3D(a2,b2,b1) );
+	list.push( new Tri3D(b1,b2,c1) );
+	list.push( new Tri3D(b2,c2,c1) );
+	list.push( new Tri3D(c1,c2,d1) );
+	list.push( new Tri3D(c2,d2,d1) );
+	list.push( new Tri3D(d1,d2,a1) );
+	list.push( new Tri3D(d2,a2,a1) );
+	return list;
+}
 DILogo.prototype.icosahedron = function(){ // 20-sided, centered at 0,0,0, radius 1
 	var i, j, x,y,z, rad, ang,tmp, arr, tri, list = [];
 	// points:
@@ -220,6 +321,38 @@ DILogo.prototype.colorsHead = function(){
 				  DILogo.COLOR_GRN_MID_DRK,DILogo.COLOR_BLU_MID_DRK,DILogo.COLOR_GRN_MID_DRK,DILogo.COLOR_BLU_MID_DRK];
 	return colors;
 }
+
+DILogo.prototype.colorsTetrahedron = function(){
+	// var colors = [DILogo.COLOR_RED_TOP_BRI,DILogo.COLOR_RED_TOP_MED,DILogo.COLOR_RED_TOP_LOW,DILogo.COLOR_RED_TOP_AVG];
+	// var colors = [DILogo.COLOR_RED_MID_BRI,DILogo.COLOR_RED_TOP_MED,DILogo.COLOR_RED_TOP_LOW,DILogo.COLOR_RED_TOP_AVG];
+	var colors = [0xFFFF0000, 0xFFCC00CC, 0xFF99CC33, 0xFFCC00CC];
+	return colors;
+}
+DILogo.prototype.colorsBipyramid = function(){
+	var colors = [
+		DILogo.COLOR_RED_MID_BRI,DILogo.COLOR_RED_MID_MED,DILogo.COLOR_RED_MID_DAR,
+		DILogo.COLOR_RED_MID_AVG,DILogo.COLOR_RED_MID_OFF,DILogo.COLOR_RED_MID_HIG,
+	];
+	return colors;
+}
+DILogo.prototype.colorsOctahedron = function(){
+	var colors = [
+		DILogo.COLOR_RED_MID_BRI,DILogo.COLOR_RED_MID_MED,DILogo.COLOR_RED_MID_DAR,DILogo.COLOR_RED_MID_AVG,DILogo.COLOR_RED_MID_OFF,
+		DILogo.COLOR_RED_MID_HIG,DILogo.COLOR_RED_MID_LOW,DILogo.COLOR_RED_MID_DOW,DILogo.COLOR_RED_MID_HIG,DILogo.COLOR_RED_MID_OF2,
+	];
+	return colors;
+}
+
+DILogo.prototype.colorsSquareBipyramid = function(){
+	var colors = [DILogo.COLOR_YLW_MID_HIG,DILogo.COLOR_PRP_MID_HIG,DILogo.COLOR_YLW_MID_HIG,DILogo.COLOR_PRP_MID_HIG,
+				  DILogo.COLOR_YLW_MID_MED,DILogo.COLOR_GRN_MID_HIG,DILogo.COLOR_YLW_MID_LOW,//1
+				  DILogo.COLOR_GRN_MID_LOW,
+				  DILogo.COLOR_PRP_MID_MED,DILogo.COLOR_PRP_MID_LOW,DILogo.COLOR_BLU_MID_HIG,//2
+				  DILogo.COLOR_BLU_MID_LOW,
+				  DILogo.COLOR_GRN_MID_DRK,DILogo.COLOR_BLU_MID_DRK,DILogo.COLOR_GRN_MID_DRK,DILogo.COLOR_BLU_MID_DRK];
+	return colors;
+}
+
 DILogo.prototype.bufferTrisAndColors = function(listTris,listColors){
 	var ret, i, tri, col, cols;
 	var triBuffer = [];
@@ -255,6 +388,35 @@ DILogo.prototype.setupFxn = function(e){
 	ret = this.bufferTrisAndColors(this.icosahedron(), this.colorsEarRed());
 	this._redTriBuffer = ret.tris;
 	this._redTriColorBuffer = ret.cols;
+
+
+	// EXCESS 4:
+	ret = this.bufferTrisAndColors(this.tetrahedron(), this.colorsTetrahedron());
+	this._poly4TriBuffer = ret.tris;
+	this._poly4TriColorBuffer = ret.cols;
+
+	// EXCESS 6:
+	ret = this.bufferTrisAndColors(this.triangularBipyramid(), this.colorsBipyramid());
+	this._poly6TriBuffer = ret.tris;
+	this._poly6TriColorBuffer = ret.cols;
+
+	// EXCESS 8:
+	ret = this.bufferTrisAndColors(this.octahedron(), this.colorsOctahedron());
+	this._poly8TriBuffer = ret.tris;
+	this._poly8TriColorBuffer = ret.cols;
+
+	// EXCESS 16:
+	ret = this.bufferTrisAndColors(this.squareBipyramid(), this.colorsSquareBipyramid());
+	this._poly16TriBuffer = ret.tris;
+	this._poly16TriColorBuffer = ret.cols;
+
+// console.log(ret);
+// throw "?"
+
+	// EXCESS 8:
+
+	// ...
+
 	// START
     this._stage.addFunction(StageGL.EVENT_ON_ENTER_FRAME, this.onEnterFrameFxn, this);
     this._stage.start();
@@ -310,6 +472,7 @@ if(this.RAN){
 // matrixMultM3D
 // matrixMultM3DPre
 
+
 	// BODY
 	this._stage.matrixIdentity();
 	this._stage.matrixMultM3D(cameraMatrix);
@@ -324,13 +487,6 @@ if(this.RAN){
 
 	// this._stage.matrixIdentity();
 
-/*
-		thisStage.matrixTranslate(3.0, 0.0, 0.0);
-
-		thisStage.bindArrayFloatBuffer(attrVP, squareVertexPositionBuffer);
-        thisStage.matrixReset();
-        thisStage.drawTriangleList(attrVP, squareVertexPositionBuffer);
-*/
 	// PINK EAR
 	this._stage.matrixIdentity();
 	this._stage.matrixMultM3D(cameraMatrix);
@@ -358,6 +514,93 @@ if(this.RAN){
 	this._stage.bindArrayFloatBuffer(this._vertexColorAttrib, this._redTriColorBuffer);
 	this._stage.matrixReset();
 	this._stage.drawTriangles(this._vertexPositionAttrib, this._redTriBuffer);
+
+
+
+var ratePoly4_1 = 0.001;
+var ratePoly4_2 = 0.0005;
+var ratePoly4_3 = 0.0001;
+	// TETRA:
+	this._stage.matrixIdentity();
+	this._stage.matrixMultM3D(cameraMatrix);
+	this._stage.matrixTranslate(7,0,zDistEars);
+	this._stage.matrixRotate(e*ratePoly4_1, 0,1,0);
+	this._stage.matrixRotate(e*ratePoly4_2, 0,0,1);
+	this._stage.matrixRotate(e*ratePoly4_3, 1,0,0);
+	// this._stage.matrixRotate(rateEar2, 0,0,1);
+	// this._stage.matrixRotate(earTilt, 1,0,0);
+	// this._stage.matrixRotate(Math.PI - earRotOffset, 0,1,0);
+	this._stage.matrixRotate(Code.radians(90), 1,0,0);
+	sca = 1.0; this._stage.matrixScale(sca,sca,sca);
+	this._stage.bindArrayFloatBuffer(this._vertexPositionAttrib, this._poly4TriBuffer);
+	this._stage.bindArrayFloatBuffer(this._vertexColorAttrib, this._poly4TriColorBuffer);
+	this._stage.matrixReset();
+	this._stage.drawTriangles(this._vertexPositionAttrib, this._poly4TriBuffer);
+
+
+var ratePoly6_1 = 0.001;
+var ratePoly6_2 = 0.0002;
+var ratePoly6_3 = 0.0001;
+	// TETRA:
+	this._stage.matrixIdentity();
+	this._stage.matrixMultM3D(cameraMatrix);
+	this._stage.matrixTranslate(-7,0,zDistEars);
+	this._stage.matrixRotate(e*ratePoly6_1, 0,1,0);
+	this._stage.matrixRotate(e*ratePoly6_2, 0,0,1);
+	this._stage.matrixRotate(e*ratePoly6_3, 1,0,0);
+	// this._stage.matrixRotate(rateEar2, 0,0,1);
+	// this._stage.matrixRotate(earTilt, 1,0,0);
+	// this._stage.matrixRotate(Math.PI - earRotOffset, 0,1,0);
+	// this._stage.matrixRotate(Code.radians(90), 1,0,0);
+	sca = 1.0; this._stage.matrixScale(sca,sca,sca);
+	this._stage.bindArrayFloatBuffer(this._vertexPositionAttrib, this._poly6TriBuffer);
+	this._stage.bindArrayFloatBuffer(this._vertexColorAttrib, this._poly6TriColorBuffer);
+	this._stage.matrixReset();
+	this._stage.drawTriangles(this._vertexPositionAttrib, this._poly6TriBuffer);
+
+
+var ratePoly8_1 = 0.001;
+var ratePoly8_2 = 0.0002;
+var ratePoly8_3 = 0.0001;
+	// TETRA:
+	this._stage.matrixIdentity();
+	this._stage.matrixMultM3D(cameraMatrix);
+	this._stage.matrixTranslate(5,0,zDistEars);
+	this._stage.matrixRotate(e*ratePoly8_1, 0,1,0);
+	this._stage.matrixRotate(e*ratePoly8_2, 0,0,1);
+	this._stage.matrixRotate(e*ratePoly8_3, 1,0,0);
+	// this._stage.matrixRotate(rateEar2, 0,0,1);
+	// this._stage.matrixRotate(earTilt, 1,0,0);
+	// this._stage.matrixRotate(Math.PI - earRotOffset, 0,1,0);
+	// this._stage.matrixRotate(Code.radians(90), 1,0,0);
+	sca = 1.0; this._stage.matrixScale(sca,sca,sca);
+	this._stage.bindArrayFloatBuffer(this._vertexPositionAttrib, this._poly8TriBuffer);
+	this._stage.bindArrayFloatBuffer(this._vertexColorAttrib, this._poly8TriColorBuffer);
+	this._stage.matrixReset();
+	this._stage.drawTriangles(this._vertexPositionAttrib, this._poly8TriBuffer);
+
+
+var ratePoly16_1 = 0.001;
+var ratePoly16_2 = 0.0002;
+var ratePoly16_3 = 0.0001;
+	// TETRA:
+	this._stage.matrixIdentity();
+	this._stage.matrixMultM3D(cameraMatrix);
+	this._stage.matrixTranslate(-5,0,zDistEars);
+	this._stage.matrixRotate(e*ratePoly16_1, 0,1,0);
+	this._stage.matrixRotate(e*ratePoly16_2, 0,0,1);
+	this._stage.matrixRotate(e*ratePoly16_3, 1,0,0);
+	// this._stage.matrixRotate(rateEar2, 0,0,1);
+	// this._stage.matrixRotate(earTilt, 1,0,0);
+	// this._stage.matrixRotate(Math.PI - earRotOffset, 0,1,0);
+	// this._stage.matrixRotate(Code.radians(90), 1,0,0);
+	sca = 1.0; this._stage.matrixScale(sca,sca,sca);
+	this._stage.bindArrayFloatBuffer(this._vertexPositionAttrib, this._poly16TriBuffer);
+	this._stage.bindArrayFloatBuffer(this._vertexColorAttrib, this._poly16TriColorBuffer);
+	this._stage.matrixReset();
+	this._stage.drawTriangles(this._vertexPositionAttrib, this._poly16TriBuffer);
+
+
 
 	// OUT
 	// this._stage.matrixPop();

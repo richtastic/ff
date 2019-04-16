@@ -9517,6 +9517,152 @@ Code.centroid2D = function(image, imageWidth,imageHeight, imageMaskWeights){ // 
 
 
 
+Code.momentMatrixFrom2DArray = function(source, width, height, center, mask){
+	center = center!==undefined ? center : Code.centroidFrom2DArray(source, width,height, mask);
+	var i, j, x, y, value;
+	var moment = 0;
+	var totalWeight = 0;
+	var m = 1.0;
+	var index = 0;
+	var mxx = 0;
+	var mxy = 0;
+	var myy = 0;
+	var m = 1.0;
+	var count = 0;
+	for(j=0; j<height; ++j){
+		for(i=0; i<width; ++i){
+			if(mask){
+				m = mask[index];
+			}
+			if(m!=0){
+				++count;
+				value = source[index];
+				totalWeight += value;
+				x = i - center.x;
+				y = j - center.y;
+				mxx += value * x * x;
+				mxy += value * x * y;
+				myy += value * y * y;
+			}
+			++index;
+		}
+	}
+	if(totalWeight!=0){
+		mxx /= totalWeight;
+		mxy /= totalWeight;
+		myy /= totalWeight;
+	}
+	var matrix = new Matrix(2,2,[mxx,mxy,mxy,myy]);
+	return matrix;
+}
+Code.momentFrom2DArray = function(source, width, height, center, mask){
+	var matrix = Code.momentMatrixFrom2DArray(source, width, height, center, mask);
+// matrix = Matrix.inverse(matrix);
+	var eigens = Matrix.eigenValuesAndVectors(matrix);
+	var eigenVectors = eigens.vectors
+	eigenVectors[0] = eigenVectors[0].toArray();
+	eigenVectors[1] = eigenVectors[1].toArray();
+	var eigenValues = eigens.values;
+	var ev1 = new V3D(eigenVectors[0][0],eigenVectors[0][1],eigenValues[0]);
+	var ev2 = new V3D(eigenVectors[1][0],eigenVectors[1][1],eigenValues[1]);
+	if(ev1.z<ev2.z){ // show largest first
+		var temp = ev2;
+		ev2 = ev1;
+		ev1 = temp;
+	}
+	return [ev1,ev2];
+}
+Code.covarianceFrom2DArray = function(source, width, height, center, mask){
+	// same as moment ?
+	throw "?"
+}
+
+Code.centroidFrom2DArray = function(source, width, height, mask){ // SUM: m_i * x_i / M
+	var cen = new V2D();
+	var length = width * height;
+	var totalWeight = 0;
+	var i, j, value;
+	var index = 0;
+	var m = 1.0;
+	for(j=0; j<height; ++j){
+		for(i=0; i<width; ++i){
+			if(mask){
+				m = mask[index];
+			}
+			if(m!=0){
+				value = source[index];
+				totalWeight += value;
+				cen.x += i*value;
+				cen.y += j*value;
+			}
+			++index;
+		}
+	}
+	if(totalWeight!=0){
+		cen.scale(1.0/totalWeight);
+	}
+	return cen;
+}
+
+/*
+ImageMat.calculateMoment = function(gry,wid,hei,mean,mask){
+	mean = mean!==undefined ? mean : ImageMat.calculateCentroid(gry, wid,hei);
+
+	//var totalWeight = ImageMat.sumFloat(gry);
+	// var m01 = ImageMat.calculateRawMoment(gry,wid,hei,0,1,mean);
+	// var m10 = ImageMat.calculateRawMoment(gry,wid,hei,1,0,mean);
+
+	var m11 = ImageMat.calculateRawMoment(gry,wid,hei,1,1,mean,mask);
+	var m20 = ImageMat.calculateRawMoment(gry,wid,hei,2,0,mean,mask);
+	var m02 = ImageMat.calculateRawMoment(gry,wid,hei,0,2,mean,mask);
+	var matrix = new Matrix(2,2,[m20,m11,m11,m02]);
+
+	var eigens = Matrix.eigenValuesAndVectors(matrix);
+	var eigenVectors = eigens.vectors
+	eigenVectors[0] = eigenVectors[0].toArray();
+	eigenVectors[1] = eigenVectors[1].toArray();
+	var eigenValues = eigens.values;
+	var ev1 = new V3D(eigenVectors[0][0],eigenVectors[0][1],eigenValues[0]);
+	var ev2 = new V3D(eigenVectors[1][0],eigenVectors[1][1],eigenValues[1]);
+	if(ev1.z<ev2.z){ // show largest first
+		var temp = ev2;
+		ev2 = ev1;
+		ev1 = temp;
+	}
+	return [ev1,ev2];
+}
+
+ImageMat.calculateRawMoment = function(image, imageWidth,imageHeight, expX, expY, mean, inMask){
+	mean = mean!==undefined ? mean : ImageMat.calculateCentroid(image, imageWidth,imageHeight);
+	var i, j, x, y, index, value;
+	var moment = 0;
+	var totalWeight = 0;
+	var mask = 1.0;
+	for(j=0; j<imageHeight; ++j){
+		for(i=0; i<imageWidth; ++i){
+			index = j*imageWidth + i;
+			if(inMask){
+				mask = inMask[index];
+			}
+			if(mask!=1){
+				continue;
+			}
+			value = image[index];
+			totalWeight += value;
+			x = i - mean.x;
+			y = j - mean.y;
+			// x = i;
+			// y = j;
+			moment += value * Math.pow(x,expX) * Math.pow(y,expY);
+		}
+	}
+	return moment/totalWeight;
+}
+
+
+*/
+
+
 
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------- equation coefficients
