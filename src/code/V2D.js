@@ -272,6 +272,9 @@ V2D.prototype.scale = function(c,d){
 	this.x *= c; this.y *= d;
 	return this;
 }
+V2D.prototype.flip = function(){
+	return this.flip(-1);
+}
 V2D.prototype.setLength = function(l){
 	this.norm();
 	this.x *= l; this.y *= l;

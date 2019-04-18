@@ -1254,7 +1254,6 @@ R3D._orientatedFundamentalMatrixDirectionVotes = function(orgB,dirB, F,eA,eB, qA
 			throw "WHAT?"
 		}
 	}
-	// console.log(voteA,voteB);
 	if(voteB>voteA){
 		dirB.scale(-1);
 	}
@@ -10973,7 +10972,7 @@ R3D.extractCornerGeometryFeatures = function(imageMatrixA){
 	return featuresA;
 }
 
-R3D.extractImageCorners = function(imageSource, type, maxCount, single){
+R3D.extractImageCorners = function(imageSource, type, maxCount, single, scaleUp){
 	maxCount = (maxCount!==undefined && maxCount!==null) ? maxCount : 500;
 	type = (type!==undefined && type!==null) ? type : R3D.CORNER_SELECT_RELAXED;
 	var sourceWidth = imageSource.width();
@@ -10988,6 +10987,11 @@ R3D.extractImageCorners = function(imageSource, type, maxCount, single){
 	var scales = [1.0,0.5,0.25,0.125];
 	if(single){
 		scales = [1];
+	}
+	if(scaleUp){
+		for(var i=0; i<scales.length; ++i){
+			scales[i] *= scaleUp;
+		}
 	}
 	var count = scales.length;
 	for(k=0; k<scales.length; ++k){
@@ -11879,7 +11883,7 @@ R3D.denormalizeSIFTObjects = function(features, width, height){
 	}
 	return fixeds;
 }
-R3D.fullMatchesForObjects = function(objectsAIn, imageMatrixA, objectsBIn, imageMatrixB){
+R3D.fullMatchesForObjects = function(objectsAIn, imageMatrixA, objectsBIn, imageMatrixB, skipProcess){
 	console.log("fullMatchesForObjects");
 	var initialAveragePixelError = 5.0; // maximum allowable error in later steps
 	var imageAverageDimension = (imageMatrixA.width()+imageMatrixA.height())*0.5;
@@ -11913,8 +11917,9 @@ R3D.fullMatchesForObjects = function(objectsAIn, imageMatrixA, objectsBIn, image
 
 
 // TODO: REMOVE TEST
+if(skipProcess){
 return {"F":null, "matches":best, "error":0};
-
+}
 
 
 
@@ -11961,7 +11966,7 @@ return {"F":null, "matches":best, "error":0};
 			pointsA = matches[0];
 			pointsB = matches[1];
 			console.log("INITIAL RANSAC-MATCH COUNT: "+pointsA.length);
-			if(pointsA.length<10){
+			if(pointsA.length<8){
 				console.log("not enough ransac matches: "+pointsA.length);
 				result = null;
 			}else{
@@ -13657,7 +13662,73 @@ R3D.fErrorList = function(FFwd,FRev,pointsA,pointsB){
 	var bSigma = Code.stdDev(fDistancesB, bMean);
 	return {"mean":fMean, "sigma":fSigma, "meanA":aMean, "sigmaA":aSigma, "meanB":bMean, "sigmaB":bSigma};
 }
+R3D.fundamentalRelativeAngleForPoint = function(pointA,Fab,Fba, epipoleA, epipoleB, matchesA,matchesB){
+	// console.log("fundamentalRelativeAngleForPoint");
+	if(!epipoleA){
+		var epipoles = R3D.getEpipolesFromF(Fab);
+		epipoleA = epipoles["A"];
+		epipoleB = epipoles["B"];
+	}
+	var dirA = V2D.sub(pointA,epipoleA);
+		dirA.norm();
+	var upA = V2D.rotate(dirA,Math.PI*0.5);
+	// console.log(upA+"");
+	var pointA2 = V2D.add(pointA,upA);
 
+	var lineB1 = R3D.lineFromF(Fab,pointA);
+	var lineB2 = R3D.lineFromF(Fab,pointA2);
+
+	// var org, dir;
+	// var org = new V3D();
+	// var dir = new V3D();
+	// Code.lineOriginAndDirection2DFromEquation(lineB1["org"],lineB1["dir"], lineB1.x,lineB1.y,lineB1.z);
+	// console.log(lineB1["org"]+" | "+lineB1["dir"])
+	// org = lineB1["org"];
+	// dir = lineB1["dir"];
+
+	// console.log("A");
+	R3D._orientatedFundamentalMatrixDirectionVotes(lineB1["org"],lineB1["dir"], Fab,epipoleA,epipoleB, pointA, matchesA,matchesB);
+	// console.log("B");
+	R3D._orientatedFundamentalMatrixDirectionVotes(lineB2["org"],lineB2["dir"], Fab,epipoleA,epipoleB, pointA2, matchesA,matchesB);
+
+	// console.log("...");
+
+	var upB = V2D.sub(lineB2["dir"],lineB1["dir"]);
+	upB.norm();
+	// upB.scale(-1);
+	// console.log(upB+"");
+
+	var angle = V2D.angleDirection(upA,upB);
+	// console.log(Code.degrees(angle));
+
+
+
+/*
+	var size = 100;
+	var d = new DO();
+
+		d.graphics().setLine(1.0, 0xFFFF0000);
+		d.graphics().beginPath();
+		d.graphics().drawCircle(0,0,size);
+		d.graphics().moveTo(0,0);
+		d.graphics().lineTo(upA.x*size,upA.y*size);
+		d.graphics().endPath();
+		d.graphics().strokeLine();
+
+		d.graphics().setLine(1.0, 0xFF0000FF);
+		d.graphics().beginPath();
+		d.graphics().drawCircle(0,0,size);
+		d.graphics().moveTo(0,0);
+		d.graphics().lineTo(upB.x*size,upB.y*size);
+		d.graphics().endPath();
+		d.graphics().strokeLine();
+
+	d.matrix().translate(200,200);
+	GLOBALSTAGE.addChild(d);
+	*/
+	return angle;
+
+}
 R3D.bestPointNeedleInHaystack = function(needle, haystack){ // point in haystack relative to center
 	var i;
 	var scores = Dense.searchNeedleHaystackImage(needle,null, haystack);

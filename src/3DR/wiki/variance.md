@@ -68,6 +68,8 @@ what about NON-SQUARED SIGMA ?
 
 
 
+variance == moment - dA | dM
+
 
 
 

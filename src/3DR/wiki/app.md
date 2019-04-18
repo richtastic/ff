@@ -345,6 +345,16 @@ https://cloud.google.com/appengine/docs/nodejs/
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+- extract rect @ size  &  get SIFT
+- compare fat sift
+
+
+- algorithm for medium-error F starting place
+	- light sifting
+-
+
+
+
 - affine corner does not scale with image -- only with local area ->
 - extract / visualize oval at scale
 
