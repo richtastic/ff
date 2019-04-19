@@ -345,6 +345,28 @@ https://cloud.google.com/appengine/docs/nodejs/
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+- initial FAT MATCH + REFINEMENT must be better
+	- compare 'affine' sift & scale sift
+
+
+- smaller areas handle scale/projection better but are not distinct
+- larger areas are more distinct but are bad for scale differences
+
+
+
+- better iterating to reduce F error
+
+- any way to compare at different SCALES (+ angle)?
+	-- big skew / scale differences can't be accounted for
+
+
+
+- only need to perform extra tasks if F error is > 0.1 ~ 0.5
+
+
+
+
+
 - extract rect @ size  &  get SIFT
 - compare fat sift
 

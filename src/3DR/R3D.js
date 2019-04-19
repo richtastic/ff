@@ -11990,7 +11990,9 @@ return {"F":null, "matches":best, "error":0};
 	var F = R3D.fundamentalRefineFromPoints(pointsA,pointsB, null);
 	var Finv = R3D.fundamentalInverse(F);
 	var fError = R3D.fErrorList(F, Finv, pointsA, pointsB);
-	var initialPixelError = fError["mean"];
+	var initialPixelError = fError["mean"] + fError["sigma"];
+
+// TODO: IF THE COUNT IS VERY LOW, THE ERROR SHOULD BE ALLOWED TO BE HIGHER ... initialPixelError
 
 	console.log("initialPixelError: "+initialPixelError);
 
@@ -17755,7 +17757,6 @@ R3D.limitedObjectSearchFromF = function(featuresA,imageMatrixA, featuresB,imageM
 		}
 		var arr = queue.toArray();
 		queue.clear();
-		// for(i=arr.length-1; i>=0; --i){
 		for(i=0; i<arr.length; ++i){
 			var o = arr[i];
 			var dist = o["d"];
@@ -17771,38 +17772,6 @@ R3D.limitedObjectSearchFromF = function(featuresA,imageMatrixA, featuresB,imageM
 	}
 	return putatives;
 }
-/*
-// THIS IS NOT A THING
-R3D.limitedObjectSearchFromPK = function(featuresA,imageMatrixA, featuresB,imageMatrixB, cameraA,cameraB, Ka,Kb, errorDistanceA,errorDistanceB){
-	errorDistance = (errorDistance!==null && errorDistance!==undefined) ? errorDistance : 5;
-	var i, j, putatives = [];
-	for(j=0; j<featuresA.length; ++j){
-		var featureA = featuresA[j];
-		var pointA = featureA["point"];
-
-		var destinationA = R3D.?
-
-		// find relevant B points
-		putatives[j] = [];
-		for(i=0; i<featuresB.length; ++i){
-			var featureB = featuresB[i];
-			var pointB = featureB["point"];
-			var destinationB = R3D.? // TODO: calculate this once
-
-			var distA = V2D.distance(pointA,destinationB);
-			var distB = V2D.distance(pointB,destinationA);
-			if(distA<errorDistanceA && distB<errorDistanceB){
-				//console.log("distance: "+dist+" / "+pointB);
-				putatives[j].push(featureB);
-			}
-		}
-	}
-
-var pointsRev = R3D.triangulationDLT(pointsFr,pointsTo, cameraA,cameraB, Ka, Kb)[0];
-
-	return putatives;
-}
-*/
 
 R3D._sortMatch = function(a, b){
 	return a.score < b.score ? -1 : 1;

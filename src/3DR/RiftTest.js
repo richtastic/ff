@@ -13,16 +13,23 @@ function RiftTest(){
 	// new ImageLoader("./images/iowa/",["0.JPG", "1.JPG"],this,this.imagesLoadComplete).load();
 	// new ImageLoader("./images/iowa/",["1.JPG", "2.JPG"],this,this.imagesLoadComplete).load();
 	// new ImageLoader("./images/iowa/",["2.JPG", "3.JPG"],this,this.imagesLoadComplete).load();
-	// new ImageLoader("./images/iowa/",["3.JPG", "4.JPG"],this,this.imagesLoadComplete).load();
+	// new ImageLoader("./images/iowa/",["3.JPG", "4.JPG"],this,this.imagesLoadComplete).load(); // bad
 	// new ImageLoader("./images/iowa/",["4.JPG", "5.JPG"],this,this.imagesLoadComplete).load();
 
 	// new ImageLoader("./images/iowa/",["0.JPG", "4.JPG"],this,this.imagesLoadComplete).load();
-	new ImageLoader("./images/iowa/",["3.JPG", "5.JPG"],this,this.imagesLoadComplete).load(); // bad
+	// new ImageLoader("./images/iowa/",["2.JPG", "4.JPG"],this,this.imagesLoadComplete).load(); // bad
+	// new ImageLoader("./images/iowa/",["3.JPG", "5.JPG"],this,this.imagesLoadComplete).load(); // poor
 
 	// ...
+	// FLOWER:
 	// new ImageLoader("./images/flowers_1/",["7120.png", "7127.png"],this,this.imagesLoadComplete).load(); // bad
+	// new ImageLoader("./images/",["xA_small.jpg", "xB_small.jpg"],this,this.imagesLoadComplete).load(); // bad
 
+	// BENCH
+	// new ImageLoader("./images/",["bench_A.png", "bench_D.png"],this,this.imagesLoadComplete).load(); //
 
+	// ROOM
+	new ImageLoader("./images/",["room0.png", "room2.png"],this,this.imagesLoadComplete).load(); //
 }
 
 RiftTest.prototype.imagesLoadComplete = function(imageInfo){
@@ -715,19 +722,14 @@ ptsA.push(new V2D(278,148));ptsB.push(new V2D(406,143));
 
 */
 
-
-
-	// var F = new Matrix(3,3).fromArray([ 8.7319E-6, -2.8461E-5,  9.9949E-4, 2.6549E-5, -7.4250E-5, 3.9319E-2, 3.4349E-3, -1.1667E-2, -9.9915E-1]);
-
-	var F = R3D.fundamentalMatrix(ptsA,ptsB);
-	console.log(F+"");
+	// initially allowed error
+	var F = R3D.fundamentalFromUnnormalized(ptsA,ptsB);
 	var Finv = R3D.fundamentalInverse(F);
 	var info = R3D.fundamentalError(F,Finv,ptsA,ptsB);
 	console.log(info);
-
+	// var sigmaMult = 2.0; // 1-2 -- looser allows some change in F
 	var sigmaMult = 1.0;
-	var fSymmetricError = info["mean"] + info["sigma"] * sigmaMult;
-
+	var fSymmetricError = info["mean"] + info["sigma"]*sigmaMult;
 	fSymmetricError = Math.min(fSymmetricError,20.0); // < 10% of image
 
 /*
@@ -771,11 +773,12 @@ ptsA.push(new V2D(278,148));ptsB.push(new V2D(406,143));
 
 
 // better matches
-var iterations = 2;
+var iterations = 3; // 2-5
+var objectsA = null;
 for(var itr=0; itr<iterations; ++itr){
-	console.log("iterations : "+itr+" / "+iterations);
+	console.log("iterations : "+itr+" / "+iterations+" @ "+fSymmetricError);
 	// use current F to estimate angles
-	var result = RiftTest.stationaryFeatures(imageMatrixA, imageMatrixB, F, ptsA,ptsB, display);
+	var result = RiftTest.stationaryFeatures(imageMatrixA, imageMatrixB, F, ptsA,ptsB, display, objectsA);
 	console.log(result);
 	var objectsA = result["A"];
 	var objectsB = result["B"];
@@ -784,74 +787,34 @@ for(var itr=0; itr<iterations; ++itr){
 	// sigmas:
 	var pixelErrorA = fSymmetricError;
 	var pixelErrorB = fSymmetricError;
-	// var pixelErrorA = 10;
-	// var pixelErrorB = 10;
 	var errorWindow = 1;
 	var limitScoreRatio = 0.95; // 0.90 - 0.95
 	var limitScoreSearch = 0.15; // 0.10 - 0.20
-	var minimumFCount = 10; // 5-10
+	// var minimumFCount = 10; // 5-10
+	var minimumFCount = 20;
 	var putativeA = R3D.limitedObjectSearchFromF(objectsA,imageMatrixA,objectsB,imageMatrixB,matrixFfwd, pixelErrorB*errorWindow, minimumFCount);
 	var putativeB = R3D.limitedObjectSearchFromF(objectsB,imageMatrixB,objectsA,imageMatrixA,matrixFrev, pixelErrorA*errorWindow, minimumFCount);
 	var matching = R3D.matchObjectsSubset(objectsA, putativeA, objectsB, putativeB, limitScoreRatio, limitScoreSearch);
 	var matches = matching["best"];
 	console.log(matches.length);
-	// re-estimate
-	var ptsA = [];
-	var ptsB = [];
-	for(var i=0; i<matches.length; ++i){
-		var match = matches[i];
-		var a = match["A"];
-		var b = match["B"];
-		a = a["point"];
-		b = b["point"];
-		ptsA.push(a);
-		ptsB.push(b);
-	}
-	// drop outliers
-	F = R3D.fundamentalMatrix(ptsA,ptsB);
-	Finv = R3D.fundamentalInverse(F);
-	var info = R3D.fundamentalError(F,Finv,ptsA,ptsB);
+	// var result = RiftTest.dropOutliersIteritively(matches, 2.0);
+	var result = RiftTest.dropOutliersIteritively(matches, 1.5);
+	// var result = RiftTest.dropOutliersIteritively(matches, 1.0); // too low
+	F = result["F"];
+	matches= result["matches"];
+	var info = result["info"];
 	console.log(info);
-
-	var mean = info["mean"];
-	var sigma = info["sigma"];
-	var errors = info["values"];
-	var limit = mean + sigma*1.0; // outlier ratio
-	var ptsA = [];
-	var ptsB = [];
-	var keep = [];
-	for(var i=0; i<matches.length; ++i){
-		var match = matches[i];
-		var a = match["A"];
-		var b = match["B"];
-		a = a["point"];
-		b = b["point"];
-		var error = errors[i];
-		if(error<limit){
-			ptsA.push(a);
-			ptsB.push(b);
-			keep.push(match);
-		}
-	}
-	matches = keep;
-console.log(ptsA,ptsB);
-
-	F = R3D.fundamentalMatrix(ptsA,ptsB);
-	Finv = R3D.fundamentalInverse(F);
-	var info = R3D.fundamentalError(F,Finv,ptsA,ptsB);
-	console.log(info);
-
 	var newError = info["mean"] + info["sigma"]*sigmaMult;
 	fSymmetricError = Math.min(fSymmetricError,newError);
+	// sigmaMult = (sigmaMult-1)*0.5 + 1;
 }
 
-
-RiftTest.showMatches(matches, imageMatrixA, imageMatrixB, GLOBALSTAGE);
+// discrete matches
+// RiftTest.showMatches(matches, imageMatrixA, imageMatrixB, GLOBALSTAGE);
 
 
 
 // show dense:
-
 var ptsA = [];
 var ptsB = [];
 for(var i=0; i<matches.length; ++i){
@@ -860,11 +823,8 @@ for(var i=0; i<matches.length; ++i){
 	var b = match["B"];
 	a = a["point"];
 	b = b["point"];
-	var error = errors[i];
-	if(error<limit){
-		ptsA.push(a);
-		ptsB.push(b);
-	}
+	ptsA.push(a);
+	ptsB.push(b);
 }
 console.log("stereoHighConfidenceMatches ...");
 var matches = R3D.stereoHighConfidenceMatches(imageMatrixA,imageMatrixB, ptsA,ptsA,F);
@@ -1009,20 +969,55 @@ throw "..."
 }
 
 
-RiftTest.stationaryFeatures = function(imageA,imageB,F, ptsA,ptsB,  display){
-console.log("stationaryFeatures");
+RiftTest.dropOutliersIteritively = function(matches, sigmaRatio, maxIterations){
+	sigmaRatio = sigmaRatio!==undefined && sigmaRatio!==null ? sigmaRatio : 1.0;
+	maxIterations = maxIterations!==undefined && maxIterations!==null ? maxIterations : 5;
+console.log("dropOutliersIteritively: "+maxIterations);
+	var F, Finv, info;
+	var currentCount = matches.length;
+	var ptsA = null;
+	var ptsB = null;
+	for(var itr=0; itr<maxIterations; ++itr){
+		// re-estimate
+		ptsA = [];
+		ptsB = [];
+		for(var i=0; i<matches.length; ++i){
+			var match = matches[i];
+			var a = match["A"];
+			var b = match["B"];
+			a = a["point"];
+			b = b["point"];
+			ptsA.push(a);
+			ptsB.push(b);
+		}
+		F = R3D.fundamentalFromUnnormalized(ptsA,ptsB);
+		Finv = R3D.fundamentalInverse(F);
+		info = R3D.fundamentalError(F,Finv,ptsA,ptsB);
+		// drop outliers
+		var mean = info["mean"];
+		var sigma = info["sigma"];
+		var errors = info["values"];
+		console.log(" > "+itr+" : "+currentCount+" = "+mean+" +/- "+sigma);
+		var limit = mean + sigma*sigmaRatio;
+		var keep = [];
+		for(var i=0; i<matches.length; ++i){
+			var match = matches[i];
+			var error = errors[i];
+			if(error<limit){
+				keep.push(match);
+			}
+		}
+		matches = keep;
+		if(matches.length==currentCount){
+			break;
+		}
+		currentCount = matches.length;
+	}
+	return {"F":F, "matches":matches, "info":info};
+}
+
+RiftTest.stationaryFeatures = function(imageA,imageB,F, ptsA,ptsB,  display, existingA){
 	var Finv = R3D.fundamentalInverse(F);
-	// var pointA = new V2D(10,10); // 164
-	// var pointA = new V2D(120,120); // 135
-	// var pointA = new V2D(220,120); // 126
-	// var pointA = new V2D(200,200); // 107
-	// var pointA = new V2D(400,300); // 115
-
-	// 0 - 1
-	// var pointA = new V2D(10,10); // 5
-
-	// 5,6,11,8,11,8,12,13,4,11,5  ~ 9
-	// var pointA = new V2D(Math.random()*imageA.width(),Math.random()*imageA.height()); // 5
 	var angles = [];
 	var samples = 20;
 	for(var i=0; i<samples; ++i){
@@ -1030,32 +1025,35 @@ console.log("stationaryFeatures");
 		var angle = R3D.fundamentalRelativeAngleForPoint(pointA,F,Finv, null,null, ptsA,ptsB);
 		angles.push(angle);
 	}
-	console.log(angles);
-	var angle = Code.averageNumbers(angles);
+	var angle = Code.averageAngles(angles);
+	console.log(angles.map( Code.radians ));
 	console.log(Code.degrees(angle));
 
 	// get all corner peaks
 	var nonMaximalPercent = 1.0;
-	// R3D.pointsCornerMaxima = function(src, width, height, keepPercentScore, );
 	// var scalable = 1.5;
 	var scalable = 2.0;
-	var cornersA = R3D.extractImageCorners(imageA, nonMaximalPercent, 1E4, false, scalable);
-	var cornersB = R3D.extractImageCorners(imageB, nonMaximalPercent, 1E4, false, scalable);
-	// var cornersA = R3D.pointsCornerMaxima(imageA.gry(), imageA.width(), imageA.height(), 1.0);
-	// var cornersB = R3D.pointsCornerMaxima(imageB.gry(), imageB.width(), imageB.height(), 1.0);
-console.log(cornersA);
-console.log(cornersB);
 
+// TODO: CORNERS ONLY NEED TO BE FOUND ONCE
 
+// TODO: SOME KIND OF ANTI-CLUSTERING OF CORNERS
+// => 1-5 pixels apart ordered on corner value
 
+// 2 - 10 %
 	// var useSize = 11; // small
-	var useSize = 15;
-	// var useSize = 25;
-	// var useSize = 51; // big
-	var featuresA = RiftTest.stationaryFeaturesFromAngle(imageA, cornersA, 0, useSize, null, display);
-	console.log(featuresA);
+	// var useSize = 15;
+	var useSize = 25; // ~5%
+	// var useSize = 41; // ~ 7%
+	// var useSize = 51; //  ~9% big
+	var featuresA = existingA;
+	if(!featuresA){
+		var cornersA = R3D.extractImageCorners(imageA, nonMaximalPercent, 1E4, false, scalable);
+		featuresA = RiftTest.stationaryFeaturesFromAngle(imageA, cornersA, 0, useSize, null, display);
+	}
+	// always B
+	var cornersB = R3D.extractImageCorners(imageB, nonMaximalPercent, 1E4, false, scalable);
 	var featuresB = RiftTest.stationaryFeaturesFromAngle(imageB, cornersB, -angle, useSize, null, display);
-	console.log(featuresB);
+
 
 	return {"A":featuresA, "B":featuresB}
 }
@@ -1082,21 +1080,21 @@ RiftTest.stationaryFeaturesFromAngle = function(image, corners, angle, size, sca
 		// var ang = 0;
 		var object = {"point":point.copy(), "angle":0, "dirX":dirX, "dirY":dirY, "sift":vectorSIFT, "sad":vectorSAD};
 		features.push(object);
-if(false){
-		if(!HAS_CALLED && i%10==0){
-			var blockSize = 25;
-			var block = image.extractRectFromFloatImage(point.x,point.y,size/blockSize,null,blockSize,blockSize, matrix);
-			var img, d;
-				block.normalFloat01();
-			img = GLOBALSTAGE.getFloatRGBAsImage(block.red(), block.grn(), block.blu(), block.width(), block.height());
-			d = new DOImage(img);
-			// d.matrix().scale(2.0);
-			d.matrix().scale(1.0);
-			// d.matrix().translate(10 + 50*i, 10 );
-			d.matrix().translate(point.x - blockSize*0.5, point.y - blockSize*0.5);
-			display.addChild(d);
-		}
-}
+// if(false){
+// 		if(!HAS_CALLED && i%10==0){
+// 			var blockSize = 25;
+// 			var block = image.extractRectFromFloatImage(point.x,point.y,size/blockSize,null,blockSize,blockSize, matrix);
+// 			var img, d;
+// 				block.normalFloat01();
+// 			img = GLOBALSTAGE.getFloatRGBAsImage(block.red(), block.grn(), block.blu(), block.width(), block.height());
+// 			d = new DOImage(img);
+// 			// d.matrix().scale(2.0);
+// 			d.matrix().scale(1.0);
+// 			// d.matrix().translate(10 + 50*i, 10 );
+// 			d.matrix().translate(point.x - blockSize*0.5, point.y - blockSize*0.5);
+// 			display.addChild(d);
+// 		}
+// }
 
 	}
 	HAS_CALLED = true;
