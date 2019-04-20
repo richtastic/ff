@@ -428,6 +428,7 @@ if(this.RAN){
 }
 // this.RAN = true;
 	var e = count * 10;
+// e = 0;
 	var rateBase = 0.0004;
 	var rateHead = rateBase*1.0;
 	var rateEar1 = rateBase*2.0;

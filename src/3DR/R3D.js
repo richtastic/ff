@@ -11734,12 +11734,8 @@ R3D.generateSIFTObjects = function(featuresA, imageMatrixA){
 
 		var imageWidth = imageMatrix.width();
 		var imageHeight = imageMatrix.height();
-// var imageBlurred = imageMatrix.getBlurredImage(1.0);
-// var imageBlurred = imageMatrix.getBlurredImage(2.0);
-
-var imageBlurred = imageMatrix.getBlurredImage(4.0); // TODO: base on size of feature scaling?
-
-//var imageGradient = ImageMat.gradientVector(imageBlurred,imageWidth,imageHeight).value;
+		var imageBlurred = imageMatrix.getBlurredImage(4.0); // TODO: base on size of feature scaling?
+		//var imageGradient = ImageMat.gradientVector(imageBlurred,imageWidth,imageHeight).value;
 		// var imageCorners = corners[i];
 		// var imageGradients = gradients[i];
 		var features = list[i];

@@ -345,13 +345,31 @@ https://cloud.google.com/appengine/docs/nodejs/
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
 - initial FAT MATCH + REFINEMENT must be better
 	- compare 'affine' sift & scale sift
+- dominant angle to use for features: COM | MOMENT | GRADIENT  && flat/corner/grad-mag
+- reassess SAD / SIFT extraction
+
+
+- filtering of bad points
+	- large skew (dirX & dirY < 45)
+	- large scale diff dirX & dirY
+
+
+- optimize matrix multiplication to not use Matrix() / use Matrix3D()
+
+- optimize epipole reuse - pass in
+- use 2d grid for angles not full average -- create interpolation Code fxn
+
+
 
 
 - smaller areas handle scale/projection better but are not distinct
 - larger areas are more distinct but are bad for scale differences
 
+
+- using individual angle for each unique point ? [not average over whole image?]
 
 
 - better iterating to reduce F error
