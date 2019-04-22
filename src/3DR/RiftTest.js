@@ -9,10 +9,13 @@ function RiftTest(){
 	this._root = new DO();
 	this._stage.root().addChild(this._root);
 	// new ImageLoader("./images/",["bench_A.png", "bench_B.png"],this,this.imagesLoadComplete).load();
-
-	// new ImageLoader("./images/iowa/",["0.JPG", "1.JPG"],this,this.imagesLoadComplete).load();
-	// new ImageLoader("./images/iowa/",["1.JPG", "2.JPG"],this,this.imagesLoadComplete).load();
-	// new ImageLoader("./images/iowa/",["2.JPG", "3.JPG"],this,this.imagesLoadComplete).load();
+// bad = unusable
+// poor = minimal points / inaccurate
+// ok = 10-50% somewhat accurate
+// good = accurate + 50%
+	new ImageLoader("./images/iowa/",["0.JPG", "1.JPG"],this,this.imagesLoadComplete).load(); // bad
+	// new ImageLoader("./images/iowa/",["1.JPG", "2.JPG"],this,this.imagesLoadComplete).load(); // ok
+	// new ImageLoader("./images/iowa/",["2.JPG", "3.JPG"],this,this.imagesLoadComplete).load(); // ok
 	// new ImageLoader("./images/iowa/",["3.JPG", "4.JPG"],this,this.imagesLoadComplete).load(); // bad
 	// new ImageLoader("./images/iowa/",["4.JPG", "5.JPG"],this,this.imagesLoadComplete).load(); // poor
 
@@ -36,13 +39,23 @@ function RiftTest(){
 	// TANKMAN
 	// new ImageLoader("./images/",["caseStudy1-14.jpg", "caseStudy1-20.jpg"],this,this.imagesLoadComplete).load(); // ok
 	// new ImageLoader("./images/",["caseStudy1-14.jpg", "caseStudy1-20_rot.jpg"],this,this.imagesLoadComplete).load(); // bad - INITIAL CLOSE TO FAIL
+	// new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-9.jpg"],this,this.imagesLoadComplete).load(); // ok
+	// new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-26.jpg"],this,this.imagesLoadComplete).load();
 
 	// EX 1
 	// new ImageLoader("./images/user/beach_pillar/",["0_50.jpg", "1_50.jpg"],this,this.imagesLoadComplete).load(); // good
 	// new ImageLoader("./images/user/beach_pillar/",["1_50.jpg", "2_50.jpg"],this,this.imagesLoadComplete).load(); // bad - initial matching fails or close to fails
-//
-	new ImageLoader("./images/user/beach_pillar/",["1_50.jpg", "2_50_r.jpg"],this,this.imagesLoadComplete).load();
+	// new ImageLoader("./images/user/beach_pillar/",["1_50.jpg", "2_50_r.jpg"],this,this.imagesLoadComplete).load();
 
+
+
+	// new ImageLoader("./images/",["bt.000.png","bt.006.png"],this,this.imagesLoadComplete).load();
+	// new ImageLoader("./images/",["temple_1.png","temple_2.png"],this,this.imagesLoadComplete).load();
+	// new ImageLoader("./images/",["xA_small.jpg","xB_small.jpg"],this,this.imagesLoadComplete).load();
+/*
+o -
+r -
+*/
 
 	// new ImageLoader("./images/user/beach_pillar/",["2_50.jpg", "3_50.jpg"],this,this.imagesLoadComplete).load(); //
 	// new ImageLoader("./images/user/beach_pillar/",["0_50.jpg", "2_50.jpg"],this,this.imagesLoadComplete).load(); //
@@ -56,20 +69,20 @@ RiftTest.prototype.imagesLoadComplete = function(imageInfo){
 	var x = 0;
 	var y = 0;
 	var images = [];
-//GLOBALSCALE = 1.75;
- // GLOBALSCALE = 1.0;
+	// GLOBALSCALE = 1.75;
+	// GLOBALSCALE = 1.0;
 	for(i=0;i<imageList.length;++i){
 		var file = fileList[i];
 		var img = imageList[i];
 		images[i] = img;
-	// 	var d = new DOImage(img);
-	// 	this._root.addChild(d);
-	// 	d.matrix().scale(GLOBALSCALE);
-	// 	// d.graphics().alpha(0.10);
-	// 	d.graphics().alpha(0.50);
-	// 	// d.graphics().alpha(1.0);
-	// 	d.matrix().translate(x,y);
-	// 	x += img.width*GLOBALSCALE;
+		// 	var d = new DOImage(img);
+		// 	this._root.addChild(d);
+		// 	d.matrix().scale(GLOBALSCALE);
+		// 	// d.graphics().alpha(0.10);
+		// 	d.graphics().alpha(0.50);
+		// 	// d.graphics().alpha(1.0);
+		// 	d.matrix().translate(x,y);
+		// 	x += img.width*GLOBALSCALE;
 	}
 	var display = this._root;
 	display.matrix().scale(1.5);
@@ -83,6 +96,11 @@ RiftTest.prototype.imagesLoadComplete = function(imageInfo){
 	var imageSourceB = images[1];
 	var imageFloatB = GLOBALSTAGE.getImageAsFloatRGB(imageSourceB);
 	var imageMatrixB = new ImageMat(imageFloatB["width"],imageFloatB["height"], imageFloatB["red"], imageFloatB["grn"], imageFloatB["blu"]);
+
+
+// ROTATE B
+// imageMatrixB = imageMatrixB.rotate180();
+imageMatrixB = imageMatrixA.rotate180();
 
 	var filter = new Filter();
 	var imgs = [imageMatrixA,imageMatrixB];
@@ -110,7 +128,7 @@ break;
 		// filter.applyFilterHue(1.0,red,grn,blu, wid,hei);
 
 
-		// Filter.filterHistogramExpand()
+		// Filter.filterHistogramExpand();
 		// var sharp = imageMatrix.copy();
 		var sharp = imageMatrix;
 
@@ -135,6 +153,7 @@ for(i=0;i<matrixes.length;++i){
 	// d.graphics().alpha(0.0);
 	// d.graphics().alpha(0.05);
 	// d.graphics().alpha(0.10);
+	// d.graphics().alpha(0.25);
 	// d.graphics().alpha(0.50);
 	d.graphics().alpha(1.0);
 	d.matrix().translate(x,y);
@@ -458,6 +477,7 @@ cornersB.sort(sortZ);
 console.log(cornersA);
 console.log(cornersB);
 
+
 // var peaks = ;
 // var peakA = cornersA[0];
 
@@ -548,6 +568,7 @@ var peakA = {"point": peakA};
 
 console.log("NEW AGE MATCHES");
 
+
 var peakLists = [cornersA,cornersB];
 var mats = [imageMatrixA,imageMatrixB];
 
@@ -558,32 +579,87 @@ var featuresA = [];
 var featuresB = [];
 var features = [featuresA,featuresB];
 
+// var peakLists = [cornersB];
+// var mats = [imageMatrixB];
+// var features = [featuresB];
+
+
+/*
+// TESTING ORIENTATION CHANGE
+var image = imageMatrixA;
+var point = cornersA[444];
+
+
+var rotated = image.rotate180();
+var center = new V2D((rotated.width()-1)*0.5,(rotated.height()-1)*0.5);
+
+
+
+
+// var rotate = point.copy();
+// 	rotate.sub(center);
+var rotate = V2D.sub(point,center);
+	rotate.rotate(Math.PI);
+	rotate.add(center);
+
+
+var featureA = RiftTest.basicFeatureFromPoint(point, image);
+var featureR = RiftTest.basicFeatureFromPoint(rotate, rotated);
+
+console.log(featureA);
+console.log(featureR);
+
+var angleA = featureA["angle"];
+var angleR = featureR["angle"];
+var pointA = featureA["point"];
+var pointR = featureR["point"];
+console.log( Code.degrees( Code.angleDirection(angleA,angleR) ) );
+
+
+var pnts = [pointA,pointR];
+var imgs = [image,rotated];
+
+for(var i=0; i<pnts.length; ++i){
+	var pointA = pnts[i];
+	var image = imgs[i];
+	var bSize = 51;
+	var block = image.extractRectFromFloatImage(pointA.x,pointA.y,0.10,null,bSize,bSize,null);
+	var img = GLOBALSTAGE.getFloatRGBAsImage(block.red(), block.grn(), block.blu(), block.width(), block.height());
+	d = new DOImage(img);
+	d.matrix().scale(2.0);
+	d.matrix().translate(10 + i*100 , 10 );
+	GLOBALSTAGE.addChild(d);
+
+}
+
+throw "TESTING";
+
+*/
+
 for(var k=0; k<peakLists.length; ++k){
 	var peaks = peakLists[k];
 	var mat = mats[k];
 	var grad = grads[k];
 	var feature = features[k];
+var cornerH = R3D.cornerScaleScores(mat.gry(),mat.width(),mat.height()).value;
 	for(var i=0; i<peaks.length; ++i){
 		var peak = peaks[i];
+
+		// simple
+		var refine = RiftTest.basicFeatureFromPoint(peak, mat, cornerH);
+		feature.push(refine);
+continue;
+
 		peak = {"point":peak};
 		// console.log("...");
 		var start = peak["point"].copy();
 		var refine = {"point":peak["point"], "dirX":new V2D(1,0), "dirY":new V2D(0,1), "scale":null};
 		// for(var j=0; j<25; ++j){
 		for(var j=0; j<1; ++j){
-			//
-			// var refine = this.testCornerness(refine["point"], mat, refine["dirX"], refine["dirY"]);
-			// var refine = RiftTest.edgeFollow(refine["point"], mat, refine["dirX"], refine["dirY"]);
-			// console.log(refine);
-			// refine = RiftTest.iterateAffineTransform(refine, mat, );
 			refine = RiftTest.iterateAffineTransform(refine, mat, grad);
-			// peak = this.peakScaleForPoint(peak["point"], mat, peak["covAngle"], peak["covScale"]);
-			// break;
 			if(refine){
 				var ratio = refine["ratio"];
 				if(ratio>maximumRefineRatio){
-	// console.log(refine);
-	// feature.push(refine);
 					break;
 				}
 			}else{
@@ -602,9 +678,6 @@ for(var k=0; k<peakLists.length; ++k){
 		}
 		// console.log("CHANGE?: "+start+" -> "+refine["point"])
 
-		// peaks[i] = refine;
-		// break;
-		// peaks[i] = peak;
 	}
 }
 
@@ -660,18 +733,32 @@ for(var k=0; k<peakLists.length; ++k){
 
 // console.log(featuresA);
 // console.log(featuresB);
+
+
+
+
+
+
+// NEW OBJECTS
+
+
 this.showFeatures(featuresA, imageMatrixA.width()*0,0, display, 0x990000FF);
 this.showFeatures(featuresB, imageMatrixA.width(),0, display, 0x990000FF);
 
 
+
+// throw "whaaat"
+
 var objectsA = RiftTest.generateSIFTObjects(featuresA, imageMatrixA);
 var objectsB = RiftTest.generateSIFTObjects(featuresB, imageMatrixB);
-// console.log(objectsA);
-// console.log(objectsB);
 
-console.log("full matches");
-// var result = R3D.fullMatchesForObjects(objectsA, imageMatrixA, objectsB, imageMatrixB, false); // WHOLE PROCESS
-var result = R3D.fullMatchesForObjects(objectsA, imageMatrixA, objectsB, imageMatrixB, true); // skip refinements
+console.log(objectsA);
+console.log(objectsB);
+
+
+/*
+var result = R3D.fullMatchesForObjects(objectsA, imageMatrixA, objectsB, imageMatrixB, false); // WHOLE PROCESS
+// var result = R3D.fullMatchesForObjects(objectsA, imageMatrixA, objectsB, imageMatrixB, true); // skip refinements
 	console.log(result);
 var matches = result["matches"];
 // what would F error be
@@ -689,35 +776,43 @@ var matches = result["matches"];
 	}
 
 /// COMMENT END
+*/
 
 
 // initial matches only show
-RiftTest.showMatches(matches,imageMatrixA, imageMatrixB, GLOBALSTAGE);
+// RiftTest.showMatches(matches,imageMatrixA, imageMatrixB, GLOBALSTAGE);
+// throw "..."
 
 
 
 
-throw "..."
-
-
+/*
 
 // ORIGINAL SCALE CORNER POINTS
-
-
 var maxCount = 1000;
-
 var featuresA = R3D.calculateScaleCornerFeatures(imageMatrixA, maxCount);
 var objectsA = R3D.generateSIFTObjects(featuresA, imageMatrixA);
-
 var featuresB = R3D.calculateScaleCornerFeatures(imageMatrixB, maxCount);
 var objectsB = R3D.generateSIFTObjects(featuresB, imageMatrixB);
 
 console.log(objectsA);
 console.log(objectsB);
+*/
 
-// var result = R3D.fullMatchesForObjects(objectsA, imageMatrixA, objectsB, imageMatrixB, true);
-var result = R3D.fullMatchesForObjects(objectsA, imageMatrixA, objectsB, imageMatrixB, false);
+
+var result = R3D.fullMatchesForObjects(objectsA, imageMatrixA, objectsB, imageMatrixB, true);
+console.log("FULL MATCHES START");
+// var result = R3D.fullMatchesForObjects(objectsA, imageMatrixA, objectsB, imageMatrixB, false);
+console.log(result);
 var matches = result["matches"];
+
+RiftTest.showMatches(matches,imageMatrixA, imageMatrixB, GLOBALSTAGE);
+throw "?";
+
+
+
+var F = result["F"];
+console.log(matches);
 	var ptsA = [];
 	var ptsB = [];
 	for(var i=0; i<matches.length; ++i){
@@ -729,90 +824,40 @@ var matches = result["matches"];
 		ptsA.push(a);
 		ptsB.push(b);
 	}
+console.log("FULL MATCHES CHECK");
+// initially allowed error
+// var F = R3D.fundamentalFromUnnormalized(ptsA,ptsB);
+var F = R3D.fundamentalRefineFromPoints(ptsA,ptsB);
+var Finv = R3D.fundamentalInverse(F);
+var info = R3D.fundamentalError(F,Finv,ptsA,ptsB);
+console.log(info);
+// var sigmaMult = 2.0; // 1-2 - looser allows some change in F
+var sigmaMult = 1.0;
+var fSymmetricError = info["mean"] + info["sigma"]*sigmaMult;
+console.log("fSymmetricError: "+fSymmetricError);
+fSymmetricError = Math.min(fSymmetricError,10.0); // < 10% of image
+
+var F = R3D.fundamentalFromUnnormalized(ptsA,ptsB);
+var Finv = R3D.fundamentalInverse(F);
+var info = R3D.fundamentalError(F,Finv,ptsA,ptsB);
+console.log(info);
 
 // initial matches only show
-// RiftTest.showMatches(matches,imageMatrixA, imageMatrixB, GLOBALSTAGE);
-
-// throw "...";
-
-
-/*
-// manual
-ptsA = [];
-ptsB = [];
-// 0 & 1 :
-ptsA.push(new V2D(124,237));ptsB.push(new V2D(166,107));
-ptsA.push(new V2D(210,181));ptsB.push(new V2D(317,42));
-ptsA.push(new V2D(310,208));ptsB.push(new V2D(472,96));
-ptsA.push(new V2D(187,237));ptsB.push(new V2D(267,117));
-ptsA.push(new V2D(252,226));ptsB.push(new V2D(370,113));
-ptsA.push(new V2D(274,223));ptsB.push(new V2D(408,111));
-ptsA.push(new V2D(254,250));ptsB.push(new V2D(369,144));
-ptsA.push(new V2D(278,148));ptsB.push(new V2D(406,143));
-// ptsA.push(new V2D(,));ptsB.push(new V2D(,));
-
-*/
-
-	// initially allowed error
-	var F = R3D.fundamentalFromUnnormalized(ptsA,ptsB);
-	var Finv = R3D.fundamentalInverse(F);
-	var info = R3D.fundamentalError(F,Finv,ptsA,ptsB);
-	console.log(info);
-	// var sigmaMult = 2.0; // 1-2 -- looser allows some change in F
-	var sigmaMult = 1.0;
-	var fSymmetricError = info["mean"] + info["sigma"]*sigmaMult;
-	fSymmetricError = Math.min(fSymmetricError,20.0); // < 10% of image
-
-/*
-	// REDO:
-	var mean = info["mean"];
-	var sigma = info["sigma"];
-	var errors = info["values"];
-	var limit = mean + sigma*1.0;
-	var keep = [];
-	for(var i=0; i<matches.length; ++i){
-		var match = matches[i];
-		var a = match["A"];
-		var b = match["B"];
-		var error = errors[i];
-		if(error<limit){
-			keep.push(match);
-		}
-	}
-	var ptsA = [];
-	var ptsB = [];
-	for(var i=0; i<matches.length; ++i){
-		var match = matches[i];
-		var a = match["A"];
-		var b = match["B"];
-		a = a["point"];
-		b = b["point"];
-		ptsA.push(a);
-		ptsB.push(b);
-	}
-	var F = R3D.fundamentalMatrix(ptsA,ptsB);
-	console.log(F+"");
-	var Finv = R3D.fundamentalInverse(F);
-	var info = R3D.fundamentalError(F,Finv,ptsA,ptsB);
-	console.log(info);
-*/
-
-// }
-
-// display
-// RiftTest.showMatches(matches,imageMatrixA, imageMatrixB, GLOBALSTAGE);
-
+RiftTest.showMatches(matches,imageMatrixA, imageMatrixB, GLOBALSTAGE);
+throw "so ?";
 
 // better matches
 var iterations = 3; // 2-5
-var objectsA = null;
+// var objectsA = null;
+var stationaryResult = null;
 for(var itr=0; itr<iterations; ++itr){
 	console.log("iterations : "+itr+" / "+iterations+" @ "+fSymmetricError);
 	// use current F to estimate angles
-	var result = RiftTest.stationaryFeatures(imageMatrixA, imageMatrixB, F, ptsA,ptsB, display, objectsA);
-	console.log(result);
-	var objectsA = result["A"];
-	var objectsB = result["B"];
+	stationaryResult = RiftTest.stationaryFeatures(imageMatrixA, imageMatrixB, F, ptsA,ptsB, display, stationaryResult, fSymmetricError);
+	console.log(stationaryResult);
+	var objectsA = stationaryResult["A"];
+	var objectsB = stationaryResult["B"];
+
 	var matrixFfwd = F;
 	var matrixFrev = Finv;
 	// sigmas:
@@ -823,24 +868,32 @@ for(var itr=0; itr<iterations; ++itr){
 	var limitScoreSearch = 0.15; // 0.10 - 0.20
 	// var minimumFCount = 10; // 5-10
 
-	limitScoreRatio = 0.90;
+	limitScoreRatio = 0.95; // 0.90 - 0.95
 	limitScoreSearch = 0.15;
 
 	var minimumFCount = 20;
 	var putativeA = R3D.limitedObjectSearchFromF(objectsA,imageMatrixA,objectsB,imageMatrixB,matrixFfwd, pixelErrorB*errorWindow, minimumFCount);
 	var putativeB = R3D.limitedObjectSearchFromF(objectsB,imageMatrixB,objectsA,imageMatrixA,matrixFrev, pixelErrorA*errorWindow, minimumFCount);
-	var matching = R3D.matchObjectsSubset(objectsA, putativeA, objectsB, putativeB, limitScoreRatio, limitScoreSearch);
-	var matches = matching["best"];
-	console.log(matches.length);
-	// var result = RiftTest.dropOutliersIteritively(matches, 2.0);
-	var result = RiftTest.dropOutliersIteritively(matches, 1.5);
-	// var result = RiftTest.dropOutliersIteritively(matches, 1.0); // too low
-	F = result["F"];
-	matches= result["matches"];
-	var info = result["info"];
-	console.log(info);
-	var newError = info["mean"] + info["sigma"]*sigmaMult;
-	fSymmetricError = Math.min(fSymmetricError,newError);
+	var matching = R3D.matchObjectsSubset(objectsA, putativeA, objectsB, putativeB, limitScoreRatio, limitScoreSearch, true);
+	console.log(matching);
+	var newMatches = matching["best"];
+	console.log(newMatches.length);
+	if(newMatches.length>8){
+		var matches = newMatches;
+		var result = RiftTest.dropOutliersIteritively(matches, 2.0, 10);
+		// var result = RiftTest.dropOutliersIteritively(matches, 1.5, 10);
+		// var result = RiftTest.dropOutliersIteritively(matches, 1.0); // too low
+		F = result["F"];
+		matches= result["matches"];
+		var info = result["info"];
+		console.log(info);
+		var newError = info["mean"] + info["sigma"]*sigmaMult;
+		fSymmetricError = Math.min(fSymmetricError,newError);
+	}else{
+		console.log("not enough matches");
+throw "?";
+		fSymmetricError *= 2;
+	}
 	// sigmaMult = (sigmaMult-1)*0.5 + 1;
 }
 
@@ -968,17 +1021,6 @@ throw "..."
 
 
 
-	// var matrixFfwd = [2.041322467847871e-7,0.000014304778253234078,-0.0016910858521905143,-0.0000021465269183805225,-0.00001003739246648299,0.019402193354383566,-0.00004247026281761891,-0.020592074595533316,0.14857516866839532];
-	// matrixFfwd = new Matrix(3,3).fromArray(matrixFfwd);
-
-
-	// var matrixFfwd = [-0.0000041576723316428, -0.00005882120633163811, 0.008730780225219698, 0.00004167019132862216, -0.0000020442702939101748, -0.025987525163972135, -0.004339999775773085, 0.02644111516518665, -0.02076316997976102];
-	// 	matrixFfwd = new Matrix(3,3).fromArray(matrixFfwd);
-	// var matrixFfwd = [-0.000004139363896986988, -0.00005863702537626256, 0.008705674476541317, 0.00004131342313242088, -0.0000018824489333730404, -0.025913976364139904, -0.004291507571148334, 0.02638087842817162, -0.027575659232469817];
-	// 	matrixFfwd = new Matrix(3,3).fromArray(matrixFfwd);
-	// var matrixFfwd = [-0.000003486663949059767, -0.000046789577223311455, 0.006911118081526229, 0.0000328596065195337, -0.0000036611058428955012, -0.02273586780312925, -0.0031370534738073396, 0.02335622033036775, -0.023247364225031944];
-	// 	matrixFfwd = new Matrix(3,3).fromArray(matrixFfwd);
-
 	// MEDIUM / DENSISH:
 	console.log("stereoHighConfidenceMatches");
 	var matches = R3D.stereoHighConfidenceMatches(imageMatrixA,imageMatrixB, pointsA,pointsB,matrixFfwd);
@@ -1004,14 +1046,151 @@ throw "..."
 }
 
 
+RiftTest.basicFeatureFromPoint = function(point, image, faker){
+	var imageGray = image.gry();
+	var imageWidth = image.width();
+	var imageHeight = image.height();
+
+	var scale = 1.0;
+	var result = RiftTest.optimumCornerScale(point, image, null, 1.0);
+	if(result){
+		scale = result["scale"];
+	}
+	var grySigma = 2.0;
+	var gSize = 11;
+	var g2 = gSize*0.5 | 0;
+	var pad = 3;
+	var grySize = gSize + 2*pad; // COMPUTING SIZE ---- 21-4 = 17 = 144 samples
+	var gryScale = grySize/11; // SAMPLE SIZE
+
+	//
+
+	// var gryScale = grySize/21;
+	// var gryScale = 21/grySize;
+	// var gryScale = 41/grySize;
+	//
+	var matrix = new Matrix(3,3);
+		matrix.identity();
+		matrix = Matrix.transform2DScale(matrix, scale*gryScale);
+
+	// console.log(faker)
+	// var gry = ImageMat.extractRectFromFloatImage(point.x,point.y,1.0,grySigma,grySize,grySize, faker,imageWidth,imageHeight, matrix);
+	var gry = ImageMat.extractRectFromFloatImage(point.x,point.y,1.0,grySigma,grySize,grySize, imageGray,imageWidth,imageHeight, matrix);
+
+/*
+var block = Code.copyArray(gry);
+img = GLOBALSTAGE.getFloatRGBAsImage(block, block, block, grySize,grySize);
+d = new DOImage(img);
+d.matrix().scale(2.0);
+d.matrix().translate(10 , 10 );
+GLOBALSTAGE.addChild(d);
+throw " ... "
+*/
+
+
+	// ImageMat.normalFloat01(gry);
+	//
+	// primary direction
+	// var gSize = grySize - 6;
+
+
+	// var gMask = ImageMat.gaussianMask(gSize,gSize, 2,2, true, true);
+	var gMask = ImageMat.circleMask(gSize,gSize);
+	//
+	var grd = ImageMat.gradientVector(gry,grySize,grySize);
+		grd = grd["value"];
+		grd = ImageMat.unpadFloat(grd,grySize,grySize, pad,pad,pad,pad);
+	//
+	var dir = new V2D(0,0);
+	var ds = [];
+	var ps = [];
+	var os = [];
+	for(var i=0; i<grd.length; ++i){
+		var m = gMask[i];
+		if(m!=0){
+			var g = grd[i];
+			var l = g.length();
+			// l = l*l*m;
+			// g.length(l);
+			// dir.add(g.x*m,g.y*m);
+			os.push(g.copy());
+			ds.push(g.copy().norm());
+			ps.push(m*l);
+		}
+	}
+	ps = Code.countsToPercents(ps);
+	dir = Code.averageAngleVector2D(ds,ps);
+// different now ?
+	// dir = grd[grd.length/2 | 0];
+	dir.norm();
+
+	var dirA = dir;
+	dirA.norm();
+	var angle = V2D.angleDirection(V2D.DIRX,dirA);
+
+
+
+
+	// histogram of angles:
+	var peakKeep = 0.75;
+	var binCount = 8;
+	var bins = Code.newArrayZeros(binCount);
+	for(i=0; i<os.length; ++i){
+		var v = os[i];
+		var a = V2D.angleDirection(V2D.DIRX,v);
+			a = Code.angleZeroTwoPi(a);
+		var b = Math.min(Math.floor((a/Math.PI2)*binCount),binCount-1);
+		var l = v.length();
+		bins[b] += l;
+
+	}
+
+	var info = Code.infoArray(bins);
+	var binMaxIndex = info["indexMax"];
+	var maxValue = bins[binMaxIndex];
+
+	var peakKeep = 0.75;
+	var angles = [];
+	var mags = [];
+	// var i = binMaxIndex;
+	// var angle = R3D.interpolateAngleMaxima(bins, i);
+	for(i=0; i<bins.length; ++i){
+		if(bins[i]>=peakKeep*maxValue){
+			var angle = R3D.interpolateAngleMaxima(bins, i);
+			angles.push(angle);
+			mags.push(bins[i]);
+		}
+	}
+	var percents = Code.countsToPercents(mags);
+	var angle = Code.averageAngles(angles,percents);
+	// console.log( angles.map(Code.degrees) );
+
+
+
+
+
+
+
+// console.log(Code.degrees(angle+Math.PI));
+// console.log(Code.degrees(angle));
+// angle = faker
+	var dirX = new V2D(1,0);
+	var dirY = new V2D(0,1);
+
+	// might be a V3D
+	point = new V2D(point.x,point.y);
+	var feature = {"point":point.copy(), "dirX":dirX, "dirY":dirY, "scale":scale, "angle":angle, "ratio":1.0};
+	return feature;
+}
+
 RiftTest.dropOutliersIteritively = function(matches, sigmaRatio, maxIterations){
 	sigmaRatio = sigmaRatio!==undefined && sigmaRatio!==null ? sigmaRatio : 1.0;
 	maxIterations = maxIterations!==undefined && maxIterations!==null ? maxIterations : 5;
-console.log("dropOutliersIteritively: "+maxIterations);
 	var F, Finv, info;
 	var currentCount = matches.length;
 	var ptsA = null;
 	var ptsB = null;
+	console.log("dropOutliersIteritively: "+maxIterations+" @ "+currentCount);
 	for(var itr=0; itr<maxIterations; ++itr){
 		// re-estimate
 		ptsA = [];
@@ -1055,25 +1234,59 @@ console.log("dropOutliersIteritively: "+maxIterations);
 	return {"F":F, "matches":matches, "info":info};
 }
 
-RiftTest.stationaryFeatures = function(imageA,imageB,F, ptsA,ptsB,  display, existingA){
+RiftTest.stationaryFeatures = function(imageA,imageB,F, ptsA,ptsB,  display, existingA, fError){
 	var Finv = R3D.fundamentalInverse(F);
-	var angles = [];
-	var samples = 20;
-	for(var i=0; i<samples; ++i){
-		var pointA = new V2D(Math.random()*imageA.width(),Math.random()*imageA.height()); // 5
-		var angle = R3D.fundamentalRelativeAngleForPoint(pointA,F,Finv, null,null, ptsA,ptsB);
-		angles.push(angle);
+	var angleAB = 0;
+	var epipoles = R3D.getEpipolesFromF(F);
+	var epipoleA = epipoles["A"];
+	var epipoleB = epipoles["B"];
+	var imageBWidth = imageB.width();
+	var imageBHeight = imageB.height();
+	var gridCount = 10;
+	var grid2D = null;
+	var limitPixels = 2; // TODO: ~1% of image : 2-5
+	// if(true){
+	if(fError>1){ // if error in F is really high - grid is not really more useful
+		var angles = [];
+		var samples = 20; // 10-100
+		for(var i=0; i<samples; ++i){
+			var pointA = new V2D(Math.random()*imageA.width(),Math.random()*imageA.height()); // 5
+			var angle = R3D.fundamentalRelativeAngleForPoint(pointA,F,Finv, epipoleA,epipoleB, ptsA,ptsB);
+			angles.push(angle);
+		}
+		angleAB = -Code.averageAngles(angles);
+		// console.log(Code.degrees(angleAB));
+	}else{
+		var gridSizeBX = imageBWidth/gridCount;
+		var gridSizeBY = imageBHeight/gridCount;
+		var gridLenB = gridCount*gridCount;
+		grid2D = Code.newArray(gridLenB);
+		var pointB = new V2D();
+		for(var y=0; y<gridCount; ++y){
+			for(var x=0; x<gridCount; ++x){
+				var angles = [];
+				var samples = 20; // 10-100
+				for(var i=0; i<samples; ++i){
+					pointB.set( x*gridSizeBX + Math.random()*gridSizeBX, y*gridSizeBY + Math.random()*gridSizeBY);
+					var angle = R3D.fundamentalRelativeAngleForPoint(pointB,Finv,F, epipoleB,epipoleA, ptsB,ptsA);
+					angles.push(angle);
+				}
+				var angle = Code.averageAngles(angles);
+				var index = y*gridCount + x;
+				// grid2D[index] = -angle;
+				grid2D[index] = angle;
+			}
+		}
 	}
-	var angle = Code.averageAngles(angles);
-	console.log(angles.map( Code.radians ));
-	console.log(Code.degrees(angle));
+	// var angle = Code.averageAngles(angles);
+	// console.log(angles.map( Code.radians ));
+	// console.log(Code.degrees(angle));
 
 	// get all corner peaks
 	var nonMaximalPercent = 1.0;
 	// var scalable = 1.5;
 	var scalable = 2.0;
-
-// TODO: CORNERS ONLY NEED TO BE FOUND ONCE
+	// var scalable = 1.0;
 
 // TODO: SOME KIND OF ANTI-CLUSTERING OF CORNERS
 // => 1-5 pixels apart ordered on corner value
@@ -1081,43 +1294,64 @@ RiftTest.stationaryFeatures = function(imageA,imageB,F, ptsA,ptsB,  display, exi
 // 2 - 10 %
 	// var useSize = 11; // small
 	// var useSize = 15;
-	var useSize = 25; // ~5%
+	// var useSize = 25; // ~5%
+	var useSize = 31; // ~6%
 	// var useSize = 41; // ~ 7%
 	// var useSize = 51; //  ~9% big
-	var featuresA = existingA;
+	var featuresA = null;
+	var featuresB = null;
+	var cornersA = null;
+	var cornersB = null;
+	if(existingA && existingA["A"]){
+		featuresA = existingA["A"];
+		cornersA = existingA["cornersA"];
+		cornersB = existingA["cornersB"];
+	}
+	if(!cornersA){
+		cornersA = R3D.extractImageCorners(imageA, nonMaximalPercent, 1E4, false, scalable, limitPixels);
+	}
+	if(!cornersB){
+		cornersB = R3D.extractImageCorners(imageB, nonMaximalPercent, 1E4, false, scalable, limitPixels);
+	}
 	if(!featuresA){
-		var cornersA = R3D.extractImageCorners(imageA, nonMaximalPercent, 1E4, false, scalable);
 		featuresA = RiftTest.stationaryFeaturesFromAngle(imageA, cornersA, 0, useSize, null, display);
 	}
-	// always B
-	var cornersB = R3D.extractImageCorners(imageB, nonMaximalPercent, 1E4, false, scalable);
-	var featuresB = RiftTest.stationaryFeaturesFromAngle(imageB, cornersB, -angle, useSize, null, display);
-
-
-	return {"A":featuresA, "B":featuresB}
+	if(!featuresB){ // always B
+		featuresB = RiftTest.stationaryFeaturesFromAngle(imageB, cornersB, angleAB, useSize, null, display, grid2D,gridCount,gridCount);
+	}
+	return {"A":featuresA, "B":featuresB, "cornersA":cornersA, "cornersB":cornersB}
 }
 HAS_CALLED = false;
 CALL_COUNT = 0;
-RiftTest.stationaryFeaturesFromAngle = function(image, corners, angle, size, scale, display){
+RiftTest.stationaryFeaturesFromAngle = function(image, corners, angle, size, scale, display, grid,gridSizeX,gridSizeY){
 	angle = angle!==undefined && angle!==null ? angle : 0.0;
 	scale = scale!==undefined && scale!==null ? scale : 1.0;
 	size = size!==undefined && size!==null ? size : 11;
-	var point = new V2D();
 	var features = [];
+	var imageWidth = image.width();
+	var imageHeight = image.height();
+	var interpGrid = function(angles,percents){
+		return Code.averageAngles(angles,percents);
+	}
 	for(var i=0; i<corners.length; ++i){
 		var corner = corners[i];
-		point.x = corner.x;
-		point.y = corner.y;
-// console.log(point+"")
+		var point = new V2D(corner.x,corner.y);
+		var ang = angle;
+		// if(false){
+		if(grid){
+			var x = (point.x/imageWidth)*gridSizeX;
+			var y = (point.y/imageHeight)*gridSizeY;
+			var a = Code.interpolateArray2DLinear(grid,gridSizeX,gridSizeY, x,y, interpGrid);
+			ang += a;
+		}
 		var matrix = new Matrix(3,3).identity();
 			matrix = Matrix.transform2DScale(matrix, scale);
-			matrix = Matrix.transform2DRotate(matrix, angle);
+			matrix = Matrix.transform2DRotate(matrix, ang);
 		var vectorSAD = R3D.SADVectorCircular(image, point,size,matrix);
 		var vectorSIFT = R3D.SIFTVectorCircular(image, point,size,matrix, true);
 		var dirX = new V2D(1,0);
 		var dirY = new V2D(0,1);
-		// var ang = 0;
-		var object = {"point":point.copy(), "angle":0, "dirX":dirX, "dirY":dirY, "sift":vectorSIFT, "sad":vectorSAD};
+		var object = {"point":point.copy(), "angle":0, "dirX":dirX, "dirY":dirY, "sift":vectorSIFT, "sad":vectorSAD, "scale":scale};
 		features.push(object);
 // if(false){
 // 		if(!HAS_CALLED && i%10==0){
@@ -1134,7 +1368,6 @@ RiftTest.stationaryFeaturesFromAngle = function(image, corners, angle, size, sca
 // 			display.addChild(d);
 // 		}
 // }
-
 	}
 	HAS_CALLED = true;
 	return features;
@@ -1213,9 +1446,9 @@ RiftTest.generateSIFTObjects = function(features, imageMatrix){
 	// var diaNeighborhood = 5; // many
 	// var diaNeighborhood = 11;
 	// var diaNeighborhood = 15; // ...
-	// var diaNeighborhood = 21; // few
+	var diaNeighborhood = 21; // few
 	// var diaNeighborhood = 31;
-	var diaNeighborhood = 51;
+	// var diaNeighborhood = 51;
 // HOW TO SIZE THIS ?
 
 	var imageWidth = imageMatrix.width();
@@ -1283,7 +1516,7 @@ CALL_OFFX = 800;
 	var startScale = null;
 	var prependMatrix = null;
 	var result = RiftTest.optimumCornerScale(point, imageMatrix, prependMatrix, startScale);
-	var scale = 2.0;
+	var scale = 1.0;
 	if(result){
 		scale = result["scale"];
 	}else{
@@ -1791,7 +2024,7 @@ if(dirX.length()>5 || dirY.length()>5 || scale>10){
 
 	var ratio = values[0]/values[1];
 
-	var a = V2D.angleDirection(V2D.DIRX,dir0);
+	// var a = V2D.angleDirection(V2D.DIRX,dir0);
 
 	// console.log(ratio);
 	// throw "?"
@@ -1819,20 +2052,27 @@ if(dirX.length()>5 || dirY.length()>5 || scale>10){
 	c.graphics().beginPath();
 	// c.graphics().drawEllipse(0,0, fSize*ratio,fSize);
 	c.graphics().drawEllipse(0,0, sizeX,sizeY);
+
+	c.graphics().moveTo(0,0);
+	c.graphics().lineTo(sizeX,0);
+
+
 	c.graphics().strokeLine();
 	c.graphics().endPath();
 
-	c.matrix().rotate(a);
+	// c.matrix().rotate(a);
+	c.matrix().rotate(angle);
+
 
 }
 
 		// DOT:
 		//c.graphics().setLine(1.0, Code.setAlpARGB(color, 0x33) );
-		c.graphics().setLine(2.0, color);
-		c.graphics().beginPath();
-		c.graphics().drawCircle(0,0, 1);
-		c.graphics().strokeLine();
-		c.graphics().endPath();
+		// c.graphics().setLine(2.0, color);
+		// c.graphics().beginPath();
+		// c.graphics().drawCircle(0,0, 1);
+		// c.graphics().strokeLine();
+		// c.graphics().endPath();
 
 
 		/*
@@ -2275,8 +2515,8 @@ RiftTest.optimumCornerScale = function(point, imageMatrix, prependMatrix, startS
 	}
 
 	var scores = [];
-	var sig = null;
-	// var sig = 1.0;
+	// var sig = null;
+	var sig = 1.0;
 	// var sig = 2.0;
 	// var sig = 4.0;
 	for(var j=0; j<scales.length; ++j){
@@ -2284,7 +2524,6 @@ RiftTest.optimumCornerScale = function(point, imageMatrix, prependMatrix, startS
 		if(prependMatrix){
 			matrix = Matrix.mult(matrix,prependMatrix);
 		}
-
 		var gry = ImageMat.extractRectFromFloatImage(point.x,point.y,1.0,sig,compareSize,compareSize, imageGray,imageWidth,imageHeight, matrix);
 		// var blur = ImageMat.getBlurredImage(gry, compareSize,compareSize, 1.0);
 		var blur = gry;
@@ -2293,41 +2532,23 @@ RiftTest.optimumCornerScale = function(point, imageMatrix, prependMatrix, startS
 		var score = H[center*compareSize + center];
 		scores.push(score);
 	}
-// console.log("A");
-// 	Code.printMatlabArray(scales,"scales");
-// 	Code.printMatlabArray(scores,"scores");
+	// ignore end peaks
 	var peaks = Code.findGlobalExtrema1D(scores, true);
 	var force = true;
 	if(force && !peaks["max"]){
-		// Code.printMatlabArray(scales,"scales");
-		// Code.printMatlabArray(scores,"scores");
 		var sca = Code.copyArray(scales);
 		while(sca.length>3){
 			// if the peak is the left:
-			// sca.shift();
-			// scores.shift();
 			sca.pop();
 			scores.pop();
 			peaks = Code.findGlobalExtrema1D(scores, true);
-// console.log(" ... ");
-// Code.printMatlabArray(sca,"scales");
-// Code.printMatlabArray(scores,"scores");
 			if(peaks["max"]){
 				peaks["max"].x += scales.length-sca.length;
 				break;
 			}
 		}
-		// console.log(sca.length)
 	}
-/*
-	// peaks = {"max":new V2D(0,1)};
-	if(peaks && peaks.length>0){
-
-	}else{
-		// peaks = {"max":new V2D(0,1)};
-	}
-*/
-	// console.log(peaks)
+	// find best corner peak
 	var max = peaks["max"];
 	if(max){
 		var peak = max.y;
@@ -2338,11 +2559,9 @@ RiftTest.optimumCornerScale = function(point, imageMatrix, prependMatrix, startS
 		var val = scales[lo]*pc1 + scales[hi]*pct;
 		var p = new V2D(point.x,point.y);
 		var sca = 1.0/val;
-
 		// FIND MORE PRECISE OPTIMAL LOCATION:
 		var scas = Code.divSpace(scales[Math.max(lo-1,0)],scales[Math.min(hi+1,scales.length-1)], 9); // 7-9
 		scores = [];
-// console.log("   base: "+sca);
 		for(var j=0; j<scas.length; ++j){
 			var sc = scas[j];
 			var matrix = new Matrix(3,3).identity();
@@ -2357,14 +2576,7 @@ RiftTest.optimumCornerScale = function(point, imageMatrix, prependMatrix, startS
 			scores.push(score);
 		}
 		var peaks = Code.findGlobalExtrema1D(scores, true);
-
-		// Code.printMatlabArray(scas,"scales");
-		// Code.printMatlabArray(scores,"scores");
-		// console.log(peaks);
 		if(peaks){
-// console.log("sub peaks ...");
-			// Code.printMatlabArray(scas,"scales");
-			// Code.printMatlabArray(scores,"scores");
 			var max = peaks["max"];
 			if(max){
 				var peak = max.y;
@@ -2373,12 +2585,9 @@ RiftTest.optimumCornerScale = function(point, imageMatrix, prependMatrix, startS
 				var pct = max.x-lo;
 				var pc1 = 1.0 - pct;
 				var val = scas[lo]*pc1 + scas[hi]*pct;
-				// p = new V2D(point.x,point.y);
 				sca = 1.0/val;
-// console.log("   =>cls: "+sca);
 			}
 		}
-
 		// ALLOW SEARCHING AROUND AREA ...
 		var matrix = new Matrix(3,3).identity();
 			matrix = Matrix.transform2DScale(matrix,sca);
@@ -2391,16 +2600,11 @@ RiftTest.optimumCornerScale = function(point, imageMatrix, prependMatrix, startS
 		// var blur = ImageMat.getBlurredImage(gry, compareSize,compareSize, 1.0);
 		var results = R3D.cornerScaleScores(blur,compareSize,compareSize, null,false);
 		results = results["value"];
-		// console.log(results);
-
-var peaks = null;
+		var peaks = null;
 		// var peaks = Code.findMaxima2DFloat(results,compareSize,compareSize);
-		// console.log(peaks);
-		// console.log("sca: "+sca)
 		if(peaks && peaks.length>0){
 			// peaks = peaks.sort( function(a,b){ return a.z>b.z ? -1 : 1 } );
 			// var peak = peaks[0];
-
 			var pea = new V2D();
 			var cen = new V2D(center,center);
 			var dis = 0;
@@ -2415,10 +2619,7 @@ var peaks = null;
 				}
 			}
 			// TODO: PEAK CLOSEST TO CENTER
-
-			// console.log(peak+"");
 			peak = new V2D(peak.x-center,peak.y-center);
-			// console.log(peak+"");
 			var matrix = new Matrix(3,3).identity();
 				matrix = Matrix.transform2DScale(matrix,sca);
 			if(prependMatrix){
@@ -2429,30 +2630,8 @@ var peaks = null;
 			console.log("W: "+w);
 			p.add(w);
 		}
-		// for(i=0; i<peaks.length; ++i){
-		// 	peak = peaks[i];
-		// 	if(peak.z>percentKeep){
-		// 		peak.z = needleCenter * Math.pow(2,k);
-		// 		peak.scale(1.0/imageWidth, 1.0/imageHeight, 1.0);
-		// 		features.push(peak);
-		// 	}
-		// }
-
-
-		// throw "?"
-// get scores @ peak scale
-// find max location
-// convert to
-
-// is there JUMPING ?
-
-
-// console.log("point: "+point+" => "+p);
 		return {"point": p, "scale": sca};
-	}
-	// console.log("NO PEAKS");
-	// Code.printMatlabArray(scales,"scales");
-	// Code.printMatlabArray(scores,"scores");
+	} // no peaks
 	return null;
 }
 
@@ -2506,10 +2685,10 @@ gMask = ImageMat.gaussianMask(gSize,gSize, 2,2);
 // Code.printMatlabArray(gMask);
 // throw "?"
 
-	var grad = ImageMat.gradientMagnitude(gry,covarianceSize,covarianceSize);
-		grad = grad["value"];
-		grad = ImageMat.unpadFloat(grad,covarianceSize,covarianceSize, 2,2,2,2);
-	ImageMat.normalFloat01(grad);
+	// var grad = ImageMat.gradientMagnitude(gry,covarianceSize,covarianceSize);
+	// 	grad = grad["value"];
+	// 	grad = ImageMat.unpadFloat(grad,covarianceSize,covarianceSize, 2,2,2,2);
+	// ImageMat.normalFloat01(grad);
 
 	var grd = ImageMat.gradientVector(gry,covarianceSize,covarianceSize);
 		grd = grd["value"];
@@ -2561,7 +2740,7 @@ gMask = ImageMat.gaussianMask(gSize,gSize, 2,2);
 */
 
 	dirA.norm();
-	featureAngle = V2D.angle(V2D.DIRX,dirA);
+	featureAngle = V2D.angleDirection(V2D.DIRX,dirA);
 
 
 

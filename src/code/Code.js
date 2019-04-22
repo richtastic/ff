@@ -6807,6 +6807,31 @@ Code.interpolateArray1D = function(array,value){ // linear interpolate
 	}
 	return value;
 }
+Code.interpolateArray2DLinear = function(grid,wid,hei, x,y, fxn){
+	var minX = x | 0;
+	var maxX = Math.min(minX + 1,wid-1);
+	var minY = y | 0;
+	var maxY = Math.min(minY + 1,hei-1);
+	// NN
+	// var index = minY*wid + minX;
+	// return grid[index];
+	// linear
+	var pxb = x - minX;
+	var pyb = y - minY;
+	var pxa = 1 - x;
+	var pya = 1 - y;
+	var indexA = minY*wid + minX;
+	var indexB = minY*wid + maxX;
+	var indexC = maxY*wid + minX;
+	var indexD = maxY*wid + maxX;
+	var pA = pxa*pya;
+	var pB = pxb*pya;
+	var pC = pxa*pyb;
+	var pD = pxb*pyb;
+	var list = [grid[indexA],grid[indexB],grid[indexC],grid[indexD]];
+	var counts = [pA,pB,pC,pD];
+	return fxn(list,counts);
+}
 //------------------------------------------------------------------------------------------------------------------------------------------------- interpolation - 2D
 Code.gradient2D = function(loc,d0,d1,d2,d3,d4,d5,d6,d7,d8){
 	loc.x = (d5-d3)*0.5;

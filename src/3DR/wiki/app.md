@@ -345,6 +345,38 @@ https://cloud.google.com/appengine/docs/nodejs/
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+show the same corner @ 2 separate rotations
+
+
+- CONSISTENT DOMINANT ANGLE?
+	- flat / grad / corner / 2nd grad
+	- com /mom / grad
+
+	=>
+		- averaging of nearby pointness ...
+			- sub-pixel maxima
+- affine-ness testing again
+
+
+- optimum scale is so bad, it's actually better to not use it w/ otehr assistive fxns
+
+
+
+- why is rotation of corners not the same?
+	x NOT THE CORNERS
+	- 'random' step?
+	- gradient slight differences?
+	x rounding errors for eg linear interpolation?
+
+	=> in areas where gradient is not clear there is more variability
+
+- optimize matrix mult in loops with Matrix3D - not NEW Matrix
+x optimize epipole in loops by passing as params
+x unique angle for each point in mid-dense interpolation usign grid
+- reassess SWIFT / SAD extraction / usage
+
+
+
 
 - initial FAT MATCH + REFINEMENT must be better
 	- compare 'affine' sift & scale sift

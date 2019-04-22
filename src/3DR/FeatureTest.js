@@ -796,19 +796,12 @@ for(var b=0; b<bestAngles.length; ++b){
 
 var sizeAverage = (sizeX+sizeY)*0.5;
 
-
 var averageAngle = Code.averageAngles(valueAngles, percentAngles);
-// console.log(valueAngles);
-// console.log(percentAngles);
-// console.log(averageAngle);
-// throw "?";
-//useColors = false;
-//console.log(averageAngle);
-//if(i==vectorScales.length){
+
 if(i==1){
 	feature["bestAngles"] = [[averageAngle,0]];
 }
-useColors = true;
+	useColors = true;
 	var bestAngle = averageAngle;
 
 	// var vectorSAD = FeatureTest.SADVectorRGBGradientOctantCircular(image, center,dirX,dirY,bestAngle);
@@ -907,7 +900,7 @@ c.graphics().beginPath();
 			}
 			var dirX = feature["x"];
 			var dirY = feature["y"];
-			
+
 			//var bestAngle = feature["angle"];
 			//var bestAngle = item["angle"];
 				var bestAngle = j==0 ? match["angleA"] : match["angleB"]; // TODO: GET FROM BEST MATCH YEAH

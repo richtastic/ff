@@ -2106,7 +2106,7 @@ ImageMat.applyGaussianMask = function(image, imageWidth,imageHeight){
 	return {"value":image, "width":imageWidth, "height":imageHeight};
 }
 
-ImageMat.gaussianMask = function(width,height, sigmaX, sigmaY){ // area ~ 1
+ImageMat.gaussianMask = function(width,height, sigmaX, sigmaY, clearCircle, areRatios){ // area ~ 1
 	if(sigmaX===undefined){ // 3sigma = 99.7%
 		sigmaX = Math.min(width,height)*0.5/3.0;
 		sigmaX = sigmaX;
@@ -2114,15 +2114,32 @@ ImageMat.gaussianMask = function(width,height, sigmaX, sigmaY){ // area ~ 1
 	sigmaY = sigmaY!==undefined ? sigmaY : sigmaX;
 	var cX = (width-1)*0.5;
 	var cY = (height-1)*0.5;
+	if(areRatios){
+		sigmaX = cX/sigmaX;
+		sigmaY = cY/sigmaY;
+	}
 	var prefix = 1.0/(2.0*Math.PI*sigmaX*sigmaY);
 	var divX = 2.0*sigmaX*sigmaX;
 	var divY = 2.0*sigmaY*sigmaY;
 	var i, j, x, y, index, value;
+	var rx = (width/2);
+	var ry = (height/2);
 	var image = [];
 	for(j=0; j<height; ++j){
 		for(i=0; i<width; ++i){
 			index = j*width + i;
-			image[index] = prefix * Math.exp( -( Math.pow(i-cX,2)/divX  +  Math.pow(j-cY,2)/divY ) );
+			var keep = true;
+			var x = i - cX;
+			var y = j - cY;
+			if(clearCircle){
+				var d = Math.pow(x/rx,2) + Math.pow(y/ry,2);
+				keep = d<=1;
+			}
+			if(keep){
+				image[index] = prefix * Math.exp( -( Math.pow(x,2)/divX  +  Math.pow(y,2)/divY ) );
+			}else{
+				image[index] = 0;
+			}
 		}
 	}
 	return image;
