@@ -4167,14 +4167,14 @@ ImageMat.prototype.getBlurredImage = function(sigma){
 	var blu = ImageMat.getBlurredImage(this.blu(),this.width(),this.height(), sigma);
 	return new ImageMat(this.width(),this.height(), red,grn,blu);
 }
+ImageMat.extract_M2D_A = new Matrix2D();
+ImageMat.extract_M2D_B = new Matrix2D();
 ImageMat.extractRectFromFloatImage = function(x,y,scale,sigma, w,h, imgSource,imgWid,imgHei, matrix){ // scale=opposite behavior, w/h=destination width/height,
 	var blurr = (sigma!==undefined) && (sigma!=null);
-	var gaussSize, gauss1D, padding=0;// fullX=(imgWid*x), fullY=(imgHei*y); // wtf
+	var gaussSize, gauss1D, padding=0;
 	var img;
-	var fullX = x; // wtf
-	var fullY = y; // wtf
-	// console.log(fullX,fullY)
-	// console.log("blurr: "+blurr);
+	var fullX = x;
+	var fullY = y;
 	if(blurr){
 		gaussSize = Math.round(5.0 + sigma*2.0)*2+1;
 		gauss1D = ImageMat.getGaussianWindow(gaussSize,1, sigma);
@@ -4190,23 +4190,23 @@ ImageMat.extractRectFromFloatImage = function(x,y,scale,sigma, w,h, imgSource,im
 	var TR = ImageMat._TR; TR.set(right,top);
 	var BR = ImageMat._BR; BR.set(right,bot);
 	var BL = ImageMat._BL; BL.set(left,bot);
-//	console.log(left,right,top,bot)
-
-	if(matrix){
-		var matinv = matrix;
-		matrix = Matrix.inverse(matrix);
+	if(matrix){ // to origin & to updated center
 		var center1 = ImageMat._center1; center1.set(fullX,fullY);
-		var center2 = ImageMat._center2; center2.set(0,0);
-// console.log(matinv);
-		matinv.multV2DtoV2D(center2,center1);
-		// to origin
-		var m = new Matrix(3,3);
-		m.fromArray([1,0, -center1.x, 0,1, -center1.y, 0,0,1]);
-		matrix = Matrix.mult(matrix,m);
-		// to updated center
-		m.fromArray([1,0, center2.x, 0,1, center2.y, 0,0,1]);
-		matrix = Matrix.mult(matrix,m);
-		// apply to all points
+		var center2 = ImageMat._center2; // center2.set(0,0);
+		if(Code.isa(matrix,Matrix2D)){
+			matrix.multV2DtoV2D(center2,center1);
+			matrix = ImageMat.extract_M2D_A.copy(matrix); // change locally
+			matrix.inverse();
+			var m = ImageMat.extract_M2D_B;
+				m.set(1,0,0,1, center2.x-center1.x,center2.y-center1.y);
+			matrix.premult(m);
+		}else{
+			matrix.multV2DtoV2D(center2,center1);
+			matrix = Matrix.inverse(matrix);
+			var m = new Matrix(3,3);
+			m.fromArray([1,0, center2.x-center1.x, 0,1, center2.y-center1.y, 0,0,1]);
+			matrix = Matrix.mult(matrix,m);
+		} // apply to all points
 		matrix.multV2DtoV2D(TL,TL);
 		matrix.multV2DtoV2D(TR,TR);
 		matrix.multV2DtoV2D(BR,BR);
@@ -4219,7 +4219,6 @@ ImageMat.extractRectFromFloatImage = function(x,y,scale,sigma, w,h, imgSource,im
 	// BLUR IMAGE
 	if(blurr){
 		img = ImageMat.gaussian2DFrom1DFloat(img, wid,hei, gauss1D);
-		// DE-PAD IMAGE
 		img = ImageMat.unpadFloat(img, wid,hei, padding,padding,padding,padding);
 	}
 	return img;

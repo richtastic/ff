@@ -8897,8 +8897,13 @@ R3D.pointsCornerMaxima = function(src, width, height, keepPercentScore, nonMaxim
 */
 
 	// peak method
-	var extrema = Code.findMaxima2DFloat(H, width,height, true);
-	// var extrema = Code.findMaxima2DFloat(H, width,height, false);
+	// var doSubpixel = false;
+	var doSubpixel = true;
+	if(doSubpixel){
+		var extrema = Code.findMaxima2DFloat(H, width,height, false);
+	}else{
+		var extrema = Code.findMaxima2DFloat(H, width,height, true);
+	}
 	var borderIgnore = 0.01;
 	var border = Math.round(Math.min(borderIgnore*width,borderIgnore*height));
 	var zpb = border;
@@ -9858,20 +9863,12 @@ R3D.SIFTVectorCircular = function(imageMatrix, location,diaNeighborhood,matrix, 
 	var vectorGroups = Code.newArrayArrays(vectorLen*colorCount);
 	var scale = diaNeighborhood/binWidth;
 	var gradientR, gradientG, gradientB, gradientY;
-// // var matrix = null;
-// if(ANGLE!==undefined){
-// 	matrix = new Matrix(3,3);
-// 	matrix.identity();
-// 	// matrix = Matrix.transform2DTranslate(matrix, -location.x , -location.y );
-// 	// matrix = Matrix.transform2DScale(matrix, scaleDouble);
-// 	matrix = Matrix.transform2DRotate(matrix,ANGLE);
-// }
 	if(colors){
 		gradientR = R3D._SIFTchannelMatrix(imageMatrix.red(), imageMatrix.width(),imageMatrix.height(), binWidth, location, scale, matrix);
 		gradientG = R3D._SIFTchannelMatrix(imageMatrix.grn(), imageMatrix.width(),imageMatrix.height(), binWidth, location, scale, matrix);
 		gradientB = R3D._SIFTchannelMatrix(imageMatrix.blu(), imageMatrix.width(),imageMatrix.height(), binWidth, location, scale, matrix);
 	}else{
-		gradientB = R3D._SIFTchannelMatrix(imageMatrix.gry(), imageMatrix.width(),imageMatrix.height(), binWidth, location, scale, matrix);
+		gradientY = R3D._SIFTchannelMatrix(imageMatrix.gry(), imageMatrix.width(),imageMatrix.height(), binWidth, location, scale, matrix);
 	}
 	for(var j=0; j<binWidth; ++j){
 		for(var i=0; i<binWidth; ++i){
@@ -9888,7 +9885,7 @@ R3D.SIFTVectorCircular = function(imageMatrix, location,diaNeighborhood,matrix, 
 			}
 		}
 	}
-
+	// to 1d vector
 	var vector = [];
 	for(var i=0; i<vectorGroups.length; ++i){
 		var group = vectorGroups[i];
@@ -9899,7 +9896,7 @@ R3D.SIFTVectorCircular = function(imageMatrix, location,diaNeighborhood,matrix, 
 	Code.arraySub(vector, min);
 	Code.normalizeArray(vector);
 	// ImageMat.normalFloat01(vector); ?
-	vector = ImageMat.pow(vector,0.25);
+	// vector = ImageMat.pow(vector,0.25);
 	// vector = ImageMat.pow(vector,0.5);
 	return vector;
 }
@@ -11883,6 +11880,7 @@ R3D.fullMatchesForObjects = function(objectsAIn, imageMatrixA, objectsBIn, image
 	}
 	// get some high-error set of possible matches
 	var matching = R3D.matchObjectsSubset(objectsUniqueA, objectsUniqueB, objectsUniqueB, objectsUniqueA, 0.95, 0.20); // 0.95 , 0.20
+// TODO: DYNAMICALLY PICK THRESHOLDS TO GET 10~20% OF MATCHES ?
 	var best = matching["best"];
 	console.log(best)
 

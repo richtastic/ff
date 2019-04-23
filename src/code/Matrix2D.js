@@ -128,6 +128,14 @@ Matrix2D.prototype.multV2D = function(aV,bV){ // a = trans(b)
 
 Matrix2D.prototype.multV2DtoV2D = Matrix2D.prototype.multV2D;
 
+// Matrix.prototype.multV2DtoV2D = function(out, inn){
+// 	if(!inn){ inn = out; out = new V2D(); }
+// 	var x = this._rows[0][0]*inn.x + this._rows[0][1]*inn.y + this._rows[0][2];
+// 	out.y = this._rows[1][0]*inn.x + this._rows[1][1]*inn.y + this._rows[1][2];
+// 	out.x = x;
+// 	return out;
+// }
+
 Matrix2D.prototype.multV3D = function(aV,bV){ // a = trans(b)
 	if(bV==undefined){
 		bV = aV;

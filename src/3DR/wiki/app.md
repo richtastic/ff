@@ -345,20 +345,26 @@ https://cloud.google.com/appengine/docs/nodejs/
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-show the same corner @ 2 separate rotations
+- speed up methods by correct nesting & reuse
 
 
-- CONSISTENT DOMINANT ANGLE?
+~ affine matrix
+
+~ CONSISTENT DOMINANT ANGLE?
 	- flat / grad / corner / 2nd grad
-	- com /mom / grad
+	- com / mom / grad
+	- histogram / sum average / rotation average
+	- window big / window small
 
 	=>
 		- averaging of nearby pointness ...
 			- sub-pixel maxima
 - affine-ness testing again
 
+- sift feature could be a combination of different 'angles' / 'scales' / transforms
 
-- optimum scale is so bad, it's actually better to not use it w/ otehr assistive fxns
+
+- optimum scale is so bad, it's actually better to not use it w/ other assistive fxns
 
 
 
