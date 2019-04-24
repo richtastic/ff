@@ -345,6 +345,53 @@ https://cloud.google.com/appengine/docs/nodejs/
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+- keep track of USED locations & UNUSED:
+	- mask of used area
+	- use mask for limiting final search locations
+
+
+- easing of gradient calculation
+	- blur image
+	- get gradients
+	- blur gradients
+	- average gradient directions
+
+- overall move-direction max error vector
+
+=> covariance of gradients ?
+
+
+- check how gradient is affected using eigenvectors from:
+[dx dxy]
+[dxy dy]
+
+
+
+- dynamically upscale / downscale values based on current result values:
+	- lots of matches:
+		- decrease valid-match-ratio (0.95 -> 0.94)
+		- increase feature size/extent pixels (15 -> 21)
+		- decrease sigma multiplier (2->1.5)
+
+
+
+.... goal of initial matches (fat match) is to get the algorithm started off in a good general direction / starting point
+	- downstream methods:
+
+		- a way to mark BAD locations ? to avoid using/trying points in obviously not working areas?
+
+		- keep a count of how many times the feature/point was used & what score it got ?
+
+		- does this imply keeping track of "NO-GO-ZONES" ?
+
+
+----- integrating matching of multiple types of features:
+	- corners [~1000]
+	- blobs [~200]
+	- MSER [~100]
+
+
+
 - speed up methods by correct nesting & reuse
 
 

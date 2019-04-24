@@ -12010,6 +12010,8 @@ console.log(" +++++++++++ "+i+" / "+maxIterations+" @ "+(pixelErrorA*errorWindow
 		var putativeA = R3D.limitedObjectSearchFromF(objectsA,imageMatrixA,objectsB,imageMatrixB,matrixFfwd, pixelErrorB*errorWindow, minimumFCount);
 		var putativeB = R3D.limitedObjectSearchFromF(objectsB,imageMatrixB,objectsA,imageMatrixA,matrixFrev, pixelErrorA*errorWindow, minimumFCount);
 		var matching = R3D.matchObjectsSubset(objectsA, putativeA, objectsB, putativeB, limitScoreRatio, limitScoreSearch);
+		// R3D.markFeatureUse(matching, objectsA);
+		// R3D.markFeatureUse(matching, objectsB);
 		var matches = matching["best"];
 		if(matches.length<8){
 			stagnantCount += 1;
@@ -17866,6 +17868,42 @@ R3D.matchObjectsSubset = function(objectsA, putativeA, objectsB, putativeB, mini
 	bestMatches = bestMatches.sort(function(a,b){
 		return a["rank"] < b["rank"] ? -1 : 1;
 	});
+
+	// mark UNUSED objects
+	for(var i=0; i<objectsA.length; ++i){
+		objectsA["used"] = Code.valueOrDefault(objectsA["used"],0) - 1;
+	}
+	for(var i=0; i<objectsB.length; ++i){
+		objectsB["used"] = Code.valueOrDefault(objectsB["used"],0) - 1;
+	}
+	// mark USED objects
+	for(var i=0; i<bestMatches.length; ++i){
+		var match = bestMatches[i];
+		var mA = match["A"];
+		var mB = match["B"];
+		mA["used"] = Code.valueOrDefault(mA["used"],0) + 2;
+		mB["used"] = Code.valueOrDefault(mB["used"],0) + 2;
+		var prevA = mA["mPrev"];
+		var prevB = mB["mPrev"];
+		if(prevA!==undefined){
+			if(prevA!=match["b"]){
+				mA["mChange"] = Code.valueOrDefault(mA["mChange"],0) + 1;
+			}
+		}
+		if(prevB!==undefined){
+			if(prevB!=match["b"]){
+				mB["mChange"] = Code.valueOrDefault(mB["mChange"],0) + 1;
+			}
+		}
+		mA["mPrev"] = match["b"];
+		mB["mPrev"] = match["a"];
+	}
+	// marked CHANGED matches
+
+	// console.log(bestMatches);
+	// throw "..."
+
+
 
 	return {"matches":matches, "A":matchesA, "B":matchesB, "best":bestMatches};
 }
