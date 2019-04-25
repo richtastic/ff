@@ -11879,10 +11879,21 @@ R3D.fullMatchesForObjects = function(objectsAIn, imageMatrixA, objectsBIn, image
 		console.log("unique: "+objectsUniqueA.length+" & "+objectsUniqueB.length);
 	}
 	// get some high-error set of possible matches
-	var matching = R3D.matchObjectsSubset(objectsUniqueA, objectsUniqueB, objectsUniqueB, objectsUniqueA, 0.95, 0.20); // 0.95 , 0.20
-// TODO: DYNAMICALLY PICK THRESHOLDS TO GET 10~20% OF MATCHES ?
-	var best = matching["best"];
-	console.log(best)
+	var best = [];
+	var minimumRatio = 0.90;
+	var minimumMatch = 0.15;
+	var minimumFatMatch = 16; // 12-20
+	while(best.length<minimumFatMatch){ // need SOME
+		console.log(minimumRatio);
+		if(minimumRatio>=0.99){
+			break;
+		}
+		var matching = R3D.matchObjectsSubset(objectsUniqueA, objectsUniqueB, objectsUniqueB, objectsUniqueA, minimumRatio, minimumMatch); // 0.95 , 0.20
+		best = matching["best"];
+		console.log(best.length);
+		minimumRatio += 0.02;
+		minimumMatch += 0.02;
+	}
 
 // TODO: REMOVE TEST
 if(skipProcess){
@@ -11924,6 +11935,7 @@ return {"F":null, "matches":best, "error":0};
 	// WANT THE LARGEST NUMBER OF MATCHES  &&  LOWEST ERROR / AVERAGE ERROR
 	var bestResult = null;
 	var bestError = null;
+	var bestInitialError = null;
 	for(var i=0; i<tries; ++i){
 		result = R3D.fundamentalRANSACFromPoints(pointsA,pointsB, initialAveragePixelError, null, 0.50, 0.99);
 		if(result){
@@ -11938,12 +11950,14 @@ return {"F":null, "matches":best, "error":0};
 				var Finv = R3D.fundamentalInverse(F);
 				var fError = R3D.fErrorList(F, Finv, ptsA, ptsB);
 				var initialPixelError = fError["mean"] + fError["sigma"]*2.0;
+				var avg = initialPixelError / ptsA.length;
 				// var error = fError["mean"] + fError["sigma"];
-				console.log("potential: "+ptsA.length+" | "+initialPixelError);
-				if(initialPixelError<initialAveragePixelError){
-					if(!bestResult || initialPixelError<bestError){
+				console.log("potential: "+ptsA.length+" | "+initialPixelError+" = "+avg);
+				if(avg<initialAveragePixelError){
+					if(!bestResult || avg<bestError){
 						bestResult = result;
-						bestError = initialPixelError;
+						bestError = avg;
+						bestInitialError = initialPixelError;
 					}
 					// break;
 				}else{
@@ -11954,7 +11968,7 @@ return {"F":null, "matches":best, "error":0};
 			// fundamentalFromUnnormalized *= 1.5;
 		}
 	}
-	initialPixelError = bestError;
+	initialPixelError = bestInitialError;
 	result = bestResult;
 	console.log(result);
 
@@ -11994,7 +12008,7 @@ return {"F":null, "matches":best, "error":0};
 	var pixelErrorA = initialPixelError * 1.0;
 	var pixelErrorB = initialPixelError * 1.0;
 	var pixelErrorAB = Math.max(pixelErrorA,pixelErrorB);
-	var limitScoreRatio = 0.95; // 0.90 - 0.95
+	var limitScoreRatio = 0.90; // 0.90 - 0.95
 	var limitScoreSearch = 0.15; // 0.10 - 0.20
 	var minimumFCount = 10; // 5-10
 	var bestMatchSet = null;
@@ -12010,6 +12024,7 @@ console.log(" +++++++++++ "+i+" / "+maxIterations+" @ "+(pixelErrorA*errorWindow
 		var putativeA = R3D.limitedObjectSearchFromF(objectsA,imageMatrixA,objectsB,imageMatrixB,matrixFfwd, pixelErrorB*errorWindow, minimumFCount);
 		var putativeB = R3D.limitedObjectSearchFromF(objectsB,imageMatrixB,objectsA,imageMatrixA,matrixFrev, pixelErrorA*errorWindow, minimumFCount);
 		var matching = R3D.matchObjectsSubset(objectsA, putativeA, objectsB, putativeB, limitScoreRatio, limitScoreSearch);
+		R3D.markFeatureObjectsFromUsage(objectsA,objectsB,matching["best"]);
 		// R3D.markFeatureUse(matching, objectsA);
 		// R3D.markFeatureUse(matching, objectsB);
 		var matches = matching["best"];
@@ -13016,7 +13031,7 @@ R3D.siftObjectsToUnique = function(objects){
 		var scores = group["s"];
 		scores.sort(sorting);
 		var ratio = scores[0]/scores[1];
-		if(ratio<0.95){
+		if(ratio<0.99){
 			group["r"] = ratio;
 			keep.push(group);
 		}
@@ -17869,45 +17884,46 @@ R3D.matchObjectsSubset = function(objectsA, putativeA, objectsB, putativeB, mini
 		return a["rank"] < b["rank"] ? -1 : 1;
 	});
 
-	// mark UNUSED objects
-	for(var i=0; i<objectsA.length; ++i){
-		objectsA["used"] = Code.valueOrDefault(objectsA["used"],0) - 1;
-	}
-	for(var i=0; i<objectsB.length; ++i){
-		objectsB["used"] = Code.valueOrDefault(objectsB["used"],0) - 1;
-	}
-	// mark USED objects
-	for(var i=0; i<bestMatches.length; ++i){
-		var match = bestMatches[i];
-		var mA = match["A"];
-		var mB = match["B"];
-		mA["used"] = Code.valueOrDefault(mA["used"],0) + 2;
-		mB["used"] = Code.valueOrDefault(mB["used"],0) + 2;
-		var prevA = mA["mPrev"];
-		var prevB = mB["mPrev"];
-		if(prevA!==undefined){
-			if(prevA!=match["b"]){
-				mA["mChange"] = Code.valueOrDefault(mA["mChange"],0) + 1;
-			}
-		}
-		if(prevB!==undefined){
-			if(prevB!=match["b"]){
-				mB["mChange"] = Code.valueOrDefault(mB["mChange"],0) + 1;
-			}
-		}
-		mA["mPrev"] = match["b"];
-		mB["mPrev"] = match["a"];
-	}
-	// marked CHANGED matches
-
-	// console.log(bestMatches);
-	// throw "..."
-
-
-
 	return {"matches":matches, "A":matchesA, "B":matchesB, "best":bestMatches};
 }
+R3D.markFeatureObjectsFromUsage = function(objectsA,objectsB,bestMatches){
+		// mark UNUSED objects
+		for(var i=0; i<objectsA.length; ++i){
+			objectsA["used"] = Code.valueOrDefault(objectsA["used"],0) - 1;
+		}
+		for(var i=0; i<objectsB.length; ++i){
+			objectsB["used"] = Code.valueOrDefault(objectsB["used"],0) - 1;
+		}
+		// mark USED objects
+		for(var i=0; i<bestMatches.length; ++i){
+			var match = bestMatches[i];
+			var mA = match["A"];
+			var mB = match["B"];
+			mA["used"] = Code.valueOrDefault(mA["used"],0) + 2;
+			mB["used"] = Code.valueOrDefault(mB["used"],0) + 2;
+			var prevA = mA["mPrev"];
+			var prevB = mB["mPrev"];
+			if(prevA!==undefined){
+				if(prevA!=match["b"]){
+					mA["mChange"] = Code.valueOrDefault(mA["mChange"],0) + 1;
+				}
+			}
+			if(prevB!==undefined){
+				if(prevB!=match["b"]){
+					mB["mChange"] = Code.valueOrDefault(mB["mChange"],0) + 1;
+				}
+			}
+			mA["mPrev"] = match["b"];
+			mB["mPrev"] = match["a"];
+		}
+		// marked CHANGED matches
 
+		// console.log(bestMatches);
+		// throw "..."
+
+
+
+}
 R3D.compareSADVectorBoth = function(vectorA, vectorB){
 	var vFA = vectorA[0];
 	var vGA = vectorA[1];

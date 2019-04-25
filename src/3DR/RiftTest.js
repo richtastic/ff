@@ -18,11 +18,18 @@ function RiftTest(){
 
 
 	// IOWA
-	// new ImageLoader("./images/iowa/",["0.JPG", "1.JPG"],this,this.imagesLoadComplete).load(); // bad
-	// new ImageLoader("./images/iowa/",["1.JPG", "2.JPG"],this,this.imagesLoadComplete).load(); // ok
-	// new ImageLoader("./images/iowa/",["2.JPG", "3.JPG"],this,this.imagesLoadComplete).load(); // ok
-	// new ImageLoader("./images/iowa/",["3.JPG", "4.JPG"],this,this.imagesLoadComplete).load(); // bad ???
-	// new ImageLoader("./images/iowa/",["4.JPG", "5.JPG"],this,this.imagesLoadComplete).load(); // poor
+	// 504 x 378
+
+	// IOWA 2
+	// new ImageLoader("./images/iowa/",["0.JPG", "1.JPG"],this,this.imagesLoadComplete).load(); // good
+	// new ImageLoader("./images/iowa/",["1.JPG", "2.JPG"],this,this.imagesLoadComplete).load(); // poor
+	// new ImageLoader("./images/iowa/",["2.JPG", "3.JPG"],this,this.imagesLoadComplete).load(); // good
+	// new ImageLoader("./images/iowa/",["3.JPG", "4.JPG"],this,this.imagesLoadComplete).load(); // incorrect / bad
+	// new ImageLoader("./images/iowa/",["4.JPG", "5.JPG"],this,this.imagesLoadComplete).load(); // incorrect / bad
+	// new ImageLoader("./images/iowa/",["6.JPG", "7.JPG"],this,this.imagesLoadComplete).load(); // good
+	// new ImageLoader("./images/iowa/",["7.JPG", "8.JPG"],this,this.imagesLoadComplete).load(); // incorrect / bad
+	// new ImageLoader("./images/iowa/",["8.JPG", "9.JPG"],this,this.imagesLoadComplete).load(); // ok
+	// new ImageLoader("./images/iowa/",[".JPG", ".JPG"],this,this.imagesLoadComplete).load(); //
 
 	// new ImageLoader("./images/iowa/",["0.JPG", "4.JPG"],this,this.imagesLoadComplete).load(); // poor
 	// new ImageLoader("./images/iowa/",["2.JPG", "4.JPG"],this,this.imagesLoadComplete).load(); // bad
@@ -43,6 +50,28 @@ function RiftTest(){
 	// new ImageLoader("./images/",["F_S_1_1.jpg", "F_S_1_2.jpg"],this,this.imagesLoadComplete).load(); // good
 
 	// BENCH
+	// 1
+	// new ImageLoader("./images/",["bench_A.png", "bench_B.png"],this,this.imagesLoadComplete).load(); // good  |  31411 @ 0.870  | 16%
+	// new ImageLoader("./images/",["bench_B.png", "bench_C.png"],this,this.imagesLoadComplete).load(); // poor  |  11303 @ 0.929  |  6%
+	// new ImageLoader("./images/",["bench_C.png", "bench_D.png"],this,this.imagesLoadComplete).load(); // good  |  26042 @ 0.885  | 13%
+	// new ImageLoader("./images/",["bench_D.png", "bench_E.png"],this,this.imagesLoadComplete).load(); // ok    |  21188 @ 0.839  | 11%
+	// new ImageLoader("./images/",["bench_E.png", "bench_F.png"],this,this.imagesLoadComplete).load(); // ok    |  19594 @ 0.886  | 10%
+	// 2
+	// new ImageLoader("./images/",["bench_A.png", "bench_C.png"],this,this.imagesLoadComplete).load(); // good  |  29273 @ 0.583  | 15%
+	// new ImageLoader("./images/",["bench_B.png", "bench_D.png"],this,this.imagesLoadComplete).load(); // bad   |    4107 @ 1.64  |  2%
+	// new ImageLoader("./images/",["bench_C.png", "bench_E.png"],this,this.imagesLoadComplete).load(); // ok    |   15555 @ 1.01  |  8%
+	// new ImageLoader("./images/",["bench_D.png", "bench_F.png"],this,this.imagesLoadComplete).load(); // good  |   18500 @ 1.85  |  9%
+	// 3
+	// new ImageLoader("./images/",["bench_A.png", "bench_D.png"],this,this.imagesLoadComplete).load(); // ok    |  16768 @ 0.978  |  8%
+	// new ImageLoader("./images/",["bench_B.png", "bench_E.png"],this,this.imagesLoadComplete).load(); // good  |  28361 @ 0.888  | 14%
+	// new ImageLoader("./images/",["bench_C.png", "bench_F.png"],this,this.imagesLoadComplete).load(); // good  |  40834 @ 0.797  | 21%
+	// 4
+	// new ImageLoader("./images/",["bench_A.png", "bench_E.png"],this,this.imagesLoadComplete).load(); // good  |  52580 @ 0.837  | 27%
+	// new ImageLoader("./images/",["bench_B.png", "bench_F.png"],this,this.imagesLoadComplete).load(); // poor  |   10612 @ 8226  |  5%
+	// 5
+	// new ImageLoader("./images/",["bench_A.png", "bench_F.png"],this,this.imagesLoadComplete).load(); // wrong |    542 @ 1.36 |  5%   1453 @ 2.0 7%
+
+	// prev
 	// new ImageLoader("./images/",["bench_A.png", "bench_B.png"],this,this.imagesLoadComplete).load(); // ok
 	// new ImageLoader("./images/",["bench_A.png", "bench_C.png"],this,this.imagesLoadComplete).load(); // good
 	// new ImageLoader("./images/",["bench_A.png", "bench_D.png"],this,this.imagesLoadComplete).load(); // ok
@@ -54,21 +83,23 @@ function RiftTest(){
 	// new ImageLoader("./images/",["room0.png", "room2.png"],this,this.imagesLoadComplete).load(); // good
 
 	// TANKMAN
-	// new ImageLoader("./images/",["caseStudy1-14.jpg", "caseStudy1-20.jpg"],this,this.imagesLoadComplete).load(); // ok
-	// new ImageLoader("./images/",["caseStudy1-14.jpg", "caseStudy1-20_rot.jpg"],this,this.imagesLoadComplete).load(); // bad - INITIAL CLOSE TO FAIL
+	// new ImageLoader("./images/",["caseStudy1-14.jpg", "caseStudy1-20.jpg"],this,this.imagesLoadComplete).load(); // poor
+	// new ImageLoader("./images/",["caseStudy1-14.jpg", "caseStudy1-20_rot.jpg"],this,this.imagesLoadComplete).load(); // bad
 	// new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-9.jpg"],this,this.imagesLoadComplete).load(); // ok
 	// new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-26.jpg"],this,this.imagesLoadComplete).load();
 
 	// BEACH PILLAR
 	// new ImageLoader("./images/user/beach_pillar/",["0_50.jpg", "1_50.jpg"],this,this.imagesLoadComplete).load(); // good
-	// new ImageLoader("./images/user/beach_pillar/",["1_50.jpg", "2_50.jpg"],this,this.imagesLoadComplete).load(); // bad - initial matching fails or close to fails
-	new ImageLoader("./images/user/beach_pillar/",["1_50.jpg", "2_50_r.jpg"],this,this.imagesLoadComplete).load();
+	// new ImageLoader("./images/user/beach_pillar/",["1_50.jpg", "2_50.jpg"],this,this.imagesLoadComplete).load(); // bad
+	// new ImageLoader("./images/user/beach_pillar/",["1_50.jpg", "2_50_r.jpg"],this,this.imagesLoadComplete).load(); // bad
+	// new ImageLoader("./images/user/beach_pillar/",["2_50.jpg", "3_50.jpg"],this,this.imagesLoadComplete).load(); // ok
+	// new ImageLoader("./images/user/beach_pillar/",["0_50.jpg", "2_50.jpg"],this,this.imagesLoadComplete).load(); // poor
 
 
 
-	// new ImageLoader("./images/",["bt.000.png","bt.006.png"],this,this.imagesLoadComplete).load();
-	// new ImageLoader("./images/",["temple_1.png","temple_2.png"],this,this.imagesLoadComplete).load();
-	// new ImageLoader("./images/",["xA_small.jpg","xB_small.jpg"],this,this.imagesLoadComplete).load();
+	// new ImageLoader("./images/",["bt.000.png","bt.006.png"],this,this.imagesLoadComplete).load(); // good
+	// new ImageLoader("./images/",["temple_1.png","temple_2.png"],this,this.imagesLoadComplete).load(); // ok
+	// new ImageLoader("./images/",["xA_small.jpg","xB_small.jpg"],this,this.imagesLoadComplete).load(); // poor
 /*
 o -
 r -
@@ -103,6 +134,7 @@ RiftTest.prototype.imagesLoadComplete = function(imageInfo){
 	}
 	var display = this._root;
 	display.matrix().scale(1.5);
+	// display.matrix().scale(2.0);
 	GLOBALSTAGE = this._stage;
 
 // show initial points
@@ -602,6 +634,7 @@ var peakA = {"point": peakA};
 
 /// COMMENT START
 
+
 console.log("NEW AGE MATCHES");
 
 
@@ -619,15 +652,18 @@ var features = [featuresA,featuresB];
 // var mats = [imageMatrixB];
 // var features = [featuresB];
 
-
 /*
+
 // TESTING ORIENTATION CHANGE
 var image = imageMatrixA;
 var point = cornersA[444];
 
+point.round();
+
 
 var rotated = image.rotate180();
 var center = new V2D((rotated.width()-1)*0.5,(rotated.height()-1)*0.5);
+
 
 
 
@@ -639,8 +675,14 @@ var rotate = V2D.sub(point,center);
 	rotate.add(center);
 
 
+console.log(point)
+console.log(rotate)
+
 var featureA = RiftTest.basicFeatureFromPoint(point, image);
 var featureR = RiftTest.basicFeatureFromPoint(rotate, rotated);
+
+featureA = featureA[0];
+featureR = featureR[0];
 
 console.log(featureA);
 console.log(featureR);
@@ -649,19 +691,45 @@ var angleA = featureA["angle"];
 var angleR = featureR["angle"];
 var pointA = featureA["point"];
 var pointR = featureR["point"];
-console.log( Code.degrees( Code.angleDirection(angleA,angleR) ) );
+// console.log( Code.degrees( Code.angleDirection(angleA,angleR) ) );
+console.log(pointA,pointR);
+
+
+
+var grayA = image.gry();
+var grayB = rotated.gry();
+var indexA = image.width()*point.y + point.x;
+var indexB = rotated.width()*rotate.y + rotate.x;
+var colorA = grayA[indexA];
+var colorB = grayB[indexB];
+
+console.log(colorA);
+console.log(colorB);
+
+console.log(" ... ");
 
 
 var pnts = [pointA,pointR];
 var imgs = [image,rotated];
 
 for(var i=0; i<pnts.length; ++i){
-	var pointA = pnts[i];
+	var pnt = pnts[i];
 	var image = imgs[i];
 	var bSize = 51;
-	var block = image.extractRectFromFloatImage(pointA.x,pointA.y,0.10,null,bSize,bSize,null);
+	var cen = bSize*0.5 | 0;
+	var block = image.extractRectFromFloatImage(pnt.x,pnt.y,0.25,null,bSize,bSize,null);
+	var blockGray = block.gry();
+	var index = bSize*cen + cen;
+	var color = blockGray[index];
+	console.log("COLOR: "+i+" = "+color);
+
 	var img = GLOBALSTAGE.getFloatRGBAsImage(block.red(), block.grn(), block.blu(), block.width(), block.height());
 	d = new DOImage(img);
+	if(i==1){
+		d.matrix().translate(-bSize*0.5,-bSize*0.5);
+		d.matrix().rotate(Math.PI);
+		d.matrix().translate(bSize*0.5,bSize*0.5);
+	}
 	d.matrix().scale(2.0);
 	d.matrix().translate(10 + i*100 , 10 );
 	GLOBALSTAGE.addChild(d);
@@ -669,8 +737,12 @@ for(var i=0; i<pnts.length; ++i){
 }
 
 throw "TESTING";
-
 */
+
+
+
+
+
 
 for(var k=0; k<peakLists.length; ++k){
 	var peaks = peakLists[k];
@@ -781,13 +853,16 @@ continue;
 // NEW OBJECTS
 
 
-// this.showFeatures(featuresA, imageMatrixA.width()*0,0, display, 0x990000FF);
-// this.showFeatures(featuresB, imageMatrixA.width(),0, display, 0x990000FF);
+this.showFeatures(featuresA, imageMatrixA.width()*0,0, display, 0x990000FF);
+this.showFeatures(featuresB, imageMatrixA.width(),0, display, 0x990000FF);
 
 
+// throw "..."
 
-var objectsA = RiftTest.generateSIFTObjects(featuresA, imageMatrixA, 21);
-var objectsB = RiftTest.generateSIFTObjects(featuresB, imageMatrixB, 21);
+// var siftSize = 31;
+var siftSize = 21;
+var objectsA = RiftTest.generateSIFTObjects(featuresA, imageMatrixA, siftSize);
+var objectsB = RiftTest.generateSIFTObjects(featuresB, imageMatrixB, siftSize);
 
 console.log(objectsA);
 console.log(objectsB);
@@ -840,20 +915,37 @@ console.log(objectsB);
 
 
 // var result = R3D.fullMatchesForObjects(objectsA, imageMatrixA, objectsB, imageMatrixB, true);
-// console.log("FULL MATCHES START");
 var result = R3D.fullMatchesForObjects(objectsA, imageMatrixA, objectsB, imageMatrixB, false);
-console.log(result);
 var matches = result["matches"];
+console.log(matches);
 
-this.showFeatures(objectsA, imageMatrixA.width()*0,0, display, 0x990000FF);
-this.showFeatures(objectsB, imageMatrixA.width(),0, display, 0x990000FF);
+// this.showFeatures(objectsA, imageMatrixA.width()*0,0, display, 0x990000FF);
+// this.showFeatures(objectsB, imageMatrixA.width(),0, display, 0x990000FF);
 
-RiftTest.showMatches(matches,imageMatrixA, imageMatrixB, GLOBALSTAGE);
+/*
+var maskA = RiftTest.maskFromFeatures(objectsA,imageMatrixA);
+var maskB = RiftTest.maskFromFeatures(objectsB,imageMatrixB);
+img = GLOBALSTAGE.getFloatRGBAsImage(maskA, maskA, maskA, imageMatrixA.width(),imageMatrixA.height());
+d = new DOImage(img);
+d.graphics().alpha(0.25);
+d.matrix().translate(0,0);
+display.addChild(d);
 
+img = GLOBALSTAGE.getFloatRGBAsImage(maskB, maskB, maskB, imageMatrixB.width(),imageMatrixB.height());
+d = new DOImage(img);
+d.graphics().alpha(0.25);
+d.matrix().translate(imageMatrixA.width(),0);
+display.addChild(d);
+*/
+
+
+// RiftTest.showMatches(matches,imageMatrixA, imageMatrixB, display);
 
 // RiftTest.showObjects(objectsA,imageMatrixA, GLOBALSTAGE, 0,0);
 // RiftTest.showObjects(objectsB,imageMatrixB, GLOBALSTAGE, imageMatrixA.width(),0);
-throw "?";
+
+
+// throw "?";
 
 
 
@@ -892,10 +984,22 @@ console.log(info);
 RiftTest.showMatches(matches,imageMatrixA, imageMatrixB, GLOBALSTAGE);
 // throw "so ?";
 
+var useMasks = false;
+// var useMasks = true;
 // better matches
 var iterations = 3; // 2-5
+// var iterations = 0;
 // var objectsA = null;
 var stationaryResult = null;
+var keepObject = function(feature, args){
+	var mask = args[0];
+	var wid = args[1];
+	var point = feature["point"];
+	var x = point.x | 0;
+	var y = point.y | 0;
+	var index = y*wid + x;
+	return mask[index]>0;
+}
 for(var itr=0; itr<iterations; ++itr){
 	console.log("iterations : "+itr+" / "+iterations+" @ "+fSymmetricError);
 	// use current F to estimate angles
@@ -903,7 +1007,12 @@ for(var itr=0; itr<iterations; ++itr){
 	console.log(stationaryResult);
 	var objectsA = stationaryResult["A"];
 	var objectsB = stationaryResult["B"];
-
+if(useMasks){
+	console.log("FROM: "+objectsA.length+" | "+objectsB.length);
+	objectsA = Code.filterArray(objectsA, keepObject, [maskA,imageMatrixA.width()]);
+	objectsB = Code.filterArray(objectsB, keepObject, [maskB,imageMatrixB.width()]);
+	console.log("  TO: "+objectsA.length+" | "+objectsB.length);
+}
 	var matrixFfwd = F;
 	var matrixFrev = Finv;
 	// sigmas:
@@ -914,7 +1023,7 @@ for(var itr=0; itr<iterations; ++itr){
 	var limitScoreSearch = 0.15; // 0.10 - 0.20
 	// var minimumFCount = 10; // 5-10
 
-	limitScoreRatio = 0.95; // 0.90 - 0.95
+	limitScoreRatio = 0.90; // 0.85 - 0.90
 	limitScoreSearch = 0.15;
 
 	var minimumFCount = 20;
@@ -928,8 +1037,9 @@ for(var itr=0; itr<iterations; ++itr){
 		var matches = newMatches;
 		// var sigma = matches.length;
 		var sigma = 2.0;
+		// var sigma = 1.5;
 		// IF THERE ARE A LOT OF MATCHES, CAN USE EVEN SMALLER SIGMA : (100-1000) = 2.0->1.0
-		var result = RiftTest.dropOutliersIteritively(matches, 2.0, 10);
+		var result = RiftTest.dropOutliersIteritively(matches, 2.0, 10, F);
 		// var result = RiftTest.dropOutliersIteritively(matches, 1.5, 10);
 		// var result = RiftTest.dropOutliersIteritively(matches, 1.0); // too low
 		F = result["F"];
@@ -943,6 +1053,9 @@ for(var itr=0; itr<iterations; ++itr){
 throw "?";
 		fSymmetricError *= 2;
 	}
+
+	// TODO: CREATE NEW MASKS
+
 	// sigmaMult = (sigmaMult-1)*0.5 + 1;
 }
 
@@ -1094,6 +1207,29 @@ throw "..."
 
 }
 
+RiftTest.maskFromFeatures = function(objects, image){
+	var wid = image.width();
+	var hei = image.height();
+	var mask = Code.newArrayZeros(wid*hei);
+	// var size = 25.0;
+	var size = 21.0; // 5~10%
+	Code.forEach(objects, function(value, index){
+		var used = value["used"]
+		if(used){
+			var point = value["point"];
+			// console.log(point);
+			var x = point.x | 0;
+			var y = point.y | 0;
+			// throw "?";
+			var minX = Math.max(0,x-size);
+			var maxX = Math.max(0,x+size);
+			var minY = Math.max(0,y-size);
+			var maxY = Math.max(0,y+size);
+			Code.fill2DArrayRect(mask,wid,hei, minX,minY, maxX-minX+1,maxY-minY+1, 1.0);
+		}
+	});
+	return mask;
+}
 
 RiftTest.testEigs = function(corner, image, gradient, display, offX,offY){
 	offX = offX!==undefined ? offX : 0;
@@ -1194,27 +1330,36 @@ RiftTest.testEigs = function(corner, image, gradient, display, offX,offY){
 
 }
 
-RiftTest.covFromGray = function(block, width,height){
+RiftTest.covFromGray = function(block, width,height, offX,offY, eX,eY, norm){
+	norm = norm!==undefined ? norm : true;
+	offX = offX!==undefined ? offX : 0;
+	offY = offY!==undefined ? offY : 0;
+	eX = eX!==undefined ? eX : 1;
+	eY = eY!==undefined ? eY : 1;
 	var cX = width*0.5 | 0;
 	var cY = height*0.5 | 0;
 	// var rt2 = Math.sqrt(0.5);
+	cX += offX;
+	cY += offY;
 	var rt2 = 1.0 / (2*Math.sqrt(2));
-	var v0 = block[(cY-1)*width + (cX-1)];
-	var v1 = block[(cY-1)*width + (cX+0)];
-	var v2 = block[(cY-1)*width + (cX+1)];
-	var v3 = block[(cY+0)*width + (cX-1)];
+	var v0 = block[(cY-eY)*width + (cX-eX)];
+	var v1 = block[(cY-eY)*width + (cX+0)];
+	// var v2 = block[(cY-eY)*width + (cX+eX)];
+	var v3 = block[(cY+0)*width + (cX-eX)];
 	var v4 = block[(cY+0)*width + (cX+0)];
-	var v5 = block[(cY+0)*width + (cX+1)];
-	var v6 = block[(cY+1)*width + (cX-1)];
-	var v7 = block[(cY+1)*width + (cX+0)];
-	var v8 = block[(cY+1)*width + (cX+1)];
+	var v5 = block[(cY+0)*width + (cX+eX)];
+	// var v6 = block[(cY+eY)*width + (cX-eX)];
+	var v7 = block[(cY+eY)*width + (cX+0)];
+	var v8 = block[(cY+eY)*width + (cX+eX)];
 	var dx = (v5 - v3)*0.5;
 	var dy = (v7 - v1)*0.5;
 	var dxy = (v8 - v0)*rt2;
-	var dyx = (v6 - v2)*rt2;
+	// var dyx = (v6 - v2)*rt2;
 
 	var gradient = new V2D(dx,dy);
+	if(norm){
 		gradient.norm();
+	}
 	// console.log("gradient: "+gradient);
 	var mat = new Matrix(2,2).fromArray([dx, dxy, dxy, dy]);
 	var eig = Matrix.eigenValuesAndVectors(mat);
@@ -1223,7 +1368,10 @@ RiftTest.covFromGray = function(block, width,height){
 	var v0 = vec[0].toArray();
 	var v1 = vec[1].toArray();
 	// console.log(v0,v1,val);
-	var derivative = new V2D().fromArray(v0).norm();
+	var derivative = new V2D().fromArray(v0);
+	if(norm){
+		derivative.norm();
+	}
 	// if(val[0]<0){
 	// 	derivative.scale(-1);
 	// }
@@ -1231,6 +1379,9 @@ RiftTest.covFromGray = function(block, width,height){
 		derivative.scale(-1);
 	}
 	return derivative;
+
+
+	// return gradient;
 }
 
 RiftTest.basicFeatureFromPoint = function(point, image, gradient){
@@ -1269,12 +1420,12 @@ RiftTest.basicFeatureFromPoint = function(point, image, gradient){
 			scale = result["scale"];
 		}
 	}
-	var grySigma = 2.0;
+	var grySigma = 1.0;
 	var gSize = 11;
 	var g2 = gSize*0.5 | 0;
 	var pad = 3;
 	var grySize = gSize + 2*pad; // COMPUTING SIZE ---- 21-4 = 17 = 144 samples
-	var gryScale = grySize/7; // SAMPLE SIZE 11~21
+	var gryScale = grySize/11; // SAMPLE SIZE 11~21
 	// var matrix = new Matrix(3,3);
 	// 	matrix.identity();
 	// 	matrix = Matrix.transform2DScale(matrix, scale*gryScale);
@@ -1301,10 +1452,17 @@ throw " ... "
 	//
 	// primary direction
 	// var gSize = grySize - 6;
+// console.log(gry);
+	// var gry = ImageMat.getBlurredImage(gry,grySize,grySize,1.0);
+// console.log(gry);
+// throw "?"
 
 
-	var cov = RiftTest.covFromGray(gry, grySize,grySize);
+
+	// var offsets = [[0,0],];
+	var cov = RiftTest.covFromGray(gry, grySize,grySize,0,0, 1,1);
 	var angle = V2D.angleDirection(V2D.DIRX,cov);
+
 
 
 
@@ -1381,9 +1539,11 @@ throw " ... "
 	}
 	var percents = Code.countsToPercents(mags);
 	var angle = Code.averageAngles(angles,percents);
+
 */
 
 /*
+
 	// use moment to guide direction
 	var directionGradient = new V2D(1,0).rotate(angle);
 	var grySize = 11;
@@ -1417,8 +1577,8 @@ throw " ... "
 	}
 	angle = V2D.angleDirection(V2D.DIRX,mom);
 	// throw "..... cov";
-*/
 
+*/
 
 
 // use COM
@@ -1468,10 +1628,10 @@ angle = V2D.angleDirection(V2D.DIRX,directionGradient);
 	return features;
 }
 
-RiftTest.dropOutliersIteritively = function(matches, sigmaRatio, maxIterations){
+RiftTest.dropOutliersIteritively = function(matches, sigmaRatio, maxIterations, Fin){
 	sigmaRatio = sigmaRatio!==undefined && sigmaRatio!==null ? sigmaRatio : 1.0;
 	maxIterations = maxIterations!==undefined && maxIterations!==null ? maxIterations : 5;
-	var F, Finv, info;
+	var F = Fin, Finv, info;
 	var currentCount = matches.length;
 	var ptsA = null;
 	var ptsB = null;
@@ -1489,7 +1649,8 @@ RiftTest.dropOutliersIteritively = function(matches, sigmaRatio, maxIterations){
 			ptsA.push(a);
 			ptsB.push(b);
 		}
-		F = R3D.fundamentalFromUnnormalized(ptsA,ptsB);
+		F = R3D.fundamentalRefineFromPoints(ptsA,ptsB, F); // keep prior F, but update towards remaining points
+		// F = R3D.fundamentalFromUnnormalized(ptsA,ptsB); // new F each time
 		Finv = R3D.fundamentalInverse(F);
 		info = R3D.fundamentalError(F,Finv,ptsA,ptsB);
 		// drop outliers
@@ -1577,10 +1738,11 @@ RiftTest.stationaryFeatures = function(imageA,imageB,F, ptsA,ptsB,  display, exi
 // => 1-5 pixels apart ordered on corner value
 
 // 2 - 10 %
-	// var useSize = 11; // small
+	var useSize = 11; // small
 	// var useSize = 15;
-	var useSize = 25; // ~5%
-	// var useSize = 31; // ~6%
+	// var useSize = 21;
+	// var useSize = 25; // ~5%
+	var useSize = 31; // ~6%  // medium
 	// var useSize = 41; // ~ 7%
 	// var useSize = 51; //  ~9% big
 	var featuresA = null;
@@ -1604,6 +1766,7 @@ RiftTest.stationaryFeatures = function(imageA,imageB,F, ptsA,ptsB,  display, exi
 	if(!featuresB){ // always B
 		featuresB = RiftTest.stationaryFeaturesFromAngle(imageB, cornersB, angleAB, useSize, null, display, grid2D,gridCount,gridCount);
 	}
+
 	return {"A":featuresA, "B":featuresB, "cornersA":cornersA, "cornersB":cornersB}
 }
 HAS_CALLED = false;
@@ -1643,12 +1806,6 @@ RiftTest.stationaryFeaturesFromAngle = function(image, corners, angle, size, sca
 	return features;
 }
 
-//
-// RiftTest.showObjects = function(objects, imageA, display, offX, offY){
-// 	for(){
-//
-// 	}
-// }
 
 RiftTest.showMatches = function(matches, imageA, imageB, display){
 	// var offY = imageA.height();
@@ -1659,7 +1816,8 @@ RiftTest.showMatches = function(matches, imageA, imageB, display){
 		var score = match["score"];
 		var pairs = [match["A"],match["B"]];
 		// draw matches:
-		var ssss = 1.5;
+		// var ssss = 1.5;
+		var ssss = 1.0;
 		var c = new DO();
 		c.graphics().setLine(1.0, 0x66FF0000);
 		c.graphics().beginPath();
@@ -2285,7 +2443,7 @@ showAffine = true;
 // showAffine = false;
 if(showAffine){
 // console.log(scale)
-/*
+
 	var dirX = feature["dirX"];
 	var dirY = feature["dirY"];
 	if(dirX && dirY){
@@ -2316,35 +2474,15 @@ if(showAffine){
 		sizeX = featureSize*values[0];
 		sizeY = featureSize*values[1];
 	}
-*/
-	// var a = V2D.angleDirection(V2D.DIRX,dir0);
-
-	// console.log(ratio);
-	// throw "?"
-
-	// var fSize = 5.0;
-	// var sizeX = featureSize*dir0.length();
-	// var sizeY = featureSize*dir1.length();
-	// var sizeX = featureSize*values[0];
-	// var sizeY = featureSize*values[1];
-
-	// var sizeX = featureSize*scale;
-	// var sizeY = featureSize*scale/ratio;
-
-
-
-// console.log(feature["used"]);
-
-// console.log(sizeX,sizeY,angle,scale);
-// console.log(feature["mChange"]);
 
 	var col = color;
+/*
 	if(!feature["used"]){
 		col = 0x66999999;
 	}else if( (feature["mChange"] && feature["mChange"]>5) ){
 		col = 0x99FF00FF;
 	}
-
+*/
 	// round:
 	// var sizeX = featureSize*scale;
 	// var sizeY = featureSize*scale;
@@ -2832,9 +2970,14 @@ RiftTest.optimumCornerScale = function(point, imageMatrix, prependMatrix, startS
 		// var blur = ImageMat.getBlurredImage(gry, compareSize,compareSize, 1.0);
 		var blur = gry;
 		// SPEEDUP - ONLY CARE ABOUT CENTER
+
 		var H = R3D.cornerScaleScores(blur,compareSize,compareSize)["value"];
 		var score = H[center*compareSize + center];
 		scores.push(score);
+
+		// maximum gradient
+		// var cov = RiftTest.covFromGray(gry, compareSize,compareSize,0,0, 1,1, false);
+		// scores.push(cov.length());
 	}
 	// ignore end peaks
 	var peaks = Code.findGlobalExtrema1D(scores, true);

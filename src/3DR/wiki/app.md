@@ -345,25 +345,16 @@ https://cloud.google.com/appengine/docs/nodejs/
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-- keep track of USED locations & UNUSED:
-	- mask of used area
-	- use mask for limiting final search locations
+- optimize code in some locations
+-> convert current RIFT code back to pipeline (features + matching)
+=> how to define success (good enough) & failure ?
+	- sigma
+	- initial error / final error
+	- final match count
+	-> percent of image kept?
 
+-> create easy set of ~6 images for pipeline test
 
-- easing of gradient calculation
-	- blur image
-	- get gradients
-	- blur gradients
-	- average gradient directions
-
-- overall move-direction max error vector
-
-=> covariance of gradients ?
-
-
-- check how gradient is affected using eigenvectors from:
-[dx dxy]
-[dxy dy]
 
 
 

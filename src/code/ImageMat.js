@@ -3298,6 +3298,7 @@ ImageMat.extractRectWithProjection = function(source,sW,sH, wid,hei, projection,
 	// interpolationType : 1=linear, 3=cubic
 	var i, j, fr = new V3D(), val = new V3D();
 	if( !(source instanceof Array) ){
+		// Code.isa(source,Array)
 		var destination = new ImageMat(wid,hei);
 		for(j=0;j<hei;++j){
 			for(i=0;i<wid;++i){
@@ -3311,12 +3312,13 @@ ImageMat.extractRectWithProjection = function(source,sW,sH, wid,hei, projection,
 	}else{
 		destination = new Array(wid*hei);
 		for(j=0;j<hei;++j){
+			var wJ = wid*j;
 			for(i=0;i<wid;++i){
 				fr.x = i; fr.y = j;
 				projection.multV2DtoV3D(fr,fr);
 				fr.x /= fr.z; fr.y /= fr.z;
-				destination[wid*j+i] = ImageMat.getPointInterpolateCubic(source, sW,sH, fr.x,fr.y);
-				//destination[wid*j+i] = ImageMat.getPointInterpolateLinear(source, sW,sH, fr.x,fr.y);
+				destination[wJ+i] = ImageMat.getPointInterpolateCubic(source, sW,sH, fr.x,fr.y);
+				// destination[wid*j+i] = ImageMat.getPointInterpolateLinear(source, sW,sH, fr.x,fr.y);
 				//destination[wid*j+i] = ImageMat.getPointInterpolateNearest(source, sW,sH, fr.x,fr.y);
 			}
 		}
@@ -3324,8 +3326,7 @@ ImageMat.extractRectWithProjection = function(source,sW,sH, wid,hei, projection,
 	return destination;
 }
 ImageMat.extractRect = function(source, aX,aY,bX,bY,cX,cY,dX,dY, wid,hei, sW,sH){ // generates homography beforehand
-	//var fromPoints = [new V2D(0,0), new V2D(wid-1,0), new V2D(wid-1,hei-1), new V2D(0,hei-1)];
-	var fromPoints = [new V2D(0,0), new V2D(wid,0), new V2D(wid,hei), new V2D(0,hei)];
+	var fromPoints = [new V2D(0,0), new V2D(wid-1,0), new V2D(wid-1,hei-1), new V2D(0,hei-1)];
 	var toPoints = [new V2D(aX,aY), new V2D(bX,bY), new V2D(cX,cY), new V2D(dX,dY)];
 	var projection = Matrix.get2DProjectiveMatrix(fromPoints,toPoints);
 	return ImageMat.extractRectWithProjection(source,sW,sH, wid,hei, projection);

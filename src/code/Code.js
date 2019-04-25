@@ -1408,10 +1408,10 @@ Code.transformArray = function(a,f){
 	}
 	return a;
 }
-Code.filterArray = function(a, f){
+Code.filterArray = function(a, f, args){
 	filtered = [];
 	for(var i=0; i<a.length; ++i){
-		if(f(a[i])){
+		if(f(a[i],args)){
 			filtered.push(a[i]);
 		}
 	}
@@ -9627,6 +9627,15 @@ Code.centroidFrom2DArray = function(source, width, height, mask){ // SUM: m_i * 
 		cen.scale(1.0/totalWeight);
 	}
 	return cen;
+}
+
+Code.fill2DArrayRect = function(array,wid,hei, x,y, width,height, fill){
+	for(var j=0; j<height; ++j){
+		for(var i=0; i<width; ++i){
+			var index = (j+y)*wid + (i+x);
+			array[index] = fill;
+		}
+	}
 }
 
 /*

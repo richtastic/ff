@@ -1340,11 +1340,6 @@ Matrix.get2DProjectiveMatrix = function(fromPoints, toPoints){
 	//var x = Matrix.solve(matA,matB);
 	var x = Matrix.mult(Matrix.pseudoInverseSimple(matA), matB); //
 	var projection = (new Matrix(3,3)).fromArray([x.get(0,0),x.get(1,0),x.get(2,0), x.get(3,0),x.get(4,0),x.get(5,0), x.get(6,0),x.get(7,0),1.0]);
-	// var pt = new V3D(0,0,0);
-	// projection.multV2DtoV3D(pt,pt);
-	// console.log(pt.toString());
-	// projection.set(0,0, projection.get(0,0)/pt.z );
-	// projection.set(1,1, projection.get(1,1)/pt.z );
 	return projection;
 }
 

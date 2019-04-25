@@ -305,6 +305,11 @@ V3D.prototype.wiggle = function(a,b,c){
 	this.z += (Math.random()-0.5)*c;
 	return this;
 }
+V3D.prototype.round = function(){
+	this.x = Math.round(this.x);
+	this.y = Math.round(this.y);
+	this.z = Math.round(this.z);
+}
 V3D.prototype.random = function(a,b,c){
 	return this.wiggle(a,b,c);
 }

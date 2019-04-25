@@ -197,6 +197,10 @@ V2D.prototype.wiggle = function(a,b){
 	this.y += (Math.random()-0.5)*b;
 	return this;
 }
+V2D.prototype.round = function(){
+	this.x = Math.round(this.x);
+	this.y = Math.round(this.y);
+}
 V2D.randomRect = function(minX,maxX,minY,maxY){
 	if(minY===undefined){
 		maxY = maxX;
