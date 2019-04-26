@@ -24,10 +24,10 @@ function RiftTest(){
 	// new ImageLoader("./images/iowa/",["0.JPG", "1.JPG"],this,this.imagesLoadComplete).load(); // good
 	// new ImageLoader("./images/iowa/",["1.JPG", "2.JPG"],this,this.imagesLoadComplete).load(); // poor
 	// new ImageLoader("./images/iowa/",["2.JPG", "3.JPG"],this,this.imagesLoadComplete).load(); // good
-	// new ImageLoader("./images/iowa/",["3.JPG", "4.JPG"],this,this.imagesLoadComplete).load(); // incorrect / bad
-	// new ImageLoader("./images/iowa/",["4.JPG", "5.JPG"],this,this.imagesLoadComplete).load(); // incorrect / bad
+	// new ImageLoader("./images/iowa/",["3.JPG", "4.JPG"],this,this.imagesLoadComplete).load(); // incorrect / bad  ~
+	// new ImageLoader("./images/iowa/",["4.JPG", "5.JPG"],this,this.imagesLoadComplete).load(); // incorrect / bad  ~
 	// new ImageLoader("./images/iowa/",["6.JPG", "7.JPG"],this,this.imagesLoadComplete).load(); // good
-	// new ImageLoader("./images/iowa/",["7.JPG", "8.JPG"],this,this.imagesLoadComplete).load(); // incorrect / bad
+	new ImageLoader("./images/iowa/",["7.JPG", "8.JPG"],this,this.imagesLoadComplete).load(); // incorrect / bad ~
 	// new ImageLoader("./images/iowa/",["8.JPG", "9.JPG"],this,this.imagesLoadComplete).load(); // ok
 	// new ImageLoader("./images/iowa/",[".JPG", ".JPG"],this,this.imagesLoadComplete).load(); //
 
@@ -520,14 +520,21 @@ var sortZ = function(a,b){
 // var searchCriteria = 0.99; // ~ 425
 // var searchCriteria = 0.999; // ~ 800
 var searchCriteria = 0.9999; // ~ 900
-var cornersA = R3D.pointsCornerMaxima(imageMatrixA.gry(), imageMatrixA.width(), imageMatrixA.height(),  searchCriteria);
-cornersA.sort(sortZ);
-var cornersB = R3D.pointsCornerMaxima(imageMatrixB.gry(), imageMatrixB.width(), imageMatrixB.height(),  searchCriteria);
-cornersB.sort(sortZ);
+
+
+// var cornersA = R3D.pointsCornerMaxima(imageMatrixA.gry(), imageMatrixA.width(), imageMatrixA.height(),  searchCriteria);
+// cornersA.sort(sortZ);
+// var cornersB = R3D.pointsCornerMaxima(imageMatrixB.gry(), imageMatrixB.width(), imageMatrixB.height(),  searchCriteria);
+// cornersB.sort(sortZ);
+var nonMaximalPercent = 0.999;
+var scalable = 1.0;
+var limitPixels = 2.0;
+var maxCorners = 1500;
+var single = false;
+cornersA = R3D.extractImageCorners(imageMatrixA, nonMaximalPercent, maxCorners, single, scalable, limitPixels);
+cornersB = R3D.extractImageCorners(imageMatrixB, nonMaximalPercent, maxCorners, single, scalable, limitPixels);
 console.log(cornersA);
 console.log(cornersB);
-
-
 
 
 
@@ -752,10 +759,8 @@ for(var k=0; k<peakLists.length; ++k){
 var cornerH = R3D.cornerScaleScores(mat.gry(),mat.width(),mat.height()).value;
 	for(var i=0; i<peaks.length; ++i){
 		var peak = peaks[i];
-
 		// simple
 		var refines = RiftTest.basicFeatureFromPoint(peak, mat, cornerH);
-// console.log(refines.length); // 50% 1  | 40% 2 | 10% 3
 		for(var r=0; r<refines.length; ++r){
 			feature.push(refines[r]);
 		}
@@ -792,72 +797,14 @@ continue;
 	}
 }
 
-// throw "wot";
-// throw " .... "
-
-// peakA = peaks[0];
-// peakB = peaks[1];
-
-//
-// console.log(peakA)
-//
 
 
-
-// peakB = null;
-
-//peakB = this.peakScaleForPoint(peakB["point"], imageMatrixB, peakB["covAngle"], peakB["covScale"]);
-
-
-// console.log(peakA);
-// console.log(peakB);
-
-// var featureA = peakA;
-// var featureB = peakB;
-
-
-// TODO: MOMENT
-// if(featureA && featureB){
-// featureA["angle"] = featureA["covAngle"];
-// featureB["angle"] = featureB["covAngle"];
-// }
-// featureA["angle"] = featureA["covScale"];
-
-//
-// var angleA = 0;
-// var sizeA = peakA ? peakA["scale"] : 10;
-// var angleB = 0;
-// var sizeB = peakB ? peakB["scale"] : 10;
-//
-// var featureA = {"point":pointA, "angle":angleA, "size":sizeA};
-// var featureB = {"point":pointB, "angle":angleB, "size":sizeB};
-//
-// var featuresA = [];
-// var featuresB = [];
-// if(featureA){
-// 	featuresA.push(featureA);
-// }
-// if(featureB){
-// 	featuresB.push(featureB);
-// }
-
-
-// console.log(featuresA);
-// console.log(featuresB);
-
-
-
-
-
-
-// NEW OBJECTS
 
 
 this.showFeatures(featuresA, imageMatrixA.width()*0,0, display, 0x990000FF);
 this.showFeatures(featuresB, imageMatrixA.width(),0, display, 0x990000FF);
 
-
-// throw "..."
+// throw "?"
 
 // var siftSize = 31;
 var siftSize = 21;
@@ -914,8 +861,8 @@ console.log(objectsB);
 */
 
 
-// var result = R3D.fullMatchesForObjects(objectsA, imageMatrixA, objectsB, imageMatrixB, true);
-var result = R3D.fullMatchesForObjects(objectsA, imageMatrixA, objectsB, imageMatrixB, false);
+var result = R3D.fullMatchesForObjects(objectsA, imageMatrixA, objectsB, imageMatrixB, true);
+// var result = R3D.fullMatchesForObjects(objectsA, imageMatrixA, objectsB, imageMatrixB, false);
 var matches = result["matches"];
 console.log(matches);
 
@@ -939,13 +886,8 @@ display.addChild(d);
 */
 
 
-// RiftTest.showMatches(matches,imageMatrixA, imageMatrixB, display);
-
-// RiftTest.showObjects(objectsA,imageMatrixA, GLOBALSTAGE, 0,0);
-// RiftTest.showObjects(objectsB,imageMatrixB, GLOBALSTAGE, imageMatrixA.width(),0);
-
-
-// throw "?";
+RiftTest.showMatches(matches,imageMatrixA, imageMatrixB, display);
+throw "?";
 
 
 
@@ -1378,7 +1320,9 @@ RiftTest.covFromGray = function(block, width,height, offX,offY, eX,eY, norm){
 	if(V2D.dot(gradient,derivative)<0){
 		derivative.scale(-1);
 	}
-	return derivative;
+
+	return {"cov":derivative, "ratio":Math.abs(val[0]/val[1]), "0":val[0],  "1":val[1]}
+	// return derivative;
 
 
 	// return gradient;
@@ -1389,9 +1333,8 @@ RiftTest.basicFeatureFromPoint = function(point, image, gradient){
 	var imageWidth = image.width();
 	var imageHeight = image.height();
 
-
-	var doAffine = false;
-	// var doAffine = true;
+	// var doAffine = false;
+	var doAffine = true;
 
 	// var doScale = false;
 	var doScale = true;
@@ -1460,7 +1403,7 @@ throw " ... "
 
 
 	// var offsets = [[0,0],];
-	var cov = RiftTest.covFromGray(gry, grySize,grySize,0,0, 1,1);
+	var cov = RiftTest.covFromGray(gry, grySize,grySize,0,0, 1,1)["cov"];
 	var angle = V2D.angleDirection(V2D.DIRX,cov);
 
 
@@ -1878,14 +1821,6 @@ RiftTest.showMatches = function(matches, imageA, imageB, display){
 
 RiftTest.generateSIFTObjects = function(features, imageMatrix, diaNeighborhood){
 	diaNeighborhood = diaNeighborhood!==undefined ? diaNeighborhood : 21;
-	// var featureScale = 1.0/4.0;
-	// var diaNeighborhood = 5; // many
-	// var diaNeighborhood = 11;
-	// var diaNeighborhood = 15; // ...
-	// var diaNeighborhood = 21; // few
-	// var diaNeighborhood = 31;
-	// var diaNeighborhood = 51;
-
 // HOW TO SIZE THIS ?
 
 	var imageWidth = imageMatrix.width();
@@ -3271,9 +3206,26 @@ var doShow = false;
 		scale = optimum["scale"];
 		point = optimum["point"];
 	}
+
+	throw "..."
 	var imageGray = imageMatrix.gry();
 	var imageWidth = imageMatrix.width();
 	var imageHeight = imageMatrix.height();
+
+	var covSigma = 1.0;
+	var compareSize = 11;
+	var compareScale = covarianceSize/5;
+	var matrix = new Matrix2D();
+		matrix.identity();
+		matrix.scale(scale*compareScale);
+		matrix.premult(prependMatrix);
+	var gry = ImageMat.extractRectFromFloatImage(point.x,point.y,1.0,covSigma,compareSize,compareSize, imageGray,imageWidth,imageHeight, matrix);
+
+	// maximum gradient
+	var cov = RiftTest.covFromGray(gry, compareSize,compareSize,0,0, 1,1, false);
+	scores.push(cov.length());
+
+/*
 	// COVARIANCE SAMPLE:
 	var covarianceSize = 15; // 15 - 4 = 11				| 17-13
 	var covarianceScale = covarianceSize/3; // 1 == too circular 3 ... 6 == too oval
@@ -3299,7 +3251,7 @@ var doShow = false;
 			matrix = Matrix.mult(matrix,prependMatrix);
 		}
 
-
+*/
 
 
 	// FLAT IMAGE
@@ -3560,7 +3512,7 @@ var additonal = cornerH;
 	//var covarianceSize = gradSize + 4;
 	var covarianceSize = gradSize + 0;
 	var c2 = covarianceSize*0.5 | 0;
-	var covarianceScale = covarianceSize/3;
+	var covarianceScale = covarianceSize/11;
 	// var covarianceSigma = null;
 	// var covarianceSigma = 1.0;
 	var covarianceSigma = 2.0;
@@ -3580,19 +3532,39 @@ var additonal = cornerH;
 	var grad = ImageMat.extractRectFromFloatImage(point.x,point.y,1.0,covarianceSigma,covarianceSize,covarianceSize, cornerH,imageWidth,imageHeight, matrix);
 	// console.log(grad);
 
+/*
+	var cov = RiftTest.covFromGray(grad, covarianceSize,covarianceSize,0,0, 2,2, false);
+	// console.log(cov)
+	var covarianceRatio = cov["ratio"];
+	cov = cov["cov"];
+	// console.log(cov);
+	var covAngle = V2D.angleDirection(V2D.DIRX,cov);
+	// console.log(Code.degrees(covAngle))
+	// throw "?"
+	// if(covarianceRatio>1.0){
+	// 	covarianceRatio = 1.0/covarianceRatio;
+	// }
+	var covScale = Math.sqrt(covarianceRatio);
+	covarianceRatio = 1.0/covarianceRatio;
+*/
+
+
+
 	var covariance = Code.momentFrom2DArray(grad, gradSize,gradSize, gradMean, gradMask);
 	var covarianceA = covariance[0];
 	var covarianceB = covariance[1];
-	var covarianceRatio = covarianceA.z/covarianceB.z;
+	var covarianceRatio = Math.abs(covarianceA.z/covarianceB.z);
 	if(covarianceRatio>1.0){
 		covarianceRatio = 1.0/covarianceRatio;
 		covarianceA = covariance[1];
 		covarianceB = covariance[0];
 	}
-
 	var covScale = Math.sqrt(covarianceRatio);
 		covarianceA = new V2D(covarianceA.x,covarianceA.y);
 	var covAngle = V2D.angleDirection(V2D.DIRX,covarianceA);
+
+if(covScale>0){
+// IF THE RATIO DOESN'T GET BETTER -> RETURN W/ SCAE
 
 	// transform
 	var cov = new Matrix2D().identity();
@@ -3601,12 +3573,37 @@ var additonal = cornerH;
 	cov.rotate(covAngle);
 	cov.premult(workingMatrix);
 
+	// if( Code.isNaN(cov.a) ){
+	// 	console.log(covAngle);
+	// 	console.log(covScale);
+	// 	console.log(cov);
+	// 	console.log(workingMatrix);
+	// 	throw "?"
+	// }
+
 	workingMatrix.copy(cov);
+}
 	var refine = {"point":point, "scale":scale, "ratio":covarianceRatio, "matrix":cov};
 	return refine;
 }
 
 
+// var imageGray = imageMatrix.gry();
+// var imageWidth = imageMatrix.width();
+// var imageHeight = imageMatrix.height();
+//
+// var covSigma = 1.0;
+// var compareSize = 11;
+// var compareScale = covarianceSize/5;
+// var matrix = new Matrix2D();
+// 	matrix.identity();
+// 	matrix.scale(scale*compareScale);
+// 	matrix.premult(prependMatrix);
+// var gry = ImageMat.extractRectFromFloatImage(point.x,point.y,1.0,covSigma,compareSize,compareSize, imageGray,imageWidth,imageHeight, matrix);
+//
+// // maximum gradient
+// var cov = RiftTest.covFromGray(gry, compareSize,compareSize,0,0, 1,1, false);
+// scores.push(cov.length());
 
 
 // ...

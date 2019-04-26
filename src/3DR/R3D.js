@@ -11001,7 +11001,6 @@ R3D.extractImageCorners = function(imageSource, type, maxCount, single, scaleUp,
 	var toV2D = function(a){
 		return a;
 	}
-// console.log("features before: "+features.length);
 	features.sort(function(a,b){
 		return a.t > b.t ? -1 : 1;
 	});
@@ -11015,23 +11014,14 @@ R3D.extractImageCorners = function(imageSource, type, maxCount, single, scaleUp,
 	}
 	features = space.toArray();
 	space.kill();
-// console.log("features after: "+features.length);
-
-	// remove low corner prominence
-	features = features.sort(function(a,b){
-		return a.t > b.t ? -1 : 1;
-	});
-	var max = features[0].t;
-	var min = features[features.length-1].t;
-	var range = max-min;
-	var rangeMin = min + range*0.0001; // very lowest
-	// console.log(max+" | "+min+" | "+range);
+	if(features.length>maxCount){ // remove low corner prominence first
+		features = features.sort(function(a,b){
+			return a.t > b.t ? -1 : 1;
+		});
+	}
 	var featuresOut = [];
 	for(i=0; i<features.length; ++i){
 		var feature = features[i];
-		// if(feature.t<rangeMin){
-		// 	continue;
-		// }
 		var f = new V4D(feature.x,feature.y,feature.z, feature.t);
 		featuresOut.push(f);
 		if(featuresOut.length>=maxCount){

@@ -3325,10 +3325,33 @@ ImageMat.extractRectWithProjection = function(source,sW,sH, wid,hei, projection,
 	}
 	return destination;
 }
+
 ImageMat.extractRect = function(source, aX,aY,bX,bY,cX,cY,dX,dY, wid,hei, sW,sH){ // generates homography beforehand
-	var fromPoints = [new V2D(0,0), new V2D(wid-1,0), new V2D(wid-1,hei-1), new V2D(0,hei-1)];
-	var toPoints = [new V2D(aX,aY), new V2D(bX,bY), new V2D(cX,cY), new V2D(dX,dY)];
-	var projection = Matrix.get2DProjectiveMatrix(fromPoints,toPoints);
+	if(!ImageMat.extractRect_temp3x3){
+		ImageMat.extractRect_temp3x3 = new Matrix(3,3);
+	}
+	if(!ImageMat.extractRect_temp8x8){
+		ImageMat.extractRect_temp8x8 = new Matrix(8,8);
+	}
+	if(!ImageMat.extractRect_temp8x1){
+		ImageMat.extractRect_temp8x1 = new Matrix(8,1);
+	}
+	if(!ImageMat.extractRect_listA){
+		ImageMat.extractRect_listA = [new V2D(),new V2D(),new V2D(),new V2D()];
+	}
+	if(!ImageMat.extractRect_listB){
+		ImageMat.extractRect_listB = [new V2D(),new V2D(),new V2D(),new V2D()];
+	}
+	// now that its all set, use this going forward:
+	ImageMat.extractRect = ImageMat._extractRectInit;
+	return ImageMat.extractRect(source, aX,aY,bX,bY,cX,cY,dX,dY, wid,hei, sW,sH);
+}
+ImageMat._extractRectInit = function(source, aX,aY,bX,bY,cX,cY,dX,dY, wid,hei, sW,sH){
+	var fr = ImageMat.extractRect_listA;
+	fr[0].set(0,0); fr[1].set(wid-1,0); fr[2].set(wid-1,hei-1); fr[3].set(0,hei-1);
+	var to = ImageMat.extractRect_listB;
+	to[0].set(aX,aY); to[1].set(bX,bY), to[2].set(cX,cY), to[3].set(dX,dY);
+	var projection = Matrix.get2DProjectiveMatrix(fr,to, ImageMat.extractRect_temp3x3, ImageMat.extractRect_temp8x8, ImageMat.extractRect_temp8x1);
 	return ImageMat.extractRectWithProjection(source,sW,sH, wid,hei, projection);
 }
 

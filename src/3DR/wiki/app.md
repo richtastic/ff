@@ -354,6 +354,7 @@ https://cloud.google.com/appengine/docs/nodejs/
 	-> percent of image kept?
 
 -> create easy set of ~6 images for pipeline test
+	- bench is ok
 
 
 

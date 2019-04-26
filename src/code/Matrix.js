@@ -1310,36 +1310,45 @@ Matrix.getFundamentalMatrix = function(normPointsA, normPointsB){ // x^T * F * x
 	return mat;
 }
 
-Matrix.get2DProjectiveMatrix = function(fromPoints, toPoints){
+Matrix.get2DProjectiveMatrix = function(fromPoints, toPoints, output, matA, matB){
 	var i, fr, to;
 	var len = fromPoints.length;
-	var matA = new Matrix(2*len,8);
-	var matB = new Matrix(2*len,1);
-	for(i=0;i<len;++i){
+	if(matA===undefined || matA===null){
+		matA = new Matrix(2*len,8);
+	}
+	if(matB===undefined || matB===null){
+		matB = new Matrix(2*len,1);
+	}
+	for(i=len-1;i>=0;--i){
 		fr = fromPoints[i];
 		to = toPoints[i];
-		matA.set(2*i,0,   fr.x);
-		matA.set(2*i,1,   fr.y);
-		matA.set(2*i,2,   1);
-		matA.set(2*i,3,   0);
-		matA.set(2*i,4,   0);
-		matA.set(2*i,5,   0);
-		matA.set(2*i,6,   -fr.x*to.x);
-		matA.set(2*i,7,   -fr.y*to.x);
-		matA.set(2*i+1,0, 0);
-		matA.set(2*i+1,1, 0);
-		matA.set(2*i+1,2, 0);
-		matA.set(2*i+1,3, fr.x);
-		matA.set(2*i+1,4, fr.y);
-		matA.set(2*i+1,5, 1);
-		matA.set(2*i+1,6, -fr.x*to.y);
-		matA.set(2*i+1,7, -fr.y*to.y);
-		matB.set(2*i  ,0, to.x);
-		matB.set(2*i+1,0, to.y);
+		var i2 = i*2;
+		var i21 = i2 + 1;
+		matA.set(i2, 0,  fr.x);
+		matA.set(i2, 1,  fr.y);
+		matA.set(i2, 2,  1);
+		matA.set(i2, 3,  0);
+		matA.set(i2, 4,  0);
+		matA.set(i2, 5,  0);
+		matA.set(i2, 6,  -fr.x*to.x);
+		matA.set(i2, 7,  -fr.y*to.x);
+		matA.set(i21,0, 0);
+		matA.set(i21,1, 0);
+		matA.set(i21,2, 0);
+		matA.set(i21,3, fr.x);
+		matA.set(i21,4, fr.y);
+		matA.set(i21,5, 1);
+		matA.set(i21,6, -fr.x*to.y);
+		matA.set(i21,7, -fr.y*to.y);
+		matB.set(i2 ,0, to.x);
+		matB.set(i21,0, to.y);
 	}
 	//var x = Matrix.solve(matA,matB);
 	var x = Matrix.mult(Matrix.pseudoInverseSimple(matA), matB); //
-	var projection = (new Matrix(3,3)).fromArray([x.get(0,0),x.get(1,0),x.get(2,0), x.get(3,0),x.get(4,0),x.get(5,0), x.get(6,0),x.get(7,0),1.0]);
+	if(output===undefined){
+		output = new Matrix(3,3);
+	}
+	var projection = output.fromArray([x.get(0,0),x.get(1,0),x.get(2,0), x.get(3,0),x.get(4,0),x.get(5,0), x.get(6,0),x.get(7,0),1.0]); // could also normalize?
 	return projection;
 }
 
