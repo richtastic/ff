@@ -345,13 +345,20 @@ https://cloud.google.com/appengine/docs/nodejs/
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-- optimize code in some locations
 -> convert current RIFT code back to pipeline (features + matching)
+
+AFFINE PLACEHOLDER:
+	4 vector: a,b,c,d ? array of 4 items
+
+
+
+
+
 => how to define success (good enough) & failure ?
-	- sigma
+	- sigma < 1 ?
 	- initial error / final error
-	- final match count
-	-> percent of image kept?
+	- final match count > 5% ?
+		-> percent of image kept?
 
 -> create easy set of ~6 images for pipeline test
 	- bench is ok

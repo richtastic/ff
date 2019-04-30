@@ -6978,6 +6978,10 @@ App3DR.ProjectManager.prototype._calculateFeaturesLoaded = function(view){
 	// normalizedFeatures = R3D.normalizeSIFTObjects(features, imageMatrix.width(), imageMatrix.height());
 	// console.log(normalizedFeatures);
 // CURRENT BEST METHOD OF FEATURES IS SCALED IMAGE CORNERS:
+
+
+
+
 	var features = R3D.calculateScaleCornerFeatures(imageMatrix, maxCount);
 console.log(features);
 	var objects = R3D.generateSIFTObjects(features, imageMatrix);
@@ -7066,82 +7070,32 @@ App3DR.ProjectManager.prototype.calculatePairMatch = function(viewA, viewB, pair
 		var maxFeatures = 2000;
 		var objectsA = R3D.generateSIFTObjects(featuresA, imageMatrixA);
 		var objectsB = R3D.generateSIFTObjects(featuresB, imageMatrixB);
-		// use most distinct features only
-		// objectsA = R3D.siftObjectsToUnique(objectsA);
-		// objectsB = R3D.siftObjectsToUnique(objectsB);
-
 		console.log("C: "+objectsA.length+" | "+objectsB.length)
-
-		// fat matching (no prior knowledge)
-		var matchData = R3D.fullMatchesForObjects(objectsA, imageMatrixA, objectsB, imageMatrixB, maxFeatures);
-console.log(matchData);
-
-if(matchData){
-
-		var F = matchData["F"];
-		var matches = matchData["matches"];
-		matchCount = matches.length;
-		console.log(matches);
-		// TO CORRECT FORMAT FOR MEDIUM DENSITY = POINT PAIRS
-		var pointsA = [];
-		var pointsB = [];
-		for(var i=0; i<matches.length; ++i){
-			var match = matches[i];
-			var fr = match["from"];
-			var to = match["to"];
-			if(!fr){
-				fr = match["A"];
-				to = match["B"];
-			}
-			pointsA.push(fr["point"]);
-			pointsB.push(to["point"]);
+		var maxFeaturesCompare = 2000;
+		var info = R3D.basicFullMatchingF(objectsA, imageMatrixA, objectsB, imageMatrixB, maxFeaturesCompare);
+		var matches = info["matches"];
+		var F = info["F"];
+		var sigma = info["sigma"];
+		if(!matches){
+			matches = [];
+			F = null;
+			sigma = 0;
+		}else{
+			// convert to R3D formats
+			matches = R3D.stereoToMatchPairArray(imageMatrixA,imageMatrixB,matches);
+			// add affine info:
+			R3D.stereoMatchAverageAffine(imageMatrixA,imageMatrixB,matches);
 		}
-
-		// MEDIUM-DENSITY:
-		var matches = R3D.stereoHighConfidenceMatches(imageMatrixA,imageMatrixB, pointsA,pointsB,F);
-
-// stereoHighConfidenceMatches
-console.log(matches);
-console.log(matches.length);
-// remove close duplicates
-	matches = R3D.matchesRemoveClosePairs(matches,imageMatrixA,imageMatrixB, 1.0);
-	// matches = R3D.matchesRemoveClosePairs(matches,imageMatrixA,imageMatrixB, 0.5);
-console.log(matches.length);
-// HIGHLY LIMIT FOR TESTING - ~10%
-// drop lower SAD scores -- score is f error now
-	// matches = R3D.matchesDropHighZ(matches, 1.0);
-// console.log(matches.length);
-// drop lower corners -- this should mostly be done already
-// 	matches = R3D.matchesDropLowCorners(matches, imageMatrixA,imageMatrixB, 1.0);
-// console.log(matches.length);
-// drop lower F error -- mostly done now
-// 	var Finv = R3D.fundamentalInverse(F);
-// 	matches = R3D.matchesDropHighFError(matches,F,Finv, 1.0);
-// console.log(matches.length);
-
-		// add affine info:
-		R3D.stereoMatchAverageAffine(imageMatrixA,imageMatrixB,matches);
-		// convert to object structure
-		matches = R3D.stereoToMatchPairArray(imageMatrixA,imageMatrixB,matches);
-		console.log(matches);
-
-// throw "matches";
 		var str = self._matchesToYAML(matches, F, viewA, viewB, imageMatrixA, imageMatrixB);
-// console.log(str+"");
 		var binary = Code.stringToBinary(str);
 		yamlBinary = binary;
-// // TODO: REMOVE
-// throw "...";
 		console.log("HAVE PAIR? "+(pair!==null));
 		if(pair){
 			fxnG(pair);
 		}else{
 			self.addPair(viewA, viewB, fxnG, self);
 		}
-}else{
-	matches = [];
-	throw "no matches";
-}
+
 	}
 	var yamlBinary = null;
 	// var matchCount = -1;
@@ -11719,15 +11673,13 @@ App3DR.ProjectManager.prototype._featuresToYAML = function(features){
 		var point = feature["point"];
 		var size = feature["size"];
 		var angle = feature["angle"];
-//		var vector = feature["vector"];
-		var score = feature["score"];
+		var affine = feature["affine"];
 		yaml.writeObjectStart();
 			yaml.writeNumber("x",point.x);
 			yaml.writeNumber("y",point.y);
 			yaml.writeNumber("size",size);
 			yaml.writeNumber("angle",angle);
-			yaml.writeNumber("score",score);
-//			yaml.writeArrayNumbers("vector",vector);
+			yaml.writeArray("affine",affine);
 		yaml.writeObjectEnd();
 	}
 	yaml.writeArrayEnd();
@@ -11751,7 +11703,7 @@ App3DR.ProjectManager.prototype._featuresFromObject = function(object){
 				object["point"] = new V2D(pointX,pointY);
 				object["size"] = feature["size"];
 				object["angle"] = feature["angle"];
-				object["score"] = feature["score"];
+				object["affine"] = feature["affine"];
 //				object["vector"] = feature["vector"];
 			list.push(object);
 		}

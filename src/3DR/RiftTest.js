@@ -24,10 +24,10 @@ function RiftTest(){
 	// new ImageLoader("./images/iowa/",["0.JPG", "1.JPG"],this,this.imagesLoadComplete).load(); // good
 	// new ImageLoader("./images/iowa/",["1.JPG", "2.JPG"],this,this.imagesLoadComplete).load(); // poor
 	// new ImageLoader("./images/iowa/",["2.JPG", "3.JPG"],this,this.imagesLoadComplete).load(); // good
-	// new ImageLoader("./images/iowa/",["3.JPG", "4.JPG"],this,this.imagesLoadComplete).load(); // incorrect / bad  ~
-	// new ImageLoader("./images/iowa/",["4.JPG", "5.JPG"],this,this.imagesLoadComplete).load(); // incorrect / bad  ~
+	// new ImageLoader("./images/iowa/",["3.JPG", "4.JPG"],this,this.imagesLoadComplete).load(); // incorrect / bad  ~ [matches wrong windows]
+	// new ImageLoader("./images/iowa/",["4.JPG", "5.JPG"],this,this.imagesLoadComplete).load(); // incorrect / bad  ~ [matches wrong windows]
 	// new ImageLoader("./images/iowa/",["6.JPG", "7.JPG"],this,this.imagesLoadComplete).load(); // good
-	new ImageLoader("./images/iowa/",["7.JPG", "8.JPG"],this,this.imagesLoadComplete).load(); // incorrect / bad ~
+	// new ImageLoader("./images/iowa/",["7.JPG", "8.JPG"],this,this.imagesLoadComplete).load(); // incorrect / bad ~
 	// new ImageLoader("./images/iowa/",["8.JPG", "9.JPG"],this,this.imagesLoadComplete).load(); // ok
 	// new ImageLoader("./images/iowa/",[".JPG", ".JPG"],this,this.imagesLoadComplete).load(); //
 
@@ -44,7 +44,7 @@ function RiftTest(){
 	// new ImageLoader("./images/",["xA_small.jpg", "xB_small.jpg"],this,this.imagesLoadComplete).load(); // poor
 
 	// NOTRE DAM SAMPLE
-	// new ImageLoader("./images/",["zA_small.jpg", "zB_small.jpg"],this,this.imagesLoadComplete).load(); // ok
+	// new ImageLoader("./images/",["zA_small.jpg", "zB_small.jpg"],this,this.imagesLoadComplete).load(); // good
 
 	// CAMPUS
 	// new ImageLoader("./images/",["F_S_1_1.jpg", "F_S_1_2.jpg"],this,this.imagesLoadComplete).load(); // good
@@ -69,28 +69,20 @@ function RiftTest(){
 	// new ImageLoader("./images/",["bench_A.png", "bench_E.png"],this,this.imagesLoadComplete).load(); // good  |  52580 @ 0.837  | 27%
 	// new ImageLoader("./images/",["bench_B.png", "bench_F.png"],this,this.imagesLoadComplete).load(); // poor  |   10612 @ 8226  |  5%
 	// 5
-	// new ImageLoader("./images/",["bench_A.png", "bench_F.png"],this,this.imagesLoadComplete).load(); // wrong |    542 @ 1.36 |  5%   1453 @ 2.0 7%
-
-	// prev
-	// new ImageLoader("./images/",["bench_A.png", "bench_B.png"],this,this.imagesLoadComplete).load(); // ok
-	// new ImageLoader("./images/",["bench_A.png", "bench_C.png"],this,this.imagesLoadComplete).load(); // good
-	// new ImageLoader("./images/",["bench_A.png", "bench_D.png"],this,this.imagesLoadComplete).load(); // ok
-	// new ImageLoader("./images/",["bench_A.png", "bench_F.png"],this,this.imagesLoadComplete).load(); // bad
-	// new ImageLoader("./images/",["bench_C.png", "bench_F.png"],this,this.imagesLoadComplete).load(); // good
-	// new ImageLoader("./images/",["bench_E.png", "bench_F.png"],this,this.imagesLoadComplete).load(); // ok
+	// new ImageLoader("./images/",["bench_A.png", "bench_F.png"],this,this.imagesLoadComplete).load(); // poor |    542 @ 1.36 |  5%   1453 @ 2.0 7%
 
 	// ROOM
 	// new ImageLoader("./images/",["room0.png", "room2.png"],this,this.imagesLoadComplete).load(); // good
 
 	// TANKMAN
 	// new ImageLoader("./images/",["caseStudy1-14.jpg", "caseStudy1-20.jpg"],this,this.imagesLoadComplete).load(); // poor
-	// new ImageLoader("./images/",["caseStudy1-14.jpg", "caseStudy1-20_rot.jpg"],this,this.imagesLoadComplete).load(); // bad
-	// new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-9.jpg"],this,this.imagesLoadComplete).load(); // ok
-	// new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-26.jpg"],this,this.imagesLoadComplete).load();
+	// new ImageLoader("./images/",["caseStudy1-14.jpg", "caseStudy1-20_rot.jpg"],this,this.imagesLoadComplete).load(); // poor
+	// new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-9.jpg"],this,this.imagesLoadComplete).load(); // good
+	// new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-26.jpg"],this,this.imagesLoadComplete).load(); //  good
 
 	// BEACH PILLAR
 	// new ImageLoader("./images/user/beach_pillar/",["0_50.jpg", "1_50.jpg"],this,this.imagesLoadComplete).load(); // good
-	// new ImageLoader("./images/user/beach_pillar/",["1_50.jpg", "2_50.jpg"],this,this.imagesLoadComplete).load(); // bad
+	// new ImageLoader("./images/user/beach_pillar/",["1_50.jpg", "2_50.jpg"],this,this.imagesLoadComplete).load(); // poor
 	// new ImageLoader("./images/user/beach_pillar/",["1_50.jpg", "2_50_r.jpg"],this,this.imagesLoadComplete).load(); // bad
 	// new ImageLoader("./images/user/beach_pillar/",["2_50.jpg", "3_50.jpg"],this,this.imagesLoadComplete).load(); // ok
 	// new ImageLoader("./images/user/beach_pillar/",["0_50.jpg", "2_50.jpg"],this,this.imagesLoadComplete).load(); // poor
@@ -99,7 +91,9 @@ function RiftTest(){
 
 	// new ImageLoader("./images/",["bt.000.png","bt.006.png"],this,this.imagesLoadComplete).load(); // good
 	// new ImageLoader("./images/",["temple_1.png","temple_2.png"],this,this.imagesLoadComplete).load(); // ok
-	// new ImageLoader("./images/",["xA_small.jpg","xB_small.jpg"],this,this.imagesLoadComplete).load(); // poor
+	// new ImageLoader("./images/",[".","."],this,this.imagesLoadComplete).load(); //
+	// new ImageLoader("./images/",["chapel00.png","chapel01.png"],this,this.imagesLoadComplete).load(); //  ?
+	// new ImageLoader("./images/",["snow1.png","snow2.png"],this,this.imagesLoadComplete).load(); //
 /*
 o -
 r -
@@ -504,7 +498,7 @@ var peakB = {"point": pointB, "covAngle":0, "covScale":1.0};
 // peakA = pointA;
 // peakB = pointB;
 // 2nd:
-
+/*
 var peaks = [peakA,peakB];
 var mats = [imageMatrixA,imageMatrixB];
 
@@ -535,7 +529,7 @@ cornersA = R3D.extractImageCorners(imageMatrixA, nonMaximalPercent, maxCorners, 
 cornersB = R3D.extractImageCorners(imageMatrixB, nonMaximalPercent, maxCorners, single, scalable, limitPixels);
 console.log(cornersA);
 console.log(cornersB);
-
+*/
 
 
 // pick a corner & show
@@ -609,8 +603,8 @@ throw "?"
 
 // var peakA = cornersA[495]; //
 
-	peakA = new V2D(peakA.x,peakA.y);
-var peakA = {"point": peakA};
+// 	peakA = new V2D(peakA.x,peakA.y);
+// var peakA = {"point": peakA};
 
 // console.log(peakA)
 
@@ -641,7 +635,7 @@ var peakA = {"point": peakA};
 
 /// COMMENT START
 
-
+/*
 console.log("NEW AGE MATCHES");
 
 
@@ -651,10 +645,9 @@ var mats = [imageMatrixA,imageMatrixB];
 var maximumRefineRatio = 0.98;
 
 
-var featuresA = [];
-var featuresB = [];
 var features = [featuresA,featuresB];
 
+*/
 // var peakLists = [cornersB];
 // var mats = [imageMatrixB];
 // var features = [featuresB];
@@ -747,15 +740,17 @@ throw "TESTING";
 */
 
 
-
-
-
-
+/*
 for(var k=0; k<peakLists.length; ++k){
 	var peaks = peakLists[k];
-	var mat = mats[k];
-	var grad = grads[k];
-	var feature = features[k];
+	var image = mats[k];
+	// var grad = grads[k];
+	var results = R3D.basicScaleFeaturesFromPoints(peaks, image);
+	features[k] = results;
+	// for(var i=0; i<results.length; ++i){
+	// 	features[k].push(results[i]);
+	// }
+continue;
 var cornerH = R3D.cornerScaleScores(mat.gry(),mat.width(),mat.height()).value;
 	for(var i=0; i<peaks.length; ++i){
 		var peak = peaks[i];
@@ -796,24 +791,25 @@ continue;
 
 	}
 }
+var featuresA = features[0];
+var featuresB = features[1];
+
+*/
 
 
 
-
+var maxCount = 2000;
+var featuresA = R3D.calculateScaleCornerFeatures(imageMatrixA, maxCount);
+var featuresB = R3D.calculateScaleCornerFeatures(imageMatrixB, maxCount);
 
 this.showFeatures(featuresA, imageMatrixA.width()*0,0, display, 0x990000FF);
 this.showFeatures(featuresB, imageMatrixA.width(),0, display, 0x990000FF);
 
-// throw "?"
-
-// var siftSize = 31;
-var siftSize = 21;
-var objectsA = RiftTest.generateSIFTObjects(featuresA, imageMatrixA, siftSize);
-var objectsB = RiftTest.generateSIFTObjects(featuresB, imageMatrixB, siftSize);
+var objectsA = R3D.generateSIFTObjects(featuresA, imageMatrixA);
+var objectsB = R3D.generateSIFTObjects(featuresB, imageMatrixB);
 
 console.log(objectsA);
 console.log(objectsB);
-
 
 // throw "?";
 
@@ -861,8 +857,15 @@ console.log(objectsB);
 */
 
 
-var result = R3D.fullMatchesForObjects(objectsA, imageMatrixA, objectsB, imageMatrixB, true);
-// var result = R3D.fullMatchesForObjects(objectsA, imageMatrixA, objectsB, imageMatrixB, false);
+var result = R3D.basicFullMatchingF(objectsA, imageMatrixA, objectsB, imageMatrixB, 2000);
+
+console.log(result);
+throw "";
+
+
+
+// var result = R3D.fullMatchesForObjects(objectsA, imageMatrixA, objectsB, imageMatrixB, true);
+var result = R3D.fullMatchesForObjects(objectsA, imageMatrixA, objectsB, imageMatrixB, false);
 var matches = result["matches"];
 console.log(matches);
 
@@ -1333,8 +1336,8 @@ RiftTest.basicFeatureFromPoint = function(point, image, gradient){
 	var imageWidth = image.width();
 	var imageHeight = image.height();
 
-	// var doAffine = false;
-	var doAffine = true;
+	var doAffine = false;
+	// var doAffine = true;
 
 	// var doScale = false;
 	var doScale = true;
@@ -1821,7 +1824,6 @@ RiftTest.showMatches = function(matches, imageA, imageB, display){
 
 RiftTest.generateSIFTObjects = function(features, imageMatrix, diaNeighborhood){
 	diaNeighborhood = diaNeighborhood!==undefined ? diaNeighborhood : 21;
-// HOW TO SIZE THIS ?
 
 	var imageWidth = imageMatrix.width();
 	var imageHeight = imageMatrix.height();
@@ -1839,8 +1841,7 @@ RiftTest.generateSIFTObjects = function(features, imageMatrix, diaNeighborhood){
 		var angle = feature["angle"];
 		var point = feature["point"];
 		var scale = feature["scale"];
-		var dirX = feature["dirX"];
-		var dirY = feature["dirY"];
+		var aff = feature["affine"];
 if(scale==null){
 	scale = 1.0;
 }
@@ -1864,7 +1865,8 @@ if(scale==null){
 // var vectorSAD = R3D.SADVectorCircular(gradientMatrix, point,diaNeighborhood,matrix);
 		var vectorSAD = R3D.SADVectorCircular(imageMatrix, point,diaNeighborhood,matrix);
 		var vectorSIFT = R3D.SIFTVectorCircular(imageMatrix, point,diaNeighborhood,matrix, true);
-		var object = {"point":point, "angle":angle, "dirX":dirX, "dirY":dirY, "sift":vectorSIFT, "sad":vectorSAD};
+		var size = scale * diaNeighborhood;
+		var object = {"point":point, "angle":angle, "size":size, "affine":null, "sift":vectorSIFT, "sad":vectorSAD};
 		objects.push(object);
 	}
 	return objects;
