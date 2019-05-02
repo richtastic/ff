@@ -165,7 +165,34 @@ Matrix2D.prototype.inverse = function(m){ // http://www.dr-lex.be/random/matrix_
 	this.a = a; this.b = b; this.c = c; this.d = d; this.x = x; this.y = y;
 	return this;
 }
-Matrix2D.prototype.get = function(){
+Matrix2D.prototype.get = function(r,c){
+	if(r!==undefined && c!==undefined){
+		if(r==0){
+			if(c==0){
+				return this.a;
+			}else if(c==1){
+				return this.b;
+			}else{
+				return this.x;
+			}
+		}else if(r==1){
+			if(c==0){
+				return this.c;
+			}else if(c==1){
+				return this.d;
+			}else{
+				return this.y;
+			}
+		}else{ // r == 2
+			if(c==0){
+				return 0;
+			}else if(c==1){
+				return 0;
+			}else{
+				return 1;
+			}
+		}
+	}
 	return new Array(this.a,this.b,this.c,this.d,this.x,this.y);
 }
 Matrix2D.prototype.toString = function(){
@@ -181,9 +208,10 @@ Matrix2D.prototype.kill = function(){
 Matrix2D.temp = new Matrix2D();
 
 
-Matrix2D.matrix2DfromMatrix = function(mat){
+// Matrix2D.matrix2DfromMatrix = function(mat){
+Matrix2D.fromMatrix = function(mat){
 	var m2D = new Matrix2D();
-	m2D.set(mat.get(0,0),mat.get(0,1), mat.get(1,0),mat.get(1,1), mat.get(0,1),mat.get(1,1));
+	m2D.set(mat.get(0,0),mat.get(0,1), mat.get(1,0),mat.get(1,1), mat.get(0,2),mat.get(1,2));
 	return m2D;
 }
 

@@ -345,137 +345,46 @@ https://cloud.google.com/appengine/docs/nodejs/
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
--> convert current RIFT code back to pipeline (features + matching)
+- 2d propagation of points
 
-AFFINE PLACEHOLDER:
-	4 vector: a,b,c,d ? array of 4 items
+- dropping poor neighborhood points
+	- F
+	- R
+	- NCC
+	- 3D location / distances
+	...
 
+- BA point locations to update cameras?
 
+- simpler patch initting / rougher
 
-
-
-=> how to define success (good enough) & failure ?
-	- sigma < 1 ?
-	- initial error / final error
-	- final match count > 5% ?
-		-> percent of image kept?
 
 -> create easy set of ~6 images for pipeline test
 	- bench is ok
 
+- convert from affine MATRIX to MATRIX2D
+
+- affine matrix estimation is very wrong in some places ?
 
 
 
-- dynamically upscale / downscale values based on current result values:
-	- lots of matches:
-		- decrease valid-match-ratio (0.95 -> 0.94)
-		- increase feature size/extent pixels (15 -> 21)
-		- decrease sigma multiplier (2->1.5)
+- should the pairwise do anything to help: [currently only optimize R] -- YES: only best of best & worst of worst
+	- remove bad points
+		3+ sigma R & F only
+		2d voting of:
+		 	- bad 3D location
+			- locally high SAD scores
+	- add good points
+		1- sigma only
+			-> 2D search neighbors
+	- use patches ?
 
 
-
-.... goal of initial matches (fat match) is to get the algorithm started off in a good general direction / starting point
-	- downstream methods:
-
-		- a way to mark BAD locations ? to avoid using/trying points in obviously not working areas?
-
-		- keep a count of how many times the feature/point was used & what score it got ?
-
-		- does this imply keeping track of "NO-GO-ZONES" ?
-
-
------ integrating matching of multiple types of features:
-	- corners [~1000]
-	- blobs [~200]
-	- MSER [~100]
-
-
-
-- speed up methods by correct nesting & reuse
-
-
-~ affine matrix
-
-~ CONSISTENT DOMINANT ANGLE?
-	- flat / grad / corner / 2nd grad
-	- com / mom / grad
-	- histogram / sum average / rotation average
-	- window big / window small
-
-	=>
-		- averaging of nearby pointness ...
-			- sub-pixel maxima
-- affine-ness testing again
-
-- sift feature could be a combination of different 'angles' / 'scales' / transforms
-
-
-- optimum scale is so bad, it's actually better to not use it w/ other assistive fxns
-
-
-
-- why is rotation of corners not the same?
-	x NOT THE CORNERS
-	- 'random' step?
-	- gradient slight differences?
-	x rounding errors for eg linear interpolation?
-
-	=> in areas where gradient is not clear there is more variability
-
-- optimize matrix mult in loops with Matrix3D - not NEW Matrix
-x optimize epipole in loops by passing as params
-x unique angle for each point in mid-dense interpolation usign grid
-- reassess SWIFT / SAD extraction / usage
+=> USE CELL OBJECTS TO SPEED UP LOOKUPS
 
 
 
 
-- initial FAT MATCH + REFINEMENT must be better
-	- compare 'affine' sift & scale sift
-- dominant angle to use for features: COM | MOMENT | GRADIENT  && flat/corner/grad-mag
-- reassess SAD / SIFT extraction
-
-
-- filtering of bad points
-	- large skew (dirX & dirY < 45)
-	- large scale diff dirX & dirY
-
-
-- optimize matrix multiplication to not use Matrix() / use Matrix3D()
-
-- optimize epipole reuse - pass in
-- use 2d grid for angles not full average -- create interpolation Code fxn
-
-
-
-
-- smaller areas handle scale/projection better but are not distinct
-- larger areas are more distinct but are bad for scale differences
-
-
-- using individual angle for each unique point ? [not average over whole image?]
-
-
-- better iterating to reduce F error
-
-- any way to compare at different SCALES (+ angle)?
-	-- big skew / scale differences can't be accounted for
-
-
-
-- only need to perform extra tasks if F error is > 0.1 ~ 0.5
-
-
-
-
-
-- extract rect @ size  &  get SIFT
-- compare fat sift
-
-
-- algorithm for medium-error F starting place
-	- light sifting
--
 
 
 
@@ -541,6 +450,12 @@ x USE CORNER BLOBNESS ... need to undo log tho
 - try moving point toward location with more equal-covariance ratio ...
 
 
+
+
+----- integrating matching of multiple types of features:
+	- corners [~1000]
+	- blobs [~200]
+	- MSER [~100]
 
 
 

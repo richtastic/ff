@@ -89,7 +89,7 @@ var modeModelReconstruction = false;
 
 // don't A:
 // TO SWITCH ON MODELING:
-// modeModelReconstruction = true;
+modeModelReconstruction = true;
 
 
 
@@ -6712,7 +6712,7 @@ App3DR.ProjectManager.prototype._backgroundTaskTick = function(){
 }
 App3DR.ProjectManager.prototype.checkPerformNextTask = function(){
 // don't 1 - run
-// return;
+return;
 console.log("checkPerformNextTask");
 	this.pauseBackgroundTasks();
 	this._taskBusy = true;
@@ -6733,6 +6733,7 @@ console.log("checkPerformNextTask");
 			return;
 		}
 	}
+// throw "task pair features";
 	// does a feature-match pair exist (even a bad match) between every view?
 	len = views.length;
 	console.log(pairs);
@@ -6783,6 +6784,7 @@ console.log("checkPerformNextTask");
 	if(views.length<2){
 		return;
 	}
+// throw "...";
 // throw "task dense pair";
 	// assuming all pair matches have run
 	len = views.length;
@@ -6802,6 +6804,7 @@ console.log("checkPerformNextTask");
 					}
 					if(!pair.hasTracks()){
 						console.log("NEED TO DO A TRACK PAIR : "+idA+" & "+idB+" = "+pair.id());
+// throw "...";
 						this.calculatePairTracks(viewA,viewB);
 						return;
 					}
@@ -6810,7 +6813,7 @@ console.log("checkPerformNextTask");
 		}
 	}
 
-// throw "task triples";
+throw "task triples";
 	// assuming all pairs have run
 	console.log(triples);
 	len = views.length;
@@ -6853,32 +6856,32 @@ console.log("checkPerformNextTask");
 			}
 		}
 	}
-throw "task graph";
+// throw "task graph";
 	if(!this.hasGraph()){
 		console.log("has no graph");
 		this.calculateGlobalOrientationInit();
 		return;
 	}
-throw "task tracks";
+// throw "task tracks";
 	if(!this.tracksDone()){
 		console.log("tracks not done");
 		this.iterateGraphTracks();
 		return;
 	}
-throw "task sparse";
+// throw "task sparse";
 if(!this.sparseDone()){
 	console.log("sparse not done");
 	this.iterateSparseTracks();
 	return;
 }
-throw "task dense";
+// throw "task dense";
 if(!this.denseDone()){
 	console.log("dense not done");
 	this.iterateDenseTracks();
 	return;
 }
 
-// throw "wait";
+// throw "task BA";
 
 if(!this.pointsDone()){
 	this.iteratePointsFullBA();
@@ -6964,30 +6967,9 @@ App3DR.ProjectManager.prototype._calculateFeaturesLoaded = function(view){
 	var image = view.featuresImage();
 	var imageMatrix = R3D.imageMatrixFromImage(image, this._stage);
 	var maxCount = 2000;
-	// console.log(imageMatrix);
-	// throw "?";
-		//var featurePoints = R3D.testExtract1(imageMatrix, null, 1E4); // PREVIOUS
-		//var objects = R3D.generateSIFTObjects(featurePoints, imageMatrix);
-		// var objects = R3D.extractCornerGeometryFeatures(imageMatrix, false);
-	// var objects = R3D.testExtract1(imageMatrix, R3D.CORNER_SELECT_RELAXED, 2000);
-	// console.log(objects);
-	// var features = R3D.cornersToFeatureObject(objects);
-	// console.log(features);
-	// R3D.cornerFeaturesAddAngles(imageMatrix, features, true);
-	// var features = R3D.calculateFlatCornerFeatures(imageMatrix, 2000);
-	// normalizedFeatures = R3D.normalizeSIFTObjects(features, imageMatrix.width(), imageMatrix.height());
-	// console.log(normalizedFeatures);
-// CURRENT BEST METHOD OF FEATURES IS SCALED IMAGE CORNERS:
-
-
-
-
 	var features = R3D.calculateScaleCornerFeatures(imageMatrix, maxCount);
-console.log(features);
 	var objects = R3D.generateSIFTObjects(features, imageMatrix);
-console.log(objects);
 	var normalizedObjects = R3D.normalizeSIFTObjects(objects, imageMatrix.width(), imageMatrix.height());
-console.log(normalizedObjects);
 	view.setFeatures(normalizedObjects, this._calculateFeaturesComplete, this);
 }
 App3DR.ProjectManager.prototype._calculateFeaturesComplete = function(view){
@@ -7015,6 +6997,7 @@ App3DR.ProjectManager.prototype.calculatePairMatch = function(viewA, viewB, pair
 	var imageB = null;
 	var stage = this._stage;
 	var self = this;
+	var matchCount = null;
 	var fxnA = function(){ // load features A
 		viewA.loadFeatures(function(){
 			featuresA = viewA.features();
@@ -7076,16 +7059,18 @@ App3DR.ProjectManager.prototype.calculatePairMatch = function(viewA, viewB, pair
 		var matches = info["matches"];
 		var F = info["F"];
 		var sigma = info["sigma"];
+console.log(matches);
 		if(!matches){
 			matches = [];
 			F = null;
 			sigma = 0;
 		}else{
-			// convert to R3D formats
-			matches = R3D.stereoToMatchPairArray(imageMatrixA,imageMatrixB,matches);
 			// add affine info:
 			R3D.stereoMatchAverageAffine(imageMatrixA,imageMatrixB,matches);
+			// convert to R3D formats
+			matches = R3D.stereoToMatchPairArray(imageMatrixA,imageMatrixB,matches);
 		}
+		matchCount = matches.length;
 		var str = self._matchesToYAML(matches, F, viewA, viewB, imageMatrixA, imageMatrixB);
 		var binary = Code.stringToBinary(str);
 		yamlBinary = binary;
@@ -8984,10 +8969,8 @@ world.printPoint3DTrackCount();
 world.printPoint3DTrackCount();
 
 
-// var worldPoints = world.toPointArray();
-// console.log("total points: "+worldPoints.length);
-
-// throw "embedded count up?";
+var worldPoints = world.toPointArray();
+console.log("total points: "+worldPoints.length);
 
 		var pointPoints = project._getGraphPointsFromWorld(world, lookupIndexFromID, false);
 		console.log(pointPoints);
@@ -11279,6 +11262,7 @@ var skip = true; // SKIP AFFINE SEQUENCE - OK FOR ~1000 not for ~10,000+
 
 var completeFxn = function(){
 	console.log("completeFxn");
+// throw "remove this";
 	var viewA = BAVIEWS[0];
 	var viewB = BAVIEWS[1];
 	var transform = world.transformFromViews(viewA,viewB);
@@ -11303,6 +11287,14 @@ var completeFxn = function(){
 }
 console.log(world);
 
+
+// set cell size:
+for(var i=0; i<BAVIEWS.length; ++i){
+	var view = BAVIEWS[i];
+	// view.cellSize(3);
+	// view.cellSize(5); // TODO: ~ 1-2%
+	view.cellSize(9);
+}
 
 world.solve(completeFxn, this);
 return;
@@ -11679,7 +11671,9 @@ App3DR.ProjectManager.prototype._featuresToYAML = function(features){
 			yaml.writeNumber("y",point.y);
 			yaml.writeNumber("size",size);
 			yaml.writeNumber("angle",angle);
-			yaml.writeArray("affine",affine);
+			if(affine){
+				yaml.writeArray("affine",affine);
+			}
 		yaml.writeObjectEnd();
 	}
 	yaml.writeArrayEnd();

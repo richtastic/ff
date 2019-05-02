@@ -39,6 +39,9 @@ function RiftTest(){
 	// FLOWER
 	// new ImageLoader("./images/flowers_1/",["7120.png", "7127.png"],this,this.imagesLoadComplete).load(); // bad
 	// new ImageLoader("./images/flowers_1/",["7141.png", "7144.png"],this,this.imagesLoadComplete).load(); // bad
+	// new ImageLoader("./images/flowers_1/",["7127.png", "7131.png"],this,this.imagesLoadComplete).load(); // good
+	// new ImageLoader("./images/flowers_1/",["7127.png", "7141.png"],this,this.imagesLoadComplete).load(); // ok
+	// new ImageLoader("./images/flowers_1/",["7120.png", "7140.png"],this,this.imagesLoadComplete).load(); // ok
 
 	// TOWER SAMPLE
 	// new ImageLoader("./images/",["xA_small.jpg", "xB_small.jpg"],this,this.imagesLoadComplete).load(); // poor
@@ -51,7 +54,7 @@ function RiftTest(){
 
 	// BENCH
 	// 1
-	// new ImageLoader("./images/",["bench_A.png", "bench_B.png"],this,this.imagesLoadComplete).load(); // good  |  31411 @ 0.870  | 16%
+	new ImageLoader("./images/",["bench_A.png", "bench_B.png"],this,this.imagesLoadComplete).load(); // good  |  31411 @ 0.870  | 16%
 	// new ImageLoader("./images/",["bench_B.png", "bench_C.png"],this,this.imagesLoadComplete).load(); // poor  |  11303 @ 0.929  |  6%
 	// new ImageLoader("./images/",["bench_C.png", "bench_D.png"],this,this.imagesLoadComplete).load(); // good  |  26042 @ 0.885  | 13%
 	// new ImageLoader("./images/",["bench_D.png", "bench_E.png"],this,this.imagesLoadComplete).load(); // ok    |  21188 @ 0.839  | 11%
@@ -205,6 +208,60 @@ for(i=0;i<matrixes.length;++i){
 }
 
 
+
+/*
+var imageA = imageMatrixA;
+var imageB = imageMatrixB;
+
+// var pointA = new V2D(193,105);
+// var pointB = new V2D(235,84);
+
+// var pointA = new V2D(65,167);
+// var pointB = new V2D(143,137);
+
+var pointA = new V2D(153,318);
+var pointB = new V2D(120,266);
+
+var affine = new Matrix2D();
+	affine.identity();
+	affine.scale(0.9);
+	affine.rotate(Code.radians(40));
+
+// var size = 5;
+var size = 11;
+// var size = 21;
+// var size = 71;
+var optimum = R3D.optimumAffineCornerTransform(imageA,pointA, imageB,pointB, affine, size, 20);
+
+
+
+
+
+var featuresA = [{"point":pointA, "scale":1.0, "angle":0.0}];
+var featuresB = [{"point":pointB, "scale":1.0, "angle":0.0}];
+this.showFeatures(featuresA, imageMatrixA.width()*0,0, display, 0xFFFF0000);
+this.showFeatures(featuresB, imageMatrixA.width(),0, display, 0xFFFF0000);
+
+var pts = [pointA,pointA,pointB];
+var mxs = [imageMatrixA,imageMatrixA,imageMatrixB];
+var mts = [affine, optimum, null];
+for(var i=0; i<pts.length; ++i){
+	var bSize = 21;
+	// bSize = size;
+	var pt = pts[i];
+	var mx = mxs[i];
+	var mt = mts[i];
+	var block = mx.extractRectFromFloatImage(pt.x,pt.y,1.0,null,bSize,bSize,mt);
+	var img = GLOBALSTAGE.getFloatRGBAsImage(block.red(), block.grn(), block.blu(), block.width(), block.height());
+	var d = new DOImage(img);
+	d.matrix().scale(3.0);
+	d.matrix().translate(1600 + 10 + i*100 , 10 );
+	GLOBALSTAGE.addChild(d);
+}
+
+
+throw "TEST AFFINE";
+*/
 
 
 // CORNER MAGNITUDES:

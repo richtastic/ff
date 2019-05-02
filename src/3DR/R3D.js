@@ -7665,7 +7665,7 @@ R3D.basicFullMatchingF = function(objectsA, imageMatrixA, objectsB, imageMatrixB
 // limitSigmaKeep = 1.5/100;
 // limitSigmaKeep = 3.0/100;
 // minimumCoverageKeepPercent = 0.01;
-limitSigmaKeep = 100;
+limitSigmaKeep = 5; // ratio can be very high ... maybe only absolute ?
 	// fat matching (no prior knowledge)
 	var matchData = R3D.fullMatchesForObjects(objectsA, imageMatrixA, objectsB, imageMatrixB);
 console.log(matchData);
@@ -7697,7 +7697,8 @@ console.log(matchData);
 				F = result["F"];
 				var sigma = result["sigma"];
 				var average = sigma/matches.length; // 1.0/100 =
-				if(average<=limitSigmaKeep){
+				// if(average<=limitSigmaKeep){ // average
+				if(sigma<=limitSigmaKeep){ // absolute
 					// high density:
 					var matches = R3D.stereoHighConfidenceMatches(imageMatrixA,imageMatrixB, pointsA,pointsB,F);
 					if(matches){
@@ -7896,6 +7897,8 @@ R3D.stationaryFeatures = function(imageA,imageB,F, ptsA,ptsB,  display, existing
 }
 
 R3D.basicScaleFeaturesFromPoints = function(points, image){
+	console.log(points,image);
+// throw "?"
 	var diaNeighborhood = 21;
 	var imageGray = image.gry();
 	var imageWidth = image.width();
@@ -7909,7 +7912,7 @@ R3D.basicScaleFeaturesFromPoints = function(points, image){
 		scales[i] = scale;
 		var matrix = new Matrix2D();
 			matrix.identity();
-			matrix = Matrix.transform2DScale(matrix,scale);
+			matrix.scale(scale);
 			matrixes[i] = matrix;
 	}
 	var matrix = new Matrix2D();
@@ -8008,8 +8011,9 @@ R3D.basicOptimumCornerScale = function(point, imageMatrix, prependMatrix, scales
 		if(prependMatrix){
 			reuseMatrix.copy(matrix);
 			reuseMatrix.premult(prependMatrix);
-			matrix = matrix;
+			matrix = reuseMatrix;
 		}
+		// matrix = null;
 		var gry = ImageMat.extractRectFromFloatImage(point.x,point.y,1.0,sig,compareSize,compareSize, imageGray,imageWidth,imageHeight, matrix);
 		var blur = gry;
 		var H = R3D.cornerScaleScores(blur,compareSize,compareSize)["value"];
@@ -12321,7 +12325,7 @@ matrix = Matrix.transform2DRotate(matrix, -affineAngle);
 
 				var vectorSAD = R3D.SADVectorCircular(imageMatrix, location,diaNeighborhood,matrix);
 				var vectorSIFT = R3D.SIFTVectorCircular(imageMatrix, location,diaNeighborhood,matrix, true);
-				var object = {"angle":pointAngle, "affineAngle":null, "affineScale":null, "size":diaNeighborhood, "point":location, "sift":vectorSIFT, "score":score, "sad":vectorSAD};
+				var object = {"point":location, "angle":pointAngle, "size":diaNeighborhood, "sift":vectorSIFT, "sad":vectorSAD};
 				objects.push(object);
 			}
 		}
@@ -27102,7 +27106,12 @@ R3D.affineTransformFromVectors = function(u,a,b){
 	return matrix;
 }
 
-R3D.optimumAffineTransform = function(imageA,pointA, imageB,pointB, vectorX,vectorY, sizeA, limitPixels,limitVA,limitVB,  limits){ // affine = v1(x,y) v2(x,y) + tx,ty
+R3D.optimumAffineCornerTransform = function(imageA,pointA, imageB,pointB, affine, size, maxIterations){
+	var result = R3D._affineCornerTransformNonlinearGD(imageA,pointA, imageB,pointB, affine, size, maxIterations);
+	return result;
+}
+
+R3D.optimumAffineTransform_OLD = function(imageA,pointA, imageB,pointB, vectorX,vectorY, sizeA, limitPixels,limitVA,limitVB,  limits){ // affine = v1(x,y) v2(x,y) + tx,ty
 	sizeA = Code.valueOrDefault(sizeA, 11);
 	if(!limits){
 		limits = {};
@@ -27115,15 +27124,11 @@ R3D.optimumAffineTransform = function(imageA,pointA, imageB,pointB, vectorX,vect
 	// optimum transform:
 	var compareSize = 11;
 	var scaleCompare = compareSize/sizeA;
-		var matrix = new Matrix(3,3).identity();
 	var h = null;
 	try{
-		h = imageB.extractRectFromFloatImage(pointB.x,pointB.y,scaleCompare,null,compareSize,compareSize, matrix);
+		h = imageB.extractRectFromFloatImage(pointB.x,pointB.y,scaleCompare,null,compareSize,compareSize, null);
 	}catch(e){
 		console.log("bad matrix extract rect: "+scaleCompare+" : "+compareSize+" / "+sizeA);
-		console.log(""+matrix);
-		console.log(matrix);
-		console.log("@ "+pointB);
 		return null;
 	}
 	var m = ImageMat.circleMask(compareSize);
@@ -27200,6 +27205,47 @@ R3D._gdAffineTransform = function(args, x, isUpdate){
 }
 
 
+
+R3D._affineCornerTransformNonlinearGD = function(imageFlatA,pointA, imageFlatB,pointB, affine, size, maxIterations){
+	if(!R3D._matrixAC2D){
+		R3D._matrixAC2D = new Matrix2D();
+	}
+	maxIterations = maxIterations!==undefined ? maxIterations : 10;
+	var compareSize = 11;
+	var scaleCompare = compareSize/size;
+	var compareMask = ImageMat.circleMask(compareSize);
+	var needleB = imageFlatB.extractRectFromFloatImage(pointB.x,pointB.y,scaleCompare,null,compareSize,compareSize, null);
+	var xVals = [affine.get(0,0), affine.get(0,1), affine.get(1,0), affine.get(1,1)];
+	var args = [needleB,imageFlatA,pointA,scaleCompare,compareSize,compareMask];
+	result = Code.gradientDescent(R3D._gdAffineCornerTransform, args, xVals, null, maxIterations, 1E-6);
+	xVals = result["x"];
+	xVals.push(0,0);
+	return new Matrix2D().fromArray(xVals);
+}
+R3D._gdAffineCornerTransform = function(args, x, isUpdate){
+	if(isUpdate){
+		return;
+	}
+	var matrix2D = R3D._matrixAC2D;
+	matrix2D.set(x[0],x[1],x[2],x[3],0,0);
+	var needleB = args[0];
+	var imageA = args[1];
+	var pointA = args[2];
+	var scaleCompare = args[3];
+	var compareSize = args[4];
+	var compareMask = args[5];
+	var error = R3D._gdAffineCornerCompareFxn(matrix2D, imageA, pointA, scaleCompare, compareSize, needleB, compareMask);
+	if(isUpdate){
+		console.log(error)
+	}
+	return error;
+}
+R3D._gdAffineCornerCompareFxn = function(matrix, imageA, pointA, scaleCompare, compareSize, h, m){
+	var n = imageA.extractRectFromFloatImage(pointA.x,pointA.y,scaleCompare,null,compareSize,compareSize, matrix);
+	var ncc = R3D.normalizedCrossCorrelation(n,m,h, true);
+	ncc = ncc["value"][0];
+	return ncc;
+}
 
 R3D.absoluteOrientationsFromRelativeOrientations = function(relativePairs, errorPairs){ // 1: [2...N] ; 2: [3...N] ; ... N:[]
 throw "NO";

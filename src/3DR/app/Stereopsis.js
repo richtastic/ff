@@ -307,6 +307,37 @@ Stereopsis.World.prototype.toPointArrayLocated = function(){
 Stereopsis.World.prototype.point3DCount = function(){
 	return this._pointSpace.count() + this._points3DNull.length;
 }
+
+// ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Stereopsis.ViewCell = function(center){
+	this._objects = []; // lookup is faster
+	this._neighbors = [];
+	this.center(center);
+}
+Stereopsis.ViewCell.prototype.objects = function(o){
+	return this._objects;
+}
+Stereopsis.ViewCell.prototype.neighbors = function(n){
+	if(n!==undefined){
+		this._neighbors = n;
+	}
+	return this._neighbors;
+}
+Stereopsis.ViewCell.prototype.length = function(o){
+	return this._objects.length;
+}
+Stereopsis.ViewCell.prototype.removeObject = function(o){
+	Code.removeElement(this._objects, o);
+}
+Stereopsis.ViewCell.prototype.addObject = function(o){
+	this._objects.push(o);
+}
+Stereopsis.ViewCell.prototype.center = function(c){
+	if(c!==undefined){
+		this._center = c;
+	}
+	return this._center;
+}
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 Stereopsis.View = function(image, camera, data){
 	this._id = Stereopsis.View.ID++;
@@ -317,8 +348,8 @@ Stereopsis.View = function(image, camera, data){
 	this._image = null;
 	this._corners = null;
 	this._sizeFinder = null;
-	// this._pointSpace = null;
 	this._pointSpace = new QuadTree(Stereopsis._point2DToPoint);
+	this._cells = [];
 	this._absoluteTransform = null;
 	this._absoluteTransformInverse = null;
 	this._errorMMean = null;
@@ -334,7 +365,7 @@ Stereopsis.View = function(image, camera, data){
 	this._up = null;
 	this._size = null;
 	// init:
-	this.cellSize(3); // default
+	// this.cellSize(3); // default
 	this.image(image);
 	this.camera(camera);
 	this.data(data);
@@ -393,6 +424,94 @@ Stereopsis.View.prototype.image = function(image){
 		}
 	}
 	return this._image;
+}
+Stereopsis.View.prototype.emptyNeighborCellsForView = function(otherView){
+// TODO: otherView should be passed for NON-PAIR VERSIONS OF THIS ALGORITHM TO RETURN ONLT CELLS w/ pair-view matching
+	var cells = this._cells;
+	// go thru all cells and +1 to neighbor if have a point with view
+	var empties = [];
+	for(var i=0; i<cells.length; ++i){
+		var cell = cells[i];
+		if(cell.length()==0){
+			var neighbors = cell.neighbors();
+			var found = false;
+			for(var n=0; n<neighbors.length; ++n){
+				var neighbor = neighbors[n];
+				if(neighbor.length()>0){
+					found = true;
+					break;
+				}
+			}
+			if(found){
+				empties.push(cell);
+			}
+		}
+	}
+	return empties;
+}
+Stereopsis.View.prototype._initCells = function(){
+	var size = this.size();
+	if(!size){
+		throw "?";
+	}
+	var cells = this._cells;
+	var cellSize = this.cellSize();
+	Code.emptyArray(cells);
+	var countX = Math.ceil(size.x/cellSize);
+	var countY = Math.ceil(size.y/cellSize);
+	var count = countX*countY;
+	for(var i=0; i<count; ++i){
+		cells.push(new Stereopsis.ViewCell());
+	}
+	// neighbors & centers
+	for(var j=0; j<countY; ++j){
+		for(var i=0; i<countX; ++i){
+			var index = j*countX + i;
+			var cell = cells[index];
+			var center = new V2D((i+0.5)*cellSize,(j+0.5)*cellSize);
+			cell.center(center);
+			var neighbors = [];
+			for(var jj=-1; jj<=1; ++jj){
+				for(var ii=-1; ii<=1; ++ii){
+					var j2 = j+jj;
+					var i2 = i+ii;
+					if(0<=j2 && j2<countY && 0<=i2 && i2<countX){
+						var ind = j2*countX + i2;
+						if(ind!==index){
+							var c = cells[ind];
+							neighbors.push(c);
+						}
+					}
+				}
+			}
+			cell.neighbors(neighbors);
+		}
+	}
+	// console.log(cells);
+	// console.log(countX,countY);
+	// console.log(this.size());
+	// throw "?"
+	// add in
+	var points = this._pointSpace.toArray();
+	for(var i=0; i<points.length; ++i){
+		var point = points[i];
+		var p = point.point2D();
+		var cell = this.cellForPoint(p);
+		cell.addObject(point);
+	}
+}
+Stereopsis.View.prototype.cellForPoint = function(p){
+	if(p==null){
+		console.log(p)
+		throw "null p";
+	}
+	var cellSize = this.cellSize();
+	var x = Math.floor(p.x/cellSize);
+	var y = Math.floor(p.y/cellSize);
+	var size = this.size();
+	var countX = Math.ceil(size.x/cellSize);
+	var i = y*countX + x;
+	return this._cells[i];
 }
 Stereopsis.View.prototype.corners = function(){
 	return this._corners;
@@ -664,14 +783,17 @@ Stereopsis.View.prototype.cellsForView = function(view){
 }
 Stereopsis.View.prototype.cellSize = function(cellSize){
 	if(cellSize!==undefined){
-		this._cellSize = cellSize;
-		// var compareSize = Math.round(cellSize*1.5);
-		var compareSize = Math.round(cellSize*2.0);
-		if(compareSize%2==0){
-			compareSize += 1;
+		var oldCell = this._cellSize;
+		if(cellSize!==oldCell){
+			this._cellSize = cellSize;
+			// var compareSize = Math.round(cellSize*1.5);
+			var compareSize = Math.round(cellSize*2.0);
+			if(compareSize%2==0){
+				compareSize += 1;
+			}
+			this.compareSize(compareSize);
+			this._initCells();
 		}
-		// compareSize = 21;
-		this.compareSize(compareSize);
 	}
 	return this._cellSize;
 }
@@ -736,10 +858,28 @@ Stereopsis.View.prototype.toPointArray = function(){
 	return this._pointSpace.toArray();
 }
 Stereopsis.View.prototype.insertPoint2D = function(point2D){
+	var p = point2D.point2D();
+	var s = this.size();
+	if( !(0<=p.x && p.x<s.x && 0<=p.y && p.y<s.y) ){
+		return;
+		// console.log(point2D)
+		// throw "p is outside ";
+	}
 	this.removePoint2D(point2D);
+	this.cellForPoint(point2D.point2D()).addObject(point2D);
 	return this._pointSpace.insertObject(point2D);
 }
 Stereopsis.View.prototype.removePoint2D = function(point2D){
+	var p = point2D.point2D();
+	var s = this.size();
+	if( !(0<=p.x && p.x<s.x && 0<=p.y && p.y<s.y) ){
+		// console.log(point2D)
+		// throw "p is outside ";
+		return;
+	}
+
+
+	this.cellForPoint(point2D.point2D()).removeObject(point2D);
 	return this._pointSpace.removeObject(point2D);
 }
 Stereopsis.View.prototype.isPointInside = function(point){
@@ -1853,7 +1993,10 @@ Stereopsis.Match2D.prototype.affine = function(affine){
 	if(affine!==undefined){
 		this._affine = affine;
 		if(affine){
-			this._inverse = Matrix.inverse(affine);
+			if(!Code.isa(affine,Matrix2D)){
+				this._affine = Matrix2D.fromMatrix(affine);
+			}
+			this._inverse = this._affine.copy().inverse();
 		}
 	}
 	return this._affine;
@@ -3394,13 +3537,13 @@ return;
 	// var maxIterations = 2;
 	// var maxIterations = 3;
 	// var maxIterations = 4;
-	// var maxIterations = 5;
+	var maxIterations = 5;
 	// var maxIterations = 6;
 	// var maxIterations = 7;
 	// var maxIterations = 8;
 	// var maxIterations = 9;
 	// var maxIterations = 10;
-	var maxIterations = 15;
+	// var maxIterations = 15;
 	// var maxIterations = 20;
 	// var maxIterations = 25;
 	// var maxIterations = 30;
@@ -3421,6 +3564,8 @@ Stereopsis.World.prototype.iteration = function(iterationIndex, maxIterations){
 			this.estimate3DErrors(false); // find initial F, P, estimate all errors from this
 			this.estimate3DViews(); // find absolute view locations
 			this.estimate3DPoints(); // find absolute point locations
+	}else{
+		this.estimate3DErrors(true); // update errors using absolute-relative transforms
 	}
 	this.recordTransformErrorStart();
 
@@ -3428,19 +3573,30 @@ Stereopsis.World.prototype.iteration = function(iterationIndex, maxIterations){
 	// TODO: ONLY BREAK IF ERROR IS VERY LOW OR IF ERROR CHANGE IS TINY
 
 
-	this.estimate3DErrors(true); // update errors using absolute-relative transforms
+
 	// try to distribute the error between depths
 	this.refineCameraAbsoluteOrientation(100); // refine initial absolute camera locations
 	this.estimate3DPoints(); // camera orientions have changed => points have new locations
 	// this.bundleAdjustFull();
 // EXPAND
 	// 2D NEIGHBORS
-	// console.log("probe2D ... ");
+	console.log("probe2D ... ");
 	// this.probe2D2();
+	this.probe2DNNAffine(2.0);
+// throw "after"
 
-	this.estimate3DErrors(true, true);
+// reassess
+	this.estimate3DErrors(true);
+
+	// drop worst
 	this.dropNegative3D();
-	// this.filterGlobalMatches();
+	this.filterGlobalMatches(false, 0, 3.0,3.0,3.0,3.0, false);
+	this.filterPatch3D(3.0); // very forgiving
+
+	// FILTER 2D : neightbor - 3D lcoation
+	// FILTER
+
+	// relax, iterationIndex, R,F,N,S, linearly
 
 // FILTER
 		// F
@@ -4541,36 +4697,10 @@ console.log("filterGlobalMatches");
 	var limitMatchSigmaNCC = 2.0;
 	var limitMatchSigmaSAD = 2.0;
 
-	// var limitMatchSigmaR = 1.5;
-	// var limitMatchSigmaF = 1.5;
-	// var limitMatchSigmaNCC = 2.0;
-	// var limitMatchSigmaSAD = 2.0;
-
 	limitMatchSigmaR = R;
 	limitMatchSigmaF = F;
 	limitMatchSigmaNCC = N;
 	limitMatchSigmaSAD = S;
-
-	// limitMatchSigmaR = 3.0;
-	// limitMatchSigmaF = 3.0;
-	// limitMatchSigmaNCC = 3.0;
-	// limitMatchSigmaSAD = 3.0;
-	// limitMatchSigmaR = 1.5;
-
-// limitMatchSigmaR = 4.0;
-/*
-	var dropPixelsR = 10.0;
-
-	if(iterationIndex!==undefined && iterationIndex!==null){
-		if(iterationIndex>5){
-			// var s = 1.0 + 1.5/(iterationIndex-5);
-			// s = 1.0;
-			// limitMatchSigmaR = s;
-			// limitMatchSigmaF = s;
-			dropPixelsR = 1.0;
-		}
-	}
-*/
 
 	if(relax){
 		// limitMatchSigmaR = 3.0;
@@ -5925,7 +6055,119 @@ Stereopsis.World.prototype.probeCorners = function(){
 	// 	}
 	// }
 }
-Stereopsis.World.prototype.probe2D2 = function(){
+Stereopsis.World.prototype.probe2DNNAffine = function(sigma){ //
+	var world = this;
+	var transforms = this.toTransformArray();
+	var min = new V2D();
+	var max = new V2D();
+	var matchesAddList = [];
+	for(var i=0; i<transforms.length; ++i){
+		var transform = transforms[i];
+		var viewA = transform.viewA();
+		var viewB = transform.viewB();
+		var Fab = transform.F(viewA,viewB);
+		var Fba = transform.F(viewB,viewA);
+		// var errorFmean = transform.fMean();
+		// var errorFsigma = transform.fSigma();
+		// var errorFLimit = errorFmean + 2.0*errorFsigma;
+		var viewList = [viewA,viewB];
+		var oppositeList = [viewB,viewA];
+		var fList = [[Fab,Fba],[Fab,Fba]];
+		for(var v=0; v<viewList.length; ++v){
+			var viewA = viewList[v];
+			var spaceA = viewA.pointSpace();
+			var cellSizeA = viewA.cellSize();
+			var compareSizeA = viewA.compareSize();
+			var viewB = oppositeList[v];
+			var maxSearchRadius = cellSizeA*2;
+			var emptyLocations = [];
+			var Ffwd = fList[v][0];
+			var Frev = fList[v][1];
+			// image
+			var imageA = viewA.image();
+			var imageB = viewB.image();
+			var widthA = imageA.width();
+			var heightA = imageA.height();
+			var widthB = imageB.width();
+			var heightB = imageB.height();
+			// empty
+			var empties = viewA.emptyNeighborCellsForView(viewB);
+			console.log("TO CHECK: "+empties.length);
+			for(var e=0; e<empties.length; ++e){
+				var empty = empties[e];
+				var bestPoint = null;
+				var bestNCC = null;
+				var bestMatch = null;
+				var neighbors = empty.neighbors();
+				for(var n=0; n<neighbors.length; ++n){
+					var neighbor = neighbors[n];
+					var objects = neighbor.objects();
+					for(var o=0; o<objects.length; ++o){
+						var object = objects[o];
+						try{
+						var match = object.matchForView(viewB);
+						var ncc = match.errorNCC();
+						if(bestPoint==null || ncc<bestNCC){
+							bestPoint = object;
+							bestNCC = ncc;
+							bestMatch = match;
+						}
+					}catch(e){
+						console.log(viewA);
+						console.log(viewB);
+						console.log(empty);
+						console.log(object);
+						console.log(neighbor);
+						throw "?";
+					}
+					}
+				}
+				if(bestMatch){ // should always exist
+					var affine = bestMatch.affineForViews(viewA,viewB);
+					var point2DA = bestMatch.pointForView(viewA);
+					var point2DB = bestMatch.pointForView(viewB);
+					var centerA = point2DA.point2D();
+					var centerB = point2DB.point2D();
+					var newPointA = empty.center();
+					var newMatch = this.bestMatch2DFromLocation(affine,centerA,centerB, newPointA, viewA,viewB);
+
+					// must pass F & R tooo
+
+					if(newMatch){
+						var newNCC = newMatch.errorNCC();
+						if(newNCC < 0.25 && newNCC<=1*bestNCC){ // OTHER CRITERIA ? - MATCH VALIDATION ?
+							matchesAddList.push(newMatch);
+						}
+					}
+				}
+				// new match
+				// var bestMatch = this.bestMatch2DFromLocation(affine, point2DA.point2D(),point2DB.point2D(),newPoint,  viewA,viewB);
+				// var newMatch = this.newMatchFromInfo(viewA,pointA,viewB,pointB, affine, noConnect, display);
+			}
+		}
+		matchesAddList.sort(function(a,b){
+			return a.errorNCC() < b.errorNCC() ? -1 : 1;
+		});
+		console.log("ADD MATCHES: "+matchesAddList.length);
+		// throw "?"
+		for(var j=0; j<matchesAddList.length; ++j){
+			var match = matchesAddList[j];
+			var point3D = match.point3D();
+			point3D = world.embedPoint3D(point3D);
+			if(point3D){
+				var matches = point3D.toMatchArray();
+				for(var m=0; m<matches.length; ++m){
+					var match = matches[m];
+					Stereopsis.updateErrorForMatch(match);
+				}
+				point3D.calculateAbsoluteLocation(world);
+				var p = point3D.point();
+			}
+		}
+	}
+	// done
+}
+Stereopsis.World.prototype.probe2D2 = function(){ //
 	var world = this;
 	var transforms = this.toTransformArray();
 	var min = new V2D();
@@ -5982,17 +6224,7 @@ Stereopsis.World.prototype.probe2D2 = function(){
 				var match = point2D.matchForView(viewB);
 				return match!=null;
 			}
-// console.log("MAKE UP EMPTY LOCATION:");
-// emptyLocations = [new V2D(200,200)]; // couch
-// emptyLocations = [new V2D(250,200)]; //BLACKNESS
-// emptyLocations = [new V2D(250,60)]; // window corner
-// emptyLocations = [new V2D(320,50)]; // shelf thing
-// emptyLocations = [new V2D(320,250)]; // table gray area
-// emptyLocations = [new V2D(420,270)]; // carpet
-// emptyLocations = [new V2D(480,250)]; // chair
-// emptyLocations = [new V2D(100,310)]; // couch corner
-// emptyLocations = [new V2D(100,100)];
-var edgeLocations = [];
+			var edgeLocations = [];
 			var matchesAddList = [];
 			for(var j=0; j<emptyLocations.length; ++j){
 				var center = emptyLocations[j];
@@ -6028,6 +6260,7 @@ edgeLocations.push(center);
 					var existingB = V2D.average(pointsB,percents);
 					var average = Code.averageAffineMatrices(affines,percents);
 					*/
+
 					// just use closest
 					var existingM = closestA.matchForView(viewB);
 					var existingA = closestA.point2D();
@@ -6040,17 +6273,12 @@ edgeLocations.push(center);
 						var deltaB = average.multV2DtoV2D(deltaA);
 						var predictedB = V2D.add(existingB,deltaB);
 					var pointB = predictedB;
-if(pointB.x<0 || pointB.x>widthB || pointB.y<0 || pointB.y>heightB){
-	// console.log("bad point: "+pointB);
-	continue;
-}
-// console.log(pointA+" -> "+pointB);
+					if(pointB.x<0 || pointB.x>widthB || pointB.y<0 || pointB.y>heightB){
+						continue;
+					}
 					// var inverse = Matrix.inverse(average);
-
 					var compareSize = compareSizeA;
 					var sizeNeedle = 11;
-// compareSize = 41;
-// sizeNeedle = 41;
 					var sizeHaysack = sizeNeedle*2;
 					var sizeOff = Math.floor(sizeNeedle*0.5);
 					var scale = compareSize/sizeNeedle; // < 1.0
@@ -6133,7 +6361,7 @@ var needleB = imageB.extractRectFromFloatImage(pointB.x,pointB.y,scale,null,size
 var scoresNCC = R3D.normalizedCrossCorrelation(needleA,null,needleB,true);
 var score = scoresNCC["value"][0];
 // console.log("FIRST score: "+score);
-
+/*
 					// get refined affine transform
 					var optimum = Stereopsis.bestAffine2DFromLocation(average,viewA,pointA,viewB,pointB);
 					// console.log(optimum+"");
@@ -6146,6 +6374,7 @@ var needleA = imageA.extractRectFromFloatImage(pointA.x,pointA.y,scale,null,size
 var needleB = imageB.extractRectFromFloatImage(pointB.x,pointB.y,scale,null,sizeNeedle,sizeNeedle, null);
 var scoresNCC = R3D.normalizedCrossCorrelation(needleA,null,needleB,true);
 var score = scoresNCC["value"][0];
+*/
 // console.log("BEFORE score: "+score);
 
 /*
@@ -6215,22 +6444,8 @@ GLOBALSTAGE.addChild(d);
 					// path has to be good too
 					var pA = closestA.point2D();
 					var pB = closestA.matchForView(viewB).pointForView(viewB).point2D();
-					// console.log(pA+"->"+pB);
-					// console.log(pointA+"->"+pointB);
-
-
 					var match = world.newMatchFromInfo(viewA,pointA,viewB,pointB,optimum);
 					matchesAddList.push(match);
-
-
-					// R3D.subPixelMinimumNCC = function(imageA,imageB, a,b, matrixAB,matrixBA, cellSize)
-
-
-					/*
-					Stereopsis.World.prototype.bestMatch2DFromLocation = function(affine,centerA,centerB, existingA, viewA,viewB){ // currently only used in probe2d
-						var locationB = Stereopsis.bestAffineLocationFromLocation(affine,centerA,centerB, existingA, viewA,viewB);
-						var optimum = Stereopsis.bestAffine2DFromLocation(affine,viewA,existingA,viewB,locationB);
-					*/
 
 				} // end neighbors
 			}
@@ -7413,7 +7628,7 @@ Stereopsis.World.prototype._resolveIntersectionFlat = function(point3DA,point3DB
 				// console.log(currentPoint2D)
 				// console.log(point2DA)
 				// console.log(point2DB)
-				throw("bad sequence match path");
+// throw("bad sequence match path");
 				this.disconnectPoint3D(point3DA);
 				this.disconnectPoint3D(point3DB);
 				this.disconnectPoint3D(point3DC);
@@ -7911,6 +8126,7 @@ Stereopsis.World.prototype.generateMatchAffineFromPatches = function(point3D){
 			var match = point3D.matchForViews(pA.view(),pB.view());
 			var pointsB = sets2D[j];
 			var affine = R3D.affineCornerMatrixLinear(pointsA,pointsB);
+// here
 			match.affine(affine);
 			this.updateMatchInfo(match);
 		}
@@ -8408,19 +8624,15 @@ Stereopsis.World.minimumUniqueness = 0.10; // 0.0 -> 0.59
 Stereopsis.bestAffine2DFromLocation = function(affine,viewA,pointA,viewB,pointB){
 	var imageA = viewA.image();
 	var imageB = viewB.image();
-	var vectorX = affine.multV2DtoV2D(new V2D(1,0));
-	var vectorY = affine.multV2DtoV2D(new V2D(0,1));
-	var limitPixel = 0.0;
-	var limitVAB = 0.25;
 	var compareSize = Stereopsis.compareSizeForViews2D(viewA,pointA,viewB,pointB);
-	var optimum = R3D.optimumAffineTransform(imageA,pointA, imageB,pointB, vectorX,vectorY, compareSize, limitPixel,limitVAB,limitVAB);
-	if(optimum){
-		affine = R3D.affineTransformFromVectors(optimum);
-		// affine.set(0,2, 0);
-		// affine.set(1,2, 0);
-		return affine;
+	// var optimum = R3D.optimumAffineTransform(imageA,pointA, imageB,pointB, vectorX,vectorY, compareSize, limitPixel,limitVAB,limitVAB);
+	var optimum = R3D.optimumAffineCornerTransform(imageA,pointA, imageB,pointB, affine, compareSize, 10);
+	// TODO: OPTIMUM MIGHT BE BAD
+		// big skew, big scale
+	if(false){
+		return null;
 	}
-	return null;
+	return optimum;
 }
 Stereopsis.World.prototype.bestMatch2DFromLocation = function(affine,centerA,centerB, existingA, viewA,viewB){ // currently only used in probe2d
 	var locationB = Stereopsis.bestAffineLocationFromLocation(affine,centerA,centerB, existingA, viewA,viewB);
@@ -8428,59 +8640,7 @@ Stereopsis.World.prototype.bestMatch2DFromLocation = function(affine,centerA,cen
 	if(optimum){
 		var pointA = existingA;
 		var pointB = locationB;
-		affine = optimum;
-		// affine = R3D.affineTransformFromVectors(optimum);
-		/*
-		// UNIQUENESS ATTEMPT
-		var blockSize = 11;
-		var cellSize = Math.round((viewA.cellSize()+viewB.cellSize())*0.5);
-		var compareSize = Math.round((viewA.compareSize()+viewB.compareSize())*0.5);
-		var needleSize = blockSize;
-		var haystackSize = blockSize*3;
-		var scale = blockSize/compareSize;
-		var uniqueness = Stereopsis.uniquenessFromImages(imageA,existingA,affine, imageB,locationB,null, needleSize,haystackSize, scale);
-		console.log("uniqueness probe2d: "+uniqueness);
-		if(uniqueness>Stereopsis.World.minimumUniqueness){
-			*/
-	// 		extract needle & haystack
-	// 		get uniqueness
-
-	//
-		// CORNERNESS ATTEMPT
-		/*
-		var imgA = viewA.corners();
-		var imgB = viewB.corners();
-		var blockSize = 11;
-		// var cellSize = Math.round((viewA.cellSize()+viewB.cellSize())*0.5);
-		var compareSize = Math.round((viewA.compareSize()+viewB.compareSize())*0.5);
-		var needleSize = blockSize;
-		var haystackSize = blockSize*3;
-		var scale = blockSize/compareSize;
-		var matrixA = null;
-
-		var needleB = imgB.extractRectFromFloatImage(pointB.x,pointB.y,scale,null,sizeHaysack,sizeHaysack, matrixB);
-		*/
-
-
-		/*
-		var cornernessA = Stereopsis.averageCornerness(viewA,pointA);
-		var cornernessB = Stereopsis.averageCornerness(viewB,pointB);
-		// console.log(cornernessA+" | "+cornernessB);
-		var minA = viewA.minimumCornerness();
-		var minB = viewB.minimumCornerness();
-		// var minimumCornerness = 0.333;
-		// if(cornernessA>minimumCornerness && cornernessB>minimumCornerness){
-		if(cornernessA>minA && cornernessB>minB){
-			var match = this.newMatchFromInfo(viewA,pointA,viewB,pointB,affine);
-			return match;
-		}
-		// throw "?";
-		*/
-
-
-		// no criteria:
-
-		var match = this.newMatchFromInfo(viewA,pointA,viewB,pointB,affine);
+		var match = this.newMatchFromInfo(viewA,pointA,viewB,pointB,optimum);
 		return match;
 	}
 	return null;
@@ -8583,63 +8743,26 @@ Stereopsis.bestAffineLocationFromLocation = function(affine,centerA,centerB, exi
 	var haystackSize = needleSize*3; // 2-3
 	var scores = Stereopsis.optimumScoresAtLocation(imageA,existingA, imageB,predictedB, needleSize,haystackSize,affine);
 	var finalSize = scores["width"];
-	var score = scores["value"];
-	var errorAffine = Stereopsis._errorAffine(finalSize);
-	// var cScore = 1.0;
-	// var cAffine = 0.0;
-	var cScore = 0.90;
-	var cAffine = 0.10;
-	// var cScore = 0.50;
-	// var cAffine = 0.50;
-	// var cScore = 0.01;
-	// var cAffine = 0.99;
-	// var cScore = 0.0;
-	// var cAffine = 1.0;
-	var error = [];
+	//
 	var compareSize = Stereopsis.COMPARE_SIZE;
 	var cellScale = (needleSize/compareSize);
-	for(var i=0; i<score.length; ++i){
-		var e = cScore * score[i] + cAffine * (errorAffine[i]*(1.0/needleSize));
-		error[i] = e;
-	}
-	var minimum = Stereopsis.minimumFromValues(error, finalSize, finalSize, predictedB, cellScale);
+	var minimum = Stereopsis.minimumFromValues(scores, finalSize, finalSize, predictedB, cellScale);
 	var absoluteLocation = minimum["location"];
 	return absoluteLocation;
 }
 // Stereopsis.X = 0;
 Stereopsis.optimumScoresAtLocation = function(imageA,pointA, imageB,pointB, needleSize,haystackRelativeSize, matrix){ // search needle/haystack at points
 	var compareSize = Stereopsis.COMPARE_SIZE;
-	var cellScale = (needleSize/compareSize); // EG:
-
-	// SHOULD THIS BE REVERSED ?
-
+	var cellScale = (needleSize/compareSize);
 	var haystackSize = Math.ceil((haystackRelativeSize/needleSize)*compareSize);
 	var haystackSize = Math.max(haystackSize,compareSize);
 	var needle = imageA.extractRectFromFloatImage(pointA.x,pointA.y,cellScale,null,compareSize,compareSize, matrix);
 	var haystack = imageB.extractRectFromFloatImage(pointB.x,pointB.y,cellScale,null,haystackSize,haystackSize, null);
-/*
-var iii = needle;
-var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
-var d = new DOImage(img);
-d.matrix().scale(2.0);
-d.matrix().translate(100*Stereopsis.X, 550);
-GLOBALSTAGE.addChild(d);
-
-var iii = haystack;
-var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
-var d = new DOImage(img);
-d.matrix().scale(2.0);
-d.matrix().translate(100*Stereopsis.X, 600);
-GLOBALSTAGE.addChild(d);
-++Stereopsis.X;
-*/
 	// var scoresSAD = R3D.searchNeedleHaystackImageFlat(needle, null, haystack);
 	var scoresNCC = R3D.normalizedCrossCorrelation(needle,null, haystack, true);
-	// var scoresMult = ImageMat.mulFloat(scoresSAD["value"],scoresNCC["value"]);
 	var scores = {
 		// "width": scoresSAD["width"],
 		// "height": scoresSAD["height"],
-		// "value": scoresMult
 		// "value": scoresSAD["value"]
 		"width": scoresNCC["width"],
 		"height": scoresNCC["height"],

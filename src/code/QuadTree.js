@@ -193,7 +193,7 @@ QuadTree.prototype.insertObject = function(obj){
 	// console.log(". insertObject ------------------------------------------------------------------------------------   "+point);
 	if(isInside){
 		this._root.insertObject(obj,this._toPoint);
-	}else if(this._autoResize){ // is this broke?
+	}else if(this._autoResize){
 		var objects = this.toArray();
 		objects.push(obj);
 		this.clear();
@@ -267,7 +267,7 @@ QuadTree.prototype.initWithObjects = function(objects, force){
 		V2D.max(max,max,point);
 	}
 	var eps = 1E-6;
-	min.add(-eps,-eps,);
+	min.add(-eps,-eps);
 	max.add(eps,eps);
 	var size = QuadTree.twoDivisionRound(min,max, force);
 	if(size.x==0){
