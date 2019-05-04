@@ -345,24 +345,46 @@ https://cloud.google.com/appengine/docs/nodejs/
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-- 2d propagation of points
 
-- dropping poor neighborhood points
+=> affine matrices are quite bad ...
+
+
+- repeated drop extrema points -- for when there are several really bad points pushing off stats
+
+- isolated chunks of bad matches that need to be eaten away at?
+	=> - HOW
+
+		- patches would help
+
+- keep track of FWD-BAK matches and only use these?
+
+
+- add drop distance points -- where average camera distance >> population
+
+
+- F & R restrictions prevent matches from spreading ...
+
+
+- drop voting 2D based on:
+	- difference in affine transforms
 	- F
 	- R
 	- NCC
 	- 3D location / distances
 	...
 
+- why are initial matches dropped - from: 8662 -> 7173 ?
+
+
+
 - BA point locations to update cameras?
 
 - simpler patch initting / rougher
 
+- eventually keep track of which cells were already attempted and failed ()
 
--> create easy set of ~6 images for pipeline test
-	- bench is ok
 
-- convert from affine MATRIX to MATRIX2D
+- convert from affine MATRIX to MATRIX2D & reuse
 
 - affine matrix estimation is very wrong in some places ?
 

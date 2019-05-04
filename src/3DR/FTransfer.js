@@ -68,6 +68,115 @@ FTransfer.prototype.imagesLoadComplete = function(o){
 		-0.18403660983845793,
 		]);
 console.log("HERE");
+
+
+// show images:
+for(var i=0; i<images.length; ++i){
+	var iii = images[i];
+	var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
+	var d = new DOImage(img);
+	d.matrix().translate(0 + i*iii.width(), 0 + 0);
+	GLOBALSTAGE.addChild(d);
+	d.graphics().alpha(0.50);
+}
+
+var width = images[0].width();
+var indexA = 0;
+var indexB = 1;
+
+var imageA = images[0];
+var imageB = images[1];
+// console.log(imageA,imageB)
+var compareSize = 11;
+// var locationB = Stereopsis.bestAffineLocationFromLocation(affine,centerA,centerB, existingA, imageA,imageB,needleSize);
+// // var optimum = Stereopsis.bestAffine2DFromLocation(affine,viewA,existingA,viewB,locationB, compareSize);
+// var optimum = R3D.optimumAffineCornerTransform(imageA,pointA, imageB,locationB, affine, compareSize, 10);
+var affine = new Matrix2D();
+	affine.identity();
+// pillow
+var centerA = new V2D(228,144);
+var centerB = new V2D(247,106);
+// table corner
+// var centerA = new V2D(276,291);
+// var centerB = new V2D(258,251);
+
+
+
+	var d = new DO();
+	d.graphics().setLine(2.0,0xFFFF0000);
+	d.graphics().beginPath();
+	d.graphics().drawCircle(centerA.x,centerA.y, 5);
+	d.graphics().strokeLine();
+	d.graphics().endPath();
+	d.matrix().translate(indexA*width,0);
+	GLOBALSTAGE.addChild(d);
+
+	var d = new DO();
+	d.graphics().setLine(2.0,0xFFFF0000);
+	d.graphics().beginPath();
+	d.graphics().drawCircle(centerB.x,centerB.y, 5);
+	d.graphics().strokeLine();
+	d.graphics().endPath();
+	d.matrix().translate(indexB*width,0);
+	GLOBALSTAGE.addChild(d);
+
+
+// var existingA = centerA.copy().add(new V2D(33,0));
+var existingA = centerA.copy().add(new V2D(33,33));
+
+// var existingA = centerA.copy().add(new V2D(11,0));
+// var existingA = centerA.copy().add(new V2D(-11,0));
+// var existingA = centerA.copy().add(new V2D(-11,-11));
+// var existingA = centerA.copy().add(new V2D(11,11));
+// var existingA = centerA.copy().add(new V2D(-11,11));
+var result = R3D.bestAffine2DFromExisting(affine,imageA,centerA,imageB,centerB, existingA, compareSize);
+console.log(result);
+var pointA = result["A"];
+var pointB = result["B"];
+var optimum = result["affine"];
+
+
+
+	var d = new DO();
+	d.graphics().setLine(2.0,0xFF0000FF);
+	d.graphics().beginPath();
+	d.graphics().drawCircle(pointA.x,pointA.y, 5);
+	d.graphics().strokeLine();
+	d.graphics().endPath();
+	d.matrix().translate(indexA*width,0);
+	GLOBALSTAGE.addChild(d);
+
+	var d = new DO();
+	d.graphics().setLine(2.0,0xFF0000FF);
+	d.graphics().beginPath();
+	d.graphics().drawCircle(pointB.x,pointB.y, 5);
+	d.graphics().strokeLine();
+	d.graphics().endPath();
+	d.matrix().translate(indexB*width,0);
+	GLOBALSTAGE.addChild(d);
+
+
+	var compareSize = 21;
+	var sca = 3.0;
+	var sss = 1.0;
+	var a = imageA.extractRectFromFloatImage(pointA.x,pointA.y,sss,null,compareSize,compareSize, optimum);
+	var b = imageB.extractRectFromFloatImage(pointB.x,pointB.y,sss,null,compareSize,compareSize, null);
+	var imgs = [a,b];
+	for(var i=0; i<imgs.length; ++i){
+		var iii = imgs[i];
+		var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
+		var d = new DOImage(img);
+		d.matrix().scale(sca);
+		d.matrix().translate(10 + i*100, 400);
+		GLOBALSTAGE.addChild(d);
+	}
+
+
+throw "HERE"
+
+
+throw "..."
+
 	// normalize to size:
 	var Fs = [F01,F02,F12];
 	for(var i=0; i<Fs.length; ++i){

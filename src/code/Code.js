@@ -2001,6 +2001,21 @@ Code.max2DArray = function(array2D){
 Code.min2DArray = function(array2D){
 	return Code.info2DArray["min"];
 }
+Code.minIndex = function(array){
+	if(array.length==0){
+		return null;
+	}
+	var minIndex = array.length-1;
+	var minValue = array[minIndex];
+	for(var i=minIndex; i--; ){
+		var v = array[i];
+		if(v<minValue){
+			minValue = v;
+			minIndex = i;
+		}
+	}
+	return minIndex
+}
 Code.info2DArray = function(array2D){
 	var element, arr, i, j, lenJ, lenI = array2D.length;
 	var min = array2D[0][0];

@@ -55,7 +55,7 @@ function FeatureTest(){
 
 // new ImageLoader("./images/",["room0.png", "room1.png"],this,this.imagesLoadComplete2).load(); // real / close scenario : GREAT : [63 @ 0.58 |  66 @ 0.59]
 // new ImageLoader("./images/",["room1.png", "room2.png"],this,this.imagesLoadComplete2).load(); // GREAT : [74 @ 0.45 | 65 @ 0.44]
-// new ImageLoader("./images/",["room0.png", "room2.png"],this,this.imagesLoadComplete2).load(); // GOOD : [46 @ 0.83 | 45 @ 0.78]
+new ImageLoader("./images/",["room0.png", "room2.png"],this,this.imagesLoadComplete2).load(); // GOOD : [46 @ 0.83 | 45 @ 0.78]
 
 // new ImageLoader("./images/",["bench_A.png", "bench_B.png"],this,this.imagesLoadComplete2).load(); // small skew ----- GOOD :  [24 @ 0.476 | 44 @ 0.61]
 // new ImageLoader("./images/",["bench_B.png", "bench_C.png"],this,this.imagesLoadComplete2).load(); // large skew ----- POOR : [34 : 1.32 | 39 @ 1.72]
@@ -105,7 +105,7 @@ function FeatureTest(){
 // new ImageLoader("./images/",["study1.png", "study3.png"],this,this.imagesLoadComplete2).load(); //  :  : [43 : 0.26640 |  ? @ ?]
 
 
-new ImageLoader("./images/iowa/",["0.JPG", "1.JPG"],this,this.imagesLoadComplete2).load();
+// new ImageLoader("./images/iowa/",["0.JPG", "1.JPG"],this,this.imagesLoadComplete2).load();
 
 
 // new ImageLoader("./images/",["?.png", "?.png"],this,this.imagesLoadComplete2).load();
@@ -1625,6 +1625,10 @@ for(var i=0; i<cornersA.length; ++i){
 throw "?"
 
 */
+
+
+
+
 
 
 if(false){

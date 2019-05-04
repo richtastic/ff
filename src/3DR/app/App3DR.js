@@ -89,7 +89,7 @@ var modeModelReconstruction = false;
 
 // don't A:
 // TO SWITCH ON MODELING:
-modeModelReconstruction = true;
+// modeModelReconstruction = true;
 
 
 
@@ -6712,7 +6712,7 @@ App3DR.ProjectManager.prototype._backgroundTaskTick = function(){
 }
 App3DR.ProjectManager.prototype.checkPerformNextTask = function(){
 // don't 1 - run
-return;
+// return;
 console.log("checkPerformNextTask");
 	this.pauseBackgroundTasks();
 	this._taskBusy = true;
@@ -11292,8 +11292,9 @@ console.log(world);
 for(var i=0; i<BAVIEWS.length; ++i){
 	var view = BAVIEWS[i];
 	// view.cellSize(3);
-	// view.cellSize(5); // TODO: ~ 1-2%
-	view.cellSize(9);
+	view.cellSize(5); // TODO: ~ 1-2%
+	// view.cellSize(9);
+	// view.cellSize(11);
 }
 
 world.solve(completeFxn, this);

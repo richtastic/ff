@@ -3290,7 +3290,7 @@ ImageMat.getPointInterpolateCubic = function(array, wid,hei, x,y){
 		return 0;
 	}
 	val = Math.min(Math.max(val,0.0),1.0);
-	return val
+	return val;
 }
 
 // projective transform
