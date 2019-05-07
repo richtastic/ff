@@ -8272,6 +8272,80 @@ Code.intersectFiniteRayCircle2DBoolean = function(org,dir, cen,rad){ // infinite
 	}
 	return false;
 }
+Code.intersectRaySphere3D = function(org,dir, cen,rad){ // infinite ray & sphere
+	var a = dir.x*dir.x + dir.y*dir.y+ dir.z*dir.z;
+	var b = 2*(dir.x*org.x + dir.y*org.y + dir.z*org.z - dir.x*cen.x - dir.y*cen.y - dir.z*cen.z);
+	var c = org.x*org.x + org.y*org.y + org.z*org.z + cen.x*cen.x + cen.y*cen.y + cen.z*cen.z - 2*(org.x*cen.x + org.y*cen.y + org.z*cen.z) - rad*rad;
+	var r = Code.quadraticSolution(a,b,c);
+	if(r===null){ // imaginary / no
+		return null;
+	}
+	for(var i=0; i<r.length; ++i){
+		var t = r[i];
+		r[i] = new V2D(org.x + t*dir.x, org.y + t*dir.y, org.z + t*dir.z)
+	}
+	return r;
+}
+
+Code.pointInsideCone3DBoolean = function(cen,dir,ratio, point){
+	var p = V3D.sub(point,cen);
+	var dot = V3D.dot(p,dir);
+	if(dot<0){ // negative direction
+		return false;
+	}
+	var perp = V3D.perpendicularComponent(dir,p);
+	var para = V3D.sub(p,perp);
+	var rise = perp.length();
+	var run = para.length();
+	if(rise>dir.length()){ // too far out
+		return false;
+	}
+	if(run==0){
+		return true;
+	}
+	var rr = rise/run;
+	return rr <= ratio;
+
+}
+
+Code.sphereInsideCone3DBoolean = function(cen,dir,ratio, sph,rad){ // any part of sphere touches/inside/ovarlap cone
+	// center--center distance < rad ?
+	var p = V3D.sub(sph,cen);
+	if(p.length()<=rad){ // near vertex
+		return true;
+	}
+	// body:
+	var perp = V3D.perpendicularComponent(dir,p);
+	var para = V3D.sub(p,perp);
+	var rise = perp.length();
+	var run = para.length();
+	if(rise<=rad){ // inside cylinder
+		return true;
+	}
+	// angle: -- needs to subtract from radius outer portion
+throw "here";
+	// end:
+	var cen2 = V3D.add(cen,dir);
+	var nor2 = V3D.copy(dir).norm();
+	var rad2 = ratio*dir.length(); // mouth opening :
+	var distance = Code.distancePointPlaneCircular(cen2,nor2,rad2, sph);
+	if(distance<rad){
+		return true;
+	}
+	return false;
+}
+
+Code.distancePointPlaneCircular = function(cen,nor,rad, point){
+	var closest = Code.closestPointPlane3D(cen,nor,point);
+	var cToP = V3D.sub(closest,cen);
+	if(cToP.length()<rad){ // plane perpendicular
+		return V3D.distance(point,closest);
+	} // else closest point is on rim
+	cToP.length(rad);
+	cToP.add(cen);
+	return V3D.distance(point,cToP);
+}
+
 Code.isCCW = function(a,b,c){
 	var ab = V2D.sub(b,a);
 	var bc = V2D.sub(c,b);

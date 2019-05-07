@@ -56,6 +56,19 @@
 |  |  |  |
 |  |  |  |
 |  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+| ngoan | ngwang | good (job) |
+| rua |  | wash (food) |
+| com chon |  | mixed rice (beepingbop) |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
 | nhạc |  | music |
 |  |  |  |
 |  |  |  |
@@ -114,8 +127,16 @@
 |  |  |  |
 |  |  |  |
 |  |  |  |
-|  |  | turn |
-| trái |  | left |
+| quẹo | weo | turn |
+| trái | chai | left |
+| phải | fai | right |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
 |  |  |  |
 |  |  |  |
 |  |  |  |
@@ -255,14 +276,11 @@ WEATHER
 |  |  |  |
 
 
+poems:
+chuyen nho nhu con tho
+problem small like rabbit
+
 
 
 
 https://l-lingo.com/free-lessons/en/learn-vietnamese
-
-
-
-
-
-
-

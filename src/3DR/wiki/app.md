@@ -345,8 +345,29 @@ https://cloud.google.com/appengine/docs/nodejs/
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+- cone-sphere-intersection for sphere-filtering working
 
-=> affine matrices are quite bad ...
+- is filterSphere3D working?
+	=> removing all chunks of intersecting sphere-patches?
+
+- is local3D dropping working? - (high variation in local 3D distances)
+ 	=> removing isolated noisy points
+
+- local2D dropping? (high difference in F, R, M)
+	=> removing
+
+- searchPoints2DBestMatch
+	=> really high error initially ? lots of bad/non-unique points?
+
+
+
+
+
+- would stages of cell-size help? 11 - 5 - 3 ?
+	A) get error down
+	B) expand cells
+	C) reduce cell size
+	D) goto (B)
 
 
 - repeated drop extrema points -- for when there are several really bad points pushing off stats
@@ -356,13 +377,9 @@ https://cloud.google.com/appengine/docs/nodejs/
 
 		- patches would help
 
-- keep track of FWD-BAK matches and only use these?
-
 
 - add drop distance points -- where average camera distance >> population
 
-
-- F & R restrictions prevent matches from spreading ...
 
 
 - drop voting 2D based on:

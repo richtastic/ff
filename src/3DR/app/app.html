@@ -602,6 +602,37 @@ console.log(" "+i+" DIFF: "+orgDiff.length()+" @ "+Code.degrees(dirDiff));
 
 
 function classesLoadedFxn(){
+	var center = new V3D(1,1,1);
+	var dir = new V3D(10,0,0);
+	var ratio = 0.5;
+	var point = new V3D(9,1,1);
+	var result = Code.pointInsideCone3DBoolean(center,dir,ratio, point);
+	console.log(result);
+
+	var sph = new V3D(3,1,1);
+	var rad = 5.0;
+	var result = Code.sphereInsideCone3DBoolean(center,dir,ratio, sph,rad);
+	console.log(result);
+
+	// throw "?";
+
+/*
+	var result = Code.intersectRaySphere3D(new V3D(0,0,0), new V3D(1,0,0),  new V3D(0,0,0), 1);
+	console.log(result);
+	throw "?"
+*/
+/*
+		var a = new V3D(0,0,0);
+		var b = new V3D(1,1,0);
+		console.log(a+"");
+		console.log(b+"");
+		var c = V3D.parallelComponent(a,b);
+		console.log(c+"");
+		var c = V3D.perpendicularComponent(a,b);
+		console.log(c+"");
+*/
+
+
 
 /*
 	var error = 0.1;

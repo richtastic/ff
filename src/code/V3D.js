@@ -187,6 +187,26 @@ V3D.max = function(a,b,c){ // a = max(b,c)
 V3D.pushToArray = function(a,v){
 	a.push(v.x,v.y,v.z);
 }
+V3D.parallelComponent = function(base,vector){
+	var lenB = base.length();
+	if(lenB==0){
+		return null;
+	}
+	var lenV = vector.length();
+	var dotBV = V3D.dot(base,vector);
+	dotBV /= (lenB*lenB);
+	return base.copy().scale(dotBV);
+}
+V3D.perpendicularComponent = function(base,vector){ // alternate way to do this?
+	var parallel = V3D.parallelComponent(base,vector);
+	if(!parallel){
+		return null;
+	}
+	parallel.x = vector.x - parallel.x;
+	parallel.y = vector.y - parallel.y;
+	parallel.z = vector.z - parallel.z;
+	return parallel;
+}
 V3D.orthogonal = function(v){ // find direction perpendicular to vector
 	var d = new V3D(1,1,1);
 	var dot = V3D.dot(d,v);
