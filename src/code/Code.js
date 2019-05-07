@@ -8309,41 +8309,55 @@ Code.pointInsideCone3DBoolean = function(cen,dir,ratio, point){
 }
 
 Code.sphereInsideCone3DBoolean = function(cen,dir,ratio, sph,rad){ // any part of sphere touches/inside/ovarlap cone
-	// center--center distance < rad ?
 	var p = V3D.sub(sph,cen);
 	if(p.length()<=rad){ // near vertex
 		return true;
 	}
-	// body:
-	var perp = V3D.perpendicularComponent(dir,p);
-	var para = V3D.sub(p,perp);
-	var rise = perp.length();
-	var run = para.length();
-	if(rise<=rad){ // inside cylinder
-		return true;
+	// offset-cone-body
+	var dirLength = dir.length();
+	var unitDir = dir.copy().scale(1.0/dirLength);
+	var ang = Math.atan(ratio);
+	// var cos = Math.cos(ang);
+	var sin = Math.sin(ang);
+	var mild = sin*rad; // small offset for cap end
+	var medium = rad/sin; // large offset for origin offset
+	var offA = medium - mild;
+	var offB = offA + dirLength;
+	var cen2 = unitDir.copy().scale(-medium).add(cen);
+	// point inside cone && parallel is between off2 & off3
+	var p2 = V3D.sub(sph,cen2);
+	var dot = V3D.dot(p2,unitDir);
+	if(dot<offA){ // too far back
+		return false;
 	}
-	// angle: -- needs to subtract from radius outer portion
-throw "here";
-	// end:
-	var cen2 = V3D.add(cen,dir);
-	var nor2 = V3D.copy(dir).norm();
-	var rad2 = ratio*dir.length(); // mouth opening :
-	var distance = Code.distancePointPlaneCircular(cen2,nor2,rad2, sph);
-	if(distance<rad){
+	if(dot<offB){ // cone2 interrior
+		var para = unitDir.copy().scale(dot);
+		var perp = V3D.sub(p2,para);
+		var rise = perp.length();
+		var run = dot;
+		var rr = rise/run;
+		if(rr<=ratio){
+			return true;
+		}
+	} // end-plane-cap
+	cen2.copy(cen).add(dir);
+	var rad2 = ratio*dirLength; // mouth opening : circular plane
+	var distance = Code.distancePointPlaneCircular(cen2,unitDir,rad2, sph);
+	if(distance<=rad){ // inside cap
 		return true;
-	}
+	} // outside 3 separate objects
 	return false;
 }
 
 Code.distancePointPlaneCircular = function(cen,nor,rad, point){
 	var closest = Code.closestPointPlane3D(cen,nor,point);
-	var cToP = V3D.sub(closest,cen);
-	if(cToP.length()<rad){ // plane perpendicular
+	var cToC = V3D.sub(closest,cen);
+	if(cToC.length()<=rad){ // plane perpendicular
 		return V3D.distance(point,closest);
 	} // else closest point is on rim
-	cToP.length(rad);
-	cToP.add(cen);
-	return V3D.distance(point,cToP);
+	cToC.length(rad);
+	cToC.add(cen);
+	return V3D.distance(point,cToC);
 }
 
 Code.isCCW = function(a,b,c){

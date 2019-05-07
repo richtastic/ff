@@ -89,7 +89,7 @@ var modeModelReconstruction = false;
 
 // don't A:
 // TO SWITCH ON MODELING:
-modeModelReconstruction = true;
+// modeModelReconstruction = true;
 
 
 
@@ -6712,7 +6712,7 @@ App3DR.ProjectManager.prototype._backgroundTaskTick = function(){
 }
 App3DR.ProjectManager.prototype.checkPerformNextTask = function(){
 // don't 1 - run
-return;
+// return;
 console.log("checkPerformNextTask");
 	this.pauseBackgroundTasks();
 	this._taskBusy = true;

@@ -3489,12 +3489,18 @@ Stereopsis.World.prototype.filterSphere3D = function(sigmaCount, linearly){ // t
 	var points3D = this.toPointArrayLocated();
 
 	// initialize counting
+// var sizes = [];
 	for(var i=0; i<points3D.length; ++i){
 		var point3D = points3D[i];
 		if(point3D.hasPatch()){
 			point3D.temp({"behind":[],"front":[]});
+// sizes.push(point3D.size());
 		}
 	}
+// sizes.sort(function(a,b){
+// 	return a<b ? -1 : 1;
+// });
+// console.log(sizes);
 	// TODO: SHOULD THESE BE SIZED TO PATCHES? OR JUST PIXELS?
 	var count = 0;
 	var space = this._pointSpace;
@@ -3504,7 +3510,6 @@ Stereopsis.World.prototype.filterSphere3D = function(sigmaCount, linearly){ // t
 			count++;
 			if(point3DA.hasPatch()){
 				var pointSizeA = point3DA.size();
-// console.log(pointSizeA)
 				var searchRadius = pointSizeA*2.0;
 				var pointCenterA = point3DA.point();
 				// var pointNormalA = point3DA.normal();
@@ -3512,9 +3517,18 @@ Stereopsis.World.prototype.filterSphere3D = function(sigmaCount, linearly){ // t
 				for(var j=0; j<viewsA.length;++j){
 					var viewA = viewsA[j];
 					var viewCenterA = viewA.center();
+					// var pointDirViewA = V3D.sub(pointCenterA,viewCenterA);
 					var pointDirViewA = V3D.sub(viewCenterA,pointCenterA);
+
+					// search cone:
+					// var coneCenter = new V3D();
+					// var coneDirection = new V3D();
+					// var coneRatio = 0;
+					// var searchPoints = space.objectsInsideCone(coneCenter,coneDirection,coneRatio);
+
 					// limited 3D ray search window
 					var searchPoints = space.objectsInsideRay(pointCenterA,pointDirViewA,searchRadius);
+
 					for(var k=0; k<searchPoints.length;++k){
 						var point3DB = searchPoints[k];
 						if(point3DA==point3DB){
@@ -3522,25 +3536,24 @@ Stereopsis.World.prototype.filterSphere3D = function(sigmaCount, linearly){ // t
 						}
 						if(point3DB.hasPatch()){
 							// var pointNormalB = point3DB.normal();
-							// only care about patches pointing toward eachother
-							// var angleAB = V3D.angle(pointNormalA,pointNormalB);
-							// if(angleAB<limitAngleNormalsMax){
 								var pointCenterB = point3DB.point();
 								var pointSizeB = point3DB.size();
 								var sphereRadius = pointSizeB;
-									sphereRadius *= 2;
+									//sphereRadius *= 5; // patch size
+									// sphereRadius *= 2;
 									// sphereRadius *= 0.5; // conservative
-								var minDistanceIntersect = pointSizeA*0.5 + pointSizeB*0.5;
+									sphereRadius = (pointSizeA + pointSizeB);
+								var minDistanceIntersect = (pointSizeA + pointSizeB)*0.5;
 								var intersection = Code.intersectRaySphere3D(pointCenterA,pointDirViewA, pointCenterB,sphereRadius);
 								if(intersection){
 									// only keep sphere intersections where distance > rad1+rad2
 									for(var p=0; p<intersection.length; ++p){
 										var d = V3D.distance(intersection[p],pointCenterA);
-										// if(d>minDistanceIntersect){
+										if(d>minDistanceIntersect){
 											point3DA.temp()["behind"].push(point3DB);
 											point3DB.temp()["front"].push(point3DA);
 											break;
-										// }
+										}
 									}
 								}
 							// }
@@ -3561,7 +3574,6 @@ Stereopsis.World.prototype.filterSphere3D = function(sigmaCount, linearly){ // t
 		var point3D = points3D[i];
 		if(point3D.hasPatch()){
 			var temp = point3D.temp();
-			// console.log(" INTS: "+temp["behind"].length+" / "+temp["front"].length);
 			behinds.push(temp["behind"].length);
 			fronts.push(temp["front"].length);
 			pointsFront.push(point3D);
