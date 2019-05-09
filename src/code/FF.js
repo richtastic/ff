@@ -6,6 +6,7 @@ FF.FILENAMES = ["numeric-1.2.6.js","glMatrix-0.9.5.min.js", "Code.js","Err.js","
 				"Bivector.js",
 				"Matrix.js","Tensor.js","Matrix2D.js","Matrix3D.js","Dispatch.js","Dispatchable.js","Ticker.js","JSDispatch.js","Ajax.js","ImageMat.js","Gesticulator.js","MessageBus.js",
 				"Grid2D.js","Mesh2D.js","Mesh3D.js",
+				"FFWorker.js","Threading.js",
 				"Pool.js",
 				"Memory2D.js",
 				"Poly2D.js","Graph.js","UnionFind.js","SyncData.js","Dependency.js",
@@ -17,6 +18,7 @@ FF.FILENAMES = ["numeric-1.2.6.js","glMatrix-0.9.5.min.js", "Code.js","Err.js","
 				"BivariateSurface.js",
 				"TextureAtlas.js","TextureViewBlend.js",
 				"Filter.js",
+
 				"DenseMatchF.js",
 				"ClientFile.js"]; // "Node.js"
 FF.LOCATION = "";

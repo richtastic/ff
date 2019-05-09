@@ -229,6 +229,11 @@ QuadTree.prototype.objectsInsideRay = function(org,dir,radius,isInfinite){ // ob
 	this._root.objectsInsideRay(arr,org,dir,radius,isInfinite,this._toPoint);
 	return arr;
 }
+QuadTree.prototype.objectsInsideCone = function(cen,dir,ratio){ // objects inside cone
+	var arr = [];
+	this._root.objectsInsideCone(arr, cen,dir,ratio,this._toPoint);
+	return arr;
+}
 QuadTree.prototype.convexNeighborhood = function(center, minDesiredCount, epsilon){
 	var minNeighborhood = minDesiredCount!==undefined ? minDesiredCount : 5;
 	var sampleNeighborhood = Math.max(10, minDesiredCount);
@@ -734,6 +739,31 @@ QuadTree.Arxel.prototype.objectsInsideRay = function(arr,org,dir,rad,isInfinite,
 				d -= child.size().length()*0.5; // center-hypotenuse
 				if(d<rad){
 					child.objectsInsideRay(arr,org,dir,rad,isInfinite,toPoint);
+				}
+			}
+		}
+	}
+}
+
+
+QuadTree.Arxel.prototype.objectsInsideCone = function(arr, cen,dir,ratio, toPoint){
+	if(this._datas){
+		for(var i=0; i<this._datas.length; ++i){
+			var p = toPoint(this._datas[i]);
+			var isInside = Code.pointInsideCone2DBoolean(cen,dir,ratio, p);
+			if(isInside){
+				arr.push(this._datas[i]);
+			}
+		}
+	}else if(this._children){
+		for(var i=0; i<this._children.length; ++i){
+			var child = this._children[i];
+			if(child){
+				var p = child.center();
+				var hyp = child.size().length()*0.5;
+				var isInside = Code.circleInsideCone2DBoolean(cen,dir,ratio, p,hyp);
+				if(isInside){
+					child.objectsInsideCone(arr, cen,dir,rad, toPoint);
 				}
 			}
 		}

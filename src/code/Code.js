@@ -8305,9 +8305,7 @@ Code.pointInsideCone3DBoolean = function(cen,dir,ratio, point){
 	}
 	var rr = rise/run;
 	return rr <= ratio;
-
 }
-
 Code.sphereInsideCone3DBoolean = function(cen,dir,ratio, sph,rad){ // any part of sphere touches/inside/ovarlap cone
 	var p = V3D.sub(sph,cen);
 	if(p.length()<=rad){ // near vertex
@@ -8348,7 +8346,12 @@ Code.sphereInsideCone3DBoolean = function(cen,dir,ratio, sph,rad){ // any part o
 	} // outside 3 separate objects
 	return false;
 }
-
+Code.pointInsideCone2DBoolean = function(cen,dir,ratio, point){
+	throw "?";
+}
+Code.circleInsideCone2DBoolean = function(){
+	throw "?";
+}
 Code.distancePointPlaneCircular = function(cen,nor,rad, point){
 	var closest = Code.closestPointPlane3D(cen,nor,point);
 	var cToC = V3D.sub(closest,cen);

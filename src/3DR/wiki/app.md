@@ -199,8 +199,8 @@ storage / memory info
 project typical numbers:
 	10~100  number of images
 		each image has ~ 0.2 other matched images
-	~N*N(0.2) pairs [ (n*)/2 - 2 pairs possible ]		CURRENT GUESS OF AVERAGE GRAPH CONNECTIVITY
-	~N*N(0.1) triples [(n^2 -n)/2 - 2 triples possible]
+	~N*N(0.2) pairs [ (n*(n-1))/2 - 2 pairs possible ]		CURRENT GUESS OF AVERAGE GRAPH CONNECTIVITY
+	~N*N(0.1) triples [(n^2 -n)/2 ?triples possible]
 	20~200 pairs
 	10~100 triples
 
@@ -217,7 +217,7 @@ project typical numbers:
 	100~1000 initial features
 	50~100 matched pair features
 	~10k matched dense pairs
-	100~1000 track points per pair
+	100~1000 track points per= pair
 	2-5 avg track length CURRENT GUESS OF AVG TRACK LENGTH
 
 	[100-1000] * N track points total
@@ -278,6 +278,9 @@ vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 	- high-cornerness
 	- get feature absolute size / angle
 	=> image features to compare to other images
+TODO: pairwise possibility limiting
+	? limit possible match pairs by using eg bag-of-words -- some kind of distance metric between pairs & use top set
+	=> final list of pairs to test for
 - pairwise image feature matching
 	- generate feature descriptors for each image
 	- find best matching features
@@ -307,9 +310,8 @@ vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 	- graph init
 	- sparse tracks
 	- dense points
------> HERE <------
 	- redo affine features
-(05/06)
+-----> HERE <------
 - surface triangulation(tessellation)
 	- advancing-front, curvature-based tessellation
 	=> scene triangle model
@@ -345,7 +347,122 @@ https://cloud.google.com/appengine/docs/nodejs/
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+A) get 6 & 10 sample set of easy objects
+B) walk thru each pair to see progress
+- need to decide GOOD & BAD PAIRS
+- don't AVERAGE patches -- use sphere approx ...
+C) pipeline
+- use population sigmas to throw out:
+ 	- bad track pairs [don't combine]
+	- bad abs orientation [don't include]
+C) make sure enough points for tesselation (subdivide cell size ?)
+D) get to final point cloud []
+
+
+
+
+
+6 views:
+15 pairs
+? triples
+
+
+
+
+1.0    4032 × 3024
+0.5    2016 x 1512 *** tesselation
+0.25    1008 x 756 *** bundle adjustments
+0.125    504 x 378 *** features, matching
+...
+
+
+
+
+=> MANY BAD SEED MATCHES
+- need to allow for noise (NCC SCORE)
+- need to
+
+searchPoints2DBestMatch
+bestAffine2DFromLocation
+-> what to do with points that are far away from optimum location?
+	=> willing to drop like 75% ?
+- really bad seed points
+---- should try to filter out pairwise poor matches beforehand?:
+- optimal location -- need better affine matrix
+
+
+
+- with few seed points => need to do hierarchical point searching [use best corner score location instead of center?]
+	2 or 3 steps of accuracy:
+	=> 1.00% (11) [21]
+	=> 0.50% (5)  [11]
+	=> 0.25% (3)  [5]   ?
+
+
+- 3D points are still very fuzzy
+	- try larger images?
+	- need to have a lot of good tracks
+
+=> zoom in on a problematic /noise point & figure out what precisely is bad?
+	- match points in 2D just off slightly?
+	-
+
+
+=> RECHECK WHAT OPTIMUM LOCATION MEANS
+	X-BAR
+	=> not using exact points, but optimum projected points
+var error = R3D.fError(FFwd, FRev, pA, pB);
+var error = R3D.reprojectionError(estimated3D, pA,pB, extrinsicA, extrinsicB, Ka, Kb);
+var location3D = R3D.triangulatePointDLT(pA,pB, cameraA,cameraB, KaInv, KbInv);
+triangulatePointDLT
+
+
+
+- plane sweep ? -> depth / view fusion
+- line sweep ?
+
+
+- depth uncertainty from pixel-projected voxels ?
+	-> how to use ?
+	-> combining track point estimates into single point ?
+=>
+
+
+
+- get very simple: 6 image object scene
+	- lots of texture
+	- not reflective
+	- not transparent
+	- not too complicated geometry
+	- close image takings
+	- want full 3D scene for later usage
+- get point cloud
+- get tesselation
+-
+
+- try larger image
+- now with lower SAD/NCC criteria: try to optimize affine before filtering input points to give best chance to keep [will also need to validate affine in case its garbage]
+- points with best location far away from initial locaiton are probably bad ?
+
+- use 'approximate' patches for the very dense datasets
+
+
+
+
+
+- pockets of bad matches (high R error) prevent total error from going down
+	-> have high error
+	-> can be removed in global error reduction BUT that also removes a lot of OK points too
+-> how to target patches of bad R-error:
+	- pick 'seeds' as worst p3d errors
+	- select neighboring points while error is HIGH ENOUGH
+	- drop as a group
+
+
+
 - cone-sphere-intersection for sphere-filtering working
+
+- still don't have dropping of bad affine matrices after optimal-transform checked
 
 - is filterSphere3D working?
 	=> removing all chunks of intersecting sphere-patches?

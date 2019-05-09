@@ -7687,7 +7687,8 @@ console.log(matchData);
 			console.log("fSymmetricError: "+fSymmetricError);
 			fSymmetricError = Math.min(fSymmetricError,10.0); // < 10% of image
 			// medium matching:
-			var result = R3D.mediumMatchF(imageMatrixA,imageMatrixB, pointsA,pointsB,F, fSymmetricError, 3);
+			var maxMed = Math.min(Math.max(Math.round(fSymmetricError),1),3); // rough ... don't iterate if no need
+			var result = R3D.mediumMatchF(imageMatrixA,imageMatrixB, pointsA,pointsB,F, fSymmetricError, maxMed);
 			console.log(result);
 			var matches = result["matches"];
 			if(matches && matches.length>=8){
@@ -7725,6 +7726,7 @@ console.log(matchData);
 }
 
 R3D.mediumMatchF = function(imageMatrixA,imageMatrixB,ptsA,ptsB,F, fSymmetricError, maxIterations){
+// TODO: IF DATA IS VERY GOOD => DON'T NEED SO MANY ITERATIONS
 	maxIterations = maxIterations!==undefined ? maxIterations : 3;
 	var stationaryResult = null;
 	var matches = null;
@@ -7734,6 +7736,7 @@ R3D.mediumMatchF = function(imageMatrixA,imageMatrixB,ptsA,ptsB,F, fSymmetricErr
 	var minimumFCount = 20;
 	var sigmaMult = 2.0; // TODO: MAKE AVAILABLE MATCHES BASED
 	var info = null;
+	var previousSigma = null;
 	for(var itr=0; itr<maxIterations; ++itr){
 		console.log("iterations : "+itr+" / "+maxIterations+" @ "+fSymmetricError);
 		// use current F to estimate angles
@@ -7756,9 +7759,20 @@ R3D.mediumMatchF = function(imageMatrixA,imageMatrixB,ptsA,ptsB,F, fSymmetricErr
 			F = result["F"];
 			matches = result["matches"];
 			var info = result["info"];
+			var sig = info["sigma"];
 			console.log(info);
-			var newError = info["mean"] + info["sigma"]*sigmaMult;
+			var newError = info["mean"] + sig*sigmaMult;
 			fSymmetricError = Math.min(fSymmetricError,newError);
+			if(previousSigma!==null){
+				if(previousSigma>sig){ // else got worse?
+					var ratio = previousSigma/sig;
+					console.log(ratio);
+					if(ratio<1.001){ // not helping anymore
+						break;
+					}
+				}
+			}
+			previousSigma = sig;
 		}else{
 			console.log("not enough matches");
 			fSymmetricError *= 2;
@@ -12472,6 +12486,9 @@ return {"F":null, "matches":best, "error":0};
 				}else{
 					result = null;
 				}
+
+// TODO: IF POTENTIAL IS GOOD -> CAN STOP
+
 			}
 		}else{
 			// fundamentalFromUnnormalized *= 1.5;
@@ -27106,20 +27123,22 @@ R3D.affineTransformFromVectors = function(u,a,b){
 	return matrix;
 }
 
-R3D.bestAffine2DFromExisting = function(affine,imageA,centerA,imageB,centerB, existingA, needleSize, forwardBackwardCheck){
+R3D.bestAffine2DFromExisting = function(affine,imageA,centerA,imageB,centerB, existingA, needleSize, forwardBackwardCheck, skipOptimum){
+	skipOptimum = skipOptimum!==undefined ? skipOptimum : false;
 	var locationB = R3D.bestAffineLocationFromLocation(affine,centerA,centerB, existingA, imageA,imageB,needleSize);
 	if(forwardBackwardCheck){
 		var maxDistance = 1.0;
-		// throw "forwardBackwardCheck";
 		var inverse = forwardBackwardCheck;
 		var locationA = R3D.bestAffineLocationFromLocation(inverse,centerB,centerA, locationB, imageB,imageA,needleSize);
 		var distance = V2D.distance(locationA,existingA);
-		// console.log(distance);
 		if(distance>maxDistance){
 			return null;
 		}
 	}
-	var optimum = R3D.optimumAffineCornerTransform(imageA,existingA, imageB,locationB, affine, needleSize, 10);
+	var optimum = affine;
+	if(!skipOptimum){
+		optimum = R3D.optimumAffineCornerTransform(imageA,existingA, imageB,locationB, affine, needleSize, 10);
+	}
 	return {"A":existingA, "B":locationB, "affine":optimum};
 }
 

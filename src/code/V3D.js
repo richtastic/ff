@@ -292,7 +292,10 @@ V3D.prototype.scale = function(c,d,e){
 	return this;
 }
 V3D.prototype.flip = function(){
-	return this.flip(-1);
+	this.x = -this.x;
+	this.y = -this.y;
+	this.z = -this.z;
+	return this;
 }
 V3D.prototype.rotate = function(dir,ang){
 	return V3D.rotateAngle(this,this, dir,ang);

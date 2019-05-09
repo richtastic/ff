@@ -3696,7 +3696,7 @@ App3DR.App.Model3D.prototype.setPoints = function(input3D, input2D, hasImages){
 
 	var colors = [];
 // ONLY WORKS FOR PAIR OF IMAGES
-	// var useErrors = true;
+// var useErrors = true;
 var useErrors = false;
 	useErrors = useErrors && hasImages;
 	if(useErrors ){
@@ -6856,7 +6856,7 @@ throw "task triples";
 			}
 		}
 	}
-// throw "task graph";
+throw "task graph";
 	if(!this.hasGraph()){
 		console.log("has no graph");
 		this.calculateGlobalOrientationInit();
@@ -10523,6 +10523,54 @@ App3DR.ProjectManager.prototype.calculateBundleAdjustTriple = function(viewAIn,v
 		project.saveTripleRelative(triple, str, saveTripleCompleted, project);
 	}
 
+	var worldTripleNull = function(){
+		var idA = viewAIn.id();
+		var idB = viewBIn.id();
+		var idC = viewCIn.id();
+		triple.setRelativeScales(0,0,0);
+		triple.setTFT(null);
+		triple.setTFTInfo(0,0);
+		triple.setRelativeCount(0);
+		var rAB = {
+			"A": idA,
+			"B": idB,
+			"relativeCount": 0,
+			"errorFMean": 0,
+			"errorFSigma": 0,
+			"errorRMean": 0,
+			"errorRSigma": 0,
+			"R": null,
+			"F": null,
+		};
+		var rAC = {
+			"A": idA,
+			"B": idC,
+			"relativeCount": 0,
+			"errorFMean": 0,
+			"errorFSigma": 0,
+			"errorRMean": 0,
+			"errorRSigma": 0,
+			"R": null,
+			"F": null,
+		};
+		var rBC = {
+			"A": idB,
+			"B": idC,
+			"relativeCount": 0,
+			"errorFMean": 0,
+			"errorFSigma": 0,
+			"errorRMean": 0,
+			"errorRSigma": 0,
+			"R": null,
+			"F": null,
+		};
+		var relatives = [rAB,rAC,rBC];
+		triple.setRelativeTransforms(relatives);
+		// relative file
+		var str = "";
+		project.saveTripleRelative(triple, str, saveTripleCompleted, project);
+	}
+
 	// convert to WORLD objects & find tracks
 	var createWorld = function(a){
 		console.log("create world ...");
@@ -10561,7 +10609,19 @@ App3DR.ProjectManager.prototype.calculateBundleAdjustTriple = function(viewAIn,v
 			App3DR.ProjectManager.addTransformToWorld(world, transformAB, idA, idB);
 		}
 		// solve for relative scalings & whatnot
+
+		// 2 of the 3 possible pair errors need to be in some population sigma
+		//
+		//
+
+console.log("need to see if triple is worth trying: MATCHES / ERRORS POPULATION");
+throw "?";
+	if(true){
+		// save static triples info if thats the cast
+		worldTripleNull();
+	}else{
 		world.solveTriple(worldTripleCompleted, project, null);
+		}
 	}
 
 	// done loading
@@ -11149,18 +11209,9 @@ var cam = BACAMS[0];
 // views
 for(var i=0; i<views.length; ++i){
 	var view = views[i];
-
-	//var img = view.featuresImage();
-	//var img = view.denseHiImage(); // REPLACE 1
 	var img = view.bundleAdjustImage();
-
-
-
-
 	var K = cam.K();
 	var distortion = cam.distortion();
-
-
 		var matrix = R3D.imageMatrixFromImage(img, this._stage);
 // correct distortion
 // var info = R3D.invertImageDistortion(matrix, K, distortion,true);
@@ -11236,7 +11287,8 @@ for(var i=0; i<pairs.length; ++i){
 	//console.log("MATCHES AFTER: "+filteredMatches.length);
 	console.log("MATCHES FOR PAIR "+vA.id()+"+"+vB.id()+" == "+filteredMatches.length);
 
-var skip = true; // SKIP AFFINE SEQUENCE - OK FOR ~1000 not for ~10,000+
+// var skip = true; // SKIP AFFINE SEQUENCE - OK FOR ~1000 not for ~10,000+
+var skip = false;
 	// copy over
 	for(var j=0; j<filteredMatches.length; ++j){
 	if(j%1000==0){
@@ -11291,10 +11343,14 @@ console.log(world);
 // set cell size:
 for(var i=0; i<BAVIEWS.length; ++i){
 	var view = BAVIEWS[i];
-	// view.cellSize(3);
-	view.cellSize(5); // TODO: ~ 1-2%
-	// view.cellSize(9);
-	// view.cellSize(11);
+	// var size = view.sizeFromPercent(0.03); // 1% = 5 | 2% = 9 | 3% = 13
+	var size = view.sizeFromPercent(0.01);
+	size = Math.round(size);
+	if(size%2==0){ // make odd
+		size += 1;
+	}
+	view.cellSize(size);
+	console.log("view cell size: "+size)
 }
 
 world.solve(completeFxn, this);
@@ -12082,6 +12138,7 @@ App3DR.ProjectManager.View.prototype._loadImage = function(type, callback, conte
 	var pictures = this._pictureInfo.sort(App3DR.ProjectManager.View.sortSizeIncreasing);
 	var desiredPixelCount = 600*400;
 	var maximumPixelCount = 1000*750;
+	// default
 	if(true){//loadType==App3DR.ProjectManager.View.IMAGE_LOAD_TYPE_ICON){
 		// desiredPixelCount = 400*300;
 		// maximumPixelCount = 500*350;
@@ -12092,15 +12149,20 @@ App3DR.ProjectManager.View.prototype._loadImage = function(type, callback, conte
 		desiredPixelCount = 900*600;
 		maximumPixelCount = 1000*800;
 	}else if(type==App3DR.ProjectManager.View.IMAGE_LOAD_TYPE_BUNDLE_ADJUST){
-		// marge
+		// large
 		// desiredPixelCount = 900*600;
 		// maximumPixelCount = 1000*800;
+		desiredPixelCount = 600*800;
+		maximumPixelCount = 800*1000;
 		// medium
-		desiredPixelCount = 400*300;
-		maximumPixelCount = 500*400;
+		// desiredPixelCount = 400*300;
+		// maximumPixelCount = 500*400;
 		// tiny
 		// desiredPixelCount = 400*300;
 		// maximumPixelCount = 400*300;
+	}else if(type==App3DR.ProjectManager.View.IMAGE_LOAD_TYPE_FEATURES){
+		desiredPixelCount = 400*300;
+		maximumPixelCount = 500*400;
 	}
 	// 1306
 	var closestPicture = -1;
