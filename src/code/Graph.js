@@ -2,7 +2,7 @@
 Graph.WEIGHT_INFINITY = 1E10;
 Graph.WEIGHT_EPSILON = 1E-12;
 Graph.WEIGHT_NONE = 0;
-// ------------------------------------------------------------------------------------------------------------------------ 
+// ------------------------------------------------------------------------------------------------------------------------
 Graph.adjacencyMatrix = function(graph){
 	var vertexCount = graph.vertexCount();
 	var edgeCount = graph.edgeCount();
@@ -67,7 +67,7 @@ Graph._toBipartiteCostMatrix = function(graph){
 			costMatrix[i][j] = maxCost - costMatrix[i][j];
 		}
 	}
-	// mapping is important ... 
+	// mapping is important ...
 	return {"left":left, "right":right, "costMatrix":costMatrix};
 }
 Graph.minAssignment = function(graph){ // list of edges
@@ -135,7 +135,7 @@ while(loops<2){
 			vertex = arr[i];
 			v = graphZero.addVertex();
 			vertex.temp(v);
-			v.id(vertex.id()+"_"+v.id()); 
+			v.id(vertex.id()+"_"+v.id());
 		}
 
 
@@ -253,7 +253,7 @@ while(loops<2){
 			return maxMatching;
 		}
 
-		// find minimum vertex cover 
+		// find minimum vertex cover
 		console.log("GRAPH ZERO:");
 		console.log(graphZero+"");
 
@@ -414,7 +414,7 @@ Graph.minVertexCover = function(graph, leftVertexes, rightVertexes, allCuts, lef
 			L2.push(vertex);
 		}
 	}
-	// 
+	//
 	var R1 = rightCuts;
 	var R2 = [];
 	for(i=0; i<rightVertexes.length; ++i){
@@ -530,7 +530,7 @@ if(iteration>=1E4){
 	}
 	return cuts;
 }
-Graph._disjointSets = function(graph){ // 
+Graph._disjointSets = function(graph){ //
 	var sets = [];
 	var i, j;
 	var vertexes = Code.copyArray(graph.vertexes());
@@ -742,7 +742,7 @@ Graph.BFS = function(graph, search, target, adjacencyMatrix, flowMatrix, indexes
 				predecessorVector[j] = i;
 				colorVector[j] = Graph.BFS_COLOR_GRAY;
 				queue.push(j);
-				
+
 			}
 		}
 	}
@@ -884,7 +884,7 @@ Graph.copy = function(graph){
 	graph._edges = edgesB;
 	return graph;
 }
-// ------------------------------------------------------------------------------------------------------------------------ 
+// ------------------------------------------------------------------------------------------------------------------------
 function Graph(){
 	this._vertexes = [];
 	this._edges = [];
@@ -914,6 +914,18 @@ Graph.prototype.allVertexes = function(){ // copy return
 	var arr = [];
 	for(i=0; i<len; ++i){
 		arr.push(this._vertexes[i]);
+	}
+	return arr;
+}
+Graph.prototype.noEdgeVertexes = function(){ // copy return
+	console.log(this._vertexes);
+	var i, len = this._vertexes.length;
+	var arr = [];
+	for(i=0; i<len; ++i){
+		var v = this._vertexes[i];
+		if(v.edges().length==0){
+			arr.push(v);
+		}
 	}
 	return arr;
 }
@@ -1085,7 +1097,7 @@ Graph.prototype.adjacent = function(data){ // connects to vertex via edge : neig
 Graph.prototype.kill = function(){
 	//
 }
-// ------------------------------------------------------------------------------------------------------------------------ 
+// ------------------------------------------------------------------------------------------------------------------------
 Graph.Vertex = function(d){
 	this._data = null;
 	this._id = Graph.Vertex._index++;
@@ -1225,7 +1237,7 @@ Graph.Vertex.prototype.edgesFrom = function(){
 Graph.Vertex.prototype.toString = function(){
 	return "[Vertex "+this._id+" ("+this._edges.length+")]";
 }
-// ------------------------------------------------------------------------------------------------------------------------ 
+// ------------------------------------------------------------------------------------------------------------------------
 Graph.Edge = function(a,b,w,d){
 	this._id = Graph.Edge._index++;
 	this._vertexA = null;
@@ -1324,17 +1336,4 @@ Graph.Edge.prototype.opposite = function(v){
 Graph.Edge.prototype.toString = function(){
 	return "[Edge "+this._id+" ("+(this._vertexA ? ("("+this._vertexA.id()+")") : "(?)")+"-"+this._weight+"->"+(this._vertexB ? ("("+this._vertexB.id()+")") : "(?)")+"]";
 }
-// ------------------------------------------------------------------------------------------------------------------------ 
-
-
-
-
-
-
-
-
-
-
-
-
-
+// ------------------------------------------------------------------------------------------------------------------------

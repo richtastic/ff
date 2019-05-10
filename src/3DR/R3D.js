@@ -23379,6 +23379,12 @@ R3D.optimumScaling1D = function(edges){
 		e.data({"value":value,"error":error});
 		es[i] = e;
 	}
+	// // prune singled-out vertices
+	// var unused = graph.noEdgeVertexes();
+	// console.log(unused);
+	// for(var i=0; i<unused.length; ++i){
+	// 	graph.removeVertex(unused[i]);
+	// }
 	// find path from each vertex to each other vertex
 	var allPaths = [];
 	for(var i=0; i<vs.length; ++i){
@@ -23412,10 +23418,21 @@ R3D.optimumScaling1D = function(edges){
 		}
 		allPaths.push(pathGroup);
 	}
+	//
+	var unconnected = [];
+	for(var i=0; i<vs.length; ++i){
+		if(vs[i].edges().length==0){
+			unconnected.push(i);
+		}
+	}
+
 	// find best vertex to keep at origin
 	var rootIndex = -1;
-	var rootError = 0;
+	var rootError = null;
 	for(var i=0; i<allPaths.length; ++i){
+		if(vs[i].edges().length==0){
+			continue;
+		}
 		var pathGroup = allPaths[i];
 		var totalError = 0;
 		for(var j=0; j<pathGroup.length; ++j){
@@ -23429,8 +23446,7 @@ R3D.optimumScaling1D = function(edges){
 			rootError = totalError;
 		}
 	}
-// rootIndex = 0;
-// console.log("rootIndex: "+rootIndex);
+
 	// calculate absolute scale based on root
 	var allValues = Code.newArrayArrays(vs.length);
 	for(var i=0; i<allPaths.length; ++i){
@@ -23490,7 +23506,7 @@ console.log("NONLINEAR");
 			scales[i] = scale;
 		}
 	}
-	return {"absolute":scales, "root":rootIndex};
+	return {"absolute":scales, "root":rootIndex, "unconnected":unconnected};
 }
 R3D.optimumTransform3D = function(edges){ // edges: [indexA,indexB, transform,error]
 	var nonlinear = true;

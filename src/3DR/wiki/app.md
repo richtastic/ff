@@ -199,8 +199,8 @@ storage / memory info
 project typical numbers:
 	10~100  number of images
 		each image has ~ 0.2 other matched images
-	~N*N(0.2) pairs [ (n*(n-1))/2 - 2 pairs possible ]		CURRENT GUESS OF AVERAGE GRAPH CONNECTIVITY
-	~N*N(0.1) triples [(n^2 -n)/2 ?triples possible]
+	~N*N(0.2) pairs [ (n.(n-1))/2 - 2 pairs possible ]		CURRENT GUESS OF AVERAGE GRAPH CONNECTIVITY
+	~N*N(0.1) triples [(n-1).(n-2)/2 triples possible]
 	20~200 pairs
 	10~100 triples
 
@@ -346,11 +346,17 @@ https://cloud.google.com/appengine/docs/nodejs/
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+- checkPerformNextTask MAKE SURE PROJECT IS LOADED BEFORE HAND
 
-A) get 6 & 10 sample set of easy objects
+- check that global positioning is correct
+
+
+
+
 B) walk thru each pair to see progress
-- need to decide GOOD & BAD PAIRS
-- don't AVERAGE patches -- use sphere approx ...
+- need to decide GOOD & BAD PAIRS to include
+
+for BA: - don't AVERAGE patches -- use sphere approx ...
 C) pipeline
 - use population sigmas to throw out:
  	- bad track pairs [don't combine]
@@ -364,7 +370,8 @@ D) get to final point cloud []
 
 6 views:
 15 pairs
-? triples
+20 triples
+
 
 
 
@@ -377,6 +384,15 @@ D) get to final point cloud []
 
 
 
+=> scaling & transform how to deal with sub-graphs
+	-> find biggest vertex-group for now
+	=> process of identifying & eliminating PRE-OPERATION
+
+=> most efficient way to add track points
+ 	in reality will be non-iterative, so should be only loaded once
+
+=> what should cell size be in ALL CASES?
+	- track combining doesn't matter -- doesn't do any propagating
 
 => MANY BAD SEED MATCHES
 - need to allow for noise (NCC SCORE)
