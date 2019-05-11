@@ -1032,6 +1032,9 @@ var projectViews = manager.views();
 		var v = views[i];
 console.log(v)
 		var transform = v["transform"];
+		if(!transform){
+			transform = v["R"];
+		}
 			transform = new Matrix().loadFromObject(transform);
  // extrinsic to camera matrix
 var inverse = Matrix.inverse(transform);
@@ -1056,7 +1059,19 @@ console.log(" possible: "+i+" = "+dot+" @ "+Code.degrees(angle)+" : "+o1+"/"+o2)
 		var distortion = null;
 		if(camera){
 			K = camera["K"];
-			K = new Matrix().loadFromObject(K);
+			if(!K){ // on object
+				K = camera;
+			}
+			if(K["fx"]){
+				var fx = K["fx"];
+				var fy = K["fy"];
+				var s = K["s"];
+				var cx = K["cx"];
+				var cy = K["cy"];
+				var K = new Matrix(3,3).fromArray([fx,s,cx, 0,fy,cy, 0,0,1]);
+			}else{
+				K = new Matrix().loadFromObject(K);
+			}
 			distortion = camera["distortion"];
 		}else{
 			K = new Matrix(3,3).fromArray(1,0,0, 0,1,0, 0,0,1);
@@ -3538,6 +3553,7 @@ App3DR.App.Model3D.prototype._bindAfterTexturesLoaded = function(){
 
 
 		var K = view["K"];
+console.log(K);
 // console.log(K);
 // 		if(!K || K.cols()==0){
 // 			K = new Matrix(3,3).fromArray([1,0,0, 0,1,0, 0,0,1]);
@@ -3733,7 +3749,8 @@ App3DR.App.Model3D.prototype.setPoints = function(input3D, input2D, hasImages){
 		for(var i=0; i<this._views.length; ++i){
 			var view = this._views[i];
 			var index = view["id"];
-			viewTable[index] = view;
+			viewTable[index] = view; // id lookup
+			viewTable[i] = view; // index lookup
 		}
 	}
 	// CREATE POINTS:
@@ -3748,7 +3765,7 @@ App3DR.App.Model3D.prototype.setPoints = function(input3D, input2D, hasImages){
 // var useErrors = true;
 var useErrors = false;
 	useErrors = useErrors && hasImages;
-	if(useErrors ){
+	if(useErrors){
 		var views = this._views;
 // console.log(views);
 // throw "?";
@@ -3818,11 +3835,9 @@ var useErrors = false;
 	// TRIM SO ONLY POINTS IN 0 & 1 are displayed:
 
 	var points = [];
-
 	for(var i=0; i<input3D.length; ++i){
 		var v = input3D[i];
 		points.push(v.x,v.y,v.z);
-
 
 // NEGATIVE Z:
 if(useErrors){
@@ -3832,9 +3847,15 @@ if(useErrors){
 		if(hasImages){
 			// get color from images
 			var vList = hasImages[i]["views"];
+			if(!vList){
+				vList = hasImages[i]["v"];
+			}
 			if(vList){
 				var item = vList[0]; // just grab 1
 				var vIndex = item["view"];
+				if(vIndex==undefined){
+					vIndex = item["i"];
+				}
 				var view = viewTable[vIndex];
 				var image = view["matrix"];
 				var pnt = new V2D(item["x"],item["y"]);
@@ -3859,10 +3880,6 @@ if(useErrors){
 			colors.push(0.5,0.5,0.5,0.5);
 		}
 }
-		// if(i>33){
-		// 	console.log(v+"");
-		// 	break;
-		// }
 	}
 	this._pointVertexPositionAttrib = this._stage3D.enableVertexAttribute("aVertexPosition");
 	this._pointVertexColorAttrib = this._stage3D.enableVertexAttribute("aVertexColor");
@@ -6935,13 +6952,13 @@ console.log("checkPerformNextTask");
 		this.iterateGraphTracks();
 		return;
 	}
-throw "task sparse";
+// throw "task sparse";
 if(!this.sparseDone()){
 	console.log("sparse not done");
 	this.iterateSparseTracks();
 	return;
 }
-// throw "task dense";
+throw "task dense";
 if(!this.denseDone()){
 	console.log("dense not done");
 	this.iterateDenseTracks();
@@ -8318,40 +8335,43 @@ console.log("START AT: "+startIndexI+" | "+startIndexJ);
 
 	console.log(foundPair);
 	if(foundPair){
+		console.log(foundPair);
 		var pair = foundPair;
 
 		var viewA = pair.viewA();
 		var viewB = pair.viewB();
-		//
-		var indexA = viewGraphLookupIndex[viewA.id()];
-		var indexB = viewGraphLookupIndex[viewB.id()];
-		var loadViews = this.auxilaryViewsToLoadForSet([indexA,indexB],graphData, 4); // 4-6
-		for(var i=0; i<loadViews.length; ++i){
-			loadViews[i] = viewLookup[graphViews[loadViews[i]]["id"]];
-		}
 
 		graphData["previousPair"] = {"A":newPreviousPair[0], "B":newPreviousPair[1]};
 
-var trackCount = pair.trackCount();
-if(trackCount==0){ // noop
-	console.log("no track data ...");
-	this.saveGraphFromData(graphData);
-}else{
-		// load the view images
-		var fxnViewsLoaded = function(){
-			console.log("loaded images");
-			console.log(loadViews);
-			// also want to add ALL views
-			project._iterateGraphTracksTick(pair,loadViews);
+		var trackCount = pair.trackCount();
+		if(trackCount==0){ // noop
+			console.log("no track data ...");
+			this.saveGraphFromData(graphData);
+		}else{
+			//
+			var indexA = viewGraphLookupIndex[viewA.id()];
+			var indexB = viewGraphLookupIndex[viewB.id()];
+			console.log(indexA,indexB)
+			console.log(graphData)
+			var loadViews = this.auxilaryViewsToLoadForSet([indexA,indexB],graphData, 4); // 4-6
+			for(var i=0; i<loadViews.length; ++i){
+				loadViews[i] = viewLookup[graphViews[loadViews[i]]["id"]];
+			}
+			// load the view images
+			var fxnViewsLoaded = function(){
+				console.log("loaded images");
+				console.log(loadViews);
+				// also want to add ALL views
+				project._iterateGraphTracksTick(pair,loadViews);
+			}
+			// load the track data for this pair
+			var fxnPairLoaded = function(){
+				console.log("loaded pair");
+				console.log(pair.trackData());
+				App3DR.ProjectManager.loadViewsImages(loadViews,fxnViewsLoaded, project);
+			}
+			App3DR.ProjectManager.loadPairsTrackData([pair], fxnPairLoaded, project);
 		}
-		// load the track data for this pair
-		var fxnPairLoaded = function(){
-			console.log("loaded pair");
-			console.log(pair.trackData());
-			App3DR.ProjectManager.loadViewsImages(loadViews,fxnViewsLoaded, project);
-		}
-		App3DR.ProjectManager.loadPairsTrackData([pair], fxnPairLoaded, project);
-}
 	}else{ // propagate tracks
 // throw "propagate tracks";
 		var groups = graphData["propagateGroups"]; // triples for
@@ -8799,11 +8819,14 @@ App3DR.ProjectManager.prototype._iterateGraphTracksPropagateTick = function(trip
 
 	// world fxns to:
 	world.printPoint3DTrackCount();
+	// approx patches
+	console.log("patches");
+	// world.patchInitBasicSphere(true);
 		// propagate tracks
 		console.log("errors initial");
 		world.relativeTransformsFromAbsoluteTransforms();
 		// world.relativeFFromSamples();
-		world.estimate3DErrors(true);
+		// world.estimate3DErrors(true);
 		console.log("probe3D");
 
 
@@ -8811,6 +8834,10 @@ var maxIterations = 5;
 var lowestCount = Math.round(0.005*world.point3DCount()); // .1%-1%
 console.log(lowestCount);
 for(var t=0; t<maxIterations; ++t){
+console.log("--------------------------------------------------------------------------------------------------------------------------------------------- "+t+" / "+maxIterations);
+
+	// CANT PROBE TILL ERRORS ARE DOWN ...
+/*
 		var count = world.probe3D();
 		var averageAdd = count/3;
 		// end early if no longer propagating
@@ -8818,35 +8845,49 @@ for(var t=0; t<maxIterations; ++t){
 			maxIterations = Math.min(maxIterations,t+1);
 		}
 		world.printPoint3DTrackCount();
+*/
+
+
+
+
 		world.averagePoints3DFromMatches(true);
-		console.log("errors update");
+		world.relativeFFromSamples();
 		world.estimate3DErrors(true);
-		world.filterGlobalMatches(null,null, 3.0);
+
+		world.refineSelectCameraAbsoluteOrientation(worldTriple, null, 100);
 		world.estimate3DPoints();
-		world.refineSelectCameraAbsoluteOrientation(worldTriple);
-		var listP3D = world.toPointArrayFromViews(worldTriple);
-		if(false){
-		// if(t==maxIterations-1){
-			for(var p=0; p<listP3D.length; ++p){
-				if(p%100==0){
-					console.log("    "+p+"/"+listP3D.length);
-				}
-				var p3D = listP3D[p];
-				world.updateP3DPatch(p3D, false); // keep at linear location
-				// world.updateP3DPatch(p3D, true);
-			}
-		}
+		world.refinePoint3DAbsoluteLocation();
+
+		world.patchInitBasicSphere(true);
+
+		// drop poor tracks
 		world.dropNegative3D();
+		world.filterGlobalMatches(false, 0, 3.0,3.0,3.0,3.0, false);
+		world.filterSphere3D(2.0);
+
+		// var listP3D = world.toPointArrayFromViews(worldTriple);
+		// if(false){
+		// // if(t==maxIterations-1){
+		// 	for(var p=0; p<listP3D.length; ++p){
+		// 		if(p%100==0){
+		// 			console.log("    "+p+"/"+listP3D.length);
+		// 		}
+		// 		var p3D = listP3D[p];
+		// 		world.updateP3DPatch(p3D, false); // keep at linear location
+		// 		// world.updateP3DPatch(p3D, true);
+		// 	}
+		// }
+
 }
 	world.printPoint3DTrackCount();
 	world.estimate3DErrors(true);
 
 
-// throw "wut";
+throw "wut";
 
 	// save points
 	var graphPoints = this._getGraphPointsFromWorld(world, graphViewLookupIndex);
-	var graphViews = this._updateGraphViewsFromWorld(world, graphData["views"]);
+	var graphViews = this._updateGraphViewsFromWorld(world, graphData["views"],graphData["cameras"]);
 	graphData["views"] = graphViews;
 	graphData["points"] = graphPoints;
 	graphData["propagateIndex"] += 1;
@@ -9417,7 +9458,6 @@ App3DR.ProjectManager.prototype.iterateSparseTracks = function(){
 App3DR.ProjectManager.prototype._iterateSparseTracksStart = function(){ // keep going until delta errors are all below some amount
 	var project = this;
 	var minimumDeltaError = 0.01; // change in pixels
-	// var minimumDeltaError = 0.001;
 	var sparseData = this.sparseData();
 	var sparseEdgeSort = function(a,b){
 		var aErrorDelta = a["deltaErrorR"];
@@ -9437,6 +9477,7 @@ App3DR.ProjectManager.prototype._iterateSparseTracksStart = function(){ // keep 
 	}
 	var sparsePoints = sparseData["points"];
 	var sparseViews = sparseData["views"];
+	var sparseCameras = sparseData["cameras"];
 	var sparsePairs = sparseData["pairs"];
 	var sparseIterations = sparseData["iterations"];
 	var orderedPairs = Code.copyArray(sparsePairs);
@@ -9446,6 +9487,8 @@ App3DR.ProjectManager.prototype._iterateSparseTracksStart = function(){ // keep 
 	// pick edge to load
 	var topPair = orderedPairs[0];
 	var isDone = false;
+// TODO: ADD BACK LIMITS:
+	/*
 	var topError = topPair["deltaErrorR"];
 	if(topError!==null){
 		isDone = topError < minimumDeltaError;
@@ -9454,6 +9497,7 @@ App3DR.ProjectManager.prototype._iterateSparseTracksStart = function(){ // keep 
 	if(sparseIterations>maxSparseIterations){
 		isDone = true;
 	}
+	*/
 	if(isDone){ // no more
 		var pointCount = sparsePoints.length;
 // save sparese data over to dense data & start loading dense points
@@ -9528,13 +9572,15 @@ App3DR.ProjectManager.prototype._iterateSparseTracksStart = function(){ // keep 
 		var sparseViewLookupIndex = [];
 		var sparseViewLookupIndexIndex = [];
 		var sparseViewLookupIndexToID = {};
+		var sparseViewLookupIDToIndex = {};
 		for(var i=0; i<worldViews.length; ++i){
 			var view = worldViews[i];
 			var index = i;
-			// console.log(view);
+			var viewID = view.data();
 			sparseViewLookupIndex[index] = view;
-			sparseViewLookupIndexToID[index] = view.data();
+			sparseViewLookupIndexToID[index] = viewID;
 			sparseViewLookupIndexIndex[index] = index;
+			sparseViewLookupIDToIndex[viewID] = index;
 			view.data(i);
 		}
 		// var points3D = this._embedMatchPoints(world, sparseData, sparseViewLookupIndex);
@@ -9545,6 +9591,9 @@ App3DR.ProjectManager.prototype._iterateSparseTracksStart = function(){ // keep 
 		var viewA = world.viewFromData(viewAIndex);
 		var viewB = world.viewFromData(viewBIndex);
 		var pairWorldViews = [viewA,viewB];
+
+
+
 
 		// do refinement
 		console.log("refine");
@@ -9558,24 +9607,39 @@ App3DR.ProjectManager.prototype._iterateSparseTracksStart = function(){ // keep 
 		var errorRStart = transform.rMean() + transform.rSigma();
 		var errorFStart = transform.fMean() + transform.fSigma();
 
-		world.averagePoints3DFromMatches(true);
+		// create basic patches
+
+
+
 		console.log("errors update");
-		for(var iter=0; iter<1; ++iter){
-		console.log("ITERATION: "+iter+" ............ ");
-				world.relativeFFromSamples();
-				// world.estimate3DErrors(true);
-				world.estimate3DPoints();
-		console.log("refineSelectCameraAbsoluteOrientation");
-		// for(var i=0; i<1; ++i){
-				world.refineSelectCameraAbsoluteOrientation(pairWorldViews, null, 1000);
-				// world.refineCameraAbsoluteOrientation();
-		// }
-		console.log("probe3D");
+		var totalIter = 1;
+		// var totalIter = 2;
+		for(var iter=0; iter<totalIter; ++iter){
+	console.log("ITERATION: "+iter+" ............ "+" / "+totalIter);
+			world.averagePoints3DFromMatches(true);
+			world.patchInitBasicSphere(true);
+			world.relativeFFromSamples();
+			// world.estimate3DErrors(true);
+			world.estimate3DPoints();
+	console.log("refineSelectCameraAbsoluteOrientation");
+			world.refineSelectCameraAbsoluteOrientation(pairWorldViews, null, 1000);
+	console.log("refineCameraAbsoluteOrientation");
+			// world.refineCameraAbsoluteOrientation(null, 1000);
+			world.refineCameraAbsoluteOrientation(null, 100); // lots
+
+			world.estimate3DPoints();
+			// world.patchInitBasicSphere(false);
+	console.log("probe3D");
+			// add
 			world.probe3D();
 			world.estimate3DErrors(true);
-			// world.filterGlobalMatches(null,null, 2.0);
-			world.filterGlobalMatches(null,null, 3.0);
+
+			// drops
+			world.dropNegative3D();
+			world.filterGlobalMatches(false, 0, 3.0,3.0,3.0,3.0, false);
 			world.estimate3DErrors(true);
+			// this would kill a lot:
+			// this.filterSphere3D(2.0);
 		}
 		// TODO: PATCHES LIKELY NEED UPDATING: LOWER ERROR + DRIFT
 		world.printPoint3DTrackCount();
@@ -9597,7 +9661,7 @@ App3DR.ProjectManager.prototype._iterateSparseTracksStart = function(){ // keep 
 
 
 		// update views
-		sparseViews = project._updateGraphViewsFromWorld(world, sparseViews);
+		sparseViews = project._updateGraphViewsFromWorld(world, sparseViews, sparseCameras);
 		sparseData["views"] = sparseViews;
 		sparseData["iterations"] += 1;
 
@@ -9608,12 +9672,13 @@ App3DR.ProjectManager.prototype._iterateSparseTracksStart = function(){ // keep 
 
 		var deltaR = errorRStart - errorREnd;
 		var deltaF = errorFStart - errorFEnd;
-		console.log(deltaR,deltaF);
+		console.log("deltaR / deltaF",deltaR,deltaF);
 		console.log(topPair);
 		topPair["errorR"] = errorREnd;
 		topPair["errorF"] = errorFEnd;
 		topPair["deltaErrorR"] = deltaR;
 		topPair["deltaErrorF"] = deltaF;
+		topPair["count"] = transform.matchCount();
 		// topPair["updated"] = Code.getTimeStampFromMilliseconds();
 		topPair["updated"] = Code.getTimeMilliseconds();
 // if R error goes up ... ????
@@ -9623,8 +9688,86 @@ if(deltaR<0){
 }
 		// save
 		console.log(sparseData);
+
+
+		// check to see if should keep entries:
+		var transforms = world.toTransformArray();
+		var matchCounts = [];
+		for(var i=0; i<transforms.length; ++i){
+			var transform = transforms[i];
+			matchCounts.push(transform.matchCount());
+		}
+		var max = Code.max(matchCounts);
+		var sigma = Code.stdDev(matchCounts,max);
+		var minKeepMatches = max - sigma*1.5;
+			// minKeepMatches = Math.max(minKeepMatches,16);
+		console.log(" TRANSFORM MATCH COUNTS: "+max+" +/- "+sigma+" : "+minKeepMatches);
+		//
+		var pairObjectsOld = sparseData["pairs"];
+		var pairObjectsNew = [];
+		for(var i=0; i<transforms.length; ++i){
+			var transform = transforms[i];
+			var matchCount = transform.matchCount();
+			if(matchCount>=minKeepMatches){
+				var viewA = transform.viewA();
+				var viewB = transform.viewB();
+				var indexA = sparseViewLookupIDToIndex[viewA.data()];
+				var indexB = sparseViewLookupIDToIndex[viewB.data()];
+				if(indexA>indexB){
+					var temp = indexA;
+					indexA = indexB;
+					indexB = temp;
+				}
+				var exists = null;
+				for(var j=0; j<pairObjectsOld.length; ++j){
+					var p = pairObjectsOld[j];
+					if( (p["A"]==indexA && p["B"]==indexB) || (p["B"]==indexA && p["A"]==indexB) ){
+						exists = p;
+						break;
+					}
+				}
+				if(!exists){ // create new
+					console.log("new pair passed minimum point requirement: "+matchCount+" / "+minKeepMatches);
+					exists = {};
+					exists["A"] = indexA;
+					exists["B"] = indexB;
+					// exists["count"] = matchCount; // TODO: SHOULD THIS ALWAYS BE UP TO DATE ?
+					exists["errorR"] = null;
+					exists["errorF"] = null;
+					exists["deltaErrorR"] = null;
+					exists["deltaErrorF"] = null;
+					exists["updated"] = Code.getTimeMilliseconds();
+				}
+				exists["count"] = matchCount; // TODO: SHOULD THIS ALWAYS BE UP TO DATE ?
+				pairObjectsNew.push(exists);
+			} // else drop
+		}
+		pairObjectsNew.sort(function(a,b){
+			return a["A"]<b["A"] ? -1 : 1;
+		});
+		sparseData["pairs"] = pairObjectsNew;
+
 // throw "NO SAVE"
-		this.saveSparseFromData(sparseData);
+
+		var doneFxn = function(){
+			console.log("saved sparse data");
+			var url = Code.getURL();
+			var iterations = Code.getURLParameter(url,"iterations");
+			console.log(iterations);
+			if(iterations!==null && iterations!==undefined && iterations!==0){
+				iterations -= 1;
+				console.log(iterations);
+				if(iterations>0){
+					var url = Code.setURLParameter(url,"iterations",iterations);
+					console.log(url);
+					setTimeout(function() {
+						console.log("LOAD URL: "+url);
+						Code.setURL(url);
+					}, 100);
+				}
+			}
+		}
+		this.saveSparseFromData(sparseData, doneFxn);
 	}
 
 	App3DR.ProjectManager.loadViewsImages(loadViews,fxnViewsLoaded, project);
@@ -9893,13 +10036,14 @@ App3DR.ProjectManager.prototype._iterateGraphTracksTick = function(pair,viewsLoa
 // console.log(worldViews);
 // console.log("need cell size");
 // throw "do these all have pic /size ?"
+
 	var worldViewLookup = {};
 	for(var i=0; i<worldViews.length; ++i){
 		worldViewLookup[worldViews[i].data()] = worldViews[i];
 	}
-
+console.log("embedding points");
 	var points3D = this._embedMatchPoints(world, trackData, worldViewLookup);
-
+console.log("embedded points");
 	// initialize world
 	world.relativeTransformsFromAbsoluteTransforms();
 	world.relativeFFromSamples();
@@ -9970,7 +10114,7 @@ var OFFY = 10;
 	console.log("save / update graph data");
 	// . update view transforms:
 	console.log(graphViews);
-	var graphViews = this._updateGraphViewsFromWorld(world, graphData["views"]);
+	var graphViews = this._updateGraphViewsFromWorld(world, graphData["views"],graphData["cameras"]);
 	graphData["views"] = graphViews;
 	world.printPoint3DTrackCount();
 	// .
@@ -10046,16 +10190,37 @@ App3DR.ProjectManager.prototype._getGraphPointsFromWorld = function(world, graph
 	return graphPoints;
 }
 
-App3DR.ProjectManager.prototype._updateGraphViewsFromWorld = function(world, graphViews){
+App3DR.ProjectManager.prototype._updateGraphViewsFromWorld = function(world, graphViews, graphCameras){
 	var updatedViews = [];
 	for(var i=0; i<graphViews.length; ++i){
 		var gv = graphViews[i];
 		var gid = gv["id"];
 		var view = world.viewFromData(gid);
+		var cam = view.camera();
+		var camID = "0";
+		var cD = cam.data();
+		if(cD){
+			var camID = cD;
+		}
+		// if(graphCameras){
+		// 	for(var j=0;j<graphCameras.length){
+		// 		if(graphCameras[j]["id"]==camID){
+		// 			// console.log(cam);
+		// 			// console.log();
+		// 			// console.log(cam.id());
+		// 			camID = ;
+		// 		}
+		// 	}
+		// }else{
+		// 	camID = "0";
+		// }
+// GET CAMERA FROM CAM.DATA => GET CAM ID
+		//cam.id();
 		var R = view.absoluteTransform();
 		var size = view.size();
 		updatedViews[i] = {
 			"id": gid,
+			"camera": camID,
 			"R": R.copy(),
 			"size": size,
 		};

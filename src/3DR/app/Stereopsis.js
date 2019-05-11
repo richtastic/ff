@@ -1480,9 +1480,16 @@ Stereopsis.P3D = function(point,normal,size){
 	this._points2D = {};
 	this._matches = {};
 	this._temp = null;
+	this._hysteresis = null;
 	this.point(point);
 	this.normal(normal);
 	this.size(size);
+}
+Stereopsis.P3D.prototype.propagateViewList = function(h){
+	if(h!==undefined){
+		this._hysteresis = h;
+	}
+	return this._hysteresis;
 }
 Stereopsis.P3D.prototype.data = function(data){
 	if(data!==undefined){
@@ -3568,6 +3575,8 @@ Stereopsis.World.prototype.patchInitBasicSphere = function(doMatches, points3D){
 }
 
 Stereopsis.World.prototype.filterSphere3D = function(sigmaCount, linearly){ // treat each point as a sphere
+throw "only clip pairwise";
+
 	sigmaCount = sigmaCount!==undefined ? sigmaCount : 3.0;
 	linearly = linearly!==undefined ? linearly : false;
 	var points3D = this.toPointArrayLocated();
@@ -5541,7 +5550,8 @@ Stereopsis.World.prototype.removeP2DFromP3D = function(point2D){
 		if(!result){
 			console.log(point2D);
 			console.log(view);
-			throw "POINT NOT REMOVED FROM VIEW";
+			// throw "POINT NOT REMOVED FROM VIEW";
+			console.log("POINT NOT REMOVED FROM VIEW");
 		}
 		// console.log(point3D.toMatchArray().length+" ? ")
 		point2D.view(null);
@@ -5825,7 +5835,7 @@ Stereopsis.World.prototype.estimate3DErrors = function(skipCalc, shouldLog){ // 
 		if(F){ // M
 			transform.calculateErrorM();
 		}
-		console.log("      matches: "+transform.matches().length);
+		console.log("      matches: "+transform.matches().length+"           :  "+viewA.id()+" - "+viewB.id());
 		console.log(" T "+i+" "+viewA.id()+"->"+viewB.id()+"  N : "+transform.nccMean()+" +/- "+transform.nccSigma());
 		// console.log(" T "+i+" "+viewA.id()+"->"+viewB.id()+"  S : "+transform.sadMean()+" +/- "+transform.sadSigma());
 		console.log(" T "+i+" "+viewA.id()+"->"+viewB.id()+"  F : "+transform.fMean()+" +/- "+transform.fSigma());
@@ -6218,10 +6228,7 @@ Stereopsis.World.prototype.possiblyVisibleViews = function(pointCenter, pointNor
 	return list;
 }
 
-var PROBE_CALL = 0;
 Stereopsis.World.prototype.probe3D = function(){ // requires patches to orientate projections
-throw "DOUBLE CHECK"
-var NEEDLE_COUNT = 50;
 	var world = this;
 	var imageLoadedBoolFxn = function(a){
 		return a.image()!==null;
@@ -6233,7 +6240,8 @@ var NEEDLE_COUNT = 50;
 	var allImageViews = Code.filterArray(allViews, imageLoadedBoolFxn); // only compare to views with images present
 	// common
 	var compareSize = 9;
-	var viewCompareScale = 2.0;
+	var viewCompareScale = 0.50;
+	// var viewCompareScale = 2.0;
 	// var viewCompareScale = 1.0;
 	var haystackSize = compareSize + 2; // pixel error ~ min(ceil(min + sig),~3) // 2-4
 	// var haystackSize = compareSize * 2;
@@ -6245,15 +6253,33 @@ var NEEDLE_COUNT = 50;
 	var yNeg = new V2D(0,-compareSize*0.5);
 	var checked = 0;
 	var added = 0;
+
+var matchAddList = [];
 	for(var i=0; i<points3D.length; ++i){
 		var point3D = points3D[i];
 		if(point3D.hasPatch()){
 			if(checked>0 && checked%1000==0){
 				console.log(checked+" / "+i+" / "+points3D.length);
 			}
-			checked++;
-
-			// need hysteresis to prevent researching repeatidly tested & failed P3Ds ...
+			// only try propagation if error low enough
+			var lowError = true;
+			var points2D = point3D.toPointArray();
+			var matches = point3D.toMatchArray();
+			for(var j=0; j<matches.length; ++j){
+				var match = matches[j]; // TODO?: also MATCH.rSigma ?
+				var errorR = match.transform().rSigma()*1.0;
+					errorR *= 0.5;
+				var cellA = match.viewA().cellSize();
+				var cellB = match.viewB().cellSize();
+				if(errorR>cellA || errorR>cellB){
+					lowError = false;
+					break;
+				}
+			}
+			if(!lowError){
+				continue;
+			}
+			// good enough:
 			var pointNormal = point3D.normal();
 			var pointCenter = point3D.point();
 			var visibleViews = point3D.toViewArray();
@@ -6261,8 +6287,33 @@ var NEEDLE_COUNT = 50;
 			var possibleImageViews = Code.filterArray(allImageViews, imageLoadedBoolFxn);
 				possibleImageViews = this.possiblyVisibleViews(pointCenter,pointNormal,visibleViews, possibleImageViews);
 			Code.removeDuplicates(possibleImageViews,visibleViews);
+
+			// need hysteresis to prevent researching repeatidly tested & failed P3Ds ...
+			// remove attempted views:
+			var hysteresis = point3D.propagateViewList();
+			if(!hysteresis){
+				hysteresis = {};
+				point3D.propagateViewList(hysteresis);
+			}
+			var hystersisViews = [];
+			for(var j=0; j<possibleImageViews.length; ++j){
+				var view = possibleImageViews[j];
+				var errorR = view.rSigma();
+				var viewID = view.id();
+				if(Code.hasKey(hysteresis,viewID)){
+					var eR = hysteresis[viewID];
+					if(eR<errorR){ // wait until under threshold
+						Code.removeElementAt(possibleImageViews,j);
+						--j;
+						continue;
+					}
+				} // update & continue
+				hysteresis[viewID] = errorR*0.5;
+			}
+
 			// exist more views to possibly check
 			if(possibleImageViews.length>0 && visibleImageViews.length>1){ // need potential view & at least 2 reference view2
+checked++;
 				var visibleCount = visibleImageViews.length;
 				var possibleCount = possibleImageViews.length;
 				var fullList = [];
@@ -6285,6 +6336,7 @@ var NEEDLE_COUNT = 50;
 				var needles = [];
 				var affines = [];
 				var centers = [];
+				var viewers = [];
 				// get all needles
 				for(var j=0; j<fullList.length; ++j){
 					var view = fullList[j];
@@ -6294,9 +6346,15 @@ var NEEDLE_COUNT = 50;
 					//var needleZoom = compareSize/viewCompareSize;
 					var needleZoom = viewCompareScale*compareSize/viewCompareSize;
 					// need rhombus area
-					var area = viewCompareSize*viewCompareSize;
-					var minArea = area * 0.50; // 0.5
-					var maxArea = area * 2.0; // 2.0
+
+					// sphere:
+					// ?
+
+
+
+					// var area = viewCompareSize*viewCompareSize;
+					var minArea = viewCompareSize * 0.25; // 0.25 something 2ce as close is ?
+					var maxArea = viewCompareSize * 4.0; // 4.0 something 2ce as far is half as big ?
 					// abs
 					var center2D = view.projectPoint3D(center3D);
 					var right2D = view.projectPoint3D(right3D);
@@ -6310,11 +6368,19 @@ var NEEDLE_COUNT = 50;
 					var dirDown2D = V2D.sub(down2D,center2D);
 					// area
 					var area = (dirRight2D.length() + dirUp2D.length() + dirLeft2D.length() + dirDown2D.length()); // each is 1/2 of square side
-						area = area*area*0.25;
+						area = area*0.5;
+						// area = area*area*0.25;
+
+
+
+
 					// console.log("AREA: "+area+" / "+viewCompareSize+" IN: "+minArea+" - "+maxArea);
 					var needle = null;
 					var matrix = null;
 					var isExisting = j<visibleCount;
+
+// area = viewCompareSize;
+
 					if(isExisting || (minArea<area && area<maxArea)){ // EXISTING VIEW NEED TO DO ANYWAY
 						var pointsA = [dirRight2D,dirUp2D,dirLeft2D,dirDown];
 						var pointsB = [xLoc,yLoc,xNeg,yNeg];
@@ -6329,8 +6395,17 @@ var NEEDLE_COUNT = 50;
 								var values = scoresNCC["value"];
 								var width = scoresNCC["width"];
 								var height = scoresNCC["height"];
+								/*
 								var peaks = Code.findMinima2DFloat(values, width, height, true);
 									peaks.sort( function(a,b){ return a.z<b.z ? -1 : 1; } );
+								*/
+								// by index only
+									var minIndex = Code.minIndex(values);
+									var minX = Math.floor(minIndex%width);
+									var minY = Math.floor(minIndex/width);
+									var peak = new V3D(minX,minY,values[minIndex]);
+									var peaks = [peak];
+
 								var newCenter = null;
 								if(peaks.length>0){
 									var peak = peaks[0];
@@ -6354,16 +6429,18 @@ var NEEDLE_COUNT = 50;
 					needles.push(needle);
 					affines.push(matrix);
 					centers.push(center2D);
+					viewers.push(view);
 				}
 				// get NCC for each
 				var scoresCurrent = [];
 				var scoresNew = Code.newArrayArrays(possibleCount);
-				for(var j=0; j<needles.length; ++j){
-					var needleJ = needles[j];
-					if(!needleJ){ // no needle
-						continue;
-					}
-				}
+				// var viewsNew = [];
+				// for(var j=0; j<needles.length; ++j){
+				// 	var needleJ = needles[j];
+				// 	if(!needleJ){ // no needle
+				// 		continue;
+				// 	}
+				// }
 				for(var j=0; j<visibleCount; ++j){
 					var needleJ = needles[j];
 					// record needle scores in current | next listings
@@ -6386,14 +6463,20 @@ var NEEDLE_COUNT = 50;
 				if(minCurr>0.5){ // really bad
 					continue;
 				}
+// console.log("needles: "+" / "+points2D.length);
+// console.log(needles);
+
+// console.log("SCORES: ");
+// console.log(scoresCurrent);
+// console.log(scoresNew);
+// console.log("minCurr: "+minCurr);
 				var sigCurr = minCurr*0.5; // assume a sigma
 				if(scoresCurrent.length>1){ // guarantee a sigma
 					sigCurr = Code.stdDev(scoresCurrent,minCurr);
 				}
 				var limNext = minCurr + sigCurr*1.0;
-				limNext = Math.min(limNext,0.5);
-limNext = Math.min(limNext,0.4);
-// limNext = Math.min(limNext,0.3333); // 0.2-0.5
+				limNext = Math.min(limNext,0.4);
+				// limNext = Math.min(limNext,0.3333); // 0.2-0.5
 				// console.log(scoresCurrent,minCurr,sigCurr,limNext);
 				for(var j=0; j<possibleCount; ++j){
 					var indexNew = visibleCount+j;
@@ -6405,21 +6488,38 @@ limNext = Math.min(limNext,0.4);
 					var minNext = Code.min(list);
 					var avgNext = Code.mean(list);
 					// var sigNext = Code.stdDev(list,minNext);
-					// console.log(" => ?: "+avgNext+" <?< "+limNext);
+// console.log(" => ?: "+avgNext+" <?< "+limNext+" ::: "+list.length);
 					if(avgNext<limNext){
+// console.log("try to add");
 						// create a new match @ best score view
 						var minIndex = Code.minIndex(list);
 						var affineA = affines[minIndex];
-						var viewA = visibleImageViews[minIndex]; // view with best score ?
-						var pointA = point3D.point2DForView(viewA).point2D();
+						// var viewA = visibleImageViews[minIndex]; // view with best score ?
+						// var viewA = viewers[minIndex];
+						var viewA = visibleImageViews[minIndex];
+
+						var p2DA = point3D.point2DForView(viewA);
+						if(!p2DA){
+							console.log("NO P2D");
+							console.log(needles);
+							console.log(needles);
+							console.log(affines);
+							console.log(j);
+							console.log(indexNew);
+							console.log(list);
+							console.log(minIndex);
+							console.log(visibleImageViews);
+							console.log(point3D);
+						}
+
+						var pointA = p2DA.point2D();
 						var viewB = fullList[indexNew];
 						var pointB = centers[indexNew];
 						var affineB = affines[indexNew];
 						// create new match
 						var affine = Matrix.mult(Matrix.inverse(affineA),affineB);
-						var imageA = viewA.image();
-						var imageB = viewB.image();
-						var blockSize = 11;
+						// var imageA = viewA.image();
+						// var imageB = viewB.image();
 						// TODO: don't copy, use calculated values ?
 						var pnt = point3D.point().copy();
 						var nrm = point3D.normal().copy();
@@ -6437,60 +6537,37 @@ limNext = Math.min(limNext,0.4);
 						// needs match for merging
 						match.transform(world.transformFromViews(viewA,viewB)); // ...
 						// init patch
-						world.generateMatchAffineFromPatches(p3D);
+						// world.generateMatchAffineFromPatches(p3D);
+
+
+						// sphere
+						world.patchInitBasicSphere(true,[p3D]);
+
 						// try insertion now
-						var result = world.embedPoint3D(match.point3D(), false); // don't validate
-						if(result){ // combined
-// console.log(match);
-// console.log(result);
-// if(!match.transform()){
-// 	console.log(viewA,viewB);
-// 	console.log(p3D);
-// 	console.log(match);
-// 	console.log(world.transformFromViews(viewA,viewB));
-// 	console.log(world.toViewArray());
-	// throw "no transform"
-// }
-							// if(match){
-							// 	Stereopsis.updateErrorForMatch(match);
-							// }
-							++added;
-						}
-
-if(NEEDLE_COUNT>=0){
-var m = NEEDLE_COUNT;
-						// show result:
-						for(var n=0; n<needles.length; ++n){
-// compareSize
-							var needle = needles[n];
-							var iii = needle;
-							var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
-							var d = new DOImage(img);
-							d.matrix().scale(4.0);
-							d.matrix().translate(10 + 45*m, 10 + 45*n + PROBE_CALL*200);
-							GLOBALSTAGE.addChild(d);
-						}
-						var t = Code.scientificNotation(Code.mean(scoresCurrent),3,false)+"/"+Code.scientificNotation(avgNext,3,false);
-						var d = new DOText(""+t, 10, DOText.FONT_ARIAL, 0xFFCC0099, DOText.ALIGN_LEFT);
-						d.matrix().translate(10 + 45*m, 10 + 45*3+10 + (m%3)*12 + PROBE_CALL*200);
-						GLOBALSTAGE.addChild(d);
---NEEDLE_COUNT;
-// if(NEEDLE_COUNT<0){
-// 	throw NEEDLE_COUNT;
-// }
-}
-
+						// var result = world.embedPoint3D(match.point3D(), false); // don't validate
+						matchAddList.push(match);
+						// console.log(result);
+						// if(result){ // combined
+						// 	++added;
+						// }
 					}
 				}
 			}
 		} // else no patch
 	}
-++PROBE_CALL;
+
 	console.log(" => PROBE3D ADDING NEW MATCHES:");
 	console.log("checked: "+checked);
-	console.log("added: "+added);
 
+	for(var i=0; i<matchAddList.length; ++i){
+		var match = matchAddList[i];
+		var result = world.embedPoint3D(match.point3D(), false);
+		if(result){ // combined
+			++added;
+		}
+	}
 
+	console.log("added: "+added+" / "+matchAddList.length);
 
 	var world = this;
 	var densePoints3D = this.toPointArray();
@@ -6563,6 +6640,7 @@ Stereopsis.World.prototype.probeCorners = function(){
 	// }
 }
 Stereopsis.World.prototype.probe2DNNAffine = function(sigma){ //
+throw "probe using only similar view pairs ...";
 	sigma = sigma!==undefined ? sigma : 3.0;
 	var world = this;
 	var transforms = this.toTransformArray();
@@ -8247,7 +8325,7 @@ Stereopsis.World.prototype.removeMatchFromPoint3D = function(match){
 
 	if(!point3D){ // already removed?
 		console.log(match);
-		throw "no point?";
+		// throw "no point?";
 		return;
 	}
 

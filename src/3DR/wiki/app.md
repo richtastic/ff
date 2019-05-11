@@ -346,47 +346,76 @@ https://cloud.google.com/appengine/docs/nodejs/
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-- checkPerformNextTask MAKE SURE PROJECT IS LOADED BEFORE HAND
 
-- check that global positioning is correct
+---- sparse method isn't reducing error ...
+	- refine absolutes
+	- probe3d - NO - points are too fuzzy
+		-> if there are 2 pairs with low enough error -> they should be able to successfully propagate
+
+	- drop high error R & F points -- might loose a lot
+	-
+
+	... WANT TO CONNECT DISPARATE POINTS ...
+
+- lots of s: 0 in graph points .... view size wrong ?
 
 
+
+probing 3D, but using patches in relative frames --- matches have a patch
+patch - intersect dropping - ONLY IN PAIRWISE, NOT ABSOLUTE
+
+
+..........AREAS ARE ALL ~2.0
+
+
+- some match counts are outragous numbers ...
+		=> MERGE P3D PROBABLY NOT CORRECTLY OVERRIDING / SELECTING A COMMON MATCH / REMOVING OLD ...
+
+
+
+- update graph logic for SCALE & TRANSFORM-PAIRS
+
+- how to incoporate different image SIZES / scales
+	=> everythin in terms of error in image A and image B / NORMALIZED 1:1 error / cell size
+
+- probe3D is not getting any results
+	- points are still too noisy to discern anything ?
+
+
+
+	=> how to include/exclude:
+		- get all view pairs from world
+		- get match count for each pair & add to list
+		- get max / sigma for entire list
+
+		- for each pair:
+			A) if it passes check (has enough matches)
+				if EXISTS ALREADY
+					do nothing
+				else
+					make a NULL entry
+			B) else:
+				IF EXISTS:
+					remove
+- ...
 
 
 B) walk thru each pair to see progress
 - need to decide GOOD & BAD PAIRS to include
 
-for BA: - don't AVERAGE patches -- use sphere approx ...
+- dense points should be
+	for BA: - don't AVERAGE patches -- use sphere approx ...
+
 C) pipeline
-- use population sigmas to throw out:
- 	- bad track pairs [don't combine]
-	- bad abs orientation [don't include]
 C) make sure enough points for tesselation (subdivide cell size ?)
 D) get to final point cloud []
 
 
 
 
-
-6 views:
-15 pairs
-20 triples
+- probe2D algorithm isn't set up for 2+ views
 
 
-
-
-
-1.0    4032 × 3024
-0.5    2016 x 1512 *** tesselation
-0.25    1008 x 756 *** bundle adjustments
-0.125    504 x 378 *** features, matching
-...
-
-
-
-=> scaling & transform how to deal with sub-graphs
-	-> find biggest vertex-group for now
-	=> process of identifying & eliminating PRE-OPERATION
 
 => most efficient way to add track points
  	in reality will be non-iterative, so should be only loaded once

@@ -777,7 +777,7 @@ Code.keys = function keys(object){
 	}
 	return [];
 }
-Code.hasKey = function hasKeys(object, key){
+Code.hasKey = function(object, key){
 	if(object){
 		return key in object;
 	}
@@ -4610,6 +4610,9 @@ Code.getBody = function(){
 };
 Code.getURL = function(){
 	return document.location+"";
+};
+Code.setURL = function(url){
+	document.location = url;
 };
 // Code.getDomBody = function(){
 // 	return document.body;
