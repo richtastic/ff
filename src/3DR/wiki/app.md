@@ -65,7 +65,7 @@
 	- remove images
 	- edit usable image area [masking out areas not to be used for: point matching / calculations]
 	- calibrate camera settings [pick one of pre-existing cameras or do calibration]
-	- execute/calculate [perform 3d reconstruction processes] -- iteritive: only do necessary update calculations
+	- execute/calculate [perform 3d reconstruction processes] -- iterative: only do necessary update calculations
 		- show progress / status?
 			- image pairing/matching [sparse, dense]
 			- 3d point projection [colored cloud]
@@ -76,12 +76,15 @@
 	- 3d orientable/navigating
 	- change camera settings [multiple cameras / views]
 	- take picture [create novel perspective image]
+	- edit model polygons
 	- share model
 	- export
 		- model
 		- texture
 	- apply filter (texture) [sephia, grayscale, solarize, smooth, invert, ...]
 	- background color/image
+	- view snapshots / vantages
+	- share
 #### image importer
 	- images
 	- video components [may need a separate camera calibration]
@@ -90,7 +93,18 @@
 	- brush size
 	- add / remove toggle mode
 
+#### create account
+	- username/email
+	- ALSO handle after-the-fact user account creation
+		- connect an auto-generated account with known one
 
+#### sharing settings
+	- project sharing
+	- reconstruction sharing
+	- deep link to sharing page
+		- specific sharing settings?
+		- who get's final say
+	app://scene/SCENE_ID/
 
 ### PITCHING
 	- you're outside alone in a park, meditating, hiking, enjoying yourself, you think to yourself this would be a nice experience to relive later, or share with someone who couldn't make it
@@ -579,9 +593,6 @@ triangulatePointDLT
 		1- sigma only
 			-> 2D search neighbors
 	- use patches ?
-
-
-=> USE CELL OBJECTS TO SPEED UP LOOKUPS
 
 
 

@@ -72,6 +72,9 @@ npm install mongoose
 npm install mongodb
 npm install crypto
 
+
+sudo npm install crypto mongoose mongodb express ejs
+
 npm install --save @google-cloud/storage
 npm install --save fast-crc32c
 ```
@@ -86,7 +89,7 @@ npm install --save fast-crc32c
 
 - basic app.yaml file
 
-- create basic package.json file 
+- create basic package.json file
 ```
 
 
@@ -106,7 +109,7 @@ init:
 ```
 # init project:
 gcloud init
-gcloud config 
+gcloud config
 ```
 
 deploy
@@ -201,3 +204,136 @@ gcloud --help
 
 
 
+
+### PATHS / OPERATIONS / SUCH:
+
+
+- how to 'connect' temporary user w/ logged-in user?
+	on login success: 'you have a local user account, would you like to connect it to the logged-in account?'
+		=> substitute all userid's on projects
+- how to share projects / scenes: publicly & specifically
+	=> scene sharing settings
+		=> search for user by email/alias ?
+
+
+USER
+	- id [int]
+	- userid [128-character hash]
+	- email <value = permanent> | else: <interim = device only>
+	- alias [string]
+	- encryption_seed
+	- encryption_hash = sha256(encryption_seed,password)
+	- settings = {} -- would like to be searchable?
+	- created [timestamp]
+	- modified [timestamp]
+
+USER_SESSION
+	- id [int]
+	- sessionid [128-character hash]
+	- userid -> map
+	- created [timestamp]
+
+PROJECT
+	- id [int]
+	- userid -> map <creator> <only person who can delete>
+	- projectid [128-character hash]
+	- encryption_key [256]
+	- encryption_seed [256]
+	- processes
+
+SCENE
+	- id [int]
+	- sceneid [128-character hash]
+	- projectid -> map
+	- permissions
+		- userid : level {read=4, write=2, execute=1 ?}
+		- public / all ?
+
+PROCESS
+	- id [int]
+	- processid [128-character hash]
+	- projectid -> map
+	- operation [?]
+
+PERMISSIONS (mapping) -- user has some permission on project
+	- id
+	- type <scene / project / ...>
+	- sceneid -> map
+	- userid -> map
+	- settings {} <object?>
+
+OPS:
+- create new user
+	<= email, password
+	=> userid
+- create user session
+	<= userid, password
+	=> sessionid
+- get list of projects
+	<= userid, session, offset, count
+	=> [project list]
+- create new project
+	<= userid, session
+	=> {project contents}
+
+
+==PROJECT SPECIFIC: assumed included: userid, session, projectid
+	- get summary
+		<= ...
+		=> info
+	- get status
+		<= ...
+		=> pending operations / progress
+	- add camera
+		<= image data
+		=>
+	- add view
+		<= image data
+		=>
+	- get image
+		<= id, desired w/h
+		=>
+	- get 3DR
+		<= desired poly count
+		=> tris / maps
+	- CRUD novel views
+		<= ...
+		=> ...
+	- CRUD novel images
+		<= ...
+		=> ...
+
+
+
+INTERNAL OPS:
+	- consistency check project (remove unnecessary files)
+	- encryption / decryption of a file
+	-
+
+SECURITY:
+	- encryption:
+		- every file is encrypted using 256 hash key from project + static random 256 header seed
+		- files are decrypted ON CLIENT? ON SERVER BEFORE SENT OUT ?
+		TO: => user adds image file to UI => file is encrypted [secret keychain, random hash] => file is sent to server => server passes file to storage location ...
+		FR: => user requests operation (eg feature points) => server requests file from storage => server decrypts file in memory to process => ... => server encrypts any files created => storage
+
+		[CLIENT] -> ENCRYPTED IMAGES -> [SERVER] -> ENCRYPTED IMAGES -> [STORAGE]
+		[CLIENT] -> REQUEST OPERATION -> [SERVER] -> ENCRYPTED DATA -> [STORAGE]
+		[CLIENT] -> REQUEST DATA -> [SERVER] -> REQUEST DATA -> [STORAGE] -> ENCRYPTED DATA -> [SERVER] -> ENCRYPTED DATA -> [CLIENT]
+
+
+expressjs
+socketio
+meteorjs
+
+
+
+mongodb
+	- tables & brief
+
+
+
+
+alias | monicker | nickname | handle |
+
+...

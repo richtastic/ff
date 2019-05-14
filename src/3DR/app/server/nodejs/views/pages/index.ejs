@@ -1,0 +1,32 @@
+<!-- index.ejs -->
+<!DOCTYPE html>
+
+<html>
+<head>
+	<title>Routes</title>
+</head>
+
+<body>
+	<div>
+<%
+			routes.forEach(function(operation){
+			var route = operation.route;
+			if(route){
+			 var path = route.path;
+			var stack = route.stack;
+				if(path && stack){
+					stack.forEach(function(value,key){
+	  			var method = value["method"];
+%>
+				<%= " "+method+" : "+path+"" %>
+				<br/>
+<%
+				});
+			}
+		}
+		});
+%>
+	</div>
+</body>
+
+</html>
