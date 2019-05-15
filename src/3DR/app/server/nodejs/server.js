@@ -230,6 +230,15 @@ app.set('port', port);
 app.set('view engine', 'ejs');
 
 
+
+
+var operation = require('./routers.js');
+
+app.get('/test', function (req, res) {
+	operation(req,res);
+});
+
+
 app.get('/', function (req, res) {
 	// print routes
 	res.render('pages/index', {"routes":app._router.stack});

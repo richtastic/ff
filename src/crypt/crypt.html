@@ -43,7 +43,7 @@ function testAES(data){
 		// var key = [0x60, 0x3d, 0xeb, 0x10, 0x15, 0xca, 0x71, 0xbe, 0x2b, 0x73, 0xae, 0xf0, 0x85, 0x7d, 0x77, 0x81, 0x1f, 0x35, 0x2c, 0x07, 0x3b, 0x61, 0x08, 0xd7, 0x2d, 0x98, 0x10, 0xa3, 0x09, 0x14, 0xdf, 0xf4];
 		// var plaintext = datas[0];
 		/*
-		w0 = 603deb10 w1 = 15ca71be w2 = 2b73aef0 w3 = 857d7781 w4 = 1f352c07 w5 = 3b6108d7 w6 = 2d9810a3 w7 = 0914dff4 
+		w0 = 603deb10 w1 = 15ca71be w2 = 2b73aef0 w3 = 857d7781 w4 = 1f352c07 w5 = 3b6108d7 w6 = 2d9810a3 w7 = 0914dff4
 		*/
 		//var plaintext = [];
 		/*
@@ -61,20 +61,20 @@ function testAES(data){
 		var plaintext = datas[0];
 //		plaintext = Code.copyArray(plaintext,0,15);
 		//console.log("plaintext: "+plaintext.length);
-		
-		//var type = ByteData.AES_TYPE_CBC;
-		var type = ByteData.AES_TYPE_EBC;
+
+		var type = ByteData.AES_TYPE_CBC;
+		// var type = ByteData.AES_TYPE_EBC;
 		var size = ByteData.AES_SIZE_256;
 		//var size = ByteData.AES_SIZE_192;
 		//var size = ByteData.AES_SIZE_128;
 		var cyphertext = ByteData.AESencrypt(key, plaintext, type, size);
 		// // 706c 6169 6e74 6578 7420 6461 7461 2068 6572 65
 		// 70 6C 61 69 6E 74 65 78 74 20 64 61 74 61 20 68 65 72 65
-		
+
 		console.log("key.      : "+Code.printArrayHex(key,2));
 		console.log("plaintext : "+Code.printArrayHex(plaintext,2));
 		console.log("cyphertext: "+Code.printArrayHex(cyphertext,2));
-		// 
+		//
 		var restored = ByteData.AESdecrypt(key, cyphertext, type, size);
 		console.log("check     : "+Code.printArrayHex(restored,2));
 
@@ -355,7 +355,7 @@ var t1 = Code.getTimeMilliseconds();
 	}
 var t2 = Code.getTimeMilliseconds();
 console.log( (t2-t1)/1000.0 );
-	
+
 	//BinInt.div( C, A,B );
 	console.log("A: "+A.toString());
 	console.log("B: "+B.toString());
@@ -414,7 +414,7 @@ return;
 
 /*
 65773520008252715553793686096376120358131987591796100281439399522404507091369866557034521717353362375439728505938946296255903031149462158130434509292351958094248158325754641637738208726866864709669373972036627725515364424788321754769733715510341978340413784334286899525708251182696842450489201371597761149525
- 
+
 65773520008252715553793686096376120358131987591796100281439399522404507091369866557034521717353362375439728505938946296255903031149462158130434509292351958094248158325754641637738208726866864709669373972036627725515364424788321754769733715510341978340413784334286899525708251182696842450489201371597761149525 crypt.html:64
 
 */

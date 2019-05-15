@@ -12,7 +12,7 @@
 ...
 - view example / feature projects
 - offload processing jobs to cloud [centralized code to prevent skews]
-- share models [privately]
+- share models [privately / publicly]
 	- read/edit access
 
 ### Extended:
@@ -30,7 +30,11 @@
 
 #### save unlimited models locally [+1]
 
-#### export as PLY, STL, ... ETC [+1]
+#### export as filetype:
+- PLY
+- STL
+- FBX
+- DAE / ZAE
 
 #### export texture map (+ model) [+1]
 
@@ -340,6 +344,8 @@ TODO: pairwise possibility limiting
 - viewing output
 	- locally
 	- VR device
+		- ios: scenekit
+		- oculus = unity / blender
 (07/01)
 - MVP
 	- example models

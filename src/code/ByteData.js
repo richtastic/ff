@@ -586,7 +586,7 @@ ByteData.SHA512 = function(message){
 }
 
 // AES > BLOW > DESX > RC4 > DES   | RSA / DH
-/* 
+/*
 http://csrc.nist.gov/publications/fips/fips197/fips-197.pdf
 https://csrc.nist.gov/csrc/media/publications/fips/197/final/documents/fips-197.pdf
 http://nvlpubs.nist.gov/nistpubs/Legacy/SP/nistspecialpublication800-38c.pdf
@@ -613,7 +613,7 @@ ByteData.AES_TYPE_CFB = 3; // cipher feed back
 ByteData.AES_TYPE_OFB = 4; // output feedback
 ByteData.AES_TYPE_CTR = 5; // counter
 ByteData.AES_TYPE_XTS = 6; // XEX - xor encrypt xor
-ByteData.AES_TYPE_CCM = 7; // Counter w/ CBC-MAC [MAC=Message Authentication Code] == Counter with Cipher Block Chaining-Message Authentication Code 
+ByteData.AES_TYPE_CCM = 7; // Counter w/ CBC-MAC [MAC=Message Authentication Code] == Counter with Cipher Block Chaining-Message Authentication Code
 	// b-byte nonce + 8-byte counter => xor message
 ByteData.AES_SIZE_128 = 0;
 ByteData.AES_SIZE_192 = 1;
@@ -666,7 +666,7 @@ ByteData.AESencrypt = function(key, message, type, size, useSalting, isDecrypt){
 // TODO:
 // SALTING is 2 items:
 // 1) salt the key (xor?) before usage
-// 2) initialization vector 
+// 2) initialization vector
 
 
 	var outputArray = [];
@@ -679,7 +679,7 @@ ByteData.AESencrypt = function(key, message, type, size, useSalting, isDecrypt){
 	var blockLength = 128;
 	var stateColumns = 4;// N_b
 	var blockLength = 16;
-	
+
 	if(size==ByteData.AES_SIZE_128){
 		roundCount = 10;
 		keyLengthBytes = 16;
@@ -714,14 +714,14 @@ ByteData.AESencrypt = function(key, message, type, size, useSalting, isDecrypt){
 	var iterations = Math.ceil(message.length/blockLength);
 	var salt = null;
 	if(!isDecrypt){
-		
+
 		if(useSalting){
 			salt = Code.randomIntArray(16, 0,0xFF);
 			for(var i=0; i<initVector.length; ++i){
 				initVector[i] = salt[i];
 			}
 		}
-		
+
 		for(var i=0; i<iterations; ++i){ // message loop: for each block
 			var block = message.slice(blockLength*i,blockLength*(i+1));
 			Code.copyArray(state, block);
@@ -777,7 +777,7 @@ ByteData.AESencrypt = function(key, message, type, size, useSalting, isDecrypt){
 			}
 			// console.log(" message  : "+Code.printArrayHex(message,2));
 		}
-		
+
 		var output = [];
 		for(var i=0; i<iterations; ++i){
 			var input = message.slice(blockLength*i,blockLength*(i+1));
@@ -878,7 +878,7 @@ ByteData._AESkeyExpansion = function(key, N_k, N_b, N_r, size, type){ // keyColu
 	// 		roundKey[(i*4)+j] = key[(i*4)+j];
 	// 	}
 	// }
-	// remaining rounds are scrambled 
+	// remaining rounds are scrambled
 	var limit = N_b*(N_r+1);
 	for(i=N_k; i<limit; ++i){
 		for(j=0; j<4; ++j){
@@ -938,7 +938,7 @@ ByteData._AESshiftRows = function(state){
 	return state;
 }
 ByteData._AESxTime = function(x){ // finite field | galois field
-	x <<= 1; // 7th bit = 0 then ok, else 
+	x <<= 1; // 7th bit = 0 then ok, else
 	return (x&0x100) ? (x^0x11B) : x; // 0x1_1b sets 8th bit back to 0
 }
 
@@ -1058,7 +1058,7 @@ ByteData.RSA = function(pub,pri){
 
 // }
 // ByteData.leftShift = function(c){
-	
+
 // }
 // ByteData.add = function(c,a,b){ // c = a + b
 // 	var i, len = Math.min(a.getTotalBits(),b.getTotalBits());
@@ -1348,7 +1348,7 @@ ByteData.RSA = function(pub,pri){
 // 		var n = this.readUint8();
 // 		return String.fromCharCode( n )
 // 	}
-// 	// ------------------------------------------------------------------------------------------------- 
+// 	// -------------------------------------------------------------------------------------------------
 // 	this.toStringBin = function(){
 // 		var str = "", h, i, len = getTotalBits();
 // 		initRead();
@@ -1392,7 +1392,7 @@ ByteData.RSA = function(pub,pri){
 // 	this.toString = function(){
 // 		return this.toStringBin();
 // 	}
-// 	// 
+// 	//
 // 	/*this.printBinaryString = printBinaryString;
 // 	function printBinaryString(){
 // 		var i, len=length+1, str = "";
@@ -1469,6 +1469,3 @@ ByteData.RSA = function(pub,pri){
 if(isNode){
 	module.exports = ByteData;
 }
-
-
-

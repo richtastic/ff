@@ -10736,6 +10736,7 @@ Code.arrayBufferToBase64 = function(arrayBuffer){
     return window.btoa( binary );
     */
 }
+
 Code.base64StringToBinary = function(stringData, check, final){
 	check = check!==undefined ? check : true;
 	final = final!==undefined ? final : true;
@@ -10744,7 +10745,10 @@ Code.base64StringToBinary = function(stringData, check, final){
 	}
     //console.log(window.atob(stringData));
 	var i, char, byt;
-	var BASE64TABLE = ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z","a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z","0","1","2","3","4","5","6","7","8","9","+","/"];
+	if(!Code._base64Table){
+		Code._base64Table = ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z","a","b","c","d","e","f","g","h","i","j","k","l","m","n","o","p","q","r","s","t","u","v","w","x","y","z","0","1","2","3","4","5","6","7","8","9","+","/"];
+	}
+	var BASE64TABLE = Code._base64Table;
 	var lookupTable = {};
 	for(i=0; i<BASE64TABLE.length; ++i){
 		char = BASE64TABLE[i];
