@@ -1,0 +1,37 @@
+<html>
+<head>
+<title>FF XML Parsing</title>
+<script src="../code/FF.js"></script>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<script type="text/javascript">
+function pageLoadedFxn(){
+	ff = new FF("../code/",defaultClassesLoadedFxn,defaultClassesProgressFxn);
+}
+function defaultClassesProgressFxn(o){
+	// console.log(o);
+}
+function defaultClassesLoadedFxn(o){
+	// console.log(o);
+	var list = ["TestXML.js"];
+	scriptLoader = new ScriptLoader("./",list, this,customClassesLoadedFxn,customClassesProgressFxn);
+	scriptLoader.load();
+}
+function customClassesProgressFxn(o){
+	// console.log(o);
+}
+function customClassesLoadedFxn(o){
+	// console.log(o);
+	// console.log("loading complete");
+	var test = new TestXML();
+}
+function main(){
+	console.log("DO");
+}
+
+
+</script>
+</head>
+<body onload="pageLoadedFxn();" style="border:0px;margin:0px;border:0px;">
+<div name="feedback" style=""></div>
+</body>
+</html>
