@@ -2,17 +2,15 @@
 
 function TestXML(){
 
-	// ...
-
-
 /*
 	var xml = new XML();
 	// <!DOCTYPE html>
-	// <?xml version="1.0" encoding="utf-8" standalone="true" ?>
 	xml.startElement("xml");
 	xml.setAttribute("version","1.0");
 	xml.setAttribute("encoding","utf-8");
-
+	xml.addComment(" this is a comment ");
+	xml.startElement("as-is");
+	xml.setValue("\asd\asd\asdasdsad\\\asd", true);
 	xml.startElement("html");
 	xml.setAttribute("cat","5");
 	xml.startChildren();
@@ -33,8 +31,8 @@ function TestXML(){
 	var str = xml.toStringX();
 
 	console.log(str);
-
 */
+
 
 var ajax = new Ajax();
 
@@ -43,44 +41,10 @@ ajax.get("./cube.dae",this,function(d){
 	var xml = new XML();
 	console.log(xml);
 	xml.parse(d);
-	console.log(xml.toStringX());
-	/*
-	after it is parsed, navigate:
-
-	var root = xml.root()
-
-	var collada = root.children("COLLADA");
-	var
-
-	*/
+	console.log(xml.toString());
 
 },null);
 
 
-/*
-
-var str=' \
-<xml version="1.0" encoding="utf-8"/> \
-<html cat="5"> \
-	<head data-head="value"/> \
-	<body style="background=\\"red\\";"> \
-		<p>innerHTML here</p> \
-		<a/> \
-	</body> \
-</html>';
-
-console.log(str);
-
-
-
-var xml = new XML();
-
-console.log(xml);
-
-xml.parse(str);
-
-
-console.log(xml.toStringX());
-*/
 
 }
