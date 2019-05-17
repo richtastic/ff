@@ -45,14 +45,16 @@ if(!isset($PARAM_OFFSET)){
 	$PARAM_OFFSET = null;
 }
 
-$PARAM_COUNT = $_POST["count"];
-if(!isset($PARAM_COUNT)){
-	$PARAM_COUNT = null;
+$PARAM_COUNT = null;
+$INDEX = "count";
+if(array_key_exists($INDEX,$_POST)){
+	$PARAM_COUNT = $_POST[$INDEX];
 }
 
-$PARAM_DATA = $_POST["data"];
-if(!isset($PARAM_DATA)){
-	$PARAM_DATA = null;
+$PARAM_DATA = null;
+$INDEX = "data";
+if(array_key_exists($INDEX,$_POST)){
+	$PARAM_DATA = $_POST[$INDEX];
 }
 
 $OPERATION_TYPE_HELLO = "hello";
@@ -282,5 +284,3 @@ chmod -R g+rw /path/to/webserver/www
 */
 
 ?>
-
-

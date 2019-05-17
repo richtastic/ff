@@ -85,15 +85,6 @@ var modeModelReconstruction = false;
 
 
 
-
-// don't A:
-// TO SWITCH ON MODELING:
-// modeModelReconstruction = true;
-
-
-
-
-
 	var url = Code.getURL();
 	console.log(url);
 	var datum = Code.parseURL(url);
@@ -6964,9 +6955,7 @@ if(!this.denseDone()){
 	this.iterateDenseTracks();
 	return;
 }
-
-// throw "task BA";
-
+throw "task BA";
 if(!this.pointsDone()){
 	this.iteratePointsFullBA();
 	return;
@@ -6979,22 +6968,6 @@ throw "surface - triangles";
 throw "textures";
 
 throw "scene";
-
-
-
-/*
-console.log("need relative sizing - TFT / scale approx");
-	var viewA = views[0];
-	var viewB = views[1];
-	var viewC = views[2];
-	this.calculateTripleMatch(viewA,viewB,viewC);
-throw "..."
-*/
-// return;
-
-
-// don't 3 - run
-// return;
 
 
 	// first run with limited points
@@ -9622,13 +9595,13 @@ App3DR.ProjectManager.prototype._iterateSparseTracksStart = function(){ // keep 
 			// world.estimate3DErrors(true);
 			world.estimate3DPoints();
 	console.log("refineSelectCameraAbsoluteOrientation");
-			world.refineSelectCameraAbsoluteOrientation(pairWorldViews, null, 1000);
+//			world.refineSelectCameraAbsoluteOrientation(pairWorldViews, null, 1000);
 	console.log("refineCameraAbsoluteOrientation");
 			// world.refineCameraAbsoluteOrientation(null, 1000);
-			world.refineCameraAbsoluteOrientation(null, 100); // lots
+//			world.refineCameraAbsoluteOrientation(null, 100); // lots
 
 			world.estimate3DPoints();
-			// world.patchInitBasicSphere(false);
+			world.patchInitBasicSphere(false);
 	console.log("probe3D");
 			// add
 			world.probe3D();
@@ -9659,6 +9632,8 @@ App3DR.ProjectManager.prototype._iterateSparseTracksStart = function(){ // keep 
 // var str = world.toYAMLString();
 // console.log(str);
 
+
+throw "still testing";
 
 		// update views
 		sparseViews = project._updateGraphViewsFromWorld(world, sparseViews, sparseCameras);

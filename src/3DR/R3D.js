@@ -29973,7 +29973,7 @@ R3D._dropDuplicatedPointsInList = function(points3D, pointCloud3D, only2D){
 }
 //R3D.projectPoint3DToCamera2D = function(in3D, extrinsic, K, distortions,    log){
 //R3D.projectPoint3DToCamera2DInverse = function(in3D, extrinsicInverse, K, distortions,    dropZ){
-R3D.projectPoint3DToCamera2DForward = function(in3D, extrinsic, K, distortions, dropZ){
+R3D.projectPoint3DToCamera2DForward = function(in3D, extrinsic, K, distortions, dropZ, p2D){
 	var v3D = extrinsic.multV3DtoV3D(in3D);
 	var p3D = K.multV3DtoV3D(v3D);
 	if(p3D.z==0){
@@ -29982,7 +29982,10 @@ R3D.projectPoint3DToCamera2DForward = function(in3D, extrinsic, K, distortions, 
 	if(dropZ && p3D.z<0){
 		return null;
 	}
-	var p2D = new V2D(p3D.x/p3D.z,p3D.y/p3D.z);
+	if(!p2D){
+		p2D = new V2D(0,0);
+	}
+	p2D.set(p3D.x/p3D.z,p3D.y/p3D.z);
 	return p2D;
 }
 R3D.projectPoint3DToCamera2DForward3D = function(in3D, extrinsic, K, distortions, dropZ){
