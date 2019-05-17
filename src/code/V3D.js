@@ -451,3 +451,14 @@ V3D.extremaFromArray = function(pointList){
 	var center = size.copy().scale(0.5).add(minPoint);
 	return {"min":minPoint, "max":maxPoint, "size":size, "mean":mean, "center":center };
 }
+V3D.arrayToValueList = function(pointList){
+	var a = [];
+	var N = pointList.length;
+	for(var i=0; i<N; ++i){
+		var v = pointList[i];
+		a.push(v.x);
+		a.push(v.y);
+		a.push(v.z);
+	}
+	return a;
+}

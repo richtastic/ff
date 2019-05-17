@@ -479,7 +479,7 @@ Formats3D._daeArrayFromList = function(a){
 	}
 	return s;
 }
-Formats3D._daeColorObjectToXMLValue = function(xml,object, sid){
+Formats3D._daeListObjectToXMLValue = function(xml,object, sid){
 	var type = object["type"];
 	var val = object["value"];
 	var tag = null;
@@ -491,7 +491,7 @@ Formats3D._daeColorObjectToXMLValue = function(xml,object, sid){
 		tag = "color";
 		value = Formats3D._daeArrayFromList(val); // R B G A
 	}else if(type=="texture"){
-		tag = "color";
+		tag = "texture";
 		value = val["id"];
 	}else if(type=="matrix"){
 		tag = "matrix";
@@ -627,27 +627,27 @@ Formats3D.worldToDAE = function(world){
 						xml.startChildren();
 							xml.startElement("emission");
 							xml.startChildren();
-								Formats3D._daeColorObjectToXMLValue(xml, phong["emission"], "emission");
+								Formats3D._daeListObjectToXMLValue(xml, phong["emission"], "emission");
 							xml.endChildren();
 							xml.startElement("ambient");
 							xml.startChildren();
-								Formats3D._daeColorObjectToXMLValue(xml, phong["ambient"], "ambient");
+								Formats3D._daeListObjectToXMLValue(xml, phong["ambient"], "ambient");
 							xml.endChildren();
 							xml.startElement("diffuse");
 							xml.startChildren();
-								Formats3D._daeColorObjectToXMLValue(xml, phong["diffuse"], "diffuse");
+								Formats3D._daeListObjectToXMLValue(xml, phong["diffuse"], "diffuse");
 							xml.endChildren();
 							xml.startElement("specular");
 							xml.startChildren();
-								Formats3D._daeColorObjectToXMLValue(xml, phong["specular"], "specular");
+								Formats3D._daeListObjectToXMLValue(xml, phong["specular"], "specular");
 							xml.endChildren();
 							xml.startElement("shininess");
 							xml.startChildren();
-								Formats3D._daeColorObjectToXMLValue(xml, phong["shininess"], "shininess");
+								Formats3D._daeListObjectToXMLValue(xml, phong["shininess"], "shininess");
 							xml.endChildren();
 							xml.startElement("index_of_refraction");
 							xml.startChildren();
-								Formats3D._daeColorObjectToXMLValue(xml, phong["ior"], "index_of_refraction");
+								Formats3D._daeListObjectToXMLValue(xml, phong["ior"], "index_of_refraction");
 							xml.endChildren();
 
 						xml.endChildren();
@@ -696,17 +696,38 @@ Formats3D.worldToDAE = function(world){
 					var meshPosArrID = meshPosID+"-array";
 				var meshNrmID = meshID+"-normals";
 					var meshNrmArrID = meshNrmID+"-array";
-				var meshMapID = meshName+"-map-"+0;
+				var meshMapID = meshID+"-map-"+0;
 					var meshMapArrID = meshMapID+"-array";
 				var meshVerID = meshID+"-vertices";
-				// var meshPoiID = meshID+"-positions";
-				var n3Ds = []; // from normals = 3 x tris3D.length
-				var info3D = Tri3D.arrayToUniqueVertexList(tris3D);
+				var n3Ds = Tri3D.arrayToNormalList(tris3D);
+					n3Ds = n3Ds["normals"];
+					n3Ds = V3D.arrayToValueList(n3Ds);
+					var n3DsArray = Formats3D._daeArrayFromList(n3Ds);
+				var info3D = Tri3D.arrayToPointList(tris3D);
 				var p3Ds = info3D["points"];
-				var t3Ds = info3D["triangles"];
-				var info2D = Tri2D.arrayToUniqueVertexList(tris2D);
+					p3Ds = V3D.arrayToValueList(p3Ds);
+					var p3DsArray = Formats3D._daeArrayFromList(p3Ds);
+				var info2D = Tri2D.arrayToPointList(tris2D);
 				var p2Ds = info2D["points"];
-				var t2Ds = info2D["triangles"];
+					p2Ds = V2D.arrayToValueList(p2Ds);
+					var p2DsArray = Formats3D._daeArrayFromList(p2Ds);
+				// triangle counts
+				var combinedVNTArray = [];
+				for(var t=0; t<tris3D.length; ++t){  // point index // normal index // texture index
+					var iV1 = t*3 + 0;
+					var iN1 = t;
+					var iT1 = t*3 + 0;
+					var iV2 = t*3 + 1;
+					var iN2 = t;
+					var iT2 = t*3 + 1;
+					var iV3 = t*3 + 2;
+					var iN3 = t;
+					var iT3 = t*3 + 2;
+					combinedVNTArray.push(iV1,iN1,iT1);
+					combinedVNTArray.push(iV2,iN2,iT2);
+					combinedVNTArray.push(iV3,iN3,iT3);
+				}
+				combinedVNTArray = Formats3D._daeArrayFromList(combinedVNTArray);
 				// positions
 				xml.startElement("source");
 				xml.setAttribute("id",meshPosID);
@@ -714,7 +735,7 @@ Formats3D.worldToDAE = function(world){
 					xml.startElement("float_array");
 					xml.setAttribute("id",meshPosArrID);
 					xml.setAttribute("count",p3Ds.length);
-					xml.setValue(Formats3D._daeArrayFromList(p3Ds));
+					xml.setValue(p3DsArray);
 					xml.startElement("technique_common");
 					xml.startChildren();
 						xml.startElement("accessor");
@@ -741,7 +762,7 @@ Formats3D.worldToDAE = function(world){
 					xml.startElement("float_array");
 					xml.setAttribute("id",meshNrmArrID);
 					xml.setAttribute("count",n3Ds.length);
-					xml.setValue(Formats3D._daeArrayFromList(n3Ds));
+					xml.setValue(n3DsArray);
 					xml.startElement("technique_common");
 					xml.startChildren();
 						xml.startElement("accessor");
@@ -767,12 +788,12 @@ Formats3D.worldToDAE = function(world){
 					xml.startElement("float_array");
 					xml.setAttribute("id",meshMapArrID);
 					xml.setAttribute("count",p2Ds.length);
-					xml.setValue(Formats3D._daeArrayFromList(n3Ds));
+					xml.setValue(p2DsArray);
 					xml.startElement("technique_common");
 					xml.startChildren();
 						xml.startElement("accessor");
 						xml.setAttribute("source","#"+meshMapArrID);
-						xml.setAttribute("count",n3Ds.length/2);
+						xml.setAttribute("count",p2Ds.length/2);
 						xml.setAttribute("stride",2);
 						xml.startChildren();
 							xml.startElement("param");
@@ -811,20 +832,12 @@ Formats3D.worldToDAE = function(world){
 					xml.setAttribute("offset","2");
 					xml.setAttribute("set","0");
 					xml.startElement("p");
-					xml.setValue(" tris * 3 * 3 items here ");
+					xml.setValue(combinedVNTArray);
 				xml.endChildren();
 			xml.endChildren();
 		xml.endChildren();
 	}
 	xml.endChildren();
-
-
-	/*
-
-	          <input semantic="" source="#Cube-mesh-map-0" offset="2" set="0"/>
-	          <p>0 0 0 2 0 1 3 0 2 7 1 3 5 1 4 4 1 5 4 2 6 1 2 7 0 2 8 5 3 9 2 3 10 1 3 11 2 4 12 7 4 13 3 4 14 0 5 15 7 5 16 4 5 17 0 6 18 1 6 19 2 6 20 7 7 21 6 7 22 5 7 23 4 8 24 5 8 25 1 8 26 5 9 27 6 9 28 2 9 29 2 10 30 6 10 31 7 10 32 0 11 33 3 11 34 7 11 35</p>
-
-	*/
 
 	// controllers
 	xml.startElement("library_controllers");
@@ -879,7 +892,7 @@ Formats3D.worldToDAE = function(world){
 					// xml.setAttribute("sid","transform");
 					// xml.setValue(transform);
 					var c = {"type":"matrix", "value":transform};
-					Formats3D._daeColorObjectToXMLValue(xml, c, "transform");
+					Formats3D._daeListObjectToXMLValue(xml, c, "transform");
 
 					xml.startElement("instance_geometry");
 					xml.setAttribute("url","#"+instance["id"]);

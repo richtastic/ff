@@ -243,8 +243,28 @@ Tri3D.applyTransform = function(list, matrix){
 	}
 	return list;
 }
-
-Tri3D.arrayToUniqueVertexList = function(tris3D){
+Tri3D.arrayToPointList = function(tris3D){
+	var points = [];
+	var len = tris3D.length;
+	for(var i=0; i<len; ++i){
+		var tri3D = tris3D[i];
+		points.push(tri3D.A().copy());
+		points.push(tri3D.B().copy());
+		points.push(tri3D.C().copy());
+	}
+	return {"points":points};
+}
+Tri3D.arrayToNormalList = function(tris3D){
+	var points = [];
+	var len = tris3D.length;
+	for(var i=0; i<len; ++i){
+		var tri3D = tris3D[i];
+		var n = tri3D.normal().copy();
+		points.push(n);
+	}
+	return {"normals":points};
+}
+Tri3D.arrayToUniquePointList = function(tris3D){
 	var tris = []; // list of indexes = 3 * tris3D.length
 	var points = []; // list of unique points
 	return {"points":points, "triangles":tris};

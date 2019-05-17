@@ -156,8 +156,18 @@ Tri2D.prototype.kill = function(){ // doesn't own points
 Tri2D.copy = function(a){
 	return (new Tri2D()).copy(a);
 }
-
-Tri2D.arrayToUniqueVertexList = function(tris2D){
+Tri2D.arrayToPointList = function(tris2D){
+	var points = [];
+	var len = tris2D.length;
+	for(var i=0; i<len; ++i){
+		var tri2D = tris2D[i];
+		points.push(tri2D.A().copy());
+		points.push(tri2D.B().copy());
+		points.push(tri2D.C().copy());
+	}
+	return {"points":points};
+}
+Tri2D.arrayToUniquePointList = function(tris2D){
 	var tris = []; // list of indexes = 3 * tris2D.length
 	var points = []; // list of unique points
 	return {"points":points, "triangles":tris};

@@ -495,3 +495,13 @@ V2D.infoArray = function(pointList){
 	}
 	return {"min":min, "max":max, "size":size, "center":center};
 }
+V2D.arrayToValueList = function(pointList){
+	var a = [];
+	var N = pointList.length;
+	for(var i=0; i<N; ++i){
+		var v = pointList[i];
+		a.push(v.x);
+		a.push(v.y);
+	}
+	return a;
+}
