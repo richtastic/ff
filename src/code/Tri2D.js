@@ -156,3 +156,9 @@ Tri2D.prototype.kill = function(){ // doesn't own points
 Tri2D.copy = function(a){
 	return (new Tri2D()).copy(a);
 }
+
+Tri2D.arrayToUniqueVertexList = function(tris2D){
+	var tris = []; // list of indexes = 3 * tris2D.length
+	var points = []; // list of unique points
+	return {"points":points, "triangles":tris};
+}

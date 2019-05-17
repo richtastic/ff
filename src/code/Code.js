@@ -2591,6 +2591,26 @@ Code.stringFilterNumbersOnly = function(str){ // [0-9]+[.[0-9]+][(E|e)[+.-][0-9]
 	if(!str){ return ""; }
 	return str.replace(/[^0-9]/g,""); // remove non-digits
 }
+
+Code.getTimeStampZulu = function(){
+	var str = "";
+    var d = Code.getTimeMilliseconds(true);
+	d = new Date(d);
+	var year = d.getFullYear();
+	var month = d.getMonth()+1;
+	var day = d.getDate();
+	var hour = d.getHours();
+	var min = d.getMinutes();
+	var sec = d.getSeconds();
+    str = ""+Code.prependFixed(""+year,"0",4)
+	+"-"+Code.prependFixed(""+month,"0",2)
+	+"-"+Code.prependFixed(""+day,"0",2)
+	+"T"+Code.prependFixed(""+hour,"0",2)
+	+":"+Code.prependFixed(""+min,"0",2)
+	+":"+Code.prependFixed(""+sec,"0",2);
+	return str;
+}
+
 Code.getTimeStamp = function(year, month, day, hour, min, sec, ms){
 	var str = "";
     if(arguments.length<=1){ // 0 or 1 args

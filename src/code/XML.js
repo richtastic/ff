@@ -27,7 +27,7 @@ function XML(){ // creating xml structure
 	this._currentParent = this._root;
 	this._currentElement = null;
 }
-XML.root = function(){
+XML.prototype.root = function(){
 	return this._root;
 }
 XML.parse = function(inputString){
@@ -107,9 +107,15 @@ XML.Element.prototype.children = function(tag){
 	return this._children;
 }
 XML.Element.prototype.setAttribute = function(key,val){
+	if(!Code.isString(val)){
+		val = ""+val;
+	}
 	this._properties[key] = val;
 }
 XML.Element.prototype.setValue = function(val){
+	if(!Code.isString(val)){
+		val = ""+val;
+	}
 	this._value = val;
 }
 XML.Element.prototype.value = function(){
@@ -192,12 +198,19 @@ XML.Element.prototype.appendToString = function(str, indent){
 // 	}
 // }
 // -------------------------------------------------------------------------------------------------- WRITING
+XML.prototype.addXMLProlog = function(version,encoding){
+	version = version!==undefined ? version : "1.0";
+	encoding = encoding!==undefined ? encoding : "utf-8";
+	this.startElement("xml");
+	this.currentElement().type(XML.ELEMENT_TYPE_XML);
+	this.setAttribute("encoding",encoding);
+	this.setAttribute("version",version);
+}
 XML.prototype.addComment = function(value){
 	this.startElement(null);
 	this.currentElement().type(XML.ELEMENT_TYPE_COMMENT);
 	this.setValue(value);
 }
-
 XML.prototype.startElement = function(name){
 	var parent = this.parentElement();
 	var element = new XML.Element(name, parent);
@@ -217,7 +230,11 @@ XML.prototype.endChildren = function(){
 	this.currentElement(parent);
 }
 XML.prototype.setAttribute = function(key,val){
-	this.currentElement().setAttribute(key,val);
+	if(val){
+		this.currentElement().setAttribute(key,val);
+	}else{ // k is present
+		this.currentElement().setAttribute(key,key);
+	}
 }
 XML.prototype.setValue = function(val,asIs){
 	this.currentElement().setValue(val);

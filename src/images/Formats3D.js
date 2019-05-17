@@ -6,7 +6,7 @@ function Formats3D(){
 	this._root = new DO();
 	this._stage.addChild(this._root);
 	this._canvas.addListeners();
-	
+
 	this._stage.addFunction(Stage.EVENT_ON_ENTER_FRAME,this._handleEnterFrameFxn,this);
 
 	this._stage.addListeners();
@@ -18,7 +18,7 @@ function Formats3D(){
 	this._keyboard.addFunction(Keyboard.EVENT_KEY_DOWN,this._handleKeyboardDown,this);
 	this._keyboard.addFunction(Keyboard.EVENT_KEY_STILL_DOWN,this._handleKeyboardDownStill,this);
 	this._keyboard.addListeners();
-	
+
 	// LOAD IMAGES
 	var ajax = new Ajax();
 	ajax.binary(true);
@@ -27,9 +27,9 @@ function Formats3D(){
 	ajax.get("../../fb/phone_mount/stl/mount_simple_iphone7.stl",this,this._handleLoaded,null);
 	//ajax.get("../../fb/monitor_mount/output/stl/connection_plate.stl ",this,this._handleLoaded,null);
 	//ajax.get("../../fb/monitor_mount/output/stl/connection_plate.stl ",this,this._handleLoaded,null);
-	
-	// 
-	
+
+	//
+
 	//ajax.();
 	this._display3D = new DO();
 	this._root.addChild(this._display3D);
@@ -62,7 +62,7 @@ if(triangles.length==0){
 		//cam.translate(1, 2, -3);
 		//cam.translate(0, 0, 0);
 		//cam.rotate(0.5*e, 0.1*e, 0);
-		
+
 		cam.translate(modelCenter.x, modelCenter.y, modelCenter.z);
 		cam.rotate(0.05*e, 0.01*e, 0);
 		cam.scale(scale);
@@ -75,26 +75,26 @@ if(triangles.length==0){
 	// mat.rotateXYZ(0.5*e, 0.1*e, 0);
 	// mat.scale(scale);
 
-	
+
 	// mat.translate(-modelCenter.x, -modelCenter.y, -modelCenter.z);
 	// mat.rotateXYZ(0.5*e, 0.1*e, 0);
 	// mat.scale(scale);
-	
-	
+
+
 
 	var display = this._display3D;
 
 	// transform coordinates into local space
 	// offset by size
-	// 
+	//
 
 
-	
+
 var lightSource = new V3D(0,10,10);
 
 
 	var triangleDO = [];
-	
+
 	for(i=0; i<triangles.length; ++i){
 		var tri = triangles[i];
 		var A = mat.multV3D(tri.A());
@@ -193,7 +193,7 @@ Formats3D.prototype.readSTLToTriangles = function(array){
 	if(array.length < start + facets*50){ // incorrect number of facets
 		return triangles;
 	}
-	
+
 	//facets = Math.min(facets, 5);
 	for(i=0; i<facets; ++i){
 		var facetOffset = start + i*(4*3*4+2); // each iteration is 50 bytes
@@ -385,7 +385,7 @@ Formats3D.prototype.readPLYToTriangles = function(array){
 						jump = 1; // fill this tri
 						A = B; B = C; C = null;
 					}
-					
+
 				}
 			}
 		}
@@ -405,13 +405,13 @@ Formats3D.prototype._handleLoaded = function(response){
 }
 
 Formats3D.prototype._handleKeyboardUp = function(e){
-	// 
+	//
 }
 Formats3D.prototype._handleKeyboardDownStill = function(e){
-	// 
+	//
 }
 Formats3D.prototype._handleKeyboardDown = function(e){
-	// 
+	//
 }
 
 Formats3D.prototype._handleImagesLoaded = function(imageInfo){
@@ -451,6 +451,479 @@ Formats3D.prototype._handleImagesLoaded = function(imageInfo){
 }
 
 
+
+Formats3D.DAEtoWorld = function(daeString){
+	var xml = new XML();
+	xml.parse(daeString);
+	// console.log(xml);
+	var root = xml.root();
+	console.log(root);
+
+
+	var world = {};
+	world["images"] = [];
+
+
+	return null;
+}
+Formats3D._daeArrayFromList = function(a){
+	var s = "";
+	var len = a.length;
+	var lm1 = len-1;
+	for(var i=0; i<len; ++i){
+		if(i<lm1){
+			s = s + a[i] + " ";
+		}else{
+			s = s + a[i];
+		}
+	}
+	return s;
+}
+Formats3D._daeColorObjectToXMLValue = function(xml,object, sid){
+	var type = object["type"];
+	var val = object["value"];
+	var tag = null;
+	var value = null;
+	if(type=="number"){
+		tag = "float";
+		value = ""+val;
+	}else if(type=="color"){
+		tag = "color";
+		value = Formats3D._daeArrayFromList(val); // R B G A
+	}else if(type=="texture"){
+		tag = "color";
+		value = val["id"];
+	}else if(type=="matrix"){
+		tag = "matrix";
+		value = Formats3D._daeArrayFromList(val.toArray());
+	}
+	// value = "???";
+	if(tag && value){
+		xml.startElement(tag);
+		if(sid){
+			xml.setAttribute("sid",sid);
+		}
+		xml.setValue(value);
+	}
+}
+Formats3D.worldToDAE = function(world){
+	console.log(world);
+	var worldImages = Code.valueOrDefault(world["images"], []);
+	var worldEffects = Code.valueOrDefault(world["effects"], []);
+	var worldControllers = Code.valueOrDefault(world["controllers"], []);
+	var worldScenes = Code.valueOrDefault(world["scenes"], []);
+	var worldLights = Code.valueOrDefault(world["lights"], []);
+	var worldMeshes = Code.valueOrDefault(world["meshes"], []);
+
+
+	var DAE_KEYWORD_COLLADA = "COLLADA";
+	var DAE_VALUE_COLLADA_XMLNS = "http://www.collada.org/2005/11/COLLADASchema";
+	var DAE_VALUE_COLLADA_XMLNS_XSI = "http://www.w3.org/2001/XMLSchema-instance";
+	var DAE_VALUE_COLLADA_VERSION = "1.4.1";
+
+	var contributor = "Blender User";
+	var authoringTool = "Blender 2.79.0 commit date:2018-03-22, commit time:14:10, hash:f4dc9f9";
+	var exportTime = Code.getTimeStampZulu();
+	var units = "meters";
+	var axisUp = "Z_UP";
+
+	var xml = new XML();
+
+
+	// xml pre
+	xml.addXMLProlog();
+
+	// collada
+	xml.startElement(DAE_KEYWORD_COLLADA);
+	xml.setAttribute("version",DAE_VALUE_COLLADA_VERSION);
+	xml.setAttribute("xmlns",DAE_VALUE_COLLADA_XMLNS);
+	xml.setAttribute("xmlns:xsi",DAE_VALUE_COLLADA_XMLNS_XSI);
+	xml.startChildren();
+
+	// info
+	xml.startElement("asset");
+	xml.startChildren();
+		xml.startElement("contributor");
+		xml.startChildren();
+			xml.startElement("author");
+				xml.setValue(contributor);
+			xml.startElement("authoring_tool");
+				xml.setValue(authoringTool);
+		xml.endChildren();
+		xml.startElement("created");
+			xml.setValue(exportTime);
+		xml.startElement("modified");
+			xml.setValue(exportTime);
+		xml.startElement("unit");
+			xml.setAttribute("name",units);
+			xml.setAttribute(units,"1");
+		xml.startElement("up_axis");
+			xml.setValue(axisUp);
+	xml.endChildren();
+
+	// images
+	xml.startElement("library_images");
+	xml.startChildren();
+		for(var i=0; i<worldImages.length; ++i){
+			var image = worldImages[i];
+			var imageID = image["id"];
+			var imageFile = image["file"];
+			xml.startElement("image");
+			xml.setAttribute("id",imageID);
+			xml.setAttribute("name",imageID);
+			xml.startChildren();
+				xml.startElement("init_from");
+				xml.setValue(imageFile);
+			xml.endChildren();
+		}
+	xml.endChildren();
+
+	// effects
+	xml.startElement("library_effects");
+	xml.startChildren();
+		for(var i=0; i<worldEffects.length; ++i){
+			var effect = worldEffects[i];
+			var effectID = effect["id"];
+			var surface = effect["surface"];
+				var surfaceID = surface["id"];
+				var surfaceType = surface["type"];
+				var surfaceImageID = surface["image"];
+			var sampler = effect["sampler"];
+				var samplerID = sampler["id"];
+				var samplerSourceID = surfaceID;
+			// var imageFile = effect["file"];
+			xml.startElement("effect");
+			xml.setAttribute("id",effectID);
+			xml.startChildren();
+				xml.startElement("profile_COMMON");
+				xml.startChildren();
+
+					xml.startElement("newparam");
+					xml.setAttribute("sid",surfaceID);
+					xml.startChildren();
+						xml.startElement("surface");
+						xml.setAttribute("type",surfaceType);
+						xml.startChildren();
+							xml.startElement("init_from");
+							xml.setValue(surfaceImageID);
+						xml.endChildren();
+					xml.endChildren();
+
+					xml.startElement("newparam");
+					xml.setAttribute("sid",samplerID);
+					xml.startChildren();
+						xml.startElement("sampler2D");
+						xml.startChildren();
+							xml.startElement("init_from");
+							xml.setValue(samplerSourceID);
+						xml.endChildren();
+					xml.endChildren();
+
+					var phong = effect["phong"];
+					xml.startElement("technique");
+					xml.setAttribute("sid","common");
+					xml.startChildren();
+						xml.startElement("phong");
+						xml.startChildren();
+							xml.startElement("emission");
+							xml.startChildren();
+								Formats3D._daeColorObjectToXMLValue(xml, phong["emission"], "emission");
+							xml.endChildren();
+							xml.startElement("ambient");
+							xml.startChildren();
+								Formats3D._daeColorObjectToXMLValue(xml, phong["ambient"], "ambient");
+							xml.endChildren();
+							xml.startElement("diffuse");
+							xml.startChildren();
+								Formats3D._daeColorObjectToXMLValue(xml, phong["diffuse"], "diffuse");
+							xml.endChildren();
+							xml.startElement("specular");
+							xml.startChildren();
+								Formats3D._daeColorObjectToXMLValue(xml, phong["specular"], "specular");
+							xml.endChildren();
+							xml.startElement("shininess");
+							xml.startChildren();
+								Formats3D._daeColorObjectToXMLValue(xml, phong["shininess"], "shininess");
+							xml.endChildren();
+							xml.startElement("index_of_refraction");
+							xml.startChildren();
+								Formats3D._daeColorObjectToXMLValue(xml, phong["ior"], "index_of_refraction");
+							xml.endChildren();
+
+						xml.endChildren();
+					xml.endChildren();
+
+				xml.endChildren();
+			xml.endChildren();
+		}
+	xml.endChildren();
+
+	// materials
+// FROM EFFECTS?
+	xml.startElement("library_materials");
+	xml.startChildren();
+		xml.startElement("material");
+		xml.setAttribute("id","Material-material");
+		xml.setAttribute("name","Material");
+		xml.startChildren();
+			xml.startElement("instance_effect");
+			xml.setAttribute("url","#Material-effect");
+		xml.endChildren();
+	xml.endChildren();
+
+	// geometries
+	xml.startElement("library_geometries");
+	xml.startChildren();
+	for(var i=0; i<worldMeshes.length; ++i){
+		var mesh = worldMeshes[i];
+		var meshID = mesh["id"];
+		var meshName = mesh["name"];
+		var tris3D = mesh["triangles3D"];
+		var tris2D = mesh["triangles2D"];
+		var normals = mesh["normals"];
+		if(!normals){
+			normals = []; // TODO: from tris3D
+		}
+		var material = mesh["material"];
+		var materialID = material["id"];
+		xml.startElement("geometry");
+		xml.startChildren();
+			xml.startElement("mesh");
+			xml.setAttribute("id",meshID);
+			xml.setAttribute("name",meshName);
+			xml.startChildren();
+				var meshPosID = meshID+"-positions";
+					var meshPosArrID = meshPosID+"-array";
+				var meshNrmID = meshID+"-normals";
+					var meshNrmArrID = meshNrmID+"-array";
+				var meshMapID = meshName+"-map-"+0;
+					var meshMapArrID = meshMapID+"-array";
+				var meshVerID = meshID+"-vertices";
+				// var meshPoiID = meshID+"-positions";
+				var n3Ds = []; // from normals = 3 x tris3D.length
+				var info3D = Tri3D.arrayToUniqueVertexList(tris3D);
+				var p3Ds = info3D["points"];
+				var t3Ds = info3D["triangles"];
+				var info2D = Tri2D.arrayToUniqueVertexList(tris2D);
+				var p2Ds = info2D["points"];
+				var t2Ds = info2D["triangles"];
+				// positions
+				xml.startElement("source");
+				xml.setAttribute("id",meshPosID);
+				xml.startChildren();
+					xml.startElement("float_array");
+					xml.setAttribute("id",meshPosArrID);
+					xml.setAttribute("count",p3Ds.length);
+					xml.setValue(Formats3D._daeArrayFromList(p3Ds));
+					xml.startElement("technique_common");
+					xml.startChildren();
+						xml.startElement("accessor");
+						xml.setAttribute("source","#"+meshPosArrID);
+						xml.setAttribute("count",p3Ds.length/3);
+						xml.setAttribute("stride",3);
+						xml.startChildren();
+							xml.startElement("param");
+							xml.setAttribute("name","X");
+							xml.setAttribute("type","float");
+							xml.startElement("param");
+							xml.setAttribute("name","Y");
+							xml.setAttribute("type","float");
+							xml.startElement("param");
+							xml.setAttribute("name","Z");
+							xml.setAttribute("type","float");
+						xml.endChildren();
+					xml.endChildren();
+				xml.endChildren();
+				// normals
+				xml.startElement("source");
+				xml.setAttribute("id",meshNrmID);
+				xml.startChildren();
+					xml.startElement("float_array");
+					xml.setAttribute("id",meshNrmArrID);
+					xml.setAttribute("count",n3Ds.length);
+					xml.setValue(Formats3D._daeArrayFromList(n3Ds));
+					xml.startElement("technique_common");
+					xml.startChildren();
+						xml.startElement("accessor");
+						xml.setAttribute("source","#"+meshNrmArrID);
+						xml.setAttribute("count",n3Ds.length/3);
+						xml.setAttribute("stride",3);
+						xml.startChildren();
+							xml.startElement("param");
+							xml.setAttribute("name","X");
+							xml.setAttribute("type","float");
+							xml.startElement("param");
+							xml.setAttribute("name","Y");
+							xml.setAttribute("type","float");
+							xml.startElement("param");
+							xml.setAttribute("name","Z");
+							xml.setAttribute("type","float");
+						xml.endChildren();
+					xml.endChildren();
+				// tex coords
+				xml.startElement("source");
+				xml.setAttribute("id",meshMapID);
+				xml.startChildren();
+					xml.startElement("float_array");
+					xml.setAttribute("id",meshMapArrID);
+					xml.setAttribute("count",p2Ds.length);
+					xml.setValue(Formats3D._daeArrayFromList(n3Ds));
+					xml.startElement("technique_common");
+					xml.startChildren();
+						xml.startElement("accessor");
+						xml.setAttribute("source","#"+meshMapArrID);
+						xml.setAttribute("count",n3Ds.length/2);
+						xml.setAttribute("stride",2);
+						xml.startChildren();
+							xml.startElement("param");
+							xml.setAttribute("name","S");
+							xml.setAttribute("type","float");
+							xml.startElement("param");
+							xml.setAttribute("name","T");
+							xml.setAttribute("type","float");
+						xml.endChildren();
+					xml.endChildren();
+				xml.endChildren();
+				// verts-2
+				xml.startElement("vertices");
+				xml.setAttribute("id",meshVerID);
+				xml.startChildren();
+					xml.startElement("input");
+					xml.setAttribute("semantic","POSITION");
+					xml.setAttribute("source","#"+meshPosID);
+				xml.endChildren();
+				// triangles
+				xml.startElement("triangles");
+				xml.setAttribute("material",materialID);
+				xml.setAttribute("count",tris3D.length);
+				xml.startChildren();
+					xml.startElement("input");
+					xml.setAttribute("semantic","VERTEX");
+					xml.setAttribute("source","#"+meshVerID);
+					xml.setAttribute("offset","0");
+					xml.startElement("input");
+					xml.setAttribute("semantic","NORMAL");
+					xml.setAttribute("source","#"+meshNrmID);
+					xml.setAttribute("offset","1");
+					xml.startElement("input");
+					xml.setAttribute("semantic","TEXCOORD");
+					xml.setAttribute("source","#"+meshMapID);
+					xml.setAttribute("offset","2");
+					xml.setAttribute("set","0");
+					xml.startElement("p");
+					xml.setValue(" tris * 3 * 3 items here ");
+				xml.endChildren();
+			xml.endChildren();
+		xml.endChildren();
+	}
+	xml.endChildren();
+
+
+	/*
+
+	          <input semantic="" source="#Cube-mesh-map-0" offset="2" set="0"/>
+	          <p>0 0 0 2 0 1 3 0 2 7 1 3 5 1 4 4 1 5 4 2 6 1 2 7 0 2 8 5 3 9 2 3 10 1 3 11 2 4 12 7 4 13 3 4 14 0 5 15 7 5 16 4 5 17 0 6 18 1 6 19 2 6 20 7 7 21 6 7 22 5 7 23 4 8 24 5 8 25 1 8 26 5 9 27 6 9 28 2 9 29 2 10 30 6 10 31 7 10 32 0 11 33 3 11 34 7 11 35</p>
+
+	*/
+
+	// controllers
+	xml.startElement("library_controllers");
+	xml.startChildren();
+	for(var i=0; i<worldControllers.length; ++i){
+		var controller = worldControllers[i];
+	}
+	xml.endChildren();
+
+	// lights
+	xml.startElement("library_lights");
+	xml.startChildren();
+	for(var i=0; i<worldLights.length; ++i){
+		var light = worldLights[i];
+	}
+	xml.endChildren();
+
+	// physics
+
+	// scenes
+	xml.startElement("library_visual_scenes");
+	xml.startChildren();
+	var startScene = null;
+	for(var i=0; i<worldScenes.length; ++i){
+		var scene = worldScenes[i];
+		var sceneID = scene["id"];
+		var sceneName = scene["name"];
+		var isDefault = scene["default"];
+		var nodes = scene["nodes"];
+		if(isDefault){
+			startScene = scene;
+		}
+		xml.startElement("visual_scene");
+		xml.setAttribute("id",sceneID);
+		xml.setAttribute("name",sceneName);
+		if(nodes.length>0){
+			xml.startChildren();
+			for(var j=0; j<nodes.length; ++j){
+				var node = nodes[j];
+				var nodeID = node["id"];
+				var nodeName = node["name"];
+				var transform = node["transform"];
+				var instance = node["instance"];
+				var material = node["material"];
+				xml.startElement("node");
+				xml.setAttribute("id",nodeID);
+				xml.setAttribute("name",nodeName);
+				xml.setAttribute("type","NODE");
+
+				xml.startChildren();
+					// xml.startElement("matrix");
+					// xml.setAttribute("sid","transform");
+					// xml.setValue(transform);
+					var c = {"type":"matrix", "value":transform};
+					Formats3D._daeColorObjectToXMLValue(xml, c, "transform");
+
+					xml.startElement("instance_geometry");
+					xml.setAttribute("url","#"+instance["id"]);
+					xml.setAttribute("name",instance["name"]);
+					if(material){
+						var materialID = material["id"];
+					xml.startChildren();
+						xml.startElement("bind_material");
+						xml.startChildren();
+							xml.startElement("technique_common");
+							xml.startChildren();
+								xml.startElement("instance_material");
+								xml.setAttribute("target","#"+materialID);
+								xml.setAttribute("symbol",materialID);
+							xml.endChildren();
+						xml.endChildren();
+					xml.endChildren();
+					}
+				xml.endChildren();
+
+			}
+			xml.endChildren();
+		}
+	}
+	xml.endChildren();
+
+	// starting scene
+	if(startScene){
+		var sceneID = startScene["id"];
+		xml.startElement("scene");
+		xml.startChildren();
+			xml.startElement("instance_visual_scene");
+			xml.setAttribute("url","#"+sceneID);
+		xml.endChildren();
+	}
+
+	// collada - end
+	xml.endChildren();
+
+	var str = xml.toString();
+	return str;
+}
+
+
 // http://www.flexcomm.com/library/ASCII256.htm
 // http://www.ascii-code.com/
 var asciiList = [];
@@ -483,8 +956,5 @@ asciiList.push([23 ,""]);
 // 32 = space
 // 128 = 0x80
 // 191 = 0x8F
-// 
 //
-
-
-
+//

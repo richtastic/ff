@@ -7,6 +7,7 @@ Tri3D.YAML = {
 
 function Tri3D(a,b,c){ // CCW+
 	Tri3D._.constructor.call(this,a,b,c);
+	this._norm = null; // if manual vs derived ?
 }
 Code.inheritClass(Tri3D, Tri2D);
 Tri3D.fromPoints = function(a,b,c){
@@ -77,6 +78,9 @@ Tri3D.prototype.opposite = function(a,b){
 	return null;
 }
 Tri3D.prototype.normal = function(){
+	if(this._norm){
+		return this._norm;
+	}
 	var AB = V3D.sub(this._b,this._a);
 	var AC = V3D.sub(this._c,this._a);
 	V3D.cross(AB, AB,AC);
@@ -238,4 +242,10 @@ Tri3D.applyTransform = function(list, matrix){
 		tri.C( matrix.multV3DtoV3D(tri.C()) );
 	}
 	return list;
+}
+
+Tri3D.arrayToUniqueVertexList = function(tris3D){
+	var tris = []; // list of indexes = 3 * tris3D.length
+	var points = []; // list of unique points
+	return {"points":points, "triangles":tris};
 }
