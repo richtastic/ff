@@ -9542,6 +9542,19 @@ App3DR.ProjectManager.prototype._iterateSparseTracksStart = function(){ // keep 
 		var worldViews = App3DR.ProjectManager.addViewsToWorld(world, views, images, transforms);
 		console.log(worldViews);
 
+// set cell sizes to medium ?
+for(var i=0; i<worldViews.length; ++i){
+	var view = worldViews[i];
+	// var size = view.sizeFromPercent(0.01); // fine
+	// var size = view.sizeFromPercent(0.02); // med?
+	// var size = view.sizeFromPercent(0.05); // coarse
+	// var size = view.sizeFromPercent(0.10); // too big
+	// view.cellSize(size);
+	console.log("SIZES: "+view.cellSize()+" | "+view.compareSize());
+}
+
+
+
 		var sparseViewLookupIndex = [];
 		var sparseViewLookupIndexIndex = [];
 		var sparseViewLookupIndexToID = {};
@@ -9559,14 +9572,9 @@ App3DR.ProjectManager.prototype._iterateSparseTracksStart = function(){ // keep 
 		// var points3D = this._embedMatchPoints(world, sparseData, sparseViewLookupIndex);
 		this._embedTrackPoints(world, sparseData, sparseViewLookupIndex);
 		var points3D = world.toPointArray();
-		// var viewA = world.viewFromData(sparseViewA["id"]);
-		// var viewB = world.viewFromData(sparseViewB["id"]);
 		var viewA = world.viewFromData(viewAIndex);
 		var viewB = world.viewFromData(viewBIndex);
 		var pairWorldViews = [viewA,viewB];
-
-
-
 
 		// do refinement
 		console.log("refine");
@@ -9580,40 +9588,48 @@ App3DR.ProjectManager.prototype._iterateSparseTracksStart = function(){ // keep 
 		var errorRStart = transform.rMean() + transform.rSigma();
 		var errorFStart = transform.fMean() + transform.fSigma();
 
-		// create basic patches
-
-
-
 		console.log("errors update");
-		var totalIter = 1;
-		// var totalIter = 2;
+		// var totalIter = 1;
+		var totalIter = 2;
 		for(var iter=0; iter<totalIter; ++iter){
 	console.log("ITERATION: "+iter+" ............ "+" / "+totalIter);
 			world.averagePoints3DFromMatches(true);
 			world.patchInitBasicSphere(true);
 			world.relativeFFromSamples();
-			// world.estimate3DErrors(true);
-			world.estimate3DPoints();
-	console.log("refineSelectCameraAbsoluteOrientation");
-//			world.refineSelectCameraAbsoluteOrientation(pairWorldViews, null, 1000);
-	console.log("refineCameraAbsoluteOrientation");
-			// world.refineCameraAbsoluteOrientation(null, 1000);
-//			world.refineCameraAbsoluteOrientation(null, 100); // lots
 
 			world.estimate3DPoints();
-			world.patchInitBasicSphere(false);
+	console.log("refineSelectCameraAbsoluteOrientation");
+			// world.refineSelectCameraAbsoluteOrientation(pairWorldViews, null, 1000);
+			world.refineSelectCameraAbsoluteOrientation(pairWorldViews, null, 100);
+			world.relativeTransformsFromAbsoluteTransforms();
+	console.log("refineCameraAbsoluteOrientation");
+			// world.refineCameraAbsoluteOrientation(null, 1000);
+			world.refineCameraAbsoluteOrientation(null, 100); // lots
+
+			world.estimate3DPoints();
+			// world.patchInitBasicSphere(false);
+			world.patchInitBasicSphere(true);
+// if(iter==1){
 	console.log("probe3D");
 			// add
 			world.probe3D();
+// }
 			world.estimate3DErrors(true);
 
 			// drops
 			world.dropNegative3D();
 			world.filterGlobalMatches(false, 0, 3.0,3.0,3.0,3.0, false);
-			world.estimate3DErrors(true);
+			world.filterMatchGroups();
+			// world.estimate3DErrors(true);
+
 			// this would kill a lot:
 			// this.filterSphere3D(2.0);
+
+
+			world.relativeTransformsFromAbsoluteTransforms();
+			world.estimate3DErrors(true);
 		}
+
 		// TODO: PATCHES LIKELY NEED UPDATING: LOWER ERROR + DRIFT
 		world.printPoint3DTrackCount();
 
@@ -9633,7 +9649,7 @@ App3DR.ProjectManager.prototype._iterateSparseTracksStart = function(){ // keep 
 // console.log(str);
 
 
-throw "still testing";
+// throw "still testing";
 
 		// update views
 		sparseViews = project._updateGraphViewsFromWorld(world, sparseViews, sparseCameras);
@@ -9674,7 +9690,7 @@ if(deltaR<0){
 		}
 		var max = Code.max(matchCounts);
 		var sigma = Code.stdDev(matchCounts,max);
-		var minKeepMatches = max - sigma*1.5;
+		var minKeepMatches = max - sigma*2.0;
 			// minKeepMatches = Math.max(minKeepMatches,16);
 		console.log(" TRANSFORM MATCH COUNTS: "+max+" +/- "+sigma+" : "+minKeepMatches);
 		//
@@ -9728,13 +9744,13 @@ if(deltaR<0){
 			console.log("saved sparse data");
 			var url = Code.getURL();
 			var iterations = Code.getURLParameter(url,"iterations");
-			console.log(iterations);
+			// console.log(iterations);
 			if(iterations!==null && iterations!==undefined && iterations!==0){
 				iterations -= 1;
-				console.log(iterations);
+				// console.log(iterations);
 				if(iterations>0){
 					var url = Code.setURLParameter(url,"iterations",iterations);
-					console.log(url);
+					// console.log(url);
 					setTimeout(function() {
 						console.log("LOAD URL: "+url);
 						Code.setURL(url);

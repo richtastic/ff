@@ -330,6 +330,7 @@ TODO: pairwise possibility limiting
 	- dense points
 	- redo affine features
 -----> HERE <------
+	- multi-view combining into single 3D scene - minimizing errors
 - surface triangulation(tessellation)
 	- advancing-front, curvature-based tessellation
 	=> scene triangle model
@@ -367,39 +368,40 @@ https://cloud.google.com/appengine/docs/nodejs/
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
----- sparse method isn't reducing error ...
-	- refine absolutes
-	- probe3d - NO - points are too fuzzy
-		-> if there are 2 pairs with low enough error -> they should be able to successfully propagate
+- PAIRWISE CLIPPING SPHERES in 3D
 
-	- drop high error R & F points -- might loose a lot
-	-
+- something seems to be limiting probe3D
+	- why does second loop have fewer probe3D locations?
+	- does the match NCC need to be recalculated?
 
-	... WANT TO CONNECT DISPARATE POINTS ...
+~ cleaning up 3+ matches points by dropping worst NCC point2D
+	- no clear divisions ... maybe plot some ?
+
+- 3-way match points try trifocal tensor improvement ?
+
+- is probe3d picking optimum location from haystack??
+
+- when matches are updated -> pick best point as reference & update other points to be best matching?
+
+
+
 
 - lots of s: 0 in graph points .... view size wrong ?
 
 
 
-probing 3D, but using patches in relative frames --- matches have a patch
-patch - intersect dropping - ONLY IN PAIRWISE, NOT ABSOLUTE
 
 
-..........AREAS ARE ALL ~2.0
-
-
-- some match counts are outragous numbers ...
-		=> MERGE P3D PROBABLY NOT CORRECTLY OVERRIDING / SELECTING A COMMON MATCH / REMOVING OLD ...
 
 
 
 - update graph logic for SCALE & TRANSFORM-PAIRS
 
-- how to incoporate different image SIZES / scales
-	=> everythin in terms of error in image A and image B / NORMALIZED 1:1 error / cell size
 
-- probe3D is not getting any results
-	- points are still too noisy to discern anything ?
+
+
+- how to incorporate different image SIZES / scales
+	=> everythin in terms of error in image A and image B / NORMALIZED 1:1 error / cell size
 
 
 
