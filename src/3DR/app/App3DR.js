@@ -5726,9 +5726,9 @@ D			dense/PAIR/dense.yaml - pair optimized dense points with patches
 
 
 E			points.yaml - dense point reconstruction info
-				cameras:
+				?cameras:
 					...
-				views:
+				?views:
 					...
 				points:
 					...
@@ -5736,50 +5736,45 @@ E			points.yaml - dense point reconstruction info
 
 
 E			triangles.yaml - triangle reconstruction - triangle soup of approximated surface & texture mapping
-				points:
+				views:
+					- ...
+				vertexes:
 					-
 						X: ...
 						Y: ...
 						Z: ...
+				uvs:
+					-
+						x:
+						y:
 				triangles:
 					-
 						A:
 							i: # vertex index
-							x: # 2D location
-							y:
+							u: # uv index
+							v: # view index
 						B:
 							i:
-							x:
-							y:
+							u:
+							v:
 						C:
 							i:
-							x:
-							y:
-						t: "0" # texture atlas id
+							u:
+							v:
+						t: # texture atlas index
 					...
-
-F			packing.yaml -- bin packing planning for construction of textures
-				- views # remaining views to be loaded
-					-
-						id: ID (to info.yaml)
-				- triangles:
-					-
-						i: # triangle index (to triangles.yaml)
-						A: # view ID (to info.yaml)
-						B: # view ID
-
-F			textures.yaml
 				textures:
 					-
 						id: "0"
 						file: tex0.png
 						width: 512
 						height: 512
-					...
-			textures/
-				tex0.png
-				tex1.png
-				...
+
+				packing:
+					views: # list of views yet to load - pop off when done
+						- index in list to load
+
+
 
 		scene/
 			0/
@@ -5864,6 +5859,7 @@ App3DR.ProjectManager = function(relativePath, operatingStage, readyFxn){ // ver
 	this._pairs = [];
 	this._triples = [];
 	this._cameras = [];
+	this._scenes = [];
 	this._bundleFilename = null; // TO BE REMOVED
 	// reconstruction related:
 	this._graphFilename = null;
@@ -5882,17 +5878,23 @@ App3DR.ProjectManager = function(relativePath, operatingStage, readyFxn){ // ver
 	this._pointsFilename = null;
 	this._pointsCount = null;
 
+	this._triangleFilename = null;
+	this._triangleCount = null;
+	this._textureCount = null;
+
+	this._sceneID = null;
+
+
 	// this._sparseInfo = null;
 	// this._sparsePoints = null;
 	// this._denseInfo = null;
 	// this._densePoints = null;
-	this._triangles = null;
-	this._triangleCount = null;
-	this._packing = null;
-	this._packingCount = null;
-	this._textures = null;
-	this._textureCount = null;
-	this._packing = null;
+
+	// this._packing = null;
+	// this._packingCount = null;
+	// this._textures = null;
+	// this._textureCount = null;
+	// this._packing = null;
 	this._scenes = [];
 	// operations related
 	this._loading = true;
@@ -6063,6 +6065,36 @@ App3DR.ProjectManager.prototype.pointsDone = function(){
 	return this._pointsCount != null;
 }
 
+
+App3DR.ProjectManager.prototype.setTriangleCount = function(count){
+	this._triangleCount = count;
+}
+App3DR.ProjectManager.prototype.triangleCount = function(count){
+	return this._triangleCount;
+}
+App3DR.ProjectManager.prototype.triangleFilename = function(){
+	return this._triangleFilename;
+}
+App3DR.ProjectManager.prototype.setTriangleFilename = function(tris){
+	this._triangleFilename = tris;
+}
+
+
+App3DR.ProjectManager.prototype.setTextureCount = function(count){
+	this._textureCount = count;
+}
+App3DR.ProjectManager.prototype.textureCount = function(count){
+	return this._textureCount;
+}
+
+App3DR.ProjectManager.prototype.sceneID = function(){
+	return this._sceneID;
+}
+App3DR.ProjectManager.prototype.setSceneID = function(scene){
+	this._sceneID = scene;
+}
+
+
 App3DR.ProjectManager.prototype.bundleFilename = function(file){
 	if(file!==undefined){
 		this._bundleFilename = file;
@@ -6164,6 +6196,9 @@ App3DR.ProjectManager.prototype.setFromYAML = function(object){
 	var denseCount = object["denseCount"];
 	var pointsCount = object["pointsCount"];
 	var points = object["points"];
+	var textureCount = object["textureCount"];
+	var triangleCount = object["triangleCount"];
+	var triangles = object["triangles"];
 
 	this._titleName = title;
 	this._createdTimestamp = created;
@@ -6218,6 +6253,10 @@ App3DR.ProjectManager.prototype.setFromYAML = function(object){
 	this._denseCount = Code.valueOrDefault(denseCount, null);
 	this._pointsFilename = Code.valueOrDefault(points, null);
 	this._pointsCount = Code.valueOrDefault(pointsCount, null);
+
+	this._triangleFilename = Code.valueOrDefault(triangles, null);
+	this._triangleCount = Code.valueOrDefault(triangleCount, null);
+	this._textureCount = Code.valueOrDefault(textureCount, null);
 }
 App3DR.ProjectManager.prototype.toYAML = function(){
 	var modified = Code.getTimeStampFromMilliseconds();
@@ -6307,7 +6346,10 @@ App3DR.ProjectManager.prototype.toYAML = function(){
 	yaml.writeNumber("pointsCount",this._pointsCount);
 	yaml.writeBlank();
 	// triangles
-
+	yaml.writeString("points",this._pointsFilename);
+	yaml.writeNumber("triangleCount",this._triangleCount);
+	yaml.writeNumber("textureCount",this._textureCount);
+	yaml.writeBlank();
 
 
 	// legacy
@@ -6881,7 +6923,6 @@ console.log("checkPerformNextTask");
 					}
 					if(!pair.hasTracks()){
 						console.log("NEED TO DO A TRACK PAIR : "+idA+" & "+idB+" = "+pair.id());
-// throw "...";
 						this.calculatePairTracks(viewA,viewB);
 						return;
 					}
@@ -6889,6 +6930,20 @@ console.log("checkPerformNextTask");
 			}
 		}
 	}
+
+/*
+console.log("REFINE A VIEW PAIR ...");
+var viewA = this.viewFromID("9T4X6FGN");
+var viewB = this.viewFromID("RIMPJ5P9");
+// var pair = this.pairFromViewIDs("9T4X6FGN","RIMPJ5P9");
+// console.log(pair);
+console.log(viewA,viewB);
+this.calculatePairTracks(viewA,viewB);
+throw "NO";
+
+// this.calculatePairTracks(viewA,viewB,);
+// this.increaseResolution(pair);
+
 
 // throw "task triples";
 	// assuming all pairs have run
@@ -6963,9 +7018,17 @@ if(!this.pointsDone()){
 
 
 throw "surface - triangles";
+this.surfaceTriangulate();
+*/
 
+var triangles = this.triangleCount();
+console.log("triangle count: "+triangles);
 
-throw "textures";
+var textures = this.textureCount();
+console.log("texture count: "+triangles);
+// throw "textures";
+this.trianglesTexturize();
+
 
 throw "scene";
 
@@ -7867,7 +7930,7 @@ var v = views[i];
 	view.cellSize(9);
 	view.absoluteTransform(transform);
 }
-world.relativeTransformsFromAbsoluteTransforms();
+world.copyRelativeTransformsFromAbsolute();
 var str = world.toYAMLString();
 console.log(str);
 
@@ -8797,7 +8860,7 @@ App3DR.ProjectManager.prototype._iterateGraphTracksPropagateTick = function(trip
 	// world.patchInitBasicSphere(true);
 		// propagate tracks
 		console.log("errors initial");
-		world.relativeTransformsFromAbsoluteTransforms();
+		world.copyRelativeTransformsFromAbsolute();
 		// world.relativeFFromSamples();
 		// world.estimate3DErrors(true);
 		console.log("probe3D");
@@ -8828,7 +8891,7 @@ console.log("-------------------------------------------------------------------
 		world.estimate3DErrors(true);
 
 		world.refineSelectCameraAbsoluteOrientation(worldTriple, null, 100);
-		world.estimate3DPoints();
+		world.averagePoints3DFromMatches();
 		world.refinePoint3DAbsoluteLocation();
 
 		world.patchInitBasicSphere(true);
@@ -8927,7 +8990,7 @@ console.log(worldViews);
 	project._embedTrackPoints(world, dataPoints, lookupViewFromIndex); // TODO: THIS DOES NOT NEED INTERSECTION CHECKING
 
 	console.log("setup");
-	world.relativeTransformsFromAbsoluteTransforms(); // transforms avail
+	world.copyRelativeTransformsFromAbsolute(); // transforms avail
 	world.printPoint3DTrackCount();
 	world.relativeFFromSamples();
 	world.estimate3DErrors(true, true);
@@ -8948,10 +9011,8 @@ console.log(worldViews);
 		}
 */
 
-		// world.relativeTransformsFromAbsoluteTransforms(); // SHOULD ALREADY BE DONE
 		world.estimate3DErrors(true);
-		// world.averagePoints3DFromMatches();
-		world.estimate3DPoints();
+		world.averagePoints3DFromMatches();
 
 		// clean
 		console.log("clean");
@@ -9092,7 +9153,7 @@ for(var i=0; i<worldViews.length; ++i){
 	lookupViewFromIndex[i] = v;
 }
 
-		world.relativeTransformsFromAbsoluteTransforms(); // transforms avail
+		world.copyRelativeTransformsFromAbsolute(); // transforms avail
 console.log("COMBINING ALL TRACK POINTS");
 world.printPoint3DTrackCount();
 		for(var i=0; i<datas.length; ++i){
@@ -9227,7 +9288,7 @@ App3DR.ProjectManager.prototype._iterateDenseTracksStart = function(){
 		var worldViewA = world.viewFromData(viewAID);
 		var worldViewB = world.viewFromData(viewBID);
 		// init
-		world.relativeTransformsFromAbsoluteTransforms();
+		world.copyRelativeTransformsFromAbsolute();
 		world.printPoint3DTrackCount();
 
 		// sort dense points on corner score
@@ -9351,7 +9412,6 @@ App3DR.ProjectManager.prototype._iterateDenseTracksStart = function(){
 		var maxIterations = 1;
 		for(var iteration=0; iteration<maxIterations; ++iteration){
 			// add new points
-			// console.log("probe3D");
 			// world.probe3D();
 			// world.refinePoint3DAbsoluteLocation(); // TODO: only update newly added points
 			// TODO: LIMIT TO TOP CORNER POINTS ONLY -- with ~3x3 added locations
@@ -9578,7 +9638,7 @@ for(var i=0; i<worldViews.length; ++i){
 
 		// do refinement
 		console.log("refine");
-		world.relativeTransformsFromAbsoluteTransforms();
+		world.copyRelativeTransformsFromAbsolute();
 		world.printPoint3DTrackCount();
 		world.relativeFFromSamples();
 		world.estimate3DErrors(true);
@@ -9593,41 +9653,47 @@ for(var i=0; i<worldViews.length; ++i){
 		var totalIter = 2;
 		for(var iter=0; iter<totalIter; ++iter){
 	console.log("ITERATION: "+iter+" ............ "+" / "+totalIter);
-			world.averagePoints3DFromMatches(true);
+			world.averagePoints3DFromMatches();
 			world.patchInitBasicSphere(true);
 			world.relativeFFromSamples();
 
-			world.estimate3DPoints();
-	console.log("refineSelectCameraAbsoluteOrientation");
-			// world.refineSelectCameraAbsoluteOrientation(pairWorldViews, null, 1000);
-			world.refineSelectCameraAbsoluteOrientation(pairWorldViews, null, 100);
-			world.relativeTransformsFromAbsoluteTransforms();
-	console.log("refineCameraAbsoluteOrientation");
-			// world.refineCameraAbsoluteOrientation(null, 1000);
-			world.refineCameraAbsoluteOrientation(null, 100); // lots
-
-			world.estimate3DPoints();
-			// world.patchInitBasicSphere(false);
-			world.patchInitBasicSphere(true);
-// if(iter==1){
-	console.log("probe3D");
-			// add
+			// find new point3D spread
+			console.log("probe3D");
 			world.probe3D();
-// }
+			// update patches ... ?
+			var ps3D = world.toPointArray();
+			for(var p=0; p<ps3D.length; ++p){
+				var p3D = ps3D[p];
+				world.generateMatchAffineFromPatches(p3D);
+			}
+			world.estimate3DErrors(true); // spread error ..... for new matches ...
+
+
+			// update view locations
+			world.refineSelectCameraAbsoluteOrientation(pairWorldViews, null, 1000);
+			world.refineCameraAbsoluteOrientation(null, 1000); // lots
 			world.estimate3DErrors(true);
 
-			// drops
+			// re-estimate matches & points3D &
+			world.averagePoints3DFromMatches();
+			world.patchInitBasicSphere(true);
+			world.relativeFFromSamples();
+
+
+			// drop worst
+			console.log("FILTER");
+			world.printPoint3DTrackCount();
 			world.dropNegative3D();
 			world.filterGlobalMatches(false, 0, 3.0,3.0,3.0,3.0, false);
-			world.filterMatchGroups();
-			// world.estimate3DErrors(true);
-
-			// this would kill a lot:
+			world.printPoint3DTrackCount();
+			// world.filterMatchGroups();
 			// this.filterSphere3D(2.0);
 
-
-			world.relativeTransformsFromAbsoluteTransforms();
+			// point changes => new errors
 			world.estimate3DErrors(true);
+
+
+
 		}
 
 		// TODO: PATCHES LIKELY NEED UPDATING: LOWER ERROR + DRIFT
@@ -10036,7 +10102,7 @@ console.log("embedding points");
 	var points3D = this._embedMatchPoints(world, trackData, worldViewLookup);
 console.log("embedded points");
 	// initialize world
-	world.relativeTransformsFromAbsoluteTransforms();
+	world.copyRelativeTransformsFromAbsolute();
 	world.relativeFFromSamples();
 	world.averagePoints3DFromMatches(true);
 	world.estimate3DErrors(true);
@@ -10290,6 +10356,76 @@ App3DR.ProjectManager.prototype.savePointsFromData = function(pointsData, fxn, c
 	this.savePoints(pointsString, this.pointsFilename(), fxnSavedPoints, this);
 }
 
+
+
+App3DR.ProjectManager.prototype.surfaceTriangulate = function(){ // triangles from points
+	console.log("surfaceTriangulate");
+	var project = this;
+	// do operations
+	var fxnPointsLoaded = function(){
+		console.log("fxnPointsLoaded");
+
+		// load from points file
+		var pnts = [];
+		var nrms = [];
+		var mesh = new Mesh3D(pnts,nrms);
+		var triangles = mesh.generateSurfaces();
+
+		// pass along cameras
+		// pass along views
+
+
+		throw "?";
+
+	}
+	// load final points file
+	project.loadPoints(fxnPointsLoaded, project);
+
+
+
+
+}
+
+
+
+
+App3DR.ProjectManager.prototype.trianglesTexturize = function(){ // find uv source coords from images
+	console.log("trianglesTexturize");
+	var project = this;
+	var views = project.views();
+	console.log(views);
+	// do operations
+	var fxnTrianglesLoaded = function(){
+		console.log("fxnTrianglesLoaded");
+
+		// get each view's maximum resolution file
+
+		var views = project.views();
+		console.log(views);
+		var view = views[0];
+		console.log(view);
+		var size = view.maximumImageSize();
+		console.log(size);
+
+		// load from triangle file
+		var triangles = [];
+
+		//
+
+
+		// ...
+
+		var what = R3D.textureAssigments(views,resolutions,textureSize,triangles);
+		throw "?";
+
+	}
+	// load final points file
+	project.loadTriangles(fxnTrianglesLoaded, project);
+
+
+
+
+}
 
 
 
@@ -11009,6 +11145,50 @@ App3DR.ProjectManager.prototype.calculatePairTracks = function(viewAIn,viewBIn, 
 		App3DR.ProjectManager.addViewsToWorld(world, relativeData["views"], images);
 		App3DR.ProjectManager.addPointsToWorld(world, relativeData["points"]);
 		// solve for tracks
+
+
+
+
+
+// save as point list:
+var str = world.toPointFile(true);
+console.log(str);
+
+
+
+throw "HERE";
+
+
+/*
+// increase resolution:
+	// set cell size:
+	var BAVIEWS = world.toViewArray();
+	for(var i=0; i<BAVIEWS.length; ++i){
+		var view = BAVIEWS[i];
+		// var size = view.sizeFromPercent(0.03); // 1% = 5 | 2% = 9 | 3% = 13
+		// var size = view.sizeFromPercent(0.01); // 9
+		// var size = view.sizeFromPercent(0.005); // 5
+		var size = view.sizeFromPercent(0.002); // ?
+		size = Math.round(size);
+		if(size%2==0){ // make odd
+			size += 1;
+		}
+		view.cellSize(size);
+		console.log("view cell size: "+size)
+	}
+
+
+
+var completeFxn = function(){
+console.log("completeFxn");
+var str = world.toYAMLString();
+console.log(str);
+}
+		world.solve(completeFxn,this);
+
+*/
+throw "not tracks ..."
+
 		world.solveForTracks(worldTracksCompleted, project, null);
 	}
 
@@ -11152,8 +11332,7 @@ App3DR.ProjectManager.addPointsToWorld = function(world, points){
 				to.scale(sizeTo.x,sizeTo.y);
 				var affineAB = R3D.affineMatrixExact(arr1,arr2);
 				// add
-				world.addMatchFromInfo(vJ,fr, vK,to, affineAB, point3D);
-// viewA,pointA,viewB,pointB, affine, location3D, skipEmbed
+				world.addMatchFromInfo(vJ,fr, vK,to, affineAB, point3D, false, true);
 				pointCountAdded++;
 			}
 		}
@@ -12323,6 +12502,23 @@ App3DR.ProjectManager.View.prototype.cameraID = function(){
 }
 App3DR.ProjectManager.View.prototype.directory = function(){
 	return this._directory;
+}
+App3DR.ProjectManager.View.prototype.maximumImageSize = function(){
+	var list = this._pictureInfo;
+	if(list){
+		var maxSize = null;
+		var maxScale = null;
+		for(var i=0; i<list.length; ++i){
+			var item = list[i];
+			var scale = item["scale"];
+			var size = item["size"];
+			if(maxScale==null || scale>maxScale){
+				maxScale = scale;
+				maxSize = size;
+			}
+		}
+	}
+	return null;
 }
 App3DR.ProjectManager.View.prototype.aspectRatio = function(r){
 	if(r!==undefined){
@@ -13693,14 +13889,14 @@ if(distance3D>1.0){
 		}
 	}
 	console.log("....");
-	world.estimate3DPoints();
+	world.averagePoints3DFromMatches();
 	*/
 
 	console.log("....");
 	// world.estimate3DErrors(true);
 	world.estimate3DErrors();
 	// world.estimate3DViews();
-	world.estimate3DPoints();
+	world.averagePoints3DFromMatches();
 
 
 	// world.filterGlobal();
@@ -13709,7 +13905,7 @@ if(distance3D>1.0){
 // throw "??";
 	// this.estimate3DErrors();
 	// this.estimate3DViews();
-	// this.estimate3DPoints();
+	// this.averagePoints3DFromMatches();
 	//Stereopsis.World.prototype.addMatchForViews = function(viewA,pointA, viewB,pointB, scaleAtoB, angleAtoB){
 	//
 

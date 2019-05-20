@@ -16932,6 +16932,108 @@ R3D.filterFeaturesBasedOn = function(featuresA, imageMatrixA, filterType, percen
 
 // texture / triangulating / blending
 
+R3D.optimumTriangleTextureImageAssignment = function(views,resolutions,triangles3D,textureSize){ // COULD HAVE NEW TRIANGLES
+
+	// triangles are typically connected at the vertex -> make sure triangles are connected components
+
+	// insert triangles into space
+
+	// for each UNIQUE vertex:
+	// get list of views acceptible to project to
+	//		- view facing opposite to triangle normal
+	//		=> ray-triangle-intersection
+	// order list based on priority (projected patch size = distance & angle)
+
+	// for each triangle
+	// if any view is NOT present in all 3 vertexes, the view should be dropped (silhouette)
+
+	// while check:
+		// greedy algorithm:
+		// classify all triangles as: interal or frontier:
+		// place all frontier vertices into queue (any triangle with vertices not pointing to same texture)
+		// while Q not empty:
+		//		pop next (frontier) vertex off
+		//		for each possible image index (in ordered list)
+		//			if switching the index results in a reduced count:
+		//				change index
+		//				remove all adjacent vertexes from Q
+		//				add back any adjacent vertexes that are frontiers
+		//				continue
+		// -> vertexes are all assigned to desired texture
+
+		// for each triangle [not new ones & ignore marked old]:
+		//		if projected edge size > maximum size
+		//			divide triangle * adjacent triangles up
+		//			new vertex possible views = all of triangle's initial settings
+		//			add any adjacent frontier vertices to Q
+		// 			check = true
+	// -> list of triangles & views & 2D location
+
+
+// TODO: HOW TO DO THIS PROGRESSIVLEY @ SCALE ?
+	// local registration phase: -- requires images to be present at check time
+	// for each vertex: [pick image for which vertex is most directly pointing straight?]
+	//		generate a needle
+	// 		for each view affecting vertex (up to 3 for triangle):
+	//			generate a haystack using inverse projection ~ matrix
+	//			find optimal NCC location inside window (9+ px up to ~1/3rd of triangle 2D size)
+	//			update
+	//
+	//
+
+	//
+
+	/*
+		view absolute orientations
+		view resolutions
+		triangle list - Tri3D
+
+
+		A) find best possible views for each vertex [resolution, distance, skew]
+		B) find optimal view for vertex : minimizing blending
+		C) subdivide triangles [remove if necessary]
+
+		OUTPUT:
+			vertex-view assignments
+			vertex-view-image source locations [normalized?]
+
+
+	*/
+
+	// up to 3 triangles2D for each triangle3D:
+	// [{"view":INDEX, "triangle":Tri2D}]
+	return {"triangles3D":null, "triangles2D":null}; // views = vertex-view assignments [indexes]
+}
+
+R3D.optimumTriangleTextureBinning = function(resolutions,triangles3D,triangles2D,textureSize){
+	/*
+		for each triangle3D-2D:
+			create best rectangle container -- padded by 1 px
+		-> list of rectangles
+
+		rectangle-atlas packing
+
+		for each triangle3D-2D:
+			lookup final texture assignment
+			lookup final rectangle position
+			map uv 2D points to final locations
+
+
+		OUTPUT:
+			mapping: triangle3D->triangle2D texture index & locations
+
+
+	*/
+	return {"triangles3D":null, "triangles2D":null, "textures":null};
+}
+R3D.triangleTexture = function(image,triangles2D,views,view){
+	// color image for triangles using views for single view
+	// determine barycentric percentage to ADD == accumulator
+	// ...
+	return null;
+}
+
+
 
 R3D.triangulateTexture = function(inputImages, inputTriangles, inputWeights, outputImage, outputTriangle, paddingOut){ // single channel combining of colors in [0,1]
 	// inputImages: array of 0-1 floats, width, height

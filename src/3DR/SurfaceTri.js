@@ -701,9 +701,12 @@ SurfaceTri.prototype.loadPointFile = function(){
 	// var sourceFileName = "./images/points/bunny_30571.pts";
 	// var sourceFileName = "./images/points/test.pts";
 	// var hasNormals = false;
-	var sourceFileName = "./images/points/test_normals.pts";
+	// var sourceFileName = "./images/points/test_normals.pts";
 	// var sourceFileName = "./images/points/test_normals_1314.pts";
 	// var sourceFileName = "./images/points/test_normals_2468.pts";
+	var sourceFileName = "./images/points/pika_normals_9.pts";
+	// var sourceFileName = "./images/points/pika_normals_5.pts";
+	var doNormalizing = false;
 	var hasNormals = true;
 	var ajax = new Ajax();
 	ajax.get(sourceFileName,this,function(e){
@@ -743,19 +746,21 @@ SurfaceTri.prototype.loadPointFile = function(){
 		var center = V3D.avg(min,max);
 		var range = V3D.sub(max,min);
 		// center at origin, scaled to [0,1]
-		var trans = new Matrix3D();
-		trans.identity();
-		trans.translate(-center.x,-center.y,-center.z);
-		trans.scale( 2.0/Math.max(range.x,range.y,range.z) );
-		for(i=0;i<len;++i){
-			v = list[i];
-			trans.multV3D(v,v);
-			// if(v==null){
-			// 	throw new Error("null v");
-			// }
-			// if( isNaN(v.x) || isNaN(v.y) || isNaN(v.z) ){
-			// 	throw new Error("found nanish "+v);
-			// }
+		if(doNormalizing){
+			var trans = new Matrix3D();
+			trans.identity();
+			trans.translate(-center.x,-center.y,-center.z);
+			trans.scale( 2.0/Math.max(range.x,range.y,range.z) );
+			for(i=0;i<len;++i){
+				v = list[i];
+				trans.multV3D(v,v);
+				// if(v==null){
+				// 	throw new Error("null v");
+				// }
+				// if( isNaN(v.x) || isNaN(v.y) || isNaN(v.z) ){
+				// 	throw new Error("found nanish "+v);
+				// }
+			}
 		}
 		// TODO: UNCOMMENT
 		// this.startPointCloud(list);
@@ -855,13 +860,11 @@ console.log("maxP: "+maxP);
 
 }
 SurfaceTri.prototype.startPointCloud = function(pts,nrms){
-	console.log("start point cloud")
-
+	console.log("start point cloud");
 GLOBAL_LASTTRI = null;
 GLOBAL_LAST_PREV = null;
 GLOBAL_LAST_NEXT = null;
 GLOBAL_RAYS = null;
-	// console.log(pts);
 	var mesh = new Mesh3D(pts,nrms);
 	var triangles = mesh.generateSurfaces();
 	// var triangles = [];
@@ -890,9 +893,7 @@ GLOBAL_RAYS = null;
 	var allTriangles = mesh.outputTriangles();
 	console.log(allTriangles);
 	var yaml = R3D.outputTriangleModel(allTriangles);
-	// console.log(yaml);
-
-
+	console.log(yaml);
 
 /*
 	this._mlsMesh = new MLSMesh3D();

@@ -368,11 +368,63 @@ https://cloud.google.com/appengine/docs/nodejs/
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-- PAIRWISE CLIPPING SPHERES in 3D
 
-- something seems to be limiting probe3D
-	- why does second loop have fewer probe3D locations?
-	- does the match NCC need to be recalculated?
+- filtering after probe3d removes most of the added matches
+	- is the high error related to the optimal points not all aligning ?
+	-
+
+
+- print out the new / 3+ matches to screen to see ERROR ?
+
+
+
+
+triangle filename exist?
+	no => generate triangles
+		set triangle.yaml
+yes=>
+
+is trianglesCount != null?
+	no => map triangle vertex to views
+		map triangles to a texture atlas
+		set trianglesCount = #
+yes=>
+
+is textureCount != null?
+	no => initialize packing with each view necessary from triangles
+		=> iteritively load views & update texture files until done
+		set textureCount = #
+yes=>
+
+scene filename exist?
+	no =>
+		copy triangles / textures / etc from reconstruction into new scene directory
+
+yes =>
+
+done
+
+
+
+- tesellation:
+	- file with just list of points
+	- triangulate algorithm
+	- output to triangles.yaml
+- texuring
+	- file with just list of triangles
+	- view geometry decide vertexes
+	- output to texure start file
+- texture images:
+	- iteritively load images & views for color
+	- save to image files
+
+
+
+
+
+
+		- PAIRWISE CLIPPING SPHERES in 3D
+
 
 ~ cleaning up 3+ matches points by dropping worst NCC point2D
 	- no clear divisions ... maybe plot some ?
