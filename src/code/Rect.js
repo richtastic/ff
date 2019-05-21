@@ -1,5 +1,5 @@
 // Rect.js
-Rect.pack = function(rectList, bound, isList){ 
+Rect.pack = function(rectList, bound, isList){
 	if(isList){ // pack to N bounds - minimized
 		console.log("RECT PACK LIST");
 		var boundArea = bound.area();
@@ -7,7 +7,7 @@ Rect.pack = function(rectList, bound, isList){
 			return a.area()>b.area() ? -1 : 1;
 		});
 		console.log(rectList)
-		var unpackable = []; // too big / invalid / full, 
+		var unpackable = []; // too big / invalid / full,
 		var bins = [];
 		var i, j, k;
 		var maxAreaPercent = 0.95;
@@ -44,7 +44,7 @@ Rect.pack = function(rectList, bound, isList){
 						// console.log(" => don't try "+(areaRatio));
 						continue;
 					}
-					// good to try to fit in 
+					// good to try to fit in
 					// copy all existing rects to remember best placements:
 					var copyList = [];
 					for(k=0; k<list.length; ++k){
@@ -77,7 +77,7 @@ Rect.pack = function(rectList, bound, isList){
 					}
 				}
 				if(!added){ // make new bin
-					//console.log("  => new bin");
+					// console.log("  => new bin");
 					rect.x(0);
 					rect.y(0);
 					bin = {"list":[rect], "area":rect.area(), "fails":0};
@@ -108,7 +108,7 @@ Rect._packSingle = function(rectList, bound, iterationsMax){ // updates rectList
 	// memory.addFunction( Memory2D.EVENT_SERIES, this.handleMemorySeries, this);
 	// memory.addFunction( Memory2D.EVENT_FAILURE, this.handleMemoryFailure, this);
 	var result = memory.run(false, iterationsMax);
-	
+
 	// for(i=0;i<len;++i){
 	// 	console.log( i+": "+rectList[i].area() );
 	// }

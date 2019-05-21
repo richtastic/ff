@@ -10444,7 +10444,10 @@ App3DR.ProjectManager.prototype.trianglesTexturize = function(){ // find uv sour
 
 		// get view resolutions
 		var textureSize = new V2D(512,512);
-		var resolutionScale = 0.5;
+		// var textureSize = new V2D(1024,1024);
+		// var resolutionScale = 0.5;
+		// var resolutionScale = 0.25;
+		var resolutionScale = 0.125;
 		var resolutions = [];
 		var transforms = [];
 		var cameras = [];
@@ -10509,7 +10512,7 @@ App3DR.ProjectManager.prototype.trianglesTexturize = function(){ // find uv sour
 		var triangles2D = info["destinations2D"];
 		var maxSize = null;
 		// 2D texture packing
-		var info = R3D.optimumTriangleTexturePacking(textureSize,triangles2D,maxSize);
+		var info = R3D.optimumTriangleTexturePacking(textureSize,triangles2D,maxSize,resolutionScale);
 
 		throw "?"
 

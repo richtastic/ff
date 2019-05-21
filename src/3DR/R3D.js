@@ -17453,6 +17453,9 @@ R3D.optimumTriangleTextureImageAssignment = function(transforms,cameras,resoluti
 					var d01 = V2D.distance(ps[0],ps[1]);
 					var d02 = V2D.distance(ps[0],ps[2]);
 					var d12 = V2D.distance(ps[1],ps[2]);
+					d01 *= resolutionScale;
+					d02 *= resolutionScale;
+					d12 *= resolutionScale;
 					// scale up into proportional size:
 					var r01 = d01/l01;
 					var r02 = d02/l02;
@@ -17461,6 +17464,7 @@ R3D.optimumTriangleTextureImageAssignment = function(transforms,cameras,resoluti
 					d01 = Math.max(l01*r02,l01*r12,d01);
 					d02 = Math.max(l02*r01,l02*r12,d02);
 					d12 = Math.max(l12*r01,l12*r02,d12);
+
 					// POSSIBLE VERY SKEWED TRIANGLE / PROJECTION => LIMIT ITERATIONS
 					var max = Math.max(d01,d02,d12);
 						if(maxEdgeLength===null){
@@ -17555,15 +17559,82 @@ R3D.optimumTriangleTextureImageAssignment = function(transforms,cameras,resoluti
 	return {"vertexes3D":outputVertexes3D,"triangles3D":outputTri3D, "sources2D":outputTri2D, "destinations2D":outputTriFinal2D, "views2D":outputViews2D, "views":outputViews};
 }
 
-R3D.optimumTriangleTexturePacking = function(textureSizes,triangles2D,maxSize){
-	// convert triangles2D into 'optimum' rectangles
+R3D.optimumTriangleTexturePacking = function(textureSizes,triangles2D,resolutionScale,maxSize){ // convert triangles2D into 'optimum' rectangles
+	resolutionScale = resolutionScale!==undefined ? resolutionScale : 1.0;
+	if(!maxSize){
+		maxSize = textureSizes.copy();
+	}
+	var padding = 1;
 	console.log(textureSizes,triangles2D,maxSize);
+
+	var atlas = new TextureAtlas(textureSizes);
+
+	// rotate triangles into optimal rects:
+	console.log(triangles2D);
+	var sortArea = function(a,b){
+		return a["l"] < b["l"] ? -1 : 1;
+	};
+	var infos = [];
+	for(var i=0; i<triangles2D.length; ++i){
+		var tri = triangles2D[i];
+		// var A = tri.A();
+		// var B = tri.B();
+		// var C = tri.C();
+		var A = tri[0];
+		var B = tri[1];
+		var C = tri[2];
+		var sizeAB = Code.triSizeWithBase2D(A,B,C);
+		var sizeBC = Code.triSizeWithBase2D(B,C,A);
+		var sizeAC = Code.triSizeWithBase2D(C,A,B);
+		if(!sizeAB || !sizeBC || !sizeAC){
+			console.log(A,B,C);
+			// .... why are some areas 0 ... ?
+			continue;
+		}
+		var angleAB = -V2D.angleDirection(V2D.DIRX,V2D.sub(B,A)); // about A
+		var angleBC = -V2D.angleDirection(V2D.DIRX,V2D.sub(C,B)); // about B
+		var angleCA = -V2D.angleDirection(V2D.DIRX,V2D.sub(A,C)); // about C
+		var sets = [];
+			sets.push({"o":A,"a":angleAB,"s":sizeAB,"l":sizeAB.lengthSquare()});
+			sets.push({"o":B,"a":angleBC,"s":sizeBC,"l":sizeBC.lengthSquare()});
+			sets.push({"o":C,"a":angleCA,"s":sizeAC,"l":sizeAC.lengthSquare()});
+		// pick smallest area soln
+		sets.sort(sortArea);
+		var min = sets[0];
+		// var scale = Math.min(maxSize.x/min["s"].x, maxSize.y/min["s"].y, 1);
+		var scale = 1.0;
+		var org = min["o"];
+		var ang = min["a"];
+		var siz = min["s"];
+		// transform points
+		var pnts = [A.copy(),B.copy(),C.copy()];
+		for(var j=0; j<pnts.length; ++j){
+			var pnt = pnts[j];
+			pnt.sub(org);
+			pnt.rotate(ang);
+			pnt.scale(scale);
+		}
+		var info = {"points":pnts};
+		infos.push(info);
+		var map = atlas.addRectMapping(siz, info);
+
+	}
+
+	console.log(infos);
+	// throw "?"
+
+	//
+	var result = atlas.pack();
+	console.log(result);
+	var objects = result["objects"];
+	var pages = result["sheets"];
 
 	throw "yep";
 
 
 
 	// calculate packing
+	console.log("set packing");
 
 
 	var pages = [];

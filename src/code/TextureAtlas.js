@@ -4,8 +4,10 @@ triangle 3D -> texture image -> texture 2D
 loading / saving
 */
 // --------------------------------------------------------------------------------------------------------------------
-function TextureAtlas(){
+function TextureAtlas(size){
+	this._maximumTextureSize = size.copy();
 	this._textures = [];
+	this._mappings = []; // list of all texture triangles
 }
 // --------------------------------------------------------------------------------------------------------------------
 TextureAtlas.prototype.addTexture = function(location){
@@ -34,8 +36,9 @@ TextureAtlas.prototype.loadTextures = function(){
 TextureAtlas.prototype._textureLoaded = function(){
 	console.log("loaded");
 }
-
-
+TextureAtlas.prototype.addMapping = function(m){
+	this._mappings.push(m);
+}
 TextureAtlas.prototype.addRectMapping = function(size2D, data){
 	var map = new TextureAtlas.Mapping(size2D, data);
 	this.addMapping(map);
@@ -45,8 +48,8 @@ TextureAtlas.prototype.pack = function(){
 	console.log("PACKING ...");
 	// go thru individual triangles & combine into texture
 	var maxTextureSize = this._maximumTextureSize;
-	var textureWidth = maxTextureSize;
-	var textureHeight = maxTextureSize;
+	var textureWidth = maxTextureSize.x;
+	var textureHeight = maxTextureSize.y;
 	var bounds = new Rect(0,0, textureWidth, textureHeight);
 console.log(" bounds: "+bounds);
 	var mappings = this._mappings;
@@ -57,7 +60,6 @@ console.log(" bounds: "+bounds);
 		rects.push(rect);
 	}
 	var packing = Rect.pack(rects, bounds, true);
-
 	console.log(packing);
 
 	var invalid = packing["invalid"];
@@ -85,7 +87,7 @@ console.log(" bounds: "+bounds);
 }
 
 // TextureAtlas.prototype.addTriangleTexture = function(imageSource){
-// 	// 
+// 	//
 // }
 
 
@@ -140,6 +142,3 @@ TextureAtlas.Mapping.prototype.rect = function(rect){
 TextureAtlas.Mapping.prototype.data = function(data){
 	return this._data;
 }
-
-
-
