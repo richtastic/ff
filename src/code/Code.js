@@ -1318,6 +1318,15 @@ Code.setArrayConstant = function(arr,c){
 	return arr;
 }
 // Code.appendArray = function(a,b){
+
+Code.arrayMap = function(arr, fxn){
+	var i, len = arr.length;
+	for(i=0;i<len;++i){
+		arr[i] = fxn(arr[i]);
+	}
+	return arr;
+}
+
 Code.arrayPushArray = function(a,b, start,end){
 	if(a && b){
 		start = start!==undefined ? start : 0;

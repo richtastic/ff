@@ -5877,10 +5877,12 @@ App3DR.ProjectManager = function(relativePath, operatingStage, readyFxn){ // ver
 
 	this._pointsFilename = null;
 	this._pointsCount = null;
+	this._pointData = null;
 
 	this._triangleFilename = null;
 	this._triangleCount = null;
 	this._textureCount = null;
+	this._triangleData = null;
 
 	this._sceneID = null;
 
@@ -6769,6 +6771,31 @@ App3DR.ProjectManager.prototype._loadPointsComplete = function(object, data){
 	var callback = object["callback"];
 	var context = object["context"];
 	this._pointsData = this.dataToObject(data);
+	if(callback && context){
+		callback.call(context, this);
+	}
+}
+
+
+App3DR.ProjectManager.prototype.saveTriangles = function(string, filename, callback, context, object){
+	console.log("saveTriangles: ");
+	var path = Code.appendToPath(this._workingPath, App3DR.ProjectManager.RECONSTRUCT_DIRECTORY, filename);
+	var yamlBinary = Code.stringToBinary(string);
+	this.addOperation("SET", {"path":path, "data":yamlBinary}, callback, context);
+}
+App3DR.ProjectManager.prototype.loadTriangles = function(callback, context, object){
+	var path = Code.appendToPath(this._workingPath, App3DR.ProjectManager.RECONSTRUCT_DIRECTORY, this.triangleFilename());
+	console.log("loadTriangles: "+path);
+	var object = {};
+		object["callback"] = callback;
+		object["context"] = context;
+	this.addOperation("GET", {"path":path}, this._loadTrianglesComplete, this, object);
+}
+App3DR.ProjectManager.prototype._loadTrianglesComplete = function(object, data){
+	console.log("_loadTrianglesComplete");
+	var callback = object["callback"];
+	var context = object["context"];
+	this._triangleData = this.dataToObject(data);
 	if(callback && context){
 		callback.call(context, this);
 	}
@@ -10398,24 +10425,166 @@ App3DR.ProjectManager.prototype.trianglesTexturize = function(){ // find uv sour
 	var fxnTrianglesLoaded = function(){
 		console.log("fxnTrianglesLoaded");
 
-		// get each view's maximum resolution file
+		var triangleData = this._triangleData;
+		console.log(triangleData);
+		var triangleCameras = triangleData["cameras"];
+		var triangleViews = triangleData["views"];
+		var triangles = triangleData["triangles"];
+		var vertexes = triangleData["vertexes"];
 
+		var cameraFromID = {};
+		// var Ks = [];
+		for(var i=0; i<triangleCameras.length; ++i){
+			var cam = triangleCameras[i];
+			var K = cam["K"];
+				K = Matrix.fromObject(K); // TODO: or if fx,fy,s,cx,cy
+			cameraFromID[cam["id"]] = K;
+		}
 		var views = project.views();
-		console.log(views);
-		var view = views[0];
-		console.log(view);
-		var size = view.maximumImageSize();
-		console.log(size);
+
+		// get view resolutions
+		var textureSize = new V2D(512,512);
+		var resolutionScale = 0.5;
+		var resolutions = [];
+		var transforms = [];
+		var cameras = [];
+		for(var i=0; i<triangleViews.length; ++i){
+			var tv = triangleViews[i];
+			var viewID = tv["id"]
+			var camID = tv["camera"];
+			var K = cameraFromID[camID];
+			var viewTransform = tv["transform"];
+			var transform = Matrix.fromObject(viewTransform); // extrinsic
+				// absolute ???
+			var view = this.viewFromID(viewID);
+			var size = view.maximumImageSize();
+			resolutions.push(size);
+			transforms.push(transform);
+			cameras.push(K);
+		}
+		// get view orientations
+
+		// convert to common format:
+		vertexes = Code.copyArray(vertexes);
+		triangles = Code.copyArray(triangles);
+		for(var i=0; i<vertexes.length; ++i){
+			var vertex = vertexes[i];
+			var x = vertex["X"];
+			var y = vertex["Y"];
+			var z = vertex["Z"];
+			vertexes[i] = new V3D(x,y,z);
+		}
+		for(var i=0; i<triangles.length; ++i){
+			var triangle = triangles[i];
+			var a = triangle["A"];
+			var b = triangle["B"];
+			var c = triangle["C"];
+				a = a["i"];
+				b = b["i"];
+				c = c["i"];
+			triangles[i] = [a,b,c];
+		}
 
 		// load from triangle file
-		var triangles = [];
+		// console.log(triangles);
+		// console.log(vertexes);
+		var triangles3D = [];
+		for(var i=0; i<triangles.length; ++i){
+			var triangle = triangles[i];
+			var a = triangle[0];
+			var b = triangle[1];
+			var c = triangle[2];
+			a = vertexes[a];
+			b = vertexes[b];
+			c = vertexes[c];
+			var t = new Tri3D(a.copy(),b.copy(),c.copy());
+			triangles3D.push(t);
+		}
+		console.log(triangles3D);
 
-		//
+		// 3D-2D texture sourcing
+		var info = R3D.optimumTriangleTextureImageAssignment(transforms,cameras,resolutions,triangles3D,textureSize,resolutionScale);
+		console.log(info);
+
+		var triangles2D = info["destinations2D"];
+		var maxSize = null;
+		// 2D texture packing
+		var info = R3D.optimumTriangleTexturePacking(textureSize,triangles2D,maxSize);
+
+		throw "?"
 
 
-		// ...
+		// var triangleCameras = triangleData["cameras"];
+		// var triangleViews = triangleData["views"];
+		// triangleData["triangles"] = triangles;
+		// triangleData["vertexes"] = vertexes;
+		// triangleData["packing"] = viewList;
 
-		var what = R3D.textureAssigments(views,resolutions,textureSize,triangles);
+
+/*
+		views:
+			- ...
+		vertexes:
+			-
+				X: ...
+				Y: ...
+				Z: ...
+		uvs:
+			-
+				x:
+				y:
+		triangles:
+			-
+				A:
+					i: # vertex index
+					u: # uv index
+					v: # view index
+				B:
+					i:
+					u:
+					v:
+				C:
+					i:
+					u:
+					v:
+				t: # texture atlas index
+			...
+		textures:
+			-
+				id: "0"
+				file: tex0.png
+				width: 512
+				height: 512
+
+		packing:
+			views: # list of views yet to load - pop off when done
+				- index in list to load
+
+*/
+
+/*
+		vertexes:
+		X,Y,Z
+
+		triangles:
+			-
+				A:
+					i: vertex
+					v: view index assignment
+				B:
+					i: vertex
+					v: view index assignment
+				C:
+					i: vertex
+					v: view index assignment
+
+				v:
+					- index
+					- a: x,y
+					- b: x,y
+					- c: x,y
+*/
+		// var what = R3D.textureAssigments(views,resolutions,textureSize,triangles);
 		throw "?";
 
 	}
@@ -12511,12 +12680,15 @@ App3DR.ProjectManager.View.prototype.maximumImageSize = function(){
 		for(var i=0; i<list.length; ++i){
 			var item = list[i];
 			var scale = item["scale"];
-			var size = item["size"];
 			if(maxScale==null || scale>maxScale){
 				maxScale = scale;
-				maxSize = size;
+				maxSize = item;
 			}
 		}
+		var width = maxSize["width"];
+		var height = maxSize["height"];
+		maxSize = new V2D(width,height);
+		return maxSize;
 	}
 	return null;
 }

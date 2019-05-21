@@ -368,6 +368,8 @@ https://cloud.google.com/appengine/docs/nodejs/
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+- triangle texture mapping
+
 
 - filtering after probe3d removes most of the added matches
 	- is the high error related to the optimal points not all aligning ?
@@ -392,7 +394,7 @@ yes=>
 
 is textureCount != null?
 	no => initialize packing with each view necessary from triangles
-		=> iteritively load views & update texture files until done
+		=> iteratively load views & update texture files until done
 		set textureCount = #
 yes=>
 
@@ -406,7 +408,7 @@ done
 
 
 
-- tesellation:
+- tessellation:
 	- file with just list of points
 	- triangulate algorithm
 	- output to triangles.yaml
