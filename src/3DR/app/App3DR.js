@@ -3735,17 +3735,12 @@ App3DR.App.Model3D.prototype.setViews = function(input){
 
 }
 App3DR.App.Model3D.prototype.setTextures = function(images, triangles, vertexes){
-	console.log(images);
-	console.log(triangles);
-	console.log(vertexes);
+	// this only currently works because of delatyed loading of large model images
+	// console.log(images);
+	// console.log(triangles);
+	// console.log(vertexes);
 	var currentLength = this._textures.length;
 	console.log("current texture length: "+currentLength);
-	// render objects
-	// this._renderTriangleTextureUVList = [];
-	// this._renderTriangleTexturePointList = [];
-	// this._renderTriangleTextureUVPoints = [];
-	// this._renderTriangleTextureVertexPoints = [];
-	// this._triangeTextures = [];
 	// image texture binding
 	var bindedTextures = [];
 	var textureCount = images.length;
@@ -3790,8 +3785,6 @@ App3DR.App.Model3D.prototype.setTextures = function(images, triangles, vertexes)
 		cy = 1.0 - cy;
 		texturePoints.push(ax,ay,bx,by,cx,cy);
 	}
-	// console.log(vertexPointList);
-	// console.log(texturePointList);
 	this._stage3D.selectProgram(1);
 	// this._vertexPositionAttrib = this._stage3D.enableVertexAttribute("aVertexPosition");
 	// this._triangletextureCoordAttrib = this._stage3D.enableVertexAttribute("aTextureCoord");
@@ -3809,180 +3802,7 @@ App3DR.App.Model3D.prototype.setTextures = function(images, triangles, vertexes)
 		this._textureUVPoints[j] = this._stage3D.getBufferFloat32Array(texturePoints, 2);
 		this._textureVertexPoints[j] = this._stage3D.getBufferFloat32Array(vertexPoints, 3);
 	}
-
-	console.log(this._textures);
-	console.log(this._renderTextureUVList);
-	console.log(this._renderTexturePointList);
-
-	// this._textureUVPoints[i] = this._stage3D.getBufferFloat32Array(texturePoints, 2);
-	// this._textureVertexPoints[i] = this._stage3D.getBufferFloat32Array(vertexPoints, 3);
-
-
-/*
-this._textures = [];
-var nextIndex = 0;
-
-this._renderTextureUVList = [];
-this._renderTexturePointList = [];
-this._textureUVPoints = [];
-this._textureVertexPoints = [];
-
-var lines = [];
-
-var views = this._views;
-for(i=0; i<views.length; ++i){
-	var view = views[i];
-	var transform = view["transform"];
-	var tx = transform.get(0,3);
-	var ty = transform.get(1,3);
-	var tz = transform.get(2,3);
-	var o = new V3D(0,0,0);
-	var x = new V3D(1,0,0);
-	var y = new V3D(0,1,0);
-	var z = new V3D(0,0,1);
-	// var z = new V3D(0,0,-1);
-	o = transform.multV3DtoV3D(o);
-	x = transform.multV3DtoV3D(x);
-	y = transform.multV3DtoV3D(y);
-	z = transform.multV3DtoV3D(z);
-	var dirX = V3D.sub(x,o);
-	var dirY = V3D.sub(y,o);
-	var dirZ = V3D.sub(z,o);
-	lines.push(o,x);
-	lines.push(o,y);
-	lines.push(o,z);
-//		console.log("VIEW ORIGIN : "+o);
-
-
-	var K = view["K"];
-console.log(K);
-// console.log(K);
-// 		if(!K || K.cols()==0){
-// 			K = new Matrix(3,3).fromArray([1,0,0, 0,1,0, 0,0,1]);
-// 		}
-// console.log(K);
-	var image = view["image"];
-	var obj = this._viewImages[i];
-//console.log(image.width,image.height)
-//Code.addChild(Code.getBody(), image);
-	if(obj){
-		var texture = obj["texture"];
-		var original = obj["original"];
-//console.log(texture);
-console.log(texture.complete+" ? ");
-console.log(texture.width,texture.height);
-		var horz = obj["width"];
-		var vert = obj["height"];
-		var bind = this._canvas3D.bindTextureImageRGBA(texture);
-		obj["bind"] = bind;
-		this._textures.push(bind);
-
-// TODO: PROJECT TL/TR/BR/BL TO RAY & INTERSECT WITH PLANE+NORM*delta
-//
-//
-//console.log(K)
-		var wid = image.width;
-		var hei = image.height;
-		var fx = K.get(0,0);
-		var fy = K.get(1,1);
-		var cx = K.get(0,2);
-		var cy = K.get(1,2);
-		var s = K.get(0,1);
-		var camWid = 1.0;
-camWid = 0.20;
-		var camHei = camWid*(hei/wid);
-		var fyOfx = fy/fx;
-//console.log("CAM WID: "+camWid+" x "+camHei);
-//console.log("fyOfx: "+fyOfx);
-//s = 0.25;
-		var CX = camWid * cx;
-		var CY = camHei * cy;
-		var SX = camHei * cy * s; // top left offset
-		var FX = camHei * s; // full offset
-
-//console.log(dirX.length(),dirY.length(),dirZ.length());
-
-
-		var off = dirZ.copy().scale(camWid * fx);
-		var pBL = o.copy().add( dirX.copy().scale(-CX) ) .add( dirY.copy().scale(CY) )  .add( dirX.copy().scale(SX) );
-		pBL.add( off );
-		var pBR = pBL.copy().add( dirX.copy().scale(camWid) );
-		var pTR = pBL.copy().add( dirX.copy().scale(camWid) ).add( dirY.copy().scale(-camHei) ) .add( dirX.copy().scale(FX) );
-		var pTL = pBL.copy().add( dirY.copy().scale(-camHei) ) .add( dirX.copy().scale(FX) );
-
-		var uvList = [0,vert, horz,vert, horz,1,  horz,1, 0,1, 0,vert];
-		var vertList = [pBL.x,pBL.y,pBL.z, pBR.x,pBR.y,pBR.z, pTR.x,pTR.y,pTR.z,   pTR.x,pTR.y,pTR.z, pTL.x,pTL.y,pTL.z, pBL.x,pBL.y,pBL.z];
-
-		console.log("SRZ: "+horz+" x "+vert);
-	// if(i==0){
-	// if(i==1){
-	if(false){ // none
-	//if(true){ // overlapping
-		console.log("CREATE TEXTURES HERE");
-		var triangleInfo = this._triangulateSurface(i);
-		//console.log(triangleInfo);
-		var triangles = triangleInfo["triangles"];
-		for(var t=0; t<triangles.length; ++t){
-			var tri = triangles[t];
-			var p2Ds = tri["2D"];
-			var p3Ds = tri["3D"];
-			for(var k=0; k<3; ++k){
-				var x = p2Ds[k].x;
-				var y = p2Ds[k].y;
-				x = x / original.width;
-				y = y / original.height;
-				x = x * horz;
-
-				// y flipped
-				// y = y * (1.0 - vert);
-				// y = 1 - y;
-
-				// single line
-				y = 1 + y*vert - y;
-
-				uvList.push(x,y);
-				vertList.push(p3Ds[k].x,p3Ds[k].y,p3Ds[k].z);
-			}
-		}
-		console.log(uvList);
-		console.log(vertList);
-	}
-
-		this._renderTextureUVList[nextIndex] = uvList;
-		this._renderTexturePointList[nextIndex] = vertList;
-		++nextIndex;
-
-		// add lines:
-		var points = this._points3D;
-		if(points){
-			for(var j=0; j<points.length; ++j){
-				var v = points[j];
-				lines.push(o,v);
-			}
-		}
-	}
-}
-
-
-
-
-// set textures:
-//console.log(this._textures)
-
-this._stage3D.selectProgram(1);
-this._vertexPositionAttrib = this._stage3D.enableVertexAttribute("aVertexPosition");
-this._textureCoordAttrib = this._stage3D.enableVertexAttribute("aTextureCoord");
-
-var len = this._textures.length;
-for(i=0; i<len; ++i){
-	var texturePoints = this._renderTextureUVList[i];
-	var vertexPoints = this._renderTexturePointList[i];
-	this._textureUVPoints[i] = this._stage3D.getBufferFloat32Array(texturePoints, 2);
-	this._textureVertexPoints[i] = this._stage3D.getBufferFloat32Array(vertexPoints, 3);
-}
-
-*/
-
+	console.log("added triangle model");
 }
 App3DR.App.Model3D.prototype.setLines = function(input){
 	// CREATE LINES:
@@ -10772,9 +10592,10 @@ App3DR.ProjectManager.prototype.trianglesTexturize = function(){ // find uv sour
 
 		// get view resolutions
 		// var textureSize = new V2D(512,512);
-		var textureSize = new V2D(1024,1024);
-		// var resolutionScale = 0.5;
-		var resolutionScale = 0.25;
+		// var textureSize = new V2D(1024,1024);
+		var textureSize = new V2D(2048,2048);
+		var resolutionScale = 0.5;
+		// var resolutionScale = 0.25;
 		// var resolutionScale = 0.15;
 		// var resolutionScale = 0.125;
 		var resolutions = [];
@@ -10990,8 +10811,8 @@ App3DR.ProjectManager.prototype.trianglesPacking = function(){
 			console.log("FILL : "+currentTexture);
 			var texture = textures[currentTexture];
 			var filename = texture["file"];
-			console.log(imageSource);
-			console.log(textureImage);
+			// console.log(imageSource);
+			// console.log(textureImage);
 			// go thru all trianges with texture i
 			var ext = 0;
 			for(var i=0; i<triangleTris.length; ++i){
@@ -11023,6 +10844,7 @@ App3DR.ProjectManager.prototype.trianglesPacking = function(){
 				}
 			}
 			console.log("extract: "+ext);
+// throw "TESTING"
 			// dISPLAY:
 			/*
 			var image = R3D.imageFromImageMatrix(textureImage, GLOBALSTAGE,function(){
@@ -11036,18 +10858,10 @@ App3DR.ProjectManager.prototype.trianglesPacking = function(){
 				console.log("saveTextureComplete");
 				loadNextTexture();
 			}
-			// var image = textureImage
-			// var width = textureImage.width();
-			// var height = textureImage.height();
-			// var d = new DOImage(image);
-			// var stage = GLOBALSTAGE;
-			// var renderedImage = stage.renderImage(width,height,d, null);
-			var image = R3D.imageFromImageMatrix(textureImage, GLOBALSTAGE,function(){
-				// console.log(image);
-				var imageBase64 = image.src;
-				var imageBinary = Code.base64StringToBinary(imageBase64);
-				var binary = imageBinary;
-				project.saveTriangleTextureFromFilename(filename, binary, saveTextureComplete, project, null);
+			// send image
+			var updatedImage = R3D.imageFromImageMatrix(textureImage, GLOBALSTAGE,function(){
+				var imageBinary = Code.base64StringToBinary(updatedImage.src);
+				project.saveTriangleTextureFromFilename(filename, imageBinary, saveTextureComplete, project, null);
 			});
 		}
 

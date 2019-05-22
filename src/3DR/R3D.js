@@ -17721,14 +17721,9 @@ R3D.triangleTextureApply = function(image,triangles2D,views,view){
 
 
 R3D.textureAddSourceTriangles = function(destinationImage, destinationTri2D, sourceImage, sourceTri2D, vertexSources){
-	// console.log(destinationImage, destinationTri2D, sourceImage, sourceTri2D, vertexSources);
 	var padding = 1;
 	// var transform = Matrix.get2DProjectiveMatrix(fr,to, ImageMat.extractRect_temp3x3, ImageMat.extractRect_temp8x8, ImageMat.extractRect_temp8x1);
 	var transform = R3D.affineMatrixExact(destinationTri2D,sourceTri2D);
-	// console.log(transform+"");
-	//var destinationRect = Code.minRect(destinationTri2D);
-	// var destinationRect = Code.minRect(destinationTri2D);
-	// console.log(destinationRect);
 	var info = V2D.infoArray(destinationTri2D);
 	var min = info["min"];
 	var max = info["max"];
@@ -17750,28 +17745,21 @@ R3D.textureAddSourceTriangles = function(destinationImage, destinationTri2D, sou
 	var dB = destinationTri2D[1];
 	var dC = destinationTri2D[2];
 	var bary = new V3D();
-	// console.log(dW,dH);
 	var destWidth = destinationImage.width();
 	var destR = destinationImage.red();
 	var destG = destinationImage.grn();
 	var destB = destinationImage.blu();
 	for(var j=0; j<dH; ++j){
-		// var wJ = destWidth*j;
+		p.y = j+min.y;
 		for(var i=0; i<dW; ++i){
-			p.set(i+min.x,j+min.y);
+			p.x = i+min.x;
 			var inside = Code.distancePointTri2D(p, dA,dB,dC) <= padding;
 			if(inside){
 				transform.multV2DtoV2D(q,p);
-				// fr.x /= fr.z; fr.y /= fr.z;
 				Code.triBarycentricCoordinate2D(bary, dA,dB,dC, p);
 				var percent = bary.x*pA + bary.y*pB + bary.z*pC;
 				sourceImage.getPoint(v, q.x,q.y);
-				// console.log(p+" -> "+q);
-				// console.log(v);
-				// console.log(percent);
 				v.scale(percent);
-				// destinationImage.setPoin
-				// var index = wJ+i;
 				var index = destWidth*p.y + p.x;
 				destR[index] += v.x;
 				destG[index] += v.y;
@@ -17780,20 +17768,6 @@ R3D.textureAddSourceTriangles = function(destinationImage, destinationTri2D, sou
 		}
 	}
 }
-
-/*
-R3D.triangulateTexture = function(inputImages, inputTriangles, inputWeights, outputImage, outputTriangle, paddingOut){ // single channel combining of colors in [0,1]
-	// inputImages: array of 0-1 floats, width, height
-	// inputTriangles: coordinates of 2D triangle vertices,
-	// inputWeights: 0-1 weights to use for applying color - if null, it will do averaging with 2 images, and median with 3+ images
-	//
-	// output image: array to output 0-1, width, height
-	// outputTriangle: coordinates of 2D triangle vertices
-	// paddingOut: overhanging distance to account for edges (in pixels), defaults to 1
-
-	var inside = Code.insideTrianglePadded3D();
-}
-*/
 
 R3D.highDensityMatchesOLD = function(imageA,widthA,heightA,pointsA, imageB,widthB,heightB,pointsB,     stage){
 	if(!Code.isArray(imageA)){
