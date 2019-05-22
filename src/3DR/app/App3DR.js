@@ -936,7 +936,7 @@ App3DR.prototype._projectBALoad = function(projectManager){
 }
 App3DR.prototype._projectBALoaded = function(object, data){
 	console.log("_projectBALoaded")
-	console.log(object,data)
+	// console.log(object,data)
 	// console.log(data);
 	// console.log(object);
 	var str = Code.binaryToString(data);
@@ -950,6 +950,11 @@ App3DR.prototype._projectBALoaded = function(object, data){
 	var cameras = object["cameras"];
 	var views = object["views"];
 	var points = object["points"];
+
+	var textures = object["textures"];
+	var vertexes = object["vertexes"];
+	var triangles = object["triangles"];
+
 
 	var cameraLookup = {};
 	var cameraLookupIndex = {};
@@ -1013,6 +1018,17 @@ if(points){
 		points3D.push(point3D);
 //console.log("TODO: SCALE ENTIRE SCENE ????? OR INCREASE FRUSTRUM");
 //point3D.scale(0.001);
+	}
+}else if(vertexes){
+	for(var i=0; i<vertexes.length; ++i){
+		var v = vertexes[i];
+		var point3D = new V3D(v["X"],v["Y"],v["Z"]);
+		if(!min3D){
+			min3D = new V3D(point3D.x,point3D.y,point3D.z);
+			max3D = new V3D(point3D.x,point3D.y,point3D.z);
+		}
+		V3D.min(min3D,min3D,point3D);
+		V3D.max(max3D,max3D,point3D);
 	}
 }
 var manager = this._projectManager;
@@ -1086,41 +1102,55 @@ console.log(" possible: "+i+" = "+dot+" @ "+Code.degrees(angle)+" : "+o1+"/"+o2)
 		views3D.push(view);
 	}
 
+
+
+	if(textures){
+		var loadedTextureCount = 0;
+		var expectedTextureCount = textures.length;
+		var loadedTextureImages = Code.newArrayNulls(expectedTextureCount);
+		var fxnLoadedImage = function(i,data){
+			manager.dataToImage(data, function(image){
+				loadedTextureImages[i] = image;
+				loadedTextureCount += 1;
+				console.log("LOADED IMAGES: "+loadedTextureCount);
+				if(loadedTextureCount==expectedTextureCount){
+					console.log("create triangles");
+					app.setTextures(loadedTextureImages, triangles, vertexes);
+				}
+			});
+		}
+		// console.log(textures);
+		for(var i=0; i<textures.length; ++i){
+			var texture = textures[i];
+			var file = texture["file"];
+			// App3DR.ProjectManager.prototype.loadTriangleTextureFromFilename = function(filename, callback, context, object){
+			manager.loadTriangleTextureFromFilename(file, fxnLoadedImage, manager, i);
+		}
+		// throw "LOAD TEXTURES";
+	}
+
 	var app = this._activeApp;
 	app._originalPoints = points;
 console.log("this._originalPoints");
 console.log(app._originalPoints);
 console.log(points2D);
-	app.setPoints(points3D, points2D);
-
+	if(points3D.length>0){
+		app.setPoints(points3D, points2D);
+	}
 	app.setViews(views3D);
-if(!max3D || !min3D){
-	max3D = new V3D(1,1,1);
-	min3D = new V3D(-1,-1,-1);
-}
-console.log(max3D);
-console.log(min3D);
-var range = V3D.sub(max3D,min3D);
-
-var maxDistance = max3D.length();
-
-
-// console.log("maxDistance: "+maxDistance);
-maxDistance = maxDistance * 2;
-
-maxDistance = Math.max(maxDistance,10);
-
-
-app._distanceRange = maxDistance * 0.5;
-
-
-console.log("maxDistance: "+maxDistance);
-
-app._stage3D.frustrumAngle(45);
-app._stage3D.distanceNear(0.01);
-//app._stage3D.distanceFar(100.0);
-
-app._stage3D.distanceFar(maxDistance);
+	if(!max3D || !min3D){
+		max3D = new V3D(1,1,1);
+		min3D = new V3D(-1,-1,-1);
+	}
+	var range = V3D.sub(max3D,min3D);
+	var maxDistance = max3D.length();
+	maxDistance = maxDistance * 2;
+	maxDistance = Math.max(maxDistance,10);
+	app._distanceRange = maxDistance * 0.5;
+	console.log("maxDistance: "+maxDistance);
+	app._stage3D.frustrumAngle(45);
+	app._stage3D.distanceNear(0.01);
+	app._stage3D.distanceFar(maxDistance);
 
 
 console.log("DONE");
@@ -3641,21 +3671,16 @@ camWid = 0.20;
 			this._renderTexturePointList[nextIndex] = vertList;
 			++nextIndex;
 
-
-
-
 			// add lines:
 			var points = this._points3D;
-//			console.log(points)
-			for(var j=0; j<points.length; ++j){
-				var v = points[j];
-				lines.push(o,v);
+			if(points){
+				for(var j=0; j<points.length; ++j){
+					var v = points[j];
+					lines.push(o,v);
+				}
 			}
 		}
 	}
-
-
-
 
 	// set textures:
 	//console.log(this._textures)
@@ -3709,8 +3734,255 @@ App3DR.App.Model3D.prototype.setViews = function(input){
 	}
 
 }
-App3DR.App.Model3D.prototype.setTextures = function(input){
-	// ...
+App3DR.App.Model3D.prototype.setTextures = function(images, triangles, vertexes){
+	console.log(images);
+	console.log(triangles);
+	console.log(vertexes);
+	var currentLength = this._textures.length;
+	console.log("current texture length: "+currentLength);
+	// render objects
+	// this._renderTriangleTextureUVList = [];
+	// this._renderTriangleTexturePointList = [];
+	// this._renderTriangleTextureUVPoints = [];
+	// this._renderTriangleTextureVertexPoints = [];
+	// this._triangeTextures = [];
+	// image texture binding
+	var bindedTextures = [];
+	var textureCount = images.length;
+	for(var i=0; i<images.length; ++i){
+		var image = images[i];
+		var bind = this._canvas3D.bindTextureImageRGBA(image);
+		bindedTextures.push(bind);
+	}
+	// vertex (3D) & uv (2D) binding
+	var texturePointList = Code.newArrayArrays(textureCount);
+	var vertexPointList = Code.newArrayArrays(textureCount);
+	for(var i=0; i<triangles.length; ++i){
+		var tri = triangles[i];
+		var t = tri["t"];
+		var tex = images[t];
+		var texturePoints = texturePointList[t];
+		var vertexPoints = vertexPointList[t];
+		var A = tri["A"];
+		var B = tri["B"];
+		var C = tri["C"];
+		A = A["i"];
+		B = B["i"];
+		C = C["i"];
+		A = vertexes[A];
+		B = vertexes[B];
+		C = vertexes[C];
+		vertexPoints.push(A["X"],A["Y"],A["Z"]);
+		vertexPoints.push(B["X"],B["Y"],B["Z"]);
+		vertexPoints.push(C["X"],C["Y"],C["Z"]);
+		// UV
+		var a = tri["a"];
+		var b = tri["b"];
+		var c = tri["c"];
+		var ax = a["x"]/tex.width;
+		var ay = a["y"]/tex.height;
+		var bx = b["x"]/tex.width;
+		var by = b["y"]/tex.height;
+		var cx = c["x"]/tex.width;
+		var cy = c["y"]/tex.height;
+		ay = 1.0 - ay;
+		by = 1.0 - by;
+		cy = 1.0 - cy;
+		texturePoints.push(ax,ay,bx,by,cx,cy);
+	}
+	// console.log(vertexPointList);
+	// console.log(texturePointList);
+	this._stage3D.selectProgram(1);
+	// this._vertexPositionAttrib = this._stage3D.enableVertexAttribute("aVertexPosition");
+	// this._triangletextureCoordAttrib = this._stage3D.enableVertexAttribute("aTextureCoord");
+	var len = this._textures.length;
+	for(i=0; i<len; ++i){
+		var j = i + currentLength;
+		// push:
+		this._textures[j] = bindedTextures[i];
+		this._renderTextureUVList[j] = texturePointList[i];
+		this._renderTexturePointList[j] = vertexPointList[i];
+		// set
+		var texturePoints = this._renderTextureUVList[j];
+		var vertexPoints = this._renderTexturePointList[j];
+		console.log(texturePoints.length,vertexPoints.length);
+		this._textureUVPoints[j] = this._stage3D.getBufferFloat32Array(texturePoints, 2);
+		this._textureVertexPoints[j] = this._stage3D.getBufferFloat32Array(vertexPoints, 3);
+	}
+
+	console.log(this._textures);
+	console.log(this._renderTextureUVList);
+	console.log(this._renderTexturePointList);
+
+	// this._textureUVPoints[i] = this._stage3D.getBufferFloat32Array(texturePoints, 2);
+	// this._textureVertexPoints[i] = this._stage3D.getBufferFloat32Array(vertexPoints, 3);
+
+
+/*
+this._textures = [];
+var nextIndex = 0;
+
+this._renderTextureUVList = [];
+this._renderTexturePointList = [];
+this._textureUVPoints = [];
+this._textureVertexPoints = [];
+
+var lines = [];
+
+var views = this._views;
+for(i=0; i<views.length; ++i){
+	var view = views[i];
+	var transform = view["transform"];
+	var tx = transform.get(0,3);
+	var ty = transform.get(1,3);
+	var tz = transform.get(2,3);
+	var o = new V3D(0,0,0);
+	var x = new V3D(1,0,0);
+	var y = new V3D(0,1,0);
+	var z = new V3D(0,0,1);
+	// var z = new V3D(0,0,-1);
+	o = transform.multV3DtoV3D(o);
+	x = transform.multV3DtoV3D(x);
+	y = transform.multV3DtoV3D(y);
+	z = transform.multV3DtoV3D(z);
+	var dirX = V3D.sub(x,o);
+	var dirY = V3D.sub(y,o);
+	var dirZ = V3D.sub(z,o);
+	lines.push(o,x);
+	lines.push(o,y);
+	lines.push(o,z);
+//		console.log("VIEW ORIGIN : "+o);
+
+
+	var K = view["K"];
+console.log(K);
+// console.log(K);
+// 		if(!K || K.cols()==0){
+// 			K = new Matrix(3,3).fromArray([1,0,0, 0,1,0, 0,0,1]);
+// 		}
+// console.log(K);
+	var image = view["image"];
+	var obj = this._viewImages[i];
+//console.log(image.width,image.height)
+//Code.addChild(Code.getBody(), image);
+	if(obj){
+		var texture = obj["texture"];
+		var original = obj["original"];
+//console.log(texture);
+console.log(texture.complete+" ? ");
+console.log(texture.width,texture.height);
+		var horz = obj["width"];
+		var vert = obj["height"];
+		var bind = this._canvas3D.bindTextureImageRGBA(texture);
+		obj["bind"] = bind;
+		this._textures.push(bind);
+
+// TODO: PROJECT TL/TR/BR/BL TO RAY & INTERSECT WITH PLANE+NORM*delta
+//
+//
+//console.log(K)
+		var wid = image.width;
+		var hei = image.height;
+		var fx = K.get(0,0);
+		var fy = K.get(1,1);
+		var cx = K.get(0,2);
+		var cy = K.get(1,2);
+		var s = K.get(0,1);
+		var camWid = 1.0;
+camWid = 0.20;
+		var camHei = camWid*(hei/wid);
+		var fyOfx = fy/fx;
+//console.log("CAM WID: "+camWid+" x "+camHei);
+//console.log("fyOfx: "+fyOfx);
+//s = 0.25;
+		var CX = camWid * cx;
+		var CY = camHei * cy;
+		var SX = camHei * cy * s; // top left offset
+		var FX = camHei * s; // full offset
+
+//console.log(dirX.length(),dirY.length(),dirZ.length());
+
+
+		var off = dirZ.copy().scale(camWid * fx);
+		var pBL = o.copy().add( dirX.copy().scale(-CX) ) .add( dirY.copy().scale(CY) )  .add( dirX.copy().scale(SX) );
+		pBL.add( off );
+		var pBR = pBL.copy().add( dirX.copy().scale(camWid) );
+		var pTR = pBL.copy().add( dirX.copy().scale(camWid) ).add( dirY.copy().scale(-camHei) ) .add( dirX.copy().scale(FX) );
+		var pTL = pBL.copy().add( dirY.copy().scale(-camHei) ) .add( dirX.copy().scale(FX) );
+
+		var uvList = [0,vert, horz,vert, horz,1,  horz,1, 0,1, 0,vert];
+		var vertList = [pBL.x,pBL.y,pBL.z, pBR.x,pBR.y,pBR.z, pTR.x,pTR.y,pTR.z,   pTR.x,pTR.y,pTR.z, pTL.x,pTL.y,pTL.z, pBL.x,pBL.y,pBL.z];
+
+		console.log("SRZ: "+horz+" x "+vert);
+	// if(i==0){
+	// if(i==1){
+	if(false){ // none
+	//if(true){ // overlapping
+		console.log("CREATE TEXTURES HERE");
+		var triangleInfo = this._triangulateSurface(i);
+		//console.log(triangleInfo);
+		var triangles = triangleInfo["triangles"];
+		for(var t=0; t<triangles.length; ++t){
+			var tri = triangles[t];
+			var p2Ds = tri["2D"];
+			var p3Ds = tri["3D"];
+			for(var k=0; k<3; ++k){
+				var x = p2Ds[k].x;
+				var y = p2Ds[k].y;
+				x = x / original.width;
+				y = y / original.height;
+				x = x * horz;
+
+				// y flipped
+				// y = y * (1.0 - vert);
+				// y = 1 - y;
+
+				// single line
+				y = 1 + y*vert - y;
+
+				uvList.push(x,y);
+				vertList.push(p3Ds[k].x,p3Ds[k].y,p3Ds[k].z);
+			}
+		}
+		console.log(uvList);
+		console.log(vertList);
+	}
+
+		this._renderTextureUVList[nextIndex] = uvList;
+		this._renderTexturePointList[nextIndex] = vertList;
+		++nextIndex;
+
+		// add lines:
+		var points = this._points3D;
+		if(points){
+			for(var j=0; j<points.length; ++j){
+				var v = points[j];
+				lines.push(o,v);
+			}
+		}
+	}
+}
+
+
+
+
+// set textures:
+//console.log(this._textures)
+
+this._stage3D.selectProgram(1);
+this._vertexPositionAttrib = this._stage3D.enableVertexAttribute("aVertexPosition");
+this._textureCoordAttrib = this._stage3D.enableVertexAttribute("aTextureCoord");
+
+var len = this._textures.length;
+for(i=0; i<len; ++i){
+	var texturePoints = this._renderTextureUVList[i];
+	var vertexPoints = this._renderTexturePointList[i];
+	this._textureUVPoints[i] = this._stage3D.getBufferFloat32Array(texturePoints, 2);
+	this._textureVertexPoints[i] = this._stage3D.getBufferFloat32Array(vertexPoints, 3);
+}
+
+*/
+
 }
 App3DR.App.Model3D.prototype.setLines = function(input){
 	// CREATE LINES:
@@ -3826,51 +4098,53 @@ var useErrors = false;
 	// TRIM SO ONLY POINTS IN 0 & 1 are displayed:
 
 	var points = [];
+	if(input3D){
 	for(var i=0; i<input3D.length; ++i){
 		var v = input3D[i];
 		points.push(v.x,v.y,v.z);
 
-// NEGATIVE Z:
-if(useErrors){
-}else{
-//		points.push(v.x,v.y,-v.z);
-		var imageSuccess = false;
-		if(hasImages){
-			// get color from images
-			var vList = hasImages[i]["views"];
-			if(!vList){
-				vList = hasImages[i]["v"];
-			}
-			if(vList){
-				var item = vList[0]; // just grab 1
-				var vIndex = item["view"];
-				if(vIndex==undefined){
-					vIndex = item["i"];
+	// NEGATIVE Z:
+	if(useErrors){
+	}else{
+	//		points.push(v.x,v.y,-v.z);
+			var imageSuccess = false;
+			if(hasImages){
+				// get color from images
+				var vList = hasImages[i]["views"];
+				if(!vList){
+					vList = hasImages[i]["v"];
 				}
-				var view = viewTable[vIndex];
-				var image = view["matrix"];
-				var pnt = new V2D(item["x"],item["y"]);
-				var wid = image.width();
-				var hei = image.height();
-				pnt.scale(wid, hei);
-				var x = Math.min(Math.max(Math.round(pnt.x),0),wid-1);
-				var y = Math.min(Math.max(Math.round(pnt.y),0),hei-1);
-				var index = y*wid + x;
-				var red = image.red()[index];
-				var grn = image.grn()[index];
-				var blu = image.blu()[index];
-				colors.push(red,grn,blu,1.0);
-				imageSuccess = true;
-			}else{
-				// console.log(hasImages);
-				// console.log(hasImages[i]);
-				// throw "?";
+				if(vList){
+					var item = vList[0]; // just grab 1
+					var vIndex = item["view"];
+					if(vIndex==undefined){
+						vIndex = item["i"];
+					}
+					var view = viewTable[vIndex];
+					var image = view["matrix"];
+					var pnt = new V2D(item["x"],item["y"]);
+					var wid = image.width();
+					var hei = image.height();
+					pnt.scale(wid, hei);
+					var x = Math.min(Math.max(Math.round(pnt.x),0),wid-1);
+					var y = Math.min(Math.max(Math.round(pnt.y),0),hei-1);
+					var index = y*wid + x;
+					var red = image.red()[index];
+					var grn = image.grn()[index];
+					var blu = image.blu()[index];
+					colors.push(red,grn,blu,1.0);
+					imageSuccess = true;
+				}else{
+					// console.log(hasImages);
+					// console.log(hasImages[i]);
+					// throw "?";
+				}
 			}
+			if(!imageSuccess){
+				colors.push(0.5,0.5,0.5,0.5);
+			}
+	}
 		}
-		if(!imageSuccess){
-			colors.push(0.5,0.5,0.5,0.5);
-		}
-}
 	}
 	this._pointVertexPositionAttrib = this._stage3D.enableVertexAttribute("aVertexPosition");
 	this._pointVertexColorAttrib = this._stage3D.enableVertexAttribute("aVertexColor");
@@ -4113,6 +4387,8 @@ App3DR.App.Model3D.prototype._eff = function(){
 
 	this.rotateScene();
 
+
+
 	// RENDERING:
 	this._stage3D.clear();
 
@@ -4120,6 +4396,7 @@ App3DR.App.Model3D.prototype._eff = function(){
 
 	// RENDER TEXTURES
 	if(this._textureUVPoints && this._textureUVPoints.length>0){
+		// console.log("this._textureUVPoints: "+this._textureUVPoints.length);
 		this._stage3D.selectProgram(1);
 		this._stage3D.disableCulling();
 		this._stage3D.matrixReset();
@@ -4130,6 +4407,7 @@ App3DR.App.Model3D.prototype._eff = function(){
 			this._canvas3D._context.activeTexture(this._canvas3D._context.TEXTURE0);
 			// console.log( this._canvas3D._context.TEXTURE0 )
 			this._canvas3D._context.bindTexture(this._canvas3D._context.TEXTURE_2D,this._textures[i]);
+			// this._canvas3D._context.bindTexture(this._canvas3D._context.TEXTURE_2D,this._textures[0]);
 			this._canvas3D._context.uniform1i(this._canvas3D._program.samplerUniform, 0); //
 			this._stage3D.drawTriangles(this._vertexPositionAttrib, this._textureVertexPoints[i]);
 		}
@@ -5886,6 +6164,7 @@ App3DR.ProjectManager = function(relativePath, operatingStage, readyFxn){ // ver
 
 	this._sceneID = null;
 
+	this._scene = null;
 
 	// this._sparseInfo = null;
 	// this._sparsePoints = null;
@@ -5898,6 +6177,7 @@ App3DR.ProjectManager = function(relativePath, operatingStage, readyFxn){ // ver
 	// this._textureCount = null;
 	// this._packing = null;
 	this._scenes = [];
+
 	// operations related
 	this._loading = true;
 	this._stage = operatingStage;
@@ -5933,6 +6213,7 @@ App3DR.ProjectManager.BUNDLE_ADJUST_DIRECTORY = "bundle";
 App3DR.ProjectManager.RECONSTRUCT_DIRECTORY = "reconstruct";
 App3DR.ProjectManager.RECONSTRUCT_TRACKS_FILE_NAME = "tracks.yaml";
 App3DR.ProjectManager.RECONSTRUCT_GRAPH_FILE_NAME = "graph.yaml";
+App3DR.ProjectManager.RECONSTRUCT_TEXTURES_DIRECTORY = "textures";
 // App3DR.ProjectManager.BUNDLE_SPARSE_POINTS_FILE_NAME = "points_sparse.yaml";
 // App3DR.ProjectManager.BUNDLE_SPARSE_INFO_FILE_NAME = "info_sparse.yaml";
 // App3DR.ProjectManager.BUNDLE_DENSE_POINTS_FILE_NAME = "points_dense.yaml";
@@ -6201,6 +6482,7 @@ App3DR.ProjectManager.prototype.setFromYAML = function(object){
 	var textureCount = object["textureCount"];
 	var triangleCount = object["triangleCount"];
 	var triangles = object["triangles"];
+	var scene = object["scene"];
 
 	this._titleName = title;
 	this._createdTimestamp = created;
@@ -6259,6 +6541,7 @@ App3DR.ProjectManager.prototype.setFromYAML = function(object){
 	this._triangleFilename = Code.valueOrDefault(triangles, null);
 	this._triangleCount = Code.valueOrDefault(triangleCount, null);
 	this._textureCount = Code.valueOrDefault(textureCount, null);
+	this._scene = Code.valueOrDefault(scene, null);
 }
 App3DR.ProjectManager.prototype.toYAML = function(){
 	var modified = Code.getTimeStampFromMilliseconds();
@@ -6348,11 +6631,13 @@ App3DR.ProjectManager.prototype.toYAML = function(){
 	yaml.writeNumber("pointsCount",this._pointsCount);
 	yaml.writeBlank();
 	// triangles
-	yaml.writeString("points",this._pointsFilename);
+	yaml.writeString("triangles",this._triangleFilename);
 	yaml.writeNumber("triangleCount",this._triangleCount);
 	yaml.writeNumber("textureCount",this._textureCount);
 	yaml.writeBlank();
 
+	// scene ?
+	yaml.writeString("scene",this._scene);
 
 	// legacy
 	yaml.writeString("bundle",this._bundleFilename);
@@ -6777,6 +7062,25 @@ App3DR.ProjectManager.prototype._loadPointsComplete = function(object, data){
 }
 
 
+
+App3DR.ProjectManager.prototype.saveTrianglesFromData = function(triangleData, fxn, ctx){
+	console.log(triangleData);
+	var yaml = new YAML();
+	var object = triangleData;
+	var timestampNow = Code.getTimeStampFromMilliseconds();
+		triangleData["modified"] = timestampNow;
+	yaml.writeComment("Triangles");
+	yaml.writeObjectLiteral(triangleData);
+	var triangleString = yaml.toString();
+	var fxnSavedTriangles = function(){
+		console.log("fxnSavedTriangles");
+		if(fxn){
+			fxn.call(ctx);
+		}
+	}
+	this.saveGraph(triangleString, this.triangleFilename(), fxnSavedTriangles, this);
+}
+
 App3DR.ProjectManager.prototype.saveTriangles = function(string, filename, callback, context, object){
 	console.log("saveTriangles: ");
 	var path = Code.appendToPath(this._workingPath, App3DR.ProjectManager.RECONSTRUCT_DIRECTORY, filename);
@@ -7048,14 +7352,25 @@ throw "surface - triangles";
 this.surfaceTriangulate();
 */
 
+// throw "triangles"
 var triangles = this.triangleCount();
 console.log("triangle count: "+triangles);
+if(triangles===null){
+	this.trianglesTexturize();
+	return;
+}
 
-var textures = this.textureCount();
-console.log("texture count: "+triangles);
+
 // throw "textures";
-this.trianglesTexturize();
+var textures = this.textureCount();
+console.log("texture count: "+textures);
+if(textures===null){
+	this.trianglesPacking();
+	return;
+}
 
+var scene = this.currentScene();
+console.log(scene);
 
 throw "scene";
 
@@ -7135,6 +7450,19 @@ App3DR.ProjectManager.prototype.loadImageForCamera = function(camera, filename, 
 	console.log("IMAGE PATH: "+path);
 	this.addOperation("GET", {"path":path}, callback, context, object);
 }
+
+
+App3DR.ProjectManager.prototype.loadTriangleTextureFromFilename = function(filename, callback, context, object){
+	var path = Code.appendToPath(this._workingPath, App3DR.ProjectManager.RECONSTRUCT_DIRECTORY, App3DR.ProjectManager.RECONSTRUCT_TEXTURES_DIRECTORY, filename);
+	console.log("IMAGE PATH: "+path);
+	this.addOperation("GET", {"path":path}, callback, context, object);
+}
+App3DR.ProjectManager.prototype.saveTriangleTextureFromFilename = function(filename, binary, callback, context, object){
+	var path = Code.appendToPath(this._workingPath, App3DR.ProjectManager.RECONSTRUCT_DIRECTORY, App3DR.ProjectManager.RECONSTRUCT_TEXTURES_DIRECTORY, filename);
+	console.log("IMAGE PATH: "+path);
+	this.addOperation("SET", {"path":path, "data":binary}, callback, context, object);
+}
+
 App3DR.ProjectManager.prototype.calculatePairMatch = function(viewA, viewB, pair, callback, context, object){
 	console.log("calculatePairMatch");
 	// ...
@@ -10443,11 +10771,12 @@ App3DR.ProjectManager.prototype.trianglesTexturize = function(){ // find uv sour
 		var views = project.views();
 
 		// get view resolutions
-		var textureSize = new V2D(512,512);
-		// var textureSize = new V2D(1024,1024);
+		// var textureSize = new V2D(512,512);
+		var textureSize = new V2D(1024,1024);
 		// var resolutionScale = 0.5;
-		// var resolutionScale = 0.25;
-		var resolutionScale = 0.125;
+		var resolutionScale = 0.25;
+		// var resolutionScale = 0.15;
+		// var resolutionScale = 0.125;
 		var resolutions = [];
 		var transforms = [];
 		var cameras = [];
@@ -10508,95 +10837,275 @@ App3DR.ProjectManager.prototype.trianglesTexturize = function(){ // find uv sour
 		// 3D-2D texture sourcing
 		var info = R3D.optimumTriangleTextureImageAssignment(transforms,cameras,resolutions,triangles3D,textureSize,resolutionScale);
 		console.log(info);
+		var triangles3D = info["triangles3D"];
+		var vertexes3D = info["vertexes3D"];
+		var sources2D = info["sources2D"]; // 2D locations for each view image
+		var views2D = info["views2D"]; // views for source locations
+		var included2D = info["views"]; // assigned views per 3 vertexes
 
 		var triangles2D = info["destinations2D"];
+		console.log(triangles2D);
+		var totalArea = 0;
+		for(var i=0; i<triangles2D.length; ++i){
+			var tri = triangles2D[i];
+			var a = tri[0];
+			var b = tri[1];
+			var c = tri[2];
+			var area = V2D.areaTri(a,b,c);
+			totalArea += area;
+		}
+		console.log("totalArea: "+totalArea)
+		console.log("textureSize: "+textureSize+" = "+textureSize.area());
+		console.log("EST PAGES:"+(totalArea/textureSize.area()));
+
 		var maxSize = null;
 		// 2D texture packing
-		var info = R3D.optimumTriangleTexturePacking(textureSize,triangles2D,maxSize,resolutionScale);
+		var info = R3D.optimumTriangleTexturePacking(textureSize,triangles2D,resolutionScale,maxSize);
+		console.log(info);
+		console.log(triangles);
+		var pagesCount = info["pageCount"];
+		var texture2D = info["mapped2D"];
+		var pages2D = info["pages"];
 
-		throw "?"
+		var newTriangles = [];
+		var newVertexes = [];
+		for(var i=0; i<vertexes3D.length; ++i){
+			var v = vertexes3D[i];
+			newVertexes.push({"X":v.x,"Y":v.y,"Z":v.z});
+		}
+		for(var i=0; i<triangles.length; ++i){
+			var tri2D = texture2D[i];
+			if(!tri2D){ // 0-areas .. or otherwise ...
+				continue;
+			}
+			var triangle3D = triangles3D[i];
+			var page = pages2D[i];
+			var assignedView = included2D[i];
+			var sourceViews = views2D[i];
+			var sourcePoints = sources2D[i];
+			var sourceList = [];
+			for(var j=0; j<sourceViews.length; ++j){
+				var v = sourceViews[j];
+				var p = sourcePoints[j];
+				try{
+					sourceList.push({"v":v,"a":{"x":p[0].x,"y":p[0].y},"b":{"x":p[1].x,"y":p[1].y},"c":{"x":p[2].x,"y":p[2].y}});
+				}catch{
 
-
-		// var triangleCameras = triangleData["cameras"];
-		// var triangleViews = triangleData["views"];
-		// triangleData["triangles"] = triangles;
-		// triangleData["vertexes"] = vertexes;
-		// triangleData["packing"] = viewList;
-
-
-/*
-		views:
-			- ...
-		vertexes:
-			-
-				X: ...
-				Y: ...
-				Z: ...
-		uvs:
-			-
-				x:
-				y:
-		triangles:
-			-
-				A:
-					i: # vertex index
-					u: # uv index
-					v: # view index
-				B:
-					i:
-					u:
-					v:
-				C:
-					i:
-					u:
-					v:
-				t: # texture atlas index
-			...
-		textures:
-			-
-				id: "0"
-				file: tex0.png
-				width: 512
-				height: 512
-
-		packing:
-			views: # list of views yet to load - pop off when done
-				- index in list to load
-
-*/
-
-/*
-		vertexes:
-		X,Y,Z
-
-		triangles:
-			-
-				A:
-					i: vertex
-					v: view index assignment
-				B:
-					i: vertex
-					v: view index assignment
-				C:
-					i: vertex
-					v: view index assignment
-
-				v:
-					- index
-					- a: x,y
-					- b: x,y
-					- c: x,y
-*/
-		// var what = R3D.textureAssigments(views,resolutions,textureSize,triangles);
-		throw "?";
-
+					console.log(sourceViews);
+					console.log(sourcePoints);
+					console.log(i+":");
+					console.log(j+":");
+					console.log(v);
+					console.log(p);
+					console.log("?");
+					throw "?"
+				}
+			}
+			var newTri = {};
+				newTri["A"] = {"i":triangle3D[0],"v":assignedView[0]};
+				newTri["B"] = {"i":triangle3D[1],"v":assignedView[1]};
+				newTri["C"] = {"i":triangle3D[2],"v":assignedView[2]};
+				newTri["a"] = {"x":tri2D[0].x,"y":tri2D[0].y};
+				newTri["b"] = {"x":tri2D[1].x,"y":tri2D[1].y};
+				newTri["c"] = {"x":tri2D[2].x,"y":tri2D[2].y};
+				newTri["t"] = page;
+				newTri["v"] = sourceList; // i, x,y,z
+			newTriangles.push(newTri);
+		}
+		console.log(newTriangles);
+		// packing init:
+		var packing = [];
+		for(var i=0; i<triangleViews.length; ++i){
+			packing.push({"v":i});
+		}
+		// texture init:
+		var textures = [];
+		for(var i=0; i<pagesCount; ++i){
+			var tex = {};
+			tex["id"] = ""+i;
+			tex["file"] = "tex"+i+".png";
+			tex["width"] = textureSize.x;
+			tex["height"] = textureSize.y;
+			textures.push(tex);
+		}
+		// save updated version:
+		triangleData["triangles"] = newTriangles;
+		triangleData["vertexes"] = newVertexes;
+		triangleData["packing"] = packing;
+		triangleData["textures"] = textures;
+		var triangleCount = newTriangles.length;
+		var completeFxn = function(){
+			console.log("SAVING TRIANGLE COUNT");
+			project.setTriangleCount(triangleCount);
+			project.saveProjectFile();
+		}
+		console.log("SAVING TRIANGLES WITH INIT TEXTURE PACKING");
+		project.saveTrianglesFromData(triangleData, completeFxn, project);
 	}
 	// load final points file
 	project.loadTriangles(fxnTrianglesLoaded, project);
 
 
+}
 
+App3DR.ProjectManager.prototype.trianglesPacking = function(){
+	console.log("trianglesPacking");
+	var project = this;
+	var fxnTrianglesLoaded = function(){
+		console.log("fxnTrianglesLoaded");
 
+		var triangleData = this._triangleData;
+		console.log(triangleData);
+		var textures = triangleData["textures"];
+		var packing = triangleData["packing"];
+		if(!packing || packing.length==0){
+			var textureCount = textures.length;
+			console.log("done packing");
+			// save only pertenent info to scene file
+			project.setTextureCount(textureCount);
+			project.saveProjectFile();
+			return;
+		}
+		// keep packing
+		var triangleViews = triangleData["views"];
+		var triangleTris = triangleData["triangles"];
+		var view = packing.shift();
+		var viewIndex = view["v"];
+			view = triangleViews[viewIndex];
+
+		var viewID = view["id"];
+		var projectView = project.viewFromID(viewID);
+		var imageSource = null;
+
+		// TODO get list of all textures view is included in
+		var currentTexture = -1;
+
+		var savedUpdatedTexture = function(a,o){
+			console.log(a);
+			console.log(o);
+			console.log("savedUpdatedTexture");
+		}
+
+		var fillNextTexture = function(textureImage){
+			console.log("FILL : "+currentTexture);
+			var texture = textures[currentTexture];
+			var filename = texture["file"];
+			console.log(imageSource);
+			console.log(textureImage);
+			// go thru all trianges with texture i
+			var ext = 0;
+			for(var i=0; i<triangleTris.length; ++i){
+				var tri = triangleTris[i];
+				var tex = tri["t"];
+				if(tex==currentTexture){
+					var vs = tri["v"];
+					for(var j=0; j<vs.length; ++vs){
+						if(vs[j]["v"]==viewIndex){
+							var sourcing = [ (tri["A"]["v"]==viewIndex), (tri["B"]["v"]==viewIndex), (tri["C"]["v"]==viewIndex) ];
+							var A = tri["a"];
+							var B = tri["b"];
+							var C = tri["c"];
+							var a = vs[j]["a"];
+							var b = vs[j]["b"];
+							var c = vs[j]["c"];
+							A = new V2D(A["x"],A["y"]);
+							B = new V2D(B["x"],B["y"]);
+							C = new V2D(C["x"],C["y"]);
+							a = new V2D(a["x"],a["y"]);
+							b = new V2D(b["x"],b["y"]);
+							c = new V2D(c["x"],c["y"]);
+							var destinationTri2D = [A,B,C];
+							var sourceTri2D = [a,b,c];
+							R3D.textureAddSourceTriangles(textureImage, destinationTri2D, imageSource, sourceTri2D, sourcing);
+							++ext;
+						}
+					}
+				}
+			}
+			console.log("extract: "+ext);
+			// dISPLAY:
+			/*
+			var image = R3D.imageFromImageMatrix(textureImage, GLOBALSTAGE,function(){
+				var d = new DOImage(image);
+				GLOBALSTAGE.addChild(d);
+			});
+			throw "..."
+			*/
+			// save updated texture
+			var saveTextureComplete = function(){
+				console.log("saveTextureComplete");
+				loadNextTexture();
+			}
+			// var image = textureImage
+			// var width = textureImage.width();
+			// var height = textureImage.height();
+			// var d = new DOImage(image);
+			// var stage = GLOBALSTAGE;
+			// var renderedImage = stage.renderImage(width,height,d, null);
+			var image = R3D.imageFromImageMatrix(textureImage, GLOBALSTAGE,function(){
+				// console.log(image);
+				var imageBase64 = image.src;
+				var imageBinary = Code.base64StringToBinary(imageBase64);
+				var binary = imageBinary;
+				project.saveTriangleTextureFromFilename(filename, binary, saveTextureComplete, project, null);
+			});
+		}
+
+		var loadNextTextureComplete = function(object,data){
+			if(data){
+				project.dataToImage(data, function(image){
+					// console.log(image);
+					var imageMatrix = R3D.imageMatrixFromImage(image, GLOBALSTAGE);
+					// console.log(imageMatrix);
+					fillNextTexture(imageMatrix);
+				}, project);
+			}else{ // need to init data
+				var texture = textures[currentTexture];
+				var width = texture["width"];
+				var height = texture["height"];
+				// console.log("INIT IMAGE");
+				var imageMatrix = new ImageMat(width,height);
+				fillNextTexture(imageMatrix);
+			}
+		}
+
+		var completedImageSourcing = function(){
+			console.log("completedImageSourcing for "+viewID);
+		}
+
+		var loadNextTexture = function(){
+			++currentTexture;
+			console.log("loadNextTexture: "+currentTexture);
+			if(currentTexture>=textures.length){
+				console.log("done loading textures ... drop packing");
+				// packing.shift(); // ALREADY SHIFTED
+				if(packing.length==0){
+					triangleData["packing"] = null;
+				}
+				project.saveTrianglesFromData(triangleData, completedImageSourcing, project);
+				return;
+			}
+			var texture = textures[currentTexture];
+			console.log(texture);
+			var filename = texture["file"];
+			project.loadTriangleTextureFromFilename(filename, loadNextTextureComplete, project, null);
+		}
+
+		var loadImageTextureComplete = function(a,o){
+			imageSource = projectView.textureImage();
+			imageSource = R3D.imageMatrixFromImage(imageSource, GLOBALSTAGE);
+			console.log(imageSource);
+			loadNextTexture();
+		}
+
+		var loadImageTexture = function(){
+			console.log(projectView);
+			projectView.loadTextureImage(loadImageTextureComplete, project);
+		}
+
+		loadImageTexture();
+	}
+	project.loadTriangles(fxnTrianglesLoaded, project);
 }
 
 
@@ -12863,6 +13372,9 @@ App3DR.ProjectManager.View.prototype._loadImage = function(type, callback, conte
 	}else if(type==App3DR.ProjectManager.View.IMAGE_LOAD_TYPE_FEATURES){
 		desiredPixelCount = 400*300;
 		maximumPixelCount = 500*400;
+	}else if(type==App3DR.ProjectManager.View.IMAGE_LOAD_TYPE_TEXTURE){
+		desiredPixelCount = 2000*2500;
+		maximumPixelCount = 2500*3000;
 	}
 	// 1306
 	var closestPicture = -1;
@@ -12892,6 +13404,17 @@ if(picture){
 		object["context"] = context;
 		object["type"] = type;
 	this._manager.loadImageForView(this, file, this._loadImageComplete, this, object);
+}
+App3DR.ProjectManager.prototype.dataToImage = function(data, callback, context){
+	var binary = data;
+	var filetype = "png";
+	var base64 = Code.arrayBufferToBase64(binary);
+	var imageSrc = Code.appendHeaderBase64(base64, filetype);
+	var image = new Image();
+	image.onload = function(e){
+		callback.call(context, image);
+	}
+	image.src = imageSrc;
 }
 App3DR.ProjectManager.View.prototype._loadImageComplete = function(object, data){
 	// console.log("_loadImageComplete");

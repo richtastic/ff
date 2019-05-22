@@ -10332,6 +10332,19 @@ Code.isPointInsideTri2D = function(p, a,b,c){
 // Code.isPointInsideTri2D = function(p, a,b,c){ /// not correct at borders for whatever reason
 // 	return Code.isPointInsidePolygon2D(p, [a,b,c]);
 // }
+Code.distancePointTri2D = function(p, A,B,C){
+	if(Code.isPointInsideTri2D(p,A,B,C)){
+		return 0;
+	}
+	var dir = new V2D();
+	V2D.sub(dir,B,A);
+	var dAB = Code.distancePointRayFinite2D(A,dir, p);
+	V2D.sub(dir,C,B);
+	var dBC = Code.distancePointRayFinite2D(B,dir, p);
+	V2D.sub(dir,A,C);
+	var dCA = Code.distancePointRayFinite2D(C,dir, p);
+	return Math.min(dAB,dBC,dCA);
+}
 Code.isPointInsideRect2D = function(p, a,b,c,d){
 	if(arguments.length<5){
 		var w = a;
@@ -11983,9 +11996,6 @@ Code.spherePointFrom2DRect = function(originx,originy,width,height, px,py){
 	cenToPnt.y = -cenToPnt.y;
 	return cenToPnt;
 }
-
-
-
 Code.insideTrianglePadded3D = function(a,b,c,pad){
 	// check inside inside triangle
 	// check inside outer triangle

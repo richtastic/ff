@@ -51,39 +51,42 @@ TextureAtlas.prototype.pack = function(){
 	var textureWidth = maxTextureSize.x;
 	var textureHeight = maxTextureSize.y;
 	var bounds = new Rect(0,0, textureWidth, textureHeight);
-console.log(" bounds: "+bounds);
 	var mappings = this._mappings;
 	var rects = [];
+	var area = 0;
 	for(i=0; i<mappings.length; ++i){
 		var map = mappings[i];
 		var rect = map.rect();
 		rects.push(rect);
+		area += rect.area();
 	}
-	var packing = Rect.pack(rects, bounds, true);
-	console.log(packing);
-
-	var invalid = packing["invalid"];
+	console.log("areas: "+area+" / "+bounds.area()+" ~ "+(area/bounds.area()));
+	var packing = Rect.packBins(rects, bounds);
+	var impossible = packing["impossible"];
 	var bins = packing["bins"];
-
-	console.log(invalid);
+	console.log(impossible);
 	console.log(bins);
-
-	var objects = [];
+	// wrap & pass back
+	var failed = [];
+	for(var i=0; i<impossible.length; ++i){
+		var rect = impossible[i];
+		var mapping = rect.data();
+		var item = mapping.data();
+		var object = {"rect":rect, "data":item, "page":null};
+		failed.push(object);
+	}
+	var success = [];
 	for(var i=0; i<bins.length; ++i){
 		var bin = bins[i];
 		for(var j=0; j<bin.length; ++j){
 			var rect = bin[j];
 			var mapping = rect.data();
 			var item = mapping.data();
-			var object = {"rect":rect, "object":object, "sheet":i};
-			objects.push(object);
+			var object = {"rect":rect, "data":item, "page":i};
+			success.push(object);
 		}
 	}
-	if(invalid.length>0){
-		throw "invalid ?";
-	}
-	// /return {"objects":objects, "rects":rects, "pages"};
-	return {"sheets":bins.length, "objects":objects};
+	return {"pages":bins.length, "success":success, "fail":failed};
 }
 
 // TextureAtlas.prototype.addTriangleTexture = function(imageSource){
@@ -127,10 +130,6 @@ TextureAtlas.addElement = function(){
 // --------------------------------------------------------------------------------------------------------------------
 TextureAtlas.Mapping = function(size2D, data){
 	data = data!==undefined? data : null;
-	// this._atlas = null;
-	// this._tri3D = tri3D;
-	// this._tris2D = tris2D;
-	// this._triImage = triImage;
 	this._data = data;
 	var rect = new Rect(0,0, size2D.x,size2D.y);
 	rect.data(this);

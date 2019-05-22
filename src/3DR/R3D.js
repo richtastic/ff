@@ -17062,6 +17062,25 @@ R3D.TextureVertex.prototype.selectFirstAllowedView = function(){
 	}
 	return false;
 }
+// R3D.TextureTriangle.prototype.initFromAllowedViews = function(){
+// 	var tris = this._triangles;
+// 	var views = this._views;
+// 	this._index = -1;
+// 	for(var i=0; i<views.length; ++i){
+// 		var isAllowed = true;
+// 		var v = views[i];
+// 		for(var i=0; i<tris.lenth; ++i){
+// 			if(!tris[i].allowedView(v)){
+// 				isAllowed = false;
+// 				break;
+// 			}
+// 		}
+// 		if(isAllowed){
+// 			this._index = i;
+// 			break;
+// 		}
+// 	}
+// }
 R3D.TextureVertex.prototype.canFlipView = function(){
 	var views = this._views;
 	if(views.length>0){
@@ -17123,6 +17142,11 @@ R3D.TextureVertex.prototype.flipView = function(newIndex){
 		this._index = newIndex;
 	}
 }
+
+R3D.TextureVertex.prototype.removeTri = function(tri){
+	Code.removeElement(this._triangles, tri);
+}
+
 R3D.TextureTriangle = function(verts){
 	this._vertexes = [];
 	this._views = [];
@@ -17155,6 +17179,7 @@ R3D.TextureTriangle.prototype.initAllowedViews = function(){
 		}
 	}
 	this._views = intersect;
+	return intersect.length>0;
 }
 R3D.TextureTriangle.prototype.activeViews = function(){
 	var views = [];
@@ -17193,6 +17218,14 @@ R3D.TextureTriangle.prototype.isFrontier = function(){
 	var v1 = v[1].view();
 	var v2 = v[2].view();
 	return v0 != v1 || v0 != v2 || v1 != v2;
+}
+R3D.TextureTriangle.prototype.removeFromAll = function(){
+	var v = this._vertexes;
+	for(var i=0; i<v.length; ++i){
+		var x = v[i];
+		x.removeTri(this);
+	}
+	Code.emptyArray(v);
 }
 R3D.TextureTriangle.prototype.subdivide = function(){
 	throw "TODO";
@@ -17356,19 +17389,37 @@ R3D.optimumTriangleTextureImageAssignment = function(transforms,cameras,resoluti
 		vert.viewAndRanks(vs,rs,ps);
 	}
 	var impossibleViews = 0;
+	// triangles init states
+	var badTris = [];
+	for(var i=0; i<tris.length; ++i){
+		var tri = tris[i];
+		var result = tri.initAllowedViews();
+		if(!result){
+			badTris.push(tri);
+			Code.removeElementAt(tris,i);
+			--i;
+		}
+	}
+	console.log("impossible Tris: "+badTris.length);
+	for(var i=0; i<badTris.length; ++i){
+		var tri = badTris[i];
+		tri.removeFromAll();
+	}
+	console.log(tris);
+	// init vert states
+	var badVerts = [];
 	for(var i=0; i<verts.length; ++i){
 		var vert = verts[i];
 		var result = vert.selectFirstAllowedView();
-		impossibleViews += (result ? 1 : 0 );
+		if(!result){
+			badVerts.push(vert);
+		}
+		// if a vertex has no tris ... remove ...
+		if(vert._triangles.length==0){
+			console.log("empty vertex");
+		}
 	}
-	console.log("impossibleViews: "+impossibleViews);
-	// console.log(verts);
-	// triangles
-	for(var i=0; i<tris.length; ++i){
-		var tri = tris[i];
-		tri.initAllowedViews();
-	}
-	// console.log(tris);
+	console.log("impossibleVerts: "+badVerts.length);
 	// get all initial frontier vertexes
 	for(var i=0; i<verts.length; ++i){
 		var vert = verts[i];
@@ -17446,6 +17497,12 @@ R3D.optimumTriangleTextureImageAssignment = function(transforms,cameras,resoluti
 				for(var k=0; k<vx.length; ++k){
 					var x = vx[k];
 					var p = x.pointForView(v);
+					if(!p){
+						console.log(tri);
+						console.log(vx);
+						console.log(x);
+						throw "don't have a p: "+i+":"+j+" = "+v;
+					}
 					// console.log(p);
 					ps.push(p);
 				}
@@ -17534,6 +17591,9 @@ R3D.optimumTriangleTextureImageAssignment = function(transforms,cameras,resoluti
 			for(var k=0; k<vx.length; ++k){
 				var x = vx[k];
 				var p = x.pointForView(v);
+if(!p){
+	throw "bad p: "+i;
+}
 				ps.push(p);
 			}
 			locations.push(ps);
@@ -17574,7 +17634,8 @@ R3D.optimumTriangleTexturePacking = function(textureSizes,triangles2D,resolution
 	var sortArea = function(a,b){
 		return a["l"] < b["l"] ? -1 : 1;
 	};
-	var infos = [];
+	// var infos = [];
+	var totalArea = 0;
 	for(var i=0; i<triangles2D.length; ++i){
 		var tri = triangles2D[i];
 		// var A = tri.A();
@@ -17587,7 +17648,7 @@ R3D.optimumTriangleTexturePacking = function(textureSizes,triangles2D,resolution
 		var sizeBC = Code.triSizeWithBase2D(B,C,A);
 		var sizeAC = Code.triSizeWithBase2D(C,A,B);
 		if(!sizeAB || !sizeBC || !sizeAC){
-			console.log(A,B,C);
+			// console.log(A,B,C);
 			// .... why are some areas 0 ... ?
 			continue;
 		}
@@ -17601,11 +17662,14 @@ R3D.optimumTriangleTexturePacking = function(textureSizes,triangles2D,resolution
 		// pick smallest area soln
 		sets.sort(sortArea);
 		var min = sets[0];
-		// var scale = Math.min(maxSize.x/min["s"].x, maxSize.y/min["s"].y, 1);
-		var scale = 1.0;
+		var scale = Math.min(maxSize.x/min["s"].x, maxSize.y/min["s"].y, 1);
+		// var scale = 1.0;
 		var org = min["o"];
 		var ang = min["a"];
 		var siz = min["s"];
+		siz.scale(scale);
+		siz.add(padding*2,padding*2);
+		siz.ceil();
 		// transform points
 		var pnts = [A.copy(),B.copy(),C.copy()];
 		for(var j=0; j<pnts.length; ++j){
@@ -17613,53 +17677,40 @@ R3D.optimumTriangleTexturePacking = function(textureSizes,triangles2D,resolution
 			pnt.sub(org);
 			pnt.rotate(ang);
 			pnt.scale(scale);
+			pnt.add(padding,padding);
 		}
-		var info = {"points":pnts};
-		infos.push(info);
+		var info = {"points":pnts, "index":i};
 		var map = atlas.addRectMapping(siz, info);
+		totalArea += siz.area();
 
 	}
-
-	console.log(infos);
-	// throw "?"
-
-	//
+	console.log("ESTIMATED AREA: "+totalArea);
+	console.log("ESTIMATED PAGES: "+(totalArea/textureSizes.area()));
+	// pack sizes
 	var result = atlas.pack();
-	console.log(result);
-	var objects = result["objects"];
-	var pages = result["sheets"];
-
-	throw "yep";
-
-
-
-	// calculate packing
-	console.log("set packing");
-
-
-	var pages = [];
-	var tris2D = [];
-	// var reference = [];
-
-	/*
-		for each triangle3D-2D:
-			create best rectangle container -- padded by 1 px
-		-> list of rectangles
-
-		rectangle-atlas packing
-
-		for each triangle3D-2D:
-			lookup final texture assignment
-			lookup final rectangle position
-			map uv 2D points to final locations
-
-
-		OUTPUT:
-			mapping: triangle3D->triangle2D texture index & locations
-
-
-	*/
-	return {"triangles2D":tris2D, "pages":pages};
+	var objects = result["success"];
+	var pageCount = result["pages"];
+	// wrap
+	var count = triangles2D.length;
+	var pages = Code.newArrayNulls(count);
+	var tris2D = Code.newArrayNulls(count);
+	var rects2D = Code.newArrayNulls(count);
+	for(var i=0; i<objects.length; ++i){
+		var object = objects[i];
+		var page = object["page"];
+		var rect = object["rect"];
+		var data = object["data"];
+		var pts2D = data["points"];
+		var index = data["index"];
+		// offset by rect:
+		for(var j=0; j<pts2D.length; ++j){
+			pts2D[j].add(rect.x(),rect.y());
+		}
+		tris2D[index] = pts2D;
+		rects2D[index] = rect;
+		pages[index] = page;
+	}
+	return {"triangles2D":triangles2D, "mapped2D":tris2D, "rects2D":rects2D, "pages":pages, "pageCount":pageCount};
 }
 R3D.triangleTextureApply = function(image,triangles2D,views,view){
 	// color image for triangles using views for single view
@@ -17669,7 +17720,68 @@ R3D.triangleTextureApply = function(image,triangles2D,views,view){
 }
 
 
+R3D.textureAddSourceTriangles = function(destinationImage, destinationTri2D, sourceImage, sourceTri2D, vertexSources){
+	// console.log(destinationImage, destinationTri2D, sourceImage, sourceTri2D, vertexSources);
+	var padding = 1;
+	// var transform = Matrix.get2DProjectiveMatrix(fr,to, ImageMat.extractRect_temp3x3, ImageMat.extractRect_temp8x8, ImageMat.extractRect_temp8x1);
+	var transform = R3D.affineMatrixExact(destinationTri2D,sourceTri2D);
+	// console.log(transform+"");
+	//var destinationRect = Code.minRect(destinationTri2D);
+	// var destinationRect = Code.minRect(destinationTri2D);
+	// console.log(destinationRect);
+	var info = V2D.infoArray(destinationTri2D);
+	var min = info["min"];
+	var max = info["max"];
+	min.floor();
+	max.ceil();
+	var siz = V2D.sub(max,min);
+	var dW = siz.x;
+	var dH = siz.y;
+	var pA = vertexSources[0] ? 1 : 0;
+	var pB = vertexSources[1] ? 1 : 0;
+	var pC = vertexSources[2] ? 1 : 0;
+	var p = new V2D();
+	var q = new V2D();
+	var v = new V3D();
+	var sA = sourceTri2D[0];
+	var sB = sourceTri2D[1];
+	var sC = sourceTri2D[2];
+	var dA = destinationTri2D[0];
+	var dB = destinationTri2D[1];
+	var dC = destinationTri2D[2];
+	var bary = new V3D();
+	// console.log(dW,dH);
+	var destWidth = destinationImage.width();
+	var destR = destinationImage.red();
+	var destG = destinationImage.grn();
+	var destB = destinationImage.blu();
+	for(var j=0; j<dH; ++j){
+		// var wJ = destWidth*j;
+		for(var i=0; i<dW; ++i){
+			p.set(i+min.x,j+min.y);
+			var inside = Code.distancePointTri2D(p, dA,dB,dC) <= padding;
+			if(inside){
+				transform.multV2DtoV2D(q,p);
+				// fr.x /= fr.z; fr.y /= fr.z;
+				Code.triBarycentricCoordinate2D(bary, dA,dB,dC, p);
+				var percent = bary.x*pA + bary.y*pB + bary.z*pC;
+				sourceImage.getPoint(v, q.x,q.y);
+				// console.log(p+" -> "+q);
+				// console.log(v);
+				// console.log(percent);
+				v.scale(percent);
+				// destinationImage.setPoin
+				// var index = wJ+i;
+				var index = destWidth*p.y + p.x;
+				destR[index] += v.x;
+				destG[index] += v.y;
+				destB[index] += v.z;
+			}
+		}
+	}
+}
 
+/*
 R3D.triangulateTexture = function(inputImages, inputTriangles, inputWeights, outputImage, outputTriangle, paddingOut){ // single channel combining of colors in [0,1]
 	// inputImages: array of 0-1 floats, width, height
 	// inputTriangles: coordinates of 2D triangle vertices,
@@ -17681,7 +17793,7 @@ R3D.triangulateTexture = function(inputImages, inputTriangles, inputWeights, out
 
 	var inside = Code.insideTrianglePadded3D();
 }
-
+*/
 
 R3D.highDensityMatchesOLD = function(imageA,widthA,heightA,pointsA, imageB,widthB,heightB,pointsB,     stage){
 	if(!Code.isArray(imageA)){

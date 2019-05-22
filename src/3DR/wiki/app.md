@@ -369,6 +369,15 @@ https://cloud.google.com/appengine/docs/nodejs/
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 - triangle texture mapping
+	-  triangles taking up too many pages
+		=> print out total areas
+
+
+
+
+
+
+
 
 
 - filtering after probe3d removes most of the added matches

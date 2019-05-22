@@ -1,5 +1,72 @@
 // Rect.js
+
+
+Rect.packBins = function(rectList, bound){
+	var maxAreaPercent = 0.95;
+	// var maxIterationsPage = 1E2; // --- 121 bins
+	// var maxIterationsPage = 1E3; // FAST --- too many fails --- 13 bins
+	var maxIterationsPage = 1E4; // FAST  ------ 7 bins
+	// var maxIterationsPage = 1E5; // OK ----- 7 bins
+	// var maxIterationsPage = 1E6; // slow ----- 6 bins
+	// more iterations
+	var boundArea = bound.area();
+	var boundWidth = bound.width();
+	var boundHeight = bound.height();
+	rectList = Code.copyArray(rectList);
+	rectList = rectList.sort(function(a,b){
+		return a.area()<b.area() ? -1 : 1;
+	});
+	// TODO: MIX LARGE-SMALL-LARGE-SMALL-... ????
+	var groups = [];
+	var impossible = [];
+	while(rectList.length>0){
+		// collect group until area peaks out
+		var nextArea = 0;
+		var group = [];
+		var check = true;
+		while(check){
+			var next = rectList.pop();
+			if(next.width()>boundWidth || next.height()>boundHeight){
+				impossible.push(next);
+				continue;
+			}
+			var area = next.area();
+			nextArea += area;
+			var percent = (nextArea/boundArea);
+			if(percent>maxAreaPercent){
+				rectList.push(next);
+				check = false;
+			}else{
+				group.push(next);
+			}
+			if(rectList.length==0){
+				check = false;
+			}
+		}
+		// pack single group
+		check = true;
+		while(check && group.length>0){
+			var result = Rect._packSingle(group, bound, maxIterationsPage);
+			console.log(group.length+" = "+result);
+			if(!result){
+				var decay = 0.9; // 0.5 too fast
+				var nextSize = group.length*decay;
+				nextSize = Math.min(nextSize,group.length-1);
+				while(group.length>nextSize){
+					// rectList.push(group.pop());
+					rectList.push(group.shift()); // remove starting rect first
+				}
+			}else{ // done
+				check = false;
+				groups.push(group);
+			}
+		}
+	}
+	return {"bins":groups, "impossible":impossible};
+}
+
 Rect.pack = function(rectList, bound, isList){
+	throw "old";
 	if(isList){ // pack to N bounds - minimized
 		console.log("RECT PACK LIST");
 		var boundArea = bound.area();

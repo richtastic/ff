@@ -17,6 +17,9 @@ V2D.crossOrigin = function(o,a,b){ // cross vectors oa & ob
 	return (a.x-o.x)*(b.y-o.y)-(a.y-o.y)*(b.x-o.x);
 }
 V2D.areaTri = function(a,b,c){
+	return V2D.crossTri(a,b,c)*0.5; // abs ?
+}
+V2D.signedAreaTri = function(a,b,c){
 	return V2D.crossTri(a,b,c)*0.5;
 }
 V2D.crossTri = function(a,b,c){ // ab x bc // - area of a TRIANGLE is 1/2 of this
@@ -244,6 +247,9 @@ V2D.prototype.max = function(a){
 	this.x = Math.max(this.x,a.x);
 	this.y = Math.max(this.y,a.y);
 	return this;
+}
+V2D.prototype.area = function(a){
+	return Math.abs(this.x*this.y);
 }
 V2D.prototype.rotate = function(a){
 	V2D.rotate(this,this,a);
