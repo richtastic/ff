@@ -18,6 +18,7 @@ FF.FILENAMES = ["numeric-1.2.6.js","glMatrix-0.9.5.min.js", "Code.js","Err.js","
 				"BivariateSurface.js",
 				"TextureAtlas.js","TextureViewBlend.js",
 				"Filter.js",
+				"Formats3D.js",
 
 				"DenseMatchF.js",
 				"ClientFile.js"]; // "Node.js"

@@ -3790,7 +3790,7 @@ var triangleCount = triangles.length;
 	this._stage3D.selectProgram(1);
 	// this._vertexPositionAttrib = this._stage3D.enableVertexAttribute("aVertexPosition");
 	// this._triangletextureCoordAttrib = this._stage3D.enableVertexAttribute("aTextureCoord");
-	var len = this._textures.length;
+	var len = images.length;
 	for(i=0; i<len; ++i){
 		var j = i + currentLength;
 		// push:
@@ -3811,6 +3811,12 @@ var triangleCount = triangles.length;
 	console.log(gl);
 	var maxTextures = gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS);
 	console.log(maxTextures);
+
+
+
+
+
+
 }
 App3DR.App.Model3D.prototype.setLines = function(input){
 	// CREATE LINES:
@@ -4224,6 +4230,7 @@ App3DR.App.Model3D.prototype._eff = function(){
 
 	// RENDER TEXTURES
 	if(this._textureUVPoints && this._textureUVPoints.length>0){
+// console.log(this._textures.length, this._textureUVPoints);
 		// console.log("this._textureUVPoints: "+this._textureUVPoints.length);
 		this._stage3D.selectProgram(1);
 		this._stage3D.disableCulling();
@@ -7238,6 +7245,12 @@ var sceneID = this.currentSceneID();
 console.log(sceneID);
 var scene = this.sceneFromID(sceneID);
 console.log(scene);
+
+
+this.sceneToDAE();
+
+
+
 
 throw "scene";
 
@@ -10645,8 +10658,8 @@ App3DR.ProjectManager.prototype.trianglesTexturize = function(){ // find uv sour
 
 		// get view resolutions
 		// var textureSize = new V2D(512,512);
-		// var textureSize = new V2D(1024,1024);
-		var textureSize = new V2D(2048,2048);
+		var textureSize = new V2D(1024,1024);
+		// var textureSize = new V2D(2048,2048);
 		var resolutionScale = 0.5; // GAPS ?
 		// var resolutionScale = 0.25;
 		// var resolutionScale = 0.15;
@@ -10830,6 +10843,86 @@ App3DR.ProjectManager.prototype.trianglesTexturize = function(){ // find uv sour
 	project.loadTriangles(fxnTrianglesLoaded, project);
 
 
+}
+App3DR.ProjectManager.prototype.sceneToDAE = function(){
+	console.log("sceneToDAE");
+	var project = this;
+	var fxnTrianglesLoaded = function(){
+		console.log("fxnTrianglesLoaded");
+		var triangleData = this._triangleData;
+		console.log(triangleData);
+
+		//
+
+		var triangles = triangleData["triangles"];
+		var vertexes = triangleData["vertexes"];
+		var textures = triangleData["textures"];
+		var vertex3D = [];
+		for(var i=0; i<vertexes.length; ++i){
+			var v = vertexes[i];
+			var p = new V3D(v["X"],v["Y"],v["Z"]);
+			vertex3D.push(p);
+		}
+		var world = Formats3D.daeWorldNew();
+
+		var images = [];
+		var effects = [];
+		var materials = [];
+		var sizes = [];
+		for(var i=0; i<textures.length; ++i){
+			var tex = textures[i];
+			var file = tex["file"];
+			var width = tex["width"];
+			var height = tex["height"];
+			var size = new V2D(width,height);
+			sizes.push(size);
+			var image = Formats3D.daeWorldAddImage(world, file);
+			images.push(image);
+			var effect = Formats3D.daeWorldAddMaterialFromImage(world, image);
+			effects.push(effect);
+			var material = Formats3D.daeWorldAddInstanceFromMaterial(world, effect);
+			materials.push(material);
+		}
+		var tris3D = Code.newArrayArrays(images.length);
+		var tris2D = Code.newArrayArrays(images.length);
+		for(var i=0; i<triangles.length; ++i){
+			var tri = triangles[i];
+			var A = tri["A"]["i"];
+			var B = tri["B"]["i"];
+			var C = tri["C"]["i"];
+			var a = tri["a"];
+			var b = tri["b"];
+			var c = tri["c"];
+			var index = tri["t"];
+				A = vertex3D[A];
+				B = vertex3D[B];
+				C = vertex3D[C];
+				a = new V2D(a["x"],a["y"]);
+				b = new V2D(b["x"],b["y"]);
+				c = new V2D(c["x"],c["y"]);
+			var size = sizes[index];
+			a.x = a.x/size.x; a.y = 1 - (a.y/size.y);
+			b.x = b.x/size.x; b.y = 1 - (b.y/size.y)
+			c.x = c.x/size.x; c.y = 1 - (c.y/size.y)
+
+			var t3D = new Tri3D(A,B,C);
+			var t2D = new Tri2D(a,b,c);
+			var tri3D = tris3D[index];
+			var tri2D = tris2D[index];
+			tri3D.push(t3D);
+			tri2D.push(t2D);
+		}
+
+		var mesh = Formats3D.daeWorldAddMesh(world, tris3D, tris2D, materials);
+		var object = Formats3D.daeWorldAddInstanceFromMesh(world, mesh, new Matrix3D().identity());
+		var scene = Formats3D.daeWorldAddScene(world);
+		Formats3D.daeWorldAddInstanceMeshToScene(world, scene, object);
+
+		var xml = Formats3D.worldToDAE(world);
+		console.log(xml);
+
+	}
+	project.loadTriangles(fxnTrianglesLoaded, project);
 }
 
 App3DR.ProjectManager.prototype.trianglesPacking = function(){

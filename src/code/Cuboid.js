@@ -128,6 +128,10 @@ Cuboid.prototype.size = function(s){
 	}
 	return this._size;
 }
+Cuboid.prototype.diagonal = function(){
+	return this._size.length();
+	// return Math.sqrt(this._size.x*this._size.x + this._size.y*this._size.y + this._size.z*this._size.z);
+}
 Cuboid.prototype.volume = function(){
 	return this._size.x*this._size.y*this._size.z;
 }

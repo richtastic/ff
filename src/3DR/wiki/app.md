@@ -329,18 +329,17 @@ TODO: pairwise possibility limiting
 	- sparse tracks
 	- dense points
 	- redo affine features
------> HERE <------
-	- multi-view combining into single 3D scene - minimizing errors
+x	- multi-view combining into single 3D scene - minimizing errors
 - surface triangulation(tessellation)
 	- advancing-front, curvature-based tessellation
 	=> scene triangle model
-(05/27)
 - texturing
 	- view-based surface texturing
 	- blending between triangles
 	- separate triangles into texture lookup / files
 		- TextureMap (from textures to atlas)
 	=> scene textured model
+-----> HERE <------
 (06/17)
 - viewing output
 	- locally
@@ -368,34 +367,18 @@ https://cloud.google.com/appengine/docs/nodejs/
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
--normals 
-
-
-- export scene to dae & import to ios / unity / blender
-	- check if it works for cube
-	- how to do multiple textures with same texture image ?
-	- validate 2-texture model
-	- validate 6-texture model
 
 - point - triangle-intersection criteria for surface
+	-- not sure if working or not ...
 
-- need additional step for fine triangle point localization
+
+
+- need additional step for fine triangle-texture point localization
 	- graduated loading
 
 
 
 	- scene copying triangles.yaml pertinent info
-
-
-=> RENDERING WEBGL PROBLEMS:
-	- gaps between textured triangles - fix webgl tiny spaces in texture rendering?
-	- something wrong with triangulating the surface ... holes in the surface
-		- higher - resolution breaks it?
-			- resolutionScale = 0.5 => 0.25
-			0.25: 11420
-		=> verify by rendering solids not textures for same tris
-
-
 
 
 - filtering after probe3d removes most of the added matches
@@ -416,10 +399,8 @@ https://cloud.google.com/appengine/docs/nodejs/
 
 
 
-
-
-
 - PAIRWISE CLIPPING SPHERES in 3D
+
 
 
 ~ cleaning up 3+ matches points by dropping worst NCC point2D
@@ -437,13 +418,13 @@ https://cloud.google.com/appengine/docs/nodejs/
 - lots of s: 0 in graph points .... view size wrong ?
 
 
-
-
-
-
-
-
 - update graph logic for SCALE & TRANSFORM-PAIRS
+	- create scale graph w/ all trivial edges (calc scale ratios)
+	- select largest subgraph (views) that has A) most views B) lowest average error
+	=> do absolute scale solve
+	- create trans. graph only using edges (pairs) that exist in scale graph
+	=> do absolute trans. solve
+
 
 
 

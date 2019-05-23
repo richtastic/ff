@@ -41,8 +41,11 @@ TestDAE.prototype._handleLoaded = function(data){
 			"id":"tex2_png-surface",
 			"type":"2D",
 			"image":image2,
+			"sampler":{
+				"id": "tex2_png-sampler",
+			}
 		},
-		"sampler": sampler2,
+		// "sampler": sampler2,
 		"phong":
 		{
 			"emission":
@@ -58,7 +61,7 @@ TestDAE.prototype._handleLoaded = function(data){
 			"diffuse":
 			{
 				"type":"texture",
-				"value":sampler2,
+				// "value":sampler2,
 			},
 			"specular":
 			{
@@ -83,8 +86,10 @@ TestDAE.prototype._handleLoaded = function(data){
 			"id":"world_jpg-surface",
 			"type":"2D",
 			"image":image1,
+			"sampler":{
+				"id": "world_jpg-sampler",
+			}
 		},
-		"sampler": sampler1,
 		"phong":
 		{
 			"emission":
@@ -100,7 +105,7 @@ TestDAE.prototype._handleLoaded = function(data){
 			"diffuse":
 			{
 				"type":"texture",
-				"value":sampler1,
+				// "value":sampler1,
 			},
 			"specular":
 			{
@@ -145,8 +150,8 @@ TestDAE.prototype._handleLoaded = function(data){
 	var z = new V3D(0,1,1);
 	var tri3Ds = [];
 		// bot
-		tri3Ds.push(new Tri3D(a,b,c));
-		tri3Ds.push(new Tri3D(a,c,d));
+		tri3Ds.push(new Tri3D(a,d,c));
+		tri3Ds.push(new Tri3D(c,b,a));
 		// top
 		tri3Ds.push(new Tri3D(w,x,y));
 		tri3Ds.push(new Tri3D(w,y,z));
@@ -157,8 +162,8 @@ TestDAE.prototype._handleLoaded = function(data){
 		tri3Ds.push(new Tri3D(a,b,x));
 		tri3Ds.push(new Tri3D(a,x,w));
 		// back
-		tri3Ds.push(new Tri3D(b,c,z));
-		tri3Ds.push(new Tri3D(b,z,y));
+		tri3Ds.push(new Tri3D(b,c,y));
+		tri3Ds.push(new Tri3D(b,y,x));
 		// front
 		tri3Ds.push(new Tri3D(d,a,w));
 		tri3Ds.push(new Tri3D(d,w,z));
@@ -251,6 +256,30 @@ TestDAE.prototype._handleLoaded = function(data){
 			cube
 		],
 	};
+
+
+
+
+	var world = Formats3D.daeWorldNew();
+	var image1 = Formats3D.daeWorldAddImage(world, "world.jpg");
+	var image2 = Formats3D.daeWorldAddImage(world, "tex2.png");
+	var effect1 = Formats3D.daeWorldAddMaterialFromImage(world, image1);
+	var effect2 = Formats3D.daeWorldAddMaterialFromImage(world, image2);
+	var material1 = Formats3D.daeWorldAddInstanceFromMaterial(world, effect1);
+	var material2 = Formats3D.daeWorldAddInstanceFromMaterial(world, effect2);
+	var tris3D = [Code.subArray(tri3Ds,0,10), Code.subArray(tri3Ds,10,2)];
+	var tris2D = [Code.subArray(tri2Ds,0,10), Code.subArray(tri2Ds,10,2)];
+	var mats = [material1,material2];
+	var mesh = Formats3D.daeWorldAddMesh(world, tris3D, tris2D, mats);
+	var object1 = Formats3D.daeWorldAddInstanceFromMesh(world, mesh, new Matrix3D().identity());
+	// var object2 = Formats3D.daeWorldAddInstanceFromMesh(world, mesh, new Matrix3D().identity().translate(-3,0,1));
+	var object2 = Formats3D.daeWorldAddInstanceFromMesh(world, mesh, new Matrix3D().identity().rotateX(Code.radians(-45)).rotateZ(Code.radians(45)).translate(-2,0,1));
+	var scene1 = Formats3D.daeWorldAddScene(world);
+	Formats3D.daeWorldAddInstanceMeshToScene(world, scene1, object1);
+	Formats3D.daeWorldAddInstanceMeshToScene(world, scene1, object2);
+
+	console.log(world);
+
 	var xml = Formats3D.worldToDAE(world);
 
 	console.log(xml);

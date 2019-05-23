@@ -8,7 +8,7 @@ function pageLoadedFxn(){
 	var ff = new FF("../code/",ffLoadedFxn);
 }
 function ffLoadedFxn(){
-	(new ScriptLoader("./",["Formats3D.js","TestDAE.js"],this,funLoadedFxn)).load();
+	(new ScriptLoader("./",["TestDAE.js"],this,funLoadedFxn)).load();
 }
 function funLoadedFxn(){
 	var test = new TestDAE();

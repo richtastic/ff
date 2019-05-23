@@ -138,7 +138,6 @@ display.graphics().clear();
 			var dot = (light+1.0)*0.5;
 			var dm1 = 1.0 - dot;
 		// clipping ?
-		//console.log(A+"");
 		if(false){//A.z<0 || B.z<0|| C.z<0){
 			//
 		}else{
@@ -491,10 +490,8 @@ Formats3D._daeListObjectToXMLValue = function(xml,object, sid){
 		value = Formats3D._daeArrayFromList(val); // R B G A
 	}else if(type=="texture"){
 		tag = "texture";
-		sid = val["id"];
+		sid = val["sampler"]["id"];
 		value = "";
-		// value = val["id"];
-		// sid = "diffuse";
 	}else if(type=="matrix"){
 		tag = "matrix";
 		value = Formats3D._daeArrayFromList(val.toArray());
@@ -513,7 +510,6 @@ Formats3D._daeListObjectToXMLValue = function(xml,object, sid){
 	}
 }
 Formats3D.worldToDAE = function(world){
-	console.log(world);
 	var worldImages = Code.valueOrDefault(world["images"], []);
 	var worldEffects = Code.valueOrDefault(world["effects"], []);
 	var worldMaterials = Code.valueOrDefault(world["materials"], []);
@@ -521,7 +517,6 @@ Formats3D.worldToDAE = function(world){
 	var worldScenes = Code.valueOrDefault(world["scenes"], []);
 	var worldLights = Code.valueOrDefault(world["lights"], []);
 	var worldMeshes = Code.valueOrDefault(world["meshes"], []);
-
 
 	var DAE_KEYWORD_COLLADA = "COLLADA";
 	var DAE_VALUE_COLLADA_XMLNS = "http://www.collada.org/2005/11/COLLADASchema";
@@ -531,12 +526,10 @@ Formats3D.worldToDAE = function(world){
 	var contributor = "Blender User";
 	var authoringTool = "Blender 2.79.0 commit date:2018-03-22, commit time:14:10, hash:f4dc9f9";
 	var exportTime = Code.getTimeStampZulu();
-	var units = "meter";
-	var axisUp = "Z_UP";
+	var units = "meter"; // meter="ratio here"
+	var axisUp = "Z_UP"; // X_UP, Y_UP, Z_UP
 
 	var xml = new XML();
-
-
 	// xml pre
 	xml.addXMLProlog();
 
@@ -559,6 +552,8 @@ Formats3D.worldToDAE = function(world){
 		xml.endChildren();
 		xml.startElement("created");
 			xml.setValue(exportTime);
+		xml.startElement("keywords");
+			xml.setValue("");
 		xml.startElement("modified");
 			xml.setValue(exportTime);
 		xml.startElement("unit");
@@ -595,7 +590,7 @@ Formats3D.worldToDAE = function(world){
 				var surfaceID = surface["id"];
 				var surfaceType = surface["type"];
 				var surfaceImageID = surface["image"]["id"];
-			var sampler = effect["sampler"];
+				var sampler = surface["sampler"];
 				var samplerID = sampler["id"];
 				var samplerSourceID = surfaceID;
 			// var imageFile = effect["file"];
@@ -604,7 +599,6 @@ Formats3D.worldToDAE = function(world){
 			xml.startChildren();
 				xml.startElement("profile_COMMON");
 				xml.startChildren();
-console.log("surfaceID: "+surfaceID)
 					xml.startElement("newparam");
 					xml.setAttribute("sid",surfaceID);
 					xml.startChildren();
@@ -946,31 +940,16 @@ console.log("surfaceID: "+surfaceID)
 								for(var m=0; m<materials.length; ++m){
 									var material = materials[m];
 										material = material["material"]; // library source
-console.log(material)
 									var materialID = material["id"];
 									xml.startElement("instance_material");
 									xml.setAttribute("target","#"+materialID);
 									xml.setAttribute("symbol",materialID);
 								}
 							}
-							// for(var m=0; m<bindMaterials.length; ++m){
-							// 	var material = bindMaterials[m];
-							// }
 							xml.endChildren();
 						xml.endChildren();
 					xml.endChildren();
 				xml.endChildren();
-				// <node id="Cube_Instance_2" name="Cube_Instance_2" type="NODE">
-		        //   <matrix sid="transform">1 0 0 -3 0 1 0 0 0 0 1 1 0 0 0 1</matrix>
-		        //   <instance_geometry url="#Cube_MESH-mesh" name="Cube_Instance_2">
-		        //     <bind_material>
-		        //       <technique_common>
-		        //         <instance_material symbol="Material1-material" target="#Material1-material"/>
-		        //         <instance_material symbol="Material2-material" target="#Material2-material"/>
-		        //       </technique_common>
-		        //     </bind_material>
-		        //   </instance_geometry>
-		        // </node>
 			}
 			xml.endChildren();
 		}
@@ -994,6 +973,160 @@ console.log(material)
 	return str;
 }
 
+Formats3D.daeWorldNew = function(){
+	var world = {};
+	return world;
+}
+Formats3D.daeWorldAddImage = function(world, imageFile){
+	var imageID = Code.stringReplaceAll(imageFile,".","_");
+	var image = {
+		"file":imageFile,
+	};
+	var images = world["images"];
+	if(!images){
+		images = [];
+		world["images"] = images;
+	}
+	image["id"] = imageID+"_"+images.length
+	images.push(image);
+	return image;
+}
+Formats3D.daeWorldAddMaterialFromImage = function(world, image){
+	var materials = world["effects"];
+	if(!materials){
+		materials = [];
+		world["effects"] = materials;
+	}
+	// make
+	var baseID = "Material"+materials.length;
+	var materialID = baseID+"-effect";
+	var surfaceID = image["id"]+"-surface";
+	var samplerID = image["id"]+"-sampler";
+	var surface = {
+		"id":surfaceID,
+		"type":"2D",
+		"image":image,
+		"sampler":{
+			"id":samplerID,
+		},
+	};
+	var material = {
+		"id":materialID,
+		"instances":[],
+		"surface": surface,
+		"phong": {
+			"emission":
+			{
+				"type":"color",
+				"value":[0, 0, 0, 1],
+			},
+			"ambient":
+			{
+				"type":"color",
+				"value":[0, 0, 0, 1],
+			},
+			"diffuse":
+			{
+				"type":"texture",
+				"value":surface,
+			},
+			"specular":
+			{
+				"type":"color",
+				"value":[0.5, 0.5, 0.5, 1.0],
+			},
+			"shininess":{
+				"type":"number",
+				"value":50,
+			},
+			"ior":{
+				"type":"number",
+				"value":1,
+			},
+		},
+	};
+	materials.push(material);
+	return material;
+}
+Formats3D.daeWorldAddInstanceFromMaterial = function(world, sourceMaterial){
+	var materials = world["materials"];
+	if(!materials){
+		materials = [];
+		world["materials"] = materials;
+	}
+	// add
+	var baseID = sourceMaterial["id"];
+	var materialID = baseID+"-material";
+	var material = {
+		"id":materialID,
+		"name":"Material"+materials.length,
+		"instance":sourceMaterial,
+	};
+	materials.push(material);
+	sourceMaterial["instances"].push(material);
+	return material;
+}
+Formats3D.daeWorldAddMesh = function(world, triangles3D, triangles2D, materials){
+	var meshes = world["meshes"];
+	if(!meshes){
+		meshes = [];
+		world["meshes"] = meshes;
+	}
+	// add
+	var mesh = {
+		"name":"Mesh"+meshes.length+"",
+		"id":"Mesh"+meshes.length+"-mesh",
+		"materials":[],
+		"instances":[],
+	};
+	for(var i=0; i<triangles3D.length; ++i){
+		var tris3D = triangles3D[i];
+		var tris2D = triangles2D[i];
+		var material = materials[i];
+		var obj = {
+			"material":material,
+			"triangles2D":tris2D,
+			"triangles3D":tris3D,
+		};
+		mesh["materials"].push(obj);
+	}
+	meshes.push(mesh);
+	return mesh;
+}
+Formats3D.daeWorldAddInstanceFromMesh = function(world, sourceMesh, transform){
+	transform = transform!==undefined ? transform : new Matrix3D().identity();
+	var count = sourceMesh["instances"].length;
+	var name = sourceMesh["name"]+"_"+count;
+	var instance = {
+		"id":name,
+		"name":name,
+		"instance":sourceMesh,
+		"transform":transform,
+	};
+	sourceMesh["instances"].push(instance);
+	return instance;
+}
+Formats3D.daeWorldAddScene = function(world){
+	var scenes = world["scenes"];
+	if(!scenes){
+		scenes = [];
+		world["scenes"] = scenes;
+	}
+	// add
+	var isDefault = scenes.length==0;
+	var sceneID = "Scene"+scenes.length;
+	var scene = {
+		"id":sceneID,
+		"name":sceneID,
+		"nodes":[],
+		"default":isDefault,
+	};
+	scenes.push(scene);
+	return scene;
+}
+Formats3D.daeWorldAddInstanceMeshToScene = function(world, scene, node){
+	scene["nodes"].push(node);
+}
 
 // http://www.flexcomm.com/library/ASCII256.htm
 // http://www.ascii-code.com/

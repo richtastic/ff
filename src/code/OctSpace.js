@@ -147,9 +147,12 @@ OctSpace.prototype.objectsInsideCuboid = function(min,max){
 	this._root.objectsInsideCuboid(arr,min,max,this._toCuboidFxn);
 	return arr;
 }
-OctTree.prototype.objectsInsideRay = function(org,dir,radius){ // objects inside cylinder-ray
+OctSpace.prototype.objectsInsideRay = function(org,dir){ // objects inside cylinder-ray
+	throw "TODO";
+}
+OctSpace.prototype.objectsIntersectRay = function(org,dir){ // objects intersecting ray
 	var arr = [];
-	this._root.objectsInsideRay(arr,org,dir,radius,this._toPoint);
+	this._root.objectsIntersectRay(arr,org,dir,this._toCuboidFxn);
 	return arr;
 }
 // ---------------------------------------------------------------------------------------------------------
@@ -548,8 +551,41 @@ OctSpace.Voxel.prototype.objectsInsideCuboid = function(arr,min,max,toCubeFxn){
 		}
 	}
 }
+OctSpace.Voxel.prototype.objectsIntersectRay = function(arr,org,dir,toCubeFxn){ // sphere intersection
+	// console.log(this,this._objects);
+	if(this._objects){
+		// console.log(this._objects);
+		// throw "found dobjects";
+		// console.log(toCubeFxn);
+		for(var i=0; i<this._objects.length; ++i){
+			var object = this._objects[i].object();
+			var cube = toCubeFxn(object);
+			var radius = cube.size().length()*0.5;
+			var center = cube.center();
+			var intersection = Code.intersectRaySphere3D(org,dir, center,radius);
+			console.log(intersection)
+			throw "?"
+			if(intersection){
+				arr.push(this._objects[i]);
+			}
+		}
+	}else if(this._children){
+		for(var i=0; i<this._children.length; ++i){
+			var child = this._children[i];
+			if(child){
+				var p = child.center();
+				var d = Code.distancePointRayFinite3D(org,dir,p);
+				var r = child.size().length()*0.5;
+				// if(d<=r){
+					child.objectsIntersectRay(arr,org,dir,toCubeFxn);
+				// }
+			}
+		}
+	}
+}
 OctSpace.Voxel.prototype.allObjects = function(arr){
 	if(this._objects){
+		// console.log(this._objects.length);
 		for(var i=0; i<this._objects.length; ++i){
 			var object = this._objects[i].object();
 			Code.addUnique(arr,object);

@@ -1177,7 +1177,14 @@ String.prototype.endsWith = function(suffix) {
     return this.indexOf(suffix, this.length - suffix.length) !== -1;
 };
 Code.stringReplaceAll = function(haystack,needle,replacement){
-	//needle = escape(needle)
+	needle = needle.replace(/\./g,"\\.");
+	needle = needle.replace(/\[/g,"\\[");
+	needle = needle.replace(/\]/g,"\\]");
+	needle = needle.replace(/\(/g,"\\(");
+	needle = needle.replace(/\)/g,"\\)");
+	// others?
+	// needle = needle.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, '\\$&');
+	// console.log(needle)
 	// NOT WORK WITH \
 	var regex = new RegExp(needle,"g");
 	return haystack.replace(regex,replacement);

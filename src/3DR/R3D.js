@@ -17303,7 +17303,7 @@ R3D.optimumTriangleTextureImageAssignment = function(transforms,cameras,resoluti
 	var toCuboid = function(a){
 		return a.toCuboid();
 	}
-	var triangleSpace = new OctSpace(toCuboid,minSpace,maxSpace);
+	//var triangleSpace = new OctSpace(toCuboid,minSpace,maxSpace);
 	// Q
 	var sortRank = function(a,b){
 		if(a==b){
@@ -17331,13 +17331,22 @@ R3D.optimumTriangleTextureImageAssignment = function(transforms,cameras,resoluti
 	}
 
 	// insert triangles into space
-	for(var i=0; i<tris.length; ++i){
-		var tri = tris[i];
-		triangleSpace.insertObject(tri);
-	}
+	// for(var i=0; i<tris.length; ++i){
+	// 	var tri = tris[i];
+	// 	triangleSpace.insertObject(tri);
+	// }
+	var triangleSpace = new OctSpace(toCuboid,minSpace,maxSpace);
+	triangleSpace.initWithObjects(tris);
+
+	// console.log("CONTENTS:");
+	// var arr = triangleSpace.toArray();
+	// console.log(arr);
+	console.log(triangleSpace.size()+"");
+	console.log(triangleSpace);
 	var fxnSortRank = function(a,b){
 		return a["rank"] > b["rank"] ? -1 : 1; // larger number first
 	}
+	var intersectionCount = 0;
 	var maxViewAngle = Code.radians(90.0);
 	for(var i=0; i<verts.length; ++i){
 		var vert = verts[i];
@@ -17353,14 +17362,33 @@ R3D.optimumTriangleTextureImageAssignment = function(transforms,cameras,resoluti
 			var viewSize = resolutions[j];
 			var K = cameras[j];
 			var distortions = null;
+			// aiming toward camera
 			var angle = Math.PI - V3D.angle(viewNormal,vertNormal); // 180 = good | 0 = bad
 			if(angle>maxViewAngle){
 				continue;
 			}
-			// TODO: => ray-triangle-intersection
-			var intersection = triangleSpace.;
-			// go thru
+			// triangle occlusions
+			var org = vertPoint;
+			var des = viewCenter;
+			var dir = V2D.sub(des,org);
+			var potentialTriangles = triangleSpace.objectsIntersectRay(org,dir);
+			var intersection = null;
+			intersectionCount += potentialTriangles.length;
+			if(potentialTriangles.length>0){
+				console.log(potentialTriangles);
+				throw "potentialTriangles";
+				for(var t=0; t<potentialTriangles.length; ++t){
+					var tri = potentialTriangles[t];
+					// TODO: IGNORE INTERSECTOIN WITH tri if contains THIS vertex
+					var intersect = Code.intersectRayTri(org,dir, tri.A(),tri.B(),tri.C(),tri.normal());
+					if(intersect){
+						intersection = intersect;
+						break;
+					}
+				}
+			}
 			if(intersection){
+				// ++intersectionCount;
 				continue;
 			}
 			var projected2D = R3D.projectPoint3DToCamera2DForward(vertPoint, viewTransform, K, distortions, false);
@@ -17372,6 +17400,7 @@ R3D.optimumTriangleTextureImageAssignment = function(transforms,cameras,resoluti
 			if( !((0<=projected2D.x && projected2D.x<viewSize.x) && (0<=projected2D.y && projected2D.y<viewSize.y)) ){
 				continue;
 			}
+			// valid vertex-view match
 			var distance = V3D.distance(viewCenter,vertPoint);
 			var cosine = Math.cos(angle);
 			var rank = cosine/distance;
@@ -17390,8 +17419,9 @@ R3D.optimumTriangleTextureImageAssignment = function(transforms,cameras,resoluti
 		}
 		vert.viewAndRanks(vs,rs,ps);
 	}
+	console.log("INTERSECTIONS FOUND: intersectionCount:"+intersectionCount);
+throw "here"
 	triangleSpace.kill(); // done
-	var impossibleViews = 0;
 	// triangles init states
 	var badTris = [];
 	for(var i=0; i<tris.length; ++i){
@@ -17408,7 +17438,6 @@ R3D.optimumTriangleTextureImageAssignment = function(transforms,cameras,resoluti
 		var tri = badTris[i];
 		tri.removeFromAll();
 	}
-	console.log(tris);
 	// init vert states
 	var badVerts = [];
 	for(var i=0; i<verts.length; ++i){
@@ -17438,18 +17467,6 @@ R3D.optimumTriangleTextureImageAssignment = function(transforms,cameras,resoluti
 		check = false;
 		var iteration = 0;
 		while(!Q.isEmpty()){
-			//
-			// var cnt = 0;
-			// for(var i=0; i<verts.length; ++i){
-			// 	cnt += verts[i].isFrontier() ? 1 : 0;
-			// }
-			//
-			// var cnt2 = 0;
-			// for(var i=0; i<tris.length; ++i){
-			// 	cnt2 += tris[i].isFrontier() ? 1 : 0;
-			// }
-			//
-			// console.log(iteration+"  count: "+Q.length()+" ---- frontiers: "+cnt+" / "+cnt2);
 			++iteration;
 			var vertex = Q.pop();
 			if(!vertex.isFrontier()){
@@ -17469,7 +17486,7 @@ R3D.optimumTriangleTextureImageAssignment = function(transforms,cameras,resoluti
 			}
 		}
 
-
+		// feedback:
 		var cnt1 = 0;
 		for(var i=0; i<verts.length; ++i){
 			cnt1 += verts[i].isFrontier() ? 1 : 0;
@@ -17501,12 +17518,8 @@ R3D.optimumTriangleTextureImageAssignment = function(transforms,cameras,resoluti
 					var x = vx[k];
 					var p = x.pointForView(v);
 					if(!p){
-						console.log(tri);
-						console.log(vx);
-						console.log(x);
 						throw "don't have a p: "+i+":"+j+" = "+v;
 					}
-					// console.log(p);
 					ps.push(p);
 				}
 				if(ps[0] && ps[1] && ps[2]){
@@ -17524,7 +17537,6 @@ R3D.optimumTriangleTextureImageAssignment = function(transforms,cameras,resoluti
 					d01 = Math.max(l01*r02,l01*r12,d01);
 					d02 = Math.max(l02*r01,l02*r12,d02);
 					d12 = Math.max(l12*r01,l12*r02,d12);
-
 					// POSSIBLE VERY SKEWED TRIANGLE / PROJECTION => LIMIT ITERATIONS
 					var max = Math.max(d01,d02,d12);
 						if(maxEdgeLength===null){
@@ -17544,6 +17556,7 @@ R3D.optimumTriangleTextureImageAssignment = function(transforms,cameras,resoluti
 			}
 			tri.scale(maxScale);
 			if(overMax){
+				throw "need to subdivide triangle to fit at desired resolution"
 				//			divide triangle * adjacent triangles up
 				//			new vertex possible views = all of triangle's initial settings
 				//			add any adjacent frontier vertices to Q
@@ -17594,9 +17607,9 @@ R3D.optimumTriangleTextureImageAssignment = function(transforms,cameras,resoluti
 			for(var k=0; k<vx.length; ++k){
 				var x = vx[k];
 				var p = x.pointForView(v);
-if(!p){
-	throw "bad p: "+i;
-}
+				if(!p){
+					throw "bad p: "+i;
+				}
 				ps.push(p);
 			}
 			locations.push(ps);
@@ -17753,6 +17766,10 @@ R3D.textureAddSourceTriangles = function(destinationImage, destinationTri2D, sou
 	var max = info["max"];
 	min.floor();
 	max.ceil();
+	min.x -= padding;
+	min.y -= padding;
+	max.y += padding;
+	max.y += padding;
 	var siz = V2D.sub(max,min);
 	var dW = siz.x;
 	var dH = siz.y;
