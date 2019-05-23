@@ -203,8 +203,8 @@ XML.prototype.addXMLProlog = function(version,encoding){
 	encoding = encoding!==undefined ? encoding : "utf-8";
 	this.startElement("xml");
 	this.currentElement().type(XML.ELEMENT_TYPE_XML);
-	this.setAttribute("encoding",encoding);
 	this.setAttribute("version",version);
+	this.setAttribute("encoding",encoding);
 }
 XML.prototype.addComment = function(value){
 	this.startElement(null);

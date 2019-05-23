@@ -3498,7 +3498,8 @@ console.log("TODO: UNDO");
 	this._canvas3D = new Canvas(null,0,0,Canvas.STAGE_FIT_FILL,false,true);
     this._stage3D = new StageGL(this._canvas3D, frameRate, this.getVertexShaders(), this.getFragmentShaders());
     this._canvas3D.addListeners();
-  	this._stage3D.setBackgroundColor(0xFF000000);
+  	// this._stage3D.setBackgroundColor(0xFF000000);
+	this._stage3D.setBackgroundColor(0xFFFFFFFF);
   	this._stage3D.frustrumAngle(35);
 	this._stage3D.enableDepthTest();
 	this._stage3D.setViewport(0,0,this._canvas3D.width(),this._canvas3D.height());
@@ -3752,6 +3753,7 @@ App3DR.App.Model3D.prototype.setTextures = function(images, triangles, vertexes)
 	// vertex (3D) & uv (2D) binding
 	var texturePointList = Code.newArrayArrays(textureCount);
 	var vertexPointList = Code.newArrayArrays(textureCount);
+var triangleCount = triangles.length;
 	for(var i=0; i<triangles.length; ++i){
 		var tri = triangles[i];
 		var t = tri["t"];
@@ -3802,7 +3804,13 @@ App3DR.App.Model3D.prototype.setTextures = function(images, triangles, vertexes)
 		this._textureUVPoints[j] = this._stage3D.getBufferFloat32Array(texturePoints, 2);
 		this._textureVertexPoints[j] = this._stage3D.getBufferFloat32Array(vertexPoints, 3);
 	}
-	console.log("added triangle model");
+	console.log("added triangle model: "+triangleCount);
+
+	console.log(this._stage3D);
+	var gl = this._stage3D.canvas().context();
+	console.log(gl);
+	var maxTextures = gl.getParameter(gl.MAX_TEXTURE_IMAGE_UNITS);
+	console.log(maxTextures);
 }
 App3DR.App.Model3D.prototype.setLines = function(input){
 	// CREATE LINES:
@@ -5982,9 +5990,11 @@ App3DR.ProjectManager = function(relativePath, operatingStage, readyFxn){ // ver
 	this._textureCount = null;
 	this._triangleData = null;
 
-	this._sceneID = null;
 
-	this._scene = null;
+
+	this._scenes = [];
+	this._currentSceneID = null;
+
 
 	// this._sparseInfo = null;
 	// this._sparsePoints = null;
@@ -5996,7 +6006,7 @@ App3DR.ProjectManager = function(relativePath, operatingStage, readyFxn){ // ver
 	// this._textures = null;
 	// this._textureCount = null;
 	// this._packing = null;
-	this._scenes = [];
+
 
 	// operations related
 	this._loading = true;
@@ -6190,13 +6200,27 @@ App3DR.ProjectManager.prototype.textureCount = function(count){
 	return this._textureCount;
 }
 
-App3DR.ProjectManager.prototype.sceneID = function(){
-	return this._sceneID;
+App3DR.ProjectManager.prototype.currentSceneID = function(){
+	return this._currentSceneID;
 }
-App3DR.ProjectManager.prototype.setSceneID = function(scene){
-	this._sceneID = scene;
+App3DR.ProjectManager.prototype.setCurrentSceneID = function(scene){
+	this._currentSceneID = scene;
 }
-
+App3DR.ProjectManager.prototype.setScenes = function(scenes){
+	this._scenes = scenes;
+}
+App3DR.ProjectManager.prototype.sceneFromID = function(sceneID){
+	if(sceneID){
+		var scenes = this._scenes;
+		for(var i=0; i<scenes.length; ++i){
+			var scene = scene[i];
+			if(scene.id()==sceneID){
+				return scene;
+			}
+		}
+	}
+	return null;
+}
 
 App3DR.ProjectManager.prototype.bundleFilename = function(file){
 	if(file!==undefined){
@@ -6302,7 +6326,8 @@ App3DR.ProjectManager.prototype.setFromYAML = function(object){
 	var textureCount = object["textureCount"];
 	var triangleCount = object["triangleCount"];
 	var triangles = object["triangles"];
-	var scene = object["scene"];
+	var scenes = object["scenes"];
+	var currentSceneID = object["currentSceneID"];
 
 	this._titleName = title;
 	this._createdTimestamp = created;
@@ -6361,7 +6386,18 @@ App3DR.ProjectManager.prototype.setFromYAML = function(object){
 	this._triangleFilename = Code.valueOrDefault(triangles, null);
 	this._triangleCount = Code.valueOrDefault(triangleCount, null);
 	this._textureCount = Code.valueOrDefault(textureCount, null);
-	this._scene = Code.valueOrDefault(scene, null);
+	this._currentSceneID = Code.valueOrDefault(currentSceneID, null);
+	this._scenes = [];
+	if(scenes){
+		len = scenes.length;
+		for(i=0; i<len; ++i){
+			throw "READ SCENE";
+			var s = scenes[i];
+			var scene = new App3DR.ProjectManager.Scene(this);
+			scenes.readFromObject(c);
+			this._scenes.push(scene);
+		}
+	}
 }
 App3DR.ProjectManager.prototype.toYAML = function(){
 	var modified = Code.getTimeStampFromMilliseconds();
@@ -6456,10 +6492,19 @@ App3DR.ProjectManager.prototype.toYAML = function(){
 	yaml.writeNumber("textureCount",this._textureCount);
 	yaml.writeBlank();
 
-	// scene ?
-	yaml.writeString("scene",this._scene);
+	// scene
+	yaml.writeString("currentSceneID",this._currentSceneID);
+	len = this._scenes ? this._scenes.length : 0;
+	if(len>0){
+		yaml.writeArrayStart("scenes");
+		for(i=0; i<len; ++i){
+			var scene = this._scenes[i];
+			yaml.writeString("SCENE","?");
+		}
+		yaml.writeArrayEnd();
+	}
 
-	// legacy
+	// legacy - testing
 	yaml.writeString("bundle",this._bundleFilename);
 	yaml.writeBlank();
 
@@ -7189,7 +7234,9 @@ if(textures===null){
 	return;
 }
 
-var scene = this.currentScene();
+var sceneID = this.currentSceneID();
+console.log(sceneID);
+var scene = this.sceneFromID(sceneID);
 console.log(scene);
 
 throw "scene";
@@ -7281,6 +7328,12 @@ App3DR.ProjectManager.prototype.saveTriangleTextureFromFilename = function(filen
 	var path = Code.appendToPath(this._workingPath, App3DR.ProjectManager.RECONSTRUCT_DIRECTORY, App3DR.ProjectManager.RECONSTRUCT_TEXTURES_DIRECTORY, filename);
 	console.log("IMAGE PATH: "+path);
 	this.addOperation("SET", {"path":path, "data":binary}, callback, context, object);
+}
+
+App3DR.ProjectManager.prototype.removeAllTextures = function(callback, context, object){
+	var path = Code.appendToPath(this._workingPath, App3DR.ProjectManager.RECONSTRUCT_DIRECTORY, App3DR.ProjectManager.RECONSTRUCT_TEXTURES_DIRECTORY);
+	console.log("TEXTURE PATH: "+path);
+	this.addOperation("DEL", {"path":path}, callback, context, object);
 }
 
 App3DR.ProjectManager.prototype.calculatePairMatch = function(viewA, viewB, pair, callback, context, object){
@@ -10594,7 +10647,7 @@ App3DR.ProjectManager.prototype.trianglesTexturize = function(){ // find uv sour
 		// var textureSize = new V2D(512,512);
 		// var textureSize = new V2D(1024,1024);
 		var textureSize = new V2D(2048,2048);
-		var resolutionScale = 0.5;
+		var resolutionScale = 0.5; // GAPS ?
 		// var resolutionScale = 0.25;
 		// var resolutionScale = 0.15;
 		// var resolutionScale = 0.125;
@@ -10653,7 +10706,7 @@ App3DR.ProjectManager.prototype.trianglesTexturize = function(){ // find uv sour
 			var t = new Tri3D(a.copy(),b.copy(),c.copy());
 			triangles3D.push(t);
 		}
-		console.log(triangles3D);
+		console.log("TRIANGLES START: "+triangles3D.length);
 
 		// 3D-2D texture sourcing
 		var info = R3D.optimumTriangleTextureImageAssignment(transforms,cameras,resolutions,triangles3D,textureSize,resolutionScale);
@@ -10666,6 +10719,7 @@ App3DR.ProjectManager.prototype.trianglesTexturize = function(){ // find uv sour
 
 		var triangles2D = info["destinations2D"];
 		console.log(triangles2D);
+		console.log("TRIANGLES END: "+triangles3D.length);
 		var totalArea = 0;
 		for(var i=0; i<triangles2D.length; ++i){
 			var tri = triangles2D[i];
@@ -10683,7 +10737,7 @@ App3DR.ProjectManager.prototype.trianglesTexturize = function(){ // find uv sour
 		// 2D texture packing
 		var info = R3D.optimumTriangleTexturePacking(textureSize,triangles2D,resolutionScale,maxSize);
 		console.log(info);
-		console.log(triangles);
+
 		var pagesCount = info["pageCount"];
 		var texture2D = info["mapped2D"];
 		var pages2D = info["pages"];
@@ -10734,6 +10788,7 @@ App3DR.ProjectManager.prototype.trianglesTexturize = function(){ // find uv sour
 			newTriangles.push(newTri);
 		}
 		console.log(newTriangles);
+// throw "SOMETHING WRONG WITH RESOLUTION?"
 		// packing init:
 		var packing = [];
 		for(var i=0; i<triangleViews.length; ++i){
@@ -10755,13 +10810,21 @@ App3DR.ProjectManager.prototype.trianglesTexturize = function(){ // find uv sour
 		triangleData["packing"] = packing;
 		triangleData["textures"] = textures;
 		var triangleCount = newTriangles.length;
-		var completeFxn = function(){
+
+		var completeTexturesDeleteFxn = function(){
 			console.log("SAVING TRIANGLE COUNT");
 			project.setTriangleCount(triangleCount);
+			project.setTextureCount(null); // should alreay be the case
+			project.setCurrentSceneID(null);
+			project.setScenes(null);
 			project.saveProjectFile();
 		}
+		var completeTriangleSaveFxn = function(){
+			console.log("DELETING PREVIOUS TEXTURES");
+			project.removeAllTextures(completeTexturesDeleteFxn, project, null);
+		}
 		console.log("SAVING TRIANGLES WITH INIT TEXTURE PACKING");
-		project.saveTrianglesFromData(triangleData, completeFxn, project);
+		project.saveTrianglesFromData(triangleData, completeTriangleSaveFxn, project);
 	}
 	// load final points file
 	project.loadTriangles(fxnTrianglesLoaded, project);
@@ -10814,14 +10877,15 @@ App3DR.ProjectManager.prototype.trianglesPacking = function(){
 			// console.log(imageSource);
 			// console.log(textureImage);
 			// go thru all trianges with texture i
+console.log("viewIndex: "+viewIndex);
 			var ext = 0;
 			for(var i=0; i<triangleTris.length; ++i){
 				var tri = triangleTris[i];
 				var tex = tri["t"];
 				if(tex==currentTexture){
-					var vs = tri["v"];
-					for(var j=0; j<vs.length; ++vs){
-						if(vs[j]["v"]==viewIndex){
+					var vs = tri["v"]; // view source list
+					for(var j=0; j<vs.length; ++j){
+						if(vs[j]["v"]===viewIndex){
 							var sourcing = [ (tri["A"]["v"]==viewIndex), (tri["B"]["v"]==viewIndex), (tri["C"]["v"]==viewIndex) ];
 							var A = tri["a"];
 							var B = tri["b"];

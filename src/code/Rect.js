@@ -5,8 +5,8 @@ Rect.packBins = function(rectList, bound){
 	var maxAreaPercent = 0.95;
 	// var maxIterationsPage = 1E2; // --- 121 bins
 	// var maxIterationsPage = 1E3; // FAST --- too many fails --- 13 bins
-	var maxIterationsPage = 1E4; // FAST  ------ 7 bins
-	// var maxIterationsPage = 1E5; // OK ----- 7 bins
+	// var maxIterationsPage = 1E4; // FAST  ------ 7 bins
+	var maxIterationsPage = 1E5; // OK ----- 7 bins
 	// var maxIterationsPage = 1E6; // slow ----- 6 bins
 	// more iterations
 	var boundArea = bound.area();
@@ -15,8 +15,20 @@ Rect.packBins = function(rectList, bound){
 	rectList = Code.copyArray(rectList);
 	rectList = rectList.sort(function(a,b){
 		return a.area()<b.area() ? -1 : 1;
+		// return a.area()>b.area() ? -1 : 1;
 	});
-	// TODO: MIX LARGE-SMALL-LARGE-SMALL-... ????
+	// MIX LARGE-SMALL-LARGE-SMALL-
+	/*
+	var rectLen = rectList.length;
+	halfLength = rectLen*0.5 | 0;
+	for(var i=0; i<halfLength; ++i){
+		var j = rectLen-i-1;
+		var temp = rectList[i];
+		rectList[i] = rectList[j];
+		rectList[j] = temp;
+	}
+	*/
+	// looping groups:
 	var groups = [];
 	var impossible = [];
 	while(rectList.length>0){
@@ -49,7 +61,7 @@ Rect.packBins = function(rectList, bound){
 			var result = Rect._packSingle(group, bound, maxIterationsPage);
 			console.log(group.length+" = "+result);
 			if(!result){
-				var decay = 0.9; // 0.5 too fast
+				var decay = 0.95; // 0.5 too fast
 				var nextSize = group.length*decay;
 				nextSize = Math.min(nextSize,group.length-1);
 				while(group.length>nextSize){

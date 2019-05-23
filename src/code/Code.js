@@ -9236,6 +9236,18 @@ Code.triTriIntersection3DBoolean = function(a1,b1,c1,n1, a2,b2,c2,n2){ // n = b-
 // intersections, fenceA-B
 Code.triSizeWithBase2D = function(a,b,c){
 	var dAB = V2D.sub(b,a);
+	var aAB = V2D.angleDirection(V2D.DIRX,dAB);
+	var C = c.copy().sub(a).rotate(-aAB);
+	var B = b.copy().sub(a).rotate(-aAB);
+	var minX = Math.min(0,C.x,B.x);
+	var maxX = Math.max(0,C.x,B.x);
+	var minY = Math.min(0,C.y,B.y);
+	var maxY = Math.max(0,C.y,B.y);
+	var width = maxX-minX;
+	var height = maxY-minY;
+	return new V2D(width,height);
+	/*
+	var dAB = V2D.sub(b,a);
 	var lAB = dAB.length();
 	var dAC = V2D.sub(c,a);
 	var lAC = dAC.length();
@@ -9252,6 +9264,7 @@ Code.triSizeWithBase2D = function(a,b,c){
 	}
 	var height = Math.sqrt(Math.abs(lAC*lAC - oWid*oWid));
 	return new V2D(width,height);
+	*/
 }
 Code.triSizeWithBase3D = function(a,b,c){
 	var dAB = V3D.sub(b,a);

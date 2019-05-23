@@ -17290,7 +17290,8 @@ R3D.optimumTriangleTextureImageAssignment = function(transforms,cameras,resoluti
 			var v = vs[j];
 			v.addTriangle(tri);
 		}
-	}
+	} // done
+	space.kill();
 	// console.log("triangles: "+tris.length);
 	// console.log("vertexes: "+verts.length);
 	// console.log("SIZE: "+minSpace+" - "+maxSpace);
@@ -17357,7 +17358,8 @@ R3D.optimumTriangleTextureImageAssignment = function(transforms,cameras,resoluti
 				continue;
 			}
 			// TODO: => ray-triangle-intersection
-			var intersection = null;
+			var intersection = triangleSpace.;
+			// go thru
 			if(intersection){
 				continue;
 			}
@@ -17388,6 +17390,7 @@ R3D.optimumTriangleTextureImageAssignment = function(transforms,cameras,resoluti
 		}
 		vert.viewAndRanks(vs,rs,ps);
 	}
+	triangleSpace.kill(); // done
 	var impossibleViews = 0;
 	// triangles init states
 	var badTris = [];
@@ -17647,38 +17650,58 @@ R3D.optimumTriangleTexturePacking = function(textureSizes,triangles2D,resolution
 		var sizeAB = Code.triSizeWithBase2D(A,B,C);
 		var sizeBC = Code.triSizeWithBase2D(B,C,A);
 		var sizeAC = Code.triSizeWithBase2D(C,A,B);
+		if(sizeAB.area()==0){
+			sizeAB = null;
+		}
+		if(sizeBC.area()==0){
+			sizeBC = null;
+		}
+		if(sizeAC.area()==0){
+			sizeAC = null;
+		}
 		if(!sizeAB || !sizeBC || !sizeAC){
 			// console.log(A,B,C);
-			// .... why are some areas 0 ... ?
+			throw ".... why are some areas 0 ... ?"
 			continue;
 		}
 		var angleAB = -V2D.angleDirection(V2D.DIRX,V2D.sub(B,A)); // about A
 		var angleBC = -V2D.angleDirection(V2D.DIRX,V2D.sub(C,B)); // about B
 		var angleCA = -V2D.angleDirection(V2D.DIRX,V2D.sub(A,C)); // about C
 		var sets = [];
-			sets.push({"o":A,"a":angleAB,"s":sizeAB,"l":sizeAB.lengthSquare()});
-			sets.push({"o":B,"a":angleBC,"s":sizeBC,"l":sizeBC.lengthSquare()});
-			sets.push({"o":C,"a":angleCA,"s":sizeAC,"l":sizeAC.lengthSquare()});
+			sets.push({"o":A,"a":angleAB,"s":sizeAB,"l":sizeAB.area()});
+			sets.push({"o":B,"a":angleBC,"s":sizeBC,"l":sizeBC.area()});
+			sets.push({"o":C,"a":angleCA,"s":sizeAC,"l":sizeAC.area()});
 		// pick smallest area soln
 		sets.sort(sortArea);
 		var min = sets[0];
-		var scale = Math.min(maxSize.x/min["s"].x, maxSize.y/min["s"].y, 1);
+		var scale = Math.min(maxSize.x/min["s"].x, maxSize.y/min["s"].y, 1.0); // scale DOWN only to fit
 		// var scale = 1.0;
 		var org = min["o"];
 		var ang = min["a"];
-		var siz = min["s"];
-		siz.scale(scale);
-		siz.add(padding*2,padding*2);
-		siz.ceil();
+		// var siz = min["s"];
+		// siz.scale(scale);
+		// siz.add(padding*2,padding*2);
+		// siz.ceil();
 		// transform points
 		var pnts = [A.copy(),B.copy(),C.copy()];
+		var min = new V2D(0,0);
 		for(var j=0; j<pnts.length; ++j){
 			var pnt = pnts[j];
 			pnt.sub(org);
 			pnt.rotate(ang);
 			pnt.scale(scale);
+			V2D.min(min,min,pnt);
+		}
+		// offset to left / right | add padding
+		for(var j=0; j<pnts.length; ++j){
+			var pnt = pnts[j];
+			pnt.add(min);
 			pnt.add(padding,padding);
 		}
+		var siz = V2D.infoArray(pnts)["size"];
+		siz.add(padding*2,padding*2);
+		siz.ceil();
+		//
 		var info = {"points":pnts, "index":i};
 		var map = atlas.addRectMapping(siz, info);
 		totalArea += siz.area();
@@ -17710,6 +17733,7 @@ R3D.optimumTriangleTexturePacking = function(textureSizes,triangles2D,resolution
 		rects2D[index] = rect;
 		pages[index] = page;
 	}
+// throw "here";
 	return {"triangles2D":triangles2D, "mapped2D":tris2D, "rects2D":rects2D, "pages":pages, "pageCount":pageCount};
 }
 R3D.triangleTextureApply = function(image,triangles2D,views,view){

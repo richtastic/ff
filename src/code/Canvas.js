@@ -233,11 +233,14 @@ Canvas.prototype.setBackgroundColor = function (r,g,b,a){
 Canvas.prototype.enableDepthTest = function(){
 	this._context.enable(this._context.DEPTH_TEST);
 // put these in seperate method:
-	//this._context.depthFunc(this._context.LESS);
-	this._context.depthFunc(this._context.LEQUAL);
-	//this._context.depthFunc(this._context.MORE);
+	this._context.depthFunc(this._context.LESS); // DEFAULT
+	// this._context.depthFunc(this._context.LEQUAL);
+	// this._context.depthFunc(this._context.ALWAYS);
 	//this._context.blendFunc(this._context.SRC_ALPHA, this._context.ONE);
-	this._context.blendFunc(this._context.SRC_ALPHA, this._context.ONE_MINUS_SRC_ALPHA);
+	// this._context.blendFunc(this._context.SRC_ALPHA, this._context.ONE_MINUS_SRC_ALPHA);
+
+	this._context.blendFunc(this._context.ONE, this._context.ONE_MINUS_SRC_ALPHA);
+
 	//this._context.blendFuncSeparate(this._context.SRC_ALPHA, this._context.ONE_MINUS_SRC_ALPHA, this._context.ONE, this._context.ONE_MINUS_SRC_ALPHA);
 	this._context.enable(this._context.BLEND);
 	//this._context.enable(this._context.DEPTH_TEST); // disable?
@@ -328,11 +331,17 @@ Canvas.prototype.bindTextureImageRGBA = function(image){
 	this._context.bindTexture(gl.TEXTURE_2D,texture);
 	this._context.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
 	this._context.texImage2D(gl.TEXTURE_2D, 0, this._context.RGBA, this._context.RGBA, this._context.UNSIGNED_BYTE, image);
-	this._context.texParameteri(gl.TEXTURE_2D, this._context.TEXTURE_MAG_FILTER, this._context.NEAREST); // this._context.LINEAR
+	this._context.texParameteri(gl.TEXTURE_2D, this._context.TEXTURE_MAG_FILTER, this._context.NEAREST);
 	this._context.texParameteri(gl.TEXTURE_2D, this._context.TEXTURE_MIN_FILTER, this._context.NEAREST);
+	// this._context.texParameteri(gl.TEXTURE_2D, this._context.TEXTURE_MAG_FILTER, this._context.LINEAR);
+	// this._context.texParameteri(gl.TEXTURE_2D, this._context.TEXTURE_MIN_FILTER, this._context.LINEAR);
 		// this fixes some sort of edge problem :  RENDER WARNING: texture bound to texture unit 0 is not renderable. It maybe non-power-of-2 and have incompatible texture filtering.
-		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
+		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
+		// gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+		// gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+		// gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.MIRRORED_REPEAT);
+		// gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.MIRRORED_REPEAT);
 	this._context.bindTexture(gl.TEXTURE_2D,null);
 	return texture;
 }

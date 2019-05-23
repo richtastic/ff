@@ -368,14 +368,32 @@ https://cloud.google.com/appengine/docs/nodejs/
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-- triangle texture mapping
-	-  triangles taking up too many pages
-		=> print out total areas
+-normals 
+
+
+- export scene to dae & import to ios / unity / blender
+	- check if it works for cube
+	- how to do multiple textures with same texture image ?
+	- validate 2-texture model
+	- validate 6-texture model
+
+- point - triangle-intersection criteria for surface
+
+- need additional step for fine triangle point localization
+	- graduated loading
 
 
 
+	- scene copying triangles.yaml pertinent info
 
 
+=> RENDERING WEBGL PROBLEMS:
+	- gaps between textured triangles - fix webgl tiny spaces in texture rendering?
+	- something wrong with triangulating the surface ... holes in the surface
+		- higher - resolution breaks it?
+			- resolutionScale = 0.5 => 0.25
+			0.25: 11420
+		=> verify by rendering solids not textures for same tris
 
 
 
@@ -384,57 +402,24 @@ https://cloud.google.com/appengine/docs/nodejs/
 	- is the high error related to the optimal points not all aligning ?
 	-
 
-
-- print out the new / 3+ matches to screen to see ERROR ?
-
+	=> print out the new / 3+ matches to screen to see ERROR ?
 
 
 
-triangle filename exist?
-	no => generate triangles
-		set triangle.yaml
-yes=>
+- surface triangulation is poor
+	- soften noise
+		=> better finding neighborhood size
+	- curvature estimates poor - triangles are too tiny
+		=> do more averaging/blurring on surface estimation
 
-is trianglesCount != null?
-	no => map triangle vertex to views
-		map triangles to a texture atlas
-		set trianglesCount = #
-yes=>
-
-is textureCount != null?
-	no => initialize packing with each view necessary from triangles
-		=> iteratively load views & update texture files until done
-		set textureCount = #
-yes=>
-
-scene filename exist?
-	no =>
-		copy triangles / textures / etc from reconstruction into new scene directory
-
-yes =>
-
-done
-
-
-
-- tessellation:
-	- file with just list of points
-	- triangulate algorithm
-	- output to triangles.yaml
-- texuring
-	- file with just list of triangles
-	- view geometry decide vertexes
-	- output to texure start file
-- texture images:
-	- iteritively load images & views for color
-	- save to image files
+....
 
 
 
 
 
 
-		- PAIRWISE CLIPPING SPHERES in 3D
+- PAIRWISE CLIPPING SPHERES in 3D
 
 
 ~ cleaning up 3+ matches points by dropping worst NCC point2D

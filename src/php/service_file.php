@@ -30,19 +30,24 @@ $FILESYSTEM_URL = appendToPath($MY_URL_DIR, $FILESYSTEM_LOCAL);
 // 	$PARAMETER_FILE_DATA = "file_data";
 
 
-$PARAM_OPERATION = $_POST["operation"];
-if(!isset($PARAM_OPERATION)){
-	$PARAM_OPERATION = "unknown";
+$PARAM_OPERATION = "unknown";
+$INDEX = "operation";
+if(array_key_exists($INDEX,$_POST)){
+	$PARAM_OPERATION = $_POST[$INDEX];
 }
 
-$PARAM_PATH = $_POST["path"];
-if(!isset($PARAM_PATH)){
-	$PARAM_PATH = null;
+
+$PARAM_PATH = null;
+$INDEX = "path";
+if(array_key_exists($INDEX,$_POST)){
+	$PARAM_PATH = $_POST[$INDEX];
 }
 
-$PARAM_OFFSET = $_POST["offset"];
-if(!isset($PARAM_OFFSET)){
-	$PARAM_OFFSET = null;
+
+$PARAM_OFFSET = null;
+$INDEX = "offset";
+if(array_key_exists($INDEX,$_POST)){
+	$PARAM_OFFSET = $_POST[$INDEX];
 }
 
 $PARAM_COUNT = null;
