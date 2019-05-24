@@ -16952,6 +16952,9 @@ R3D.TextureVertex.prototype.data = function(data){
 R3D.TextureVertex.prototype.addTriangle = function(tri){
 	return Code.addUnique(this._triangles,tri);
 }
+R3D.TextureVertex.prototype.triangles = function(){
+	return this._triangles;
+}
 R3D.TextureVertex._mapNormal = function(t){
 	return t.normal();
 }
@@ -16975,7 +16978,19 @@ R3D.TextureVertex.prototype.point = function(point){
 	}
 	return this._point;
 }
+R3D.TextureVertex.prototype.setPointsForViews = function(views,points){
+	this._projectedViews = views;
+	this._projectedPoints = points;
+}
 R3D.TextureVertex.prototype.pointForView = function(viewIndex){
+	var views = this._projectedViews;
+	for(var i=0; i<views.length; ++i){
+		if(views[i]==viewIndex){
+			return this._projectedPoints[i];
+		}
+	}
+	return null;
+	/*
 	var views = this._views;
 	for(var i=0; i<views.length; ++i){
 		if(views[i]==viewIndex){
@@ -16983,6 +16998,7 @@ R3D.TextureVertex.prototype.pointForView = function(viewIndex){
 		}
 	}
 	return null;
+	*/
 }
 R3D.TextureVertex.prototype.rank = function(){
 	var index = this._index;
@@ -16996,6 +17012,9 @@ R3D.TextureVertex.prototype.rank = function(){
 		// return 0;
 	}
 	return 0;
+}
+R3D.TextureVertex.prototype.views = function(){
+	return this._views;
 }
 R3D.TextureVertex.prototype.view = function(){
 	var index = this._index;
@@ -17052,6 +17071,7 @@ R3D.TextureVertex.prototype.selectFirstAllowedView = function(){
 				var tri = tris[j];
 				if(!tri.allowedView(view)){
 					canUse = false;
+					break;
 				}
 			}
 			if(canUse){
@@ -17142,7 +17162,19 @@ R3D.TextureVertex.prototype.flipView = function(newIndex){
 		this._index = newIndex;
 	}
 }
-
+R3D.TextureVertex.prototype.activeViews = function(){
+	var views = [];
+	var tris = this._triangles;
+	for(var i=0; i<tris.length; ++i){
+		var tri = tris[i];
+		var vs = tri.activeViews();
+		for(var j=0; j<vs.length; ++j){
+			var v = vs[j];
+			Code.addUnique(views,v);
+		}
+	}
+	return views;
+}
 R3D.TextureVertex.prototype.removeTri = function(tri){
 	Code.removeElement(this._triangles, tri);
 }
@@ -17158,6 +17190,21 @@ R3D.TextureTriangle = function(verts){
 		}
 	}
 }
+R3D.TextureTriangle.prototype.views = function(){
+	return this._views;
+}
+R3D.TextureTriangle.prototype.hasVertex = function(vertex){
+	return Code.elementExists(this._vertexes,vertex);
+}
+R3D.TextureTriangle.prototype.A = function(){
+	return this._vertexes[0].point();
+}
+R3D.TextureTriangle.prototype.B = function(){
+	return this._vertexes[1].point();
+}
+R3D.TextureTriangle.prototype.C = function(){
+	return this._vertexes[2].point();
+}
 R3D.TextureTriangle.prototype.toCuboid = function(){
 	if(!this._cuboid){
 		this._cuboid = new Cuboid();
@@ -17167,26 +17214,32 @@ R3D.TextureTriangle.prototype.toCuboid = function(){
 	}
 	return this._cuboid;
 }
-R3D.TextureTriangle.prototype.initAllowedViews = function(){
+R3D.TextureTriangle.prototype.initAllowedViews = function(l){
 	var verts = this._vertexes;
 	var intersect = null;
 	for(var i=0; i<verts.length; ++i){
-		var views = verts[i]._views;
+		var views = verts[i].views();
 		if(!intersect){
 			intersect = Code.copyArray(views);
 		}else{
 			intersect = Code.arrayIntersect(intersect,views);
 		}
+if(l){
+	console.log("   "+i+" = "+intersect);
+}
 	}
+if(l){
+	console.log(" => "+intersect);
+}
 	this._views = intersect;
 	return intersect.length>0;
 }
 R3D.TextureTriangle.prototype.activeViews = function(){
 	var views = [];
 	var v = this._vertexes;
-	Code.addUnique(views,v[0].view());
-	Code.addUnique(views,v[1].view());
-	Code.addUnique(views,v[2].view());
+	for(var i=0; i<v.length; ++i){
+		Code.addUnique(views,v[i].view());
+	}
 	return views;
 }
 R3D.TextureTriangle.prototype.allowedView = function(viewID){
@@ -17223,9 +17276,15 @@ R3D.TextureTriangle.prototype.removeFromAll = function(){
 	var v = this._vertexes;
 	for(var i=0; i<v.length; ++i){
 		var x = v[i];
+		var before = x.triangles().length;
 		x.removeTri(this);
+		var after = x.triangles().length;
+		if(after==before){
+			console.log(before,after);
+			throw "unchanged";
+		}
 	}
-	Code.emptyArray(v);
+	this._vertexes = null;
 }
 R3D.TextureTriangle.prototype.subdivide = function(){
 	throw "TODO";
@@ -17235,7 +17294,7 @@ R3D.TextureTriangle.prototype.subdivide = function(){
 }
 R3D.optimumTriangleTextureImageAssignment = function(transforms,cameras,resolutions,triangles3D,textureSize,resolutionScale){ // COULD HAVE NEW TRIANGLES
 	resolutionScale = resolutionScale!==undefined ? resolutionScale : 1.0;
-	console.log(transforms,cameras,resolutions,triangles3D,textureSize,resolutionScale);
+	// console.log(transforms,cameras,resolutions,triangles3D,textureSize,resolutionScale);
 	// scale camera matrices up to resolution:
 	cameras = Code.copyArray(cameras);
 	for(var i=0; i<cameras.length; ++i){
@@ -17331,18 +17390,9 @@ R3D.optimumTriangleTextureImageAssignment = function(transforms,cameras,resoluti
 	}
 
 	// insert triangles into space
-	// for(var i=0; i<tris.length; ++i){
-	// 	var tri = tris[i];
-	// 	triangleSpace.insertObject(tri);
-	// }
 	var triangleSpace = new OctSpace(toCuboid,minSpace,maxSpace);
 	triangleSpace.initWithObjects(tris);
-
-	// console.log("CONTENTS:");
-	// var arr = triangleSpace.toArray();
-	// console.log(arr);
-	console.log(triangleSpace.size()+"");
-	console.log(triangleSpace);
+	//
 	var fxnSortRank = function(a,b){
 		return a["rank"] > b["rank"] ? -1 : 1; // larger number first
 	}
@@ -17370,27 +17420,27 @@ R3D.optimumTriangleTextureImageAssignment = function(transforms,cameras,resoluti
 			// triangle occlusions
 			var org = vertPoint;
 			var des = viewCenter;
-			var dir = V2D.sub(des,org);
+			var dir = V3D.sub(des,org);
 			var potentialTriangles = triangleSpace.objectsIntersectRay(org,dir);
-			var intersection = null;
-			intersectionCount += potentialTriangles.length;
 			if(potentialTriangles.length>0){
-				console.log(potentialTriangles);
-				throw "potentialTriangles";
+				var intersection = null;
 				for(var t=0; t<potentialTriangles.length; ++t){
 					var tri = potentialTriangles[t];
-					// TODO: IGNORE INTERSECTOIN WITH tri if contains THIS vertex
+					if(tri.hasVertex(vert)){ // ignore tris containing vertex
+						continue;
+					}
 					var intersect = Code.intersectRayTri(org,dir, tri.A(),tri.B(),tri.C(),tri.normal());
 					if(intersect){
 						intersection = intersect;
 						break;
 					}
 				}
+				if(intersection){
+					++intersectionCount;
+					continue;
+				}
 			}
-			if(intersection){
-				// ++intersectionCount;
-				continue;
-			}
+			// get projected point for view
 			var projected2D = R3D.projectPoint3DToCamera2DForward(vertPoint, viewTransform, K, distortions, false);
 			if(!projected2D){
 				console.log(vertPoint, viewTransform, K, distortions, false);
@@ -17420,45 +17470,92 @@ R3D.optimumTriangleTextureImageAssignment = function(transforms,cameras,resoluti
 		vert.viewAndRanks(vs,rs,ps);
 	}
 	console.log("INTERSECTIONS FOUND: intersectionCount:"+intersectionCount);
-throw "here"
 	triangleSpace.kill(); // done
 	// triangles init states
-	var badTris = [];
+	badTris = 0;
 	for(var i=0; i<tris.length; ++i){
 		var tri = tris[i];
 		var result = tri.initAllowedViews();
 		if(!result){
-			badTris.push(tri);
+			badTris += 1;
 			Code.removeElementAt(tris,i);
 			--i;
+			tri.removeFromAll();
+		}else{
+			if(tri.views().length==0){
+				throw "0";
+			}
 		}
 	}
-	console.log("impossible Tris: "+badTris.length);
-	for(var i=0; i<badTris.length; ++i){
-		var tri = badTris[i];
-		tri.removeFromAll();
-	}
+	console.log("impossible Tris: "+badTris);
 	// init vert states
-	var badVerts = [];
+	var badVerts = 0;
 	for(var i=0; i<verts.length; ++i){
 		var vert = verts[i];
+		if(vert._triangles.length==0){
+			badVerts += 1;
+			Code.removeElementAt(verts,i);
+			--i;
+			continue;
+		}
+		/*
 		var result = vert.selectFirstAllowedView();
 		if(!result){
+			console.log(" .. no allowed views:");
+			console.log(vert);
+			console.log(vert.view());
+			console.log(vert.views());
+			var tris = vert.triangles();
+			for(var t=0; t<tris.length; ++t){
+				console.log(" ................. ");
+				var tri = tris[t];
+				console.log(tri.views());
+				console.log(tri.allowedView(vert.view()));
+
+				var result = tri.initAllowedViews(true);
+				console.log("RESULT: "+result);
+
+			}
+			console.log(tris);
+			console.log(vert);
+			console.log();
+
+
+			throw "I'm a vertex without an allowed view ?";
 			badVerts.push(vert);
+			Code.removeElementAt(verts,i);
+			--i;
+			continue;
 		}
-		// if a vertex has no tris ... remove ...
-		if(vert._triangles.length==0){
-			console.log("empty vertex");
-		}
+		*/
 	}
-	console.log("impossibleVerts: "+badVerts.length);
+	console.log("impossibleVerts: "+badVerts);
 	// get all initial frontier vertexes
 	for(var i=0; i<verts.length; ++i){
 		var vert = verts[i];
 		if(vert.isFrontier()){
 			Q.push(vert);
 		}
+		// TEST:
+		/*
+		var c = vert.view();
+		for(var j=0; j<vert._triangles.length; ++j){
+			var t = vert._triangles[j];
+			var allowed = t.allowedView(c);
+			if(!allowed){
+				throw "set to un allowed view";
+			}
+		}
+		*/
 	}
+
+
+
+
+
+
+
+
 	// place all frontier vertices into queue (any triangle with vertices not pointing to same texture)
 	var check = true;
 	var sizeCheckTris = Code.copyArray(tris);
@@ -17474,6 +17571,8 @@ throw "here"
 				continue;
 			}
 			var index = vertex.canFlipView();
+// to do: uncomment
+index = null;
 			if(index!==null && index>=0){
 				vertex.flipView(index);
 				var adj = vertex.adjacentVertexes();
@@ -17497,6 +17596,30 @@ throw "here"
 		}
 		console.log(iteration+"  count: "+Q.length()+" ---- frontiers: "+cnt1+" / "+cnt2);
 
+
+
+		// need to get all projected points for deciding views:
+		for(var iV=0; iV<verts.length; ++iV){
+			var vert = verts[iV];
+			var vertPoint = vert.point();
+			var union = vert.activeViews();
+			// TODO: ONLY NEED TO REPEAT IF PROJECTIONS DON'T ALREADY EXIST
+			var points = [];
+			for(var jV=0; jV<union.length; ++jV){
+				var v = union[jV];
+				var viewTransform = transforms[v];
+				var viewSize = resolutions[v];
+				var K = cameras[v];
+				var distortions = null;
+				var projected2D = R3D.projectPoint3DToCamera2DForward(vertPoint, viewTransform, K, distortions, false);
+				if(!projected2D){
+					throw "bad point";
+				}
+				points.push(projected2D);
+			}
+			vert.setPointsForViews(union,points);
+		}
+
 		var maxEdgeLength = null;
 		var newCheckTris = [];
 		for(var i=0; i<sizeCheckTris.length; ++i){
@@ -17518,6 +17641,10 @@ throw "here"
 					var x = vx[k];
 					var p = x.pointForView(v);
 					if(!p){
+						console.log(tri);
+						console.log(vx);
+						console.log(x);
+						console.log(tri.allowedView(v));
 						throw "don't have a p: "+i+":"+j+" = "+v;
 					}
 					ps.push(p);
@@ -17583,6 +17710,7 @@ throw "here"
 	//			generate a haystack using inverse projection ~ matrix
 	//			find optimal NCC location inside window (9+ px up to ~1/3rd of triangle 2D size)
 	//			update
+
 
 
 	var outputVertexes3D = []; // 3D vertexs
@@ -17795,6 +17923,7 @@ R3D.textureAddSourceTriangles = function(destinationImage, destinationTri2D, sou
 		for(var i=0; i<dW; ++i){
 			p.x = i+min.x;
 			var inside = Code.distancePointTri2D(p, dA,dB,dC) <= padding;
+			inside = true; // rectangles
 			if(inside){
 				transform.multV2DtoV2D(q,p);
 				Code.triBarycentricCoordinate2D(bary, dA,dB,dC, p);

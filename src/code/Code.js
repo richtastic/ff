@@ -1613,7 +1613,7 @@ Code.arrayIntersect = function(c,a,b, equalFxn, combineFxn){
 			if(equalFxn){
 				equal = equalFxn(itemA,itemB);
 			}else{
-				equal = itemA==itemB;
+				equal = itemA===itemB;
 			}
 			if(equal){
 				found = true;

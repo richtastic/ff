@@ -368,24 +368,34 @@ https://cloud.google.com/appengine/docs/nodejs/
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
-- point - triangle-intersection criteria for surface
-	-- not sure if working or not ...
-
-
-
-- need additional step for fine triangle-texture point localization
-	- graduated loading
-
-
-
-	- scene copying triangles.yaml pertinent info
-
-
 - filtering after probe3d removes most of the added matches
 	- is the high error related to the optimal points not all aligning ?
 	-
 
 	=> print out the new / 3+ matches to screen to see ERROR ?
+
+
+
+
+
+	- update graph logic for SCALE & TRANSFORM-PAIRS
+		- create scale graph w/ all trivial edges (calc scale ratios)
+		- select largest subgraph (views) that has A) most views B) lowest average error
+		=> do absolute scale solve
+		- create trans. graph only using edges (pairs) that exist in scale graph
+		=> do absolute trans. solve
+
+
+
+
+
+
+
+TEXTURING:
+- need additional step for fine triangle-texture point localization
+	- graduated loading
+
+- scene copying triangles.yaml pertinent info
 
 
 
@@ -415,22 +425,11 @@ https://cloud.google.com/appengine/docs/nodejs/
 
 
 
-- lots of s: 0 in graph points .... view size wrong ?
-
-
-- update graph logic for SCALE & TRANSFORM-PAIRS
-	- create scale graph w/ all trivial edges (calc scale ratios)
-	- select largest subgraph (views) that has A) most views B) lowest average error
-	=> do absolute scale solve
-	- create trans. graph only using edges (pairs) that exist in scale graph
-	=> do absolute trans. solve
-
-
 
 
 
 - how to incorporate different image SIZES / scales
-	=> everythin in terms of error in image A and image B / NORMALIZED 1:1 error / cell size
+	=> everything in terms of error in image A and image B / NORMALIZED 1:1 error / cell size
 
 
 

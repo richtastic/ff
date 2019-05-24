@@ -552,33 +552,29 @@ OctSpace.Voxel.prototype.objectsInsideCuboid = function(arr,min,max,toCubeFxn){
 	}
 }
 OctSpace.Voxel.prototype.objectsIntersectRay = function(arr,org,dir,toCubeFxn){ // sphere intersection
-	// console.log(this,this._objects);
+	var children = this._children;
 	if(this._objects){
-		// console.log(this._objects);
-		// throw "found dobjects";
-		// console.log(toCubeFxn);
-		for(var i=0; i<this._objects.length; ++i){
-			var object = this._objects[i].object();
+		var objects = this._objects;
+		for(var i=0; i<objects.length; ++i){
+			var object = objects[i].object();
 			var cube = toCubeFxn(object);
 			var radius = cube.size().length()*0.5;
 			var center = cube.center();
 			var intersection = Code.intersectRaySphere3D(org,dir, center,radius);
-			console.log(intersection)
-			throw "?"
 			if(intersection){
-				arr.push(this._objects[i]);
+				arr.push(object);
 			}
 		}
-	}else if(this._children){
-		for(var i=0; i<this._children.length; ++i){
-			var child = this._children[i];
+	}else if(children){
+		for(var i=0; i<children.length; ++i){
+			var child = children[i];
 			if(child){
 				var p = child.center();
 				var d = Code.distancePointRayFinite3D(org,dir,p);
 				var r = child.size().length()*0.5;
-				// if(d<=r){
+				if(d<=r){
 					child.objectsIntersectRay(arr,org,dir,toCubeFxn);
-				// }
+				}
 			}
 		}
 	}
