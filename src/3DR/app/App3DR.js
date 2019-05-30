@@ -7046,7 +7046,6 @@ console.log("checkPerformNextTask");
 		// ASSUMED DONE ...
 	// do all views have features detected?
 	len = views.length;
-	console.log(views);
 	for(i=0; i<len; ++i){
 		var view = views[i];
 		var hasFeatures = view.hasFeatures();
@@ -7106,7 +7105,6 @@ console.log("checkPerformNextTask");
 	if(views.length<2){
 		return;
 	}
-// throw "...";
 // throw "task dense pair";
 	// assuming all pair matches have run
 	len = views.length;
@@ -7133,7 +7131,6 @@ console.log("checkPerformNextTask");
 			}
 		}
 	}
-
 /*
 console.log("REFINE A VIEW PAIR ...");
 var viewA = this.viewFromID("9T4X6FGN");
@@ -7143,10 +7140,7 @@ var viewB = this.viewFromID("RIMPJ5P9");
 console.log(viewA,viewB);
 this.calculatePairTracks(viewA,viewB);
 throw "NO";
-
-// this.calculatePairTracks(viewA,viewB,);
-// this.increaseResolution(pair);
-
+*/
 
 // throw "task triples";
 	// assuming all pairs have run
@@ -7189,12 +7183,14 @@ throw "NO";
 			}
 		}
 	}
+	// ????
 // throw "task graph";
 	if(!this.hasGraph()){
 		console.log("has no graph");
 		this.calculateGlobalOrientationInit();
 		return;
 	}
+throw "...";
 // throw "task tracks";
 	if(!this.tracksDone()){
 		console.log("tracks not done");
@@ -7222,7 +7218,7 @@ if(!this.pointsDone()){
 
 throw "surface - triangles";
 this.surfaceTriangulate();
-*/
+
 
 // throw "triangles"
 var triangles = this.triangleCount();
@@ -7937,9 +7933,6 @@ App3DR.ProjectManager.prototype.calculateGlobalOrientationInit = function(callba
 	var setOrFlip = function(table,iA,iB,scale, error){
 		var key = viewIDsToPairID(iA,iB);
 		var edge = table[key];
-		// console.log(table);
-		// console.log(key);
-		// console.log(edge);
 		if(edge["A"]==iA && edge["B"]==iB){
 			edge["list"].push([scale,error]);
 		}else if(edge["A"]==iB && edge["B"]==iA){
@@ -7947,8 +7940,16 @@ App3DR.ProjectManager.prototype.calculateGlobalOrientationInit = function(callba
 		}else{
 			throw "?";
 		}
-
 	}
+	// EDGE: A: PAIR ID | B: PAIR ID | LIST: ERROR LIST
+		//
+	// ...
+
+	// ...
+
+	// ...
+
+
 	// locals
 	var views = this._views;
 	var pairs = this._pairs;
@@ -7958,32 +7959,39 @@ App3DR.ProjectManager.prototype.calculateGlobalOrientationInit = function(callba
 	var edgesRotate = [];
 	// A-B pair lists (transforms and errors): each is of length i-1
 	var tableViewIDToIndex = {};
+	var tableViewIndexToID = {};
 	for(var i=0; i<viewCount; ++i){
 		var view = views[i];
 		tableViewIDToIndex[view.id()+""] = i;
+		tableViewIndexToID[i+""] = view.id();
+console.log(view.id()+" = "+i);
 	}
 	//
 	var edges = [];
 	var tableViewPairToEdge = {};
+	var tableViewPairToPair = {};
 	var tablePairIDToIndex = {};
+	var tablePairIndexToID = {};
 	for(var i=0; i<pairs.length; ++i){
 		var pairA = pairs[i];
 		var idA = pairA.viewA().id();
 		var idB = pairA.viewB().id();
 		var nodeA = viewIDsToPairID(idA,idB);
 		tablePairIDToIndex[nodeA] = i;
+		tablePairIndexToID[i+""] = nodeA;
+		tableViewPairToPair[nodeA] = pairA;
 		for(var j=i+1; j<pairs.length; ++j){
 			var pairB = pairs[j];
 			var idC = pairB.viewA().id();
 			var idD = pairB.viewB().id();
-
 			var nodeB = viewIDsToPairID(idC,idD);
 			var index = viewIDsToPairID(nodeA,nodeB);
 			// console.log(" INDEX ... "+index);
-			var edge = {"A":nodeA, "B":nodeB, "list":[]};
+			var edge = {"A":nodeA, "B":nodeB, "list":[], "pairA":pairA,"pairB":pairB};
 			edges.push(edge); // directional
 			tableViewPairToEdge[index] = edge;
 		}
+// console.log(nodeA+" = "+i);
 	}
 
 	// go thru all triples and get all possible edges for each pair
@@ -8029,12 +8037,16 @@ App3DR.ProjectManager.prototype.calculateGlobalOrientationInit = function(callba
 		}
 	}
 	// combine every conflicting edge into single edge using error ratios
+// shouldn't ever be conflicting edges ?
 	for(var i=0; i<edges.length; ++i){
 		var edge = edges[i];
 		var list = edge["list"];
 		var values = [];
 		var errors = [];
 		if(list.length>0){
+			if(list.length>1){
+				throw "ONLY EVER AT MOST 1 EDGE BETWEEN VIEW-PAIRS"
+			}
 			for(var j=0; j<list.length; ++j){
 				var e = list[j];
 				values.push(e[0]);
@@ -8048,54 +8060,118 @@ App3DR.ProjectManager.prototype.calculateGlobalOrientationInit = function(callba
 			edge["error"] = error;
 		}
 	}
-	console.log(edges);
-	// throw "?"
-	// create graph
-	var graphEdges = [];
+
+	var subgraphEdges = [];
+	var subgraphEdgeLookup = [];
 	for(var i=0; i<edges.length; ++i){
 		var edge = edges[i];
-		var list = edge["list"];
-		if(list.length>0){
-			var idA = edge["A"];
-			var idB = edge["B"];
-			var value = edge["value"];
-			var error = edge["error"];
-			var indexA = tablePairIDToIndex[idA];
-			var indexB = tablePairIDToIndex[idB];
-			graphEdges.push([indexA,indexB, value, error]);
+		var idA = edge["A"];
+		var idB = edge["B"];
+		var list = edge["list"]
+		if(list && list.length>0){
+			idA = tablePairIDToIndex[idA];
+			idB = tablePairIDToIndex[idB];
+			subgraphEdges.push([idA,idB]);
+			subgraphEdgeLookup.push(i);
 		}
 	}
-	// prune unused vertexes
-	var reachable = [];
-
-	for(var i=0; i<pairs.length; ++i){
-		var reached = false;
-		for(var j=0; j<graphEdges.length; ++j){
-			if(graphEdges[j][0]==i || graphEdges[j][1]==i){
-				reached = true;
-				break;
-			}
-		}
-		reachable[i] = reached;
+	// find largest subgraph of connected pairs
+	var viewCount = views.length;
+	console.log(subgraphEdges);
+	console.log(viewCount);
+	var result = R3D.bestConnectedViewSubgraph(subgraphEdges, viewCount);
+	var bestPairs = result["pairs"];
+	var bestViews = result["views"];
+	var bestEdges = result["edges"];
+console.log("SUBGRAPH:");
+console.log(bestPairs);
+console.log(bestViews);
+console.log(bestEdges);
+	var includedPairs = [];
+	var includedViews = [];
+	var includedPairEdges = [];
+	// grab all edges that are included pairs
+	for(var i=0; i<bestEdges.length; ++i){
+		var edgeIndex = bestEdges[i];
+		var allEdgeIndex = subgraphEdgeLookup[edgeIndex];
+		edge = edges[allEdgeIndex];
+		includedPairEdges.push(edge);
+		// pair
+		var pairsX = subgraphEdges[edgeIndex];
+		var indexA = pairsX[0];
+		var indexB = pairsX[1];
+			indexA = tablePairIndexToID[indexA+""];
+			indexB = tablePairIndexToID[indexB+""];
+			// console.log(indexA+" => "+indexB);
+		var pairA = tableViewPairToPair[indexA];
+		var pairB = tableViewPairToPair[indexB];
+		Code.addUnique(includedPairs, pairA);
+		Code.addUnique(includedPairs, pairB);
+		// views
+		var viewA = pairA.viewA();
+		var viewB = pairA.viewB();
+		var viewC = pairB.viewA();
+		var viewD = pairB.viewB();
+		Code.addUnique(includedViews, viewA);
+		Code.addUnique(includedViews, viewB);
+		Code.addUnique(includedViews, viewC);
+		Code.addUnique(includedViews, viewD);
 	}
-	console.log(reachable);
-
-
-	// TODO: check subgraph reachability - path for all nodes
-	console.log(graphEdges);
+	// throw away duplicate (close) views
+	// TODO: ALSO NEED A CONSISTENCY CHECK - throw out bad matches : SCALE & TRANSFORM
+	console.log("includedViews");
+	console.log(includedViews);
+	console.log(includedPairs);
+	console.log(includedPairEdges);
+	// map visited pair-vertexes
+	var mappingIndexToExistPairs = {};
+	var mappingExistToIndexPairs = {};
+	for(var i=0; i<includedPairs.length; ++i){
+		var j = bestPairs[i];
+		mappingExistToIndexPairs[j+""] = i;
+		mappingIndexToExistPairs[i+""] = j;
+	}
+	// map visited view-vertexes
+	var mappingIndexToExistViews = {};
+	var mappingExistToIndexViews = {};
+	for(var i=0; i<includedViews.length; ++i){
+		var j = bestViews[i];
+		mappingExistToIndexViews[j+""] = i;
+		mappingIndexToExistViews[i+""] = j;
+	}
+	// grab all edges that are included pairs
+	var graphEdges = [];
+	for(var i=0; i<includedPairEdges.length; ++i){
+		var edge = includedPairEdges[i];
+		var value = edge["value"];
+		var error = edge["error"];
+		var indexA = edge["A"];
+		var indexB = edge["B"];
+			indexA = tablePairIDToIndex[indexA];
+			indexB = tablePairIDToIndex[indexB];
+			indexA = mappingExistToIndexPairs[indexA+""];
+			indexB = mappingExistToIndexPairs[indexB+""];
+		graphEdges.push([indexA,indexB, value,error]);
+	}
+	// optimum scale
+	var vertexesUseScale = bestPairs;
 	var results = R3D.optimumScaling1D(graphEdges);
 	console.log(results);
 	var absoluteScales = results["absolute"];
-	var unused = results["unconnected"];
-	// throw "need to do optimum scaling using all triples"
-
+	var scales = [];
+	for(var i=0; i<includedPairs.length; ++i){
+		var j = mappingIndexToExistPairs[i+""];
+		scales[j+""] = absoluteScales[i];
+	}
+	absoluteScales = scales;
 	// get relative transform+error
 	var listPairs = [];
 	for(var i=0; i<pairs.length; ++i){
-		if(!reachable[i]){
+		var scaler = absoluteScales[i+""]; // some may not be included
+		// console.log(scaler)
+		if(!scaler){
 			continue;
 		}
-
 		var pair = pairs[i];
 		var viewA = pair.viewA();
 		var viewB = pair.viewB();
@@ -8105,48 +8181,54 @@ App3DR.ProjectManager.prototype.calculateGlobalOrientationInit = function(callba
 		var extrinsicAtoB = pair.R();
 		// INVERT FROM EXT TO CAM
 		var relativeAtoB = Matrix.inverse(extrinsicAtoB);
-// console.log(""+extrinsicAtoB);
-// console.log(""+relativeAtoB);
 		var transformRMean = pair.errorRMean();
 		var transformRSigma = pair.errorRSigma();
 		var transformMatches = pair.relativeCount();
 		var indexPair = tablePairIDToIndex[pairID];
-		var scaler = absoluteScales[indexPair];
-
-
-
-// HERE
-
 		// scale 'pair' local scale to match universe scale
-		console.log("scaler:"+scaler);
 		relativeAtoB.set(0,3, relativeAtoB.get(0,3)*scaler);
 		relativeAtoB.set(1,3, relativeAtoB.get(1,3)*scaler);
 		relativeAtoB.set(2,3, relativeAtoB.get(2,3)*scaler);
-
 		var center = relativeAtoB.multV3DtoV3D(new V3D(0,0,0));
-		console.log("     RELATIVE CENTER : "+center+" -> "+center.length());
+		// console.log("     RELATIVE CENTER : "+center+" -> "+center.length());
 		// ERROR
 		var errorAB = (transformRMean + 1.0*transformRSigma)/transformMatches;
 		// set
 		var indexA = tableViewIDToIndex[viewA.id()+""];
 		var indexB = tableViewIDToIndex[viewB.id()+""];
+			indexA = mappingExistToIndexViews[indexA+""];
+			indexB = mappingExistToIndexViews[indexB+""];
 		listPairs.push([indexA,indexB,relativeAtoB,errorAB]);
 	}
-	// nonlinear estimate
+	// nonlinear estimate transforms
 	var result = R3D.optimumTransform3DFromRelativePairTransforms(listPairs);
 	console.log(result);
 	var transforms = result["absolute"];
-	console.log(transforms);
-
 	// from camera to extrinsic
+	var trans = [];
 	for(var i=0; i<transforms.length; ++i){
 	   var transform = transforms[i];
 	   var matrix = transform;
-	   transforms[i] = Matrix.inverse(matrix);
+	   var j = mappingIndexToExistViews[i+""];
+	   trans[j] = Matrix.inverse(matrix);
 	}
+	transforms = trans;
+	// fill in empty with identity
+	for(var i=0; i<viewCount; ++i){
+		if(!transforms[i]){
+			transforms[i] = new Matrix(4,4).identity();
+		}
+	}
+	// calculate skeletal graph
+	console.log(listPairs);
 
-	// TODO: calculate skeletal graph
+	R3D.skeletalViewGraph(listPairs);
 
+
+console.log("skeleton");
+
+
+/*
 	// save just views to view scene
 console.log("PRINT OUT SCENE WITH JUST VIEWS FOR VISUALIZING");
 var world = new Stereopsis.World();
@@ -8174,6 +8256,8 @@ var v = views[i];
 world.copyRelativeTransformsFromAbsolute();
 var str = world.toYAMLString();
 console.log(str);
+*/
+
 
 
 
@@ -8217,8 +8301,9 @@ console.log(str);
 	yaml.writeString("points", null);
 	yaml.writeBlank();
 
+
 var graphString = yaml.toString();
-console.log(graphString);
+// console.log(graphString);
 
 this.setGraphFilename(App3DR.ProjectManager.RECONSTRUCT_GRAPH_FILE_NAME);
 
@@ -8238,7 +8323,7 @@ this.setGraphFilename(App3DR.ProjectManager.RECONSTRUCT_GRAPH_FILE_NAME);
 	yaml.writeBlank();
 
 var tracksString = yaml.toString();
-console.log(tracksString);
+// console.log(tracksString);
 
 this.setTracksFilename(App3DR.ProjectManager.RECONSTRUCT_TRACKS_FILE_NAME);
 
@@ -8255,6 +8340,10 @@ this.setTracksFilename(App3DR.ProjectManager.RECONSTRUCT_TRACKS_FILE_NAME);
 		console.log("fxnSavedGraph");
 		this.saveTracks(tracksString, this.tracksFilename(), fxnSavedTracks, this);
 	}
+
+
+	throw "here ..."
+
 
 // SAVE
 this.saveGraph(graphString, this.graphFilename(), fxnSavedGraph, this);
@@ -10658,10 +10747,10 @@ App3DR.ProjectManager.prototype.trianglesTexturize = function(){ // find uv sour
 
 		// get view resolutions
 		// var textureSize = new V2D(512,512);
-		var textureSize = new V2D(1024,1024);
-		// var textureSize = new V2D(2048,2048);
-		var resolutionScale = 1.0;
-		// var resolutionScale = 0.5;
+		// var textureSize = new V2D(1024,1024);
+		var textureSize = new V2D(2048,2048);
+		// var resolutionScale = 1.0;
+		var resolutionScale = 0.5;
 		// var resolutionScale = 0.25;
 		// var resolutionScale = 0.15;
 		// var resolutionScale = 0.125;
@@ -11802,15 +11891,13 @@ App3DR.ProjectManager.prototype.calculatePairTracks = function(viewAIn,viewBIn, 
 
 
 
-
+/*
+// TESTING:
 // save as point list:
 var str = world.toPointFile(true);
 console.log(str);
-
-
-
 throw "HERE";
-
+*/
 
 /*
 // increase resolution:

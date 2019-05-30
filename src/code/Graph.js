@@ -704,6 +704,41 @@ Graph._addVistitedVertex = function(graph, vertex, skippedEdges, list){
 		}
 	}
 }
+Graph.prototype.subgraphVertexes = function(){
+	var vertexes = this.vertexes();
+	for(var i=0; i<vertexes.length; ++i){
+		var vertex = vertexes[i];
+		vertex.temp(null);
+	}
+	var q = [];
+	var groupCount = 0;
+	for(var i=0; i<vertexes.length; ++i){
+		var vertex = vertexes[i];
+		if(vertex.temp()===null){
+			q.push(vertex);
+			while(q.length>0){
+				var v = q.pop();
+				v.temp(groupCount);
+				var es = v.edges();
+				for(var j=0; j<es.length; ++j){
+					var o = es[j].opposite(v);
+					if(o.temp()===null){
+						q.push(o);
+					}
+				}
+			}
+			++groupCount;
+		}
+	}
+	var groups = Code.newArrayArrays(groupCount);
+	for(var i=0; i<vertexes.length; ++i){
+		var vertex = vertexes[i];
+		var index = vertex.temp();
+		groups[index].push(vertex);
+		vertex.temp(null);
+	}
+	return groups;
+}
 Graph.verticesReachableFromVertexWithoutEdges = function(graph, startVertex, skippedEdges){
 	var i, vertex;
 	var reachable = [];

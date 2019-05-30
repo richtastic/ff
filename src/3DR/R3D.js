@@ -24334,9 +24334,9 @@ R3D.optimumTransform3DFromRelativePairTransforms = function(pairs){
 	}
 	return R3D.optimumTransform3D(edges); // nodeA, nodeB, scale, error
 }
-R3D.optimumScaling1D = function(edges){
-	// var nonlinear = true;
-	nonlinear = false;
+R3D.optimumScaling1D = function(edges){ // assume all connectes vertexes
+	var nonlinear = true;
+	// nonlinear = false;
 	// find size of graph
 	var maxVertex = -1;
 	for(var i=0; i<edges.length; ++i){
@@ -24347,9 +24347,9 @@ R3D.optimumScaling1D = function(edges){
 	if(maxVertex<0){
 		return null;
 	}
-	var vertexCount = maxVertex + 1;
 	// create graph
 	var graph = new Graph();
+	var vertexCount = maxVertex + 1;
 	var vs = [];
 	for(var i=0; i<vertexCount; ++i){
 		var v = graph.addVertex();
@@ -24372,16 +24372,14 @@ R3D.optimumScaling1D = function(edges){
 		e.data({"value":value,"error":error});
 		es[i] = e;
 	}
-	// // prune singled-out vertices
-	// var unused = graph.noEdgeVertexes();
-	// console.log(unused);
-	// for(var i=0; i<unused.length; ++i){
-	// 	graph.removeVertex(unused[i]);
-	// }
 	// find path from each vertex to each other vertex
 	var allPaths = [];
 	for(var i=0; i<vs.length; ++i){
 		var v = vs[i];
+		if(!v){
+			allPaths.push([{"scale":0,"error":0}]);
+			continue;
+		}
 		var paths = graph.minPaths(v);
 		var pathGroup = []; // cummulative path to each vertex
 		var reference = v.data();
@@ -24405,24 +24403,24 @@ R3D.optimumScaling1D = function(edges){
 				scaleCumulative += scale;
 				vertex = opposite;
 			}
-// console.log("scaleCumulative "+scaleCumulative)
-			// totalError = Math.sqrt(totalError);
 			pathGroup.push({"value":{"scale":scaleCumulative}, "error":totalError});
 		}
 		allPaths.push(pathGroup);
 	}
 	//
-	var unconnected = [];
-	for(var i=0; i<vs.length; ++i){
-		if(vs[i].edges().length==0){
-			unconnected.push(i);
-		}
-	}
-
+	// var unconnected = [];
+	// for(var i=0; i<vs.length; ++i){
+	// 	var v = vs[i];
+	// 	if(!v){continue;}
+	// 	if(v.edges().length==0){
+	// 		unconnected.push(i);
+	// 	}
+	// }
 	// find best vertex to keep at origin
 	var rootIndex = -1;
 	var rootError = null;
 	for(var i=0; i<allPaths.length; ++i){
+		if(!vs[i]){continue;}
 		if(vs[i].edges().length==0){
 			continue;
 		}
@@ -24433,18 +24431,23 @@ R3D.optimumScaling1D = function(edges){
 			var error = group["error"];
 			totalError += error;
 		}
-		// console.log("INDEX: "+i+" = "+totalError);
 		if(rootIndex<0 || rootError>totalError){
 			rootIndex = i;
 			rootError = totalError;
 		}
 	}
-
 	// calculate absolute scale based on root
 	var allValues = Code.newArrayArrays(vs.length);
 	for(var i=0; i<allPaths.length; ++i){
+		if(!vs[i]){
+			continue;
+		}
+		// console.log(allPaths[i]);
 		var pathGroup = allPaths[i];
+		// console.log(pathGroup);
+		// console.log(rootIndex);
 		var reference = pathGroup[rootIndex];
+		// console.log(reference);
 		var valueA = reference["value"];
 		var scaleA = valueA["scale"];
 		for(var j=0; j<pathGroup.length; ++j){
@@ -24480,12 +24483,15 @@ R3D.optimumScaling1D = function(edges){
 	}
 	var scales = [];
 	if(nonlinear){
-console.log("NONLINEAR");
+		console.log("NONLINEAR");
 		var iterations = 100;
 		var result = R3D._gdScales1D(vs,es,values,rootIndex,iterations, 0);
 		var values = result["values"];
+		var rootScale = values[rootIndex];
 		for(var i=0; i<values.length; ++i){
 			var scale = values[i];
+				scale -= rootScale;
+				scale = Math.exp(scale);
 			scales[i] = scale;
 		}
 	}else{
@@ -24499,7 +24505,87 @@ console.log("NONLINEAR");
 			scales[i] = scale;
 		}
 	}
-	return {"absolute":scales, "root":rootIndex, "unconnected":unconnected};
+	return {"absolute":scales, "root":rootIndex};
+}
+R3D.bestConnectedViewSubgraph = function(edges, viewCount){ // subgraph with most views
+	// create graph:
+	var maxIndex = edges.reduce(function(a,b){
+		if(a===null){
+			return Math.max(b[0],b[1]);
+		}
+		return Math.max(a,b[0],b[1]);
+	}, null);
+	if(maxIndex===null){
+		return [];
+	}
+	var vertexCount = maxIndex + 1;
+	// pairs
+	var pairs = [];
+	for(var i=0; i<viewCount; ++i){
+		for(var j=i+1; j<viewCount; ++j){
+			pairs.push([i,j]);
+		}
+	}
+	// graph
+	var graph = new Graph();
+	// vertexes
+	var vertexes = [];
+	for(var i=0; i<vertexCount; ++i){
+		var vertex = graph.addVertex();
+		vertex.data(i);
+		vertexes.push(vertex);
+	}
+	// edges
+	for(var i=0; i<edges.length; ++i){
+		var edge = edges[i];
+		var a = edge[0];
+		var b = edge[1];
+		a = vertexes[a];
+		b = vertexes[b];
+		var e = graph.addEdge(a,b, 1, Graph.Edge.DIRECTION_DUPLEX);
+		e.data(i);
+	}
+	// subgraphs
+	var subgraphs = graph.subgraphVertexes();
+	// pick subgraph with most number of views
+	var biggest = null;
+	var biggestCount = null;
+	var biggestEdges = null;
+	var biggestIndex = null;
+	for(var i=0; i<subgraphs.length; ++i){
+		var sub = subgraphs[i];
+		var unique = [];
+		for(var j=0; j<sub.length; ++j){
+			var s = sub[j];
+			var pair = pairs[s.data()];
+			var viewA = pair[0];
+			var viewB = pair[1];
+			Code.addUnique(unique,viewA);
+			Code.addUnique(unique,viewB);
+		}
+		var count = unique.length;
+		if(!biggest || count>biggestCount){
+			biggestViews = unique;
+			biggest = sub;
+			biggestCount = count;
+		}
+	}
+	var biggestEdges = [];
+	if(biggest){
+		// edges to index
+		for(var i=0; i<biggest.length; ++i){
+			var vertex = biggest[i]
+			var edges = vertex.edges();
+			for(var j=0; j<edges.length; ++j){
+				Code.addUnique(biggestEdges,edges[j].data());
+			}
+		}
+		// vertexes to index
+		biggest = biggest.map(function(a){return a.data()});
+	}
+	// done
+	graph.kill();
+	return {"views":biggestViews, "pairs":biggest, "edges":biggestEdges};
 }
 R3D.optimumTransform3D = function(edges){ // edges: [indexA,indexB, transform,error]
 	var nonlinear = true;
@@ -24879,7 +24965,7 @@ R3D._gdLocationRotationOperation3D = function(args, x, isUpdate, type){
 	}
 	return totalError;
 }
-R3D._gdScaleOperation1D = function(args, x, isUpdate, type){
+R3D._gdScaleOperation1D = function(args, x, isUpdate){
 	var edges = args[0];
 	var rootVertex = args[1];
 	var totalError = 0;
@@ -24912,9 +24998,8 @@ R3D._gdScaleOperation1D = function(args, x, isUpdate, type){
 // enforce consistency: all loops sum to 0
 // pick a random loop = pick random vertex a & random vertex b & path between them : pathAB != pathBC
 // find the total error & spread along path
-
 	if(isUpdate){
-		console.log(" "+type+" totalError: "+totalError);
+		// console.log(" scale - totalError: "+totalError);
 	}
 	return totalError;
 }
@@ -24945,7 +25030,35 @@ R3D._gdScales1D = function(vs,es,values,rootIndex,iterations){
 }
 
 
+R3D.skeletalViewGraph = function(edges){ // maximum leaf t-spanner
+	// Gi = image graph
+	// Gs = skeletal graph
+	// Gp = image pair graph
+	// Cij = covariance (position)
+	// tr(Cij) = scalar estimate of uncertainty
+	// efficiency = # of interrior nodes in Gs
+	// t = stretch factor = max_distance(Gs)/max_distance(Gi) <= #
 
+	// errors in this case are R in pixels | they should be divided by image size to average out the differnt scales of pixels
+
+	/*
+	pick vertex with most edges (degree)
+	pick next vertex in list with most edges
+	 ...MST
+	 interrior nodes = black
+	 add edges back based on A)interrior B) cov weight
+	*/
+
+	/*
+	for each vertex
+	find shortest path between vertexes & add calc importance V->U = error/minError
+	keep most important edges
+	add edges back?
+
+	*/
+	console.log("TODO");
+	// throw "TODO";
+}
 
 
 

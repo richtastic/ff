@@ -218,7 +218,8 @@ project typical numbers:
 	10~100  number of images
 		each image has ~ 0.2 other matched images
 	~N*N(0.2) pairs [ (n.(n-1))/2 - 2 pairs possible ]		CURRENT GUESS OF AVERAGE GRAPH CONNECTIVITY
-	~N*N(0.1) triples [(n-1).(n-2)/2 triples possible]
+	~N*N(0.1) triples [(n)*(n-1)*(n-2)/6 triples possible] - tetrahedral number
+
 	20~200 pairs
 	10~100 triples
 
@@ -331,7 +332,7 @@ TODO: pairwise possibility limiting
 	- redo affine features
 x	- multi-view combining into single 3D scene - minimizing errors
 - surface triangulation(tessellation)
-	- advancing-front, curvature-based tessellation
+x	- advancing-front, curvature-based tessellation
 	=> scene triangle model
 - texturing
 	- view-based surface texturing
@@ -339,13 +340,14 @@ x	- multi-view combining into single 3D scene - minimizing errors
 	- separate triangles into texture lookup / files
 		- TextureMap (from textures to atlas)
 	=> scene textured model
------> HERE <------
 (06/17)
 - viewing output
 	- locally
 	- VR device
 		- ios: scenekit
 		- oculus = unity / blender
+-----> HERE <------
+
 (07/01)
 - MVP
 	- example models
@@ -366,28 +368,30 @@ https://cloud.google.com/appengine/docs/nodejs/
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+- goal of combining multiple views is to get the views in the correct orientation
+- method of combining the views:
+	- expand P3d match coverage by transferring matching points
+		=> pull mean in this correct direction
+	- drop the worst (high sigma error) points existing on the edge of errors
+
+
+...
 
 
 - filtering after probe3d removes most of the added matches
-	- is the high error related to the optimal points not all aligning ?
-	-
+	- is the high error related to the optimal points not all aligning inside allowed error ?
+	- ...
 
 	=> print out the new / 3+ matches to screen to see ERROR ?
 
 
+- surface triangulation is poor
+	- soften noise
+		=> better finding neighborhood size
+	- curvature estimates poor - triangles are too tiny
+		=> do more averaging/blurring on surface estimation
 
-
-
-	- update graph logic for SCALE & TRANSFORM-PAIRS
-		- create scale graph w/ all trivial edges (calc scale ratios)
-		- select largest subgraph (views) that has A) most views B) lowest average error
-		=> do absolute scale solve
-		- create trans. graph only using edges (pairs) that exist in scale graph
-		=> do absolute trans. solve
-
-
-
-
+- add surface process in app
 
 
 
@@ -398,12 +402,6 @@ TEXTURING:
 - scene copying triangles.yaml pertinent info
 
 
-
-- surface triangulation is poor
-	- soften noise
-		=> better finding neighborhood size
-	- curvature estimates poor - triangles are too tiny
-		=> do more averaging/blurring on surface estimation
 
 ....
 
