@@ -5992,6 +5992,9 @@ App3DR.ProjectManager = function(relativePath, operatingStage, readyFxn){ // ver
 	this._pointsCount = null;
 	this._pointData = null;
 
+	this._bundleFilename = null;
+	this._bundleData = null;
+
 	this._triangleFilename = null;
 	this._triangleCount = null;
 	this._textureCount = null;
@@ -6058,7 +6061,10 @@ App3DR.ProjectManager.BUNDLE_SPARSE_FILE_NAME = "sparse.yaml";
 App3DR.ProjectManager.BUNDLE_DENSE_FILE_NAME = "dense.yaml";
 App3DR.ProjectManager.RECONSTRUCT_DENSE_DIRECTORY = "dense";
 App3DR.ProjectManager.RECONSTRUCT_DENSE_FILENAME = "dense.yaml";
-App3DR.ProjectManager.RECONSTRUCT_POINTS_FILE_NAME = "points.yaml";
+App3DR.ProjectManager.RECONSTRUCT_POINTS_FILE_NAME = "points.yaml"; // result of compiled points.yaml
+App3DR.ProjectManager.RECONSTRUCT_BUNDLE_FILE_NAME = "bundle.yaml"; // cams, views & P3D+NRM absolutes
+// App3DR.ProjectManager.RECONSTRUCT_ABSOLUTE_FILE_NAME = "absolute.yaml"; //
+
 // App3DR.ProjectManager.BUNDLE_DENSE_INFO_FILE_NAME = "info_dense.yaml";
 // App3DR.ProjectManager.SPARSE_MATCHES_FILE_NAME = "sparse.yaml"; // sparse points + transform
 // App3DR.ProjectManager.MEDIUM_MATCHES_FILE_NAME = "medium.yaml";
@@ -6935,6 +6941,33 @@ App3DR.ProjectManager.prototype._loadPointsComplete = function(object, data){
 
 
 
+App3DR.ProjectManager.prototype.saveBundle = function(string, filename, callback, context, object){
+	console.log("saveBundle: ");
+	var path = Code.appendToPath(this._workingPath, App3DR.ProjectManager.RECONSTRUCT_DIRECTORY, filename);
+	var yamlBinary = Code.stringToBinary(string);
+	this.addOperation("SET", {"path":path, "data":yamlBinary}, callback, context);
+}
+App3DR.ProjectManager.prototype.loadBundle = function(callback, context, object){
+	var path = Code.appendToPath(this._workingPath, App3DR.ProjectManager.RECONSTRUCT_DIRECTORY, this.bundleFilename());
+	console.log("loadBundle: "+path);
+	var object = {};
+		object["callback"] = callback;
+		object["context"] = context;
+	this.addOperation("GET", {"path":path}, this._loadBundleComplete, this, object);
+}
+App3DR.ProjectManager.prototype._loadBundleComplete = function(object, data){
+	console.log("_loadBundleComplete");
+	var callback = object["callback"];
+	var context = object["context"];
+	this._bundleData = this.dataToObject(data);
+	if(callback && context){
+		callback.call(context, this);
+	}
+}
+
+
+
+
 App3DR.ProjectManager.prototype.saveTrianglesFromData = function(triangleData, fxn, ctx){
 	console.log(triangleData);
 	var yaml = new YAML();
@@ -7190,13 +7223,13 @@ throw "NO";
 		this.calculateGlobalOrientationInit();
 		return;
 	}
-throw "...";
 // throw "task tracks";
 	if(!this.tracksDone()){
 		console.log("tracks not done");
 		this.iterateGraphTracks();
 		return;
 	}
+// throw "...";
 // throw "task sparse";
 if(!this.sparseDone()){
 	console.log("sparse not done");
@@ -7204,13 +7237,13 @@ if(!this.sparseDone()){
 	return;
 }
 throw "task dense";
-if(!this.denseDone()){
+if(!this.denseDone()){ // loads all dense matches using updated camera positions & saves into PAIR/dense.yaml
 	console.log("dense not done");
 	this.iterateDenseTracks();
 	return;
 }
 throw "task BA";
-if(!this.pointsDone()){
+if(!this.pointsDone()){ // iteritive bundle adjust
 	this.iteratePointsFullBA();
 	return;
 }
@@ -8342,7 +8375,7 @@ this.setTracksFilename(App3DR.ProjectManager.RECONSTRUCT_TRACKS_FILE_NAME);
 	}
 
 
-	throw "here ..."
+	// throw "here ..."
 
 
 // SAVE
@@ -8586,13 +8619,10 @@ return;
 
 App3DR.ProjectManager.prototype.iterateGraphTracks = function(){ // aggregate / accumulate tracks
 	console.log("iterateGraphTracks");
-
 	var project = this;
-	// backwards:
 	// load tracks file
 	var fxnGraphLoaded = function(){
 		console.log("fxnGraphLoaded");
-		// project.loadTracks(fxnTracksLoaded, project);
 		project._iterateGraphTracksStart();
 	}
 	// load graph file
@@ -8698,10 +8728,7 @@ console.log("START AT: "+startIndexI+" | "+startIndexJ);
 	for(var i=0; i<graphViews.length; ++i){
 		viewPointCounts[i] = Code.newArrayZeros(graphViews.length);
 	}
-
-	console.log(foundPair);
 	if(foundPair){
-		console.log(foundPair);
 		var pair = foundPair;
 
 		var viewA = pair.viewA();
@@ -8739,7 +8766,6 @@ console.log("START AT: "+startIndexI+" | "+startIndexJ);
 			App3DR.ProjectManager.loadPairsTrackData([pair], fxnPairLoaded, project);
 		}
 	}else{ // propagate tracks
-// throw "propagate tracks";
 		var groups = graphData["propagateGroups"]; // triples for
 		console.log(groups);
 		if(groups){
@@ -8751,7 +8777,6 @@ console.log("START AT: "+startIndexI+" | "+startIndexJ);
 				// // make copy of original groups
 				triple = Code.copyArray(triple);
 				console.log(triple);
-// throw "what"
 				// get auxilary views
 				var loadViews = this.auxilaryViewsToLoadForSet(triple,graphData, 6);
 				var views = this.views();
@@ -8760,16 +8785,12 @@ console.log("START AT: "+startIndexI+" | "+startIndexJ);
 				for(var i=0; i<views.length; ++i){
 					viewLookup[views[i].id()] = views[i];
 				}
-				// var graphViews = graphData["views"];
 				for(var i=0; i<triple.length; ++i){
 					triple[i] = viewLookup[graphViews[triple[i]]["id"]];
 				}
 				for(var i=0; i<loadViews.length; ++i){
 					loadViews[i] = viewLookup[graphViews[loadViews[i]]["id"]];
 				}
-				console.log(loadViews);
-				//
-				//
 				// load images and proceed
 				var fxnViewsLoaded = function(){
 					console.log("loaded images");
@@ -8778,8 +8799,7 @@ console.log("START AT: "+startIndexI+" | "+startIndexJ);
 				}
 				// load the track data for this pair
 				App3DR.ProjectManager.loadViewsImages(loadViews,fxnViewsLoaded, project);
-			}else{
-// throw "done propagating";
+			}else{ // done propagating
 				console.log("done loading/propagating tracks");
 				var sparseCameras = [];
 				var sparseViews = [];
@@ -9212,10 +9232,6 @@ console.log("-------------------------------------------------------------------
 		}
 		world.printPoint3DTrackCount();
 */
-
-
-
-
 		world.averagePoints3DFromMatches(true);
 		world.relativeFFromSamples();
 		world.estimate3DErrors(true);
@@ -9231,25 +9247,12 @@ console.log("-------------------------------------------------------------------
 		world.filterGlobalMatches(false, 0, 3.0,3.0,3.0,3.0, false);
 		world.filterSphere3D(2.0);
 
-		// var listP3D = world.toPointArrayFromViews(worldTriple);
-		// if(false){
-		// // if(t==maxIterations-1){
-		// 	for(var p=0; p<listP3D.length; ++p){
-		// 		if(p%100==0){
-		// 			console.log("    "+p+"/"+listP3D.length);
-		// 		}
-		// 		var p3D = listP3D[p];
-		// 		world.updateP3DPatch(p3D, false); // keep at linear location
-		// 		// world.updateP3DPatch(p3D, true);
-		// 	}
-		// }
-
 }
 	world.printPoint3DTrackCount();
 	world.estimate3DErrors(true);
 
 
-throw "wut";
+throw "don't want to do triple propagation ...";
 
 	// save points
 	var graphPoints = this._getGraphPointsFromWorld(world, graphViewLookupIndex);
@@ -9326,7 +9329,10 @@ console.log(worldViews);
 	world.estimate3DErrors(true, true);
 
 
-	maxIterations = 5;
+	throw "... double check all these";
+
+
+	maxIterations = 3;
 	// maxIterations = 7;
 	var views = world.toViewArray();
 	for(var iterations=0; iterations<maxIterations; ++iterations){ // LINEAR until P3D is stable enough to do nonlinear
@@ -9334,7 +9340,7 @@ console.log(worldViews);
 		console.log("refine views");
 		world.refineCameraAbsoluteOrientation(null,100); // 100-200
 /*
-		// simgle camera
+		// single camera
 		for(var i=0; i<views.length; ++i){
 			view = views[i];
 			world.refineSelectCameraAbsoluteOrientation([view], null, 50); // 10-100
@@ -9343,7 +9349,6 @@ console.log(worldViews);
 
 		world.estimate3DErrors(true);
 		world.averagePoints3DFromMatches();
-
 		// clean
 		console.log("clean");
 		world.filterGlobalMatches(null,null, 3.0);
@@ -9354,6 +9359,8 @@ console.log(worldViews);
 	}
 
 
+	world.patchInitBasicSphere(true);
+	world.relativeFFromSamples();
 
 
 
@@ -9361,19 +9368,31 @@ console.log(worldViews);
 	console.log("NONLINEAR POINTS");
 	maxIterations = 5;
 	for(var iterations=0; iterations<maxIterations; ++iterations){
+
+		world.printPoint3DTrackCount();
+
+
 		// reesimate points
 		world.refinePoint3DAbsoluteLocation(null,10);
 		world.copyPoint3DToMatchEstimates();
+
+		world.relativeFFromSamples();
+
 		world.estimate3DErrors(true, true);
 
+
+		world.estimate3DErrors(true);
+
+		world.filterPatch3D();
+
 		// filter pairwise
-		world.filterGlobalMatches(null,null, 3.0,3.0,null,null, false); // 2 = many | 3 = no dropping
+		// world.filterGlobalMatches(null,null, 3.0,3.0,null,null, false); // 2 = many | 3 = no dropping
 		// filter bad points
-		world.filterGlobalPoints(4.0); // 3 medium
-		world.filterPatch3D(4.0); // 3 medium
+		// world.filterGlobalPoints(4.0); // 3 medium
+		// world.filterPatch3D(4.0); // 3 medium
 
 		// local
-		world.filterLocal3D(4.0); // 3 medium
+		// world.filterLocal3D(4.0); // 3 medium
 		//world.filterLocal2D(); 2D neighbor voting: F / R / ...
 
 		// reestimate cameras
@@ -9384,6 +9403,9 @@ console.log(worldViews);
 				world.refineSelectCameraAbsoluteOrientation([view], null, 50); // 10-100
 			}
 			*/
+		world.dropNegative3D();
+		world.filterGlobalMatches(false, 0, 3.0,3.0,3.0,3.0, false);
+
 		world.refineCameraAbsoluteOrientation(null,100);
 
 		//
@@ -9406,7 +9428,20 @@ console.log(worldViews);
 	// console.log(worldPoints);
 
 
-// return;
+
+		// KEEP THE VIEW INFO
+		// KEEP THE CAMERA INFO
+
+		// GET POINT3D ABSOLUTE LOCATIONS & NORMALS
+
+
+		var path = Code.appendToPath(this._workingPath, App3DR.ProjectManager.RECONSTRUCT_DIRECTORY, App3DR.ProjectManager.RECONSTRUCT_BUNDLE_FILE_NAME);
+
+		console.log("SAVE TO BUNDLE FILE");
+
+
+throw "... save auto.yaml"
+
 
 	var str = world.toYAMLString();
 	// console.log(str);
@@ -9429,7 +9464,7 @@ App3DR.ProjectManager.prototype.iterateDenseTracks = function(){
 		console.log("fxnTracksLoaded");
 		project._iterateDenseTracksStart();
 	}
-	// load sparse file
+	// load dense file
 	project.loadDense(fxnTracksLoaded, project);
 }
 App3DR.ProjectManager.prototype._iterateDenseTracksEnd = function(object, data){ // all pair's dense points are loaded
@@ -9533,7 +9568,7 @@ App3DR.ProjectManager.prototype._iterateDenseTracksStart = function(){
 	var densePoints = denseData["points"];
 	var currentPair = denseData["currentPair"];
 	currentPair++;
-	if(currentPair>=densePairs.length){
+	if(currentPair>=densePairs.length){ // load all dense pairs at same time
 // throw "dense about done";
 		var loadPairFiles = [];
 		for(var i=0; i<densePairs.length; ++i){
@@ -9555,7 +9590,7 @@ App3DR.ProjectManager.prototype._iterateDenseTracksStart = function(){
 			this.addOperation("GET", {"path":path}, callback, context, object);
 		}
 		return;
-	}
+	} // else copy dense pair using updated transforms
 	var densePair = densePairs[currentPair];
 
 	var denseViewLookup = {};
@@ -9810,7 +9845,6 @@ App3DR.ProjectManager.prototype.iterateSparseTracks = function(){
 	console.log("iterateSparseTracks");
 	var project = this;
 	// backwards:
-	// do operations
 	var fxnTracksLoaded = function(){
 		console.log("fxnTracksLoaded");
 		project._iterateSparseTracksStart();
@@ -9998,9 +10032,9 @@ for(var i=0; i<worldViews.length; ++i){
 			}
 			world.estimate3DErrors(true); // spread error ..... for new matches ...
 
-
 			// update view locations
-			world.refineSelectCameraAbsoluteOrientation(pairWorldViews, null, 1000);
+			// world.refineSelectCameraAbsoluteOrientation(pairWorldViews, null, 1000);
+			world.refineSelectCameraAbsoluteOrientation(pairWorldViews, null, 100);
 			world.refineCameraAbsoluteOrientation(null, 1000); // lots
 			world.estimate3DErrors(true);
 
@@ -10014,7 +10048,8 @@ for(var i=0; i<worldViews.length; ++i){
 			console.log("FILTER");
 			world.printPoint3DTrackCount();
 			world.dropNegative3D();
-			world.filterGlobalMatches(false, 0, 3.0,3.0,3.0,3.0, false);
+			// world.filterGlobalMatches(false, 0, 3.0,3.0,3.0,3.0, false);
+			world.filterGlobalMatches(false, 0, 2.0,2.0,2.0,2.0, false);
 			world.printPoint3DTrackCount();
 			// world.filterMatchGroups();
 			// this.filterSphere3D(2.0);
@@ -10386,7 +10421,7 @@ App3DR.ProjectManager.prototype._iterateGraphTracksTick = function(pair,viewsLoa
 	var graphData = this.graphData();
 	console.log(graphData);
 	var graphViews = graphData["views"];
-
+	// lookup tables
 	var graphViewLookup = {};
 	var graphViewLookupIndex = {};
 	var graphViewLookupID = {};
@@ -10439,16 +10474,11 @@ console.log("embedded points");
 
 	// initialize point patches
 	console.log("init the patches");
-	// world.patchInitOnly();
 	world.patchInitBasicSphere(true);
 
 	var newPoints = world.toPointArray();
 	// remove new points
 	world.disconnectPoints3D(newPoints);
-	// for(var i=0; i<newPoints.length; ++i){
-	// 	var point3D = newPoints[i];
-	// 	world.disconnectPoint3D(point3D);
-	// }
 	//
 	this._embedTrackPoints(world, graphData, graphViewLookupID);
 	console.log("EMBED NEW POINTS ...: ");
@@ -10461,39 +10491,36 @@ console.log("embedded points");
 	}
 	world.printPoint3DTrackCount();
 
-
-for(var i=0; i<worldViews.length; ++i){
-	var view = worldViews[i];
-	var image = view.image();
-	var points2D = view.toPointArray();
-	console.log(points2D);
-	if(!image){
-		continue;
-	}
-var OFFX = 10 + i*image.width();
-var OFFY = 10;
-	var img = GLOBALSTAGE.getFloatRGBAsImage(image.red(),image.grn(),image.blu(), image.width(),image.height());
-	var d = new DOImage(img);
-	d.matrix().translate(OFFX, OFFY);
-	GLOBALSTAGE.addChild(d);
-	for(var j=0; j<points2D.length; ++j){
-		var point2D = points2D[j];
-		var p = point2D.point2D();
-		var d = new DO();
-		d.graphics().setFill(0xFFFF0066);
-		d.graphics().beginPath();
-		d.graphics().drawCircle(p.x,p.y,2.0);
-		d.graphics().endPath();
-		d.graphics().fill();
+if(false){
+	// SHOW IMAGES
+	for(var i=0; i<worldViews.length; ++i){
+		var view = worldViews[i];
+		var image = view.image();
+		var points2D = view.toPointArray();
+		console.log(points2D);
+		if(!image){
+			continue;
+		}
+	var OFFX = 10 + i*image.width();
+	var OFFY = 10;
+		var img = GLOBALSTAGE.getFloatRGBAsImage(image.red(),image.grn(),image.blu(), image.width(),image.height());
+		var d = new DOImage(img);
 		d.matrix().translate(OFFX, OFFY);
 		GLOBALSTAGE.addChild(d);
+		for(var j=0; j<points2D.length; ++j){
+			var point2D = points2D[j];
+			var p = point2D.point2D();
+			var d = new DO();
+			d.graphics().setFill(0xFFFF0066);
+			d.graphics().beginPath();
+			d.graphics().drawCircle(p.x,p.y,2.0);
+			d.graphics().endPath();
+			d.graphics().fill();
+			d.matrix().translate(OFFX, OFFY);
+			GLOBALSTAGE.addChild(d);
+		}
 	}
 }
-
-
-// throw "any merging?"
-	// all points to tracks
-
 
 	var graphPoints = this._getGraphPointsFromWorld(world, graphViewLookupIndex);
 	graphData["points"] = graphPoints;
@@ -10695,6 +10722,9 @@ App3DR.ProjectManager.prototype.surfaceTriangulate = function(){ // triangles fr
 	var fxnPointsLoaded = function(){
 		console.log("fxnPointsLoaded");
 
+		// extract points & normals
+
+
 		// load from points file
 		var pnts = [];
 		var nrms = [];
@@ -10709,7 +10739,7 @@ App3DR.ProjectManager.prototype.surfaceTriangulate = function(){ // triangles fr
 
 	}
 	// load final points file
-	project.loadPoints(fxnPointsLoaded, project);
+	project.loadBundled(fxnPointsLoaded, project);
 
 
 

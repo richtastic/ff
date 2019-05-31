@@ -3456,6 +3456,18 @@ Code.randomIndexes = function(count, range){
 // 	return set;
 // }
 // Code.randomIntervalSet(5, 0, 10);
+Code.randomPopParallelArrays = function(arrays,count){
+	var len = arrays.length;
+	if(len>0){
+		while(arrays[0].length>count){
+			var l = arrays[0].length;
+			var index = Math.floor(Math.random()*l);
+			for(var i=0; i<len; ++i){
+				arrays[i].splice(index,1);
+			}
+		}
+	}
+}
 Code.randomSampleRepeatsMaximum = function(array, maximumCount, randomCount){ // use array as-is if too small, else subsample
 	var samples = null;
 	if(array.length<maximumCount){

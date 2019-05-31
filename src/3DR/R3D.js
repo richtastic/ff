@@ -25053,7 +25053,8 @@ R3D.skeletalViewGraph = function(edges){ // maximum leaf t-spanner
 	for each vertex
 	find shortest path between vertexes & add calc importance V->U = error/minError
 	keep most important edges
-	add edges back?
+	add vertexes/edges back in priority Q
+	continue to add back edges until propagated error < t * original
 
 	*/
 	console.log("TODO");
