@@ -8,9 +8,9 @@ function QuadTree(toPoint, min, max){
 	if(min && max){
 		var size = V2D.sub(max,min);
 		var center = V2D.avg(max,min);
-		this.initWithDimensions(center, size);
+		this._initWithDimensions(center, size);
 	}else{
-		this.initWithDimensions(new V2D(0,0), new V2D(1,1));
+		this._initWithDimensions(new V2D(0,0), new V2D(1,1));
 	}
 }
 QuadTree.objectToV2D = function(p){
@@ -250,13 +250,16 @@ QuadTree.prototype.toString = function(){
 	str += this._root.toString()+"";
 	return str;
 }
-QuadTree.prototype.initWithDimensions = function(center,size){
+QuadTree.prototype._initWithDimensions = function(center,size){
 	this._root.center(center);
 	this._root.size(size);
 }
+QuadTree.prototype.initWithDimensions = function(center,size){
+	this.clear();
+	this._initWithDimensions(center,size);
+}
 QuadTree.prototype.initWithObjects = function(objects, force){
 	force = force!==undefined ? force : true;
-	this.clear();
 	if(objects.length==0){
 		return false;
 	}
@@ -271,6 +274,17 @@ QuadTree.prototype.initWithObjects = function(objects, force){
 		V2D.min(min,min,point);
 		V2D.max(max,max,point);
 	}
+	this.initWithSize(min,max,force);
+	for(i=0;i<len;++i){
+		this.insertObject(objects[i]);
+	}
+	return true;
+}
+QuadTree.prototype.initWithSize = function(min,max, force){
+	force = force!==undefined ? force : true;
+	if(!min || !max){
+		return;
+	}
 	var eps = 1E-6;
 	min.add(-eps,-eps);
 	max.add(eps,eps);
@@ -282,13 +296,8 @@ QuadTree.prototype.initWithObjects = function(objects, force){
 		size.y = 1.0;
 	}
 	var center = V2D.avg(max,min);
-	this.initWithDimensions(center,size);
-	for(i=0;i<len;++i){
-		this.insertObject(objects[i]);
-	}
-	return true;
+	this._initWithDimensions(center,size);
 }
-
 QuadTree._sortArxel = function(a,b){
 	return a.temp() < b.temp() ? -1 : 1;
 }

@@ -834,7 +834,10 @@ Graph.BFS = function(graph, search, target, adjacencyMatrix, flowMatrix, indexes
 	}
 	return path;
 }
-
+Graph.DFS = function(){
+	// use stack
+	throw "TODO";
+}
 Graph.indexAndCopyVertexFromList = function(copyVertexList, vertexList){ // copy list verbatim
 	for(var i=0;i<vertexList.length;++i){
 		var v = vertexList[i];

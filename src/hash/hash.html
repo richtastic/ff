@@ -1,0 +1,64 @@
+<html>
+<head>
+<title>Hash</title>
+<script src="../code/FF.js"></script>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<script type="text/javascript">
+function pageLoadedFxn(){
+	ff = new FF("../code/",defaultClassesLoadedFxn,defaultClassesProgressFxn);
+}
+function defaultClassesProgressFxn(o){ /* don't care */ }
+function defaultClassesLoadedFxn(){
+	var list = [];
+	scriptLoader = new ScriptLoader("./",list,this,customClassesLoadedFxn,null);
+	scriptLoader.load();
+}
+function customClassesLoadedFxn(){
+	console.log("loaded");
+	
+	/*
+	var hash = new Hash();
+	hash.intFxn(Hash.toIntegerFromString);
+	console.log(hash);
+
+	// hash.value(0,"A");
+	// hash.value(1,"B");
+	// hash.value(2,"C");
+	// hash.value(3,"D");
+	// hash.value(4,"E");
+	// hash.value(5,"F");
+	// console.log( hash.value(2) );
+
+
+	hash.value("A","A");
+	hash.value("B","B");
+	hash.value("C","C");
+	hash.value("D","D");
+	hash.value("E","E");
+	hash.value("F","F");
+	hash.value("G","G");
+	hash.value("H","H");
+
+	hash.value("X","kitty");
+
+	hash.remove("H");
+
+
+	console.log( hash.value("C") );
+	console.log( hash.toArray() );
+	*/
+
+	// var arr = [1,3,5,2,9,0,2,4,5,2,1,6,7,8,6,5,1,3,7];
+	var arr = ["b","c","t","d","z","a","f","c","g","a","d","b"];
+	console.log(arr+"");
+	Code.mergeSort(arr);
+	console.log(arr+"");
+
+}
+</script>
+</head>
+<body onload="pageLoadedFxn();" style="border:0px;margin:0px;border:0px;">
+<div name="feedback" style=""></div>
+</body>
+</html>
+

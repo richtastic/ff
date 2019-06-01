@@ -10006,6 +10006,7 @@ for(var i=0; i<worldViews.length; ++i){
 		world.printPoint3DTrackCount();
 		world.relativeFFromSamples();
 		world.estimate3DErrors(true);
+		world.printErrorsDebugMatchCount();
 
 		// RECORD INITIAL ERROR BETWEEN 2 VIEWS
 		var transform = world.transformFromViews(viewA,viewB);
@@ -10025,11 +10026,13 @@ for(var i=0; i<worldViews.length; ++i){
 			console.log("probe3D");
 			world.probe3D();
 			// update patches ... ?
+			// world.generateMatchAffineFromPatches();
 			var ps3D = world.toPointArray();
 			for(var p=0; p<ps3D.length; ++p){
 				var p3D = ps3D[p];
 				world.generateMatchAffineFromPatches(p3D);
 			}
+			world.printErrorsDebugMatchCount();
 			world.estimate3DErrors(true); // spread error ..... for new matches ...
 
 			// update view locations
@@ -10046,10 +10049,12 @@ for(var i=0; i<worldViews.length; ++i){
 
 			// drop worst
 			console.log("FILTER");
+			world.filterPairwiseSphere3D();
 			world.printPoint3DTrackCount();
 			world.dropNegative3D();
 			// world.filterGlobalMatches(false, 0, 3.0,3.0,3.0,3.0, false);
-			world.filterGlobalMatches(false, 0, 2.0,2.0,2.0,2.0, false);
+			// world.filterGlobalMatches(false, 0, 2.0,2.0,2.0,2.0, false);
+			world.filterGlobalMatches(false, 0, 2.0,5.0,3.0,3.0, false); // 95% - 99.9% - 99% - 99%
 			world.printPoint3DTrackCount();
 			// world.filterMatchGroups();
 			// this.filterSphere3D(2.0);

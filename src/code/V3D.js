@@ -408,7 +408,8 @@ V3D.meanFromArray = function(pointList){
 	// 	mean.add(pt);
 	// }`
 	// mean.scale(1.0/len);
-	return V3D.infoFromArray(pointList)["mean"];
+	// return V3D.infoFromArray(pointList)["mean"];
+	return V3D.average(pointList);
 }
 V3D.mean = function(pointList){
 	return V3D.meanFromArray(pointList);

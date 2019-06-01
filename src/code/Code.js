@@ -12184,10 +12184,50 @@ Code.assert = function(boolCheck, comment){
 Code.bubbleSort = function(a,f){ // n -> n^2
 	throw "todo";
 }
-Code.selectionSort = function(a,f){ // n -> n^2
-	throw "todo";
-}
 Code.mergeSort = function(a,f){ // n -> n*lg(n)
+	f = f!==undefined ? f : Code._mergeSortInt;
+	var temp = Code.newArrayNulls(a.length);
+	Code._mergeSort(a,f,temp,  0,a.length-1);
+	Code.emptyArray(temp);
+}
+Code._mergeSortInt = function(a,b){
+	return a<b ? -1 : 1;
+}
+Code._mergeSort = function(a,f,t,  s,e){ // divide the problem in half, sort self, merge up
+	if(s<e){ // divide up
+		var m = (s+e)*0.5 | 0;
+		Code._mergeSort(a,f,t, s,m);
+		Code._mergeSort(a,f,t, m+1,e);
+		Code._mergeSubArrays(a,f,t, s,m,e);
+	}
+}
+Code._mergeSubArrays = function(a,f,t, s,m,e){
+	var m1 = m+1;
+	var i = s;
+	var j = m1;
+	var count = e-s+1;
+	for(var x=0; x<count; ++x){
+		var smaller;
+		if(i>m){ // end from left
+			smaller = a[j];
+			++j;
+		}else if(j>e){ // end from right
+			smaller = a[i];
+			++i;
+		}else if(f(a[i],a[j])<=0){ // only place where f is used
+			smaller = a[i];
+			++i;
+		}else{ // a[j]>a[i]
+			smaller = a[j];
+			++j;
+		}
+		t[x] = smaller;
+	} // copy back
+	for(var x=0; x<count; ++x){
+		a[s+x] = t[x];
+	}
+}
+Code.selectionSort = function(a,f){ // n -> n^2
 	throw "todo";
 }
 Code.heapSort = function(a,f){ // n*lg(n)

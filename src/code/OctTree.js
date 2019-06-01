@@ -8,9 +8,9 @@ function OctTree(toPoint, max, min){
 	if(min && max){
 		var size = V3D.sub(max,min);
 		var center = V3D.avg(max,min);
-		this.initWithDimensions(center, size);
+		this._initWithDimensions(center, size);
 	}else{
-		this.initWithDimensions(new V3D(0,0,0), new V3D(1,1,1));
+		this._initWithDimensions(new V3D(0,0,0), new V3D(1,1,1));
 	}
 }
 OctTree.objectToV3D = function(v){
@@ -126,9 +126,38 @@ OctTree.prototype.toString = function(){
 	str += this._root.toString()+"";
 	return str;
 }
-OctTree.prototype.initWithDimensions = function(center,size){
+OctTree.prototype.initWithSize = function(min,max, force){
+	force = force!==undefined ? force : true;
+	if(!min || !max){
+		return;
+	}
+	this.clear();
+	min = min.copy();
+	max = max.copy();
+	var force = true;
+	var eps = 1E-6;
+	min.add(-eps,-eps,-eps);
+	max.add(eps,eps,eps);
+	var size = OctTree.twoDivisionRound(min,max, force);
+	if(size.x==0){
+		size.x = 1.0;
+	}
+	if(size.y==0){
+		size.y = 1.0;
+	}
+	if(size.z==0){
+		size.z = 1.0;
+	}
+	var center = V3D.avg(max,min);
+	this._initWithDimensions(center,size);
+}
+OctTree.prototype._initWithDimensions = function(center,size){
 	this._root.center(center);
 	this._root.size(size);
+}
+OctTree.prototype.initWithDimensions = function(center,size){
+	this.clear();
+	this._initWithDimensions(center,size);
 }
 OctTree.prototype.initWithObjects = function(objects, force){
 	this.clear();
@@ -144,21 +173,7 @@ OctTree.prototype.initWithObjects = function(objects, force){
 		V3D.min(min,min,point);
 		V3D.max(max,max,point);
 	}
-	var eps = 1E-6;
-	min.add(-eps,-eps,-eps);
-	max.add(eps,eps,eps);
-	var size = OctTree.twoDivisionRound(min,max, force);
-	if(size.x==0){
-		size.x = 1.0;
-	}
-	if(size.y==0){
-		size.y = 1.0;
-	}
-	if(size.z==0){
-		size.z = 1.0;
-	}
-	var center = V3D.avg(max,min);
-	this.initWithDimensions(center,size);
+	this.initWithSize(min,max,force);
 	for(i=0;i<len;++i){
 		this.insertObject(objects[i]);
 	}
