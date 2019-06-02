@@ -10021,6 +10021,8 @@ for(var i=0; i<worldViews.length; ++i){
 	console.log("ITERATION: "+iter+" ............ "+" / "+totalIter);
 			world.averagePoints3DFromMatches();
 			world.patchInitBasicSphere(true);
+// world.printMatchStemPlots();
+// throw "...";
 			world.relativeFFromSamples();
 
 			// find new point3D spread
@@ -10037,6 +10039,7 @@ for(var i=0; i<worldViews.length; ++i){
 			world.estimate3DErrors(true); // spread error ..... for new matches ...
 
 			// update view locations
+// world.refineSelectCameraAbsoluteOrientation([world.viewFromID(5)], null, 100);
 			// world.refineSelectCameraAbsoluteOrientation(pairWorldViews, null, 1000);
 			// world.refineSelectCameraAbsoluteOrientation(pairWorldViews, null, 100);
 			world.refineCameraAbsoluteOrientation(null, 1000); // lots
@@ -10061,10 +10064,15 @@ for(var i=0; i<worldViews.length; ++i){
 			world.dropNegative3D();
 			// world.filterGlobalMatches(false, 0, 3.0,3.0,3.0,3.0, false);
 			// world.filterGlobalMatches(false, 0, 2.0,2.0,2.0,2.0, false);
-			world.filterGlobalMatches(false, 0, 2.0,4.0,3.0,3.0, false); // 95% - 99.7% - 99% - 99%
+			world.filterGlobalMatches(false, 0, 2.0,4.0,2.5,2.5, false); // 95% - 99.7% - 99% - 99%
 			// 1.0 = 68%
 			// 1.5 = 86%
 			// 2.0 = 95%
+			// 3.0 = 99%
+			// 4.0 = 99.9%
+
+			// ...
+
 			world.printPoint3DTrackCount();
 			// world.filterMatchGroups();
 			// this.filterSphere3D(2.0);
@@ -10075,15 +10083,14 @@ for(var i=0; i<worldViews.length; ++i){
 /*
 			// update views from liklihoods
 			console.log("GRAPH UPDATE");
+			world.copyRelativeTransformsFromAbsolute(); // already should be done ????
 			world.absoluteOrientationGraphSolve(); // set absolute views
 			world.copyRelativeTransformsFromAbsolute(); // update transforms
 			world.relativeFFromSamples();
 			world.estimate3DErrors(true); // re-estimate match.estimate3D
 			world.averagePoints3DFromMatches(); // re-estimate point3D location
 			world.patchInitBasicSphere(true); // restimate point3D patch
-
 			world.estimate3DErrors(true); // update errors ?????
-throw "???????"
 */
 		}
 

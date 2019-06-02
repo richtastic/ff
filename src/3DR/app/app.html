@@ -599,9 +599,359 @@ console.log(" "+i+" DIFF: "+orgDiff.length()+" @ "+Code.degrees(dirDiff));
 
 
 
-
-
 function classesLoadedFxn(){
+	var app = new App3DR();
+	return;
+
+
+	testAbs();
+}
+
+
+function testAbs(){
+
+
+		var m0 = new Matrix(4,4).identity();
+			m0 = Matrix.transform3DRotateZ(m0, Code.radians(-50.0));
+			m0 = Matrix.transform3DRotateX(m0, Code.radians( 20.0));
+			m0 = Matrix.transform3DRotateY(m0, Code.radians(-20.0));
+			m0 = Matrix.transform3DRotateZ(m0, Code.radians(120.0));
+		var m1 = new Matrix(4,4).identity();
+			m1 = Matrix.transform3DRotateZ(m1, Code.radians(-10.0));
+			m1 = Matrix.transform3DRotateX(m1, Code.radians(-20.0));
+			m1 = Matrix.transform3DRotateY(m1, Code.radians( 20.0));
+			m1 = Matrix.transform3DRotateZ(m1, Code.radians(-40.0));
+		var m2 = new Matrix(4,4).identity();
+			m2 = Matrix.transform3DRotateZ(m2, Code.radians( 20.0));
+			m2 = Matrix.transform3DRotateX(m2, Code.radians(-50.0));
+			m2 = Matrix.transform3DRotateY(m2, Code.radians(-10.0));
+			m2 = Matrix.transform3DRotateZ(m2, Code.radians(-20.0));
+		var m3 = new Matrix(4,4).identity();
+			m3 = Matrix.transform3DRotateZ(m3, Code.radians(-20.0));
+			m3 = Matrix.transform3DRotateX(m3, Code.radians(-10.0));
+			m3 = Matrix.transform3DRotateY(m3, Code.radians(-90.0));
+			m3 = Matrix.transform3DRotateZ(m3, Code.radians(-30.0));
+		var m4 = new Matrix(4,4).identity();
+			m4 = Matrix.transform3DRotateZ(m4, Code.radians(-20.0));
+			m4 = Matrix.transform3DRotateX(m4, Code.radians( 10.0));
+			m4 = Matrix.transform3DRotateY(m4, Code.radians( 20.0));
+			m4 = Matrix.transform3DRotateZ(m4, Code.radians( 30.0));
+		var m5 = new Matrix(4,4).identity();
+			m5 = Matrix.transform3DRotateZ(m5, Code.radians( 10.0));
+			m5 = Matrix.transform3DRotateX(m5, Code.radians(-10.0));
+			m5 = Matrix.transform3DRotateY(m5, Code.radians(-20.0));
+			m5 = Matrix.transform3DRotateZ(m5, Code.radians( 90.0));
+
+		var points = [];
+		points.push([new V3D(0, 1,1), V4D.qFromMatrix(m0) ]);
+		points.push([new V3D(2, 1,0), V4D.qFromMatrix(m1) ]);
+		points.push([new V3D(3, 0,0), V4D.qFromMatrix(m2) ]);
+		points.push([new V3D(1, 0,1), V4D.qFromMatrix(m3) ]);
+		// points.push([new V3D(4,2,3), V4D.qFromMatrix(m4) ]);
+		// points.push([new V3D(1,2,-1), V4D.qFromMatrix(m5) ]);
+			// points.push([new V3D(0,1,1), {"direction":new V3D(1,2,3).norm(), "angle":Code.radians(10.0)}]);
+			// points.push([new V3D(2,1,0), {"direction":new V3D(1,1,-1).norm(), "angle":Code.radians(20.0)}]);
+			// points.push([new V3D(3,0,0), {"direction":new V3D(0,-3,-3).norm(), "angle":Code.radians(-30.0)}]);
+			// points.push([new V3D(5,2,0), {"direction":new V3D(2,1,1).norm(), "angle":Code.radians(40.0)}]);
+			// points.push([new V3D(7,0,0), {"direction":new V3D(-2,2,2).norm(), "angle":Code.radians(-50.0)}]);
+			// points.push([new V3D(1,3,0), {"direction":new V3D(-1,2,0).norm(), "angle":Code.radians(90.0)}]);
+	for(var i=0; i<points.length; ++i){
+		console.log("ABS: "+i+": "+points[i][1]);
+		var q = points[i][1];
+		var t = Code.vectorTwistFromQuaternion(q);
+		console.log("    "+t["direction"]+" @ "+Code.degrees(t["angle"]));
+		var q2 = Code.quaternionFromVectorTwist(t);
+		console.log("        "+q2);
+		var t2 = Code.vectorTwistFromQuaternion(q2);
+		console.log("  ? "+t2["direction"]+" @ "+Code.degrees(t2["angle"]));
+		points[i][1] = q2;
+	}
+
+		var edges = [];
+			edges.push([0,1, 0.01]);
+			edges.push([0,2, 0.01]);
+				edges.push([0,3, 0.01]);
+				edges.push([0,4, 0.05]);
+				edges.push([0,5, 0.01]);
+	// edges.push([0,5, 0.5]);
+	// edges.push([0,5, 0.001]);
+			edges.push([1,2, 0.01]);
+			edges.push([1,3, 0.03]);
+				edges.push([1,4, 0.02]);
+				edges.push([1,5, 0.01]);
+
+			edges.push([2,3, 0.1]);
+				edges.push([2,4, 0.03]);
+				edges.push([2,5, 0.02]);
+
+			edges.push([3,4, 0.04]);
+				edges.push([3,5, 0.05]);
+
+			edges.push([4,5, 0.02]);
+
+		var max = 3;
+		for(var i=0; i<edges.length; ++i){
+			if(edges[i][0]>max || edges[i][1]>max){
+				Code.removeElementAt(edges,i);
+				--i;
+			}
+		}
+		var graph = new Graph();
+		var vs = [];
+		for(var i=0; i<points.length; ++i){
+			var v = graph.addVertex();
+			v.data([i,points[i],null]);
+			vs[i] = v;
+		}
+		var es = [];
+		// var relativeEdges = [];
+		// var relativeLocations = [];
+		var pairs = [];
+		for(var i=0; i<edges.length; ++i){
+			var edge = edges[i];
+			var a = edge[0];
+			var b = edge[1];
+			var error = edge[2];
+				error = error;
+			var w = 1.0/Math.max(error,1E-6);
+			var va = vs[a];
+			var vb = vs[b];
+			var pa = points[a][0];
+			var pb = points[b][0];
+			var ra = points[a][1];
+			var rb = points[b][1];
+			var e = graph.addEdge(va,vb, w, Graph.Edge.DIRECTION_DUPLEX);
+			var vector = V3D.sub(pb,pa);
+			//
+			var rainv = ra.copy().qInverse().qNorm();
+			var rab = V4D.qMul(rb,rainv);
+	console.log("EDGE: "+a+"->"+b+" = "+rab);
+	var tt = Code.vectorTwistFromQuaternion(rab);
+	console.log("   "+ra+" && "+rb);
+	var ta = Code.vectorTwistFromQuaternion(ra);
+	var tb = Code.vectorTwistFromQuaternion(rb);
+	console.log("   "+ta["direction"]+" @ "+Code.degrees(ta["angle"])+" && "+tb["direction"]+" @ "+Code.degrees(tb["angle"]));
+	console.log("       TWIST: "+tt["direction"]+" @ "+Code.degrees(tt["angle"]));
+			// var b = V4D.qMul(rab,ra);
+
+			var errorAngle = error * 1.0;
+			var errorLocation = error * 1.0;
+			// var errorAngle = error * 3.0;
+			// var errorLocation = error * 3.0;
+			error = errorLocation;
+			// location
+			vector.add( Code.randomFloat(-errorLocation,errorLocation), Code.randomFloat(-errorLocation,errorLocation) , Code.randomFloat(-errorLocation,errorLocation) );
+			// rotation
+			var q = V4D.qIdentity().qRotateDir( new V3D().random(1.0).norm(), Code.randomFloat(-errorAngle,errorAngle) );
+			rab = V4D.qMul(q,rab);
+			// save
+			e.data([va,vb,vector,rab,error]);
+			es[i] = e;
+			var transform = V4D.qMatrix(rab,new Matrix(3,3));
+			transform.appendColFromArray(vector.toArray());
+			transform.appendRowFromArray([0,0,0,1]);
+			pairs[i] = [a,b,transform, error];
+		}
+
+		// initial estimation:
+		var root = vs[0];
+		var origin = points[0][0];
+		var originQ = points[0][1];
+		var locations = [];
+		var rotations = [];
+		locations.push(origin);
+		rotations.push(originQ);
+		for(var i=1; i<vs.length; ++i){
+			var target = vs[i];
+			var path = graph.minPath(root,target);
+			var edges = path["edges"];
+			var vertex = root;
+			var location = origin.copy();
+			var rotation = originQ.copy();
+			var sigma = 0;
+			for(var j=0; j<edges.length; ++j){
+				var edge = edges[j];
+				// console.log(edge.data()[0].data()[0]+" to "+edge.data()[1].data()[0]);
+				var data = edge.data();
+				var va = data[0];
+				var vb = data[1];
+				var dir = data[2];
+				var qua = data[3];
+				var error = data[4];
+				// console.log("QUA: "+qua);
+				sigma = sigma + error;
+				if(vb==vertex){ // invert direction
+					qua = qua.copy().qInverse().qNorm();
+					dir = dir.copy().scale(-1);
+				}
+				//
+				location.add(dir);
+				console.log(qua,rotation)
+				rotation = V4D.qMul(qua,rotation);
+				vertex = edge.opposite(vertex);
+			}
+			locations.push(location);
+			rotations.push(rotation);
+			vertex.data()[2] = location;
+			vertex.data()[3] = rotation;
+		}
+	var locationsA = locations;
+	var rotationsA = rotations;
+	// console.log(locationsA);
+	// throw "?"
+
+		var SCA = 100.0;
+		var OFFX = 40;
+		var OFFY = 60;
+		// actual - GREEN
+		for(var i=0; i<locations.length; ++i){
+			var location = points[i][0];
+			// var angle = points[i][1];
+			var angle = 0; // TODO
+			var rad = 25.0;
+			var d = new DO();
+				d.graphics().setLine(1.0,0xFF004400);
+				d.graphics().setFill(0x6600FF00);
+				d.graphics().beginPath();
+				d.graphics().drawCircle(0,0, rad);
+				d.graphics().moveTo(0,0);
+				d.graphics().lineTo(rad*Math.cos(angle),rad*Math.sin(angle));
+				// d.graphics().fill();
+				d.graphics().strokeLine();
+				d.graphics().endPath();
+			d.matrix().translate(OFFX,OFFY);
+			d.matrix().translate(location.x*SCA,location.y*SCA);
+
+			GLOBALSTAGE.addChild(d);
+		}
+
+		// estimated (initial naive guess) - RED
+		for(var i=0; i<locations.length; ++i){
+			var location = locations[i];
+			// var angle = rotations[i];
+			var angle = 0; // TODO
+			var rad = 28.0;
+			var d = new DO();
+				d.graphics().setLine(1.0,0xFFFF0000);
+				d.graphics().setFill(0x66FF0000);
+				d.graphics().beginPath();
+				d.graphics().drawCircle(0,0, rad);
+				d.graphics().moveTo(0,0);
+				d.graphics().lineTo(rad*Math.cos(angle),rad*Math.sin(angle));
+				// d.graphics().fill();
+				d.graphics().strokeLine();
+				d.graphics().endPath();
+			d.matrix().translate(OFFX,OFFY);
+			d.matrix().translate(location.x*SCA,location.y*SCA);
+
+			GLOBALSTAGE.addChild(d);
+		}
+
+	var result = R3D.optimumTransform3DFromRelativePairTransforms(pairs);
+	console.log(result);
+	var absolutes = result["absolute"];
+	// throw "?";
+	var locations = [];
+	var rotations = [];
+	for(var i=0; i<absolutes.length; ++i){
+		var absolute = absolutes[i];
+	console.log(absolute)
+		var location = absolute.multV3DtoV3D(new V3D(0,0,0));
+		var rotation = V4D.qFromMatrix(absolute);
+		rotations.push(rotation);
+		locations.push(location);
+	}
+
+
+		// INITIAL OFFSET FOR COMPARISON
+		var root = points[0];
+		var rootLocation = root[0];
+		var rootQuaternion = root[1]; // ROOT FROM RESULT MIGHT NOT BE 0 ...
+
+		// var tR = Code.vectorTwistFromQuaternion(rootQuaternion);
+		// rootQuaternion = Code.quaternionFromVectorTwist(tR);
+
+	console.log(rootQuaternion+".....");
+
+		// rootQuaternion = rootQuaternion.copy().qInverse();
+		for(var i=0; i<rotations.length; ++i){
+			var absolute = rotationsA[i];
+			var rotation = rotations[i];
+			// APPLY INVERSE TO SOURCE
+			var original = V4D.qMul(rotation,V4D.qIdentity());
+			var absolute = V4D.qMul(absolute,rootQuaternion.copy().qInverse());
+
+			// APPLY CHANGE TO RESULT
+			// var original = V4D.qMul(rotation,rootQuaternion);
+			// var absolute = V4D.qMul(absolute,V4D.qIdentity());
+
+			console.log("  "+i+"  "+rotation);
+			// console.log("      =  "+Code.vectorTwistFromQuaternion(rotation)["direction"]);
+			// console.log("      =  "+Code.vectorTwistFromQuaternion(rotations[i].copy().qInverse())["direction"]);
+			console.log("   A  "+absolute);
+			// console.log("    "+V4D.qMul(rootQuaternion,rotations[i]));
+			console.log("   ?  "+original);
+			// console.log("   ?  "+V4D.qMul(rotations[i].copy().qInverse(),rootQuaternion));
+			// console.log("      O?  "+Code.vectorTwistFromQuaternion( V4D.qMul(rotation.copy().qInverse(),rootQuaternion) )["direction"]);
+					var twist = Code.vectorTwistFromQuaternion(absolute);
+				console.log("  t: "+twist["direction"]+" @ "+Code.degrees(twist["angle"]));
+				twist = Code.vectorTwistFromQuaternion(original);
+				console.log("  t: "+twist["direction"]+" @ "+Code.degrees(twist["angle"]));
+			console.log("  ");
+		}
+		// FINAL ESTIMATION - BLUE
+		for(var i=0; i<locations.length; ++i){
+			var location = locations[i];
+			var rotation = rotations[i];
+			location = V3D.add(location, rootLocation);
+			// rotation = V4D.qMul(rotation, rootQuaternion);
+			var angle = 0; //
+			var rad = 30.0;
+			var d = new DO();
+				d.graphics().setLine(1.0,0xFF0000CC);
+				d.graphics().setFill(0x6600FF00);
+				d.graphics().beginPath();
+				d.graphics().drawCircle(0,0, rad);
+				d.graphics().moveTo(0,0);
+				d.graphics().lineTo(rad*Math.cos(angle),rad*Math.sin(angle));
+				d.graphics().strokeLine();
+				d.graphics().endPath();
+			d.matrix().translate(OFFX,OFFY);
+			d.matrix().translate(location.x*SCA,location.y*SCA);
+
+			GLOBALSTAGE.addChild(d);
+		}
+		for(var i=0; i<locations.length; ++i){
+			// known
+			var location = points[i][0];
+			var rotation = points[i][1];
+			// estimated
+			var loc = locations[i];
+			var rot = rotations[i];
+			rotation = V4D.qMul(rotation, rootQuaternion.copy().qInverse());
+			// location diff
+			loc = loc.copy().add(rootLocation);
+			var distance = V3D.distance(location,loc);
+			// estimate error
+			var axisA = Code.axisFromQuaternion(rotation);
+			var axisB = Code.axisFromQuaternion(rot);
+			var errorAxis = R3D._gdErrorAxisAngles3D(axisA[0],axisA[1],axisA[2], axisB[0],axisB[1],axisB[2]);
+			var avgAngle = Math.sqrt(errorAxis);
+			// var diffA = Code.degrees(diff["angle"]);
+			// var diffDir = V3D.angle(diff["direction"],rot["direction"]);// V3D.dot(twist["direction"],rot["direction"]);
+			// var diffB = V3D.angle(V3D.DIRZ,diff["direction"]);
+			// diffB = Code.degrees(diffB);
+			//console.log("TWIST: "+Code.degrees(diffDir)+" & "+Code.degrees(diffAng)+"   --- DISTANCE: "+distance);
+			// @  dot: "+diffB+" deg
+			console.log("ERROR:  ANGLE: "+Code.degrees(avgAngle)+"   DISTANCE: "+distance);
+		}
+
+
+	throw "TESTING";
+}
+
+
+function classesLoadedFxn2(){
 /*
 	var center = new V3D(1,1,1);
 	var dir = new V3D(10,0,0);
@@ -1015,10 +1365,7 @@ console.log(" OFFSET ");
 // R3D.stereoMatchAverageAffine(imageMatrixA,imageMatrixB,matches);
 
 
-	var app = new App3DR();
-		return;
-
-
+/*
 	// GLOBAL STAGE:
 	// AVERAGING 3D POINTS
 	this._canvas = new Canvas(null,0,0,Canvas.STAGE_FIT_FILL, false,false);
@@ -1075,14 +1422,9 @@ console.log(" OFFSET ");
 
 
 
-/*
-
-
-*/
-
 
 throw "intersections";
-
+*/
 
 /*
 
@@ -1112,6 +1454,9 @@ Matrix.transform2DSkewX = function(a,ang, isAngle){ // give an angle
 }
 Matrix.transform2DSkewY
 */
+
+/*
+
 var affine = new Matrix(3,3).identity();
 affine = Matrix.transform2DScale(affine, 1.5,2.0);
 affine = Matrix.transform2DRotate(affine, Code.radians(45));
@@ -1211,7 +1556,7 @@ if(i>pointCount-outlierCount-1){
 
 
 return;
-
+*/
 
 
 /*
@@ -1988,347 +2333,6 @@ for(var i=0; i<t.length; ++i){
 }
 */
 // throw "?";
-
-
-	var m0 = new Matrix(4,4).identity();
-		m0 = Matrix.transform3DRotateZ(m0, Code.radians(-50.0));
-		m0 = Matrix.transform3DRotateX(m0, Code.radians( 20.0));
-		m0 = Matrix.transform3DRotateY(m0, Code.radians(-20.0));
-		m0 = Matrix.transform3DRotateZ(m0, Code.radians(120.0));
-	var m1 = new Matrix(4,4).identity();
-		m1 = Matrix.transform3DRotateZ(m1, Code.radians(-10.0));
-		m1 = Matrix.transform3DRotateX(m1, Code.radians(-20.0));
-		m1 = Matrix.transform3DRotateY(m1, Code.radians( 20.0));
-		m1 = Matrix.transform3DRotateZ(m1, Code.radians(-40.0));
-	var m2 = new Matrix(4,4).identity();
-		m2 = Matrix.transform3DRotateZ(m2, Code.radians( 20.0));
-		m2 = Matrix.transform3DRotateX(m2, Code.radians(-50.0));
-		m2 = Matrix.transform3DRotateY(m2, Code.radians(-10.0));
-		m2 = Matrix.transform3DRotateZ(m2, Code.radians(-20.0));
-	var m3 = new Matrix(4,4).identity();
-		m3 = Matrix.transform3DRotateZ(m3, Code.radians(-20.0));
-		m3 = Matrix.transform3DRotateX(m3, Code.radians(-10.0));
-		m3 = Matrix.transform3DRotateY(m3, Code.radians(-90.0));
-		m3 = Matrix.transform3DRotateZ(m3, Code.radians(-30.0));
-	var m4 = new Matrix(4,4).identity();
-		m4 = Matrix.transform3DRotateZ(m4, Code.radians(-20.0));
-		m4 = Matrix.transform3DRotateX(m4, Code.radians( 10.0));
-		m4 = Matrix.transform3DRotateY(m4, Code.radians( 20.0));
-		m4 = Matrix.transform3DRotateZ(m4, Code.radians( 30.0));
-	var m5 = new Matrix(4,4).identity();
-		m5 = Matrix.transform3DRotateZ(m5, Code.radians( 10.0));
-		m5 = Matrix.transform3DRotateX(m5, Code.radians(-10.0));
-		m5 = Matrix.transform3DRotateY(m5, Code.radians(-20.0));
-		m5 = Matrix.transform3DRotateZ(m5, Code.radians( 90.0));
-
-	var points = [];
-	points.push([new V3D(0, 1,1), V4D.qFromMatrix(m0) ]);
-	points.push([new V3D(2, 1,0), V4D.qFromMatrix(m1) ]);
-	points.push([new V3D(3, 0,0), V4D.qFromMatrix(m2) ]);
-	points.push([new V3D(1, 0,1), V4D.qFromMatrix(m3) ]);
-	// points.push([new V3D(4,2,3), V4D.qFromMatrix(m4) ]);
-	// points.push([new V3D(1,2,-1), V4D.qFromMatrix(m5) ]);
-		// points.push([new V3D(0,1,1), {"direction":new V3D(1,2,3).norm(), "angle":Code.radians(10.0)}]);
-		// points.push([new V3D(2,1,0), {"direction":new V3D(1,1,-1).norm(), "angle":Code.radians(20.0)}]);
-		// points.push([new V3D(3,0,0), {"direction":new V3D(0,-3,-3).norm(), "angle":Code.radians(-30.0)}]);
-		// points.push([new V3D(5,2,0), {"direction":new V3D(2,1,1).norm(), "angle":Code.radians(40.0)}]);
-		// points.push([new V3D(7,0,0), {"direction":new V3D(-2,2,2).norm(), "angle":Code.radians(-50.0)}]);
-		// points.push([new V3D(1,3,0), {"direction":new V3D(-1,2,0).norm(), "angle":Code.radians(90.0)}]);
-for(var i=0; i<points.length; ++i){
-	console.log("ABS: "+i+": "+points[i][1]);
-	var q = points[i][1];
-	var t = Code.vectorTwistFromQuaternion(q);
-	console.log("    "+t["direction"]+" @ "+Code.degrees(t["angle"]));
-	var q2 = Code.quaternionFromVectorTwist(t);
-	console.log("        "+q2);
-	var t2 = Code.vectorTwistFromQuaternion(q2);
-	console.log("  ? "+t2["direction"]+" @ "+Code.degrees(t2["angle"]));
-	points[i][1] = q2;
-}
-
-	var edges = [];
-		edges.push([0,1, 0.01]);
-		edges.push([0,2, 0.01]);
-			edges.push([0,3, 0.01]);
-			edges.push([0,4, 0.05]);
-			edges.push([0,5, 0.01]);
-// edges.push([0,5, 0.5]);
-// edges.push([0,5, 0.001]);
-		edges.push([1,2, 0.01]);
-		edges.push([1,3, 0.03]);
-			edges.push([1,4, 0.02]);
-			edges.push([1,5, 0.01]);
-
-		edges.push([2,3, 0.1]);
-			edges.push([2,4, 0.03]);
-			edges.push([2,5, 0.02]);
-
-		edges.push([3,4, 0.04]);
-			edges.push([3,5, 0.05]);
-
-		edges.push([4,5, 0.02]);
-
-	var max = 3;
-	for(var i=0; i<edges.length; ++i){
-		if(edges[i][0]>max || edges[i][1]>max){
-			Code.removeElementAt(edges,i);
-			--i;
-		}
-	}
-	var graph = new Graph();
-	var vs = [];
-	for(var i=0; i<points.length; ++i){
-		var v = graph.addVertex();
-		v.data([i,points[i],null]);
-		vs[i] = v;
-	}
-	var es = [];
-	// var relativeEdges = [];
-	// var relativeLocations = [];
-	var pairs = [];
-	for(var i=0; i<edges.length; ++i){
-		var edge = edges[i];
-		var a = edge[0];
-		var b = edge[1];
-		var error = edge[2];
-			error = error;
-		var w = 1.0/Math.max(error,1E-6);
-		var va = vs[a];
-		var vb = vs[b];
-		var pa = points[a][0];
-		var pb = points[b][0];
-		var ra = points[a][1];
-		var rb = points[b][1];
-		var e = graph.addEdge(va,vb, w, Graph.Edge.DIRECTION_DUPLEX);
-		var vector = V3D.sub(pb,pa);
-		//
-		var rainv = ra.copy().qInverse().qNorm();
-		var rab = V4D.qMul(rb,rainv);
-console.log("EDGE: "+a+"->"+b+" = "+rab);
-var tt = Code.vectorTwistFromQuaternion(rab);
-console.log("   "+ra+" && "+rb);
-var ta = Code.vectorTwistFromQuaternion(ra);
-var tb = Code.vectorTwistFromQuaternion(rb);
-console.log("   "+ta["direction"]+" @ "+Code.degrees(ta["angle"])+" && "+tb["direction"]+" @ "+Code.degrees(tb["angle"]));
-console.log("       TWIST: "+tt["direction"]+" @ "+Code.degrees(tt["angle"]));
-		// var b = V4D.qMul(rab,ra);
-
-		var errorAngle = error * 1.0;
-		var errorLocation = error * 1.0;
-		// var errorAngle = error * 3.0;
-		// var errorLocation = error * 3.0;
-		error = errorLocation;
-		// location
-		vector.add( Code.randomFloat(-errorLocation,errorLocation), Code.randomFloat(-errorLocation,errorLocation) , Code.randomFloat(-errorLocation,errorLocation) );
-		// rotation
-		var q = V4D.qIdentity().qRotateDir( new V3D().random(1.0).norm(), Code.randomFloat(-errorAngle,errorAngle) );
-		rab = V4D.qMul(q,rab);
-		// save
-		e.data([va,vb,vector,rab,error]);
-		es[i] = e;
-		var transform = V4D.qMatrix(rab,new Matrix(3,3));
-		transform.appendColFromArray(vector.toArray());
-		transform.appendRowFromArray([0,0,0,1]);
-		pairs[i] = [a,b,transform, error];
-	}
-
-	// initial estimation:
-	var root = vs[0];
-	var origin = points[0][0];
-	var originQ = points[0][1];
-	var locations = [];
-	var rotations = [];
-	locations.push(origin);
-	rotations.push(originQ);
-	for(var i=1; i<vs.length; ++i){
-		var target = vs[i];
-		var path = graph.minPath(root,target);
-		var edges = path["edges"];
-		var vertex = root;
-		var location = origin.copy();
-		var rotation = originQ.copy();
-		var sigma = 0;
-		for(var j=0; j<edges.length; ++j){
-			var edge = edges[j];
-			// console.log(edge.data()[0].data()[0]+" to "+edge.data()[1].data()[0]);
-			var data = edge.data();
-			var va = data[0];
-			var vb = data[1];
-			var dir = data[2];
-			var qua = data[3];
-			var error = data[4];
-			// console.log("QUA: "+qua);
-			sigma = sigma + error;
-			if(vb==vertex){ // invert direction
-				qua = qua.copy().qInverse().qNorm();
-				dir = dir.copy().scale(-1);
-			}
-			//
-			location.add(dir);
-			console.log(qua,rotation)
-			rotation = V4D.qMul(qua,rotation);
-			vertex = edge.opposite(vertex);
-		}
-		locations.push(location);
-		rotations.push(rotation);
-		vertex.data()[2] = location;
-		vertex.data()[3] = rotation;
-	}
-var locationsA = locations;
-var rotationsA = rotations;
-// console.log(locationsA);
-// throw "?"
-
-	var SCA = 100.0;
-	var OFFX = 40;
-	var OFFY = 60;
-	// actual - GREEN
-	for(var i=0; i<locations.length; ++i){
-		var location = points[i][0];
-		// var angle = points[i][1];
-		var angle = 0; // TODO
-		var rad = 25.0;
-		var d = new DO();
-			d.graphics().setLine(1.0,0xFF004400);
-			d.graphics().setFill(0x6600FF00);
-			d.graphics().beginPath();
-			d.graphics().drawCircle(0,0, rad);
-			d.graphics().moveTo(0,0);
-			d.graphics().lineTo(rad*Math.cos(angle),rad*Math.sin(angle));
-			// d.graphics().fill();
-			d.graphics().strokeLine();
-			d.graphics().endPath();
-		d.matrix().translate(OFFX,OFFY);
-		d.matrix().translate(location.x*SCA,location.y*SCA);
-
-		GLOBALSTAGE.addChild(d);
-	}
-
-	// estimated (initial naive guess) - RED
-	for(var i=0; i<locations.length; ++i){
-		var location = locations[i];
-		// var angle = rotations[i];
-		var angle = 0; // TODO
-		var rad = 28.0;
-		var d = new DO();
-			d.graphics().setLine(1.0,0xFFFF0000);
-			d.graphics().setFill(0x66FF0000);
-			d.graphics().beginPath();
-			d.graphics().drawCircle(0,0, rad);
-			d.graphics().moveTo(0,0);
-			d.graphics().lineTo(rad*Math.cos(angle),rad*Math.sin(angle));
-			// d.graphics().fill();
-			d.graphics().strokeLine();
-			d.graphics().endPath();
-		d.matrix().translate(OFFX,OFFY);
-		d.matrix().translate(location.x*SCA,location.y*SCA);
-
-		GLOBALSTAGE.addChild(d);
-	}
-
-var result = R3D.optimumTransform3DFromRelativePairTransforms(pairs);
-console.log(result);
-var absolutes = result["absolute"];
-// throw "?";
-var locations = [];
-var rotations = [];
-for(var i=0; i<absolutes.length; ++i){
-	var absolute = absolutes[i];
-console.log(absolute)
-	var location = absolute.multV3DtoV3D(new V3D(0,0,0));
-	var rotation = V4D.qFromMatrix(absolute);
-	rotations.push(rotation);
-	locations.push(location);
-}
-
-
-	// INITIAL OFFSET FOR COMPARISON
-	var root = points[0];
-	var rootLocation = root[0];
-	var rootQuaternion = root[1]; // ROOT FROM RESULT MIGHT NOT BE 0 ...
-
-	// var tR = Code.vectorTwistFromQuaternion(rootQuaternion);
-	// rootQuaternion = Code.quaternionFromVectorTwist(tR);
-
-console.log(rootQuaternion+".....");
-
-	// rootQuaternion = rootQuaternion.copy().qInverse();
-	for(var i=0; i<rotations.length; ++i){
-		var absolute = rotationsA[i];
-		var rotation = rotations[i];
-		// APPLY INVERSE TO SOURCE
-		var original = V4D.qMul(rotation,V4D.qIdentity());
-		var absolute = V4D.qMul(absolute,rootQuaternion.copy().qInverse());
-
-		// APPLY CHANGE TO RESULT
-		// var original = V4D.qMul(rotation,rootQuaternion);
-		// var absolute = V4D.qMul(absolute,V4D.qIdentity());
-
-		console.log("  "+i+"  "+rotation);
-		// console.log("      =  "+Code.vectorTwistFromQuaternion(rotation)["direction"]);
-		// console.log("      =  "+Code.vectorTwistFromQuaternion(rotations[i].copy().qInverse())["direction"]);
-		console.log("   A  "+absolute);
-		// console.log("    "+V4D.qMul(rootQuaternion,rotations[i]));
-		console.log("   ?  "+original);
-		// console.log("   ?  "+V4D.qMul(rotations[i].copy().qInverse(),rootQuaternion));
-		// console.log("      O?  "+Code.vectorTwistFromQuaternion( V4D.qMul(rotation.copy().qInverse(),rootQuaternion) )["direction"]);
-				var twist = Code.vectorTwistFromQuaternion(absolute);
-			console.log("  t: "+twist["direction"]+" @ "+Code.degrees(twist["angle"]));
-			twist = Code.vectorTwistFromQuaternion(original);
-			console.log("  t: "+twist["direction"]+" @ "+Code.degrees(twist["angle"]));
-		console.log("  ");
-	}
-	// FINAL ESTIMATION - BLUE
-	for(var i=0; i<locations.length; ++i){
-		var location = locations[i];
-		var rotation = rotations[i];
-		location = V3D.add(location, rootLocation);
-		// rotation = V4D.qMul(rotation, rootQuaternion);
-		var angle = 0; //
-		var rad = 30.0;
-		var d = new DO();
-			d.graphics().setLine(1.0,0xFF0000CC);
-			d.graphics().setFill(0x6600FF00);
-			d.graphics().beginPath();
-			d.graphics().drawCircle(0,0, rad);
-			d.graphics().moveTo(0,0);
-			d.graphics().lineTo(rad*Math.cos(angle),rad*Math.sin(angle));
-			d.graphics().strokeLine();
-			d.graphics().endPath();
-		d.matrix().translate(OFFX,OFFY);
-		d.matrix().translate(location.x*SCA,location.y*SCA);
-
-		GLOBALSTAGE.addChild(d);
-	}
-	for(var i=0; i<locations.length; ++i){
-		// known
-		var location = points[i][0];
-		var rotation = points[i][1];
-		// estimated
-		var loc = locations[i];
-		var rot = rotations[i];
-		rotation = V4D.qMul(rotation, rootQuaternion.copy().qInverse());
-		// location diff
-		loc = loc.copy().add(rootLocation);
-		var distance = V3D.distance(location,loc);
-		// estimate error
-		var axisA = Code.axisFromQuaternion(rotation);
-		var axisB = Code.axisFromQuaternion(rot);
-		var errorAxis = R3D._gdErrorAxisAngles3D(axisA[0],axisA[1],axisA[2], axisB[0],axisB[1],axisB[2]);
-		var avgAngle = Math.sqrt(errorAxis);
-		// var diffA = Code.degrees(diff["angle"]);
-		// var diffDir = V3D.angle(diff["direction"],rot["direction"]);// V3D.dot(twist["direction"],rot["direction"]);
-		// var diffB = V3D.angle(V3D.DIRZ,diff["direction"]);
-		// diffB = Code.degrees(diffB);
-		//console.log("TWIST: "+Code.degrees(diffDir)+" & "+Code.degrees(diffAng)+"   --- DISTANCE: "+distance);
-		// @  dot: "+diffB+" deg
-		console.log("ERROR:  ANGLE: "+Code.degrees(avgAngle)+"   DISTANCE: "+distance);
-	}
-
-
-// throw "TESTING";
-// return;
-
 
 
 

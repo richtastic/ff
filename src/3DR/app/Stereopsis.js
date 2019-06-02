@@ -279,7 +279,16 @@ Stereopsis.World.prototype.viewCount = function(){
 	this._viewCount;
 }
 
-
+Stereopsis.World.prototype.viewFromID = function(i){
+	var views = Code.arrayFromHash(this._views);
+	for(var i=0; i<views.length; ++i){
+		var view = views[i];
+		if(view.id()==i){
+			return view;
+		}
+	}
+	return null;
+}
 
 
 
@@ -3297,6 +3306,7 @@ Stereopsis.World.prototype.absoluteOrientationGraphSolve = function(){
 			var indexA = viewA.id();
 			var indexB = viewB.id();
 			var error = (transform.rMean() + transform.rSigma())/matchCount;
+// error = 1.0;
 			// var extrinsicAtoB = transform.R();
 			var extrinsicAtoB = transform.R(viewA,viewB);
 			var relativeAtoB = Matrix.inverse(extrinsicAtoB);
@@ -3312,17 +3322,11 @@ Stereopsis.World.prototype.absoluteOrientationGraphSolve = function(){
 	var extrinsics = [];
 	for(var i=0; i<absolutes.length; ++i){
 		var absolute = absolutes[i];
-	// 	extrinsics[i] = Matrix.inverse(absolute);
-	// }
-	// // set to views:
-	// for(var i=0; i<extrinsics.length; ++i){
-	// 	var extrinsic = extrinsics[i];
 		var extrinsic = Matrix.inverse(absolute);
 		var view = lookupView[i+""];
-		var centerA = view.center();
-		// console.log(view);
-		view.absoluteTransform(extrinsic);
-		var centerB = view.center();
+		// var centerA = view.center();
+		// view.absoluteTransform(extrinsic);
+		// var centerB = view.center();
 		// console.log(" view: "+i+" : "+V3D.distance(centerB,centerA));
 	}
 }
@@ -5116,6 +5120,99 @@ Stereopsis.World.prototype.showReprojectionError = function(){
 		console.log(error);
 	}
 }
+
+Stereopsis.World.prototype.printMatchStemPlots = function(){
+	var points3D = this.toPointArray();
+	var listStems = {};
+	var sorting = function(a,b){
+		return a < b ? -1 : 1;
+	}
+	for(var i=0; i<points3D.length; ++i){
+		var point3D = points3D[i];
+		var viewCount = point3D.viewCount();
+		// if(viewCount>1){
+		if(viewCount>2){ // more than 1 match
+			var index = viewCount+"";
+			var list = listStems[index];
+			if(!list){
+				list = [];
+				listStems[index] = list;
+			}
+
+			var ncc = [];
+			var sad = [];
+
+			// view based:
+			// var points2D = point3D.toPointArray();
+			// for(var j=0; j<points2D.length; ++j){
+			// 	var point2D = points2D[j];
+			// 	var matches = point2D.toMatchArray();
+			// 	var n = 0;
+			// 	var s = 0;
+			// 	for(var m=0; m<matches.length; ++m){
+			// 		var match = matches[m];
+			// 		n += match.errorNCC();
+			// 		s += match.errorSAD();
+			// 	}
+			// 	n /= matches.length;
+			// 	s /= matches.length;
+			// 	ncc.push(n);
+			// 	sad.push(s);
+			// }
+
+			// matches:
+			var matches = point3D.toMatchArray();
+			for(var j=0; j<matches.length; ++j){
+				var match = matches[j];
+				ncc.push(match.errorNCC());
+				sad.push(match.errorSAD());
+			}
+
+			// AVERAGE:
+			ncc = [Code.averageNumbers(ncc)];
+			sad = [Code.averageNumbers(sad)];
+
+			ncc.sort(sorting);
+			sad.sort(sorting);
+			var entry = {"ncc":ncc, "sad":sad};
+			list.push(entry);
+		}
+	}
+
+	var str = "";
+	var err = "";
+	Code._forEachHash(listStems, function(v,k){
+		console.log("VIEW COUNT: "+k);
+		str = str+"% "+" views: "+k+" "+"\n";
+		var count = 0;
+		var list = v;
+		var errn = "errorsN_"+k+" = {";
+		var errs = "errorsS_"+k+" = {";
+		var listCountM1 = list.length-1;
+		for(var i=0; i<=listCountM1; ++i){
+			var l = list[i];
+			var ncc = l["ncc"];
+			var sad = l["sad"];
+			var n = "ncc"+k+"_"+count;
+			var s = "sad"+k+"_"+count;
+			errs += s;
+			errn += n;
+			if(i<listCountM1){
+				errs += ",";
+				errn += ",";
+			}
+				n = Code.printMatlabArray(ncc,n,true);
+				s = Code.printMatlabArray(sad,s,true);
+			str = str+""+s+"\n"+n+"\n";
+			++count;
+		}
+		errn += "};";
+		errs += "};";
+		err = err+"\n"+errn+"\n"+errs+"\n";
+	});
+	console.log(str+"\n\n"+err);
+	throw "?";
+}
 Stereopsis.World.prototype.printInfo = function(){
 // console.log("printInfo");
 
@@ -6413,6 +6510,10 @@ Stereopsis.World.prototype.probe3D = function(){ // requires patches to orientat
 	var allViews = this.toViewArray();
 	var allImageViews = Code.filterArray(allViews, imageLoadedBoolFxn); // only compare to views with images present
 	// common
+	var minMatchScoreNCC = 0.10;
+	var maxMatchScoreNCC = 0.35;
+	var minMatchScoreSAD = 0.05;
+	var maxMatchScoreSAD = 0.25;
 	var compareSize = 9;
 	// var viewCompareScale = 1.0;
 	var viewCompareScale = 2.0; // zoom out == make sure area around is also acceptible
@@ -6556,6 +6657,7 @@ checked++;
 					if(isExisting || (minArea<area && area<maxArea)){ // EXISTING VIEW NEED TO DO ANYWAY
 						var pointsA = [dirRight2D,dirUp2D,dirLeft2D,dirDown];
 						var pointsB = standardizedPoints;
+						// try rotation + scale basic affine
 						var matrix = R3D.affineCornerMatrixLinear(pointsA,pointsB);
 						if(j>=visibleCount){ // search a small area around predicted point, compensate for reprojection error
 							var haystack = image.extractRectFromFloatImage(center2D.x,center2D.y,needleZoom,null,haystackSize,haystackSize, matrix);
@@ -6706,19 +6808,17 @@ checked++;
 						var meanSAD = Code.mean(ss);
 						var sigmaSAD = Code.stdDev(ss,minSAD);
 						if(ns.length<=1){
-							//sigmaNCC = minNCC*0.25;
-							sigmaNCC = minNCC*0.33;
+							sigmaNCC = minNCC*0.25;
 							sigmaSAD = minSAD*0.25;
 						}
 						var limitNCC = minNCC + 1.0*sigmaNCC;
-						limitNCC = Math.min(Math.max(limitNCC,0.05),0.30);
+						limitNCC = Math.min(Math.max(limitNCC,minMatchScoreNCC),maxMatchScoreNCC);
 						var limitSAD = minSAD + 1.0*sigmaSAD;
-						limitSAD = Math.min(Math.max(limitSAD,0.05),0.25);
+						limitSAD = Math.min(Math.max(limitSAD,minMatchScoreSAD),maxMatchScoreSAD);
 ++added;
 						if( ncc>limitNCC || sad>limitSAD ){ // too poor
 							continue;
 						}
-// ++added;
 						var imageA = viewA.image();
 						var imageB = viewB.image();
 

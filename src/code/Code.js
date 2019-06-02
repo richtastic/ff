@@ -4331,10 +4331,10 @@ Code.mirrorArray = function(array){
 }
 Code.stdDev = function(list,mean,key, count){
 	var i, sig=0, item, len=list.length;
+	if(len==0){ return 0; }
 	if(count!==undefined){
 		len = Math.min(len,count);
 	}
-	if(len==0){ return 0; }
 	for(i=len;i--;){
 		item = list[i];
 		if(key!==undefined && key!==null){
@@ -4342,7 +4342,7 @@ Code.stdDev = function(list,mean,key, count){
 		}
 		sig += Math.pow(item-mean,2);
 	}
-	return Math.sqrt(sig / len);
+	return Math.sqrt(sig / len); // len-1 is typical number
 }
 Code.mean = function(list,key, count){
 	var i, mu=0, item, len=list.length;

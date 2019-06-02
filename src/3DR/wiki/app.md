@@ -368,8 +368,94 @@ https://cloud.google.com/appengine/docs/nodejs/
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-- add more methods to discriminate bad matches
-	- local cell neighbors: 3D distance outliers
+view #5 is in a bad location
+
+B) review steps of probe3d projection / affine / haystack / scoring
+	- haystack size should be based on error
+		min = needle + 3
+		guess = needle + 2*(rMin + rSig)
+		max = 2*needle
+	- scoring
+		...
+C) GET TO DENSE MATCHING ...
+
+WHEN SPARSE IS DONE:
+	- have much better F & R than started
+	- have each view in absolute & relative transforms in same frame
+	- likely have more relative pairs to try
+
+
+RETHINKING DENSE MATCHING: REDO PAIRS BUT DENSE
+	at end of sparse:
+		- determine what each views' top pairs should be
+			- have some minimum number of matches (16+)
+			- are within some sigma of max [eg: 1000,500,200,100,50 => ignore 50]
+		- set dense.yaml as:
+			- cameras
+			- views w/ abs locations
+			- pairs to load (with relative error info)
+			- DON'T CARE ABOUT SPARSE POINTS
+		- for each dense.yaml pair to attempt:
+			- load original pair (if exists)
+			- keep only the best original points that don't filter out of R (& F?)
+			- load each pair's features
+			- do initial feature matching
+				- align with R (& F?)
+			- combine original & new matches
+			- iterative:
+				- 2x:
+					- refine 2 views
+					- expand2D
+					- refine 3D points
+					- filter F/R/N/S
+					- filter patches
+					- filter ...
+				- half cell size [2%->1%->0.5%]
+			- save to dense/DENSE_PAIR.yaml
+		- for each dense.yaml pair completed:
+			- load all into single list [minimal info: P2D]
+			- calculate optimal graph absolute transforms
+
+		...
+
+		- IMAGE-PRESENT ITERATION?
+			- want chance to:
+				further reduce error
+				further combine points across images
+
+		- BLIND ITERATION?
+			- only filter on
+
+		- drop worst points? [under 1-2 sigma?]
+
+		save final data to points.yaml:
+			- cameras
+			- view absolute locations
+			? - relative errors (transforms can be derived)
+			- list of 3D points
+				? - 2D locations?
+		- points.yaml
+			- find surface
+		- surface.yaml
+			- view locations
+			- vertexes
+			- triangles
+
+
+
+
+
+
+
+
+
+- are probe3d matches being discarded by the merging algorithm?
+
+
+MULTI-MATCH-DROPPING:
+	drop the match with the worst score IF:
+		- worst > sigma * C / range ; C = some absolute sizing constant (0.1-1 ?)
+		- use pure match scores to determine worst match, not view match score averaging
 
 - double check criteria for probe3D including a match
 	- NCC
@@ -521,7 +607,19 @@ QUESTIONS:
 		...
 		[0, 0, 4557, 461, 26, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 		[0, 0, 4520, 452, 28, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+		[0, 0, 4502, 446, 27, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+		[0, 0, 4452, 465, 28, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+		[0, 0, 4396, 458, 24, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+		[0, 0, 4364, 453, 24, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 		...
+		[0, 0, 3933, 308, 14, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+		[0, 0, 3902, 303, 14, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+		[0, 0, 3876, 302, 17, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+		[0, 0, 3806, 294, 16, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+		[0, 0, 3796, 291, 16, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+		[0, 0, 3792, 290, 17, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+		...
+		???
 
 
 
