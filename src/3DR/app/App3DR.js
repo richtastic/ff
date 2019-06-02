@@ -8219,10 +8219,11 @@ console.log(bestEdges);
 		var transformMatches = pair.relativeCount();
 		var indexPair = tablePairIDToIndex[pairID];
 		// scale 'pair' local scale to match universe scale
+// TODO: IS THIS THE CORRECT WAY TO SCALE A 3D MATRIX TRANSFORM?
 		relativeAtoB.set(0,3, relativeAtoB.get(0,3)*scaler);
 		relativeAtoB.set(1,3, relativeAtoB.get(1,3)*scaler);
 		relativeAtoB.set(2,3, relativeAtoB.get(2,3)*scaler);
-		var center = relativeAtoB.multV3DtoV3D(new V3D(0,0,0));
+		// var center = relativeAtoB.multV3DtoV3D(new V3D(0,0,0));
 		// console.log("     RELATIVE CENTER : "+center+" -> "+center.length());
 		// ERROR
 		var errorAB = (transformRMean + 1.0*transformRSigma)/transformMatches;
@@ -10037,24 +10038,33 @@ for(var i=0; i<worldViews.length; ++i){
 
 			// update view locations
 			// world.refineSelectCameraAbsoluteOrientation(pairWorldViews, null, 1000);
-			world.refineSelectCameraAbsoluteOrientation(pairWorldViews, null, 100);
+			// world.refineSelectCameraAbsoluteOrientation(pairWorldViews, null, 100);
 			world.refineCameraAbsoluteOrientation(null, 1000); // lots
+			world.copyRelativeTransformsFromAbsolute(); // duh
+
+
 			world.estimate3DErrors(true);
 
 			// re-estimate matches & points3D &
 			world.averagePoints3DFromMatches();
+			world.refinePoint3DAbsoluteLocation();
 			world.patchInitBasicSphere(true);
 			world.relativeFFromSamples();
 
 
 			// drop worst
 			console.log("FILTER");
-			world.filterPairwiseSphere3D();
+			world.filterLocal3D(4.0); // points far away from local sphere / plane
+
+			world.filterPairwiseSphere3D(3.0); // patch intersections
 			world.printPoint3DTrackCount();
 			world.dropNegative3D();
 			// world.filterGlobalMatches(false, 0, 3.0,3.0,3.0,3.0, false);
 			// world.filterGlobalMatches(false, 0, 2.0,2.0,2.0,2.0, false);
-			world.filterGlobalMatches(false, 0, 2.0,5.0,3.0,3.0, false); // 95% - 99.9% - 99% - 99%
+			world.filterGlobalMatches(false, 0, 2.0,4.0,3.0,3.0, false); // 95% - 99.7% - 99% - 99%
+			// 1.0 = 68%
+			// 1.5 = 86%
+			// 2.0 = 95%
 			world.printPoint3DTrackCount();
 			// world.filterMatchGroups();
 			// this.filterSphere3D(2.0);
@@ -10062,8 +10072,19 @@ for(var i=0; i<worldViews.length; ++i){
 			// point changes => new errors
 			world.estimate3DErrors(true);
 
+/*
+			// update views from liklihoods
+			console.log("GRAPH UPDATE");
+			world.absoluteOrientationGraphSolve(); // set absolute views
+			world.copyRelativeTransformsFromAbsolute(); // update transforms
+			world.relativeFFromSamples();
+			world.estimate3DErrors(true); // re-estimate match.estimate3D
+			world.averagePoints3DFromMatches(); // re-estimate point3D location
+			world.patchInitBasicSphere(true); // restimate point3D patch
 
-
+			world.estimate3DErrors(true); // update errors ?????
+throw "???????"
+*/
 		}
 
 		// TODO: PATCHES LIKELY NEED UPDATING: LOWER ERROR + DRIFT

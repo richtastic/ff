@@ -12182,19 +12182,32 @@ Code.assert = function(boolCheck, comment){
 
 // -------------------------------------------------------------------------------------------------------------------------------------------- Sorting
 Code.bubbleSort = function(a,f){ // n -> n^2
-	throw "todo";
+	f = f!==undefined ? f : Code._sortingInt;
+	var len = a.length;
+	var lm1 = len-1;
+	for(var i=0; i<lm1; ++i){
+		var last = len-i-1;
+		for(var j=0; j<last; ++j){ // move largest element to end
+			if(f(a[j],a[j+1])>0){
+				var temp = a[j];
+				a[j] = a[j+1];
+				a[j+1] = temp;
+			}
+		}
+	}
 }
 Code.mergeSort = function(a,f){ // n -> n*lg(n)
-	f = f!==undefined ? f : Code._mergeSortInt;
+	f = f!==undefined ? f : Code._sortingInt;
 	var temp = Code.newArrayNulls(a.length);
 	Code._mergeSort(a,f,temp,  0,a.length-1);
 	Code.emptyArray(temp);
 }
-Code._mergeSortInt = function(a,b){
-	return a<b ? -1 : 1;
+Code._sortingInt = function(a,b){
+	return a<b ? -1 : 1; // smaller first
+	// return a<b ? 1 : -1; // larger first
 }
-Code._mergeSort = function(a,f,t,  s,e){ // divide the problem in half, sort self, merge up
-	if(s<e){ // divide up
+Code._mergeSort = function(a,f,t,  s,e){ // divide problem in half, sort self, merge up
+	if(s<e){ // divide up until unit
 		var m = (s+e)*0.5 | 0;
 		Code._mergeSort(a,f,t, s,m);
 		Code._mergeSort(a,f,t, m+1,e);
@@ -12228,18 +12241,100 @@ Code._mergeSubArrays = function(a,f,t, s,m,e){
 	}
 }
 Code.selectionSort = function(a,f){ // n -> n^2
-	throw "todo";
+	f = f!==undefined ? f : Code._sortingInt;
+	var len = a.length;
+	for(var i=0; i<len; ++i){ //
+		var min = i;
+		for(var j=i+1; j<len;++j){
+			if(f(a[j],a[min])<0){
+				min = j;
+			}
+		}
+		var temp = a[i];
+		a[i] = a[min];
+		a[min] = temp;
+	}
 }
 Code.heapSort = function(a,f){ // n*lg(n)
-	throw "todo";
+	f = f!==undefined ? f : Code._sortingInt;
+	var len = a.length;
+	var half = (len/2 | 0) - 1;
+	// conform to heap
+	for(var i=half; i>=0; --i){
+		Code._heapSort(a,f, len,i);
+	}
+	// move last to top & propagate down
+	for(var i=len-1; i>=0; --i){
+		var temp = a[0];
+		a[0] = a[i];
+		a[i] = temp;
+		Code._heapSort(a,f, i,0);
+	}
+}
+Code._heapSort = function(a,f, root,level){
+	var max = level;
+	var l = 2*level + 1; // left & right children
+	var r = 2*level + 2;
+	if(l<root && f(a[l],a[max])>0){ // left is bigger
+		max = l;
+	}
+	if(r<root && f(a[r],a[max])>0){ // right is bigger
+		max = r;
+	}
+	if(max!=level){
+		var temp = a[level];
+		a[level] = a[max];
+		a[max] = temp;
+		Code._heapSort(a,f, root,max);
+	}
 }
 Code.quickSort = function(a,f){ // n*lg(n) -> n^2
-	throw "todo";
+	f = f!==undefined ? f : Code._sortingInt;
+	var len = a.length;
+	Code._quickSort(a,f, 0,a.length-1);
+}
+Code._quickSort = function(a,f, l,r){
+	if(l<r){
+		var m = Code._quickSortPartition(a,f, l,r);
+		Code._quickSort(a,f, l,m-1);
+		Code._quickSort(a,f, m+1,r);
+	}
+}
+Code._quickSortPartition = function(a,f, l,r){
+	var pivot = a[r];
+	var i = l-1;
+    for(var j=l; j<r;++j){
+		if(f(pivot,a[j])>0){
+			++i;
+			var temp = a[i];
+			a[i] = a[j];
+			a[j] = temp;
+		}
+	}
+	var p = i+1;
+	var temp = a[p];
+	a[p] = a[r];
+	a[r] = temp;
+	return p;
 }
 Code.insertionSort = function(a,f){ // n -> n^2
-	throw "todo";
+	f = f!==undefined ? f : Code._sortingInt;
+	var len = a.length;
+	for(var i=1; i<len; ++i){ // expand array
+		var next = a[i];
+		var j = i-1;
+		while(j>=0 && f(a[j],next)>0){ // move elements forward
+			a[j+1] = a[j];
+			j--;
+		}
+		a[j+1] = next; // add in at location
+	}
+} //  todo: binary insertion sort
+Code._radixSortInt = function(i){
+	return i;
 }
 Code.radixSort = function(a,f){ // n*k
+	f = f!==undefined ? f : Code._radixSortInt;
 	throw "todo";
 }
 

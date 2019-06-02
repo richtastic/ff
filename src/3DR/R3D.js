@@ -24315,7 +24315,7 @@ R3D.componentwiseRelativeCameraMatrix = function(transformA,transformB){
 	return transform;
 }
 
-R3D.optimumTransform3DFromRelativePairTransforms = function(pairs){
+R3D.optimumTransform3DFromRelativePairTransforms = function(pairs, maxIterations){
 	var edges = [];
 	for(var i=0; i<pairs.length; ++i){
 		var pair = pairs[i];
@@ -24332,7 +24332,7 @@ R3D.optimumTransform3DFromRelativePairTransforms = function(pairs){
 		var edge = [a,b, {"quaternion":quaternion, "translation":translation}, error];
 		edges.push(edge);
 	}
-	return R3D.optimumTransform3D(edges); // nodeA, nodeB, scale, error
+	return R3D.optimumTransform3D(edges, maxIterations); // nodeA, nodeB, scale, error
 }
 R3D.optimumScaling1D = function(edges){ // assume all connectes vertexes
 	var nonlinear = true;
@@ -24587,7 +24587,7 @@ R3D.bestConnectedViewSubgraph = function(edges, viewCount){ // subgraph with mos
 	graph.kill();
 	return {"views":biggestViews, "pairs":biggest, "edges":biggestEdges};
 }
-R3D.optimumTransform3D = function(edges){ // edges: [indexA,indexB, transform,error]
+R3D.optimumTransform3D = function(edges, maxIterations){ // edges: [indexA,indexB, transform,error]
 	var nonlinear = true;
 	// nonlinear = false;
 	// find size of graph
@@ -24786,7 +24786,9 @@ console.log(percents)
 	if(nonlinear){
 		// var iterations = 1;
 		// var iterations = 10;
-		var iterations = 100;
+
+
+		var iterations = maxIterations!==undefined ? maxIterations : 100;
 		// translations
 		var result = R3D._gdTranslationRotation3D(vs,es,values,rootIndex,iterations, 0);
 		translations = result["values"];

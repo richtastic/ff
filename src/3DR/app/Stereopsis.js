@@ -3272,6 +3272,61 @@ Stereopsis.World.prototype._refineCameraAbs = function(viewsChange, viewsConstan
 	}
 	// this.copyRelativeTransformsFromAbsolute();
 }
+
+Stereopsis.World.prototype.absoluteOrientationGraphSolve = function(){
+	console.log("absoluteOrientationGraphSolve");
+
+	var edges = [];
+	var minMatches = 16;
+
+	var lookupView = {};
+	var views = this.toViewArray();
+	for(var i=0; i<views.length; ++i){
+		var view = views[i];
+		lookupView[view.id()+""] = view;
+	}
+	// get useful edges -- ASSUMING FULLY CONNECTED SET ...
+	var transforms = this.toTransformArray();
+	for(var t=0; t<transforms.length; ++t){
+		var transform = transforms[t];
+		var matches = transform.matches();
+		var matchCount = matches.length;
+		if(matchCount>=minMatches){
+			var viewA = transform.viewA();
+			var viewB = transform.viewB();
+			var indexA = viewA.id();
+			var indexB = viewB.id();
+			var error = (transform.rMean() + transform.rSigma())/matchCount;
+			// var extrinsicAtoB = transform.R();
+			var extrinsicAtoB = transform.R(viewA,viewB);
+			var relativeAtoB = Matrix.inverse(extrinsicAtoB);
+// var relativeAtoB = extrinsicAtoB;
+			edges.push([indexA,indexB,relativeAtoB,error]);
+		}
+	}
+	console.log(edges);
+	// find solution
+	var result = R3D.optimumTransform3DFromRelativePairTransforms(edges, 50);
+	var absolutes = result["absolute"];
+	// from camera to extrinsic
+	var extrinsics = [];
+	for(var i=0; i<absolutes.length; ++i){
+		var absolute = absolutes[i];
+	// 	extrinsics[i] = Matrix.inverse(absolute);
+	// }
+	// // set to views:
+	// for(var i=0; i<extrinsics.length; ++i){
+	// 	var extrinsic = extrinsics[i];
+		var extrinsic = Matrix.inverse(absolute);
+		var view = lookupView[i+""];
+		var centerA = view.center();
+		// console.log(view);
+		view.absoluteTransform(extrinsic);
+		var centerB = view.center();
+		// console.log(" view: "+i+" : "+V3D.distance(centerB,centerA));
+	}
+}
+
 Stereopsis.World.prototype.copyRelativeTransformsFromAbsolute = function(){
 	var views = this.toViewArray();
 	for(var i=0; i<views.length; ++i){
@@ -3837,6 +3892,8 @@ Stereopsis.World.prototype.filterPairwiseSphere3D = function(sigmaCount, linearl
 			// limits
 			var limF = Math.round(avgF + sigF*sigmaCount);
 			var limB = Math.round(avgB + sigB*sigmaCount);
+			limF = Math.max(limF,1);
+			limB = Math.max(limB,1);
 			console.log("F: "+minF+" : "+avgF+" +/- "+sigF+" --- "+limF);
 			console.log("B: "+minB+" : "+avgB+" +/- "+sigB+" --- "+limB);
 			// limF = Math.max(limF,2);
@@ -4146,15 +4203,26 @@ this.searchPoints2DBestMatch();
 
 	// try to distribute the error between depths
 	this.refineCameraAbsoluteOrientation(100); // refine initial absolute camera locations
+
+/// ??????
+this.copyRelativeTransformsFromAbsolute();
+
 	this.averagePoints3DFromMatches(); // camera orientions have changed => points have new locations
 	this.refinePoint3DAbsoluteLocation();
 
 	// SPHERE - PATCHES
-	if(iterationIndex==0){
-		this.patchInitBasicSphere(true);
-	}else{
-		this.patchInitBasicSphere(false);
-	}
+	this.patchInitBasicSphere(true);
+	// if(iterationIndex==0){
+	// 	this.patchInitBasicSphere(true);
+	// }else{
+	// 	this.patchInitBasicSphere(false); // shouldn't be too much overhead ...
+	// }
+	// // THIS IS ACTUALLY BETTER:
+	// var ps3D = world.toPointArray();
+	// for(var p=0; p<ps3D.length; ++p){
+	// 	var p3D = ps3D[p];
+	// 	world.generateMatchAffineFromPatches(p3D);
+	// }
 
 	// this.bundleAdjustFull();
 // EXPAND
@@ -5686,15 +5754,18 @@ Stereopsis.World.prototype.removeCheckP3D = function(point3D){ // if no matches 
 	}
 }
 Stereopsis.World.prototype.filterLocal3D = function(sigmaDrop){ // this might prioritize points with more 2D neighbors rather than 3D association
-	sigmaDrop = Code.valueOrDefault(sigmaDrop, 2.0);
+// TODO: is there a way to do this per transform in segmented 3D frames?
+
+	sigmaDrop = Code.valueOrDefault(sigmaDrop, 3.0);
+	console.log("filterLocal3D @ "+sigmaDrop);
 // checks to see if a point is very different than its neighbors:
 // centroidal 3D distance
 	var points3D = this.toPointArray();
 	var views = this.toViewArray();
-	var neighborCount = 8; // 5-9
+	var neighborCount = 12; // 8-16
 	// var includeSelfPoint = true;
-	var includeSelfPoint = false;
-	var invNeighborCount = includeSelfPoint ? 1.0/neighborCount : 1.0/(neighborCount-1);
+	// var includeSelfPoint = false;
+	var invNeighborCount = 1.0/(neighborCount-1);
 	var centroid = new V3D();
 	var dropList = [];
 	for(var i=0; i<views.length; ++i){
@@ -5705,54 +5776,42 @@ Stereopsis.World.prototype.filterLocal3D = function(sigmaDrop){ // this might pr
 		var points2D = view.toPointArray();
 		for(var j=0; j<points2D.length; ++j){
 			var point2D = points2D[j];
-			var p3D = point2D.point3D().point();
+			var point3D = point2D.point3D();
+			// if(!point3D.hasPatch()){
+			// 	continue;
+			// }
+			var p3D = point3D.point();
 			var p2D = point2D.point2D();
 			var neighbors = space.kNN(p2D, neighborCount, null, maxRadius);
 			if(neighbors.length==neighborCount){
-
-				// TODO: NEED TO EVAULATE & SURE THAT POINT3D IS NONNULL
-
 				// average distance between neighbors
-
 				centroid.set(0,0,0);
 				for(var k=0; k<neighbors.length; ++k){
 					var neighbor = neighbors[k];
-					// if(includeSelfPoint || neighbor!=point2D){
 					if(neighbor!=point2D){
 						centroid.add(neighbor.point3D().point());
 					}
 				}
-				// centroid.scale(invNeighborCount);
-				centroid.scale(1.0/(neighborCount-1));
-				var averageNDistance = 0;
-				// var d = [];
+				centroid.scale(invNeighborCount);
+				// var averageNDistance = 0;
+				var ds = [];
 				for(var k=0; k<neighbors.length; ++k){
 					var neighbor = neighbors[k];
-					// if(includeSelfPoint || neighbor!=point2D){
 					if(neighbor!=point2D){
 						var dist = V3D.distance(centroid,neighbor.point3D().point());
-						// d.push(dist);
-						averageNDistance += dist;
+						ds.push(dist);
+						// averageNDistance += dist;
 					}
 				}
-				averageNDistance /= (neighborCount-1);
-				// average distance to neighbors:
-				var averageDistance = 0;
-				// for(var k=0; k<neighbors.length; ++k){
-				// 	var neighbor = neighbors[k];
-				// 	if(neighbor!=point2D){
-				// 		var dist = V3D.distance(centroid,neighbor.point3D().point());
-				// 		averageDistance += dist;
-				// 	}
-				// }
-					var dist = V3D.distance(centroid,p3D);
-					averageDistance += dist;
-				averageDistance /= (neighborCount-1);
-				var distanceRatio = averageDistance/averageNDistance;
-				// console.log(distanceRatio);
-				if(distanceRatio>4){
-				// if(distanceRatio>3){
-					Code.addUnique(dropList,point2D.point3D());
+				averageNDistance *= invNeighborCount;
+				var averageNDistance = Code.min(ds);
+				var sigmaNDistance = Code.stdDev(ds,averageNDistance);
+				var dist = V3D.distance(centroid,p3D);
+				var limit = sigmaNDistance*sigmaDrop;
+				if(dist>limit){
+					// console.log("add drop: "+dist+" / "+limit+" @ "+sigmaNDistance);
+					//Code.addUnique(dropList,point2D);
+					dropList.push(point2D);
 				}
 				/*
 				var minD = Code.min(d);
@@ -5767,23 +5826,22 @@ Stereopsis.World.prototype.filterLocal3D = function(sigmaDrop){ // this might pr
 					Code.addUnique(dropList,point2D.point3D());
 				}
 				*/
+
+				// COULD ALSO APPROXIMATE PLANE WITH POINTS & USE DISTANCE FROM PLANE AS CRITERIA
 			}
 		}
 	}
-	console.log("local3D dropping: "+dropList.length+" / "+points3D.length);
+	console.log("local2D dropping: "+dropList.length+" / "+points3D.length+" = "+(dropList.length/points3D.length));
 	for(var i=0; i<dropList.length; ++i){
-		var point3D = dropList[i];
-		this.disconnectPoint3D(point3D); // calls removePoint3D
-		this.killPoint3D(point3D);
+		var point2D = dropList[i];
+		// this.removePoint2DFromPoint3D(point2D);
+		this.removeP2DFromP3D(point2D);
+		// console.log(point2D);
+		// throw "?";
+		// this.disconnectPoint3D(point3D); // calls removePoint3D
+		// this.killPoint3D(point3D);
 	}
-	// remove points behind camera?
-	// remove very isolated points
-	/*
-	3D KNN
-		-> if very far away in 3D from all 2D neighbors => probably wrong
-		-> plot average distances for kNN @ 3,5,7,9 =>
-		-> avg 3D distance to 2D neighbors is >> neighbor distances
-	*/
+
 }
 Stereopsis.World.prototype.estimate3DViews = function(){ // get absolution of views/cameras starting at most certain as reference IDENTITY
 	// create relative transform list
@@ -6370,7 +6428,7 @@ Stereopsis.World.prototype.probe3D = function(){ // requires patches to orientat
 	var standardizedPoints = [xLoc,yLoc,xNeg,yNeg];
 	var checked = 0;
 	var added = 0;
-var limited = [];
+// var limited = [];
 var matchAddList = [];
 	for(var i=0; i<points3D.length; ++i){
 		var point3D = points3D[i];
@@ -6631,36 +6689,36 @@ checked++;
 // F & R ?
 
 						var ncc = match.errorNCC();
+						var sad = match.errorSAD();
 
 						// match all existing:
 						var ns = [];
+						var ss = [];
 						for(var m=0; m<existingMatches.length; ++m){
 							var mat = existingMatches[m];
 							ns.push(mat.errorNCC());
+							ss.push(mat.errorSAD());
 						}
 						var minNCC = Code.min(ns);
 						var meanNCC = Code.mean(ns);
 						var sigmaNCC = Code.stdDev(ns,minNCC);
-
+						var minSAD = Code.min(ss);
+						var meanSAD = Code.mean(ss);
+						var sigmaSAD = Code.stdDev(ss,minSAD);
 						if(ns.length<=1){
 							//sigmaNCC = minNCC*0.25;
-							sigmaNCC = minNCC*0.50;
+							sigmaNCC = minNCC*0.33;
+							sigmaSAD = minSAD*0.25;
 						}
 						var limitNCC = minNCC + 1.0*sigmaNCC;
-						limitNCC = Math.max(limitNCC,0.05);
-						// limitNCC = Math.min(limitNCC,0.25);
-limitNCC = Math.min(limitNCC,0.30);
-limited.push([minNCC,meanNCC,sigmaNCC,limitNCC,"?",ncc]);
-
-// TODO: USE SAD values
-
-// ++added;
-						if( ncc>limitNCC ){ // too poor
+						limitNCC = Math.min(Math.max(limitNCC,0.05),0.30);
+						var limitSAD = minSAD + 1.0*sigmaSAD;
+						limitSAD = Math.min(Math.max(limitSAD,0.05),0.25);
+++added;
+						if( ncc>limitNCC || sad>limitSAD ){ // too poor
 							continue;
 						}
-++added;
-// console.log(" => NCCS: "+minNCC+" | "+meanNCC+" +/- "+sigmaNCC+" = "+ncc+" / "+limitNCC);
-
+// ++added;
 						var imageA = viewA.image();
 						var imageB = viewB.image();
 
@@ -6684,15 +6742,9 @@ if(probe3D_COUNT<50){
 		}
 	}
 }
-
 // if(true){
 if(false){
 var OFFY = 300;
-	// console.log(p3D)
-	// console.log(match)
-	// console.log(match.errorNCC())
-	// console.log(affine+"");
-	// console.log(match);
 	var matrix = match.affine();
 	var pointA = match.point2DA().point2D();
 	var pointB = match.point2DB().point2D();
@@ -6700,7 +6752,7 @@ var OFFY = 300;
 	var sizeCompare = 31;
 	// var scale = 0.50;
 	var scale = 2.0; // larger number = zoom out
-// scale = viewCompareScale;
+	// scale = viewCompareScale;
 	var sss = 3.0;
 	var imgA = imageA.extractRectFromFloatImage(pointA.x,pointA.y,scale,null,sizeCompare,sizeCompare, matrix);
 	var imgB = imageB.extractRectFromFloatImage(pointB.x,pointB.y,scale,null,sizeCompare,sizeCompare, null);
@@ -6721,12 +6773,7 @@ var OFFY = 300;
 	d.matrix().translate(10 + OFFX, 10 + sss*sizeCompare + 1 + OFFY);
 	GLOBALSTAGE.addChild(d);
 }
-// if(false){
-// 	if(probe3D_COUNT>50){
-// 		throw "printing here";
-// 	}
-	++probe3D_COUNT;
-// }
+++probe3D_COUNT;
 
 						matchAddList.push(match);
 					}
@@ -6743,16 +6790,13 @@ var OFFY = 300;
 	for(var i=0; i<matchAddList.length; ++i){
 		var match = matchAddList[i];
 		var result = world.embedPoint3D(match.point3D(), false);
-		// if(result){ // combined
-		// 	++added;
-		// }
 	}
 
 	world.printPoint3DTrackCount();
 
 	console.log("added: "+added+" / "+matchAddList.length);
 
-	console.log(limited);
+	// console.log(limited);
 
 	var world = this;
 	var densePoints3D = this.toPointArray();
@@ -8578,11 +8622,11 @@ Stereopsis.World.prototype.removePoint2DAndMatchesFromPoint3D = function(point2D
 	point2D.kill();
 	return;
 }
-Stereopsis.World.prototype.removePoint2DFromPoint3D = function(point2D){
+Stereopsis.World.prototype.removePoint2DFromPoint3D = function(point2D){ // assume connected & reconnect
 	var point3D = point2D.point3D();
 	this.disconnectPoint3D(point3D);
 	this.removeP2DFromP3D(point2D);
-	if(point3D.toMatchArray()!=0){
+	if(point3D.matchCount()>0){
 		this.connectPoint3D(point3D);
 	}
 }
