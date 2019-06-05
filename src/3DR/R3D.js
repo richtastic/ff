@@ -12025,6 +12025,66 @@ R3D.optimalFeaturePointsInImage = function(imageMatrixA){
 	return featuresA;
 }
 
+R3D.searchPoints3D = function(images, cellSizes, relativeAB, errorPixels){
+	var imageA = images[0];
+	var imageB = images[1];
+	var cellA = cellSizes[0];
+	var cellB = cellSizes[1];
+	var errorA = errorPixels[0];
+	var errorB = errorPixels[1];
+	// get corner candidates spread throughout image
+	// create objects for each corner with: P2D,meancolor,histogram[],matches[],ray3D,ray2DB,needleFlat[],needleGrad[],?
+	// go thru each object in A [& B]
+	// find limited search list in B from ray2D
+	// further limit B search list with color | histogram
+	// search up to top 10 candidates:
+	// estimate P3D with ray midpoint, estimate size & normal & up from geometry, estimate affine from relative projections
+	// get flat image / grad image? & get compare scores
+	// set top candidate
+
+// progressive 'keep' filtering? -- keep ~50% each time until only 1 match is left?
+	/* -> filter by [precomputed:]
+			average color distance AD (LIMIT 0.25)
+			color histogram SAD	(LIMIT 0.1)
+			color histogram NCC (LIMIT 0.1)
+			gradient histogram SAD (LIMIT 0.1)
+			gradient histogram NCC (LIMIT 0.1)
+		-> get 2D flat image (B)
+			2D SAD (LIMIT 0.1)
+			2D NCC (LIMIT 0.1)
+		-> get SIFT (B)
+			SIFT COMPARE
+		-> pick 0
+	*/
+/*
+filtering:
+10,000 initial points
+*0.005 line distance = 50
+*0.5 color distance = 25
+*0.5 histogram SAD distance = 13
+*0.5 SAD flat score = 7
+*0.5 NCC flat score = 4
+*0.5 SIFT = 2
+=> pick last
+
+backwards:
+
+1 final candidate
+10 SIFT
+20 NCC
+40 SAD
+80 HISTOGRAM
+160 FLAT COLOR
+320 LINE
+64000 TOTAL POINTS
+
+*/
+	//
+	//
+	// for each object A, if top match B's top match is also A => make pair
+
+}
+
 R3D.optimalFeatureMatchesInImages = function(imageMatrixA,imageMatrixB, featuresA,featuresB) {
 	console.log("creating sifts...");
 	var siftA = R3D.pointsToSIFT(imageMatrixA, featuresA);
@@ -28076,12 +28136,15 @@ R3D.normalizedCrossCorrelation = function(needle,needleMask, haystack, isCost){ 
 		return null;
 	}
 	var mask = 1.0;
-	var i, j;
-	var maskCount = 0;
-	for(i=0; i<needleCount; ++i){
-		if(needleMask){ mask = needleMask[i]; }
-		if(mask===0){ continue; }
-		++maskCount;
+	var i, j, k;
+	var maskCount = needleWidth*needleHeight;
+	if(needleMask){
+		maskCount = 0;
+		for(i=0; i<needleCount; ++i){
+			mask = needleMask[i];
+			if(mask===0){ continue; }
+			++maskCount;
+		}
 	}
 	// needle infos
 	var avgN = new V3D();
@@ -28135,7 +28198,7 @@ R3D.normalizedCrossCorrelation = function(needle,needleMask, haystack, isCost){ 
 			var minH = null;
 			var maxH = null;
 			var avgH = new V3D();
-			var autH = new V3D();
+			// var autH = new V3D();
 			for(var nJ=0; nJ<needleHeight; ++nJ){ // entire needle
 				for(var nI=0; nI<needleWidth; ++nI){
 					var nIndex = nJ*needleWidth + nI;
@@ -28233,6 +28296,118 @@ R3D.normalizedCrossCorrelation = function(needle,needleMask, haystack, isCost){ 
 
 	return {"value":result, "width":resultWidth, "height":resultHeight};
 
+}
+
+
+
+R3D.normalizedCrossCorrelation1D = function(signalA,signalB, mask){ // ZNCC ?
+	var sizeA = signalA.length;
+	var sizeB = signalB.length;
+	var sizeC = sizeA - sizeB + 1;
+	if(sizeC<=0){
+		return null;
+	}
+	// var mask = 1.0;
+	var i, j, k;
+	var maskCount = signalA.length;
+	// var maskCount = 0;
+	// for(i=0; i<needleCount; ++i){
+	// 	if(needleMask){ mask = needleMask[i]; }
+	// 	if(mask===0){ continue; }
+	// 	++maskCount;
+	// }
+	// needle infos
+	var avgN = 0;
+	var minN = null;
+	var maxN = null;
+	for(k=0; k<sizeA; ++k){
+		// if(needleMask){ mask = needleMask[k]; }
+		// if(mask===0){ continue; }
+		avgN += signalA[k];
+		if(minN==null){
+			minN = signalA[k];
+			maxN = signalA[k];
+		}
+		minN = Math.min(minN,signalA[k]);
+		maxN = Math.max(maxN,signalA[k]);
+	}
+	avgN /= maskCount;
+	var rangeN = maxN - minN;
+	// sigma N
+	var sigmaN = 0;
+	for(k=0; k<sizeA; ++k){
+		// if(needleMask){ mask = needleMask[k]; }
+		// if(mask===0){ continue; }
+		sigmaN += Math.pow(signalA[k] - avgN,2);
+	}
+	sigmaN = Math.sqrt(sigmaN);
+	//
+	var result = new Array();
+	for(i=0; i<sizeC; ++i){
+			var ncc = 0;
+			var minH = null;
+			var maxH = null;
+			var avgH = 0;
+			for(var nI=0; nI<sizeA; ++nI){ // entire needle
+					var nIndex = nI;
+					var hIndex = i+nI;
+					// if(needleMask){ mask = needleMask[nIndex]; }
+					// if(mask===0){ continue; }
+					var n = signalA[nIndex];
+					var h = signalB[hIndex];
+					if(minH==null){
+						minH = signalB[i];
+						maxH = signalB[hIndex];
+					}
+					minH = Math.min(minH,signalB[hIndex]);
+					maxH = Math.max(maxH,signalB[hIndex]);
+					avgH += signalB[hIndex];
+			}
+			avgH /= maskCount;
+			var rangeH = maxH - minH;
+			// sigma H
+			var sigmaH = 0;
+			for(var nI=0; nI<sizeA; ++nI){ // entire needle
+					var nIndex = nI;
+					var hIndex = i+nI;
+					// if(needleMask){ mask = needleMask[nIndex]; }
+					// if(mask===0){ continue; }
+					var n = signalA[nIndex];
+					var h = signalB[hIndex];
+					sigmaH += Math.pow(signalB[hIndex] - avgH,2);
+			}
+			sigmaH = Math.sqrt(sigmaH);
+
+			// N * H
+			for(var nI=0; nI<sizeA; ++nI){ // entire needle
+					var nIndex = nI;
+					var hIndex = i+nI;
+					// if(needleMask){ mask = needleMask[nIndex]; }
+					// if(mask===0){ continue; }
+					var n = signalA[nIndex];
+					var h = signalB[hIndex];
+					n = n - avgN;
+					h = h - avgH;
+					ncc += n*h;
+			}
+			ncc = ncc/Math.max(sigmaN*sigmaH, 1E-12);
+			// if(isCost){
+			ncc = (1 - ncc)*0.5;
+			// }
+			result[i] = ncc;
+	}
+
+	return {"value":result};
+
+}
+
+R3D.averageVectorsArray3D = function(r,g,b){
+	var vectors = [];
+	for(var i=0; i<r.length; ++r){
+		vectors.push( new V3D(r[i],g[i],b[i]).norm() );
+	}
+	var vector = Code.averageAngleVector3D(vectors);
+	return [vector.x,vector.y,vector.z];
 }
 
 R3D.affineTransformFromVectors = function(u,a,b){

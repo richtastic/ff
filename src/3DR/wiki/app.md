@@ -368,7 +368,19 @@ https://cloud.google.com/appengine/docs/nodejs/
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-view #5 is in a bad location
+- is there a way to do SAD/SSD/NCC keeping COLORS R/G/B together ?
+
+- HISTOGRAM LIMITING OF IMAGE CANDIDATES:
+	test:
+		- SAD
+		- NCC
+		- bucket sizes
+- does using 'inbetweens' help in histogram comparison ?
+
+-TESTING:
+	extract 1 needle + n haystack locations & show histograms & scores
+
+
 
 B) review steps of probe3d projection / affine / haystack / scoring
 	- haystack size should be based on error
@@ -428,12 +440,16 @@ RETHINKING DENSE MATCHING: REDO PAIRS BUT DENSE
 
 		- drop worst points? [under 1-2 sigma?]
 
+		- double point coverage ?
+
 		save final data to points.yaml:
 			- cameras
 			- view absolute locations
 			? - relative errors (transforms can be derived)
-			- list of 3D points
-				? - 2D locations?
+			- list of points:
+			 	- 3D loc
+				- 3D norm
+					- view + 2D locations
 		- points.yaml
 			- find surface
 		- surface.yaml

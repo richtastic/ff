@@ -3509,6 +3509,51 @@ Stereopsis.World.prototype.patchInitOnly = function(limit){
 Stereopsis.World.prototype.patchUpdateOnly = function(limit){
 	this.patchInitOrUpdate(limit, false, true);
 }
+
+
+Stereopsis.World.prototype.searchCornerSeeds = function(){ // create feature seeds only knowing R
+	var world = this;
+	var transforms = world.toTransformArray();
+	var transforms = this.toTransformArray();
+	console.log("filterPairwiseSphere3D: "+transforms.length);
+	for(var t=0; t<transforms.length; ++t){
+		var transform = transforms[t];
+		// var views = world.toViewArray();
+		var viewA = transform.viewA();
+		var viewB = transform.viewB();
+		// get list of corner candidates, spaced out 1 per cell size for each view [1000-10000 pts]
+		// extract each corner @ cell size for comparrision
+		//		zoomed out 2*cell w/ mild blur
+		// 		get cell's average center color
+		//		get cell color histogram
+		//		get projected backwards 3D ray
+		// for each viewA
+		// 		for each corner
+		//			get projected line in viewB
+		//			search for points along line +/- sigma ([1-5] pixels)	[1% ~ 10-100 pts]
+		//				any way to further limit candidates?	[5-50 pts] -- just pick top 10?
+		//					- average color distance?
+		//					- color histogram?
+		//			for each candidate
+		//				get midpoint of projected 3D rays
+		//				get normal, up, size of patch
+		//				get affine transform between views
+		//				extract candidate bug
+		//				get SAD / NCC / SIFT score, keep top 1~10 ?
+		//
+		// keep matches where top candidates match
+		//
+		// RUNTIME: [1000-10000]*[2]*[5-50] = 10000 - 1000000 extractions
+		// AVERAGE % of candidates per image: [2*r*R]/[pi*R*R] = r*0.6/R | EG: [1px-5px]/500px = [0.002-0.01] | @10000 = [20-100]
+		// histogram comparrison -- bucket [9x9=81 | 11x11=121] into [255/10] = 10~25 buckets  [3x5x17] ... 15,17 buckets
+		// 	 paper on better pixel comparrisons .... ?
+		// 		1D NCC or SAD
+	}
+
+	return {"pointsA":pointsA,"pointsB":pointsB};
+}
+
+
 Stereopsis.World.prototype.searchPoints2DBestMatch = function(){ // find better 2d matches using affines
 // return;
 

@@ -149,6 +149,12 @@ RiftTest.prototype.imagesLoadComplete = function(imageInfo){
 	var imageMatrixB = new ImageMat(imageFloatB["width"],imageFloatB["height"], imageFloatB["red"], imageFloatB["grn"], imageFloatB["blu"]);
 
 
+
+
+this.testHistograms(imageMatrixA,imageMatrixB);
+return;
+
+
 // ROTATE B
 // imageMatrixB = imageMatrixB.rotate180();
 // imageMatrixB = imageMatrixA.rotate180();
@@ -3671,3 +3677,458 @@ if(covScale>0){
 
 
 // ...
+
+RiftTest.detailedObject = function(image,p){
+	var object = {};
+
+	// info
+	var sampleSize = 11;
+	var mask = ImageMat.circleMask(sampleSize);
+	var pmask = ImageMat.mulConst(Code.copyArray(mask), 1.0/Code.averageNumbers(mask));
+
+	// flat image
+	var sigma = 1.0;
+	var block = image.extractRectFromFloatImage(p.x,p.y,1.0,sigma,sampleSize,sampleSize,null);
+	object["image"] = block;
+
+	// flat color
+	// // BAD
+	// var color = [ Code.averageNumbers(block.red()), Code.averageNumbers(block.grn()), Code.averageNumbers(block.blu()) ];
+	// object["color"] = color;
+
+	// // BAD
+	// var color = [ Code.averageNumbers(block.gry()) ];
+	// object["color"] = color;
+
+	// OK
+	var color = R3D.averageVectorsArray3D(block.red(),block.grn(),block.blu());
+	object["color"] = color;
+
+
+
+	// flat histogram
+	// var buckets = 15;
+	// var buckets = 10;
+	// mask = null;
+
+	// // BAD
+	// var buckets = 15;
+	// var histogramR = Code.histogram(block.red(),mask,buckets,0,1);
+	// var histogramG = Code.histogram(block.grn(),mask,buckets,0,1);
+	// var histogramB = Code.histogram(block.blu(),mask,buckets,0,1);
+	// 	histogramR = histogramR["histogram"];
+	// 	histogramG = histogramG["histogram"];
+	// 	histogramB = histogramB["histogram"];
+	// var histogram = Code.arrayPushArrays([],histogramR,histogramG,histogramB);
+	// object["histogramFlat"] = histogram;
+
+
+	// // BAD
+	// var buckets = 15;
+	// var histogramY = Code.histogram(block.gry(),mask,buckets,0,1);
+	// 	histogramY = histogramY["histogram"];
+	// 	// ImageMat.mulConst(histogramY,Code.max();
+	// 	ImageMat.normalFloat01(histogramY);
+	// object["histogramFlat"] = histogramY;
+
+	// OK
+	var buckets3D = 10; // 5 ok results |  10 too big -- very sparse
+	var histogram = Code.histogram3D(block.red(),block.grn(),block.blu(),buckets3D, mask,0,1);
+		histogram = histogram["histogram"];
+		ImageMat.normalFloat01(histogram);
+	object["histogramFlat"] = histogram;
+
+	// very sparse
+	console.log( histogram.reduce(function(acc,a){ return acc + (a==0 ? 0 : 1); }, 0), histogram.length );
+
+
+	// mass distance - non oriented
+
+	// gradient -- orientational
+	// var directions = 8;
+	// var blurred = block.getBlurredImage(1.0);
+	// var gradient = ImageMat.gradientVector(blurred,sampleSize,sampleSize).value;
+	// console.log(gradient);
+	// object["gradient"] = gradient;
+	// var redM = redV.length();
+	// var redA = V2D.angleDirection(V2D.DIRX,redV);
+	// 	redA = Code.angleZeroTwoPi(redA);
+	// var valueR = redM * weight;
+	// var redB = Math.min(Math.floor((redA/Math.PI2)*binsSize),binsSize-1);
+	// var vectorIndexR = binsSize*bin + redB + vectorLen*offset;
+	// vector[vectorIndexR] += valueR;
+
+	// gradient histogram
+	/*
+	var buckets = 15;
+	var histogramR = Code.histogram(block.red(),mask,buckets,0,1);
+	var histogramG = Code.histogram(block.grn(),mask,buckets,0,1);
+	var histogramB = Code.histogram(block.blu(),mask,buckets,0,1);
+		histogramR = histogramR["histogram"];
+		histogramG = histogramG["histogram"];
+		histogramB = histogramB["histogram"];
+	var histogram = [histogramR,histogramG,histogramB];
+	object["histogramGradient"] = histogram;
+	*/
+
+
+	// SIFT
+	var diaNeighborhood = 11; // cel size
+	var matrix = null;
+	var vectorSAD = R3D.SADVectorCircular(image, p,diaNeighborhood,matrix);
+	var vectorSIFT = R3D.SIFTVectorCircular(image, p,diaNeighborhood,matrix, true);
+
+	object["siftFlat"] = vectorSAD;
+	object["siftGradient"] = vectorSIFT;
+
+	// console.log(object);
+	//
+	// Code.printHistogram(histogramR, 10);
+	// Code.printHistogram(histogramG, 10);
+	// Code.printHistogram(histogramB, 10);
+
+	object["matches"] = [];
+
+	return object;
+}
+RiftTest.compareFlatColorRGB = function(colorA,colorB){
+	return RiftTest.compare1DArraySAD(colorA,colorB);
+	// return RiftTest.compare1DArraySSD(colorA,colorB);
+}
+RiftTest.compareFlatHistogramRGB = function(histA,histB){
+	var r = RiftTest.compare1DArraySAD(histA[0],histB[0]);
+	var g = RiftTest.compare1DArraySAD(histA[1],histB[1]);
+	var b = RiftTest.compare1DArraySAD(histA[2],histB[2]);
+	return (r+g+b)/3.0;
+}
+RiftTest.compare1DArraySAD = function(histA,histB){
+	var sum = 0;
+	let count = histA.length;
+	for(var i=histA.length; i--;){
+		sum += Math.abs(histA[i]-histB[i]);
+	}
+	return sum/count;
+	// return sum;
+}
+RiftTest.compare1DArraySSD = function(histA,histB){
+	var sum = 0;
+	let count = histA.length;
+	for(var i=histA.length; i--;){
+		sum += Math.pow(histA[i]-histB[i],2);
+	}
+	return sum/count;
+}
+// RiftTest.color3DHistogramToImage = function(histA){
+// 	var size = histA.length;
+// 	var bins = Math.cbrt(size);
+// 		bins = Math.round(bins);
+// 	// console.log(bins);
+// 	var red = Code.newArrayZeros(bins);
+// 	var grn = Code.newArrayZeros(bins);
+// 	var blu = Code.newArrayZeros(bins);
+// 	var increment = 1.0/bins;
+// 	for(var i=0; i<bins; ++i){
+// 		var r = ;
+// 		for(var j=0; j<bins; ++j){
+// 			var g = ;
+// 			for(var k=0; k<bins; ++k){
+// 				var g = ;
+// 				var b = ;
+// 			}
+// 		}
+// 	}
+//
+//
+// 	throw "?"
+// }
+RiftTest.compare1DArrayNCC = function(histA,histB){
+	// var imageA = RiftTest.color3DHistogramToImage(histA);
+	// var imageB = RiftTest.color3DHistogramToImage(histB);
+	// var info = R3D.normalizedCrossCorrelation(imageA, null, imageB, true);
+	var info = R3D.normalizedCrossCorrelation1D(histA, histB, null);
+	var scoreNCC = info["value"][0];
+	return scoreNCC;
+}
+RiftTest.pointsToObjects = function(imageMatrixA,pointsA){
+	var objectsA = [];
+	for(var i=0; i<pointsA.length; ++i){
+		var object = RiftTest.detailedObject(imageMatrixA, pointsA[i]);
+		object["p2d"] = pointsA[i];
+		object["i"] = i;
+		objectsA.push(object);
+	}
+	return objectsA;
+}
+
+
+RiftTest.matchesForObject = function(objectA,objectsB){
+	console.log("matchesForObject: "+objectsB.length);
+	var dropPercent = 0.5; // percent or sigma
+	var sortScore = function(a,b){
+		return a[0]<b[0] ? -1 : 1;
+	}
+	var best = [];
+	for(var i=0; i<objectsB.length; ++i){
+		var objectB = objectsB[i];
+		best.push([0,objectB]);
+	}
+
+/*
+	// flat color
+	objectsB = best;
+	var best = [];
+	for(var i=0; i<objectsB.length; ++i){
+		var objectB = objectsB[i][1];
+		var score = RiftTest.compareFlatColorRGB(objectA["color"],objectB["color"]);
+		best.push([score,objectB]);
+	}
+	best.sort(sortScore);
+var histogram = best.map(function(a){return a[0];});
+Code.printHistogram(histogram, 10);
+	Code.truncateArray(best, Math.max(Math.ceil(best.length*dropPercent), 9) );
+*/
+
+
+
+// var score = RiftTest.compareFlatHistogramRGB(objectA["histogramFlat"],objectA["histogramFlat"]);
+// console.log(score)
+// throw "?";
+	// histogram
+console.log(objectA["histogramFlat"])
+	objectsB = best;
+	best = [];
+	for(var i=0; i<objectsB.length; ++i){
+		var objectB = objectsB[i][1];
+		//var score = RiftTest.compareFlatColorRGB(objectA["histogramFlat"],objectB["histogramFlat"]);
+		var score = RiftTest.compare1DArraySAD(objectA["histogramFlat"],objectB["histogramFlat"]);
+		// var score = RiftTest.compare1DArraySSD(objectA["histogramFlat"],objectB["histogramFlat"]);
+		// var score = RiftTest.compare1DArrayNCC(objectA["histogramFlat"],objectB["histogramFlat"]);
+		best.push([score,objectB]);
+	}
+	best.sort(sortScore);
+// var histogram = best.map(function(a){return a[0];});
+// Code.printHistogram(histogram, 10);
+// 	Code.truncateArray(best, Math.max(Math.ceil(best.length*dropPercent), 8) );
+
+
+	// Code.truncateArray(best, 5 );
+	console.log(best);
+
+/*
+
+// at this point there should be an estimate of affine/projection matrix & image extracted in imageB
+	// var needle = imageA.extractRectFromFloatImage(pointA.x,pointA.y,zoom,null,needleSize,needleSize, matrix);
+	// var haystack = imageB.extractRectFromFloatImage(pointB.x,pointB.y,zoom,null,needleSize,needleSize, null);
+	// var scoreNCC = R3D.normalizedCrossCorrelation(needle,null,haystack,true);
+	// 	scoreNCC = scoreNCC["value"][0];
+	// var scoreSAD = R3D.searchNeedleHaystackImageFlat(needle,null,haystack);
+	// 	scoreSAD = scoreSAD["value"][0];
+	// var range = needle.range()["y"];
+	// return {"ncc":scoreNCC, "sad":scoreSAD, "range":range};
+
+	var blockA = objectA["image"];
+	// flat sad
+	objectsB = best;
+	best = [];
+	for(var i=0; i<objectsB.length; ++i){
+		var objectB = objectsB[i][1];
+		var blockB = objectB["image"];
+		var scoreSAD = R3D.searchNeedleHaystackImageFlat(blockA,null,blockB);
+			scoreSAD = scoreSAD["value"][0];
+		best.push([scoreSAD,objectB]);
+	}
+	best.sort(sortScore);
+var histogram = best.map(function(a){return a[0];});
+Code.printHistogram(histogram, 10);
+	Code.truncateArray(best, Math.max(Math.ceil(best.length*dropPercent), 7) );
+
+	// flat ncc
+	objectsB = best;
+	best = [];
+	for(var i=0; i<objectsB.length; ++i){
+		var objectB = objectsB[i][1];
+		var blockB = objectB["image"];
+		var scoreNCC = R3D.normalizedCrossCorrelation(blockA,null,blockB,true);
+			scoreNCC = scoreNCC["value"][0];
+		best.push([scoreNCC,objectB]);
+	}
+	best.sort(sortScore);
+var histogram = best.map(function(a){return a[0];});
+Code.printHistogram(histogram, 10);
+	Code.truncateArray(best, Math.max(Math.ceil(best.length*dropPercent), 6) );
+
+// at this point the remaining points should generate SIFT-SAD vectors
+
+	// SIFT SAD
+	var vectorSADA = objectA["siftFlat"];
+	objectsB = best;
+	best = [];
+	for(var i=0; i<objectsB.length; ++i){
+		var objectB = objectsB[i][1];
+		var vectorSADB = objectB["siftFlat"];
+		var scoreSAD = 1.0 - R3D.compareVectorAbs(vectorSADA, vectorSADB);
+		best.push([scoreSAD,objectB]);
+	}
+	best.sort(sortScore);
+var histogram = best.map(function(a){return a[0];});
+Code.printHistogram(histogram, 20);
+	Code.truncateArray(best, Math.max(Math.ceil(best.length*dropPercent), 5) );
+console.log(best);
+
+// at this point the remaining points should generate SIFT-GRAD vectors
+
+	// SIFT GRAD
+	var vectorSIFTA = objectA["siftGradient"];
+	objectsB = best;
+	best = [];
+	for(var i=0; i<objectsB.length; ++i){
+		var objectB = objectsB[i][1];
+		var vectorSIFTB = objectB["siftGradient"];
+		var scoreSIFT = 1.0 - R3D.compareVectorAbs(vectorSIFTA, vectorSIFTB);
+		best.push([scoreSIFT,objectB]);
+	}
+	best.sort(sortScore);
+var histogram = best.map(function(a){return a[0];});
+Code.printHistogram(histogram, 20);
+	Code.truncateArray(best, Math.max(Math.ceil(best.length*dropPercent), 4) );
+console.log(best);
+	// SIFT TOTAL
+	objectsB = best;
+	best = [];
+	for(var i=0; i<objectsB.length; ++i){
+		var objectB = objectsB[i][1];
+		var vectorSADB = objectB["siftFlat"];
+		var vectorSIFTB = objectB["siftGradient"];
+		var score = R3D.compareSIFTSADVector(vectorSIFTA,vectorSADA, vectorSIFTB,vectorSADB);
+		best.push([score,objectB]);
+	}
+	best.sort(sortScore);
+var histogram = best.map(function(a){return a[0];});
+Code.printHistogram(histogram, 20);
+		Code.truncateArray(best, Math.max(Math.ceil(best.length*dropPercent), 3) );
+
+console.log("...");
+var histogram = best.map(function(a){return a[0];});
+Code.printHistogram(histogram, 20);
+console.log(best);
+
+*/
+
+	objectA["matches"] = best;
+}
+RiftTest.showCount = 0;
+RiftTest.showImage = function(objectA, imageMatrixA){
+	var sampleSize = 21;
+	var image = imageMatrixA;
+	var p = objectA["p2d"];
+	var block = image.extractRectFromFloatImage(p.x,p.y,1.0,null,sampleSize,sampleSize,null);
+	var img = GLOBALSTAGE.getFloatRGBAsImage(block.red(), block.grn(), block.blu(), block.width(), block.height());
+	var d = new DOImage(img);
+	d.matrix().scale(3.0);
+	d.matrix().translate(10 + RiftTest.showCount*100, 10 );
+	GLOBALSTAGE.addChild(d);
+
+
+	++RiftTest.showCount;
+}
+
+RiftTest.prototype.testHistograms = function(imageMatrixA,imageMatrixB){
+	// extract needles & haystacks
+
+	var sampleSize = 21;
+
+
+	var pointsA = [];
+		pointsA.push(new V2D(190,100));
+
+	var pointsB = [];
+		pointsB.push(new V2D(189,101));
+		pointsB.push(new V2D(185,105));
+
+		pointsB.push(new V2D(100,100));
+		pointsB.push(new V2D(200,100));
+		pointsB.push(new V2D(100,200));
+		pointsB.push(new V2D(200,200));
+		pointsB.push(new V2D(300,100));
+		pointsB.push(new V2D(300,200));
+		pointsB.push(new V2D(400,100));
+		pointsB.push(new V2D(400,200));
+		pointsB.push(new V2D(400,300));
+
+	var matrix = new Matrix2D().identity();
+		// matrix.scale(1.5);
+
+	var objectsA = RiftTest.pointsToObjects(imageMatrixA, pointsA);
+	var objectsB = RiftTest.pointsToObjects(imageMatrixB, pointsB);
+
+	console.log(objectsA);
+	console.log(objectsB);
+
+
+
+	for(var i=0; i<objectsB.length; ++i){
+		RiftTest.showImage(objectsB[i],imageMatrixB);
+	}
+
+		var i = 0;
+		var objectA = objectsA[i];
+		RiftTest.matchesForObject(objectA, objectsB);
+	RiftTest.showImage(objectA,imageMatrixA);
+	RiftTest.showImage(objectA,imageMatrixA);
+	RiftTest.showImage(objectA,imageMatrixA);
+	// RiftTest.showImage(objectA["matches"][0][1],imageMatrixB);
+
+	var bestB = objectA["matches"];
+	for(var i=0; i<bestB.length; ++i){
+		RiftTest.showImage(bestB[i][1],imageMatrixB);
+	}
+
+
+	/*
+	var image = imageMatrixA;
+	var p = pointsA[0];
+	var block = image.extractRectFromFloatImage(p.x,p.y,1.0,null,sampleSize,sampleSize,null);
+	var img = GLOBALSTAGE.getFloatRGBAsImage(block.red(), block.grn(), block.blu(), block.width(), block.height());
+	var d = new DOImage(img);
+	d.matrix().scale(3.0);
+	d.matrix().translate(10 , 10 );
+	GLOBALSTAGE.addChild(d);
+
+	var gry = block.gry();
+
+	console.log(gry);
+	var buckets = 15;
+	// var buckets = 50;
+	var histogram = Code.histogram(gry, null, buckets, 0,1);
+
+	console.log(histogram);
+
+	histogram = histogram["histogram"];
+	Code.printHistogram(histogram, 10);
+	*/
+
+
+
+
+	// compare minor scale / rotation / skew
+
+
+	// NCC
+	// SAD
+
+	// SIFT
+	// ...
+
+
+/*
+
+*0.5 SAD flat score = 7
+*0.5 NCC flat score = 4
+*0.5 SIFT = 2
+=> pick last
+
+*/
+
+
+	throw "testHistograms"
+}

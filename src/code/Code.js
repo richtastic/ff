@@ -11023,14 +11023,24 @@ Code.dropOutliers = function(list, valueFxn, sigmas, rightOnly, useMin){
 	return {"outliers":outliers, "inliers":keep};
 }
 
-Code.histogram = function(data, masking, buckets){
+Code.histogram = function(data, masking, buckets, min,max, useValue){
+	useValue = useValue!==undefined ? useValue : false;
 	var value, i, bin, len = data.length;
 	buckets = (buckets!==undefined && buckets!==null) ? buckets : Math.round(Math.sqrt(len));
-	var info = Code.infoArray(data);
-	var infoMax = info["max"];
-	var infoMin = info["min"];
-	var infoRange = info["range"];
-		infoRange = infoMax - infoMin;
+	var infoMax = 0;
+	var infoMin = 0;
+	if(min!==undefined && max!==undefined){
+		infoMin = min;
+		infoMax = max;
+	}else{
+		// var info = Code.infoArray(data);
+		// var infoMax = info["max"];
+		// var infoMin = info["min"];
+		// infoRange = info["range"];
+		var infoMax = Code.max(data);
+		var infoMin = Code.min(data);
+	}
+	var infoRange = infoMax - infoMin;
 	var bm1 = buckets - 1;
 	var histogram = Code.newArrayZeros(buckets);
 	var mask = 1.0;
@@ -11039,7 +11049,11 @@ Code.histogram = function(data, masking, buckets){
 		if(mask!=0.0){
 			value = (data[i]-infoMin)/infoRange;
 			bin = Math.min(Math.floor( value*buckets ),bm1);
-			histogram[bin] += 1;
+			// if(useValue){
+			// 	histogram[bin] += 1;
+			// }else{
+				histogram[bin] += 1;
+			// }
 		}
 	}
 	var bucketSize = 0;
@@ -11047,6 +11061,57 @@ Code.histogram = function(data, masking, buckets){
 		bucketSize = infoRange/buckets;
 	}
 	return {"histogram":histogram, "size":bucketSize, "min":infoMin, "max":infoMax};
+}
+
+Code.histogram3D = function(dataR,dataG,dataB, buckets, masking, min,max, isSparse){
+	var b2 = buckets*buckets;
+	var bucketsTotal = b2*buckets; // 3>9 | 4>64 | 5>125 | 6>216 | 7>343 | 8>42 | 10>30
+	var infoMax = 0;
+	var infoMin = 0;
+	if(min!==undefined && max!==undefined){
+		infoMin = min;
+		infoMax = max;
+	}else{
+		throw "?";
+		// var infoMax = Code.max(data);
+		// var infoMin = Code.min(data);
+	}
+	var infoRange = infoMax - infoMin;
+	var bm1 = buckets - 1;
+	var len = dataR.length;
+	var histogram = null;
+	if(isSparse){
+		histogram = {};
+	}else{
+		histogram = Code.newArrayZeros(bucketsTotal);
+	}
+	var mask = 1.0;
+	for(i=0; i<len; ++i){
+		if(masking){ mask = masking[i]; }
+		if(mask!=0.0){
+			var valueR = (dataR[i]-infoMin)/infoRange;
+			var valueG = (dataG[i]-infoMin)/infoRange;
+			var valueB = (dataB[i]-infoMin)/infoRange;
+			var binR = Math.min(Math.floor( valueR*buckets ),bm1);
+			var binG = Math.min(Math.floor( valueG*buckets ),bm1);
+			var binB = Math.min(Math.floor( valueB*buckets ),bm1);
+
+			if(isSparse){
+				var index = binR+"-"+binG+"-"+binB;
+				var value = Code.valueOrDefault(histogram[index],0) + 1;
+				histogram[index] = value;
+			}else{
+				var bin = binR*b2 + binG*buckets + binB;
+				histogram[bin] += 1;
+			}
+		}
+	}
+	var bucketSize = 0;
+	if(buckets>0){
+		bucketSize = infoRange/buckets;
+	}
+	return {"histogram":histogram, "size":bucketSize, "min":infoMin, "max":infoMax};
+
 }
 Code.range = function(data, masking){
 	var i, len=data.length;
