@@ -3681,8 +3681,10 @@ if(covScale>0){
 RiftTest.detailedObject = function(image,p){
 	var object = {};
 
+	// masking keeps 0.7854 of square data
+
 	// info
-	var sampleSize = 11;
+	var sampleSize = 11; // 11=121=95
 	var mask = ImageMat.circleMask(sampleSize);
 	var pmask = ImageMat.mulConst(Code.copyArray(mask), 1.0/Code.averageNumbers(mask));
 
@@ -3692,12 +3694,13 @@ RiftTest.detailedObject = function(image,p){
 	object["image"] = block;
 
 	// flat color
-	// // BAD
-	// var color = [ Code.averageNumbers(block.red()), Code.averageNumbers(block.grn()), Code.averageNumbers(block.blu()) ];
-	// object["color"] = color;
 
 	// // BAD
 	// var color = [ Code.averageNumbers(block.gry()) ];
+	// object["color"] = color;
+
+	// // BAD
+	// var color = [ Code.averageNumbers(block.red()), Code.averageNumbers(block.grn()), Code.averageNumbers(block.blu()) ];
 	// object["color"] = color;
 
 	// OK
@@ -3707,9 +3710,6 @@ RiftTest.detailedObject = function(image,p){
 
 
 	// flat histogram
-	// var buckets = 15;
-	// var buckets = 10;
-	// mask = null;
 
 	// // BAD
 	// var buckets = 15;
@@ -3722,7 +3722,6 @@ RiftTest.detailedObject = function(image,p){
 	// var histogram = Code.arrayPushArrays([],histogramR,histogramG,histogramB);
 	// object["histogramFlat"] = histogram;
 
-
 	// // BAD
 	// var buckets = 15;
 	// var histogramY = Code.histogram(block.gry(),mask,buckets,0,1);
@@ -3732,17 +3731,60 @@ RiftTest.detailedObject = function(image,p){
 	// object["histogramFlat"] = histogramY;
 
 	// OK
-	var buckets3D = 10; // 5 ok results |  10 too big -- very sparse
-	var histogram = Code.histogram3D(block.red(),block.grn(),block.blu(),buckets3D, mask,0,1);
+	var buckets3D = 10; // 5-15
+	var histogram = Code.histogram3D(block.red(),block.grn(),block.blu(),buckets3D, mask,0,1, true);
 		histogram = histogram["histogram"];
 		ImageMat.normalFloat01(histogram);
 	object["histogramFlat"] = histogram;
 
-	// very sparse
-	console.log( histogram.reduce(function(acc,a){ return acc + (a==0 ? 0 : 1); }, 0), histogram.length );
+
+	// color gradients histogram
+	// get average color (have)  [try basic avg & angle avg]
+	// gradient = color-avg		MIN:0 MAX:1
+	// gradient2 = r/g/b separate spatial intensity gradients =>
+	// histogram
+	// - bin
+	// - bin into 3D by mag+dir
+	// - bin into 3D by direction & use magnitude as increment
+	// - bin by angle 1D
+
+	// flat
+	// want some small / circular / blurred window of image (icon) *0.78539
+	// 5x5=> 20 | 7x7=>38 | 9x9=>64 | 11x11=>95
+	//
 
 
-	// mass distance - non oriented
+	// gradient
+	// small circular blurred window
+	// - grayscale x/y @ angle => 1D bin w/ mag (current)
+	// - gradient R G B separate & angle bin => 3D bin w/ mag (current)
+	// - gradient R G B separate & col.x,y bin => 6D bin w/ mag [mixing color & space likely sparse] (x)
+	// - 3D angle from 1,0,0  for x/y => 2 separate 1D bins w/ mag
+	// - 6D angle from 1,0,0,0,0,0,0 => 2 separate 1D bins [mixing color & space likely bad]  (x)
+
+	// SIFT-color-flat-hist
+
+	// SIFT-color-grad
+	// calc single sift object for NxN windows
+	// accumulate
+
+	// SIFT-spatial-grad
+	// calc single sift object for NxN windows
+	// accumulate
+
+
+	// SIFTING:
+	// count size (3-6) 4
+	// block size (3-5) 4
+	// image size = block * count @ ~1 sigma blur
+	// falloff gaussian multiplier ~1 sigma
+	// each window aggregate to some basic object (SIFT = 8-vector)
+	//	color: 3D flat histogram [5-10 ^3 bins] 5x5 - 9x9 source
+	//	cgrad: 3D delta histogram ^
+	//	sgrad:
+
+
+
 
 	// gradient -- orientational
 	// var directions = 8;
@@ -3801,14 +3843,24 @@ RiftTest.compareFlatHistogramRGB = function(histA,histB){
 	var b = RiftTest.compare1DArraySAD(histA[2],histB[2]);
 	return (r+g+b)/3.0;
 }
-RiftTest.compare1DArraySAD = function(histA,histB){
+RiftTest.compare1DArraySAD = function(histA,histB, count){
 	var sum = 0;
-	let count = histA.length;
-	for(var i=histA.length; i--;){
-		sum += Math.abs(histA[i]-histB[i]);
+	count = count!==undefined ? count : 1;
+	if( Code.isObject(histA) ){ // can't normalize without original length
+		var keys = Code.keysUnion(histA,histB);
+		for(var i=0; i<keys.length; ++i){
+			var key = keys[i];
+			var a = Code.valueOrDefault(histA[key], 0);
+			var b = Code.valueOrDefault(histB[key], 0);
+			sum += Math.abs(a-b);
+		}
+	}else{
+		var count = histA.length;
+		for(var i=histA.length; i--;){
+			sum += Math.abs(histA[i]-histB[i]);
+		}
 	}
 	return sum/count;
-	// return sum;
 }
 RiftTest.compare1DArraySSD = function(histA,histB){
 	var sum = 0;
@@ -3864,6 +3916,8 @@ RiftTest.pointsToObjects = function(imageMatrixA,pointsA){
 RiftTest.matchesForObject = function(objectA,objectsB){
 	console.log("matchesForObject: "+objectsB.length);
 	var dropPercent = 0.5; // percent or sigma
+	var dropSigma = 1.0; // 68%
+	// var dropSigma = 2.0; // 95%
 	var sortScore = function(a,b){
 		return a[0]<b[0] ? -1 : 1;
 	}
@@ -3884,17 +3938,12 @@ RiftTest.matchesForObject = function(objectA,objectsB){
 	}
 	best.sort(sortScore);
 var histogram = best.map(function(a){return a[0];});
-Code.printHistogram(histogram, 10);
-	Code.truncateArray(best, Math.max(Math.ceil(best.length*dropPercent), 9) );
+Code.printHistogram(histogram, 20);
+	// Code.truncateArray(best, Math.max(Math.ceil(best.length*dropPercent), 9) );
 */
 
-
-
-// var score = RiftTest.compareFlatHistogramRGB(objectA["histogramFlat"],objectA["histogramFlat"]);
-// console.log(score)
-// throw "?";
-	// histogram
-console.log(objectA["histogramFlat"])
+/*
+	// flat histogram
 	objectsB = best;
 	best = [];
 	for(var i=0; i<objectsB.length; ++i){
@@ -3906,15 +3955,18 @@ console.log(objectA["histogramFlat"])
 		best.push([score,objectB]);
 	}
 	best.sort(sortScore);
-// var histogram = best.map(function(a){return a[0];});
-// Code.printHistogram(histogram, 10);
+var histogram = best.map(function(a){return a[0];});
+Code.printHistogram(histogram, 20);
 // 	Code.truncateArray(best, Math.max(Math.ceil(best.length*dropPercent), 8) );
-
+*/
 
 	// Code.truncateArray(best, 5 );
-	console.log(best);
+	// console.log(best);
 
-/*
+
+????
+
+
 
 // at this point there should be an estimate of affine/projection matrix & image extracted in imageB
 	// var needle = imageA.extractRectFromFloatImage(pointA.x,pointA.y,zoom,null,needleSize,needleSize, matrix);
@@ -3925,6 +3977,8 @@ console.log(objectA["histogramFlat"])
 	// 	scoreSAD = scoreSAD["value"][0];
 	// var range = needle.range()["y"];
 	// return {"ncc":scoreNCC, "sad":scoreSAD, "range":range};
+
+/*
 
 	var blockA = objectA["image"];
 	// flat sad
@@ -4025,7 +4079,7 @@ RiftTest.showImage = function(objectA, imageMatrixA){
 	var img = GLOBALSTAGE.getFloatRGBAsImage(block.red(), block.grn(), block.blu(), block.width(), block.height());
 	var d = new DOImage(img);
 	d.matrix().scale(3.0);
-	d.matrix().translate(10 + RiftTest.showCount*100, 10 );
+	d.matrix().translate(10 + RiftTest.showCount*65, 10 );
 	GLOBALSTAGE.addChild(d);
 
 
@@ -4042,18 +4096,20 @@ RiftTest.prototype.testHistograms = function(imageMatrixA,imageMatrixB){
 		pointsA.push(new V2D(190,100));
 
 	var pointsB = [];
-		pointsB.push(new V2D(189,101));
-		pointsB.push(new V2D(185,105));
-
-		pointsB.push(new V2D(100,100));
-		pointsB.push(new V2D(200,100));
-		pointsB.push(new V2D(100,200));
-		pointsB.push(new V2D(200,200));
-		pointsB.push(new V2D(300,100));
-		pointsB.push(new V2D(300,200));
-		pointsB.push(new V2D(400,100));
-		pointsB.push(new V2D(400,200));
-		pointsB.push(new V2D(400,300));
+		// pointsB.push(new V2D(189,101));
+		// pointsB.push(new V2D(185,105));
+		// pointsB.push(new V2D(100,100));
+		// pointsB.push(new V2D(200,100));
+		// pointsB.push(new V2D(100,200));
+		// pointsB.push(new V2D(200,200));
+		// pointsB.push(new V2D(300,100));
+		// pointsB.push(new V2D(300,200));
+		// pointsB.push(new V2D(400,100));
+		// pointsB.push(new V2D(400,200));
+		// pointsB.push(new V2D(400,300));
+	for(var i=0; i<40; ++i){
+		pointsB.push(new V2D(Math.random()*imageMatrixB.width(),Math.random()*imageMatrixB.height()));
+	}
 
 	var matrix = new Matrix2D().identity();
 		// matrix.scale(1.5);
@@ -4066,16 +4122,16 @@ RiftTest.prototype.testHistograms = function(imageMatrixA,imageMatrixB){
 
 
 
-	for(var i=0; i<objectsB.length; ++i){
-		RiftTest.showImage(objectsB[i],imageMatrixB);
-	}
+	// for(var i=0; i<objectsB.length; ++i){
+	// 	RiftTest.showImage(objectsB[i],imageMatrixB);
+	// }
 
 		var i = 0;
 		var objectA = objectsA[i];
 		RiftTest.matchesForObject(objectA, objectsB);
 	RiftTest.showImage(objectA,imageMatrixA);
-	RiftTest.showImage(objectA,imageMatrixA);
-	RiftTest.showImage(objectA,imageMatrixA);
+	// RiftTest.showImage(objectA,imageMatrixA);
+	// RiftTest.showImage(objectA,imageMatrixA);
 	// RiftTest.showImage(objectA["matches"][0][1],imageMatrixB);
 
 	var bestB = objectA["matches"];

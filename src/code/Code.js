@@ -777,6 +777,20 @@ Code.keys = function keys(object){
 	}
 	return [];
 }
+
+Code.keysUnion = function(a,b){
+	var hash = {};
+	var keys = Code.keys(a);
+	for(var i=keys.length;--i;){
+		hash[keys[i]] = 0;
+	}
+	var keys = Code.keys(b);
+	for(var i=keys.length;--i;){
+		hash[keys[i]] = 0;
+	}
+	return Code.keys(hash);
+}
+
 Code.hasKey = function(object, key){
 	if(object){
 		return key in object;
@@ -3350,6 +3364,17 @@ Code.anglesToBins = function(angles, mags, binCount){ // [0,2pi]
 		}
 	}
 	return {"bins":bins, "count":binCount};
+}
+Code.arrayVectorAngleDirection= function(vectorA,vectorB, lenA,lenB){ // angle in higher dimensions
+	lenA = lenA!==undefined ? lenA : Code.arrayVectorLength(vectorA);
+	lenB = lenB!==undefined ? lenB : Code.arrayVectorLength(vectorB);
+	if(lenA==0 || lenB==0){
+		return 0;
+	}
+	var dotA = Code.arrayVectorDot(vectorA,vectorB);
+	var cos = dotA/(lenA*lenB);
+	cos = Math.max(Math.min(cos,1.0),-1.0);
+	return Math.acos(cos);
 }
 Code.vectorsToAngleBins = function(vectors, binCount){
 	var angles = [];
@@ -11095,7 +11120,6 @@ Code.histogram3D = function(dataR,dataG,dataB, buckets, masking, min,max, isSpar
 			var binR = Math.min(Math.floor( valueR*buckets ),bm1);
 			var binG = Math.min(Math.floor( valueG*buckets ),bm1);
 			var binB = Math.min(Math.floor( valueB*buckets ),bm1);
-
 			if(isSparse){
 				var index = binR+"-"+binG+"-"+binB;
 				var value = Code.valueOrDefault(histogram[index],0) + 1;
@@ -11109,6 +11133,16 @@ Code.histogram3D = function(dataR,dataG,dataB, buckets, masking, min,max, isSpar
 	var bucketSize = 0;
 	if(buckets>0){
 		bucketSize = infoRange/buckets;
+	}
+	// normalize to %
+	if(isSparse){
+		var keys = Code.keys(histogram);
+		for(var i=0; i<keys; ++i){
+			var key = keys[i];
+			var val = histogram[key];
+			val = val/bucketsTotal;
+			histogram[key] = val;
+		}
 	}
 	return {"histogram":histogram, "size":bucketSize, "min":infoMin, "max":infoMax};
 

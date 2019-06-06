@@ -11,6 +11,7 @@
 0) [Fundamental Matrix](#FUNDAMENTAL)
 0) [Trifocal Tensor](#TRIFOCAL)
 0) [Stereo Matching](#STEREO)
+0) [Pair Guessing](#BAGOFWORDS)
 0) [Pair Reconstruction](#PAIRS)
 0) [Triplet Reconstruction](#TRIPLES)
 0) [Multi View Reconstruction](#MULTIVIEW)
@@ -218,6 +219,34 @@ P<sub>B</sub> = [[e<sub>A</sub>]<sub>&times;</sub>&midot;F|e<sub>B</sub>]
 reduce searching to single line
 
 hierarchical matching
+
+
+<a name="BAGOFWORDS"></a>
+### Pair Guessing
+Large Image datasets are likely to have many pictures that share no overlapping regions.
+Goal: avoid unnecessarily processing images that have no business being compared.
+significant enough of overlap to consider being compared
+
+# Bag of Words
+Some summary statistics / features of each image can be used to compare overlap
+
+- features = vocabulary
+
+- individual features in each image are assigned a boolean value indicating if there is a similar enough feature in the opposite image
+-
+
+
+- need large part or entire dataset to be preprocessed before the discarding can begin
+
+
+- with all image features loaded:
+	- can find clusters / nearest neighbors / overlap
+
+
+progressive comparisons
+	- perform easy calculations early on to discard candidate / to avoid wasted time on complicated calculations later
+
+
 
 
 <a name="PAIRS"></a>

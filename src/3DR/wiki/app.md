@@ -368,7 +368,91 @@ https://cloud.google.com/appengine/docs/nodejs/
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+- bag of features
+	- want to quickly discard & find pair matches
+		- graduated steps
+		- pref non-oriented?
+	- file (database) with list of pertinent summary of each image
+
+		images:
+			-
+				id: ABCD
+					- features:
+						-
+							f: [....] # flat histogram 10-20 entries [non-oriented] - quick discounting
+							i: [....] # flat circular icon/histogram 16-25 entries [oriented]
+							g: [....] # gradient circular histogram [orientated]
+
+	- for each new added view:
+		- load database
+		- compute salient feature descriptors [top 100~1000]
+		- add entries to DB / save
+		- for each other view:
+			- calculate best matching feature A<->B
+		- a valid match:
+			- A) fwd-bak top pair matches
+			- B) similarity score above some minimal #
+				- C) dynamically estimate what score cutoff point would give the maximum match % to be 50% for any pair
+			- D)
+		- assign view pair a % of overlap
+	-
+
+	a can have a 50% match with b (many to one)
+	b can have a 10% with a
+
+	low/0 matches % should be dropped
+
+ Naive Bayes
+
+
+https://www.mpi-inf.mpg.de/fileadmin/inf/d2/HLCV/cv-ss17-0510-object-bow-part1.pdf
+
+
+
+
+
 - is there a way to do SAD/SSD/NCC keeping COLORS R/G/B together ?
+	diff = V3D.sub(A,B)
+	diff = V3D.sub(A,B).length() ***
+	diff = V3D.angle(A,B)
+
+
+
+- NCC VECTOR R/G/B
+
+
+position dependent::::::::::
+	- avg color
+		- avg y (poor)
+		- avg r+g+b (poor)
+		- avg 3D-sphere r+g+b (good)
+	- color histogram
+		- y bins
+		- r+g+b bins [3D] (good)
+		- color gradient histogram
+			- (color_i - color_avg) = delta.r,g,b [0->1]
+
+position+rotational dependent::::::::::
+	- [x/y-positional]
+		- flat image
+	- spatial gradient histogram [x/y-positional]
+		- y angle []
+		- r+g+b angle (half separated) [3D]
+		- r+g+b|x+y directions [6D]
+
+position+rotational+spatial dependent::::::::::
+	- location binning of sub-bins:
+		- colors
+		- spatial gradients
+		- color gradients
+
+
+using color-space directions based off (0.5,0.5,0.5) as reference point -- discretize angles [easy 8, more complicated others?]
+
+
+
+
+
 
 - HISTOGRAM LIMITING OF IMAGE CANDIDATES:
 	test:
