@@ -3742,6 +3742,47 @@ RiftTest.detailedObject = function(image,p){
 	// get average color (have)  [try basic avg & angle avg]
 	// gradient = color-avg		MIN:0 MAX:1
 	// gradient2 = r/g/b separate spatial intensity gradients =>
+
+	var red = block.red();
+	var grn = block.grn();
+	var blu = block.blu();
+	var color = [ Code.averageNumbers(red), Code.averageNumbers(grn), Code.averageNumbers(blu) ];
+		color = new V3D().fromArray(color);
+	// var color = R3D.averageVectorsArray3D(red,grn,blu);
+	var wid = block.width();
+	var hei = block.height();
+	var pix = wid*hei;
+	var gradientsColor = [];
+	// var index = 0;
+	var col = new V3D();
+	for(var i=0; i<pix; ++i){
+	// for(var j=0; j<hei; ++j){
+		// for(var i=0; i<wid; ++i){
+			var r = red[i];
+			var g = grn[i];
+			var b = blu[i];
+			col.set(r,g,b);
+			gradientsColor[i] = V3D.angle(color,col); // angle -- most are close to 0 ... // OK
+			// gradientsColor[i] = V3D.sub(col,color); // vector
+		// }
+	}
+	// console.log(gradientsColor);
+	// throw "?"
+
+	// var histogram = Code.histogram3D(block.red(),block.grn(),block.blu(),buckets3D, mask,0,1, true);
+	// 	histogram = histogram["histogram"];
+	// 	ImageMat.normalFloat01(histogram);
+
+	gradientsColor = Code.histogram(gradientsColor,null, 15);
+	// console.log(gradientsColor);
+	// throw "?"
+		gradientsColor = gradientsColor["histogram"];
+		ImageMat.normalFloat01(gradientsColor);
+	object["gradientColor"] = gradientsColor;
+
+	// throw "?"
+
+
 	// histogram
 	// - bin
 	// - bin into 3D by mag+dir
@@ -3964,7 +4005,24 @@ Code.printHistogram(histogram, 20);
 	// console.log(best);
 
 
-????
+	// color gradient histogram
+console.log(objectA["gradientColor"])
+	objectsB = best;
+	best = [];
+	for(var i=0; i<objectsB.length; ++i){
+		var objectB = objectsB[i][1];
+		var score = RiftTest.compare1DArraySAD(objectA["gradientColor"],objectB["gradientColor"]);
+		best.push([score,objectB]);
+	}
+best.sort(sortScore);
+var histogram = best.map(function(a){return a[0];});
+Code.printHistogram(histogram, 20);
+
+
+
+
+
+
 
 
 
