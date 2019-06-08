@@ -9896,58 +9896,39 @@ App3DR.ProjectManager.prototype._iterateSparseTracksStart = function(){ // keep 
 		isDone = true;
 	}
 	*/
-	if(isDone){ // no more
-		var pointCount = sparsePoints.length;
-// save sparese data over to dense data & start loading dense points
-	console.log("FINAL POINTS: "+pointCount);
-		// get a list of all pairs dense needs to load
-		var pairs = project.pairs();
-		console.log(pairs);
-		var loadPairList = [];
-		for(var i=0; i<pairs.length; ++i){
-			var pair = pairs[i];
-			var p = {};
-			p["id"] = pair.id();
-			loadPairList.push(p);
-		}
-// throw "about to save done";
-		// save
-		var denseData = {};
-		denseData["cameras"] = sparseData["cameras"];
-		denseData["views"] = sparseViews;
-		denseData["points"] = sparsePoints;
-		denseData["pairs"] = loadPairList;
-		denseData["currentPair"] = -1;
-		console.log(denseData);
-		// SAVE PROJECT FILE
-		var fxnSavedProject = function(){
-			console.log("fxnSavedProject");
-		}
-		var fxnSavedDense = function(){
-			console.log("fxnSavedDense");
-			project.saveProjectFile(fxnSavedProject, project);
-		}
-		// SAVE
-		project.setSparseCount(pointCount);
-		project.setDenseFilename(App3DR.ProjectManager.BUNDLE_DENSE_FILE_NAME);
-		project.saveDenseFromData(denseData, fxnSavedDense, this);
-		return;
-	} // else
+isDone = true;
+
+console.log("isDone: "+isDone);
+
+
+
 	var viewAIndex = topPair["A"];
 	var viewBIndex = topPair["B"];
 	var sparseViewA = sparseViews[viewAIndex];
 	var sparseViewB = sparseViews[viewBIndex];
 	// pick additional views to load
+
+var loadViews = [];
+if(!isDone){
+
 	var loadViews = this.auxilaryViewsToLoadForSet([viewAIndex,viewBIndex],sparseData, 6);
 	for(var i=0; i<loadViews.length; ++i){
 		loadViews[i] = this.viewFromID(sparseViews[loadViews[i]]["id"]);
 	}
+}
 
 	// console.log(viewA,viewB);
 	var fxnViewsLoaded = function(){
 		console.log("fxnViewsLoaded");
 		console.log(sparseData);
-		console.log(sparseViews);
+		// need to re-get these ...
+		var sparsePoints = sparseData["points"];
+		var sparseViews = sparseData["views"];
+		var sparseCameras = sparseData["cameras"];
+		var sparsePairs = sparseData["pairs"];
+		var sparseIterations = sparseData["iterations"];
+
+
 		var sparseViewLookup = {};
 		for(var i=0; i<sparseViews.length; ++i){
 			var vid = sparseViews[i]["id"];
@@ -9967,17 +9948,16 @@ App3DR.ProjectManager.prototype._iterateSparseTracksStart = function(){ // keep 
 		var worldViews = App3DR.ProjectManager.addViewsToWorld(world, views, images, transforms);
 		console.log(worldViews);
 
-// set cell sizes to medium ?
-for(var i=0; i<worldViews.length; ++i){
-	var view = worldViews[i];
-	// var size = view.sizeFromPercent(0.01); // fine
-	// var size = view.sizeFromPercent(0.02); // med?
-	// var size = view.sizeFromPercent(0.05); // coarse
-	// var size = view.sizeFromPercent(0.10); // too big
-	// view.cellSize(size);
-	console.log("SIZES: "+view.cellSize()+" | "+view.compareSize());
-}
-
+		// set cell sizes to medium ?
+		for(var i=0; i<worldViews.length; ++i){
+			var view = worldViews[i];
+			// var size = view.sizeFromPercent(0.01); // fine
+			// var size = view.sizeFromPercent(0.02); // med?
+			// var size = view.sizeFromPercent(0.05); // coarse
+			// var size = view.sizeFromPercent(0.10); // too big
+			// view.cellSize(size);
+			console.log("SIZES: "+view.cellSize()+" | "+view.compareSize());
+		}
 
 
 		var sparseViewLookupIndex = [];
@@ -10000,6 +9980,69 @@ for(var i=0; i<worldViews.length; ++i){
 		var viewA = world.viewFromData(viewAIndex);
 		var viewB = world.viewFromData(viewBIndex);
 		var pairWorldViews = [viewA,viewB];
+
+
+		if(isDone){ // no more
+			console.log("done sparse");
+			console.log(sparseData)
+
+
+			var pointCount = sparsePoints.length;
+	// save sparese data over to dense data & start loading dense points
+		console.log("FINAL POINTS: "+pointCount);
+
+		console.log("need to find all pairs that should be attempted for dense pairing");
+
+		console.log(world);
+
+		var transforms = world.transformsWithOverlap();
+
+		console.log(transforms);
+
+		var pairs = [];
+
+// TODO: GET ALL PAIRS THAT ARE PRESENT IN TRANSFORMS ^
+		for(){
+
+		}
+
+
+
+			// get a list of all pairs dense needs to load
+			// var pairs = project.pairs();
+			// console.log(pairs);
+			// var loadPairList = [];
+			// for(var i=0; i<pairs.length; ++i){
+			// 	var pair = pairs[i];
+			// 	var p = {};
+			// 	p["id"] = pair.id();
+			// 	loadPairList.push(p);
+			// }
+	throw "about to save done";
+			// save
+			var denseData = {};
+			denseData["cameras"] = sparseData["cameras"];
+			denseData["views"] = sparseViews;
+			denseData["points"] = sparsePoints;
+			denseData["pairs"] = loadPairList;
+			denseData["currentPair"] = -1;
+			console.log(denseData);
+			// SAVE PROJECT FILE
+			var fxnSavedProject = function(){
+				console.log("fxnSavedProject");
+			}
+			var fxnSavedDense = function(){
+				console.log("fxnSavedDense");
+				project.saveProjectFile(fxnSavedProject, project);
+			}
+	throw "WHAT?";
+			// SAVE
+			project.setSparseCount(pointCount);
+			project.setDenseFilename(App3DR.ProjectManager.BUNDLE_DENSE_FILE_NAME);
+			project.saveDenseFromData(denseData, fxnSavedDense, this);
+			return;
+		} // else
+
 
 		// do refinement
 		console.log("refine");
@@ -12199,6 +12242,9 @@ App3DR.ProjectManager.loadViewsImages = function(views, callback, context, objec
 	for(i=0; i<views.length; ++i){
 		view = views[i];
 		view.loadBundleAdjustImage(fxnFeatureImageLoaded, this);
+	}
+	if(views.length==0){
+		checkLoadedAllImages();
 	}
 }
 

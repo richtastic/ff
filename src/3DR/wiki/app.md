@@ -331,6 +331,8 @@ TODO: pairwise possibility limiting
 	- dense points
 	- redo affine features
 x	- multi-view combining into single 3D scene - minimizing errors
+		- sparse tracks
+		- dense points
 - surface triangulation(tessellation)
 x	- advancing-front, curvature-based tessellation
 	=> scene triangle model
@@ -368,102 +370,59 @@ https://cloud.google.com/appengine/docs/nodejs/
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-- bag of features
-	- want to quickly discard & find pair matches
-		- graduated steps
-		- pref non-oriented?
-	- file (database) with list of pertinent summary of each image
-
-		images:
-			-
-				id: ABCD
-					- features:
-						-
-							f: [....] # flat histogram 10-20 entries [non-oriented] - quick discounting
-							i: [....] # flat circular icon/histogram 16-25 entries [oriented]
-							g: [....] # gradient circular histogram [orientated]
-
-	- for each new added view:
-		- load database
-		- compute salient feature descriptors [top 100~1000]
-		- add entries to DB / save
-		- for each other view:
-			- calculate best matching feature A<->B
-		- a valid match:
-			- A) fwd-bak top pair matches
-			- B) similarity score above some minimal #
-				- C) dynamically estimate what score cutoff point would give the maximum match % to be 50% for any pair
-			- D)
-		- assign view pair a % of overlap
-	-
-
-	a can have a 50% match with b (many to one)
-	b can have a 10% with a
-
-	low/0 matches % should be dropped
-
- Naive Bayes
 
 
-https://www.mpi-inf.mpg.de/fileadmin/inf/d2/HLCV/cv-ss17-0510-object-bow-part1.pdf
-
-
-
-
-
-- is there a way to do SAD/SSD/NCC keeping COLORS R/G/B together ?
-	diff = V3D.sub(A,B)
-	diff = V3D.sub(A,B).length() ***
-	diff = V3D.angle(A,B)
-
-
+- sparse finish with/ dense estimates of pairs
+- dense initing of matches aligning with R
+- dense iteration with (initial) R unchanging to start
+- saving dense pairs
+- group dense pairs into single file
+- dense iterate: probe3d projection & probe2d to increase overlap | drop poor R/F/N/S
+- dense BA
+- dense save to points file
 
 - NCC VECTOR R/G/B
 
 
 position dependent::::::::::
 	- avg color
-		- avg y (poor)
-		- avg r+g+b (poor)
-		- avg 3D-sphere r+g+b (good)
+x		- avg y (poor)
+x		- avg r+g+b (poor)
+x		- avg 3D-sphere r+g+b (good)
 	- color histogram
-		- y bins
-		- r+g+b bins [3D] (good)
-		- color gradient histogram
-			- (color_i - color_avg) = delta.r,g,b [0->1]
+x		- y bins (poor)
+x		- r+g+b bins [3D] (good)
+	- color gradient histogram
+x		- (color_i - color_avg) = angle [0->pi] -- most angles are ~0 (poor)
+x		- (color_i - color_avg) = delta.r,g,b [0->1] (poor)
 
 position+rotational dependent::::::::::
 	- [x/y-positional]
-		- flat image
+x		- flat image color: normalized V3D [0-1 length] [ok]
+	- spatial gradient
+x		- colDX, colDY [2 3D vectors] [ok]
+x		- Rx,Ry Gx,Gy, Bx,By [6D vector] [bad]
 	- spatial gradient histogram [x/y-positional]
-		- y angle []
-		- r+g+b angle (half separated) [3D]
-		- r+g+b|x+y directions [6D]
+x		- y angle []
+x		- r+g+b angle bins & mag = ||gr|,|gb|,|gg|| [3D] []
+x		- r+g+b|x+y directions [6D] [expect bad]
 
 position+rotational+spatial dependent::::::::::
-	- location binning of sub-bins:
-		- colors
-		- spatial gradients
-		- color gradients
+	- location binning of sub-bins (SIFT-ish) -- RADIAL BASED & GRID BASED -- && falloff
+x		- colors
+x		- spatial gradients
+		- color gradients [expect bad]
 
 
 using color-space directions based off (0.5,0.5,0.5) as reference point -- discretize angles [easy 8, more complicated others?]
 
 
 
+-- black & yellow are really close for some reason ....
 
 
 
-- HISTOGRAM LIMITING OF IMAGE CANDIDATES:
-	test:
-		- SAD
-		- NCC
-		- bucket sizes
 - does using 'inbetweens' help in histogram comparison ?
-
--TESTING:
-	extract 1 needle + n haystack locations & show histograms & scores
-
 
 
 B) review steps of probe3d projection / affine / haystack / scoring
@@ -543,6 +502,45 @@ RETHINKING DENSE MATCHING: REDO PAIRS BUT DENSE
 
 
 
+BAG OF FEATURES
+			- bag of features
+				- want to quickly discard & find pair matches
+					- graduated steps
+					- pref non-oriented?
+				- file (database) with list of pertinent summary of each image
+
+					images:
+						-
+							id: ABCD
+								- features:
+									-
+										f: [....] # flat histogram 10-20 entries [non-oriented] - quick discounting
+										i: [....] # flat circular icon/histogram 16-25 entries [oriented]
+										g: [....] # gradient circular histogram [orientated]
+
+				- for each new added view:
+					- load database
+					- compute salient feature descriptors [top 100~1000]
+					- add entries to DB / save
+					- for each other view:
+						- calculate best matching feature A<->B
+					- a valid match:
+						- A) fwd-bak top pair matches
+						- B) similarity score above some minimal #
+							- C) dynamically estimate what score cutoff point would give the maximum match % to be 50% for any pair
+						- D)
+					- assign view pair a % of overlap
+				-
+
+				a can have a 50% match with b (many to one)
+				b can have a 10% with a
+
+				low/0 matches % should be dropped
+
+			 Naive Bayes
+
+
+			https://www.mpi-inf.mpg.de/fileadmin/inf/d2/HLCV/cv-ss17-0510-object-bow-part1.pdf
 
 
 

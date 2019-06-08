@@ -779,16 +779,17 @@ Code.keys = function keys(object){
 }
 
 Code.keysUnion = function(a,b){
-	var hash = {};
-	var keys = Code.keys(a);
-	for(var i=keys.length;--i;){
+	var hash = {}, keys;
+	keys = Code.keys(a);
+	for(var i=keys.length;i--;){
 		hash[keys[i]] = 0;
 	}
-	var keys = Code.keys(b);
-	for(var i=keys.length;--i;){
+	keys = Code.keys(b);
+	for(var i=keys.length;i--;){
 		hash[keys[i]] = 0;
 	}
-	return Code.keys(hash);
+	keys = Code.keys(hash);
+	return keys;
 }
 
 Code.hasKey = function(object, key){
@@ -4354,6 +4355,43 @@ Code.mirrorArray = function(array){
 	}
 	return next;
 }
+Code.stdDevV3D = function(list,mean){
+	if(!mean){
+		mean = V3D.average(list);
+	}
+	var sig = new V3D();
+	var len = list.length;
+	if(len>0){
+		for(i=len;i--;){
+			v = list[i];
+			sig.x += Math.pow(v.x-mean.x,2);
+			sig.y += Math.pow(v.y-mean.y,2);
+			sig.z += Math.pow(v.z-mean.z,2);
+		}
+		sig.x = Math.sqrt(sig.x/len);
+		sig.y = Math.sqrt(sig.y/len);
+		sig.z = Math.sqrt(sig.z/len);
+		// sig.x = Math.sqrt(sig.x);
+		// sig.y = Math.sqrt(sig.y);
+		// sig.z = Math.sqrt(sig.z);
+		// sig.x = Math.sqrt(sig.x)/len;
+		// sig.y = Math.sqrt(sig.y)/len;
+		// sig.z = Math.sqrt(sig.z)/len;
+	}
+	return sig;
+}
+Code.stdDevWeights = function(list,mean){
+	var i, sig=0, item, len=list.length;
+	if(len==0){ return 0; }
+	var count = 0;
+	for(i=len;i--;){
+		var weight = list[i];
+		var dev = Math.pow(weight-mean,2);
+		count += weight;
+		sig += dev*weight;
+	}
+	return Math.sqrt(sig/count);
+}
 Code.stdDev = function(list,mean,key, count){
 	var i, sig=0, item, len=list.length;
 	if(len==0){ return 0; }
@@ -4367,7 +4405,7 @@ Code.stdDev = function(list,mean,key, count){
 		}
 		sig += Math.pow(item-mean,2);
 	}
-	return Math.sqrt(sig / len); // len-1 is typical number
+	return Math.sqrt(sig/len); // len-1 is typical number
 }
 Code.mean = function(list,key, count){
 	var i, mu=0, item, len=list.length;
@@ -11074,11 +11112,12 @@ Code.histogram = function(data, masking, buckets, min,max, useValue){
 		if(mask!=0.0){
 			value = (data[i]-infoMin)/infoRange;
 			bin = Math.min(Math.floor( value*buckets ),bm1);
-			// if(useValue){
-			// 	histogram[bin] += 1;
-			// }else{
+			if(useValue){
+				// todo: array value?
+				histogram[bin] += useValue[i];
+			}else{
 				histogram[bin] += 1;
-			// }
+			}
 		}
 	}
 	var bucketSize = 0;
@@ -11088,7 +11127,7 @@ Code.histogram = function(data, masking, buckets, min,max, useValue){
 	return {"histogram":histogram, "size":bucketSize, "min":infoMin, "max":infoMax};
 }
 
-Code.histogram3D = function(dataR,dataG,dataB, buckets, masking, min,max, isSparse){
+Code.histogram3D = function(dataR,dataG,dataB, buckets, masking, min,max, isSparse, magnitude){
 	var b2 = buckets*buckets;
 	var bucketsTotal = b2*buckets; // 3>9 | 4>64 | 5>125 | 6>216 | 7>343 | 8>42 | 10>30
 	var infoMax = 0;
@@ -11111,6 +11150,7 @@ Code.histogram3D = function(dataR,dataG,dataB, buckets, masking, min,max, isSpar
 		histogram = Code.newArrayZeros(bucketsTotal);
 	}
 	var mask = 1.0;
+	var inc = 1.0;
 	for(i=0; i<len; ++i){
 		if(masking){ mask = masking[i]; }
 		if(mask!=0.0){
@@ -11120,13 +11160,16 @@ Code.histogram3D = function(dataR,dataG,dataB, buckets, masking, min,max, isSpar
 			var binR = Math.min(Math.floor( valueR*buckets ),bm1);
 			var binG = Math.min(Math.floor( valueG*buckets ),bm1);
 			var binB = Math.min(Math.floor( valueB*buckets ),bm1);
+			if(magnitude){
+				inc = magnitude[i];
+			}
 			if(isSparse){
 				var index = binR+"-"+binG+"-"+binB;
-				var value = Code.valueOrDefault(histogram[index],0) + 1;
+				var value = Code.valueOrDefault(histogram[index],0) + inc;
 				histogram[index] = value;
 			}else{
 				var bin = binR*b2 + binG*buckets + binB;
-				histogram[bin] += 1;
+				histogram[bin] += inc;
 			}
 		}
 	}

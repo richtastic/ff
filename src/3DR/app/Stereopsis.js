@@ -302,9 +302,61 @@ Stereopsis.World.prototype.viewFromData = function(data){
 	}
 	return null;
 }
+Stereopsis.World.prototype.transformsFromView = function(view){
+	var transforms = this.toTransformArray();
+	var included = [];
+	for(var i=0; i<transforms.length; ++i){
+		var transform = transforms[i];
+		if(transform.hasView(view)){
+			included.push(transform);
+		}
+	}
+	return included;
+}
 
-
-
+Stereopsis.World.prototype.transformsWithOverlap = function(sigma){ // pick the pairs that are primarily involved in reconstruction
+	sigma = sigma!==undefined ? sigma : 2.0;
+	var minimumMatchCount = 16;
+	var world = this;
+	var views = world.toViewArray();
+	var filterMinimumFxn = function(a){
+		// return a>100;
+		return a>=minimumMatchCount;
+	}
+	var markedTransformIDs = {};
+	for(var i=0; i<views.length; ++i){
+		var view = views[i];
+		var viewTransforms = world.transformsFromView(view);
+		var counts = [];
+		for(var j=0; j<viewTransforms.length; ++j){
+			var transform = viewTransforms[j];
+			var matchCount = transform.matchCount();
+			counts.push(matchCount);
+		}
+		counts.filter(filterMinimumFxn);
+		var max = Code.max(counts);
+		var sig = Code.stdDevWeights(counts,max);
+		var limit = max - sig*sigma;
+		for(var j=0; j<viewTransforms.length; ++j){
+			var transform = viewTransforms[j];
+			var matchCount = transform.matchCount();
+			if(matchCount>limit){
+				markedTransformIDs[transform.id()+""] = 1;
+			}
+		}
+	}
+	// console.log( Code.keys(markedTransformIDs).length ,"of", world.toTransformArray().length );
+	var markedTransforms = [];
+	var transforms = world.toTransformArray();
+	// console.log(transforms)
+	for(var i=0; i<transforms.length; ++i){
+		var transform = transforms[i];
+		if(markedTransformIDs[transform.id()+""]===1){
+			markedTransforms.push(transform);
+		}
+	}
+	return markedTransforms;
+}
 
 
 
@@ -1113,6 +1165,7 @@ Stereopsis.Camera.prototype.distortion = function(distortion){
 }
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 Stereopsis.Transform3D = function(viewA,viewB,world){
+	this._id = Stereopsis.Transform3D.ID++;
 	this._viewA = null;
 	this._viewB = null;
 	this._Ffwd = null;
@@ -1142,6 +1195,13 @@ Stereopsis.Transform3D = function(viewA,viewB,world){
 	this.viewB(viewB);
 	this.world(world);
 }
+Stereopsis.Transform3D.ID = 0;
+Stereopsis.Transform3D.prototype.id = function(id){
+	if(id!==undefined){
+		this._id = id;
+	}
+	return this._id;
+}
 Stereopsis.Transform3D.prototype.errorStart = function(){
 	this._errorRStart = this._errorRMean + this._errorRSigma;
 	this._errorFStart = this._errorFMean + this._errorFSigma;
@@ -1157,6 +1217,9 @@ Stereopsis.Transform3D.prototype.errorRDelta = function(){
 }
 Stereopsis.Transform3D.prototype.errorFDelta = function(){
 	return this._errorFDelta;
+}
+Stereopsis.Transform3D.prototype.hasView = function(view){
+	return this._viewA == view || this._viewB == view;
 }
 Stereopsis.Transform3D.prototype.viewA = function(viewA){
 	if(viewA!==undefined){

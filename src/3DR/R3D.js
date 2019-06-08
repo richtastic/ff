@@ -12078,6 +12078,20 @@ backwards:
 320 LINE
 64000 TOTAL POINTS
 
+
+----- udpated for working:
+R-line-error ~ 0.01
+-> compare
+color-angle difference [outliers] ~ 0.75
+color histogram [outliers] ~ 0.5
+-> oriented compare
+color-sad
+	SAD-BLUR? [outliers] ~ 0.75
+	NCC-BLUR? [outliers] ~ 0.75
+SIFT-FLAT [outliers] ~ 0.75
+SIFT-GRAD [outliers] ~ 0.75
+SIFT-FULL [multiply SIFT-FLAT & SIFT-GRAD]
+
 */
 	//
 	//
