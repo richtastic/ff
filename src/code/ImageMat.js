@@ -3420,18 +3420,19 @@ ImageMat.padFloat = function(src,wid,hei, left,right,top,bot){
 }
 
 ImageMat.unpadFloat = function(src,wid,hei, left,right,top,bot){
-	var newWid = wid-left-right, newHei = hei-top-bot;
-	var newLen = newWid*newHei;
-	var result = new Array(newLen);
-	var i, j, nJ, nJJ;
-	for(j=0;j<newHei;++j){
-		nJ = (j+top)*wid;
-		nJJ = j*newWid;
-		for(i=0;i<newWid;++i){
-			result[nJJ+i] = src[nJ + i+left];
-		}
-	}
-	return result;
+	return Code.unpadArray2DLinear(src,wid,hei, left,right,top,bot);
+	// var newWid = wid-left-right, newHei = hei-top-bot;
+	// var newLen = newWid*newHei;
+	// var result = new Array(newLen);
+	// var i, j, nJ, nJJ;
+	// for(j=0;j<newHei;++j){
+	// 	nJ = (j+top)*wid;
+	// 	nJJ = j*newWid;
+	// 	for(i=0;i<newWid;++i){
+	// 		result[nJJ+i] = src[nJ + i+left];
+	// 	}
+	// }
+	// return result;
 }
 ImageMat.applyGaussianFloat = function(src,wid,hei, sigma){
 	var gaussSizeBase = 5;

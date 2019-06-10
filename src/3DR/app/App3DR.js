@@ -7236,7 +7236,7 @@ if(!this.sparseDone()){
 	this.iterateSparseTracks();
 	return;
 }
-throw "task dense";
+// throw "task dense";
 if(!this.denseDone()){ // loads all dense matches using updated camera positions & saves into PAIR/dense.yaml
 	console.log("dense not done");
 	this.iterateDenseTracks();
@@ -9568,9 +9568,10 @@ App3DR.ProjectManager.prototype._iterateDenseTracksStart = function(){
 	var densePairs = denseData["pairs"];
 	var densePoints = denseData["points"];
 	var currentPair = denseData["currentPair"];
+
 	currentPair++;
 	if(currentPair>=densePairs.length){ // load all dense pairs at same time
-// throw "dense about done";
+throw "DENSE AT END";
 		var loadPairFiles = [];
 		for(var i=0; i<densePairs.length; ++i){
 			var pair = densePairs[i];
@@ -9606,6 +9607,9 @@ App3DR.ProjectManager.prototype._iterateDenseTracksStart = function(){
 
 	console.log(densePair);
 	var densePairID = densePair["id"];
+	var densePairErrorF = densePair["errorF"];
+	var densePairErrorR = densePair["errorR"];
+	// console.log("densePairError: "+densePairErrorR);
 	var pair = this.pairFromID(densePairID);
 	var viewA = pair.viewA();
 	var viewB = pair.viewB();
@@ -9613,21 +9617,24 @@ App3DR.ProjectManager.prototype._iterateDenseTracksStart = function(){
 	var viewBID = viewB.id();
 	var viewAIndex = denseViewLookupIndex[viewA.id()];
 	var viewBIndex = denseViewLookupIndex[viewB.id()];
-
 	var loadViews = project.auxilaryViewsToLoadForSet([viewAIndex,viewBIndex],denseData, 6);
 	console.log(loadViews);
 	for(var i=0; i<loadViews.length; ++i){
 		loadViews[i] = project.viewFromID(denseViews[loadViews[i]]["id"]);
 	}
-
 	// console.log(viewA,viewB);
 	var fxnViewsLoaded = function(){
 		console.log("fxnViewsLoaded");
-		App3DR.ProjectManager.loadPairsRelativeData([pair], fxnPairLoaded, project, null);
-	}
-	var fxnPairLoaded = function(){
-		console.log("fxnPairLoaded");
-		var relativeData = pair.relativeData();
+		console.log(project.views());
+		// fxnPairLoaded();
+		// don't actually care about old existing points ... want to start from scratch
+		// App3DR.ProjectManager.loadPairsRelativeData([pair], fxnPairLoaded, project, null);
+	// }
+	// var fxnPairLoaded = function(){
+		// console.log("fxnPairLoaded");
+		// var relativeData = pair.relativeData();
+		// console.log(viewA.bundleAdjustImage());
+		// console.log(viewB.bundleAdjustImage());
 		// utils
 		var stage = GLOBALSTAGE;
 		// create world
@@ -9640,26 +9647,40 @@ App3DR.ProjectManager.prototype._iterateDenseTracksStart = function(){
 		var transforms = info["transforms"];
 		// ?
 		App3DR.ProjectManager.addCamerasToWorld(world, cameras);
-		var worldViews = App3DR.ProjectManager.addViewsToWorld(world, views, images, transforms);
+		// only want this pair in:
+		var pairViews = [];
+		var pairImages = [];
+		var pairTransforms = [];
+		for(var i=0; i<views.length; ++i){
+			var view = views[i];
+			if(view==viewA || view==viewB){
+				pairViews.push(view);
+				pairImages.push(images[i]);
+				pairTransforms.push(transforms[i]);
+			}
+		}
+		//
+		var worldViews = App3DR.ProjectManager.addViewsToWorld(world, pairViews, pairImages, pairTransforms);
 		var denseViewLookupViewFromID = {};
 		var denseViewLookupViewFromIndex = {};
 		var denseViewLookupIndexFromID = {};
-		console.log(worldViews);
+		//
 		for(var i=0; i<worldViews.length; ++i){
 			var v = worldViews[i];
 			denseViewLookupViewFromID[v.data()] = v;
 			denseViewLookupViewFromIndex[i] = v;
 			denseViewLookupIndexFromID[v.data()] = i;
 		}
-		var worldViewA = world.viewFromData(viewAID);
-		var worldViewB = world.viewFromData(viewBID);
+		//
+/*
 		// init
 		world.copyRelativeTransformsFromAbsolute();
 		world.printPoint3DTrackCount();
-
 		// sort dense points on corner score
 		//this._embedTrackPoints(world, relativeData, denseViewLookupViewFromID);
-		this._embedMatchPoints(world, relativeData, denseViewLookupViewFromID);
+		// this._embedMatchPoints(world, relativeData, denseViewLookupViewFromID);
+
+
 
 		world.relativeFFromSamples();
 		world.estimate3DErrors(true);
@@ -9672,6 +9693,7 @@ App3DR.ProjectManager.prototype._iterateDenseTracksStart = function(){
 		// world.filterGlobalPoints(1.0);
 
 		world.estimate3DErrors(true);
+
 
 		// limit dense points spatially to most prevalent local corners
 		// add dense points limited by ~3px distance to nearest existing pixel
@@ -9773,32 +9795,21 @@ App3DR.ProjectManager.prototype._iterateDenseTracksStart = function(){
 		// console.log("patch updates");
 		// world.patchUpdateOnly();
 		// TODO: AVERAGING ... ?
+		*/
 
-		// main loop:
-		var maxIterations = 1;
-		for(var iteration=0; iteration<maxIterations; ++iteration){
-			// add new points
-			// world.probe3D();
-			// world.refinePoint3DAbsoluteLocation(); // TODO: only update newly added points
-			// TODO: LIMIT TO TOP CORNER POINTS ONLY -- with ~3x3 added locations
+		var worldViewA = world.viewFromData(viewAID);
+		var worldViewB = world.viewFromData(viewBID);
+		var transformAB = world.transformFromViews(worldViewA,worldViewB);
+		console.log(transformAB);
+		transformAB.rMean(0);
+		transformAB.rSigma(densePairErrorR);
+		console.log(transformAB.rMean(),transformAB.rSigma());
+		world.solveDensePair();
 
-			// filter patch inconsistencies
-			console.log("filterPatch3D");
-			world.filterPatch3D();
 
-			// pairs
-			// console.log("filter PAIRS");
-			// world.estimate3DErrors(true);
-			// world.filterGlobalMatches(null,null, 2.0);
+// ....
 
-			console.log("filter 3D");
-			world.filterGlobalPoints(3.0); // 2 - 3
-
-			// just for printing
-			world.estimate3DErrors(true);
-		}
-
-// throw "dense iteration end";
+throw "dense iteration end";
 
 		// var denseViewLookupViewIndexFromID = {};
 		// for(var i=0; i<worldViews.length; ++i){
@@ -9807,6 +9818,7 @@ App3DR.ProjectManager.prototype._iterateDenseTracksStart = function(){
 		// 	// denseViewLookupViewIndexFromID[i] = i;
 		// }
 		// console.log(denseViewLookupViewIndexFromID);
+
 
 		// var str = world.toYAMLString();
 		// console.log(str);
@@ -9959,7 +9971,6 @@ if(!isDone){
 			console.log("SIZES: "+view.cellSize()+" | "+view.compareSize());
 		}
 
-
 		var sparseViewLookupIndex = [];
 		var sparseViewLookupIndexIndex = [];
 		var sparseViewLookupIndexToID = {};
@@ -9983,50 +9994,44 @@ if(!isDone){
 
 
 		if(isDone){ // no more
+			// need error numbers:
+			world.copyRelativeTransformsFromAbsolute();
+			world.relativeFFromSamples();
+			world.estimate3DErrors(true);
 			console.log("done sparse");
-			console.log(sparseData)
-
-
+			console.log(sparseData);
 			var pointCount = sparsePoints.length;
-	// save sparese data over to dense data & start loading dense points
-		console.log("FINAL POINTS: "+pointCount);
-
-		console.log("need to find all pairs that should be attempted for dense pairing");
-
-		console.log(world);
-
-		var transforms = world.transformsWithOverlap();
-
-		console.log(transforms);
-
-		var pairs = [];
-
-// TODO: GET ALL PAIRS THAT ARE PRESENT IN TRANSFORMS ^
-		for(){
-
-		}
-
-
-
-			// get a list of all pairs dense needs to load
-			// var pairs = project.pairs();
-			// console.log(pairs);
-			// var loadPairList = [];
-			// for(var i=0; i<pairs.length; ++i){
-			// 	var pair = pairs[i];
-			// 	var p = {};
-			// 	p["id"] = pair.id();
-			// 	loadPairList.push(p);
-			// }
-	throw "about to save done";
+			// save sparse data over to dense data & start loading dense points
+			console.log("FINAL POINTS: "+pointCount);
+			console.log(world);
+			// get all pairs that should be attempted for dense pairing
+			var transforms = world.transformsWithOverlap();
+			var pairs = [];
+			for(var i=0; i<transforms.length; ++i){
+				var transform = transforms[i];
+				var viewA = transform.viewA();
+				var viewB = transform.viewB();
+				var pair = {};
+					var indexA = viewA.data();
+					var indexB = viewB.data();
+					var idA = sparseViewLookupIndexToID[indexA+""];
+					var idB = sparseViewLookupIndexToID[indexB+""];
+					var p = project.pairFromViewIDs(idA,idB);
+					pair["id"] = p.id();
+					pair["A"] = idA;
+					pair["B"] = idB;
+					pair["errorF"] = transform.fSigma();
+					pair["errorR"] = transform.rSigma();
+				pairs.push(pair);
+			}
 			// save
 			var denseData = {};
 			denseData["cameras"] = sparseData["cameras"];
 			denseData["views"] = sparseViews;
-			denseData["points"] = sparsePoints;
-			denseData["pairs"] = loadPairList;
+			denseData["pairs"] = pairs;
 			denseData["currentPair"] = -1;
 			console.log(denseData);
+// throw "about to save done";
 			// SAVE PROJECT FILE
 			var fxnSavedProject = function(){
 				console.log("fxnSavedProject");
@@ -10035,7 +10040,6 @@ if(!isDone){
 				console.log("fxnSavedDense");
 				project.saveProjectFile(fxnSavedProject, project);
 			}
-	throw "WHAT?";
 			// SAVE
 			project.setSparseCount(pointCount);
 			project.setDenseFilename(App3DR.ProjectManager.BUNDLE_DENSE_FILE_NAME);

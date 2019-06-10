@@ -4046,6 +4046,7 @@ var toScale = 0.25;
 	}
 
 	var grads = block.gradientVector();
+	
 	var red = grads["r"];
 	var grn = grads["g"];
 	var blu = grads["b"];
@@ -4082,13 +4083,6 @@ var toScale = 0.25;
 	// NORMALIZE GRADIENTS
 	// A) find min / max, range - normalize between 0-1 [can drop item at 0]
 	// B) normalize by vector length
-
-
-
-
-
-
-
 	RiftTest.histogramListToUnitLength(binHistograms);
 	object["siftGrad"] = binHistograms;
 
@@ -4167,44 +4161,44 @@ var toScale = 0.25;
 }
 
 
-RiftTest.histogramListToUnitLength = function(binHistograms){
-	// var mMin = null;
-	// var mMax = null;
-	var length = 0;
-	for(var i=0; i<binHistograms.length; ++i){
-		var h = binHistograms[i];
-		var keys = Code.keys(h);
-		for(var j=0; j<keys.length; ++j){
-			var key = keys[j];
-			var val = h[key];
-			length += val*val;
-			// if(mMin==null){
-			// 	mMin = val;
-			// 	mMax = val;
-			// }
-			// mMin = Math.min(mMin,val);
-			// mMax = Math.max(mMax,val);
-		}
-	}
-	length = Math.sqrt(length);
-	if(length>0){
-		length = 1.0/length;
-	}
-	// var mRan = mMax-mMin;
-	// if(mRan>0){
-	// 	mRan = 1.0/mRan;
-	// }
-	for(var i=0; i<binHistograms.length; ++i){
-		var h = binHistograms[i];
-		var keys = Code.keys(h);
-		for(var j=0; j<keys.length; ++j){
-			var key = keys[j];
-			var val = h[key];
-			val = val*length;
-			h[key] = val;
-		}
-	}
-}
+// RiftTest.histogramListToUnitLength = function(binHistograms){
+// 	// var mMin = null;
+// 	// var mMax = null;
+// 	var length = 0;
+// 	for(var i=0; i<binHistograms.length; ++i){
+// 		var h = binHistograms[i];
+// 		var keys = Code.keys(h);
+// 		for(var j=0; j<keys.length; ++j){
+// 			var key = keys[j];
+// 			var val = h[key];
+// 			length += val*val;
+// 			// if(mMin==null){
+// 			// 	mMin = val;
+// 			// 	mMax = val;
+// 			// }
+// 			// mMin = Math.min(mMin,val);
+// 			// mMax = Math.max(mMax,val);
+// 		}
+// 	}
+// 	length = Math.sqrt(length);
+// 	if(length>0){
+// 		length = 1.0/length;
+// 	}
+// 	// var mRan = mMax-mMin;
+// 	// if(mRan>0){
+// 	// 	mRan = 1.0/mRan;
+// 	// }
+// 	for(var i=0; i<binHistograms.length; ++i){
+// 		var h = binHistograms[i];
+// 		var keys = Code.keys(h);
+// 		for(var j=0; j<keys.length; ++j){
+// 			var key = keys[j];
+// 			var val = h[key];
+// 			val = val*length;
+// 			h[key] = val;
+// 		}
+// 	}
+// }
 RiftTest.compare1DArray3V = function(a,b){
 	a = new V3D().fromArray(a);
 	b = new V3D().fromArray(b);
@@ -4592,7 +4586,7 @@ Code.printHistogram(histogram, 20);
 
 /*
 	// color gradient histogram --- poor
-console.log(objectA["gradientColor"])
+	console.log(objectA["gradientColor"])
 	objectsB = best;
 	best = [];
 	for(var i=0; i<objectsB.length; ++i){
@@ -4607,7 +4601,7 @@ Code.printHistogram(histogram, 20);
 
 /*
 	// color flat oriented -- ok
-console.log(objectA["orientatedFlat"])
+	console.log(objectA["orientatedFlat"])
 	objectsB = best;
 	best = [];
 	for(var i=0; i<objectsB.length; ++i){

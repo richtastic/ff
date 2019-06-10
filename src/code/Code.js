@@ -2032,6 +2032,22 @@ Code.max2DArray = function(array2D){
 Code.min2DArray = function(array2D){
 	return Code.info2DArray["min"];
 }
+
+Code.unpadArray2DLinear = function(src,wid,hei, left,right,top,bot){
+	var newWid = wid-left-right, newHei = hei-top-bot;
+	var newLen = newWid*newHei;
+	var result = new Array(newLen);
+	var i, j, nJ, nJJ;
+	for(j=0;j<newHei;++j){
+		nJ = (j+top)*wid;
+		nJJ = j*newWid;
+		for(i=0;i<newWid;++i){
+			result[nJJ+i] = src[nJ + i+left];
+		}
+	}
+	return result;
+}
+
 Code.minIndex = function(array){
 	if(array.length==0){
 		return null;
