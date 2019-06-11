@@ -140,7 +140,7 @@ The intrinsic camera (K) and distortion parameters are first approximated using 
 *TODO: cost functions*
 
 
-<a name="Feature Matching"></a>
+<a name="MATCHING"></a>
 ### Feature Matching
 
 
@@ -179,6 +179,10 @@ LDA-HASH
 BINBOOST - Binary
 
 ...
+
+
+low res : low frequency -> high res iteritive F refinement
+
 
 
 failure points: repeated objects,

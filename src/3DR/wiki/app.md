@@ -371,55 +371,21 @@ https://cloud.google.com/appengine/docs/nodejs/
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+- matching corner points => seed points
+- test initial seed points in model viewer
+- probe2d increase density of points [only drop very high error: 3-4 sigma]
+- test points in model viewer
+- probe2D + refinement /error dropping
+- test final points in model viewer
 
-- sparse finish with/ dense estimates of pairs
-- dense initing of matches aligning with R
+
 - dense iteration with (initial) R unchanging to start
 - saving dense pairs
+
 - group dense pairs into single file
 - dense iterate: probe3d projection & probe2d to increase overlap | drop poor R/F/N/S
 - dense BA
 - dense save to points file
-
-- NCC VECTOR R/G/B
-
-
-position dependent::::::::::
-	- avg color
-x		- avg y (poor)
-x		- avg r+g+b (poor)
-x		- avg 3D-sphere r+g+b (good)
-	- color histogram
-x		- y bins (poor)
-x		- r+g+b bins [3D] (good)
-	- color gradient histogram
-x		- (color_i - color_avg) = angle [0->pi] -- most angles are ~0 (poor)
-x		- (color_i - color_avg) = delta.r,g,b [0->1] (poor)
-
-position+rotational dependent::::::::::
-	- [x/y-positional]
-x		- flat image color: normalized V3D [0-1 length] [ok]
-	- spatial gradient
-x		- colDX, colDY [2 3D vectors] [ok]
-x		- Rx,Ry Gx,Gy, Bx,By [6D vector] [bad]
-	- spatial gradient histogram [x/y-positional]
-x		- y angle []
-x		- r+g+b angle bins & mag = ||gr|,|gb|,|gg|| [3D] []
-x		- r+g+b|x+y directions [6D] [expect bad]
-
-position+rotational+spatial dependent::::::::::
-	- location binning of sub-bins (SIFT-ish) -- RADIAL BASED & GRID BASED -- && falloff
-x		- colors
-x		- spatial gradients
-		- color gradients [expect bad]
-
-
-using color-space directions based off (0.5,0.5,0.5) as reference point -- discretize angles [easy 8, more complicated others?]
-
-
-
--- black & yellow are really close for some reason ....
-
 
 
 - does using 'inbetweens' help in histogram comparison ?
@@ -432,31 +398,11 @@ B) review steps of probe3d projection / affine / haystack / scoring
 		max = 2*needle
 	- scoring
 		...
-C) GET TO DENSE MATCHING ...
-
-WHEN SPARSE IS DONE:
-	- have much better F & R than started
-	- have each view in absolute & relative transforms in same frame
-	- likely have more relative pairs to try
-
-
-RETHINKING DENSE MATCHING: REDO PAIRS BUT DENSE
-	at end of sparse:
-		- determine what each views' top pairs should be
-			- have some minimum number of matches (16+)
-			- are within some sigma of max [eg: 1000,500,200,100,50 => ignore 50]
-		- set dense.yaml as:
-			- cameras
-			- views w/ abs locations
-			- pairs to load (with relative error info)
-			- DON'T CARE ABOUT SPARSE POINTS
+GET TO DENSE MATCHING ...
+	- ...
 		- for each dense.yaml pair to attempt:
-			- load original pair (if exists)
-			- keep only the best original points that don't filter out of R (& F?)
-			- load each pair's features
 			- do initial feature matching
-				- align with R (& F?)
-			- combine original & new matches
+				- align with R
 			- iterative:
 				- 2x:
 					- refine 2 views
