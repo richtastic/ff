@@ -4412,7 +4412,7 @@ this.copyRelativeTransformsFromAbsolute();
 Stereopsis.World.prototype.solveDensePair = function(){ // pairwise
 	console.log("solveDensePair");
 	var world = this;
-	// 
+	
 	// initial setup
 	var viewSizePercent = 0.05; // 45 -> 23 -> 11 -> 5 (3?)
 	var minViewCellSize = 5;
