@@ -12151,6 +12151,8 @@ console.log(spaceA.closestObject(new V2D(400,260))); // ?
 
 	var objectsA = spaceA.toArray();
 	var objectsB = spaceB.toArray();
+var originalObjectsA = objectsA;
+var originalObjectsB = objectsB;
 	var widthA = imageA.width();
 	var heightA = imageA.height();
 	console.log(objectsA.length,objectsB.length);
@@ -12177,8 +12179,10 @@ var cameraSizesList = [ [cellA,cellB], [cellB,cellA] ];
 
 var errSearch = Math.min(errorPixels*5,25); // 1 -> 10 | 5 -> 50
 // errSearch = 50;
-errSearch = 25;
+// errSearch = 25;
+errSearch = 10;
 
+var doDebug = false;
 var debugOffY = 350;
 var fList = [Fab,Fba];
 for(var k=0; k<objList.length; ++k){
@@ -12201,7 +12205,16 @@ for(var k=0; k<objList.length; ++k){
 var featureSizeA = cellSizeA*featureScale;
 var featureSizeB = cellSizeB*featureScale;
 	for(var i=0; i<objectsA.length; ++i){
+		if(i%100==0){
+			console.log(i+" / "+objectsA.length);
+		}
 
+
+if(doDebug){
+// i = 666;
+i = 658;
+// i = 655;
+// i = 700;
 // i = 554;
 // i = 569;
 // i = 575;
@@ -12219,56 +12232,59 @@ var featureSizeB = cellSizeB*featureScale;
 // i = 205; //
 // i = 201; //
 // i = 203; //
-i = 250; //
+// i = 213; //
+// i = 212; //
 // i = ; //
-
+}
 		var objectA = objectsA[i];
 		var point2DA = objectA["point"];
-		var p = point2DA;
-
-		var lB = R3D.lineFromF(Fab,p);
+		var lB = R3D.lineFromF(Fab,point2DA);
 		var dir = lB["dir"];
 		var org = lB["org"];
 		var ints = Code.clipRayRect2D(org,dir,new V2D(0,0), new V2D(widthA,0), new V2D(widthA,heightA), new V2D(0,heightA));
 
-			console.log(ints);
-			var a = ints["a"].copy();
-			var b = ints["b"].copy();
 
-			p = p.copy();
-			p.scale(imageScale);
-			a.scale(imageScale);
-			b.scale(imageScale);
+if(doDebug){
+var p = point2DA;
+console.log(ints);
+var a = ints["a"].copy();
+var b = ints["b"].copy();
 
-			var d = new DO();
-				d.graphics().clear();
-				d.graphics().setLine(1.0, 0xFFFF0000);
-				d.graphics().beginPath();
-				d.graphics().moveTo(a.x,a.y);
-				d.graphics().lineTo(b.x,b.y);
-				d.graphics().endPath();
-				d.graphics().strokeLine();
-			GLOBALSTAGE.addChild(d);
-			d.matrix().translate(0 + 1*600, 0);
+p = p.copy();
+p.scale(imageScale);
+a.scale(imageScale);
+b.scale(imageScale);
 
-			var d = new DO();
-				d.graphics().clear();
-				d.graphics().setLine(1.0, 0xFFFF0000);
-				d.graphics().beginPath();
-				d.graphics().drawCircle(p.x,p.y, 4);
-				d.graphics().endPath();
-				d.graphics().strokeLine();
-			GLOBALSTAGE.addChild(d);
+var d = new DO();
+	d.graphics().clear();
+	d.graphics().setLine(1.0, 0xFFFF0000);
+	d.graphics().beginPath();
+	d.graphics().moveTo(a.x,a.y);
+	d.graphics().lineTo(b.x,b.y);
+	d.graphics().endPath();
+	d.graphics().strokeLine();
+GLOBALSTAGE.addChild(d);
+d.matrix().translate(0 + 1*600, 0);
 
+var d = new DO();
+	d.graphics().clear();
+	d.graphics().setLine(1.0, 0xFFFF0000);
+	d.graphics().beginPath();
+	d.graphics().drawCircle(p.x,p.y, 4);
+	d.graphics().endPath();
+	d.graphics().strokeLine();
+GLOBALSTAGE.addChild(d);
+}
 
 			// search for points along line
 			var objectsB = spaceB.objectsInsideRay(org,dir,errSearch,true);
 if(!objectsB || objectsB.length==0){
-	throw "no points";
+	console.log("no points");
+	continue;
 }
 			var sortedB = objectsB;
 
-
+if(doDebug){
 // show all intersecting points:
 for(var b=0; b<sortedB.length; ++b){
 	var objectB = sortedB[b];
@@ -12302,8 +12318,9 @@ d.matrix().scale(1.5);
 d.matrix().translate(10 + 100, debugOffY + 50);
 GLOBALSTAGE.addChild(d);
 
+}
 
-
+if(doDebug){
 for(var b=0; b<sortedB.length; ++b){
 	var objectB = sortedB[b];
 var img = objectB["icon"];
@@ -12313,11 +12330,12 @@ d.matrix().scale(3.0);
 d.matrix().translate(10 + 50*b, debugOffY + 100);
 GLOBALSTAGE.addChild(d);
 }
+}
 			// serach for points with close color average
 			sortedB = R3D._sortCompareProgressiveColor(objectA, sortedB);
 			// console.log(sortedB);
 
-
+if(doDebug){
 for(var b=0; b<sortedB.length; ++b){
 	var objectB = sortedB[b];
 var img = objectB["icon"];
@@ -12327,11 +12345,12 @@ d.matrix().scale(3.0);
 d.matrix().translate(10 + 50*b, debugOffY + 150);
 GLOBALSTAGE.addChild(d);
 }
+}
 			// search for colors with close color histograms
 			sortedB = R3D._sortCompareProgressiveColorHistogram(objectA, sortedB);
 			// console.log(sortedB);
 
-
+if(doDebug){
 for(var b=0; b<sortedB.length; ++b){
 var objectB = sortedB[b];
 var img = objectB["icon"];
@@ -12340,6 +12359,7 @@ var d = new DOImage(img);
 d.matrix().scale(3.0);
 d.matrix().translate(10 + 50*b, debugOffY + 200);
 GLOBALSTAGE.addChild(d);
+}
 }
 
 			// calculate P3D / projections
@@ -12371,7 +12391,7 @@ GLOBALSTAGE.addChild(d);
 			sortedB = R3D._sortCompareProgressiveColorFlatSSD(objectA, sortedB);
 			// console.log(sortedB);
 
-
+if(doDebug){
 for(var b=0; b<sortedB.length; ++b){
 var objectB = sortedB[b];
 var img = objectB["icon"];
@@ -12381,12 +12401,12 @@ d.matrix().scale(3.0);
 d.matrix().translate(10 + 50*b, debugOffY + 250);
 GLOBALSTAGE.addChild(d);
 }
-
+}
 			// search for colors with close flat color - ncc
 			sortedB = R3D._sortCompareProgressiveColorFlatNCC(objectA, sortedB);
 			// console.log(sortedB);
 
-
+if(doDebug){
 for(var b=0; b<sortedB.length; ++b){
 var objectB = sortedB[b];
 var img = objectB["icon"];
@@ -12396,22 +12416,22 @@ d.matrix().scale(3.0);
 d.matrix().translate(10 + 50*b, debugOffY + 300);
 GLOBALSTAGE.addChild(d);
 }
-
-
+}
+			// this is consistently not very good
 			// search for orientated gradient histogram
-			sortedB = R3D._sortCompareProgressiveColorGradHistogram(objectA, sortedB);
+			// sortedB = R3D._sortCompareProgressiveColorGradHistogram(objectA, sortedB);
 			// console.log(sortedB);
 
 
-for(var b=0; b<sortedB.length; ++b){
-var objectB = sortedB[b];
-var img = objectB["icon"];
-img = GLOBALSTAGE.getFloatRGBAsImage(img.red(),img.grn(),img.blu(), img.width(),img.height());
-var d = new DOImage(img);
-d.matrix().scale(3.0);
-d.matrix().translate(10 + 50*b, debugOffY + 350);
-GLOBALSTAGE.addChild(d);
-}
+// for(var b=0; b<sortedB.length; ++b){
+// var objectB = sortedB[b];
+// var img = objectB["icon"];
+// img = GLOBALSTAGE.getFloatRGBAsImage(img.red(),img.grn(),img.blu(), img.width(),img.height());
+// var d = new DOImage(img);
+// d.matrix().scale(3.0);
+// d.matrix().translate(10 + 50*b, debugOffY + 350);
+// GLOBALSTAGE.addChild(d);
+// }
 
 			// prep sift:
 			for(var b=0; b<sortedB.length; ++b){
@@ -12427,19 +12447,19 @@ GLOBALSTAGE.addChild(d);
 			sortedB = R3D._sortCompareProgressiveSIFTFlat(objectA, sortedB);
 			// console.log(sortedB);
 
-
+if(doDebug){
 for(var b=0; b<sortedB.length; ++b){
 var objectB = sortedB[b];
-// var img = objectB["icon"];
-var img = objectB["sift"];
+var img = objectB["icon"];
+// var img = objectB["sift"];
 img = GLOBALSTAGE.getFloatRGBAsImage(img.red(),img.grn(),img.blu(), img.width(),img.height());
 var d = new DOImage(img);
-// d.matrix().scale(3.0);
-d.matrix().scale(1.5);
+d.matrix().scale(3.0);
+// d.matrix().scale(1.5);
 d.matrix().translate(10 + 50*b, debugOffY + 400);
 GLOBALSTAGE.addChild(d);
 }
-
+}
 
 			// prep sift grad:
 			for(var b=0; b<sortedB.length; ++b){
@@ -12451,25 +12471,25 @@ GLOBALSTAGE.addChild(d);
 			sortedB = R3D._sortCompareProgressiveSIFTGrad(objectA, sortedB);
 			// console.log(sortedB);
 
-
+if(doDebug){
 for(var b=0; b<sortedB.length; ++b){
 var objectB = sortedB[b];
-// var img = objectB["icon"];
-var img = objectB["sift"];
+var img = objectB["icon"];
+// var img = objectB["sift"];
 img = GLOBALSTAGE.getFloatRGBAsImage(img.red(),img.grn(),img.blu(), img.width(),img.height());
 var d = new DOImage(img);
-// d.matrix().scale(3.0);
-d.matrix().scale(1.5);
+d.matrix().scale(3.0);
+// d.matrix().scale(1.5);
 d.matrix().translate(10 + 50*b, debugOffY + 450);
 GLOBALSTAGE.addChild(d);
 }
-
+}
 
 			// search for SIFT-FULL
 			sortedB = R3D._sortCompareProgressiveSIFTFullScoreCache(objectA, sortedB);
 			// console.log(sortedB);
 
-
+if(doDebug){
 for(var b=0; b<sortedB.length; ++b){
 var objectB = sortedB[b];
 var img = objectB["icon"];
@@ -12481,7 +12501,7 @@ d.matrix().scale(3.0);
 d.matrix().translate(10 + 50*b, debugOffY + 500);
 GLOBALSTAGE.addChild(d);
 }
-
+}
 			// look at score ratio of 1 / 0  to estimate confidence
 
 			// pick the remaining first match as best
@@ -12491,6 +12511,9 @@ GLOBALSTAGE.addChild(d);
 
 
 var best = sortedB[0];
+objectA["best"] = best;
+
+if(doDebug){
 console.log("best");
 console.log(best);
 
@@ -12506,21 +12529,35 @@ var d = new DO();
 	d.graphics().strokeLine();
 GLOBALSTAGE.addChild(d);
 d.matrix().translate(0 + 1*600, 0);
+}
 
 
+// go thru and re-print the original locations
 
-throw "?"
+
+// throw "?"
+
 
 
 
 
 		// Code.clipRayRect2D = function(org,dir, a,b,c,d){
 
-		break;
+		// break;
 	}
-	break;
+	console.log(" A-B ");
+	// break;
 }
-console.log("...")
+console.log("...");
+console.log(originalObjectsA);
+console.log(originalObjectsB);
+console.log("...");
+
+
+object . best .match . source == self
+
+
+ORRRRRR .. if the P2D are < ~2px of eachother
 	throw "?";
 
 	//
@@ -12753,39 +12790,41 @@ R3D._sortCompareProgressiveFxn = function(a,b){
 }
 
 R3D._sortCompareProgressiveColor = function(objectA, objectsB){
-	return R3D._sortCompareProgressiveType(objectA, objectsB, R3D._progressiveCompareV3DDistance, "color");
+	return R3D._sortCompareProgressiveType(objectA, objectsB, R3D._progressiveCompareV3DDistance, "color",null,null, 10);
 }
 R3D._sortCompareProgressiveColorHistogram = function(objectA, objectsB){
-	return R3D._sortCompareProgressiveType(objectA, objectsB, R3D._progressiveCompare1DArraySAD, "flatHistogram");
-}
-R3D._sortCompareProgressiveColorHistogram = function(objectA, objectsB){
-	return R3D._sortCompareProgressiveType(objectA, objectsB, R3D._progressiveCompare1DArraySAD, "flatHistogram");
+	return R3D._sortCompareProgressiveType(objectA, objectsB, R3D._progressiveCompare1DArraySAD, "flatHistogram",null,null, 9);
 }
 R3D._sortCompareProgressiveColorFlatSSD = function(objectA, objectsB){
-	return R3D._sortCompareProgressiveType(objectA, objectsB, R3D._progressiveCompare1DArrayV3DSAD, "flatOrientated");
+	return R3D._sortCompareProgressiveType(objectA, objectsB, R3D._progressiveCompare1DArrayV3DSAD, "flatOrientated",null,null, 8);
 }
 R3D._sortCompareProgressiveColorFlatNCC = function(objectA, objectsB){
-	return R3D._sortCompareProgressiveType(objectA, objectsB, R3D._progressiveCompare1DArrayV3DNCC, "flatOrientated");
+	return R3D._sortCompareProgressiveType(objectA, objectsB, R3D._progressiveCompare1DArrayV3DNCC, "flatOrientated",null,null, 7);
 }
-R3D._sortCompareProgressiveColorGradHistogram = function(objectA, objectsB){
-	return R3D._sortCompareProgressiveType(objectA, objectsB, R3D._progressiveCompare1DArraySAD, "gradHistogram");
-}
+// R3D._sortCompareProgressiveColorGradHistogram = function(objectA, objectsB){
+// 	return R3D._sortCompareProgressiveType(objectA, objectsB, R3D._progressiveCompare1DArraySAD, "gradHistogram",null,null, 6);
+// }
 R3D._sortCompareProgressiveSIFTFlat = function(objectA, objectsB){
-	return R3D._sortCompareProgressiveType(objectA, objectsB, R3D._progressiveCompareMultiArraySAD, "flatSIFT", null, "scoreFlatSIFT");
+	return R3D._sortCompareProgressiveType(objectA, objectsB, R3D._progressiveCompareMultiArraySAD, "flatSIFT", null, "scoreFlatSIFT",null,null, 4);
 }
 R3D._sortCompareProgressiveSIFTGrad = function(objectA, objectsB){
-	return R3D._sortCompareProgressiveType(objectA, objectsB, R3D._progressiveCompareMultiArraySAD, "gradSIFT", null, "scoreGradSIFT");
+	return R3D._sortCompareProgressiveType(objectA, objectsB, R3D._progressiveCompareMultiArraySAD, "gradSIFT", null, "scoreGradSIFT",null,null, 3);
 }
 R3D._sortCompareProgressiveSIFTFullScoreCache = function(objectA, objectsB){
+	var keepMinCount = 2;
+	var saveIndex = "scoreSIFT";
 	var fxn = R3D._progressiveCompareSIFTCache;
 	var best = [];
 	for(var i=0; i<objectsB.length; ++i){
 		var objectB = objectsB[i];
 		var score = fxn(objectB);
+		if(saveIndex){
+			objectB[saveIndex] = score;
+		}
 		best.push([objectB, score]);
 	}
 	best.sort(R3D._sortCompareProgressiveFxn);
-	R3D._sortCompareProgressiveDropWorst(best);
+	R3D._sortCompareProgressiveDropWorst(best, keepMinCount);
 
 	var histogram = best.map(function(a){return a[0];});
 	for(var i=0; i<best.length; ++i){
@@ -12794,7 +12833,7 @@ R3D._sortCompareProgressiveSIFTFullScoreCache = function(objectA, objectsB){
 	return best;
 }
 
-R3D._sortCompareProgressiveType = function(objectA, objectsB, fxn, indexA, indexB, saveIndex){
+R3D._sortCompareProgressiveType = function(objectA, objectsB, fxn, indexA, indexB, saveIndex, keepMinCount){
 	indexB = indexB!==undefined && indexB!==null ? indexB : indexA;
 	var best = [];
 	for(var i=0; i<objectsB.length; ++i){
@@ -12806,7 +12845,7 @@ R3D._sortCompareProgressiveType = function(objectA, objectsB, fxn, indexA, index
 		best.push([objectB, score]);
 	}
 	best.sort(R3D._sortCompareProgressiveFxn);
-	R3D._sortCompareProgressiveDropWorst(best);
+	R3D._sortCompareProgressiveDropWorst(best, keepMinCount);
 
 	var histogram = best.map(function(a){return a[0];});
 	for(var i=0; i<best.length; ++i){
@@ -12814,28 +12853,51 @@ R3D._sortCompareProgressiveType = function(objectA, objectsB, fxn, indexA, index
 	}
 	return best;
 }
-R3D._sortCompareProgressiveDropWorst = function(best){
-	var minCount = 3;
+R3D._sortCompareProgressiveDropWorst = function(best, minCount){
+	minCount = minCount!==undefined && minCount!==null ? minCount : 3;
 	var p = 0.75; // 0.5-0.90
 	var m = Math.round(best.length*p);
-	console.log(m+" of "+minCount+" of "+best.length);
-	// console.log(best)
-	// var limitA = best[best.length-1][1];
-	// if(m>=minCount){
-		// Code.truncateArray(best,m);
-	// }
+	// console.log(m+" of "+minCount+" of "+best.length);
+	minCount = Math.min(minCount,best.length-1);
+	m = Math.min(m,best.length-1);
+	if(minCount==0){
+		return;
+	}
 		var limitA = best[m][1];
 		//
-		var sigma = 1.5; // 1 - 2 too much
+		// var sigma = 1.5; // 1 - 2 too much
 		var scores = [];
 		for(var i=0; i<best.length; ++i){
 			scores.push(best[i][1]);
 		}
+// Code.printHistogram(scores, 50);
 		var min = Code.min(scores);
-		var sig = Code.stdDev(scores,min);
-		var limitB = min + sig*sigma;
+		var max = Code.max(scores);
+		var sigMin = Code.stdDev(scores,min);
+		var sigMax = Code.stdDev(scores,max);
+		var limitMin = min + sigMin*1.5; // left distributed drop worst
+		var limitMax = limitMin;
+		// var limitMax = max - sigMax*sigma; // right destributed remove
+		var limitB = Math.min(limitMin,limitMax);
+
 	// remove obviously worst elements
 	var limit = Math.min(limitA,limitB);
+
+	var index = Code.binarySearch(scores, function(a){
+		if(a==limit){
+			return 0;
+		}
+		return a<limit ? 1 : -1;
+	});
+	// console.log(scores);
+	// console.log(index);
+	if(Code.isArray(index)){
+		index = index[0];
+	}
+	index = Math.max(index,minCount);
+	Code.truncateArray(best,index);
+
+	/*
 	// console.log(limitA,limitB,limit);
 	for(var i=best.length; i--;){
 		if(best.length<=minCount){
@@ -12845,6 +12907,7 @@ R3D._sortCompareProgressiveDropWorst = function(best){
 			Code.removeElementAt(best,i);
 		}
 	}
+	*/
 	return best;
 }
 

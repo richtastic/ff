@@ -181,7 +181,7 @@ BINBOOST - Binary
 ...
 
 
-low res : low frequency -> high res iteritive F refinement
+low res : low frequency -> high res iterative F refinement
 
 
 

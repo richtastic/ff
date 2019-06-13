@@ -330,11 +330,13 @@ TODO: pairwise possibility limiting
 	- sparse tracks
 	- dense points
 	- redo affine features
-x	- multi-view combining into single 3D scene - minimizing errors
+	- multi-view combining into single 3D scene - minimizing errors
 		- sparse tracks
-		- dense points
+		x - dense points
+(07/01)
 - surface triangulation(tessellation)
 x	- advancing-front, curvature-based tessellation
+(07/17)
 	=> scene triangle model
 - texturing
 	- view-based surface texturing
@@ -342,15 +344,12 @@ x	- advancing-front, curvature-based tessellation
 	- separate triangles into texture lookup / files
 		- TextureMap (from textures to atlas)
 	=> scene textured model
-(06/17)
 - viewing output
 	- locally
 	- VR device
 		- ios: scenekit
 		- oculus = unity / blender
------> HERE <------
-
-(07/01)
+(08/101)
 - MVP
 	- example models
 	- example screens
@@ -370,6 +369,9 @@ https://cloud.google.com/appengine/docs/nodejs/
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+- patch size is wrong in R3D
+- migrate R3D code to Stereopsis?
+
 
 - matching corner points => seed points
 - test initial seed points in model viewer

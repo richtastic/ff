@@ -10977,7 +10977,7 @@ App3DR.ProjectManager.prototype.trianglesTexturize = function(){ // find uv sour
 				var p = sourcePoints[j];
 				try{
 					sourceList.push({"v":v,"a":{"x":p[0].x,"y":p[0].y},"b":{"x":p[1].x,"y":p[1].y},"c":{"x":p[2].x,"y":p[2].y}});
-				}catch{
+				}catch(e){
 
 					console.log(sourceViews);
 					console.log(sourcePoints);
