@@ -373,6 +373,42 @@ https://cloud.google.com/appengine/docs/nodejs/
 - migrate R3D code to Stereopsis?
 
 
+- something wrong with probing ? along x=y ?
+
+
+
+bestMatch2DFromLocation => use R3D fxn
+
+
+
+
+queue2d are filled with every cell that was updated: removed / added
+
+probe2d cares about all empty cells next to filled cells
+
+
+WHICH PROBE@D TO USE?:
+
+probe2DNNAffine
+probe2D
+
+
+- expand 2d
+	- ways to speed up process?
+		-
+		- 2D matching
+		- limiting searching areas
+			- on reset: [only filled block with 1+ blank neighbors]
+
+		=> on probe2d:
+			- only want list of empty blocks & source predictor [for each view pair]
+
+
+
+
+- match process is still very slow
+
+
 - matching corner points => seed points
 - test initial seed points in model viewer
 - probe2d increase density of points [only drop very high error: 3-4 sigma]

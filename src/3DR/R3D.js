@@ -12035,9 +12035,8 @@ R3D.optimalFeaturePointsInImage = function(imageMatrixA){
 R3D.searchMatchPoints3D = function(images, cellSizes, relativeAB, Ks, errorPixels){
 	console.log(images, cellSizes, relativeAB, errorPixels);
 
-	var imageScale = 0.5;
+	var imageScale = 0.5; // TODO: determined from source size => ~600x400
 
-	// ...
 	var imageA = images[0];
 	var imageB = images[1];
 	var cellA = cellSizes[0];
@@ -12060,17 +12059,14 @@ R3D.searchMatchPoints3D = function(images, cellSizes, relativeAB, Ks, errorPixel
 	var Kb = Ks[1];
 	var KaInv = Matrix.inverse(Ka);
 	var KbInv = Matrix.inverse(Kb);
-	//
-	// console.log(relativeAB, Ka,Kb);
 	var Fab = R3D.fundamentalFromPose(relativeAB, Ka,Kb);
 	var Fba = R3D.fundamentalInverse(Fab);
-	// console.log(Fab+"");
-	//
+
 	var nonMaximalPercent = 0.999;
 	var scalable = 1.0;
 	var limitPixels = 2.0;
 	var single = false;
-	var maxCount = 99999;
+	var maxCount = 9999;
 	//
 	var toPointPoint = function(a){
 		return a;
@@ -12088,7 +12084,7 @@ R3D.searchMatchPoints3D = function(images, cellSizes, relativeAB, Ks, errorPixel
 		var cellSize = cellSizes[i];
 		var featureSize = cellSize*featureScale;
 		var peakSize = cellSize*0.5;
-		console.log(corners.length);
+		// console.log(corners.length);
 		// add points to space limited by largest in radius
 		for(var j=0; j<corners.length; ++j){
 			var c = corners[j];
@@ -12103,15 +12099,17 @@ R3D.searchMatchPoints3D = function(images, cellSizes, relativeAB, Ks, errorPixel
 				space.insertObject(c);
 			}
 		}
+/*
 // display source images
 var img = imageMatrixScaled;
 	img = GLOBALSTAGE.getFloatRGBAsImage(img.red(),img.grn(),img.blu(), img.width(),img.height());
 var d = new DOImage(img);
 d.matrix().translate(0 + i*600, 0);
 GLOBALSTAGE.addChild(d);
+*/
 		// convert to objects
 		corners = space.toArray();
-		console.log(corners.length);
+		// console.log(corners.length);
 		space.clear();
 		space.toPoint(toPointObject);
 		for(var j=0; j<corners.length; ++j){
@@ -12119,7 +12117,6 @@ GLOBALSTAGE.addChild(d);
 			var o = R3D.objectProgressiveR3D(c,imageMatrix, featureSize);
 			o["i"] = j;
 			space.insertObject(o);
-
 // display source points
 // var q = o["point"].copy();
 // 	q.scale(imageScale);
@@ -12132,83 +12129,68 @@ GLOBALSTAGE.addChild(d);
 // 	d.graphics().strokeLine();
 // GLOBALSTAGE.addChild(d);
 // d.matrix().translate(0 + i*600, 0);
-
 		}
 		spaces.push(space);
-
 	}
-
 
 	// corners to objects:
 	var spaceA = spaces[0];
 	var spaceB = spaces[1];
-
-
-//console.log(spaceA.closestObject(new V2D(500,400))); // 690
-console.log(spaceA.closestObject(new V2D(400,260))); // ?
-// console.log(spaceA.closestObject(new V2D(500,400))); // ?
-// console.log(spaceA.closestObject(new V2D(500,400))); // ?
-
 	var objectsA = spaceA.toArray();
 	var objectsB = spaceB.toArray();
-var originalObjectsA = objectsA;
-var originalObjectsB = objectsB;
+	var originalObjectsA = objectsA;
+	var originalObjectsB = objectsB;
+	var originalImageA = imageA;
+	var originalImageB = imageB;
+
+
 	var widthA = imageA.width();
 	var heightA = imageA.height();
-	console.log(objectsA.length,objectsB.length);
-var imagesAList = [imageA,imageB];
-var imagesBList = [imageB,imageA];
-var objList = [objectsA,objectsB];
-var oppList = [spaceB,spaceA];
-var matList = [cameraA,cameraB];
-var ma2List = [cameraB,cameraA];
-var kaList = [Ka,Kb];
-var iaList = [KaInv,KbInv];
-var kbList = [Kb,Ka];
-var ibList = [KbInv,KaInv];
-
-var cameraCentersList = [ [cameraCenterA,cameraCenterB], [cameraCenterB,cameraCenterA] ];
-var cameraNormalsList = [ [cameraNormalA,cameraNormalB], [cameraNormalB,cameraNormalA] ];
-var cameraRightsList = [ [cameraRightA,cameraRightB], [cameraRightB,cameraRightA] ];
-var cameraSizesList = [ [cellA,cellB], [cellB,cellA] ];
-
+	// console.log(objectsA.length,objectsB.length);
+	var imagesList = [imageA,imageB];
+	var objList = [objectsA,objectsB];
+	var oppList = [spaceB,spaceA];
+	var matList = [cameraA,cameraB];
+	var fList = [Fab,Fba];
+	var kList = [Ka,Kb];
+	var iList = [KaInv,KbInv];
+	var cameraCentersList = [cameraCenterA,cameraCenterB];
+	var cameraNormalsList = [cameraNormalA,cameraNormalB];
+	var cameraRightsList = [cameraRightA,cameraRightB];
+	var cameraSizesList = [cellA,cellB];
 // var errSearch = Math.min(errorPixels*2,5);
-
 // var errSearch = Math.min(errorPixels*3,10);
 // var errSearch = 10;
-
-var errSearch = Math.min(errorPixels*5,25); // 1 -> 10 | 5 -> 50
+var errSearch = Math.min(errorPixels*5,25); // 1 -> 10 | 5 -> 50   -- absolute shoule be % ... 10% ?
 // errSearch = 50;
 // errSearch = 25;
-errSearch = 10;
+// errSearch = 10;
 
 var doDebug = false;
 var debugOffY = 350;
-var fList = [Fab,Fba];
+var dir = new V2D();
+var org = new V2D();
 for(var k=0; k<objList.length; ++k){
 	var objectsA = objList[k];
 	var spaceB = oppList[k];
-	var Ka = kaList[k];
-	var Kb = kbList[k];
-	var KaInv = iaList[k];
-	var KbInv = ibList[k];
-	var cameraCenters = cameraCentersList[k];
-	var cameraNormals = cameraNormalsList[k];
-	var cameraRights = cameraRightsList[k];
-	var cameraSizes  = cameraSizesList[k];
-	var cameraA = matList[k];
-	var cameraB = ma2List[k];
-	var imageA = imagesAList[k];
-	var imageB = imagesBList[k];
-	var cellSizeA = cellSizes[k];
+	var Ffwd = fList[k];
+	var Ka = kList[k%2];
+	var Kb = kList[(k+1)%2];
+	var KaInv = iList[k%2];
+	var KbInv = iList[(k+1)%2];
+	var cameraA = matList[k%2];
+	var cameraB = matList[(k+1)%2];
+	var imageA = imagesList[k%2];
+	var imageB = imagesList[(k+1)%2];
+	var cellSizeA = cellSizes[k%2];
 	var cellSizeB = cellSizes[(k+1)%2];
-var featureSizeA = cellSizeA*featureScale;
-var featureSizeB = cellSizeB*featureScale;
+	var featureSizeA = cellSizeA*featureScale;
+	var featureSizeB = cellSizeB*featureScale;
 	for(var i=0; i<objectsA.length; ++i){
+// break;
 		if(i%100==0){
 			console.log(i+" / "+objectsA.length);
 		}
-
 
 if(doDebug){
 // i = 666;
@@ -12238,13 +12220,10 @@ i = 658;
 }
 		var objectA = objectsA[i];
 		var point2DA = objectA["point"];
-		var lB = R3D.lineFromF(Fab,point2DA);
-		var dir = lB["dir"];
-		var org = lB["org"];
-		var ints = Code.clipRayRect2D(org,dir,new V2D(0,0), new V2D(widthA,0), new V2D(widthA,heightA), new V2D(0,heightA));
-
-
+		var lB = R3D.lineFromF(Ffwd,point2DA, org,dir);
+/*
 if(doDebug){
+var ints = Code.clipRayRect2D(org,dir,new V2D(0,0), new V2D(widthA,0), new V2D(widthA,heightA), new V2D(0,heightA));
 var p = point2DA;
 console.log(ints);
 var a = ints["a"].copy();
@@ -12275,15 +12254,15 @@ var d = new DO();
 	d.graphics().strokeLine();
 GLOBALSTAGE.addChild(d);
 }
-
+*/
 			// search for points along line
 			var objectsB = spaceB.objectsInsideRay(org,dir,errSearch,true);
-if(!objectsB || objectsB.length==0){
-	console.log("no points");
-	continue;
-}
+			if(!objectsB || objectsB.length==0){ // no possible matches
+				// console.log("no points");
+				continue;
+			}
 			var sortedB = objectsB;
-
+/*
 if(doDebug){
 // show all intersecting points:
 for(var b=0; b<sortedB.length; ++b){
@@ -12319,7 +12298,8 @@ d.matrix().translate(10 + 100, debugOffY + 50);
 GLOBALSTAGE.addChild(d);
 
 }
-
+*/
+/*
 if(doDebug){
 for(var b=0; b<sortedB.length; ++b){
 	var objectB = sortedB[b];
@@ -12331,10 +12311,11 @@ d.matrix().translate(10 + 50*b, debugOffY + 100);
 GLOBALSTAGE.addChild(d);
 }
 }
+*/
 			// serach for points with close color average
 			sortedB = R3D._sortCompareProgressiveColor(objectA, sortedB);
 			// console.log(sortedB);
-
+/*
 if(doDebug){
 for(var b=0; b<sortedB.length; ++b){
 	var objectB = sortedB[b];
@@ -12346,10 +12327,11 @@ d.matrix().translate(10 + 50*b, debugOffY + 150);
 GLOBALSTAGE.addChild(d);
 }
 }
+*/
 			// search for colors with close color histograms
 			sortedB = R3D._sortCompareProgressiveColorHistogram(objectA, sortedB);
 			// console.log(sortedB);
-
+/*
 if(doDebug){
 for(var b=0; b<sortedB.length; ++b){
 var objectB = sortedB[b];
@@ -12361,14 +12343,14 @@ d.matrix().translate(10 + 50*b, debugOffY + 200);
 GLOBALSTAGE.addChild(d);
 }
 }
-
+*/
 			// calculate P3D / projections
 			for(var b=0; b<sortedB.length; ++b){
 				var objectB = sortedB[b];
 				var point2DB = objectB["point"];
 				var points2D = [point2DA, point2DB];
 				var point3D = R3D.triangulatePointDLT(point2DA,point2DB, cameraA,cameraB, KaInv, KbInv);
-				var patch3D = R3D.patch3DFromPoint3DCameras(point3D, cameraCenters, cameraNormals, cameraRights, cameraSizes, points2D);
+				var patch3D = R3D.patch3DFromPoint3DCameras(point3D, cameraCentersList, cameraNormalsList, cameraRightsList, cameraSizesList, points2D);
 				var normal3D = patch3D["normal"];
 				var up3D = patch3D["up"];
 				var right3D = patch3D["right"];
@@ -12390,7 +12372,7 @@ GLOBALSTAGE.addChild(d);
 			// search for colors with close flat color - ssd
 			sortedB = R3D._sortCompareProgressiveColorFlatSSD(objectA, sortedB);
 			// console.log(sortedB);
-
+/*
 if(doDebug){
 for(var b=0; b<sortedB.length; ++b){
 var objectB = sortedB[b];
@@ -12402,10 +12384,11 @@ d.matrix().translate(10 + 50*b, debugOffY + 250);
 GLOBALSTAGE.addChild(d);
 }
 }
+*/
 			// search for colors with close flat color - ncc
 			sortedB = R3D._sortCompareProgressiveColorFlatNCC(objectA, sortedB);
 			// console.log(sortedB);
-
+/*
 if(doDebug){
 for(var b=0; b<sortedB.length; ++b){
 var objectB = sortedB[b];
@@ -12417,6 +12400,7 @@ d.matrix().translate(10 + 50*b, debugOffY + 300);
 GLOBALSTAGE.addChild(d);
 }
 }
+*/
 			// this is consistently not very good
 			// search for orientated gradient histogram
 			// sortedB = R3D._sortCompareProgressiveColorGradHistogram(objectA, sortedB);
@@ -12436,9 +12420,8 @@ GLOBALSTAGE.addChild(d);
 			// prep sift:
 			for(var b=0; b<sortedB.length; ++b){
 				var objectB = sortedB[b];
-				// var affine = objectB["match"]["affine"];
-				var affine = null;
-// affine = null;
+				var affine = objectB["match"]["affine"];
+				// var affine = null; // TODO: IS THIS BETTER ?
 				R3D.objectProgressiveR3D_C(objectB, imageB, featureSizeB, affine);
 				R3D.objectProgressiveR3D_SIFT_FLAT(objectB);
 			}
@@ -12446,7 +12429,7 @@ GLOBALSTAGE.addChild(d);
 			// search for SIFT-FLAT
 			sortedB = R3D._sortCompareProgressiveSIFTFlat(objectA, sortedB);
 			// console.log(sortedB);
-
+/*
 if(doDebug){
 for(var b=0; b<sortedB.length; ++b){
 var objectB = sortedB[b];
@@ -12460,17 +12443,16 @@ d.matrix().translate(10 + 50*b, debugOffY + 400);
 GLOBALSTAGE.addChild(d);
 }
 }
-
+*/
 			// prep sift grad:
 			for(var b=0; b<sortedB.length; ++b){
 				var objectB = sortedB[b];
 				R3D.objectProgressiveR3D_SIFT_GRAD(objectB);
 			}
-
 			// search for SIFT-GRAD
 			sortedB = R3D._sortCompareProgressiveSIFTGrad(objectA, sortedB);
 			// console.log(sortedB);
-
+/*
 if(doDebug){
 for(var b=0; b<sortedB.length; ++b){
 var objectB = sortedB[b];
@@ -12484,11 +12466,11 @@ d.matrix().translate(10 + 50*b, debugOffY + 450);
 GLOBALSTAGE.addChild(d);
 }
 }
-
+*/
 			// search for SIFT-FULL
 			sortedB = R3D._sortCompareProgressiveSIFTFullScoreCache(objectA, sortedB);
 			// console.log(sortedB);
-
+/*
 if(doDebug){
 for(var b=0; b<sortedB.length; ++b){
 var objectB = sortedB[b];
@@ -12502,17 +12484,12 @@ d.matrix().translate(10 + 50*b, debugOffY + 500);
 GLOBALSTAGE.addChild(d);
 }
 }
-			// look at score ratio of 1 / 0  to estimate confidence
+*/
 
-			// pick the remaining first match as best
+			var best = sortedB[0];
+			objectA["best"] = best;
 
-
-
-
-
-var best = sortedB[0];
-objectA["best"] = best;
-
+/*
 if(doDebug){
 console.log("best");
 console.log(best);
@@ -12530,7 +12507,7 @@ var d = new DO();
 GLOBALSTAGE.addChild(d);
 d.matrix().translate(0 + 1*600, 0);
 }
-
+*/
 
 // go thru and re-print the original locations
 
@@ -12553,22 +12530,133 @@ console.log(originalObjectsA);
 console.log(originalObjectsB);
 console.log("...");
 
+var objectsA = originalObjectsA;
+var objectsB = originalObjectsB;
+var imageA = originalImageA;
+var imageB = originalImageB;
 
-object . best .match . source == self
+var matchingCount = 0;
+var matches = [];
+for(var i=0; i<objectsA.length; ++i){
+	var objectA = objectsA[i];
+	var bestA = objectA["best"];
+	if(bestA){
+		var objectB = bestA["match"]["source"];
+		if(objectB){
+			var bestB = objectB["best"];
+			if(bestB){
+				var oA = bestB["match"]["source"];
+				var d = V2D.distance(objectA["point"],oA["point"]);
+				// console.log(d+" | "+objectA["i"]+" & "+oA["i"]+" ? "+(objectA==oA));
+				if(objectA==oA){ // 583
+				// if(d<1){ // 583
+					matches.push([objectA,objectB, bestA["match"],bestB["match"]]);
+					matchingCount += 1;
+				}
+			}
+		}
+	}
+}
+
+console.log("matchingCount: "+matchingCount);
 
 
-ORRRRRR .. if the P2D are < ~2px of eachother
-	throw "?";
+for(var i=0; i<matches.length; ++i){
+	var match = matches[i];
+	var objectA = match[0];
+	var objectB = match[1];
+	var pointA = objectA["point"];
+	var pointB = objectB["point"];
+	var matched = match[2];
+	var affine = matched["affine"];
+	// console.log(imageA,imageB, pointA,pointB, affine);
+	// do optimized sub-pixel matching:
+	var info = R3D.subpixelHaystack(imageA,imageB, pointA,pointB, affine);
+	// console.log(info);
+	matches[i] = info;
 
-	//
-	//
-	// for each object A, if top match B's top match is also A => make pair
-	// TOP MATCH OR IF THE MATCHING POINTS ARE CLOSE (there may be 2 points close to eachother) ===> then at least the points could be close
+	continue;
+
+	var p = objectA["point"].copy();
+	var q = objectB["point"].copy();
+
+	p.scale(imageScale);
+	q.scale(imageScale);
+	q.add(600,0);
+
+	var d = new DO();
+		d.graphics().clear();
+		d.graphics().setLine(2.0, 0xFFFF0000);
+		d.graphics().beginPath();
+		d.graphics().drawCircle(p.x,p.y, 5);
+		d.graphics().endPath();
+		d.graphics().strokeLine();
+		//
+		d.graphics().setLine(2.0, 0xFF0000FF);
+		d.graphics().beginPath();
+		d.graphics().drawCircle(q.x,q.y, 5);
+		d.graphics().endPath();
+		d.graphics().strokeLine();
+		//
+		// d.graphics().setLine(2.0, 0x99FF00FF);
+		// d.graphics().beginPath();
+		// d.graphics().moveTo(p.x,p.y);
+		// d.graphics().lineTo(q.x,q.y);
+		// d.graphics().endPath();
+		// d.graphics().strokeLine();
+
+	GLOBALSTAGE.addChild(d);
+	// d.matrix().translate(0 + 1*600, 0);
+}
 
 
+return matches;
 
-	// eah matched object should be re-searched for optimum sub-pixel location
+}
 
+
+R3D.subpixelHaystack = function(imageA,imageB, pointA,pointB, affine){
+	var needleSize = 11;
+	var haystackSize = Math.round(needleSize*2.0);
+	var needleZoom = 1.0;
+	var needle = imageA.extractRectFromFloatImage(pointA.x,pointA.y,needleZoom,null,needleSize,needleSize, affine);
+	var haystack = imageB.extractRectFromFloatImage(pointB.x,pointB.y,needleZoom,null,haystackSize,haystackSize, null);
+	var scoreSAD = R3D.searchNeedleHaystackSSDColor(needle,haystack);
+// console.log(scoreSAD);
+	// throw "scoreSAD";
+	// var scoresNCC = R3D.normalizedCrossCorrelation(needle,null, haystack, true);
+	// var scoreSAD = R3D.searchNeedleHaystackImageFlat(needle,null,haystack);
+	var values = scoreSAD["value"];
+	var width = scoreSAD["width"];
+	var height = scoreSAD["height"];
+	// find peak
+	var minIndex = Code.minIndex(values);
+	var minX = Math.floor(minIndex%width);
+	var minY = Math.floor(minIndex/width);
+	var peak = new V3D(minX,minY,values[minIndex]);
+	// find subpixel peak
+	var xMin = Math.max(0,minX-1);
+	var xMax = Math.min(width-1,minX+1);
+	var yMin = Math.max(0,minY-1);
+	var yMax = Math.min(height-1,minY+1);
+	var d0 = values[width*yMin + xMin];
+	var d1 = values[width*yMin + minX];
+	var d2 = values[width*yMin + xMax];
+	var d3 = values[width*minY + xMin];
+	var d4 = values[width*minY + minX];
+	var d5 = values[width*minY + xMax];
+	var d6 = values[width*yMax + xMin];
+	var d7 = values[width*yMax + minX];
+	var d8 = values[width*yMax + xMax];
+	var result = Code.extrema2DFloatInterpolate(new V3D(), d0,d1,d2,d3,d4,d5,d6,d7,d8);
+	peak.x += result.x;
+	peak.y += result.y;
+// console.log(peak.x-width*0.5,peak.y-height*0.5)
+	// set new point
+	var p = pointB;
+	var q = p.copy().add((peak.x-width*0.5)*needleZoom,(peak.y-height*0.5)*needleZoom);
+	// context object return
+	return {"A":pointA, "B":q, "affine":affine};
 }
 
 R3D.patch3DFromPoint3DCameras = function(point3D, cameraCenters, cameraNormals, cameraRights, cameraSizes, points2D){
@@ -12603,7 +12691,6 @@ R3D.patch3DFromPoint3DCameras = function(point3D, cameraCenters, cameraNormals, 
 	patchSize /= cameraCount;
 // patchSize is PROJECTED SIZE
 // TODO: GET WORLD SIZE
-
 	// make sure 90 degrees
 	var up = V3D.cross(normal,right);
 	up.norm();
@@ -12855,7 +12942,8 @@ R3D._sortCompareProgressiveType = function(objectA, objectsB, fxn, indexA, index
 }
 R3D._sortCompareProgressiveDropWorst = function(best, minCount){
 	minCount = minCount!==undefined && minCount!==null ? minCount : 3;
-	var p = 0.75; // 0.5-0.90
+	// var p = 0.75; // 0.5-0.90
+	var p = 0.50;
 	var m = Math.round(best.length*p);
 	// console.log(m+" of "+minCount+" of "+best.length);
 	minCount = Math.min(minCount,best.length-1);
@@ -28840,6 +28928,101 @@ sss = sadAvg;
 	return {"value":result, "width":resultWidth, "height":resultHeight};
 
 }
+
+
+R3D.searchNeedleHaystackSSDColor = function(needle,haystack,needleMask){
+	var needleWidth = needle.width();
+	var needleHeight = needle.height();
+	var needleR = needle.red();
+	var needleG = needle.grn();
+	var needleB = needle.blu();
+	var haystackWidth = haystack.width();
+	var haystackHeight = haystack.height();
+	var haystackR = haystack.red();
+	var haystackG = haystack.grn();
+	var haystackB = haystack.blu();
+	var needleCount = needleWidth*needleHeight;
+	var resultWidth = haystackWidth - needleWidth + 1;
+	var resultHeight = haystackHeight - needleHeight + 1;
+	var resultCount = resultWidth * resultHeight;
+	if(resultCount<=0){
+		return null;
+	}
+	var mask = 1.0;
+	var i, j;
+	var maskCount = needleCount;
+	if(needleMask){
+		maskCount = 0;
+		for(i=0; i<needleCount; ++i){
+			if(needleMask){ mask = needleMask[i]; }
+			if(mask===0){ continue; }
+			++maskCount;
+		}
+	}
+	// needle average
+	var avgN = new V3D();
+	for(k=0; k<needleCount; ++k){
+		if(needleMask){ mask = needleMask[k]; }
+		if(mask===0){ continue; }
+		avgN.x += needleR[k];
+		avgN.y += needleG[k];
+		avgN.z += needleB[k];
+	}
+	avgN.scale(1.0/needleCount);
+	//
+	var avgH = new V3D();
+	var result = new Array();
+	for(j=0; j<resultHeight; ++j){
+		var jW = j*resultWidth;
+		for(i=0; i<resultWidth; ++i){
+			var resultIndex = jW + i;
+			var sad = 0;
+			avgH.set(0,0,0);
+			for(var nJ=0; nJ<needleHeight; ++nJ){ // entire needle
+				var jhW = (j+nJ)*haystackWidth;
+				for(var nI=0; nI<needleWidth; ++nI){
+					var hIndex = jhW + (i+nI);
+					if(needleMask){ mask = needleMask[nIndex]; }
+					if(mask===0){ continue; }
+					var h = haystack[hIndex];
+					avgH.x += haystackR[hIndex];
+					avgH.y += haystackG[hIndex];
+					avgH.z += haystackB[hIndex];
+				}
+			}
+			avgH.scale(1.0/needleCount);
+			// ...
+			for(var nJ=0; nJ<needleHeight; ++nJ){ // entire needle
+				var jnW = nJ*needleWidth
+				var jhW = (j+nJ)*haystackWidth
+				for(var nI=0; nI<needleWidth; ++nI){
+					var nIndex = jnW + nI;
+					var hIndex = jhW + (i+nI);
+					if(needleMask){ mask = needleMask[nIndex]; }
+					if(mask===0){ continue; } // completely ignore a masked operation
+					var nR = needleR[nIndex];
+					var nG = needleG[nIndex];
+					var nB = needleB[nIndex];
+					var hR = haystackR[hIndex];
+					var hG = haystackG[hIndex];
+					var hB = haystackB[hIndex];
+					// SAD - color
+					var dR = nR - hR;
+					var dG = nG - hG;
+					var dB = nB - hB;
+					var sq = dR*dR + dG*dG + dB*dB;
+					sad += Math.sqrt(sq);
+				}
+			}
+			result[resultIndex] = sad;
+		}
+	}
+	return {"value":result, "width":resultWidth, "height":resultHeight};
+}
+
+
+
+
 R3D.inPlaceOperation = function(imageA,startAX,endAX,startAY,endAY, imageB,startBX,endBX,startBY,endBY, operationFxn, args){
 	var widthA = imageA.width();
 	var heightA = imageA.height();
