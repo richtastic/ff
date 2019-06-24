@@ -8418,23 +8418,24 @@ Code.intersectRaySphere3D = function(org,dir, cen,rad){ // infinite ray & sphere
 }
 
 Code.pointInsideCone3DBoolean = function(cen,dir,ratio, point){
-	var p = V3D.sub(point,cen);
-	var dot = V3D.dot(p,dir);
-	if(dot<0){ // negative direction
+	var c = Code.closestPointLine3D(cen,dir,point);
+	var cToC = V3D.sub(c,cen);
+	var dot = V3D.dot(dir,cToC);
+	if(dot<0){ // past origin
 		return false;
 	}
-	var perp = V3D.perpendicularComponent(dir,p);
-	var para = V3D.sub(p,perp);
-	var rise = perp.length();
-	var run = para.length();
-	if(rise>dir.length()){ // too far out
+	var len = dir.length();
+	dot = dot/(len*len);
+	if(dot>1){ // past end
 		return false;
 	}
-	if(run==0){
-		return true;
-	}
-	var rr = rise/run;
-	return rr <= ratio;
+	var lC = cToC.length();
+	var siz = lC*ratio;
+	var distance = V3D.distance(c,point);
+	if(siz<distance){
+		return false;
+	} // inside
+	return true;
 }
 Code.sphereInsideCone3DBoolean = function(cen,dir,ratio, sph,rad){ // any part of sphere touches/inside/ovarlap cone
 	var p = V3D.sub(sph,cen);

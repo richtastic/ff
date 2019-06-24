@@ -369,8 +369,120 @@ https://cloud.google.com/appengine/docs/nodejs/
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+- ORIGINAL DENSE F MATCHES ARE MOSTLY GOOD
+	POSSIBLE ERRORS:
+		- filter on patch sphere 3d
+		- probe2D
+		- refining P3D only -> not re-linear estimating location each time ? [need to copy match.estimated3D from point3D ? inverse ?]
+
+
+
+- patch sphere intersection seems high ?
+	=> visual display of cone intersection (2D?) validness ?
+		x random points in 3D on x/y plane
+		- internalize fxn that returns list of matched cone items
+			- 'expand' by radius * 2
+		- display all points, potential points, final points
+
+
+- probe2D working?
+	=> visual display of achieved points [location in image A with extract from image B]
+
+
+
+- some things take a very long time
+
+
+- points from dense F are only +/- 1/2 pixel [@ 0.25 scale = +/- 2 pixels]
+
+
+
+42563
+
+
+- HOW TO PRIORITIZE PROBE2D CHECKING SMARTLY - ADD  & REMOVE
+	- can't be the case that every border cell is re-checked every iteration
+		=> poor matches will repeatedly throw error | progress in knowledge is not made
+	- keep track of only border cells:
+		- add: remove included cell from list, add empty neighbors
+		- remove: add now-empty cell to list
+			=> only recheck if error
+
+	..
+
+- RECHECK:
+? filterPairwiseSphere3D
+? probe2DPairwise
+	matching:
+	? COLORED NCC / SAD ?
+
+
+- using dense stero - cell size needs to be tiny to accomidate (on same level of approx)
+
+
+- patch sphere sizes need to be more accurate ? up/down/left/right
+	- how do different resolutions of images account for this? in K
+		=> use percentages going forward? conversions might be everywhere
+- double check probe2d gets edge cells & only propagate to good locations (F / R / N)
+
+	- print out some CURRENT POINTS & PROJECTED NEXT POINTS
+
+- some way to drop groups of bad points & not the good points?
+	- how to get around groups of sphere-patch collisions both saying eachother is bad
+		-> allow for re-propagation somehow?
+
+
+- try using dense F results turn to matches
+	- can use lower resolution for testing
+
+
+
+
+local probe2d seems to be stopping prematurely
+	- other criteria is dropping points?
+		=> sphere/patch interference between 2 clumps is dropping both the good set and the bad set
+
+why is this higher:
+	probe2d changed points to blank points:
+ 	4596 => 4959
+
+- try to rescue point dropping by using sphere intersections
+
+-- need this to run before probe2d
+
+
+--- matches2d have a patch size (in respective transform) so do point3d
+
+
+
+- some initial corner matches are WRONG
+	- use a score ratio to pick among clear matches
+		=> for points that don't necessarily have a match
+
+		( THIS DOESN'T ADDRESS LARGE GROUPS OF BAD MATCHES - systemic)
+	- perhaps do 2D neighborhood picking to identify points very far from correct neghborhood
+		- source 2D distances / destination 2D distances
+			[scale for each point]
+		- for each point:
+			- get variation in neighborhood (~8)
+			- if point is over ~2 sigma from neighborhood variation
+				-> mark as outlier
+
+
+- do dense F again instead
+	- use initial points from R to get better F
+	- rectify
+	-
+
+
+
 - patch size is wrong in R3D
 - migrate R3D code to Stereopsis?
+
+
+
+0 is there a way to do dense R similar to dense F ?
+	- distort image in some way ... in all directions
 
 
 - something wrong with probing ? along x=y ?

@@ -4,7 +4,9 @@ function OctTree(toPoint, max, min){
 	this._root = new OctTree.Voxel();
 	this._toPoint = OctTree.objectToV3D;
 	this._autoResize = true;
-	this.toPoint(toPoint);
+	if(toPoint){
+		this.toPoint(toPoint);
+	}
 	if(min && max){
 		var size = V3D.sub(max,min);
 		var center = V3D.avg(max,min);
@@ -106,7 +108,7 @@ OctTree.prototype.objectsInsideRay = function(org,dir,radius){ // objects inside
 	this._root.objectsInsideRay(arr,org,dir,radius,this._toPoint);
 	return arr;
 }
-OctTree.prototype.objectsInsideCone = function(cen,dir,ratio){ // objects inside cone
+OctTree.prototype.objectsInsideCone = function(cen,dir,ratio){ // objects inside cone [sphere - capped]
 	var arr = [];
 	this._root.objectsInsideCone(arr, cen,dir,ratio, this._toPoint);
 	return arr;
@@ -607,6 +609,7 @@ OctTree.Voxel.prototype.objectsInsideCone = function(arr, cen,dir,ratio, toPoint
 }
 
 OctTree.Voxel.prototype.objectsNearCircularPlane = function(arr,center,normal,radius,distance,toPoint){ // near = offset from plane < distance
+	throw "TODO";
 	if(this._datas){
 		for(var i=0; i<this._datas.length; ++i){
 			// var p = toPoint(this._datas[i]);
