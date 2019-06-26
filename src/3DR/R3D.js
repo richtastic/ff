@@ -843,9 +843,9 @@ R3D.screenNormalizedPointsFromPixelPoints = function(points,width,height){
 	return list;
 }
 // ------------------------------------------------------------------------------------------- H utilities
-R3D.affineCornerMatrixLinear = function(pointsA,pointsB){
+R3D.affineCornerMatrixLinear = function(pointsA,pointsB, reuse){
 	if (pointsA && pointsB && pointsA.length>=2 && pointsB.length>=2){
-		return R3D.affineCornerDLT(pointsA,pointsB);
+		return R3D.affineCornerDLT(pointsA,pointsB, reuse);
 	}
 	return null;
 }
@@ -4362,6 +4362,72 @@ b.scale(scaleBI);
 			break;
 		}
 	}
+
+
+console.log(picked.length)
+	var OFFX = 10;
+	var OFFY = 10;
+	var count = 0;
+	for(var i=0; i<picked.length; i += 100){
+		var match = picked[i];
+// console.log(match)
+		var a = match[0];
+		var b = match[1];
+		V2D.sub(eToA, a,eA);
+		V2D.sub(eToB, b,eB);
+		if(!sameDirection){ // TODO: IS THIS VALIDATED?
+			eToB.scale(-1);
+		}
+		var angleAB = V2D.angle(eToA, eToB);
+		var matrix = new Matrix(3,3).identity();
+		matrix = Matrix.transform2DRotate(matrix, angleAB);
+
+console.log("angleAB: "+Code.degrees(angleAB));
+
+a = a.copy();
+b = b.copy();
+a.scale(scaleA);
+b.scale(scaleB);
+// var info = R3D.subpixelHaystack(subpixelA,
+
+// console.log(count,a+"",b+"");
+
+		var compareSize = 31;
+		var zoom = 1.0;
+		var sca = 1.0;
+		var cols = 50;
+		var col = count%cols;
+		var row = Math.floor(count/cols);
+
+		// matrix = null;
+
+		var needleA = subpixelA.extractRectFromFloatImage(a.x,a.y,zoom,null,compareSize,compareSize, matrix);
+		var needleB = subpixelB.extractRectFromFloatImage(b.x,b.y,zoom,null,compareSize,compareSize, null);
+
+		var iii = needleA;
+		var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
+		var d = new DOImage(img);
+		d.matrix().scale(sca);
+		d.matrix().translate(OFFX + 50*col, OFFY + 100*row);
+		GLOBALSTAGE.addChild(d);
+
+		var iii = needleB;
+		var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
+		var d = new DOImage(img);
+		d.matrix().scale(sca);
+		d.matrix().translate(OFFX + 50*col, OFFY + 100*row + 50);
+		GLOBALSTAGE.addChild(d);
+
+		++count;
+		if(count>100){
+			break;
+		}
+	}
+
+	throw "?"
+
+
+
 /*
 	picked.sort(function(a,b){
 		return a[2] < b[2] ? -1 : 1;
@@ -4695,8 +4761,8 @@ for(var i=0; i<matches.length; ++i){
 
 
 // show mapping:
-var show = true;
-// var show = false;
+// var show = true;
+var show = false;
 if(show){
 var colAr = 0.0;
 var colAg = 1.0;
@@ -4725,7 +4791,7 @@ for(var i=0; i<matches.length; ++i){
 	var a = match["A"];
 	var b = match["B"];
 	var d = V2D.distance(a,b);
-		d += 1;
+		// d += 1;
 	var indexA = Math.round(a.y)*widA + Math.round(a.x);
 	var indexB = Math.round(b.y)*widB + Math.round(b.x);
 	depthsA[indexA] = d;
@@ -4751,14 +4817,27 @@ colorsB_b[indexB] = b;
 	var sca = 1.5;
 	// var sca = 1.0;
 
+	var showDepths = false;
+	// var showDepths = true;
+console.log("SHOW DEPTHS");
+	var img;
+	if(showDepths){
+		console.log(depthsA);
+		var colors = [0xFF000099, 0xFF0000FF, 0xFFCC00CC, 0xFFFF0000, 0xFF990000, 0x00];
+		// var colors = [0xFFFFFFFF, 0xFF000000];
+		// var colors = [0xFF000000, 0xFFFFFFFF];
+		var depths = Code.copyArray(depthsA);
+		// var mini = Code.min(depths);
+			// ImageMat.addConst(depths,-mini);
+			ImageMat.normalFloat01(depths);
 
-	// var colors = [0xFF000099, 0xFF0000FF, 0xFFCC00CC, 0xFFFF0000, 0xFF990000, 0x00];
-	// var colors = [0xFF000099, 0xFF0000FF, 0xFFCC00CC, 0xFFFF0000, 0xFF990000, 0x0];
 
-	// var depths = ImageMat.getNormalFloat01(depthsA);
-	// var heat = ImageMat.heatImage(depths, widA, heiA, true, colors);
-	// img = GLOBALSTAGE.getFloatRGBAsImage(heat.red(), heat.grn(), heat.blu(), widA, heiA);
-	img = GLOBALSTAGE.getFloatRGBAsImage(colorsA_r,colorsA_g,colorsA_b, widA, heiA);
+		// var depths = ImageMat.getNormalFloat01(depthsA);
+		var heat = ImageMat.heatImage(depths, widA, heiA, true, colors);
+		img = GLOBALSTAGE.getFloatRGBAsImage(heat.red(), heat.grn(), heat.blu(), widA, heiA);
+	}else{
+		img = GLOBALSTAGE.getFloatRGBAsImage(colorsA_r,colorsA_g,colorsA_b, widA, heiA);
+	}
 	d = new DOImage(img);
 	d.graphics().alpha(alp);
 // d.matrix().translate(-widA, 0);
@@ -5319,6 +5398,162 @@ hI = Math.max(Math.min(nI,radEndB),radStartB);
 	}
 	return {"disparity":disparity, "SAD":scoresSAD, "confidence":confidences};
 }
+
+R3D.affine2DFromTransform = function(point2DA,point2DB,cameraA,cameraB, Ka,Kb, KaInv, KbInv, reuse){
+	var cellA = 1.0;
+	var cellB = 1.0;
+
+	var relativeAB = cameraB;
+
+	var cameraCenterA = new V3D(0,0,0);
+	var cameraCenterB = relativeAB.multV3DtoV3D(cameraCenterA);
+	var cameraNormalA = new V3D(0,0,1);
+	var cameraNormalB = relativeAB.multV3DtoV3D(cameraNormalA);
+		cameraNormalB.sub(cameraCenterB);
+	var cameraRightA = new V3D(1,0,0);
+	var cameraRightB = relativeAB.multV3DtoV3D(cameraRightA);
+		cameraRightB.sub(cameraCenterB);
+
+
+	var cameraCentersList = [cameraCenterA,cameraCenterB];
+	var cameraNormalsList = [cameraNormalA,cameraNormalB];
+	var cameraRightsList = [cameraRightA,cameraRightB];
+	var cameraSizesList = [cellA,cellB];
+
+		var points2D = [point2DA, point2DB];
+		var point3D = R3D.triangulatePointDLT(point2DA,point2DB, cameraA,cameraB, KaInv, KbInv);
+		var patch3D = R3D.patch3DFromPoint3DCameras(point3D, cameraCentersList, cameraNormalsList, cameraRightsList, cameraSizesList, points2D);
+		var normal3D = patch3D["normal"];
+		var up3D = patch3D["up"];
+		var right3D = patch3D["right"];
+		var size3D = patch3D["size"];
+		var affine2D = R3D.patchAffine2DFromPatch3D(point3D,normal3D,up3D,right3D,size3D, cameraA,Ka, cameraB,Kb, point2DA,point2DB,  reuse);
+		// var affine2D = null;
+		// var temp = R3D.objectProgressiveR3D_Z(point2DB,imageB, featureSizeB, affine2D);
+		// 	temp["match"] = {"affine":affine2D, "point3D":point3D, "source":objectB};
+		// 	temp["i"] = objectB["i"];
+		// sortedB[b] = temp;
+
+	return affine2D;
+}
+
+R3D.optimumLocationRefineTransform = function(pointsA,pointsB, F, KA,KB,KAInv,KBInv, imageMatrixA,imageMatrixB, debug){
+	console.log("optimumLocationRefineTransform: ");
+	var Pidentity = new Matrix(4,4).identity();
+	var PA = Pidentity;
+	// console.log(F);
+	var PB = R3D.transformFromFundamental(pointsA,pointsB, F, KA,KAInv,KB,KBInv, PA, true);
+	// console.log(PA,PB);
+
+	var pointCount = pointsA.length;
+
+
+	// var compareRefineSize = 21; // 7-11
+	var compareRefineSize = 11;
+	// var compareRefineSize = 7;
+	// var compareRefineWindow = 5;
+	// var compareRefineWindow = 6;
+	// var compareRefineWindow = 30;
+	// var compareRefineWindow = 2 + 4*compareRefineSize;
+	// var compareRefineWindow = 2 + 4*compareRefineSize;
+	var compareRefineWindow = 2 + 3*compareRefineSize;
+	// x1 = 2  |  x2 =  4 | x4 = 6?8 |   x_i = 2 + scale*2
+	// var needleZoom = 2.0; // zoom out
+	// for(var i=1; i<pointCount; i+=50){
+	var needleZoom = 1.0;
+	var matrixReuse = new Matrix2D();
+	for(var i=0; i<pointCount; i++){
+		var a = pointsA[i];
+		var b = pointsB[i];
+		var matrix = R3D.affine2DFromTransform(a,b,PA,PB, KA,KB, KAInv,KBInv, matrixReuse);
+		var info = R3D.subpixelHaystack(imageMatrixA,imageMatrixB, a,b, matrix,   compareRefineSize,compareRefineWindow, needleZoom);
+		var result = info["B"];
+		b.x = result.x;
+		b.y = result.y;
+	}
+
+
+
+// pring out images with substituted block chunks
+
+if(debug){
+	var OFFX = 10;
+	var OFFY = 10;
+	var count = 0;
+var alp = 0.10;
+
+var diffX = imageMatrixA.width();
+var display = new DO();
+GLOBALSTAGE.addChild(display);
+
+var iii = imageMatrixA;
+var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
+var d = new DOImage(img);
+d.graphics().alpha(alp);
+d.matrix().translate(0,0);
+display.addChild(d);
+
+var iii = imageMatrixB;
+var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
+var d = new DOImage(img);
+d.graphics().alpha(alp);
+d.matrix().translate(diffX,0);
+display.addChild(d);
+
+// show some opposite points:
+
+var count = 0;
+for(var i=0; i<pointCount; i+=15){
+// for(var i=0; i<pointCount; i++){
+	var a = pointsA[i];
+	var b = pointsB[i];
+	// console.log(a+" - "+b);
+
+	var compareSize = 21;
+	// var compareSize = 15;
+	// var compareSize = 9;
+	var half = compareSize*0.5;
+	var zoom = 1.0;
+	var sca = 1.0;
+
+
+	var matrix = R3D.affine2DFromTransform(a,b,PA,PB, KA,KB, KAInv,KBInv);
+	var inverse = Matrix.inverse(matrix);
+// console.log(matrix);
+	// var matrix = null;
+	// var inverse = null;
+
+	var needleA = imageMatrixA.extractRectFromFloatImage(a.x,a.y,zoom,null,compareSize,compareSize, matrix);
+	var needleB = imageMatrixB.extractRectFromFloatImage(b.x,b.y,zoom,null,compareSize,compareSize, inverse);
+
+	var iii = needleA;
+	var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
+	var d = new DOImage(img);
+	// d.matrix().scale(sca);
+	d.matrix().translate(diffX+b.x - half, b.y - half);
+	display.addChild(d);
+
+	var iii = needleB;
+	var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
+	var d = new DOImage(img);
+	// d.matrix().scale(sca);
+	d.matrix().translate(a.x - half,a.y - half);
+	display.addChild(d);
+
+	++count;
+	if(count>=1000){
+		break;
+	}
+}
+
+throw "testing"
+
+}
+
+
+	return {"A":pointsA, "B":pointsB};
+}
+
 // ------------------------------------------------------------------------------------------- nonlinearness
 R3D.essentialMatrixNonlinear = function(E,pointsA,pointsB){ // nonlinearLeastSquares
 //return E;
@@ -6211,7 +6446,7 @@ R3D.affineDLT = function(pointsFr,pointsTo){ // 3 points = affine matrix transfo
 	return H;
 }
 
-R3D.affineCornerDLT = function(pointsFr,pointsTo){
+R3D.affineCornerDLT = function(pointsFr,pointsTo, reuse){
 	var i, j, fr, to, len = pointsFr.length;
 	var rows = len*2;
 	var cols = 5;
@@ -6234,7 +6469,27 @@ R3D.affineCornerDLT = function(pointsFr,pointsTo){
 	var svd = Matrix.SVD(A);
 	var coeff = svd.V.colToArray(4);
 	coeff = [ coeff[0]/coeff[4], coeff[1]/coeff[4], 0, coeff[2]/coeff[4], coeff[3]/coeff[4], 0, 0,0,1];
-	var H = new Matrix(3,3).fromArray(coeff);
+	var H;
+	if(reuse){ // Matrix or Matrix2D or Matrix3D
+		H = reuse;
+		if(Code.isa(H,Matrix2D)){
+			H.set(coeff[0],coeff[1],coeff[3],coeff[4], coeff[2],coeff[5]);
+		}else{
+			H.fromArray(coeff);
+		}
+		// H.set(0,0, coeff[0]);
+		// H.set(0,1, coeff[1]);
+		// H.set(0,2, coeff[2]);
+		// H.set(1,0, coeff[3]);
+		// H.set(1,1, coeff[4]);
+		// H.set(1,2, coeff[5]);
+		// H.set(2,0, coeff[6]);
+		// H.set(2,1, coeff[7]);
+		// H.set(2,2, coeff[8]);
+	}else{
+		H = new Matrix(3,3);
+		H.fromArray(coeff);
+	}
 	return H;
 }
 R3D.affineCornerNonlinearGD = function(affine, pointsA,pointsB){ // with few params in very linear case this is only helpful for a few % error reduction
@@ -12649,10 +12904,13 @@ return matches;
 }
 
 
-R3D.subpixelHaystack = function(imageA,imageB, pointA,pointB, affine,  needleSize,haystackSize){
+
+// TODO: subpixelHaystack USING ORIGINAL IMAGE B AS HAYSTACKs
+R3DDEBUGC = 0;
+R3D.subpixelHaystack = function(imageA,imageB, pointA,pointB, affine,  needleSize,haystackSize, needleZoom, debug){ // zoom <0 = ZOOMED IN | zoom>0 == ZOOMED OUT
 	needleSize = needleSize!==undefined ? needleSize : 11;
 	haystackSize = haystackSize!==undefined ? haystackSize : Math.round(needleSize*2.0);
-	var needleZoom = 1.0;
+	needleZoom = needleZoom!==undefined ? needleZoom : 1.0;
 	var needle = imageA.extractRectFromFloatImage(pointA.x,pointA.y,needleZoom,null,needleSize,needleSize, affine);
 	var haystack = imageB.extractRectFromFloatImage(pointB.x,pointB.y,needleZoom,null,haystackSize,haystackSize, null);
 	var scoreSAD = R3D.searchNeedleHaystackSSDColor(needle,haystack);
@@ -12686,12 +12944,58 @@ R3D.subpixelHaystack = function(imageA,imageB, pointA,pointB, affine,  needleSiz
 		console.log(values);
 		// .. no solution -> do nothing
 	}
-// console.log(peak.x-width*0.5,peak.y-height*0.5)
 	// set new point
-	var p = pointB;
-	var q = p.copy().add((peak.x-width*0.5)*needleZoom,(peak.y-height*0.5)*needleZoom);
+	var newB = pointB.copy().add((peak.x-width*0.5)*needleZoom,(peak.y-height*0.5)*needleZoom);
+
+if(debug){
+	var iii = needle;
+	var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
+	var d = new DOImage(img);
+	d.matrix().translate(10 + R3DDEBUGC*100, 10);
+	GLOBALSTAGE.addChild(d);
+
+	var iii = haystack;
+	var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
+	var d = new DOImage(img);
+	d.matrix().translate(10 + R3DDEBUGC*100, 10 + 100);
+	GLOBALSTAGE.addChild(d);
+
+	var wid = width
+	var hei = height;
+	var colors = [0xFF000099, 0xFF0000FF, 0xFFCC00CC, 0xFFFF0000, 0xFF990000, 0xFFFFFFFF];
+	var heat = Code.copyArray(values);
+	ImageMat.normalFloat01(heat);
+	ImageMat.pow(heat,0.5);
+	// ImageMat.pow(heat,2.0);
+	heat = ImageMat.heatImage(heat, wid, hei, true, colors);
+	img = GLOBALSTAGE.getFloatRGBAsImage(heat.red(), heat.grn(), heat.blu(), wid, hei);
+	// img = GLOBALSTAGE.getFloatRGBAsImage(colorsA_r,colorsA_g,colorsA_b, wid, hei);
+	d = new DOImage(img);
+	d.matrix().translate(10 + R3DDEBUGC*100 + (haystackSize-width)*0.5, 10 + 100 + (haystackSize-height)*0.5 );
+	GLOBALSTAGE.addChild(d);
+	d.graphics().alpha(0.50);
+
+
+	var iii = haystack;
+	var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
+	var d = new DOImage(img);
+	d.matrix().translate(10 + R3DDEBUGC*100, 10 + 300);
+	GLOBALSTAGE.addChild(d);
+	d.graphics().alpha(0.5);
+
+	var iii = needle;
+	var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
+	var d = new DOImage(img);
+	d.matrix().translate(10 + R3DDEBUGC*100 + (haystackSize-needleSize)*0.5 + (peak.x-width*0.5), 10 + 300 + (haystackSize-needleSize)*0.5 + (peak.y-height*0.5));
+	// (peak.x-width*0.5)
+	GLOBALSTAGE.addChild(d);
+
+
+	++R3DDEBUGC;
+}
+
 	// context object return
-	return {"A":pointA, "B":q, "affine":affine};
+	return {"A":pointA, "B":newB, "affine":affine};
 }
 
 R3D.patch3DFromPoint3DCameras = function(point3D, cameraCenters, cameraNormals, cameraRights, cameraSizes, points2D){
@@ -12781,7 +13085,7 @@ R3D.projectPoint3DForPoint2DInfo = function(center3D,normal3D,up3D,ri3D,size3D, 
 	list.unshift(center2D);
 	return {"points":list, "size":distance};
 }
-R3D.patchAffine2DFromPatch3D = function(point3D,normal3D,up3D,right3D,size3D, camA,Ka, camB,Kb, pointA2D,pointB2D){
+R3D.patchAffine2DFromPatch3D = function(point3D,normal3D,up3D,right3D,size3D, camA,Ka, camB,Kb, pointA2D,pointB2D, reuse){
 	var points2D = [pointA2D,pointB2D];
 	var cams = [camA,camB];
 	var Ks = [Ka,Kb];
@@ -12807,7 +13111,7 @@ R3D.patchAffine2DFromPatch3D = function(point3D,normal3D,up3D,right3D,size3D, ca
 	var pointsA = sets2D[0];
 	var pA = points2D[1];
 	var pointsB = sets2D[1];
-	var affine = R3D.affineCornerMatrixLinear(pointsA,pointsB);
+	var affine = R3D.affineCornerMatrixLinear(pointsA,pointsB, reuse);
 	return affine;
 }
 
