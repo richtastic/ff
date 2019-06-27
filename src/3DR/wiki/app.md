@@ -369,56 +369,30 @@ https://cloud.google.com/appengine/docs/nodejs/
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+- can a default assumed K (identity?) be used to approximate affine matrixes [from similar projection] so that the F sampling can be ignored ... ?
+	- how do differences in K affect resulting 3D geometry?:
+	- f
+	- fx
+	- fy
+	- s
+	- cx
+	- cy
+	=> finally how do these changes affect projected patch & A->B patch affine?
+
+- probe2d more accurate
+- probe2d searched points criteria
 
 - slow
 		- speed up  zoom-best location
 		- speed up probe2D? [can use cell-size scaling of image?]
-- accuracy?
-	- try increasing accuracy by zooming in @2x [then sub-scaling back]
-
-- stop dropping 'fuzzy' BG data?
-
--
 
 
- R3D.subpixelHaystack works well
+- is NCC/SAD using updated COLOR methods
 
-
-- efficient way to do probe2D
-	- static sized images @ 1x,1/2x1/4x -- need to pick size to use
-
-
-
-
- - ORIGINAL POINTS ARE NOT GOOD (from dense F)
-
-- error in dense F is off a lot?
-	=> do larger size F, but only keep top N corner points
-
-- initial matches aren't aligned too nicely
-	- is optimized location bad ?
-	- is original location (stereo) bad ?
-
-- need to see if A) any matches are good & B) try to remove worst matches
-
-
-
-- get SAD-score & tint display based on error (blue - red)
--
-
-
-
-- show worst/best matches & projected locations in A & B images
-	- initial dense F/R points seems very accurate
-
-
-- try INIT instead of refine ?
-	- broken?
-
-
-
-21944
-
+DENSE:
+  - CLEAN: remove worst offenders to make probe2d only probe best locations [keep optimizing]
+  - EXPAND: use probe2d to keep acquiring better points [keep optimizing]
+  - OPTIMIZE: remove R/F/N & patch [keep expanding & optimizing]
 
 
 

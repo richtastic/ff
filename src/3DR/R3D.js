@@ -621,7 +621,6 @@ log = false;
 		var M1 = M1Full;
 		var M2 = possible; // F-POINTS
 		var points3D = R3D.triangulationDLT(pointsA,pointsB, M1,M2, Ka, Kb, KaInv, KbInv); // possibles are EXTRINSIC MATRICES
-// console.log(points3D)
 		var distortions = null;
 		for(var j=0; j<points3D.length; ++j){ // project point to both cameras:
 			var point3D = points3D[j];
@@ -631,7 +630,7 @@ log = false;
 			countsTotal[i] += p2D2 ? 1 : -1;
 		}
 	}
-	console.log(countsTotal);
+	// console.log(countsTotal);
 	var bestTotalCount = Code.max(countsTotal);
 	if(bestTotalCount>=0){ // ?
 		var bestProjections = [];
@@ -5441,13 +5440,18 @@ R3D.optimumLocationRefineTransform = function(pointsA,pointsB, F, KA,KB,KAInv,KB
 	console.log("optimumLocationRefineTransform: ");
 	var Pidentity = new Matrix(4,4).identity();
 	var PA = Pidentity;
-	// console.log(F);
-	var PB = R3D.transformFromFundamental(pointsA,pointsB, F, KA,KAInv,KB,KBInv, PA, true);
-	// console.log(PA,PB);
-
+	var maxTest = 1000;
+	var ptsA = pointsA;
+	var ptsB = pointsB;
+	if(pointsA.length>maxTest){
+		var result = Code.randomSampleRepeatsParallelArrays([ptsA,ptsB], maxTest);
+		ptsA = result[0];
+		ptsB = result[1];
+	}
+	var PB = R3D.transformFromFundamental(ptsA,ptsB, F, KA,KAInv,KB,KBInv, PA, true);
+	//
 	var pointCount = pointsA.length;
-
-
+	//
 	// var compareRefineSize = 21; // 7-11
 	var compareRefineSize = 11;
 	// var compareRefineSize = 7;
@@ -5667,6 +5671,18 @@ R3D.fundamentalMatrixNonlinear = function(fundamental,pointsA,pointsB){
 }
 
 // F nonlinear
+R3D.fundamentalFromUnnormalizedMaxCheck = function(pointsA,pointsB, maxCount, skipNonlinear){
+	var maxTest = 500;
+	var ptsA = pointsA;
+	var ptsB = pointsB;
+	if(pointsA.length>maxCount){
+		var result = Code.randomSampleRepeatsParallelArrays([ptsA,ptsB], maxTest);
+		ptsA = result[0];
+		ptsB = result[1];
+	}
+	var F = R3D.fundamentalFromUnnormalized(ptsA,ptsB, skipNonlinear);
+	return {"F":F, "A":ptsA, "B":ptsB};
+}
 R3D.fundamentalFromUnnormalized = function(pointsA,pointsB, skipNonlinear){
 	skipNonlinear = skipNonlinear!==undefined ? skipNonlinear : false;
 	var pointsANorm = R3D.calculateNormalizedPoints([pointsA]);
@@ -5683,8 +5699,6 @@ R3D.fundamentalError = function(matrixFfwd,matrixFrev,pointsA,pointsB){
 	var pointA = new V3D();
 	var pointB = new V3D();
 	var errors = [];
-	// var matrixFfwd = F;
-	// var matrixFrev = R3D.fundamentalInverse(matrixFfwd);
 	for(i=0; i<pointsA.length; ++i){
 		var pA = pointsA[i];
 		var pB = pointsB[i];
@@ -12907,17 +12921,12 @@ return matches;
 
 // TODO: subpixelHaystack USING ORIGINAL IMAGE B AS HAYSTACKs
 R3DDEBUGC = 0;
-R3D.subpixelHaystack = function(imageA,imageB, pointA,pointB, affine,  needleSize,haystackSize, needleZoom, debug){ // zoom <0 = ZOOMED IN | zoom>0 == ZOOMED OUT
-	needleSize = needleSize!==undefined ? needleSize : 11;
-	haystackSize = haystackSize!==undefined ? haystackSize : Math.round(needleSize*2.0);
-	needleZoom = needleZoom!==undefined ? needleZoom : 1.0;
-	var needle = imageA.extractRectFromFloatImage(pointA.x,pointA.y,needleZoom,null,needleSize,needleSize, affine);
-	var haystack = imageB.extractRectFromFloatImage(pointB.x,pointB.y,needleZoom,null,haystackSize,haystackSize, null);
-	var scoreSAD = R3D.searchNeedleHaystackSSDColor(needle,haystack);
-	var values = scoreSAD["value"];
-	var width = scoreSAD["width"];
-	var height = scoreSAD["height"];
-	// find peak
+R3D.subpixelMinimumPeak = function(values,width,height){
+	if(!width){
+		width = values["width"];
+		height = values["height"];
+		values = values["value"];
+	}
 	var minIndex = Code.minIndex(values);
 	var minX = Math.floor(minIndex%width);
 	var minY = Math.floor(minIndex/width);
@@ -12936,17 +12945,50 @@ R3D.subpixelHaystack = function(imageA,imageB, pointA,pointB, affine,  needleSiz
 	var d6 = values[width*yMax + xMin];
 	var d7 = values[width*yMax + minX];
 	var d8 = values[width*yMax + xMax];
-	try{
+	// try{
 		var result = Code.extrema2DFloatInterpolate(new V3D(), d0,d1,d2,d3,d4,d5,d6,d7,d8);
-		peak.x += result.x;
-		peak.y += result.y;
-	}catch(e){
-		console.log(values);
-		// .. no solution -> do nothing
+		if(result){
+			if( Code.isNaN(result.x) ){
+				console.log(result);
+				console.log(d0,d1,d2,d3,d4,d5,d6,d7,d8);
+				throw "?";
+			}
+			peak.x += result.x;
+			peak.y += result.y;
+		}
+	// }catch(e){
+	// 	console.log(values);
+	// }
+	return peak;
+}
+R3D.subpixelHaystack = function(imageA,imageB, pointA,pointB, affine,  needleSize,haystackSize, needleZoom, debug){ // zoom <0 = ZOOMED IN | zoom>0 == ZOOMED OUT
+	needleSize = needleSize!==undefined ? needleSize : 11;
+	haystackSize = haystackSize!==undefined ? haystackSize : Math.round(needleSize*2.0);
+	needleZoom = needleZoom!==undefined ? needleZoom : 1.0;
+	var needle = imageA.extractRectFromFloatImage(pointA.x,pointA.y,needleZoom,null,needleSize,needleSize, affine);
+	var scoreSAD;
+	if(needleZoom==1.0){
+		var offsetX = Math.round(pointB.x - haystackSize*0.5);
+		var offsetY = Math.round(pointB.y - haystackSize*0.5);
+		scoreSAD = R3D.searchNeedleHaystackSSDColorFull(needle,imageB, offsetX,offsetY,haystackSize,haystackSize);
+	}else{
+		var haystack = imageB.extractRectFromFloatImage(pointB.x,pointB.y,needleZoom,null,haystackSize,haystackSize, null);
+		scoreSAD = R3D.searchNeedleHaystackSSDColor(needle,haystack);
+	}
+	var values = scoreSAD["value"];
+	var width = scoreSAD["width"];
+	var height = scoreSAD["height"];
+
+	var peak = R3D.subpixelMinimumPeak(scoreSAD);
+
+	if( Code.isNaN(peak.x) ){
+		console.log(scoreSAD);
+		console.log(peak);
+		throw "NAN";
 	}
 	// set new point
 	var newB = pointB.copy().add((peak.x-width*0.5)*needleZoom,(peak.y-height*0.5)*needleZoom);
-
+/*
 if(debug){
 	var iii = needle;
 	var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
@@ -12993,7 +13035,7 @@ if(debug){
 
 	++R3DDEBUGC;
 }
-
+*/
 	// context object return
 	return {"A":pointA, "B":newB, "affine":affine};
 }
@@ -29298,6 +29340,7 @@ R3D.searchNeedleHaystackSSDColor = function(needle,haystack,needleMask){
 			++maskCount;
 		}
 	}
+	var inverseNeedleCount = 1.0/maskCount;
 	// needle average
 	var avgN = new V3D();
 	for(k=0; k<needleCount; ++k){
@@ -29307,7 +29350,7 @@ R3D.searchNeedleHaystackSSDColor = function(needle,haystack,needleMask){
 		avgN.y += needleG[k];
 		avgN.z += needleB[k];
 	}
-	avgN.scale(1.0/needleCount);
+	avgN.scale(inverseNeedleCount);
 	//
 	var avgH = new V3D();
 	var result = new Array();
@@ -29315,7 +29358,7 @@ R3D.searchNeedleHaystackSSDColor = function(needle,haystack,needleMask){
 		var jW = j*resultWidth;
 		for(i=0; i<resultWidth; ++i){
 			var resultIndex = jW + i;
-			var sad = 0;
+			// haystack average
 			avgH.set(0,0,0);
 			for(var nJ=0; nJ<needleHeight; ++nJ){ // entire needle
 				var jhW = (j+nJ)*haystackWidth;
@@ -29329,8 +29372,9 @@ R3D.searchNeedleHaystackSSDColor = function(needle,haystack,needleMask){
 					avgH.z += haystackB[hIndex];
 				}
 			}
-			avgH.scale(1.0/needleCount);
-			// ...
+			avgH.scale(inverseNeedleCount);
+			// SAD
+			var sad = 0;
 			for(var nJ=0; nJ<needleHeight; ++nJ){ // entire needle
 				var jnW = nJ*needleWidth
 				var jhW = (j+nJ)*haystackWidth
@@ -29358,7 +29402,87 @@ R3D.searchNeedleHaystackSSDColor = function(needle,haystack,needleMask){
 	}
 	return {"value":result, "width":resultWidth, "height":resultHeight};
 }
-
+R3D.searchNeedleHaystackSSDColorFull = function(needle,haystack, offsetX,offsetY,haystackWidth,haystackHeight){ // TODO: what to do about edges ...
+	var needleWidth = needle.width();
+	var needleHeight = needle.height();
+	var needleR = needle.red();
+	var needleG = needle.grn();
+	var needleB = needle.blu();
+	var haystackR = haystack.red();
+	var haystackG = haystack.grn();
+	var haystackB = haystack.blu();
+	var fullHWidth = haystack.width();
+	var fullHHeight = haystack.height();
+	var fWm1 = fullHWidth - 1;
+	var fHm1 = fullHHeight - 1;
+	var needleCount = needleWidth*needleHeight;
+	var resultWidth = haystackWidth - needleWidth + 1;
+	var resultHeight = haystackHeight - needleHeight + 1;
+	var resultCount = resultWidth * resultHeight;
+	if(resultCount<=0){
+		return null;
+	}
+	var i, j;
+	var inverseNeedleCount = 1.0/needleCount;
+	// needle average
+	var avgN = new V3D();
+	for(k=0; k<needleCount; ++k){
+		avgN.x += needleR[k];
+		avgN.y += needleG[k];
+		avgN.z += needleB[k];
+	}
+	avgN.scale(inverseNeedleCount);
+	//
+	var avgH = new V3D();
+	var result = new Array();
+	for(j=0; j<resultHeight; ++j){
+		var jW = j*resultWidth;
+		for(i=0; i<resultWidth; ++i){
+			var resultIndex = jW + i;
+			// haystack average
+			avgH.set(0,0,0);
+			for(var nJ=0; nJ<needleHeight; ++nJ){ // entire needle
+				var jhW = Math.min(Math.max(offsetY+j+nJ,0),fHm1);
+					jhW = jhW*fullHWidth;
+				for(var nI=0; nI<needleWidth; ++nI){
+					var hIndex = Math.min(Math.max(offsetX+i+nI,0),fWm1);
+						hIndex = jhW + hIndex;
+					var h = haystack[hIndex];
+					avgH.x += haystackR[hIndex];
+					avgH.y += haystackG[hIndex];
+					avgH.z += haystackB[hIndex];
+				}
+			}
+			avgH.scale(inverseNeedleCount);
+			// SAD
+			var sad = 0;
+			for(var nJ=0; nJ<needleHeight; ++nJ){ // entire needle
+				var jnW = nJ*needleWidth
+				var jhW = Math.min(Math.max(offsetY+j+nJ,0),fHm1);
+					jhW = jhW*fullHWidth;
+				for(var nI=0; nI<needleWidth; ++nI){
+					var nIndex = jnW + nI;
+					var hIndex = Math.min(Math.max(offsetX+i+nI,0),fWm1);
+						hIndex = jhW + hIndex;
+					var nR = needleR[nIndex];
+					var nG = needleG[nIndex];
+					var nB = needleB[nIndex];
+					var hR = haystackR[hIndex];
+					var hG = haystackG[hIndex];
+					var hB = haystackB[hIndex];
+					// SAD - color
+					var dR = nR - hR;
+					var dG = nG - hG;
+					var dB = nB - hB;
+					var sq = dR*dR + dG*dG + dB*dB;
+					sad += Math.sqrt(sq);
+				}
+			}
+			result[resultIndex] = sad;
+		}
+	}
+	return {"value":result, "width":resultWidth, "height":resultHeight};
+}
 
 
 
@@ -30123,13 +30247,13 @@ R3D.optimumAffineCornerTransform = function(imageA,pointA, imageB,pointB, affine
 	return result;
 }
 
-R3D.bestAffineLocationFromLocation = function(affine,centerA,centerB, existingA,  imageA,imageB, needleSize){
+R3D.bestAffineLocationFromLocation = function(affine,centerA,centerB, existingA,  imageA,imageB, needleSize, haystackSize){
 	var compareSize = 11;
 	var deltaA = V2D.sub(existingA,centerA); // A to B
 	var deltaB = affine.multV2DtoV2D(deltaA);
 	var predictedB = V2D.add(centerB,deltaB);
 	// get scores
-	var haystackSize = needleSize*3; // 2-3
+	haystackSize = haystackSize!==undefined ? haystackSize : needleSize*3; // 2-3
 	var scores = R3D.optimumScoresAtLocation(imageA,existingA, imageB,predictedB, needleSize,haystackSize,affine);
 	var finalSize = scores["width"];
 	var cellScale = (needleSize/compareSize);
@@ -30148,6 +30272,9 @@ R3D.optimumScoresAtLocation = function(imageA,pointA, imageB,pointB, needleSize,
 	var needle = imageA.extractRectFromFloatImage(pointA.x,pointA.y,cellScale,null,compareSize,compareSize, matrix);
 	var haystack = imageB.extractRectFromFloatImage(pointB.x,pointB.y,cellScale,null,haystackSize,haystackSize, null);
 	// var scoresSAD = R3D.searchNeedleHaystackImageFlat(needle, null, haystack);
+
+// TODO: THIS SHOULD USE UPDATED COLOR FXNs
+
 	var scoresNCC = R3D.normalizedCrossCorrelation(needle,null, haystack, true);
 	var scores = {
 		// "width": scoresSAD["width"],

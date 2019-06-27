@@ -4042,6 +4042,8 @@ ImageMat.prototype.getScaledImage = function(scale){
 		}
 		*/
 		sigma = Math.sqrt(1.0/scale);
+	}else if(scale==1.0){
+		return this.copy();
 	}
 	var newWidth = Math.round(scale*this.width());
 	var newHeight = Math.round(scale*this.height());

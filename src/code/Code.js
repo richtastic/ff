@@ -3528,6 +3528,24 @@ Code.randomSampleRepeats = function(array, count){
 	}
 	return random;
 }
+Code.randomSampleRepeatsParallelArrays = function(arrays, count){
+	var arrCount = arrays.length;
+	if(arrCount==0){
+		return [];
+	}
+	var len = arrays[0].length;
+	if(len==0){
+		return [];
+	}
+	var randoms = Code.newArrayArrays(arrCount);
+	for(var i=0; i<count; ++i){
+		var index = Math.floor(Math.random()*len);
+		for(var j=0; j<arrCount; ++j){
+			randoms[j].push(arrays[j][index]);
+		}
+	}
+	return randoms;
+}
 Code.randomIntervalSet = function(count, min,max){
 // TODO: OPTIMIZATIONS FOR DIFFERENT COUNT CASES
 	if(max===undefined){ max = min; min = 0; }
