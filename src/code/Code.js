@@ -4475,8 +4475,9 @@ Code.median = function(list,key,count, doSort){ // median = middle of set: assum
 }
 Code.percentile = function(list, percent){ // not statistics percentile .. more just linear array percent index
 	var count = list.length;
-	var indexA = Math.floor(count*percent);
-	var indexB = Math.min(Math.ceil(count*percent),count-1);
+	var index = count*percent;
+	var indexA = Math.floor(index);
+	var indexB = Math.min(Math.ceil(index),count-1);
 	return (list[indexA] + list[indexB])*0.5;
 }
 Code.sum = function(list,key,count){

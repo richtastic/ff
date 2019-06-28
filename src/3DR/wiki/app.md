@@ -333,10 +333,10 @@ TODO: pairwise possibility limiting
 	- multi-view combining into single 3D scene - minimizing errors
 		- sparse tracks
 		x - dense points
-(07/01)
+(07/17)
 - surface triangulation(tessellation)
 x	- advancing-front, curvature-based tessellation
-(07/17)
+(07/31)
 	=> scene triangle model
 - texturing
 	- view-based surface texturing
@@ -349,11 +349,11 @@ x	- advancing-front, curvature-based tessellation
 	- VR device
 		- ios: scenekit
 		- oculus = unity / blender
-(08/101)
+(08/31)
 - MVP
 	- example models
 	- example screens
-(07/15)
+(08/15)
 
 google app engine project - nodejs
 https://cloud.google.com/appengine/docs/nodejs/
@@ -369,6 +369,17 @@ https://cloud.google.com/appengine/docs/nodejs/
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+- initial dense F has large error
+	- use first/second score ratios [keep top half ?]
+
+- probe2d searched cells/points criteria
+
+- how to verify if patch dropping is working?
+
+- identify / remove small disconnected (bad) neighborhoods
+	- 'expand' locally
+
+
 - can a default assumed K (identity?) be used to approximate affine matrixes [from similar projection] so that the F sampling can be ignored ... ?
 	- how do differences in K affect resulting 3D geometry?:
 	- f
@@ -379,33 +390,11 @@ https://cloud.google.com/appengine/docs/nodejs/
 	- cy
 	=> finally how do these changes affect projected patch & A->B patch affine?
 
-- probe2d more accurate
-- probe2d searched points criteria
 
-- slow
-		- speed up  zoom-best location
-		- speed up probe2D? [can use cell-size scaling of image?]
+- look back at radial distortion minimizing
+- look back at guessed K minimizing
 
 
-- is NCC/SAD using updated COLOR methods
-
-DENSE:
-  - CLEAN: remove worst offenders to make probe2d only probe best locations [keep optimizing]
-  - EXPAND: use probe2d to keep acquiring better points [keep optimizing]
-  - OPTIMIZE: remove R/F/N & patch [keep expanding & optimizing]
-
-
-
-
-- since R is known - can get relative 2D matrixes after F is complete
-
-
-
-- ORIGINAL DENSE F MATCHES ARE MOSTLY GOOD
-	POSSIBLE ERRORS:
-		- filter on patch sphere 3d
-		- probe2D
-		- refining P3D only -> not re-linear estimating location each time ? [need to copy match.estimated3D from point3D ? inverse ?]
 
 
 
@@ -422,14 +411,13 @@ DENSE:
 
 
 
-- some things take a very long time
-
-
-- points from dense F are only +/- 1/2 pixel [@ 0.25 scale = +/- 2 pixels]
 
 
 
-42563
+- probe2d more accurate
+- probe2d searched points criteria
+- probe2d use smart haystack sizing
+	- make lookup image when cell size changes ...
 
 
 - HOW TO PRIORITIZE PROBE2D CHECKING SMARTLY - ADD  & REMOVE

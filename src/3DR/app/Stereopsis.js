@@ -237,9 +237,10 @@ Stereopsis.infoFromMatrix2D = function(imageA,pointA,imageB,pointB,matrix,compar
 	// throw "zoom: "+zoom+" @ "+compareSize;
 	var needle = imageA.extractRectFromFloatImage(pointA.x,pointA.y,zoom,null,needleSize,needleSize, matrix);
 	var haystack = imageB.extractRectFromFloatImage(pointB.x,pointB.y,zoom,null,needleSize,needleSize, null);
-	var scoreNCC = R3D.normalizedCrossCorrelation(needle,null,haystack,true);
+
+	var scoreNCC = R3D.searchNeedleHaystackNCCColor(needle,haystack);
 		scoreNCC = scoreNCC["value"][0];
-	var scoreSAD = R3D.searchNeedleHaystackImageFlat(needle,null,haystack);
+	var scoreSAD = R3D.searchNeedleHaystackSADColor(needle,haystack);
 		scoreSAD = scoreSAD["value"][0];
 	var range = needle.range()["y"];
 	return {"ncc":scoreNCC, "sad":scoreSAD, "range":range};
@@ -659,6 +660,16 @@ TODO:
 	}
 
 }
+
+
+Stereopsis.View.prototype._initProbe2DImage = function(){
+	console.log("_initProbe2DImage");
+	var compareWindow = this.compareSize();
+	var compareSize = 11;
+	var scale = compareWindow/compareSize;
+	console.log(scale);
+	// ... create an image such that the needle sizes are scaled the same as the haystack image -- this might be origin-image resolution dependent
+}
 Stereopsis.View.prototype.cellForPoint = function(p){
 	if(p==null){
 		console.log(p);
@@ -976,6 +987,7 @@ Stereopsis.View.prototype.cellSize = function(cellSize){
 			compareSize = Math.max(compareSize,9); // at least as big as comparison
 			this.compareSize(compareSize);
 			this._initCells();
+			this._initProbe2DImage();
 		}
 	}
 	return this._cellSize;
@@ -4075,7 +4087,8 @@ Stereopsis.World.prototype.filterPairwiseSphere3D = function(sigmaCount, linearl
 						var pointSizeB = point3DB.size();
 						// ignore points that start off very close to eachother to begin with:
 						var distAB = V3D.distance(pointCenterA,pointCenterB);
-						if(distAB<=(pointSizeA+pointSizeB)){
+						var combinedRadius = (pointSizeA+pointSizeB);
+						if(distAB<=combinedRadius){
 							continue;
 						}
 
@@ -4095,7 +4108,9 @@ Stereopsis.World.prototype.filterPairwiseSphere3D = function(sigmaCount, linearl
 						var localSizeA = (distanced/distanceD)*pointSizeA;
 						// if distance between center & line point < rad1 + rad2 == intersection
 						var distance = V3D.distance(closestB, pointCenterB);
-						if(distance < (localSizeA+pointSizeB)*1.0){  // possibly also add padding
+							combinedRadius = (localSizeA+pointSizeB);
+							// combinedRadius *= 0.5; // lenient
+						if(distance < combinedRadius){  // possibly also add padding
 							matchA.temp()["behind"].push(matchB);
 							matchB.temp()["front"].push(matchA);
 							++intersectionsFound;
@@ -4605,8 +4620,8 @@ Stereopsis.World.prototype.solveDensePair = function(){ // pairwise
 
 		} //
 
-
 /*
+
 // TEST SUBPIXEL PEAK:
 
 var imageMatrixA = images[0];
@@ -4636,9 +4651,44 @@ var matrix = new Matrix2D();
 // var b = new V2D(700,500);
 
 
-var a = new V2D(485,380);
-var b = new V2D(520,380);
+// var a = new V2D(485,380);
+
+// var a = new V2D(570,430);
+// var a = new V2D(500,390);
+// var b = new V2D(520,380);
 // B: V2D {x: 517.4956094823938, y: 384.09953738627837
+
+var a = new V2D(650,520);
+var b = new V2D(600,500);
+
+
+// var a = new V2D(580,450);
+// var b = new V2D(600,500);
+
+var needleZoom = 1.0;
+var needleSize = 21;
+var haystackSize = needleSize*9;
+var pointA = a;
+var pointB = b;
+var needle = imageMatrixA.extractRectFromFloatImage(pointA.x,pointA.y,needleZoom,null,needleSize,needleSize, null);
+var haystack = imageMatrixB.extractRectFromFloatImage(pointB.x,pointB.y,needleZoom,null,haystackSize,haystackSize, null);
+
+
+var scoresNCC = R3D.searchNeedleHaystackNCCColor(needle,haystack); // 0.01
+// var scoresNCC = R3D.searchNeedleHaystackSADColor(needle,haystack); // 0.11 * 10
+console.log(scoresNCC);
+var values = scoresNCC["value"];
+var width = scoresNCC["width"];
+var height = scoresNCC["height"];
+var result = scoresNCC;
+
+var hist = Code.histogram(values, null, 10);
+console.log(hist);
+hist = hist["histogram"];
+var s = Code.printHistogram(hist, 50);
+console.log(s);
+
+// throw "???"
 
 
 // var s = 11;
@@ -4647,28 +4697,29 @@ var b = new V2D(520,380);
 // var result = info["B"];
 
 
-var pointA = a;
-var pointB = b;
-
-var needleZoom = 1.0;
-var affine = null;
-var needleSize = 21;
-var haystackSize = needleSize*4;
-var offsetX = Math.round(pointB.x - haystackSize*0.5);
-var offsetY = Math.round(pointB.y - haystackSize*0.5);
-var needle = imageMatrixA.extractRectFromFloatImage(pointA.x,pointA.y,needleZoom,null,needleSize,needleSize, affine);
-
-var result = R3D.searchNeedleHaystackSSDColorFull(needle,imageMatrixB, offsetX,offsetY,haystackSize,haystackSize);
-console.log(result);
-var values = result["value"];
-var width = result["width"];
-var height = result["height"];
-
+// var pointA = a;
+// var pointB = b;
+//
+// var needleZoom = 1.0;
+// var affine = null;
+// var needleSize = 21;
+// var haystackSize = needleSize*4;
+// var offsetX = Math.round(pointB.x - haystackSize*0.5);
+// var offsetY = Math.round(pointB.y - haystackSize*0.5);
+// var needle = imageMatrixA.extractRectFromFloatImage(pointA.x,pointA.y,needleZoom,null,needleSize,needleSize, affine);
+//
+// var result = R3D.searchNeedleHaystackSSDColorFull(needle,imageMatrixB, offsetX,offsetY,haystackSize,haystackSize);
+// console.log(result);
+// var values = result["value"];
+// var width = result["width"];
+// var height = result["height"];
+//
 var peak = R3D.subpixelMinimumPeak(result);
+console.log(peak)
 
 var R3DDEBUGC = 0;
 
-var haystack = imageMatrixB.extractRectFromFloatImage(pointB.x,pointB.y,needleZoom,null,haystackSize,haystackSize, null);
+// var haystack = imageMatrixB.extractRectFromFloatImage(pointB.x,pointB.y,needleZoom,null,haystackSize,haystackSize, null);
 
 	var iii = needle;
 	var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
@@ -4688,7 +4739,7 @@ var haystack = imageMatrixB.extractRectFromFloatImage(pointB.x,pointB.y,needleZo
 	var heat = Code.copyArray(values);
 
 	ImageMat.normalFloat01(heat);
-	ImageMat.pow(heat,0.5);
+	// ImageMat.pow(heat,0.5);
 	// ImageMat.pow(heat,2.0);
 	heat = ImageMat.heatImage(heat, wid, hei, true, colors);
 	img = GLOBALSTAGE.getFloatRGBAsImage(heat.red(), heat.grn(), heat.blu(), wid, hei);
@@ -4730,7 +4781,7 @@ throw "???"
 		console.log(matches);
 
 
-// throw "..."
+throw "..."
 
 var KA = Ks[0];
 var KB = Ks[1];
@@ -4754,7 +4805,9 @@ var PA = Pidentity;
 		var minErrorPixels = 0.25;
 		// drop worst points -- repeatidly
 		// do until: A) percent drops below 50% of original points B) error drops below 0.5 pixels C) max iterations
-		for(var k=0; k<5; ++k){
+		var Fkeep = null;
+		var errorPosition = 5; // high
+		for(var k=0; k<10; ++k){
 
 			// var F = R3D.fundamentalFromUnnormalized(pointsA,pointsB);
 			// var Finv = R3D.fundamentalInverse(F);
@@ -4763,22 +4816,24 @@ var PA = Pidentity;
 			// var limit = 0 + error["sigma"]*1.0;
 
 			// TODO: IF POINTSA & POINTSB > 1000 => subsample
+			// var errorPosition = 1 + (4/(k+1)); // 5
+			// errorPosition = 1 + (4/(k+1)); // 5
+			var pOutlier = 0.50;
+			var pDesired = 0.99;
+			var info = R3D.fundamentalRANSACFromPoints(pointsA,pointsB, errorPosition, null, pOutlier, pDesired);
+			console.log(info);
+			var F = info["F"];
+			if(!Fkeep){
+				Fkeep = F;
+			}
+			// R3D.fundamentalRANSACFromPoints = function(pointsAIn,pointsBIn, errorPosition, initialF, pOutlier, pDesired){
 
-			var F = R3D.fundamentalFromUnnormalized(pointsA,pointsB);
+			// var F = R3D.fundamentalFromUnnormalized(pointsA,pointsB);
 			var PB = R3D.transformFromFundamental(pointsA,pointsB, F, KA,KAInv,KB,KBInv, PA, true);
 
 			var points3D = [];
 			var errors = [];
-				var maxRSamples = 500;
-				// var ptsA = point2DA;
-				// var ptsB = point2DB;
-				// var pts3 = point3D;
-				// if(ptsA.length>maxRSamples){
-				// 	var info = Code.randomSampleRepeatsParallelArrays([ptsA,ptsB,pts3], maxRSamples);
-				// 		ptsA = info[0];
-				// 		ptsB = info[1];
-				// 		pts3 = info[2];
-				// }
+				// var maxRSamples = 500;
 			for(var p=0; p<pointsA.length; ++p){
 				var point2DA = pointsA[p];
 				var point2DB = pointsB[p];
@@ -4788,16 +4843,30 @@ var PA = Pidentity;
 					error = error["error"];
 					errors.push(error);
 			}
-			if(errors.length>maxRSamples){
-				errors = Code.randomSampleRepeats(errors,maxRSamples);
-			}
+			// TODO: COMPARE:
+			// if(errors.length>maxRSamples){
+			// 	errors = Code.randomSampleRepeats(errors,maxRSamples);
+			// }
 			// drop worst points
+
+errors.sort();
+
 			var mini = Code.min(errors);
 			var maxi = Code.max(errors);
 			var sigma = Code.stdDev(errors, mini);
-			var limit = mini + sigma*2.0; // 1-2
+			var halfError = Code.percentile(errors,0.5);
+			var limitS = mini + sigma*2.0; // 1-2
+			var limitL = mini + 2*halfError;
+			var limit = Math.min(limitS,limitL);
+			errorPosition = Math.min(errorPosition, halfError);
+			// low variablity stuff -> 2.0 sigma
+			// high variabaliity -> 1.0 sigma
+			// -> LINEAR DROPPING for high variability
 				limit = Math.min(limit,maxi);
-			console.log(mini+" +/- "+sigma+" = "+limit);
+			console.log(mini+" +/- "+sigma+" = "+limitS+" | "+limitL+" = "+limit+" @ "+points3D.length+" | ERROR: "+errorPosition);
+
+Code.printMatlabArray(errors,"x_"+k);
+// throw "?"
 			// var R = R3D.cameraExtrinsicRANSACFromPoints
 			// R3D.cameraExtrinsicRANSACFromPointsAutomated = function(pointsA,pointsB, Ka,Kb,KaInv,KbInv, Pinitial){
 			if(limit<minErrorPixels){
@@ -4827,12 +4896,21 @@ var PA = Pidentity;
 				console.log("exit min");
 				break;
 			}
+			Fkeep = F;
 			pointsA = keepA;
 			pointsB = keepB;
 		}
+// throw "yup"
 
-		var info = R3D.fundamentalFromUnnormalizedMaxCheck(pointsA, pointsB, maxFSamples);
-			var F = info["F"];
+
+
+
+
+
+		// var info = R3D.fundamentalFromUnnormalizedMaxCheck(pointsA, pointsB, maxFSamples);
+		// 	var F = info["F"];
+		F = Fkeep;
+
 		var Finv = R3D.fundamentalInverse(F);
 		// dense
 		var imageMatrixA = viewA.image();
@@ -4887,6 +4965,11 @@ var PA = Pidentity;
 			var error = R3D.fErrorList(F,Finv,ptsA,ptsB);
 			console.log(error);
 			var limit = 0 + error["sigma"]*3.0; // 2-3
+error["errors"].sort();
+Code.printMatlabArray(error["errors"]);
+			var percentCheck = 0.75;
+			var percentError = Code.percentile(error["errors"],percentCheck);
+			limit = Math.min(limit,percentError/percentCheck);
 			// drop worst
 			var keepA = [];
 			var keepB = [];
@@ -4903,7 +4986,7 @@ var PA = Pidentity;
 			pointsA = keepA;
 			pointsB = keepB;
 			console.log(" F drop => "+pointsA.length);
-
+			// ..
 			var result = R3D.optimumLocationRefineTransform(pointsA,pointsB, F, KA,KB,KAInv,KBInv, iA,iB,   false);
 
 			// drop points falling outside window:
@@ -5277,8 +5360,8 @@ view.cellSize(5);
 */
 
 
-	var maxIterations = 10;
-	// var maxIterations = 5;
+	// var maxIterations = 10;
+	var maxIterations = 5;
 	// var maxIterations = 1;
 	for(var iteration=0; iteration<maxIterations; ++iteration){
 		console.log("all: ========================================================================================= "+iteration+" / "+maxIterations);
@@ -7812,7 +7895,7 @@ checked++;
 							var newCenters = [];
 							for(var k=0; k<visibleCount; ++k){ // get most likely point location of new needle
 								var needleK = needles[k];
-								var scoresNCC = R3D.normalizedCrossCorrelation(needleK,null, haystack, true);
+								var scoresNCC = R3D.searchNeedleHaystackNCCColor(needleK,haystack);
 								var values = scoresNCC["value"];
 								var width = scoresNCC["width"];
 								var height = scoresNCC["height"];
@@ -8399,7 +8482,7 @@ edgeLocations.push(center);
 					var needleA = imageA.extractRectFromFloatImage(pointA.x,pointA.y,scale,null,sizeNeedle,sizeNeedle, average);
 					var haystackB = imageB.extractRectFromFloatImage(pointB.x,pointB.y,scale,null,sizeHaysack,sizeHaysack, null);
 
-					var scoresNCC = R3D.normalizedCrossCorrelation(needleA,null,haystackB,true);
+					var scoresNCC = R3D.searchNeedleHaystackNCCColor(needleA,haystackB);
 					// find location
 					var values = scoresNCC["value"];
 					var width = scoresNCC["width"];
@@ -8472,8 +8555,9 @@ GLOBALSTAGE.addChild(d);
 
 var needleA = imageA.extractRectFromFloatImage(pointA.x,pointA.y,scale,null,sizeNeedle,sizeNeedle, average);
 var needleB = imageB.extractRectFromFloatImage(pointB.x,pointB.y,scale,null,sizeNeedle,sizeNeedle, null);
-var scoresNCC = R3D.normalizedCrossCorrelation(needleA,null,needleB,true);
+var scoresNCC = R3D.searchNeedleHaystackNCCColor(needleA,needleB);
 var score = scoresNCC["value"][0];
+
 // console.log("FIRST score: "+score);
 /*
 					// get refined affine transform
@@ -8884,8 +8968,8 @@ Stereopsis.World.prototype._probeSearchList = function(viewA,viewB,listA){
 	var errorFsigma = transform.fSigma();
 	var errorRmean = transform.rMean();
 	var errorRsigma = transform.rSigma();
-	var checkErrorF = errorFmean + 2.0*errorFsigma; // source points
-	var checkErrorR = errorRmean + 2.0*errorRsigma;
+	var checkErrorF = errorFmean + 1.0*errorFsigma; // source points
+	var checkErrorR = errorRmean + 1.0*errorRsigma;
 	var maxErrorF = errorFmean + sigma*errorFsigma; // new points
 	var maxErrorR = errorRmean + sigma*errorRsigma;
 
@@ -8928,11 +9012,8 @@ Stereopsis.World.prototype._probeSearchList = function(viewA,viewB,listA){
 			var centerA = point2DA.point2D();
 			var centerB = point2DB.point2D();
 			var newPointA = center;
-			// var newMatch = this.bestMatch2DFromLocation(affine,centerA,centerB, newPointA, viewA,viewB, null);
-			// var newMatch = this.bestMatch2DFromLocation(affine,centerA,centerB, newPointA, viewA,viewB, inverse);
 
 			var newMatch = this.bestMatch2DFromExisting(affine,centerA,centerB, newPointA, viewA,viewB, null);
-
 
 			if(newMatch){
 				Stereopsis.updateErrorForMatch(newMatch);
@@ -9465,7 +9546,7 @@ Stereopsis.World.prototype._resolveIntersectionPatch = function(point3DA,point3D
 				var matrix = match.affineForViews(needleView,view);
 				var haystack = image.extractRectFromFloatImage(p.x,p.y,needleZoom,null,haystackSize,haystackSize, matrix);
 				// find NCC:
-				var scoresNCC = R3D.normalizedCrossCorrelation(needle,null, haystack, true);
+				var scoresNCC = R3D.searchNeedleHaystackNCCColor(needle,haystack);
 				var values = scoresNCC["value"];
 				var width = scoresNCC["width"];
 				var height = scoresNCC["height"];
@@ -10427,7 +10508,9 @@ if(dot<=0){ // is this a problem?
 		var patchI = patches[i];
 		for(var j=i+1; j<patches.length; ++j){
 			var patchJ = patches[j];
-			var scoresNCC = R3D.normalizedCrossCorrelation(patchI,needleMask, patchJ, true);
+			var scoresNCC = R3D.searchNeedleHaystackNCCColor(patchI,patchJ, needleMask);
+
+	throw "HERE"
 			scoresNCC = scoresNCC["value"][0];
 			totalCost += scoresNCC;
 			++compares;
@@ -10797,15 +10880,17 @@ Stereopsis.World.prototype.bestMatch2DFromLocation = function(affine,centerA,cen
 	}
 	return null;
 }
+// Stereopsis.World.Probe2DCompareSize = 11; // 7-11
 Stereopsis.World.prototype.bestMatch2DFromExisting = function(affine,centerA,centerB, existingA, viewA,viewB){
 	var imageA = viewA.image();
 	var imageB = viewB.image();
 	var needleSize = viewB.compareSize(); // smaller size would be more accurate | larger size allows for more initial error
 	var haystackSize = 2*needleSize;
 	var locationB = R3D.bestAffineLocationFromLocation(affine,centerA,centerB, existingA, imageA,imageB,needleSize, haystackSize);
-	var compareWindow = Stereopsis.compareSizeForViews2D(viewA,centerA,viewB,locationB);
+	// var compareWindow = Stereopsis.compareSizeForViews2D(viewA,centerA,viewB,locationB);
+	var compareWindow = viewB.compareSize();
 
-	var compareSize = 11; // 7-11
+	var compareSize = 11;
 	var compareArea = 2 + 2*compareSize;
 	var needleZoom = (compareWindow/compareSize);
 	var matrixReuse = new Matrix2D();
@@ -10813,6 +10898,15 @@ Stereopsis.World.prototype.bestMatch2DFromExisting = function(affine,centerA,cen
 	var result = info["B"];
 	locationB.x = result.x;
 	locationB.y = result.y;
+
+	// more accurate location?:
+	// compareSize = 7;
+	// compareArea = 2*compareSize;
+	// needleZoom = 0.5 * (compareWindow/compareSize);
+	// var info = R3D.subpixelHaystack(imageA,imageB, existingA,locationB, affine,  compareSize,compareArea, needleZoom);
+	// var result = info["B"];
+	// locationB.x = result.x;
+	// locationB.y = result.y;
 
 	var match = this.newMatchFromInfo(viewA,existingA.copy(),viewB,locationB,affine);
 	return match;
@@ -10829,79 +10923,57 @@ Stereopsis.averageCornerness = function(view,point){
 	var mean = Code.mean(needle);
 	return mean;
 }
-Stereopsis.uniquenessPerUnitCell = function(imageA,pointA,matrixA, imageB,pointB,matrixB, scale){
-	throw "..."
-	/*
-	scale = scale!==undefined ? scale : 1.0;
-	// console.log("uniquenessFromImages");
-	var needle = imageA.extractRectFromFloatImage(pointA.x,pointA.y,scale,null,sizeNeedle,sizeNeedle, matrixA);
-	var haystack = imageB.extractRectFromFloatImage(pointB.x,pointB.y,scale,null,sizeHaysack,sizeHaysack, matrixB);
-	var scoreNCC = R3D.normalizedCrossCorrelation(needle,null,haystack,true);
-	var values = scoreNCC["value"];
-	var width = scoreNCC["width"];
-	var height = scoreNCC["height"];
-	var uniqueness = Stereopsis.uniquenessFromValueList(values, width, height);
-	*/
-
-	/*
-	get needle @ center
-	get haystack @ 4 locations:
-	loc,d0,d1,d2,d3,d4,d5,d6,d7,d8
-	loc.x = (d5-d3)*0.5;
-	loc.y = (d7-d1)*0.5;
-	get 4 needle-haystack scores
-	invert 4 scores by difference
-	get gradient direction
-
-	*/
-	var sizeA = viewA.size();
-	var sizeB = viewB.size();
-	var blockSize = 11;
-	var compareSize = view.compareSize();
-	var needleSize = blockSize;
-	var scale = blockSize/compareSize;
-	var matrix = null;
-	var needle = ImageMat.extractRectFromFloatImage(point.x,point.y,scale,null,blockSize,blockSize, corners,size.x,size.y, matrix);
-	var mean = Code.mean(needle);
-	return uniqueness;
-}
-Stereopsis.uniquenessFromImages = function(imageA,pointA,matrixA, imageB,pointB,matrixB, sizeNeedle,sizeHaysack, scale){
-	// console.log(imageA,pointA,matrixA, imageB,pointB,matrixB, sizeNeedle,sizeHaysack, scale)
-	scale = scale!==undefined ? scale : 1.0;
-	// console.log("uniquenessFromImages");
-	var needle = imageA.extractRectFromFloatImage(pointA.x,pointA.y,scale,null,sizeNeedle,sizeNeedle, matrixA);
-	var haystack = imageB.extractRectFromFloatImage(pointB.x,pointB.y,scale,null,sizeHaysack,sizeHaysack, matrixB);
-	var scoreNCC = R3D.normalizedCrossCorrelation(needle,null,haystack,true);
-	var values = scoreNCC["value"];
-	var width = scoreNCC["width"];
-	var height = scoreNCC["height"];
-	var uniqueness = Stereopsis.uniquenessFromValueList(values, width, height);
-	return uniqueness;
-	// 	scoreNCC = scoreNCC["value"][0];
-	// var scoreSAD = R3D.searchNeedleHaystackImageFlat(needle,null,haystack);
-	// 	scoreSAD = scoreSAD["value"][0];
-
-}
-Stereopsis.uniquenessFromValueList = function(values, width, height){
-	// console.log(values, width, height);
-	var peaks = Code.findMinima2DFloat(values, width, height, true);
-		peaks.sort( function(a,b){ return a.z<b.z ? -1 : 1; } );
-	var uniqueness = 1.0;
-	var nextBest = 0;
-	var thisBest = 0;
-	if(peaks.length>1){
-		thisBest = peaks[0].z;
-		nextBest = peaks[1].z;
-		// var uniqueness = 1.0/(peaks[1].z-peaks[0].z);
-		// uniqueness = 1-(peaks[1].z-peaks[0].z);
-		// uniqueness = nextBest/thisBest;
-		uniqueness = nextBest - thisBest;
-		// uniqeness = Math.pow(uniqueness,0.5);
-		// uniqueness = 1.0 + Math.pow(uniqueness,0.1);
-		// uniqueness = 1.0;
-	}
-	return uniqueness;
-}
+// Stereopsis.uniquenessPerUnitCell = function(imageA,pointA,matrixA, imageB,pointB,matrixB, scale){
+// 	var sizeA = viewA.size();
+// 	var sizeB = viewB.size();
+// 	var blockSize = 11;
+// 	var compareSize = view.compareSize();
+// 	var needleSize = blockSize;
+// 	var scale = blockSize/compareSize;
+// 	var matrix = null;
+// 	var needle = ImageMat.extractRectFromFloatImage(point.x,point.y,scale,null,blockSize,blockSize, corners,size.x,size.y, matrix);
+// 	var mean = Code.mean(needle);
+// 	return uniqueness;
+// }
+// Stereopsis.uniquenessFromImages = function(imageA,pointA,matrixA, imageB,pointB,matrixB, sizeNeedle,sizeHaysack, scale){
+// 	// console.log(imageA,pointA,matrixA, imageB,pointB,matrixB, sizeNeedle,sizeHaysack, scale)
+// 	scale = scale!==undefined ? scale : 1.0;
+// 	// console.log("uniquenessFromImages");
+// 	var needle = imageA.extractRectFromFloatImage(pointA.x,pointA.y,scale,null,sizeNeedle,sizeNeedle, matrixA);
+// 	var haystack = imageB.extractRectFromFloatImage(pointB.x,pointB.y,scale,null,sizeHaysack,sizeHaysack, matrixB);
+// 	var scoreNCC = R3D.normalizedCrossCorrelation(needle,null,haystack,true);
+// ???
+// throw "HERE"
+// 	var values = scoreNCC["value"];
+// 	var width = scoreNCC["width"];
+// 	var height = scoreNCC["height"];
+// 	var uniqueness = Stereopsis.uniquenessFromValueList(values, width, height);
+// 	return uniqueness;
+// 	// 	scoreNCC = scoreNCC["value"][0];
+// 	// var scoreSAD = R3D.searchNeedleHaystackImageFlat(needle,null,haystack);
+// 	// 	scoreSAD = scoreSAD["value"][0];
+//
+// }
+// Stereopsis.uniquenessFromValueList = function(values, width, height){
+// 	// console.log(values, width, height);
+// 	var peaks = Code.findMinima2DFloat(values, width, height, true);
+// 		peaks.sort( function(a,b){ return a.z<b.z ? -1 : 1; } );
+// 	var uniqueness = 1.0;
+// 	var nextBest = 0;
+// 	var thisBest = 0;
+// 	if(peaks.length>1){
+// 		thisBest = peaks[0].z;
+// 		nextBest = peaks[1].z;
+// 		// var uniqueness = 1.0/(peaks[1].z-peaks[0].z);
+// 		// uniqueness = 1-(peaks[1].z-peaks[0].z);
+// 		// uniqueness = nextBest/thisBest;
+// 		uniqueness = nextBest - thisBest;
+// 		// uniqeness = Math.pow(uniqueness,0.5);
+// 		// uniqueness = 1.0 + Math.pow(uniqueness,0.1);
+// 		// uniqueness = 1.0;
+// 	}
+// 	return uniqueness;
+// }
 
 
 

@@ -4020,48 +4020,49 @@ R3D.stereoHighConfidenceMatches = function(imageMatrixA,imageMatrixB, pointsA,po
 	return matches;
 }
 
-R3D.subPixelMinimumNCC = function(imageA,imageB, a,b, matrixAB,matrixBA, cellSize){
-	cellSize = cellSize!==undefined ? cellSize : 15; // 7-21
-	var compareSize = 7; // 5 - 11
-	var zoom = cellSize/compareSize;
-	var needleSize = compareSize;
-	var haystackSize = needleSize + 2;
-	// TODO: ADD 2 more pixels to search ?
-	var needle = imageA.extractRectFromFloatImage(a.x,a.y,zoom,null,needleSize,needleSize, null);
-	var haystack = imageB.extractRectFromFloatImage(b.x,b.y,zoom,null,haystackSize,haystackSize, matrixBA);
-	// local scores:
-	var scoresNCC = R3D.normalizedCrossCorrelation(needle,null, haystack, true);
-	var values = scoresNCC["value"];
-	var width = scoresNCC["width"];
-	var height = scoresNCC["height"];
-
-	var d0 = values[0];
-	var d1 = values[1];
-	var d2 = values[2];
-	var d3 = values[3];
-	var d4 = values[4];
-	var d5 = values[5];
-	var d6 = values[6];
-	var d7 = values[7];
-	var d8 = values[8];
-	var loc = new V3D();
-	var result = Code.extrema2DFloatInterpolate(loc, d0,d1,d2,d3,d4,d5,d6,d7,d8);
-	if(!result || Math.abs(loc.x)>1 || Math.abs(loc.y)>1){ // too far
-		loc.x = b.x;
-		loc.y = b.y;
-		loc.z = d4;
-	}else{
-		var d = new V2D(loc.x,loc.y);
-		var d = matrixAB.multV2DtoV2D(d,d);
-		loc.x = d.x + b.x;
-		loc.y = d.y + b.y;
-		if(Code.isNaN(loc.z)){
-			loc.z = d4;
-		}
-	}
-	loc.z = Math.max(0,loc.z);
-	return loc;
-}
+// R3D.subPixelMinimumNCC = function(imageA,imageB, a,b, matrixAB,matrixBA, cellSize){
+// 	cellSize = cellSize!==undefined ? cellSize : 15; // 7-21
+// 	var compareSize = 7; // 5 - 11
+// 	var zoom = cellSize/compareSize;
+// 	var needleSize = compareSize;
+// 	var haystackSize = needleSize + 2;
+// 	// TODO: ADD 2 more pixels to search ?
+// 	var needle = imageA.extractRectFromFloatImage(a.x,a.y,zoom,null,needleSize,needleSize, null);
+// 	var haystack = imageB.extractRectFromFloatImage(b.x,b.y,zoom,null,haystackSize,haystackSize, matrixBA);
+// 	// local scores:
+// 	??????
+// 	var scoresNCC = R3D.normalizedCrossCorrelation(needle,null, haystack, true);
+// 	var values = scoresNCC["value"];
+// 	var width = scoresNCC["width"];
+// 	var height = scoresNCC["height"];
+//
+// 	var d0 = values[0];
+// 	var d1 = values[1];
+// 	var d2 = values[2];
+// 	var d3 = values[3];
+// 	var d4 = values[4];
+// 	var d5 = values[5];
+// 	var d6 = values[6];
+// 	var d7 = values[7];
+// 	var d8 = values[8];
+// 	var loc = new V3D();
+// 	var result = Code.extrema2DFloatInterpolate(loc, d0,d1,d2,d3,d4,d5,d6,d7,d8);
+// 	if(!result || Math.abs(loc.x)>1 || Math.abs(loc.y)>1){ // too far
+// 		loc.x = b.x;
+// 		loc.y = b.y;
+// 		loc.z = d4;
+// 	}else{
+// 		var d = new V2D(loc.x,loc.y);
+// 		var d = matrixAB.multV2DtoV2D(d,d);
+// 		loc.x = d.x + b.x;
+// 		loc.y = d.y + b.y;
+// 		if(Code.isNaN(loc.z)){
+// 			loc.z = d4;
+// 		}
+// 	}
+// 	loc.z = Math.max(0,loc.z);
+// 	return loc;
+// }
 R3D.iteritiveBestPointsF = function(pointsAIn,pointsBIn, limitError){
 	limitError = limitError!==undefined ? limitError : 0.25; // 0.1 ~ 1.0
 	var limitMult = 0.5; // want to go theis % under limitError in sigma
@@ -12766,6 +12767,12 @@ GLOBALSTAGE.addChild(d);
 
 			var best = sortedB[0];
 			objectA["best"] = best;
+			var ratio = 0;
+			// if(sortedB.length>1){
+			// 	ratio = sortedB[0][1]/sortedB[1][1];
+			// }
+			// scoreSIFT
+			objectA["ratio"] = ratio;
 
 /*
 if(doDebug){
@@ -12815,6 +12822,7 @@ var imageB = originalImageB;
 
 var matchingCount = 0;
 var matches = [];
+var ratios = [];
 for(var i=0; i<objectsA.length; ++i){
 	var objectA = objectsA[i];
 	var bestA = objectA["best"];
@@ -12828,6 +12836,7 @@ for(var i=0; i<objectsA.length; ++i){
 				// console.log(d+" | "+objectA["i"]+" & "+oA["i"]+" ? "+(objectA==oA));
 				if(objectA==oA){ // 583
 				// if(d<1){ // 583
+ratios.push(bestA["ratio"]);
 					matches.push([objectA,objectB, bestA["match"],bestB["match"]]);
 					matchingCount += 1;
 				}
@@ -12835,7 +12844,7 @@ for(var i=0; i<objectsA.length; ++i){
 		}
 	}
 }
-
+Code.printMatlabArray(ratios,"ratios");
 console.log("matchingCount: "+matchingCount);
 
 
@@ -12970,10 +12979,10 @@ R3D.subpixelHaystack = function(imageA,imageB, pointA,pointB, affine,  needleSiz
 	if(needleZoom==1.0){
 		var offsetX = Math.round(pointB.x - haystackSize*0.5);
 		var offsetY = Math.round(pointB.y - haystackSize*0.5);
-		scoreSAD = R3D.searchNeedleHaystackSSDColorFull(needle,imageB, offsetX,offsetY,haystackSize,haystackSize);
+		scoreSAD = R3D.searchNeedleHaystackSADColorFull(needle,imageB, offsetX,offsetY,haystackSize,haystackSize);
 	}else{
 		var haystack = imageB.extractRectFromFloatImage(pointB.x,pointB.y,needleZoom,null,haystackSize,haystackSize, null);
-		scoreSAD = R3D.searchNeedleHaystackSSDColor(needle,haystack);
+		scoreSAD = R3D.searchNeedleHaystackSADColor(needle,haystack);
 	}
 	var values = scoreSAD["value"];
 	var width = scoreSAD["width"];
@@ -15840,7 +15849,7 @@ R3D.fErrorList = function(FFwd,FRev,pointsA,pointsB){
 	var aSigma = Code.stdDev(fDistancesA, aMean);
 	var bMean = Code.mean(fDistancesB);
 	var bSigma = Code.stdDev(fDistancesB, bMean);
-	return {"mean":fMean, "sigma":fSigma, "meanA":aMean, "sigmaA":aSigma, "meanB":bMean, "sigmaB":bSigma};
+	return {"mean":fMean, "sigma":fSigma, "meanA":aMean, "sigmaA":aSigma, "meanB":bMean, "sigmaB":bSigma, "errors":fDistances};
 }
 R3D.fundamentalRelativeAngleForPoint = function(pointA,Fab,Fba, epipoleA, epipoleB, matchesA,matchesB){
 	// console.log("fundamentalRelativeAngleForPoint");
@@ -28687,10 +28696,631 @@ R3D._gdTriMatchSAD = function(args, x, isUpdate){
 
 // EXPERIMENTING DIFFERENTLY
 
-R3D.searchNeedleHaystackImageFlatFast = function(needle,needleMask, haystack){
-	// ....
-}
-R3D.searchNeedleHaystackImageFlatTest = function(needle,needleMask, haystack){
+// R3D.searchNeedleHaystackImageFlatFast = function(needle,needleMask, haystack){
+// 	// ....
+// }
+// R3D.searchNeedleHaystackImageFlatTest = function(needle,needleMask, haystack){
+// 	var needleWidth = needle.width();
+// 	var needleHeight = needle.height();
+// 	var needleR = needle.red();
+// 	var needleG = needle.grn();
+// 	var needleB = needle.blu();
+// 	var haystackWidth = haystack.width();
+// 	var haystackHeight = haystack.height();
+// 	var haystackR = haystack.red();
+// 	var haystackG = haystack.grn();
+// 	var haystackB = haystack.blu();
+//
+// 	var needleCount = needleWidth*needleHeight;
+// 	var resultWidth = haystackWidth - needleWidth + 1;
+// 	var resultHeight = haystackHeight - needleHeight + 1;
+// 	var resultCount = resultWidth * resultHeight;
+// 	if(resultCount<=0){
+// 		return null;
+// 	}
+// 	var mask = 1.0;
+// 	var i, j;
+// 	var maskCount = 0;
+// 	for(i=0; i<needleCount; ++i){
+// 		if(needleMask){ mask = needleMask[i]; }
+// 		if(mask===0){ continue; }
+// 		++maskCount;
+// 	}
+// 	// needle infos
+// 	var avgN = new V3D();
+// 	var minN = null;
+// 	var maxN = null;
+// 	for(k=0; k<needleCount; ++k){
+// 		if(needleMask){ mask = needleMask[k]; }
+// 		if(mask===0){ continue; }
+// 		avgN.x += needleR[k];
+// 		avgN.y += needleG[k];
+// 		avgN.z += needleB[k];
+// 		++maskCount;
+// 		if(minN==null){
+// 			minN = new V3D();
+// 			minN.x = needleR[k];
+// 			minN.y = needleG[k];
+// 			minN.z = needleB[k];
+// 			maxN = new V3D();
+// 			maxN.x = needleR[k];
+// 			maxN.y = needleG[k];
+// 			maxN.z = needleB[k];
+// 		}
+// 		minN.x = Math.min(minN.x,needleR[k]);
+// 		minN.y = Math.min(minN.y,needleG[k]);
+// 		minN.z = Math.min(minN.z,needleB[k]);
+// 		maxN.x = Math.max(maxN.x,needleR[k]);
+// 		maxN.y = Math.max(maxN.y,needleG[k]);
+// 		maxN.z = Math.max(maxN.z,needleB[k]);
+// 	}
+// 	avgN.scale(1.0/needleCount);
+// 	var rangeN = V3D.sub(maxN,minN);
+// 	// sigma
+// 	var sigmaN = new V3D();
+// 	for(k=0; k<needleCount; ++k){
+// 		if(needleMask){ mask = needleMask[k]; }
+// 		if(mask===0){ continue; }
+// 		sigmaN.x += Math.pow(needleR[k] - avgN.x,2);
+// 		sigmaN.y += Math.pow(needleG[k] - avgN.y,2);
+// 		sigmaN.z += Math.pow(needleB[k] - avgN.z,2);
+// 	}
+// 	sigmaN.x = Math.sqrt(sigmaN.x);
+// 	sigmaN.y = Math.sqrt(sigmaN.y);
+// 	sigmaN.z = Math.sqrt(sigmaN.z);
+// 	//
+// 	var result = new Array();
+// 	for(j=0; j<resultHeight; ++j){
+// 		for(i=0; i<resultWidth; ++i){
+// 			var resultIndex = j*resultWidth + i;
+// 			var sadR = 0;
+// 			var sadG = 0;
+// 			var sadB = 0;
+// 				var sadY = 0;
+// 			var nccR = 0;
+// 			var nccG = 0;
+// 			var nccB = 0;
+// 			var minH = null;
+// 			var maxH = null;
+// 			var avgH = new V3D();
+// 			for(var nJ=0; nJ<needleHeight; ++nJ){ // entire needle
+// 				for(var nI=0; nI<needleWidth; ++nI){
+// 					var nIndex = nJ*needleWidth + nI;
+// 					var hIndex = (j+nJ)*haystackWidth + (i+nI);
+// 					if(needleMask){ mask = needleMask[nIndex]; }
+// 					if(mask===0){ continue; }
+// 					var n = needle[nIndex];
+// 					var h = haystack[hIndex];
+// 					if(minH==null){
+// 						minH = new V3D();
+// 						minH.x = haystackR[hIndex];
+// 						minH.y = haystackG[hIndex];
+// 						minH.z = haystackB[hIndex];
+// 						maxH = new V3D();
+// 						maxH.x = haystackR[hIndex];
+// 						maxH.y = haystackG[hIndex];
+// 						maxH.z = haystackB[hIndex];
+// 					}
+// 					minH.x = Math.min(minH.x,haystackR[hIndex]);
+// 					minH.y = Math.min(minH.y,haystackG[hIndex]);
+// 					minH.z = Math.min(minH.z,haystackB[hIndex]);
+// 					maxH.x = Math.max(maxH.x,haystackR[hIndex]);
+// 					maxH.y = Math.max(maxH.y,haystackG[hIndex]);
+// 					maxH.z = Math.max(maxH.z,haystackB[hIndex]);
+// 					avgH.x += haystackR[hIndex];
+// 					avgH.y += haystackG[hIndex];
+// 					avgH.z += haystackB[hIndex];
+// 				}
+// 			}
+// 			avgH.scale(1.0/needleCount);
+// 			var rangeH = V3D.sub(maxH,minH);
+// 			// sigma
+// 			var sigmaH = new V3D();
+// 			for(var nJ=0; nJ<needleHeight; ++nJ){ // entire needle
+// 				for(var nI=0; nI<needleWidth; ++nI){
+// 					var nIndex = nJ*needleWidth + nI;
+// 					var hIndex = (j+nJ)*haystackWidth + (i+nI);
+// 					if(needleMask){ mask = needleMask[nIndex]; }
+// 					if(mask===0){ continue; }
+// 					var n = needle[nIndex];
+// 					var h = haystack[hIndex];
+// 					sigmaH.x += Math.pow(haystackR[hIndex] - avgH.x,2);
+// 					sigmaH.y += Math.pow(haystackG[hIndex] - avgH.y,2);
+// 					sigmaH.z += Math.pow(haystackB[hIndex] - avgH.z,2);
+// 				}
+// 			}
+// 			sigmaH.x = Math.sqrt(sigmaH.x);
+// 			sigmaH.y = Math.sqrt(sigmaH.y);
+// 			sigmaH.z = Math.sqrt(sigmaH.z);
+// 			// ...
+// 			for(var nJ=0; nJ<needleHeight; ++nJ){ // entire needle
+// 				for(var nI=0; nI<needleWidth; ++nI){
+// 					var nIndex = nJ*needleWidth + nI;
+// 					var hIndex = (j+nJ)*haystackWidth + (i+nI);
+// 					if(needleMask){ mask = needleMask[nIndex]; }
+// 					if(mask===0){ continue; }
+// 					// completely ignore a masked operation
+// 					var nR = needleR[nIndex];
+// 					var nG = needleG[nIndex];
+// 					var nB = needleB[nIndex];
+// 					var hR = haystackR[hIndex];
+// 					var hG = haystackG[hIndex];
+// 					var hB = haystackB[hIndex];
+// 					// from median .... intensity differences
+// 					nR = nR - avgN.x;
+// 					nG = nG - avgN.y;
+// 					nB = nB - avgN.z;
+// 					hR = hR - avgH.x;
+// 					hG = hG - avgH.y;
+// 					hB = hB - avgH.z;
+// 						nR = nR / rangeN.x;
+// 						nG = nG / rangeN.y;
+// 						nB = nB / rangeN.z;
+// 						hR = hR / rangeH.x;
+// 						hG = hG / rangeH.y;
+// 						hB = hB / rangeH.z;
+// 					// nR = nR / sigmaN.x;
+// 					// nG = nG / sigmaN.y;
+// 					// nB = nB / sigmaN.z;
+// 					// hR = hR / sigmaH.x;
+// 					// hG = hG / sigmaH.y;
+// 					// hB = hB / sigmaH.z;
+// 					// SAD
+// 					var absR = Math.abs(nR - hR);
+// 					var absG = Math.abs(nG - hG);
+// 					var absB = Math.abs(nB - hB);
+// 					var absY = Math.abs(nR + nG + nB - hB - hG - hB);
+// // absR += 1;
+// // absG += 1;
+// // absB += 1;
+// // sadR += Math.pow(absR,2);
+// // sadG += Math.pow(absG,2);
+// // sadB += Math.pow(absB,2);
+// // sadR += Math.pow(absR,.1);
+// // sadG += Math.pow(absG,.1);
+// // sadB += Math.pow(absB,.1);
+// //sadR -= 1;
+// // sadG -= 1;
+// // sadB -= 1;
+// 					// ABS
+// 					// sadR += absR;
+// 					// sadG += absG;
+// 					// sadB += absB;
+// 					// sadY += absY;
+// 					// SQ
+// 					sadR += absR*absR;
+// 					sadG += absG*absG;
+// 					sadB += absB*absB;
+// 					sadY += absY*absY;
+// 					// QU
+// 					// sadR += Math.pow(absR,4);
+// 					// sadG += Math.pow(absG,4);
+// 					// sadB += Math.pow(absB,4);
+// 					// RT
+// 					// sadR += Math.pow(absR,0.5);
+// 					// sadG += Math.pow(absG,0.5);
+// 					// sadB += Math.pow(absB,0.5);
+//
+//
+//
+// 					// sadR += Math.sqrt(absR);
+// 					// sadG += Math.sqrt(absG);
+// 					// sadB += Math.sqrt(absB);
+// 					// NCC:
+// 					nccR += (nR * hR);
+// 					nccG += (nG * hG);
+// 					nccB += (nB * hB);
+// 					// nccR += Math.abs(nR * hR);
+// 					// nccG += Math.abs(nG * hG);
+// 					// nccB += Math.abs(nB * hB);
+// 				}
+// 			}
+// 			var sigSquR = Math.sqrt(sigmaN.x*sigmaN.x*sigmaH.x*sigmaH.x);
+// 			var sigSquG = Math.sqrt(sigmaN.y*sigmaN.y*sigmaH.y*sigmaH.y);
+// 			var sigSquB = Math.sqrt(sigmaN.z*sigmaN.z*sigmaH.z*sigmaH.z);
+// 			nccR = nccR / sigSquR;
+// 			nccG = nccG / sigSquG;
+// 			nccB = nccB / sigSquB;
+// 			// sadR = sadR * sigSquR;
+// 			// sadG = sadG * sigSquG;
+// 			// sadB = sadB * sigSquB;
+// 			// sadR = sadR / sigSquR;
+// 			// sadG = sadG / sigSquG;
+// 			// sadB = sadB / sigSquB;
+// 			var sadAvg = (sadR + sadG + sadB) / maskCount / 3.0;
+// //var sadAvg = (sadR + sadG + sadB + sadY) / maskCount / 4.0;
+// //var sadAvg = (sadY) / maskCount / 3.0;
+// 			//var nccAvg = (nccR + nccG + nccB) / maskCount / 3.0;
+//
+// //sss = 1E-4 * 1.0/nccAvg;
+//
+// //sadRMS = Math.sqrt(sadR*sadR + sadG*sadG + sadB*sadB) / maskCount / 3.0;
+//
+// /*
+// 			var sadAvg = (sadR + sadG + sadB) / maskCount / 3.0;
+//
+// sadRMS = Math.sqrt(sadR*sadR + sadG*sadG + sadB*sadB) / maskCount / 3.0; // div 3 no longer makes sense
+//
+// 			//
+// 			var rngR = Math.abs(rangeN.x-rangeH.x);
+// 			var rngG = Math.abs(rangeN.y-rangeH.y);
+// 			var rngB = Math.abs(rangeN.z-rangeH.z);
+// 			var rngAvg = (rngR+rngG+rngB) / 3.0;
+//
+// 			var avgR = (avgN.x+avgH.x);
+// 			var avgG = (avgN.y+avgH.y);
+// 			var avgB = (avgN.z+avgH.z);
+// 			var avgTot = (avgR+avgG+avgB) / 3.0;
+//
+// 			var minR = Math.min(avgN.x,avgH.x);
+// 			var minG = Math.min(avgN.y,avgH.y);
+// 			var minB = Math.min(avgN.z,avgH.z);
+// 			var minTot = (minR+minG+minB) / 3.0;
+//
+// 			var difR = Math.abs(avgN.x-avgH.x);
+// 			var difG = Math.abs(avgN.y-avgH.y);
+// 			var difB = Math.abs(avgN.z-avgH.z);
+// 			var difAvg = (difR+difG+difB) / 3.0;
+// 			var difX = Math.max(difR,difG,difB);
+// //			sss = sss * (1.0 + difAvg);
+// 			// var rangeR = Math.min(minN.x,minH.x);
+// 			// var rangeG = Math.min(minN.y,minH.y);
+// 			// var rangeB = Math.min(minN.z,minH.z);
+// 			var minRangeR = Math.min(rangeN.x,rangeH.x);
+// 			var minRangeG = Math.min(rangeN.y,rangeH.y);
+// 			var minRangeB = Math.min(rangeN.z,rangeH.z);
+// 			var minRangeTot = (minRangeR + minRangeG + minRangeB) / 3.0
+// */
+//
+// //sss = sadAvg; // current best
+//
+// //sss = sadRMS;
+//
+// sss = sadAvg;
+// //sss = (sadAvg/nccAvg) * 0.001; // BAD
+// //sss = 1.0/nccAvg;
+// //sss = nccAvg;
+// //sss = nccAvg*sadAvg;
+// 			result[resultIndex] = sss;
+// 		}
+// 	}
+// 	return {"value":result, "width":resultWidth, "height":resultHeight};
+//
+// }
+
+// R3D.searchNeedleHaystackImageFlatTest2 = function(needle,needleMask, haystack, flag){
+// // flag = false;
+// // flag = true;
+// 	var needleWidth = needle.width();
+// 	var needleHeight = needle.height();
+// 	var needleR = needle.red();
+// 	var needleG = needle.grn();
+// 	var needleB = needle.blu();
+// 	var haystackWidth = haystack.width();
+// 	var haystackHeight = haystack.height();
+// 	var haystackR = haystack.red();
+// 	var haystackG = haystack.grn();
+// 	var haystackB = haystack.blu();
+//
+// 	var needleCount = needleWidth*needleHeight;
+// 	var resultWidth = haystackWidth - needleWidth + 1;
+// 	var resultHeight = haystackHeight - needleHeight + 1;
+// 	var resultCount = resultWidth * resultHeight;
+// 	if(resultCount<=0){
+// 		return null;
+// 	}
+// 	var mask = 1.0;
+// 	var i, j;
+// 	var maskCount = 0;
+// 	for(i=0; i<needleCount; ++i){
+// 		if(needleMask){ mask = needleMask[i]; }
+// 		if(mask===0){ continue; }
+// 		++maskCount;
+// 	}
+// 	// needle infos
+// 	var avgN = new V3D();
+// 	var minN = null;
+// 	var maxN = null;
+// 	for(k=0; k<needleCount; ++k){
+// 		if(needleMask){ mask = needleMask[k]; }
+// 		if(mask===0){ continue; }
+// 		avgN.x += needleR[k];
+// 		avgN.y += needleG[k];
+// 		avgN.z += needleB[k];
+// 		if(minN==null){
+// 			minN = new V3D();
+// 			minN.x = needleR[k];
+// 			minN.y = needleG[k];
+// 			minN.z = needleB[k];
+// 			maxN = new V3D();
+// 			maxN.x = needleR[k];
+// 			maxN.y = needleG[k];
+// 			maxN.z = needleB[k];
+// 		}
+// 		minN.x = Math.min(minN.x,needleR[k]);
+// 		minN.y = Math.min(minN.y,needleG[k]);
+// 		minN.z = Math.min(minN.z,needleB[k]);
+// 		maxN.x = Math.max(maxN.x,needleR[k]);
+// 		maxN.y = Math.max(maxN.y,needleG[k]);
+// 		maxN.z = Math.max(maxN.z,needleB[k]);
+// 	}
+// 	avgN.scale(1.0/needleCount);
+// 	var rangeN = V3D.sub(maxN,minN);
+// 	// sigma
+// 	var sigmaN = new V3D();
+// 	for(k=0; k<needleCount; ++k){
+// 		if(needleMask){ mask = needleMask[k]; }
+// 		if(mask===0){ continue; }
+// 		sigmaN.x += Math.pow(needleR[k] - avgN.x,2);
+// 		sigmaN.y += Math.pow(needleG[k] - avgN.y,2);
+// 		sigmaN.z += Math.pow(needleB[k] - avgN.z,2);
+// 	}
+// 	sigmaN.x = Math.sqrt(sigmaN.x);
+// 	sigmaN.y = Math.sqrt(sigmaN.y);
+// 	sigmaN.z = Math.sqrt(sigmaN.z);
+// 	//
+// 	var result = new Array();
+// 	for(j=0; j<resultHeight; ++j){
+// 		for(i=0; i<resultWidth; ++i){
+// 			var resultIndex = j*resultWidth + i;
+// 			var sadR = 0;
+// 			var sadG = 0;
+// 			var sadB = 0;
+// 				var sadY = 0;
+// 			var nccR = 0;
+// 			var nccG = 0;
+// 			var nccB = 0;
+// 			var minH = null;
+// 			var maxH = null;
+// 			var avgH = new V3D();
+// 			for(var nJ=0; nJ<needleHeight; ++nJ){ // entire needle
+// 				for(var nI=0; nI<needleWidth; ++nI){
+// 					var nIndex = nJ*needleWidth + nI;
+// 					var hIndex = (j+nJ)*haystackWidth + (i+nI);
+// 					if(needleMask){ mask = needleMask[nIndex]; }
+// 					if(mask===0){ continue; }
+// 					var n = needle[nIndex];
+// 					var h = haystack[hIndex];
+// 					if(minH==null){
+// 						minH = new V3D();
+// 						minH.x = haystackR[hIndex];
+// 						minH.y = haystackG[hIndex];
+// 						minH.z = haystackB[hIndex];
+// 						maxH = new V3D();
+// 						maxH.x = haystackR[hIndex];
+// 						maxH.y = haystackG[hIndex];
+// 						maxH.z = haystackB[hIndex];
+// 					}
+// 					minH.x = Math.min(minH.x,haystackR[hIndex]);
+// 					minH.y = Math.min(minH.y,haystackG[hIndex]);
+// 					minH.z = Math.min(minH.z,haystackB[hIndex]);
+// 					maxH.x = Math.max(maxH.x,haystackR[hIndex]);
+// 					maxH.y = Math.max(maxH.y,haystackG[hIndex]);
+// 					maxH.z = Math.max(maxH.z,haystackB[hIndex]);
+// 					avgH.x += haystackR[hIndex];
+// 					avgH.y += haystackG[hIndex];
+// 					avgH.z += haystackB[hIndex];
+// 				}
+// 			}
+// 			avgH.scale(1.0/needleCount);
+// 			var rangeH = V3D.sub(maxH,minH);
+// 			// sigma
+// 			var sigmaH = new V3D();
+// 			for(var nJ=0; nJ<needleHeight; ++nJ){ // entire needle
+// 				for(var nI=0; nI<needleWidth; ++nI){
+// 					var nIndex = nJ*needleWidth + nI;
+// 					var hIndex = (j+nJ)*haystackWidth + (i+nI);
+// 					if(needleMask){ mask = needleMask[nIndex]; }
+// 					if(mask===0){ continue; }
+// 					var n = needle[nIndex];
+// 					var h = haystack[hIndex];
+// 					sigmaH.x += Math.pow(haystackR[hIndex] - avgH.x,2);
+// 					sigmaH.y += Math.pow(haystackG[hIndex] - avgH.y,2);
+// 					sigmaH.z += Math.pow(haystackB[hIndex] - avgH.z,2);
+// 				}
+// 			}
+// 			sigmaH.x = Math.sqrt(sigmaH.x);
+// 			sigmaH.y = Math.sqrt(sigmaH.y);
+// 			sigmaH.z = Math.sqrt(sigmaH.z);
+// 			// ...
+// 			for(var nJ=0; nJ<needleHeight; ++nJ){ // entire needle
+// 				for(var nI=0; nI<needleWidth; ++nI){
+// 					var nIndex = nJ*needleWidth + nI;
+// 					var hIndex = (j+nJ)*haystackWidth + (i+nI);
+// 					if(needleMask){ mask = needleMask[nIndex]; }
+// 					if(mask===0){ continue; }
+// 					// completely ignore a masked operation
+// 					var nR = needleR[nIndex];
+// 					var nG = needleG[nIndex];
+// 					var nB = needleB[nIndex];
+// 					var hR = haystackR[hIndex];
+// 					var hG = haystackG[hIndex];
+// 					var hB = haystackB[hIndex];
+// 					// from median .... intensity differences
+// 					if(flag){
+// 						nR = nR - avgN.x;
+// 						nG = nG - avgN.y;
+// 						nB = nB - avgN.z;
+// 						hR = hR - avgH.x;
+// 						hG = hG - avgH.y;
+// 						hB = hB - avgH.z;
+//
+// 						nR = nR / rangeN.x;
+// 						nG = nG / rangeN.y;
+// 						nB = nB / rangeN.z;
+// 						hR = hR / rangeH.x;
+// 						hG = hG / rangeH.y;
+// 						hB = hB / rangeH.z;
+//
+// 						// nR = nR / sigmaN.x;
+// 						// nG = nG / sigmaN.y;
+// 						// nB = nB / sigmaN.z;
+// 						// hR = hR / sigmaH.x;
+// 						// hG = hG / sigmaH.y;
+// 						// hB = hB / sigmaH.z;
+// 					}
+// 					// SAD
+// 					var absR = Math.abs(nR - hR);
+// 					var absG = Math.abs(nG - hG);
+// 					var absB = Math.abs(nB - hB);
+// 					var absY = Math.abs(nR + nG + nB - hR - hG - hB);
+// // absR += 1;
+// // absG += 1;
+// // absB += 1;
+// // sadR += Math.pow(absR,2);
+// // sadG += Math.pow(absG,2);
+// // sadB += Math.pow(absB,2);
+// // sadR += Math.pow(absR,.1);
+// // sadG += Math.pow(absG,.1);
+// // sadB += Math.pow(absB,.1);
+// //sadR -= 1;
+// // sadG -= 1;
+// // sadB -= 1;
+// 					// ABS
+//
+// 					if(flag){
+// 						sadR += absR*absR;
+// 						sadG += absG*absG;
+// 						sadB += absB*absB;
+// 						sadY += absY*absY;
+// 						// sadR += absR;
+// 						// sadG += absG;
+// 						// sadB += absB;
+// 						// sadY += absY;
+// 					}else{
+// 						sadR += absR;
+// 						sadG += absG;
+// 						sadB += absB;
+// 						sadY += absY;
+// 					}
+// 					// SQ
+// 					// sadR += absR*absR;
+// 					// sadG += absG*absG;
+// 					// sadB += absB*absB;
+// 					// sadY += absY*absY;
+// 					// QU
+// 					// sadR += Math.pow(absR,4);
+// 					// sadG += Math.pow(absG,4);
+// 					// sadB += Math.pow(absB,4);
+// 					// RT
+// 					// sadR += Math.pow(absR,0.5);
+// 					// sadG += Math.pow(absG,0.5);
+// 					// sadB += Math.pow(absB,0.5);
+//
+//
+//
+// 					// sadR += Math.sqrt(absR);
+// 					// sadG += Math.sqrt(absG);
+// 					// sadB += Math.sqrt(absB);
+// 					// NCC:
+// 					nccR += (nR * hR);
+// 					nccG += (nG * hG);
+// 					nccB += (nB * hB);
+// 					// nccR += Math.abs(nR * hR);
+// 					// nccG += Math.abs(nG * hG);
+// 					// nccB += Math.abs(nB * hB);
+// 				}
+// 			}
+// 			// var sigSquR = Math.sqrt(sigmaN.x*sigmaN.x*sigmaH.x*sigmaH.x);
+// 			// var sigSquG = Math.sqrt(sigmaN.y*sigmaN.y*sigmaH.y*sigmaH.y);
+// 			// var sigSquB = Math.sqrt(sigmaN.z*sigmaN.z*sigmaH.z*sigmaH.z);
+// 			// nccR = nccR / sigSquR;
+// 			// nccG = nccG / sigSquG;
+// 			// nccB = nccB / sigSquB;
+// 			// sadR = sadR * sigSquR;
+// 			// sadG = sadG * sigSquG;
+// 			// sadB = sadB * sigSquB;
+// 			// sadR = sadR / sigSquR;
+// 			// sadG = sadG / sigSquG;
+// 			// sadB = sadB / sigSquB;
+// 			//var sadAvg = (sadR + sadG + sadB) / maskCount / 3.0;
+// 			var sadAvg = (sadR + sadG + sadB) / maskCount / 3.0;
+// 			if(flag){
+// 				// sadAvg = sadAvg /((rangeN.x + rangeN.y + rangeN.z)/3.0);
+// 				// var sadAvg = sadY / maskCount;
+// 			}
+// //var sadAvg = (sadR + sadG + sadB + sadY) / maskCount / 4.0;
+// //var sadAvg = (sadY) / maskCount / 3.0;
+//
+// 				// nccR = nccR / ( Math.pow(rangeN.x,2) * Math.pow(rangeH.x,2) );
+// 				// nccG = nccG / ( Math.pow(rangeN.y,2) * Math.pow(rangeH.y,2) );
+// 				// nccB = nccB / ( Math.pow(rangeN.z,2) * Math.pow(rangeH.z,2) );
+//
+// 				// nccR = nccR / ( Math.pow(sigmaN.x,2) * Math.pow(sigmaH.x,2) );
+// 				// nccG = nccG / ( Math.pow(sigmaN.y,2) * Math.pow(sigmaH.y,2) );
+// 				// nccB = nccB / ( Math.pow(sigmaN.z,2) * Math.pow(sigmaH.z,2) );
+//
+// 				// nccR = nccR / ( Math.pow(sigmaN.x,.5) * Math.pow(sigmaH.x,0.5) );
+// 				// nccG = nccG / ( Math.pow(sigmaN.y,.5) * Math.pow(sigmaH.y,0.5) );
+// 				// nccB = nccB / ( Math.pow(sigmaN.z,.5) * Math.pow(sigmaH.z,0.5) );
+//
+// 				// nccR = nccR / ( Math.pow(sigmaN.x,1.0) * Math.pow(sigmaH.x,1.0) );
+// 				// nccG = nccG / ( Math.pow(sigmaN.y,1.0) * Math.pow(sigmaH.y,1.0) );
+// 				// nccB = nccB / ( Math.pow(sigmaN.z,1.0) * Math.pow(sigmaH.z,1.0) );
+// 				// var nccAvg = (nccR + nccG + nccB) / maskCount / 3.0;
+// 			// var avgR = (avgN.x+avgH.x);
+// 			// var avgG = (avgN.y+avgH.y);
+// 			// var avgB = (avgN.z+avgH.z);
+// 			// var avgTot = (avgR+avgG+avgB) / 3.0;
+//
+// 			// var difR = Math.abs(avgN.x-avgH.x);
+// 			// var difG = Math.abs(avgN.y-avgH.y);
+// 			// var difB = Math.abs(avgN.z-avgH.z);
+// 			// var difAvg = (difR+difG+difB) / 3.0;
+//
+// //sss = 1E-4 * 1.0/nccAvg;
+//
+// //sadRMS = Math.sqrt(sadR*sadR + sadG*sadG + sadB*sadB) / maskCount / 3.0;
+//
+// /*
+// 			var sadAvg = (sadR + sadG + sadB) / maskCount / 3.0;
+//
+// sadRMS = Math.sqrt(sadR*sadR + sadG*sadG + sadB*sadB) / maskCount / 3.0; // div 3 no longer makes sense
+//
+// 			//
+// 			var rngR = Math.abs(rangeN.x-rangeH.x);
+// 			var rngG = Math.abs(rangeN.y-rangeH.y);
+// 			var rngB = Math.abs(rangeN.z-rangeH.z);
+// 			var rngAvg = (rngR+rngG+rngB) / 3.0;
+//
+//
+// 			var minR = Math.min(avgN.x,avgH.x);
+// 			var minG = Math.min(avgN.y,avgH.y);
+// 			var minB = Math.min(avgN.z,avgH.z);
+// 			var minTot = (minR+minG+minB) / 3.0;
+//
+//
+// 			var difX = Math.max(difR,difG,difB);
+// //			sss = sss * (1.0 + difAvg);
+// 			// var rangeR = Math.min(minN.x,minH.x);
+// 			// var rangeG = Math.min(minN.y,minH.y);
+// 			// var rangeB = Math.min(minN.z,minH.z);
+// 			var minRangeR = Math.min(rangeN.x,rangeH.x);
+// 			var minRangeG = Math.min(rangeN.y,rangeH.y);
+// 			var minRangeB = Math.min(rangeN.z,rangeH.z);
+// 			var minRangeTot = (minRangeR + minRangeG + minRangeB) / 3.0
+// */
+//
+// //sss = sadAvg; // current best
+//
+// //sss = sadRMS;
+//
+// sss = sadAvg;
+// //sss = sadAvg * (1.0 + difAvg);
+//
+// //sss = (sadAvg/nccAvg) * 0.001; // BAD
+// //sss = 1.0/nccAvg;
+// // sss = -nccAvg;
+// //sss = nccAvg*sadAvg;
+// 			result[resultIndex] = sss;
+// 		}
+// 	}
+// 	return {"value":result, "width":resultWidth, "height":resultHeight};
+//
+// }
+
+
+R3D.searchNeedleHaystackSADColor = function(needle,haystack,needleMask){
 	var needleWidth = needle.width();
 	var needleHeight = needle.height();
 	var needleR = needle.red();
@@ -28701,7 +29331,6 @@ R3D.searchNeedleHaystackImageFlatTest = function(needle,needleMask, haystack){
 	var haystackR = haystack.red();
 	var haystackG = haystack.grn();
 	var haystackB = haystack.blu();
-
 	var needleCount = needleWidth*needleHeight;
 	var resultWidth = haystackWidth - needleWidth + 1;
 	var resultHeight = haystackHeight - needleHeight + 1;
@@ -28711,288 +29340,64 @@ R3D.searchNeedleHaystackImageFlatTest = function(needle,needleMask, haystack){
 	}
 	var mask = 1.0;
 	var i, j;
-	var maskCount = 0;
-	for(i=0; i<needleCount; ++i){
-		if(needleMask){ mask = needleMask[i]; }
-		if(mask===0){ continue; }
-		++maskCount;
-	}
-	// needle infos
-	var avgN = new V3D();
-	var minN = null;
-	var maxN = null;
-	for(k=0; k<needleCount; ++k){
-		if(needleMask){ mask = needleMask[k]; }
-		if(mask===0){ continue; }
-		avgN.x += needleR[k];
-		avgN.y += needleG[k];
-		avgN.z += needleB[k];
-		++maskCount;
-		if(minN==null){
-			minN = new V3D();
-			minN.x = needleR[k];
-			minN.y = needleG[k];
-			minN.z = needleB[k];
-			maxN = new V3D();
-			maxN.x = needleR[k];
-			maxN.y = needleG[k];
-			maxN.z = needleB[k];
+	var maskCount = needleCount;
+	if(needleMask){
+		maskCount = 0;
+		for(i=0; i<needleCount; ++i){
+			if(needleMask){ mask = needleMask[i]; }
+			if(mask===0){ continue; }
+			++maskCount;
 		}
-		minN.x = Math.min(minN.x,needleR[k]);
-		minN.y = Math.min(minN.y,needleG[k]);
-		minN.z = Math.min(minN.z,needleB[k]);
-		maxN.x = Math.max(maxN.x,needleR[k]);
-		maxN.y = Math.max(maxN.y,needleG[k]);
-		maxN.z = Math.max(maxN.z,needleB[k]);
 	}
-	avgN.scale(1.0/needleCount);
-	var rangeN = V3D.sub(maxN,minN);
-	// sigma
-	var sigmaN = new V3D();
-	for(k=0; k<needleCount; ++k){
-		if(needleMask){ mask = needleMask[k]; }
-		if(mask===0){ continue; }
-		sigmaN.x += Math.pow(needleR[k] - avgN.x,2);
-		sigmaN.y += Math.pow(needleG[k] - avgN.y,2);
-		sigmaN.z += Math.pow(needleB[k] - avgN.z,2);
-	}
-	sigmaN.x = Math.sqrt(sigmaN.x);
-	sigmaN.y = Math.sqrt(sigmaN.y);
-	sigmaN.z = Math.sqrt(sigmaN.z);
+	var inverseNeedleCount = 1.0/maskCount;
 	//
 	var result = new Array();
 	for(j=0; j<resultHeight; ++j){
+		var jW = j*resultWidth;
 		for(i=0; i<resultWidth; ++i){
-			var resultIndex = j*resultWidth + i;
-			var sadR = 0;
-			var sadG = 0;
-			var sadB = 0;
-				var sadY = 0;
-			var nccR = 0;
-			var nccG = 0;
-			var nccB = 0;
-			var minH = null;
-			var maxH = null;
-			var avgH = new V3D();
+			var resultIndex = jW + i;
+			// SAD
+			var sad = 0;
 			for(var nJ=0; nJ<needleHeight; ++nJ){ // entire needle
+				var jnW = nJ*needleWidth
+				var jhW = (j+nJ)*haystackWidth
 				for(var nI=0; nI<needleWidth; ++nI){
-					var nIndex = nJ*needleWidth + nI;
-					var hIndex = (j+nJ)*haystackWidth + (i+nI);
+					var nIndex = jnW + nI;
+					var hIndex = jhW + (i+nI);
 					if(needleMask){ mask = needleMask[nIndex]; }
-					if(mask===0){ continue; }
-					var n = needle[nIndex];
-					var h = haystack[hIndex];
-					if(minH==null){
-						minH = new V3D();
-						minH.x = haystackR[hIndex];
-						minH.y = haystackG[hIndex];
-						minH.z = haystackB[hIndex];
-						maxH = new V3D();
-						maxH.x = haystackR[hIndex];
-						maxH.y = haystackG[hIndex];
-						maxH.z = haystackB[hIndex];
-					}
-					minH.x = Math.min(minH.x,haystackR[hIndex]);
-					minH.y = Math.min(minH.y,haystackG[hIndex]);
-					minH.z = Math.min(minH.z,haystackB[hIndex]);
-					maxH.x = Math.max(maxH.x,haystackR[hIndex]);
-					maxH.y = Math.max(maxH.y,haystackG[hIndex]);
-					maxH.z = Math.max(maxH.z,haystackB[hIndex]);
-					avgH.x += haystackR[hIndex];
-					avgH.y += haystackG[hIndex];
-					avgH.z += haystackB[hIndex];
-				}
-			}
-			avgH.scale(1.0/needleCount);
-			var rangeH = V3D.sub(maxH,minH);
-			// sigma
-			var sigmaH = new V3D();
-			for(var nJ=0; nJ<needleHeight; ++nJ){ // entire needle
-				for(var nI=0; nI<needleWidth; ++nI){
-					var nIndex = nJ*needleWidth + nI;
-					var hIndex = (j+nJ)*haystackWidth + (i+nI);
-					if(needleMask){ mask = needleMask[nIndex]; }
-					if(mask===0){ continue; }
-					var n = needle[nIndex];
-					var h = haystack[hIndex];
-					sigmaH.x += Math.pow(haystackR[hIndex] - avgH.x,2);
-					sigmaH.y += Math.pow(haystackG[hIndex] - avgH.y,2);
-					sigmaH.z += Math.pow(haystackB[hIndex] - avgH.z,2);
-				}
-			}
-			sigmaH.x = Math.sqrt(sigmaH.x);
-			sigmaH.y = Math.sqrt(sigmaH.y);
-			sigmaH.z = Math.sqrt(sigmaH.z);
-			// ...
-			for(var nJ=0; nJ<needleHeight; ++nJ){ // entire needle
-				for(var nI=0; nI<needleWidth; ++nI){
-					var nIndex = nJ*needleWidth + nI;
-					var hIndex = (j+nJ)*haystackWidth + (i+nI);
-					if(needleMask){ mask = needleMask[nIndex]; }
-					if(mask===0){ continue; }
-					// completely ignore a masked operation
+					if(mask===0){ continue; } // completely ignore a masked operation
 					var nR = needleR[nIndex];
 					var nG = needleG[nIndex];
 					var nB = needleB[nIndex];
 					var hR = haystackR[hIndex];
 					var hG = haystackG[hIndex];
 					var hB = haystackB[hIndex];
-					// from median .... intensity differences
-					nR = nR - avgN.x;
-					nG = nG - avgN.y;
-					nB = nB - avgN.z;
-					hR = hR - avgH.x;
-					hG = hG - avgH.y;
-					hB = hB - avgH.z;
-						nR = nR / rangeN.x;
-						nG = nG / rangeN.y;
-						nB = nB / rangeN.z;
-						hR = hR / rangeH.x;
-						hG = hG / rangeH.y;
-						hB = hB / rangeH.z;
-					// nR = nR / sigmaN.x;
-					// nG = nG / sigmaN.y;
-					// nB = nB / sigmaN.z;
-					// hR = hR / sigmaH.x;
-					// hG = hG / sigmaH.y;
-					// hB = hB / sigmaH.z;
-					// SAD
-					var absR = Math.abs(nR - hR);
-					var absG = Math.abs(nG - hG);
-					var absB = Math.abs(nB - hB);
-					var absY = Math.abs(nR + nG + nB - hB - hG - hB);
-// absR += 1;
-// absG += 1;
-// absB += 1;
-// sadR += Math.pow(absR,2);
-// sadG += Math.pow(absG,2);
-// sadB += Math.pow(absB,2);
-// sadR += Math.pow(absR,.1);
-// sadG += Math.pow(absG,.1);
-// sadB += Math.pow(absB,.1);
-//sadR -= 1;
-// sadG -= 1;
-// sadB -= 1;
-					// ABS
-					// sadR += absR;
-					// sadG += absG;
-					// sadB += absB;
-					// sadY += absY;
-					// SQ
-					sadR += absR*absR;
-					sadG += absG*absG;
-					sadB += absB*absB;
-					sadY += absY*absY;
-					// QU
-					// sadR += Math.pow(absR,4);
-					// sadG += Math.pow(absG,4);
-					// sadB += Math.pow(absB,4);
-					// RT
-					// sadR += Math.pow(absR,0.5);
-					// sadG += Math.pow(absG,0.5);
-					// sadB += Math.pow(absB,0.5);
-
-
-
-					// sadR += Math.sqrt(absR);
-					// sadG += Math.sqrt(absG);
-					// sadB += Math.sqrt(absB);
-					// NCC:
-					nccR += (nR * hR);
-					nccG += (nG * hG);
-					nccB += (nB * hB);
-					// nccR += Math.abs(nR * hR);
-					// nccG += Math.abs(nG * hG);
-					// nccB += Math.abs(nB * hB);
+					// SAD - color
+					var dR = nR - hR;
+					var dG = nG - hG;
+					var dB = nB - hB;
+					var sq = dR*dR + dG*dG + dB*dB;
+					sad += Math.sqrt(sq);
 				}
 			}
-			var sigSquR = Math.sqrt(sigmaN.x*sigmaN.x*sigmaH.x*sigmaH.x);
-			var sigSquG = Math.sqrt(sigmaN.y*sigmaN.y*sigmaH.y*sigmaH.y);
-			var sigSquB = Math.sqrt(sigmaN.z*sigmaN.z*sigmaH.z*sigmaH.z);
-			nccR = nccR / sigSquR;
-			nccG = nccG / sigSquG;
-			nccB = nccB / sigSquB;
-			// sadR = sadR * sigSquR;
-			// sadG = sadG * sigSquG;
-			// sadB = sadB * sigSquB;
-			// sadR = sadR / sigSquR;
-			// sadG = sadG / sigSquG;
-			// sadB = sadB / sigSquB;
-			var sadAvg = (sadR + sadG + sadB) / maskCount / 3.0;
-//var sadAvg = (sadR + sadG + sadB + sadY) / maskCount / 4.0;
-//var sadAvg = (sadY) / maskCount / 3.0;
-			//var nccAvg = (nccR + nccG + nccB) / maskCount / 3.0;
-
-//sss = 1E-4 * 1.0/nccAvg;
-
-//sadRMS = Math.sqrt(sadR*sadR + sadG*sadG + sadB*sadB) / maskCount / 3.0;
-
-/*
-			var sadAvg = (sadR + sadG + sadB) / maskCount / 3.0;
-
-sadRMS = Math.sqrt(sadR*sadR + sadG*sadG + sadB*sadB) / maskCount / 3.0; // div 3 no longer makes sense
-
-			//
-			var rngR = Math.abs(rangeN.x-rangeH.x);
-			var rngG = Math.abs(rangeN.y-rangeH.y);
-			var rngB = Math.abs(rangeN.z-rangeH.z);
-			var rngAvg = (rngR+rngG+rngB) / 3.0;
-
-			var avgR = (avgN.x+avgH.x);
-			var avgG = (avgN.y+avgH.y);
-			var avgB = (avgN.z+avgH.z);
-			var avgTot = (avgR+avgG+avgB) / 3.0;
-
-			var minR = Math.min(avgN.x,avgH.x);
-			var minG = Math.min(avgN.y,avgH.y);
-			var minB = Math.min(avgN.z,avgH.z);
-			var minTot = (minR+minG+minB) / 3.0;
-
-			var difR = Math.abs(avgN.x-avgH.x);
-			var difG = Math.abs(avgN.y-avgH.y);
-			var difB = Math.abs(avgN.z-avgH.z);
-			var difAvg = (difR+difG+difB) / 3.0;
-			var difX = Math.max(difR,difG,difB);
-//			sss = sss * (1.0 + difAvg);
-			// var rangeR = Math.min(minN.x,minH.x);
-			// var rangeG = Math.min(minN.y,minH.y);
-			// var rangeB = Math.min(minN.z,minH.z);
-			var minRangeR = Math.min(rangeN.x,rangeH.x);
-			var minRangeG = Math.min(rangeN.y,rangeH.y);
-			var minRangeB = Math.min(rangeN.z,rangeH.z);
-			var minRangeTot = (minRangeR + minRangeG + minRangeB) / 3.0
-*/
-
-//sss = sadAvg; // current best
-
-//sss = sadRMS;
-
-sss = sadAvg;
-//sss = (sadAvg/nccAvg) * 0.001; // BAD
-//sss = 1.0/nccAvg;
-//sss = nccAvg;
-//sss = nccAvg*sadAvg;
-			result[resultIndex] = sss;
+			result[resultIndex] = sad*inverseNeedleCount;
 		}
 	}
 	return {"value":result, "width":resultWidth, "height":resultHeight};
-
 }
-
-R3D.searchNeedleHaystackImageFlatTest2 = function(needle,needleMask, haystack, flag){
-// flag = false;
-// flag = true;
+R3D.searchNeedleHaystackSADColorFull = function(needle,haystack, offsetX,offsetY,haystackWidth,haystackHeight){ // TODO: what to do about edges ...
 	var needleWidth = needle.width();
 	var needleHeight = needle.height();
 	var needleR = needle.red();
 	var needleG = needle.grn();
 	var needleB = needle.blu();
-	var haystackWidth = haystack.width();
-	var haystackHeight = haystack.height();
 	var haystackR = haystack.red();
 	var haystackG = haystack.grn();
 	var haystackB = haystack.blu();
-
+	var fullHWidth = haystack.width();
+	var fullHHeight = haystack.height();
+	var fWm1 = fullHWidth - 1;
+	var fHm1 = fullHHeight - 1;
 	var needleCount = needleWidth*needleHeight;
 	var resultWidth = haystackWidth - needleWidth + 1;
 	var resultHeight = haystackHeight - needleHeight + 1;
@@ -29000,318 +29405,47 @@ R3D.searchNeedleHaystackImageFlatTest2 = function(needle,needleMask, haystack, f
 	if(resultCount<=0){
 		return null;
 	}
-	var mask = 1.0;
 	var i, j;
-	var maskCount = 0;
-	for(i=0; i<needleCount; ++i){
-		if(needleMask){ mask = needleMask[i]; }
-		if(mask===0){ continue; }
-		++maskCount;
-	}
-	// needle infos
-	var avgN = new V3D();
-	var minN = null;
-	var maxN = null;
-	for(k=0; k<needleCount; ++k){
-		if(needleMask){ mask = needleMask[k]; }
-		if(mask===0){ continue; }
-		avgN.x += needleR[k];
-		avgN.y += needleG[k];
-		avgN.z += needleB[k];
-		if(minN==null){
-			minN = new V3D();
-			minN.x = needleR[k];
-			minN.y = needleG[k];
-			minN.z = needleB[k];
-			maxN = new V3D();
-			maxN.x = needleR[k];
-			maxN.y = needleG[k];
-			maxN.z = needleB[k];
-		}
-		minN.x = Math.min(minN.x,needleR[k]);
-		minN.y = Math.min(minN.y,needleG[k]);
-		minN.z = Math.min(minN.z,needleB[k]);
-		maxN.x = Math.max(maxN.x,needleR[k]);
-		maxN.y = Math.max(maxN.y,needleG[k]);
-		maxN.z = Math.max(maxN.z,needleB[k]);
-	}
-	avgN.scale(1.0/needleCount);
-	var rangeN = V3D.sub(maxN,minN);
-	// sigma
-	var sigmaN = new V3D();
-	for(k=0; k<needleCount; ++k){
-		if(needleMask){ mask = needleMask[k]; }
-		if(mask===0){ continue; }
-		sigmaN.x += Math.pow(needleR[k] - avgN.x,2);
-		sigmaN.y += Math.pow(needleG[k] - avgN.y,2);
-		sigmaN.z += Math.pow(needleB[k] - avgN.z,2);
-	}
-	sigmaN.x = Math.sqrt(sigmaN.x);
-	sigmaN.y = Math.sqrt(sigmaN.y);
-	sigmaN.z = Math.sqrt(sigmaN.z);
+	var inverseNeedleCount = 1.0/needleCount;
 	//
 	var result = new Array();
 	for(j=0; j<resultHeight; ++j){
+		var jW = j*resultWidth;
 		for(i=0; i<resultWidth; ++i){
-			var resultIndex = j*resultWidth + i;
-			var sadR = 0;
-			var sadG = 0;
-			var sadB = 0;
-				var sadY = 0;
-			var nccR = 0;
-			var nccG = 0;
-			var nccB = 0;
-			var minH = null;
-			var maxH = null;
-			var avgH = new V3D();
+			var resultIndex = jW + i;
+			// SAD
+			var sad = 0;
 			for(var nJ=0; nJ<needleHeight; ++nJ){ // entire needle
+				var jnW = nJ*needleWidth
+				var jhW = Math.min(Math.max(offsetY+j+nJ,0),fHm1);
+					jhW = jhW*fullHWidth;
 				for(var nI=0; nI<needleWidth; ++nI){
-					var nIndex = nJ*needleWidth + nI;
-					var hIndex = (j+nJ)*haystackWidth + (i+nI);
-					if(needleMask){ mask = needleMask[nIndex]; }
-					if(mask===0){ continue; }
-					var n = needle[nIndex];
-					var h = haystack[hIndex];
-					if(minH==null){
-						minH = new V3D();
-						minH.x = haystackR[hIndex];
-						minH.y = haystackG[hIndex];
-						minH.z = haystackB[hIndex];
-						maxH = new V3D();
-						maxH.x = haystackR[hIndex];
-						maxH.y = haystackG[hIndex];
-						maxH.z = haystackB[hIndex];
-					}
-					minH.x = Math.min(minH.x,haystackR[hIndex]);
-					minH.y = Math.min(minH.y,haystackG[hIndex]);
-					minH.z = Math.min(minH.z,haystackB[hIndex]);
-					maxH.x = Math.max(maxH.x,haystackR[hIndex]);
-					maxH.y = Math.max(maxH.y,haystackG[hIndex]);
-					maxH.z = Math.max(maxH.z,haystackB[hIndex]);
-					avgH.x += haystackR[hIndex];
-					avgH.y += haystackG[hIndex];
-					avgH.z += haystackB[hIndex];
-				}
-			}
-			avgH.scale(1.0/needleCount);
-			var rangeH = V3D.sub(maxH,minH);
-			// sigma
-			var sigmaH = new V3D();
-			for(var nJ=0; nJ<needleHeight; ++nJ){ // entire needle
-				for(var nI=0; nI<needleWidth; ++nI){
-					var nIndex = nJ*needleWidth + nI;
-					var hIndex = (j+nJ)*haystackWidth + (i+nI);
-					if(needleMask){ mask = needleMask[nIndex]; }
-					if(mask===0){ continue; }
-					var n = needle[nIndex];
-					var h = haystack[hIndex];
-					sigmaH.x += Math.pow(haystackR[hIndex] - avgH.x,2);
-					sigmaH.y += Math.pow(haystackG[hIndex] - avgH.y,2);
-					sigmaH.z += Math.pow(haystackB[hIndex] - avgH.z,2);
-				}
-			}
-			sigmaH.x = Math.sqrt(sigmaH.x);
-			sigmaH.y = Math.sqrt(sigmaH.y);
-			sigmaH.z = Math.sqrt(sigmaH.z);
-			// ...
-			for(var nJ=0; nJ<needleHeight; ++nJ){ // entire needle
-				for(var nI=0; nI<needleWidth; ++nI){
-					var nIndex = nJ*needleWidth + nI;
-					var hIndex = (j+nJ)*haystackWidth + (i+nI);
-					if(needleMask){ mask = needleMask[nIndex]; }
-					if(mask===0){ continue; }
-					// completely ignore a masked operation
+					var nIndex = jnW + nI;
+					var hIndex = Math.min(Math.max(offsetX+i+nI,0),fWm1);
+						hIndex = jhW + hIndex;
 					var nR = needleR[nIndex];
 					var nG = needleG[nIndex];
 					var nB = needleB[nIndex];
 					var hR = haystackR[hIndex];
 					var hG = haystackG[hIndex];
 					var hB = haystackB[hIndex];
-					// from median .... intensity differences
-					if(flag){
-						nR = nR - avgN.x;
-						nG = nG - avgN.y;
-						nB = nB - avgN.z;
-						hR = hR - avgH.x;
-						hG = hG - avgH.y;
-						hB = hB - avgH.z;
-
-						nR = nR / rangeN.x;
-						nG = nG / rangeN.y;
-						nB = nB / rangeN.z;
-						hR = hR / rangeH.x;
-						hG = hG / rangeH.y;
-						hB = hB / rangeH.z;
-
-						// nR = nR / sigmaN.x;
-						// nG = nG / sigmaN.y;
-						// nB = nB / sigmaN.z;
-						// hR = hR / sigmaH.x;
-						// hG = hG / sigmaH.y;
-						// hB = hB / sigmaH.z;
-					}
-					// SAD
-					var absR = Math.abs(nR - hR);
-					var absG = Math.abs(nG - hG);
-					var absB = Math.abs(nB - hB);
-					var absY = Math.abs(nR + nG + nB - hR - hG - hB);
-// absR += 1;
-// absG += 1;
-// absB += 1;
-// sadR += Math.pow(absR,2);
-// sadG += Math.pow(absG,2);
-// sadB += Math.pow(absB,2);
-// sadR += Math.pow(absR,.1);
-// sadG += Math.pow(absG,.1);
-// sadB += Math.pow(absB,.1);
-//sadR -= 1;
-// sadG -= 1;
-// sadB -= 1;
-					// ABS
-
-					if(flag){
-						sadR += absR*absR;
-						sadG += absG*absG;
-						sadB += absB*absB;
-						sadY += absY*absY;
-						// sadR += absR;
-						// sadG += absG;
-						// sadB += absB;
-						// sadY += absY;
-					}else{
-						sadR += absR;
-						sadG += absG;
-						sadB += absB;
-						sadY += absY;
-					}
-					// SQ
-					// sadR += absR*absR;
-					// sadG += absG*absG;
-					// sadB += absB*absB;
-					// sadY += absY*absY;
-					// QU
-					// sadR += Math.pow(absR,4);
-					// sadG += Math.pow(absG,4);
-					// sadB += Math.pow(absB,4);
-					// RT
-					// sadR += Math.pow(absR,0.5);
-					// sadG += Math.pow(absG,0.5);
-					// sadB += Math.pow(absB,0.5);
-
-
-
-					// sadR += Math.sqrt(absR);
-					// sadG += Math.sqrt(absG);
-					// sadB += Math.sqrt(absB);
-					// NCC:
-					nccR += (nR * hR);
-					nccG += (nG * hG);
-					nccB += (nB * hB);
-					// nccR += Math.abs(nR * hR);
-					// nccG += Math.abs(nG * hG);
-					// nccB += Math.abs(nB * hB);
+					// SAD - color
+					var dR = nR - hR;
+					var dG = nG - hG;
+					var dB = nB - hB;
+					var sq = dR*dR + dG*dG + dB*dB;
+					sad += Math.sqrt(sq);
 				}
 			}
-			// var sigSquR = Math.sqrt(sigmaN.x*sigmaN.x*sigmaH.x*sigmaH.x);
-			// var sigSquG = Math.sqrt(sigmaN.y*sigmaN.y*sigmaH.y*sigmaH.y);
-			// var sigSquB = Math.sqrt(sigmaN.z*sigmaN.z*sigmaH.z*sigmaH.z);
-			// nccR = nccR / sigSquR;
-			// nccG = nccG / sigSquG;
-			// nccB = nccB / sigSquB;
-			// sadR = sadR * sigSquR;
-			// sadG = sadG * sigSquG;
-			// sadB = sadB * sigSquB;
-			// sadR = sadR / sigSquR;
-			// sadG = sadG / sigSquG;
-			// sadB = sadB / sigSquB;
-			//var sadAvg = (sadR + sadG + sadB) / maskCount / 3.0;
-			var sadAvg = (sadR + sadG + sadB) / maskCount / 3.0;
-			if(flag){
-				// sadAvg = sadAvg /((rangeN.x + rangeN.y + rangeN.z)/3.0);
-				// var sadAvg = sadY / maskCount;
-			}
-//var sadAvg = (sadR + sadG + sadB + sadY) / maskCount / 4.0;
-//var sadAvg = (sadY) / maskCount / 3.0;
-
-				// nccR = nccR / ( Math.pow(rangeN.x,2) * Math.pow(rangeH.x,2) );
-				// nccG = nccG / ( Math.pow(rangeN.y,2) * Math.pow(rangeH.y,2) );
-				// nccB = nccB / ( Math.pow(rangeN.z,2) * Math.pow(rangeH.z,2) );
-
-				// nccR = nccR / ( Math.pow(sigmaN.x,2) * Math.pow(sigmaH.x,2) );
-				// nccG = nccG / ( Math.pow(sigmaN.y,2) * Math.pow(sigmaH.y,2) );
-				// nccB = nccB / ( Math.pow(sigmaN.z,2) * Math.pow(sigmaH.z,2) );
-
-				// nccR = nccR / ( Math.pow(sigmaN.x,.5) * Math.pow(sigmaH.x,0.5) );
-				// nccG = nccG / ( Math.pow(sigmaN.y,.5) * Math.pow(sigmaH.y,0.5) );
-				// nccB = nccB / ( Math.pow(sigmaN.z,.5) * Math.pow(sigmaH.z,0.5) );
-
-				// nccR = nccR / ( Math.pow(sigmaN.x,1.0) * Math.pow(sigmaH.x,1.0) );
-				// nccG = nccG / ( Math.pow(sigmaN.y,1.0) * Math.pow(sigmaH.y,1.0) );
-				// nccB = nccB / ( Math.pow(sigmaN.z,1.0) * Math.pow(sigmaH.z,1.0) );
-				// var nccAvg = (nccR + nccG + nccB) / maskCount / 3.0;
-			// var avgR = (avgN.x+avgH.x);
-			// var avgG = (avgN.y+avgH.y);
-			// var avgB = (avgN.z+avgH.z);
-			// var avgTot = (avgR+avgG+avgB) / 3.0;
-
-			// var difR = Math.abs(avgN.x-avgH.x);
-			// var difG = Math.abs(avgN.y-avgH.y);
-			// var difB = Math.abs(avgN.z-avgH.z);
-			// var difAvg = (difR+difG+difB) / 3.0;
-
-//sss = 1E-4 * 1.0/nccAvg;
-
-//sadRMS = Math.sqrt(sadR*sadR + sadG*sadG + sadB*sadB) / maskCount / 3.0;
-
-/*
-			var sadAvg = (sadR + sadG + sadB) / maskCount / 3.0;
-
-sadRMS = Math.sqrt(sadR*sadR + sadG*sadG + sadB*sadB) / maskCount / 3.0; // div 3 no longer makes sense
-
-			//
-			var rngR = Math.abs(rangeN.x-rangeH.x);
-			var rngG = Math.abs(rangeN.y-rangeH.y);
-			var rngB = Math.abs(rangeN.z-rangeH.z);
-			var rngAvg = (rngR+rngG+rngB) / 3.0;
-
-
-			var minR = Math.min(avgN.x,avgH.x);
-			var minG = Math.min(avgN.y,avgH.y);
-			var minB = Math.min(avgN.z,avgH.z);
-			var minTot = (minR+minG+minB) / 3.0;
-
-
-			var difX = Math.max(difR,difG,difB);
-//			sss = sss * (1.0 + difAvg);
-			// var rangeR = Math.min(minN.x,minH.x);
-			// var rangeG = Math.min(minN.y,minH.y);
-			// var rangeB = Math.min(minN.z,minH.z);
-			var minRangeR = Math.min(rangeN.x,rangeH.x);
-			var minRangeG = Math.min(rangeN.y,rangeH.y);
-			var minRangeB = Math.min(rangeN.z,rangeH.z);
-			var minRangeTot = (minRangeR + minRangeG + minRangeB) / 3.0
-*/
-
-//sss = sadAvg; // current best
-
-//sss = sadRMS;
-
-sss = sadAvg;
-//sss = sadAvg * (1.0 + difAvg);
-
-//sss = (sadAvg/nccAvg) * 0.001; // BAD
-//sss = 1.0/nccAvg;
-// sss = -nccAvg;
-//sss = nccAvg*sadAvg;
-			result[resultIndex] = sss;
+			result[resultIndex] = sad;
 		}
 	}
 	return {"value":result, "width":resultWidth, "height":resultHeight};
-
 }
 
 
-R3D.searchNeedleHaystackSSDColor = function(needle,haystack,needleMask){
+
+R3D.searchNeedleHaystackNCCColor_AVG = function(needle,haystack,needleMask){
 	var needleWidth = needle.width();
 	var needleHeight = needle.height();
 	var needleR = needle.red();
@@ -29351,6 +29485,21 @@ R3D.searchNeedleHaystackSSDColor = function(needle,haystack,needleMask){
 		avgN.z += needleB[k];
 	}
 	avgN.scale(inverseNeedleCount);
+	// needle sigma
+	var sigmaN = new V3D();
+	for(k=0; k<needleCount; ++k){
+		if(needleMask){ mask = needleMask[k]; }
+		if(mask===0){ continue; }
+		var dR = Math.pow(needleR[k] - avgN.x,2);
+		var dG = Math.pow(needleG[k] - avgN.y,2);
+		var dB = Math.pow(needleB[k] - avgN.z,2);
+		sigmaN.x += dR;
+		sigmaN.y += dG;
+		sigmaN.z += dB;
+	}
+	sigmaN.x = Math.sqrt(sigmaN.x);
+	sigmaN.y = Math.sqrt(sigmaN.y);
+	sigmaN.z = Math.sqrt(sigmaN.z);
 	//
 	var avgH = new V3D();
 	var result = new Array();
@@ -29366,15 +29515,34 @@ R3D.searchNeedleHaystackSSDColor = function(needle,haystack,needleMask){
 					var hIndex = jhW + (i+nI);
 					if(needleMask){ mask = needleMask[nIndex]; }
 					if(mask===0){ continue; }
-					var h = haystack[hIndex];
 					avgH.x += haystackR[hIndex];
 					avgH.y += haystackG[hIndex];
 					avgH.z += haystackB[hIndex];
 				}
 			}
 			avgH.scale(inverseNeedleCount);
-			// SAD
-			var sad = 0;
+			// sigma H
+			var sigmaH = new V3D();
+			for(var nJ=0; nJ<needleHeight; ++nJ){ // entire needle
+				var jhW = (j+nJ)*haystackWidth;
+				for(var nI=0; nI<needleWidth; ++nI){
+					var nIndex = nJ*needleWidth + nI;
+					var hIndex = jhW + (i+nI);
+					if(needleMask){ mask = needleMask[nIndex]; }
+					if(mask===0){ continue; }
+					var dR = Math.pow(haystackR[hIndex] - avgH.x,2);
+					var dG = Math.pow(haystackG[hIndex] - avgH.y,2);
+					var dB = Math.pow(haystackB[hIndex] - avgH.z,2);
+					sigmaH.x += dR;
+					sigmaH.y += dG;
+					sigmaH.z += dB;
+				}
+			}
+			sigmaH.x = Math.sqrt(sigmaH.x);
+			sigmaH.y = Math.sqrt(sigmaH.y);
+			sigmaH.z = Math.sqrt(sigmaH.z);
+			// NCC
+			var ncc = new V3D();
 			for(var nJ=0; nJ<needleHeight; ++nJ){ // entire needle
 				var jnW = nJ*needleWidth
 				var jhW = (j+nJ)*haystackWidth
@@ -29383,38 +29551,41 @@ R3D.searchNeedleHaystackSSDColor = function(needle,haystack,needleMask){
 					var hIndex = jhW + (i+nI);
 					if(needleMask){ mask = needleMask[nIndex]; }
 					if(mask===0){ continue; } // completely ignore a masked operation
-					var nR = needleR[nIndex];
-					var nG = needleG[nIndex];
-					var nB = needleB[nIndex];
-					var hR = haystackR[hIndex];
-					var hG = haystackG[hIndex];
-					var hB = haystackB[hIndex];
-					// SAD - color
-					var dR = nR - hR;
-					var dG = nG - hG;
-					var dB = nB - hB;
-					var sq = dR*dR + dG*dG + dB*dB;
-					sad += Math.sqrt(sq);
+					var nR = needleR[nIndex] - avgN.x;
+					var nG = needleG[nIndex] - avgN.y;
+					var nB = needleB[nIndex] - avgN.z;
+					var hR = haystackR[hIndex] - avgH.x;
+					var hG = haystackG[hIndex] - avgH.y;
+					var hB = haystackB[hIndex] - avgH.z;
+					// NCC - color
+					ncc.x += nR*hR;
+					ncc.y += nG*hG;
+					ncc.z += nB*hB;
 				}
 			}
-			result[resultIndex] = sad;
+			ncc.x = ncc.x/Math.max(sigmaN.x*sigmaH.x, 1E-6);
+			ncc.y = ncc.y/Math.max(sigmaN.y*sigmaH.y, 1E-6);
+			ncc.z = ncc.z/Math.max(sigmaN.z*sigmaH.z, 1E-6);
+			var avg = (ncc.x+ncc.y+ncc.z)/3.0;
+			avg = (1 - avg)*0.5;
+			result[resultIndex] = avg;
 		}
 	}
-	return {"value":result, "width":resultWidth, "height":resultHeight};
+	return {"value":result, "width":resultWidth, "height":resultHeight}; // 0 -> inf
 }
-R3D.searchNeedleHaystackSSDColorFull = function(needle,haystack, offsetX,offsetY,haystackWidth,haystackHeight){ // TODO: what to do about edges ...
+
+
+R3D.searchNeedleHaystackNCCColor_DOT = function(needle,haystack,needleMask){
 	var needleWidth = needle.width();
 	var needleHeight = needle.height();
 	var needleR = needle.red();
 	var needleG = needle.grn();
 	var needleB = needle.blu();
+	var haystackWidth = haystack.width();
+	var haystackHeight = haystack.height();
 	var haystackR = haystack.red();
 	var haystackG = haystack.grn();
 	var haystackB = haystack.blu();
-	var fullHWidth = haystack.width();
-	var fullHHeight = haystack.height();
-	var fWm1 = fullHWidth - 1;
-	var fHm1 = fullHHeight - 1;
 	var needleCount = needleWidth*needleHeight;
 	var resultWidth = haystackWidth - needleWidth + 1;
 	var resultHeight = haystackHeight - needleHeight + 1;
@@ -29422,16 +29593,39 @@ R3D.searchNeedleHaystackSSDColorFull = function(needle,haystack, offsetX,offsetY
 	if(resultCount<=0){
 		return null;
 	}
+	var mask = 1.0;
 	var i, j;
-	var inverseNeedleCount = 1.0/needleCount;
+	var maskCount = needleCount;
+	if(needleMask){
+		maskCount = 0;
+		for(i=0; i<needleCount; ++i){
+			if(needleMask){ mask = needleMask[i]; }
+			if(mask===0){ continue; }
+			++maskCount;
+		}
+	}
+	var inverseNeedleCount = 1.0/maskCount;
 	// needle average
 	var avgN = new V3D();
 	for(k=0; k<needleCount; ++k){
+		if(needleMask){ mask = needleMask[k]; }
+		if(mask===0){ continue; }
 		avgN.x += needleR[k];
 		avgN.y += needleG[k];
 		avgN.z += needleB[k];
 	}
 	avgN.scale(inverseNeedleCount);
+	// needle sigma
+	var sigmaN = 0;
+	for(k=0; k<needleCount; ++k){
+		if(needleMask){ mask = needleMask[k]; }
+		if(mask===0){ continue; }
+		var dR = Math.pow(needleR[k] - avgN.x,2);
+		var dG = Math.pow(needleG[k] - avgN.y,2);
+		var dB = Math.pow(needleB[k] - avgN.z,2);
+		sigmaN += (dR + dG + dB); // squared
+	}
+	sigmaN = Math.sqrt(sigmaN);
 	//
 	var avgH = new V3D();
 	var result = new Array();
@@ -29442,50 +29636,70 @@ R3D.searchNeedleHaystackSSDColorFull = function(needle,haystack, offsetX,offsetY
 			// haystack average
 			avgH.set(0,0,0);
 			for(var nJ=0; nJ<needleHeight; ++nJ){ // entire needle
-				var jhW = Math.min(Math.max(offsetY+j+nJ,0),fHm1);
-					jhW = jhW*fullHWidth;
+				var jhW = (j+nJ)*haystackWidth;
 				for(var nI=0; nI<needleWidth; ++nI){
-					var hIndex = Math.min(Math.max(offsetX+i+nI,0),fWm1);
-						hIndex = jhW + hIndex;
-					var h = haystack[hIndex];
+					var hIndex = jhW + (i+nI);
+					if(needleMask){ mask = needleMask[nIndex]; }
+					if(mask===0){ continue; }
 					avgH.x += haystackR[hIndex];
 					avgH.y += haystackG[hIndex];
 					avgH.z += haystackB[hIndex];
 				}
 			}
 			avgH.scale(inverseNeedleCount);
-			// SAD
-			var sad = 0;
+			// sigma H
+			var sigmaH = 0;
 			for(var nJ=0; nJ<needleHeight; ++nJ){ // entire needle
-				var jnW = nJ*needleWidth
-				var jhW = Math.min(Math.max(offsetY+j+nJ,0),fHm1);
-					jhW = jhW*fullHWidth;
+				var jhW = (j+nJ)*haystackWidth;
 				for(var nI=0; nI<needleWidth; ++nI){
-					var nIndex = jnW + nI;
-					var hIndex = Math.min(Math.max(offsetX+i+nI,0),fWm1);
-						hIndex = jhW + hIndex;
-					var nR = needleR[nIndex];
-					var nG = needleG[nIndex];
-					var nB = needleB[nIndex];
-					var hR = haystackR[hIndex];
-					var hG = haystackG[hIndex];
-					var hB = haystackB[hIndex];
-					// SAD - color
-					var dR = nR - hR;
-					var dG = nG - hG;
-					var dB = nB - hB;
-					var sq = dR*dR + dG*dG + dB*dB;
-					sad += Math.sqrt(sq);
+					var nIndex = nJ*needleWidth + nI;
+					var hIndex = jhW + (i+nI);
+					if(needleMask){ mask = needleMask[nIndex]; }
+					if(mask===0){ continue; }
+					var dR = Math.pow(haystackR[hIndex] - avgH.x,2);
+					var dG = Math.pow(haystackG[hIndex] - avgH.y,2);
+					var dB = Math.pow(haystackB[hIndex] - avgH.z,2);
+					sigmaH += (dR + dG + dB); // squared
 				}
 			}
-			result[resultIndex] = sad;
+			sigmaH = Math.sqrt(sigmaH);
+			// NCC
+			var ncc = 0;
+			for(var nJ=0; nJ<needleHeight; ++nJ){ // entire needle
+				var jnW = nJ*needleWidth
+				var jhW = (j+nJ)*haystackWidth
+				for(var nI=0; nI<needleWidth; ++nI){
+					var nIndex = jnW + nI;
+					var hIndex = jhW + (i+nI);
+					if(needleMask){ mask = needleMask[nIndex]; }
+					if(mask===0){ continue; } // completely ignore a masked operation
+					var nR = needleR[nIndex] - avgN.x;
+					var nG = needleG[nIndex] - avgN.y;
+					var nB = needleB[nIndex] - avgN.z;
+					var hR = haystackR[hIndex] - avgH.x;
+					var hG = haystackG[hIndex] - avgH.y;
+					var hB = haystackB[hIndex] - avgH.z;
+					// NCC - color
+					var dR = nR*hR;
+					var dG = nG*hG;
+					var dB = nB*hB;
+					ncc += dR + dG + dB; // dot product
+				}
+			}
+			ncc = ncc/Math.max(sigmaN*sigmaH, 1E-6);
+			ncc = (1 - ncc)*0.5;
+			result[resultIndex] = ncc;
 		}
 	}
 	return {"value":result, "width":resultWidth, "height":resultHeight};
 }
 
 
-
+// R3D.searchNeedleHaystackNCCColor = R3D.searchNeedleHaystackNCCColor_DOT;
+R3D.searchNeedleHaystackNCCColor = R3D.searchNeedleHaystackNCCColor_AVG;
+R3D.searchNeedleHaystackNCCColorFull = function(needle,haystack){
+	throw "TODO";
+}
 R3D.inPlaceOperation = function(imageA,startAX,endAX,startAY,endAY, imageB,startBX,endBX,startBY,endBY, operationFxn, args){
 	var widthA = imageA.width();
 	var heightA = imageA.height();
@@ -29661,252 +29875,252 @@ R3D.searchNeedleHaystackImageFlatSAD = function(needle,needleMask, haystack){
 
 
 
-R3D.searchNeedleHaystackImageFlatTest3 = function(needle,needleMask, haystack){
-	var needleWidth = needle.width();
-	var needleHeight = needle.height();
-	var needleR = needle.red();
-	var needleG = needle.grn();
-	var needleB = needle.blu();
-	var haystackWidth = haystack.width();
-	var haystackHeight = haystack.height();
-	var haystackR = haystack.red();
-	var haystackG = haystack.grn();
-	var haystackB = haystack.blu();
-
-	var needleCount = needleWidth*needleHeight;
-	var resultWidth = haystackWidth - needleWidth + 1;
-	var resultHeight = haystackHeight - needleHeight + 1;
-	var resultCount = resultWidth * resultHeight;
-	if(resultCount<=0){
-		return null;
-	}
-	var mask = 1.0;
-	var i, j;
-	var maskCount = 0;
-	for(i=0; i<needleCount; ++i){
-		if(needleMask){ mask = needleMask[i]; }
-		if(mask===0){ continue; }
-		++maskCount;
-	}
-	// needle infos
-	var avgN = new V3D();
-	var minN = null;
-	var maxN = null;
-	for(k=0; k<needleCount; ++k){
-		if(needleMask){ mask = needleMask[k]; }
-		if(mask===0){ continue; }
-		avgN.x += needleR[k];
-		avgN.y += needleG[k];
-		avgN.z += needleB[k];
-		if(minN==null){
-			minN = new V3D();
-			minN.x = needleR[k];
-			minN.y = needleG[k];
-			minN.z = needleB[k];
-			maxN = new V3D();
-			maxN.x = needleR[k];
-			maxN.y = needleG[k];
-			maxN.z = needleB[k];
-		}
-		minN.x = Math.min(minN.x,needleR[k]);
-		minN.y = Math.min(minN.y,needleG[k]);
-		minN.z = Math.min(minN.z,needleB[k]);
-		maxN.x = Math.max(maxN.x,needleR[k]);
-		maxN.y = Math.max(maxN.y,needleG[k]);
-		maxN.z = Math.max(maxN.z,needleB[k]);
-	}
-	avgN.scale(1.0/needleCount);
-	var rangeN = V3D.sub(maxN,minN);
-	// sigma
-	var sigmaN = new V3D();
-	for(k=0; k<needleCount; ++k){
-		if(needleMask){ mask = needleMask[k]; }
-		if(mask===0){ continue; }
-		sigmaN.x += Math.pow(needleR[k] - avgN.x,2);
-		sigmaN.y += Math.pow(needleG[k] - avgN.y,2);
-		sigmaN.z += Math.pow(needleB[k] - avgN.z,2);
-	}
-	sigmaN.x = Math.sqrt(sigmaN.x);
-	sigmaN.y = Math.sqrt(sigmaN.y);
-	sigmaN.z = Math.sqrt(sigmaN.z);
-	//
-	var result = new Array();
-	for(j=0; j<resultHeight; ++j){
-		for(i=0; i<resultWidth; ++i){
-			var resultIndex = j*resultWidth + i;
-			var sadR = 0;
-			var sadG = 0;
-			var sadB = 0;
-				var sadY = 0;
-			var nccR = 0;
-			var nccG = 0;
-			var nccB = 0;
-			var minH = null;
-			var maxH = null;
-			var avgH = new V3D();
-			for(var nJ=0; nJ<needleHeight; ++nJ){ // entire needle
-				for(var nI=0; nI<needleWidth; ++nI){
-					var nIndex = nJ*needleWidth + nI;
-					var hIndex = (j+nJ)*haystackWidth + (i+nI);
-					if(needleMask){ mask = needleMask[nIndex]; }
-					if(mask===0){ continue; }
-					var n = needle[nIndex];
-					var h = haystack[hIndex];
-					if(minH==null){
-						minH = new V3D();
-						minH.x = haystackR[hIndex];
-						minH.y = haystackG[hIndex];
-						minH.z = haystackB[hIndex];
-						maxH = new V3D();
-						maxH.x = haystackR[hIndex];
-						maxH.y = haystackG[hIndex];
-						maxH.z = haystackB[hIndex];
-					}
-					minH.x = Math.min(minH.x,haystackR[hIndex]);
-					minH.y = Math.min(minH.y,haystackG[hIndex]);
-					minH.z = Math.min(minH.z,haystackB[hIndex]);
-					maxH.x = Math.max(maxH.x,haystackR[hIndex]);
-					maxH.y = Math.max(maxH.y,haystackG[hIndex]);
-					maxH.z = Math.max(maxH.z,haystackB[hIndex]);
-					avgH.x += haystackR[hIndex];
-					avgH.y += haystackG[hIndex];
-					avgH.z += haystackB[hIndex];
-				}
-			}
-			avgH.scale(1.0/needleCount);
-			var rangeH = V3D.sub(maxH,minH);
-			// sigma
-			var sigmaH = new V3D();
-			for(var nJ=0; nJ<needleHeight; ++nJ){ // entire needle
-				for(var nI=0; nI<needleWidth; ++nI){
-					var nIndex = nJ*needleWidth + nI;
-					var hIndex = (j+nJ)*haystackWidth + (i+nI);
-					if(needleMask){ mask = needleMask[nIndex]; }
-					if(mask===0){ continue; }
-					var n = needle[nIndex];
-					var h = haystack[hIndex];
-					sigmaH.x += Math.pow(haystackR[hIndex] - avgH.x,2);
-					sigmaH.y += Math.pow(haystackG[hIndex] - avgH.y,2);
-					sigmaH.z += Math.pow(haystackB[hIndex] - avgH.z,2);
-				}
-			}
-			sigmaH.x = Math.sqrt(sigmaH.x);
-			sigmaH.y = Math.sqrt(sigmaH.y);
-			sigmaH.z = Math.sqrt(sigmaH.z);
-			// ...
-			for(var nJ=0; nJ<needleHeight; ++nJ){ // entire needle
-				for(var nI=0; nI<needleWidth; ++nI){
-					var nIndex = nJ*needleWidth + nI;
-					var hIndex = (j+nJ)*haystackWidth + (i+nI);
-					if(needleMask){ mask = needleMask[nIndex]; }
-					if(mask===0){ continue; }
-					// completely ignore a masked operation
-					var nR = needleR[nIndex];
-					var nG = needleG[nIndex];
-					var nB = needleB[nIndex];
-					var hR = haystackR[hIndex];
-					var hG = haystackG[hIndex];
-					var hB = haystackB[hIndex];
-					// from median .... intensity differences
-					// 	nR = nR - avgN.x;
-					// 	nG = nG - avgN.y;
-					// 	nB = nB - avgN.z;
-					// 	hR = hR - avgH.x;
-					// 	hG = hG - avgH.y;
-					// 	hB = hB - avgH.z;
-
-					// 	nR = nR / rangeN.x;
-					// 	nG = nG / rangeN.y;
-					// 	nB = nB / rangeN.z;
-					// 	hR = hR / rangeH.x;
-					// 	hG = hG / rangeH.y;
-					// 	hB = hB / rangeH.z;
-
-					// nR = nR / sigmaN.x;
-					// nG = nG / sigmaN.y;
-					// nB = nB / sigmaN.z;
-					// hR = hR / sigmaH.x;
-					// hG = hG / sigmaH.y;
-					// hB = hB / sigmaH.z;
-
-					// SAD
-					var absR = Math.abs(nR - hR);
-					var absG = Math.abs(nG - hG);
-					var absB = Math.abs(nB - hB);
-					var absY = Math.abs(nR + nG + nB - hR - hG - hB);
-					// ABS
-					// sadR += absR;
-					// sadG += absG;
-					// sadB += absB;
-					// sadY += absY;
-					// SQ
-					sadR += absR*absR;
-					sadG += absG*absG;
-					sadB += absB*absB;
-					sadY += absY*absY;
-					// QU
-					// sadR += Math.pow(absR,4);
-					// sadG += Math.pow(absG,4);
-					// sadB += Math.pow(absB,4);
-					// RT
-					// sadR += Math.pow(absR,0.5);
-					// sadG += Math.pow(absG,0.5);
-					// sadB += Math.pow(absB,0.5);
-					// ?
-					// sadR += Math.sqrt(absR);
-					// sadG += Math.sqrt(absG);
-					// sadB += Math.sqrt(absB);
-					// NCC:
-					nccR += (nR * hR);
-					nccG += (nG * hG);
-					nccB += (nB * hB);
-					// nccR += Math.abs(nR * hR);
-					// nccG += Math.abs(nG * hG);
-					// nccB += Math.abs(nB * hB);
-				}
-			}
-			// var sigSquR = Math.sqrt(sigmaN.x*sigmaN.x*sigmaH.x*sigmaH.x);
-			// var sigSquG = Math.sqrt(sigmaN.y*sigmaN.y*sigmaH.y*sigmaH.y);
-			// var sigSquB = Math.sqrt(sigmaN.z*sigmaN.z*sigmaH.z*sigmaH.z);
-			//var sadAvg = (sadR + sadG + sadB) / maskCount / 3.0;
-var sadAvg = (sadR + sadG + sadB) / maskCount / 3.0;
-//var sadAvg = (sadR + sadG + sadB + sadY) / maskCount / 4.0;
-//var sadAvg = (sadY) / maskCount / 3.0;
-
-				// nccR = nccR / ( Math.pow(rangeN.x,2) * Math.pow(rangeH.x,2) );
-				// nccG = nccG / ( Math.pow(rangeN.y,2) * Math.pow(rangeH.y,2) );
-				// nccB = nccB / ( Math.pow(rangeN.z,2) * Math.pow(rangeH.z,2) );
-
-				// nccR = nccR / ( Math.pow(sigmaN.x,2) * Math.pow(sigmaH.x,2) );
-				// nccG = nccG / ( Math.pow(sigmaN.y,2) * Math.pow(sigmaH.y,2) );
-				// nccB = nccB / ( Math.pow(sigmaN.z,2) * Math.pow(sigmaH.z,2) );
-
-				// nccR = nccR / ( Math.pow(sigmaN.x,.5) * Math.pow(sigmaH.x,0.5) );
-				// nccG = nccG / ( Math.pow(sigmaN.y,.5) * Math.pow(sigmaH.y,0.5) );
-				// nccB = nccB / ( Math.pow(sigmaN.z,.5) * Math.pow(sigmaH.z,0.5) );
-
-				// nccR = nccR / ( Math.pow(sigmaN.x,1.0) * Math.pow(sigmaH.x,1.0) );
-				// nccG = nccG / ( Math.pow(sigmaN.y,1.0) * Math.pow(sigmaH.y,1.0) );
-				// nccB = nccB / ( Math.pow(sigmaN.z,1.0) * Math.pow(sigmaH.z,1.0) );
-//var nccAvg = (nccR + nccG + nccB) / maskCount / 3.0;
-			// var avgR = (avgN.x+avgH.x);
-			// var avgG = (avgN.y+avgH.y);
-			// var avgB = (avgN.z+avgH.z);
-			// var avgTot = (avgR+avgG+avgB) / 3.0;
-
-			// var difR = Math.abs(avgN.x-avgH.x);
-			// var difG = Math.abs(avgN.y-avgH.y);
-			// var difB = Math.abs(avgN.z-avgH.z);
-			// var difAvg = (difR+difG+difB) / 3.0;
-			result[resultIndex] = sadAvg;
-			// result[resultIndex] = 1.0 - nccAvg;
-		}
-	}
-	// console.log(result);
-	// throw "?"
-	return {"value":result, "width":resultWidth, "height":resultHeight};
-
-}
+// R3D.searchNeedleHaystackImageFlatTest3 = function(needle,needleMask, haystack){
+// 	var needleWidth = needle.width();
+// 	var needleHeight = needle.height();
+// 	var needleR = needle.red();
+// 	var needleG = needle.grn();
+// 	var needleB = needle.blu();
+// 	var haystackWidth = haystack.width();
+// 	var haystackHeight = haystack.height();
+// 	var haystackR = haystack.red();
+// 	var haystackG = haystack.grn();
+// 	var haystackB = haystack.blu();
+//
+// 	var needleCount = needleWidth*needleHeight;
+// 	var resultWidth = haystackWidth - needleWidth + 1;
+// 	var resultHeight = haystackHeight - needleHeight + 1;
+// 	var resultCount = resultWidth * resultHeight;
+// 	if(resultCount<=0){
+// 		return null;
+// 	}
+// 	var mask = 1.0;
+// 	var i, j;
+// 	var maskCount = 0;
+// 	for(i=0; i<needleCount; ++i){
+// 		if(needleMask){ mask = needleMask[i]; }
+// 		if(mask===0){ continue; }
+// 		++maskCount;
+// 	}
+// 	// needle infos
+// 	var avgN = new V3D();
+// 	var minN = null;
+// 	var maxN = null;
+// 	for(k=0; k<needleCount; ++k){
+// 		if(needleMask){ mask = needleMask[k]; }
+// 		if(mask===0){ continue; }
+// 		avgN.x += needleR[k];
+// 		avgN.y += needleG[k];
+// 		avgN.z += needleB[k];
+// 		if(minN==null){
+// 			minN = new V3D();
+// 			minN.x = needleR[k];
+// 			minN.y = needleG[k];
+// 			minN.z = needleB[k];
+// 			maxN = new V3D();
+// 			maxN.x = needleR[k];
+// 			maxN.y = needleG[k];
+// 			maxN.z = needleB[k];
+// 		}
+// 		minN.x = Math.min(minN.x,needleR[k]);
+// 		minN.y = Math.min(minN.y,needleG[k]);
+// 		minN.z = Math.min(minN.z,needleB[k]);
+// 		maxN.x = Math.max(maxN.x,needleR[k]);
+// 		maxN.y = Math.max(maxN.y,needleG[k]);
+// 		maxN.z = Math.max(maxN.z,needleB[k]);
+// 	}
+// 	avgN.scale(1.0/needleCount);
+// 	var rangeN = V3D.sub(maxN,minN);
+// 	// sigma
+// 	var sigmaN = new V3D();
+// 	for(k=0; k<needleCount; ++k){
+// 		if(needleMask){ mask = needleMask[k]; }
+// 		if(mask===0){ continue; }
+// 		sigmaN.x += Math.pow(needleR[k] - avgN.x,2);
+// 		sigmaN.y += Math.pow(needleG[k] - avgN.y,2);
+// 		sigmaN.z += Math.pow(needleB[k] - avgN.z,2);
+// 	}
+// 	sigmaN.x = Math.sqrt(sigmaN.x);
+// 	sigmaN.y = Math.sqrt(sigmaN.y);
+// 	sigmaN.z = Math.sqrt(sigmaN.z);
+// 	//
+// 	var result = new Array();
+// 	for(j=0; j<resultHeight; ++j){
+// 		for(i=0; i<resultWidth; ++i){
+// 			var resultIndex = j*resultWidth + i;
+// 			var sadR = 0;
+// 			var sadG = 0;
+// 			var sadB = 0;
+// 				var sadY = 0;
+// 			var nccR = 0;
+// 			var nccG = 0;
+// 			var nccB = 0;
+// 			var minH = null;
+// 			var maxH = null;
+// 			var avgH = new V3D();
+// 			for(var nJ=0; nJ<needleHeight; ++nJ){ // entire needle
+// 				for(var nI=0; nI<needleWidth; ++nI){
+// 					var nIndex = nJ*needleWidth + nI;
+// 					var hIndex = (j+nJ)*haystackWidth + (i+nI);
+// 					if(needleMask){ mask = needleMask[nIndex]; }
+// 					if(mask===0){ continue; }
+// 					var n = needle[nIndex];
+// 					var h = haystack[hIndex];
+// 					if(minH==null){
+// 						minH = new V3D();
+// 						minH.x = haystackR[hIndex];
+// 						minH.y = haystackG[hIndex];
+// 						minH.z = haystackB[hIndex];
+// 						maxH = new V3D();
+// 						maxH.x = haystackR[hIndex];
+// 						maxH.y = haystackG[hIndex];
+// 						maxH.z = haystackB[hIndex];
+// 					}
+// 					minH.x = Math.min(minH.x,haystackR[hIndex]);
+// 					minH.y = Math.min(minH.y,haystackG[hIndex]);
+// 					minH.z = Math.min(minH.z,haystackB[hIndex]);
+// 					maxH.x = Math.max(maxH.x,haystackR[hIndex]);
+// 					maxH.y = Math.max(maxH.y,haystackG[hIndex]);
+// 					maxH.z = Math.max(maxH.z,haystackB[hIndex]);
+// 					avgH.x += haystackR[hIndex];
+// 					avgH.y += haystackG[hIndex];
+// 					avgH.z += haystackB[hIndex];
+// 				}
+// 			}
+// 			avgH.scale(1.0/needleCount);
+// 			var rangeH = V3D.sub(maxH,minH);
+// 			// sigma
+// 			var sigmaH = new V3D();
+// 			for(var nJ=0; nJ<needleHeight; ++nJ){ // entire needle
+// 				for(var nI=0; nI<needleWidth; ++nI){
+// 					var nIndex = nJ*needleWidth + nI;
+// 					var hIndex = (j+nJ)*haystackWidth + (i+nI);
+// 					if(needleMask){ mask = needleMask[nIndex]; }
+// 					if(mask===0){ continue; }
+// 					var n = needle[nIndex];
+// 					var h = haystack[hIndex];
+// 					sigmaH.x += Math.pow(haystackR[hIndex] - avgH.x,2);
+// 					sigmaH.y += Math.pow(haystackG[hIndex] - avgH.y,2);
+// 					sigmaH.z += Math.pow(haystackB[hIndex] - avgH.z,2);
+// 				}
+// 			}
+// 			sigmaH.x = Math.sqrt(sigmaH.x);
+// 			sigmaH.y = Math.sqrt(sigmaH.y);
+// 			sigmaH.z = Math.sqrt(sigmaH.z);
+// 			// ...
+// 			for(var nJ=0; nJ<needleHeight; ++nJ){ // entire needle
+// 				for(var nI=0; nI<needleWidth; ++nI){
+// 					var nIndex = nJ*needleWidth + nI;
+// 					var hIndex = (j+nJ)*haystackWidth + (i+nI);
+// 					if(needleMask){ mask = needleMask[nIndex]; }
+// 					if(mask===0){ continue; }
+// 					// completely ignore a masked operation
+// 					var nR = needleR[nIndex];
+// 					var nG = needleG[nIndex];
+// 					var nB = needleB[nIndex];
+// 					var hR = haystackR[hIndex];
+// 					var hG = haystackG[hIndex];
+// 					var hB = haystackB[hIndex];
+// 					// from median .... intensity differences
+// 					// 	nR = nR - avgN.x;
+// 					// 	nG = nG - avgN.y;
+// 					// 	nB = nB - avgN.z;
+// 					// 	hR = hR - avgH.x;
+// 					// 	hG = hG - avgH.y;
+// 					// 	hB = hB - avgH.z;
+//
+// 					// 	nR = nR / rangeN.x;
+// 					// 	nG = nG / rangeN.y;
+// 					// 	nB = nB / rangeN.z;
+// 					// 	hR = hR / rangeH.x;
+// 					// 	hG = hG / rangeH.y;
+// 					// 	hB = hB / rangeH.z;
+//
+// 					// nR = nR / sigmaN.x;
+// 					// nG = nG / sigmaN.y;
+// 					// nB = nB / sigmaN.z;
+// 					// hR = hR / sigmaH.x;
+// 					// hG = hG / sigmaH.y;
+// 					// hB = hB / sigmaH.z;
+//
+// 					// SAD
+// 					var absR = Math.abs(nR - hR);
+// 					var absG = Math.abs(nG - hG);
+// 					var absB = Math.abs(nB - hB);
+// 					var absY = Math.abs(nR + nG + nB - hR - hG - hB);
+// 					// ABS
+// 					// sadR += absR;
+// 					// sadG += absG;
+// 					// sadB += absB;
+// 					// sadY += absY;
+// 					// SQ
+// 					sadR += absR*absR;
+// 					sadG += absG*absG;
+// 					sadB += absB*absB;
+// 					sadY += absY*absY;
+// 					// QU
+// 					// sadR += Math.pow(absR,4);
+// 					// sadG += Math.pow(absG,4);
+// 					// sadB += Math.pow(absB,4);
+// 					// RT
+// 					// sadR += Math.pow(absR,0.5);
+// 					// sadG += Math.pow(absG,0.5);
+// 					// sadB += Math.pow(absB,0.5);
+// 					// ?
+// 					// sadR += Math.sqrt(absR);
+// 					// sadG += Math.sqrt(absG);
+// 					// sadB += Math.sqrt(absB);
+// 					// NCC:
+// 					nccR += (nR * hR);
+// 					nccG += (nG * hG);
+// 					nccB += (nB * hB);
+// 					// nccR += Math.abs(nR * hR);
+// 					// nccG += Math.abs(nG * hG);
+// 					// nccB += Math.abs(nB * hB);
+// 				}
+// 			}
+// 			// var sigSquR = Math.sqrt(sigmaN.x*sigmaN.x*sigmaH.x*sigmaH.x);
+// 			// var sigSquG = Math.sqrt(sigmaN.y*sigmaN.y*sigmaH.y*sigmaH.y);
+// 			// var sigSquB = Math.sqrt(sigmaN.z*sigmaN.z*sigmaH.z*sigmaH.z);
+// 			//var sadAvg = (sadR + sadG + sadB) / maskCount / 3.0;
+// var sadAvg = (sadR + sadG + sadB) / maskCount / 3.0;
+// //var sadAvg = (sadR + sadG + sadB + sadY) / maskCount / 4.0;
+// //var sadAvg = (sadY) / maskCount / 3.0;
+//
+// 				// nccR = nccR / ( Math.pow(rangeN.x,2) * Math.pow(rangeH.x,2) );
+// 				// nccG = nccG / ( Math.pow(rangeN.y,2) * Math.pow(rangeH.y,2) );
+// 				// nccB = nccB / ( Math.pow(rangeN.z,2) * Math.pow(rangeH.z,2) );
+//
+// 				// nccR = nccR / ( Math.pow(sigmaN.x,2) * Math.pow(sigmaH.x,2) );
+// 				// nccG = nccG / ( Math.pow(sigmaN.y,2) * Math.pow(sigmaH.y,2) );
+// 				// nccB = nccB / ( Math.pow(sigmaN.z,2) * Math.pow(sigmaH.z,2) );
+//
+// 				// nccR = nccR / ( Math.pow(sigmaN.x,.5) * Math.pow(sigmaH.x,0.5) );
+// 				// nccG = nccG / ( Math.pow(sigmaN.y,.5) * Math.pow(sigmaH.y,0.5) );
+// 				// nccB = nccB / ( Math.pow(sigmaN.z,.5) * Math.pow(sigmaH.z,0.5) );
+//
+// 				// nccR = nccR / ( Math.pow(sigmaN.x,1.0) * Math.pow(sigmaH.x,1.0) );
+// 				// nccG = nccG / ( Math.pow(sigmaN.y,1.0) * Math.pow(sigmaH.y,1.0) );
+// 				// nccB = nccB / ( Math.pow(sigmaN.z,1.0) * Math.pow(sigmaH.z,1.0) );
+// //var nccAvg = (nccR + nccG + nccB) / maskCount / 3.0;
+// 			// var avgR = (avgN.x+avgH.x);
+// 			// var avgG = (avgN.y+avgH.y);
+// 			// var avgB = (avgN.z+avgH.z);
+// 			// var avgTot = (avgR+avgG+avgB) / 3.0;
+//
+// 			// var difR = Math.abs(avgN.x-avgH.x);
+// 			// var difG = Math.abs(avgN.y-avgH.y);
+// 			// var difB = Math.abs(avgN.z-avgH.z);
+// 			// var difAvg = (difR+difG+difB) / 3.0;
+// 			result[resultIndex] = sadAvg;
+// 			// result[resultIndex] = 1.0 - nccAvg;
+// 		}
+// 	}
+// 	// console.log(result);
+// 	// throw "?"
+// 	return {"value":result, "width":resultWidth, "height":resultHeight};
+//
+// }
 
 //R3D.searchNeedleHaystackImageFlat =  R3D.searchNeedleHaystackImageFlatFast;
 //R3D.searchNeedleHaystackImageFlat =  R3D.searchNeedleHaystackImageFlatTest;
