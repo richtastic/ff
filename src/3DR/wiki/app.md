@@ -369,6 +369,33 @@ https://cloud.google.com/appengine/docs/nodejs/
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+- get ORDERING F matches working --- should help with sporadically incorrect feature matches in dense F
+
+- how to determine with image is left and which is right?
+	-> location of epipole ? + rotated?
+- can't include pixels outside of match range [mask out edge pixels]
+
+
+
+for each row:
+	*) initialize costs to inf [outside window]
+	*) initialize existing pair costs for +/- window to matching cost (SAD/NCC)
+	*) calc optimal routes forward & record total path cost
+		-) a each displarity increment also adds additional cost
+	*) follow optimal route (lowest path cost) backwards
+
+..
+
+
+=> handle stereo match non-existing mappings / matches
+
+
+B) remove clumps of incorrect matches
+	=> identify bad matches in 3D space somehow
+	---- might be accidentally 'good / low erro
+	- eat edges?
+
+
 - initial dense F has large error
 	- use first/second score ratios [keep top half ?]
 

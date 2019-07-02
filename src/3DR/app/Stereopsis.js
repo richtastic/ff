@@ -4777,11 +4777,10 @@ throw "???"
 		// get corners
 		// keep only peak corners within grid size distance
 		console.log(transform);
+		var errorPixels = Math.max(errorR,1.0);
+		console.log("ERROR: "+errorR+" | "+errorPixels);
 		var matches = R3D.searchMatchPoints3D(images, sizes, relativeAB, Ks, errorR);
 		console.log(matches);
-
-
-throw "..."
 
 var KA = Ks[0];
 var KB = Ks[1];
@@ -4933,6 +4932,10 @@ Code.printMatlabArray(errors,"x_"+k);
 		}
 		// var result = R3D.stereoHighConfidenceMatches(imageA,imageB, ptsA,ptsB,F);
 		var result = R3D.stereoHighConfidenceMatches(imageA,imageB, pointsA,pointsB,F);
+
+
+throw "HCM"
+
 
 		// to parallel arrays
 		var matches = result;

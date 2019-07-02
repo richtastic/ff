@@ -11,12 +11,18 @@ function StereoTest(){
 	// new ImageLoader("./images/",["stereo_1_left.png", "stereo_1_right.png"],this,this.imagesLoadComplete).load(); // BIG CONES
 	// new ImageLoader("./images/",["stereo_0_left.png", "stereo_0_right.png"],this,this.imagesLoadComplete).load(); // SMALL CONES
 	// new ImageLoader("./images/",["stereo_2_left.png", "stereo_2_right.png"],this,this.imagesLoadComplete).load(); // DESKS - OFFICE
-	new ImageLoader("./images/",["stereo_3_left.png", "stereo_3_right.png"],this,this.imagesLoadComplete).load(); // MEETING - OFFICE
+	// new ImageLoader("./images/",["stereo_3_left.png", "stereo_3_right.png"],this,this.imagesLoadComplete).load(); // MEETING - OFFICE
+
+	// new ImageLoader("./images/tsukuba/",["s1_r1_c1.png", "s1_r1_c2.png"],this,this.imagesLoadComplete).load();
+	new ImageLoader("./images/tsukuba/",["s1_r1_c1_50.png", "s1_r1_c2_50.png"],this,this.imagesLoadComplete).load();
+	// new ImageLoader("./images/tsukuba/",["s1_r1_c2_50.png", "s1_r1_c1_50.png"],this,this.imagesLoadComplete).load();
+	// new ImageLoader("./images/tsukuba/",["s1_r1_c1_25.png", "s1_r1_c2_25.png"],this,this.imagesLoadComplete).load();
+
 	// REVERSE: - BAD FOR SEQUENTIAL
-	// new ImageLoader("./images/",["stereo_0_right.png", "stereo_0_left.png"],this,this.imagesLoadComplete).load(); // 
+	// new ImageLoader("./images/",["stereo_0_right.png", "stereo_0_left.png"],this,this.imagesLoadComplete).load(); //
 	// MORE:
-	// new ImageLoader("./images/",["stereo_teddy_2.png", "stereo_teddy_6.png"],this,this.imagesLoadComplete).load(); // 
-	// new ImageLoader("./images/",["stereo_tsukuba_1.png", "stereo_tsukuba_5.png"],this,this.imagesLoadComplete).load(); // 
+	// new ImageLoader("./images/",["stereo_teddy_2.png", "stereo_teddy_6.png"],this,this.imagesLoadComplete).load(); //
+	// new ImageLoader("./images/",["stereo_tsukuba_1.png", "stereo_tsukuba_5.png"],this,this.imagesLoadComplete).load(); //
 }
 StereoTest.prototype.imagesLoadComplete = function(imageInfo){
 	var imageList = imageInfo.images;
@@ -55,7 +61,9 @@ GLOBALSTAGE.root().matrix().scale(2.0);
 
 	// StereoTest.hierarchyMatch(imageMatrixA,imageMatrixB);
 	// R3D._stereoBlockMatch(sourceImageA,sourceImageB, imageMatrixA,infoA, imageMatrixB,infoB, FFwd, inputDisparity, disparityRange){
-		R3D.stereoMatch(imageMatrixA,imageMatrixB, null,null, null,null, null, null,null);
+
+	// R3D.stereoMatch(imageMatrixA,imageMatrixB, null,null, null,null, null, null,null);
+	R3D._stereoBlockMatchOrdered(imageMatrixA,imageMatrixB);
 }
 StereoTest.hierarchyMatch = function(imageMatrixA,imageMatrixB){
 var OFFY = 0;
@@ -73,7 +81,7 @@ var OFFY = 0;
 	var exponentAY = Math.log2(heightA/miniumSize);
 	var exponentBX = Math.log2(widthB/miniumSize);
 	var exponentBY = Math.log2(heightB/miniumSize);
-	
+
 	var exponent = Math.min(exponentAX,exponentAY,exponentBX,exponentBY);
 		exponent = Math.floor(exponent);
 
@@ -112,7 +120,7 @@ var OFFY = 0;
 			ImageMat.mulConst(blur,info["range"]);
 			ImageMat.add(blur,info["min"]);
 console.log(blur);
-			
+
 			// ImageMat.getBlurredImage(source,wid,hei, sigma){
 dOffset = blur;
 */
@@ -138,14 +146,14 @@ dOffset = blur;
 		// disparity = StereoTest.blockMatch(imgA,imgB, dOffset,dRange);
 		disparity = StereoTest.blockMatchOrdering(imgA,imgB, dOffset,dRange);
 		// console.log(disparity)
-		
+
 		var depths = Code.copyArray(disparity);
 		pWidA = widA;
 		pHeiA = heiA;
-		
+
 		// depths = ImageMat.absFloat(depths);
 		depths = ImageMat.getNormalFloat01(depths);
-		
+
 		// depths = ImageMat.pow(depths,0.25);
 		// depths = ImageMat.pow(depths,10);
 
@@ -223,7 +231,7 @@ console.log(widthA,disparityRange);
 			roiMaxC = Math.min(widthB-1,Math.max(0,roiMaxC));
 			roiMinR = Math.min(heightB-1,Math.max(0,roiMinR));
 			roiMaxR = Math.min(heightB-1,Math.max(0,roiMaxR));
-			// 
+			//
 			var disparityOffset = -(n-roiMinC);
 			var solution = R3D.inPlaceOperation(imageMatrixB,roiMinC,roiMaxC,roiMinR,roiMaxR, imageMatrixA,minc,maxc,minr,maxr, R3D.inPlaceOperationSADRGB, []);
 			var values = solution["value"];
@@ -244,7 +252,7 @@ d.matrix().scale(5.0);
 d.matrix().translate(100,200);
 GLOBALSTAGE.addChild(d);
 */
-			
+
 			var index = m*widthA + n;
 			var cell = cells[index];
 
@@ -347,7 +355,7 @@ StereoTest.blockMatchOrdering = function(imageMatrixA,imageMatrixB,  inputDispar
 				var index = m*widthA + n;
 				disparityStart = inputDisparity[index];
 				disparityStart = Math.round(disparityStart);
-				
+
 			}
 			// haystack
 			var roiMinC = n-disparityRange+disparityStart;
@@ -356,7 +364,7 @@ StereoTest.blockMatchOrdering = function(imageMatrixA,imageMatrixB,  inputDispar
 			// limits haystack
 			roiMinC = Math.min(widthB-1,Math.max(0,roiMinC));
 			roiMaxC = Math.min(widthB-1,Math.max(0,roiMaxC));
-			
+
 			var disparityOffset = -(n-roiMinC-halfBlockSize);
 			if(disparityOffset>0){
 				disparityOffset = 0;
@@ -391,7 +399,7 @@ StereoTest.blockMatchOrdering = function(imageMatrixA,imageMatrixB,  inputDispar
 				pathCosts[d] = null;
 				previousIndexes[d] = null;
 			}
-			
+
 			disparities.push({"costs":values, "disparities":absDisparity, "pathCosts":pathCosts, "previous":previousIndexes});
 			//
 		}
@@ -495,7 +503,7 @@ startM = 1E9;
 					throw "BAD ?"
 				}
 				disp = next;
-				
+
 			}
 			if(disp===null){
 				throw "why null?";
@@ -634,7 +642,7 @@ StereoTest.blockMatch = function(imageMatrixA,imageMatrixB,  inputDisparity, dis
 			roiMinR = Math.min(heightB-1,Math.max(0,roiMinR));
 			roiMaxR = Math.min(heightB-1,Math.max(0,roiMaxR));
 			// limits needle
-			
+
 			// ...
 			// var disparityOffset = -(n-roiMinC);
 			var disparityOffset = -(n-roiMinC-halfBlockSize);
@@ -766,7 +774,7 @@ GLOBALSTAGE.addChild(d);
 
 /*
 		% Construct template and region of interest.
-		
+
 		roi = [minr+templateCenter(1)‐2 ...
 			   minc+templateCenter(2)+mind‐2 ...
 			   1 maxd‐mind+1];
@@ -858,7 +866,3 @@ StereoTest.interpolateMinima = function(array, index){
 	}
 	return new V2D(index,array[index]);
 }
-
-
-
-

@@ -4761,8 +4761,8 @@ for(var i=0; i<matches.length; ++i){
 
 
 // show mapping:
-// var show = true;
-var show = false;
+var show = true;
+// var show = false;
 if(show){
 var colAr = 0.0;
 var colAg = 1.0;
@@ -4870,8 +4870,8 @@ R3D.stereoMatch = function(sourceImageA,sourceImageB, imageMatrixA,infoA, imageM
 }
 var HAS_SHOWN = false
 R3D._stereoHierarchyMatch = function(sourceImageA,sourceImageB, imageMatrixA,infoA, imageMatrixB,infoB, FFwd,bestMatchesList, inputDisparity, disparityRange){
-	var show = false;
-	// var show = true;
+	// var show = false;
+	var show = true;
 	// var miniumSize = 8;
 	// var miniumSize = 16; // poor
 	var miniumSize = 32;
@@ -5110,16 +5110,20 @@ if(show && !HAS_SHOWN){
 		}
 		return angle;
 	}
+console.log(eA);
+console.log(eB);
+console.log(anglesA);
 	// for every pixel in A: find matching pixel in B
 	for(var j=0; j<heiA; j++){
 		for(var i=0; i<widA; i++){
 			// image A location
 			pixA.set(i,j);
+if(infoA){
 			// epipolar-relative A
 			V2D.sub(relA,pixA,eA);
 			radA = relA.length();
 			if(radA<0.1){ // -- need at least some small direction
-				console.log("rad A too small: "+i+","+j);
+				// console.log("rad A too small: "+i+","+j+" ? "+radA);
 				continue;
 			}
 			theA = V2D.angleDirection(V2D.DIRX,relA);
@@ -5205,6 +5209,9 @@ pixB = new V3D(radB*Math.cos(theB),radB*Math.sin(theB), score);
 			pixB.add(eB);
 			index = j*widA + i;
 			pixelsMatchingAB[index] = pixB;
+}else{
+	// console.log("?");
+}
 		}
 	}
 HAS_SHOWN = true;
@@ -5397,6 +5404,211 @@ hI = Math.max(Math.min(nI,radEndB),radStartB);
 		}
 	}
 	return {"disparity":disparity, "SAD":scoresSAD, "confidence":confidences};
+}
+
+
+R3D._stereoBlockMatchOrdered = function(imageA,imageB, scale, mappingAB,radsA,radsB, displarityOffsets, disparityRange){
+	var halfBlockSizeX = 2;
+	var halfBlockSizeY = 1;
+	var blockSizeX = 2*halfBlockSizeX + 1;
+	var blockSizeY = 2*halfBlockSizeY + 1;
+	var disparityHalfWindow = 6; // x2 + 1
+	var disparityCount = disparityHalfWindow*2 + 1;
+	var occlusionCostConstant = 0.0001;
+	// var occlusionCostConstant = 0.05;
+	// ...
+	var colsA = imageA.width();
+	var rowsA = imageA.height();
+	var colsB = imageB.width();
+	var rowsB = imageB.height();
+	var redA = imageA.red();
+	var grnA = imageA.grn();
+	var bluA = imageA.blu();
+	var redB = imageB.red();
+	var grnB = imageB.grn();
+	var bluB = imageB.blu();
+	var disparities = [];
+	for(var rowA=0; rowA<rowsA; ++rowA){
+	// var rowA = 50;
+		var rowB = rowA;
+		var pathCosts = [];
+		var pathPredecessor = [];
+		var path = [];
+		for(var colA=0; colA<colsA; ++colA){ // cost for each possible disparity pixel in line
+			var disparityOffset = 0; // TODO: FROM displarityOffsets
+			var pathRow = [];
+			for(var disparity=-disparityHalfWindow; disparity<=disparityHalfWindow; ++disparity){
+				var d = disparity + disparityOffset;
+				var colB = colA + d;
+				var sad = 0;
+				if(colB<0 || colB>=colsB){ // matching search pixel outside image B area
+					// only occlusion
+				}else{ // match cost
+					// find inside starting & ending indexes
+					var minXA = Math.max(colA-halfBlockSizeX, 0);
+					var maxXA = Math.min(colA+halfBlockSizeX,colsA-1);
+					var minXB = Math.max(colB-halfBlockSizeX, 0);
+					var maxXB = Math.min(colB+halfBlockSizeX,colsB-1);
+					var lf = Math.min(colA-minXA, colB-minXB);
+					var ri = Math.min(maxXA-colA, maxXB-colB);
+					minXA = colA-lf;
+					minXB = colB-lf;
+					maxXA = colA+ri;
+					maxXB = colB+ri;
+					var minYA = Math.max(rowA-halfBlockSizeY, 0);
+					var maxYA = Math.min(rowA+halfBlockSizeY,rowsA-1);
+					var minYB = Math.max(rowB-halfBlockSizeY, 0);
+					var maxYB = Math.min(rowB+halfBlockSizeY,rowsB-1);
+					var bo = Math.min(rowA-minYA, rowB-minYB);
+					var to = Math.min(maxYA-rowA, maxYB-rowB);
+					minYA = rowA-bo;
+					minYB = rowB-bo;
+					maxYA = rowA+to;
+					maxYB = rowB+to;
+					// sad computation
+					var countX = maxXA - minXA + 1;
+					var countY = maxYA - minYA + 1;
+					var count = countX*countY;
+					for(var j=0; j<countY; ++j){
+						for(var i=0; i<countX; ++i){
+							var iA = (minYA+j)*colsA + (minXA+i);
+							var iB = (minYB+j)*colsB + (minXB+i);
+							var r = redA[iA] - redB[iB];
+							var g = grnA[iA] - grnB[iB];
+							var b = bluA[iA] - bluB[iB];
+							var s = Math.sqrt(r*r + g*g + b*b);
+							sad += s;
+						}
+					}
+					sad /= count;
+				}
+				var previousPathCost = 0;
+				var matchCost = sad;
+				var verticalCost = 0;
+				var occlusionCost = 0; // difference in previous - this disparity (left / right)
+				var prev = null;
+
+				if(path.length>0){ // previous path continue from best
+					var prevRow = path[path.length-1];
+					var bestPredecessor = null;
+					var bestPredecessorCost = null;
+					for(var i=0; i<prevRow.length; ++i){
+						var pred = prevRow[i];
+						if(!pred){ // possible impossible ?
+							continue;
+						}
+						var cost = pred["cost"];
+						var disp = pred["disp"];
+						// if(disp>d){ // can't make cross in disparities
+						// 	continue;
+						// }
+						if(bestPredecessorCost==null || bestPredecessorCost>cost){
+							bestPredecessorCost = cost;
+							bestPredecessor = pred;
+						}
+					}
+					if(bestPredecessor){
+						prev = bestPredecessor;
+						occlusionCost = Math.abs(prev["disp"]-d)*occlusionCostConstant;
+						previousPathCost = prev["cost"];
+					}else{
+						console.log(prevRow)
+						throw "no prev?";
+					}
+				}else{ //
+					previousPathCost = Math.abs(d)*occlusionCostConstant;
+				}
+				var nextPathCost = previousPathCost + matchCost + occlusionCost + verticalCost;
+				var node = {"cost":nextPathCost, "disp":d, "prev":prev, "a":colA, "b":colB};
+				pathRow.push(node);
+			}
+			path.push(pathRow);
+		}
+
+
+
+
+			var minPathNode = null;
+			var minPathCost = null;
+			// console.log(path);
+			for(var i=0; i<pathRow.length; ++i){
+				var pred = pathRow[i];
+				var cost = pred["cost"];
+				if(minPathNode==null || cost<minPathCost){
+					minPathNode = pred;
+					minPathCost = cost;
+				}
+			}
+			// console.log("LAST:");
+			// console.log(minPathNode);
+			var node = minPathNode;
+			var ds = [];
+			while(node){
+				var d = node["disp"];
+				ds.unshift(d);
+				node = node["prev"];
+			}
+			// console.log(ds);
+			for(var i=0; i<ds.length; ++i){
+				var d = ds[i];
+				disparities.push(d);
+			}
+			// console.log(disparities);
+
+	}
+
+
+	console.log(disparities);
+
+
+	var d = Code.copyArray(disparities);
+
+	ImageMat.normalFloat01(d);
+	ImageMat.invertFloat01(d);
+
+	// var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
+
+var display = GLOBALSTAGE;
+
+	var alp = 1.0;
+	var img = GLOBALSTAGE.getFloatRGBAsImage(d,d,d, colsA,rowsA);
+	var d = new DOImage(img);
+	d.graphics().alpha(alp);
+	d.matrix().translate(500,0);
+	display.addChild(d);
+
+
+	throw "?"
+
+/*
+	for each row:
+		for each col:
+			- calculate cost for each pixel's offset +/- disparity
+		- initialize path cost matrix & left/right matrix
+		for each col:
+			- update path cost matrix
+		find best end path cost & follow backwards to get deltas
+
+
+		- vertical costs?
+			- gradient using sobel operator
+		- discontinuity costs?
+			- BETA  = ?
+
+
+		occlusion function?
+			- if creating an occlusion leads to a good series of matches => overall cost should go down ??
+			- per-occlusion not per-pixel score
+
+		- occlusion penalty
+		- match reward
+*/
+
+
+// var solution = R3D.inPlaceOperation(imageB,minHaystackI,maxHaystackI,minHaystackJ,maxHaystackJ,
+// 									imageA,minNeedleI,maxNeedleI,minNeedleJ,maxNeedleJ,
+// 									R3D.inPlaceOperationSADRGB, []);
+	throw "?"
 }
 
 R3D.affine2DFromTransform = function(point2DA,point2DB,cameraA,cameraB, Ka,Kb, KaInv, KbInv, reuse){
@@ -12396,18 +12608,20 @@ GLOBALSTAGE.addChild(d);
 			var o = R3D.objectProgressiveR3D(c,imageMatrix, featureSize);
 			o["i"] = j;
 			space.insertObject(o);
+/*
 // display source points
-// var q = o["point"].copy();
-// 	q.scale(imageScale);
-// var d = new DO();
-// 	d.graphics().clear();
-// 	d.graphics().setLine(1.0, 0xFF00FF99);
-// 	d.graphics().beginPath();
-// 	d.graphics().drawCircle(q.x,q.y, 4);
-// 	d.graphics().endPath();
-// 	d.graphics().strokeLine();
-// GLOBALSTAGE.addChild(d);
-// d.matrix().translate(0 + i*600, 0);
+var q = o["point"].copy();
+	q.scale(imageScale);
+var d = new DO();
+	d.graphics().clear();
+	d.graphics().setLine(1.0, 0xFF00FF99);
+	d.graphics().beginPath();
+	d.graphics().drawCircle(q.x,q.y, 4);
+	d.graphics().endPath();
+	d.graphics().strokeLine();
+GLOBALSTAGE.addChild(d);
+d.matrix().translate(0 + i*600, 0);
+*/
 		}
 		spaces.push(space);
 	}
@@ -12440,11 +12654,15 @@ GLOBALSTAGE.addChild(d);
 // var errSearch = Math.min(errorPixels*2,5);
 // var errSearch = Math.min(errorPixels*3,10);
 // var errSearch = 10;
-var errSearch = Math.min(errorPixels*5,25); // 1 -> 10 | 5 -> 50   -- absolute shoule be % ... 10% ?
+// var errSearch = Math.min(errorPixels*5,25); // 1 -> 10 | 5 -> 50   -- absolute shoule be % ... 10% ?
 // errSearch = 50;
 // errSearch = 25;
 // errSearch = 10;
 
+var errSearch = Math.min(2*errorPixels/imageScale,25);
+// errSearch = 15;
+errSearch = Math.max(errSearch,15); // do want some amount of variation so that score ratio is meaningful
+console.log("errSearch: "+errSearch);
 var doDebug = false;
 var debugOffY = 350;
 var dir = new V2D();
@@ -12536,6 +12754,8 @@ GLOBALSTAGE.addChild(d);
 */
 			// search for points along line
 			var objectsB = spaceB.objectsInsideRay(org,dir,errSearch,true);
+var originalCount = objectsB.length;
+// console.log("objectsB: "+objectsB.length)
 			if(!objectsB || objectsB.length==0){ // no possible matches
 				// console.log("no points");
 				continue;
@@ -12592,8 +12812,8 @@ GLOBALSTAGE.addChild(d);
 }
 */
 			// serach for points with close color average
-			sortedB = R3D._sortCompareProgressiveColor(objectA, sortedB);
-			// console.log(sortedB);
+			sortedB = R3D._sortCompareProgressiveColor(objectA, sortedB, 10);
+			// console.log("color: "+originalCount+" => "+sortedB.length);
 /*
 if(doDebug){
 for(var b=0; b<sortedB.length; ++b){
@@ -12608,7 +12828,7 @@ GLOBALSTAGE.addChild(d);
 }
 */
 			// search for colors with close color histograms
-			sortedB = R3D._sortCompareProgressiveColorHistogram(objectA, sortedB);
+			sortedB = R3D._sortCompareProgressiveColorHistogram(objectA, sortedB, 8);
 			// console.log(sortedB);
 /*
 if(doDebug){
@@ -12649,7 +12869,7 @@ GLOBALSTAGE.addChild(d);
 			}
 
 			// search for colors with close flat color - ssd
-			sortedB = R3D._sortCompareProgressiveColorFlatSSD(objectA, sortedB);
+			sortedB = R3D._sortCompareProgressiveColorFlatSSD(objectA, sortedB, 6);
 			// console.log(sortedB);
 /*
 if(doDebug){
@@ -12665,7 +12885,7 @@ GLOBALSTAGE.addChild(d);
 }
 */
 			// search for colors with close flat color - ncc
-			sortedB = R3D._sortCompareProgressiveColorFlatNCC(objectA, sortedB);
+			sortedB = R3D._sortCompareProgressiveColorFlatNCC(objectA, sortedB, 5);
 			// console.log(sortedB);
 /*
 if(doDebug){
@@ -12706,7 +12926,7 @@ GLOBALSTAGE.addChild(d);
 			}
 
 			// search for SIFT-FLAT
-			sortedB = R3D._sortCompareProgressiveSIFTFlat(objectA, sortedB);
+			sortedB = R3D._sortCompareProgressiveSIFTFlat(objectA, sortedB, 4);
 			// console.log(sortedB);
 /*
 if(doDebug){
@@ -12729,7 +12949,7 @@ GLOBALSTAGE.addChild(d);
 				R3D.objectProgressiveR3D_SIFT_GRAD(objectB);
 			}
 			// search for SIFT-GRAD
-			sortedB = R3D._sortCompareProgressiveSIFTGrad(objectA, sortedB);
+			sortedB = R3D._sortCompareProgressiveSIFTGrad(objectA, sortedB, 3);
 			// console.log(sortedB);
 /*
 if(doDebug){
@@ -12747,7 +12967,7 @@ GLOBALSTAGE.addChild(d);
 }
 */
 			// search for SIFT-FULL
-			sortedB = R3D._sortCompareProgressiveSIFTFullScoreCache(objectA, sortedB);
+			sortedB = R3D._sortCompareProgressiveSIFTFullScoreCache(objectA, sortedB, 2);
 			// console.log(sortedB);
 /*
 if(doDebug){
@@ -12765,14 +12985,18 @@ GLOBALSTAGE.addChild(d);
 }
 */
 
+var finalCount = sortedB.length;
+// console.log("objectsB: "+originalCount+" => "+finalCount);
+
 			var best = sortedB[0];
 			objectA["best"] = best;
-			var ratio = 0;
+			objectA["second"] = sortedB[1];
+			// var ratio = 0;
 			// if(sortedB.length>1){
 			// 	ratio = sortedB[0][1]/sortedB[1][1];
 			// }
 			// scoreSIFT
-			objectA["ratio"] = ratio;
+			// objectA["ratio"] = ratio;
 
 /*
 if(doDebug){
@@ -12823,22 +13047,39 @@ var imageB = originalImageB;
 var matchingCount = 0;
 var matches = [];
 var ratios = [];
+var maximumRatio = 0.90; // eg 0.028/0.051 = 0.56    | 25% ~ 0.5 | 50% ~ 0.75
+var scoreIndex = "scoreSIFT";
+var skipped = 0;
 for(var i=0; i<objectsA.length; ++i){
 	var objectA = objectsA[i];
 	var bestA = objectA["best"];
-	if(bestA){
+	var scndA = objectA["second"];
+	if(bestA && scndA){
+		var ratioA = 0;
+		if(scndA){
+			ratioA = bestA[scoreIndex]/scndA[scoreIndex];
+		}
 		var objectB = bestA["match"]["source"];
 		if(objectB){
 			var bestB = objectB["best"];
+			var scndB = objectB["second"];
 			if(bestB){
+				var ratioB = 0;
+				if(scndB){
+					ratioB = bestB[scoreIndex]/scndA[scoreIndex];
+				}
 				var oA = bestB["match"]["source"];
 				var d = V2D.distance(objectA["point"],oA["point"]);
 				// console.log(d+" | "+objectA["i"]+" & "+oA["i"]+" ? "+(objectA==oA));
 				if(objectA==oA){ // 583
-				// if(d<1){ // 583
-ratios.push(bestA["ratio"]);
-					matches.push([objectA,objectB, bestA["match"],bestB["match"]]);
-					matchingCount += 1;
+					ratios.push(ratioA,ratioB);
+					var ratio = Math.max(ratioA,ratioB);
+					if(ratio<maximumRatio){
+						matches.push([objectA,objectB, bestA["match"],bestB["match"]]);
+						matchingCount += 1;
+					}else{
+						skipped++;
+					}
 				}
 			}
 		}
@@ -12846,7 +13087,7 @@ ratios.push(bestA["ratio"]);
 }
 Code.printMatlabArray(ratios,"ratios");
 console.log("matchingCount: "+matchingCount);
-
+console.log("skipped: "+skipped+" / "+matchingCount);
 
 var color0 = new V3D(1,0,0);
 var color1 = new V3D(0,1,0);
@@ -12885,11 +13126,8 @@ for(var i=0; i<matches.length; ++i){
 	var p3 = px*py;
 
 	// console.log(p0,p1,p2,p3, p0+p1+p2+p3);
-
 	var color = V3D.average(colors, [p0,p1,p2,p3]);
 	color = Code.getColARGBFromFloat(1.0,color.x,color.y,color.z);
-// console.log(color)
-// throw "?"
 	p.scale(imageScale);
 	q.scale(imageScale);
 	q.add(600,0);
@@ -12916,7 +13154,6 @@ for(var i=0; i<matches.length; ++i){
 		// d.graphics().lineTo(q.x,q.y);
 		// d.graphics().endPath();
 		// d.graphics().strokeLine();
-
 	GLOBALSTAGE.addChild(d);
 	// d.matrix().translate(0 + 1*600, 0);
 }
@@ -13266,28 +13503,28 @@ R3D._sortCompareProgressiveFxn = function(a,b){
 	return a[1] < b[1] ? -1 : 1;
 }
 
-R3D._sortCompareProgressiveColor = function(objectA, objectsB){
+R3D._sortCompareProgressiveColor = function(objectA, objectsB, minCount){
 	return R3D._sortCompareProgressiveType(objectA, objectsB, R3D._progressiveCompareV3DDistance, "color",null,null, 10);
 }
-R3D._sortCompareProgressiveColorHistogram = function(objectA, objectsB){
+R3D._sortCompareProgressiveColorHistogram = function(objectA, objectsB, minCount){
 	return R3D._sortCompareProgressiveType(objectA, objectsB, R3D._progressiveCompare1DArraySAD, "flatHistogram",null,null, 9);
 }
-R3D._sortCompareProgressiveColorFlatSSD = function(objectA, objectsB){
+R3D._sortCompareProgressiveColorFlatSSD = function(objectA, objectsB, minCount){
 	return R3D._sortCompareProgressiveType(objectA, objectsB, R3D._progressiveCompare1DArrayV3DSAD, "flatOrientated",null,null, 8);
 }
-R3D._sortCompareProgressiveColorFlatNCC = function(objectA, objectsB){
+R3D._sortCompareProgressiveColorFlatNCC = function(objectA, objectsB, minCount){
 	return R3D._sortCompareProgressiveType(objectA, objectsB, R3D._progressiveCompare1DArrayV3DNCC, "flatOrientated",null,null, 7);
 }
 // R3D._sortCompareProgressiveColorGradHistogram = function(objectA, objectsB){
 // 	return R3D._sortCompareProgressiveType(objectA, objectsB, R3D._progressiveCompare1DArraySAD, "gradHistogram",null,null, 6);
 // }
-R3D._sortCompareProgressiveSIFTFlat = function(objectA, objectsB){
+R3D._sortCompareProgressiveSIFTFlat = function(objectA, objectsB, minCount){
 	return R3D._sortCompareProgressiveType(objectA, objectsB, R3D._progressiveCompareMultiArraySAD, "flatSIFT", null, "scoreFlatSIFT",null,null, 4);
 }
-R3D._sortCompareProgressiveSIFTGrad = function(objectA, objectsB){
+R3D._sortCompareProgressiveSIFTGrad = function(objectA, objectsB, minCount){
 	return R3D._sortCompareProgressiveType(objectA, objectsB, R3D._progressiveCompareMultiArraySAD, "gradSIFT", null, "scoreGradSIFT",null,null, 3);
 }
-R3D._sortCompareProgressiveSIFTFullScoreCache = function(objectA, objectsB){
+R3D._sortCompareProgressiveSIFTFullScoreCache = function(objectA, objectsB, minCount){
 	var keepMinCount = 2;
 	var saveIndex = "scoreSIFT";
 	var fxn = R3D._progressiveCompareSIFTCache;
@@ -13332,23 +13569,20 @@ R3D._sortCompareProgressiveType = function(objectA, objectsB, fxn, indexA, index
 }
 R3D._sortCompareProgressiveDropWorst = function(best, minCount){
 	minCount = minCount!==undefined && minCount!==null ? minCount : 3;
+	minCount = Math.min(minCount,best.length);
 	// var p = 0.75; // 0.5-0.90
 	var p = 0.50;
 	var m = Math.round(best.length*p);
-	// console.log(m+" of "+minCount+" of "+best.length);
-	minCount = Math.min(minCount,best.length-1);
 	m = Math.min(m,best.length-1);
-	if(minCount==0){
+	if(best.length<=minCount){ // no middle section to even do
 		return;
 	}
 		var limitA = best[m][1];
-		//
 		// var sigma = 1.5; // 1 - 2 too much
 		var scores = [];
 		for(var i=0; i<best.length; ++i){
 			scores.push(best[i][1]);
 		}
-// Code.printHistogram(scores, 50);
 		var min = Code.min(scores);
 		var max = Code.max(scores);
 		var sigMin = Code.stdDev(scores,min);
@@ -13357,35 +13591,18 @@ R3D._sortCompareProgressiveDropWorst = function(best, minCount){
 		var limitMax = limitMin;
 		// var limitMax = max - sigMax*sigma; // right destributed remove
 		var limitB = Math.min(limitMin,limitMax);
-
 	// remove obviously worst elements
 	var limit = Math.min(limitA,limitB);
-
 	var index = Code.binarySearch(scores, function(a){
 		if(a==limit){
 			return 0;
 		}
 		return a<limit ? 1 : -1;
 	});
-	// console.log(scores);
-	// console.log(index);
 	if(Code.isArray(index)){
 		index = index[0];
 	}
-	index = Math.max(index,minCount);
 	Code.truncateArray(best,index);
-
-	/*
-	// console.log(limitA,limitB,limit);
-	for(var i=best.length; i--;){
-		if(best.length<=minCount){
-			break;
-		}
-		if(best[i][1]>limit){
-			Code.removeElementAt(best,i);
-		}
-	}
-	*/
 	return best;
 }
 
@@ -27280,7 +27497,7 @@ R3D._disparityPixelNCCR = function(winA,i, winB,j){ // TODO: also vertical neigh
 	diff = Math.pow(diff,2);
 	return diff;
 }
-R3D._disparityPixelBirchfield = function(winA,i, winB,j){
+R3D._disparityPixelBirchfield = function(winA,i, winB,j){ // smallest difference in range
 	i = Math.min(Math.max(i,0),winA.length-1);
 	j = Math.min(Math.max(j,0),winB.length-1);
 	var i0 = i>0 ? i-1 : i;
@@ -27306,9 +27523,13 @@ R3D._disparityPixelBirchfield = function(winA,i, winB,j){
 	var iR2 = (b1+b2)*0.5;
 	var iRMax = Math.max(iR0,iR1,iR2);
 	var iRMin = Math.min(iR0,iR1,iR2);
-	var scoreLeft = Math.max(0, iL0-iRMax, iRMin-iL0);
-	var scoreRight = Math.max(0, iR0-iLMax, iLMin-iR0);
-	return Math.max(scoreLeft,scoreRight);
+	// var scoreLeft = Math.max(0, iL0-iRMax, iRMin-iL0);
+	// var scoreRight = Math.max(0, iR0-iLMax, iLMin-iR0);
+	// return Math.max(scoreLeft,scoreRight);
+	var scoreLeft =  iRMin <= iL0 && iL0 <= iRMax ? 0 : Math.min(Math.abs(iL0-iRMax), Math.abs(iL0-iRMin));
+	var scoreRight = iLMin <= iR0 && iR0 <= iLMax ? 0 : Math.min(Math.abs(iR0-iLMax), Math.abs(iR0-iLMin));
+	// new:
+	return Math.min(scoreLeft,scoreRight);
 }
 R3D._disparityPixelAD = function(winA,i, winB,j){
 	i = Math.min(Math.max(i,0),winA.length-1);
@@ -29802,7 +30023,8 @@ R3D.inPlaceOperationSADRGB = function(args,imageA,xA,yA,indexA, imageB,xB,yB,ind
 	var diffR = aR-bR;
 	var diffG = aG-bG;
 	var diffB = aB-bB;
-	var squareRGB = (diffR*diffR + diffG*diffG + diffB*diffB);
+	var squareRGB = (diffR*diffR + diffG*diffG + diffB*diffB); // sqrt ?
+		squareRGB = Math.sqrt(squareRGB);
 	sum[countB] += squareRGB;
 }
 R3D.searchNeedleHaystackImageFlatSAD = function(needle,needleMask, haystack){
