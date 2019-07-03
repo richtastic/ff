@@ -10,18 +10,20 @@ function StereoTest(){
 	this._stage.root().addChild(this._root);
 	// new ImageLoader("./images/",["stereo_1_left.png", "stereo_1_right.png"],this,this.imagesLoadComplete).load(); // BIG CONES
 	// new ImageLoader("./images/",["stereo_0_left.png", "stereo_0_right.png"],this,this.imagesLoadComplete).load(); // SMALL CONES
+	// new ImageLoader("./images/",["stereo_0_right.png", "stereo_0_left.png"],this,this.imagesLoadComplete).load(); // SMALL CONES
 	// new ImageLoader("./images/",["stereo_2_left.png", "stereo_2_right.png"],this,this.imagesLoadComplete).load(); // DESKS - OFFICE
 	// new ImageLoader("./images/",["stereo_3_left.png", "stereo_3_right.png"],this,this.imagesLoadComplete).load(); // MEETING - OFFICE
 
 	// new ImageLoader("./images/tsukuba/",["s1_r1_c1.png", "s1_r1_c2.png"],this,this.imagesLoadComplete).load();
-	new ImageLoader("./images/tsukuba/",["s1_r1_c1_50.png", "s1_r1_c2_50.png"],this,this.imagesLoadComplete).load();
-	// new ImageLoader("./images/tsukuba/",["s1_r1_c2_50.png", "s1_r1_c1_50.png"],this,this.imagesLoadComplete).load();
+	// new ImageLoader("./images/tsukuba/",["s1_r1_c2.png", "s1_r1_c1.png"],this,this.imagesLoadComplete).load();
+	// new ImageLoader("./images/tsukuba/",["s1_r1_c1_50.png", "s1_r1_c2_50.png"],this,this.imagesLoadComplete).load();
+	new ImageLoader("./images/tsukuba/",["s1_r1_c2_50.png", "s1_r1_c1_50.png"],this,this.imagesLoadComplete).load();
 	// new ImageLoader("./images/tsukuba/",["s1_r1_c1_25.png", "s1_r1_c2_25.png"],this,this.imagesLoadComplete).load();
 
 	// REVERSE: - BAD FOR SEQUENTIAL
 	// new ImageLoader("./images/",["stereo_0_right.png", "stereo_0_left.png"],this,this.imagesLoadComplete).load(); //
 	// MORE:
-	// new ImageLoader("./images/",["stereo_teddy_2.png", "stereo_teddy_6.png"],this,this.imagesLoadComplete).load(); //
+	// new ImageLoader("./images/",["stereo_teddy_6.png", "stereo_teddy_2.png"],this,this.imagesLoadComplete).load(); //
 	// new ImageLoader("./images/",["stereo_tsukuba_1.png", "stereo_tsukuba_5.png"],this,this.imagesLoadComplete).load(); //
 }
 StereoTest.prototype.imagesLoadComplete = function(imageInfo){
@@ -63,7 +65,9 @@ GLOBALSTAGE.root().matrix().scale(2.0);
 	// R3D._stereoBlockMatch(sourceImageA,sourceImageB, imageMatrixA,infoA, imageMatrixB,infoB, FFwd, inputDisparity, disparityRange){
 
 	// R3D.stereoMatch(imageMatrixA,imageMatrixB, null,null, null,null, null, null,null);
+
 	R3D._stereoBlockMatchOrdered(imageMatrixA,imageMatrixB);
+	// R3D._stereoBlockMatchOrderedHierarchy(imageMatrixA,imageMatrixB);
 }
 StereoTest.hierarchyMatch = function(imageMatrixA,imageMatrixB){
 var OFFY = 0;

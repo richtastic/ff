@@ -376,15 +376,59 @@ https://cloud.google.com/appengine/docs/nodejs/
 - can't include pixels outside of match range [mask out edge pixels]
 
 
+- pixels that are entirely occluded [==0]
+	- don't attempt a match score
+	- next score == best previous score + occluded*(distance)
 
-for each row:
-	*) initialize costs to inf [outside window]
-	*) initialize existing pair costs for +/- window to matching cost (SAD/NCC)
-	*) calc optimal routes forward & record total path cost
-		-) a each displarity increment also adds additional cost
-	*) follow optimal route (lowest path cost) backwards
+...
+DSI = disparity space image
+GCP = ground control points
 
-..
+
+
+
+
+
+
+
+..........................................
+
+create a match cost for every pixel in row A for every dispartity dmin -> dmax
+
+for every pixel in row A:
+	for every possible predecessor of pixel:
+		calculate what would be the total path cost
+	pick predecessor with lowest path cost & set
+
+POSSIBLE PREDECESSORS:
+	- either indexA = a-1 OR indexB = b-1
+		- I PREDECESSORS
+			(i-1), j-1,j-2,...j-N
+		- J PREDECESSORS
+			i-1,i-2,...,i-N, (j-1)
+
+WOULD-BE-TOTAL-PATH-COST:
+	- current path cost
+	- match cost
+	- occlusion LEFT
+	- occlusion RIGHT
+	- vertical
+
+
+- only ever 1 occlusion: left or right -- never both
+- always a match cost for the pair
+- vertical cost is (difference in delta) * (#/gradient)
+
+
+
+
+
+
+..........................................
+
+
+
+
 
 
 => handle stereo match non-existing mappings / matches
