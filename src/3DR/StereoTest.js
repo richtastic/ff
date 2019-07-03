@@ -66,8 +66,8 @@ GLOBALSTAGE.root().matrix().scale(2.0);
 
 	// R3D.stereoMatch(imageMatrixA,imageMatrixB, null,null, null,null, null, null,null);
 
-	R3D._stereoBlockMatchOrdered(imageMatrixA,imageMatrixB);
-	// R3D._stereoBlockMatchOrderedHierarchy(imageMatrixA,imageMatrixB);
+	// R3D._stereoBlockMatchOrdered(imageMatrixA,imageMatrixB);
+	R3D._stereoBlockMatchOrderedHierarchy(imageMatrixA,imageMatrixB);
 }
 StereoTest.hierarchyMatch = function(imageMatrixA,imageMatrixB){
 var OFFY = 0;
