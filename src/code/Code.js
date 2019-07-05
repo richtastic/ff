@@ -6752,6 +6752,59 @@ Code.interpolate1D = function(locOut, locIn, a, b, c, d){ // list of V2D
 	}
 	return null;
 }
+Code.interpolate1DFillArray = function(array){
+	var firstElementIndex = null;
+	var lastElementIndex = null;
+	var startElementIndex = null;
+	var endElementIndex = null;
+	for(var i=0; i<array.length; ++i){
+		var value = array[i];
+		if(value!==null){
+			if(firstElementIndex==null){
+				firstElementIndex = i;
+				startElementIndex = i;
+			}else{
+				lastElementIndex = i;
+				endElementIndex = i;
+				var valueA = array[startElementIndex];
+				var valueB = array[endElementIndex];
+				var count = endElementIndex-startElementIndex;
+				for(var j=1; j<count; ++j){
+					var p = (j/count);
+					var value = valueA*(1.0-p) + valueB*p;
+					array[startElementIndex+j] = value;
+				}
+				startElementIndex = endElementIndex;
+				endElementIndex = null;
+			}
+		}
+	}
+	// interpolate ends
+	// console.log(firstElementIndex,lastElementIndex);
+	if(firstElementIndex!==null && lastElementIndex!==null){
+		var v, a, b;
+		if(firstElementIndex>1){
+			a = array[firstElementIndex+1];
+			b = array[firstElementIndex];
+			v = b-a;
+			// console.log(a,b,v);
+			for(var i=0; i<firstElementIndex; ++i){
+				// console.log(i+"/"+firstElementIndex);
+				array[i] = (firstElementIndex-i)*v + a;
+			}
+		}
+		if(lastElementIndex<array.length-1){
+			a = array[lastElementIndex-1];
+			b = array[lastElementIndex];
+			v = b-a;
+			// console.log(a,b,v);
+			for(var i=lastElementIndex+1; i<array.length; ++i){
+				array[i] = (i-lastElementIndex)*v + b;
+			}
+		}
+	}
+	return array;
+}
 Code.findMaxima1D = function(d){
 	var i, lenM1 = d.length-1, a,b,c, v, list = [];
 	if(d.length>1 &&d[0]>=d[1]){
@@ -6913,9 +6966,18 @@ Code.interpolateExtrema1D = function(loc, a,b,c){
 	if(dxdx==0){ return null; }
 	var dx = (c-a)*0.5;
 	loc.x = -dx/dxdx;
-	loc.y = b + 0.5*dx*loc.x;
+	// loc.y = b + 0.5*dx*loc.x;
+	loc.y = b + dx*loc.x + dxdx*loc.x*loc.x*0.5;
 	return loc;
 }
+Code.interpolatePolynomialExtrema1D = function(loc, a,b,c){ // POLYNOMIAL PEAK ?
+	throw "TODO";
+	Code.parabolaABCFromPoints(x1,y1, x2,y2, x3,y3);
+	return loc;
+}
+
+// ...
+
 Code.findExtrema1DDiff = function(xVals,yVals, noEnds){
 	var val, i, lenM1 = yVals.length-1;
 	var min = yVals[0], max = yVals[0];
