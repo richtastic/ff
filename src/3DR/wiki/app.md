@@ -376,11 +376,40 @@ https://cloud.google.com/appengine/docs/nodejs/
 ..........................................
 
 
-REVISIT:
 
-FAT-UNKNOWN MATCHING
-	- new color histogram
-	- new SIFT/SAD
+
+basicFullMatchingF
+stereoHighConfidenceMatches
+
+var result = R3D.mediumMatchF(imageMatrixA,imageMatrixB, pointsA,pointsB,F, fSymmetricError, maxMed);
+
+
+
+
+
+---- more corners?
+---- limit cutting with heuristics?
+---- ....
+...
+
+
+
+
+
+
+
+R3D.searchMatchPoints3D = function(images, cellSizes, relativeAB, Ks, errorPixels){
+
+	R3D.objectProgressiveR3D = function(point,imageMatrix, cellSize, matrix){
+	- quick discard of different colors
+	- quick discard of different histogram
+	-
+
+
+
+
+
+
 
 	- using some default camera matrix to help create affine transforms ???
 

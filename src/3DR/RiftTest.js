@@ -24,7 +24,7 @@ function RiftTest(){
 	// new ImageLoader("./images/iowa/",["0.JPG", "1.JPG"],this,this.imagesLoadComplete).load(); // good
 	// new ImageLoader("./images/iowa/",["1.JPG", "2.JPG"],this,this.imagesLoadComplete).load(); // poor
 	// new ImageLoader("./images/iowa/",["2.JPG", "3.JPG"],this,this.imagesLoadComplete).load(); // good
-	// new ImageLoader("./images/iowa/",["3.JPG", "4.JPG"],this,this.imagesLoadComplete).load(); // incorrect / bad  ~ [matches wrong windows]
+// new ImageLoader("./images/iowa/",["3.JPG", "4.JPG"],this,this.imagesLoadComplete).load(); // incorrect / bad  ~ [matches wrong windows]
 	// new ImageLoader("./images/iowa/",["4.JPG", "5.JPG"],this,this.imagesLoadComplete).load(); // incorrect / bad  ~ [matches wrong windows]
 	// new ImageLoader("./images/iowa/",["6.JPG", "7.JPG"],this,this.imagesLoadComplete).load(); // good
 	// new ImageLoader("./images/iowa/",["7.JPG", "8.JPG"],this,this.imagesLoadComplete).load(); // incorrect / bad ~
@@ -47,7 +47,7 @@ function RiftTest(){
 	// new ImageLoader("./images/",["xA_small.jpg", "xB_small.jpg"],this,this.imagesLoadComplete).load(); // poor
 
 	// NOTRE DAM SAMPLE
-	// new ImageLoader("./images/",["zA_small.jpg", "zB_small.jpg"],this,this.imagesLoadComplete).load(); // good
+	new ImageLoader("./images/",["zA_small.jpg", "zB_small.jpg"],this,this.imagesLoadComplete).load(); // good
 
 	// CAMPUS
 	// new ImageLoader("./images/",["F_S_1_1.jpg", "F_S_1_2.jpg"],this,this.imagesLoadComplete).load(); // good
@@ -86,7 +86,7 @@ function RiftTest(){
 	// BEACH PILLAR
 	// new ImageLoader("./images/user/beach_pillar/",["0_50.jpg", "1_50.jpg"],this,this.imagesLoadComplete).load(); // good
 	// new ImageLoader("./images/user/beach_pillar/",["1_50.jpg", "2_50.jpg"],this,this.imagesLoadComplete).load(); // poor
-	// new ImageLoader("./images/user/beach_pillar/",["1_50.jpg", "2_50_r.jpg"],this,this.imagesLoadComplete).load(); // bad
+// new ImageLoader("./images/user/beach_pillar/",["1_50.jpg", "2_50_r.jpg"],this,this.imagesLoadComplete).load(); // bad
 	// new ImageLoader("./images/user/beach_pillar/",["2_50.jpg", "3_50.jpg"],this,this.imagesLoadComplete).load(); // ok
 	// new ImageLoader("./images/user/beach_pillar/",["0_50.jpg", "2_50.jpg"],this,this.imagesLoadComplete).load(); // poor
 
@@ -103,7 +103,7 @@ r -
 */
 
 
-	new ImageLoader("./images/pika_1/",["image-0.png", "image-1.png"],this,this.imagesLoadComplete).load();
+	// new ImageLoader("./images/pika_1/",["image-0.png", "image-1.png"],this,this.imagesLoadComplete).load();
 
 
 
@@ -138,6 +138,8 @@ RiftTest.prototype.imagesLoadComplete = function(imageInfo){
 	display.matrix().scale(1.5);
 	// display.matrix().scale(2.0);
 	GLOBALSTAGE = this._stage;
+
+GLOBALDISPLAY = display;
 
 // show initial points
 	var imageSourceA = images[0];
@@ -219,60 +221,7 @@ for(i=0;i<matrixes.length;++i){
 }
 
 
-
-/*
-var imageA = imageMatrixA;
-var imageB = imageMatrixB;
-
-// var pointA = new V2D(193,105);
-// var pointB = new V2D(235,84);
-
-// var pointA = new V2D(65,167);
-// var pointB = new V2D(143,137);
-
-var pointA = new V2D(153,318);
-var pointB = new V2D(120,266);
-
-var affine = new Matrix2D();
-	affine.identity();
-	affine.scale(0.9);
-	affine.rotate(Code.radians(40));
-
-// var size = 5;
-var size = 11;
-// var size = 21;
-// var size = 71;
-var optimum = R3D.optimumAffineCornerTransform(imageA,pointA, imageB,pointB, affine, size, 20);
-
-
-
-
-
-var featuresA = [{"point":pointA, "scale":1.0, "angle":0.0}];
-var featuresB = [{"point":pointB, "scale":1.0, "angle":0.0}];
-this.showFeatures(featuresA, imageMatrixA.width()*0,0, display, 0xFFFF0000);
-this.showFeatures(featuresB, imageMatrixA.width(),0, display, 0xFFFF0000);
-
-var pts = [pointA,pointA,pointB];
-var mxs = [imageMatrixA,imageMatrixA,imageMatrixB];
-var mts = [affine, optimum, null];
-for(var i=0; i<pts.length; ++i){
-	var bSize = 21;
-	// bSize = size;
-	var pt = pts[i];
-	var mx = mxs[i];
-	var mt = mts[i];
-	var block = mx.extractRectFromFloatImage(pt.x,pt.y,1.0,null,bSize,bSize,mt);
-	var img = GLOBALSTAGE.getFloatRGBAsImage(block.red(), block.grn(), block.blu(), block.width(), block.height());
-	var d = new DOImage(img);
-	d.matrix().scale(3.0);
-	d.matrix().translate(1600 + 10 + i*100 , 10 );
-	GLOBALSTAGE.addChild(d);
-}
-
-
-throw "TEST AFFINE";
-*/
+// throw "HERE 1";
 
 
 // CORNER MAGNITUDES:
@@ -362,508 +311,8 @@ continue;
 // throw "wut";
 
 
-// TEST
-if(false){
-var source = matrixes[0];
-var imageGray = source.gry();
-var imageWidth = source.width();
-var imageHeight = source.height();
 
-
-// console.log(imageGray);
-imageGray = grads[0];
-console.log(imageGray);
-
-// var point = new V2D(200,280); // CORNER
-// var point = new V2D(220,225); // EDGE
-	// var point = new V2D(220,228);
-// var point = new V2D(120,250);
-// var point = new V2D(200,250);
-// var point = new V2D(256,249.5); // CORNER
-// var point = new V2D(186,199);
-// var point = new V2D(253.99963768284985, 228.00371748959114); // working
-var point = new V2D(403.9972095994657,294.00058409867853); // not working
-
-
-var sigma = 1.0;
-var compareSize = 41;
-var angle = 0;
-var angle = Code.radians(0.0);
-var scale = 3.0;
-var matrix = null;
-	matrix = new Matrix(3,3).identity();
-	matrix = Matrix.transform2DScale(matrix,scale);
-	matrix = Matrix.transform2DRotate(matrix,angle);
-	// matrix = Matrix.transform2DScale(matrix,scaleX,scaleY);
-	// matrix = Matrix.transform2DRotate(matrix,-bestAngle);
-	//matrix = Matrix.transform2DScale(matrix,0.5);
-var gry = ImageMat.extractRectFromFloatImage(point.x,point.y,1.0,sigma,compareSize,compareSize, imageGray,imageWidth,imageHeight, matrix);
-
-var mask = null;
-var mask = ImageMat.circleMask(compareSize,compareSize);
-
-
-gry = Code.arrayVectorMul(gry,mask);
-
-ImageMat.normalFloat01(gry);
-console.log(gry);
-
-
-var centroid = Code.centroidFrom2DArray(gry, compareSize, compareSize, mask);
-console.log(centroid+"");
-
-var center = new V2D(compareSize*0.5|0, compareSize*0.5|0);
-console.log(center+"  /  "+compareSize);
-
-var moment = Code.momentFrom2DArray(gry, compareSize, compareSize, center, mask);
-console.log(moment);
-
-img = GLOBALSTAGE.getFloatRGBAsImage(gry,gry,gry, compareSize,compareSize);
-var d = new DOImage(img);
-d.matrix().scale(2.0);
-d.matrix().translate(10,10);
-GLOBALSTAGE.addChild(d);
-
-
-var directionA = moment[0];
-var directionB = moment[1];
-var ratio = directionB.z/directionA.z;
-console.log(ratio)
-var imageSize = 10.0
-	var c = new DO();
-d.addChild(c);
-		c.graphics().setLine(1, 0xCCFF0000);
-		c.graphics().beginPath();
-		c.graphics().moveTo(0,0);
-		c.graphics().lineTo(imageSize*directionA.x,imageSize*directionA.y);
-		c.graphics().strokeLine();
-		c.graphics().endPath();
-
-		c.graphics().setLine(1, 0xCC00FF00);
-		c.graphics().beginPath();
-		c.graphics().moveTo(0,0);
-		c.graphics().lineTo(ratio*imageSize*directionB.x,ratio*imageSize*directionB.y);
-		c.graphics().strokeLine();
-		c.graphics().endPath();
-
-		c.graphics().setLine(1, 0xCCFF00FF);
-		c.graphics().beginPath();
-		c.graphics().drawCircle(centroid.x-center.x,centroid.y-center.y, 2);
-		c.graphics().strokeLine();
-		c.graphics().endPath();
-
-c.matrix().translate(center.x,center.y);
-
-}
-
-// throw "?"
-
-
-
-
-/*
-x = 0;
-y = 0;
-for(i=0;i<matrixes.length;++i){
-	var img = matrixes[i];
-	var gry = img.gry();
-	var wid = img.width();
-	var hei = img.height();
-	var cost = ImageMat.costToMoveAny(gry, wid,hei).value;
-	//
-	console.log(cost);
-	ImageMat.normalFloat01(cost);
-	ImageMat.pow(cost,4.0);
-	img = GLOBALSTAGE.getFloatRGBAsImage(cost,cost,cost, wid,hei);
-	var d = new DOImage(img);
-	this._root.addChild(d);
-	// d.graphics().alpha(0.05);
-	// d.graphics().alpha(0.10);
-	d.graphics().alpha(0.50);
-	// d.graphics().alpha(1.0);
-	d.matrix().translate(x,y);
-	x += img.width;
-}
-
-throw "?"
-*/
-// var red = ImageMat.costToMoveAny(red, wid,hei).value;
-
-
-
-// pick 2 pair points:
-
-// var pointA = new V2D(300,200);
-// var pointB = new V2D(400,100);
-
-
-// // sign
-// var pointA = new V2D(125,267);
-// var pointB = new V2D(124.5,147);
-
-// // top right window
-// var pointA = new V2D(286.5,219.5);
-// var pointB = new V2D(427.5,107);
-
-// // win bottom -- line vs corner vs sample
-// var pointA = new V2D(178,259);
-// var pointB = new V2D(248,145);
-// var pointA = new V2D(178.5,258.5);
-// var pointB = new V2D(248,144);
-// var pointA = new V2D(178.5,258.5);
-// var pointB = new V2D(247,142);
-
-// // tree hole
-// var pointA = new V2D(159,248);
-// var pointB = new V2D(309,139);
-
-
-// // tree 2
-// var pointA = new V2D(168,304);
-// var pointB = new V2D(311,195);
-
-// // sill corner
-// var pointA = new V2D(49,296.5);
-// var pointB = new V2D(16.5,175);
-
-// // roof corner
-// var pointA = new V2D(210,182);
-// var pointB = new V2D(318,43);
-
-// // step
-// var pointA = new V2D(68,312);
-// var pointB = new V2D(56,197.5);
-
-// // concrete corner
-// var pointA = new V2D(131,310);
-// var pointB = new V2D(186,199);
-
-// // window BL
-// var pointA = new V2D(256,249.5);
-// var pointB = new V2D(371,142);
-
-// // stain
-// var pointA = new V2D(332,300);
-// var pointB = new V2D(476,211);
-
-// // gutter
-// var pointA = new V2D(324,314);
-// var pointB = new V2D(468,227);
-
-// // ?
-var pointA = new V2D(68,312);
-var pointB = new V2D(56,198);
-
-// var featureSize = 21.0;
-
-
-var peakA = {"point": pointA, "covAngle":0, "covScale":1.0};
-var peakB = {"point": pointB, "covAngle":0, "covScale":1.0};
-
-// var peakA = this.peakScaleForPoint(pointA, imageMatrixA);
-// var peakB = this.peakScaleForPoint(pointB, imageMatrixB);
-
-// peakA = pointA;
-// peakB = pointB;
-// 2nd:
-/*
-var peaks = [peakA,peakB];
-var mats = [imageMatrixA,imageMatrixB];
-
-// var peaks = [peakB,peakA];
-// var mats = [imageMatrixB,imageMatrixA];
-
-var sortZ = function(a,b){
-	return a.z>b.z ? -1 : 1;
-};
-// var searchCriteria = 0.80; // ~ 55
-// var searchCriteria = 0.90; // ~ 110
-// var searchCriteria = 0.95; // ~ 170
-// var searchCriteria = 0.99; // ~ 425
-// var searchCriteria = 0.999; // ~ 800
-var searchCriteria = 0.9999; // ~ 900
-
-
-// var cornersA = R3D.pointsCornerMaxima(imageMatrixA.gry(), imageMatrixA.width(), imageMatrixA.height(),  searchCriteria);
-// cornersA.sort(sortZ);
-// var cornersB = R3D.pointsCornerMaxima(imageMatrixB.gry(), imageMatrixB.width(), imageMatrixB.height(),  searchCriteria);
-// cornersB.sort(sortZ);
-var nonMaximalPercent = 0.999;
-var scalable = 1.0;
-var limitPixels = 2.0;
-var maxCorners = 1500;
-var single = false;
-cornersA = R3D.extractImageCorners(imageMatrixA, nonMaximalPercent, maxCorners, single, scalable, limitPixels);
-cornersB = R3D.extractImageCorners(imageMatrixB, nonMaximalPercent, maxCorners, single, scalable, limitPixels);
-console.log(cornersA);
-console.log(cornersB);
-*/
-
-
-// pick a corner & show
-// var cornerA = cornersA[0];
-
-// var pointA = new V2D(210,182);
-// var pointB = new V2D(318,43);
-
-// display = GLOBALSTAGE;
-/*
-RiftTest.testEigs(pointA, imageMatrixA, grads[0], display, 0,0);
-RiftTest.testEigs(pointB, imageMatrixB, grads[1], display, imageMatrixA.width(),0);
-
-throw "?"
-*/
-
-
-// var peaks = ;
-// var peakA = cornersA[0];
-
-// var peakA = cornersA[333];
-// var peakA = cornersA[295];
-// var peakA = cornersA[296]; // window corner
-// var peakA = cornersA[306]; // roof corner window
-// var peakA = cornersA[313]; // left window corner
-// var peakA = cornersA[316]; // garden
-// var peakA = cornersA[319]; // window corner
-// var peakA = cornersA[321]; // garden brick
-// var peakA = cornersA[326]; // wood corner --- check
-// var peakA = cornersA[348]; // window frame corner
-// var peakA = cornersA[362]; // window frame corner
-// var peakA = cornersA[367]; // garden tree base
-// var peakA = cornersA[371]; // window corner
-// var peakA = cornersA[393]; // below window
-// var peakA = cornersA[394]; // window
-// var peakA = cornersA[404]; // left gutter base
-// var peakA = cornersA[407]; // garage
-// var peakA = cornersA[417]; // top floor left corner
-// var peakA = cornersA[419]; // bush-window
-// var peakA = cornersA[423]; // bush-window 2
-// var peakA = cornersA[424]; // ...
-// var peakA = cornersA[425]; // win 2
-// var peakA = cornersA[442]; // roof corner
-// var peakA = cornersA[445]; // brick corner --- check
-// var peakA = cornersA[448]; // win 3
-// var peakA = cornersA[451]; // side thing --- check
-// var peakA = cornersA[456]; // edge --- check
-// var peakA = cornersA[462]; // garden brick --- check
-// var peakA = cornersA[473]; // window with tree noise
-// var peakA = cornersA[476]; // roof with tree noise
-// var peakA = cornersA[481]; // corner grabage
-// var peakA = cornersA[482]; // siding
-// var peakA = cornersA[483]; // right garbage --- check
-// var peakA = cornersA[485]; // garbage 4
-// var peakA = cornersA[487]; // wall edge
-// var peakA = cornersA[488]; // wall peak
-// var peakA = cornersA[492]; // tree-bush corner
-// var peakA = cornersA[494]; // right-tree v
-// var peakA = cornersA[495]; // garbage
-// var peakA = cornersA[496]; // window
-// var peakA = cornersA[497]; // rock
-// var peakA = cornersA[498]; // roof corner
-// var peakA = cornersA[503]; // window center
-// var peakA = cornersA[508]; // roof corner
-// var peakA = cornersA[515]; // brick
-// var peakA = cornersA[516]; //window
-// var peakA = cornersA[517]; // wind 2
-// var peakA = cornersA[518]; // whitening
-// var peakA = cornersA[519]; // rock
-// var peakA = cornersA[522]; // gutter bottom
-
-// var peakA = cornersA[495]; //
-
-// 	peakA = new V2D(peakA.x,peakA.y);
-// var peakA = {"point": peakA};
-
-// console.log(peakA)
-
-//
-// var peaks = [peakA];
-// var mats = [imageMatrixA];
-// var grads = [grads[0]];
-
-// peakB = new V2D(466,226);
-// var peakB = {"point": peakB};
-// var peaks = [peakB];
-// var mats = [imageMatrixB];
-// var grads = [grads[1]];
-
-
-
-
-// cornersA = [ cornersA[100] ];
-// cornersB = [ cornersB[100] ];
-
-// cornersA = [ cornersA[102] ];
-// cornersB = [ cornersB[102] ];
-
-// cornersA = Code.randomSampleRepeats(cornersA,5);
-// cornersB = Code.randomSampleRepeats(cornersB,0);
-
-
-
-/// COMMENT START
-
-/*
-console.log("NEW AGE MATCHES");
-
-
-var peakLists = [cornersA,cornersB];
-var mats = [imageMatrixA,imageMatrixB];
-
-var maximumRefineRatio = 0.98;
-
-
-var features = [featuresA,featuresB];
-
-*/
-// var peakLists = [cornersB];
-// var mats = [imageMatrixB];
-// var features = [featuresB];
-
-/*
-
-// TESTING ORIENTATION CHANGE
-var image = imageMatrixA;
-var point = cornersA[444];
-
-point.round();
-
-
-var rotated = image.rotate180();
-var center = new V2D((rotated.width()-1)*0.5,(rotated.height()-1)*0.5);
-
-
-
-
-
-// var rotate = point.copy();
-// 	rotate.sub(center);
-var rotate = V2D.sub(point,center);
-	rotate.rotate(Math.PI);
-	rotate.add(center);
-
-
-console.log(point)
-console.log(rotate)
-
-var featureA = RiftTest.basicFeatureFromPoint(point, image);
-var featureR = RiftTest.basicFeatureFromPoint(rotate, rotated);
-
-featureA = featureA[0];
-featureR = featureR[0];
-
-console.log(featureA);
-console.log(featureR);
-
-var angleA = featureA["angle"];
-var angleR = featureR["angle"];
-var pointA = featureA["point"];
-var pointR = featureR["point"];
-// console.log( Code.degrees( Code.angleDirection(angleA,angleR) ) );
-console.log(pointA,pointR);
-
-
-
-var grayA = image.gry();
-var grayB = rotated.gry();
-var indexA = image.width()*point.y + point.x;
-var indexB = rotated.width()*rotate.y + rotate.x;
-var colorA = grayA[indexA];
-var colorB = grayB[indexB];
-
-console.log(colorA);
-console.log(colorB);
-
-console.log(" ... ");
-
-
-var pnts = [pointA,pointR];
-var imgs = [image,rotated];
-
-for(var i=0; i<pnts.length; ++i){
-	var pnt = pnts[i];
-	var image = imgs[i];
-	var bSize = 51;
-	var cen = bSize*0.5 | 0;
-	var block = image.extractRectFromFloatImage(pnt.x,pnt.y,0.25,null,bSize,bSize,null);
-	var blockGray = block.gry();
-	var index = bSize*cen + cen;
-	var color = blockGray[index];
-	console.log("COLOR: "+i+" = "+color);
-
-	var img = GLOBALSTAGE.getFloatRGBAsImage(block.red(), block.grn(), block.blu(), block.width(), block.height());
-	d = new DOImage(img);
-	if(i==1){
-		d.matrix().translate(-bSize*0.5,-bSize*0.5);
-		d.matrix().rotate(Math.PI);
-		d.matrix().translate(bSize*0.5,bSize*0.5);
-	}
-	d.matrix().scale(2.0);
-	d.matrix().translate(10 + i*100 , 10 );
-	GLOBALSTAGE.addChild(d);
-
-}
-
-throw "TESTING";
-*/
-
-
-/*
-for(var k=0; k<peakLists.length; ++k){
-	var peaks = peakLists[k];
-	var image = mats[k];
-	// var grad = grads[k];
-	var results = R3D.basicScaleFeaturesFromPoints(peaks, image);
-	features[k] = results;
-	// for(var i=0; i<results.length; ++i){
-	// 	features[k].push(results[i]);
-	// }
-continue;
-var cornerH = R3D.cornerScaleScores(mat.gry(),mat.width(),mat.height()).value;
-	for(var i=0; i<peaks.length; ++i){
-		var peak = peaks[i];
-		// simple
-		var refines = RiftTest.basicFeatureFromPoint(peak, mat, cornerH);
-		for(var r=0; r<refines.length; ++r){
-			feature.push(refines[r]);
-		}
-continue;
-
-		peak = {"point":peak};
-		// console.log("...");
-		var start = peak["point"].copy();
-		var refine = {"point":peak["point"], "dirX":new V2D(1,0), "dirY":new V2D(0,1), "scale":null};
-		// for(var j=0; j<25; ++j){
-		for(var j=0; j<1; ++j){
-			refine = RiftTest.iterateAffineTransform(refine, mat, grad);
-			if(refine){
-				var ratio = refine["ratio"];
-				if(ratio>maximumRefineRatio){
-					break;
-				}
-			}else{
-				break;
-			}
-		}
-		if(refine){
-			try {
-				this.affineCornerFeatureAddOrientation(refine, mat, grad);
-			}catch(e){
-				refine = null;
-			}
-		}
-		if(refine){
-			feature.push(refine);
-		}
-		// console.log("CHANGE?: "+start+" -> "+refine["point"])
-
-	}
-}
-var featuresA = features[0];
-var featuresB = features[1];
-
-*/
-
+// throw "HERE 2"
 
 
 var maxCount = 2000;
@@ -873,57 +322,15 @@ var featuresB = R3D.calculateScaleCornerFeatures(imageMatrixB, maxCount);
 this.showFeatures(featuresA, imageMatrixA.width()*0,0, display, 0x990000FF);
 this.showFeatures(featuresB, imageMatrixA.width(),0, display, 0x990000FF);
 
-var objectsA = R3D.generateSIFTObjects(featuresA, imageMatrixA);
-var objectsB = R3D.generateSIFTObjects(featuresB, imageMatrixB);
+var objectsA = R3D.generateProgressiveSIFTObjects(featuresA, imageMatrixA);
+var objectsB = R3D.generateProgressiveSIFTObjects(featuresB, imageMatrixB);
 
 console.log(objectsA);
 console.log(objectsB);
 
-// throw "?";
+var result = R3D.progressiveFullMatchingDense(objectsA, imageMatrixA, objectsB, imageMatrixB);
 
-/*
-var result = R3D.fullMatchesForObjects(objectsA, imageMatrixA, objectsB, imageMatrixB, false); // WHOLE PROCESS
-// var result = R3D.fullMatchesForObjects(objectsA, imageMatrixA, objectsB, imageMatrixB, true); // skip refinements
-	console.log(result);
-var matches = result["matches"];
-// what would F error be
-// if(matches.length>8){
-	var ptsA = [];
-	var ptsB = [];
-	for(var i=0; i<matches.length; ++i){
-		var match = matches[i];
-		var a = match["A"];
-		var b = match["B"];
-		a = a["point"];
-		b = b["point"];
-		ptsA.push(a);
-		ptsB.push(b);
-	}
-
-/// COMMENT END
-*/
-
-
-// initial matches only show
-// RiftTest.showMatches(matches,imageMatrixA, imageMatrixB, GLOBALSTAGE);
-// throw "..."
-
-
-
-
-/*
-
-// ORIGINAL SCALE CORNER POINTS
-var maxCount = 1000;
-var featuresA = R3D.calculateScaleCornerFeatures(imageMatrixA, maxCount);
-var objectsA = R3D.generateSIFTObjects(featuresA, imageMatrixA);
-var featuresB = R3D.calculateScaleCornerFeatures(imageMatrixB, maxCount);
-var objectsB = R3D.generateSIFTObjects(featuresB, imageMatrixB);
-
-console.log(objectsA);
-console.log(objectsB);
-*/
-
+throw "HERE 3";
 
 var result = R3D.basicFullMatchingF(objectsA, imageMatrixA, objectsB, imageMatrixB, 2000);
 

@@ -1145,6 +1145,7 @@ Code.binarySearch = function(a, f, noEnds){ // assumed increasing | if AT INDEX:
 	var minIndex = 0;
 	var maxIndex = a.length-1;
 	var value, result, middleIndex;
+	// var doFxn = Code.isFunction(f);
 	while(minIndex<=maxIndex){
 		middleIndex = (minIndex+maxIndex) >> 1;
 		value = a[middleIndex];
