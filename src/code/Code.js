@@ -6840,11 +6840,33 @@ Code.findMinima1D = function(d){
 	return list;
 }
 Code.findExtrema1D = function(d){
-	var i, lenM1 = d.length-1, a,b,c, v, list = [];
+	var i, a,b,c, v, lenM1 = d.length-1, list = [];
 	for(i=1;i<lenM1;++i){
 		a = d[i-1]; b = d[i]; c = d[i+1];
 		if( (b<=a&&b<=c) || (b>=a&&b>=c) ){
 			v = Code.interpolateExtrema1D(new V2D(), a,b,c);
+			if(v){ v.x += i; list.push(v); }
+		}
+	}
+	return list;
+}
+Code.findMinima1D = function(d){
+	var i, a,b,c, v, lenM1 = d.length-1, list = [];
+	for(i=1;i<lenM1;++i){
+		a = d[i-1]; b = d[i]; c = d[i+1];
+		if( (b<=a&&b<=c) ){
+			v = Code.interpolateMinimum1D(new V2D(), a,b,c);
+			if(v){ v.x += i; list.push(v); }
+		}
+	}
+	return list;
+}
+Code.findMaxima1D = function(d){
+	var i, a,b,c, v, lenM1 = d.length-1, list = [];
+	for(i=1;i<lenM1;++i){
+		a = d[i-1]; b = d[i]; c = d[i+1];
+		if( (b>=a&&b>=c) ){
+			v = Code.interpolateMaximum1D(new V2D(), a,b,c);
 			if(v){ v.x += i; list.push(v); }
 		}
 	}
@@ -6970,6 +6992,46 @@ Code.interpolateExtrema1D = function(loc, a,b,c){
 	loc.y = b + dx*loc.x + dxdx*loc.x*loc.x*0.5;
 	return loc;
 }
+
+Code.interpolateMaximum1D = function(loc, a,b,c){
+	var v = Code.interpolateExtrema1D(loc, a,b,c);
+	if(v){
+		var maxY = Math.max(a,b,c);
+		if(v.y<maxY){
+			if(a==maxY){
+				v.x = -1;
+				v.y = a;
+			}else if(b==maxY){
+				v.x = 0;
+				v.y = b;
+			}else{ // c==maxY
+				v.x = 1;
+				v.y = c;
+			}
+		}
+	}
+	return v;
+}
+Code.interpolateMinimum1D = function(loc, a,b,c){
+	var v = Code.interpolateExtrema1D(loc, a,b,c);
+	if(v){
+		var minY = Math.min(a,b,c);
+		if(v.y>minY){
+			if(a==minY){
+				v.x = -1;
+				v.y = a;
+			}else if(b==minY){
+				v.x = 0;
+				v.y = b;
+			}else{ // c==minY
+				v.x = 1;
+				v.y = c;
+			}
+		}
+	}
+	return v;
+}
+// Code.interpolateExtrema1D(new V2D(), 0.1,0.2,0.35)
 Code.interpolatePolynomialExtrema1D = function(loc, a,b,c){ // POLYNOMIAL PEAK ?
 	throw "TODO";
 	Code.parabolaABCFromPoints(x1,y1, x2,y2, x3,y3);

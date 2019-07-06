@@ -3630,12 +3630,18 @@ ImageMat.sobel = function(src,wid,hei, w,h){
 }
 ImageMat.sobelX = function(src,wid,hei, w,h){
 	// var val = ImageMat.convolve(src,wid,hei, [1,0,-1, 2,0,-2, 1,0,-1], 3,3);
-	var val = ImageMat.convolve(src,wid,hei, [-1,0,1, -2,0,2, -1,0,1], 3,3);
+	// var val = ImageMat.convolve(src,wid,hei, [-1,0,1, -2,0,2, -1,0,1], 3,3);
+	var val = ImageMat.convolve(src,wid,hei, [-0.25,0,0.25, -0.5,0,0.5, -0.25,0,0.25], 3,3);
 	return val;
 }
 ImageMat.sobelY = function(src,wid,hei, w,h){
 	// var val = ImageMat.convolve(src,wid,hei, [1,2,1, 0,0,0, -1,-2,-1], 3,3);
-	var val = ImageMat.convolve(src,wid,hei, [-1,-2,-1, 0,0,0, 1,2,1], 3,3);
+	// var val = ImageMat.convolve(src,wid,hei, [-1,-2,-1, 0,0,0, 1,2,1], 3,3);
+	var val = ImageMat.convolve(src,wid,hei, [-0.25,-0.5,-0.25, 0,0,0, 0.25,0.5,0.25], 3,3);
+	return val;
+}
+ImageMat.sobelYFast = function(src,wid,hei, w,h){ // TESTED?
+	var val = ImageMat.convolve(src,wid,hei, [-1, 0, 1], 1,3);
 	return val;
 }
 ImageMat.scharrX = function(src,wid,hei, w,h){

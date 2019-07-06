@@ -369,46 +369,26 @@ https://cloud.google.com/appengine/docs/nodejs/
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-- get ORDERING F matches working --- should help with sporadically incorrect feature matches in dense F
 
-- how to determine with image is left and which is right?
-	-> location of epipole ? + rotated?
-- can't include pixels outside of match range [mask out edge pixels]
-
-
-- pixels that are entirely occluded [==0]
-	- don't attempt a match score
-	- next score == best previous score + occluded*(distance)
-
-...
-DSI = disparity space image
-GCP = ground control points
-
-
-
-
-
-
-
-
-..........................................
-
-create a match cost for every pixel in row A for every dispartity dmin -> dmax
-
-- BIRCHFIELD SIM
-
-- VERTICAL GRADIENT - COST
-
-x FINAL SUB-PIXEL LOCALIZATION
 
 - FWD / BACK VALID POINTS
 
-
 ..........................................
 
 
+REVISIT:
 
-=> handle stereo match non-existing mappings / matches
+FAT-UNKNOWN MATCHING
+	- new color histogram
+	- new SIFT/SAD
+
+	- using some default camera matrix to help create affine transforms ???
+
+- camera distortion / center
+
+- disparity on rectified images [row]
+
+
 
 
 B) remove clumps of incorrect matches

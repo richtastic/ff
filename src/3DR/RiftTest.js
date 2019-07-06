@@ -151,8 +151,8 @@ RiftTest.prototype.imagesLoadComplete = function(imageInfo){
 
 
 
-this.testHistograms(imageMatrixA,imageMatrixB);
-return;
+// this.testHistograms(imageMatrixA,imageMatrixB);
+// return;
 
 
 // ROTATE B
@@ -4035,7 +4035,7 @@ var toScale = 0.25;
 		var histogram = Code.histogram3D(hist[0],hist[1],hist[2], 10, null,0,1, true, null); // 8-12
 		binHistograms[i] = histogram["histogram"];
 	}
-	RiftTest.histogramListToUnitLength(binHistograms);
+	R3D.histogramListToUnitLength(binHistograms);
 	object["siftFlat"] = binHistograms;
 
 
@@ -4046,7 +4046,7 @@ var toScale = 0.25;
 	}
 
 	var grads = block.gradientVector();
-	
+
 	var red = grads["r"];
 	var grn = grads["g"];
 	var blu = grads["b"];
@@ -4083,7 +4083,7 @@ var toScale = 0.25;
 	// NORMALIZE GRADIENTS
 	// A) find min / max, range - normalize between 0-1 [can drop item at 0]
 	// B) normalize by vector length
-	RiftTest.histogramListToUnitLength(binHistograms);
+	R3D.histogramListToUnitLength(binHistograms);
 	object["siftGrad"] = binHistograms;
 
 
@@ -4894,8 +4894,8 @@ RiftTest.prototype.testHistograms = function(imageMatrixA,imageMatrixB){
 	var objectsA = RiftTest.pointsToObjects(imageMatrixA, pointsA);
 	var objectsB = RiftTest.pointsToObjects(imageMatrixB, pointsB);
 
-	// console.log(objectsA);
-	// console.log(objectsB);
+	console.log(objectsA);
+	console.log(objectsB);
 
 
 
