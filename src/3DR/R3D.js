@@ -8529,8 +8529,9 @@ R3D.generateProgressiveSIFTObjects = function(features, imageMatrix){
 	return objects;
 }
 R3D.progressiveFullMatchingDense = function(objectsA,imageMatrixA, objectsB,imageMatrixB){
+	var minimumMatchCount = 8;
 	var info;
-	var F, Finv, Ferror, matches;
+	var F, Finv, Ferror, matches, pointsA, pointsB;
 	R3D._progressiveMatchIndex(objectsA);
 	R3D._progressiveMatchIndex(objectsB);
 	// get approximate F from sparse matches
@@ -8538,13 +8539,23 @@ R3D.progressiveFullMatchingDense = function(objectsA,imageMatrixA, objectsB,imag
 	for(var iteration=0; iteration<maxIterations; ++iteration){
 		R3D.progressiveMatchObjectsSubset(imageMatrixA,imageMatrixB, objectsA,objectsB, objectsB,objectsA, F,Finv, Ferror);
 		info = R3D._progressiveMatchChooseBest(objectsA,objectsB);
-		console.log(objectsA)
-		console.log(objectsB)
 		console.log(info);
-		matches = info["matches"];
-		// info = R3D._progressiveRefineFFromMatches(matches,imageMatrixA,imageMatrixB, iteration==3);
-		info = R3D._progressiveRefineFFromMatches(matches,imageMatrixA,imageMatrixB, iteration==0);
+		var nextMatches = info["matches"];
+		if(nextMatches.length<minimumMatchCount){
+			console.log("done a: "+nextMatches.length+" | "+iteration);
+			break;
+		}
+		matches = nextMatches;
+		info = R3D._progressiveRefineFFromMatches(nextMatches,imageMatrixA,imageMatrixB);
 		console.log(info);
+		var nextA = info["A"];
+		var nextB = info["B"];
+		if(nextA.length<minimumMatchCount){
+			console.log("done b: "+nextMatches.length+" | "+iteration);
+			break;
+		}
+		pointsA = nextA;
+		pointsB = nextB;
 		F = info["F"];
 		Finv = info["inv"];
 		Ferror = info["error"];
@@ -8553,21 +8564,29 @@ R3D.progressiveFullMatchingDense = function(objectsA,imageMatrixA, objectsB,imag
 			break;
 		}
 	}
-	// denser refinement
+	// medium point refinement
+// var debug = true;
+var debug = false;
+if(debug){
+	var display = GLOBALDISPLAY;
+	// var ms = matches;
+	ms = [];
+	for(var i=0; i<pointsA.length; ++i){
+		var A = pointsA[i];
+		var B = pointsB[i];
+		ms[i] = {"A":{"point":A}, "B":{"point":B} };
+	}
+	RiftTest.showMatches(ms, imageMatrixA, imageMatrixB, display);
+}
+	info = R3D._progressiveMediumMatches(imageMatrixA,imageMatrixB, pointsA,pointsB, F,Finv,Ferror);
 
-	// R3D._progressiveMediumMatches();
 
 
 
 
 
 
-
-	var pointsA = matches[0];
-	var pointsB = matches[1];
-	console.log(pointsA,pointsB)
-
-	// dense
+	// dense - stereo + fwd/bak
 
 	// info = R3D.stereoHighConfidenceMatches(imageMatrixA,imageMatrixB, pointsA,pointsB,F, imageMatrixA,imageMatrixB);
 	// console.log(info);
@@ -8579,23 +8598,269 @@ R3D.progressiveFullMatchingDense = function(objectsA,imageMatrixA, objectsB,imag
 	throw "progressiveFullMatchingDenseF ... ";
 }
 
-R3D._progressiveMediumMatches = function(imageA,imageB, Fab,Fba){ // match small portions of image at a time
-	throw "..."
+R3D._progressiveMediumMatches = function(imageA,imageB, pointsA,pointsB, Fab,Fba,pixelError){ // match small portions of image at a time
+	var minimumMatchCount = 16;
+	var info;
+	var F, Finv, Ferror, matches, pointsA, pointsB;
+	var existingA = null;
+	Code.timerStart();
+var display = GLOBALDISPLAY;
+// THIS MAY NEED TO BE IN LOOP IF F SUBSTANTIALLY CHANGES ANGLES ....
+	info = R3D._progressiveStationaryFeatures(imageA,imageB,Fab,Fba,pixelError, pointsA,pointsB, existingA, display,imageA.width());
+	var mediumA = info["A"];
+	var mediumB = info["B"];
+	Code.timerStop();
+	var time = Code.timerDifference();
+	console.log("object creation: "+time);
+	console.log(mediumA);
+	console.log(mediumB);
+	R3D._progressiveMatchIndex(mediumA);
+	R3D._progressiveMatchIndex(mediumB);
+
+
+
+
+	var useGrids = null;
+
+
+
+	var maxIterations = 5;
+	for(var iteration=0; iteration<maxIterations; ++iteration){
+		R3D.progressiveMatchObjectsFlatSubset(imageA,imageB, mediumA,mediumB, Fab,Fba, pixelError);
+		info = R3D._progressiveMatchChooseBest(mediumA,mediumB);
+		var nextMatches = info["matches"];
+		if(nextMatches.length<minimumMatchCount){
+			console.log("done a: "+nextMatches.length+" | "+iteration);
+			break;
+		}
+		matches = nextMatches;
+		info = R3D._progressiveRefineFFromMatches(matches,imageA,imageB);
+		console.log(info);
+		var nextA = info["A"];
+		var nextB = info["B"];
+		if(nextA.length<minimumMatchCount){
+			console.log("done b: "+nextMatches.length+" | "+iteration);
+			break;
+		}
+		pointsA = nextA;
+		pointsB = nextB;
+		F = info["F"];
+		Finv = info["inv"];
+		Ferror = info["error"];
+		if(Ferror<0.25){
+			console.log("done: "+Ferror+" | "+iteration);
+			break;
+		}
+	}
+
+
+		// var debug = false;
+		var debug = true;
+		if(debug){
+			var display = GLOBALDISPLAY;
+			// var ms = matches;
+			ms = [];
+			for(var i=0; i<pointsA.length; ++i){
+				var A = pointsA[i];
+				var B = pointsB[i];
+				ms[i] = {"A":{"point":A}, "B":{"point":B} };
+			}
+			RiftTest.showMatches(ms, imageA, imageB, display);
+		}
+
+
+
+
+		throw "?"
+		// console.log(info);
+	// }
+
+
+	// compare matches
+	// R3D.progressiveMatchObjectsSubset(imageMatrixA,imageMatrixB, objectsA,objectsB, objectsB,objectsA, F,Finv, Ferror);
+	// choose best among matches
+	// info = R3D._progressiveMatchChooseBest(objectsA,objectsB);
+
+
+
 /*
 	search a bunch more corner objects
 		- all corners in small radius
 		- SSD / SAD
 */
 
-	stationaryResult = R3D.stationaryFeatures(imageMatrixA, imageMatrixB, matrixFfwd, ptsA,ptsB, null, stationaryResult, fSymmetricError);
+	// stationaryResult = R3D.stationaryFeatures(imageMatrixA, imageMatrixB, matrixFfwd, ptsA,ptsB, null, stationaryResult, fSymmetricError);
 
-	fundamentalRelativeAngleForPoint
+	// fundamentalRelativeAngleForPoint
 
-
+	throw "..."
 }
+R3D._progressiveStationaryFeatures = function(imageA,imageB,F,Finv,fError,  ptsA,ptsB, existingA,  display,offsetX){
+	var angleAB = 0;
+	var epipoles = R3D.getEpipolesFromF(F);
+	var epipoleA = epipoles["A"];
+	var epipoleB = epipoles["B"];
+	var imageAWidth = imageA.width();
+	var imageAHeight = imageA.height();
+	var imageBWidth = imageB.width();
+	var imageBHeight = imageB.height();
+	var dimensionA = Math.sqrt(imageAWidth*imageAWidth + imageAHeight*imageAHeight);
+	var dimensionB = Math.sqrt(imageBWidth*imageBWidth + imageBHeight*imageBHeight);
+	var dimension = (dimensionA+dimensionB)*0.5;
+	var gridCount = 10;
+	var grid2D = null;
+	var limitPixels = 0.005*dimension; // ~1% of image : 2-5
+	console.log("limitPixels: "+limitPixels);
+
+
+	// var gridToPoint = function(a){
+	// 	return a["point"];
+	// }
+	// as bas as resolution as desired ....
+	// should be around twice as big as separation
+	var gridPercent = 0.01; // 50x50 - 100x100
+	var gridSizeA = Math.ceil(gridPercent*dimensionA);
+	var gridSizeB = Math.ceil(gridPercent*dimensionB);
+	var useGridA = new Grid2D(Math.ceil(imageAWidth/gridSizeA),Math.ceil(imageAHeight/gridSizeA), gridSizeA,gridSizeA, 0,0);
+	var useGridB = new Grid2D(Math.ceil(imageBWidth/gridSizeB),Math.ceil(imageBHeight/gridSizeB), gridSizeB,gridSizeB, 0,0);
+
+
+	// Grid2D.prototype.cellFromPoint
+	// Grid2D.prototype.setFromCountAndCellSize = function(countWidth,countHeight, cellWidth,cellHeight, offsetX,offsetY){
+
+
+
+
+	// if(fError>1){ // if error in F is really high - grid is not really more useful
+	// 	var angles = [];
+	// 	var samples = 20; // 10-100
+	// 	for(var i=0; i<samples; ++i){
+	// 		var pointA = new V2D(Math.random()*imageA.width(),Math.random()*imageA.height()); // 5
+	// 		var angle = R3D.fundamentalRelativeAngleForPoint(pointA,F,Finv, epipoleA,epipoleB, ptsA,ptsB);
+	// 		angles.push(angle);
+	// 	}
+	// 	angleAB = -Code.averageAngles(angles);
+	// }else{
+		var gridSizeBX = imageBWidth/gridCount;
+		var gridSizeBY = imageBHeight/gridCount;
+		var gridLenB = gridCount*gridCount;
+		grid2D = Code.newArray(gridLenB);
+		var pointB = new V2D();
+		for(var y=0; y<gridCount; ++y){
+			for(var x=0; x<gridCount; ++x){
+				var angles = [];
+				var samples = 10; // 10-100
+				for(var i=0; i<samples; ++i){
+					pointB.set( x*gridSizeBX + Math.random()*gridSizeBX, y*gridSizeBY + Math.random()*gridSizeBY);
+					var angle = R3D.fundamentalRelativeAngleForPoint(pointB,Finv,F, epipoleB,epipoleA, ptsB,ptsA);
+					angles.push(angle);
+				}
+				var angle = Code.averageAngles(angles);
+				var index = y*gridCount + x;
+				grid2D[index] = angle;
+			}
+		}
+// show grid directions:
+if(display){
+	console.log("SHOW ?");
+	console.log(display);
+	var mag = 10.0;
+	for(var y=0; y<gridCount; ++y){
+		for(var x=0; x<gridCount; ++x){
+			var index = y*gridCount + x;
+			var p = new V2D(gridSizeBX*(x+0.5),gridSizeBY*(y+0.5));
+			var angle = grid2D[index];
+			var q = new V2D(mag,0);
+				q.rotate(angle);
+				q.add(p);
+			var d = new DO();
+				d.graphics().clear();
+				d.graphics().setLine(2.0, 0xFFFF0099);
+				d.graphics().beginPath();
+				d.graphics().moveTo(p.x,p.y);
+				d.graphics().lineTo(q.x,q.y);
+				d.graphics().endPath();
+				d.graphics().strokeLine();
+			display.addChild(d);
+			d.matrix().translate(0 + offsetX, 0);
+		}
+	}
+}
+
+	// }
+	// get all corner peaks
+	var nonMaximalPercent = 0.9999;
+	var maximumCorners = 1E4; // 10k
+	var scalable = 2.0;
+	var useRatio = 0.02; // 0.01-0.05
+	var useSize = useRatio*dimension;
+	console.log("useSize: "+useSize);
+	var featuresA = null;
+	var featuresB = null;
+	var cornersA = null;
+	var cornersB = null;
+	if(existingA && existingA["A"]){
+		featuresA = existingA["A"];
+		cornersA = existingA["cornersA"];
+		cornersB = existingA["cornersB"];
+	}
+	if(!cornersA){
+		cornersA = R3D.extractImageCorners(imageA, nonMaximalPercent, maximumCorners, false, scalable, limitPixels);
+	}
+	if(!cornersB){
+		cornersB = R3D.extractImageCorners(imageB, nonMaximalPercent, maximumCorners, false, scalable, limitPixels);
+	}
+	if(!featuresA){
+		featuresA = R3D._progressiveStationaryFeaturesFromAngle(imageA, cornersA, 0, useSize, null, display);
+	}
+	if(!featuresB){ // always B
+		featuresB = R3D._progressiveStationaryFeaturesFromAngle(imageB, cornersB, angleAB, useSize, null, display, grid2D,gridCount,gridCount);
+	}
+	return {"A":featuresA, "B":featuresB, "cornersA":cornersA, "cornersB":cornersB}
+}
+
+
+
+R3D._progressiveStationaryFeaturesFromAngle = function(image, corners, angle, size, scale, display, grid,gridSizeX,gridSizeY){
+	angle = angle!==undefined && angle!==null ? angle : 0.0;
+	scale = scale!==undefined && scale!==null ? scale : 1.0;
+	size = size!==undefined && size!==null ? size : 11;
+	var needleSize = 11;
+	var needleScale = needleSize/size; // if size is beig =>zoom out => <1
+	// var scale = diaNeighborhood/outerSize;
+	var needleSigma = null;
+	var features = [];
+	var imageWidth = image.width();
+	var imageHeight = image.height();
+	var interpGrid = function(angles,percents){
+		return Code.averageAngles(angles,percents);
+	}
+	var matrix = new Matrix2D();
+	for(var i=0; i<corners.length; ++i){
+		var corner = corners[i];
+		var point = new V2D(corner.x,corner.y);
+		var ang = angle;
+		// if(false){
+		if(grid){
+			var x = (point.x/imageWidth)*gridSizeX;
+			var y = (point.y/imageHeight)*gridSizeY;
+			var a = Code.interpolateArray2DLinear(grid,gridSizeX,gridSizeY, x,y, interpGrid);
+			ang += a;
+		}
+		matrix.identity();
+		matrix.scale(scale);
+		matrix.rotate(ang);
+		var icon = image.extractRectFromFloatImage(point.x,point.y, needleScale,needleSigma, needleSize,needleSize, matrix);
+		var flatColor = R3D._progressiveR3DColorAverage(icon);
+		var flatHistogram = R3D._progressiveR3DColorHistogram(icon);
+		var flat = R3D._progressiveR3DColorOriented(icon);
+		var object = {"point":point.copy(), "angle":ang, "scale":scale, "flatOrientated":flat, "flatHistogram":flatHistogram, "color":flatColor};
+		features.push(object);
+	}
+	return features;
+}
+
 /*
-
-
 R3D.mediumMatchF = function(imageMatrixA,imageMatrixB,ptsA,ptsB,F, fSymmetricError, maxIterations){
 // TODO: IF DATA IS VERY GOOD => DON'T NEED SO MANY ITERATIONS
 	maxIterations = maxIterations!==undefined ? maxIterations : 3;
@@ -8688,21 +8953,10 @@ RiftTest.showMatches(matches, imageA, imageB, display);
 	Finv = R3D.fundamentalInverse(F);
 	error = R3D.fundamentalError(F,Finv,pointsA,pointsB);
 	console.log(error);
-
 	// update error:
 	errorMean = error["mean"];
 	errorSigma = error["sigma"];
 	lim = errorMean + 2.0*errorSigma;
-
-// if(debug){
-// 	var display = GLOBALDISPLAY;
-// 	matches = [];
-// 	for(var i=0; i<pointsA.length; ++i){
-// 		matches[i] = {"A":{"point":pointsA[i]}, "B":{"point":pointsB[i]} };
-// 	}
-// 	RiftTest.showMatches(matches, imageA, imageB, display);
-// }
-
 	return {"F":F, "inv":Finv, "error":lim, "A":pointsA, "B":pointsB};
 }
 R3D._progressiveMatchIndex = function(objects){
@@ -8711,6 +8965,7 @@ R3D._progressiveMatchIndex = function(objects){
 	}
 }
 R3D._progressiveMatchChooseBest = function(objectsA,objectsB,  minimumRatio,minScore){
+	console.log("_progressiveMatchChooseBest");
 	// check to see if top match comparisons:
 	minimumRatio = minimumRatio!==undefined && minimumRatio!==null ? minimumRatio : 0.90;
 	minScore = minScore!==undefined && minScore!==null ? minScore : 0.20;
@@ -8772,7 +9027,10 @@ R3D.progressiveMatchObjectsSubset = function(imageA,imageB, objectsA,putativeA, 
 	R3D._progressiveMatchSubset(objectsA,imageA, putativeA,imageB, Fab,errorPixels);
 	R3D._progressiveMatchSubset(objectsB,imageB, putativeB,imageA, Fba,errorPixels);
 }
-
+R3D.progressiveMatchObjectsFlatSubset = function(imageA,imageB, objectsA,objectsB, Fab,Fba,errorPixels){
+	R3D._progressiveMatchFlatSubset(objectsA,imageA, objectsB,imageB, Fab,errorPixels);
+	R3D._progressiveMatchFlatSubset(objectsB,imageB, objectsA,imageA, Fba,errorPixels);
+}
 R3D._progressiveLimitScores = function(scores, limitSigma,limitPercent,limitMinimum){
 	if(scores.length<limitMinimum){
 		if(scores.length==0){
@@ -8781,20 +9039,17 @@ R3D._progressiveLimitScores = function(scores, limitSigma,limitPercent,limitMini
 		return scores[scores.length-1];
 	}
 	scores.sort();
-	var min = Code.min(scores);
+	var min = scores[0]; // Code.min(scores);
 	var sig = Code.stdDev(scores,min);
-	var haf = Code.percentile(scores,limitPercent);
-	var limitPercent = haf;
+	var limitPercent = Code.percentile(scores,limitPercent);
 	var limitSigma = min + sig*limitSigma;
 	var limitMinimum = scores[limitMinimum];
 	var fxn = function(a){ return a>limitSigma ? -1 : (a<limitSigma ? 1 : 0); };
 	limitSigma = Code.binarySearch(scores,fxn);
-	if(Code.isArray(limitSigma)){
-		limitSigma = limitSigma.length>1 ? limitSigma[1] : limitSigma[0];
-		limitSigma = scores[limitSigma];
-	}
-	// var limit = Math.max(limitPercent,limitSigma);
-	var limit = Math.min(limitPercent,limitSigma);
+	limitSigma = limitSigma.length>1 ? limitSigma[1] : limitSigma[0];
+	limitSigma = scores[limitSigma];
+	// var limit = Math.max(limitPercent,limitSigma); // typically does nothing
+	var limit = Math.min(limitPercent,limitSigma); // force smaller
 		limit = Math.max(limit,limitMinimum);
 	return limit;
 }
@@ -8807,13 +9062,120 @@ R3D._progressiveDropOverLimit = function(objects, limit, key){
 		}
 	}
 }
-R3D._progressiveMatchSubset = function(objectsA,imageA, objectsB,imageB, Fab,pixelError){
-	console.log("R3D._progressiveMatchSubset: "+objectsA.length+" + "+objectsB.length);
+R3D._progressiveMatchFlatSubset = function(objectsA,imageA, objectsB,imageB, Fab,pixelError){
+	console.log("R3D._progressiveMatchFlatSubset: "+objectsA.length+" + "+objectsB.length);
+	var usePutativeCountFlatUnoriented = 8;
+	var usePutativeCountFlatHistogram = 6;
+	var usePutativeCountFlatSAD = 4;
+	var usePutativeCountFlatNCC = 2;
+	var decaySigma = 1.0;
+	var decayRatio = 0.75;
+	var scores = null;
+	var limit = null;
 	var sortScore = function(a,b){
 		return a["s"] < b["s"] ? -1 : 1;
 	};
-	var sortNumeric = function(a,b){
-		return a < b ? -1 : 1;
+	// insert into space
+	var toPointObject = function(a){
+		return a["point"];
+	};
+	var spaceB = new QuadTree(toPointObject, new V2D(0,0), new V2D(imageB.width(),imageB.height()));
+	for(var i=0; i<objectsB.length; ++i){
+		spaceB.insertObject(objectsB[i]);
+	}
+	var dir = new V2D();
+	var org = new V2D();
+Code.timerStart();
+	for(var i=0; i<objectsA.length; ++i){
+		var objectA = objectsA[i];
+		var putativeB = [];
+		var pointA = objectA["point"];
+		var lineB = R3D.lineFromF(Fab,pointA, org,dir);
+		putativeB = spaceB.objectsInsideRay(org,dir,pixelError,true);
+		for(var j=0; j<putativeB.length; ++j){
+			var objectB = putativeB[j];
+			putativeB[j] = {"o":objectB, "s":0};
+		}
+		objectA["matches"] = putativeB;
+		// FLAT COLORS
+		if(putativeB.length>usePutativeCountFlatUnoriented){
+			scores = [];
+			for(var j=0; j<putativeB.length; ++j){
+				var match = putativeB[j];
+				var objectB = match["o"];
+				var s = R3D._progressiveCompareV3DDistance(objectA["color"],objectB["color"]);
+				match["s"] = s;
+				scores.push(s);
+			}
+			limit = R3D._progressiveLimitScores(scores, decaySigma,decayRatio, usePutativeCountFlatUnoriented);
+			R3D._progressiveDropOverLimit(putativeB,limit);
+		}
+		// COLOR HISTOGRAMS:
+		if(putativeB.length>usePutativeCountFlatHistogram){
+			scores = [];
+			for(var j=0; j<putativeB.length; ++j){
+				var match = putativeB[j];
+				var objectB = match["o"];
+				var s = R3D._progressiveCompare1DArraySAD(objectA["flatHistogram"],objectB["flatHistogram"]);
+				match["s"] = s;
+				scores.push(s);
+			}
+			limit = R3D._progressiveLimitScores(scores, decaySigma,decayRatio, usePutativeCountFlatHistogram);
+			R3D._progressiveDropOverLimit(putativeB,limit);
+		}
+		// console.log("HIST: "+putativeB.length);
+		// COLOR SAD:
+		if(putativeB.length>usePutativeCountFlatSAD){
+			scores = [];
+			for(var j=0; j<putativeB.length; ++j){
+				var match = putativeB[j];
+				var objectB = match["o"];
+				var s = R3D._progressiveCompare1DArrayV3DSAD(objectA["flatOrientated"],objectB["flatOrientated"]);
+				match["s"] = s;
+				scores.push(s);
+			}
+			limit = R3D._progressiveLimitScores(scores, decaySigma,decayRatio, usePutativeCountFlatSAD);
+			R3D._progressiveDropOverLimit(putativeB,limit);
+		}
+		// console.log("SAD: "+putativeB.length);
+		// COLOR NCC:
+		// if(putativeB.length>usePutativeCountFlatNCC){
+			scores = [];
+			for(var j=0; j<putativeB.length; ++j){
+				var match = putativeB[j];
+				var objectB = match["o"];
+				var s = R3D._progressiveCompare1DArrayV3DNCC(objectA["flatOrientated"],objectB["flatOrientated"]);
+				match["s"] = s;
+				scores.push(s);
+			}
+			limit = R3D._progressiveLimitScores(scores, decaySigma,decayRatio, usePutativeCountFlatNCC);
+			R3D._progressiveDropOverLimit(putativeB,limit);
+		// }
+		// bestMatches = bestMatches.sort(function(a,b){
+		// 	return a["rank"] < b["rank"] ? -1 : 1;
+		// });
+		putativeB.sort(sortScore);
+	}
+Code.timerStop();
+var time = Code.timerDifference();
+console.log("delta: "+time);
+}
+R3D._progressiveMatchSubset = function(objectsA,imageA, objectsB,imageB, Fab,pixelError){
+	console.log("R3D._progressiveMatchSubset: "+objectsA.length+" + "+objectsB.length);
+	var usePutativeCountFlatUnoriented = 14;
+	var usePutativeCountFlatHistogram = 12;
+	var usePutativeCountFlatSAD = 10;
+	var usePutativeCountFlatNCC = 8;
+	var usePutativeCountFlatSIFT = 6;
+	var usePutativeCountGradSIFT = 4;
+	var usePutativeCountRIFT = 2;
+	var decaySigma = 1.0;
+	var decayRatio = 0.50; // fat match drop quick
+	if(Fab){ // limited match go slowly
+		decayRatio = 0.75;
+	}
+	var sortScore = function(a,b){
+		return a["s"] < b["s"] ? -1 : 1;
 	};
 	var scores = null;
 	var limit = null;
@@ -8842,7 +9204,6 @@ Code.timerStart();
 				var objectB = putativeB[j];
 				putativeB[j] = {"o":objectB, "s":0};
 			}
-
 		}else{ // use entire list
 			putativeB = [];
 			for(var j=0; j<objectsB.length; ++j){
@@ -8850,96 +9211,107 @@ Code.timerStart();
 				putativeB.push({"o":objectB, "s":0});
 			}
 		}
-// TODO: AVOID DOING WORK WHEN THERE ARE NOT ENOUGH IN THE LIST TO ACTUALLY DROP SOME
 		objectA["matches"] = putativeB;
 		// console.log("START: "+putativeB.length);
 		// FLAT COLORS
-		scores = [];
-		for(var j=0; j<putativeB.length; ++j){
-			var match = putativeB[j];
-			var objectB = match["o"];
-			var s = R3D._progressiveCompareV3DDistance(objectA["color"],objectB["color"]);
-			match["s"] = s;
-			scores.push(s);
+		if(putativeB.length>usePutativeCountFlatUnoriented){
+			scores = [];
+			for(var j=0; j<putativeB.length; ++j){
+				var match = putativeB[j];
+				var objectB = match["o"];
+				var s = R3D._progressiveCompareV3DDistance(objectA["color"],objectB["color"]);
+				match["s"] = s;
+				scores.push(s);
+			}
+			limit = R3D._progressiveLimitScores(scores, decaySigma,decayRatio, usePutativeCountFlatUnoriented);
+			R3D._progressiveDropOverLimit(putativeB,limit);
 		}
-		limit = R3D._progressiveLimitScores(scores, 2.0,0.5,14);
-		R3D._progressiveDropOverLimit(putativeB,limit);
 		// console.log("FLAT: "+putativeB.length);
 		// COLOR HISTOGRAMS:
-		scores = [];
-		for(var j=0; j<putativeB.length; ++j){
-			var match = putativeB[j];
-			var objectB = match["o"];
-			var s = R3D._progressiveCompare1DArraySAD(objectA["flatHistogram"],objectB["flatHistogram"]);
-			match["s"] = s;
-			scores.push(s);
+		if(putativeB.length>usePutativeCountFlatHistogram){
+			scores = [];
+			for(var j=0; j<putativeB.length; ++j){
+				var match = putativeB[j];
+				var objectB = match["o"];
+				var s = R3D._progressiveCompare1DArraySAD(objectA["flatHistogram"],objectB["flatHistogram"]);
+				match["s"] = s;
+				scores.push(s);
+			}
+			limit = R3D._progressiveLimitScores(scores, decaySigma,decayRatio, usePutativeCountFlatHistogram);
+			R3D._progressiveDropOverLimit(putativeB,limit);
 		}
-		limit = R3D._progressiveLimitScores(scores, 2.0,0.5,12);
-		R3D._progressiveDropOverLimit(putativeB,limit);
 		// console.log("HIST: "+putativeB.length);
 		// COLOR SAD:
-		scores = [];
-		for(var j=0; j<putativeB.length; ++j){
-			var match = putativeB[j];
-			var objectB = match["o"];
-			var s = R3D._progressiveCompare1DArrayV3DSAD(objectA["flatOrientated"],objectB["flatOrientated"]);
-			match["s"] = s;
-			scores.push(s);
+		if(putativeB.length>usePutativeCountFlatSAD){
+			scores = [];
+			for(var j=0; j<putativeB.length; ++j){
+				var match = putativeB[j];
+				var objectB = match["o"];
+				var s = R3D._progressiveCompare1DArrayV3DSAD(objectA["flatOrientated"],objectB["flatOrientated"]);
+				match["s"] = s;
+				scores.push(s);
+			}
+			limit = R3D._progressiveLimitScores(scores, decaySigma,decayRatio, usePutativeCountFlatSAD);
+			R3D._progressiveDropOverLimit(putativeB,limit);
 		}
-		limit = R3D._progressiveLimitScores(scores, 2.0,0.5,10);
-		R3D._progressiveDropOverLimit(putativeB,limit);
 		// console.log("SAD: "+putativeB.length);
-		// COLOR SAD:
-		scores = [];
-		for(var j=0; j<putativeB.length; ++j){
-			var match = putativeB[j];
-			var objectB = match["o"];
-			var s = R3D._progressiveCompare1DArrayV3DNCC(objectA["flatOrientated"],objectB["flatOrientated"]);
-			match["s"] = s;
-			scores.push(s);
+		// COLOR NCC:
+		if(putativeB.length>usePutativeCountFlatNCC){
+			scores = [];
+			for(var j=0; j<putativeB.length; ++j){
+				var match = putativeB[j];
+				var objectB = match["o"];
+				var s = R3D._progressiveCompare1DArrayV3DNCC(objectA["flatOrientated"],objectB["flatOrientated"]);
+				match["s"] = s;
+				scores.push(s);
+			}
+			limit = R3D._progressiveLimitScores(scores, decaySigma,decayRatio, usePutativeCountFlatNCC);
+			R3D._progressiveDropOverLimit(putativeB,limit);
 		}
-		limit = R3D._progressiveLimitScores(scores, 2.0,0.5,8);
-		R3D._progressiveDropOverLimit(putativeB,limit);
 		// console.log("SSD: "+putativeB.length);
 		// FLAT SIFT:
-		scores = [];
-		for(var j=0; j<putativeB.length; ++j){
-			var match = putativeB[j];
-			var objectB = match["o"];
-			var s = R3D._progressiveCompareMultiArraySAD(objectA["flatSIFT"],objectB["flatSIFT"]);
-			match["s"] = s;
-			match["f"] = s;
-			scores.push(s);
-		}
-		limit = R3D._progressiveLimitScores(scores, 2.0,0.5,6);
-		R3D._progressiveDropOverLimit(putativeB,limit);
+		// always
+			scores = [];
+			for(var j=0; j<putativeB.length; ++j){
+				var match = putativeB[j];
+				var objectB = match["o"];
+				var s = R3D._progressiveCompareMultiArraySAD(objectA["flatSIFT"],objectB["flatSIFT"]);
+				match["s"] = s;
+				match["f"] = s;
+				scores.push(s);
+			}
+			limit = R3D._progressiveLimitScores(scores, decaySigma,decayRatio, usePutativeCountFlatSIFT);
+			R3D._progressiveDropOverLimit(putativeB,limit);
 		// console.log("F-SIFT: "+putativeB.length);
 		// GRAD SIFT:
-		scores = [];
-		for(var j=0; j<putativeB.length; ++j){
-			var match = putativeB[j];
-			var objectB = match["o"];
-			var s = R3D._progressiveCompareMultiArraySAD(objectA["gradSIFT"],objectB["gradSIFT"]);
-			match["s"] = s;
-			match["g"] = s;
-			scores.push(s);
-		}
-		limit = R3D._progressiveLimitScores(scores, 2.0,0.5,4);
-		R3D._progressiveDropOverLimit(putativeB,limit);
+		// always
+			scores = [];
+			for(var j=0; j<putativeB.length; ++j){
+				var match = putativeB[j];
+				var objectB = match["o"];
+				var s = R3D._progressiveCompareMultiArraySAD(objectA["gradSIFT"],objectB["gradSIFT"]);
+				match["s"] = s;
+				match["g"] = s;
+				scores.push(s);
+			}
+			limit = R3D._progressiveLimitScores(scores, decaySigma,decayRatio, usePutativeCountGradSIFT);
+			R3D._progressiveDropOverLimit(putativeB,limit);
 		// console.log("G-SIFT: "+putativeB.length);
-		// GRAD SIFT:
-		scores = [];
-		for(var j=0; j<putativeB.length; ++j){
-			var match = putativeB[j];
-			var objectB = match["o"];
-			var scoreFlat = match["f"];
-			var scoreGrad = match["g"];
-			var s = (scoreFlat*scoreGrad) * (scoreFlat+scoreGrad);
-			match["s"] = s;
-			scores.push(s);
-		}
-		limit = R3D._progressiveLimitScores(scores, 2.0,0.5,2);
-		R3D._progressiveDropOverLimit(putativeB,limit);
+		// FLAT+GRAD SIFT:
+		// always
+			scores = [];
+			for(var j=0; j<putativeB.length; ++j){
+				var match = putativeB[j];
+				var objectB = match["o"];
+				var scoreFlat = match["f"];
+				var scoreGrad = match["g"];
+				var s = (scoreFlat*scoreGrad) * (scoreFlat+scoreGrad);
+				match["s"] = s;
+				scores.push(s);
+			}
+			limit = R3D._progressiveLimitScores(scores, decaySigma,decayRatio, usePutativeCountRIFT);
+			R3D._progressiveDropOverLimit(putativeB,limit);
+
 		// console.log("RIFT: "+putativeB.length);
 		putativeB.sort(sortScore);
 	}
@@ -12774,7 +13146,7 @@ R3D.extractCornerGeometryFeatures = function(imageMatrixA){
 }
 
 R3D.extractImageCorners = function(imageSource, type, maxCount, single, scaleUp, limitPixels){
-	var limitDistance = limitPixels!==undefined ? limitPixels : 0.25;
+	var limitDistance = limitPixels!==undefined ? limitPixels : 1.0;
 	maxCount = (maxCount!==undefined && maxCount!==null) ? maxCount : 500;
 	type = (type!==undefined && type!==null) ? type : R3D.CORNER_SELECT_RELAXED;
 	var sourceWidth = imageSource.width();
@@ -12784,8 +13156,8 @@ R3D.extractImageCorners = function(imageSource, type, maxCount, single, scaleUp,
 	var wm1 = sourceWidth-1;
 	var hm1 = sourceHeight-1;
 	var features = [];
-	var defaultRadius = hypotenuse*0.020; // radius = 1% of image size .. TODO: scale based.   1~4
-	//var scales = [2.0,1.0,0.5,0.25];
+	var defaultRadius = hypotenuse*0.020;
+	//var scales = [2.0,1.0,0.5,0.25]; // too many points
 	var scales = [1.0,0.5,0.25,0.125];
 	if(single){
 		scales = [1];
@@ -12802,7 +13174,6 @@ R3D.extractImageCorners = function(imageSource, type, maxCount, single, scaleUp,
 		var gry = image.gry();
 		var wid = image.width();
 		var hei = image.height();
-
 		var corners = R3D.pointsCornerMaxima(gry, wid, hei,  type);
 		for(i=0; i<corners.length; ++i){
 			var point = corners[i];
@@ -12810,8 +13181,6 @@ R3D.extractImageCorners = function(imageSource, type, maxCount, single, scaleUp,
 			var x = point.x/scale;
 			var y = point.y/scale;
 			var rad = defaultRadius/scale;
-			// var lim = rad;
-			// var lim = 0;
 			var lim = rad*0.5;
 			var left = x-lim;
 			var right = x+lim;
@@ -12843,18 +13212,9 @@ R3D.extractImageCorners = function(imageSource, type, maxCount, single, scaleUp,
 		features = features.sort(function(a,b){
 			return a.t > b.t ? -1 : 1;
 		});
+		Code.truncateArray(features,maxCount);
 	}
-	var featuresOut = [];
-	for(i=0; i<features.length; ++i){
-		var feature = features[i];
-		var f = new V4D(feature.x,feature.y,feature.z, feature.t);
-		featuresOut.push(f);
-		if(featuresOut.length>=maxCount){
-			break;
-		}
-	}
-	// TODO: INCLUDE SCORE DISTRIBUTION INFO
-	return featuresOut;
+	return features;
 }
 
 R3D.testExtract1 = function(imageSource, type, maxCount){
@@ -16860,47 +17220,23 @@ R3D.fErrorList = function(FFwd,FRev,pointsA,pointsB){
 	var bSigma = Code.stdDev(fDistancesB, bMean);
 	return {"mean":fMean, "sigma":fSigma, "meanA":aMean, "sigmaA":aSigma, "meanB":bMean, "sigmaB":bSigma, "errors":fDistances};
 }
-R3D.fundamentalRelativeAngleForPoint = function(pointA,Fab,Fba, epipoleA, epipoleB, matchesA,matchesB){
-	// console.log("fundamentalRelativeAngleForPoint");
+R3D.fundamentalRelativeAngleForPoint = function(pointA1,Fab,Fba, epipoleA, epipoleB, matchesA,matchesB){
 	if(!epipoleA){
 		var epipoles = R3D.getEpipolesFromF(Fab);
 		epipoleA = epipoles["A"];
 		epipoleB = epipoles["B"];
 	}
-	var dirA = V2D.sub(pointA,epipoleA);
+	var dirA = V2D.sub(pointA1,epipoleA);
 		dirA.norm();
 	var upA = V2D.rotate(dirA,Math.PI*0.5);
-	// console.log(upA+"");
-	var pointA2 = V2D.add(pointA,upA);
-
-	var lineB1 = R3D.lineFromF(Fab,pointA);
+	var pointA2 = V2D.add(pointA1,upA);
+	var lineB1 = R3D.lineFromF(Fab,pointA1);
 	var lineB2 = R3D.lineFromF(Fab,pointA2);
-
-	// var org, dir;
-	// var org = new V3D();
-	// var dir = new V3D();
-	// Code.lineOriginAndDirection2DFromEquation(lineB1["org"],lineB1["dir"], lineB1.x,lineB1.y,lineB1.z);
-	// console.log(lineB1["org"]+" | "+lineB1["dir"])
-	// org = lineB1["org"];
-	// dir = lineB1["dir"];
-
-	// console.log("A");
-	R3D._orientatedFundamentalMatrixDirectionVotes(lineB1["org"],lineB1["dir"], Fab,epipoleA,epipoleB, pointA, matchesA,matchesB);
-	// console.log("B");
+	R3D._orientatedFundamentalMatrixDirectionVotes(lineB1["org"],lineB1["dir"], Fab,epipoleA,epipoleB, pointA1, matchesA,matchesB);
 	R3D._orientatedFundamentalMatrixDirectionVotes(lineB2["org"],lineB2["dir"], Fab,epipoleA,epipoleB, pointA2, matchesA,matchesB);
-
-	// console.log("...");
-
 	var upB = V2D.sub(lineB2["dir"],lineB1["dir"]);
 	upB.norm();
-	// upB.scale(-1);
-	// console.log(upB+"");
-
 	var angle = V2D.angleDirection(upA,upB);
-	// console.log(Code.degrees(angle));
-
-
-
 /*
 	var size = 100;
 	var d = new DO();

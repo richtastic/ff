@@ -371,11 +371,37 @@ https://cloud.google.com/appengine/docs/nodejs/
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
-- FWD / BACK VALID POINTS
+- FWD / BACK VALID POINTS [DENSE STEREO PATH]
 
 ..........................................
+// what if assume K ?
+// var K = new Matrix(3,3).fromArray([1,0,0.5, 0,1,0.5, 0,0,1]);
+// var P = ?;
 
 
+GRID UN/MARKED USED CELLS -- get masking of used/unused areas
+- way to mark part of an image as unlikely matching
+	- to prevent searching there
+
+
+- if medium dense matching is poor -- may need to go back to SIFT processing ...
+
+
+REFINING:
+	- RANSAC -- pick best within error range
+	- dropping highest error points -- drop worst
+
+
+
+-- STOP ITERATIONS if error is not going down in iterations - errorNext/errorPrev > 0.95 ?
+
+
+stationary points:
+	- get area: 7x7-9x9-11x11 = 49-81-121
+		- FLAT
+		- FLAT HIST
+		- SAD
+		- SSD
 
 
 basicFullMatchingF

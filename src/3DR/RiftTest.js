@@ -47,7 +47,7 @@ function RiftTest(){
 	// new ImageLoader("./images/",["xA_small.jpg", "xB_small.jpg"],this,this.imagesLoadComplete).load(); // poor
 
 	// NOTRE DAM SAMPLE
-	new ImageLoader("./images/",["zA_small.jpg", "zB_small.jpg"],this,this.imagesLoadComplete).load(); // good
+	// new ImageLoader("./images/",["zA_small.jpg", "zB_small.jpg"],this,this.imagesLoadComplete).load(); // good
 
 	// CAMPUS
 	// new ImageLoader("./images/",["F_S_1_1.jpg", "F_S_1_2.jpg"],this,this.imagesLoadComplete).load(); // good
@@ -55,7 +55,7 @@ function RiftTest(){
 	// BENCH
 	// 1
 	// new ImageLoader("./images/",["bench_A.png", "bench_B.png"],this,this.imagesLoadComplete).load(); // good  |  31411 @ 0.870  | 16%
-	// new ImageLoader("./images/",["bench_B.png", "bench_C.png"],this,this.imagesLoadComplete).load(); // poor  |  11303 @ 0.929  |  6%
+	new ImageLoader("./images/",["bench_B.png", "bench_C.png"],this,this.imagesLoadComplete).load(); // poor  |  11303 @ 0.929  |  6%
 	// new ImageLoader("./images/",["bench_C.png", "bench_D.png"],this,this.imagesLoadComplete).load(); // good  |  26042 @ 0.885  | 13%
 	// new ImageLoader("./images/",["bench_D.png", "bench_E.png"],this,this.imagesLoadComplete).load(); // ok    |  21188 @ 0.839  | 11%
 	// new ImageLoader("./images/",["bench_E.png", "bench_F.png"],this,this.imagesLoadComplete).load(); // ok    |  19594 @ 0.886  | 10%
@@ -319,11 +319,15 @@ var maxCount = 2000;
 var featuresA = R3D.calculateScaleCornerFeatures(imageMatrixA, maxCount);
 var featuresB = R3D.calculateScaleCornerFeatures(imageMatrixB, maxCount);
 
-this.showFeatures(featuresA, imageMatrixA.width()*0,0, display, 0x990000FF);
-this.showFeatures(featuresB, imageMatrixA.width(),0, display, 0x990000FF);
+// this.showFeatures(featuresA, imageMatrixA.width()*0,0, display, 0x990000FF);
+// this.showFeatures(featuresB, imageMatrixA.width(),0, display, 0x990000FF);
 
+Code.timerStart();
 var objectsA = R3D.generateProgressiveSIFTObjects(featuresA, imageMatrixA);
 var objectsB = R3D.generateProgressiveSIFTObjects(featuresB, imageMatrixB);
+Code.timerStop();
+var time = Code.timerDifference();
+console.log("object creation: "+time);
 
 console.log(objectsA);
 console.log(objectsB);
