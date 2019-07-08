@@ -8,14 +8,14 @@ function StereoTest(){
 	this._canvas.addFunction(Canvas.EVENT_MOUSE_CLICK,this.handleMouseClickFxn,this);
 	this._root = new DO();
 	this._stage.root().addChild(this._root);
-	//new ImageLoader("./images/",["stereo_1_left.png", "stereo_1_right.png"],this,this.imagesLoadComplete).load(); // BIG CONES
+	new ImageLoader("./images/",["stereo_1_left.png", "stereo_1_right.png"],this,this.imagesLoadComplete).load(); // BIG CONES
 	// new ImageLoader("./images/",["stereo_0_left.png", "stereo_0_right.png"],this,this.imagesLoadComplete).load(); // SMALL CONES
 	// new ImageLoader("./images/",["stereo_0_right.png", "stereo_0_left.png"],this,this.imagesLoadComplete).load(); // SMALL CONES
 	// new ImageLoader("./images/",["stereo_2_left.png", "stereo_2_right.png"],this,this.imagesLoadComplete).load(); // DESKS - OFFICE
 	// new ImageLoader("./images/",["stereo_3_left.png", "stereo_3_right.png"],this,this.imagesLoadComplete).load(); // MEETING - OFFICE
 
 	// new ImageLoader("./images/tsukuba/",["s1_r1_c1.png", "s1_r1_c2.png"],this,this.imagesLoadComplete).load();
-	new ImageLoader("./images/tsukuba/",["s1_r1_c1.png", "s1_r1_c5.png"],this,this.imagesLoadComplete).load();
+	// new ImageLoader("./images/tsukuba/",["s1_r1_c1.png", "s1_r1_c5.png"],this,this.imagesLoadComplete).load();
 	// new ImageLoader("./images/tsukuba/",["s1_r1_c2.png", "s1_r1_c1.png"],this,this.imagesLoadComplete).load();
 	// new ImageLoader("./images/tsukuba/",["s1_r1_c1_50.png", "s1_r1_c2_50.png"],this,this.imagesLoadComplete).load();
 	// new ImageLoader("./images/tsukuba/",["s1_r1_c2_50.png", "s1_r1_c1_50.png"],this,this.imagesLoadComplete).load();
@@ -68,7 +68,8 @@ GLOBALSTAGE.root().matrix().scale(2.0);
 
 	// R3D._stereoBlockMatchOrdered(imageMatrixA,imageMatrixB);
 	// R3D._stereoBlockMatchOrderedHierarchy(imageMatrixA,imageMatrixB);
-	R3D._stereoBlockMatchOrderedForwardBackward(imageMatrixA,imageMatrixB);
+	var matches = R3D._stereoBlockMatchOrderedForwardBackward(imageMatrixA,imageMatrixB);
+		matches = matches["matches"];
 }
 StereoTest.hierarchyMatch = function(imageMatrixA,imageMatrixB){
 var OFFY = 0;
@@ -848,8 +849,6 @@ StereoTest.Cell.prototype.getConfidence = function(index){
 	}
 	return 0;
 }
-
-
 StereoTest.interpolateMinima = function(array, index){
 	var last = array.length-1;
 	if(index!==0 || index!==last){

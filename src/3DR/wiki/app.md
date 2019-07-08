@@ -369,45 +369,61 @@ https://cloud.google.com/appengine/docs/nodejs/
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+imageHomographyOverlapSingle
+projectiveDLT
 
 
-- FWD / BACK VALID POINTS [DENSE STEREO PATH]
+- try to limit horizontal stereo matching
+
 
 ..........................................
+- way to get scale from approx F ?
+-> can get an approximate K focal length 
 // what if assume K ?
 // var K = new Matrix(3,3).fromArray([1,0,0.5, 0,1,0.5, 0,0,1]);
 // var P = ?;
 
 
-GRID UN/MARKED USED CELLS -- get masking of used/unused areas
-- way to mark part of an image as unlikely matching
-	- to prevent searching there
+- bring corner finder into loop [changing F changes relative orientation -- ADD CHECK FOR RE-GETTING ELEMENTS ONLY IF RELATIVE ANGLES ARE > ~10 degrees]
+
+- rectify images for dense stereo
+
+- dense stereo handle obscure images
+
+progressiveMediumMatches
+progressiveMatchObjectsFlatSubset
+progressiveMatchFlatSubset
 
 
-- if medium dense matching is poor -- may need to go back to SIFT processing ...
+
+- FOCAL LENGTH FROM FUNDAMENTAL MATRIX [assumed principle points]
+	-> get approx P
+	-> get approx relative image-space-scales
 
 
-REFINING:
-	- RANSAC -- pick best within error range
-	- dropping highest error points -- drop worst
+objectProgressiveR3D
+
+progressiveR3DColorAverage
+
+
+
+- way to find out if SEGMENTS of stereo-dense-F are valid ? -- ignore poor ends
+--- way to ignore ends of rectified pairs ?
+
+
+- HANDLING REPEATED STRUCTURE:
+	- REMOVE UNIQUE POINTS TYPES
+		- same-image identify peak match objects & REMOVE THEM ???
+
 
 
 
 -- STOP ITERATIONS if error is not going down in iterations - errorNext/errorPrev > 0.95 ?
 
 
-stationary points:
-	- get area: 7x7-9x9-11x11 = 49-81-121
-		- FLAT
-		- FLAT HIST
-		- SAD
-		- SSD
-
-
 basicFullMatchingF
 stereoHighConfidenceMatches
 
-var result = R3D.mediumMatchF(imageMatrixA,imageMatrixB, pointsA,pointsB,F, fSymmetricError, maxMed);
 
 
 
@@ -424,24 +440,17 @@ var result = R3D.mediumMatchF(imageMatrixA,imageMatrixB, pointsA,pointsB,F, fSym
 
 
 
-R3D.searchMatchPoints3D = function(images, cellSizes, relativeAB, Ks, errorPixels){
-
-	R3D.objectProgressiveR3D = function(point,imageMatrix, cellSize, matrix){
-	- quick discard of different colors
-	- quick discard of different histogram
-	-
-
-
-
-
-
-
 
 	- using some default camera matrix to help create affine transforms ???
 
 - camera distortion / center
 
 - disparity on rectified images [row]
+
+
+
+
+
 
 
 
@@ -463,21 +472,15 @@ B) remove clumps of incorrect matches
 	- 'expand' locally
 
 
-- can a default assumed K (identity?) be used to approximate affine matrixes [from similar projection] so that the F sampling can be ignored ... ?
-	- how do differences in K affect resulting 3D geometry?:
-	- f
-	- fx
-	- fy
-	- s
-	- cx
-	- cy
-	=> finally how do these changes affect projected patch & A->B patch affine?
 
 
 - look back at radial distortion minimizing
 - look back at guessed K minimizing
 
 
+
+- image blending: gain offset, multiband sigmas
+...
 
 
 

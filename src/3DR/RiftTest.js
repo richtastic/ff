@@ -24,16 +24,16 @@ function RiftTest(){
 	// new ImageLoader("./images/iowa/",["0.JPG", "1.JPG"],this,this.imagesLoadComplete).load(); // good
 	// new ImageLoader("./images/iowa/",["1.JPG", "2.JPG"],this,this.imagesLoadComplete).load(); // poor
 	// new ImageLoader("./images/iowa/",["2.JPG", "3.JPG"],this,this.imagesLoadComplete).load(); // good
-// new ImageLoader("./images/iowa/",["3.JPG", "4.JPG"],this,this.imagesLoadComplete).load(); // incorrect / bad  ~ [matches wrong windows]
-	// new ImageLoader("./images/iowa/",["4.JPG", "5.JPG"],this,this.imagesLoadComplete).load(); // incorrect / bad  ~ [matches wrong windows]
+	// new ImageLoader("./images/iowa/",["3.JPG", "4.JPG"],this,this.imagesLoadComplete).load(); // good
+	// new ImageLoader("./images/iowa/",["4.JPG", "5.JPG"],this,this.imagesLoadComplete).load(); // ok ~ [matches wrong windows]
 	// new ImageLoader("./images/iowa/",["6.JPG", "7.JPG"],this,this.imagesLoadComplete).load(); // good
-	// new ImageLoader("./images/iowa/",["7.JPG", "8.JPG"],this,this.imagesLoadComplete).load(); // incorrect / bad ~
-	// new ImageLoader("./images/iowa/",["8.JPG", "9.JPG"],this,this.imagesLoadComplete).load(); // ok
+	// new ImageLoader("./images/iowa/",["7.JPG", "8.JPG"],this,this.imagesLoadComplete).load(); // incorrect / bad ~ [too big of a scale difference (2x)]
+	// new ImageLoader("./images/iowa/",["8.JPG", "9.JPG"],this,this.imagesLoadComplete).load(); // good
 	// new ImageLoader("./images/iowa/",[".JPG", ".JPG"],this,this.imagesLoadComplete).load(); //
 
-	// new ImageLoader("./images/iowa/",["0.JPG", "4.JPG"],this,this.imagesLoadComplete).load(); // poor
-	// new ImageLoader("./images/iowa/",["2.JPG", "4.JPG"],this,this.imagesLoadComplete).load(); // bad
-	// new ImageLoader("./images/iowa/",["3.JPG", "5.JPG"],this,this.imagesLoadComplete).load(); // poor
+	// new ImageLoader("./images/iowa/",["0.JPG", "4.JPG"],this,this.imagesLoadComplete).load(); // poor / [matches wrong trees] [scale differences]
+	// new ImageLoader("./images/iowa/",["2.JPG", "4.JPG"],this,this.imagesLoadComplete).load(); // good
+	// new ImageLoader("./images/iowa/",["3.JPG", "5.JPG"],this,this.imagesLoadComplete).load(); // ok
 
 	// ...
 	// FLOWER
@@ -44,7 +44,7 @@ function RiftTest(){
 	// new ImageLoader("./images/flowers_1/",["7120.png", "7140.png"],this,this.imagesLoadComplete).load(); // ok
 
 	// TOWER SAMPLE
-	// new ImageLoader("./images/",["xA_small.jpg", "xB_small.jpg"],this,this.imagesLoadComplete).load(); // poor
+	// new ImageLoader("./images/",["xA_small.jpg", "xB_small.jpg"],this,this.imagesLoadComplete).load(); // ok
 
 	// NOTRE DAM SAMPLE
 	// new ImageLoader("./images/",["zA_small.jpg", "zB_small.jpg"],this,this.imagesLoadComplete).load(); // good
@@ -54,8 +54,8 @@ function RiftTest(){
 
 	// BENCH
 	// 1
-	// new ImageLoader("./images/",["bench_A.png", "bench_B.png"],this,this.imagesLoadComplete).load(); // good  |  31411 @ 0.870  | 16%
-	new ImageLoader("./images/",["bench_B.png", "bench_C.png"],this,this.imagesLoadComplete).load(); // poor  |  11303 @ 0.929  |  6%
+	new ImageLoader("./images/",["bench_A.png", "bench_B.png"],this,this.imagesLoadComplete).load(); // good  |  31411 @ 0.870  | 16%
+	// new ImageLoader("./images/",["bench_B.png", "bench_C.png"],this,this.imagesLoadComplete).load(); // poor  |  11303 @ 0.929  |  6%
 	// new ImageLoader("./images/",["bench_C.png", "bench_D.png"],this,this.imagesLoadComplete).load(); // good  |  26042 @ 0.885  | 13%
 	// new ImageLoader("./images/",["bench_D.png", "bench_E.png"],this,this.imagesLoadComplete).load(); // ok    |  21188 @ 0.839  | 11%
 	// new ImageLoader("./images/",["bench_E.png", "bench_F.png"],this,this.imagesLoadComplete).load(); // ok    |  19594 @ 0.886  | 10%
@@ -70,9 +70,17 @@ function RiftTest(){
 	// new ImageLoader("./images/",["bench_C.png", "bench_F.png"],this,this.imagesLoadComplete).load(); // good  |  40834 @ 0.797  | 21%
 	// 4
 	// new ImageLoader("./images/",["bench_A.png", "bench_E.png"],this,this.imagesLoadComplete).load(); // good  |  52580 @ 0.837  | 27%
-	// new ImageLoader("./images/",["bench_B.png", "bench_F.png"],this,this.imagesLoadComplete).load(); // poor  |   10612 @ 8226  |  5%
+	// new ImageLoader("./images/",["bench_B.png", "bench_F.png"],this,this.imagesLoadComplete).load(); // ok  |   10612 @ 8226  |  5%
 	// 5
-	// new ImageLoader("./images/",["bench_A.png", "bench_F.png"],this,this.imagesLoadComplete).load(); // poor |    542 @ 1.36 |  5%   1453 @ 2.0 7%
+	// new ImageLoader("./images/",["bench_A.png", "bench_F.png"],this,this.imagesLoadComplete).load(); // ok |    542 @ 1.36 |  5%   1453 @ 2.0 7%
+
+
+
+	// PIKACHUS
+	// new ImageLoader("./images/pika_1/",["image-0.png", "image-1.png"],this,this.imagesLoadComplete).load(); // ok? -- matches ground
+	// new ImageLoader("./images/pika_1/",["image-0.png", "image-3.png"],this,this.imagesLoadComplete).load(); // ok?
+	// new ImageLoader("./images/pika_1/",["image-0.png", "image-5.png"],this,this.imagesLoadComplete).load(); // bad
+	// new ImageLoader("./images/pika_1/",["image-0.png", "image-1.png"],this,this.imagesLoadComplete).load();
 
 	// ROOM
 	// new ImageLoader("./images/",["room0.png", "room2.png"],this,this.imagesLoadComplete).load(); // good
@@ -82,28 +90,42 @@ function RiftTest(){
 	// new ImageLoader("./images/",["caseStudy1-14.jpg", "caseStudy1-20_rot.jpg"],this,this.imagesLoadComplete).load(); // poor
 	// new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-9.jpg"],this,this.imagesLoadComplete).load(); // good
 	// new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-26.jpg"],this,this.imagesLoadComplete).load(); //  good
+	// new ImageLoader("./images/",["caseStudy1-20.jpg", "caseStudy1-24.jpg"],this,this.imagesLoadComplete).load(); // good
+	// new ImageLoader("./images/",["caseStudy1-20.jpg", "caseStudy1-26.jpg"],this,this.imagesLoadComplete).load(); // poor [zoom @2x]
+	// new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-9.jpg"],this,this.imagesLoadComplete).load(); // ok
+
+	// CASTLE
+	// new ImageLoader("./images/",["castle.000.jpg", "castle.009.jpg"],this,this.imagesLoadComplete).load(); // good
+	// new ImageLoader("./images/",["castle.000.jpg", "castle.018.jpg"],this,this.imagesLoadComplete).load(); // good
+	// new ImageLoader("./images/",["castle.000.jpg", "castle.027.jpg"],this,this.imagesLoadComplete).load(); // bad
+
+	// MEDUSA
+	// new ImageLoader("./images/",["medusa_1.png", "medusa_2.png"],this,this.imagesLoadComplete).load(); // good
+	// new ImageLoader("./images/",["medusa_1.png", "medusa_3.png"],this,this.imagesLoadComplete).load(); // good
+	// new ImageLoader("./images/",["medusa_1.png", "medusa_4.png"],this,this.imagesLoadComplete).load(); // poor
+	// new ImageLoader("./images/",["medusa_1.png", "medusa_5.png"],this,this.imagesLoadComplete).load(); // bad
 
 	// BEACH PILLAR
 	// new ImageLoader("./images/user/beach_pillar/",["0_50.jpg", "1_50.jpg"],this,this.imagesLoadComplete).load(); // good
 	// new ImageLoader("./images/user/beach_pillar/",["1_50.jpg", "2_50.jpg"],this,this.imagesLoadComplete).load(); // poor
-// new ImageLoader("./images/user/beach_pillar/",["1_50.jpg", "2_50_r.jpg"],this,this.imagesLoadComplete).load(); // bad
+// new ImageLoader("./images/user/beach_pillar/",["1_50.jpg", "2_50_r.jpg"],this,this.imagesLoadComplete).load(); // bad -- no initial fat match
 	// new ImageLoader("./images/user/beach_pillar/",["2_50.jpg", "3_50.jpg"],this,this.imagesLoadComplete).load(); // ok
 	// new ImageLoader("./images/user/beach_pillar/",["0_50.jpg", "2_50.jpg"],this,this.imagesLoadComplete).load(); // poor
 
 
 
 	// new ImageLoader("./images/",["bt.000.png","bt.006.png"],this,this.imagesLoadComplete).load(); // good
-	// new ImageLoader("./images/",["temple_1.png","temple_2.png"],this,this.imagesLoadComplete).load(); // ok
+	// new ImageLoader("./images/",["temple_1.png","temple_2.png"],this,this.imagesLoadComplete).load(); // good
 	// new ImageLoader("./images/",[".","."],this,this.imagesLoadComplete).load(); //
-	// new ImageLoader("./images/",["chapel00.png","chapel01.png"],this,this.imagesLoadComplete).load(); //  ?
-	// new ImageLoader("./images/",["snow1.png","snow2.png"],this,this.imagesLoadComplete).load(); //
+	// new ImageLoader("./images/",["chapel00.png","chapel01.png"],this,this.imagesLoadComplete).load(); //  good
+	// new ImageLoader("./images/",["snow1.png","snow2.png"],this,this.imagesLoadComplete).load(); // good
 /*
 o -
 r -
 */
 
 
-	// new ImageLoader("./images/pika_1/",["image-0.png", "image-1.png"],this,this.imagesLoadComplete).load();
+
 
 
 
@@ -125,14 +147,15 @@ RiftTest.prototype.imagesLoadComplete = function(imageInfo){
 		var file = fileList[i];
 		var img = imageList[i];
 		images[i] = img;
-		// 	var d = new DOImage(img);
-		// 	this._root.addChild(d);
+			var d = new DOImage(img);
+			this._root.addChild(d);
 		// 	d.matrix().scale(GLOBALSCALE);
 		// 	// d.graphics().alpha(0.10);
 		// 	d.graphics().alpha(0.50);
 		// 	// d.graphics().alpha(1.0);
-		// 	d.matrix().translate(x,y);
-		// 	x += img.width*GLOBALSCALE;
+			d.matrix().translate(x,y);
+			// x += img.width*GLOBALSCALE;
+			x += img.width;
 	}
 	var display = this._root;
 	display.matrix().scale(1.5);
@@ -152,6 +175,8 @@ GLOBALDISPLAY = display;
 
 
 
+
+// this.testGrids(imageMatrixA,imageMatrixB);
 
 // this.testHistograms(imageMatrixA,imageMatrixB);
 // return;
@@ -4242,7 +4267,120 @@ RiftTest.showImage = function(objectA, imageMatrixA){
 
 	++RiftTest.showCount;
 }
+RiftTest.prototype.testGrids = function(imageA,imageB){
+	var imageAWidth = imageA.width();
+	var imageAHeight = imageA.height();
+	var imageBWidth = imageB.width();
+	var imageBHeight = imageB.height();
+	var dimensionA = Math.sqrt(imageAWidth*imageAWidth + imageAHeight*imageAHeight);
+	var dimensionB = Math.sqrt(imageBWidth*imageBWidth + imageBHeight*imageBHeight);
+	var dimension = (dimensionA+dimensionB)*0.5;
 
+	var gridPercent = 0.025; // 50x50 - 100x100
+	var gridSizeA = Math.ceil(gridPercent*dimensionA);
+	var gridSizeB = Math.ceil(gridPercent*dimensionB);
+	// var useGridA = new Grid2D(Math.ceil(imageAWidth/gridSizeA),Math.ceil(imageAHeight/gridSizeA), gridSizeA,gridSizeA, 0,0);
+	// var useGridB = new Grid2D(Math.ceil(imageBWidth/gridSizeB),Math.ceil(imageBHeight/gridSizeB), gridSizeB,gridSizeB, 0,0);
+	var useGridA = R3D._gridForCoverageFromImage(imageA,gridSizeA);
+	var useGridB = R3D._gridForCoverageFromImage(imageB,gridSizeB);
+
+	// TEST:
+	var grid = useGridA;
+	var threshold = 0.1;
+	R3D._gridMarkAllCellsUnused(grid);
+	for(var i=0; i<100; ++i){
+		var point = new V2D(imageAWidth*Math.random(),imageAHeight*Math.random());
+		R3D._gridMarkPointUsedNeighborhood(grid,point);
+	}
+	R3D._gridUpdateVistedColors(grid);
+	R3D._gridUpdateVistedColors(grid);
+	R3D._gridUpdateVistedColors(grid);
+	R3D._gridExpandUnused(grid,threshold);
+
+
+	RiftTest.renderGrid(grid, 0);
+	RiftTest.renderGrid(grid, imageAWidth);
+
+	// var display = GLOBALDISPLAY;
+	// // var display = GLOBALSTAGE;
+	// var grid = useGridA;
+	// var cellSize = grid.cellSize();
+	// var cells = grid.cells();
+	// // console.log(cells)
+	// for(var i=0; i<cells.length; ++i){
+	// 	var cell = cells[i];
+	// 	var data = cell.data();
+	// 	var color = data["color"];
+	// 	var center = grid.centerFromCell(cell);
+	// 	var alp = 0.50;
+	// 	// var red = Math.random();
+	// 	// var grn = Math.random();
+	// 	// var blu = Math.random();
+	// 	var red = color;
+	// 	var grn = color;
+	// 	var blu = color;
+	//
+	// 	color = Code.getColARGBFromFloat(alp,red,grn,blu);
+	// 	var d = new DO();
+	// 		d.graphics().clear();
+	// 		d.graphics().setLine(1.0, 0xFF000000);
+	// 		d.graphics().setFill(color);
+	// 		d.graphics().beginPath();
+	// 		d.graphics().drawRect(center.x-cellSize.x*0.5,center.y-cellSize.y*0.5, cellSize.x,cellSize.y);
+	// 		d.graphics().endPath();
+	// 		d.graphics().fill();
+	// 		d.graphics().strokeLine();
+	// 	// d.matrix().translate(200, 200);
+	// 	display.addChild(d);
+	//
+	// 	// console.log(cell,center,color,data)
+	// 	// throw "?"
+	// }
+
+	// show:
+
+	throw "...";
+
+}
+RiftTest.renderGrid = function(grid, offsetX){
+	if(!grid){
+		return;
+	}
+	var display = GLOBALDISPLAY;
+	// var display = GLOBALSTAGE;
+	var cellSize = grid.cellSize();
+	var cells = grid.cells();
+	for(var i=0; i<cells.length; ++i){
+		var cell = cells[i];
+		var data = cell.data();
+		var color = data["color"];
+		var center = grid.centerFromCell(cell);
+		var alp = (1.0-color)*0.75;
+		// var alp = 0.50;
+		// var red = Math.random();
+		// var grn = Math.random();
+		// var blu = Math.random();
+		// var red = color;
+		// var grn = color;
+		// var blu = color;
+		var red = 0.0;
+		var grn = 0.0;
+		var blu = 0.0;
+
+		color = Code.getColARGBFromFloat(alp,red,grn,blu);
+		var d = new DO();
+			d.graphics().clear();
+			// d.graphics().setLine(1.0, 0xFF000000);
+			d.graphics().setFill(color);
+			d.graphics().beginPath();
+			d.graphics().drawRect(center.x-cellSize.x*0.5,center.y-cellSize.y*0.5, cellSize.x,cellSize.y);
+			d.graphics().endPath();
+			d.graphics().fill();
+			// d.graphics().strokeLine();
+		d.matrix().translate(offsetX, 0);
+		display.addChild(d);
+	}
+}
 RiftTest.prototype.testHistograms = function(imageMatrixA,imageMatrixB){
 	// extract needles & haystacks
 

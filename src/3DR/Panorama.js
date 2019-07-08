@@ -35,6 +35,9 @@ Panorama.prototype.imagesLoadComplete = function(o){
 	this._inputPointInverseTransforms = ret.reverse;
 	// start work
 	this.beginPanorama();
+
+
+	// R3D.homographyMatrixNonlinear = function(H,pointsA,pointsB){
 }
 
 Panorama.prototype.beginPanorama = function(){
@@ -56,6 +59,7 @@ Panorama.prototype.beginPanorama = function(){
 	}
 	// RANSAC GOES HERE
 	var H = this.goldStandardAlgorithmH();
+console.log("H: "+H);
 	var Hinv = Matrix.inverse(H);
 var sum = 0.0;
 var str = "dat = [\n";
@@ -327,7 +331,7 @@ Panorama.prototype.getDLTA = function(pointsA,pointsB){
 		// 	rows.push([  b.y*a.x,  b.y*a.y,  b.y*a.z,  -b.x*a.x, -b.x*a.y, -b.x*a.z,         0,        0,        0 ]);
 		// }
 	}
-	A = new Matrix(rows.length,9).setFromArrayMatrix(rows);
+	A = new Matrix(rows.length,9).fromArrayMatrix(rows);
 	return A;
 }
 Panorama.prototype.directLinearTransformH = function(){

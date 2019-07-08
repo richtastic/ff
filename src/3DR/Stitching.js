@@ -132,9 +132,9 @@ this._root.addChild(d);
 		x += img.width;
 		y += 0;
 	}
-	// 
+	//
 	// create polygon;
-	var polygonCut = [new V2D(0.3,0.0), new V2D(0.95,0.0), new V2D(0.95,0.50), new V2D(0.80,0.80), new V2D(0.28,0.95), new V2D(0.09,0.70), new V2D(0.12,0.60), new V2D(0.30,0.45)]; // bottom left is origin, 
+	var polygonCut = [new V2D(0.3,0.0), new V2D(0.95,0.0), new V2D(0.95,0.50), new V2D(0.80,0.80), new V2D(0.28,0.95), new V2D(0.09,0.70), new V2D(0.12,0.60), new V2D(0.30,0.45)]; // bottom left is origin,
 	// DRAW POLYGON:
 	d = new DO();
 //	this._root.addChild(d);
@@ -467,7 +467,7 @@ var matches = [];
 				matches.push({A:featureA, B:featureB});
 			}
 		}
-		// 
+		//
 console.log("matches: "+matches.length);
 // searching for best fit homography: H = [a b c; d e f; g h i]
 	// RANSAC matches
@@ -772,7 +772,7 @@ for(j=0;j<hei;++j){
 				var fr = new V2D(ptA.x/ptA.z,ptA.y/ptA.z);
 				var colorA, colorB, colorC;
 				//var isPointInside = Code.isPointInsidePolygon2D(ptA,);
-				
+
 				var isPointInsideA = ( (fr.x>=0) && (fr.x<imageA.width) && (fr.y>=0) && (fr.y<imageA.height) );
 				var isPointInsideB = ( (to.x>=0) && (to.x<imageB.width) && (to.y>=0) && (to.y<imageB.height) );
 				var isPointInside = isPointInsideA && isPointInsideB;
@@ -798,7 +798,7 @@ for(j=0;j<hei;++j){
 
 		// if inside, mask = 1, else mask = 0
 	}
-}		
+}
 
 		intersectionImage = ImageMat.normalFloat01(intersectionImage);
 		// imageC = this._stage.getFloatARGBAsImage(intersectionMask,intersectionImage,intersectionImage,intersectionImage, wid,hei, null);
@@ -907,7 +907,7 @@ if(extrema.length>1) {
 					groupBitmap[index] = bitmapValue;
 					mergedBitmapAlp[index] = 1.0;
 					// construct pixels to find colors in separate images
-					var x = pixel.x + offX ;//- padLeft;// - offsetBC.x; // - offX; //- padLeft; // - offX 
+					var x = pixel.x + offX ;//- padLeft;// - offsetBC.x; // - offX; //- padLeft; // - offX
 					var y = pixel.y + offY; //- padTop;// - offsetBC.y; //offY; //- padTop; // - offXY
 
 					var ptB = new V3D(x,y,1.0);
@@ -935,7 +935,7 @@ if(extrema.length>1) {
 		}
 		console.log("D");
 // WHAT TO DO ABOUT CORNER POINTS --- ADD TO GROUP & GRAB ARBITRARY PICTURE PIXELS?
-		
+
 
 
 	// imgGroups = this.colorImageWithGroups(groupBitmap,wid,hei);
@@ -953,7 +953,7 @@ if(extrema.length>1) {
 		vertexes = [];
 		Code.arrayInsertArray(vertexes,vertexes.length,graphA._vertexes);
 		Code.arrayInsertArray(vertexes,vertexes.length,graphB._vertexes);
-		// 
+		//
 		console.log(graphA._vertexes.length);
 		//for(i=0;i<graphA._vertexes.length;++i){
 		//	var v = graphA._vertexes[i];
@@ -972,7 +972,7 @@ if(extrema.length>1) {
 		}
 */
 
-	// FOR SMOOTHING / FADING BORDER: 
+	// FOR SMOOTHING / FADING BORDER:
 	// 1 SEPARATE IMAGE, GAUSSED on A or B
 	// if == 0 => just grab A
 	// if == 1 => just grab B
@@ -1083,7 +1083,7 @@ Stitching.graphFromGroupBitmap = function(groupList, groupRects, groupMap,width,
 			// s.drawRectFromRect(groupRects[i]);
 			vertexList[i] = null;
 		} else { // 0 or 1 border
-			// add group vertex to graph 
+			// add group vertex to graph
 			v = graph.addVertex();
 			v.data( {"index":i,"node":null} );
 			vertexList[i] = v;
@@ -1352,6 +1352,3 @@ Stitching.prototype.handleEnterFrame = function(e){ // 2D canvas
 Stitching.prototype.handleMouseClickFxn = function(e){
 	console.log(e.x%400,e.y)
 }
-
-
-

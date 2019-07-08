@@ -1,8 +1,8 @@
 // Grid2D.js
 
-// ------------------------------------------------------------------------------------------------------------------------ 
+// ------------------------------------------------------------------------------------------------------------------------
 
-Grid2D = function(toPoint){
+Grid2D = function(countWidth,countHeight, cellWidth,cellHeight, offsetX,offsetY, toPoint){
 	this._toPointFxn = Grid2D.toPoint;
 	this._size = null;
 	this._cellSize = null;
@@ -11,12 +11,14 @@ Grid2D = function(toPoint){
 	this._count = 0;
 	this._cols = 0;
 	this._rows = 0;
+	this.setFromCountAndCellSize(countWidth,countHeight, cellWidth,cellHeight, offsetX,offsetY);
+	// console.log(countWidth,countHeight, cellWidth,cellHeight, offsetX,offsetY)
 	this.toPoint(toPoint);
 }
 Grid2D.toPoint = function(o){
 	return o;
 }
-// ------------------------------------------------------------------------------------------------------------------------ 
+// ------------------------------------------------------------------------------------------------------------------------
 Grid2D.prototype.toPoint = function(f){
 	if(f!==undefined){
 		this._toPointFxn = f;
@@ -25,6 +27,9 @@ Grid2D.prototype.toPoint = function(f){
 }
 Grid2D.prototype.count = function(){
 	return this._count;
+}
+Grid2D.prototype.cells = function(){
+	return this._cells;
 }
 Grid2D.prototype.cellCount = function(){
 	if(this._cells){
@@ -45,9 +50,11 @@ Grid2D.prototype.offset = function(){
 	return this._offset.copy();
 }
 Grid2D.prototype.setFromCountAndCellSize = function(countWidth,countHeight, cellWidth,cellHeight, offsetX,offsetY){
-	var width = countWidth*cellWidth;
-	var height = countHeight*cellHeight;
-	return this.setFromSizeAndCount(width,height, countWidth,countHeight, offsetX,offsetY);
+	if(countWidth && countHeight){
+		var width = countWidth*cellWidth;
+		var height = countHeight*cellHeight;
+		return this.setFromSizeAndCount(width,height, countWidth,countHeight, offsetX,offsetY);
+	}
 }
 //Grid2D.prototype.setFromSizeAndCount = function(width,height, cols,rows, offsetX,offsetY){
 Grid2D.prototype.setFromSizeAndCount = function(width,height, cols,rows, offsetX,offsetY){
@@ -61,6 +68,7 @@ Grid2D.prototype.setFromSizeAndCount = function(width,height, cols,rows, offsetX
 	var cellSize = new V2D(width/cols,height/rows);
 	var size = new V2D(width,height);
 	var count = cols*rows;
+
 	var cells = [];
 	for(var j=0; j<rows; ++j){
 		for(var i=0; i<cols; ++i){
@@ -76,6 +84,15 @@ Grid2D.prototype.setFromSizeAndCount = function(width,height, cols,rows, offsetX
 	this._cellSize = cellSize;
 	return true;
 }
+Grid2D.prototype.centerFromCell = function(cell, point){
+	if(!point){
+		point = new V2D();
+	}
+	var size = this._cellSize;
+	point.x = (cell.col()+0.5)*size.x;
+	point.y = (cell.row()+0.5)*size.y;
+	return point;
+}
 Grid2D.prototype.objectsFromColRow = function(c,r){
 	var cell = this.cellFromColRow(c,r);
 	if(cell){
@@ -84,8 +101,11 @@ Grid2D.prototype.objectsFromColRow = function(c,r){
 	return null;
 }
 Grid2D.prototype.cellFromPoint = function(x,y){
+	// console.log(this._cells , this._size)
 	if(this._cells && this._size){
+		// console.log("A");
 		var cr = this._colRowFromPoint(x,y);
+		// console.log(cr);
 		if(cr){
 			return this.cellFromColRow(cr.x,cr.y);
 		}
@@ -100,6 +120,7 @@ Grid2D.prototype._colRowFromPoint = function(x,y){
 	var cellSize = this._cellSize;
 	var localX = x - this._offset.x;
 	var localY = y - this._offset.y;
+	// console.log(size,cellSize,localX,localY,x,y)
 	if(0<=localX && localX<size.x && 0<=localY && localY<size.y){
 		var c = localX/cellSize.x | 0;
 		var r = localY/cellSize.y | 0;
@@ -123,27 +144,69 @@ Grid2D.prototype.isCellEmptyForColRow = function(c,r){
 	}
 	return null;
 }
-Grid2D.prototype.neighbor9ObjectsForPoint = function(x,y){
+Grid2D.prototype.neighbor9CellsForPoint = function(x,y){
 	var cr = this._colRowFromPoint(x,y);
 	if(cr){
-		return this.neighbor9ObjectsForColRow(cr.x,cr.y);
+		return this._neighbor9ObjectsForColRow(cr.x,cr.y, false);
 	}
 	return null;
 }
-Grid2D.prototype.neighbor9ObjectsForColRow = function(col,row){
+Grid2D.prototype.neighbor13CellsForPoint = function(x,y){
+	var cr = this._colRowFromPoint(x,y);
+	if(cr){
+		return this._neighbor13ObjectsForColRow(cr.x,cr.y, false);
+	}
+	return null;
+}
+Grid2D.prototype.neighbor9ObjectsForPoint = function(x,y){
+	var cr = this._colRowFromPoint(x,y);
+	if(cr){
+		return this._neighbor9ObjectsForColRow(cr.x,cr.y);
+	}
+	return null;
+}
+Grid2D.prototype.neighbor5CellsForCell = function(cell){
+	var cr = new V2D(cell.col(),cell.row());
+	return this._neighbor5ObjectsForColRow(cr.x,cr.y, false);
+}
+Grid2D.prototype.neighbor9CellsForCell = function(cell){
+	var cr = new V2D(cell.col(),cell.row());
+	return this._neighbor9ObjectsForColRow(cr.x,cr.y, false);
+}
+Grid2D.prototype.neighbor13CellsForCell = function(cell){
+	var cr = new V2D(cell.col(),cell.row());
+	return this._neighbor13ObjectsForColRow(cr.x,cr.y, false);
+}
+Grid2D.prototype._neighbor5ObjectsForColRow = function(col,row, doObjects){
+	return this._neighborNObjectsForColRow(col,row, doObjects, [0,-1, -1,0, 0,0, 1,0, 0,1]);
+}
+Grid2D.prototype._neighbor9ObjectsForColRow = function(col,row, doObjects){
+	return this._neighborNObjectsForColRow(col,row, doObjects, [-1,-1, 0,-1, 1,-1,  -1,0, 0,0, 1,0, -1,1, 0,1, 1,1]);
+}
+Grid2D.prototype._neighbor13ObjectsForColRow = function(col,row, doObjects){
+	return this._neighborNObjectsForColRow(col,row, doObjects, [
+						0,-2,
+				-1,-1,	0,-1,	1,-1,
+		-2,0,	-1,0,	0,0,	1,0,	2,0,
+				-1,1,	0,1,	1,1,
+						0,2
+	]);
+}
+Grid2D.prototype._neighborNObjectsForColRow = function(col,row, doObjects, list){ // 1 | 5 | 9 | 13 | 21 | 37 ...
+	doObjects = doObjects!==undefined ? doObjects : true;
 	var cols = this._cols;
 	var rows = this._rows;
 	var neighbors = [];
-	for(j=-1; j<=1; ++j){
-		var r = row + j;
-		for(i=-1; i<=1; ++i){
-			var c = col + i;
-			if(0<=c && c<cols && 0<=r && r<rows){
-				var cell = this.cellFromColRow(c,r);
+	for(i=0; i<list.length; i+=2){
+		var r = row+list[2*i+0];
+		var c = col+list[2*i+1];
+		if(0<=c && c<cols && 0<=r && r<rows){
+			var cell = this.cellFromColRow(c,r);
+			if(doObjects){
 				var objects = cell.toArray();
 				neighbors.push(objects);
 			}else{
-				neighbors.push(null);
+				neighbors.push(cell);
 			}
 		}
 	}
@@ -212,11 +275,25 @@ Grid2D.prototype.toString = function(){
 	var str = "[Grid2D: "+this.count()+"]";
 	return str;
 }
-// ------------------------------------------------------------------------------------------------------------------------ 
+// ------------------------------------------------------------------------------------------------------------------------
 Grid2D.Cell = function(col,row){
+	this._data = null;
+	this._temp = null;
 	this._objects = [];
 	this._col = col;
 	this._row = row;
+}
+Grid2D.Cell.prototype._temp = function(temp){
+	if(temp!==undefined){
+		this._temp = temp;
+	}
+	return this._temp;
+}
+Grid2D.Cell.prototype.data = function(data){
+	if(data!==undefined){
+		this._data = data;
+	}
+	return this._data;
 }
 Grid2D.Cell.prototype.col = function(){
 	return this._col;
@@ -261,10 +338,3 @@ Grid2D.Cell.prototype.toString = function(){
 	var str = "[Cell: ("+this._col+","+this._row+"): "+this.count()+"]";
 	return str;
 }
-
-
-
-
-
-
-
