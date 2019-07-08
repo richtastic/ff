@@ -17,6 +17,9 @@ function RiftTest(){
 // new ImageLoader("./images/iowa/",["0_50.JPG", "1_50.JPG"],this,this.imagesLoadComplete).load(); // bad
 
 
+new ImageLoader("./images/",["bench_A.png", "bench_B.png"],this,this.imagesLoadComplete).load();
+// new ImageLoader("./images/",["bench_B.png", "bench_A.png"],this,this.imagesLoadComplete).load();
+
 	// IOWA
 	// 504 x 378
 
@@ -54,7 +57,7 @@ function RiftTest(){
 
 	// BENCH
 	// 1
-	new ImageLoader("./images/",["bench_A.png", "bench_B.png"],this,this.imagesLoadComplete).load(); // good  |  31411 @ 0.870  | 16%
+	// new ImageLoader("./images/",["bench_A.png", "bench_B.png"],this,this.imagesLoadComplete).load(); // good  |  31411 @ 0.870  | 16%
 	// new ImageLoader("./images/",["bench_B.png", "bench_C.png"],this,this.imagesLoadComplete).load(); // poor  |  11303 @ 0.929  |  6%
 	// new ImageLoader("./images/",["bench_C.png", "bench_D.png"],this,this.imagesLoadComplete).load(); // good  |  26042 @ 0.885  | 13%
 	// new ImageLoader("./images/",["bench_D.png", "bench_E.png"],this,this.imagesLoadComplete).load(); // ok    |  21188 @ 0.839  | 11%
@@ -352,10 +355,10 @@ var objectsA = R3D.generateProgressiveSIFTObjects(featuresA, imageMatrixA);
 var objectsB = R3D.generateProgressiveSIFTObjects(featuresB, imageMatrixB);
 Code.timerStop();
 var time = Code.timerDifference();
-console.log("object creation: "+time);
+console.log("object creation time: "+time);
 
-console.log(objectsA);
-console.log(objectsB);
+// console.log(objectsA);
+// console.log(objectsB);
 
 var result = R3D.progressiveFullMatchingDense(objectsA, imageMatrixA, objectsB, imageMatrixB);
 

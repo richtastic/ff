@@ -369,30 +369,21 @@ https://cloud.google.com/appengine/docs/nodejs/
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-imageHomographyOverlapSingle
-projectiveDLT
+- dense stereo handle obscure images
+	- scaled search columns/radius wrong (negative?)
+	- mapping disparities along non-aligned sections A & B ?
 
 
-- try to limit horizontal stereo matching
+- HANDLING REPEATED STRUCTURE:
+	- REMOVE NON-UNIQUE POINTS TYPES
+		- same-image identify peak match objects & REMOVE THEM ???
 
 
-..........................................
-- way to get scale from approx F ?
--> can get an approximate K focal length 
-// what if assume K ?
-// var K = new Matrix(3,3).fromArray([1,0,0.5, 0,1,0.5, 0,0,1]);
-// var P = ?;
+
+-> TEST PIPELINE DENSE-MATCHING FALSE POSITIVES
 
 
 - bring corner finder into loop [changing F changes relative orientation -- ADD CHECK FOR RE-GETTING ELEMENTS ONLY IF RELATIVE ANGLES ARE > ~10 degrees]
-
-- rectify images for dense stereo
-
-- dense stereo handle obscure images
-
-progressiveMediumMatches
-progressiveMatchObjectsFlatSubset
-progressiveMatchFlatSubset
 
 
 
@@ -401,57 +392,18 @@ progressiveMatchFlatSubset
 	-> get approx relative image-space-scales
 
 
-objectProgressiveR3D
-
-progressiveR3DColorAverage
-
-
 
 - way to find out if SEGMENTS of stereo-dense-F are valid ? -- ignore poor ends
 --- way to ignore ends of rectified pairs ?
-
-
-- HANDLING REPEATED STRUCTURE:
-	- REMOVE UNIQUE POINTS TYPES
-		- same-image identify peak match objects & REMOVE THEM ???
-
 
 
 
 -- STOP ITERATIONS if error is not going down in iterations - errorNext/errorPrev > 0.95 ?
 
 
-basicFullMatchingF
-stereoHighConfidenceMatches
 
-
-
-
-
-
----- more corners?
----- limit cutting with heuristics?
----- ....
-...
-
-
-
-
-
-
-
-
-	- using some default camera matrix to help create affine transforms ???
-
-- camera distortion / center
 
 - disparity on rectified images [row]
-
-
-
-
-
-
 
 
 
@@ -473,9 +425,11 @@ B) remove clumps of incorrect matches
 
 
 
-
 - look back at radial distortion minimizing
 - look back at guessed K minimizing
+
+- camera distortion / center
+
 
 
 
