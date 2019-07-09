@@ -179,6 +179,9 @@ GLOBALDISPLAY = display;
 
 
 
+// this.testFocalLengths(imageMatrixA,imageMatrixB);
+// return;
+
 // this.testGrids(imageMatrixA,imageMatrixB);
 
 // this.testHistograms(imageMatrixA,imageMatrixB);
@@ -4270,6 +4273,48 @@ RiftTest.showImage = function(objectA, imageMatrixA){
 
 	++RiftTest.showCount;
 }
+
+RiftTest.prototype.testFocalLengths = function(imageA,imageB){
+	console.log(imageA.width(),imageA.height());
+	var Fab = null;
+	var Fba = null;
+/*
+fx: 0.8565143769157422
+fy: 1.1625998022448123
+s: -0.012439315192795274
+cx: 0.4781381185245835
+cy: 0.4746370298801608
+*/
+	// fx: 0.8565143769157422 * 504 = 431.68
+	// fy: 1.1625998022448123 * 378 = 439.46
+	// cx = 240.9
+	// cy = 180.6
+
+	// @ CENTER: 315
+	// @ OFFSET: 320
+
+	Fab = new Matrix(3,3).fromArray([-4.6696560635617005e-7,0.000006164773673632962,-0.00012097061094337242,0.000009246262746843135,-0.0000029069445230409455,-0.015435943439858595,-0.00107026260877018,0.012374192336259766,-0.014613060130294286]);
+	// FAB: -4.6696560635617005e-7,0.000006164773673632962,-0.00012097061094337242,0.000009246262746843135,-0.0000029069445230409455,-0.015435943439858595,-0.00107026260877018,0.012374192336259766,-0.014613060130294286
+	// R3D.js:8851 FBA: -4.6696560635617005e-7,0.000009246262746843135,-0.00107026260877018,0.000006164773673632962,-0.0000029069445230409455,0.012374192336259766,-0.00012097061094337242,-0.015435943439858595,-0.014613060130294286
+	Fba = Matrix.inverse(Fab);
+
+	var principle = new V2D(240.9, 180.6);
+	// var principle = new V2D(0,0);
+	// principle = null;
+
+	var results = R3D.basicIntrinsicsFromFundamental(Fab,Fba, imageA,imageB, principle,principle);
+	console.log(results);
+	if(results){
+		var A = results["A"];
+		var B = results["B"];
+		console.log(A+"");
+		console.log(B+"");
+	}
+
+
+	throw "..."
+}
+
 RiftTest.prototype.testGrids = function(imageA,imageB){
 	var imageAWidth = imageA.width();
 	var imageAHeight = imageA.height();

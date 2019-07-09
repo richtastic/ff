@@ -1106,6 +1106,16 @@ return Matrix.nonShittySVD(A);
 	//
 	//
 }
+Matrix.QR2 = function(){ // A = Q * R : Q=orhtogonal, R-upper-right
+	/*
+	for each min(row,col):
+		for each next row:
+
+	*/
+}
+
+
+
 // numeric.QRFrancis
 Matrix.QRCore = function(){ //
 // Q = normal basis for col(A)

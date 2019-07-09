@@ -1532,7 +1532,7 @@ Code.getScaledArray = function(array, scale, fxn){ // ENDS MATCH UP
 			// var q = 1.0-p;
 			A = Math.min(A,lm1);
 			B = Math.min(B,lm1);
-			var val = fxn(array[A],array[B],p);
+			var val = fxn(array[A],array[B],p,scale);
 			a[i] = val;
 		}
 	}else{
@@ -7084,14 +7084,17 @@ Code.interpolateExtrema1DDiff = function(ext, xA,yA, xB,yB, xC,yC){ // unequal x
 	ext.x = x + xB;
 	return ext;
 }
-Code.interpolateArray1D = function(array,value){ // linear interpolate
+Code.interpolateArray1D = function(array,value, fxn){ // linear interpolate
 	var min = Math.floor(value);
-	var nex = min+1;
+	var max = Math.ceil(value);
 	if(array.length>nex){
 		var diff = value - min;
-		var dim1 = 1.0 - diff;
 		var a = array[min];
 		var b = array[nex];
+		if(fxn){
+			return fxn(a,b,diff);
+		}
+		var dim1 = 1.0 - diff;
 		return a*dim1 + b*diff;
 	}
 	return value;

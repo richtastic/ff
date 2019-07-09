@@ -374,6 +374,11 @@ https://cloud.google.com/appengine/docs/nodejs/
 	- mapping disparities along non-aligned sections A & B ?
 
 
+
+
+_rectifyRegionAll
+
+
 - HANDLING REPEATED STRUCTURE:
 	- REMOVE NON-UNIQUE POINTS TYPES
 		- same-image identify peak match objects & REMOVE THEM ???
