@@ -8,7 +8,7 @@ function StereoTest(){
 	this._canvas.addFunction(Canvas.EVENT_MOUSE_CLICK,this.handleMouseClickFxn,this);
 	this._root = new DO();
 	this._stage.root().addChild(this._root);
-	new ImageLoader("./images/",["stereo_1_left.png", "stereo_1_right.png"],this,this.imagesLoadComplete).load(); // BIG CONES
+	// new ImageLoader("./images/",["stereo_1_left.png", "stereo_1_right.png"],this,this.imagesLoadComplete).load(); // BIG CONES
 	// new ImageLoader("./images/",["stereo_0_left.png", "stereo_0_right.png"],this,this.imagesLoadComplete).load(); // SMALL CONES
 	// new ImageLoader("./images/",["stereo_0_right.png", "stereo_0_left.png"],this,this.imagesLoadComplete).load(); // SMALL CONES
 	// new ImageLoader("./images/",["stereo_2_left.png", "stereo_2_right.png"],this,this.imagesLoadComplete).load(); // DESKS - OFFICE
@@ -25,6 +25,10 @@ function StereoTest(){
 	// new ImageLoader("./images/",["stereo_teddy_2.png", "stereo_teddy_6.png"],this,this.imagesLoadComplete).load(); //
 	// new ImageLoader("./images/",["stereo_tsukuba_1.png", "stereo_tsukuba_5.png"],this,this.imagesLoadComplete).load(); //
 	// new ImageLoader("./images/",["stereo_tsukuba_5.png", "stereo_tsukuba_1.png"],this,this.imagesLoadComplete).load(); //
+
+
+	// ADHOC:
+	new ImageLoader("./images/adhoc/",["ben_01.png", "ben_02.png"],this,this.imagesLoadComplete).load(); // benches
 }
 StereoTest.prototype.imagesLoadComplete = function(imageInfo){
 	var imageList = imageInfo.images;

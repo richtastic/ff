@@ -370,9 +370,22 @@ https://cloud.google.com/appengine/docs/nodejs/
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 - dense stereo handle obscure images
-	- scaled search columns/radius wrong (negative?)
-	- mapping disparities along non-aligned sections A & B ?
 
+
+- display final fwd-bak matches
+
+- lots of no - paths
+
+
+_stereoDisparityFromPath
+
+
+
+
+
+_scaledDisparity usage on NULL areas ?
+	=> EXPAND VERTICALLY TO AREAS NOW TOO ....
+R3D._scaledDisparity
 
 
 

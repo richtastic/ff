@@ -6753,7 +6753,89 @@ Code.interpolate1D = function(locOut, locIn, a, b, c, d){ // list of V2D
 	}
 	return null;
 }
-Code.interpolate1DFillArray = function(array){
+Code.interpolate2DFillArrayVertical = function(array,width,height, filler){ // null rows are replaced
+	filler = filler!==undefined ? filler : 0;
+	if(width==0 || height==0){
+		return;
+	}
+	var startIndex;
+	var rowFirst = null;
+	var rowLast = null;
+	var rowStart = null;
+	var rowEnd = null;
+	for(var row=0; row<height; ++row){
+		var index = row*width + 0;
+		var value = array[index];
+		if(value!==null){
+			if(rowStart==null){
+				rowFirst = row;
+				rowStart = row;
+			}else{
+				rowLast = row;
+				rowEnd = row;
+				var count = rowEnd-rowStart;
+				if(count>1){
+					var rowStartWidth = rowStart*width;
+					var rowEndWidth = rowEnd*width;
+					for(var j=1; j<count; ++j){
+						var p = (j/count);
+						var q = (1.0-p);
+						var offsetJWidth = j*width;
+						for(var i=0; i<width; ++i){
+							var a = array[rowStartWidth + i];
+							var b = array[rowEndWidth + i];
+							var value = a*q + b*p;
+							array[rowStartWidth+offsetJWidth + i] = value;
+						}
+					}
+				}
+				rowStart = rowEnd;
+			}
+		}
+	}
+	if(rowFirst!==null){
+		var onlySingle = rowLast===null;
+		var v, a, b;
+		if(rowFirst>0){ // fill beginning
+			for(var i=0; i<width; ++i){
+				a = array[rowFirst*width + i];
+				b = a;
+				if(!onlySingle && rowFirst+1<height){
+					b = array[(rowFirst+1)*width + i];
+				}
+				v = a-b;
+v = 0;
+				for(var j=0; j<rowFirst; ++j){
+					array[j*width + i] = (rowFirst-j)*v + a;
+				}
+			}
+		}
+		if(onlySingle){
+			rowLast = rowFirst;
+		}
+		if(rowLast<height-1){ // fill end
+			for(var i=0; i<width; ++i){
+				b = array[rowLast*width + i];
+				a = b;
+				if(!onlySingle && rowLast-1>=0){
+					a = array[(rowLast-1)*width + i];
+				}
+				v = b-a;
+v = 0;
+				for(var j=rowLast+1; j<height; ++j){
+					array[j*width + i] = (j-rowLast)*v + b;
+				}
+			}
+		}
+	}else{
+		var count = width*height;
+		for(var i=0; i<count; ++i){
+			array[i] = filler;
+		}
+	}
+}
+Code.interpolate1DFillArray = function(array, filler){
+	filler = filler!==undefined ? filler : 0;
 	var firstElementIndex = null;
 	var lastElementIndex = null;
 	var startElementIndex = null;
@@ -6767,41 +6849,53 @@ Code.interpolate1DFillArray = function(array){
 			}else{
 				lastElementIndex = i;
 				endElementIndex = i;
-				var valueA = array[startElementIndex];
-				var valueB = array[endElementIndex];
 				var count = endElementIndex-startElementIndex;
-				for(var j=1; j<count; ++j){
-					var p = (j/count);
-					var value = valueA*(1.0-p) + valueB*p;
-					array[startElementIndex+j] = value;
+				if(count>1){
+					var valueA = array[startElementIndex];
+					var valueB = array[endElementIndex];
+					for(var j=1; j<count; ++j){
+						var p = (j/count);
+						var value = valueA*(1.0-p) + valueB*p;
+						array[startElementIndex+j] = value;
+					}
 				}
 				startElementIndex = endElementIndex;
-				endElementIndex = null;
+				// endElementIndex = null;
 			}
 		}
 	}
 	// interpolate ends
-	// console.log(firstElementIndex,lastElementIndex);
-	if(firstElementIndex!==null && lastElementIndex!==null){
+	if(firstElementIndex!==null){
+		var onlySingle = lastElementIndex===null;
 		var v, a, b;
-		if(firstElementIndex>1){
-			a = array[firstElementIndex+1];
-			b = array[firstElementIndex];
-			v = b-a;
-			// console.log(a,b,v);
+		if(firstElementIndex>0){ // fill beginning
+			a = array[firstElementIndex];
+			b = a;
+			if(!onlySingle && firstElementIndex+1<array.length){
+				b = array[firstElementIndex+1];
+			}
+			v = a-b;
 			for(var i=0; i<firstElementIndex; ++i){
-				// console.log(i+"/"+firstElementIndex);
 				array[i] = (firstElementIndex-i)*v + a;
 			}
 		}
-		if(lastElementIndex<array.length-1){
-			a = array[lastElementIndex-1];
+		if(onlySingle){
+			lastElementIndex = firstElementIndex;
+		}
+		if(lastElementIndex<array.length-1){ // fill end
 			b = array[lastElementIndex];
+			a = b;
+			if(!onlySingle && lastElementIndex-1>=0){
+				a = array[lastElementIndex-1];
+			}
 			v = b-a;
-			// console.log(a,b,v);
 			for(var i=lastElementIndex+1; i<array.length; ++i){
 				array[i] = (i-lastElementIndex)*v + b;
 			}
+		}
+	}else{ // fill with default
+		for(var i=0; i<array.length; ++i){
+			array[i] = filler;
 		}
 	}
 	return array;
