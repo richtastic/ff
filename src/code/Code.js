@@ -6753,8 +6753,9 @@ Code.interpolate1D = function(locOut, locIn, a, b, c, d){ // list of V2D
 	}
 	return null;
 }
-Code.interpolate2DFillArrayVertical = function(array,width,height, filler){ // null rows are replaced
+Code.interpolate2DFillArrayVertical = function(array,width,height, filler, velocity){ // null rows are replaced
 	filler = filler!==undefined ? filler : 0;
+	velocity = velocity!==undefined ? velocity : true;
 	if(width==0 || height==0){
 		return;
 	}
@@ -6795,7 +6796,7 @@ Code.interpolate2DFillArrayVertical = function(array,width,height, filler){ // n
 	}
 	if(rowFirst!==null){
 		var onlySingle = rowLast===null;
-		var v, a, b;
+		var v=0, a, b;
 		if(rowFirst>0){ // fill beginning
 			for(var i=0; i<width; ++i){
 				a = array[rowFirst*width + i];
@@ -6803,8 +6804,9 @@ Code.interpolate2DFillArrayVertical = function(array,width,height, filler){ // n
 				if(!onlySingle && rowFirst+1<height){
 					b = array[(rowFirst+1)*width + i];
 				}
-				v = a-b;
-v = 0;
+				if(velocity){
+					v = a-b;
+				}
 				for(var j=0; j<rowFirst; ++j){
 					array[j*width + i] = (rowFirst-j)*v + a;
 				}
@@ -6820,8 +6822,9 @@ v = 0;
 				if(!onlySingle && rowLast-1>=0){
 					a = array[(rowLast-1)*width + i];
 				}
-				v = b-a;
-v = 0;
+				if(velocity){
+					v = b-a;
+				}
 				for(var j=rowLast+1; j<height; ++j){
 					array[j*width + i] = (j-rowLast)*v + b;
 				}
@@ -6834,8 +6837,9 @@ v = 0;
 		}
 	}
 }
-Code.interpolate1DFillArray = function(array, filler){
+Code.interpolate1DFillArray = function(array, filler, velocity){
 	filler = filler!==undefined ? filler : 0;
+	velocity = velocity!==undefined ? velocity : true;
 	var firstElementIndex = null;
 	var lastElementIndex = null;
 	var startElementIndex = null;
@@ -6867,14 +6871,16 @@ Code.interpolate1DFillArray = function(array, filler){
 	// interpolate ends
 	if(firstElementIndex!==null){
 		var onlySingle = lastElementIndex===null;
-		var v, a, b;
+		var v=0, a, b;
 		if(firstElementIndex>0){ // fill beginning
 			a = array[firstElementIndex];
 			b = a;
 			if(!onlySingle && firstElementIndex+1<array.length){
 				b = array[firstElementIndex+1];
 			}
-			v = a-b;
+			if(velocity){
+				v = a-b;
+			}
 			for(var i=0; i<firstElementIndex; ++i){
 				array[i] = (firstElementIndex-i)*v + a;
 			}
@@ -6888,7 +6894,9 @@ Code.interpolate1DFillArray = function(array, filler){
 			if(!onlySingle && lastElementIndex-1>=0){
 				a = array[lastElementIndex-1];
 			}
-			v = b-a;
+			if(velocity){
+				v = b-a;
+			}
 			for(var i=lastElementIndex+1; i<array.length; ++i){
 				array[i] = (i-lastElementIndex)*v + b;
 			}

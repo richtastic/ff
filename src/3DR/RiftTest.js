@@ -8,7 +8,7 @@ function RiftTest(){
 	this._canvas.addFunction(Canvas.EVENT_MOUSE_CLICK,this.handleMouseClickFxn,this);
 	this._root = new DO();
 	this._stage.root().addChild(this._root);
-	// new ImageLoader("./images/",["bench_A.png", "bench_B.png"],this,this.imagesLoadComplete).load();
+	new ImageLoader("./images/",["bench_A.png", "bench_B.png"],this,this.imagesLoadComplete).load();
 // bad = unusable
 // poor = minimal points / inaccurate
 // ok = 10-50% somewhat accurate
@@ -17,8 +17,12 @@ function RiftTest(){
 // new ImageLoader("./images/iowa/",["0_50.JPG", "1_50.JPG"],this,this.imagesLoadComplete).load(); // bad
 
 
-new ImageLoader("./images/",["bench_A.png", "bench_B.png"],this,this.imagesLoadComplete).load();
+// new ImageLoader("./images/",["bench_A.png", "bench_B.png"],this,this.imagesLoadComplete).load();
 // new ImageLoader("./images/",["bench_B.png", "bench_A.png"],this,this.imagesLoadComplete).load();
+
+
+
+	// new ImageLoader("./images/pika_1/",["image-0.png", "image-1.png"],this,this.imagesLoadComplete).load();
 
 	// IOWA
 	// 504 x 378
@@ -4901,10 +4905,17 @@ var pointsB = points;
 
 
 // R3D.js:8909 FAB: 5.7701903529840405e-8,-0.00000880157441958602,0.0008623817386501065,-0.000005234536640140499,6.571893353328299e-7,0.01358699255515799,0.00047689349513741104,-0.010095067343942235,-0.08287704104606065
-// R3D.js:8910 FBA: 5.7701903529840405e-8,-0.000005234536640140499,0.00047689349513741104,-0.00000880157441958602,6.571893353328299e-7,-0.010095067343942235,0.0008623817386501065,0.01358699255515799,-0.08287704104606065
-
+// R3D.js:8910 FBA: 5.7701903529840405e-8,-0.000005234536640140499,0.00047689349513741104,-0.00000880157441958602,6.571893353328299e-7,-0.010095067343942235,0.0008623817386501065,0.01358699255515799,-0.08287704104606065"
 Fab = new Matrix(3,3).fromArray([-4.6696560635617005e-7,0.000006164773673632962,-0.00012097061094337242,0.000009246262746843135,-0.0000029069445230409455,-0.015435943439858595,-0.00107026260877018,0.012374192336259766,-0.014613060130294286]);
-Fba = Matrix.inverse(Fab);
+// Fba = Matrix.inverse(Fab);
+// Fba = Matrix.transpose(Fab);
+Fba = R3D.fundamentalInverse(Fab);
+
+
+var results = R3D.arbitraryAffineMatches(imageA,imageB, Fab,Fba, pointsA,pointsB);
+
+
+throw "..."
 
 var results = R3D.arbitraryStereoMatches(imageA,imageB, Fab,Fba, pointsA,pointsB);
 

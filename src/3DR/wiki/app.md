@@ -369,32 +369,37 @@ https://cloud.google.com/appengine/docs/nodejs/
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-- dense stereo handle obscure images
 
 
-- display final fwd-bak matches
-
-- lots of no - paths
+- stereo with occlusion penalty is poor for large occlusions
 
 
-_stereoDisparityFromPath
-
+- retry fwd/back without ordering constraint
+	-> ideas for handling accidental repeated ?
 
 
 
 
-_scaledDisparity usage on NULL areas ?
-	=> EXPAND VERTICALLY TO AREAS NOW TOO ....
-R3D._scaledDisparity
+
+
+- affine hierarchy
+	match best image affine: location / angle / (scale?)
+		[use normal distribution to drop outliers]
+		[use mean of samples]
+	repeat 3-5 times: [64,256,1024]
+		- subdivide grid
+			- x, y, theta, s optimal tests [3]^4=81 or 3x4=12 tests & use optimal scenario
+			- regularize using neighborhood confidences & affine predictions
+	final step [1024,4096]
+		- needle/haystack @ 3-5 pixel size
+	pixel step [4096,16384]
+		- +/- 1 pixel  w/ extrema ?
+
+	- poorest matches (based on neighborhood) are set as occluded & not pursued [outside 3 or 4 sigma]
 
 
 
-_rectifyRegionAll
 
-
-- HANDLING REPEATED STRUCTURE:
-	- REMOVE NON-UNIQUE POINTS TYPES
-		- same-image identify peak match objects & REMOVE THEM ???
 
 
 

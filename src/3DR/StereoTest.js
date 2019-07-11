@@ -14,7 +14,7 @@ function StereoTest(){
 	// new ImageLoader("./images/",["stereo_2_left.png", "stereo_2_right.png"],this,this.imagesLoadComplete).load(); // DESKS - OFFICE
 	// new ImageLoader("./images/",["stereo_3_left.png", "stereo_3_right.png"],this,this.imagesLoadComplete).load(); // MEETING - OFFICE
 
-	// new ImageLoader("./images/tsukuba/",["s1_r1_c1.png", "s1_r1_c2.png"],this,this.imagesLoadComplete).load();
+	new ImageLoader("./images/tsukuba/",["s1_r1_c1.png", "s1_r1_c2.png"],this,this.imagesLoadComplete).load();
 	// new ImageLoader("./images/tsukuba/",["s1_r1_c1.png", "s1_r1_c5.png"],this,this.imagesLoadComplete).load();
 	// new ImageLoader("./images/tsukuba/",["s1_r1_c2.png", "s1_r1_c1.png"],this,this.imagesLoadComplete).load();
 	// new ImageLoader("./images/tsukuba/",["s1_r1_c1_50.png", "s1_r1_c2_50.png"],this,this.imagesLoadComplete).load();
@@ -28,7 +28,7 @@ function StereoTest(){
 
 
 	// ADHOC:
-	new ImageLoader("./images/adhoc/",["ben_01.png", "ben_02.png"],this,this.imagesLoadComplete).load(); // benches
+	// new ImageLoader("./images/adhoc/",["ben_01.png", "ben_02.png"],this,this.imagesLoadComplete).load(); // benches
 }
 StereoTest.prototype.imagesLoadComplete = function(imageInfo){
 	var imageList = imageInfo.images;
