@@ -11300,7 +11300,43 @@ Code.fuzzyRound = function(a,b){
 Code.fuzzyTruncate = function(a,b){
 	return (a>b)?a:0;
 }
-
+Code.repeatedDropOutliersMean = function(list, sigmaLimit, fxnMean, fxnError, minCount){
+	minCount = minCount!==undefined ? minCount : 1; // number of items needed in list
+	list = Code.copyArray(list);
+	var maxIterations = 20;
+	var mean = null;
+	var sigma = null;
+	var errors = null;
+	var min = null;
+	for(var iteration=0; iteration<maxIterations; ++iteration){
+		mean = fxnMean(list);
+		errors = [];
+		for(var i=0; i<list.length; ++i){
+			var error = fxnError(list[i], mean);
+			errors.push(error);
+		}
+		min = Code.min(errors);
+		sigma = Code.stdDev(errors, mean);
+		limit = min + sigma*sigmaLimit;
+		// console.log(mean, min,sigma,limit);
+		var next = [];
+		for(var i=0; i<list.length; ++i){
+			error = errors[i];
+			if(error<limit){
+				next.push(list[i]);
+			}
+		}
+		if(next.length==list.length){
+			break;
+		}
+		if(next.length<minCount){
+			break;
+		}
+		list = next;
+	}
+	// console.log(list);
+	return mean;
+}
 Code.dropOutliers = function(list, valueFxn, sigmas, rightOnly, useMin){
 	rightOnly = rightOnly!==undefined && rightOnly!==null ? rightOnly : true;
 	useMin = useMin!==undefined && useMin!==null ? useMin : false;

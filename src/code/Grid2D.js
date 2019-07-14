@@ -89,8 +89,9 @@ Grid2D.prototype.centerFromCell = function(cell, point){
 		point = new V2D();
 	}
 	var size = this._cellSize;
-	point.x = (cell.col()+0.5)*size.x;
-	point.y = (cell.row()+0.5)*size.y;
+	var offset = this._offset;
+	point.x = (cell.col()+0.5)*size.x + offset.x;
+	point.y = (cell.row()+0.5)*size.y + offset.y;
 	return point;
 }
 Grid2D.prototype.objectsFromColRow = function(c,r){
@@ -101,11 +102,8 @@ Grid2D.prototype.objectsFromColRow = function(c,r){
 	return null;
 }
 Grid2D.prototype.cellFromPoint = function(x,y){
-	// console.log(this._cells , this._size)
 	if(this._cells && this._size){
-		// console.log("A");
 		var cr = this._colRowFromPoint(x,y);
-		// console.log(cr);
 		if(cr){
 			return this.cellFromColRow(cr.x,cr.y);
 		}
