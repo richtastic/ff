@@ -4047,7 +4047,8 @@ ImageMat.prototype.getScaledImage = function(scale){
 			sigma = 2.0;
 		}
 		*/
-		sigma = Math.sqrt(1.0/scale);
+		sigma = 0.5/Math.sqrt(scale);
+		// sigma = 0.25/scale;
 	}else if(scale==1.0){
 		return this.copy();
 	}
@@ -4135,9 +4136,6 @@ ImageMat.getScaledImage = function(source,wid,hei, scale, sigma, forceWidth,forc
 	if(sigma){
 		source = ImageMat.getBlurredImage(source, wid,hei, sigma);
 	}
-	//var x = wid*0.5;
-	//var y = hei*0.5;
-	//var newImg = ImageMat.extractRectFromFloatImage(x,y,1.0/scale,null, newWid,newHei, source,wid,hei, null);
 	var newImg = ImageMat.extractRectSimple(source,wid,hei, 0,0,wid-1,hei-1, newWid,newHei);
 	return {"width":newWid, "height":newHei, "value":newImg};
 }

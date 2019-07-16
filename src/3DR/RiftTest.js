@@ -9,7 +9,6 @@ function RiftTest(){
 	this._root = new DO();
 	this._stage.root().addChild(this._root);
 	// new ImageLoader("./images/",["bench_A.png", "bench_B.png"],this,this.imagesLoadComplete).load();
-
 	new ImageLoader("./images/",["room0.png", "room2.png"],this,this.imagesLoadComplete).load();
 
 // bad = unusable
@@ -4390,7 +4389,8 @@ cy: 0.4746370298801608
 
 
 RiftTest.prototype.testStereo = function(imageA,imageB){
-/*
+
+
 // bench_A.png & bench_B.png
 var points = [];
 points.push( new V2D(291.00244593231275,125.16577334122776) ); // 0
@@ -4906,8 +4906,7 @@ Fab = new Matrix(3,3).fromArray([-4.3108970745948067e-7,0.00000781421750838453,-
 Fba = R3D.fundamentalInverse(Fab);
 
 
-
-*/
+/*
 
 // ROOM 0-2
 
@@ -5326,11 +5325,13 @@ var pointsB = points;
 Fab = new Matrix(3,3).fromArray([-3.215889693813057e-7,0.0000034706541031937704,0.0001683307229678381,0.000007135251608929445,-0.000008159225833811654,-0.015252965924983004,-0.000698476119524769,0.015209996609977953,-0.9179263092166661]);
 Fba = R3D.fundamentalInverse(Fab);
 
-// var results = R3D.arbitraryAffineMatches(imageA,imageB, Fab,Fba, pointsA,pointsB);
-// var results = R3D.arbitraryAffineMatches(imageB,imageA, Fba,Fab, pointsB,pointsA);
-// throw "..."
+*/
 
-var results = R3D.arbitraryStereoMatches(imageA,imageB, Fab,Fba, pointsA,pointsB);
+var results = R3D.arbitraryAffineMatches(imageA,imageB, Fab,Fba, pointsA,pointsB);
+// var results = R3D.arbitraryAffineMatches(imageB,imageA, Fba,Fab, pointsB,pointsA);
+throw "..."
+
+// var results = R3D.arbitraryStereoMatches(imageA,imageB, Fab,Fba, pointsA,pointsB);
 // var matches = R3D.stereoHighConfidenceMatches(imageA,imageB, pointsA,pointsB,Fab);
 throw "..."
 

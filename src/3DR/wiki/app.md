@@ -369,37 +369,76 @@ https://cloud.google.com/appengine/docs/nodejs/
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
-- search needle along haystack LINE in B
-- refine affine using nonlinear searching with ~10 iterations
-- add regularization w/ error averaging 
-
-
-- stereo with occlusion penalty is poor for large occlusions
-
-
-- retry fwd/back without ordering constraint
-	-> ideas for handling accidental repeated ?
+- CONFIRM that stereo is bad because of high differences / disparity by testing more similar pair:
+	- room0/room1
 
 
 
-
+AFFINE OPTIMIZING:
+	- separate:
+		- find location
+		- rotation
+		- scale
+		- skew
+	- all together: affine ... can
 
 
 - affine hierarchy
-	match best image affine: location / angle / (scale?)
-		[use normal distribution to drop outliers]
-		[use mean of samples]
-	repeat 3-5 times: [64,256,1024]
-		- subdivide grid
-			- x, y, theta, s optimal tests [3]^4=81 or 3x4=12 tests & use optimal scenario
-			- regularize using neighborhood confidences & affine predictions
+	- optimized affine all 4 params
+		-> fwd/bak might help force same scale?
+	- optimized affine w/o scale [angleX & angleY]
+	- optimized affine only scale
+	- test: w/ & w/o blurring ?
+	- regularization:
+		- final cell location:
+			- average of all neighbors: (predicted location) * (SAD score)
+	- searching for needle in haystack only along F-line
+
+
+
 	final step [1024,4096]
 		- needle/haystack @ 3-5 pixel size
 	pixel step [4096,16384]
 		- +/- 1 pixel  w/ extrema ?
 
 	- poorest matches (based on neighborhood) are set as occluded & not pursued [outside 3 or 4 sigma]
+
+
+- sparse->dense via region growing
+	... may beed to go back to this
+
+	- candidate matches using known F
+	- prioritize distinct points
+	- optmiize affine fransform
+	-
+
+
+
+
+
+
+- search needle along haystack LINE in B
+- refine affine using nonlinear searching with ~10 iterations
+- add regularization w/ error averaging
+- points fully out of image A/B => not processed / rendered
+- points with poor match score (relative to neighbors) => dead
+
+
+
+
+
+- stereo with occlusion penalty is poor for large occlusions
+-- early propagated disparities are bad ....
+	- try scaling only in x direction ?
+- need to rotate final images in hierarchy before matching if opposite rotation
+
+- retry fwd/back without ordering constraint
+	-> ideas for handling accidental repeated ?
+
+
+--- try creating 1:1 mapping between rectified images
+	- list of all 1+ mappings, collapse to average, repeat till none
+
 
 
 

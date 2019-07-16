@@ -5496,10 +5496,11 @@ R3D._stereoRectifiedOrderColFxn = function(a,b,p, scale){
 }
 R3D._stereoBlockMatchOrderedHierarchy = function(imageA,imageB, infoA,infoB,Fab,Fba,pointsA,pointsB,sourceA,sourceB){
 	console.log("_stereoBlockMatchOrderedHierarchy");
-	var minimumDimension = 4; // @ +/- 3
-	// var minimumDimension = 8;
+	// var minimumDimension = 4; // @ +/- 3
+	var minimumDimension = 8;
 	// var minimumDimension = 16;
 	// var minimumDimension = 32;
+	// var minimumDimension = 64;
 	// var minimumDimension = 400;
 	var scales = [];
 	var widthA = imageA.width();
@@ -5578,6 +5579,7 @@ R3D._stereoBlockMatchOrderedHierarchy = function(imageA,imageB, infoA,infoB,Fab,
 	var scaledValidColsA, scaledValidColsB, scaledMappingABRows;
 var OFFERX = 0;
 	for(var s=0; s<scales.length; ++s){
+		isFirst = s==0;
 		scale = scales[s];
 		currentImageA = imageA.getScaledImage(scale);
 		currentImageB = imageB.getScaledImage(scale);
@@ -5623,15 +5625,19 @@ var OFFERX = 0;
 			}
 		}
 // draw scaled stuff:
-// if(true){
-if(false){
+if(true){
+// if(false){
 	console.log("scaledValidColsB " + currentImageB.width()+" x "+currentImageB.height());
-	console.log(scaledValidColsB);
+	// console.log(scaledValidColsB);
 
 	var widA = currentImageA.width();
 	var heiA = currentImageA.height();
 	var widB = currentImageB.width();
 	var heiB = currentImageB.height();
+	// var display = GLOBALDISPLAY;
+	var display = GLOBALSTAGE;
+
+/*
 	var pixelsA = widA*heiA;
 	var pixelsB = widB*heiB;
 	var usedA = Code.newArrayZeros(pixelsA);
@@ -5654,8 +5660,7 @@ if(false){
 			usedB[index] = 1.0;
 		}
 	}
-	// var display = GLOBALDISPLAY;
-	var display = GLOBALSTAGE;
+
 	var alp = 1.0;
 	var img = GLOBALSTAGE.getFloatRGBAsImage(usedA,usedA,usedA, widA, heiA);
 	var d = new DOImage(img);
@@ -5669,14 +5674,31 @@ if(false){
 	d.matrix().translate(0+OFFERX,350);
 	display.addChild(d);
 	OFFERX += Math.max(widA,widB);
+*/
+	var heat = currentImageA;
+	var img = GLOBALSTAGE.getFloatRGBAsImage(heat.red(), heat.grn(), heat.blu(), heat.width(), heat.height());
+	var d = new DOImage(img);
+	d.graphics().alpha(alp);
+	d.matrix().translate(10 + OFFERX,10 + 0);
+	d.matrix().translate(0, 0);
+	display.addChild(d);
 
+	var heat = currentImageB;
+	var img = GLOBALSTAGE.getFloatRGBAsImage(heat.red(), heat.grn(), heat.blu(), heat.width(), heat.height());
+	var d = new DOImage(img);
+	d.graphics().alpha(alp);
+	d.matrix().translate(10 + OFFERX,10 + 350);
+	d.matrix().translate(0, 0);
+	display.addChild(d);
+
+	OFFERX += Math.max(widA,widB);
 }
 		currentWidthA = currentImageA.width();
 		currentHeightA = currentImageA.height();
 		currentWidthB = currentImageB.width();
 		currentHeightB = currentImageB.height();
 console.log("  "+s+": "+currentWidthA+"x"+currentHeightA+" & "+currentWidthB+"x"+currentHeightB+"");
-		var result = R3D._stereoBlockMatchOrdered(currentImageA,currentImageB, disparityA,disparityB, occlusionA,occlusionB,  scaledMappingABRows,scaledValidColsA,scaledValidColsB);
+		var result = R3D._stereoBlockMatchOrdered(currentImageA,currentImageB, disparityA,disparityB, occlusionA,occlusionB,  scaledMappingABRows,scaledValidColsA,scaledValidColsB, isFirst);
 		disparityA = result["disparity"]["A"];
 		disparityB = result["disparity"]["B"];
 		occlusionA = result["occlusion"]["A"];
@@ -5684,8 +5706,40 @@ console.log("  "+s+": "+currentWidthA+"x"+currentHeightA+" & "+currentWidthB+"x"
 	}
 	var disparity = R3D._subpixelDisparity(imageA,imageB, disparityA,occlusionA, scaledMappingABRows,scaledValidColsA,scaledValidColsB);
 		disparityA = disparity["disparity"];
+
+// throw "...."
+
+if(true){
+	var d = Code.copyArray(disparityA);
+	var o = Code.copyArray(occlusionA);
+	// d = ImageMat.mulFloat(d,o);
+	ImageMat.normalFloat01(d);
+	// ImageMat.invertFloat01(d);
+	// d = ImageMat.pow(d,0.5);
+	// d = ImageMat.pow(d,0.25);
+	// d = ImageMat.pow(d,0.1);
+	// d = ImageMat.pow(d,2.0);
+	// d = ImageMat.pow(d,4.0);
+	var display = GLOBALSTAGE;
+	var alp = 1.0;
+	// var alp = 0.75;
+	// var img = GLOBALSTAGE.getFloatRGBAsImage(d,d,d, colsA,rowsA);
+	var colors = [0xFFFFFFFF, 0xFFFF9900, 0xFFFF0000, 0xFF00FF00, 0xFF3399FF, 0xFF0000FF, 0xFF330066, 0xFF000000];
+		// colors = [0xFFFFFFFF, 0xFFFF9900, 0xFFFF0000, 0xFF00FF00, 0xFF3399FF, 0xFF0000FF, 0xFF330066, 0xFF000000, 0xFFFFFFFF, 0xFFFF9900, 0xFFFF0000, 0xFF00FF00, 0xFF3399FF, 0xFF0000FF, 0xFF330066, 0xFF000000];
+	var heat = ImageMat.heatImage(d, imageA.width(),imageA.height(), true, colors);
+	var img = GLOBALSTAGE.getFloatRGBAsImage(heat.red(), heat.grn(), heat.blu(), heat.width(), heat.height());
+	var d = new DOImage(img);
+	d.graphics().alpha(alp);
+	d.matrix().translate(10 + 0,10 + OFFERD*400);
+	d.matrix().translate(0, 0);
+	display.addChild(d);
+	++OFFERD;
+}
+
+
 	return {"disparity":disparityA, "occlusion":occlusionA};
 }
+OFFERD = 0;
 R3D._stereoBlockMatchOrderedForwardBackward = function(imageA,imageB, infoA,infoB,Fab,Fba,pointsA,pointsB, originalA,originalB){
 	var isRectified = infoA!==undefined;
 	var pixelLimit = 1.0;
@@ -5737,6 +5791,7 @@ SHOWUP = 1;
 		}
 	}
 	if(isRectified){
+// IF OPPOSITE -> NEED TO ROTATE ALL POINTS IN BTO MATCH UP TO A ...
 		var radiusMinA = infoA["radiusMin"];
 		var radiusMinB = infoB["radiusMin"];
 		var anglesA = infoA["angles"];
@@ -5880,6 +5935,7 @@ R3D._subpixelDisparity = function(imageA,imageB, disparitiesA,occlusionsA, mappi
 	var colStartB = 0;
 	var colEndB = colsB-1;
 	var rowB;
+	console.log(occlusionsA);
 	for(var rowA=0; rowA<rowsA; ++rowA){
 		if(isRectified){
 			rowB = mappingRowsAB[rowA];
@@ -5896,9 +5952,11 @@ R3D._subpixelDisparity = function(imageA,imageB, disparitiesA,occlusionsA, mappi
 		for(var colA=colStartA; colA<=colEndA; ++colA){
 			var index = rowA*colsA + colA;
 			var occlusion = occlusionsA[index];
-			if(occlusion>0){
+			if(true){
+			// if(occlusion>0){
 				var disparity = disparitiesA[index];
 				var colB = colA + disparity;
+					colB = Math.round(colB);
 					colB = Math.min(Math.max(colB,colStartB),colEndB); // TODO: should colB be limited by validColsB[rowB]
 				// in-place operation for peak
 				var result = R3D.inPlaceNeedleHaystackSADColor(imageA,colA+offNx,rowA+offNy,needleX,needleY, imageB,colB+offHx,rowB+offHy,haystackX,haystackY);
@@ -5991,7 +6049,211 @@ R3D._scaledDisparity = function(source,width,height, forceWidth, forceHeight){
 }
 var SHOWCOUNT = 0;
 var SHOWUP = 0;
-R3D._stereoBlockMatchOrdered = function(imageA,imageB, disparityOffsetsA,disparityOffsetsB,occlusionOffsetsA,occlusionOffsetsB, mappingRowsAB,validColsA,validColsB){
+R3D._stereoBlockMatchOrdered_NEW = function(imageA,imageB, disparityOffsetsA,disparityOffsetsB,occlusionOffsetsA,occlusionOffsetsB, mappingRowsAB,validColsA,validColsB, isFirst){
+// R3D._stereoBlockMatchOrdered = function(imageA,imageB, disparityOffsetsA,disparityOffsetsB,occlusionOffsetsA,occlusionOffsetsB, mappingRowsAB,validColsA,validColsB, isFirst){
+	var isRectified = mappingRowsAB!==undefined;
+	var outsideRangeCostConstant = 1E9;
+	// TODO: should gradient/disparities be averaged among images A & B ?
+	var gradientCostDivisor = 0.20; // 0.25
+	var gradientCostConstant = 0.0001;
+	var occlusionCostConstant = 0.20; // order of poor match -- 0.1-0.25
+	// var occlusionCostConstant = 0.10;
+	// var occlusionCostConstant = 0.5;
+	// var halfBlockSizeX = 1; var halfBlockSizeY = 0;
+	// var halfBlockSizeX = 2; var halfBlockSizeY = 1;
+	var halfBlockSizeX = 3; var halfBlockSizeY = 2;
+	var disparityHalfWindow = 3;
+	// if(isFirst){
+	// 	disparityHalfWindow = 7;
+	// }
+	// var disparityHalfWindow = 11;
+	var blockSizeX = 2*halfBlockSizeX + 1;
+	var blockSizeY = 2*halfBlockSizeY + 1;
+	var disparityCount = disparityHalfWindow*2 + 1;
+	var disparityMin = -disparityHalfWindow;
+	var disparityMax = disparityHalfWindow;
+	var imageAWidth = imageA.width();
+	var imageAHeight = imageA.height();
+	var imageBWidth = imageB.width();
+	var imageBHeight = imageB.height();
+	var colsA = imageA.width();
+	var rowsA = imageA.height();
+	var colsB = imageB.width();
+	var rowsB = imageB.height();
+	var redA = imageA.red();
+	var grnA = imageA.grn();
+	var bluA = imageA.blu();
+	var redB = imageB.red();
+	var grnB = imageB.grn();
+	var bluB = imageB.blu();
+	// gradient
+	var gradientA = imageA.gry(); // TODO: COLOR GRADIENT MAGNITUDE
+		gradientA = ImageMat.sobelY(gradientA, colsA,rowsA);
+		gradientA = gradientA["value"];
+	var countA = colsA*rowsA;
+	var countB = colsB*rowsB;
+	if(!disparityOffsetsA){
+		disparityOffsetsA = Code.newArrayZeros(countA);
+	}
+	// storage
+	var disparitiesA = Code.newArrayNulls(countA);
+	var occlusionsA = Code.newArrayZeros(countA);
+	var imageAWidthM1 = imageAWidth-1;
+	var imageBWidthM1 = imageBWidth-1;
+	// defaults for non-rectified
+	var rowCountA = imageAHeight;
+	var colStartA = 0;
+	var colEndA = imageAWidthM1;
+	var colStartB = 0;
+	var colEndB = imageBWidthM1;
+	var previousRowWasUsed = false;
+	for(var rowA=0; rowA<rowCountA; ++rowA){
+		var rowB = rowA;
+		if(isRectified){
+			rowB = mappingRowsAB[rowA];
+			if(rowB<0 || rowB>=imageBHeight){ // default disparities for this row carry over
+				previousRowWasUsed = false;
+				continue;
+			} // column start / stop
+			var validA = validColsA[rowA];
+			var validB = validColsB[rowB];
+			colStartA = validA[0];
+			colEndA = validA[1];
+			colStartB = validB[0];
+			colEndB = validB[1];
+			var countA = colEndA-colStartA+1;
+			var countB = colEndB-colStartB+1;
+		}
+var colDisparities = Code.newArrayNulls(colsA);
+		for(var col=colStartA; col<=colEndA; ++col){
+			var colA = col;
+			var index = rowA*colsA + colA;
+			var disparityOffsetA = disparityOffsetsA[index];
+				disparityOffsetA = Math.round(disparityOffsetA);
+var bestDisparity = null;
+var bestDisparityCost = null;
+			for(var disparity=disparityMin; disparity<=disparityMax; ++disparity){
+				var colB = colA + disparity + disparityOffsetA;
+				// don't care about outside the window
+				if(colA<colStartA || colB<colStartB || colA>colEndA || colB>colEndB){
+					continue;
+				}
+				// match cost
+				var sad = 0;
+					// find inside starting & ending indexes
+					var minXA = Math.max(colA-halfBlockSizeX, 0);
+					var maxXA = Math.min(colA+halfBlockSizeX,colsA-1);
+					var minXB = Math.max(colB-halfBlockSizeX, 0);
+					var maxXB = Math.min(colB+halfBlockSizeX,colsB-1);
+					var lf = Math.min(colA-minXA, colB-minXB);
+					var ri = Math.min(maxXA-colA, maxXB-colB);
+					minXA = colA-lf;
+					minXB = colB-lf;
+					maxXA = colA+ri;
+					maxXB = colB+ri;
+					var minYA = Math.max(rowA-halfBlockSizeY, 0);
+					var maxYA = Math.min(rowA+halfBlockSizeY,rowsA-1);
+					var minYB = Math.max(rowB-halfBlockSizeY, 0);
+					var maxYB = Math.min(rowB+halfBlockSizeY,rowsB-1);
+					var bo = Math.min(rowA-minYA, rowB-minYB);
+					var to = Math.min(maxYA-rowA, maxYB-rowB);
+					minYA = rowA-bo;
+					minYB = rowB-bo;
+					maxYA = rowA+to;
+					maxYB = rowB+to;
+					// sad computation
+					var countX = maxXA - minXA + 1;
+					var countY = maxYA - minYA + 1;
+					var count = countX*countY;
+					for(var j=0; j<countY; ++j){
+						for(var i=0; i<countX; ++i){
+							var iA = (minYA+j)*colsA + (minXA+i);
+							var iB = (minYB+j)*colsB + (minXB+i);
+							var r = redA[iA] - redB[iB];
+							var g = grnA[iA] - grnB[iB];
+							var b = bluA[iA] - bluB[iB];
+							// sad += (Math.abs(r) + Math.abs(g) + Math.abs(b))/ 3.0;
+							// sad += (r*r + g*g + b*b);
+							sad += Math.sqrt(r*r + g*g + b*b);
+						}
+					}
+					sad /= count;
+				var cost = sad;
+				if(bestDisparity===null || bestDisparityCost>cost){
+					bestDisparityCost = cost;
+					// bestDisparity = colB-colA;
+					bestDisparity = colB-colA;
+				}
+			} // end disparity in [min,max]
+			colDisparities[colA] = bestDisparity;
+		} // end cols
+		var velocity = false;
+		Code.interpolate1DFillArray(colDisparities,velocity);
+		var offset = rowA*colsA;
+		for(var i=0; i<colDisparities.length; ++i){
+			var index = offset+i;
+			disparitiesA[index] = colDisparities[i];
+			// if( (colEndA-colStartA) < 0.75*colsA ){
+			// 	occlusionsA[index] = 0.0;
+			// }else{
+			// 	occlusionsA[index] = 1.0;
+			// }
+			occlusionsA[index] = 1.0;
+		}
+		// console.log(colDisparities)
+		// console.log(colDisparities.length);
+		// console.log(occlusionsA)
+		// throw "..."
+	} // rows
+	// console.log( Code.array1Das2DtoString(disparitiesA,colsA,rowsA, 1) );
+	var velocity = false;
+	Code.interpolate2DFillArrayVertical(disparitiesA,imageAWidth,imageAHeight, 0,velocity);
+	// console.log( Code.array1Das2DtoString(disparitiesA,colsA,rowsA, 1) );
+	// throw "..."
+if(true){
+// if(false){
+	var d = Code.copyArray(disparitiesA);
+	var o = Code.copyArray(occlusionsA);
+	d = ImageMat.mulFloat(d,o);
+	ImageMat.normalFloat01(d);
+	// ImageMat.invertFloat01(d);
+	// d = ImageMat.pow(d,0.5);
+	// d = ImageMat.pow(d,0.25);
+	// d = ImageMat.pow(d,0.1);
+	// d = ImageMat.pow(d,4.0);
+	for(var i=0; i<d.length; ++i){
+		if(o[i]==0){
+			// d[i] = 1.0;
+			// d[i] = 0.5;
+			// d[i] = 0.0;
+		}
+	}
+	var display = GLOBALSTAGE;
+	var alp = 1.0;
+	// var alp = 0.75;
+	// var img = GLOBALSTAGE.getFloatRGBAsImage(d,d,d, colsA,rowsA);
+	var colors = [0xFFFFFFFF, 0xFFFF9900, 0xFFFF0000, 0xFF00FF00, 0xFF3399FF, 0xFF0000FF, 0xFF330066, 0xFF000000];
+		// colors = [0xFFFFFFFF, 0xFFFF9900, 0xFFFF0000, 0xFF00FF00, 0xFF3399FF, 0xFF0000FF, 0xFF330066, 0xFF000000, 0xFFFFFFFF, 0xFFFF9900, 0xFFFF0000, 0xFF00FF00, 0xFF3399FF, 0xFF0000FF, 0xFF330066, 0xFF000000];
+	var heat = ImageMat.heatImage(d, imageAWidth,imageAHeight, true, colors);
+	var img = GLOBALSTAGE.getFloatRGBAsImage(heat.red(), heat.grn(), heat.blu(), heat.width(), heat.height());
+	var d = new DOImage(img);
+	d.graphics().alpha(alp);
+	//d.matrix().translate(500 + (Math.pow(2,SHOWCOUNT))*20,0);
+	d.matrix().translate(600 + (Math.pow(2,SHOWCOUNT+0))*20, 500*SHOWUP);
+	// d.matrix().translate(1600,700);
+	display.addChild(d);
+	++SHOWCOUNT;
+}
+
+var occlusionsA = Code.newArrayOnes(rowsB*colsB);
+
+	var disparitiesB = Code.newArrayZeros(rowsB*colsB);
+	var occlusionsB = Code.newArrayZeros(rowsB*colsB);
+	return {"disparity":{"A":disparitiesA,"B":disparitiesB}, "occlusion":{"A":occlusionsA,"B":occlusionsB}};
+}
+
+// R3D._stereoBlockMatchOrdered_WORKING_OLD = function(imageA,imageB, disparityOffsetsA,disparityOffsetsB,occlusionOffsetsA,occlusionOffsetsB, mappingRowsAB,validColsA,validColsB){
+R3D._stereoBlockMatchOrdered = function(imageA,imageB, disparityOffsetsA,disparityOffsetsB,occlusionOffsetsA,occlusionOffsetsB, mappingRowsAB,validColsA,validColsB, isFirst){
 	var isRectified = mappingRowsAB!==undefined;
 	var outsideRangeCostConstant = 1E9;
 	// TODO: should gradient/disparities be averaged among images A & B ?
@@ -6004,6 +6266,9 @@ R3D._stereoBlockMatchOrdered = function(imageA,imageB, disparityOffsetsA,dispari
 	var halfBlockSizeX = 2; var halfBlockSizeY = 1;
 	// var halfBlockSizeX = 3; var halfBlockSizeY = 2;
 	var disparityHalfWindow = 3;
+	if(isFirst){
+		disparityHalfWindow = 7;
+	}
 	// var disparityHalfWindow = 11;
 	var blockSizeX = 2*halfBlockSizeX + 1;
 	var blockSizeY = 2*halfBlockSizeY + 1;
@@ -6055,7 +6320,6 @@ R3D._stereoBlockMatchOrdered = function(imageA,imageB, disparityOffsetsA,dispari
 		if(isRectified){
 			rowB = mappingRowsAB[rowA];
 			if(rowB<0 || rowB>=imageBHeight){ // default disparities for this row carry over
-				// console.log(rowA+" - "+rowB+": no mapping");
 				previousRowWasUsed = false;
 				continue;
 			} // column start / stop
@@ -6067,7 +6331,6 @@ R3D._stereoBlockMatchOrdered = function(imageA,imageB, disparityOffsetsA,dispari
 			colEndB = validB[1];
 			var countA = colEndA-colStartA+1;
 			var countB = colEndB-colStartB+1;
-			// console.log(rowA+" - "+rowB+": "+colStartA+":"+colEndA+" & "+colStartB+":"+colEndB);
 		}
 		var pathTable = {}; // TODO: MAKE THIS A LOOKUP ARRAY AGAIN
 		var pathEnds = [];
@@ -6127,7 +6390,6 @@ R3D._stereoBlockMatchOrdered = function(imageA,imageB, disparityOffsetsA,dispari
 if(colA<colStartA || colB<colStartB || colA>colEndA || colB>colEndB){
 	continue;
 }
-// console.log(" REG: "+rowA+" - "+rowB+" = "+colA+" | "+colB)
 				// path entries
 				var nodeIndex = colA+","+disparity;
 				var node = {"cost":0, "prev":null, "a":colA, "b":colB, "i":nodeIndex};
@@ -6380,7 +6642,6 @@ if(true){
 }
 	return {"disparity":{"A":disparitiesA,"B":disparitiesB}, "occlusion":{"A":occlusionsA,"B":occlusionsB}};
 }
-
 R3D._stereoDisparityFromPath = function(path, colsA, colsB){
 	var disparitiesA = Code.newArrayNulls(colsA);
 	var disparitiesB = Code.newArrayNulls(colsB);
@@ -32540,8 +32801,8 @@ R3D.bestAffine2DFromExisting = function(affine,imageA,centerA,imageB,centerB, ex
 	return {"A":existingA, "B":locationB, "affine":optimum};
 }
 
-R3D.optimumAffineCornerTransform = function(imageA,pointA, imageB,pointB, affine, size, maxIterations){
-	var result = R3D._affineCornerTransformNonlinearGD(imageA,pointA, imageB,pointB, affine, size, maxIterations);
+R3D.optimumAffineCornerTransform = function(imageA,pointA, imageB,pointB, affine, size, maxIterations, compareSize){
+	var result = R3D._affineCornerTransformNonlinearGD(imageA,pointA, imageB,pointB, affine, size, maxIterations, compareSize);
 	return result;
 }
 
@@ -32750,12 +33011,12 @@ R3D._gdAffineTransform = function(args, x, isUpdate){
 
 
 
-R3D._affineCornerTransformNonlinearGD = function(imageFlatA,pointA, imageFlatB,pointB, affine, size, maxIterations){
+R3D._affineCornerTransformNonlinearGD = function(imageFlatA,pointA, imageFlatB,pointB, affine, size, maxIterations, compareSize){
 	if(!R3D._matrixAC2D){
 		R3D._matrixAC2D = new Matrix2D();
 	}
 	maxIterations = maxIterations!==undefined ? maxIterations : 10;
-	var compareSize = 11;
+	compareSize = compareSize!==undefined ? compareSize : 11;
 	var scaleCompare = compareSize/size;
 	var compareMask = ImageMat.circleMask(compareSize);
 	var needleB = imageFlatB.extractRectFromFloatImage(pointB.x,pointB.y,scaleCompare,null,compareSize,compareSize, null);
@@ -32789,6 +33050,9 @@ R3D._gdAffineCornerCompareFxn = function(matrix, imageA, pointA, scaleCompare, c
 	var ncc = R3D.normalizedCrossCorrelation(n,m,h, true);
 	ncc = ncc["value"][0];
 	return ncc;
+	// var sad = R3D.searchNeedleHaystackSADColor(n,h, m);
+	// 	sad = sad["value"][0];
+	// return sad;
 }
 
 R3D.absoluteOrientationsFromRelativeOrientations = function(relativePairs, errorPairs){ // 1: [2...N] ; 2: [3...N] ; ... N:[]
