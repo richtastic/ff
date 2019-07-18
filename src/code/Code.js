@@ -2341,6 +2341,57 @@ Code.sumArray = function(a){
 	}
 	return sum;
 }
+Code.optimizerSimplex = function(fxn, args, x, ix, iter, diff, epsilon){ // Nelder - Mead Simplex - direct search methed
+	// get values at simplex locations
+	//  reflection from worst
+	// shrinkage towards best
+	/*
+
+	A = 1
+	C = 2
+	R = 0.5
+	S = 0.5
+
+	*) [initialize] initial points x0...xn
+
+	*) [ordering] order points f(x0) <= ... f(xn)
+
+	*) [termination] if
+
+	*) [centroid] calc xc = centroid of all points except xn
+
+	*) [reflection] calc xr = xc + A*(xc-xn) [A>0]
+		- if f(x0) <= f(xr) < f(xn)
+			- replace xn with xr => go to ordering
+
+	*) [expansion] xr is best point so far
+		- if f(xr) < f(x0)
+			- calc xe = xc + C*(xc-xn) [C>1]
+			- if f(xe) < f(xr)
+				- replace xn with xe => go to ordering
+			- else
+				- replace xn with xr => go to ordering
+	*) [contraction] f(xn-1) <= f(xr)
+		- xcont = xc + R*(xn - xc) [0 < R < 0.5]
+		- if f(xcont) < f(xn)
+			- replace xn with xcont => go to ordering
+
+	*) [shrink]
+		- replace all points except x0 with:
+		xi = x0 + S*(xi - x0)
+	=> go to  ordering
+
+	*/
+	// ...
+}
+
+
+// Powell’s Method
+
+
+Code.optimizerBinarySearch = function(fxn, args, x, ranges, iter, diff, epsilon){
+}
+
 Code.gradientDescent = function(fxn, args, x, dx, iter, diff, epsilon){
 	var i, j, k, c;
 	var sizeX = x.length;
@@ -7386,7 +7437,7 @@ Code.extrema2DFloatInterpolate = function(loc, d0,d1,d2,d3,d4,d5,d6,d7,d8){ // w
 		//var H = new Matrix(2,2, [dxdx,dxdy, dxdy,dydy]);
 		//var Hinv = Matrix.inverse(H);
 		//Hinv = Hinv.toArray();
-	if(!Hinv){ console.log("COULD NOT FIND INVERSE"); return null; }
+	if(!Hinv){ /*console.log("COULD NOT FIND INVERSE");*/ return null; }
 	var dD = Code.setArray(Code._tempMatrixArray2,dx,dy);
 	Code.mult2x2by2x1toV2D(loc, Hinv,dD);
 	loc.x = -loc.x; loc.y = -loc.y;

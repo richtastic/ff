@@ -4201,7 +4201,7 @@ ImageMat.prototype.getBlurredImage = function(sigma){
 ImageMat.extract_M2D_A = new Matrix2D();
 ImageMat.extract_M2D_B = new Matrix2D();
 ImageMat.extractRectFromFloatImage = function(x,y,scale,sigma, w,h, imgSource,imgWid,imgHei, matrix){ // scale=opposite behavior, w/h=destination width/height,
-	var blurr = (sigma!==undefined) && (sigma!=null);
+	var blurr = (sigma!==undefined) && (sigma!==null);
 	var gaussSize, gauss1D, padding=0;
 	var img;
 	var fullX = x;
@@ -4211,11 +4211,12 @@ ImageMat.extractRectFromFloatImage = function(x,y,scale,sigma, w,h, imgSource,im
 		gauss1D = ImageMat.getGaussianWindow(gaussSize,1, sigma);
 		padding = Math.ceil(gaussSize/2.0);
 	}
-
-	var left = fullX - (w*0.5)*scale - padding*scale;
-	var right = fullX + (w*0.5)*scale + padding*scale;
-	var top = fullY - (h*0.5)*scale - padding*scale;
-	var bot = fullY + (h*0.5)*scale + padding*scale;
+	var wm1 = w-1;
+	var hm1 = h-1;
+	var left = fullX - (wm1*0.5)*scale - padding*scale;
+	var right = fullX + (wm1*0.5)*scale + padding*scale;
+	var top = fullY - (hm1*0.5)*scale - padding*scale;
+	var bot = fullY + (hm1*0.5)*scale + padding*scale;
 	var O = ImageMat._O; O.set(0,0);
 	var TL = ImageMat._TL; TL.set(left,top);
 	var TR = ImageMat._TR; TR.set(right,top);

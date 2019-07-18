@@ -1,0 +1,117 @@
+
+https://threejs.org/docs/index.html#manual/en/introduction/Creating-a-scene
+
+https://freefrontend.com/three-js-examples/
+
+
+
+
+
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+
+<script src="/path/to/WebGL.js"></script>
+if ( WEBGL.isWebGL2Available() === false ) {
+
+
+
+
+
+### GLSL ES 3.00 code:
+
+<script id="vs" type="x-shader/x-vertex">
+#version 300 es
+void main() {
+	gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+}
+</script>
+<script id="fs" type="x-shader/x-fragment">
+#version 300 es
+precision highp float;
+precision highp int;
+out vec4 out_FragColor;
+void main() {
+	out_FragColor = vec4( 1.0 );
+}
+</script>
+
+var material = new THREE.ShaderMaterial( {
+	vertexShader: document.getElementById( 'vs' ).textContent.trim(),
+	fragmentShader: document.getElementById( 'fs' ).textContent.trim()
+} );
+
+
+material.side = THREE.DoubleSide
+
+
+https://github.com/mrdoob/three.js/tree/dev/examples/js/loaders
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+...

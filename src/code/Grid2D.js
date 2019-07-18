@@ -323,6 +323,12 @@ Grid2D.Cell.prototype.count = function(){
 	}
 	return 0;
 }
+Grid2D.Cell.prototype.firstObject = function(){
+	if(this._objects.length>0){
+		return this._objects[0];
+	}
+	return null;
+}
 Grid2D.Cell.prototype.objects = function(){
 	return this._objects;
 }

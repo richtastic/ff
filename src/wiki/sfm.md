@@ -12,6 +12,7 @@
 0) [Trifocal Tensor](#TRIFOCAL)
 0) [Stereo Matching](#STEREO)
 0) [Pair Guessing](#BAGOFWORDS)
+0) [Dense Matching](#DENSE)
 0) [Pair Reconstruction](#PAIRS)
 0) [Triplet Reconstruction](#TRIPLES)
 0) [Multi View Reconstruction](#MULTIVIEW)
@@ -249,6 +250,41 @@ Some summary statistics / features of each image can be used to compare overlap
 
 progressive comparisons
 	- perform easy calculations early on to discard candidate / to avoid wasted time on complicated calculations later
+
+
+
+
+<a name="DENSE"></a>
+### Dense Matching
+input:
+    - fair number of accurate sparse matches [&approx;10+]
+    - low reprojection error F [&approx;<1]
+output:
+    - dense (on order of image pixels: 10%-100%) matches
+
+#### Stereo Matching
+- pair matches with only small disparity changes (small baseline)
+    
+    - hierarchical ordered stereo matching
+
+    - Image Rectification
+        - simply homogaphy of dominant plane
+        - nonlinear common F-line mapping
+
+#### Image Registration
+- wide baseline / high disparity / sporatic disparity 
+    - cost functions:
+        - SSD | SAD | NCC | Entropy | Mututal Information
+
+    - hierarchical progressive localization
+
+    - minor affine changes
+        - inital guess/state is assumed very close to 
+            - affine cost minimization of patch
+            - change in corner location to define affine transform
+
+
+
 
 
 

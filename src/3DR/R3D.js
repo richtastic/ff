@@ -31606,6 +31606,87 @@ R3D._gdTriMatchSAD = function(args, x, isUpdate){
 //
 // }
 
+R3D.jointHistogram = function(imageA,imageB, bins){ // assumed same size
+	bins = bins!==undefined ? bins : 10;
+	var bm1 = bins-1;
+	var count = bins*bins;
+	var histogram = Code.newArrayZeros(count);
+	var gryA = imageA.gry();
+	var gryB = imageB.gry();
+	var wid = imageA.width();
+	var hei = imageA.height();
+	var cnt = wid*hei;
+	for(var i=0; i<cnt; ++i){
+		var valA = gryA[i];
+		var valB = gryB[i];
+		valA = Math.min(Math.floor(valA*bins),bm1);
+		valB = Math.min(Math.floor(valB*bins),bm1);
+		var index = bins*valB + valA;
+		histogram[index] += 1;
+	}
+	return histogram;
+	// colors has much more bins and is much more sparse
+}
+R3D.singleHistogram = function(image, bins){
+	bins = bins!==undefined ? bins : 10;
+	var bm1 = bins-1;
+	var histogram = Code.newArrayZeros(bins);
+	var gry = image.gry();
+	var wid = image.width();
+	var hei = image.height();
+	var cnt = wid*hei;
+	for(var i=0; i<cnt; ++i){
+		var val = gry[i];
+		val = Math.min(Math.floor(val*bins),bm1);
+		histogram[val] += 1;
+	}
+	return histogram;
+	// colors has much more bins and is much more sparse
+}
+R3D.mutualInformation = function(imageA,imageB, maskAB){
+	var bins = 10;
+	var histA = R3D.singleHistogram(imageA,bins);
+	var histB = R3D.singleHistogram(imageB,bins);
+	var histAB = R3D.jointHistogram(imageA,imageB,bins);
+	var entropyA = R3D.entropyFromHistogram(histA);
+	var entropyB = R3D.entropyFromHistogram(histB);
+	var entropyAB = R3D.entropyFromHistogram(histAB);
+	var mi = entropyA + entropyB - entropyAB;
+	// console.log(histA);
+	// console.log(histB);
+	// console.log(histAB);
+	// console.log(entropyA);
+	// console.log(entropyB);
+	// console.log(entropyAB);
+	// console.log(mi);
+	return mi;
+}
+R3D.entropyFromHistogram = function(hist){
+	var bins = hist.length;
+	var count = 0;
+	for(var i=0; i<bins; ++i){
+		var freq = hist[i];
+		count += freq;
+	}
+	if(count==0){
+		return 0;
+	}
+	var entropy = 0;
+	for(var i=0; i<bins; ++i){
+		var freq = hist[i];
+		if(freq<=0){
+			continue;
+		}
+		var prob = freq/count;
+		entropy += prob * Math.log(prob);
+	}
+	return -entropy;
+}
+R3D.searchNeedleHaystackMIColor = function(needle,haystack,needleMask){
+	var mi = R3D.mutualInformation(needle,haystack,needleMask);
+	var score = -mi; // larger is better
+	return {"values":[mi], "width":1, "height":1};
+}
 
 R3D.searchNeedleHaystackSADColor = function(needle,haystack,needleMask){
 	var needleWidth = needle.width();

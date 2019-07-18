@@ -369,6 +369,124 @@ https://cloud.google.com/appengine/docs/nodejs/
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+-
+=> regularization of new cells [~50% from predicted, ~50% from expected]
+	- after predicted points are found ... some manner of averaging with expected locations
+
+=> average affine / corner matrix
+
+- 4 corner affine doesn't seem to work well
+	=> try exhaustive AFFINE method
+
+- if affine estimations OR locations estimates are high error:
+	=> as gaps open the jumping search distance for predicted location can get pretty small
+		=> predicted locations can be far away from actual locations
+
+[invalidated are ignored during division - propagation]
+- invalidate matches that go outside imageB
+- invalidate matches with poor scores
+
+
+- why is constrained F worse than free range?
+	=> large scale objects have a lot of distortion, and the average location might be far off the central F-location
+		=> might need to wait to use F until the cell sizes are on the order of the F-range pixel error
+	- debug:
+		- show search ranges
+		- show matched locations
+
+
+
+
+
+TODO: HANDLE AFFINE/ POINTS OUTSIDE OF IMAGE WINDOW(S)
+
+
+
+- some key points to base searching algorithm on:
+	A) 'up' predicted by F should be very accurate [under 10 deg]
+	B) searching direction should be primarily along F line (+/- pixel error in Y)
+	C) at each iteration, 'affine' transform should be fairly accurate [only require tiny distortions locally]
+	D) the more refined the search size, the smaller the distortion error is expected to be [~halving]
+	E) affine transform can be determined from 4 local points location searches
+		- points outside image A / image B cannot be considered [try inside-local size, eg: 1-10% of image]
+
+
+
+
+- instead of finding best transform of AFFINE IMAGE:
+	=> use 4 corners to find best LOCATION
+	=> infer affine transform from 4 corner points
+
+
+- seeding prioritization:
+	- distinctiveness
+		- color differentials
+		[allow for not selecting a gradient before a corner]
+
+- compare ACTUAL BEST POINT W/ REACHED BEST POINT
+
+- try 'exhaustive' range check to see which is better
+
+
+- smaller search range as cell size gets smaller on each division
+
+ImageMat.prototype.extractRectFromFloatImage = function(x,y,scale,sigma,w,h,matrix){
+
+ImageMat.extractRectFromFloatImage
+
+var img = ImageMat.extractRect(imgSource, TL.x,TL.y, TR.x,TR.y, BR.x,BR.y, BL.x,BL.y, wid,hei, imgWid,imgHei);
+
+
+
+
+
+Nelder - Mead
+http://www.scholarpedia.org/article/Nelder-Mead_algorithm
+https://www.scilab.org/sites/default/files/neldermead.pdf
+https://github.com/huttmf/nelder-mead
+http://www.jasoncantarella.com/downloads/NelderMeadProof.pdf
+https://en.wikipedia.org/wiki/Nelder%E2%80%93Mead_method
+
+
+
+
+
+- image alignment
+	Lucas Kanade alignment http://16720.courses.cs.cmu.edu/lec/alignment.pdf
+		- gradients?
+			- manual hessian & gradient
+			Lucas-Kanade 20 Years On: A Unifying Framework
+
+
+
+The simplex search algorithm (Nelder and Mead, 1965)
+https://www.scilab.org/sites/default/files/neldermead.pdf
+
+
+Newton-Raphson
+
+
+
+- radial gaussian window
+
+- cost function - convex finding minimum
+	- SSD ?
+	- MSD MEAN SQUARED DIFFERENCE = 1/N * SSD
+	- normalized mutual information
+	- CR - correlation ratio
+	- joint entropy minimization
+	- mutual information maximization: MI(I,J|T) = SUM_i,j p_i.j * log ( p_i,j / (p_i * p_j) )
+		- maximized joint histogram is 'sharpest'
+	-
+...
+http://www.cs.ucf.edu/~bagci/teaching/mic17/lec16.pdf
+minimum entropy registration
+maximum mutual information registration
+
+
+
+
+
 - CONFIRM that stereo is bad because of high differences / disparity by testing more similar pair:
 	- room0/room1
 

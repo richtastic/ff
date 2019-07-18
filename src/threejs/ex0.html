@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset=utf-8>
+		<title>EX0 - Three.js</title>
+		<style>
+			body { margin: 0; }
+			canvas { width: 100%; height: 100% }
+		</style>
+	</head>
+	<body>
+		<script src="js/three.js"></script>
+		<!-- <script type="text/javascript" src="assets/helvetiker_regular.typeface.js"></script> -->
+		<script>
+
+		var scene = new THREE.Scene();
+		var camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
+
+		var renderer = new THREE.WebGLRenderer();
+		renderer.setSize( window.innerWidth, window.innerHeight );
+		document.body.appendChild( renderer.domElement );
+
+		var geometry = new THREE.BoxGeometry( 1, 1, 1 );
+		var material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
+		var cube = new THREE.Mesh( geometry, material );
+		scene.add( cube );
+
+		camera.position.z = 5;
+
+
+		//create a blue LineBasicMaterial
+		var material = new THREE.LineBasicMaterial( { color: 0x0000ff } );
+		var geometry = new THREE.Geometry();
+		geometry.vertices.push(new THREE.Vector3( -10, 0, 0) );
+		geometry.vertices.push(new THREE.Vector3( 0, 2, 0) );
+		geometry.vertices.push(new THREE.Vector3( 10, 0, 0) );
+		var line = new THREE.Line( geometry, material );
+		scene.add( line );
+		// new THREE.TextGeometry( text, parameters );
+		// var material = new THREE.MeshPhongMaterial({
+		// 	color: 0xdddddd
+		// });
+		// var textGeom = new THREE.TextGeometry( 'Hello World!', {
+		// 	font: 'arial', // Must be lowercase!
+		// 	weight: 'normal',
+		// });
+		// var textMesh = new THREE.Mesh( textGeom, material );
+		// scene.add( textMesh );
+		var loader = new THREE.FontLoader();
+			loader.load( 'assets/helvetiker_regular.typeface.json', function ( font ) {
+			var textGeom = new THREE.TextGeometry( 'Hello three.js!', {
+				font: font,
+				size: 80,
+				height: 1,
+				curveSegments: 12,
+				bevelEnabled: true,
+				bevelThickness: 0,
+				bevelSize: 1,
+				bevelOffset: 0,
+				bevelSegments: 5,
+			} );
+			var textMesh = new THREE.Mesh( textGeom, material );
+			console.log(textMesh);
+			var s = 0.01;
+			textMesh.scale.x = s;
+			textMesh.scale.y = s;
+			textMesh.scale.z = s;
+			scene.add( textMesh );
+		} );
+
+
+		function animate(){
+			cube.rotation.x += 0.01;
+			cube.rotation.y += 0.01;
+			requestAnimationFrame( animate ); // calls animate again
+			renderer.render( scene, camera );
+		}
+		animate();
+
+
+
+		</script>
+	</body>
+</html>
