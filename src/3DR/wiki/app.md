@@ -369,23 +369,44 @@ https://cloud.google.com/appengine/docs/nodejs/
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
--
-=> regularization of new cells [~50% from predicted, ~50% from expected]
-	- after predicted points are found ... some manner of averaging with expected locations
 
-=> average affine / corner matrix
+- logical step-by-step seeding stereo algorithm:
+	- progressive affine/location matching on source image
+		- this helps avoid repeated structure by spreading out matching areas
+		- this helps expand seed range by not focusing on only the top best matches
+	- repeat opposite direction
+	=> 1000~2000 matches
+	- keep all forward-backward matches within ~2 pixels [locations need not be exact]
+	=> 100~500 matches
+		=> the sparse points can be used as nearest neighbor to interpolate densly for all between points
+	- get rectifications of image A & B
+	- map seed locations from sources A&B to rectified A&B via epipole angle / distance
+	- initialize disparity map for rectified A&B using horizontal=>vertical hole filling
+	- use disparity map at 1/2-1/4 stereo size as initial scale offset
+	++++ALTERNATE++++
+	- refine fwd-bak match locations
+	- use as seed points in cell propagation
+	- ...
+
 
 - 4 corner affine doesn't seem to work well
-	=> try exhaustive AFFINE method
+	=> try exhaustive AFFINE method : 5x5 / 9x9
+		- poor as well
 
-- if affine estimations OR locations estimates are high error:
-	=> as gaps open the jumping search distance for predicted location can get pretty small
-		=> predicted locations can be far away from actual locations
 
-[invalidated are ignored during division - propagation]
-- invalidate matches that go outside imageB
-- invalidate matches with poor scores
 
+
+
+
+- [invalidated are ignored during division - propagation]
+	- invalidate matches that go outside imageB
+	- invalidate matches with poor scores
+
+- at small enough scale affine can be determined by locations of neighbors A->B
+	- blend/ignore inherited affine matrix
+
+=> regularization of new cells [~50% from predicted, ~50% from expected]
+	- after predicted points are found ... some manner of averaging with expected locations
 
 - why is constrained F worse than free range?
 	=> large scale objects have a lot of distortion, and the average location might be far off the central F-location
@@ -394,11 +415,34 @@ https://cloud.google.com/appengine/docs/nodejs/
 		- show search ranges
 		- show matched locations
 
+=> F should be used as much as possible to A) search more-correct locations & B) reduce search spaces
+	- predicted location clamp to F [+/- pixel error]
+	- search range only along F line [+/- pixel error]
+	-
+
+- maybe cell comparison size should be a little larger than the cell ? => would this help with making things more gradual ?
+
+- output final matches
+
+- forward backward match checking
+
+- final sub-pixel localization speed ups?
 
 
 
 
-TODO: HANDLE AFFINE/ POINTS OUTSIDE OF IMAGE WINDOW(S)
+2nd step?:
+	A) seed dense stereo disparities
+	B) cell seed point propagation from first step
+
+
+
+- 1:1 rectified image stereo
+	- collapse multi-mapped rows
+	- repeat
+=> does using this help speed up search ?
+
+
 
 
 

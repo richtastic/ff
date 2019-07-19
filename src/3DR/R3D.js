@@ -7593,11 +7593,9 @@ R3D._affineMatrixSteps = function(pointA,pointB,pointC){
 	//console.log("   1?: "+(AC.x + AC.x*skewX));
 	return {"translateX":transX,"translateY":transY,"rotate":angle,"skewX":skewX,"scaleX":scaleX,"scaleY":scaleY};
 }
-R3D.affineMatrixExact = function(pointsA,pointsB){ // first 3 points of A & B
+R3D.affineMatrixExact = function(pointsA,pointsB, m){ // first 3 points of A & B
 	var sequenceA = R3D._affineMatrixSteps(pointsA[0],pointsA[1],pointsA[2]);
 	var sequenceB = R3D._affineMatrixSteps(pointsB[0],pointsB[1],pointsB[2]);
-	// console.log(sequenceA);
-	// console.log(sequenceB);
 	var aTX = sequenceA["translateX"];
 	var aTY = sequenceA["translateY"];
 	var aRo = sequenceA["rotate"];
@@ -7610,17 +7608,34 @@ R3D.affineMatrixExact = function(pointsA,pointsB){ // first 3 points of A & B
 	var bSK = sequenceB["skewX"];
 	var bSX = sequenceB["scaleX"];
 	var bSY = sequenceB["scaleY"];
-	var m = new Matrix(3,3).identity();
-	// forward A
-	m = Matrix.transform2DTranslate(m,aTX,aTY);
-	m = Matrix.transform2DRotate(m,aRo);
-	m = Matrix.transform2DSkewX(m,aSK);
-	m = Matrix.transform2DScale(m,aSX,aSY);
-	// reverse B
-	m = Matrix.transform2DScale(m,1.0/bSX,1.0/bSY);
-	m = Matrix.transform2DSkewX(m,-bSK);
-	m = Matrix.transform2DRotate(m,-bRo);
-	m = Matrix.transform2DTranslate(m,-bTX,-bTY);
+	if(!m){
+		var m = new Matrix(3,3);
+	}
+	if(Code.isa(m,Matrix)){
+		m.identity();
+		// forward A
+		m = Matrix.transform2DTranslate(m,aTX,aTY);
+		m = Matrix.transform2DRotate(m,aRo);
+		m = Matrix.transform2DSkewX(m,aSK);
+		m = Matrix.transform2DScale(m,aSX,aSY);
+		// reverse B
+		m = Matrix.transform2DScale(m,1.0/bSX,1.0/bSY);
+		m = Matrix.transform2DSkewX(m,-bSK);
+		m = Matrix.transform2DRotate(m,-bRo);
+		m = Matrix.transform2DTranslate(m,-bTX,-bTY);
+	}else{ // assume Matrix2D
+		m.identity();
+		// forward A
+		m.translate(aTX,aTY);
+		m.rotate(aRo);
+		m.skewX(aSK);
+		m.scale(aSX,aSY);
+		// reverse B
+		m.scale(1.0/bSX,1.0/bSY);
+		m.skewX(-bSK);
+		m.rotate(-bRo);
+		m.translate(-bTX,-bTY);
+	}
 	return m;
 }
 R3D.offsetFromAffine2D = function(affine){

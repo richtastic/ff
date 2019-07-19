@@ -3261,14 +3261,14 @@ Code.averageMatrices3D = function(matrixes, percents){ // average location offse
 	var result = Code.Matrix3DFromVectorTwist(average["offset"], average);
 	return result;
 }
-Code.averageAffineMatrices = function(affines, percents){
+Code.averageAffineMatrices = function(affines, percents, result){
 	var i, count = affines.length;
 	if(count==0){
 		return null;
 	}
 	var offsets = [];
-	var directions = [];
-	var interriors = [];
+	var directionsX = [];
+	var directionsY = [];
 	var magnitudesX = [];
 	var magnitudesY = [];
 	// collect
@@ -3280,39 +3280,28 @@ Code.averageAffineMatrices = function(affines, percents){
 		affine.multV2DtoV2D(o,o);
 		affine.multV2DtoV2D(x,x);
 		affine.multV2DtoV2D(y,y);
+		// console.log(o+" "+x+" "+y)
 		x.sub(o);
 		y.sub(o);
-		var z = Code.averageAngleVector2D([x,y]);
-		var a = V2D.angleDirection(x,y);
 		offsets.push(o);
-		directions.push(z);
-		interriors.push(a);
+		directionsX.push(x);
+		directionsY.push(y);
 		magnitudesX.push(x.length());
 		magnitudesY.push(y.length());
 	}
 	// average
 	var offset = Code.averageV2D(offsets,percents);
-	var direction = Code.averageAngleVector2D(directions,percents);
-	var interrior = Code.averageNumbers(interriors,percents);
+	var directionX = Code.averageAngleVector2D(directionsX,percents);
+	var directionY = Code.averageAngleVector2D(directionsY,percents);
 	var magnitudeX = Code.averageNumbers(magnitudesX,percents);
 	var magnitudeY = Code.averageNumbers(magnitudesY,percents);
-	var angle = V2D.angleDirection(V2D.DIRX,direction);
 	// final
-	var a = new V2D(1,0).rotate(angle).rotate(-interrior*0.5).scale(magnitudeX).add(offset);
-	var b = new V2D(1,0).rotate(angle).rotate( interrior*0.5).scale(magnitudeY).add(offset);
-	var affine = R3D.affineMatrixExact([V2D.ZERO.copy(),V2D.DIRX.copy(),V2D.DIRY.copy()],[offset,a,b]);
+	var angleX = V2D.angleDirection(V2D.DIRX,directionX);
+	var angleY = V2D.angleDirection(V2D.DIRX,directionY);
+	var a = new V2D(1,0).rotate(angleX).scale(magnitudeX).add(offset);
+	var b = new V2D(1,0).rotate(angleY).scale(magnitudeY).add(offset);
+	var affine = R3D.affineMatrixExact([V2D.ZERO,V2D.DIRX,V2D.DIRY],[offset,a,b], result);
 	return affine;
-	/*
-	ALT:
-	for each matrix:
-	get offset exact
-	get xscale
-	get yscale
-	get xdir & ydir & average
-	// AVERAGE:
-	offset = p2D
-
-	*/
 }
 Code.averageAngles = function(angles, percents){
 	var i, count = angles.length;
