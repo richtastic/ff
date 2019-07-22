@@ -370,49 +370,37 @@ https://cloud.google.com/appengine/docs/nodejs/
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-- any way to get path working?
-- absolute (w/o path) with some amount of hierarchy (refining SAD size too)
+- HOW TO PASS DISPARITY AT % OF SIZE
+- stereo absolute (w/o path) with some amount of hierarchy (refining SAD size too)
+
+
+
+- mbda * (summed average location) + lambda*(predicted location)
+- SPEED UP LAST STEP
+	- dont do any matrix averaging
+
+- DROPPING POOR SCORES
+	- invalidate cells with neighborhood score >> rest
+
+
 
 - better smoothing ?
-- better 2D interpolation ?
-
-- check dense stereo performance
-
-- REGULARIZATION
-- DROPPING POOR SCORES
 
 
+- any way to get path working?
 
+
+- need faster triangulation?
+	- use assumed grid & invalid points use nearest invalid neighbor values
 
 
 
-- logical step-by-step seeding stereo algorithm:
-	- progressive affine/location matching on source image
-		- this helps avoid repeated structure by spreading out matching areas
-		- this helps expand seed range by not focusing on only the top best matches
-	- repeat opposite direction
-	=> 1000~2000 matches
-	- keep all forward-backward matches within ~2 pixels [locations need not be exact]
-	=> 100~500 matches
-		=> the sparse points can be used as nearest neighbor to interpolate densly for all between points
-	- get rectifications of image A & B
-	- map seed locations from sources A&B to rectified A&B via epipole angle / distance
-	- initialize disparity map for rectified A&B using horizontal=>vertical hole filling
-	- use disparity map at 1/2-1/4 stereo size as initial scale offset
 	++++ALTERNATE++++
 	- refine fwd-bak match locations
 		- alternately: search area can be reduced to ~10% radius around matched points
 		- use as seeds
 	- use as seed points in cell propagation
 	- ...
-
-
-- 4 corner affine doesn't seem to work well
-	=> try exhaustive AFFINE method : 5x5 / 9x9
-		- poor as well
-
-
-
 
 
 

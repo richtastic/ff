@@ -9500,6 +9500,8 @@ R3D.arbitraryAffineMatches = function(imageMatrixA,imageMatrixB, Fab,Fba, points
 	}
 	console.log(count);
 
+// throw "..."
+
 	// rectify
 
 

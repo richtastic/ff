@@ -112,7 +112,18 @@ Tri2D.prototype.area = function(){
 	return Math.abs(V2D.cross(AB,AC)) * 0.5; // ?
 }
 Tri2D.prototype.center = function(){ // barycenter
-	return new V2D((this._a.x+this._b.x+this._c.x)/3.0, (this._a.y+this._b.y+this._c.y)/3.0);
+	return Tri2D.center(this._a,this._b,this._c);
+}
+Tri2D.center = function(v,a,b,c){ // barycenter
+	if(!c){
+		c = b;
+		b = a;
+		a = v;
+		v = new V2D();
+	}
+	v.x = (a.x+b.x+c.x)/3.0;
+	v.y = (a.y+b.y+c.y)/3.0;
+	return v;
 }
 Tri2D.prototype.copy = function(a){
 	if(a===undefined){ return new Tri2D(this.A(),this.B(),this.C()); }

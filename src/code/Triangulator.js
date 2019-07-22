@@ -1,4 +1,7 @@
 // Triangulator.js
+
+// delaunay iteritive triangulation
+
 Triangulator.EPSILON = 1E-10;
 
 function Triangulator(pointsStart){
@@ -117,33 +120,25 @@ Triangulator.Mesh.prototype.datas = function(){
 	for(i=0; i<len; ++i){
 		var point = points[i];
 		internals[i] = point.data();
-		//internals[point.id()] = point.data();
 	}
-	return internals;	return null;
+	return internals;
 }
-
 Triangulator.Mesh.prototype._dummyPoints = function(){
 	var dummyPoints = [this._dummyA,this._dummyB,this._dummyC];
 	return dummyPoints;
 }
-//Triangulator.Mesh.prototype.triangles = function(dropExternal){
 Triangulator.Mesh.prototype.triangles = function(){
-	//console.log("triangles")
 	var triangles = this._tris;
-	//console.log(triangles)
 	// remove external-perimeter triangles
 	var internals = [];
 	var i, len = triangles.length;
 	var dummyPoints = this._dummyPoints();
 	for(i=0; i<len; ++i){
-		//console.log(".  . . . ..  "+i);
 		var tri = triangles[i];
 		var points = tri.points();
 		var a = points[0];
 		var b = points[1];
 		var c = points[2];
-		// console.log(a,b,c);
-		// console.log(a+" | "+b+" | "+c+" | ");
 		if( !Code.elementExists(dummyPoints, a) && !Code.elementExists(dummyPoints, b) && !Code.elementExists(dummyPoints, c) ){
 			internals.push([a.id(),b.id(),c.id()]);
 		}
@@ -196,23 +191,18 @@ Triangulator.Mesh.prototype.perimeter = function(){
 			}
 		}
 	}
-	//return internals;
 	return sequence;
 }
 Triangulator.nextEdge = function(edge, dummyPoints){
-	//var next = edge.next().opposite().next();
 	var next = edge.opposite().prev().opposite().prev().opposite();
-		while( Code.elementExists(dummyPoints, next.b()) ){
-			//console.log("hop");
-			next = next.prev().opposite();
-			// if( Code.elementExists(dummyPoints, next.b()) ){
-			// 	console.log("hop 2");
-			// 	next = next.opposite().prev().opposite();
-			// }
-		}
-	// }else{
-	// 	return null;
-	// }
+	while( Code.elementExists(dummyPoints, next.b()) ){
+		//console.log("hop");
+		next = next.prev().opposite();
+		// if( Code.elementExists(dummyPoints, next.b()) ){
+		// 	console.log("hop 2");
+		// 	next = next.opposite().prev().opposite();
+		// }
+	}
 	return next;
 }
 
@@ -225,7 +215,6 @@ Triangulator.isInCircle = function(d, a,b,c){ // d inside circle made by a,b,c
 	var det = Code.determinant4x4(a.x, a.y, a.x*a.x+a.y*a.y, 1.0,  b.x, b.y, b.x*b.x+b.y*b.y, 1.0,  c.x, c.y, c.x*c.x+c.y*c.y, 1.0,  d.x, d.y, d.x*d.x+d.y*d.y, 1.0);
 	return det > 0;
 }
-
 Triangulator.Mesh.prototype.addPoints = function(points, datas){
 	var i, len = points.length;
 	for(i=0; i<len; ++i){
@@ -262,14 +251,8 @@ Triangulator.Mesh.prototype.removePoints = function(points, datas){
 	// REDO
 	this._init();
 	this.addPoints(pointList,dataList);
-	// for(j=0; j<pointList.length; ++j){
-	// 	var point = pointList[j];
-	// 	var data = dataList[j];
-	//	this.addPoint(point,data);
-	// }
 }
 Triangulator.Mesh.prototype.addPoint = function(point, data){
-	//console.log("addPoint "+point+" --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- --- ");
 	var points = this._points;
 	var pnt = new Triangulator.Point(point,data);
 	this._expandDummyForPoint(point);
@@ -313,6 +296,7 @@ Triangulator.Mesh.prototype.isExternal = function(tri){
 	return false;
 }
 Triangulator.Mesh.prototype.triangle = function(point, dropExternal){
+	// TODO: space lookup
 	var i, tri, tris = this._tris;
 	var len = tris.length;
 	for(i=0; i<len; ++i){
@@ -334,7 +318,6 @@ Triangulator.Mesh.prototype.triangle = function(point, dropExternal){
 	}
 	return null;
 }
-//Triangulator.Mesh.prototype.triangleNeighbors = function(point,andSelf){
 Triangulator.Mesh.prototype.triangleNeighbors = function(point,andSelf){
 	var triangle = null;
 	if(Code.isa(point,V2D)){
@@ -381,10 +364,7 @@ Triangulator.Mesh.prototype.triangleNeighbors = function(point,andSelf){
 	return neighbors;
 }
 Triangulator.Mesh.prototype.subdivide = function(tri, point){
-	//console.log("subdivide");
 	var minDistance = 1E-10;
-	//var tris = this._tris;
-	//console.log(tri+" @ "+point);
 	if(!tri){
 		console.log(tri+" @ "+point);
 		Code.printPoints(this.points());
@@ -559,7 +539,7 @@ this._edges.push(edgeAC_C);
 		edgeBC_C.next(edgeC);
 		edgeAC_C.prev(edgeC);
 		edgeAC_C.next(edgeBC_C);
-		// 
+		//
 		edgeA.tri(triA);
 		edgeB.tri(triB);
 		edgeC.tri(triC);
@@ -618,7 +598,6 @@ this._tris.push(triC);
 		this.validateEdge(point,triC);
 	}
 }
-
 Triangulator.isPointInside = function(point, a,b,c){
 	var eps = 1E-8;
 	var circle = Code.circleFromPoints(a,b,c);
@@ -661,7 +640,7 @@ Triangulator.Mesh.prototype.validateEdge = function(point,tri){//,edge){
 	var pointTriA = points[0];
 	var pointTriB = points[1];
 	var pointTriC = points[2];
-	
+
 	//
 	var isInCircleA = Triangulator.isInCircle(triPoint.point(), pointAdjA.point(),pointAdjB.point(),pointAdjC.point());
 	var isInCircleB = Triangulator.isInCircle(adjPoint.point(), pointTriA.point(),pointTriB.point(),pointTriC.point());
@@ -672,7 +651,7 @@ Triangulator.Mesh.prototype.validateEdge = function(point,tri){//,edge){
 
 	// console.log("     1: "+triPoint.point()+" "+pointAdjA.point()+" "+pointAdjB.point()+" "+pointAdjC.point()+" ");
 	// console.log("     2: "+adjPoint.point()+" "+pointTriA.point()+" "+pointTriB.point()+" "+pointTriC.point()+" ");
-	// 3: 
+	// 3:
 	// var insideA = Triangulator.isPointInside(triPoint.point(), pointAdjA.point(),pointAdjB.point(),pointAdjC.point());
 	// var insideB = Triangulator.isPointInside(adjPoint.point(), pointTriA.point(),pointTriB.point(),pointTriC.point());
 	// var isInCircle = insideA || insideB;
@@ -895,7 +874,6 @@ Triangulator.Point.prototype.id = function(i){
 	return this._id;
 }
 Triangulator.Point.prototype.toString = function(){
-	//return "[P: "+this._point+" | "+this._data+" ]";
 	return "[P: "+this._point+" ("+this._id+") ]";
 }
 Triangulator.Point.prototype.point = function(p){
@@ -910,10 +888,3 @@ Triangulator.Point.prototype.data = function(d){
 	}
 	return this._data;
 }
-
-
-
-
-
-
-

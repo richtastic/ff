@@ -30,83 +30,118 @@ ImageMapper.prototype.interpolateMatches = function(matchesAB, imageA, imageB, p
 	var countA = widthA*heightA;
 	var widthBM1 = widthB-1;
 	var heightBM1 = heightB-1;
-	var toV2D = function(a){
-		return a["A"];
-	}
-	var spaceA = new QuadTree(toV2D, new V2D(0,0), new V2D(widthA,heightA));
-	var pixelsA = Code.newArrayNulls(countA);
+	// triangulate existing points
+	console.log("triangulating start");
+	var minX = 0 - widthA;
+	var maxX = widthA + widthA;
+	var minY = 0 - heightA;
+	var maxY = heightA + heightA;
+	var triangulator = new Triangulator();
+	var min = new V2D(minX,minY);
+	var max = new V2D(maxX,maxY);
+	triangulator.setLimits(min,max);
+	// triangle vertexes
+	var points = [];
+	var datas = [];
 	for(var i=0; i<matchesAB.length; ++i){
 		var match = matchesAB[i];
-		spaceA.insertObject(match);
-		// spaceA.insertObject({"A":match["A"], "B":match["B"]});
+		points.push(match["A"]);
+		datas.push(match);
 	}
-	var epsilon = 1E-6; // 10% pixel
+	triangulator.addPoints(points, datas);
+	var vertexes = triangulator.points();
+	var datas = triangulator.datas();
+	var tris = triangulator.triangles();
+	var perimeter = triangulator.perimeter();
+	var toV2D = function(a){
+		return a["center"];
+	}
+	var spaceA = new QuadTree(toV2D, new V2D(0,0), new V2D(widthA,heightA));
+	for(var i=0; i<tris.length; ++i){
+		var tri = tris[i];
+		var ai = tri[0];
+		var bi = tri[1];
+		var ci = tri[2];
+		var a = vertexes[ai];
+		var b = vertexes[bi];
+		var c = vertexes[ci];
+		var center = Tri2D.center(a,b,c);
+			a = datas[ai];
+			b = datas[bi];
+			c = datas[ci];
+		spaceA.insertObject({"center":center,"A":a,"B":b,"C":c});
+	}
 	var point = new V2D();
 	var avg = new V2D();
+	var coords = new V3D();
+	var pixelsA = Code.newArrayNulls(countA);
 	for(var j=0; j<heightA; ++j){
 		point.y = j;
 		for(var i=0; i<widthA; ++i){
 			point.x = i;
 			var index = j*widthA + i;
-			// var aNN = spaceA.kNN(point,10);
-			// var aNN = spaceA.kNN(point,4);
-			// var aNN = spaceA.kNN(point,3);
-			var aNN = spaceA.kNN(point,5); // 3-5
-			// var aNN = spaceA.kNN(point,1);
-			// source distances
-			var totD = 0;
-			var distances = [];
-			var errors = [];
-			for(var k=0; k<aNN.length; ++k){
-				var a = aNN[k];
-				var e = a["error"];
-					a = a["A"];
-				errors.push(e);
-				// console.log(e);
-				// throw "?"
-				// var d = 1.0/(V2D.distance(point,a)+epsilon);
-				var d = 1.0/(V2D.distanceSquare(point,a)+epsilon);
-				// var d = 1.0/(Math.pow(V2D.distanceSquare(point,a),2)+epsilon);
-				//var d = 1;
-				// var d = e;
-				distances.push(d);
-				totD += d;
+			var closest = spaceA.closestObject(point);
+			var a = closest["A"];
+			var b = closest["B"];
+			var c = closest["C"];
+			var va = a["A"];
+			var vb = b["A"];
+			var vc = c["A"];
+			// hack for searching thru all adjacent triangles:
+			// exhaustive search in area for the triangle it is interior to:
+			var longestEdge = Math.max( V2D.distanceSquare(va,vb), V2D.distanceSquare(va,vc), V2D.distanceSquare(vb,vc) );
+			var area = spaceA.objectsInsideCircle(point, longestEdge*0.5);
+			var isInside = false;
+			for(var k=0; k<area.length; ++k){
+				var tri = area[k];
+				var ta = tri["A"];
+				var tb = tri["B"];
+				var tc = tri["C"];
+				var ua = ta["A"];
+				var ub = tb["A"];
+				var uc = tc["A"];
+				isInside = Code.isPointInsideTri2DFast(point,ua,ub,uc);
+				if(isInside){
+					closest = tri;
+					a = ta;
+					b = tb;
+					c = tc;
+					va = ua;
+					vb = ub;
+					vc = uc;
+					break;
+				}
 			}
-			var percents = Code.errorsToPercents(distances);
-				percents = percents["percents"];
-			totD = 1.0/totD;
-			var weights = [];
-			var totalW = 0;
-			for(var k=0; k<aNN.length; ++k){
-				var d = distances[k];
-				var e = errors[k];
-				var w = e*d*totD;
-				weights.push(w);
-				totalW += w;
+			isInside = true; // need second space to get closest vertex point
+			if(isInside){
+				Code.triBarycentricCoordinate2D(coords, va,vb,vc, point);
+				// console.log(coords);
+				// var errors = [a["error"],b["error"],c["error"]];
+				// var percents = Code.errorsToPercents(errors);
+				// 	percents = percents["percents"];
+				avg.x = coords.x*a["B"].x + coords.y*b["B"].x + coords.z*c["B"].x;
+				avg.y = coords.x*a["B"].y + coords.y*b["B"].y + coords.z*c["B"].y;
+			}else{ // should be choosing from closest POINT, not triangle center ... need second space
+				var da = V2D.distanceSquare(point,va);
+				var db = V2D.distanceSquare(point,vb);
+				var dc = V2D.distanceSquare(point,vc);
+				if(da<=db && da<=dc){
+					closest = a;
+				}else if(db<=da && db<=dc){
+					closest = b;
+				}else{
+					closest = c;
+				}
+				avg.x = closest["B"].x;
+				avg.y = closest["B"].y;
 			}
-			totalW = 1.0/totalW;
-			avg.x = 0; avg.y = 0;
-			for(var k=0; k<aNN.length; ++k){
-				var a = aNN[k];
-				var b = a["B"];
-				// var d = distances[k];
-				// var e = errors[k];
-				// var p = d*totD;
-					// p = percents[k];
-				var p = weights[k]*totalW;
-				avg.x += p*b.x;
-				avg.y += p*b.y;
-			}
-			// average point mapping (score based?)
-			// if(0<=avg.x && avg.x<=widthBM1 && 0<=avg.y && avg.y<=heightBM1){
-				pixelsA[index] = avg.copy();
-			// }
+			pixelsA[index] = avg.copy();
 		}
 	}
-	spaceA.kill();
+	console.log("triangulating end");
 
-// if(false){
-if(true){
+if(false){
+// if(true){
 	// smoothing
 	var dx = [];
 	var dy = [];
@@ -155,10 +190,35 @@ if(true){
 	d.matrix().translate(10 + 550, 10 + 450*INTERPOLATE_CALLS );
 	GLOBALSTAGE.addChild(d);
 	// d.graphics().alpha(0.50);
+
+	// show triangles:
+	var cont = d;
+	var tris = spaceA.toArray();
+	for(var i=0; i<tris.length; ++i){
+		break;
+		var tri = tris[i];
+		var a = tri["A"]["A"];
+		var b = tri["B"]["A"];
+		var c = tri["C"]["A"];
+		var d = new DO();
+			d.graphics().setLine(1.0, 0xFFFF0000);
+			d.graphics().beginPath();
+			d.graphics().moveTo(a.x,a.y);
+			d.graphics().lineTo(b.x,b.y);
+			d.graphics().lineTo(c.x,c.y);
+			d.graphics().endPath();
+			d.graphics().strokeLine();
+		// d.matrix().translate(10 + 550, 10 + 450*INTERPOLATE_CALLS );
+		cont.addChild(d);
+	}
+
+
 	++INTERPOLATE_CALLS;
 }
 
 
+
+	spaceA.kill();
 
 
 	return pixelsA;
@@ -746,15 +806,16 @@ var centerB = pointB.copy();
 // var divisions = 1; // 4
 // var divisions = 2; // 16
 // var divisions = 3; // 64
-var divisions = 4; // 256
-// var divisions = 5; // 1024
+// var divisions = 4; // 256
+var divisions = 5; // 1024
 // var divisions = 6; // 4096 // MAXIMUM
 // var divisions = 7; // 16384 // ~ order of pixels
 	for(var i=0; i<divisions; ++i){
 	console.log(" iteration: "+i+" / "+divisions);
+		var isLast = i == divisions-1;
 		layer = layer.divide();
-		layer.searchOptimalNeighborhood(imageA,imageB, F,Finv,ptsA,ptsB);
-		layer.postProcessNeighborhood(imageA,imageB, F,Finv,ptsA,ptsB);
+		layer.searchOptimalNeighborhood(imageA,imageB, F,Finv,ptsA,ptsB, isLast);
+		layer.postProcessNeighborhood(imageA,imageB, F,Finv,ptsA,ptsB, isLast);
 		// VOTE BASED ON VALUE & NEIGHBORS
 	}
 	// have a bunch of matches: interpolate between local affines
@@ -1759,7 +1820,8 @@ ImageMapper.GridLayer.prototype.kill = function(){
 	this._parent = null;
 }
 
-ImageMapper.GridLayer.prototype.searchOptimalNeighborhood = function(imageA,imageB, F,Finv,ptsA,ptsB){
+ImageMapper.GridLayer.prototype.searchOptimalNeighborhood = function(imageA,imageB, F,Finv,ptsA,ptsB, isLast){
+	isLast = isLast!==undefined ? isLast : false;
 	var widthA = imageA.width();
 	var heightA = imageA.height();
 	var widthB = imageB.width();
@@ -1890,15 +1952,81 @@ var d = pToC.length();
 		}
 	}
 }
-ImageMapper.GridLayer.prototype.postProcessNeighborhood = function(imageA,imageB, F,Finv,ptsA,ptsB){
-
+ImageMapper.GridLayer.prototype.postProcessNeighborhood = function(imageA,imageB, F,Finv,ptsA,ptsB, isLast){
+	isLast = isLast!==undefined ? isLast : false;
+	if(isLast){
+		return;
+	}
+	var lambda = 0.25; // regularization averaging : 0 = all peak score| 1 = all predicted --- [0.0-0.5]
+	var lm1 = 1.0 - lambda;
+	var grid = this.grid();
+	var cells = grid.cells();
+	if(cells.length<=1){ // no-op
+		return;
+	}
 	// invalidate very poor scores
+	for(var i=0; i<cells.length; ++i){
+		var cell = cells[i];
+		var c = cell.firstObject();
+		if(!c.isValid()){ // no pointB
+			continue;
+		}
+		var pointA = c.pointA();
+		var pointB = c.pointB();
+		var neighbors = grid.neighbor9CellsForCell(cell);
+		var errors = [];
+		var predicted = [];
+		for(var j=0; j<neighbors.length; ++j){
+			var neighbor = neighbors[j];
+			var n = neighbor.firstObject();
+			if(!n.isValid()){
+				continue;
+			}
+			var error = n.error();
+			var nA = n.pointA();
+			var nB = n.pointB();
+			var dA = V2D.sub(pointA,nA);
+			var aff = n.affine();
+			// var dB = V2D.sub(pointB,nB);
+			predictedB = aff.multV2DtoV2D(dA);
+			predictedB.add(nB);
+			errors.push(error);
+			predicted.push(predictedB);
+		}
 
+		// todo: regularize direction / affine too ?
+		// if(errors.length>0){
+			var percents = Code.errorsToPercents(errors);
+				percents = percents["percents"];
+			var avg = Code.averageV2D(predicted,percents);
+// console.log("predictedB:");
+// 			console.log(predicted);
+// 			console.log(pointB);
+// 			console.log(avg+"");
+			avg.x = lambda*avg.x + lm1*pointB.x;
+			avg.y = lambda*avg.y + lm1*pointB.y;
+// console.log(avg+"");
+			// throw "?"
+			c.temp(avg.copy());
+		// }
+		// console.log(pointB);
+		// console.log(errors);
+		// console.log(cell);
+	}
+	// apply
+	for(var i=0; i<cells.length; ++i){
+		var cell = cells[i];
+		var c = cell.firstObject();
+		var newB = c.temp();
+		if(newB){
+			c.pointB(newB);
+			c.temp(null);
+		}
+	}
 	// regularization averaging
 
 
 	// throw "TODO";
-
 }
 RENDER_CALLS = 0;
 ImageMapper.GridLayer.prototype.render = function(imageA,imageB){
@@ -1992,7 +2120,7 @@ ImageMapper.Cell = function(){
 	this._parent = null;
 	this._error = null;
 	this._pointA = null;
-	// this._grid = null;
+	this._temp = null;
 	// var size = Math.max(width,height);
 	// this._size = size;
 	// this._offset = new V2D(size*0.5,size*0.5);
@@ -2015,6 +2143,12 @@ ImageMapper.Cell.prototype.parent = function(cell){
 		this._parent = cell;
 	}
 	return this._parent;
+}
+ImageMapper.Cell.prototype.temp = function(temp){
+	if(temp!==undefined){
+		this._temp = temp;
+	}
+	return this._temp;
 }
 ImageMapper.Cell.prototype.addChild = function(cell){
 	this._children.push(cell);
@@ -2055,6 +2189,8 @@ ImageMapper.Cell.prototype.pointA = function(pointA){
 ImageMapper.Cell.prototype.pointB = function(pointB){
 	if(pointB!==undefined){
 		this._pointB = pointB;
+		this._x = this._pointB.x - this._pointA.x;
+		this._y = this._pointB.y - this._pointA.y;
 	}
 	return this._pointB;
 }
