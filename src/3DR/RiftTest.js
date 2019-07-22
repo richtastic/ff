@@ -21,8 +21,8 @@ function RiftTest(){
 	this._stage.root().addChild(this._root);
 
 	this._stage.root().addChild(this._root);
-	// new ImageLoader("./images/",["bench_A.png", "bench_B.png"],this,this.imagesLoadComplete).load();
-	new ImageLoader("./images/",["room0.png", "room2.png"],this,this.imagesLoadComplete).load();
+	new ImageLoader("./images/",["bench_A.png", "bench_B.png"],this,this.imagesLoadComplete).load();
+	// new ImageLoader("./images/",["room0.png", "room2.png"],this,this.imagesLoadComplete).load();
 
 // bad = unusable
 // poor = minimal points / inaccurate
@@ -4403,8 +4403,8 @@ cy: 0.4746370298801608
 
 RiftTest.prototype.testStereo = function(imageA,imageB){
 
-var doBench = false;
-// var doBench = true;
+// var doBench = false;
+var doBench = true;
 
 var Fab, Fba, pointsA,pointsB;
 
@@ -5348,9 +5348,9 @@ Fba = R3D.fundamentalInverse(Fab);
 
 
 
-// var results = R3D.arbitraryAffineMatches(imageA,imageB, Fab,Fba, pointsA,pointsB);
-var results = R3D.arbitraryAffineMatches(imageB,imageA, Fba,Fab, pointsB,pointsA);
-console.log(results);
+var results = R3D.arbitraryAffineMatches(imageA,imageB, Fab,Fba, pointsA,pointsB);
+// var results = R3D.arbitraryAffineMatches(imageB,imageA, Fba,Fab, pointsB,pointsA);
+// console.log(results);
 throw "..."
 
 // var results = R3D.arbitraryStereoMatches(imageA,imageB, Fab,Fba, pointsA,pointsB);
