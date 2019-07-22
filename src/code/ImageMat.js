@@ -3680,10 +3680,12 @@ ImageMat.meanFilter = function(src,wid,hei, w,h){
 		for(i=0;i<len;++i){ filter[i] = num; }
 		ImageMat.convolve(src,wid,hei, filter, w,h);
 	}
-	return ImageMat.convolve(src,wid,hei, [1/9,1/9,1/9, 1/9,1/9,1/9, 1/9,1/9,1/9], 3,3);
+	var n = 1.0/9.0;
+	return ImageMat.convolve(src,wid,hei, [n,n,n, n,n,n, n,n,n], 3,3);
 }
 ImageMat.medianFilter = function(src,wid,hei, w,h){
 	// .. nonlinear
+	throw "todo";
 	return ImageMat.convolve(src,wid,hei, [0], 1,1);
 }
 

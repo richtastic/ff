@@ -370,6 +370,20 @@ https://cloud.google.com/appengine/docs/nodejs/
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
+- better smoothing ?
+- better 2D interpolation ?
+
+- check dense stereo performance
+
+- REGULARIZATION
+- DROPPING POOR SCORES
+
+
+
+
+
+
 - logical step-by-step seeding stereo algorithm:
 	- progressive affine/location matching on source image
 		- this helps avoid repeated structure by spreading out matching areas
@@ -385,6 +399,8 @@ https://cloud.google.com/appengine/docs/nodejs/
 	- use disparity map at 1/2-1/4 stereo size as initial scale offset
 	++++ALTERNATE++++
 	- refine fwd-bak match locations
+		- alternately: search area can be reduced to ~10% radius around matched points
+		- use as seeds
 	- use as seed points in cell propagation
 	- ...
 

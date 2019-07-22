@@ -13,7 +13,7 @@ function RiftTest(){
 		// d.graphics().setFill(0xFFCCCCCC);
 		d.graphics().setFill(0xFF000088);
 		d.graphics().beginPath();
-		d.graphics().drawRect(0,0,2000,1000);
+		d.graphics().drawRect(0,0,3000,1500);
 		d.graphics().endPath();
 		d.graphics().fill();
 	this._stage.root().addChild(d);
@@ -4403,8 +4403,12 @@ cy: 0.4746370298801608
 
 RiftTest.prototype.testStereo = function(imageA,imageB){
 
-/*
+var doBench = false;
+// var doBench = true;
 
+var Fab, Fba, pointsA,pointsB;
+
+if(doBench){ // bench
 // bench_A.png & bench_B.png
 var points = [];
 points.push( new V2D(291.00244593231275,125.16577334122776) ); // 0
@@ -4659,7 +4663,7 @@ points.push( new V2D(270.88090288673646,175.6908002095701) ); // 248
 points.push( new V2D(108.87921661813644,213.7507162619068) ); // 249
 points.push( new V2D(46.0670848846526,126.09856330067197) ); // 250
 points.push( new V2D(105.45575755987403,110.39099466840932) ); // 251
-var pointsA = points;
+pointsA = points;
 
 var points = [];
 points.push( new V2D(309.1098049803943,105.02838784171182) ); // 0
@@ -4914,13 +4918,13 @@ points.push( new V2D(304.48929608115253,157.17416943566303) ); // 248
 points.push( new V2D(156.9045054793566,178.13912758029198) ); // 249
 points.push( new V2D(160.51904444868623,102.64595008292493) ); // 250
 points.push( new V2D(194.49656369695077,89.52293912490727) ); // 251
-var pointsB = points;
+pointsB = points;
 
 Fab = new Matrix(3,3).fromArray([-4.3108970745948067e-7,0.00000781421750838453,-0.0002885616969251561,0.000006421379783849224,-0.0000010159732704234994,-0.014129253470822702,-0.0007746827740367043,0.010812617094431187,-0.002727580762916125]);
 Fba = R3D.fundamentalInverse(Fab);
-*/
 
 
+}else{ // room
 
 // ROOM 0-2
 
@@ -5334,17 +5338,19 @@ points.push( new V2D(398.04010248248676,223.33006892778383) ); // 198
 points.push( new V2D(283.21753732179616,115.86948526881473) ); // 199
 points.push( new V2D(372.03282548195824,184.37949198029057) ); // 200
 points.push( new V2D(272.9144783183408,268.1682057135989) ); // 201
-var pointsB = points;
+pointsB = points;
 
 Fab = new Matrix(3,3).fromArray([-3.215889693813057e-7,0.0000034706541031937704,0.0001683307229678381,0.000007135251608929445,-0.000008159225833811654,-0.015252965924983004,-0.000698476119524769,0.015209996609977953,-0.9179263092166661]);
 Fba = R3D.fundamentalInverse(Fab);
 
+}
 
 
 
 
 // var results = R3D.arbitraryAffineMatches(imageA,imageB, Fab,Fba, pointsA,pointsB);
 var results = R3D.arbitraryAffineMatches(imageB,imageA, Fba,Fab, pointsB,pointsA);
+console.log(results);
 throw "..."
 
 // var results = R3D.arbitraryStereoMatches(imageA,imageB, Fab,Fba, pointsA,pointsB);
