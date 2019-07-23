@@ -10,7 +10,7 @@ function QuadSpace(toRect,min,max,eps){
 QuadSpace.objectToRect = function(p){
 	throw "need to rect function";
 }
-// --------------------------------------------------------------------------------------------------------- 
+// ---------------------------------------------------------------------------------------------------------
 QuadSpace.prototype.kill = function(){
 	this.clear();
 	this._root = null;
@@ -30,9 +30,8 @@ QuadSpace.prototype.initWithSize = function(min,max, epsilon){
 	var square = Math.max(size.x,size.y);
 	square = Code.nextExponentialTwoRounded(square);
 	size.set(square,square);
-	epsilon = (epsilon!==undefined && eps!==null) ? epsilon : Math.max(square) * Math.pow(2,-6); // 2^6 = 64
+	epsilon = (epsilon!==undefined && epsilon!==null) ? epsilon : Math.max(square) * Math.pow(2,-6); // 2^6 = 64
 	this._epsilon = epsilon;
-	// console.log("   "+center+" & "+size);
 	this._root.setCenterAndSize(center,size);
 }
 
@@ -51,6 +50,31 @@ QuadSpace.prototype.max = function(){
 QuadSpace.prototype.clear = function(){
 	this._root.clear();
 }
+QuadSpace.prototype.initWithObjects = function(objects, epsilon){
+	var i, object, rect;
+	var min = null;
+	var max = null;
+	for(i=0; i<objects.length; ++i){
+		object = objects[i];
+		rect = this._toRectFxn(object);
+		if(!min){
+			min = rect.min().copy();
+			max = rect.max().copy();
+		}else{
+			min = V3D.min(min, rect.min());
+			max = V3D.max(max, rect.max());
+		}
+	}
+	var force = true;
+	var eps = 1E-6;
+	min.add(-eps,-eps,-eps);
+	max.add(eps,eps,eps);
+	this.initWithSize(min, max, epsilon);
+	for(i=0; i<objects.length; ++i){
+		object = objects[i];
+		this.insertObject(object);
+	}
+}
 QuadSpace.prototype.insertObject = function(object){
 	var package = new QuadSpace.Package(object);
 	var rect = this._toRectFxn(object);
@@ -60,13 +84,12 @@ QuadSpace.prototype.insertObject = function(object){
 	if(fitsInside){
 		root.insertObject(package, rect, this._toRectFxn, this._epsilon);
 	}else if(this._autoResize){
-		console.log("OUTSIDE: "+object.rect());
+		// console.log("OUTSIDE: "+rect);
 		var objects = this.toArray();
 		objects.push(object);
 		this.clear();
 		this.initWithObjects(objects, true);
-		// this.initWithSize(min,max, this._epsilon);
-	
+
 	} // drop on floor
 }
 QuadSpace.prototype.containsObject = function(object){
@@ -129,7 +152,7 @@ QuadSpace.prototype.toArray = function(){
 	}
 	return items;
 }
-// --------------------------------------------------------------------------------------------------------- 
+// ---------------------------------------------------------------------------------------------------------
 QuadSpace.Package = function(object){
 	this._object = null;
 	this._arxels = [];
@@ -154,7 +177,7 @@ QuadSpace.Package.prototype.kill = function(){
 	this._object = null;
 	this._arxels = null;
 }
-// --------------------------------------------------------------------------------------------------------- 
+// ---------------------------------------------------------------------------------------------------------
 QuadSpace.Arxel = function(){
 	this._count = 0;
 	this._parent = null;
@@ -216,7 +239,7 @@ QuadSpace.Arxel.prototype._recheckExtrema = function(){
 	this._max.set(cen.x+0.5*siz.x,cen.y+0.5*siz.y);
 	this._rect.set(this._min.x,this._min.y, this._size.x,this._size.y);
 }
-// --------------------------------------------------------------------------------------------------------- 
+// ---------------------------------------------------------------------------------------------------------
 QuadSpace.Arxel.prototype.insertObject = function(package, rect, toRectFxn, epsilon){
 	var overlap = this.overlap(rect);
 	if(!overlap){
@@ -461,7 +484,7 @@ QuadSpace.Arxel.prototype.objectsInsideCircleSquare = function(arr,center,radSqu
 			var rect = toRectFxn(obj);
 			var distance = QuadSpace.closestDistanceSquareRect(center,radSquare, rect.min(),rect.max());
 			if(distance<=radSquare){
-				Code.addUnique(arr,obj); // TODO: RBTREE ? 
+				Code.addUnique(arr,obj); // TODO: RBTREE ?
 			}
 		}
 	}else if(this._children){
@@ -480,7 +503,7 @@ QuadSpace.Arxel.prototype.objectsInsideRect = function(arr,min,max,toRectFxn){
 			var obj = this._objects[i].object();
 			var rect = toRectFxn(obj);
 			if( !Code.rectsSeparate(min,max, rect.min(),rect.max()) ){
-				Code.addUnique(arr,obj); // TODO: RBTREE ? 
+				Code.addUnique(arr,obj); // TODO: RBTREE ?
 			}
 		}
 	}else if(this._children){
@@ -494,5 +517,3 @@ QuadSpace.Arxel.prototype.objectsInsideRect = function(arr,min,max,toRectFxn){
 		}
 	}
 }
-
-

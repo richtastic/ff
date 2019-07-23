@@ -370,9 +370,9 @@ https://cloud.google.com/appengine/docs/nodejs/
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-- HOW TO PASS DISPARITY AT % OF SIZE
-- stereo absolute (w/o path) with some amount of hierarchy (refining SAD size too)
 
+
+- image mapping using rectified images -> limit to dx & scale x/y
 
 
 - mbda * (summed average location) + lambda*(predicted location)
@@ -390,9 +390,9 @@ https://cloud.google.com/appengine/docs/nodejs/
 - any way to get path working?
 
 
-- need faster triangulation?
-	- use assumed grid & invalid points use nearest invalid neighbor values
 
+- speed up quadspace lookuping
+	- 'checked' / 'added'
 
 
 	++++ALTERNATE++++

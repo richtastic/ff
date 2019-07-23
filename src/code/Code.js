@@ -10705,6 +10705,7 @@ Code.isPointInsideTri2DFast = function(p, a,b,c){
 		return false;
 	}
 	return Code.isPointInsidePolygon2D(p, [a,b,c]);
+	// return Code.isPointInsideTri2D(p, a,b,c);
 }
 Code.isPointInsideTri2D = function(p, a,b,c){
 	var ab = V2D.sub(b,a);

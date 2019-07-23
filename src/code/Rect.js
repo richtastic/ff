@@ -283,6 +283,11 @@ function Rect(xPos,yPos, w,h, d){
 	this.height(h);
 	this.data(d);
 }
+Rect.fromPointArray = function(points2D){
+	var rect = new Rect();
+	rect.fromArray(points2D);
+	return rect;
+}
 Rect.prototype.fromArray = function(points2D){ // bounding box of points
 	if(points2D && points2D.length>0){
 		var extrema = V2D.extremaFromArray(points2D);

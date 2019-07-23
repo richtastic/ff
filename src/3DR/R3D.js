@@ -5497,9 +5497,10 @@ R3D._stereoRectifiedOrderColFxn = function(a,b,p, scale){
 	return [A,B];
 	// return [A*p,B*p];
 }
-R3D._stereoBlockMatchOrderedHierarchy = function(imageA,imageB, infoA,infoB,Fab,Fba,pointsA,pointsB,sourceA,sourceB, scaleStartA,disparityStartA, pathSolution){
+R3D._stereoBlockMatchOrderedHierarchy = function(imageA,imageB, infoA,infoB,Fab,Fba,pointsA,pointsB,sourceA,sourceB, scaleStartA,disparityStartA, pathSolution,disparityRange){
 	pathSolution = pathSolution!==undefined ? pathSolution : true;
 	scaleStartA = scaleStartA!==undefined ? scaleStartA : 0.01;
+	disparityRange = disparityRange!==undefined ? disparityRange : 3;
 	console.log("_stereoBlockMatchOrderedHierarchy");
 	// var minimumDimension = 4; // @ +/- 3
 	var minimumDimension = 8;
@@ -5583,14 +5584,50 @@ R3D._stereoBlockMatchOrderedHierarchy = function(imageA,imageB, infoA,infoB,Fab,
 							// dNew = -dNew;
 						var indexNew = rowA*widthA + colA;
 						dsa[indexNew] = dNew;
-						if(j==100 && i==100){
-							console.log("from: "+j+","+i+" -> "+rowA+","+colA+" : "+dOld+" => "+dNew);
-						}
-						// throw "?";
+						// if(j==100 && i==100){
+						// 	console.log("from: "+j+","+i+" -> "+rowA+","+colA+" : "+dOld+" => "+dNew);
+						// }
+						// // throw "?";
 					}
 				}
 				disparityA = dsa;
-				disparityStartA = disparityA;
+				// disparityStartA = disparityA;
+				// ...
+				console.log("scaleStartA: "+scaleStartA);
+				var startW = Math.round(scaleStartA*widthA);
+				var startH = Math.round(scaleStartA*heightA);
+				var sigma;
+				if(scaleStartA<1.0){
+					console.log(disparityA);
+						// pre - blur:
+						sigma = 2.0;
+						disparityA = ImageMat.getBlurredImage(disparityA,widthA,heightA, sigma);
+					disparityA = R3D._scaledDisparity(disparityA,widthA,heightA, startW,startH);
+					console.log(disparityA);
+						// post blur
+						// sigma = 2.0;
+						// disparityA = ImageMat.getBlurredImage(disparityA,startW,startH, sigma);
+
+				}
+				// post blur
+				// sigma = 1.0;
+				// disparityA = ImageMat.getBlurredImage(disparityA,startW,startH, sigma);
+
+				// post blur
+				// sigma = 2.0;
+				// disparityA = ImageMat.getBlurredImage(disparityA,startW,startH, sigma);
+
+				if(true && disparityA){
+					var display = GLOBALSTAGE;
+					var dA = Code.copyArray(disparityA);
+					ImageMat.normalFloat01(dA);
+					var alp = 1.0;
+					// var img = GLOBALSTAGE.getFloatRGBAsImage(dA,dA,dA, widthA, heightA);
+					var img = GLOBALSTAGE.getFloatRGBAsImage(dA,dA,dA, startW, startH);
+					var d = new DOImage(img);
+					d.matrix().translate(0+2300,0+600);
+					display.addChild(d);
+				}
 			}
 		}
 	}
@@ -5620,16 +5657,6 @@ if(true){
 	display.addChild(d);
 }
 
-if(true && disparityA){
-var display = GLOBALSTAGE;
-var dA = Code.copyArray(disparityA);
-ImageMat.normalFloat01(dA);
-	var alp = 1.0;
-	var img = GLOBALSTAGE.getFloatRGBAsImage(dA,dA,dA, widthA, heightA);
-	var d = new DOImage(img);
-	d.matrix().translate(0+2300,0+600);
-	display.addChild(d);
-}
 
 
 
@@ -5659,10 +5686,6 @@ var OFFERX = 0;
 			ImageMat.mulConst(disparityA, 2.0);
 			disparityA = R3D._scaledDisparity(disparityA,currentWidthA,currentHeightA, currentImageA.width(), currentImageA.height());
 		}
-		console.log(disparityA);
-		console.log(imageA);
-
-
 
 		if(isRectified){
 			if(rotationA){ // TODO: MOVE THIS OUT OF LOOP
@@ -5775,7 +5798,11 @@ if(false){
 console.log("  "+s+": "+currentWidthA+"x"+currentHeightA+" & "+currentWidthB+"x"+currentHeightB+"");
 console.log("disparityA");
 console.log(disparityA);
-		var result = R3D._stereoBlockMatchOrdered(currentImageA,currentImageB, disparityA,occlusionA, scaledMappingABRows,scaledValidColsA,scaledValidColsB, isFirst, pathSolution);
+		var range = disparityRange;
+		if(Code.isArray(disparityRange)){
+			range = disparityRange[s];
+		}
+		var result = R3D._stereoBlockMatchOrdered(currentImageA,currentImageB, disparityA,occlusionA, scaledMappingABRows,scaledValidColsA,scaledValidColsB, isFirst, pathSolution, range);
 		disparityA = result["disparity"]["A"];
 		occlusionA = result["occlusion"]["A"];
 	}
@@ -5986,10 +6013,13 @@ R3D._subpixelDisparity = function(imageA,imageB, disparitiesA,occlusionsA, mappi
 	var isRectified = mappingRowsAB!==undefined;
 	var halfX = 2;
 	var halfY = 1;
+	// var halfX = 1;
+	// var halfY = 0;
 	var needleX = 1+halfX*2;
 	var needleY = 1+halfY*2;
 	// var spacing = 1;
 	var spacing = 3; // 1-3
+spacing = 2;
 	var haystackX = needleX+2*spacing;
 	var haystackY = needleY;
 	var offNx = -halfX;
@@ -6127,8 +6157,10 @@ R3D._scaledDisparity = function(source,width,height, forceWidth, forceHeight){
 }
 var SHOWCOUNT = 0;
 var SHOWUP = 0;
-R3D._stereoBlockMatchOrdered_NEW = function(imageA,imageB, disparityOffsetsA,occlusionOffsetsA, mappingRowsAB,validColsA,validColsB, isFirst){
-// R3D._stereoBlockMatchOrdered = function(imageA,imageB, disparityOffsetsA,disparityOffsetsB,occlusionOffsetsA,occlusionOffsetsB, mappingRowsAB,validColsA,validColsB, isFirst){
+R3D._stereoBlockMatchOrdered_NEW = function(imageA,imageB, disparityOffsetsA,occlusionOffsetsA, mappingRowsAB,validColsA,validColsB, isFirst, disparityRange){
+// R3D._stereoBlockMatchOrdered_x = function(imageA,imageB, disparityOffsetsA,disparityOffsetsB,occlusionOffsetsA,occlusionOffsetsB, mappingRowsAB,validColsA,validColsB, isFirst){
+	disparityRange = disparityRange!==undefined ? disparityRange : 3;
+	console.log("disparityRange: "+disparityRange);
 	var isRectified = mappingRowsAB!==undefined;
 	var outsideRangeCostConstant = 1E9;
 	// TODO: should gradient/disparities be averaged among images A & B ?
@@ -6140,9 +6172,9 @@ R3D._stereoBlockMatchOrdered_NEW = function(imageA,imageB, disparityOffsetsA,occ
 	// var halfBlockSizeX = 1; var halfBlockSizeY = 0;
 	// var halfBlockSizeX = 2; var halfBlockSizeY = 1;
 	var halfBlockSizeX = 3; var halfBlockSizeY = 2;
-	// var disparityHalfWindow = 3;
+	var disparityHalfWindow = disparityRange;
 	// if(isFirst){
-	// 	disparityHalfWindow = 7;
+		disparityHalfWindow = 7;
 	// }
 	// var disparityHalfWindow = 11;
 	var blockSizeX = 2*halfBlockSizeX + 1;
@@ -6331,25 +6363,27 @@ var occlusionsA = Code.newArrayOnes(rowsB*colsB);
 }
 
 // R3D._stereoBlockMatchOrdered_WORKING_OLD = function(imageA,imageB, disparityOffsetsA,disparityOffsetsB,occlusionOffsetsA,occlusionOffsetsB, mappingRowsAB,validColsA,validColsB){
-R3D._stereoBlockMatchOrdered = function(imageA,imageB, disparityOffsetsA,occlusionOffsetsA, mappingRowsAB,validColsA,validColsB, isFirst, pathSolution){
+R3D._stereoBlockMatchOrdered = function(imageA,imageB, disparityOffsetsA,occlusionOffsetsA, mappingRowsAB,validColsA,validColsB, isFirst, pathSolution, disparityRange){
 console.log("_stereoBlockMatchOrdered: "+pathSolution);
+	disparityRange = disparityRange!==undefined ? disparityRange : 3;
 	pathSolution = pathSolution!==undefined ? pathSolution : true;
+	console.log("disparityRange: "+disparityRange);
 	var isRectified = mappingRowsAB!==undefined;
 	var outsideRangeCostConstant = 1E9;
 	// TODO: should gradient/disparities be averaged among images A & B ?
 	var gradientCostDivisor = 0.20; // 0.25
 	var gradientCostConstant = 0;//0.0001;
-	var occlusionCostConstant = 0.10; // order of poor match -- 0.1-0.25
+	var occlusionCostConstant = 0.20; // order of poor match -- 0.1-0.25
 	// var occlusionCostConstant = 0.10;
 	// var occlusionCostConstant = 0.5;
 	// var halfBlockSizeX = 1; var halfBlockSizeY = 0;
 	// var halfBlockSizeX = 2; var halfBlockSizeY = 1;
 	var halfBlockSizeX = 3; var halfBlockSizeY = 2;
-	var disparityHalfWindow = 3;
+	var disparityHalfWindow = disparityRange;
 	// var disparityHalfWindow = 11;
 	// var disparityHalfWindow = 21;
 	// if(isFirst){
-		disparityHalfWindow = 7;
+	// disparityHalfWindow = 7;
 	// }
 	// var disparityHalfWindow = 11;
 	var blockSizeX = 2*halfBlockSizeX + 1;
@@ -9379,6 +9413,15 @@ R3D.progressiveFullMatchingDense = function(objectsA,imageMatrixA, objectsB,imag
 // RESULTS
 	// rectify + dense
 	console.log("rectify images");
+
+	console.log("FAB: "+F.toArray());
+	console.log("FBA: "+Finv.toArray());
+	console.log("A: ");
+	Code.printPoints(pointsA);
+	console.log("B: ");
+	Code.printPoints(pointsB);
+
+	throw "LAST STEP";
 	var matches = R3D.arbitraryStereoMatches(imageMatrixA,imageMatrixB, F,Finv, pointsA,pointsB, null);
 
 	console.log(matches);
@@ -9464,8 +9507,6 @@ R3D.arbitraryAffineMatches = function(imageMatrixA,imageMatrixB, Fab,Fba, points
 	var matchesBA = mapperBA.findMatches();
 
 
-// throw "..."
-	// console.log(matchesBA);
 	// if B->A < 2 pixels -> keep
 	var maxDistance = 2.0; // 1 for A 1 for B
 	var widthA = imageMatrixA.width();
@@ -9529,8 +9570,8 @@ var mappingBARows = infoRowMatchBA["mapping"];
 console.log(infoRowMatchBA);
 
 
-	var pointA = new V2D();
-	var out = new V2D;
+	// var pointA = new V2D();
+	// var out = new V2D;
 	var widthRA = rectifiedA.width();
 	var heightRA = rectifiedA.height();
 	var widthRB = rectifiedB.width();
@@ -9544,8 +9585,9 @@ console.log(infoRowMatchBA);
 		}
 	}
 
-	// TODO: THIS SHOULD BE THE OPPOSITE DIRECTION ....
-
+	// TODO: THIS SHOULD BE THE OPPOSITE DIRECTION .... ?
+	var out = new V2D();
+	var pointA = new V2D();
 	for(var j=0; j<heightA; ++j){
 		for(var i=0; i<widthA; ++i){
 			pointA.x = i;
@@ -9571,6 +9613,40 @@ console.log(infoRowMatchBA);
 			}
 		}
 	}
+	// var radiusMin = rectifiedInfoA["radiusMin"];
+	// var radius = rectifiedInfoA["radius"];
+	// var angles = rectifiedInfoA["angles"];
+	// var point = new V2D();
+	// var dir = new V2D();
+	// var val = new V3D();
+	// for(var j=0; j<heightRA; ++j){
+	// 	var angle = angles[j];
+	// 	var radius = radius;
+	// 	var colMin = radius[0];
+	// 	var colMax = radius[1];
+	// 	dir.set(1,0);
+	// 	dir.rotate(angle);
+	// 	// point.add(epipoleA);
+	// 	for(var i=colMin; i<=colMax; ++i){
+	// 		var x = (radMin+i)*dir.x + epipoleA.x;
+	// 		var y = (radMin+i)*dir.y + epipoleA.y;
+	// 		point.x = x;
+	// 		point.y = y;
+	// 		var value = ;
+	// 		var index = j*widthA + i;
+	// 		displacementA[index] = value;
+	//
+	//
+	// 	}
+	// }
+/*
+	rectifiedA ->
+	sourceA ->
+	sourceB ->
+	rectifiedB
+*/
+
+	// throw "..."
 
 	// interpolate rows:
 	console.log("interpolate rows");
@@ -9668,8 +9744,10 @@ if(true){
 	// displacementA = ImageMat.getBlurredImage(displacementA,widthRA,heightRA, sigma);
 
 
-var halfA = displacementA;
+// var halfA = displacementA;
 var startS = 1.0;
+// var startS = 0.5;
+// var startS = 0.25;
 
 // var halfA = R3D._scaledDisparity(displacementA,widthRA,heightRA, Math.round(widthRA*0.5), Math.round(heightRA*0.5));
 // console.log(halfA);
@@ -9683,25 +9761,12 @@ var infoA = rectifiedInfoA;
 var infoB = rectifiedInfoB;
 SHOWUP = 0;
 SHOWCOUNT = 0;
-	var A = R3D._stereoBlockMatchOrderedHierarchy(imageA,imageB, infoA,infoB,Fab,Fba,pointsA,pointsB, originalA,originalB, startS,halfA,false);
+// var pathSolution = true;
+var pathSolution = false;
+	var A = R3D._stereoBlockMatchOrderedHierarchy(imageA,imageB, infoA,infoB,Fab,Fba,pointsA,pointsB, originalA,originalB, startS,displacementA,pathSolution, [3,3]); // [7,5,3]
 console.log(A);
 
-// console.log("stereoMatch");
-// var bestMatchesList = {"A":pointsA, "B":pointsB};
-// var A = R3D.stereoMatch(originalA,originalB, imageA,infoA, imageB,infoB, Fab,bestMatchesList, displacementA, 5);
-// console.log(A);
 
-
-
-
-	// ...
-
-
-
-
-
-	// displacements:
-	// displacementA
 
 throw "map matching points A & B";
 // arbitraryAffineMatches

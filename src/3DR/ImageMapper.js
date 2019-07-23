@@ -53,10 +53,16 @@ ImageMapper.prototype.interpolateMatches = function(matchesAB, imageA, imageB, p
 	var datas = triangulator.datas();
 	var tris = triangulator.triangles();
 	var perimeter = triangulator.perimeter();
+	console.log("triangulating end");
 	var toV2D = function(a){
-		return a["center"];
+		return a["A"];
 	}
-	var spaceA = new QuadTree(toV2D, new V2D(0,0), new V2D(widthA,heightA));
+	var toRect = function(a){
+		return a["rect"];
+	}
+	console.log("mapping start");
+	var pointSpace = new QuadTree(toV2D, new V2D(0,0), new V2D(widthA,heightA));
+	var triSpace = new QuadSpace(toRect, new V2D(-widthA,heightA), new V2D(widthA*2,heightA*2));
 	for(var i=0; i<tris.length; ++i){
 		var tri = tris[i];
 		var ai = tri[0];
@@ -65,81 +71,61 @@ ImageMapper.prototype.interpolateMatches = function(matchesAB, imageA, imageB, p
 		var a = vertexes[ai];
 		var b = vertexes[bi];
 		var c = vertexes[ci];
-		var center = Tri2D.center(a,b,c);
 			a = datas[ai];
 			b = datas[bi];
 			c = datas[ci];
-		spaceA.insertObject({"center":center,"A":a,"B":b,"C":c});
+		var rect = Rect.fromPointArray([a["A"],b["A"],c["A"]]);
+		triSpace.insertObject({"A":a,"B":b,"C":c,"rect":rect});
+	}
+var allTris = triSpace.toArray();
+	for(var i=0; i<matchesAB.length; ++i){
+		var match = matchesAB[i];
+		pointSpace.insertObject(match);
 	}
 	var point = new V2D();
 	var avg = new V2D();
 	var coords = new V3D();
 	var pixelsA = Code.newArrayNulls(countA);
+	var inside = 0;
+	var index = 0;
 	for(var j=0; j<heightA; ++j){
 		point.y = j;
-		for(var i=0; i<widthA; ++i){
+		for(var i=0; i<widthA; ++i, ++index){
 			point.x = i;
-			var index = j*widthA + i;
-			var closest = spaceA.closestObject(point);
-			var a = closest["A"];
-			var b = closest["B"];
-			var c = closest["C"];
-			var va = a["A"];
-			var vb = b["A"];
-			var vc = c["A"];
-			// hack for searching thru all adjacent triangles:
-			// exhaustive search in area for the triangle it is interior to:
-			var longestEdge = Math.max( V2D.distanceSquare(va,vb), V2D.distanceSquare(va,vc), V2D.distanceSquare(vb,vc) );
-			var area = spaceA.objectsInsideCircle(point, longestEdge*0.5);
+			var triangles = triSpace.objectsInsideCircle(point,1);
 			var isInside = false;
-			for(var k=0; k<area.length; ++k){
-				var tri = area[k];
-				var ta = tri["A"];
-				var tb = tri["B"];
-				var tc = tri["C"];
-				var ua = ta["A"];
-				var ub = tb["A"];
-				var uc = tc["A"];
-				isInside = Code.isPointInsideTri2DFast(point,ua,ub,uc);
-				if(isInside){
-					closest = tri;
-					a = ta;
-					b = tb;
-					c = tc;
-					va = ua;
-					vb = ub;
-					vc = uc;
-					break;
+			if(triangles.length>0){
+				for(var k=0; k<triangles.length; ++k){
+					var tri = triangles[k];
+					var a = tri["A"];
+					var b = tri["B"];
+					var c = tri["C"];
+					var va = a["A"];
+					var vb = b["A"];
+					var vc = c["A"];
+					isInside = Code.isPointInsideTri2DFast(point,va,vb,vc);
+					if(isInside){
+						++inside;
+						Code.triBarycentricCoordinate2D(coords, va,vb,vc, point);
+						avg.x = coords.x*a["B"].x + coords.y*b["B"].x + coords.z*c["B"].x;
+						avg.y = coords.x*a["B"].y + coords.y*b["B"].y + coords.z*c["B"].y;
+						pixelsA[index] = avg.copy();
+						break;
+					}
 				}
 			}
-			isInside = true; // need second space to get closest vertex point
-			if(isInside){
-				Code.triBarycentricCoordinate2D(coords, va,vb,vc, point);
-				// console.log(coords);
-				// var errors = [a["error"],b["error"],c["error"]];
-				// var percents = Code.errorsToPercents(errors);
-				// 	percents = percents["percents"];
-				avg.x = coords.x*a["B"].x + coords.y*b["B"].x + coords.z*c["B"].x;
-				avg.y = coords.x*a["B"].y + coords.y*b["B"].y + coords.z*c["B"].y;
-			}else{ // should be choosing from closest POINT, not triangle center ... need second space
-				var da = V2D.distanceSquare(point,va);
-				var db = V2D.distanceSquare(point,vb);
-				var dc = V2D.distanceSquare(point,vc);
-				if(da<=db && da<=dc){
-					closest = a;
-				}else if(db<=da && db<=dc){
-					closest = b;
-				}else{
-					closest = c;
-				}
-				avg.x = closest["B"].x;
-				avg.y = closest["B"].y;
+			// TODO: FIND NEAREST TRI... NEAREST LINE SEGMENT
+			if(!isInside){
+				var a = pointSpace.closestObject(point);
+				avg.x = a["B"].x;
+				avg.y = a["B"].y;
+				pixelsA[index] = avg.copy();
 			}
-			pixelsA[index] = avg.copy();
 		}
 	}
-	console.log("triangulating end");
-
+	triSpace.kill();
+	pointSpace.kill();
+	console.log("mapping end");
 if(false){
 // if(true){
 	// smoothing
@@ -152,7 +138,7 @@ if(false){
 	}
 	// dx = ImageMat.meanFilter(dx,widthA,heightA);
 	// dy = ImageMat.meanFilter(dy,widthA,heightA);
-	var sigma = 3.0; // 1+
+	var sigma = 3.0; // 1+ --- 3 is slow
 	dx = ImageMat.getBlurredImage(dx,widthA,heightA, sigma);
 	dy = ImageMat.getBlurredImage(dy,widthA,heightA, sigma);
 	// dx = dx["value"];
@@ -190,10 +176,10 @@ if(true){
 	d.matrix().translate(10 + 550, 10 + 450*INTERPOLATE_CALLS );
 	GLOBALSTAGE.addChild(d);
 	// d.graphics().alpha(0.50);
-
+	//
 	// show triangles:
 	var cont = d;
-	var tris = spaceA.toArray();
+	var tris = allTris;
 	for(var i=0; i<tris.length; ++i){
 		break;
 		var tri = tris[i];
@@ -212,14 +198,8 @@ if(true){
 		cont.addChild(d);
 	}
 
-
 	++INTERPOLATE_CALLS;
 }
-
-
-
-	spaceA.kill();
-
 
 	return pixelsA;
 }
