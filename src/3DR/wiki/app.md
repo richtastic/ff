@@ -370,9 +370,24 @@ https://cloud.google.com/appengine/docs/nodejs/
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+- searching for points along discontinuity should check A or B
+	=> how to identify discontinuity ?
 
 
-- image mapping using rectified images -> limit to dx & scale x/y
+- what do do about F rectified looping around ?
+	- find smallest (valid)value in rowA -> this should be the 'start?' of A?
+
+=> rectified lines aren't matching up too well
+- could F be re-estimated using fwd/bak kept points?
+
+=> could this method be used early on to get good F?
+
+
+
+
+
+- what to do about epiole inside image
+	=> looping image extraction
 
 
 - mbda * (summed average location) + lambda*(predicted location)

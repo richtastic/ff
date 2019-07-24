@@ -10,9 +10,133 @@ function SpaceTest(){
 	this._stage.addListeners();
 	this._stage.start();
 
-	this.test3DCone();
+	// this.test3DCone();
+
+	this.test2DSearch();
 
 }
+SpaceTest.prototype.test2DSearch = function(){
+	console.log("test2DSearch")
+	var min = new V2D(0,0);
+	var max = new V2D(10,10);
+	var siz = V2D.sub(max,min);
+	var toRect = function(tri){
+		var rect = Rect.fromPointArray([tri["A"],tri["B"],tri["C"]]);
+		return rect;
+	}
+	var space = new QuadSpace(toRect, min,max);
+
+	var triangleCount = 500;
+	var tSize = Math.min(siz.x,siz.y)*0.2;
+	var rangeX = siz.x-tSize;
+	var rangeY = siz.y-tSize;
+
+	for(var i=0; i<triangleCount; ++i){
+		var p = new V2D(Math.random()*rangeX + min.x + tSize*0.5, Math.random()*rangeY + min.y + tSize*0.5);
+		var a = new V2D(p.x + Math.random()*tSize*0.5, p.y + Math.random()*tSize*0.5);
+		var b = new V2D(p.x + Math.random()*tSize*0.5, p.y + Math.random()*tSize*0.5);
+		var c = new V2D(p.x + Math.random()*tSize*0.5, p.y + Math.random()*tSize*0.5);
+		var t = {"A":a,"B":b,"C":c};
+		space.insertObject(t);
+	}
+
+	// render
+
+	var displaySize = 400;
+	var displayScale = displaySize/Math.max(siz.x,siz.y);
+
+	var display = new DO();
+	this._stage.addChild(display);
+
+	// background:
+	// var tris = space.toArray();
+	// for(var i=0; i<triangleCount; ++i){
+	// 	var t = tris[i];
+	// 	var ax = t["A"].x * displayScale;
+	// 	var ay = t["A"].y * displayScale;
+	// 	var bx = t["B"].x * displayScale;
+	// 	var by = t["B"].y * displayScale;
+	// 	var cx = t["C"].x * displayScale;
+	// 	var cy = t["C"].y * displayScale;
+	//
+	// 	var d = new DO();
+	// 	d.graphics().setFill(0x33990099);
+	// 	d.graphics().setLine(1.0,0x99660066);
+	// 		d.graphics().beginPath();
+	// 		d.graphics().moveTo(ax,ay);
+	// 		d.graphics().lineTo(bx,by);
+	// 		d.graphics().lineTo(cx,cy);
+	// 		d.graphics().lineTo(ax,ay);
+	// 		d.graphics().endPath();
+	// 		d.graphics().fill();
+	// 		d.graphics().strokeLine();
+	// 	display.addChild(d);
+	// }
+	var center = new V2D(3,3);
+	var radius = 1.0;
+	// var tris = space.objectsInsideCircle(center, radius);
+	var rect = new Rect(3,4,4,1);
+
+	console.log(rect)
+	var tris = space.objectsInsideRect(rect.min(),rect.max());
+	console.log(tris);
+	for(var i=0; i<tris.length; ++i){
+		var t = tris[i];
+		t["marked"] = true;
+	}
+
+	var tris = space.toArray();
+	for(var i=0; i<triangleCount; ++i){
+		var t = tris[i];
+		var ax = t["A"].x * displayScale;
+		var ay = t["A"].y * displayScale;
+		var bx = t["B"].x * displayScale;
+		var by = t["B"].y * displayScale;
+		var cx = t["C"].x * displayScale;
+		var cy = t["C"].y * displayScale;
+
+		var d = new DO();
+		if(t["marked"]){
+			d.graphics().setFill(0x33FF0000);
+			d.graphics().setLine(1.0,0x99CC0000);
+		}else{
+			d.graphics().setFill(0x33990099);
+			d.graphics().setLine(1.0,0x99660066);
+		}
+			d.graphics().beginPath();
+			d.graphics().moveTo(ax,ay);
+			d.graphics().lineTo(bx,by);
+			d.graphics().lineTo(cx,cy);
+			d.graphics().lineTo(ax,ay);
+			d.graphics().endPath();
+			d.graphics().fill();
+			d.graphics().strokeLine();
+		display.addChild(d);
+	}
+
+	// var d = new DO();
+	// d.graphics().setFill(0x330099CC);
+	// d.graphics().setLine(1.0,0x99006699);
+	// 	d.graphics().beginPath();
+	// 	d.graphics().drawCircle(center.x*displayScale, center.y*displayScale, radius*displayScale);
+	// 	d.graphics().endPath();
+	// 	d.graphics().fill();
+	// 	d.graphics().strokeLine();
+	// display.addChild(d);
+
+	var d = new DO();
+	d.graphics().setFill(0x330099CC);
+	d.graphics().setLine(1.0,0xCC003399);
+		d.graphics().beginPath();
+		d.graphics().drawRect(rect.x()*displayScale, rect.y()*displayScale, rect.width()*displayScale, rect.height()*displayScale);
+		d.graphics().endPath();
+		d.graphics().fill();
+		d.graphics().strokeLine();
+	display.addChild(d);
+
+	console.log(space);
+}
+
 SpaceTest.prototype.test3DCone = function(){
 	console.log("test3DCone")
 	var min = new V3D(0,0,0);

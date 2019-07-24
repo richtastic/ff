@@ -21,10 +21,10 @@ function RiftTest(){
 	this._stage.root().addChild(this._root);
 
 	this._stage.root().addChild(this._root);
-	// new ImageLoader("./images/",["bench_A.png", "bench_B.png"],this,this.imagesLoadComplete).load();
+	new ImageLoader("./images/",["bench_A.png", "bench_B.png"],this,this.imagesLoadComplete).load();
 	// new ImageLoader("./images/",["room0.png", "room2.png"],this,this.imagesLoadComplete).load();
 	// new ImageLoader("./images/iowa/",["1.JPG", "2.JPG"],this,this.imagesLoadComplete).load(); // poor
-	new ImageLoader("./images/pika_1/",["image-0.png", "image-1.png"],this,this.imagesLoadComplete).load(); // ok
+	// new ImageLoader("./images/pika_1/",["image-0.png", "image-1.png"],this,this.imagesLoadComplete).load(); // ok
 
 
 // bad = unusable
@@ -4410,11 +4410,14 @@ var TYPE_ROOM = 1;
 var TYPE_HOUSE = 2;
 var TYPE_PIKA = 3;
 
-var doType = TYPE_HOUSE;
+var doType = TYPE_BENCH;
+// var doType = TYPE_ROOM;
+// var doType = TYPE_HOUSE;
+// var doType = TYPE_PIKA;
 
 var Fab, Fba, pointsA,pointsB;
 
-if(doType==TYPE_HOUSE){ // bench
+if(doType==TYPE_BENCH){ // bench
 // bench_A.png & bench_B.png
 var points = [];
 points.push( new V2D(291.00244593231275,125.16577334122776) ); // 0
@@ -7137,6 +7140,13 @@ points.push( new V2D(95.71371896934191,365.26379110152664) ); // 787
 pointsB = points;
 
 		Fab = new Matrix(3,3).fromArray([-0.0000010045093557104883,-0.000006198162643156648,-0.005366859095900903,0.000006952677264108829,0.0000014793218519935346,0.0015660283087212462,0.006140631375650682,-0.0007843263724920506,-0.41292538067582396]);
+		Fba = R3D.fundamentalInverse(Fab);
+
+
+
+
+		// TESTING 2:
+		Fab = new Matrix(3,3).fromArray([9.139991567618561e-7,-0.000029381677966615182,0.0002955874746919653,0.000027399509299681868,0.000005093582347088805,-0.01318612791903384,-0.0008734664118063099,0.012710784628649925,0.09998367542170004]);
 		Fba = R3D.fundamentalInverse(Fab);
 }
 

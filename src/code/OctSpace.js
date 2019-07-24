@@ -137,30 +137,35 @@ OctSpace.prototype.removeObject = function(object){
 	return object;
 }
 OctSpace.prototype.objectsInsideSphere = function(center,radius){
+	x
 	var arr = [];
 	radius = Math.min(this._root.size().length(),radius);
-	this._root.objectsInsideSphereSquare(arr,center,radius*radius,this._toCuboidFxn);
+	this._root.objectsInsideSphereSquare(arr,{},center,radius*radius,this._toCuboidFxn);
 	return arr;
 }
 OctSpace.prototype.objectsInsideCuboid = function(min,max){
+	x
 	var arr = [];
-	this._root.objectsInsideCuboid(arr,min,max,this._toCuboidFxn);
+	this._root.objectsInsideCuboid(arr,{},min,max,this._toCuboidFxn);
 	return arr;
 }
 OctSpace.prototype.objectsInsideRay = function(org,dir){ // objects inside cylinder-ray
 	throw "TODO";
 }
 OctSpace.prototype.objectsIntersectRay = function(org,dir){ // objects intersecting ray
+	x
 	var arr = [];
-	this._root.objectsIntersectRay(arr,org,dir,this._toCuboidFxn);
+	this._root.objectsIntersectRay(arr,{},org,dir,this._toCuboidFxn);
 	return arr;
 }
 // ---------------------------------------------------------------------------------------------------------
 OctSpace.Package = function(object){
+	this._id = OctSpace.Package._ID++;
 	this._object = null;
 	this._voxels = [];
 	this.object(object);
 }
+OctSpace.Package._ID = 0;
 OctSpace.Package.prototype.object = function(object){
 	if(object!==undefined){
 		this._object = object;
@@ -509,12 +514,16 @@ OctSpace.closestDistanceSquareCuboid = function(center, min,max){ // 27 possibil
 }
 // TODO: each item is potentially queried many times -> queried (fail | success) array ?
 // TODO: RBTREE
-OctSpace.Voxel.prototype.objectsInsideSphereSquare = function(arr,center,radSquare,toCubeFxn){
-	//console.log("OBJECTS: "+(this._objects ? this._objects.length : "null"));
+OctSpace.Voxel.prototype.objectsInsideSphereSquare = function(found,checked,center,radSquare,toCubeFxn){
 	if(this._objects){
-		// console.log("OBJECTS: "+this._objects.length);
 		for(var i=0; i<this._objects.length; ++i){
-			var object = this._objects[i].object();
+			var vox = this._objects[i];
+			var index = vox._id;
+			if(checked[index]){
+				continue;
+			}
+			checked[index] = true;
+			var object = vox.object();
 			var cube = toCubeFxn(object);
 			var distance = OctSpace.closestDistanceSquareCuboid(center, cube.min(),cube.max());
 			if(distance<=radSquare){
@@ -526,15 +535,21 @@ OctSpace.Voxel.prototype.objectsInsideSphereSquare = function(arr,center,radSqua
 			var child = this._children[i];
 			var distance = OctSpace.closestDistanceSquareCuboid(center, child.min(),child.max());
 			if( distance <= radSquare  ){
-				child.objectsInsideSphereSquare(arr,center,radSquare,toCubeFxn);
+				child.objectsInsideSphereSquare(found,checked,center,radSquare,toCubeFxn);
 			}
 		}
 	}
 }
-OctSpace.Voxel.prototype.objectsInsideCuboid = function(arr,min,max,toCubeFxn){
+OctSpace.Voxel.prototype.objectsInsideCuboid = function(found,checked,min,max,toCubeFxn){
 	if(this._objects){
 		for(var i=0; i<this._objects.length; ++i){
-			var object = this._objects[i].object();
+			var vox = this._objects[i];
+			var index = vox._id;
+			if(checked[index]){
+				continue;
+			}
+			checked[index] = true;
+			var object = vox.object();
 			var cube = toCubeFxn(object);
 			if( !Code.cuboidsSeparate(min,max, cube.min(),cube.max()) ){
 				Code.addUnique(arr,object);
@@ -545,18 +560,24 @@ OctSpace.Voxel.prototype.objectsInsideCuboid = function(arr,min,max,toCubeFxn){
 			var child = this._children[i];
 			if(child){
 				if( !Code.cuboidsSeparate(child.min(),child.max(), min,max) ){
-					child.objectsInsideCuboid(arr,min,max,toCubeFxn);
+					child.objectsInsideCuboid(found,checked,min,max,toCubeFxn);
 				}
 			}
 		}
 	}
 }
-OctSpace.Voxel.prototype.objectsIntersectRay = function(arr,org,dir,toCubeFxn){ // sphere intersection
+OctSpace.Voxel.prototype.objectsIntersectRay = function(found,checked,org,dir,toCubeFxn){ // sphere intersection
 	var children = this._children;
 	if(this._objects){
 		var objects = this._objects;
 		for(var i=0; i<objects.length; ++i){
-			var object = objects[i].object();
+			var vox = this._objects[i];
+			var index = vox._id;
+			if(checked[index]){
+				continue;
+			}
+			checked[index] = true;
+			var object = vox.object();
 			var cube = toCubeFxn(object);
 			var radius = cube.size().length()*0.5;
 			var center = cube.center();
@@ -573,7 +594,7 @@ OctSpace.Voxel.prototype.objectsIntersectRay = function(arr,org,dir,toCubeFxn){ 
 				var d = Code.distancePointRayFinite3D(org,dir,p);
 				var r = child.size().length()*0.5;
 				if(d<=r){
-					child.objectsIntersectRay(arr,org,dir,toCubeFxn);
+					child.objectsIntersectRay(found,checked,org,dir,toCubeFxn);
 				}
 			}
 		}

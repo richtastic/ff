@@ -297,6 +297,9 @@ Rect.prototype.fromArray = function(points2D){ // bounding box of points
 	}
 	return this;
 }
+Rect.prototype.isPointInside = function(p){
+	return (this._x<=p.x && p.x<=this._x+this._width && this._y<=p.y && p.y<=this._y+this._height);
+}
 Rect.prototype.toArray = function(){ // bounding box of points
 	return [new V2D(this.x(),this.y()), new V2D(this.x()+this.width(),this.y()), new V2D(this.x()+this.width(),this.y()+this.height()), new V2D(this.x(),this.y()+this.height())];
 }

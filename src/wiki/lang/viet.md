@@ -20,7 +20,7 @@
 | cảm ơn |  | thanks |
 | that's ok |  | không sao |
 |  |  |  |
-| ?KHONG GA CHI? |  | ?no problem? |
+| không có gì |  | you're welcome /no problem |
 |  |  |  |
 |  |  |  |
 |  |  |  |
