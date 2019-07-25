@@ -5497,7 +5497,7 @@ R3D._stereoRectifiedOrderColFxn = function(a,b,p, scale){
 	return [A,B];
 	// return [A*p,B*p];
 }
-R3D._stereoBlockMatchOrderedHierarchy = function(imageA,imageB, infoA,infoB,Fab,Fba,pointsA,pointsB,sourceA,sourceB, scaleStartA,disparityStartA, pathSolution,disparityRange){
+R3D._stereoBlockMatchOrderedHierarchy = function(imageA,imageB, infoA,infoB,sourceA,sourceB, scaleStartA,disparityStartA, pathSolution,disparityRange){
 	pathSolution = pathSolution!==undefined ? pathSolution : true;
 	scaleStartA = scaleStartA!==undefined ? scaleStartA : 0.01;
 	disparityRange = disparityRange!==undefined ? disparityRange : 3;
@@ -5534,128 +5534,133 @@ R3D._stereoBlockMatchOrderedHierarchy = function(imageA,imageB, infoA,infoB,Fab,
 	var isRectified = false, mappingABRows, validColsA, validColsB;
 	var rotationA = false;
 	if(infoA){
+
+		rotationA = false;
+		rotationB = false;
+
+
 		isRectified = true;
-		validColsA = infoA["radius"];
-		validColsB = infoB["radius"];
-		var bestMatchesListAB = {"A":pointsA, "B":pointsB};
-		var infoRowMatchAB = R3D.polarRectificationRowMatch(infoA,infoB, Fab,bestMatchesListAB, sourceA,sourceB);
-			mappingABRows = infoRowMatchAB["mapping"];
-		var direction = infoRowMatchAB["direction"];
-		if(direction){ // same dir
-			rotationA = false;
-			rotationB = false;
-		}else{
-			rotationA = true;
-			rotationB = false;
-		}
+		// validColsA = infoA["radius"];
+		// validColsB = infoB["radius"];
+		// var bestMatchesListAB = {"A":pointsA, "B":pointsB};
+		// var infoRowMatchAB = R3D.polarRectificationRowMatch(infoA,infoB, Fab,bestMatchesListAB, sourceA,sourceB);
+		// 	mappingABRows = infoRowMatchAB["mapping"];
+		// var direction = infoRowMatchAB["direction"];
+		// if(direction){ // same dir
+		// 	rotationA = false;
+		// 	rotationB = false;
+		// }else{
+		// 	rotationA = true;
+		// 	rotationB = false;
+		// }
 		if(disparityStartA){
 			disparityA = disparityStartA;
 		}
-		if(rotationA){ // flip rows = vertically  + flop cols horizontally = rotation by 180
-			var next = [];
-			for(var i=0; i<validColsA.length; ++i){
-				next[i] = [validColsA[i][0],validColsA[i][1]];
-			}
-			validColsA = next;
-			Code.reverseArray(validColsA);
-			for(var i=0; i<validColsA.length; ++i){
-				var cols = validColsA[i];
-				var cA = widthAm1-cols[1]; // last -> first
-				var cB = widthAm1-cols[0]; // first -> last
-				validColsA[i][0] = cA;
-				validColsA[i][1] = cB;
-			}
-			mappingABRows = Code.reverseArray(Code.copyArray(mappingABRows));
-			if(disparityA){
-				var dsa = Code.newArrayZeros(widthA*heightA);
-				for(var j=0; j<heightA; ++j){
-					for(var i=0; i<widthA; ++i){
-						var rowA = j;
-						var colA = i;
-						var indexOld = rowA*widthA + colA;
-						var dOld = disparityA[indexOld];
-						var bOld = colA+dOld;
-							rowA = heightAm1 - rowA;
-							colA = widthAm1 - colA;
-						// var bNew = bOld; // ... widthAm1 - bOld;
-						// var bNew = bOld;
-						var bNew = widthBm1 - bOld; // rotated in opposite direction
-						var dNew = bNew - colA; // relative disparity
-							// dNew = -dNew;
-						var indexNew = rowA*widthA + colA;
-						dsa[indexNew] = dNew;
-						// if(j==100 && i==100){
-						// 	console.log("from: "+j+","+i+" -> "+rowA+","+colA+" : "+dOld+" => "+dNew);
-						// }
-						// // throw "?";
-					}
-				}
-				disparityA = dsa;
-				// disparityStartA = disparityA;
-				// ...
-				console.log("scaleStartA: "+scaleStartA);
-				var startW = Math.round(scaleStartA*widthA);
-				var startH = Math.round(scaleStartA*heightA);
-				var sigma;
-				if(scaleStartA<1.0){
-					console.log(disparityA);
-						// pre - blur:
-						sigma = 2.0;
-						disparityA = ImageMat.getBlurredImage(disparityA,widthA,heightA, sigma);
-					disparityA = R3D._scaledDisparity(disparityA,widthA,heightA, startW,startH);
-					console.log(disparityA);
-						// post blur
-						// sigma = 2.0;
-						// disparityA = ImageMat.getBlurredImage(disparityA,startW,startH, sigma);
-
-				}
-				// post blur
-				// sigma = 1.0;
-				// disparityA = ImageMat.getBlurredImage(disparityA,startW,startH, sigma);
-
-				// post blur
-				// sigma = 2.0;
-				// disparityA = ImageMat.getBlurredImage(disparityA,startW,startH, sigma);
-
-				if(true && disparityA){
-					var display = GLOBALSTAGE;
-					var dA = Code.copyArray(disparityA);
-					ImageMat.normalFloat01(dA);
-					var alp = 1.0;
-					// var img = GLOBALSTAGE.getFloatRGBAsImage(dA,dA,dA, widthA, heightA);
-					var img = GLOBALSTAGE.getFloatRGBAsImage(dA,dA,dA, startW, startH);
-					var d = new DOImage(img);
-					d.matrix().translate(0+2300,0+600);
-					display.addChild(d);
-				}
-			}
-		}
+		// if(rotationA){ // flip rows = vertically  + flop cols horizontally = rotation by 180
+		// 	var next = [];
+		// 	for(var i=0; i<validColsA.length; ++i){
+		// 		next[i] = [validColsA[i][0],validColsA[i][1]];
+		// 	}
+		// 	validColsA = next;
+		// 	Code.reverseArray(validColsA);
+		// 	for(var i=0; i<validColsA.length; ++i){
+		// 		var cols = validColsA[i];
+		// 		var cA = widthAm1-cols[1]; // last -> first
+		// 		var cB = widthAm1-cols[0]; // first -> last
+		// 		validColsA[i][0] = cA;
+		// 		validColsA[i][1] = cB;
+		// 	}
+		// 	mappingABRows = Code.reverseArray(Code.copyArray(mappingABRows));
+		// 	if(disparityA){
+		// 		var dsa = Code.newArrayZeros(widthA*heightA);
+		// 		for(var j=0; j<heightA; ++j){
+		// 			for(var i=0; i<widthA; ++i){
+		// 				var rowA = j;
+		// 				var colA = i;
+		// 				var indexOld = rowA*widthA + colA;
+		// 				var dOld = disparityA[indexOld];
+		// 				var bOld = colA+dOld;
+		// 					rowA = heightAm1 - rowA;
+		// 					colA = widthAm1 - colA;
+		// 				// var bNew = bOld; // ... widthAm1 - bOld;
+		// 				// var bNew = bOld;
+		// 				var bNew = widthBm1 - bOld; // rotated in opposite direction
+		// 				var dNew = bNew - colA; // relative disparity
+		// 					// dNew = -dNew;
+		// 				var indexNew = rowA*widthA + colA;
+		// 				dsa[indexNew] = dNew;
+		// 				// if(j==100 && i==100){
+		// 				// 	console.log("from: "+j+","+i+" -> "+rowA+","+colA+" : "+dOld+" => "+dNew);
+		// 				// }
+		// 				// // throw "?";
+		// 			}
+		// 		}
+		// 		disparityA = dsa;
+		// 		// disparityStartA = disparityA;
+		// 		// ...
+		// 		console.log("scaleStartA: "+scaleStartA);
+		// 		var startW = Math.round(scaleStartA*widthA);
+		// 		var startH = Math.round(scaleStartA*heightA);
+		// 		var sigma;
+		// 		if(scaleStartA<1.0){
+		// 			console.log(disparityA);
+		// 				// pre - blur:
+		// 				sigma = 2.0;
+		// 				disparityA = ImageMat.getBlurredImage(disparityA,widthA,heightA, sigma);
+		// 			disparityA = R3D._scaledDisparity(disparityA,widthA,heightA, startW,startH);
+		// 			console.log(disparityA);
+		// 				// post blur
+		// 				// sigma = 2.0;
+		// 				// disparityA = ImageMat.getBlurredImage(disparityA,startW,startH, sigma);
+		//
+		// 		}
+		// 		// post blur
+		// 		// sigma = 1.0;
+		// 		// disparityA = ImageMat.getBlurredImage(disparityA,startW,startH, sigma);
+		//
+		// 		// post blur
+		// 		// sigma = 2.0;
+		// 		// disparityA = ImageMat.getBlurredImage(disparityA,startW,startH, sigma);
+		//
+		// 		if(true && disparityA){
+		// 			var display = GLOBALSTAGE;
+		// 			var dA = Code.copyArray(disparityA);
+		// 			ImageMat.normalFloat01(dA);
+		// 			var alp = 1.0;
+		// 			// var img = GLOBALSTAGE.getFloatRGBAsImage(dA,dA,dA, widthA, heightA);
+		// 			var img = GLOBALSTAGE.getFloatRGBAsImage(dA,dA,dA, startW, startH);
+		// 			var d = new DOImage(img);
+		// 			d.matrix().translate(0+2300,0+600);
+		// 			display.addChild(d);
+		// 		}
+		// 	}
+		// }
 	}
 
 
-if(true){
-	console.log("SHOW ME");
-	var display = GLOBALSTAGE;
-
-	var iii = imageA;
-	var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
-	var d = new DOImage(img);
-	if(rotationA){
-		d.matrix().translate(-iii.width()*0.5,-iii.height()*0.5);
-		d.matrix().rotate(Math.PI);
-		d.matrix().translate(iii.width()*0.5,iii.height()*0.5);
-	}
-	d.matrix().scale(0.5);
-	d.matrix().translate(0+1700,500);
-	display.addChild(d);
-
-	var iii = imageB;
-	var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
-	var d = new DOImage(img);
-	d.matrix().scale(0.5);
-	d.matrix().translate(0+1700,800);
-	display.addChild(d);
-}
+// if(true){
+// 	console.log("SHOW ME");
+// 	var display = GLOBALSTAGE;
+//
+// 	var iii = imageA;
+// 	var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
+// 	var d = new DOImage(img);
+// 	if(rotationA){
+// 		d.matrix().translate(-iii.width()*0.5,-iii.height()*0.5);
+// 		d.matrix().rotate(Math.PI);
+// 		d.matrix().translate(iii.width()*0.5,iii.height()*0.5);
+// 	}
+// 	d.matrix().scale(0.5);
+// 	d.matrix().translate(0+1700,500);
+// 	display.addChild(d);
+//
+// 	var iii = imageB;
+// 	var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
+// 	var d = new DOImage(img);
+// 	d.matrix().scale(0.5);
+// 	d.matrix().translate(0+1700,800);
+// 	display.addChild(d);
+// }
 
 
 
@@ -5856,6 +5861,7 @@ R3D._stereoBlockMatchOrderedForwardBackward = function(imageA,imageB, infoA,info
 	var widBm1 = widthB-1;
 SHOWUP = 0;
 SHOWCOUNT = 0;
+throw "dropped FAB"
 	var A = R3D._stereoBlockMatchOrderedHierarchy(imageA,imageB, infoA,infoB,Fab,Fba,pointsA,pointsB, originalA,originalB);
 SHOWCOUNT = 0;
 SHOWUP = 1;
@@ -6725,8 +6731,8 @@ if(!pathSolution){
 }
 	Code.interpolate2DFillArrayVertical(disparitiesA,imageAWidth,imageAHeight, 0,false);
 
-if(true){
-// if(false){
+// if(true){
+if(false){
 // DISPLAY:
 // console.log(disparitiesA)
 console.log("block: out disparities");
@@ -9497,15 +9503,39 @@ R3D._progressiveSparseMatches = function(imageMatrixA,objectsA, imageMatrixB,obj
 	}
 	return {"F":F, "inv":Finv, "error":Ferror, "A":pointsA, "B":pointsB};
 }
+
+R3D.rectifiedDisparityToImage = function(disparityA, infoA,epipoleA, infoB,epipoleB, mappingABRows, widthA,heightA, widthRA,heightRA){
+	var depthA = Code.newArrayZeros(widthA*heightA);
+	var pointA = new V2D();
+	var pointB = new V2D();
+	var out = new V2D();
+	var indexA = 0;
+	for(var j=0; j<heightA; ++j){
+		for(var i=0; i<widthA; ++i,++indexA){
+			pointA.x = i;
+			pointA.y = j;
+			// to RA
+			var result = R3D.pointToRectifiedPoint(out, infoA,epipoleA, pointA);
+			if(result){
+				// to RB
+				var ind = out.y*widthRA + out.x;
+				var dA = disparityA[ind];
+				out.x += Math.round(dA);
+				out.y = mappingABRows[out.y];
+				// to B
+				R3D.rectifiedPointToPoint(pointB, infoB,epipoleB, out);
+				depthA[indexA] = V2D.distance(pointA,pointB);
+			}
+		}
+	}
+	return depthA
+}
+
 R3DTESTX = 0;
-R3D.polarRectificationMatchRotate = function(infoRowMatchAB,infoA,infoB, imageA,imageB, rectifiedA,rectifiedB){
-	console.log(infoA)
-	console.log(infoB)
-	console.log(infoRowMatchAB)
+R3D.polarRectificationMatchRotate = function(infoRowMatchAB,infoA,infoB, imageA,imageB, rectifiedA,rectifiedB, Fab,Fba,epipoleA,epipoleB){
 	var mappingABRows = infoRowMatchAB["mapping"];
 	var direction = infoRowMatchAB["direction"];
 	var rotateB = direction===false;
-console.log("rotateB: "+rotateB)
 	var radiusB = infoB["radius"];
 	var radMinB = infoB["radiusMin"];
 	var radMaxB = infoB["radiusMax"];
@@ -9566,6 +9596,10 @@ console.log("rotateB: "+rotateB)
 		mappingAB["sourceB"] = imageB;
 		mappingAB["rectifiedB"] = rectifiedB;
 	}
+	mappingAB["Fab"] = Fab;
+	mappingAB["Fba"] = Fba;
+	mappingAB["epipoleA"] = epipoleA;
+	mappingAB["epipoleB"] = epipoleB;
 	// minimal overlap rect:
 	var minRowA = null;
 	var maxRowA = null;
@@ -9593,16 +9627,21 @@ console.log("rotateB: "+rotateB)
 		var j = mappingABRows[i];
 		var colsA = radiusA[i];
 		var colsB = radiusB[j];
+		if(j>=0){
+			if(minColB===null){
+				minColB = colsB[0];
+				maxColB = colsB[1];
+			}else{
+				minColB = Math.min(minColB,colsB[0]);
+				maxColB = Math.max(maxColB,colsB[1]);
+			}
+		}
 		if(minColA===null){
 			minColA = colsA[0];
 			maxColA = colsA[1];
-			minColB = colsB[0];
-			maxColB = colsB[1];
 		}else{
 			minColA = Math.min(minColA,colsA[0]);
 			maxColA = Math.max(maxColA,colsA[1]);
-			minColB = Math.min(minColB,colsB[0]);
-			maxColB = Math.max(maxColB,colsB[1]);
 		}
 	}
 	var rectA = new Rect(minColA,minRowA, maxColA-minColA+1,maxRowA-minRowA+1);
@@ -9664,7 +9703,8 @@ R3D.arbitraryAffineMatches = function(imageMatrixA,imageMatrixB, Fab,Fba, points
 // var doRectified = true;
 var doRectified = false;
 
-if(doRectified){
+/*
+if(doRectified){ // end do rectified
 
 	var epipole = R3D.getEpipolesFromF(Fab);
 	var epipoleA = epipole["A"];
@@ -9676,11 +9716,12 @@ if(doRectified){
 	// mapping AB
 	var bestMatchesListAB = {"A":pointsA, "B":pointsB};
 	var infoRowMatchAB = R3D.polarRectificationRowMatch(rectifiedInfoA,rectifiedInfoB, Fab,bestMatchesListAB, imageMatrixA,imageMatrixB);
-	var mappingAB = mappingAB = R3D.polarRectificationMatchRotate(infoRowMatchAB, rectifiedInfoA, rectifiedInfoB, imageMatrixA,imageMatrixB, rectifiedA,rectifiedB);
+	var mappingAB = R3D.polarRectificationMatchRotate(infoRowMatchAB, rectifiedInfoA, rectifiedInfoB, imageMatrixA,imageMatrixB, rectifiedA,rectifiedB, Fab,Fba,epipoleA,epipoleB);
+	console.log(mappingAB);
 	// mapping BA
 	var bestMatchesListBA = {"A":pointsB, "B":pointsA};
 	var infoRowMatchBA = R3D.polarRectificationRowMatch(rectifiedInfoB,rectifiedInfoA, Fba,bestMatchesListBA, imageMatrixB,imageMatrixA);
-	var mappingBA = R3D.polarRectificationMatchRotate(infoRowMatchBA, rectifiedInfoB, rectifiedInfoA, imageMatrixB,imageMatrixA, rectifiedB,rectifiedA);
+	var mappingBA = R3D.polarRectificationMatchRotate(infoRowMatchBA, rectifiedInfoB, rectifiedInfoA, imageMatrixB,imageMatrixA, rectifiedB,rectifiedA, Fba,Fba,epipoleB,epipoleA);
 	console.log(mappingBA);
 
 	// aligning
@@ -9704,23 +9745,30 @@ throw "A";
 
 	throw "jere"
 }else{
+	*/
 
 	var mapperAB = new ImageMapper(imageMatrixA,imageMatrixB, pointsA,pointsB, Fab,Fba);
 	var matchesAB = mapperAB.findMatches();
-	// console.log(matchesAB);
+	console.log(matchesAB);
+// throw "A only"
 	var mapperBA = new ImageMapper(imageMatrixB,imageMatrixA, pointsB,pointsA, Fba,Fab);
 	var matchesBA = mapperBA.findMatches();
+	console.log(matchesBA);
+// throw "A & B"
 
-
-Fab = matchesAB["F"];
-
-matchesAB = matchesAB["matches"];
-matchesBA = matchesBA["matches"];
-
-
-// throw "?";
+// throw "done matching"
+	if(matchesAB["error"]<matchesBA["error"]){
+		Fab = matchesAB["F"];
+		Fba = R3D.fundamentalInverse(Fab);
+	}else{
+		Fba = matchesBA["F"];
+		Fab = R3D.fundamentalInverse(Fba);
+	}
+	matchesAB = matchesAB["matches"];
+	matchesBA = matchesBA["matches"];
 
 	// if B->A < 2 pixels -> keep
+	/*
 	var maxDistance = 2.0; // 1 for A 1 for B
 	var widthA = imageMatrixA.width();
 	var heightA = imageMatrixA.height();
@@ -9743,148 +9791,89 @@ matchesBA = matchesBA["matches"];
 				var bj = Math.round(pointB.y);
 				var indexB = bj*widthB + bi;
 				var pointA2 = matchesBA[indexB];
-				var d = V2D.distance(pointA,pointA2);
-				if(d<maxDistance){
-					displacementA[indexA] = pointB;
-					displacementB[indexB] = pointA2;
-					++count;
-				}
-			}
-		}
-	}
-	console.log(count);
-
-	// rectify
-
-
-
-var epipole = R3D.getEpipolesFromF(Fab);
-var epipoleA = epipole["A"];
-var epipoleB = epipole["B"];
-var rectifiedInfoA = R3D.polarRectification(imageMatrixA,epipoleA);
-var rectifiedInfoB = R3D.polarRectification(imageMatrixB,epipoleB);
-var rectifiedA = new ImageMat(rectifiedInfoA.width,rectifiedInfoA.height, rectifiedInfoA.red,rectifiedInfoA.grn,rectifiedInfoA.blu);
-var rectifiedB = new ImageMat(rectifiedInfoB.width,rectifiedInfoB.height, rectifiedInfoB.red,rectifiedInfoB.grn,rectifiedInfoB.blu);
-// mapping AB
-var bestMatchesListAB = {"A":pointsA, "B":pointsB};
-var infoRowMatchAB = R3D.polarRectificationRowMatch(rectifiedInfoA,rectifiedInfoB, Fab,bestMatchesListAB, imageMatrixA,imageMatrixB);
-var mappingAB = mappingAB = R3D.polarRectificationMatchRotate(infoRowMatchAB, rectifiedInfoA, rectifiedInfoB, imageMatrixA,imageMatrixB, rectifiedA,rectifiedB);
-// mapping BA
-var bestMatchesListBA = {"A":pointsB, "B":pointsA};
-var infoRowMatchBA = R3D.polarRectificationRowMatch(rectifiedInfoB,rectifiedInfoA, Fba,bestMatchesListBA, imageMatrixB,imageMatrixA);
-var mappingBA = R3D.polarRectificationMatchRotate(infoRowMatchBA, rectifiedInfoB, rectifiedInfoA, imageMatrixB,imageMatrixA, rectifiedB,rectifiedA);
-console.log(mappingBA);
-
-
-
-
-
-	// var rotateB = mappingAB["rotated"];
-	var mappingABRows = infoRowMatchAB["mapping"];
-	var direction = infoRowMatchAB["direction"];
-	var rotateB = direction===false;
-
-
-
-	// var pointA = new V2D();
-	// var out = new V2D;
-	var widthRA = rectifiedA.width();
-	var heightRA = rectifiedA.height();
-	var widthRB = rectifiedB.width();
-	var heightRB = rectifiedB.height();
-	var pixelsRA = widthRA*heightRA;
-	var displacementA = Code.newArrayNulls(pixelsRA);
-
-	if(rotateB){
-		for(var i=0; i<heightRA; ++i){
-			mappingABRows[i] = heightRB - 1 - mappingABRows[i];
-		}
-	}
-
-	// TODO: THIS SHOULD BE THE OPPOSITE DIRECTION .... ?
-	var out = new V2D();
-	var pointA = new V2D();
-	for(var j=0; j<heightA; ++j){
-		for(var i=0; i<widthA; ++i){
-			pointA.x = i;
-			pointA.y = j;
-			var indexA = j*widthA + i;
-			var pointB = matchesAB[indexA];
-			if(pointB){
-				var result = R3D.pointToRectifiedPoint(out, rectifiedInfoA,epipoleA, pointA);
-				if(result){
-					var colA = out.x;
-					var rowA = out.y;
-					var result = R3D.pointToRectifiedPoint(out, rectifiedInfoB,epipoleB, pointB);
-					if(result){
-						var colB = out.x;
-						var rowB = out.y;
-						if(rotateB){
-							colB = widthRB - 1 - colB;
-						}
-						var displacement = colB-colA;
-						displacementA[rowA*widthRA + colA] = displacement;
+				if(pointA2){
+					var d = V2D.distance(pointA,pointA2);
+					if(d<maxDistance){
+						displacementA[indexA] = pointB;
+						displacementB[indexB] = pointA2;
+						++count;
 					}
 				}
 			}
 		}
 	}
-	// var radiusMin = rectifiedInfoA["radiusMin"];
-	// var radius = rectifiedInfoA["radius"];
-	// var angles = rectifiedInfoA["angles"];
-	// var point = new V2D();
-	// var dir = new V2D();
-	// var val = new V3D();
-	// for(var j=0; j<heightRA; ++j){
-	// 	var angle = angles[j];
-	// 	var radius = radius;
-	// 	var colMin = radius[0];
-	// 	var colMax = radius[1];
-	// 	dir.set(1,0);
-	// 	dir.rotate(angle);
-	// 	// point.add(epipoleA);
-	// 	for(var i=colMin; i<=colMax; ++i){
-	// 		var x = (radMin+i)*dir.x + epipoleA.x;
-	// 		var y = (radMin+i)*dir.y + epipoleA.y;
-	// 		point.x = x;
-	// 		point.y = y;
-	// 		var value = ;
-	// 		var index = j*widthA + i;
-	// 		displacementA[index] = value;
-	//
-	//
-	// 	}
-	// }
+	console.log("cross matching: "+count);
+	*/
+
+
+	// rectify
+	console.log("rectify for 1D optimizing location");
+	var epipole = R3D.getEpipolesFromF(Fab);
+	var epipoleA = epipole["A"];
+	var epipoleB = epipole["B"];
+	var rectifiedInfoA = R3D.polarRectification(imageMatrixA,epipoleA);
+	var rectifiedInfoB = R3D.polarRectification(imageMatrixB,epipoleB);
+	var rectifiedA = new ImageMat(rectifiedInfoA.width,rectifiedInfoA.height, rectifiedInfoA.red,rectifiedInfoA.grn,rectifiedInfoA.blu);
+	var rectifiedB = new ImageMat(rectifiedInfoB.width,rectifiedInfoB.height, rectifiedInfoB.red,rectifiedInfoB.grn,rectifiedInfoB.blu);
+	// mapping AB
+	var bestMatchesListAB = {"A":pointsA, "B":pointsB};
+	var infoRowMatchAB = R3D.polarRectificationRowMatch(rectifiedInfoA,rectifiedInfoB, Fab,bestMatchesListAB, imageMatrixA,imageMatrixB);
+	var mappingAB = R3D.polarRectificationMatchRotate(infoRowMatchAB, rectifiedInfoA, rectifiedInfoB, imageMatrixA,imageMatrixB, rectifiedA,rectifiedB, Fab,Fba,epipoleA,epipoleB);
+	console.log(mappingAB);
+	// mapping BA
+	var bestMatchesListBA = {"A":pointsB, "B":pointsA};
+	var infoRowMatchBA = R3D.polarRectificationRowMatch(rectifiedInfoB,rectifiedInfoA, Fba,bestMatchesListBA, imageMatrixB,imageMatrixA);
+	var mappingBA = R3D.polarRectificationMatchRotate(infoRowMatchBA, rectifiedInfoB, rectifiedInfoA, imageMatrixB,imageMatrixA, rectifiedB,rectifiedA, Fba,Fba,epipoleB,epipoleA);
+	console.log(mappingBA);
+
+
+	displacementA = R3D.displacementFromSparseMatches(mappingAB, matchesAB);
+	console.log(displacementA);
+	displacementB = R3D.displacementFromSparseMatches(mappingBA, matchesBA);
+	console.log(displacementB);
 /*
-	rectifiedA ->
-	sourceA ->
-	sourceB ->
-	rectifiedB
+} // end do rectified
 */
+	var rotateB = mappingAB["rotated"];
 
-	// throw "..."
-}
+	var widthRA = rectifiedA.width();
+	var heightRA = rectifiedA.height();
+	var widthRB = rectifiedB.width();
+	var heightRB = rectifiedB.height();
 
-// throw "naow ?"
-	// interpolate rows:
-	console.log("interpolate rows");
-	var row = Code.newArrayNulls(widthRA);
-	for(var j=0; j<heightRA; ++j){
-		for(var i=0; i<widthRA; ++i){
-			row[i] = displacementA[j*widthRA + i];
-		}
-		Code.interpolate1DFillArray(row,null, false);
-		for(var i=0; i<widthRA; ++i){
-			displacementA[j*widthRA + i] = row[i];
-		}
-	}
-	Code.interpolate2DFillArrayVertical(displacementA,widthRA,heightRA, null, false);
+// show rectified displacements
+	var sca = 0.5;
+	var d = Code.copyArray(displacementA);
+	ImageMat.normalFloat01(d);
+	d = ImageMat.pow(d,0.5);
+	var display = GLOBALSTAGE;
+	var colors = [0xFFFFFFFF, 0xFFFF9900, 0xFFFF0000, 0xFF00FF00, 0xFF3399FF, 0xFF0000FF, 0xFF330066, 0xFF000000];
+	var heat = ImageMat.heatImage(d, widthRA,heightRA, true);
+	var img = GLOBALSTAGE.getFloatRGBAsImage(heat.red(), heat.grn(), heat.blu(), heat.width(), heat.height());
+	var d = new DOImage(img);
+	d.matrix().scale(sca);
+	d.matrix().translate(10 + 1100, 10 + 0);
+	display.addChild(d);
 
-	var sca = 1.0;
+	var d = Code.copyArray(displacementB);
+	ImageMat.normalFloat01(d);
+	d = ImageMat.pow(d,0.5);
+	var display = GLOBALSTAGE;
+	var colors = [0xFFFFFFFF, 0xFFFF9900, 0xFFFF0000, 0xFF00FF00, 0xFF3399FF, 0xFF0000FF, 0xFF330066, 0xFF000000];
+	var heat = ImageMat.heatImage(d, widthRB,heightRB, false);
+	var img = GLOBALSTAGE.getFloatRGBAsImage(heat.red(), heat.grn(), heat.blu(), heat.width(), heat.height());
+	var d = new DOImage(img);
+	d.matrix().scale(sca);
+	d.matrix().translate(10 + 1100, 10 + 800);
+	display.addChild(d);
+
+
+	var sca = 0.5;
+
 	var img = GLOBALSTAGE.getFloatRGBAsImage(rectifiedA.red(), rectifiedA.grn(), rectifiedA.blu(), rectifiedA.width(),rectifiedA.height());
 	var d = new DOImage(img);
 		d.matrix().scale(sca);
-		d.matrix().translate(10 + 1100, 10 + 0);
+		d.matrix().translate(10 + 1400, 10 + 0);
 	GLOBALSTAGE.addChild(d);
 
 	var img = GLOBALSTAGE.getFloatRGBAsImage(rectifiedB.red(), rectifiedB.grn(), rectifiedB.blu(), rectifiedB.width(),rectifiedB.height());
@@ -9894,11 +9883,13 @@ console.log(mappingBA);
 		d.matrix().rotate(Math.PI);
 		d.matrix().translate(rectifiedB.width()*0.5,rectifiedB.height()*0.5);
 	}
-		d.matrix().scale(sca);
-		d.matrix().translate(10 + 1100, 10 + 600);
+	d.matrix().scale(sca);
+	d.matrix().translate(10 + 1400, 10 + 800);
 	GLOBALSTAGE.addChild(d);
 
-if(true){
+/*
+if(false){
+// if(true){
 	console.log("display pluck");
 	// PLUCK POINTS:
 	var pluckA = new ImageMat(widthRA,heightRA);
@@ -9957,40 +9948,76 @@ if(true){
 	d.matrix().translate(10 + 2300, 10 + 0);
 	GLOBALSTAGE.addChild(d);
 }
+
+*/
 	// blur
 	// var sigma = 3.0;
 	// displacementA = ImageMat.getBlurredImage(displacementA,widthRA,heightRA, sigma);
 
 
 // var halfA = displacementA;
-var startS = 1.0;
+// var startS = 1.0;
 // var startS = 0.5;
 // var startS = 0.25;
 
 // var halfA = R3D._scaledDisparity(displacementA,widthRA,heightRA, Math.round(widthRA*0.5), Math.round(heightRA*0.5));
 // console.log(halfA);
 // var startS = 0.5;
+//
+// var originalA = imageMatrixA;
+// var originalB = imageMatrixB;
+// var imageA = rectifiedA;
+// var imageB = rectifiedB;
+// var infoA = rectifiedInfoA;
+// var infoB = rectifiedInfoB;
+// SHOWUP = 0;
+// SHOWCOUNT = 0;
+// // var pathSolution = true;
+// var pathSolution = false;
+// 	var A = R3D._stereoBlockMatchOrderedHierarchy(imageA,imageB, infoA,infoB,Fab,Fba,pointsA,pointsB, originalA,originalB, startS,displacementA,pathSolution, [9,5]); // [7,5,3]
+// console.log(A);
+//
+// var disparityA = A["disparity"];
+//
+// console.log("rectified depth to image depth");
+//
+// 	var depthA = R3D.rectifiedDisparityToImage(disparityA, infoA,epipoleA, infoB,epipoleB, mappingABRows, widthA,heightA, widthRA,heightRA);
+// 	// var depthB = R3D.rectifiedDisparityToImage(disparityB, infoB,epipoleB, infoA,epipoleA, mappingBARows, widthB,heightB, widthRB,heightRB);
 
-var originalA = imageMatrixA;
-var originalB = imageMatrixB;
-var imageA = rectifiedA;
-var imageB = rectifiedB;
-var infoA = rectifiedInfoA;
-var infoB = rectifiedInfoB;
+
 SHOWUP = 0;
 SHOWCOUNT = 0;
-// var pathSolution = true;
-var pathSolution = false;
-	var A = R3D._stereoBlockMatchOrderedHierarchy(imageA,imageB, infoA,infoB,Fab,Fba,pointsA,pointsB, originalA,originalB, startS,displacementA,pathSolution, [3,3]); // [7,5,3]
-console.log(A);
+var depthA = R3D.linearDepthFromDisplacement(mappingAB,displacementA);
+var depthB = R3D.linearDepthFromDisplacement(mappingBA,displacementB);
+
+	// show 'displacement'
+	var widthA = imageMatrixA.width();
+	var heightA = imageMatrixA.height();
+	var widthB = imageMatrixB.width();
+	var heightB = imageMatrixB.height();
+
+	var sca = 1.0;
+	var iii = Code.copyArray(depthA);
+		ImageMat.normalFloat01(iii);
+	var img = GLOBALSTAGE.getFloatRGBAsImage(iii,iii,iii, widthA,heightA);
+	var d = new DOImage(img);
+	d.matrix().scale(sca);
+	d.matrix().translate(10 + 0, 0 + 900);
+	GLOBALSTAGE.addChild(d);
+
+	var iii = Code.copyArray(depthB);
+		ImageMat.normalFloat01(iii);
+	var img = GLOBALSTAGE.getFloatRGBAsImage(iii,iii,iii, widthB,heightB);
+	var d = new DOImage(img);
+	d.matrix().scale(sca);
+	d.matrix().translate(10 + 500, 0 + 900);
+	GLOBALSTAGE.addChild(d);
 
 
 
 throw "map matching points A & B";
-// arbitraryAffineMatches
-// arbitraryStereoMatches
-//	_stereoBlockMatchOrderedForwardBackward
-//		_stereoBlockMatchOrderedHierarchy
+
+	// forward - backward matching points
 	// fill in
 
 	// smooth
@@ -10002,7 +10029,157 @@ throw "map matching points A & B";
 
 	throw " thing ...";
 }
+R3D.displacementFromSparseMatches = function(mappingAB, matchesAB){
+	console.log(mappingAB);
 
+	var rectifiedA = mappingAB["rectifiedA"];
+	var rectifiedB = mappingAB["rectifiedB"];
+	var epipoleA = mappingAB["epipoleA"];
+	var epipoleB = mappingAB["epipoleB"];
+
+	// var mappingABRows = mappingAB["mapping"]; // need ?
+	var rectifiedInfoA = mappingAB["infoA"];
+	var rectifiedInfoB = mappingAB["infoB"];
+
+	var imageA = mappingAB["sourceA"];
+	var imageB = mappingAB["sourceB"];
+	var widthA = imageA.width();
+	var widthB = imageB.width();
+	var heightA = imageA.height();
+	var heightB = imageB.height();
+
+	var widthRA = rectifiedA.width();
+	var heightRA = rectifiedA.height();
+	var widthRB = rectifiedB.width();
+	var heightRB = rectifiedB.height();
+	var pixelsRA = widthRA*heightRA;
+	var displacementA = Code.newArrayNulls(pixelsRA);
+
+	var rotateB = mappingAB["rotated"];
+	// THIS SHOULD ALREADY HAVE BEEN DONE
+	// if(rotateB){
+	// 	for(var i=0; i<heightRA; ++i){
+	// 		mappingABRows[i] = heightRB - 1 - mappingABRows[i];
+	// 	}
+	// }
+	// TODO: THIS SHOULD BE THE OPPOSITE DIRECTION .... ?
+	var out = new V2D();
+	var pointA = new V2D();
+	for(var j=0; j<heightA; ++j){
+		for(var i=0; i<widthA; ++i){
+			pointA.x = i;
+			pointA.y = j;
+			var indexA = j*widthA + i;
+			var pointB = matchesAB[indexA];
+			if(pointB){
+				var result = R3D.pointToRectifiedPoint(out, rectifiedInfoA,epipoleA, pointA);
+				if(result){
+					var colA = out.x;
+					var rowA = out.y;
+					var result = R3D.pointToRectifiedPoint(out, rectifiedInfoB,epipoleB, pointB);
+					if(result){
+						var colB = out.x;
+						var rowB = out.y;
+						if(rotateB){
+							colB = widthRB - 1 - colB;
+						}
+						var displacement = colB-colA;
+						displacementA[rowA*widthRA + colA] = displacement;
+					}
+				}
+			}
+		}
+	}
+	// var radiusMin = rectifiedInfoA["radiusMin"];
+	// var radius = rectifiedInfoA["radius"];
+	// var angles = rectifiedInfoA["angles"];
+	// var point = new V2D();
+	// var dir = new V2D();
+	// var val = new V3D();
+	// for(var j=0; j<heightRA; ++j){
+	// 	var angle = angles[j];
+	// 	var radius = radius;
+	// 	var colMin = radius[0];
+	// 	var colMax = radius[1];
+	// 	dir.set(1,0);
+	// 	dir.rotate(angle);
+	// 	// point.add(epipoleA);
+	// 	for(var i=colMin; i<=colMax; ++i){
+	// 		var x = (radMin+i)*dir.x + epipoleA.x;
+	// 		var y = (radMin+i)*dir.y + epipoleA.y;
+	// 		point.x = x;
+	// 		point.y = y;
+	// 		var value = ;
+	// 		var index = j*widthA + i;
+	// 		displacementA[index] = value;
+	//
+	//
+	// 	}
+	// }
+
+	// interpolate rows:
+	var row = Code.newArrayNulls(widthRA);
+	for(var j=0; j<heightRA; ++j){
+		for(var i=0; i<widthRA; ++i){
+			row[i] = displacementA[j*widthRA + i];
+		}
+		Code.interpolate1DFillArray(row,null, false);
+		for(var i=0; i<widthRA; ++i){
+			displacementA[j*widthRA + i] = row[i];
+		}
+	}
+	Code.interpolate2DFillArrayVertical(displacementA,widthRA,heightRA, null, false);
+	return displacementA;
+}
+CALLED_ASD = 0;
+R3D.linearDepthFromDisplacement = function(mappingAB, displacementA){
+	var infoA = mappingAB["infoA"];
+	var infoB = mappingAB["infoB"];
+	var imageA = mappingAB["sourceA"];
+	var imageB = mappingAB["sourceB"];
+	var rectifiedA = mappingAB["rectifiedA"];
+	var rectifiedB = mappingAB["rectifiedB"];
+	var Fab = mappingAB["Fab"];
+	var Fba = mappingAB["Fba"];
+	var epipoleA = mappingAB["epipoleA"];
+	var epipoleB = mappingAB["epipoleB"];
+
+	var mappingABRows = mappingAB["mapping"];
+
+	var widthA = imageA.width();
+	var heightA = imageA.height();
+	var widthRA = rectifiedA.width();
+	var heightRA = rectifiedA.height();
+
+	// TODO:
+	// UNDO ALL THE ORIENTATION STUFF INSIDE IN STEREO ...
+
+	var startS = 1.0;
+	// var pathSolution = true;
+	var pathSolution = false;
+	var A = R3D._stereoBlockMatchOrderedHierarchy(rectifiedA,rectifiedB, infoA,infoB, imageA,imageB, startS,displacementA,pathSolution, [5,3]); // [7,5,3]
+		var disparityA = A["disparity"];
+
+
+		// var sca = 0.5;
+		// var d = Code.copyArray(disparityA);
+		// ImageMat.normalFloat01(d);
+		// d = ImageMat.pow(d,0.5);
+		// var display = GLOBALSTAGE;
+		// var colors = [0xFFFFFFFF, 0xFFFF9900, 0xFFFF0000, 0xFF00FF00, 0xFF3399FF, 0xFF0000FF, 0xFF330066, 0xFF000000];
+		// var heat = ImageMat.heatImage(d, widthRA,heightRA, false);
+		// var img = GLOBALSTAGE.getFloatRGBAsImage(heat.red(), heat.grn(), heat.blu(), heat.width(), heat.height());
+		// var d = new DOImage(img);
+		// d.matrix().scale(sca);
+		// d.matrix().translate(10 + 1400 + CALLED_ASD*400, 10 + 300);
+		// display.addChild(d);
+		// CALLED_ASD++;
+
+
+	console.log("rectified depth to image depth");
+	var depthA = R3D.rectifiedDisparityToImage(disparityA, infoA,epipoleA, infoB,epipoleB, mappingABRows, widthA,heightA, widthRA,heightRA);
+	return depthA;
+}
 R3D.arbitraryStereoMatches = function(imageMatrixA,imageMatrixB, Fab,Fba, pointsA,pointsB){
 // console.log("FAB: "+Fab.toArray());
 // console.log("FBA: "+Fba.toArray());
@@ -28073,6 +28250,21 @@ var d = new DOImage(img);
 	// KD TREE ??
 	console.log("oot");
 }
+R3D.rectifiedPointToPoint = function(out, info,epipole, point){
+	var angles = info["angles"];
+	var radius = info["radius"];
+	var radMin = info["radiusMin"];
+	var width = info["width"];
+	var height = info["height"];
+	var angle = angles[point.y];
+	out.x = point.x; // + radMin;
+	out.y = 0;
+	out.rotate(angle);
+	out.add(epipole);
+	return out;
+	// return null;
+}
+
 R3D.pointToRectifiedPoint = function(out, info,epipole, point){
 	var angles = info["angles"];
 	var radius = info["radius"];
@@ -28095,17 +28287,14 @@ R3D.pointToRectifiedPoint = function(out, info,epipole, point){
 	}
 	var row = Code.binarySearchCircular(angles, circularF, false);
 
-
 	if(Code.isArray(row)){
 		row = row[0];
 	}
 	if(row<0 || row>height-1){
 		return null;
 	}
-	// radius = radius[row];
 	var distance = V2D.distance(point,epipole);
 	var col = Math.round(distance)-radMin;
-	// console.log(col);
 	if(col<0 || col>width-1){
 		return null;
 	}

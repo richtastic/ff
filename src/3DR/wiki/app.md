@@ -370,9 +370,31 @@ https://cloud.google.com/appengine/docs/nodejs/
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+- determine best predicted location:
+	x search each of 4 possible parents
+	x pick parent / location with lowest score
+	- inlier parents
+
+x determine which neighbors to use for regularization
+	x list of B/A ratios
+	x max-min, keep all under avg (or mid)
+
+
+- plot motion field
+
+
+
+- forward/backward chosen priorities?
+
+- motion field rather than / in conjunction with affine ?
+
+
+- discontinuities cause invalidation or some such
+
 - searching for points along discontinuity should check A or B
 	=> how to identify discontinuity ?
-
+		- look at relative distance of ~9 neighbors, if closest half & farthest half ratio > ~2
+	=> how to react to discontinuity
 
 - what do do about F rectified looping around ?
 	- find smallest (valid)value in rowA -> this should be the 'start?' of A?
@@ -380,13 +402,15 @@ https://cloud.google.com/appengine/docs/nodejs/
 => rectified lines aren't matching up too well
 - could F be re-estimated using fwd/bak kept points?
 
-=> could this method be used early on to get good F?
+=> could this method be used earlier on to get good F?
+
+
+- edges of interpolated map should be more gradient-like ..
 
 
 
 
-
-- what to do about epiole inside image
+- what to do about epiople inside image
 	=> looping image extraction
 
 
@@ -399,15 +423,34 @@ https://cloud.google.com/appengine/docs/nodejs/
 
 
 
-- better smoothing ?
 
 
-- any way to get path working?
+- ways to get around path non-finding
+	ANY path ending at: i-1,x : x <= i+del-1
+	ANY path ending at: x,i+del-1 : x <= i-1
+
+		lookup table: A
+			sorted on B
+				-> lookup first index for B<=i+del-1
+		lookup table: B
+			sorted on A
+				-> lookup first index for A<=i-1
+
+	FINDING PREDECESSORS: [up to N]
+		A predecessor:
+			for each entry in A starting at i-1:
+				binary-lookup to find first index ending at B<=i-del-1
+					grab all previous entries up to N count
+				if count >= N
+					break
+		B predecessor:
+			for each entry in B starting at i-delta-1:
+				binary-lookup to find first index ending at A<=i-1
+					grab all previous entries up to N count
+				if count >= N
+					break
 
 
-
-- speed up quadspace lookuping
-	- 'checked' / 'added'
 
 
 	++++ALTERNATE++++

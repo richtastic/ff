@@ -195,10 +195,12 @@ Grid2D.prototype._neighborNObjectsForColRow = function(col,row, doObjects, list)
 	var cols = this._cols;
 	var rows = this._rows;
 	var neighbors = [];
-	for(i=0; i<list.length; i+=2){
-		var r = row+list[2*i+0];
-		var c = col+list[2*i+1];
+	for(var i=0; i<list.length; i+=2){
+		var r = row+list[i+0];
+		var c = col+list[i+1];
+		// console.log(i+" = "+row+":"+col+" "+r+","+c);
 		if(0<=c && c<cols && 0<=r && r<rows){
+			// console.log(r+","+c);
 			var cell = this.cellFromColRow(c,r);
 			if(doObjects){
 				var objects = cell.toArray();
