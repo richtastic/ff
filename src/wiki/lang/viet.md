@@ -7,20 +7,18 @@
 | --- | --- | --- |
 | chào | chow | hello |
 | khỏe không? | kaweii cowngh | how are you |
-| khỏe |  | good (feel) |
+| khỏe |  | well (feel good) |
 | cảm ơn | cam ohn | thank you |
+| không có gì |  | you're welcome /no problem |
 | tên  |  | name |
 | đang làm gì đấy | lahm yee yiee | what you doing |
 |  |  |  |
-| về nhà |  | go home |
+| về nhà | vay nyah | go home |
 | house |  | nhà |
 | phòng vệ sinh |  | bathroom |
 | đang làm gì đấy |  | what are you doing |
-| khỏe không |  | how are you |
-| cảm ơn |  | thanks |
 | that's ok |  | không sao |
 |  |  |  |
-| không có gì |  | you're welcome /no problem |
 |  |  |  |
 |  |  |  |
 |  |  |  |
@@ -39,13 +37,30 @@
 |  |  |  |
 |  |  |  |
 |  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+
+
+tiền bạc
+
+|  |  |  |
+| giờ | yuhh | o'clock |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+
 | tiếng | tee-eng | language |
 | tiền | tee-en | money |
 |  |  |  |
 | xe hơi |  | car |
 | xe đạp |  | bike |
 | xe lửa |  | train |
-| máy bay | my by | plain |
+| máy bay | my by | plane |
 | phim | feem | movie(film) |
 |  |  |  |
 |  |  |  |

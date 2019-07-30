@@ -370,6 +370,31 @@ https://cloud.google.com/appengine/docs/nodejs/
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+- see how many points % of image are fwd/bak mapped to eachother [10%+]
+- try optimizing individual steps:
+	- initial orientation:
+		- location from average displacement
+		- rotation from average F-angle [subsample like 10-100]
+		- scale from average scale [in log space]
+	- subdivision
+		- estimating search point(s)
+			- including correct neighbors
+			- avoid neighbors across discontinuity
+		- optimal location
+			- best choice
+				- fwd/bak check ?
+		- optimal orientation
+			- averaging
+	- regularization
+		- which neighbors to include
+			- avoid neighbors across discontinuity
+				- (distance ?)
+	- smoothing disparity
+		- median filter
+	- interpolation
+		- triangle perimeter edges
+
+
 - determine best predicted location:
 	x search each of 4 possible parents
 	x pick parent / location with lowest score

@@ -860,9 +860,9 @@ ImageMapper.Grid.prototype.solveMapping = function(){
 // var divisions = 1; // 4
 // var divisions = 2; // 16
 // var divisions = 3; // 64
-// var divisions = 4; // 256
+var divisions = 4; // 256
 // var divisions = 5; // 1024
-var divisions = 6; // 4096 // MAXIMUM
+// var divisions = 6; // 4096 // MAXIMUM
 // var divisions = 7; // 16384 // ~ order of pixels
 	for(var i=0; i<divisions; ++i){
 	console.log(" iteration: "+i+" / "+divisions);
