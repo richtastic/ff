@@ -7797,6 +7797,9 @@ Code.distancePointRayFinite2D = function(org,dir, point){ // point and ray - fin
 }
 
 Code.closestPointLineSegment2D = function(org,dir, point){ // finite ray and point
+
+// TODO: RETURN OUT VAR
+
 	var t = (V2D.dot(dir,point)-V2D.dot(org,dir))/V2D.dot(dir,dir);
 	if(t<=0){
 		return new V2D(org.x,org.y);

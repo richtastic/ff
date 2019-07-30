@@ -370,7 +370,7 @@ https://cloud.google.com/appengine/docs/nodejs/
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-- see how many points % of image are fwd/bak mapped to eachother [10%+]
+
 - try optimizing individual steps:
 	- initial orientation:
 		- location from average displacement
@@ -428,10 +428,6 @@ x determine which neighbors to use for regularization
 - could F be re-estimated using fwd/bak kept points?
 
 => could this method be used earlier on to get good F?
-
-
-- edges of interpolated map should be more gradient-like ..
-
 
 
 

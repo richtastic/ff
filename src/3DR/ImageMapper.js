@@ -117,6 +117,9 @@ ImageMapper.prototype.interpolateMatches = function(matchesAB, imageA, imageB, p
 	}
 	console.log("mapping start");
 	var pointSpace = new QuadTree(toV2D, new V2D(0,0), new V2D(widthA,heightA));
+
+// TODO: THIS NEEDS TO BE A POINT-SPACE FOR LINE SEGMENTS OF PERIMETER
+
 	var triSpace = new QuadSpace(toRect, new V2D(-widthA,heightA), new V2D(widthA*2,heightA*2));
 	for(var i=0; i<tris.length; ++i){
 		var tri = tris[i];
@@ -133,8 +136,13 @@ ImageMapper.prototype.interpolateMatches = function(matchesAB, imageA, imageB, p
 		triSpace.insertObject({"A":a,"B":b,"C":c,"rect":rect});
 	}
 var allTris = triSpace.toArray();
-	for(var i=0; i<matchesAB.length; ++i){
-		var match = matchesAB[i];
+	// for(var i=0; i<matchesAB.length; ++i){
+	// 	var match = matchesAB[i];
+	// 	pointSpace.insertObject(match);
+	// }
+	for(var i=0; i<perimeter.length; ++i){
+		var perim = perimeter[i];
+		var match = datas[i];
 		pointSpace.insertObject(match);
 	}
 	var point = new V2D();
@@ -169,11 +177,23 @@ var allTris = triSpace.toArray();
 					}
 				}
 			}
-			// TODO: FIND NEAREST TRI... NEAREST LINE SEGMENT
-			if(!isInside){
-				var a = pointSpace.closestObject(point);
-				avg.x = a["B"].x;
-				avg.y = a["B"].y;
+			if(!isInside){ // nearest line segment
+				var ab = pointSpace.kNN(point, 2);
+				var a = ab[0];
+				var b = ab[1];
+					var A = a["A"];
+					var B = b["A"];
+				var dir = V2D.sub(B,A);
+				var len = dir.length();
+				var pt = Code.closestPointLineSegment2D(A,dir, point);
+				pt.sub(A);
+				var dot = pt.length()/len;
+				var pB = dot;
+				var pA = 1.0-dot;
+					var A = a["B"];
+					var B = b["B"];
+				avg.x = pA*A.x + pB*B.x;
+				avg.y = pA*A.y + pB*B.y;
 				pixelsA[index] = avg.copy();
 			}
 		}
@@ -181,6 +201,7 @@ var allTris = triSpace.toArray();
 	triSpace.kill();
 	pointSpace.kill();
 	console.log("mapping end");
+// throw "..."
 if(false){
 // if(true){
 	// smoothing
@@ -252,10 +273,9 @@ if(true){
 		// d.matrix().translate(10 + 550, 10 + 450*INTERPOLATE_CALLS );
 		cont.addChild(d);
 	}
-
 	++INTERPOLATE_CALLS;
 }
-
+// throw "what ?"
 	return pixelsA;
 }
 
@@ -860,8 +880,8 @@ ImageMapper.Grid.prototype.solveMapping = function(){
 // var divisions = 1; // 4
 // var divisions = 2; // 16
 // var divisions = 3; // 64
-var divisions = 4; // 256
-// var divisions = 5; // 1024
+// var divisions = 4; // 256
+var divisions = 5; // 1024
 // var divisions = 6; // 4096 // MAXIMUM
 // var divisions = 7; // 16384 // ~ order of pixels
 	for(var i=0; i<divisions; ++i){
