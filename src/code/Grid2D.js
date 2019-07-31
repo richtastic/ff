@@ -44,6 +44,8 @@ Grid2D.prototype.rows = function(){
 	return this._rows;
 }
 Grid2D.prototype.size = function(){
+	// var cellSize = this.cellSize();
+	// return new V2D(this._cols*cellSize.x,this._rows*cellSize.y);
 	return this._size.copy();
 }
 Grid2D.prototype.offset = function(){
@@ -101,6 +103,28 @@ Grid2D.prototype.objectsFromColRow = function(c,r){
 	}
 	return null;
 }
+Grid2D.prototype.cellFromPointRounded = function(x,y){
+	if(this._cells && this._size){
+		var cr = this._colRowFromPointRounded(x,y);
+		return this.cellFromColRow(cr.x,cr.y);
+	}
+	return null;
+}
+Grid2D.prototype._colRowFromPointRounded = function(x,y){
+	var size = this._size;
+	var cellSize = this._cellSize;
+	var localX = x - this._offset.x;
+	var localY = y - this._offset.y;
+	var c = localX/cellSize.x | 0;
+	var r = localY/cellSize.y | 0;
+		c = Math.min(Math.max(c,0),this._cols-1);
+		r = Math.min(Math.max(r,0),this._rows-1);
+	return new V2D(c,r);
+}
+
+
+
+
 Grid2D.prototype.cellFromPoint = function(x,y){
 	if(this._cells && this._size){
 		var cr = this._colRowFromPoint(x,y);

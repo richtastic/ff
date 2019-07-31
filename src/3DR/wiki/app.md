@@ -369,7 +369,29 @@ https://cloud.google.com/appengine/docs/nodejs/
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+- update graph initialization / subdividing to only incorporate starting matching location COM & extent
 
+
+
+
+- some way to incorporate initial F pairwise matches in seeding?
+
+- use initial point matches to point to where blocks should go
+
+x try using FWD/BAK on original source images (interpolated w/o rectification)
+
+
+SHOW WHAT WOULD BE THE STARTING SEEDS ?
+
+.....
+
+
+IMPROVING ESTIMATIONS:
+	- can F-angle be used to help transforms?
+	x use sigma = null for ~1:1, use larger sigma for 2:1 + ratios?
+
+- wrap up logic into single R3D fxn
+	- test in pipeline process
 
 - try optimizing individual steps:
 	- initial orientation:
@@ -408,7 +430,6 @@ x determine which neighbors to use for regularization
 - plot motion field
 
 
-
 - forward/backward chosen priorities?
 
 - motion field rather than / in conjunction with affine ?
@@ -429,10 +450,6 @@ x determine which neighbors to use for regularization
 
 => could this method be used earlier on to get good F?
 
-
-
-- what to do about epiople inside image
-	=> looping image extraction
 
 
 - mbda * (summed average location) + lambda*(predicted location)
