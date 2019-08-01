@@ -10707,8 +10707,8 @@ Code.isPointInsideTri2DFast = function(p, a,b,c){
 	if(p.y > Math.max(a.y,b.y,c.y)){
 		return false;
 	}
-	return Code.isPointInsidePolygon2D(p, [a,b,c]);
-	// return Code.isPointInsideTri2D(p, a,b,c);
+	// return Code.isPointInsidePolygon2D(p, [a,b,c]); // less reliable ...
+	return Code.isPointInsideTri2D(p, a,b,c); // slower
 }
 Code.isPointInsideTri2D = function(p, a,b,c){
 	var ab = V2D.sub(b,a);
@@ -12823,6 +12823,94 @@ Code._radixSortInt = function(i){
 }
 Code.radixSort = function(a,f){ // n*k
 	f = f!==undefined ? f : Code._radixSortInt;
+	throw "todo";
+}
+
+
+// --------------------------------------------------------------------------------------------------------------------------------------------
+Code.clusterHierarchicalPoints2D = function(points,distance,toPointFxn){ // hierarchical clustering 2D [agglomerative]
+	toPointFxn = toPointFxn ? toPointFxn : function(a){ return a; };
+	var mini = null;
+	var maxi = null;
+	var pointCount = points.length;
+	if(pointCount==0){
+		return null;
+	}
+	if(pointCount==1){
+		return [[points[0]]];
+	}
+	var groups = [];
+	// insert initial points
+	for(var i=0; i<pointCount; ++i){
+		var point = points[i];
+		var pnt = toPointFxn(point);
+		var group = {"center":pnt.copy(), "points":[point], "linked":[]};
+		groups.push(group);
+		if(!mini){
+			mini = pnt.copy();
+			maxi = pnt.copy();
+		}else{
+			mini.x = Math.min(mini.x,pnt.x);
+			mini.y = Math.min(mini.y,pnt.y);
+			maxi.x = Math.max(maxi.x,pnt.x);
+			maxi.y = Math.max(maxi.y,pnt.y);
+		}
+	}
+	// insert initial points
+	var toPoint = function(a){ return a["center"]; };
+	var pointSpace = new QuadTree(toPoint, mini, maxi);
+	for(var i=0; i<pointCount; ++i){
+		var group = groups[i];
+		pointSpace.insertObject(group);
+	}
+	// find initial closest points
+	for(var i=0; i<pointCount; ++i){
+		var group = groups[i];
+		var closests = pointSpace.kNN(group["center"],2);
+		var closest = closests[1];
+		if(closest==group){ // if exactly the same point
+			closest = closests[0];
+		}
+		closest["linked"].push(group);
+		group["closest"] = closest;
+	}
+	console.log(groups);
+	// while number of groups in space > 1
+		// for each group with closest
+			// pair up
+			// mark others as unable
+		// ...
+	// ...
+	// ...
+
+	throw "?"
+	/*
+
+	- for each other group:
+	- if distance to centroid
+
+HIERARCHY:
+	- place all points into space
+	- each point finds its closest neighbor
+	REPEAT UNTIL SINGLE POINT EXISTS:
+		- choose closest pair [ignore pairs who's target has changed]
+			- merge into single point
+			- remove 2 previous points
+			- replace with single grouped point
+		- any (ignored) points pointing to any of the grouped point must research closest
+
+	a: separate groups where adding-distance > 2*distance
+
+	b: choose group count based on maximum dentrogram vertical height
+
+
+*/
+
+	return groups;
+}
+
+Code.clusterAffinityPoints2D = function(points,distance,toPointFxn){ // affinity = responsibility + availability
+	// graph propagation
 	throw "todo";
 }
 

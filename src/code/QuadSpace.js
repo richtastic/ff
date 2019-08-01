@@ -4,6 +4,7 @@ function QuadSpace(toRect,min,max,eps){
 	this._root = new QuadSpace.Arxel();
 	this._autoResize = true;
 	this._epsilon = null;
+	this._maxDivisions = 8; // 6-10
 	this._toRectFxn = toRect;
 	this.initWithSize(min,max,eps);
 }
@@ -30,11 +31,17 @@ QuadSpace.prototype.initWithSize = function(min,max, epsilon){
 	var square = Math.max(size.x,size.y);
 	square = Code.nextExponentialTwoRounded(square);
 	size.set(square,square);
-	epsilon = (epsilon!==undefined && epsilon!==null) ? epsilon : Math.max(square) * Math.pow(2,-6); // 2^6 = 64
+	epsilon = (epsilon!==undefined && epsilon!==null) ? epsilon : Math.max(square) * Math.pow(2,-this._maxDivisions); // 2^6 = 64
+console.log("SET EPS: "+epsilon);
+// if(!this._epsilon){
 	this._epsilon = epsilon;
+// }
 	this._root.setCenterAndSize(center,size);
 }
-
+QuadSpace.prototype.updateMinSize = function(eps){
+	console.log("updateMinSize: "+this._epsilon+" => "+eps);
+	this._epsilon = eps;
+}
 QuadSpace.prototype.count = function(){
 	return this._root.count();
 }
@@ -79,7 +86,6 @@ QuadSpace.prototype.insertObject = function(object){
 	var package = new QuadSpace.Package(object);
 	var rect = this._toRectFxn(object);
 	var root = this._root;
-	// root.overlap(cube)
 	var fitsInside = root.inside(rect); // full contained
 	if(fitsInside){
 		root.insertObject(package, rect, this._toRectFxn, this._epsilon);
@@ -88,7 +94,7 @@ QuadSpace.prototype.insertObject = function(object){
 		var objects = this.toArray();
 		objects.push(object);
 		this.clear();
-		this.initWithObjects(objects, true);
+		this.initWithObjects(objects);
 
 	} // drop on floor
 }
@@ -243,18 +249,19 @@ QuadSpace.Arxel.prototype._recheckExtrema = function(){
 }
 // ---------------------------------------------------------------------------------------------------------
 QuadSpace.Arxel.prototype.insertObject = function(package, rect, toRectFxn, epsilon){
-	var overlap = this.overlap(rect);
-	if(!overlap){
+	var overlap = this.overlap(rect); // divide when overlap is significant enough ... ?
+	if(!overlap || overlap.area()==0){
 		return null;
 	}
 	var i, j, children = this._children;
 	var minSizeSelf = Math.min(this._size.x,this._size.y);
-	var maxSizeRect = Math.max(overlap.width(),overlap.height());
-	maxSizeRect *= 2;
+	var areaSelf = this._size.x*this._size.y;
+	var areaShare = overlap.width()*overlap.height();
+	var ratio = areaShare/areaSelf;
 
 	++this._count;
 	if(children==null){ // leaf
-		if(minSizeSelf<maxSizeRect || minSizeSelf <= epsilon){ // small enough
+		if(ratio>0.5 || minSizeSelf <= epsilon){ // small enough
 			package.pushArxel(this);
 			if(!this._objects){
 				this._objects = [];

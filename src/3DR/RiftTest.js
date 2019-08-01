@@ -1,4 +1,17 @@
 function RiftTest(){
+
+	Code.clusterHierarchicalPoints2D([
+		new V2D(2,1),
+		new V2D(2,2),
+		new V2D(3,2),
+		new V2D(4,3),
+		new V2D(5,2),
+		new V2D(5,3),
+	], 1.0, null);
+
+
+throw "?"
+
 	// setup display
 	this._canvas = new Canvas(null,1,1,Canvas.STAGE_FIT_FILL);
 	this._stage = new Stage(this._canvas, (1/5)*1000);
@@ -21,8 +34,8 @@ function RiftTest(){
 	this._stage.root().addChild(this._root);
 
 	this._stage.root().addChild(this._root);
-	new ImageLoader("./images/",["bench_A.png", "bench_B.png"],this,this.imagesLoadComplete).load();
-	// new ImageLoader("./images/",["room0.png", "room2.png"],this,this.imagesLoadComplete).load();
+	// new ImageLoader("./images/",["bench_A.png", "bench_B.png"],this,this.imagesLoadComplete).load();
+	new ImageLoader("./images/",["room0.png", "room2.png"],this,this.imagesLoadComplete).load();
 
 	// new ImageLoader("./images/iowa/",["1.JPG", "2.JPG"],this,this.imagesLoadComplete).load(); // poor
 	// new ImageLoader("./images/iowa/",["0.JPG", "1.JPG"],this,this.imagesLoadComplete).load(); // good
@@ -4418,8 +4431,8 @@ var TYPE_HOUSE_GOOD = 3;
 var TYPE_PIKA = 4;
 var TYPE_PIKA_FAR = 5;
 
-var doType = TYPE_BENCH;
-// var doType = TYPE_ROOM;
+// var doType = TYPE_BENCH;
+var doType = TYPE_ROOM;
 // var doType = TYPE_HOUSE;
 // var doType = TYPE_HOUSE_GOOD;
 // var doType = TYPE_PIKA;
@@ -7869,7 +7882,7 @@ console.log(doType);
 
 var results = R3D.arbitraryAffineMatches(imageA,imageB, Fab,Fba, pointsA,pointsB);
 // var results = R3D.arbitraryAffineMatches(imageB,imageA, Fba,Fab, pointsB,pointsA);
-// console.log(results);
+console.log(results);
 throw "..."
 
 // var results = R3D.arbitraryStereoMatches(imageA,imageB, Fab,Fba, pointsA,pointsB);

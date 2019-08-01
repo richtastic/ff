@@ -4,6 +4,7 @@ function OctSpace(toCube,min,max,eps){
 	this._root = new OctSpace.Voxel();
 	this._autoResize = true;
 	this._epsilon = null;
+	this._maxDivisions = 8; // 6-10
 	this._toCuboidFxn = toCube;
 	this.initWithSize(min,max,eps);
 }
@@ -67,7 +68,7 @@ OctSpace.prototype.initWithDimensions = function(center,size, epsilon){
 	var square = Math.max(size.x,size.y,size.z);
 	square = Code.nextExponentialTwoRounded(square);
 	size.set(square,square,square);
-	epsilon = epsilon!==undefined ? epsilon : Math.max(square) * Math.pow(2,-6); // 2^6 = 64
+	epsilon = epsilon!==undefined ? epsilon : Math.max(square) * Math.pow(2,-this._maxDivisions);
 	this._epsilon = epsilon;
 	this._root.setCenterAndSize(center,size);
 }
@@ -253,17 +254,18 @@ OctSpace.Voxel.prototype._recheckExtrema = function(){
 // ---------------------------------------------------------------------------------------------------------
 OctSpace.Voxel.prototype.insertObject = function(package, cube, toCubeFxn, epsilon){
 	var overlap = this.overlap(cube);
-	if(!overlap){
+	if(!overlap || overlap.volume()==0){
 		return null;
 	}
-	var overlapSize = overlap.size();
 	var i, j, children = this._children;
 	var minSizeSelf = Math.min(this._size.x,this._size.y,this._size.z);
-	var maxSizeCube = Math.max(overlapSize.x,overlapSize.y,overlapSize.z);
-	maxSizeCube *= 2;
+	var volumeSelf = this._size.x*this._size.y*this._size.z;
+	var volumeShare = overlap.volume();
+	var ratio = volumeShare/volumeSelf;
+
 	++this._count;
 	if(children==null){ // leaf
-		if(minSizeSelf<maxSizeCube || minSizeSelf <= epsilon){ // small enough
+		if(ratio>0.5 || minSizeSelf <= epsilon){ // small enough
 			package.pushVoxel(this);
 			if(!this._objects){
 				this._objects = [];

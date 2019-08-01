@@ -9824,7 +9824,7 @@ throw "A";
 	var mapperBA = new ImageMapper(imageMatrixB,imageMatrixA, pointsB,pointsA, Fba,Fab);
 	var matchesBA = mapperBA.findMatches();
 	console.log(matchesBA);
-throw "A & B"
+// throw "A & B"
 
 // console.log("MAPPERS:");
 // console.log(mapperAB);
@@ -9844,20 +9844,6 @@ console.log("done matching");
 
 console.log(matchesAB);
 console.log(matchesBA);
-
-
-var pointA = new V2D();
-for(var j=0; j<heightA; ++j){
-	for(var i=0; i<widthA; ++i){
-		var indexA = j*widthA + i;
-		pointA.set(i,j);
-		var pointB = transferA[indexA];
-		if(pointB){
-			var distance = V2D.distance(pointA,pointB);
-			depthA[indexA] = distance;
-		}
-	}
-}
 
 	var maxDistance = 2.0; // 1 for A 1 for B
 	// var maxDistance = 1.0;
@@ -9908,8 +9894,6 @@ for(var j=0; j<heightA; ++j){
 							displacementA[indexA] = pointB;
 							displacementB[indexB] = pointA2;
 							depthA[indexA] = 1;
-
-
 							var bi = Math.round(pointB.x);
 							var bj = Math.round(pointB.y);
 							var indexB = bj*widthB + bi;
@@ -9917,17 +9901,13 @@ for(var j=0; j<heightA; ++j){
 							++count;
 						}
 					}
-
-				}else{
-					// console.log(indB0,indB1,indB2,indB3);
-					console.log(bil,bih,bjl,bjh);
 				}
 			}
 		}
 	}
 	console.log("cross matching: "+count);
 
-
+if(true){
 	var sca = 1.0;
 	var d = Code.copyArray(depthA);
 	ImageMat.normalFloat01(d);
@@ -9952,50 +9932,43 @@ for(var j=0; j<heightA; ++j){
 	d.matrix().scale(sca);
 	d.matrix().translate(10 + 1100, 10 + 400);
 	display.addChild(d);
+}
 
 
-
-throw "A & B"
-
-
-	// if B->A < 2 pixels -> keep
-	/*
-	var maxDistance = 2.0; // 1 for A 1 for B
-	var widthA = imageMatrixA.width();
-	var heightA = imageMatrixA.height();
-	var widthB = imageMatrixB.width();
-	var heightB = imageMatrixB.height();
-	var pixelsA = widthA*heightA;
-	var pixelsB = widthB*heightB;
-	var displacementA = Code.newArrayNulls(pixelsA);
-	var displacementB = Code.newArrayNulls(pixelsB);
-	var pointA = new V2D();
-	var count = 0;
-	for(var j=0; j<heightA; ++j){
-		for(var i=0; i<widthA; ++i){
-			pointA.x = i;
-			pointA.y = j;
-			var indexA = j*widthA + i;
-			var pointB = matchesAB[indexA];
-			if(pointB){
-				var bi = Math.round(pointB.x);
-				var bj = Math.round(pointB.y);
-				var indexB = bj*widthB + bi;
-				var pointA2 = matchesBA[indexB];
-				if(pointA2){
-					var d = V2D.distance(pointA,pointA2);
-					if(d<maxDistance){
-						displacementA[indexA] = pointB;
-						displacementB[indexB] = pointA2;
-						++count;
-					}
-				}
-			}
+var matchesA = [];
+var matchesB = [];
+var pointA = new V2D();
+var count = 0;
+for(var j=0; j<heightA; ++j){
+	for(var i=0; i<widthA; ++i){
+		pointA.x = i;
+		pointA.y = j;
+		var indexA = j*widthA + i;
+		var pointB = displacementA[indexA];
+		if(pointB){
+			matchesA.push(pointA.copy());
+			matchesB.push(pointB.copy());
 		}
 	}
-	console.log("cross matching: "+count);
-	*/
+}
 
+var maxPoints = 200;
+// matchesA.length check ?
+var samples = Code.randomSampleRepeatsParallelArrays([matchesA,matchesB], maxPoints);
+var pointsA = samples[0];
+var pointsB = samples[1];
+
+F = R3D.fundamentalFromUnnormalized(pointsA,pointsB);
+var Finv = R3D.fundamentalInverse(F);
+var error = R3D.fundamentalError(F,Finv,pointsA,pointsB);
+var errorMean = error["mean"];
+var errorSigma = error["sigma"];
+console.log(error);
+	error = errorMean + errorSigma*1.0;
+
+return {"A":matchesA,"B":matchesB, "F":F, "error":error};
+
+throw "A & B fwd/bak"
 
 	// rectify
 	console.log("rectify for 1D optimizing location");
@@ -10088,7 +10061,7 @@ throw "A & B"
 	GLOBALSTAGE.addChild(d);
 
 
-	throw "rectified displacement"
+	// throw "rectified displacement"
 
 // throw "??. 2"
 

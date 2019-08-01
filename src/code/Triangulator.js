@@ -302,6 +302,11 @@ Triangulator.Mesh.prototype.setLimits = function(minIn,maxIn){
 	this._dummyB.point().set(center.x + mul*size, center.y - mul*size);
 	this._dummyC.point().set(center.x, center.y + mul*size);
 	// add back changed
+
+// console.log("UPDATE SIZE: "+size);
+// var epsilon = size*1E-6;
+// console.log("UPDATE EPSILON: "+epsilon);
+// this._triSpace.updateMinSize(epsilon); // smallest sectional
 	for(var i=0; i<list.length; ++i){
 		this._triSpace.insertObject(list[i]);
 	}
@@ -319,12 +324,19 @@ Triangulator.Mesh.prototype.isExternal = function(tri){
 	}
 	return false;
 }
-Triangulator.Mesh.prototype.triangle = function(point, dropExternal){
+Triangulator.Mesh.prototype.triangle = function(point, dropExternal, logging){
 	var size = this._triSpace.size();
-	var epsilon = Math.min(size.x,size.y)*1E-10; // based on average triangle size / area
+	var epsilon = Math.min(size.x,size.y)*1E-30; // based on average triangle size / area
 	var tris = this._triSpace.objectsInsideCircle(point,epsilon);
 	var i, tri;
 	var len = tris.length;
+if(logging){
+
+	console.log("size: "+size);
+	console.log("epsilon: "+epsilon);
+	console.log(tris);
+	console.log("count: "+len);
+}
 	for(i=0; i<len; ++i){
 		tri = tris[i];
 		var pts = tri.points();
@@ -380,10 +392,15 @@ Triangulator.Mesh.prototype.subdivide = function(tri, point){
 	if(!tri){
 		console.log(tri+" @ "+point);
 		Code.printPoints(this.points());
-		console.log("something wrong -- mising tri: ",tri,"@",point);
+		console.log("something wrong -- mising tri @"+point.point());
+		console.log(point);
 		console.log(this._tris);
 		console.log(this._triSpace);
 		console.log(this._triSpace.toArray());
+
+		tri = this.triangle(point, false, true);
+		console.log(tri);
+
 		throw "should have tri ... intersection code wrong?";
 	}
 	var edgeA = tri.edgeA();

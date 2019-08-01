@@ -58,7 +58,7 @@ ImageMapper.estimateF = function(matches){
 		console.log(error);
 		error = errorMean + 1.0*errorSigma;
 	}
-	return {"F":F, "error":error };
+	return {"F":F, "error":error};
 }
 ImageMapper.prototype.findMatches = function(){
 	console.log("findMatches");
@@ -79,7 +79,7 @@ ImageMapper.prototype.findMatches = function(){
 INTERPOLATE_CALLS = 0;
 ImageMapper.prototype.interpolateMatches = function(matchesAB, imageA, imageB, pointsA, pointsB, Fab, Fba){
 
-return [];
+// return [];
 
 	var widthA = imageA.width();
 	var heightA = imageA.height();
@@ -88,6 +88,80 @@ return [];
 	var countA = widthA*heightA;
 	var widthBM1 = widthB-1;
 	var heightBM1 = heightB-1;
+
+/*
+	var toV2D = function(a){
+		return a["A"];
+	}
+	var spaceA = new QuadTree(toV2D, new V2D(0,0), new V2D(widthA,heightA));
+	var pixelsA = Code.newArrayNulls(countA);
+	for(var i=0; i<matchesAB.length; ++i){
+		var match = matchesAB[i];
+		spaceA.insertObject(match);
+	}
+	var epsilon = 1E-6; // 10% pixel
+	var point = new V2D();
+	var avg = new V2D();
+	for(var j=0; j<heightA; ++j){
+		point.y = j;
+		for(var i=0; i<widthA; ++i){
+			point.x = i;
+			var aNN = spaceA.kNN(point,5); // 3-5
+			// source distances
+			var totD = 0;
+			var distances = [];
+			var errors = [];
+			for(var k=0; k<aNN.length; ++k){
+				var a = aNN[k];
+				var e = a["error"];
+					a = a["A"];
+				errors.push(e);
+				// console.log(e);
+				// throw "?"
+				// var d = 1.0/(V2D.distance(point,a)+epsilon);
+				var d = 1.0/(V2D.distanceSquare(point,a)+epsilon);
+				// var d = 1.0/(Math.pow(V2D.distanceSquare(point,a),2)+epsilon);
+				//var d = 1;
+				// var d = e;
+				distances.push(d);
+				totD += d;
+			}
+			// var percents = Code.errorsToPercents(distances);
+				// percents = percents["percents"];
+			totD = 1.0/totD;
+			var weights = [];
+			var totalW = 0;
+			for(var k=0; k<aNN.length; ++k){
+				var d = distances[k];
+				var e = errors[k];
+				var w = e*d*totD;
+				weights.push(w);
+				totalW += w;
+			}
+			totalW = 1.0/totalW;
+			avg.x = 0; avg.y = 0;
+			for(var k=0; k<aNN.length; ++k){
+				var a = aNN[k];
+				var b = a["B"];
+				// var d = distances[k];
+				// var e = errors[k];
+				// var p = d*totD;
+					// p = percents[k];
+				var p = weights[k]*totalW;
+				avg.x += p*b.x;
+				avg.y += p*b.y;
+			}
+			var index = j*widthA + i;
+			pixelsA[index] = avg.copy();
+		}
+	}
+	spaceA.kill();
+	console.log(pixelsA);
+*/
+
+
+
+
 	// triangulate existing points
 	console.log("triangulating start");
 	var minX = 0 - widthA;
@@ -112,18 +186,30 @@ return [];
 	var tris = triangulator.triangles();
 	var perimeter = triangulator.perimeter();
 	console.log("triangulating end");
+	// console.log(triangulator);
 	var toV2D = function(a){
-		return a["A"];
+		return a["A"]["A"]; // edge first point + location lookup
 	}
 	var toRect = function(a){
 		return a["rect"];
 	}
-	console.log("mapping start");
-	var pointSpace = new QuadTree(toV2D, new V2D(0,0), new V2D(widthA,heightA));
-
-// TODO: THIS NEEDS TO BE A POINT-SPACE FOR LINE SEGMENTS OF PERIMETER
-
+	// var pointSpace = new QuadTree(toV2D, new V2D(0,0), new V2D(widthA,heightA));
+	var pointSpace = new QuadTree(toV2D, new V2D(-widthA,-heightA), new V2D(widthA*2,heightA*2));
+	var edgeSpace = new QuadSpace(toRect, new V2D(-widthA,-heightA), new V2D(widthA*2,heightA*2));
+	var edgePad = 0.01;
+	for(var i=0; i<perimeter.length; ++i){
+		var indexA = perimeter[i];
+		var indexB = perimeter[(i+1)%perimeter.length];
+		var a = datas[indexA];
+		var b = datas[indexB];
+		var rect = Rect.fromPointArray([a["A"],b["A"]]);
+			rect.pad(edgePad,edgePad,edgePad,edgePad); // vertical / horizontal lines have no area
+		var edge = {"A":a,"B":b,"rect":rect};
+		edgeSpace.insertObject(edge);
+		pointSpace.insertObject(edge);
+	}
 	var triSpace = new QuadSpace(toRect, new V2D(-widthA,heightA), new V2D(widthA*2,heightA*2));
+		// triSpace.updateMinSize(10.0); // smallest
 	for(var i=0; i<tris.length; ++i){
 		var tri = tris[i];
 		var ai = tri[0];
@@ -139,15 +225,6 @@ return [];
 		triSpace.insertObject({"A":a,"B":b,"C":c,"rect":rect});
 	}
 var allTris = triSpace.toArray();
-	// for(var i=0; i<matchesAB.length; ++i){
-	// 	var match = matchesAB[i];
-	// 	pointSpace.insertObject(match);
-	// }
-	for(var i=0; i<perimeter.length; ++i){
-		var perim = perimeter[i];
-		var match = datas[i];
-		pointSpace.insertObject(match);
-	}
 	var point = new V2D();
 	var avg = new V2D();
 	var coords = new V3D();
@@ -181,16 +258,39 @@ var allTris = triSpace.toArray();
 				}
 			}
 			if(!isInside){ // nearest line segment
-				var ab = pointSpace.kNN(point, 2);
-				var a = ab[0];
-				var b = ab[1];
-					var A = a["A"];
-					var B = b["A"];
-				var dir = V2D.sub(B,A);
-				var len = dir.length();
-				var pt = Code.closestPointLineSegment2D(A,dir, point);
-				pt.sub(A);
-				var dot = pt.length()/len;
+				var edge = pointSpace.closestObject(point);
+				var distanceTo = V2D.distance(point,edge["A"]["A"]);
+				var edgeLength = V2D.distance(edge["A"]["A"],edge["B"]["A"]);
+				var radius = distanceTo + edgeLength;
+				var edges = edgeSpace.objectsInsideCircle(point,radius);
+				// var edges = allEdges;
+				var closestEdge = null;
+				var closestDistance = null;
+				var closestPoint = null;
+				for(var k=0; k<edges.length; ++k){
+					var edge = edges[k];
+					var a = edge["A"];
+					var b = edge["B"];
+						a = a["A"];
+						b = b["A"];
+					var dir = V2D.sub(b,a);
+					var p = Code.closestPointLineSegment2D(a,dir, point);
+					var d = V2D.distance(point,p);
+					if(closestEdge===null || closestDistance>d){
+						closestEdge = edge;
+						closestDistance = d;
+						closestPoint = p;
+					}
+				}
+				var p = closestPoint;
+				var a = closestEdge["A"];
+				var b = closestEdge["B"];
+				var A = a["A"];
+				var B = b["A"];
+				var d = V2D.sub(B,A);
+				var len = d.length();
+					p.sub(A);
+				var dot = p.length()/len;
 				var pB = dot;
 				var pA = 1.0-dot;
 					var A = a["B"];
@@ -203,7 +303,10 @@ var allTris = triSpace.toArray();
 	}
 	triSpace.kill();
 	pointSpace.kill();
+	edgeSpace.kill();
 	console.log("mapping end");
+
+
 // throw "..."
 if(false){
 // if(true){
@@ -229,8 +332,10 @@ if(false){
 	}
 }
 
+// if(false){
 if(true){
 	// SHOW PIXELS:
+	var point = new V2D();
 	var disp = Code.newArrayZeros(pixelsA);
 	for(var j=0; j<heightA; ++j){
 		point.y = j;
@@ -257,25 +362,25 @@ if(true){
 	// d.graphics().alpha(0.50);
 	//
 	// show triangles:
-	var cont = d;
-	var tris = allTris;
-	for(var i=0; i<tris.length; ++i){
-		break;
-		var tri = tris[i];
-		var a = tri["A"]["A"];
-		var b = tri["B"]["A"];
-		var c = tri["C"]["A"];
-		var d = new DO();
-			d.graphics().setLine(1.0, 0xFFFF0000);
-			d.graphics().beginPath();
-			d.graphics().moveTo(a.x,a.y);
-			d.graphics().lineTo(b.x,b.y);
-			d.graphics().lineTo(c.x,c.y);
-			d.graphics().endPath();
-			d.graphics().strokeLine();
-		// d.matrix().translate(10 + 550, 10 + 450*INTERPOLATE_CALLS );
-		cont.addChild(d);
-	}
+	// var cont = d;
+	// var tris = allTris;
+	// for(var i=0; i<tris.length; ++i){
+	// 	break;
+	// 	var tri = tris[i];
+	// 	var a = tri["A"]["A"];
+	// 	var b = tri["B"]["A"];
+	// 	var c = tri["C"]["A"];
+	// 	var d = new DO();
+	// 		d.graphics().setLine(1.0, 0xFFFF0000);
+	// 		d.graphics().beginPath();
+	// 		d.graphics().moveTo(a.x,a.y);
+	// 		d.graphics().lineTo(b.x,b.y);
+	// 		d.graphics().lineTo(c.x,c.y);
+	// 		d.graphics().endPath();
+	// 		d.graphics().strokeLine();
+	// 	// d.matrix().translate(10 + 550, 10 + 450*INTERPOLATE_CALLS );
+	// 	cont.addChild(d);
+	// }
 	++INTERPOLATE_CALLS;
 }
 // throw "what ?"
@@ -872,7 +977,7 @@ throw "init grid ?"
 		console.log("sigmaB: "+sigmaB);
 		var sigmaAB = sigmaB/sigmaA;
 		console.log("scale: "+sigmaAB);
-
+if(false){
 		// display differentials:
 		var OFFX = 10;
 		var OFFY = 10 + RENDER_CALLS*400;
@@ -931,6 +1036,8 @@ throw "init grid ?"
 			// 	d.matrix().translate(OFFX, OFFY);
 			// 	GLOBALSTAGE.addChild(d);
 		}
+}
+
 var avgS = scaleAB;
 // var avgA = avgAngle;
 
@@ -958,12 +1065,12 @@ console.log("INIT GRID");
 
 	var layer;
 	layer = root;
-// var divisions = 0; // 1
-var divisions = 1; // 4
-// var divisions = 2; // 16
-// var divisions = 3; // 64
-// var divisions = 4; // 256
-// var divisions = 5; // 1024
+// var divisions = 0; // 1 [1]
+// var divisions = 1; // 4 [10]
+// var divisions = 2; // 16 [50]
+// var divisions = 3; // 64 [250]
+var divisions = 4; // 256 [1000]
+// var divisions = 5; // 1024 [4500] // NEW MAXIMUM
 // var divisions = 6; // 4096 // MAXIMUM
 // var divisions = 7; // 16384 // ~ order of pixels
 	for(var i=0; i<divisions; ++i){
@@ -1042,6 +1149,7 @@ ImageMapper.Grid.prototype.initGridWith = function(pointA,pointB, sizeA,rotation
 	var gridCell = grid.cellFromColRow(0,0);
 	var cell = new ImageMapper.Cell();
 	gridCell.insertObject(cell);
+	cell.cell(gridCell);
 	// ..
 	var matrix = new Matrix2D();
 	matrix.rotate(rotationAB);
@@ -1058,6 +1166,7 @@ ImageMapper.Grid.prototype.initGridWith = function(pointA,pointB, sizeA,rotation
 	cell.error(error);
 	// use ?
 	cell.pointB(newB);
+
 }
 
 ImageMapper.Grid.prototype.bestMatches = function(){
@@ -2115,23 +2224,32 @@ ImageMapper.GridLayer = function(rect, parent){
 	if(parent){
 		this._parent = parent;
 		parentGrid = parent.grid();
-		console.log(parentGrid);
+		// console.log(parentGrid);
 		var parentCellSize = parentGrid.cellSize();
-			console.log(parentCellSize);
+			// console.log(parentCellSize);
 			parentCellSize = parentCellSize.x;
 		var nextCellSize = parentCellSize*0.5; // 0.5-0.75
-		console.log(parentCellSize);
-		console.log(nextCellSize);
+		// console.log(parentCellSize);
+		// console.log(nextCellSize);
 		var parentSize = parentGrid.size();
-		console.log(parentSize);
+		// console.log(parentSize);
 		var parentOffset = parentGrid.offset();
-		console.log(parentOffset);
+		// console.log(parentOffset);
 		var centerX = parentOffset.x + parentSize.x*0.5;
 		var centerY = parentOffset.y + parentSize.y*0.5;
 		var minX = centerX - parentSize.x*0.5 - nextCellSize;
 		var maxX = centerX + parentSize.x*0.5 + nextCellSize;
 		var minY = centerY - parentSize.y*0.5 - nextCellSize;
 		var maxY = centerY + parentSize.y*0.5 + nextCellSize;
+		// clip to keep only cells with centers
+		var limXL = Math.abs(Math.max(minX-centerX, rect.x()-centerX));
+		var limXR = Math.min(maxX-centerX, rect.x()+rect.width()-centerX);
+		var limYB = Math.abs(Math.max(minY-centerY, rect.y()-centerY));
+		var limYT = Math.min(maxY-centerY, rect.y()+rect.height()-centerY);
+		minX = Math.max(minX, centerX - (Math.floor(limXL/nextCellSize) + 0.5)*nextCellSize );
+		maxX = Math.min(maxX, centerX + (Math.floor(limXR/nextCellSize) + 0.5)*nextCellSize );
+		minY = Math.max(minY, centerY - (Math.floor(limYB/nextCellSize) + 0.5)*nextCellSize );
+		maxY = Math.min(maxY, centerY + (Math.floor(limYT/nextCellSize) + 0.5)*nextCellSize );
 		console.log("next lims: "+minX+","+minY+" => "+maxX+","+maxY);
 		var sizeX = maxX-minX;
 		var sizeY = maxY-minY;
@@ -2141,10 +2259,7 @@ ImageMapper.GridLayer = function(rect, parent){
 		console.log("next cnt: "+countX+","+countY);
 		// TODO: LIMIT TO ONLY USED AREA
 			// backtrack L/R/U/D ?
-
 		grid.setFromSizeAndCount(sizeX,sizeY, countX,countY, minX,minY);
-
-console.log(countX,countY);
 		for(var j=0; j<countY; ++j){
 			for(var i=0; i<countX; ++i){
 				var gridCell = grid.cellFromColRow(i,j);
@@ -2153,9 +2268,7 @@ console.log(countX,countY);
 				imageCell.pointA(pointA);
 				imageCell.cell(gridCell);
 				gridCell.insertObject(imageCell);
-					// var parentGridCell = parentGrid.cellFromPoint(pointA);
-					var parentGridCell = parentGrid.cellFromPointRounded(pointA);
-					console.log(parentGridCell);
+					var parentGridCell = parentGrid.cellFromPointRounded(pointA.x,pointA.y);
 					var parentImageCell = parentGridCell.firstObject();
 					imageCell.parent(parentImageCell);
 					imageCell.affine(parentImageCell.affine());
@@ -2250,7 +2363,18 @@ ImageMapper.GridLayer.prototype.kill = function(){
 	}
 	this._parent = null;
 }
-
+ImageMapper.GridLayer.prototype.grid = function(grid){
+	if(grid!==undefined){
+		this._grid = grid;
+	}
+	return this._grid;
+}
+ImageMapper.GridLayer.prototype.parent = function(parent){
+	if(parent!==undefined){
+		this._parent = parent;
+	}
+	return this._parent;
+}
 ImageMapper.GridLayer.prototype.searchOptimalNeighborhood = function(imageA,imageB, F,Finv,ptsA,ptsB, isLast, divisions){
 	isLast = isLast!==undefined ? isLast : false;
 	var widthA = imageA.width();
@@ -2261,12 +2385,14 @@ ImageMapper.GridLayer.prototype.searchOptimalNeighborhood = function(imageA,imag
 	var hm1A = heightA-1;
 	var wm1B = widthB-1;
 	var hm1B = heightB-1;
+	var parentLayer = this.parent();
+	var parentGrid = parentLayer.grid();
 	var grid = this._grid;
 	var colCount = grid.cols();
 	var rowCount = grid.rows();
 	var cellSize = grid.cellSize();
 		cellSize = cellSize.x;
-	var sourceSize = Math.round(cellSize * 1.5); // 1.0-1.5
+	var sourceSize = Math.round(cellSize * 1.5); // 1.0-1.5 ... 1.0-1.25 seems better
 		sourceSize = sourceSize%2==1 ? sourceSize : sourceSize+1;
 	var maxDim = Math.round(1.0*Math.min(widthA,heightA,widthB,heightB));
 		sourceSize = Math.min(Math.max(sourceSize,11), maxDim);
@@ -2283,31 +2409,64 @@ ImageMapper.GridLayer.prototype.searchOptimalNeighborhood = function(imageA,imag
 			var gridCell = grid.cellFromColRow(i,j);
 			var cell = gridCell.firstObject();
 			var cellPointA = cell.pointA();
+			var cellPointB = cell.pointB();
 			var cellAffine = cell.affine();
 			// get list of all previous-layer's nearest neighbors of influence
-			var neighborList = [];
-			var neighborGridCells = grid.neighbor9CellsForCell(gridCell);
-			for(n=0; n<neighborGridCells.length; ++n){
-				var parentGridCell = neighborGridCells[n];
-				var neighborCell = parentGridCell.firstObject();
-				var parentCell = neighborCell.parent();
-				if(!parentCell.isValid()){
-					continue;
+			var parentCell = cell.parent();
+			var parentGridCell = parentCell.cell();
+			var neighborList = parentGrid.neighbor9CellsForCell(parentGridCell);
+			// drop invalids
+			for(var k=0; k<neighborList.length; ++k){
+				var neighbor = neighborList[k];
+				neighbor = neighbor.firstObject();
+				if(!neighbor.isValid()){
+					Code.removeElementAt(neighborList, k);
+					--k;
+				}else{
+					neighborList[k] = neighbor;
 				}
-				Code.addUnique(neighborList,parentCell);
 			}
 			if(neighborList.length==0){
-				// throw "no valid supers ?";
+				console.log("no valid super");
 				cell.invalidate();
 				continue;
 			}
 			// search each parent for optimal locations:
+
+
+ // DON'T HAVE AN INDEPENDENT AFFINE / LOCATION B YET ...
+
+ throw "here"
+
+// choose between most linier parents:
+for(var n=0; n<neighborList.length; ++n){
+	var neighbor = neighborList[n];
+	var neighborA = neighbor.pointA();
+	var neighborB = neighbor.pointB();
+	var dA = V2D.sub(neighborA,cellPointA);
+	var dA = V2D.sub(neighborA,cellPointA);
+
+
+	// var neighborToCell = V2D.sub(cellPointA,neighborA);
+	// var affine = neighbor.affine();
+}
+
+
+
+
+
+
 				// [TODO: group in order to reduce repeated calculations]
 				// [TODO: drop choices with poor fwd/bak difference]
 			var putativeBList = [];
 			var errorList = [];
 			var affineList = [];
 			var pointBList = [];
+var groupList = [];
+
+
+
+
 			for(var n=0; n<neighborList.length; ++n){
 				var neighbor = neighborList[n];
 				var neighborA = neighbor.pointA();
@@ -2317,14 +2476,17 @@ ImageMapper.GridLayer.prototype.searchOptimalNeighborhood = function(imageA,imag
 				var predictedB = affine.multV2DtoV2D(neighborToCell,neighborToCell);
 					predictedB.add(neighborB);
 					// A:
-						// var info = ImageMapper.optimumLocation(imageA,imageB,F,Finv,ptsA,ptsB, cellPointA,predictedB,cellAffine, sourceSize);
-						// var error = info["error"];
-						// var pointB = info["point"];
-						// // var info = ImageMapper.optimumAffine(imageA,imageB,F,Finv,ptsA,ptsB, cellPointA,pointB,cellAffine, sourceSize, divisions);
+						// var pointB = predictedB;
+						// // var info = ImageMapper.optimumLocation(imageA,imageB,F,Finv,ptsA,ptsB, cellPointA,predictedB,cellAffine, sourceSize);
 						// // var error = info["error"];
+						// // var pointB = info["point"];
+						// var info = ImageMapper.optimumAffine(imageA,imageB,F,Finv,ptsA,ptsB, cellPointA,pointB,cellAffine, sourceSize, divisions);
+						// var error = info["error"];
 					// B:
 						var pointB = predictedB;
 						var error = neighbor.error();
+// var distance = 1E-6 + V2D.distance(neighbor.pointA(),cellPointA);
+// error = error/distance;
 				putativeBList.push({"point":pointB, "error":error, "cell":neighbor});
 				errorList.push(error);
 				affineList.push(affine);
@@ -2334,7 +2496,17 @@ ImageMapper.GridLayer.prototype.searchOptimalNeighborhood = function(imageA,imag
 
 
 
-			// option 1 : average
+			// TODO: GROUP PREDICTED LOCATIONS - SPLIT BY 0.5 - 0.25 cell size ?
+console.log(groupList);
+			cellSize;
+
+// ??????
+throw "here"
+
+
+
+
+			// // option 1 : average
 			var percents = Code.errorsToPercents(errorList);
 				percents = percents["percents"];
 			var predictedB = Code.averageV2D(pointBList,percents);
@@ -2343,7 +2515,7 @@ ImageMapper.GridLayer.prototype.searchOptimalNeighborhood = function(imageA,imag
 				predictedB = info["point"];
 
 
-			// // option 2 : pick best
+			// option 2 : pick best
 			// putativeBList.sort(sortErrorFxn);
 			// var putativeB = putativeBList[0];
 			// var predictedB = putativeB["point"];
@@ -2388,12 +2560,14 @@ ImageMapper.GridLayer.prototype.postProcessNeighborhood = function(imageA,imageB
 		//
 	}
 	isLast = isLast!==undefined ? isLast : false;
-	// if(isLast){
-	// 	return;
-	// }
+	if(isLast){
+		console.log("isLast");
+		return;
+	}
 	// var lambda = 0.99; // regularization averaging : 0 = all peak score| 1 = all predicted --- [0.0-0.5]
-	var lambda = 0.25;
 	// var lambda = 0.50;
+	var lambda = 0.25;
+	// var lambda = 0.10;
 	divisions = Code.valueOrDefault(divisions, 1);
 	// var lambda = 0.25 + (0.25/divisions);
 	// var lambda = 0.10 + (0.40/divisions);
@@ -2409,6 +2583,7 @@ ImageMapper.GridLayer.prototype.postProcessNeighborhood = function(imageA,imageB
 		var gridCell = cells[i];
 		var cell = gridCell.firstObject();
 		if(!cell.isValid()){ // don't waste time
+// console.log("invalid A");
 			continue;
 		}
 		var cellPointA = cell.pointA();

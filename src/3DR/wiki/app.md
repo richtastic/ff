@@ -369,35 +369,44 @@ https://cloud.google.com/appengine/docs/nodejs/
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-- update graph initialization / subdividing to only incorporate starting matching location COM & extent
+- identify discontinutites:
+	- plot parent distances
+		: B / A
+		actualA / expectedA
+
+- group / use inlier parents
+	- top 3-5 inliers [expected length == actual length]
+
+- ?grouping predicted points:
 
 
 
 
-- some way to incorporate initial F pairwise matches in seeding?
 
-- use initial point matches to point to where blocks should go
-
-x try using FWD/BAK on original source images (interpolated w/o rectification)
+- SEEDED MATCHING SPREAD ... ?
+	- VERY SIMILAR to spread
 
 
-SHOW WHAT WOULD BE THE STARTING SEEDS ?
+- good visual matches don't seem to have quite enough fwd/bak matches
+	- what does the basic distance interpolation look like ?
+
+
+
+- wrap up logic into single R3D fxn
+	- test in pipeline process
+		- pairwise matches
+
 
 .....
 
 
-IMPROVING ESTIMATIONS:
-	- can F-angle be used to help transforms?
-	x use sigma = null for ~1:1, use larger sigma for 2:1 + ratios?
 
-- wrap up logic into single R3D fxn
-	- test in pipeline process
 
 - try optimizing individual steps:
 	- initial orientation:
-		- location from average displacement
+		x location from average displacement
 		- rotation from average F-angle [subsample like 10-100]
-		- scale from average scale [in log space]
+		x scale from average scale [in log space]
 	- subdivision
 		- estimating search point(s)
 			- including correct neighbors
@@ -413,8 +422,6 @@ IMPROVING ESTIMATIONS:
 				- (distance ?)
 	- smoothing disparity
 		- median filter
-	- interpolation
-		- triangle perimeter edges
 
 
 - determine best predicted location:
