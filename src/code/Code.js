@@ -12828,8 +12828,30 @@ Code.radixSort = function(a,f){ // n*k
 
 
 // --------------------------------------------------------------------------------------------------------------------------------------------
-Code.clusterHierarchicalPoints2D = function(points,distance,toPointFxn){ // hierarchical clustering 2D [agglomerative]
+Code.clusterHierarchicalPoints2D = function(points,distinctDistance,toPointFxn){ // hierarchical clustering 2D [agglomerative]
+// single(minimum) | complete(maximum) | average |
 	toPointFxn = toPointFxn ? toPointFxn : function(a){ return a; };
+	var orderingFxn = function(a,b){
+		// console.log("ORDERING: "+(a===b),a,b);
+		if(a===b){
+			return 0;
+		}
+		if(a["distance"] == b["distance"]){
+			var cA = a["center"];
+			var cB = b["center"];
+			if(cA.x==cB.x){
+				if(cA.y==cB.y){
+					throw "same exact points ... precombine these beforehand"
+				}
+				return cA.y < cB.y ? -1 : 1;
+			}
+			return cA.x < cB.x ? -1 : 1;
+		}
+		return a["distance"] < b["distance"] ? -1 : 1;
+	}
+	var toV2D = function(a){
+		return a["center"];
+	}
 	var mini = null;
 	var maxi = null;
 	var pointCount = points.length;
@@ -12844,7 +12866,7 @@ Code.clusterHierarchicalPoints2D = function(points,distance,toPointFxn){ // hier
 	for(var i=0; i<pointCount; ++i){
 		var point = points[i];
 		var pnt = toPointFxn(point);
-		var group = {"center":pnt.copy(), "points":[point], "linked":[]};
+		var group = {"center":pnt.copy(), "source":point, "count":1, "height":0, "linked":[]};
 		groups.push(group);
 		if(!mini){
 			mini = pnt.copy();
@@ -12858,36 +12880,84 @@ Code.clusterHierarchicalPoints2D = function(points,distance,toPointFxn){ // hier
 	}
 	// insert initial points
 	var toPoint = function(a){ return a["center"]; };
-	var pointSpace = new QuadTree(toPoint, mini, maxi);
+	var space = new QuadTree(toV2D, mini, maxi);
 	for(var i=0; i<pointCount; ++i){
 		var group = groups[i];
-		pointSpace.insertObject(group);
+		space.insertObject(group);
 	}
 	// find initial closest points
+	var queue = new PriorityQueue(orderingFxn);
 	for(var i=0; i<pointCount; ++i){
 		var group = groups[i];
-		var closests = pointSpace.kNN(group["center"],2);
+		var closests = space.kNN(group["center"],2);
 		var closest = closests[1];
 		if(closest==group){ // if exactly the same point
 			closest = closests[0];
 		}
+		var distance = V2D.distance(group["center"],closest["center"]);
 		closest["linked"].push(group);
 		group["closest"] = closest;
+		group["distance"] = distance;
+		queue.push(group);
 	}
+	// keep track of first closest?
+
 	console.log(groups);
-	// while number of groups in space > 1
-		// for each group with closest
-			// pair up
-			// mark others as unable
-		// ...
-	// ...
-	// ...
+	while(!queue.isEmpty()){
+		var candidate = queue.pop();
+		var distance = candidate["distance"];
+		var closest = candidate["closest"];
+		// remove from space & queue before update
+		console.log(candidate);
+		console.log(closest);
+		var result = queue.removeObject(closest);
+		console.log("is closest?:");
+		space.removeObject(candidate);
+		space.removeObject(closest);
+		// combine
+		var countTotal = closest["count"]+candidate["count"];
+		var percentA = candidate["count"]/countTotal;
+		var percentB = closest["count"]/countTotal;
+		var center = V2D.average([candidate["center"],closest["center"]], [percentA,percentB]);
+		var merged = {"center":center, "children":[candidate,closest], "count":countTotal, "height":distance, "linked":[]};
+		console.log(merged);
+		// get list of dependents:
+		var linked = [];
+		Code.arrayPushArray(linked,candidate["linked"]);
+		Code.arrayPushArray(linked,closest["linked"]);
+		// TODO: THESE MAY CONTAIN EACHOTHER
+
+		// remove linked from queue
+
+		// DO ALL POINTS NEED TO BE UPDATED? -- ONLY POINTS WITHIN RADIUS OF LINKED?
+
+		// insert updated into space
+
+		// recalculate closests neighbors/distances
+
+		// insert changed back into queue
+
+		throw "..."
+	}
+
 
 	throw "?"
 	/*
+AGG:
+- create a group for each point & add to point space
+- each point find nearest neighbor, insert into priority queue
+- while queue.length > 1			# N TIMES
+	- pop candidate off queue
+	- remove candidate from space
+	- remove closest from queue & space
+	- remove any other referencee to candidate OR closest from queue (only)
+	- connect candidate + closest into single combined group
+	- reinsert combined group into space
+	- altered = changed groups & combined group
+	- find NN for each of altered
+	- insert each altered into queue
 
-	- for each other group:
-	- if distance to centroid
+
 
 HIERARCHY:
 	- place all points into space
@@ -12905,6 +12975,11 @@ HIERARCHY:
 
 
 */
+	space.kill();
+	queue.kill();
+	// seperate into groups based on:
+	// A) merges that exceed distinctDistance
+	// B) largest difference gt input distinctDistance
 
 	return groups;
 }

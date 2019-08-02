@@ -1,6 +1,6 @@
 function RiftTest(){
 
-	Code.clusterHierarchicalPoints2D([
+	var result = Code.clusterHierarchicalPoints2D([
 		new V2D(2,1),
 		new V2D(2,2),
 		new V2D(3,2),
@@ -8,7 +8,7 @@ function RiftTest(){
 		new V2D(5,2),
 		new V2D(5,3),
 	], 1.0, null);
-
+	console.log(result);
 
 throw "?"
 
