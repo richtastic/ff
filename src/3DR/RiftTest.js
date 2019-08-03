@@ -1,16 +1,5 @@
 function RiftTest(){
 
-	var result = Code.clusterHierarchicalPoints2D([
-		new V2D(2,1),
-		new V2D(2,2),
-		new V2D(3,2),
-		new V2D(4,3),
-		new V2D(5,2),
-		new V2D(5,3),
-	], 1.0, null);
-	console.log(result);
-
-throw "?"
 
 	// setup display
 	this._canvas = new Canvas(null,1,1,Canvas.STAGE_FIT_FILL);
@@ -20,9 +9,8 @@ throw "?"
 	this._stage.start();
 	this._canvas.addFunction(Canvas.EVENT_MOUSE_CLICK,this.handleMouseClickFxn,this);
 	this._root = new DO();
-
+/*
 	var d = new DO();
-
 		// d.graphics().setFill(0xFFCCCCCC);
 		d.graphics().setFill(0xFF000088);
 		d.graphics().beginPath();
@@ -30,14 +18,52 @@ throw "?"
 		d.graphics().endPath();
 		d.graphics().fill();
 	this._stage.root().addChild(d);
-
+*/
 	this._stage.root().addChild(this._root);
 
 	this._stage.root().addChild(this._root);
+
+/*
+GLOBALSTAGE = this._stage;
+var pts = [
+	new V2D(2,1),
+	new V2D(2,2),
+	new V2D(3,2),
+
+	new V2D(4,3),
+	new V2D(5,2),
+	new V2D(5,3),
+
+	new V2D(6,1),
+	new V2D(7,1),
+	new V2D(7,2),
+];
+
+var pts = [];
+var cnt = 10;
+var dis = 6.0;
+for(var i=0; i<cnt; ++i){
+	var pt = new V2D(Math.random()*dis,Math.random()*dis);
+	pts.push(pt);
+}
+
+// var dist = 1.5;
+var dist = null;
+// var dist = 10.0;
+	var result = Code.clusterHierarchicalPoints2D(pts, dist, null);
+	console.log(result);
+
+	throw "?"
+
+*/
+
+
+
+	// TESTING:
 	// new ImageLoader("./images/",["bench_A.png", "bench_B.png"],this,this.imagesLoadComplete).load();
-	new ImageLoader("./images/",["room0.png", "room2.png"],this,this.imagesLoadComplete).load();
+	// new ImageLoader("./images/",["room0.png", "room2.png"],this,this.imagesLoadComplete).load();
 
-	// new ImageLoader("./images/iowa/",["1.JPG", "2.JPG"],this,this.imagesLoadComplete).load(); // poor
+	new ImageLoader("./images/iowa/",["1.JPG", "2.JPG"],this,this.imagesLoadComplete).load(); // poor
 	// new ImageLoader("./images/iowa/",["0.JPG", "1.JPG"],this,this.imagesLoadComplete).load(); // good
 
 	// new ImageLoader("./images/pika_1/",["image-0.png", "image-1.png"],this,this.imagesLoadComplete).load(); // ok
@@ -4432,8 +4458,8 @@ var TYPE_PIKA = 4;
 var TYPE_PIKA_FAR = 5;
 
 // var doType = TYPE_BENCH;
-var doType = TYPE_ROOM;
-// var doType = TYPE_HOUSE;
+// var doType = TYPE_ROOM;
+var doType = TYPE_HOUSE;
 // var doType = TYPE_HOUSE_GOOD;
 // var doType = TYPE_PIKA;
 // var doType = TYPE_PIKA_FAR;

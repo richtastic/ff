@@ -12829,25 +12829,29 @@ Code.radixSort = function(a,f){ // n*k
 
 // --------------------------------------------------------------------------------------------------------------------------------------------
 Code.clusterHierarchicalPoints2D = function(points,distinctDistance,toPointFxn){ // hierarchical clustering 2D [agglomerative]
-// single(minimum) | complete(maximum) | average |
+// single(minimum) | complete(maximum) | average | ward |
 	toPointFxn = toPointFxn ? toPointFxn : function(a){ return a; };
 	var orderingFxn = function(a,b){
-		// console.log("ORDERING: "+(a===b),a,b);
+		// var index = "distance"; // average metric
+		var index = "ward"; //
 		if(a===b){
 			return 0;
 		}
-		if(a["distance"] == b["distance"]){
+		if(a[index] == b[index]){
 			var cA = a["center"];
 			var cB = b["center"];
 			if(cA.x==cB.x){
 				if(cA.y==cB.y){
+					console.log(cA,cB);
+					console.log(a);
+					console.log(b);
 					throw "same exact points ... precombine these beforehand"
 				}
 				return cA.y < cB.y ? -1 : 1;
 			}
 			return cA.x < cB.x ? -1 : 1;
 		}
-		return a["distance"] < b["distance"] ? -1 : 1;
+		return a[index] < b[index] ? -1 : 1;
 	}
 	var toV2D = function(a){
 		return a["center"];
@@ -12859,14 +12863,14 @@ Code.clusterHierarchicalPoints2D = function(points,distinctDistance,toPointFxn){
 		return null;
 	}
 	if(pointCount==1){
-		return [[points[0]]];
+		return [{"center":toPointFxn(points[0]), "points":[points[0]], "radius":0}];
 	}
 	var groups = [];
-	// insert initial points
+	// create initial points
 	for(var i=0; i<pointCount; ++i){
 		var point = points[i];
 		var pnt = toPointFxn(point);
-		var group = {"center":pnt.copy(), "source":point, "count":1, "height":0, "linked":[]};
+		var group = {"center":pnt.copy(), "source":point, "count":1, "height":0};
 		groups.push(group);
 		if(!mini){
 			mini = pnt.copy();
@@ -12895,53 +12899,206 @@ Code.clusterHierarchicalPoints2D = function(points,distinctDistance,toPointFxn){
 			closest = closests[0];
 		}
 		var distance = V2D.distance(group["center"],closest["center"]);
-		closest["linked"].push(group);
+		var ward = 0;
 		group["closest"] = closest;
 		group["distance"] = distance;
+		group["ward"] = ward;
 		queue.push(group);
 	}
-	// keep track of first closest?
-
-	console.log(groups);
+	// merge until single group
 	while(!queue.isEmpty()){
+		var before = queue.length();
 		var candidate = queue.pop();
 		var distance = candidate["distance"];
+		var ward = candidate["ward"];
 		var closest = candidate["closest"];
 		// remove from space & queue before update
-		console.log(candidate);
-		console.log(closest);
 		var result = queue.removeObject(closest);
-		console.log("is closest?:");
+		var after = queue.length();
+		if(after==before){
+			console.log(candidate);
+			console.log(closest);
+			console.log(result);
+			throw "wrong remove";
+		}
+		if(!result){
+			console.log(candidate);
+			console.log(closest);
+			throw "unable to remove";
+		}
 		space.removeObject(candidate);
 		space.removeObject(closest);
 		// combine
-		var countTotal = closest["count"]+candidate["count"];
+		var countA = candidate["count"];
+		var countB = closest["count"];
+		var countTotal = countA+countB;
 		var percentA = candidate["count"]/countTotal;
 		var percentB = closest["count"]/countTotal;
 		var center = V2D.average([candidate["center"],closest["center"]], [percentA,percentB]);
-		var merged = {"center":center, "children":[candidate,closest], "count":countTotal, "height":distance, "linked":[]};
-		console.log(merged);
-		// get list of dependents:
-		var linked = [];
-		Code.arrayPushArray(linked,candidate["linked"]);
-		Code.arrayPushArray(linked,closest["linked"]);
-		// TODO: THESE MAY CONTAIN EACHOTHER
-
-		// remove linked from queue
-
-		// DO ALL POINTS NEED TO BE UPDATED? -- ONLY POINTS WITHIN RADIUS OF LINKED?
-
-		// insert updated into space
-
+		var merged = {"center":center, "children":[candidate,closest], "count":countTotal, "height":distance, "closest":null, "distance":0, "ward":0};
+		queue.push(merged);
+		space.insertObject(merged);
 		// recalculate closests neighbors/distances
+		groups = space.toArray();
+		if(groups.length==1){
+			break;
+		}
+		for(var i=0; i<groups.length; ++i){
+			var group = groups[i];
+			var closests = space.kNN(group["center"],2);
+			var closest = closests[1];
+			if(closest==group){ // if exactly the same point
+				closest = closests[0];
+			}
+			if(closest==group["closest"]){ // don't need to redo
+				continue;
+			}
+			queue.removeObject(group);
+			var distance = V2D.distance(group["center"],closest["center"]);
+			// could distance be what the distance WOULD BE after the merge?
+			var ward = ((countA*countB)/(countA+countB)) * (distance*distance);
+			group["closest"] = closest;
+			group["distance"] = distance;
+			group["ward"] = ward;
+			try{
+				queue.push(group);
+			}catch(e){
+				console.log("?");
+				console.log(groups);
+				console.log(group);
+				throw e;
+			}
+		}
+	}
+	var onlyGroup = groups[0];
+	space.kill();
+	queue.kill();
 
-		// insert changed back into queue
+	var display = GLOBALSTAGE;
+	var scale = 30.0;
+	var offX = 200;
+	var offY = 200;
 
-		throw "..."
+
+	// emperically find group count using by finding largest interval:
+	if(distinctDistance===null || distinctDistance===undefined || distinctDistance<=0){
+		var intervals = [];
+		var q = [];
+		q.push(onlyGroup);
+		intervals.push(onlyGroup["height"]);
+		while(q.length>0){
+			var g = q.shift();
+			var center = g["center"];
+			var ch = g["children"];
+			var height = g["height"];
+			intervals.push(height);
+			if(ch){
+				q.push(ch[0]);
+				q.push(ch[1]);
+			}
+		}
+		intervals.sort();
+		var girth = Code.intervalLongestContinuity(intervals);
+		distinctDistance = (girth["A"] + girth["B"])*0.5;
 	}
 
+	// perform cut
+	var q = [];
+	q.push(onlyGroup);
+	var maxGroupHeight = q[0]["height"];
+	var cut = [];
+	while(q.length>0){
+		var g = q.shift();
+		var center = g["center"];
+		var ch = g["children"];
+		var height = g["height"];
+		if(ch){
+			q.push(ch[0]);
+			q.push(ch[1]);
+			var maxHeight = height;
+			var minHeight = ch[0]["height"];
+			if(minHeight<=distinctDistance && distinctDistance<maxHeight){
+				cut.push(ch[0]);
+			}
+			minHeight = ch[1]["height"];
+			if(minHeight<=distinctDistance && distinctDistance<maxHeight){
+				cut.push(ch[1]);
+			}
+		}
+/*
+if(!ch){
+	height = 0.1; // ~0
+}
+var r  = (height/maxGroupHeight);
+r = Math.pow(r,0.50);
+// console.log(r)
+var color = Code.getColARGBFromFloat(0.20,1.0-r,0,r);
+var c = new DO();
+c.graphics().setLine(2.0, color);
+c.graphics().beginPath();
+c.graphics().drawCircle(center.x*scale, center.y*scale, height*scale*1.0);
+c.graphics().strokeLine();
+c.graphics().endPath();
+c.matrix().translate(0 + offX, 0 + offY);
+GLOBALSTAGE.addChild(c);
+*/
+	}
+	// if cuts were all overhead
+	if(cut.length==0){
+		cut = [onlyGroup];
+	}
 
-	throw "?"
+	// convert hierarchy to group sets:
+	for(var i=0; i<cut.length; ++i){
+		var q = [];
+		var p = [];
+		q.push(cut[i]);
+		var com = new V2D();
+		var z = [];
+		while(q.length>0){
+			var g = q.shift();
+			var ch = g["children"];
+			var height = g["height"];
+			if(ch){
+				q.push(ch[0]);
+				q.push(ch[1]);
+			}else{
+				p.push(g["source"]);
+				z.push(g["center"]);
+				com.add(g["center"]);
+			}
+		}
+		com.scale(1.0/p.length);
+		var maxD = 0;
+		for(var j=0; j<z.length; ++j){
+			var d = V2D.distance(com,z[j]);
+			if(d>maxD){
+				maxD = d;
+			}
+		}
+		cut[i] = {"center":com, "points":p, "radius":maxD};
+	}
+/*
+	for(var i=0; i<cut.length; ++i){
+		var c = cut[i];
+		var center = c["center"];
+		var height = c["radius"];
+		if(height==0){
+			height = 0.1;
+		}
+		var color = 0xFFFF00FF;
+		var c = new DO();
+		c.graphics().setLine(2.0, color);
+		c.graphics().beginPath();
+		c.graphics().drawCircle(center.x*scale, center.y*scale, height*scale);
+		c.graphics().drawCircle(center.x*scale, center.y*scale, 1.0);
+		c.graphics().strokeLine();
+		c.graphics().endPath();
+		c.matrix().translate(0 + offX, 0 + offY);
+		GLOBALSTAGE.addChild(c);
+
+	}
+*/
 	/*
 AGG:
 - create a group for each point & add to point space
@@ -12975,13 +13132,42 @@ HIERARCHY:
 
 
 */
-	space.kill();
-	queue.kill();
 	// seperate into groups based on:
 	// A) merges that exceed distinctDistance
 	// B) largest difference gt input distinctDistance
 
-	return groups;
+	return cut;
+}
+/*
+	- initialize all points as single group with SoS = 0
+	- until a single group exists:
+		- for each group
+			- for each other group
+				- calculate next potential SoS
+		- select to merge group with smallest merging cost SoS
+*/
+Code.intervalLongestContinuity = function(locations){ // needs to be sorted already ...
+	var count = locations.length;
+	if(count<2){
+		return null;
+	}
+	var diff;
+	var a = null;
+	var b = locations[0];
+	var longestSize = null;
+	var longestA = null;
+	var longestB = null;
+	for(var i=1; i<count; ++i){
+		a = b;
+		b = locations[i];
+		diff = b-a;
+		if(longestSize===null || diff>longestSize){
+			longestSize = diff;
+			longestA = a;
+			longestB = b;
+		}
+	}
+	return {"A":longestA, "B":longestB, "size":longestSize};
 }
 
 Code.clusterAffinityPoints2D = function(points,distance,toPointFxn){ // affinity = responsibility + availability

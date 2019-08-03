@@ -369,6 +369,16 @@ https://cloud.google.com/appengine/docs/nodejs/
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+- try to better optimize mapping to/from rectified images (interpolation, etc)
+	- maybe do a 1:1 mapping nonlinear lookup mapping  when creating fxn ?
+
+- odd artifacts on final image mappings ...
+
+
+- use F to direct searching ...
+
+
 - identify discontinutites:
 	- plot parent distances
 		: B / A
@@ -377,7 +387,9 @@ https://cloud.google.com/appengine/docs/nodejs/
 - group / use inlier parents
 	- top 3-5 inliers [expected length == actual length]
 
-- ?grouping predicted points:
+
+- use mapping to restrict sparse matches to area???
+
 
 
 
