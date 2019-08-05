@@ -2585,7 +2585,6 @@ R3D.polarRectificationRowMatch = function(rectificationA, rectificationB, FFwd,b
 	// var imageHeightA = source.height();
 	var imageWidthB = destination.width();
 	var imageHeightB = destination.height();
-
 	var epipoles = R3D.getEpipolesFromF(FFwd);
 	var eA = epipoles["A"];
 	var eB = epipoles["B"];
@@ -2803,9 +2802,9 @@ R3D.polarRectificationRowSets = function(rectification, FFwd, source,destination
 	// TODO: can this ever be multiple disconnected row sets ?
 	return [minRow,maxRow];
 }
-R3D.polarRectification = function(source,epipole){
+R3D.polarRectification = function(source,epipole, mapping){
 	var region = R3D._polarRectificationRegionFromEpipole(source,epipole);
-	return R3D._rectifyRegionAll(source,epipole, region);
+	return R3D._rectifyRegionAll(source,epipole, region, mapping);
 }
 R3D._polarRectificationRegionFromEpipole = function(source,epipole){
 	var width = 0;
@@ -2880,7 +2879,8 @@ R3D.polarRectificationAbsoluteRotation = function(source,epipole){ // TODO: TEST
 		return 180;
 	}
 }
-R3D._rectifyRegionAll = function(source,epipole, region){ // convention is always CW & seamless border-interface
+R3D._rectifyRegionAll = function(source,epipole, region, doMapping){ // convention is always CW & seamless border-interface
+	doMapping = Code.valueOrDefault(doMapping,false);
 	var image, width, height;
 	if( source && Code.isa(source,ImageMat) ){ // is already imagemat
 		image = source;
@@ -2904,6 +2904,12 @@ R3D._rectifyRegionAll = function(source,epipole, region){ // convention is alway
 	var angleTable = [];
 	var radiusTable = [];
 	var regionAngleOffset = 0;
+	// mapping
+	var mappingItoR = null, mappingRtoI = null;
+	if(doMapping){
+		mappingItoR = [];
+		mappingRtoI = [];
+	}
 	if(region==0){
 		corners = [TR,BR,BL, TL];
 		radiusMin = Math.floor( V2D.distance(epipole,TL) );
@@ -3031,6 +3037,9 @@ R3D._rectifyRegionAll = function(source,epipole, region){ // convention is alway
 			rectifiedR[index] = color.x;
 			rectifiedG[index] = color.y;
 			rectifiedB[index] = color.z;
+			if(doMapping){
+				mappingRtoI[index] = point.copy();
+			}
 		}
 		// save recorded stats
 		radiusStart = radiusStart!==null ? radiusStart : 0;
@@ -3063,10 +3072,32 @@ R3D._rectifyRegionAll = function(source,epipole, region){ // convention is alway
 	rectifiedB = rectifiedB.slice(0,len);
 	var rotatedAngle = R3D.polarRectificationAbsoluteRotation(region);
 	// angleTable = R3D.monotonicAngleArray(angleTable);
-	// TODO: want a reverse-lookup array -> or at least a method to do this later
-	return {red:rectifiedR, grn:rectifiedG, blu:rectifiedB, width:radiusCount, height:thetaCount, radius:radiusTable, angles:angleTable, radiusMin:radiusMin, radiusMax:radiusMax, angleOffset:regionAngleOffset, "rotation":rotatedAngle,"region":region};
+	var info = {"red":rectifiedR, grn:rectifiedG, blu:rectifiedB, width:radiusCount,
+			"height":thetaCount, radius:radiusTable, angles:angleTable, radiusMin:radiusMin, radiusMax:radiusMax,
+			"angleOffset":regionAngleOffset, "rotation":rotatedAngle,"region":region,
+			"forward":mappingItoR, "backward":mappingRtoI};
+	if(doMapping){ // go thru each pixel in I and find out where in R it maps to
+		var pointI = new V2D();
+		var pointR = new V2D();
+		var index = 0;
+		for(var j=0; j<height; ++j){
+			for(var i=0; i<width; ++i){
+				pointI.set(i,j);
+				var result = R3D.pointToRectifiedPoint(pointR, info,epipole, pointI);
+				if(result){
+					mappingItoR[index] = pointR.copy();
+				}else{
+					console.log("does this happen?");
+					mappingItoR[index] = null;
+				}
+				++index;
+			}
+		}
+	}
+	return info;
 }
 // -------------------------------------------------------------------------------------------
+/*
 // R3D.monotonicAngleArray
 R3D.rectificationRowFromAngle = function(rectification, angleIn){ // TODO: this is broken around discontinuties
 	var angles = rectification["angles"];
@@ -3113,6 +3144,7 @@ R3D.rectificationRowFromAngle = function(rectification, angleIn){ // TODO: this 
 	}
 	return -1;
 }
+*/
 R3D.rectificationRowAssignment = function(rectificationA, rectificationB, rowPairs){
 	var anglesA = rectificationA["angles"];
 	var anglesB = rectificationB["angles"];
@@ -3473,7 +3505,6 @@ R3D.ransacAffineIterate = function(pointsAIn,pointsBIn, errorStart, keepPercent)
 			errorPixels /= 2;
 		}
 	}
-	// console.log(result)
 	result["iterations"] = i;
 	result["pixels"] = errorPixels;
 	return result;
@@ -6382,8 +6413,8 @@ console.log("_stereoBlockMatchOrdered: "+pathSolution);
 	// var occlusionCostConstant = 0.10;
 	// var occlusionCostConstant = 0.5;
 	// var halfBlockSizeX = 1; var halfBlockSizeY = 0;
-	// var halfBlockSizeX = 2; var halfBlockSizeY = 1;
-	var halfBlockSizeX = 3; var halfBlockSizeY = 2;
+	var halfBlockSizeX = 2; var halfBlockSizeY = 1;
+	// var halfBlockSizeX = 3; var halfBlockSizeY = 2;
 	var disparityHalfWindow = disparityRange;
 	// var disparityHalfWindow = 11;
 	// var disparityHalfWindow = 21;
@@ -9508,8 +9539,11 @@ R3D.rectifiedDisparityToImage = function(disparityA, infoA,epipoleA, infoB,epipo
 	// infoA["rotated"] !== 0;
 	console.log(infoA);
 	console.log(infoB);
-	// console.log(infoA["direction"]);
 	console.log("rectifiedDisparityToImage - isRotated: "+isRotated);
+	var mappingForwardA = infoA["forward"];
+	var mappingBackwardB = infoB["backward"];
+	var widthRB = infoB["width"];
+	var heightRB = infoB["height"];
 	var depthA = Code.newArrayNulls(widthA*heightA);
 	var pointA = new V2D();
 	var pointB = new V2D();
@@ -9517,19 +9551,20 @@ R3D.rectifiedDisparityToImage = function(disparityA, infoA,epipoleA, infoB,epipo
 	var indexA = 0;
 	var widthB = infoB["width"];
 	var heightB = infoB["height"];
+	var result;
 	for(var j=0; j<heightA; ++j){
 		for(var i=0; i<widthA; ++i,++indexA){
 			pointA.x = i;
 			pointA.y = j;
 			// to RA
-			var result = R3D.pointToRectifiedPoint(out, infoA,epipoleA, pointA);
+			if(mappingForwardA){
+				result = mappingForwardA[indexA];
+				out.x = result.x;
+				out.y = result.y;
+			}else{
+				result = R3D.pointToRectifiedPoint(out, infoA,epipoleA, pointA);
+			}
 			if(result){
-
-				// if(isRotated){
-				// 	out.x = widthA-1-out.x;
-				// 	out.y = heightA-1-out.y;
-				// }
-// console.log("A: "+out.x,out.y);
 				// to RB
 				var ind = out.y*widthRA + out.x;
 				var dA = disparityA[ind];
@@ -9538,60 +9573,32 @@ R3D.rectifiedDisparityToImage = function(disparityA, infoA,epipoleA, infoB,epipo
 				if(rowB<0){
 					continue;
 				}
-// console.log("rowB: "+rowB);
-// console.log("dA: "+dA);
-				// if(isRotated){
-				// 	out.x = widthB-1-(out.x+dA);
-				// 	out.y = heightB-1-(rowB);
-				// }else{
-					out.x = out.x + dA;
-					out.y = rowB;
-				// }
-// console.log(out.x,out.y);
-
-
-				// ????
-
+				out.x = out.x + dA;
+				out.y = rowB;
 				if(isRotated){
 					out.x = widthB-1-out.x;
 					out.y = heightB-1-out.y;
 				}
-
 				// to B
-
-
-
-				R3D.rectifiedPointToPoint(pointB, infoB,epipoleB, out);
-// console.log("pointB: "+pointB);
-//
-// var info = infoB;
-//
-// console.log("epipoleB: ");
-// console.log(epipoleB);
-//
-// console.log("angles: ");
-// console.log(info["angles"]);
-//
-// console.log("radius: ");
-// console.log(info["radius"]);
-//
-// console.log("radiusMin: ");
-// console.log(info["radiusMin"]);
-//
-// console.log("width: ");
-// console.log(info["width"]);
-//
-// console.log("width: ");
-// console.log(info["height"]);
-//
-// throw "???";
-
-				// if(isRotated){
-				// 	pointB.x = widthB-1-pointB.x;
-				// 	pointB.y = heightB-1-pointB.y;
-				// }
-
-				// depthA[indexA] = V2D.sub(pointB,pointA); // relative
+				if(mappingBackwardB){
+					// TODO: NEED TO AVERAGE POINT B from % neighbors
+					var bI = Math.min(Math.max(Math.round(out.x),0),widthRB-1);
+					var bJ = Math.min(Math.max(Math.round(out.y),0),heightRB-1);
+					var indexB = bJ*widthB + bI;
+					// result = mappingForwardB[indexB];
+					result = mappingBackwardB[indexB];
+					if(!result){
+						console.log(out+"");
+						console.log(bI,bJ);
+						console.log(indexB);
+					}
+					pointB.x = result.x;
+					pointB.y = result.y;
+				}else{
+					console.log("take out");
+					R3D.rectifiedPointToPoint(pointB, infoB,epipoleB, out);
+					// var result = R3D.pointToRectifiedPoint(out, rectifiedInfoB,epipoleB, pointB);
+				}
 				depthA[indexA] = pointB.copy(); // absolute
 			}
 		}
@@ -9630,7 +9637,6 @@ R3D.polarRectificationMatchRotate = function(infoRowMatchAB,infoA,infoB, imageA,
 		}
 		radiusB = radB;
 		// mapping
-		// mappingABRows = Code.reverseArray(Code.copyArray(mappingABRows));
 		mappingABRows = Code.copyArray(mappingABRows);
 		for(var i=0; i<heightA; ++i){
 			var j = mappingABRows[i];
@@ -10016,8 +10022,8 @@ throw "A & B fwd/bak"
 	var epipole = R3D.getEpipolesFromF(Fab);
 	var epipoleA = epipole["A"];
 	var epipoleB = epipole["B"];
-	var rectifiedInfoA = R3D.polarRectification(imageMatrixA,epipoleA);
-	var rectifiedInfoB = R3D.polarRectification(imageMatrixB,epipoleB);
+	var rectifiedInfoA = R3D.polarRectification(imageMatrixA,epipoleA, true);
+	var rectifiedInfoB = R3D.polarRectification(imageMatrixB,epipoleB, true);
 	var rectifiedA = new ImageMat(rectifiedInfoA.width,rectifiedInfoA.height, rectifiedInfoA.red,rectifiedInfoA.grn,rectifiedInfoA.blu);
 	var rectifiedB = new ImageMat(rectifiedInfoB.width,rectifiedInfoB.height, rectifiedInfoB.red,rectifiedInfoB.grn,rectifiedInfoB.blu);
 	console.log("rectifiedInfos:");
@@ -10028,35 +10034,24 @@ throw "A & B fwd/bak"
 	var bestMatchesListAB = {"A":pointsA, "B":pointsB};
 	var infoRowMatchAB = R3D.polarRectificationRowMatch(rectifiedInfoA,rectifiedInfoB, Fab,bestMatchesListAB, imageMatrixA,imageMatrixB);
 	var mappingAB = R3D.polarRectificationMatchRotate(infoRowMatchAB, rectifiedInfoA, rectifiedInfoB, imageMatrixA,imageMatrixB, rectifiedA,rectifiedB, Fab,Fba,epipoleA,epipoleB);
-	console.log(mappingAB);
 	// mapping BA
 	var bestMatchesListBA = {"A":pointsB, "B":pointsA};
 	var infoRowMatchBA = R3D.polarRectificationRowMatch(rectifiedInfoB,rectifiedInfoA, Fba,bestMatchesListBA, imageMatrixB,imageMatrixA);
 	var mappingBA = R3D.polarRectificationMatchRotate(infoRowMatchBA, rectifiedInfoB, rectifiedInfoA, imageMatrixB,imageMatrixA, rectifiedB,rectifiedA, Fba,Fba,epipoleB,epipoleA);
-	console.log(mappingBA);
 
-	console.log("infoRowMatches:");
-	console.log(infoRowMatchAB);
-	console.log(infoRowMatchBA);
-
-
-	displacementA = R3D.displacementFromSparseMatches(mappingAB, matchesAB);
-	console.log(displacementA);
-	displacementB = R3D.displacementFromSparseMatches(mappingBA, matchesBA);
-	console.log(displacementB);
-
-
+	var displacementA = R3D.displacementFromSparseMatches(mappingAB, matchesAB);
+	var displacementB = R3D.displacementFromSparseMatches(mappingBA, matchesBA);
 /*
 } // end do rectified
 */
 	var rotateB = mappingAB["rotated"];
-
 	var widthRA = rectifiedA.width();
 	var heightRA = rectifiedA.height();
 	var widthRB = rectifiedB.width();
 	var heightRB = rectifiedB.height();
 
 // show rectified displacements
+	console.log("show rectified displacement");
 	var sca = 0.5;
 	var d = Code.copyArray(displacementA);
 	ImageMat.normalFloat01(d);
@@ -10101,20 +10096,10 @@ throw "A & B fwd/bak"
 	d.matrix().translate(10 + 1400, 10 + 500);
 	GLOBALSTAGE.addChild(d);
 
-
-	// throw "rectified displacement"
-
-// throw "??. 2"
-
 SHOWUP = 0;
 SHOWCOUNT = 0;
 var transferA = R3D.linearDepthFromDisplacement(mappingAB,displacementA);
 var transferB = R3D.linearDepthFromDisplacement(mappingBA,displacementB);
-
-// console.log("transferA");
-// console.log(transferA);
-// console.log("transferB");
-// console.log(transferB);
 
 	// show 'displacement'
 	var widthA = imageMatrixA.width();
@@ -10236,25 +10221,22 @@ throw "map matching points A & B";
 
 	throw " thing ...";
 }
-R3D.displacementFromSparseMatches = function(mappingAB, matchesAB){
-	console.log(mappingAB);
-
+R3D.displacementFromSparseMatches = function(mappingAB, matchesAB){ // create rectified mappng from image mapping
 	var rectifiedA = mappingAB["rectifiedA"];
 	var rectifiedB = mappingAB["rectifiedB"];
 	var epipoleA = mappingAB["epipoleA"];
 	var epipoleB = mappingAB["epipoleB"];
-
 	// var mappingABRows = mappingAB["mapping"]; // need ?
 	var rectifiedInfoA = mappingAB["infoA"];
 	var rectifiedInfoB = mappingAB["infoB"];
-
 	var imageA = mappingAB["sourceA"];
 	var imageB = mappingAB["sourceB"];
 	var widthA = imageA.width();
 	var widthB = imageB.width();
 	var heightA = imageA.height();
 	var heightB = imageB.height();
-
+		var mappingForwardA = rectifiedInfoA["forward"];
+		var mappingForwardB = rectifiedInfoB["forward"];
 	var widthRA = rectifiedA.width();
 	var heightRA = rectifiedA.height();
 	var widthRB = rectifiedB.width();
@@ -10263,15 +10245,10 @@ R3D.displacementFromSparseMatches = function(mappingAB, matchesAB){
 	var displacementA = Code.newArrayNulls(pixelsRA);
 
 	var rotateB = mappingAB["rotated"];
-	// THIS SHOULD ALREADY HAVE BEEN DONE
-	// if(rotateB){
-	// 	for(var i=0; i<heightRA; ++i){
-	// 		mappingABRows[i] = heightRB - 1 - mappingABRows[i];
-	// 	}
-	// }
 	// TODO: THIS SHOULD BE THE OPPOSITE DIRECTION .... ?
 	var out = new V2D();
 	var pointA = new V2D();
+	var result;
 	for(var j=0; j<heightA; ++j){
 		for(var i=0; i<widthA; ++i){
 			pointA.x = i;
@@ -10279,11 +10256,31 @@ R3D.displacementFromSparseMatches = function(mappingAB, matchesAB){
 			var indexA = j*widthA + i;
 			var pointB = matchesAB[indexA];
 			if(pointB){
-				var result = R3D.pointToRectifiedPoint(out, rectifiedInfoA,epipoleA, pointA);
+				result = null;
+				if(mappingForwardA){
+					result = mappingForwardA[indexA];
+					out.x = result.x;
+					out.y = result.y;
+				}else{
+					console.log("take out");
+					R3D.pointToRectifiedPoint(out, rectifiedInfoA,epipoleA, pointA);
+				}
 				if(result){
 					var colA = out.x;
 					var rowA = out.y;
-					var result = R3D.pointToRectifiedPoint(out, rectifiedInfoB,epipoleB, pointB);
+					result = null;
+					if(mappingForwardB){
+						// TODO: NEED TO AVERAGE POINT B from % neighbors
+						var bI = Math.min(Math.max(Math.round(pointB.x),0),widthB-1);
+						var bJ = Math.min(Math.max(Math.round(pointB.y),0),heightB-1);
+						var indexB = bJ*widthB + bI;
+						result = mappingForwardB[indexB];
+						out.x = result.x;
+						out.y = result.y;
+					}else{
+						console.log("take out");
+						result = R3D.pointToRectifiedPoint(out, rectifiedInfoB,epipoleB, pointB);
+					}
 					if(result){
 						var colB = out.x;
 						var rowB = out.y;
@@ -10297,6 +10294,16 @@ R3D.displacementFromSparseMatches = function(mappingAB, matchesAB){
 			}
 		}
 	}
+
+/*
+for each rectified pixel A
+	source pixel A = x,y (float) interpolate local
+	disparity pixel B = A + offset
+	rectified pixel B =
+
+
+*/
+
 	// var radiusMin = rectifiedInfoA["radiusMin"];
 	// var radius = rectifiedInfoA["radius"];
 	// var angles = rectifiedInfoA["angles"];
@@ -10338,9 +10345,7 @@ R3D.displacementFromSparseMatches = function(mappingAB, matchesAB){
 	Code.interpolate2DFillArrayVertical(displacementA,widthRA,heightRA, null, false);
 	return displacementA;
 }
-CALLED_ASD = 0;
 R3D.linearDepthFromDisplacement = function(mappingAB, displacementA){
-	console.log(mappingAB);
 	var infoA = mappingAB["infoA"];
 	var infoB = mappingAB["infoB"];
 	var imageA = mappingAB["sourceA"];
@@ -10348,31 +10353,20 @@ R3D.linearDepthFromDisplacement = function(mappingAB, displacementA){
 	var rectifiedA = mappingAB["rectifiedA"];
 	var rectifiedB = mappingAB["rectifiedB"];
 	var isRotated = mappingAB["rotated"];
-	// var Fab = mappingAB["Fab"];
-	// var Fba = mappingAB["Fba"];
 	var epipoleA = mappingAB["epipoleA"];
 	var epipoleB = mappingAB["epipoleB"];
-
 	var mappingABRows = mappingAB["mapping"];
-	console.log("orientated mapping: ");
-	console.log(mappingABRows);
-	// var mappingABRows = infoA["mapping"]; // original mapping
-	// console.log("original mapping: ");
-	// console.log(mappingABRows);
-
 	var widthA = imageA.width();
 	var heightA = imageA.height();
 	var widthRA = rectifiedA.width();
 	var heightRA = rectifiedA.height();
-
 	// var startS = 1.0;
 	// var startS = 0.50;
 	var startS = 0.25;
-	// var pathSolution = true;
 	var pathSolution = false;
-	var A = R3D._stereoBlockMatchOrderedHierarchy(rectifiedA,rectifiedB, infoA,infoB, imageA,imageB, startS,displacementA,pathSolution, [7,5,3]);
-	// var A = R3D._stereoBlockMatchOrderedHierarchy(rectifiedA,rectifiedB, infoA,infoB, imageA,imageB, startS,displacementA,pathSolution, [3,3,3]);
-		var disparityA = A["disparity"];
+	// var A = R3D._stereoBlockMatchOrderedHierarchy(rectifiedA,rectifiedB, infoA,infoB, imageA,imageB, startS,displacementA,pathSolution, [7,5,3]);
+	var A = R3D._stereoBlockMatchOrderedHierarchy(rectifiedA,rectifiedB, infoA,infoB, imageA,imageB, startS,displacementA,pathSolution, [3,3,3]);
+	var disparityA = A["disparity"];
 	console.log("rectified depth to image depth");
 	var depthA = R3D.rectifiedDisparityToImage(disparityA, infoA,epipoleA, infoB,epipoleB, mappingABRows, widthA,heightA, widthRA,heightRA, isRotated);
 	return depthA;
@@ -28483,7 +28477,6 @@ R3D.pointToRectifiedPoint = function(out, info,epipole, point){
 		return angle;
 	}
 	var row = Code.binarySearchCircular(angles, circularF, false);
-
 	if(Code.isArray(row)){
 		row = row[0];
 	}

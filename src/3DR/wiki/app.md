@@ -370,6 +370,16 @@ https://cloud.google.com/appengine/docs/nodejs/
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+- fast lookup FWD/BAK for rectification
+
+- R3D.displacementFromSparseMatches
+	- look thru all pixels in RA (not IA)
+
+- need to do interpolation for non-integer point lookups:
+	- EG:
+		- R3D.rectifiedDisparityToImage
+		- R3D.displacementFromSparseMatches
+
 - try to better optimize mapping to/from rectified images (interpolation, etc)
 	- maybe do a 1:1 mapping nonlinear lookup mapping  when creating fxn ?
 

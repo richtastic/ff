@@ -139,6 +139,14 @@ tiền bạc
 |  |  |  |
 | chân |  | leg/foot |
 |  |  |  |
+
+
+cái đầu | kai dow |  head
+vai | vie | shoulder
+đầu gối | dow goy | knee
+ngón chân | ngon chan | toe
+
+
 |  |  |  |
 |  |  |  |
 |  |  |  |

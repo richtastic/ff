@@ -60,10 +60,10 @@ var dist = null;
 
 
 	// TESTING:
-	// new ImageLoader("./images/",["bench_A.png", "bench_B.png"],this,this.imagesLoadComplete).load();
+	new ImageLoader("./images/",["bench_A.png", "bench_B.png"],this,this.imagesLoadComplete).load();
 	// new ImageLoader("./images/",["room0.png", "room2.png"],this,this.imagesLoadComplete).load();
 
-	new ImageLoader("./images/iowa/",["1.JPG", "2.JPG"],this,this.imagesLoadComplete).load(); // poor
+	// new ImageLoader("./images/iowa/",["1.JPG", "2.JPG"],this,this.imagesLoadComplete).load(); // poor
 	// new ImageLoader("./images/iowa/",["0.JPG", "1.JPG"],this,this.imagesLoadComplete).load(); // good
 
 	// new ImageLoader("./images/pika_1/",["image-0.png", "image-1.png"],this,this.imagesLoadComplete).load(); // ok
@@ -4457,9 +4457,9 @@ var TYPE_HOUSE_GOOD = 3;
 var TYPE_PIKA = 4;
 var TYPE_PIKA_FAR = 5;
 
-// var doType = TYPE_BENCH;
+var doType = TYPE_BENCH;
 // var doType = TYPE_ROOM;
-var doType = TYPE_HOUSE;
+// var doType = TYPE_HOUSE;
 // var doType = TYPE_HOUSE_GOOD;
 // var doType = TYPE_PIKA;
 // var doType = TYPE_PIKA_FAR;
