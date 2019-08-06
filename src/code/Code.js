@@ -7241,19 +7241,48 @@ Code.interpolateArray1D = function(array,value, fxn){ // linear interpolate
 	}
 	return value;
 }
-Code.interpolateArray2DLinear = function(grid,wid,hei, x,y, fxn){
+Code.interpolateArray2DLinearV2D = function(v, grid,wid,hei, x,y){
+	return Code.interpolateArray2DLinear(grid,wid,hei, x,y, Code._interpolate2DV2D,v);
+}
+Code._interpolate2DV2D = function(list, counts, args){
+	var pTotal = 0;
+	for(var i=0; i<list.length; ++i){ // how to ignore nulls ?
+		var val = list[i];
+		if(!val){
+			list.splice(i,1);
+			counts.splice(i,1);
+			--i;
+		}else{
+			pTotal += counts[i];
+		}
+	}
+	if(list.length==0 || pTotal==0){
+		return null;
+	}
+	if(counts.length!==4){ // dropped at least 1
+		for(var i=0; i<counts.length; ++i){
+			counts[i] = counts[i]/pTotal;
+		}
+	}
+	return V2D.average(args, list, counts);
+}
+
+Code.interpolateArray2DLinear = function(grid,wid,hei, x,y, fxn,args){
+	var wm1 = wid - 1;
+	var hm1 = hei - 1;
+	var xIn = x;
+	var yIn = y;
+	x = Math.min(Math.max(x,0),wm1);
+	y = Math.min(Math.max(y,0),hm1);
 	var minX = x | 0;
-	var maxX = Math.min(minX + 1,wid-1);
+	var maxX = Math.min(minX + 1,wm1);
 	var minY = y | 0;
-	var maxY = Math.min(minY + 1,hei-1);
-	// NN
-	// var index = minY*wid + minX;
-	// return grid[index];
+	var maxY = Math.min(minY + 1,hm1);
 	// linear
 	var pxb = x - minX;
 	var pyb = y - minY;
-	var pxa = 1 - x;
-	var pya = 1 - y;
+	var pxa = 1 - pxb;
+	var pya = 1 - pyb;
 	var indexA = minY*wid + minX;
 	var indexB = minY*wid + maxX;
 	var indexC = maxY*wid + minX;
@@ -7264,7 +7293,7 @@ Code.interpolateArray2DLinear = function(grid,wid,hei, x,y, fxn){
 	var pD = pxb*pyb;
 	var list = [grid[indexA],grid[indexB],grid[indexC],grid[indexD]];
 	var counts = [pA,pB,pC,pD];
-	return fxn(list,counts);
+	return fxn(list,counts,args);
 }
 //------------------------------------------------------------------------------------------------------------------------------------------------- interpolation - 2D
 Code.gradient2D = function(loc,d0,d1,d2,d3,d4,d5,d6,d7,d8){

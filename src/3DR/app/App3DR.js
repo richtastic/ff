@@ -6308,6 +6308,14 @@ App3DR.ProjectManager.prototype._loadProjectCallback = function(object, data){
 	this.alertAll(App3DR.ProjectManager.EVENT_LOADED, this);
 }
 App3DR.ProjectManager.prototype._saveProjectCallback = function(object, data){
+	console.log(object);
+	if(object){
+		var callback = object["callback"];
+		if(callback){
+			callback(this);
+		}
+	}
+	console.log(data);
 	console.log("saved");
 }
 
@@ -6533,12 +6541,12 @@ App3DR.ProjectManager.prototype.loadProjectFile = function(readyFxn){
 	this._operation = App3DR.ProjectManager.OPERATION_LOAD_PROJECT;
 	this.addOperation("GET", {"path":this.infoPath(),"data":null}, this._loadProjectCallback, this, {"callback":readyFxn} );
 }
-App3DR.ProjectManager.prototype.saveProjectFile = function(){
+App3DR.ProjectManager.prototype.saveProjectFile = function(callbackFxn){
 	console.log("saveProjectFile");
 	this._operation = App3DR.ProjectManager.OPERATION_SAVE_PROJECT;
 	var str = this.toYAML();
 	var binary = Code.stringToBinary(str);
-	this.addOperation("SET", {"path":this.infoPath(),"data":binary}, this._saveProjectCallback, this, null);
+	this.addOperation("SET", {"path":this.infoPath(),"data":binary}, this._saveProjectCallback, this, {"callback":callbackFxn});
 }
 App3DR.ProjectManager.ID_LENGTH = 8;
 App3DR.ProjectManager._randomID = function(){
@@ -7118,6 +7126,7 @@ console.log("checkPerformNextTask");
 			}
 		}
 	}
+	// throw "calculate cameras";
 	// cameras:
 	var cameras = this._cameras;
 	console.log(cameras)
@@ -7157,6 +7166,7 @@ console.log("checkPerformNextTask");
 					}
 					if(!pair.hasTracks()){
 						console.log("NEED TO DO A TRACK PAIR : "+idA+" & "+idB+" = "+pair.id());
+throw "...";
 						this.calculatePairTracks(viewA,viewB);
 						return;
 					}
@@ -7175,7 +7185,7 @@ this.calculatePairTracks(viewA,viewB);
 throw "NO";
 */
 
-// throw "task triples";
+throw "task triples";
 	// assuming all pairs have run
 	console.log(triples);
 	len = views.length;
@@ -7339,9 +7349,8 @@ App3DR.ProjectManager.prototype._calculateFeaturesLoaded = function(view){
 	var imageMatrix = R3D.imageMatrixFromImage(image, this._stage);
 	var maxCount = 2000;
 	var features = R3D.calculateScaleCornerFeatures(imageMatrix, maxCount);
-	var objects = R3D.generateSIFTObjects(features, imageMatrix);
-	var normalizedObjects = R3D.normalizeSIFTObjects(objects, imageMatrix.width(), imageMatrix.height());
-	view.setFeatures(normalizedObjects, this._calculateFeaturesComplete, this);
+	var normalizedFeatures = R3D.normalizeSIFTObjects(features, imageMatrix.width(), imageMatrix.height());
+	view.setFeatures(normalizedFeatures, this._calculateFeaturesComplete, this);
 }
 App3DR.ProjectManager.prototype._calculateFeaturesComplete = function(view){
 	console.log("_calculateFeaturesComplete");
@@ -7422,49 +7431,64 @@ App3DR.ProjectManager.prototype.calculatePairMatch = function(viewA, viewB, pair
 		var imageAHeight = imageA.height;
 		var imageBWidth = imageB.width;
 		var imageBHeight = imageB.height;
-
 		console.log("A: "+featuresA.length+" | "+featuresB.length)
-
-		// drop low score corners:
-		// featuresA = R3D.keepGoodCornerFeatures(featuresA);
-		// featuresB = R3D.keepGoodCornerFeatures(featuresB);
-
-		console.log("B: "+featuresA.length+" | "+featuresB.length)
-
 		featuresA = R3D.denormalizeSIFTObjects(featuresA, imageAWidth, imageAHeight);
 		featuresB = R3D.denormalizeSIFTObjects(featuresB, imageBWidth, imageBHeight);
-
+		console.log(featuresA);
+		console.log(featuresB);
+GLOBALDISPLAY = GLOBALSTAGE;
 		var imageMatrixA = R3D.imageMatrixFromImage(imageA, stage);
 		var imageMatrixB = R3D.imageMatrixFromImage(imageB, stage);
-		// from limited SIFT to points
-		// var pointsA = R3D.generatePointsFromSIFTObjects(featuresA);
-		// var pointsB = R3D.generatePointsFromSIFTObjects(featuresB);
 		// TO SIFT OBJECTS
 		var maxFeatures = 2000;
-		var objectsA = R3D.generateSIFTObjects(featuresA, imageMatrixA);
-		var objectsB = R3D.generateSIFTObjects(featuresB, imageMatrixB);
-		console.log("C: "+objectsA.length+" | "+objectsB.length)
+		var objectsA = R3D.generateProgressiveSIFTObjects(featuresA, imageMatrixA);
+		var objectsB = R3D.generateProgressiveSIFTObjects(featuresB, imageMatrixB);
 		var maxFeaturesCompare = 2000;
-		var info = R3D.basicFullMatchingF(objectsA, imageMatrixA, objectsB, imageMatrixB, maxFeaturesCompare);
-		var matches = info["matches"];
-		var F = info["F"];
-		var sigma = info["sigma"];
-console.log(matches);
-		if(!matches){
+		// MEDIUM
+		var result = R3D.progressiveFullMatchingDense(objectsA, imageMatrixA, objectsB, imageMatrixB);
+		var pointsA = result["A"];
+		var pointsB = result["B"];
+		var F = result["F"];
+		var Finv = result["Finv"];
+		// DENSE:
+		var result = R3D.arbitraryAffineMatches(imageMatrixA,imageMatrixB, F,Finv, pointsA,pointsB);
+		console.log(result);
+			F = result["F"];
+			Finv = result["Finv"];
+			pointsA = result["A"];
+			pointsB = result["B"];
+		if(!F || !pointsA || pointsA.length==0){
 			matches = [];
 			F = null;
 			sigma = 0;
 		}else{
+			var fSampleCount = 200;
+			var result = Code.randomSampleRepeatsParallelArrays([pointsA,pointsB], fSampleCount);
+			var ptsA = result[0];
+			var ptsB = result[1];
+			var info = R3D.fErrorList(F, Finv, ptsA, ptsB);
+			console.log(info);
+			var F = info["F"];
+			var mean = info["mean"];
+			var sigma = info["sigma"];
+			sigma = mean + sigma*1.0;
+			console.log("sigma: "+sigma);
 			// add affine info:
-			R3D.stereoMatchAverageAffine(imageMatrixA,imageMatrixB,matches);
+			// R3D.stereoMatchAverageAffine(imageMatrixA,imageMatrixB,matches);
 			// convert to R3D formats
+			console.log(pointsA);
+			console.log(pointsB);
+			var matches = R3D.separatePointArraysToMatchArray(pointsA,pointsB);
+			console.log(matches);
 			matches = R3D.stereoToMatchPairArray(imageMatrixA,imageMatrixB,matches);
 		}
+		console.log(matches);
 		matchCount = matches.length;
 		var str = self._matchesToYAML(matches, F, viewA, viewB, imageMatrixA, imageMatrixB);
 		var binary = Code.stringToBinary(str);
 		yamlBinary = binary;
 		console.log("HAVE PAIR? "+(pair!==null));
+// throw "here ..."
 		if(pair){
 			fxnG(pair);
 		}else{
@@ -7473,7 +7497,7 @@ console.log(matches);
 
 	}
 	var yamlBinary = null;
-	// var matchCount = -1;
+	console.log("saving matches");
 	var fxnG = function(pair){
 		var path = Code.appendToPath(self._workingPath, App3DR.ProjectManager.PAIRS_DIRECTORY, pair.directory(), App3DR.ProjectManager.INITIAL_MATCHES_FILE_NAME);
 		pair.setMatchFeatureCount(matchCount);
@@ -7481,6 +7505,7 @@ console.log(matches);
 	}
 	var fxnH = function(object, data){
 // throw "HUH";
+		console.log("saving matches to project");
 		self.saveProjectFile(); // TODO: add completion here
 		return;
 		// return to checking
@@ -12634,7 +12659,7 @@ for(var i=0; i<pairs.length; ++i){
 		var fr = match["fr"];
 		var to = match["to"];
 		var relScale = (to["s"]*imageWidthB)/(fr["s"]*imageWidthA);
-		var relAngle = to["a"] - fr["a"];
+		var relAngle = V2D.angleDifference(to["a"],fr["a"]);//to["a"] - fr["a"];
 
 		fr = new V2D(fr.x,fr.y);
 		//fr = R3D.undistortPointCamera(fr, K, distortion);
@@ -12648,6 +12673,7 @@ for(var i=0; i<pairs.length; ++i){
 	//console.log("MATCHES AFTER: "+filteredMatches.length);
 	console.log("MATCHES FOR PAIR "+vA.id()+"+"+vB.id()+" == "+filteredMatches.length);
 
+console.log(matches);
 // var skip = true; // SKIP AFFINE SEQUENCE - OK FOR ~1000 not for ~10,000+
 var skip = false;
 	// copy over
@@ -12655,15 +12681,17 @@ var skip = false;
 	if(j%1000==0){
 		console.log(" "+j+"/"+filteredMatches.length);
 	}
+// if(j>200){
+// 	break;
+// }
 		var match = filteredMatches[j];
-//		console.log(match);
 		var fr = match[0];
 		var to = match[1];
 		var angleAB = match[2];
 		var scaleAB = match[3]; // THIS DEPENDS ON ABSOLUTE SIZE ...
-//		console.log(fr+" & "+to+" & "+angleAB+" | "+scaleAB);
-		world.addMatchForViews(vA,fr, vB,to, scaleAB,angleAB, skip);
+		var m = world.addMatchForViews(vA,fr, vB,to, scaleAB,angleAB, skip);
 	}
+	console.log(world._points3DNull.length);
 	// initially get 2-sigma points & only add those from match list
 }
 
@@ -12675,7 +12703,7 @@ var skip = false;
 
 var completeFxn = function(){
 	console.log("completeFxn");
-// throw "remove this";
+throw "remove this";
 	var viewA = BAVIEWS[0];
 	var viewB = BAVIEWS[1];
 	var transform = world.transformFromViews(viewA,viewB);

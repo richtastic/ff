@@ -369,27 +369,80 @@ https://cloud.google.com/appengine/docs/nodejs/
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+0 = 25I42TL0
+1 = IQX1JE9K
 
-- fast lookup FWD/BAK for rectification
 
-- R3D.displacementFromSparseMatches
-	- look thru all pixels in RA (not IA)
 
-- need to do interpolation for non-integer point lookups:
-	- EG:
-		- R3D.rectifiedDisparityToImage
-		- R3D.displacementFromSparseMatches
+when inserting points - why are A/B negative ?
 
-- try to better optimize mapping to/from rectified images (interpolation, etc)
-	- maybe do a 1:1 mapping nonlinear lookup mapping  when creating fxn ?
 
-- odd artifacts on final image mappings ...
+
+- how to decide if a dense recron is good / bad ?
+	- avg reprojection error ...
+
+- test in pipeline process
+	- pairwise matches
+
+
+http://localhost/ff/3DR/app/app.html?mode=image
+
+http://localhost/ff/3DR/app/app.html?mode=model
+
+
+// FEATURES
+var featuresA = R3D.calculateScaleCornerFeatures(imageMatrixA, maxCount);
+var featuresB = R3D.calculateScaleCornerFeatures(imageMatrixB, maxCount);
+
+// SIFT OBJECTS
+var objectsA = R3D.generateProgressiveSIFTObjects(featuresA, imageMatrixA);
+var objectsB = R3D.generateProgressiveSIFTObjects(featuresB, imageMatrixB);
+
+// SPARSE:
+var result = R3D.progressiveFullMatchingDense(objectsA, imageMatrixA, objectsB, imageMatrixB);
+
+// DENSE:
+var results = R3D.arbitraryAffineMatches(imageA,imageB, Fab,Fba, pointsA,pointsB);
+
+OLD:
+var result = R3D.basicFullMatchingF(objectsA, imageMatrixA, objectsB, imageMatrixB, 2000); ----- OLD
+// var objects = R3D.generateSIFTObjects(features, imageMatrix);
+// var objects = R3D.generateProgressiveSIFTObjects(features, imageMatrix);
+// console.log(objects);
+// var normalizedObjects = R3D.normalizeSIFTObjects(objects, imageMatrix.width(), imageMatrix.height());
+// console.log(normalizedObjects);
+
+
+
+- debug epipole in image: BENCH C & D
+
+
+
+
+PIKANICE:
+105622/(504*378) = 55%
+
+COUCH:
+46912/(504*378) = 25%
+
+BENCH:
+27998/(504*378) = 15%
+
+HOUSE BAD:
+24737/(504*378) = 13% [only possible 70% => 18%]
+
+HOUSE GOOD:
+5738/(504*378) = 3% [only possible 25% => 12%]
+
+PIKABAD:
+13120/(504*378) = 7%
+
 
 
 - use F to direct searching ...
 
 
-- identify discontinutites:
+- identify discontinuties:
 	- plot parent distances
 		: B / A
 		actualA / expectedA
@@ -411,12 +464,6 @@ https://cloud.google.com/appengine/docs/nodejs/
 
 - good visual matches don't seem to have quite enough fwd/bak matches
 	- what does the basic distance interpolation look like ?
-
-
-
-- wrap up logic into single R3D fxn
-	- test in pipeline process
-		- pairwise matches
 
 
 .....

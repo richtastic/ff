@@ -61,16 +61,11 @@ ImageMapper.estimateF = function(matches){
 	return {"F":F, "error":error};
 }
 ImageMapper.prototype.findMatches = function(){
-	console.log("findMatches");
 	this._grid.solveMapping();
 	var matches = this._grid.bestMatches();
-	console.log(matches)
 	var F = ImageMapper.estimateF(matches);
 		var fError = F["error"];
 		var F = F["F"];
-	console.log(F+"");
-	console.log(F);
-// throw "matched"
 	var imageA = this._imageA;
 	var imageB = this._imageB;
 	var mapping = this.interpolateMatches(matches,imageA,imageB);
@@ -78,9 +73,7 @@ ImageMapper.prototype.findMatches = function(){
 }
 INTERPOLATE_CALLS = 0;
 ImageMapper.prototype.interpolateMatches = function(matchesAB, imageA, imageB, pointsA, pointsB, Fab, Fba){
-
 // return [];
-
 	var widthA = imageA.width();
 	var heightA = imageA.height();
 	var widthB = imageB.width();
@@ -158,9 +151,6 @@ ImageMapper.prototype.interpolateMatches = function(matchesAB, imageA, imageB, p
 	spaceA.kill();
 	console.log(pixelsA);
 */
-
-
-
 
 	// triangulate existing points
 	console.log("triangulating start");
@@ -331,9 +321,8 @@ if(false){
 		v.y = dy[i];
 	}
 }
-
-// if(false){
-if(true){
+if(false){
+// if(true){
 	// SHOW PIXELS:
 	var point = new V2D();
 	var disp = Code.newArrayZeros(pixelsA);
@@ -383,7 +372,6 @@ if(true){
 	// }
 	++INTERPOLATE_CALLS;
 }
-// throw "what ?"
 	return pixelsA;
 }
 
@@ -872,15 +860,11 @@ ImageMapper.forceRectifiedRowMapping = function(mapping, pointA, pointB){
 ImageMapper.Grid.prototype.solveMapping = function(){
 	var imageA = this._imageSource;
 	var imageB = this._imageTarget;
-
-
-
-
 	if(this._rectified){
 		var mapping = this._mapping;
 		var pointB = new V2D(pointA.x,pointA.y);
 // TODO: WHERE TO GET INITIAL X ?
-throw "init grid ?"
+		throw "have not yet re-implemented rectified searching ... init grid ?"
 		ImageMapper.forceRectifiedRowMapping(mapping, pointA, pointB);
 		var matrix = new Matrix2D();
 			matrix.identity();
@@ -939,10 +923,8 @@ throw "init grid ?"
 		var avgA = Code.repeatedDropOutliersMean(an, 1.0, Code.averageAngles, errorAngleFxn);
 		console.log("avgA: "+Code.degrees(avgA));
 		var dirAB = new V2D(avgX,avgY);
-
 		console.log(centerA+" : A");
 		console.log(centerB+" : B");
-
 		console.log(dirAB+" dir 1");
 		console.log(V2D.sub(centerB,centerA)+" dir 2");
 
@@ -1037,23 +1019,14 @@ if(false){
 			// 	GLOBALSTAGE.addChild(d);
 		}
 }
-
-var avgS = scaleAB;
-// var avgA = avgAngle;
-
-console.log("INIT GRID");
+		var avgS = scaleAB;
+		// var avgA = avgAngle;
+		console.log("INIT GRID");
 		this._root.clear();
 		var root = this._root;
 		var grid = root.grid();
 		this.initGridWith(centerA,centerB, sigmaA, avgA,avgS);
-
-		// var gridCell = grid.cells()[0];
-		// var cell = cell.firstObject();
-		// console.log(cell);
-
 	}
-
-
 	var rectA;
 	if(this._rectified){
 		rectA = mapping["rectA"];
@@ -1072,7 +1045,6 @@ console.log("INIT GRID");
 // var divisions = 4; // 256 [1000]
 var divisions = 5; // 1024 [4500] // NEW MAXIMUM
 // var divisions = 6; // 4096 // MAXIMUM
-// var divisions = 7; // 16384 // ~ order of pixels
 	for(var i=0; i<divisions; ++i){
 	console.log(" iteration: "+i+" / "+divisions);
 		var isLast = i == divisions-1;
@@ -1090,45 +1062,11 @@ var divisions = 5; // 1024 [4500] // NEW MAXIMUM
 		// VOTE BASED ON VALUE & NEIGHBORS
 	}
 	// have a bunch of matches: interpolate between local affines
-
-	// ...
-
 	// final 1-2 subdivisions should limit on, F & don't need to update affine
-console.log("layer")
-
-console.log(layer)
+if(true){
+// if(false){
 	layer.render(imageA,imageB);
-/*
-	// show
-	var OFFX = 10;
-	var OFFY = 10;
-	var sca = 1.0;
-
-	var centerB = new V2D(imageB.width()*0.5, imageB.height()*0.5);
-	var centerA = new V2D(imageA.width()*0.5, imageA.height()*0.5);
-
-	// B = target
-	var iii = imageB;
-	var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
-	var d = new DOImage(img);
-	d.matrix().scale(sca);
-	d.matrix().translate(OFFX, OFFY);
-	GLOBALSTAGE.addChild(d);
-
-	// A = source
-	var iii = imageA;
-	var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
-	var d = new DOImage(img);
-	d.matrix().scale(sca);
-	d.matrix().translate(-centerA.x, -centerA.y);
-		d.matrix().scale(avgS);
-		d.matrix().rotate(avgA);
-		d.matrix().translate(avgX, avgY);
-	d.matrix().translate(centerB.x, centerB.y);
-	d.matrix().translate(OFFX, OFFY);
-	GLOBALSTAGE.addChild(d);
-	d.graphics().alpha(0.50);
-*/
+}
 }
 
 ImageMapper.Grid.prototype.initGridWith = function(pointA,pointB, sizeA,rotationAB,scaleAB){
@@ -2780,10 +2718,13 @@ var predictedB;
 
 RENDER_CALLS = 0;
 ImageMapper.GridLayer.prototype.render = function(imageA,imageB){
-	// console.log("render");
+	console.log("render");
 	// show
-	var OFFX = 10;
-	var OFFY = 10 + RENDER_CALLS*400;
+	// var OFFX = 10;
+	// var OFFY = 10 + RENDER_CALLS*400;
+
+	var OFFX = 1600 + RENDER_CALLS*600;
+	var OFFY = 600;
 	var sca = 1.0;
 
 	var centerImageB = new V2D(imageB.width()*0.5, imageB.height()*0.5);

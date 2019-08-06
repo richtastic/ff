@@ -60,7 +60,7 @@ var dist = null;
 
 
 	// TESTING:
-	new ImageLoader("./images/",["bench_A.png", "bench_B.png"],this,this.imagesLoadComplete).load();
+	// new ImageLoader("./images/",["bench_A.png", "bench_B.png"],this,this.imagesLoadComplete).load();
 	// new ImageLoader("./images/",["room0.png", "room2.png"],this,this.imagesLoadComplete).load();
 
 	// new ImageLoader("./images/iowa/",["1.JPG", "2.JPG"],this,this.imagesLoadComplete).load(); // poor
@@ -116,6 +116,9 @@ var dist = null;
 	// TOWER SAMPLE
 	// new ImageLoader("./images/",["xA_small.jpg", "xB_small.jpg"],this,this.imagesLoadComplete).load(); // ok
 
+	// RUSHMORE SAMPLE
+	// new ImageLoader("./images/",["yA_small.jpg", "yB_small.jpg"],this,this.imagesLoadComplete).load(); // good
+
 	// NOTRE DAM SAMPLE
 	// new ImageLoader("./images/",["zA_small.jpg", "zB_small.jpg"],this,this.imagesLoadComplete).load(); // good
 
@@ -142,7 +145,7 @@ var dist = null;
 	// new ImageLoader("./images/",["bench_A.png", "bench_E.png"],this,this.imagesLoadComplete).load(); // good  |  52580 @ 0.837  | 27%
 	// new ImageLoader("./images/",["bench_B.png", "bench_F.png"],this,this.imagesLoadComplete).load(); // ok  |   10612 @ 8226  |  5%
 	// 5
-	// new ImageLoader("./images/",["bench_A.png", "bench_F.png"],this,this.imagesLoadComplete).load(); // ok |    542 @ 1.36 |  5%   1453 @ 2.0 7%
+	new ImageLoader("./images/",["bench_A.png", "bench_F.png"],this,this.imagesLoadComplete).load(); // ok |    542 @ 1.36 |  5%   1453 @ 2.0 7%
 
 
 
@@ -162,7 +165,6 @@ var dist = null;
 	// new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-26.jpg"],this,this.imagesLoadComplete).load(); //  good
 	// new ImageLoader("./images/",["caseStudy1-20.jpg", "caseStudy1-24.jpg"],this,this.imagesLoadComplete).load(); // good
 	// new ImageLoader("./images/",["caseStudy1-20.jpg", "caseStudy1-26.jpg"],this,this.imagesLoadComplete).load(); // poor [zoom @2x]
-	// new ImageLoader("./images/",["caseStudy1-0.jpg", "caseStudy1-9.jpg"],this,this.imagesLoadComplete).load(); // ok
 
 	// CASTLE
 	// new ImageLoader("./images/",["castle.000.jpg", "castle.009.jpg"],this,this.imagesLoadComplete).load(); // good
@@ -308,8 +310,8 @@ GLOBALDISPLAY = display;
 // return;
 
 
-this.testStereo(imageMatrixA,imageMatrixB);
-throw "..."
+// this.testStereo(imageMatrixA,imageMatrixB);
+// throw "..."
 
 // this.testFocalLengths(imageMatrixA,imageMatrixB);
 // return;
@@ -496,6 +498,29 @@ console.log("object creation time: "+time);
 // console.log(objectsB);
 
 var result = R3D.progressiveFullMatchingDense(objectsA, imageMatrixA, objectsB, imageMatrixB);
+
+console.log(result);
+var pointsA = result["A"];
+var pointsB = result["B"];
+var Fab = result["F"];
+var Fba = result["Finv"];
+var results = R3D.arbitraryAffineMatches(imageMatrixA,imageMatrixB, Fab,Fba, pointsA,pointsB);
+
+console.log(results);
+
+var F = results["F"];
+var Finv = results["Finv"];
+var A = results["A"];
+var B = results["B"];
+
+var FtestCount = 200;
+var result = Code.randomSampleRepeatsParallelArrays([A,B], FtestCount);
+var ptsA = result[0];
+var ptsB = result[1];
+var fError = R3D.fErrorList(F, Finv, ptsA, ptsB);
+console.log(fError);
+
+
 
 throw "HERE 3";
 

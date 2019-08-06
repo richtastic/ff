@@ -139,8 +139,8 @@ Stereopsis.World.prototype.addMatchForViews = function(viewA,pointA, viewB,point
 		}
 		if(affine){
 			var match = this.newMatchFromInfo(viewA,pointA,viewB,pointB,affine);
-			this.embedPoint3D(match.point3D(), validate);
-			return match;
+			var result = this.embedPoint3D(match.point3D(), validate);
+			return result;
 		}
 	}
 	return null;
@@ -221,28 +221,15 @@ Stereopsis.infoFromMatrix2D = function(imageA,pointA,imageB,pointB,matrix,compar
 	// GET CORNERNESS TOO ?
 	var needleSize = 11;
 	var zoom = needleSize/compareSize;
-
-
-
-
-
-
-	// var zoom = compareSize/needleSize; // ????
-
-	// var cellScale = (needleSize/compareSize); // EG:  11/21
-
-	// SHOULD THIS BE REVERSED ?
-
-
 	// throw "zoom: "+zoom+" @ "+compareSize;
 	var needle = imageA.extractRectFromFloatImage(pointA.x,pointA.y,zoom,null,needleSize,needleSize, matrix);
 	var haystack = imageB.extractRectFromFloatImage(pointB.x,pointB.y,zoom,null,needleSize,needleSize, null);
-
 	var scoreNCC = R3D.searchNeedleHaystackNCCColor(needle,haystack);
 		scoreNCC = scoreNCC["value"][0];
 	var scoreSAD = R3D.searchNeedleHaystackSADColor(needle,haystack);
 		scoreSAD = scoreSAD["value"][0];
 	var range = needle.range()["y"];
+	// console.log(scoreSAD,scoreNCC);
 	return {"ncc":scoreNCC, "sad":scoreSAD, "range":range};
 }
 Stereopsis.World.prototype.insertPoint3D = function(point3D){
@@ -4412,11 +4399,11 @@ return;
 	console.log("SOLVE");
 	this._completeFxn = completeFxn;
 	this._completeContext = completeContext;
-	var maxIterations = 1;
+	// var maxIterations = 1;
 	// var maxIterations = 2;
 	// var maxIterations = 3;
 	// var maxIterations = 4;
-	// var maxIterations = 5;
+	var maxIterations = 5;
 	// var maxIterations = 6;
 	// var maxIterations = 7;
 	// var maxIterations = 8;
@@ -4427,6 +4414,7 @@ return;
 	// var maxIterations = 25;
 	// var maxIterations = 30;
 	// var maxIterations = 40;
+	console.log(this)
 	for(var i=0; i<maxIterations; ++i){
 		this.iteration(i, maxIterations);
 	}
@@ -4456,7 +4444,7 @@ Stereopsis.World.prototype.iteration = function(iterationIndex, maxIterations){
 		}
 	}
 	*/
-
+console.log("START");
 	if(iterationIndex==0){ // subsequent approximations are always worse than the refined estimates
 		this.estimate3DErrors(false); // find initial F, P, estimate all errors from this
 		this.estimate3DViews(); // find absolute view locations
@@ -4466,7 +4454,7 @@ Stereopsis.World.prototype.iteration = function(iterationIndex, maxIterations){
 		this.estimate3DErrors(true, false); // update errors using absolute-relative transforms
 	}
 	this.recordTransformErrorStart();
-
+console.log("continue ...");
 	// this.patchInitOnly();
 	if(iterationIndex==0){
 		// this.generateMatchAffineFromPatches();
@@ -9311,7 +9299,6 @@ Stereopsis.World.prototype.resolveIntersection = function(point3DA,point3DB){ //
 	if(point3DA.hasPatch() && point3DB.hasPatch()){
 		return this._resolveIntersectionPatch(point3DA,point3DB);
 	}
-	// throw "no flats ...";
 	return this._resolveIntersectionFlat(point3DA,point3DB);
 }
 Stereopsis.World.prototype._resolveIntersectionGeometry = function(point3DA,point3DB){
@@ -9698,13 +9685,22 @@ Stereopsis.World.prototype._addBackDroppingIntersections = function(point3DA,poi
 	return result;
 }
 Stereopsis.World.prototype._resolveIntersectionFlat = function(point3DA,point3DB){
-	console.log(point3DA);
-	console.log(point3DB);
-throw "dont use no more"
+	// console.log(point3DA);
+	// console.log(point3DB);
 	var world = this;
 	// remove
 	this.disconnectPoint3D(point3DA);
 	this.disconnectPoint3D(point3DB);
+
+
+// temp soln:
+this.killPoint3D(point3DB);
+return this.embedPoint3D(point3DA);
+
+	throw "TODO --- still need for initial case when F / P unknown"
+
+
+
 	// new point
 	var pA3D = point3DA.point();
 	var pB3D = point3DB.point();
@@ -9934,6 +9930,9 @@ console.log("bad sequence");
 	// this.validatePoint3D(point3DC);
 	// add in
 	point3DC.point(averagePoint3D); // simple average -- no relative error taken into account
+
+throw "....."
+
 	return this.embedPoint3D(point3DC);
 }
 Stereopsis.World.prototype.removePoint2DAndMatchesFromPoint3D = function(point2D){

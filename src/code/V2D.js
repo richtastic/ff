@@ -139,6 +139,11 @@ V2D.cosAngle = function(a,b){
 	}
 	return 0;
 }
+V2D.angleDifference = function(a,b){
+	 a = new V2D(1,0).rotate(a);
+	 b = new V2D(1,0).rotate(b);
+	 return V2D.angleDirection(a,b);
+}
 V2D.angleDirection = function(a,b){
 	var angle = V2D.angle(a,b);
 	var cross = V2D.cross(a,b);
@@ -351,10 +356,19 @@ V2D.max = function(out, a,b){
 	out.y = Math.max(a.y,b.y);
 	return out;
 }
-V2D.average = function(pointList, weights){
+V2D.average = function(avg, pointList, weights){
+	if(pointList===undefined){ // 1
+		pointList = avg;
+		avg = new V2D(0,0);
+	}else if(weights===undefined){ // 2
+		pointList = avg;
+		weights = pointList;
+		avg = new V2D(0,0);
+	}else{// 3
+		avg.x = 0; avg.y = 0;
+	}
 	var N = pointList.length;
 	var p = 1.0/N;
-	var avg = new V2D(0,0);
 	for(var i=0; i<N; ++i){
 		var v = pointList[i];
 		if(weights){
