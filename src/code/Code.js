@@ -3606,7 +3606,7 @@ Code.randomIntervalSet = function(count, min,max){
 	return set;
 }
 
-Code.randomInt = function(min,max){
+Code.randomInt = function(min,max){ // inclusive
 	if(max===undefined){
 		max = min;
 		min = 0;

@@ -3915,7 +3915,7 @@ var useErrors = false;
 		ImageMat.normalFloat01(errors);
 		// exaggerate
 		// ImageMat.pow(errors, 2); // fewer red
-		// ImageMat.pow(errors, 0.5); // more red
+		ImageMat.pow(errors, 0.5); // more red
 		var colorList = [0xFF0000FF, 0xFFFF0000];
 		var locationList = [0.0,1.0];
 		for(var i=0; i<errors.length; ++i){
@@ -7164,12 +7164,12 @@ console.log("checkPerformNextTask");
 						this.calculateBundleAdjustPair(viewA,viewB);
 						return;
 					}
-					if(!pair.hasTracks()){
-						console.log("NEED TO DO A TRACK PAIR : "+idA+" & "+idB+" = "+pair.id());
-throw "...";
-						this.calculatePairTracks(viewA,viewB);
-						return;
-					}
+// 					if(!pair.hasTracks()){
+// 						console.log("NEED TO DO A TRACK PAIR : "+idA+" & "+idB+" = "+pair.id());
+// throw "...";
+// 						this.calculatePairTracks(viewA,viewB);
+// 						return;
+// 					}
 				}
 			}
 		}
@@ -12673,6 +12673,8 @@ for(var i=0; i<pairs.length; ++i){
 	//console.log("MATCHES AFTER: "+filteredMatches.length);
 	console.log("MATCHES FOR PAIR "+vA.id()+"+"+vB.id()+" == "+filteredMatches.length);
 
+
+world.resolveIntersectionByMatchScore();
 console.log(matches);
 // var skip = true; // SKIP AFFINE SEQUENCE - OK FOR ~1000 not for ~10,000+
 var skip = false;
@@ -12681,7 +12683,7 @@ var skip = false;
 	if(j%1000==0){
 		console.log(" "+j+"/"+filteredMatches.length);
 	}
-// if(j>200){
+// if(j>2000){
 // 	break;
 // }
 		var match = filteredMatches[j];
@@ -12690,11 +12692,13 @@ var skip = false;
 		var angleAB = match[2];
 		var scaleAB = match[3]; // THIS DEPENDS ON ABSOLUTE SIZE ...
 		var m = world.addMatchForViews(vA,fr, vB,to, scaleAB,angleAB, skip);
+
+// j += 10; // 1/10th
 	}
 	console.log(world._points3DNull.length);
 	// initially get 2-sigma points & only add those from match list
 }
-
+world.resolveIntersectionByDefault();
 
 
 
@@ -12703,7 +12707,7 @@ var skip = false;
 
 var completeFxn = function(){
 	console.log("completeFxn");
-throw "remove this";
+// throw "remove this";
 	var viewA = BAVIEWS[0];
 	var viewB = BAVIEWS[1];
 	var transform = world.transformFromViews(viewA,viewB);
@@ -12733,16 +12737,21 @@ console.log(world);
 for(var i=0; i<BAVIEWS.length; ++i){
 	var view = BAVIEWS[i];
 	// var size = view.sizeFromPercent(0.03); // 1% = 5 | 2% = 9 | 3% = 13
-	var size = view.sizeFromPercent(0.01);
+	// var size = view.sizeFromPercent(0.01);
 	size = Math.round(size);
 	if(size%2==0){ // make odd
 		size += 1;
 	}
+	// size = 5;
+	size = 11;
 	view.cellSize(size);
 	console.log("view cell size: "+size)
 }
 
-world.solve(completeFxn, this);
+
+
+
+world.solvePair(completeFxn, this);
 return;
 throw "USE NEW BUNDLE ADJUST: R3D.BA";
 

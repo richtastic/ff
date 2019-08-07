@@ -371,10 +371,79 @@ https://cloud.google.com/appengine/docs/nodejs/
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 0 = 25I42TL0
 1 = IQX1JE9K
+2 = OFM81KML
+
+
+0 + 1 = Z84ENWKE
+0 + 2 = UEX4H682
+1 + 2 = NY9RPQHA
 
 
 
-when inserting points - why are A/B negative ?
+- generate a disparity map for images ?
+- intermediary surface reference for normal / etc
+- move noisy points toward surface ()
+
+x need to make patch sizes on order of NEIGHBORHOOD -- cell size is often too large
+
+- CLEARLY NOISE P3D
+	- neighborhood 3D distances is sporadic
+	- compared to what?
+		- not 'locally'
+		- global average distance range /
+
+
+	=> there is a P3D very far away from any other 3D points, why not being dropped?
+		x not in anyone's way
+		- 2D-3D neighborhood is all over the place
+		- 3D-neighborhood is all over the place
+			=> 3D/2D distances of 4-8 neighbors
+
+- how to get rid of incorrect noise points in 2-way ?
+	x in front of eachother
+	~ R-error
+	~ F-error
+	- pairwise 'global' average estimate of neighbor distances
+		~1000 sampled points in transform pair
+			record metric:
+				average 3D / 2D distance ratio to k neighbors [8-12]
+					- allows for comparison of sparse and dense samples
+				divide by depth (distance from cameras)
+					- further points are expected to have
+
+		=> far points means sproadic
+		=> what does very close points mean ?
+	- other ways to target-remove clumps of bad points - isolated single-points & small groups
+		- ?
+
+
+	- drop points who's average distance >> 3 sigma
+
+
+	- 2D neighborhood of 3D distance outliers
+		- EACH POINT x ~10 neighbors = 100k
+
+- clumpy behavior, especially distant
+	- allow for local 're-search' to pick point more-better aligned with F / R
+		- how to avoid just picking a point that fits but isn't correct?
+	- ...
+
+- planar artifacts from 2D F sampling
+
+
+- pairwise goal:
+	- drop worst scores while maintaining connectivity
+	=> filling in details is last step in process
+
+- how do pairwise & allwise match-obstruction compare?
+	- does pairwise actually do much?
+	- does allwise have a 'size' that works globally?
+		- is this fast/slow?
+
+
+- non-patch combining again
+
+when inserting points - why are A/B negative from dense grouping?
 
 
 
