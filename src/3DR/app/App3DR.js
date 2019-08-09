@@ -3859,8 +3859,8 @@ App3DR.App.Model3D.prototype.setPoints = function(input3D, input2D, hasImages){
 
 	var colors = [];
 // ONLY WORKS FOR PAIR OF IMAGES
-// var useErrors = true;
-var useErrors = false;
+var useErrors = true;
+// var useErrors = false;
 	useErrors = useErrors && hasImages;
 	if(useErrors){
 		var views = this._views;
@@ -3905,8 +3905,8 @@ var useErrors = false;
 				pointA = pointA.copy().scale(imageSizeA.x,imageSizeA.y);
 				pointB = pointB.copy().scale(imageSizeB.x,imageSizeB.y);
 			var point3D = points3D[i];
-			// var error = R3D.fError(F, Finv, pointA, pointB);
-			var error = R3D.reprojectionError(point3D, pointA,pointB, extrinsicA, extrinsicB, Ka, Kb);
+			var error = R3D.fError(F, Finv, pointA, pointB);
+			// var error = R3D.reprojectionError(point3D, pointA,pointB, extrinsicA, extrinsicB, Ka, Kb);
 			// var error = R3D.reprojectionError(point3D, pointA,pointB, cameraA, cameraB, Ka, Kb);
 			errors.push(error["error"]);
 		}

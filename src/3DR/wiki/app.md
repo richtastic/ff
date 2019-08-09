@@ -372,17 +372,90 @@ https://cloud.google.com/appengine/docs/nodejs/
 0 = 25I42TL0
 1 = IQX1JE9K
 2 = OFM81KML
-
-
 0 + 1 = Z84ENWKE
 0 + 2 = UEX4H682
 1 + 2 = NY9RPQHA
 
 
+- SIFT FLOW
+	- use gradients to compare score rather than flat NCC / SAD
+
+...
+
+
+- find / visualize invalid areas [areas A doesn't fit into B and areas B not mapped to by A]
+
+- try using F => focal length => basic Rab
+
+- use basic R to approximate AFFINE matrices between points between A & B
+	=> rotation & scale
+
+
+
+
+
+- try SEED process again ... can reuse a lot of the imageMapper?
+	- seeds = best corner / score points from prev step
+	- use 'REGIONS'
+		- at region seams: if disagreement, better sequence wins
+			- 'disagree' = scores / rotation / scale / location / ...
+			- 'better' = score
+
+
+- better affine mapping:
+	- mask out matching outside images
+	- better handle cells with split disparities
+
+
+- visualize out invalidated area
+	- from FORWARD A & INVERSE A & " " B
+	=> geometric invalid area:
+		source = each cell * radius size
+		dest = everything outside convex-hull-ish of interrior points
+
+- enforce uniqueness by picking best match by score for same-mapped point OR invalid both
+- pick best matching score from A->B & B->A for points
+
+
+
+
+
+- hierarchy affine algorithm is still missing better matches [pikachu]
+	- perturbed by occlusions/jumps
+
+	=> force rotation to start at relative F rotation
+	=> force location to start at clamped F line
+		- or increase clamping percent based on # of iterations
+
+
+- go back a step and make sure ways to keep bad F-compliant points from making their way in to final 2-way match ...
+
+- without OCCLUDED value, not sure what points are kept because of good match or just best guess
+- cross reference with original images?
+=> HANDLE:
+	- non-textured points [corner / uniqueness / entropic]
+	-
+
+--- mark areas of poor match score (triangulated?) as not usable for matchings
+- nothing outside of convex hull (+ padding) should be used ...
+
+
+=> keep track / display out matching regions that are invalidated:
+	A) outside of limits
+	B) bad NCC / SAD score (add)
+=> avoid unmapped ROUNDED areas (max/min) to be kept around
+	- it there a way to get the matching scores for each pixel?
+		=> pick only very best
+
+- f & r errors are more lining up with the bad data than the good data ... local minimizing progress ...
+
+
+- probing to aquire better points doesn't seem used?
 
 - generate a disparity map for images ?
 - intermediary surface reference for normal / etc
 - move noisy points toward surface ()
+- depth outliers []
 
 x need to make patch sizes on order of NEIGHBORHOOD -- cell size is often too large
 

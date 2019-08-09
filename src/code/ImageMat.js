@@ -3072,10 +3072,11 @@ ImageMat.prototype.addConst = function(a){
 	return this;
 }
 
-ImageMat.prototype._op = function(fxn){
-	fxn(this._r);
-	fxn(this._g);
-	fxn(this._b);
+ImageMat.prototype._op = function(fxn,args){
+	args = args!==undefined ? args : [];
+	fxn.apply(this, Code.copyArray(args).unshift(this._r) );
+	fxn.apply(this, Code.copyArray(args).unshift(this._g) );
+	fxn.apply(this, Code.copyArray(args).unshift(this._b) );
 }
 ImageMat.prototype.clipFloat01 = function(){
 	this._op(ImageMat.clipFloat01);
@@ -3089,9 +3090,23 @@ ImageMat.prototype.invertFloat01 = function(){
 	this._op(ImageMat.invertFloat01);
 	return this;
 }
-ImageMat.prototype.scaleFloat01 = function(){
-	this._op(ImageMat.scaleFloat01);
+ImageMat.prototype.tint = function(color, percent){ // new color = old color * (1-p) + tint * p -- alpha ignored
+	var red = Code.getFloatRedARGB(color);
+	var grn = Code.getFloatGrnARGB(color);
+	var blu = Code.getFloatBluARGB(color);
+	ImageMat.tint(this._r,red,percent);
+	ImageMat.tint(this._g,grn,percent);
+	ImageMat.tint(this._b,blu,percent);
 	return this;
+}
+ImageMat.tint = function(a,v,p){
+	var i, len = a.length;
+	var result = new Array(len);
+	var q = 1.0-p;
+	for(i=0;i<len;++i){
+		a[i] = a[i]*q + v*p;
+	}
+	return result;
 }
 ImageMat.clipFloat01 = function(data){
 	var i, len = data.length;

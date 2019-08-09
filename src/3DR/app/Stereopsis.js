@@ -4536,14 +4536,12 @@ this.searchPoints2DBestMatch();
 	// this.filterGlobalMatches(false, 0, 3.0,3.0,3.0,3.0, true);
 	this.filterGlobalMatches(false, 0, 2.0,2.0,2.0,2.0, false); // slowly drops points
 
-	this.filterTransform2D3D();
+	// don't think this helps much:
+	// this.filterTransform2D3D();
 
 // if(i==1 || i==3){
 	// this.reposition2D();
 // }
-	// this.filterLocal3D();
-	// this.filterPatch3D(3.0);
-	// this.filterSphere3D(3.0);
 
 	this.filterPairwiseSphere3D(2.0);
 
