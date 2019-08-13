@@ -361,8 +361,8 @@ V2D.average = function(avg, pointList, weights){
 		pointList = avg;
 		avg = new V2D(0,0);
 	}else if(weights===undefined){ // 2
-		pointList = avg;
 		weights = pointList;
+		pointList = avg;
 		avg = new V2D(0,0);
 	}else{// 3
 		avg.x = 0; avg.y = 0;

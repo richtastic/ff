@@ -187,6 +187,10 @@ Grid2D.prototype.neighbor9ObjectsForPoint = function(x,y){
 	}
 	return null;
 }
+Grid2D.prototype.neighbor4CellsForCell = function(cell){
+	var cr = new V2D(cell.col(),cell.row());
+	return this._neighbor4ObjectsForColRow(cr.x,cr.y, false);
+}
 Grid2D.prototype.neighbor5CellsForCell = function(cell){
 	var cr = new V2D(cell.col(),cell.row());
 	return this._neighbor5ObjectsForColRow(cr.x,cr.y, false);
@@ -199,8 +203,14 @@ Grid2D.prototype.neighbor13CellsForCell = function(cell){
 	var cr = new V2D(cell.col(),cell.row());
 	return this._neighbor13ObjectsForColRow(cr.x,cr.y, false);
 }
+Grid2D.prototype._neighbor4ObjectsForColRow = function(col,row, doObjects){
+	return this._neighborNObjectsForColRow(col,row, doObjects, [0,-1, -1,0, 1,0, 0,1]);
+}
 Grid2D.prototype._neighbor5ObjectsForColRow = function(col,row, doObjects){
 	return this._neighborNObjectsForColRow(col,row, doObjects, [0,-1, -1,0, 0,0, 1,0, 0,1]);
+}
+Grid2D.prototype._neighbor8ObjectsForColRow = function(col,row, doObjects){
+	return this._neighborNObjectsForColRow(col,row, doObjects, [-1,-1, 0,-1, 1,-1,  -1,0, 1,0, -1,1, 0,1, 1,1]);
 }
 Grid2D.prototype._neighbor9ObjectsForColRow = function(col,row, doObjects){
 	return this._neighborNObjectsForColRow(col,row, doObjects, [-1,-1, 0,-1, 1,-1,  -1,0, 0,0, 1,0, -1,1, 0,1, 1,1]);

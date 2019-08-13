@@ -60,13 +60,13 @@ var dist = null;
 
 
 	// TESTING:
-	// new ImageLoader("./images/",["bench_A.png", "bench_B.png"],this,this.imagesLoadComplete).load();
+	new ImageLoader("./images/",["bench_A.png", "bench_B.png"],this,this.imagesLoadComplete).load();
 	// new ImageLoader("./images/",["room0.png", "room2.png"],this,this.imagesLoadComplete).load();
 
 	// new ImageLoader("./images/iowa/",["1.JPG", "2.JPG"],this,this.imagesLoadComplete).load(); // poor
 	// new ImageLoader("./images/iowa/",["0.JPG", "1.JPG"],this,this.imagesLoadComplete).load(); // good
 
-	new ImageLoader("./images/pika_1/",["image-0.png", "image-1.png"],this,this.imagesLoadComplete).load(); // ok
+	// new ImageLoader("./images/pika_1/",["image-0.png", "image-1.png"],this,this.imagesLoadComplete).load(); // ok
 	// new ImageLoader("./images/pika_1/",["image-0.png", "image-5.png"],this,this.imagesLoadComplete).load(); // wrong
 
 
@@ -309,6 +309,9 @@ GLOBALDISPLAY = display;
 // console.log(str);
 // return;
 
+
+// this.testSIFTImage(imageMatrixA,imageMatrixB);
+// throw "..."
 
 this.testStereo(imageMatrixA,imageMatrixB);
 throw "..."
@@ -4473,7 +4476,370 @@ cy: 0.4746370298801608
 	throw "..."
 }
 
+RiftTest.prototype.testSIFTImage = function(imageA,imageB){
+	console.log("testSIFTImage");
+	var widthA = imageA.width();
+	var heightA = imageA.height();
+	var widthB = imageB.width();
+	var heightB = imageB.height();
 
+	var siftB = R3D.SIFTImageFromImage(imageB);
+	console.log(siftB);
+
+	// var pointA = new V2D(60,190);
+	// var pointB = new V2D(120,140);
+
+	// var pointA = new V2D(90,190);
+	// var pointB = new V2D(140,150);
+
+	// var pointA = new V2D(150,170);
+	// var pointA = new V2D(160,170);
+	// var pointB = new V2D(190,160);
+
+	// var pointA = new V2D(210,240); // beneath bench
+	// var pointB = new V2D(200,200);
+
+	var pointA = new V2D(210,170);
+	var pointB = new V2D(220,160);
+
+	// var pointA = new V2D(280,190);
+	// var pointB = new V2D(260,180);
+
+	// var pointA = new V2D(350,220); // pot
+	// var pointB = new V2D(320,200);
+
+	// var pointA = new V2D(370,160);
+	// var pointB = new V2D(400,150);
+
+
+	// var siftSize = 13;
+	// var halfSize = needleSize*0.5 | 0;
+	// var needleSize = siftSize + halfSize*2;
+var needleSize = 13;
+// var needleSize = 19;
+
+	var compareSize = needleSize;
+	var compareScale = 1.0;
+	var affine = null;
+	console.log(needleSize);
+	var needleA = imageA.extractRectFromFloatImage(pointA.x,pointA.y,compareScale,null, compareSize,compareSize, affine);
+	console.log(needleA);
+	var siftA = R3D.SIFTImageFromImage(needleA, true);
+	console.log(siftA);
+	var histA = siftA[0];
+	console.log(histA);
+
+	var windowC = 151;
+	var halfWindowC = windowC*0.5 | 0;
+	var scores = [];
+	for(var j=0; j<windowC; ++j){
+		for(var i=0; i<windowC; ++i){
+			var x = pointB.x + i - halfWindowC;
+			var y = pointB.y + j - halfWindowC;
+			var indexB = y*widthB + x;
+			var histB = siftB[indexB];
+			var score = R3D.SIFTImageCompare(histA,histB);
+			var index = j*windowC + i;
+			scores[index] = score;
+		}
+	}
+	var minIndex = Code.minIndex(scores);
+	var minBX = minIndex%windowC | 0;
+	var minBY = minIndex/windowC | 0;
+
+	console.log(scores);
+	console.log(minIndex);
+	console.log(minBX);
+	console.log(minBY);
+	var values = ImageMat.getNormalFloat01(scores);
+	// values = ImageMat.pow(values,0.10);
+	values = ImageMat.pow(values,0.50);
+	// values = ImageMat.pow(values,2.0);
+	// console.log(values);
+	// show matching:
+
+	var sss = 1.0;
+
+	// B
+	var iii = imageB;
+	var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
+	var d = new DOImage(img);
+	d.matrix().scale(sss);
+	d.matrix().translate(10 + 0, 10 + 0);
+	GLOBALSTAGE.addChild(d);
+		// var c = new DO();
+		// c.graphics().setLine(2.0, 0xFFFF0000);
+		// c.graphics().beginPath();
+		// c.graphics().drawCircle(minBX, minBY, 9.0);
+		// c.graphics().strokeLine();
+		// c.graphics().endPath();
+		// c.matrix().translate(pointB.x - halfWindowC, pointB.y - halfWindowC);
+		// d.addChild(c);
+	// A
+	var iii = imageA;
+	var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
+	var d = new DOImage(img);
+	d.matrix().scale(sss);
+	d.matrix().translate(10 + 600, 10 + 0);
+	GLOBALSTAGE.addChild(d);
+		var c = new DO();
+		c.graphics().setLine(2.0, 0xFFFF0000);
+		c.graphics().beginPath();
+		c.graphics().drawCircle(pointA.x, pointA.y, 5.0);
+		c.graphics().strokeLine();
+		c.graphics().endPath();
+		d.addChild(c);
+
+	// A
+	var iii = needleA;
+	var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
+	var d = new DOImage(img);
+	d.matrix().scale(sss);
+	d.matrix().translate(10 + 520, 10 + 0);
+	GLOBALSTAGE.addChild(d);
+
+	// heat
+	var heat = Code.grayscaleFloatToHeatMapFloat(values);
+	var img = GLOBALSTAGE.getFloatRGBAsImage(heat["red"],heat["grn"],heat["blu"], windowC,windowC);
+	var d = new DOImage(img);
+	d.graphics().alpha(0.60);
+	d.matrix().scale(sss);
+	d.matrix().translate(10 + sss*pointB.x - sss*halfWindowC, 10 + sss*pointB.y - sss*halfWindowC);
+	GLOBALSTAGE.addChild(d);
+	// peak
+	var c = new DO();
+	c.graphics().setLine(3.0, 0xFFFF0000);
+	c.graphics().beginPath();
+	c.graphics().drawCircle(0, 0, 15.0);
+	c.graphics().strokeLine();
+	c.graphics().endPath();
+	// c.matrix().translate(10 + sss*pointB.x - sss*halfWindowC + sss*minBX, sss*pointB.y - sss*halfWindowC + sss*minBY);
+	c.matrix().translate(10 + sss*pointB.x - sss*halfWindowC + sss*minBX, 10 + sss*pointB.y - sss*halfWindowC + sss*minBY);
+	GLOBALSTAGE.addChild(c);
+
+
+}
+R3D.SIFTImageCompare = function(siftImageA,siftImageB){
+	var score = R3D._progressiveCompare1DArraySAD(siftImageA,siftImageB);
+	return score;
+}
+R3D.SIFTImageFromImage = function(image, centerOnly){
+	// input
+	var width = image.width();
+	var height = image.height();
+	var pixels = width*height;
+	var wm1 = width-1;
+	var hm1 = height-1;
+	// options
+	var sigmaFlat = 1.0;
+	var sigmaGrad = 1.0;
+	var segRad = 3; // segment count
+	var binCount = 8; // gradient directions
+	var bm1 = binCount-1;
+	var segMask = R3D.circularSIFTBinMask(2.1, 2.0); // 9 bins @ 13 samples [size: 13x13]
+	// var segMask = R3D.circularSIFTBinMask(3.1, 2.0); // 9 bins @ 24 [19x19]
+
+	var maskBin = segMask["value"];
+	var maskSize = segMask["width"];
+	var segCount = segMask["bins"];
+	var halfSize = maskSize*0.5 | 0;
+
+	var str = Code.toStringArray2D(maskBin,maskSize,maskSize);
+// console.log(segMask);
+// console.log(str);
+// 	throw "...";
+
+	// blurr source
+	var blurred = image.getBlurredImage(sigmaFlat);
+		var gry = image.gry();
+		var blurY = ImageMat.getBlurredImage(gry,width,height, sigmaFlat);
+	// get gradients
+	var dx = blurred.derivativeX();
+	var dy = blurred.derivativeY();
+		var dxY = ImageMat.derivativeX(blurY,width,height).value;
+		var dyY = ImageMat.derivativeY(blurY,width,height).value;
+	// blur gradients
+	// dx = dx.getBlurredImage(sigmaGrad);
+	// dy = dy.getBlurredImage(sigmaGrad);
+	// 	dxY = ImageMat.getBlurredImage(dxY,width,height, sigmaGrad);
+	// 	dyY = ImageMat.getBlurredImage(dyY,width,height, sigmaGrad);
+	var dxR = dx.red();
+	var dxG = dx.grn();
+	var dxB = dx.blu();
+	var dyR = dy.red();
+	var dyG = dy.grn();
+	var dyB = dy.blu();
+	var gradientR = [];
+	var gradientG = [];
+	var gradientB = [];
+	var angleR = [];
+	var angleG = [];
+	var angleB = [];
+	var magsR = [];
+	var magsG = [];
+	var magsB = [];
+	var magsY = [];
+	var binsR = [];
+	var binsG = [];
+	var binsB = [];
+	var binsY = [];
+	var twopi = Math.PI*2.0;
+	for(var i=0; i<pixels; ++i){
+		var r = new V2D(dxR[i],dyR[i]);
+		var g = new V2D(dxG[i],dyG[i]);
+		var b = new V2D(dxB[i],dyB[i]);
+		// var y = new V2D( (r.x+g.x+b.x)/3.0, (r.y+g.y+b.y)/3.0);
+		var y = new V2D(dxY[i],dxY[i]);
+		gradientR[i] = r;
+		gradientG[i] = g;
+		gradientB[i] = b;
+		var angleR = V2D.angleDirection(V2D.DIRX,r) + Math.PI;
+		var angleG = V2D.angleDirection(V2D.DIRX,g) + Math.PI;
+		var angleB = V2D.angleDirection(V2D.DIRX,b) + Math.PI;
+		var angleY = V2D.angleDirection(V2D.DIRX,y) + Math.PI;
+		angleR[i] = angleR;
+		angleG[i] = angleG;
+		angleB[i] = angleB;
+		magsR[i] = r.length();
+		magsG[i] = g.length();
+		magsB[i] = b.length();
+		magsY[i] = y.length();
+		var binR = Math.min(Math.floor(angleR*binCount/twopi),bm1);
+		var binG = Math.min(Math.floor(angleG*binCount/twopi),bm1);
+		var binB = Math.min(Math.floor(angleB*binCount/twopi),bm1);
+		var binY = Math.min(Math.floor(angleY*binCount/twopi),bm1);
+		binsR[i] = binR;
+		binsG[i] = binG;
+		binsB[i] = binB;
+		binsY[i] = binY;
+	}
+	// console.log(binsR,binsG,binsB);
+	// histogram gadients
+	var sift = [];
+	var minJ = 0;
+	var maxJ = hm1;
+	var minI = 0;
+	var maxI = wm1;
+	if(centerOnly){
+		minI = maxI = width*0.5 | 0;
+		minJ = maxJ = height*0.5 | 0;
+		console.log("CENTER: "+minI+","+minJ);
+	}
+	var t = new V3D();
+	var siftIndex = 0;
+	for(var j=minJ; j<=maxJ; ++j){
+		for(var i=minI; i<=maxI; ++i){
+			var hist = {};
+			// var startJ = (j-halfSize);
+			// var endJ = (j+halfSize);
+			// var startI = (i-halfSize);
+			// var endI = (i+halfSize);
+			// for(var jj=startJ; jj<=endJ; ++jj){
+			// 	for(var ii=startI; ii<=endI; ++ii){
+			var maskIndex = 0;
+			for(var jj=0; jj<maskSize; ++jj){
+				for(var ii=0; ii<maskSize; ++ii){
+					var x = i + ii - halfSize;
+					var y = j + jj - halfSize;
+					if(0<=x && x<=wm1 && 0<=y && y<=hm1){
+						var bin = maskBin[maskIndex];
+						if(bin>=0){
+							var index = y*width + x;
+							var binR = binsR[index];
+							var binG = binsG[index];
+							var binB = binsB[index];
+							var binY = binsY[index];
+							// var mr = magsR[index];
+							// var mg = magsG[index];
+							// var mb = magsB[index];
+							var r = magsR[index];
+							var g = magsG[index];
+							var b = magsB[index];
+							var y = magsY[index];
+								t.set(r,g,b);
+							var mag = t.length();
+
+/*
+							// MULTIPLE:
+							var h, val;
+							// R
+							h = bin+"-"+"R"+"-"+binR;
+							val = hist[h];
+							if(val!==undefined){
+								hist[h] = val + r;
+							}else{
+								hist[h] = r;
+							}
+							// G
+							h = bin+"-"+"G"+"-"+binG;
+							val = hist[h];
+							if(val!==undefined){
+								hist[h] = val + g;
+							}else{
+								hist[h] = g;
+							}
+							// B
+							h = bin+"-"+"G"+"-"+binB;
+							val = hist[h];
+							if(val!==undefined){
+								hist[h] = val + b;
+							}else{
+								hist[h] = b;
+							}
+*/
+							// SINGLE
+							var h = bin+"-"+binR+"-"+binG+"-"+binB;
+							// var h = bin+"-"+binY;
+							var val = hist[h];
+							if(val!==undefined){
+								hist[h] = val + mag;
+							}else{
+								hist[h] = mag;
+							}
+
+
+
+						}
+					}
+					++maskIndex;
+				}
+			}
+			// normalize to max(hist) = 1
+			var keys = Code.keys(hist);
+			var maxValue = null;
+			var minValue = null;
+			var len = 0;
+			for(var k=0; k<keys.lenght; ++k){
+				var key = keys[k];
+				var val = hist[key];
+				len += val*val;
+				if(minValue==null){
+					maxValue = value;
+					minValue = value;
+				}else{
+					maxValue = Math.max(maxValue,val);
+					minValue = Math.min(minValue,val);
+				}
+			}
+			var range = maxValue - minValue;
+			len = Math.sqrt(len);
+			if(len>0){
+				len = 1.0/len;
+			}
+			// if(range>0){
+				for(var k=0; k<keys.lenght; ++k){
+					var key = keys[k];
+					var val = hist[key];
+					// hist[key] = (value-minValue)/range;
+					 hist[key] = value*len;
+				}
+			// }
+			sift[siftIndex] = hist;
+			++siftIndex;
+		}
+	}
+	return sift;
+}
 RiftTest.prototype.testStereo = function(imageA,imageB){
 var TYPE_BENCH = 0;
 var TYPE_ROOM = 1;
@@ -4481,15 +4847,15 @@ var TYPE_HOUSE = 2;
 var TYPE_HOUSE_GOOD = 3;
 var TYPE_PIKA = 4;
 var TYPE_PIKA_FAR = 5;
-var TYPE_CAMPUS = 5;
+var TYPE_CAMPUS = 6;
 
-// var doType = TYPE_BENCH;
+var doType = TYPE_BENCH;
 // var doType = TYPE_ROOM;
 // var doType = TYPE_HOUSE;
 // var doType = TYPE_HOUSE_GOOD;
 // var doType = TYPE_PIKA;
 // var doType = TYPE_PIKA_FAR;
-var doType = TYPE_CAMPUS;
+// var doType = TYPE_CAMPUS;
 
 var Fab, Fba, pointsA,pointsB;
 

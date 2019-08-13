@@ -377,10 +377,88 @@ https://cloud.google.com/appengine/docs/nodejs/
 1 + 2 = NY9RPQHA
 
 
+- how to apply regularization to affine matrices?
+
+- add masking in score calcs for portions of needles outside of image
+
+- test SIFT image placement optimal positioning
+	- rotation?
+	- scale?
+	=> SIFT LOCATIONS ARE VERY POOR
+	=> MAYBE ONLY USE AT LARGE SCALES TO DISCRIMINATE initially
+
+- set 'occluded' cells if score > worst allowable score
+	- still calculate best location
+	- influence neighbors ?
+
+
+	- do multiple iterations & actually try to converge rather than use single step:
+
+	- GRAPH SIZE ITERATION: [cell size doubling]
+		- create new graph ; connect parents & children
+		- GLOBAL MINIMIZATION ITERATION: [each cell has a delta of change in location; init to null, stop when avg delta < 0.25*cellsize ; or exceed max iterations]
+			- get list of descriptor score at all neighborhood locations (first time)
+				- cell size scaled to 9x9 - 11x11 resolution search area
+				- use inherited angle & scale
+				- set initial location based on optimal score (ignoring neighbors)
+					- use regularization for first guess
+			- use 4-neighbor locations to find optimal point based on full score: DESCRIPTOR + DISPLACEMENT + NEIGHBOR-POSITION-DIFFERENCE
+			- at optimum location: find optimal rotation & scale
+
+	- gradient histogram as descriptor in various places
+		- translation:
+			- images are scaled to cell size / compare size
+			- calc gradients R/G/B (smoothed colors & smoothed gradient)
+			- each pixel assigned histogram based on CELL-SIZE neighbors @ circular mask
+			=> each pixel is ORDERED SET OF GRADIENT HISTOGRAMS
+		- rotation:
+			- each pixel is UNORDERED SET OF GRADIENT HISTOGRAMS
+		- scale + rotation
+			- ? compare to images at different scale (search range)
+
+
+	- full location + rotation + scale:
+		- instead of extracting image of colors; extract image with padding + convert interrior pixels to sift
+
+
+
+
+
+
+
+- key to optimum location is LBP:
+	- minimize global energy fxn by:
+		- iterate on local best location - considering neighbors
+
+- limits:
+	- scale
+	- rotation
+	- time to extract SIFT from each ENTIRE image
+
+
+- auto calibration: arbitrary images => K - many views to constrain H
+	- Pab = [[e_b]x F | e_b]
+	- P ~ H * Pab
+	- p = -(K)^-T * v
+	- H = [K 0 ; -p^T * K 1]
+		=> 8 unknowns
+	- absolute plane
+	- abs conic
+	- projective factorization
+	---- https://www.tnt.uni-hannover.de/papers/data/407/ACCV06_TTHBPM_1.pdf
+	---- http://www.csc.kth.se/~madry/courses/mvg10/Attachments/10_Presentation_Alper.pdf
+
+- self calibration: use some input images with known constancy (eg position / rotation / GPS / gyroscope) to determine K
+
+- allow for unmatched portions
+- use image derivatives
+- scale/blur both images A & B
+
 - SIFT FLOW
 	- use gradients to compare score rather than flat NCC / SAD
+- PATCH MATCH
+	- ...
 
-...
 
 
 - find / visualize invalid areas [areas A doesn't fit into B and areas B not mapped to by A]

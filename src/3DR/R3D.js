@@ -5934,8 +5934,8 @@ spacing = 2;
 					v = Code.interpolateMinimum1D(peak, value[a],value[b],value[c]);
 					if(v){
 						v.x = Math.min(Math.max(v.x,-1.0),1.0);
+						score = v.y;
 					}
-					score = v.y;
 				}
 				if(v){
 					disparity += v.x;
@@ -9593,7 +9593,8 @@ R3D.arbitraryAffineMatches = function(imageMatrixA,imageMatrixB, Fab,Fba, points
 // var K = R3D.basicIntrinsicsFromFundamental(Fab,Fba, imageMatrixA,imageMatrixB);
 
 
-// throw ".."
+// throw "..";
+
 	var mapperBA = new ImageMapper(imageMatrixB,imageMatrixA, pointsB,pointsA, Fba,Fab);
 	var matchesBA = mapperBA.findMatches();
 	console.log(matchesBA);
@@ -9886,8 +9887,10 @@ R3D.linearDepthFromDisplacement = function(mappingAB, displacementA){
 	var widthRA = rectifiedA.width();
 	var heightRA = rectifiedA.height();
 	// var startS = 1.0;
-	// var startS = 0.50;
 	var startS = 0.25;
+	if(widthA*startS<100){ // too small
+		startS = 0.50;
+	}
 	// var startS = 0.125;
 	var pathSolution = false;
 	// var A = R3D._stereoBlockMatchOrderedHierarchy(rectifiedA,rectifiedB, infoA,infoB, imageA,imageB, startS,displacementA,pathSolution, [7,5,3,3]);
