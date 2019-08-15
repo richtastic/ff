@@ -377,9 +377,71 @@ https://cloud.google.com/appengine/docs/nodejs/
 1 + 2 = NY9RPQHA
 
 
-- how to apply regularization to affine matrices?
+
+
+
+x method to get masked part of image
+~ system of prescaling image before extraction to help for large scale differences
+	=> want to move this logic to all previous steps
+		- SIFT extraction
+
+=> opt on the side of blurring
+	: includes correct colors more toward destination
+	: preserves appearance of lines
+=> opt for side of crispness [is it FALSELY crisp tho?]
+	: more vivid colors better for discriminating
+
+
+
+- 2D DENSE BP:
+	- input:
+		- original cell is in approximate: location, scale, rotation
+	- process:
+		- find optimum initial cell: location / scale / rotation via minimizing SAD costs
+		- while number of hierarch iterations
+			- initialize sub-graph with cells half-size of parent
+			- for each cell:
+				- get predicted locations from parent neighbors
+				- cell representation size = [11x11]
+				- extract cell rect around area in imageA
+				- extract compare rect around area in imageB
+				(get image masks for cells that are hyptoenuse away from image border)
+				- get compare costs for cell w/ circular mask & skip 1 param [5x5] -- reduce search space
+			- convert graph to BP
+				- v: initial location = predicted location
+				- f: 2-loop: find minimum over all costs using eqn: feature cost + distance cost + difference cost
+				- v: average locations from f
+			- for each cell:
+				- optimize rotation / scale using updated location [1/(2^outerloop)]
+			continue loop
+
+
+
+- how to separate x, y  to keep from cost matrix and instead cost vector ?
+
+- can use 1D search using rectified images to reduce search space
+
+
+-
+	-
+	- a) find optimal sub positions from sub-costs
+		- cell => min(11, round(cell/2) * 2 + 1 )
+		- reduce search space by sub-sampling comparison costs
+	- b) update scale & rotation to improve cost
+
+
+- is separating rotation & scalea a more reliable way?
 
 - add masking in score calcs for portions of needles outside of image
+
+- error of a cell should be the TOTAL COST, not just the matching cost
+
+- add circular masking everywhere
+
+- how to apply regularization to affine matrices?
+
+
+	-
 
 - test SIFT image placement optimal positioning
 	- rotation?

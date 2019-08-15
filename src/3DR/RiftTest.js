@@ -310,8 +310,14 @@ GLOBALDISPLAY = display;
 // return;
 
 
+// this.testScaling(imageMatrixA,imageMatrixB);
+// throw "..."
+
 // this.testSIFTImage(imageMatrixA,imageMatrixB);
 // throw "..."
+
+this.testBP(imageMatrixA,imageMatrixB);
+throw "..."
 
 this.testStereo(imageMatrixA,imageMatrixB);
 throw "..."
@@ -4476,8 +4482,199 @@ cy: 0.4746370298801608
 	throw "..."
 }
 
+
+RiftTest.prototype.testScaling = function(imageA,imageB){
+	console.log("testScaling");
+
+	var widthA = imageA.width();
+	var heightA = imageA.height();
+	var widthB = imageB.width();
+	var heightB = imageB.height();
+	var scalesA = [1.0];
+	var imagesA = [imageA];
+	var maxScales = 20;
+	var scale = 1.0;
+	var minSize = 4;
+	var scaleMult = 0.5;
+	// var scaleMult = 0.75;
+	for(var i=0; i<maxScales; ++i){
+		scale = scale * scaleMult;
+		var nextWidth = Math.round(scale*widthA);
+		var nextHeight = Math.round(scale*heightA);
+		console.log(" "+i+": "+scale+" = "+nextWidth+" x "+nextHeight);
+		if(nextWidth<=minSize || nextHeight<=minSize){
+			break;
+		}
+		var imgA = imagesA[i];
+		// var halfA = imgA.getScaledImage(0.5,0.001);
+		// var halfA = imgA.getScaledImage(0.5,0.10);
+		var halfA = imgA.getScaledImage(scaleMult,0.5, false); // #2 - blurrier
+		// var halfA = imgA.getScaledImage(scaleMult, null, false); // #1 - crisper - aliasing
+
+		var avgScale = (halfA.width()/widthA + halfA.height()/heightA)*0.5;
+
+		//
+		imagesA.push(halfA);
+		scalesA.push(avgScale);
+	}
+	console.log(imagesA);
+	console.log(scalesA);
+	// var fromSize = 100;
+	// var toSize = 5;
+	var fromSize = 200;
+	var toSize = 11;
+	// var fromSize = 100;
+	// var toSize = 21;
+	// var fromSize = 100;
+	// var toSize = 51;
+	// var fromSize = 200;
+	// var toSize = 100;
+
+	var matrix = new Matrix2D();
+	// matrix.rotate( Code.radians(-30) );
+	// matrix.rotate( Code.radians(45) );
+	// matrix.rotate( Code.radians(30) );
+
+	// var fromSize = 150;
+	// var toSize = 100;
+	// var pointA = new V2D(100,100);
+	// var pointA = new V2D(100,150);
+	// var pointA = new V2D(150,150);
+	// var pointA = new V2D(150,151);
+	// var pointA = new V2D(150.2,150.9);
+	var pointA = new V2D(200,151);
+
+	// var pointA = new V2D(500,251);
+	// var pointA = new V2D(0,0);
+	// var pointA = new V2D(500,351);
+
+	var binaryF = function(haystack,needle){
+		if(needle==haystack){
+			return 0;
+		}
+		return needle>haystack ? -1 : 1;
+	};
+
+	var compareScale = fromSize/toSize;
+	console.log("scale ratio: "+compareScale);
+	var invScale = 1.0/compareScale;
+	console.log("      >>>> "+invScale);
+	var effectiveIndex = Code.binarySearch(scalesA, binaryF, false, invScale);
+	if(Code.isArray(effectiveIndex)){
+		effectiveIndex = effectiveIndex[0];
+	}
+	console.log(effectiveIndex);
+	var effectiveA = imagesA[effectiveIndex];
+	var actualScaleA = scalesA[effectiveIndex];
+	console.log(effectiveA);
+	console.log(actualScaleA);
+
+	//
+	var needle0 = imageA.imageAtPoint(pointA.x,pointA.y,compareScale, toSize,toSize, matrix);
+	// var needle0 = imageA.extractRectFromFloatImage(pointA.x,pointA.y,compareScale,null, toSize,toSize, null);
+
+	var effA = pointA.copy().scale(actualScaleA);
+	var effectiveScale = actualScaleA*compareScale;
+	console.log("effective ratio: "+effectiveScale);
+	// var needle1 = effectiveA.extractRectFromFloatImage(effA.x,effA.y,effectiveScale,null, toSize,toSize, null);
+	var needle1 = effectiveA.imageAtPoint(effA.x,effA.y,effectiveScale, toSize,toSize, matrix);
+
+	// ImageMat.extractRectWithProjectionIsInside
+// ImageMat.extractRectWithProjectionIsInside = function(sW,sH, wid,hei, projection){
+	var insideMask = effectiveA.imageAtPoint(effA.x,effA.y,effectiveScale, toSize,toSize, matrix, true);
+
+	// imageAtPoint
+
+	console.log(needle0);
+	console.log(needle1);
+	console.log(insideMask);
+
+
+	// progressive scaling vs current thing
+	var display = GLOBALSTAGE;
+
+	var sca = 10.0;
+	// var sca = 5.0;
+	// var sca = 1.0;
+
+	var heat = needle0;
+	var img = GLOBALSTAGE.getFloatRGBAsImage(heat.red(), heat.grn(), heat.blu(), heat.width(), heat.height());
+	var d = new DOImage(img);
+	d.matrix().scale(sca);
+	d.matrix().translate(10 + 0, 10 + 0);
+	display.addChild(d);
+
+	var heat = needle1;
+	var img = GLOBALSTAGE.getFloatRGBAsImage(heat.red(), heat.grn(), heat.blu(), heat.width(), heat.height());
+	var d = new DOImage(img);
+	d.matrix().scale(sca);
+	d.matrix().translate(10 + sca*toSize + 10, 10 + 0);
+	display.addChild(d);
+
+
+	var heat = needle1;
+	var img = GLOBALSTAGE.getFloatRGBAsImage(insideMask,insideMask,insideMask, heat.width(), heat.height());
+	var d = new DOImage(img);
+	d.matrix().scale(sca);
+	d.matrix().translate(10 + (sca*toSize+10)*2, 10 + 0);
+	display.addChild(d);
+
+	//
+
+	throw "?"
+}
+
+RiftTest.prototype.testBP = function(imageA,imageB){
+	console.log("testBP");
+	var graph = new Graph();
+
+	// ...
+
+	var tov = function(){
+		throw "?";
+	}
+	var tof = function(){
+		throw "?";
+	}
+	var vtof = function(){
+		throw "?";
+	}
+	var ftov = function(){
+		throw "?";
+	}
+	var pv = function(){
+		throw "?";
+	}
+	var pf = function(){
+		throw "?";
+	}
+	var done = function(){
+		throw "?";
+	}
+
+
+	var bp = new BeliefPropagation(graph,tov,tof,vtof,ftov,pv,pf, done, 0.01, 3);
+	console.log(bp);
+	console.log(bp+"");
+	bp.solve();
+
+	//
+
+	throw "?"
+}
+
+
 RiftTest.prototype.testSIFTImage = function(imageA,imageB){
 	console.log("testSIFTImage");
+
+	// how sift works at higher scales:
+	var scale = 1.0;
+
+	// var scale = 0.5;
+	// imageA = imageA.getScaledImage(scale);
+	// imageB = imageB.getScaledImage(scale);
+
+
 	var widthA = imageA.width();
 	var heightA = imageA.height();
 	var widthB = imageB.width();
@@ -4511,6 +4708,9 @@ RiftTest.prototype.testSIFTImage = function(imageA,imageB){
 	// var pointA = new V2D(370,160);
 	// var pointB = new V2D(400,150);
 
+	pointA.scale(scale);
+	pointB.scale(scale);
+
 
 	// var siftSize = 13;
 	// var halfSize = needleSize*0.5 | 0;
@@ -4529,18 +4729,21 @@ var needleSize = 13;
 	var histA = siftA[0];
 	console.log(histA);
 
-	var windowC = 151;
+	var windowC = 51;
 	var halfWindowC = windowC*0.5 | 0;
 	var scores = [];
 	for(var j=0; j<windowC; ++j){
 		for(var i=0; i<windowC; ++i){
 			var x = pointB.x + i - halfWindowC;
 			var y = pointB.y + j - halfWindowC;
-			var indexB = y*widthB + x;
-			var histB = siftB[indexB];
-			var score = R3D.SIFTImageCompare(histA,histB);
-			var index = j*windowC + i;
-			scores[index] = score;
+			if(0<=x && x<widthB && 0<=y && y<heightB){
+				var indexB = y*widthB + x;
+				var score = 0;
+				var histB = siftB[indexB];
+				var score = R3D.SIFTImageCompare(histA,histB);
+				var index = j*windowC + i;
+				scores[index] = score;
+			}
 		}
 	}
 	var minIndex = Code.minIndex(scores);

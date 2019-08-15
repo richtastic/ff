@@ -4,6 +4,9 @@ BP
 Factor graph
 
 
+solve: inference | optimization | constraint
+
+
 
 loopy belief propagation: LBP
 - in undirected graph what is meaning of parents / children?
@@ -38,6 +41,9 @@ loopy belief propagation: LBP
 	- FACTOR = ? WHAT IS
 		- fxn can be determined by the product of separate fxns
 	- factor nodes between variable nodes
+    FACTOR GRAPH:
+        - variable nodes
+        - factor nodes
 
 	...
 	- Energy:
@@ -65,7 +71,7 @@ Bayesian network:
 	- directed & acyclic graph : DAG
 
 
-MP = message passing
+
 ? : EP
 
 
@@ -79,16 +85,37 @@ https://www.cs.cmu.edu/~epxing/Class/10708-14/scribe_notes/scribe_note_lecture13
 http://www.gatsby.ucl.ac.uk/~turner/LoopBPTutorial/LBP.html
 http://cbl.eng.cam.ac.uk/pub/Intranet/MLG/ReadingGroup/loopyBP.pdf
 
+https://ermongroup.github.io/cs228-notes/inference/jt/
+
 
 MRF:
 https://ermongroup.github.io/cs228-notes/representation/undirected/
 http://homes.sice.indiana.edu/natarasr/Courses/I590/Papers/MRF.pdf
 
 
+JT:
+https://ermongroup.github.io/cs228-notes/inference/jt/
+
 VIDS:
 https://metacademy.org/graphs/concepts/loopy_belief_propagation
 
 https://www.coursera.org/learn/probabilistic-graphical-models
+
+
+
+
+???2:
+http://www.stat.columbia.edu/~liam/teaching/compstat-spr18/AMPlecture.pdf
+http://www.cse.psu.edu/~rtc12/CSE586/lectures/cse586GMplusMP_6pp.pdf
+http://www.utstat.toronto.edu/~rsalakhu/sta4273/notes/Lecture5.pdf
+https://people.eecs.berkeley.edu/~wainwrig/Talks/Wainwright_PartII.pdf
+https://people.eecs.berkeley.edu/~wainwrig/Talks/Wainwright_PartI.pdf
+
+
+
+
+
+
 
 
 - mean field approximation
@@ -113,8 +140,28 @@ modus tollens (mode that denies):
 p→q
 ∴ ¬p
 
-
-
+- EM = ?
+- GM = Graph Model
+- CRF = conditional random field
+- RBM = Restricted Boltzmann Machines
+- BN = Bayesian Network
+- MN = ? markov?
+- CHAIN GRAPH = graph with directed and undirected edges
+- I-MAP = set of independencies
+- P-MAP = perfect map : I(P) = I(G)
+- PGM = Probabalistic Graph Model
+- HMM = Hidden Markov Model
+- MPA = Most Probable (Joint) Assignment
+- MAP = Maximum A Posterior
+- SP = sum product
+- FG = factor graph
+- MP = maximum product
+- moral graph: married ancestors to convert directed to undirected graph
+- clique tree: ? (use MST alg to create)
+- junction tree: clique tree for triangulated graph [local consistency = global consistency]
+- triangulate:
+- MP = message passing
+- DC - divide and conquer
 
 - want to maximize the overall P({x}) = (1/Z) PRODUCT(i,j)[  ] * PRODCUT()[ ... ]
 
@@ -123,7 +170,44 @@ p→q
 - minimized value is bethe energy fxn [on factor graph]
 - RANDOM initialization of messages & beliefs
 - ANCESTOR -> PARENT -> CHILD -> DESCENDENT
-- I-MAP = set of independencies
+
+
+- DAG as a distribution P(X1,...,Xn) = (1/Z)PROD(c in C)[ psi_c(x_c) ] is H with positive POTENTIAL FUNCTIONS phi_c
+    - X = set of random variables
+    - x_i = random variable
+    - psi_c = potential function = ? [goodness function, not probability distribution] : arbitrary potentials => preserved qualitative specification
+    - x_c = ?
+    - C = cliques ?
+    - Z = SUM(x_i in X)[phi_c &middot; x_c]
+    - phi_c(x_c) = more generic energy function ~potential -- used by psi_c(x_c) = exp(-phi_c(x_c)) [log linear / botlzmann]
+
+    - evidence e is assignment of values to a set E variables in domain
+    - E = {X_k+1, ..., X_n} ???
+    - X = set of variables
+    - F = set of factors, phi in F
+    - P(e) = probability of evidence = SUM_x_1 ... Sum_x_k P(x_1,...,x_k, e)
+        - likelihood of e
+    - P(X|e) = conditional probability distribution = P(X,e)/P(e) = P(X,e)/[SUM_x P(X=x,e)]
+    - SUM PRODUCT: SUM_z PRODUCT_phi phi [phi is in set of factors F]
+        - P(X_1,e) = SUM_x_n ... SUM_x_1 PROD_i P(x_i|p&middot;a_i)
+        - P(X_1|e) = phi(X_1,e)[SUM_x_1 phi(X_1,e)]
+    - m_ij(x_i) = message from x_j to x_i ~ 'belief'
+    - SUM-PRODUCT = BELIEF PROPAGATION =
+    - message  passing:
+        - forward algorithm: ?
+        - backward algorithm: ?
+
+- ACTUAL MESSAGES?
+    - ARG MAX (INPUTS)
+        A:
+            - x_j: max x_j [ psi(x_j)&middot;psi(x_i,x_j)&middot; PROD_(k in N(j)-i) m_k_j(x_j) ]
+        B:
+            - j: arg max(psi(x_j)&middot;psi(x_i,x_j)&middot;m_k_j&middot;m_i_j(x_j) )
+
+
+
+
+
 
 
 LBP class:

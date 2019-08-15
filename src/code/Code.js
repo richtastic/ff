@@ -1138,7 +1138,7 @@ console.log("    => R");
 
 throw "bad";
 }
-Code.binarySearch = function(a, f, noEnds){ // assumed increasing | if AT INDEX: return index, if BETWEEN INDEX: return [a,b], if OUTSIDE: return [end]
+Code.binarySearch = function(a, f, noEnds, args){ // assumed increasing | if AT INDEX: return index, if BETWEEN INDEX: return [a,b], if OUTSIDE: return [end]
 	if(a.length==0){
 		return null;
 	}
@@ -1149,7 +1149,7 @@ Code.binarySearch = function(a, f, noEnds){ // assumed increasing | if AT INDEX:
 	while(minIndex<=maxIndex){
 		middleIndex = (minIndex+maxIndex) >> 1;
 		value = a[middleIndex];
-		result = f(value);
+		result = f(value,args);
 		if(result==0){
 			return middleIndex;
 		}else if(result<0){

@@ -14,6 +14,7 @@ FF.FILENAMES = ["numeric-1.2.6.js","glMatrix-0.9.5.min.js", "Code.js","Err.js","
 				"Voronoi.js","Triangulator.js",
 				"Canvas.js","Graphics.js","DO.js","DOImage.js","DOButton.js","DOTri.js","Font.js","DOText.js","Stage.js","MatrixStackGL.js","StageGL.js","Minify.js",
 				"UndoStack.js",
+				"BeliefPropagation.js",
 				"Resource.js","Keyboard.js","Cache.js","Diagram.js",
 				"BivariateSurface.js",
 				"TextureAtlas.js","TextureViewBlend.js",

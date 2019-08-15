@@ -1042,12 +1042,12 @@ if(false){
 
 	var layer;
 	layer = root;
-// var divisions = 0; // 1 [1]
+var divisions = 0; // 1 [1]
 // var divisions = 1; // 4 [10]
 // var divisions = 2; // 16 [50]
 // var divisions = 3; // 64 [250]
 // var divisions = 4; // 256 [1000]
-var divisions = 5; // 1024 [4500] // NEW MAXIMUM
+// var divisions = 5; // 1024 [4500] // NEW MAXIMUM
 // var divisions = 6; // 4096 // MAXIMUM
 	for(var i=0; i<divisions; ++i){
 	console.log(" iteration: "+i+" / "+divisions);

@@ -3326,22 +3326,45 @@ ImageMat.extractRectWithProjection = function(source,sW,sH, wid,hei, projection,
 		}
 	}else{
 		destination = new Array(wid*hei);
+		var index = 0;
 		for(j=0;j<hei;++j){
-			var wJ = wid*j;
+			// var wJ = wid*j;
 			for(i=0;i<wid;++i){
 				fr.x = i; fr.y = j;
 				projection.multV2DtoV3D(fr,fr);
 				fr.x /= fr.z; fr.y /= fr.z;
-				destination[wJ+i] = ImageMat.getPointInterpolateCubic(source, sW,sH, fr.x,fr.y);
+				destination[index] = ImageMat.getPointInterpolateCubic(source, sW,sH, fr.x,fr.y);
+				// destination[wJ+i] = ImageMat.getPointInterpolateCubic(source, sW,sH, fr.x,fr.y);
 				// destination[wid*j+i] = ImageMat.getPointInterpolateLinear(source, sW,sH, fr.x,fr.y);
 				//destination[wid*j+i] = ImageMat.getPointInterpolateNearest(source, sW,sH, fr.x,fr.y);
+				++index;
 			}
 		}
 	}
 	return destination;
 }
+ImageMat.extractRectWithProjectionIsInside = function(sW,sH, wid,hei, projection){
+	destination = new Array(wid*hei);
+	var i, j, index=0, fr = new V3D();
+	var wm1 = sW-1;
+	var hm1 = sH-1;
+	for(j=0;j<hei;++j){
+		for(i=0;i<wid;++i){
+			fr.x = i; fr.y = j;
+			projection.multV2DtoV3D(fr,fr);
+			fr.x /= fr.z; fr.y /= fr.z;
+			if(0<=fr.x && fr.x<=wm1 && 0<=fr.y && fr.y<=hm1){
+				destination[index] = 1.0;
+			}else{
+				destination[index] = 0.0;
+			}
+			++index;
+		}
+	}
+	return destination;
+}
 
-ImageMat.extractRect = function(source, aX,aY,bX,bY,cX,cY,dX,dY, wid,hei, sW,sH){ // generates homography beforehand
+ImageMat.extractRect = function(source, aX,aY,bX,bY,cX,cY,dX,dY, wid,hei, sW,sH, isInside){ // generates homography beforehand
 	if(!ImageMat.extractRect_temp3x3){
 		ImageMat.extractRect_temp3x3 = new Matrix(3,3);
 	}
@@ -3359,14 +3382,17 @@ ImageMat.extractRect = function(source, aX,aY,bX,bY,cX,cY,dX,dY, wid,hei, sW,sH)
 	}
 	// now that its all set, use this going forward:
 	ImageMat.extractRect = ImageMat._extractRectInit;
-	return ImageMat.extractRect(source, aX,aY,bX,bY,cX,cY,dX,dY, wid,hei, sW,sH);
+	return ImageMat.extractRect(source, aX,aY,bX,bY,cX,cY,dX,dY, wid,hei, sW,sH, isInside);
 }
-ImageMat._extractRectInit = function(source, aX,aY,bX,bY,cX,cY,dX,dY, wid,hei, sW,sH){
+ImageMat._extractRectInit = function(source, aX,aY,bX,bY,cX,cY,dX,dY, wid,hei, sW,sH, isInside){
 	var fr = ImageMat.extractRect_listA;
 	fr[0].set(0,0); fr[1].set(wid-1,0); fr[2].set(wid-1,hei-1); fr[3].set(0,hei-1);
 	var to = ImageMat.extractRect_listB;
 	to[0].set(aX,aY); to[1].set(bX,bY), to[2].set(cX,cY), to[3].set(dX,dY);
 	var projection = Matrix.get2DProjectiveMatrix(fr,to, ImageMat.extractRect_temp3x3, ImageMat.extractRect_temp8x8, ImageMat.extractRect_temp8x1);
+	if(isInside){
+		return ImageMat.extractRectWithProjectionIsInside(sW,sH, wid,hei, projection);
+	}
 	return ImageMat.extractRectWithProjection(source,sW,sH, wid,hei, projection);
 }
 
@@ -3410,14 +3436,55 @@ ImageMat.extractRectFromMatrix = function(source, width,height, newWidth,newHeig
 	return ImageMat.extractRectWithProjection(source, width,height, newWidth,newHeight, matrix);
 }
 
-ImageMat.prototype.extractRectFromMatrix = function(newWidth,newHeight, matrix){
-	var width = this.width();
-	var height = this.height();
-	var red = ImageMat.extractRectWithProjection(this.red(), width,height, newWidth,newHeight, matrix);
-	var grn = ImageMat.extractRectWithProjection(this.grn(), width,height, newWidth,newHeight, matrix);
-	var blu = ImageMat.extractRectWithProjection(this.blu(), width,height, newWidth,newHeight, matrix);
-	return new ImageMat(newWidth,newHeight, red, grn, blu);
+ImageMat.prototype.imageAtPoint = function(x,y,scale,w,h,matrix, insideCheck){
+	if(insideCheck){
+		return ImageMat.imageAtPoint(x,y,scale,w,h, null,null,null,this._width,this._height, matrix);
+	}
+	var list = ImageMat.imageAtPoint(x,y,scale,w,h, this._r,this._g,this._b,this._width,this._height, matrix);
+	return new ImageMat(w,h, list[0],list[1],list[2]);
 }
+ImageMat.imageAtPoint = function(x,y,scale, w,h, red,grn,blu,imgWid,imgHei, matrix){
+	var wm1 = w-1;
+	var hm1 = h-1;
+	var left = x - (wm1*0.5)*scale;
+	var right = x + (wm1*0.5)*scale;
+	var top = y - (hm1*0.5)*scale;
+	var bot = y + (hm1*0.5)*scale;
+	var O = ImageMat._O; O.set(0,0);
+	var TL = ImageMat._TL; TL.set(left,top);
+	var TR = ImageMat._TR; TR.set(right,top);
+	var BR = ImageMat._BR; BR.set(right,bot);
+	var BL = ImageMat._BL; BL.set(left,bot);
+	if(matrix){ // to origin & to updated center
+		var center1 = ImageMat._center1; center1.set(x,y);
+		var center2 = ImageMat._center2;
+		matrix.multV2DtoV2D(center2,center1);
+		matrix = ImageMat.extract_M2D_A.copy(matrix); // change locally
+		matrix.inverse();
+		var m = ImageMat.extract_M2D_B;
+			m.set(1,0,0,1, center2.x-center1.x,center2.y-center1.y);
+		matrix.premult(m);
+ 		// apply to all points
+		matrix.multV2DtoV2D(TL,TL);
+		matrix.multV2DtoV2D(TR,TR);
+		matrix.multV2DtoV2D(BR,BR);
+		matrix.multV2DtoV2D(BL,BL);
+	}
+	// EXTRACT AROUND SOURCE POINT
+	if(!red){ // return is inside
+		return ImageMat.extractRect(null, TL.x,TL.y, TR.x,TR.y, BR.x,BR.y, BL.x,BL.y, w,h, imgWid,imgHei, true);
+		// ImageMat.extractRectWithProjectionIsInside(sW,sH, wid,hei, projection);
+	}
+	red = ImageMat.extractRect(red, TL.x,TL.y, TR.x,TR.y, BR.x,BR.y, BL.x,BL.y, w,h, imgWid,imgHei);
+	if(grn){
+		grn = ImageMat.extractRect(grn, TL.x,TL.y, TR.x,TR.y, BR.x,BR.y, BL.x,BL.y, w,h, imgWid,imgHei);
+		blu = ImageMat.extractRect(blu, TL.x,TL.y, TR.x,TR.y, BR.x,BR.y, BL.x,BL.y, w,h, imgWid,imgHei);
+		return [red,grn,blu];
+	}
+	return red;
+}
+
+
 ImageMat.padFloat = function(src,wid,hei, left,right,top,bot){
 	var newWid = wid+left+right, newHei = hei+top+bot;
 	var newLen = newWid*newHei;
@@ -4052,33 +4119,34 @@ ImageMat.prototype.calculateGradient = function(x,y, blur){
 	//dir.norm();
 	return dir;
 }
-ImageMat.prototype.getScaledImage = function(scale){
+ImageMat.prototype.getScaledImage = function(scale, sigmaIn, doCeil){
 	var sigma = null;
 	if(scale<1.0){
-		/*
-		if(scale==0.75){
-			sigma = 0.75;
-		}else if(scale==0.5){
-			sigma = 1.0; // 0.5 - 1.0
-		}else if(scale==0.25){
-			sigma = 2.0;
+		var newWidth;
+		var newHeight;
+		if(doCeil){
+			newWidth = Math.ceil(scale*this.width());
+			newHeight = Math.ceil(scale*this.height());
+		}else{
+			newWidth = Math.round(scale*this.width());
+			newHeight = Math.round(scale*this.height());
 		}
-		*/
-		sigma = 0.5/Math.sqrt(scale);
-		// sigma = 0.25/scale;
+		if(sigmaIn!==undefined){
+			sigma = sigmaIn;
+		}else{
+			sigma = 0.5/Math.sqrt(scale);
+		}
+		var red = ImageMat.getScaledImage(this.red(), this.width(), this.height(), scale, sigma, newWidth, newHeight);
+		var grn = ImageMat.getScaledImage(this.grn(), this.width(), this.height(), scale, sigma, newWidth, newHeight);
+		var blu = ImageMat.getScaledImage(this.blu(), this.width(), this.height(), scale, sigma, newWidth, newHeight);
+			red = red["value"];
+			grn = grn["value"];
+			blu = blu["value"];
+		var image = new ImageMat(newWidth,newHeight, red,grn,blu);
+		return image;
 	}else if(scale==1.0){
 		return this.copy();
 	}
-	var newWidth = Math.round(scale*this.width());
-	var newHeight = Math.round(scale*this.height());
-	var red = ImageMat.getScaledImage(this.red(), this.width(), this.height(), scale, sigma, newWidth, newHeight);
-	var grn = ImageMat.getScaledImage(this.grn(), this.width(), this.height(), scale, sigma, newWidth, newHeight);
-	var blu = ImageMat.getScaledImage(this.blu(), this.width(), this.height(), scale, sigma, newWidth, newHeight);
-		red = red["value"];
-		grn = grn["value"];
-		blu = blu["value"];
-	var image = new ImageMat(newWidth,newHeight, red,grn,blu);
-	return image;
 }
 ImageMat.prototype.getRotatedImage = function(angle){
 	var red = this.red();
