@@ -4148,6 +4148,51 @@ ImageMat.prototype.getScaledImage = function(scale, sigmaIn, doCeil){
 		return this.copy();
 	}
 }
+ImageMat.prototype.getProgressiveScaledImage = function(){
+	return ImageMat.getProgressiveScaledImage(this);
+}
+ImageMat.getProgressiveScaledImage = function(imageA){
+	var widthA = imageA.width();
+	var heightA = imageA.height();
+	var scalesA = [1.0];
+	var imagesA = [imageA];
+	var maxScales = 10; // 2^10 = 1024 ...
+	var scale = 1.0;
+	var minSize = 4;
+	var scaleMult = 0.5;
+	// var scaleMult = 0.75;
+	for(var i=0; i<maxScales; ++i){
+		scale = scale * scaleMult;
+		var nextWidth = Math.round(scale*widthA);
+		var nextHeight = Math.round(scale*heightA);
+		// console.log(" "+i+": "+scale+" = "+nextWidth+" x "+nextHeight);
+		if(nextWidth<=minSize || nextHeight<=minSize){
+			break;
+		}
+		var imgA = imagesA[i];
+		var halfA = imgA.getScaledImage(scaleMult,0.5, false); // #2 - blurrier
+		// var halfA = imgA.getScaledImage(scaleMult, null, false); // #1 - crisper - aliasing
+		var avgScale = (halfA.width()/widthA + halfA.height()/heightA)*0.5; // actual efective scale
+		imagesA.push(halfA);
+		scalesA.push(avgScale);
+	}
+	return {"scales":scalesA,"images":imagesA};
+}
+ImageMat.effectiveIndexFromImageScales = function(images,scale){
+	var scales = images["scales"];
+	var binaryF = function(haystack,needle){
+		if(needle==haystack){
+			return 0;
+		}
+		return needle>haystack ? -1 : 1;
+	};
+	var effectiveIndex = Code.binarySearch(scales, binaryF, false, scale);
+	if(Code.isArray(effectiveIndex)){
+		// console.log(scale,effectiveIndex,scales);
+		effectiveIndex = effectiveIndex[0]; // return higher resolution possibility
+	}
+	return effectiveIndex;
+}
 ImageMat.prototype.getRotatedImage = function(angle){
 	var red = this.red();
 	var grn = this.grn();

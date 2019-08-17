@@ -963,6 +963,10 @@ ImageMapper.Grid.prototype.solveMapping = function(){
 		console.log("sigmaB: "+sigmaB);
 		var sigmaAB = sigmaB/sigmaA;
 		console.log("scale: "+sigmaAB);
+
+
+
+// if(true){
 if(false){
 		// display differentials:
 		var OFFX = 10;
@@ -1023,6 +1027,110 @@ if(false){
 			// 	GLOBALSTAGE.addChild(d);
 		}
 }
+
+
+// show extracted regions & approximated matrices:
+
+
+
+var imagesA = ImageMat.getProgressiveScaledImage(imageA);
+var imagesB = ImageMat.getProgressiveScaledImage(imageB);
+
+
+var sizeA = sigmaA;
+var sizeB = sigmaB;
+var needleSize = 11;
+
+
+
+
+var scaleAB = sizeB/sizeA;
+var angleAB = avgAngle;
+console.log("scaleAB: "+scaleAB);
+var affineAB = new Matrix2D();
+	affineAB.identity();
+	affineAB.scale(scaleAB);
+	affineAB.rotate(angleAB);
+// remove scaling from affine:  // OVERALL AVERAGE SCALE HAS TO BE TAKEN OUT OF AFFINE MATRIX => SO THAT BEST IMAGES CAN BE SELECTED
+var infoAB = R3D.infoFromAffine2D(affineAB);
+var averageScaleAB = infoAB["scale"];
+console.log(infoAB);
+console.log("averageScaleAB: "+averageScaleAB);
+//
+ var affine = new Matrix2D();
+ 	affine.copy(affineAB);
+	affine.scale(1.0/averageScaleAB);
+
+
+	var needleScaleA = sizeA/needleSize;
+	var needleScaleB = needleScaleA*averageScaleAB;
+	// var needleScaleB = sizeB/needleSize;
+
+	// console.log("needleScaleA: "+needleScaleA);
+
+
+
+
+
+
+
+// var needleA = imageA.extractRectFromFloatImage(centerA.x,centerA.y,needleScale,null, needleSize,needleSize, affineAB);
+// var needleB = imageB.extractRectFromFloatImage(centerB.x,centerB.y,needleScale,null, needleSize,needleSize, null);
+
+
+var scaleIndexA = ImageMat.effectiveIndexFromImageScales(imagesA,1.0/needleScaleA);
+var scaleIndexB = ImageMat.effectiveIndexFromImageScales(imagesB,1.0/needleScaleB);
+console.log(scaleIndexA);
+console.log(scaleIndexB);
+var actualScaleA = imagesA["scales"][scaleIndexA];
+var actualScaleB = imagesB["scales"][scaleIndexB];
+console.log(actualScaleA,actualScaleB);
+var effectiveImageA = imagesA["images"][scaleIndexA];
+var effectiveImageB = imagesB["images"][scaleIndexB];
+
+var effectiveScaleA = actualScaleA*needleScaleA;
+var effectiveScaleB = actualScaleB*needleScaleB;
+console.log("effectiveScaleA: "+effectiveScaleA);
+console.log("effectiveScaleB: "+effectiveScaleB);
+// effectiveScale = 1.0/effectiveScale;
+var effA = centerA.copy().scale(actualScaleA);
+var effB = centerB.copy().scale(actualScaleB);
+
+
+var needleA = effectiveImageA.extractRectFromFloatImage(effA.x,effA.y,effectiveScaleA,null, needleSize,needleSize, affine);
+var needleB = effectiveImageB.extractRectFromFloatImage(effB.x,effB.y,effectiveScaleB,null, needleSize,needleSize, null);
+
+// var needleA = imageA.extractRectFromFloatImage(centerA.x,centerA.y,needleScaleA,null, needleSize,needleSize, affine);
+// var needleB = imageB.extractRectFromFloatImage(centerB.x,centerB.y,needleScaleB,null, needleSize,needleSize, null);
+
+// TODO: IF EFFECTIVE SCALE IN B IS WAY DIFFERENT THAN A => WANT TO USE SEPARATE SOURCE IMAGE ....
+
+
+
+
+var sca = 10.0;
+
+var iii = needleA;
+var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
+var d = new DOImage(img);
+d.matrix().scale(sca);
+d.matrix().translate(10 + 0, 10 + 0);
+GLOBALSTAGE.addChild(d);
+
+var iii = needleB;
+var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
+var d = new DOImage(img);
+d.matrix().scale(sca);
+d.matrix().translate(10 + 230, 10 + 0);
+GLOBALSTAGE.addChild(d);
+
+
+
+
+// TODO: TEST OPTIMIZING HERE
+
+
+throw "HERE";
 		var avgS = scaleAB;
 		// var avgA = avgAngle;
 		console.log("INIT GRID");

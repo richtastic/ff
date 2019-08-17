@@ -377,19 +377,20 @@ https://cloud.google.com/appengine/docs/nodejs/
 1 + 2 = NY9RPQHA
 
 
+- test masking / optimizing affine again: [2^scale powered sizings]
+	- display process images
 
 
 
-x method to get masked part of image
-~ system of prescaling image before extraction to help for large scale differences
-	=> want to move this logic to all previous steps
-		- SIFT extraction
 
-=> opt on the side of blurring
-	: includes correct colors more toward destination
-	: preserves appearance of lines
-=> opt for side of crispness [is it FALSELY crisp tho?]
-	: more vivid colors better for discriminating
+
+- incorporate PM randomized sampling (& use if better approx.)?
+- simultaneous FWD/BAK matching ?
+
+- perturbation in stereopsis to allow for picking slightly better cost / parameters ?
+
+
+
 
 
 
