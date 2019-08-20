@@ -32312,7 +32312,11 @@ R3D.searchNeedleHaystackMIColor = function(needle,haystack,needleMask){
 	return {"values":[mi], "width":1, "height":1};
 }
 
-R3D.searchNeedleHaystackSADColor = function(needle,haystack,needleMask){
+R3D.searchNeedleHaystackSADColor = function(needle,haystack,needleMask, spacingI,spacingJ){
+	spacingI = spacingI!==undefined ? spacingI : 0;
+	spacingJ = spacingJ!==undefined ? spacingJ : 0;
+	spacingI += 1;
+	spacingJ += 1;
 	var needleWidth = needle.width();
 	var needleHeight = needle.height();
 	var needleR = needle.red();
@@ -32324,9 +32328,12 @@ R3D.searchNeedleHaystackSADColor = function(needle,haystack,needleMask){
 	var haystackG = haystack.grn();
 	var haystackB = haystack.blu();
 	var needleCount = needleWidth*needleHeight;
-	var resultWidth = haystackWidth - needleWidth + 1;
-	var resultHeight = haystackHeight - needleHeight + 1;
+	var totalWidth = (haystackWidth - needleWidth) + 1;
+	var totalHeight = (haystackHeight - needleHeight) + 1;
+	var resultWidth = ((haystackWidth - needleWidth)/spacingI | 0) + 1;
+	var resultHeight = ((haystackHeight - needleHeight)/spacingJ | 0) + 1;
 	var resultCount = resultWidth * resultHeight;
+	// console.log(totalWidth,totalHeight, resultWidth,resultHeight, haystackWidth - needleWidth)
 	if(resultCount<=0){
 		return null;
 	}
@@ -32342,12 +32349,12 @@ R3D.searchNeedleHaystackSADColor = function(needle,haystack,needleMask){
 		}
 	}
 	var inverseNeedleCount = 1.0/maskCount;
-	//
+// console.log(spacingI,spacingJ)
 	var result = new Array();
-	for(j=0; j<resultHeight; ++j){
-		var jW = j*resultWidth;
-		for(i=0; i<resultWidth; ++i){
-			var resultIndex = jW + i;
+	for(j=0; j<totalHeight; j+=spacingJ){
+// console.log(j)
+		var jW = (j/spacingJ)*resultWidth;
+		for(i=0; i<totalWidth; i+=spacingI){
 			// SAD
 			var sad = 0;
 			for(var nJ=0; nJ<needleHeight; ++nJ){ // entire needle
@@ -32372,6 +32379,7 @@ R3D.searchNeedleHaystackSADColor = function(needle,haystack,needleMask){
 					sad += Math.sqrt(sq);
 				}
 			}
+			var resultIndex = jW + (i/spacingI);
 			result[resultIndex] = sad*inverseNeedleCount;
 		}
 	}

@@ -377,18 +377,15 @@ https://cloud.google.com/appengine/docs/nodejs/
 1 + 2 = NY9RPQHA
 
 
-- test masking / optimizing affine again: [2^scale powered sizings]
-	- display process images
+- build up app in pieces again
+	- optimum location
+		- test at larger / smaller heights
+		- show heat map of choices
+	- encapsulate fxns to deal with all converting between scales / sizes
+	...
 
 
-
-
-
-- incorporate PM randomized sampling (& use if better approx.)?
-- simultaneous FWD/BAK matching ?
-
-- perturbation in stereopsis to allow for picking slightly better cost / parameters ?
-
+ImageMapper
 
 
 
@@ -421,6 +418,18 @@ https://cloud.google.com/appengine/docs/nodejs/
 - how to separate x, y  to keep from cost matrix and instead cost vector ?
 
 - can use 1D search using rectified images to reduce search space
+
+
+
+
+
+
+- incorporate PM randomized sampling (& use if better approx.)?
+- simultaneous FWD/BAK matching ?
+
+- perturbation in stereopsis to allow for picking slightly better cost / parameters ?
+
+
 
 
 -

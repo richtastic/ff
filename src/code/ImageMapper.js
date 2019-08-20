@@ -1037,8 +1037,12 @@ var imagesA = ImageMat.getProgressiveScaledImage(imageA);
 var imagesB = ImageMat.getProgressiveScaledImage(imageB);
 
 
-var sizeA = sigmaA;
-var sizeB = sigmaB;
+// var sizeA = sigmaA * 0.5;
+// var sizeB = sigmaB * 0.5;
+var sizeA = sigmaA * 1;
+var sizeB = sigmaB * 1;
+// var sizeA = sigmaA * 2;
+// var sizeB = sigmaB * 2;
 var needleSize = 11;
 
 
@@ -1103,8 +1107,6 @@ var needleB = effectiveImageB.extractRectFromFloatImage(effB.x,effB.y,effectiveS
 // var needleA = imageA.extractRectFromFloatImage(centerA.x,centerA.y,needleScaleA,null, needleSize,needleSize, affine);
 // var needleB = imageB.extractRectFromFloatImage(centerB.x,centerB.y,needleScaleB,null, needleSize,needleSize, null);
 
-// TODO: IF EFFECTIVE SCALE IN B IS WAY DIFFERENT THAN A => WANT TO USE SEPARATE SOURCE IMAGE ....
-
 
 
 
@@ -1127,7 +1129,112 @@ GLOBALSTAGE.addChild(d);
 
 
 
-// TODO: TEST OPTIMIZING HERE
+
+console.log("OPTIMUM LOCATION");
+var locationSpacing = 0;
+// var locationSpacing = 1;
+var result = ImageMapper.optimumSeparatedLocation(effectiveImageA,effectiveImageB, effA,effB, effectiveScaleA,effectiveScaleB, needleSize, affine, divisions, locationSpacing);
+console.log(result);
+var scores = result["scores"];
+var bestB = result["point"];
+console.log(bestB);
+console.log(scores)
+
+
+var iii = effectiveImageB;
+var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
+var d = new DOImage(img);
+d.matrix().scale(sca);
+d.matrix().translate(10 + 400, 10 + 0);
+GLOBALSTAGE.addChild(d);
+
+
+var d = new DO();
+d.graphics().setLine(2.0, 0xFFFF0000);
+d.graphics().beginPath();
+d.graphics().drawCircle(sca*bestB.x,sca*bestB.y, 10);
+d.graphics().strokeLine();
+d.graphics().endPath();
+d.matrix().translate(10 + 400, 10 + 0);
+GLOBALSTAGE.addChild(d);
+
+var d = new DO();
+d.graphics().setLine(2.0, 0xFF0000FF);
+d.graphics().beginPath();
+d.graphics().drawCircle(sca*effB.x,sca*effB.y, 10);
+d.graphics().strokeLine();
+d.graphics().endPath();
+d.matrix().translate(10 + 400, 10 + 0);
+GLOBALSTAGE.addChild(d);
+
+
+// throw "..."
+
+// var sca = 1.0;
+
+var iii = imagesB["images"][0];
+var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
+var d = new DOImage(img);
+// d.matrix().scale(sca);
+d.matrix().translate(10 + 800, 10 + 0);
+GLOBALSTAGE.addChild(d);
+
+
+var d = new DO();
+d.graphics().setLine(2.0, 0xFFFF0000);
+d.graphics().beginPath();
+d.graphics().drawCircle(bestB.x/actualScaleB,bestB.y/actualScaleB, 10);
+d.graphics().strokeLine();
+d.graphics().endPath();
+d.matrix().translate(10 + 800, 10 + 0);
+GLOBALSTAGE.addChild(d);
+
+
+var iii = imagesA["images"][0];
+var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
+var d = new DOImage(img);
+// d.matrix().scale(sca);
+d.matrix().translate(10 + 1300, 10 + 0);
+GLOBALSTAGE.addChild(d);
+
+
+var d = new DO();
+d.graphics().setLine(2.0, 0xFFFF0000);
+d.graphics().beginPath();
+d.graphics().drawCircle(centerA.x,centerA.y, 10);
+d.graphics().strokeLine();
+d.graphics().endPath();
+d.matrix().translate(10 + 1300, 10 + 0);
+GLOBALSTAGE.addChild(d);
+
+
+effB.copy(bestB);
+
+console.log("OPTIMUM AFFINE");
+
+var divisions = 1;
+var result = ImageMapper.optimumSeparatedAffine(effectiveImageA,effectiveImageB, effA,effB, effectiveScaleA,effectiveScaleB, needleSize, affine, divisions);
+console.log(result);
+var best = result["affine"];
+
+var needleA = effectiveImageA.extractRectFromFloatImage(effA.x,effA.y,effectiveScaleA,null, needleSize,needleSize, best);
+var needleB = effectiveImageB.extractRectFromFloatImage(effB.x,effB.y,effectiveScaleB,null, needleSize,needleSize, null);
+
+
+
+var iii = needleA;
+var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
+var d = new DOImage(img);
+d.matrix().scale(sca);
+d.matrix().translate(10 + 0, 10 + 200);
+GLOBALSTAGE.addChild(d);
+
+var iii = needleB;
+var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
+var d = new DOImage(img);
+d.matrix().scale(sca);
+d.matrix().translate(10 + 230, 10 + 200);
+GLOBALSTAGE.addChild(d);
 
 
 throw "HERE";
@@ -1180,6 +1287,175 @@ if(true){
 	layer.render(imageA,imageB);
 }
 }
+ImageMapper.optimumSeparatedLocation = function(imageA,imageB, pointA,pointB, scaleA,scaleB, compareSize, affineIn, divisions, spacing){
+	spacing = spacing!==undefined ? spacing : 1; // 11 +1 => 5
+	var spacingScale = spacing+1; // if using spacing, may need to rely on peak finding -- else lots of values could be skipped
+	var compareSizeHaystack = compareSize*2 -1; // 11+11-1 = 21 21/2 =
+// var compareSizeHaystack = compareSize*3;
+	var scaleCompareA = scaleA;
+	var scaleCompareB = scaleB;
+	var mask = null;
+	var needleA = imageA.extractRectFromFloatImage(pointA.x,pointA.y,scaleCompareA,null,compareSize,compareSize, affineIn);
+	var haystackB = imageB.extractRectFromFloatImage(pointB.x,pointB.y,scaleCompareB,null,compareSizeHaystack,compareSizeHaystack, null);
+	// var cost = ImageMapper._gdAffineCompareCostFxn(needleA, needleB, mask);
+	// console.log("CALLING: "+compareSize+" | "+compareSizeHaystack);
+	var scores = R3D.searchNeedleHaystackSADColor(needleA,haystackB,mask, spacing,spacing);
+	// var scores = R3D.searchNeedleHaystackNCCColor(needleA,haystackB,mask, spacing,spacing);
+	var values = scores["value"];
+	var width = scores["width"];
+	var height = scores["height"];
+	// console.log(scores);
+	var peak = R3D.subpixelMinimumPeak(scores);
+	// console.log(peak+"");
+	var error = peak.y;
+	var min = Code.minIndex(values); // interpolated minimum can be poor (eg <0)
+// console.log("MIN: "+min+" = "+values[min]);
+// console.log(values);
+		min = values[min];
+	error = min;
+	// calc best location
+	var newB = pointB.copy().add( (peak.x-width*0.5)*scaleCompareB*spacingScale, (peak.y-height*0.5)*scaleCompareB*spacingScale );
+
+/*
+	// SHOW:
+	var sca = 10.0;
+
+	var iii = needleA;
+	var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
+	var d = new DOImage(img);
+	d.matrix().scale(sca);
+	d.matrix().translate(10 + 400, 10 + 0);
+	GLOBALSTAGE.addChild(d);
+
+	var iii = haystackB;
+	var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
+	var d = new DOImage(img);
+	d.matrix().scale(sca);
+	d.matrix().translate(10 + 500, 10 + 0);
+	GLOBALSTAGE.addChild(d);
+
+*/
+
+/*
+
+// SHOW:
+var sca = 10.0;
+var iii = haystackB;
+var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
+var d = new DOImage(img);
+d.matrix().scale(sca);
+d.matrix().translate(10 + 400, 10 + 0);
+GLOBALSTAGE.addChild(d);
+
+var heat = Code.copyArray(values);
+ImageMat.normalFloat01(heat);
+ImageMat.pow(heat,0.5);
+// ImageMat.pow(heat,0.5);
+// ImageMat.pow(heat,2.0);
+heat = ImageMat.heatImage(heat, width, height);
+img = GLOBALSTAGE.getFloatRGBAsImage(heat.red(), heat.grn(), heat.blu(), width, height);
+d = new DOImage(img);
+d.matrix().scale(sca*spacingScale);
+// d.matrix().translate(10 + 400 + (haystackB.width()-needleA.width())*0.5*sca, 10 + (haystackB.height()-needleA.height())*0.5*sca );
+d.matrix().translate(10 + 400 + (haystackB.width()-width)*0.5*sca/spacingScale, 10 + (haystackB.height()-height)*0.5*sca/spacingScale );
+d.graphics().alpha(0.5);
+GLOBALSTAGE.addChild(d);
+
+
+var d = new DO();
+d.graphics().setLine(2.0, 0xFFFF0000);
+d.graphics().beginPath();
+d.graphics().drawCircle(sca*peak.x*spacingScale,sca*peak.y*spacingScale, 10);
+d.graphics().strokeLine();
+d.graphics().endPath();
+d.matrix().translate(10 + 400 + (haystackB.width()-width)*0.5*sca/spacingScale, 10 + (haystackB.height()-height)*0.5*sca/spacingScale);
+GLOBALSTAGE.addChild(d);
+throw "..."
+
+*/
+
+	return {"point":newB, "error":error};
+}
+
+ImageMapper.optimumSeparatedAffine = function(imageA,imageB, pointA,pointB, scaleA,scaleB, compareSize, affineIn, divisions){
+	// masking ?
+	var mask = null;
+
+	divisions = divisions!==undefined ? divisions : 1.0;
+	divisions = Math.max(1,divisions);
+	var multi = 1.0/divisions;
+	var scaleDiff = 0.3*multi;
+	var angleDiff = Code.radians(45.0)*multi;
+	var scaleCompareA = scaleA;
+	var scaleCompareB = scaleB;
+	var matrix = new Matrix2D();
+	var iterations = 3;
+	var divisions = 3;
+	var scaleCenter = 0.0;
+	var angleCenter = 0.0;
+	var needleB = imageB.extractRectFromFloatImage(pointB.x,pointB.y,scaleCompareB,null,compareSize,compareSize, null);
+
+var sca = 10.0;
+var iii = needleB;
+var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
+var d = new DOImage(img);
+d.matrix().scale(sca);
+d.matrix().translate(10 + 0, 10 + 400);
+GLOBALSTAGE.addChild(d);
+var counts = 0;
+
+
+	var bestScore = null;
+	for(var i=0; i<iterations; ++i){
+		var scales = Code.divSpace(scaleCenter-scaleDiff*0.5,scaleCenter+scaleDiff*0.5,divisions);
+		var angles = Code.divSpace(angleCenter-angleDiff*0.5,angleCenter+angleDiff*0.5,divisions);
+		var bestIndexA = null;
+		var bestIndexS = null;
+		bestScore = null;
+		for(var a=0; a<angles.length; ++a){
+			for(var s=0; s<scales.length; ++s){
+				if(affineIn){
+					matrix.copy(affineIn);
+				}else{
+					matrix.identity();
+				}
+				var scale = Math.pow(2,scales[s]);
+				var angle = angles[a];
+				matrix.scale(scale);
+				matrix.rotate(angle);
+				var needleA = imageA.extractRectFromFloatImage(pointA.x,pointA.y,scaleCompareA,null,compareSize,compareSize, matrix);
+				var cost = ImageMapper._gdAffineCompareCostFxn(needleA, needleB, mask);
+				// console.log(cost);
+				if(!bestScore || cost<bestScore){
+					bestScore = cost;
+					bestIndexA = a;
+					bestIndexS = s;
+					console.log("=> "+bestScore+" @ "+scales[s]+" | "+Code.degrees(angles[a]));
+var iii = needleA;
+var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
+var d = new DOImage(img);
+d.matrix().scale(sca);
+d.matrix().translate(10 + 200*(counts+1), 10 + 400);
+GLOBALSTAGE.addChild(d);
+++counts;
+				}
+			}
+		}
+		scaleCenter = scales[bestIndexS];
+		angleCenter = angles[bestIndexA];
+		scaleDiff *= 0.5;
+		angleDiff *= 0.5;
+	}
+	if(affineIn){
+		matrix.copy(affineIn);
+	}else{
+		matrix.identity();
+	}
+	matrix.scale(Math.pow(2,scaleCenter));
+	matrix.rotate(angleCenter);
+	return {"affine":matrix, "error":bestScore};
+}
+
 
 ImageMapper.Grid.prototype.initGridWith = function(pointA,pointB, sizeA,rotationAB,scaleAB){
 	console.log(this)

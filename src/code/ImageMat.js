@@ -4156,7 +4156,7 @@ ImageMat.getProgressiveScaledImage = function(imageA){
 	var heightA = imageA.height();
 	var scalesA = [1.0];
 	var imagesA = [imageA];
-	var maxScales = 10; // 2^10 = 1024 ...
+	var maxScales = 10; // 2^10 = 1024 x 0.5 ...
 	var scale = 1.0;
 	var minSize = 4;
 	var scaleMult = 0.5;
