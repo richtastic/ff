@@ -377,13 +377,12 @@ https://cloud.google.com/appengine/docs/nodejs/
 1 + 2 = NY9RPQHA
 
 
-- build up app in pieces again
-	- optimum location
-		- test at larger / smaller heights
-		- show heat map of choices
-	- encapsulate fxns to deal with all converting between scales / sizes
-	...
+- propagate scaling
+- final iteration step: optimize scale +- small margin
+- calculate cost of cell area once
+- sub-pixel minimum total cost point [location]
 
+- allow for SCALE differences
 
 ImageMapper
 

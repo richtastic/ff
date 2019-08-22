@@ -60,10 +60,10 @@ var dist = null;
 
 
 	// TESTING:
-	new ImageLoader("./images/",["bench_A.png", "bench_B.png"],this,this.imagesLoadComplete).load();
+	// new ImageLoader("./images/",["bench_A.png", "bench_B.png"],this,this.imagesLoadComplete).load();
 	// new ImageLoader("./images/",["room0.png", "room2.png"],this,this.imagesLoadComplete).load();
 
-	// new ImageLoader("./images/iowa/",["1.JPG", "2.JPG"],this,this.imagesLoadComplete).load(); // poor
+	new ImageLoader("./images/iowa/",["1.JPG", "2.JPG"],this,this.imagesLoadComplete).load(); // poor
 	// new ImageLoader("./images/iowa/",["0.JPG", "1.JPG"],this,this.imagesLoadComplete).load(); // good
 
 	// new ImageLoader("./images/pika_1/",["image-0.png", "image-1.png"],this,this.imagesLoadComplete).load(); // ok
@@ -309,6 +309,9 @@ GLOBALDISPLAY = display;
 // console.log(str);
 // return;
 
+
+// this.testAngles(imageMatrixA,imageMatrixB);
+// throw "..."
 
 // this.testScaling(imageMatrixA,imageMatrixB);
 // throw "..."
@@ -4482,6 +4485,10 @@ cy: 0.4746370298801608
 	throw "..."
 }
 
+RiftTest.prototype.testAngles = function(imageA,imageB){
+	console.log("testAngles");
+
+}
 
 RiftTest.prototype.testScaling = function(imageA,imageB){
 	console.log("testScaling");
@@ -5052,9 +5059,9 @@ var TYPE_PIKA = 4;
 var TYPE_PIKA_FAR = 5;
 var TYPE_CAMPUS = 6;
 
-var doType = TYPE_BENCH;
+// var doType = TYPE_BENCH;
 // var doType = TYPE_ROOM;
-// var doType = TYPE_HOUSE;
+var doType = TYPE_HOUSE;
 // var doType = TYPE_HOUSE_GOOD;
 // var doType = TYPE_PIKA;
 // var doType = TYPE_PIKA_FAR;
