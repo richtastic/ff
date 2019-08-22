@@ -377,9 +377,10 @@ https://cloud.google.com/appengine/docs/nodejs/
 1 + 2 = NY9RPQHA
 
 
-- propagate scaling
-- final iteration step: optimize scale +- small margin
+
 - calculate cost of cell area once
+	- not working:
+	- perhaps the scale at witch this is calculated needs to include many more pixels?
 - sub-pixel minimum total cost point [location]
 
 - allow for SCALE differences

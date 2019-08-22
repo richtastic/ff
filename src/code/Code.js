@@ -11015,6 +11015,46 @@ Code.pointInterpolate2DLinear = function(array, wid,hei, x,y){
 	}
 	return val;
 }
+
+Code.scaleArrayLinear2D = function(source,wid,hei, scale){
+	var nextWidth = Math.round(wid*scale);
+	var nextHeight = Math.round(hei*scale);
+	destination = new Array(nextWidth*nextHeight);
+	var index = 0;
+	var p = new V2D();
+	var wm1 = nextWidth-1;
+	var hm1 = nextHeight-1;
+	for(j=0;j<nextHeight;++j){
+		for(i=0;i<nextWidth;++i){
+			var x = i/scale;
+			var y = j/scale;
+			destination[index] = Code.valueInterpolateLinear2D(source, wid,hei, x,y);
+			++index;
+		}
+	}
+	return {"value":destination,"width":nextWidth, "height":nextHeight};
+}
+Code.valueInterpolateLinear2D = function(array, wid,hei, x,y){
+	var hm1 = hei-1, wm1 = wid-1;
+	var minX = Math.min( Math.max(Math.floor(x), 0), wm1);
+	var minY = Math.min( Math.max(Math.floor(y), 0), hm1);
+	var maxX = Math.max( Math.min(Math.ceil(x), wm1), 0);
+	var maxY = Math.max( Math.min(Math.ceil(y), hm1), 0);
+	var indexA = minY*wid + minX; var colA = array[indexA];
+	var indexB = minY*wid + maxX; var colB = array[indexB];
+	var indexC = maxY*wid + minX; var colC = array[indexC];
+	var indexD = maxY*wid + maxX; var colD = array[indexD];
+	minX = x - minX;
+	if(x<0||x>wid){ minX=0.0;}
+	minY = y - minY;
+	if(y<0||y>hei){ minY=0.0;}
+	var val =  Code.linear2D(minX,minY, colA,colB,colC,colD);
+	if(isNaN(val)){
+		console.log("PT",wid,hei,x,y);
+	}
+	return val;
+}
+
 // -------------------------------------------------------------------------------------------------------------------------------------------------
 Code.nextExponentialTwoRounded = function(d){
 	var n = Math.abs(d);

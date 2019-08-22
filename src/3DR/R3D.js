@@ -9599,7 +9599,7 @@ R3D.arbitraryAffineMatches = function(imageMatrixA,imageMatrixB, Fab,Fba, points
 	var matchesBA = mapperBA.findMatches();
 	console.log(matchesBA);
 	console.log("done matching");
-throw "...";
+// throw "...";
 	if(matchesAB["error"]<matchesBA["error"]){
 		Fab = matchesAB["F"];
 		Fba = R3D.fundamentalInverse(Fab);
