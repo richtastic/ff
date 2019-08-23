@@ -9209,6 +9209,11 @@ R3D.generateProgressiveSIFTObjects = function(features, imageMatrix){
 	var imageWidth = imageMatrix.width();
 	var imageHeight = imageMatrix.height();
 	var imageBlurred = imageMatrix.getBlurredImage(4.0); // TODO: base on size of feature scaling?
+
+	// TODO: GET IMAGE SCALED SEQUENCE
+	// var imageScaled = ;
+	//
+
 	var objects = [];
 	var matrix = new Matrix2D()
 	for(k=0; k<features.length; ++k){
@@ -9593,7 +9598,8 @@ R3D.arbitraryAffineMatches = function(imageMatrixA,imageMatrixB, Fab,Fba, points
 // var K = R3D.basicIntrinsicsFromFundamental(Fab,Fba, imageMatrixA,imageMatrixB);
 
 
-// throw "..";
+
+throw "..";
 
 	var mapperBA = new ImageMapper(imageMatrixB,imageMatrixA, pointsB,pointsA, Fba,Fab);
 	var matchesBA = mapperBA.findMatches();
@@ -9608,6 +9614,13 @@ R3D.arbitraryAffineMatches = function(imageMatrixA,imageMatrixB, Fab,Fba, points
 		Fab = R3D.fundamentalInverse(Fba);
 	}
 	// TODO: possible to average Fs?
+	var maskingA1 = matchesAB["maskA"];
+	var maskingB2 = matchesAB["maskB"];
+	var maskingB1 = matchesBA["maskA"];
+	var maskingA2 = matchesBA["maskB"];
+
+	console.log(maskingA1,maskingA2,maskingB1,maskingB2)
+
 	matchesAB = matchesAB["matches"];
 	matchesBA = matchesBA["matches"];
 	var maxDistance = 1.0; // 1 for A 1 for B
@@ -9649,6 +9662,7 @@ R3D.arbitraryAffineMatches = function(imageMatrixA,imageMatrixB, Fab,Fba, points
 	var heightRA = rectifiedA.height();
 	var widthRB = rectifiedB.width();
 	var heightRB = rectifiedB.height();
+
 if(true){
 // show rectified displacements
 	console.log("show rectified displacement");
@@ -9721,10 +9735,18 @@ if(true){
 	var pointA2 = new V2D();
 	var fwdBakA = [];
 	var fwdBakB = [];
+
+	var maskingA = ImageMat.mulFloat(maskingA1,maskingA2);
+	var maskingB = ImageMat.mulFloat(maskingB1,maskingB2);
+
 	for(var j=0; j<heightA; ++j){
 		for(var i=0; i<widthA; ++i){
 			++checkCount;
 			var indexA = j*widthA + i;
+			if(maskingA[indexA]==0){ // skip invalid areas
+				continue;
+			}
+
 			pointA.set(i,j);
 			result = transferA[indexA];
 			// result = Code.interpolateArray2DLinearV2D(pointB, transferA,widthA,heightA, pointA.x,pointA.y);
@@ -9734,14 +9756,22 @@ if(true){
 			}
 			pointB.x = result.x;
 			pointB.y = result.y;
+
 			result = Code.interpolateArray2DLinearV2D(pointA2, transferB,widthB,heightB, pointB.x,pointB.y);
 			if(!result){
 				continue;
 			}
+
 			var distance = V2D.distance(pointA,pointA2);
 			if(distance<=maxDistance){
 				if(0<pointA.x && pointA.x<widAm1 && 0<pointA.y && pointA.y<heiAm1
 					&& 0<pointB.x && pointB.x<widBm1 && 0<pointB.y && pointB.y<heiBm1 ){
+
+					var indexB = Math.floor(pointB.y)*widthB + Math.floor(pointB.x);
+					if(maskingB[indexB]==0){ // skip invalid areas
+						continue;
+					}
+
 					transferV_A[indexA] = 1.0;
 					fwdBakA.push(pointA.copy()); // average A & A2?
 					fwdBakB.push(pointB.copy());
@@ -15156,8 +15186,6 @@ R3D.optimalFeaturePointsInImage = function(imageMatrixA){
 }
 
 R3D.searchMatchPoints3D = function(images, cellSizes, relativeAB, Ks, errorPixels){
-	console.log(images, cellSizes, relativeAB, errorPixels);
-
 	var imageScale = 0.5; // TODO: determined from source size => ~600x400
 
 	var imageA = images[0];
@@ -15198,6 +15226,9 @@ R3D.searchMatchPoints3D = function(images, cellSizes, relativeAB, Ks, errorPixel
 		return a["point"];
 	};
 	var spaces = [];
+
+// TODO: GET IMAGE SCALE SEQUENCE
+
 	for(var i=0; i<images.length; ++i){
 		var imageMatrix = images[i];
 		var space = new QuadTree(toPointPoint, new V2D(0,0), new V2D(imageMatrix.width(),imageMatrix.height()));
@@ -16290,6 +16321,8 @@ R3D._progressiveR3DFlatSIFT = function(point,imageMatrix, size, matrix){
 	var radialBins = R3D._progressiveR3DSIFTBins();
 	var sampleSize = radialBins["width"];
 	var toScale = size/sampleSize;
+	// console.log(toScale); // 1-6
+	// TODO: scaled index - up image scaling
 	var sigma = 1.0;
 	var block = imageMatrix.extractRectFromFloatImage(point.x,point.y,toScale,sigma,sampleSize,sampleSize,matrix);
 	return block;
@@ -16298,6 +16331,8 @@ R3D._progressiveR3DFlat = function(point,imageMatrix, size, matrix){
 	matrix = matrix!==undefined ? matrix : null;
 	var sampleSize = R3D._progressiveR3DSize();
 	var toScale = size/sampleSize;
+	// console.log(toScale); // 1-6
+	// TODO: scaled index - up image scaling
 	var sigma = 1.0;
 	var block = imageMatrix.extractRectFromFloatImage(point.x,point.y,toScale,sigma,sampleSize,sampleSize,matrix);
 	return block;

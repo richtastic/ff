@@ -193,21 +193,25 @@ ImageMapper.prototype.testAngles = function(){
 	throw "..."
 }
 ImageMapper.prototype.findMatches = function(){
-
-
-// 	this.testAngles();
-// throw "?"
-
-
-	this._grid.solveMapping();
-	var matches = this._grid.bestMatches();
+	var grid = this._grid;
+	grid.solveMapping();
+	var matches = grid.bestMatches();
 	var F = ImageMapper.estimateF(matches);
 		var fError = F["error"];
 		var F = F["F"];
 	var imageA = this._imageA;
 	var imageB = this._imageB;
 	var mapping = this.interpolateMatches(matches,imageA,imageB);
-	return {"matches":mapping, "F":F, "error":fError};
+
+	var layer = grid._leaf;
+	console.log(layer)
+	// var hull = layer.convexHull();
+	var hulls = grid.maskHulls(matches);
+	console.log(hulls);
+	var maskA = hulls["A"];
+	var maskB = hulls["B"];
+
+	return {"matches":mapping, "F":F, "error":fError, "maskA":maskA, "maskB":maskB};
 }
 INTERPOLATE_CALLS = 0;
 ImageMapper.prototype.interpolateMatches = function(matchesAB, imageA, imageB, pointsA, pointsB, Fab, Fba){
@@ -307,6 +311,8 @@ ImageMapper.prototype.interpolateMatches = function(matchesAB, imageA, imageB, p
 	// triangle vertexes
 	var points = [];
 	var datas = [];
+
+
 	for(var i=0; i<matchesAB.length; ++i){
 		var match = matchesAB[i];
 		points.push(match["A"]);
@@ -1190,8 +1196,8 @@ console.log("avgAngle: "+Code.degrees(avgAngle));
 // var divisions = 1; // 4 [10]
 // var divisions = 2; // 16 [50]
 // var divisions = 3; // 64 [250]
-var divisions = 4; // 256 [1000]
-// var divisions = 5; // 1024 [4500] // NEW MAXIMUM
+// var divisions = 4; // 256 [1000]
+var divisions = 5; // 1024 [4500] // NEW MAXIMUM
 // var divisions = 6; // 4096 // MAXIMUM
 
 	for(var i=0; i<divisions; ++i){
@@ -1206,9 +1212,6 @@ var divisions = 4; // 256 [1000]
 		// }else{
 			layer = layer.divide(rectA);
 			layer.searchOptimalNeighborhood(imagesA,imagesB, isLast, i+1, F,Finv,ptsA,ptsB);
-			// layer = layer.expand(rectA);
-			// layer.searchOptimalNeighborhood(imagesA,imagesB, isLast, i+1);
-
 			// layer.postProcessNeighborhood(imageA,imageB, F,Finv,ptsA,ptsB, isLast, i+1);
 		// }
 		// VOTE BASED ON VALUE & NEIGHBORS
@@ -1221,9 +1224,7 @@ if(true){
 // if(false){
 	layer.render(imageA,imageB);
 }
-
-
-
+	this._leaf = layer;
 // throw "here"
 }
 ImageMapper.optimumSeparatedLocation = function(imageA,imageB, pointA,pointB, scaleA,scaleB, compareSize,compareSizeHaystack, affineIn, divisions, spacing){
@@ -1363,10 +1364,6 @@ ImageMapper.Grid.prototype.initGridWith = function(pointA,pointB, sizeA,rotation
 	cell.pointA(pointA.copy());
 	cell.pointB(pointB.copy());
 	cell.affine(matrix);
-	// root.searchOptimalNeighborhood(imageA,imageB, F,Finv,ptsA,ptsB);
-	// TODO: MOVE HERE:
-	// cell.error(1.0);
-	// cell.pointB(pointB);
 	console.log("local minimizing");
 
 	var needleSize = 11;
@@ -1448,6 +1445,42 @@ ImageMapper.Grid.prototype.initGridWith = function(pointA,pointB, sizeA,rotation
 
 }
 
+ImageMapper.Grid.prototype.maskHulls = function(matches){
+	var layer = this._leaf;
+	var cellSize = layer.grid().cellSize().x;
+	// var fillRadius = Math.ceil(cellSize*0.5*Math.sqrt(2)); // MIN
+	// var fillRadius = Math.ceil(cellSize); // AVG
+	var fillRadius = Math.ceil(cellSize*Math.sqrt(2)); // HIGH
+	var imagesA = this._imageSource;
+	var imagesB = this._imageTarget;
+	var imageA = imagesA["images"][0];
+	var imageB = imagesB["images"][0];
+	var widthA = imageA.width();
+	var heightA = imageA.height();
+	var widthB = imageB.width();
+	var heightB = imageB.height();
+	var pixelsA = widthA*heightA;
+	var pixelsB = widthB*heightB;
+	var maskA = Code.newArrayZeros(pixelsA);
+	var maskB = Code.newArrayZeros(pixelsB);
+	for(var i=0; i<matches.length; ++i){
+		var match = matches[i];
+		var b = match["B"];
+		var a = match["A"];
+		var s = match["scale"];
+		var radA = Math.ceil(fillRadius);
+		var radB = Math.ceil(fillRadius*s);
+		Code.fill2DArrayCircle(maskA,widthA,heightA, Math.round(a.x),Math.round(a.y), radA, 1.0);
+		Code.fill2DArrayCircle(maskB,widthB,heightB, Math.round(b.x),Math.round(b.y), radB, 1.0);
+	}
+	// var img = GLOBALSTAGE.getFloatRGBAsImage(maskB,maskB,maskB, widthB,heightB);
+	// var d = new DOImage(img);
+	// d.matrix().translate(10,10);
+	// GLOBALSTAGE.addChild(d);
+	// d.graphics().alpha(0.5);
+	return {"A":maskA, "B":maskB};
+}
+
 ImageMapper.Grid.prototype.bestMatches = function(){
 	var root = this._root;
 	var layer = root;
@@ -1457,15 +1490,44 @@ ImageMapper.Grid.prototype.bestMatches = function(){
 	var grid = layer.grid();
 	var objects = grid.toArray();
 	var matches = [];
+	var errors = [];
 	for(var i=0; i<objects.length; ++i){
 		var object = objects[i];
 		if(object.isValid()){
+			var e = object.error();
+			errors.push(e);
+		}
+	}
+	// Code.printMatlabArray(errors);
+	// NORMAL ERROR
+	var min = Code.min(errors);
+	var sigma = Code.stdDev(errors, min);
+	var maxNormal = min + 2.0*sigma; // 2-3
+	// LINEAR ERROR
+	var maxSamples = 500;
+	errors = Code.randomSampleRepeatsMaximum(errors, maxSamples, maxSamples);
+	errors.sort();
+	var min = Code.percentile(errors,0);
+	var half = Code.percentile(errors,0.5);
+	var maxLinear = min + (half-min)*2.0; // 2-3
+	var maxError = Math.min(maxNormal,maxLinear);
+	// console.log(min+" - "+sigma+" = "+maxNormal+" | "+maxLinear+" === "+maxError);
+	for(var i=0; i<objects.length; ++i){
+		var object = objects[i];
+		if(object.isValid()){
+			var e = object.error();
+			if(e>maxError){
+				continue;
+			}
 			var a = object.pointA();
 			var b = object.pointB();
-			var e = object.error();
+
+			var affine = object.affine();
 			a = a.copy();
 			b = b.copy();
-			var match = {"A":a, "B":b, "error":e};
+			var infoAB = R3D.infoFromAffine2D(affine);
+			var scale = infoAB["scale"];
+			var match = {"A":a, "B":b, "error":e, "scale":scale};
 			matches.push(match);
 		}
 	}
@@ -2636,7 +2698,6 @@ ImageMapper.GridLayer.prototype.parent = function(parent){
 	}
 	return this._parent;
 }
-// ImageMapper.GridLayer.prototype.searchOptimalNeighborhood = function(imageA,imageB, F,Finv,ptsA,ptsB, isLast, divisions){ // get area scores
 ImageMapper.GridLayer.prototype.searchOptimalNeighborhood = function(imagesA,imagesB, isLast, divisionIterations,  F,Finv,ptsA,ptsB  ){ // get area scores
 var epipoles = R3D.getEpipolesFromF(F);
 var epipoleA = epipoles["A"];
@@ -2660,7 +2721,7 @@ var imageB = imagesB["images"][0];
 	var rowCount = grid.rows();
 	var cellSize = grid.cellSize();
 		cellSize = cellSize.x;
-	var sourceSize = Math.round(cellSize * 1.5); // 1.0-2.0
+	var sourceSize = Math.round(cellSize * 2.0); // 1.0-2.0
 		sourceSize = sourceSize%2==1 ? sourceSize : sourceSize+1;
 	var maxDim = Math.round(1.0*Math.min(widthA,heightA,widthB,heightB));
 		sourceSize = Math.min(Math.max(sourceSize,11), maxDim);
@@ -2674,8 +2735,9 @@ var imageB = imagesB["images"][0];
 	var error;
 
 	var mData = 1.0; // raw match cost
-	var mDisp = 0.01; // non-texture pushing
-	var mDiff = 0.20; // regularization -- 1-10
+	var mDisp = 0.001; // non-texture pushing
+	var mDiff = 0.10; // regularization -- [0.1, 0.25]
+	var mFund = 0.001; // epipolar -- [0.01, 0.10] -- loose for poor initial F estimates
 	var normalizedGridScale = 1.0/cellSize;
 
 	// comparisons:
@@ -2683,9 +2745,7 @@ var imageB = imagesB["images"][0];
 	var haystackSize = needleSize*2-1; // 1x
 	// var haystackSize = needleSize*3; // 11*3 = 33 1.5x
 	// var haystackSize = needleSize*4-1; // 11*3 = 33  2x
-
-	// var maxIterations = 35; // maybe scale with # of cells
-	var maxIterations = 50;
+	var maxIterations = 50; // maybe scale with # of cells
 	var minDifference = 0.0001*cellSize;
 	var iterationDifferencePrev = null;
 	// reuse:
@@ -2721,14 +2781,11 @@ var imageB = imagesB["images"][0];
 							neighbors[n] = neighbor;
 						}
 					}
-					if(neighbors.length==0){
-						// console.log("no valid super");
+					if(neighbors.length==0){ // no close enough parent
 						cell.invalidate();
 						continue;
 					}
-
 					// calc from parents
-
 					var pointsB = [];
 					var errors = [];
 					var affines = [];
@@ -2819,6 +2876,11 @@ var imageB = imagesB["images"][0];
 				var divisions = 0;
 				var locationSpacing = 0;
 				if(!temp){
+					var org = new V2D();
+					var dir = new V2D();
+					var p = new V3D(cellPointA.x,cellPointA.y,1.0);
+					var lineB = F.multV3DtoV3D(p,p);
+						Code.lineOriginAndDirection2DFromEquation(org,dir, lineB.x,lineB.y,lineB.z);
 					// console.log(actualScaleB)
 					var result = ImageMapper.optimumSeparatedLocation(effectiveImageA,effectiveImageB, effA,effB, effectiveScaleA,effectiveScaleB, needleSize,haystackSize, affine, divisions, locationSpacing);
 					// var bestB = result["point"];
@@ -2831,13 +2893,15 @@ var imageB = imagesB["images"][0];
 					var effScale = 1.0/actualScaleB/scale;
 					var center = effB.copy().scale(1.0/actualScaleB);
 					// console.log("1 pixel = "+(1.0/actualScaleB)+" => "+effScale);
-					temp = {"scores":scores, "center":center, "scaleB":effScale, "best":null};
+					temp = {"scores":scores, "center":center, "scaleB":effScale, "orgB":org, "dirB":dir, "best":null};
 					cell.temp(temp);
 				}
 				// choose best scenario
 				var scores = temp["scores"];
 				var centerB = temp["center"];
 				var costSca = temp["scaleB"]*(locationSpacing+1);
+				var orgB = temp["orgB"];
+				var dirB = temp["dirB"];
 				var costs = scores["value"];
 				var costWid = scores["width"];
 				var costHei = scores["height"];
@@ -2845,6 +2909,7 @@ var imageB = imagesB["images"][0];
 				var halfHei = costHei*0.5;
 				// get all 4 neighbors
 				var neighbors = grid.neighbor4CellsForCell(gridCell);
+				// var neighbors = grid.neighbor8CellsForCell(gridCell);
 				for(var n=0; n<neighbors.length; ++n){ // drop invalids
 					var neighbor = neighbors[n];
 					neighbor = neighbor.firstObject();
@@ -2883,7 +2948,10 @@ var imageB = imagesB["images"][0];
 							V2D.sub(neighborDelta,neighbor.pointB(),neighbor.pointA());
 							neighborCost += V2D.distance(neighborDelta,delta);
 						}
-						totalCost = mData*matchCost + mDisp*normalizedGridScale*parentCost + mDiff*normalizedGridScale*neighborCost/neighborCount;
+						// epipolar
+						epipolarCost = Code.distancePointRay2D(orgB,dirB, b);
+						// total
+						totalCost = mData*matchCost + mDisp*normalizedGridScale*parentCost + mDiff*normalizedGridScale*neighborCost/neighborCount + mFund*epipolarCost;
 						// totalCosts.push(totalCost);
 						if(minCostValue===null || minCostValue>totalCost){
 							minCostValue = totalCost;
@@ -3098,6 +3166,56 @@ limitRatio = medRatio;
 	// throw "TODO";
 }
 
+
+ImageMapper.GridLayer.prototype.convexHull = function(){
+	console.log("convexHull");
+
+
+	var grid = this._grid;
+	console.log(grid)
+	throw "..."
+	var cells = grid.cells();
+	var cellSize = grid.cellSize();
+	var p = new V2D();
+	var pointList = [];
+	console.log(cells)
+	for(var i=0; i<cells.length; ++i){
+		var cell = cells[i];
+			cell = cell.firstObject();
+		if(cell.isValid()){
+			pointList.push(cell.pointB());
+		}
+	}
+
+
+
+
+		console.log(pointList);
+		var hull = Code.convexHull(pointList);
+		console.log(hull);
+
+
+
+
+hull.push(hull[0]);
+
+
+		// A
+		var d = new DO();
+		d.graphics().setLine(2.0, 0xFFFF0000);
+		d.graphics().beginPath();
+		// for(){
+		// d.graphics().drawCircle(0,0, rad);
+		d.graphics().drawPolygon(hull);
+		// d.graphics().moveTo(0,0);
+		// d.graphics().lineTo(rad,0);
+		d.graphics().strokeLine();
+		d.graphics().endPath();
+		d.matrix().translate(10, 10);
+		GLOBALSTAGE.addChild(d);
+
+		return hull;
+}
 
 
 ImageMapper.GridLayer.prototype.searchRectifiedNeighborhood = function(mapping, isLast, divisions){
@@ -3351,9 +3469,9 @@ ImageMapper.GridLayer.prototype.render = function(imageA,imageB){
 		d.matrix().translate(centerB.x, centerB.y);
 		// d.matrix().translate(centerImageB.x,centerImageB.y);
 		GLOBALSTAGE.addChild(d);
-		// d.graphics().alpha(0.50);
+		d.graphics().alpha(0.50);
 		// d.graphics().alpha(0.60);
-		d.graphics().alpha(0.75);
+		// d.graphics().alpha(0.75);
 		// d.graphics().alpha(0.90);
 	}
 	RENDER_CALLS += 1;

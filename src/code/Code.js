@@ -10227,6 +10227,25 @@ Code.fill2DArrayRect = function(array,wid,hei, x,y, width,height, fill){
 	}
 }
 
+Code.fill2DArrayCircle = function(array,wid,hei, x,y, radius, fill){
+	// var halfRad = radius*0.5;
+	var sqRad = radius*radius;
+	// var twoRad = 2*radius;
+	for(var j=-radius; j<radius; ++j){
+		for(var i=-radius; i<radius; ++i){
+			var d = i*i + j*j;
+			if(d<=sqRad){
+				var px = i+x;
+				var py = j+y;
+				if(0<=px && px<wid && 0<=py && py<hei){
+					var index = py*wid + px;
+					array[index] = fill;
+				}
+			}
+		}
+	}
+}
+
 /*
 ImageMat.calculateMoment = function(gry,wid,hei,mean,mask){
 	mean = mean!==undefined ? mean : ImageMat.calculateCentroid(gry, wid,hei);

@@ -378,134 +378,43 @@ https://cloud.google.com/appengine/docs/nodejs/
 
 
 
-- calculate cost of cell area once
-	- not working:
-	- perhaps the scale at witch this is calculated needs to include many more pixels?
-- sub-pixel minimum total cost point [location]
+=> 3D tests again
 
-- allow for SCALE differences
-
-ImageMapper
+=> TOO MANY POOR DENSE MATCHES
+- subselect areas with nice iniformity flow gradient ?
 
 
+--- what's causing poor matching?
+	- original Fs?
+	- params?
+	- ... F - orientation?
 
 
+R3D.objectProgressiveR3D
 
-- 2D DENSE BP:
-	- input:
-		- original cell is in approximate: location, scale, rotation
-	- process:
-		- find optimum initial cell: location / scale / rotation via minimizing SAD costs
-		- while number of hierarch iterations
-			- initialize sub-graph with cells half-size of parent
-			- for each cell:
-				- get predicted locations from parent neighbors
-				- cell representation size = [11x11]
-				- extract cell rect around area in imageA
-				- extract compare rect around area in imageB
-				(get image masks for cells that are hyptoenuse away from image border)
-				- get compare costs for cell w/ circular mask & skip 1 param [5x5] -- reduce search space
-			- convert graph to BP
-				- v: initial location = predicted location
-				- f: 2-loop: find minimum over all costs using eqn: feature cost + distance cost + difference cost
-				- v: average locations from f
-			- for each cell:
-				- optimize rotation / scale using updated location [1/(2^outerloop)]
-			continue loop
+R3D.objectProgressiveR3D_Z
+
+- R3D._progressiveR3DFlatSIFT
+- R3D._progressiveR3DFlat
+
+progressiveR3DColorAverage
+
+
+R3D.searchMatchPoints3D
 
 
 
-- how to separate x, y  to keep from cost matrix and instead cost vector ?
 
-- can use 1D search using rectified images to reduce search space
+progressiveStationaryFeatures
 
 
 
 
 
+- import scaling image logic for
+	- PROGRESSIVE SIFT IMAGES
+	- stereopsis cells (maybe OK atm with cells on same size as image source)
 
-- incorporate PM randomized sampling (& use if better approx.)?
-- simultaneous FWD/BAK matching ?
-
-- perturbation in stereopsis to allow for picking slightly better cost / parameters ?
-
-
-
-
--
-	-
-	- a) find optimal sub positions from sub-costs
-		- cell => min(11, round(cell/2) * 2 + 1 )
-		- reduce search space by sub-sampling comparison costs
-	- b) update scale & rotation to improve cost
-
-
-- is separating rotation & scalea a more reliable way?
-
-- add masking in score calcs for portions of needles outside of image
-
-- error of a cell should be the TOTAL COST, not just the matching cost
-
-- add circular masking everywhere
-
-- how to apply regularization to affine matrices?
-
-
-	-
-
-- test SIFT image placement optimal positioning
-	- rotation?
-	- scale?
-	=> SIFT LOCATIONS ARE VERY POOR
-	=> MAYBE ONLY USE AT LARGE SCALES TO DISCRIMINATE initially
-
-- set 'occluded' cells if score > worst allowable score
-	- still calculate best location
-	- influence neighbors ?
-
-
-	- do multiple iterations & actually try to converge rather than use single step:
-
-	- GRAPH SIZE ITERATION: [cell size doubling]
-		- create new graph ; connect parents & children
-		- GLOBAL MINIMIZATION ITERATION: [each cell has a delta of change in location; init to null, stop when avg delta < 0.25*cellsize ; or exceed max iterations]
-			- get list of descriptor score at all neighborhood locations (first time)
-				- cell size scaled to 9x9 - 11x11 resolution search area
-				- use inherited angle & scale
-				- set initial location based on optimal score (ignoring neighbors)
-					- use regularization for first guess
-			- use 4-neighbor locations to find optimal point based on full score: DESCRIPTOR + DISPLACEMENT + NEIGHBOR-POSITION-DIFFERENCE
-			- at optimum location: find optimal rotation & scale
-
-	- gradient histogram as descriptor in various places
-		- translation:
-			- images are scaled to cell size / compare size
-			- calc gradients R/G/B (smoothed colors & smoothed gradient)
-			- each pixel assigned histogram based on CELL-SIZE neighbors @ circular mask
-			=> each pixel is ORDERED SET OF GRADIENT HISTOGRAMS
-		- rotation:
-			- each pixel is UNORDERED SET OF GRADIENT HISTOGRAMS
-		- scale + rotation
-			- ? compare to images at different scale (search range)
-
-
-	- full location + rotation + scale:
-		- instead of extracting image of colors; extract image with padding + convert interrior pixels to sift
-
-
-
-
-
-
-
-- key to optimum location is LBP:
-	- minimize global energy fxn by:
-		- iterate on local best location - considering neighbors
-
-- limits:
-	- scale
-	- rotation
-	- time to extract SIFT from each ENTIRE image
 
 
 - auto calibration: arbitrary images => K - many views to constrain H
@@ -522,92 +431,31 @@ ImageMapper
 
 - self calibration: use some input images with known constancy (eg position / rotation / GPS / gyroscope) to determine K
 
-- allow for unmatched portions
-- use image derivatives
-- scale/blur both images A & B
+- calibration methods:
+	- vanishing points
+	- KNOWN parallel | perpendicular lines
+	- TFT
+	- factorization: W | SDV | R & Q
+	- dual absolute quadric
 
-- SIFT FLOW
-	- use gradients to compare score rather than flat NCC / SAD
-- PATCH MATCH
-	- ...
-
-
-
-- find / visualize invalid areas [areas A doesn't fit into B and areas B not mapped to by A]
-
-- try using F => focal length => basic Rab
+- simplifications:
+	- K no skew, square pixels, optical center = image center, no distortion
+	-
 
 - use basic R to approximate AFFINE matrices between points between A & B
 	=> rotation & scale
 
 
+- allow for unmatched portions
+- use image derivatives
+- incorporate PM randomized sampling (& use if better approx.)?
+- simultaneous FWD/BAK matching ?
+- perturbation in stereopsis to allow for picking slightly better cost / parameters ?
 
 
-
-- try SEED process again ... can reuse a lot of the imageMapper?
-	- seeds = best corner / score points from prev step
-	- use 'REGIONS'
-		- at region seams: if disagreement, better sequence wins
-			- 'disagree' = scores / rotation / scale / location / ...
-			- 'better' = score
-
-
-- better affine mapping:
-	- mask out matching outside images
-	- better handle cells with split disparities
-
-
-- visualize out invalidated area
-	- from FORWARD A & INVERSE A & " " B
-	=> geometric invalid area:
-		source = each cell * radius size
-		dest = everything outside convex-hull-ish of interrior points
-
-- enforce uniqueness by picking best match by score for same-mapped point OR invalid both
-- pick best matching score from A->B & B->A for points
-
-
-
-
-
-- hierarchy affine algorithm is still missing better matches [pikachu]
-	- perturbed by occlusions/jumps
-
-	=> force rotation to start at relative F rotation
-	=> force location to start at clamped F line
-		- or increase clamping percent based on # of iterations
-
-
-- go back a step and make sure ways to keep bad F-compliant points from making their way in to final 2-way match ...
-
-- without OCCLUDED value, not sure what points are kept because of good match or just best guess
-- cross reference with original images?
-=> HANDLE:
-	- non-textured points [corner / uniqueness / entropic]
-	-
-
---- mark areas of poor match score (triangulated?) as not usable for matchings
-- nothing outside of convex hull (+ padding) should be used ...
-
-
-=> keep track / display out matching regions that are invalidated:
-	A) outside of limits
-	B) bad NCC / SAD score (add)
-=> avoid unmapped ROUNDED areas (max/min) to be kept around
-	- it there a way to get the matching scores for each pixel?
-		=> pick only very best
-
-- f & r errors are more lining up with the bad data than the good data ... local minimizing progress ...
-
-
-- probing to aquire better points doesn't seem used?
-
-- generate a disparity map for images ?
 - intermediary surface reference for normal / etc
 - move noisy points toward surface ()
 - depth outliers []
-
-x need to make patch sizes on order of NEIGHBORHOOD -- cell size is often too large
 
 - CLEARLY NOISE P3D
 	- neighborhood 3D distances is sporadic
@@ -670,7 +518,7 @@ when inserting points - why are A/B negative from dense grouping?
 
 
 
-- how to decide if a dense recron is good / bad ?
+- how to decide if a dense recon is good / bad ?
 	- avg reprojection error ...
 
 - test in pipeline process
@@ -682,32 +530,8 @@ http://localhost/ff/3DR/app/app.html?mode=image
 http://localhost/ff/3DR/app/app.html?mode=model
 
 
-// FEATURES
-var featuresA = R3D.calculateScaleCornerFeatures(imageMatrixA, maxCount);
-var featuresB = R3D.calculateScaleCornerFeatures(imageMatrixB, maxCount);
-
-// SIFT OBJECTS
-var objectsA = R3D.generateProgressiveSIFTObjects(featuresA, imageMatrixA);
-var objectsB = R3D.generateProgressiveSIFTObjects(featuresB, imageMatrixB);
-
-// SPARSE:
-var result = R3D.progressiveFullMatchingDense(objectsA, imageMatrixA, objectsB, imageMatrixB);
-
-// DENSE:
-var results = R3D.arbitraryAffineMatches(imageA,imageB, Fab,Fba, pointsA,pointsB);
-
-OLD:
-var result = R3D.basicFullMatchingF(objectsA, imageMatrixA, objectsB, imageMatrixB, 2000); ----- OLD
-// var objects = R3D.generateSIFTObjects(features, imageMatrix);
-// var objects = R3D.generateProgressiveSIFTObjects(features, imageMatrix);
-// console.log(objects);
-// var normalizedObjects = R3D.normalizeSIFTObjects(objects, imageMatrix.width(), imageMatrix.height());
-// console.log(normalizedObjects);
-
-
 
 - debug epipole in image: BENCH C & D
-
 
 
 
@@ -730,8 +554,6 @@ PIKABAD:
 13120/(504*378) = 7%
 
 
-
-- use F to direct searching ...
 
 
 - identify discontinuties:

@@ -65,7 +65,7 @@ K:
 
 Cameras that vary from the linear model are said to have (nonlinear) _distortion_, modeled using polynomials:
 
-
+"Center of distortion"
 *Radial Distortion*:
 
 
@@ -128,7 +128,9 @@ identify -verbose ./test.jpg
 
 For images without any camera data, *reasonable* values can be assumed, and final values rely on agorithms to solve for finding the best value.
 
-This is a less documented area seems people prefer to spend effort on the easier cases
+- methods:
+    - using lines in images
+    -
 
 *TODO: research methods*
 
@@ -264,27 +266,32 @@ output:
 
 #### Stereo Matching
 - pair matches with only small disparity changes (small baseline)
-    
+
     - hierarchical ordered stereo matching
+        - minimum path calculation
+            - depends on only few occlusions per line sequence
 
     - Image Rectification
         - simply homogaphy of dominant plane
         - nonlinear common F-line mapping
 
 #### Image Registration
-- wide baseline / high disparity / sporatic disparity 
+- wide baseline / high disparity / sporatic disparity
     - cost functions:
         - SSD | SAD | NCC | Entropy | Mututal Information
 
     - hierarchical progressive localization
 
     - minor affine changes
-        - inital guess/state is assumed very close to 
+        - inital guess/state is assumed very close to
             - affine cost minimization of patch
             - change in corner location to define affine transform
 
-
-
+#### Belief Propagation / Message Passing
+    - Specific application of MP: 2D 'stereo' searching
+    - rather than minimize costs along a 1D path, try to minimize 2D costs using neighbor
+    - cost: data term (match cost) + neighbor difference term (regularization) + drift term (non-textured areas)
+    - messages use neighborhood to update current best guess of flow (eg avg / lowest cost)
 
 
 
@@ -330,7 +337,8 @@ Method 2:
 Method 3:
 - something to do with solving an SVD related to the Pab and Pac
 
-
+#### Camera Intrinsic from TFT?
+    - ? simple camera intrinsic matrix assumption + TF + Absolute Conic = 4 possible solutions => choose positive semi-definite
 
 
 

@@ -4789,6 +4789,8 @@ var info = R3D.subpixelHaystack(imageMatrixA,imageMatrixB, pointA,pointB, affine
 throw "???"
 */
 
+console.log("R3D.searchMatchPoints3D called");
+
 		// get corners
 		// keep only peak corners within grid size distance
 		console.log(transform);

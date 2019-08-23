@@ -4121,16 +4121,16 @@ ImageMat.prototype.calculateGradient = function(x,y, blur){
 }
 ImageMat.prototype.getScaledImage = function(scale, sigmaIn, doCeil){
 	var sigma = null;
+	var newWidth;
+	var newHeight;
+	if(doCeil){
+		newWidth = Math.ceil(scale*this.width());
+		newHeight = Math.ceil(scale*this.height());
+	}else{
+		newWidth = Math.round(scale*this.width());
+		newHeight = Math.round(scale*this.height());
+	}
 	if(scale<1.0){
-		var newWidth;
-		var newHeight;
-		if(doCeil){
-			newWidth = Math.ceil(scale*this.width());
-			newHeight = Math.ceil(scale*this.height());
-		}else{
-			newWidth = Math.round(scale*this.width());
-			newHeight = Math.round(scale*this.height());
-		}
 		if(sigmaIn!==undefined){
 			sigma = sigmaIn;
 		}else{
@@ -4146,7 +4146,16 @@ ImageMat.prototype.getScaledImage = function(scale, sigmaIn, doCeil){
 		return image;
 	}else if(scale==1.0){
 		return this.copy();
-	}
+	} // else scale > 1
+	var sigma = null;
+	var red = ImageMat.getScaledImage(this.red(), this.width(), this.height(), scale, sigma, newWidth, newHeight);
+	var grn = ImageMat.getScaledImage(this.grn(), this.width(), this.height(), scale, sigma, newWidth, newHeight);
+	var blu = ImageMat.getScaledImage(this.blu(), this.width(), this.height(), scale, sigma, newWidth, newHeight);
+		red = red["value"];
+		grn = grn["value"];
+		blu = blu["value"];
+	var image = new ImageMat(newWidth,newHeight, red,grn,blu);
+	return image;
 }
 ImageMat.prototype.getProgressiveScaledImage = function(){
 	return ImageMat.getProgressiveScaledImage(this);

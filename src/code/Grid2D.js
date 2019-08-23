@@ -195,6 +195,10 @@ Grid2D.prototype.neighbor5CellsForCell = function(cell){
 	var cr = new V2D(cell.col(),cell.row());
 	return this._neighbor5ObjectsForColRow(cr.x,cr.y, false);
 }
+Grid2D.prototype.neighbor8CellsForCell = function(cell){
+	var cr = new V2D(cell.col(),cell.row());
+	return this._neighbor8ObjectsForColRow(cr.x,cr.y, false);
+}
 Grid2D.prototype.neighbor9CellsForCell = function(cell){
 	var cr = new V2D(cell.col(),cell.row());
 	return this._neighbor9ObjectsForColRow(cr.x,cr.y, false);
