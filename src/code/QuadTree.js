@@ -6,9 +6,7 @@ function QuadTree(toPoint, min, max){
 	this._autoResize = true;
 	this.toPoint(toPoint);
 	if(min && max){
-		var size = V2D.sub(max,min);
-		var center = V2D.avg(max,min);
-		this._initWithDimensions(center, size);
+		this.initWithMinMax(min,max);
 	}else{
 		this._initWithDimensions(new V2D(0,0), new V2D(1,1));
 	}
@@ -256,6 +254,12 @@ QuadTree.prototype._initWithDimensions = function(center,size){
 }
 QuadTree.prototype.initWithDimensions = function(center,size){
 	this.clear();
+	this._initWithDimensions(center,size);
+}
+QuadTree.prototype.initWithMinMax = function(min,max){
+	this.clear();
+	var size = V2D.sub(max,min);
+	var center = V2D.avg(max,min);
 	this._initWithDimensions(center,size);
 }
 QuadTree.prototype.initWithObjects = function(objects, force){

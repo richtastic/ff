@@ -4960,3 +4960,25 @@ ImageMat.colorFilter = function(srcR,srcG,srcB, wid, hei, colorTarget, colorDist
 	var mask;
 	return {"value":mask, "width":wid, "height":hei};
 }
+
+
+
+
+function ImageMatScaled(image){
+	this._images = ImageMat.getProgressiveScaledImage(image);
+}
+ImageMatScaled.prototype.infoForScale = function(scale){
+	var images = this._images;
+	var scaleIndex = ImageMat.effectiveIndexFromImageScales(images,scale);
+	var actualScale = images["scales"][scaleIndex];
+	var effectiveImage = images["images"][scaleIndex];
+	var effectiveScale = actualScale*scale;
+	// var effA = pointA.copy().scale(actualScaleA);
+	return {"image":effectiveImage, "actualScale":actualScale, "effectiveScale":effectiveScale};
+}
+
+
+
+
+
+// ...

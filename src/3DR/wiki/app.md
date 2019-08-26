@@ -377,17 +377,94 @@ https://cloud.google.com/appengine/docs/nodejs/
 1 + 2 = NY9RPQHA
 
 
+- not enough seeds in the correct places
+	- need seeds everywhere
 
-=> 3D tests again
+- can get rotation from best F matrix
+- missing good scale
+	- could get this from the camera R [need K]
 
-=> TOO MANY POOR DENSE MATCHES
-- subselect areas with nice iniformity flow gradient ?
+
+
+
+
+
+
+
+
+
+
+
+
+MORE INVESTIGATIONS:
+=> LARGE SKEW DIFFERENCE BETWEEN FG & BG OBJECTS
+=> DOES NOT VARY SMOOTHLY ...
+	- location
+	- affine
+=> need way to compare areas that is not oriented / strictly oriented
+	- color histogram
+	- color-gradient histogram
+	- SIFT aligned with F
+
+
+.... may need to go back to seeds ....
+	- if an 'originating' seed is removed => cascade remove all decendants?
+
+- in stead of finding dense ...
+- use good F to find new set of best matches, using oriented F SIFT OBJECTS
+
+
+- progressively up density
+
+
+
+x plot all F relative normals/angles in A & B
+x plot rectified images
+
+- try to make optimized skew ?
+
+
+
+
+dense:
+- still poor matching
+	- incorrect existing 2 points
+
+
+=> OBSERVATIONS:
+	- initial placement has a much different skew, so the correct match is poor
+	- a nearby point is an incorrect match BUT accidentallly better affine skew match
+
+=> initial matrix needs to be much better
+
+
+
+NEXT?
+
+=> IS DOING THIS IN RECTIFIED DOMAIN BETTER ?
+
+=> BAD PLACEMENT
+=> BAD ROTATION
+
+
+
+
 
 
 --- what's causing poor matching?
 	- original Fs?
 	- params?
-	- ... F - orientation?
+	- ... F - orientation? [assumed rotation]?
+		- affine?
+
+- WATCH: first steps vs last steps? - progression of process
+
+- second step of matching is the DENSE STEREO
+	- is this OK?
+
+- way to allow for occlusions to be detected / disregarded during optimizing location process?
+
+
 
 
 R3D.objectProgressiveR3D

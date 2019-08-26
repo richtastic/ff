@@ -4423,11 +4423,11 @@ Stereopsis.World.prototype.solvePair = function(completeFxn, completeContext){ /
 	console.log("SOLVE");
 	this._completeFxn = completeFxn;
 	this._completeContext = completeContext;
-	// var maxIterations = 1;
+	var maxIterations = 1;
 	// var maxIterations = 2;
 	// var maxIterations = 3;
 	// var maxIterations = 4;
-	var maxIterations = 5;
+	// var maxIterations = 5;
 	// var maxIterations = 6;
 	// var maxIterations = 7;
 	// var maxIterations = 8;

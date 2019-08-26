@@ -105,7 +105,11 @@ var modeModelReconstruction = false;
 			console.log("upload camera image");
 			modeImageUpload = true;
 			modeImageUploadCamera = true;
+		}else if(mode=="compare"){
+			console.log("compare pair image");
+			modeImageCompare = true;
 		}
+
 	}
 
 
@@ -688,14 +692,18 @@ App3DR.App.prototype.updateSize = function(min,max){
 }
 App3DR.prototype._setupMatchCompareProjectManager = function(readyFxn){
 	console.log("_setupMatchCompareProjectManager");
-compareIndex = 2;
-compareIndex = 12;
+	// console.log(readyFxn);
+	// throw "?"
+compareIndex = 1;
+// compareIndex = 2;
+// compareIndex = 12;
 	var manager = this._projectManager;
 	var app = this._activeApp;
 	if(manager.isLoaded()){
 		var views = manager.views();
 		var pairs = manager.pairs();
 		var triples = manager.triples();
+// console.log(pairs)
 		if(pairs.length>0){
 			var pair1 = pairs[0];
 			var pair2 = pairs[1];
@@ -748,6 +756,7 @@ var showTriple = false;
 					//
 				}
 				var fxnX = function(){
+					console.log("fxnX")
 					var data = triple ? triple._matchingData : null;
 					var matches = triple ? data["matches"] : [];
 					var tripleA = [];
@@ -796,13 +805,16 @@ var showTriple = false;
 					if(showTriple){
 						app.setDisplay([imageA,imageB,imageC], [1,2], [], [[tripleA,imageA, tripleB,imageB, tripleC,imageC]]);
 					}else{
+						// console.log("set: ");
+						// console.log(imageA,imageB);
 						app.setDisplay([imageA,imageB], [2], [[imageA,imageB,matchAB]]);
 					}
 				}
 				fxnA();
 			}
 		}
-		if(readyFxn){
+		if(readyFxn && Code.isFunction(readyFxn)){
+			console.log(readyFxn)
 			readyFxn();
 		}
 	}else{
@@ -1277,6 +1289,7 @@ console.log("objectSize: "+objectSize);
 	}
 
 	this._displayData = {"images":imageInfoList, "objectSize":objectSize, "fullSize":fullSize, "grid":grid, "matches":matchInfoList, "triples":tripleInfoList};
+	console.log(this._displayData);
 	this._render();
 
 	// SAVE THE LOCATIONS / SIZES FOR HIT - TESTING
@@ -1741,11 +1754,13 @@ App3DR.App.MatchCompare.prototype._render = function(){
 		for(i=0; i<matchInfo.length; ++i){
 			console.log("matchInfo: "+i);
 			var match = matchInfo[i];
+			console.log(match)
 			var imageA = match["A"];
 			var imageB = match["B"];
 			var matches = match["match"];
-			var F = matches["F"];
-				F = new Matrix().loadFromObject(F);
+// F IS NOT CURRENTLY PASSED
+// var F = matches["F"];
+// 	F = new Matrix().loadFromObject(F);
 //console.log(F+"");
 // console.log("A: "+imageA["offset"]);
 // console.log("B: "+imageB["offset"]);
@@ -3859,8 +3874,8 @@ App3DR.App.Model3D.prototype.setPoints = function(input3D, input2D, hasImages){
 
 	var colors = [];
 // ONLY WORKS FOR PAIR OF IMAGES
-var useErrors = true;
-// var useErrors = false;
+// var useErrors = true;
+var useErrors = false;
 	useErrors = useErrors && hasImages;
 	if(useErrors){
 		var views = this._views;
@@ -7451,12 +7466,20 @@ GLOBALDISPLAY = GLOBALSTAGE;
 		var F = result["F"];
 		var Finv = result["Finv"];
 		// DENSE:
+		console.log("SKIPPING DENSE ...");
+
+
+
+
+// throw "HERE";
+/*
 		var result = R3D.arbitraryAffineMatches(imageMatrixA,imageMatrixB, F,Finv, pointsA,pointsB);
 		console.log(result);
 			F = result["F"];
 			Finv = result["Finv"];
 			pointsA = result["A"];
 			pointsB = result["B"];
+*/
 		if(!F || !pointsA || pointsA.length==0){
 			matches = [];
 			F = null;

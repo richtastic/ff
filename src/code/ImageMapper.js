@@ -79,6 +79,125 @@ ImageMapper.prototype.testAngles = function(){
 	var epipoles = R3D.getEpipolesFromF(F);
 	var epipoleA = epipoles["A"];
 	var epipoleB = epipoles["B"];
+
+// SHOW GRID OF RELATIVE ANGLES:
+
+
+console.log(imageA);
+console.log(imageB);
+var widthA = imageA.width();
+var heightA = imageA.height();
+var widthB = imageB.width();
+var heightB = imageB.height();
+
+
+var OFFX1 = 10;
+var OFFY1 = 10;
+var OFFX2 = 610;
+var OFFY2 = 10;
+var sca = 1.0;
+var alp = 0.10;
+var alp = 0.50;
+var rad = 20.0;
+
+
+/*
+
+var iii = imageA;
+var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
+var d = new DOImage(img);
+d.graphics().alpha(alp);
+d.matrix().translate(OFFX1, OFFY1);
+GLOBALSTAGE.addChild(d);
+
+var iii = imageB;
+var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
+var d = new DOImage(img);
+d.graphics().alpha(alp);
+d.matrix().translate(OFFX2, OFFY2);
+GLOBALSTAGE.addChild(d);
+
+
+var gridSize = 50;
+var pA = new V2D();
+for(var yA=0; yA<heightA; yA+=gridSize){
+	for(var xA=0; xA<widthA; xA+=gridSize){
+		pA.set(xA,yA);
+		var angleAB = R3D.fundamentalRelativeAngleForPoint(pA,F,Finv, epipoleA,epipoleB, ptsA,ptsB);
+		// console.log("angleAB: "+Code.degrees(angleAB));
+		var d = new DO();
+		d.graphics().setLine(2.0, 0x99FF0000);
+		d.graphics().beginPath();
+		d.graphics().drawCircle(0,0, rad);
+		d.graphics().moveTo(0,0);
+		d.graphics().lineTo(rad,0);
+		d.graphics().strokeLine();
+		d.graphics().endPath();
+			d.matrix().rotate(angleAB);
+		d.matrix().translate(OFFX1 + pA.x, OFFY1 + pA.y);
+		GLOBALSTAGE.addChild(d);
+	}
+}
+
+
+var pB = new V2D();
+for(var yB=0; yB<heightB; yB+=gridSize){
+	for(var xB=0; xB<widthB; xB+=gridSize){
+		pB.set(xB,yB);
+		var angleBA = R3D.fundamentalRelativeAngleForPoint(pB,Finv,F, epipoleB,epipoleA, ptsB,ptsA);
+		// console.log("angleAB: "+Code.degrees(angleAB));
+		var d = new DO();
+		d.graphics().setLine(2.0, 0x99FF0000);
+		d.graphics().beginPath();
+		d.graphics().drawCircle(0,0, rad);
+		d.graphics().moveTo(0,0);
+		d.graphics().lineTo(rad,0);
+		d.graphics().strokeLine();
+		d.graphics().endPath();
+			d.matrix().rotate(angleBA);
+		d.matrix().translate(OFFX2 + pB.x, OFFY2 + pB.y);
+		GLOBALSTAGE.addChild(d);
+	}
+}
+
+
+*/
+
+
+
+
+var rectifiedInfoA = R3D.polarRectification(imageA,epipoleA, true);
+var rectifiedInfoB = R3D.polarRectification(imageB,epipoleB, true);
+var rectifiedA = new ImageMat(rectifiedInfoA.width,rectifiedInfoA.height, rectifiedInfoA.red,rectifiedInfoA.grn,rectifiedInfoA.blu);
+var rectifiedB = new ImageMat(rectifiedInfoB.width,rectifiedInfoB.height, rectifiedInfoB.red,rectifiedInfoB.grn,rectifiedInfoB.blu);
+console.log("rectifiedInfos:");
+console.log(rectifiedInfoA);
+console.log(rectifiedInfoB);
+
+
+var iii = rectifiedA;
+var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
+var d = new DOImage(img);
+d.graphics().alpha(alp);
+d.matrix().translate(-iii.width()*0.5, -iii.height()*0.5);
+d.matrix().rotate(Math.PI);
+d.matrix().translate(iii.width()*0.5, iii.height()*0.5);
+d.matrix().translate(10, 10);
+GLOBALSTAGE.addChild(d);
+
+var iii = rectifiedB;
+var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
+var d = new DOImage(img);
+d.graphics().alpha(alp);
+d.matrix().translate(-iii.width()*0.5, -iii.height()*0.5);
+d.matrix().rotate(Math.PI);
+d.matrix().translate(iii.width()*0.5, iii.height()*0.5);
+d.matrix().translate(610, 10);
+GLOBALSTAGE.addChild(d);
+
+
+throw "testAngles"
+
 // BENCH
 	// gnd
 	// var pointA = new V2D(200,200);
@@ -193,6 +312,9 @@ ImageMapper.prototype.testAngles = function(){
 	throw "..."
 }
 ImageMapper.prototype.findMatches = function(){
+
+this.testAngles();
+
 	var grid = this._grid;
 	grid.solveMapping();
 	var matches = grid.bestMatches();
@@ -1194,10 +1316,10 @@ console.log("avgAngle: "+Code.degrees(avgAngle));
 	layer = root;
 // var divisions = 0; // 1 [1]
 // var divisions = 1; // 4 [10]
-// var divisions = 2; // 16 [50]
+var divisions = 2; // 16 [50]
 // var divisions = 3; // 64 [250]
 // var divisions = 4; // 256 [1000]
-var divisions = 5; // 1024 [4500] // NEW MAXIMUM
+// var divisions = 5; // 1024 [4500] // NEW MAXIMUM
 // var divisions = 6; // 4096 // MAXIMUM
 
 	for(var i=0; i<divisions; ++i){
@@ -1252,6 +1374,9 @@ ImageMapper.optimumSeparatedLocation = function(imageA,imageB, pointA,pointB, sc
 	return {"point":newB, "error":error, "scores":scores};
 }
 
+ImageMapper.optimumSeparatedSkewX = function(imageA,imageB, pointA,pointB, scaleA,scaleB, compareSize, affineIn, divisions){
+	throw "?"
+}
 ImageMapper.optimumSeparatedAffine = function(imageA,imageB, pointA,pointB, scaleA,scaleB, compareSize, affineIn, divisions){
 // divisions = 1;
 	// masking ?
@@ -2735,9 +2860,9 @@ var imageB = imagesB["images"][0];
 	var error;
 
 	var mData = 1.0; // raw match cost
-	var mDisp = 0.001; // non-texture pushing
-	var mDiff = 0.10; // regularization -- [0.1, 0.25]
-	var mFund = 0.001; // epipolar -- [0.01, 0.10] -- loose for poor initial F estimates
+	var mDisp = 0.0001; // non-texture pushing
+	var mDiff = 0.20; // regularization -- [0.1, 0.25]
+	var mFund = 0.000001; // epipolar -- [0.01, 0.10] -- loose for poor initial F estimates
 	var normalizedGridScale = 1.0/cellSize;
 
 	// comparisons:
@@ -2752,6 +2877,10 @@ var imageB = imagesB["images"][0];
 	var neighborDelta = new V2D();
 	var delta = new V2D();
 	var b = new V2D();
+if(divisionIterations==3){
+	console.log("EARLY");
+	maxIterations = 1;
+}
 	for(var iteration=0; iteration<=maxIterations; ++iteration){
 		// for each cell
 		var iterationDifference = 0;
@@ -2814,6 +2943,9 @@ var imageB = imagesB["images"][0];
 						affine.identity();
 						affine.rotate(angleAB);
 						affine.scale(averageScaleAB);
+// NEED TO DO OPTIMIZED SKEW ....
+
+
 					// initial settings
 					cell.affine(affine);
 					cell.pointB(averageB);
@@ -2843,7 +2975,7 @@ var imageB = imagesB["images"][0];
 				var affine = new Matrix2D();
 				affine.copy(affineAB);
 				affine.scale(1.0/averageScaleAB);
-					if(iteration==maxIterations){ // keep final location & update affine
+				if(iteration==maxIterations){ // keep final location & update affine
 					var pB = cellPointB;
 					if( pB.x<0 || pB.x>wm1B || pB.y<0 || pB.y>hm1B ){
 					   cell.invalidate();
@@ -2861,6 +2993,11 @@ var imageB = imagesB["images"][0];
 					// divisionIterations = 2;
 					// divisionIterations = 5;
 					// var divs = 1;
+
+
+					var result = ImageMapper.optimumSeparatedSkewX(effectiveImageA,effectiveImageB, effA,effB, effectiveScaleA,effectiveScaleB, needleSize, affine, divisionIterations);
+
+
 					var result = ImageMapper.optimumSeparatedAffine(effectiveImageA,effectiveImageB, effA,effB, effectiveScaleA,effectiveScaleB, needleSize, affine, divisionIterations);
 					var bestAffine = result["affine"];
 					var bestError = result["error"];
@@ -2875,7 +3012,7 @@ var imageB = imagesB["images"][0];
 				var temp = cell.temp();
 				var divisions = 0;
 				var locationSpacing = 0;
-				if(!temp){
+				if(!temp){ // iteration == first
 					var org = new V2D();
 					var dir = new V2D();
 					var p = new V3D(cellPointA.x,cellPointA.y,1.0);
