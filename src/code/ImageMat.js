@@ -4972,7 +4972,7 @@ ImageMatScaled.prototype.infoForScale = function(scale){
 	var scaleIndex = ImageMat.effectiveIndexFromImageScales(images,scale);
 	var actualScale = images["scales"][scaleIndex];
 	var effectiveImage = images["images"][scaleIndex];
-	var effectiveScale = actualScale*scale;
+	var effectiveScale = scale/actualScale;
 	// var effA = pointA.copy().scale(actualScaleA);
 	return {"image":effectiveImage, "actualScale":actualScale, "effectiveScale":effectiveScale};
 }

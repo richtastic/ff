@@ -4423,11 +4423,11 @@ Stereopsis.World.prototype.solvePair = function(completeFxn, completeContext){ /
 	console.log("SOLVE");
 	this._completeFxn = completeFxn;
 	this._completeContext = completeContext;
-	var maxIterations = 1;
+	// var maxIterations = 1;
 	// var maxIterations = 2;
 	// var maxIterations = 3;
 	// var maxIterations = 4;
-	// var maxIterations = 5;
+	var maxIterations = 5;
 	// var maxIterations = 6;
 	// var maxIterations = 7;
 	// var maxIterations = 8;
@@ -4447,7 +4447,9 @@ Stereopsis.World.prototype.iteration = function(iterationIndex, maxIterations){
 	var isLast = iterationIndex == maxIterations-1;
 	console.log("-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ "+iterationIndex+"/"+maxIterations+" ( "+isFirst+" & "+isLast+" ) ");
 
-	/*
+	// SUBDIVIDE:
+
+/*
 	// increase cover toward end
 	if(iterationIndex==3){
 		var views = this.toViewArray();
@@ -4462,7 +4464,7 @@ Stereopsis.World.prototype.iteration = function(iterationIndex, maxIterations){
 			view.cellSize(size);
 		}
 	}
-	*/
+*/
 console.log("START");
 	if(iterationIndex==0){ // subsequent approximations are always worse than the refined estimates
 		this.estimate3DErrors(false); // find initial F, P, estimate all errors from this
@@ -4494,6 +4496,12 @@ this.searchPoints2DBestMatch();
 }
 */
 
+
+// expand step & retract step
+
+// var doRelaxed = true;
+var doRelaxed = iterationIndex%2==0;
+
 	// TODO: ONLY BREAK IF ERROR IS VERY LOW OR IF ERROR CHANGE IS TINY
 
 
@@ -4523,7 +4531,12 @@ this.searchPoints2DBestMatch();
 // EXPAND
 	// 2D NEIGHBORS
 
+// ADD BACK
+if(doRelaxed){
+	this.probe2DNNAffine(3.0);
+}else{
 	this.probe2DNNAffine(2.0);
+}
 
 
 // reassess
@@ -4532,9 +4545,14 @@ this.searchPoints2DBestMatch();
 	// drop worst
 	this.dropNegative3D();
 	this.dropFurthest();
-	// this.filterGlobalMatches(false, 0, 3.0,3.0,3.0,3.0, false);
+
+
+if(doRelaxed){
+	this.filterGlobalMatches(false, 0, 3.0,3.0,3.0,3.0, false);
+}else{
 	// this.filterGlobalMatches(false, 0, 3.0,3.0,3.0,3.0, true);
 	this.filterGlobalMatches(false, 0, 2.0,2.0,2.0,2.0, false); // slowly drops points
+}
 
 	// don't think this helps much:
 	// this.filterTransform2D3D();
@@ -4543,9 +4561,10 @@ this.searchPoints2DBestMatch();
 	// this.reposition2D();
 // }
 
-	this.filterPairwiseSphere3D(2.0);
-
+// ADD BACK
 	// this.filterPairwiseSphere3D(2.0);
+
+	this.filterPairwiseSphere3D(3.0);
 
 	// FILTER 2D F / R / M errpr
 
@@ -8656,7 +8675,7 @@ Stereopsis.World.prototype.probe2DNNAffine = function(sigma){ //
 				if(cellErrorF==null){ // not searched yet
 					cellErrorF = maxErrorF;
 					cellErrorR = maxErrorR;
-				}else if(cellErrorF>maxErrorF || cellErrorR>maxErrorR){
+				}else if(cellErrorF>maxErrorF && cellErrorR>maxErrorR){
 					continue; // don't re-check this cell
 				}
 				// mark search criteria for next inclusion
@@ -8734,8 +8753,6 @@ how to prune bad 2D / affine matches ?
 							if(newNCC < 0.40 && newNCC<=1.5*bestNCC){ // WHAT ARE TYPICAL VALUES ?
 								// OTHER CRITERIA ? - MATCH VALIDATION ?
 								var m3D = newMatch.point3D();
-								// console.log(newMatch);
-								// console.log(m3D);
 								m3D.point( m3D.calculateAbsoluteLocation(this,true) );
 								this.patchInitBasicSphere(false,[m3D]);
 								matchesAddList.push(newMatch);

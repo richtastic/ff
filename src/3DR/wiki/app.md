@@ -377,6 +377,31 @@ https://cloud.google.com/appengine/docs/nodejs/
 1 + 2 = NY9RPQHA
 
 
+- stereopsis not propagating seeds into all spots
+	- maybe allowed have more than allowed error ...
+	=> WHY?
+- different ways to do affine comparing cells? A v B v AB
+
+
+STEREOPSIS PROBLEMS:
+ - probe2DNNAffine very slow
+ 	[should also use scaled image version]
+
+
+
+- use scaling images in stereopsis ??? (small cell sizes shouldn't see any benefit)
+
+
+
+
+
+FOR CHOOSING TRACK POINTS:
+	- choose among corners inside mapped cells A/B [valid areas]
+	- keep top 1/2 of best: corners, ferror, rerror => = 1/8th
+
+
+
+
 - not enough seeds in the correct places
 	- need seeds everywhere
 

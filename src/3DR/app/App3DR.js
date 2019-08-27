@@ -694,7 +694,8 @@ App3DR.prototype._setupMatchCompareProjectManager = function(readyFxn){
 	console.log("_setupMatchCompareProjectManager");
 	// console.log(readyFxn);
 	// throw "?"
-compareIndex = 1;
+compareIndex = 0;
+// compareIndex = 1;
 // compareIndex = 2;
 // compareIndex = 12;
 	var manager = this._projectManager;

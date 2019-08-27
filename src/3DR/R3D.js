@@ -8859,11 +8859,11 @@ R3D.subPixelCornerMaximum = function(values, width,height, point){
 	return loc;
 }
 
-R3D.calculateScaleCornerFeatures = function(imageMatrix, maxCount){
+R3D.calculateScaleCornerFeatures = function(imageMatrix, maxCount, limitPercent){
 	var imageScales = new ImageMatScaled(imageMatrix);
-	var nonMaximalPercent = 0.9999999; // want everything, best in area is filtered
+	var limitPercent = limitPercent!==undefined ? limitPercent : 0.01; // 0.01-0.02 % ~ 5-10 pixels
+	var nonMaximalPercent = 1.0; // want everything, best in area is filtered
 	var scalable = 1.0;
-	var limitPercent = 0.01; // 0.01-0.02 % ~ 5-10 pixels
 	var imageWidth = imageMatrix.width();
 	var imageHeight = imageMatrix.height();
 	var limitPixels = limitPercent*Math.sqrt(imageWidth*imageWidth + imageHeight*imageHeight);
@@ -9214,24 +9214,18 @@ R3D.generateProgressiveSIFTObjects = function(features, imageMatrix){
 	var objects = [];
 	var matrix = new Matrix2D()
 	for(k=0; k<features.length; ++k){
-// k = 620;
 		var feature = features[k];
-		var isObject = false;
-		var hasAngle = false;
-		var score = 0;
 		var angle = feature["angle"];
 		var point = feature["point"];
 			point = new V2D(point.x,point.y);
 		var size = feature["size"];
-		var pointAngles = [angle];
-		for(var a=0; a<pointAngles.length; ++a){
-			var pointAngle = pointAngles[a];
-			matrix.identity();
-			matrix.rotate(-pointAngle);
-			var object = R3D.objectProgressiveR3D(point,imageScales, size, matrix);
-			objects.push(object);
-		}
-// throw "..."
+		var pointAngle = angle;
+		matrix.identity();
+		matrix.rotate(-pointAngle);
+		var object = R3D.objectProgressiveR3D(point,imageScales, size, matrix);
+			object["size"] = size;
+			object["angle"] = pointAngle;
+		objects.push(object);
 	}
 	return objects;
 }
@@ -9251,24 +9245,9 @@ console.log("progressiveFullMatchingDense")
 
 // return {"A":pointsA, "B":pointsB, "F":F, "Finv":Finv};
 
-	// // var debug = true;
-	// var debug = false;
-	// if(debug){
-	// 	var display = GLOBALDISPLAY;
-	// 	// var ms = matches;
-	// 	ms = [];
-	// 	for(var i=0; i<pointsA.length; ++i){
-	// 		var A = pointsA[i];
-	// 		var B = pointsB[i];
-	// 		ms[i] = {"A":{"point":A}, "B":{"point":B} };
-	// 	}
-	// 	RiftTest.showMatches(ms, imageMatrixA, imageMatrixB, display);
-	// }
-
-
 	// get <1px F error : medium refinement -- isolate best searching locations
 	info = R3D._progressiveMediumMatches(imageMatrixA,imageMatrixB, pointsA,pointsB, F,Finv,Ferror);
-	console.log(info)
+	console.log(info);
 	F = info["F"];
 	Finv = info["inv"];
 	Ferror = info["error"];
@@ -9277,20 +9256,28 @@ console.log("progressiveFullMatchingDense")
 	// RESULTS
 	console.log("FAB: "+F.toArray());
 	console.log("FBA: "+Finv.toArray());
-console.log("A: ");
-Code.printPoints(pointsA);
-console.log("B: ");
-Code.printPoints(pointsB);
+	console.log(pointsA,pointsB);
+// console.log("A: ");
+// Code.printPoints(pointsA);
+// console.log("B: ");
+// Code.printPoints(pointsB);
 
 	console.log(matches);
-	// return {"A":pointsA, "B":pointsB, "F":F, "Finv":Finv};
+// return {"A":pointsA, "B":pointsB, "F":F, "Finv":Finv};
 
 
 	// 'dense sparse'
+
+// currently very bad
 info = R3D._progressiveSparseDenseMatches(imageMatrixA,imageMatrixB, pointsA,pointsB, F,Finv,Ferror);
 
 console.log(info);
-throw "..."
+
+F = info["F"];
+Finv = info["inv"];
+Ferror = info["error"];
+pointsA = info["A"];
+pointsB = info["B"];
 
 
 
@@ -10266,7 +10253,7 @@ R3D._progressiveStationaryFeatures = function(imageA,imageB,F,Finv,fError,  ptsA
 				}
 				var angle = Code.averageAngles(angles);
 				var index = y*gridCount + x;
-				grid2D[index] = angle;
+				grid2D[index] = -angle; // angleAB = -angleBA
 			}
 		}
 /*
@@ -10332,17 +10319,230 @@ if(display){
 
 
 
-R3D._progressiveSparseDenseMatches = function(imageA,imageB, pointsAIn,pointsBIn, Fab,Fba,pixelError){ // match small portions of image at a time
+R3D._progressiveSparseDenseMatches = function(imageMatrixA,imageMatrixB, pointsAIn,pointsBIn, Fab,Fba,pixelError){ // match small portions of image at a time
 console.log("R3D._progressiveSparseDenseMatches");
 
+	var widthA = imageMatrixA.width();
+	var heightA = imageMatrixA.height();
+	var widthB = imageMatrixB.width();
+	var heightB = imageMatrixB.height();
 
-console.log("use low error F ; loosen range; loosen match criteria; find dense corners in A & B; create objects using relative F angle ; match along F line");
+	// find all corners:
+	var maxCount = 2000;
+	var featuresA = R3D.calculateScaleCornerFeatures(imageMatrixA, maxCount);
+	var featuresB = R3D.calculateScaleCornerFeatures(imageMatrixB, maxCount);
 
-throw "..."
+	var epipoles = R3D.getEpipolesFromF(Fab);
+	var epipoleA = epipoles["A"];
+	var epipoleB = epipoles["B"];
 
+	// add relative angles:
+	for(var i=0; i<featuresA.length; ++i){
+		var feature = featuresA[i];
+		feature["angle"] = 0;
+	}
+	for(var i=0; i<featuresB.length; ++i){
+		var feature = featuresB[i];
+		var pointB = feature["point"];
+		var angleBA = R3D.fundamentalRelativeAngleForPoint(pointB,Fba,Fab, epipoleB,epipoleA, pointsBIn,pointsAIn);
+		// feature["angle"] = angleBA;
+		feature["angle"] = -angleBA;
+	}
+
+/*
+	// make features bigger:
+	var sizing = 0.025; // 2.5 - 5 - 10  --- 11, 22
+	sizing = sizing*Code.averageNumbers([widthA,heightA,widthB,heightB]);
+	sizing = Math.round(sizing);
+	// sizing = 31;
+	console.log("SIZING: "+sizing)
+	var scaling = 1.0;
+	for(var i=0; i<featuresA.length; ++i){
+		var feature = featuresA[i];
+		// feature["size"] *= scaling;
+		feature["size"] = sizing;
+	}
+	for(var i=0; i<featuresB.length; ++i){
+		var feature = featuresB[i];
+		// feature["size"] *= scaling;
+		feature["size"] = sizing;
+	}
+*/
+
+	// create SIFT objects
+	Code.timerStart();
+	var objectsA = R3D.generateProgressiveSIFTObjects(featuresA, imageMatrixA);
+	var objectsB = R3D.generateProgressiveSIFTObjects(featuresB, imageMatrixB);
+	Code.timerStop();
+	var time = Code.timerDifference();
+	console.log("object creation time: "+time);
+
+
+	// match across F
+	Ferror = 2.0*pixelError;
+	// Ferror = 1.0;
+	// Ferror = Math.max(Ferror, 1.0);
+	// Ferror = 1.0*pixelError;
+	// var minimumRatio = 0.75;
+	// var minimumScore = 0.10;
+	var minimumRatio = 0.80;
+	var minimumScore = 0.15;
+	// var minimumRatio = 0.90;
+	// var minimumScore = 0.20;
+
+	console.log("best of F  @ "+Ferror+" ");
+	R3D.progressiveMatchObjectsSubset(imageMatrixA,imageMatrixB, objectsA,objectsB, objectsB,objectsA, Fab,Fba, Ferror);
+	info = R3D._progressiveMatchChooseBest(objectsA,objectsB, minimumRatio,minimumScore);
+	console.log(info);
+	var matches = info["matches"];
+
+
+	// keep spatially best matches ?
+
+
+
+	// info = R3D.dropOutliersIteritively(matches, 2.0, 10, Fab);
+	// matches = info["matches"];
+
+
+var pointsA = [];
+var pointsB = [];
+for(var i=0; i<matches.length; ++i){
+	match = matches[i];
+	var a = match["A"];
+	var b = match["B"];
+	pointsA.push(a["point"]);
+	pointsB.push(b["point"]);
 }
+Fab = R3D.fundamentalFromUnnormalized(pointsA,pointsB);
+Fba = R3D.fundamentalInverse(Fab);
+var error = R3D.fundamentalError(Fab,Fba,pointsA,pointsB);
+	var errorMean = error["mean"];
+	var errorSigma = error["sigma"];
+	var lim = errorMean + 2.0*errorSigma;
+Ferror = lim;
+
+// return {"F":Fab, "inv":Fba, "error":Ferror, "A":pointsA, "B":pointsB};
 
 
+
+
+	// localization via minimization for matches:
+
+	info = R3D._progressiveSparseOptimizeLocation(matches,imageMatrixA,imageMatrixB, Fab,Fba, Ferror);
+console.log(info);
+	var pointsA = info["A"];
+	var pointsB = info["B"];
+	Fab = R3D.fundamentalFromUnnormalized(pointsA,pointsB);
+	Fba = R3D.fundamentalInverse(Fab);
+	var error = R3D.fundamentalError(Fab,Fba,pointsA,pointsB);
+console.log(error);
+		var errorMean = error["mean"];
+		var errorSigma = error["sigma"];
+		var lim = errorMean + 2.0*errorSigma;
+		Ferror = lim;
+
+// return {"F":Fab, "inv":Fba, "error":Ferror, "A":pointsA, "B":pointsB};
+
+
+
+	var matches = [];
+	for(var i=0; i<pointsA.length; ++i){
+		match = {"A":pointsA[i],"B":pointsB[i]};
+		matches.push(match);
+	}
+	// throw out matches that now deviate too far from new F
+	info = R3D.dropOutliersIteritively(matches, 3.0, 5, Fab);
+	console.log(info);
+	matches = info["matches"];
+	Fab = info["F"];
+		error = info["info"];
+		var errorMean = error["mean"];
+		var errorSigma = error["sigma"];
+		var lim = errorMean + 2.0*errorSigma;
+		Ferror = lim;
+	Fba = R3D.fundamentalInverse(Fab);
+	console.log(matches);
+	var pointsA = [];
+	var pointsB = [];
+	for(var i=0; i<matches.length; ++i){
+		match = matches[i];
+		pointsA.push(match["A"]);
+		pointsB.push(match["B"]);
+	}
+
+
+	// drop worst ?
+	// info = R3D._progressiveInfoFromMatches(matches,imageMatrixA,imageMatrixB);
+	// console.log(info);
+	// var pointsA = info["A"];
+	// var pointsB = info["B"];
+	// F = info["F"];
+	// Finv = info["inv"];
+	// Ferror = info["error"];
+
+	return {"F":Fab, "inv":Fba, "error":Ferror, "A":pointsA, "B":pointsB};
+}
+R3D._progressiveSparseOptimizeLocation = function(matches, imageMatrixA,imageMatrixB, Fab,Fba,maxErrorF){
+	var imageScalesA = new ImageMatScaled(imageMatrixA);
+	var imageScalesB = new ImageMatScaled(imageMatrixB);
+	var pointsA = [];
+	var pointsB = [];
+	var needleSize = 11;
+	var haystackSize = Math.min( needleSize + 2*Math.ceil(maxErrorF), Math.round(needleSize*1.5) );
+	var matrix = new Matrix2D();
+	for(var i=0; i<matches.length; ++i){
+		var match = matches[i];
+		var objectA = match["A"];
+		var objectB = match["B"];
+		var sizeA = objectA["size"];
+		var sizeB = objectB["size"];
+		var angleA = objectA["angle"];
+		var angleB = objectB["angle"];
+		var pointA = objectA["point"];
+		var pointB = objectB["point"];
+		// var scaleAB = sizeB/sizeA;
+		var angleAB = angleB - angleA;
+		matrix.identity();
+		matrix.rotate(angleAB);
+		// needle
+		// var scaleA = sizeA/needleSize;
+		var scaleA = needleSize/sizeA;
+		var info = imageScalesA.infoForScale(scaleA);
+			var imageA = info["image"];
+			var effScale = info["effectiveScale"];
+			var actScale = info["actualScale"];
+		var needleA = imageA.extractRectFromFloatImage(pointA.x*actScale,pointA.y*actScale,1.0/effScale,null,needleSize,needleSize, matrix);
+		// haystack
+		// var scaleB = sizeB/needleSize;
+		var scaleB = needleSize/sizeB;
+		var info = imageScalesB.infoForScale(scaleB);
+			var imageB = info["image"];
+			var effScale = info["effectiveScale"];
+			var actScale = info["actualScale"];
+		var haystackB = imageB.extractRectFromFloatImage(pointB.x*actScale,pointB.y*actScale,1.0/effScale,null,haystackSize,haystackSize, null);
+// console.log(" B  "+scaleB+" => "+actScale+" & "+effScale);
+		// search
+		// var scores = R3D.searchNeedleHaystackSADColor(needleA,haystackB);
+		var scores = R3D.searchNeedleHaystackNCCColor(needleA,haystackB);
+		var values = scores["value"];
+		var width = scores["width"];
+		var height = scores["height"];
+		var peak = R3D.subpixelMinimumPeak(scores);
+		var newB = pointB.copy().add( (peak.x-width*0.5)*scaleB, (peak.y-height*0.5)*scaleB );
+// console.log(pointB+" => "+newB+" = "+(V2D.distance(pointB,newB)));
+		// only keep if low error
+		// var error = R3D.fundamentalErrorSingle(Fab,Fba,pointA,newB);
+		// error = error["error"];
+		// console.log(error);
+		// if(error<maxErrorF){
+			pointsA.push(pointA);
+			// pointsB.push(pointB);
+			pointsB.push(newB);
+		// }
+	}
+	return {"A":pointsA, "B":pointsB};
+}
 R3D._progressiveStationaryFeaturesFromAngle = function(image, corners, angle, size, scale, display, grid,gridSizeX,gridSizeY){
 	angle = angle!==undefined && angle!==null ? angle : 0.0;
 	scale = scale!==undefined && scale!==null ? scale : 1.0;
@@ -10367,7 +10567,8 @@ R3D._progressiveStationaryFeaturesFromAngle = function(image, corners, angle, si
 			var x = (point.x/imageWidth)*gridSizeX;
 			var y = (point.y/imageHeight)*gridSizeY;
 			var a = Code.interpolateArray2DLinear(grid,gridSizeX,gridSizeY, x,y, interpGrid);
-			ang += a;
+			// ang += a;
+			ang = a;
 		}
 		matrix.identity();
 		matrix.scale(scale);
@@ -10439,6 +10640,27 @@ R3D.mediumMatchF = function(imageMatrixA,imageMatrixB,ptsA,ptsB,F, fSymmetricErr
 	return {"matches":matches, "F":F, "sigma":info["sigma"]};
 }
 */
+
+R3D._progressiveInfoFromMatches = function(matches,imageA,imageB){
+	var pointsA = [];
+	var pointsB = [];
+	for(var i=0; i<matches.length; ++i){
+		var match = matches[i];
+		var A = match["A"];
+		var B = match["B"];
+		A = A["point"];
+		B = B["point"];
+		pointsA.push(A);
+		pointsB.push(B);
+	}
+	var F = R3D.fundamentalFromUnnormalized(pointsA,pointsB);
+	var Finv = R3D.fundamentalInverse(F);
+	var error = R3D.fundamentalError(F,Finv,pointsA,pointsB);
+	var errorMean = error["mean"];
+	var errorSigma = error["sigma"];
+	var lim = errorMean + 2.0*errorSigma; // could keep top ~50% ?
+	return {"F":F, "inv":Finv, "error":lim, "A":pointsA, "B":pointsB};
+}
 R3D._progressiveRefineFFromMatches = function(matches,imageA,imageB, debug){
 	var pointsA = [];
 	var pointsB = [];
@@ -10994,8 +11216,10 @@ R3D.dropOutliersIteritively = function(matches, sigmaRatio, maxIterations, Fin){
 			var match = matches[i];
 			var a = match["A"];
 			var b = match["B"];
-			a = a["point"];
-			b = b["point"];
+			if(!Code.isa(a,V2D)){
+				a = a["point"];
+				b = b["point"];
+			}
 			ptsA.push(a);
 			ptsB.push(b);
 		}
@@ -11110,7 +11334,8 @@ R3D.stationaryFeatures = function(imageA,imageB,F, ptsA,ptsB,  display, existing
 R3D.basicScaleFeaturesFromPoints = function(points, imageScales){
 	var diaNeighborhood = 21;
 	// reuse items
-	var scales = Code.divSpace(-2,3, 20);
+	// var scales = Code.divSpace(-2,3, 20);
+	var scales = Code.divSpace(3,-2, 20);
 	var matrixes = [];
 	for(var i=0; i<scales.length; ++i){
 		var scale = scales[i];
@@ -11131,7 +11356,7 @@ R3D.basicScaleFeaturesFromPoints = function(points, imageScales){
 		}else{
 			continue;
 		}
-		var gryScale = grySize*scale;
+		var gryScale = scale;
 			var info = imageScales.infoForScale(gryScale);
 			var imageMatrix = info["image"];
 			var imageGray = imageMatrix.gry();
@@ -11139,7 +11364,7 @@ R3D.basicScaleFeaturesFromPoints = function(points, imageScales){
 			var imageHeight = imageMatrix.height();
 			var effScale = info["effectiveScale"];
 			var actScale = info["actualScale"];
-		var gry = ImageMat.extractRectFromFloatImage(point.x*actScale,point.y*actScale,effScale,grySigma,grySize,grySize, imageGray,imageWidth,imageHeight, null);
+		var gry = ImageMat.extractRectFromFloatImage(point.x*actScale,point.y*actScale,1.0/effScale,grySigma,grySize,grySize, imageGray,imageWidth,imageHeight, null);
 		var cov = R3D.covFromGray(gry, grySize,grySize,0,0, 1,1)["cov"];
 		var angle = V2D.angleDirection(V2D.DIRX,cov);
 		var size = scale * diaNeighborhood;
@@ -11223,7 +11448,8 @@ R3D.basicOptimumCornerScale = function(point, imageMatrixScales, prependMatrix, 
 			var imageHeight = imageMatrix.height();
 			var effScale = info["effectiveScale"];
 			var actScale = info["actualScale"];
-		var gry = ImageMat.extractRectFromFloatImage(point.x*actScale,point.y*actScale,effScale,sig,compareSize,compareSize, imageGray,imageWidth,imageHeight, matrix);
+// console.log(j+": "+scale+" = "+actScale+" @ "+effScale);
+		var gry = ImageMat.extractRectFromFloatImage(point.x*actScale,point.y*actScale,1.0/effScale,sig,compareSize,compareSize, imageGray,imageWidth,imageHeight, matrix);
 // var sca = 4.0;
 // var img = GLOBALSTAGE.getFloatRGBAsImage(gry,gry,gry, compareSize,compareSize);
 // var d = new DOImage(img);
@@ -11276,7 +11502,7 @@ R3D.basicOptimumCornerScale = function(point, imageMatrixScales, prependMatrix, 
 				var imageHeight = imageMatrix.height();
 				var effScale = info["effectiveScale"];
 				var actScale = info["actualScale"];
-			var gry = ImageMat.extractRectFromFloatImage(point.x*actScale,point.y*actScale,effScale,sig,compareSize,compareSize, imageGray,imageWidth,imageHeight, matrix);
+			var gry = ImageMat.extractRectFromFloatImage(point.x*actScale,point.y*actScale,1.0/effScale,sig,compareSize,compareSize, imageGray,imageWidth,imageHeight, matrix);
 			var score = R3D.cornerScaleScores(gry,compareSize,compareSize, null,true);
 			scores.push(score);
 		}
@@ -11295,49 +11521,10 @@ R3D.basicOptimumCornerScale = function(point, imageMatrixScales, prependMatrix, 
 				sca = 1.0/val;
 			}
 		}
-		// if(allowMigration){
-		// 	throw "untested";
-		// 	var matrix = reuseMatrix;
-		// 	matrix.scale(sca);
-		// 	if(prependMatrix){
-		// 		matrix.premult(prependMatrix);
-		// 	}
-		// 	var gry = ImageMat.extractRectFromFloatImage(point.x,point.y,1.0,sig,compareSize,compareSize, imageGray,imageWidth,imageHeight, matrix);
-		// 	var blur = gry;
-		// 	var results = R3D.cornerScaleScores(blur,compareSize,compareSize, null,false);
-		// 	results = results["value"];
-		// 	var peaks = Code.findMaxima2DFloat(results,compareSize,compareSize);
-		// 	if(peaks && peaks.length>0){
-		// 		// peaks = peaks.sort( function(a,b){ return a.z>b.z ? -1 : 1 } );
-		// 		// var peak = peaks[0];
-		// 		var pea = new V2D();
-		// 		var cen = new V2D(center,center);
-		// 		var dis = 0;
-		// 		var dist = null;
-		// 		var peak = null;
-		// 		for(var it=0; it<peaks.length; ++it){
-		// 			pea.set(peaks[it].x,peaks[it].y);
-		// 			d = V2D.distance(pea,cen);
-		// 			if(!peak || d<dist){
-		// 				peak = peaks[it];
-		// 				dist = d;
-		// 			}
-		// 		}
-		// 		// TODO: PEAK CLOSEST TO CENTER
-		// 		peak = new V2D(peak.x-center,peak.y-center);
-		// 		var matrix = new Matrix(3,3).identity();
-		// 			matrix = Matrix.transform2DScale(matrix,sca);
-		// 		if(prependMatrix){
-		// 			matrix = Matrix.mult(matrix,prependMatrix);
-		// 		}
-		// 		var inverse = Matrix.inverse(matrix);
-		// 		var w = inverse.multV2DtoV2D(peak);
-		// 		console.log("W: "+w);
-		// 		p.add(w);
-		// 	}
-		// }
+// throw " 1 ";
 		return {"point": p, "scale": sca};
 	} // no peaks
+// throw " 2 ";
 	return null;
 }
 
@@ -16366,8 +16553,6 @@ R3D._progressiveR3DFlatSIFT = function(point,imageMatrixScales, size, matrix){
 	var radialBins = R3D._progressiveR3DSIFTBins();
 	var sampleSize = radialBins["width"];
 	var toScale = size/sampleSize;
-	// var sigma = 1.0;
-	var sigma = null;
 	var info = imageMatrixScales.infoForScale(toScale);
 		var imageMatrix = info["image"];
 		var imageGray = imageMatrix.gry();
@@ -16375,15 +16560,13 @@ R3D._progressiveR3DFlatSIFT = function(point,imageMatrixScales, size, matrix){
 		var imageHeight = imageMatrix.height();
 		var effScale = info["effectiveScale"];
 		var actScale = info["actualScale"];
-	var block = imageMatrix.extractRectFromFloatImage(point.x*actScale,point.y*actScale,effScale,sigma,sampleSize,sampleSize,matrix);
+	var block = imageMatrix.extractRectFromFloatImage(point.x*actScale,point.y*actScale,1.0/effScale,null,sampleSize,sampleSize,matrix);
 	return block;
 }
 R3D._progressiveR3DFlat = function(point,imageMatrixScales, size, matrix){
 	matrix = matrix!==undefined ? matrix : null;
 	var sampleSize = R3D._progressiveR3DSize();
 	var toScale = size/sampleSize;
-	// var sigma = 1.0;
-	var sigma = null;
 	var info = imageMatrixScales.infoForScale(toScale);
 		var imageMatrix = info["image"];
 		var imageGray = imageMatrix.gry();
@@ -16391,7 +16574,7 @@ R3D._progressiveR3DFlat = function(point,imageMatrixScales, size, matrix){
 		var imageHeight = imageMatrix.height();
 		var effScale = info["effectiveScale"];
 		var actScale = info["actualScale"];
-	var block = imageMatrix.extractRectFromFloatImage(point.x*actScale,point.y*actScale,effScale,sigma,sampleSize,sampleSize,matrix);
+	var block = imageMatrix.extractRectFromFloatImage(point.x*actScale,point.y*actScale,1.0/effScale,null,sampleSize,sampleSize,matrix);
 	return block;
 }
 R3D._progressiveR3DGrad = function(block){
@@ -16589,7 +16772,7 @@ R3D.objectProgressiveR3D = function(point,imageMatrixScales, cellSize, matrix){
 	// oriented
 	R3D.objectProgressiveR3D_B(object);
 	// SIFT icon
-	R3D.objectProgressiveR3D_C(object,imageMatrixScales, cellSize)
+	R3D.objectProgressiveR3D_C(object,imageMatrixScales, cellSize, matrix);
 	// SIFT
 	R3D.objectProgressiveR3D_SIFT_FLAT(object);
 	R3D.objectProgressiveR3D_SIFT_GRAD(object);
@@ -16597,17 +16780,11 @@ R3D.objectProgressiveR3D = function(point,imageMatrixScales, cellSize, matrix){
 	return object;
 }
 
-R3D.objectProgressiveR3D_Z = function(point,imageMatrixScales, cellSize, affine){
+R3D.objectProgressiveR3D_Z = function(point,imageMatrixScales, cellSize, matrix){
 	var object = {};
-	var icon = R3D._progressiveR3DFlat(point,imageMatrixScales, cellSize, affine);
-	object["icon"] = icon;
-	object["point"] = point;
-// var image = icon;
-// var img = GLOBALSTAGE.getFloatRGBAsImage(image.red(), image.grn(), image.blu(), image.width(), image.height());
-// var d = new DOImage(img);
-// d.matrix().scale(5.0);
-// d.matrix().translate(0 + 100, 0 );
-// GLOBALSTAGE.addChild(d);
+	var icon = R3D._progressiveR3DFlat(point,imageMatrixScales, cellSize, matrix);
+		object["icon"] = icon;
+		object["point"] = point;
 	return object;
 }
 R3D.objectProgressiveR3D_A = function(object){ // unoriented first step
@@ -16620,7 +16797,6 @@ R3D.objectProgressiveR3D_A = function(object){ // unoriented first step
 	return object;
 }
 R3D.objectProgressiveR3D_B = function(object){
-	// icon = icon!==undefined ? icon : object["icon"];
 	var icon = object["icon"];
 	var flatOriented = R3D._progressiveR3DColorOriented(icon);
 	var grad = R3D._progressiveR3DGrad(icon);
@@ -16634,12 +16810,6 @@ R3D.objectProgressiveR3D_C = function(object, imageMatrixScales, cellSize, matri
 	var siftSize = cellSize*2.0;
 	var point = object["point"];
 	var siftImage = R3D._progressiveR3DFlatSIFT(point,imageMatrixScales, siftSize, matrix);
-// var image = siftImage;
-// var img = GLOBALSTAGE.getFloatRGBAsImage(image.red(), image.grn(), image.blu(), image.width(), image.height());
-// var d = new DOImage(img);
-// d.matrix().scale(5.0);
-// d.matrix().translate(0 + 100, 0 + 100);
-// GLOBALSTAGE.addChild(d);
 		object["sift"] = siftImage;
 	return object;
 }
