@@ -376,6 +376,53 @@ https://cloud.google.com/appengine/docs/nodejs/
 0 + 2 = UEX4H682
 1 + 2 = NY9RPQHA
 
+=> is there a way to get better spread of points ?
+	=> want more corners for 2D to search from
+- 2D match filter on RIFT / NCC score
+
+
+- affine matrices for non-flat planes may not map well ? [simple sphere patch vs actual object surface patch (optimized normal)]
+... how much overhead is an optimization step for getting better normal for each patch? [11x11 vs 5x5]
+
+- when optimizing patch using images: avg size of minimum projection should scale up / down to compare size
+
+
+
+-
+
+patchInitOrUpdate
+	this.updateP3DPatch(point3D);
+	this.initialEstimatePatch(point3D);
+
+		updateP3DPatch
+
+		Stereopsis.patchNonlinear(center,size,normal,right,up,moveDirection,visibleViews,point3D,doTranslate);
+
+Stereopsis.World.prototype.updateP3DPatch = function(point3D, doTranslate){
+
+
+--- need to detect when affine propagation stops (goes real low ?)
+
+
+--- when to subdivide?:
+	- when change in F & R errors are becoming ~ minimum
+	- when propagation is leveling out (will always have some delta drop/add ~ in/out)
+
+...
+	probe2DNNAffine
+		bestMatch2DFromLocation
+			bestAffine2DFromLocation
+				R3D.bestAffine2DFromExisting
+					R3D.bestAffineLocationFromLocation
+
+=> check cells & space are working well together
+
+
+
+/*
+only worth spending time on cells with fairly good corner values
+how to prune bad 2D / affine matches ?
+*/
 
 - stereopsis not propagating seeds into all spots
 	- maybe allowed have more than allowed error ...

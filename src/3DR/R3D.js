@@ -10321,7 +10321,6 @@ if(display){
 
 R3D._progressiveSparseDenseMatches = function(imageMatrixA,imageMatrixB, pointsAIn,pointsBIn, Fab,Fba,pixelError){ // match small portions of image at a time
 console.log("R3D._progressiveSparseDenseMatches");
-
 	var widthA = imageMatrixA.width();
 	var heightA = imageMatrixA.height();
 	var widthB = imageMatrixB.width();
@@ -10345,7 +10344,6 @@ console.log("R3D._progressiveSparseDenseMatches");
 		var feature = featuresB[i];
 		var pointB = feature["point"];
 		var angleBA = R3D.fundamentalRelativeAngleForPoint(pointB,Fba,Fab, epipoleB,epipoleA, pointsBIn,pointsAIn);
-		// feature["angle"] = angleBA;
 		feature["angle"] = -angleBA;
 	}
 
@@ -33798,7 +33796,7 @@ R3D.bestAffineLocationFromLocation = function(affine,centerA,centerB, existingA,
 	var deltaB = affine.multV2DtoV2D(deltaA);
 	var predictedB = V2D.add(centerB,deltaB);
 	// get scores
-	haystackSize = haystackSize!==undefined ? haystackSize : needleSize*3; // 2-3
+	haystackSize = haystackSize!==undefined ? haystackSize : needleSize*2; // 2-3
 	var scores = R3D.optimumScoresAtLocation(imageA,existingA, imageB,predictedB, needleSize,haystackSize,affine);
 	var finalSize = scores["width"];
 	var cellScale = (needleSize/compareSize);

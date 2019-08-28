@@ -398,6 +398,7 @@ Stereopsis.ViewCell = function(i){
 	this._markedR = null;
 	this._center = null;
 	this._id = null;
+	this._temp = null;
 	// this.center(center);
 	this.id(i);
 }
@@ -406,6 +407,12 @@ Stereopsis.ViewCell.prototype.id = function(i){
 		this._id = i;
 	}
 	return this._id;
+}
+Stereopsis.ViewCell.prototype.temp = function(t){
+	if(t!==undefined){
+		this._temp = t;
+	}
+	return this._temp;
 }
 Stereopsis.ViewCell.prototype.objects = function(o){
 	return this._objects;
@@ -546,7 +553,54 @@ Stereopsis.View.prototype.defaultCells = function(){
 	// cellSize = 3;
 	this.cellSize(size);
 }
-Stereopsis.View.prototype.emptyNeighborCellsForView = function(otherView){
+Stereopsis.View.prototype.emptyNeighborCellsForView = function(viewB){
+	var cells = this._cells;
+	// marked each cell as filled or not
+	var filled = [];
+	for(var i=0; i<cells.length; ++i){
+		var cell = cells[i];
+		var objects = cell.objects();
+		var found = false;
+		for(var j=0; j<objects.length; ++j){
+			var point2D = objects[j];
+			var point3D = point2D.point3D();
+			if(point3D.hasView(viewB)){
+				found = true;
+				break;
+			}
+		}
+		if(found){
+			cell.temp(true);
+			filled.push(cell);
+		}else{
+			cell.temp(false);
+		}
+	}
+	// for all filled cells:
+	var hash = {};
+	for(var i=0; i<filled.length; ++i){
+		var cell = filled[i];
+		// add each non-filled neighbor to hash
+		var neighbors = cell.neighbors();
+		for(var n=0; n<neighbors.length; ++n){
+			var neighbor = neighbors[n];
+			if(!neighbor.temp()){
+				hash[neighbor.id()] = neighbor;
+			}
+		}
+	}
+	// clear work
+	for(var i=0; i<cells.length; ++i){
+		var cell = cells[i];
+		cell.temp(null);
+	}
+	// hash to array
+	var empties = Code.objectToArray(hash);
+	return empties;
+}
+Stereopsis.View.prototype.emptyNeighborCellsForViewOld = function(otherView){
+
+	// ???
 // TODO: otherView should be passed for NON-PAIR VERSIONS OF THIS ALGORITHM TO RETURN ONLT CELLS w/ pair-view matching
 	var cells = this._cells;
 	// go thru all cells and +1 to neighbor if have a point with view
@@ -1784,6 +1838,14 @@ Stereopsis.P3D.prototype.addPoint2D = function(point2D){
 }
 Stereopsis.P3D.prototype.removePoint2D = function(point2D){
 	var m = this.point2DForView(point2D.view(), null);
+}
+Stereopsis.P3D.prototype.hasView = function(view){
+	var index = Stereopsis.indexFromObjectID(view);
+	var point = this._points2D[index];
+	if(point){
+		return true;
+	}
+	return false;
 }
 Stereopsis.P3D.prototype.point2DForView = function(view,point2D){
 	var index = Stereopsis.indexFromObjectID(view);
@@ -3853,10 +3915,7 @@ Code.printMatlabArray(dists);
 	var points3D = this.toPointArray();
 	console.log(points3D.length);
 }
-Stereopsis.World.prototype.patchInitBasicSphere = function(doMatches, points3D){
-	// ????
-	// generateMatchAffineFromPatches
-	// Stereopsis.projectPoint3DForPoint2DInfo(point2D);
+Stereopsis.World.prototype.patchInitBasicSphere = function(doMatches, points3D){ // estimate patch using only geometry [no images]
 	points3D = points3D!==undefined ? points3D : this.toPointArrayLocated();
 	// estimate normal & up - from view anti-normal
 	var center2D = new V2D();
@@ -3883,7 +3942,7 @@ Stereopsis.World.prototype.patchInitBasicSphere = function(doMatches, points3D){
 			var view = point2D.view();
 			var viewNormal = view.normal();
 			var patchSize = view.cellSize();
-			// TODO: BASE PATCH SIZE ON NEIGHBORHOOD
+			// BASE PATCH SIZE ON NEIGHBORHOOD -- if cell size: then unintended collisions
 				var neighborhoodCount = 3 + 1;
 				var space = view.pointSpace(pnt2D,neighborhoodCount);
 				var neighbors = space.kNN(pnt2D, neighborhoodCount);
@@ -3940,24 +3999,172 @@ Stereopsis.World.prototype.patchInitBasicSphere = function(doMatches, points3D){
 					var distB = distances[k];
 					var ptsB = pts[k];
 					var viewB = point2DB.view();
-					var scale = distB/distA; // TODO: is scale distance or PERPENDICULAR distance ratio?
-					var angles = [];
-					for(var p=0; p<ptsA.length; ++p){
-						var angle = V2D.angleDirection(ptsA[p],ptsB[p]);
-						angles.push(angle);
+					// affine directly: more accurate for actual projections
+					if(true){
+						var affine = R3D.affineCornerMatrixLinear(ptsA,ptsB, new Matrix2D());
+						var match = point3D.matchForViews(viewA,viewB);
+							match.affineForViews(viewA,viewB, affine);
+					// affine from summary stats:
+					}else{
+						var scale = distB/distA; // TODO: is scale distance or PERPENDICULAR-NORMAL distance ratio?
+						var angles = [];
+						for(var p=0; p<ptsA.length; ++p){
+							var angle = V2D.angleDirection(ptsA[p],ptsB[p]);
+							angles.push(angle);
+						}
+						var angle = Code.averageAngles(angles);
+						var match = point3D.matchForViews(viewA,viewB);
+						var affine = new Matrix2D();
+							affine.identity();
+							affine.scale(scale);
+							affine.rotate(angle);
+						match.affineForViews(viewA,viewB, affine); // A to B
 					}
-					var angle = Code.averageAngles(angles);
-					var match = point3D.matchForViews(viewA,viewB);
-					var affine = new Matrix2D();
-						affine.identity();
-						affine.scale(scale);
-						affine.rotate(angle);
-					match.affineForViews(viewA,viewB, affine); // A to B
 				}
 			}
 		}
 	}
 }
+
+Stereopsis.World.prototype.patchUpdateSphere = function(points3D){ // update normal direction for patches
+	points3D = points3D!==undefined ? points3D : this.toPointArrayLocated();
+
+	// for each p3d
+		// get center / normal / size
+			// nonlinear optimize normal only
+				//
+
+	throw "patchUpdateSphere"
+}
+Stereopsis.World.prototype._nonlinearPatchUpdate = function(patch){
+/*
+	project points to each view
+	get average extent in each view
+	scale smallest size up to compare size
+	reverse projection to 11x11 compare square
+
+*/
+}
+/*
+
+Stereopsis.patchNonlinear = function(center,size,directionNormal,directionRight,directionUp,moveDirection, views,p3D,doTranslate){
+	// TODO: doTranslate = allow movement of P3D along original normal line [depth]
+	var maxIterations = 10;
+	var fxn = Stereopsis._gdPatch;
+	var args = [center,directionNormal,directionRight,directionUp,moveDirection,size,views,p3D,doTranslate];
+	var xVals = [0,0,0];
+	result = Code.gradientDescent(fxn, args, xVals, null, maxIterations, 1E-6,  1E-10);
+	x = result["x"];
+	var startCenter = args[0];
+	var startNormal = args[1];
+	var startRight = args[2];
+	var startUp = args[3];
+	var moveNormal = args[4];
+	var size = args[5];
+	var views = args[6];
+	var moveDistance = x[0];
+	var angleX = x[1];
+	var angleY = x[2];
+	var center = null;
+	if(doTranslate){
+		center = startCenter.copy().add( moveNormal.copy().scale(moveDistance) );
+	}else{
+		center = startCenter.copy();
+	}
+	// if(doTranslate){
+	// 	console.log("doTranslate: "+(V3D.distance(center,startCenter))); // if this is VERY FAR ... probs have bad point
+	// }
+	var normal = startNormal.copy().rotate(startRight, angleX).rotate(startUp, angleY);
+	var up = startUp.copy().rotate(startRight, angleX).rotate(startUp, angleY);
+	return {"center":center,"normal":normal,"up":up,"size":size};
+}
+// Stereopsis._gdPatch_SIZE = 11; // slow
+Stereopsis._gdPatch_SIZE = 9;
+// Stereopsis._gdPatch_SIZE = 7;
+// Stereopsis._gdPatch_SIZE = 5; // too small
+Stereopsis._gdPatch_MASK = ImageMat.circleMask(Stereopsis._gdPatch_SIZE);
+Stereopsis._gdPatch = function(args, x, isUpdate, descriptive){
+	if(isUpdate){
+		return;
+	}
+	var startCenter = args[0];
+	var startNormal = args[1];
+	var startRight = args[2];
+	var startUp = args[3];
+	var moveNormal = args[4];
+	var size = args[5];
+// size *= 4; // forces to not change much
+	var halfSize = size*0.5; //
+	var views = args[6];
+	var p3D = args[7];
+	var doTranslate = args[8];
+	var moveDistance = x[0];
+	var angleX = x[1];
+	var angleY = x[2];
+	var center = null;
+	if(doTranslate){ // allow some movement along ray
+		center = startCenter.copy().add( moveNormal.copy().scale(moveDistance) );
+	}else{ // only stay at original predicted location
+		center = startCenter;
+	}
+	var normal = startNormal.copy().rotate(startRight, angleX).rotate(startUp, angleY);
+	var top = startUp.copy().rotate(startRight, angleX).rotate(startUp, angleY);
+	var right = startRight.copy().rotate(startRight, angleX).rotate(startUp, angleY);
+		top.scale(halfSize).add(center);
+		right.scale(halfSize).add(center);
+// don't reverse normal direction
+var dot = V3D.dot(normal,startNormal);
+if(dot<=0){ // is this a problem?
+	return 1E12;
+}
+	// patches
+	var patches = [];
+	var compareSize = Stereopsis._gdPatch_SIZE;
+	var needleMask = Stereopsis._gdPatch_MASK;
+	var org = V2D.ZERO;
+	var xLoc = new V2D(compareSize*0.5,0);
+	var yLoc = new V2D(0,compareSize*0.5);
+	for(var i=0; i<views.length; ++i){
+		var view = views[i];
+		var image = view.image();
+		// project: center, up, right
+		var cen2D = view.projectPoint3D(center);
+		var rig2D = view.projectPoint3D(right);
+		var top2D = view.projectPoint3D(top);
+		rig2D.sub(cen2D);
+		top2D.sub(cen2D);
+		// TODO: PROJECTED CENTER AND ACTUAL CENTER ARE DIFFERENT ...
+		var p2D = p3D.point2DForView(view);
+			cen2D = p2D.point2D();
+		// create affine
+		var pointsA = [org,rig2D,top2D];
+		var pointsB = [org,xLoc,yLoc];
+		var matrix = R3D.affineMatrixExact(pointsA,pointsB);
+		// var matrix = R3D.affineMatrixLinear(pointsA,pointsB);
+		// extract from affine
+		var needle = image.extractRectFromFloatImage(cen2D.x,cen2D.y,1.0,null,compareSize,compareSize, matrix);
+		patches.push(needle);
+	}
+	// cost
+	var totalCost = 0;
+	var compares = 0;
+	for(var i=0; i<patches.length; ++i){
+		var patchI = patches[i];
+		for(var j=i+1; j<patches.length; ++j){
+			var patchJ = patches[j];
+			var scoresNCC = R3D.searchNeedleHaystackNCCColor(patchI,patchJ, needleMask);
+
+	throw "HERE"
+			scoresNCC = scoresNCC["value"][0];
+			totalCost += scoresNCC;
+			++compares;
+		}
+	}
+	totalCost /= compares;
+	return totalCost;
+}
+
+*/
 
 Stereopsis.World.prototype.filterMatchGroups = function(){
 	var world = this;
@@ -4427,12 +4634,12 @@ Stereopsis.World.prototype.solvePair = function(completeFxn, completeContext){ /
 	// var maxIterations = 2;
 	// var maxIterations = 3;
 	// var maxIterations = 4;
-	var maxIterations = 5;
+	// var maxIterations = 5;
 	// var maxIterations = 6;
 	// var maxIterations = 7;
 	// var maxIterations = 8;
 	// var maxIterations = 9;
-	// var maxIterations = 10;
+	var maxIterations = 10;
 	console.log(this)
 	for(var i=0; i<maxIterations; ++i){
 		this.iteration(i, maxIterations);
@@ -4449,7 +4656,7 @@ Stereopsis.World.prototype.iteration = function(iterationIndex, maxIterations){
 
 	// SUBDIVIDE:
 
-/*
+
 	// increase cover toward end
 	if(iterationIndex==3){
 		var views = this.toViewArray();
@@ -4464,7 +4671,9 @@ Stereopsis.World.prototype.iteration = function(iterationIndex, maxIterations){
 			view.cellSize(size);
 		}
 	}
-*/
+
+
+
 console.log("START");
 	if(iterationIndex==0){ // subsequent approximations are always worse than the refined estimates
 		this.estimate3DErrors(false); // find initial F, P, estimate all errors from this
@@ -4499,8 +4708,8 @@ this.searchPoints2DBestMatch();
 
 // expand step & retract step
 
-// var doRelaxed = true;
-var doRelaxed = iterationIndex%2==0;
+var doRelaxed = true;
+// var doRelaxed = iterationIndex%2==0;
 
 	// TODO: ONLY BREAK IF ERROR IS VERY LOW OR IF ERROR CHANGE IS TINY
 
@@ -4515,6 +4724,10 @@ var doRelaxed = iterationIndex%2==0;
 // if(false){
 	// SPHERE - PATCHES
 	this.patchInitBasicSphere(true);
+	this.patchUpdateSphere(true);
+
+
+
 	// if(iterationIndex==0){
 	// 	this.patchInitBasicSphere(true);
 	// }else{
@@ -4526,6 +4739,9 @@ var doRelaxed = iterationIndex%2==0;
 	// 	var p3D = ps3D[p];
 	// 	world.generateMatchAffineFromPatches(p3D);
 	// }
+
+	// refine from patch:
+	// this.patchInitBasicSphere(true);
 
 	// this.bundleAdjustFull();
 // EXPAND
@@ -8621,32 +8837,40 @@ Stereopsis.World.prototype.probeCorners = function(){
 	// }
 }
 Stereopsis.World.prototype.probe2DNNAffine = function(sigma){ //
-
-// TODO: FIX FOR MULTI-VIEW SCENARIO
-
-// throw "probe using only similar view pairs ...";
-	sigma = sigma!==undefined ? sigma : 3.0;
+	var maxNewSigma = sigma;
+	var maxExistingSigma = sigma;
+	var maxReferenceSigma = sigma;
+	maxNewSigma = maxNewSigma!==undefined ? maxNewSigma : 3.0; // new points worth creating
+	maxExistingSigma = maxExistingSigma!==undefined ? maxExistingSigma : 3.0;
+	maxReferenceSigma = maxReferenceSigma!==undefined ? maxReferenceSigma : 3.0; // current points worth looking at
+	var checkErrorRatio = 0.99; // when error goes below this : allow rechecking of empty perimeter cell
+	var perimeterSearchMultiplier = 2.0; // max distance a permiter point can be
+	var minimumTransformMatchCount = 8;
 	var world = this;
 	var transforms = this.toTransformArray();
 	var min = new V2D();
 	var max = new V2D();
 	for(var i=0; i<transforms.length; ++i){
 		var transform = transforms[i];
+		// skip transforms with few matches
+		var matches = transform.matches();
+		if(matches.length<minimumTransformMatchCount){
+			continue;
+		}
 		var viewA = transform.viewA();
 		var viewB = transform.viewB();
-		// var Fab = transform.F(viewA,viewB);
-		// var Fba = transform.F(viewB,viewA);
 		var errorFmean = transform.fMean();
 		var errorFsigma = transform.fSigma();
 		var errorRmean = transform.rMean();
 		var errorRsigma = transform.rSigma();
-		var checkErrorF = errorFmean + 2.0*errorFsigma; // source points
-		var checkErrorR = errorRmean + 2.0*errorRsigma;
-		var maxErrorF = errorFmean + sigma*errorFsigma; // new points
-		var maxErrorR = errorRmean + sigma*errorRsigma;
+		var maxCheckErrorF = errorFmean + maxExistingSigma*errorFsigma; // empties worth trying
+		var maxCheckErrorR = errorRmean + maxExistingSigma*errorRsigma;
+		var maxReferenceErrorF = errorFmean + maxReferenceSigma*errorFsigma;  // source points worth using
+		var maxReferenceErrorR = errorRmean + maxReferenceSigma*errorRsigma;
+		var maxNewErrorF = errorFmean + maxNewSigma*errorFsigma; // new points worth making
+		var maxNewErrorR = errorRmean + maxNewSigma*errorRsigma;
 		var viewList = [viewA,viewB];
 		var oppositeList = [viewB,viewA];
-		// var fList = [[Fab,Fba],[Fab,Fba]];
 		var matchesAddList = [];
 		for(var v=0; v<viewList.length; ++v){
 			var viewA = viewList[v];
@@ -8654,10 +8878,7 @@ Stereopsis.World.prototype.probe2DNNAffine = function(sigma){ //
 			var cellSizeA = viewA.cellSize();
 			var compareSizeA = viewA.compareSize();
 			var viewB = oppositeList[v];
-			var maxSearchRadius = cellSizeA*2;
-			var emptyLocations = [];
-			// var Ffwd = fList[v][0];
-			// var Frev = fList[v][1];
+			var maxSearchRadius = cellSizeA*perimeterSearchMultiplier;
 			// image
 			var imageA = viewA.image();
 			var imageB = viewB.image();
@@ -8665,22 +8886,22 @@ Stereopsis.World.prototype.probe2DNNAffine = function(sigma){ //
 			var heightA = imageA.height();
 			var widthB = imageB.width();
 			var heightB = imageB.height();
-			// empty
 			var empties = viewA.emptyNeighborCellsForView(viewB);
 			console.log("TO CHECK: "+empties.length);
 			for(var e=0; e<empties.length; ++e){
 				var empty = empties[e];
 				var cellErrorF = empty.markedF();
 				var cellErrorR = empty.markedR();
-				if(cellErrorF==null){ // not searched yet
-					cellErrorF = maxErrorF;
-					cellErrorR = maxErrorR;
-				}else if(cellErrorF>maxErrorF && cellErrorR>maxErrorR){
+				if(cellErrorF===null){ // not searched yet
+					cellErrorF = maxCheckErrorF*checkErrorRatio;
+					cellErrorR = maxCheckErrorR*checkErrorRatio;
+				}else if(cellErrorF>maxCheckErrorF || cellErrorR>maxCheckErrorR){ // both errors should be below minimums
 					continue; // don't re-check this cell
 				}
 				// mark search criteria for next inclusion
-	// empty.markedF(maxErrorF*0.5);
-	// empty.markedR(maxErrorR*0.5);
+				empty.markedF(cellErrorF);
+				empty.markedR(cellErrorR);
+				// find best reference neighbor
 				var bestPoint = null;
 				var bestNCC = null;
 				var bestMatch = null;
@@ -8690,75 +8911,49 @@ Stereopsis.World.prototype.probe2DNNAffine = function(sigma){ //
 					var objects = neighbor.objects();
 					for(var o=0; o<objects.length; ++o){
 						var object = objects[o];
-						try{
-							var match = object.matchForView(viewB);
-							var ncc = match.errorNCC();
-							var f = match.errorF();
-							var r = match.errorR();
-							if(f<checkErrorF && r<checkErrorR){
-								if(bestPoint==null || ncc<bestNCC){
-									bestPoint = object;
-									bestNCC = ncc;
-									bestMatch = match;
-								}
+						var match = object.matchForView(viewB);
+						var ncc = match.errorNCC();
+						var f = match.errorF();
+						var r = match.errorR();
+						if(f<maxReferenceErrorF && r<maxReferenceErrorR){
+							if(bestPoint===null || ncc<bestNCC){
+								bestPoint = object;
+								bestNCC = ncc;
+								bestMatch = match;
 							}
-						}catch(e){
-							console.log(viewA);
-							console.log(viewB);
-							console.log(empty);
-							console.log(object);
-							console.log(neighbor);
-							throw "?";
 						}
 					}
 				}
 				if(bestMatch){
-					var affine = bestMatch.affineForViews(viewA,viewB);
-					var inverse = bestMatch.affineForViews(viewB,viewA);
+					// find best new match for perimeter cell
+					var affine = bestMatch.affineForViews(viewA,viewB);;
 					var point2DA = bestMatch.pointForView(viewA);
 					var point2DB = bestMatch.pointForView(viewB);
 					var centerA = point2DA.point2D();
 					var centerB = point2DB.point2D();
 					var newPointA = empty.center();
-					var newMatch = this.bestMatch2DFromLocation(affine,centerA,centerB, newPointA, viewA,viewB, null);
-
-					// var newMatch = this.bestMatch2DFromLocation(affine,centerA,centerB, newPointA, viewA,viewB, inverse);
-
-/*
-only worth spending time on cells with fairly good corner values
-
-other requirements:
-affine should be similar to existing affine
-=> how to measure difference?
-
-how to prune bad 2D / affine matches ?
-*/
+					var newMatch = world.bestMatch2DFromLocation(affine,centerA,centerB, newPointA, viewA,viewB);
 					if(newMatch){
-						// var added = false;
 						Stereopsis.updateErrorForMatch(newMatch);
-						// console.log(newMatch);
 						var fError = newMatch.errorF();
 						var rError = newMatch.errorR();
 						var newNCC = newMatch.errorNCC();
-						// console.log(fError+"/"+maxErrorF+" & "+rError+"/"+maxErrorR);
-						// throw "?"
-						// fError = 0;
-						// rError = 0;
-						// newNCC = 0;
-						var checkF = Math.min(cellErrorF,maxErrorF);
-						var checkR = Math.min(cellErrorR,maxErrorR);
-						if(fError<checkF || rError<checkR){
-						// if(fError<maxErrorF && rError<maxErrorR){
-							// ???
-							if(newNCC < 0.40 && newNCC<=1.5*bestNCC){ // WHAT ARE TYPICAL VALUES ?
+						if(fError<maxNewErrorF || rError<maxNewErrorR){
+							// if(newNCC < 0.40 && newNCC<=1.5*bestNCC){ // WHAT ARE TYPICAL VALUES ?
 								// OTHER CRITERIA ? - MATCH VALIDATION ?
 								var m3D = newMatch.point3D();
-								m3D.point( m3D.calculateAbsoluteLocation(this,true) );
-								this.patchInitBasicSphere(false,[m3D]);
+								m3D.point( m3D.calculateAbsoluteLocation(world,true) );
+								world.patchInitBasicSphere(false,[m3D]);
 								matchesAddList.push(newMatch);
-							}
+							// }
+						}else{
+							// console.log("new match? errors too high: "+fError+" > "+maxNewErrorF+" & "+rError+" > "+maxNewErrorR);
 						}
+					}else{
+						// console.log("why no new match?");
 					}
+				}else{
+					// console.log("why no best match?");
 				}
 			}
 			// break; // single direction
@@ -11316,6 +11511,8 @@ Stereopsis._errorAffine = function(size){
 Stereopsis.World.minimumUniqueness = 0.10; // 0.0 -> 0.59
 
 Stereopsis.World.prototype.bestAffine2DFromLocation = function(affine,centerA,centerB, existingA, viewA,viewB, forwardBackwardCheck, skipOptimum){
+		forwardBackwardCheck = false;
+		skipOptimum = true;
 	var imageA = viewA.image();
 	var imageB = viewB.image();
 	var compareSize = Stereopsis.compareSizeForViews2D(viewA,centerA,viewB,centerB);
