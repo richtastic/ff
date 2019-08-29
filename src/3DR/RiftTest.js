@@ -67,7 +67,8 @@ var dist = null;
 	// new ImageLoader("./images/iowa/",["0.JPG", "1.JPG"],this,this.imagesLoadComplete).load(); // good
 
 	// new ImageLoader("./images/pika_1/",["image-0.png", "image-1.png"],this,this.imagesLoadComplete).load(); // ok
-	new ImageLoader("./images/pika_1/",["image-0.png", "image-2.png"],this,this.imagesLoadComplete).load(); // ok
+	// new ImageLoader("./images/pika_1/",["image-0.png", "image-2.png"],this,this.imagesLoadComplete).load(); // ok
+	new ImageLoader("./images/pika_1/",["image-1.png", "image-2.png"],this,this.imagesLoadComplete).load(); // ok
 	// new ImageLoader("./images/pika_1/",["image-0.png", "image-5.png"],this,this.imagesLoadComplete).load(); // wrong
 
 
@@ -507,9 +508,9 @@ var maxCount = 2000;
 var featuresA = R3D.calculateScaleCornerFeatures(imageMatrixA, maxCount);
 var featuresB = R3D.calculateScaleCornerFeatures(imageMatrixB, maxCount);
 console.log(featuresA,featuresB); // ~1000
-// this.showFeatures(featuresA, imageMatrixA.width()*0,0, display, 0xCC0000FF);
-// this.showFeatures(featuresB, imageMatrixA.width()*1,0, display, 0xCC0000FF);
-// throw "HERE 99";
+this.showFeatures(featuresA, imageMatrixA.width()*0,0, display, 0xCC0000FF);
+this.showFeatures(featuresB, imageMatrixA.width()*1,0, display, 0xCC0000FF);
+throw "HERE 99";
 
 
 

@@ -376,15 +376,126 @@ https://cloud.google.com/appengine/docs/nodejs/
 0 + 2 = UEX4H682
 1 + 2 = NY9RPQHA
 
+
+
+---- INITIAL POINTS CHECK AGAIN
+	- more consistent orientations
+	- possibly more corners
+-? if all points are on a plane => make 3D camera orientation poor ?
+	--- drop some non-unique features
+
+
+- if R error is > ~5 pixels => don't reuse old approx
+
+=> simple 2D/3D single-point noise dropping
+	- each P3D get X NN (4-8)
+		- record average & sigma distance
+	- each P2D get X NN
+		- each neighbor.distance > avg + sig => vote drop
+	- remove worst drop counts
+
+=> 3D noise dropping
+	- 3d kNN projected hull voting
+	- drop where most neighbors say bad
+
+=> neighbor statistic voting? 2D vs 3D ?
+	- F error
+	- R error
+	- M error
+	-> 2D: ...
+	-> 3D:
+
+
+
+=> predicted missing points propagation?
+	- find areas of unmapped 2D locations
+		- interpolate from nearest neighbors ?
+
+--- RIGHT EAR STILL SHOULD BE PROPAGATED TO THO
+=> VISUALIZE THIS?
+	x F error
+	x R error
+	- M error
+	- propagation cell scores (active/inactive)
+
+
+
+
+
+
+
+
+
+
+
+- rules for determining which spheres to drop:
+	- notion of support?
+		- all points in 2D neighborhood with gradual change in depth
+		- larger groups preferred to spotty points
+
+=> check sphere dropping algorithm
+	- optionally allow GLOBAL points too
+		- how does this work in multi-faceted complex world?
+
+
+- look again back at voting:
+	- dropping 2D / 3D distances
+	- ...
+
+	filterLocal2D
+	filterLocal3D
+
+- 3D groupings => vote if missing in 2D inner hull
+
+
+- maybe due to camera position/angle errors ; initial location will be poor
+	=> need to wait for 2nd more accurate global round
+- some kind of bottleneck?
+
+- not propagating to ears ... ?
+		=> THE COLOR IS GRAY --- BG problems ?
+	x M SCORE DROPPING
+	x score compare metric?
+	x range of search region?
+	x neighbor of choice (best vs closest)
+	~ propagation error limits
+	- normal estimates ?
+		=> affects affine
+	x maximal NCC / SAD scores ?
+	- affine: scale + rotation |vs| 4-pt average
+	- compare size ?
+	~ sphere drops
+		=> are discontinuities subject to more ?
+
+
+	=> other dropped match reasons?
+
+
+- issues with sphere droppings ?
+
+
+
+=> affine estimated from local projection neighborhood?
+=> normal estimated from local 3D ~ plane neighborhood ?
+
+filterPairwiseSphere3D
+
+
+
+
+
+- back to scattered 3D point distance dropping
+
+
 => is there a way to get better spread of points ?
 	=> want more corners for 2D to search from
 - 2D match filter on RIFT / NCC score
 
 
-- affine matrices for non-flat planes may not map well ? [simple sphere patch vs actual object surface patch (optimized normal)]
-... how much overhead is an optimization step for getting better normal for each patch? [11x11 vs 5x5]
 
-- when optimizing patch using images: avg size of minimum projection should scale up / down to compare size
+- middle-ground to optimizing patch normals?
+
+- neighborhood plane estimating for normals?
 
 
 

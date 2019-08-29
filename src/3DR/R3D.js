@@ -9243,7 +9243,7 @@ console.log("progressiveFullMatchingDense")
 	pointsA = info["A"];
 	pointsB = info["B"];
 
-// return {"A":pointsA, "B":pointsB, "F":F, "Finv":Finv};
+return {"A":pointsA, "B":pointsB, "F":F, "Finv":Finv};
 
 	// get <1px F error : medium refinement -- isolate best searching locations
 	info = R3D._progressiveMediumMatches(imageMatrixA,imageMatrixB, pointsA,pointsB, F,Finv,Ferror);
@@ -9263,7 +9263,7 @@ console.log("progressiveFullMatchingDense")
 // Code.printPoints(pointsB);
 
 	console.log(matches);
-// return {"A":pointsA, "B":pointsB, "F":F, "Finv":Finv};
+return {"A":pointsA, "B":pointsB, "F":F, "Finv":Finv};
 
 
 	// 'dense sparse'
@@ -11330,9 +11330,8 @@ R3D.stationaryFeatures = function(imageA,imageB,F, ptsA,ptsB,  display, existing
 }
 
 R3D.basicScaleFeaturesFromPoints = function(points, imageScales){
-	var diaNeighborhood = 21;
+	var diaNeighborhood = 21; // bigger / smaller?
 	// reuse items
-	// var scales = Code.divSpace(-2,3, 20);
 	var scales = Code.divSpace(3,-2, 20);
 	var matrixes = [];
 	for(var i=0; i<scales.length; ++i){
@@ -11354,6 +11353,8 @@ R3D.basicScaleFeaturesFromPoints = function(points, imageScales){
 		}else{
 			continue;
 		}
+// BETTER ANGLE HERE
+throw "..."
 		var gryScale = scale;
 			var info = imageScales.infoForScale(gryScale);
 			var imageMatrix = info["image"];
@@ -33794,9 +33795,9 @@ R3D.bestAffineLocationFromLocation = function(affine,centerA,centerB, existingA,
 	var compareSize = 11;
 	var deltaA = V2D.sub(existingA,centerA); // A to B
 	var deltaB = affine.multV2DtoV2D(deltaA);
-	var predictedB = V2D.add(centerB,deltaB);
+	var predictedB = deltaB.add(centerB);
 	// get scores
-	haystackSize = haystackSize!==undefined ? haystackSize : needleSize*2; // 2-3
+	haystackSize = haystackSize!==undefined ? haystackSize : needleSize*3; // 2-3
 	var scores = R3D.optimumScoresAtLocation(imageA,existingA, imageB,predictedB, needleSize,haystackSize,affine);
 	var finalSize = scores["width"];
 	var cellScale = (needleSize/compareSize);
@@ -33814,18 +33815,15 @@ R3D.optimumScoresAtLocation = function(imageA,pointA, imageB,pointB, needleSize,
 	var haystackSize = Math.max(haystackSize,compareSize);
 	var needle = imageA.extractRectFromFloatImage(pointA.x,pointA.y,cellScale,null,compareSize,compareSize, matrix);
 	var haystack = imageB.extractRectFromFloatImage(pointB.x,pointB.y,cellScale,null,haystackSize,haystackSize, null);
-	// var scoresSAD = R3D.searchNeedleHaystackImageFlat(needle, null, haystack);
-
-// TODO: THIS SHOULD USE UPDATED COLOR FXNs
-
-	var scoresNCC = R3D.normalizedCrossCorrelation(needle,null, haystack, true);
+		// var scoreSAD = R3D.searchNeedleHaystackSADColor(needle,haystack);
+		var scoreNCC = R3D.searchNeedleHaystackNCCColor(needle,haystack);
 	var scores = {
-		// "width": scoresSAD["width"],
-		// "height": scoresSAD["height"],
-		// "value": scoresSAD["value"]
-		"width": scoresNCC["width"],
-		"height": scoresNCC["height"],
-		"value": scoresNCC["value"]
+		// "width": scoreSAD["width"],
+		// "height": scoreSAD["height"],
+		// "value": scoreSAD["value"]
+		"width": scoreNCC["width"],
+		"height": scoreNCC["height"],
+		"value": scoreNCC["value"]
 	}
 /*
 

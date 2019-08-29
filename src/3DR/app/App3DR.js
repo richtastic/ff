@@ -3875,13 +3875,11 @@ App3DR.App.Model3D.prototype.setPoints = function(input3D, input2D, hasImages){
 
 	var colors = [];
 // ONLY WORKS FOR PAIR OF IMAGES
-// var useErrors = true;
-var useErrors = false;
+var useErrors = true;
+// var useErrors = false;
 	useErrors = useErrors && hasImages;
 	if(useErrors){
 		var views = this._views;
-// console.log(views);
-// throw "?";
 		var viewA = views[0];
 		var viewB = views[1];
 		// ...
@@ -3921,9 +3919,9 @@ var useErrors = false;
 				pointA = pointA.copy().scale(imageSizeA.x,imageSizeA.y);
 				pointB = pointB.copy().scale(imageSizeB.x,imageSizeB.y);
 			var point3D = points3D[i];
-			var error = R3D.fError(F, Finv, pointA, pointB);
-			// var error = R3D.reprojectionError(point3D, pointA,pointB, extrinsicA, extrinsicB, Ka, Kb);
-			// var error = R3D.reprojectionError(point3D, pointA,pointB, cameraA, cameraB, Ka, Kb);
+			// var error = R3D.fError(F, Finv, pointA, pointB);
+						// var error = R3D.reprojectionError(point3D, pointA,pointB, extrinsicA, extrinsicB, Ka, Kb); // NO
+			var error = R3D.reprojectionError(point3D, pointA,pointB, cameraA, cameraB, Ka, Kb);
 			errors.push(error["error"]);
 		}
 		// Code.printMatlabArray(errors,"errors");
@@ -3931,7 +3929,7 @@ var useErrors = false;
 		ImageMat.normalFloat01(errors);
 		// exaggerate
 		// ImageMat.pow(errors, 2); // fewer red
-		ImageMat.pow(errors, 0.5); // more red
+		// ImageMat.pow(errors, 0.5); // more red
 		var colorList = [0xFF0000FF, 0xFFFF0000];
 		var locationList = [0.0,1.0];
 		for(var i=0; i<errors.length; ++i){
