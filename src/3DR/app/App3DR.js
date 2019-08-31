@@ -3875,8 +3875,8 @@ App3DR.App.Model3D.prototype.setPoints = function(input3D, input2D, hasImages){
 
 	var colors = [];
 // ONLY WORKS FOR PAIR OF IMAGES
-var useErrors = true;
-// var useErrors = false;
+// var useErrors = true;
+var useErrors = false;
 	useErrors = useErrors && hasImages;
 	if(useErrors){
 		var views = this._views;

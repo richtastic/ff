@@ -68,7 +68,7 @@ var dist = null;
 
 	// new ImageLoader("./images/pika_1/",["image-0.png", "image-1.png"],this,this.imagesLoadComplete).load(); // ok
 	// new ImageLoader("./images/pika_1/",["image-0.png", "image-2.png"],this,this.imagesLoadComplete).load(); // ok
-	new ImageLoader("./images/pika_1/",["image-1.png", "image-2.png"],this,this.imagesLoadComplete).load(); // ok
+// new ImageLoader("./images/pika_1/",["image-1.png", "image-2.png"],this,this.imagesLoadComplete).load(); // ok
 	// new ImageLoader("./images/pika_1/",["image-0.png", "image-5.png"],this,this.imagesLoadComplete).load(); // wrong
 
 
@@ -152,10 +152,12 @@ var dist = null;
 
 
 	// PIKACHUS
-	// new ImageLoader("./images/pika_1/",["image-0.png", "image-1.png"],this,this.imagesLoadComplete).load(); // ok? -- matches ground
-	// new ImageLoader("./images/pika_1/",["image-0.png", "image-3.png"],this,this.imagesLoadComplete).load(); // ok?
-	// new ImageLoader("./images/pika_1/",["image-0.png", "image-5.png"],this,this.imagesLoadComplete).load(); // bad -- matches wrong side
-	// new ImageLoader("./images/pika_1/",["image-0.png", "image-1.png"],this,this.imagesLoadComplete).load();
+	// new ImageLoader("./images/pika_1/",["image-0.png", "image-1.png"],this,this.imagesLoadComplete).load(); // ok
+	new ImageLoader("./images/pika_1/",["image-0.png", "image-2.png"],this,this.imagesLoadComplete).load(); // ok
+	// new ImageLoader("./images/pika_1/",["image-0.png", "image-3.png"],this,this.imagesLoadComplete).load(); // poor
+	// new ImageLoader("./images/pika_1/",["image-0.png", "image-4.png"],this,this.imagesLoadComplete).load(); // poor
+	// new ImageLoader("./images/pika_1/",["image-0.png", "image-5.png"],this,this.imagesLoadComplete).load(); // bad
+
 
 	// ROOM
 	// new ImageLoader("./images/",["room0.png", "room2.png"],this,this.imagesLoadComplete).load(); // good
@@ -508,11 +510,39 @@ var maxCount = 2000;
 var featuresA = R3D.calculateScaleCornerFeatures(imageMatrixA, maxCount);
 var featuresB = R3D.calculateScaleCornerFeatures(imageMatrixB, maxCount);
 console.log(featuresA,featuresB); // ~1000
-this.showFeatures(featuresA, imageMatrixA.width()*0,0, display, 0xCC0000FF);
-this.showFeatures(featuresB, imageMatrixA.width()*1,0, display, 0xCC0000FF);
-throw "HERE 99";
+// this.showFeatures(featuresA, imageMatrixA.width()*0,0, display, 0xCC0000FF);
+// this.showFeatures(featuresB, imageMatrixA.width()*1,0, display, 0xCC0000FF);
+// throw "HERE 99";
 
 
+// for(var i=0; i<featuresA.length; ++i){
+// 	var a = featuresA[i];
+// 	a = a["point"];
+// 	for(var j=i+1; j<featuresA.length; ++j){
+// 		var b = featuresA[j];
+// 		b = b["point"];
+// 		var distance = V2D.distance(a,b);
+// 		if(distance<1){
+// 			console.log(a,b);
+// 			throw "too close, why ?";
+// 		}
+// 	}
+// }
+//
+//
+// for(var i=0; i<featuresB.length; ++i){
+// 	var a = featuresB[i];
+// 	a = a["point"];
+// 	for(var j=i+1; j<featuresB.length; ++j){
+// 		var b = featuresB[j];
+// 		b = b["point"];
+// 		var distance = V2D.distance(a,b);
+// 		if(distance<1){
+// 			console.log(a,b);
+// 			throw "too close, why ?";
+// 		}
+// 	}
+// }
 
 
 Code.timerStart();
@@ -534,6 +564,34 @@ var pointsA = result["A"];
 var pointsB = result["B"];
 var Fab = result["F"];
 var Fba = result["Finv"];
+
+
+for(var i=0; i<pointsA.length; ++i){
+	var a = pointsA[i];
+	for(var j=i+1; j<pointsA.length; ++j){
+		var b = pointsA[j];
+		var distance = V2D.distance(a,b);
+		if(distance<1){
+			console.log(a,b);
+			throw "too close, why ?";
+		}
+	}
+}
+
+
+for(var i=0; i<pointsB.length; ++i){
+	var a = pointsB[i];
+	for(var j=i+1; j<pointsB.length; ++j){
+		var b = pointsB[j];
+		var distance = V2D.distance(a,b);
+		if(distance<1){
+			console.log(a,b);
+			throw "too close, why ?";
+		}
+	}
+}
+
+
 
 var matches = [];
 for(var i=0; i<pointsA.length; ++i){
@@ -1489,6 +1547,9 @@ if(asImage){
 		var centerA = match["A"];
 		var centerB = match["B"];
 // console.log(centerA,centerB)
+
+centerB = centerB.copy();
+centerB.add( Math.random()*2, Math.random()*2 );
 
 			var needleA = imageA.extractRectFromFloatImage(centerA.x,centerA.y,1.0,null,needleSize,needleSize, null);
 			var needleB = imageB.extractRectFromFloatImage(centerB.x,centerB.y,1.0,null,needleSize,needleSize, null);

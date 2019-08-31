@@ -7015,6 +7015,44 @@ Code.findMaxima1D = function(d){
 	}
 	return list;
 }
+Code.findMaxima1DLoop = function(d){
+	var i, a,b,c, v, len=d.length, lenM1 = d.length-1, list = [];
+	for(i=0;i<len;++i){
+		a = d[(i-1)%len]; b = d[i]; c = d[(i+1)%len];
+		if( (b>=a&&b>=c) ){
+			v = Code.interpolateMaximum1D(new V2D(), a,b,c);
+			if(v){
+				v.x += i;
+				if(v.x>lenM1){
+					v.x -= lenM1;
+				}else if(v.x<0){
+					v.x += lenM1;
+				}
+				list.push(v);
+			}
+		}
+	}
+	return list;
+}
+Code.interpolateMaxima1DLoop = function(bins, binMaxIndex){
+	var totalBinCount = bins.length;
+	var tbcM1 = totalBinCount-1;
+	var x0 = (binMaxIndex-1 + totalBinCount)%totalBinCount;
+	var x1 = binMaxIndex;
+	var x2 = (binMaxIndex+1)%totalBinCount;
+	var y0 = bins[x0];
+	var y1 = bins[x1];
+	var y2 = bins[x2];
+	var peak = Code.interpolateExtrema1D(new V2D(), y0,y1,y2);
+	peak.x += x1;
+	if(peak.x>tbcM1){
+		peak.x -= tbcM1;
+	}else if(peak.x<0){
+		peak.x += tbcM1;
+	}
+	return peak;
+}
+
 Code.findExtremaProminence1D = function(d){
 	var wasIncreasing = false;
 	var wasDecreasing = false;
@@ -11561,9 +11599,9 @@ Code.histogram = function(data, masking, buckets, min,max, useValue){
 	return {"histogram":histogram, "size":bucketSize, "min":infoMin, "max":infoMax};
 }
 
-Code.histogram3D = function(dataR,dataG,dataB, buckets, masking, min,max, isSparse, magnitude){
+Code.histogram3D = function(dataR,dataG,dataB, buckets, masking, min,max, isSparse, magnitude, loop){
 	var b2 = buckets*buckets;
-	var bucketsTotal = b2*buckets; // 3>9 | 4>64 | 5>125 | 6>216 | 7>343 | 8>42 | 10>30
+	var bucketsTotal = b2*buckets; // 3>9 | 4>64 | 5>125 | 6>216 | 7>343 | 8>512 | 10>1000
 	var infoMax = 0;
 	var infoMin = 0;
 	if(min!==undefined && max!==undefined){
@@ -11591,19 +11629,38 @@ Code.histogram3D = function(dataR,dataG,dataB, buckets, masking, min,max, isSpar
 			var valueR = (dataR[i]-infoMin)/infoRange;
 			var valueG = (dataG[i]-infoMin)/infoRange;
 			var valueB = (dataB[i]-infoMin)/infoRange;
-			var binR = Math.min(Math.floor( valueR*buckets ),bm1);
-			var binG = Math.min(Math.floor( valueG*buckets ),bm1);
-			var binB = Math.min(Math.floor( valueB*buckets ),bm1);
-			if(magnitude){
-				inc = magnitude[i];
-			}
-			if(isSparse){
-				var index = binR+"-"+binG+"-"+binB;
-				var value = Code.valueOrDefault(histogram[index],0) + inc;
-				histogram[index] = value;
+			// if(loop){
+			if(false){
+				if(magnitude){
+					inc = magnitude[i];
+				}
+				throw "circular";
+				var binR = valueR*buckets;
+				/*
+				var mag = grad.length()*mask;
+				var p = ang/twoPi;
+				var bin = p*gradientBins;
+				var binMin = Math.floor(bin);
+				var binMax = Math.ceil(bin);
+					// circular overflow
+					binMin = binMin % gradientBins;
+					binMax = binMax % gradientBins;
+				*/
 			}else{
-				var bin = binR*b2 + binG*buckets + binB;
-				histogram[bin] += inc;
+				var binR = Math.min(Math.floor( valueR*buckets ),bm1);
+				var binG = Math.min(Math.floor( valueG*buckets ),bm1);
+				var binB = Math.min(Math.floor( valueB*buckets ),bm1);
+				if(magnitude){
+					inc = magnitude[i];
+				}
+				if(isSparse){
+					var index = binR+"-"+binG+"-"+binB;
+					var value = Code.valueOrDefault(histogram[index],0) + inc;
+					histogram[index] = value;
+				}else{
+					var bin = binR*b2 + binG*buckets + binB;
+					histogram[bin] += inc;
+				}
 			}
 		}
 	}

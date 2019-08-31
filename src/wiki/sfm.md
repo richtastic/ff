@@ -146,49 +146,60 @@ The intrinsic camera (K) and distortion parameters are first approximated using 
 <a name="MATCHING"></a>
 ### Feature Matching
 
+#### Features
+    - repeatably detectable locations in image
+        - corners (per harris [eigenvalue] or similar detector)
+        - blobs (as having a scale space extrema)
+    - want to be able to orientate the feature for matching
+    - size / area of influence:
+        - scale space extrema (peaks only usually only for blob-type features) (good)
+        - corner scale space extrema (scale at which a point is most corner-like) (smaller sized)
+        - constant entropy (scale out until entropy reaches some constant) (difficult, poor)
+        - range (scale out until range reaches some value) (noisy, poor)
+        -
+    - angle (rotation invariant):
+        - covariance (mass direction) (ok)
+        - center of mass (noisy)
+        - dominant gradient (noisy)
+        - histogram of gradients (ok)
+        -
+    - affine invariant:
+        -
+    - examples:
+        - SIFT: Scale Invariant Feature Transforms
+            - grayscale gradient (8-bin) histograms with 16 samples (4x4) repeated in 16 oriented (4x4 grid) locations
+            - blob size is really well defined; total feature size ~ 2-8 x size of blob
+            -
+        - MSER: Maximally Stable Extremal Regions
+            - very accurate outline, repeatable
+            - typically only handful of points [10~100]
+        - SURF:
+        - DAISY:
+        - MOPS: Multi Scale Oriented Patche(S)
+            - 40x40 => 8x8 window ; subtract mean ; divide by sigma;
+        - ORB:
+        - GLOH: Gradient Location Oriented Histogram
+            - circular SIFT binning
+        - BRIEF:
+        - BRISK:
+        - BGM:
+        - LATCH:
+        - KVLD:
+        - CODE:
+        - GMS:
+        - LDA-HASH:
+        - BINBOOST - Binary
 
-CORNERS
 
-SCALES SPACE
 
-- corner maxima
-- blob maxima
-- attempted: entropy constant, range constant,
+#### Matching
 
-SIFT
+failure points: repeated objects,
 
-SURF
-
-DAISY
-
-ORB
-
-BRIEF
-
-BRISK
-
-BGM
-
-LATCH
-
-KVLD
-
-CODE
-
-GMS
-
-LDA-HASH
-
-BINBOOST - Binary
-
-...
 
 
 low res : low frequency -> high res iterative F refinement
 
-
-
-failure points: repeated objects,
 
 
 

@@ -645,8 +645,8 @@ ImageMat.gaussianWindow1DFromSigma = function(sigma, bas, inc, does){
 	return ImageMat.getGaussianWindow(size,1, sigma);
 	// SHOULD USE A 1D GENERATOR HERE
 }
-ImageMat.getGaussianWindow = function(width,height, sigmaX, sigmaY, normCenter, norm2){
-	if(sigmaY==undefined){ sigmaY = sigmaX; }
+ImageMat.getGaussianWindow = function(width,height, sigmaX, sigmaY, normCenter, norm2){ // sigma is in absolute pixels sizes
+	if(sigmaY===undefined || sigmaY===null){ sigmaY = sigmaX; }
 	var len = width*height;
 	var matrix = new Array(len);
 	var sigSquareX = sigmaX*sigmaX;

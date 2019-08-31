@@ -4803,15 +4803,15 @@ Stereopsis.World.prototype.solvePair = function(completeFxn, completeContext){ /
 	// var maxIterations = 6;
 	// var maxIterations = 7;
 	// var maxIterations = 8;
-	var maxIterations = 9;
+	// var maxIterations = 9;
 	// var maxIterations = 10;
-	// var maxIterations = 15;
+	var maxIterations = 15;
 	// var maxIterations = 17;
 	console.log(this)
 	for(var i=0; i<maxIterations; ++i){
 		this.iteration(i, maxIterations);
 	}
-throw "...";
+// throw "...";
 
 /*
 	var viewA = this.toViewArray()[0];
@@ -4889,7 +4889,7 @@ Stereopsis.World.prototype.iteration = function(iterationIndex, maxIterations){
 
 	if(iterationIndex==0){
 		shouldRetryInit = true;
-	}else if(transform0.rSigma()>5){ // transform.rMean()+" +/- "+transform.rSigma()
+	}else if(transform0.rSigma()>10){ // transform.rMean()+" +/- "+transform.rSigma()
 		shouldRetryInit = true;
 	}else{
 		shouldPropagate = true;
@@ -4918,6 +4918,8 @@ console.log("continue ...");
 		// this.refinePoint3DAbsoluteLocation();
 		// this.estimate3DErrors(true);
 	}
+
+
 /*
 if(iterationIndex==0){
 	// searchPoints2DBestMatch
@@ -4932,6 +4934,11 @@ this.searchPoints2DBestMatch();
 
 // var doRelaxed = true;
 var doRelaxed = iterationIndex%2==0;
+
+
+if(transform0.rSigma()>5){
+	doRelaxed = true;
+}
 
 	// TODO: ONLY BREAK IF ERROR IS VERY LOW OR IF ERROR CHANGE IS TINY
 

@@ -378,14 +378,9 @@ https://cloud.google.com/appengine/docs/nodejs/
 
 
 
----- INITIAL POINTS CHECK AGAIN
-	- more consistent orientations
-	- possibly more corners
--? if all points are on a plane => make 3D camera orientation poor ?
-	--- drop some non-unique features
 
 
-- if R error is > ~5 pixels => don't reuse old approx
+
 
 => simple 2D/3D single-point noise dropping
 	- each P3D get X NN (4-8)
@@ -394,9 +389,11 @@ https://cloud.google.com/appengine/docs/nodejs/
 		- each neighbor.distance > avg + sig => vote drop
 	- remove worst drop counts
 
+
 => 3D noise dropping
 	- 3d kNN projected hull voting
 	- drop where most neighbors say bad
+
 
 => neighbor statistic voting? 2D vs 3D ?
 	- F error
@@ -423,6 +420,9 @@ https://cloud.google.com/appengine/docs/nodejs/
 
 
 
+
+- FEATURE MATCHING RATIOS:
+	- filter best matches by score / ratios after the fact ?
 
 
 
