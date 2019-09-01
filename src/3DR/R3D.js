@@ -9250,6 +9250,7 @@ console.log("progressiveFullMatchingDense")
 
 // return {"A":pointsA, "B":pointsB, "F":F, "Finv":Finv}; // SPARSE RESULTS
 
+/*
 	// get <1px F error : medium refinement -- isolate best searching locations
 	info = R3D._progressiveMediumMatches(imageMatrixA,imageMatrixB, pointsA,pointsB, F,Finv,Ferror);
 	console.log(info);
@@ -9266,7 +9267,7 @@ console.log("progressiveFullMatchingDense")
 
 
 // return {"A":pointsA, "B":pointsB, "F":F, "Finv":Finv}; // LOW ERROR - TOP MATCHES
-
+*/
 
 	// 'dense sparse'
 	info = R3D._progressiveSparseDenseMatches(imageMatrixA,imageMatrixB, pointsA,pointsB, F,Finv,Ferror);
@@ -10382,7 +10383,7 @@ size = 7.0;
 throw "..."
 */
 
-/*
+
 	// make features bigger: --- not good for size variation
 	var sizing = 0.05; // 2% - 5%  --- 11, 22, 44
 	sizing = sizing*Code.averageNumbers([widthA,heightA,widthB,heightB]);
@@ -10397,7 +10398,7 @@ throw "..."
 		var feature = featuresB[i];
 		feature["size"] = sizing;
 	}
-*/
+
 
 	// create SIFT objects
 	Code.timerStart();
@@ -10415,6 +10416,7 @@ throw "..."
 	var minimumScore = 0.10; // scores ~ 0.05
 
 	console.log("best of F  @ "+Ferror+" ");
+	Ferror = Math.max(Ferror, 1.0);
 	R3D._progressiveMatchIndex(objectsA);
 	R3D._progressiveMatchIndex(objectsB);
 	R3D.progressiveMatchObjectsSubset(imageMatrixA,imageMatrixB, objectsA,objectsB, objectsB,objectsA, Fab,Fba, Ferror);
@@ -10422,12 +10424,12 @@ throw "..."
 	console.log(info);
 	var matches = info["matches"];
 
-var data = [];
-for(var x=0; x<matches.length; ++x){
-	var match = matches[x];
-	data.push(match["score"]);
-}
-Code.printMatlabArray(data,"scores");
+// var data = [];
+// for(var x=0; x<matches.length; ++x){
+// 	var match = matches[x];
+// 	data.push(match["score"]);
+// }
+// Code.printMatlabArray(data,"scores");
 
 // drop worst scores:
 
@@ -10455,7 +10457,7 @@ var error = R3D.fundamentalError(Fab,Fba,pointsA,pointsB);
 Ferror = lim;
 
 
-return {"F":Fab, "inv":Fba, "error":Ferror, "A":pointsA, "B":pointsB};
+// return {"F":Fab, "inv":Fba, "error":Ferror, "A":pointsA, "B":pointsB};
 
 
 
@@ -10503,16 +10505,6 @@ console.log(error);
 		pointsA.push(match["A"]);
 		pointsB.push(match["B"]);
 	}
-
-
-	// drop worst ?
-	// info = R3D._progressiveInfoFromMatches(matches,imageMatrixA,imageMatrixB);
-	// console.log(info);
-	// var pointsA = info["A"];
-	// var pointsB = info["B"];
-	// F = info["F"];
-	// Finv = info["inv"];
-	// Ferror = info["error"];
 
 	return {"F":Fab, "inv":Fba, "error":Ferror, "A":pointsA, "B":pointsB};
 }
@@ -11413,7 +11405,7 @@ R3D.basicScaleFeaturesFromPoints = function(points, imageScales){
 
 
 		// COVARIANCE:
-		var grySize = 5; // ? why not 3x3 ?
+		var grySize = 3; // ? why not 3x3 ? 5?
 		var gryScale = scale;
 			var info = imageScales.infoForScale(gryScale);
 			var imageMatrix = info["image"];
@@ -16736,10 +16728,18 @@ R3D._progressiveR3DColorAverage = function(block){
 }
 R3D._progressiveR3DColorHistogram = function(block){
 	var mask = R3D._progressiveR3DMask();
-	var buckets3D = 10;
-	var histogram = Code.histogram3D(block.red(),block.grn(),block.blu(),buckets3D, mask,0,1, true);
+	// original
+	var histogram = Code.histogram3D(block.red(),block.grn(),block.blu(),10, mask,0,1, true);
 		histogram = histogram["histogram"];
-		ImageMat.normalFloat01(histogram);
+	/*
+		var buckets = [10,10,10];
+		// var buckets = [8,8,8];
+		var loopings = [false,false,false];
+		var datas = [block.red(),block.grn(),block.blu()];
+		var magnitudes = mask;
+		var histogram = Code.histogramND(buckets, loopings, datas, magnitudes, true, true); // 6 -> 32
+			histogram = histogram["histogram"];
+	*/
 	return histogram;
 }
 R3D._progressiveR3DColorOriented = function(block){
@@ -16839,8 +16839,18 @@ R3D._progressiveR3DSIFTFlat = function(block){
 	}
 	for(var i=0; i<radialCount; ++i){
 		var hist = binHistograms[i];
+		// original
 		var histogram = Code.histogram3D(hist[0],hist[1],hist[2], 10, null,0,1, true, null); // 8-12
-		binHistograms[i] = histogram["histogram"];
+			histogram = histogram["histogram"];
+		/*
+		var buckets = [10,10,10];
+		// var buckets = [8,8,8];
+		var loopings = [false,false,false];
+		var datas = [hist[0],hist[1],hist[2]];
+		var histogram = Code.histogramND(buckets, loopings, datas, null, true, true); // 4 -> 20
+			histogram = histogram["histogram"];
+		*/
+		binHistograms[i] = histogram;
 	}
 	R3D.histogramListToUnitLength(binHistograms);
 	return binHistograms;
@@ -16851,41 +16861,51 @@ R3D._progressiveR3DSIFTGrad = function(block){
 	var binValues = radialBins["value"];
 	var binHistograms = Code.newArrayArrays(radialCount);
 	for(var i=0; i<radialCount; ++i){
-		binHistograms[i].push([],[],[],[]);
+		binHistograms[i].push([],[],[],[],[]);
 	}
+	var twoPi = Math.PI*2;
 	var grads = block.gradientVector();
 	var red = grads["r"];
 	var grn = grads["g"];
 	var blu = grads["b"];
 	var binCounts = Code.newArrayZeros(radialCount);
-	var t = new V3D();
+	// var t = new V3D();
+	var y = new V2D();
 	for(var i=0; i<binValues.length; ++i){
 		var bin = binValues[i];
 		if(bin>=0){
 			var r = red[i];
 			var g = grn[i];
 			var b = blu[i];
-			var angleR = V2D.angleDirection(V2D.DIRX,r);
-			var angleG = V2D.angleDirection(V2D.DIRX,g);
-			var angleB = V2D.angleDirection(V2D.DIRX,b);
-				angleR = Code.angleZeroTwoPi(angleR);
-				angleG = Code.angleZeroTwoPi(angleG);
-				angleB = Code.angleZeroTwoPi(angleB);
-			t.set(r.length(),g.length(),b.length());
-			var r = red[i];
-			var g = grn[i];
-			var b = blu[i];
-			var v = t.length();
-			binHistograms[bin][0].push(angleR);
-			binHistograms[bin][1].push(angleG);
-			binHistograms[bin][2].push(angleB);
-			binHistograms[bin][3].push(v);
+			y.set(r.x+g.x+b.x, r.y+g.y+b.y).scale(1.0/3.0);
+			var angleY = V2D.angleDirection(V2D.DIRX,y);
+				angleY = Code.angleZeroTwoPi(angleY)/twoPi;
+			var lenR = r.length();
+			var lenG = g.length();
+			var lenB = b.length();
+			var lenMax = Math.max(lenR,lenG,lenB);
+			if(lenMax>0){
+				lenR /= lenMax;
+				lenG /= lenMax;
+				lenB /= lenMax;
+			}
+			binHistograms[bin][0].push(angleY);
+			binHistograms[bin][1].push(lenR);
+			binHistograms[bin][2].push(lenG);
+			binHistograms[bin][3].push(lenB);
+			binHistograms[bin][4].push(y.length());
 		}
 	}
 	for(var i=0; i<radialCount; ++i){
 		var hist = binHistograms[i];
-		var histogram = Code.histogram3D(hist[0],hist[1],hist[2], 8, null,0,Math.PI2, true, hist[3], true);
-		binHistograms[i] = histogram["histogram"];
+		// var histogram = Code.histogram3D(hist[0],hist[1],hist[2], 8, null,0,1.0, true, hist[3], true);
+		// histogram = histogram["histogram"];
+		var buckets = [8,8,8,8];
+		var loopings = [true,false,false,false];
+		var datas = [hist[0],hist[1],hist[2],hist[3]];
+		var histogram = Code.histogramND(buckets, loopings, datas, hist[4], true, true); // 10 -> 20
+			histogram = histogram["histogram"];
+		binHistograms[i] = histogram;
 	}
 	R3D.histogramListToUnitLength(binHistograms);
 	return binHistograms;
@@ -16951,9 +16971,11 @@ R3D.objectProgressiveR3D_SIFT_GRAD = function(object){
 }
 R3D.histogramListToUnitLength = function(binHistograms){
 	var length = 0;
+	var keyList = [];
 	for(var i=0; i<binHistograms.length; ++i){
 		var h = binHistograms[i];
 		var keys = Code.keys(h);
+		keyList[i] = keys;
 		for(var j=0; j<keys.length; ++j){
 			var key = keys[j];
 			var val = h[key];
@@ -16966,7 +16988,7 @@ R3D.histogramListToUnitLength = function(binHistograms){
 	}
 	for(var i=0; i<binHistograms.length; ++i){
 		var h = binHistograms[i];
-		var keys = Code.keys(h);
+		var keys = keyList[i];
 		for(var j=0; j<keys.length; ++j){
 			var key = keys[j];
 			var val = h[key];

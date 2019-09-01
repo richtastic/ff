@@ -333,10 +333,10 @@ TODO: pairwise possibility limiting
 	- multi-view combining into single 3D scene - minimizing errors
 		- sparse tracks
 		x - dense points
-(07/17)
+(09/31)
 - surface triangulation(tessellation)
 x	- advancing-front, curvature-based tessellation
-(07/31)
+(10/31)
 	=> scene triangle model
 - texturing
 	- view-based surface texturing
@@ -377,21 +377,51 @@ https://cloud.google.com/appengine/docs/nodejs/
 1 + 2 = NY9RPQHA
 
 
+- test patch normal refinement ... display process
+
+
+-) features & matching process make better
+	- sift histogramming
+		- bin using: grayscale angle | mag(R)/|Y| x 3 |  @ grayscale magnitude
+			- 8 : 4 : 4 : 4
+		- normalize by scaling to unity (no min subtraction)
+		- binning should use percentages
+	- sad?
+		- binning should use percentages
+			- 8 : 8 : 8
+		- don't want to do any 'normalizing' - want raw counts
+
+
+=> PERCENTAGES double the creation time and comparison time
+
+
+histogramND
+
+
+A) Stereopsis
+	- tracks & patch optimizing
+		---- WHATS WITH SCALING????
+	- triplets
+
+B) Stereopsis to use image scales
 
 
 
 
 
-=> simple 2D/3D single-point noise dropping
-	- each P3D get X NN (4-8)
-		- record average & sigma distance
-	- each P2D get X NN
-		- each neighbor.distance > avg + sig => vote drop
-	- remove worst drop counts
+- still missing consistent matching of close views [hit or miss]
+	- way to help force matching in unmatched regions?
+
+
+
+
+- what is the merging point logic for A) images loaded, B) images not loaded?
 
 
 => 3D noise dropping
 	- 3d kNN projected hull voting
+		each projected p3d votes if p2d.p3d is in hull
+	- go thru each p3d and if votes >
 	- drop where most neighbors say bad
 
 
@@ -402,6 +432,10 @@ https://cloud.google.com/appengine/docs/nodejs/
 	-> 2D: ...
 	-> 3D:
 
+
+
+- isolated regions:
+	- plot knn / distance & look for large jump -- derivative peak >> 2x other peaks
 
 
 => predicted missing points propagation?

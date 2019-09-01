@@ -5607,7 +5607,9 @@ projects/
 							scale: 1
 						...
 					features:
-						file: "features.yaml"	# found features for image
+						file: "features.yaml"	# found features (location / affine) for image
+					summary:
+						file: "summary.yaml"	# color histogram, individual feature details list [flat, grad, hist]
 
 			pairs:
 				-
@@ -7108,6 +7110,13 @@ console.log("checkPerformNextTask");
 			this.calculateFeatures(view);
 			return;
 		}
+		// TODO SUMMARY STATSTICS: store in summary.yaml
+		var hasSummary = true;
+		if(!hasSummary){
+			throw "SUMMARY STATSTICS";
+			this.calculateSummary(view);
+			return;
+		}
 	}
 // throw "task pair features";
 	// does a feature-match pair exist (even a bad match) between every view?
@@ -7123,10 +7132,8 @@ console.log("checkPerformNextTask");
 			var foundPair = null;
 			for(k=0; k<pairs.length; ++k){
 				var pair = pairs[k];
-				// console.log(pair.isPair(idA,idB)+" ? "+idA+" "+idB+" = "+pair.id())
 				if(pair.isPair(idA,idB)){
 					foundPair = pair;
-					// console.log(" "+idA+" & "+idB+" has match: "+pair.hasMatch());
 					if(pair.hasMatch()){
 						found = true;
 					}
@@ -7140,7 +7147,7 @@ console.log("checkPerformNextTask");
 			}
 		}
 	}
-	// throw "calculate cameras";
+// throw "calculate cameras";
 	// cameras:
 	var cameras = this._cameras;
 	console.log(cameras)
@@ -7178,12 +7185,11 @@ console.log("checkPerformNextTask");
 						this.calculateBundleAdjustPair(viewA,viewB);
 						return;
 					}
-// 					if(!pair.hasTracks()){
-// 						console.log("NEED TO DO A TRACK PAIR : "+idA+" & "+idB+" = "+pair.id());
-// throw "...";
-// 						this.calculatePairTracks(viewA,viewB);
-// 						return;
-// 					}
+					if(!pair.hasTracks()){
+						console.log("NEED TO DO A TRACK PAIR : "+idA+" & "+idB+" = "+pair.id());
+						this.calculatePairTracks(viewA,viewB);
+						return;
+					}
 				}
 			}
 		}
@@ -7241,26 +7247,25 @@ throw "task triples";
 		}
 	}
 	// ????
-// throw "task graph";
+throw "task graph";
 	if(!this.hasGraph()){
 		console.log("has no graph");
 		this.calculateGlobalOrientationInit();
 		return;
 	}
-// throw "task tracks";
+throw "task tracks";
 	if(!this.tracksDone()){
 		console.log("tracks not done");
 		this.iterateGraphTracks();
 		return;
 	}
-// throw "...";
-// throw "task sparse";
+throw "task sparse";
 if(!this.sparseDone()){
 	console.log("sparse not done");
 	this.iterateSparseTracks();
 	return;
 }
-// throw "task dense";
+throw "task dense";
 if(!this.denseDone()){ // loads all dense matches using updated camera positions & saves into PAIR/dense.yaml
 	console.log("dense not done");
 	this.iterateDenseTracks();
@@ -12015,6 +12020,7 @@ App3DR.ProjectManager.prototype.calculatePairTracks = function(viewAIn,viewBIn, 
 	// save to track file
 	var worldTracksCompleted = function(a){
 		console.log("worldTracksCompleted");
+throw "..."
 		var viewA = world.viewFromData(viewAIn.id());
 		var viewB = world.viewFromData(viewBIn.id());
 		console.log(viewA,viewB);
@@ -12084,7 +12090,7 @@ console.log(str);
 		world.solve(completeFxn,this);
 
 */
-throw "not tracks ..."
+// throw "not tracks ..."
 
 		world.solveForTracks(worldTracksCompleted, project, null);
 	}

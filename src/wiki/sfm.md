@@ -245,7 +245,7 @@ Large Image datasets are likely to have many pictures that share no overlapping 
 Goal: avoid unnecessarily processing images that have no business being compared.
 significant enough of overlap to consider being compared
 
-# Bag of Words
+# Bag of Words - Word Salad
 Some summary statistics / features of each image can be used to compare overlap
 
 - features = vocabulary
@@ -434,9 +434,54 @@ iteratively solved
 
 
 
+#### Pipeline
+*Summary of steps & purpose/goals*
+    - Camera Calibration
+        - need K (at least initial estimate)
+        - remove camera distortion from images
+    - Feature Detection / Description: for each input image, find subset of points repeatably localizable
+        - one time search for features
+        - one time search for summary statistics: (color histograms, ??)
+    - Image Similar Pair Search
+        - limit total possible search space to pictures most likely to be successful in pairwise matching
+            - color histogram to limit total number of pairs to test
+            - load each other image to do feature compare
+    - Image Pair F
+        - good seed matches to allow for
+        - find good F (~1px error) to initialize R in next step
+    - Image Pair R
+        - find good R (~1px error)
+        - find semi-dense set of points
+    - Tracks
+        - Smaller subset of best features to use in full view graph optimization, shared in at least 2 images
+        - good initial patch estimates
+            - good corner score / textured
+            - low R error
+            - low F error
+            - dominant corners first
+    - Image Triplet
+        - find relative scale of pairs
+        - fill out more points in possibly mission sections [use TFT to estimate missing locations | project using known point]
+    - Absolute Orientations
+        - View Graph
+        - Increase accuracy of camera orientations / reduce errors by using multiple measurements
+    - Absolute RANSAC
+        - use tracks and initial view graph to find nonlinear best orientation
+    - Pairwise Dense
+        - reduce errors on existing pairs using updated orientation
+        - create new pairs from previously unknown relative orientation
+    - Triplet Dense ?
+        - ?
+    - Absolute Orientation 2
+        - Reduce error again, using better estimates and perhaps more edges in view graph
+    - Global RANSAC - iterative - only load small subset of views at a time
+        - final absolute camera orientations
+        - final set of surface points
+    - Triangulate
+        - triangles
+    - Texture
+        - textured triangles
 
-
-- pipeline
 
 
 
@@ -444,6 +489,78 @@ iteratively solved
 *TODO: EXAMPLE IMAGES*
 
 
+
+<br/>
+![Camera](./images/sfm/ex_pipeline_camera.png "Camera")
+<br/>
+*camera calibration using checkerboard pattern: matched corners, undistorted (radial & tangental)*
+<br/>
+
+
+<br/>
+![Corners](./images/sfm/ex_pipeline_corners.png "Corners")
+<br/>
+*high confidence corner points found in an image, maximal corners suppressing less prominent ones*
+<br/>
+
+
+<br/>
+![Features](./images/sfm/ex_pipeline_features.png "Features")
+<br/>
+*features derived from corners, using: most prominent direction (covariance or gradients), scale with peak corner value, and expanded area*
+<br/>
+
+
+<br/>
+![Matches](./images/sfm/ex_pipeline_matches.png "Matches")
+<br/>
+*high confidence matches found using: simultaneous best match cost, limited cost, next-best-cost ratio, and F RANSACing*
+<br/>
+
+
+<br/>
+![Pair](./images/sfm/ex_pipeline_pair.png "Pair")
+<br/>
+*reproduced 3D points & camera pair, using: minimizing error techniques, and propagating original matching seed points*
+<br/>
+
+
+<br/>
+![Triple](./images/sfm/ex_pipeline_triple.png "Triple")
+<br/>
+*three camera triplet scene, used for finding relative scale of individual pair scenes*
+<br/>
+
+
+<br/>
+![Scene](./images/sfm/ex_pipeline_scene.png "Scene")
+<br/>
+*multi camera scene showing estimated points, again using error minimizing techniques and RANSACing*
+<br/>
+
+
+<br/>
+![Triangles](./images/sfm/ex_pipeline_triangles.png "Triangles")
+<br/>
+*surface tessellation by estimating curvature, using advancing front techniques*
+<br/>
+
+
+<br/>
+![Textures](./images/sfm/ex_pipeline_textures.png "Textures")
+<br/>
+*surface triangles using textures produced by merging best available camera images per triangle, example triangle packing*
+<br/>
+
+
+
+
+
+
+
+<br/>
+![Image](./images/sfm/image.png "Image")
+<br/>
 
 
 ### Other Info:

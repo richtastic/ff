@@ -11599,6 +11599,108 @@ Code.histogram = function(data, masking, buckets, min,max, useValue){
 	return {"histogram":histogram, "size":bucketSize, "min":infoMin, "max":infoMax};
 }
 
+Code.histogramND = function(buckets,loopings, datas, magnitudes, joinDelimeter, round){ // assumed sparse ; assumed all values prenormalized to 0-1 ; assumed percentage binning
+	round = round!==undefined ? round : false;
+	joinDelimeter = (joinDelimeter===undefined || joinDelimeter===true) ? "-" : "";
+	// if all buckets are less than 10, can join indexes without delimeter
+	var dimensions = buckets.length;
+	var samples = datas[0].length;
+	var histogram = {};
+	var binarySamples = Math.pow(2,dimensions);
+	var magnitude = 1.0;
+	for(var s=0; s<samples; ++s){
+		var bins = []; // 1D = 2 ; 2D = 4 ; 3D = 8 ; 4D = 16 ; ...
+		for(var d=0; d<dimensions; ++d){
+			var isCircular = loopings[d];
+			var value = datas[d][s];
+			var binCount = buckets[d];
+			var bcm1 = binCount-1;
+			var bin = value*binCount;
+
+			if(round){
+				bins.push(Math.min(Math.floor(bin),bcm1));
+			}else{ // spread
+				var bmh = bin-0.5;
+				var binMin = Math.min(Math.floor(bmh),bcm1);
+				var binMax = Math.min(Math.ceil(bmh),bcm1);
+				var pMin = binMax - bmh;
+				var pMax = 1.0 - pMin;
+				if(isCircular){ // circular - overflow / underflow
+					if(bin<0.5){ // underflow
+						binMin = bcm1;
+						binMax = 0;
+						pMin = 0.5 - bin;
+						pMax = 1.0 - pMin;
+					}else if(bin>bcm1+0.5){ // overflow
+						binMin = bcm1;
+						binMax = 0;
+						pMin = binCount - bmh;
+						pMax = 1.0 - pMin;
+					}
+				}else{ // linear - cap
+					if(bin<0.5){ // under
+						binMin = 0;
+						binMax = 0;
+						pMin = 1.0;
+						pMax = 0.0;
+					}else if(bin>bcm1+0.5){// over
+						binMin = bcm1;
+						binMax = bcm1;
+						pMin = 1.0;
+						pMax = 0.0;
+					}
+				}
+				// console.log(" "+value+" :   "+binMin+" @ "+pMin+"   &   "+binMax+" @ "+pMax+"  ");
+				bins.push([binMin,pMin, binMax,pMax]);
+			}
+		}
+		if(magnitudes){
+			magnitude = magnitudes[s];
+		}
+		if(round){ // single entry
+			index = bins.join(joinDelimeter);
+			var value = magnitude;
+			if(value!==0){
+				var entry = Code.valueOrDefault(histogram[index],0) + value;
+				histogram[index] = entry;
+			}
+		}else{ // go thru each bin entry & add percent of magnitude
+			var binary = 0;
+			for(var i=0; i<binarySamples; ++i){
+				var shift = 1;
+				var percent = 1.0;
+				var index;
+				var indexes = [];
+				for(var b=0; b<bins.length; ++b){
+					var bin = bins[b];
+						var binA = bin[0];
+						var pA = bin[1];
+						var binB = bin[2];
+						var pB = bin[3];
+					if((binary & shift) == 0){
+						percent *= pA;
+						index = binA;
+					}else{
+						percent *= pB;
+						index = binB;
+					}
+					indexes.push(index);
+					shift <<= 1;
+				}
+				var value = percent*magnitude;
+				index = indexes.join(joinDelimeter);
+				if(value!==0){
+					var entry = Code.valueOrDefault(histogram[index],0) + value;
+					histogram[index] = entry;
+				}
+				++binary;
+			}
+		}
+	}
+
+	return {"histogram":histogram}; //, "sizes":bucketSize, "min":infoMin, "max":infoMax};
+}
+
 Code.histogram3D = function(dataR,dataG,dataB, buckets, masking, min,max, isSparse, magnitude, loop){
 	var b2 = buckets*buckets;
 	var bucketsTotal = b2*buckets; // 3>9 | 4>64 | 5>125 | 6>216 | 7>343 | 8>512 | 10>1000

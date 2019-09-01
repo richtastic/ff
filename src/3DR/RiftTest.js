@@ -153,8 +153,8 @@ var dist = null;
 
 	// PIKACHUS
 	// new ImageLoader("./images/pika_1/",["image-0.png", "image-1.png"],this,this.imagesLoadComplete).load(); // ok
-	new ImageLoader("./images/pika_1/",["image-0.png", "image-2.png"],this,this.imagesLoadComplete).load(); // ok
-	// new ImageLoader("./images/pika_1/",["image-0.png", "image-3.png"],this,this.imagesLoadComplete).load(); // poor
+	// new ImageLoader("./images/pika_1/",["image-0.png", "image-2.png"],this,this.imagesLoadComplete).load(); // ok
+	new ImageLoader("./images/pika_1/",["image-0.png", "image-3.png"],this,this.imagesLoadComplete).load(); // poor
 	// new ImageLoader("./images/pika_1/",["image-0.png", "image-4.png"],this,this.imagesLoadComplete).load(); // poor
 	// new ImageLoader("./images/pika_1/",["image-0.png", "image-5.png"],this,this.imagesLoadComplete).load(); // bad
 
@@ -249,6 +249,34 @@ GLOBALDISPLAY = display;
 	var imageSourceB = images[1];
 	var imageFloatB = GLOBALSTAGE.getImageAsFloatRGB(imageSourceB);
 	var imageMatrixB = new ImageMat(imageFloatB["width"],imageFloatB["height"], imageFloatB["red"], imageFloatB["grn"], imageFloatB["blu"]);
+
+
+
+
+
+// var histogram = Code.histogramND([3],[false], [[0.0,0.1,0.3,0.5,0.9,1.0]], [1,1,1,1,1,1], true, true);
+// var histogram = Code.histogramND([3],[false], [[0.0,0.1,0.3,0.5,0.9,1.0]], [1,1,1,1,1,1], true, false);
+// var histogram = Code.histogramND([3],[false], [[0.0,0.1,0.2,0.3,0.5,0.6,0.67,0.75,0.9,0.95,1.0]], [1,1,1,1,1,1,1,1,1,1,1], true, false);
+// histogram = histogram["histogram"];
+// console.log(histogram);
+// throw "yep"
+
+// var buckets = [8,4,4,4];
+// var loopings = [true,false,false,false];
+// var datas = [
+// 				[0.00, 0.30, 0.60, 1.00], // theta
+// 				[0.25, 0.35, 0.45, 0.55], // pr
+// 				[0.01, 0.02, 0.04, 0.05], // pg
+// 				[0.50, 0.66, 0.55, 0.95], // pb
+// 			];
+// var magnitudes = [1.0, 2.0, 3.0, 1.0];
+// var histogram = Code.histogramND(buckets, loopings, datas, magnitudes, false, false);
+// histogram = histogram["histogram"];
+//
+// console.log(histogram);
+//
+// throw "yep"
+
 
 
 
@@ -547,6 +575,8 @@ console.log(featuresA,featuresB); // ~1000
 
 Code.timerStart();
 var objectsA = R3D.generateProgressiveSIFTObjects(featuresA, imageMatrixA);
+// console.log(objectsA)
+// throw "?";
 var objectsB = R3D.generateProgressiveSIFTObjects(featuresB, imageMatrixB);
 // console.log(objectsA,objectsB);
 Code.timerStop();
