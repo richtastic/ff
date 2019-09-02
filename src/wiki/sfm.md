@@ -447,39 +447,39 @@ iteratively solved
             - color histogram to limit total number of pairs to test
             - load each other image to do feature compare
     - Image Pair F
-        - good seed matches to allow for
+        - good seed match points
         - find good F (~1px error) to initialize R in next step
     - Image Pair R
+        - find semi-dense set of points starting with seed points
         - find good R (~1px error)
-        - find semi-dense set of points
-    - Tracks
+    - Tracks (from view pairs)
         - Smaller subset of best features to use in full view graph optimization, shared in at least 2 images
+            - good corner score / textured, low R error, low F error, dominant corners first
         - good initial patch estimates
-            - good corner score / textured
-            - low R error
-            - low F error
-            - dominant corners first
-    - Image Triplet
+    - Image Triplets (from view pairs)
         - find relative scale of pairs
-        - fill out more points in possibly mission sections [use TFT to estimate missing locations | project using known point]
-    - Absolute Orientations
-        - View Graph
-        - Increase accuracy of camera orientations / reduce errors by using multiple measurements
-    - Absolute RANSAC
+        - decrease relative error between camera matrices
+        - calculate TFT
+    - Absolute Orientations (from pair & triplet camera matrices)
+        - global absolute orientation of views in view graph
+        - increase accuracy of camera orientations / reduce errors by using multiple measurements
+    - Absolute RANSAC (from sparse track points)
+        - build up multi-view-spanning tracks from individual pair-tracks (for long sequences if possible)
         - use tracks and initial view graph to find nonlinear best orientation
-    - Pairwise Dense
+        - find new view pairs via projection
+    - Multiwise Dense (group dense iteration - only load small subset of views at a time)
         - reduce errors on existing pairs using updated orientation
-        - create new pairs from previously unknown relative orientation
-    - Triplet Dense ?
-        - ?
+        - fill out more points in possibly mission sections [use TFT to estimate missing locations | project using known point]
+        - create new pairs from previously unmatched relative orientations
     - Absolute Orientation 2
-        - Reduce error again, using better estimates and perhaps more edges in view graph
-    - Global RANSAC - iterative - only load small subset of views at a time
+        - find improved absolute orientations of views, reducing error, using added & better estimates in view graph
+    - Global RANSAC (load all dense points at same time [& views])
+        - reduce error of all params at same time (or in randomized bunches)
         - final absolute camera orientations
         - final set of surface points
-    - Triangulate
+    - Triangulate (simplify surface using curvature to estimate triangulated locations)
         - triangles
-    - Texture
+    - Texture (sourced from unobstructed views & blending)
         - textured triangles
 
 
@@ -531,6 +531,8 @@ iteratively solved
 *three camera triplet scene, used for finding relative scale of individual pair scenes*
 <br/>
 
+
+scene graph with edges / relative scales ...
 
 <br/>
 ![Scene](./images/sfm/ex_pipeline_scene.png "Scene")

@@ -7205,7 +7205,7 @@ this.calculatePairTracks(viewA,viewB);
 throw "NO";
 */
 
-throw "task triples";
+// throw "task triples";
 	// assuming all pairs have run
 	console.log(triples);
 	len = views.length;
@@ -7254,25 +7254,25 @@ throw "task graph";
 		return;
 	}
 throw "task tracks";
-	if(!this.tracksDone()){
+	if(!this.tracksDone()){ // load/build up tracks incrementally loading known pairs at a time
 		console.log("tracks not done");
 		this.iterateGraphTracks();
 		return;
 	}
 throw "task sparse";
-if(!this.sparseDone()){
+if(!this.sparseDone()){ // load groups of views at a time (primary pair + aux views) until errors no longer get lower - global
 	console.log("sparse not done");
 	this.iterateSparseTracks();
 	return;
 }
 throw "task dense";
-if(!this.denseDone()){ // loads all dense matches using updated camera positions & saves into PAIR/dense.yaml
+if(!this.denseDone()){ // loads groups of views & optimizes single dense pair - ??? all dense matches using updated camera positions & saves into PAIR/dense.yaml
 	console.log("dense not done");
 	this.iterateDenseTracks();
 	return;
 }
 throw "task BA";
-if(!this.pointsDone()){ // iteritive bundle adjust
+if(!this.pointsDone()){ // iteritive bundle adjust -- all points in single file
 	this.iteratePointsFullBA();
 	return;
 }
@@ -10118,6 +10118,11 @@ if(!isDone){
 		var totalIter = 2;
 		for(var iter=0; iter<totalIter; ++iter){
 	console.log("ITERATION: "+iter+" ............ "+" / "+totalIter);
+
+
+console.log("need to revisit logic");
+
+
 			world.averagePoints3DFromMatches();
 			world.patchInitBasicSphere(true);
 // world.printMatchStemPlots();
@@ -11806,7 +11811,7 @@ App3DR.ProjectManager.prototype.calculateBundleAdjustTriple = function(viewAIn,v
 
 		var triple = project.triple(idA,idB,idC);
 		console.log(triple);
-
+throw "..."
 		triple.setRelativeScales(scaleAB,scaleAC,scaleBC);
 		triple.setTFT(TFT);
 		triple.setTFTInfo(meanTFT,sigmaTFT);
@@ -11841,20 +11846,20 @@ App3DR.ProjectManager.prototype.calculateBundleAdjustTriple = function(viewAIn,v
 			}
 		}
 		triple.setRelativeTransforms(relatives);
-		console.log(triple);
 		// relative file
 		var str = world.toYAMLString();
 		project.saveTripleRelative(triple, str, saveTripleCompleted, project);
 	}
 
 	var worldTripleNull = function(){
+console.log("worldTripleNull");
 		var idA = viewAIn.id();
 		var idB = viewBIn.id();
 		var idC = viewCIn.id();
 
 		var triple = project.triple(idA,idB,idC);
 		console.log(triple);
-
+throw "?"
 		triple.setRelativeScales(0,0,0);
 		triple.setTFT(null);
 		triple.setTFTInfo(0,0);
@@ -12020,7 +12025,7 @@ App3DR.ProjectManager.prototype.calculatePairTracks = function(viewAIn,viewBIn, 
 	// save to track file
 	var worldTracksCompleted = function(a){
 		console.log("worldTracksCompleted");
-throw "..."
+// throw "..."
 		var viewA = world.viewFromData(viewAIn.id());
 		var viewB = world.viewFromData(viewBIn.id());
 		console.log(viewA,viewB);

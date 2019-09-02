@@ -154,7 +154,7 @@ var dist = null;
 	// PIKACHUS
 	// new ImageLoader("./images/pika_1/",["image-0.png", "image-1.png"],this,this.imagesLoadComplete).load(); // ok
 	// new ImageLoader("./images/pika_1/",["image-0.png", "image-2.png"],this,this.imagesLoadComplete).load(); // ok
-	new ImageLoader("./images/pika_1/",["image-0.png", "image-3.png"],this,this.imagesLoadComplete).load(); // poor
+	// new ImageLoader("./images/pika_1/",["image-0.png", "image-3.png"],this,this.imagesLoadComplete).load(); // poor
 	// new ImageLoader("./images/pika_1/",["image-0.png", "image-4.png"],this,this.imagesLoadComplete).load(); // poor
 	// new ImageLoader("./images/pika_1/",["image-0.png", "image-5.png"],this,this.imagesLoadComplete).load(); // bad
 
@@ -177,7 +177,7 @@ var dist = null;
 
 	// MEDUSA
 	// new ImageLoader("./images/",["medusa_1.png", "medusa_2.png"],this,this.imagesLoadComplete).load(); // good
-	// new ImageLoader("./images/",["medusa_1.png", "medusa_3.png"],this,this.imagesLoadComplete).load(); // good
+	new ImageLoader("./images/",["medusa_1.png", "medusa_3.png"],this,this.imagesLoadComplete).load(); // good
 	// new ImageLoader("./images/",["medusa_1.png", "medusa_4.png"],this,this.imagesLoadComplete).load(); // poor
 	// new ImageLoader("./images/",["medusa_1.png", "medusa_5.png"],this,this.imagesLoadComplete).load(); // bad
 
@@ -576,9 +576,9 @@ console.log(featuresA,featuresB); // ~1000
 Code.timerStart();
 var objectsA = R3D.generateProgressiveSIFTObjects(featuresA, imageMatrixA);
 // console.log(objectsA)
-// throw "?";
+// throw "..."
 var objectsB = R3D.generateProgressiveSIFTObjects(featuresB, imageMatrixB);
-// console.log(objectsA,objectsB);
+console.log(objectsA,objectsB);
 Code.timerStop();
 var time = Code.timerDifference();
 console.log("object creation time: "+time);
@@ -1558,7 +1558,8 @@ RiftTest.showMatches = function(matches, imageA, imageB, display, asImage){
 	var blockSize = 25;
 	// var needleSize = 25;
 	var needleSize = 11;
-	var alpha = 0.5;
+	// var alpha = 0.5;
+	var alpha = 0.75;
 	for(var i=0; i<matches.length; ++i){
 		var match = matches[i];
 // console.log(match);
@@ -1576,6 +1577,9 @@ RiftTest.showMatches = function(matches, imageA, imageB, display, asImage){
 if(asImage){
 		var centerA = match["A"];
 		var centerB = match["B"];
+
+
+		// needleSize = match["A"]["size"];
 // console.log(centerA,centerB)
 
 centerB = centerB.copy();

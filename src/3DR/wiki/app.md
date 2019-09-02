@@ -377,35 +377,35 @@ https://cloud.google.com/appengine/docs/nodejs/
 1 + 2 = NY9RPQHA
 
 
-- test patch normal refinement ... display process
+still poor matches
+progressiveMatchChooseBest
 
 
--) features & matching process make better
-	- sift histogramming
-		- bin using: grayscale angle | mag(R)/|Y| x 3 |  @ grayscale magnitude
-			- 8 : 4 : 4 : 4
-		- normalize by scaling to unity (no min subtraction)
-		- binning should use percentages
-	- sad?
-		- binning should use percentages
-			- 8 : 8 : 8
-		- don't want to do any 'normalizing' - want raw counts
 
-
-=> PERCENTAGES double the creation time and comparison time
-
-
-histogramND
 
 
 A) Stereopsis
-	- tracks & patch optimizing
-		---- WHATS WITH SCALING????
 	- triplets
 
-B) Stereopsis to use image scales
+calculateBundleAdjustTriple
+solveTriple
 
 
+iterateSparseTracks
+
+iterateDenseTracks
+
+iteratePointsFullBA
+
+
+B) Stereopsis to use image scales [more]
+
+
+
+C) HANDLING FAIL SCENARIOS
+	- pair F error too high [5-10?]
+	- pair R error too high [5-10?]
+	- triplet?
 
 
 
@@ -416,6 +416,8 @@ B) Stereopsis to use image scales
 
 
 - what is the merging point logic for A) images loaded, B) images not loaded?
+
+
 
 
 => 3D noise dropping

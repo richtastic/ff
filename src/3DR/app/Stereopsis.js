@@ -540,8 +540,18 @@ Stereopsis.View.prototype.image = function(image){
 		if(image){
 			this.defaultCells();
 		}
+		this._imageScales = null; // need to repro for next time
+		// this.imageScales(); // auto load
 	}
 	return this._image;
+}
+Stereopsis.View.prototype.imageScales = function(){
+	if(!this._imageScales){
+		if(this._image){
+			this._imageScales = new ImageMatScaled(this._image);
+		}
+	}
+	return this._imageScales;
 }
 Stereopsis.View.prototype.defaultCells = function(){
 	var size = Math.round( this.sizeFromPercent(0.01) );
@@ -3955,7 +3965,7 @@ Stereopsis.World.prototype.patchInitBasicSphere = function(doMatches, points3D, 
 			var pnt2D = point2D.point2D();
 			var view = point2D.view();
 			var viewNormal = view.normal();
-			var patchSize = view.cellSize();
+			var maxPatchSize = view.cellSize();
 			// BASE PATCH SIZE ON NEIGHBORHOOD -- if cell size: then unintended collisions
 				var neighborhoodCount = 3 + 1;
 				var space = view.pointSpace(pnt2D,neighborhoodCount);
@@ -3966,10 +3976,11 @@ Stereopsis.World.prototype.patchInitBasicSphere = function(doMatches, points3D, 
 					var neighbor = neighbors[n];
 					if(neighbor!=point2D){
 						++patchCount;
-						patchSize += V2D.distance(pnt2D,neighbor.point2D());
+						patchSize += V2D.distance(pnt2D,neighbor.point2D()); // half sizes
 					}
 				}
 				patchSize /= patchCount;
+				// patchSize = Math.min(patchSize,maxPatchSize*0.5);
 			// project (parallel) unit up to view plane
 			view.projectPoint3D(center2D, p3D);
 			var parallelUp = V3D.perpendicularComponent(viewNormal,up).norm();
@@ -3987,8 +3998,8 @@ Stereopsis.World.prototype.patchInitBasicSphere = function(doMatches, points3D, 
 				dn2D.sub(center2D);
 				lf2D.sub(center2D);
 				ri2D.sub(center2D);
-			var avg = (up2D.length()+dn2D.length()+lf2D.length()+ri2D.length())*0.25;
-			var s = patchSize*0.5/avg; // radius = half a cell
+			var avg = (up2D.length()+dn2D.length()+lf2D.length()+ri2D.length())*0.25; // half sizes
+			var s = 0.5*patchSize/avg; // scale from projected size to patch size for full patch size
 			if(s==Infinity){
 				throw "infinite size";
 			}
@@ -4022,9 +4033,6 @@ Stereopsis.World.prototype.patchInitBasicSphere = function(doMatches, points3D, 
 					// affine from summary stats:
 					}else{
 						var scale = distB/distA; // TODO: is scale distance or PERPENDICULAR-NORMAL distance ratio?
-						// 	var sca = sizes[k]/sizes[j]; // can be quite different
-						// 	console.log(sca+" | "+scale);
-						// scale = sca;
 						var angles = [];
 						for(var p=0; p<ptsA.length; ++p){
 							var angle = V2D.angleDirection(ptsA[p],ptsB[p]);
@@ -4048,7 +4056,7 @@ Stereopsis.World.prototype.patchUpdateSphere = function(updateOnly){ // update n
 	points3D = this.toPointArrayLocated();
 	var world = this;
 	console.log("patchUpdateSphere: "+points3D.length);
-var showIndexMin = 610;
+var showIndexMin = 666610;
 var showIndexMax = showIndexMin + 10;
 	for(var i=0; i<points3D.length; ++i){
 var doLogging = (showIndexMin<=i && i<=showIndexMax);
@@ -4089,13 +4097,12 @@ if(i>=showIndexMax){
 	}
 }
 Stereopsis.World.prototype._nonlinearPatchUpdateNormal = function(patch,point3D,views,   doLogging){
-// DO_LOGGING_COUNT = 0;
 	var center = patch["point"];
 	var normal = patch["normal"];
 	var up = patch["up"];
 	var right = patch["right"];
 	var size = patch["size"];
-	var maxIterations = 5;
+	var maxIterations = 3; // 3-5
 	var fxn = Stereopsis._gdPatchUpdateNormal;
 	var args = [center,normal,up,right,size,views,point3D, doLogging];
 	var xVals = [0,0]; // up | right
@@ -4112,9 +4119,9 @@ DO_LOGGING_COUNT = 0;
 DO_LOGGING_COUNT = 0;
 DO_LOGGING_COUNT_Y = 0;
 Stereopsis._gdPatchUpdateNormal = function(args, x, isUpdate, descriptive){
-	// if(isUpdate){
-	// 	return;
-	// }
+	if(isUpdate){
+		return;
+	}
 	var startCenter = args[0];
 	var startNormal = args[1];
 	var startUp = args[2];
@@ -4134,7 +4141,6 @@ var doLogging = args[7];
 		Stereopsis._gdPatchUpdateNormal_V3D_3 = new V3D();
 		Stereopsis._gdPatchUpdateNormal_V3D_4 = new V3D();
 		Stereopsis._gdPatchUpdateNormal_SIZE = 7;
-		// Stereopsis._gdPatchUpdateNormal_SIZE = 9;
 		Stereopsis._gdPatchUpdateNormal_MASK = ImageMat.circleMask(Stereopsis._gdPatchUpdateNormal_SIZE);
 	}
 	var normal = Stereopsis._gdPatchUpdateNormal_V3D_0;
@@ -4155,7 +4161,7 @@ var doLogging = args[7];
 	// don't allow reverse of normal direction
 	var dot = V3D.dot(normal,startNormal);
 	if(dot<=0){ // TODO: is this a problem?
-		return 1E12;
+		return 1E9;
 	}
 	// affines
 	var compareSize = Stereopsis._gdPatchUpdateNormal_SIZE;
@@ -4176,7 +4182,6 @@ var doLogging = args[7];
 	var scales = [];
 	var affines = [];
 	var centers = [];
-	var viewCompareSizes = [];
 	for(var i=0; i<views.length; ++i){
 		var view = views[i];
 		// project: center, up, right
@@ -4190,16 +4195,14 @@ var doLogging = args[7];
 		top2D.sub(cen2D);
 		lft2D.sub(cen2D);
 		dwn2D.sub(cen2D);
+		// record scales: from expected compare size to actual projected size
 // if(doLogging){
-// console.log(rig2D.length(),top2D.length(),lft2D.length(),dwn2D.length(), view.cellSize(),view.compareSize());
+// 	console.log("half lengths: ",[rig2D.length(),top2D.length(),lft2D.length(),dwn2D.length()])
 // }
-		// record sizes
 		scales.push( 2.0*Code.averageNumbers([rig2D.length(),top2D.length(),lft2D.length(),dwn2D.length()])/view.compareSize() );
-			viewCompareSizes.push( view.compareSize() );
 		// use P2D center, not projected center
 		var p2D = p3D.point2DForView(view);
 		var c2D = p2D.point2D();
-
 		// create affine
 		var pointsA = [rig2D,top2D,lft2D,dwn2D];
 		var pointsB = [xLoc,yLoc,nxLoc,nyLoc];
@@ -4207,25 +4210,39 @@ var doLogging = args[7];
 		affines.push(affine.copy());
 		centers.push(c2D);
 	}
-	// scale A) average size up to compare size ; B) minimum size to compare size
-	var viewCompareSize = Code.averageNumbers(viewCompareSizes);
-	var averageScale = Code.averageNumbers(scales); // needs to in log space to average correctly -- UNUSED
 	var minimumScale = Code.min(scales);
-	// var scale = 1.0/minimumScale;
-	// var scale = minimumScale * viewCompareSize/compareSize;
-	var scale = minimumScale * compareSize/viewCompareSize;
-// if(doLogging){
-// 	console.log("minimumScale: "+minimumScale+"   averageScale: "+averageScale+" => "+scale);
-// }
 	// patches extract from affine
 	var patches = [];
 	for(var i=0; i<views.length; ++i){
 		var view = views[i];
-		var image = view.image();
+		var imageScales = view.imageScales();
 		var c2D = centers[i];
 		var affine = affines[i];
-			affine.scale(scale);
-		var needle = image.extractRectFromFloatImage(c2D.x,c2D.y,1.0,null,compareSize,compareSize, affine);
+		// separate out scales
+			var info = R3D.infoFromAffine2D(affine);
+			var applyScale = info["scale"];
+			affine.scale(1.0/applyScale);
+			applyScale = applyScale*minimumScale; // additional scale for including entirety of cell-compare size
+			// best size scaling
+			info = imageScales.infoForScale(applyScale);
+		    var image = info["image"];
+		    var effScale = info["effectiveScale"];
+		    var actScale = info["actualScale"];
+		var needle = image.extractRectFromFloatImage(c2D.x*actScale,c2D.y*actScale,1.0/effScale,null,compareSize,compareSize, affine);
+// if(doLogging){
+// 	var totalSize = 19;
+// 	var d = new DO();
+// 		d.graphics().setLine(1.0,0xFFFF0000);
+// 		d.graphics().beginPath();
+// 		d.graphics().drawCircle(c2D.x,c2D.y, totalSize*0.5);
+// 		d.graphics().strokeLine();
+// 		d.graphics().endPath();
+// 		d.matrix().translate(10 + 0, 10 + 0);
+// 		if(i==1){
+// 			d.matrix().translate(view.image().width()*1, 0);
+// 		}
+// 	GLOBALSTAGE.addChild(d);
+// }
 		patches.push(needle);
 	}
 	// cost
@@ -4242,24 +4259,20 @@ var doLogging = args[7];
 			++compares;
 		}
 	}
-	// console.log(totalCost+" / "+compares);
 	totalCost /= compares;
-	if(doLogging && isUpdate){ // (isUpdate || (angleU==0 && angleU==0) ) ){
-		console.log("TOTAL COST: "+totalCost);
-		// console.log(scales)
-		var sca = 7.0;
-		for(var i=0; i<patches.length; ++i){
-			var patch = patches[i];
-			var iii = patch;
-			var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
-			var d = new DOImage(img);
-			d.matrix().scale(sca);
-			// d.matrix().translate(10 + i*100, 10 + DO_LOGGING_COUNT*90);
-			d.matrix().translate(10 + DO_LOGGING_COUNT*50, 10 + i*50 + (DO_LOGGING_COUNT_Y*2)*50);
-			GLOBALSTAGE.addChild(d);
-		}
-		++DO_LOGGING_COUNT;
-	}
+	// if(doLogging && isUpdate){ // (isUpdate || (angleU==0 && angleU==0) ) ){
+	// 	var sca = 5.0;
+	// 	for(var i=0; i<patches.length; ++i){
+	// 		var patch = patches[i];
+	// 		var iii = patch;
+	// 		var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
+	// 		var d = new DOImage(img);
+	// 		d.matrix().scale(sca);
+	// 		d.matrix().translate(10 + DO_LOGGING_COUNT*50, 10 + i*50 + (DO_LOGGING_COUNT_Y*2)*50);
+	// 		GLOBALSTAGE.addChild(d);
+	// 	}
+	// 	++DO_LOGGING_COUNT;
+	// }
 	return totalCost;
 }
 
@@ -6217,9 +6230,9 @@ var OFFY = 10;
 
 	// estimate patch using geometry, then refine
 	console.log("estimate patch initial");
-	this.patchInitBasicSphere(true);
+	world.patchInitBasicSphere(true);
 	console.log("estimate patch detailed -- TODO: VERIFY THIS");
-	this.patchUpdateSphere();
+	world.patchUpdateSphere();
 	// done
 	if(completeFxn){
 		completeFxn.call(completeContext);

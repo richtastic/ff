@@ -9250,24 +9250,27 @@ console.log("progressiveFullMatchingDense")
 
 // return {"A":pointsA, "B":pointsB, "F":F, "Finv":Finv}; // SPARSE RESULTS
 
-/*
-	// get <1px F error : medium refinement -- isolate best searching locations
-	info = R3D._progressiveMediumMatches(imageMatrixA,imageMatrixB, pointsA,pointsB, F,Finv,Ferror);
-	console.log(info);
-	F = info["F"];
-	Finv = info["inv"];
-	Ferror = info["error"];
-	pointsA = info["A"];
-	pointsB = info["B"];
-	// RESULTS
-	console.log("FAB: "+F.toArray());
-	console.log("FBA: "+Finv.toArray());
-	console.log(pointsA,pointsB);
-	console.log(matches);
+
+// // if error is already low, can skip this step:
+// if(Ferror>1.0){
+// 	// get <1px F error : medium refinement -- isolate best searching locations
+// 	info = R3D._progressiveMediumMatches(imageMatrixA,imageMatrixB, pointsA,pointsB, F,Finv,Ferror);
+// 	console.log(info);
+// 	F = info["F"];
+// 	Finv = info["inv"];
+// 	Ferror = info["error"];
+// 	pointsA = info["A"];
+// 	pointsB = info["B"];
+// 	// RESULTS
+// 	console.log("FAB: "+F.toArray());
+// 	console.log("FBA: "+Finv.toArray());
+// 	console.log(pointsA,pointsB);
+// 	console.log(matches);
+// }
 
 
 // return {"A":pointsA, "B":pointsB, "F":F, "Finv":Finv}; // LOW ERROR - TOP MATCHES
-*/
+
 
 	// 'dense sparse'
 	info = R3D._progressiveSparseDenseMatches(imageMatrixA,imageMatrixB, pointsA,pointsB, F,Finv,Ferror);
@@ -9326,7 +9329,7 @@ R3D._progressiveSparseMatches = function(imageMatrixA,objectsA, imageMatrixB,obj
 	var F, Finv, Ferror, matches, pointsA, pointsB, pixelError;
 	var maxIterations = 5;
 	var minimumRatio = 0.90; // full area should be more unique?
-	var mininumScore = 0.15;
+	var mininumScore = null;//0.25;
 	for(var iteration=0; iteration<maxIterations; ++iteration){
 		R3D.progressiveMatchObjectsSubset(imageMatrixA,imageMatrixB, objectsA,objectsB, objectsB,objectsA, F,Finv, Ferror);
 		info = R3D._progressiveMatchChooseBest(objectsA,objectsB, minimumRatio,mininumScore);
@@ -10138,8 +10141,8 @@ console.log("R3D._progressiveMediumMatches");
 	R3D._progressiveMarkGridIteration(gridB,pointsBIn);
 	}
 
-	var minimumRatio = 0.95; // limited search group
-	var mininumScore = 0.15;
+	var minimumRatio = 0.95; // 0.95; // limited search group
+	var mininumScore = null; // 0.20;
 	var maxIterations = 5;
 	for(var iteration=0; iteration<maxIterations; ++iteration){
 		console.log("medium: "+iteration+" / "+maxIterations);
@@ -10350,9 +10353,9 @@ console.log("R3D._progressiveSparseDenseMatches");
 
 
 
-
 /*
-// SHOW
+
+// SHOW relative match points
 var list = [featuresA,featuresB];
 var offsetX = 0;
 for(var l=0; l<list.length; ++l){
@@ -10384,20 +10387,21 @@ throw "..."
 */
 
 
-	// make features bigger: --- not good for size variation
-	var sizing = 0.05; // 2% - 5%  --- 11, 22, 44
-	sizing = sizing*Code.averageNumbers([widthA,heightA,widthB,heightB]);
-	sizing = Math.round(sizing);
-	console.log("SIZING: "+sizing)
-	var scaling = 1.0;
-	for(var i=0; i<featuresA.length; ++i){
-		var feature = featuresA[i];
-		feature["size"] = sizing;
-	}
-	for(var i=0; i<featuresB.length; ++i){
-		var feature = featuresB[i];
-		feature["size"] = sizing;
-	}
+
+	// // make features bigger: --- not good for size variation
+	// var sizing = 0.05; // 2% - 5%  --- 11, 22, 44
+	// sizing = sizing*Code.averageNumbers([widthA,heightA,widthB,heightB]);
+	// sizing = Math.round(sizing);
+	// console.log("SIZING: "+sizing)
+	// var scaling = 1.0;
+	// for(var i=0; i<featuresA.length; ++i){
+	// 	var feature = featuresA[i];
+	// 	feature["size"] = sizing;
+	// }
+	// for(var i=0; i<featuresB.length; ++i){
+	// 	var feature = featuresB[i];
+	// 	feature["size"] = sizing;
+	// }
 
 
 	// create SIFT objects
@@ -10409,11 +10413,11 @@ throw "..."
 	console.log("object creation time: "+time);
 
 	// match across F
-	Ferror = 4.0*pixelError; // ... 2-4 sigma ?
+	Ferror = 2.0*pixelError; // ... 2-4 sigma ?
 	// Ferror = Math.max(Ferror, 1.0);
 
-	var minimumRatio = 0.99; //
-	var minimumScore = 0.10; // scores ~ 0.05
+	var minimumRatio = 0.99; // 0.90; //
+	var minimumScore = null; // 0.20; // scores ~ 0.05
 
 	console.log("best of F  @ "+Ferror+" ");
 	Ferror = Math.max(Ferror, 1.0);
@@ -10743,7 +10747,6 @@ R3D._progressiveMatchChooseBest = function(objectsA,objectsB,  minimumRatio,minS
 		var matchesA = objectA["matches"];
 		var indexA = objectA["index"];
 		if(matchesA.length>0){
-			var matchFound = false;
 			var matchA0 = matchesA[0];
 			var objectB = matchA0["o"];
 			var indexB = objectB["index"];
@@ -10759,11 +10762,17 @@ R3D._progressiveMatchChooseBest = function(objectsA,objectsB,  minimumRatio,minS
 					var scoreRank = null;
 					var ratioA, ratioB;
 					var pass = false;
-					var passScoreLimit = scoreA<minScore && scoreB<minScore;
+					var passScoreLimit = true;
+					// scoreA<minScore && scoreB<minScore;
 					if(matchesA.length>1 && matchesB.length>1){
-						ratioA = scoreA/matchesA[1]["s"];
-						ratioB = scoreB/matchesB[1]["s"];
-						scoreRank = Math.min(ratioA,ratioB);
+						var scoreA2 = matchesA[1]["s"];
+						var scoreB2 = matchesB[1]["s"];
+						if(scoreA2==0 || scoreB2==0){
+							continue;
+						}
+						ratioA = scoreA/scoreA2;
+						ratioB = scoreB/scoreB2;
+						scoreRank = Math.max(ratioA,ratioB);
 						var passRankLimit = scoreRank<minimumRatio;
 						pass = passScoreLimit && passRankLimit;
 					}else{ // no other matches to get ratio for
@@ -10775,23 +10784,44 @@ R3D._progressiveMatchChooseBest = function(objectsA,objectsB,  minimumRatio,minS
 						var match = {"A":objectA, "B":objectB, "score":score, "rank":rank, "a":indexA, "b":indexB};
 						bestMatches.push(match);
 					}
-					matchFound = true;
 				}
 			} // else no matches on B
 		} // else no matches on A
 	}
 	// filter out worst matches based on score HERE ?
+	// bestMatches.sort(function(a,b){
+	// 	return a["rank"] < b["rank"] ? -1 : 1;
+	// });
+	var scores = [];
+	var ranks = [];
+	for(var i=0; i<bestMatches.length; ++i){
+		var match = bestMatches[i];
+		scores.push(match["score"]);
+		ranks.push(match["rank"]);
+	}
+	// Code.printMatlabArray(scores,"scores");
+	// Code.printMatlabArray(ranks,"rank");
+	console.log("STARTING: "+bestMatches.length);
+	var minScore = Code.min(scores);
+	var sigmaScore = Code.stdDev(scores,minScore);
+	var limitScore = minScore + 2.0*sigmaScore;
+	console.log(minScore+" +/- "+sigmaScore+" = "+limitScore);
+	// var minRank = Code.min(ranks);
+	// var sigmaRank = Code.stdDev(ranks,minRank);
+	// var limitRank = minRank + 2.0*sigmaRank;
+	// console.log(minRank+" +/- "+sigmaRank+" = "+limitRank);
+// rank does nothing ...
 
-	// var data = [];
-	// for(var x=0; x<matches.length; ++x){
-	// 	var match = matches[x];
-	// 	data.push(match["score"]);
-	// }
-	// Code.printMatlabArray(data,"scores");
+	for(var i=0; i<bestMatches.length; ++i){
+		var match = bestMatches[i];
+		if(match["score"]>limitScore){ // || match["rank"]>limitRank){
+			Code.removeElementAt(bestMatches,i);
+			--i;
+		}
+	}
 
-	bestMatches.sort(function(a,b){
-		return a["rank"] < b["rank"] ? -1 : 1;
-	});
+	console.log("ENDING: "+bestMatches.length);
+
 	return {"matches":bestMatches};
 }
 R3D.progressiveMatchObjectsSubset = function(imageA,imageB, objectsA,putativeA, objectsB,putativeB, Fab,Fba,errorPixels){
@@ -11096,6 +11126,7 @@ Code.timerStart();
 				var scoreFlat = match["f"];
 				var scoreGrad = match["g"];
 				var s = (scoreFlat*scoreGrad) * (scoreFlat+scoreGrad);
+// console.log(scoreFlat,scoreGrad,"=",s);
 				match["s"] = s;
 				scores.push(s);
 			}
@@ -11366,8 +11397,8 @@ R3D.stationaryFeatures = function(imageA,imageB,F, ptsA,ptsB,  display, existing
 }
 
 R3D.basicScaleFeaturesFromPoints = function(points, imageScales){
-	var diaNeighborhood = 21; //  [15 - 25]
-	// var diaNeighborhood = 31;
+	// var diaNeighborhood = 21; //  [15 - 25]
+	var diaNeighborhood = 15;
 	// reuse items
 	var scales = Code.divSpace(3,-2, 20);
 	var matrixes = [];
@@ -11406,7 +11437,7 @@ R3D.basicScaleFeaturesFromPoints = function(points, imageScales){
 
 		// COVARIANCE:
 		var grySize = 3; // ? why not 3x3 ? 5?
-		var gryScale = scale;
+		var gryScale = scale * 0.5;
 			var info = imageScales.infoForScale(gryScale);
 			var imageMatrix = info["image"];
 			var imageGray = imageMatrix.gry();
@@ -16525,14 +16556,10 @@ R3D._progressiveCompare1DArrayV3DNCC = function(histA,histB){
 R3D._progressiveCompareSIFTCache = function(object){
 	var scoreFlat = object["scoreFlatSIFT"];
 	var scoreGrad = object["scoreGradSIFT"];
-
-// return scoreFlat;
-// return scoreGrad;
-
-	return (scoreFlat*scoreGrad) * (scoreFlat+scoreGrad);
-
+var scoreCache = (scoreFlat*scoreGrad) * (scoreFlat+scoreGrad);
+console.log(scoreFlat,scoreGrad,scoreCache);
+	return scoreCache;
 	// var score = (sF*sS)*(sF+sS); // better
-
 	// return scoreFlat * scoreGrad;
 }
 R3D._sortCompareProgressiveFxn = function(a,b){
@@ -16729,17 +16756,16 @@ R3D._progressiveR3DColorAverage = function(block){
 R3D._progressiveR3DColorHistogram = function(block){
 	var mask = R3D._progressiveR3DMask();
 	// original
-	var histogram = Code.histogram3D(block.red(),block.grn(),block.blu(),10, mask,0,1, true);
+	// var histogram = Code.histogram3D(block.red(),block.grn(),block.blu(),10, mask,0,1, true);
+	// 	histogram = histogram["histogram"];
+	var buckets = [10,10,10];
+	// var buckets = [8,8,8];
+	var loopings = [false,false,false];
+	var datas = [block.red(),block.grn(),block.blu()];
+	var magnitudes = mask;
+	var histogram = Code.histogramND(buckets, loopings, datas, magnitudes, true, true); // 6 -> 32
 		histogram = histogram["histogram"];
-	/*
-		var buckets = [10,10,10];
-		// var buckets = [8,8,8];
-		var loopings = [false,false,false];
-		var datas = [block.red(),block.grn(),block.blu()];
-		var magnitudes = mask;
-		var histogram = Code.histogramND(buckets, loopings, datas, magnitudes, true, true); // 6 -> 32
-			histogram = histogram["histogram"];
-	*/
+	// R3D.histogramListToUnitLength([histogram]);
 	return histogram;
 }
 R3D._progressiveR3DColorOriented = function(block){
@@ -16840,19 +16866,17 @@ R3D._progressiveR3DSIFTFlat = function(block){
 	for(var i=0; i<radialCount; ++i){
 		var hist = binHistograms[i];
 		// original
-		var histogram = Code.histogram3D(hist[0],hist[1],hist[2], 10, null,0,1, true, null); // 8-12
-			histogram = histogram["histogram"];
-		/*
+		// var histogram = Code.histogram3D(hist[0],hist[1],hist[2], 10, null,0,1, true, null); // 8-12
+		// 	histogram = histogram["histogram"];
 		var buckets = [10,10,10];
 		// var buckets = [8,8,8];
 		var loopings = [false,false,false];
 		var datas = [hist[0],hist[1],hist[2]];
 		var histogram = Code.histogramND(buckets, loopings, datas, null, true, true); // 4 -> 20
 			histogram = histogram["histogram"];
-		*/
 		binHistograms[i] = histogram;
 	}
-	R3D.histogramListToUnitLength(binHistograms);
+	// R3D.histogramListToUnitLength(binHistograms);
 	return binHistograms;
 }
 R3D._progressiveR3DSIFTGrad = function(block){
@@ -16900,7 +16924,9 @@ R3D._progressiveR3DSIFTGrad = function(block){
 		var hist = binHistograms[i];
 		// var histogram = Code.histogram3D(hist[0],hist[1],hist[2], 8, null,0,1.0, true, hist[3], true);
 		// histogram = histogram["histogram"];
-		var buckets = [8,8,8,8];
+		// var buckets = [8,6,6,6];
+		// var buckets = [8,8,8,8];
+		var buckets = [10,8,8,8];
 		var loopings = [true,false,false,false];
 		var datas = [hist[0],hist[1],hist[2],hist[3]];
 		var histogram = Code.histogramND(buckets, loopings, datas, hist[4], true, true); // 10 -> 20
