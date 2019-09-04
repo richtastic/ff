@@ -380,8 +380,17 @@ https://cloud.google.com/appengine/docs/nodejs/
 still poor matches
 progressiveMatchChooseBest
 
+~ ORIENTATION
+	x look at pixels around, center focus
+	x try similar measurement [diagonal] around origin?
 
+	-
+x SCORE
+	- try different score metric (FLAT | GRAD)
 
+x gradient gaussian falloff
+
+-
 
 
 A) Stereopsis

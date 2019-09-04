@@ -153,7 +153,7 @@ var dist = null;
 
 	// PIKACHUS
 	// new ImageLoader("./images/pika_1/",["image-0.png", "image-1.png"],this,this.imagesLoadComplete).load(); // ok
-	// new ImageLoader("./images/pika_1/",["image-0.png", "image-2.png"],this,this.imagesLoadComplete).load(); // ok
+	new ImageLoader("./images/pika_1/",["image-0.png", "image-2.png"],this,this.imagesLoadComplete).load(); // ok
 	// new ImageLoader("./images/pika_1/",["image-0.png", "image-3.png"],this,this.imagesLoadComplete).load(); // poor
 	// new ImageLoader("./images/pika_1/",["image-0.png", "image-4.png"],this,this.imagesLoadComplete).load(); // poor
 	// new ImageLoader("./images/pika_1/",["image-0.png", "image-5.png"],this,this.imagesLoadComplete).load(); // bad
@@ -177,7 +177,7 @@ var dist = null;
 
 	// MEDUSA
 	// new ImageLoader("./images/",["medusa_1.png", "medusa_2.png"],this,this.imagesLoadComplete).load(); // good
-	new ImageLoader("./images/",["medusa_1.png", "medusa_3.png"],this,this.imagesLoadComplete).load(); // good
+	// new ImageLoader("./images/",["medusa_1.png", "medusa_3.png"],this,this.imagesLoadComplete).load(); // good
 	// new ImageLoader("./images/",["medusa_1.png", "medusa_4.png"],this,this.imagesLoadComplete).load(); // poor
 	// new ImageLoader("./images/",["medusa_1.png", "medusa_5.png"],this,this.imagesLoadComplete).load(); // bad
 
@@ -208,6 +208,14 @@ r -
 	// new ImageLoader("./images/user/beach_pillar/",["2_50.jpg", "3_50.jpg"],this,this.imagesLoadComplete).load(); //
 	// new ImageLoader("./images/user/beach_pillar/",["0_50.jpg", "2_50.jpg"],this,this.imagesLoadComplete).load(); //
 	// new ImageLoader("./images/user/beach_pillar/",["0_50.jpg", "1_50.jpg"],this,this.imagesLoadComplete).load(); //
+}
+
+RiftTest.prototype.handleMouseClickFxn = function(e){
+
+
+	console.log(e);
+	var location = e["location"];
+	console.log(location);
 }
 
 RiftTest.prototype.imagesLoadComplete = function(imageInfo){
@@ -422,8 +430,9 @@ for(i=0;i<matrixes.length;++i){
 	// d.graphics().alpha(0.01);
 	// d.graphics().alpha(0.05);
 	// d.graphics().alpha(0.10);
-	d.graphics().alpha(0.25);
-	// d.graphics().alpha(0.50);
+	// d.graphics().alpha(0.25);
+	d.graphics().alpha(0.50);
+	// d.graphics().alpha(0.75);
 	// d.graphics().alpha(1.0);
 	d.matrix().translate(x,y);
 	// x += img.width*GLOBALSCALE;
@@ -532,6 +541,10 @@ continue;
 // ImageMatScaled.prototype.imageForScale = function(scale){
 // 	return {"image":effectiveImage, "scale":actualScale, "effective":effectiveScale};
 // }
+
+
+// this.testCorners(imageMatrixA,imageMatrixB);
+// throw "?"
 
 
 var maxCount = 2000;
@@ -1982,6 +1995,163 @@ RiftTest._appendEdgePoints = function(pointList, gry,compareSize, edgeLength, do
 		}
 	}
 	return;
+}
+
+RiftTest.prototype.testCorners = function(imageMatrixA, imageMatrixB){
+
+
+	var imageScales = new ImageMatScaled(imageMatrixA);
+
+	console.log("testCorners");
+	// {x: 326, y: 304, z: 0}
+	// var p = new V2D(326, 304);
+	//
+	// var p = new V2D(219, 202);
+	// bench
+	var p = new V2D(338, 107);
+
+	var c = new DO();
+	// color = 0xFFFF0000;
+	c.graphics().setLine(1, 0xFFFF0000);
+	c.graphics().beginPath();
+	// c.graphics().moveTo(0,0);
+	// c.graphics().lineTo(imageSize*0.5*Math.cos(ang),imageSize*0.5*Math.sin(ang));
+	c.graphics().drawCircle(p.x,p.y, 5);
+	c.graphics().endPath();
+	c.graphics().strokeLine();
+	// c.matrix().scale(1.0/rat,rat);
+	// c.matrix().translate(imageSize*0.5,imageSize*0.5);
+	GLOBALDISPLAY.addChild(c);
+	// GLOBALSTAGE.addChild(c);
+
+	console.log(p+"")
+
+	// extract block:
+	var blockSize = 3;
+	var scale = 2.0;
+	var affine = new Matrix2D();
+		affine.scale(scale);
+		// revert scale
+		var info = R3D.infoFromAffine2D(affine);
+		var applyScale = info["scale"];
+			affine.scale(1.0/applyScale);
+
+		var info = imageScales.infoForScale(applyScale);
+		var image = info["image"];
+		var effScale = info["effectiveScale"];
+		var actScale = info["actualScale"];
+		var block = image.extractRectFromFloatImage(p.x*actScale,p.y*actScale,1.0/effScale,null,blockSize,blockSize, affine);
+		console.log(block);
+
+		var gry = block.gry();
+		var a = gry[0];
+		var b = gry[1];
+		var c = gry[2];
+		var d = gry[3];
+		var e = gry[4];
+		var f = gry[5];
+		var g = gry[6];
+		var h = gry[7];
+		var i = gry[8];
+
+		var s8 = 1.0/Math.sqrt(8);
+		var s5 = 1.0/Math.sqrt(5);
+		var d1x = (f-d)*0.5;
+		var d1y = (h-b)*0.5;
+		var d2x = (i-a)*s8;
+		var d2y = (c-g)*s8;
+		var d3x = (f+i-a-d)*s5;
+		var d3y = (g+h-b-c)*s5;
+		var d4x = (c+f-d-g)*s5;
+		var d4y = (h+i-a-b)*s5;
+
+		var g1 = new V2D(d1x,d1y);
+		var g2 = new V2D(d2x,d2y);
+		g2.rotate(Math.PI*0.25); // 90 deg
+		var g3 = new V2D(d3x,d3y);
+		g3.rotate(Math.atan(1/2));
+		var g4 = new V2D(d4x,d4y);
+		g4.rotate(-Math.atan(1/2));
+		var a1 = V2D.angleDirection(V2D.DIRX,g1);
+		var a2 = V2D.angleDirection(V2D.DIRX,g2);
+		var a3 = V2D.angleDirection(V2D.DIRX,g3);
+		var a4 = V2D.angleDirection(V2D.DIRX,g4);
+		a1 = Code.angleZeroTwoPi(a1);
+		a2 = Code.angleZeroTwoPi(a2);
+		a3 = Code.angleZeroTwoPi(a3);
+		a4 = Code.angleZeroTwoPi(a4);
+		console.log(Code.degrees(a1));
+		console.log(Code.degrees(a2));
+		console.log(Code.degrees(a3));
+		console.log(Code.degrees(a4));
+		var gradAng = Code.averageAngles([a1,a2,a3,a4]);
+		gradAng = Code.angleZeroTwoPi(gradAng);
+		console.log(Code.degrees(gradAng));
+
+		var gradAng = R3D.gradAngleFromGry3x3(gry);
+		console.log(Code.degrees(gradAng));
+
+
+
+		// COV STUFF:
+		var mat = new Matrix(2,2).fromArray([d1x, d2x, d2x, d1y]);
+		var eig = Matrix.eigenValuesAndVectors(mat);
+		var vec = eig["vectors"];
+		var val = eig["values"];
+		var v0 = vec[0].toArray();
+		var v1 = vec[1].toArray();
+		var cov1 = new V2D().fromArray(v0);
+		var c1 = V2D.angleDirection(V2D.DIRX,cov1);
+			c1 = Code.angleZeroTwoPi(c1);
+		console.log(Code.degrees(c1));
+
+
+		var mat = new Matrix(2,2).fromArray([d1y, d2y, d2y, -d1x]);
+		var eig = Matrix.eigenValuesAndVectors(mat);
+		var vec = eig["vectors"];
+		var val = eig["values"];
+		var v0 = vec[0].toArray();
+		var v1 = vec[1].toArray();
+		var cov2 = new V2D().fromArray(v0);
+			cov2.rotate(-Math.PI*0.5);
+		var c2 = V2D.angleDirection(V2D.DIRX,cov2);
+			c2 = Code.angleZeroTwoPi(c2);
+		console.log(Code.degrees(c2));
+
+		console.log("angle: "+Code.degrees(Code.minAngle(c1,c2)));
+		var covAng = Code.averageAngles([c1,c2]);
+			covAng = Code.angleZeroTwoPi(covAng);
+		console.log(Code.degrees(covAng));
+
+		// var grySize = 3; // ? why not 3x3 ? 5?
+		// var gryScale = scale * 0.5;
+		// 	var info = imageScales.infoForScale(gryScale);
+		// 	var imageMatrix = info["image"];
+		// 	var imageGray = imageMatrix.gry();
+		// 	var imageWidth = imageMatrix.width();
+		// 	var imageHeight = imageMatrix.height();
+		// 	var effScale = info["effectiveScale"];
+		// 	var actScale = info["actualScale"];
+		// var gry = ImageMat.extractRectFromFloatImage(point.x*actScale,point.y*actScale,1.0/effScale,null,grySize,grySize, imageGray,imageWidth,imageHeight, null);
+		// var cov = R3D.covFromGray(gry, grySize,grySize,0,0, 1,1)["cov"];
+		// var angle = V2D.angleDirection(V2D.DIRX,cov);
+
+
+		// GLOBALDISPLAY.addChild(d);
+
+
+	var imageSize = 11;
+	var matrix = new Matrix2D().scale(scale);
+	var image = imageMatrixA.extractRectFromFloatImage(p.x,p.y, 1.0,null, imageSize,imageSize, matrix);
+	var sca = 4.0;
+	var img = GLOBALSTAGE.getFloatRGBAsImage(image.red(), image.grn(), image.blu(), image.width(), image.height());
+	var d = new DOImage(img);
+	d.matrix().scale(sca);
+	d.matrix().translate(10,10);
+	// GLOBALSTAGE.addChild(d);
+	GLOBALDISPLAY.addChild(d);
+
+	throw "..."
 }
 
 RiftTest.prototype.peakScaleForPoint = function(point, imageMatrix, covAngle,covScale){

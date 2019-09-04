@@ -11126,7 +11126,8 @@ Code.timerStart();
 				var scoreFlat = match["f"];
 				var scoreGrad = match["g"];
 				var s = (scoreFlat*scoreGrad) * (scoreFlat+scoreGrad);
-// console.log(scoreFlat,scoreGrad,"=",s);
+				// var s = scoreGrad;
+				// var s = (scoreFlat*scoreGrad);
 				match["s"] = s;
 				scores.push(s);
 			}
@@ -11397,8 +11398,8 @@ R3D.stationaryFeatures = function(imageA,imageB,F, ptsA,ptsB,  display, existing
 }
 
 R3D.basicScaleFeaturesFromPoints = function(points, imageScales){
-	// var diaNeighborhood = 21; //  [15 - 25]
-	var diaNeighborhood = 15;
+	var diaNeighborhood = 21; //  [15 - 25]
+	// var diaNeighborhood = 15;
 	// reuse items
 	var scales = Code.divSpace(3,-2, 20);
 	var matrixes = [];
@@ -11407,6 +11408,7 @@ R3D.basicScaleFeaturesFromPoints = function(points, imageScales){
 		scale = Math.pow(2,scale);
 		scales[i] = scale;
 	}
+	// console.log(scales)
 	// unused gradient peak stuff
 	// var gradNeighborhood = diaNeighborhood*0.25;
 	// var gradNeighborhood = diaNeighborhood;
@@ -11420,12 +11422,12 @@ R3D.basicScaleFeaturesFromPoints = function(points, imageScales){
 	// falloff = ImageMat.mulFloat(falloff,circleMask);
 	// ImageMat.normalFloat01(falloff); // 0-1
 	// console.log(falloff);
-	var features = [];
-	var gradientBins = 32; // 8-16
-	var gBM1 = gradientBins - 1;
-	var gBinWid = 1.0/gradientBins;
-	var twoPi = Math.PI*2;
+	// var gradientBins = 32; // 8-16
+	// var gBM1 = gradientBins - 1;
+	// var gBinWid = 1.0/gradientBins;
+	// var twoPi = Math.PI*2;
 	// get scale & rotation for each point
+	var features = [];
 	for(var i=0; i<points.length; ++i){
 		var point = points[i];
 		var result = R3D.basicOptimumCornerScale(point, imageScales, null, scales, null, null);
@@ -11433,11 +11435,12 @@ R3D.basicScaleFeaturesFromPoints = function(points, imageScales){
 			continue;
 		}
 		var peakScale = result["scale"];
-
-
 		// COVARIANCE:
-		var grySize = 3; // ? why not 3x3 ? 5?
-		var gryScale = scale * 0.5;
+		var grySize = 3;
+		// var gryScale = peakScale * 8.0;
+		// var gryScale = peakScale * 1.0;
+		var gryScale = peakScale * 0.25;
+		// var gryScale = scale * 0.5;
 			var info = imageScales.infoForScale(gryScale);
 			var imageMatrix = info["image"];
 			var imageGray = imageMatrix.gry();
@@ -11446,8 +11449,13 @@ R3D.basicScaleFeaturesFromPoints = function(points, imageScales){
 			var effScale = info["effectiveScale"];
 			var actScale = info["actualScale"];
 		var gry = ImageMat.extractRectFromFloatImage(point.x*actScale,point.y*actScale,1.0/effScale,null,grySize,grySize, imageGray,imageWidth,imageHeight, null);
-		var cov = R3D.covFromGray(gry, grySize,grySize,0,0, 1,1)["cov"];
-		var angle = V2D.angleDirection(V2D.DIRX,cov);
+
+		// var cov = R3D.covFromGray(gry, grySize,grySize,0,0, 1,1)["cov"];
+		// var angle = V2D.angleDirection(V2D.DIRX,cov);
+
+		var angle = R3D.gradAngleFromGry3x3(gry);
+
+
 
 /*
 		var size = peakScale*gradNeighborhood;
@@ -11519,6 +11527,95 @@ R3D.basicScaleFeaturesFromPoints = function(points, imageScales){
 	return features;
 }
 
+R3D.gradAngleFromGry3x3 = function(gry){
+	var a = gry[0];
+	var b = gry[1];
+	var c = gry[2];
+	var d = gry[3];
+	var e = gry[4];
+	var f = gry[5];
+	var g = gry[6];
+	var h = gry[7];
+	var i = gry[8];
+
+	var s8 = 1.0/Math.sqrt(8);
+	var s5 = 1.0/Math.sqrt(5);
+	var d1x = (f-d)*0.5;
+	var d1y = (h-b)*0.5;
+	var d2x = (i-a)*s8;
+	var d2y = (c-g)*s8;
+	var d3x = (f+i-a-d)*s5;
+	var d3y = (g+h-b-c)*s5;
+	var d4x = (c+f-d-g)*s5;
+	var d4y = (h+i-a-b)*s5;
+
+	var g1 = new V2D(d1x,d1y);
+	var g2 = new V2D(d2x,d2y);
+	g2.rotate(Math.PI*0.25); // 90 deg
+	var g3 = new V2D(d3x,d3y);
+	g3.rotate(Math.atan(1/2));
+	var g4 = new V2D(d4x,d4y);
+	g4.rotate(-Math.atan(1/2));
+	var a1 = V2D.angleDirection(V2D.DIRX,g1);
+	var a2 = V2D.angleDirection(V2D.DIRX,g2);
+	var a3 = V2D.angleDirection(V2D.DIRX,g3);
+	var a4 = V2D.angleDirection(V2D.DIRX,g4);
+	a1 = Code.angleZeroTwoPi(a1);
+	a2 = Code.angleZeroTwoPi(a2);
+	a3 = Code.angleZeroTwoPi(a3);
+	a4 = Code.angleZeroTwoPi(a4);
+	// console.log(Code.degrees(a1));
+	// console.log(Code.degrees(a2));
+	// console.log(Code.degrees(a3));
+	// console.log(Code.degrees(a4));
+	var gradAng = Code.averageAngles([a1,a2,a3,a4]);
+	gradAng = Code.angleZeroTwoPi(gradAng);
+
+
+	// return gradAng;
+
+
+	var grad = new V2D(1,0).rotate(gradAng);
+
+
+
+
+	// COV STUFF:
+	var mat = new Matrix(2,2).fromArray([d1x, d2x, d2x, d1y]);
+	var eig = Matrix.eigenValuesAndVectors(mat);
+	var vec = eig["vectors"];
+	var val = eig["values"];
+	var v0 = vec[0].toArray();
+	var v1 = vec[1].toArray();
+	var cov1 = new V2D().fromArray(v0);
+	var c1 = V2D.angleDirection(V2D.DIRX,cov1);
+		c1 = Code.angleZeroTwoPi(c1);
+	// console.log(Code.degrees(c1));
+
+	var mat = new Matrix(2,2).fromArray([d1y, d2y, d2y, -d1x]);
+	var eig = Matrix.eigenValuesAndVectors(mat);
+	var vec = eig["vectors"];
+	var val = eig["values"];
+	var v0 = vec[0].toArray();
+	var v1 = vec[1].toArray();
+	var cov2 = new V2D().fromArray(v0);
+		cov2.rotate(-Math.PI*0.5);
+	var c2 = V2D.angleDirection(V2D.DIRX,cov2);
+		c2 = Code.angleZeroTwoPi(c2);
+	// console.log(Code.degrees(c2));
+
+	// console.log("angle: "+Code.degrees(Code.minAngle(c1,c2)));
+	var covAng = Code.averageAngles([c1,c2]);
+		covAng = Code.angleZeroTwoPi(covAng);
+	// console.log(Code.degrees(covAng));
+
+	var cov = new V2D(1,0).rotate(covAng);
+	if(V2D.dot(cov,grad)<-1){
+		cov.scale(-1);
+	}
+
+	return V2D.angleDirection(V2D.DIRX,cov);
+}
 R3D.covFromGray = function(block, width,height, offX,offY, eX,eY, norm){
 	norm = norm!==undefined ? norm : true;
 	offX = offX!==undefined ? offX : 0;
@@ -11577,11 +11674,9 @@ R3D.covFromGray = function(block, width,height, offX,offY, eX,eY, norm){
 
 R3D.basicOptimumCornerScale = function(point, imageMatrixScales, prependMatrix, scales, matrixes, reuseMatrix){
 	var allowMigration = false;
-	var compareSize = 9;
+	var compareSize = 9; // how big does this need to be ?
 	var center = compareSize*0.5 | 0;
 	var scores = [];
-	// var sig = 1.0;
-	var sig = null;
 	// get score for each scale
 	for(var j=0; j<scales.length; ++j){
 		var matrix = prependMatrix;
@@ -11593,20 +11688,11 @@ R3D.basicOptimumCornerScale = function(point, imageMatrixScales, prependMatrix, 
 			var imageHeight = imageMatrix.height();
 			var effScale = info["effectiveScale"];
 			var actScale = info["actualScale"];
-// console.log(j+": "+scale+" = "+actScale+" @ "+effScale);
-		var gry = ImageMat.extractRectFromFloatImage(point.x*actScale,point.y*actScale,1.0/effScale,sig,compareSize,compareSize, imageGray,imageWidth,imageHeight, matrix);
-// var sca = 4.0;
-// var img = GLOBALSTAGE.getFloatRGBAsImage(gry,gry,gry, compareSize,compareSize);
-// var d = new DOImage(img);
-// d.matrix().scale(sca);
-// d.matrix().translate(0 + j*50, 0 + 0);
-// GLOBALSTAGE.addChild(d);
+		var gry = ImageMat.extractRectFromFloatImage(point.x*actScale,point.y*actScale,1.0/effScale,null,compareSize,compareSize, imageGray,imageWidth,imageHeight, matrix);
 		var H = R3D.cornerScaleScores(gry,compareSize,compareSize)["value"];
 		var score = H[center*compareSize + center];
 		scores.push(score);
 	}
-// Code.printMatlabArray(scores,"scores1");
-// Code.printMatlabArray(scales,"scales1");
 	// ignore end peaks
 	var peaks = Code.findGlobalExtrema1D(scores, true);
 	var force = true;
@@ -11647,12 +11733,10 @@ R3D.basicOptimumCornerScale = function(point, imageMatrixScales, prependMatrix, 
 				var imageHeight = imageMatrix.height();
 				var effScale = info["effectiveScale"];
 				var actScale = info["actualScale"];
-			var gry = ImageMat.extractRectFromFloatImage(point.x*actScale,point.y*actScale,1.0/effScale,sig,compareSize,compareSize, imageGray,imageWidth,imageHeight, matrix);
+			var gry = ImageMat.extractRectFromFloatImage(point.x*actScale,point.y*actScale,1.0/effScale,null,compareSize,compareSize, imageGray,imageWidth,imageHeight, matrix);
 			var score = R3D.cornerScaleScores(gry,compareSize,compareSize, null,true);
 			scores.push(score);
 		}
-// Code.printMatlabArray(scores,"scores2");
-// Code.printMatlabArray(scas,"scales2");
 		var peaks = Code.findGlobalExtrema1D(scores, true);
 		if(peaks){
 			var max = peaks["max"];
@@ -11663,13 +11747,11 @@ R3D.basicOptimumCornerScale = function(point, imageMatrixScales, prependMatrix, 
 				var pct = max.x-lo;
 				var pc1 = 1.0 - pct;
 				var val = scas[lo]*pc1 + scas[hi]*pct;
-				sca = 1.0/val;
+				sca = val;
 			}
 		}
-// throw " 1 ";
 		return {"point": p, "scale": sca};
 	} // no peaks
-// throw " 2 ";
 	return null;
 }
 
@@ -16765,7 +16847,7 @@ R3D._progressiveR3DColorHistogram = function(block){
 	var magnitudes = mask;
 	var histogram = Code.histogramND(buckets, loopings, datas, magnitudes, true, true); // 6 -> 32
 		histogram = histogram["histogram"];
-	// R3D.histogramListToUnitLength([histogram]);
+R3D.histogramListToUnitLength([histogram]);
 	return histogram;
 }
 R3D._progressiveR3DColorOriented = function(block){
@@ -16832,12 +16914,24 @@ R3D._progressiveR3DGradHistogram = function(grads){
 		histogram = histogram["histogram"];
 	return histogram;
 }
-R3D._progressiveR3DSIFTBins = function(block){
+R3D._progressiveR3DSIFTBins = function(){
 	if(!R3D._progressiveR3DSIFTBinsValue){
 		var radialBins = R3D.circularSIFTBinMask(2.5, 3); // 25 bins @ ~20
 		R3D._progressiveR3DSIFTBinsValue = radialBins;
 	}
 	return R3D._progressiveR3DSIFTBinsValue;
+}
+R3D._progressiveR3DSIFTFalloff = function(){
+	if(!R3D._progressiveR3DSIFTFalloffValue){
+		var bins = R3D._progressiveR3DSIFTBins();
+		console.log(bins);
+		var size = bins["width"];
+		var gauss = ImageMat.gaussianMask(size,size, size*0.5);
+		var max = Code.max(gauss);
+		ImageMat.mulConst(gauss,1.0/max);
+		R3D._progressiveR3DSIFTFalloffValue = gauss;
+	}
+	return R3D._progressiveR3DSIFTFalloffValue;
 }
 R3D._progressiveR3DSIFTFlat = function(block){
 	var radialBins = R3D._progressiveR3DSIFTBins();
@@ -16876,11 +16970,12 @@ R3D._progressiveR3DSIFTFlat = function(block){
 			histogram = histogram["histogram"];
 		binHistograms[i] = histogram;
 	}
-	// R3D.histogramListToUnitLength(binHistograms);
+R3D.histogramListToUnitLength(binHistograms);
 	return binHistograms;
 }
 R3D._progressiveR3DSIFTGrad = function(block){
 	var radialBins = R3D._progressiveR3DSIFTBins();
+	var falloffBins = R3D._progressiveR3DSIFTFalloff();
 	var radialCount = radialBins["bins"];
 	var binValues = radialBins["value"];
 	var binHistograms = Code.newArrayArrays(radialCount);
@@ -16897,7 +16992,9 @@ R3D._progressiveR3DSIFTGrad = function(block){
 	var y = new V2D();
 	for(var i=0; i<binValues.length; ++i){
 		var bin = binValues[i];
+
 		if(bin>=0){
+			var multi = falloffBins[i];
 			var r = red[i];
 			var g = grn[i];
 			var b = blu[i];
@@ -16917,7 +17014,7 @@ R3D._progressiveR3DSIFTGrad = function(block){
 			binHistograms[bin][1].push(lenR);
 			binHistograms[bin][2].push(lenG);
 			binHistograms[bin][3].push(lenB);
-			binHistograms[bin][4].push(y.length());
+			binHistograms[bin][4].push(y.length()*multi);
 		}
 	}
 	for(var i=0; i<radialCount; ++i){
