@@ -501,7 +501,7 @@ V2D.infoArray = function(pointList){
 	var min = null;
 	var max = null;
 	var center = null;
-	var size = new V2D(0,0);
+	var size = null;
 	if(pointList.length>0){
 		min = pointList[0].copy();
 		max = min.copy();

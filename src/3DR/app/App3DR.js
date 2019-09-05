@@ -8308,13 +8308,10 @@ console.log(bestEdges);
 	// calculate skeletal graph
 	console.log(listPairs);
 
-	R3D.skeletalViewGraph(listPairs);
-
-
+	var result = R3D.skeletalViewGraph(listPairs);
 console.log("skeleton");
+console.log(result);
 
-
-console.log("display graph somehow ?");
 this.displayViewGraph(transforms,listPairs);
 
 
@@ -8447,7 +8444,7 @@ App3DR.ProjectManager.prototype.displayViewGraph = function(transforms, pairs){
 	console.log(transforms);
 
 	var displaySize = 500;
-	var displayPadding = 0;
+	var displayPadding = 20;
 	var displayWidth = displaySize - displayPadding*2.0;
 	var displayHeight = displaySize - displayPadding*2.0;
 	var offset2D = new V2D(displaySize*0.5,displaySize*0.5);
@@ -8460,7 +8457,9 @@ App3DR.ProjectManager.prototype.displayViewGraph = function(transforms, pairs){
 		var transform = transforms[i];
 		console.log(transform);
 		var o = transform.multV3DtoV3D(new V3D(0,0,0));
-		var z = transform.multV3DtoV3D(new V3D(0,0,1));
+		var z = transform.multV3DtoV3D(new V3D(0,0,-1));
+		// var z = transform.multV3DtoV3D(new V3D(0,0,1));
+		// var z = transform.multV3DtoV3D(new V3D(-1,0,0));
 		var normal = V3D.sub(z,o);
 		centers.push(o);
 		normals.push(normal);
@@ -8471,14 +8470,8 @@ App3DR.ProjectManager.prototype.displayViewGraph = function(transforms, pairs){
 	var centers2D = Code.projectPointsTo2DPlane(centers,planeCenter,planeNormal);
 
 	var info2D = V2D.infoArray(centers2D);
-	console.log(info2D);
-
-	var min2D = info2D["min"];
 	var size2D = info2D["size"];
-	// var origin2D = size2D.copy().scale(0.5).add(min2D);
 	var origin2D = info2D["center"];
-	// var origin2D = info2D["min"];
-	// var origin2D = planeCenter2D;
 	var scaleToDisplay = Math.min(displayWidth/size2D.x, displayHeight/size2D.y);
 
 	var transformTo2D = new Matrix2D();
@@ -8494,16 +8487,16 @@ App3DR.ProjectManager.prototype.displayViewGraph = function(transforms, pairs){
 	display.graphics().drawRect(0,0,displaySize,displaySize);
 	display.graphics().endPath();
 	display.graphics().strokeLine();
-	display.graphics().setLine(2.0,0x66000000);
-	display.graphics().beginPath();
-	display.graphics().drawRect(displayPadding,displayPadding,displayWidth,displayHeight);
-	display.graphics().endPath();
-	display.graphics().strokeLine();
-	var normalSize = 10.0;
+	// display.graphics().setLine(2.0,0x66000000);
+	// display.graphics().beginPath();
+	// display.graphics().drawRect(displayPadding,displayPadding,displayWidth,displayHeight);
+	// display.graphics().endPath();
+	// display.graphics().strokeLine();
+	var normalSize = 25.0;
 	var cameraSize = 5.0;
 	var centersDisplay2D = [];
-	for(var i=0; i<centers.length; ++i){
-		var center2D = centers[i];
+	for(var i=0; i<centers2D.length; ++i){
+		var center2D = centers2D[i];
 		// var p2D = center2D.copy().sub(origin2D).scale(scaleToDisplay).add(offset2D);
 		var p2D = transformTo2D.multV2DtoV2D(center2D);
 		centersDisplay2D.push(p2D);
@@ -8517,7 +8510,8 @@ App3DR.ProjectManager.prototype.displayViewGraph = function(transforms, pairs){
 		display.graphics().strokeLine();
 		// normal:
 		var normal3D = normals[i];
-		var n2D = Code.projectTo2DPlane(normal3D.copy().sub(planeCenter),planeCenter,planeNormal);
+		// var n2D = Code.projectTo2DPlane(normal3D.copy().sub(),planeCenter,planeNormal);
+		var n2D = V3D.perpendicularComponent(planeNormal,normal3D);
 		n2D.norm().scale(normalSize);
 		// var n2D = V3D.perpendicularComponent(base,normal2D);
 		display.graphics().setLine(1.0,0xFF000000);
@@ -8526,6 +8520,11 @@ App3DR.ProjectManager.prototype.displayViewGraph = function(transforms, pairs){
 		display.graphics().lineTo(p2D.x+n2D.x,p2D.y+n2D.y);
 		display.graphics().endPath();
 		display.graphics().strokeLine();
+
+		var text = new DOText(""+i, 18, DOText.FONT_ARIAL, 0xFF990099, DOText.ALIGN_CENTER);
+		// text.matrix().scale(1,-1);
+		text.matrix().translate(p2D.x, p2D.y-20.0);
+		display.addChild(text);
 
 	}
 	// min & max errors:
@@ -8553,24 +8552,24 @@ App3DR.ProjectManager.prototype.displayViewGraph = function(transforms, pairs){
 		// var na = Matrix.mult(tb,bak);
 		// var nb = Matrix.mult(fwd,ta);
 		// var na = Matrix.mult(bak,tb);
-		var nb = Matrix.mult(fwd,tb);
-		var na = Matrix.mult(bak,ta);
-		var ts = [nb,na];
+		var nb = Matrix.mult(bak,ta);
+		var na = Matrix.mult(fwd,tb);
+		// var nb = Matrix.mult(fwd,tb);
+		// var na = Matrix.mult(bak,ta);
+		var ts = [na,nb];
 		for(var j=0; j<ts.length; ++j){
 			var c3D = ts[j].multV3DtoV3D(new V3D(0,0,0));
 			var p2D = Code.projectTo2DPlane(c3D.copy().sub(planeCenter),planeCenter,planeNormal);
 			p2D = transformTo2D.multV2DtoV2D(p2D);
 			// center:
 			display.graphics().setLine(1.0,0xFFCCCCCC);
-			display.graphics().setFill(0x99CCCCCC);
+			display.graphics().setFill(0x66CCCCCC);
 			display.graphics().beginPath();
 			display.graphics().drawCircle(p2D.x,p2D.y, cameraSize*err);
 			display.graphics().endPath();
 			display.graphics().fill();
 			display.graphics().strokeLine();
 		}
-
-
 		var p2DA = centersDisplay2D[a];
 		var p2DB = centersDisplay2D[b];
 		display.graphics().setLine(2.0,0xFF0000CC);
@@ -8582,18 +8581,19 @@ App3DR.ProjectManager.prototype.displayViewGraph = function(transforms, pairs){
 
 		var c2D = V2D.avg(p2DA,p2DB);
 
-		var text = new DOText(Code.fixed(""+err,5), 14, DOText.FONT_ARIAL, 0xFF990099, DOText.ALIGN_CENTER);
-		text.matrix().scale(1,-1);
+		var text = new DOText(Code.fixed(""+err,5), 16, DOText.FONT_ARIAL, 0xFF990099, DOText.ALIGN_CENTER);
+		// text.matrix().scale(1,-1);
 		text.matrix().translate(c2D.x, c2D.y);
 		display.addChild(text);
 
 	}
-	display.matrix().scale(1,-1);
-	display.matrix().translate(0,displaySize);
+	// display.matrix().scale(1,-1);
+	// display.matrix().translate(0,displaySize);
 	GLOBALSTAGE.addChild(display);
-	display.matrix().translate(200,100);
+	display.matrix().translate(300,100);
 
 
+	throw "..."
 }
 
 App3DR.ProjectManager.prototype.iterateGraphTracks = function(){ // aggregate / accumulate tracks
