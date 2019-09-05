@@ -458,21 +458,23 @@ iteratively solved
         - good initial patch estimates
     - Image Triplets (from view pairs)
         - find relative scale of pairs
-        - decrease relative error between camera matrices
+        - decrease relative error between camera matrices [only used to optimize TFT]
         - calculate TFT
     - Absolute Orientations (from pair & triplet camera matrices)
         - global absolute orientation of views in view graph
-        - increase accuracy of camera orientations / reduce errors by using multiple measurements
+            - increase accuracy of camera initial orientations / reduce errors by using multiple measurements
     - Absolute RANSAC (from sparse track points)
         - build up multi-view-spanning tracks from individual pair-tracks (for long sequences if possible)
         - use tracks and initial view graph to find nonlinear best orientation
-        - find new view pairs via projection
+        - find new view pairs (and add to existing) via projection
+- which is first here and why?
+    - Absolute Orientation 2
+        - find improved absolute orientations of views, reducing error, using added & better estimates in view graph
     - Multiwise Dense (group dense iteration - only load small subset of views at a time)
         - reduce errors on existing pairs using updated orientation
         - fill out more points in possibly mission sections [use TFT to estimate missing locations | project using known point]
         - create new pairs from previously unmatched relative orientations
-    - Absolute Orientation 2
-        - find improved absolute orientations of views, reducing error, using added & better estimates in view graph
+
     - Global RANSAC (load all dense points at same time [& views])
         - reduce error of all params at same time (or in randomized bunches)
         - final absolute camera orientations
@@ -483,6 +485,9 @@ iteratively solved
         - textured triangles
 
 
+- sparse seeds starts in 11x11 grid
+- semi dense in ends in 5x5 grid
+- should a 3x3 grid be run at end to add points to dense set? / HOW?
 
 
 

@@ -375,30 +375,42 @@ https://cloud.google.com/appengine/docs/nodejs/
 0 + 1 = Z84ENWKE
 0 + 2 = UEX4H682
 1 + 2 = NY9RPQHA
+0+1+2 = S21L1RCT
 
 
-still poor matches
+
+gradAngleFromGry3x3
+
+progressiveSparseDenseMatches
+
 progressiveMatchChooseBest
 
+
+
+
+
 ~ ORIENTATION
-	x look at pixels around, center focus
-	x try similar measurement [diagonal] around origin?
+x cov of 9-grid
+x simple gradient from dx & dy in 9-grid (4 points)
+x highly averaged covariange
+x highly averaged gradient
+x direction of max gradient from center (abs,binned) 8 & 16
+x separate covariance averagings
+x separate gradients averagings
+- 4 covariances from 9-grid?
+- full on covariance of entire area?
 
-	-
-x SCORE
-	- try different score metric (FLAT | GRAD)
-
-x gradient gaussian falloff
-
--
 
 
 A) Stereopsis
-	- triplets
+	- tracks
+
+
 
 calculateBundleAdjustTriple
 solveTriple
 
+calculateGlobalOrientationInit
 
 iterateSparseTracks
 

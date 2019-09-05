@@ -6275,6 +6275,8 @@ Stereopsis.World.prototype.solveTriple = function(completeFxn, completeContext){
 
 // IF A VIEW DOESN'T HAVE A MATRIX ???
 
+console.log(RIJ,RIK,RJK);
+
 				var RJI = RJI ? R3D.inverseCameraMatrix(RIJ) : null;
 				var RKI = RKI ? R3D.inverseCameraMatrix(RIK) : null;
 				var RKJ = RKJ ? R3D.inverseCameraMatrix(RJK) : null;
@@ -6423,8 +6425,6 @@ var tripleScale = null;
 	this.printPoint3DTrackCount();
 
 
-
-
 	// use only overlapping 3D points
 	var points3D = this.toPointArray();
 	var group2 = []; // keep for later matching
@@ -6461,7 +6461,7 @@ var tripleScale = null;
 	var errorPosition = ((transformAB.rSigma() + transformAC.rSigma() + transformBC.rSigma())/3.0) * 2.0 * 2.0; /// ... extra 2.0 ... reprojection & TFT error arent necessarily comparable metrics ...
 	//var T = R3D.TFTRANSACFromPointsAuto(pointsA,pointsB,pointsC, errorPosition, null, 0.10);
 
-	var T = R3D.TFTRANSACFromPoints(pointsA,pointsB,pointsC, errorPosition, null, 0.50, 0.99, 100); // 0.50 / 0.99
+	var T = R3D.TFTRANSACFromPoints(pointsA,pointsB,pointsC, errorPosition, null, 0.50, 0.99, 50); // 0.50 / 0.99
 	var TFT = null;
 	if(!T){
 		console.log("did not get a T ...");
@@ -6483,7 +6483,7 @@ var tripleScale = null;
 		var p2DC = point2DC.point2D();
 		var error = R3D.tftError(TFT, p2DA, p2DB, p2DC);
 			error = error["error"];
-			error = Math.log(error);
+			// error = Math.log(error);
 		errors.push(error);
 		errorPoints.push([error, point3D]);
 	}
@@ -6563,7 +6563,7 @@ Code.printMatlabArray(errors,"tError");
 	// this.averagePoints3DFromMatches(true);
 
 
-	var maxLoops = 3;
+	var maxLoops = 5;
 	for(var i=0; i<maxLoops; ++i){
 		// add back all points for last round
 		if(i==maxLoops-1){
@@ -6577,6 +6577,9 @@ break;
 		}
 
 		this.estimate3DErrors(true);
+
+		this.patchInitBasicSphere(true);
+
 		this.averagePoints3DFromMatches();
 		// averagePoints3DFromMatches
 		// this.averagePoints3DFromMatches(true); // DOES ONLY TRUE
@@ -6595,9 +6598,23 @@ break;
 		// this.filterLocal2D(); //
 		// this.filterLocal3D(); //
 
+		// 2.0 - 3.0 ?
+		this.filterGlobalMatches(false, 0, 3.0,3.0,3.0,3.0, false);
+
+
+			// // reassess
+			// this.estimate3DErrors(true);
+
+		// drop worst
+		this.dropNegative3D();
+		this.dropFurthest();
+		// intersection
+		this.filterPairwiseSphere3D(3.0);
+		// local 3d to 2d
+		this.filterLocal3Dto2DSize();
 	}
 	this.estimate3DErrors(true);
-	// TODO: BA
+	// TODO: BA ?
 
 	//
 
@@ -7986,7 +8003,7 @@ percents.push(percent);
 			}
 		}
 	}
-Code.printMatlabArray(percents,"percents");
+// Code.printMatlabArray(percents,"percents");
 	// clear
 	for(var i=0; i<points3D.length; ++i){
 		var point3D = points3D[i];
@@ -7999,7 +8016,7 @@ Code.printMatlabArray(percents,"percents");
 		world.disconnectPoint3D(point3D);
 		world.killPoint3D(point3D);
 	}
-	throw "? - filterLocal3Dto2DSize";
+	// throw "? - filterLocal3Dto2DSize";
 }
 Stereopsis.World.prototype.filterLocal3Dto2DProjection = function(){ // drop 3D outlier noise - projected 3D points missing may be outliers
 	console.log("filterLocal3Dto2DProjection");

@@ -136,7 +136,7 @@ var dist = null;
 	// new ImageLoader("./images/",["bench_E.png", "bench_F.png"],this,this.imagesLoadComplete).load(); // ok    |  19594 @ 0.886  | 10%
 	// 2
 	// new ImageLoader("./images/",["bench_A.png", "bench_C.png"],this,this.imagesLoadComplete).load(); // good  |  29273 @ 0.583  | 15%
-	// new ImageLoader("./images/",["bench_B.png", "bench_D.png"],this,this.imagesLoadComplete).load(); // bad   |    4107 @ 1.64  |  2%
+	new ImageLoader("./images/",["bench_B.png", "bench_D.png"],this,this.imagesLoadComplete).load(); // bad   |    4107 @ 1.64  |  2%
 	// new ImageLoader("./images/",["bench_C.png", "bench_E.png"],this,this.imagesLoadComplete).load(); // ok    |   15555 @ 1.01  |  8%
 	// new ImageLoader("./images/",["bench_D.png", "bench_F.png"],this,this.imagesLoadComplete).load(); // good  |   18500 @ 1.85  |  9%
 	// 3
@@ -153,7 +153,7 @@ var dist = null;
 
 	// PIKACHUS
 	// new ImageLoader("./images/pika_1/",["image-0.png", "image-1.png"],this,this.imagesLoadComplete).load(); // ok
-	new ImageLoader("./images/pika_1/",["image-0.png", "image-2.png"],this,this.imagesLoadComplete).load(); // ok
+	// new ImageLoader("./images/pika_1/",["image-0.png", "image-2.png"],this,this.imagesLoadComplete).load(); // ok
 	// new ImageLoader("./images/pika_1/",["image-0.png", "image-3.png"],this,this.imagesLoadComplete).load(); // poor
 	// new ImageLoader("./images/pika_1/",["image-0.png", "image-4.png"],this,this.imagesLoadComplete).load(); // poor
 	// new ImageLoader("./images/pika_1/",["image-0.png", "image-5.png"],this,this.imagesLoadComplete).load(); // bad
@@ -551,8 +551,8 @@ var maxCount = 2000;
 var featuresA = R3D.calculateScaleCornerFeatures(imageMatrixA, maxCount);
 var featuresB = R3D.calculateScaleCornerFeatures(imageMatrixB, maxCount);
 console.log(featuresA,featuresB); // ~1000
-// this.showFeatures(featuresA, imageMatrixA.width()*0,0, display, 0xCC0000FF);
-// this.showFeatures(featuresB, imageMatrixA.width()*1,0, display, 0xCC0000FF);
+this.showFeatures(featuresA, imageMatrixA.width()*0,0, display, 0xCC0000FF);
+this.showFeatures(featuresB, imageMatrixA.width()*1,0, display, 0xCC0000FF);
 // throw "HERE 99";
 
 
@@ -2010,19 +2010,7 @@ RiftTest.prototype.testCorners = function(imageMatrixA, imageMatrixB){
 	// bench
 	var p = new V2D(338, 107);
 
-	var c = new DO();
-	// color = 0xFFFF0000;
-	c.graphics().setLine(1, 0xFFFF0000);
-	c.graphics().beginPath();
-	// c.graphics().moveTo(0,0);
-	// c.graphics().lineTo(imageSize*0.5*Math.cos(ang),imageSize*0.5*Math.sin(ang));
-	c.graphics().drawCircle(p.x,p.y, 5);
-	c.graphics().endPath();
-	c.graphics().strokeLine();
-	// c.matrix().scale(1.0/rat,rat);
-	// c.matrix().translate(imageSize*0.5,imageSize*0.5);
-	GLOBALDISPLAY.addChild(c);
-	// GLOBALSTAGE.addChild(c);
+
 
 	console.log(p+"")
 
@@ -2137,7 +2125,149 @@ RiftTest.prototype.testCorners = function(imageMatrixA, imageMatrixB){
 		// var angle = V2D.angleDirection(V2D.DIRX,cov);
 
 
-		// GLOBALDISPLAY.addChild(d);
+
+	// cov averaging:
+	console.log("cov avg:")
+	var dx = c + f + i - a - d - g;
+	var dy = i + h + g - c - b - a;
+	var dz = f + i + h - b - a - d;
+		dx /= 3;
+		dy /= 3;
+		dz /= 3;
+
+	var mat = new Matrix(2,2).fromArray([dx, dz, dz, dy]);
+	var eig = Matrix.eigenValuesAndVectors(mat);
+	var vec = eig["vectors"];
+	var val = eig["values"];
+	var v0 = vec[0].toArray();
+	var v1 = vec[1].toArray();
+	var cov = new V2D().fromArray(v0);
+	var c = V2D.angleDirection(V2D.DIRX,cov);
+		c = Code.angleZeroTwoPi(c);
+	console.log(Code.degrees(c));
+
+// var showAngle = c;
+
+	// var gry = block.gry();
+	// var a = gry[0];
+	// var b = gry[1];
+	// var c = gry[2];
+	// var d = gry[3];
+	// var e = gry[4];
+	// var f = gry[5];
+	// var g = gry[6];
+	// var h = gry[7];
+	// var i = gry[8];
+
+	console.log("grad cov:")
+	var mat = new Matrix(2,2).fromArray([dx*dx, dx*dy, dx*dy, dy*dy]);
+	var eig = Matrix.eigenValuesAndVectors(mat);
+	var vec = eig["vectors"];
+	var val = eig["values"];
+	var v0 = vec[0].toArray();
+	var v1 = vec[1].toArray();
+	var cov = new V2D().fromArray(v0);
+	var c = V2D.angleDirection(V2D.DIRX,cov);
+		c = Code.angleZeroTwoPi(c);
+	console.log(Code.degrees(c));
+
+
+var showAngle = c;
+
+
+
+	var a = gry[0];
+	var b = gry[1];
+	var c = gry[2];
+	var d = gry[3];
+	var e = gry[4];
+	var f = gry[5];
+	var g = gry[6];
+	var h = gry[7];
+	var i = gry[8];
+
+	var sos = 1.0/Math.sqrt(2);
+	var g0 = (f-e);
+	var g1 = (c-e)*sos;
+	var g2 = (b-e);
+	var g3 = (a-e)*sos;
+	var g4 = (d-e);
+	var g5 = (g-e)*sos;
+	var g6 = (h-e);
+	var g7 = (i-e)*sos;
+		g0 = Math.abs(g0);
+		g1 = Math.abs(g1);
+		g2 = Math.abs(g2);
+		g3 = Math.abs(g3);
+		g4 = Math.abs(g4);
+		g5 = Math.abs(g5);
+		g6 = Math.abs(g6);
+		g7 = Math.abs(g7);
+	var list = [g0,g1,g2,g3,g4,g5,g6,g7];
+	console.log(list)
+	var peaks = Code.findMaxima1DLoop(list);
+	console.log(peaks)
+	peaks.sort(function(a,b){ return a.y>b.y ? -1 : 1; });
+	var peak = peaks[0];
+	console.log(peak);
+	// var peakAngle = peak.x*Math.PI;
+	var peakAngle = peak.x*(1.0/8.0)*(Math.PI*2.0);
+		peakAngle = Code.angleZeroTwoPi(peakAngle);
+	console.log("peakAngle 8: "+Code.degrees(peakAngle));
+var showAngle = peakAngle;
+
+	var sof = 1.0/Math.sqrt(1.25);
+	var g01 = ((c+f)*0.5-e)*sof;
+	var g12 = ((b+c)*0.5-e)*sof;
+	var g23 = ((a+b)*0.5-e)*sof;
+	var g34 = ((a+d)*0.5-e)*sof;
+	var g45 = ((d+g)*0.5-e)*sof;
+	var g56 = ((g+h)*0.5-e)*sof;
+	var g67 = ((h+i)*0.5-e)*sof;
+	var g78 = ((i+f)*0.5-e)*sof;
+		g01 = Math.abs(g01);
+		g12 = Math.abs(g12);
+		g23 = Math.abs(g23);
+		g34 = Math.abs(g34);
+		g45 = Math.abs(g45);
+		g56 = Math.abs(g56);
+		g67 = Math.abs(g67);
+		g78 = Math.abs(g78);
+
+	var list = [g0,g01,g1,g12,g2,g23,g3,g34,g4,g45,g5,g56,g6,g67,g7,g78];
+	var peaks = Code.findMaxima1DLoop(list);
+	console.log(peaks)
+	peaks.sort(function(a,b){ return a.y>b.y ? -1 : 1; });
+	var peak = peaks[0];
+	console.log(peak);
+	// var peakAngle = peak.x*Math.PI;
+	var peakAngle = peak.x*(1.0/16.0)*(Math.PI*2.0);
+		peakAngle = Code.angleZeroTwoPi(peakAngle);
+	console.log("peakAngle 16: "+Code.degrees(peakAngle));
+
+	// WHAT DOES IT MEAN IF GRADIENT IS NEGATIVE?
+
+var showAngle = peakAngle;
+
+console.log("showAngle: "+showAngle);
+// CIRCLE:
+var rad = 10.0;
+var c = new DO();
+// color = 0xFFFF0000;
+c.graphics().setLine(1, 0xFFFF0000);
+c.graphics().beginPath();
+c.graphics().moveTo(p.x,p.y);
+c.graphics().lineTo(p.x + rad*Math.cos(showAngle),p.y + rad*Math.sin(showAngle));
+c.graphics().drawCircle(p.x,p.y, rad*0.5);
+c.graphics().endPath();
+c.graphics().strokeLine();
+// c.matrix().scale(1.0/rat,rat);
+// c.matrix().translate(imageSize*0.5,imageSize*0.5);
+GLOBALDISPLAY.addChild(c);
+// GLOBALSTAGE.addChild(c);
+
+// console.log(rad*Math.cos(showAngle),rad*Math.sin(showAngle))
+
 
 
 	var imageSize = 11;

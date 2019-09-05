@@ -7015,10 +7015,10 @@ Code.findMaxima1D = function(d){
 	}
 	return list;
 }
-Code.findMaxima1DLoop = function(d){
+Code.findMaxima1DLoop = function(d){ // circular repeat loop
 	var i, a,b,c, v, len=d.length, lenM1 = d.length-1, list = [];
 	for(i=0;i<len;++i){
-		a = d[(i-1)%len]; b = d[i]; c = d[(i+1)%len];
+		a = d[(i+lenM1)%len]; b = d[i]; c = d[(i+1)%len];
 		if( (b>=a&&b>=c) ){
 			v = Code.interpolateMaximum1D(new V2D(), a,b,c);
 			if(v){
@@ -8421,7 +8421,7 @@ Code.sphereAlgebraic = function(points, location){
 // console.log(best);
 	if(a===0){ // plane
 		// console.log("PLANE");
-		var plane = Code.planeFromPoints(location, points, weights);
+		var plane = Code.planeFromPoints3D(location, points, weights);
 		return plane;
 	}
 	var sphere = Code.sphereCoefficientsToSphere(a,b1,b2,b3,c);
@@ -9924,7 +9924,11 @@ Code.pointOnPositiveSidePlane3D = function(location, planePoint, planeNormal, er
 	}
 	return dot>=error;
 }
-Code.planeFromPoints = function(center, points, weights, cov){
+Code.planeFromPoints3D = function(center, points, weights, cov){
+	if(points==undefined){ // single argument scenario
+		points = center;
+		center = null;
+	}
 	if(!center){
 		center = V3D.mean(points);
 	}
@@ -9948,7 +9952,8 @@ Code.planeFromPoints = function(center, points, weights, cov){
 			point = points[i];
 			weight = weights[i];
 			//weight = 1.0/(1.0 + weight*weight);
-			weight = Math.exp(-weight/weightAvg);
+			// weight = Math.exp(-weight/weightAvg);
+			weight = 1.0; // ?
 			weights[i] = weight;
 		}
 	}

@@ -9248,7 +9248,7 @@ console.log("progressiveFullMatchingDense")
 		return null;
 	}
 
-// return {"A":pointsA, "B":pointsB, "F":F, "Finv":Finv}; // SPARSE RESULTS
+return {"A":pointsA, "B":pointsB, "F":F, "Finv":Finv}; // SPARSE RESULTS
 
 
 // // if error is already low, can skip this step:
@@ -11538,6 +11538,7 @@ R3D.gradAngleFromGry3x3 = function(gry){
 	var h = gry[7];
 	var i = gry[8];
 
+// dense gradient w/ averaging
 	var s8 = 1.0/Math.sqrt(8);
 	var s5 = 1.0/Math.sqrt(5);
 	var d1x = (f-d)*0.5;
@@ -11569,16 +11570,77 @@ R3D.gradAngleFromGry3x3 = function(gry){
 	// console.log(Code.degrees(a3));
 	// console.log(Code.degrees(a4));
 	var gradAng = Code.averageAngles([a1,a2,a3,a4]);
-	gradAng = Code.angleZeroTwoPi(gradAng);
+		gradAng = Code.angleZeroTwoPi(gradAng);
+	var dirGrad = new V2D(1,0).rotate(gradAng);
+	// var grad = new V2D(1,0).rotate(gradAng);
+
+	return gradAng;
 
 
-	// return gradAng;
+// maximum gradient direction binning
+	var sos = 1.0/Math.sqrt(2);
+	var g0 = (f-e);
+	var g1 = (c-e)*sos;
+	var g2 = (b-e);
+	var g3 = (a-e)*sos;
+	var g4 = (d-e);
+	var g5 = (g-e)*sos;
+	var g6 = (h-e);
+	var g7 = (i-e)*sos;
+		g0 = Math.abs(g0);
+		g1 = Math.abs(g1);
+		g2 = Math.abs(g2);
+		g3 = Math.abs(g3);
+		g4 = Math.abs(g4);
+		g5 = Math.abs(g5);
+		g6 = Math.abs(g6);
+		g7 = Math.abs(g7);
+	var list = [g0,g1,g2,g3,g4,g5,g6,g7];
+	var peaks = Code.findMaxima1DLoop(list);
+	peaks.sort(function(a,b){ return a.y>b.y ? -1 : 1; });
+	var peak = peaks[0];
+	if(peak){
+		var peakAngle = peak.x*(Math.PI/4.0);
+		return peakAngle; // A
+
+		var dirPeak = new V2D(1,0).rotate(peakAngle);
+		if(V2D.dot(dirPeak,dirGrad)<-1){
+			dirPeak.scale(-1);
+		}
+		return V2D.angleDirection(V2D.DIRX,dirPeak); // B
+	}else{
+		console.log("no peak: ",list);
+		return V2D.angleDirection(V2D.DIRX,dirGrad);
+	}
 
 
-	var grad = new V2D(1,0).rotate(gradAng);
+
+
+	// cov averaging:
+	var dx = c + f + i - a - d - g;
+	var dy = i + h + g - c - b - a;
+	var dz = f + i + h - b - a - d;
+		dx /= 3;
+		dy /= 3;
+		dz /= 3;
+	// averaged covariance
+	var mat = new Matrix(2,2).fromArray([dx, dz, dz, dy]);
+	var eig = Matrix.eigenValuesAndVectors(mat);
+	var vec = eig["vectors"];
+	var val = eig["values"];
+	var v0 = vec[0].toArray();
+	var v1 = vec[1].toArray();
+	var cov = new V2D().fromArray(v0);
+	var c = V2D.angleDirection(V2D.DIRX,cov);
+		c = Code.angleZeroTwoPi(c);
+	// return c;
 
 
 
+
+
+
+// separate covariance averaging
 
 	// COV STUFF:
 	var mat = new Matrix(2,2).fromArray([d1x, d2x, d2x, d1y]);
@@ -11609,7 +11671,21 @@ R3D.gradAngleFromGry3x3 = function(gry){
 		covAng = Code.angleZeroTwoPi(covAng);
 	// console.log(Code.degrees(covAng));
 
-	var cov = new V2D(1,0).rotate(covAng);
+
+	// gradient covariance
+	var mat = new Matrix(2,2).fromArray([dx*dx, dx*dy, dx*dy, dy*dy]);
+	var eig = Matrix.eigenValuesAndVectors(mat);
+	var vec = eig["vectors"];
+	var val = eig["values"];
+	var v0 = vec[0].toArray();
+	var v1 = vec[1].toArray();
+	var cov = new V2D().fromArray(v0);
+	var gradCovAng = V2D.angleDirection(V2D.DIRX,cov);
+		gradCovAng = Code.angleZeroTwoPi(gradCovAng);
+	// return gradCovAng;
+
+	// var cov = new V2D(1,0).rotate(covAng);
+	var cov = new V2D(1,0).rotate(gradCovAng);
 	if(V2D.dot(cov,grad)<-1){
 		cov.scale(-1);
 	}
@@ -16935,6 +17011,7 @@ R3D._progressiveR3DSIFTFalloff = function(){
 }
 R3D._progressiveR3DSIFTFlat = function(block){
 	var radialBins = R3D._progressiveR3DSIFTBins();
+	var falloffBins = R3D._progressiveR3DSIFTFalloff();
 	var radialCount = radialBins["bins"];
 	var binValues = radialBins["value"];
 	var red = block.red();
@@ -16942,19 +17019,22 @@ R3D._progressiveR3DSIFTFlat = function(block){
 	var blu = block.blu();
 	var binHistograms = Code.newArrayArrays(radialCount);
 	for(var i=0; i<radialCount; ++i){
-		binHistograms[i].push([],[],[]);
+		binHistograms[i].push([],[],[],[]);
 	}
-	var binCounts = Code.newArrayZeros(radialCount);
+	// var binCounts = Code.newArrayZeros(radialCount);
 	for(var i=0; i<binValues.length; ++i){
 		var bin = binValues[i];
 		if(bin>=0){
+			var f = falloffBins[i];
 			var r = red[i];
 			var g = grn[i];
 			var b = blu[i];
 			binHistograms[bin][0].push(r);
 			binHistograms[bin][1].push(g);
 			binHistograms[bin][2].push(b);
-			binCounts[bin] += 1;
+			binHistograms[bin][3].push(f);
+
+			// binCounts[bin] += 1;
 		}
 	}
 	for(var i=0; i<radialCount; ++i){
@@ -16966,7 +17046,7 @@ R3D._progressiveR3DSIFTFlat = function(block){
 		// var buckets = [8,8,8];
 		var loopings = [false,false,false];
 		var datas = [hist[0],hist[1],hist[2]];
-		var histogram = Code.histogramND(buckets, loopings, datas, null, true, true); // 4 -> 20
+		var histogram = Code.histogramND(buckets, loopings, datas, hist[3], true, true); // 4 -> 20
 			histogram = histogram["histogram"];
 		binHistograms[i] = histogram;
 	}
