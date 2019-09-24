@@ -11,7 +11,8 @@ Triangulate.prototype.handleLoaded = function(){
 	this._stage.addChild(this._root);
 	this.setupData();
 	this.addListeners();
-	this.doTriangulation();
+	// this.doTriangulation();
+	this.doBeaconStuff();
 	this._refreshDisplay();
 }
 Triangulate.prototype.addListeners = function(){
@@ -44,19 +45,24 @@ this._doY = -300;
 	this.drawDot( V2D.add(V2D.scale(calculated.location,this._displayScale), new V2D(this._doX,this._doY)), 0x9900FF00,0xCC009900, 3.0);
 
 }
+
+
+Triangulate.prototype.doBeaconStuff = function(){
+	console.log("doBeaconStuff");
+}
 Triangulate.prototype.doTriangulation = function(){
 	if(!this._phone){
 		this._phone = { location:new V3D(6.5,1.5,0) };
 		this._phoneCalculated = { location:new V3D() }
 		this._beacons = 	[
-					
+
 					{"id":0, location:new V3D(1,1,0)},
 					{"id":1, location:new V3D(2,1,0)},
 					{"id":2, location:new V3D(1,3,0)},
 					{"id":3, location:new V3D(6,2,0)},
 					{"id":4, location:new V3D(8,2,0)},
 					{"id":5, location:new V3D(7,1,0)},
-					
+
 					/*
 					{"id":6, location:new V2D(6.5,1.5)},
 					{"id":7, location:new V2D(7.5,1)},
@@ -76,7 +82,7 @@ Triangulate.prototype.doTriangulation = function(){
 	// determine sensor distances
 	for(i=0;i<beaconCount;++i){
 		beacon = beacons[i];
-		num = V2D.distance(beacon.location, phone.location) 
+		num = V2D.distance(beacon.location, phone.location)
 		beacon.distance = num + (this._errorDistance*Math.random()-this._errorDistance*0.5)*num; // distance + random*distance
 		beacon.weight = beacon.distance>1E-6?(1/(Math.pow(beacon.distance,2))):1.0;
 		console.log(beacon.weight)
@@ -166,7 +172,7 @@ Triangulate.prototype.doTriangulation = function(){
 		coeff[i] = coeff[i]/coeff[coeff.length-1];
 	}
 	this._phoneCalculated.location.set(coeff[0],coeff[1],coeff[2]);
-	// 
+	//
 	var X = new Matrix(coeff.length,1).setFromArray(coeff);
 	temp = Matrix.mult(A,X);
 	temp = temp.colToArray(0);
@@ -183,7 +189,7 @@ Triangulate.prototype.handleStageEnterFrameFxn = function(e){
 	//console.log(e);
 }
 Triangulate.prototype.handleKeyUpFxn = function(e){
-	// 
+	//
 }
 Triangulate.prototype.handleKeyDownFxn = function(e){
 	var dist = 0.5;
@@ -209,7 +215,7 @@ Triangulate.prototype.handleKeyDownFxn = function(e){
 	console.log("CALC: "+this._phoneCalculated.location);
 }
 Triangulate.prototype.handleKeyDown2Fxn = function(e){
-	// 
+	//
 }
 Triangulate.prototype.handle = function(e){
 	console.log(e);
@@ -464,270 +470,3 @@ Tri.Estimate.prototype.updateEstimate = function(){
 
 	*/
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
