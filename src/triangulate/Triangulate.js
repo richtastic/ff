@@ -12,8 +12,11 @@ Triangulate.prototype.handleLoaded = function(){
 	this.setupData();
 	this.addListeners();
 	// this.doTriangulation();
+	// this._refreshDisplay();
+
 	this.doBeaconStuff();
-	this._refreshDisplay();
+
+
 }
 Triangulate.prototype.addListeners = function(){
 	this._canvas.addFunction(Canvas.EVENT_WINDOW_RESIZE,this.handleCanvasResizeFxn,this);
@@ -49,7 +52,48 @@ this._doY = -300;
 
 Triangulate.prototype.doBeaconStuff = function(){
 	console.log("doBeaconStuff");
+	var sources = [];
+		sources.push( new Tri.Beacon(new V3D(0,0,0), 3, 1E9, 0, 0, 0) );
+		sources.push( new Tri.Beacon(new V3D(1,0,0), 4, 1E9, 0, 0, 0) );
+	var samples = [];
+
+		// var location = new V3D(0.25,0.25,0);
+		var location = new V3D(0.25,0.25,0);
+	// Tri.Beacon.prototype.sample = function(position){
+	// 	var distance = V3D.distance(this._location,position);
+	for(var i=0; i<sources.length; ++i){
+		var source = sources[i];
+		samples.push( source.sample(location) );
+	}
+	console.log(sources);
+	console.log(samples);
+
+	// find power somehow ???
+	
+
+		// ???
+		var pA = 1;
+		var pB = 1;
+
+	//
+	var sA = samples[0];
+	var sB = samples[1];
+	var dAS = Math.sqrt(pA/sA);
+	var dBS = Math.sqrt(pA/sA);
+
+	var xS = (dAS*dAS - sBS*dBS + 1)*0.5;
+	var yS = Math.sqrt(dAS*dAS - xS*xS);
+	console.log(yS);
+	var yS = Math.sqrt(dBS*dBS - Math.pow(1-xS,2));
+	console.log(yS);
+
+
+		// sources.push( new Tri.Source2D( new V2D(0,0), 3 ) );
+		// sources.push( new Tri.Source2D( new V2D(3,1), 4 ) );
+
 }
+
+
 Triangulate.prototype.doTriangulation = function(){
 	if(!this._phone){
 		this._phone = { location:new V3D(6.5,1.5,0) };
