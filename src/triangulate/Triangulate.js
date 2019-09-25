@@ -52,9 +52,35 @@ this._doY = -300;
 
 Triangulate.prototype.doBeaconStuff = function(){
 	console.log("doBeaconStuff");
-	var sources = [];
-		sources.push( new Tri.Beacon(new V3D(0,0,0), 3, 1E9, 0, 0, 0) );
-		sources.push( new Tri.Beacon(new V3D(1,0,0), 4, 1E9, 0, 0, 0) );
+	var beacons = [];
+		beacons.push( new Tri.Beacon(new V3D(0,0,0), 3, 1E9, 0, 0, 0) );
+		beacons.push( new Tri.Beacon(new V3D(1,0,0), 4, 1E9, 0, 0, 0) );
+
+	var daq = new Tri.DAQ(beacons);
+	var model = new Tri.Estimate();
+	var phone = new Tri.Target(daq);
+
+	var samples;
+	// journey
+	phone.location().set(0.25,0.5,0);
+
+	phone.recordAvailableSamples();
+
+	phone.move(new V3D(0.25,0.0,0.0));
+	phone.recordAvailableSamples();
+
+	phone.move(new V3D(0.0,-0.25,0.0));
+	phone.recordAvailableSamples();
+
+//	var samples = phone.getAvailableSamples();
+//	model.addGroupedSamples(samples);
+
+
+	console.log(phone);
+
+
+
+/*
 	var samples = [];
 
 		// var location = new V3D(0.25,0.25,0);
@@ -69,7 +95,7 @@ Triangulate.prototype.doBeaconStuff = function(){
 	console.log(samples);
 
 	// find power somehow ???
-	
+
 
 		// ???
 		var pA = 1;
@@ -90,7 +116,7 @@ Triangulate.prototype.doBeaconStuff = function(){
 
 		// sources.push( new Tri.Source2D( new V2D(0,0), 3 ) );
 		// sources.push( new Tri.Source2D( new V2D(3,1), 4 ) );
-
+*/
 }
 
 
@@ -288,31 +314,31 @@ Triangulate.prototype.setupData = function(){
 }
 Triangulate.prototype.handleEnterFrameFxn = function(e){
 	// console.log("get sample list");
-	this.getBeaconSamples();
+	// this.getBeaconSamples();
 
 }
-Triangulate.prototype.getBeaconSamples = function(e){
-	var phone = this._phone;
-	if(!phone){
-		return;
-	}
-	var location = phone.location;
-	var beacons = this._allBeacons;
-	var samples = [];
-	var time = Code.getTimeMilliseconds();
-	for(var i=0; i<beacons.length; ++i){
-		var beacon = beacons[i];
-		var id = beacon.id();
-		var index = id+"";
-
-		var power = beacon.sample(location);
-		if(power>0){
-			var sample = new Tri.BeaconSample(beacon, time, power);
-			samples.push(sample);
-		}
-	}
-	this._estimate.addSampleList(samples);
-}
+// Triangulate.prototype.getBeaconSamples = function(e){
+// 	var phone = this._phone;
+// 	if(!phone){
+// 		return;
+// 	}
+// 	var location = phone.location;
+// 	var beacons = this._allBeacons;
+// 	var samples = [];
+// 	var time = Code.getTimeMilliseconds();
+// 	for(var i=0; i<beacons.length; ++i){
+// 		var beacon = beacons[i];
+// 		var id = beacon.id();
+// 		var index = id+"";
+//
+// 		var power = beacon.sample(location);
+// 		if(power>0){
+// 			var sample = new Tri.BeaconSample(beacon, time, power);
+// 			samples.push(sample);
+// 		}
+// 	}
+// 	this._estimate.addSampleList(samples);
+// }
 
 
 
@@ -422,25 +448,58 @@ Tri.BeaconSample.prototype.time = function(time){
 	return this._time;
 }
 
-Tri.DAQ = function(){
+Tri.DAQ = function(beacons){
 	this._beacons = {};
 	this.samples = [];
+	if(beacons){
+		for(var i=0; i<beacons.length; ++i){
+			this.addBeacon(beacons[i]);
+		}
+	}
 }
 Tri.DAQ.prototype.addBeacon = function(beacon){
 	var index = beacon.id()+"";
 	this._beacons[index] = beacon;
 }
 
-Tri.Target = function(){
-	this._location = new V2D();
-	this._daq = Tri.DAQ();
-	this.addBeacon();
-}
-Tri.Target.prototype.addBeacon = function(location, power, distance, staticError, powerError, distanceError){
-	var beacon = new Tri.Beacon(location, power, distance, staticError, powerError, distanceError);
-	this._daq.addBeacon(beacon);
+Tri.DAQ.prototype.getSamplesForLocation = function(location){
+	var beacons = Code.objectToArray(this._beacons);
+	var samples = [];
+	var time = Code.getTimeMilliseconds();
+	for(var i=0; i<beacons.length; ++i){
+		var beacon = beacons[i];
+		var id = beacon.id();
+		// var index = id+"";
+		var power = beacon.sample(location);
+		if(power>0){
+			var sample = new Tri.BeaconSample(beacon, time, power);
+			samples.push(sample);
+		}
+	}
+	return samples;
 }
 
+
+// target, remote, device, phone, listener
+Tri.Target = function(daq){
+	this._location = new V3D();
+	this._daq = daq;
+	this._estimate = new Tri.Estimate();
+}
+Tri.Target.prototype.location = function(){
+	return this._location;
+}
+Tri.Target.prototype.move = function(delta){
+	this._location.add(delta);
+}
+Tri.Target.prototype.getAvailableSamples = function(){
+	var samples = this._daq.getSamplesForLocation(this._location);
+	return samples;
+}
+Tri.Target.prototype.recordAvailableSamples = function(){
+	var samples = this.getAvailableSamples();
+	this._estimate.addGroupedSamples(samples);
+}
 
 
 // single beacon modeled from data
@@ -469,24 +528,26 @@ Tri.BeaconModel.prototype.x = function(){
 // world model based on beacon esimates
 Tri.Estimate = function(){
 	this._beaconModels = {};
-	this._timeSamples = [];
+	// this._timeSamples = [];
+	this._groupedSamples = [];
 }
-Tri.Estimate.prototype.addSample = function(sample){
-	var index = sample.beacon().id();
-	var model = this._beaconModels[index];
-	if(!model){
-		model = new Tri.BeaconModel();
-		this._beaconModels[index] = model;
-	}
-	model.addSample(sample);
-}
-Tri.Estimate.prototype.addSampleList = function(samples){
-	this._timeSamples.push(samples);
-	Code.preTruncateArray(this._timeSamples,10);
-	for(var i=0; i<samples.length; ++i){
-		var sample = samples[i];
-		this.addSample(sample);
-	}
+// Tri.Estimate.prototype.addSample = function(sample){
+// 	var index = sample.beacon().id();
+// 	var model = this._beaconModels[index];
+// 	if(!model){
+// 		model = new Tri.BeaconModel();
+// 		this._beaconModels[index] = model;
+// 	}
+// 	model.addSample(sample);
+// }
+Tri.Estimate.prototype.addGroupedSamples = function(samples){
+	// this._timeSamples.push(samples);
+	// Code.preTruncateArray(this._timeSamples,10);
+	// for(var i=0; i<samples.length; ++i){
+	// 	var sample = samples[i];
+	// 	this.addSample(sample);
+	// }
+	this._groupedSamples.push(samples);
 }
 
 Tri.Estimate.prototype.updateEstimate = function(){
