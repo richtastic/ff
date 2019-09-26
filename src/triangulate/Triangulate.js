@@ -55,6 +55,7 @@ Triangulate.prototype.doBeaconStuff = function(){
 	var beacons = [];
 		beacons.push( new Tri.Beacon(new V3D(0,0,0), 3, 1E9, 0, 0, 0) );
 		beacons.push( new Tri.Beacon(new V3D(1,0,0), 4, 1E9, 0, 0, 0) );
+		beacons.push( new Tri.Beacon(new V3D(0.75,0.75,0), 5, 1E9, 0, 0, 0) );
 
 	var daq = new Tri.DAQ(beacons);
 	var model = new Tri.Estimate();
@@ -72,11 +73,15 @@ Triangulate.prototype.doBeaconStuff = function(){
 	phone.move(new V3D(0.0,-0.25,0.0));
 	phone.recordAvailableSamples();
 
+	console.log(phone);
+
+	var what = phone.solvePower();
+	// phone.solve
+	console.log(what);
+
 //	var samples = phone.getAvailableSamples();
 //	model.addGroupedSamples(samples);
 
-
-	console.log(phone);
 
 
 
@@ -500,25 +505,49 @@ Tri.Target.prototype.recordAvailableSamples = function(){
 	var samples = this.getAvailableSamples();
 	this._estimate.addGroupedSamples(samples);
 }
+Tri.Target.prototype.solvePower = function(){
+	console.log(this);
+	var estimate = this._estimate;
+	console.log(this);
+
+	estimate.solvePower();
+
+
+	throw "..."
+}
+
 
 
 // single beacon modeled from data
-Tri.BeaconModel = function(){
+Tri.BeaconModel = function(id){
 	this._id = null;
-	this._maxPower = null;
-	this._minPower = null;
-	this._locationCenter = null;
-	this._locationMean = null;
+	this._power = null;
+	// this._maxPower = null;
+	// this._minPower = null;
+	// this._locationCenter = null;
+	// this._locationMean = null;
 	this._samples = [];
-	this._valueMax = null;
-	this._valueDecay = null;
+	// this._valueMax = null;
+	// this._valueDecay = null;
+	this.id(id);
 }
 Tri.BeaconModel.prototype.addSample = function(sample){
 	var list = this._samples;
 	list.push(sample);
-	Code.preTruncateArray(list,10);
+	// Code.preTruncateArray(list,10);
 }
-
+Tri.BeaconModel.prototype.id = function(i){
+	if(i!==undefined){
+		this._id = i;
+	}
+	return this._id;
+}
+Tri.BeaconModel.prototype.power = function(p){
+	if(p!==undefined){
+		this._power = p;
+	}
+	return this._power;
+}
 Tri.BeaconModel.prototype.x = function(){
 	//
 }
@@ -527,8 +556,7 @@ Tri.BeaconModel.prototype.x = function(){
 
 // world model based on beacon esimates
 Tri.Estimate = function(){
-	this._beaconModels = {};
-	// this._timeSamples = [];
+	this._beacons = {};
 	this._groupedSamples = [];
 }
 // Tri.Estimate.prototype.addSample = function(sample){
@@ -543,13 +571,139 @@ Tri.Estimate = function(){
 Tri.Estimate.prototype.addGroupedSamples = function(samples){
 	// this._timeSamples.push(samples);
 	// Code.preTruncateArray(this._timeSamples,10);
-	// for(var i=0; i<samples.length; ++i){
-	// 	var sample = samples[i];
-	// 	this.addSample(sample);
-	// }
+	for(var i=0; i<samples.length; ++i){
+		var sample = samples[i];
+		this._checkAddBeaconModel(sample.beacon().id(), sample);
+	}
 	this._groupedSamples.push(samples);
 }
+Tri.Estimate.prototype._checkAddBeaconModel = function(beaconID, sample){
+	var beacon = this._beacons[beaconID];
+	if(!beacon){
+		console.log(beaconID)
+		beacon = new Tri.BeaconModel(beaconID);
+		this._beacons[beaconID] = beacon;
+	}
+	beacon.addSample(sample);
+}
+Tri.Estimate.prototype.solvePower = function(){
+	console.log(this);
+	// initial guess of power for beacons
+	var beacons = Code.objectToArray(this._beacons);
+	console.log(beacons);
+	for(var i=0; i<beacons.length; ++i){
+		var beacon = beacons[i];
+		beacon.power(1.0);
+	}
+	// collect
+	var powers = [];
+	var samples = [];
+	var sampleLookup = {};
+	for(var i=0; i<beacons.length; ++i){
+		var beacon = beacons[i];
+		powers[i] = beacon.power(1.0);
+		var arr = [];
+		samples[i] = arr;
+		sampleLookup[beacon.id()] = arr;
+	}
+	var groups = this._groupedSamples;
+	for(var g=0; g<groups.length; ++g){
+		var group = groups[g];
+		for(var i=0; i<group.length; ++i){
+			var sample = group[i];
+			var bID = sample.beacon().id();
+			var power = sample.power();
+			sampleLookup[bID].push(power);
+		}
+	}
+	// nonlinear updates
+	console.log(powers,samples);
+	// Tri.iteritiveSourcePower(powers, samples);
 
+	// ...does power need to be done a pair at at time?
+
+	Tri.nonlinearSourcePower(powers,samples);
+
+	// source locations ???
+
+	// save
+	throw "?"
+}
+Tri.iteritiveSourcePower = function(powers,samples){ // s = p/(d*d) ; p = s*d*d ; d = sq(p/s)
+	var maxIterations = 5;
+	for(var iter=0; iter<maxIterations; ++iter){
+		var count = powers.length;
+
+		var distances = [];
+		var nextPowers = [];
+		for(var i=0; i<count; ++i){
+			var power = powers[i];
+			var dists = [];
+				distances[i] = dists;
+			var list = samples[i];
+			var nextPower = 0;
+			for(var l=0; l<list.length; ++l){
+				var sample = list[l];
+				// var estimate = power/(distance*distance);
+				var distance = Math.sqrt(power/sample);
+				dists.push(distance);
+				nextPower += sample*distance*distance;
+			}
+			nextPowers.push(nextPower);
+		}
+		console.log(distances);
+		console.log(nextPowers);
+		powers = nextPowers;
+	}
+	// distance_i = Math.sqrt(sample_i/power_N)
+	// // ...
+	// newPower_N = sample_i/Math.pow(distance_i,2);
+	//
+	// // move toward new estimate?
+	// power_i = 0.5*power_i + 0.5*power_N;
+
+	throw "?";
+}
+Tri.nonlinearSourcePower = function(){
+
+	// linear initial estimation of power ?
+
+// NONLINEAR ERROR FXN:
+	// > updating: pA, pB, pC, Cx, Cy
+	// for each grouping (assuming 3+)
+		// get calculated distances dI^2 = pI/SiI
+		// get optimal circle center point: Six,Siy
+		// get optimal distances: diI^2 = (Ix-Six)^2 + (Iy-Siy)^2
+		// get each error: [SiI - (PI/diI^2)]^2
+		// error += 3 sub errors
+
+
+		var circles = [];
+			circles.push({"center":new V2D(0,0), "radius":2});
+			circles.push({"center":new V2D(5.1,0), "radius":3});
+			circles.push({"center":new V2D(2,.2), "radius":1});
+		//var result = Code.pointFromCirclesAlgebraic(circles);
+		var result = Code.pointFromCircles(circles);
+		console.log(result);
+
+
+		var totalError = 0;
+
+	// Code.pointFromCirclesAlgebraic(circles);
+	// Code.pointFromCirclesGeometric(circles,location);
+	// ...
+	throw "here";
+}
+Tri._nonlinearSourcePowerError = function(what){//initial: distances_i & powers_N, sample_i){
+	// ...
+	// LOTS OF DISTANCES
+
+
+	estimate_i = power_N/Math.pow(distance_i,2);
+	var error = (estimate_i - sample_i);
+	totalError += error*error;
+	throw "..."
+}
 Tri.Estimate.prototype.updateEstimate = function(){
 	/*
 		estimate current position based on knowledge of beacon data

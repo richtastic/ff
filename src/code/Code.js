@@ -8318,6 +8318,91 @@ Code.circleGeometric = function(points, location, maxIterations){
 	radius = x[2];
 	return {"center":center, "radius":radius, "weights":weights};
 }
+Code.pointFromCircles = function(circles){
+	if(circles.length>=3){
+		return Code.pointFromCirclesAlgebraic(circles);
+	}else if(circles.length==2){
+		var a = circles[0];
+		var b = circles[1];
+		var points = Code.closesSurfacePointsCircles(a["center"],a["radius"],b["center"],b["radius"]);
+		return V2D.average(points);
+	}
+	return null;
+}
+Code.pointFromCirclesAlgebraic = function(circles){
+	var count = circles.length;
+	// no center of circle in case of 2 ; use nearest point
+	if(count<=2){
+		return null;
+	}
+	// construct set of equations:
+	var rows = count*(count-1); // only NEED 3
+	var cols = 3;
+	var A = new Matrix(rows,cols);
+	var row = 0;
+	for(var i=0; i<count; ++i){
+		var circleA = circles[i];
+		var cA = circleA["center"];
+		var rA = circleA["radius"];
+		for(var j=i+1; j<count; ++j){
+			var circleB = circles[j];
+			var cB = circleB["center"];
+			var rB = circleB["radius"];
+			A.set(row,0, 2*(cB.x - cA.x));
+			A.set(row,1, 2*(cB.y - cA.y));
+			A.set(row,2, cA.x*cA.x + cA.y*cA.y - cB.x*cB.x - cB.y*cB.y - rA*rA + rB*rB);
+			++row;
+		} // 2*(Bx - Ax)*Sx + 2*(By - Ay)*Sy  +  Ax^2 + Ay^2 - Bx^2 - By^2 + dB^2 - dA^2  = 0
+	}
+	// SVD projection closest
+	var svd = Matrix.SVD(A);
+	var best = svd.V.colToArray(cols-1);
+	var x = best[0];
+	var y = best[1];
+	var c = best[2];
+	if(c==0){
+		return null;
+	}
+	x /= c;
+	y /= c;
+	return new V2D(x,y);
+}
+Code.pointFromCirclesGeometric = function(circles,location){
+	// nonlinear optimizing:
+	// ...
+	throw "?"
+}
+Code.pointFromCirclesIteritive = function(circles){ // use center points to iteritively find point
+	throw "?"
+}
+Code.closesSurfacePointsCircles = function(cA,rA,cB,rB){ // return closest of 4 possible solutions
+	var aToB = V2D.sub(cB,cA);
+	var a1 = aToB.copy();
+		a1.length(rA);
+	var a2 = a1.copy().scale(-1);
+		a1.add(cA);
+		a2.add(cA);
+	var b1 = aToB.copy();
+		b1.length(rB);
+	var b2 = b1.copy().scale(-1);
+		b1.add(cB);
+		b2.add(cB);
+	var d11 = V2D.distanceSquare(a1,b1);
+	var d12 = V2D.distanceSquare(a1,b2);
+	var d21 = V2D.distanceSquare(a2,b1);
+	var d22 = V2D.distanceSquare(a2,b2);
+	var min = Math.min(d11,d12,d21,d22);
+	if(min==d11){
+		return [a1,b1];
+	}else if(min==d12){
+		return [a1,b2];
+	}else if(min==d21){
+		return [a2,b1];
+	}
+	return [a2,b2];
+}
+
+
 
 Code.sphereFromPoints = function(a,b,c,d){ // ~95+s% accurate
 	// var i;
