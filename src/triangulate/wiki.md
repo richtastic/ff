@@ -62,8 +62,31 @@ each reading consists of:
 		SiA = pA/diA^2
 		SiB = pB/diB^2
 		SiC = pC/diC^2
+ALT:
+base unknowns:
+	By
+	Cx
+	Cy
+base knowns / assumed:
+	Ax = 0
+	Ay = 0
+	Bx = ?
+each reading consists of:
+	3 kwn:
+		dA
+		dB
+		dC
+	2 unk:
+		Six
+		SiY
 
 
+##### localizing sample locations when source locations are known
+	dA^2 = (Sx-Ax)^2 + (Sy-Ay)^2
+	dB^2 = (Sx-Bx)^2 + (Sy-By)^2
+	dC^2 = (Sx-Cx)^2 + (Sy-Cy)^2
+	=> circular point minimize
+	-> with error ?
 
 ##### initial linear estimate:
 	?
@@ -228,8 +251,8 @@ improve Sx & Sy to reduce error:
 
 rI = [ (Sx-Ix)^2 + (Sx-Ix)^2 ]^1/2
 
-errorI = (dI - rI)^2
-error = errorA + errorB + errorC
+errorI = wI * (dI - rI)^2			# wi = weighted error
+error = errorA + errorB + errorC + ...
 
 
 ...
@@ -248,6 +271,10 @@ e2c56db5 dffb48d2 b060d0f5 a71096e0 00000000 00
 
 
 REFERENCE RSSI VALUE AT 1 M ????
+
+https://www.aislelabs.com/reports/beacon-guide/
+
+
 
 
 #### RSSI & LOG

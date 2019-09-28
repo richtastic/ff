@@ -2392,16 +2392,17 @@ Code.optimizerSimplex = function(fxn, args, x, ix, iter, diff, epsilon){ // Neld
 Code.optimizerBinarySearch = function(fxn, args, x, ranges, iter, diff, epsilon){
 }
 
-Code.gradientDescent = function(fxn, args, x, dx, iter, diff, epsilon){
+Code.gradientDescent = function(fxn, args, x, dx, iter, diff, epsilon, lambda){
 	var i, j, k, c;
 	var sizeX = x.length;
 	// var epsilon = 1E-6;
-	epsilon = epsilon!==undefined ? epsilon : 1E-6;
+	epsilon = epsilon!==undefined && epsilon!==null ? epsilon : 1E-6;
 	var cost = fxn(args, x, false, -1); // current cost
 	var currCost, nextCost;
 	var maxIterations = iter!=null ? iter : 50;
 	var minDifference = diff!=null ? diff : 1E-10;
-	var lambda = 1.0/epsilon; // start at on par with 1.0
+		// lambda = lambda!==undefined && lambda!==null ? lambda : 1.0/epsilon; // start at on par with 1.0
+		lambda = 1.0;
 	var scaler = 2.0; // smaller is more accurate, larger is quicker initially
 	var nextX = Code.newArrayZeros(sizeX);
 	var prevX = Code.copyArray(x); // local instance of x
@@ -2415,17 +2416,12 @@ Code.gradientDescent = function(fxn, args, x, dx, iter, diff, epsilon){
 		}
 	}
 	for(k=0; k<maxIterations; ++k){
+		// console.log("dx: "+dx+"  @  "+lambda);
 		for(i=0; i<sizeX; ++i){
 			Code.copyArray(tx,prevX);
 			tx[i] += dx[i];
 			c = fxn(args, tx, false, i);
 			dy[i] = c - cost;
-			// if(Code.isNaN(dy[0])){
-			// 	console.log(tx);
-			// 	console.log(c);
-			// 	console.log(cost);
-			// 	throw "dy is NaN";
-			// }
 			tx[i] = 0;
 		}
 		// initial best guess:
@@ -2446,6 +2442,7 @@ Code.gradientDescent = function(fxn, args, x, dx, iter, diff, epsilon){
 		// should be good by now, following gradient
 		var diffCost = Math.abs(newCost-cost);
 		if(newCost<cost){
+			// console.log("NEW COST: "+newCost+" / "+cost);
 			cost = newCost;
 			var temp = prevX;
 			prevX = nextX;
@@ -2456,6 +2453,7 @@ Code.gradientDescent = function(fxn, args, x, dx, iter, diff, epsilon){
 			lambda /= scaler;
 		}
 		if(diffCost<minDifference){
+			console.log("exit 1: "+diffCost+" "+dx+" #@ "+lambda+" ... "+dy);
 			break;
 		}
 	}
@@ -8367,7 +8365,12 @@ Code.pointFromCirclesAlgebraic = function(circles){
 	y /= c;
 	return new V2D(x,y);
 }
-Code.pointFromCirclesGeometric = function(circles,location){
+Code.pointFromCirclesGeometric = function(location,circles){
+	// nonlinear optimizing:
+	// ...
+	throw "?"
+}
+Code.pointFromCirclesNonlinear = function(location,circles,weights){
 	// nonlinear optimizing:
 	// ...
 	throw "?"

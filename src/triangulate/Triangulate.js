@@ -61,6 +61,7 @@ Triangulate.prototype.doBeaconStuff = function(){
 	var model = new Tri.Estimate();
 	var phone = new Tri.Target(daq);
 
+	console.log(beacons);
 	var samples;
 	// journey
 	phone.location().set(0.25,0.5,0);
@@ -70,8 +71,35 @@ Triangulate.prototype.doBeaconStuff = function(){
 	phone.move(new V3D(0.25,0.0,0.0));
 	phone.recordAvailableSamples();
 
+	phone.move(new V3D(0.05,0.10,0.0));
+	phone.recordAvailableSamples();
+
+	phone.move(new V3D(-0.05,0.10,0.0));
+	phone.recordAvailableSamples();
+
+	phone.move(new V3D(0.15,0.05,0.0));
+	phone.recordAvailableSamples();
+
 	phone.move(new V3D(0.0,-0.25,0.0));
 	phone.recordAvailableSamples();
+
+	// ... down
+
+	phone.move(new V3D(-0.05,-0.25,0.0));
+	phone.recordAvailableSamples();
+	phone.move(new V3D(-0.05,-0.25,0.0));
+	phone.recordAvailableSamples();
+	phone.move(new V3D(-0.05,-0.25,0.0));
+	phone.recordAvailableSamples();
+
+
+	phone.move(new V3D(-0.15,0.15,0.0));
+	phone.recordAvailableSamples();
+	phone.move(new V3D(-0.15,0.15,0.0));
+	phone.recordAvailableSamples();
+	phone.move(new V3D(-0.15,0.15,0.0));
+	phone.recordAvailableSamples();
+
 
 	console.log(phone);
 
@@ -426,13 +454,15 @@ Tri.Beacon.prototype.sample = function(position){
 	return power;
 }
 
-Tri.BeaconSample = function(beacon, time, power){
+Tri.BeaconSample = function(beacon, time, power, distance){
 	this._beacon = null;
 	this._power = null;
 	this._time = null;
+	this._distance = null;
 	this.beacon(beacon);
 	this.time(time);
 	this.power(power);
+	this.distance(distance);
 }
 Tri.BeaconSample.prototype.beacon = function(beacon){
 	if(beacon!==undefined){
@@ -445,6 +475,12 @@ Tri.BeaconSample.prototype.power = function(power){
 		this._power = power;
 	}
 	return this._power;
+}
+Tri.BeaconSample.prototype.distance = function(distance){
+	if(distance!==undefined){
+		this._distance = distance;
+	}
+	return this._distance;
 }
 Tri.BeaconSample.prototype.time = function(time){
 	if(time!==undefined){
@@ -477,7 +513,8 @@ Tri.DAQ.prototype.getSamplesForLocation = function(location){
 		// var index = id+"";
 		var power = beacon.sample(location);
 		if(power>0){
-			var sample = new Tri.BeaconSample(beacon, time, power);
+			var distance = V3D.distance(location,beacon.location());
+			var sample = new Tri.BeaconSample(beacon, time, power, distance);
 			samples.push(sample);
 		}
 	}
@@ -503,6 +540,7 @@ Tri.Target.prototype.getAvailableSamples = function(){
 }
 Tri.Target.prototype.recordAvailableSamples = function(){
 	var samples = this.getAvailableSamples();
+	console.log("sample @: "+this._location);
 	this._estimate.addGroupedSamples(samples);
 }
 Tri.Target.prototype.solvePower = function(){
@@ -524,7 +562,7 @@ Tri.BeaconModel = function(id){
 	this._power = null;
 	// this._maxPower = null;
 	// this._minPower = null;
-	// this._locationCenter = null;
+	this._location = null;
 	// this._locationMean = null;
 	this._samples = [];
 	// this._valueMax = null;
@@ -547,6 +585,12 @@ Tri.BeaconModel.prototype.power = function(p){
 		this._power = p;
 	}
 	return this._power;
+}
+Tri.BeaconModel.prototype.location = function(l){
+	if(l!==undefined){
+		this._location = l;
+	}
+	return this._location;
 }
 Tri.BeaconModel.prototype.x = function(){
 	//
@@ -580,7 +624,6 @@ Tri.Estimate.prototype.addGroupedSamples = function(samples){
 Tri.Estimate.prototype._checkAddBeaconModel = function(beaconID, sample){
 	var beacon = this._beacons[beaconID];
 	if(!beacon){
-		console.log(beaconID)
 		beacon = new Tri.BeaconModel(beaconID);
 		this._beacons[beaconID] = beacon;
 	}
@@ -597,37 +640,109 @@ Tri.Estimate.prototype.solvePower = function(){
 	}
 	// collect
 	var powers = [];
-	var samples = [];
-	var sampleLookup = {};
 	for(var i=0; i<beacons.length; ++i){
 		var beacon = beacons[i];
-		powers[i] = beacon.power(1.0);
-		var arr = [];
-		samples[i] = arr;
-		sampleLookup[beacon.id()] = arr;
+		powers[i] = beacon.power();
 	}
+	// var samples = [];
+	// var sampleLookup = {};
+	// for(var i=0; i<beacons.length; ++i){
+	// 	var beacon = beacons[i];
+	// 	powers[i] = beacon.power();
+	// 	var arr = [];
+	// 	samples[i] = arr;
+	// 	sampleLookup[beacon.id()] = arr;
+	// }
+	// console.log(samples)
+	// throw "?"
+	// var groups = this._groupedSamples;
+	// for(var g=0; g<groups.length; ++g){
+	// 	var group = groups[g];
+	// 	for(var i=0; i<group.length; ++i){
+	// 		var sample = group[i];
+	// 		var bID = sample.beacon().id();
+	// 		var power = sample.power();
+	// 		sampleLookup[bID].push(power);
+	// 	}
+	// }
+
+	// nonlinear updates
+	var samples = [];
 	var groups = this._groupedSamples;
 	for(var g=0; g<groups.length; ++g){
 		var group = groups[g];
+		var list = [];
+		samples.push(list);
 		for(var i=0; i<group.length; ++i){
 			var sample = group[i];
-			var bID = sample.beacon().id();
 			var power = sample.power();
-			sampleLookup[bID].push(power);
+			list.push(power);
 		}
 	}
-	// nonlinear updates
-	console.log(powers,samples);
 	// Tri.iteritiveSourcePower(powers, samples);
 
 	// ...does power need to be done a pair at at time?
 
-	Tri.nonlinearSourcePower(powers,samples);
+	// Tri.nonlinearSourcePower(powers,samples);
+
+
+	// after beacon sources are determined ...
+	var beacons = Code.objectToArray(this._beacons);
+	console.log(beacons)
+	beacons[0].location(new V3D(0,0,0));
+	beacons[1].location(new V3D(1,0,0));
+	beacons[2].location(new V3D(0.75,0.75,0));
+	var sources = [];
+	for(var i=0; i<beacons.length; ++i){
+		var beacon = beacons[i];
+		sources.push(beacon.location());
+	}
+	//
+	// var samples = [];
+	var groups = this._groupedSamples;
+	var distances = [];
+	for(var i=0; i<groups.length; ++i){
+		var group = groups[i];
+		var list = [];
+		distances.push(list);
+		for(var j=0; j<group.length; ++j){
+			var sample = group[j];
+			// console.log(sample);
+			var distance = sample.distance();
+			// sources.push(beacon.location());
+			list.push(distance);
+		}
+	}
+	console.log(sources);
+	console.log(distances);
+
+	Tri.locateSamplePoints(sources,distances);
 
 	// source locations ???
 
 	// save
 	throw "?"
+}
+Tri.locateSamplePoints = function(sources,samples){
+	var locations = [];
+	var circles = [];
+	for(var i=0; i<sources.length; ++i){
+		var source = sources[i];
+		var s = source;
+		circles.push({"center":new V2D(s.x,s.y), "radius":0});
+	}
+	for(var i=0; i<samples.length; ++i){
+		var sample = samples[i];
+		for(var j=0; j<sample.length; ++j){
+			var distance = sample[j];
+			circles[j]["radius"] = distance;
+		}
+		var result = Code.pointFromCircles(circles);
+		locations.push(result);
+	}
+	console.log(locations);
+	throw "?";
+	return locations;
 }
 Tri.iteritiveSourcePower = function(powers,samples){ // s = p/(d*d) ; p = s*d*d ; d = sq(p/s)
 	var maxIterations = 5;
@@ -664,7 +779,21 @@ Tri.iteritiveSourcePower = function(powers,samples){ // s = p/(d*d) ; p = s*d*d 
 
 	throw "?";
 }
-Tri.nonlinearSourcePower = function(){
+Tri.nonlinearSourcePower = function(powers, samples){
+	// also need locations of A / B / C
+	console.log(powers)
+	console.log(samples)
+
+	console.log("nonlinearSourcePower");
+	// a = 0,0
+	// b = 1,0
+
+	var cx = 0.75; // 0.75
+	var cy = 0.75; // 0.75
+	var pA = 1; // 3
+	var pB = 1; // 4
+	var pC = 1; // 5
+
 
 	// linear initial estimation of power ?
 
@@ -678,30 +807,144 @@ Tri.nonlinearSourcePower = function(){
 		// error += 3 sub errors
 
 
-		var circles = [];
-			circles.push({"center":new V2D(0,0), "radius":2});
-			circles.push({"center":new V2D(5.1,0), "radius":3});
-			circles.push({"center":new V2D(2,.2), "radius":1});
-		//var result = Code.pointFromCirclesAlgebraic(circles);
-		var result = Code.pointFromCircles(circles);
-		console.log(result);
+		// var circles = [];
+		// 	circles.push({"center":new V2D(0,0), "radius":2});
+		// 	circles.push({"center":new V2D(5.1,0), "radius":3});
+		// 	circles.push({"center":new V2D(2,.2), "radius":1});
+		// //var result = Code.pointFromCirclesAlgebraic(circles);
+		// var result = Code.pointFromCircles(circles);
+		// console.log(result);
+		// var totalError = 0;
 
 
-		var totalError = 0;
+
+	// gradient descent
+	// var maxIterations = 10;
+	// var maxIterations = 25;
+	var maxIterations = 100;
+	// maxIterations = maxIterations!==undefined ? maxIterations : 10;
+	var eps = 1E-8;
+		eps = [eps,eps,eps,eps,eps];
+	eps = null;
+	// var unknowns = [cx,cy, pA,pB,pC];
+	// var unknowns = [pC];
+	var unknowns = [pA,pB,pC];
+	var result = Code.gradientDescent(Tri._nonlinearSourcePowerError, [samples], unknowns, null, maxIterations, 1E-16, null, 1.0);
+	var x = result["x"];
+	console.log(x+"");
+
+	// var x = result["x"];
+	// center = new V3D(x[0],x[1],x[2]);
+	// radius = x[3];
+	// return {"center":center, "radius":radius, "weights":weights};
 
 	// Code.pointFromCirclesAlgebraic(circles);
 	// Code.pointFromCirclesGeometric(circles,location);
 	// ...
 	throw "here";
 }
-Tri._nonlinearSourcePowerError = function(what){//initial: distances_i & powers_N, sample_i){
+Tri._nonlinearSourcePowerError = function(args, vals, isUpdate){//initial: distances_i & powers_N, sample_i){
+	// console.log(args);
+	// console.log(vals);
+	var groups = args[0];
+	// console.log(groups);
+
+	var ax = 0;
+	var ay = 0;
+	var bx = 1;
+	var by = 0;
+	// var cx = vals[0];
+	// var cy = vals[1];
+	// var pA = vals[2];
+	// var pB = vals[3];
+	// var pC = vals[4];
+
+	var cx = 0.75;
+	var cy = 0.75;
+	// var pA = 3;
+	// var pB = 4;
+	// var pC = vals[0];
+	var pA = vals[0];
+	var pB = vals[1];
+	var pC = vals[2];
+
+	pA = Math.abs(pA);
+	pB = Math.abs(pB);
+	pC = Math.abs(pC);
+	var powers = [pA,pB,pC];
+	// if(pA<=0 || pB<=0 || pC<=0){
+	// 	return 1E99;
+	// }
+	// console.log(powers+"")
+	// var sources = [new V2D(ax,ay),new V2D(bx,by),new V2D(cx,cy)];
 	// ...
-	// LOTS OF DISTANCES
+	var circles = [];
+		circles.push({"center":new V2D(ax,ay), "radius":0});
+		circles.push({"center":new V2D(bx,by), "radius":0});
+		circles.push({"center":new V2D(cx,cy), "radius":0});
+	var totalError = 0;
+	for(var g=0; g<groups.length; ++g){
+		var samples = groups[g];
+		// distances from power
+		for(var s=0; s<samples.length; ++s){
+			var sample = samples[s];
+			var power = powers[s];
+			var distanceSquare = power/sample;
+			var distance = Math.sqrt(distanceSquare);
+			circles[s]["radius"] = distance;
+		}
+		// optimum sample location
+		var location = Code.pointFromCircles(circles);
+		if(isUpdate){
+			// console.log(location+" <<<");
+		}
+		// distances from location
+		for(var s=0; s<samples.length; ++s){
+			var power = powers[s];
+			var sample = samples[s];
+			var circle = circles[s];
+			var distanceSquare = V2D.distanceSquare(circle["center"], location);
+			// error
+			var expected = power/distanceSquare;
+			var error = Math.pow(expected - sample, 2);
+			// var error = Math.abs(expected - sample);
+			// console.log(sample,expected,error);
+			totalError += error;
+		}
+	}
 
+	if(isUpdate){
+		console.log("powers: "+powers);
+		console.log(totalError+" ...");
+	}
+	// console.log(" "+pC+" = "+totalError+" ...");
 
-	estimate_i = power_N/Math.pow(distance_i,2);
-	var error = (estimate_i - sample_i);
-	totalError += error*error;
+	// console.log(totalError);
+	return totalError;
+
+		// estimate distances:
+		// 	diA^2 = pA/SiA
+		// 	diB^2 = pB/SiB
+		// 	diC^2 = pC/SiC
+		//
+		// calculate optimum locations: closest intersect of 3 radiuses
+		// 	Six = ...
+		// 	Siy = ...
+		//
+		// calculate distances:
+		// 	diA^2 = (Ax-Six)^2 + (Ay-Siy)^2
+		// 	diB^2 = (Bx-Six)^2 + (By-Siy)^2
+		// 	diC^2 = (Cx-Six)^2 + (Cy-Siy)^2
+		//
+		//
+		// calculate error:
+		// 	error_i_I = SiA - (PA/diA^2)
+		// 	error_i = error_i_A + error_i_B + error_i_C
+		//
+
+	// estimate_i = power_N/Math.pow(distance_i,2);
+	// var error = (estimate_i - sample_i);
+	// totalError += error*error;
 	throw "..."
 }
 Tri.Estimate.prototype.updateEstimate = function(){
