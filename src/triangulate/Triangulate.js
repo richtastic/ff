@@ -52,10 +52,14 @@ this._doY = -300;
 
 Triangulate.prototype.doBeaconStuff = function(){
 	console.log("doBeaconStuff");
+	var errorStatic = 0.1;
+	var errorPower = 0.0;
+	var errorDistance = 0.0;
+	var maximumRange = 1E9;
 	var beacons = [];
-		beacons.push( new Tri.Beacon(new V3D(0,0,0), 3, 1E9, 0, 0, 0) );
-		beacons.push( new Tri.Beacon(new V3D(1,0,0), 4, 1E9, 0, 0, 0) );
-		beacons.push( new Tri.Beacon(new V3D(0.75,0.75,0), 5, 1E9, 0, 0, 0) );
+		beacons.push( new Tri.Beacon(new V3D(0,0,0), 3, maximumRange, errorStatic, 0, 0) );
+		beacons.push( new Tri.Beacon(new V3D(1,0,0), 4, maximumRange, errorStatic, 0, 0) );
+		beacons.push( new Tri.Beacon(new V3D(0.75,0.75,0), 5, maximumRange, errorStatic, 0, 0) );
 
 	var daq = new Tri.DAQ(beacons);
 	var model = new Tri.Estimate();
@@ -63,6 +67,28 @@ Triangulate.prototype.doBeaconStuff = function(){
 
 	console.log(beacons);
 	var samples;
+
+	// calibrate:
+	phone.location().set(0.5,0.5,0);
+	phone.recordAvailableSamples();
+
+	phone.location().set(0.5,1.5,0);
+	phone.recordAvailableSamples();
+
+	phone.location().set(1.5,0.5,0);
+	phone.recordAvailableSamples();
+
+	phone.location().set(1.5,1.5,0);
+	phone.recordAvailableSamples();
+
+	phone.location().set(-1,-1,0);
+	phone.recordAvailableSamples();
+
+	phone.location().set(1.0,1.0,0);
+	phone.recordAvailableSamples();
+
+
+/*
 	// journey
 	phone.location().set(0.25,0.5,0);
 
@@ -99,13 +125,18 @@ Triangulate.prototype.doBeaconStuff = function(){
 	phone.recordAvailableSamples();
 	phone.move(new V3D(-0.15,0.15,0.0));
 	phone.recordAvailableSamples();
-
+*/
 
 	console.log(phone);
 
-	var what = phone.solvePower();
-	// phone.solve
+
+	var what = phone.solveWorldCalibration();
 	console.log(what);
+	throw "A";
+
+	var what = phone.solvePower();
+	console.log(what);
+	throw "B";
 
 //	var samples = phone.getAvailableSamples();
 //	model.addGroupedSamples(samples);
@@ -379,7 +410,7 @@ Triangulate.prototype.handleEnterFrameFxn = function(e){
 
 // ---------------------------------------------------------------------------------------------------------------------------------------------------
 Tri = Triangulate;
-Tri.Beacon = function(location, power, distance, staticError, powerError, distanceError){
+Tri.Beacon = function(location, power, maxDistance, staticError, powerError, distanceError){
 	this._id = Tri.Beacon._ID++;
 	this._sourcePower = 1.0;
 	this._powerError = 0.01; // proportional to power
@@ -390,7 +421,7 @@ Tri.Beacon = function(location, power, distance, staticError, powerError, distan
 	this._location = null;
 	this.location(location);
 	this.power(power);
-	this.maxDistance(distance);
+	this.maxDistance(maxDistance);
 	this.staticError(staticError);
 	this.powerError(powerError);
 	this.distanceError(distanceError);
@@ -437,6 +468,9 @@ Tri.Beacon.prototype.maxDistance = function(maxDistance){
 }
 Tri.Beacon.prototype.sample = function(position){
 	var distance = V3D.distance(this._location,position);
+
+// distance error here ?
+
 	var d2 = distance *distance;
 	var inverse = d2>0 ? 1.0/d2 : 0.0;
 	var exp = Math.exp(-inverse);
@@ -444,7 +478,8 @@ Tri.Beacon.prototype.sample = function(position){
 	var errorPower = Code.randomFloat(-1.0,1.0) * this._powerError * inverse;
 	var errorDistance = Code.randomFloat(-1.0,1.0) * this._distanceError * distance;
 	var error = errorPower + errorStatic + errorDistance;
-	var power = this._sourcePower * inverse  +  error;
+console.log("errorStatic: "+errorStatic);
+	var power = this._sourcePower * inverse + error;
 	power = Math.max(0,power);
 	// dropping in / out based on distance:
 	var distanceCheck = this._maximumDistance + Code.randomFloat(-1.0,1.0) * this._maximumDistanceError;
@@ -454,15 +489,17 @@ Tri.Beacon.prototype.sample = function(position){
 	return power;
 }
 
-Tri.BeaconSample = function(beacon, time, power, distance){
+Tri.BeaconSample = function(beacon, time, power, distance, location){
 	this._beacon = null;
 	this._power = null;
 	this._time = null;
 	this._distance = null;
+	this._location = null;
 	this.beacon(beacon);
 	this.time(time);
 	this.power(power);
 	this.distance(distance);
+	this.location(location);
 }
 Tri.BeaconSample.prototype.beacon = function(beacon){
 	if(beacon!==undefined){
@@ -488,6 +525,14 @@ Tri.BeaconSample.prototype.time = function(time){
 	}
 	return this._time;
 }
+Tri.BeaconSample.prototype.location = function(location){
+	if(location!==undefined){
+		this._location = location;
+	}
+	return this._location;
+}
+
+
 
 Tri.DAQ = function(beacons){
 	this._beacons = {};
@@ -512,9 +557,12 @@ Tri.DAQ.prototype.getSamplesForLocation = function(location){
 		var id = beacon.id();
 		// var index = id+"";
 		var power = beacon.sample(location);
+		// ?
 		if(power>0){
 			var distance = V3D.distance(location,beacon.location());
-			var sample = new Tri.BeaconSample(beacon, time, power, distance);
+			// var loc = beacon.location();
+			var loc = location.copy();
+			var sample = new Tri.BeaconSample(beacon, time, power, distance, loc);
 			samples.push(sample);
 		}
 	}
@@ -554,7 +602,17 @@ Tri.Target.prototype.solvePower = function(){
 	throw "..."
 }
 
+Tri.Target.prototype.solveWorldCalibration = function(){
+	console.log(this);
+	var estimate = this._estimate;
+	console.log(this);
 
+	estimate.solveCalibration();
+
+
+	throw "..."
+
+}
 
 // single beacon modeled from data
 Tri.BeaconModel = function(id){
@@ -629,6 +687,93 @@ Tri.Estimate.prototype._checkAddBeaconModel = function(beaconID, sample){
 	}
 	beacon.addSample(sample);
 }
+
+// using known sample locations, solve for source locations
+Tri.Estimate.prototype.solveCalibration = function(){
+	console.log(this);
+
+	var sampleLookup = {};
+	var beacons = Code.objectToArray(this._beacons);
+	console.log(beacons);
+	for(var i=0; i<beacons.length; ++i){
+		var beacon = beacons[i];
+		sampleLookup[beacon.id()] = [];
+	}
+
+	// pairs of samples:
+	// sx, sy, sp
+
+	// var samples = [];
+	var groups = this._groupedSamples;
+	for(var g=0; g<groups.length; ++g){
+		var group = groups[g];
+		// var list = [];
+		// samples.push(list);
+		for(var i=0; i<group.length; ++i){
+			var sample = group[i];
+			var beaconID = sample.beacon().id();
+			var list = sampleLookup[beaconID];
+			var power = sample.power();
+			var location = sample.location();
+				location = location.copy();
+			list.push([location, power]);
+			// console.log(sample);
+			// var power = sample.power();
+			// list.push(power);
+		}
+	}
+	console.log(sampleLookup);
+
+	for(var i=0; i<beacons.length; ++i){
+		var beacon = beacons[i];
+		var samples = sampleLookup[beacon.id()];
+		// get closest / lowest error top N samples only
+		var sampleCount = samples.length;
+			var rows = sampleCount*(sampleCount-1);
+			var cols = 4;
+			A = new Matrix(rows,cols);
+			B = new Matrix(rows,1);
+		var row = 0;
+		for(var si=0; si<samples.length; ++si){
+			var sampleI = samples[si];
+			var s1 = sampleI[0];
+			var s1x = s1.x;
+			var s1y = s1.y;
+			var s1p = sampleI[1];
+			for(var sj=si+1; sj<samples.length; ++sj){
+				var sampleJ = samples[sj];
+				var s2 = sampleJ[0];
+				var s2x = s2.x;
+				var s2y = s2.y;
+				var s2p = sampleJ[1];
+				A.set(row, 0, 2*(s2x-s1x));
+				A.set(row, 1, 2*(s2y-s1y));
+				A.set(row, 2, 1.0/s2p - 1.0/s1p);
+				A.set(row, 3, s1x*s1x - s2x*s2x + s1y*s1y - s2y*s2y);
+				++row;
+			}
+		}
+		var svd = Matrix.SVD(A);
+
+		coeff = svd.V.colToArray(3);
+		for(c=0;c<coeff.length;++c){
+			coeff[c] = coeff[c]/coeff[coeff.length-1];
+		}
+		// source values:
+		var position = new V2D(coeff[0],coeff[1]);
+		var power = coeff[2];
+		console.log(" "+i+": "+position+"  @ "+power);
+	}
+
+	// nonlinear solve:
+	// minimize distance error?
+	// minimize sample error ?
+
+	throw ".."
+}
+
+// ALL UNKNOWNS ...
+
 Tri.Estimate.prototype.solvePower = function(){
 	console.log(this);
 	// initial guess of power for beacons

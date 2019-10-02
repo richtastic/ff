@@ -155,7 +155,7 @@ Sy = ((dA^2 - dC^2 + Cx^2 + Cy^2)/2 - Cx*(1 + dA^2 - dB^2)/2)/Cy		[div by zero]
 ==> INTO 1:
 dA^2 = Sx^2 + Sy^2
 
-A: [ (1 + dA^2 - dB^2)/2 ]^2
+A: Sx^2 = [ (1 + dA^2 - dB^2)/2 ]^2
 ->
 	(1 + dA^2 - dB^2)^2 / 4
 	(1 + dA^2 - dB^2) * (1 + dA^2 - dB^2) / 4
@@ -173,7 +173,7 @@ A: [ (1 + dA^2 - dB^2)/2 ]^2
 
 
 
-B: [ ((dA^2 - dC^2 + Cx^2 + Cy^2) - Cx*(1 + dA^2 - dB^2))/(2*Cy) ]^2
+B: Sy^2 = [ ((dA^2 - dC^2 + Cx^2 + Cy^2) - Cx*(1 + dA^2 - dB^2))/(2*Cy) ]^2
 ->
 	(dA^2 - dC^2 + Cx^2 + Cy^2 - Cx - Cx*dA^2 + Cx*dB^2) / (2*Cy) ]^2
 	(dA^2 - dC^2 + Cx^2 + Cy^2 - Cx - Cx*dA^2 + Cx*dB^2)^2 / (4*Cy^2)
@@ -187,6 +187,15 @@ B: [ ((dA^2 - dC^2 + Cx^2 + Cy^2) - Cx*(1 + dA^2 - dB^2))/(2*Cy) ]^2
 		-dA^2*Cx + dC^2*Cx - Cx*Cx^2 - Cx*Cy^2 + Cx^2 + dA^2*Cx^2 - dB^2*Cx^2
 		-Cx*dA^2*dA^2 + Cx*dA^2*dC^2 - Cx*dA^2*Cx^2 - Cx*dA^2*Cy^2 + dA^2*Cx^2 + dA^2*Cx^2*dA^2 - dA^2*Cx^2*dB^2
 		Cx*dB^2*dA^2 - Cx*dB^2*dC^2 + Cx*dB^2*Cx^2 + Cx*dB^2*Cy^2 - dB^2*Cx^2 - dB^2*Cx^2*dA^2 + dB^2*Cx^2*dB^2
+
+
+		=
+
+
+		dA^2*dA^2 - 2*dA^2*dC^2 + 3*dA^2*Cx^2 + dA^2*Cy^2 - 2*dA^2*Cx - dA^2*dA^2*Cx + dA^2*dB^2*Cx + dC^2*dC^2 - 2*dC^2*Cx^2 - 2*dC^2*Cy^2 + 2*dC^2*Cx + dA^2*dC^2*Cx - dB^2*dC^2*Cx + dA^2*Cx^2 + Cx^2*Cx^2
+		+ 2*Cx^2*Cy^2 - 2*Cx*Cx^2 + Cy^2*Cy^2 - dA^2*Cx*Cx^2 + dB^2*Cx*Cx^2 + dA^2*Cy^2 - 2*Cx*Cy^2 - dA^2*Cx*Cy^2 + dB^2*Cx*Cy^2 + Cx^2 - 2*dB^2*Cx^2
+		- Cx*dA^2*dA^2 + Cx*dA^2*dC^2 - Cx*dA^2*Cx^2 - Cx*dA^2*Cy^2 + dA^2*Cx^2*dA^2 - dA^2*Cx^2*dB^2
+		+ Cx*dB^2*dA^2 - Cx*dB^2*dC^2 + Cx*dB^2*Cx^2 + Cx*dB^2*Cy^2 - dB^2*Cx^2*dA^2 + dB^2*Cx^2*dB^2
 
 have to be separable ...
 
@@ -257,6 +266,28 @@ error = errorA + errorB + errorC + ...
 
 ...
 **
+
+
+##### sphere - intersect of distances:
+(Ax-Sx)^2 + (Ay-Sy)^2 + (Az-Sz)^2 = dA^2	= Ax^2 + Sx^2 - 2*Ax*Sx + Ay^2 + Sy^2 - 2*Ay*Sy + Az^2 + Sz^2 - 2*Az*Sz - dA^2 = 0	[1]
+(Bx-Sx)^2 + (By-Sy)^2 + (Az-Sz)^2 = dA^2	= Ax^2 + Sx^2 - 2*Ax*Sx + Ay^2 + Sy^2 - 2*Ay*Sy + Az^2 + Sz^2 - 2*Az*Sz - dA^2 = 0	[1]
+(Cx-Sx)^2 + (Cy-Sy)^2 + (Az-Sz)^2 = dA^2	= Ax^2 + Sx^2 - 2*Ax*Sx + Ay^2 + Sy^2 - 2*Ay*Sy + Az^2 + Sz^2 - 2*Az*Sz - dA^2 = 0	[1]
+[1-2]:
+(Ax^2 - Bx^2) + (Ay^2 - By^2) + (Az^2 - Bz^2) + (2*Bx*Sx - 2*Ax*Sx) + (2*By*Sy - 2*Ay*Sy) + (2*Bz*Sz - 2*Az*Sz) + (dB^2 - dA^2) = 0
+[1-3]:
+(Ax^2 - Cx^2) + (Ay^2 - Cy^2) + (Az^2 - Cz^2) + (2*Cx*Sx - 2*Ax*Sx) + (2*Cy*Sy - 2*Ay*Sy) + (2*Cz*Sz - 2*Az*Sz) + (dC^2 - dA^2) = 0
+[2-3]:
+(Bx^2 - Cx^2) + (By^2 - Cy^2) + (Bz^2 - Cz^2) + (2*Cx*Sx - 2*Bx*Sx) + (2*Cy*Sy - 2*By*Sy) + (2*Cz*Sz - 2*Bz*Sz) + (dC^2 - dB^2) = 0
+
+[A-B]:
+Ax^2 - Bx^2 + Ay^2 - By^2 + Az^2 - Bz^2 + 2*Sx*(Bx - Ax) + 2*Sy*(By - Ay) + 2*Sz*(Bz - Az) + dB^2 - dA^2 = 0
+Ax^2 - Cx^2 + Ay^2 - Cy^2 + Az^2 - Cz^2 + 2*Sx*(Cx - Ax) + 2*Sy*(Cy - Ay) + 2*Sz*(Cz - Az) + dC^2 - dA^2 = 0
+Bx^2 - Cx^2 + By^2 - Cy^2 + Bz^2 - Cz^2 + 2*Sx*(Cx - Bx) + 2*Sy*(Cy - By) + 2*Sz*(Cz - Bz) + dC^2 - dB^2 = 0
+
+...
+
+
+
 
 
 #### BLUETOOTH / BEACONS
@@ -365,6 +396,73 @@ with shifted curve???::
 http://download.ni.com/evaluation/rf/intro_to_bluetooth_test.pdf
 
 
+
+
+...
+
+
+
+##### steps in calibrating a world
+- choose some easy set of coordinates
+- walk around and take readings for coordinate
+	- BEACON_I - KNOWN LOCATION, ESTIMATED DISTANCE
+		=> triangulate with 3+ (dozens) of samples
+
+- RSSI ???? VS LOCATION ???
+
+
+- known:
+	Sx
+	Sy
+- unknown:
+	Bp
+	Bx
+	By
+- data:
+	+Sx
+	+Sy
+	+Sp
+- equations:
+	Sp = Bp/dB^2
+		=>
+	dB^2 = Bp/Sp
+	(Bx-Sx)^2 + (By-Sy)^2 = Bp/Sp
+	Bx^2 + Sx^2 - 2*Bx*Sx + By^2 + Sy^2 - 2*By*Sy - Bp/Sp = 0
+
+	| Bx | Bx^2 | By | By^2 | Bp | 1 |
+
+	WITH 2 SAMPLES:
+	  Bx^2 + S1x^2 - 2*Bx*S1x + By^2 + S1y^2 - 2*By*S1y - Bp/S1p = 0
+	- Bx^2 + S2x^2 - 2*Bx*S2x + By^2 + S2y^2 - 2*By*S2y - Bp/S2p = 0
+	----------------------------------------------------------------------
+	     0 + S1x^2 - S2x^2 - 2*Bx*S1x + 2*Bx*S2x + 0 + S1y^2 - S2y^2 - 2*By*S1y + 2*By*S2y - Bp/S1p + Bp/S2p = 0
+	| Bx | By | Bp | 1 |
+	Bx: - 2*S1x + 2*S2x
+	By: - 2*S1y + 2*S2y
+	Bp: - 1/S1p + 1/S2p
+	c:  S1x^2 - S2x^2 + S1y^2 - S2y^2
+	=> optimize nonlinearly:
+		=> minimize error: distances?
+		=> minimize error: Sp_estimate - Sp_i
+
+
+COULD 2 PAIRS OF SAMPLES BE USED TO CALIBRATE AUTOMATICALLY ?
+AGAIN:
+
+##### 3 - equations:
+dA^2 = pA/SiA
+dB^2 = pB/SiB
+dC^2 = pC/SiC
+dA^2 = Sx^2 + Sy^2
+dB^2 = (1-Sx)^2 + Sy^2 = 1 + Sx^2 - 2*Sx  +  Sy^2
+dC^2 = (Cx-Sx)^2 + (Cy-Sy)^2 = Cx^2 + Sx^2 - 2*Cx*Sx  +  Cy^2 + Sy^2 - 2*Cy*Sy
+
+[2-1] :
+dB^2 - dA^2 = 1 - 2*Sx
+
+[3-1] :
+dC^2 - dA^2 = Cx^2 - 2*Cx*Sx  +  Cy^2 - 2*Cy*Sy
+...
 
 
 ...

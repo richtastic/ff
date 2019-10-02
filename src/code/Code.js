@@ -8407,6 +8407,51 @@ Code.closesSurfacePointsCircles = function(cA,rA,cB,rB){ // return closest of 4 
 
 
 
+
+Code.pointFromSpheresAlgebraic = function(spheres){
+	var count = spheres.length;
+	// no center of circle in case of 3 ; use nearest point
+	if(count<=3){
+		return null;
+	}
+	// construct set of equations:
+	var rows = count*(count-1); // only NEED 4
+	var cols = 4;
+	var A = new Matrix(rows,cols);
+	var row = 0;
+	for(var i=0; i<count; ++i){
+		var sphereA = spheres[i];
+		var cA = sphereA["center"];
+		var rA = sphereA["radius"];
+		for(var j=i+1; j<count; ++j){
+			var sphereB = spheres[j];
+			var cB = sphereB["center"];
+			var rB = sphereB["radius"];
+			A.set(row,0, 2*(cB.x - cA.x));
+			A.set(row,1, 2*(cB.y - cA.y));
+			A.set(row,2, 2*(cB.z - cA.z));
+			A.set(row,3, cA.x*cA.x + cA.y*cA.y + cB.y*cB.y - cB.x*cB.x - cB.y*cB.y - cB.z*cB.z - rA*rA + rB*rB);
+			++row;
+		} // 2*(Bx - Ax)*Sx + 2*(By - Ay)*Sy + 2*(Bz - Az)*Sz  +  Ax^2 + Ay^2 + Az^2 - Bx^2 - By^2 - Bz^2 + dB^2 - dA^2  = 0
+	}
+	// SVD projection closest
+	var svd = Matrix.SVD(A);
+	var best = svd.V.colToArray(cols-1);
+	var x = best[0];
+	var y = best[1];
+	var z = best[2];
+	var c = best[3];
+	if(c==0){
+		return null;
+	}
+	x /= c;
+	y /= c;
+	z /= c;
+	return new V3D(x,y,z);
+}
+
+
+
 Code.sphereFromPoints = function(a,b,c,d){ // ~95+s% accurate
 	// var i;
 	// if(Code.coplanar(a,b,c,d)){
