@@ -332,11 +332,11 @@ TODO: pairwise possibility limiting
 	- redo affine features
 	- multi-view combining into single 3D scene - minimizing errors
 		- sparse tracks
-		x - dense points
-(09/31)
+		x dense points
+(10/31)
 - surface triangulation(tessellation)
 x	- advancing-front, curvature-based tessellation
-(10/31)
+(11/31)
 	=> scene triangle model
 - texturing
 	- view-based surface texturing
@@ -349,11 +349,11 @@ x	- advancing-front, curvature-based tessellation
 	- VR device
 		- ios: scenekit
 		- oculus = unity / blender
-(08/31)
+(12/31)
 - MVP
 	- example models
 	- example screens
-(08/15)
+(01/31)
 
 google app engine project - nodejs
 https://cloud.google.com/appengine/docs/nodejs/
@@ -377,6 +377,11 @@ https://cloud.google.com/appengine/docs/nodejs/
 1 + 2 = NY9RPQHA
 0+1+2 = S21L1RCT
 
+
+
+
+- is absolute from relative correct?
+	- run on fake scenarios
 
 
 gradAngleFromGry3x3

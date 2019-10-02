@@ -8440,6 +8440,47 @@ this.setTracksFilename(App3DR.ProjectManager.RECONSTRUCT_TRACKS_FILE_NAME);
 
 
 App3DR.ProjectManager.prototype.displayViewGraph = function(transforms, pairs){
+
+// test data
+/*
+
+	var abs0 = new Matrix(4,4).identity();
+		abs0 = Matrix.transform3DRotateY(abs0, Code.radians(20));
+		abs0 = Matrix.transform3DTranslate(abs0, 0,0,0);
+	var abs1 = new Matrix(4,4).identity();
+		abs1 = Matrix.transform3DRotateY(abs1, Code.radians(-30));
+		abs1 = Matrix.transform3DTranslate(abs1, 1,0,0);
+	var abs2 = new Matrix(4,4).identity();
+		abs2 = Matrix.transform3DRotateY(abs2, Code.radians(40));
+		abs2 = Matrix.transform3DTranslate(abs2, 0,0,1);
+
+	var rel01 = R3D.relativeTransformMatrix2(abs0,abs1);
+	var rel02 = R3D.relativeTransformMatrix2(abs0,abs2);
+	var rel12 = R3D.relativeTransformMatrix2(abs1,abs2);
+
+	// add some error
+		rel01 = Matrix.transform3DRotateY(rel01, Code.radians(1));
+		rel01 = Matrix.transform3DTranslate(rel01, 0.01,0,0.01);
+
+		rel02 = Matrix.transform3DRotateY(rel02, Code.radians(2));
+		rel02 = Matrix.transform3DTranslate(rel02, 0.01,0,0.01);
+
+		rel12 = Matrix.transform3DRotateY(rel12, Code.radians(3));
+		rel12 = Matrix.transform3DTranslate(rel12, 0.005,0,0.005);
+
+
+		rel01 = Matrix.inverse(rel01);
+		rel02 = Matrix.inverse(rel02);
+		rel12 = Matrix.inverse(rel12);
+
+	transforms = [abs0,abs1,abs2];
+	pairs = [];
+		pairs.push([0,1, rel01, 1.0]);
+		pairs.push([0,2, rel02, 1.0]);
+		pairs.push([1,2, rel12, 1.0]);
+*/
+	
+	console.log("displayViewGraph");
 	console.log(pairs);
 	console.log(transforms);
 
@@ -8453,21 +8494,31 @@ App3DR.ProjectManager.prototype.displayViewGraph = function(transforms, pairs){
 
 	var centers = [];
 	var normals = [];
+	var forwards = [];
+	var plus = new V3D(0,0,1);
+	var zero = new V3D(0,0,0);
 	for(var i=0; i<transforms.length; ++i){
 		var transform = transforms[i];
-		console.log(transform);
-		var o = transform.multV3DtoV3D(new V3D(0,0,0));
-		var z = transform.multV3DtoV3D(new V3D(0,0,-1));
-		// var z = transform.multV3DtoV3D(new V3D(0,0,1));
-		// var z = transform.multV3DtoV3D(new V3D(-1,0,0));
+			// transform = Matrix.inverse(transform);
+		var o = transform.multV3DtoV3D(zero);
+		var z = transform.multV3DtoV3D(plus);
 		var normal = V3D.sub(z,o);
 		centers.push(o);
 		normals.push(normal);
+		forwards.push(z);
 	}
 	var plane = Code.planeFromPoints3D(centers);
 	var planeCenter = plane["point"];
 	var planeNormal = plane["normal"];
 	var centers2D = Code.projectPointsTo2DPlane(centers,planeCenter,planeNormal);
+	var forwards2D = Code.projectPointsTo2DPlane(forwards,planeCenter,planeNormal);
+	var normals2D = [];
+	for(var i=0; i<centers2D.length; ++i){
+		var c2D = centers2D[i];
+		var f2D = forwards2D[i];
+		var n2D = V2D.sub(f2D,c2D);
+		normals2D[i] = n2D;
+	}
 
 	var info2D = V2D.infoArray(centers2D);
 	var size2D = info2D["size"];
@@ -8509,9 +8560,7 @@ App3DR.ProjectManager.prototype.displayViewGraph = function(transforms, pairs){
 		display.graphics().fill();
 		display.graphics().strokeLine();
 		// normal:
-		var normal3D = normals[i];
-		// var n2D = Code.projectTo2DPlane(normal3D.copy().sub(),planeCenter,planeNormal);
-		var n2D = V3D.perpendicularComponent(planeNormal,normal3D);
+		var n2D = normals2D[i];
 		n2D.norm().scale(normalSize);
 		// var n2D = V3D.perpendicularComponent(base,normal2D);
 		display.graphics().setLine(1.0,0xFF000000);
@@ -8520,13 +8569,13 @@ App3DR.ProjectManager.prototype.displayViewGraph = function(transforms, pairs){
 		display.graphics().lineTo(p2D.x+n2D.x,p2D.y+n2D.y);
 		display.graphics().endPath();
 		display.graphics().strokeLine();
-
 		var text = new DOText(""+i, 18, DOText.FONT_ARIAL, 0xFF990099, DOText.ALIGN_CENTER);
 		// text.matrix().scale(1,-1);
 		text.matrix().translate(p2D.x, p2D.y-20.0);
 		display.addChild(text);
 
 	}
+
 	// min & max errors:
 	var errors = [];
 	for(var i=0; i<pairs.length; ++i){
@@ -8535,31 +8584,29 @@ App3DR.ProjectManager.prototype.displayViewGraph = function(transforms, pairs){
 	}
 	var info = Code.infoArray(errors);
 	var minError = info["min"];
-	console.log(info);
+	// console.log(info);
 	for(var i=0; i<pairs.length; ++i){
 		var pair = pairs[i];
 		var a = pair[0];
 		var b = pair[1];
 		var fwd = pair[2];
 		var error = pair[3];
-		var bak = Matrix.inverse(fwd);
+		var bak = Matrix.inverse(fwd); // i
 		var err = error/minError;
 
 		// show would-be points:
 		var ta = transforms[a];
 		var tb = transforms[b];
-		// var nb = Matrix.mult(ta,fwd);
-		// var na = Matrix.mult(tb,bak);
+		// depends on if relative or if extrinsic
 		// var nb = Matrix.mult(fwd,ta);
 		// var na = Matrix.mult(bak,tb);
 		var nb = Matrix.mult(bak,ta);
 		var na = Matrix.mult(fwd,tb);
-		// var nb = Matrix.mult(fwd,tb);
-		// var na = Matrix.mult(bak,ta);
+
 		var ts = [na,nb];
 		for(var j=0; j<ts.length; ++j){
 			var c3D = ts[j].multV3DtoV3D(new V3D(0,0,0));
-			var p2D = Code.projectTo2DPlane(c3D.copy().sub(planeCenter),planeCenter,planeNormal);
+			var p2D = Code.projectTo2DPlane(c3D.copy(),planeCenter,planeNormal);
 			p2D = transformTo2D.multV2DtoV2D(p2D);
 			// center:
 			display.graphics().setLine(1.0,0xFFCCCCCC);
@@ -8572,7 +8619,7 @@ App3DR.ProjectManager.prototype.displayViewGraph = function(transforms, pairs){
 		}
 		var p2DA = centersDisplay2D[a];
 		var p2DB = centersDisplay2D[b];
-		display.graphics().setLine(2.0,0xFF0000CC);
+		display.graphics().setLine(2.0,0x990000CC);
 		display.graphics().beginPath();
 		display.graphics().moveTo(p2DA.x,p2DA.y);
 		display.graphics().lineTo(p2DB.x,p2DB.y);
@@ -8585,8 +8632,8 @@ App3DR.ProjectManager.prototype.displayViewGraph = function(transforms, pairs){
 		// text.matrix().scale(1,-1);
 		text.matrix().translate(c2D.x, c2D.y);
 		display.addChild(text);
-
 	}
+	
 	// display.matrix().scale(1,-1);
 	// display.matrix().translate(0,displaySize);
 	GLOBALSTAGE.addChild(display);
