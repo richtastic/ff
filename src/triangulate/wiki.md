@@ -152,6 +152,7 @@ cX*(1 + dA^2 - dB^2)/2 = (dA^2 - dC^2 + Cx^2 + Cy^2)/2 - Cy*Sy
 cX*(1 + dA^2 - dB^2)/2 - (dA^2 - dC^2 + Cx^2 + Cy^2)/2 = -Cy*Sy
 Sy = ((dA^2 - dC^2 + Cx^2 + Cy^2)/2 - Cx*(1 + dA^2 - dB^2)/2)/Cy		[div by zero]
 
+
 ==> INTO 1:
 dA^2 = Sx^2 + Sy^2
 
@@ -199,8 +200,11 @@ B: Sy^2 = [ ((dA^2 - dC^2 + Cx^2 + Cy^2) - Cx*(1 + dA^2 - dB^2))/(2*Cy) ]^2
 
 have to be separable ...
 
+or solve together & use equations to find 'average' of values...?
 
 
+
+dA^4, dA^2*dC^2,
 ..........
 
 
@@ -218,10 +222,6 @@ f(dA,dB,dC,Cx,Cy) = 0
 
 
 ##### CAN BX DISTANCE ASSUMED TO BE 1 ???
-	=> given signal strength vs given raw distances ?
-	...
-	=> scaling?
-
 	p / d = s
 	if d or p are in different units, equation becomes:
 	cp * (1/cd^2) * (p/d) = s
@@ -247,7 +247,7 @@ Ax,Ay, Bx,By, Cx,Cy, dA,dB,dC
 [1-3]:
 (Ax^2 - Cx^2) + (2*Cx*Sx - 2*Ax*Sx) + (Ay^2 - Cy^2) + (2*Cy*Sy - 2*Ay*Sy) + (dC^2 - dA^2) = 0
 
-[A-B]:
+[A-B]  (A-C) (B-C) :
 2*(Bx - Ax)*Sx + 2*(By - Ay)*Sy  +  Ax^2 + Ay^2 - Bx^2 - By^2 + dB^2 - dA^2  = 0
 
 
@@ -466,3 +466,37 @@ dC^2 - dA^2 = Cx^2 - 2*Cx*Sx  +  Cy^2 - 2*Cy*Sy
 
 
 ...
+
+
+##### calibration process:
+	- user entered coordinates
+	- button: take sample
+	- visual feedback:
+		- number of beacons found
+		- map of beacons in user specified coordinates
+			- beacon localization accuracy visualized by size of circle
+		- list of entered samples
+			- ability to remove a sample
+
+##### tracking process:
+	- map of user locations: current and historical
+		- user locations
+			- accuracy visualized by size of circle
+		- beacon locations
+		- sample count
+
+
+
+
+
+
+
+
+
+GPS DATA: NMEA
+
+https://www.gpsinformation.org/dale/nmea.htm
+https://learn.sparkfun.com/tutorials/gps-basics/message-formats
+https://cdn.sparkfun.com/datasheets/Sensors/GPS/fundamentals_of_gps_receivers-v1.pdf
+https://nguyenduyliemgis.files.wordpress.com/2014/09/fundamentals-of-gps-receivers-a-hardware-approach-2012.pdf
+http://twanclik.free.fr/electricity/electronic/pdfdone7/Fundamentals%20of%20Global%20Positioning%20System%20Receivers.pdf

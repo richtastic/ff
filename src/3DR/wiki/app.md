@@ -379,9 +379,12 @@ https://cloud.google.com/appengine/docs/nodejs/
 
 
 
-
-- is absolute from relative correct?
-	- run on fake scenarios
+- get tracks?
+- RANSAC tracks
+- 2D collision senarios:
+	- with images
+	- without images
+	- e/o: patches
 
 
 gradAngleFromGry3x3
