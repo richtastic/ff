@@ -378,13 +378,24 @@ https://cloud.google.com/appengine/docs/nodejs/
 0+1+2 = S21L1RCT
 
 
+- SPARSE LOGIG
+	- OPTIMIZE VIEW ORIENTATIONS
+	- PROPAGATE TRACKS TO ADJ VIEWS
 
-- get tracks?
-- RANSAC tracks
-- 2D collision senarios:
-	- with images
-	- without images
+- REVISTIT LOGIC OPTIONS ON 2D collision senarios:
+	- with images [pair,triple]
+	- without images [full dense]
 	- e/o: patches
+
+
+- REVISIT SURFACE CURVATURE ESTIMATION
+	- SAMPLE COUNT?
+	- PLANE / SIZE ?
+
+
+- DENSE LOGIC
+
+...
 
 
 gradAngleFromGry3x3

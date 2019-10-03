@@ -471,15 +471,21 @@ iteratively solved
         - reduce errors on existing pairs using updated orientation
         - fill out more points in possibly mission sections [use TFT to estimate missing locations | project using known point]
         - create new pairs from previously unmatched relative orientations
-    - Absolute Orientation 2 (better pairwise count & accuracy)
+    - USEFUL? Absolute Orientation 2 (better pairwise count & accuracy)
         - find improved absolute orientations of views, reducing error, using added & better estimates in view graph
     - Global RANSAC (load all dense points at same time [& views])
         - reduce error of all params at same time (or in randomized bunches)
         - final absolute camera orientations
         - final set of surface points
-    - ??? more-dense surface points ?
-            - increase sample count of surface
-            - may need to support sectioning
+    - TODO:
+        - Dense (increase surface resolution over what can fit in memory)
+            - load pair/triple & allow each 2d cell area on order of pixels (3-5) opportunity to 
+                - support sectioning: store 'database' in single large or multiple file
+                    - index between:
+                        - track
+                        - view
+                        - voxel [divided/combined to max point count ~ 1E6]
+                    - surface triangulation: only find surface a voxel at a time - propagation madness
     - Triangulate (simplify surface using curvature to estimate triangulated locations)
         - triangles
     - Texture (sourced from unobstructed views & blending)

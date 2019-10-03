@@ -7247,19 +7247,19 @@ throw "NO";
 		}
 	}
 	// ????
-// throw "task graph";
+// throw "task graph"; // first absolute from pairs
 	if(!this.hasGraph()){
 		console.log("has no graph");
 		this.calculateGlobalOrientationInit();
 		return;
 	}
-throw "task tracks";
-	if(!this.tracksDone()){ // load/build up tracks incrementally loading known pairs at a time
+// throw "task tracks";
+	if(!this.tracksDone()){ // load/build up tracks incrementally loading known pairs at a time [PREVIOUSLY: ALLOW PROPAGATION]
 		console.log("tracks not done");
 		this.iterateGraphTracks();
 		return;
 	}
-throw "task sparse";
+// throw "task sparse";
 if(!this.sparseDone()){ // load groups of views at a time (primary pair + aux views) until errors no longer get lower - global
 	console.log("sparse not done");
 	this.iterateSparseTracks();
@@ -7271,6 +7271,9 @@ if(!this.denseDone()){ // loads groups of views & optimizes single dense pair - 
 	this.iterateDenseTracks();
 	return;
 }
+
+// throw "task ABS 2?"
+
 throw "task BA";
 if(!this.pointsDone()){ // iteritive bundle adjust -- all points in single file
 	this.iteratePointsFullBA();
@@ -8416,7 +8419,7 @@ var tracksString = yaml.toString();
 this.setTracksFilename(App3DR.ProjectManager.RECONSTRUCT_TRACKS_FILE_NAME);
 
 	var fxnSavedProject = function(){
-		console.log("fxnSavedProject");
+		console.log("fxnSavedProject -- complete graph start");
 	}
 
 	var fxnSavedTracks = function(){
@@ -8639,8 +8642,6 @@ App3DR.ProjectManager.prototype.displayViewGraph = function(transforms, pairs){
 	GLOBALSTAGE.addChild(display);
 	display.matrix().translate(300,100);
 
-
-	throw "..."
 }
 
 App3DR.ProjectManager.prototype.iterateGraphTracks = function(){ // aggregate / accumulate tracks
@@ -8765,6 +8766,7 @@ console.log("START AT: "+startIndexI+" | "+startIndexJ);
 		var trackCount = pair.trackCount();
 		if(trackCount==0){ // noop
 			console.log("no track data ...");
+throw "save ?"
 			this.saveGraphFromData(graphData);
 		}else{
 			//
@@ -8929,6 +8931,7 @@ console.log("START AT: "+startIndexI+" | "+startIndexJ);
 				}
 				// SAVE
 				console.log(graphPoints.length)
+// throw "save ?";
 				this.setTrackCount(graphPoints.length);
 				this.setSparseFilename(App3DR.ProjectManager.BUNDLE_SPARSE_FILE_NAME);
 				this.saveSparseFromData(sparseData, fxnSavedSparse, this);
@@ -9024,6 +9027,7 @@ console.log("START AT: "+startIndexI+" | "+startIndexJ);
 			graphData["propagateIndex"] = -1;
 			// throw "create list of propagating triples"
 			console.log(graphData);
+// throw "save initial propagation groups"
 			// save
 			this.saveGraphFromData(graphData);
 		}
@@ -9239,10 +9243,10 @@ App3DR.ProjectManager.prototype._iterateGraphTracksPropagateTick = function(trip
 		world.copyRelativeTransformsFromAbsolute();
 		// world.relativeFFromSamples();
 		// world.estimate3DErrors(true);
-		console.log("probe3D");
+		console.log("TODO: ONLY IF ERRORS ARE LOW ENOUGH? OR REMOVE ENTIRELY - probe3D");
 
-
-var maxIterations = 5;
+// throw "HERE???"
+var maxIterations = 0;
 var lowestCount = Math.round(0.005*world.point3DCount()); // .1%-1%
 console.log(lowestCount);
 for(var t=0; t<maxIterations; ++t){
@@ -9278,7 +9282,7 @@ console.log("-------------------------------------------------------------------
 	world.estimate3DErrors(true);
 
 
-throw "don't want to do triple propagation ...";
+// throw "don't want to do triple propagation ...";
 
 	// save points
 	var graphPoints = this._getGraphPointsFromWorld(world, graphViewLookupIndex);
@@ -9933,7 +9937,7 @@ App3DR.ProjectManager.prototype._iterateSparseTracksStart = function(){ // keep 
 		isDone = true;
 	}
 	*/
-isDone = true;
+// isDone = true;
 
 console.log("isDone: "+isDone);
 
@@ -10056,7 +10060,7 @@ if(!isDone){
 			denseData["pairs"] = pairs;
 			denseData["currentPair"] = -1;
 			console.log(denseData);
-// throw "about to save done";
+throw "about to save done";
 			// SAVE PROJECT FILE
 			var fxnSavedProject = function(){
 				console.log("fxnSavedProject");
@@ -10070,7 +10074,7 @@ if(!isDone){
 			project.setDenseFilename(App3DR.ProjectManager.BUNDLE_DENSE_FILE_NAME);
 			project.saveDenseFromData(denseData, fxnSavedDense, this);
 			return;
-		} // else
+		} // else - not done
 
 
 		// do refinement
@@ -10095,6 +10099,8 @@ if(!isDone){
 
 console.log("need to revisit logic");
 
+// A - ransac view pair
+// B - propagate track points
 
 			world.averagePoints3DFromMatches();
 			world.patchInitBasicSphere(true);
@@ -10190,7 +10196,7 @@ console.log("need to revisit logic");
 // console.log(str);
 
 
-// throw "still testing";
+throw "still testing";
 
 		// update views
 		sparseViews = project._updateGraphViewsFromWorld(world, sparseViews, sparseCameras);
@@ -10525,7 +10531,7 @@ App3DR.ProjectManager.prototype._embedTrackPoints = function(world,graphData, gr
 
 }
 
-App3DR.ProjectManager.prototype._iterateGraphTracksTick = function(pair,viewsLoad){
+App3DR.ProjectManager.prototype._iterateGraphTracksTick = function(pair,viewsLoad){ // progressively add pair tracks
 	console.log("_iterateGraphTracksTick");
 	var stage = GLOBALSTAGE;
 	var graphData = this.graphData();
@@ -10601,8 +10607,9 @@ console.log("embedded points");
 	}
 	world.printPoint3DTrackCount();
 
+// if(true){
 if(false){
-	// SHOW IMAGES
+	// SHOW IMAGES - & 2D track points
 	for(var i=0; i<worldViews.length; ++i){
 		var view = worldViews[i];
 		var image = view.image();
@@ -10643,7 +10650,7 @@ if(false){
 	world.printPoint3DTrackCount();
 	// .
 	console.log(graphData);
-	// throw "TO SAVE ...";
+// throw "TO SAVE ...";
 	this.saveGraphFromData(graphData);
 }
 
