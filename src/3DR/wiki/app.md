@@ -378,7 +378,7 @@ https://cloud.google.com/appengine/docs/nodejs/
 0+1+2 = S21L1RCT
 
 
-- SPARSE LOGIG
+- SPARSE LOGIC
 	- OPTIMIZE VIEW ORIENTATIONS
 	- PROPAGATE TRACKS TO ADJ VIEWS
 
@@ -391,6 +391,8 @@ https://cloud.google.com/appengine/docs/nodejs/
 - REVISIT SURFACE CURVATURE ESTIMATION
 	- SAMPLE COUNT?
 	- PLANE / SIZE ?
+
+	- experiment in 2D
 
 
 - DENSE LOGIC

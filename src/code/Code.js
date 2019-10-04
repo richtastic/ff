@@ -10216,7 +10216,7 @@ Code.planeFromPoints2D = function(center, points, weights){
 			v0 = vB; v1 = vA;
 		}
 		if( V2D.dot(v0,v1) < 0 ){ // consistent orientation - CCW 90 degrees
-			v1.mult(-1.0);
+			v1.scale(-1.0);
 		}
 	}catch(e){ // covariance is likely all the same / not invertable => make something up
 		console.log(e)
@@ -10782,10 +10782,19 @@ Code.medianPointLines3D = function(lines){ // list of o+d lines
 	// SUMi=0_to_m: l - o - d*[(l-o)*d]/||d||
 }
 
-Code.closestPointPlane3D = function(q,n, p){ //
+Code.closestPointPlane3D = function(q,n, p){ // perpendicular component + origin
 	var t = ((q.x-p.x)*n.x + (q.y-p.y)*n.y + (q.z-p.z)*n.z)/(n.x*n.x+n.y*n.y+n.z*n.z);
 	return new V3D(p.x+t*n.x,p.y+t*n.y,p.z+t*n.z);
 }
+
+Code.closestPointPlane2D = function(q,n, p){ // perpendicular component + origin
+	// var t = ((q.x-p.x)*n.x + (q.y-p.y)*n.y)/(n.x*n.x+n.y*n.y);
+	// return new V2D(q.x-t*n.x,q.y-t*n.y);
+	var t = ((q.x-p.x)*n.x + (q.y-p.y)*n.y)/(n.x*n.x+n.y*n.y);
+	return new V2D(q.x+t*n.x,q.y+t*n.y);
+}
+
+
 Code.closestPointTri3D = function(pnt, a,b,c,nrm){ // closest point to plane also inside tri bounds
 	var p, ab,bc,ca, u,v,w;
 	p = Code.closestPointPlane3D(a,nrm, pnt);
