@@ -393,6 +393,7 @@ https://cloud.google.com/appengine/docs/nodejs/
 	- PLANE / SIZE ?
 
 	- experiment in 2D
+		=> VISUALIZE APPROXIMATED SURFACE
 
 
 - DENSE LOGIC

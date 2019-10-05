@@ -31,29 +31,56 @@ SurfaceTest.prototype._refreshDisplay = function(){
 	// make some surfaces & see how the window affects accuracy:
 
 	var center = new V2D(0,0);
-	var pointCount = 50;
+	// var pointCount = 50;
+	var pointCount = 100;
+	// var error = 0.0;
+	var error = 0.01;
 	// var error = 0.10; // ok
-	var error = 0.25; // bad
+	// var error = 0.25; // bad
 	// var error = 0.5; // impossible
 	var points = [];
 
 	// plane
-	var plane = {"center":new V2D(0,0),"normal":new V2D(0,1)};
-	for(var i=0; i<pointCount; ++i){
-		var percent = i/(pointCount-1);
-		var nor = plane["normal"];
-		var cen = plane["center"];
-		var left = nor.copy().rotate(Code.radians(90));
-		left.scale( (percent-0.5) );
-		var point = new V2D(0,0);
-		point.add(left);
-		point.add(new V2D(error*(Math.random()-0.5),error*(Math.random()-0.5)));
-		point.add(cen);
-		points.push(point);
+	if(false){
+		var plane = {"center":new V2D(0,0),"normal":new V2D(0,2)};
+		for(var i=0; i<pointCount; ++i){
+			var percent = i/(pointCount-1);
+			var nor = plane["normal"];
+			var cen = plane["center"];
+			var left = nor.copy().rotate(Code.radians(90));
+			left.scale( (percent-0.5) );
+			var point = new V2D(0,0);
+			point.add(left);
+			point.add(new V2D(error*(Math.random()-0.5),error*(Math.random()-0.5)));
+			point.add(cen);
+			points.push(point);
+		}
 	}
 
-
 	// circle
+	if(true){
+		// var focus = new V2D(0,2);
+		// var focus = new V2D(0,1);
+		var focus = new V2D(0,0.5);
+		var focToCen = V2D.sub(center,focus);
+		var radius = focToCen.length();
+		// var totalAngle = Code.radians(45);
+		// var totalAngle = Code.radians(90);
+		var totalAngle = Code.radians(180);
+		var halfAngle = totalAngle*0.5;
+		var startAngle = V2D.angleDirection(V2D.DIRX,focToCen);
+			startAngle -= halfAngle;
+		console.log("radius: "+radius);
+		for(var i=0; i<pointCount; ++i){
+			var percent = i/(pointCount-1);
+			var point = new V2D(radius,0);
+			point.rotate(startAngle + percent*totalAngle);
+			point.add(new V2D(error*(Math.random()-0.5),error*(Math.random()-0.5)));
+			point.add(focus);
+			points.push(point);
+			console.log(point);
+		}
+	}
 
 	// corner
 
@@ -73,8 +100,11 @@ SurfaceTest.prototype._refreshDisplay = function(){
 
 	console.log(points);
 
-	var worldScale = 400.0;
-	var worldOffset = new V2D(300,300);
+	// var worldScale = 400.0;
+	// var worldOffset = new V2D(300,300);
+
+	var worldScale = 1000.0;
+	var worldOffset = new V2D(500,500);
 	for(var i=0; i<points.length; ++i){
 		var point = points[i];
 
@@ -93,8 +123,10 @@ SurfaceTest.prototype._refreshDisplay = function(){
 
 	// show simulated plane surfaces
 	var cumulative = [];
-	// var maxCount = 10;
 	var maxCount = points.length;
+	// var maxCount = 10;
+	// var maxCount = 25;
+
 	for(var i=0; i<maxCount; ++i){
 		var point = points[i];
 			cumulative.push(point);
@@ -275,7 +307,7 @@ SurfaceTest.prototype._refreshDisplay = function(){
 // 	//
 // 	this.drawDot( V2D.scale(device.location,this._displayScale), 0xFF0000FF,0xFF000099, 5.0);
 // 	//this.drawDot( V2D.scale(calculated.location,this._displayScale), 0x9900FF00,0xCC009900, 3.0);
-	
+
 // }
 // Hot.prototype._checkPositions = function(){
 // 	var i, len;
@@ -283,7 +315,7 @@ SurfaceTest.prototype._refreshDisplay = function(){
 // 	var beacon = beacons[0];
 // 	var device = this._device;
 // 	device.distance = V2D.distance(device.location,beacon.location);
-// 	// .. 
+// 	// ..
 // 	len = beacons.length;
 // 	for(i=0;i<len;++i){
 // 		//
@@ -327,7 +359,7 @@ SurfaceTest.prototype._refreshDisplay = function(){
 // 	//console.log(e);
 // }
 // Hot.prototype.handleKeyUpFxn = function(e){
-// 	// 
+// 	//
 // }
 // Hot.prototype.handleKeyDownFxn = function(e){
 // 	var dist = 0.5;
@@ -354,7 +386,7 @@ SurfaceTest.prototype._refreshDisplay = function(){
 // 	this._refreshDisplay();
 // }
 // Hot.prototype.handleKeyDown2Fxn = function(e){
-// 	// 
+// 	//
 // }
 // Hot.prototype.handle = function(e){
 // 	console.log(e);

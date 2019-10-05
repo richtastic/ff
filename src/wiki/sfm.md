@@ -415,7 +415,19 @@ iteratively solved
 
 - points to triangles
 
+#### Surface modeling
+    - model local area with plane
+        - at what point does
+    - model local area with a sphere
+        - ...
 
+    - how many points to include?
+        - need local estimate of 'noise' - sigma distance from true surface
+        - the sample sphere size needs to be larger than the error [2-4 x] to find preferential direction
+
+    - 3 points is perfect plane
+    - as add more points: average distance goes up
+    - add too many points ->
 
 
 <a name="TEXTURE"></a>
@@ -479,7 +491,7 @@ iteratively solved
         - final set of surface points
     - TODO:
         - Dense (increase surface resolution over what can fit in memory)
-            - load pair/triple & allow each 2d cell area on order of pixels (3-5) opportunity to 
+            - load pair/triple & allow each 2d cell area on order of pixels (3-5) opportunity to
                 - support sectioning: store 'database' in single large or multiple file
                     - index between:
                         - track
