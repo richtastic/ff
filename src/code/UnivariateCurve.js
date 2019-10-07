@@ -1,98 +1,110 @@
-// UnivariateSurface.js
+// UnivariateCurve.js
 
-function UnivariateSurface(degree){
+function UnivariateCurve(degree){
 	this._degree = degree!==undefined?degree:3;
 	this._coefficients = new Array();
 };
-UnivariateSurface.prototype.copy = function(){
+UnivariateCurve.prototype.copy = function(){
 	var b = new UnivariateSurface();
 	b._degree = this._degree;
 	b._coefficients = Code.copyArray(this._coefficients);
 	return b;
 };
-UnivariateSurface.prototype.coefficients = function(c){
+UnivariateCurve.prototype.coefficients = function(c){
 	if(c!==undefined){
 		Code.copyArray(this._coefficients,c);
 	}
 	return this._coefficients;
 };
-UnivariateSurface.prototype.degree = function(d){
+UnivariateCurve.prototype.degree = function(d){
 	if(d!==undefined){
 		this._degree = d;
 	}
 	return this._degree;
 };
-UnivariateSurface.prototype.valueAt = function(x,y){
-	throw "here";
-	var d, e, degree = this._degree, coeff = this._coefficients;
-	var value = 0.0, index = 0;
-	for(d=0;d<=degree;++d){
-		for(e=0;e<=d;++e){
-			value += coeff[index]*Math.pow(x,d-e)*Math.pow(y,e);
-			++index;
-		}
+UnivariateCurve.prototype.valueAt = function(x){
+	var degree = this._degree, coeff = this._coefficients;
+	var value = 0.0;
+	var num = 1.0;
+	for(var d=0;d<=degree;++d){
+		value += coeff[d]*num;
+		num *= x;
 	}
 	return value;
 }
-// BivariateSurface.prototype.degree4ValueAt = function(x){
-// 	var value = 0.0, degree = this._degree, coeff = this._coefficients;
-// 	var x2 = x*x, y2 = y*y;
-// 	var x3 = x2*x, y3 = y2*y;
-// 	var x4 = x2*x2, y4 = y2*y2;
-// 	value += coeff[0];
-// 	value += coeff[1]*x;
-// 	value += coeff[2]*y;
-// 	value += coeff[3]*x2;
-// 	value += coeff[4]*x*y;
-// 	value += coeff[5]*y2;
-// 	value += coeff[6]*x3;
-// 	value += coeff[7]*x2*y;
-// 	value += coeff[8]*x*y2;
-// 	value += coeff[9]*y3;
-// 	value += coeff[10]*x4;
-// 	value += coeff[11]*x3*y;
-// 	value += coeff[12]*x2*y2;
-// 	value += coeff[13]*x*y3;
-// 	value += coeff[14]*y4;
-// 	return value;
-// }
-
-
-UnivariateSurface.prototype.fromPoints = function(points){
+UnivariateCurve.prototype.fromPoints = function(points){
 	var degree = this._degree;
-	var hh = h?h*h:0;
-	var i, j, k, len, index, point, coeff, w=1.0;
-	var A, bb, bi, biT, b, dd, c;
-	// initial matrices
-	this.degree(degree);
-	coeff = UnivariateSurface.coefficientCountFromDegree(degree);
-	A = new Matrix(coeff,coeff);
-	bb = new Matrix(coeff,coeff);
-	bi = new Matrix(coeff,1);
-	biT = new Matrix(1,coeff);
-	b = new Matrix(coeff,1);
+	var rows = points.length;
+	var coef = UnivariateCurve.coefficientCountFromDegree(degree);
+	var cols = coef;
 	//
-	len = points.length;
-	for(i=0;i<len;++i){
+	var A = new Matrix(rows,cols);
+	var b = new Matrix(rows, 1);
+	for(var i=0;i<rows;++i){
 		point = points[i];
-		index = 0;
-		for(j=0;j<=degree;++j){
-			bi.set(index,0, Math.pow(point.x,j-k)*Math.pow(point.y,k) );
-			++index;
+		var x = point.x;
+		for(var j=0;j<cols;++j){
+			var num;
+			if(j==0){
+				num = 1;
+			}else{
+				num *= x;
+			}
+			A.set(i,j, num);
 		}
-
-SVD ?
-
+		b.set(i,0, point.y);
 	}
-	//c = Matrix.solve(A,b);
+	console.log(A);
+	console.log(b);
 	pInv = Matrix.pseudoInverse(A);
+	pInv = Matrix.transpose(pInv);
+	console.log(pInv+"");
+	console.log(pInv);
 	c = Matrix.mult(pInv,b);
-	Code.emptyArray(this._coefficients);
-	c.toArray(this._coefficients);
-	//console.log(this._coefficients);
+	console.log(c+"");
+	c = c.toArray();
+	Code.copyArray(this._coefficients, c);
+	// why is solving with pseudo-inverse different than SVD ?
+	// is it a different equation alltogether?
+};
 
 
-	throw "here";
+
+
+
+UnivariateCurve.prototype.fromPointsSVD = function(points){
+	var degree = this._degree;
+	var rows = points.length;
+	var coef = UnivariateCurve.coefficientCountFromDegree(degree);
+	var cols = coef + 1;
+	var lastCol = cols - 1;
+	var A = new Matrix(rows,cols);
+	for(var i=0;i<rows;++i){
+		point = points[i];
+		var x = point.x;
+		for(var j=0;j<cols;++j){
+			var num;
+			if(j==lastCol){
+				num = -point.y;
+			}else if(j==0){
+				num = 1;
+			}else{
+				num *= x;
+			}
+			A.set(i,j, num);
+		}
+	}
+	console.log(A+"");
+	var svd = Matrix.SVD(A);
+	c = svd.V.colToArray(lastCol);
+	var last = c[c.length-1];
+	console.log(c+" ...")
+	c.pop();
+	for(i=0;i<c.length;++i){
+		c[i] = c[i]/last;
+	}
+	Code.copyArray(this._coefficients, c);
+	console.log(this._coefficients+"");
 };
 /*
 UnivariateSurface.prototype.fromPoints = function(points,degree, weightPoint,h){
@@ -150,15 +162,15 @@ UnivariateSurface.prototype.fromPoints = function(points,degree, weightPoint,h){
 	//console.log(this._coefficients);
 };
 */
-UnivariateSurface.degreeFromCoefficientCount = function(coeff){
+UnivariateCurve.degreeFromCoefficientCount = function(coeff){
 	throw "here";
 	return Math.floor( (Math.sqrt(9.0 - 8.0*(1.0-coeff)) - 3.0)/2.0 );
 };
-UnivariateSurface.coefficientCountFromDegree = function(degree){ // c + x + x^2 + x^3 ...
+UnivariateCurve.coefficientCountFromDegree = function(degree){ // c + x + x^2 + x^3 ...
 	if(degree<=0){ return 1; }
 	return degree + 1;
 };
-UnivariateSurface.prototype.curvatureAt = function(x1,y1){
+UnivariateCurve.prototype.curvatureAt = function(x1,y1){
 	throw "here";
 	var temp;
 	var dx = dy = 1E-6;

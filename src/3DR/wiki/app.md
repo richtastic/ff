@@ -394,11 +394,29 @@ https://cloud.google.com/appengine/docs/nodejs/
 
 	- experiment in 2D
 		=> VISUALIZE APPROXIMATED SURFACE
+	- dynamic way to estimate (minimal/optimum) number of samples to use []
+		- and if have a big range of samples, maybe only need to subsample ? (consistently?)
+
+- plot: - samples vs
+	x eigenvalue ratio
+		- indirect measurement of average: sample distance / plane extent
+	- (max sample radius / (avg or) maximum plane sample distance)
+
+
+
+- maybe all the SVD solutions need to be converted to A^-1 * b = 0 ...
+
+
 
 
 - DENSE LOGIC
 
-...
+
+
+
+
+
+
 
 
 gradAngleFromGry3x3

@@ -28,21 +28,40 @@ SurfaceTest.prototype.addListeners = function(){
 SurfaceTest.prototype._refreshDisplay = function(){
 	console.log("refresh");
 
+/*
+	var points = [];
+	for(var i=0; i<5; ++i){
+		var x = i;
+		var y = 0.5 + x*0.1 + x*x*0.75 + x*x*x*2;
+		var point = new V2D(x,y);
+		console.log(point+"");
+		points.push(point);
+	}
+	console.log(points);
+	var curve = new UnivariateCurve(3);
+	console.log(curve);
+
+	curve.fromPoints(points);
+
+	throw "..."
+*/
 	// make some surfaces & see how the window affects accuracy:
 
 	var center = new V2D(0,0);
 	// var pointCount = 50;
-	var pointCount = 100;
-	// var error = 0.0;
-	var error = 0.01;
+	var pointCount = 150;
+	var error = 0.0;
+	// var error = 0.01;
+	// var error = 0.05;
 	// var error = 0.10; // ok
 	// var error = 0.25; // bad
 	// var error = 0.5; // impossible
 	var points = [];
 
 	// plane
+	// if(true){
 	if(false){
-		var plane = {"center":new V2D(0,0),"normal":new V2D(0,2)};
+		var plane = {"center":new V2D(0,0),"normal":new V2D(0,1)};
 		for(var i=0; i<pointCount; ++i){
 			var percent = i/(pointCount-1);
 			var nor = plane["normal"];
@@ -59,6 +78,7 @@ SurfaceTest.prototype._refreshDisplay = function(){
 
 	// circle
 	if(true){
+	// if(false){
 		// var focus = new V2D(0,2);
 		// var focus = new V2D(0,1);
 		var focus = new V2D(0,0.5);
@@ -78,7 +98,7 @@ SurfaceTest.prototype._refreshDisplay = function(){
 			point.add(new V2D(error*(Math.random()-0.5),error*(Math.random()-0.5)));
 			point.add(focus);
 			points.push(point);
-			console.log(point);
+			// console.log(point);
 		}
 	}
 
@@ -104,7 +124,7 @@ SurfaceTest.prototype._refreshDisplay = function(){
 	// var worldOffset = new V2D(300,300);
 
 	var worldScale = 1000.0;
-	var worldOffset = new V2D(500,500);
+	var worldOffset = new V2D(500,300);
 	for(var i=0; i<points.length; ++i){
 		var point = points[i];
 
@@ -123,42 +143,110 @@ SurfaceTest.prototype._refreshDisplay = function(){
 
 	// show simulated plane surfaces
 	var cumulative = [];
-	var maxCount = points.length;
+	// var maxCount = points.length;
 	// var maxCount = 10;
 	// var maxCount = 25;
+	// var maxCount = 50;
+	var maxCount = 100;
 
+	// var drawIndex = 5;
+	// var drawIndex = 10;
+	// var drawIndex = 20;
+	// var drawIndex = 25;
+	// var drawIndex = 100;
+	var drawIndex = maxCount-1;
+
+
+var datas = [];
 	for(var i=0; i<maxCount; ++i){
 		var point = points[i];
 			cumulative.push(point);
 		var percent = i/(maxCount-1);
 		if(cumulative.length>1){
 			var plane = Code.planeFromPoints2D(center, cumulative);
-			var p = plane["point"];
-			var n = plane["normal"];
+			var planePoint = plane["point"];
+			var planeNormal = plane["normal"];
+// planePoint = new V2D(0,0);
+// planeNormal = new V2D(0,1);
+			var planeRight = V2D.rotate(planeNormal, -Math.PI*0.5);
+			// drawIndex = i;
 			if(plane){
-				// console.log(n+"")
-				var r = V2D.rotate(n,Math.PI*0.5);
-				// console.log(r+"")
-				// console.log(center+"")
-				// var p = Code.closestPointPlane2D(center, n,p);
-				var p = Code.closestPointPlane2D(p,n, center);
-				// p = center;
-				var color = Code.getColARGBFromFloat(0.80,percent*1.0, 0, (1.0-percent)*1.0);
-				// 0x990000FF;
-				// Code.getColARGBFromFloat = function(a,r,g,b){
-				var d = new DO();
-				d.graphics().setLine(1.0,color);
-				d.graphics().beginPath();
-				d.graphics().moveTo((p.x-r.x)*worldScale*0.5,(p.y-r.y)*worldScale*0.5);
-				d.graphics().lineTo((p.x+r.x)*worldScale*0.5,(p.y+r.y)*worldScale*0.5);
-				d.graphics().endPath();
-				d.graphics().strokeLine();
-				d.matrix().translate(worldOffset.x, worldOffset.y);
-				GLOBALSTAGE.addChild(d);
+// console.log(plane);
+var ratio = plane["ratio"];
+datas.push(ratio);
+				if(i==drawIndex){
+					var r = planeRight;
+					var p = Code.closestPointPlane2D(planePoint,planeNormal, center);
+					// p = center;
+					var color = Code.getColARGBFromFloat(0.80,percent*1.0, 0, (1.0-percent)*1.0);
+					// Code.getColARGBFromFloat = function(a,r,g,b){
+					var d = new DO();
+					d.graphics().setLine(1.0,color);
+					d.graphics().beginPath();
+					d.graphics().moveTo((p.x-r.x)*worldScale*0.25,(p.y-r.y)*worldScale*0.25);
+					d.graphics().lineTo((p.x+r.x)*worldScale*0.25,(p.y+r.y)*worldScale*0.25);
+					d.graphics().endPath();
+					d.graphics().strokeLine();
+					d.matrix().translate(worldOffset.x, worldOffset.y);
+					GLOBALSTAGE.addChild(d);
+					var planePoints = [];
+					// convert cumulative to plane points
+					for(var j=0; j<cumulative.length; ++j){
+						var c = cumulative[j];
+						// distance from plane in direction of normal is +y
+						var toP = V2D.sub(c,planePoint);
+						var dx = V2D.dot(toP,planeRight);
+						var dy = V2D.dot(toP,planeNormal);
+						pp = new V2D(dx,dy);
+						planePoints.push(pp);
+						// console.log(c+"")
+							var d = new DO();
+							d.graphics().setLine(2.0,0xFF00CC00);
+							d.graphics().beginPath();
+							d.graphics().drawCircle((c.x)*worldScale,(c.y)*worldScale, 2.0);
+							d.graphics().endPath();
+							d.graphics().strokeLine();
+							d.matrix().translate(worldOffset.x, worldOffset.y);
+							GLOBALSTAGE.addChild(d);
+					}
+					// find polynomial approx
+					var curve = new UnivariateCurve(3);
+					// var curve = new UnivariateCurve(5);
+					// var curve = new UnivariateCurve(4);
+					curve.fromPoints(planePoints);
+					// display curve
+					var iterations = 100;
+					var d = new DO();
+					d.graphics().setLine(1.0, 0xFF0000FF);
+					d.graphics().beginPath();
+					for(var iter=0; iter<iterations; ++iter){
+						var percent = iter/(iterations-1);
+						// plane point
+						var x = (percent-0.5)*0.50; // how wide ? point area max length
+						var y = curve.valueAt(x);
+						// convert to world aligned
+						var p = new V2D(x,y);
+							p = Code.planePointToWorldPoint(p, planePoint,planeNormal, V2D.DIRY);
+						// to display:
+						x = p.x*worldScale;
+						y = p.y*worldScale;
+						if(iter==0){
+							d.graphics().moveTo(x,y);
+						}else{
+							d.graphics().lineTo(x,y);
+						}
+						// throw "?"
+					}
+					d.graphics().strokeLine();
+					d.graphics().endPath();
+					d.matrix().translate(worldOffset.x, worldOffset.y);
+					GLOBALSTAGE.addChild(d);
+					// throw "..."
+				}
 			}
 		}
 	}
-
+Code.printMatlabArray(datas,"x");
 
 
 

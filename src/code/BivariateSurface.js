@@ -57,6 +57,43 @@ BivariateSurface.prototype.degree4ValueAt = function(x){
 	value += coeff[14]*y4;
 	return value;
 }
+BivariateSurface.prototype.fromPoints = function(points){
+	var degree = this._degree;
+	var coef = BivariateSurface.coefficientCountFromDegree(degree);
+	var rows = points.length;
+	var cols = coef;
+	var A = new Matrix(rows,cols);
+	var b = new Matrix(rows,1);
+	var xs = [];
+	var ys = [];
+	for(var i=0;i<rows;++i){
+		var point = points[i];
+		var index = 0;
+		var x = 1.0;
+		var y = 1.0;
+		for(var j=0;j<=degree;++j){
+			xs[j] = x;
+			ys[j] = y;
+			x *= point.x;
+			y *= point.y;
+		}
+		for(var j=0;j<=degree;++j){
+			for(k=0;k<=j;++k){
+				A.set(i,index, xs[j-k]*ys[k] );
+				++index;
+			}
+		}
+		b.set(i,0, point.z);
+	}
+	var pInv = Matrix.pseudoInverse(A);
+		pInv = Matrix.transpose(pInv);
+	var c = Matrix.mult(pInv,b);
+	Code.emptyArray(this._coefficients);
+	c.toArray(this._coefficients);
+	console.log(this._coefficients+"");
+	throw "is this right? --- is C the right dimension";
+}
+/*
 BivariateSurface.prototype.fromPoints = function(points,degree, weightPoint,h){
 	degree = degree!==undefined?degree:this._degree;
 	degree = Math.max(0,degree);
@@ -87,7 +124,7 @@ BivariateSurface.prototype.fromPoints = function(points,degree, weightPoint,h){
 		index = 0;
 		for(j=0;j<=degree;++j){
 			for(k=0;k<=j;++k){
-//console.log("      "+index+": "+(j-k)+" "+k+"    ==="+(Math.pow(point.x,j-k)*Math.pow(point.y,k)))
+				//console.log("      "+index+": "+(j-k)+" "+k+"    ==="+(Math.pow(point.x,j-k)*Math.pow(point.y,k)))
 				bi.set(index,0, Math.pow(point.x,j-k)*Math.pow(point.y,k) );
 				++index;
 			}
@@ -109,7 +146,10 @@ BivariateSurface.prototype.fromPoints = function(points,degree, weightPoint,h){
 	Code.emptyArray(this._coefficients);
 	c.toArray(this._coefficients);
 	//console.log(this._coefficients);
+	throw "is this right? --- is C the right dimension";
+	//
 }
+*/
 
 BivariateSurface.degreeFromCoefficientCount = function(coeff){
 	return Math.floor( (Math.sqrt(9.0 - 8.0*(1.0-coeff)) - 3.0)/2.0 );

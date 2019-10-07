@@ -10039,6 +10039,12 @@ Code.projectPointsTo2DPlane = function(points, planePoint, planeNormal){ // x & 
 	}
 	return projections;
 }
+Code.planePointToWorldPoint = function(location, planePoint, planeNormal, up){ // scaling?
+	var angle = V2D.angle(up,planeNormal);
+	var worldPoint = V2D.rotate(location, -angle);
+	worldPoint.add(planePoint);
+	return worldPoint;
+}
 Code.projectTo2DPlane = function(location, planePoint, planeNormal){
 	return Code.projectPointsTo2DPlane([location],planePoint, planeNormal)[0];
 }
@@ -10194,7 +10200,7 @@ Code.planeFromPoints2D = function(center, points, weights){
 	}
 	var covariance = new Matrix(2,2).fromArray([A,B,B,D]);
 	// console.log(covariance);
-	var v0, v1;
+	var v0, v1, ratio;
 	try{
 		// TODO: NOT ALWAYS WORK:
 		// var eig = Code.eigenValuesAndVectors2D(A,B,B,D);
@@ -10210,10 +10216,12 @@ Code.planeFromPoints2D = function(center, points, weights){
 		var vB = vectors[1].toV2D();
 		// console.log(vA+" | "+vB+" : "+values[0]+" / "+values[1]);
 		var vMin = Math.min(values[0],values[1]); // least direction
+ratio = values[0]/values[1];
 		if(values[0] == vMin){
 			v0 = vA; v1 = vB;
 		}else{
 			v0 = vB; v1 = vA;
+ratio = 1.0/ratio;
 		}
 		if( V2D.dot(v0,v1) < 0 ){ // consistent orientation - CCW 90 degrees
 			v1.scale(-1.0);
@@ -10222,7 +10230,7 @@ Code.planeFromPoints2D = function(center, points, weights){
 		console.log(e)
 		throw "what?"
 	}
-	return {"point":centerOfMass, "normal":v0, "x":v1};
+	return {"point":centerOfMass, "normal":v0, "x":v1, "ratio":ratio};
 }
 
 Code.consistentOrientation = function(pointA,pointB, pointsA,pointsB){ // TODO: if duplicated angles => also allow
