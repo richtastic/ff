@@ -10040,7 +10040,7 @@ Code.projectPointsTo2DPlane = function(points, planePoint, planeNormal){ // x & 
 	return projections;
 }
 Code.planePointToWorldPoint = function(location, planePoint, planeNormal, up){ // scaling?
-	var angle = V2D.angle(up,planeNormal);
+	var angle = V2D.angleDirection(planeNormal,up);
 	var worldPoint = V2D.rotate(location, -angle);
 	worldPoint.add(planePoint);
 	return worldPoint;

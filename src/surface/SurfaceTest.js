@@ -50,13 +50,18 @@ SurfaceTest.prototype._refreshDisplay = function(){
 	var center = new V2D(0,0);
 	// var pointCount = 50;
 	var pointCount = 150;
-	var error = 0.0;
+	// var error = 0.0;
 	// var error = 0.01;
-	// var error = 0.05;
+	var error = 0.05;
 	// var error = 0.10; // ok
 	// var error = 0.25; // bad
 	// var error = 0.5; // impossible
+	// var nerror = Code.radians(0.0);
+	// var nerror = Code.radians(10.0);
+	// var nerror = Code.radians(30.0);
+	var nerror = Code.radians(45.0);
 	var points = [];
+	var normals = [];
 
 	// plane
 	// if(true){
@@ -73,15 +78,21 @@ SurfaceTest.prototype._refreshDisplay = function(){
 			point.add(new V2D(error*(Math.random()-0.5),error*(Math.random()-0.5)));
 			point.add(cen);
 			points.push(point);
+			//
+			var normal = nor.copy();
+				normal.norm()
+			normal.rotate( nerror*(Math.random()-0.5) );
+			normals.push(normal);
 		}
 	}
 
 	// circle
-	// if(true){
-	if(false){
+	if(true){
+	// if(false){
 		// var focus = new V2D(0,2);
 		// var focus = new V2D(0,1);
-		var focus = new V2D(0,0.5);
+		var focus = new V2D(0,0.25);
+		// var focus = new V2D(0,0.5);
 		var focToCen = V2D.sub(center,focus);
 		var radius = focToCen.length();
 		// var totalAngle = Code.radians(45);
@@ -99,56 +110,74 @@ SurfaceTest.prototype._refreshDisplay = function(){
 			point.add(focus);
 			points.push(point);
 			// console.log(point);
+			var normal = V2D.sub(point,focus);
+				normal.norm()
+			normal.rotate( nerror*(Math.random()-0.5) );
+			normals.push(normal);
 		}
 	}
 
 	// corner
-	if(true){
-	// if(false){
+	// if(true){
+	if(false){
 		var focus = new V2D(0,0);
-		var angle = Code.radians(45);
-		var offset = Code.radians(0);
+		// var angle = Code.radians(15);
+		// var angle = Code.radians(30);
+		// var angle = Code.radians(45);
+		var angle = Code.radians(60);
+		// var angle = Code.radians(90);
+		// var angle = Code.radians(120);
+		// var angle = Code.radians(160);
+		// var angle = Code.radians(180);
+		var offset = Code.radians(20);
 		var size = 1.0;
 		for(var i=0; i<pointCount; ++i){
 			var percent = i/(pointCount-1);
 			var point;
+			var normal;
 			var dir = new V2D(1.0,0);
 			if(percent<0.5){
-				point = dir.copy().rotate(offset).scale((percent*2)*size);
+				var line = dir.copy().rotate(offset);
+				point = line.copy().scale((percent*2)*size);
+				normal = line.copy().rotate(-Math.PI*0.5);
 			}else{
-				point = dir.copy().rotate(offset).rotate(angle).scale(((percent-0.5)*2)*size);
+				var line = dir.copy().rotate(offset).rotate(angle);
+				point = line.copy().scale(((percent-0.5)*2)*size);
+				normal = line.copy().rotate(Math.PI*0.5);
 			}
 			point.add(new V2D(error*(Math.random()-0.5),error*(Math.random()-0.5)));
 			point.add(focus);
 			points.push(point);
-			// console.log(point);
+			// normal
+			normal.rotate( nerror*(Math.random()-0.5) );
+			normals.push(normal);
 		}
 	}
 
-	// high angle corner
-
-// Code.closestPointPlane2D = function(q, n,p){ // perpendicular component + origin
-// 	var t = ((q.x-p.x)*n.x + (q.y-p.y)*n.y)/(n.x*n.x+n.y*n.y);
-// 	return new V2D(q.x-t*n.x,q.y-t*n.y);
-// }
-
 	// sort on distance
-	points.sort(function(a,b){
+	var joints = [];
+	for(var i=0; i<points.length; ++i){
+		joint = [points[i],normals[i]];
+		joints[i] = joint;
+	}
+	joints.sort(function(a,b){
+		a = a[0];
+		b = b[0];
 		var da = V2D.distanceSquare(a,center);
 		var db = V2D.distanceSquare(b,center);
 		return da<db ? -1 : 1;
 	});
-
-	console.log(points);
-
-	// var worldScale = 400.0;
-	// var worldOffset = new V2D(300,300);
+	for(var i=0; i<joints.length; ++i){
+		joint = joints[i];
+		points[i] = joint[0];
+		normals[i] = joint[1];
+	}
 
 	var worldScale = 1000.0;
-	var worldOffset = new V2D(500,300);
+	var worldOffset = new V2D(400,400);
+	var nSize = 10.0;
 	for(var i=0; i<points.length; ++i){
 		var point = points[i];
-
 		var p = point.copy();
 		p.scale(worldScale);
 
@@ -160,14 +189,27 @@ SurfaceTest.prototype._refreshDisplay = function(){
 		d.graphics().fill();
 		d.matrix().translate(worldOffset.x, worldOffset.y);
 		GLOBALSTAGE.addChild(d);
+
+		var normal = normals[i];
+		var n = normal.copy();
+		var d = new DO();
+			d.graphics().setLine(1.0,0xFFFF0000);
+			d.graphics().beginPath();
+			d.graphics().moveTo(p.x,p.y);
+			d.graphics().lineTo(p.x+n.x*nSize,p.y+n.y*nSize);
+			d.graphics().endPath();
+			d.graphics().strokeLine();
+			d.matrix().translate(worldOffset.x, worldOffset.y);
+			GLOBALSTAGE.addChild(d);
 	}
 
 	// show simulated plane surfaces
 	var cumulative = [];
+	var numulative = [];
 	// var maxCount = points.length;
-	var maxCount = 10;
+	// var maxCount = 10;
 	// var maxCount = 25;
-	// var maxCount = 50;
+	var maxCount = 50;
 	// var maxCount = 100;
 
 	// var drawIndex = 5;
@@ -181,14 +223,20 @@ SurfaceTest.prototype._refreshDisplay = function(){
 var datas = [];
 	for(var i=0; i<maxCount; ++i){
 		var point = points[i];
+		var normal = normals[i];
 			cumulative.push(point);
+			numulative.push(normal);
 		var percent = i/(maxCount-1);
 		if(cumulative.length>1){
+			// var plane = [];
 			var plane = Code.planeFromPoints2D(center, cumulative);
 			var planePoint = plane["point"];
 			var planeNormal = plane["normal"];
-// planePoint = new V2D(0,0);
-// planeNormal = new V2D(0,1);
+
+
+			var planeNormal = Code.averageAngleVector2D(numulative);
+			var planePoint = Code.averageV2D(cumulative);
+
 			var planeRight = V2D.rotate(planeNormal, -Math.PI*0.5);
 			// drawIndex = i;
 			if(plane){
@@ -196,20 +244,34 @@ var datas = [];
 var ratio = plane["ratio"];
 datas.push(ratio);
 				if(i==drawIndex){
+console.log(planeNormal+"")
 					var r = planeRight;
 					var p = Code.closestPointPlane2D(planePoint,planeNormal, center);
+					// p = planePoint;
 					// p = center;
 					var color = Code.getColARGBFromFloat(0.80,percent*1.0, 0, (1.0-percent)*1.0);
 					// Code.getColARGBFromFloat = function(a,r,g,b){
 					var d = new DO();
 					d.graphics().setLine(1.0,color);
 					d.graphics().beginPath();
-					d.graphics().moveTo((p.x-r.x)*worldScale*0.25,(p.y-r.y)*worldScale*0.25);
-					d.graphics().lineTo((p.x+r.x)*worldScale*0.25,(p.y+r.y)*worldScale*0.25);
+					d.graphics().moveTo((p.x-r.x)*worldScale,(p.y-r.y)*worldScale);
+					d.graphics().lineTo((p.x+r.x)*worldScale,(p.y+r.y)*worldScale);
 					d.graphics().endPath();
 					d.graphics().strokeLine();
 					d.matrix().translate(worldOffset.x, worldOffset.y);
 					GLOBALSTAGE.addChild(d);
+
+
+					var d = new DO();
+					d.graphics().setFill(0xFFCC6600);
+					d.graphics().beginPath();
+					d.graphics().drawCircle(p.x*worldScale,p.y*worldScale,5.0);
+					d.graphics().endPath();
+					d.graphics().fill();
+					d.matrix().translate(worldOffset.x, worldOffset.y);
+					GLOBALSTAGE.addChild(d);
+					
+
 					var planePoints = [];
 					// convert cumulative to plane points
 					for(var j=0; j<cumulative.length; ++j){
@@ -231,12 +293,16 @@ datas.push(ratio);
 							GLOBALSTAGE.addChild(d);
 					}
 					// find polynomial approx
+					// var curve = new UnivariateCurve(2);
 					var curve = new UnivariateCurve(3);
-					// var curve = new UnivariateCurve(5);
 					// var curve = new UnivariateCurve(4);
+					// var curve = new UnivariateCurve(5);
+					// var curve = new UnivariateCurve(6);
+
+					
 					curve.fromPoints(planePoints);
 					// display curve
-					var iterations = 100;
+					var iterations = 200;
 					var d = new DO();
 					d.graphics().setLine(1.0, 0xFF0000FF);
 					d.graphics().beginPath();
@@ -256,13 +322,35 @@ datas.push(ratio);
 						}else{
 							d.graphics().lineTo(x,y);
 						}
-						// throw "?"
 					}
 					d.graphics().strokeLine();
 					d.graphics().endPath();
 					d.matrix().translate(worldOffset.x, worldOffset.y);
 					GLOBALSTAGE.addChild(d);
-					// throw "..."
+
+					//
+					var k = curve.curvatureAt(0);
+					console.log(k);
+					var radius = k["radius"];
+					var norm = k["normal"];
+					console.log(norm+"")
+					// ..
+						var x = 0;
+						var y = curve.valueAt(x);
+						var p = new V2D(x,y);
+						console.log(p+" @ "+radius);
+						p.add(norm.copy().scale(radius));
+						p = Code.planePointToWorldPoint(p, planePoint,planeNormal, V2D.DIRY);
+						
+						console.log(p+"");
+					var d = new DO();
+					d.graphics().setLine(1.0,0xFFFF9900);
+					d.graphics().beginPath();
+					d.graphics().drawCircle((p.x)*worldScale,(p.y)*worldScale, radius*worldScale);
+					d.graphics().endPath();
+					d.graphics().strokeLine();
+					d.matrix().translate(worldOffset.x, worldOffset.y);
+					GLOBALSTAGE.addChild(d);
 				}
 			}
 		}
