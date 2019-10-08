@@ -378,6 +378,16 @@ https://cloud.google.com/appengine/docs/nodejs/
 0+1+2 = S21L1RCT
 
 
+- curvature steps:
+	- have initial (noisy) normal estimates at each point
+	- get 'neighborhood' of each point
+	- update each normal to be weighted average of neighborhood
+	- use smoothed normals as base for plane [interpolate based on inverse squared distance]
+	- use polynomial surface with (wider?) neighborhood to interpolate surface
+
+...
+
+
 - SPARSE LOGIC
 	- OPTIMIZE VIEW ORIENTATIONS
 	- PROPAGATE TRACKS TO ADJ VIEWS
@@ -389,6 +399,14 @@ https://cloud.google.com/appengine/docs/nodejs/
 
 
 - REVISIT SURFACE CURVATURE ESTIMATION
+	=> determining a plane is very bad around a corner
+	- circle/plane?
+		- closest orthogonal point on sphere => direction ?
+	=> use point normals ?
+		- average normals in neighborhood to find plane?
+		- how to define neighborhood?
+
+
 	- SAMPLE COUNT?
 	- PLANE / SIZE ?
 
@@ -402,6 +420,13 @@ https://cloud.google.com/appengine/docs/nodejs/
 		- indirect measurement of average: sample distance / plane extent
 	- (max sample radius / (avg or) maximum plane sample distance)
 
+- show curvature circle at various points on curve...
+
+CURVATURE: HOW MANY NEIGHBORS TO USE:
+	- want to use as few points as possible:
+		- surface error is spread over all points -> [more points increases error around point of interest]
+		- less processing overall
+	- # of neighbors will be similar to neighbor [reduce search range]
 
 
 - maybe all the SVD solutions need to be converted to A^-1 * b = 0 ...

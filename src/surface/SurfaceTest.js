@@ -77,8 +77,8 @@ SurfaceTest.prototype._refreshDisplay = function(){
 	}
 
 	// circle
-	if(true){
-	// if(false){
+	// if(true){
+	if(false){
 		// var focus = new V2D(0,2);
 		// var focus = new V2D(0,1);
 		var focus = new V2D(0,0.5);
@@ -103,6 +103,27 @@ SurfaceTest.prototype._refreshDisplay = function(){
 	}
 
 	// corner
+	if(true){
+	// if(false){
+		var focus = new V2D(0,0);
+		var angle = Code.radians(45);
+		var offset = Code.radians(0);
+		var size = 1.0;
+		for(var i=0; i<pointCount; ++i){
+			var percent = i/(pointCount-1);
+			var point;
+			var dir = new V2D(1.0,0);
+			if(percent<0.5){
+				point = dir.copy().rotate(offset).scale((percent*2)*size);
+			}else{
+				point = dir.copy().rotate(offset).rotate(angle).scale(((percent-0.5)*2)*size);
+			}
+			point.add(new V2D(error*(Math.random()-0.5),error*(Math.random()-0.5)));
+			point.add(focus);
+			points.push(point);
+			// console.log(point);
+		}
+	}
 
 	// high angle corner
 
@@ -144,10 +165,10 @@ SurfaceTest.prototype._refreshDisplay = function(){
 	// show simulated plane surfaces
 	var cumulative = [];
 	// var maxCount = points.length;
-	// var maxCount = 10;
+	var maxCount = 10;
 	// var maxCount = 25;
 	// var maxCount = 50;
-	var maxCount = 100;
+	// var maxCount = 100;
 
 	// var drawIndex = 5;
 	// var drawIndex = 10;
