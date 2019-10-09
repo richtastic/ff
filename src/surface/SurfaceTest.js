@@ -52,9 +52,9 @@ SurfaceTest.prototype._refreshDisplay = function(){
 	var pointCount = 150;
 	// var error = 0.0;
 	// var error = 0.01;
-	var error = 0.05;
+	// var error = 0.05;
 	// var error = 0.10; // ok
-	// var error = 0.25; // bad
+	var error = 0.25; // bad
 	// var error = 0.5; // impossible
 	// var nerror = Code.radians(0.0);
 	// var nerror = Code.radians(10.0);
@@ -209,8 +209,8 @@ SurfaceTest.prototype._refreshDisplay = function(){
 	// var maxCount = points.length;
 	// var maxCount = 10;
 	// var maxCount = 25;
-	var maxCount = 50;
-	// var maxCount = 100;
+	// var maxCount = 50;
+	var maxCount = 100;
 
 	// var drawIndex = 5;
 	// var drawIndex = 10;
@@ -233,7 +233,6 @@ var datas = [];
 			var planePoint = plane["point"];
 			var planeNormal = plane["normal"];
 
-
 			var planeNormal = Code.averageAngleVector2D(numulative);
 			var planePoint = Code.averageV2D(cumulative);
 
@@ -242,7 +241,15 @@ var datas = [];
 			if(plane){
 // console.log(plane);
 var ratio = plane["ratio"];
-datas.push(ratio);
+// datas.push(ratio);
+
+
+var largestDistance = V2D.distance(center,point);
+var largestArea = largestDistance*largestDistance;
+var datum = largestArea/i;
+
+datas.push(datum);
+
 				if(i==drawIndex){
 console.log(planeNormal+"")
 					var r = planeRight;
@@ -270,7 +277,7 @@ console.log(planeNormal+"")
 					d.graphics().fill();
 					d.matrix().translate(worldOffset.x, worldOffset.y);
 					GLOBALSTAGE.addChild(d);
-					
+
 
 					var planePoints = [];
 					// convert cumulative to plane points
@@ -299,7 +306,7 @@ console.log(planeNormal+"")
 					// var curve = new UnivariateCurve(5);
 					// var curve = new UnivariateCurve(6);
 
-					
+
 					curve.fromPoints(planePoints);
 					// display curve
 					var iterations = 200;
@@ -307,6 +314,7 @@ console.log(planeNormal+"")
 					d.graphics().setLine(1.0, 0xFF0000FF);
 					d.graphics().beginPath();
 					for(var iter=0; iter<iterations; ++iter){
+// break;
 						var percent = iter/(iterations-1);
 						// plane point
 						var x = (percent-0.5)*0.50; // how wide ? point area max length
@@ -341,7 +349,7 @@ console.log(planeNormal+"")
 						console.log(p+" @ "+radius);
 						p.add(norm.copy().scale(radius));
 						p = Code.planePointToWorldPoint(p, planePoint,planeNormal, V2D.DIRY);
-						
+
 						console.log(p+"");
 					var d = new DO();
 					d.graphics().setLine(1.0,0xFFFF9900);
