@@ -385,6 +385,58 @@ https://cloud.google.com/appengine/docs/nodejs/
 	- use smoothed normals as base for plane [interpolate based on inverse squared distance]
 	- use polynomial surface with (wider?) neighborhood to interpolate surface
 
+=> want to find 'direction' that minimizes size first
+	- best fit ellipsoid: doesn't tell  WHEN (distance/neighbor) the 'search' should stop
+		- need to work from center of points - not necessarily starting point
+	=> first multi-modal density max/peak
+	-
+
+
+
+=> points in sphere are weighted by their normal DOT the averaged normal
+	=> anything orthogonal or worse (opposite) are not included
+	=> weighted also on orthogonal distance from center?
+	=> what does OPPOSITE/ORTHOGONAL plotting do?
+
+
+convex hull area / sphere area
+... needs to be statistical tho ...
+
+ALGB:
+	- find obviously planar locations --- sigma ratio > 2-4
+	- calculate local sample radius [1-4 sigma & COM]
+	- propagate outwards
+		- ...
+		- when corners are reached ...
+		- limit ?
+		-
+
+
+- direction of surface normals ~ direction of minimal wall thickness
+	- get closest point
+	- get ~3 NN, estimate normal
+	- sphere = NN size
+	- grow/shrink sphere
+		- estimate COM in direction of normal
+		- estimate sigma in direction of normal
+			=> need to ignore the items on the 'sides' of the sphere and only get growth along centerline
+				- how 'wide' should net be?
+	- at some point the growth in the minimal direction will go slowly
+
+ALG A:
+	- input: search point
+		- find closest surface sample point to search point
+		- each points' size = nearest neighbor distance
+		- grow sphere:
+			- find next nearest neighbor to center of sphere
+			- sphere size = maximum distance between interrior points
+			- update sphere center to midpoint of largest diameter points
+			- used volume ratio = sum of all points' volumes / sphere volume
+		- chosen sphere size / location = maximum of volume ratios
+		- normal = rotational average of all normals
+		- surface approx using bivariate polynomial
+
+
 ...
 
 

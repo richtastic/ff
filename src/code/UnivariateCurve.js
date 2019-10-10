@@ -54,14 +54,14 @@ UnivariateCurve.prototype.fromPoints = function(points){
 		}
 		b.set(i,0, point.y);
 	}
-	console.log(A);
-	console.log(b);
+	// console.log(A);
+	// console.log(b);
 	pInv = Matrix.pseudoInverse(A);
 	pInv = Matrix.transpose(pInv);
-	console.log(pInv+"");
-	console.log(pInv);
+	// console.log(pInv+"");
+	// console.log(pInv);
 	c = Matrix.mult(pInv,b);
-	console.log(c+"");
+	// console.log(c+"");
 	c = c.toArray();
 	Code.copyArray(this._coefficients, c);
 	// why is solving with pseudo-inverse different than SVD ?
@@ -133,4 +133,3 @@ UnivariateCurve.prototype.curvatureAt = function(x1){
 	var rad = 1/k;
 	return {"k":k, "radius":rad, "normal":n02};
 };
-

@@ -87,8 +87,8 @@ SurfaceTest.prototype._refreshDisplay = function(){
 	}
 
 	// circle
-	if(true){
-	// if(false){
+	// if(true){
+	if(false){
 		// var focus = new V2D(0,2);
 		// var focus = new V2D(0,1);
 		var focus = new V2D(0,0.25);
@@ -118,8 +118,8 @@ SurfaceTest.prototype._refreshDisplay = function(){
 	}
 
 	// corner
-	// if(true){
-	if(false){
+	if(true){
+	// if(false){
 		var focus = new V2D(0,0);
 		// var angle = Code.radians(15);
 		// var angle = Code.radians(30);
@@ -220,6 +220,31 @@ SurfaceTest.prototype._refreshDisplay = function(){
 	var drawIndex = maxCount-1;
 
 
+// determine each points' 'SIZE
+var sizes = [];
+for(var i=0; i<points.length; ++i){
+	var pA = points[i];
+	var closestD = null;
+	var list = [];
+	for(var j=0; j<points.length; ++j){
+		var pB = points[j];
+		var d = V2D.distance(pA,pB);
+		if(d>0){
+			if(closestD===null || d<closestD){
+				closestD = d;
+			}
+			list.push(d);
+		}
+	}
+	// sizes.push(closestD);
+	list.sort();
+	// sizes.push(list);
+	var size = (list[0]+list[1])*0.5;
+	sizes.push(size);
+}
+// console.log(sizes);
+// throw "?";
+
 var datas = [];
 	for(var i=0; i<maxCount; ++i){
 		var point = points[i];
@@ -244,9 +269,11 @@ var ratio = plane["ratio"];
 // datas.push(ratio);
 
 
+var pointRadius = sizes[i];
+var pointArea = pointRadius*pointRadius;
 var largestDistance = V2D.distance(center,point);
 var largestArea = largestDistance*largestDistance;
-var datum = largestArea/i;
+var datum = largestArea/pointArea;
 
 datas.push(datum);
 
