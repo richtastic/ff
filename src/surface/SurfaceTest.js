@@ -53,8 +53,9 @@ SurfaceTest.prototype._refreshDisplay = function(){
 	// var error = 0.0;
 	// var error = 0.01;
 	// var error = 0.05;
-	// var error = 0.10; // ok
-	var error = 0.25; // bad
+	var error = 0.10; // ok
+	// var error = 0.20; //
+	// var error = 0.25; // bad
 	// var error = 0.5; // impossible
 	// var nerror = Code.radians(0.0);
 	// var nerror = Code.radians(10.0);
@@ -91,8 +92,8 @@ SurfaceTest.prototype._refreshDisplay = function(){
 	if(false){
 		// var focus = new V2D(0,2);
 		// var focus = new V2D(0,1);
-		var focus = new V2D(0,0.25);
-		// var focus = new V2D(0,0.5);
+		// var focus = new V2D(0,0.25);
+		var focus = new V2D(0,0.5);
 		var focToCen = V2D.sub(center,focus);
 		var radius = focToCen.length();
 		// var totalAngle = Code.radians(45);
@@ -245,6 +246,89 @@ for(var i=0; i<points.length; ++i){
 // console.log(sizes);
 // throw "?";
 
+
+// dynamically estimate best wall size ...
+
+var sigmas = [];
+	// find closest point
+	var setP = [];
+	var setN = [];
+	// grow sphere by continually adding next neighbor [point-to-point vs normals]
+
+	for(var i=0; i<points.length; ++i){
+		var point = points[i];
+		var normal = normals[i];
+			setP.push(point);
+			setN.push(normal);
+		var circleCenter, circleNormal;
+		if(i>2){
+			// TODO: ADD WEIGHTS BASED ON DISTANCES & NORMAL DIRECTION
+
+// NEED MAXIMUM AND MINIMUM X IN DIR OF NORMAL
+// => DROP POINTS IN Y OUTSIDE OF THIS
+
+			circleCenter = Code.averageV2D(setP);
+			circleNormal = Code.averageAngleVector2D(setN);
+			circleRight = V2D.rotate(circleNormal,Math.PI*0.5);
+			var circleRadius = V2D.maximumDistance(setP) * 0.5;
+			// project points to normal line, get COM + sigmas
+			var xLocations = [];
+			// exclude all points outside of maximum x difference
+
+			// for(var j=0; j<setP.length; ++j){
+			// 	var p = setP[j];
+			// 	var n = setN[j];
+			// 	var cToP = V2D.sub(p,circleCenter);
+			// 	var dot = V2D.dot(cToP,circleNormal);
+			// 	xLocations.push(dot);
+			// }
+			//
+			// var ps = [];
+			// var ns = [];
+
+			// ... ?
+
+			var xLocations = [];
+			var yLocations = [];
+			var weights = [];
+			for(var j=0; j<setP.length; ++j){
+				var p = setP[j];
+				var n = setN[j];
+				var cToP = V2D.sub(p,circleCenter);
+				var dot = V2D.dot(cToP,circleNormal);
+				xLocations.push(dot);
+				dot = V2D.dot(cToP,circleRight);
+				yLocations.push(dot);
+			}
+			// console.log(xLocations)
+			var xMin = Code.min(xLocations);
+			var xMax = Code.max(xLocations);
+			var xRange = xMax-xMin;
+			var xMean = Code.mean(xLocations);
+			var xSigma = Code.stdDev(xLocations, xMean);
+			var yMin = Code.min(yLocations);
+			var yMax = Code.max(yLocations);
+			var yRange = yMax-yMin;
+			var yMean = Code.mean(yLocations);
+			var ySigma = Code.stdDev(yLocations, yMean);
+			// console.log(xMean,xSigma);
+			// throw  "...";
+			// sigmas.push(xSigma/circleRadius);
+			// sigmas.push(xSigma/ySigma);
+			// sigmas.push(xSigma/xRange);
+			sigmas.push(xSigma/);
+			// xRange
+		}
+
+		// ...
+
+	}
+
+Code.printMatlabArray(sigmas,"x");
+
+
+throw "...";
+
 var datas = [];
 	for(var i=0; i<maxCount; ++i){
 		var point = points[i];
@@ -341,7 +425,6 @@ console.log(planeNormal+"")
 					d.graphics().setLine(1.0, 0xFF0000FF);
 					d.graphics().beginPath();
 					for(var iter=0; iter<iterations; ++iter){
-// break;
 						var percent = iter/(iterations-1);
 						// plane point
 						var x = (percent-0.5)*0.50; // how wide ? point area max length
@@ -368,7 +451,7 @@ console.log(planeNormal+"")
 					console.log(k);
 					var radius = k["radius"];
 					var norm = k["normal"];
-					console.log(norm+"")
+					console.log(norm+"");
 					// ..
 						var x = 0;
 						var y = curve.valueAt(x);
@@ -386,6 +469,39 @@ console.log(planeNormal+"")
 					d.graphics().strokeLine();
 					d.matrix().translate(worldOffset.x, worldOffset.y);
 					GLOBALSTAGE.addChild(d);
+
+					// project to surface - plane
+					// var example = center.copy().add(.35,.1);
+					var example = center;
+					var toP = V2D.sub(example,planePoint);
+					var dx = V2D.dot(toP,planeRight);
+					// y value off of plane
+					var dy = curve.valueAt(dx);
+					var p = new V2D(dx,dy);
+					// world location of point
+						p = Code.planePointToWorldPoint(p, planePoint,planeNormal, V2D.DIRY);
+					var d = new DO();
+					d.graphics().setLine(3.0,0xFF0000FF);
+					d.graphics().setFill(0xCC0000FF);
+					d.graphics().beginPath();
+					d.graphics().drawCircle((example.x)*worldScale,(example.y)*worldScale, 6.0);
+					d.graphics().endPath();
+					d.graphics().fill();
+					d.graphics().strokeLine();
+					d.matrix().translate(worldOffset.x, worldOffset.y);
+					GLOBALSTAGE.addChild(d);
+					//
+					var d = new DO();
+					d.graphics().setLine(3.0,0xFFFF0000);
+					d.graphics().setFill(0xCCFF0000);
+					d.graphics().beginPath();
+					d.graphics().drawCircle((p.x)*worldScale,(p.y)*worldScale, 6.0);
+					d.graphics().endPath();
+					d.graphics().fill();
+					d.graphics().strokeLine();
+					d.matrix().translate(worldOffset.x, worldOffset.y);
+					GLOBALSTAGE.addChild(d);
+
 				}
 			}
 		}

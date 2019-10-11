@@ -378,6 +378,23 @@ https://cloud.google.com/appengine/docs/nodejs/
 0+1+2 = S21L1RCT
 
 
+- do dot-normal 'attenuated' sigmas
+
+
+
+
+=> radius size is only the extent of distance in direction of normal
+	- means a lot more processing [need to re-get kNN / order each time is run]
+=> noisy plot .. need to do some smoothing (averaging filter / poly interpolation)
+
+=> wall thickness is one measurement
+=> wall length -- extent is another []
+
+
+- 'growth x' vs 'growth' y
+
+
+
 - curvature steps:
 	- have initial (noisy) normal estimates at each point
 	- get 'neighborhood' of each point
@@ -398,9 +415,29 @@ https://cloud.google.com/appengine/docs/nodejs/
 	=> weighted also on orthogonal distance from center?
 	=> what does OPPOSITE/ORTHOGONAL plotting do?
 
+=> NOT GROWING CIRCLE FROM CENTER, GROWING FROM SOURCE POINT ... MAY NEED TO DROP POINTS OUTSIDE RADIUS N DIRECTION
 
 convex hull area / sphere area
-... needs to be statistical tho ...
+... needs to be statistical tho ... - also not good for splotchy data
+
+
+ALGC - 2D:
+	- input: point needing to project to surface
+	- find 3 NN, initialize circle
+		- repeat:
+			- find k+1 NN
+			- normal = average of all point normals
+			- center = averate of all point locations
+			- project points to 1D normal line
+			- estimate statistical density using (normal dot) & (distance from centerline) weighting
+		- stop when change in sigma (along normal line) reaches minimum
+		==> ONLY KEEP INTER SIGMA OF POINTS IN CENTER ?
+		- window = (1-3) * sigma @ centroid
+		- estimate polygonal surface
+		- project point to surface
+	- REPEAT projection until change in location is minimal
+
+
 
 ALGB:
 	- find obviously planar locations --- sigma ratio > 2-4

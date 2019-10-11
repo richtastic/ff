@@ -525,3 +525,19 @@ V2D.arrayToValueList = function(pointList){
 	}
 	return a;
 }
+
+V2D.maximumDistance = function(pointList){
+	var d = 0;
+	var N = pointList.length;
+	for(var i=0; i<N; ++i){
+		var a = pointList[i];
+		for(var j=i+1; j<N; ++j){
+			var b = pointList[j];
+			var dS = V2D.distanceSquare(a,b);
+			if(dS>d){
+				d = dS;
+			}
+		}
+	}
+	return Math.sqrt(d);
+}
