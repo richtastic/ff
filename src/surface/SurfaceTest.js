@@ -53,10 +53,10 @@ SurfaceTest.prototype._refreshDisplay = function(){
 	// var error = 0.0;
 	// var error = 0.01;
 	// var error = 0.05;
-	var error = 0.10; // ok
+	// var error = 0.10; // ok
 	// var error = 0.20; //
 	// var error = 0.25; // bad
-	// var error = 0.5; // impossible
+	var error = 0.5; // impossible
 	// var nerror = Code.radians(0.0);
 	// var nerror = Code.radians(10.0);
 	// var nerror = Code.radians(30.0);
@@ -123,9 +123,9 @@ SurfaceTest.prototype._refreshDisplay = function(){
 	// if(false){
 		var focus = new V2D(0,0);
 		// var angle = Code.radians(15);
-		// var angle = Code.radians(30);
+		var angle = Code.radians(30);
 		// var angle = Code.radians(45);
-		var angle = Code.radians(60);
+		// var angle = Code.radians(60);
 		// var angle = Code.radians(90);
 		// var angle = Code.radians(120);
 		// var angle = Code.radians(160);
@@ -217,8 +217,9 @@ SurfaceTest.prototype._refreshDisplay = function(){
 	// var drawIndex = 10;
 	// var drawIndex = 20;
 	// var drawIndex = 25;
+	var drawIndex = 50;
 	// var drawIndex = 100;
-	var drawIndex = maxCount-1;
+	// var drawIndex = maxCount-1;
 
 
 // determine each points' 'SIZE
@@ -250,6 +251,7 @@ for(var i=0; i<points.length; ++i){
 // dynamically estimate best wall size ...
 
 var sigmas = [];
+var densities = [];
 	// find closest point
 	var setP = [];
 	var setN = [];
@@ -266,6 +268,11 @@ var sigmas = [];
 
 // NEED MAXIMUM AND MINIMUM X IN DIR OF NORMAL
 // => DROP POINTS IN Y OUTSIDE OF THIS
+
+
+// - ignore points with normals not in direction of average normal
+
+
 
 			circleCenter = Code.averageV2D(setP);
 			circleNormal = Code.averageAngleVector2D(setN);
@@ -285,49 +292,101 @@ var sigmas = [];
 			//
 			// var ps = [];
 			// var ns = [];
+if(true){
+// if(i==40){
+// if(false){
+			// DRAW ALL:
+			// var convexHull =
+			var d = new DO();
+			d.graphics().setLine(1.0,0x9900CC00);
+			d.graphics().beginPath();
+			d.graphics().drawCircle((circleCenter.x+0)*worldScale,(circleCenter.y+0)*worldScale, circleRadius*worldScale);
+			d.graphics().moveTo((circleCenter.x-circleNormal.x*circleRadius*1.0)*worldScale,(circleCenter.y-circleNormal.y*circleRadius*1.0)*worldScale);
+			d.graphics().lineTo((circleCenter.x+circleNormal.x*circleRadius*1.0)*worldScale,(circleCenter.y+circleNormal.y*circleRadius*1.0)*worldScale);
+			d.graphics().endPath();
+			d.graphics().strokeLine();
+			d.matrix().translate(worldOffset.x, worldOffset.y);
+			GLOBALSTAGE.addChild(d);
+}
 
 			// ... ?
 
 			var xLocations = [];
 			var yLocations = [];
+			var xMagnitudes = [];
+			var yMagnitudes = [];
+			var dotNorms = [];
 			var weights = [];
+			// vareight
 			for(var j=0; j<setP.length; ++j){
 				var p = setP[j];
 				var n = setN[j];
 				var cToP = V2D.sub(p,circleCenter);
-				var dot = V2D.dot(cToP,circleNormal);
+				var dot;
+				var dotXDir = V2D.dot(n,circleNormal);
+					dotNorms.push(dotXDir);
+					// weights.push(dotXDir*dotXDir);
+				var dotX = V2D.dot(n,circleNormal); // points pointing away from
+				var dotY = V2D.dot(n,circleRight);
+				var linearDistanceX = 1.0 - Math.abs(V2D.dot(circleRight,cToP))/circleRadius;
+				var linearDistanceY = 1.0 - Math.abs(V2D.dot(circleNormal,cToP))/circleRadius;
+
+				// weights.push(dotXDir*dotXDir*linearDistanceX);
+				weights.push(linearDistanceX*linearDistanceX);
+
+				// var penaltyDistance = 1.0/circleCenter;
+					// dotX = Math.max(dotX,0);
+					// dotY = Math.max(dotY,0);
+					dotX = Math.abs(dotX);
+					dotY = Math.abs(dotY);
+				dot = V2D.dot(cToP,circleNormal);
+
 				xLocations.push(dot);
+					// xMagnitudes.push(dotX);
+					xMagnitudes.push(1.0);
+
 				dot = V2D.dot(cToP,circleRight);
+
 				yLocations.push(dot);
+					// yMagnitudes.push(dotY);
+					yMagnitudes.push(1.0);
+
 			}
 			// console.log(xLocations)
 			var xMin = Code.min(xLocations);
 			var xMax = Code.max(xLocations);
 			var xRange = xMax-xMin;
 			var xMean = Code.mean(xLocations);
-			var xSigma = Code.stdDev(xLocations, xMean);
+				// var xSigma = Code.stdDev(xLocations, xMean);
+				var xSigma = Code.stdDevMag(xLocations, xMagnitudes, xMean);
 			var yMin = Code.min(yLocations);
 			var yMax = Code.max(yLocations);
 			var yRange = yMax-yMin;
 			var yMean = Code.mean(yLocations);
-			var ySigma = Code.stdDev(yLocations, yMean);
-			// console.log(xMean,xSigma);
-			// throw  "...";
+				// var ySigma = Code.stdDev(yLocations, yMean);
+				var ySigma = Code.stdDevMag(yLocations, yMagnitudes, yMean);
 			// sigmas.push(xSigma/circleRadius);
-			// sigmas.push(xSigma/ySigma);
+			// console.log(xSigma,ySigma);
+			sigmas.push(xSigma/ySigma);
 			// sigmas.push(xSigma/xRange);
-			sigmas.push(xSigma/);
+			// sigmas.push(xSigma/);
 			// xRange
+			// density = Code.sum(dotNorms) / (circleRadius*circleRadius);
+			// density = Code.sum(dotNorms) / (circleRadius);
+
+			density = Code.sum(weights) / (circleRadius);
+			densities.push(density);
 		}
 
 		// ...
 
 	}
 
-Code.printMatlabArray(sigmas,"x");
+// Code.printMatlabArray(sigmas,"x");
+Code.printMatlabArray(densities,"x");
 
 
-throw "...";
+// throw "...";
 
 var datas = [];
 	for(var i=0; i<maxCount; ++i){

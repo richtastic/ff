@@ -4480,6 +4480,16 @@ Code.stdDev = function(list,mean,key, count){
 	}
 	return Math.sqrt(sig/len); // len-1 is typical number
 }
+Code.stdDevMag = function(locations,magnitudes,mean){
+	var i, sig=0, loc, mag, len=locations.length;
+	if(len==0){ return 0; }
+	for(i=len;i--;){
+		loc = locations[i];
+		mag = magnitudes[i]
+		sig += mag*Math.pow(loc-mean,2);
+	}
+	return Math.sqrt(sig/len); // len-1 is typical number
+}
 Code.mean = function(list,key, count){
 	var i, mu=0, item, len=list.length;
 	if(count!==undefined){

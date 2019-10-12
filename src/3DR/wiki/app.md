@@ -382,6 +382,9 @@ https://cloud.google.com/appengine/docs/nodejs/
 
 
 
+- extent of sample in surface direction 
+
+
 
 => radius size is only the extent of distance in direction of normal
 	- means a lot more processing [need to re-get kNN / order each time is run]
