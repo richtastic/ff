@@ -53,10 +53,10 @@ SurfaceTest.prototype._refreshDisplay = function(){
 	// var error = 0.0;
 	// var error = 0.01;
 	// var error = 0.05;
-	// var error = 0.10; // ok
+	var error = 0.10; // ok
 	// var error = 0.20; //
 	// var error = 0.25; // bad
-	var error = 0.5; // impossible
+	// var error = 0.5; // impossible
 	// var nerror = Code.radians(0.0);
 	// var nerror = Code.radians(10.0);
 	// var nerror = Code.radians(30.0);
@@ -88,8 +88,8 @@ SurfaceTest.prototype._refreshDisplay = function(){
 	}
 
 	// circle
-	// if(true){
-	if(false){
+	if(true){
+	// if(false){
 		// var focus = new V2D(0,2);
 		// var focus = new V2D(0,1);
 		// var focus = new V2D(0,0.25);
@@ -119,8 +119,8 @@ SurfaceTest.prototype._refreshDisplay = function(){
 	}
 
 	// corner
-	if(true){
-	// if(false){
+	// if(true){
+	if(false){
 		var focus = new V2D(0,0);
 		// var angle = Code.radians(15);
 		var angle = Code.radians(30);
@@ -175,7 +175,7 @@ SurfaceTest.prototype._refreshDisplay = function(){
 	}
 
 	var worldScale = 1000.0;
-	var worldOffset = new V2D(400,400);
+	var worldOffset = new V2D(300,300);
 	var nSize = 10.0;
 	for(var i=0; i<points.length; ++i){
 		var point = points[i];
@@ -292,9 +292,9 @@ var densities = [];
 			//
 			// var ps = [];
 			// var ns = [];
-if(true){
+// if(true){
 // if(i==40){
-// if(false){
+if(false){
 			// DRAW ALL:
 			// var convexHull =
 			var d = new DO();
@@ -383,8 +383,27 @@ if(true){
 	}
 
 // Code.printMatlabArray(sigmas,"x");
-Code.printMatlabArray(densities,"x");
+// Code.printMatlabArray(densities,"x");
 
+console.log("ALG");
+	var points2D = [];
+	for(var i=0; i<points.length; ++i){
+		var point = points[i];
+		var normal = normals[i];
+		points2D.push({"point":point,"normal":normal});
+	}
+	// console.log(points2D);
+	var toPoint2D = function(a){
+		return a["point"];
+	}
+	var toNormal2D = function(a){
+		return a["normal"];
+	}
+	var space2D = new QuadTree(toPoint2D);
+	space2D.initWithObjects(points2D);
+	// console.log(space2D);
+var result = R3D.surfaceThicknessFromPoint2D(center,space2D, toNormal2D);
+console.log(result);
 
 // throw "...";
 

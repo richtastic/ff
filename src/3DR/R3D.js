@@ -34928,6 +34928,96 @@ R3D.transform3DFromParameters = function(P, rx,ry,rz, tx,ty,tz){
 	return P;
 }
 
+R3D.surfaceThicknessFromPoint2D = function(location,space, toNormalFxn){ //  // points+normals => neighborhood 
+	// nearest neighbors for initial circle
+	var toPointFxn = space.toPoint();
+	var objects = space.kNN(location, 3);
+	var points = [];
+	var normals = [];
+	for(var i=0; i<objects.length; ++i){
+		var object = objects[i];
+		var point = toPointFxn(object);
+		var normal = toNormalFxn(object);
+		points.push(point);
+		normals.push(normal);
+	}
+	console.log(normals,points);
+	// create initial circle
+	var circleCenter = Code.averageV2D(points);
+	var circleNormal = null;
+	var circleRight = null;
+	var circleRadius = null;
+	// get graph:
+	var maxNeighbors = 100;
+	var objects = space.kNN(circleCenter, maxNeighbors);
+	points = [];
+	normals = [];
+	var datas = [];
+	var circles = [];
+	for(var i=0; i<objects.length; ++i){
+		var object = objects[i];
+		var point = toPointFxn(object);
+		var normal = toNormalFxn(object);
+		points.push(point);
+		normals.push(normal);
+		if(points.length>2){ // 3+ points // TODO: optimize by weighting by only latest addition
+			circleCenter = Code.averageV2D(points);
+			circleNormal = Code.averageAngleVector2D(normals);
+			circleRight = V2D.rotate(circleNormal,Math.PI*0.5);
+			circleRadius = V2D.maximumDistance(points) * 0.5;
+				// circleRadius = V2D.maximumDistance(circleCenter, points);
+			// get x distribution
+			var xs = [];
+			var vs = [];
+			for(var j=0; j<points.length; ++j){ // weight points by: distance from center & normal direction
+				var point = points[j];
+				var normal = normals[j];
+				var cToP = V2D.sub(point,circleCenter);
+				var dotN = V2D.dot(circleNormal,normal);
+				var distanceR = V2D.dot(circleRight,cToP); // signed distances
+				var distanceN = V2D.dot(circleNormal,cToP);
+					var linearDistanceR = 1.0 - Math.abs(distanceR)/circleRadius;
+				// console.log(circleNormal,normal,cToP);
+				// console.log(dotN,distanceR,distanceN);
+				var x = distanceN;
+				// further away || wrong normal == worse
+				// var v = 1.0 * Math.max(dotN,0) * distanceR * distanceR;
+				var v = 1.0 * Math.max(dotN,0) * linearDistanceR * linearDistanceR;
+				xs.push(x);
+				vs.push(v);
+			}
+			// throw "?";
+			// statistics
+			// var xMin = Code.min(xs);
+			// var xMax = Code.max(xs);
+			// var xRange = xMax-xMin;
+			var xMean = Code.mean(xs);
+				// var xSigma = Code.stdDev(xs, vs);
+				var xSigma = Code.stdDevMag(xs, vs, xMean);
+			// var density = Code.sum(weights) / (circleRadius);
+			// var densities.push(density);
+			//var data = xSigma/circleRadius;
+			
+			// var data = circleRadius/xSigma; // 
+			var data = xSigma / circleRadius;
+			// var data = circleRadius / Code.sum(vs);
+			// var data = Code.sum(vs) / circleRadius;
+			
+			datas.push(data);
+
+
+			circles.push({"center":circleCenter.copy(),"radius":circleRight});
+		}
+	}
+	// console.log(datas);
+// Code.printMatlabArray(datas,"x");
+	Code.printMatlabArray(datas,"y");
+	// var mapped = [];
+	// var result = R3D.surfaceThicknessFromNeighborhood2D(mapped);
+	throw "...";
+}
+
+
 
 // ITERITIVE BUNDLE ADJUSTMENT
 /*

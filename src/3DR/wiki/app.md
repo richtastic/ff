@@ -378,14 +378,37 @@ https://cloud.google.com/appengine/docs/nodejs/
 0+1+2 = S21L1RCT
 
 
-- do dot-normal 'attenuated' sigmas
+
+finding wall thickness
+	A) direction of shortest thickness
+		- hard
+	B) direction of normal
+	ALG:
+		- input: point to project to surface
+		- find 3 NN to init a circle [center, normal, radius]
+		- get ~100 NN from circle centroid
+		- for each 3+ neighbor:
+			- get circle using averaged center & normal
+			- radius = largest extent in normal direction, WEIGHTED BY DISTANCE FROM CENTER
+			- statistic: care about size of circle, most importantly around the centerline (along normal)
+				- count = sum: perpendicular normal distance ^ 2
+				- count / radius
+		- smooth curve with window averaging / curve-fitting
+		- thickness maximum ~ when curve reaches 80~90% of final value
+			=> get radius value
+		- neighborhood search/sample size 2~4 [3]x wall thickness size
+	OPTS:
+		- once size is found for one location, nearby points can narrow search area:
+			- first 3-10, last 3-10, window around limit percent
+---- any 3D differences ?
 
 
 
-- extent of sample in surface direction 
 
 
 
+
+`
 => radius size is only the extent of distance in direction of normal
 	- means a lot more processing [need to re-get kNN / order each time is run]
 => noisy plot .. need to do some smoothing (averaging filter / poly interpolation)

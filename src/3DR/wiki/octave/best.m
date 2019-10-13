@@ -122,8 +122,18 @@ plot(x2,'m-+');
 plot(x3,'b-');
 plot(x4,'k-+');
 
-%hold off;
-%plot(x,'r-');
+
+
+
+
+
+
+
+
+
+
+hold off;
+plot(x,'r-');
 
 
 
