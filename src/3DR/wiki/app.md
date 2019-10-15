@@ -378,6 +378,22 @@ https://cloud.google.com/appengine/docs/nodejs/
 0+1+2 = S21L1RCT
 
 
+- ignore points not pointing in same direction as circle normal:
+	- dot(N,n) or ot(N,n)^2
+- ignore points too far away from center of circle:
+	- 1/d or 1/d^2
+- penalize fo difference in circle & sample averages:
+	- MOMENT / MEAN DISTANCE FROM CENTER / ???
+		-
+
+
+
+
+----- sigmaX needs to level out or decrease at some point
+	1/d^2 not seem to work
+
+- use 'MOMENT' as a penalty ? [lines and circles wont have this]
+
 
 finding wall thickness
 	A) direction of shortest thickness

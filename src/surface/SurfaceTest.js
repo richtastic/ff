@@ -88,8 +88,8 @@ SurfaceTest.prototype._refreshDisplay = function(){
 	}
 
 	// circle
-	if(true){
-	// if(false){
+	// if(true){
+	if(false){
 		// var focus = new V2D(0,2);
 		// var focus = new V2D(0,1);
 		// var focus = new V2D(0,0.25);
@@ -112,19 +112,19 @@ SurfaceTest.prototype._refreshDisplay = function(){
 			points.push(point);
 			// console.log(point);
 			var normal = V2D.sub(point,focus);
-				normal.norm()
+				normal.norm();
 			normal.rotate( nerror*(Math.random()-0.5) );
 			normals.push(normal);
 		}
 	}
 
 	// corner
-	// if(true){
-	if(false){
+	if(true){
+	// if(false){
 		var focus = new V2D(0,0);
 		// var angle = Code.radians(15);
-		var angle = Code.radians(30);
-		// var angle = Code.radians(45);
+		// var angle = Code.radians(30);
+		var angle = Code.radians(45);
 		// var angle = Code.radians(60);
 		// var angle = Code.radians(90);
 		// var angle = Code.radians(120);
@@ -292,9 +292,9 @@ var densities = [];
 			//
 			// var ps = [];
 			// var ns = [];
-// if(true){
+if(true){
 // if(i==40){
-if(false){
+// if(false){
 			// DRAW ALL:
 			// var convexHull =
 			var d = new DO();
@@ -358,13 +358,13 @@ if(false){
 			var xRange = xMax-xMin;
 			var xMean = Code.mean(xLocations);
 				// var xSigma = Code.stdDev(xLocations, xMean);
-				var xSigma = Code.stdDevMag(xLocations, xMagnitudes, xMean);
+				var xSigma = Code.stdDevWeights(xLocations, xMagnitudes, xMean);
 			var yMin = Code.min(yLocations);
 			var yMax = Code.max(yLocations);
 			var yRange = yMax-yMin;
 			var yMean = Code.mean(yLocations);
 				// var ySigma = Code.stdDev(yLocations, yMean);
-				var ySigma = Code.stdDevMag(yLocations, yMagnitudes, yMean);
+				var ySigma = Code.stdDevWeights(yLocations, yMagnitudes, yMean);
 			// sigmas.push(xSigma/circleRadius);
 			// console.log(xSigma,ySigma);
 			sigmas.push(xSigma/ySigma);
@@ -405,6 +405,11 @@ console.log("ALG");
 var result = R3D.surfaceThicknessFromPoint2D(center,space2D, toNormal2D);
 console.log(result);
 
+var localRadius = result["radius"];
+var localCount = result["count"];
+
+console.log(localCount);
+
 // throw "...";
 
 var datas = [];
@@ -436,6 +441,9 @@ var pointArea = pointRadius*pointRadius;
 var largestDistance = V2D.distance(center,point);
 var largestArea = largestDistance*largestDistance;
 var datum = largestArea/pointArea;
+
+drawIndex = localCount;
+// drawIndex = 50;
 
 datas.push(datum);
 
@@ -584,7 +592,7 @@ console.log(planeNormal+"")
 			}
 		}
 	}
-Code.printMatlabArray(datas,"x");
+// Code.printMatlabArray(datas,"x");
 
 
 
