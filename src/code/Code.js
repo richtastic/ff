@@ -4453,18 +4453,18 @@ Code.stdDevV3D = function(list,mean){
 	}
 	return sig;
 }
-Code.stdDevWeights = function(list,mean){
-	var i, sig=0, item, len=list.length;
-	if(len==0){ return 0; }
-	var count = 0;
-	for(i=len;i--;){
-		var weight = list[i];
-		var dev = Math.pow(weight-mean,2);
-		count += weight;
-		sig += dev*weight;
-	}
-	return Math.sqrt(sig/count);
-}
+// Code.stdDevWeights = function(list,mean){
+// 	var i, sig=0, item, len=list.length;
+// 	if(len==0){ return 0; }
+// 	var count = 0;
+// 	for(i=len;i--;){
+// 		var weight = list[i];
+// 		var dev = Math.pow(weight-mean,2);
+// 		count += weight;
+// 		sig += dev*weight;
+// 	}
+// 	return Math.sqrt(sig/count);
+// }
 Code.stdDev = function(list,mean,key, count){
 	var i, sig=0, item, len=list.length;
 	if(len==0){ return 0; }
@@ -4487,11 +4487,10 @@ Code.stdDevWeights = function(locations,magnitudes,mean){
 	for(i=len;i--;){
 		loc = locations[i];
 		mag = magnitudes[i];
-		totalWeight += mag;
 		sig += mag*Math.pow(loc-mean,2);
+		totalWeight += mag;
 	}
-	totalWeight /= len;
-	return Math.sqrt(sig/totalWeight/len); // len-1 is typical number
+	return Math.sqrt(sig/totalWeight); // len-1 is typical number
 }
 Code.meanWeights = function(locations,magnitudes){
 	var i, mu=0, loc, mag, len=locations.length;
@@ -4503,8 +4502,7 @@ Code.meanWeights = function(locations,magnitudes){
 		mu += mag*loc;
 		totalWeight += mag;
 	}
-	totalWeight /= len;
-	return mu / totalWeight / len;
+	return mu / totalWeight;
 }
 Code.mean = function(list,key, count){
 	var i, mu=0, item, len=list.length;

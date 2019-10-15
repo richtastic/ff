@@ -34953,6 +34953,7 @@ R3D.surfaceThicknessFromPoint2D = function(location,space, toNormalFxn){ //  // 
 	points = [];
 	normals = [];
 	var datas = [];
+var datas2 = [];
 	var circles = [];
 	for(var i=0; i<objects.length; ++i){
 		var object = objects[i];
@@ -34965,20 +34966,23 @@ R3D.surfaceThicknessFromPoint2D = function(location,space, toNormalFxn){ //  // 
 			circleCenter = Code.averageV2D(points);
 			circleNormal = Code.averageAngleVector2D(normals);
 			circleRight = V2D.rotate(circleNormal,Math.PI*0.5);
-			// circleRadius = V2D.maximumDistance(points) * 0.5;
-			var d0 = V2D.distance(points[2],circleCenter);
 			circleRadius = V2D.maximumDistance(points,circleCenter);
+
 			// get x distribution
 			var xs = [];
 			var ys = [];
 			var vxs = [];
 			var vys = [];
+
+			var zs = [];
+			var vzs = [];
 			for(var j=0; j<points.length; ++j){ // weight points by: distance from center & normal direction
 				var point = points[j];
 				var normal = normals[j];
 				var cToP = V2D.sub(point,circleCenter);
 				var dotN = V2D.dot(circleNormal,normal);
 				var distanceR = V2D.dot(circleRight,cToP); // signed distances
+// console.log(distanceR/circleRadius);
 				var distanceN = V2D.dot(circleNormal,cToP);
 					var linearDistanceR = Math.abs(distanceR)/circleRadius; // 1 @ 0 ; 0 @ R
 					// var linearDistanceR = Math.abs(distanceR)/circleRadius;
@@ -34999,40 +35003,52 @@ R3D.surfaceThicknessFromPoint2D = function(location,space, toNormalFxn){ //  // 
 				// var vx = 1.0 * Math.pow(Math.max(dotN,0),2) / Math.pow(distanceR,2);
 				// var vx = 1.0 * Math.pow(Math.max(dotN,0),2) / Math.pow(linearDistanceR,2);
 
-				var vx = 1.0 * Math.pow(Math.max(dotN,0),2) * Math.pow(1.0-linearDistanceR,2); // smoother
+				// var vx = 1.0 * Math.pow(Math.max(dotN,0),2) * Math.pow(1.0-linearDistanceR,2); // smoother
+				// var vx = 1.0 * Math.pow(Math.max(dotN,0),2);// / Math.pow(distanceR,2);
 				// var vx = 1.0 * Math.pow(Math.max(dotN,0),2) / Math.pow(distanceR,2);
-				// var vx = 1.0 * Math.pow(Math.max(dotN,0),2) / Math.pow(distanceR,2);
-				var vy = 1.0 * Math.pow(Math.max(dotN,0),2);
+				// var vy = 1.0 * Math.pow(Math.max(dotN,0),2);
 
 				// var vx = 1 / Math.pow(distanceR/d0,2);
 				// var vx = linearDistanceR;
 				// var vx = Math.pow(linearDistanceR,2);
 
+				// var vx = Math.pow(Math.max(dotN,0),2);
 
-				// var vx = 1.0/(1E-9 + Math.pow(distanceR,2));
-if(j==points.length-1){
-	// console.log(j+": "+Math.pow(distanceR/d0,2));
-}
+
+				// var vx = distanceR>d0 ? 0 : 1;
+
+				var vx = 1;
+				var vy = 1;
+
+
+
 				xs.push(x);
 				ys.push(y);
 				vxs.push(vx);
 				vys.push(vy);
+
+
+				zs.push(cToP.length());
+				vzs.push(1.0);
 			}
-			// throw "?";
+			// console.log(vxs);
 			// statistics
 			// var xMin = Code.min(xs);
 			// var xMax = Code.max(xs);
 			// var xRange = xMax-xMin;
 			var xMean = Code.meanWeights(xs,vxs);
-			// var xMoment = Math.abs(xMean);
-// xMean = 0; // center
-				var xSigma = Code.stdDevWeights(xs, vxs, xMean);
+			var xSigma = Code.stdDevWeights(xs, vxs, xMean);
 
+			// var xMoment = Math.abs(xMean);
 			var xMoment = Code.stdDevWeights(xs, vxs, 0);
 
 			var yMean = Code.meanWeights(ys,vys);
-				var ySigma = Code.stdDevWeights(ys, vys, yMean);
+			var ySigma = Code.stdDevWeights(ys, vys, yMean);
 			// var density = Code.sum(weights) / (circleRadius);
+			
+			var zMean = Code.meanWeights(zs,vzs);
+			var zSigma = Code.stdDevWeights(zs, vzs, 0);
+
 			// var densities.push(density);
 			//var data = xSigma/circleRadius;
 
@@ -35042,8 +35058,26 @@ if(j==points.length-1){
 			// var data = Code.sum(vs) / circleRadius;
 
 			// var data = xSigma;
+
+
+			// var data = (1+Math.abs(xMean)/xSigma);
 			// var data = (xMoment);
-			// var data = xSigma * (1.0/xMoment);
+			// var data = xSigma / Math.pow(xSigma/xMoment, 2);
+			// var data = xMoment/xSigma;
+			// var data = xMean;
+
+			// var data = Math.min(xSigma,ySigma)/circleRadius;
+			// var data = Math.min(xSigma,ySigma)/zSigma;
+
+
+			var data = (xSigma)/zSigma;
+			var data2 = (ySigma)/zSigma;
+
+			// var data = ySigma/xSigma;
+			// var data = xSigma/ySigma;
+			// if(data<1){
+			// 	data = 1.0/data;
+			// }
 
 			// var data = xSigma * (1.0/xMoment) / circleRadius;
 
@@ -35051,7 +35085,7 @@ if(j==points.length-1){
 			// var data = Math.abs(xMean)/xSigma;
 			// var data = Math.abs(xMean)/xSigma;
 			// var data = xMoment;
-			var data = xMoment/xSigma;
+			// var data = xMoment/xSigma;
 			// var data = xSigma * (1.0/xMoment) / circleRadius;
 			// var data = xSigma / circleRadius;
 			// var data = xSigma / (circleRadius*circleRadius);
@@ -35061,6 +35095,7 @@ if(j==points.length-1){
 			// data = Code.sum(vxs);
 
 			datas.push(data);
+			datas2.push(data2);
 
 
 			circles.push({"center":circleCenter.copy(),"radius":circleRight});
@@ -35068,7 +35103,8 @@ if(j==points.length-1){
 	}
 	// console.log(datas);
 // Code.printMatlabArray(datas,"x");
-	Code.printMatlabArray(datas,"y");
+	Code.printMatlabArray(datas,"x");
+	Code.printMatlabArray(datas2,"y");
 	// smooth fxn:
 
 	// find minimum of fxn:

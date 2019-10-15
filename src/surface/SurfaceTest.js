@@ -88,8 +88,8 @@ SurfaceTest.prototype._refreshDisplay = function(){
 	}
 
 	// circle
-	// if(true){
-	if(false){
+	if(true){
+	// if(false){
 		// var focus = new V2D(0,2);
 		// var focus = new V2D(0,1);
 		// var focus = new V2D(0,0.25);
@@ -119,8 +119,8 @@ SurfaceTest.prototype._refreshDisplay = function(){
 	}
 
 	// corner
-	if(true){
-	// if(false){
+	// if(true){
+	if(false){
 		var focus = new V2D(0,0);
 		// var angle = Code.radians(15);
 		// var angle = Code.radians(30);
