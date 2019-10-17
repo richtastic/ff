@@ -34932,7 +34932,7 @@ R3D.surfaceThicknessFromPoint2D = function(location,space, toNormalFxn){ //  // 
 
 var worldScale = 1000.0;
 var worldOffset = new V2D(300,300);
-	
+
 
 	// tools:
 	var toPointFxn = space.toPoint();
@@ -34945,7 +34945,7 @@ var worldOffset = new V2D(300,300);
 		var object = objects[i];
 		var point = toPointFxn(object);
 
-		var nei = space.kNN(point, 2+1); 
+		var nei = space.kNN(point, 2+1);
 			nei.unshift();
 			nei = nei.map(function(a){return a["point"]});
 		// var cen = Code.averageV2D(nei);
@@ -34975,7 +34975,7 @@ var worldOffset = new V2D(300,300);
 
 
 	// nearest neighbors for initial circle
-	
+
 	var objects = space.kNN(location, 3);
 	var points = [];
 	var normals = [];
@@ -34993,8 +34993,8 @@ var worldOffset = new V2D(300,300);
 	var circleRight = null;
 	var circleRadius = null;
 	// get graph:
-	// var maxNeighbors = 100;
-	var maxNeighbors = 50; // TODO: if error comes back around -> ignore everything after large valley
+	var maxNeighbors = 100;
+	// var maxNeighbors = 50; // TODO: if error comes back around -> ignore everything after large valley
 	var objects = space.kNN(circleCenter, maxNeighbors);
 	points = [];
 	normals = [];
@@ -35029,9 +35029,9 @@ var originalCenter = null;
 			// -> TRY CLOSEST TO ORIGINAL POINT
 
 			// moves everywhere
-			// var minCircle2D = Code.minCircle2D(points);
-			// var minCircleRadius = minCircle2D["radius"];
-			// var minCircleCenter = minCircle2D["center"];
+			var minCircle2D = Code.minCircle2D(points);
+			var minCircleRadius = minCircle2D["radius"];
+			var minCircleCenter = minCircle2D["center"];
 			// circleRadius = minCircle2D["radius"];
 			// circleCenter = minCircle2D["center"];
 			// console.log(minCircle2D);
@@ -35102,7 +35102,7 @@ var originalCenter = null;
 			var nSigma2 = nSigma*nSigma;
 				// var rSigma2_2 = Math.pow(rSigma*0.250, 2); // narrow center
 				var rSigma2_2 = rSigma2;
-			
+
 			// get weights:
 			var vxs = [];
 			var vys = [];
@@ -35120,7 +35120,7 @@ var originalCenter = null;
 // 				var x = xs[j];
 // 				vx = Math.exp(-Math.pow(x-rMean,2)/rSigma2_2);
 // 					vx = Math.pow(vx,2);
-				
+
 
 
 // 				// var r = Math.min(Math.max(Math.abs(x/rSigma2_2),0),1);
@@ -35252,14 +35252,21 @@ dataSigmaZ.push(zSigma);
 // var xWeights = Code.sum(vxs)/vxs.length;
 			// var data = xSigma;
 			// var data = xSigma/zSigma;
-			var ratio =	(xSigma/ySigma);
-			if(ratio<1){
-				ratio = 1.0/ratio;
-			}
-			var data = 1 - ratio; // more noisy?
+			// var ratio =	(xSigma/ySigma);
+			// if(ratio<1){
+			// 	ratio = 1.0/ratio;
+			// }
+			// var data = 1 - ratio;
 			// var data = xSigma/circleRadius; // inaccurate radius size
 			// var data = xSigma;
-			var data2 = ySigma/zSigma;
+
+			// var data = xSigma/zSigma;
+			// // var data = xSigma/ySigma/zSigma;
+			//
+			// var data2 = ySigma/zSigma;
+
+			var data = xSigma;
+			var data2 = ySigma;
 
 
 
@@ -35306,8 +35313,8 @@ dataSigmaZ.push(zSigma);
 // 95
 // 99
 // 99.9
-if(points.length==10){
-// if(points.length==30){
+// if(points.length==10){
+if(points.length==30){
 // if(points.length==50){
 // if(points.length==80){
 	xSigma = xSigma;
@@ -35322,7 +35329,7 @@ if(points.length==10){
 	if(rangeX==0){
 		rangeX = 1;
 	}
-	var sizeMin = 2;
+	var sizeMin = 10;
 	var sizeMax = 20;
 	// console.log(infoX);
 	// console.log(circleRadius);
@@ -35342,6 +35349,15 @@ if(points.length==10){
 		d.matrix().translate(worldOffset.x, worldOffset.y);
 		GLOBALSTAGE.addChild(d);
 	}
+	// minimum
+	var d = new DO();
+	d.graphics().setLine(1.0,0x99000000);
+	d.graphics().beginPath();
+	d.graphics().drawCircle(minCircleCenter.x*worldScale,minCircleCenter.y*worldScale,minCircleRadius*worldScale);
+	d.graphics().endPath();
+	d.graphics().strokeLine();
+	d.matrix().translate(worldOffset.x, worldOffset.y);
+	GLOBALSTAGE.addChild(d);
 	// overall
 	var d = new DO();
 	d.graphics().setLine(1.0,0xFF000000);
@@ -35393,6 +35409,25 @@ if(points.length==10){
 	d.matrix().translate(circleCenter.x*worldScale,circleCenter.y*worldScale);
 	d.matrix().translate(worldOffset.x, worldOffset.y);
 	GLOBALSTAGE.addChild(d);
+
+	// com
+	var d = new DO();
+	d.graphics().setLine(3.0,0xFF660000);
+	d.graphics().beginPath();
+	d.graphics().drawCircle(circleCenter.x*worldScale,circleCenter.y*worldScale,6);
+	d.graphics().endPath();
+	d.graphics().strokeLine();
+	d.matrix().translate(worldOffset.x, worldOffset.y);
+	GLOBALSTAGE.addChild(d);
+	// circle
+	var d = new DO();
+	d.graphics().setLine(3.0,0xFF000066);
+	d.graphics().beginPath();
+	d.graphics().drawCircle(minCircleCenter.x*worldScale,minCircleCenter.y*worldScale,6);
+	d.graphics().endPath();
+	d.graphics().strokeLine();
+	d.matrix().translate(worldOffset.x, worldOffset.y);
+	GLOBALSTAGE.addChild(d);
 	// ...
 
 }
@@ -35419,7 +35454,7 @@ if(points.length==10){
 
 // Code.printMatlabArray(datas,"x");
 	Code.printMatlabArray(datas,"x");
-	// Code.printMatlabArray(datas2,"y");
+	Code.printMatlabArray(datas2,"y");
 
 
 	// Code.printMatlabArray(dataSigmaX,"x");

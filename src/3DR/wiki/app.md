@@ -382,6 +382,79 @@ https://cloud.google.com/appengine/docs/nodejs/
 => visualize: weights / sigmas => first few values are being selected because of random error -> ratio accidentally higher ...
 
 
+
+
+
+
+GEOMETRY ALG1:
+	- spherewide: sigmaR & sigmaN
+	check:
+		- get sigmaR_top & sigmaR_bot inside cylinder 
+
+		- get distribution in cylendar
+
+
+
+GEOMETRY ALGX:
+	- spherewide: sigmaR & sigmaN
+	check:
+		- if sigmaN/sigmaR > 2 & sigmaR is slowing down
+
+
+
+
+
+- divide sizes in half (left/right along normal) -- merging of 2 planes
+	- 3D correlary?: any number of surfaces [cone or edge... ]
+
+
+
+- mass distributions of top & bottom halves of circle:
+	- the corner half should: have smaller sigma & smaller volume & more dense
+	- the hole half should have larger sigma & more sparse
+	- the volume opposite the filled corner should be more empty
+
+
+
+CIRCULAR / SPHERICAL DISTRIBUTIONS:
+	- COM ANGLE/DIR [could be different from normal]
+	- SIGMA == angle distance from COM
+
+
+circular distribution:
+	- mean of circular quantity: = first moment =
+		- z = e^i*theta
+		- m1 = 1/N * SUM z_i
+		- R = | m1 |
+		- variance = V(z) = 1 - R [0 to 1]
+		- stddev = S(z) = ( -2*ln(R) )^1/2
+		- dispersion = d =  (1 - R_2) / (2*R^2)
+
+
+
+- other metrics of where the mass is distributed
+	- angles / directions to mass
+
+
+MODEL:
+	- surface has thickness error distribution: sigma
+	- some space on interior and exterior (of normal axis) absent of points
+	- closest point grows from some point in interior or edge (not too far outside surface)
+		flat:
+		- sigmaX and sigmaY grow until sigmaX halts at surface thickness
+			=> sigmaX/sigmaY > 2 => stop
+		curve:
+		- sigmaX and sigmaY grow until sigmaX slows
+
+			A) => sigmaX/sigmaY > 2 => stop
+			B)
+		corner:
+		- sigmaX and sigmaY continually grow
+		-
+
+
+- COM will start to shift toward one side of the circle
+
 - computer curvature each iteration?
 	- most stable = lowest change in curvature?
 
