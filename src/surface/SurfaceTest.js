@@ -88,8 +88,8 @@ SurfaceTest.prototype._refreshDisplay = function(){
 	}
 
 	// circle
-	if(true){
-	// if(false){
+	// if(true){
+	if(false){
 		// var focus = new V2D(0,2);
 		// var focus = new V2D(0,1);
 		// var focus = new V2D(0,0.25);
@@ -119,8 +119,8 @@ SurfaceTest.prototype._refreshDisplay = function(){
 	}
 
 	// corner
-	// if(true){
-	if(false){
+	if(true){
+	// if(false){
 		var focus = new V2D(0,0);
 		// var angle = Code.radians(15);
 		// var angle = Code.radians(30);
@@ -292,9 +292,9 @@ var densities = [];
 			//
 			// var ps = [];
 			// var ns = [];
-if(true){
+// if(true){
 // if(i==40){
-// if(false){
+if(false){
 			// DRAW ALL:
 			// var convexHull =
 			var d = new DO();
@@ -406,9 +406,21 @@ var result = R3D.surfaceThicknessFromPoint2D(center,space2D, toNormal2D);
 console.log(result);
 
 var localRadius = result["radius"];
+var localCenter = result["center"];
 var localCount = result["count"];
 
 console.log(localCount);
+
+// overarching neighborhood:
+
+var neighborhoodSize = localRadius * 2.0; // 2-4
+console.log(localCenter, neighborhoodSize)
+var objs = space2D.objectsInsideCircle(localCenter, neighborhoodSize);
+console.log(objs);
+
+
+localCount = objs.length;
+
 
 // throw "...";
 

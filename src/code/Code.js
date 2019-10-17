@@ -1440,6 +1440,22 @@ Code.transformArray = function(a,f){
 	}
 	return a;
 }
+Code.filterArrayAverage1D = function(a, cnt){
+	cnt = cnt!==undefined ? cnt : 1;
+	var len = a.length;
+	var lm1 = len - 1;
+	var b = [];
+	for(var i=0; i<len; ++i){
+		var sum = 0;
+		var minJ = Math.max(i-cnt,0);
+		var maxJ = Math.min(i+cnt,lm1);
+		for(var j=minJ; j<maxJ; ++j){
+			sum += a[j];
+		}
+		b[i] = sum/(maxJ-minJ+1);
+	}
+	return b;
+}
 Code.filterArray = function(a, f, args){
 	filtered = [];
 	for(var i=0; i<a.length; ++i){
@@ -8200,6 +8216,30 @@ Code.sphereDistanceToPoint = function(center,radius, point){
 		return radius-distance;
 	}
 	return distance-radius;
+}
+Code.minCircle2D = function(points){ // smallest circle that contains all points
+	var largestD = -1;
+	var len = points.length;
+	var A = null;
+	var B = null;
+	for(var i=0; i<len; ++i){
+		var a = points[i];
+		for(var j=i+1; j<len; ++j){
+			var b = points[j];
+			var d = V2D.distanceSquare(a,b);
+			if(d>largestD){
+				largestD = d;
+				A = a;
+				B = b;
+			}
+		}
+	}
+	if(A){
+		var center = V2D.avg(A,B);
+		var radius = Math.sqrt(largestD)*0.5;
+		return {"center":center, "radius":radius};
+	}
+	return null;
 }
 Code.circleFromPoints = function(a,b,c){
 	if(Code.colinear(a,b,c)){

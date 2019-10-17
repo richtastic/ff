@@ -14,7 +14,116 @@ function defaultClassesLoadedFxn(){
 }
 function customClassesProgressFxn(o){}
 function customClassesLoadedFxn(){
+
+
+
 	var hot = new SurfaceTest();
+
+return;
+
+
+	// example fall-off from center
+	var points = [];
+	points.push(new V2D(-1,-1));
+	points.push(new V2D(-1, 1));
+	points.push(new V2D(1, 0));
+	//
+	points.push(new V2D(-3, -2));
+	points.push(new V2D(3, 1.5));
+	points.push(new V2D(-5, -1));
+	points.push(new V2D(4, 1));
+
+	// SPACE
+	var toPoint2D = function(a){
+		// return a["point"];
+		return a;
+	}
+	// var toNormal2D = function(a){
+	// 	return a["normal"];
+	// }
+	var space = new QuadTree(toPoint2D);
+	console.log(points);
+	space.initWithObjects(points);
+
+
+	// FIND
+	var location = new V2D(0,1);
+
+
+
+	var objects = space.kNN(location, 3);
+	var points = [];
+	// var normals = [];
+	for(var i=0; i<objects.length; ++i){
+		var object = objects[i];
+		var point = toPoint2D(object);
+		// var normal = toNormalFxn(object);
+		points.push(point);
+		// normals.push(normal);
+	}
+
+	var circleCenter = Code.averageV2D(points);
+	var circleNormal = null;
+	var circleRight = null;
+	var circleRadius = null;
+
+
+
+	var maxNeighbors = 100;
+	var objects = space.kNN(circleCenter, maxNeighbors);
+
+	console.log(objects);
+
+	var points = objects;
+
+	circleCenter = Code.averageV2D(points);
+	circleNormal = new V2D(0,1);//Code.averageAngleVector2D(normals);
+	circleRight = V2D.rotate(circleNormal,Math.PI*0.5);
+	circleRadius = V2D.maximumDistance(points,circleCenter);
+
+	console.log(circleCenter);
+	console.log(circleNormal);
+	console.log(circleRight);
+	console.log(circleRadius);
+
+	// DECAYS:
+	var totalWeight = 0;
+	var weights = [];
+
+	var xs = [];
+	var vxs = [];
+
+	for(var j=0; j<points.length; ++j){ // weight points by: distance from center & normal direction
+		var point = points[j];
+		// var normal = normals[j];
+		var cToP = V2D.sub(point,circleCenter);
+		// var dotN = V2D.dot(circleNormal,normal);
+		var distanceR = V2D.dot(circleRight,cToP); // signed distances
+		var distanceN = V2D.dot(circleNormal,cToP);
+		//
+		var linearDistanceR = Math.abs(distanceR)/circleRadius; // 1 @ 0 ; 0 @ R
+		var weight = Math.pow(1.0-linearDistanceR,2);
+		totalWeight += weight;
+
+		console.log(point+" : "+linearDistanceR+" = "+weight);
+		weights.push(weight);
+
+
+		xs.push(distanceR);
+		vxs.push(weight);
+	}
+	for(var j=0; j<weights.length; ++j){ // weight points by: distance from center & normal direction
+		var weight = weights[j];
+		console.log(weight/totalWeight);
+	}
+
+	var xMean = Code.meanWeights(xs,vxs);
+	var xSigma = Code.stdDevWeights(xs, vxs, xMean);
+
+	console.log(xMean+" @ "+xSigma);
+
+
+	throw "????"
 
 
 
@@ -38,4 +147,3 @@ function customClassesLoadedFxn(){
 <body onload="pageLoadedFxn();" style="border:0px;margin:0px;border:0px;">
 </body>
 </html>
-

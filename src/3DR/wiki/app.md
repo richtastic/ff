@@ -378,186 +378,75 @@ https://cloud.google.com/appengine/docs/nodejs/
 0+1+2 = S21L1RCT
 
 
-- ignore points not pointing in same direction as circle normal:
-	- dot(N,n) or ot(N,n)^2
-- ignore points too far away from center of circle:
-	- 1/d or 1/d^2
-- penalize fo difference in circle & sample averages:
-	- MOMENT / MEAN DISTANCE FROM CENTER / ???
-		-
+
+=> visualize: weights / sigmas => first few values are being selected because of random error -> ratio accidentally higher ...
+
+
+
+- linearDistanceR => some distance from sample center ...
 
 
 
 
------ sigmaX needs to level out or decrease at some point
-	1/d^2 not seem to work
-
-- use 'MOMENT' as a penalty ? [lines and circles wont have this]
+- weight the normal by the distance sigma ?
 
 
-finding wall thickness
-	A) direction of shortest thickness
-		- hard
-	B) direction of normal
-	ALG:
-		- input: point to project to surface
-		- find 3 NN to init a circle [center, normal, radius]
-		- get ~100 NN from circle centroid
-		- for each 3+ neighbor:
-			- get circle using averaged center & normal
-			- radius = largest extent in normal direction, WEIGHTED BY DISTANCE FROM CENTER
-			- statistic: care about size of circle, most importantly around the centerline (along normal)
-				- count = sum: perpendicular normal distance ^ 2
-				- count / radius
-		- smooth curve with window averaging / curve-fitting
-		- thickness maximum ~ when curve reaches 80~90% of final value
-			=> get radius value
-		- neighborhood search/sample size 2~4 [3]x wall thickness size
-	OPTS:
-		- once size is found for one location, nearby points can narrow search area:
-			- first 3-10, last 3-10, window around limit percent
----- any 3D differences ?
+
+- maybe use the 'final' normal angle for the approx ?
+
+- average all of the peaks ?
+
+- select the right-most peak as long as the prominance is at least half of the maximum prominence
 
 
 
 
+x try smoothing x & z separately before ratioing ?
+
+x DECAY OF FALLOFF SHOULD START AT MOST AVERAGE 2~4 closest points --- else a single point will dominate
+
+
+- normal penalty is very noise-creating when normals are not perfect
+
+- covariance matrix ?
+- individual points assessing own neighborhood
+- derivative of 'depth map'
+
+
+ATTEMPTS:
+	- fullness / emptiness of a circle
+		=> not sure how to measure an individual point's 'size' | may bread down for very pointy
+		=> need to not multi-count area intersections = hard
+		=> convex hull wrong
+	- weight circle center points most, stop when growth along normal gets low
+		=> grows always increases ?
+	- keep sigmaN & sigmaR, stop when (worst) ratio is no longer ~1
+		=> very noisy, often not near 1
+	- keep sigmaX, sigmaY, sigmaZ, stop when either ratio is no longer ~1
+		=> very noisy
 
 
 
-`
-=> radius size is only the extent of distance in direction of normal
-	- means a lot more processing [need to re-get kNN / order each time is run]
-=> noisy plot .. need to do some smoothing (averaging filter / poly interpolation)
-
-=> wall thickness is one measurement
-=> wall length -- extent is another []
-
-
-- 'growth x' vs 'growth' y
 
 
 
-- curvature steps:
-	- have initial (noisy) normal estimates at each point
-	- get 'neighborhood' of each point
-	- update each normal to be weighted average of neighborhood
-	- use smoothed normals as base for plane [interpolate based on inverse squared distance]
-	- use polynomial surface with (wider?) neighborhood to interpolate surface
-
-=> want to find 'direction' that minimizes size first
-	- best fit ellipsoid: doesn't tell  WHEN (distance/neighbor) the 'search' should stop
-		- need to work from center of points - not necessarily starting point
-	=> first multi-modal density max/peak
-	-
 
 
 
-=> points in sphere are weighted by their normal DOT the averaged normal
-	=> anything orthogonal or worse (opposite) are not included
-	=> weighted also on orthogonal distance from center?
-	=> what does OPPOSITE/ORTHOGONAL plotting do?
-
-=> NOT GROWING CIRCLE FROM CENTER, GROWING FROM SOURCE POINT ... MAY NEED TO DROP POINTS OUTSIDE RADIUS N DIRECTION
-
-convex hull area / sphere area
-... needs to be statistical tho ... - also not good for splotchy data
-
-
-ALGC - 2D:
-	- input: point needing to project to surface
-	- find 3 NN, initialize circle
-		- repeat:
-			- find k+1 NN
-			- normal = average of all point normals
-			- center = averate of all point locations
-			- project points to 1D normal line
-			- estimate statistical density using (normal dot) & (distance from centerline) weighting
-		- stop when change in sigma (along normal line) reaches minimum
-		==> ONLY KEEP INTER SIGMA OF POINTS IN CENTER ?
-		- window = (1-3) * sigma @ centroid
-		- estimate polygonal surface
-		- project point to surface
-	- REPEAT projection until change in location is minimal
-
-
-
-ALGB:
-	- find obviously planar locations --- sigma ratio > 2-4
-	- calculate local sample radius [1-4 sigma & COM]
-	- propagate outwards
-		- ...
-		- when corners are reached ...
-		- limit ?
-		-
-
-
-- direction of surface normals ~ direction of minimal wall thickness
-	- get closest point
-	- get ~3 NN, estimate normal
-	- sphere = NN size
-	- grow/shrink sphere
-		- estimate COM in direction of normal
-		- estimate sigma in direction of normal
-			=> need to ignore the items on the 'sides' of the sphere and only get growth along centerline
-				- how 'wide' should net be?
-	- at some point the growth in the minimal direction will go slowly
-
-ALG A:
-	- input: search point
-		- find closest surface sample point to search point
-		- each points' size = nearest neighbor distance
-		- grow sphere:
-			- find next nearest neighbor to center of sphere
-			- sphere size = maximum distance between interrior points
-			- update sphere center to midpoint of largest diameter points
-			- used volume ratio = sum of all points' volumes / sphere volume
-		- chosen sphere size / location = maximum of volume ratios
-		- normal = rotational average of all normals
-		- surface approx using bivariate polynomial
-
-
-...
 
 
 - SPARSE LOGIC
 	- OPTIMIZE VIEW ORIENTATIONS
 	- PROPAGATE TRACKS TO ADJ VIEWS
 
-- REVISTIT LOGIC OPTIONS ON 2D collision senarios:
+- REVISIT LOGIC OPTIONS ON 2D collision senarios:
 	- with images [pair,triple]
 	- without images [full dense]
 	- e/o: patches
 
 
-- REVISIT SURFACE CURVATURE ESTIMATION
-	=> determining a plane is very bad around a corner
-	- circle/plane?
-		- closest orthogonal point on sphere => direction ?
-	=> use point normals ?
-		- average normals in neighborhood to find plane?
-		- how to define neighborhood?
 
 
-	- SAMPLE COUNT?
-	- PLANE / SIZE ?
-
-	- experiment in 2D
-		=> VISUALIZE APPROXIMATED SURFACE
-	- dynamic way to estimate (minimal/optimum) number of samples to use []
-		- and if have a big range of samples, maybe only need to subsample ? (consistently?)
-
-- plot: - samples vs
-	x eigenvalue ratio
-		- indirect measurement of average: sample distance / plane extent
-	- (max sample radius / (avg or) maximum plane sample distance)
-
-- show curvature circle at various points on curve...
-
-CURVATURE: HOW MANY NEIGHBORS TO USE:
-	- want to use as few points as possible:
-		- surface error is spread over all points -> [more points increases error around point of interest]
-		- less processing overall
-	- # of neighbors will be similar to neighbor [reduce search range]
 
 
 - maybe all the SVD solutions need to be converted to A^-1 * b = 0 ...
