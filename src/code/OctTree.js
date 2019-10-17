@@ -533,7 +533,7 @@ OctTree.Voxel.prototype.objectsInsideSphereSquare = function(arr,center,radSquar
 				var distance = V3D.distanceSquare(center,child.center());
 				rad = Math.sqrt(rad);
 				distance = Math.sqrt(distance);
-				if( distance-rad <= radSquare  ){
+				if( distance-rad <= Math.sqrt(radSquare) ){
 					child.objectsInsideSphereSquare(arr,center,radSquare,toPoint);
 				}
 			}

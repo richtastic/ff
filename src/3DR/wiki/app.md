@@ -382,9 +382,10 @@ https://cloud.google.com/appengine/docs/nodejs/
 => visualize: weights / sigmas => first few values are being selected because of random error -> ratio accidentally higher ...
 
 
+- computer curvature each iteration?
+	- most stable = lowest change in curvature?
 
-- linearDistanceR => some distance from sample center ...
-
+- use geometry to find maximum normal extent?
 
 
 

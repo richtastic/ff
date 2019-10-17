@@ -4506,6 +4506,9 @@ Code.stdDevWeights = function(locations,magnitudes,mean){
 		sig += mag*Math.pow(loc-mean,2);
 		totalWeight += mag;
 	}
+	if(totalWeight<=0){
+		return 0;
+	}
 	return Math.sqrt(sig/totalWeight); // len-1 is typical number
 }
 Code.meanWeights = function(locations,magnitudes){

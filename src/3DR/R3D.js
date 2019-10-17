@@ -34932,13 +34932,50 @@ R3D.surfaceThicknessFromPoint2D = function(location,space, toNormalFxn){ //  // 
 
 var worldScale = 1000.0;
 var worldOffset = new V2D(300,300);
+	
 
+	// tools:
+	var toPointFxn = space.toPoint();
 
 // ...
 
+	// fill in area:
+	var objects = space.toArray();
+	for(var i=0; i<objects.length; ++i){
+		var object = objects[i];
+		var point = toPointFxn(object);
+
+		var nei = space.kNN(point, 2+1); 
+			nei.unshift();
+			nei = nei.map(function(a){return a["point"]});
+		// var cen = Code.averageV2D(nei);
+		var cen = point;
+			nei = nei.map(function(a){return V2D.distance(cen,a)});
+
+		var sig = Code.stdDev(nei,0);
+		// var sig = Code.averageNumbers(nei);
+// console.log(sig);
+// throw "?"/
+		// object["area"] = 1.0/sig;
+		// var d = 1.0/sig;
+		object["area"] = sig*sig;
+		// object["area"] = d*d;
+		// object["area"] = d;
+
+
+		// var two = space.kNN(point, 2);
+		// var A = toPointFxn(two[0]);
+		// var B = toPointFxn(two[1]);
+		// var d = V2D.distance(A,B);
+		// object["area"] = d*d;
+	}
+	// console.log(objects);
+	// throw "?"
+
+
 
 	// nearest neighbors for initial circle
-	var toPointFxn = space.toPoint();
+	
 	var objects = space.kNN(location, 3);
 	var points = [];
 	var normals = [];
@@ -34956,10 +34993,12 @@ var worldOffset = new V2D(300,300);
 	var circleRight = null;
 	var circleRadius = null;
 	// get graph:
-	var maxNeighbors = 100;
+	// var maxNeighbors = 100;
+	var maxNeighbors = 50; // TODO: if error comes back around -> ignore everything after large valley
 	var objects = space.kNN(circleCenter, maxNeighbors);
 	points = [];
 	normals = [];
+	var areas = [];
 var dataSigmaX = [];
 var dataSigmaY = [];
 var dataSigmaZ = [];
@@ -34971,8 +35010,10 @@ var originalCenter = null;
 		var object = objects[i];
 		var point = toPointFxn(object);
 		var normal = toNormalFxn(object);
+		var area = object["area"];
 		points.push(point);
 		normals.push(normal);
+		areas.push(area);
 		if(points.length>2){ // 3+ points // TODO: optimize by weighting by only latest addition
 
 			if(points.length==3){
@@ -34984,11 +35025,13 @@ var originalCenter = null;
 			circleRight = V2D.rotate(circleNormal,Math.PI*0.5);
 				// circleCenter = Code.closestPointPlane2D(originalCenter,circleRight,  circleCenter);
 			circleRadius = V2D.maximumDistance(points,circleCenter);
-
+			// console.log(i+": "+circleRadius+" @ "+circleCenter);
 			// -> TRY CLOSEST TO ORIGINAL POINT
 
 			// moves everywhere
 			// var minCircle2D = Code.minCircle2D(points);
+			// var minCircleRadius = minCircle2D["radius"];
+			// var minCircleCenter = minCircle2D["center"];
 			// circleRadius = minCircle2D["radius"];
 			// circleCenter = minCircle2D["center"];
 			// console.log(minCircle2D);
@@ -35059,10 +35102,7 @@ var originalCenter = null;
 			var nSigma2 = nSigma*nSigma;
 				// var rSigma2_2 = Math.pow(rSigma*0.250, 2); // narrow center
 				var rSigma2_2 = rSigma2;
-			// ..
-
-			// throw "...";
-
+			
 			// get weights:
 			var vxs = [];
 			var vys = [];
@@ -35077,15 +35117,18 @@ var originalCenter = null;
 				//vx = 1.0 * Math.pow(Math.max(dotN,0),0.25) * Math.pow( 1.0 - r, 4); // 2-8 ---- 2=plateau , 8=more peaks
 				var dotN = dotsN[j];
 				var dotR = dotsR[j];
-				var x = xs[j];
-				vx = Math.exp(-Math.pow(x-rMean,2)/rSigma2_2);
-					vx = Math.pow(vx,2);
-				vx = 1.0 * Math.pow(Math.max(dotN,0),0.25) * vx;
+// 				var x = xs[j];
+// 				vx = Math.exp(-Math.pow(x-rMean,2)/rSigma2_2);
+// 					vx = Math.pow(vx,2);
+				
 
 
-// HERE
-				var r = Math.min(Math.max(Math.abs(0.5*x/rSigma2_2),0),1);
-				vx = Math.pow( 1.0 - r, 1);
+// 				// var r = Math.min(Math.max(Math.abs(x/rSigma2_2),0),1);
+// 				var r = Math.min(Math.max(Math.abs(2*x/circleRadius),0),1);
+// 				vx = Math.pow( 1.0 - r, 16);
+
+
+// 				vx = Math.pow(Math.max(dotN,0),0.5) * vx;
 
 				vxs.push(vx);
 				vys.push(vy);
@@ -35164,6 +35207,11 @@ var originalCenter = null;
 			var xMean = Code.meanWeights(xs,vxs);
 			var xSigma = Code.stdDevWeights(xs, vxs, xMean);
 
+if(Code.isNaN(xSigma)){
+	console.log(xs,vxs)
+		throw "?";
+	}
+
 			var yMean = Code.meanWeights(ys,vys);
 			var ySigma = Code.stdDevWeights(ys, vys, yMean);
 			// var density = Code.sum(weights) / (circleRadius);
@@ -35203,11 +35251,29 @@ dataSigmaZ.push(zSigma);
 
 // var xWeights = Code.sum(vxs)/vxs.length;
 			// var data = xSigma;
-			var data = xSigma/zSigma;
-			// var data = xSigma/ySigma; // more noisy?
+			// var data = xSigma/zSigma;
+			var ratio =	(xSigma/ySigma);
+			if(ratio<1){
+				ratio = 1.0/ratio;
+			}
+			var data = 1 - ratio; // more noisy?
 			// var data = xSigma/circleRadius; // inaccurate radius size
 			// var data = xSigma;
 			var data2 = ySigma/zSigma;
+
+
+
+			// var data = zSigma/circleRadius;
+			// var data = zSigma/minCircleRadius;
+			// var data = points.length/(zSigma*zSigma);
+			// var data = points.length/(minCircleRadius*minCircleRadius);
+
+
+			// var totalArea = Code.sum(areas);
+			// var data = totalArea/(circleRadius*circleRadius);
+			// var data = totalArea/(minCircleRadius*minCircleRadius);
+			// var data = totalArea/(zSigma*zSigma);
+
 
 			// var data = ySigma/xSigma;
 			// var data = xSigma/ySigma;
@@ -35240,9 +35306,9 @@ dataSigmaZ.push(zSigma);
 // 95
 // 99
 // 99.9
-// if(points.length==10){
+if(points.length==10){
 // if(points.length==30){
-if(points.length==50){
+// if(points.length==50){
 // if(points.length==80){
 	xSigma = xSigma;
 	ySigma = ySigma;
@@ -35262,11 +35328,11 @@ if(points.length==50){
 	// console.log(circleRadius);
 	for(var p=0; p<points.length; ++p){
 		var pnt = points[p];
-		console.log(pnt+"");
+		// console.log(pnt+"");
 		var vx = vxs[p];
 		// circle:
 		var s = ((vx-minX)/rangeX)*(sizeMax-sizeMin) + sizeMin;
-		console.log(s)
+		// console.log(s)
 		var d = new DO();
 		d.graphics().setLine(1.0,0xFFCC0000);
 		d.graphics().beginPath();
@@ -35334,13 +35400,16 @@ if(points.length==50){
 		}
 	}
 	// pre smooth before division
-	var ds = [];
-	dataSigmaX = Code.filterArrayAverage1D(dataSigmaX, 1);
-	dataSigmaY = Code.filterArrayAverage1D(dataSigmaY, 1);
-	dataSigmaZ = Code.filterArrayAverage1D(dataSigmaZ, 1);
-	// for(var i=0; i<dataSigmaX.length; ++i){
-	// 	datas[i] = dataSigmaX[i]/dataSigmaZ[i];
-	// }
+	// var ds = [];
+	var avg = 1;
+	var avg = 2;
+	dataSigmaX = Code.filterArrayAverage1D(dataSigmaX, avg);
+	dataSigmaY = Code.filterArrayAverage1D(dataSigmaY, avg);
+	dataSigmaZ = Code.filterArrayAverage1D(dataSigmaZ, avg);
+	for(var i=0; i<dataSigmaX.length; ++i){
+		// datas[i] = dataSigmaX[i]/dataSigmaZ[i];
+		// datas[i] = dataSigmaX[i];
+	}
 
 
 
@@ -35353,9 +35422,9 @@ if(points.length==50){
 	// Code.printMatlabArray(datas2,"y");
 
 
-	Code.printMatlabArray(dataSigmaX,"x");
-	Code.printMatlabArray(dataSigmaY,"y");
-	Code.printMatlabArray(dataSigmaZ,"z");
+	// Code.printMatlabArray(dataSigmaX,"x");
+	// Code.printMatlabArray(dataSigmaY,"y");
+	// Code.printMatlabArray(dataSigmaZ,"z");
 	// smooth fxn:
 
 	// find minimum of fxn:
@@ -35379,9 +35448,6 @@ if(points.length==50){
 		GLOBALSTAGE.addChild(d);
 
 
-
-
-	// throw "...y";
 	return {"radius":minCircle["radius"], "center":minCircle["center"], "count":maxIndex, "points":null};
 }
 

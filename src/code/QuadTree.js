@@ -207,7 +207,7 @@ QuadTree.prototype.removeObject = function(obj){
 }
 QuadTree.prototype.objectsInsideCircle = function(center,radius){
 	var arr = [];
-	radius = Math.min(this._root.size().length(),radius);
+	// radius = Math.min(this._root.size().length(),radius);
 	this._root.objectsInsideCircleSquare(arr,center,radius*radius,this._toPoint);
 	return arr;
 }
@@ -683,7 +683,6 @@ QuadTree.Arxel.prototype.objectsInsideCircleSquare = function(arr,center,radSqua
 	if(this._datas){
 		for(var i=0; i<this._datas.length; ++i){
 			var point = toPoint(this._datas[i]);
-			// console.log(this._datas[i],point)
 			var distance = V2D.distanceSquare(center,point);
 			if(distance<=radSquare){
 				arr.push(this._datas[i]);
@@ -697,7 +696,8 @@ QuadTree.Arxel.prototype.objectsInsideCircleSquare = function(arr,center,radSqua
 				var distance = V2D.distanceSquare(center,child.center());
 				rad = Math.sqrt(rad);
 				distance = Math.sqrt(distance);
-				if( distance-rad <= radSquare  ){
+				// if( distance-rad <= radSquare){ // this is extra safe -- why is it bad?
+				if( distance-rad <= Math.sqrt(radSquare) ){
 					child.objectsInsideCircleSquare(arr,center,radSquare,toPoint);
 				}
 			}
