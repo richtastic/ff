@@ -384,35 +384,31 @@ https://cloud.google.com/appengine/docs/nodejs/
 
 
 
+- divide circle in half along sample center
+- gather samples in upper & lower (separately) to find sigmaNUp & sigmaNDn
+- for smaller sigmaR Up/Dn:
+	- get samples in upper & lower
+- if ratio of sigmas is >2 -> size = sigmaUp & center = com of up
+
+- WHICH SIDE IS WHICH ? [does it matter?]
+	- side with more points @ center
+
+- OPTIMUM LOC:?
+	- at some point the sigmas start to be different
+	- at some point the counts start to be different
+
+=> need to allow for errors : need statistical way to decide when sides are different enough
+	(when is this significant?)
+
+=> need to end operation asap
+	- less processing
+	- more points = new surface features
+
+=> how to ignore opposite-siding normal points ?
 
 
-GEOMETRY ALG1:
-	- spherewide: sigmaR & sigmaN
-	check:
-		- get sigmaR_top & sigmaR_bot inside cylinder 
-
-		- get distribution in cylendar
 
 
-
-GEOMETRY ALGX:
-	- spherewide: sigmaR & sigmaN
-	check:
-		- if sigmaN/sigmaR > 2 & sigmaR is slowing down
-
-
-
-
-
-- divide sizes in half (left/right along normal) -- merging of 2 planes
-	- 3D correlary?: any number of surfaces [cone or edge... ]
-
-
-
-- mass distributions of top & bottom halves of circle:
-	- the corner half should: have smaller sigma & smaller volume & more dense
-	- the hole half should have larger sigma & more sparse
-	- the volume opposite the filled corner should be more empty
 
 
 
