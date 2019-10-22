@@ -35351,7 +35351,7 @@ dataSigmaZ.push(zSigma);
 			datas.push(upCount);
 			datas2.push(dnCount);
 
-			
+
 
 
 			circles.push({"center":circleCenter.copy(),"radius":circleRadius});
@@ -35529,6 +35529,34 @@ if(points.length==20){
 // Code.printMatlabArray(datas,"x");
 	Code.printMatlabArray(datas,"x");
 	Code.printMatlabArray(datas2,"y");
+
+
+
+???
+/*
+process:
+
+
+ (sigmaX/sigmaY) or inverse --
+	- >= 4 ?
+	- go back to most previous value closest to 2 (without going under)
+top / bot numbers:
+	- backtrack to
+
+
+EX:
+	- countTop/countTotal > 50% ?
+	- countBot/countTotal < 25% ?
+
+	- p value -- significance tests - NULL:H0 &   ALTERNATE:H1
+		- alpha : significance level eg 1/10 or 10% or 0.
+		- p value: p > alpha => do not reject | p < alpha => reject
+		=>
+	- z score == units of standard deviation distance from mean
+	- t score ?
+		=> ?
+
+*?
 
 
 	// Code.printMatlabArray(dataSigmaX,"x");

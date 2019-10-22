@@ -385,7 +385,7 @@ https://cloud.google.com/appengine/docs/nodejs/
 
 
 - divide circle in half along sample center
-- gather samples in upper & lower (separately) to find sigmaNUp & sigmaNDn
+- gather samples in upper & lower (separately) to find sigmaUp & sigmaDn
 - for smaller sigmaR Up/Dn:
 	- get samples in upper & lower
 - if ratio of sigmas is >2 -> size = sigmaUp & center = com of up

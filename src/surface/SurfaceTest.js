@@ -53,8 +53,8 @@ SurfaceTest.prototype._refreshDisplay = function(){
 	// var error = 0.0;
 	// var error = 0.01;
 	// var error = 0.05;
-	// var error = 0.10; // ok
-	var error = 0.20; //
+	var error = 0.10; // ok
+	// var error = 0.20; //
 	// var error = 0.25; // bad
 	// var error = 0.5; // impossible
 	// var nerror = Code.radians(0.0);
@@ -402,6 +402,9 @@ if(false){
 var result = R3D.surfaceThicknessFromPoint2D(center,space2D, toNormal2D);
 console.log("result");
 console.log(result);
+
+
+throw "?"
 
 var localRadius = result["radius"];
 var localCenter = result["center"];
