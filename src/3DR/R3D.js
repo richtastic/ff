@@ -35004,6 +35004,8 @@ var dataSigmaY = [];
 var dataSigmaZ = [];
 	var datas = [];
 var datas2 = [];
+var datas3 = [];
+var datas4 = [];
 	var circles = [];
 var originalCenter = null;
 	for(var i=0; i<objects.length; ++i){
@@ -35122,8 +35124,10 @@ var originalCenter = null;
 			var dnSigma = Code.stdDev(dns,dnMean);
 			ups = [];
 			dns = [];
+		var upsOut = [];
+		var dnsOut = [];
 // width depends on mean ....
-			// var minSigma = Math.min(upSigma,dnSigma); // at some point down becomes 9
+			// var minSigma = Math.min(upSigma,dnSigma); // at some point down becomes 90
 			var minSigma = rSigma;
 			// get cylindar
 			for(var j=0; j<points.length; ++j){ // weight points by: distance from center & normal direction
@@ -35138,6 +35142,12 @@ var originalCenter = null;
 						ups.push(point);
 					}else{
 						dns.push(point);
+					}
+				}else{
+					if(distanceN>=0){
+						upsOut.push(point);
+					}else{
+						dnsOut.push(point);
 					}
 				}
 			}
@@ -35348,8 +35358,13 @@ dataSigmaZ.push(zSigma);
 			// datas.push(upSigma);
 			// datas2.push(dnSigma);
 
-			datas.push(upCount);
-			datas2.push(dnCount);
+			// datas.push(upCount);
+			// datas2.push(dnCount);
+
+			datas.push(upCount/points.length);
+			datas2.push(dnCount/points.length);
+			datas3.push(upsOut.length/points.length);
+			datas4.push(dnsOut.length/points.length);
 
 
 
@@ -35484,8 +35499,8 @@ if(points.length==20){
 	// coverage:
 	console.log(dnSigma,upSigma);
 
-	var up = circleNormal.copy().scale(0.5*minCircleRadius).add(minCircleCenter);
-	var dn = circleNormal.copy().scale(-0.5*minCircleRadius).add(minCircleCenter);
+	var up = circleNormal.copy().scale(0.5*minCircleRadius).add(circleCenter);
+	var dn = circleNormal.copy().scale(-0.5*minCircleRadius).add(circleCenter);
 	var d = new DO();
 	d.graphics().setLine(2.0,0xFF009900);
 	d.graphics().beginPath();
@@ -35510,15 +35525,15 @@ if(points.length==20){
 	}
 	// pre smooth before division
 	// var ds = [];
-	var avg = 1;
-	var avg = 2;
-	dataSigmaX = Code.filterArrayAverage1D(dataSigmaX, avg);
-	dataSigmaY = Code.filterArrayAverage1D(dataSigmaY, avg);
-	dataSigmaZ = Code.filterArrayAverage1D(dataSigmaZ, avg);
-	for(var i=0; i<dataSigmaX.length; ++i){
-		// datas[i] = dataSigmaX[i]/dataSigmaZ[i];
-		// datas[i] = dataSigmaX[i];
-	}
+	// var avg = 1;
+	// var avg = 2;
+	// dataSigmaX = Code.filterArrayAverage1D(dataSigmaX, avg);
+	// dataSigmaY = Code.filterArrayAverage1D(dataSigmaY, avg);
+	// dataSigmaZ = Code.filterArrayAverage1D(dataSigmaZ, avg);
+	// for(var i=0; i<dataSigmaX.length; ++i){
+	// 	// datas[i] = dataSigmaX[i]/dataSigmaZ[i];
+	// 	// datas[i] = dataSigmaX[i];
+	// }
 
 
 
@@ -35527,14 +35542,25 @@ if(points.length==20){
 	// datas = avg;
 
 // Code.printMatlabArray(datas,"x");
-	Code.printMatlabArray(datas,"x");
-	Code.printMatlabArray(datas2,"y");
+	Code.printMatlabArray(datas,"x1");
+	Code.printMatlabArray(datas2,"y1");
+	Code.printMatlabArray(datas3,"x2");
+	Code.printMatlabArray(datas4,"y2");
 
 
 
-???
+// ???
 /*
 process:
+
+minCount = 2 x (min number) ~ 2 x 5 ~ 10
+
+upsIn > 25% [50]
+upsOut < 10% [0]
+dnsIn < 25% [10]
+dnsOut > 25 [50]
+
+
 
 
  (sigmaX/sigmaY) or inverse --
@@ -35556,7 +35582,7 @@ EX:
 	- t score ?
 		=> ?
 
-*?
+*/
 
 
 	// Code.printMatlabArray(dataSigmaX,"x");

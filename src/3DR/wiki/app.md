@@ -405,9 +405,17 @@ https://cloud.google.com/appengine/docs/nodejs/
 	- more points = new surface features
 
 => how to ignore opposite-siding normal points ?
+	- side with more interrior points
 
-
-
+REQUIREMENTS:
+	- smoothed vars?
+	- top inside > 25%  [~50%]
+	- top outside < 10% [~0%]
+	- bot inside < 10% [~0%]
+	- bot outside ???
+	- consistent (2-3 samples at least)
+	- 
+...
 
 
 
