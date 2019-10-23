@@ -35002,6 +35002,12 @@ var worldOffset = new V2D(300,300);
 var dataSigmaX = [];
 var dataSigmaY = [];
 var dataSigmaZ = [];
+var dataUpIn = [];
+var dataUpOut = [];
+var dataDnIn = [];
+var dataDnOut = [];
+
+
 	var datas = [];
 var datas2 = [];
 var datas3 = [];
@@ -35122,8 +35128,8 @@ var originalCenter = null;
 			var upSigma = Code.stdDev(ups,upMean);
 			var dnMean = Code.mean(dns);
 			var dnSigma = Code.stdDev(dns,dnMean);
-			ups = [];
-			dns = [];
+		var upsIn = [];
+		var dnsIn = [];
 		var upsOut = [];
 		var dnsOut = [];
 // width depends on mean ....
@@ -35139,9 +35145,9 @@ var originalCenter = null;
 				var distanceN = V2D.dot(circleNormal,cToP);
 				if(Math.abs(distanceR)<minSigma){
 					if(distanceN>=0){
-						ups.push(point);
+						upsIn.push(point);
 					}else{
-						dns.push(point);
+						dnsIn.push(point);
 					}
 				}else{
 					if(distanceN>=0){
@@ -35152,8 +35158,8 @@ var originalCenter = null;
 				}
 			}
 			// HERE
-			var upCount = ups.length;
-			var dnCount = dns.length;
+			// var upCount = ups.length;
+			// var dnCount = dns.length;
 
 			// get weights:
 			var vxs = [];
@@ -35267,12 +35273,11 @@ var originalCenter = null;
 			var zSigma = Code.stdDevWeights(zs, vzs, 0);
 
 			// var xMoment = Code.stdDevWeights(xs, vxs, 0);
-
-
+			//
 dataSigmaX.push(xSigma);
 dataSigmaY.push(ySigma);
 dataSigmaZ.push(zSigma);
-
+			//
 			// var densities.push(density);
 			//var data = xSigma/circleRadius;
 
@@ -35361,13 +35366,16 @@ dataSigmaZ.push(zSigma);
 			// datas.push(upCount);
 			// datas2.push(dnCount);
 
-			datas.push(upCount/points.length);
-			datas2.push(dnCount/points.length);
-			datas3.push(upsOut.length/points.length);
-			datas4.push(dnsOut.length/points.length);
+			// datas.push(upCount/points.length);
+			// datas2.push(dnCount/points.length);
+			// datas3.push(upsOut.length/points.length);
+			// datas4.push(dnsOut.length/points.length);
 
 
-
+			dataUpIn.push(upsIn.length/points.length);
+			dataUpOut.push(upsOut.length/points.length);
+			dataDnIn.push(dnsIn.length/points.length);
+			dataDnOut.push(dnsOut.length/points.length);
 
 			circles.push({"center":circleCenter.copy(),"radius":circleRadius});
 
@@ -35375,8 +35383,9 @@ dataSigmaZ.push(zSigma);
 // 95
 // 99
 // 99.9
+if(false){
 // if(points.length==10){
-if(points.length==20){
+// if(points.length==20){
 // if(points.length==30){
 // if(points.length==50){
 // if(points.length==80){
@@ -35542,10 +35551,10 @@ if(points.length==20){
 	// datas = avg;
 
 // Code.printMatlabArray(datas,"x");
-	Code.printMatlabArray(datas,"x1");
-	Code.printMatlabArray(datas2,"y1");
-	Code.printMatlabArray(datas3,"x2");
-	Code.printMatlabArray(datas4,"y2");
+	// Code.printMatlabArray(datas,"x1");
+	// Code.printMatlabArray(datas2,"y1");
+	// Code.printMatlabArray(datas3,"x2");
+	// Code.printMatlabArray(datas4,"y2");
 
 
 
@@ -35588,8 +35597,54 @@ EX:
 	// Code.printMatlabArray(dataSigmaX,"x");
 	// Code.printMatlabArray(dataSigmaY,"y");
 	// Code.printMatlabArray(dataSigmaZ,"z");
-	// smooth fxn:
 
+	// simulate going thru process
+	var avg = 1;
+	var minimumPlaneRatio = 2.0; // 2-4
+	var backtrackPlaneRatio = 2.0; // 1.5-2.0
+	var minInOutRatio = 1.5; // 2
+	var optimumCircle = null;
+	var optimumIndex = null;
+	for(var i=0; i<circles.length; ++i){
+		var circle = circles[i];
+		var sigmaX = Code.sampleArrayAverage1D(dataSigmaX, i, avg);
+		var sigmaY = Code.sampleArrayAverage1D(dataSigmaY, i, avg);
+		var sigmaZ = Code.sampleArrayAverage1D(dataSigmaZ, i, avg);
+		var sigmaXtoY = sigmaX/sigmaY; // R / N (wider > 1)
+		// console.log("plane: "+sigmaXtoY);
+		if(sigmaXtoY>minimumPlaneRatio){
+			console.log("optimum plane");
+			optimumCircle = circle;
+			optimumIndex = i;
+			// backtrackPlaneRatio
+			// TODO: this should be a higher plane ratio (4) & should backtrack to the nearest previous entry closest to standard ratio (2)
+			break;
+		}
+		var upIn = Code.sampleArrayAverage1D(dataUpIn, i, avg);
+		var upOut = Code.sampleArrayAverage1D(dataUpOut, i, avg);
+		var dnIn = Code.sampleArrayAverage1D(dataDnIn, i, avg);
+		var dnOut = Code.sampleArrayAverage1D(dataDnOut, i, avg);
+		// if(upIn<dnIn){ // flip all
+		// 	var temp;
+		// 	temp = dnIn;
+		// 	dnIn = upIn;
+		// 	upIn = temp;
+		// 	temp = dnOut;
+		// 	dnOut = upOut;
+		// 	upOut = temp;
+		// }
+		var upOdnIn = upIn/dnIn;
+		console.log(" corner: "+upOdnIn);
+		if(upOdnIn>minInOutRatio && upIn>0.333 && upOut < 0.15 && dnIn < 0.25 && dnOut > 0.10){
+			console.log("optimum corner");
+			optimumCircle = circle;
+			optimumIndex = i;
+			// TODO: this circle should be centered on top center & sized ~ half of circle size
+			break;
+		}
+	}
+
+/*
 	// find minimum of fxn:
 	var info = Code.infoArray(datas);
 	console.log(info);
@@ -35609,8 +35664,9 @@ EX:
 		d.graphics().strokeLine();
 		d.matrix().translate(worldOffset.x, worldOffset.y);
 		GLOBALSTAGE.addChild(d);
-
-
+*/
+	var maxIndex = optimumIndex;
+	var minCircle = optimumCircle;
 	return {"radius":minCircle["radius"], "center":minCircle["center"], "count":maxIndex, "points":null};
 }
 

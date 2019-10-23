@@ -51,8 +51,8 @@ SurfaceTest.prototype._refreshDisplay = function(){
 	// var pointCount = 50;
 	var pointCount = 150;
 	// var error = 0.0;
-	var error = 0.01;
-	// var error = 0.05;
+	// var error = 0.01;
+	var error = 0.05;
 	// var error = 0.10; // ok
 	// var error = 0.20; //
 	// var error = 0.25; // bad
@@ -125,9 +125,9 @@ SurfaceTest.prototype._refreshDisplay = function(){
 		// var angle = Code.radians(15);
 		// var angle = Code.radians(30);
 		// var angle = Code.radians(45);
-		// var angle = Code.radians(60);
+		var angle = Code.radians(60);
 		// var angle = Code.radians(90);
-		var angle = Code.radians(120);
+		// var angle = Code.radians(120);
 		// var angle = Code.radians(160);
 		// var angle = Code.radians(180);
 		var offset = Code.radians(20);
@@ -404,7 +404,7 @@ console.log("result");
 console.log(result);
 
 
-throw "?"
+// throw "?"
 
 var localRadius = result["radius"];
 var localCenter = result["center"];

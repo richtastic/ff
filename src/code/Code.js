@@ -1465,6 +1465,21 @@ Code.filterArray = function(a, f, args){
 	}
 	return filtered;
 }
+Code.sampleArrayAverage1D = function(array, index, count){
+	var len = array.length;
+	var minIndex = Math.max(index-count,0);
+	var maxIndex = Math.min(index+count,len-1);
+	var avg = 0;
+	var cnt = 0;
+	for(var i=minIndex; i<=maxIndex; ++i){
+		avg += array[i];
+		cnt += 1;
+	}
+	if(cnt>0){
+		return avg/cnt;
+	}
+	return 0;
+}
 // Array.prototype.insert = function(i, o){ this.splice(i, 0, o); }
 // Code.copyArray(array)
 // Code.copyArray(arrayTo, arrayFrom)
