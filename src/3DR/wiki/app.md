@@ -379,45 +379,8 @@ https://cloud.google.com/appengine/docs/nodejs/
 
 
 
-=> visualize: weights / sigmas => first few values are being selected because of random error -> ratio accidentally higher ...
-
-
-
-
-- divide circle in half along sample center
-- gather samples in upper & lower (separately) to find sigmaUp & sigmaDn
-- for smaller sigmaR Up/Dn:
-	- get samples in upper & lower
-- if ratio of sigmas is >2 -> size = sigmaUp & center = com of up
-
-- WHICH SIDE IS WHICH ? [does it matter?]
-	- side with more points @ center
-
-- OPTIMUM LOC:?
-	- at some point the sigmas start to be different
-	- at some point the counts start to be different
-
-=> need to allow for errors : need statistical way to decide when sides are different enough
-	(when is this significant?)
-
-=> need to end operation asap
-	- less processing
-	- more points = new surface features
-
-=> how to ignore opposite-siding normal points ?
-	- side with more interrior points
-
-REQUIREMENTS:
-	- smoothed vars?
-	- top inside > 25%  [~50%]
-	- top outside < 10% [~0%]
-	- bot inside < 10% [~0%]
-	- bot outside ???
-	- consistent (2-3 samples at least)
-	- 
-...
-
-
+- get example of circular and spherical distribution:
+	- some metric for spread over circle / sphere
 
 
 CIRCULAR / SPHERICAL DISTRIBUTIONS:
@@ -435,80 +398,7 @@ circular distribution:
 		- dispersion = d =  (1 - R_2) / (2*R^2)
 
 
-
-- other metrics of where the mass is distributed
-	- angles / directions to mass
-
-
-MODEL:
-	- surface has thickness error distribution: sigma
-	- some space on interior and exterior (of normal axis) absent of points
-	- closest point grows from some point in interior or edge (not too far outside surface)
-		flat:
-		- sigmaX and sigmaY grow until sigmaX halts at surface thickness
-			=> sigmaX/sigmaY > 2 => stop
-		curve:
-		- sigmaX and sigmaY grow until sigmaX slows
-
-			A) => sigmaX/sigmaY > 2 => stop
-			B)
-		corner:
-		- sigmaX and sigmaY continually grow
-		-
-
-
-- COM will start to shift toward one side of the circle
-
-- computer curvature each iteration?
-	- most stable = lowest change in curvature?
-
-- use geometry to find maximum normal extent?
-
-
-
-- weight the normal by the distance sigma ?
-
-
-
-- maybe use the 'final' normal angle for the approx ?
-
-- average all of the peaks ?
-
-- select the right-most peak as long as the prominance is at least half of the maximum prominence
-
-
-
-
-x try smoothing x & z separately before ratioing ?
-
-x DECAY OF FALLOFF SHOULD START AT MOST AVERAGE 2~4 closest points --- else a single point will dominate
-
-
-- normal penalty is very noise-creating when normals are not perfect
-
-- covariance matrix ?
-- individual points assessing own neighborhood
-- derivative of 'depth map'
-
-
-ATTEMPTS:
-	- fullness / emptiness of a circle
-		=> not sure how to measure an individual point's 'size' | may bread down for very pointy
-		=> need to not multi-count area intersections = hard
-		=> convex hull wrong
-	- weight circle center points most, stop when growth along normal gets low
-		=> grows always increases ?
-	- keep sigmaN & sigmaR, stop when (worst) ratio is no longer ~1
-		=> very noisy, often not near 1
-	- keep sigmaX, sigmaY, sigmaZ, stop when either ratio is no longer ~1
-		=> very noisy
-
-
-
-
-
-
-
+- 3D version of point neighborhood
 
 
 

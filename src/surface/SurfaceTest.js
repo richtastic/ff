@@ -28,23 +28,6 @@ SurfaceTest.prototype.addListeners = function(){
 SurfaceTest.prototype._refreshDisplay = function(){
 	console.log("refresh");
 
-/*
-	var points = [];
-	for(var i=0; i<5; ++i){
-		var x = i;
-		var y = 0.5 + x*0.1 + x*x*0.75 + x*x*x*2;
-		var point = new V2D(x,y);
-		console.log(point+"");
-		points.push(point);
-	}
-	console.log(points);
-	var curve = new UnivariateCurve(3);
-	console.log(curve);
-
-	curve.fromPoints(points);
-
-	throw "..."
-*/
 	// make some surfaces & see how the window affects accuracy:
 
 	var center = new V2D(0,0);
@@ -92,13 +75,15 @@ SurfaceTest.prototype._refreshDisplay = function(){
 	if(false){
 		// var focus = new V2D(0,2);
 		// var focus = new V2D(0,1);
+		// var focus = new V2D(0,0.5);
 		// var focus = new V2D(0,0.25);
-		var focus = new V2D(0,0.5);
+		var focus = new V2D(0,0.15);
 		var focToCen = V2D.sub(center,focus);
 		var radius = focToCen.length();
 		// var totalAngle = Code.radians(45);
 		// var totalAngle = Code.radians(90);
-		var totalAngle = Code.radians(180);
+		// var totalAngle = Code.radians(180);
+		var totalAngle = Code.radians(360);
 		var halfAngle = totalAngle*0.5;
 		var startAngle = V2D.angleDirection(V2D.DIRX,focToCen);
 			startAngle -= halfAngle;
@@ -125,8 +110,8 @@ SurfaceTest.prototype._refreshDisplay = function(){
 		// var angle = Code.radians(15);
 		// var angle = Code.radians(30);
 		// var angle = Code.radians(45);
-		var angle = Code.radians(60);
-		// var angle = Code.radians(90);
+		// var angle = Code.radians(60);
+		var angle = Code.radians(90);
 		// var angle = Code.radians(120);
 		// var angle = Code.radians(160);
 		// var angle = Code.radians(180);
@@ -409,22 +394,18 @@ console.log(result);
 var localRadius = result["radius"];
 var localCenter = result["center"];
 var localCount = result["count"];
+var localNormal = result["normal"];
 
 // console.log(localCount);
 
 // overarching neighborhood:
 
-var neighborhoodSize = localRadius * 4.0; // 2-4 [if correct: 2-3]
+var neighborhoodSize = localRadius * 2.0; // 2-4 [if correct: 1-2]
 // console.log(localCenter, neighborhoodSize)
 
 
 // why is this wrong?
 var objs = space2D.objectsInsideCircle(localCenter, neighborhoodSize);
-
-// var objs = space2D.kNN(localCenter, localCount);
-
-
-
 console.log(objs.length);
 console.log(objs);
 
@@ -434,8 +415,12 @@ localCount = objs.length-1;
 points = [];
 normals = [];
 for(var i=0; i<objs.length; ++i){
-	points.push(objs[i]["point"]);
-	normals.push(objs[i]["normal"]);
+	var nrm = objs[i]["normal"];
+	var pnt = objs[i]["point"];
+	if(V2D.dot(localNormal,nrm)>0){
+		points.push(pnt);
+		normals.push(nrm);
+	}
 }
 maxCount = objs.length;
 
