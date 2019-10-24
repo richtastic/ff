@@ -383,12 +383,17 @@ https://cloud.google.com/appengine/docs/nodejs/
 	- some metric for spread over circle / sphere
 
 
+
+
+
+
+
 CIRCULAR / SPHERICAL DISTRIBUTIONS:
 	- COM ANGLE/DIR [could be different from normal]
 	- SIGMA == angle distance from COM
 
 
-circular distribution:
+circular distribution: [circular, circular normal, mises, ]
 	- mean of circular quantity: = first moment =
 		- z = e^i*theta
 		- m1 = 1/N * SUM z_i
@@ -396,6 +401,28 @@ circular distribution:
 		- variance = V(z) = 1 - R [0 to 1]
 		- stddev = S(z) = ( -2*ln(R) )^1/2
 		- dispersion = d =  (1 - R_2) / (2*R^2)
+		- KAPPA ?
+
+spherical distribution: [mises-fisher, Directional statistics, wrapped normal, kent dist, elliptical dist, ]
+	-
+	- confidence cone?
+
+	https://en.wikipedia.org/wiki/Von_Mises%E2%80%93Fisher_distribution
+	http://pascal.upf.edu/am/dades/h-s-mva-book/mvahtmlnode42.html
+	https://freakonometrics.hypotheses.org/files/2015/11/distribution_workshop.pdf
+	http://www2.compute.dtu.dk/~sohau/papers/fusion2018/paper.pdf
+	https://en.wikipedia.org/wiki/Kent_distribution
+	https://alexsingleton.files.wordpress.com/2014/09/25-directional-statistics.pdf
+	http://suvrit.de/papers/sra_dirchap.pdf
+	https://pdfs.semanticscholar.org/bdae/bf35908d4ce3a37d90d8fea26dc8a396c2d0.pdf
+	http://palaeo.spb.ru/pmlibrary/pmbooks/mardia&jupp_2000.pdf
+	http://library.sadjad.ac.ir/opac/temp/19108.pdf
+	https://core.ac.uk/download/pdf/12009314.pdf
+
+
+	- 
+	...
+
 
 
 - 3D version of point neighborhood
