@@ -339,7 +339,7 @@ Stereopsis.World.prototype.transformsWithOverlap = function(sigma){ // pick the 
 		}
 		counts.filter(filterMinimumFxn);
 		var max = Code.max(counts);
-		var sig = Code.stdDevWeights(counts,max);
+		var sig = Code.stdDev(counts,max);
 		var limit = max - sig*sigma;
 		for(var j=0; j<viewTransforms.length; ++j){
 			var transform = viewTransforms[j];
@@ -352,7 +352,6 @@ Stereopsis.World.prototype.transformsWithOverlap = function(sigma){ // pick the 
 	// console.log( Code.keys(markedTransformIDs).length ,"of", world.toTransformArray().length );
 	var markedTransforms = [];
 	var transforms = world.toTransformArray();
-	// console.log(transforms)
 	for(var i=0; i<transforms.length; ++i){
 		var transform = transforms[i];
 		if(markedTransformIDs[transform.id()+""]===1){
@@ -6239,6 +6238,102 @@ var OFFY = 10;
 	}
 	return null;
 }
+
+
+
+
+
+
+
+
+
+
+
+// ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+// refine view positions (therefore points)
+// project good tracks to possible new views
+// drop poor track matches
+Stereopsis.World.prototype.solveSparseTracks = function(viewsToOptimize, completeFxn, completeContext){ // TODO: MAKE ASYNC
+	viewsToOptimize = viewsToOptimize!==undefined ? viewsToOptimize : null;
+	console.log("solveSparseTracks");
+	var world = this;
+	// var totalIter = 1;
+	// var totalIter = 2;
+	var totalIter = 3;
+	// TODO: keep track of camera/view error progress & stop early if error gets low
+	for(var iter=0; iter<totalIter; ++iter){
+		console.log("ITERATION: "+iter+" ............ "+" / "+totalIter);
+		world.averagePoints3DFromMatches();
+		world.patchInitBasicSphere(true);
+		world.relativeFFromSamples();
+
+		// find new point3D spread
+		console.log("probe3D");
+		world.probe3D();
+		// update patches
+		// world.generateMatchAffineFromPatches();
+		var ps3D = world.toPointArray();
+		for(var p=0; p<ps3D.length; ++p){
+			var p3D = ps3D[p];
+			world.generateMatchAffineFromPatches(p3D);
+		}
+		world.printErrorsDebugMatchCount();
+		world.estimate3DErrors(true);
+
+		// update view locations
+		// world.refineSelectCameraAbsoluteOrientation([world.viewFromID(5)], null, 100);
+		// world.refineSelectCameraAbsoluteOrientation(pairWorldViews, null, 100);
+		world.refineCameraAbsoluteOrientation(viewsToOptimize, 1000); // all at once ?
+		world.copyRelativeTransformsFromAbsolute();
+		
+		// re-estimate matches & points3D &
+		world.estimate3DErrors(true);
+		world.averagePoints3DFromMatches();
+		world.refinePoint3DAbsoluteLocation();
+		world.patchInitBasicSphere(true);
+		world.relativeFFromSamples();
+
+		// drop worst
+		console.log("FILTER");
+		world.filterLocal3D(4.0); // points far away from local sphere / plane
+
+		world.filterPairwiseSphere3D(3.0); // patch intersections
+		world.printPoint3DTrackCount();
+		world.dropNegative3D();
+		//										R F N S
+		// world.filterGlobalMatches(false, 0, 3.0,3.0,3.0,3.0, false);
+		// world.filterGlobalMatches(false, 0, 2.0,2.0,2.0,2.0, false);
+		world.filterGlobalMatches(false, 0, 2.0,4.0,2.5,2.5, false); // 95% - 99.7% - 99% - 99%
+		
+		world.printPoint3DTrackCount();
+		// world.filterMatchGroups();
+		// this.filterSphere3D(2.0);
+
+		// point changes => new errors
+		world.estimate3DErrors(true);
+		}
+
+		// TODO: PATCHES LIKELY NEED UPDATING: LOWER ERROR + DRIFT
+		world.printPoint3DTrackCount();
+
+		// 
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

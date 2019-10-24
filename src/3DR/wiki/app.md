@@ -379,10 +379,7 @@ https://cloud.google.com/appengine/docs/nodejs/
 
 
 
-- get example of circular and spherical distribution:
-	- some metric for spread over circle / sphere
-
-
+- look at physics for examples of 3D mass distribution / rotational moments
 
 
 
@@ -424,15 +421,14 @@ spherical distribution: [mises-fisher, Directional statistics, wrapped normal, k
 	...
 
 
+- check 2d & 3d angle COM via complex number adding
+=> wrong ... why?
+
+
 
 - 3D version of point neighborhood
 
 
-
-
-- SPARSE LOGIC
-	- OPTIMIZE VIEW ORIENTATIONS
-	- PROPAGATE TRACKS TO ADJ VIEWS
 
 - REVISIT LOGIC OPTIONS ON 2D collision senarios:
 	- with images [pair,triple]
@@ -449,7 +445,14 @@ spherical distribution: [mises-fisher, Directional statistics, wrapped normal, k
 
 
 
-- DENSE LOGIC
+- DENSE LOGIC:
+	- loading pairs again?
+		- where do points come from --- original grouping may not exist? be poor?
+		- are final tracks added anywhere?
+
+	- load small groups?
+		- only update/add pair points in a single pair?
+	- 
 
 
 

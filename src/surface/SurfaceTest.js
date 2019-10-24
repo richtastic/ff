@@ -11,7 +11,8 @@ SurfaceTest.prototype.handleLoaded = function(){
 	this._stage.addChild(this._root);
 // this._root.matrix().translate(100,400);
 	this.addListeners();
-	this._refreshDisplay();
+	// this._refreshDisplay();
+	this._testA();
 }
 SurfaceTest.prototype.addListeners = function(){
 	// this._canvas.addFunction(Canvas.EVENT_WINDOW_RESIZE,this.handleCanvasResizeFxn,this);
@@ -24,6 +25,24 @@ SurfaceTest.prototype.addListeners = function(){
 	this._keyboard.addListeners();
 	this._stage.start();
 	GLOBALSTAGE = this._stage;
+}
+SurfaceTest.prototype._testA = function(){
+	var angles = [10,20,30,40,80,90];
+	var vectors = [];
+	for(var i=0; i<angles.length; ++i){
+		var angle = angles[i];
+			angle = Code.radians(angle);
+			var v = new V2D(1,0);
+			v.rotate(angle);
+			vectors.push(v);
+	}
+	console.log(vectors);
+	var ang = Code.averageNumbers(angles);
+	console.log(ang+"");
+	var avg1 = Code.averageAngleVector2D(vectors);
+	var avg2 = Code.averageAngleVector2D_2(vectors);
+	console.log(avg1+"");
+	console.log(avg2+"");
 }
 SurfaceTest.prototype._refreshDisplay = function(){
 	console.log("refresh");

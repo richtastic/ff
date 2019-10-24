@@ -7265,14 +7265,12 @@ if(!this.sparseDone()){ // load groups of views at a time (primary pair + aux vi
 	this.iterateSparseTracks();
 	return;
 }
-throw "task dense";
+// throw "task dense";
 if(!this.denseDone()){ // loads groups of views & optimizes single dense pair - ??? all dense matches using updated camera positions & saves into PAIR/dense.yaml
 	console.log("dense not done");
 	this.iterateDenseTracks();
 	return;
 }
-
-// throw "task ABS 2?"
 
 throw "task BA";
 if(!this.pointsDone()){ // iteritive bundle adjust -- all points in single file
@@ -9499,6 +9497,7 @@ App3DR.ProjectManager.prototype.iterateDenseTracks = function(){
 }
 App3DR.ProjectManager.prototype._iterateDenseTracksEnd = function(object, data){ // all pair's dense points are loaded
 console.log("_iterateDenseTracksEnd");
+throw "?";
 	var project = this;
 	var str = Code.binaryToString(data);
 	var yaml = YAML.parse(str);
@@ -9826,6 +9825,11 @@ throw "DENSE AT END";
 		// TODO: AVERAGING ... ?
 		*/
 
+
+
+
+console.log(world);
+throw "?"
 		var worldViewA = world.viewFromData(viewAID);
 		var worldViewB = world.viewFromData(viewBID);
 		var transformAB = world.transformFromViews(worldViewA,worldViewB);
@@ -9927,7 +9931,7 @@ App3DR.ProjectManager.prototype._iterateSparseTracksStart = function(){ // keep 
 	var topPair = orderedPairs[0];
 	var isDone = false;
 // TODO: ADD BACK LIMITS:
-	/*
+	
 	var topError = topPair["deltaErrorR"];
 	if(topError!==null){
 		isDone = topError < minimumDeltaError;
@@ -9936,7 +9940,7 @@ App3DR.ProjectManager.prototype._iterateSparseTracksStart = function(){ // keep 
 	if(sparseIterations>maxSparseIterations){
 		isDone = true;
 	}
-	*/
+	
 // isDone = true;
 
 console.log("isDone: "+isDone);
@@ -10017,6 +10021,7 @@ if(!isDone){
 		// var points3D = this._embedMatchPoints(world, sparseData, sparseViewLookupIndex);
 		this._embedTrackPoints(world, sparseData, sparseViewLookupIndex);
 		var points3D = world.toPointArray();
+console.log("optimizing for views: "+viewAIndex+" & "+viewBIndex);
 		var viewA = world.viewFromData(viewAIndex);
 		var viewB = world.viewFromData(viewBIndex);
 		var pairWorldViews = [viewA,viewB];
@@ -10060,7 +10065,7 @@ if(!isDone){
 			denseData["pairs"] = pairs;
 			denseData["currentPair"] = -1;
 			console.log(denseData);
-throw "about to save done";
+// throw "about to save done";
 			// SAVE PROJECT FILE
 			var fxnSavedProject = function(){
 				console.log("fxnSavedProject");
@@ -10090,97 +10095,9 @@ throw "about to save done";
 		var errorRStart = transform.rMean() + transform.rSigma();
 		var errorFStart = transform.fMean() + transform.fSigma();
 
-		console.log("errors update");
-		// var totalIter = 1;
-		var totalIter = 2;
-		for(var iter=0; iter<totalIter; ++iter){
-	console.log("ITERATION: "+iter+" ............ "+" / "+totalIter);
+		// TODO: MAKE ASYNC
+		world.solveSparseTracks(pairWorldViews, null, null);
 
-
-console.log("need to revisit logic");
-
-// A - ransac view pair
-// B - propagate track points
-
-			world.averagePoints3DFromMatches();
-			world.patchInitBasicSphere(true);
-// world.printMatchStemPlots();
-// throw "...";
-			world.relativeFFromSamples();
-
-			// find new point3D spread
-			console.log("probe3D");
-			world.probe3D();
-			// update patches ... ?
-			// world.generateMatchAffineFromPatches();
-			var ps3D = world.toPointArray();
-			for(var p=0; p<ps3D.length; ++p){
-				var p3D = ps3D[p];
-				world.generateMatchAffineFromPatches(p3D);
-			}
-			world.printErrorsDebugMatchCount();
-			world.estimate3DErrors(true); // spread error ..... for new matches ...
-
-			// update view locations
-// world.refineSelectCameraAbsoluteOrientation([world.viewFromID(5)], null, 100);
-			// world.refineSelectCameraAbsoluteOrientation(pairWorldViews, null, 1000);
-			// world.refineSelectCameraAbsoluteOrientation(pairWorldViews, null, 100);
-			world.refineCameraAbsoluteOrientation(null, 1000); // lots
-			world.copyRelativeTransformsFromAbsolute(); // duh
-
-
-			world.estimate3DErrors(true);
-
-			// re-estimate matches & points3D &
-			world.averagePoints3DFromMatches();
-			world.refinePoint3DAbsoluteLocation();
-			world.patchInitBasicSphere(true);
-			world.relativeFFromSamples();
-
-
-			// drop worst
-			console.log("FILTER");
-			world.filterLocal3D(4.0); // points far away from local sphere / plane
-
-			world.filterPairwiseSphere3D(3.0); // patch intersections
-			world.printPoint3DTrackCount();
-			world.dropNegative3D();
-			// world.filterGlobalMatches(false, 0, 3.0,3.0,3.0,3.0, false);
-			// world.filterGlobalMatches(false, 0, 2.0,2.0,2.0,2.0, false);
-			world.filterGlobalMatches(false, 0, 2.0,4.0,2.5,2.5, false); // 95% - 99.7% - 99% - 99%
-			// 1.0 = 68%
-			// 1.5 = 86%
-			// 2.0 = 95%
-			// 3.0 = 99%
-			// 4.0 = 99.9%
-
-			// ...
-
-			world.printPoint3DTrackCount();
-			// world.filterMatchGroups();
-			// this.filterSphere3D(2.0);
-
-			// point changes => new errors
-			world.estimate3DErrors(true);
-
-/*
-			// update views from liklihoods
-			console.log("GRAPH UPDATE");
-			world.copyRelativeTransformsFromAbsolute(); // already should be done ????
-			world.absoluteOrientationGraphSolve(); // set absolute views
-			world.copyRelativeTransformsFromAbsolute(); // update transforms
-			world.relativeFFromSamples();
-			world.estimate3DErrors(true); // re-estimate match.estimate3D
-			world.averagePoints3DFromMatches(); // re-estimate point3D location
-			world.patchInitBasicSphere(true); // restimate point3D patch
-			world.estimate3DErrors(true); // update errors ?????
-*/
-		}
-
-		// TODO: PATCHES LIKELY NEED UPDATING: LOWER ERROR + DRIFT
-		world.printPoint3DTrackCount();
-
-// throw "about to save";
 		// update points
 		var sparsePoints = project._getGraphPointsFromWorld(world, sparseViewLookupIndexIndex, false);
 		sparseData["points"] = sparsePoints;
@@ -10194,10 +10111,7 @@ console.log("need to revisit logic");
 // check it out
 // var str = world.toYAMLString();
 // console.log(str);
-
-
-throw "still testing";
-
+	
 		// update views
 		sparseViews = project._updateGraphViewsFromWorld(world, sparseViews, sparseCameras);
 		sparseData["views"] = sparseViews;
@@ -10217,16 +10131,15 @@ throw "still testing";
 		topPair["deltaErrorR"] = deltaR;
 		topPair["deltaErrorF"] = deltaF;
 		topPair["count"] = transform.matchCount();
-		// topPair["updated"] = Code.getTimeStampFromMilliseconds();
 		topPair["updated"] = Code.getTimeMilliseconds();
 // if R error goes up ... ????
 if(deltaR<0){
 	console.log("ERROR WENT UP");
 	// throw "?";
 }
+
 		// save
 		console.log(sparseData);
-
 
 		// check to see if should keep entries:
 		var transforms = world.toTransformArray();

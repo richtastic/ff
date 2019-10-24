@@ -2918,7 +2918,7 @@ Code.averageV3D = function(values, percents){
 	}
 	return sum;
 }
-Code.averageAngleVector2D = function(vectors, percents){ // vectors assumed nonzero
+Code.averageAngleVector2D = function(vectors, percents){
 	if(!vectors){
 		return null;
 	}
@@ -2946,6 +2946,31 @@ Code.averageAngleVector2D = function(vectors, percents){ // vectors assumed nonz
 		total.norm(); // numerical error keep at 1.0
 	}
 	return total;
+
+}
+Code.averageAngleVector2D_2 = function(vectors, percents){ // vectors assumed nonzero
+	if(!vectors){
+		return null;
+	}
+	var count = vectors.length;
+	if(count==0){
+		return null;
+	}
+	var percent = 1.0/count;
+	if(percents){
+		percent = percents[0];
+	}
+	var sumPercent = percent;
+	var avg = new V2D();
+	for(var i=0; i<vectors.length; ++i){
+		var vector = vectors[i];
+		if(percents){
+			percent = percents[i];
+		}
+		avg.add(vector.x*percent, vector.y*percent);
+	}
+	// avg.norm();
+	return avg;
 }
 
 
