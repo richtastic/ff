@@ -421,12 +421,6 @@ spherical distribution: [mises-fisher, Directional statistics, wrapped normal, k
 	...
 
 
-- check 2d & 3d angle COM via complex number adding
-=> wrong ... why?
-
-
-
-- 3D version of point neighborhood
 
 
 
@@ -440,11 +434,6 @@ spherical distribution: [mises-fisher, Directional statistics, wrapped normal, k
 
 
 
-- maybe all the SVD solutions need to be converted to A^-1 * b = 0 ...
-
-
-
-
 - DENSE LOGIC:
 	- loading pairs again?
 		- where do points come from --- original grouping may not exist? be poor?
@@ -453,6 +442,66 @@ spherical distribution: [mises-fisher, Directional statistics, wrapped normal, k
 	- load small groups?
 		- only update/add pair points in a single pair?
 	- 
+
+	=> START FROM SCRATCH?
+		- have well defined F (angle) & R (projective / sizing)
+		- find corners/features
+			- in A: angle = 0
+			- in B: angle = F-line ????
+		- limit search by:
+			- error window along F line
+		- check match:
+			- get 3D predicted point
+			- get projection/affine (relative angle / size)
+				-- unit sphere @ 3D point gives relative size
+				-- unit 'up' gives relative angle 
+			- extract expected projection from image B
+			- compare affine-extracted patch
+
+
+		- once best matches are found, relative R can be updated using best inliers (25-50%)
+
+		- LOOP:
+			- 2D probing
+			- error updating
+			- dropping worst R / F / N
+			- R / F updates
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+- check 2d & 3d angle COM via complex number adding
+=> wrong ... why?
+
+
+
+- 3D version of point neighborhood
+
+
+
+
+
+
+- maybe all the SVD solutions need to be converted to A^-1 * b = 0 ...
+
+
+
+
+
 
 
 
