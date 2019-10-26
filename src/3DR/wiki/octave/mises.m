@@ -52,6 +52,9 @@ d
 
 
 
+
+
+
 % wrong
 degrees = [10,20,30,40,80,90];
 count = size(samples,2);
@@ -68,6 +71,35 @@ meanAngle
 
 
 % SPHERICAL
+
+
+average =  45
+meanAngle =  44.324
+
+
+
+
+
+degrees = [10,20,30,40,80,90];
+N = size(degrees,2);
+average = (1/N) * sum(degrees);
+radians = degrees * (pi/180);
+samples = e.^(j*radians);
+mean = (1/N) * sum(samples);
+
+meanAngle = atan2(imag(mean),real(mean));
+meanAngle = meanAngle * (180/pi);
+
+average % = 45
+meanAngle % = 44.324
+
+
+
+
+
+
+
+
 
 
 

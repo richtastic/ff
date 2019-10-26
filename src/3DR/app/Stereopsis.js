@@ -5000,6 +5000,39 @@ if(doRelaxed){
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 Stereopsis.World.prototype.solveDensePair = function(){ // pairwise
+	// use R abs positions to get good initial points + iterate on expanding confident points
+	/*
+	- get corners in A & B
+	- (dumb) features in A & B = some double-cell size area of a corner -- don't care about orientation
+	- for images A & B: [FWD & BAK processess ???]
+		- for each feature in A:
+			- filter putative Bs:
+				- limit search region to F-line in B [10%]
+				- top unoriented average color [50%]
+				- top unoriented histogram [50%]
+				=> .1 * .5 * .5 = ~ 2%
+				- from pts A & B + R => get 3D position P & dir UP & dir RI
+				- get affine approx A->B / B->A from projected pts
+				- get oriented patch (a) -> b
+				- top oriented NCC / SAD [50%]
+				- top COLOR - SIFT [50%]
+				- top GRAD - SIFT [50%]
+				- top RIFT
+	- pick matching A-B with good scores
+	- drop worst R outliers
+	=> seed points [1-10% of image]
+	- iterate expansion & error reduction
+		- expand cells: 2D probing nearby, only add if within error ~2 sigma
+		- update camera view orientations
+		- update error metrics
+		- drop points based on R / F / N / S
+	
+
+	notes:
+	- points with large distance differences between views A & B may have large differences in projected patch area
+		- get oriented 2D patches: a & b [avg projected size ~ cell]
+
+	*/ 
 	console.log("solveDensePair");
 	var world = this;
 
