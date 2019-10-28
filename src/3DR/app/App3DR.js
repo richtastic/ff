@@ -9345,7 +9345,6 @@ console.log(worldViews);
 		lookupViewFromIndex[i] = v;
 	}
 
-
 	var dataPoints = data["points"];
 	console.log(dataPoints);
 	project._embedTrackPoints(world, dataPoints, lookupViewFromIndex); // TODO: THIS DOES NOT NEED INTERSECTION CHECKING
@@ -9617,6 +9616,7 @@ throw "DENSE AT END";
 		var context = project;
 		for(var i=0; i<loadPairFiles.length; ++i){
 			var path = loadPairFiles[i];
+console.log("GETTING PATH ?");
 			this.addOperation("GET", {"path":path}, callback, context, object);
 		}
 		return;
@@ -9687,12 +9687,14 @@ throw "DENSE AT END";
 				pairTransforms.push(transforms[i]);
 			}
 		}
-		//
+console.log("HERE?");
+console.log(pairViews,pairImages,pairTransforms)
 		var worldViews = App3DR.ProjectManager.addViewsToWorld(world, pairViews, pairImages, pairTransforms);
 		var denseViewLookupViewFromID = {};
 		var denseViewLookupViewFromIndex = {};
 		var denseViewLookupIndexFromID = {};
 		//
+console.log("whats so long ?");
 		for(var i=0; i<worldViews.length; ++i){
 			var v = worldViews[i];
 			denseViewLookupViewFromID[v.data()] = v;
@@ -9826,10 +9828,10 @@ throw "DENSE AT END";
 		*/
 
 
-
+console.log("HERE 2?");
 
 console.log(world);
-throw "?"
+
 		var worldViewA = world.viewFromData(viewAID);
 		var worldViewB = world.viewFromData(viewBID);
 		var transformAB = world.transformFromViews(worldViewA,worldViewB);
@@ -12035,9 +12037,11 @@ App3DR.ProjectManager.addCamerasToWorld = function(world, cameras){
 		// camera.temp(c);
 		WORLDCAMS.push(c);
 	}
+console.log("done addCamerasToWorld");
 	return WORLDCAMS;
 }
 App3DR.ProjectManager.addViewsToWorld = function(world, views, images, transforms){
+console.log("addViewsToWorld");
 	var WORLDVIEWS = [];
 	var cameras = world.toCameraArray();
 	var cameraLookup = {};
@@ -12072,6 +12076,7 @@ App3DR.ProjectManager.addViewsToWorld = function(world, views, images, transform
 		var v = world.addView(null,cam);
 		v.absoluteTransform(transform);
 		if(image){
+			console.log(" ... image "+i);
 			if(Code.isa(image, V2D)){
 				v.size(image);
 			}else{

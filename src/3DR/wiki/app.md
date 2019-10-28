@@ -379,9 +379,15 @@ https://cloud.google.com/appengine/docs/nodejs/
 
 
 
+- why is zoom in logic off: ImageMatScaled
+	- scale is inverse
+	- window seems off by ~pixel
+
+
+
 - look at physics for examples of 3D mass distribution / rotational moments
 
-
+- objectProgressiveR3D was changed -- blind matching needs to be rechecked
 
 
 
@@ -431,6 +437,11 @@ spherical distribution: [mises-fisher, Directional statistics, wrapped normal, k
 
 
 
+	=> SCENARIOS:
+		- pairwise (image)
+		- combining tracks? (images?)
+		- groups (some images)
+		- full dense (no images)
 
 
 
@@ -438,6 +449,10 @@ spherical distribution: [mises-fisher, Directional statistics, wrapped normal, k
 	- loading pairs again?
 		- where do points come from --- original grouping may not exist? be poor?
 		- are final tracks added anywhere?
+
+
+- CAN FIX ONE CAMERA TO OPTIMIZE LOCALIZATION OPTIMIZING 
+
 
 	- load small groups?
 		- only update/add pair points in a single pair?

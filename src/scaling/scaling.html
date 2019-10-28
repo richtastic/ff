@@ -1,0 +1,23 @@
+<html>
+<head>
+<title>ScalingTest</title>
+<script src="../code/FF.js"></script>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<script type="text/javascript">
+function pageLoadedFxn(){
+	var ff = new FF("../code/",defaultClassesLoadedFxn,defaultClassesProgressFxn);
+}
+function defaultClassesProgressFxn(o){}
+function defaultClassesLoadedFxn(){
+	scriptLoader = new ScriptLoader("./",["../3DR/R3D.js","ScalingTest.js"],this,customClassesLoadedFxn,customClassesProgressFxn);
+	scriptLoader.load();
+}
+function customClassesProgressFxn(o){}
+function customClassesLoadedFxn(){
+	var scaling = new ScalingTest();
+}
+</script>
+</head>
+<body onload="pageLoadedFxn();" style="border:0px;margin:0px;border:0px;">
+</body>
+</html>

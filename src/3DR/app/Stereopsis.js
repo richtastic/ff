@@ -5002,6 +5002,10 @@ if(doRelaxed){
 Stereopsis.World.prototype.solveDensePair = function(){ // pairwise
 	// use R abs positions to get good initial points + iterate on expanding confident points
 	/*
+	
+	inputs: image A & image B & view A orientation & view B orientation
+
+
 	- get corners in A & B
 	- (dumb) features in A & B = some double-cell size area of a corner -- don't care about orientation
 	- for images A & B: [FWD & BAK processess ???]
@@ -5035,6 +5039,72 @@ Stereopsis.World.prototype.solveDensePair = function(){ // pairwise
 	*/ 
 	console.log("solveDensePair");
 	var world = this;
+
+
+
+
+	// initial setup
+	var viewSizePercent = 0.05; // 45 -> 23 -> 11 -> 5 (3?)
+	var minViewCellSize = 5;
+	var viewGridSizePercent = 0.02;
+	var maxFSamples = 500;
+
+	// create seed points:
+	var transforms = this.toTransformArray();
+	var limitsR = [];
+	var limitsF = [];
+	for(var i=0; i<transforms.length; ++i){
+		var transform = transforms[i];
+		transform.copyRelativeFromAbsolute();
+		// world.copyRelativeTransformsFromAbsolute();
+		var viewA = transform.viewA();
+		var viewB = transform.viewB();
+		var relativeAB = transform.R(viewA,viewB);
+		var errorR = transform.rMean() + transform.rSigma();
+		var views = [viewA,viewB];
+		var images = [];
+		var sizes = [];
+		var Ks = [];
+		for(var j=0; j<views.length; ++j){
+			var view = views[j];
+			var K = view.K();
+			var image = view.image();
+			var gridSize = view.sizeFromPercent(viewGridSizePercent);
+			console.log("gridSize: "+gridSize);
+			sizes.push(gridSize);
+			images.push(image);
+			Ks.push(K);
+
+		} //
+//
+
+//
+
+// 
+console.log("errorR IS IN TERMS OF SEARCHED SIZE -- NOT NECESSARILY THIS SIZE ?");
+console.log("ERR: "+errorR);
+errorR *= 2;
+// 
+		// get corners
+		// keep only peak corners within grid size distance
+		console.log(transform);
+		var errorPixels = Math.max(errorR,1.0);
+		console.log("ERROR: "+errorR+" | "+errorPixels);
+		var matches = R3D.searchMatchPoints3D(images, sizes, relativeAB, Ks, errorPixels);
+		console.log(matches);
+
+
+
+/*
+	- pick matching A-B with good scores
+	- drop worst R outliers
+*/
+
+	}
+
+
+	throw "here"
+console.log("older stuff after here");
 
 	// initial setup
 	var viewSizePercent = 0.05; // 45 -> 23 -> 11 -> 5 (3?)

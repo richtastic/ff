@@ -726,16 +726,18 @@ QuadTree.Arxel.prototype.objectsInsideRect = function(arr,min,max,toPoint){
 
 QuadTree.Arxel.prototype.objectsInsideRay = function(arr,org,dir,rad,isInfinite,toPoint){
 	if(this._datas){
-		for(var i=0; i<this._datas.length; ++i){
-			var p = toPoint(this._datas[i]);
+		var datas = this._datas;
+		var len = datas.length;
+		for(var i=0; i<len; ++i){
+			var p = toPoint(datas[i]);
 			var d = null;
 			if(isInfinite){
 				d = Code.distancePointRay2D(org,dir,p);
 			}else{
 				d = Code.distancePointRayFinite2D(org,dir,p);
 			}
-			if(d<rad){
-				arr.push(this._datas[i]);
+			if(d<=rad){
+				arr.push(datas[i]);
 			}
 		}
 	}else if(this._children){

@@ -7931,11 +7931,16 @@ Code.closestPointLine2D = function(org,dir, point){ // infinite ray and point
 	var t = (V2D.dot(dir,point)-V2D.dot(org,dir))/bot;
 	return new V2D(org.x+t*dir.x,org.y+t*dir.y);
 }
-Code.distancePointRay2D = function(org,dir, point){ // point and RAY
-	var p = Code.closestPointLine2D(org,dir, point);
-	return V2D.distance(point,p);
+Code.distancePointRay2D = function(org,dir, point){ // point and INFINITE RAY
+	var dLen = dir.length();
+	var p = V2D.sub(point,org);
+	var dot = V2D.dot(p,dir)/dLen;
+	var q = new V2D(dot*dir.x,dot*dir.y);
+	return V2D.distance(q,p);
+	// var p = Code.closestPointLine2D(org,dir, point);
+	// return V2D.distance(point,p);
 }
-// Code.distancePointLine2D_ = function(a,b, point){ // point and RAY
+// Code.distancePointLine2D = function(a,b, point){ // point and RAY
 // 	var dir = V2D.sub(b,a);
 // 	return Code.distancePointRay2D(a,dir, point);
 // }

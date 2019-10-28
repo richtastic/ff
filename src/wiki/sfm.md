@@ -483,7 +483,8 @@ iteratively solved
         - reduce errors on existing pairs using updated orientation
         - fill out more points in possibly mission sections [use TFT to estimate missing locations | project using known point]
         - create new pairs from previously unmatched relative orientations
-    - USEFUL? Absolute Orientation 2 (better pairwise count & accuracy)
+...
+    - Absolute Orientation 2 (use updated pairwise transforms (lower error) & counts (more points))
         - find improved absolute orientations of views, reducing error, using added & better estimates in view graph
     - Global RANSAC (load all dense points at same time [& views])
         - reduce error of all params at same time (or in randomized bunches)

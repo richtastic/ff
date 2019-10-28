@@ -10408,6 +10408,7 @@ throw "..."
 	Code.timerStart();
 	var objectsA = R3D.generateProgressiveSIFTObjects(featuresA, imageMatrixA);
 	var objectsB = R3D.generateProgressiveSIFTObjects(featuresB, imageMatrixB);
+// throw "feature sizes?";
 	Code.timerStop();
 	var time = Code.timerDifference();
 	console.log("object creation time: "+time);
@@ -15729,9 +15730,11 @@ R3D.searchMatchPoints3D = function(images, cellSizes, relativeAB, Ks, errorPixel
 	var imageB = images[1];
 	var cellA = cellSizes[0];
 	var cellB = cellSizes[1];
-	var errorA = errorPixels[0];
-	var errorB = errorPixels[1];
-	var featureScale = 2.0;
+	// var errorA = errorPixels[0];
+	// var errorB = errorPixels[1];
+	var imageScalesList = [];
+	var featureScale = 2.0; // multiple of cell size
+	var distanceScale = 0.5; // local maximal suppression
 	var cameraA = new Matrix(4,4).identity();
 	var cameraB = relativeAB;
 	var cameraCenterA = new V3D(0,0,0);
@@ -15750,9 +15753,9 @@ R3D.searchMatchPoints3D = function(images, cellSizes, relativeAB, Ks, errorPixel
 	var Fab = R3D.fundamentalFromPose(relativeAB, Ka,Kb);
 	var Fba = R3D.fundamentalInverse(Fab);
 
-	var nonMaximalPercent = 0.999;
+	var nonMaximalPercent = 1.0; // EERUTHING 0.999;
 	var scalable = 1.0;
-	var limitPixels = 2.0;
+	var limitPixelScale = 2.0;
 	var single = false;
 	var maxCount = 9999;
 	//
@@ -15763,19 +15766,31 @@ R3D.searchMatchPoints3D = function(images, cellSizes, relativeAB, Ks, errorPixel
 		return a["point"];
 	};
 	var spaces = [];
-
 // TODO: GET IMAGE SCALE SEQUENCE
-
 	for(var i=0; i<images.length; ++i){
 		var imageMatrix = images[i];
+		var cellSize = cellSizes[i];
+		var featureSize = cellSize*featureScale;
+// featureSize = 11*16.0;
+console.log(featureSize+" featureSize --- ");
+		//var limitPixels = cellSize*distanceScale;
+		var peakSize = cellSize*distanceScale;
+		var limitPixels = 2.0;
+		// ... 
 		var space = new QuadTree(toPointPoint, new V2D(0,0), new V2D(imageMatrix.width(),imageMatrix.height()));
 		// size for appropriate corner discovery
 		var imageMatrixScaled = imageMatrix.getScaledImage(imageScale);
+		// sizings for 
+		var imageScales = new ImageMatScaled(imageMatrix);
+console.log(imageMatrix);
+console.log(imageScales);
+imageScalesList.push(imageScales);
+// throw "?"
 		var corners = R3D.extractImageCorners(imageMatrixScaled, nonMaximalPercent, maxCount, single, scalable, limitPixels);
-		var cellSize = cellSizes[i];
-		var featureSize = cellSize*featureScale;
-		var peakSize = cellSize*0.5;
-		// console.log(corners.length);
+		corners.sort(function(a,b){
+			return a.t > b.t ? -1 : 1;
+		})
+		// console.log("corner count: "+corners.length);
 		// add points to space limited by largest in radius
 		for(var j=0; j<corners.length; ++j){
 			var c = corners[j];
@@ -15790,14 +15805,16 @@ R3D.searchMatchPoints3D = function(images, cellSizes, relativeAB, Ks, errorPixel
 				space.insertObject(c);
 			}
 		}
-/*
+		// console.log("space count: "+space.count());
+
+
 // display source images
 var img = imageMatrixScaled;
 	img = GLOBALSTAGE.getFloatRGBAsImage(img.red(),img.grn(),img.blu(), img.width(),img.height());
 var d = new DOImage(img);
 d.matrix().translate(0 + i*600, 0);
 GLOBALSTAGE.addChild(d);
-*/
+
 		// convert to objects
 		corners = space.toArray();
 		// console.log(corners.length);
@@ -15805,11 +15822,9 @@ GLOBALSTAGE.addChild(d);
 		space.toPoint(toPointObject);
 		for(var j=0; j<corners.length; ++j){
 			var c = corners[j];
-			throw "unused"
-			var o = R3D.objectProgressiveR3D(c,imageMatrix, featureSize);
+			var o = R3D.objectProgressiveR3D(c, imageScales, featureSize, null);
 			o["i"] = j;
 			space.insertObject(o);
-/*
 // display source points
 var q = o["point"].copy();
 	q.scale(imageScale);
@@ -15822,7 +15837,7 @@ var d = new DO();
 	d.graphics().strokeLine();
 GLOBALSTAGE.addChild(d);
 d.matrix().translate(0 + i*600, 0);
-*/
+
 		}
 		spaces.push(space);
 	}
@@ -15837,10 +15852,8 @@ d.matrix().translate(0 + i*600, 0);
 	var originalImageA = imageA;
 	var originalImageB = imageB;
 
-
 	var widthA = imageA.width();
 	var heightA = imageA.height();
-	// console.log(objectsA.length,objectsB.length);
 	var imagesList = [imageA,imageB];
 	var objList = [objectsA,objectsB];
 	var oppList = [spaceB,spaceA];
@@ -15852,6 +15865,266 @@ d.matrix().translate(0 + i*600, 0);
 	var cameraNormalsList = [cameraNormalA,cameraNormalB];
 	var cameraRightsList = [cameraRightA,cameraRightB];
 	var cameraSizesList = [cellA,cellB];
+
+	// find best match candidates fwd & bak
+	var hyp = Math.sqrt(widthA*widthA + heightA*heightA);
+	var minPix = 0.01*hyp;
+	var maxPix = 0.10*hyp;
+	console.log(minPix,maxPix);
+	var errSearch = Math.min(Math.max(4*errorPixels,minPix),maxPix); // todo percent
+	// errSearch = 5;
+	console.log("errSearch: "+errSearch);
+	var dir = new V2D();
+	var org = new V2D();
+var doDebug = true;
+var debugOffY = 300;
+	for(var k=0; k<objList.length; ++k){
+		var objectsA = objList[k];
+		var spaceB = oppList[k];
+		var Ffwd = fList[k%2];
+		var Frev = fList[(k+1)%2];
+		var Ka = kList[k%2];
+		var Kb = kList[(k+1)%2];
+		var KaInv = iList[k%2];
+		var KbInv = iList[(k+1)%2];
+		var cameraA = matList[k%2];
+		var cameraB = matList[(k+1)%2];
+		var imageA = imagesList[k%2];
+		var imageB = imagesList[(k+1)%2];
+		var cellSizeA = cellSizes[k%2];
+		var cellSizeB = cellSizes[(k+1)%2];
+		var featureSizeA = cellSizeA*featureScale;
+		var featureSizeB = cellSizeB*featureScale;
+		var imageScales = imageScalesList[k];
+		for(var i=0; i<objectsA.length; ++i){
+			// if(i%100==0){
+			// 	console.log(i+" / "+objectsA.length);
+			// }
+if(doDebug){
+i = 650;
+// i = 210;
+// var c = new V2D(400,300);
+// var c = new V2D(600,300);//
+// var c = new V2D(610,300);// too far right
+// var c = new V2D(650,300);
+// featureSize = 51;
+// c = objectsA[i]["point"];
+// objectsA[i] = R3D.objectProgressiveR3D(c, imageScales, featureSize, null , true);
+}
+			var objectA = objectsA[i];
+			var point2DA = objectA["point"];
+
+			var lB = R3D.lineFromF(Ffwd,point2DA, org,dir);
+			// search for points along line
+			var all = spaceB.toArray();
+			var objectsB = [];
+			console.log(all);
+			for(var ind=0; ind<all.length; ++ind){
+				var obj = all[ind];
+				var pp = obj["point"];
+				//var dd = Code.distancePointRay2D(org,dir, pp);
+				var dd = Code.distancePointRay2D(org,dir, pp);
+				if(dd<errSearch){
+					objectsB.push(obj);
+				}
+
+			}
+			console.log(objectsB);
+			
+			// var objectsB = spaceB.objectsInsideRay(org,dir,errSearch,true);
+			if(!objectsB || objectsB.length==0){ // no possible matches
+				continue;
+			}
+			var sortedB = objectsB;
+			console.log(sortedB.length);
+if(doDebug){
+var ints = Code.clipRayRect2D(org,dir,new V2D(0,0), new V2D(widthA,0), new V2D(widthA,heightA), new V2D(0,heightA));
+var p = point2DA;
+console.log(ints);
+var a = ints["a"].copy();
+var b = ints["b"].copy();
+
+p = p.copy();
+p.scale(imageScale);
+a.scale(imageScale);
+b.scale(imageScale);
+
+var d = new DO();
+	d.graphics().clear();
+	d.graphics().setLine(1.0, 0xFFFF0000);
+	d.graphics().beginPath();
+	d.graphics().moveTo(a.x,a.y);
+	d.graphics().lineTo(b.x,b.y);
+	d.graphics().strokeLine();
+	d.graphics().endPath();
+
+// limits:
+ort = dir.copy().rotate(Math.PI*0.5);
+	d.graphics().setLine(1.0, 0xFFFF00FF);
+	d.graphics().beginPath();
+	d.graphics().moveTo(a.x + ort.x*errSearch*imageScale,a.y + ort.y*errSearch*imageScale);
+	d.graphics().lineTo(b.x + ort.x*errSearch*imageScale,b.y + ort.y*errSearch*imageScale);
+	d.graphics().strokeLine();
+	d.graphics().endPath();
+
+	d.graphics().setLine(1.0, 0xFFFF00FF);
+	d.graphics().beginPath();
+	d.graphics().moveTo(a.x - ort.x*errSearch*imageScale,a.y - ort.y*errSearch*imageScale);
+	d.graphics().lineTo(b.x - ort.x*errSearch*imageScale,b.y - ort.y*errSearch*imageScale);
+	d.graphics().strokeLine();
+	d.graphics().endPath();
+	
+GLOBALSTAGE.addChild(d);
+d.matrix().translate(0 + 1*600, 0);
+
+
+
+var d = new DO();
+	d.graphics().clear();
+	d.graphics().setLine(1.0, 0xFFFF0000);
+	d.graphics().beginPath();
+	d.graphics().drawRect(p.x -featureSize*0.5*imageScale,p.y-featureSize*0.5*imageScale, featureSize*imageScale,featureSize*imageScale);
+	// d.graphics().drawCircle(p.x,p.y, 4);
+	d.graphics().endPath();
+	d.graphics().strokeLine();
+GLOBALSTAGE.addChild(d);
+}
+
+
+if(doDebug){
+// show initial object A
+var img = objectA["icon"];
+img = GLOBALSTAGE.getFloatRGBAsImage(img.red(),img.grn(),img.blu(), img.width(),img.height());
+var d = new DOImage(img);
+d.matrix().scale(3.0);
+// d.matrix().scale(7.0);
+d.matrix().translate(10, debugOffY + 100);
+GLOBALSTAGE.addChild(d);
+}
+
+if(doDebug){
+for(var b=0; b<sortedB.length; ++b){
+	var objectB = sortedB[b];
+	var p = objectB["point"];
+		p = p.copy();
+		p.scale(imageScale);
+	var img = objectB["icon"];
+	img = GLOBALSTAGE.getFloatRGBAsImage(img.red(),img.grn(),img.blu(), img.width(),img.height());
+	var d = new DOImage(img);
+	d.matrix().scale(3.0);
+	d.matrix().translate(10 + 50*b, debugOffY + 150 + 100);
+	GLOBALSTAGE.addChild(d);
+
+
+	var d = new DO();
+		d.graphics().clear();
+		d.graphics().setLine(1.0, 0xFF0000FF);
+		d.graphics().beginPath();
+		// d.graphics().drawRect(p.x -featureSize*0.5*imageScale,p.y-featureSize*0.5*imageScale, featureSize*imageScale,featureSize*imageScale);
+		// console.log(p+" ? ")
+		d.graphics().drawCircle(p.x,p.y, 4);
+		d.graphics().endPath();
+		d.graphics().strokeLine();
+		GLOBALSTAGE.addChild(d);
+		d.matrix().translate(0 + 1*600, 0);
+}
+}
+
+		// filter on color average
+		sortedB = R3D._sortCompareProgressiveColor(objectA, sortedB, 10);
+		console.log(sortedB.length);
+
+		// search for colors with close color histograms
+		sortedB = R3D._sortCompareProgressiveColorHistogram(objectA, sortedB, 8);
+		console.log(sortedB.length);
+
+		// calculate P3D / projections
+		for(var b=0; b<sortedB.length; ++b){
+throw "here"
+			var objectB = sortedB[b];
+			var point2DB = objectB["point"];
+			var points2D = [point2DA, point2DB];
+			var point3D = R3D.triangulatePointDLT(point2DA,point2DB, cameraA,cameraB, KaInv, KbInv);
+			var patch3D = R3D.patch3DFromPoint3DCameras(point3D, cameraCentersList, cameraNormalsList, cameraRightsList, cameraSizesList, points2D);
+			var normal3D = patch3D["normal"];
+			var up3D = patch3D["up"];
+			var right3D = patch3D["right"];
+			var size3D = patch3D["size"];
+			var affine2D = R3D.patchAffine2DFromPatch3D(point3D,normal3D,up3D,right3D,size3D, cameraA,Ka, cameraB,Kb, point2DA,point2DB);
+			// var affine2D = null;
+			var temp = R3D.objectProgressiveR3D_Z(point2DB,imageB, featureSizeB, affine2D);
+				temp["match"] = {"affine":affine2D, "point3D":point3D, "source":objectB};
+				temp["i"] = objectB["i"];
+			sortedB[b] = temp;
+		}
+
+		// get orientated
+		for(var b=0; b<sortedB.length; ++b){
+			var objectB = sortedB[b];
+			R3D.objectProgressiveR3D_B(objectB);
+		}
+
+		// search for colors with close flat color - ssd
+		sortedB = R3D._sortCompareProgressiveColorFlatSSD(objectA, sortedB, 6);
+		console.log(sortedB);
+
+
+		// search for colors with close flat color - ncc
+		sortedB = R3D._sortCompareProgressiveColorFlatNCC(objectA, sortedB, 5);
+		console.log(sortedB);
+
+		// prep sift:
+		for(var b=0; b<sortedB.length; ++b){
+			var objectB = sortedB[b];
+			var affine = objectB["match"]["affine"];
+			// var affine = null; // TODO: IS THIS BETTER ?
+			R3D.objectProgressiveR3D_C(objectB, imageB, featureSizeB, affine);
+			R3D.objectProgressiveR3D_SIFT_FLAT(objectB);
+		}
+
+		// search for SIFT-FLAT
+		sortedB = R3D._sortCompareProgressiveSIFTFlat(objectA, sortedB, 4);
+		console.log(sortedB);
+
+
+		// prep sift grad:
+		for(var b=0; b<sortedB.length; ++b){
+			var objectB = sortedB[b];
+			R3D.objectProgressiveR3D_SIFT_GRAD(objectB);
+		}
+		// search for SIFT-GRAD
+		sortedB = R3D._sortCompareProgressiveSIFTGrad(objectA, sortedB, 3);
+		console.log(sortedB);
+
+		// search for SIFT-FULL
+		sortedB = R3D._sortCompareProgressiveSIFTFullScoreCache(objectA, sortedB, 2);
+		console.log(sortedB);
+
+
+if(doDebug){
+	break;
+}
+
+
+		}
+		// console.log(percents);
+		// console.log(Code.averageNumbers(percents));
+		// console.log(Code.averageNumbers(percents)/spaceB.count());
+if(doDebug){
+break;
+}
+	}
+
+	throw "..."
+
+
+
+
+
+
+
+
+
 // var errSearch = Math.min(errorPixels*2,5);
 // var errSearch = Math.min(errorPixels*3,10);
 // var errSearch = 10;
@@ -16857,21 +17130,31 @@ R3D._progressiveR3DFlatSIFT = function(point,imageMatrixScales, size, matrix){
 	matrix = matrix!==undefined ? matrix : null;
 	var radialBins = R3D._progressiveR3DSIFTBins();
 	var sampleSize = radialBins["width"];
-	var toScale = size/sampleSize;
-	var info = imageMatrixScales.infoForScale(toScale);
-		var imageMatrix = info["image"];
-		var imageGray = imageMatrix.gry();
-		var imageWidth = imageMatrix.width();
-		var imageHeight = imageMatrix.height();
-		var effScale = info["effectiveScale"];
-		var actScale = info["actualScale"];
-	var block = imageMatrix.extractRectFromFloatImage(point.x*actScale,point.y*actScale,1.0/effScale,null,sampleSize,sampleSize,matrix);
-	return block;
+	return R3D._progressiveR3DSizing(point, imageMatrixScales, sampleSize, size, matrix);
+
+	// var toScale = size/sampleSize;
+	// var toScale = sampleSize/size;
+	// var info = imageMatrixScales.infoForScale(toScale);
+	// 	var imageMatrix = info["image"];
+	// 	var imageGray = imageMatrix.gry();
+	// 	var imageWidth = imageMatrix.width();
+	// 	var imageHeight = imageMatrix.height();
+	// 	var effScale = info["effectiveScale"];
+	// 	var actScale = info["actualScale"];
+	// var block = imageMatrix.extractRectFromFloatImage(point.x*actScale,point.y*actScale,1.0/effScale,null,sampleSize,sampleSize,matrix);
+	// return block;
 }
-R3D._progressiveR3DFlat = function(point,imageMatrixScales, size, matrix){
+R3D._progressiveR3DFlat = function(point,imageMatrixScales, size, matrix, debug){
 	matrix = matrix!==undefined ? matrix : null;
 	var sampleSize = R3D._progressiveR3DSize();
-	var toScale = size/sampleSize;
+if(debug){
+	sampleSize = 51;
+	// sampleSize = 31;
+}
+	return R3D._progressiveR3DSizing(point, imageMatrixScales, sampleSize, size, matrix);
+}
+R3D._progressiveR3DSizing = function(point, imageMatrixScales, displaySize, sourceSize, matrix){
+	var toScale = displaySize/sourceSize;
 	var info = imageMatrixScales.infoForScale(toScale);
 		var imageMatrix = info["image"];
 		var imageGray = imageMatrix.gry();
@@ -16879,7 +17162,7 @@ R3D._progressiveR3DFlat = function(point,imageMatrixScales, size, matrix){
 		var imageHeight = imageMatrix.height();
 		var effScale = info["effectiveScale"];
 		var actScale = info["actualScale"];
-	var block = imageMatrix.extractRectFromFloatImage(point.x*actScale,point.y*actScale,1.0/effScale,null,sampleSize,sampleSize,matrix);
+	var block = imageMatrix.extractRectFromFloatImage(point.x*actScale,point.y*actScale,1.0/effScale,null,displaySize,displaySize,matrix);
 	return block;
 }
 R3D._progressiveR3DGrad = function(block){
@@ -17033,8 +17316,6 @@ R3D._progressiveR3DSIFTFlat = function(block){
 			binHistograms[bin][1].push(g);
 			binHistograms[bin][2].push(b);
 			binHistograms[bin][3].push(f);
-
-			// binCounts[bin] += 1;
 		}
 	}
 	for(var i=0; i<radialCount; ++i){
@@ -17113,10 +17394,10 @@ R3D._progressiveR3DSIFTGrad = function(block){
 	R3D.histogramListToUnitLength(binHistograms);
 	return binHistograms;
 }
-R3D.objectProgressiveR3D = function(point,imageMatrixScales, cellSize, matrix){
+R3D.objectProgressiveR3D = function(point,imageMatrixScales, cellSize, matrix, debug){
 	matrix = Code.valueOrDefault(matrix,null);
 	// base
-	var object = R3D.objectProgressiveR3D_Z(point,imageMatrixScales, cellSize, matrix);
+	var object = R3D.objectProgressiveR3D_Z(point,imageMatrixScales, cellSize, matrix, debug);
 	// flat
 	R3D.objectProgressiveR3D_A(object);
 	// oriented
@@ -17130,9 +17411,9 @@ R3D.objectProgressiveR3D = function(point,imageMatrixScales, cellSize, matrix){
 	return object;
 }
 
-R3D.objectProgressiveR3D_Z = function(point,imageMatrixScales, cellSize, matrix){
+R3D.objectProgressiveR3D_Z = function(point,imageMatrixScales, cellSize, matrix, debug){
 	var object = {};
-	var icon = R3D._progressiveR3DFlat(point,imageMatrixScales, cellSize, matrix);
+	var icon = R3D._progressiveR3DFlat(point,imageMatrixScales, cellSize, matrix, debug);
 		object["icon"] = icon;
 		object["point"] = point;
 	return object;
