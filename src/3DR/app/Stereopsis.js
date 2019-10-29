@@ -5090,6 +5090,7 @@ errorR *= 2;
 		console.log(transform);
 		var errorPixels = Math.max(errorR,1.0);
 		console.log("ERROR: "+errorR+" | "+errorPixels);
+// relativeAB = R3D.cameraMatrixFromExtrinsicMatrix(relativeAB);
 		var matches = R3D.searchMatchPoints3D(images, sizes, relativeAB, Ks, errorPixels);
 		console.log(matches);
 

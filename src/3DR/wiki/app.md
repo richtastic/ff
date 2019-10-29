@@ -379,10 +379,27 @@ https://cloud.google.com/appengine/docs/nodejs/
 
 
 
-- why is zoom in logic off: ImageMatScaled
-	- scale is inverse
-	- window seems off by ~pixel
 
+- poor results:
+	- check patch projection
+	- remove sub-pixel maxima
+	- remove some of the 'dropping' methods ?
+		- /reduce dropping 
+	- stiffen error region
+	- ... ?
+
+
+i = 630;
+_sortCompareProgressiveDropWorst
+
+
+WHY IS REPROJECTION ERROR SO HIGH?
+
+
+
+PATCH SIZE 2DE VS 3D / CELL SIZE
+patch3DFromPoint3DCameras
+patchAffine2DFromPatch3D
 
 
 - look at physics for examples of 3D mass distribution / rotational moments
