@@ -4190,8 +4190,10 @@ if(this._keyboard.isKeyDown(Keyboard.KEY_LET_O)){ // left/right
 
 // ROTATIONS
 	if(this._keyboard.isKeyDown(Keyboard.KEY_LET_Z)){ // left/right
+// console.log("LEFT / RIGHT ...");
 y = new V3D(0,1,0);
-		var dirY = y.copy().scale(scroll.x);
+		// var dirY = y.copy().scale(scroll.x);
+		var dirY = y.copy().scale(scroll.y);
 		var rot = dirY.copy().norm();
 		var mag = dirY.length() * scaleAngle;
 		this._camera.rotate(rot, mag);
@@ -4214,7 +4216,9 @@ y = new V3D(0,1,0);
 		this._camera.translate(dirY);
 	}else if(this._keyboard.isKeyDown(Keyboard.KEY_LET_A)){ // left/right
 x = new V3D(1,0,0);
-		var dirX = x.copy().scale(scroll.x * scaleSize);
+		//var dirX = x.copy().scale(scroll.x * scaleSize);
+		var dirX = x.copy().scale(scroll.y * scaleSize); // does not exist on all mouse
+// console.log("LEFT / RIGHT ... "+dirX);
 		this._camera.translate(dirX);
 	}else{ // in/out
 z = new V3D(0,0,1);
@@ -7271,6 +7275,9 @@ if(!this.denseDone()){ // loads groups of views & optimizes single dense pair - 
 	this.iterateDenseTracks();
 	return;
 }
+
+throw "dense graph task skeleton/positioning again"
+
 
 throw "task BA";
 if(!this.pointsDone()){ // iteritive bundle adjust -- all points in single file

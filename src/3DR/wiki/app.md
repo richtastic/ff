@@ -332,7 +332,9 @@ TODO: pairwise possibility limiting
 	- redo affine features
 	- multi-view combining into single 3D scene - minimizing errors
 		- sparse tracks
-		x dense points
+		- dense points
+	x dense tracks
+	=> dense point tracks
 (10/31)
 - surface triangulation(tessellation)
 x	- advancing-front, curvature-based tessellation
@@ -379,21 +381,19 @@ https://cloud.google.com/appengine/docs/nodejs/
 
 
 
-
-- poor results:
-	- check patch projection
-	- remove sub-pixel maxima
-	- remove some of the 'dropping' methods ?
-		- /reduce dropping 
-	- stiffen error region
-	- ... ?
+- generate the several dense yamls
+- add step for fusing the camera orientations
+- add step for combining the pairwise points into long tracks ()
+- start bundle adjust from just points ....
 
 
-i = 630;
-_sortCompareProgressiveDropWorst
+
+- determine correct patch size for affine generation
+	- fastest way to get ?
+- how to get a 'frustrum' of a camera: get 2D image plane in 3D space (apply camera transform to get 2D loc, then pass a ray?)
 
 
-WHY IS REPROJECTION ERROR SO HIGH?
+sortCompareProgressiveDropWorst
 
 
 

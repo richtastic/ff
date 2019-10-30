@@ -483,11 +483,15 @@ iteratively solved
         - reduce errors on existing pairs using updated orientation
         - fill out more points in possibly mission sections [use TFT to estimate missing locations | project using known point]
         - create new pairs from previously unmatched relative orientations
-...
+... HERE
     - Absolute Orientation 2 (use updated pairwise transforms (lower error) & counts (more points))
         - find improved absolute orientations of views, reducing error, using added & better estimates in view graph
+    - 2D point intersection resolving (combine dense pairs into long-ish tracks)
+        - load P3Ds a pair at a time, and do collision resolving by loading the images (combine into track vs separate/drop)
+        - helps reduce total number of P3Ds (50% to 10% of original - duplicate coverage)
     - Global RANSAC (load all dense points at same time [& views])
-        - reduce error of all params at same time (or in randomized bunches)
+        - reduce error of all params at same time (or in randomized bunches [single camera - load ones who's error R reduces most rapidly])
+            - no new points are added; only removed
         - final absolute camera orientations
         - final set of surface points
     - TODO:
@@ -557,12 +561,24 @@ iteratively solved
 <br/>
 
 
-scene graph with edges / relative scales ...
+<br/>
+![Dense](./images/sfm/ex_pipeline_dense.png "Dense")
+<br/>
+*dense pair 3D scene of best points*
+<br/>
+
+
+<br/>
+![Graph](./images/sfm/ex_pipeline_graph.png "Graph")
+<br/>
+*scene graph with edges / relative scales ... skeleton highlighted in center*
+<br/>
+
 
 <br/>
 ![Scene](./images/sfm/ex_pipeline_scene.png "Scene")
 <br/>
-*multi camera scene showing estimated points, again using error minimizing techniques and RANSACing*
+*multi camera scene showing estimated points (flat color?), again using error minimizing techniques and RANSACing*
 <br/>
 
 
