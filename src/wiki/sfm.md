@@ -479,14 +479,16 @@ iteratively solved
         - build up multi-view-spanning tracks from individual pair-tracks (for long sequences if possible)
         - use tracks and initial view graph to find nonlinear best orientation
         - find new view pairs (and add to existing) via projection
+    - Pairwise Dense (use updated R to get better initial points [& ignore first iteration possible poor matches])
+        - get dense points
+... HERE
+    - Absolute Orientation 2 (use updated pairwise transforms (lower error) & counts (more points))
+        - find improved absolute orientations of views, reducing error, using added & better estimates in view graph
     - Multiwise Dense (group dense iteration - use images: only load small subset of views at a time)
         - reduce errors on existing pairs using updated orientation
         - fill out more points in possibly mission sections [use TFT to estimate missing locations | project using known point]
         - create new pairs from previously unmatched relative orientations
-... HERE
-    - Absolute Orientation 2 (use updated pairwise transforms (lower error) & counts (more points))
-        - find improved absolute orientations of views, reducing error, using added & better estimates in view graph
-    - 2D point intersection resolving (combine dense pairs into long-ish tracks)
+    - Dense to Tracks: 2D point intersection resolving (combine dense pairs into long-ish tracks)
         - load P3Ds a pair at a time, and do collision resolving by loading the images (combine into track vs separate/drop)
         - helps reduce total number of P3Ds (50% to 10% of original - duplicate coverage)
     - Global RANSAC (load all dense points at same time [& views])

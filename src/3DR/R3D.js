@@ -16213,10 +16213,10 @@ for(var i=0; i<objectsA.length; ++i){
 	}
 }
 // Code.printMatlabArray(ratios,"ratios");
-console.log("matchingCount: "+matchingCount);
-console.log("skipped: "+skipped+" / "+matchingCount);
+// console.log("matchingCount: "+matchingCount);
+console.log("skipped: "+skipped+" / matchingCount: "+matchingCount);
 
-console.log(matches)
+// console.log(matches)
 
 
 

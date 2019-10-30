@@ -381,10 +381,14 @@ https://cloud.google.com/appengine/docs/nodejs/
 
 
 
-- generate the several dense yamls
+
+
 - add step for fusing the camera orientations
+	- graph2?
 - add step for combining the pairwise points into long tracks ()
+	- merge
 - start bundle adjust from just points ....
+	...
 
 
 

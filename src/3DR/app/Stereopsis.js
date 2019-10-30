@@ -5109,11 +5109,8 @@ errorR *= 2;
 	var subdivisions = 1;
 	// var subdivisions = 0;
 	var iterations = 3; // per grid size
-	// var maxIterations = 10;
+	// var iterations = 1;
 	var maxIterations = (subdivisions+1)*iterations;
-	// var maxIterations = 3;
-	// var maxIterations = 1;
-
 
 	for(var iteration=0; iteration<maxIterations; ++iteration){
 		console.log("all: ========================================================================================= "+iteration+" / "+maxIterations);
@@ -5172,13 +5169,11 @@ errorR *= 2;
 		world.filterLocal3Dto2DSize();
 		// world.filterLocal3D(); // ...
 		world.filterPairwiseSphere3D(3.0); // 2-3
+// ?: start more rigid, allow for more error, finish rigid
 		world.filterGlobalMatches(false, 0, 2.0,2.0,2.0,2.0, false);
 		// world.filterGlobalMatches(false, 0, 3.0,3.0,3.0,3.0, false);
 
-
-		//world.filterLocal3Dto2DSize();
-		// world.filterLocal3Dto2DSize();
-		// world.filterLocal3Dto2DProjection();
+		// world.filterLocal3Dto2DProjection(); // not implemented yet
 
 		// update
 		// world.averagePoints3DFromMatches();
@@ -5192,22 +5187,14 @@ errorR *= 2;
 	world.refinePoint3DAbsoluteLocation();
 	world.patchInitBasicSphere(true);
 
-
-	// world.averagePoints3DFromMatches();
-	// world.patchInitBasicSphere(true);
-
-
-	// throw "..."
-	// console.log(world);
-
 	// check it out
 	var str = world.toYAMLString();
 	console.log(str);
-	// copy(str);
+	
 
 
 
-
+return;
 
 	throw "?"
 
