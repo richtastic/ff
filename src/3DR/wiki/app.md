@@ -380,10 +380,72 @@ https://cloud.google.com/appengine/docs/nodejs/
 0+1+2 = S21L1RCT
 
 
+--- maybe propagation can only occurr before merging?
+	- pairs & triples ?
 
+- can store global NCC/SAD limits for each pair ?
+
+- how to do propagation without some images loaded
+	== don't have ncc/sad avail for most matches
+	== not able to filter poor matches on ncc/sad
+	=> can a score be inferred?
+	- not able to merge ncc/sad scores? [unless all views are present]
+	- else: how to tell if good match?
 
 - add step for combining the pairwise points into long tracks ()
-	- merge logic
+
+- new dense points:
+	- need to load the view images
+	- need to recalculate the point factors of each point pair:
+		- P3D
+		- normal
+		- size
+		- matches:
+			- ncc
+			- sad
+	- stored tracks should include all these pieces and generate from 
+ match ncc & sad is a lot more data
+ 	- try to work without this in propagation & BA ?
+ 		- propagation: needs to discard points by quality of matches
+ 		- BA wont be adding more points -> filtering primarily on geometry
+ 	- ncc & sad needs to be preserved in various scenarios
+ 		- merging
+ 			- new matches will not have scores possible
+
+-
+		X: -8.8
+		Y: -8.6
+		Z: 22.7
+		x: 0.36
+		y: 0.32
+		z: -0.8
+		s: 0.10
+		v:
+			-
+				i: 0
+				x: 0.18
+				y: 0.05
+			-
+				i: 1
+				x: 0.014
+				y: 0.01
+			-
+				i: 2
+				x: 0.02
+				y: 0.03
+		m:
+			-			# assumed 0-1
+				s: 0.01
+				n: 0.02
+			-			# assumed 0-2
+				s: 0.10
+				n: 0.05
+			-			# assumed 1-2
+				s: 0.19
+				n: 0.14
+
+
+
 
 - iteration steps to spread / expand via projection to other views
 	- limiting to best candidates
@@ -461,6 +523,9 @@ EXPAND:
 				- 'nearby' geometrically - neighbors
 				- has fewer neighbors than average
 				- views with direct dense edges were likely already searched well [& points merged]
+			----- sample points in view [100-1000 pts]
+					- find all views pointing in direction & not occluded
+					- look at relative percentages of all views reached
 	- ? no other optimizing ?
 	=> output to .bundle file [views + points]
 BA:

@@ -194,6 +194,36 @@ Stereopsis.setMatchInfoFromParamerers = function(match, viewA,pointA,viewB,point
 	} // else can't set the range / NCC / SAD
 	return match;
 }
+Stereopsis.World.prototype.newPointFromInfoList = function(views,point2DNs,affines, normalized){ // unconnected
+	var matches = [];
+	var points2D = [];
+	point3D = new Stereopsis.P3D();
+	for(var i=0; i<views.length; ++i){
+		var view = views[i];
+		var point2DN = point2DNs[i];
+		point2DN.scale(view.size());
+		point2D = new Stereopsis.P2D(view,point2DN,point3D);
+		points2D.push(point2D);
+		point3D.addPoint2D(point2D);
+	}
+	for(var i=0; i<views.length; ++i){
+		var viewA = views[i];
+		var point2DA = points2D[i];
+		for(var j=0; j<views.length; ++j){
+			var viewB = views[i];
+			var point2DB = points2D[i];
+			var affine = null; // affines[]
+			var match = new Stereopsis.Match2D(point2DA,point2DB,point3D,affine);
+			var match = new Stereopsis.Match2D(point2DA,point2DB,point3D,affine);
+			match.transform(this.transformFromViews(viewA,viewB));
+			// Stereopsis.setMatchInfoFromParamerers(match, viewA,pointA,viewB,pointB,affine); // ?
+			point3D.addMatch(match);
+			point2DA.addMatch(match);
+			point2DB.addMatch(match);
+		}
+	}
+	return point3D;
+}
 Stereopsis.World.prototype.newMatchFromInfo = function(viewA,pointA,viewB,pointB, affine, noConnect, display){
 	noConnect = noConnect!==undefined ? noConnect : false;
 	noConnect = !noConnect;
@@ -10643,6 +10673,12 @@ Stereopsis.World.prototype.embedPoints3D = function(points3D){
 		this.embedPoint3D(point3D, false);
 	}
 }
+Stereopsis.World.prototype.embedPoints3D = function(points3D, validCheck){ 
+	for(var i=0; i<points3D.length; ++i){
+		var point3D = points3D[i];
+		this.embedPoint3D(point3D,validCheck);
+	}
+}
 Stereopsis.World.prototype.embedPoint3D = function(point3D, validCheck){ // insert the P3D into the various views -> checks for intersection first (and calls resolve intersection)
 	var checkIntersection = this.checkForIntersections();
 	validCheck = validCheck!==undefined ? validCheck : true;
@@ -10710,7 +10746,12 @@ Stereopsis.World.prototype._resolveIntersectionDefault = function(point3DA,point
 }
 Stereopsis.World.prototype._resolveIntersectionGeometry = function(point3DA,point3DB){ // merge only knowing relative affine transforms
 	/*
-		?
+		keep 3D point:
+			A) most 2D 
+			B) lower R error
+		- find intersecting view with lowest 2D distance [absolute or relative terms?]
+		- get relative affine transformed locations for each point in opposite 3D point
+		- make new P3D
 	*/
 	throw "TODO";
 }

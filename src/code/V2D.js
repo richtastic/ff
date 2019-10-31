@@ -172,7 +172,9 @@ V2D.fromArray = function(a){
 	v = new V2D(a[0],a[1]);
 	return v;
 }
-
+V2D.fromObject = function(obj){
+	return new V2D().fromObject(obj);
+}
 function V2D(xP,yP){
 	this.x = xP==undefined?0.0:xP;
 	this.y = yP==undefined?0.0:yP;
