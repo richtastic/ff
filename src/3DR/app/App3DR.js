@@ -5866,6 +5866,13 @@ E			points.yaml - dense point reconstruction info
 				points:
 					...
 				ACCUMULATED DENSE POINTS
+			bundle.yaml
+						-- same but 'saved state'
+			
+			views.yaml
+				- just final views
+			surface.yaml
+				- just final points + normals [no view data]
 
 
 E			triangles.yaml - triangle reconstruction - triangle soup of approximated surface & texture mapping
@@ -7276,14 +7283,26 @@ if(!this.denseDone()){ // loads groups of views & optimizes single dense pair - 
 	return;
 }
 
-throw "dense graph task skeleton/positioning again"
+// throw "task: dense loading into tracks"
+if(!this.pointsDone()){ // iteritive bundle adjust -- all points in single file
+	this.iterateDenseLoading();
+	return;
+}
 
-throw "dense loading into tracks"
+/*
+accumulate
+conglomerate
+- initialize POINT FILE with:
+	- final view orientation data
+	- pairs to load
+	- 
 
-throw "dense multiwise - propagate P3D to other views / combine triples"
+*/
+
+throw "dense multiwise - propagate P3D to other views / bad surfaces remove"
 
 throw "task BA";
-if(!this.pointsDone()){ // iteritive bundle adjust -- all points in single file
+if(!this.bundleAdjustDone()){ // iteritive bundle adjust -- all points in single file
 	this.iteratePointsFullBA();
 	return;
 }
@@ -9504,7 +9523,7 @@ App3DR.ProjectManager.prototype.iterateDenseTracks = function(){
 	// load dense file
 	project.loadDense(fxnTracksLoaded, project);
 }
-App3DR.ProjectManager.prototype._iterateDenseTracksEnd = function(object, data){ // all pair's dense points are loaded
+App3DR.ProjectManager.prototype._iterateDenseTracksEnd_UNUSED = function(object, data){ // all pair's dense points are loaded
 console.log("_iterateDenseTracksEnd");
 throw "?";
 	var project = this;
@@ -9609,28 +9628,64 @@ App3DR.ProjectManager.prototype._iterateDenseTracksStart = function(){
 	currentPair++;
 	if(currentPair>=densePairs.length){ // load all dense pairs at same time
 console.log("need to add a step to combine reconstructions coheriently");
+		var result = this._absoluteViewsFromDensePairs(denseViews, densePairs);
+		console.log(result);
+		var transforms = result["transforms"];
+		var viewIDs = result["views"];
 
-throw "DENSE AT END";
-		var loadPairFiles = [];
+		var pointData = {};
+		var pointViews = [];
+
+		for(var i=0; i<viewIDs.length; ++i){
+			var viewID = viewIDs[i];
+			var transform = transforms[i];
+			view = {"id":viewID, "R":transform};
+			pointViews.push(view);
+		}
+		var pointPairs = [];
+		var totalCount = 0;
 		for(var i=0; i<densePairs.length; ++i){
-			var pair = densePairs[i];
-			console.log(pair);
-			var pairID = pair["id"];
-			var path = Code.appendToPath(project._workingPath, App3DR.ProjectManager.RECONSTRUCT_DIRECTORY, App3DR.ProjectManager.RECONSTRUCT_DENSE_DIRECTORY, pairID, App3DR.ProjectManager.RECONSTRUCT_DENSE_FILENAME);
-			loadPairFiles.push(path);
+			var sourcePair = densePairs[i];
+			var pointCount = sourcePair["points"];
+			var pair = {};
+				pair["id"] = sourcePair["id"];
+				pair["A"] = sourcePair["A"];
+				pair["B"] = sourcePair["B"];
+				pair["points"] = pointCount;
+				pair["need"] = null;
+				totalCount += pointCount;
+				// pair["errorR"] = sourcePair["errorR"];
+			pointPairs.push(pair);
 		}
-		console.log(loadPairFiles);
-		var object = {};
-		object["expectedCount"] = loadPairFiles.length;
-		object["loadedCount"] = 0;
-		object["datas"] = [];
-		var callback = project._iterateDenseTracksEnd;
-		var context = project;
-		for(var i=0; i<loadPairFiles.length; ++i){
-			var path = loadPairFiles[i];
-console.log("GETTING PATH ?");
-			this.addOperation("GET", {"path":path}, callback, context, object);
+		var timestampNow = Code.getTimeStampFromMilliseconds();
+		pointData["views"] = pointViews;
+		pointData["skeleton"] = null;
+		pointData["pending"] = pointPairs;
+		pointData["pendingIndex"] = -1;
+		pointData["points"] = null;
+		pointData["stash"] = null;
+		pointData["created"] = timestampNow;
+
+		// var yaml = new YAML();
+		// yaml.writeComment("Points");
+		// yaml.writeObjectLiteral(pointData);
+		// var pointString = yaml.toString();
+		// console.log(pointString);
+
+		var fxnSavedProject = function(){
+			console.log("PROJECT SAVED")
 		}
+		var fxnSavedPoints = function(){
+			console.log("POINT FILE SAVED")
+			project.saveProjectFile(fxnSavedProject, project);
+		}
+
+		project.setDenseCount(totalCount);
+		project.setPointsFilename(App3DR.ProjectManager.RECONSTRUCT_POINTS_FILE_NAME);
+		// SAVE
+		project.savePointsFromData(pointData, fxnSavedPoints, project);
+
+// throw "DENSE AT END";
 		return;
 	} // else copy dense pair using updated transforms
 	var densePair = densePairs[currentPair];
@@ -9720,9 +9775,13 @@ console.log("GETTING PATH ?");
 		transformAB.rMean(0);
 		transformAB.rSigma(densePairErrorR);
 		console.log(transformAB.rMean(),transformAB.rSigma());
-		var transformError = transformAB.rMean() + transformAB.rSigma();
+		var errorF = transformAB.fMean() + transformAB.fSigma();
+		var errorR = transformAB.rMean() + transformAB.rSigma();
 		var transformR = transformAB.R(worldViewA,worldViewB);
+		var transformF = transformAB.F(worldViewA,worldViewB);
+		console.log(transformF);
 		console.log(transformR);
+		var pointCount = transformAB.matchCount();
 
 // throw "dense iteration end";
 
@@ -9744,8 +9803,8 @@ console.log("GETTING PATH ?");
 		var justData = [];
 		justData["pair"] = densePairID;
 		justData["points"] = justPoints;
-		justData["transform"] = transformR;
-		justData["error"] = transformError;
+		justData["R"] = transformR;
+		justData["errorR"] = errorR;
 		console.log(justData);
 
 		var path = Code.appendToPath(this._workingPath, App3DR.ProjectManager.RECONSTRUCT_DIRECTORY, App3DR.ProjectManager.RECONSTRUCT_DENSE_DIRECTORY, densePairID, App3DR.ProjectManager.RECONSTRUCT_DENSE_FILENAME);
@@ -9767,6 +9826,11 @@ console.log("GETTING PATH ?");
 		this.addOperation("SET", {"path":path,"data":binary}, callback, context, object);
 
 		// save working file
+		densePair["errorF"] = errorF;
+		densePair["errorR"] = errorR;
+		densePair["R"] = transformR;
+		densePair["F"] = transformF;
+		densePair["pointCount"] = pointCount;
 		denseData["currentPair"] += 1;
 		this.saveDenseFromData(denseData);
 	}
@@ -9784,6 +9848,154 @@ App3DR.ProjectManager.prototype.iterateSparseTracks = function(){
 	// load sparse file
 	project.loadSparse(fxnTracksLoaded, project);
 }
+
+
+App3DR.ProjectManager.prototype._absoluteViewsFromDensePairs = function(views, pairs){
+	console.log("_absoluteViewsFromDensePairs");
+
+	// lookup ID -> INDEX
+	var tableViewIndexToID = {};
+	var tableViewIDToIndex = {};
+	for(var i=0; i<views.length; ++i){
+		var view = views[i];
+		console.log(view);
+		var viewID = view["id"];
+		tableViewIDToIndex[viewID] = i;
+		tableViewIndexToID[i] = viewID;
+	}
+
+	// TODO: SUBGRAPH
+	// 
+	// var result = R3D.bestConnectedViewSubgraph(subgraphEdges, viewCount);
+	// 	var subgraphEdges = [];
+	// var subgraphEdgeLookup = [];
+	// for(var i=0; i<edges.length; ++i){
+	// 	var edge = edges[i];
+	// 	var idA = edge["A"];
+	// 	var idB = edge["B"];
+	// 	var list = edge["list"]
+	// 	if(list && list.length>0){
+	// 		idA = tablePairIDToIndex[idA];
+	// 		idB = tablePairIDToIndex[idB];
+	// 		subgraphEdges.push([idA,idB]);
+	// 		subgraphEdgeLookup.push(i);
+	// 	}
+	// }
+	// // find largest subgraph of connected pairs
+	// var viewCount = views.length;
+	// console.log(subgraphEdges);
+	// console.log(viewCount);
+	// var result = R3D.bestConnectedViewSubgraph(subgraphEdges, viewCount);
+	// var bestPairs = result["pairs"];
+	// var bestViews = result["views"];
+	// var bestEdges = result["edges"];
+
+	var edges = [];
+	for(var i=0; i<pairs.length; ++i){
+		var pair = pairs[i];
+		console.log(pair);
+		var pairID = pair["id"];
+		var viewAID = pair["A"];
+		var viewBID = pair["B"];
+		var viewAIndex = tableViewIDToIndex[viewAID];
+		var viewBIndex = tableViewIDToIndex[viewBID];
+		var errorR = pair["errorR"];
+		var pointCount = pair["points"];
+		var R = pair["R"];
+			R = Matrix.fromObject(R);
+		var extrinsicAtoB = R;
+		var relativeAtoB = Matrix.inverse(extrinsicAtoB);
+		var errorAB = errorR/pointCount;
+		var edge = [viewAIndex,viewBIndex, relativeAtoB, errorAB];
+		edges.push([viewAIndex,viewBIndex,relativeAtoB,errorAB]);
+	}
+	// nonlinear estimate transforms
+	var result = R3D.optimumTransform3DFromRelativePairTransforms(edges);
+	console.log(result);
+	var absolutes = result["absolute"];
+	var transforms = [];
+	var viewIDs = [];
+	for(var i=0; i<absolutes.length; ++i){
+		var abs = absolutes[i];
+		var viewID = tableViewIndexToID[i];
+		//transforms.push({"transform":abs, "view":viewID});
+		transforms.push(abs);
+		viewIDs.push(viewID);
+	}
+
+
+	var result = R3D.skeletalViewGraph(edges);
+	console.log("skeleton");
+	console.log(result);
+	this.displayViewGraph(transforms,edges);
+
+	
+	return {"transforms":transforms, "views":viewIDs, "skeleton":result};
+}
+
+App3DR.ProjectManager.prototype.iterateDenseLoading = function(){
+	console.log("iterateDenseLoading");
+	var project = this;
+	// do operations
+	var fxnTracksLoaded = function(){
+		console.log("fxnTracksLoaded");
+		project._iterateDenseLoadingStart();
+	}
+	// load points file
+	project.loadPoints(fxnTracksLoaded, project);
+}
+App3DR.ProjectManager.prototype._iterateDenseLoadingStart = function(){
+	var project = this;
+	var pointsData = project.pointsData();
+	console.log("_iterateDenseLoadingStart");
+	console.log(pointsData);
+
+	var pendingList = pointsData["pending"];
+	var pendingIndex = pointsData["pendingIndex"];
+	var stash = pointsData["stash"];
+
+	/*
+	increment index
+	set current pending
+	if stash not empty -- set this as points to merge
+	else -- set pair as need to load
+	images to load:
+		- A & B [2]
+		at least 4 :
+		- stash?
+			- use NEED list to prioritize first N
+		- most common pairs
+			- lookup pairs with most common numbers first
+		append image list until max number found
+	- load images
+	
+	- setup world
+		- insert views
+		- set images for loaded views
+		- insert tracks without intersection
+		- insert points with intersection
+		=> event trigger for any point merge that doesn't have a view loaded for both intersection points
+			- project record point,
+			- world 'drop' point on floor
+	- re-grab ALL points from world & set as 
+	
+	- if trigger list / stash is not empty, set as new "NEED" list
+	- else increment index
+	
+	SAVE
+
+
+
+
+
+.....
+
+
+	*/
+	throw "here";
+
+}
+
 App3DR.ProjectManager.prototype._iterateSparseTracksStart = function(){ // keep going until delta errors are all below some amount
 	var project = this;
 	var minimumDeltaError = 0.01; // change in pixels

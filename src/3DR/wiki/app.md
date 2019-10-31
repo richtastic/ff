@@ -382,13 +382,95 @@ https://cloud.google.com/appengine/docs/nodejs/
 
 
 
-
-- add step for fusing the camera orientations
-	- graph2?
 - add step for combining the pairwise points into long tracks ()
-	- merge
+	- merge logic
+
+- iteration steps to spread / expand via projection to other views
+	- limiting to best candidates
+
 - start bundle adjust from just points ....
-	...
+	- metric for tracking view update progress [R error across pairs?]
+
+- make simple 2d pt intersection using only affine data [no images loaded]
+	- ...
+
+- WORLDWIDE PATCH INTERSECTION OUTLIER TEST FOR RANSAC 
+
+
+
+
+
+
+
+------------------- > POINT COLLISION RESOLVING
+goals: 
+	- keep bad match from taking down a good match
+		how to tell if it is bad?
+	- better precice localization of points that are only 'close' eg: 1 px off
+		small differences in pixel accuracy (esp when cell size is halved) can lead to unnecessary larger error in R
+
+	metric: see if R error after the fact is better or worse? --- need global R error??
+
+- 
+
+- if at least 1 intersection view is not loaded:
+
+
+
+
+possible intersection scenarios:
+	- disjoint views [only one point]
+	- 2 point, overlapping
+		- choose centerpoint [0,1,2 images]
+	- 2 point, not overlapping
+		=> need to choose 1
+			- both images loaded [2]
+				=> choose point with better matching to intersection point
+			- 1 images loaded
+				=> ?
+			- no images loaded
+				=> choose point that would result in lower R error ?
+	update:
+	- for all loaded images, pick optimized location that matches intersecting points?
+
+no images loaded:
+	- ?
+
+if A & B have no common subviews -> error
+if A or B is subset of views of the other -> insert 'better' point (R3D / NCC error)
+
+
+.............. keeping location accuracy even without (some) views loaded:
+	- one of the points to become the 'reference' point [more points, lower N error, lower R error]
+		- optimum location found via 2D haystack search [1, RError, 3]
+		- assumed location in other views found affine mapping difference
+	- know the affine location
+
+
+
+
+
+
+EXPAND:
+	- load pair images + support images at a time [3-6] + world point data
+	- project P3D to unknown views
+		[how to get a list of CANDICATE projection possibilities?]
+				- get view frustrum + avg/max z depth
+				- get content overlapping ellipsoid
+				- facing similar directions
+				- 'nearby' geometrically - neighbors
+				- has fewer neighbors than average
+				- views with direct dense edges were likely already searched well [& points merged]
+	- ? no other optimizing ?
+	=> output to .bundle file [views + points]
+BA:
+	- only load world point data
+	- pick view and optimize location
+		- order views based on previous average/total R error reduction
+	=> output to .points & .views?
+
+
+
 
 
 

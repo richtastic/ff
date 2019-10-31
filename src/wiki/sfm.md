@@ -481,9 +481,9 @@ iteratively solved
         - find new view pairs (and add to existing) via projection
     - Pairwise Dense (use updated R to get better initial points [& ignore first iteration possible poor matches])
         - get dense points
-... HERE
     - Absolute Orientation 2 (use updated pairwise transforms (lower error) & counts (more points))
         - find improved absolute orientations of views, reducing error, using added & better estimates in view graph
+... HERE
     - Multiwise Dense (group dense iteration - use images: only load small subset of views at a time)
         - reduce errors on existing pairs using updated orientation
         - fill out more points in possibly mission sections [use TFT to estimate missing locations | project using known point]

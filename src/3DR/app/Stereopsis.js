@@ -1407,11 +1407,6 @@ Stereopsis.Transform3D.prototype.matches = function(){
 	return this._matches;
 }
 Stereopsis.Transform3D.prototype.matchCount = function(){
-	if(Code.isNaN(this._matches.length)){
-		console.log(this);
-		console.log(this._matches);
-		throw "NAN";
-	}
 	if(this._matches){
 		return this._matches.length;
 	}
@@ -5011,7 +5006,8 @@ Stereopsis.World.prototype.solveDensePair = function(){ // pairwise
 	// initial setup
 	var viewSizePercent = 0.05; // 45 -> 23 -> 11 -> 5 (3?)
 	var minViewCellSize = 5;
-	var viewGridSizePercent = 0.02;
+	var viewGridSizePercent = 0.02; // ~9 & 5
+	// var viewGridSizePercent = 0.05; // ~11 & 5
 	var maxFSamples = 500;
 
 	// create seed points:
@@ -5112,6 +5108,7 @@ errorR *= 2;
 	// var iterations = 1;
 	var maxIterations = (subdivisions+1)*iterations;
 
+	var subdivision = 0;
 	for(var iteration=0; iteration<maxIterations; ++iteration){
 		console.log("all: ========================================================================================= "+iteration+" / "+maxIterations);
 		// inif?
@@ -5128,6 +5125,7 @@ errorR *= 2;
 
 		// subdivisions
 		if(iteration!==0 && iteration%iterations==0){
+			++subdivision;
 			var views = world.toViewArray();
 			// var transforms = world.toTransformArray();
 			// var transform0 = transforms[0];
@@ -5170,8 +5168,11 @@ errorR *= 2;
 		// world.filterLocal3D(); // ...
 		world.filterPairwiseSphere3D(3.0); // 2-3
 // ?: start more rigid, allow for more error, finish rigid
-		world.filterGlobalMatches(false, 0, 2.0,2.0,2.0,2.0, false);
-		// world.filterGlobalMatches(false, 0, 3.0,3.0,3.0,3.0, false);
+		if(subdivision<1){
+			world.filterGlobalMatches(false, 0, 2.0,2.0,2.0,2.0, false);
+		}else{
+			world.filterGlobalMatches(false, 0, 3.0,3.0,3.0,3.0, false);
+		}
 
 		// world.filterLocal3Dto2DProjection(); // not implemented yet
 
@@ -10707,7 +10708,16 @@ Stereopsis.World.prototype._resolveIntersectionDefault = function(point3DA,point
 	}
 	return this._resolveIntersectionFlat(point3DA,point3DB);
 }
-Stereopsis.World.prototype._resolveIntersectionGeometry = function(point3DA,point3DB){
+Stereopsis.World.prototype._resolveIntersectionGeometry = function(point3DA,point3DB){ // merge only knowing relative affine transforms
+	/*
+		?
+	*/
+	throw "TODO";
+}
+Stereopsis.World.prototype._resolveIntersectionDumb = function(point3DA,point3DB){ // merge intersecting views & drop conflicting views
+	/*
+		 ... 
+	*/
 	throw "TODO";
 }
 Stereopsis.World.prototype._resolveIntersectionPatch = function(point3DA,point3DB){
@@ -10742,7 +10752,7 @@ Stereopsis.World.prototype._resolveIntersectionPatch = function(point3DA,point3D
 	var distances = [];
 	var overDistance = [];
 	var anyOver = false;
-	var allUnder
+	// var allUnder;
 	for(var i=0; i<allViews.length; ++i){
 		var view = allViews[i];
 		var point2DA = point3DA.pointForView(view);
@@ -10863,9 +10873,6 @@ Stereopsis.World.prototype._resolveIntersectionPatch = function(point3DA,point3D
 	}
 	// TODO: UPDATE PATCH USING SPHERE
 	world.patchInitBasicSphere(true,[point3DC]);
-// TOO SLOW:
-// world.updateP3DPatch(point3DC);
-// world.generateMatchAffineFromPatches(point3DC);
 	if(point3DC.toMatchArray().length==0){
 		throw "why no matches ?";
 	}
@@ -10892,11 +10899,8 @@ Stereopsis.World.prototype._resolveIntersectionPatch = function(point3DA,point3D
 		} // success
 	}else{
 		// TODO: VALIDATE USING SPHERE3D PATCH SIZE, & DIRECTION
-
 		// blind validation
-
 	}
-
 	// FINAL STEP: PICK BEST POINT AMONGST ALL 2D VIEWS
 	if(loadedViewsAll.length>1){
 		// choose reference image
@@ -11122,7 +11126,7 @@ Stereopsis.World.prototype._resolveIntersectionFlat = function(point3DA,point3DB
 
 
 
-	throw "TODO --- still need for initial case when F / P unknown"
+	throw "TODO --- still need for initial case when F / P unknown --- WHEN IS THIS?"
 
 
 
