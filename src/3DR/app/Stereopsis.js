@@ -81,6 +81,9 @@ Stereopsis.World.prototype.resolveIntersectionByMatchScore = function(){
 	// this._intersectionResolve2D = Stereopsis.World._INTERSECTION_RESOLVE_BEST_MATCH_SCORE;
 	this.resolveIntersection = this._resolveIntersectionMatchScore;
 }
+Stereopsis.World.prototype.resolveIntersectionByGeometry = function(){
+	this.resolveIntersection = this._resolveIntersectionGeometry;
+}
 Stereopsis.World.prototype.checkForIntersections = function(v){
 	if(v!==undefined){
 		this._checkInt2D = v;
@@ -194,29 +197,39 @@ Stereopsis.setMatchInfoFromParamerers = function(match, viewA,pointA,viewB,point
 	} // else can't set the range / NCC / SAD
 	return match;
 }
-Stereopsis.World.prototype.newPointFromInfoList = function(views,point2DNs,affines, normalized){ // unconnected
-	var matches = [];
+Stereopsis.World.prototype.newPoint3DFromPieces = function(views,point2DNs,affines, normalized){ // unconnected
+	normalized = normalized!==undefined ? normalized : true;
+	var world = this;
 	var points2D = [];
-	point3D = new Stereopsis.P3D();
+	var point3D = new Stereopsis.P3D();
 	for(var i=0; i<views.length; ++i){
 		var view = views[i];
 		var point2DN = point2DNs[i];
-		point2DN.scale(view.size());
+		var s = view.size();
+		point2DN.x *= s.x;
+		point2DN.y *= s.y;
 		point2D = new Stereopsis.P2D(view,point2DN,point3D);
 		points2D.push(point2D);
 		point3D.addPoint2D(point2D);
 	}
+	var a=0;
 	for(var i=0; i<views.length; ++i){
 		var viewA = views[i];
 		var point2DA = points2D[i];
-		for(var j=0; j<views.length; ++j){
-			var viewB = views[i];
-			var point2DB = points2D[i];
-			var affine = null; // affines[]
+		for(var j=i+1; j<views.length; ++j){
+			var viewB = views[j];
+			var point2DB = points2D[j];
+			var affine = null;
+			if(affines){
+				affine = affines[a];
+				++a;
+			}
 			var match = new Stereopsis.Match2D(point2DA,point2DB,point3D,affine);
-			var match = new Stereopsis.Match2D(point2DA,point2DB,point3D,affine);
-			match.transform(this.transformFromViews(viewA,viewB));
-			// Stereopsis.setMatchInfoFromParamerers(match, viewA,pointA,viewB,pointB,affine); // ?
+			match.transform(world.transformFromViews(viewA,viewB));
+			if(!match.transform()){
+				console.log(match);
+				throw "?"
+			}
 			point3D.addMatch(match);
 			point2DA.addMatch(match);
 			point2DB.addMatch(match);
@@ -1374,7 +1387,9 @@ Stereopsis.Transform3D = function(viewA,viewB,world){
 	this._errorFSigma = null;
 	this._errorRMean = null;
 	this._errorRSigma = null;
-	this._matches = [];
+	this._matches = {};
+	this._matchCount = 0;
+	// this._matches = [];
 	this._world = null;
 	this._searchCorners = null;
 	// delta errors
@@ -1434,13 +1449,15 @@ Stereopsis.Transform3D.prototype.world = function(world){
 	return this._world;
 }
 Stereopsis.Transform3D.prototype.matches = function(){
-	return this._matches;
+	return Code.objectToArray(this._matches);
+	// return this._matches;
 }
 Stereopsis.Transform3D.prototype.matchCount = function(){
-	if(this._matches){
-		return this._matches.length;
-	}
-	return 0;
+	return this._matchCount;
+	// if(this._matches){
+	// 	return this._matches.length;
+	// }
+	// return 0;
 }
 Stereopsis.Transform3D.prototype.graphWeight = function(){
 	return 1.0;
@@ -1554,18 +1571,32 @@ Stereopsis.Transform3D.prototype.rSigma = function(sigma){
 	return this._errorRSigma;
 }
 Stereopsis.Transform3D.prototype.insertMatch = function(match){
-	this.removeMatch(match);
-	this._matches.push(match);
-	match.transform(this);
+	var index = match.id();
+	if(this._matches[index]){
+		if(this._matches[index]!==match){
+			throw "?";
+		}
+		return;
+	}
+	this._matches[index] = match;
+	this._matchCount += 1;
+	// console.log(this._matches);
+	// this.removeMatch(match);
+	// this._matches.push(match);
+	match.transform(this); // maybe shouldn't be here ...
 }
 Stereopsis.Transform3D.prototype.removeMatch = function(match){
-	Code.removeElement(this._matches,match);
+	var index = match.id();
+	if(this._matches[index]){
+		if(this._matches[index]!==match){
+			throw "?";
+		}
+		this._matchCount -= 1;
+		delete this._matches[index];
+	}
+	// Code.removeElement(this._matches,match);
 	// match.transform(null);
 }
-// Stereopsis.Transform3D.prototype.removeMatch = function(match){
-// 	Code.removeElement(this._matches,match);
-// }
-
 
 Stereopsis.Transform3D.prototype.copyRelativeFromAbsolute = function(){
 	var transform = this;
@@ -2306,6 +2337,7 @@ Stereopsis.P2D.prototype.voteDrop = function(){
 }
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 Stereopsis.Match2D = function(pointA,pointB, point3D, affine, ncc, sad, others){
+	this._id = Stereopsis.Match2D._ID++;
 	this._point2DA = null;
 	this._point2DB = null;
 	this._point3D = null;
@@ -2329,11 +2361,15 @@ Stereopsis.Match2D = function(pointA,pointB, point3D, affine, ncc, sad, others){
 	this.errorNCC(ncc);
 	this.errorSAD(sad);
 }
+Stereopsis.Match2D._ID = 0;
 Stereopsis.Match2D.prototype.temp = function(temp){
 	if(temp!==undefined){
 		this._temp = temp;
 	}
 	return this._temp;
+}
+Stereopsis.Match2D.prototype.id = function(){
+	return this._id;
 }
 Stereopsis.Match2D.prototype.kill = function(){
 	this._point2DA = null;
@@ -10664,16 +10700,17 @@ Stereopsis.World.prototype.embedPoints3DNoValidation = function(points3D){
 		this.embedPoint3DNoValidation(point3D);
 	}
 }
+Stereopsis.World.prototype.embedPoints3DNoValidation = function(points3D){
+	for(var i=0; i<points3D.length; ++i){
+		var point3D = points3D[i];
+		this.embedPoint3DNoValidation(point3D);
+	}
+}
 Stereopsis.World.prototype.embedPoint3DNoValidation = function(point3D){
 	this.connectPoint3D(point3D);
 }
-Stereopsis.World.prototype.embedPoints3D = function(points3D){
-	for(var i=0; i<points3D.length; ++i){
-		var point3D = points3D[i];
-		this.embedPoint3D(point3D, false);
-	}
-}
-Stereopsis.World.prototype.embedPoints3D = function(points3D, validCheck){ 
+Stereopsis.World.prototype.embedPoints3D = function(points3D, validCheck){
+	validCheck = validCheck!==undefined ? validCheck : false;
 	for(var i=0; i<points3D.length; ++i){
 		var point3D = points3D[i];
 		this.embedPoint3D(point3D,validCheck);
@@ -10745,6 +10782,8 @@ Stereopsis.World.prototype._resolveIntersectionDefault = function(point3DA,point
 	return this._resolveIntersectionFlat(point3DA,point3DB);
 }
 Stereopsis.World.prototype._resolveIntersectionGeometry = function(point3DA,point3DB){ // merge only knowing relative affine transforms
+	console.log(point3DA);
+	console.log(point3DB);
 	/*
 		keep 3D point:
 			A) most 2D 
@@ -11415,6 +11454,13 @@ Stereopsis.World.prototype.removePoint2DAndMatchesFromPoint3D = function(point2D
 		point3D.removeMatch(match);
 		p2DA.removeMatch(match);
 		p2DB.removeMatch(match);
+		if(!match.transform()){
+			var transform = this.transformFromViews(match.viewA(),match.viewB());
+			console.log(point3D);
+			console.log(match);
+			console.log(transform);
+			throw "?";
+		}
 		match.transform().removeMatch(match);
 		match.kill();
 	}
@@ -11492,6 +11538,11 @@ Stereopsis.World.prototype.connectPoint3D = function(point3D){
 		var viewA = match.viewA();
 		var viewB = match.viewB();
 		var transform = world.transformFromViews(viewA,viewB);
+		if(!transform){
+			console.log(match);
+			console.log(viewA);
+			console.log(viewB);
+		}
 		match.transform(transform); // ...
 		transform.insertMatch(match);
 	}

@@ -7288,23 +7288,11 @@ if(!this.denseDone()){ // loads groups of views & optimizes single dense pair - 
 	return;
 }
 
-// throw "task: dense loading into tracks"
-if(!this.pointsDone()){ // iteritive bundle adjust -- all points in single file
+// throw "task: dense loading tracks"
+if(!this.pointsDone()){ // put all points in single file
 	this.iterateDenseLoading();
 	return;
 }
-
-/*
-accumulate
-conglomerate
-- initialize POINT FILE with:
-	- final view orientation data
-	- pairs to load
-	- 
-
-*/
-
-throw "dense multiwise - propagate P3D to other views / bad surfaces remove"
 
 throw "task BA";
 if(!this.bundleAdjustDone()){ // iteritive bundle adjust -- all points in single file
@@ -9949,19 +9937,37 @@ App3DR.ProjectManager.prototype.iterateDenseLoading = function(){
 	project.loadPoints(fxnTracksLoaded, project);
 }
 
-App3DR.ProjectManager._insertWorldPointPairs = function(world, points, viewLookup){
+App3DR.ProjectManager._worldPointFromSaves = function(world, points, viewLookup){
 	var points3D = [];
 	for(var i=0; i<points.length; ++i){
 		var point = points[i];
-		console.log(point);
-		throw "?";
+		var p3D = new V3D(point["X"],point["Y"],point["Z"]);
+		var n3D = new V3D(point["x"],point["y"],point["z"]);
+		var s3D = point["s"];
+		var entries = point["v"];
+		var vs = [];
+		var ps = [];
+		for(var j=0; j<entries.length; ++j){
+			var entry = entries[j];
+			var v = entry["i"];
+			var p2D = new V2D(entry["x"],entry["y"]);
+			// console.log(p2D);
+			v = viewLookup[v];
+			vs.push(v);
+			ps.push(p2D);
+		}
+		var point3D = world.newPoint3DFromPieces(vs,ps,null);
+		point3D.point(p3D);
+		point3D.normal(n3D);
+		point3D.size(s3D);
+		// throw "?";
+		// up ?
+		points3D.push(point3D);
 	}
 	return points3D;
-	// viewA,point2DA,viewB,point2DB
-	//Stereopsis.World.prototype.newMatchFromInfo = function(viewA,pointA,viewB,pointB, affine, noConnect, display);
 }
 App3DR.ProjectManager.prototype._iterateDenseLoadingStart = function(){
-	var cellPercentSize = 0.02;
+	var cellPercentSize = 0.02; // 1% = dense
 	var project = this;
 	var pointsData = project.pointsData();
 	console.log("_iterateDenseLoadingStart");
@@ -10019,19 +10025,20 @@ App3DR.ProjectManager.prototype._iterateDenseLoadingStart = function(){
 
 	console.log("EXISTING");
 	console.log(worldViewLookup);
+	console.log("creating world points");
+	// var trackData = {"points":existingPoints};
+	console.log(existingPoints);
+	var points3D = App3DR.ProjectManager._worldPointFromSaves(world, existingPoints, worldViewLookup);
+	console.log(points3D);
 	console.log("embedding points");
-	var trackData = {"points":existingPoints};
 	world.checkForIntersections(false);
-
-HERE IN THIS MESS
-
+	var timeA = Code.getTimeMilliseconds();
+	world.embedPoints3D(points3D);
+	var timeB = Code.getTimeMilliseconds();
 	// var points3D = project._embedMatchPoints(world, trackData, worldViewLookup);
+	console.log("DELTA: "+(timeB-timeA));
 	console.log("embedded points");
-	// console.log(points3D);
-	//  ????
 	
-
-	// throw "?";
 
 	// add next pair's dense points
 	pendingIndex++;
@@ -10061,19 +10068,26 @@ HERE IN THIS MESS
 			}
 		}
 		console.log(worldViewLookupPair);
-		console.log("embedding points");
-		var trackData = {"points":densePairPoints};
+		console.log("embedding points 2");
+		
 		// init P3D 
-		world.checkForIntersections(false);
-		var points3D = App3DR.ProjectManager._insertWorldPointPairs(world, densePairPoints, worldViewLookupPair);
-		// var points3D = project._embedMatchPoints(world, trackData, worldViewLookupPair);
+		var points3D = App3DR.ProjectManager._worldPointFromSaves(world, densePairPoints, worldViewLookupPair);
+
+		// may need to embed points, get R error, then proceed...
+
+
+		console.log(points3D);
+		// throw "?"
 		// amerge
 		world.checkForIntersections(true);
-		// ...
-
+		world.resolveIntersectionByGeometry();
+		var timeA = Code.getTimeMilliseconds();
+		world.embedPoints3D(points3D);
+		var timeB = Code.getTimeMilliseconds();
+		console.log("DELTA: "+(timeB-timeA));
 		// world.embedPoints3D(points3D);
-		console.log("embedded points");
-
+		console.log("embedded points 2");
+		console.log(world);
 		throw "?";
 
 
