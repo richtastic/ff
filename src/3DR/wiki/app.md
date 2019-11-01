@@ -235,8 +235,8 @@ project typical numbers:
 
 	100~1000 initial features
 	50~100 matched pair features
-	~10k matched dense pairs
-	100~1000 track points per= pair
+	10k~50k matched dense pairs
+	100~1000 track points per pair
 	2-5 avg track length CURRENT GUESS OF AVG TRACK LENGTH
 
 	[100-1000] * N track points total
@@ -254,7 +254,15 @@ project typical numbers:
 		1E4-1E5 track points [100,000]
 		1E6 dense points [1,000,000]
 
-
+	10 images:
+		0.25 redundant coverage
+		50E3 dense points
+		= 125,000 dense points total
+		px3 + nx3 + (v,x,y)x3 = 15 floats per point
+		= 2,000,000 x 8 bytes = 15MB
+	100 images
+		= 1,250,000 dense points
+		= 1,250,000 = 150MB
 
 
 
@@ -378,6 +386,111 @@ https://cloud.google.com/appengine/docs/nodejs/
 0 + 2 = UEX4H682
 1 + 2 = NY9RPQHA
 0+1+2 = S21L1RCT
+
+
+
+
+
+
+
+
+
+TODO:
+	- update/new track merging code for accumulator
+		- only care about merging precise position, don't need images present [for now]
+	- points accumulate to file
+	- bundle adjust + propagation at same time now [loaded view + NN projecting]
+	- update/new track merging code for summary statistics check
+		- check 
+		- make sure summary statistics aren't re-updated during process
+	- VERIFY BA IMPROVES OUTPUT
+
+
+- ALL merging solns should use affine location method [or needle/haystack] for adj view 2D locations
+	- is NCC used before a match is even made ?
+
+point merging scenarios:
+	- F only
+		- without an R, don't have affine
+		=> this should ONLY happen in pairwise
+			- an inetersection in this case implies a point is either exactly overlapping OR 2 points are mapping to same place
+				=> can just pick better match & throw other away?
+	- pair/triple:
+		- logic?
+		- ?? IS NCC CHECKED BEFOREHAND?
+	- merging long tracks / propagating:
+
+		- logic?
+		- check global SSD before adding
+		
+		- don't need to save/generate SSD/AFFINE -- can figure that out at merge time
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+-> decisions:
+	- dont record ncc/sad for each point
+	- do record summary statistics for every (known) pair 
+		- when combining tracks, only thing that is checked is that the new ncc/sad score is better than some sigma limit of the would-be transform
+			- the 2 views of projection are present to get this score
+		- if a new pair (transform) is added during BA : the summary statistics are initted as the average of it's kNN ( first adj views when point count > #)
+
+
+
+
+
+- only need ncc/sad match data in order to decide if a projected point is good or not
+	- can keep pairwize ncc/sad sigma info (already tracked)
+
+
+- how is the track point projection working w/o match data? -- assuming already loaded?
+
+
+
+
+-> need to allow saving of match ncc/sad data 
+-> ncc/sad needs to be played nice with when added externally
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+- is there a way to add a lot of surface detail after the fact?
+	- project new points ???
+	- need to drop/merge superfluous points [identify planar spots?]
+- how to load 'sections' of the volume at a time
+...
+
+
+
+- doing point propagation isn't really possible after points are unified
+	- ncc matches aren't available for views where image is not loaded
+- propagation beforehand:
+	- triples? / N-ples
+		- lots of duplicated points
+- limited propagation during:
+	- can only extend / match points that have views already loaded
+	- ...
+
+- goal of propagation:
+	- finding more support for a point pulls model toward correct spot
+	- if points are removed during error reduction, there will be open areas
+
+- FILLING ?
+	- can only fill in / join areas that are all loaded
+	
+
+
+
+STEPS:
+	- dense pairs
+	- aggregate pairs into world + combine tracks
+	- bundle adjust + optimize
+		- view optimizing orientation
+		- remove obstruction matches [delete points]
+	- filling
+		- identify 'holes' in images where objects 'should' be [no obstruction]
+		- load select set of scene images
+	- propagating [can only propagate tracks of images that are loaded]
+		- project point 
+		- load select set of scene images
+
 
 
 --- maybe propagation can only occurr before merging?

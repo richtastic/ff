@@ -446,6 +446,40 @@ iteratively solved
 
 
 
+<a name="BIG_DATA"></a>
+### BIG DATA
+*handling input data over 10~100 images [1k+]*
+- start
+    =>
+        - image summary data [color histogram]
+        - image similarity bag of words search
+    => reduce
+        - pairwise image F & R matching
+    => reduce
+        - triples of 3D orientations
+    => reduce
+    => serial - absolute orientation init
+        - pairwise dense features
+    => reduce
+    => serial (1) - absolute orientation update
+
+    => skeletal graph - 
+        - separate views into groups
+            - spine O(logn)
+            - leaves O(logn)
+    => each group:
+        => serial (logn) - global point accumulation for world init
+        => serial (n/c) - bundle adjust: random view update
+        => 
+            - hole filling?
+            - track propagation?
+        => serial (n) - surface triangulation
+    => reduce - groups
+    => combine triangulations into single [? overlapping edges?]
+
+
+
+
 #### Pipeline
 *Summary of steps & purpose/goals*
     - Camera Calibration
