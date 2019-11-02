@@ -451,23 +451,33 @@ iteratively solved
 *handling input data over 10~100 images [1k+]*
 - start
     =>
-        - image summary data [color histogram]
+    => parallel
+        - image summary data [eg: color histogram]
+    => reduce - wait
+    => parallel
         - image similarity bag of words search
-    => reduce
+    => reduce - wait
+    => parallel
         - pairwise image F & R matching
-    => reduce
+    => reduce - wait
+    => parallel
         - triples of 3D orientations
-    => reduce
-    => serial - absolute orientation init
+    => reduce - wait
+    => serial
+        - absolute orientation init
+    => parallel
         - pairwise dense features
-    => reduce
-    => serial (1) - absolute orientation update
+    => reduce - wait
 
-    => skeletal graph - 
-        - separate views into groups
-            - spine O(logn)
-            - leaves O(logn)
-    => each group:
+    => serial (1)
+        - absolute orientation update
+
+    => serial
+        - skeletal graph:
+            - separate views into groups
+                - spine O(logn)
+                - leaves O(logn)
+    => parallel (each group):
         => serial (logn) - global point accumulation for world init
         => serial (n/c) - bundle adjust: random view update
         => 
@@ -475,7 +485,9 @@ iteratively solved
             - track propagation?
         => serial (n) - surface triangulation
     => reduce - groups
-    => combine triangulations into single [? overlapping edges?]
+    => serial
+        - identify overlap ?
+        - combine triangulations into single [? overlapping edges?]
 
 
 
@@ -515,21 +527,32 @@ iteratively solved
         - find new view pairs (and add to existing) via projection
     - Pairwise Dense (use updated R to get better initial points [& ignore first iteration possible poor matches])
         - get dense points
+    - Triple Dense from Pairs (need relative scales again)
+        - load common pairs & get 2 or 3 way relative scales
     - Absolute Orientation 2 (use updated pairwise transforms (lower error) & counts (more points))
         - find improved absolute orientations of views, reducing error, using added & better estimates in view graph
-... HERE
-    - Multiwise Dense (group dense iteration - use images: only load small subset of views at a time)
-        - reduce errors on existing pairs using updated orientation
-        - fill out more points in possibly mission sections [use TFT to estimate missing locations | project using known point]
-        - create new pairs from previously unmatched relative orientations
     - Dense to Tracks: 2D point intersection resolving (combine dense pairs into long-ish tracks)
-        - load P3Ds a pair at a time, and do collision resolving by loading the images (combine into track vs separate/drop)
+        - TODO: load P3Ds a pair at a time, and do collision resolving by loading the images (combine into track vs separate/drop)
         - helps reduce total number of P3Ds (50% to 10% of original - duplicate coverage)
+
+HERE
+
     - Global RANSAC (load all dense points at same time [& views])
         - reduce error of all params at same time (or in randomized bunches [single camera - load ones who's error R reduces most rapidly])
             - no new points are added; only removed
+        - Multiwise Dense (group dense iteration - use images: only load small subset of views at a time)
+            - reduce errors on existing pairs using updated orientation
+            - fill out more points in possibly mission sections [use TFT to estimate missing locations | project using known point]
+            - create new pairs from previously unmatched relative orientations
+        - Hole filling? -- same as probe2D?
         - final absolute camera orientations
         - final set of surface points
+
+
+
+
+
+
     - TODO:
         - Dense (increase surface resolution over what can fit in memory)
             - load pair/triple & allow each 2d cell area on order of pixels (3-5) opportunity to

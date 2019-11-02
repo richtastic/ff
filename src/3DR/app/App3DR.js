@@ -9620,9 +9620,29 @@ App3DR.ProjectManager.prototype._iterateDenseTracksStart = function(){
 
 	currentPair++;
 	if(currentPair>=densePairs.length){ // load all dense pairs at same time
+
+		console.log("need to get relative scales again ...");
 		var result = this._absoluteViewsFromDensePairs(denseViews, densePairs);
 		console.log(result);
+
+
+
 		var transforms = result["transforms"];
+
+		var denseViewFromID = {};
+		for(var i=0; i<denseViews.length; ++i){
+			var view = denseViews[i];
+			var viewID = view["id"];
+			denseViewFromID[viewID] = view
+		}
+
+		// INVERT FROM ABS TO EXT
+		// var trans = [];
+		// for(var i=0; i<transforms.length; ++i){
+		//    var transform = transforms[i];
+		//    transforms[i] = Matrix.inverse(transform);
+		// }
+
 		var viewIDs = result["views"];
 
 		var pointData = {};
@@ -9631,10 +9651,12 @@ App3DR.ProjectManager.prototype._iterateDenseTracksStart = function(){
 		for(var i=0; i<viewIDs.length; ++i){
 			var viewID = viewIDs[i];
 			var sourceView = denseViewFromID[viewID];
+			// console.log(sourceView);
 			var camID = sourceView["camera"];
 			var size = sourceView["size"];
 			var transform = transforms[i];
-			view = {"id":viewID, "R":transform, "camera":camID, "size":size};
+				var extrinsic = Matrix.inverse(transform);
+			view = {"id":viewID, "R":extrinsic, "camera":camID, "size":size};
 			pointViews.push(view);
 		}
 		var pointPairs = [];
@@ -9653,6 +9675,7 @@ App3DR.ProjectManager.prototype._iterateDenseTracksStart = function(){
 			pointPairs.push(pair);
 		}
 		var timestampNow = Code.getTimeStampFromMilliseconds();
+		pointData["cameras"] = denseCameras;
 		pointData["views"] = pointViews;
 		pointData["skeleton"] = null;
 		pointData["pending"] = pointPairs;
@@ -9661,6 +9684,10 @@ App3DR.ProjectManager.prototype._iterateDenseTracksStart = function(){
 		pointData["stash"] = null;
 		pointData["created"] = timestampNow;
 
+// throw "abs locations are bad"
+
+// console.log(pointData);
+// throw "..."
 		var fxnSavedProject = function(){
 			console.log("PROJECT SAVED")
 		}
@@ -9899,9 +9926,11 @@ App3DR.ProjectManager.prototype._absoluteViewsFromDensePairs = function(views, p
 		var extrinsicAtoB = R;
 		var relativeAtoB = Matrix.inverse(extrinsicAtoB);
 		var errorAB = errorR/pointCount;
+			errorAB = 1.0;
 		var edge = [viewAIndex,viewBIndex, relativeAtoB, errorAB];
 		edges.push([viewAIndex,viewBIndex,relativeAtoB,errorAB]);
 	}
+	console.log(edges);
 	// nonlinear estimate transforms
 	var result = R3D.optimumTransform3DFromRelativePairTransforms(edges);
 	console.log(result);
@@ -9967,7 +9996,8 @@ App3DR.ProjectManager._worldPointFromSaves = function(world, points, viewLookup)
 	return points3D;
 }
 App3DR.ProjectManager.prototype._iterateDenseLoadingStart = function(){
-	var cellPercentSize = 0.02; // 1% = dense
+	// var cellPercentSize = 0.02; // 1% = dense
+	var cellPercentSize = 0.01;
 	var project = this;
 	var pointsData = project.pointsData();
 	console.log("_iterateDenseLoadingStart");
@@ -9998,18 +10028,22 @@ App3DR.ProjectManager.prototype._iterateDenseLoadingStart = function(){
 			size = V2D.fromObject(size);
 		sizes[i] = size;
 	}
-	// console.log(tableViewFromID);
+
+	console.log("A");
 	var stage = GLOBALSTAGE;
 	// world:
 	var world = new Stereopsis.World();
 	var info = project._addGraphViews(world, tableViewFromID, stage);
+	console.log("B");
 	// var images = info["images"];
 	var transforms = info["transforms"];
 	App3DR.ProjectManager.addCamerasToWorld(world, cameras);
+	console.log("C");
 	var worldViews = App3DR.ProjectManager.addViewsToWorld(world, views, sizes, transforms);
 	// console.log(worldViews);
 	// console.log(world);
-	// ..
+	// ..0
+	console.log("V");
 	var worldViewLookup = {};
 	for(var i=0; i<worldViews.length; ++i){
 		var view = worldViews[i];
@@ -10021,6 +10055,25 @@ App3DR.ProjectManager.prototype._iterateDenseLoadingStart = function(){
 		view.cellSize(size);
 		console.log("SIZES: "+view.cellSize()+" | "+view.compareSize());
 	}
+console.log("C");
+	// set view abs locations
+	// for(var i=0; i<views.length; ++i){
+	// 	var view = views[i];
+	// 	var viewID = view["id"];
+	// 	console.log(view);
+	// 	var v = world.viewFromData(viewID);
+	// 	console.log(v);
+	// }
+
+	// get relative from abs
+	// var transforms = world.toTransformArray();
+	// for(var i=0; i<transforms.length; ++i){
+	// 	var transform = transforms[i];
+	// 	transform.copyRelativeFromAbsolute();
+	// }
+	world.copyRelativeTransformsFromAbsolute();
+// console.log(world);
+// throw "?"
 	// add existing points
 
 	console.log("EXISTING");
@@ -10028,14 +10081,13 @@ App3DR.ProjectManager.prototype._iterateDenseLoadingStart = function(){
 	console.log("creating world points");
 	// var trackData = {"points":existingPoints};
 	console.log(existingPoints);
-	var points3D = App3DR.ProjectManager._worldPointFromSaves(world, existingPoints, worldViewLookup);
-	console.log(points3D);
+	var points3DExisting = App3DR.ProjectManager._worldPointFromSaves(world, existingPoints, worldViewLookup);
+	console.log(points3DExisting);
 	console.log("embedding points");
 	world.checkForIntersections(false);
 	var timeA = Code.getTimeMilliseconds();
-	world.embedPoints3D(points3D);
+	world.embedPoints3D(points3DExisting);
 	var timeB = Code.getTimeMilliseconds();
-	// var points3D = project._embedMatchPoints(world, trackData, worldViewLookup);
 	console.log("DELTA: "+(timeB-timeA));
 	console.log("embedded points");
 	
@@ -10071,21 +10123,40 @@ App3DR.ProjectManager.prototype._iterateDenseLoadingStart = function(){
 		console.log("embedding points 2");
 		
 		// init P3D 
-		var points3D = App3DR.ProjectManager._worldPointFromSaves(world, densePairPoints, worldViewLookupPair);
+		var points3DNew = App3DR.ProjectManager._worldPointFromSaves(world, densePairPoints, worldViewLookupPair);
 
-		// may need to embed points, get R error, then proceed...
+		console.log(points3DNew);
+		world.checkForIntersections(false);
+		var timeA = Code.getTimeMilliseconds();
+		world.embedPoints3D(points3DNew);
+		var timeB = Code.getTimeMilliseconds();
+		console.log("DELTA: "+(timeB-timeA));
+		// 
+		// init peach p3d info
+		// estimate patches
+		// estimate R error
+		console.log("err");
+		world.estimate3DErrors(true);
+		console.log("pat");
+		// TODO: ONLY DO AFFINE -- ALREADY HAVE PATCH SIZE & NORMAL ???
+		world.patchInitBasicSphere(true);
+		console.log("F");
+		world.relativeFFromSamples();
+		world.estimate3DErrors(true);
+		console.log("remove");
+		// remove new points:
+		world.disconnectPoints3D(points3DNew);
 
 
-		console.log(points3D);
+		console.log("add with intersection");
 		// throw "?"
 		// amerge
 		world.checkForIntersections(true);
 		world.resolveIntersectionByGeometry();
 		var timeA = Code.getTimeMilliseconds();
-		world.embedPoints3D(points3D);
+		world.embedPoints3D(points3DNew);
 		var timeB = Code.getTimeMilliseconds();
 		console.log("DELTA: "+(timeB-timeA));
-		// world.embedPoints3D(points3D);
 		console.log("embedded points 2");
 		console.log(world);
 		throw "?";

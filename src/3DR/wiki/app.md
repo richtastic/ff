@@ -388,8 +388,8 @@ https://cloud.google.com/appengine/docs/nodejs/
 0+1+2 = S21L1RCT
 
 
-
-
+- error on abs view locations is bad
+----  need relative scales again?
 
 
 
@@ -404,6 +404,8 @@ TODO:
 		- check 
 		- make sure summary statistics aren't re-updated during process
 	- VERIFY BA IMPROVES OUTPUT
+
+	- go back and add triple scaling
 
 
 - ALL merging solns should use affine location method [or needle/haystack] for adj view 2D locations

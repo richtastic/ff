@@ -205,9 +205,12 @@ Stereopsis.World.prototype.newPoint3DFromPieces = function(views,point2DNs,affin
 	for(var i=0; i<views.length; ++i){
 		var view = views[i];
 		var point2DN = point2DNs[i];
-		var s = view.size();
-		point2DN.x *= s.x;
-		point2DN.y *= s.y;
+			point2DN = point2DN.copy();
+		if(normalized){
+			var s = view.size();
+			point2DN.x *= s.x;
+			point2DN.y *= s.y;
+		}
 		point2D = new Stereopsis.P2D(view,point2DN,point3D);
 		points2D.push(point2D);
 		point3D.addPoint2D(point2D);
@@ -10781,9 +10784,156 @@ Stereopsis.World.prototype._resolveIntersectionDefault = function(point3DA,point
 	}
 	return this._resolveIntersectionFlat(point3DA,point3DB);
 }
-Stereopsis.World.prototype._resolveIntersectionGeometry = function(point3DA,point3DB){ // merge only knowing relative affine transforms
-	console.log(point3DA);
-	console.log(point3DB);
+Stereopsis.World.prototype._resolveIntersectionGeometry = function(point3DA,point3DB){ // merge only knowing relative R error and affine transforms
+	// console.log(point3DA);
+	// console.log(point3DB);
+	var viewsA = point3DA.toViewArray();
+	var viewsB = point3DB.toViewArray();
+	// console.log(viewsA);
+	// console.log(viewsB);
+	var allViews = {};
+	var intersectViews = [];
+	var singleAViews = [];
+	var singleBViews = [];
+	for(var i=0; i<viewsA.length; ++i){
+		var viewA  = viewsA[i];
+		allViews[viewA.id()] = viewA;
+	}
+	for(var i=0; i<viewsB.length; ++i){
+		var viewB  = viewsB[i];
+		allViews[viewB.id()] = viewB;
+	}
+	allViews = Code.objectToArray(allViews);
+	// find intersections:
+	var intersectLimit = 1; // 1 pixel -- TODO: image size dependent ... ~0.001 to 1px ?
+	// var intersectLimit = 0.1;
+	// intersect
+	var distances = [];
+	var overDistance = [];
+	var anyOver = false;
+	var closestIntersectingView = null;
+	var closestIntersectingDistance = null;
+	for(var i=0; i<allViews.length; ++i){
+		var view = allViews[i];
+		var point2DA = point3DA.pointForView(view);
+		var point2DB = point3DB.pointForView(view);
+		if(point2DA && point2DB){
+			intersectViews.push(view);
+			var distance = V2D.distance(point2DA.point2D(), point2DB.point2D());
+			distances.push(distance);
+			if(closestIntersectingDistance===null || closestIntersectingDistance>distance){
+				closestIntersectingDistance = distance;
+				closestIntersectingView = view;
+			}
+			if(distance>intersectLimit){ //
+				// throw "off?: "+distance;
+			}
+		}else if(point2DA){
+			singleAViews.push(view);
+		}else if(point2DB){
+			singleBViews.push(view);
+		}
+	}
+	if(closestIntersectingView==null){
+		throw "should have at least 1 "
+	}
+	var errorRA = point3DA.averageRError();
+	var errorRB = point3DB.averageRError();
+	// return more supersuming or better point
+	if(singleAViews.length==0 && singleBViews.length==0){
+		var countA = point3DA.point2DCount();
+		var countB = point3DB.point2DCount();
+		// TODO: CREATE NEW POINT, NOT OLD ONE:
+		if(countA>countB){
+			return point3DA;
+		}else if(countB>countA){
+			return point3DB;
+		}
+		// console.log(errorRA+" ? "+errorRB);
+		if(errorRA<=errorRB){
+			return point3DA;
+		}
+		return point3DB;
+	}
+	// pick dominant point & create new points
+	var pointDom = null;
+	var pointSub = null;
+	if(viewsA.length>viewsB.length){
+		pointDom = 0;
+	}else if(viewsB.length>viewsA.length){
+		pointDom = 1;
+	}else if(errorRA<=errorRB){
+		pointDom = 0;
+	}else{
+		pointDom = 1;
+	}
+	if(pointDom==0){
+		pointDom = point3DA;
+		pointSub = point3DB;
+	}else{
+		pointDom = point3DB;
+		pointSub = point3DA;
+	}
+	// get list of all points of dom
+	// get list of all needed points / views of sub
+
+	console.log(viewsA);
+	console.log(viewsB);
+	console.log(singleAViews);
+	console.log(singleBViews);
+	console.log(intersectViews);
+
+
+	var point2Ds = [];
+	for(var i=0; i<allViews.length; ++i){
+		var view = allViews[i];
+		var pointA = pointDom.pointForView(view);
+		if(pointA){ // A has already
+			point2Ds.push(pointA.point2D());
+		}else{ // only in B
+			throw "need to find mapping for intersect -> view"
+			point2Ds.push(null);
+		}
+	}
+	
+
+	throw "real logic here";
+	
+	var point3DC = this.newPoint3DFromPieces(allViews,point2DNs,null, false);
+	
+
+	return point3DC;
+
+	// R - error
+	// estimate affine
+
+
+	/* list of
+		- each points total view count
+		- closest intersection / views: INT
+		- duplicated views: DOU
+		- single views: SIN
+		
+		// pick base point:
+		if points have same number of total views:
+			- pick point with lowest average R error
+		else 
+			- pick point with most views
+		
+		
+		- need to get affine transform for each view
+		for every single view not in base:
+			- transfer original point from each of base point's previous views to new view via affine
+			- extimate average point should be location
+
+		
+
+		// separater into: INT, DOU, SIN
+			var pointsINT = [];
+			var pointsSIN = [];
+			var pointsDOU = [];
+
+	*/
 	/*
 		keep 3D point:
 			A) most 2D 
