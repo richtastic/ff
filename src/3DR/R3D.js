@@ -35001,6 +35001,10 @@ var worldOffset = new V2D(300,300);
 	points = [];
 	normals = [];
 	var areas = [];
+
+var dataCircular = [];
+var dataCircMom = [];
+
 var dataSigmaX = [];
 var dataSigmaY = [];
 var dataSigmaZ = [];
@@ -35115,6 +35119,39 @@ var maxSizeNi = 0;
 					dns.push(distanceR);
 				}
 			}
+
+
+// CIRCULAR
+
+var cirAvg = new V2D();
+var cirDir = [];
+for(var j=0; j<points.length; ++j){ // weight points by: distance from center & normal direction
+	var point = points[j];
+	// var dir = V2D.sub(point,minCircleCenter);
+	var dir = V2D.sub(point,circleCenter);
+		dir.norm();
+	cirAvg.add(dir);
+	cirDir.push(dir);
+}
+cirAvg.scale(1.0/points.length);
+var mag = cirAvg.length();
+cirAvg.norm();
+dataCircular.push(mag);
+
+// moment:
+var moment = 0;
+for(var j=0; j<cirDir.length; ++j){ 
+	var dir = cirDir[j];
+	var angle = V2D.angle(dir,cirAvg);
+	var mom = angle / Math.PI; // [0-1]
+	mom = mom*mom;
+	mom = Math.abs(mom);
+	moment += mom;
+}
+moment = moment / points.length;
+
+dataCircMom.push(moment);
+
 
 
 			///
@@ -35558,6 +35595,10 @@ if(false){
 			break;
 		}
 	}
+
+
+Code.printMatlabArray(dataCircular,"dataCircular");
+Code.printMatlabArray(dataCircMom,"dataMoment");
 
 	var maxIndex = optimumIndex;
 	var minCircle = optimumCircle;

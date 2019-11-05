@@ -11,8 +11,8 @@ SurfaceTest.prototype.handleLoaded = function(){
 	this._stage.addChild(this._root);
 // this._root.matrix().translate(100,400);
 	this.addListeners();
-	// this._refreshDisplay();
-	this._testA();
+	this._refreshDisplay();
+	// this._testA();
 }
 SurfaceTest.prototype.addListeners = function(){
 	// this._canvas.addFunction(Canvas.EVENT_WINDOW_RESIZE,this.handleCanvasResizeFxn,this);
@@ -54,8 +54,8 @@ SurfaceTest.prototype._refreshDisplay = function(){
 	var pointCount = 150;
 	// var error = 0.0;
 	// var error = 0.01;
-	var error = 0.05;
-	// var error = 0.10; // ok
+	// var error = 0.05;
+	var error = 0.10; // ok
 	// var error = 0.20; //
 	// var error = 0.25; // bad
 	// var error = 0.5; // impossible

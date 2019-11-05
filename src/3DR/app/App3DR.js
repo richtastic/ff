@@ -982,6 +982,7 @@ App3DR.prototype._projectBALoaded = function(object, data){
 var min3D = null;
 var max3D = new V3D();
 	var points3D = [];
+	var normals3D = [];
 	var points2D = Code.newArrayArrays(views.length);
 	console.log(views);
 
@@ -998,6 +999,14 @@ if(points){
 	for(var i=0; i<points.length; ++i){
 		var v = points[i];
 		var point3D = new V3D(v["X"],v["Y"],v["Z"]);
+		points3D.push(point3D);
+		if(v["x"] !== undefined){
+			var normal3D = new V3D(v["x"],v["y"],v["z"]);
+			// var normal3D = new V3D(1.0,0.0,0.0);
+			// console.log(normal3D.length());
+			normal3D.norm();
+			normals3D.push(normal3D);
+		}
 		if(!min3D){
 			min3D = new V3D(point3D.x,point3D.y,point3D.z);
 			max3D = new V3D(point3D.x,point3D.y,point3D.z);
@@ -1028,7 +1037,7 @@ if(points){
 		}
 		V3D.min(min3D,min3D,point3D);
 		V3D.max(max3D,max3D,point3D);
-		points3D.push(point3D);
+		
 //console.log("TODO: SCALE ENTIRE SCENE ????? OR INCREASE FRUSTRUM");
 //point3D.scale(0.001);
 	}
@@ -1148,13 +1157,14 @@ console.log("this._originalPoints");
 console.log(app._originalPoints);
 console.log(points2D);
 	if(points3D.length>0){
-		app.setPoints(points3D, points2D);
+		app.setPoints(points3D, points2D, null, normals3D);
 	}
 	app.setViews(views3D);
 	if(!max3D || !min3D){
 		max3D = new V3D(1,1,1);
 		min3D = new V3D(-1,-1,-1);
 	}
+console.log(min3D,max3D);
 	var range = V3D.sub(max3D,min3D);
 	var maxDistance = max3D.length();
 	maxDistance = maxDistance * 2;
@@ -3688,14 +3698,14 @@ camWid = 0.20;
 			this._renderTexturePointList[nextIndex] = vertList;
 			++nextIndex;
 
-			// add lines:
-			var points = this._points3D;
-			if(points){
-				for(var j=0; j<points.length; ++j){
-					var v = points[j];
-					lines.push(o,v);
-				}
-			}
+			// // add lines:
+			// var points = this._points3D;
+			// if(points){
+			// 	for(var j=0; j<points.length; ++j){
+			// 		var v = points[j];
+			// 		lines.push(o,v);
+			// 	}
+			// }
 		}
 	}
 
@@ -3716,10 +3726,10 @@ camWid = 0.20;
 
 console.log("GOT STUFF ?");
 	// set lines
-	this.setLines(lines);
+	// this.setLines(lines);
 
 	// reset points with colors now avail:
-	this.setPoints(this._points3D, this._points2D, this._originalPoints);
+	this.setPoints(this._points3D, this._points2D, this._originalPoints, this._normals3D);
 
 }
 
@@ -3829,25 +3839,34 @@ var triangleCount = triangles.length;
 	console.log(maxTextures);
 
 
-
+// ..
 
 
 
 }
 App3DR.App.Model3D.prototype.setLines = function(input){
 	// CREATE LINES:
+
+	console.log("setLines ........................")
 	var points = [];
 	var colors = [];
 	for(var i=0; i<input.length; ++i){
-break;
+// break;
 		var v = input[i];
 		points.push(v.x,v.y,v.z);
 // NEGATIVE Z:
 // points.push(v.x,v.y,-v.z);
+
+colors.push(0.0,0.0,1.0,0.25);
 		// colors.push(1.0,1.0,1.0,0.05);
-		colors.push(0.1,0.1,0.1,0.02);
+		// colors.push(0.1,0.1,0.1,0.02);
 		// colors.push(0.1,0.1,0.1,0.005);
 	}
+
+	console.log(input);
+	console.log(colors);
+	console.log("points:");
+	console.log(points);
 	// create objects
 	this._stage3D.selectProgram(2);
 	this._programLineVertexPositionAttrib = this._stage3D.enableVertexAttribute("aVertexPosition");
@@ -3855,7 +3874,7 @@ break;
 	this._programLinePoints = this._stage3D.getBufferFloat32Array(points, 3);
 	this._programLineColors = this._stage3D.getBufferFloat32Array(colors, 4);
 }
-App3DR.App.Model3D.prototype.setPoints = function(input3D, input2D, hasImages){
+App3DR.App.Model3D.prototype.setPoints = function(input3D, input2D, hasImages, normals3D){
 	//console.log(this._viewImages);
 	var viewTable = {};
 	if(this._views) {
@@ -3869,6 +3888,7 @@ App3DR.App.Model3D.prototype.setPoints = function(input3D, input2D, hasImages){
 	// CREATE POINTS:
 	this._points3D = input3D;
 	this._points2D = input2D;
+	this._normals3D = normals3D;
 	console.log("setPoints ---");
 	console.log(input3D);
 	console.log(input2D);
@@ -3937,10 +3957,30 @@ var useErrors = false;
 			var col = Code.interpolateColorGradientARGB(err, colorList,locationList);
 				col = Code.getFloatARGB(col);
 			colors.push(col[1],col[2],col[3],col[0]);
+			// colors.push(0,0,0,1); // black points
 		}
 	}
 	console.log("COLORED");
 
+
+var showNormals = true;
+if(showNormals && normals3D){
+	console.log(normals3D);
+	console.log(input3D);
+	// throw "showNormals"
+
+	var lines = [];
+	var normalSize = 0.1; // scale by scene size
+	var s = normalSize;
+	for(var i=0; i<normals3D.length; ++i){
+		var p = input3D[i];
+		var n = normals3D[i];
+		lines.push(new V3D(p.x,p.y,p.z));
+		lines.push(new V3D(p.x+s*n.x,p.y+s*n.y,p.z+s*n.z));
+	}
+
+	this.setLines(lines);
+}
 
 
 	// TRIM SO ONLY POINTS IN 0 & 1 are displayed:
@@ -3981,6 +4021,8 @@ var useErrors = false;
 					var grn = image.grn()[index];
 					var blu = image.blu()[index];
 					colors.push(red,grn,blu,1.0);
+					// single color
+					// colors.push(0.9,0.9,0.9,1.0);
 					imageSuccess = true;
 				}else{
 					// console.log(hasImages);
@@ -4268,6 +4310,7 @@ App3DR.App.Model3D.prototype._eff = function(){
 	// RENDER POINTS
 
 	if(this._pointPointBuffer && this._pointPointBuffer.length>0){
+	// if(false){
 		this._stage3D.selectProgram(3);
 		this._stage3D.disableCulling();
 		this._stage3D.matrixReset();
@@ -4278,6 +4321,7 @@ App3DR.App.Model3D.prototype._eff = function(){
 
 	// RENDER LINES
 	if(this._programLinePoints && this._programLinePoints.length>0){
+		// console.log("lines")
 		this._stage3D.selectProgram(2);
 		this._stage3D.matrixReset();
 		this._stage3D.disableCulling();
@@ -5866,6 +5910,9 @@ E			points.yaml - dense point reconstruction info
 				points:
 					...
 				ACCUMULATED DENSE POINTS
+
+
+
 			bundle.yaml
 						-- same but 'saved state'
 			
@@ -6019,6 +6066,11 @@ App3DR.ProjectManager = function(relativePath, operatingStage, readyFxn){ // ver
 	this._pointsCount = null;
 	this._pointData = null;
 
+	this._bundledFilename = null;
+	this._bundledCount = null;
+	this._bundledData = null;
+
+	// this is a debugging parameter:
 	this._bundleFilename = null;
 	this._bundleData = null;
 
@@ -6089,6 +6141,8 @@ App3DR.ProjectManager.BUNDLE_DENSE_FILE_NAME = "dense.yaml";
 App3DR.ProjectManager.RECONSTRUCT_DENSE_DIRECTORY = "dense";
 App3DR.ProjectManager.RECONSTRUCT_DENSE_FILENAME = "dense.yaml";
 App3DR.ProjectManager.RECONSTRUCT_POINTS_FILE_NAME = "points.yaml"; // result of compiled points.yaml
+App3DR.ProjectManager.RECONSTRUCT_BUNDLE_FILE_NAME = "bundled.yaml";
+// DEBUG FILE:
 App3DR.ProjectManager.RECONSTRUCT_BUNDLE_FILE_NAME = "bundle.yaml"; // cams, views & P3D+NRM absolutes
 // App3DR.ProjectManager.RECONSTRUCT_ABSOLUTE_FILE_NAME = "absolute.yaml"; //
 
@@ -6217,6 +6271,25 @@ App3DR.ProjectManager.prototype.setPointsCount = function(count){
 App3DR.ProjectManager.prototype.pointsDone = function(){
 	return this._pointsCount != null;
 }
+
+
+App3DR.ProjectManager.prototype.bundledFilename = function(){
+	return this._bundledFilename;
+}
+App3DR.ProjectManager.prototype.setBundledFilename = function(bundled){
+	this._bundledFilename = bundled;
+}
+App3DR.ProjectManager.prototype.bundledData = function(){
+	return this._bundledData;
+}
+App3DR.ProjectManager.prototype.setBundledCount = function(count){
+	this._bundledCount = count;
+}
+App3DR.ProjectManager.prototype.bundledDone = function(){
+	return this._bundledCount != null;
+}
+
+
 
 
 App3DR.ProjectManager.prototype.setTriangleCount = function(count){
@@ -6369,8 +6442,13 @@ App3DR.ProjectManager.prototype.setFromYAML = function(object){
 	var sparseCount = object["sparseCount"];
 	var dense = object["dense"];
 	var denseCount = object["denseCount"];
+	
 	var pointsCount = object["pointsCount"];
 	var points = object["points"];
+
+	var bundledCount = object["bundledCount"];
+	var bundled = object["bundled"];
+
 	var textureCount = object["textureCount"];
 	var triangleCount = object["triangleCount"];
 	var triangles = object["triangles"];
@@ -6430,6 +6508,9 @@ App3DR.ProjectManager.prototype.setFromYAML = function(object){
 	this._denseCount = Code.valueOrDefault(denseCount, null);
 	this._pointsFilename = Code.valueOrDefault(points, null);
 	this._pointsCount = Code.valueOrDefault(pointsCount, null);
+
+	this._bundledFilename = Code.valueOrDefault(bundled, null);
+	this._bundledCount = Code.valueOrDefault(bundledCount, null);
 
 	this._triangleFilename = Code.valueOrDefault(triangles, null);
 	this._triangleCount = Code.valueOrDefault(triangleCount, null);
@@ -6533,6 +6614,10 @@ App3DR.ProjectManager.prototype.toYAML = function(){
 	// points
 	yaml.writeString("points",this._pointsFilename);
 	yaml.writeNumber("pointsCount",this._pointsCount);
+	yaml.writeBlank();
+	// bundled
+	yaml.writeString("bundled",this._bundledFilename);
+	yaml.writeNumber("bundledCount",this._bundledCount);
 	yaml.writeBlank();
 	// triangles
 	yaml.writeString("triangles",this._triangleFilename);
@@ -6981,6 +7066,42 @@ App3DR.ProjectManager.prototype._loadPointsComplete = function(object, data){
 
 
 
+
+App3DR.ProjectManager.prototype.saveBundled = function(string, filename, callback, context, object){
+	console.log("saveBundled: ");
+	var path = Code.appendToPath(this._workingPath, App3DR.ProjectManager.RECONSTRUCT_DIRECTORY, filename);
+	var yamlBinary = Code.stringToBinary(string);
+	this.addOperation("SET", {"path":path, "data":yamlBinary}, callback, context);
+}
+App3DR.ProjectManager.prototype.loadBundled = function(callback, context, object){
+	var path = Code.appendToPath(this._workingPath, App3DR.ProjectManager.RECONSTRUCT_DIRECTORY, this.bundledFilename());
+	console.log("loadBundled: "+path);
+	var object = {};
+		object["callback"] = callback;
+		object["context"] = context;
+	this.addOperation("GET", {"path":path}, this._loadBundledComplete, this, object);
+}
+App3DR.ProjectManager.prototype._loadBundledComplete = function(object, data){
+	console.log("_loadBundledComplete");
+	var callback = object["callback"];
+	var context = object["context"];
+	this._bundledData = this.dataToObject(data);
+	if(callback && context){
+		callback.call(context, this);
+	}
+}
+
+
+
+
+
+
+
+
+
+
+// debug:
+
 App3DR.ProjectManager.prototype.saveBundle = function(string, filename, callback, context, object){
 	console.log("saveBundle: ");
 	var path = Code.appendToPath(this._workingPath, App3DR.ProjectManager.RECONSTRUCT_DIRECTORY, filename);
@@ -7294,18 +7415,18 @@ if(!this.pointsDone()){ // put all points in single file
 	return;
 }
 
-throw "task BA";
-if(!this.bundleAdjustDone()){ // iteritive bundle adjust -- all points in single file
-	this.iteratePointsFullBA();
-	return;
-}
+// throw "task BA";
+// if(!this.bundleAdjustDone()){ // iteritive bundle adjust -- all points in single file
+// 	this.iteratePointsFullBA();
+// 	return;
+// }
 
 
-throw "surface - triangles";
+// throw "surface - triangles";
 this.surfaceTriangulate();
 
 
-// throw "triangles"
+throw "triangles"
 var triangles = this.triangleCount();
 console.log("triangle count: "+triangles);
 if(triangles===null){
@@ -7314,7 +7435,7 @@ if(triangles===null){
 }
 
 
-// throw "textures";
+throw "textures";
 var textures = this.textureCount();
 console.log("texture count: "+textures);
 if(textures===null){
@@ -10013,12 +10134,14 @@ App3DR.ProjectManager.prototype._iterateDenseLoadingStart = function(){
 	// console.log(views);
 	// prep
 	var tableViewFromID = {};
+	var lookupIndexFromID = {};
 	var images = [];
 	var sizes = [];
 	var transforms = [];
 	for(var i=0; i<views.length; ++i){
 		var view = views[i];
 		var vid = view["id"];
+		lookupIndexFromID[vid] = i;
 		tableViewFromID[vid] = views[i];
 		images[i] = null;
 		var R = view["R"];
@@ -10029,21 +10152,17 @@ App3DR.ProjectManager.prototype._iterateDenseLoadingStart = function(){
 		sizes[i] = size;
 	}
 
-	console.log("A");
+	///
 	var stage = GLOBALSTAGE;
 	// world:
 	var world = new Stereopsis.World();
 	var info = project._addGraphViews(world, tableViewFromID, stage);
-	console.log("B");
 	// var images = info["images"];
 	var transforms = info["transforms"];
 	App3DR.ProjectManager.addCamerasToWorld(world, cameras);
-	console.log("C");
 	var worldViews = App3DR.ProjectManager.addViewsToWorld(world, views, sizes, transforms);
 	// console.log(worldViews);
 	// console.log(world);
-	// ..0
-	console.log("V");
 	var worldViewLookup = {};
 	for(var i=0; i<worldViews.length; ++i){
 		var view = worldViews[i];
@@ -10055,7 +10174,6 @@ App3DR.ProjectManager.prototype._iterateDenseLoadingStart = function(){
 		view.cellSize(size);
 		console.log("SIZES: "+view.cellSize()+" | "+view.compareSize());
 	}
-console.log("C");
 	// set view abs locations
 	// for(var i=0; i<views.length; ++i){
 	// 	var view = views[i];
@@ -10074,6 +10192,7 @@ console.log("C");
 	world.copyRelativeTransformsFromAbsolute();
 // console.log(world);
 // throw "?"
+
 	// add existing points
 
 	console.log("EXISTING");
@@ -10090,14 +10209,58 @@ console.log("C");
 	var timeB = Code.getTimeMilliseconds();
 	console.log("DELTA: "+(timeB-timeA));
 	console.log("embedded points");
-	
+
+
 
 	// add next pair's dense points
 	pendingIndex++;
-	if(pendingIndex>pendingList.length){
+	if(pendingIndex>=pendingList.length){ // all points loaded, save to BA
+		var pointsCount = existingPoints.length;
+		console.log(pointsCount);
+		// get a BA object:
+
+		// ???
+
+		console.log("data");
+		world.estimate3DErrors(true);
+		world.patchInitBasicSphere(true);
+		// world.estimate3DErrors(true);
+
+
+
+
+
+		console.log("bundle adjust");
+
+		world.solveFullDenseIterate();
+
+
+
+
+		console.log("str");
+		// check it out
+		var str = world.toYAMLString();
+		console.log(str);
+
+
+
+		// this.setPointsCount(pointsCount);
+
+		// ...
+
+
+
 		throw "done loading";
+
+
 		return;
 	}
+throw "?"
+	
+// var points = world.toPointArray();
+// console.log(points);
+// throw "inserted?";
+	
 	var densePair = pendingList[pendingIndex];
 	var densePairID = densePair["id"];
 	// var densePairData = null;
@@ -10139,15 +10302,14 @@ console.log("C");
 		world.estimate3DErrors(true);
 		console.log("pat");
 		// TODO: ONLY DO AFFINE -- ALREADY HAVE PATCH SIZE & NORMAL ???
-		world.patchInitBasicSphere(true);
-		console.log("F");
-		world.relativeFFromSamples();
-		world.estimate3DErrors(true);
+		world.patchInitBasicSphere(true); // only the actually merged points need this calculated -- can delay until need
+		// world.relativeFFromSamples();
+		// world.estimate3DErrors(true);
 		console.log("remove");
 		// remove new points:
 		world.disconnectPoints3D(points3DNew);
-
-
+		// 
+		// 
 		console.log("add with intersection");
 		// throw "?"
 		// amerge
@@ -10159,11 +10321,32 @@ console.log("C");
 		console.log("DELTA: "+(timeB-timeA));
 		console.log("embedded points 2");
 		console.log(world);
-		throw "?";
-
-
-		
+		world.printPoint3DTrackCount();
+		// var allPoints = world.toPointArray();
+		var pointPoints = project._getGraphPointsFromWorld(world, lookupIndexFromID, false);
+		// 
+		// save as update
+		pointsData["pendingIndex"] = pendingIndex;
+		pointsData["points"] = pointPoints;
+		var pointCount = pointPoints.length;
+		project.setPointsCount(pointCount);
+		// 
+		console.log(pointsData);
+		console.log(pointPoints);
+		console.log(pointCount);
+		// 
+		throw "to save";
+		project.savePointsFromData(pointsData, fxnSavedPoints, project);
 	}
+
+	var fxnSavedProject = function(){
+		console.log("PROJECT SAVED")
+	}
+	var fxnSavedPoints = function(){
+		console.log("POINT FILE SAVED")
+		project.saveProjectFile(fxnSavedProject, project);
+	}
+
 	var densePairPointsReadyFxn = function(){
 		console.log(densePairPoints);
 		throw "densePairPointsReadyFxn";
@@ -10902,8 +11085,8 @@ if(false){
 App3DR.ProjectManager.prototype._getGraphPointsFromWorld = function(world, graphViewLookupIndex, includeAffine){
 	includeAffine = includeAffine!==undefined && includeAffine!==null ? includeAffine : true;
 	var allPoints = world.toPointArray();
-	console.log("allPoints: "+allPoints.length);
-	console.log(allPoints);
+	// console.log("allPoints: "+allPoints.length);
+	// console.log(allPoints);
 
 	// update points on graph:
 	var points3D = allPoints;
@@ -11082,13 +11265,26 @@ App3DR.ProjectManager.prototype.surfaceTriangulate = function(){ // triangles fr
 	// do operations
 	var fxnPointsLoaded = function(){
 		console.log("fxnPointsLoaded");
-
+		var bundleData = project.bundledData();
+		console.log(bundleData);
+		var allPoints = bundleData["points"];
 		// extract points & normals
-
-
-		// load from points file
 		var pnts = [];
 		var nrms = [];
+		for(var i=0; i<allPoints.length; ++i){
+			var p = allPoints[i];
+			var pnt = new V3D(p["X"],p["Y"],p["Z"]);
+			var nrm = new V3D(p["x"],p["y"],p["z"]);
+			pnts.push(pnt);
+			nrms.push(nrm);
+		}
+		console.log(pnts);
+		console.log(nrms);
+
+// throw "?"
+
+		// load from points file
+		
 		var mesh = new Mesh3D(pnts,nrms);
 		var triangles = mesh.generateSurfaces();
 
@@ -11103,7 +11299,7 @@ App3DR.ProjectManager.prototype.surfaceTriangulate = function(){ // triangles fr
 	project.loadBundled(fxnPointsLoaded, project);
 
 
-
+// ????
 
 }
 
@@ -11732,7 +11928,7 @@ console.log("_calculateGlobalOrientationNonlinearB");
 		this.saveBundleAdjust(str, fxnZ, this);
 	}
 
-	world.solveGlobalAbsoluteTransform(completeFxn, this,      false);
+	world.solveGlobalAbsoluteTransform(completeFxn, this, false);
 }
 App3DR.ProjectManager.prototype.calculateGlobalOrientationHierarchyLoad = function(){
 	console.log("load all necessary BA stuff ...");

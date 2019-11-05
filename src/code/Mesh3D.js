@@ -1819,14 +1819,14 @@ Mesh3D.prototype._iterateFronts = function(){
 		// var maxIter = 0;
 		// var maxIter = 5;
 		// var maxIter = 10;
-		// var maxIter = 100;
+		var maxIter = 100;
 		// var maxIter = 1000;
 		// var maxIter = 2000;
 		// var maxIter = 3000;
 		// var maxIter = 4000;
 		// var maxIter = 6000;
 		// var maxIter = 10000;
-		var maxIter = 15000;
+// var maxIter = 15000;
 		// var maxIter = 20000;
 		// var maxIter = 40000;
 		// var maxIter = 60000;
@@ -2258,6 +2258,7 @@ var kNNWindow = 30;
 		// get local plane
 		// Code.planeFromPoints = function(center, points, weights){
 		// console.log(location, neighbors, weights);
+throw "...";
 		var plane = Code.planeFromPoints(location, neighbors, weights);
 
 		// console.log(plane);
