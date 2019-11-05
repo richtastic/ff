@@ -516,7 +516,7 @@ QuadSpace.Arxel.prototype.objectsInsideRect = function(found,checked,min,max,toR
 	if(this._objects){
 		for(var i=0; i<this._objects.length; ++i){
 			var arx = this._objects[i];
-console.log(arx)
+// console.log(arx)
 			var index = arx._id;
 			if(checked[index]){
 				continue;

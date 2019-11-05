@@ -534,7 +534,7 @@ var windowCount = 10;
 			weights[i] = weights[i]/weightTotal;
 		}
 
-		var plane = Code.planeFromPoints(location, perimeter, weights);
+		var plane = Code.planeFromPoints3D(location, perimeter, weights);
 		// move points away center:
 		var normal = plane["normal"];
 		var center = plane["point"];
@@ -1316,6 +1316,7 @@ Mesh3D.prototype._propagateNormals = function(){
 	graph.kill();
 }
 Mesh3D.prototype.convexNeighborhoodEdges = function(point){
+
 	var space = this._pointSpace;
 	var maxNeighborsCheck = 12; // 6 -> 10
 	var minSphereNeighborhood = 4;
@@ -1362,6 +1363,7 @@ Mesh3D.prototype.convexNeighborhoodEdges = function(point){
 	return edges;
 }
 Mesh3D.prototype._setCurvaturePoints_MLS = function(){
+
 var limitCurvatureToNeighborhood = true;
 	var space = this._pointSpace;
 	var points = space.toArray();
@@ -1422,9 +1424,16 @@ var maxRadius = 1.0/Math.max(minimumCurvature,1E-16);
 var minRadius = 1.0/Math.max(maximumCurvature,1E-16);
 console.log("MAX CURVATURE: "+maximumCurvature+" ~ "+minRadius);
 console.log("MIN CURVATURE: "+minimumCurvature+" ~ "+maxRadius);
+
+
+// this._cappedMinK = 1.0/8.50;
+// this._cappedMaxK = 1.0/0.10;
+
+
 }
 Mesh3D.prototype._setCurvaturePoints_APSS = function(){
 	// find ideal edge lengths at each input point:
+/*
 	var space = this._pointSpace;
 	var points = space.toArray();
 	// var planeNeighborCount = 7;
@@ -1470,15 +1479,6 @@ var localSize2 = V3D.distance(neighbors[0].point(),neighbors[2].point());
 		var dirY = plane["y"];
 		var dirZ = plane["normal"];
 
-/*
-// APSS = use local normal
-		// normal aligned with local normal:
-		dirZ = normal.copy();
-		dirY = V3D.cross(dirZ,dirX);
-		dirY.norm();
-		dirX = V3D.cross(dirY,dirZ);
-		dirX.norm();
-*/
 		// var cross = V3D.cross(dirX,dirY);
 		// var dot = V3D.dot(cross,dirZ);
 		// 5 points on surface
@@ -1516,52 +1516,6 @@ var localSize2 = V3D.distance(neighbors[0].point(),neighbors[2].point());
 		var H = pts[4];
 		// var curvature = Code.curvature3D(A,B,C,D,E,F,G,H,I);
 		var curvature = Code.curvature3D5(E,D,F,B,H);
-
-
-
-
-/*
-// epsilon = localSize*0.1;
-var list = [];
-	var yMin = -100;
-	var yMax = 100;
-	for(var y=yMin; y<=yMax; ++y){
-		var x = 0;
-
-		var p = new V3D();
-		p.add(dirX.x*epsilon*x,dirX.y*epsilon*x,dirX.z*epsilon*x);
-		p.add(dirY.x*epsilon*y,dirY.y*epsilon*y,dirY.z*epsilon*y);
-		p.add(location);
-		p = this._projectPointToSurface(p);
-		pts.push(p);
-
-
-		var locationToP = V3D.sub(p,location);
-		var dot = V3D.dot(dirZ,locationToP);
-		list.push(dot);
-
-
-	}
-
-Code.printMatlabArray(list);
-
-console.log(V3D.sub(D,E));
-console.log(V3D.sub(F,E));
-console.log(V3D.sub(B,E));
-console.log(V3D.sub(H,E));
-console.log("epsilon: "+epsilon);
-console.log(V3D.sub(D,E).length());
-console.log(V3D.sub(F,E).length());
-console.log(V3D.sub(B,E).length());
-console.log(V3D.sub(H,E).length());
-
-console.log(curvature);
-var radius = 1.0/curvature["max"];
-console.log(radius);
-
-console.log(curvature["normal"]);
-throw "curv?"
-*/
 		var kMin = curvature["min"];
 		var kMax = curvature["max"];
 		var norm = curvature["normal"];
@@ -1596,6 +1550,14 @@ list10 = list[Math.round(list.length*0.10)];
 list90 = list[Math.round(list.length*0.90)];
 this._cappedMinK = list10;
 this._cappedMaxK = list90;
+
+
+
+
+throw "..";
+
+this._cappedMinK = 1.0/8.50;
+this._cappedMaxK = 1.0/0.10;
 
 /*
 // convert to normal distribution:
@@ -1638,7 +1600,7 @@ Mesh3D.prototype._setNeighborhoodSize = function(){
 		for(var j=minimumCount; j<neighbors.length; ++j){
 			vectors.push(neighbors[j].point());
 			ones.push(1.0);
-			var vals = Code.planeFromPoints(location, vectors, ones, true);
+			var vals = Code.planeFromPoints3D(location, vectors, ones, true);
 			// var vals = Code.planeFromPoints(location, vectors, null, true);
 			vals.sort(minFirst);
 			var v0 = vals[0];
@@ -1819,8 +1781,8 @@ Mesh3D.prototype._iterateFronts = function(){
 		// var maxIter = 0;
 		// var maxIter = 5;
 		// var maxIter = 10;
-		var maxIter = 100;
-		// var maxIter = 1000;
+		// var maxIter = 100;
+		var maxIter = 1000;
 		// var maxIter = 2000;
 		// var maxIter = 3000;
 		// var maxIter = 4000;
@@ -2107,7 +2069,7 @@ Mesh3D.prototype.tangentPlaneAtPoint = function(location, normal){
 	for(var j=0; j<neighbors.length; ++j){
 		neighs[j] = neighbors[j].point();
 	}
-	var plane = Code.planeFromPoints(location, neighs);
+	var plane = Code.planeFromPoints3D(location, neighs);
 	if(normal){ // force plane to align with normal
 		// var dirX = plane["x"];
 		// var dirY = plane["y"];
@@ -2191,9 +2153,47 @@ Mesh3D.transformPoints = function(points, trans){ // transform the points
 	return newPoints;
 }
 
+
+Mesh3D.prototype._projectPointToSurface_MLS_NEW = function(startingLocation, getInfo){
+	var space = this._pointSpace;
+	if(!this._bivariate){
+		this._bivariate = new BivariateSurface(3);
+	}
+	var bivariate = this._bivariate;
+
+	// get inital starting sphere
+
+
+	// grow sphere until plane is found
+
+
+	// transform local points into local 'up' direction
+
+
+	// get surface estimate
+
+
+	// get curvature
+	if(getInfo){
+		throw "curvature"
+	}
+
+	// project to surface
+
+
+	// 
+
+
+	console.log(startingLocation);
+	console.log(info);
+
+throw "?";
+}
+
 Mesh3D._tempForward = new Matrix3D();
 Mesh3D._tempReverse = new Matrix3D();
-Mesh3D.prototype._projectPointToSurface_MLS = function(startingLocation, info){
+// Mesh3D.prototype._projectPointToSurface_MLS_OLD = function(startingLocation, info){
+	Mesh3D.prototype._projectPointToSurface_MLS = function(startingLocation, info){
 	var space = this._pointSpace;
 if(!this._bivariate){
 	this._bivariate = new BivariateSurface(3);
@@ -2258,9 +2258,8 @@ var kNNWindow = 30;
 		// get local plane
 		// Code.planeFromPoints = function(center, points, weights){
 		// console.log(location, neighbors, weights);
-throw "...";
-		var plane = Code.planeFromPoints(location, neighbors, weights);
-
+		// var plane = Code.planeFromPoints(location, neighbors, weights);
+		var plane = Code.planeFromPoints3D(location, neighbors, weights);
 		// console.log(plane);
 		var planeNormal = plane["normal"];
 		var planeOrigin = location;
@@ -2615,7 +2614,7 @@ Mesh3D.prototype.projectedMaxNeighborhoodAngle = function(location, length, norm
 	for(var i=0; i<knn.length; ++i){
 		points[i] = knn[i].point();
 	}
-var plane = Code.planeFromPoints(location, points);
+var plane = Code.planeFromPoints3D(location, points);
 var planePoint = plane["point"];
 var planeNormal = plane["normal"];
 	var planeNormal = normal;

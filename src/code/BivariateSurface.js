@@ -88,10 +88,12 @@ BivariateSurface.prototype.fromPoints = function(points){
 	var pInv = Matrix.pseudoInverse(A);
 		pInv = Matrix.transpose(pInv);
 	var c = Matrix.mult(pInv,b);
+	// console.log(c);
 	Code.emptyArray(this._coefficients);
 	c.toArray(this._coefficients);
-	console.log(this._coefficients+"");
-	throw "is this right? --- is C the right dimension";
+	// console.log(this._coefficients);
+	// console.log(this._coefficients+"");
+	// throw "is this right? --- is C the right dimension";
 }
 /*
 BivariateSurface.prototype.fromPoints = function(points,degree, weightPoint,h){

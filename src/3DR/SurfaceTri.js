@@ -696,7 +696,7 @@ SurfaceTri.prototype.subSampleArray = function(array, count){
 }
 SurfaceTri.prototype.loadPointFile = function(){
 	console.log("loadPointFile");
-	// var sourceFileName = "./images/points/saltdome_1019.pts";
+	var sourceFileName = "./images/points/saltdome_1019.pts";
 	// var sourceFileName = "./images/points/foot_5092.pts";
 	// var sourceFileName = "./images/points/bunny_30571.pts";
 	// var sourceFileName = "./images/points/test.pts";
@@ -704,7 +704,7 @@ SurfaceTri.prototype.loadPointFile = function(){
 	// var sourceFileName = "./images/points/test_normals.pts";
 	// var sourceFileName = "./images/points/test_normals_1314.pts";
 	// var sourceFileName = "./images/points/test_normals_2468.pts";
-	var sourceFileName = "./images/points/pika_normals_9.pts";
+	// var sourceFileName = "./images/points/pika_normals_9.pts";
 	// var sourceFileName = "./images/points/pika_normals_5.pts";
 	var doNormalizing = false;
 	var hasNormals = true;

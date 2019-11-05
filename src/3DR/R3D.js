@@ -34929,7 +34929,106 @@ R3D.transform3DFromParameters = function(P, rx,ry,rz, tx,ty,tz){
 	return P;
 }
 
-R3D.surfaceThicknessFromPoint2D = function(location,space, toNormalFxn){ //  // points+normals => neighborhood
+R3D.surfaceThicknessFromPoint2D = function(location,space, toNormalFxn){
+	// tools:
+	var toPointFxn = space.toPoint();
+
+	// initial circle:
+	var objects = space.kNN(location, 3);
+	var points = [];
+	var normals = [];
+	for(var i=0; i<objects.length; ++i){
+		var object = objects[i];
+		var point = toPointFxn(object);
+		var normal = toNormalFxn(object);
+		points.push(point);
+		normals.push(normal);
+	}
+	var circleCenter = Code.averageV2D(points);
+
+	// all possibilities:
+	var maxNeighbors = 100;
+	var objects = space.kNN(circleCenter, maxNeighbors);
+	var allPoints = [];
+	var allNormals = [];
+	for(var i=0; i<objects.length; ++i){
+		var object = objects[i];
+		var point = toPointFxn(object);
+		var normal = toNormalFxn(object);
+		allPoints.push(point);
+		allNormals.push(normal);
+	}
+	// accumulate:
+	var points = [];
+	var normals = [];
+var dataPlaneRatios = [];
+var dataDirectionConfidence = [];
+var dataDirectionMoment = [];
+var dataDirectionAngle = [];
+	for(var i=0; i<allPoints.length; ++i){
+		points.push(allPoints[i]);
+		normals.push(allNormals[i]);
+		if(points.length<3){
+			continue;
+		}
+		// circle:
+		var circleCenter = Code.averageV2D(points);
+		var circleNormal = Code.averageAngleVector2D(normals);
+		var circleRadius = V2D.maximumDistance(points,circleCenter);
+
+		// plane estimation:
+		// Code.planeFromPoints3D = function(center, points, weights, cov){
+		var plane = Code.planeFromPoints2D(circleCenter, points, null);
+		var ratio = plane["ratio"];
+		dataPlaneRatios.push(ratio);
+
+
+		// direction confidence
+		var cirAvg = new V2D();
+		var cirDir = [];
+		for(var j=0; j<points.length; ++j){ // weight points by: distance from center & normal direction
+			var point = points[j];
+			var dir = V2D.sub(point,circleCenter);
+				dir.norm();
+			cirAvg.add(dir);
+			cirDir.push(dir);
+		}
+		cirAvg.scale(1.0/points.length);
+		var mag = cirAvg.length();
+		cirAvg.norm();
+		dataDirectionConfidence.push(mag);
+
+		// moment
+		var angle = 0;
+		var moment = 0;
+		for(var j=0; j<cirDir.length; ++j){ 
+			var dir = cirDir[j];
+			var ang = V2D.angle(dir,cirAvg);
+			var mom = ang / Math.PI; // [0-1]
+			angle += mom;
+			mom = mom*mom;
+			mom = Math.abs(mom);
+			moment += mom;
+		}
+		moment = moment / points.length;
+		angle = angle / points.length;
+		dataDirectionMoment.push(moment);
+		dataDirectionAngle.push(angle);
+
+		
+
+	}
+
+	Code.printMatlabArray(dataPlaneRatios,"x");
+	Code.printMatlabArray(dataDirectionConfidence,"y");
+	Code.printMatlabArray(dataDirectionMoment,"m");
+	Code.printMatlabArray(dataDirectionAngle,"a");
+	throw "?"
+
+	return {"radius":minCircle["radius"], "center":minCircle["center"], "count":maxIndex, "normal":minCircle["normal"]};
+}
+
+R3D.surfaceThicknessFromPoint2D_2 = function(location,space, toNormalFxn){ //  // points+normals => neighborhood
 
 var worldScale = 1000.0;
 var worldOffset = new V2D(300,300);

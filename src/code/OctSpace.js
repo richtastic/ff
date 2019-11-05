@@ -138,7 +138,6 @@ OctSpace.prototype.removeObject = function(object){
 	return object;
 }
 OctSpace.prototype.objectsInsideSphere = function(center,radius){
-	x
 	var arr = [];
 	radius = Math.min(this._root.size().length(),radius);
 	this._root.objectsInsideSphereSquare(arr,{},center,radius*radius,this._toCuboidFxn);
@@ -529,7 +528,7 @@ OctSpace.Voxel.prototype.objectsInsideSphereSquare = function(found,checked,cent
 			var cube = toCubeFxn(object);
 			var distance = OctSpace.closestDistanceSquareCuboid(center, cube.min(),cube.max());
 			if(distance<=radSquare){
-				Code.addUnique(arr,object);
+				found.push(object);
 			}
 		}
 	}else if(this._children){
@@ -554,7 +553,7 @@ OctSpace.Voxel.prototype.objectsInsideCuboid = function(found,checked,min,max,to
 			var object = vox.object();
 			var cube = toCubeFxn(object);
 			if( !Code.cuboidsSeparate(min,max, cube.min(),cube.max()) ){
-				Code.addUnique(arr,object);
+				found.push(object);
 			}
 		}
 	}else if(this._children){
@@ -585,7 +584,7 @@ OctSpace.Voxel.prototype.objectsIntersectRay = function(found,checked,org,dir,to
 			var center = cube.center();
 			var intersection = Code.intersectRaySphere3D(org,dir, center,radius);
 			if(intersection){
-				arr.push(object);
+				found.push(object);
 			}
 		}
 	}else if(children){

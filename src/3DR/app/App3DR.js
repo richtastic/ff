@@ -1053,6 +1053,9 @@ if(points){
 		V3D.max(max3D,max3D,point3D);
 	}
 }
+
+this._modelMax3D = max3D;
+this._modelMin3D = min3D;
 var manager = this._projectManager;
 console.log(manager);
 var projectViews = manager.views();
