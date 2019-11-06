@@ -6220,7 +6220,7 @@ Stereopsis.World.prototype.solveFullDenseIterate = function(){ // multiwise BA f
 		// 	world.estimate3DErrors(true, false); // update errors using absolute-relative transforms
 		// }
 
-
+		
 		// refine cameras
 		world.estimate3DErrors(true);
 		world.averagePoints3DFromMatches();

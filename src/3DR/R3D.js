@@ -34930,6 +34930,9 @@ R3D.transform3DFromParameters = function(P, rx,ry,rz, tx,ty,tz){
 }
 
 R3D.surfaceThicknessFromPoint2D = function(location,space, toNormalFxn){
+var worldScale = 1000.0;
+var worldOffset = new V2D(300,300);
+
 	// tools:
 	var toPointFxn = space.toPoint();
 
@@ -34947,7 +34950,8 @@ R3D.surfaceThicknessFromPoint2D = function(location,space, toNormalFxn){
 	var circleCenter = Code.averageV2D(points);
 
 	// all possibilities:
-	var maxNeighbors = 100;
+	// var maxNeighbors = 100;
+	var maxNeighbors = 150;
 	var objects = space.kNN(circleCenter, maxNeighbors);
 	var allPoints = [];
 	var allNormals = [];
@@ -34965,6 +34969,15 @@ var dataPlaneRatios = [];
 var dataDirectionConfidence = [];
 var dataDirectionMoment = [];
 var dataDirectionAngle = [];
+var dataAreaPercent = [];
+
+// var areaGridN = 10; // maybe too small?
+// var areaGridN = 20;
+var areaGridN = 40; // too much
+var areaGridHalf = areaGridN/2;
+var areaGridTotal = areaGridN*areaGridN;
+var areaGrid = Code.newArrayZeros(areaGridTotal);
+var areaGridMask = ImageMat.circleMask(areaGridN, areaGridN);
 	for(var i=0; i<allPoints.length; ++i){
 		points.push(allPoints[i]);
 		normals.push(allNormals[i]);
@@ -35015,14 +35028,141 @@ var dataDirectionAngle = [];
 		dataDirectionMoment.push(moment);
 		dataDirectionAngle.push(angle);
 
+
+		// area grid fill:
+		var N = points.length;
+		var R = areaGridHalf;
+		// var r = Math.sqrt(1.0/(Math.PI*N));
+		var r = Math.sqrt(R*R/N);
+// r = r/2;
+		var rr = r*r;
+		var A = Math.PI*R*R;
+		var a = Math.PI*r*r;
+		// console.log(a+" / "+A+" = "+(a/A));
+		// var min = R/N;
+		// console.log(r+" / ");
+		var c = circleCenter;
+		var rad = circleRadius;
+
+		for(var j=0; j<N; ++j){
+			var p = points[j];
+			var x = (p.x-c.x)*R/circleRadius;
+			var y = (p.y-c.y)*R/circleRadius;
+			// console.log(p+" -> "+x+","+y);
+			if(r<=0.5){ // fill in single cell
+				// throw "single";
+				var cx = Math.min(Math.max(Math.round(x)+R, 0),areaGridN-1);
+				var cy = Math.min(Math.max(Math.round(y)+R, 0),areaGridN-1);
+				var index = cy*areaGridN + cx;
+				areaGrid[index] = 1;
+			}else{
+				var minX = Math.max(Math.floor(x-r)+R, 0);
+				var maxX = Math.min(Math.ceil(x+r)+R, areaGridN-1);
+				var minY = Math.max(Math.floor(y-r)+R, 0);
+				var maxY = Math.min(Math.ceil(y+r)+R, areaGridN-1);
+				// console.log(minX+","+maxX+" : "+minY+","+maxY)
+				for(var cy=minY; cy<=maxY; ++cy){
+					for(var cx=minX; cx<=maxX; ++cx){
+						var dd = Math.pow(x-cx+R, 2) + Math.pow(y-cy+R, 2);
+						if(dd<=rr){
+							var index = cy*areaGridN + cx;
+							areaGrid[index] = 1;
+						}
+					}
+				}
+			}
+		}
+
+// if(i==20){
+// if(i==30){
+// if(i==50){
+// if(i==80){
+if(i==99){
+		// throw "display grid";
+		var size = 10;
+		for(var y=0; y<areaGridN; ++y){
+			for(var x=0; x<areaGridN; ++x){
+				var index = y*areaGridN + x;
+				var value = areaGrid[index];
+				var mask = areaGridMask[index];
+				var d = new DO();
+				// d.graphics().setLine(1.0,0x66000000);
+				if(mask==0){
+					d.graphics().setFill(0xFF000000);
+				}else{
+					if(value){
+						d.graphics().setFill(0xFFFF0000);
+					}else{
+						d.graphics().setFill(0xFF0000FF);
+					}
+				}
+				d.graphics().beginPath();
+				d.graphics().drawRect(x*size,y*size, size,size);
+				d.graphics().endPath();
+				d.graphics().fill();
+				// d.graphics().strokeLine();
+				// d.matrix().translate(worldOffset.x, worldOffset.y);
+				GLOBALSTAGE.addChild(d);
+			}
+		}
+}
+		// sum up
+		var cellCount = 0;
+		for(var j=0; j<areaGridTotal; ++j){
+			var value = areaGrid[j];
+			var mask = areaGridMask[j];
+			if(value && mask){
+				cellCount++;
+				areaGrid[j] = 0;
+			}
+		}
+		var percent = cellCount/areaGridTotal;
+		percent *= (4.0/Math.PI);
+		console.log(cellCount+" / "+areaGridTotal+" = "+percent+" @ "+r);
+		dataAreaPercent.push(percent);
+
+
 		
+/*
+		var circle = Code.circleAlgebraic(points, circleCenter, true);
+
+		if(i==70){
+			console.log(circle);
+			var rad = circle["radius"];
+			for(var j=0; j<points.length; ++j){
+				var p = points[j];
+			var d = new DO();
+			d.graphics().setLine(1.0,0xFF0000FF);
+			d.graphics().beginPath();
+			d.graphics().drawCircle(p.x*worldScale,p.y*worldScale,2.0);
+			d.graphics().endPath();
+			d.graphics().strokeLine();
+			d.matrix().translate(worldOffset.x, worldOffset.y);
+			GLOBALSTAGE.addChild(d);
+			}
+
+			var d = new DO();
+			d.graphics().setLine(1.0,0xFFFF0000);
+			d.graphics().beginPath();
+			d.graphics().drawCircle(circleCenter.x*worldScale,circleCenter.y*worldScale,rad*worldScale);
+			d.graphics().endPath();
+			d.graphics().strokeLine();
+			d.matrix().translate(worldOffset.x, worldOffset.y);
+			GLOBALSTAGE.addChild(d);
+		}
+*/
 
 	}
+
+
+
 
 	Code.printMatlabArray(dataPlaneRatios,"x");
 	Code.printMatlabArray(dataDirectionConfidence,"y");
 	Code.printMatlabArray(dataDirectionMoment,"m");
 	Code.printMatlabArray(dataDirectionAngle,"a");
+	Code.printMatlabArray(dataAreaPercent,"a");
+	
 	throw "?"
 
 	return {"radius":minCircle["radius"], "center":minCircle["center"], "count":maxIndex, "normal":minCircle["normal"]};

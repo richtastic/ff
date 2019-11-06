@@ -397,6 +397,166 @@ https://cloud.google.com/appengine/docs/nodejs/
 
 TODO:
 
+
+- HOW TO PROPAGATE SAERCH WINDOW:
+	- do it 'on demand'
+		[if there are many redundant points then giving every point a 'wall thickness' is unnecessarily repetitive]
+	- wall-thickness oct-tree
+		- lay a point at the center [centroid] when a calculation is made
+		- if nearest neighbor DNE OR if d(nn) is > 2 x nn wall thickness
+			- find an initial wall size with binary search high res
+			- lay point
+		- if d(nn) < wall thickness
+			- use exact thickness w/o search
+		- else [1 < d(nn) < 2]
+			- use NN thickness as starting point
+			- binary search
+			- lay new point
+
+
+
+
+- use discrete area / volume to estimate percent occupancy
+- values to use: 33-50%
+- 10x10 is very coarse
+- 20x20 is maybe ok
+- coarser estimates:
+	- opt for medium threshold [ ~ 40%]
+		- if too high, might have premature minimums
+		- if too low, might not actually get there (resolution minimum is 1 pixel)
+	- add smoothing
+
+- can do binary searching (with +/- padding)
+- can do 'skipping' & interpolation between [eg 5, 10, 15, 20, ...]
+
+-> can do initial estimate, then nearby neighbors can use initial start point and search around area
+
+- quick way to propagate?
+	-> push onto queue? [how big is this queue ? ]
+	-> disconnected points ?
+
+
+- if wall thickness is very thin, lower res grid can be used
+	- resolution cell size should be > ~ 2 x sqrt(N) [radius of a point > 1 pixel], jump in increments of 10:
+		- 25 pts => 10x10 [with smoothing ?]
+		- 100 pts => 20x20
+		- 225 pts => 30x30
+
+
+
+- calc / show plot:
+
+- make a 10x10 = 100 cell grid, for each point count:
+- n = cell side size = 10
+- total = n * n = 100
+	- N = point count
+	- R = n/2 = 5
+	- A = 1
+	- a = A/N
+	- r = sqrt(1/(pi * N))
+	- for each point:
+		- x = (px - cx) * n/2 /radius
+		- y = (py - cy) * n/2 /radius
+		- get maximum number of cells in X & Y:
+			- xmin = floor(x - r) + n/2 --- >=0
+			- xmax =  ceil(x + r) + n/2 --- < n
+		- if r <= 1 -- too large resolution
+			- single cell = 1
+		- else
+			- for each cell in x&y : min&max:
+				- if cell center is closer than r => set to 1
+				- QUICK: just set all to 1
+	- add up cell count, reset all cells to 0
+	- area percentage = count/total [divide by pi/4 ~ 0.7854]
+- if area drops below ~ 50% -> neighborhood reached
+
+
+
+- just want overall concentration metric...
+- when there's a bunc of open area -- the extent is found
+	- area/volume of a point is relative to count of points in circle/sphere
+		- static size of grid & filled in by points?
+		- grid size changes & points only go into a single grid cell?
+
+
+
+finite element analysis:
+	- each point's area is proportional to the expected area of an equal distribution of points: ie area/N
+	- the grid size needs to be symmetric, ie: square grid cells
+	- dependent on cell orientation
+	- dependent on cell size
+		- N = points, R = radius, A = area, => n = cell size:
+			- A/N = ideal cell sizes
+
+
+
+AREA:
+ N |r(N)| n | lowest
+---+----+---+---
+ 1 |  1 | 1 | 100%
+ 2 | 1.4| 1 | 100%
+ 3 | 1.8| 2?| 100%
+ 4 |  2 | 2 |  25%
+---+----+---+-----
+ 9 |  3 | 3 |  11%
+---+----+---+-----`
+16 |  4 | 4 |   6%
+---+----+---+-----
+25 |  5 | 5 |   4%
+---+----+---+-----
+
+
+
+
+VOLUME:
+ N |r(N)| n | lowest
+---+----+---+---
+ 1 |  1 | 1 | 100%
+---+----+---+---
+ 8 |  2 | 2 |  12%
+---+----+---+-----
+27 |  3 | 3 |   3%
+---+----+---+-----
+64 |  4 | 4 |   1%
+---+----+---+-----
+
+
+	- fixed grid size and just add a point if any overlap exists
+
+
+
+	- add circle area
+	- analytically: subtract in-common areas
+
+
+
+
+
+
+	- metric to tell if cirlce COM is OUTSIDE points ?
+		- big-angled corners will throw this off
+
+
+	- half-circle angle (bidirectional normals - additive, not cancel)
+	- preferred half-plane
+
+	- a single point can check its ~3 neighbors and see if it is an 'inside' or 'outside' point
+		- if neighbors are all on same side of half-plane
+
+	- peak signal/noise ratio
+		- preferred directions (opposites donn't cancel)
+			- what is the 3D coutnerpart?
+		- corner has ~3 preferred directions?
+
+	- how to tell if circle com is 'outside' of points ?
+		- some direction has very few points
+
+	- can points be 'spread' across normal surface based on 1/count ?
+		...
+
+	- using algebraic circles to get horizon of points, and estimating normal from relative directions
+	- 
+
 	- combining different measurements of circularness to get a good window for neighborhood
 		-> normal direction = ????
 		- directly from input? (likely off 30-60 degrees)

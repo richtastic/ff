@@ -127,9 +127,9 @@ SurfaceTest.prototype._refreshDisplay = function(){
 	if(true){
 	// if(false){
 		var focus = new V2D(0,0);
-		// var angle = Code.radians(15);
+		var angle = Code.radians(15);
 		// var angle = Code.radians(30);
-		var angle = Code.radians(45);
+		// var angle = Code.radians(45);
 		// var angle = Code.radians(60);
 		// var angle = Code.radians(90);
 		// var angle = Code.radians(120);

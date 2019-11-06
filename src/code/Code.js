@@ -8323,7 +8323,7 @@ Code.circleCoefficientsToCircle = function(a,b1,b2,c){
 	var radius = Math.sqrt(inside);
 	return {"radius":radius,"center":center};
 }
-Code.circleAlgebraic = function(points, location){
+Code.circleAlgebraic = function(points, location, noweights){
 	var N = points.length;
 	var W = null;
 	var weights = null;
@@ -8348,6 +8348,9 @@ Code.circleAlgebraic = function(points, location){
 			//weight = Math.pow(dist,-2);
 // TODO: PICK A WEIGHT
 			var weight = Math.exp(-dist);
+			if(noweights){
+				weight = 1.0;
+			}
 			// weights.push(weight);
 			weights[i] = weight;
 		}
