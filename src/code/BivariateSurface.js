@@ -3,6 +3,7 @@
 function BivariateSurface(degree){
 	this._degree = degree!==undefined?degree:3;
 	this._coefficients = new Array();
+	this._valueAt = this.valueAtN;
 //	this._origin = new V3D(); // 0
 //	this._normal = new V3D(); // +z
 }
@@ -21,10 +22,23 @@ BivariateSurface.prototype.coefficients = function(c){
 BivariateSurface.prototype.degree = function(d){
 	if(d!==undefined){
 		this._degree = d;
+		if(d==0){
+			this._valueAt = this._degree0ValueAt;
+		}else if(d==1){
+			this._valueAt = this._degree1ValueAt;
+		}else if(d==2){
+			this._valueAt = this._degree2ValueAt;
+		}else if(d==3){
+			this._valueAt = this._degree3ValueAt;
+		}else if(d==4){
+			this._valueAt = this._degree4ValueAt;
+		}else{ // > 4
+			this._valueAt = this._valueAtN;
+		}
 	}
 	return this._degree;
 }
-BivariateSurface.prototype.valueAt = function(x,y){
+BivariateSurface.prototype._valueAtN = function(x,y){
 	var d, e, degree = this._degree, coeff = this._coefficients;
 	var value = 0.0, index = 0;
 	for(d=0;d<=degree;++d){
@@ -35,8 +49,45 @@ BivariateSurface.prototype.valueAt = function(x,y){
 	}
 	return value;
 }
-BivariateSurface.prototype.degree4ValueAt = function(x){
-	var value = 0.0, degree = this._degree, coeff = this._coefficients;
+BivariateSurface.prototype._degree0ValueAt = function(x,y){
+	return this._coefficients[0];
+}
+BivariateSurface.prototype._degree1ValueAt = function(x,y){
+	var value = 0.0, coeff = this._coefficients;
+	value += coeff[0];
+	value += coeff[1]*x;
+	value += coeff[2]*y;
+	return value;
+}
+BivariateSurface.prototype._degree2ValueAt = function(x,y){
+	var value = 0.0, coeff = this._coefficients;
+	var x2 = x*x, y2 = y*y;
+	value += coeff[0];
+	value += coeff[1]*x;
+	value += coeff[2]*y;
+	value += coeff[3]*x2;
+	value += coeff[4]*x*y;
+	value += coeff[5]*y2;
+	return value;
+}
+BivariateSurface.prototype._degree3ValueAt = function(x,y){
+	var value = 0.0, coeff = this._coefficients;
+	var x2 = x*x, y2 = y*y;
+	var x3 = x2*x, y3 = y2*y;
+	value += coeff[0];
+	value += coeff[1]*x;
+	value += coeff[2]*y;
+	value += coeff[3]*x2;
+	value += coeff[4]*x*y;
+	value += coeff[5]*y2;
+	value += coeff[6]*x3;
+	value += coeff[7]*x2*y;
+	value += coeff[8]*x*y2;
+	value += coeff[9]*y3;
+	return value;
+}
+BivariateSurface.prototype._degree4ValueAt = function(x,y){
+	var value = 0.0, coeff = this._coefficients;
 	var x2 = x*x, y2 = y*y;
 	var x3 = x2*x, y3 = y2*y;
 	var x4 = x2*x2, y4 = y2*y2;
@@ -78,7 +129,7 @@ BivariateSurface.prototype.fromPoints = function(points){
 			y *= point.y;
 		}
 		for(var j=0;j<=degree;++j){
-			for(k=0;k<=j;++k){
+			for(var k=0;k<=j;++k){
 				A.set(i,index, xs[j-k]*ys[k] );
 				++index;
 			}
@@ -88,12 +139,8 @@ BivariateSurface.prototype.fromPoints = function(points){
 	var pInv = Matrix.pseudoInverse(A);
 		pInv = Matrix.transpose(pInv);
 	var c = Matrix.mult(pInv,b);
-	// console.log(c);
 	Code.emptyArray(this._coefficients);
 	c.toArray(this._coefficients);
-	// console.log(this._coefficients);
-	// console.log(this._coefficients+"");
-	// throw "is this right? --- is C the right dimension";
 }
 /*
 BivariateSurface.prototype.fromPoints = function(points,degree, weightPoint,h){
@@ -164,7 +211,7 @@ BivariateSurface.coefficientCountFromDegree = function(degree){
 
 BivariateSurface.prototype.curvatureAt = function(x1,y1){
 	var temp;
-	var dx = dy = 1E-6;
+	var dx = dy = 1E-6; // this should depend on the size of the point samples (range)
 	// var dxx = dx*dx;
 	// var dxy = dx*dy;
 	// var dyy = dy*dy;

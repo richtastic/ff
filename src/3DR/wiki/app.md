@@ -388,17 +388,20 @@ https://cloud.google.com/appengine/docs/nodejs/
 0+1+2 = S21L1RCT
 
 
-- error on abs view locations is bad
-----  need relative scales again?
 
+- test on toroid / sphere with normals generated
 
+- surfacing triangles
+	- walk thru algorithm -- maybe make new fxns
 
 
 
 TODO:
 
+- show working discretized window
 
-- HOW TO PROPAGATE SAERCH WINDOW:
+
+- HOW TO PROPAGATE SEARCH WINDOW:
 	- do it 'on demand'
 		[if there are many redundant points then giving every point a 'wall thickness' is unnecessarily repetitive]
 	- wall-thickness oct-tree
@@ -444,158 +447,13 @@ TODO:
 
 
 
-- calc / show plot:
-
-- make a 10x10 = 100 cell grid, for each point count:
-- n = cell side size = 10
-- total = n * n = 100
-	- N = point count
-	- R = n/2 = 5
-	- A = 1
-	- a = A/N
-	- r = sqrt(1/(pi * N))
-	- for each point:
-		- x = (px - cx) * n/2 /radius
-		- y = (py - cy) * n/2 /radius
-		- get maximum number of cells in X & Y:
-			- xmin = floor(x - r) + n/2 --- >=0
-			- xmax =  ceil(x + r) + n/2 --- < n
-		- if r <= 1 -- too large resolution
-			- single cell = 1
-		- else
-			- for each cell in x&y : min&max:
-				- if cell center is closer than r => set to 1
-				- QUICK: just set all to 1
-	- add up cell count, reset all cells to 0
-	- area percentage = count/total [divide by pi/4 ~ 0.7854]
-- if area drops below ~ 50% -> neighborhood reached
-
-
-
-- just want overall concentration metric...
-- when there's a bunc of open area -- the extent is found
-	- area/volume of a point is relative to count of points in circle/sphere
-		- static size of grid & filled in by points?
-		- grid size changes & points only go into a single grid cell?
-
-
-
-finite element analysis:
-	- each point's area is proportional to the expected area of an equal distribution of points: ie area/N
-	- the grid size needs to be symmetric, ie: square grid cells
-	- dependent on cell orientation
-	- dependent on cell size
-		- N = points, R = radius, A = area, => n = cell size:
-			- A/N = ideal cell sizes
-
-
-
-AREA:
- N |r(N)| n | lowest
----+----+---+---
- 1 |  1 | 1 | 100%
- 2 | 1.4| 1 | 100%
- 3 | 1.8| 2?| 100%
- 4 |  2 | 2 |  25%
----+----+---+-----
- 9 |  3 | 3 |  11%
----+----+---+-----`
-16 |  4 | 4 |   6%
----+----+---+-----
-25 |  5 | 5 |   4%
----+----+---+-----
-
-
-
-
-VOLUME:
- N |r(N)| n | lowest
----+----+---+---
- 1 |  1 | 1 | 100%
----+----+---+---
- 8 |  2 | 2 |  12%
----+----+---+-----
-27 |  3 | 3 |   3%
----+----+---+-----
-64 |  4 | 4 |   1%
----+----+---+-----
-
-
-	- fixed grid size and just add a point if any overlap exists
-
-
-
-	- add circle area
-	- analytically: subtract in-common areas
-
-
-
-
-
-
-	- metric to tell if cirlce COM is OUTSIDE points ?
-		- big-angled corners will throw this off
-
-
-	- half-circle angle (bidirectional normals - additive, not cancel)
-	- preferred half-plane
-
-	- a single point can check its ~3 neighbors and see if it is an 'inside' or 'outside' point
-		- if neighbors are all on same side of half-plane
-
-	- peak signal/noise ratio
-		- preferred directions (opposites donn't cancel)
-			- what is the 3D coutnerpart?
-		- corner has ~3 preferred directions?
-
-	- how to tell if circle com is 'outside' of points ?
-		- some direction has very few points
-
-	- can points be 'spread' across normal surface based on 1/count ?
-		...
-
-	- using algebraic circles to get horizon of points, and estimating normal from relative directions
-	- 
-
-	- combining different measurements of circularness to get a good window for neighborhood
-		-> normal direction = ????
-		- directly from input? (likely off 30-60 degrees)
-
-		...
-		- maximum inverse-angle moment ()
-
-
-	.... how will surface be affected if normal is off by 30-60 degrees ?
-		- floor is slanty
-		- surface curve may be off?
-		-> normal can't be used to indicate direction of surface
-
-
-	- start surfacing
-		- 2D neighborhood size
-		- 3D neighborhood size
-
 
 - BI-DIRECTIONAL ERROR FROM NORMAL ?
+	- 
 
-
-NEIGHBORHOOD SIZE 1:
-	- find where it's most 'circular', then double the radius
-	- normal = average normal of all included points
-
-NEIGHBORHOOD SIZE 2:
-	- expand circle
-		- if cov mid/min > 4 => direction is dir(min), thickness = ||min||
-		- else: track minimum of angular moment (smoothed)
-			thickness = circle radius
-			direction = ???
-				- double the radius & get avg direction ?
-				- how to get 'next' peak
-	- use 2 * thickness as base search radius
-
-
-
-
+	
+	- texturing triangles
+	- run on device
 
 	
 	- bundle adjust + propagation at same time now [loaded view + NN projecting]
@@ -608,7 +466,11 @@ NEIGHBORHOOD SIZE 2:
 		- make sure summary statistics aren't re-updated during process
 	- VERIFY BA IMPROVES OUTPUT
 
-	- go back and add triple scaling
+
+	- error on abs view locations is bad
+		- go back and add triple scaling
+
+
 
 
 - ALL merging solns should use affine location method [or needle/haystack] for adj view 2D locations

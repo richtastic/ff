@@ -3,7 +3,7 @@ Mesh3D.X = 0;
 
 function Mesh3D(points, norms, angle){
 	// this._angle = Math.PI*0.1; // 18 degrees
-	this._angle = Math.PI*0.20; //
+	this._angle = Math.PI*0.20; // 36 deg
 	// this._angle = Math.PI*0.25; // 45 degrees
 	// this._angle = Math.PI*0.50; // 90 degrees - anything after this doesn't make sense
 	// this._angle = Math.PI*1.0;
@@ -14,6 +14,9 @@ function Mesh3D(points, norms, angle){
 	this._eta = Math.sin(2*beta)/Math.sin(3*beta); // search distance multiplier
 		// this._eta *= 2; // TODO: this is to help fix underlying problem
 		this._eta *= 4;
+
+	this._neighborhoodSizeVolumeRatio = 0.333;
+	
 	this._pointSpace = new OctTree(Mesh3D._pointToPoint);
 	this._triangleSpace = new OctSpace(Mesh3D._triToCuboid);
 	this._edgeSpace = new OctSpace(Mesh3D._edgeToCuboid);
@@ -226,11 +229,10 @@ Mesh3D.prototype.generateSurfaces = function(){
 		this._setCurvaturePoints_APSS();
 	}
 	if(this._reconstructionMethod==Mesh3D.RECONSTRUCTION_METHOD_MLS){
-		this._projectPointToSurface = this._projectPointToSurface_MLS;
+		// this._projectPointToSurface = this._projectPointToSurface_MLS;
 		// this._projectPointToSurface = this._projectPointToSurface_sphere;
 
-		// this._setNeighborhoodSize();
-		this._setCurvaturePoints_MLS();
+		// this._setCurvaturePoints_MLS();
 
 
 		// this._projectPointToSurface = this._projectPointToSurface_sphere;
@@ -1362,8 +1364,7 @@ Mesh3D.prototype.convexNeighborhoodEdges = function(point){
 	}
 	return edges;
 }
-Mesh3D.prototype._setCurvaturePoints_MLS = function(){
-
+Mesh3D.prototype._setCurvaturePoints_MLS_OLD = function(){
 var limitCurvatureToNeighborhood = true;
 	var space = this._pointSpace;
 	var points = space.toArray();
@@ -1781,8 +1782,8 @@ Mesh3D.prototype._iterateFronts = function(){
 		// var maxIter = 0;
 		// var maxIter = 5;
 		// var maxIter = 10;
-		// var maxIter = 100;
-		var maxIter = 1000;
+		var maxIter = 100;
+		// var maxIter = 1000;
 		// var maxIter = 2000;
 		// var maxIter = 3000;
 		// var maxIter = 4000;
@@ -2153,47 +2154,10 @@ Mesh3D.transformPoints = function(points, trans){ // transform the points
 	return newPoints;
 }
 
-
-Mesh3D.prototype._projectPointToSurface_MLS_NEW = function(startingLocation, getInfo){
-	var space = this._pointSpace;
-	if(!this._bivariate){
-		this._bivariate = new BivariateSurface(3);
-	}
-	var bivariate = this._bivariate;
-
-	// get inital starting sphere
-
-
-	// grow sphere until plane is found
-
-
-	// transform local points into local 'up' direction
-
-
-	// get surface estimate
-
-
-	// get curvature
-	if(getInfo){
-		throw "curvature"
-	}
-
-	// project to surface
-
-
-	// 
-
-
-	console.log(startingLocation);
-	console.log(info);
-
-throw "?";
-}
-
 Mesh3D._tempForward = new Matrix3D();
 Mesh3D._tempReverse = new Matrix3D();
-// Mesh3D.prototype._projectPointToSurface_MLS_OLD = function(startingLocation, info){
-	Mesh3D.prototype._projectPointToSurface_MLS = function(startingLocation, info){
+Mesh3D.prototype._projectPointToSurface_MLS_OLD = function(startingLocation, info){
+	// Mesh3D.prototype._projectPointToSurface_MLS = function(startingLocation, info){
 	var space = this._pointSpace;
 if(!this._bivariate){
 	this._bivariate = new BivariateSurface(3);
@@ -3409,3 +3373,119 @@ Mesh3D.prototype.growTriangle = function(front, edge, vertex){
 	// remove old edge
 	front.popEdge(edge);
 }
+
+
+
+
+
+
+
+
+
+
+
+
+// new: +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+Mesh3D.prototype._setCurvaturePoints_MLS = function(){
+	if(!this._bivariate){
+		this._bivariate = new BivariateSurface(3);
+	}
+	this._projectPointToSurface = this._projectPointToSurface_MLS;
+}
+
+Mesh3D.prototype._nearestLocalNeighborhoodSizeMark = function(location){
+	//
+	return null;
+}
+Mesh3D.prototype._neighborhoodSizeInit = function(location){ // go thru full range & smooth & find value
+	this._neighborhoodSizeVolumeRatio;
+}
+Mesh3D.prototype._neighborhoodSizeBinarySearch = function(location,count){ // 
+	var skipCount = 5;
+	// binary search around location to get size
+	// 
+	this._neighborhoodSizeVolumeRatio;
+}
+Mesh3D.prototype._localNeighborhoodSize = function(location){
+	// check if point marker exists already 
+	var info = this._nearestLocalNeighborhoodSizeMark();
+	if(info){
+		// ... keep or not ?
+	}
+	// get inital starting sphere
+
+
+	// grow sphere until plane is found
+
+	var count = 0;
+	var radius = 0;
+	var center = null;
+	return {"radius":radius, "center":center, "count":count};
+}
+
+// Mesh3D.prototype._projectPointToSurface_MLS_NEW = function(startingLocation, getInfo){
+Mesh3D.prototype._projectPointToSurface_MLS = function(startingLocation, getInfo){
+	var space = this._pointSpace;
+	var bivariate = this._bivariate;
+
+	// estimate local neighborhood
+	var neighborhood = this._localNeighborhoodSize(startingLocation);
+	var neighborhoodCenter = neighborhood["center"];
+	var neighborhoodRadius = neighborhood["radius"];
+
+	// get neighborhood
+	// var neighbors = space.kNN(location, kNNEstimate);
+	var neighbors = objectsInsideSphere.kNN(neighborhoodCenter, neighborhoodRadius);
+
+
+	// iterate location
+	var maxIterations = 5;
+	var maxDistance = radius * 0.01; // 1% change in siz
+	var location = startingLocation.copy();
+	for(var iteration=0; iteration<maxIterations; ++iteration){
+		// only need to get a new neighborhood if the change in location position is changing a lot (compared to search radius)
+		var neighbors = space.objectsInsideSphere(location???, neighborhoodRadius);
+
+		// transform local points into local 'up' direction
+
+
+		// get surface estimate
+
+
+		// get curvature
+		if(getInfo){
+			throw "curvature"
+		}
+
+		// project to surface
+
+
+		// get local surface plane
+
+		// project startingLocation to closest point on plane
+
+		// new location
+
+		// ???
+		// var curvature = bivariate.curvatureAt(0,0);
+		// 	// need to rotate directions toward:
+		// 	var normal = curvature["normal"];
+		// 		reverse.multV3D(normal,normal); // just want rotation
+		// 		normal.sub(planeOrigin);
+		// 	curvature["normal"] = normal;
+		// 	curvature["localSize"] = localSize;
+		// 	return curvature;
+	}
+
+
+
+	console.log(startingLocation);
+	console.log(info);
+
+throw "?";
+}
+
+
+

@@ -34950,8 +34950,8 @@ var worldOffset = new V2D(300,300);
 	var circleCenter = Code.averageV2D(points);
 
 	// all possibilities:
-	// var maxNeighbors = 100;
-	var maxNeighbors = 150;
+	var maxNeighbors = 100;
+	// var maxNeighbors = 150;
 	var objects = space.kNN(circleCenter, maxNeighbors);
 	var allPoints = [];
 	var allNormals = [];
@@ -34965,6 +34965,7 @@ var worldOffset = new V2D(300,300);
 	// accumulate:
 	var points = [];
 	var normals = [];
+	var circles = [];
 var dataPlaneRatios = [];
 var dataDirectionConfidence = [];
 var dataDirectionMoment = [];
@@ -34972,8 +34973,8 @@ var dataDirectionAngle = [];
 var dataAreaPercent = [];
 
 // var areaGridN = 10; // maybe too small?
-// var areaGridN = 20;
-var areaGridN = 40; // too much
+var areaGridN = 20;
+// var areaGridN = 40; // too much
 var areaGridHalf = areaGridN/2;
 var areaGridTotal = areaGridN*areaGridN;
 var areaGrid = Code.newArrayZeros(areaGridTotal);
@@ -34988,6 +34989,9 @@ var areaGridMask = ImageMat.circleMask(areaGridN, areaGridN);
 		var circleCenter = Code.averageV2D(points);
 		var circleNormal = Code.averageAngleVector2D(normals);
 		var circleRadius = V2D.maximumDistance(points,circleCenter);
+
+
+		circles.push({"center":circleCenter.copy(),"radius":circleRadius, "normal":circleNormal.copy()});
 
 		// plane estimation:
 		// Code.planeFromPoints3D = function(center, points, weights, cov){
@@ -35077,7 +35081,8 @@ var areaGridMask = ImageMat.circleMask(areaGridN, areaGridN);
 // if(i==30){
 // if(i==50){
 // if(i==80){
-if(i==99){
+// if(i==99){
+if(i==false){
 		// throw "display grid";
 		var size = 10;
 		for(var y=0; y<areaGridN; ++y){
@@ -35157,15 +35162,53 @@ if(i==99){
 
 
 
-	Code.printMatlabArray(dataPlaneRatios,"x");
-	Code.printMatlabArray(dataDirectionConfidence,"y");
-	Code.printMatlabArray(dataDirectionMoment,"m");
-	Code.printMatlabArray(dataDirectionAngle,"a");
-	Code.printMatlabArray(dataAreaPercent,"a");
-	
-	throw "?"
+	// Code.printMatlabArray(dataPlaneRatios,"x");
+	// Code.printMatlabArray(dataDirectionConfidence,"y");
+	// Code.printMatlabArray(dataDirectionMoment,"m");
+	// Code.printMatlabArray(dataDirectionAngle,"a");
 
-	return {"radius":minCircle["radius"], "center":minCircle["center"], "count":maxIndex, "normal":minCircle["normal"]};
+	Code.printMatlabArray(dataAreaPercent,"a");
+
+	// 0.5 -> 0.33
+	var searchValue = 0.40;
+	// var searchValue = 0.50;
+	// var searchValue = 0.33;
+	var f = function(a){
+		return a>searchValue ? 1 : -1;
+	}
+	var result = Code.binarySearch(dataAreaPercent, f);
+
+	console.log(result);
+
+	var index = null;
+	for(var i=0; i<dataAreaPercent.length; ++i){
+		var value = dataAreaPercent[i];
+		if(value<searchValue){
+			index = i;
+			break;
+		}
+	}
+	console.log(index);
+	if(index===null){
+		index = dataAreaPercent.length - 1;
+	}
+
+	var minCircle = circles[index];
+	var minCircleCenter = minCircle["center"];
+	var minCircleRadius = minCircle["radius"];
+	
+	console.log(minCircle);
+// draw
+var d = new DO();
+d.graphics().setLine(1.0,0x99FF0000);
+d.graphics().beginPath();
+d.graphics().drawCircle(minCircleCenter.x*worldScale,minCircleCenter.y*worldScale,minCircleRadius*worldScale);
+d.graphics().endPath();
+d.graphics().strokeLine();
+d.matrix().translate(worldOffset.x, worldOffset.y);
+GLOBALSTAGE.addChild(d);
+
+	return {"radius":minCircle["radius"], "center":minCircle["center"], "count":index, "normal":minCircle["normal"]};
 }
 
 R3D.surfaceThicknessFromPoint2D_2 = function(location,space, toNormalFxn){ //  // points+normals => neighborhood

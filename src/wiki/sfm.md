@@ -562,6 +562,7 @@ HERE
                         - view
                         - voxel [divided/combined to max point count ~ 1E6]
                     - surface triangulation: only find surface a voxel at a time - propagation madness
+            - triangle subdivisions?
     - Triangulate (simplify surface using curvature to estimate triangulated locations)
         - triangles
     - Texture (sourced from unobstructed views & blending)
