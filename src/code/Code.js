@@ -8718,7 +8718,40 @@ Code.sphereGeometric = function(points, location, maxIterations){
 	radius = x[3];
 	return {"center":center, "radius":radius, "weights":weights};
 }
-
+// MASKS
+Code.sphereMask3D = function(countX,countY,countZ){ // force circle?
+	var padding = 0;
+	countY = countY!==undefined ? countY : countX;
+	countZ = countZ!==undefined ? countZ : countX;
+	var radius = Math.min(countX/2,countY/2,countZ/2);
+	console.log(radius);
+	// SHOULD BE SYMMETRIC
+	var i, j;
+	var len = countX*countY*countZ;
+	console.log(len);
+	var mask = Code.newArrayZeros(len);
+	var cx = (countX-1.0)*0.5;
+	var cy = (countY-1.0)*0.5;
+	var cz = (countZ-1.0)*0.5;
+	var rx = (countX-padding)*0.5;
+	var ry = (countY-padding)*0.5;
+	var rz = (countZ-padding)*0.5;
+	console.log(rx,ry,rz);
+	var cXY = countX*countY;
+	for(k=0; k<countZ; ++k){
+		var ok = k*cXY;
+		for(j=0; j<countY; ++j){
+			var oj = j*countX;
+			for(i=0; i<countX; ++i){
+				var d = Math.pow((i-cx)/rx,2) + Math.pow((j-cy)/ry,2) + Math.pow((k-cz)/rz,2);
+				if( d <= 1){
+					mask[ok + oj + i] = 1.0;
+				}
+			}
+		}
+	}
+	return mask;
+}
 
 
 Code.interpolateP2D = function(pointX, pointsA, pointsB, weights){ // TODO: convex hull outside closest point => weight = 1

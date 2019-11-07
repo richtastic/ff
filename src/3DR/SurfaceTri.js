@@ -24,31 +24,18 @@ GLOBALSTAGE = this._stage2D;
 // this.quadSpaceCheck();
 // return;
 
-/*
-var A = new V3D(1,2,3);
-var B = new V3D(2,1,0);
-var crossA = V3D.cross(A,B).norm();
-var crossB = V3D.cross(B,A).norm();
-console.log(crossA+"");
-console.log(crossB+"");
-console.log("cross dot: "+V3D.dot(crossA,crossB));
-var angleA = V3D.angleDirection(A,B, crossA);
-var angleB = V3D.angleDirection(B,A, crossA);
-console.log("angles: "+Code.degrees(angleA)+" & "+Code.degrees(angleB));
-return;
-*/
-
 	// datas
 	//
 //	this.plot1D();
 	//
 	this.setupDisplay3D();
-//	this.setupSphere3D();
+	this.setupSphere3D(1000, 1.0, 0.10, 0.25);
 	// this.setupTorus3D();
-	this.loadPointFile();
+	// this.loadPointFile();
 //	this.setupRect3D();
 //	this.setupCurveTest();
 //this.setupLineTest();
+
 this._displayPoints = true;
 this._displayTriangles = true;
 this._displayLines= true;
@@ -785,12 +772,15 @@ SurfaceTri.prototype.setupTorus3D = function(count,radiusA,radiusB,error){
 	var pts = this.generateTorusPoints(count,radiusA,radiusB,error);
 	this.startPointCloud(pts);
 }
-SurfaceTri.prototype.setupSphere3D = function(count, radius, error){
+SurfaceTri.prototype.setupSphere3D = function(count, radius, errorP, errorN){
 	count = count!==undefined ? count : 5000;
 	radius = radius!==undefined ? radius : 1.5;
-	error = error!==undefined ? error : 1E-12;
-	var pts = this.generateSpherePoints(count,radius,error);
-	this.startPointCloud(pts);
+	errorP = errorP!==undefined ? errorP : 1E-12;
+	errorN = errorN!==undefined ? errorN : 1E-12;
+	var info = this.generateSpherePoints(count,radius,errorP,errorN);
+	var pts = info["points"];
+	var nms = info["normals"];
+	this.startPointCloud(pts, nms);
 }
 SurfaceTri.prototype.setupRect3D = function(){
 	var list = [];
@@ -866,9 +856,14 @@ GLOBAL_LAST_PREV = null;
 GLOBAL_LAST_NEXT = null;
 GLOBAL_RAYS = null;
 	var mesh = new Mesh3D(pts,nrms);
-	var triangles = mesh.generateSurfaces();
+
+
+	var info = mesh._localNeighborhoodSize(new V3D(1,1,1));
+	console.log(info);
+	var triangles = [];
+	// var triangles = mesh.generateSurfaces();
 	// var triangles = [];
-	// console.log(triangles);
+	console.log(triangles);
 
 // var pts = spherePoints;
 // console.log(pts);
@@ -982,6 +977,26 @@ if(showPoints){
 	}
 }
 
+	// line data:
+	var pointsL = [];
+	var colorsL = [];
+
+var showNormals = true;
+if(showNormals){
+	var normalScale = 0.05;
+	for(i=0;i<nrms.length;++i){
+		var p = pts[i];
+		var n = nrms[i];
+		var a = p.copy();
+		var b = p.copy().add(n.copy().scale(normalScale));
+		//colors.push(Math.random(),Math.random(),Math.random(),1.0);
+		//colors.push(0.1,0.1,0.1,1.0);
+		colorsL.push(0.5,0.5,0.5,1.0);
+		colorsL.push(0.5,0.5,0.5,1.0);
+		V3D.pushToArray(pointsL, a);
+		V3D.pushToArray(pointsL, b);
+	}
+}
 
 
 	// show octtree stuff
@@ -990,13 +1005,12 @@ if(showPoints){
 
 	// show normals
 	var p, i;
-	var pointsL = [];
-	var colorsL = [];
+	
 	// var pts = this._mlsMesh._field.points();
 
 
 	// TRIANGLE NORMALS:
-
+// console.log(spherePoints);
 	// POINT NORMALS:
 	for(i=0;i<spherePoints.length;++i){
 break; // no normals
@@ -1766,24 +1780,31 @@ SurfaceTri.prototype.covarianceFromPoints = function(points){
 	console.log(this._planeTriangleColorsList)
 	return cov;
 }
-SurfaceTri.prototype.generateSpherePoints = function(count,radius,error){
+SurfaceTri.prototype.generateSpherePoints = function(count,radius,errorP,errorN){
 	count = count!==undefined?count:25;
 	radius = radius!==undefined?radius:1.0;
-	error = error!==undefined?error:0.01;
-	var i, v, theta, phi, psi, rad, list = [];
+	errorP = errorP!==undefined?errorP:0.01;
+	errorN = errorN!==undefined?errorN:0.01;
+	var i, v, theta, phi, psi, rad
+	var points = [];
+	var normals = [];
 	for(i=0;i<count;++i){
 		u = Math.random()*2.0-1.0;
 		rad = Math.sqrt(1-u*u);
 		theta = Math.random()*Math.TAU;
 		v = new V3D(rad*Math.cos(theta),rad*Math.sin(theta),u);
-		v.scale(radius+(Math.random()-0.5)*error);
-		list.push(v);
+		v.scale(radius+(Math.random()-0.5)*errorP);
+		points.push(v);
+		var n = new V3D(Math.cos(theta),Math.sin(theta),u);
+			n.wiggle(errorN);
+			n.norm();
+		normals.push(n);
 		//v.set(Math.random()*10-5,Math.random()*10-5,Math.random()*10-5);
 		// v.x *= 0.5;
 		// v.y *= 1.0;
 		// v.z *= 2.0;
 	}
-	return list;
+	return {"points":points, "normals":normals};
 }
 SurfaceTri.prototype.generateTorusPoints = function(count,radiusA,radiusB,error){
 	count = count!==undefined?count:25;

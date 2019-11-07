@@ -463,3 +463,30 @@ V3D.arrayToValueList = function(pointList){
 	}
 	return a;
 }
+V3D.maximumDistance = function(pointList, centerPoint){
+	var d = 0;
+	var N = pointList.length;
+	if(centerPoint){
+		for(var i=0; i<N; ++i){
+			var a = pointList[i];
+			var b = centerPoint;
+			var dS = V3D.distanceSquare(a,b);
+			if(dS>d){
+				d = dS;
+			}
+		}
+	}else{
+		for(var i=0; i<N; ++i){
+			var a = pointList[i];
+			for(var j=i+1; j<N; ++j){
+				var b = pointList[j];
+				var dS = V3D.distanceSquare(a,b);
+				if(dS>d){
+					d = dS;
+				}
+			}
+		}
+	}
+	return Math.sqrt(d);
+}
+

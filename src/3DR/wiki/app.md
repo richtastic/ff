@@ -389,16 +389,20 @@ https://cloud.google.com/appengine/docs/nodejs/
 
 
 
-- test on toroid / sphere with normals generated
+
+- estimate exponential curve from pts -- fitting to volume percentage curve, so only need a few points, and does smoothing
+
+- circle from optimum knn
+	- visualize chosen points with a color
+- projection to surface
+
+- iteritive projection
+
+
 
 - surfacing triangles
 	- walk thru algorithm -- maybe make new fxns
 
-
-
-TODO:
-
-- show working discretized window
 
 
 - HOW TO PROPAGATE SEARCH WINDOW:

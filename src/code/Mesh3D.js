@@ -15,7 +15,7 @@ function Mesh3D(points, norms, angle){
 		// this._eta *= 2; // TODO: this is to help fix underlying problem
 		this._eta *= 4;
 
-	this._neighborhoodSizeVolumeRatio = 0.333;
+	this._neighborhoodSizeVolumeRatio = 0.25; // peaks at~0.6 ; 0.2-0.3
 	
 	this._pointSpace = new OctTree(Mesh3D._pointToPoint);
 	this._triangleSpace = new OctSpace(Mesh3D._triToCuboid);
@@ -232,7 +232,7 @@ Mesh3D.prototype.generateSurfaces = function(){
 		// this._projectPointToSurface = this._projectPointToSurface_MLS;
 		// this._projectPointToSurface = this._projectPointToSurface_sphere;
 
-		// this._setCurvaturePoints_MLS();
+		this._setCurvaturePoints_MLS();
 
 
 		// this._projectPointToSurface = this._projectPointToSurface_sphere;
@@ -649,6 +649,20 @@ Mesh3D.Point3D = function(point){
 	this._visited = false;
 	this._temp = null;
 	this.point(point);
+}
+Mesh3D.Point3D.mapArrayToPoints = function(array){
+	var points = [];
+	for(var i=0; i<array.length; ++i){
+		points[i] = array[i].point();
+	}
+	return points;
+}
+Mesh3D.Point3D.mapArrayToNormals = function(array){
+	var normals = [];
+	for(var i=0; i<array.length; ++i){
+		normals[i] = array[i].normal();
+	}
+	return normals;
 }
 Mesh3D.Point3D.prototype.point = function(point){
 	if(point!==undefined){
@@ -3395,12 +3409,160 @@ Mesh3D.prototype._setCurvaturePoints_MLS = function(){
 	this._projectPointToSurface = this._projectPointToSurface_MLS;
 }
 
-Mesh3D.prototype._nearestLocalNeighborhoodSizeMark = function(location){
+/*
+	
+	resolution minimum ...
+
+
+	N*N/2/2
+	5: 5*5*5/2/2 = 32
+	8: 8*8*8/2/2 = 128
+	10: 10*10*10/2/2 = 250
+	12: 12*12*12/2/2 = 432
+	
+*/
+
+Mesh3D._cacheVolumeGrid = function(){
+	if(!Mesh3D._volumeGrid){
+		var gridN = 10; // 1k
+		// var gridN = 20; // 8k
+		// var gridN = 40;
+		var gridHalf = gridN/2;
+		var gridTotal = gridN*gridN*gridN;
+		var grid = Code.newArrayZeros(gridTotal);
+		var mask = Code.sphereMask3D(gridN);
+		Mesh3D._volumeGrid = grid;
+		Mesh3D._volumeMask = mask;
+		Mesh3D._volumeRadius = gridHalf;
+	}
+	return {"mask":Mesh3D._volumeMask, "grid":Mesh3D._volumeGrid, "radius":Mesh3D._volumeRadius};
+}
+Mesh3D.prototype._nearestLocalNeighborhoodSizeMark = function(location){ // find size marker
+	// first find closest surface point?
+	// 
 	//
 	return null;
 }
 Mesh3D.prototype._neighborhoodSizeInit = function(location){ // go thru full range & smooth & find value
-	this._neighborhoodSizeVolumeRatio;
+	// TODO: fit to curve?
+	var cubeToSphereRatio = 6.0/Math.PI; // box / sphere ~ 1.91
+	var space = this._pointSpace;
+	var maximumPoints = 100; // where to get this ?
+	var spherePoints = 5; // 4-6
+	var objects, points, normals;
+	// cache
+	var info = Mesh3D._cacheVolumeGrid();
+	var mask = info["mask"];
+	var grid = info["grid"];
+	var gridRadius = info["radius"];
+	var gridN = 2*gridRadius;
+	var gridNN = gridN*gridN;
+	var gridTotal = grid.length;
+	// initial sphere:
+	objects = space.kNN(location,spherePoints);
+	points = Mesh3D.Point3D.mapArrayToPoints(objects);
+	normals = Mesh3D.Point3D.mapArrayToNormals(objects);
+	var sphereCenter = Code.averageV3D(points);
+	var sphereNormal = Code.averageAngleVector3D(normals);
+	var sphereRadius = V3D.maximumDistance(points,sphereCenter);
+	// expand until desired volume is found
+	objects = space.kNN(location,maximumPoints);
+	var volumes = [];
+	var spheres = [];
+	points = [];
+	for(var i=0; i<objects.length; ++i){
+	// TODO: can skip amount -- 2 - 5
+		var object = objects[i];
+		points.push(object.point());
+		if(points.length<spherePoints){
+			continue;
+		}
+		// fill in:
+		var N = points.length;
+		var R = gridRadius;
+		var r = Math.cbrt(R*R*R/N);
+		var rr = r*r;
+		var c = sphereCenter;
+		var rad = sphereRadius;
+		// fill in:
+		for(var j=0; j<N; ++j){
+			var p = points[j];
+			var x = (p.x-c.x)*R/sphereRadius;
+			var y = (p.y-c.y)*R/sphereRadius;
+			var z = (p.z-c.z)*R/sphereRadius;
+			if(r<=0.5){ // fill in single cell
+				var cx = Math.min(Math.max(Math.round(x)+R, 0),gridN-1);
+				var cy = Math.min(Math.max(Math.round(y)+R, 0),gridN-1);
+				var cz = Math.min(Math.max(Math.round(z)+R, 0),gridN-1);
+				var index = cz*gridNN + cy*gridN + cx;
+				grid[index] = 1;
+			}else{
+				var minX = Math.max(Math.floor(x-r)+R, 0);
+				var maxX = Math.min(Math.ceil(x+r)+R, gridN-1);
+				var minY = Math.max(Math.floor(y-r)+R, 0);
+				var maxY = Math.min(Math.ceil(y+r)+R, gridN-1);
+				var minZ = Math.max(Math.floor(z-r)+R, 0);
+				var maxZ = Math.min(Math.ceil(z+r)+R, gridN-1);
+				for(var cz=minZ; cz<=maxZ; ++cz){
+					for(var cy=minY; cy<=maxY; ++cy){
+						for(var cx=minX; cx<=maxX; ++cx){
+							var dd = Math.pow(x-cx+R, 2) + Math.pow(y-cy+R, 2) + Math.pow(z-cz+R, 2);
+							if(dd<=rr){
+								var index = cz*gridNN + cy*gridN + cx;
+								grid[index] = 1;
+							}
+						}
+					}
+				}
+			}
+		}
+		// count
+		var cellCount = 0;
+		var maskCount = 0;
+		for(var j=0; j<gridTotal; ++j){
+			var g = grid[j];
+			var m = mask[j];
+			maskCount += m;
+			if(g && m){
+				cellCount++;
+				grid[j] = 0;
+			}
+		}
+		// console.log(cellCount,maskCount,gridTotal);
+		// var percent = cellCount/maskCount;
+		var percent = cellCount/gridTotal;
+		percent *= cubeToSphereRatio;
+		// console.log(cellCount+" / "+gridTotal+" = "+percent+" @ "+r);
+		// save
+		volumes.push(percent);
+	}
+	Code.printMatlabArray(volumes,"v");
+	// smoothing moves the graph down
+	// volumes = Code.filterArrayAverage1D(volumes, 1);
+	// Code.printMatlabArray(volumes,"u");
+
+	var searchValue = this._neighborhoodSizeVolumeRatio;
+	var f = function(a){
+		return a>searchValue ? 1 : -1;
+	}
+
+	var index = Code.binarySearch(volumes, f);
+	console.log(index);
+	if(!index){
+		throw "?";
+	}
+	if(index.lenth==1){
+		index = index[0];
+	}else{
+		// index = (index[0]+index[1])*0.5;
+		index = (index[1]);
+	}
+	console.log(volumes[index]);
+
+	// recalculate best circle from index
+
+
+	return null;
 }
 Mesh3D.prototype._neighborhoodSizeBinarySearch = function(location,count){ // 
 	var skipCount = 5;
@@ -3409,10 +3571,15 @@ Mesh3D.prototype._neighborhoodSizeBinarySearch = function(location,count){ //
 	this._neighborhoodSizeVolumeRatio;
 }
 Mesh3D.prototype._localNeighborhoodSize = function(location){
+	var space = this._pointSpace;
+	console.log(space);
 	// check if point marker exists already 
 	var info = this._nearestLocalNeighborhoodSizeMark();
 	if(info){
 		// ... keep or not ?
+	}else{
+		info = this._neighborhoodSizeInit(location);
+		console.log(info);
 	}
 	// get inital starting sphere
 
@@ -3437,16 +3604,17 @@ Mesh3D.prototype._projectPointToSurface_MLS = function(startingLocation, getInfo
 
 	// get neighborhood
 	// var neighbors = space.kNN(location, kNNEstimate);
-	var neighbors = objectsInsideSphere.kNN(neighborhoodCenter, neighborhoodRadius);
+	var neighbors = space.objectsInsideSphere(neighborhoodCenter, neighborhoodRadius);
+	console.log(neighbors)
 
-
+throw "..."
 	// iterate location
 	var maxIterations = 5;
 	var maxDistance = radius * 0.01; // 1% change in siz
 	var location = startingLocation.copy();
 	for(var iteration=0; iteration<maxIterations; ++iteration){
 		// only need to get a new neighborhood if the change in location position is changing a lot (compared to search radius)
-		var neighbors = space.objectsInsideSphere(location???, neighborhoodRadius);
+		var neighbors = space.objectsInsideSphere(location, neighborhoodRadius);
 
 		// transform local points into local 'up' direction
 

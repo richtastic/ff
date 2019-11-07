@@ -4,8 +4,6 @@ function BivariateSurface(degree){
 	this._degree = degree!==undefined?degree:3;
 	this._coefficients = new Array();
 	this._valueAt = this.valueAtN;
-//	this._origin = new V3D(); // 0
-//	this._normal = new V3D(); // +z
 }
 BivariateSurface.prototype.copy = function(){
 	var b = new BivariateSurface();
