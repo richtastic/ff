@@ -15,7 +15,7 @@ function Mesh3D(points, norms, angle){
 		// this._eta *= 2; // TODO: this is to help fix underlying problem
 		this._eta *= 4;
 
-	this._neighborhoodSizeVolumeRatio = 0.25; // peaks at~0.6 ; 0.2-0.3
+	this._neighborhoodSizeVolumeRatio = 0.35; // peaks at~0.6 ; 0.333-0.5
 	
 	this._pointSpace = new OctTree(Mesh3D._pointToPoint);
 	this._triangleSpace = new OctSpace(Mesh3D._triToCuboid);
@@ -2175,6 +2175,7 @@ Mesh3D.prototype._projectPointToSurface_MLS_OLD = function(startingLocation, inf
 	var space = this._pointSpace;
 if(!this._bivariate){
 	this._bivariate = new BivariateSurface(3);
+	// this._bivariate = new BivariateSurface(5);
 }
 var bivariate = this._bivariate;
 
@@ -3426,7 +3427,6 @@ Mesh3D._cacheVolumeGrid = function(){
 	if(!Mesh3D._volumeGrid){
 		var gridN = 10; // 1k
 		// var gridN = 20; // 8k
-		// var gridN = 40;
 		var gridHalf = gridN/2;
 		var gridTotal = gridN*gridN*gridN;
 		var grid = Code.newArrayZeros(gridTotal);
@@ -3447,7 +3447,7 @@ Mesh3D.prototype._neighborhoodSizeInit = function(location){ // go thru full ran
 	// TODO: fit to curve?
 	var cubeToSphereRatio = 6.0/Math.PI; // box / sphere ~ 1.91
 	var space = this._pointSpace;
-	var maximumPoints = 100; // where to get this ?
+	var maximumPoints = 500; // where to get this ?
 	var spherePoints = 5; // 4-6
 	var objects, points, normals;
 	// cache
@@ -3462,7 +3462,9 @@ Mesh3D.prototype._neighborhoodSizeInit = function(location){ // go thru full ran
 	objects = space.kNN(location,spherePoints);
 	points = Mesh3D.Point3D.mapArrayToPoints(objects);
 	normals = Mesh3D.Point3D.mapArrayToNormals(objects);
-	var sphereCenter = Code.averageV3D(points);
+// try minimum sphere ?
+
+	var sphereCenter = V3D.average(points);
 	var sphereNormal = Code.averageAngleVector3D(normals);
 	var sphereRadius = V3D.maximumDistance(points,sphereCenter);
 	// expand until desired volume is found
@@ -3477,36 +3479,41 @@ Mesh3D.prototype._neighborhoodSizeInit = function(location){ // go thru full ran
 		if(points.length<spherePoints){
 			continue;
 		}
+		// update containint sphere 
+		sphereCenter = V3D.average(points);
+		sphereRadius = V3D.maximumDistance(points,sphereCenter);
+
 		// fill in:
 		var N = points.length;
 		var R = gridRadius;
-		var r = Math.cbrt(R*R*R/N);
+		var r = R/Math.cbrt(N);
+		// r += 0.5; // round up
 		var rr = r*r;
 		var c = sphereCenter;
 		var rad = sphereRadius;
 		// fill in:
 		for(var j=0; j<N; ++j){
 			var p = points[j];
-			var x = (p.x-c.x)*R/sphereRadius;
-			var y = (p.y-c.y)*R/sphereRadius;
-			var z = (p.z-c.z)*R/sphereRadius;
+			var x = (p.x-c.x)*R/sphereRadius + R-1;
+			var y = (p.y-c.y)*R/sphereRadius + R-1;
+			var z = (p.z-c.z)*R/sphereRadius + R-1;
 			if(r<=0.5){ // fill in single cell
-				var cx = Math.min(Math.max(Math.round(x)+R, 0),gridN-1);
-				var cy = Math.min(Math.max(Math.round(y)+R, 0),gridN-1);
-				var cz = Math.min(Math.max(Math.round(z)+R, 0),gridN-1);
+				var cx = Math.min(Math.max(Math.round(x), 0),gridN-1);
+				var cy = Math.min(Math.max(Math.round(y), 0),gridN-1);
+				var cz = Math.min(Math.max(Math.round(z), 0),gridN-1);
 				var index = cz*gridNN + cy*gridN + cx;
 				grid[index] = 1;
 			}else{
-				var minX = Math.max(Math.floor(x-r)+R, 0);
-				var maxX = Math.min(Math.ceil(x+r)+R, gridN-1);
-				var minY = Math.max(Math.floor(y-r)+R, 0);
-				var maxY = Math.min(Math.ceil(y+r)+R, gridN-1);
-				var minZ = Math.max(Math.floor(z-r)+R, 0);
-				var maxZ = Math.min(Math.ceil(z+r)+R, gridN-1);
+				var minX = Math.max(Math.floor(x-r), 0);
+				var maxX = Math.min(Math.ceil(x+r), gridN-1);
+				var minY = Math.max(Math.floor(y-r), 0);
+				var maxY = Math.min(Math.ceil(y+r), gridN-1);
+				var minZ = Math.max(Math.floor(z-r), 0);
+				var maxZ = Math.min(Math.ceil(z+r), gridN-1);
 				for(var cz=minZ; cz<=maxZ; ++cz){
 					for(var cy=minY; cy<=maxY; ++cy){
 						for(var cx=minX; cx<=maxX; ++cx){
-							var dd = Math.pow(x-cx+R, 2) + Math.pow(y-cy+R, 2) + Math.pow(z-cz+R, 2);
+							var dd = Math.pow(x-cx, 2) + Math.pow(y-cy, 2) + Math.pow(z-cz, 2);
 							if(dd<=rr){
 								var index = cz*gridNN + cy*gridN + cx;
 								grid[index] = 1;
@@ -3518,30 +3525,31 @@ Mesh3D.prototype._neighborhoodSizeInit = function(location){ // go thru full ran
 		}
 		// count
 		var cellCount = 0;
-		var maskCount = 0;
 		for(var j=0; j<gridTotal; ++j){
 			var g = grid[j];
 			var m = mask[j];
-			maskCount += m;
 			if(g && m){
 				cellCount++;
 				grid[j] = 0;
 			}
 		}
-		// console.log(cellCount,maskCount,gridTotal);
-		// var percent = cellCount/maskCount;
 		var percent = cellCount/gridTotal;
 		percent *= cubeToSphereRatio;
-		// console.log(cellCount+" / "+gridTotal+" = "+percent+" @ "+r);
 		// save
 		volumes.push(percent);
 	}
+// if the last volume index > percent -> not enough points searched from
 	Code.printMatlabArray(volumes,"v");
 	// smoothing moves the graph down
 	// volumes = Code.filterArrayAverage1D(volumes, 1);
 	// Code.printMatlabArray(volumes,"u");
 
+	// TODO: try curve fitting
+
+
+
 	var searchValue = this._neighborhoodSizeVolumeRatio;
+
 	var f = function(a){
 		return a>searchValue ? 1 : -1;
 	}
@@ -3551,18 +3559,32 @@ Mesh3D.prototype._neighborhoodSizeInit = function(location){ // go thru full ran
 	if(!index){
 		throw "?";
 	}
-	if(index.lenth==1){
+	if(index.length==1){
 		index = index[0];
 	}else{
 		// index = (index[0]+index[1])*0.5;
 		index = (index[1]);
 	}
 	console.log(volumes[index]);
+	index = index+spherePoints;
+	console.log(index);
+	index = Math.min(index,objects.length-1);
+	console.log(index);
 
 	// recalculate best circle from index
+	points = [];
+	normals = [];
+	for(var i=0; i<=index; ++i){
+		var object = objects[i];
+		points.push(object.point());
+		normals.push(object.normal());
+	}
+	var sphereCenter = Code.averageV3D(points);
+	// var sphereCenter = V3D.average(points);
+	var sphereNormal = Code.averageAngleVector3D(normals); // can also do 'dumb' normal -- faster
+	var sphereRadius = V3D.maximumDistance(points,sphereCenter);
 
-
-	return null;
+	return {"center":sphereCenter, "radius":sphereRadius, "normal":sphereNormal, "count":index};
 }
 Mesh3D.prototype._neighborhoodSizeBinarySearch = function(location,count){ // 
 	var skipCount = 5;
@@ -3577,83 +3599,185 @@ Mesh3D.prototype._localNeighborhoodSize = function(location){
 	var info = this._nearestLocalNeighborhoodSizeMark();
 	if(info){
 		// ... keep or not ?
-	}else{
-		info = this._neighborhoodSizeInit(location);
-		console.log(info);
 	}
-	// get inital starting sphere
+	if(!info){
+		// closest 'projection' to surface
+		var closestPoint = space.kNN(location,1);
+			closestPoint = closestPoint[0].point();
+		info = this._neighborhoodSizeInit(closestPoint);
+		// set marker
+	}
+
+// DEBUG: GET SOME POINTS:
 
 
-	// grow sphere until plane is found
+var center = info["center"];
+var radius = info["radius"];
+var count = info["count"];
 
-	var count = 0;
-	var radius = 0;
-	var center = null;
-	return {"radius":radius, "center":center, "count":count};
+var points = [];
+var normals = [];
+// var objects = space.kNN(center, count);
+var objects = space.objectsInsideSphere(center, radius);
+for(var i=0; i<objects.length; ++i){
+	var object = objects[i];
+	points.push(object.point());
+	normals.push(object.normal());
+}
+
+GLOBAL_DATA = {"points":points, "normals":normals};
+
+
+
+	console.log(info);
+
+	return info;
+	// var count = 0;
+	// var radius = 0;
+	// var center = null;
+	// return {"radius":radius, "center":center, "count":count};
 }
 
 // Mesh3D.prototype._projectPointToSurface_MLS_NEW = function(startingLocation, getInfo){
-Mesh3D.prototype._projectPointToSurface_MLS = function(startingLocation, getInfo){
-	var space = this._pointSpace;
-	var bivariate = this._bivariate;
-
+Mesh3D.prototype._projectPointToSurface_MLS = function(startingLocation, getCurvature){
 	// estimate local neighborhood
 	var neighborhood = this._localNeighborhoodSize(startingLocation);
 	var neighborhoodCenter = neighborhood["center"];
 	var neighborhoodRadius = neighborhood["radius"];
-
-	// get neighborhood
-	// var neighbors = space.kNN(location, kNNEstimate);
-	var neighbors = space.objectsInsideSphere(neighborhoodCenter, neighborhoodRadius);
-	console.log(neighbors)
-
-throw "..."
-	// iterate location
-	var maxIterations = 5;
-	var maxDistance = radius * 0.01; // 1% change in siz
-	var location = startingLocation.copy();
-	for(var iteration=0; iteration<maxIterations; ++iteration){
-		// only need to get a new neighborhood if the change in location position is changing a lot (compared to search radius)
-		var neighbors = space.objectsInsideSphere(location, neighborhoodRadius);
-
-		// transform local points into local 'up' direction
-
-
-		// get surface estimate
-
-
-		// get curvature
-		if(getInfo){
-			throw "curvature"
+	var neighborhoodNormal = neighborhood["normal"];
+	var neighborhoodCount = neighborhood["count"];
+	// iterations
+var startingX = null;
+	var maximumRatioDifference = 0.05;
+	var maximumIterations = 5;
+	for(var iteration=0; iteration<maximumIterations; ++iteration){
+		var center = this._projectPointIteration_MLS(startingLocation, neighborhoodCenter, neighborhoodRadius, neighborhoodNormal);
+		var distance = V3D.distance(center,neighborhoodCenter);
+		var ratio = (distance/neighborhoodRadius);
+		neighborhoodCenter = center;
+if(!startingX){
+startingX = neighborhoodCenter.copy();
+}
+		console.log(iteration+" : "+distance+" / "+neighborhoodRadius+" = "+ratio);
+		if(ratio<maximumRatioDifference){
+			break;
 		}
-
-		// project to surface
-
-
-		// get local surface plane
-
-		// project startingLocation to closest point on plane
-
-		// new location
-
-		// ???
-		// var curvature = bivariate.curvatureAt(0,0);
-		// 	// need to rotate directions toward:
-		// 	var normal = curvature["normal"];
-		// 		reverse.multV3D(normal,normal); // just want rotation
-		// 		normal.sub(planeOrigin);
-		// 	curvature["normal"] = normal;
-		// 	curvature["localSize"] = localSize;
-		// 	return curvature;
 	}
+var endingX = neighborhoodCenter.copy();
+	var object = {"point":neighborhoodCenter};
+	if(getCurvature){
+		var x=0, y=0; // todo: reverse location ???
+		var curvature = bivariate.valueAt(x,y);
+		console.log("curvature: "+curvature);
+		object["curvature"] = curvature;
+	}
+	console.log("TOTAL CHANGE IN DISTANCE "+( V3D.distance(startingX,endingX) / neighborhoodRadius ));
+	return object;
+}
+Mesh3D.prototype._projectPointIteration_MLS = function(startingLocation, neighborhoodCenter, neighborhoodRadius, neighborhoodNormal){
+	var space = this._pointSpace;
+	var bivariate = this._bivariate;
+	// get neighborhood
+	var neighbors = space.objectsInsideSphere(neighborhoodCenter, neighborhoodRadius);
+	if(neighbors.length<3){
+		// backup: get ~ 5 kNN ?
+		throw "????"
+	}
+	var points = Mesh3D.Point3D.mapArrayToPoints(neighbors);
+	var normals = Mesh3D.Point3D.mapArrayToNormals(neighbors);
+	// surface estimate
+	var planeNormal = Code.averageAngleVector3D(normals);//neighborhoodNormal;
+	var planeOrigin = V3D.average(points);//neighborhoodCenter; // average ?
+	// transform to/from plane
+	var forward = Mesh3D._tempForward;
+	var reverse = Mesh3D._tempReverse;
+	Mesh3D.transformMatricesFromSpaceToPlane(forward,reverse, planeOrigin, planeNormal);
+	var planeNeighborhood = Mesh3D.transformPoints(points, forward);
+	// transform input point:
+ 	var localLocation = Mesh3D.transformPoints([startingLocation], forward);
+		localLocation = localLocation[0];
+	
+	// poly surface
+	bivariate.fromPoints(planeNeighborhood);
+	// bivariate.fromPointsWeights(planeNeighborhood, neighborhoodCenter);
+	
+// var surface = bivariate.mesh(planeNeighborhood);
 
-
-
-	console.log(startingLocation);
-	console.log(info);
-
-throw "?";
+	// initial search segments
+	// var info = V3D.infoFromArray(planeNeighborhood);
+	// var center = info["center"];
+	// var size = info["size"];
+	// 	size = Math.max(size.x,size.y,size.z); // not square? -> force
+	// 	size *= 0.5;
+		size = neighborhoodRadius; // half the valid area, asymptotically approach end
+	var half = size*0.5;
+	// base grid divisions:
+	var divisions = 7; // 5=25 7=49 9=81 11=121
+	var dm1 = divisions - 1;
+	var checks = [];
+	for(var j=0; j<divisions; ++j){
+		var pJ = j/dm1;
+		for(var i=0; i<divisions; ++i){
+			var pI = i/dm1;
+			var x = -half + size*pI;
+			var y = -half + size*pJ;
+			var z = bivariate.valueAt(x,y);
+			var p = new V3D(x,y,z);
+			checks.push(p);
+		}
+	}
+	// starting subdivision search = closest discrete point (TODO: octspace?)
+	var info = V3D.closestPoint(localLocation, checks);
+	var point = info["point"];
+	// subdivisions
+	var siz = size / divisions;
+	var div = 3;
+	var dm1 = div-1;
+	var minimumAccuracyRatio = 0.05; // 1-10%
+	var maximumIterations = 5;
+	for(var iteration=0; iteration<maximumIterations; ++iteration){
+		var ratio = (siz / neighborhoodRadius);
+		// console.log(iteration + " : " + ratio);
+		// stop if division size is << neighborhood
+		if(ratio<minimumAccuracyRatio){
+			break;
+		}
+		siz = siz * 0.5;
+		hal = siz * 0.5;
+		checks = [];
+		for(var j=0; j<div; ++j){
+			var pJ = j/dm1;
+			for(var i=0; i<div; ++i){
+				var pI = i/dm1;
+				var x = -hal + siz*pI + point.x;
+				var y = -hal + siz*pJ + point.y;
+				var z = bivariate.valueAt(x,y);
+				var p = new V3D(x,y,z);
+				checks.push(p);
+			}
+		}
+		var info = V3D.closestPoint(localLocation, checks);
+		point = info["point"];
+	}
+// var str = "";
+// 	str = str + "\n";
+// 	str = str + "p = ["+localLocation.toArray()+"];\n";
+// 	str = str + "q = ["+point.toArray()+"];\n";
+// 	str = str + "\n";
+// console.log(str);
+	// transform to original space:
+	reverse.multV3D(point,point);
+	return point;
 }
 
 
 
+
+
+
+
+
+
+
+
+// ...

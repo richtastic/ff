@@ -53,14 +53,16 @@ SurfaceTest.prototype._refreshDisplay = function(){
 	// var pointCount = 50;
 	var pointCount = 150;
 	// var error = 0.0;
-	var error = 0.01;
+	// var error = 0.01;
 	// var error = 0.05;
-	// var error = 0.10; // ok
+	var error = 0.10; // ok
 	// var error = 0.20; //
 	// var error = 0.25; // bad
 	// var error = 0.40; //
 	// var error = 0.5; // impossible
 	// var nerror = Code.radians(0.0);
+	var noffset = Code.radians(0.0);
+	// var noffset = Code.radians(-45.0);
 	var nerror = Code.radians(10.0);
 	// var nerror = Code.radians(30.0);
 	// var nerror = Code.radians(45.0);
@@ -130,10 +132,10 @@ SurfaceTest.prototype._refreshDisplay = function(){
 		// var angle = Code.radians(15);
 		// var angle = Code.radians(30);
 		// var angle = Code.radians(45);
-		// var angle = Code.radians(60);
+		var angle = Code.radians(60);
 		// var angle = Code.radians(90);
 		// var angle = Code.radians(120);
-		var angle = Code.radians(160);
+		// var angle = Code.radians(160);
 		// var angle = Code.radians(180);
 		var offset = Code.radians(20);
 		var size = 1.0;
@@ -155,6 +157,7 @@ SurfaceTest.prototype._refreshDisplay = function(){
 			point.add(focus);
 			points.push(point);
 			// normal
+			normal.rotate( noffset );
 			normal.rotate( nerror*(Math.random()-0.5) );
 			normals.push(normal);
 		}

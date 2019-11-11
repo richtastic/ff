@@ -489,4 +489,20 @@ V3D.maximumDistance = function(pointList, centerPoint){
 	}
 	return Math.sqrt(d);
 }
+V3D.closestPoint = function(centerPoint, pointList){
+	var N = pointList.length;
+	var closestI = 0;
+	var closestPoint = pointList[closestI];
+	var closestD = V3D.distanceSquare(centerPoint, closestPoint);
+	for(var i=1; i<N; ++i){
+		var p = pointList[i];
+		var d = V3D.distanceSquare(centerPoint, p);
+		if(d<closestD){
+			closestD = d;
+			closestPoint = p;
+			closestI = i;
+		}
+	}
+	return {"point":closestPoint, "index":i, "distance":Math.sqrt(closestD)};
+}
 

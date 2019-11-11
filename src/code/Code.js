@@ -8724,11 +8724,9 @@ Code.sphereMask3D = function(countX,countY,countZ){ // force circle?
 	countY = countY!==undefined ? countY : countX;
 	countZ = countZ!==undefined ? countZ : countX;
 	var radius = Math.min(countX/2,countY/2,countZ/2);
-	console.log(radius);
 	// SHOULD BE SYMMETRIC
 	var i, j;
 	var len = countX*countY*countZ;
-	console.log(len);
 	var mask = Code.newArrayZeros(len);
 	var cx = (countX-1.0)*0.5;
 	var cy = (countY-1.0)*0.5;
@@ -8736,7 +8734,6 @@ Code.sphereMask3D = function(countX,countY,countZ){ // force circle?
 	var rx = (countX-padding)*0.5;
 	var ry = (countY-padding)*0.5;
 	var rz = (countZ-padding)*0.5;
-	console.log(rx,ry,rz);
 	var cXY = countX*countY;
 	for(k=0; k<countZ; ++k){
 		var ok = k*cXY;
@@ -11070,6 +11067,19 @@ Code.closestDistanceSegmentTri3D = function(org,dir, a,b,c,nrm){ // shortest dis
 	dC = V3D.distance(pC[0],pC[1]);
 //console.log(" "+dC+" "+pC[0]+" "+pC[1]);
 	return Math.min(dA,dB,dC);
+}
+
+Code.tris3DFromQuadPoints = function(A,B,C,D){
+	var norm1 = Code.normalTri3D(A,B,C);
+	var norm2 = Code.normalTri3D(C,D,A);
+	return {"A":{"normal":norm1, "points":[A,B,C]}, "B":{"normal":norm2, "points":[C,D,A]}};
+}
+Code.normalTri3D = function(A,B,C){
+	var AB = V3D.sub(B,A);
+	var AC = V3D.sub(C,A);
+	V3D.cross(AB, AB,AC);
+	AB.norm();
+	return AB;
 }
 
 Code.radians = function(degrees){

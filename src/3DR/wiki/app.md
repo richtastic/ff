@@ -341,9 +341,8 @@ TODO: pairwise possibility limiting
 	- multi-view combining into single 3D scene - minimizing errors
 		- sparse tracks
 		- dense points
-	x dense tracks
+	- dense tracks
 	=> dense point tracks
-(10/31)
 - surface triangulation(tessellation)
 x	- advancing-front, curvature-based tessellation
 (11/31)
@@ -389,19 +388,21 @@ https://cloud.google.com/appengine/docs/nodejs/
 
 
 
-
-- estimate exponential curve from pts -- fitting to volume percentage curve, so only need a few points, and does smoothing
-
-- circle from optimum knn
-	- visualize chosen points with a color
-- projection to surface
-
-- iteritive projection
+x convert local point set to normal plane orientation
+x estimate local bivariate [windowing via gaussian ? -- distance from center of plane - sigma ?]
+x visualize points + surface estimation
 
 
+- closest point of like ~100 pts may be much faster than closest point of ~ 10 triangles [which has ~ 30 points]
+	- last step can be closest point on single triangle
+- could use binary space tree for more speed up ...
 
-- surfacing triangles
-	- walk thru algorithm -- maybe make new fxns
+
+
+
+
+
+
 
 
 
@@ -419,36 +420,6 @@ https://cloud.google.com/appengine/docs/nodejs/
 			- use NN thickness as starting point
 			- binary search
 			- lay new point
-
-
-
-
-- use discrete area / volume to estimate percent occupancy
-- values to use: 33-50%
-- 10x10 is very coarse
-- 20x20 is maybe ok
-- coarser estimates:
-	- opt for medium threshold [ ~ 40%]
-		- if too high, might have premature minimums
-		- if too low, might not actually get there (resolution minimum is 1 pixel)
-	- add smoothing
-
-- can do binary searching (with +/- padding)
-- can do 'skipping' & interpolation between [eg 5, 10, 15, 20, ...]
-
--> can do initial estimate, then nearby neighbors can use initial start point and search around area
-
-- quick way to propagate?
-	-> push onto queue? [how big is this queue ? ]
-	-> disconnected points ?
-
-
-- if wall thickness is very thin, lower res grid can be used
-	- resolution cell size should be > ~ 2 x sqrt(N) [radius of a point > 1 pixel], jump in increments of 10:
-		- 25 pts => 10x10 [with smoothing ?]
-		- 100 pts => 20x20
-		- 225 pts => 30x30
-
 
 
 
@@ -475,6 +446,11 @@ https://cloud.google.com/appengine/docs/nodejs/
 		- go back and add triple scaling
 
 
+
+
+- estimate exponential curve from pts -- fitting to volume percentage curve, so only need a few points, and does smoothing
+http://mathworld.wolfram.com/LeastSquaresFittingExponential.html
+A * exp(-B * x) + C
 
 
 - ALL merging solns should use affine location method [or needle/haystack] for adj view 2D locations

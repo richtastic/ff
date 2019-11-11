@@ -29,8 +29,15 @@ GLOBALSTAGE = this._stage2D;
 //	this.plot1D();
 	//
 	this.setupDisplay3D();
-	this.setupSphere3D(1000, 1.0, 0.10, 0.25);
-	// this.setupTorus3D();
+	// this.setupSphere3D(1000, 1.0, 0.0, 0.25);
+	// this.setupSphere3D(250, 1.0, 0.0, 0.0);
+	// this.setupSphere3D(4000, 1.0, 0.50, 0.0);
+	// this.setupSphere3D(10000, 1.0, 0.0, 0.0);
+	// this.setupSphere3D(100, 1.0, 0.0, 0.0);
+
+	this.setupTorus3D(10000, 4.0,2.0, 0.50,0.0);
+
+	// this.setupPlane3D(1000, 1.0, 0.01, 0.0);
 	// this.loadPointFile();
 //	this.setupRect3D();
 //	this.setupCurveTest();
@@ -769,8 +776,11 @@ SurfaceTri.prototype.setupTorus3D = function(count,radiusA,radiusB,error){
 	radiusA = radiusA!==undefined ? radiusA : 3.0;
 	radiusB = radiusB!==undefined ? radiusB : 1.0;
 	error = error!==undefined ? error : 1E-12;
-	var pts = this.generateTorusPoints(count,radiusA,radiusB,error);
-	this.startPointCloud(pts);
+	var info = this.generateTorusPoints(count,radiusA,radiusB,error);
+	var pts = info["points"];
+	var nms = info["normals"];
+	console.log(pts,nms)
+	this.startPointCloud(pts, nms);
 }
 SurfaceTri.prototype.setupSphere3D = function(count, radius, errorP, errorN){
 	count = count!==undefined ? count : 5000;
@@ -778,6 +788,16 @@ SurfaceTri.prototype.setupSphere3D = function(count, radius, errorP, errorN){
 	errorP = errorP!==undefined ? errorP : 1E-12;
 	errorN = errorN!==undefined ? errorN : 1E-12;
 	var info = this.generateSpherePoints(count,radius,errorP,errorN);
+	var pts = info["points"];
+	var nms = info["normals"];
+	this.startPointCloud(pts, nms);
+}
+SurfaceTri.prototype.setupPlane3D = function(count, radius, errorP, errorN){
+	count = count!==undefined ? count : 5000;
+	radius = radius!==undefined ? radius : 1.5;
+	errorP = errorP!==undefined ? errorP : 1E-12;
+	errorN = errorN!==undefined ? errorN : 1E-12;
+	var info = this.generatePlanePoints(count,radius,errorP,errorN);
 	var pts = info["points"];
 	var nms = info["normals"];
 	this.startPointCloud(pts, nms);
@@ -857,8 +877,16 @@ GLOBAL_LAST_NEXT = null;
 GLOBAL_RAYS = null;
 	var mesh = new Mesh3D(pts,nrms);
 
+	// var info = mesh._localNeighborhoodSize(new V3D(6,0,0));
+	// var info = mesh._localNeighborhoodSize(new V3D(1,1,1));
+	// var info = mesh._localNeighborhoodSize(new V3D(0,0,0));
 
-	var info = mesh._localNeighborhoodSize(new V3D(1,1,1));
+	mesh._setCurvaturePoints_MLS();
+	var info = mesh._projectPointToSurface_MLS(new V3D(1,2,0), false);
+	console.log(info);
+
+// throw "?"
+
 	console.log(info);
 	var triangles = [];
 	// var triangles = mesh.generateSurfaces();
@@ -948,6 +976,17 @@ var points = [];
 var colors = [];
 var showPoints = true;
 if(showPoints){
+
+	var infoPoints = GLOBAL_DATA["points"];
+console.log("GLOBAL_DATA: "+infoPoints.length);
+	for(i=0;i<infoPoints.length;++i){
+		var p = infoPoints[i];
+		points.push(p.x,p.y,p.z);
+		//colors.push(0.5*Math.random()+0.5,0.0,0.5*Math.random(),0.90);
+		colors.push(1.0,0,0,1.0);
+	}
+
+
 	// show source points
 	for(i=0;i<pts.length;++i){
 // break;
@@ -975,13 +1014,16 @@ if(showPoints){
 		// colors.push(1.0,0.0,0.0,0.90);
 		// colors.push(0.5*Math.random()+0.5,0.0,0.5*Math.random(),0.90);
 	}
+
+
 }
 
 	// line data:
 	var pointsL = [];
 	var colorsL = [];
 
-var showNormals = true;
+var showNormals = false;
+// var showNormals = true;
 if(showNormals){
 	var normalScale = 0.05;
 	for(i=0;i<nrms.length;++i){
@@ -1780,6 +1822,28 @@ SurfaceTri.prototype.covarianceFromPoints = function(points){
 	console.log(this._planeTriangleColorsList)
 	return cov;
 }
+SurfaceTri.prototype.generatePlanePoints = function(count,radius,errorP,errorN){
+	count = count!==undefined?count:25;
+	radius = radius!==undefined?radius:1.0;
+	errorP = errorP!==undefined?errorP:0.01;
+	errorN = errorN!==undefined?errorN:0.01;
+	var i, v, theta, phi, psi, rad
+	var points = [];
+	var normals = [];
+	for(i=0;i<count;++i){
+		theta = Math.random()*Math.TAU;
+		rad = Math.sqrt(Math.random()) * radius;
+		v = new V3D(rad*Math.cos(theta),rad*Math.sin(theta),0);
+		v.add( 0, 0, (Math.random()-0.5)*errorP ); // in/out
+		points.push(v);
+		var n = new V3D(0,0,1);
+			n.wiggle(errorN);
+			n.norm();
+		normals.push(n);
+	}
+	return {"points":points, "normals":normals};
+}
+
 SurfaceTri.prototype.generateSpherePoints = function(count,radius,errorP,errorN){
 	count = count!==undefined?count:25;
 	radius = radius!==undefined?radius:1.0;
@@ -1806,32 +1870,48 @@ SurfaceTri.prototype.generateSpherePoints = function(count,radius,errorP,errorN)
 	}
 	return {"points":points, "normals":normals};
 }
-SurfaceTri.prototype.generateTorusPoints = function(count,radiusA,radiusB,error){
+SurfaceTri.prototype.generateTorusPoints = function(count,radiusA,radiusB,errorP, errorN){
 	count = count!==undefined?count:25;
 	radiusA = radiusA!==undefined?radiusA:2.0;
 	radiusB = radiusB!==undefined?radiusB:1.0;
 	// radiusA = radiusA!==undefined?radiusA:3.0;
 	// radiusB = radiusB!==undefined?radiusB:0.2;
-	error = error!==undefined?error:0.01;
-	var i, list = [];
-var index = 0;
-var prng = [101681,101693,103001,102929,104033, 1, 2, 3, 4, 5, 6, 7];
-var prngMod = 104729;
-var r;
-	for(i=0;i<count;++i){
+	errorP = errorP!==undefined?errorP:0.0;
+	errorN = errorN!==undefined?errorN:0.0;
+	var normals = [];
+	var points = [];
+	// repeatable random
+	var index = 0;
+	var prng = [101681,101693,103001,102929,104033, 1, 21, 66793, 497551, 543899, 6999, 7975313];
+	var prngMod = 104729;
+	var r;
+	for(var i=0;i<count;++i){
 		r = Code.PRNG(prng, ++index, prngMod);
 		var angleA = r*Math.TAU;
 		r = Code.PRNG(prng, ++index, prngMod);
 		var angleB = r*Math.TAU;
 		// var angleA = Math.random()*Math.TAU;
 		// var angleB = Math.random()*Math.TAU;
-		var errorX = 0;//(Math.random()-0.5)*error;
-		var errorY = 0;//(Math.random()-0.5)*error;
-		var point = new V3D(radiusA + radiusB*Math.cos(angleB) + errorX,radiusB*Math.sin(angleB) + errorY, 0);
+		// var errorX = 0;//(Math.random()-0.5)*error;
+		// var errorY = 0;//(Math.random()-0.5)*error;
+		var errorX = Code.PRNG(prng, ++index, prngMod);
+		var errorY = Code.PRNG(prng, ++index, prngMod);
+			errorX = (errorX - 0.5)*errorP;
+			errorY = (errorY - 0.5)*errorP;
+		// 
+		var c = Math.cos(angleB);
+		var s = Math.sin(angleB)
+		var point = new V3D(radiusA + radiusB*c, radiusB*s, 0);
+			point.add(errorX,errorY,0);
+		var normal = new V3D(radiusB*c, radiusB*s, 0);
+			point.add(0,0,0);
+			normal.norm();
 		point = V3D.rotateAngle(point, V3D.DIRY, angleA);
-		list.push(point);
+		normal = V3D.rotateAngle(normal, V3D.DIRY, angleA);
+		points.push(point);
+		normals.push(normal);
 	}
-	return list;
+	return {"points":points, "normals":normals};
 }
 // ------------------------------------------------------------------------------------------------------------------------
 SurfaceTri.prototype.plot1D = function(){

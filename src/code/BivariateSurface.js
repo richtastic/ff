@@ -1,9 +1,10 @@
 // BivariateSurface.js
 
 function BivariateSurface(degree){
-	this._degree = degree!==undefined?degree:3;
+	this._degree = 0;//degree!==undefined?degree:3;
 	this._coefficients = new Array();
-	this._valueAt = this.valueAtN;
+	this.valueAt = this._valueAtN;
+	this.degree(degree);
 }
 BivariateSurface.prototype.copy = function(){
 	var b = new BivariateSurface();
@@ -21,17 +22,17 @@ BivariateSurface.prototype.degree = function(d){
 	if(d!==undefined){
 		this._degree = d;
 		if(d==0){
-			this._valueAt = this._degree0ValueAt;
+			this.valueAt = this._degree0ValueAt;
 		}else if(d==1){
-			this._valueAt = this._degree1ValueAt;
+			this.valueAt = this._degree1ValueAt;
 		}else if(d==2){
-			this._valueAt = this._degree2ValueAt;
+			this.valueAt = this._degree2ValueAt;
 		}else if(d==3){
-			this._valueAt = this._degree3ValueAt;
+			this.valueAt = this._degree3ValueAt;
 		}else if(d==4){
-			this._valueAt = this._degree4ValueAt;
+			this.valueAt = this._degree4ValueAt;
 		}else{ // > 4
-			this._valueAt = this._valueAtN;
+			this.valueAt = this._valueAtN;
 		}
 	}
 	return this._degree;
@@ -140,10 +141,11 @@ BivariateSurface.prototype.fromPoints = function(points){
 	Code.emptyArray(this._coefficients);
 	c.toArray(this._coefficients);
 }
-/*
-BivariateSurface.prototype.fromPoints = function(points,degree, weightPoint,h){
-	degree = degree!==undefined?degree:this._degree;
-	degree = Math.max(0,degree);
+
+BivariateSurface.prototype.fromPointsWeights = function(points, weightPoint,h){
+	var degree = this._degree;
+	// degree = degree!==undefined?degree:this._degree;
+	// degree = Math.max(0,degree);
 	var hh = h?h*h:0;
 	var i, j, k, len, index, point, coeff, w=1.0;
 	var A, bb, bi, biT, b, dd, c;
@@ -157,7 +159,7 @@ BivariateSurface.prototype.fromPoints = function(points,degree, weightPoint,h){
 		weightPoint.scale(1.0/len);
 	}
 	// initial matrices
-	this.degree(degree);
+	// this.degree(degree);
 	coeff = BivariateSurface.coefficientCountFromDegree(degree);
 	A = new Matrix(coeff,coeff);
 	bb = new Matrix(coeff,coeff);
@@ -192,11 +194,8 @@ BivariateSurface.prototype.fromPoints = function(points,degree, weightPoint,h){
 	c = Matrix.mult(pInv,b);
 	Code.emptyArray(this._coefficients);
 	c.toArray(this._coefficients);
-	//console.log(this._coefficients);
-	throw "is this right? --- is C the right dimension";
-	//
 }
-*/
+
 
 BivariateSurface.degreeFromCoefficientCount = function(coeff){
 	return Math.floor( (Math.sqrt(9.0 - 8.0*(1.0-coeff)) - 3.0)/2.0 );
@@ -207,12 +206,10 @@ BivariateSurface.coefficientCountFromDegree = function(degree){
 }
 
 
-BivariateSurface.prototype.curvatureAt = function(x1,y1){
+BivariateSurface.prototype.curvatureAt = function(x1,y1, delta){
+	delta = delta!==undefined ? delta : 1E-6;
+	var dx = dy = delta;
 	var temp;
-	var dx = dy = 1E-6; // this should depend on the size of the point samples (range)
-	// var dxx = dx*dx;
-	// var dxy = dx*dy;
-	// var dyy = dy*dy;
 	// locations
 	var x0 = x1-dx, x2 = x1+dx;
 	var y0 = y1-dy, y2 = y1+dy;
@@ -277,27 +274,27 @@ BivariateSurface.prototype.curvatureAt = function(x1,y1){
 	if(eigenValues[1]>eigenValues[0]){
 		temp = eigA; eigA = eigB; eigB = temp;
 	}
-		// perpendicular vector:
-		var twist = V3D.cross(unitNormal,V3D.DIRZ); twist.norm();
-		var angle = V3D.angle(V3D.DIRZ,unitNormal);
-		// rotate vectors to match z axis
-		var twistX = V3D.rotateAngle(new V3D(),V3D.DIRX,twist,-angle);
-		var twistY = V3D.rotateAngle(new V3D(),V3D.DIRY,twist,-angle);
-		// find angle between axes
-		var angleX = V3D.angle(tangentA,V3D.DIRX);
-		var angleY = V3D.angle(tangentB,V3D.DIRY);
-		if( Math.abs(angleX-angleY)>1E-6 ){ // roundoff error
+	// perpendicular vector:
+	var twist = V3D.cross(unitNormal,V3D.DIRZ); twist.norm();
+	var angle = V3D.angle(V3D.DIRZ,unitNormal);
+	// rotate vectors to match z axis
+	var twistX = V3D.rotateAngle(new V3D(),V3D.DIRX,twist,-angle);
+	var twistY = V3D.rotateAngle(new V3D(),V3D.DIRY,twist,-angle);
+	// find angle between axes
+	var angleX = V3D.angle(tangentA,V3D.DIRX);
+	var angleY = V3D.angle(tangentB,V3D.DIRY);
+	if( Math.abs(angleX-angleY)>1E-6 ){ // roundoff error
 //			console.log("inside");
-			angleX = V3D.angle(tangentA,V3D.DIRY);
-			angleY = V3D.angle(tangentB,V3D.DIRX);
-		}
-		// repeat process for eigenvectors
-		var twistEigA = V3D.rotateAngle(new V3D(),eigA,twist,-angle);
-		var twistEigB = V3D.rotateAngle(new V3D(),eigB,twist,-angle);
-		var frameEigA = V3D.rotateAngle(new V3D(),twistEigA,unitNormal,-angleX);
-		var frameEigB = V3D.rotateAngle(new V3D(),twistEigB,unitNormal,-angleX);
-		frameEigA.norm();
-		frameEigB.norm();
+		angleX = V3D.angle(tangentA,V3D.DIRY);
+		angleY = V3D.angle(tangentB,V3D.DIRX);
+	}
+	// repeat process for eigenvectors
+	var twistEigA = V3D.rotateAngle(new V3D(),eigA,twist,-angle);
+	var twistEigB = V3D.rotateAngle(new V3D(),eigB,twist,-angle);
+	var frameEigA = V3D.rotateAngle(new V3D(),twistEigA,unitNormal,-angleX);
+	var frameEigB = V3D.rotateAngle(new V3D(),twistEigB,unitNormal,-angleX);
+	frameEigA.norm();
+	frameEigB.norm();
 // console.log(tangentA+"")
 // console.log(tangentB+"")
 // console.log(normal+"")
@@ -318,4 +315,56 @@ BivariateSurface.prototype.curvatureAt = function(x1,y1){
 	}
 	unitNormal.scale(-1.0); // flip from direction of curvature to direction of exterior
 	return {min:curveMin, max:curveMax, directionMax:frameEigA, directionMin:frameEigB, normal:unitNormal};
+}
+
+BivariateSurface.prototype.mesh = function(pointList){ // get a 2D + altitude 
+	var count = 11;
+	var countX = count;
+	var countY = count;
+	var min3D = V3D.copy(pointList[0]);
+	var max3D = V3D.copy(pointList[0]);
+	var pointCount = pointList.length;
+	// samples:
+	var pListX = [];
+	var pListY = [];
+	var pListZ = [];
+	for(var i=0; i<pointCount; ++i){
+		var point = pointList[i];
+		V3D.min(min3D,min3D,point);
+		V3D.max(max3D,max3D,point);
+		pListX.push(point.x);
+		pListY.push(point.y);
+		pListZ.push(point.z);
+	}
+	var ran3D = V3D.sub(max3D,min3D);
+	// console.log(min3D+" | "+max3D);
+	var xList = [];
+	var yList = [];
+	var zList = [];
+	for(var j=0; j<countY; ++j){
+		for(var i=0; i<countX; ++i){
+			var pX = i/(countX-1);
+			var pY = j/(countY-1);
+			var x = ran3D.x*pX + min3D.x;
+			var y = ran3D.y*pY + min3D.y;
+			var z = this.valueAt(x,y);
+			xList.push(x);
+			yList.push(y);
+			zList.push(z);
+		}
+	}
+	//
+	var str = "";
+		str += "\n";
+		str += "countX = "+countX+";\n";
+		str += "countY = "+countY+";\n";
+		str += "x = ["+xList+"];\n";
+		str += "y = ["+yList+"];\n";
+		str += "z = ["+zList+"];\n";
+		str += "px = ["+pListX+"];\n";
+		str += "py = ["+pListY+"];\n";
+		str += "pz = ["+pListZ+"];\n";
+		str += "\n";
+	console.log(str);
+	// pointList
 }
