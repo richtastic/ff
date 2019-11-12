@@ -393,9 +393,32 @@ x estimate local bivariate [windowing via gaussian ? -- distance from center of 
 x visualize points + surface estimation
 
 
-- closest point of like ~100 pts may be much faster than closest point of ~ 10 triangles [which has ~ 30 points]
-	- last step can be closest point on single triangle
-- could use binary space tree for more speed up ...
+
+x project ~ 1000 pts to surface and see if forms expected result
+	- edges are a problem 
+	- repetitive iterations are a problemz
+
+- prep all points preprocessing step
+	- go thru each point & get neighborhood size
+	- confidence, curvature, ...
+
+- generateSurfaces
+	- iterateFronts
+		- 
+
+- what should starting point be?
+	- not near edge
+	- planar
+	- confidence in normal (planar normal / group normal dot single normal closest to 1)
+	- 
+
+
+?? why are some projections not working (from far away?) EDGE ... OUTSIDE CIRCLE - PREVENT
+
+- walk thru iterations of process ?
+	- ...
+
+- how to handle edge 'points' ?
 
 
 
@@ -406,20 +429,6 @@ x visualize points + surface estimation
 
 
 
-- HOW TO PROPAGATE SEARCH WINDOW:
-	- do it 'on demand'
-		[if there are many redundant points then giving every point a 'wall thickness' is unnecessarily repetitive]
-	- wall-thickness oct-tree
-		- lay a point at the center [centroid] when a calculation is made
-		- if nearest neighbor DNE OR if d(nn) is > 2 x nn wall thickness
-			- find an initial wall size with binary search high res
-			- lay point
-		- if d(nn) < wall thickness
-			- use exact thickness w/o search
-		- else [1 < d(nn) < 2]
-			- use NN thickness as starting point
-			- binary search
-			- lay new point
 
 
 

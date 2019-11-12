@@ -29,15 +29,15 @@ GLOBALSTAGE = this._stage2D;
 //	this.plot1D();
 	//
 	this.setupDisplay3D();
-	// this.setupSphere3D(1000, 1.0, 0.0, 0.25);
+	this.setupSphere3D(10000, 1.0, 0.0, 0.25);
 	// this.setupSphere3D(250, 1.0, 0.0, 0.0);
 	// this.setupSphere3D(4000, 1.0, 0.50, 0.0);
 	// this.setupSphere3D(10000, 1.0, 0.0, 0.0);
 	// this.setupSphere3D(100, 1.0, 0.0, 0.0);
 
-	this.setupTorus3D(10000, 4.0,2.0, 0.50,0.0);
+	// this.setupTorus3D(1000, 4.0,2.0, 0.20,0.0);
 
-	// this.setupPlane3D(1000, 1.0, 0.01, 0.0);
+	// this.setupPlane3D(1000, 1.0, 0.5, 0.0);
 	// this.loadPointFile();
 //	this.setupRect3D();
 //	this.setupCurveTest();
@@ -800,6 +800,7 @@ SurfaceTri.prototype.setupPlane3D = function(count, radius, errorP, errorN){
 	var info = this.generatePlanePoints(count,radius,errorP,errorN);
 	var pts = info["points"];
 	var nms = info["normals"];
+console.log(pts,nms)
 	this.startPointCloud(pts, nms);
 }
 SurfaceTri.prototype.setupRect3D = function(){
@@ -882,16 +883,47 @@ GLOBAL_RAYS = null;
 	// var info = mesh._localNeighborhoodSize(new V3D(0,0,0));
 
 	mesh._setCurvaturePoints_MLS();
-	var info = mesh._projectPointToSurface_MLS(new V3D(1,2,0), false);
-	console.log(info);
+	// var info = mesh._projectPointToSurface_MLS(new V3D(1,2,0), false);
+	// console.log(info);
 
-// throw "?"
 
-	console.log(info);
+/*
+var surface = [];
+var totalPointTest = 1000;
+var space = mesh._pointSpace;
+var min = space.min();
+var max = space.max();
+var cen = V3D.avg(max,min);
+var siz = V3D.sub(max,min);
+// console.log(siz);
+siz.scale(1.0);
+for(var i=0; i<totalPointTest; ++i){
+	console.log(i+" / "+totalPointTest);
+	// var p = new V3D(min.x,min.y,min.z);
+	var p = new V3D(cen.x,cen.y,cen.z);
+		p.wiggle(siz.x,siz.y,siz.z);
+	var info = mesh._projectPointToSurface_MLS(p, false);
+	if(info){
+		// console.log(info);
+		surface.push(info["point"]);
+	}
+	// throw "?"
+}
+console.log(surface);
+GLOBAL_DATA["points"] = surface;
+*/
+
+
+	// console.log(info);
 	var triangles = [];
-	// var triangles = mesh.generateSurfaces();
+	var triangles = mesh.generateSurfaces();
+
+
+
+
 	// var triangles = [];
 	console.log(triangles);
+	throw "?";
 
 // var pts = spherePoints;
 // console.log(pts);
@@ -986,14 +1018,15 @@ console.log("GLOBAL_DATA: "+infoPoints.length);
 		colors.push(1.0,0,0,1.0);
 	}
 
-
-	// show source points
+// var showSource = false;
+var showSource = true;
+if(showSource){ // show source points
 	for(i=0;i<pts.length;++i){
-// break;
 		var p = pts[i];
 		points.push(p.x,p.y,p.z);
-		colors.push(0.0,0.0,1.0,0.90);
+		colors.push(0.0,0.0,1.0,0.50);
 	}
+}
 
 	for(i=0;i<surfacePoints.length;++i){
 		p = surfacePoints[i];

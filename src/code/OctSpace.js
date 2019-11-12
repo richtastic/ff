@@ -40,6 +40,11 @@ OctSpace.prototype.initWithObjects = function(objects, epsilon){
 	var eps = 1E-6;
 	min.add(-eps,-eps,-eps);
 	max.add(eps,eps,eps);
+if( Code.isNaN(min.x) ){
+	console.log(objects);
+	console.log(min+" - "+max);
+	throw "?"
+}
 
 	this.initWithSize(min, max, epsilon);
 
