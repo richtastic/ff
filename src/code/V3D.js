@@ -414,8 +414,8 @@ V3D.meanFromArray = function(pointList){
 V3D.mean = function(pointList){
 	return V3D.meanFromArray(pointList);
 }
-V3D.average = function(pointList, weights){
-	var N = pointList.length;
+V3D.average = function(pointList, weights, N){
+	N = N!==undefined ? N : pointList.length;
 	var p = 1.0/N;
 	var avg = new V3D(0,0,0);
 	for(var i=0; i<N; ++i){
@@ -463,9 +463,9 @@ V3D.arrayToValueList = function(pointList){
 	}
 	return a;
 }
-V3D.maximumDistance = function(pointList, centerPoint){
+V3D.maximumDistance = function(pointList, centerPoint, N){
 	var d = 0;
-	var N = pointList.length;
+	N = N!==undefined ? N : pointList.length;
 	if(centerPoint){
 		for(var i=0; i<N; ++i){
 			var a = pointList[i];

@@ -54,9 +54,9 @@ PriorityQueue.prototype.popMaximum = function(){
 	return this._tree.popMaximum();
 }
 PriorityQueue.prototype.exists = function(o){
-	console.log("exists: "+o);
+	// console.log("exists: "+o);
 	var node = this._tree.findNodeFromObject(o);
-	console.log(node);
+	// console.log(node);
 	return node != null;
 }
 PriorityQueue.prototype.linearSearchFxn = function(fxn, args){

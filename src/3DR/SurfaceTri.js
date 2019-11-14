@@ -29,7 +29,7 @@ GLOBALSTAGE = this._stage2D;
 //	this.plot1D();
 	//
 	this.setupDisplay3D();
-	this.setupSphere3D(10000, 1.0, 0.0, 0.25);
+	this.setupSphere3D(1000, 1.0, 0.0, 0.25);
 	// this.setupSphere3D(250, 1.0, 0.0, 0.0);
 	// this.setupSphere3D(4000, 1.0, 0.50, 0.0);
 	// this.setupSphere3D(10000, 1.0, 0.0, 0.0);

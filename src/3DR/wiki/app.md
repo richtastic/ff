@@ -396,11 +396,55 @@ x visualize points + surface estimation
 
 x project ~ 1000 pts to surface and see if forms expected result
 	- edges are a problem 
+		- detect: projection to 'normal' plane = all points are on single side (largest angle > 100 - 150)
 	- repetitive iterations are a problemz
 
 - prep all points preprocessing step
-	- go thru each point & get neighborhood size
-	- confidence, curvature, ...
+	- for each point:
+		- if NOT already has conf/curv/planar/proj/edge
+		- push on queue
+			- for each queue.pop
+				- if point NOT already has a conf/curv/...
+					- find nearest neighborhood marker [or nearest 3 ?]
+						- first that fits:
+							- A) point within radius of marker
+								- use neighborhood as is
+							- B) point within X * radius of marker neighborhood ()
+								- use as base point * binary-ish search
+								- plant a new marker [@ COM]
+							- C) else:
+								- start new marker process
+								- plant new marker  [@ COM]
+					- calculate:
+						- planarness ratio of neighborhood
+						- is an edge point (largest planar angle)
+						- confidence of normal
+						- curvature at point [surface]
+						- PROJECTED SURFACE POINT ?
+						- 
+
+
+seedTriFromPoint
+
+iteritiveEdgeSizeFromPoint
+	- as the edge size gets bigger, so does the search radius
+		- as does the maximum edge size
+	- binaryish search behavior
+
+
+FRONT ITERATING PROCESS:
+	- find 'starting' point
+		- choose most planar point (that is not an edge)
+	- create first tri
+		- iterate the size:
+			- edge size starts as the ideal curvature 
+			- 
+	- extend tri from edge:
+		- edge ?
+		- ...
+		- too close?
+		- 
+
 
 - generateSurfaces
 	- iterateFronts
