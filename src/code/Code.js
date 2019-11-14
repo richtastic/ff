@@ -3062,11 +3062,11 @@ Code._opAngleVector3D = function(vectorA, vectorB, mag){ // assume Z = default l
 	}
 	return vectorC;
 }
-Code.averageAngleVector3D = function(vectors, percents){ // center of vectors via rotation on sphere [ignores twist]
+Code.averageAngleVector3D = function(vectors, percents, count){ // center of vectors via rotation on sphere [ignores twist]
 	if(!vectors){
 		return null;
 	}
-	var count = vectors.length;
+	count = count!==undefined ? count : vectors.length;
 	if(count==0){
 		return null;
 	}
