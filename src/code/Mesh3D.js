@@ -142,6 +142,7 @@ Mesh3D.prototype.outputTriangles = function(){
 	// throw "output Tri3D";
 }
 Mesh3D.prototype.consistentTriangleOrientationsFromPoints = function(){
+	throw "?";
 	var triSpace = this._triangleSpace;
 	var pointSpace = this._pointSpace;
 	var triangles = triSpace.toArray();
@@ -167,7 +168,8 @@ Mesh3D.prototype.consistentTriangleOrientationsFromPoints = function(){
 			var normals = [];
 			for(var j=0; j<neighbors.length; ++j){
 				var nearest = neighbors[j];
-				var normal = nearest.sourceNormal();
+				console.log(nearest);
+				var normal = nearest.normal();
 				if(normal){
 					normals.push(normal);
 				}
@@ -259,19 +261,25 @@ Mesh3D.prototype.generateSurfaces = function(){
 	// this._testSurface();
 
 
-	// var triangles = this.toTriangleList();
-	// return triangles;
+	var triangles = this.toTriangleList();
+	return triangles;
 	// var pts = this.testPoints();
-	return this._pointSpace.toArray();
+	// return this._pointSpace.toArray();
 }
 Mesh3D.prototype.toTriangleList = function(){
 	var front = this._front;
 	var triangles = [];
-	throw "?";
+
+	triangles = this._triangleSpace.toArray();
+	// console.log();
+	// throw "?";
 	// for(var i=0; i<fronts.length; ++i){
 	// 	var front = fronts[i];
 	// 	polygons.push(front.toPolygon());
 	// }
+
+
+	// _triangleSpace
 	return triangles;
 }
 Mesh3D.prototype.kill = function(){
@@ -1842,13 +1850,13 @@ Mesh3D.prototype._iterateFronts = function(){
 		console.log(seedPoint);
 		console.log("seedPoint: "+seedPoint);
 
-		this.seedTriFromPoint(fronts, seedPoint.point());
+		this.seedTriFromPoint(fronts, seedPoint);
 console.log("iterating ...");
-throw "iterate with seed ...";
+// throw "iterate with seed ...";
 		// iterate:
-		// var maxIter = 0;
+		var maxIter = 0;
 		// var maxIter = 5;
-		var maxIter = 10;
+		// var maxIter = 10;
 		// var maxIter = 100;
 		// var maxIter = 1000;
 		// var maxIter = 2000;
@@ -1999,7 +2007,7 @@ if(groupIndex>=1){
 }
 	}
 console.log(" -------------------------------------- ");
-	this.consistentTriangleOrientationsFromPoints();
+	// this.consistentTriangleOrientationsFromPoints();
 
 }
 Mesh3D.prototype.close = function(front){ // collape 3 edges to triangle
@@ -2022,40 +2030,39 @@ Mesh3D.prototype.close = function(front){ // collape 3 edges to triangle
 	front.popEdge(edgeC);
 	fronts.removeFront(front);
 }
-Mesh3D.prototype.iteritiveEdgeSizeFromPoint = function(location, currentSize){
-	var eta = this._eta;
-		// eta = eta*2;
+Mesh3D.prototype.edgeSizeFromCurvature = function(curvature){
 	var rho = this._angle;
-	var curvature, searchRadius;
-	if(!currentSize){
-		curvature = this.curvatureAtPoint(location);
-		currentSize = rho/curvature;
-	}
-	var maxSize = currentSize;
-	searchRadius = eta*maxSize;
-	curvature = this.maxCurvatureAtPoint(location, searchRadius);
+	return rho/curvature;
+}
+Mesh3D.prototype.iteritiveEdgeSizeFromPoint = function(location){//, currentSize){ // as 
+	var eta = this._eta;
+	var rho = this._angle;
+	var idealCurvature = this.curvatureAtPoint(location);
+	var idealLength = rho/idealCurvature;
+	var searchRadius = idealLength*eta;
+	var maxSize = idealCurvature;
+	var curvature = this.maxCurvatureAtPoint(location, searchRadius);
 	var minSize = rho/curvature;
-	// console.log("       - iteritiveEdgeSizeFromPoint : "+minSize+" - "+maxSize);
+	console.log("       - iteritiveEdgeSizeFromPoint : "+minSize+" - "+maxSize);
 	if(minSize==maxSize){
 		return minSize;
 	}
 	var maxIterations = 10;
-	var i = 0;
-	while(i<maxIterations){
+	for(var i=0; i<maxIterations; ++i){
 		var midSize = (maxSize-minSize)*0.5;
-		searchRadius = eta*midSize;
-		curvature = this.maxCurvatureAtPoint(location, searchRadius);
+		var searchRadius = eta*midSize;
+		var curvature = this.maxCurvatureAtPoint(location, searchRadius);
 		var size = rho/curvature;
 		var ratio = minSize/midSize;
 		if(ratio<1){
 			ratio = 1/ratio;
 		}
-		// console.log("                        midSize: "+midSize+" ["+searchRadius+"] = > "+size+"/"+maxSize);//+"  -       "+ratio);
+		console.log("                        midSize: "+midSize+" ["+searchRadius+"] = > "+size+"/"+maxSize+"  -       "+ratio);
 		if(size==maxSize){
 			break;
 		}else if(size>midSize){
 			minSize = midSize;
-		}else{
+		}else{ // size < midSize
 			maxSize = midSize;
 		}
 		if(ratio<1.0001){
@@ -2066,6 +2073,7 @@ Mesh3D.prototype.iteritiveEdgeSizeFromPoint = function(location, currentSize){
 	return minSize;
 }
 Mesh3D.prototype.iteritiveEdgeToSizeAtPoint = function(pointA,pointB, idealSize){ // iterate pointB location until length ~ ideal size
+	throw "?";
 	var maxIterations = 5;
 	var maxRatio = 1.001;
 	var point = pointB.copy();
@@ -2114,18 +2122,18 @@ Mesh3D.prototype.maxCurvatureAtPoint = function(location, searchRadius){
 	var maxCurvature = null;
 	for(var i=0; i<points.length; ++i){
 		var point = points[i];
-		var curvature = point.curvature();
+		var curvature = point.surfaceCurvature();
 		if(maxCurvature==null || maxCurvature<curvature){
 			maxCurvature = curvature;
 		}
 	}
-	maxCurvature = this._capCurvature(maxCurvature);
+	// maxCurvature = this._capCurvature(maxCurvature);
 	return maxCurvature;
 }
 Mesh3D.prototype.curvatureAtPoint = function(location){ // guidance field - curvature @ closest point to point
 	var point = this._pointSpace.closestObject(location);
-	var curvature = point.curvature();
-		curvature = this._capCurvature(curvature);
+	var curvature = point.surfaceCurvature();
+	// curvature = this._capCurvature(curvature);
 	return curvature;
 }
 Mesh3D.prototype.tangentPlaneAtPoint = function(location, normal){
@@ -2153,43 +2161,37 @@ Mesh3D.prototype.tangentPlaneAtPoint = function(location, normal){
 
 Mesh3D.prototype.seedTriFromPoint = function(fronts, seed){
 	var info;
-
-throw "already have the seed's surface projection & surface normal"
-/*
-console.log(fronts,seed)
-	info = this._projectPointToSurface(seed);
-	var point = info["point"];
-console.log("point: ",point);
-	var edgeSize = this.iteritiveEdgeSizeFromPoint(point);
-console.log("edgeSize: ",edgeSize);
-	var tangent = this.tangentPlaneAtPoint(point);
-// var tangent = this.tangentPlaneAtPoint(point);
-console.log("tangent: ",tangent);
-
-*/
+	console.log(seed);
 	var point = seed.surfacePoint();
 	var normal = seed.surfaceNormal();
-	var tangent = ?;
-	var edgeSize = ?;
-
-
+	var tangent = V3D.orthogonal(normal);
+	var curvature = seed.surfaceCurvature();
+	// var edgeSize = this.edgeSizeFromCurvature(curvature);
+console.log(point);
+console.log(normal);
+console.log(tangent);
+	edgeSize = this.iteritiveEdgeSizeFromPoint(point);
+console.log(edgeSize);
 	var equilSizeH = (edgeSize*0.5)/Math.sin(Code.radians(60.0));
 	var equilSizeO = equilSizeH*Math.cos(Code.radians(60.0));
-	var dirX = tangent["x"];
-	var dirY = tangent["y"];
-throw "?";
+	var dirX = tangent;
+	var dirY = V3D.rotateAngle(tangent,normal, Math.PI*0.5);
+console.log(dirX+"");
+console.log(dirY+"");
+	dirY = V3D.cross(normal,dirX);
+	dirY.norm();
+console.log(dirY+"");
 	var a = dirY.copy().scale( equilSizeH).add(point);
 	var b = dirY.copy().scale(-equilSizeO).add( dirX.copy().scale(-edgeSize*0.5)).add(point);
 	var c = dirY.copy().scale(-equilSizeO).add( dirX.copy().scale( edgeSize*0.5)).add(point);
 	// console.log(point,a,equilSizeH);
-	a = this.iteritiveEdgeToSizeAtPoint(point,a,equilSizeH);
-	b = this.iteritiveEdgeToSizeAtPoint(point,b,equilSizeH);
-	c = this.iteritiveEdgeToSizeAtPoint(point,c,equilSizeH);
-	var d1 = V3D.distance(a,b);
-	var d2 = V3D.distance(b,c);
-	var d3 = V3D.distance(c,a);
-	console.log(edgeSize,d1,d2,d3); // if ratio is bad => return null
-throw "?";
+	// a = this.iteritiveEdgeToSizeAtPoint(point,a,equilSizeH);
+	// b = this.iteritiveEdgeToSizeAtPoint(point,b,equilSizeH);
+	// c = this.iteritiveEdgeToSizeAtPoint(point,c,equilSizeH);
+	// var d1 = V3D.distance(a,b);
+	// var d2 = V3D.distance(b,c);
+	// var d3 = V3D.distance(c,a);
+	// console.log(edgeSize,d1,d2,d3); // if ratio is bad => return null
 	// edges
 	var edgeAB = new Mesh3D.Edge3D(a,b, edgeSize);
 	var edgeBC = new Mesh3D.Edge3D(b,c, edgeSize);
@@ -2626,6 +2628,9 @@ Mesh3D.prototype.vertexPredict = function(edge, edgeFront){
 	// console.log("searchLength: "+searchLength);
 	var midpoint = edge.midpoint();
 	// console.log("midpoint: "+midpoint);
+
+throw "is this correct to use here?: iteritiveEdgeSizeFromPoint"
+
 	var idealSize = this.iteritiveEdgeSizeFromPoint(midpoint);//,edgeLength); // i
 	// console.log("idealSize: "+idealSize);
 	var baseAngle = limitMax; // if ratio < 1
@@ -2949,6 +2954,7 @@ Mesh3D.prototype.closestTooCloseEdge = function(edge, point, localEdges){ // clo
 	var A = edge.A();
 	var B = edge.B();
 	// sporadic lenght changes break this
+throw "is this correct here iteritiveEdgeSizeFromPoint"
 	var idealLengthP = this.iteritiveEdgeSizeFromPoint(point);
 	var len1 = V3D.distance(edge.A(),edge.B());
 	var len2 = V3D.distance(edge.A(),point);
@@ -3128,6 +3134,7 @@ Mesh3D.prototype.cutEar = function(edgeA,edgeB){ // new edges/tri
 	var edgeBC = edgeB;
 	var idealAB = edgeAB.idealLength();
 	var idealBC = edgeBC.idealLength();
+throw "is this correct here iteritiveEdgeSizeFromPoint"
 	var idealAC = this.iteritiveEdgeSizeFromPoint(midpoint);
 	var edgeAC = new Mesh3D.Edge3D(A,C, idealAC, front); // new edge
 	var edgeCB = new Mesh3D.Edge3D(C,B, idealBC, front); // opposite
@@ -3337,6 +3344,7 @@ Mesh3D.prototype.merge = function(edge, conflictEdge,conflictPoint){
 	var b = edge.B();
 	var c = conflictPoint;
 	var idealAB = edge.idealLength();
+throw "is this correct here iteritiveEdgeSizeFromPoint"
 	var idealBC = this.iteritiveEdgeSizeFromPoint(V3D.midpoint(b,c));
 	var idealAC = this.iteritiveEdgeSizeFromPoint(V3D.midpoint(a,c));
 	var edgeAC = new Mesh3D.Edge3D(a,c, idealAC); // new
@@ -3386,6 +3394,7 @@ Mesh3D.prototype.split = function(edge, conflictEdge,conflictPoint){
 	var b = edge.B();
 	var c = conflictPoint;
 	var idealAB = edge.idealLength();
+throw "is this correct here iteritiveEdgeSizeFromPoint"
 	var idealBC = this.iteritiveEdgeSizeFromPoint(V3D.midpoint(b,c));
 	var idealAC = this.iteritiveEdgeSizeFromPoint(V3D.midpoint(a,c));
 	var edgeAC = new Mesh3D.Edge3D(a,c, idealAC); // new
@@ -3439,6 +3448,7 @@ Mesh3D.prototype.growTriangle = function(front, edge, vertex){
 	var c = vertex;
 	var edgeAB = edge;
 	var idealAB = edgeAB.idealLength(); // same @ midpoint
+throw "is this correct here iteritiveEdgeSizeFromPoint"
 	var idealBC = this.iteritiveEdgeSizeFromPoint(V3D.midpoint(b,c));
 	var idealAC = this.iteritiveEdgeSizeFromPoint(V3D.midpoint(c,a));
 	var edgeAC = new Mesh3D.Edge3D(a,c, idealAC); // new

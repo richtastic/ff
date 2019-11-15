@@ -394,37 +394,40 @@ x visualize points + surface estimation
 
 
 
-x project ~ 1000 pts to surface and see if forms expected result
-	- edges are a problem 
-		- detect: projection to 'normal' plane = all points are on single side (largest angle > 100 - 150)
-	- repetitive iterations are a problemz
+ideal edge length at any point is:
+	- largest edge size possible, restricted by:
+	- it is small enough to 'react' to edge lengths at a distance d
+		- react means some multiplier based on the neighbor point: distance & edge length
 
-- prep all points preprocessing step
-	- for each point:
-		- if NOT already has conf/curv/planar/proj/edge
-		- push on queue
-			- for each queue.pop
-				- if point NOT already has a conf/curv/...
-					- find nearest neighborhood marker [or nearest 3 ?]
-						- first that fits:
-							- A) point within radius of marker
-								- use neighborhood as is
-							- B) point within X * radius of marker neighborhood ()
-								- use as base point * binary-ish search
-								- plant a new marker [@ COM]
-							- C) else:
-								- start new marker process
-								- plant new marker  [@ COM]
-					- calculate:
-						- planarness ratio of neighborhood
-						- is an edge point (largest planar angle)
-						- confidence of normal
-						- curvature at point [surface]
-						- PROJECTED SURFACE POINT ?
-						- 
+
+
+
+edge size to choose at a point:
+EDGE LENGTH FROM CURRENTLY BEST SIZED TRIANGLE
+- want largest edge that has enough space to 'react' with edges of at most BETA ... 
+
+- closest point's curvature
+=> do a search w/ radius from curvature (r = eta/rho)
+- if this is the smallest edge length of neighbors => keep as is
+- if any neighbors are smaller, the desired size should be based on the distance to the neighbor?
+	=> eg infinite curvature: 3rd angle -s 180-beta-beta , eg 180 - 50 x 2 = 70
+	...
+	...
+
+FIRST TRIANGLE LENGTH is a unique scenario
+	- want largest edge that can react to smallest edge at distance
+
+
+
+
 
 
 seedTriFromPoint
+
+
+maxCurvatureAtPoint
+capCurvature
+
 
 iteritiveEdgeSizeFromPoint
 	- as the edge size gets bigger, so does the search radius

@@ -922,8 +922,8 @@ GLOBAL_DATA["points"] = surface;
 
 
 	// var triangles = [];
-	console.log(triangles);
-	throw "?";
+	// console.log(triangles);
+	// throw "?";
 
 // var pts = spherePoints;
 // console.log(pts);
@@ -932,8 +932,8 @@ GLOBAL_DATA["points"] = surface;
 // 	allPoints[i] = allPoints[i].point();
 // }
 // pts = allPoints;
-
-	var spherePoints = triangles;
+var spherePoints = [];
+	// var spherePoints = triangles;
 
 	//surfacePoints = triangles;
 	var surfacePoints = [];
@@ -1009,14 +1009,14 @@ var colors = [];
 var showPoints = true;
 if(showPoints){
 
-	var infoPoints = GLOBAL_DATA["points"];
-console.log("GLOBAL_DATA: "+infoPoints.length);
-	for(i=0;i<infoPoints.length;++i){
-		var p = infoPoints[i];
-		points.push(p.x,p.y,p.z);
-		//colors.push(0.5*Math.random()+0.5,0.0,0.5*Math.random(),0.90);
-		colors.push(1.0,0,0,1.0);
-	}
+// 	var infoPoints = GLOBAL_DATA["points"];
+// console.log("GLOBAL_DATA: "+infoPoints.length);
+// 	for(i=0;i<infoPoints.length;++i){
+// 		var p = infoPoints[i];
+// 		points.push(p.x,p.y,p.z);
+// 		//colors.push(0.5*Math.random()+0.5,0.0,0.5*Math.random(),0.90);
+// 		colors.push(1.0,0,0,1.0);
+// 	}
 
 // var showSource = false;
 var showSource = true;
@@ -1035,14 +1035,12 @@ if(showSource){ // show source points
 		// colors.push(1.0,0.0,0.0,0.90);
 		colors.push(0.5*Math.random()+0.5,0.0,0.5*Math.random(),0.90);
 	}
-
+	
 	for(i=0;i<spherePoints.length;++i){
 		var p = spherePoints[i];
 		p = p.point();
-
 		points.push(p.x,p.y,p.z);
 		colors.push(0.5*Math.random()+0.5,0.0,0.5*Math.random(),0.90);
-
 		// colors.push(Math.random(),Math.random(),Math.random(),0.90);
 		// colors.push(1.0,0.0,0.0,0.90);
 		// colors.push(0.5*Math.random()+0.5,0.0,0.5*Math.random(),0.90);

@@ -207,15 +207,27 @@ V3D.perpendicularComponent = function(base,vector){ // alternate way to do this?
 	parallel.z = vector.z - parallel.z;
 	return parallel;
 }
-V3D.orthogonal = function(v){ // find direction perpendicular to vector
-	var d = new V3D(1,1,1);
-	var dot = V3D.dot(d,v);
-	if(dot==0){
-		d.x = 0;
+V3D.orthogonal = function(u){ // find direction perpendicular to vector
+	// set 1 to smallest component ; set 0 to largest component
+	var v = u.copy().norm();
+	if(v.x>=v.y && v.y>=v.z){
+		v.set(0,0,1);
+	}else if(v.x>=v.z && v.z>=v.y){
+		v.set(0,1,0);
+	}else if(v.y>=v.x && v.x>=v.z){
+		v.set(0,0,1);
+	}else if(v.y>=v.z && v.z>=v.x){
+		v.set(1,0,0);
+	}else if(v.z>=v.y && v.y>=v.x){
+		v.set(1,0,0);
+	}else if(v.z>=v.x && v.x>=v.y){
+		v.set(0,1,0);
+	}else{
+		throw "huh?";
 	}
-	V3D.cross(d, v,d);
-	d.norm();
-	return d;
+	V3D.cross(v, u,v);
+	v.norm();
+	return v;
 }
 function V3D(xP,yP,zP){
 	V3D._.constructor.call(this,xP,yP);
