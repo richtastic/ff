@@ -29,7 +29,8 @@ GLOBALSTAGE = this._stage2D;
 //	this.plot1D();
 	//
 	this.setupDisplay3D();
-	this.setupSphere3D(1000, 1.0, 0.0, 0.25);
+	this.setupSphere3D(2000, 1.0, 0.0, 0.0);
+	// this.setupSphere3D(1000, 1.0, 0.0, 0.25);
 	// this.setupSphere3D(250, 1.0, 0.0, 0.0);
 	// this.setupSphere3D(4000, 1.0, 0.50, 0.0);
 	// this.setupSphere3D(10000, 1.0, 0.0, 0.0);
@@ -947,8 +948,10 @@ var spherePoints = [];
 	// IF ORIGINAL POINTS HAVE NORMALS -> SET CONSISTENT WITH THEM
 	var allTriangles = mesh.outputTriangles();
 	console.log(allTriangles);
-	var yaml = R3D.outputTriangleModel(allTriangles);
-	console.log(yaml);
+
+	// YAML
+	// var yaml = R3D.outputTriangleModel(allTriangles);
+	// console.log(yaml);
 
 /*
 	this._mlsMesh = new MLSMesh3D();
@@ -1035,7 +1038,7 @@ if(showSource){ // show source points
 		// colors.push(1.0,0.0,0.0,0.90);
 		colors.push(0.5*Math.random()+0.5,0.0,0.5*Math.random(),0.90);
 	}
-	
+
 	for(i=0;i<spherePoints.length;++i){
 		var p = spherePoints[i];
 		p = p.point();

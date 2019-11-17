@@ -388,34 +388,64 @@ https://cloud.google.com/appengine/docs/nodejs/
 
 
 
-x convert local point set to normal plane orientation
-x estimate local bivariate [windowing via gaussian ? -- distance from center of plane - sigma ?]
-x visualize points + surface estimation
+
+
+volume handing noise & such ....
+
+
+add averaging
 
 
 
-ideal edge length at any point is:
-	- largest edge size possible, restricted by:
-	- it is small enough to 'react' to edge lengths at a distance d
-		- react means some multiplier based on the neighbor point: distance & edge length
+- volume capacity:
+	case: 1 = 1
+	case: 2 = .707 ?
+	case: 3 = ... normal
+
+
+
+- 
 
 
 
 
-edge size to choose at a point:
-EDGE LENGTH FROM CURRENTLY BEST SIZED TRIANGLE
-- want largest edge that has enough space to 'react' with edges of at most BETA ... 
 
-- closest point's curvature
-=> do a search w/ radius from curvature (r = eta/rho)
-- if this is the smallest edge length of neighbors => keep as is
-- if any neighbors are smaller, the desired size should be based on the distance to the neighbor?
-	=> eg infinite curvature: 3rd angle -s 180-beta-beta , eg 180 - 50 x 2 = 70
-	...
-	...
 
-FIRST TRIANGLE LENGTH is a unique scenario
-	- want largest edge that can react to smallest edge at distance
+
+
+
+
+
+isPointTooClose
+
+	x putativeTriLocalEdges
+
+	? intersectAnyFences
+
+	? closestTooCloseEdge
+
+
+ear cut -- is just merging with adj 2-edges either side
+
+too close / intersection testing: --- isPointTooClose
+	- too close to edge
+	- too close to tris
+	- intersects a fence
+	... CLOSEST FENCE
+
+
+
+
+// var idealAC = this.iteritiveEdgeSizeFromPoint(V3D.midpoint(c,a));
+var idealAB = this.curvatureAtPoint(V3D.midpoint(a,b));
+
+
+
+
+
+
+
+
 
 
 
@@ -429,45 +459,7 @@ maxCurvatureAtPoint
 capCurvature
 
 
-iteritiveEdgeSizeFromPoint
-	- as the edge size gets bigger, so does the search radius
-		- as does the maximum edge size
-	- binaryish search behavior
-
-
-FRONT ITERATING PROCESS:
-	- find 'starting' point
-		- choose most planar point (that is not an edge)
-	- create first tri
-		- iterate the size:
-			- edge size starts as the ideal curvature 
-			- 
-	- extend tri from edge:
-		- edge ?
-		- ...
-		- too close?
-		- 
-
-
-- generateSurfaces
-	- iterateFronts
-		- 
-
-- what should starting point be?
-	- not near edge
-	- planar
-	- confidence in normal (planar normal / group normal dot single normal closest to 1)
-	- 
-
-
-?? why are some projections not working (from far away?) EDGE ... OUTSIDE CIRCLE - PREVENT
-
-- walk thru iterations of process ?
-	- ...
-
-- how to handle edge 'points' ?
-
-
+-  triangles seem like they may need a step to do edge-swapping 
 
 
 

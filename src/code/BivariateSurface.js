@@ -205,8 +205,14 @@ BivariateSurface.coefficientCountFromDegree = function(degree){
 	return (degree*degree + 3*degree)/2 + 1;
 }
 
-
+BivariateSurface.prototype.normalAt = function(x1,y1, delta){
+	return this._infoAt(x1,y1, delta, true);
+}
 BivariateSurface.prototype.curvatureAt = function(x1,y1, delta){
+	return this._infoAt(x1,y1, delta, false);
+}
+BivariateSurface.prototype._infoAt = function(x1,y1, delta, simple){
+	simple = simple!==undefined ? simple : false;
 	delta = delta!==undefined ? delta : 1E-6;
 	var dx = dy = delta;
 	var temp;
@@ -236,6 +242,9 @@ BivariateSurface.prototype.curvatureAt = function(x1,y1, delta){
 	// normal vectors
 	var normal = V3D.cross(tangentA,tangentB);
 	var unitNormal = normal.copy().norm();
+	if(simple){
+		return {"normal":unitNormal};
+	}
 	// second derivative vectors
 	// var secondA = new V3D(0,0,dzdxx);
 	// var secondB = new V3D(0,0,dzdxy);
