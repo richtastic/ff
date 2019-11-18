@@ -36,9 +36,11 @@ GLOBALSTAGE = this._stage2D;
 	// this.setupSphere3D(10000, 1.0, 0.0, 0.0);
 	// this.setupSphere3D(100, 1.0, 0.0, 0.0);
 
-	// this.setupTorus3D(1000, 4.0,2.0, 0.20,0.0);
+	// this.setupTorus3D(2000, 4.0,2.0, 0.0,0.0);
 
-	// this.setupPlane3D(1000, 1.0, 0.5, 0.0);
+	// this.setupPlane3D(2000, 1.0, 0.0, 0.0);
+	
+
 	// this.loadPointFile();
 //	this.setupRect3D();
 //	this.setupCurveTest();

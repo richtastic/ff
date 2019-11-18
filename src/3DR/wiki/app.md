@@ -393,7 +393,6 @@ https://cloud.google.com/appengine/docs/nodejs/
 volume handing noise & such ....
 
 
-add averaging
 
 
 
@@ -407,10 +406,15 @@ add averaging
 - 
 
 
+- add averaging
 
 
 
+- planes have 0 curvature ... large triangles ... have some minimum curvature (need min/max curv capping)
 
+
+
+neighborhoodVolumeCapacity
 
 
 

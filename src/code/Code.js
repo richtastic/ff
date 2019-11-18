@@ -1449,7 +1449,7 @@ Code.filterArrayAverage1D = function(a, cnt){
 		var sum = 0;
 		var minJ = Math.max(i-cnt,0);
 		var maxJ = Math.min(i+cnt,lm1);
-		for(var j=minJ; j<maxJ; ++j){
+		for(var j=minJ; j<=maxJ; ++j){
 			sum += a[j];
 		}
 		b[i] = sum/(maxJ-minJ+1);

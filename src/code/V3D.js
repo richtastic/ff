@@ -210,6 +210,7 @@ V3D.perpendicularComponent = function(base,vector){ // alternate way to do this?
 V3D.orthogonal = function(u){ // find direction perpendicular to vector
 	// set 1 to smallest component ; set 0 to largest component
 	var v = u.copy().norm();
+	v.abs();
 	if(v.x>=v.y && v.y>=v.z){
 		v.set(0,0,1);
 	}else if(v.x>=v.z && v.z>=v.y){
@@ -243,6 +244,12 @@ Code.inheritClass(V3D, V2D);
 V3D.prototype.toYAML = function(yaml){
 	var obj = this.toObject();
 	yaml.writeObjectLiteral(obj);
+	return this;
+}
+V3D.prototype.abs = function(){
+	this.x = Math.abs(this.x);
+	this.y = Math.abs(this.y);
+	this.z = Math.abs(this.z);
 	return this;
 }
 V3D.prototype.toObject = function(){
