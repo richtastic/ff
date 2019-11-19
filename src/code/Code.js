@@ -11754,7 +11754,23 @@ Code.binaryToYAMLObject = function(binary){
 	}
 	return yaml;
 }
-
+Code.pointsToPtsFileString = function(points,normals){
+	var count = points.length;
+	var separator = " ";
+	var str = "";
+	str += count+"\n";
+	for(var i=0; i<count; ++i){
+		var point = points[i];
+		str += point.x+separator+point.y+separator+point.z+"\n";
+	}
+	if(normals){
+		for(var i=0; i<count; ++i){
+			var normal = normals[i];
+			str += normal.x+separator+normal.y+separator+normal.z+"\n";
+		}
+	}
+	return str;
+}
 // multivalued logic [0,1]
 Code.fuzzyNot = function(a){ // compliment
 	return 1 - a;

@@ -21,7 +21,12 @@ function Mesh3D(points, norms, angle){
 
 
 	// should be based on total scene size:
-	this._cappedMinK = 1.0/100.0;
+	// this._cappedMinK = 1.0/10.0;
+	// this._cappedMinK = 1.0/0.20;
+	// this._cappedMaxK = 1.0/0.01;
+
+
+	this._cappedMinK = 1.0/1000.0;
 	this._cappedMaxK = 1.0/0.001;
 	
 	this._pointSpace = new OctTree(Mesh3D._pointToPoint);
@@ -1858,7 +1863,9 @@ Mesh3D.prototype._iterateFronts = function(){
 		console.log("seedPoint: "+seedPoint);
 
 		this.seedTriFromPoint(fronts, seedPoint);
+console.log(this._triangleSpace.toArray());
 console.log("iterating ...");
+
 // throw "iterate with seed ...";
 		// iterate:
 		// var maxIter = 0;
@@ -1870,8 +1877,8 @@ console.log("iterating ...");
 		// var maxIter = 50;
 		// var maxIter = 100;
 		// var maxIter = 200;
-		// var maxIter = 1000;
-		var maxIter = 2000;
+		var maxIter = 1000;
+		// var maxIter = 2000;
 		// var maxIter = 3000;
 		// var maxIter = 4000;
 		// var maxIter = 6000;
@@ -1977,7 +1984,8 @@ console.log(closeInfo);
 			// grow
 			console.log("checking .... ?");
 			//var ratio = edge.priority();
-			var maxRatio = 10;
+			// WHAT IS THIS EDGE RATIO?
+			var maxRatio = 100;
 			console.log(edge.idealLength(), edge.length())
 			var ratio = edge.idealLength() / edge.length();
 			if(ratio<1){
@@ -2102,7 +2110,7 @@ Mesh3D.prototype.iteritiveEdgeToSizeAtPoint = function(pointA,pointB, idealSize)
 		var dir = V3D.sub(point,pointA);
 		var length = dir.length();
 		var ratio = idealSize/length;
-		console.log(i+" = "+ratio+" ("+idealSize+" / "+length+")");
+		// console.log(i+" = "+ratio+" ("+idealSize+" / "+length+")");
 		dir.scale(ratio);
 		point = V3D.add(pointA,dir);
 		var info = this._projectPointToSurface(point);
@@ -2164,6 +2172,7 @@ Mesh3D.prototype.curvatureAtPoint = function(location){ // guidance field - curv
 	return curvature;
 }
 Mesh3D.prototype.tangentPlaneAtPoint = function(location, normal){
+	throw "?";
 	// var planeNeighborCount = 7;
 	var planeNeighborCount = 10;
 	var space = this._pointSpace;
@@ -2187,7 +2196,6 @@ Mesh3D.prototype.tangentPlaneAtPoint = function(location, normal){
 }
 
 Mesh3D.prototype.seedTriFromPoint = function(fronts, seed){
-	console.log("seedTriFromPoint - still smaller than expected")
 	var info;
 	console.log(seed);
 	var point = seed.surfacePoint();
@@ -2212,20 +2220,19 @@ Mesh3D.prototype.seedTriFromPoint = function(fronts, seed){
 	var a = dirY.copy().scale( equilSizeH).add(point);
 	var b = dirY.copy().scale(-equilSizeO).add( dirX.copy().scale(-edgeSize*0.5)).add(point);
 	var c = dirY.copy().scale(-equilSizeO).add( dirX.copy().scale( edgeSize*0.5)).add(point);
-	// console.log(point,a,equilSizeH);
-	// a = this.iteritiveEdgeToSizeAtPoint(point,a,equilSizeH);
-	// b = this.iteritiveEdgeToSizeAtPoint(point,b,equilSizeH);
-	// c = this.iteritiveEdgeToSizeAtPoint(point,c,equilSizeH);
-	// var d1 = V3D.distance(a,b);
-	// var d2 = V3D.distance(b,c);
-	// var d3 = V3D.distance(c,a);
-	// console.log(edgeSize,d1,d2,d3); // if ratio is bad => return null
+	var d1 = V3D.distance(a,b);
+	var d2 = V3D.distance(b,c);
+	var d3 = V3D.distance(c,a);
+	console.log(edgeSize,d1,d2,d3); // if ratio is bad => return null
 	// edges
 	var edgeAB = new Mesh3D.Edge3D(a,b, edgeSize);
 	var edgeBC = new Mesh3D.Edge3D(b,c, edgeSize);
 	var edgeCA = new Mesh3D.Edge3D(c,a, edgeSize);
 	// tri
+	console.log(this._triangleSpace.count());
 	var tri = new Mesh3D.Tri3D(edgeAB,edgeBC,edgeCA);
+	console.log(this._triangleSpace.count());
+	console.log(tri); // 0 thickness
 	this.addTri(tri);
 	// create first front
 	var edgeFront = fronts.newFront();
@@ -2681,8 +2688,11 @@ Mesh3D.prototype.vertexPredict = function(edge, edgeFront){
 	perpendicular.add(midpoint);
 	var info = this._projectPointToSurface(perpendicular);
 	var p = info["point"];
+
+	// ? iteritiveEdgeToSizeAtPoint
+
 	p = this.iteritiveEdgeToSizeAtPoint(midpoint,p,altitude);
-	console.log(p);
+	// console.log(p);
 	return p;
 }
 
@@ -3575,7 +3585,7 @@ Mesh3D.prototype._preprocessPoints_MLS = function(){
 	}
 	var queue = new PriorityQueue(priorityFxn);
 
-var countMax = 10000;
+var countMax = 100000;
 	for(var i=0; i<points.length; ++i){
 		var point = points[i];
 		if(!point.isPreprocessed()){
@@ -3673,6 +3683,7 @@ Mesh3D.prototype._neighborhoodVolumeCapacityMean = function(points, N){
 }
 Mesh3D.prototype._neighborhoodVolumeCapacity = function(points, N){
 	N = N!==undefined ? N : points.length;
+	N = Math.min(Math.max(1,N), points.length);
 	if(N<=1){
 		return 1.0;
 	}else if(N==2){
@@ -3760,6 +3771,17 @@ Mesh3D.prototype._neighborhoodVolumeCapacity = function(points, N){
 	return percent;
 }
 Mesh3D.prototype._neighborhoodSizeInit = function(location, debug){ // go thru full range & smooth & find value
+
+
+
+// this is sort of already doing a binary search ....  make fully binary search ...
+
+
+
+
+// ...
+
+
 	// debug = true;	
 	var space = this._pointSpace;
 	var maximumPoints = 500; // where to get this ?
@@ -3830,12 +3852,17 @@ if(debug){
 // 	return {"center":new V3D(0,0,0), "radius":, "normal":sphereNormal, "count":N};
 // }
 Mesh3D.prototype._neighborhoodPackagePeak = function(points,normals,index){ 
-	var N = index+1;
+	var N = index;
 	var sphereCenter = V3D.average(points, null, N);
 	var sphereNormal = Code.averageAngleVector3D(normals, null, N); // can also do 'dumb' normal -- faster
 	var sphereRadius = V3D.maximumDistance(points,sphereCenter, N);
 	return {"center":sphereCenter, "radius":sphereRadius, "normal":sphereNormal, "count":N};
 }
+
+
+// could try binary search simply with min & max points ....
+
+
 Mesh3D.prototype._neighborhoodSizeBinarySearch = function(location,count){ // binary search around location to get size
 	var space = this._pointSpace;
 	var searchValue = this._neighborhoodSizeVolumeRatio;
@@ -3844,7 +3871,7 @@ Mesh3D.prototype._neighborhoodSizeBinarySearch = function(location,count){ // bi
 	var countRatio = 2;
 	var skipRatio = 2; // if too high -> overshoots
 	var skipCount = 4;
-	var data = this._neighborhoodSizeInit(location);
+	// var data = this._neighborhoodSizeInit(location);
 	// get twice as many count neighbors
 	var maximumCount = countRatio * count;
 	var objects = space.kNN(location,maximumCount);
@@ -3881,11 +3908,20 @@ console.log("still too high: "+valueLow+" ("+indexLow+") < "+searchValue+" < "+v
 			valueHigh = valueLow;
 			indexHigh = indexLow;
 			indexLow = indexHigh+skipCount;
-			indexLow = Math.min(indexLow,points.length-1);
+			indexLow = Math.min(indexLow,points.length);
 			valueLow = this._neighborhoodVolumeCapacityMean(points, indexLow);
 			// console.log(indexLow+" - "+valueLow);
-			if(indexLow==points.length-1 && valueLow>searchValue){ // neef to get more points
+			if(indexLow==points.length && valueLow>searchValue){ // neef to get more points
+
+				var info = this._neighborhoodSizeInit(location);
+				console.log("LIMIT: "+points.length+" => "+info["count"]);
+				return info;
+
+
+				// var info = this._neighborhoodSizeInit(location, true);
 				// console.log("LIMIT: "+points.length+" -- ");
+
+
 				var wasLength = points.length; 
 				maximumCount = points.length*2;
 				objects = space.kNN(location,maximumCount);
@@ -3899,7 +3935,10 @@ console.log("still too high: "+valueLow+" ("+indexLow+") < "+searchValue+" < "+v
 			}
 			++c;
 			if(c>100){
-				throw "error";
+				// throw "error 1";
+				var index = this._neighborhoodSizeInit(location);
+				console.log("unable to find in max iterations - A : "+index);
+				return index;
 				break;
 			}
 		}
@@ -3914,25 +3953,18 @@ console.log("still too low: "+valueLow+" ("+indexLow+") < "+searchValue+" < "+va
 			indexHigh = indexHigh-skipCount;
 			indexHigh = Math.max(indexHigh,minimumPoints);
 			valueHigh = this._neighborhoodVolumeCapacityMean(points, indexHigh);
-			console.log(" >>>>>> : "+valueLow+" ("+indexLow+") < "+searchValue+" < "+valueHigh+" ("+indexHigh+")");
-			if(indexHigh==minimumPoints){
-				//console.log("still too low .....: "+valueLow+" ("+indexLow+") < "+searchValue+" < "+valueHigh+" ("+indexHigh+")");
-				/*
-				console.log("LIMIT: "+minimumPoints);
-				
-				valueHigh = minimumValue;
-				
-				var info = this._neighborhoodSizeInit(location, true);
-
-				// console.log(info);
-				throw "no fewer points --- high not reachable";
-				// throw "limit ... ";
-				*/
+			// console.log(" >>>>>> : "+valueLow+" ("+indexLow+") < "+searchValue+" < "+valueHigh+" ("+indexHigh+")");
+			if(indexHigh==minimumPoints && valueHigh<searchValue){
+				console.log("still too low .....: "+valueLow+" ("+indexLow+") < "+searchValue+" < "+valueHigh+" ("+indexHigh+")");
+				throw "no fewer points --- high not reachable: ";
 				break;
 			}
 			++c;
 			if(c>100){
-				throw "error";
+				// throw "error 2";
+				var info = this._neighborhoodSizeInit(location);
+				console.log("unable to find in max iterations - B : "+info["count"]);
+				return info;
 				break;
 			}
 		}
@@ -3950,7 +3982,7 @@ console.log("still too low: "+valueLow+" ("+indexLow+") < "+searchValue+" < "+va
 				indexFinal = indexMid;
 				break;
 			}
-			var valueMid = this._neighborhoodVolumeCapacity(points, indexMid);
+			var valueMid = this._neighborhoodVolumeCapacityMean(points, indexMid);
 // console.log(indexMid+" value: "+valueMid);
 			if(valueMid==searchValue){
 				console.log("EXACT");
@@ -3971,10 +4003,15 @@ console.log("still too low: "+valueLow+" ("+indexLow+") < "+searchValue+" < "+va
 	}
 	// value should be inside
 	if(indexFinal===null){
+		console.log(indexFinal);
+
+		// this._neighborhoodSizeInit(points, true);
+
 		throw "?";
 	}
-	var normals = Mesh3D.Point3D.mapArrayToNormals(objects,indexFinal+1);
+	var normals = Mesh3D.Point3D.mapArrayToNormals(objects,indexFinal);
 	// would it ever be the case due to approx that the value is magically outside due to approx error ?
+	// console.log(points.length, indexFinal);
 	var result = this._neighborhoodPackagePeak(points,normals,indexFinal);
 	return result;
 }

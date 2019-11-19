@@ -387,34 +387,77 @@ https://cloud.google.com/appengine/docs/nodejs/
 0+1+2 = S21L1RCT
 
 
+iterateDenseTracks:
+	- dense triples [0.37 1.01, 0.53]
+		- load sequence (check original)
+		- full absolute orientation
+
+	- absoluteViewsFromDensePairs
 
 
 
-volume handing noise & such ....
 
+- loading dense pair into single file
 
-
-
-
-- volume capacity:
-	case: 1 = 1
-	case: 2 = .707 ?
-	case: 3 = ... normal
-
-
+- bundle adjust single file of points [view index format]
 
 - 
 
 
-- add averaging
 
 
 
-- planes have 0 curvature ... large triangles ... have some minimum curvature (need min/max curv capping)
+TRIPLE LIST:
+	for each pair
+		for each other pair
+			if any view in common:
+			add to list
 
 
 
-neighborhoodVolumeCapacity
+
+	...
+
+
+
+
+- ways to improve BA progress
+	- include only triples+ 
+	- ...
+	- 
+
+
+- way to push camera views towards each other by knowing relative offset of a set of points?
+	if Pa & Pb are supposed to be the same point
+		-find some relative transform from a set of points
+	=> tracks of length > 2 ???
+
+
+	...
+
+
+
+
+- points file to bundled file
+
+- wrong file format for loading view iDs / indexes ?
+
+- bundle adjust reduce error
+	- loading images?
+
+- source points are still high-error ... 3 - separate triangulations ...
+
+
+
+	- test triangulation on actual points
+	- add triangulation in pipeline
+	- texturing triangles
+	- export DAE & run on device
+
+
+- reduce points by averaging points ?
+
+
 
 
 
@@ -468,20 +511,8 @@ capCurvature
 
 
 
-
-
-
-
-
-
-
 - BI-DIRECTIONAL ERROR FROM NORMAL ?
 	- 
-
-	
-	- texturing triangles
-	- run on device
-
 	
 	- bundle adjust + propagation at same time now [loaded view + NN projecting]
 

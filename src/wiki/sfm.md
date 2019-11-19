@@ -527,15 +527,27 @@ iteratively solved
         - find new view pairs (and add to existing) via projection
     - Pairwise Dense (use updated R to get better initial points [& ignore first iteration possible poor matches])
         - get dense points
+TODO:
     - Triple Dense from Pairs (need relative scales again)
         - load common pairs & get 2 or 3 way relative scales
     - Absolute Orientation 2 (use updated pairwise transforms (lower error) & counts (more points))
         - find improved absolute orientations of views, reducing error, using added & better estimates in view graph
+
+
     - Dense to Tracks: 2D point intersection resolving (combine dense pairs into long-ish tracks)
         - TODO: load P3Ds a pair at a time, and do collision resolving by loading the images (combine into track vs separate/drop)
         - helps reduce total number of P3Ds (50% to 10% of original - duplicate coverage)
 
 HERE
+RANSAC:
+    - A) reduce error by:
+        - refining view orientations
+        - dropping worst points
+    - B) add back dropped points by:
+        - including images & doing 2D probe + 3D projection search
+
+....
+
 
     - Global RANSAC (load all dense points at same time [& views])
         - reduce error of all params at same time (or in randomized bunches [single camera - load ones who's error R reduces most rapidly])

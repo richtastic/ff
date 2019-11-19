@@ -29,7 +29,7 @@ GLOBALSTAGE = this._stage2D;
 //	this.plot1D();
 	//
 	this.setupDisplay3D();
-	this.setupSphere3D(2000, 1.0, 0.0, 0.0);
+	// this.setupSphere3D(2000, 1.0, 0.0, 0.0);
 	// this.setupSphere3D(1000, 1.0, 0.0, 0.25);
 	// this.setupSphere3D(250, 1.0, 0.0, 0.0);
 	// this.setupSphere3D(4000, 1.0, 0.50, 0.0);
@@ -39,9 +39,9 @@ GLOBALSTAGE = this._stage2D;
 	// this.setupTorus3D(2000, 4.0,2.0, 0.0,0.0);
 
 	// this.setupPlane3D(2000, 1.0, 0.0, 0.0);
-	
 
-	// this.loadPointFile();
+
+	this.loadPointFile();
 //	this.setupRect3D();
 //	this.setupCurveTest();
 //this.setupLineTest();
@@ -693,7 +693,7 @@ SurfaceTri.prototype.subSampleArray = function(array, count){
 }
 SurfaceTri.prototype.loadPointFile = function(){
 	console.log("loadPointFile");
-	var sourceFileName = "./images/points/saltdome_1019.pts";
+	// var sourceFileName = "./images/points/saltdome_1019.pts";
 	// var sourceFileName = "./images/points/foot_5092.pts";
 	// var sourceFileName = "./images/points/bunny_30571.pts";
 	// var sourceFileName = "./images/points/test.pts";
@@ -703,6 +703,9 @@ SurfaceTri.prototype.loadPointFile = function(){
 	// var sourceFileName = "./images/points/test_normals_2468.pts";
 	// var sourceFileName = "./images/points/pika_normals_9.pts";
 	// var sourceFileName = "./images/points/pika_normals_5.pts";
+
+	var sourceFileName = "./images/points/pika_0.pts";
+
 	var doNormalizing = false;
 	var hasNormals = true;
 	var ajax = new Ajax();
@@ -881,11 +884,10 @@ GLOBAL_LAST_NEXT = null;
 GLOBAL_RAYS = null;
 	var mesh = new Mesh3D(pts,nrms);
 
-	// var info = mesh._localNeighborhoodSize(new V3D(6,0,0));
-	// var info = mesh._localNeighborhoodSize(new V3D(1,1,1));
-	// var info = mesh._localNeighborhoodSize(new V3D(0,0,0));
 
-	mesh._setCurvaturePoints_MLS();
+// mesh._setCurvaturePoints_MLS();
+
+
 	// var info = mesh._projectPointToSurface_MLS(new V3D(1,2,0), false);
 	// console.log(info);
 
@@ -919,7 +921,7 @@ GLOBAL_DATA["points"] = surface;
 
 	// console.log(info);
 	var triangles = [];
-	var triangles = mesh.generateSurfaces();
+// var triangles = mesh.generateSurfaces();
 
 
 
@@ -1026,6 +1028,7 @@ if(showPoints){
 // var showSource = false;
 var showSource = true;
 if(showSource){ // show source points
+	console.log("SOURCE POINTS: "+pts.length);
 	for(i=0;i<pts.length;++i){
 		var p = pts[i];
 		points.push(p.x,p.y,p.z);
@@ -1477,7 +1480,7 @@ if(GLOB_FENCE){
 	}
 }
 */
-
+console.log("RENDER");
 
 	this._linePointBuffer = this._stage3D.getBufferFloat32Array(pointsL,3);
 	this._lineColorBuffer = this._stage3D.getBufferFloat32Array(colorsL,4);

@@ -258,7 +258,7 @@ OctSpace.Voxel.prototype._recheckExtrema = function(){
 // ---------------------------------------------------------------------------------------------------------
 OctSpace.Voxel.prototype.insertObject = function(package, cube, toCubeFxn, epsilon){
 	var overlap = this.overlap(cube);
-	if(!overlap || overlap.volume()==0){
+	if(!overlap){ // || overlap.volume()==0){ // allow '0' volume items to allow for: 2D & point objects
 		return null;
 	}
 	var i, j, children = this._children;

@@ -3598,12 +3598,12 @@ Stereopsis.World.prototype.refineSelectCameraAbsoluteOrientation = function(view
 	Code.removeDuplicates(views,viewsChange);
 	this._refineCameraAbs(viewsChange, views, minimumPoints, maxIterations);
 }
-Stereopsis.World.prototype.refineCameraAbsoluteOrientation = function(minimumPoints, maxIterations){
+Stereopsis.World.prototype.refineCameraAbsoluteOrientation = function(minimumPoints, maxIterations, higherOrderPoints){
 	var views = this.toViewArray();
-	this._refineCameraAbs(views, [], minimumPoints, maxIterations);
+	this._refineCameraAbs(views, [], minimumPoints, maxIterations, higherOrderPoints);
 }
-Stereopsis.World.prototype._refineCameraAbs = function(viewsChange, viewsConstant,minimumPoints, maxIterations){ // get updated camera positions with less error
-	var result = this.bundleAdjustViews(viewsChange, viewsConstant, minimumPoints, maxIterations);
+Stereopsis.World.prototype._refineCameraAbs = function(viewsChange, viewsConstant, minimumPoints, maxIterations, higherOrderPoints){ // get updated camera positions with less error
+	var result = this.bundleAdjustViews(viewsChange, viewsConstant, minimumPoints, maxIterations, null, higherOrderPoints);
 	var extrinsics = result["extrinsics"];
 	for(var i=0; i<viewsChange.length; ++i){
 		var view = viewsChange[i];
@@ -3696,7 +3696,7 @@ Stereopsis.averageMatrixEstimates = function(matrixes, errors){ // average locat
 // 	// var relAtoB = R3D.relativeTransformMatrix(absA,absB);
 // 	return {"relative":relAtoB, "error":error};
 // }
-Stereopsis.World.prototype.bundleAdjustViews = function(viewsChange, viewsConstant, minimumPoints, maxIterations, maximumPoints3D){
+Stereopsis.World.prototype.bundleAdjustViews = function(viewsChange, viewsConstant, minimumPoints, maxIterations, maximumPoints3D, higherOrderPoints){
 	maximumPoints3D = maximumPoints3D!==undefined ? maximumPoints3D : 1000;
 	maxIterations = maxIterations!==undefined && maxIterations!==null ? maxIterations : 50;
 	var allViews = Code.copyArray(viewsChange);
@@ -3746,9 +3746,21 @@ Stereopsis.World.prototype.bundleAdjustViews = function(viewsChange, viewsConsta
 				var point3D = match.point3D(); // absolute position
 				point3D = point3D.point();
 				if(point3D){
-					points2DA.push(point2DA.point2D());
-					points2DB.push(point2DB.point2D());
-					points3D.push(point3D);
+					var usePoint = true;
+					if(higherOrderPoints){
+						console.log(point3D.point2DCount());
+						throw "???";
+						if(point3D.point2DCount()>2){
+							usePoint = true;
+						}else{
+							usePoint = false;
+						}
+					}
+					if(usePoint){
+						points2DA.push(point2DA.point2D());
+						points2DB.push(point2DB.point2D());
+						points3D.push(point3D);
+					}
 				}else{
 					throw "no point3D";
 				}
@@ -6206,6 +6218,8 @@ Stereopsis.World.prototype.solveFullDenseIterate = function(){ // multiwise BA f
 
 
 	var maxIterations = 3;
+	// var maxIterations = 5;
+	// var maxIterations = 10;
 	for(var iteration=0; iteration<maxIterations; ++iteration){
 		console.log("all: ========================================================================================= "+iteration+" / "+maxIterations);
 		// inif?
@@ -6230,7 +6244,7 @@ Stereopsis.World.prototype.solveFullDenseIterate = function(){ // multiwise BA f
 		// 
 
 		// ALL CAMERAS:
-		world.refineCameraAbsoluteOrientation(null, 1000);
+		world.refineCameraAbsoluteOrientation(null, 1000, true);
 		world.copyRelativeTransformsFromAbsolute();
 		world.relativeFFromSamples();
 
@@ -6238,7 +6252,7 @@ Stereopsis.World.prototype.solveFullDenseIterate = function(){ // multiwise BA f
 		world.estimate3DErrors(true);
 		world.averagePoints3DFromMatches();
 		world.refinePoint3DAbsoluteLocation();
-
+/*
 		// LONG ... 
 		world.patchInitBasicSphere(true);
 
@@ -6246,8 +6260,7 @@ Stereopsis.World.prototype.solveFullDenseIterate = function(){ // multiwise BA f
 //		world.probe3D()???
 //		world.probe2DNNAffine(3.0);
 //		world.averagePoints3DFromMatches(true); // only newly added points
-
-
+/*
 		// drop poor tracks
 		world.dropNegative3D();
 		world.dropFurthest();
@@ -6262,6 +6275,8 @@ Stereopsis.World.prototype.solveFullDenseIterate = function(){ // multiwise BA f
 		// }
 
 		// world.filterLocal3Dto2DProjection(); // not implemented yet
+*/
+
 
 		// update
 		// world.averagePoints3DFromMatches();
@@ -6276,11 +6291,9 @@ Stereopsis.World.prototype.solveFullDenseIterate = function(){ // multiwise BA f
 	world.patchInitBasicSphere(true);
 
 	// check it out
-	var str = world.toYAMLString();
-	console.log(str);
+	// var str = world.toYAMLString();
+	// console.log(str);
 	
-
-	throw "??";
 }
 
 
