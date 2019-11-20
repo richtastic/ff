@@ -3744,12 +3744,12 @@ Stereopsis.World.prototype.bundleAdjustViews = function(viewsChange, viewsConsta
 				var point2DA = match.pointForView(viewA);
 				var point2DB = match.pointForView(viewB);
 				var point3D = match.point3D(); // absolute position
-				point3D = point3D.point();
-				if(point3D){
+				var v3D = point3D.point();
+				if(v3D){
 					var usePoint = true;
 					if(higherOrderPoints){
-						console.log(point3D.point2DCount());
-						throw "???";
+						// console.log(point3D.point2DCount());
+						// throw "???";
 						if(point3D.point2DCount()>2){
 							usePoint = true;
 						}else{
@@ -3759,7 +3759,7 @@ Stereopsis.World.prototype.bundleAdjustViews = function(viewsChange, viewsConsta
 					if(usePoint){
 						points2DA.push(point2DA.point2D());
 						points2DB.push(point2DB.point2D());
-						points3D.push(point3D);
+						points3D.push(v3D);
 					}
 				}else{
 					throw "no point3D";
@@ -6245,6 +6245,7 @@ Stereopsis.World.prototype.solveFullDenseIterate = function(){ // multiwise BA f
 
 		// ALL CAMERAS:
 		world.refineCameraAbsoluteOrientation(null, 1000, true);
+		// world.refineCameraAbsoluteOrientation(null, 1000);
 		world.copyRelativeTransformsFromAbsolute();
 		world.relativeFFromSamples();
 
@@ -6252,21 +6253,23 @@ Stereopsis.World.prototype.solveFullDenseIterate = function(){ // multiwise BA f
 		world.estimate3DErrors(true);
 		world.averagePoints3DFromMatches();
 		world.refinePoint3DAbsoluteLocation();
-/*
+
 		// LONG ... 
-		world.patchInitBasicSphere(true);
+		if(i==0){
+			world.patchInitBasicSphere(true);
+		}
 
 		// add new points
 //		world.probe3D()???
 //		world.probe2DNNAffine(3.0);
 //		world.averagePoints3DFromMatches(true); // only newly added points
-/*
+
 		// drop poor tracks
 		world.dropNegative3D();
 		world.dropFurthest();
 		world.filterLocal3Dto2DSize();
 		// world.filterLocal3D(); // ...
-		world.filterPairwiseSphere3D(3.0); // 2-3
+		// world.filterPairwiseSphere3D(3.0); // 2-3
 // ?: start more rigid, allow for more error, finish rigid
 		// if(subdivision<1){
 		// 	world.filterGlobalMatches(false, 0, 2.0,2.0,2.0,2.0, false);
@@ -6275,7 +6278,6 @@ Stereopsis.World.prototype.solveFullDenseIterate = function(){ // multiwise BA f
 		// }
 
 		// world.filterLocal3Dto2DProjection(); // not implemented yet
-*/
 
 
 		// update
@@ -6758,7 +6760,7 @@ Stereopsis.World.prototype.solveSparseTracks = function(viewsToOptimize, complet
 
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-Stereopsis.World.prototype.solveTriple = function(completeFxn, completeContext){ // only tested for single triple system
+Stereopsis.World.prototype.solveTriple = function(completeFxn, completeContext, doTFT){ // only tested for single triple system
 	console.log("solveTriple");
 	// absolute locations aren't known yet
 	// relative locations are not transferrable yet
@@ -6915,7 +6917,6 @@ var tripleScale = null;
 		}
 	}
 
-
 	// apply the scaling to get transforms in same coordinate system
 	var viewA = tripleScale["A"];
 	var viewB = tripleScale["B"];
@@ -6930,7 +6931,14 @@ var tripleScale = null;
 	transformAC.scaleR(scaleAC);
 	transformBC.scaleR(scaleBC);
 
+if(!doTFT){
 
+	var payload = {"scales":tripleScale}; // , "T":TFT, "errorTMean":TFTmean, "errorTSigma":TFTsigma};
+	if(completeFxn){
+		completeFxn.call(completeContext, payload);
+	}
+	return;
+}
 	// need to rembed the points to combine collided
 	var points3D = this.toPointArray();
 	console.log("remove points");
@@ -6976,6 +6984,9 @@ var tripleScale = null;
 	}
 	var errorPosition = ((transformAB.rSigma() + transformAC.rSigma() + transformBC.rSigma())/3.0) * 2.0 * 2.0; /// ... extra 2.0 ... reprojection & TFT error arent necessarily comparable metrics ...
 	//var T = R3D.TFTRANSACFromPointsAuto(pointsA,pointsB,pointsC, errorPosition, null, 0.10);
+
+
+
 
 	var T = R3D.TFTRANSACFromPoints(pointsA,pointsB,pointsC, errorPosition, null, 0.50, 0.99, 50); // 0.50 / 0.99
 	var TFT = null;
@@ -7185,9 +7196,12 @@ Stereopsis.World.prototype.relativeScaleFromSampleRatios = function(viewA,viewB,
 	// var viewB = views[0];
 	// var viewC = views[1];
 
-	var imageA = viewA.image();
-	var widthA = imageA.width();
-	var heightA = imageA.height();
+	// var imageA = viewA.image();
+	// var widthA = imageA.width();
+	// var heightA = imageA.height();
+	var sizeA = viewA.size();
+	var widthA = sizeA.x;
+	var heightA = sizeA.y;
 
 	var fxnB = function(p2D){
 		return p2D.point3D().point2DForView(viewB) != null;

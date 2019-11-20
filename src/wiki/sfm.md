@@ -527,7 +527,7 @@ iteratively solved
         - find new view pairs (and add to existing) via projection
     - Pairwise Dense (use updated R to get better initial points [& ignore first iteration possible poor matches])
         - get dense points
-TODO:
+HERE:
     - Triple Dense from Pairs (need relative scales again)
         - load common pairs & get 2 or 3 way relative scales
     - Absolute Orientation 2 (use updated pairwise transforms (lower error) & counts (more points))
@@ -542,6 +542,7 @@ HERE
 RANSAC:
     - A) reduce error by:
         - refining view orientations
+            - try using 3+ track points
         - dropping worst points
     - B) add back dropped points by:
         - including images & doing 2D probe + 3D projection search

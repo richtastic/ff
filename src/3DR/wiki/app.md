@@ -386,13 +386,40 @@ https://cloud.google.com/appengine/docs/nodejs/
 1 + 2 = NY9RPQHA
 0+1+2 = S21L1RCT
 
+- why is absolute orientation worse than first iteration?
 
-iterateDenseTracks:
-	- dense triples [0.37 1.01, 0.53]
-		- load sequence (check original)
-		- full absolute orientation
 
-	- absoluteViewsFromDensePairs
+
+
+
+- re-desiging filesystem & project files with most recent knowledge
+
+
+project-ID/
+	info.yaml 						# cameras,views,current-state-info [sparse,track,dense,BA,scene]
+	views/
+		ID/
+			pictures/
+			features/summary.yaml 		# corner-sift feature summaries (location & scale); DoG-SIFT, MSER, histogram color / grad data
+			compare.yaml 				# similarity scores for each of N-1 other views
+	sparse.yaml 						# ?
+	sparse/
+		pairs/
+			matches.yaml 				# F matches
+			relative.yaml 				# R matches
+			tracks.yaml 				# best relative R P3D
+	graph.yaml
+	tracks.yaml
+	dense.yaml
+	dense/
+		pairs/
+		ID/
+	points.yaml
+	bundle.yaml
+	scenes.yaml
+	scenes/
+		ID/
+
 
 
 
@@ -461,6 +488,8 @@ TRIPLE LIST:
 
 
 
+
+- DENSE PAIRS MAY NOT HAVE SPARSE PAIR ID --- THESE TO BE DETERMINED AT LATER POINT ... POSSIBLY SEPARATE FIRST STEPS OUT MORE
 
 
 isPointTooClose

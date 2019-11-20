@@ -5661,43 +5661,8 @@ projects/
 						file: "features.yaml"	# found features (location / affine) for image
 					summary:
 						file: "summary.yaml"	# color histogram, individual feature details list [flat, grad, hist]
-
-			pairs:
-				-
-					directory: "KF398BC7"
-					viewA: "2DWWPMNZ"
-					viewB: "914UQJ51"
-					featureCount: 42		# 2D match count
-					relativeCount: 29683	# 3D match count
-					F: # MATRIX
-					R: # MATRIX
-					errorFMean: #
-					errorFSigma: #
-					errorRMean: #
-					errorRSigma: #
-				...
-			triples:
-				-
-					directory: "KF398BC7"
-					viewA: "2DWWPMNZ"
-					viewB: "914UQJ51"
-					viewC: "CCCCCCCC"
-					relativeCount: 29683	# 3D match count
-					T: # MATRIX
-					errorTMean: #
-					errorTSigma: #
-
-					gauge: # - relative scalings between separate pairs -- coordinate system gauge
-						AB: 1.0		# ABS SCALE
-						AC: 2.2		# ABS SCALE
-						BC: 1.1		# ABS SCALE
-					# ?
-						F-DATA HERE
-						R-DATA HERE
-				...
-
 		views/
-			0/
+			VIEW-ID/
 				features.yaml 			all possible feature points w/ score
 					# ?
 				pictures/
@@ -5705,62 +5670,9 @@ projects/
 					50.png
 					25.png
 					12.5.png
-		pairs/
-			0/
-				matches.yaml 			x,y,z,t[,u,v] <=> ; F [initial feature matching]
-				relative.yaml 			relative orientation of camera views w/ matches / triangulated points -- medium/high density
-					P: (4x4 matrix)
-					cellSizeA: 5 		 [start at whatever size ~ 20x20 cells (odd) => 3 pixels]
-					cellSizeB: 7
-					points:
-						a: x,y
-						b: x,y
-						3D: X,Y,Z
-				tracks.yaml 				optimum seed track points [best points]
-					views:
-						-
-							id: "A"
-						...
-					tracks:
-						-
-							p:
-								v: INDEX-OF-VIEW
-								x: [0-1]
-								y: [0-1]
-						...
-
-		triples/tuples
-			0/
-				info.yaml 			x,y <=> pixel matches among 3 views
-					cameras:
-						... # camera data used
-					views:
-						-
-							id: # CAMERA ID
-							camera: "0" # INDEX TO CAMERAS
-							imageSize:	# SIZE OF IMAGE USED
-								x: 504
-								y: 378
-							cellSize: 3 # SIZE OF CELLS USED
-							transform: ABS TRANSFORM
-
-					transforms: # data on view transforms (1:1 parallel array to views) -- SAME AS PAIR
-						-
-							matches: 21857
-							errorRMean: 0.00000103378302308721
-							errorRSigma: 0.3029725132265945
-							errorFMean: 0.0000018490823274523024
-							errorFSigma: 0.24309154400461266
-							errorNCCMean: 0.002385297852253665
-							errorNCCSigma: 0.1671777117177186
-							errorSADMean: 0.004033203176232317
-							errorSADSigma: 0.06777955317617489
-					points:
-						-
-							SAME AS PAIR
 
 		cameras/
-			0/
+			CAMERA-ID/
 				info.yaml 				computed intrinsic properties (K & distortion)
 							K: 0,1,2, 3,4,5, 6,7,8
 								fx
@@ -5803,6 +5715,97 @@ projects/
 									x
 									y
 									z
+		sparse.yaml
+			...
+			pairs:
+				-
+					directory: "KF398BC7"
+					viewA: "2DWWPMNZ"
+					viewB: "914UQJ51"
+					featureCount: 42		# 2D match count
+					relativeCount: 29683	# 3D match count
+					F: # MATRIX
+					R: # MATRIX
+					errorFMean: #
+					errorFSigma: #
+					errorRMean: #
+					errorRSigma: #
+				...
+			triples:
+				-
+					directory: "KF398BC7"
+					viewA: "2DWWPMNZ"
+					viewB: "914UQJ51"
+					viewC: "CCCCCCCC"
+					relativeCount: 29683	# 3D match count
+					T: # MATRIX
+					errorTMean: #
+					errorTSigma: #
+
+					gauge: # - relative scalings between separate pairs -- coordinate system gauge
+						AB: 1.0		# ABS SCALE
+						AC: 2.2		# ABS SCALE
+						BC: 1.1		# ABS SCALE
+					# ?
+						F-DATA HERE
+						R-DATA HERE
+				...
+
+		sparse/
+			pairs/
+				0/
+					matches.yaml 			x,y,z,t[,u,v] <=> ; F [initial feature matching]
+					relative.yaml 			relative orientation of camera views w/ matches / triangulated points -- medium/high density
+						P: (4x4 matrix)
+						cellSizeA: 5 		 [start at whatever size ~ 20x20 cells (odd) => 3 pixels]
+						cellSizeB: 7
+						points:
+							a: x,y
+							b: x,y
+							3D: X,Y,Z
+					tracks.yaml 				optimum seed track points [best points]
+						views:
+							-
+								id: "A"
+							...
+						tracks:
+							-
+								p:
+									v: INDEX-OF-VIEW
+									x: [0-1]
+									y: [0-1]
+							...
+
+			triples/tuples
+				0/
+					info.yaml 			x,y <=> pixel matches among 3 views
+						cameras:
+							... # camera data used
+						views:
+							-
+								id: # CAMERA ID
+								camera: "0" # INDEX TO CAMERAS
+								imageSize:	# SIZE OF IMAGE USED
+									x: 504
+									y: 378
+								cellSize: 3 # SIZE OF CELLS USED
+								transform: ABS TRANSFORM
+
+						transforms: # data on view transforms (1:1 parallel array to views) -- SAME AS PAIR
+							-
+								matches: 21857
+								errorRMean: 0.00000103378302308721
+								errorRSigma: 0.3029725132265945
+								errorFMean: 0.0000018490823274523024
+								errorFSigma: 0.24309154400461266
+								errorNCCMean: 0.002385297852253665
+								errorNCCSigma: 0.1671777117177186
+								errorSADMean: 0.004033203176232317
+								errorSADSigma: 0.06777955317617489
+						points:
+							-
+								SAME AS PAIR
+
 
 		bundle/
 A			graph.yaml - view graph of scene - result of global (quasi-local) bundle adjustment iterations on TRACK POINTS -- initialized using PAIR TRANSFORMS & TRIPLE SCALES
@@ -8154,6 +8157,11 @@ inverted:
 
 App3DR.ProjectManager.prototype.calculateGlobalOrientationInit = function(callback, context, object){
 	console.log("calculateGlobalOrientationInit");
+
+
+
+	throw "TO USE: optimumTransform3DFromObjectLookup";
+
 	// helpers
 	var minimumStringFirst = function(a,b){
 		return a < b ? (a+"-"+b) : (b+"-"+a);
@@ -9748,19 +9756,22 @@ App3DR.ProjectManager.prototype._iterateDenseTracksStart = function(){
 	var denseCameras = denseData["cameras"];
 	var denseViews = denseData["views"];
 	var densePoints = denseData["points"];
+	var densePointCount = denseData["pointCount"];
 	var densePairs = denseData["pairs"];
 	var currentPair = denseData["currentPair"];
 	var denseTriples = denseData["triples"];
 	var currentTriple = denseData["currentTriple"];
+
+	var sortAlphabet = function(a,b){
+		return a<b ? -1 : 1;
+	}
 
 	currentPair++;
 	if(currentPair>=densePairs.length){ // load all dense pairs at same time
 
 
 	if(denseTriples == null){
-		var sortAlphabet = function(a,b){
-			return a<b ? -1 : 1;
-		}
+		
 		// go thru all pairs ...
 		var triples = {};
 		for(var i=0; i<densePairs.length; ++i){
@@ -9795,95 +9806,103 @@ App3DR.ProjectManager.prototype._iterateDenseTracksStart = function(){
 		}
 		triples = Code.objectToArray(triples);
 		console.log(triples);
+		denseTriples = triples;
+		denseData["triples"] = denseTriples;
 		currentTriple = -1;
-
-		throw "START TRIPLES";
+		console.log("START TRIPLES");
 	} // else triples exist
 	console.log(currentTriple);
+	++currentTriple;
+	if(currentTriple>=denseTriples.length){ // done with triples
 
-throw "load dense triples now ...."
+		// DO ABSOLUTE TRANSFORMS ....
 
 
+		this._denseAbsoluteOrientation(denseData);
 
-		console.log("need to get relative scales again ...");
-		var result = this._absoluteViewsFromDensePairs(denseViews, densePairs);
-		console.log(result);
+		throw "done with triples";
+	} // continue triples
+	var triple = denseTriples[currentTriple];
+	//
+	var densePairsLookup = {};
+	for(var i=0; i<densePairs.length; ++i){
+		var pair = densePairs[i];
+		var list = [pair["A"],pair["B"]];
+		list.sort(sortAlphabet);
+		var idA = list[0];
+		var idB = list[1];
+		var index = idA+"-"+idB;
+		densePairsLookup[index] = pair;
+	}
+	console.log(densePairsLookup);
+	var idA = triple["A"];
+	var idB = triple["B"];
+	var idC = triple["C"];
+	// up to 3 
+	var idAB = idA+"-"+idB;
+	var idAC = idA+"-"+idC;
+	var idBC = idB+"-"+idC;
+	var pairAB = densePairsLookup[idAB];
+	var pairAC = densePairsLookup[idAC];
+	var pairBC = densePairsLookup[idBC];
+	var putative = [pairAB,pairAC,pairBC];
+	var loadPairs = [];
+	for(var i=0; i<putative.length; ++i){
+		var pair = putative[i];
+		if(pair){
+			loadPairs.push(pair);
+		}
+	}
+	console.log(loadPairs);
 
-throw "abs locations are bad"
 
-		var transforms = result["transforms"];
+	var expectedPairs = loadPairs.length;
+	var loadedPairs = 0;
+	var loadedPairData = [];
+	var self = this;
 
-		var denseViewFromID = {};
-		for(var i=0; i<denseViews.length; ++i){
-			var view = denseViews[i];
-			var viewID = view["id"];
-			denseViewFromID[viewID] = view
+	var handleLoadedPair = function(a,o){
+		console.log("handleLoadedPair"+loadedPairs);
+		var string = Code.binaryToString(o);
+		var object = YAML.parse(string);
+		if(Code.isArray(object)){
+			object = object[0];
+		}
+		loadedPairData.push(object);
+		++loadedPairs;
+		if(loadedPairs==expectedPairs){
+			console.log(loadedPairData)
+			var info = this._tripleInfoFromPairList(loadedPairData, denseViews, denseCameras, handleScaleInfoCompleted);
+		}
+	}
+
+		var handleScaleInfoCompleted = function(info){
+			console.log(info);
+			console.log(info);
+			var scales = info;
+			var sAB = scales["AB"];
+			var sAC = scales["AC"];
+			var sBC = scales["BC"];
+			triple["gauge"] = {"AB":sAB, "AC":sAC, "BC":sBC};
+			denseData["currentTriple"] = currentTriple;
+			console.log(denseData);
+			project.saveDenseFromData(denseData, fxnSavedDense, this);
 		}
 
-		// INVERT FROM ABS TO EXT
-		// var trans = [];
-		// for(var i=0; i<transforms.length; ++i){
-		//    var transform = transforms[i];
-		//    transforms[i] = Matrix.inverse(transform);
-		// }
-
-		var viewIDs = result["views"];
-
-		var pointData = {};
-		var pointViews = [];
-
-		for(var i=0; i<viewIDs.length; ++i){
-			var viewID = viewIDs[i];
-			var sourceView = denseViewFromID[viewID];
-			// console.log(sourceView);
-			var camID = sourceView["camera"];
-			var size = sourceView["size"];
-			var transform = transforms[i];
-				var extrinsic = Matrix.inverse(transform);
-			view = {"id":viewID, "R":extrinsic, "camera":camID, "size":size};
-			pointViews.push(view);
-		}
-		var pointPairs = [];
-		var totalCount = 0;
-		for(var i=0; i<densePairs.length; ++i){
-			var sourcePair = densePairs[i];
-			var pointCount = sourcePair["points"];
-			var pair = {};
-				pair["id"] = sourcePair["id"];
-				pair["A"] = sourcePair["A"];
-				pair["B"] = sourcePair["B"];
-				pair["points"] = pointCount;
-				pair["need"] = null;
-				totalCount += pointCount;
-				// pair["errorR"] = sourcePair["errorR"];
-			pointPairs.push(pair);
-		}
-		var timestampNow = Code.getTimeStampFromMilliseconds();
-		pointData["cameras"] = denseCameras;
-		pointData["views"] = pointViews;
-		pointData["skeleton"] = null;
-		pointData["pending"] = pointPairs;
-		pointData["pendingIndex"] = -1;
-		pointData["points"] = null;
-		pointData["stash"] = null;
-		pointData["created"] = timestampNow;
-
-throw "abs locations are bad"
-
-// console.log(pointData);
-// throw "..."
-		var fxnSavedProject = function(){
-			console.log("PROJECT SAVED")
-		}
-		var fxnSavedPoints = function(){
-			console.log("POINT FILE SAVED")
-			project.saveProjectFile(fxnSavedProject, project);
+		var fxnSavedDense = function(){
+			console.log("fxnSavedDense");
+			// project.saveProjectFile(fxnSavedProject, project);
 		}
 
-		project.setDenseCount(totalCount);
-		project.setPointsFilename(App3DR.ProjectManager.RECONSTRUCT_POINTS_FILE_NAME);
-		// SAVE
-		project.savePointsFromData(pointData, fxnSavedPoints, project);
+		for(var i=0; i<loadPairs.length; ++i){
+			var pair = loadPairs[i];
+			var pairID = pair["id"];
+			// handleLoadedPair();
+			var path = this.densePairPathFromID(pairID);
+			console.log("dense pair: "+pairID+" = "+path);
+			this.addOperation("GET", {"path":path}, handleLoadedPair, this, null);
+		}
+		console.log("load triples");
 		return;
 	} // else copy dense pair using updated transforms
 	var densePair = densePairs[currentPair];
@@ -9902,7 +9921,12 @@ throw "abs locations are bad"
 	var densePairErrorF = densePair["errorF"];
 	var densePairErrorR = densePair["errorR"];
 	// console.log("densePairError: "+densePairErrorR);
+
+	// this pair not exist
 	var pair = this.pairFromID(densePairID);
+	if(!pair){
+		throw "this pair only exists as a dense pair, not an initial sparse pair";
+	}
 	var viewA = pair.viewA();
 	var viewB = pair.viewB();
 	var viewAID = viewA.id();
@@ -10036,9 +10060,199 @@ throw "abs locations are bad"
 	}
 	App3DR.ProjectManager.loadViewsImages(loadViews,fxnViewsLoaded, project);
 }
+
+
+App3DR.ProjectManager.prototype._tripleInfoFromPairList = function(pairs, views, cameras, completeFxn){
+	console.log("_tripleInfoFromPairList");
+	var project = this;
+	// var viewIDs = {};
+	// for(var i=0; i<pairs.length; ++i){
+	// 	var pair = pairs[i];
+	// 	console.log(pair)
+	// 	var idA = pair["A"];
+	// 	var idB = pair["B"];
+	// 	viewIDs[idA] = "";
+	// 	viewIDs[idB] = "";
+	// }
+	// viewIDs = Code.keys(viewIDs);// Code.objectToArray(viewIDs);
+	// console.log(viewIDs);
+	// var views = [];
+	// for(var i=0; i<viewIDs.length; ++i){
+	// 	var viewID = viewIDs[i];
+	// 	var view = project.viewFromID(viewID);
+	// 	views.push(view);
+	// }
+
+	// sizes
+	var images = [];
+	for(var i=0; i<views.length; ++i){
+		var view = views[i];
+		images.push( new V2D().fromObject(view["size"]) );
+	}	
+
+
+
+	// fill world in
+	world = new Stereopsis.World();
+	App3DR.ProjectManager.addCamerasToWorld(world, cameras);
+	App3DR.ProjectManager.addViewsToWorld(world, views, images);
+	var worldViews = world.toViewArray();
+	
+	var worldViewLookup = {};
+	for(var i=0; i<worldViews.length; ++i){
+		worldViewLookup[worldViews[i].data()] = worldViews[i];
+	}
+	console.log("add matching points");
+	var pointsList = [];
+	for(var i=0; i<pairs.length; ++i){
+		var pair = pairs[i];
+		var idA = pair["A"];
+		var idB = pair["B"];
+		var points = pair["points"];
+		// console.log(points);
+		// App3DR.ProjectManager.addPointsToWorld(world, points);
+		
+		var worldViewLookupPair = {};
+		worldViewLookupPair[0] = worldViewLookup[idA];
+		worldViewLookupPair[1] = worldViewLookup[idB];
+
+		// var points3D = this._embedMatchPoints(world, points, worldViewLookup);
+		var points3D = App3DR.ProjectManager._worldPointFromSaves(world, points, worldViewLookupPair);
+		// console.log(points3D);
+		// world.patchInitBasicSphere(true);
+		// var points3D = world.toPointArray();
+		// world.disconnectPoints3D(points3D);
+		pointsList.push(points3D);
+		console.log(" "+i+" = "+points3D.length);
+		var R = pair["R"];
+			R = new Matrix().fromObject(R);
+		App3DR.ProjectManager.addTransformToWorld(world, R, idA, idB);
+	}
+	console.log(world);
+	console.log(pointsList);
+	// add points in
+	console.log("add points with patches");
+	for(var i=0; i<pointsList.length; ++i){
+		var points3D = pointsList[i];
+		// world.embedPoints3D(points3D);
+		world.embedPoints3DNoValidation(points3D);
+		// world.printPoint3DTrackCount();
+	}
+	// solve for relative scalings & whatnot
+	console.log("solveTriple");
+	var worldTripleCompleted = function(payload){
+		console.log("worldTripleCompleted");
+		console.log(payload);
+		var scales = payload["scales"]
+		// var TFT = payload["T"];
+		// var meanTFT = payload["errorTMean"];
+		// var sigmaTFT = payload["errorTSigma"];
+		console.log(scales);
+		var sAB = scales["AB"];
+		var sAC = scales["AC"];
+		var sBC = scales["BC"];
+		// var vA = scales["A"];
+		// var vB = scales["B"];
+		// var vC = scales["C"];
+		// var lookup = {};
+		// 	lookup[viewA.data()+"-"+viewB.data()] = sAB;
+		// 	lookup[viewB.data()+"-"+viewA.data()] = sAB;
+		// 	lookup[viewA.data()+"-"+viewC.data()] = sAC;
+		// 	lookup[viewC.data()+"-"+viewA.data()] = sAC;
+		// 	lookup[viewB.data()+"-"+viewC.data()] = sBC;
+		// 	lookup[viewC.data()+"-"+viewB.data()] = sBC;
+		// var scaleAB = lookup[idA+"-"+idB];
+		// var scaleAC = lookup[idA+"-"+idC];
+		// var scaleBC = lookup[idB+"-"+idC];
+
+		// console.log(scaleAB,scaleAC,scaleBC);
+		// ...
+		// triple.setRelativeScales(scaleAB,scaleAC,scaleBC);
+		completeFxn(scales);
+		// return scales;
+
+	}
+	world.solveTriple(worldTripleCompleted, project, null);
+}
+
+App3DR.ProjectManager.prototype._denseAbsoluteOrientation = function(data){
+	var project = this;
+	console.log(data);
+	var views = data["views"];
+	var cameras = data["cameras"];
+	var pairs = data["pairs"];
+	var triples = data["triples"];
+	var result = this._absoluteViewsFromDensePairs(views, pairs, triples);
+	console.log(result);
+
+	var transforms = result["transforms"];
+
+	var viewFromID = {};
+	for(var i=0; i<views.length; ++i){
+		var view = views[i];
+		var viewID = view["id"];
+		viewFromID[viewID] = view;
+	}
+	var viewIDs = result["views"];
+	var pointData = {};
+	var pointViews = [];
+
+	for(var i=0; i<viewIDs.length; ++i){
+		var viewID = viewIDs[i];
+		var sourceView = viewFromID[viewID];
+		// console.log(sourceView);
+		var camID = sourceView["camera"];
+		var size = sourceView["size"];
+		var extrinsic = transforms[i];
+			// var extrinsic = Matrix.inverse(transform);
+			// var extrinsic = transform;
+		view = {"id":viewID, "R":extrinsic, "camera":camID, "size":size};
+		pointViews.push(view);
+	}
+	var pointPairs = [];
+	var totalCount = 0;
+	for(var i=0; i<pairs.length; ++i){
+		var sourcePair = pairs[i];
+		var pointCount = sourcePair["pointCount"];
+		var pair = {};
+			pair["id"] = sourcePair["id"];
+			pair["A"] = sourcePair["A"];
+			pair["B"] = sourcePair["B"];
+			pair["pointCount"] = pointCount;
+			pair["need"] = null;
+			totalCount += pointCount;
+			// pair["errorR"] = sourcePair["errorR"];
+		pointPairs.push(pair);
+	}
+	var timestampNow = Code.getTimeStampFromMilliseconds();
+	pointData["cameras"] = cameras;
+	pointData["views"] = pointViews;
+	pointData["skeleton"] = null;
+	pointData["pending"] = pointPairs;
+	pointData["pendingIndex"] = -1;
+	pointData["points"] = null;
+	pointData["stash"] = null;
+	pointData["created"] = timestampNow;
+	console.log(pointData);
+
+throw "abs locations are bad";
+		var fxnSavedProject = function(){
+			console.log("PROJECT SAVED");
+		}
+		var fxnSavedPoints = function(){
+			console.log("POINT FILE SAVED");
+			project.saveProjectFile(fxnSavedProject, project);
+		}
+
+		project.setDenseCount(totalCount);
+		project.setPointsFilename(App3DR.ProjectManager.RECONSTRUCT_POINTS_FILE_NAME);
+		// SAVE
+		project.savePointsFromData(pointData, fxnSavedPoints, project);
+}
+
 App3DR.ProjectManager.prototype.densePairPathFromID = function(densePairID){
 	var path = Code.appendToPath(this._workingPath, App3DR.ProjectManager.RECONSTRUCT_DIRECTORY, App3DR.ProjectManager.RECONSTRUCT_DENSE_DIRECTORY, densePairID, App3DR.ProjectManager.RECONSTRUCT_DENSE_FILENAME);
-	console.log("dense pair: "+densePairID+" = "+path);
+	// console.log("dense pair: "+densePairID+" = "+path);
 	return path;
 }
 App3DR.ProjectManager.prototype.iterateSparseTracks = function(){
@@ -10054,92 +10268,80 @@ App3DR.ProjectManager.prototype.iterateSparseTracks = function(){
 }
 
 
-App3DR.ProjectManager.prototype._absoluteViewsFromDensePairs = function(views, pairs){
+App3DR.ProjectManager.prototype._absoluteViewsFromDensePairs = function(views, pairs, triples){
 	console.log("_absoluteViewsFromDensePairs");
 
-	// lookup ID -> INDEX
-	var tableViewIndexToID = {};
+	var viewToID = function(view){
+		return view["id"];
+	};
+	var pairToIDs = function(pair){
+		return [pair["A"],pair["B"]];
+	};
+	var pairToError = function(pair){
+		// return 1/pair["errorR"];
+		return 1.0;
+		// return pair["errorR"];
+		// return pair["errorR"]/pair["pointCount"];
+	};
+	var pairToTransform = function(pair, idA,idB){
+		var A = pair["A"];
+		var B = pair["B"];
+		// console.log(A,idA,B,idB);
+		var R = pair["R"];
+			R = new Matrix().fromObject(R);
+		// R = Matrix.inverse(R);
+		return R;
+	};
+	var tripleToIDs = function(triple){
+		return [triple["A"],triple["B"],triple["C"]];
+	};
+	var tripleToScales = function(triple){
+		var gauge = triple["gauge"];
+		return gauge;
+	};
+
+
+var originalTransforms = [];
+for(var i=0; i<views.length; ++i){
+	var view = views[i];
+	var R = view["R"];
+		R = new Matrix().fromObject(R);
+	originalTransforms[i] = R;
+}
+
+	var info = R3D.optimumTransform3DFromObjectLookup(views, pairs, triples, viewToID,pairToIDs,tripleToIDs, pairToError,pairToTransform,tripleToScales,  originalTransforms);
+	var transforms = info["transforms"];
+	var listPairs = info["listPairs"];
+	var viewIDs = info["views"];
+
+
+
+// TESTING KEEPING ORIGINAL:
+/*
+	// viewIDs
 	var tableViewIDToIndex = {};
+	var tableViewIndexToID = {};
+	var tableViewIDToView = {};
 	for(var i=0; i<views.length; ++i){
 		var view = views[i];
-		console.log(view);
-		var viewID = view["id"];
+		var viewID = viewToID(view);
+		tableViewIDToView[viewID] = view;
 		tableViewIDToIndex[viewID] = i;
-		tableViewIndexToID[i] = viewID;
+		tableViewIndexToID[i+""] = viewID;
 	}
 
-
-throw "HERE ... _absoluteViewsFromDensePairs"
-
-
-	// TODO: SUBGRAPH
-	// 
-	// var result = R3D.bestConnectedViewSubgraph(subgraphEdges, viewCount);
-	// 	var subgraphEdges = [];
-	// var subgraphEdgeLookup = [];
-	// for(var i=0; i<edges.length; ++i){
-	// 	var edge = edges[i];
-	// 	var idA = edge["A"];
-	// 	var idB = edge["B"];
-	// 	var list = edge["list"]
-	// 	if(list && list.length>0){
-	// 		idA = tablePairIDToIndex[idA];
-	// 		idB = tablePairIDToIndex[idB];
-	// 		subgraphEdges.push([idA,idB]);
-	// 		subgraphEdgeLookup.push(i);
-	// 	}
-	// }
-	// // find largest subgraph of connected pairs
-	// var viewCount = views.length;
-	// console.log(subgraphEdges);
-	// console.log(viewCount);
-	// var result = R3D.bestConnectedViewSubgraph(subgraphEdges, viewCount);
-	// var bestPairs = result["pairs"];
-	// var bestViews = result["views"];
-	// var bestEdges = result["edges"];
-
-	var edges = [];
-	for(var i=0; i<pairs.length; ++i){
-		var pair = pairs[i];
-		console.log(pair);
-		var pairID = pair["id"];
-		var viewAID = pair["A"];
-		var viewBID = pair["B"];
-		var viewAIndex = tableViewIDToIndex[viewAID];
-		var viewBIndex = tableViewIDToIndex[viewBID];
-		var errorR = pair["errorR"];
-		var pointCount = pair["points"];
-		var R = pair["R"];
-			R = Matrix.fromObject(R);
-		var extrinsicAtoB = R;
-		var relativeAtoB = Matrix.inverse(extrinsicAtoB);
-		var errorAB = errorR/pointCount;
-			errorAB = 1.0;
-		var edge = [viewAIndex,viewBIndex, relativeAtoB, errorAB];
-		edges.push([viewAIndex,viewBIndex,relativeAtoB,errorAB]);
+	for(var i=0; i<viewIDs.length; ++i){
+		var viewID = viewIDs[i];
+		var view = tableViewIDToView[viewID];
+		var R = view["R"];
+			R = new Matrix().fromObject(R);
+		transforms[i] = R;
 	}
-	console.log(edges);
-	// nonlinear estimate transforms
-	var result = R3D.optimumTransform3DFromRelativePairTransforms(edges);
-	console.log(result);
-	var absolutes = result["absolute"];
-	var transforms = [];
-	var viewIDs = [];
-	for(var i=0; i<absolutes.length; ++i){
-		var abs = absolutes[i];
-		var viewID = tableViewIndexToID[i];
-		transforms.push(abs);
-		viewIDs.push(viewID);
-	}
+*/
+	this.displayViewGraph(transforms,listPairs);
 
-
-	var result = R3D.skeletalViewGraph(edges);
-	console.log("skeleton");
-	console.log(result);
-	this.displayViewGraph(transforms,edges);
-
-	
-	return {"transforms":transforms, "views":viewIDs, "skeleton":result};
+	return info;
+	// {"transforms":transforms, "views":viewIDs, "skeleton":result};
 }
 
 App3DR.ProjectManager.prototype.iterateDenseLoading = function(){
@@ -10299,6 +10501,7 @@ console.log("pendingIndex: "+pendingIndex);
 
 
 		console.log("bundle adjust");
+// throw "HERE - BA";
 
 		world.solveFullDenseIterate();
 
@@ -10308,29 +10511,15 @@ console.log("pendingIndex: "+pendingIndex);
 		var str = world.toYAMLString();
 		console.log(str);
 
-		console.log("HERE ...");
-		// var points = project._getGraphPointsFromWorld(world, lookupIndexFromID, false);
-
-
-
-		this.setPointsCount(pointsCount);
-
-		// ...
-
-
+		console.log("HERE ... POINTS");
 
 		throw "done loading";
-
+		this.setPointsCount(pointsCount);
 //		fxnSavedPoints();
 
 
 		return;
 	}
-// throw "?"
-	
-// var points = world.toPointArray();
-// console.log(points);
-// throw "inserted?";
 
 	var densePair = pendingList[pendingIndex];
 	var densePairID = densePair["id"];
@@ -10406,7 +10595,7 @@ console.log("pendingIndex: "+pendingIndex);
 		console.log(pointPoints);
 		console.log(pointCount);
 		// 
-		// throw "to save";
+// throw "to save - points iteration";
 		// project.savePointsFromData(pointsData, fxnSavedPoints, project);
 		project.savePointsFromData(pointsData, fxnSavedPointsNA, project);
 	}
@@ -10844,7 +11033,12 @@ App3DR.ProjectManager.prototype._embedMatchPoints = function(world, trackData, w
 	//
 	var pointCountAdded = 0;
 	console.log(trackData);
-	var points3D = Code.valueOrDefault(trackData["points"], []);
+	var points3D = null;
+	if(Code.isArray(trackData)){
+		points3D = trackData;
+	}else{
+		points3D = Code.valueOrDefault(trackData["points"], []);
+	}
 	var created3D = [];
 	console.log("points3D: "+points3D.length);
 	for(var i=0; i<points3D.length; ++i){

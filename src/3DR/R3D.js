@@ -27463,7 +27463,7 @@ R3D.cameraDistortionNonlinear = function(pointsFrom,pointsTo, K, d){
 		xVals = [d["k1"],d["k2"],d["k3"],d["p1"],d["p2"]];
 	}
 	var args = [pointsFrom,pointsTo,K];
-	var result = Code.gradientDescent(R3D._gdDist, args, xVals, null, 500, 1E-10);
+	var result = Code.gradientDescent(R3D._gdDist, args, xVals, null, 500, 1E-16);
 	xVals = result["x"];
 	//console.log(xVals);
 	var k1 = xVals[0];
@@ -29128,7 +29128,7 @@ R3D._optiumGraph2D = function(edges,isAngles){ // edges: [indexA,indexB,VALUE,ER
 			values[i*2+1] = locations[i].y;
 		}
 	}
-	var result = Code.gradientDescent(fxn, args, values, null, 10, 1E-10);
+	var result = Code.gradientDescent(fxn, args, values, null, 10, 1E-16);
 	var output = [];
 	graph.kill();
 	// absolutes:
@@ -29533,7 +29533,7 @@ R3D.componentwiseRelativeCameraMatrix = function(transformA,transformB){
 	return transform;
 }
 
-R3D.optimumTransform3DFromRelativePairTransforms = function(pairs, maxIterations){
+R3D.optimumTransform3DFromRelativePairTransforms = function(pairs, maxIterations, originalTransforms){
 	var edges = [];
 	for(var i=0; i<pairs.length; ++i){
 		var pair = pairs[i];
@@ -29541,6 +29541,14 @@ R3D.optimumTransform3DFromRelativePairTransforms = function(pairs, maxIterations
 		var b = pair[1];
 		var transform = pair[2];
 		var error = 1.0;
+
+			var tA = originalTransforms[a];
+			var tB = originalTransforms[b];
+			var absA = Matrix.inverse(tA);
+			var absB = Matrix.inverse(tB);
+			transform = R3D.relativeTransformMatrix2(absA,absB);
+			console.log("GOT TRANSFORM: "+transform)
+
 		if(pair.length>3){
 			error = pair[3];
 		}
@@ -29550,7 +29558,9 @@ R3D.optimumTransform3DFromRelativePairTransforms = function(pairs, maxIterations
 		var edge = [a,b, {"quaternion":quaternion, "translation":translation}, error];
 		edges.push(edge);
 	}
-	return R3D.optimumTransform3D(edges, maxIterations); // nodeA, nodeB, scale, error
+	console.log("edges:");
+	console.log(edges);
+	return R3D.optimumTransform3D(edges, maxIterations,  originalTransforms); // nodeA, nodeB, scale, error
 }
 R3D.optimumScaling1D = function(edges){ // assume all connectes vertexes
 	var nonlinear = true;
@@ -29700,6 +29710,7 @@ R3D.optimumScaling1D = function(edges){ // assume all connectes vertexes
 		values[i] = {"scale":scale};
 	}
 	var scales = [];
+console.log("optimumScaling1D")
 	if(nonlinear){
 		console.log("NONLINEAR");
 		var iterations = 100;
@@ -29805,9 +29816,321 @@ R3D.bestConnectedViewSubgraph = function(edges, viewCount){ // subgraph with mos
 	graph.kill();
 	return {"views":biggestViews, "pairs":biggest, "edges":biggestEdges};
 }
-R3D.optimumTransform3D = function(edges, maxIterations){ // edges: [indexA,indexB, transform,error]
+
+
+R3D.optimumTransform3DFromObjectLookup = function(views, pairs, triples,  viewToID,pairToIDs,tripleToIDs, pairToError,pairToTransform, tripleToScales,   originalTransforms){ 
+	// helpers
+	var minimumStringFirst = function(a,b){
+		return a < b ? (a+"-"+b) : (b+"-"+a);
+	}
+	var viewIDsToPairID = function(iA,iB){
+		return minimumStringFirst(iA,iB);
+	}
+	var setOrFlip = function(table,iA,iB,scale, error){
+		var key = viewIDsToPairID(iA,iB);
+		var edge = table[key];
+		if(edge["A"]==iA && edge["B"]==iB){
+			edge["list"].push([scale,error]);
+		}else if(edge["A"]==iB && edge["B"]==iA){
+			edge["list"].push([1.0/scale,error]);
+		}else{
+			throw "?";
+		}
+	}
+
+	// prep
+	var viewCount = views.length;
+
+	// view lookup
+	var tableViewIDToIndex = {};
+	var tableViewIndexToID = {};
+	var tableViewIDToView = {};
+	for(var i=0; i<viewCount; ++i){
+		var view = views[i];
+		var viewID = viewToID(view);
+		tableViewIDToView[viewID] = view;
+		tableViewIDToIndex[viewID] = i;
+		tableViewIndexToID[i+""] = viewID;
+	}
+	console.log(tableViewIDToIndex);
+	console.log(tableViewIndexToID);
+	console.log(tableViewIDToView);
+	// init scale edges
+	var edges = [];
+	var tableViewPairToEdge = {};
+	var tableViewPairToPair = {};
+	var tablePairIDToIndex = {};
+	var tablePairIndexToID = {};
+	for(var i=0; i<pairs.length; ++i){
+		var pairA = pairs[i];
+		var pairIDs = pairToIDs(pairA);
+		var idA = pairIDs[0];
+		var idB = pairIDs[1];
+		var nodeA = viewIDsToPairID(idA,idB);
+		tablePairIDToIndex[nodeA] = i;
+		tablePairIndexToID[i+""] = nodeA;
+		tableViewPairToPair[nodeA] = pairA;
+		for(var j=i+1; j<pairs.length; ++j){
+			var pairB = pairs[j];
+			var pairIDs = pairToIDs(pairB);
+			var idC = pairIDs[0];
+			var idD = pairIDs[1];
+			var nodeB = viewIDsToPairID(idC,idD);
+			var index = viewIDsToPairID(nodeA,nodeB);
+			// console.log(" INDEX ... "+index);
+			var edge = {"A":nodeA, "B":nodeB, "list":[], "pairA":pairA,"pairB":pairB};
+			edges.push(edge); // directional
+			tableViewPairToEdge[index] = edge;
+		}
+	}
+	console.log(tableViewPairToEdge);
+	console.log(tableViewPairToPair);
+	console.log(tablePairIDToIndex);
+	console.log(tablePairIndexToID);
+
+	// go thru all triples and get all possible edges for each pair
+	for(var i=0; i<triples.length; ++i){
+		var triple = triples[i];
+		var tripleIDs = tripleToIDs(triple);
+		var idA = tripleIDs[0];
+		var idB = tripleIDs[1];
+		var idC = tripleIDs[2];
+		var idAB = viewIDsToPairID(idA,idB);
+		var idAC = viewIDsToPairID(idA,idC);
+		var idBC = viewIDsToPairID(idB,idC);
+		var pairAB = tableViewPairToPair[idAB];
+		var pairAC = tableViewPairToPair[idAC];
+		var pairBC = tableViewPairToPair[idBC];
+		var errorAB = pairToError(pairAB);
+		var errorAC = pairToError(pairAC);
+		var errorBC = pairToError(pairBC);
+		var scales = tripleToScales(triple);
+		var scaleAB = scales["AB"];
+		var scaleAC = scales["AC"];
+		var scaleBC = scales["BC"];
+		// console.log(" "+i+" : "+scaleAB+" | "+scaleAC+" | "+scaleBC+" | "+" - "+idAB+" - "+idAC+" - "+idBC);
+		if(scaleAB>0 && scaleAC>0){
+			var scaleABtoAC = scaleAC/scaleAB;
+			setOrFlip(tableViewPairToEdge,idAB,idAC,scaleABtoAC,errorAB+errorAC);
+		}
+		if(scaleAC>0 && scaleBC>0){
+			var scaleACtoBC = scaleBC/scaleAC;
+			setOrFlip(tableViewPairToEdge,idAC,idBC,scaleACtoBC,errorAC+errorBC);
+		}
+		if(scaleAB>0 && scaleBC>0){
+			var scaleBCtoAB = scaleAB/scaleBC;
+			setOrFlip(tableViewPairToEdge,idBC,idAB,scaleBCtoAB,errorBC+errorAB);
+		}
+	}
+	console.log(tableViewPairToEdge);
+
+	// combine every conflicting edge into single edge using error ratios
+	for(var i=0; i<edges.length; ++i){
+		var edge = edges[i];
+		var list = edge["list"];
+		var values = [];
+		var errors = [];
+		if(list.length>0){
+			if(list.length>1){
+				throw "ONLY EVER AT MOST 1 EDGE BETWEEN VIEW-PAIRS"
+			}
+			for(var j=0; j<list.length; ++j){
+				var e = list[j];
+				values.push(e[0]);
+				errors.push(e[1]);
+			}
+			var percents = Code.errorsToPercents(errors);
+			var error = percents["error"];
+				percents = percents["percents"];
+			var value = Code.averageNumbers(values, percents);
+			edge["value"] = value;
+			edge["error"] = error;
+		}
+	}
+	var subgraphEdges = [];
+	var subgraphEdgeLookup = [];
+	for(var i=0; i<edges.length; ++i){
+		var edge = edges[i];
+		var idA = edge["A"];
+		var idB = edge["B"];
+		var list = edge["list"]
+		if(list && list.length>0){
+			idA = tablePairIDToIndex[idA];
+			idB = tablePairIDToIndex[idB];
+			subgraphEdges.push([idA,idB]);
+			subgraphEdgeLookup.push(i);
+		}
+	}
+	// find largest subgraph of connected pairs
+	var viewCount = views.length;
+	var result = R3D.bestConnectedViewSubgraph(subgraphEdges, viewCount);
+	var bestPairs = result["pairs"];
+	var bestViews = result["views"];
+	var bestEdges = result["edges"];
+console.log("SUBGRAPH:");
+console.log(bestPairs);
+console.log(bestViews);
+console.log(bestEdges);
+	var includedPairs = {};
+	var includedViews = {};
+	var includedPairEdges = [];
+	// grab all edges that are included pairs
+	for(var i=0; i<bestEdges.length; ++i){
+		var edgeIndex = bestEdges[i];
+		var allEdgeIndex = subgraphEdgeLookup[edgeIndex];
+		edge = edges[allEdgeIndex];
+		includedPairEdges.push(edge);
+		// pair
+		var pairsX = subgraphEdges[edgeIndex];
+		var indexA = pairsX[0];
+		var indexB = pairsX[1];
+			indexA = tablePairIndexToID[indexA+""];
+			indexB = tablePairIndexToID[indexB+""];
+			// console.log(indexA+" => "+indexB);
+		var pairA = tableViewPairToPair[indexA];
+		var pairB = tableViewPairToPair[indexB];
+		includedPairs[indexA] = pairA;
+		includedPairs[indexB] = pairB;
+		// views
+		var pairIDs = pairToIDs(pairA);
+		var idA = pairIDs[0];
+		var idB = pairIDs[1];
+			pairIDs = pairToIDs(pairB);
+		var idC = pairIDs[0];
+		var idD = pairIDs[1];
+		var viewA = tableViewIDToView[idA];
+		var viewB = tableViewIDToView[idB];
+		var viewC = tableViewIDToView[idC];
+		var viewD = tableViewIDToView[idD];
+		includedViews[idA] = viewA;
+		includedViews[idB] = viewB;
+		includedViews[idC] = viewC;
+		includedViews[idD] = viewD;
+	}
+	includedViews = Code.objectToArray(includedViews);
+	includedPairs = Code.objectToArray(includedPairs);
+	// throw away duplicate (close) views
+	// TODO: ALSO NEED A CONSISTENCY CHECK - throw out bad matches : SCALE & TRANSFORM
+	console.log("includedViews");
+	console.log(includedViews);
+	console.log(includedPairs);
+	console.log(includedPairEdges);
+	// map visited pair-vertexes
+	var mappingIndexToExistPairs = {};
+	var mappingExistToIndexPairs = {};
+	for(var i=0; i<includedPairs.length; ++i){
+		var j = bestPairs[i];
+		mappingExistToIndexPairs[j+""] = i;
+		mappingIndexToExistPairs[i+""] = j;
+	}
+	// map visited view-vertexes
+	var mappingIndexToExistViews = {};
+	var mappingExistToIndexViews = {};
+	for(var i=0; i<includedViews.length; ++i){
+		var j = bestViews[i];
+		mappingExistToIndexViews[j+""] = i;
+		mappingIndexToExistViews[i+""] = j;
+	}
+	// grab all edges that are included pairs
+	var graphEdges = [];
+	for(var i=0; i<includedPairEdges.length; ++i){
+		var edge = includedPairEdges[i];
+		var value = edge["value"];
+// console.log("value scale: "+value);
+		var error = edge["error"];
+		var indexA = edge["A"];
+		var indexB = edge["B"];
+			indexA = tablePairIDToIndex[indexA];
+			indexB = tablePairIDToIndex[indexB];
+			indexA = mappingExistToIndexPairs[indexA+""];
+			indexB = mappingExistToIndexPairs[indexB+""];
+		graphEdges.push([indexA,indexB, value,error]);
+	}
+	console.log(graphEdges);
+	// optimum scale
+	var vertexesUseScale = bestPairs;
+	var results = R3D.optimumScaling1D(graphEdges);
+	console.log(results);
+	var absoluteScales = results["absolute"];
+	var scales = [];
+	for(var i=0; i<includedPairs.length; ++i){
+		var j = mappingIndexToExistPairs[i+""];
+		scales[j+""] = absoluteScales[i];
+	}
+	absoluteScales = scales;
+
+
+	var listPairs = [];
+	for(var i=0; i<pairs.length; ++i){
+		var scaler = absoluteScales[i+""];
+// console.log("scaler: "+scaler);
+		if(!scaler){
+			continue;
+		}
+		var pair = pairs[i];
+		var pairIDs = pairToIDs(pair);
+		var idA = pairIDs[0];
+		var idB = pairIDs[1];
+		var viewA = tableViewIDToView[idA];
+		var viewB = tableViewIDToView[idB];
+		var pairID = viewIDsToPairID(idA,idB);
+		var errorAB = pairToError(pair);
+		var extrinsicAtoB = pairToTransform(pair, idA,idB);
+		// INVERT FROM EXT TO CAM
+		var relativeAtoB = Matrix.inverse(extrinsicAtoB);
+		var indexPair = tablePairIDToIndex[pairID];
+		// scale 'pair' local scale to match universe scale
+		// TODO: IS THIS THE CORRECT WAY TO SCALE A 3D MATRIX TRANSFORM?
+		relativeAtoB.set(0,3, relativeAtoB.get(0,3)*scaler);
+		relativeAtoB.set(1,3, relativeAtoB.get(1,3)*scaler);
+		relativeAtoB.set(2,3, relativeAtoB.get(2,3)*scaler);
+		// set
+		var indexA = tableViewIDToIndex[idA+""];
+		var indexB = tableViewIDToIndex[idB+""];
+			indexA = mappingExistToIndexViews[indexA+""];
+			indexB = mappingExistToIndexViews[indexB+""];
+		listPairs.push([indexA,indexB,relativeAtoB,errorAB]);
+	}
+	// nonlinear estimate transforms
+	var result = R3D.optimumTransform3DFromRelativePairTransforms(listPairs, undefined,   originalTransforms);
+	console.log(result);
+	var transforms = result["absolute"];
+	// from camera to extrinsic
+	var trans = [];
+	for(var i=0; i<transforms.length; ++i){
+	   var transform = transforms[i];
+	   var matrix = transform;
+	   var j = mappingIndexToExistViews[i+""];
+	   trans[j] = Matrix.inverse(matrix);
+	   // trans[j] = matrix;
+	}
+	transforms = trans;
+	// fill in empty with identity
+	for(var i=0; i<viewCount; ++i){
+		if(!transforms[i]){
+			transforms[i] = new Matrix(4,4).identity();
+		}
+	}
+	var viewIDs = [];
+	for(var i=0; i<transforms.length; ++i){
+		var viewID = tableViewIndexToID[i];
+		viewIDs.push(viewID);
+	}
+
+	// calculate skeletal graph
+	console.log(listPairs);
+	var result = R3D.skeletalViewGraph(listPairs);
+	return {"transforms":transforms, "views":viewIDs, "listPairs":listPairs, "skeleton":result};
+}
+
+
+
+
+
+
+R3D.optimumTransform3D = function(edges, maxIterations,   originalTransforms){ // edges: [indexA,indexB, transform,error]
 	var nonlinear = true;
-	// nonlinear = false;
+	// var nonlinear = false;
 	// find size of graph
 	var maxVertex = -1;
 	for(var i=0; i<edges.length; ++i){
@@ -29827,6 +30150,7 @@ R3D.optimumTransform3D = function(edges, maxIterations){ // edges: [indexA,index
 		v.data(i);
 		vs[i] = v;
 	}
+// errorsToPercents ?
 	var es = [];
 	for(var i=0; i<edges.length; ++i){
 		var edge = edges[i];
@@ -30002,8 +30326,6 @@ console.log(percents)
 	// nonlinear error minimize
 	var transforms = [];
 	if(nonlinear){
-		// var iterations = 1;
-		// var iterations = 10;
 
 
 		var iterations = maxIterations!==undefined ? maxIterations : 100;
@@ -30022,6 +30344,12 @@ console.log(percents)
 			matrix.appendRowFromArray([0,0,0,1]);
 			transforms[i] = matrix;
 		}
+
+
+		// can do another combined nonlinear step? -- how to measure error of combined transform?
+		// vector distance between expected and calculated origin ?
+
+
 	}else{
 		for(var i=0; i<values.length; ++i){
 			var transform = values[i];
@@ -30095,7 +30423,9 @@ R3D._gdTranslationRotation3D = function(vs,es,values,rootIndex,iterations, type)
 	}
 	// guts
 	// var iterations = 1;
-	var result = Code.gradientDescent(fxn, args, x, null, iterations, 1E-10);
+	// Code.gradientDescent = function(fxn, args, x, dx, iter, diff, epsilon, lambda){
+	// var result = Code.gradientDescent(fxn, args, x, null, iterations, 1E-16, 1E-8);
+	var result = Code.gradientDescent(fxn, args, x, null, iterations, 1E-16);
 	// parse result into objects
 	var values = result["x"];
 	var vectors = [];
@@ -30237,7 +30567,7 @@ R3D._gdScales1D = function(vs,es,values,rootIndex,iterations){
 		x.push(scale);
 	}
 	// guts
-	var result = Code.gradientDescent(fxn, args, x, null, iterations, 1E-10);
+	var result = Code.gradientDescent(fxn, args, x, null, iterations, 1E-16);
 	// parse result into objects
 	var values = result["x"];
 	var scales = [];
@@ -30279,6 +30609,7 @@ R3D.skeletalViewGraph = function(edges){ // maximum leaf t-spanner
 	*/
 	console.log("TODO");
 	// throw "TODO";
+	return null;
 }
 
 
