@@ -3697,7 +3697,7 @@ Stereopsis.averageMatrixEstimates = function(matrixes, errors){ // average locat
 // 	return {"relative":relAtoB, "error":error};
 // }
 Stereopsis.World.prototype.bundleAdjustViews = function(viewsChange, viewsConstant, minimumPoints, maxIterations, maximumPoints3D, higherOrderPoints){
-	maximumPoints3D = maximumPoints3D!==undefined ? maximumPoints3D : 1000;
+	maximumPoints3D = maximumPoints3D!==undefined && maximumPoints3D!==null ? maximumPoints3D : 1000;
 	maxIterations = maxIterations!==undefined && maxIterations!==null ? maxIterations : 50;
 	var allViews = Code.copyArray(viewsChange);
 	Code.arrayPushArray(allViews,viewsConstant);
@@ -3711,6 +3711,7 @@ Stereopsis.World.prototype.bundleAdjustViews = function(viewsChange, viewsConsta
 	var I2s = [];
 	var pairPoints2D = [];
 	var pairPoints3D = [];
+	var totalPointsReferenced = 0;
 	for(var i=0; i<viewCount; ++i){
 		var viewA = allViews[i];
 		var Ka = viewA.K();
@@ -3770,13 +3771,23 @@ Stereopsis.World.prototype.bundleAdjustViews = function(viewsChange, viewsConsta
 			// }
 			if(points3D.length>maximumPoints3D){ // maximum points > subsampling
 				// console.log("SUB INDEX POP: "+points3D.length+"/"+maximumPoints3D);
-
 				// sort by reprojection error => keep best ?
-
+				// console.log(points3D.length);
 				Code.randomPopParallelArrays([points3D,points2DA,points2DB],maximumPoints3D);
+				// console.log(points3D.length);
+				// throw "SA?ME?"
 			}
+			totalPointsReferenced += points3D.length;
 		}
 	}
+	if(totalPointsReferenced==0){
+		console.log(totalPointsReferenced);
+		console.log(Ks,Is,Ps, pairPoints2D, pairPoints3D, maxIterations, K2s,I2s,P2s);
+		console.log(higherOrderPoints);
+		throw "? totalPointsReferenced";
+	}
+
+
 	var result = R3D.BundleAdjustCameraExtrinsic(Ks,Is,Ps, pairPoints2D, pairPoints3D, maxIterations, K2s,I2s,P2s);
 	return result;
 }
@@ -6217,8 +6228,8 @@ Stereopsis.World.prototype.solveFullDenseIterate = function(){ // multiwise BA f
 	var world = this;
 
 
-	var maxIterations = 3;
-	// var maxIterations = 5;
+	// var maxIterations = 3;
+	var maxIterations = 5;
 	// var maxIterations = 10;
 	for(var iteration=0; iteration<maxIterations; ++iteration){
 		console.log("all: ========================================================================================= "+iteration+" / "+maxIterations);
@@ -6234,6 +6245,9 @@ Stereopsis.World.prototype.solveFullDenseIterate = function(){ // multiwise BA f
 		// 	world.estimate3DErrors(true, false); // update errors using absolute-relative transforms
 		// }
 
+console.log("sampleErrorsDebug");
+world.sampleErrorsDebug();
+
 		
 		// refine cameras
 		world.estimate3DErrors(true);
@@ -6244,8 +6258,8 @@ Stereopsis.World.prototype.solveFullDenseIterate = function(){ // multiwise BA f
 		// 
 
 		// ALL CAMERAS:
-		world.refineCameraAbsoluteOrientation(null, 1000, true);
-		// world.refineCameraAbsoluteOrientation(null, 1000);
+		// world.refineCameraAbsoluteOrientation(null, 1000, true); // NOT BETTER
+		world.refineCameraAbsoluteOrientation(null, 1000);
 		world.copyRelativeTransformsFromAbsolute();
 		world.relativeFFromSamples();
 
@@ -6269,7 +6283,7 @@ Stereopsis.World.prototype.solveFullDenseIterate = function(){ // multiwise BA f
 		world.dropFurthest();
 		world.filterLocal3Dto2DSize();
 		// world.filterLocal3D(); // ...
-		// world.filterPairwiseSphere3D(3.0); // 2-3
+		world.filterPairwiseSphere3D(3.0); // 2-3
 // ?: start more rigid, allow for more error, finish rigid
 		// if(subdivision<1){
 		// 	world.filterGlobalMatches(false, 0, 2.0,2.0,2.0,2.0, false);
@@ -8897,6 +8911,34 @@ throw "IS THIS WHAT YOU REALLY WANT?"
 			//
 		}
 	}
+}
+Stereopsis.World.prototype.sampleErrorsDebug = function(){
+	console.log("sampleErrorsDebug");
+	var transforms = this.toTransformArray();
+	var srt = function(a,b){
+		return a<b ? -1 : 1;
+	}
+	for(var i=0; i<transforms.length; ++i){
+		var transform = transforms[i];
+		var matches = transform.matches();
+		var errorMax = 0;
+		for(var m=0; m<matches.length; ++m){
+			var match = matches[m];
+			var error = match.errorR();;
+			errorMax = Math.max(errorMax,error);
+		}
+		// var samples = 1000;
+		// var errors = [];
+		// for(var s=0; s<samples; ++s){
+		// 	var match = Code.randomSampleArray(matches);
+		// 	var error = match.errorR();
+		// 	errors.push(error);
+		// }
+		// errors.sort(srt);
+		// Code.printMatlabArray(errors,"t"+i);
+		console.log(i+"   errorMax: "+errorMax);
+	}
+
 }
 Stereopsis.World.prototype.estimate3DErrors = function(skipCalc, shouldLog){ // triangulate locations for matches (P3D) & get errors from this
 	// TRANSFORMS

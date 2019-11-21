@@ -3605,6 +3605,14 @@ Code.randomPopParallelArrays = function(arrays,count){
 		}
 	}
 }
+Code.randomSampleArray = function(array){
+	var len = array.length;
+	if(len>0){
+		var index = Math.floor(Math.random()*len);
+		return array[index];
+	}
+	return null;
+}
 Code.randomSampleRepeatsMaximum = function(array, maximumCount, randomCount){ // use array as-is if too small, else subsample
 	var samples = null;
 	if(array.length<maximumCount){

@@ -3966,13 +3966,15 @@ var useErrors = false;
 	console.log("COLORED");
 
 
-var showNormals = true;
+// var showNormals = true;
+var showNormals = false;
+var lines = [];
 if(showNormals && normals3D){
 	console.log(normals3D);
 	console.log(input3D);
 	// throw "showNormals"
 
-	var lines = [];
+	
 	var normalSize = 0.1; // scale by scene size
 	var s = normalSize;
 	for(var i=0; i<normals3D.length; ++i){
@@ -3982,8 +3984,9 @@ if(showNormals && normals3D){
 		lines.push(new V3D(p.x+s*n.x,p.y+s*n.y,p.z+s*n.z));
 	}
 
-	this.setLines(lines);
+	
 }
+this.setLines(lines);
 
 
 	// TRIM SO ONLY POINTS IN 0 & 1 are displayed:
@@ -10278,10 +10281,11 @@ App3DR.ProjectManager.prototype._absoluteViewsFromDensePairs = function(views, p
 		return [pair["A"],pair["B"]];
 	};
 	var pairToError = function(pair){
+		// ...
 		// return 1/pair["errorR"];
-		return 1.0;
+		// return 1.0;
 		// return pair["errorR"];
-		// return pair["errorR"]/pair["pointCount"];
+		return pair["errorR"]/pair["pointCount"];
 	};
 	var pairToTransform = function(pair, idA,idB){
 		var A = pair["A"];
@@ -10315,9 +10319,9 @@ for(var i=0; i<views.length; ++i){
 	var viewIDs = info["views"];
 
 
-
-// TESTING KEEPING ORIGINAL:
 /*
+// TESTING KEEPING ORIGINAL:
+
 	// viewIDs
 	var tableViewIDToIndex = {};
 	var tableViewIndexToID = {};
@@ -10338,6 +10342,7 @@ for(var i=0; i<views.length; ++i){
 		transforms[i] = R;
 	}
 */
+
 	this.displayViewGraph(transforms,listPairs);
 
 	return info;
@@ -10459,9 +10464,10 @@ App3DR.ProjectManager.prototype._iterateDenseLoadingStart = function(){
 	// 	var transform = transforms[i];
 	// 	transform.copyRelativeFromAbsolute();
 	// }
+	console.log("COPY ...")
 	world.copyRelativeTransformsFromAbsolute();
-// console.log(world);
-// throw "?"
+	// world.copyRelativeTransformsFromAbsolute();
+
 
 	// add existing points
 
@@ -10557,6 +10563,7 @@ console.log("pendingIndex: "+pendingIndex);
 		// 
 		// init peach p3d info
 		// estimate patches
+
 		// estimate R error
 		console.log("err");
 		world.estimate3DErrors(true);

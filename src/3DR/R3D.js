@@ -30326,8 +30326,6 @@ console.log(percents)
 	// nonlinear error minimize
 	var transforms = [];
 	if(nonlinear){
-
-
 		var iterations = maxIterations!==undefined ? maxIterations : 100;
 		// translations
 		var result = R3D._gdTranslationRotation3D(vs,es,values,rootIndex,iterations, 0);
@@ -30343,7 +30341,81 @@ console.log(percents)
 			matrix.appendColFromArray(translation.toArray());
 			matrix.appendRowFromArray([0,0,0,1]);
 			transforms[i] = matrix;
+
+/*
+			// TEST IGNORING SEPARATE OPTIMIZATIONS
+
+			var value = values[i];
+			console.log(value);
+				var rotation = value["quaternion"];
+				var translation = value["translation"];
+				// var tx = 0;
+				// var ty = 0;
+				// var tz = 0;
+				// var rx = 0;
+				// var ry = 0;
+				// var rz = 0;
+				var matrix = V4D.qMatrix(rotation, new Matrix(3,3));
+				matrix.appendColFromArray(translation.toArray());
+				matrix.appendRowFromArray([0,0,0,1]);
+				// matrix = R3D.rotationEulerRodriguezToMatrix(new Matrix(3,3), new V3D(rx,ry,rz));
+				// matrix.appendColFromArray([tx,ty,tz]);
+				// matrix.appendRowFromArray([0,0,0,1]);
+			// throw "?";
+			// set ?
+			// values[i]["translation"] = translation;
+			// values[i]["quaternion"] = rotation;
+			// COMBINE THE ABSOLUTE INTO MATRIXES
+
+
+*/
+
+
+			values[i]["transform"] = matrix;
 		}
+
+		console.log("COMBINE EDGES")
+		// COMBINE THE EDGES INTO MATRIXES
+		for(var i=0; i<es.length; ++i){
+			var e = es[i];
+			var data = e.data();
+			var value = data["value"];
+			var translation = value["translation"];
+			var rotation = value["quaternion"];
+			var matrix = V4D.qMatrix(rotation, new Matrix(3,3));
+			matrix.appendColFromArray(translation.toArray());
+			matrix.appendRowFromArray([0,0,0,1]);
+
+// matrix = originalTransforms[i];
+// matrix = Matrix.inverse(matrix);
+// if(i==0){
+// 	matrix = originalTransforms[0];
+// }else if(i==1){
+// 	matrix = originalTransforms[2];
+// }else if(i==2){
+// 	matrix = originalTransforms[1];
+// }
+
+			value["transform"] = matrix;
+			console.log(matrix+"");
+			console.log(originalTransforms[i]+"");
+		}
+// throw "????????????????????"
+
+		if(true){
+		// if(false){
+			console.log(transforms);
+			console.log("COMBINED ...")
+			var result = R3D._gdTranslationRotation3D(vs,es,values,rootIndex,iterations, 2);
+			var matrices = result["values"];
+			console.log(matrices);
+			transforms = matrices;
+		}
+
+
+		// throw "?"
+
+		// error is measured in difference in relative edges and absolute->relative edges
 
 
 		// can do another combined nonlinear step? -- how to measure error of combined transform?
@@ -30395,6 +30467,26 @@ R3D._gdErrorAxisAngles3D = function(xA,yA,zA, xB,yB,zB){
 	var angleY = V3D.angle(yA,yB);
 	var angleZ = V3D.angle(zA,zB);
 	return angleX*angleX + angleY*angleY + angleZ*angleZ;
+	// return Math.abs(angleX) + Math.abs(angleY) + Math.abs(angleZ);
+}
+R3D._gdErrorTransform3DAxis = function(matrixA,matrixB){
+	var o = new V3D(0,0,0);
+	var x = new V3D(1,0,0);
+	var y = new V3D(0,0,0);
+	var z = new V3D(1,0,0);
+	var list = [o,x,y,z];
+	var error = 0;
+	for(var i=0; i<list.length; ++i){
+		var p = list[i];
+		var a = matrixA.multV3DtoV3D(p);
+		var b = matrixB.multV3DtoV3D(p);
+		// console.log(a+b+"");
+		var d2 = V3D.distanceSquare(a,b);
+		error += d2;
+	}
+	// console.log(error);
+	// throw "?"
+	return error;
 }
 R3D._gdTranslationRotation3D = function(vs,es,values,rootIndex,iterations, type){
 	var args = [];
@@ -30403,6 +30495,9 @@ R3D._gdTranslationRotation3D = function(vs,es,values,rootIndex,iterations, type)
 	var fxn = null;
 	var x = [];
 	var output = [];
+	// console.log(es);
+	// console.log(values);
+	// throw "?"
 	// convert args based on purpose
 	if(type==0){ // location
 		fxn = R3D._gdLocationOperation3D
@@ -30411,7 +30506,7 @@ R3D._gdTranslationRotation3D = function(vs,es,values,rootIndex,iterations, type)
 			var t = v["translation"];
 			x.push(t.x,t.y,t.z);
 		}
-	}else{ // rotation
+	}else if(type==1){ // rotation
 		fxn = R3D._gdRotationOperation3D;
 		for(var i=0; i<values.length; ++i){
 			var v = values[i];
@@ -30420,6 +30515,20 @@ R3D._gdTranslationRotation3D = function(vs,es,values,rootIndex,iterations, type)
 			var r = R3D.rotationMatrixToEulerRodriguez(matrix);
 			x.push(r.x,r.y,r.z);
 		}
+	}else if(type==2){ // combined
+		fxn = R3D._gdCombinedOperation3D;
+		// console.log(values);
+		for(var i=0; i<values.length; ++i){
+			var v = values[i];
+			var t = v["translation"];
+			var q = v["quaternion"];
+			var matrix = V4D.qMatrix(q,new Matrix(3,3));
+			var r = R3D.rotationMatrixToEulerRodriguez(matrix);
+			x.push(t.x,t.y,t.z, r.x,r.y,r.z);
+		}
+		// throw "type 2"
+	}else{
+		throw "type: "+type;
 	}
 	// guts
 	// var iterations = 1;
@@ -30429,30 +30538,58 @@ R3D._gdTranslationRotation3D = function(vs,es,values,rootIndex,iterations, type)
 	// parse result into objects
 	var values = result["x"];
 	var vectors = [];
-	for(var i=0; i<values.length; i+=3){
-		var x = values[i+0];
-		var y = values[i+1];
-		var z = values[i+2];
-		vectors.push(new V3D(x,y,z));
+	if(type==0 || type==1){
+		for(var i=0; i<values.length; i+=3){
+			var x = values[i+0];
+			var y = values[i+1];
+			var z = values[i+2];
+			vectors.push(new V3D(x,y,z));
+		}
+	}else if(type==2){
+		console.log("combine")
+		for(var i=0; i<values.length; i+=6){
+			var tx = values[i+0];
+			var ty = values[i+1];
+			var tz = values[i+2];
+			var rx = values[i+3];
+			var ry = values[i+4];
+			var rz = values[i+5];
+			var matrix = R3D.rotationEulerRodriguezToMatrix(new Matrix(3,3), new V3D(rx,ry,rz));
+				matrix.appendColFromArray([tx,ty,tz]);
+				matrix.appendRowFromArray([0,0,0,1]);
+			vectors.push(matrix);
+		}
+	}else{
+		throw "type: "+type;
 	}
 	// convert to output type
 	if(type==0){ // location
 		// as-is vector
-	}else{ // rotation
+	}else if(type==1){  // rotation
 		for(var i=0; i<vectors.length; ++i){
 			var matrix = R3D.rotationEulerRodriguezToMatrix(new Matrix(3,3), vectors[i]);
 			var quaternion = V4D.qFromMatrix(matrix);
 			vectors[i] = quaternion;
 		}
+	}else if(type==2){
+		// as-is matrix
+	}else{
+		throw "type: "+type
 	}
 	// object
 	return {"values":vectors};
 }
 R3D._gdLocationOperation3D = function(args, x, isUpdate){
+	// console.log("_gdLocationOperation3D")
 	return R3D._gdLocationRotationOperation3D(args, x, isUpdate, 0);
 }
 R3D._gdRotationOperation3D = function(args, x, isUpdate){
+	// console.log("_gdRotationOperation3D")
 	return R3D._gdLocationRotationOperation3D(args, x, isUpdate, 1);
+}
+R3D._gdCombinedOperation3D = function(args, x, isUpdate){
+	// console.log("_gdRotationOperation3D")
+	return R3D._gdLocationRotationOperation3D(args, x, isUpdate, 2);
 }
 R3D._gdLocationRotationOperation3D = function(args, x, isUpdate, type){
 	var edges = args[0];
@@ -30470,38 +30607,100 @@ R3D._gdLocationRotationOperation3D = function(args, x, isUpdate, type){
 		var error = null;
 		var rel = null;
 		var abs = null; // absolute-relative parameter
-			// get params - same for trans or rot
-			var ax = x[ia*3+0];
-			var bx = x[ib*3+0];
-			var ay = x[ia*3+1];
-			var by = x[ib*3+1];
-			var az = x[ia*3+2];
-			var bz = x[ib*3+2];
-			// force root x to alway be at origin
-			if(ia==rootVertex){
-				ax = 0;
-				ay = 0;
-				az = 0;
-			}else if(ib==rootVertex){
-				bx = 0;
-				by = 0;
-				bz = 0;
+		if(type==0 || type==1){
+				// get params - same for trans or rot
+				var ax = x[ia*3+0];
+				var bx = x[ib*3+0];
+				var ay = x[ia*3+1];
+				var by = x[ib*3+1];
+				var az = x[ia*3+2];
+				var bz = x[ib*3+2];
+				// force root x to alway be at origin
+				if(ia==rootVertex){
+					ax = 0;
+					ay = 0;
+					az = 0;
+				}else if(ib==rootVertex){
+					bx = 0;
+					by = 0;
+					bz = 0;
+				}
+			if(type==0){ // location
+				abs = new V3D(bx-ax,by-ay,bz-az);
+				rel = value["translation"];
+				error = R3D._gdErrorLocation3DFxn(rel,abs);
+			}else if(type==1){ // rotation
+				var matrixA = R3D.rotationEulerRodriguezToMatrix(new Matrix(3,3), new V3D(ax,ay,az));
+				var matrixB = R3D.rotationEulerRodriguezToMatrix(new Matrix(3,3), new V3D(bx,by,bz));
+				var inverseA = Matrix.inverse(matrixA);
+				var matrixAB = Matrix.mult(matrixB,inverseA);
+				abs = Code.axisFromMatrix3D(matrixAB);
+				var quaternion = value["quaternion"];
+				// quaternion = quaternion.copy().qInverse().qNorm();
+				rel = Code.axisFromQuaternion(quaternion);
+				error = R3D._gdErrorAxisAngles3D(rel[0],rel[1],rel[2],abs[0],abs[1],abs[2]);
 			}
-		if(type==0){ // location
-			abs = new V3D(bx-ax,by-ay,bz-az);
-			rel = value["translation"];
-			error = R3D._gdErrorLocation3DFxn(rel,abs);
-		}else{ // rotation
-			var matrixA = R3D.rotationEulerRodriguezToMatrix(new Matrix(3,3), new V3D(ax,ay,az));
-			var matrixB = R3D.rotationEulerRodriguezToMatrix(new Matrix(3,3), new V3D(bx,by,bz));
+		}else if(type==2){ // combined
+			var a_tx = x[ia*6+0];
+			var b_tx = x[ib*6+0];
+			var a_ty = x[ia*6+1];
+			var b_ty = x[ib*6+1];
+			var a_tz = x[ia*6+2];
+			var b_tz = x[ib*6+2];
+			var a_rx = x[ia*6+3];
+			var b_rx = x[ib*6+3];
+			var a_ry = x[ia*6+4];
+			var b_ry = x[ib*6+4];
+			var a_rz = x[ia*6+5];
+			var b_rz = x[ib*6+5];
+
+			if(ia==rootVertex){
+				a_tx = 0;
+				a_tx = 0;
+				a_tx = 0;
+				a_rx = 0;
+				a_rx = 0;
+				a_rx = 0;
+			}else if(ib==rootVertex){
+				b_tx = 0;
+				b_tx = 0;
+				b_tx = 0;
+				b_rx = 0;
+				b_rx = 0;
+				b_rx = 0;
+			}
+
+			// console.log(a_tx,a_ty,a_tz,a_rx,a_ry,a_rz);
+			// console.log(b_tx,b_ty,b_tz,b_rx,b_ry,b_rz);
+			// console.log("do combined");
+			var matrixA = R3D.rotationEulerRodriguezToMatrix(new Matrix(3,3), new V3D(a_rx,a_ry,a_rz));
+				matrixA.appendColFromArray([a_tx,a_ty,a_tz]);
+				matrixA.appendRowFromArray([0,0,0,1]);
+			var matrixB = R3D.rotationEulerRodriguezToMatrix(new Matrix(3,3), new V3D(b_rx,b_ry,b_rz));
+				matrixB.appendColFromArray([b_tx,b_ty,b_tz]);
+				matrixB.appendRowFromArray([0,0,0,1]);
+
+			
+
 			var inverseA = Matrix.inverse(matrixA);
 			var matrixAB = Matrix.mult(matrixB,inverseA);
-			abs = Code.axisFromMatrix3D(matrixAB);
-			var quaternion = value["quaternion"];
-			// quaternion = quaternion.copy().qInverse().qNorm();
-			rel = Code.axisFromQuaternion(quaternion);
-			error = R3D._gdErrorAxisAngles3D(rel[0],rel[1],rel[2],abs[0],abs[1],abs[2]);
+
+			// console.log("A:\n"+matrixA);
+			// console.log("B:\n"+matrixB);
+			// console.log("AB:\n"+matrixAB);
+
+
+			var relAB = value["transform"];
+			// console.log("relAB:\n"+relAB);
+
+			error = R3D._gdErrorTransform3DAxis(relAB, matrixAB);
+			// console.log(error);
+
+			// throw "type 2";
+		}else{
+			throw "type: "+type
 		}
+		
 		// if(type!=0){
 		// 	console.log("ERROR: "+ia+"-"+ib+" "+error);
 		// }
@@ -30510,10 +30709,16 @@ R3D._gdLocationRotationOperation3D = function(args, x, isUpdate, type){
 		// errorEdge = 1.0;
 		totalError += error/errorEdge;
 	}
+	// if(type!==0){
+	// 	console.log("ROT "+totalError)
+	// }
 	if(isUpdate){
 		console.log(" "+type+" totalError: "+totalError);
 	}
 	return totalError;
+}
+R3D._gdTransformOperation3D = function(args, x, isUpdate){
+	// ...
 }
 R3D._gdScaleOperation1D = function(args, x, isUpdate){
 	var edges = args[0];
@@ -34904,6 +35109,11 @@ R3D.BundleAdjustCameraExtrinsic = function(intrinsics, inverses, extrinsics, pai
 	args.push(intrinsicsOthers);
 	args.push(inversesOthers);
 	args.push(extrinsicsOthers);
+
+
+// console.log(pairPointList2D);
+// console.log(pairPointList3D);
+// 	throw "?"
 	for(var i=0; i<extrinsics.length; ++i){
 		var extrinsic = extrinsics[i];
 		var ext = R3D.transformMatrixToComponentArray(extrinsic);
@@ -34914,6 +35124,7 @@ R3D.BundleAdjustCameraExtrinsic = function(intrinsics, inverses, extrinsics, pai
 	var result = Code.gradientDescent(R3D._gd_BACameraExtrinsic, args, x, null, maxIterations, 1E-10);
 	Code.timerStop();
 	x = result["x"];
+	console.log(result);
 	var cost = result["cost"];
 console.log("  POINT COUNT: "+pairPointList3D[0].length+"  ITERATIONS: "+maxIterations+"  SECONDS: "+(Code.timerDifference()/1000.0)+"  ERROR: "+result["cost"]);
 	var pList = [];
@@ -35008,13 +35219,24 @@ if(i>=variableCount && j>=variableCount){
 					// error = error * error;
 				pairError += error;
 			}
-			pairError /= pointCount; // AVERAGE POINT ERROR FOR VIEW PAIR [MORE POINTS ~ LESS POINTS @ SAME SCALE]
-			totalError += pairError;
+			if(pointCount>0){
+				pairError /= pointCount; // AVERAGE POINT ERROR FOR VIEW PAIR [MORE POINTS ~ LESS POINTS @ SAME SCALE]
+				totalError += pairError;
+			}
 			// if(isUpdate){
 			// 	console.log("    --  totalError: "+totalError+" @ "+tx+","+ty+","+tz+" ... ");
 			// }
 			++pairIndex;
 		}
+	}
+	if(Code.isNaN(totalError)){
+		console.log("NaN");
+		console.log(intrinsics);
+		console.log(inverses);
+		console.log(pairPointLists2D);
+		console.log(pairPointLists3D);
+
+		throw totalError;
 	}
 	return totalError;
 }

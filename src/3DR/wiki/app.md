@@ -386,7 +386,61 @@ https://cloud.google.com/appengine/docs/nodejs/
 1 + 2 = NY9RPQHA
 0+1+2 = S21L1RCT
 
-- why is absolute orientation worse than first iteration?
+
+
+
+- back to surfacing --
+- all binary searching
+
+
+
+- see what projecting all points to their surface point looks like when re-rendering?
+
+
+... lost a section of points on the side
+
+
+
+
+
+
+sampleErrorsDebug
+
+
+optimumTransform3DFromObjectLookup
+
+
+- are errors/percents being used correctly?
+
+
+
+
+
+
+
+
+
+optimumTransform3DFromRelativePairTransforms
+
+	optimumTransform3D
+		...
+
+		nonlinear:
+		var result = R3D._gdTranslationRotation3D(vs,es,values,rootIndex,iterations, 0);
+		var result = R3D._gdTranslationRotation3D(vs,es,values,rootIndex,iterations, 1);
+
+			fxn = R3D._gdLocationOperation3D
+			fxn = R3D._gdRotationOperation3D
+				gdLocationRotationOperation3D
+
+					error = R3D._gdErrorLocation3DFxn(rel,abs);
+					error = R3D._gdErrorAxisAngles3D(rel[0],rel[1],rel[2],abs[0],abs[1],abs[2]);
+
+
+	 - initial estimate relies on averaging TWISTS: quaterntions + translations
+
+
+
 
 
 
