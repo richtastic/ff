@@ -387,10 +387,24 @@ https://cloud.google.com/appengine/docs/nodejs/
 0+1+2 = S21L1RCT
 
 
+- triangle size is wrong
+	- surface curvature wrong?
+	- search radius too large?
+	- projection to surface wrong?
+	- surface curvature is not smoothing enough?
+		~ larger window?
+		~ lower-order approximation?
+	
+
+=> visualize some of these properties
+	- kNN radius
+	- search radius
 
 
-- back to surfacing --
-- all binary searching
+
+
+- speed up projection by sampling area ? (first random 50-100 ?)
+
 
 
 
@@ -412,6 +426,11 @@ optimumTransform3DFromObjectLookup
 
 - are errors/percents being used correctly?
 
+
+
+
+- finding multiple seeds after first one fails/finishes
+- 
 
 
 

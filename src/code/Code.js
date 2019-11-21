@@ -3593,6 +3593,9 @@ Code.randomIndexes = function(count, range){
 // 	return set;
 // }
 // Code.randomIntervalSet(5, 0, 10);
+Code.randomPopArray = function(array,count){
+	return Code.randomPopParallelArrays([array], count);
+}
 Code.randomPopParallelArrays = function(arrays,count){
 	var len = arrays.length;
 	if(len>0){
@@ -11762,7 +11765,7 @@ Code.binaryToYAMLObject = function(binary){
 	}
 	return yaml;
 }
-Code.pointsToPtsFileString = function(points,normals){
+Code.pointsToPtsFileString = function(points,normals){ // points3D pts nrms
 	var count = points.length;
 	var separator = " ";
 	var str = "";

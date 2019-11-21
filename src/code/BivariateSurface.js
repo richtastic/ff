@@ -1,10 +1,12 @@
 // BivariateSurface.js
 
-function BivariateSurface(degree){
+function BivariateSurface(degree, maxSamples){
+	this._maxSamples = 1E9;
 	this._degree = 0;//degree!==undefined?degree:3;
 	this._coefficients = new Array();
 	this.valueAt = this._valueAtN;
 	this.degree(degree);
+	this.maxSamples(degree);
 }
 BivariateSurface.prototype.copy = function(){
 	var b = new BivariateSurface();
@@ -17,6 +19,12 @@ BivariateSurface.prototype.coefficients = function(c){
 		Code.copyArray(this._coefficients,c);
 	}
 	return this._coefficients;
+}
+BivariateSurface.prototype.maxSamples = function(s){
+	if(s!==undefined){
+		this._maxSamples = s;
+	}
+	return this._maxSamples;
 }
 BivariateSurface.prototype.degree = function(d){
 	if(d!==undefined){
@@ -107,7 +115,15 @@ BivariateSurface.prototype._degree4ValueAt = function(x,y){
 	value += coeff[14]*y4;
 	return value;
 }
+BivariateSurface.prototype._subsamplePoints = function(points){
+	if(points.length>this._maxSamples){
+		points = Code.copyArray(points);
+		Code.randomPopArray(points,this._maxSamples);
+	}
+	return points;
+}
 BivariateSurface.prototype.fromPoints = function(points){
+	points = this._subsamplePoints(points);
 	var degree = this._degree;
 	var coef = BivariateSurface.coefficientCountFromDegree(degree);
 	var rows = points.length;

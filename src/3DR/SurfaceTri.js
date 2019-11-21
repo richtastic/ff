@@ -704,9 +704,10 @@ SurfaceTri.prototype.loadPointFile = function(){
 	// var sourceFileName = "./images/points/pika_normals_9.pts";
 	// var sourceFileName = "./images/points/pika_normals_5.pts";
 
-	var sourceFileName = "./images/points/pika_0.pts";
+	var sourceFileName = "./images/points/pika_1.pts";
 
-	var doNormalizing = false;
+	// var doNormalizing = false;
+	var doNormalizing = true;
 	var hasNormals = true;
 	var ajax = new Ajax();
 	ajax.get(sourceFileName,this,function(e){
@@ -729,6 +730,12 @@ SurfaceTri.prototype.loadPointFile = function(){
 		}
 		// nrms = null;
 // throw "?";
+
+	// Code.randomPopParallelArrays([list,pts], 10000);
+	Code.randomPopParallelArrays([list,pts], 20000);
+	// Code.randomPopParallelArrays([list,pts], 30000);
+
+
 		// Code.subSampleArray(list,20000);
 		// Code.subSampleArray(list,10000);
 		// this.subSampleArray(list,5000);
@@ -746,8 +753,9 @@ SurfaceTri.prototype.loadPointFile = function(){
 		var center = V3D.avg(min,max);
 		var range = V3D.sub(max,min);
 		// center at origin, scaled to [0,1]
+		var trans = null;
 		if(doNormalizing){
-			var trans = new Matrix3D();
+			trans = new Matrix3D();
 			trans.identity();
 			trans.translate(-center.x,-center.y,-center.z);
 			trans.scale( 2.0/Math.max(range.x,range.y,range.z) );
@@ -762,6 +770,11 @@ SurfaceTri.prototype.loadPointFile = function(){
 				// }
 			}
 		}
+
+		// move to center
+
+
+
 		// TODO: UNCOMMENT
 		// this.startPointCloud(list);
 		// this.setupSphere3D(100);
@@ -774,7 +787,7 @@ SurfaceTri.prototype.loadPointFile = function(){
 		// this.setupTorus3D(1000);
 		// this.setupTorus3D(2000);
 		// this.setupTorus3D(5000);
-		this.startPointCloud(list,nrms);
+		this.startPointCloud(list,nrms, trans);
 	});
 }
 SurfaceTri.prototype.setupTorus3D = function(count,radiusA,radiusB,error){
@@ -876,7 +889,7 @@ console.log("maxP: "+maxP);
 	this.startPointCloud(list);
 
 }
-SurfaceTri.prototype.startPointCloud = function(pts,nrms){
+SurfaceTri.prototype.startPointCloud = function(pts,nrms, transform){
 	console.log("start point cloud");
 GLOBAL_LASTTRI = null;
 GLOBAL_LAST_PREV = null;
@@ -921,7 +934,9 @@ GLOBAL_DATA["points"] = surface;
 
 	// console.log(info);
 	var triangles = [];
-// var triangles = mesh.generateSurfaces();
+	var triangles = mesh.generateSurfaces();
+
+	mesh._toSurfaceProjections();
 
 
 
@@ -1016,7 +1031,7 @@ var colors = [];
 var showPoints = true;
 if(showPoints){
 
-// 	var infoPoints = GLOBAL_DATA["points"];
+// var infoPoints = GLOBAL_DATA["points"];
 // console.log("GLOBAL_DATA: "+infoPoints.length);
 // 	for(i=0;i<infoPoints.length;++i){
 // 		var p = infoPoints[i];
@@ -1272,8 +1287,8 @@ tris = inCube;
 				colorsT.push(0.0,0.90,0.0, 1.0);
 				colorsT.push(0.0,0.0,0.90, 1.0);
 			}
-
-
+var showTriNormals = false;
+if(showTriNormals){
 			// TRIANGLE NORMALS:
 			var normalScale = 0.03;
 			var normal = tri.normal();
@@ -1284,7 +1299,7 @@ tris = inCube;
 			colorsL.push(0.0,0.0,0.5,1.0);
 			V3D.pushToArray(pointsL, a);
 			V3D.pushToArray(pointsL, b);
-
+}
 		}
 
 

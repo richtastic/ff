@@ -4042,6 +4042,26 @@ this.setLines(lines);
 	}
 		}
 	}
+
+
+
+// show as points file:
+console.log("PTS FILE:");
+
+
+if(this._points3D && this._normals3D){
+		var pts3D = [];
+		var nms3D = [];
+		for(var i=0; i<this._points3D.length; ++i){
+			var p = this._points3D[i];
+			var n = this._normals3D[i];
+			pts3D.push(p);
+			nms3D.push(n);
+		}
+		var str = Code.pointsToPtsFileString(pts3D,nms3D);
+		console.log(str);
+}
+
 	this._pointVertexPositionAttrib = this._stage3D.enableVertexAttribute("aVertexPosition");
 	this._pointVertexColorAttrib = this._stage3D.enableVertexAttribute("aVertexColor");
 
