@@ -387,10 +387,28 @@ https://cloud.google.com/appengine/docs/nodejs/
 0+1+2 = S21L1RCT
 
 
+
+- number of spatial neighbors may be poor around base?
+- boundary edges around base ?
+
+
+
+- curvature calculation seems very picky
+--- double check surface curvature estimate / calc
+
+- visualize surface projection
+	- point
+	- projection
+	- original knn
+	- subsampled knn
+	- 
+
+
 - triangle size is wrong
 	- surface curvature wrong?
 	- search radius too large?
-	- projection to surface wrong?
+	~ projection to surface wrong?
+		- is inside core of window ?
 	- surface curvature is not smoothing enough?
 		~ larger window?
 		~ lower-order approximation?

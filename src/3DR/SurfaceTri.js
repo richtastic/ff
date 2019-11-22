@@ -931,12 +931,17 @@ console.log(surface);
 GLOBAL_DATA["points"] = surface;
 */
 
+	// mesh.testProjectionSampling();
+	// throw "?"
 
 	// console.log(info);
 	var triangles = [];
 	var triangles = mesh.generateSurfaces();
 
 	mesh._toSurfaceProjections();
+
+
+
 
 
 

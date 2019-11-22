@@ -2,6 +2,7 @@
 
 function BivariateSurface(degree, maxSamples){
 	this._maxSamples = 1E9;
+	this._size = null;
 	this._degree = 0;//degree!==undefined?degree:3;
 	this._coefficients = new Array();
 	this.valueAt = this._valueAtN;
@@ -132,8 +133,17 @@ BivariateSurface.prototype.fromPoints = function(points){
 	var b = new Matrix(rows,1);
 	var xs = [];
 	var ys = [];
+	var min = null;
+	var max = null;
 	for(var i=0;i<rows;++i){
 		var point = points[i];
+		if(!min){
+			min = new V3D(point.x,point.y,point.z);
+			max = new V3D(point.x,point.y,point.z);
+		}else{
+			V3D.min(min,min,point);
+			V3D.max(max,max,point);
+		}
 		var index = 0;
 		var x = 1.0;
 		var y = 1.0;
@@ -156,6 +166,7 @@ BivariateSurface.prototype.fromPoints = function(points){
 	var c = Matrix.mult(pInv,b);
 	Code.emptyArray(this._coefficients);
 	c.toArray(this._coefficients);
+	this._size = V3D.sub(max,min);
 }
 
 BivariateSurface.prototype.fromPointsWeights = function(points, weightPoint,h){
@@ -229,7 +240,7 @@ BivariateSurface.prototype.curvatureAt = function(x1,y1, delta){
 }
 BivariateSurface.prototype._infoAt = function(x1,y1, delta, simple){
 	simple = simple!==undefined ? simple : false;
-	delta = delta!==undefined ? delta : 1E-6;
+	delta = delta!==undefined ? delta : (Math.min(this._size.x,this._size.y) * 1E-6); // 1E-2 - 1E-6
 	var dx = dy = delta;
 	var temp;
 	// locations
@@ -246,25 +257,81 @@ BivariateSurface.prototype._infoAt = function(x1,y1, delta, simple){
 	var z12 = this.valueAt(x1,y2);
 	var z22 = this.valueAt(x2,y2);
 	// derivatives
-	var dzdx = (z21-z01)*0.5;
-	var dzdy = (z12-z10)*0.5;
+	var dzdx = (z21-z01);
+	var dzdy = (z12-z10);
 	// second derivatives
 	var dzdxx = (z21 - 2.0*z11 + z01);
 	var dzdyy = (z12 - 2.0*z11 + z10);
-	var dzdxy = (z22 - z20 - z02 + z00)*0.25;
+	var dzdxy = (z22 - z20 - z02 + z00);
+
+	// var dzdxy = z22 + z02 + z20 + z00 - 2*(z12 + z21 + z01 + z10) + 4*z11;
+
+
+	// dzdx /= (2*dx);
+	// dzdy /= (2*dy);
+	// dzdxx /= (dx*dx);
+	// dzdyy /= (dy*dy);
+	// dzdxy /= (dx*dy);
+
 	// tangent vectors
-	var tangentA = new V3D(dx,0,dzdx);
-	var tangentB = new V3D(0,dy,dzdy);
+	var tangentA = new V3D(dx*2,0,dzdx);
+	var tangentB = new V3D(0,dy*2,dzdy);
 	// normal vectors
 	var normal = V3D.cross(tangentA,tangentB);
 	var unitNormal = normal.copy().norm();
+
+	/*
+	// second tangents:
+	var tangentX1 = new V3D(dx,0,z11-z01);
+	var tangentX2 = new V3D(dx,0,z21-z11);
+	var tangentXX = V3D.sub(tangentX2,tangentX1); // x will cancel, y is 0
+	var tangentY1 = new V3D(0,dy,z11-z10);
+	var tangentY2 = new V3D(0,dy,z12-z11);
+	var tangentYY = V3D.sub(tangentY2,tangentY1); // y will cancel, x is 0
+	
+	// var tangentXY = new V3D(0,0,0);
+	var tangentXY0 = new V3D(dx*2,0,z20-z00);
+	var tangentXY2 = new V3D(dx*2,0,z22-z02);
+	var tangentXY = V3D.sub(tangentXY2,tangentXY0); 
+
+	var tangentYX0 = new V3D(0,dy*2,z02-z00);
+	var tangentYX2 = new V3D(0,dy*2,z22-z20);
+	var tangentYX = V3D.sub(tangentXY2,tangentXY0);
+	*/
+
+	// tangentXY.scale(0.5);
+	// tangentYX.scale(0.5);
+
+// console.log(tangentXY+" | "+tangentYX)
+// throw "?"
+
+	// var tangentXY = V3D.sub(tangentY2,tangentX1);
+	// var tangentZ1 = new V3D(dx,dy,z11-z00);
+	// var tangentZ2 = new V3D(dx,dy,z22-z11);
+	// var tangentXY = V3D.sub(tangentZ2,tangentZ1);
+	
+	// var tangentXY = V3D.sub(tangentB,tangentA);
+
+
+	// console.log(dot(normal,calcN));
+
+
+// throw "?"
+
+// L ~ z21 - 2*z11 + z01
+// N ~ z12 - 2*z11 + z10
+
+// M ~ z22 - z02 - z20 + z00
+
+	// var dzdxx = (z21 - 2.0*z11 + z01);
+	// var dzdyy = (z12 - 2.0*z11 + z10);
+	// var dzdxy = (z22 - z20 - z02 + z00) ???*0.25;
+
+
 	if(simple){
 		return {"normal":unitNormal};
 	}
 	// second derivative vectors
-	// var secondA = new V3D(0,0,dzdxx);
-	// var secondB = new V3D(0,0,dzdxy);
-	// var secondC = new V3D(0,0,dzdyy);
 	// (I)
 	var E = V3D.dot(tangentA,tangentA);
 	var F = V3D.dot(tangentA,tangentB);
@@ -273,6 +340,11 @@ BivariateSurface.prototype._infoAt = function(x1,y1, delta, simple){
 	var L = dzdxx*unitNormal.z; // V3D.dot(secondA,unitNormal); // secondA.z*unitNormal.z
 	var M = dzdxy*unitNormal.z; // V3D.dot(secondB,unitNormal); // secondB.z*unitNormal.z
 	var N = dzdyy*unitNormal.z; // V3D.dot(secondC,unitNormal); // secondC.z*unitNormal.z
+
+	// var L = V3D.dot(tangentXX,unitNormal);
+	// var M = V3D.dot(tangentXY,unitNormal);
+	// var N = V3D.dot(tangentYY,unitNormal);
+
 	// curvatures
 	var den = E*G - F*F;
 	var K = (L*N - M*M)/den;
@@ -282,8 +354,19 @@ BivariateSurface.prototype._infoAt = function(x1,y1, delta, simple){
 	var pMin = H - sqin;
 	var pMax = H + sqin;
 	// radius of curvature
+// console.log(pMin,pMax);
+
+	var curveMin = Math.min(Math.abs(pMin),Math.abs(pMax));
+	var curveMax = Math.max(Math.abs(pMin),Math.abs(pMax));
+
+	return {"min":curveMin, "max":curveMax, "normal":unitNormal, "tangent":tangentA.copy().norm() };
+
+	// if directions become important:
+
 	var rA = 1.0/pMin;
 	var rB = 1.0/pMax;
+
+
 	// primary curvature directions
 	var a = L*G-F*M;
 	var b = M*G-F*N;
@@ -390,6 +473,7 @@ BivariateSurface.prototype.mesh = function(pointList){ // get a 2D + altitude
 		str += "py = ["+pListY+"];\n";
 		str += "pz = ["+pListZ+"];\n";
 		str += "\n";
-	console.log(str);
+	// console.log(str);
 	// pointList
+	return str;
 }
