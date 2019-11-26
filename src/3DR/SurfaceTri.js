@@ -36,7 +36,8 @@ GLOBALSTAGE = this._stage2D;
 	// this.setupSphere3D(10000, 1.0, 0.0, 0.0);
 	// this.setupSphere3D(100, 1.0, 0.0, 0.0);
 
-	// this.setupTorus3D(2000, 4.0,2.0, 0.0,0.0);
+
+	// this.setupTorus3D(4000, 4.0,2.0, 0.0,0.0);
 
 	// this.setupPlane3D(2000, 1.0, 0.0, 0.0);
 
@@ -732,7 +733,7 @@ SurfaceTri.prototype.loadPointFile = function(){
 // throw "?";
 
 	// Code.randomPopParallelArrays([list,pts], 10000);
-	Code.randomPopParallelArrays([list,pts], 20000);
+	// Code.randomPopParallelArrays([list,pts], 20000);
 	// Code.randomPopParallelArrays([list,pts], 30000);
 
 
@@ -1031,22 +1032,24 @@ console.log("timeDelta: "+timeDelta+" = "+(timeDelta/1000.0)+" s");
 	}
 */
 //var showPoints = false;
+
+// SURFACE PROJECTED POINTS
 var points = [];
 var colors = [];
-var showPoints = true;
-if(showPoints){
+var showProjected = true;
+// var showProjected = false;
+if(showProjected){
+	var infoPoints = GLOBAL_DATA["points"];
+	console.log("GLOBAL_DATA: "+infoPoints.length);
+	for(i=0;i<infoPoints.length;++i){
+		var p = infoPoints[i];
+		points.push(p.x,p.y,p.z);
+		//colors.push(0.5*Math.random()+0.5,0.0,0.5*Math.random(),0.90);
+		colors.push(1.0,0,0,0.50);
+	}
 
-// var infoPoints = GLOBAL_DATA["points"];
-// console.log("GLOBAL_DATA: "+infoPoints.length);
-// 	for(i=0;i<infoPoints.length;++i){
-// 		var p = infoPoints[i];
-// 		points.push(p.x,p.y,p.z);
-// 		//colors.push(0.5*Math.random()+0.5,0.0,0.5*Math.random(),0.90);
-// 		colors.push(1.0,0,0,1.0);
-// 	}
-
-// var showSource = false;
-var showSource = true;
+var showSource = false;
+// var showSource = true;
 if(showSource){ // show source points
 	console.log("SOURCE POINTS: "+pts.length);
 	for(i=0;i<pts.length;++i){
@@ -1114,7 +1117,7 @@ if(showNormals){
 // console.log(spherePoints);
 	// POINT NORMALS:
 	for(i=0;i<spherePoints.length;++i){
-break; // no normals
+// break; // no normals
 		p = spherePoints[i];
 		var point = p.point();
 		var normal = p.normal();

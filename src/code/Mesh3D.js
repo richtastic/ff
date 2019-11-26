@@ -2,6 +2,8 @@
 Mesh3D.X = 0;
 
 function Mesh3D(points, norms, angle){
+	this._minCurvature = null;
+	this._maxCurvature = null;
 	// this._angle = Math.PI*0.05; // 9 degrees
 	this._angle = Math.PI*0.10; // 18 degrees
 	// this._angle = Math.PI*0.20; // 36 degrees
@@ -19,7 +21,6 @@ function Mesh3D(points, norms, angle){
 	this._neighborhoodSizeVolumeRatio = 0.333; // peaks at~0.6 ; 0.333-0.5
 	// this._neighborhoodSizeVolumeRatio = 0.40;
 	// this._neighborhoodSizeVolumeRatio = 0.35;
-
 	// this._neighborhoodSizeVolumeRatio = 0.30;
 
 
@@ -30,12 +31,18 @@ function Mesh3D(points, norms, angle){
 	// this._cappedMaxK = 1.0/0.01;
 
 
-	this._cappedMinK = 1.0/1000.0;
-	this._cappedMaxK = 1.0/0.001;
+	this._cappedMinK = 1.0/100.0;
+	this._cappedMaxK = 1.0/0.1;
 
 
 	// this._cappedMinK = 1.0/1.0;
 	// this._cappedMaxK = 1.0/0.01;
+
+	// this._cappedMinK = 1.0/0.50;
+	// this._cappedMaxK = 1.0/0.50;
+
+	// this._cappedMinK = 1.0/0.10;
+	// this._cappedMaxK = 1.0/0.10;
 
 
 
@@ -87,6 +94,8 @@ Mesh3D._sortConfidence = function(a,b){
 	}
 	var confA = a.normalConfidence();
 	var confB = b.normalConfidence();
+	// var confA = a.planarConfidence();
+	// var confB = b.planarConfidence();
 	return confA > confB ? -1 : 1;
 	/*
 	var confA = a.normalConfidence();
@@ -755,7 +764,7 @@ Mesh3D.Point3D.prototype.surfacePoint = function(point){
 	if(point!==undefined){
 		this._surfacePoint = point;
 	}
-	return this._sourcePoint;
+	return this._surfacePoint;
 }
 Mesh3D.Point3D.prototype.surfaceNormal = function(normal){
 	if(normal!==undefined){
@@ -1426,7 +1435,6 @@ Mesh3D.prototype._propagateNormals = function(){
 	graph.kill();
 }
 Mesh3D.prototype.convexNeighborhoodEdges = function(point){
-
 	var space = this._pointSpace;
 	var maxNeighborsCheck = 12; // 6 -> 10
 	var minSphereNeighborhood = 4;
@@ -1684,67 +1692,6 @@ console.log("mean: "+mean+" +/- "+sigma);
 	// throw "?";
 }
 
-
-Mesh3D.prototype._setNeighborhoodSize = function(){
-	console.log("_setNeighborhoodSize");
-	// find 'dynamic' size of neighborhood == plane once
-	var minimumCount = 7;
-	var maximumCount = 50;
-	var space = this._pointSpace;
-	var points = space.toArray();
-	var minFirst = function(a,b){ return a<b ? -1 : 1; };
-	var largeYFirst = function(a,b){ return a.y>b.y ? -1 : 1; };
-	for(var i=0; i<points.length; ++i){
-		var point = points[i];
-		var location = point.point();
-		var neighbors = space.kNN(location, maximumCount);
-		var vectors = [];
-		var ones = [];
-		for(var j=0; j<minimumCount; ++j){
-			vectors.push(neighbors[j].point());
-			ones.push(1.0);
-		}
-// var ratios = [];
-		var maximum = minimumCount;
-		for(var j=minimumCount; j<neighbors.length; ++j){
-			vectors.push(neighbors[j].point());
-			ones.push(1.0);
-			var vals = Code.planeFromPoints3D(location, vectors, ones, true);
-			// var vals = Code.planeFromPoints(location, vectors, null, true);
-			vals.sort(minFirst);
-			var v0 = vals[0];
-			var v1 = vals[1];
-			var ratio = v1/v0;
-// ratios.push(ratio);
-			if(ratio>=2.0){
-				maximum = j;
-				break;
-			}
-		}
-		point.neighborhoodCount(maximum);
-
-
-
-		// var maximum = Code.findGlobalExtrema1D(ratios, true);
-		// var maximum = Code.findExtrema1D(ratios);
-		// var maximum = Code.findMaxima1D(ratios);
-		// if(maximum && maximum.length>0){
-		// 	maximum.sort(largeYFirst);
-		// 	maximum = Math.round( maximum[0].x + minimumCount);
-		// }else{
-		// 	maximum = 0;
-		// }
-		// console.log("maximum: "+maximum);
-		// point.neighborhoodCount(maximum);
-// if(i==3){
-// 		// Code.findExtrema1DDiff(xVals,yVals, noEnds){
-// 		Code.printMatlabArray(ratios);
-// 		// throw "?";
-// }
-
-	}
-}
-
 Mesh3D.prototype._toSurfaceProjections = function(){
 	var space = this._pointSpace;
 	var points = space.toArray();
@@ -1753,6 +1700,9 @@ Mesh3D.prototype._toSurfaceProjections = function(){
 		var point = points[i];
 		var p = point.surfacePoint();
 		projections.push(p);
+		// console.log(point.point())
+		// console.log(point.surfacePoint())
+		// throw "?";
 	}
 
 	GLOBAL_DATA = {"points": projections};
@@ -1905,8 +1855,8 @@ console.log("iterating ...");
 		// var maxIter = 1000;
 		// var maxIter = 2000;
 		// var maxIter = 3000;
-		// var maxIter = 4000;
-		var maxIter = 5000;
+		var maxIter = 4000;
+		// var maxIter = 5000;
 		// var maxIter = 10000;
 // var maxIter = 15000;
 		// var maxIter = 20000;
@@ -2095,8 +2045,9 @@ Mesh3D.prototype.iteritiveEdgeSizeFromPoint = function(location){ //, currentSiz
 
 	var idealLength = rho/idealCurvature;
 	var searchRadius = idealLength*eta;
-	var maxSize = idealCurvature;
+	var maxSize = rho/idealCurvature;
 	var curvature = this.maxCurvatureAtPoint(location, searchRadius);
+	console.log("idealCurvature: "+idealCurvature+" / curvature: "+curvature);
 	var minSize = rho/curvature;
 	console.log("       - iteritiveEdgeSizeFromPoint : ["+minSize+" - "+maxSize+"]");
 	if(minSize==maxSize){
@@ -2107,6 +2058,7 @@ Mesh3D.prototype.iteritiveEdgeSizeFromPoint = function(location){ //, currentSiz
 		var midSize = (maxSize-minSize)*0.5 + minSize;
 		var searchRadius = eta*midSize;
 		var curvature = this.maxCurvatureAtPoint(location, searchRadius);
+		console.log(i+"  curvature : "+curvature);
 		var size = rho/curvature;
 		var ratio = minSize/midSize;
 		if(ratio<1){
@@ -2223,7 +2175,6 @@ Mesh3D.prototype.tangentPlaneAtPoint = function(location, normal){
 
 Mesh3D.prototype.seedTriFromPoint = function(fronts, seed){
 	var info;
-	console.log(seed);
 	var point = seed.surfacePoint();
 	var normal = seed.surfaceNormal();
 	var tangent = V3D.orthogonal(normal);
@@ -2255,11 +2206,15 @@ Mesh3D.prototype.seedTriFromPoint = function(fronts, seed){
 	var edgeBC = new Mesh3D.Edge3D(b,c, edgeSize);
 	var edgeCA = new Mesh3D.Edge3D(c,a, edgeSize);
 	// tri
-	console.log(this._triangleSpace.count());
+	var before = this._triangleSpace.count();
 	var tri = new Mesh3D.Tri3D(edgeAB,edgeBC,edgeCA);
-	console.log(this._triangleSpace.count());
-	console.log(tri); // 0 thickness
+	console.log(tri);
 	this.addTri(tri);
+	var after = this._triangleSpace.count()
+	if(before==after){
+		console.log(edgeAB,edgeBC,edgeCA);
+		throw "tri not added";
+	}
 	// create first front
 	var edgeFront = fronts.newFront();
 	// edges
@@ -3559,6 +3514,7 @@ Mesh3D.prototype._setCurvaturePoints_MLS = function(){
 		// this._bivariate = new BivariateSurface(2);
 		// this._bivariate = new BivariateSurface(3);
 		this._bivariate = new BivariateSurface(3, 50);
+		// this._bivariate = new BivariateSurface(2, 50);
 	}
 	this._projectPointToSurface = this._projectPointToSurface_MLS;
 
@@ -3585,6 +3541,8 @@ Mesh3D.prototype._setCurvaturePoints_MLS = function(){
 
 
 Mesh3D.prototype._preprocessPoints_MLS = function(){
+	this._minCurvature = null;
+this._maxCurvature = null;
 	var points = this._pointSpace.toArray();
 	var priorityFxn = function(a,b){
 		if(a==b){
@@ -3593,8 +3551,6 @@ Mesh3D.prototype._preprocessPoints_MLS = function(){
 		return a.id() < b.id() ? -1 : 1;
 	}
 	var queue = new PriorityQueue(priorityFxn);
-
-var countMax = 1E10;
 	for(var i=0; i<points.length; ++i){
 		var point = points[i];
 		if(!point.isPreprocessed()){
@@ -3603,10 +3559,6 @@ var countMax = 1E10;
 				point = queue.pop();
 				if(!point.isPreprocessed()){
 					this._preprocessPoint_MLS(point, queue);
-					--countMax;
-				}
-				if(countMax<0){
-					throw countMax;
 				}
 			}
 		}
@@ -3615,27 +3567,98 @@ var countMax = 1E10;
 	console.log("neighborhood markers: "+this._neighborhoodSpace.count());
 	// throw "go thru each point: get: neighborhood size, curvature, confidence (normalGroup dot normal), planarness (sigmaMed/sigmaMin)";
 
+console.log("curvature limits: "+this._minCurvature+" -> "+this._maxCurvature);
 
 }
 Mesh3D.prototype._preprocessPoint_MLS = function(point, queue){
 	var location = point.point();
 	// project to surface & get info
-	var surface = this._projectPointToSurface(location, true);
+	var surface = this._projectPointToSurface(location, true, false);
 	// console.log(surface);
 	var neighborhoodCount = surface["knn"];
-	var surfacePoint = surface["knn"];
+	var surfacePoint = surface["point"];
 	var surfaceNormal = surface["normal"];
 	var surfaceTangent = surface["tangent"];
 	var surfaceCurvature = surface["curvature"];
+if(false){
+// if(surfaceCurvature>1E9){
+// if(surfaceCurvature>1E5){
+	console.log("bad point: "+point+" @ "+surfaceCurvature);
+	console.log(surface);
+	// this.testProjectionSampling(location);
+
+
+
+	var startingLocation = location;
+	var bivariate = this._bivariate;
+	var forward = Mesh3D._tempForward;
+	var reverse = Mesh3D._tempReverse;
+
+ // ...
+
+	var info = surface;
+
+	var planeOrigin = info["planeOrigin"];
+	var planeNormal = info["planeNormal"];
+	var projectedPoint = info["point"];
+	var projectedNormal = info["normal"];
+	var neighbors = info["neighbors"];
+	var curvature = info["curvature"];
+console.log("curvature: "+curvature);
+	var neighborhoodPoints = Mesh3D.Point3D.mapArrayToPoints(neighbors);
+
+		neighborhoodPoints = info["used"]["points"];
+		neighborhoodPoints = Mesh3D.transformPoints(neighborhoodPoints, reverse);
+	var infoMesh = bivariate.mesh(neighborhoodPoints, forward, reverse);
+	// infoMesh += "\n";
+	infoMesh += "% original point \n";
+	infoMesh += "ox ="+startingLocation.x+";\n"+"oy ="+startingLocation.y+";\n"+"oz ="+startingLocation.z+";\n";
+	infoMesh += "% projected point \n";
+	infoMesh += "fx ="+projectedPoint.x+";\n"+"fy ="+projectedPoint.y+";\n"+"fz ="+projectedPoint.z+";\n";
+	infoMesh += "% local plane normal \n";
+	infoMesh += "nx ="+planeNormal.x+";\n"+"ny ="+planeNormal.y+";\n"+"nz ="+planeNormal.z+";\n"+"\n";
+	infoMesh += "% surface normal \n";
+	infoMesh += "sx ="+projectedNormal.x+";\n"+"sy ="+projectedNormal.y+";\n"+"sz ="+projectedNormal.z+";\n";
+	infoMesh += "curvature = "+curvature+";\n";
+	infoMesh += "\n";
+	console.log(infoMesh);
+
+
+
+
+
+
+
+	throw "???";
+
+}
 	var normalDot = V3D.dot(point.normal(),surfaceNormal);
 		normalDot = Math.abs(normalDot); // don't use curvature direction, 
 	// console.log(normalDot);
+if(this._minCurvature===null){
+	this._minCurvature = surfaceCurvature;
+	this._maxCurvature = surfaceCurvature;
+}else{
+	this._minCurvature = Math.min(this._minCurvature, surfaceCurvature);
+	this._maxCurvature = Math.max(this._maxCurvature, surfaceCurvature);
+}
+// console.log("location: "+location);
+// console.log("surfacePoint: "+surfacePoint);
+if(Code.isNaN(this._minCurvature)){
+	console.log(this._minCurvature)
+	console.log(this._maxCurvature)
+	console.log(surface)
+	console.log("PROJECTING");
+	throw "?";
+}
+
+
 	point.neighborhoodKNN(neighborhoodCount);
 	point.surfacePoint(surfacePoint);
 	point.surfaceNormal(surfaceNormal);
 	// point.surfaceTangent(surfaceTangent);
 	point.normalConfidence(normalDot);
-	point.planarConfidence(0); // TODO: how to get this ? sigmaX / Y / Z ?
+	point.planarConfidence(1.0/surfaceCurvature); // TODO: how to get this ? sigmaX / Y / Z ?
 	point.surfaceCurvature(surfaceCurvature);
 	// add neighbors to queue for consecutive preprocessing
 	if(queue){
@@ -3829,7 +3852,7 @@ Mesh3D.prototype._neighborhoodSizeInit = function(location, startCount){ // do b
 		console.log(midPointCount+" = "+percentMid+" ~ "+searchValue+" @ "+count);
 	}
 
-	// midPointCount *= 2;
+	midPointCount *= 2;
 	// midPointCount *= 4;
 
 	objects = space.kNN(location,midPointCount);
@@ -4084,6 +4107,8 @@ Mesh3D.prototype._localNeighborhoodSize = function(location){
 	var markerSpace = this._neighborhoodSpace;
 	var maxNeighborhoodRatio = 2; // 1-2
 	var maxBinaryRatio = 4; // 2-10
+	// var maxNeighborhoodRatio = 2;
+	// var maxBinaryRatio = 4;
 
 
 	// maxNeighborhoodRatio = 10;
@@ -4180,14 +4205,17 @@ Mesh3D.prototype._projectPointToSurface_MLS = function(startingLocation, getCurv
 	var points = Mesh3D.Point3D.mapArrayToPoints(neighbors);
 	var neighborhoodCenter = V3D.average(points);
 	var neighborhoodRadius = V3D.maximumDistance(points,neighborhoodCenter);
+
+
+	// TODO: SHOULD THIS BE KNN AND NOT RADIUS ???
 	// iterations
-var startingX = null;
+// var startingX = null;
 	var maximumRatioDifference = 0.05;
 	var maximumIterations = 1;
 	// for(var iteration=0; iteration<maximumIterations; ++iteration){
 		// var rad = neighborhoodRadius*Math.pow(0.5,iteration);
-		var center = this._projectPointIteration_MLS(startingLocation, neighborhoodCenter, neighborhoodRadius);
-
+		var info = this._projectPointIteration_MLS(startingLocation, neighborhoodCenter, neighborhoodRadius);
+		var center = info["point"];
 		neighborhoodCenter = center;
 
 // 		if(!center){
@@ -4208,14 +4236,17 @@ var startingX = null;
 // 		}
 	// 	break;
 	// }
-var endingX = neighborhoodCenter.copy();
+// var endingX = neighborhoodCenter.copy();
 	var object = {};
+
+object["planeNormal"] = info["normal"];
+object["planeOrigin"] = info["origin"];
+object["used"] = info["used"];
+
 	object["point"] = neighborhoodCenter;
 	object["knn"] = neighborhoodCount;
 	object["neighbors"] = neighbors;
 	if(getCurvature){
-
-
 		var location = forward.multV3D(neighborhoodCenter);
 
 		// console.log(location+" ? ")
@@ -4223,8 +4254,8 @@ var endingX = neighborhoodCenter.copy();
 		var y = location.y;
 		// var z = bivariate.valueAt(x,y); // should be the same as previously calculated
 		// console.log(z+" ... ")
-		// var curvature = bivariate.curvatureAt(x,y); // SHOULD BE CLOSE ????
-		var curvature = bivariate.curvatureAt(0,0);
+		var curvature = bivariate.curvatureAt(x,y); // SHOULD BE CLOSE ????
+		// var curvature = bivariate.curvatureAt(0,0);
 		// console.log(curvature);
 		var kappa = curvature["max"];
 		var normal = curvature["normal"];
@@ -4262,27 +4293,33 @@ Mesh3D.prototype._projectPointIteration_MLS = function(startingLocation, neighbo
 	var reverse = Mesh3D._tempReverse;
 	// get neighborhood
 	var neighbors = space.objectsInsideSphere(neighborhoodCenter, neighborhoodRadius);
-	if(neighbors.length<3){
+	if(neighbors.length<=5){
 		console.log(neighbors);
-		return null;
-		// backup: get ~ 5 kNN ?
-		throw "????"
+		throw "no neighbors";
+		// return null;
 	}
 	var points = Mesh3D.Point3D.mapArrayToPoints(neighbors);
 	var normals = Mesh3D.Point3D.mapArrayToNormals(neighbors);
 	// surface estimate
-	var planeNormal = Code.averageAngleVector3D(normals);//neighborhoodNormal;
-	var planeOrigin = V3D.average(points);//neighborhoodCenter; // average ?
+
+	// this will probly be cov(points) minimal direction
+
+	// var planeNormal = Code.averageAngleVector3D(normals);
+	// var planeOrigin = V3D.average(points);//neighborhoodCenter; // average ?
+
+	var plane = Code.planeFromPoints3D(points);
+	var planeNormal = plane["normal"];
+	var planeOrigin = plane["point"];
 	// transform to/from plane
 	
 	Mesh3D.transformMatricesFromSpaceToPlane(forward,reverse, planeOrigin, planeNormal);
 	var planeNeighborhood = Mesh3D.transformPoints(points, forward);
 	// transform input point:
- 	var localLocation = Mesh3D.transformPoints([startingLocation], forward);
-		localLocation = localLocation[0];
+	var localLocation = forward.multV3D(startingLocation);
 	
 	// poly surface
-	bivariate.fromPoints(planeNeighborhood);
+	var used = bivariate.fromPoints(planeNeighborhood);
+
 	// bivariate.fromPointsWeights(planeNeighborhood, neighborhoodCenter);
 	
 // var surface = bivariate.mesh(planeNeighborhood);
@@ -4296,7 +4333,7 @@ Mesh3D.prototype._projectPointIteration_MLS = function(startingLocation, neighbo
 		size = neighborhoodRadius; // half the valid area, asymptotically approach end
 	var half = size*0.5;
 	// base grid divisions:
-	var divisions = 7; // 5=25 7=49 9=81 11=121
+	var divisions = 11; // 5=25 7=49 9=81 11=121
 	var dm1 = divisions - 1;
 	var checks = [];
 	for(var j=0; j<divisions; ++j){
@@ -4315,10 +4352,12 @@ Mesh3D.prototype._projectPointIteration_MLS = function(startingLocation, neighbo
 	var point = info["point"];
 	// subdivisions
 	var siz = size / divisions;
-	var div = 3;
+	var div = 7;
 	var dm1 = div-1;
-	var minimumAccuracyRatio = 0.05; // 1-10%
-	var maximumIterations = 5;
+	var minimumAccuracyRatio = 0.00001; // 1-10%
+	var maximumIterations = 10;
+	var minimumAccuracyDistance = 0;
+	var prevDistance = null;
 	for(var iteration=0; iteration<maximumIterations; ++iteration){
 		var ratio = (siz / neighborhoodRadius);
 		// console.log(iteration + " : " + ratio);
@@ -4341,6 +4380,20 @@ Mesh3D.prototype._projectPointIteration_MLS = function(startingLocation, neighbo
 			}
 		}
 		var info = V3D.closestPoint(localLocation, checks);
+		var d = info["distance"];
+		if(prevDistance!==null){
+			var ratioD = prevDistance/d;
+			if(ratioD<1.0){
+				ratioD = 1.0/ratioD;
+			}
+			// console.log(ratioD);
+			if(ratioD<1.0001){
+				// console.log("done early change in distance");
+				iteration = maximumIterations
+			}
+		}
+		prevDistance = d;
+		// console.log(iteration + " : " + ratio+" @ "+d);
 		point = info["point"];
 	}
 // var str = "";
@@ -4351,30 +4404,65 @@ Mesh3D.prototype._projectPointIteration_MLS = function(startingLocation, neighbo
 // console.log(str);
 	// transform to original space:
 	reverse.multV3D(point,point);
-	return point;
+
+
+	return {"point":point, "normal":planeNormal, "origin":planeOrigin, "used":used};
+	// return point;
 }
 
 
-Mesh3D.prototype.testProjectionSampling = function(){
+Mesh3D.prototype.testProjectionSampling = function(inputPoint){
 
-	this._bivariate = new BivariateSurface(3, 50);
-	this._projectPointToSurface = this._projectPointToSurface_MLS;
+	// this._bivariate = new BivariateSurface(2, 50);
+	// this._bivariate = new BivariateSurface(3, 9999);
+	// this._projectPointToSurface = this._projectPointToSurface_MLS;
 
 
 	var pointSpace = this._pointSpace;
 	var bivariate = this._bivariate;
 	var forward = Mesh3D._tempForward;
 	var reverse = Mesh3D._tempReverse;
-	console.log(bivariate);
+	// console.log(bivariate);
 
 
 	// var location = new V3D(0,0,0);
 
+
+
+	// SEED POINT: 
+	// var location = new V3D(0.32134661479290105,-0.13500110595159398,0.07858363538011659);
+	// location.add(0.1,0,0);
+
+/*
+start point cloud
+Mesh3D.js:60 MESH3D: a: 18 | b: 50 | n: 1.9696155060244163 | 
+Mesh3D.js:254 generateSurfaces
+Mesh3D.js:682 <-3,-1.6366860564820853,-2.6064240869030915> | <3,1.6366860564820853,2.6064240869030915> | <2,1.0911240376547235,1.7376160579353943>
+Mesh3D.js:4132 new marker ....
+Mesh3D.js:3809 97 = 0.3354986200377154 ~ 0.333 @ 9
+Mesh3D.js:3586 bad point: [P3D: -<-0.5797254606491908,0.04846059494799282,-0.06157310190272858>] @ 678026.9383549648
+
+
+
+curvature: 6.106799568992623
+
+... 77
+*/
+	var location = new V3D(-0.5797254606491908,0.04846059494799282,-0.06157310190272858);
+
+
+	// var location= new V3D(0.27438919012414975,0.5034445083543266,-0.8017108798907996); // @ 115342.80650877056
+
 	// var location = new V3D(0.5,0.5,0.5);
-	var location = new V3D(0.1952198640231894, 0.3069278224747585, -0.8474758867881512);
+	// var location = new V3D(0.1952198640231894, 0.3069278224747585, -0.8474758867881512);
+
+
+	if(inputPoint){
+		location = inputPoint;
+	}
 	
 console.log("location: "+location);
-bivariate.maxSamples(1E9);
+// bivariate.maxSamples(1E9);
 	var point = pointSpace.closestObject(location);
 	var startingLocation = point.point();
 console.log("startingLocation: "+startingLocation);
@@ -4382,16 +4470,75 @@ console.log("startingLocation: "+startingLocation);
 
 
 
-	var neighborhood = this._localNeighborhoodSize(startingLocation);
-	var neighborhoodCount = neighborhood["count"];
-	var neighbors = pointSpace.kNN(startingLocation,neighborhoodCount);
-	var points = Mesh3D.Point3D.mapArrayToPoints(neighbors);
-	var normals = Mesh3D.Point3D.mapArrayToNormals(neighbors);
-	var neighborhoodCenter = V3D.average(points);
-	var neighborhoodRadius = V3D.maximumDistance(points,neighborhoodCenter);
+	// var neighborhood = this._localNeighborhoodSize(startingLocation);
+	// var neighborhoodCount = neighborhood["count"];
+	// var neighbors = pointSpace.kNN(startingLocation,neighborhoodCount);
+	// var points = Mesh3D.Point3D.mapArrayToPoints(neighbors);
+	// var normals = Mesh3D.Point3D.mapArrayToNormals(neighbors);
+	// var neighborhoodCenter = V3D.average(points);
+	// var neighborhoodRadius = V3D.maximumDistance(points,neighborhoodCenter);
 
 
 	// var neighbors = space.objectsInsideSphere(neighborhoodCenter, neighborhoodRadius);
+
+
+
+	//var info = this._projectPointToSurface_MLS(startingLocation, true, false);
+	var info = this._projectPointToSurface(startingLocation, true, false);
+	console.log(info);
+
+	var planeOrigin = info["planeOrigin"];
+	var planeNormal = info["planeNormal"];
+	var projectedPoint = info["point"];
+	var projectedNormal = info["normal"];
+	var neighbors = info["neighbors"];
+	var curvature = info["curvature"];
+console.log("curvature: "+curvature);
+	var neighborhoodPoints = Mesh3D.Point3D.mapArrayToPoints(neighbors);
+	var infoMesh = bivariate.mesh(neighborhoodPoints, forward, reverse);
+	// infoMesh += "\n";
+	infoMesh += "% original point \n";
+	infoMesh += "ox ="+startingLocation.x+";\n"+"oy ="+startingLocation.y+";\n"+"oz ="+startingLocation.z+";\n";
+	infoMesh += "% projected point \n";
+	infoMesh += "fx ="+projectedPoint.x+";\n"+"fy ="+projectedPoint.y+";\n"+"fz ="+projectedPoint.z+";\n";
+	infoMesh += "% local plane normal \n";
+	infoMesh += "nx ="+planeNormal.x+";\n"+"ny ="+planeNormal.y+";\n"+"nz ="+planeNormal.z+";\n"+"\n";
+	infoMesh += "% surface normal \n";
+	infoMesh += "sx ="+projectedNormal.x+";\n"+"sy ="+projectedNormal.y+";\n"+"sz ="+projectedNormal.z+";\n";
+	infoMesh += "curvature = "+curvature+";\n";
+	infoMesh += "\n";
+	console.log(infoMesh);
+
+ 	// var localLocation = Mesh3D.transformPoints([startingLocation], forward);
+		// localLocation = localLocation[0];
+
+		// // var location = forward.multV3D(localLocation);
+		// console.log(localLocation+" = local location ")
+		// var x = localLocation.x;
+		// var y = localLocation.y;
+		// // var z = bivariate.valueAt(x,y); // should be the same as previously calculated
+		// // console.log(z+" ... ")
+		// var curvature = bivariate.curvatureAt(x,y);
+		// console.log(curvature);
+		// var curvature = bivariate.curvatureAt(0,0);
+		// console.log(curvature);
+
+
+	// bivariate.fromPoints(planeNeighborhood);
+	// var zA = bivariate.valueAt(localLocation.x,localLocation.y);
+	
+
+
+
+
+	// Mesh3D.transformMatricesFromSpaceToPlane(forward,reverse, planeOrigin, planeNormal);
+	// var planeNeighborhood = Mesh3D.transformPoints(points, forward);
+	// // transform input point:
+ // 	// var localLocation = Mesh3D.transformPoints([startingLocation], forward);
+	// 	// localLocation = localLocation[0];
+	// var localLocation = forward.multV3D(startingLocation);
+
+throw "?"
 
 
 
@@ -4423,7 +4570,7 @@ console.log("startingLocation: "+startingLocation);
 	var infoA = bivariate.mesh(planeNeighborhood);
 	
 console.log(planeNeighborhood);
-	Code.randomPopArray(planeNeighborhood, 25);
+	Code.randomPopArray(planeNeighborhood, 50);
 
 	bivariate.fromPoints(planeNeighborhood);
 	var zB = bivariate.valueAt(localLocation.x,localLocation.y);
@@ -4438,11 +4585,16 @@ console.log(planeNeighborhood);
 		str = str + "ox = "+localLocation.x+";\n";
 		str = str + "oy = "+localLocation.y+";\n";
 		str = str + "oz = "+localLocation.z+";\n";
+		str = str + "nx = "+planeNormal.x+";\n";
+		str = str + "ny = "+planeNormal.y+";\n";
+		str = str + "nz = "+planeNormal.z+";\n";
 		str = str + infoA;
 		str = str + "az = "+zA+";\n";
 		str = str + infoB;
 		str = str + "az = "+zB+";\n";
 		str = str + "\n";
+
+		
 
 	console.log(str);
 }

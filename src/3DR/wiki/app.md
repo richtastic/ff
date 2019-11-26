@@ -388,13 +388,65 @@ https://cloud.google.com/appengine/docs/nodejs/
 
 
 
+curvature estimate is maybe not numerically stable in some conditions?
+	- alternative calculations?
+
+
+projectPointToSurface -- working very differently in 2 different contexts 
+
+numbers are not matching up ...
+	=> use KNN vs radius in some cases ??? [use nearest neighbor and KNN, not radius from center ...]
+
+
+- why are projections worse?
+	- show surface grid normals
+	- show 2 slightly differently placed points & projected surfaces
+
+	- is triangle projected point / edge close to the 'desired' size
+		- is desired size related to closest point curvature or 'within-search-radius' curvature ?
+
+- look at actual high-curvature point and SEE why it happens?
+
+....
+
+
+- projected  points are worse than original points ...
+	- normals are almost exactly wrong in some places
+		[also exactly right in others, eg: face]
+	- 
+
+
+-curvature estimates off still?
+--- should ok searching a ~2x radius -- why is this bad?
+	- is the search radius the CURRENT edge size or the IDEAL edge size?
+	-- around some points the curvature is erradic around edges ?
+
+	- try to find local normal again ?
+
+- surface projection is still not very smooth
+
+- surface projection not going 'straight' down (need retries?)
+
+
+- find a point with very high curvature
+- plot surface interpolation
+- show curvature
+
+
+
+- curvature still seems wrong ...
+
+- curvature calculation seems very picky
+--- double check surface curvature estimate / calc
+
+
+
+
 - number of spatial neighbors may be poor around base?
 - boundary edges around base ?
 
 
 
-- curvature calculation seems very picky
---- double check surface curvature estimate / calc
 
 - visualize surface projection
 	- point
