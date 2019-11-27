@@ -33,7 +33,7 @@ GLOBALSTAGE = this._stage2D;
 	// this.setupSphere3D(1000, 1.0, 0.0, 0.25);
 	// this.setupSphere3D(250, 1.0, 0.0, 0.0);
 	// this.setupSphere3D(4000, 1.0, 0.50, 0.0);
-	// this.setupSphere3D(10000, 1.0, 0.0, 0.0);
+	// this.setupSphere3D(500, 1.0, 0.0, 0.0);
 	// this.setupSphere3D(100, 1.0, 0.0, 0.0);
 
 
@@ -43,6 +43,7 @@ GLOBALSTAGE = this._stage2D;
 
 
 	this.loadPointFile();
+	
 //	this.setupRect3D();
 //	this.setupCurveTest();
 //this.setupLineTest();
@@ -1048,8 +1049,8 @@ if(showProjected){
 		colors.push(1.0,0,0,0.50);
 	}
 
-var showSource = false;
-// var showSource = true;
+// var showSource = false;
+var showSource = true;
 if(showSource){ // show source points
 	console.log("SOURCE POINTS: "+pts.length);
 	for(i=0;i<pts.length;++i){

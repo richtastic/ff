@@ -239,13 +239,90 @@ BivariateSurface.prototype.normalAt = function(x1,y1, delta){
 BivariateSurface.prototype.curvatureAt = function(x1,y1, delta){
 	return this._infoAt(x1,y1, delta, false);
 }
-BivariateSurface.prototype._infoAt = function(x2,y2, delta, simple){
+// BivariateSurface.prototype._infoAt = function(x2,y2, delta, simple){
+BivariateSurface.prototype._infoAt = function(x1,y1, delta, simple){
 	// x1,y1
 	simple = simple!==undefined ? simple : false;
 	delta = delta!==undefined ? delta : (Math.min(this._size.x,this._size.y) * 1E-6); // 1E-2 - 1E-6
 	var dx = dy = delta;
 	var temp;
 	// locations
+
+	var x0 = x1-dx, x2 = x1+dx;
+	var y0 = y1-dy, y2 = y1+dy;
+
+	// console.log(x0,x1,x2,y0,y1,y2)
+
+	var z00 = this.valueAt(x0,y0);
+	var z10 = this.valueAt(x1,y0);
+	var z20 = this.valueAt(x2,y0);
+	var z01 = this.valueAt(x0,y1);
+	var z11 = this.valueAt(x1,y1);
+	var z21 = this.valueAt(x2,y1);
+	var z02 = this.valueAt(x0,y2);
+	var z12 = this.valueAt(x1,y2);
+	var z22 = this.valueAt(x2,y2);
+
+	var fx = (z21 - z01)/(2*dx);
+	var fy = (z12 - z10)/(2*dy);
+	var fxx = (z21 + z01 - 2*z11)/(dx*dx);
+	var fyy = (z12 + z10 - 2*z11)/(dy*dy);
+	var fxy = (z20 + z02 - z00 - z22)/(4*dx*dy);
+
+	var sx = new V3D(1, 0, fx);
+	var sy = new V3D(0, 1, fy);
+	var sxx = new V3D(0, 0, fxx);
+	var sxy = new V3D(0, 0, fxy);
+	var syy = new V3D(0, 0, fyy);
+
+	var n = V3D.cross(sx,sy);
+		n.norm();
+
+	// console.log("sx: "+sx);
+	// console.log("sy: "+sy);
+	// console.log("sxx: "+sxx);
+	// console.log("sxy: "+sxy);
+	// console.log("syy: "+syy);
+	// console.log("n: "+n);
+
+	var E = V3D.dot(sx,sx);
+	var F = V3D.dot(sx,sy);
+	var G = V3D.dot(sy,sy);
+	var L = V3D.dot(sxx,n);
+	var M = V3D.dot(sxy,n);
+	var N = V3D.dot(syy,n);
+
+	// console.log(E,F,G);
+	// console.log(L,M,N);
+
+	var detFirst = E*G - F*F;
+	var detSecond = L*N - M*M;
+	// console.log("dets: "+detFirst+" | "+detSecond);
+	var top = E*N + G*L - 2.0*F*M;
+	var K = detSecond/detFirst;
+	var H = top/(2.0*detFirst);
+	// console.log("K: "+K);
+	// console.log("H: "+H);
+	var inside = H*H - K;
+	var sqin = Math.sqrt(inside);
+	var pMin = H - sqin;
+	var pMax = H + sqin;
+
+	// console.log("pMin: "+pMin);
+	// console.log("pMax: "+pMax);
+
+
+	var curveMin = Math.min(Math.abs(pMin),Math.abs(pMax));
+	var curveMax = Math.max(Math.abs(pMin),Math.abs(pMax));
+	var unitNormal = n;
+	var unitTangent = sx.copy().norm();
+
+
+	// throw "?";
+
+	// console.log("curveMin: "+curveMin+" | curveMax: "+curveMax+" | K: "+K+" | H: "+H);
+
+	return {"min":curveMin, "max":curveMax, "normal":unitNormal, "tangent":unitTangent };
 	
 	// values
 /*

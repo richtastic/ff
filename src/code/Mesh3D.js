@@ -5,22 +5,23 @@ function Mesh3D(points, norms, angle){
 	this._minCurvature = null;
 	this._maxCurvature = null;
 	// this._angle = Math.PI*0.05; // 9 degrees
-	this._angle = Math.PI*0.10; // 18 degrees
-	// this._angle = Math.PI*0.20; // 36 degrees
+	// this._angle = Math.PI*0.10; // 18 degrees
+	this._angle = Math.PI*0.20; // 36 degrees
 	// this._angle = Math.PI*0.25; // 45 degrees
 	// this._angle = Math.PI*0.50; // 90 degrees - anything after this doesn't make sense
 	// this._angle = Math.PI*1.0;
 	// this._angle = Math.PI*2.0;
-	// this._beta = Code.radians(55.0); // base angle
-	this._beta = Code.radians(50.0); // base angle
-	// this._beta = Code.radians(40.0);
+	// base angle
+	// this._beta = Code.radians(55.0); // 3.6
+	// this._beta = Code.radians(50.0); // 1.9
+	this._beta = Code.radians(40.0); // 1.1
 		var beta = this._beta;
 	this._eta = Math.sin(2*beta)/Math.sin(3*beta); // search distance multiplier
 // this._eta = Math.sqrt(this._eta);
 		// this._eta *= 2; // TODO: this is to help fix underlying problem
-	this._neighborhoodSizeVolumeRatio = 0.333; // peaks at~0.6 ; 0.333-0.5
+	// this._neighborhoodSizeVolumeRatio = 0.333; // peaks at~0.6 ; 0.333-0.5
 	// this._neighborhoodSizeVolumeRatio = 0.40;
-	// this._neighborhoodSizeVolumeRatio = 0.35;
+	this._neighborhoodSizeVolumeRatio = 0.35;
 	// this._neighborhoodSizeVolumeRatio = 0.30;
 
 
@@ -31,8 +32,8 @@ function Mesh3D(points, norms, angle){
 	// this._cappedMaxK = 1.0/0.01;
 
 
-	this._cappedMinK = 1.0/100.0;
-	this._cappedMaxK = 1.0/0.1;
+	this._cappedMinK = 1.0/1.0; // FULL SIZE OF WINDOW
+	this._cappedMaxK = 1.0/0.01;
 
 
 	// this._cappedMinK = 1.0/1.0;
@@ -727,6 +728,13 @@ Mesh3D.Point3D.mapArrayToNormals = function(array, N){
 }
 Mesh3D.Point3D.prototype.id = function(){
 	return this._id;
+}
+Mesh3D.Point3D.prototype.unPreprocess = function(){
+	this._neighborhoodKNN = null;
+	this._radius = null;
+	this._curvature = null;
+	this._surfaceNormal = null;
+	this._surfacePoint = null;
 }
 Mesh3D.Point3D.prototype.isPreprocessed = function(){ // 5 ITEMS: curvature, surf-normal, surf-point, planar-conf, normal-conf
 	return this._radius != null; // ... and others
@@ -1852,10 +1860,10 @@ console.log("iterating ...");
 		// var maxIter = 50;
 		// var maxIter = 100;
 		// var maxIter = 200;
-		// var maxIter = 1000;
+		var maxIter = 1000;
 		// var maxIter = 2000;
 		// var maxIter = 3000;
-		var maxIter = 4000;
+		// var maxIter = 4000;
 		// var maxIter = 5000;
 		// var maxIter = 10000;
 // var maxIter = 15000;
@@ -2643,18 +2651,17 @@ Mesh3D.prototype.vertexPredict = function(edge, edgeFront){
 	// I really think these limits are wrong -- too thin triangles
 	// var limitMin = Code.radians(60.0) - beta;
 	// var limitMax = Code.radians(60.0) + beta;
+	// IS BASE ANGLE OPPOSITE ANGLE ?
 	// a beta approaching 60 should have no limit
 	var delta = Code.radians(60.0) - beta;
 	var limitMin = Code.radians(60.0) - delta;
 	var limitMax = Code.radians(60.0) + delta;
 	var edgeLength = edge.length(); // c
 	var halfEdge = edgeLength*0.5;
-	// console.log("edgeLength: "+edgeLength);
-	// var searchLength = edgeLength*eta; // b
-	// console.log("searchLength: "+searchLength);
 	var midpoint = edge.midpoint();
-	var kappa = this.maxCurvatureAtPoint(midpoint);
-	console.log("kappa:"+kappa+" radius: "+(1.0/kappa)+" ?= "+edge.length());
+		var searchRadius = eta*edgeLength; // TODO: OK?
+	var kappa = this.maxCurvatureAtPoint(midpoint, searchRadius);
+	console.log(".... predict: kappa:"+kappa+" radius: "+(1.0/kappa)+" ?= "+edge.length());
 	var idealSize = rho/kappa;
 	var ratio = halfEdge/idealSize;
 	var baseAngle = limitMin;
@@ -2719,9 +2726,9 @@ Mesh3D.prototype.isBorderPoint = function(edge, p){
 	var normal = V3D.normTri(edge.A(),edge.B(),p);
 	var maxAngleNeighbors = this.projectedMaxNeighborhoodAngle(p); // edge length is arbitrary ?
 	// var maximumNeighborAngle = Code.radians(150.0);
-	// var maximumNeighborAngle = Code.radians(180.0);
+	var maximumNeighborAngle = Code.radians(180.0);
 	// var maximumNeighborAngle = Code.radians(200.0);
-	var maximumNeighborAngle = Code.radians(220.0);
+	// var maximumNeighborAngle = Code.radians(220.0);
 
 console.log("isBorderPoint: "+Code.degrees(maxAngleNeighbors)+" / "+Code.degrees(maximumNeighborAngle));
 	if(maxAngleNeighbors>maximumNeighborAngle){
@@ -2965,6 +2972,7 @@ Mesh3D.prototype.putativeTriLocalTris = function(edge, point){ // find tris in s
 
 
 Mesh3D.prototype.closestTooCloseEdge = function(edge, point, localEdges){ // closest edge under minimum
+	var eta = this._eta;
 	var rho = this._angle;
 	var prev = edge.prev();
 	var next = edge.next();
@@ -2975,7 +2983,8 @@ Mesh3D.prototype.closestTooCloseEdge = function(edge, point, localEdges){ // clo
 	// var idealLengthP = this.iteritiveEdgeSizeFromPoint(point);
 
 	// ?? iteritiveEdgeSizeFromPoint
-	var kappa = this.maxCurvatureAtPoint(point);
+		var searchRadius = eta*edge.length();
+	var kappa = this.maxCurvatureAtPoint(point, searchRadius);
 	var idealLengthP = rho/kappa;
 
 	var len1 = V3D.distance(edge.A(),edge.B());
@@ -3511,15 +3520,19 @@ Mesh3D.prototype.growTriangle = function(front, edge, vertex){
 
 Mesh3D.prototype._setCurvaturePoints_MLS = function(){
 	if(!this._bivariate){
-		// this._bivariate = new BivariateSurface(2);
-		// this._bivariate = new BivariateSurface(3);
 		this._bivariate = new BivariateSurface(3, 50);
+		// this._bivariate = new BivariateSurface(3, 100);
 		// this._bivariate = new BivariateSurface(2, 50);
 	}
 	this._projectPointToSurface = this._projectPointToSurface_MLS;
 
 
 	this._preprocessPoints_MLS();
+	// // double smoothing:
+	// this._copyPointProjectionToSource();
+	// this._preprocessPoints_MLS();
+
+
 
 	// debug info: ---- delete
 	console.log("markers");
@@ -3538,11 +3551,20 @@ Mesh3D.prototype._setCurvaturePoints_MLS = function(){
 	console.log(points);
 }
 
-
+Mesh3D.prototype._copyPointProjectionToSource = function(){
+	var points = this._pointSpace.toArray();
+	// set projected point as surface point ...
+	for(var i=0; i<points.length; ++i){
+		var point = points[i];
+		point.point( point.surfacePoint() );
+		point.unPreprocess();
+	}
+}
 
 Mesh3D.prototype._preprocessPoints_MLS = function(){
 	this._minCurvature = null;
-this._maxCurvature = null;
+	this._maxCurvature = null;
+	this._neighborhoodSpace.clear();
 	var points = this._pointSpace.toArray();
 	var priorityFxn = function(a,b){
 		if(a==b){
@@ -3566,9 +3588,7 @@ this._maxCurvature = null;
 	// console.log(points);
 	console.log("neighborhood markers: "+this._neighborhoodSpace.count());
 	// throw "go thru each point: get: neighborhood size, curvature, confidence (normalGroup dot normal), planarness (sigmaMed/sigmaMin)";
-
-console.log("curvature limits: "+this._minCurvature+" -> "+this._maxCurvature);
-
+	console.log("curvature limits: "+this._minCurvature+" -> "+this._maxCurvature);
 }
 Mesh3D.prototype._preprocessPoint_MLS = function(point, queue){
 	var location = point.point();
@@ -3580,9 +3600,10 @@ Mesh3D.prototype._preprocessPoint_MLS = function(point, queue){
 	var surfaceNormal = surface["normal"];
 	var surfaceTangent = surface["tangent"];
 	var surfaceCurvature = surface["curvature"];
-if(false){
-// if(surfaceCurvature>1E9){
-// if(surfaceCurvature>1E5){
+// if(false){
+if(surfaceCurvature>1E6){ // HUGE
+// if(surfaceCurvature>1E3){ // 1K
+// if(surfaceCurvature>100){ // 100
 	console.log("bad point: "+point+" @ "+surfaceCurvature);
 	console.log(surface);
 	// this.testProjectionSampling(location);
@@ -4414,8 +4435,8 @@ Mesh3D.prototype._projectPointIteration_MLS = function(startingLocation, neighbo
 Mesh3D.prototype.testProjectionSampling = function(inputPoint){
 
 	// this._bivariate = new BivariateSurface(2, 50);
-	// this._bivariate = new BivariateSurface(3, 9999);
-	// this._projectPointToSurface = this._projectPointToSurface_MLS;
+	this._bivariate = new BivariateSurface(3, 9999);
+	this._projectPointToSurface = this._projectPointToSurface_MLS;
 
 
 	var pointSpace = this._pointSpace;

@@ -388,6 +388,33 @@ https://cloud.google.com/appengine/docs/nodejs/
 
 
 
+
+- still have some fairly tiny triangles ... on ears -- noise ?
+	=> are ideal lengths being reached?
+		- try iterative projection ?
+	- some edge-points seem like they have highest curvature because pts are outside careable range
+	- search radius seems high?
+		~ try using TRIANGLE EDGE length rather than ideal edge length when doing search radius (because it only needs to adjust to CURRENT length)
+
+- still using neighbor search radius and not KNN ?
+
+
+- some spots aren't getting filled in with triangles (seems to be an outside-border point?)
+	- pika's left leg
+
+x try using/substituting the PROJECTED points for samples after first iteration
+	- nicer, edges still have 
+....
+
+
+
+
+
+
+
+
+
+
 curvature estimate is maybe not numerically stable in some conditions?
 	- alternative calculations?
 
