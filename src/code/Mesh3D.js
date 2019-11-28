@@ -6,8 +6,8 @@ function Mesh3D(points, norms, angle){
 	this._maxCurvature = null;
 	// this._angle = Math.PI*0.05; // 9 degrees
 	// this._angle = Math.PI*0.10; // 18 degrees
-	this._angle = Math.PI*0.20; // 36 degrees
-	// this._angle = Math.PI*0.25; // 45 degrees
+	// this._angle = Math.PI*0.20; // 36 degrees
+	this._angle = Math.PI*0.25; // 45 degrees
 	// this._angle = Math.PI*0.50; // 90 degrees - anything after this doesn't make sense
 	// this._angle = Math.PI*1.0;
 	// this._angle = Math.PI*2.0;
@@ -255,6 +255,7 @@ Mesh3D.prototype.generateSurfaces = function(){
 	console.log("generateSurfaces");
 	this._sizeSpaces();
 	this._setCurvaturePoints_MLS();
+	// this._preprocessPoints_MLS();
 /*
 	// for(var i=0; i<1; ++i){
 	// 	this._smoothSurface();
@@ -1854,13 +1855,13 @@ console.log("iterating ...");
 		// var maxIter = 0;
 		// var maxIter = 1;
 		// var maxIter = 2;
-		// var maxIter = 5;
+		var maxIter = 5;
 		// var maxIter = 10;
 		// var maxIter = 20;
 		// var maxIter = 50;
 		// var maxIter = 100;
 		// var maxIter = 200;
-		var maxIter = 1000;
+		// var maxIter = 1000;
 		// var maxIter = 2000;
 		// var maxIter = 3000;
 		// var maxIter = 4000;
@@ -2087,32 +2088,37 @@ Mesh3D.prototype.iteritiveEdgeSizeFromPoint = function(location){ //, currentSiz
 	}
 	return minSize;
 }
-Mesh3D.prototype.iteritiveEdgeToSizeAtPoint = function(pointA,pointB, idealSize){ // iterate pointB location until length ~ ideal size
+Mesh3D.prototype.iteritiveEdgeToSizeAtPoint = function(pointA,pointB, idealSize, perpendicular){ // iterate pointB location until length ~ ideal size
 	var maxIterations = 5;
 	var maxRatio = 1.001;
 	var point = pointB.copy();
 	var prevDistance = null;
+	// var dir = V3D.sub(pointB,pointA);
+// CURRENTLY THIS JUST WOBBLES AROUND  ... NEED TO PUT CAPS AT ENDS ....
+	var length;
 	for(var i=0; i<maxIterations; ++i){
-		var dir = V3D.sub(point,pointA);
-		var length = dir.length();
-		var ratio = idealSize/length;
-		// console.log(i+" = "+ratio+" ("+idealSize+" / "+length+")");
-		dir.scale(ratio);
-		point = V3D.add(pointA,dir);
+		// get closest surface point ~ perpendicular
 		var info = this._projectPointToSurface(point);
-		point = info["point"];
-		length = V3D.distance(point,pointA);
-		if(prevDistance!==null){
-			ratio = length>prevDistance ? length/prevDistance : prevDistance/length;
-			if(ratio<maxRatio){
-				// console.log(" no change "+ratio);
-				break;
-			}
-		}
-		prevDistance = length;
-		ratio = length>idealSize ? length/idealSize : idealSize/length;
+			point = info["point"];
+		// project projection onto original directional line [remove perpendicular component]
+		point.sub(pointA); // to reference frame
+		var dotP = V3D.dot(perpendicular,point); // get overlap
+		point.sub(perpendicular.x*dotP,perpendicular.y*dotP,perpendicular.z*dotP); // remove perpendicular component
+		length = point.length();
+		// set point at ideal length distance in 'new' direction
+		var ratio = idealSize/length;
+		point.scale(ratio);
+		
+		console.log("  iteritiveEdgeToSizeAtPoint: "+i+" = "+ratio+" ("+idealSize+" / "+length+")");
+
+// TODO: TRY ONLY ADDING ON HALF OF DIFFERENCE ?
+if(ratio<1){
+	ratio = 1.0/ratio;
+}
+		
+		// output:
+		point.add(pointA); // from reference frame
 		if(ratio<maxRatio){
-			// console.log(" break "+ratio);
 			break;
 		}
 	}
@@ -2652,6 +2658,7 @@ Mesh3D.prototype.vertexPredict = function(edge, edgeFront){
 	// var limitMin = Code.radians(60.0) - beta;
 	// var limitMax = Code.radians(60.0) + beta;
 	// IS BASE ANGLE OPPOSITE ANGLE ?
+	// --- what does this look like ?
 	// a beta approaching 60 should have no limit
 	var delta = Code.radians(60.0) - beta;
 	var limitMin = Code.radians(60.0) - delta;
@@ -2679,8 +2686,7 @@ Mesh3D.prototype.vertexPredict = function(edge, edgeFront){
 	var p = info["point"];
 
 	// ? iteritiveEdgeToSizeAtPoint
-
-	p = this.iteritiveEdgeToSizeAtPoint(midpoint,p,altitude);
+	p = this.iteritiveEdgeToSizeAtPoint(midpoint,p,altitude, edge.unit());
 	// console.log(p);
 	return p;
 }
@@ -2726,9 +2732,9 @@ Mesh3D.prototype.isBorderPoint = function(edge, p){
 	var normal = V3D.normTri(edge.A(),edge.B(),p);
 	var maxAngleNeighbors = this.projectedMaxNeighborhoodAngle(p); // edge length is arbitrary ?
 	// var maximumNeighborAngle = Code.radians(150.0);
-	var maximumNeighborAngle = Code.radians(180.0);
+	// var maximumNeighborAngle = Code.radians(180.0);
 	// var maximumNeighborAngle = Code.radians(200.0);
-	// var maximumNeighborAngle = Code.radians(220.0);
+	var maximumNeighborAngle = Code.radians(220.0);
 
 console.log("isBorderPoint: "+Code.degrees(maxAngleNeighbors)+" / "+Code.degrees(maximumNeighborAngle));
 	if(maxAngleNeighbors>maximumNeighborAngle){
@@ -3527,7 +3533,9 @@ Mesh3D.prototype._setCurvaturePoints_MLS = function(){
 	this._projectPointToSurface = this._projectPointToSurface_MLS;
 
 
-	this._preprocessPoints_MLS();
+	// this._preprocessPoints_MLS();
+
+
 	// // double smoothing:
 	// this._copyPointProjectionToSource();
 	// this._preprocessPoints_MLS();
@@ -3535,20 +3543,17 @@ Mesh3D.prototype._setCurvaturePoints_MLS = function(){
 
 
 	// debug info: ---- delete
-	console.log("markers");
-	markerSpace = this._neighborhoodSpace;
-	var markers = markerSpace.toArray();
-	markers.sort(function(a,b){return a["count"] < b["count"] ? -1 : 1;});
+	// console.log("markers");
+	// markerSpace = this._neighborhoodSpace;
+	// var markers = markerSpace.toArray();
+	// markers.sort(function(a,b){return a["count"] < b["count"] ? -1 : 1;});
 	// console.log(markers);
-	// markers = markers.map(function(a){return a["count"]});
-	// markers.sort(function(a,b){return a < b ? -1 : 1;});
-	console.log(markers);
 
-	var points = this._pointSpace.toArray();
-	console.log(points);
-	points = points.map(function(a){return a.surfaceCurvature()});
-	points.sort(function(a,b){return a < b ? -1 : 1;});
-	console.log(points);
+	// var points = this._pointSpace.toArray();
+	// console.log(points);
+	// points = points.map(function(a){return a.surfaceCurvature()});
+	// points.sort(function(a,b){return a < b ? -1 : 1;});
+	// console.log(points);
 }
 
 Mesh3D.prototype._copyPointProjectionToSource = function(){
@@ -3873,7 +3878,7 @@ Mesh3D.prototype._neighborhoodSizeInit = function(location, startCount){ // do b
 		console.log(midPointCount+" = "+percentMid+" ~ "+searchValue+" @ "+count);
 	}
 
-	midPointCount *= 2;
+	// midPointCount *= 2;
 	// midPointCount *= 4;
 
 	objects = space.kNN(location,midPointCount);
@@ -4156,43 +4161,6 @@ Mesh3D.prototype._localNeighborhoodSize = function(location){
 		}
 	}
 	if(!marker){
-/*
-		var closestPoint = space.kNN(location,1);
-			closestPoint = closestPoint[0].point();
-
-		var spherePoints = 200;
-
-		var objects = space.kNN(location,spherePoints);
-		var points = Mesh3D.Point3D.mapArrayToPoints(objects);
-
-		console.log(points);
-		for(var p=0; p<10; ++p){
-
-			var percent = this._neighborhoodVolumeCapacity(points, p);
-
-			console.log(p+" = "+percent);
-		}
-
-
-		var info = this._neighborhoodSizeInit(closestPoint, true);
-
-
-		throw "TESTING ..."
-
-*/
-
-
-
-
-
-
-
-
-
-
-
-
-
 		console.log("new marker ....");
 		var closestPoint = space.kNN(location,1);
 			closestPoint = closestPoint[0].point();
@@ -4227,15 +4195,11 @@ Mesh3D.prototype._projectPointToSurface_MLS = function(startingLocation, getCurv
 	var neighborhoodCenter = V3D.average(points);
 	var neighborhoodRadius = V3D.maximumDistance(points,neighborhoodCenter);
 
-
-	// TODO: SHOULD THIS BE KNN AND NOT RADIUS ???
-	// iterations
-// var startingX = null;
 	var maximumRatioDifference = 0.05;
 	var maximumIterations = 1;
 	// for(var iteration=0; iteration<maximumIterations; ++iteration){
 		// var rad = neighborhoodRadius*Math.pow(0.5,iteration);
-		var info = this._projectPointIteration_MLS(startingLocation, neighborhoodCenter, neighborhoodRadius);
+		var info = this._projectPointIteration_MLS(startingLocation, neighborhoodCenter, neighborhoodCount, neighborhoodRadius);
 		var center = info["point"];
 		neighborhoodCenter = center;
 
@@ -4248,16 +4212,12 @@ Mesh3D.prototype._projectPointToSurface_MLS = function(startingLocation, getCurv
 // 		var distance = V3D.distance(center,neighborhoodCenter);
 // 		var ratio = (distance/neighborhoodRadius);
 // 		neighborhoodCenter = center;
-// if(!startingX){
-// startingX = neighborhoodCenter.copy();
-// }
 // 		// console.log(iteration+" : "+distance+" / "+neighborhoodRadius+" = "+ratio);
 // 		if(ratio<maximumRatioDifference){
 // 			break;
 // 		}
 	// 	break;
 	// }
-// var endingX = neighborhoodCenter.copy();
 	var object = {};
 
 object["planeNormal"] = info["normal"];
@@ -4307,13 +4267,14 @@ object["used"] = info["used"];
 	// console.log("TOTAL CHANGE IN DISTANCE "+( V3D.distance(startingX,endingX) / neighborhoodRadius ));
 	return object;
 }
-Mesh3D.prototype._projectPointIteration_MLS = function(startingLocation, neighborhoodCenter, neighborhoodRadius){
+Mesh3D.prototype._projectPointIteration_MLS = function(startingLocation, neighborhoodCenter, neighborhoodCount, neighborhoodRadius){
 	var space = this._pointSpace;
 	var bivariate = this._bivariate;
 	var forward = Mesh3D._tempForward;
 	var reverse = Mesh3D._tempReverse;
 	// get neighborhood
-	var neighbors = space.objectsInsideSphere(neighborhoodCenter, neighborhoodRadius);
+	// var neighbors = space.objectsInsideSphere(neighborhoodCenter, neighborhoodRadius);
+	var neighbors = space.kNN(neighborhoodCenter, neighborhoodCount);
 	if(neighbors.length<=5){
 		console.log(neighbors);
 		throw "no neighbors";
@@ -4469,7 +4430,10 @@ curvature: 6.106799568992623
 
 ... 77
 */
-	var location = new V3D(-0.5797254606491908,0.04846059494799282,-0.06157310190272858);
+	// var location = new V3D(-0.5797254606491908,0.04846059494799282,-0.06157310190272858);
+
+
+	var location = new V3D(0.06,0.44,-0.75); // sparse pikachu location
 
 
 	// var location= new V3D(0.27438919012414975,0.5034445083543266,-0.8017108798907996); // @ 115342.80650877056

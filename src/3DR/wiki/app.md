@@ -389,6 +389,20 @@ https://cloud.google.com/appengine/docs/nodejs/
 
 
 
+- visualize registered neighbor points & sizes ???
+	- show spheres
+	- size sphere at marker locations using knn radius
+
+
+
+
+
+- base angle is OPPOSITE of edge ... what is 60 - beta look like ?
+
+- iteritiveEdgeToSizeAtPoint --- only has jumping, try adding windowing ...
+
+console.log("  iteritiveEdgeToSizeAtPoint: "+i+" = "+ratio+" ("+idealSize+" / "+length+")");
+
 - still have some fairly tiny triangles ... on ears -- noise ?
 	=> are ideal lengths being reached?
 		- try iterative projection ?
@@ -396,14 +410,12 @@ https://cloud.google.com/appengine/docs/nodejs/
 	- search radius seems high?
 		~ try using TRIANGLE EDGE length rather than ideal edge length when doing search radius (because it only needs to adjust to CURRENT length)
 
-- still using neighbor search radius and not KNN ?
 
 
-- some spots aren't getting filled in with triangles (seems to be an outside-border point?)
-	- pika's left leg
-
-x try using/substituting the PROJECTED points for samples after first iteration
-	- nicer, edges still have 
+~ try using/substituting the PROJECTED points for samples after first iteration
+	- smoother
+	- halves the knn needed during runtime
+	- edges have 'shrinking' problem
 ....
 
 

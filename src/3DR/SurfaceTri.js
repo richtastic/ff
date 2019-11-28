@@ -43,7 +43,7 @@ GLOBALSTAGE = this._stage2D;
 
 
 	this.loadPointFile();
-	
+
 //	this.setupRect3D();
 //	this.setupCurveTest();
 //this.setupLineTest();
@@ -933,14 +933,20 @@ console.log(surface);
 GLOBAL_DATA["points"] = surface;
 */
 
-	// mesh.testProjectionSampling();
-	// throw "?"
+	mesh.testProjectionSampling();
+	throw "?"
 
 	// console.log(info);
 	var triangles = [];
-	var triangles = mesh.generateSurfaces();
 
-	mesh._toSurfaceProjections();
+
+
+	mesh._sizeSpaces();
+	// mesh._setCurvaturePoints_MLS();
+
+	// var triangles = mesh.generateSurfaces();
+
+	// mesh._toSurfaceProjections();
 
 
 
@@ -1034,11 +1040,31 @@ console.log("timeDelta: "+timeDelta+" = "+(timeDelta/1000.0)+" s");
 */
 //var showPoints = false;
 
+
 // SURFACE PROJECTED POINTS
 var points = [];
 var colors = [];
-var showProjected = true;
-// var showProjected = false;
+
+
+//var lookLocation = new V3D(0.2,0.40,-0.70); // - blank space
+var lookLocation = new V3D(0.06,0.44,-0.75);
+var lookRadius = 0.02;
+console.log(mesh._pointSpace.toArray())
+var foundPoints = mesh._pointSpace.objectsInsideSphere(lookLocation,lookRadius);
+console.log(foundPoints.length);
+for(i=0;i<foundPoints.length;++i){
+	p = foundPoints[i];
+	p = p.point();
+	points.push(p.x,p.y,p.z);
+	// colors.push(Math.random(),Math.random(),Math.random(),0.90);
+	// colors.push(1.0,0.0,0.0,0.90);
+	colors.push(0.75,0.0,0.0,1.0);
+}
+
+
+
+// var showProjected = true;
+var showProjected = false;
 if(showProjected){
 	var infoPoints = GLOBAL_DATA["points"];
 	console.log("GLOBAL_DATA: "+infoPoints.length);
@@ -1048,6 +1074,7 @@ if(showProjected){
 		//colors.push(0.5*Math.random()+0.5,0.0,0.5*Math.random(),0.90);
 		colors.push(1.0,0,0,0.50);
 	}
+}
 
 // var showSource = false;
 var showSource = true;
@@ -1060,6 +1087,18 @@ if(showSource){ // show source points
 	}
 }
 
+
+// 
+// points.push(p.x,p.y,p.z);
+// colors.push(0.0,1.0,0.0,0.50);
+
+// var p = new V3D(0.2,-0.5,-0.5);
+// points.push(p.x,p.y,p.z);
+// colors.push(0.0,1.0,0.0,0.50);
+
+
+
+if(false){
 	for(i=0;i<surfacePoints.length;++i){
 		p = surfacePoints[i];
 		points.push(p.x,p.y,p.z);
@@ -1077,9 +1116,9 @@ if(showSource){ // show source points
 		// colors.push(1.0,0.0,0.0,0.90);
 		// colors.push(0.5*Math.random()+0.5,0.0,0.5*Math.random(),0.90);
 	}
-
-
 }
+
+
 
 	// line data:
 	var pointsL = [];
@@ -1159,8 +1198,8 @@ lines.push([new V3D(0,0,0),new V3D(0,1,0)]);
 lines.push([new V3D(0,0,0),new V3D(0,0,1)]);
 var colors = [];
 colors.push([1.0,0,0]);
-colors.push([  0,1,0]);
-colors.push([  0,0,1.0]);
+colors.push([0,1.0,0]);
+colors.push([0,0,1.0]);
 for(i=0; i<lines.length; ++i){
 	var a = lines[i][0];
 	var b = lines[i][1];
