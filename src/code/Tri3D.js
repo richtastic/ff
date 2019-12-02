@@ -141,6 +141,10 @@ Tri3D.prototype.jitter = function(amplitude){
 	this._c.x += Math.random()*amplitude - amplitude*0.5;
 	this._c.y += Math.random()*amplitude - amplitude*0.5;
 	this._c.z += Math.random()*amplitude - amplitude*0.5;
+	return this;
+}
+Tri3D.prototype.wiggle = function(amplitude){
+	return this.jitter(amplitude);
 }
 // --------------------------------------------------------------------------------------------------------------------
 Tri3D.prototype.toString = function(){
@@ -186,20 +190,23 @@ Tri3D.extremaFromArray = function(triangles){
 
 
 
-Tri3D.generateSphere = function(radius, latNum, lonNum){ // latitude=up/down, longitude=around
+Tri3D.generateSphere = function(radius, latNum, lonNum, offset){ // latitude=up/down, longitude=around
 	latNum = latNum!==undefined ? latNum : 6;
 	lonNum = lonNum!==undefined ? lonNum : 10;
+	offset = offset!==undefined ? offset : V3D.ZERO;
+	// offset = V3D.ZERO;
 	var i, j, tri, tris = [];
 	for(i=0; i<latNum; ++i){ // latitude
 		var aA = ((i+0)/latNum) * Math.PI;
 		var aB = ((i+1)/latNum) * Math.PI;
 		var zA = radius*Math.cos(aA);
 		var zB = radius*Math.cos(aB);
-		// var zA = (zA-0.5)*radius*2.0;
-		// var zB = (zB-0.5)*radius*2.0;
+			
 		var rA = Math.sqrt(Math.max(0,radius*radius - zA*zA));
 		var rB =  Math.sqrt(Math.max(0,radius*radius - zB*zB));
 //console.log(i+" = "+rA+" | "+rB+"   "+zA+" | "+zB);
+			zA += offset.z;
+			zB += offset.z;
 		for(j=0; j<lonNum; ++j){ // longitude
 			var tA = (j/lonNum)*Math.PI*2.0;
 			var tB = ((j+1)/lonNum)*Math.PI*2.0;
@@ -212,6 +219,14 @@ Tri3D.generateSphere = function(radius, latNum, lonNum){ // latitude=up/down, lo
 			var yBA = rB*Math.sin(tA);
 			var yBB = rB*Math.sin(tB);
 			var a,b,c,d;
+				xAA += offset.x;
+				xAB += offset.x;
+				xBA += offset.x;
+				xBB += offset.x;
+				yAA += offset.y;
+				yAB += offset.y;
+				yBA += offset.y;
+				yBB += offset.y;
 			a = new V3D(xAA,yAA,zA);
 			b = new V3D(xAB,yAB,zA);
 			c = new V3D(xBA,yBA,zB);
@@ -265,7 +280,43 @@ Tri3D.arrayToNormalList = function(tris3D){
 	return {"normals":points};
 }
 Tri3D.arrayToUniquePointList = function(tris3D){
-	var tris = []; // list of indexes = 3 * tris3D.length
+	var triObjects = []; // list of indexes = 3 * tris3D.length
 	var points = []; // list of unique points
-	return {"points":points, "triangles":tris};
+	var indexes = [];
+	var pointLookup = [];
+	// find unique points
+	for(var i=0; i<tris3D.length; ++i){
+		var tri = tris3D[i];
+		var a = tri.A();
+		var b = tri.B();
+		var c = tri.C();
+		var points = [a,b,c];
+		for(var j=0; j<points.length; ++j){
+			var point = points[j];
+			var index = point.x+"_"+point.y+"_"+point.z;
+			pointLookup[index] = point;
+		}
+	}
+	// convert to index lookup
+	var keys = Code.keys(pointLookup);
+	var points = [];
+	for(var i=0; i<keys.length; ++i){
+		var key = keys[i];
+		var val = pointLookup[key];
+		pointLookup[key] = i;
+		points.push(val.copy());
+	}
+	// convert to objects
+	for(var i=0; i<tris3D.length; ++i){
+		var tri = tris3D[i];
+		var a = tri.A();
+		var b = tri.B();
+		var c = tri.C();
+			a = pointLookup[a.x+"_"+a.y+"_"+a.z];
+			b = pointLookup[b.x+"_"+b.y+"_"+b.z];
+			c = pointLookup[c.x+"_"+c.y+"_"+c.z];
+		var object = {"A":a,"B":b,"C":c};
+		triObjects.push(object);
+	}
+	return {"points":points, "triangles":triObjects};
 }

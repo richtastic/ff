@@ -49,7 +49,7 @@ function Mesh3D(points, norms, angle){
 
 
 	// this._cappedMaxK = 1.0/0.01;
-	
+	this._markersProcessed = false;
 	this._pointSpace = new OctTree(Mesh3D._pointToPoint);
 	this._triangleSpace = new OctSpace(Mesh3D._triToCuboid);
 	this._edgeSpace = new OctSpace(Mesh3D._edgeToCuboid);
@@ -177,12 +177,11 @@ Mesh3D.prototype.outputTriangles = function(){
 	// throw "output Tri3D";
 }
 Mesh3D.prototype.consistentTriangleOrientationsFromPoints = function(){
-	throw "?";
+	console.log("consistentTriangleOrientationsFromPoints");
 	var triSpace = this._triangleSpace;
 	var pointSpace = this._pointSpace;
 	var triangles = triSpace.toArray();
 	var pointCount = pointSpace.count()
-	console.log("pointSpace: "+pointCount);
 	if(pointCount>0){
 		for(var i=0; i<triangles.length; ++i){
 			var tri = triangles[i];
@@ -194,16 +193,9 @@ Mesh3D.prototype.consistentTriangleOrientationsFromPoints = function(){
 				var nearest = pointSpace.closestObject(center);
 				neighbors.push(nearest);
 			}
-			// if(!nearest){
-			// 	throw "what?";
-			// 	console.log(i,nearest);
-			// 	break;
-			// }
-
 			var normals = [];
 			for(var j=0; j<neighbors.length; ++j){
 				var nearest = neighbors[j];
-				console.log(nearest);
 				var normal = nearest.normal();
 				if(normal){
 					normals.push(normal);
@@ -255,7 +247,7 @@ Mesh3D.prototype.generateSurfaces = function(){
 	console.log("generateSurfaces");
 	this._sizeSpaces();
 	this._setCurvaturePoints_MLS();
-	// this._preprocessPoints_MLS();
+	this._preprocessPoints_MLS();
 /*
 	// for(var i=0; i<1; ++i){
 	// 	this._smoothSurface();
@@ -389,8 +381,6 @@ Mesh3D.prototype._smoothNormals = function(){
 			var d = V3D.distance(location,v);
 			var dd = d*d;
 			var weight = Math.exp(-dd/dSigma);
-			// var weight = Math.exp(-d/size);
-			// var weight = Math.exp(-d/dSigma);
 			weights[i] = weight;
 			weightTotal += weight;
 		}
@@ -1855,7 +1845,7 @@ console.log("iterating ...");
 		// var maxIter = 0;
 		// var maxIter = 1;
 		// var maxIter = 2;
-		var maxIter = 5;
+		// var maxIter = 5;
 		// var maxIter = 10;
 		// var maxIter = 20;
 		// var maxIter = 50;
@@ -1866,7 +1856,7 @@ console.log("iterating ...");
 		// var maxIter = 3000;
 		// var maxIter = 4000;
 		// var maxIter = 5000;
-		// var maxIter = 10000;
+		var maxIter = 10000;
 // var maxIter = 15000;
 		// var maxIter = 20000;
 		// var maxIter = 40000;
@@ -2020,7 +2010,7 @@ if(groupIndex>=1){
 }
 	}
 console.log(" -------------------------------------- ");
-	// this.consistentTriangleOrientationsFromPoints();
+	this.consistentTriangleOrientationsFromPoints();
 
 }
 Mesh3D.prototype.close = function(front){ // collape 3 edges to triangle
@@ -2702,11 +2692,7 @@ Mesh3D.prototype.projectedMaxNeighborhoodAngle = function(location){ // project 
 	var points = Mesh3D.Point3D.mapArrayToPoints(neighbors);
 	var planeNormal = normal;
 	var planePoint = location;
-
-
 console.log("IS BORDER COUNT: "+points.length);
-	//
-
 	var center = Code.projectTo2DPlane(location, planePoint, planeNormal);
 	var projections = Code.projectPointsTo2DPlane(points, planePoint, planeNormal);
 	var angles = [];
@@ -2729,13 +2715,11 @@ console.log("IS BORDER COUNT: "+points.length);
 }
 Mesh3D.prototype.isBorderPoint = function(edge, p){
 	// use tri normal, not p neighborhood
-	var normal = V3D.normTri(edge.A(),edge.B(),p);
-	var maxAngleNeighbors = this.projectedMaxNeighborhoodAngle(p); // edge length is arbitrary ?
+	var maxAngleNeighbors = this.projectedMaxNeighborhoodAngle(p);
 	// var maximumNeighborAngle = Code.radians(150.0);
-	// var maximumNeighborAngle = Code.radians(180.0);
+	var maximumNeighborAngle = Code.radians(180.0);
 	// var maximumNeighborAngle = Code.radians(200.0);
-	var maximumNeighborAngle = Code.radians(220.0);
-
+	// var maximumNeighborAngle = Code.radians(220.0);
 console.log("isBorderPoint: "+Code.degrees(maxAngleNeighbors)+" / "+Code.degrees(maximumNeighborAngle));
 	if(maxAngleNeighbors>maximumNeighborAngle){
 		return true;
@@ -3567,6 +3551,7 @@ Mesh3D.prototype._copyPointProjectionToSource = function(){
 }
 
 Mesh3D.prototype._preprocessPoints_MLS = function(){
+	this._markersProcessed = false;
 	this._minCurvature = null;
 	this._maxCurvature = null;
 	this._neighborhoodSpace.clear();
@@ -3594,6 +3579,7 @@ Mesh3D.prototype._preprocessPoints_MLS = function(){
 	console.log("neighborhood markers: "+this._neighborhoodSpace.count());
 	// throw "go thru each point: get: neighborhood size, curvature, confidence (normalGroup dot normal), planarness (sigmaMed/sigmaMin)";
 	console.log("curvature limits: "+this._minCurvature+" -> "+this._maxCurvature);
+	this._markersProcessed = true;
 }
 Mesh3D.prototype._preprocessPoint_MLS = function(point, queue){
 	var location = point.point();
@@ -3718,7 +3704,6 @@ Mesh3D.prototype._nearestLocalNeighborhoodSizeMark = function(location){ // find
 	var markerSpace = this._neighborhoodSpace;
 	// console.log(markerSpace);
 	// first find closest surface point?
-	// console.log(location);
 	var closest = markerSpace.closestObject(location);
 	// console.log(closest);
 	return closest;
@@ -4131,16 +4116,54 @@ console.log("still too low: "+valueLow+" ("+indexLow+") < "+searchValue+" < "+va
 Mesh3D.prototype._localNeighborhoodSize = function(location){
 	var space = this._pointSpace;
 	var markerSpace = this._neighborhoodSpace;
+
+
+
+	// check if point marker exists already 
+	if(this._markersProcessed){
+		var markerSpace = this._neighborhoodSpace;
+		// find nearest knn
+		var k = 4; // 3 - 5
+		var neighborhood = markerSpace.kNN(location,k);
+		if(neighborhood.length<k){
+			throw "not expected count: "+neighborhood.length+" / "+k;
+		}
+		// get max distance in neighborhood
+		var points = Code.copyArray(neighborhood);
+			Code.arrayMap(points,Mesh3D._markerToPoint);
+		var maxD = V3D.maximumDistance(points,location);
+		var sigma = maxD*0.5; // half important distance
+		var s2 = sigma*sigma;
+		// get weights
+		var weights = [];
+		var weightTotal = 0;
+		for(var i=0; i<k; ++i){
+			var marker = neighborhood[i];
+			var point = marker["point"];
+			var d2 = V3D.distanceSquare(location,point);
+			var weight = Math.exp(-d2/s2);
+			weights[i] = weight;
+			weightTotal += weight;
+		}
+		// get average
+		var countAverage = 0;
+		for(var i=0; i<k; ++i){
+			var weight = weights[i]/weightTotal;
+			var marker = neighborhood[i];
+			var count = marker["count"];
+			countAverage += count*weight;
+		}
+		countAverage = Math.ceil(countAverage);
+		return {"count": countAverage};
+	}
+	// discretized marker samples
 	var maxNeighborhoodRatio = 2; // 1-2
 	var maxBinaryRatio = 4; // 2-10
 	// var maxNeighborhoodRatio = 2;
 	// var maxBinaryRatio = 4;
-
-
 	// maxNeighborhoodRatio = 10;
 	// maxBinaryRatio = 20;
 
-	// check if point marker exists already 
 	var marker = this._nearestLocalNeighborhoodSizeMark(location);
 	var info = null;
 	if(marker){
@@ -4178,7 +4201,7 @@ Mesh3D.prototype._localNeighborhoodSize = function(location){
 		markerSpace.insertObject(marker);
 		// console.log("inserted new marker");
 	}else{
-		throw "got this far without mrarker";
+		throw "got this far without marker";
 	}
 	return marker;
 }

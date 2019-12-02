@@ -34,7 +34,7 @@ GLOBALSTAGE = this._stage2D;
 	// this.setupSphere3D(250, 1.0, 0.0, 0.0);
 	// this.setupSphere3D(4000, 1.0, 0.50, 0.0);
 	// this.setupSphere3D(500, 1.0, 0.0, 0.0);
-	// this.setupSphere3D(100, 1.0, 0.0, 0.0);
+	// this.setupSphere3D(1000, 1.0, 0.0, 0.0);
 
 
 	// this.setupTorus3D(4000, 4.0,2.0, 0.0,0.0);
@@ -43,6 +43,7 @@ GLOBALSTAGE = this._stage2D;
 
 
 	this.loadPointFile();
+
 
 //	this.setupRect3D();
 //	this.setupCurveTest();
@@ -933,29 +934,25 @@ console.log(surface);
 GLOBAL_DATA["points"] = surface;
 */
 
-	mesh.testProjectionSampling();
-	throw "?"
+	// mesh.testProjectionSampling();
+	// throw "?"
 
 	// console.log(info);
 	var triangles = [];
 
 
 
-	mesh._sizeSpaces();
+	// mesh._sizeSpaces();
 	// mesh._setCurvaturePoints_MLS();
 
-	// var triangles = mesh.generateSurfaces();
+	var triangles = mesh.generateSurfaces();
 
 	// mesh._toSurfaceProjections();
 
 
+	console.log(triangles);
 
-
-
-
-
-	// var triangles = [];
-	// console.log(triangles);
+	// var info = Tri3D.arrayToUniquePointList(triangles);
 	// throw "?";
 
 // var pts = spherePoints;
@@ -980,6 +977,36 @@ var spherePoints = [];
 	// IF ORIGINAL POINTS HAVE NORMALS -> SET CONSISTENT WITH THEM
 	var allTriangles = mesh.outputTriangles();
 	console.log(allTriangles);
+
+
+
+// push in triangles for markers
+// var showMarkers = true;
+var showMarkers = false;
+if(showMarkers){
+	console.log("MARKERS");
+	var markers = mesh._neighborhoodSpace;
+	markers = markers.toArray();
+	var latNum = 5;
+	var lonNum = 5;
+	var radius = 0.1;
+	for(var m=0; m<markers.length; ++m){
+		var marker = markers[m];
+		var radius = marker["radius"];
+		var center = marker["point"];
+		var tris = Tri3D.generateSphere(radius, latNum, lonNum, center);
+		console.log("tris:");
+		console.log(tris);
+		for(var i=0; i<tris.length; ++i){
+			var t = tris[i];
+			allTriangles.push(t);
+		}
+	}
+}
+
+
+
+
 
 	// YAML
 	// var yaml = R3D.outputTriangleModel(allTriangles);
@@ -1335,7 +1362,8 @@ tris = inCube;
 				colorsT.push(0.0,0.90,0.0, 1.0);
 				colorsT.push(0.0,0.0,0.90, 1.0);
 			}
-var showTriNormals = false;
+// var showTriNormals = false;
+var showTriNormals = true;
 if(showTriNormals){
 			// TRIANGLE NORMALS:
 			var normalScale = 0.03;

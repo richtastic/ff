@@ -387,192 +387,28 @@ https://cloud.google.com/appengine/docs/nodejs/
 0+1+2 = S21L1RCT
 
 
+- how to handle differently sized images? in various steps of alg? resolution &| dimensions [also rotation of K ...]
+- how many points should be searched for at each step of the process to minimize calculations/time [visualize pixel densities]
+- try larger image data set: 6-10
+- update file/info locations
+- standardize what data formats are consistently
+- add histogram/features/summary & grab-bag step
+- add back BA steps to add points back in via projected searching & neighborhood searching
+- more accurate triangle-texture blending locations require multiple images to be loaded at same time
 
 
-- visualize registered neighbor points & sizes ???
-	- show spheres
-	- size sphere at marker locations using knn radius
+
+- VR transporting --- use left joystick?
+- VR rotation more fine angle
 
 
 
 
+- iteritiveEdgeToSizeAtPoint is still just basically random checking
 
 - base angle is OPPOSITE of edge ... what is 60 - beta look like ?
 
-- iteritiveEdgeToSizeAtPoint --- only has jumping, try adding windowing ...
-
-console.log("  iteritiveEdgeToSizeAtPoint: "+i+" = "+ratio+" ("+idealSize+" / "+length+")");
-
-- still have some fairly tiny triangles ... on ears -- noise ?
-	=> are ideal lengths being reached?
-		- try iterative projection ?
-	- some edge-points seem like they have highest curvature because pts are outside careable range
-	- search radius seems high?
-		~ try using TRIANGLE EDGE length rather than ideal edge length when doing search radius (because it only needs to adjust to CURRENT length)
-
-
-
-~ try using/substituting the PROJECTED points for samples after first iteration
-	- smoother
-	- halves the knn needed during runtime
-	- edges have 'shrinking' problem
-....
-
-
-
-
-
-
-
-
-
-
-curvature estimate is maybe not numerically stable in some conditions?
-	- alternative calculations?
-
-
-projectPointToSurface -- working very differently in 2 different contexts 
-
-numbers are not matching up ...
-	=> use KNN vs radius in some cases ??? [use nearest neighbor and KNN, not radius from center ...]
-
-
-- why are projections worse?
-	- show surface grid normals
-	- show 2 slightly differently placed points & projected surfaces
-
-	- is triangle projected point / edge close to the 'desired' size
-		- is desired size related to closest point curvature or 'within-search-radius' curvature ?
-
-- look at actual high-curvature point and SEE why it happens?
-
-....
-
-
-- projected  points are worse than original points ...
-	- normals are almost exactly wrong in some places
-		[also exactly right in others, eg: face]
-	- 
-
-
--curvature estimates off still?
---- should ok searching a ~2x radius -- why is this bad?
-	- is the search radius the CURRENT edge size or the IDEAL edge size?
-	-- around some points the curvature is erradic around edges ?
-
-	- try to find local normal again ?
-
-- surface projection is still not very smooth
-
-- surface projection not going 'straight' down (need retries?)
-
-
-- find a point with very high curvature
-- plot surface interpolation
-- show curvature
-
-
-
-- curvature still seems wrong ...
-
-- curvature calculation seems very picky
---- double check surface curvature estimate / calc
-
-
-
-
-- number of spatial neighbors may be poor around base?
-- boundary edges around base ?
-
-
-
-
-- visualize surface projection
-	- point
-	- projection
-	- original knn
-	- subsampled knn
-	- 
-
-
-- triangle size is wrong
-	- surface curvature wrong?
-	- search radius too large?
-	~ projection to surface wrong?
-		- is inside core of window ?
-	- surface curvature is not smoothing enough?
-		~ larger window?
-		~ lower-order approximation?
-	
-
-=> visualize some of these properties
-	- kNN radius
-	- search radius
-
-
-
-
-- speed up projection by sampling area ? (first random 50-100 ?)
-
-
-
-
-- see what projecting all points to their surface point looks like when re-rendering?
-
-
-... lost a section of points on the side
-
-
-
-
-
-
-sampleErrorsDebug
-
-
-optimumTransform3DFromObjectLookup
-
-
-- are errors/percents being used correctly?
-
-
-
-
 - finding multiple seeds after first one fails/finishes
-- 
-
-
-
-
-
-
-
-
-optimumTransform3DFromRelativePairTransforms
-
-	optimumTransform3D
-		...
-
-		nonlinear:
-		var result = R3D._gdTranslationRotation3D(vs,es,values,rootIndex,iterations, 0);
-		var result = R3D._gdTranslationRotation3D(vs,es,values,rootIndex,iterations, 1);
-
-			fxn = R3D._gdLocationOperation3D
-			fxn = R3D._gdRotationOperation3D
-				gdLocationRotationOperation3D
-
-					error = R3D._gdErrorLocation3DFxn(rel,abs);
-					error = R3D._gdErrorAxisAngles3D(rel[0],rel[1],rel[2],abs[0],abs[1],abs[2]);
-
-
-	 - initial estimate relies on averaging TWISTS: quaterntions + translations
-
-
-
-
-
-
-
 
 - re-desiging filesystem & project files with most recent knowledge
 
@@ -626,15 +462,6 @@ TRIPLE LIST:
 
 
 	...
-
-
-
-
-- ways to improve BA progress
-	- include only triples+ 
-	- ...
-	- 
-
 
 - way to push camera views towards each other by knowing relative offset of a set of points?
 	if Pa & Pb are supposed to be the same point

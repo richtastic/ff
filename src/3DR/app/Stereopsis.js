@@ -6228,8 +6228,8 @@ Stereopsis.World.prototype.solveFullDenseIterate = function(){ // multiwise BA f
 	var world = this;
 
 
-	var maxIterations = 3;
-	// var maxIterations = 5;
+	var maxIterations = 3; //// 0.8 2.9 0.8
+	// var maxIterations = 5; //// ?
 	// var maxIterations = 10;
 	for(var iteration=0; iteration<maxIterations; ++iteration){
 		console.log("all: ========================================================================================= "+iteration+" / "+maxIterations);

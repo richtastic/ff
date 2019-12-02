@@ -279,11 +279,11 @@ f<sub>xy</sub> = (i - c - g + a)/(4&middot;&delta;<sup>2</sup>)
 
 
 
-1? really? not &delta;?
-
 as a vector, sx = &lt;dx, 0, f(x2)-f(x1)&gt; / delta
 
-not UNIT -- if it was unit then E & G would always be 1
+
+
+&lt;&delta;,0,f<sub>x</sub>&gt; / &delta; = ... :
 
 
 &sigma;<sub>x</sub> = &lt;1,0,f<sub>x</sub>&gt;

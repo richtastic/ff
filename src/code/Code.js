@@ -13029,7 +13029,7 @@ Code.bezier2DCubicLinearN = function(A,B,C,D){
 
 }
 
-
+// GENERATING TRIANGLE PRIMITIVES
 
 
 // Code.generatePoints3DHemisphere

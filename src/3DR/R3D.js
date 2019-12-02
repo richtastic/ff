@@ -22459,6 +22459,8 @@ R3D.TextureTriangle.prototype.subdivide = function(){
 	return {"triangles":tris, "vertexes":verts};
 }
 R3D.optimumTriangleTextureImageAssignment = function(transforms,cameras,resolutions,triangles3D,textureSize,resolutionScale){ // COULD HAVE NEW TRIANGLES
+	console.log("optimumTriangleTextureImageAssignment");
+	console.log(triangles3D);
 	resolutionScale = resolutionScale!==undefined ? resolutionScale : 1.0;
 	// console.log(transforms,cameras,resolutions,triangles3D,textureSize,resolutionScale);
 	// scale camera matrices up to resolution:
@@ -22472,7 +22474,7 @@ R3D.optimumTriangleTextureImageAssignment = function(transforms,cameras,resoluti
 	var maxDimension = Math.min(textureSize.x,textureSize.y);
 	// console.log("MAX DIM: "+maxDimension+" @ "+resolutionScale)
 	maxDimension = (maxDimension*resolutionScale) - 2; // 2 = padding
-
+console.log("maxDimension: "+maxDimension);
 	// triangles are typically connected at the vertex -> make sure triangles are connected components
 	var tris = [];
 	var verts = [];
@@ -22554,7 +22556,8 @@ R3D.optimumTriangleTextureImageAssignment = function(transforms,cameras,resoluti
 		viewNormals.push(normal);
 		viewCenters.push(center);
 	}
-
+console.log(viewNormals);
+console.log(viewCenters);
 	// insert triangles into space
 	var triangleSpace = new OctSpace(toCuboid,minSpace,maxSpace);
 	triangleSpace.initWithObjects(tris);
@@ -22639,6 +22642,7 @@ R3D.optimumTriangleTextureImageAssignment = function(transforms,cameras,resoluti
 	triangleSpace.kill(); // done
 	// triangles init states
 	badTris = 0;
+	console.log(tris);
 	for(var i=0; i<tris.length; ++i){
 		var tri = tris[i];
 		var result = tri.initAllowedViews();

@@ -6170,10 +6170,11 @@ App3DR.ProjectManager.BUNDLE_DENSE_FILE_NAME = "dense.yaml";
 App3DR.ProjectManager.RECONSTRUCT_DENSE_DIRECTORY = "dense";
 App3DR.ProjectManager.RECONSTRUCT_DENSE_FILENAME = "dense.yaml";
 App3DR.ProjectManager.RECONSTRUCT_POINTS_FILE_NAME = "points.yaml"; // result of compiled points.yaml
-App3DR.ProjectManager.RECONSTRUCT_BUNDLE_FILE_NAME = "bundled.yaml";
+// App3DR.ProjectManager.RECONSTRUCT_BUNDLE_FILE_NAME = "bundled.yaml";
 // DEBUG FILE:
 App3DR.ProjectManager.RECONSTRUCT_BUNDLE_FILE_NAME = "bundle.yaml"; // cams, views & P3D+NRM absolutes
 // App3DR.ProjectManager.RECONSTRUCT_ABSOLUTE_FILE_NAME = "absolute.yaml"; //
+App3DR.ProjectManager.RECONSTRUCT_TRIANGLES_FILE_NAME = "triangles.yaml";
 
 // App3DR.ProjectManager.BUNDLE_DENSE_INFO_FILE_NAME = "info_dense.yaml";
 // App3DR.ProjectManager.SPARSE_MATCHES_FILE_NAME = "sparse.yaml"; // sparse points + transform
@@ -6320,6 +6321,9 @@ App3DR.ProjectManager.prototype.bundledDone = function(){
 
 
 
+App3DR.ProjectManager.prototype.triangulationDone = function(){
+	return this._triangleCount != null;
+}
 App3DR.ProjectManager.prototype.setTriangleCount = function(count){
 	this._triangleCount = count;
 }
@@ -6334,6 +6338,13 @@ App3DR.ProjectManager.prototype.setTriangleFilename = function(tris){
 }
 
 
+
+App3DR.ProjectManager.prototype.texturingDone = function(){
+	return this._textureCount != null;
+}
+App3DR.ProjectManager.prototype.texturingPackingDone = function(){
+	return this._textureCount != null && this._textureCount >= 0;
+}
 App3DR.ProjectManager.prototype.setTextureCount = function(count){
 	this._textureCount = count;
 }
@@ -7172,7 +7183,7 @@ App3DR.ProjectManager.prototype.saveTrianglesFromData = function(triangleData, f
 			fxn.call(ctx);
 		}
 	}
-	this.saveGraph(triangleString, this.triangleFilename(), fxnSavedTriangles, this);
+	this.saveTriangles(triangleString, this.triangleFilename(), fxnSavedTriangles, this);
 }
 
 App3DR.ProjectManager.prototype.saveTriangles = function(string, filename, callback, context, object){
@@ -7442,31 +7453,35 @@ if(!this.pointsDone()){ // put all points in single file
 	this.iterateDenseLoading();
 	return;
 }
-
+/*
 throw "task BA";
 if(!this.bundledDone()){ // iteritive bundle adjust -- all points in single file
 	this.iteratePointsFullBA();
 	return;
 }
+*/
+
+// throw "surface - triangles";
+console.log("triangle count: "+this.triangleCount());
+if(!this.triangulationDone()){
+	this.surfaceTriangulate();
+	return;
+}
 
 
-throw "surface - triangles";
-this.surfaceTriangulate();
-
-
-throw "triangles"
-var triangles = this.triangleCount();
-console.log("triangle count: "+triangles);
-if(triangles===null){
+// throw "surface triangle textures"
+console.log("texture count: "+this.textureCount());
+if(!this.texturingDone()){
 	this.trianglesTexturize();
 	return;
 }
 
 
-throw "textures";
+// throw "textures";
 var textures = this.textureCount();
 console.log("texture count: "+textures);
-if(textures===null){
+// if(textures<0){
+if(!this.texturingPackingDone()){
 	this.trianglesPacking();
 	return;
 }
@@ -7478,6 +7493,7 @@ console.log(scene);
 
 
 this.sceneToDAE();
+this.sceneToOBJ();
 
 
 
@@ -10514,35 +10530,34 @@ console.log("pendingIndex: "+pendingIndex);
 		var pointsCount = existingPoints.length;
 		console.log(pointsCount);
 		// get a BA object:
-
-		// ???
-
-		console.log("data");
 		world.estimate3DErrors(true);
 		world.patchInitBasicSphere(true);
 		// world.estimate3DErrors(true);
-
-
-
-
-
-		console.log("bundle adjust");
-// throw "HERE - BA";
-
 		world.solveFullDenseIterate();
-
-
-		console.log("str");
 		// check it out
 		var str = world.toYAMLString();
 		console.log(str);
+		// var obj = ;
+		console.log("... POINTS");
+		// SAVE TO BUNDLE ADJUST FILE
+		var saveBACompleteFxn = function(){
+			console.log("saveBAFxnComplete");
+			project.saveProjectFile(saveProjectCompleteFxn, project);
+		}
 
-		console.log("HERE ... POINTS");
+		var saveProjectCompleteFxn = function(){
+			console.log("saveProjectCompleteFxn");
+		}
 
-		throw "done loading";
+		//
+		var filename = App3DR.ProjectManager.RECONSTRUCT_BUNDLE_FILE_NAME;
+		console.log(filename);
+		this.setBundledFilename(filename);
 		this.setPointsCount(pointsCount);
-//		fxnSavedPoints();
+		
 
+		// App3DR.ProjectManager.prototype.saveBundled = function(string, filename, callback, context, object)
+		this.saveBundled(str, filename, saveBACompleteFxn, project, null);
 
 		return;
 	}
@@ -11573,6 +11588,8 @@ App3DR.ProjectManager.prototype.surfaceTriangulate = function(){ // triangles fr
 		console.log("fxnPointsLoaded");
 		var bundleData = project.bundledData();
 		console.log(bundleData);
+		var dataCameras = bundleData["cameras"];
+		var dataViews = bundleData["views"];
 		var allPoints = bundleData["points"];
 		// extract points & normals
 		var pnts = [];
@@ -11587,30 +11604,65 @@ App3DR.ProjectManager.prototype.surfaceTriangulate = function(){ // triangles fr
 		console.log(pnts);
 		console.log(nrms);
 
-
-var str = Code.pointsToPtsFileString(pnts,nrms);
-console.log(str);
-
-throw "export to POINT FILE ..."
-
-		// load from points file
-		
+console.log("CREATE MESH");
+// throw "?"
+// var str = Code.pointsToPtsFileString(pnts,nrms);
+// console.log(str);
+// throw "export to POINT FILE ..."
 		var mesh = new Mesh3D(pnts,nrms);
+		console.log(mesh);
 		var triangles = mesh.generateSurfaces();
+		console.log(triangles);
+		var info = Tri3D.arrayToUniquePointList(triangles);
+		console.log(info);
+//
+console.log("ASSEMBLE");
+		var vertexes = info["points"];
+		var triangles = info["triangles"];
+		// convert triangles objects to expected index format
+		for(var i=0; i<triangles.length; ++i){
+			var triangle = triangles[i];
+			var a = triangle["A"];
+			var b = triangle["B"];
+			var c = triangle["C"];
+			var tri = {};
+			tri["A"] = {"i":a, "u":null, "v":null};
+			tri["B"] = {"i":b, "u":null, "v":null};
+			tri["C"] = {"i":c, "u":null, "v":null};
+			tri["t"] = null;
+			triangles[i] = tri;
+		}
 
-		// pass along cameras
-		// pass along views
+		var data = {};
+		data["cameras"] = dataCameras;
+		data["views"] = dataViews;
+		data["vertexes"] = vertexes;
+		data["triangles"] = triangles;
+		data["uvs"] = null;
+		data["textures"] = null;
+		data["packing"] = null; //{"views":null};
 
+		console.log(data);
+		
+		// throw "SAVE TO TRIANGLE ???";
 
-		throw "?";
+		project.setTriangleFilename(App3DR.ProjectManager.RECONSTRUCT_TRIANGLES_FILE_NAME);
+		project.setTriangleCount(triangles.length);
+		// 
+		var saveTrianglesCompleteFxn = function(){
+			console.log("saveTrianglesCompleteFxn");
+			project.saveProjectFile(saveProjectCompleteFxn, project);
+		}
+
+		var saveProjectCompleteFxn = function(){
+			console.log("saveProjectCompleteFxn");
+		}
+		console.log("saveTrianglesFromData ??? ");
+		project.saveTrianglesFromData(data, saveTrianglesCompleteFxn, project);
 
 	}
 	// load final points file
 	project.loadBundled(fxnPointsLoaded, project);
-
-
-// ????
-
 }
 
 
@@ -11619,8 +11671,6 @@ throw "export to POINT FILE ..."
 App3DR.ProjectManager.prototype.trianglesTexturize = function(){ // find uv source coords from images
 	console.log("trianglesTexturize");
 	var project = this;
-	var views = project.views();
-	console.log(views);
 	// do operations
 	var fxnTrianglesLoaded = function(){
 		console.log("fxnTrianglesLoaded");
@@ -11641,7 +11691,6 @@ App3DR.ProjectManager.prototype.trianglesTexturize = function(){ // find uv sour
 			cameraFromID[cam["id"]] = K;
 		}
 		var views = project.views();
-
 		// get view resolutions
 		// var textureSize = new V2D(512,512);
 		// var textureSize = new V2D(1024,1024);
@@ -11669,7 +11718,7 @@ App3DR.ProjectManager.prototype.trianglesTexturize = function(){ // find uv sour
 			cameras.push(K);
 		}
 		// get view orientations
-
+		//
 		// convert to common format:
 		vertexes = Code.copyArray(vertexes);
 		triangles = Code.copyArray(triangles);
@@ -11678,6 +11727,11 @@ App3DR.ProjectManager.prototype.trianglesTexturize = function(){ // find uv sour
 			var x = vertex["X"];
 			var y = vertex["Y"];
 			var z = vertex["Z"];
+			if(x===undefined){
+				x = vertex["x"];
+				y = vertex["y"];
+				z = vertex["z"];
+			}
 			vertexes[i] = new V3D(x,y,z);
 		}
 		for(var i=0; i<triangles.length; ++i){
@@ -11690,10 +11744,11 @@ App3DR.ProjectManager.prototype.trianglesTexturize = function(){ // find uv sour
 				c = c["i"];
 			triangles[i] = [a,b,c];
 		}
-
+		// // 
 		// load from triangle file
-		// console.log(triangles);
-		// console.log(vertexes);
+		console.log(triangles);
+		console.log(vertexes);
+
 		var triangles3D = [];
 		for(var i=0; i<triangles.length; ++i){
 			var triangle = triangles[i];
@@ -11707,7 +11762,7 @@ App3DR.ProjectManager.prototype.trianglesTexturize = function(){ // find uv sour
 			triangles3D.push(t);
 		}
 		console.log("TRIANGLES START: "+triangles3D.length);
-
+// throw "?";
 		// 3D-2D texture sourcing
 		var info = R3D.optimumTriangleTextureImageAssignment(transforms,cameras,resolutions,triangles3D,textureSize,resolutionScale);
 		console.log(info);
@@ -11729,7 +11784,7 @@ App3DR.ProjectManager.prototype.trianglesTexturize = function(){ // find uv sour
 			var area = V2D.areaTri(a,b,c);
 			totalArea += area;
 		}
-		console.log("totalArea: "+totalArea)
+		console.log("totalArea: "+totalArea);
 		console.log("textureSize: "+textureSize+" = "+textureSize.area());
 		console.log("EST PAGES:"+(totalArea/textureSize.area()));
 
@@ -11814,7 +11869,8 @@ App3DR.ProjectManager.prototype.trianglesTexturize = function(){ // find uv sour
 		var completeTexturesDeleteFxn = function(){
 			console.log("SAVING TRIANGLE COUNT");
 			project.setTriangleCount(triangleCount);
-			project.setTextureCount(null); // should alreay be the case
+			// project.setTextureCount(null); // should alreay be the case
+				project.setTextureCount(-1); // start PACKING
 			project.setCurrentSceneID(null);
 			project.setScenes(null);
 			project.saveProjectFile();
@@ -11828,8 +11884,6 @@ App3DR.ProjectManager.prototype.trianglesTexturize = function(){ // find uv sour
 	}
 	// load final points file
 	project.loadTriangles(fxnTrianglesLoaded, project);
-
-
 }
 App3DR.ProjectManager.prototype.sceneToDAE = function(){
 	console.log("sceneToDAE");
@@ -12060,7 +12114,6 @@ console.log("viewIndex: "+viewIndex);
 			console.log(projectView);
 			projectView.loadTextureImage(loadImageTextureComplete, project);
 		}
-
 		loadImageTexture();
 	}
 	project.loadTriangles(fxnTrianglesLoaded, project);
