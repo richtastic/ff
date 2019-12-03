@@ -35,6 +35,7 @@
 - STL
 - FBX
 - DAE / ZAE
+- VR/AR asset thing?
 
 #### export texture map (+ model) [+1]
 
@@ -266,6 +267,24 @@ project typical numbers:
 
 
 
+CELL / DENSITY FOR IMAGES:
+- typical image: 1080x1920 = 2073600 ~ 2E6 pixels
+- sparse density: ~ 21x21 pixels = ~ 1% [51x91]   LO: [36x20 ~ ?] HI: [72x40 ~ 26]		~ 2880 pix 		3E3
+- dense density: ~ 11x11 pixels = ~ 0.5%                          HI: [143x80 ~ 13]		~ 11440 pix 	12E3
+- ba density (add back): ~ 3x3-7x7 pixels = ~ 0.25                HI: [214x120 ~ 8]		~ 25680 pix 	25E3
+
+
+-- final cell / pixel resolution also depends on the image being loaded at the time of transform
+
+
+
+
+ABSOLUTE TERMS : define cell count (for minimum size)
+RELATIVE TERMS : define image percent (for minimum size)
+
+
+
+
 
 # EXAMPLE USAGE:
 - import camera calibration/registration images
@@ -344,8 +363,7 @@ TODO: pairwise possibility limiting
 	- dense tracks
 	=> dense point tracks
 - surface triangulation(tessellation)
-x	- advancing-front, curvature-based tessellation
-(11/31)
+	- advancing-front, curvature-based tessellation
 	=> scene triangle model
 - texturing
 	- view-based surface texturing
@@ -358,6 +376,7 @@ x	- advancing-front, curvature-based tessellation
 	- VR device
 		- ios: scenekit
 		- oculus = unity / blender
+HERE --- REFINE PROCESS
 (12/31)
 - MVP
 	- example models
@@ -387,20 +406,64 @@ https://cloud.google.com/appengine/docs/nodejs/
 0+1+2 = S21L1RCT
 
 
-- how to handle differently sized images? in various steps of alg? resolution &| dimensions [also rotation of K ...]
-- how many points should be searched for at each step of the process to minimize calculations/time [visualize pixel densities]
+
+- get / plot color histograms
+
+- alg for bag of words: get corners/orientations at increasing scales (0.25 / 64x64 then up) & stop after 100 @ scale
+
+- get / plot BoW compares
+
+...
+
+
+- bag of words compare
+	- test how useful histograms are
+	- ORIENTED WAY? 
+	- feature count needs to be small to have fast compare [do features at scales until 100 + key points are found]
+		- 100x100 - each gets best other-score
+		- final number = average of all scores
+- comparison step:
+	- once all images are preprocessed for features:
+		- load pairs until all n * (n-1) have been compared
+			- final similarity score needs to be single number
+		- keep min best 4 ~ 6 or limited best
+			- HOW? -- repeated N-sigma-drop ?
+		- AND/OR until F - scores start to be very poor
+		=> each view has list of up to N other views match scores
+
+
+~ how to handle differently sized images? in various steps of alg? resolution &| dimensions [also rotation of K ...]
+	=> load image with resolution that best matches the desired pixel count / density
+	=> images are assume to be 'scaled up' to highest resolution of group
+~ how many points should be searched for at each step of the process to minimize calculations/time [visualize pixel densities]
 - try larger image data set: 6-10
+- add histogram/features/summary & grab-bag step
+
+
 - update file/info locations
 - standardize what data formats are consistently
-- add histogram/features/summary & grab-bag step
+
 - add back BA steps to add points back in via projected searching & neighborhood searching
 - more accurate triangle-texture blending locations require multiple images to be loaded at same time
+
+
+
+- camera image rectification for radial / tangential lens distortion
+
+
+
+- possible way to find abs location by minimizing DIRECTION error if relative scale is unknown?
+- 
 
 
 
 - VR transporting --- use left joystick?
 - VR rotation more fine angle
 
+
+
+- exact image file duplicate can be found with sha sum
+- exact image data duplicate requires image loading
 
 
 
@@ -439,10 +502,199 @@ project-ID/
 		ID/
 
 
+info.yaml:
+	title: "New Project 11/9/18 9:12AM"
+	created: "2018-11-09 09:12:31.9000"
+	modified: "2019-11-30 07:44:19.9290"
+	views:
+		-
+			title: "New View 25I42TL0"
+			id: "25I42TL0"					--- CHANGE FROM DIRECTORY
+			camera: null 					--- should hold ID
+			rotated: 0						--- ADDED FOR: 0 90 180 270
+			aspectRatio: 1.3333333333333333
+			mask: null
+			features: COUNT					--- CHANGE FROM FEATURES.FILES.STRINGNAME ???? --- null / value determines if it is done yet
+			???duplicate: false
+			pictures:
+				-
+					file: "100.png"
+					width: 2016
+					height: 1512
+					scale: 1
+	cameras:
+		-
+			directory: "LA8ADU8H"
+			title: "New Camera LA8ADU8H"
+			calculatedCount: 10
+			K:
+				fx: 0.8565143769157422
+				fy: 1.1625998022448123
+				s: -0.012439315192795274
+				cx: 0.4781381185245835
+				cy: 0.4746370298801608
+			distortion:
+				k1: -0.012203124117497414
+				k2: 0.0007660455391699547
+				k3: 0.0005320068206907417
+				p1: 0.017459785333744926
+				p2: 0.014415011981151046
+			images:
+				-
+					directory: "L9THUQ4M"
+					matches: 81
+					aspectRatio: 1.3333333333333333
+					pictures:
+						-
+							file: "100.png"
+							width: 1008
+							height: 756
+							scale: 1
+						-
+	bagOfWords: 								--- ADDED FOR BAG OF WORDS COMPARE
+		- 
+			view: ID
+			scores:
+				- 
+					i: ID
+					s: 0.112 --- pick a score
+					h: HISTOGRAM SCORE
+					f: FEATURE SCORE
+				...
+		...
+
+	scenes:
+		-
+			id: ID
+	...
+
+	SPARSE .... TO BE FORMER PAIR / TRIPLE DATA
+
+
+	graph: "graph.yaml"
+
+	tracks: "tracks.yaml"
+	trackCount: 4816
+
+	sparse: "sparse.yaml"
+	sparseCount: 2704
+
+	dense: "dense.yaml"
+	denseCount: 108024
+
+	points: "points.yaml"
+	pointsCount: 68212
+
+	bundled: "bundle.yaml"
+	bundledCount: null
+
+	triangles: "triangles.yaml"
+	triangleCount: 8337
+	textureCount: 2
+
+	currentSceneID: null
+	bundle: "test0.yaml"
 
 
 
-- loading dense pair into single file
+view/ID/
+features.yaml:
+	view: ID
+	created: "2019-08-05 17:58:51.7730"
+	flatHistogram:
+		0-0-0: 0.0012
+		...
+	flatHistogramSize: 10
+	wordCount: 100
+	words:
+		- 
+			x: ...
+			y: ...
+			size: ...
+			angle: ...
+	featureCount: 1124
+	features:
+		-
+			x: 0.03286579033039629
+			y: 0.025841308349525773
+			size: 0.031633061047733495
+			angle: -2.8001512423754815
+
+sparse.yaml //// 
+	cameras:
+	views: 				--- skip any views not worth checking ...
+	pairs:
+	triples:
+
+
+sparse/
+	pairs/
+		ID/
+			matches.yaml 	--- F matches
+			relative.yaml 	--- R matches
+			tracks.yaml 	--- best R matches [1K]
+
+
+tracks.yaml 			--- REPLACE existing sparse file
+
+dense.yaml
+	cameras:
+	views:
+	pairs: 				--- potential pairs to be estimated based on closeness / viewing angle / 
+	triples:
+
+dense/
+	pairs/
+		ID/
+			relative.yaml 		--- R matches
+
+
+points.yaml
+	???
+
+bundle.yaml
+	???
+
+triangles.yaml
+	???
+
+scenes/
+	ID/
+		scene.yaml
+		textures/
+			tex_0.png
+			...
+		snapshots/
+			shot_0.png
+			...
+		views/
+			ID.png
+			...
+
+
+scene.yaml
+	created:
+	modified:
+	views:
+		- 
+			id: 
+			transform:
+			...
+	cameras:
+		- ...
+	vantages:
+		- ...
+	surface:
+		vertexes:
+			- ...
+		triangles:
+			- ...
+	textures:
+		- ...
+	snapshots:
+		- ...
+
+
 
 - bundle adjust single file of points [view index format]
 
@@ -450,13 +702,6 @@ project-ID/
 
 
 
-
-
-TRIPLE LIST:
-	for each pair
-		for each other pair
-			if any view in common:
-			add to list
 
 
 
@@ -469,26 +714,12 @@ TRIPLE LIST:
 	=> tracks of length > 2 ???
 
 
-	...
-
-
-
-
 - points file to bundled file
 
 - wrong file format for loading view iDs / indexes ?
 
 - bundle adjust reduce error
 	- loading images?
-
-- source points are still high-error ... 3 - separate triangulations ...
-
-
-
-	- test triangulation on actual points
-	- add triangulation in pipeline
-	- texturing triangles
-	- export DAE & run on device
 
 
 - reduce points by averaging points ?
@@ -520,28 +751,6 @@ too close / intersection testing: --- isPointTooClose
 
 
 
-
-// var idealAC = this.iteritiveEdgeSizeFromPoint(V3D.midpoint(c,a));
-var idealAB = this.curvatureAtPoint(V3D.midpoint(a,b));
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-seedTriFromPoint
-
-
-maxCurvatureAtPoint
-capCurvature
 
 
 -  triangles seem like they may need a step to do edge-swapping 

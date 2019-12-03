@@ -7286,14 +7286,10 @@ console.log("checkPerformNextTask");
 			this.calculateFeatures(view);
 			return;
 		}
-		// TODO SUMMARY STATSTICS: store in summary.yaml
-		var hasSummary = true;
-		if(!hasSummary){
-			throw "SUMMARY STATSTICS";
-			this.calculateSummary(view);
-			return;
-		}
 	}
+
+throw "task bag of words"
+
 // throw "task pair features";
 	// does a feature-match pair exist (even a bad match) between every view?
 	len = views.length;
@@ -7557,6 +7553,10 @@ App3DR.ProjectManager.prototype._calculateFeaturesLoaded = function(view){
 	var maxCount = 2000;
 	var features = R3D.calculateScaleCornerFeatures(imageMatrix, maxCount);
 	var normalizedFeatures = R3D.normalizeSIFTObjects(features, imageMatrix.width(), imageMatrix.height());
+
+
+	throw "summary statsitics";
+
 	view.setFeatures(normalizedFeatures, this._calculateFeaturesComplete, this);
 }
 App3DR.ProjectManager.prototype._calculateFeaturesComplete = function(view){
