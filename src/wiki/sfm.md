@@ -250,9 +250,7 @@ significant enough of overlap to consider being compared
 Some summary statistics / features of each image can be used to compare overlap
 
 - features = vocabulary
-
 - individual features in each image are assigned a boolean value indicating if there is a similar enough feature in the opposite image
--
 
 
 - need large part or entire dataset to be preprocessed before the discarding can begin
@@ -260,6 +258,21 @@ Some summary statistics / features of each image can be used to compare overlap
 
 - with all image features loaded:
 	- can find clusters / nearest neighbors / overlap
+
+#### vocabulary options:
+    - flat color histogram (R/G/B binning)
+        - convolution / SAD compare
+    - gradients?
+        - requires orientation compare
+            - highest-frequency gradient?
+    - SAD/SIFT features
+        - requires orientation compare
+    - 
+
+
+
+
+similarity pair 
 
 
 progressive comparisons

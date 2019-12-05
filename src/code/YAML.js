@@ -411,6 +411,10 @@ YAML.prototype.writeString = function(name,value){ // if intending to write null
 		if(this._stackIsArray()){
 			this._lines[this._lineNumber++] = this._prefixIndent()+YAML.ARRAY_SEPARATOR+YAML.SPACE+value;
 		}else{
+			if(name==null){ // this is do to some bug / bad usage
+				name = value;
+				value = null;
+			}
 			this._lines[this._lineNumber++] = this._prefixIndent()+name+YAML.SEPARATOR+YAML.SPACE+value;
 		}
 	}

@@ -3608,6 +3608,10 @@ Code.randomPopParallelArrays = function(arrays,count){
 		}
 	}
 }
+Code.randomIndexArray = function(array){
+	var index = Math.floor(Math.random()*array.length);
+	return index;
+}
 Code.randomSampleArray = function(array){
 	var len = array.length;
 	if(len>0){

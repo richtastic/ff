@@ -407,21 +407,86 @@ https://cloud.google.com/appengine/docs/nodejs/
 
 
 
-- get / plot color histograms
 
-- alg for bag of words: get corners/orientations at increasing scales (0.25 / 64x64 then up) & stop after 100 @ scale
+cutoff
+guess
+load
+close
+putative
+reputed
+estimates
 
-- get / plot BoW compares
+
+
+pointsCornerMaxima / Raw
+
+- corner algorithm re-check -- why have smoothing in one version?
+
+- camera radial distortion retry nonlinear soln
+
+- skeletal graph algorithm
+
+
+
+
+
+- need to calculate what view-pairs should exist
+	- each view needs minimum count [2-3 other pairs]
+	- each needs max count, eg: min + 2 x sqrt(N) --- aim for over-estimate
+
+- how to select between histogram scores
+	- largest derivative in ordered score list?
+		- [after min of 2]
+
+
+
+
+- F / R errors should be in some RELATIVE size [width]
+
+
+- need to decide 'best guess' similarity pairs:
+	- find each view's in-range pairs
+	- add UNION entry for all pairs
+
+
+- sparse will use initial pairs as starting point [maybe: 25-50% will fail, 10-25% will be skipped]
+	- possible some pairs will be missed [incorrect score / necessary limit for processing]
+	- some pairs may end up with a poor F & not have pair estimate [high error / poor matches]
+
+- dense will use sparse output (known knowns) + global pair estimated adjacency
+	- propagate R-error [until reach max limit]
+	- geometry limits
+		- same direction: within ~ 45 degrees
+		x similar distance: within some sigma of known pairs
+	- [maybe 10-25% fail, 0-10% will be skipped]
+
+
+DENSE CHOICES FROM GRAPH:
+	- find shortest (lowest error) paths to all neighbors
+		- limit to ~ 2x total average error
+		- limit to ~ 1% of image size [eg: 5px for 500x400 image]
+		- limit to ~ distance of ~ 5 jumps
+	- A) views pointing within some angle of each other [90 deg]
+	- B) views frustrums have some amount of overlap
+	- histogram similarity score above some minimum
+
+
+
+
+
+
+- bundle adjustment to use skeleton
+	=> PAPER
 
 ...
 
 
-- bag of words compare
-	- test how useful histograms are
-	- ORIENTED WAY? 
-	- feature count needs to be small to have fast compare [do features at scales until 100 + key points are found]
-		- 100x100 - each gets best other-score
-		- final number = average of all scores
+
+
+- add compare grab-bag step
+
+- gradient and color way to compare images ??? or is gradient/color the best way?
+
 - comparison step:
 	- once all images are preprocessed for features:
 		- load pairs until all n * (n-1) have been compared
@@ -436,8 +501,8 @@ https://cloud.google.com/appengine/docs/nodejs/
 	=> load image with resolution that best matches the desired pixel count / density
 	=> images are assume to be 'scaled up' to highest resolution of group
 ~ how many points should be searched for at each step of the process to minimize calculations/time [visualize pixel densities]
+
 - try larger image data set: 6-10
-- add histogram/features/summary & grab-bag step
 
 
 - update file/info locations

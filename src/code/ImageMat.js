@@ -4965,18 +4965,28 @@ ImageMat.colorFilter = function(srcR,srcG,srcB, wid, hei, colorTarget, colorDist
 
 
 function ImageMatScaled(image){
-	this._images = ImageMat.getProgressiveScaledImage(image);
+	var images = ImageMat.getProgressiveScaledImage(image);
+	this._container = images;
+	this._images = images["images"];
+	this._scales = images["scales"];
 }
 ImageMatScaled.prototype.infoForScale = function(scale){
+	var container = this._container;
 	var images = this._images;
-	var scaleIndex = ImageMat.effectiveIndexFromImageScales(images,scale);
-	var actualScale = images["scales"][scaleIndex];
-	var effectiveImage = images["images"][scaleIndex];
+	var scales = this._scales;
+	var scaleIndex = ImageMat.effectiveIndexFromImageScales(container,scale);
+	var actualScale = scales[scaleIndex];
+	var effectiveImage = images[scaleIndex];
 	var effectiveScale = scale/actualScale;
 	// var effA = pointA.copy().scale(actualScaleA);
 	return {"image":effectiveImage, "actualScale":actualScale, "effectiveScale":effectiveScale};
 }
-
+ImageMatScaled.prototype.images = function(){
+	return this._images;
+}
+ImageMatScaled.prototype.scales = function(){
+	return this._scales;
+}
 
 
 
