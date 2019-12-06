@@ -7338,6 +7338,7 @@ console.log("checkPerformNextTask");
 			return;
 		}
 		if(camera.needsCalculation()){
+			console.log("needsCalculation");
 			this.calculateCameraParameters(camera, null);
 			return;
 		}
@@ -8416,7 +8417,7 @@ inverted:
 
 //R3D.BundleAdjustCameraParameters();
 
-//throw "CALIBRATE YEAH";
+throw "CALIBRATE YEAH";
 
 			self.saveProjectFile();
 		}

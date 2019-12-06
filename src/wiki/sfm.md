@@ -66,7 +66,7 @@ K:
 
 Cameras that vary from the linear model are said to have (nonlinear) _distortion_, modeled using polynomials:
 
-"Center of distortion"
+"Center of distortion", typically assumed to be cx,cy
 *Radial Distortion*:
 
 
@@ -85,6 +85,79 @@ D:?
 *k1*
 *k2*
 
+
+- want to find the undistorted image when only knowing the distorted image.
+- the undistorted image is approximated by using camera matrix that transforms (planar) known 3D points into observed 2D points
+
+
+<br/>
+u = undistorted point (approximated using 3D->2D projection with extrinsic P & intrinsic K)
+<br/>
+d = distorted point (image points inverted into normalized points from Kinv)
+<br/>
+r<sub>d</sub> = |(d<sub>x,y</sub> - c<sub>x,y</sub>)| = distorted radial distance from principle point
+<br/>
+cd<sub>x</sub> = (d<sub>x</sub> - c<sub>x</sub>)
+<br/>
+cd<sub>y</sub> = (d<sub>y</sub> - c<sub>y</sub>)
+<br/>
+u<sub>x</sub> = d<sub>x</sub> + [cd<sub>x</sub>&middot;(k<sub>1</sub>&middot;r<sub>d</sub><sup>2</sup> + k<sub>2</sub>&middot;r<sub>d</sub><sup>4</sup>)] + T
+<br/>
+u<sub>y</sub> = d<sub>y</sub> + (d<sub>y</sub> - c<sub>y</sub>) &middot; (k<sub>1</sub>&middot;r<sub>d</sub><sup>2</sup> + k<sub>2</sub>&middot;r<sub>d</sub><sup>4</sup>)
+<br/>
+
+<br/>
+initial linear estimate:
+<br/>
+```
+[ (dx-cx) * rd^2 , (dx-cx) * rd^4 , (dx-cx) * rd^6 ] * [k1 ; k2] = [ux - dx]
+[ (dy-cy) * rd^2 , (dy-cy) * rd^4 , (dy-cy) * rd^6 ] * [k1 ; k2] = [uy - dy]
+```
+<br/>
+
+
+[p<sub>1</sub>&middot;(r<sub>d</sub><sup>2</sup> + 2&middot;cd<sub>x</sub><sup>2</sup>) + 2&middot;p<sub>2</sub>&middot;cd<sub>x</sub>&middot;cd<sub>y</sub> ]
+
+
+
+
+
+
+
+
+<br/>
+nonlinear estimate
+<br/>
+
+
+TODO: could also solve for tangental et al
+
+principle point is too mixed in for linear, but nonlinearly
+
+
+
+<br/>
+for each image:
+    observed points d (distorted)
+    want to find undistorted points (u)
+    center of distortion c
+
+    r = ||(u-c)||^2
+
+    dx - cx = (ux - cx) * (1? + k1 * r^2 + k2 * r^4 )
+
+-where u comes from:
+    - know 'X' & initial K --- can find extrinsic camera projection?
+        - u = K' * EXTRINSIC * X
+        how to get EXTRINSIC ?
+        - is HOMOGRAPHY enough? to get u ?
+
+
+        [ (dx - cx) * r^2   (dx - cx) * r^4 ] * [k0 k1] = [ux - dx]
+
+
+
+    similar for y
 
 
 

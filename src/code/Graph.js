@@ -1113,6 +1113,9 @@ Graph.prototype.minSpanningTree = function(){ // minimum spanning tree MST -- as
 	// TODO: included / excluded
 	return {"edges":keep, "included":included, "excluded":excluded};
 }
+Graph.prototype.minSpanningTreeDirected = function(){ 
+	throw "TODO";
+}
 Graph.prototype.minRootPaths = function(){
 	return Graph._minRootPaths(this);
 }

@@ -421,10 +421,61 @@ estimates
 pointsCornerMaxima / Raw
 
 - corner algorithm re-check -- why have smoothing in one version?
+---- test
+
 
 - camera radial distortion retry nonlinear soln
+	- how are inverted images used in steps?
+		- invert (undistort) images on load
+			- mask of INVALID AREAS [can approx with curve?]
+			- can use down-sampled mask (1/2 - 1/4 size)
+		- undistort points on load
+		- K will change? ===> SHIFT CENTER ???
+		- re-distort points on save
+
+
+
 
 - skeletal graph algorithm
+- mst: 
+- maximum leaf mst: ?
+
+- edge 'importance'
+	- error
+	- connectivity
+	- 
+
+- why is MST not a better solution than the max conn?
+	- original path estimates may have really high error if a path is removed
+
+
+
+A) create initial MSP w/ max leaves
+	- set edge weights to importance = (shortest total path weight without edge IJ) / weight of IJ : in [1,0]
+	- remove lowest importance edges (below some min thresh, importance of 1 cannot be removed)
+	- loop: adding nodes/edges to skeleton graph
+		- start by adding node with largest importance (total number of edges, considering importance of edges)
+		- add all unmarked(white) nodes & connecting-edges, mark as gray
+		- select node with most unmarked neighbors ^repeat
+	- white = initial color
+	- gray = visited
+	- black = ???? interrior node --- how to mark?
+B) add back edges until error threshold is below stretch factor [t in 2-16?]
+	- prioritize edges:
+		- between black nodes (interrior edge)
+		- lower error first
+	- iterate thru all edges:
+		- add edge back only if d(i,j: skeleton) > t x d(i,j: original)  [assuming additive errors?]
+C) skeletal set : is non-leaf nodes/edges
+D) BA
+	- skeletal set BA
+	- leafy-groups BA -- should be disjoint
+		- determine best edges to use here too ?
+		- all leaf nodes + connected node
+		- size should be > 1 : otherwise it is just a pair and already optimized
+	- add non-skeletal views using updated absolute graph
+	- full BA
+
 
 
 

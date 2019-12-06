@@ -46,7 +46,7 @@ function Mesh3D(points, norms, angle){
 	// this._cappedMaxK = 1.0/0.10;
 
 
-
+	
 
 	// this._cappedMaxK = 1.0/0.01;
 	this._markersProcessed = false;
