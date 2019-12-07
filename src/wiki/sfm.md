@@ -101,17 +101,17 @@ cd<sub>x</sub> = (d<sub>x</sub> - c<sub>x</sub>)
 <br/>
 cd<sub>y</sub> = (d<sub>y</sub> - c<sub>y</sub>)
 <br/>
-u<sub>x</sub> = d<sub>x</sub> + [cd<sub>x</sub>&middot;(k<sub>1</sub>&middot;r<sub>d</sub><sup>2</sup> + k<sub>2</sub>&middot;r<sub>d</sub><sup>4</sup>)] + T
+u<sub>x</sub> = d<sub>x</sub> + [cd<sub>x</sub>&middot;(k<sub>1</sub>&middot;r<sub>d</sub><sup>2</sup> + k<sub>2</sub>&middot;r<sub>d</sub><sup>4</sup>)] + [p<sub>1</sub>&middot;(r<sub>d</sub><sup>2</sup> + 2&middot;cd<sub>x</sub><sup>2</sup>) + 2&middot;p<sub>2</sub>&middot;cd<sub>x</sub>&middot;cd<sub>y</sub>]
 <br/>
-u<sub>y</sub> = d<sub>y</sub> + (d<sub>y</sub> - c<sub>y</sub>) &middot; (k<sub>1</sub>&middot;r<sub>d</sub><sup>2</sup> + k<sub>2</sub>&middot;r<sub>d</sub><sup>4</sup>)
+u<sub>y</sub> = d<sub>y</sub> + [cd<sub>y</sub>&middot;(k<sub>1</sub>&middot;r<sub>d</sub><sup>2</sup> + k<sub>2</sub>&middot;r<sub>d</sub><sup>4</sup>)] + [2&middot;p<sub>1</sub>&middot;cd<sub>x</sub>&middot;cd<sub>y</sub> + p<sub>2</sub>&middot;(r<sub>d</sub><sup>2</sup> + 2&middot;cd<sub>y</sub><sup>2</sup>)]
 <br/>
 
 <br/>
 initial linear estimate:
 <br/>
 ```
-[ (dx-cx) * rd^2 , (dx-cx) * rd^4 , (dx-cx) * rd^6 ] * [k1 ; k2] = [ux - dx]
-[ (dy-cy) * rd^2 , (dy-cy) * rd^4 , (dy-cy) * rd^6 ] * [k1 ; k2] = [uy - dy]
+[ (dx-cx) * rd^2 , (dx-cx) * rd^4 , (dx-cx) * rd^6 ] * [k1 ; k2; k3] = [ux - dx]
+[ (dy-cy) * rd^2 , (dy-cy) * rd^4 , (dy-cy) * rd^6 ] * [k1 ; k2; k3] = [uy - dy]
 ```
 <br/>
 
@@ -128,9 +128,6 @@ initial linear estimate:
 <br/>
 nonlinear estimate
 <br/>
-
-
-TODO: could also solve for tangental et al
 
 principle point is too mixed in for linear, but nonlinearly
 

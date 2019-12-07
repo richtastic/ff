@@ -7792,6 +7792,19 @@ Code.linear2D = function(x,y, A,B,C,D){
 	return Code.linear1D(y, Code.linear1D(x,A,B), Code.linear1D(x,C,D));
 }
 
+Code.linear2DPercentages = function(x,y, a){
+	a = a ? a : [];
+	var px = x;
+	var qx = (1.0-x);
+	var py = y;
+	var qy = (1.0-y);
+	a[0] = qx*qy;
+	a[1] = px*qy;
+	a[2] = qx*py;
+	a[3] = px*py;
+	return a;
+}
+
 Code.lineSegCollinear2D = function(a,b, c,d){
 	var AB = V2D.sub(b,a);
 	var AC = V2D.sub(c,a);

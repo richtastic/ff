@@ -13196,9 +13196,8 @@ R3D.pointsCornerMaximaRaw = function(src, width, height, keepPercentScore, nonMa
 		if(max==null || val>max){ max = val; }
 		if(min==null || val<min){ min = val; }
 	}
-
 	var range = max-min;
-	var thresh = keepPercentScore!==undefined ? keepPercentScore : R3D.CORNER_SELECT_REGULAR;
+	var thresh = Code.valueOrDefault(keepPercentScore, R3D.CORNER_SELECT_REGULAR);
 	var limit = min + range*(1.0-thresh);
 	var pass = [];
 
@@ -13209,6 +13208,7 @@ R3D.pointsCornerMaximaRaw = function(src, width, height, keepPercentScore, nonMa
 	}else{
 		var extrema = Code.findMaxima2DFloat(H, width,height, true);
 	}
+
 	var borderIgnore = 0.01;
 	var border = Math.round(Math.min(borderIgnore*width,borderIgnore*height));
 	var zpb = border;
@@ -13222,9 +13222,36 @@ R3D.pointsCornerMaximaRaw = function(src, width, height, keepPercentScore, nonMa
 			}
 		}
 	}
+	
+	// limit to percent of image:
+	var hyp = Math.sqrt(Math.pow(width,2) + Math.pow(height,2));
+	var distance = nonMaximalPercent*hyp;
+	console.log("drop distance: "+distance);
+	var toV2D = function(a){
+		return a;
+	};
+	var sortCorners = function(a,b){
+		return a.z > b.z ? -1 : 1;
+	};
+	pass.sort(sortCorners);
+	var space = new QuadTree(toV2D);
+	space.initWithMinMax(new V2D(0,0), new V2D(width,height));
+	for(i=0; i<pass.length; ++i){
+		var point = pass[i];
+		var neighbors = space.objectsInsideCircle(point,distance);
+		if(neighbors.length==0){ // keep best corners first
+			// space.insertObject(new V4D(x,y,rad, point.z));
+			space.insertObject(point);
+		}
+		
+	}
+	pass = space.toArray();
+	space.clear();
+	space.kill();
 	return pass;
 }
 R3D.pointsCornerMaxima = function(src, width, height, keepPercentScore, nonMaximalPercent){
+console.log("pointsCornerMaxima - maybe don't use?");
 	var i, val;
 	var max = null, min = null;
 	var Horiginal = R3D.cornerScaleScores(src,width,height).value;
@@ -13272,7 +13299,7 @@ R3D.pointsCornerMaxima = function(src, width, height, keepPercentScore, nonMaxim
 	}
 
 	var range = max-min;
-	var thresh = keepPercentScore!==undefined ? keepPercentScore : R3D.CORNER_SELECT_REGULAR;
+	var thresh = Code.valueOrDefault(keepPercentScore, R3D.CORNER_SELECT_REGULAR);
 	var limit = min + range*(1.0-thresh);
 // console.log("CORNERING: "+min+" - "+max+" ("+range+") @ "+thresh+" = "+limit);
 	var pass = [];
@@ -27375,17 +27402,22 @@ break;
 	var distortion = R3D.linearCameraDistortion(estimatedPoints2D,totalPoints2D, K);
 	console.log(distortion);
 
+var distortionB = R3D.linearCameraDistortion(totalPoints2D,estimatedPoints2D, K);
+
+// throw "?"
 	var ds = [];
 var scale = 700.0;
 var half = scale*0.0;
 	for(var i=0; i<totalPoints2D.length; ++i){
 		var a = totalPoints2D[i];
 		var b = estimatedPoints2D[i];
-		var d = V2D.distance(a,b);
-		ds.push(d);
+		// var d = V2D.distance(a,b);
+		// ds.push(d);
 
 		// var c = R3D.applyDistortionParameters(distorted, undistorted, K, distortions);
 		var c = R3D.applyDistortionParameters(new V2D(), a, K, distortion);
+		var d = V2D.distance(c,b);
+			ds.push(d);
 
 		a = a.copy();
 		a.scale(scale);
@@ -27424,17 +27456,28 @@ var half = scale*0.0;
 	ds.sort();
 	console.log(ds);
 
+// throw "?";
+
+	var image = ImageMat.debugImage(500,400);
+	var img = GLOBALSTAGE.getFloatRGBAsImage(image.red(),image.grn(),image.blu(), image.width(),image.height());
+	var d = new DOImage(img);
+	d.matrix().scale(1.0);
+	d.matrix().translate(10, 10);
+	// d.graphics().alpha(0.4);
+	GLOBALSTAGE.addChild(d);
 
 
+console.log("invertImageDistortion");
+	// var result = R3D.invertImageDistortion(image, K, Kinv, distortion, image);
+	var result = R3D.invertImageDistortion(image, K, Kinv, distortionB, image);
+	console.log(result);
+	image = result["image"];
+	var img = GLOBALSTAGE.getFloatRGBAsImage(image.red(),image.grn(),image.blu(), image.width(),image.height());
+	var d = new DOImage(img);
+	d.matrix().scale(1.0);
+	d.matrix().translate(800, 10);
+	GLOBALSTAGE.addChild(d);
 
-// var result = R3D.invertImageDistortion = function(source, K, distortionFwd, isUnit, keepOriginalSizeAndCenter){
-	var image = ImageMat.debugImage(400,500);
-
-
-console.log(image);
-throw "get a debug image to invert distortion"
-invertImageDistortion ?
-	var result = R3D.invertImageDistortion(image, K, Kinv, distortion, image);
 
 	throw "?";
 
@@ -28004,7 +28047,7 @@ R3D.rotationFromApproximate = function(Q){
 	var R = Matrix.mult(U,Vt);
 	return R;
 }
-R3D.linearCameraDistortion = function(pointsUndistorted,pointsDistorted, K, maxPointCount){ // radial distortion coef to get from FROM to TO
+R3D.linearCameraDistortion = function(pointsUndistorted,pointsDistorted, K, maxPointCount, onlyRadial){ // radial distortion coef to get from FROM to TO
 	maxPointCount = Code.valueOrDefault(maxPointCount, 100);
 	if(pointsUndistorted.length>maxPointCount){
 		Code.randomPopParallelArrays([Code.copyArray(pointsUndistorted,pointsDistorted)],maxPointCount);
@@ -28013,8 +28056,10 @@ R3D.linearCameraDistortion = function(pointsUndistorted,pointsDistorted, K, maxP
 	var cx = K.get(0,2);
 	var cy = K.get(1,2);
 	var count = pointsUndistorted.length;
-	// var cols = 6;
-	var cols = 3;
+	var cols = 5;
+	if(onlyRadial){
+		var cols = 3;
+	}
 	var rows = count*2;
 	var A = new Matrix(rows,cols);
 	var b = new Matrix(rows,1);
@@ -28025,23 +28070,32 @@ R3D.linearCameraDistortion = function(pointsUndistorted,pointsDistorted, K, maxP
 		var uy = u.y;
 		var dx = d.x;
 		var dy = d.y;
-		var dxc = dx-cx;
-		var dyc = dy-cy;
+		var dcx = dx-cx;
+		var dcy = dy-cy;
+		var dcxy = dcx*dcy;
 		// var tyc = toy-cy;
 		// var fxc = frx-cx;
 		// var fyc = fry-cy;
-		var r2 = dxc*dxc + dyc*dyc;
+		var r2 = dcx*dcx + dcy*dcy;
 		var r4 = r2*r2;
 		var r6 = r4*r2;
 		var i2 = i*2;
 		var i20 = i2+0;
 		var i21 = i2+1;
-		A.set(i20,0, dxc*r2 ); // k1
-		A.set(i20,1, dxc*r4 ); // k2
-		A.set(i20,2, dxc*r6 ); // k3
-		A.set(i21,0, dyc*r2 ); // k1
-		A.set(i21,1, dyc*r4 ); // k2
-		A.set(i21,2, dyc*r6 ); // k3
+		A.set(i20,0, dcx*r2 ); // k1
+		A.set(i20,1, dcx*r4 ); // k2
+		A.set(i20,2, dcx*r6 ); // k3
+		A.set(i21,0, dcy*r2 ); // k1
+		A.set(i21,1, dcy*r4 ); // k2
+		A.set(i21,2, dcy*r6 ); // k3
+		// ps:
+		if(!onlyRadial){
+			A.set(i20,4, r2 + 2*dcx*dcx); // p1
+			A.set(i20,4, 2*dcxy); // p2
+			A.set(i20,4, 2*dcxy); // p1
+			A.set(i20,4, r2 + 2*dcy*dcy); // p2
+		}
+		// right
 		b.set(i20,0, ux-dx);
 		b.set(i21,0, uy-dy);
 		// // x
@@ -28069,6 +28123,10 @@ R3D.linearCameraDistortion = function(pointsUndistorted,pointsDistorted, K, maxP
 	var k3 = arr[2];
 	var p1 = 0;
 	var p2 = 0;
+	if(!onlyRadial){
+		p1 = arr[3];
+		p2 = arr[4];
+	}
 	distortions = {"p1":p1, "p2":p2, "k1":k1, "k2":k2, "k3":k3};
 	return distortions;
 // var xD = xU  +  k1*xR*r2 + k2*xR*r4 + k3*xR*r6 + p1*(r2 + 2*xR*xR) + 2*p2*xR*yR;
@@ -28198,6 +28256,7 @@ R3D.invertImageDistortionPerimeter = function(countX,countY, K, distortionFwd, i
 	return {"min":min, "max":max, "size":size, "center":center};
 }
 R3D.invertImageDistortion = function(source, K,Kinv, distortionFwd, isUnit, keepOriginalSizeAndCenter){ // isUnit, keepOriginalSizeAndCenter ignored
+// ????
 	console.log("invertImageDistortion")
 	isUnit = true;
 	var cx = K.get(0,2);
@@ -28207,6 +28266,12 @@ R3D.invertImageDistortion = function(source, K,Kinv, distortionFwd, isUnit, keep
 	var widthToHeightRatio = sourceWidth/sourceHeight;
 	var tempA = new V2D();
 	var tempB = new V2D();
+
+
+// THIS IS THE OPPOSITE ... NEED A TABLE OR SOMETHING ...
+
+
+
 	var mapping = function(to, fr){
 		tempA.set(fr.x,fr.y);
 
@@ -28351,7 +28416,7 @@ console.log("off: "+offX+","+offY);
 	return {"image":destination, "center":newCenter};
 }
 //R3D.applyDistortionParameters = function(distorted, undistorted, K, distortions){ // undistorted => distorted
-R3D.applyDistortionParameters = function(result, original, K, distortions){
+R3D.applyDistortionParameters = function(result, original, K, distortions, onlyRadial){
 	if(distortions===undefined){
 		distortions = undistorted;
 		original = original;
@@ -28361,22 +28426,20 @@ R3D.applyDistortionParameters = function(result, original, K, distortions){
 	}
 	var dx = original.x;
 	var dy = original.y;
-
 	var k1 = distortions["k1"];
 	var k2 = distortions["k2"];
 	var k3 = distortions["k3"];
 	var p1 = distortions["p1"];
 	var p2 = distortions["p2"];
-	var p3 = distortions["p3"];
-	var p4 = distortions["p4"];
+	// var p3 = distortions["p3"];
+	// var p4 = distortions["p4"];
 	var k1 = k1!==undefined ? k1 : 0.0;
 	var k2 = k2!==undefined ? k2 : 0.0;
 	var k3 = k3!==undefined ? k3 : 0.0;
 	var p1 = p1!==undefined ? p1 : 0.0;
 	var p2 = p2!==undefined ? p2 : 0.0;
-	var p3 = p3!==undefined ? p3 : 0.0;
-	var p4 = p4!==undefined ? p4 : 0.0;
-
+	// var p3 = p3!==undefined ? p3 : 0.0;
+	// var p4 = p4!==undefined ? p4 : 0.0;
 	var fx = K.get(0,0);
 	var fy = K.get(1,1);
 	var fs = K.get(0,1);
@@ -28387,11 +28450,9 @@ R3D.applyDistortionParameters = function(result, original, K, distortions){
 	var r2 = dcx*dcx + dcy*dcy;
 	var r4 = r2*r2;
 	var r6 = r4*r2;
-	// var xD = xU  +  k1*xR*r2 + k2*xR*r4 + k3*xR*r6 + p1*(r2 + 2*xR*xR) + 2*p2*xR*yR;
-	// var yD = yU  +  k1*yR*r2 + k2*yR*r4 + k3*yR*r6 + p2*(r2 + 2*yR*yR) + 2*p1*xR*yR;
-	var ux = dx - ( dcx*(k1*r2 + k2*r4 + k3*r6) );
-	var uy = dy - ( dcy*(k1*r2 + k2*r4 + k3*r6) );
-
+	var ux = dx - ( dcx*(k1*r2 + k2*r4 + k3*r6) ) - (p1*(r2 + 2*dcx*dcx) + 2*p2*dcx*dcy);
+	var uy = dy - ( dcy*(k1*r2 + k2*r4 + k3*r6) ) - (2*p1*dcx*dcy + p2*(r2 + 2*dcy*dcy));
+	// output
 	result.set(ux,uy);
 	return result;
 }

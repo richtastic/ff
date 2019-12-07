@@ -69,6 +69,69 @@ ImageMat.prototype.kill = function(){
 	Code.emptyArray(this._b);
 	this.unset();
 }
+// ------------------------------------------------------------------------------------------------------------------------ static
+ImageMat.debugImage = function(width,height){
+	var image = new ImageMat(width,height);
+	var wm1 = width - 1;
+	var hm1 = height - 1;
+	// base gradient
+	var colorUL = new V3D(1,0,0);
+	var colorUR = new V3D(0,1,0);
+	var colorLL = new V3D(0,0,1);
+	var colorLR = new V3D(0.5,0.5,0.5);
+	var p = [];
+	var v = new V3D();
+	for(var j=0; j<height; ++j){
+		var pY = j/hm1;
+		for(var i=0; i<width; ++i){
+			var pX = i/wm1;
+			Code.linear2DPercentages(pX,pY,p);
+			v.x = p[0]*colorUL.x + p[1]*colorUR.x + p[2]*colorLL.x + p[3]*colorLR.x;
+			v.y = p[0]*colorUL.y + p[1]*colorUR.y + p[2]*colorLL.y + p[3]*colorLR.y;
+			v.z = p[0]*colorUL.z + p[1]*colorUR.z + p[2]*colorLL.z + p[3]*colorLR.z;
+			// Code.linear2D = function(pX,pY, colorUL,B,C,D);
+			image.setPoint(i,j, v);
+		}
+	}
+	// horizontal & vertical lines
+	var spacingX = 50;
+	var spacingY = 100;
+	v.set(0,0,0);
+	var countX = Math.floor(width/spacingX);
+	var offsetX = Math.floor((width - countX*spacingX)*0.5);
+	var countY = Math.floor(height/spacingY);
+	var offsetY = Math.floor((height - countY*spacingY)*0.5);
+	for(var i=offsetX; i<width; i+=spacingX){
+		for(var j=0; j<height; ++j){
+			image.setPoint(i,j, v);
+		}
+	}
+	for(var j=offsetY; j<height; j+=spacingY){
+		for(var i=0; i<width; ++i){
+			image.setPoint(i,j, v);
+		}
+	}
+	// border
+	v.set(1,1,1);
+	var i = 0;
+	for(var j=0; j<height; ++j){
+		image.setPoint(i,j, v);
+	}
+	var i = wm1;
+	for(var j=0; j<height; ++j){
+		image.setPoint(i,j, v);
+	}
+	var j = 0;
+	for(var i=0; i<width; ++i){
+		image.setPoint(i,j, v);
+	}
+	var j = hm1;
+	for(var i=0; i<width; ++i){
+		image.setPoint(i,j, v);
+	}
+	// done
+	return image;
+}
 // ------------------------------------------------------------------------------------------------------------------------ funziez
 ImageMat.prototype.setPoint = function(x,y, val){
 	var index = y*this.width() + x;

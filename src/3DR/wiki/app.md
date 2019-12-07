@@ -324,8 +324,8 @@ vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 	- high-cornerness
 	- get feature absolute size / angle
 	=> image features to compare to other images
-TODO: pairwise possibility limiting
-	? limit possible match pairs by using eg bag-of-words -- some kind of distance metric between pairs & use top set
+- pairwise possibility limiting
+	- limit possible match pairs by using eg bag-of-words
 	=> final list of pairs to test for
 - pairwise image feature matching
 	- generate feature descriptors for each image
@@ -424,6 +424,14 @@ pointsCornerMaxima / Raw
 ---- test
 
 
+- how useful is fwd / rev distortion ?
+- 
+
+- un-distort an entire image
+	- lookup map?
+
+
+
 - camera radial distortion retry nonlinear soln
 	- how are inverted images used in steps?
 		- invert (undistort) images on load
@@ -433,7 +441,7 @@ pointsCornerMaxima / Raw
 		- K will change? ===> SHIFT CENTER ???
 		- re-distort points on save
 
-
+- tangental distortion
 
 
 - skeletal graph algorithm
@@ -475,20 +483,6 @@ D) BA
 		- size should be > 1 : otherwise it is just a pair and already optimized
 	- add non-skeletal views using updated absolute graph
 	- full BA
-
-
-
-
-
-
-- need to calculate what view-pairs should exist
-	- each view needs minimum count [2-3 other pairs]
-	- each needs max count, eg: min + 2 x sqrt(N) --- aim for over-estimate
-
-- how to select between histogram scores
-	- largest derivative in ordered score list?
-		- [after min of 2]
-
 
 
 
