@@ -1275,6 +1275,42 @@ Graph.Vertex.prototype.edgesFrom = function(){
 	}
 	return edges;
 }
+Graph.prototype.display2D = function(edgesAsDistances){ // get list of 2d positions
+	// ~n^2 body problem, iteritive
+
+	// initial conditions:
+	// random point for each vertex inside radius = maximum edge length
+
+	// ideal rest length of edges
+
+
+	/*
+		init vertex positions to random location [circle radius = average edge length?]
+
+		iterate:
+			each vertex force = 0
+			for each vertex
+				A)
+					ki = ideal distance between each vertex = shortest path to each vertex
+
+				B) 
+					each adjacent vertex has force
+						k1 * log(distance / k2)
+					else repulsive force
+						k3/distance^2
+				add the directional forces to accumulator
+			move each vertex in direction of force by F * k4
+
+		k1 = 2
+		k2 = 1 [or edge length]
+		k3 = 1
+		k4 = 0.1
+	*/
+
+	// force
+
+	throw "?";
+}
 Graph.Vertex.prototype.toString = function(){
 	return "[Vertex "+this._id+" ("+this._edges.length+")]";
 }

@@ -14,8 +14,15 @@ function Corners(){
 	this._keyboard = new Keyboard();
 	// 
 	GLOBALSTAGE = this._stage;
-	var directory = "./images/";
-	var imageList = ["bench_A.png"];
+	// var directory = "./images/";
+	// var imageList = ["bench_A.png"];
+
+	// var directory = "./images/phone6/calibrate/";
+	// var imageList = ["calib-0.png"];
+
+	var directory = "./images/CAMERA/";
+	var imageList = ["A.png"];
+
 
 	// var directory = "./images/phone6/calibrate/";
 	// var imageList = ["calib-0.png","calib-1.png","calib-2.png","../../calibration1-0.jpg","../../desktop1.png"];
@@ -53,19 +60,27 @@ Corners.prototype.handleImagesLoadedBasic = function(imageInfo){
 	y = 0;
 	for(i=0; i<imageMatrixList.length; ++i){
 		var image = imageMatrixList[i];
+
+
+var pointMatches = R3D.detectCheckerboard(imageMatrix, 10,10, true);
+console.log(pointMatches);
+break;
+continue;
+
 		var gry = image.gry();
 		var width = image.width();
 		var height = image.height();
 		// var corners = R3D.pointsCornerMaxima(gry, width, height,  R3D.CORNER_SELECT_REGULAR); // CORNER_SELECT_AVERAGE CORNER_SELECT_RELAXED CORNER_SELECT_RESTRICTED
 // R3D.pointsCornerMaxima = function(src, width, height, keepPercentScore, nonMaximalPercent){		
 		// var keepPercentScore = 1.0;
-		var keepPercentScore = 0.999;
-		var nonMaximalPercent = 0.01;
+		var keepPercentScore = null;//0.999;
+		var nonMaximalPercent = 0.01; // 0.01 - 0.005
 		var cornersA = R3D.pointsCornerMaxima(gry, width, height, keepPercentScore, nonMaximalPercent);
 		var cornersB = R3D.pointsCornerMaximaRaw(gry, width, height, keepPercentScore, nonMaximalPercent);
 
 		// console.log(cornersA);
 		// console.log(cornersB);
+		console.log(cornersA.length+" v "+cornersB.length);
 		var c = [cornersA,cornersB];
 		var sizes = [2.0,3.0];
 		var colors = [0xFFFF0000,0xFF0000FF];

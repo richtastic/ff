@@ -6634,7 +6634,17 @@ Code.bestFitLine2DWeights = function(points, count, weights){ // weighted least 
 
 }
 // TODO: BILINEAR VECTOR FIELD ?
-Code.imageNonlinearTransform = function(source, mappingFxn, samplesX, samplesY){ // image warping / distorting / transform -- very time consuming
+Code.imageNonlinearTransform = function(source, mappingFxn){
+
+	// for every point in destination image
+
+	// get 
+
+	throw "?";
+}
+
+Code.imageNonlinearTransform = function(source, mappingFxn, samplesX, samplesY){
+throw "?Code.imageNonlinearTransform" // image warping / distorting / transform -- very time consuming
 	var toPoint = function(a){
 		return a["point"];
 	};
@@ -6649,10 +6659,14 @@ Code.imageNonlinearTransform = function(source, mappingFxn, samplesX, samplesY){
 	var maxTo = null;
 	var points = [];
 	for(var j=0; j<=samplesY; ++j){
-		var pJ = j/samplesY;
+		// var pJ = j/samplesY;
 		for(var i=0; i<=samplesX; ++i){
-			var pI = i/samplesX;
-			pointFr.set(pI*sourceWidth - 0.5, pJ*sourceHeight - 0.5);
+			// var pI = i/samplesX;
+			// pointFr.set(pI*sourceWidth - 0.5, pJ*sourceHeight - 0.5);
+
+			pointFr.set(i,j);
+			// ?????
+
 			//pointFr.set(pI*swm1 - 0.0, pJ*shm1 - 0.0);
 			mappingFxn(pointTo, pointFr);
 			var p = {"point":pointTo.copy(), "mapping":pointFr.copy()};

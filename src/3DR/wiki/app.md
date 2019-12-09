@@ -416,16 +416,26 @@ putative
 reputed
 estimates
 
+- display a graph in 2D algorithm
+	- want neighbors at distance ~ k times edge distance
+	- forces:
+		- edge force is scaled by difference in desired distance
+			- d = a-b ; d>1 => force is attractive ; d<1 ; force is repulsive
+		- vertex-vertex repulsion to non-neighbors 
+	- wa
+
+https://reference.wolfram.com/language/tutorial/GraphDrawing.html
 
 
-pointsCornerMaxima / Raw
 
-- corner algorithm re-check -- why have smoothing in one version?
----- test
+linearCameraDistortion
+	- tangental seems very corner-wrong
+
+- show a inverse distorted example camera image (bench)
 
 
-- how useful is fwd / rev distortion ?
-- 
+- how useful is fwd / rev camera distortion ?
+
 
 - un-distort an entire image
 	- lookup map?
@@ -441,7 +451,8 @@ pointsCornerMaxima / Raw
 		- K will change? ===> SHIFT CENTER ???
 		- re-distort points on save
 
-- tangental distortion
+
+
 
 
 - skeletal graph algorithm
