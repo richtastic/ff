@@ -31301,6 +31301,345 @@ R3D._gdScales1D = function(vs,es,values,rootIndex,iterations){
 
 R3D.skeletalViewGraph = function(edges, maxErrorMultiple){ // get critical nodes/edges & list of sub-groups
 	var t = Code.valueOrDefault(maxErrorMultiple, 4.0); // 4-16
+
+	console.log(edges);
+	// construct graph from simple edges
+	var maxVertex = null;
+	for(var i=0; i<edges.length; ++i){
+		var edge = edges[i];
+		if(maxVertex===null){
+			maxVertex = edge[0];
+		}
+		maxVertex = Math.max(maxVertex,edge[0]);
+		maxVertex = Math.max(maxVertex,edge[1]);
+	}
+	var vertexCount = maxVertex+1;
+	console.log("vertexCount: "+vertexCount);
+	// show graph
+	var graph = new Graph();
+	var gVertexes = [];
+	var gEdges = [];
+	var vertexDatas = [];
+	var edgeDatas = [];
+	// insert vertexes
+	for(var i=0; i<vertexCount; ++i){
+		var vertex = graph.addVertex();
+		gVertexes.push(vertex);
+		var data = {};
+		data["vertex"] = vertex;
+		vertex.data(data);
+		vertexDatas.push(data);
+	}
+	// insert edges
+	for(var i=0; i<edges.length; ++i){
+		var edge = edges[i];
+		var a = edge[0];
+		var b = edge[1];
+		var w = edge[2];
+			a = gVertexes[a];
+			b = gVertexes[b];
+		edge = graph.addEdge(a,b, w, Graph.Edge.DIRECTION_DUPLEX);
+		gEdges.push(edge);
+		var data = {};
+			data["edge"] = edge;
+			data["weight"] = w;
+		edge.data(data);
+		edgeDatas.push(data);
+	}
+	// get degree
+	for(var i=0; i<vertexCount; ++i){
+		var vertex = gVertexes[i];
+		var data = vertex.data();
+		var degree = vertex.degree();
+		data["degree"] = degree;
+		data["color"] = 0;
+	}
+	// calculate the shortest path between every pair of vertexes = sum
+	var minPathLookup = {};
+	var pairIDFxn = Graph._pairIDFxn;
+	for(var i=0; i<gVertexes.length; ++i){
+		var vertexA = gVertexes[i];
+		var paths = graph.minPaths(vertexA);
+		console.log(paths);
+		for(var j=0; j<paths.length; ++j){
+			var path = paths[j];
+			var vertexB = path["vertex"];
+			var cost = path["cost"];
+			var pairID = pairIDFxn(vertexA.id(),vertexB.id());
+			minPathLookup[pairID] = cost;
+		}
+	}
+	
+	// get edge importance = shortestLength/edgeLength & reset edge weight as importance
+	for(var i=0; i<gEdges.length; ++i){
+		var edge = gEdges[i];
+		var data = edge.data();
+		var vertexA = edge.A();
+		var vertexB = edge.B();
+		var weight = edge.weight();
+		var pairID = pairIDFxn(vertexA.id(),vertexB.id());
+		var minPathCost = minPathLookup[pairID];
+		if(minPathCost==0){
+			throw "no zeros";
+		}
+		var importance = minPathCost/weight;
+		data["importance"] = importance;
+		edge.weight(importance);
+	}
+	// TODO: remove edges below some minimum importance (eg 1/4)
+	console.log(minPathLookup);
+	console.log(vertexDatas);
+	console.log(edgeDatas);
+	console.log(graph);
+	// find best vertex to add: highest degree & importance
+	var bestVertex = null;
+	var bestDegree = 0;
+	for(var i=0; i<gVertexes.length; ++i){
+		var vertex = gVertexes[i];
+		var degree = vertex.degree();
+		var data = vertex.data();
+		// get 'average' degree ?
+		// if(degree<=1){
+		// 	degree = 1;
+		// }
+		// degree = data["importance"]/degree;
+		if(!bestVertex){
+			bestVertex = vertex;
+			bestDegree = degree;
+		}else{
+			if(bestDegree<degree){
+				bestVertex = vertex;
+				bestDegree = degree;
+			}
+		}
+	}
+	console.log(bestVertex);
+	// loop - add vertexes to graph from queue
+	var includedEdges = [];
+	var sortVertexFxn = function(a,b){
+		if(a==b){
+			return 0;
+		}
+		// not DEGREE, most white neighbors
+		var da = a.degree();
+		var db = b.degree();
+		if(da==db){
+			// console.log(a);
+			// var ia = a.weight();
+			// var ib = b.weight();
+			// if(ia==ib){
+				return a.id()<b.id() ? -1 : 1;
+			// }
+			// return ia<ib ? -1 : 1;
+		}
+		return da<db ? -1 : 1;
+	}
+	var queue = new PriorityQueue(sortVertexFxn);
+	queue.push(bestVertex);
+		// .data()["color"] = 1;
+var c=0;
+	while(!queue.isEmpty()){
+		var currentVertex = queue.pop();
+		// console.log(currentVertex);
+		var currentData = currentVertex.data();
+		var color = currentData["color"];
+		if(color==2){ // already added all edges
+			continue;
+		}
+		currentData["color"] = 2;
+		// add each unvisited edge to graph
+		var edges = currentVertex.edges();
+		for(var i=0; i<edges.length; ++i){
+			var edge = edges[i];
+			var other = edge.opposite(currentVertex);
+			var otherData = other.data();
+			if(otherData["color"]==0){ // not yet added to group
+				otherData["color"] = 1;
+				queue.push(other);
+				// console.log(edge.A().id()+" & "+edge.B().id())
+				var edgeData = edge.data();
+				edgeData["skeleton"] = true;
+				includedEdges.push(edgeData);
+			}
+		}
+++c;
+if(c>1000){
+	console.log("too long");
+	break;
+}
+
+	}
+	console.log(includedEdges.length);
+	console.log(includedEdges);
+	// add unused edges to queue
+	var sortEdgeFxn = function(a,b){
+		if(a==b){
+			return 0;
+		}
+		// interrior first
+		var edgeA = a["edge"];
+		var edgeB = b["edge"];
+		var bothA = edgeA.A().data()["color"]==2 && edgeA.B().data()["color"]==2;
+		var bothB = edgeB.A().data()["color"]==2 && edgeB.B().data()["color"]==2;
+		if(bothA && !bothB){
+			return -1;
+		}else if(!bothA && bothB){
+			return 1;
+		}
+		// covariance weight
+		var wa = a["weight"];
+		var wb = b["weight"];
+		if(wa<wb){
+			return -1;
+		}else if(wa>wb){
+			return 1;
+		}
+		return edgeA.id()<edgeB.id() ? -1 : 1;
+	}
+	queue.sorting(sortEdgeFxn);
+	for(var i=0; i<edgeDatas.length; ++i){
+		var edge = edgeDatas[i];
+		if(!edge["skeleton"]){
+			queue.push(edge);
+		}
+	}
+	console.log(queue.toArray());
+	// throw "?"
+
+	// return {"edges":includedEdges};
+
+	
+	// re-calculate neighbor/shortest path lengths?
+
+	// sort unadded edges by importance / color
+
+	// add back edges until min stretch factor achieved
+
+	// separate leaves from rest of 
+	for(var i=0; i<includedEdges.length; ++i){
+		var edge = includedEdges[i];
+		var e = edge["edge"];
+		console.log(e.A().data()["color"],e.B().data()["color"])
+		if(e.A().data()["color"]==2 && e.B().data()["color"]==2){
+			edge["skeleton"] = true;
+		}else{
+			edge["skeleton"] = false;
+		}
+	}
+
+/*
+B) add back edges until error threshold is below stretch factor [t in 2-16?]
+	- prioritize edges:
+		- between black nodes (interrior edge)
+		- lower error first
+	- iterate thru all edges:
+		- add edge back only if d(i,j: skeleton) > t x d(i,j: original)  [assuming additive errors?]
+C) skeletal set : is non-leaf nodes/edges
+D) BA
+	- skeletal set BA
+	- leafy-groups BA -- should be disjoint
+		- determine best edges to use here too ?
+		- all leaf nodes + connected node
+		- size should be > 1 : otherwise it is just a pair and already optimized
+	- add non-skeletal views using updated absolute graph
+	- full BA
+
+*/
+
+
+	var info = graph.display2D();
+	console.log(info);
+
+	var positions = info["positions"];
+	var vertexes = info["vertexes"];
+	var edges = info["edges"];
+
+	var vertexIDtoIndex = {};
+	for(var i=0; i<vertexes.length; ++i){
+		var vertex = vertexes[i];
+		vertexIDtoIndex[vertex.id()] = i;
+	}
+
+
+	
+	var worldScale = 600.0;
+	var rad = 0.01;
+	var worldOffset = new V2D(400,400);
+	for(var i=0; i<positions.length; ++i){
+		var vertex = vertexes[i];
+		var position = positions[i];
+		// CIRCLES
+			var p = new V2D(position.x*worldScale,position.y*worldScale);
+			var d = new DO();
+			d.graphics().setLine(2.0,0xFFFF0000);
+			d.graphics().beginPath();
+			d.graphics().drawCircle(p.x,p.y,rad*worldScale);
+			d.graphics().endPath();
+			d.graphics().strokeLine();
+			d.matrix().translate(worldOffset.x, worldOffset.y);
+			GLOBALSTAGE.addChild(d);
+		// LABEL:
+		// var label = indexToLetter[vertex.id()]["n"];
+		var label = vertex.id();
+		var d = new DOText(""+label, 14, DOText.FONT_ARIAL, 0xFF009900, DOText.ALIGN_CENTER);
+			d.matrix().translate(worldOffset.x - 0 + p.x, worldOffset.y - 10 + p.y);
+			GLOBALSTAGE.addChild(d);
+	}
+
+	// edges
+	var d = new DO();
+	
+	GLOBALSTAGE.addChild(d);
+	for(var i=0; i<edges.length; ++i){
+		
+		var edge = edges[i];
+		var idA = edge.A().id();
+		var idB = edge.B().id();
+			idA = vertexIDtoIndex[idA];
+			idB = vertexIDtoIndex[idB];
+		var positionA = positions[idA];
+		var positionB = positions[idB];
+
+		var isSkeletal = edge.data()["skeleton"] === true;
+		// var isSkeletal = false;
+		// for(var j=0; j<includedEdges.length; ++j){
+		// 	var included = includedEdges[j];
+		// 	if(included["edge"]==edge){
+		// 		isSkeletal = true;
+		// 		break;
+		// 	}
+		// }
+		if(isSkeletal){
+			d.graphics().setLine(3.0,0xFF660033);
+		}else{
+			d.graphics().setLine(1.0,0xFF0000FF);
+		}
+
+		positionA = positionA.copy();
+		positionA.scale(worldScale);
+		positionB = positionB.copy();
+		positionB.scale(worldScale);
+
+		d.graphics().beginPath();
+		d.graphics().moveTo(positionA.x,positionA.y);
+		d.graphics().lineTo(positionB.x,positionB.y);
+		d.graphics().endPath();
+		d.graphics().strokeLine();
+
+		// var label = edge.weight();
+		var label = edge.data()["weight"];
+		var t = new DOText(""+label, 14, DOText.FONT_ARIAL, 0xFF000099, DOText.ALIGN_CENTER);
+		var p = V2D.avg(positionA,positionB);
+			t.matrix().translate(worldOffset.x - 0 + p.x, worldOffset.y - 0 + p.y);
+			GLOBALSTAGE.addChild(t);
+	}
+	
+	d.matrix().translate(worldOffset.x, worldOffset.y);
+
+	
+
+
+
 // errors are additive along edges
 
 // maximum leaf t-spanner

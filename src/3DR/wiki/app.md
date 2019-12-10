@@ -351,6 +351,8 @@ vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 - global structure & motion bundle adjust
 	- quasi-local-global bundle adjustment
 	- increase resolution to finer detail
+	x skeletal view graph grouping isolated BA
+	x all view BA
 	=> final structure & motion
 - pipelining
 	- graph init
@@ -374,7 +376,7 @@ vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 - viewing output
 	- locally
 	- VR device
-		- ios: scenekit
+		x ios: scenekit
 		- oculus = unity / blender
 HERE --- REFINE PROCESS
 (12/31)
@@ -397,112 +399,23 @@ https://cloud.google.com/appengine/docs/nodejs/
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-0 = 25I42TL0
-1 = IQX1JE9K
-2 = OFM81KML
-0 + 1 = Z84ENWKE
-0 + 2 = UEX4H682
-1 + 2 = NY9RPQHA
-0+1+2 = S21L1RCT
+
+- SKELETAL GRAPH:
+- sorting vertexes with most un-marked (white) neighbors
+	- need to remove/readd all vertexes affected by:
+		- pre-remove all neighbors
+		- update all neighbors' adjacent counts
+		- re-add all neighbors
 
 
+- separate skeletal graph into spine + end groups
 
-
-cutoff
-guess
-load
-close
-putative
-reputed
-estimates
-
-- display a graph in 2D algorithm
-	- want neighbors at distance ~ k times edge distance
-	- forces:
-		- edge force is scaled by difference in desired distance
-			- d = a-b ; d>1 => force is attractive ; d<1 ; force is repulsive
-		- vertex-vertex repulsion to non-neighbors 
-	- wa
-
-https://reference.wolfram.com/language/tutorial/GraphDrawing.html
-
-
-
-linearCameraDistortion
-	- tangental seems very corner-wrong
-
-- show a inverse distorted example camera image (bench)
-
-
-- how useful is fwd / rev camera distortion ?
-
-
-- un-distort an entire image
-	- lookup map?
-
-
-
-- camera radial distortion retry nonlinear soln
-	- how are inverted images used in steps?
-		- invert (undistort) images on load
-			- mask of INVALID AREAS [can approx with curve?]
-			- can use down-sampled mask (1/2 - 1/4 size)
-		- undistort points on load
-		- K will change? ===> SHIFT CENTER ???
-		- re-distort points on save
-
-
-
-
-
-- skeletal graph algorithm
-- mst: 
-- maximum leaf mst: ?
-
-- edge 'importance'
-	- error
-	- connectivity
-	- 
-
-- why is MST not a better solution than the max conn?
-	- original path estimates may have really high error if a path is removed
-
-
-
-A) create initial MSP w/ max leaves
-	- set edge weights to importance = (shortest total path weight without edge IJ) / weight of IJ : in [1,0]
-	- remove lowest importance edges (below some min thresh, importance of 1 cannot be removed)
-	- loop: adding nodes/edges to skeleton graph
-		- start by adding node with largest importance (total number of edges, considering importance of edges)
-		- add all unmarked(white) nodes & connecting-edges, mark as gray
-		- select node with most unmarked neighbors ^repeat
-	- white = initial color
-	- gray = visited
-	- black = ???? interrior node --- how to mark?
-B) add back edges until error threshold is below stretch factor [t in 2-16?]
-	- prioritize edges:
-		- between black nodes (interrior edge)
-		- lower error first
-	- iterate thru all edges:
-		- add edge back only if d(i,j: skeleton) > t x d(i,j: original)  [assuming additive errors?]
-C) skeletal set : is non-leaf nodes/edges
-D) BA
-	- skeletal set BA
-	- leafy-groups BA -- should be disjoint
-		- determine best edges to use here too ?
-		- all leaf nodes + connected node
-		- size should be > 1 : otherwise it is just a pair and already optimized
-	- add non-skeletal views using updated absolute graph
-	- full BA
 
 
 
 - F / R errors should be in some RELATIVE size [width]
 
 
-- need to decide 'best guess' similarity pairs:
-	- find each view's in-range pairs
-	- add UNION entry for all pairs
 
 
 - sparse will use initial pairs as starting point [maybe: 25-50% will fail, 10-25% will be skipped]
@@ -528,29 +441,29 @@ DENSE CHOICES FROM GRAPH:
 
 
 
-
-
-
-- bundle adjustment to use skeleton
-	=> PAPER
-
-...
+- update file/info locations
+- standardize what data formats are consistently
 
 
 
 
-- add compare grab-bag step
+- RADIAL DISTORTION: - camera image rectification for radial / tangential lens distortion
+	- linearCameraDistortion
+		- tangental seems very corner-wrong
+	- show a inverse distorted example camera image (bench)
+	- how useful is fwd / rev camera distortion ?
+	- un-distort an entire image
+		- lookup map?
+	- camera radial distortion retry nonlinear soln
+		- how are inverted images used in steps?
+			- invert (undistort) images on load
+				- mask of INVALID AREAS [can approx with curve?]
+				- can use down-sampled mask (1/2 - 1/4 size)
+			- undistort points on load
+			- K will change? ===> SHIFT CENTER ???
+			- re-distort points on save
 
-- gradient and color way to compare images ??? or is gradient/color the best way?
 
-- comparison step:
-	- once all images are preprocessed for features:
-		- load pairs until all n * (n-1) have been compared
-			- final similarity score needs to be single number
-		- keep min best 4 ~ 6 or limited best
-			- HOW? -- repeated N-sigma-drop ?
-		- AND/OR until F - scores start to be very poor
-		=> each view has list of up to N other views match scores
 
 
 ~ how to handle differently sized images? in various steps of alg? resolution &| dimensions [also rotation of K ...]
@@ -558,19 +471,9 @@ DENSE CHOICES FROM GRAPH:
 	=> images are assume to be 'scaled up' to highest resolution of group
 ~ how many points should be searched for at each step of the process to minimize calculations/time [visualize pixel densities]
 
-- try larger image data set: 6-10
-
-
-- update file/info locations
-- standardize what data formats are consistently
 
 - add back BA steps to add points back in via projected searching & neighborhood searching
 - more accurate triangle-texture blending locations require multiple images to be loaded at same time
-
-
-
-- camera image rectification for radial / tangential lens distortion
-
 
 
 - possible way to find abs location by minimizing DIRECTION error if relative scale is unknown?

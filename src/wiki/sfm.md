@@ -120,11 +120,6 @@ initial linear estimate:
 
 
 
-
-
-
-
-
 <br/>
 nonlinear estimate
 <br/>
@@ -134,28 +129,6 @@ principle point is too mixed in for linear, but nonlinearly
 
 
 <br/>
-for each image:
-    observed points d (distorted)
-    want to find undistorted points (u)
-    center of distortion c
-
-    r = ||(u-c)||^2
-
-    dx - cx = (ux - cx) * (1? + k1 * r^2 + k2 * r^4 )
-
--where u comes from:
-    - know 'X' & initial K --- can find extrinsic camera projection?
-        - u = K' * EXTRINSIC * X
-        how to get EXTRINSIC ?
-        - is HOMOGRAPHY enough? to get u ?
-
-
-        [ (dx - cx) * r^2   (dx - cx) * r^4 ] * [k0 k1] = [ux - dx]
-
-
-
-    similar for y
-
 
 
 *TODO: DIAGRAM*
@@ -613,6 +586,7 @@ TODO:
         - build up multi-view-spanning tracks from individual pair-tracks (for long sequences if possible)
         - use tracks and initial view graph to find nonlinear best orientation
         - find new view pairs (and add to existing) via projection
+        - use skeletal set for first iteration & combine groups as final step
     - Pairwise Dense (use updated R to get better initial points [& ignore first iteration possible poor matches])
         - get dense points
     - Triple Dense from Pairs (need relative scales again)
@@ -639,16 +613,12 @@ RANSAC:
             - reduce errors on existing pairs using updated orientation
             - fill out more points in possibly mission sections [use TFT to estimate missing locations | project using known point]
             - create new pairs from previously unmatched relative orientations
+        - use skeletal set for first iteration & combine groups as final step
+
         - Hole filling? -- same as probe2D?
         - final absolute camera orientations
         - final set of surface points
 
-
-
-
-
-
-    - TODO:
         - Dense (increase surface resolution over what can fit in memory)
             - load pair/triple & allow each 2d cell area on order of pixels (3-5) opportunity to
                 - support sectioning: store 'database' in single large or multiple file
@@ -678,6 +648,13 @@ RANSAC:
 ![Camera](./images/sfm/ex_pipeline_camera.png "Camera")
 <br/>
 *camera calibration using checkerboard pattern: matched corners, undistorted (radial & tangental)*
+<br/>
+
+
+<br/>
+![Words](./images/sfm/ex_pipeline_words.png "Bag Of Words")
+<br/>
+*using histograms as method to limit attempted neighbors by cutting off when similarity falls below limit*
 <br/>
 
 
@@ -717,16 +694,16 @@ RANSAC:
 
 
 <br/>
+![Graph](./images/sfm/ex_pipeline_graph.png "Graph")
+<br/>
+*scene graph with edges / relative scales / skeleton + end-groups highlighted in center*
+<br/>
+
+
+<br/>
 ![Dense](./images/sfm/ex_pipeline_dense.png "Dense")
 <br/>
 *dense pair 3D scene of best points*
-<br/>
-
-
-<br/>
-![Graph](./images/sfm/ex_pipeline_graph.png "Graph")
-<br/>
-*scene graph with edges / relative scales ... skeleton highlighted in center*
 <br/>
 
 
@@ -749,8 +726,6 @@ RANSAC:
 <br/>
 *surface triangles using textures produced by merging best available camera images per triangle, example triangle packing*
 <br/>
-
-
 
 
 

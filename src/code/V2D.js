@@ -290,7 +290,7 @@ V2D.prototype.scale = function(c,d){
 	return this;
 }
 V2D.prototype.flip = function(){
-	return this.flip(-1);
+	return this.scale(-1);
 }
 V2D.prototype.setLength = function(l){
 	this.norm();

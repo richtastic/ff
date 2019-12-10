@@ -632,6 +632,10 @@ Graph._minPaths = function(graph,source){ // dijkstra ??
 	}
 	return paths;
 }
+// Graph.prototype.minPaths = function(source){
+// 	var paths = Graph._minPaths(graph,source);
+// 	return paths;
+// }
 Graph._minPath = function(graph,source,target){
 	var paths = Graph._minPaths(graph,source);
 	for(var i=0; i<paths.length; ++i){
@@ -1236,7 +1240,9 @@ Graph.Vertex.prototype.removeEdge = function(e){
 Graph.Vertex.prototype.edges = function(){
 	return this._edges;
 }
-
+Graph.Vertex.prototype.degree = function(){
+	return this._edges.length;
+}
 Graph.Vertex.prototype.edgesTo = function(){
 	var edges = [];
 	var i, e, len = this._edges.length;
@@ -1275,41 +1281,157 @@ Graph.Vertex.prototype.edgesFrom = function(){
 	}
 	return edges;
 }
+Graph._pairIDFxn = function(a,b){
+	if(a<b){
+		return a+"-"+b;
+	}
+	return b+"-"+a;
+}
 Graph.prototype.display2D = function(edgesAsDistances){ // get list of 2d positions
 	// ~n^2 body problem, iteritive
+	var vertexes = this._vertexes;
+	var edges = this._edges;
+	var bodies = [];
+	var springs = [];
+
+	var springLookup = {};
+	var pairLookup = {};
+	var bodyLookup = {};
+
+	var pairIDFxn = Graph._pairIDFxn;
+
+	// create bodies for each vertex
+	var maxDegree = 0;
+	for(var i=0; i<vertexes.length; ++i){
+		var vertex = vertexes[i];
+		var degree = vertex.edges().length;
+		maxDegree = Math.max(maxDegree,degree);
+		var body = {};
+			body["vertex"] = vertex;
+			body["position"] = new V2D();
+			body["connected"] = [];
+			body["unconnected"] = [];
+			body["accumulator"] = new V2D();
+			body["processed"] = false;
+			body["degree"] = degree;
+		bodies.push(body);
+		bodyLookup[vertex.id()] = body;
+	}
+	for(var i=0; i<edges.length; ++i){
+		var edge = edges[i];
+		var spring = {};
+			spring["edge"] = edge;
+			spring["ideal"] = 1.0; // or edge length ?
+			spring["length"] = 0;
+		springs.push(spring);
+		springLookup[edge.id()] = spring;
+		var pairID = pairIDFxn(edge.A().id(),edge.B().id());
+		pairLookup[pairID] = spring;
+	}
 
 	// initial conditions:
-	// random point for each vertex inside radius = maximum edge length
+	var radius = 1.0; // random point for each vertex inside radius = maximum edge length
+	for(var i=0; i<bodies.length; ++i){
+		var body = bodies[i];
+		var position = body["position"];
+		var degree = body["degree"];
+		var p = degree/maxDegree;
+		var q = 1.0-p;
+		var radMin = radius*q;
+		var radRange = radius*p;
+		var a = Math.random()*Math.PI*2.0;
+		var r = radMin + radRange*Math.random();
+		position.set(r*Math.cos(a),r*Math.sin(a));
+	}
 
-	// ideal rest length of edges
+	var k1 = 2.0;
+	var k2 = 1.0;
+	var k3 = 1.0;
+	var k4 = 0.10;
 
+	var maxIterations = 1000;
+	// var maxIterations = 100;
+	// var maxIterations = 10;
+	var minimumForce = 0.001;
+	var forceStepScale = 0.1;
 
-	/*
-		init vertex positions to random location [circle radius = average edge length?]
+	var forceDir = new V2D();
+	var dirAB = new V2D();
+	for(var iteration=0; iteration<maxIterations; ++iteration){
+		// accumulate forces
+		for(var i=0; i<bodies.length; ++i){
+			var bodyA = bodies[i];
+			var positionA = bodyA["position"];
+			var accumulatorA = bodyA["accumulator"];
+			
+			for(var j=i+1; j<bodies.length; ++j){
+				var bodyB = bodies[j];
+				var positionB = bodyB["position"];
+				var accumulatorB = bodyB["accumulator"];
 
-		iterate:
-			each vertex force = 0
-			for each vertex
-				A)
-					ki = ideal distance between each vertex = shortest path to each vertex
+				var pairID = pairIDFxn(bodyA["vertex"].id(),bodyB["vertex"].id());
+				var spring = pairLookup[pairID];
 
-				B) 
-					each adjacent vertex has force
-						k1 * log(distance / k2)
-					else repulsive force
-						k3/distance^2
-				add the directional forces to accumulator
-			move each vertex in direction of force by F * k4
+				V2D.sub(dirAB,positionB,positionA);
+				var distanceAB = dirAB.length();
 
-		k1 = 2
-		k2 = 1 [or edge length]
-		k3 = 1
-		k4 = 0.1
-	*/
+				var forceAB = 0;
+				forceDir.copy(dirAB);
+				if(spring){ // connected
+					var idealDistance = spring["ideal"];
+					forceAB = k1*Math.log(distanceAB/idealDistance);
+					// negative means distanceAB < idealDistance => PUSH APART
+					// positive means distanceAB > idealDistance => PULL TOGETHER
+					if(forceAB<0){ // push apart
+						forceDir.flip();
+					} // else pull together
+					forceAB = Math.abs(forceAB);
+				}else{ // unconnected
+					forceAB = k3/Math.pow(distanceAB,2);
+					if(forceAB>0){
+						forceDir.flip();
+					}
+				}
+				// accumulate force
+				forceDir.length(k4*forceAB);
+				accumulatorA.add(forceDir);
+				accumulatorB.sub(forceDir);
+				
+			}
+		}
+		// apply forces
+		for(var i=0; i<bodies.length; ++i){
+			var body = bodies[i];
+			var position = body["position"];
+			var accumulator = body["accumulator"];
+			accumulator.scale(k4);
+			position.add(accumulator);
+			accumulator.set(0,0); // reset for next round
+		}
 
+	} // end iterations
+	
 	// force
 
-	throw "?";
+	var positions = [];
+	for(var i=0; i<vertexes.length; ++i){
+		var vertex = vertexes[i];
+		var body = bodyLookup[vertex.id()];
+		var position = body["position"];
+		positions.push(position);
+	}
+	// move to center
+	// TODO - scale to size radius max = 1
+	var info = V2D.infoArray(positions);
+	var com = info["center"];
+	var size = info["size"];
+	size = 1.0/Math.max(size.x,size.y);
+	for(var i=0; i<positions.length; ++i){
+		var position = positions[i];
+		position.sub(com);
+		position.scale(size);
+	}
+	return {"positions":positions, "vertexes":vertexes, "edges":edges};
 }
 Graph.Vertex.prototype.toString = function(){
 	return "[Vertex "+this._id+" ("+this._edges.length+")]";
