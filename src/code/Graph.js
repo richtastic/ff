@@ -928,6 +928,7 @@ Graph.copy = function(graph){
 }
 // ------------------------------------------------------------------------------------------------------------------------
 function Graph(){
+	// these should maybe be lookup? for O(1) remove ?
 	this._vertexes = [];
 	this._edges = [];
 }
@@ -1022,14 +1023,19 @@ Graph.prototype.removeVertex = function(v){
 	}
 	return v;
 }
-Graph.prototype.removeEdge = function(e){
+Graph.prototype.removeEdge = function(e, keepVertexes){
 	if(e!==undefined && e!==null){
 		var a = e.A();
 		var b = e.B();
 		a.removeEdge(e);
 		b.removeEdge(e);
 		Code.removeElementSimple(this._edges,e);
-		e.kill();
+		if(keepVertexes){
+			e._vertexA = a;
+			e._vertexB = b;
+		}else{
+			e.kill();
+		}
 	}
 	return e;
 }
@@ -1037,7 +1043,23 @@ Graph.prototype.vertexCount = function(){
 	return this._vertexes.length;
 }
 Graph.prototype.addEdge = function(a,b,w,d){
-	var edge = (arguments.length==1) ? a : new Graph.Edge(a,b,w,d);
+	var edge = null;
+	if(arguments.length==1){
+		// console.log("EXISTING ...")
+		edge = a;
+		var a = edge.A();
+		var b = edge.B();
+		edge._vertexA = null;
+		edge._vertexB = null;
+		// edge.A(null);
+		// edge.B(null);
+		edge.A(a);
+		edge.B(b);
+		console.log(edge);
+		// TODO: make sure edge is removed
+	}else{
+		edge = new Graph.Edge(a,b,w,d);
+	}
 	this._edges.push(edge);
 	return edge;
 }

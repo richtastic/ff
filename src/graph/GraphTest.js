@@ -124,86 +124,10 @@ GraphTest.prototype.test1 = function(){
 		edge[1] = edge[1]["i"];
 	}
 
-// run alg:
-var info = R3D.skeletalViewGraph(edges);
-console.log(info);
-throw "?"
-
-	var info = graph.display2D();
+	// run alg:
+	var info = R3D.skeletalViewGraph(edges);
 	console.log(info);
-
-	var positions = info["positions"];
-	var vertexes = info["vertexes"];
-	var edges = info["edges"];
-
-	var vertexIDtoIndex = {};
-	for(var i=0; i<vertexes.length; ++i){
-		var vertex = vertexes[i];
-		vertexIDtoIndex[vertex.id()] = i;
-	}
-
-
-	// var worldScale = 500.0;
-	// var rad = 0.01;
-	// var worldOffset = new V2D(300,300);
-	// // var worldOffset = new V2D(150,350);
-
-	// for(var i=0; i<positions.length; ++i){
-	// 	var vertex = vertexes[i];
-	// 	var position = positions[i];
-	// 	// CIRCLES
-	// 		var p = new V2D(position.x*worldScale,position.y*worldScale);
-	// 		var d = new DO();
-	// 		d.graphics().setLine(1.0,0xFFFF0000);
-	// 		d.graphics().beginPath();
-	// 		d.graphics().drawCircle(p.x,p.y,rad*worldScale);
-	// 		d.graphics().endPath();
-	// 		d.graphics().strokeLine();
-	// 		d.matrix().translate(worldOffset.x, worldOffset.y);
-	// 		GLOBALSTAGE.addChild(d);
-	// 	// LABEL:
-	// 	var label = indexToLetter[vertex.id()]["n"];
-	// 	var d = new DOText(""+label, 14, DOText.FONT_ARIAL, 0xFF009900, DOText.ALIGN_CENTER);
-	// 		// d.graphics().setLine(1.0,0xFFFF0000);
-	// 		// d.graphics().beginPath();
-	// 		// d.graphics().drawCircle(p.x,p.y,rad*worldScale);
-	// 		// d.graphics().endPath();
-	// 		// d.graphics().strokeLine();
-	// 		d.matrix().translate(worldOffset.x - 0 + p.x, worldOffset.y - 10 + p.y);
-	// 		GLOBALSTAGE.addChild(d);
-	// }
-
-	// // edges
-	// var d = new DO();
-	// d.graphics().setLine(1.0,0xFF0000FF);
-	// d.graphics().beginPath();
-	
-	
-	// GLOBALSTAGE.addChild(d);
-	// for(var i=0; i<edges.length; ++i){
-	// 	var edge = edges[i];
-	// 	var idA = edge.A().id();
-	// 	var idB = edge.B().id();
-	// 		idA = vertexIDtoIndex[idA];
-	// 		idB = vertexIDtoIndex[idB];
-	// 	var positionA = positions[idA];
-	// 	var positionB = positions[idB];
-
-	// 	d.graphics().moveTo(positionA.x*worldScale,positionA.y*worldScale);
-	// 	d.graphics().lineTo(positionB.x*worldScale,positionB.y*worldScale);
-
-	// 	// ADD LABELS
-
-	// }
-	// d.graphics().endPath();
-	// d.graphics().strokeLine();
-	// d.matrix().translate(worldOffset.x, worldOffset.y);
-
-	
-
-	// show skeleton
-
-	// results
+	throw "?"
 }
 
 

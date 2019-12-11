@@ -400,23 +400,20 @@ https://cloud.google.com/appengine/docs/nodejs/
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-- SKELETAL GRAPH:
-- sorting vertexes with most un-marked (white) neighbors
-	- need to remove/readd all vertexes affected by:
-		- pre-remove all neighbors
-		- update all neighbors' adjacent counts
-		- re-add all neighbors
+
+- re-get image features using updated 'raw' corners 
+	- test display
+
+- pass on camera refinement
 
 
-- separate skeletal graph into spine + end groups
-
-
+- throw out initial pair estimates [set to 0] if:
+	- initial match count < 16
+	- best F error > 20 px
+	- best R error > 10 px
 
 
 - F / R errors should be in some RELATIVE size [width]
-
-
-
 
 - sparse will use initial pairs as starting point [maybe: 25-50% will fail, 10-25% will be skipped]
 	- possible some pairs will be missed [incorrect score / necessary limit for processing]
@@ -430,14 +427,34 @@ https://cloud.google.com/appengine/docs/nodejs/
 	- [maybe 10-25% fail, 0-10% will be skipped]
 
 
-DENSE CHOICES FROM GRAPH:
-	- find shortest (lowest error) paths to all neighbors
-		- limit to ~ 2x total average error
-		- limit to ~ 1% of image size [eg: 5px for 500x400 image]
-		- limit to ~ distance of ~ 5 jumps
-	- A) views pointing within some angle of each other [90 deg]
-	- B) views frustrums have some amount of overlap
-	- histogram similarity score above some minimum
+HOW TO BETTER CHOOSE SECOND (DENSE) PAIR CHOICES FROM INITIAL GRAPH:
+	- geometry is most important:
+		- hard to tell what overlap is without actually doing calculation
+			- frustrum estimates will change between inital pair estimate and scale will need to be updated, 
+			- can get a max frustrum from lowest error points & doing sporadic point removal
+				- max angle from up/down & left/right
+				- max distance from center
+	A) 
+		- keep all inital working pairs PLUS:
+		- find shortest (lowest error) paths to all neighbors
+		- d = 1~4 - distant indirect neighbors (jumps) (graphwize)
+		- limited by:
+			- 2-4 x global sigma error 
+			- maximum allowable error: ~ 1-5% of image size [eg: 5-25px for 500x400 image]
+			- histogram similarity score above some minimum
+			- views pointing within some angle of each other [90 deg]
+			- views frustrums have some amount of overlap
+				- not very additionally helpful [only fairly already clearly wrong ]
+				- hard to 
+		- limit total number of possible candidates to best [lowest likley error] of ~ max[6 , sqrt(n)] of all possible
+
+- throw out dense pair estimates [set to 0] with higher standards:
+	- best F error > 10 px
+	- best R error > 5 px
+	- total final best matches count < ~ 10% of image
+
+
+- logic for processing skeleton and groups and full BA
 
 
 

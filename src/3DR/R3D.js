@@ -31301,7 +31301,8 @@ R3D._gdScales1D = function(vs,es,values,rootIndex,iterations){
 
 R3D.skeletalViewGraph = function(edges, maxErrorMultiple){ // get critical nodes/edges & list of sub-groups
 	var t = Code.valueOrDefault(maxErrorMultiple, 4.0); // 4-16
-
+	var importanceMinumum = Math.min(4.0/t,1);
+	console.log("importanceMinumum: "+importanceMinumum);
 	console.log(edges);
 	// construct graph from simple edges
 	var maxVertex = null;
@@ -31314,12 +31315,11 @@ R3D.skeletalViewGraph = function(edges, maxErrorMultiple){ // get critical nodes
 		maxVertex = Math.max(maxVertex,edge[1]);
 	}
 	var vertexCount = maxVertex+1;
-	console.log("vertexCount: "+vertexCount);
 	// show graph
 	var graph = new Graph();
 	var gVertexes = [];
 	var gEdges = [];
-	var vertexDatas = [];
+	// var vertexDatas = [];
 	var edgeDatas = [];
 	// insert vertexes
 	for(var i=0; i<vertexCount; ++i){
@@ -31327,8 +31327,9 @@ R3D.skeletalViewGraph = function(edges, maxErrorMultiple){ // get critical nodes
 		gVertexes.push(vertex);
 		var data = {};
 		data["vertex"] = vertex;
+		data["index"] = i;
 		vertex.data(data);
-		vertexDatas.push(data);
+		// vertexDatas.push(data);
 	}
 	// insert edges
 	for(var i=0; i<edges.length; ++i){
@@ -31360,7 +31361,6 @@ R3D.skeletalViewGraph = function(edges, maxErrorMultiple){ // get critical nodes
 	for(var i=0; i<gVertexes.length; ++i){
 		var vertexA = gVertexes[i];
 		var paths = graph.minPaths(vertexA);
-		console.log(paths);
 		for(var j=0; j<paths.length; ++j){
 			var path = paths[j];
 			var vertexB = path["vertex"];
@@ -31369,8 +31369,8 @@ R3D.skeletalViewGraph = function(edges, maxErrorMultiple){ // get critical nodes
 			minPathLookup[pairID] = cost;
 		}
 	}
-	
 	// get edge importance = shortestLength/edgeLength & reset edge weight as importance
+	var removedEdges = [];
 	for(var i=0; i<gEdges.length; ++i){
 		var edge = gEdges[i];
 		var data = edge.data();
@@ -31385,12 +31385,14 @@ R3D.skeletalViewGraph = function(edges, maxErrorMultiple){ // get critical nodes
 		var importance = minPathCost/weight;
 		data["importance"] = importance;
 		edge.weight(importance);
+		// remove edges below some minimum importance
+		if(importance<importanceMinumum){
+			Code.removeElementAt(gEdges,i);
+			--i;
+			graph.removeEdge(edge, true);
+			removedEdges.push(edge);
+		}
 	}
-	// TODO: remove edges below some minimum importance (eg 1/4)
-	console.log(minPathLookup);
-	console.log(vertexDatas);
-	console.log(edgeDatas);
-	console.log(graph);
 	// find best vertex to add: highest degree & importance
 	var bestVertex = null;
 	var bestDegree = 0;
@@ -31448,6 +31450,7 @@ var c=0;
 		}
 		currentData["color"] = 2;
 		// add each unvisited edge to graph
+		var addedCount = 0;
 		var edges = currentVertex.edges();
 		for(var i=0; i<edges.length; ++i){
 			var edge = edges[i];
@@ -31460,8 +31463,12 @@ var c=0;
 				var edgeData = edge.data();
 				edgeData["skeleton"] = true;
 				includedEdges.push(edgeData);
+				++addedCount;
 			}
 		}
+		// if(addedCount>0){
+		// 	currentData["color"] = 2;
+		// }
 ++c;
 if(c>1000){
 	console.log("too long");
@@ -31469,86 +31476,135 @@ if(c>1000){
 }
 
 	}
-	console.log(includedEdges.length);
-	console.log(includedEdges);
-	// add unused edges to queue
+
+	// remove non-skeleton edges:
+	for(var i=0; i<gEdges.length; ++i){
+		var edge = gEdges[i];
+		var edgeData = edge.data();
+		
+		if(!edgeData["skeleton"]){
+			Code.removeElementAt(gEdges,i);
+			--i;
+			graph.removeEdge(edge, true);
+			removedEdges.push(edge);
+		}
+
+	}
+	// add back edges to satisfy min constraint -------------------------------------
+	// cache calucation for interrior vs exterrior:
+	for(var i=0; i<removedEdges.length; ++i){
+		var edge = removedEdges[i];
+			var interriorA = edge.A().degree()>1;
+			var interriorB = edge.B().degree()>1;
+			edge.data()["interrior"] = interriorA && interriorB;
+	}
+	// set all edges back to weight from importance:
+	for(var i=0; i<edgeDatas.length; ++i){
+		var edgeData = edgeDatas[i];
+		edgeData["edge"].weight(edgeData["weight"]);
+	}
+	// sort by adding unused edges to queue
 	var sortEdgeFxn = function(a,b){
 		if(a==b){
 			return 0;
 		}
-		// interrior first
-		var edgeA = a["edge"];
-		var edgeB = b["edge"];
-		var bothA = edgeA.A().data()["color"]==2 && edgeA.B().data()["color"]==2;
-		var bothB = edgeB.A().data()["color"]==2 && edgeB.B().data()["color"]==2;
-		if(bothA && !bothB){
+		a = a.data();
+		b = b.data();
+		var intA = a["interrior"];
+		var intB = b["interrior"];
+		if(intA && !intB){
 			return -1;
-		}else if(!bothA && bothB){
+		}else if(!intA && intB){
 			return 1;
-		}
-		// covariance weight
-		var wa = a["weight"];
-		var wb = b["weight"];
-		if(wa<wb){
-			return -1;
-		}else if(wa>wb){
-			return 1;
-		}
-		return edgeA.id()<edgeB.id() ? -1 : 1;
+		} // else same
+		return a["weight"] < b["weight"] ? -1 : 1; // lower weight or higher importance ?
 	}
 	queue.sorting(sortEdgeFxn);
-	for(var i=0; i<edgeDatas.length; ++i){
-		var edge = edgeDatas[i];
-		if(!edge["skeleton"]){
-			queue.push(edge);
-		}
+	for(var i=0; i<removedEdges.length; ++i){
+		var edge = removedEdges[i];
+		queue.push(edge);
 	}
-	console.log(queue.toArray());
-	// throw "?"
-
-	// return {"edges":includedEdges};
-
-	
-	// re-calculate neighbor/shortest path lengths?
-
-	// sort unadded edges by importance / color
-
+	removedEdges = queue.toArray();
 	// add back edges until min stretch factor achieved
-
-	// separate leaves from rest of 
-	for(var i=0; i<includedEdges.length; ++i){
-		var edge = includedEdges[i];
-		var e = edge["edge"];
-		console.log(e.A().data()["color"],e.B().data()["color"])
-		if(e.A().data()["color"]==2 && e.B().data()["color"]==2){
-			edge["skeleton"] = true;
+	for(var i=0; i<removedEdges.length; ++i){
+		var edge = removedEdges[i];
+		// this edge cost:
+			// var weight = edge.weight();
+		// original graph min cost
+			var pairID = pairIDFxn(vertexA.id(),vertexB.id());
+			var weight = minPathLookup[pairID];
+		var vertexA = edge.A();
+		var vertexB = edge.B();
+		var path = graph.minPath(vertexA,vertexB);
+		var cost = path["cost"];
+		var maxRatio = weight*t;
+		if(cost>maxRatio){
+			console.log("add back");
+			console.log(cost+" / "+weight+" ? "+maxRatio);
+			graph.addEdge(edge);
+			Code.removeElementAt(removedEdges,i);
+			--i;
+			gEdges.push(edge);
+		}
+	}
+	// mark interrior / leaf nodes:
+	for(var i=0; i<gVertexes.length; ++i){
+		var vertex = gVertexes[i];
+		var degree = vertex.degree();
+		var data = vertex.data();
+		data["leaf"] = false;
+		data["interrior"] = false;
+		if(degree==1){
+			data["leaf"] = true;
 		}else{
-			edge["skeleton"] = false;
+			data["interrior"] = true;
+		}
+	}
+	// collect groups: ------------------------------------------
+	// skeleton is set of interrior nodes
+	var skeleton = [];
+	for(var i=0; i<gVertexes.length; ++i){
+		var vertex = gVertexes[i];
+		var data = vertex.data();
+		if(data["interrior"]){
+			skeleton.push(vertex);
+		}
+	}
+	// groups are interrior nodes + all leaves
+	var groups = [];
+	for(var i=0; i<gVertexes.length; ++i){
+		var vertex = gVertexes[i];
+		var data = vertex.data();
+		if(data["interrior"]){
+			var group = [];
+			var edges = vertex.edges();
+			for(var j=0; j<edges.length; ++j){
+				var edge = edges[j];
+				var opposite = edge.opposite(vertex);
+				if(opposite.data()["leaf"]){
+					group.push(opposite);
+				}
+			}
+			if(group.length>0){
+				group.push(vertex);
+				groups.push(group);
+			}
 		}
 	}
 
-/*
-B) add back edges until error threshold is below stretch factor [t in 2-16?]
-	- prioritize edges:
-		- between black nodes (interrior edge)
-		- lower error first
-	- iterate thru all edges:
-		- add edge back only if d(i,j: skeleton) > t x d(i,j: original)  [assuming additive errors?]
-C) skeletal set : is non-leaf nodes/edges
-D) BA
-	- skeletal set BA
-	- leafy-groups BA -- should be disjoint
-		- determine best edges to use here too ?
-		- all leaf nodes + connected node
-		- size should be > 1 : otherwise it is just a pair and already optimized
-	- add non-skeletal views using updated absolute graph
-	- full BA
-
-*/
+// display stuff ------------------------------------------
+var doDisplayStuff = true;
+if(doDisplayStuff){
 
 
+	// add back edges for pretty display:
+	for(var i=0; i<removedEdges.length; ++i){
+		var edge = removedEdges[i];
+		graph.addEdge(edge);
+		gEdges.push(edge);
+	}
+	removedEdges = [];
 	var info = graph.display2D();
-	console.log(info);
 
 	var positions = info["positions"];
 	var vertexes = info["vertexes"];
@@ -31559,19 +31615,23 @@ D) BA
 		var vertex = vertexes[i];
 		vertexIDtoIndex[vertex.id()] = i;
 	}
-
-
-	
+		
 	var worldScale = 600.0;
 	var rad = 0.01;
 	var worldOffset = new V2D(400,400);
 	for(var i=0; i<positions.length; ++i){
 		var vertex = vertexes[i];
 		var position = positions[i];
+		var isLeaf = vertex.data()["leaf"];
 		// CIRCLES
 			var p = new V2D(position.x*worldScale,position.y*worldScale);
 			var d = new DO();
-			d.graphics().setLine(2.0,0xFFFF0000);
+
+			if(isLeaf){
+				d.graphics().setLine(2.0,0xFFFF0000);
+			}else{
+				d.graphics().setLine(2.0,0xFF0000FF);
+			}
 			d.graphics().beginPath();
 			d.graphics().drawCircle(p.x,p.y,rad*worldScale);
 			d.graphics().endPath();
@@ -31593,26 +31653,28 @@ D) BA
 	for(var i=0; i<edges.length; ++i){
 		
 		var edge = edges[i];
-		var idA = edge.A().id();
-		var idB = edge.B().id();
+		var vA = edge.A();
+		var vB = edge.B();
+		var idA = vA.id();
+		var idB = vB.id();
 			idA = vertexIDtoIndex[idA];
 			idB = vertexIDtoIndex[idB];
 		var positionA = positions[idA];
 		var positionB = positions[idB];
+		var leafA = vA.data()["leaf"];
+		var leafB = vB.data()["leaf"];
 
 		var isSkeletal = edge.data()["skeleton"] === true;
-		// var isSkeletal = false;
-		// for(var j=0; j<includedEdges.length; ++j){
-		// 	var included = includedEdges[j];
-		// 	if(included["edge"]==edge){
-		// 		isSkeletal = true;
-		// 		break;
-		// 	}
-		// }
+		// console.log(edge.data()["skeleton"])
+		
 		if(isSkeletal){
-			d.graphics().setLine(3.0,0xFF660033);
+			if(leafA || leafB){
+				d.graphics().setLine(1.0,0xFF6600FF);
+			}else{
+				d.graphics().setLine(3.0,0xFF330033);
+			}
 		}else{
-			d.graphics().setLine(1.0,0xFF0000FF);
+			d.graphics().setLine(1.0,0xFF00FF00);
 		}
 
 		positionA = positionA.copy();
@@ -31636,52 +31698,49 @@ D) BA
 	
 	d.matrix().translate(worldOffset.x, worldOffset.y);
 
-	
 
+	// groups:
+	for(var i=0; i<groups.length; ++i){
+		var group = groups[i];
+		var points = [];
+		for(var j=0; j<group.length; ++j){
+			var vertex = group[j];
+			var point = positions[vertex.id()];
+			points.push(point);
+		}
+		var info = V2D.infoArray(points);
+		var min = info["min"];
+		var size = info["size"];
 
+		var d = new DO();
+		d.graphics().setLine(2.0,0xFF990099);
+		d.graphics().beginPath();
+		d.graphics().drawRect(min.x*worldScale,min.y*worldScale,size.x*worldScale,size.y*worldScale);
+		d.graphics().endPath();
+		d.graphics().strokeLine();
+		d.matrix().translate(worldOffset.x, worldOffset.y);
+		GLOBALSTAGE.addChild(d);
+	}
 
-// errors are additive along edges
-
-// maximum leaf t-spanner
-	// Gi = image graph
-	// Gs = skeletal graph
-	// Gp = image pair graph
-	// Cij = covariance (position)
-	// tr(Cij) = scalar estimate of uncertainty
-	// efficiency = # of interrior nodes in Gs
-	// t = stretch factor = max_distance(Gs)/max_distance(Gi) <= #
-
-	// errors in this case are R in pixels | they should be divided by image size to average out the differnt scales of pixels
-
-	/*
-	pick vertex with most edges (degree)
-	pick next vertex in list with most edges
-	 ...MST
-	 interrior nodes = black
-	 add edges back based on A)interrior B) cov weight
-	*/
-
-	/*
-	for each vertex
-	find shortest path between vertexes & add calc importance V->U = error/minError
-	keep most important edges
-	add vertexes/edges back in priority Q
-	continue to add back edges until propagated error < t * original
-
-	*/
-	console.log("TODO");
-
-
-
-
-
-
-
-
-
-
-	throw "TODO";
-	return {"vertexes":verts, "edges":pairs};
+}
+	// convert from vertexes to original pair indexes
+	groups.push(skeleton);
+	for(var i=0; i<groups.length; ++i){
+		var group = groups[i];
+		for(var j=0; j<group.length; ++j){
+		group[j] = group[j].data()["index"];
+		}
+	}
+	groups.shift();
+	console.log(skeleton);
+	console.log(groups);
+	// TODO: are these useful?
+	var skeletonPairs = [];
+	var groupPairs = [];
+	// cleanup
+	graph.kill();
+	// done
+	return {"skeletonVertexes":skeleton, "skeletonEdges":skeletonPairs, "groupVertexes":groups, "groupEdges":groupPairs};
 }
 
 

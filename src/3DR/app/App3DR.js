@@ -7314,7 +7314,6 @@ console.log("checkPerformNextTask");
 	}
 
 // throw "task pair bag of words";
-	
 	if(!this.hasViewSimilarity()){
 		this.calculateViewSimilarities(view);
 		return;
@@ -7348,7 +7347,7 @@ console.log("checkPerformNextTask");
 		return;
 	}
 
-throw "default assign views camera"
+throw "task default assign views camera"
 	// make sure every view has a camera:
 	len = views.length;
 	var wasCameraAdded = false;
@@ -7401,7 +7400,7 @@ throw "task pair feature match";
 	}
 
 
-throw "task dense pair";
+throw "task initial pairs";
 	// assuming all pair matches have run
 	len = views.length;
 	for(i=0; i<len; ++i){
@@ -7414,12 +7413,12 @@ throw "task dense pair";
 				var pair = pairs[k];
 				if(pair.isPair(idA,idB)){
 					if(!pair.hasRelative()){
-						console.log("NEED TO DO A DENSE BA PAIR : "+idA+" & "+idB+" = "+pair.id());
+						console.log("NEED TO DO AN INITIAL PAIR : "+idA+" & "+idB+" = "+pair.id());
 						this.calculateBundleAdjustPair(viewA,viewB);
 						return;
 					}
 					if(!pair.hasTracks()){
-						console.log("NEED TO DO A TRACK PAIR : "+idA+" & "+idB+" = "+pair.id());
+						console.log("NEED TO DO AN INITIAL TRACK PAIR : "+idA+" & "+idB+" = "+pair.id());
 						this.calculatePairTracks(viewA,viewB);
 						return;
 					}
@@ -7438,7 +7437,7 @@ this.calculatePairTracks(viewA,viewB);
 throw "NO";
 */
 
-throw "task triples";
+throw "task initial triples";
 	// assuming all pairs have run
 	console.log(triples);
 	len = views.length;
@@ -7486,13 +7485,13 @@ throw "task graph"; // first absolute from pairs
 		this.calculateGlobalOrientationInit();
 		return;
 	}
-throw "task tracks";
+throw "task accumulate tracks";
 	if(!this.tracksDone()){ // load/build up tracks incrementally loading known pairs at a time [PREVIOUSLY: ALLOW PROPAGATION]
 		console.log("tracks not done");
 		this.iterateGraphTracks();
 		return;
 	}
-throw "task sparse";
+throw "task sparse BA";
 if(!this.sparseDone()){ // load groups of views at a time (primary pair + aux views) until errors no longer get lower - global
 	console.log("sparse not done");
 	this.iterateSparseTracks();
@@ -7505,13 +7504,13 @@ if(!this.denseDone()){ // loads groups of views & optimizes single dense pair - 
 	return;
 }
 
-throw "task: dense loading tracks"
+throw "task dense accumulate tracks"
 if(!this.pointsDone()){ // put all points in single file
 	this.iterateDenseLoading();
 	return;
 }
 
-throw "task BA";
+throw "task dense BA";
 if(!this.bundledDone()){ // iteritive bundle adjust -- all points in single file
 	this.iteratePointsFullBA();
 	return;
