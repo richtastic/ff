@@ -567,10 +567,10 @@ TODO:
             - load each other image to do feature compare
     - Image Pair F
         - good seed match points
-        - find good F (~1px error) to initialize R in next step
+        - find good F (1-5px error) to initialize R in next step
     - Image Pair R
         - find semi-dense set of points starting with seed points
-        - find good R (~1px error)
+        - find good R (1-5px error)
     - Tracks (from view pairs)
         - Smaller subset of best features to use in full view graph optimization, shared in at least 2 images
             - good corner score / textured, low R error, low F error, dominant corners first
@@ -586,9 +586,9 @@ TODO:
         - build up multi-view-spanning tracks from individual pair-tracks (for long sequences if possible)
         - use tracks and initial view graph to find nonlinear best orientation
         - find new view pairs (and add to existing) via projection
-        - use skeletal set for first iteration & combine groups as final step
+        - use skeletal set (and edge groups) for first iteration & combine groups as final step
     - Pairwise Dense (use updated R to get better initial points [& ignore first iteration possible poor matches])
-        - get dense points
+        - get dense points using R
     - Triple Dense from Pairs (need relative scales again)
         - load common pairs & get 2 or 3 way relative scales
     - Absolute Orientation 2 (use updated pairwise transforms (lower error) & counts (more points))
@@ -596,38 +596,31 @@ TODO:
     - Dense to Tracks: 2D point intersection resolving (combine dense pairs into long-ish tracks)
         - TODO: load P3Ds a pair at a time, and do collision resolving by loading the images (combine into track vs separate/drop)
         - helps reduce total number of P3Ds (50% to 10% of original - duplicate coverage)
-
-HERE
-RANSAC:
-
-    - B) add back dropped points by:
-        - including images & doing 2D probe + 3D projection search
-
-....
-
-
-    - Global RANSAC (load all dense points at same time [& views])
-        - reduce error of all params at same time (or in randomized bunches [single camera - load ones who's error R reduces most rapidly])
-            - no new points are added; only removed
-        - Multiwise Dense (group dense iteration - use images: only load small subset of views at a time)
-            - reduce errors on existing pairs using updated orientation
-            - fill out more points in possibly mission sections [use TFT to estimate missing locations | project using known point]
-            - create new pairs from previously unmatched relative orientations
-        - use skeletal set for first iteration & combine groups as final step
-
-        - Hole filling? -- same as probe2D?
-        - final absolute camera orientations
-        - final set of surface points
-
+    - Global RANSAC (load all dense 'track' points at same time [& views])
+        - use skeleton sets for first iteration, combine groups as final step, then full set on final few iterations
+        - reduce error of all view transforms at same time (or in randomized bunches [single camera - load ones who's error R reduces most rapidly])
+            - no new points are added
+            - only remove on full BA
+        - Hole filling / exending support == probe2D & project3D
+            - Multiwise Dense (group dense iteration - use images: only load small subset of views at a time)
+                - reduce errors on existing pairs using updated orientation
+                - fill out more points in possibly mission sections [use TFT to estimate missing locations | project using known point]
+                - create new pairs from previously unmatched relative orientations
+        - possible more/final BA with aid of new points
+        -> final absolute camera orientations
+        -> final set of surface points
+    - TODO: hi-res surfacing:
         - Dense (increase surface resolution over what can fit in memory)
-            - load pair/triple & allow each 2d cell area on order of pixels (3-5) opportunity to
-                - support sectioning: store 'database' in single large or multiple file
-                    - index between:
-                        - track
-                        - view
-                        - voxel [divided/combined to max point count ~ 1E6]
-                    - surface triangulation: only find surface a voxel at a time - propagation madness
-            - triangle subdivisions?
+        - load pair/triple/group & allow each 2d cell area on order of pixels (3-5) opportunity to
+            - support sectioning: store 'database' in single large or multiple file
+                - index between:
+                    - track
+                    - view
+                    - voxel [divided/combined to max point count ~ 1E6]
+                - surface triangulation: only find surface a voxel at a time - propagation madness
+        - COULD 
+        - triangle subdivisions?
+    - VOXEL LOADING BASED ON EACH VIEW'S POINTS -- keep track on view
     - Triangulate (simplify surface using curvature to estimate triangulated locations)
         - triangles
     - Texture (sourced from unobstructed views & blending)

@@ -5416,6 +5416,9 @@ Code.valueOrDefault = function(val, def){
 	}
 	return def;
 }
+Code.isSet = function(val){
+	return val!==undefined && val!==null;
+}
 Code.getPropertyOrDefault = function(ele,pro, def){
 	if(Code.hasProperty(ele,pro)){
 		return Code.getProperty(ele,pro);

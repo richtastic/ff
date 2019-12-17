@@ -397,14 +397,34 @@ https://cloud.google.com/appengine/docs/nodejs/
 - encryption
 
 
+refinement - dates
+12/15 x retest corners > features
+12/16 x pass on camera distortion refinement
+12/17 - sparse.yaml incorporated
+12/18 - visualize F/R pair results -- make all cell sizes based on TOTAL COUNT ( ~ PERCENTS) of image
+12/20 - dropping poorest sparse F/R based on defined criteria
+12/23 - pair/triple/scale -> absolute graph 'generalization'
+12/27 - skeleton and group and final BA algorithm defined
+12/31 - dense pair candidate decisions
+01/01 - dense.yaml incorporated
+01/08 - dense replica of sparse incorporated
+01/10 - multi-view point propagation from dense
+01/17 - triangulation algorithm updates
+01/24 - texture-triangle-edge problems
+01/31 - test new set of 10 ~ 20 images
+
+- triangle - texture loading groups at a time to get local approx blending
+- out-of-core octtree (stereopsis focused)
+...
+
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
-- re-get image features using updated 'raw' corners 
-	- test display
+- ~ 2500 match-pts with 40 cells, 
 
-- pass on camera refinement
+- double check normalizing
+
 
 
 - throw out initial pair estimates [set to 0] if:
@@ -455,6 +475,33 @@ HOW TO BETTER CHOOSE SECOND (DENSE) PAIR CHOICES FROM INITIAL GRAPH:
 
 
 - logic for processing skeleton and groups and full BA
+	- POINTS ARE CONSTANT
+	- ONLY VIEW TRANSFORMS CHANGE
+	- same points can be loaded for each group (although wasteful for non-skeleton)
+	- each group has it's own absolute transforms
+		- load in sequence until error goes down
+	- absolute transforms from groups to be combined:
+		- A) assume skeletal is correct, append groups based on neighbor [or pairs from non-groups?]
+		- B) graphwise combining relative pairs
+	- reset transforms to origin at center of mass
+
+
+groups:
+	- 
+		views:
+			- 
+				id: VIEWIDA
+				transform: ...
+				errorR: ...
+				errorF: ...
+			- 
+				id: VIEWIDB
+				transform: ...
+				errorR: ...
+				errorF: ...
+		...
+
+- 
 
 
 
@@ -592,24 +639,36 @@ info.yaml:
 							height: 756
 							scale: 1
 						-
-	bagOfWords: 								--- ADDED FOR BAG OF WORDS COMPARE
-		- 
-			view: ID
-			scores:
-				- 
-					i: ID
-					s: 0.112 --- pick a score
-					h: HISTOGRAM SCORE
-					f: FEATURE SCORE
-				...
-		...
+	viewSimilarity:
+		-
+			A: viewIDA
+			s: (HISTOGRAM SCORE | AVG FEATURE SCORE | ...)
 
-	scenes:
+	sparse: sparse/sparse.yaml 				# lower-res initializing of pairs / triples / graph / absolute
+	sparseCount: # 
+
+	dense: dense/dense.yaml 				# higher-res pair / triple / graph / absolute
+	denseCount: #
+
+	bundle: reconstruction/bundle.yaml 		# fill-in absolute / triangles / textures
+	bundleCount:
+
+
+
+	scenes: 								# copy of last step of reconstruction
 		-
 			id: ID
-	...
+			?
 
-	SPARSE .... TO BE FORMER PAIR / TRIPLE DATA
+
+bundle.yaml
+	points: model/points.yaml 				# fill in points [2d & 3d propagation]
+	triangles: model/triangles.yaml 		# create surface
+	textures: model/textures.yaml 			# update surface & create textures
+
+
+
+
 
 
 	graph: "graph.yaml"

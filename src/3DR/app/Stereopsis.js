@@ -339,9 +339,6 @@ Stereopsis.World.prototype.viewFromID = function(i){
 	}
 	return null;
 }
-
-
-
 Stereopsis.World.prototype.viewFromData = function(data){
 	var views = Code.arrayFromHash(this._views);
 	for(var i=0; i<views.length; ++i){
@@ -352,6 +349,18 @@ Stereopsis.World.prototype.viewFromData = function(data){
 	}
 	return null;
 }
+
+Stereopsis.World.prototype.cameraFromData = function(data){
+	var cameras = Code.arrayFromHash(this._cameras);
+	for(var i=0; i<cameras.length; ++i){
+		var camera = cameras[i];
+		if(camera.data()==data){
+			return camera;
+		}
+	}
+	return null;
+}
+
 Stereopsis.World.prototype.transformsFromView = function(view){
 	var transforms = this.toTransformArray();
 	var included = [];
@@ -4854,47 +4863,16 @@ Stereopsis.World.prototype.solvePair = function(completeFxn, completeContext){ /
 	// var maxIterations = 7;
 	// var maxIterations = 8;
 	// var maxIterations = 9;
-	// var maxIterations = 10;
-	var maxIterations = 15;
+	var maxIterations = 10;
+	// var maxIterations = 15;
 	// var maxIterations = 17;
 	console.log(this)
 	for(var i=0; i<maxIterations; ++i){
-		this.iteration(i, maxIterations);
+		var shouldQuit = this.iteration(i, maxIterations);
+		if(shouldQuit){
+			break;
+		}
 	}
-// throw "...";
-
-/*
-	var viewA = this.toViewArray()[0];
-	var imageA = viewA.image();
-	var points2DA = viewA.toPointArray();
-
-
-	var iii = imageA;
-	var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
-	var d = new DOImage(img);
-	d.matrix().translate(0,0);
-	GLOBALSTAGE.addChild(d);
-
-
-	for(var i=0; i<points2DA.length; ++i){
-		var p = points2DA[i];
-			p = p.point2D();
-		var d = new DO();
-			d.graphics().setFill(0xFFCC00CC);
-			d.graphics().beginPath();
-			d.graphics().drawCircle(p.x,p.y, 3);
-			d.graphics().fill();
-			d.graphics().endPath();
-		GLOBALSTAGE.addChild(d);
-	}
-
-*/
-
-
-
-
-// throw "..."
-
 	if(this._completeFxn){
 		this._completeFxn.call(this._completeContext);
 	}
@@ -4910,9 +4888,9 @@ Stereopsis.World.prototype.iteration = function(iterationIndex, maxIterations){
 	var transform0 = transforms[0];
 	console.log(views);
 	// increase cover toward end
-	// if(false){
+	if(false){
 	// if(iterationIndex==10 || iterationIndex==15){
-	if(iterationIndex==10){
+	// if(iterationIndex==10){
 	// if(iterationIndex==5){
 	// if(iterationIndex==3){
 		// var views = this.toViewArray();
@@ -4927,13 +4905,7 @@ Stereopsis.World.prototype.iteration = function(iterationIndex, maxIterations){
 			view.cellSize(size);
 		}
 	}
-
-// if(i==3){
-// 	throw "..."
-// }
-
 // TODO: IF R ERROR > 2~5 => don't reuse old estimate
-
 	var shouldRetryInit = false;
 	var shouldPropagate = false;
 
@@ -4949,6 +4921,7 @@ console.log("START");
 	if(shouldRetryInit){ // subsequent approximations are always worse than the refined estimates
 		console.log("RETRY INIT");
 		this.estimate3DErrors(false); // find initial F, P, estimate all errors from this
+// don't need to do this if only 2 views ?
 		this.estimate3DViews(); // find absolute view locations
 		this.averagePoints3DFromMatches(); // find absolute point locations
 	}else{
@@ -4969,19 +4942,6 @@ console.log("continue ...");
 		// this.estimate3DErrors(true);
 	}
 
-
-/*
-if(iterationIndex==0){
-	// searchPoints2DBestMatch
-	// bestAffine2DFromLocation
-this.searchPoints2DBestMatch();
-// throw "?"
-}
-*/
-
-
-// expand step & retract step
-
 // var doRelaxed = true;
 var doRelaxed = iterationIndex%2==0;
 
@@ -4992,7 +4952,6 @@ if(transform0.rSigma()>5){
 }
 
 	// TODO: ONLY BREAK IF ERROR IS VERY LOW OR IF ERROR CHANGE IS TINY
-
 
 
 	// try to distribute the error between depths
@@ -5111,6 +5070,14 @@ if(doRelaxed){
 		// this.refinePoint3DAbsoluteLocation();
 		// this.estimate3DErrors(true);
 	}
+
+
+	// early quitting criteria:
+	// error isn't going down
+	// number of matches isn't going up
+
+
+	return false;
 }
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -6631,7 +6598,7 @@ console.log("POINT COUNT F/R ERROR: "+world.toPointArray().length);
 	// accurate error for tracks
 	this.estimate3DErrors(true);
 
-
+/*
 // display debug
 var worldViews = world.toViewArray();
 for(var i=0; i<worldViews.length; ++i){
@@ -6663,12 +6630,12 @@ var OFFY = 10;
 		GLOBALSTAGE.addChild(d);
 	}
 }
-
+*/
 	// estimate patch using geometry, then refine
 	console.log("estimate patch initial");
 	world.patchInitBasicSphere(true);
-	console.log("estimate patch detailed -- TODO: VERIFY THIS");
-	world.patchUpdateSphere();
+	// console.log("estimate patch detailed -- TODO: VERIFY THIS");
+	// world.patchUpdateSphere();
 	// done
 	if(completeFxn){
 		completeFxn.call(completeContext);

@@ -8936,6 +8936,7 @@ R3D.compareBagsOfWords = function(wordsA,imageMatrixA, wordsB,imageMatrixB){
 
 R3D.bagOfWords = function(imageMatrix, wordCount){
 	wordCount = wordCount!==undefined ? wordCount : 100;
+	// wordCount = 9999;
 	var minimumSquareSize = 32;
 	var minimumPixels = minimumSquareSize*minimumSquareSize;
 	var imageScales = new ImageMatScaled(imageMatrix);
@@ -8947,7 +8948,6 @@ R3D.bagOfWords = function(imageMatrix, wordCount){
 		return sizeA<sizeB ? -1 : 1;
 	}
 	images.sort(fxnSort);
-	// console.log(images);
 	// find smallest size and get larger
 	var smallestSizeIndex = null;
 	for(var i=0; i<images.length; ++i){
@@ -8968,32 +8968,34 @@ R3D.bagOfWords = function(imageMatrix, wordCount){
 		return a>b ? -1 : 1; // bigger first
 	}
 
-	var limitPercent = 0.01; // 1-10%
+	var limitPercent = 0.05; // 1-10%
 	var largest = images[images.length-1];
 	for(var i=smallestSizeIndex; i<images.length; ++i){
 		var image = images[i];
 		singleScale = image.width()/largest.width();
-		// console.log(i+": "+singleScale);
 		//var features = R3D.calculateScaleCornerFeatures(image, null, limitPercent, true, null, imageScales);
 		var features = R3D.calculateScaleCornerFeatures(largest, null, limitPercent, singleScale, null, imageScales);
 		features.sort(sortFeatureFxn);
-		// console.log(features.length);
 		for(var j=0; j<features.length; ++j){
 			allFeatures.push(features[j]);
 			// stop at the fact
-			if(allFeatures.length>=wordCount){
-				i = images.length;
-				break;
-			}
+			// if(allFeatures.length>=wordCount){
+			// 	i = images.length;
+			// 	break;
+			// }
 		}
 		// stop after the fact
-		// if(allFeatures.length>=wordCount){
-		// 	i = images.length;
-		// 	break;
-		// }
+		if(allFeatures.length>=wordCount){
+			i = images.length;
+			break;
+		}
+		console.log(i+": "+singleScale+" = "+features.length+" ( "+allFeatures.length+" ) ");
 		limitPercent *= 2;
-		// break;
 	}
+
+	// R3D.showFeaturesForImage(imageMatrix, allFeatures);
+
+
 	return {"features":allFeatures};
 }
 
@@ -9004,7 +9006,11 @@ R3D.calculateScaleCornerFeatures = function(imageMatrix, maxCount, limitPercent,
 	//var imageScales = new ImageMatScaled(imageMatrix);
 	var limitPercent = limitPercent!==undefined && limitPercent!==null ? limitPercent : 0.01; // 0.01-0.02 % ~ 5-10 pixels
 	var nonMaximalPercent = nonMaximalPercent!==undefined && nonMaximalPercent!==null ? nonMaximalPercent : 1.0;
-	var nonMaximalPercent = 1.0; // want everything, best in area is filtered
+	// var nonMaximalPercent = 1.0; // want everything, best in area is filtered
+	// var nonMaximalPercent = 0.999; 1000
+	// var nonMaximalPercent = 0.9999; // 1500
+	var nonMaximalPercent = 0.99999; // 1700
+	// var nonMaximalPercent = 1.0; // 2000
 	var scalable = 1.0;
 	var imageWidth = imageMatrix.width();
 	var imageHeight = imageMatrix.height();
@@ -9013,7 +9019,53 @@ R3D.calculateScaleCornerFeatures = function(imageMatrix, maxCount, limitPercent,
 	var features = R3D.basicScaleFeaturesFromPoints(corners, imageScales);
 	return features;
 }
+R3D.calculateScaleCornerFeaturesIdealCount = function(imageMatrix, idealCount, maxCount){
+	var imageScales = new ImageMatScaled(imageMatrix);
+	var scalable = 1.0;
+	var imageWidth = imageMatrix.width();
+	var imageHeight = imageMatrix.height();
+	// var ratio = 2.0 / Math.PI; // 0.636
+	var ratio = 1.0/Math.sqrt(2.0); // 0.707
+	// var ratio = Math.PI * Math.sqrt(0.5); // 0.785 === max
+	var limitPixels = ratio*Math.sqrt((imageWidth*imageHeight)/idealCount);
+	console.log(limitPixels+" / "+imageWidth+"x"+imageHeight+" = "+(limitPixels/imageWidth));
+	var nonMaximalPercent = 0.99999;
+	var single = false;
+	var scalable = 1.0;
+	var corners = R3D.extractImageCorners(imageMatrix, nonMaximalPercent, maxCount, single, scalable, limitPixels);
+	var features = R3D.basicScaleFeaturesFromPoints(corners, imageScales);
+	return features;
+}
+R3D.showFeaturesForImage = function(imageMatrix, features, offX){
+	offX = Code.valueOrDefault(offX,0.0);
+	var img = GLOBALSTAGE.getFloatRGBAsImage(imageMatrix.red(),imageMatrix.grn(),imageMatrix.blu(), imageMatrix.width(),imageMatrix.height());
+	var d = new DOImage(img);
+	// d.graphics().alpha(0.10);
+	d.graphics().alpha(0.50);
+	d.matrix().translate(0 + offX, 0);
+	GLOBALSTAGE.addChild(d);
 
+	for(k=0; k<features.length; ++k){
+		var feature = features[k];
+		var point = feature["point"];
+		var size = feature["size"];
+		var angle = feature["angle"];
+		// break;
+		
+		// size = 1.0;
+		size *= 0.20;
+		var p = point;
+		var d = new DO();
+			d.graphics().clear();
+			d.graphics().setLine(1.0, 0xCC000099);
+			d.graphics().beginPath();
+			d.graphics().drawCircle(p.x,p.y, size*0.5);
+			d.graphics().endPath();
+			d.graphics().strokeLine();
+		GLOBALSTAGE.addChild(d);
+		d.matrix().translate(0 + offX, 0);
+	}
+}
 R3D.calculateScaleCornerFeatures_X = function(imageMatrix, maxCount){
 	var featureWindowScale = 13.0; // 7-15
 // larger scale = more correct
@@ -10132,6 +10184,16 @@ if(false){
 }
 
 
+R3D.cellSizingRoundWithDimensions = function(width,height, count){
+	var size = Math.min(width,height)/count;
+	size = Math.round(size);
+	if(size%2==0){
+		size += 1;
+	}
+	return size;
+}
+
+
 R3D.imageHomographyOverlap = function(imageA,imageB, Hab,Hba){
 	var maskA = R3D._imageHomographyOverlapSingle(imageA,imageB,Hab);
 	var maskB = R3D._imageHomographyOverlapSingle(imageB,imageA,Hba);
@@ -10465,6 +10527,7 @@ if(display){
 
 R3D._progressiveSparseDenseMatches = function(imageMatrixA,imageMatrixB, pointsAIn,pointsBIn, Fab,Fba,pixelError){ // match small portions of image at a time
 console.log("R3D._progressiveSparseDenseMatches");
+throw "? where is this used ?";
 	var widthA = imageMatrixA.width();
 	var heightA = imageMatrixA.height();
 	var widthB = imageMatrixB.width();
@@ -13208,7 +13271,7 @@ R3D.pointsCornerMaximaRaw = function(src, width, height, keepPercentScore, nonMa
 	}else{
 		var extrema = Code.findMaxima2DFloat(H, width,height, true);
 	}
-
+// console.log("EXTREMA: "+extrema.length);
 	var borderIgnore = 0.01;
 	var border = Math.round(Math.min(borderIgnore*width,borderIgnore*height));
 	var zpb = border;
@@ -13226,7 +13289,7 @@ R3D.pointsCornerMaximaRaw = function(src, width, height, keepPercentScore, nonMa
 	// limit to percent of image:
 	var hyp = Math.sqrt(Math.pow(width,2) + Math.pow(height,2));
 	var distance = nonMaximalPercent*hyp;
-	console.log("drop distance: "+distance);
+	// console.log("limit drop distance: "+distance);
 	var toV2D = function(a){
 		return a;
 	};
@@ -13240,7 +13303,6 @@ R3D.pointsCornerMaximaRaw = function(src, width, height, keepPercentScore, nonMa
 		var point = pass[i];
 		var neighbors = space.objectsInsideCircle(point,distance);
 		if(neighbors.length==0){ // keep best corners first
-			// space.insertObject(new V4D(x,y,rad, point.z));
 			space.insertObject(point);
 		}
 		
@@ -15390,10 +15452,15 @@ R3D.extractCornerGeometryFeatures = function(imageMatrixA){
 R3D.extractImageCorners = function(imageSource, type, maxCount, single, scaleUp, limitPixels){
 	var limitDistance = limitPixels!==undefined ? limitPixels : 1.0;
 	maxCount = (maxCount!==undefined && maxCount!==null) ? maxCount : 500;
-	type = (type!==undefined && type!==null) ? type : R3D.CORNER_SELECT_RELAXED;
+	// type = (type!==undefined && type!==null) ? type : R3D.CORNER_SELECT_RELAXED;
+	type = (type!==undefined && type!==null) ? type : R3D.CORNER_SELECT_REGULAR;
 	var sourceWidth = imageSource.width();
 	var sourceHeight = imageSource.height();
 	var hypotenuse = Math.sqrt(sourceWidth*sourceWidth + sourceHeight*sourceHeight);
+	// var nonMaximalPercent = limitDistance/hypotenuse;
+	var nonMaximalPercent = 0;
+	// nonMaximalPercent *= 2;
+	// limitDistance *= 2;
 	var i, j, k;
 	var wm1 = sourceWidth-1;
 	var hm1 = sourceHeight-1;
@@ -15422,9 +15489,12 @@ R3D.extractImageCorners = function(imageSource, type, maxCount, single, scaleUp,
 		var gry = image.gry();
 		var wid = image.width();
 		var hei = image.height();
-		var corners = R3D.pointsCornerMaxima(gry, wid, hei,  type);
+		//var corners = R3D.pointsCornerMaxima(gry, wid, hei,  type);
+		var corners = R3D.pointsCornerMaximaRaw(gry, wid, hei, type, nonMaximalPercent);
 		var limitPix = limitDistance*scale;
 		space.initWithMinMax(new V2D(0,0), new V2D(wid,hei));
+		// don't need to limit each individual scale
+		/*
 		corners.sort(sortCorners);
 		for(i=0; i<corners.length; ++i){
 			var point = corners[i];
@@ -15437,14 +15507,15 @@ R3D.extractImageCorners = function(imageSource, type, maxCount, single, scaleUp,
 			var top = y-lim;
 			var bot = y+lim;
 			if(0<=left && right<=wm1 && 0<top && bot<hm1){ // keep features inside window
-				var neighbors = space.objectsInsideCircle(point,limitPix);
-				if(neighbors.length==0){ // keep best corners first
+				// var neighbors = space.objectsInsideCircle(point,limitPix);
+				// if(neighbors.length==0){ // keep best corners first
 					space.insertObject(new V4D(x,y,rad, point.z));
-				}
+				// }
 			}
 		}
 		corners = space.toArray();
 		space.clear();
+		*/
 		Code.arrayPushArray(features, corners);
 		// next image size:
 		if(k<scaleCount-1){
@@ -15456,6 +15527,7 @@ R3D.extractImageCorners = function(imageSource, type, maxCount, single, scaleUp,
 	// console.log("SIZE?: "+space.count());
 	features.sort(sortFeatures);
 	space.initWithMinMax(new V2D(0,0), new V2D(sourceWidth,sourceHeight));
+	// console.log("LIMIT: "+limitDistance);
 	for(var i=0; i<features.length; ++i){
 		var point = features[i];
 		var neighbors = space.objectsInsideCircle(point,limitDistance);
@@ -15465,10 +15537,10 @@ R3D.extractImageCorners = function(imageSource, type, maxCount, single, scaleUp,
 	}
 	features = space.toArray();
 	space.kill();
+	features = features.sort(function(a,b){
+		return a.t > b.t ? -1 : 1;
+	});
 	if(features.length>maxCount){ // remove low corner prominence first
-		features = features.sort(function(a,b){
-			return a.t > b.t ? -1 : 1;
-		});
 		Code.truncateArray(features,maxCount);
 	}
 
@@ -25800,12 +25872,11 @@ GLOBALSTAGE.addChild(d);
 d.graphics().alpha(1.0);
 d.matrix().translate(imageWidth*CALLED,imageHeight*0);
 		
-		var nonMaximalPercent = 0.005; // 0.01-0.001
-		nonMaximalPercent = 0.9999;
+		var nonMaximalPercent = 0.001; // 0.01-0.001
+		//nonMaximalPercent = 0.9999;
+		// R3D.CORNER_SELECT_RELAXED
 		corners = R3D.pointsCornerMaximaRaw(imageThreshold,imageWidth,imageHeight, R3D.CORNER_SELECT_RELAXED, nonMaximalPercent); // CORNER_SELECT_REGULAR  CORNER_SELECT_RESTRICTED  CORNER_SELECT_RELAXED);
 	}
-//console.log("corners: "+corners.length);
-
 // SHOW CORNERS:
 var siz = 3;
 for(i=0; i<corners.length; ++i){
@@ -25820,7 +25891,6 @@ for(i=0; i<corners.length; ++i){
 	GLOBALSTAGE.addChild(d);
 	d.matrix().translate(imageWidth*CALLED,imageHeight*0);
 }
-// throw "?"
 
 
 
@@ -27386,15 +27456,27 @@ R3D.calibrateCameraK = function(pointGroups3D, pointGroups2D){
 
 
 	// calc errors ?:
-	console.log(pointGroups2D)
-	console.log(totalPoints2D)
-	console.log(estimatedPoints2D)
+	// console.log(pointGroups2D)
+	// console.log(totalPoints2D)
+	// console.log(estimatedPoints2D)
 
 	// var doRadial = true;
 	var doRadial = false;
 	// var distortion = R3D.linearCameraDistortion(estimatedPoints2D,totalPoints2D, K, null, doRadial);
 	var distortion = R3D.linearCameraDistortion(totalPoints2D,estimatedPoints2D, K, null, doRadial);
 	console.log(distortion);
+
+	// var distortion = {"k1":0, "k2":0, "k3":0, "p1":0, "p2":0};
+	var result = R3D.BundleAdjustCameraParameters(K, distortion, listM, pointGroups2D, pointGroups3D);
+	var K = result["K"];
+	var listP = result["extrinsic"];
+	var distortion = result["distortion"];
+
+	return {"K":K, "distortion":distortion, "extrinsic":listP};
+
+
+// TESTING:
+
 	// var distortionB = R3D.linearCameraDistortion(totalPoints2D,estimatedPoints2D, K, null, doRadial);
 	// console.log(distortionB);
 
@@ -27795,16 +27877,11 @@ R3D.testDistortion = function(image, K, Kinv, distortion, image, originalPoints)
 	for(var j=0; j<height; ++j){
 		for(var i=0; i<width; ++i){
 			image.get(i,j, color);
-// console.log(i+","+j);
 			point.set(i/width,j/height);
-// console.log(point+"");
 			// distortion
 			R3D.applyDistortionParameters(moved, point, K, distortion);
-// console.log(moved+"");
 			var x = Math.min(Math.max(Math.round(moved.x*width), 0),wm1);
 			var y = Math.min(Math.max(Math.round(moved.y*height), 0),hm1);
-// console.log(x+","+y);
-// throw "?";
 			output.setPoint(x,y, color);
 			// output.setPoint(i,j, color);
 		}
@@ -30055,14 +30132,15 @@ R3D.optimumTransform3DFromRelativePairTransforms = function(pairs, maxIterations
 		var b = pair[1];
 		var transform = pair[2];
 		var error = 1.0;
-
-			var tA = originalTransforms[a];
-			var tB = originalTransforms[b];
-			var absA = Matrix.inverse(tA);
-			var absB = Matrix.inverse(tB);
-			transform = R3D.relativeTransformMatrix2(absA,absB);
-			console.log("GOT TRANSFORM: "+transform)
-
+		if(originalTransforms){
+			throw "WHY HAVE originalTransforms";
+		}
+		// var tA = originalTransforms[a];
+		// var tB = originalTransforms[b];
+		// var absA = Matrix.inverse(tA);
+		// var absB = Matrix.inverse(tB);
+		// transform = R3D.relativeTransformMatrix2(absA,absB);
+		// console.log("GOT TRANSFORM: "+transform)
 		if(pair.length>3){
 			error = pair[3];
 		}
@@ -30899,25 +30977,13 @@ console.log(percents)
 			var matrix = V4D.qMatrix(rotation, new Matrix(3,3));
 			matrix.appendColFromArray(translation.toArray());
 			matrix.appendRowFromArray([0,0,0,1]);
-
-// matrix = originalTransforms[i];
-// matrix = Matrix.inverse(matrix);
-// if(i==0){
-// 	matrix = originalTransforms[0];
-// }else if(i==1){
-// 	matrix = originalTransforms[2];
-// }else if(i==2){
-// 	matrix = originalTransforms[1];
-// }
-
 			value["transform"] = matrix;
 			console.log(matrix+"");
-			console.log(originalTransforms[i]+"");
+			if(originalTransforms){
+				console.log(originalTransforms[i]+"");
+			}
 		}
-// throw "????????????????????"
-
 		if(true){
-		// if(false){
 			console.log(transforms);
 			console.log("COMBINED ...")
 			var result = R3D._gdTranslationRotation3D(vs,es,values,rootIndex,iterations, 2);
@@ -32818,6 +32884,10 @@ R3D.fundamentalNormalize = function(F, matrixA, matrixB){
 	fNorm = Matrix.mult(fNorm, matrixA);
 	fNorm = Matrix.mult(matrixB, fNorm);
 	return fNorm;
+}
+R3D.fundamentalNormalizeImageSizes = function(F, widthA,heightA, widthB,heightB){
+	var Fnorm = R3D.fundamentalNormalize(F, Matrix.transform2DScale(Matrix.transform2DIdentity(),1.0/widthA,1.0/heightA), Matrix.transform2DScale(Matrix.transform2DIdentity(),1.0/widthB,1.0/heightB));
+	return Fnorm;
 }
 
 // R3D.lineFromR = function(relativeAB,pA,Ka,Kb){

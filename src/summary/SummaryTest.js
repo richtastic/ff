@@ -124,11 +124,24 @@ SummaryTest.prototype.imagesLoadComplete = function(imageInfo){
 
 
 
-	var wordsMax = 100;
+	var wordsMax = 400;
 		info = R3D.bagOfWords(matrixA, wordsMax);
 	var wordsA = info["features"];
 		info = R3D.bagOfWords(matrixB, wordsMax);
 	var wordsB = info["features"];
+
+
+	// R3D.showFeaturesForImage(matrixA, wordsA);
+	// R3D.showFeaturesForImage(matrixB, wordsB, matrixA.width());
+
+
+	var maxCount = 2000;
+	var featuresA = R3D.calculateScaleCornerFeatures(matrixA, maxCount);
+	var featuresB = R3D.calculateScaleCornerFeatures(matrixB, maxCount);
+	R3D.showFeaturesForImage(matrixA, featuresA);
+	R3D.showFeaturesForImage(matrixB, featuresB, matrixA.width());
+	console.log(featuresA.length+" | "+featuresB.length);
+
 
 	info = R3D.compareBagsOfWords(wordsA,matrixA, wordsB,matrixB);
 	console.log(info);
@@ -137,8 +150,8 @@ SummaryTest.prototype.imagesLoadComplete = function(imageInfo){
 	var words = wordsA;
 	var list = [[matrixA,wordsA], [matrixB,wordsB]];
 	var x = 0;
-	console.log(list)
 	for(var j=0; j<list.length; ++j){
+		break;
 		var item = list[j];
 		var matrix = item[0];
 		var words = item[1];
