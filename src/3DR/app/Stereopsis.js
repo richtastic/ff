@@ -4866,18 +4866,22 @@ Stereopsis.World.prototype.solvePair = function(completeFxn, completeContext){ /
 	var maxIterations = 10;
 	// var maxIterations = 15;
 	// var maxIterations = 17;
-	console.log(this)
+	var data = {};
+	data["errors"] = [];
+	data["splits"] = [5,15,25];
+	data["previousError"] = -1;
 	for(var i=0; i<maxIterations; ++i){
-		var shouldQuit = this.iteration(i, maxIterations);
+		var shouldQuit = this.iteration(i, maxIterations, data);
 		if(shouldQuit){
 			break;
 		}
 	}
+Code.printMatlabArray(data["errors"]);
 	if(this._completeFxn){
 		this._completeFxn.call(this._completeContext);
 	}
 }
-Stereopsis.World.prototype.iteration = function(iterationIndex, maxIterations){
+Stereopsis.World.prototype.iteration = function(iterationIndex, maxIterations, data){
 	var isFirst = iterationIndex == 0;
 	var isLast = iterationIndex == maxIterations-1;
 	console.log("-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ "+iterationIndex+"/"+maxIterations+" ( "+isFirst+" & "+isLast+" ) ");
@@ -4886,9 +4890,16 @@ Stereopsis.World.prototype.iteration = function(iterationIndex, maxIterations){
 	var views = this.toViewArray();
 	var transforms = this.toTransformArray();
 	var transform0 = transforms[0];
-	console.log(views);
 	// increase cover toward end
-	if(false){
+
+var splitIndex = Code.valueOrDefault(data["splits"][0], -1);
+var error = Code.valueOrDefault(transform0.rMean()+transform0.rSigma(), 0);
+var prevError = data["previousError"];
+data["errors"].push(error);
+
+	// if(false){
+	if(iterationIndex==splitIndex){
+		data["splits"].pop();
 	// if(iterationIndex==10 || iterationIndex==15){
 	// if(iterationIndex==10){
 	// if(iterationIndex==5){
@@ -4945,7 +4956,6 @@ console.log("continue ...");
 // var doRelaxed = true;
 var doRelaxed = iterationIndex%2==0;
 
-
 if(transform0.rSigma()>5){
 	console.log("BAD R");
 	doRelaxed = true;
@@ -4963,22 +4973,6 @@ if(transform0.rSigma()>5){
 
 	// SPHERE - PATCHES
 	this.patchInitBasicSphere(true);
-	// this.patchInitBasicSphere(true, null, true);
-	// if(views[0].cellCount()<10000){
-	// 	this.patchUpdateSphere(true);
-	// }
-	// patch from neighbors ? (only useful at higher resolutions: sub 11x11)
-
-
-	// ??? ACTUALLY BETTER:
-	// var world = this;
-	// var ps3D = world.toPointArray();
-	// for(var p=0; p<ps3D.length; ++p){
-	// 	var p3D = ps3D[p];
-	// 	world.generateMatchAffineFromPatches(p3D);
-	// }
-
-	// this.bundleAdjustFull();
 
 	// EXPAND
 	if(shouldPropagate){
@@ -5009,50 +5003,16 @@ if(doRelaxed){
 	// this.filterGlobalMatches(false, 0, 3.0,3.0,3.0,3.0, false);
 	this.filterGlobalMatches(false, 0, 2.0,2.0,2.0,2.0, false); // slowly drops points
 }
-
-	// don't think this helps much:
-	// this.filterTransform2D3D();
-
-// if(i==1 || i==3){
-	// this.reposition2D();
-// }
-
-// ADD BACK
-	// this.filterPairwiseSphere3D(2.0);
-
 	this.filterPairwiseSphere3D(3.0); // 2-3
 
 	// FILTER 2D F / R / M errpr
 
-
-// FILTER
-		// F
-		// R
-		// SAD
-		// NCC
-		// NCC*SAD
-		// VISIBILITY / DEPTH
-		// 3/5/7/9 kNN
-	// this.dropCornersWorst(0.10); // not really helpful ?
-	// this.dropCornersWorst(0.50); // 0.0 - 0.25
-	// LOCAL 2D [CELLS]
-// console.log("+++ filterLocal2D")
 	// this.filterLocal2D(); // ....... DOES THIS MAKE MUCH OF A DIFFERENCE ? --- NEEEED THIS FOR SINGLE PAIR
 
 	// should wait till point density is very high
 	this.filterLocal3Dto2DSize();
 
 	this.filterLocal3Dto2DProjection();
-		// F
-		// R
-		// NCC
-		// SAD
-		// NCC*SAD
-	// LOCAL 3D
-// console.log("+++ filterLocal3D")
-	// this.filterLocal3D();
-		// ?
-
 
 	this.recordTransformErrorEnd();
 
@@ -12869,56 +12829,50 @@ Stereopsis.World.prototype.toPointFile = function(withNormals){ // len | pnts | 
 	var str = items.join("");
 	return str;
 }
-
-Stereopsis.World.prototype.toYAMLString = function(){
-	console.log("toYAMLString");
-	var yaml = new YAML();
-	var timestampNow = Code.getTimeStamp();
-	yaml.writeComment("BA model");
-	yaml.writeComment("created: "+timestampNow);
-	yaml.writeBlank();
+Stereopsis.World.prototype.toObject = function(){
+	var object = {};
 	// OBJECTS
 	var cameras = this._cameras;
 	var views = this.toViewArray();
 	var transforms = this.toTransformArray();
 	var points3D = this.toPointArray();
-	// console.log(points3D);
 	// CAMERAS
 	if(cameras && cameras.length>0){
-		yaml.writeArrayStart("cameras");
+		// yaml.writeArrayStart("cameras");
+		var objectCameras = [];
+		object["cameras"] = objectCameras;
 		for(var i=0; i<cameras.length; ++i){
 			var camera = cameras[i];
-			yaml.writeObjectStart();
-			yaml.writeString("id",camera.id()+"");
+			var objectCamera = {};
+			objectCameras.push(objectCamera);
+			var cameraID = camera.data();
+			if(!cameraID){
+				cameraID = camera.id();
+			}
+			objectCamera["id"] = cameraID;
 			var K = camera.K();
 			if(K){
-				yaml.writeObjectStart("K");
-				K.toYAML(yaml);
-				yaml.writeObjectEnd();
+				objectCamera["K"] = K;
 			}
 			var distortion = camera.distortion();
 			if(distortion){
-				var keys = Code.keys(distortion);
-				yaml.writeObjectStart("distortion");
-				for(var j=0; j<keys.length; ++j){
-					var key = keys[j];
-					var value = distortion[key];
-					yaml.writeNumber(key,value);
-				}
-				yaml.writeObjectEnd();
+				objectCamera["distortion"] = distortion;
 			}
-			yaml.writeObjectEnd();
+console.log("SCALE THIS?")
 		}
-		yaml.writeArrayEnd();
 	}
 	// VIEWS
-	totalViewCount = 0;
 	if(views && views.length>0){
 		totalViewCount = views.length;
-		yaml.writeArrayStart("views");
+		
+		var objectViews = [];
+		object["views"] = objectViews;
 		for(var i=0; i<views.length; ++i){
 			var view = views[i];
-			yaml.writeObjectStart();
+
+			var objectView = {};
+			objectViews.push(objectView);
+
 			var viewID = view.data();
 			if(!viewID){
 				viewID = view.id();
@@ -12928,204 +12882,127 @@ Stereopsis.World.prototype.toYAMLString = function(){
 				imageSize = new V2D(0,0);
 			}
 			var cellSize = view.cellSize();
-			yaml.writeString("id",viewID+"");
-			if(view.camera()){
-				yaml.writeString("camera",view.camera().id()+"");
-			}else{
-				yaml.writeNull("camera");
+			objectView["id"] = viewID;
+			objectView["camera"] = null;
+			var camera = view.camera();
+			if(camera){
+				var cameraID = camera.data();
+				if(!cameraID){
+					cameraID = camera.id();
+				}
+				objectView["camera"] = cameraID;
 			}
-			yaml.writeObjectStart("imageSize");
-				yaml.writeNumber("x",imageSize.x);
-				yaml.writeNumber("y",imageSize.y);
-			yaml.writeObjectEnd();
-			yaml.writeNumber("cellSize",cellSize);
+			objectView["imageSize"] = imageSize.copy();
+			objectView["cellSize"] = cellSize/imageSize.x;
 			var absoluteTransform = view.absoluteTransform();
 			if(absoluteTransform){
-// console.log(absoluteTransform);// .......
-				yaml.writeObjectStart("transform");
-				absoluteTransform.toYAML(yaml);
-				yaml.writeObjectEnd();
+				objectView["transform"] = absoluteTransform.copy();
 			}
-			/*
-			var pts = view["points"];
-			if(pts && pts.length>0){
-				yaml.writeArrayStart("points");
-				for(j=0; j<pts.length; ++j){
-					var point2D = pts[j];
-					yaml.writeObjectStart();
-						yaml.writeNumber("x",point2D["x"]);
-						yaml.writeNumber("y",point2D["y"]);
-					yaml.writeObjectEnd();
-				}
-				yaml.writeArrayEnd();
-			}
-			*/
-			yaml.writeObjectEnd();
+			// console.log("TODO: SAVE PAIR INFO : RELATIVE Fs");
 		}
-		yaml.writeArrayEnd();
 
-			// TRANSFORMS:
-		yaml.writeArrayStart("transforms");
+		// TRANSFORMS:
+		var objectTransforms = [];
+		object["transforms"] = objectTransforms;
 		for(var i=0; i<views.length; ++i){
+			var viewA = views[i];
 			for(var j=i+1; j<views.length; ++j){
+				var viewB = views[i];
 				var relativeTransform = this.transformFromViews(views[i],views[j]);
 				if(relativeTransform){
-					yaml.writeObjectStart();
-						if(relativeTransform.matches()){
-							yaml.writeNumber("matches",relativeTransform.matches().length);
-						}else{
-							yaml.writeNull("matches");
-						}
-						yaml.writeNumber("errorRMean",relativeTransform.rMean());
-						yaml.writeNumber("errorRSigma",relativeTransform.rSigma());
-						yaml.writeNumber("errorFMean",relativeTransform.fMean());
-						yaml.writeNumber("errorFSigma",relativeTransform.fSigma());
-						yaml.writeNumber("errorNCCMean",relativeTransform.nccMean());
-						yaml.writeNumber("errorNCCSigma",relativeTransform.nccSigma());
-						yaml.writeNumber("errorSADMean",relativeTransform.sadMean());
-						yaml.writeNumber("errorSADSigma",relativeTransform.sadSigma());
-					yaml.writeObjectEnd();
+					var avgWidth = (viewA.size().x + viewB.size().x) * 0.5;
+					var objectTransform = {};
+					objectTransforms.push(objectTransform);
+					objectTransform["matches"] = null;
+					if(relativeTransform.matches()){
+						objectTransform["matches"] = relativeTransform.matches().length;
+					}
+					objectTransform["errorRMean"] = relativeTransform.rMean()/avgWidth;
+					objectTransform["errorRSigma"] = relativeTransform.rSigma()/avgWidth;
+					objectTransform["errorFMean"] = relativeTransform.fMean()/avgWidth;
+					objectTransform["errorFSigma"] = relativeTransform.fSigma()/avgWidth;
+					objectTransform["errorNCCMean"] = relativeTransform.nccMean();
+					objectTransform["errorNCCSigma"] = relativeTransform.nccSigma();
+					objectTransform["errorSADMean"] = relativeTransform.sadMean();
+					objectTransform["errorSADSigma"] = relativeTransform.sadSigma();
+					var viewA = relativeTransform.viewA();
+					var viewB = relativeTransform.viewB();
+					objectTransform["A"] = viewA.data();
+					objectTransform["B"] = viewB.data();
+					objectTransform["transform"] = R3D.relativeTransformMatrix2(viewA.absoluteTransform(),viewB.absoluteTransform());
 				}
 			}
 		}
-		yaml.writeArrayEnd();
 	}
 
-
-
-	console.log("TODO: SAVE PAIR INFO : RELATIVE Fs");
-
-
 	if(points3D && points3D.length>0){
-console.log("PRINT OUT THE ERROR IN RELATIVE AND ABSOLUTE LOCATION, HOW FAR ARE THE INDIVIDUAL / AVERAGES OFF FOR EACH TRANSFORM PAIR ?");
-console.log("max match types "+R3D.BA.maxiumMatchesFromViewCount(totalViewCount) );
-		var countList = Code.newArrayZeros( R3D.BA.maxiumMatchesFromViewCount(totalViewCount) + 2);
-		yaml.writeArrayStart("points");
+		console.log("PRINT OUT THE ERROR IN RELATIVE AND ABSOLUTE LOCATION, HOW FAR ARE THE INDIVIDUAL / AVERAGES OFF FOR EACH TRANSFORM PAIR ?");
+		console.log("max match types "+R3D.BA.maxiumMatchesFromViewCount(totalViewCount) );
+		var objectPointList = [];
+		object["points"] = objectPointList;
+		// var countList = Code.newArrayZeros( R3D.BA.maxiumMatchesFromViewCount(totalViewCount) + 2);
+		var countList = Code.newArrayZeros(totalViewCount+1);
 		for(var i=0; i<points3D.length; ++i){
 			var point3D = points3D[i];
 			var point = point3D.point();
-			//var pointCount = point3D.toPointArray().length;
 			var pointCount = point3D.toPointArray().length;
 			countList[pointCount]++;
-
-
-			// drop non-3 points
-			// if(pointCount<3){
-			// 	continue;
-			// }
-			// drop worst points ?
-
-			if(!point){
-				//throw "problem: "+point;
-				// console.log("problem: "+point);
-				// console.log(point3D);
-				// console.log(point3D);
-			}else{
+			if(point){
 				var points2D = point3D.toPointArray();
-
 				// increasing resolution step messes this up
 				if(points2D.length==0){
 					console.log(point3D);
 					throw "no points 2d ? ";
 				}
-				yaml.writeObjectStart();
+				var objectPoint = {};
+				objectPointList.push(objectPoint);
 				// position
-				yaml.writeNumber("X",point.x);
-				yaml.writeNumber("Y",point.y);
-				yaml.writeNumber("Z",point.z);
+				objectPoint["X"] = point.x;
+				objectPoint["Y"] = point.y;
+				objectPoint["Z"] = point.z;
 				// normal
 				var normal = point3D.normal();
 				if(normal){
-					yaml.writeNumber("x",normal.x);
-					yaml.writeNumber("y",normal.y);
-					yaml.writeNumber("z",normal.z);
+					objectPoint["x"] = normal.x;
+					objectPoint["y"] = normal.y;
+					objectPoint["z"] = normal.z;
 					var size = point3D.size();
-					yaml.writeNumber("s",size);
+					objectPoint["s"] = size;
 				}
 				// 2D
-				var refO = new V2D(0,0);
-				var refX = new V2D(1,0);
-				var refY = new V2D(0,1);
-				var refP = null;
 				if(points2D.length>0){
-					yaml.writeArrayStart("views");
+					var objectViews = [];
+					objectPoint["views"] = objectViews;
 					for(var j=0; j<points2D.length; ++j){
 						var point2D = points2D[j];
 						var view = point2D.view();
 						var size = view.size();
 						var pnt = point2D.point2D();
-						yaml.writeObjectStart();
-							yaml.writeString("view", view.data()); // data holds the original project id
-							yaml.writeNumber("x",pnt.x/size.x);
-							yaml.writeNumber("y",pnt.y/size.y);
-							// DECIDE FIRST SIZE === CELL SIZE
-							// ALL OTHER SIZES ARE RELATIVE TO
-							// yaml.writeNumber("s",?); // absolute size ?
-							// yaml.writeNumber("a",?); // absolute angle ?
-							var relX = refX;
-							var relY = refY;
-							if(j==0){
-								refP = point2D;
-							}else{
-								var match = point3D.matchForViews(refP.view(),view);
-								var affine = match.affineForViews(refP.view(),view);
-								var o = affine.multV2DtoV2D(refO); // SHOULD ALREADY BE 0
-								var x = affine.multV2DtoV2D(refX);
-								var y = affine.multV2DtoV2D(refY);
-								relX = V2D.sub(x,o);
-								relY = V2D.sub(y,o);
-							}
-							// affine relationship
-							yaml.writeNumber("Xx",relX.x);
-							yaml.writeNumber("Xy",relX.y);
-							yaml.writeNumber("Yx",relY.x);
-							yaml.writeNumber("Yy",relY.y);
-						yaml.writeObjectEnd();
+						var objectView = {};
+						objectViews.push(objectView);
+							objectView["view"] = view.data(); // data holds the original project id
+							objectView["x"] = pnt.x/size.x;
+							objectView["y"] = pnt.y/size.y;
 					}
-					yaml.writeArrayEnd();
 				}
-				/*
-				var matches = point3D.toMatchArray();
-				if(matches.length>0){
-					yaml.writeArrayStart("m"); // matches
-					for(var j=0; j<matches.length; ++j){
-						console.log(j+" / "+matches.length);
-						var match = matches[j];
-						var viewA = match.viewA();
-						var viewB = match.viewB();
-						var affine = match.affine();
-						var info = R3D.infoFromAffine2D(affine);
-						console.log(viewA);
-						console.log(viewB);
-						console.log(info);
-						// var scale = R3D.scaleFromAffine2D(affine);
-						// var angle = R3D.angleFromAffine2D(affine);
-						var scale = info["scale"];
-						var angle = info["angle"];
-						yaml.writeObjectStart();
-							// yaml.writeObjectStart("fr");
-							yaml.writeString("A",viewA.id());
-							yaml.writeString("B",viewB.id());
-							yaml.writeString("s",scale);
-							yaml.writeNumber("a",angle);
-						yaml.writeObjectEnd();
-						// yaml.writeObjectEnd();
-					}
-					yaml.writeArrayEnd();
-				}
-				*/
-				yaml.writeObjectEnd();
 			}
 		}
-		yaml.writeArrayEnd();
 	}
-	//console.log("pairsOf3: "+pairsOf3);
-	console.log(countList);
-	//
+	return object;
+}
+Stereopsis.World.prototype.toYAMLString = function(){
+	console.log("toYAMLString");
+	var world = this;
+	var yaml = new YAML();
+	var timestampNow = Code.getTimeStamp();
+	yaml.writeComment("BA model");
+	yaml.writeComment("created: "+timestampNow);
+	yaml.writeBlank();
+	yaml.writeObjectLiteral(world.toObject());
 
+	// throw "here";
 	yaml.writeDocument();
 	var str = yaml.toString();
-//	console.log(str);
 	return str;
 }
 

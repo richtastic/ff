@@ -9427,6 +9427,7 @@ console.log("progressiveFullMatchingDense")
 	var info, F, Finv, Ferror, pointsA, pointsB, matches;
 	R3D._progressiveMatchIndex(objectsA);
 	R3D._progressiveMatchIndex(objectsB);
+	console.log(objectsA,objectsB)
 	// get approximate F from sparse matches
 	info = R3D._progressiveSparseMatches(imageMatrixA,objectsA, imageMatrixB,objectsB);
 	console.log(info);
@@ -30991,16 +30992,6 @@ console.log(percents)
 			console.log(matrices);
 			transforms = matrices;
 		}
-
-
-		// throw "?"
-
-		// error is measured in difference in relative edges and absolute->relative edges
-
-
-		// can do another combined nonlinear step? -- how to measure error of combined transform?
-		// vector distance between expected and calculated origin ?
-
 
 	}else{
 		for(var i=0; i<values.length; ++i){

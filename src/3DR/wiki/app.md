@@ -279,8 +279,9 @@ CELL / DENSITY FOR IMAGES:
 
 
 
-ABSOLUTE TERMS : define cell count (for minimum size)
+ABSOLUTE TERMS : define cell SIZE
 RELATIVE TERMS : define image percent (for minimum size)
+				: define cell count (for minimum size)
 
 
 
@@ -400,12 +401,18 @@ https://cloud.google.com/appengine/docs/nodejs/
 refinement - dates
 12/15 x retest corners > features
 12/16 x pass on camera distortion refinement
-12/17 - sparse.yaml incorporated
-12/18 - visualize F/R pair results -- make all cell sizes based on TOTAL COUNT ( ~ PERCENTS) of image
+12/17 x sparse.yaml incorporated
+12/18 x visualize F/R pair results -- make all cell sizes based on TOTAL COUNT ( ~ PERCENTS) of image
 12/20 - dropping poorest sparse F/R based on defined criteria
 12/23 - pair/triple/scale -> absolute graph 'generalization'
 12/27 - skeleton and group and final BA algorithm defined
 12/31 - dense pair candidate decisions
+		- want to have a bunch up to a point
+		- minimum 2 other neighbors to create triple
+		- want more to spread error
+		- 3-9 (depending on connectivity)
+			- getting 'further' - more global help reducing error but inaccurate
+			- getting 'closer' - more accurate but very local
 01/01 - dense.yaml incorporated
 01/08 - dense replica of sparse incorporated
 01/10 - multi-view point propagation from dense
@@ -420,10 +427,36 @@ refinement - dates
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+- number of tracks aquired has to go up
+	- double the resolution during propagation
 
-- ~ 2500 match-pts with 40 cells, 
+- sequence for pair stereogram:
+	- as long as error goes down by some amount ((diff)/current > 1-10% ) (not including first iteration)
+		- only check on non-lax iterations
+	- divide if there's a 'split' waiting
+	
+- identifying errors earlier on to prevent further estimations
 
-- double check normalizing
+- if stereopsis error goes up ... not a good sign
+
+
+
+- lots of proceeded bad matches ... higher constraints for matches?
+
+
+
+
+
+- ~ 2500 match-pts with 40 cells, 1-4 px sigma error @ 500x350
+	- high error but views are in rough correct spot -- POINTS are just not
+
+- double check all normalizing
+
+- save to files:
+	- flat points ?
+	- relative points
+	- track points
+	- sparse.yaml summary
 
 
 
@@ -571,24 +604,59 @@ project-ID/
 			pictures/
 			features/summary.yaml 		# corner-sift feature summaries (location & scale); DoG-SIFT, MSER, histogram color / grad data
 			compare.yaml 				# similarity scores for each of N-1 other views
-	sparse.yaml 						# ?
 	sparse/
+		sparse.yaml 					# summary data for sparse progress
+			pairs: ...
+			triples: ...
+			graph:
+				views:
+					- 
+						id: viewID
+						R: absolute orientation
+				edges:
+					-
+						A: viewIDA
+						B: viewIDB
+						e: error
+			tracks: tracks.yaml
+			bundle:
+				groups: group.yaml
+				full: bundle.yaml
+		tracks.yaml 					# points for sparse BA -- stays the same (3D points irrelevant)
+		group.yaml 						# sub-group BA -- view orientations change
+			skeleton:
+				...
+			groups:
+				...
+		bundle.yaml 					# full BA -- view orientations change
 		pairs/
-			matches.yaml 				# F matches
-			relative.yaml 				# R matches
-			tracks.yaml 				# best relative R P3D
-	graph.yaml
-	tracks.yaml
-	dense.yaml
+			pairID/
+				matches.yaml 			# F matches
+				relative.yaml 			# R matches
+				tracks.yaml 			# best relative R P3D
+		triples/
+			tripleID/
+				relative.yaml 			# don't care? only need summary data
 	dense/
-		pairs/
-		ID/
-	points.yaml
-	bundle.yaml
+		dense.yaml
+			... SAME AS SPARSE
+	bundle/
+		bundle.yaml 					# view absolute orientations -- move
+		points.yaml 					# points -- move
+	surface/
+		surface.yaml 					# summary data of progress: views, points, triangles, textures, packing
+		points.yaml 					# surface points
+		triangles.yaml 					# triangles
+		textures/
+			tex0.png
+			...
 	scenes.yaml
 	scenes/
-		ID/
-
+		sceneID/
+			scene.yaml
+			textures/
+				tex0.png
+				...
 
 info.yaml:
 	title: "New Project 11/9/18 9:12AM"

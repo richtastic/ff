@@ -424,6 +424,22 @@ Code.appendToPath = function(path){
 	}
 	return fin;
 }
+Code.pathRemoveLastComponent = function(path){ // 
+	console.log(path);
+	if(!path){
+		return "";
+	}
+	var index = path.lastIndexOf("/");
+	console.log(index);
+	while(path.length>0 && index == path.length-1){
+		path = path.substr(0,path.length-1);
+		index = path.lastIndexOf("/");
+	}
+	if(index>=0){
+		return path.substr(0,index);
+	}
+	return "";
+}
 Code.printMatlabArray = function(array,name, ret){
 	name = name!==undefined ? name : "x";
 	var str = name+" = [";
@@ -1732,6 +1748,13 @@ Code.indexOfElement = function(a,o){ // O(n)
 Code.addUnique = function(a,o){ // O(n)
 	if( !Code.elementExists(a,o) ){ a.push(o); return true; }
 	return false;
+}
+Code.uniqueStrings = function(list){
+	var hash = {};
+	for(var i=0; i<list.length; ++i){
+		hash[list[i]] = 1;
+	}
+	return Code.keys(hash);
 }
 Code.removeElements = function(a,f){ // preserves order O(n)
 	var removed = [];
@@ -5417,7 +5440,7 @@ Code.valueOrDefault = function(val, def){
 	return def;
 }
 Code.isSet = function(val){
-	return val!==undefined && val!==null;
+	return val!==undefined && val!==null; // 0 is ok
 }
 Code.getPropertyOrDefault = function(ele,pro, def){
 	if(Code.hasProperty(ele,pro)){
