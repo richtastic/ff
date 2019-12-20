@@ -6788,14 +6788,17 @@ var tripleScale = null;
 				var scaleBCtoAB = 0;
 				console.log(transformAB,transformAC,transformBC);
 				if(transformAB.R() && transformAC.R()){
+console.log("1)");
 					scaleABtoAC = this.relativeScaleFromSampleRatios(viewA,viewB,viewC); // AB/AC
 					scaleABtoAC = 1.0/scaleABtoAC;
 				}
 				if(transformAC.R() && transformBC.R()){
+console.log("2)");
 					scaleACtoBC = this.relativeScaleFromSampleRatios(viewC,viewA,viewB); // AC/BC
 					scaleACtoBC = 1.0/scaleACtoBC;
 				}
 				if(transformAB.R() && transformBC.R()){
+console.log("3)");
 					scaleBCtoAB = this.relativeScaleFromSampleRatios(viewB,viewC,viewA); // BC/AB
 					scaleBCtoAB = 1.0/scaleBCtoAB;
 				}
@@ -6831,6 +6834,7 @@ var tripleScale = null;
 					}
 				}else{
 					var result = R3D.optimumScaling1D(edges);
+					console.log(result);
 					var abs = result["absolute"];
 					// distribute the error around for consistent scaling
 						abs0 = abs[0];
@@ -7122,6 +7126,8 @@ break;
 
 
 Stereopsis.World.prototype.relativeScaleFromSampleRatios = function(viewA,viewB,viewC){ // AC/AB
+	console.log("relativeScaleFromSampleRatios");
+	console.log(viewA,viewB,viewC);
 	// COMMON = A
 	// var viewA = views[0];
 	// var viewB = views[1];
@@ -12972,7 +12978,7 @@ console.log("SCALE THIS?")
 				// 2D
 				if(points2D.length>0){
 					var objectViews = [];
-					objectPoint["views"] = objectViews;
+					objectPoint["v"] = objectViews;
 					for(var j=0; j<points2D.length; ++j){
 						var point2D = points2D[j];
 						var view = point2D.view();
@@ -12980,7 +12986,7 @@ console.log("SCALE THIS?")
 						var pnt = point2D.point2D();
 						var objectView = {};
 						objectViews.push(objectView);
-							objectView["view"] = view.data(); // data holds the original project id
+							objectView["i"] = view.data(); // data holds the original project id
 							objectView["x"] = pnt.x/size.x;
 							objectView["y"] = pnt.y/size.y;
 					}

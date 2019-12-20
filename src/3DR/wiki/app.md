@@ -399,10 +399,6 @@ https://cloud.google.com/appengine/docs/nodejs/
 
 
 refinement - dates
-12/15 x retest corners > features
-12/16 x pass on camera distortion refinement
-12/17 x sparse.yaml incorporated
-12/18 x visualize F/R pair results -- make all cell sizes based on TOTAL COUNT ( ~ PERCENTS) of image
 12/20 - dropping poorest sparse F/R based on defined criteria
 12/23 - pair/triple/scale -> absolute graph 'generalization'
 12/27 - skeleton and group and final BA algorithm defined
