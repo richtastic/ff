@@ -30480,7 +30480,7 @@ R3D.optimumTransform3DFromObjectLookup = function(views, pairs, triples,  viewTo
 	console.log(tableViewPairToPair);
 	console.log(tablePairIDToIndex);
 	console.log(tablePairIndexToID);
-
+	console.log("getting possible edges");
 	// go thru all triples and get all possible edges for each pair
 	for(var i=0; i<triples.length; ++i){
 		var triple = triples[i];
@@ -30488,15 +30488,26 @@ R3D.optimumTransform3DFromObjectLookup = function(views, pairs, triples,  viewTo
 		var idA = tripleIDs[0];
 		var idB = tripleIDs[1];
 		var idC = tripleIDs[2];
+		// console.log("triple: "+idA+"-"+idB+"-"+idC);
 		var idAB = viewIDsToPairID(idA,idB);
 		var idAC = viewIDsToPairID(idA,idC);
 		var idBC = viewIDsToPairID(idB,idC);
 		var pairAB = tableViewPairToPair[idAB];
 		var pairAC = tableViewPairToPair[idAC];
 		var pairBC = tableViewPairToPair[idBC];
-		var errorAB = pairToError(pairAB);
-		var errorAC = pairToError(pairAC);
-		var errorBC = pairToError(pairBC);
+		// console.log(pairAB,pairAC,pairBC);
+		var errorAB = 0;
+		var errorAC = 0;
+		var errorBC = 0;
+		if(pairAB){
+			errorAB = pairToError(pairAB);
+		}
+		if(pairAC){
+			errorAC = pairToError(pairAC);
+		}
+		if(pairBC){
+			errorBC = pairToError(pairBC);
+		}
 		var scales = tripleToScales(triple);
 		var scaleAB = scales["AB"];
 		var scaleAC = scales["AC"];
@@ -30516,7 +30527,7 @@ R3D.optimumTransform3DFromObjectLookup = function(views, pairs, triples,  viewTo
 		}
 	}
 	console.log(tableViewPairToEdge);
-
+console.log("getting actual edges");
 	// combine every conflicting edge into single edge using error ratios
 	for(var i=0; i<edges.length; ++i){
 		var edge = edges[i];
@@ -31747,24 +31758,31 @@ if(doDisplayStuff){
 
 		// var label = edge.weight();
 		var label = edge.data()["weight"];
+		/*
 		var t = new DOText(""+label, 14, DOText.FONT_ARIAL, 0xFF000099, DOText.ALIGN_CENTER);
 		var p = V2D.avg(positionA,positionB);
 			t.matrix().translate(worldOffset.x - 0 + p.x, worldOffset.y - 0 + p.y);
 			GLOBALSTAGE.addChild(t);
+			*/
 	}
 	
 	d.matrix().translate(worldOffset.x, worldOffset.y);
 
-
+console.log("groups?:");
+console.log(positions);
 	// groups:
 	for(var i=0; i<groups.length; ++i){
 		var group = groups[i];
 		var points = [];
 		for(var j=0; j<group.length; ++j){
 			var vertex = group[j];
-			var point = positions[vertex.id()];
+			// console.log(vertex.id())
+			// console.log(vertex)
+			// var point = positions[vertex.id()];
+			var point = positions[vertex.data()["index"]];
 			points.push(point);
 		}
+		console.log(points)
 		var info = V2D.infoArray(points);
 		var min = info["min"];
 		var size = info["size"];

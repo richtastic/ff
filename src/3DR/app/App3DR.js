@@ -7590,7 +7590,10 @@ App3DR.ProjectManager.prototype.iterateSparseProcess = function(){
 	var project = this;
 	// LOAD SPARSE FILE
 	var filename = this.sparseFilename();
-	project.loadSparse(this._iterateSparseLoaded, this);
+	var fxn = function(){
+		project._iterateSparseLoaded(filename, project.sparseData());
+	}
+	project.loadSparse(fxn, project);
 }
 App3DR.ProjectManager.prototype._iterateSparseLoaded = function(filename, data){
 	var project = this;
@@ -7790,16 +7793,71 @@ console.log("GOT : matchCount: "+matchCount);
 	// CREATE GRAPH FROM PAIRWISE & TRIPLE SCALE
 	var graph = sparseData["graph"];
 	if(!graph){
-		console.log(pairs);
-		console.log(triples);
-
+		var views = project.views();
+		var graphViews = [];
+		var graphPairs = [];
+		var graphTriples = triples;
+		for(var i=0; i<views.length; ++i){
+			var view = views[i];
+			var v = {};
+				v["id"] = view.id();
+			graphViews.push(v);
+		}
+		for(var i=0; i<pairs.length; ++i){
+			var pair = pairs[i];
+			if(pair["tracks"]>0){
+				// console.log(pair)
+				var p = {};
+				p["A"] = pair["A"];
+				p["B"] = pair["B"];
+				p["relativeError"] = pair["relativeError"];
+				p["relative"] = pair["relative"];
+				p["R"] = Matrix.fromObject(pair["relativeTransform"]);
+				graphPairs.push(p);
+			}
+		}
+		console.log(graphViews);
+		console.log(graphPairs);
+		console.log(graphTriples);
+		console.log("_absoluteViewsFromDatas");
+		var graph = this._absoluteViewsFromDatas(graphViews, graphPairs, graphTriples);
+		console.log(graph);
 		// _absoluteViewsFromDensePairs(views, pairs, triples)
+		// global view absolute transforms
+		// for each group: make
+		// var data = ;
+		
+		var data = {};
+		data["views"] = [];
+		data["edges"] = [];
+
+		// var sparseFilename = project.sparseFilename();
+		console.log(filename);
+		var basePath = Code.pathRemoveLastComponent(filename);
+		console.log(basePath);
+		var graphFilename = Code.appendToPath(basePath, App3DR.ProjectManager.RECONSTRUCT_GRAPH_FILE_NAME);
+		console.log(graphFilename);
+		/*
+		data["skeleton"] = {
+			"groups":[
+				{
+					"views": []
+					"edges": []//
+				},
+			]
+		};
+		// list of TODO items
+		data["bundles"] = {
+			[
+				"GROUP I":?
+			]
+		},
 
 		throw "create graph";
+
+		*/
+		throw "SAVE";
 	}
-	// graph:
-	// vertexes: a bunch of views with absolute locations
-	// edges: connected pairs of view IDs
 
 	// AGGREGATE TRACKS INTO POINT FILE
 	// tracks:
@@ -7808,17 +7866,97 @@ console.log("GOT : matchCount: "+matchCount);
 	// string = filename = done
 	// trackCount: # = done ?
 
+
+
+	// HOW TO ASSEBMLE FINAL GRAPH FROM BA GROUPS?
+		// each group has 1 vertex in common with skeleton
+		// append each other vertex starting at inital transform [subtract origin tranform]
+		// 
+		// some views are not included in groups (if just hanging)
+		// SHOULD HAVE some edge to reference? which one =>>>> ONE WITH VERTEX AS SKELETON
+		// 
+
+
 	// BUNDLE ADJUST GRAPH TO MINIMIZE ERROR
 	// bundle:
 	// null = not started
 	// 
 	// bundleCount: # = done ?
 
+
 	// CREATE BEST GUESS FOR PAIRS TO USE IN DENSE PROCESS
 	// putative: list of pairs
 
 	// calculateBundleAdjustPair
 throw "next";
+}
+
+App3DR.ProjectManager.prototype._absoluteViewsFromDatas = function(views, pairs, triples){
+	console.log("_absoluteViewsFromDensePairs");
+
+	var viewToID = function(view){
+		// console.log(view);
+		// throw "view id?";
+		return view["id"];
+	};
+	var pairToIDs = function(pair){
+		// console.log(pair);
+		// throw "pair id?";
+		return [pair["A"],pair["B"]];
+	};
+	var pairToError = function(pair){
+		// console.log(pair);
+		// throw "pair error";
+		return pair["relativeError"]/pair["relative"];
+		// return pair["errorR"]/pair["pointCount"];
+	};
+	var pairToTransform = function(pair, idA,idB){
+		// console.log(pair);
+		// throw "pair trans";
+		// var A = pair["A"];
+		// var B = pair["B"];
+		// if(A!=idA || B!=idB){
+		// 	console.log(pair);
+		// 	throw "ID MISMATCH ?"
+		// }
+		var R = pair["R"];
+		return R;
+	};
+	var tripleToIDs = function(triple){
+		// console.log(triple);
+		// throw "triple ids";
+		return [triple["A"],triple["B"],triple["C"]];
+	};
+	var tripleToScales = function(triple){
+		// console.log(triple);
+		// throw "triple scales";
+		var gauge = triple["gauge"];
+		// console.log(gauge);
+		return gauge;
+	};
+
+	var info = R3D.optimumTransform3DFromObjectLookup(views, pairs, triples, viewToID,pairToIDs,tripleToIDs, pairToError,pairToTransform,tripleToScales);
+	// console.log(info);
+	var transforms = info["transforms"];
+	var listPairs = info["listPairs"];
+	var viewIDs = info["views"];
+	var skeleton = info["skeleton"];
+	var backbone = skeleton["skeletonVertexes"];
+	var groups = skeleton["groupVertexes"];
+	// from index to id
+	// groups.push(backbone);
+	for(var i=0; i<groups.length; ++i){
+		var group = groups[i];
+		for(var j=0; j<group.length; ++j){
+			console.log(group[j]+" -> "+viewIDs[group[j]]);
+			group[j] = viewIDs[group[j]];
+		}
+	}
+	// groups.pop();
+
+	this.displayViewGraph(transforms,listPairs, 500);
+	
+	return {"transforms":transforms, "views":viewIDs, "skeleton":backbone, "groups":groups};
 }
 
 App3DR.ProjectManager.prototype.calculatePairMatchFromViewIDs = function(viewAID, viewBID, completeFxn, completeCxt, settings){ // matches, F, R, tracks
@@ -9673,8 +9811,8 @@ this.setTracksFilename(App3DR.ProjectManager.RECONSTRUCT_TRACKS_FILE_NAME);
 }
 
 
-App3DR.ProjectManager.prototype.displayViewGraph = function(transforms, pairs){
-
+App3DR.ProjectManager.prototype.displayViewGraph = function(transforms, pairs, offsetX){
+	offsetX = offsetX!==undefined ? offsetX : 0.0;
 // test data
 /*
 
@@ -9724,7 +9862,7 @@ App3DR.ProjectManager.prototype.displayViewGraph = function(transforms, pairs){
 	var displayHeight = displaySize - displayPadding*2.0;
 	var offset2D = new V2D(displaySize*0.5,displaySize*0.5);
 	// new V2D(displayPadding + displayWidth*0.5, displayPadding + displayHeight*0.5);
-	console.log("offset2D: "+offset2D);
+	// console.log("offset2D: "+offset2D);
 
 	var centers = [];
 	var normals = [];
@@ -9772,11 +9910,7 @@ App3DR.ProjectManager.prototype.displayViewGraph = function(transforms, pairs){
 	display.graphics().drawRect(0,0,displaySize,displaySize);
 	display.graphics().endPath();
 	display.graphics().strokeLine();
-	// display.graphics().setLine(2.0,0x66000000);
-	// display.graphics().beginPath();
-	// display.graphics().drawRect(displayPadding,displayPadding,displayWidth,displayHeight);
-	// display.graphics().endPath();
-	// display.graphics().strokeLine();
+
 	var normalSize = 25.0;
 	var cameraSize = 5.0;
 	var centersDisplay2D = [];
@@ -9872,6 +10006,7 @@ App3DR.ProjectManager.prototype.displayViewGraph = function(transforms, pairs){
 	// display.matrix().translate(0,displaySize);
 	GLOBALSTAGE.addChild(display);
 	display.matrix().translate(300,100);
+	display.matrix().translate(offsetX,0);
 
 }
 
@@ -11395,7 +11530,7 @@ for(var i=0; i<views.length; ++i){
 	var listPairs = info["listPairs"];
 	var viewIDs = info["views"];
 
-
+	console.log(info);
 /*
 // TESTING KEEPING ORIGINAL:
 
@@ -11420,7 +11555,7 @@ for(var i=0; i<views.length; ++i){
 	}
 */
 
-	this.displayViewGraph(transforms,listPairs);
+	this.displayViewGraph(transforms,listPairs, 100);
 
 	return info;
 	// {"transforms":transforms, "views":viewIDs, "skeleton":result};
