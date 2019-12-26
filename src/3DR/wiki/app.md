@@ -399,9 +399,14 @@ https://cloud.google.com/appengine/docs/nodejs/
 
 
 refinement - dates
-12/20 - dropping poorest sparse F/R based on defined criteria
-12/23 - pair/triple/scale -> absolute graph 'generalization'
+12/20 x dropping poorest sparse F/R based on defined criteria
+12/23 x pair/triple/scale -> absolute graph 'generalization'
 12/27 - skeleton and group and final BA algorithm defined
+12/?? - loading all tracks into their groups
+12/?? - BA on groups/tracks
+12/?? - combining grouped BA into final BA init
+12/?? - BA on final group
+12/?? - hole filling?
 12/31 - dense pair candidate decisions
 		- want to have a bunch up to a point
 		- minimum 2 other neighbors to create triple
@@ -423,19 +428,56 @@ refinement - dates
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-- number of tracks aquired has to go up
-	- double the resolution during propagation
+
+- combining tracks on 2D collision
+	- pick 'one' with better score
+		- entire track
+		- single match-point
+	- load relevant images & resolve with local search
+		- iteratively loading images to resolve
+	- other?
+
+
+
+	
+- how to recognize outlier edges/pairs in graph? [assume have passed max Rerror check]
+	- before triples are determined/calculated?
+	- before absolute orientations are calculated?
+	- after initial estimation?
+	- voting requires a fair amount of connectivity:
+		- node voting [sigma drop worst]
+		- edge voting? [sigma drop worst]
+	- plotting of all edges in some N-space to detect outliers in some other way?:
+		- angle difference, distance, R-error, F-error, ... => then drop anomalies?
+		- 
+	- others methods?
+
+- how to load points by sections for large scale out of core sectioning
+- what to do about points at infinity (project eg white-space sky / unmapped areas to a sphere?)
+
+
+
+- graph EDGES should be added to when track overlaps are found / added
+=> right now only considering original pairwise matches
+
+
+- some scenes (outdoors) can have huge distances between areas of interest
+	EG: outdoors:
+		- local field area is dense ~ 1E1m
+		- mountains are sparse ~ 1E3m
+		- sky is at infinity ~ 1E9m
+	=> size of 'scene' should be focused on where CAMERAS are, not necessarily where the points end up being
+
 
 - sequence for pair stereogram:
 	- as long as error goes down by some amount ((diff)/current > 1-10% ) (not including first iteration)
 		- only check on non-lax iterations
 	- divide if there's a 'split' waiting
+		- 
 	
 - identifying errors earlier on to prevent further estimations
 
 - if stereopsis error goes up ... not a good sign
-
-
 
 - lots of proceeded bad matches ... higher constraints for matches?
 
@@ -448,12 +490,6 @@ refinement - dates
 
 - double check all normalizing
 
-- save to files:
-	- flat points ?
-	- relative points
-	- track points
-	- sparse.yaml summary
-
 
 
 - throw out initial pair estimates [set to 0] if:
@@ -462,50 +498,12 @@ refinement - dates
 	- best R error > 10 px
 
 
-- F / R errors should be in some RELATIVE size [width]
 
-- sparse will use initial pairs as starting point [maybe: 25-50% will fail, 10-25% will be skipped]
-	- possible some pairs will be missed [incorrect score / necessary limit for processing]
-	- some pairs may end up with a poor F & not have pair estimate [high error / poor matches]
-
-- dense will use sparse output (known knowns) + global pair estimated adjacency
-	- propagate R-error [until reach max limit]
-	- geometry limits
-		- same direction: within ~ 45 degrees
-		x similar distance: within some sigma of known pairs
-	- [maybe 10-25% fail, 0-10% will be skipped]
-
-
-HOW TO BETTER CHOOSE SECOND (DENSE) PAIR CHOICES FROM INITIAL GRAPH:
-	- geometry is most important:
-		- hard to tell what overlap is without actually doing calculation
-			- frustrum estimates will change between inital pair estimate and scale will need to be updated, 
-			- can get a max frustrum from lowest error points & doing sporadic point removal
-				- max angle from up/down & left/right
-				- max distance from center
-	A) 
-		- keep all inital working pairs PLUS:
-		- find shortest (lowest error) paths to all neighbors
-		- d = 1~4 - distant indirect neighbors (jumps) (graphwize)
-		- limited by:
-			- 2-4 x global sigma error 
-			- maximum allowable error: ~ 1-5% of image size [eg: 5-25px for 500x400 image]
-			- histogram similarity score above some minimum
-			- views pointing within some angle of each other [90 deg]
-			- views frustrums have some amount of overlap
-				- not very additionally helpful [only fairly already clearly wrong ]
-				- hard to 
-		- limit total number of possible candidates to best [lowest likley error] of ~ max[6 , sqrt(n)] of all possible
-
-- throw out dense pair estimates [set to 0] with higher standards:
-	- best F error > 10 px
-	- best R error > 5 px
-	- total final best matches count < ~ 10% of image
 
 
 - logic for processing skeleton and groups and full BA
-	- POINTS ARE CONSTANT
-	- ONLY VIEW TRANSFORMS CHANGE
+	- POINTS ARE CONSTANT [in 2D, but 3d positions do change]
+	- VIEW TRANSFORMS CHANGE
 	- same points can be loaded for each group (although wasteful for non-skeleton)
 	- each group has it's own absolute transforms
 		- load in sequence until error goes down
@@ -514,23 +512,70 @@ HOW TO BETTER CHOOSE SECOND (DENSE) PAIR CHOICES FROM INITIAL GRAPH:
 		- B) graphwise combining relative pairs
 	- reset transforms to origin at center of mass
 
-
-groups:
+- logic for increasing point count [fill in / expand] in 
+	- VIEW TRANSFORMS ARE CONSTANT
 	- 
-		views:
-			- 
-				id: VIEWIDA
-				transform: ...
-				errorR: ...
-				errorF: ...
-			- 
-				id: VIEWIDB
-				transform: ...
-				errorR: ...
-				errorF: ...
-		...
 
+
+
+DENSE - STEP - REMINDER
+- use best guess sparse pairs for matches
+- use sparse relative orientation to:
+	- limit F & R error min[1-5px, relativeError x 2]
+	- limit neighborhood search
+	- pick affine relationship for potential matches
+DIFFERENCE:
+	A) TRACKS ARE USED FOR BA POSITIONING
+		BUT DENSE ARE USED FOR FINAL POINTS
+	B) don't care to predict next best pair set / connectivity
+	C) 
+
+
+OUT-OF-CORE BUNDLE ADJUSTMENT: --------------------------------------------------
+
+- to load by view, each view needs to store it's array of points involved, consistency needs to be enforced across views
 - 
+
+
+A) UPDATING ONLY VIEWS:
+	- pick some view [or group] -- (connectivity i & i+1 / i+2)
+	- load all points connected to view [or group]
+	- include all adjacent views [any reference from a point]
+	- update orientate the view [or some central views in group]
+	- save updated view orientations
+
+B) UPDATING POINTS:
+	- pick small neighborhood volume to load points from
+	- load adjacent volume of points
+	- load all views referenced from core points [or full set?]
+	- mark points to remove as outliers
+	- mark propagated points to add
+
+C) INCREASING POINT DENSITY:
+	- pick some view (with areas that are empty / or areas that would be good to propagate to OTHER empty views)
+	- load all points in view + adj views
+	- subdivide view cells [double size]
+	- search adj views for collisions
+	- ...
+
+=>>> need consistency management between:
+=> list of all points referenced by views
+=> oct-tree include
+
+
+OUT-OF-CORE TRIANGLE TESSELATION: --------------------------------------------------
+- points can't fit on disk
+- triangles can't fit on disk
+- edge perimeter? can't fit on disk?
+	=> maybe perimeter size is limited by forcing to not expand until closure?
+	=> maybe processing group is limited by having a 'focus area' -- peaks at eg 100-1000 edge size?
+
+- handle?: triangles spread in ALL directions ... ?
+
+- oct-space on disk
+- edge-list/ priority queue on disk 
+
+: --------------------------------------------------
 
 
 

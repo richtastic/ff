@@ -7806,8 +7806,8 @@ console.log("GOT : matchCount: "+matchCount);
 		for(var i=0; i<pairs.length; ++i){
 			var pair = pairs[i];
 			if(pair["tracks"]>0){
-				// console.log(pair)
 				var p = {};
+				p["id"] = pair["id"];
 				p["A"] = pair["A"];
 				p["B"] = pair["B"];
 				p["relativeError"] = pair["relativeError"];
@@ -7819,81 +7819,175 @@ console.log("GOT : matchCount: "+matchCount);
 		console.log(graphViews);
 		console.log(graphPairs);
 		console.log(graphTriples);
+
+		// throw "Do poor edge pruning / outlier detection / removal ? ";
+
 		console.log("_absoluteViewsFromDatas");
 		var graph = this._absoluteViewsFromDatas(graphViews, graphPairs, graphTriples);
-		console.log(graph);
-		// _absoluteViewsFromDensePairs(views, pairs, triples)
-		// global view absolute transforms
-		// for each group: make
-		// var data = ;
-		
-		var data = {};
-		data["views"] = [];
-		data["edges"] = [];
-
-		// var sparseFilename = project.sparseFilename();
-		console.log(filename);
+		var viewIndextoViewID = graph["views"];
+		var graphGroups = graph["groups"];
+			graphGroups.unshift(graph["skeleton"]);
+		var graphGroupPairs = graph["groupEdges"]
+			graphGroupPairs.unshift(graph["skeletonEdges"]);
 		var basePath = Code.pathRemoveLastComponent(filename);
-		console.log(basePath);
+		// console.log(basePath);
 		var graphFilename = Code.appendToPath(basePath, App3DR.ProjectManager.RECONSTRUCT_GRAPH_FILE_NAME);
-		console.log(graphFilename);
-		/*
-		data["skeleton"] = {
-			"groups":[
-				{
-					"views": []
-					"edges": []//
-				},
-			]
-		};
-		// list of TODO items
-		data["bundles"] = {
-			[
-				"GROUP I":?
-			]
-		},
-
-		throw "create graph";
-
-		*/
-		throw "SAVE";
+		var dataViews = [];
+		var dataEdges = [];
+		var dataGroups = [];
+		var data = {};
+		data["views"] = dataViews;
+		data["pairs"] = dataEdges;
+		data["groups"] = dataGroups;
+		data["skeletonIndex"] = 0;
+		data["loadPairIndex"] = -1;
+		// 
+		var vs = graph["views"];
+		var vt = graph["transforms"];
+		for(var i=0; i<vs.length; ++i){
+			var d = {};
+				d["id"] = vs[i];
+				d["transform"] = vt[i];
+			dataViews.push(d);
+		}
+		// TODO: find edge outliers -- eg: node voting
+		for(var i=0; i<graphPairs.length; ++i){
+			var pair = graphPairs[i];
+			var d = {};
+				d["id"] = pair["id"];
+				d["A"] = pair["A"];
+				d["B"] = pair["B"];
+				d["error"] = pair["relativeError"];
+			dataEdges.push(d);
+		}
+		for(var i=0; i<graphGroups.length; ++i){
+			var group = graphGroups[i];
+			var g = {};
+			var gViews = [];
+			var gEdges = [];
+				g["views"] = gViews;
+				g["edges"] = gEdges;
+			for(var j=0; j<group.length; ++j){
+				var vid = group[j];
+					vid = viewIndextoViewID[vid];
+				gViews.push(vid);
+			}
+			var pairs = graphGroupPairs[i];
+			for(var j=0; j<pairs.length; ++j){
+				var pair = pairs[j];
+				var a = pair[0];
+					a = viewIndextoViewID[a];
+				var b = pair[1];
+					b = viewIndextoViewID[b];
+				gEdges.push({"A":a,"B":b});
+			}
+			dataGroups.push(g);
+		}
+		console.log(data);
+		// save graph & reference it
+		sparseData["graph"] = graphFilename;
+		var saveSparseFxn = function(){
+			console.log("saveSparseFxn");
+			project.saveSparseFromData(sparseData, saveProjectFxn,project);
+		}
+		project.saveFileFromData(data,graphFilename, saveSparseFxn,project);
+		return;
 	}
 
 	// AGGREGATE TRACKS INTO POINT FILE
-	// tracks:
-	// null = not started
-	// array = in process of loading
-	// string = filename = done
 	// trackCount: # = done ?
+	var trackCount = sparseData["trackCount"]; // number of loaded tracks
+	if(trackCount===null || trackCount===undefined){
+		// NEED TRACK FILE FOR EACH GROUP [critical pairs]
+		// + FOR FULL GROUP [all possible pairs]
+		// combine from closeness only
+		// TODO: TRACK COLLISION RESOLUTION?
+		throw "no trackCount ---> load tracks into track_GROUP.yaml & full (tracks or dense points) into tracks_all.yaml"
+	}
 
+	var bundleCount = sparseData["bundleCount"]; // some number of iterations /
+	if(bundleCount===null || bundleCount===undefined){
+		// for each group: bundle adjust only the loaded views:
+		// skip BA on group if only a pair?
+		// MOVE VIEW ORIENTATIONS TO LOWER ERROR
+		// when done with groups, initialize view locations:
+		// 		starting with group 0 [skeleton]
+		// 		each group will have some node in skeleton, offset all transforms by existing vertex's transform
+		// BA on full view & point set
+		throw "no bundleCount ---> keep iterating on graph groups"
+	}
 
+	// ONLY FOR DENSE:
+	if(false){
 
-	// HOW TO ASSEBMLE FINAL GRAPH FROM BA GROUPS?
-		// each group has 1 vertex in common with skeleton
-		// append each other vertex starting at inital transform [subtract origin tranform]
+		// use full pairwise matches [10k-100k] for final points, NOT TRACKS [1~10k]
+	}
+
+	// fill in holes & increase overlap [only care about in dense iteration]
+	var upSampling = sparseData["upSampling"];
+	if(upSampling===null || upSampling===undefined){
+		//
+		throw "want to fill in holes / interconnect more points"
+		//
+		// possible more BA?
 		// 
-		// some views are not included in groups (if just hanging)
-		// SHOULD HAVE some edge to reference? which one =>>>> ONE WITH VERTEX AS SKELETON
-		// 
+		throw "want to drop most high error points"
+	}
+
+	// TODO:
+	// INCREASE POINT DENSITY STEP?
+	// requires out-of-core sectioning
+	// requires out-of-core triangulation step
+	// ...
+/*
+	
+	want to increase resolution / point density 1 more sub-size [40 sparse] [80 dense] [160+ surfacing]
+	too many points to load all at once?
+	doing individually would be highly repetitive
+	load only certain points files from OCT TREE ?
+	- do views need to keep track of their point volume ?
+		- no, this is useless in most cases, they need to list out the oct leave they are using
+		- but these change, so maybe need to just query the oct tree
+	- how to do triangle surfacing?
+
+*/
+
+	// done => assemble final view orientation estimate
+	// output view transforms => bundle.yaml
+	// output points => points.yaml [unused for sparse, ]
+	// output best-pair guess => info.yaml
 
 
-	// BUNDLE ADJUST GRAPH TO MINIMIZE ERROR
-	// bundle:
-	// null = not started
-	// 
-	// bundleCount: # = done ?
+	
+	/*
+		// CREATE BEST GUESS FOR PAIRS TO USE IN DENSE PROCESS ---- only care in SPARSE iteration?
+		// putative: list of pairs
 
+		add edges to graph where overlapping tracks have formed where edge (from pairs) did not originally exist
+		-- some sort of minimum threshold on count - minimum (16-100, based on cell density) & ~10-25% of global average
+		-- some sort of minimum threshold on error - average & sigma
 
-	// CREATE BEST GUESS FOR PAIRS TO USE IN DENSE PROCESS
-	// putative: list of pairs
+		THEN:
+	
+		get average error to nearest direct neighbors
+		get global average error to everyone's neighbors [average of averages]
+		select i-th distance neighbors, stop gathering if:
+			path error > ~2-5 x avg local neighbor error
+			path error > ~2-5 x avg global neighbor error
+			path error > maximum allowable error [~1% [~5 pixels]]
+		remove any views not satisfy:
+			forward direction greater than angle ~ 60-90 degrees
+		order all neighbors on path error
+		select up to ~ 10-16? best [~6 is good, allow for some incorrect matches]
+		consolidate all pair matches in global lookup to drop repeats, etc
+
+	*/
 
 	// calculateBundleAdjustPair
-throw "next";
+	throw "next";
 }
 
 App3DR.ProjectManager.prototype._absoluteViewsFromDatas = function(views, pairs, triples){
-	console.log("_absoluteViewsFromDensePairs");
-
 	var viewToID = function(view){
 		// console.log(view);
 		// throw "view id?";
@@ -7936,7 +8030,6 @@ App3DR.ProjectManager.prototype._absoluteViewsFromDatas = function(views, pairs,
 	};
 
 	var info = R3D.optimumTransform3DFromObjectLookup(views, pairs, triples, viewToID,pairToIDs,tripleToIDs, pairToError,pairToTransform,tripleToScales);
-	// console.log(info);
 	var transforms = info["transforms"];
 	var listPairs = info["listPairs"];
 	var viewIDs = info["views"];
@@ -7945,18 +8038,18 @@ App3DR.ProjectManager.prototype._absoluteViewsFromDatas = function(views, pairs,
 	var groups = skeleton["groupVertexes"];
 	// from index to id
 	// groups.push(backbone);
-	for(var i=0; i<groups.length; ++i){
-		var group = groups[i];
-		for(var j=0; j<group.length; ++j){
-			console.log(group[j]+" -> "+viewIDs[group[j]]);
-			group[j] = viewIDs[group[j]];
-		}
-	}
+	// for(var i=0; i<groups.length; ++i){
+	// 	var group = groups[i];
+	// 	for(var j=0; j<group.length; ++j){
+	// 		console.log(group[j]+" -> "+viewIDs[group[j]]);
+	// 		group[j] = viewIDs[group[j]];
+	// 	}
+	// }
 	// groups.pop();
 
 	this.displayViewGraph(transforms,listPairs, 500);
 	
-	return {"transforms":transforms, "views":viewIDs, "skeleton":backbone, "groups":groups};
+	return {"transforms":transforms, "views":viewIDs, "skeleton":backbone, "groups":groups, "skeletonEdges":skeleton["skeletonEdges"], "groupEdges":skeleton["groupEdges"]};
 }
 
 App3DR.ProjectManager.prototype.calculatePairMatchFromViewIDs = function(viewAID, viewBID, completeFxn, completeCxt, settings){ // matches, F, R, tracks

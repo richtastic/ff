@@ -31659,7 +31659,31 @@ if(c>1000){
 			}
 		}
 	}
-
+	// group pairs are all leaf nodes connected to single backbone node
+	var groupPairs = [];
+	console.log("GROUPS: "+groups.length)
+	for(var i=0; i<groups.length; ++i){
+		var group = groups[i];
+		var lm1 = group.length-1;
+		var interrior = group[lm1];
+		var pairs = [];
+		groupPairs.push(pairs);
+		for(var j=0; j<lm1; ++j){
+			var edge = group[j];
+			pairs.push([interrior,edge]);
+		}
+	}
+	// skeleton pairs are all edges in skeleton set:
+	var skeletonPairs = []
+	for(var i=0; i<gEdges.length; ++i){
+		var edge = gEdges[i];
+		var a = edge.A();
+		var b = edge.B();
+		if(a.data()["interrior"] && b.data()["interrior"]){
+			skeletonPairs.push([a,b]);
+		}
+	}
+	
 // display stuff ------------------------------------------
 var doDisplayStuff = true;
 if(doDisplayStuff){
@@ -31799,19 +31823,31 @@ console.log(positions);
 
 }
 	// convert from vertexes to original pair indexes
+	// pairs:
+	groupPairs.push(skeletonPairs);
+	for(var i=0; i<groupPairs.length; ++i){
+		var group = groupPairs[i];
+		for(var j=0; j<group.length; ++j){
+			var pair = group[j];
+			for(var k=0; k<pair.length; ++k){ // spoiler: it's 2
+				pair[k] = pair[k].data()["index"];
+			}
+		}
+	}
+	groupPairs.pop();
+	// nodes
 	groups.push(skeleton);
 	for(var i=0; i<groups.length; ++i){
 		var group = groups[i];
 		for(var j=0; j<group.length; ++j){
-		group[j] = group[j].data()["index"];
+			group[j] = group[j].data()["index"];
 		}
 	}
-	groups.shift();
-	console.log(skeleton);
-	console.log(groups);
-	// TODO: are these useful?
-	var skeletonPairs = [];
-	var groupPairs = [];
+	groups.pop();
+	// console.log(skeleton);
+	// console.log(groups);
+	// console.log(groupPairs);
+	// console.log(skeletonPairs);
 	// cleanup
 	graph.kill();
 	// done

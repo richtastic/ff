@@ -1352,6 +1352,9 @@ Graph.prototype.display2D = function(edgesAsDistances){ // get list of 2d positi
 	}
 
 	// initial conditions:
+
+// TODO: lower connectivity points on outside, higher inside
+// TODO: perturbation / iterations on connectivity heuristics
 	var radius = 1.0; // random point for each vertex inside radius = maximum edge length
 	for(var i=0; i<bodies.length; ++i){
 		var body = bodies[i];

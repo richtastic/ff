@@ -17,7 +17,9 @@
 0) [Triplet Reconstruction](#TRIPLES)
 0) [Multi View Reconstruction](#MULTIVIEW)
 0) [Surface Tessellation](#SURFACE)
+0) [Background](#BACKGROUND)
 0) [Texturing](#TEXTURE)
+0) [Lowering Resolution](#LOW_RES)
 0) [Rendering](#RENDER)
 0) [Big Data](#BIG_DATA)
 0) [References](#REFERENCES)
@@ -36,9 +38,9 @@ Computer Vision
 <a name="PHOTOS"></a>
 ### Picture Acquisition
 
-
-
-
+- phone camera
+- older camera: poloroid, disposable, digital, ...
+- estimated focal length vs known/calibrated
 
 
 
@@ -422,9 +424,10 @@ graph relating transforms - "image connectivity" - "view graph" - ""
 
 - outlier detection / rejection:
     - inconsistent rotation / translation
-
-
-
+        - eg: A->B->C not in similar orientation  within similar error as: A->D->C & A->D->F->C
+        - orientation can be done but location requires known relative scales
+    - bad pairs:
+        - much higher error than neighbors
 
 
 
@@ -487,11 +490,37 @@ iteratively solved
     - add too many points ->
 
 
+<a name="BACKGROUND"></a>
+### Background - Points at Infinity
+
+- blank is areas, like sky or just things very far away compared to scene size
+- project to sphere @ inf ?
+
+
+
 <a name="TEXTURE"></a>
 ### Texturing
 
 
 - available views based on angle and distance
+
+
+<a name="LOW_RES"></a>
+### Lowering Resolution
+If high-level details aren't necessary, the surface tesselation can be done again using higher error bounds, or the triangle geometry can be reduced by removing/remapping edges while trying to maintain original model features.
+<br/>
+The triangle image resolution can also be reduced separately to reduce scene data size.
+<br/>
+
+- triangles
+    - edge swap
+    - edge collapse
+    - vertex collapse
+- image textures
+    - re-lookup texture blending step
+    - use model as base, and reduce from there?
+        - get color from closest point on original surface
+- ...
 
 
 
