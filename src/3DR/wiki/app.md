@@ -429,17 +429,88 @@ refinement - dates
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
-- combining tracks on 2D collision
-	- pick 'one' with better score
-		- entire track
-		- single match-point
-	- load relevant images & resolve with local search
-		- iteratively loading images to resolve
-	- other?
+TRACK LOADING:
+keep track of pairs next-to-load [per group or full]
+
+track file contains 'final' state of all points
+
+if there is a pending list:
+- there is an accompaning list of 'missed' views that should be loaded
+- order views by most 'missed' tracks & load those in priority (along with pair)
+
+no pending list = load next track pair
+- anticipate the most likely views needed to load for the case of an intersection on pair 'I-J'
+	- pairs of I most common [highest count]
+	- pairs of J most common [highest count]
+- if at least one other image is loaded in the compare, the resolution can complete
+- if not, the point is un-merged, and the list of unloaded views should be noted, and added to some list for the next load
+
+? record all combinations of track-point view-list
+
+graph.yaml:
+	loadGroupIndex: -1 # currently loading track group
+	loadPairIndex: -1 # currently loading pair
+
+	...
+	groups:
+		- 
+			filename: tracks/tracks_INDEX.yaml
+	...
+
+
+tracks_id.yaml:
+	views:
+		...
+	pairs: # need?
+		...
+	points: # done point tracks
+		...
+	pending: # points not yet merged in, left over from pair 
+		...
+	missed: # list of unmerged track views ordered on which track was missed
+		- VIEWIDA
+		- VIEWIDD
+		- VIEWIDC
+		- VIEWIDB
+
+...
+			count: 
+			views:
+				- VIEWIDA
+				- VIEWIDB
+				- VIEWIDC
+		- 
 
 
 
-	
+
+
+TRACK INTERSECTION:
+if 2 points in any view are closer than some threshold (1/4 - 1/10 of a cell size)
+
+scenarios: per view
+	- INT - both points are very close
+	- DOU - points are in fairly different positions
+		- use point position with best NCC score
+		- use point position which results in closer 3D point ?
+	- SIN - single point
+
+compare:
+
+
+- the 'loaded' view points can change position
+- the 'unloaded' view points have to be the base
+- if theyre all loaded ... order somehow?
+
+
+
+
+
+
+
+
+
+
 - how to recognize outlier edges/pairs in graph? [assume have passed max Rerror check]
 	- before triples are determined/calculated?
 	- before absolute orientations are calculated?

@@ -6379,7 +6379,12 @@ App3DR.ProjectManager.prototype.sceneFromID = function(sceneID){
 	}
 	return null;
 }
-
+App3DR.ProjectManager.prototype.testFilename = function(file){
+	if(file!==undefined){
+		this._testFilename = file;
+	}
+	return this._testFilename;
+}
 App3DR.ProjectManager.prototype.bundleFilename = function(file){
 	if(file!==undefined){
 		this._bundleFilename = file;
@@ -6484,7 +6489,7 @@ App3DR.ProjectManager.prototype.setFromYAML = function(object){
 
 
 	var cameras = object["cameras"];
-	var bundle = object["bundle"];
+	var test = object["test"];
 
 
 	// UPDATE:
@@ -6555,7 +6560,7 @@ App3DR.ProjectManager.prototype.setFromYAML = function(object){
 			this._cameras.push(camera);
 		}
 	}
-	this._bundleFilename = bundle ? bundle : null;
+	this._testFilename = test ? test : null;
 	// this._graphFilename = Code.valueOrDefault(graph, null);
 	// this._tracksFilename = Code.valueOrDefault(tracks, null);
 	
@@ -6721,6 +6726,8 @@ App3DR.ProjectManager.prototype.toYAML = function(){
 	yaml.writeBlank();
 	
 	*/
+	yaml.writeString("test",this._testFilename);
+	
 	yaml.writeBlank();
 
 	var str = yaml.toString();
@@ -6859,9 +6866,11 @@ App3DR.ProjectManager.prototype.loadFeaturesForView = function(view, filename, c
 }
 
 App3DR.ProjectManager.prototype.hasBundleInit = function(){
+	throw "?";
 	return this._bundleFilename !== null;
 }
 App3DR.ProjectManager.prototype.loadBundleAdjust = function(callback, context, object){
+	throw "?";
 	var filename = this._bundleFilename;
 	// filename = "info.yaml";
 	console.log("loadBundleAdjust: "+filename);
@@ -6873,6 +6882,7 @@ App3DR.ProjectManager.prototype.loadBundleAdjust = function(callback, context, o
 }
 App3DR.ProjectManager.prototype.saveBundleAdjust = function(string, callback, context, object){
 	console.log("saveBundleAdjust");
+	throw "?";
 	var filename = this._bundleFilename;
 
 	if(filename){
@@ -7217,6 +7227,7 @@ App3DR.ProjectManager.prototype._loadBundledComplete = function(object, data){
 
 App3DR.ProjectManager.prototype.saveBundle = function(string, filename, callback, context, object){
 	console.log("saveBundle: ");
+	throw "?";
 	var path = Code.appendToPath(this._workingPath, App3DR.ProjectManager.RECONSTRUCT_DIRECTORY, filename);
 	var yamlBinary = Code.stringToBinary(string);
 	this.addOperation("SET", {"path":path, "data":yamlBinary}, callback, context);
@@ -7224,6 +7235,7 @@ App3DR.ProjectManager.prototype.saveBundle = function(string, filename, callback
 App3DR.ProjectManager.prototype.loadBundle = function(callback, context, object){
 	var path = Code.appendToPath(this._workingPath, App3DR.ProjectManager.RECONSTRUCT_DIRECTORY, this.bundleFilename());
 	console.log("loadBundle: "+path);
+	throw "?";
 	var object = {};
 		object["callback"] = callback;
 		object["context"] = context;
@@ -7473,65 +7485,19 @@ calculatePairMatch
 		throw "iterate sparse ?";
 	}
 
-
-
-
-
-throw "task initial pairs -- IN SPARSE NOW";
-
-
+throw "iterate dense";
 if(!project.checkHasDenseEnded()){
 	project.iterateDenseProcess();
 	throw "iterate dense ?";
 }
 
 
+throw "increase resolution / fill gaps?"
 if(!project.checkHasBundleAdjustEnded()){
 	project.iterateBundleAdjustProcess();
 	throw "iterate ba ?";
 }
 
-
-
-
-
-
-throw "task graph"; // first absolute from pairs
-	if(!this.hasGraph()){
-		console.log("has no graph");
-		this.calculateGlobalOrientationInit();
-		return;
-	}
-throw "task accumulate tracks";
-	if(!this.tracksDone()){ // load/build up tracks incrementally loading known pairs at a time [PREVIOUSLY: ALLOW PROPAGATION]
-		console.log("tracks not done");
-		this.iterateGraphTracks();
-		return;
-	}
-throw "task sparse BA";
-if(!this.sparseDone()){ // load groups of views at a time (primary pair + aux views) until errors no longer get lower - global
-	console.log("sparse not done");
-	this.iterateSparseTracks();
-	return;
-}
-throw "task dense";
-if(!this.denseDone()){ // loads groups of views & optimizes single dense pair - ??? all dense matches using updated camera positions & saves into PAIR/dense.yaml
-	console.log("dense not done");
-	this.iterateDenseTracks();
-	return;
-}
-
-throw "task dense accumulate tracks"
-if(!this.pointsDone()){ // put all points in single file
-	this.iterateDenseLoading();
-	return;
-}
-
-throw "task dense BA";
-if(!this.bundledDone()){ // iteritive bundle adjust -- all points in single file
-	this.iteratePointsFullBA();
-	return;
-}
 
 throw "surface - triangles";
 console.log("triangle count: "+this.triangleCount());
@@ -7840,6 +7806,7 @@ console.log("GOT : matchCount: "+matchCount);
 		data["pairs"] = dataEdges;
 		data["groups"] = dataGroups;
 		data["skeletonIndex"] = 0;
+		data["loadGroupIndex"] = -1;
 		data["loadPairIndex"] = -1;
 		// 
 		var vs = graph["views"];
@@ -7898,40 +7865,43 @@ console.log("GOT : matchCount: "+matchCount);
 	// trackCount: # = done ?
 	var trackCount = sparseData["trackCount"]; // number of loaded tracks
 	if(trackCount===null || trackCount===undefined){
-		// NEED TRACK FILE FOR EACH GROUP [critical pairs]
-		// + FOR FULL GROUP [all possible pairs]
-		// combine from closeness only
-		// TODO: TRACK COLLISION RESOLUTION?
-		throw "no trackCount ---> load tracks into track_GROUP.yaml & full (tracks or dense points) into tracks_all.yaml"
+		console.log("no trackCount ---> load tracks into track_GROUP.yaml & full (tracks or dense points) into tracks_all.yaml");
+		this._iterateSparseTracks(sparseData);
+		return;
 	}
 
 	var bundleCount = sparseData["bundleCount"]; // some number of iterations /
 	if(bundleCount===null || bundleCount===undefined){
-		// for each group: bundle adjust only the loaded views:
-		// skip BA on group if only a pair?
+		// for each group in graph groups:
+		// load the first group with non-existant or R-error above some min & under max iterations [skip pairs]
+		// 
 		// MOVE VIEW ORIENTATIONS TO LOWER ERROR
+		// 
 		// when done with groups, initialize view locations:
 		// 		starting with group 0 [skeleton]
 		// 		each group will have some node in skeleton, offset all transforms by existing vertex's transform
-		// BA on full view & point set
+		// BA on full view & point set track
+		// 
 		throw "no bundleCount ---> keep iterating on graph groups"
 	}
 
 	// ONLY FOR DENSE:
 	if(false){
-
+		// loading points into a single track file
 		// use full pairwise matches [10k-100k] for final points, NOT TRACKS [1~10k]
 	}
 
-	// fill in holes & increase overlap [only care about in dense iteration]
-	var upSampling = sparseData["upSampling"];
-	if(upSampling===null || upSampling===undefined){
-		//
-		throw "want to fill in holes / interconnect more points"
-		//
-		// possible more BA?
-		// 
-		throw "want to drop most high error points"
+	if(false){
+		// fill in holes & increase overlap [only care about in dense iteration]
+		var upSampling = sparseData["upSampling"];
+		if(upSampling===null || upSampling===undefined){
+			//
+			throw "want to fill in holes / interconnect more points"
+			//
+			// possible more BA?
+			// 
+			throw "want to drop most high error points"
+		}
 	}
 
 	// TODO:
@@ -7957,8 +7927,11 @@ console.log("GOT : matchCount: "+matchCount);
 	// output points => points.yaml [unused for sparse, ]
 	// output best-pair guess => info.yaml
 
+	var bestPairs = sparseData["bestPairs"];
+	if(bestPairs===null || bestPairs===undefined){
+		throw "predict best set of pairs for next sequence";
+	}
 
-	
 	/*
 		// CREATE BEST GUESS FOR PAIRS TO USE IN DENSE PROCESS ---- only care in SPARSE iteration?
 		// putative: list of pairs
@@ -7985,6 +7958,58 @@ console.log("GOT : matchCount: "+matchCount);
 
 	// calculateBundleAdjustPair
 	throw "next";
+}
+
+App3DR.ProjectManager.prototype._iterateSparseTracks = function(data){
+	var project = this;
+	console.log(data);
+	var graphFile = data["graph"];
+	console.log(graphFile);
+
+	console.log("load graph file");
+	var fxnGraphLoaded = function(graphData){
+		console.log("fxnGraphLoaded");
+		console.log(graphData);
+		var loadGroupIndex = graphData["loadGroupIndex"];
+		var loadPairIndex = graphData["loadPairIndex"];
+		console.log(loadPairIndex,loadGroupIndex);
+
+		// special case for full yaml: views & pairs are from graph
+
+		// create new filename if does not exist
+		// & create new object if file does not exist
+
+		var trackData = App3DR.ProjectManager.defaultTrackFile();
+		console.log(trackData);
+
+		// if pending points exist
+		//    load 'previous' pair images
+		//    load missed pair images
+		// else
+		//     load next pair points
+		//     load next pair images
+		//    load most likely neighbor images
+
+		// load existing track points
+
+		// insert original track points
+
+		// insert 'new' track points
+
+
+		/// ...................
+
+		// if done with all groups & full:
+		// sparseCount = # of track groups
+
+	}
+	project.loadDataFromFile(graphFile, fxnGraphLoaded, project);
+	// 
+
+	// NEED TRACK FILE FOR EACH GROUP [critical pairs]
+	// + FOR FULL GROUP [all possible pairs]
+	// combine from closeness only
+	// TODO: TRACK COLLISION RESOLUTION?
 }
 
 App3DR.ProjectManager.prototype._absoluteViewsFromDatas = function(views, pairs, triples){
@@ -8894,6 +8919,13 @@ App3DR.ProjectManager.defaultSparseFile = function(){ // summary
 		sparse["trackCount"] = null;
 		sparse["bundle"] = null;
 	return sparse;
+}
+App3DR.ProjectManager.defaultTrackFile = function(){ // summary
+	var tracks = {};
+		tracks["views"] = null;
+		tracks["pairs"] = null;
+	return tracks;
+}
 /*
 
 pairs:
@@ -8970,7 +9002,6 @@ is BA groups / final done? [?]
 	no > iterate on BA
 
 */
-}
 
 App3DR.ProjectManager.prototype.calculatePairMatch = function(viewA, viewB, pair, callback, context, object){
 	console.log("calculatePairMatch");
