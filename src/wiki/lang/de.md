@@ -61,11 +61,13 @@
 |  |  | good morning |
 | gute nacht |  | good night |
 |  |  |  |
+| morgen |  | tomorrow / in the morning / morning |
+| gestern |  | yesterday |
 |  |  |  |
 |  |  |  |
 |  |  |  |
 |  |  |  |
-
+|  |  |  |
 
 #### numbers
 
@@ -129,8 +131,28 @@ one billion – eine Milliarde
 one trillion – eine Billion
 
 
+#### colors
+
+| de | ph | en |
+| --- | --- | --- |
+| rot | roat | red |
+| Grün | ghroon | green |
+| Blau | blaow | blue |
+| lila | lee-lah | purple |
+| orange | orhangg | orange |
+| gelb | gaylb | yellow |
+| weiß | weiss | white |
+| schwarz | shwartz | black |
+| grau | graow | grey |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+
 #### daily
 
+| de | ph | en |
+| --- | --- | --- |
 |  |  |  |
 |  |  |  |
 |  |  |  |
@@ -144,11 +166,18 @@ one trillion – eine Billion
 | Samstag | Zahms-tag(ch) | sat |
 | Sonntag | Zun-tag(ch) | sun |
 |  |  |  |
-|  |  | weekday |
-|  |  | weekend |
+| Wochentag |  | weekday |
+| Wochenende |  | weekend |
 |  |  |  |
 |  |  |  |
+|  |  | second |
+|  |  | minute |
+|  |  | hour |
+|  |  | day |
+|  |  | month |
+|  |  | year |
 |  |  |  |
+|  |  | clock |
 |  |  |  |
 |  |  |  |
 |  |  |  |
@@ -164,9 +193,33 @@ one trillion – eine Billion
 |  |  |  |
 
 
+#### relating
+| de | ph | en |
+| --- | --- | --- |
+|  |  | mine |
+|  |  | yours - single |
+|  |  | yours - plural |
+|  |  | theirs |
+|  |  | his |
+|  |  | hers |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+
+
+
 #### more
 
-
+| de | ph | en |
+| --- | --- | --- |
 |  |  |  |
 | Germany | doytchland | Deutschland |
 | German | doycheh | Deutsche |
@@ -220,6 +273,7 @@ one trillion – eine Billion
 |  |  |  |
 |  |  |  |
 |  |  |  |
+| Sachen |  | stuff/things |
 |  |  |  |
 |  |  |  |
 |  |  |  |
@@ -240,38 +294,38 @@ one trillion – eine Billion
 |  |  |  |
 |  |  |  |
 |  |  |  |
-|  |  |  |
+
+
 
 
 
 
 <br/>
 
-|  |  | Song Pt 1 |
+| de | Song Pt 1 | en |
+| - | - | - |
+| Backe, backe Kuchen, |  | Bake, bake a cake |
+| Der Bäcker hat gerufen! |  | The baker has called! |
+| Wer will gute Kuchen backen, |  | He who wants to bake good cakes |
+| Der muss haben sieben Sachen: |  | Must have seven things: |
+| Eier und Schmalz, |  | Eggs and lard, |
+| Butter und Salz, |  | Butter and salt, |
+| Milch und Mehl, |  | Milk and flour, |
+| Safran macht den Kuchen gel'! (gelb) |  | Saffron makes the cake yel(low)! |
+| Schieb in den Ofen 'rein. |  | Shove it into the oven. |
+| (Morgen muss er fertig sein.) |  | (Tomorrow it must be done.) |
+
+
+
+<br/>
+
+| de | Song Pt 2 | en |
+| - | - | - |
 | Backe, backe Kuchen, |  |  |
-| Der Bäcker hat gerufen! |  |  |
-| Wer will gute Kuchen backen, |  |  |
-| Der muss haben sieben Sachen: |  |  |
-| Eier und Schmalz, |  |  |
-| Butter und Salz, |  |  |
-| Milch und Mehl, |  |  |
-| Safran macht den Kuchen gel'! (gelb) |  |  |
-| Schieb in den Ofen 'rein. |  |  |
-| (Morgen muss er fertig sein.) |  |  |
-
-<br/>
-
-|  |  | Song Pt 2 |
-|  |  |  |
-Backe, backe Kuchen,
-der Bäcker hat gerufen,
-hat gerufen die ganze Nacht,
-(Name des Kindes) hat keinen Teig gebracht,
-kriegt er auch kein' Kuchen.
-
-|  |  |  |
-|  |  |  |
-|  |  |  |
+| der Bäcker hat gerufen, |  |  |
+| hat gerufen die ganze Nacht, |  |  |
+| (Name des Kindes) hat keinen Teig gebracht, |  |  |
+| kriegt er auch kein' Kuchen. |  |  |
 
 
 <br/>
@@ -337,6 +391,8 @@ Rammstein - Ich Will
 
 Rammstein - Sonne
 
+| du | | en |
+|-|-|-|
 |  |  |  |
 |  |  |  |
 |  |  |  |
@@ -345,6 +401,8 @@ Rammstein - Sonne
 
 Rammstein - Du Hast
 
+| du | | en |
+|-|-|-|
 |  |  |  |
 | Du ... Du hast ... Du hast mich x 5 |  | You ... You have ... You have asked me |
 |  |  |  |
@@ -369,111 +427,105 @@ Rammstein - Du Hast
 |  | (Refrain 2) |  |
 |  |  |  |
 
+
+
 Rammstein - Radio
 
-| Wir durften nicht dazugehören |  |  |
-| Nichts sehen, reden oder hören |  |  |
-| Doch jede Nacht für ein, zwei Stunden |  |  |
-| Bin ich dieser Welt entschwunden |  |  |
-| Jede Nacht ein bisschen froh |  |  |
-| Mein Ohr ganz nah am Weltempfänger |  |  |
+| du | | en |
+|-|-|-|
+| Wir durften nicht dazugehören |  | We were not allowed to belong |
+| Nichts sehen, reden oder hören |  | Do not see, speak or hear anything |
+| Doch jede Nacht für ein, zwei Stunden |  | But every night for an hour or two |
+| Bin ich dieser Welt entschwunden |  | I have disappeared from this world |
+| Jede Nacht ein bisschen froh |  | A little happy every night |
+| Mein Ohr ganz nah am Weltempfänger |  | My ear very close to the world receiver |
 |  |  |  |
 |  | Refrain: |  |
-| Radio, mein Radio |  |  |
-| Ich lass' mich in den Äther saugen |  |  |
-| Meine Ohren werden Augen |  |  |
-| Radio, mein Radio |  |  |
-| So höre ich, was ich nicht seh' |  |  |
-| Stille heimlich fernes Weh |  |  |
+| Radio, mein Radio |  | Radio, my radio |
+| Ich lass' mich in den Äther saugen |  | I let myself be sucked into the ether |
+| Meine Ohren werden Augen |  | My ears become eyes |
+| Radio, mein Radio |  | Radio, my radio |
+| So höre ich, was ich nicht seh' |  | So I hear what I don't see |
+| Stille heimlich fernes Weh |  | Silent, distant ache |
 |  |  |  |
-| Wir durften nicht dazugehören |  |  |
-| Nichts sehen, reden oder stören |  |  |
-| Jedes Liedgut war verboten |  |  |
-| So gefährlich fremde Noten |  |  |
-| Doch jede Nacht ein wenig froh |  |  |
-| Mein Ohr ganz nah am Weltempfänger |  |  |
-|  |  |  |
-|  | (Refrain) |  |
-|  |  |  |
-| Jede Nacht ich heimlich stieg |  |  |
-| Auf den Rücken der Musik |  |  |
-| Leg' die Ohren an die Schwingen |  |  |
-| Leise in die Hände singen |  |  |
-| Jede Nacht und wieder flieg' |  |  |
-| Ich einfach fort mit der Musik |  |  |
-| Schwebe so durch helle Räume |  |  |
-| Keine Grenzen, keine Zäune |  |  |
-|  |  |  |
-| Radio, Radio x 2 |  |  |
+| Wir durften nicht dazugehören |  | We were not allowed to belong |
+| Nichts sehen, reden oder stören |  | Do not see, speak or disturb anything |
+| Jedes Liedgut war verboten |  | Every song was forbidden |
+| So gefährlich fremde Noten |  | So dangerous foreign notes |
+| Doch jede Nacht ein wenig froh |  | But a little happy every night |
+| Mein Ohr ganz nah am Weltempfänger |  | My ear very close to the world receiver |
 |  |  |  |
 |  | (Refrain) |  |
-
-
-Radio, mein Radio (mein Radio)
-Ich lass' mich in den Äther saugen
-Meine Ohren werden Augen
-Radio, mein Radio (mein Radio)
-So höre ich, was ich nicht seh'
-Stille heimlich fernes Weh
-
-
-We were not allowed to belong
-Do not see, speak or hear anything
-But every night for an hour or two
-I have disappeared from this world
-A little happy every night
-My ear very close to the world receiver
-Radio, my radio
-I let myself be sucked into the ether
-My ears become eyes
-Radio, my radio
-So I hear what I don't see
-Silent, distant ache
-We were not allowed to belong
-Do not see, speak or disturb anything
-Every song was forbidden
-So dangerous foreign notes
-But a little happy every night
-My ear very close to the world receiver
-Radio, my radio
-I let myself be sucked into the ether
-My ears become eyes
-Radio, my radio (my radio)
-So I hear what I don't see
-Silent, distant ache
-Every night I secretly climbed
-On the back of the music
-Put your ears to your wings
-Sing softly in the hands
-Fly every night and again
-I just go away with the music
-So float through bright rooms
-No borders, no fences
-Radio, radio
-Radio, radio
-Radio, my radio (my radio)
-I let myself be sucked into the ether
-My ears become eyes
-Radio, my radio (my radio)
-So I hear what I don't see
-Silent, distant ache
-
+|  |  |  |
+| Jede Nacht ich heimlich stieg |  | Every night I secretly climbed |
+| Auf den Rücken der Musik |  | On the back of the music |
+| Leg' die Ohren an die Schwingen |  | Put your ears to your wings |
+| Leise in die Hände singen |  | Sing softly in the hands |
+| Jede Nacht und wieder flieg' |  | Fly every night and again |
+| Ich einfach fort mit der Musik |  | I just go away with the music |
+| Schwebe so durch helle Räume |  | So float through bright rooms |
+| Keine Grenzen, keine Zäune |  | No borders, no fences |
+|  |  |  |
+| Radio, Radio x 2 |  | Radio, radio x 2 |
+|  |  |  |
+|  | (Refrain) |  |
 
 
 
 Rammstein - Ausländer
 
+| Ich reise viel, ich reise gern |  | I travel a lot, I like to travel |
+| Fern und nah und nah und fern |  | Far and near and near and far |
+| Ich bin zuhause überall |  | I am at home everywhere |
+| Meine Sprache: International |  | My language: International |
+|  |  |  |
+| Ich mache es gern jedem recht |  | I like to please everyone |
+| Ja, mein Sprachschatz ist nicht schlecht |  |Yes, my vocabulary is not bad  |
+| Ein scharfes Schwert im Wortgefecht |  | A sharp sword in word combat |
+| Mit dem anderen Geschlecht |  | With the opposite sex |
+|  |  |  |
+|  | Refrain 0: |  |
+| Ich bin kein Mann für eine Nacht |  | I am not a man for one night |
+| Ich bleibe höchstens ein, zwei Stunden |  | I stay at most an hour or two |
+| Bevor die Sonne wieder lacht |  | Before the sun laughs again |
+| Bin ich doch schon längst verschwunden |  | I have long since disappeared |
+| Und ziehe weiter meine Runden |  | And keep doing my rounds |
+|  |  |  |
+|  | Refrain 1: |  |
+| Ich bin Ausländer (Ausländer) |  | I am a foreigner (foreigner) |
+| Mi amor, mon chéri |  | Mi amor, mon chéri |
+| Ausländer (Ausländer) |  | Foreigners (foreigners) |
+| Ciao, ragazza, take a chance on me |  | Ciao, ragazza, take a chance on me |
+| Ich bin Ausländer (Ausländer) |  | I am a foreigner (foreigner) |
+| Mon amour, Я люблю тебя |  | Mon amour, Я люблю тебя |
+| Ein Ausländer (Ausländer) |  | A foreigner (foreigner) |
+| Come on, baby, c'est, c'est, c'est la vie |  | Come on, baby, c'est, c'est, c'est la vie |
+|  |  |  |
+| Andere Länder, andere Zungen |  | Different countries, different tongues |
+| So hab' ich mich schon früh gezwungen |  | So I forced myself early |
+| Dem Missverständnis zum Verdruss |  | The misunderstanding to the annoyance |
+| Dass man Sprachen lernen muss |  | That you have to learn languages |
+|  |  |  |
+| Und wenn die Sonne untergeht |  | And when the sun goes down |
+| Und man vor Ausländerinnen steht |  | And you stand in front of foreigners |
+| Ist es von Vorteil, wenn man dann |  | Is it an advantage if you then |
+| Sich verständlich machen kann |  | Can make yourself understood |
+|  |  |  |
+|  | (Refrain 0) |  |
+|  |  |  |
+| Hahahahahaha |  |  |
+|  |  |  |
+|  | (Refrain 1) |  |
 |  |  |  |
 |  |  |  |
 |  |  |  |
-|  |  |  |
-|  |  |  |
-|  |  |  |
-|  |  |  |
+| Du kommen mit, ich dir machen gut x 3 |  | You come with me, I make you good x 3 |
 
 
 Rammstein - Ich Tu Dir Weh
 
+| du | | en |
+|-|-|-|
 |  |  |  |
 |  |  |  |
 |  |  |  |
@@ -482,4 +534,103 @@ Rammstein - Ich Tu Dir Weh
 |  |  |  |
 |  |  |  |
 
+
+Rammstein - Amerika
+
+| du | | en |
+|-|-|-|
+|  | Refrain 1: |  |
+| We're all living in Amerika, |  | We're all living in America |
+| Amerika ist wunderbar |  | America is wonderful |
+| We're all living in Amerika, |  | We're all living in America |
+| Amerika, Amerika |  | America, America |
+|  |  |  |
+| Wenn getanzt wird, will ich führen, |  |  |
+| Auch wenn ihr euch alleine dreht, |  |  |
+| Lasst euch ein wenig kontrollieren, |  |  |
+| Ich zeige euch wie's richtig geht |  |  |
+| Wir bilden einen lieben Reigen, |  |  |
+| Die Freiheit spielt auf allen Geigen, |  |  |
+| Musik kommt aus dem Weißen Haus, |  |  |
+| Und vor Paris steht Mickey Maus |  |  |
+|  |  |  |
+|  | (Refrain 1) |  |
+|  |  |  |
+| Ich kenne Schritte, die sehr nützen, |  |  |
+| Und werde euch vor Fehltritt schützen, |  |  |
+| Und wer nicht tanzen will am Schluss, |  |  |
+| Weiß noch nicht das er Tanzen muss |  |  |
+| Wir bilden einen lieben Reigen, |  |  |
+| Ich werde Euch die Richtung zeigen, |  |  |
+| Nach Afrika kommt Santa Claus, |  |  |
+| Und vor Paris steht Mickey Maus |  |  |
+|  |  |  |
+|  | (Refrain 1) |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+
+
+We're all living in Amerika,
+Amerika ist wunderbar
+We're all living in Amerika,
+Amerika, Amerika
+We're all living in Amerika,
+Coca-Cola, Wonderbra,
+We're all living in Amerika,
+Amerika, Amerika
+We're all living in Amerika,
+Amerika ist wunderbar
+We're all living in Amerika,
+Amerika, Amerika
+We're all living in Amerika,
+Coca-Cola, sometimes WAR,
+We're all living in Amerika,
+Amerika, Amerika
+
+
+
+When dancing, I want to lead
+Even if you turn alone,
+Let us control you a little,
+I show you how it's done
+We form a dear round,
+Freedom plays on all violins
+Music comes from the white house
+And in front of Paris is Mickey Mouse
+We're all living in America,
+America is wonderful
+We're all living in America,
+America, America
+I know steps that are very useful
+And will protect you from wrong step
+And if you don't want to dance at the end,
+Don't know yet that he has to dance
+We form a dear round,
+I'll show you the direction
+Santa Claus comes to Africa,
+And in front of Paris is Mickey Mouse
+We're all living in America,
+America is wonderful
+We're all living in America,
+America, America
+We're all living in America,
+Coca-Cola, Wonderbra,
+We're all living in America,
+America, America
+We're all living in America,
+America is wonderful
+We're all living in America,
+America, America
+We're all living in America,
+Coca-Cola, sometimes WAR,
+We're all living in America,
+America, America
 

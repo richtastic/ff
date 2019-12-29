@@ -7567,6 +7567,11 @@ App3DR.ProjectManager.prototype._iterateSparseLoaded = function(filename, data){
 	var sparseData = this.sparseData();
 	console.log(sparseData);
 	var pairs = sparseData["pairs"];
+
+	var sparseFilename = project.sparseFilename();
+	console.log(sparseFilename);
+	var basePath = Code.pathRemoveLastComponent(sparseFilename);
+	console.log(basePath);
 	if(!pairs){
 		throw "sparse data not have pairs";
 	}
@@ -7629,11 +7634,6 @@ console.log("GOT : matchCount: "+matchCount);
 		currentPair["tracks"] = trackCount;
 		console.log(data);
 
-		// files
-		var sparseFilename = project.sparseFilename();
-		console.log(sparseFilename);
-		var basePath = Code.pathRemoveLastComponent(sparseFilename);
-		console.log(basePath);
 		var pairBase = Code.appendToPath(basePath, App3DR.ProjectManager.PAIRS_DIRECTORY, pairID);
 		var matchesFilename = Code.appendToPath(pairBase, App3DR.ProjectManager.INITIAL_MATCHES_FILE_NAME);
 		var relativeFilename = Code.appendToPath(pairBase, App3DR.ProjectManager.PAIR_RELATIVE_FILE_NAME);
@@ -7866,7 +7866,7 @@ console.log("GOT : matchCount: "+matchCount);
 	var trackCount = sparseData["trackCount"]; // number of loaded tracks
 	if(trackCount===null || trackCount===undefined){
 		console.log("no trackCount ---> load tracks into track_GROUP.yaml & full (tracks or dense points) into tracks_all.yaml");
-		this._iterateSparseTracks(sparseData);
+		this._iterateSparseTracks(sparseData, sparseFilename);
 		return;
 	}
 
@@ -7960,49 +7960,268 @@ console.log("GOT : matchCount: "+matchCount);
 	throw "next";
 }
 
-App3DR.ProjectManager.prototype._iterateSparseTracks = function(data){
+App3DR.ProjectManager.prototype._iterateSparseTracks = function(sourceData, sourceFilename){
 	var project = this;
-	console.log(data);
-	var graphFile = data["graph"];
+	var maximumImagesLoad = 4; // 3 ~ 6
+	console.log(sourceData);
+	var graphFile = sourceData["graph"];
 	console.log(graphFile);
+	var basePath = Code.pathRemoveLastComponent(sourceFilename);
+	console.log(basePath);
+
+	var sortBestPairCount = function(a,b){
+		return a[1] > b[1] ? -1 : 1;
+	}
+	var sortBestPairError = function(a,b){
+		return a[1] < b[1] ? -1 : 1;
+	}
+	var bestNextViewsForViews = function(viewsIn, pairsIn, paramKey){
+		console.log("bestNextViewsForViews");
+		console.log(viewsIn);
+		console.log(pairsIn);
+		console.log(paramKey);
+		var bests = [];
+		for(var i=0; i<viewsIn.length; ++i){
+			var viewIDA = viewsIn[i];
+			console.log("viewIDA: "+viewIDA);
+			bests[i] = [];
+			for(var j=0; j<pairsIn.length; ++j){
+				var pair = pairsIn[j];
+				console.log(pair);
+				var viewIDB = null;
+				if(pair["A"]==viewIDA){
+					viewIDB = pair["B"];
+				}else if(pair["B"]==viewIDA){
+					viewIDB = pair["A"];
+				}else{
+					continue;
+				}
+				var count = 1;
+				if(paramKey){
+					count = pair[paramKey];
+				}
+				if(count!==undefined && count!==null){
+					bests[i].push([viewIDB, count]);
+				}
+			}
+			// bests[i].sort(sortBestPairCount);
+			bests[i].sort(sortBestPairError);
+			for(var j=0; j<bests[i].length; ++j){
+				bests[i][j] = bests[i][j][0];
+			}
+		}
+		console.log(viewsIn);
+		console.log(bests);
+		return bests;
+	}
 
 	console.log("load graph file");
 	var fxnGraphLoaded = function(graphData){
 		console.log("fxnGraphLoaded");
 		console.log(graphData);
+		var graphGroups = graphData["groups"];
+		var graphPairs = graphData["pairs"];
 		var loadGroupIndex = graphData["loadGroupIndex"];
+			loadGroupIndex = Code.valueOrDefault(loadGroupIndex, -1);
+			loadGroupIndex = Math.max(loadGroupIndex,0);
 		var loadPairIndex = graphData["loadPairIndex"];
+			loadPairIndex = Code.valueOrDefault(loadPairIndex, -1);
+			loadPairIndex = Math.max(loadPairIndex,0);
 		console.log(loadPairIndex,loadGroupIndex);
 
 		// special case for full yaml: views & pairs are from graph
-
-		// create new filename if does not exist
-		// & create new object if file does not exist
-
-		var trackData = App3DR.ProjectManager.defaultTrackFile();
+		if(graphGroups.length==loadGroupIndex){
+			throw "do full BA?"
+		}
+		var graphGroup = graphGroups[loadGroupIndex];
+		console.log("graphGroup");
+		console.log(graphGroup);
+		var graphGroupEdges = graphGroup["edges"];
+		var trackFilename = graphGroup["filename"];
+		var trackData = null;
+		if(!trackFilename){
+			trackFilename = "track_"+loadGroupIndex+".yaml";
+			graphGroup["filename"] = trackFilename;
+			trackData = App3DR.ProjectManager.defaultTrackFile();
+		}
+		var fullTrackPath = Code.appendToPath(basePath,"tracks",trackFilename);
+		console.log(fullTrackPath);
 		console.log(trackData);
 
-		// if pending points exist
-		//    load 'previous' pair images
-		//    load missed pair images
-		// else
-		//     load next pair points
-		//     load next pair images
-		//    load most likely neighbor images
+		var fxnGroupTrackLoaded = function(){
+			var pending = trackData["pending"];
+			var loadViews = [];
+			var loadPairs = [];
+			if(pending && pending.length>0){
+				throw "do pending group";
+				//    load 'previous' pair images
+				//    load missed pair images
+			}else{
+				if(loadPairIndex>=graphGroupEdges.length){
+					throw "done all pairs";
+				}else{
+					var edge = graphGroupEdges[loadPairIndex];
+					var viewAID = edge["A"];
+					var viewBID = edge["B"];
 
-		// load existing track points
+					loadPairs.push([viewAID,viewBID]);
+					// graphGroupEdges
+					var bestNextViews = bestNextViewsForViews([viewAID,viewBID], graphGroupEdges, null);
+						loadViews = {};
+						loadViews[viewAID] = 1;
+						loadViews[viewBID] = 1;
+					var loadCount = 2;
+					var index = 0;
+					var maxIterations = 100; // 
+					for(var iter=0; iter<maxIterations; ++iter){
+						var checked = false;
+						for(var i=0; i<bestNextViews.length; ++i){
+							var list = bestNextViews[i];
+							if(list.length>index){
+								checked = true;
+								var v = list[index];
+								if(!loadViews[v]){
+									loadViews[v] = 1;
+									// added = true;
+									++loadCount;
+								}
+							}
+							if(loadCount>=maximumImagesLoad){
+								break;
+							}
+						}
+						index++;
+						if(!checked || loadCount>=maximumImagesLoad){
+							break;
+						}
+					}
+					loadViews = Code.keys(loadViews);
+					console.log(loadViews);
+				}
+			}
+			var expectedImages = loadViews.length;
+			var expectedTracks = loadPairs.length;
+			var loadedImages = 0;
+			var loadedTracks = 0;
+			// handlers
+			var loadedReadyCheck = function(){
+				console.log("loadedReadyCheck");
+				if(loadedImages==expectedImages && loadedTracks==expectedTracks){
+					console.log("combine the point tracks");
+					doWorldTrackAdd();
+				}
+			}
+			var loadedImageComplete = function(a,b){
+				console.log("loadedImageComplete");
+				console.log(a,b);
+				++loadedImages;
+				loadedReadyCheck();
+			}
+			var loadedPairTracksComplete = function(data){
+				console.log("loadedPairTracksComplete");
+				var a = data["A"];
+				var b = data["B"];
+				for(var i=0; i<loadPairs.length; ++i){
+					var pair = loadPairs[i];
+					var viewIDA = pair[0];
+					var viewIDB = pair[1];
+					if((viewIDA==a && viewIDB==b) || (viewIDA==b && viewIDB==a)){
+						loadPairs[i] = data;
+						break;
+					}
+				}
+				++loadedTracks;
+				loadedReadyCheck();
+			}
+			var pairFromViewIDs = function(idA,idB){
+				return idA < idB ? (idA+"-"+idB) : (idB+"-"+idA);
+			}
+			// load images
+			console.log("load images");
+			for(var i=0; i<loadViews.length; ++i){
+				var viewID = loadViews[i];
+				var view = project.viewFromID(viewID);
+				view.loadTrackImage(loadedImageComplete, project);
+			}
+			// insert original track points
+			console.log("load merging tracks: pair");
+			for(var i=0; i<loadPairs.length; ++i){
+				var pair = loadPairs[i];
+				var viewIDA = pair[0];
+				var viewIDB = pair[1];
+				var pairID = pairFromViewIDs(viewIDA,viewIDB);
+				var pairPath = Code.appendToPath(basePath,"pairs",pairID,"tracks.yaml");
+				console.log("pairPath: "+pairPath);
+				project.loadDataFromFile(pairPath, loadedPairTracksComplete, project);
+			}
+			
+			var doWorldTrackAdd = function(){
+				console.log("doWorldTrackAdd");
+				console.log(sourceData);
 
-		// insert original track points
+				//
 
-		// insert 'new' track points
+				var cameras = project.cameras();
+				var views = graphGroup["views"];
+				var images = [];
+				var cellCount = 40; // ????
+				var cellSizes = [];
+				for(var i=0; i<views.length; ++i){
+					var viewID = views[i];
+					view = project.viewFromID(viewID);
+					views[i] = view;
+					var image = view.anyLoadedImage();
+					var wid, hei;
+					if(image){
+						var matrix = GLOBALSTAGE.getImageAsFloatRGB(image);
+							matrix = new ImageMat(matrix["width"], matrix["height"], matrix["red"], matrix["grn"], matrix["blu"]);
+						images[i] = matrix;
+						wid = matrix.width();
+						hei = matrix.height()
+					}else{
+						var ratio = view.aspectRatio(); // w to h
+						var size = new V2D(ratio,1.0);
+						images[i] = size; // is size ~ 1.0 ok?
+						wid = size.x;
+						hei = size.y;
+					}
+					var cellCount = 40;
+					cellSizes.push(R3D.cellSizingRoundWithDimensions(wid,hei,cellCount));
+				}
+				console.log(views);
+				console.log(images);
+				console.log(cameras);
+				// fill world in
+				var world = new Stereopsis.World();
+				var WORLDCAMS = App3DR.ProjectManager.addCamerasToWorld(world, cameras);
+				var WORLDVIEWS = App3DR.ProjectManager.addViewsToWorld(world, views, images);
+				console.log(WORLDCAMS);
+				console.log(WORLDVIEWS);
+
+				// LOOKUP
+				var worldViews = world.toViewArray();
+				var worldViewLookup = {};
+				for(var i=0; i<worldViews.length; ++i){
+					worldViewLookup[worldViews[i].data()] = worldViews[i];
+				}
+
+				// 
+
+				throw "........"
+			}
 
 
-		/// ...................
+			// insert 'new' track points
 
-		// if done with all groups & full:
-		// sparseCount = # of track groups
-
+		} // done track data loaded
+		if(!trackData){
+			throw "need to load trackData";
+		}else{
+			fxnGroupTrackLoaded();
+		}
+		//
 	}
+	
 	project.loadDataFromFile(graphFile, fxnGraphLoaded, project);
 	// 
 
@@ -15656,6 +15875,9 @@ App3DR.ProjectManager.View.prototype.loadFeaturesImage = function(callback, cont
 	this._loadImage(App3DR.ProjectManager.View.IMAGE_LOAD_TYPE_FEATURES, callback, context);
 }
 App3DR.ProjectManager.View.prototype.loadDenseHiImage = function(callback, context){
+	throw "???";
+}
+App3DR.ProjectManager.View.prototype.loadTrackImage = function(callback, context){
 	this._loadImage(App3DR.ProjectManager.View.IMAGE_LOAD_TYPE_DENSE_HI, callback, context);
 }
 App3DR.ProjectManager.View.prototype.loadTextureImage = function(callback, context){
@@ -15714,10 +15936,10 @@ App3DR.ProjectManager.View.prototype._loadImage = function(type, callback, conte
 	}else if(type==App3DR.ProjectManager.View.IMAGE_LOAD_TYPE_FEATURES){ // SPARSE
 		desiredPixelCount = pixelCountSparse;
 		maximumPixelCount = pixelCountSparse*maxRatio;
-	}else if(type==App3DR.ProjectManager.View.IMAGE_LOAD_TYPE_DENSE_HI){
+	}else if(type==App3DR.ProjectManager.View.IMAGE_LOAD_TYPE_DENSE_HI){ // DENSE & SPARSE-TRACKS
 		desiredPixelCount = pixelCountDense;
 		maximumPixelCount = pixelCountDense*maxRatio;
-	}else if(type==App3DR.ProjectManager.View.IMAGE_LOAD_TYPE_BUNDLE_ADJUST){
+	}else if(type==App3DR.ProjectManager.View.IMAGE_LOAD_TYPE_BUNDLE_ADJUST){ // DENSE BA
 		desiredPixelCount = pixelCountDetail;
 		maximumPixelCount = pixelCountDetail*maxRatio;
 	}else if(type==App3DR.ProjectManager.View.IMAGE_LOAD_TYPE_TEXTURE){ // LARGEST
@@ -15819,11 +16041,12 @@ App3DR.ProjectManager.View.prototype._loadImageComplete = function(object, data)
 App3DR.ProjectManager.View.prototype.loadLowDenseImage = function(callback, context){
 	var desiredPixelCount = 400*300;
 	var maximumPixelCount = 800*600;
+	throw "?";
 }
 App3DR.ProjectManager.View.prototype.loadTexturingImage = function(callback, context){
 	var desiredPixelCount = 1600*1200;
 	var maximumPixelCount = 1920*1080;
-	// 1632x1224
+	throw "?";
 }
 App3DR.ProjectManager.View.sortSizeIncreasing = function(a,b){
 	var aWidth = a["width"];
@@ -15836,6 +16059,23 @@ App3DR.ProjectManager.View.sortSizeIncreasing = function(a,b){
 }
 App3DR.ProjectManager.View.prototype.toString = function(){
 	return "[View: "+this.id()+"]";
+}
+App3DR.ProjectManager.View.prototype.anyLoadedImage = function(){
+	var images = [
+		this._pictureSourceIcon,
+		this._pictureSourceDenseLo,
+		this._pictureSourceFeatures,
+		this._pictureSourceDenseHi,
+		this._pictureSourceBundleAdjust,
+		this._pictureSourceTexture,
+	];
+	for(var i=0; i<images.length; ++i){
+		var image = images[i];
+		if(image){
+			return image;
+		}
+	}
+	return null;
 }
 
 // ------------------------------------------------------------------------------------------------------------

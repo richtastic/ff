@@ -838,7 +838,7 @@ Stereopsis.View.prototype.camera = function(camera){
 Stereopsis.View.prototype._cornersFromImage = function(){
 	var image = this._image;
 	if(image){
-
+return; // NOT USED CURRENTLY
 		var gry = image.gry();
 		var width = image.width();
 		var height = image.height();
