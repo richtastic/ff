@@ -41,6 +41,31 @@
 | ß |  | es-zed (double s) |
 
 
+#### daily
+
+| de | ph | en |
+| --- | --- | --- |
+| ich / mir |  | me / myself |
+| du / sie |  | you (s) |
+|  |  | you (p) |
+| er /  |  | he / him |
+| sie |  | she / her |
+| sie |  | they / them |
+| es |  | it |
+| wir |  | we / us |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+| meine / meines / meiner / ... | my-neh | my / mine |
+| dein / deiner |  | your / yours - single |
+|  |  | your / yours - plural |
+| ihr |  | their / theirs |
+| seins / seiner / seins |  | his |
+| ihre / ihres |  | hers |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+
 
 #### greetings
 
@@ -85,51 +110,76 @@
 | neun | noin | 9 |
 | zehn | sden | 10 |
 | elf |  | 11 |
-|  |  | 12 |
-|  |  | 13 |
-|  |  | 14 |
-|  |  | 15 |
-|  |  | 16 |
-|  |  | 17 |
-|  |  | 18 |
-|  |  | 19 |
-|  |  | 20 |
-|  |  | 30 |
-|  |  | 40 |
-|  |  | 50 |
-|  |  | 60 |
-|  |  | 70 |
-|  |  | 80 |
-|  |  | 90 |
-|  |  | 100 |
-|  |  | 1000 |
-|  |  | 10.000 |
-|  |  | 100.000 |
-|  |  | 100.000.000 |
-
-11 – elf
-12 – zwölf
-13 – dreizehn
-14 – vierzehn
-15 – fünfzehn
-16 – sechzehn
-17 – siebzehn
-18 – achtzehn
-19 – neunzehn
-20 – zwanzig
-30 – dreißig
-40 – vierzig
-50 – fünfzig
-60 – sechzig
-70 – siebzig
-80 – achtzig
-90 – neunzig
-100 – hundert
-1,000 – tausend
-one million – eine Million
-one billion – eine Milliarde
-one trillion – eine Billion
-
+| zwölf |  | 12 |
+| dreizehn |  | 13 |
+| vierzehn |  | 14 |
+| fünfzehn |  | 15 |
+| sechzehn |  | 16 |
+| siebzehn |  | 17 |
+| achtzehn |  | 18 |
+| neunzehn |  | 19 |
+| zwanzig |  | 20 |
+| ein-und-zwanzig |  | 21 |
+| zwei-und-zwanzig |  | 22 |
+| drei-und-zwanzig |  | 23 |
+| vier-und-zwanzig |  | 24 |
+| fünf-und-zwanzig |  | 25 |
+| sechs-und-zwanzig |  | 26 |
+| sieben-und-zwanzig |  | 27 |
+| acht-und-zwanzig |  | 28 |
+| neun-und-zwanzig |  | 29 |
+|  | ... |  |
+| dreißig |  | 30 |
+| vierzig |  | 40 |
+| fünfzig |  | 50 |
+| sechzig |  | 60 |
+| siebzig |  | 70 |
+| achtzig |  | 80 |
+| neunzig |  | 90 |
+| einhundret / hundret|  | 100 |
+| zweihundret |  | 200 |
+| dreihundret |  | 300 |
+| vierhundret |  | 400 |
+| fünfhundret |  | 500 |
+| sechshundret |  | 600 |
+| siebenhundret |  | 700 |
+| achthundret |  | 800 |
+| neunhundret |  | 900 |
+| eintausend / tausend |  | 1000 |
+|  | ... |  |
+| zehntausend |  | 10.000 |
+|  | ... |  |
+| ein hundrettausend |  | 100.000 |
+|  | ... |  |
+| eine million |  | 1.000.000 (million) |
+|  | ... |  |
+| ein hundretmillionen ? |  | 100.000.000 |
+|  | ... |  |
+| eine milliarde ? |  | 1.000.000.000 (billion) |
+|  | ... |  |
+| eine billion |  | 1.000.000.000.000 (trillion) |
+|  |  |  |
+|  |  | 1st |
+|  |  | 2nd |
+|  |  | 3rd |
+|  |  | 4th |
+|  |  | 5th |
+|  |  | 6th |
+|  |  | 7th |
+|  |  | 8th |
+|  |  | 9th |
+|  |  | 10th |
+|  |  | 11th |
+|  |  | 12th |
+|  |  | 13th |
+|  |  | 14th |
+|  |  | 15th |
+|  |  | 16th |
+|  |  | 17th |
+|  |  | 18th |
+|  |  | 19th |
+| -ste |  |20th+ |
+|  | ... |  |
 
 #### colors
 
@@ -170,16 +220,20 @@ one trillion – eine Billion
 | Wochenende |  | weekend |
 |  |  |  |
 |  |  |  |
-|  |  | second |
-|  |  | minute |
-|  |  | hour |
-|  |  | day |
-|  |  | month |
-|  |  | year |
+| Sekunde |  | second |
+| minute | min-oot-eh | minute |
+| stunde |  | hour |
+| tag | tayg | day |
+| monat |  | month |
+| jahr |  | year |
 |  |  |  |
-|  |  | clock |
+| uhr | oohr | clock |
 |  |  |  |
-|  |  |  |
+| buch |  | book |
+| auto / wagon | out-oh / vahgahn | car |
+| haus |  | house |
+| Schreibstift / stift |  | pen |
+| Bleistift / stift |  | pencil |
 |  |  |  |
 |  |  |  |
 |  |  |  |
@@ -188,32 +242,98 @@ one trillion – eine Billion
 | Liebe | liebeh | love |
 |  |  |  |
 |  |  |  |
+| wo |  | where |
+| was |  | what |
+| wer |  | who |
+| wann |  | when |
+| warum |  | why |
+| wie |  | how |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
 |  |  |  |
 |  |  |  |
 |  |  |  |
 
 
-#### relating
+#### animals
+
 | de | ph | en |
 | --- | --- | --- |
-|  |  | mine |
-|  |  | yours - single |
-|  |  | yours - plural |
-|  |  | theirs |
-|  |  | his |
-|  |  | hers |
+| katze |  | cat |
+| hund |  | dog |
+| rabbit |  | hase |
+| pferd |  | horse |
 |  |  |  |
-|  |  |  |
-|  |  |  |
-|  |  |  |
-|  |  |  |
-|  |  |  |
-|  |  |  |
+| ratte |  | rat |
 |  |  |  |
 |  |  |  |
 |  |  |  |
 |  |  |  |
 
+#### people
+
+| de | ph | en |
+| --- | --- | --- |
+| bruder |  | brother |
+| schwester |  | sister |
+|  |  | mother |
+|  |  | father |
+|  |  | grandma |
+|  |  | grandpa |
+|  |  | daughter |
+|  |  | son |
+|  |  | wife |
+|  |  | husband |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+
+
+#### food
+
+| de | ph | en |
+| --- | --- | --- |
+|  |  |  |
+| käse |  | cheese |
+|  |  |  |
+|  |  |  |
+| kaffee |  | coffee |
+|  |  |  |
+|  |  |  |
+| tomate |  | tomate |
+|  |  |  |
+| sandwich |  | sandwich |
+| brot |  | bread |
+| karotte |  | carrot |
+|  |  |  |
+|  |  |  |
+| senf |  | mustard |
+| ketchup |  | ketchup |
+| pfeffer |  | pepper |
+| salz |  | salt |
+| zucker |  | sugar |
+| zwiebel |  | onion |
+| salat |  | salad |
+| grüner salat |  | lettuce |
+| milch |  | milk |
+| ei |  | egg |
+| mehl |  | flour |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
 
 
 #### more
@@ -280,6 +400,12 @@ one trillion – eine Billion
 |  |  |  |
 |  |  |  |
 |  |  |  |
+| geld |  | money |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
 |  |  |  |
 |  |  |  |
 |  |  |  |
@@ -324,7 +450,7 @@ one trillion – eine Billion
 | Backe, backe Kuchen, |  |  |
 | der Bäcker hat gerufen, |  |  |
 | hat gerufen die ganze Nacht, |  |  |
-| (Name des Kindes) hat keinen Teig gebracht, |  |  |
+| (Name des Kindes) hat keinen Teig (...sachen) gebracht, |  | (things) |
 | kriegt er auch kein' Kuchen. |  |  |
 
 
@@ -634,3 +760,22 @@ Coca-Cola, sometimes WAR,
 We're all living in America,
 America, America
 
+
+
+
+
+
+
+
+
+
+
+https://deutsch.lingolia.com/en/grammar/pronouns/possessive-pronouns
+
+
+
+
+
+
+
+...

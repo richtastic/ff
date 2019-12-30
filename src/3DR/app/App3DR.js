@@ -8159,15 +8159,26 @@ App3DR.ProjectManager.prototype._iterateSparseTracks = function(sourceData, sour
 				console.log("doWorldTrackAdd");
 				console.log(sourceData);
 
-				//
+				var graphDataViews = graphData["views"]
+				var graphViewIDToTransform = {};
+				for(var i=0; i<graphDataViews.length; ++i){
+					var view = graphDataViews[i];
+					var viewID = view["id"];
+					var transform = view["transform"];
+					graphViewIDToTransform[viewID] = Matrix.fromObject(transform);
+				}
+
 
 				var cameras = project.cameras();
 				var views = graphGroup["views"];
 				var images = [];
-				var cellCount = 40; // ????
+				var cellCount = 40; // ???? from somewhere
 				var cellSizes = [];
+				var transforms = [];
 				for(var i=0; i<views.length; ++i){
 					var viewID = views[i];
+					var transform = graphViewIDToTransform[viewID];
+					transforms.push(transform);
 					view = project.viewFromID(viewID);
 					views[i] = view;
 					var image = view.anyLoadedImage();
@@ -8188,14 +8199,18 @@ App3DR.ProjectManager.prototype._iterateSparseTracks = function(sourceData, sour
 					var cellCount = 40;
 					cellSizes.push(R3D.cellSizingRoundWithDimensions(wid,hei,cellCount));
 				}
+				console.log(cameras);
 				console.log(views);
 				console.log(images);
-				console.log(cameras);
+				console.log(transforms);
+				console.log(cellSizes);
 				// fill world in
 				var world = new Stereopsis.World();
 				var WORLDCAMS = App3DR.ProjectManager.addCamerasToWorld(world, cameras);
-				var WORLDVIEWS = App3DR.ProjectManager.addViewsToWorld(world, views, images);
 				console.log(WORLDCAMS);
+				//var WORLDVIEWS = App3DR.ProjectManager.addViewsToWorld(world, views, images, transforms, cellSizes);
+				var WORLDVIEWS = project.createWorldViewsForViews(world, views, images, cellSizes, transforms);
+													// createWorldViewsForViews function(world, views, images, cells, transforms){
 				console.log(WORLDVIEWS);
 
 				// LOOKUP
@@ -8205,13 +8220,64 @@ App3DR.ProjectManager.prototype._iterateSparseTracks = function(sourceData, sour
 					worldViewLookup[worldViews[i].data()] = worldViews[i];
 				}
 
-				// 
+				world.resolveIntersectionByPatchVisuals();
 
-				throw "........"
+				// insert current points
+				console.log(trackData);
+				var existingPoints = trackData["points"];
+				console.log(existingPoints);
+				console.log(loadPairs);
+				console.log("embed points");
+
+				//project._embedTrackPoints(world, existingPoints, worldViewLookup);
+				// newPoint3DFromPieces
+				var points3D = App3DR.ProjectManager._worldPointFromSaves(world, existingPoints, worldViewLookup);
+				console.log(points3D);
+
+				// create patches
+
+				// world.embedPoints3DNoValidation(points3D);
+				// world.printPoint3DTrackCount();
+
+				throw "???"
+
+				// INIT PATCHES ????
+
+				// var existingPoints = ???;
+				// var additionalPoints = ???;
+				for(var i=0; i<loadPairs.length; ++i){
+					var loadPair = loadPairs[i];
+					var points = loadPair["points"];
+					console.log(points);
+					//project._embedTrackPoints(world, points, worldViewLookup);
+				}
+
+				// project._embedTrackPoints(world, existingPoints, worldViewLookup);
+
+				/*
+					var dataPoints = data["points"];
+	console.log(dataPoints);
+	console.log(lookupViewFromIndex);
+	project._embedTrackPoints(world, dataPoints, lookupViewFromIndex); // TODO: THIS DOES NOT NEED INTERSECTION CHECKING
+	// project._embedTrackPoints(world, dataPoints, lookupViewFromID);
+
+	console.log("setup");
+	world.copyRelativeTransformsFromAbsolute(); // transforms avail
+	world.printPoint3DTrackCount();
+	world.relativeFFromSamples();
+	world.estimate3DErrors(true, true);
+				*/
+
+
+				// insert 'new' track points
+
+				//
+
+				throw "........ tracks"
 			}
 
 
-			// insert 'new' track points
+			
 
 		} // done track data loaded
 		if(!trackData){
@@ -8766,7 +8832,7 @@ App3DR.ProjectManager.prototype.createWorldCamerasForViews = function(world, vie
 	return BACAMS;
 }
 
-App3DR.ProjectManager.prototype.createWorldViewsForViews = function(world, views, images, cells){
+App3DR.ProjectManager.prototype.createWorldViewsForViews = function(world, views, images, cells, transforms){
 	var BAVIEWS = [];
 	for(var i=0; i<views.length; ++i){
 		var view = views[i];
@@ -8774,6 +8840,10 @@ App3DR.ProjectManager.prototype.createWorldViewsForViews = function(world, views
 		var cellSize = cells[i];
 		var cam = world.cameraFromData(view.cameraID());
 		var v = world.addView(img, cam);
+		if(transforms){
+			var transform = transforms[i];
+			v.absoluteTransform(transform);
+		}
 		v.cellSize(cellSize);
 		v.data(view.id());
 		BAVIEWS.push(v);
@@ -9141,8 +9211,9 @@ App3DR.ProjectManager.defaultSparseFile = function(){ // summary
 }
 App3DR.ProjectManager.defaultTrackFile = function(){ // summary
 	var tracks = {};
-		tracks["views"] = null;
-		tracks["pairs"] = null;
+		tracks["views"] = null; // to be filled with absolute orientations
+		tracks["pairs"] = null; // necessary?
+		tracks["points"] = [];
 	return tracks;
 }
 /*

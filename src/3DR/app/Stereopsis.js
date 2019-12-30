@@ -77,6 +77,10 @@ Stereopsis.World.prototype.resolveIntersectionByDefault = function(){
 	// this._intersectionResolve2D = Stereopsis.World._INTERSECTION_RESOLVE_DEFAULT;
 	this.resolveIntersection = this._resolveIntersectionDefault;
 }
+Stereopsis.World.prototype.resolveIntersectionByPatchVisuals = function(nonexistCallback){ // use existing affine relations
+	this.resolveIntersection = this._resolveIntersectionPatchVisuals;
+	this._resolvePatchVisualsCallback = nonexistCallback;
+}
 Stereopsis.World.prototype.resolveIntersectionByMatchScore = function(){
 	// this._intersectionResolve2D = Stereopsis.World._INTERSECTION_RESOLVE_BEST_MATCH_SCORE;
 	this.resolveIntersection = this._resolveIntersectionMatchScore;
@@ -10888,6 +10892,15 @@ Stereopsis.World.prototype._resolveIntersectionMatchScore = function(point3DA,po
 	// if(doSimple){
 	return this._resolveIntersectionSimpleBestMatchScore(point3DA,point3DB);
 }
+Stereopsis.World.prototype._resolveIntersectionPatchVisuals = function(point3DA,point3DB){
+	if(point3DA.hasPatch() && point3DB.hasPatch()){
+
+
+		//
+		this._resolveIntersectionPatchViewsLoaded(point3DA,point3DB);
+	}
+	throw " no patches for P3Ds?"
+}
 Stereopsis.World.prototype._resolveIntersectionDefault = function(point3DA,point3DB){
 	if(point3DA.hasPatch() && point3DB.hasPatch()){
 		return this._resolveIntersectionPatch(point3DA,point3DB);
@@ -11056,6 +11069,47 @@ Stereopsis.World.prototype._resolveIntersectionDumb = function(point3DA,point3DB
 		 ... 
 	*/
 	throw "TODO";
+}
+Stereopsis.World.prototype._resolveIntersectionPatchViewsLoaded = function(point3DA,point3DB){
+	var world = this;
+	var temp;
+	// remove
+	world.disconnectPoint3D(point3DA);
+	world.disconnectPoint3D(point3DB);
+
+
+/*
+	if A subsumes B or B subsumes A:
+		pick point:
+			- longer track?
+			- lower error
+	
+	affine branch view = intersection view with closest overlap [V2D distance]
+
+	get affine path from all views in A to all views in B
+
+	double views: pick 2D point with lowest P3D error?
+
+	for loaded views in B:
+		- pick best matching point in extracted image area
+	for unloaded views in B:
+		- ???
+
+	get NCC scores in:
+		A-A
+		B-B
+		A-B
+
+	only add new points if pass some threshold:
+		- score < global(mean+sig) && score < local(mean+sig)	
+*/
+
+	// if there are not any views loaded in point a -> throw
+		world._resolvePatchVisualsCallback(point3DA,point3DB);
+		// world.embedPoint3D(point3DA);
+	throw "at least 1 view from each needs to be loaded & patches need to exist [other than intersection view]";
+
+
 }
 Stereopsis.World.prototype._resolveIntersectionPatch = function(point3DA,point3DB){
 	var world = this;
