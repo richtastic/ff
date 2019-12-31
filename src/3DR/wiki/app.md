@@ -427,6 +427,76 @@ refinement - dates
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+- thinking in terms of CELL SIZE and not IMAGE SIZE / resolution ...
+	- cell size is effectively highest resolution [+cell dimension]
+	- when comparing errors / numbers between different images, they should be converted to cell-distances, not pixel-distances
+
+=> convert reprojection error to terms of CELL SIZE, not pixel size
+
+
+--- using scene 3D geometry to:
+	- decide if 2 3D points are too different?
+	- decide if individual pieces of a 3D point is OK?
+	- how to compare 3D point error?
+
+
+3D GEOM TRACK MERGING STEPS:.....
+
+- calculate all current 2D reprojection errors for each point A & B
+- point A := point with lowest average 3D->2D reprojection error [in terms of cell sizes?]
+	- if all images are normalized then 'pixels' could be used?
+- if a subsumes B || B subsumes A => keep point with A) more track views B) lower avg reproj err
+- use closest intersection view to find center offset
+- calculate best guess points for each other view in B
+	- affine transfer A->X + X->B
+- if any DOU/INT views have distances between 'best guess B' and B point >> ~ 2sigma? / cell size?
+	-> drop that view/2D-point
+	-- if no new points, readd A, stop
+- estimate new point C 3D location from averaging separate match pairs from final best-set of 2D-points
+- calc new reprojection errors for each view
+- keep ALL 2D points if reprojection error for EACH 2D point is < ~ 2sigma for each view
+	- else: remove all intersecting views in B, readd A, readdB if view count > 1
+- create new point C from info
+- calc patch from geometry
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+patches can be highly different between disparate view pairs
+	- technically the same point on surface, but the 2D visuals will drop it
+	- flat surface maybe ok, but edges and corners could be poor?
+
+
+benefits of using images to resolve tracks:
+	- more obvious identification of bad matches [only for loaded images -- which is always the case with pairs]
+		- due to:
+			- bad affine
+			- incorrect match
+
+benefits of using only geometry to resolve tracks:
+	- not consider edge cases
+	- faster processing w/o ncc/sad calcuations
+	- even bad patches will likely already have good 2D matches & images will not be useful
+
+	=> how to add 3D point checking / validation step?
+
 
 
 TRACK LOADING:

@@ -10185,11 +10185,14 @@ if(false){
 }
 
 
-R3D.cellSizingRoundWithDimensions = function(width,height, count){
+R3D.cellSizingRoundWithDimensions = function(width,height, count, doRounding){
+	doRounding = Code.valueOrDefault(doRounding, true);
 	var size = Math.min(width,height)/count;
-	size = Math.round(size);
-	if(size%2==0){
-		size += 1;
+	if(doRounding){
+		size = Math.round(size);
+		if(size%2==0){
+			size += 1;
+		}
 	}
 	return size;
 }
@@ -31683,7 +31686,7 @@ if(c>1000){
 			skeletonPairs.push([a,b]);
 		}
 	}
-	
+
 // display stuff ------------------------------------------
 var doDisplayStuff = true;
 if(doDisplayStuff){

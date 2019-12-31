@@ -77,6 +77,9 @@ Stereopsis.World.prototype.resolveIntersectionByDefault = function(){
 	// this._intersectionResolve2D = Stereopsis.World._INTERSECTION_RESOLVE_DEFAULT;
 	this.resolveIntersection = this._resolveIntersectionDefault;
 }
+Stereopsis.World.prototype.resolveIntersectionByPatchGeometry = function(){
+	this.resolveIntersection = this._resolveIntersectionPatchGeometry;
+}
 Stereopsis.World.prototype.resolveIntersectionByPatchVisuals = function(nonexistCallback){ // use existing affine relations
 	this.resolveIntersection = this._resolveIntersectionPatchVisuals;
 	this._resolvePatchVisualsCallback = nonexistCallback;
@@ -553,7 +556,11 @@ Stereopsis.View = function(image, camera, data){
 	this._size = null;
 	// init:
 	// this.cellSize(3); // default
-	this.image(image);
+	if(Code.isa(image, V2D)){
+		this.size(image);
+	}else{
+		this.image(image);
+	}
 	this.camera(camera);
 	this.data(data);
 }
@@ -1125,7 +1132,8 @@ Stereopsis.View.prototype.cellSize = function(cellSize){
 Stereopsis.View.prototype.mergeDistance = function(){
 	var view = this;
 	var cellSize = view.cellSize();
-	var minDistance = Math.max(cellSize*Stereopsis.World.MIN_DISTANCE_EQUALITY,Stereopsis.World.MIN_DISTANCE_EQUALITY_MIN);
+	//var minDistance = Math.max(cellSize*Stereopsis.World.MIN_DISTANCE_EQUALITY,Stereopsis.World.MIN_DISTANCE_EQUALITY_MIN);
+	var minDistance = cellSize*Stereopsis.World.MIN_DISTANCE_EQUALITY;
 	return minDistance
 }
 Stereopsis.View.prototype.nccMean = function(mean){
@@ -10809,20 +10817,20 @@ Stereopsis.orientationTestMatch = function(match){
 }
 // Stereopsis.World.MIN_DISTANCE_EQUALITY = 0.25; // too lenient
 //Stereopsis.World.MIN_DISTANCE_EQUALITY = 0.0001; // too strict
-Stereopsis.World.MIN_DISTANCE_EQUALITY = 0.1; // 10% of a cell
-Stereopsis.World.MIN_DISTANCE_EQUALITY_MIN = 0.50; // hard stop ~ 0.1-1.0
+Stereopsis.World.MIN_DISTANCE_EQUALITY = 0.1; // 10%-25% of a cell
+Stereopsis.World.MIN_DISTANCE_EQUALITY_MIN = 0.50; // hard stop ~ 0.1-1.0 --- this should be in terms of TOTAL IMAGE SIZE -- NOT PIXELS?
 Stereopsis.World.prototype.embedPoints3DNoValidation = function(points3D){
 	for(var i=0; i<points3D.length; ++i){
 		var point3D = points3D[i];
 		this.embedPoint3DNoValidation(point3D);
 	}
 }
-Stereopsis.World.prototype.embedPoints3DNoValidation = function(points3D){
-	for(var i=0; i<points3D.length; ++i){
-		var point3D = points3D[i];
-		this.embedPoint3DNoValidation(point3D);
-	}
-}
+// Stereopsis.World.prototype.embedPoints3DNoValidation = function(points3D){
+// 	for(var i=0; i<points3D.length; ++i){
+// 		var point3D = points3D[i];
+// 		this.embedPoint3DNoValidation(point3D);
+// 	}
+// }
 Stereopsis.World.prototype.embedPoint3DNoValidation = function(point3D){
 	this.connectPoint3D(point3D);
 }
@@ -10892,11 +10900,14 @@ Stereopsis.World.prototype._resolveIntersectionMatchScore = function(point3DA,po
 	// if(doSimple){
 	return this._resolveIntersectionSimpleBestMatchScore(point3DA,point3DB);
 }
+Stereopsis.World.prototype._resolveIntersectionPatchGeometry = function(point3DA,point3DB){
+	if(point3DA.hasPatch() && point3DB.hasPatch()){
+		this._resolveIntersectionPatchGeometryImplementation(point3DA,point3DB);
+	}
+	throw " no patches for P3Ds?"
+}
 Stereopsis.World.prototype._resolveIntersectionPatchVisuals = function(point3DA,point3DB){
 	if(point3DA.hasPatch() && point3DB.hasPatch()){
-
-
-		//
 		this._resolveIntersectionPatchViewsLoaded(point3DA,point3DB);
 	}
 	throw " no patches for P3Ds?"
@@ -11110,6 +11121,31 @@ Stereopsis.World.prototype._resolveIntersectionPatchViewsLoaded = function(point
 	throw "at least 1 view from each needs to be loaded & patches need to exist [other than intersection view]";
 
 
+}
+
+Stereopsis.World.prototype._resolveIntersectionPatchGeometryImplementation = function(point3DA,point3DB){
+	var world = this;
+	// remove
+	console.log("_resolveIntersectionPatchGeometryImplementation");
+	this.disconnectPoint3D(point3DA);
+	this.disconnectPoint3D(point3DB);
+	// get views: overlapping & separate
+	// calculate reprojection error for A & B
+	// calculate average reprojection error
+	// A := best of: 1) point with more tracks 2) point with lower average reprojection error
+	// if A or B separate is 0 => one is subsumed [B]
+		// keep better of 2 points [A]
+	// get lowest-distance intersection view
+	// calc where pt A would-be in B based on relative transforms
+		// for DOU views: 1) avg estimatedA & actualA 2) drop this view ?
+	world.newPoint3DFromPieces(vs,ps,null);
+	// calc 3D point for each individual match
+	// average matches into single point using relative error
+	// calc reprojection error for each view using point C
+	// if all errors <  2*sigma of previous points => keep C
+		// init C patch [average old patch or do INIT]
+	// else: remove intersecting points in B ; add back A ; add back B if viewCount > 0
+	throw "_resolveIntersectionPatchGeometryImplementation";
 }
 Stereopsis.World.prototype._resolveIntersectionPatch = function(point3DA,point3DB){
 	var world = this;

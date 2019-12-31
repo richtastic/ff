@@ -8052,12 +8052,15 @@ App3DR.ProjectManager.prototype._iterateSparseTracks = function(sourceData, sour
 			var pending = trackData["pending"];
 			var loadViews = [];
 			var loadPairs = [];
-			if(pending && pending.length>0){
+			if(pending && pending.length>0){ // this will only exist if image-collisions are used
 				throw "do pending group";
 				//    load 'previous' pair images
 				//    load missed pair images
 			}else{
-				if(loadPairIndex>=graphGroupEdges.length){
+				if(loadPairIndex>=graphGroupEdges.length){ // all pairs loaded into track
+					// set views as default graph views
+					// increment group pair index
+					// save 
 					throw "done all pairs";
 				}else{
 					var edge = graphGroupEdges[loadPairIndex];
@@ -8099,6 +8102,10 @@ App3DR.ProjectManager.prototype._iterateSparseTracks = function(sourceData, sour
 					console.log(loadViews);
 				}
 			}
+			// don't care about images for the moment:
+			loadViews = [];
+			console.log(loadViews);
+			// start async loading
 			var expectedImages = loadViews.length;
 			var expectedTracks = loadPairs.length;
 			var loadedImages = 0;
@@ -8170,18 +8177,21 @@ App3DR.ProjectManager.prototype._iterateSparseTracks = function(sourceData, sour
 
 
 				var cameras = project.cameras();
-				var views = graphGroup["views"];
+				var graphGroupViews = graphGroup["views"];
+				var views = [];
 				var images = [];
 				var cellCount = 40; // ???? from somewhere
 				var cellSizes = [];
 				var transforms = [];
-				for(var i=0; i<views.length; ++i){
-					var viewID = views[i];
+				for(var i=0; i<graphGroupViews.length; ++i){
+					var viewID = graphGroupViews[i];
 					var transform = graphViewIDToTransform[viewID];
 					transforms.push(transform);
 					view = project.viewFromID(viewID);
 					views[i] = view;
 					var image = view.anyLoadedImage();
+					console.log("anyLoadedImage")
+					console.log(image)
 					var wid, hei;
 					if(image){
 						var matrix = GLOBALSTAGE.getImageAsFloatRGB(image);
@@ -8197,7 +8207,7 @@ App3DR.ProjectManager.prototype._iterateSparseTracks = function(sourceData, sour
 						hei = size.y;
 					}
 					var cellCount = 40;
-					cellSizes.push(R3D.cellSizingRoundWithDimensions(wid,hei,cellCount));
+					cellSizes.push(R3D.cellSizingRoundWithDimensions(wid,hei,cellCount, false));
 				}
 				console.log(cameras);
 				console.log(views);
@@ -8210,8 +8220,9 @@ App3DR.ProjectManager.prototype._iterateSparseTracks = function(sourceData, sour
 				console.log(WORLDCAMS);
 				//var WORLDVIEWS = App3DR.ProjectManager.addViewsToWorld(world, views, images, transforms, cellSizes);
 				var WORLDVIEWS = project.createWorldViewsForViews(world, views, images, cellSizes, transforms);
-													// createWorldViewsForViews function(world, views, images, cells, transforms){
 				console.log(WORLDVIEWS);
+				world.copyRelativeTransformsFromAbsolute();
+				
 
 				// LOOKUP
 				var worldViews = world.toViewArray();
@@ -8220,72 +8231,101 @@ App3DR.ProjectManager.prototype._iterateSparseTracks = function(sourceData, sour
 					worldViewLookup[worldViews[i].data()] = worldViews[i];
 				}
 
-				world.resolveIntersectionByPatchVisuals();
+				// world.resolveIntersectionByPatchVisuals();
+				world.resolveIntersectionByPatchGeometry();
+				
 
 				// insert current points
 				console.log(trackData);
-				var existingPoints = trackData["points"];
+				var existingPoints = Code.valueOrDefault(trackData["points"], []);
 				console.log(existingPoints);
 				console.log(loadPairs);
 				console.log("embed points");
 
 				//project._embedTrackPoints(world, existingPoints, worldViewLookup);
-				// newPoint3DFromPieces
-				var points3D = App3DR.ProjectManager._worldPointFromSaves(world, existingPoints, worldViewLookup);
-				console.log(points3D);
-
-				// create patches
-
-				// world.embedPoints3DNoValidation(points3D);
-				// world.printPoint3DTrackCount();
-
-				throw "???"
-
-				// INIT PATCHES ????
-
-				// var existingPoints = ???;
-				// var additionalPoints = ???;
+				var additionalPoints = [];
 				for(var i=0; i<loadPairs.length; ++i){
 					var loadPair = loadPairs[i];
 					var points = loadPair["points"];
 					console.log(points);
-					//project._embedTrackPoints(world, points, worldViewLookup);
+					var points3DAdditional = App3DR.ProjectManager._worldPointFromSaves(world, points, worldViewLookup);
+					// INIT PATCHES - currently in terms of 
+					console.log(points3DAdditional);
+						world.patchInitBasicSphere(true,points3DAdditional);
+					Code.arrayPushArray(additionalPoints, points3DAdditional);
 				}
+				console.log(additionalPoints);
 
-				// project._embedTrackPoints(world, existingPoints, worldViewLookup);
+				// add original points no intersection:
+				var points3DExisting = App3DR.ProjectManager._worldPointFromSaves(world, existingPoints, worldViewLookup);
+				console.log(points3DExisting);
+				// patches should already be set from previous steps?
+				world.embedPoints3DNoValidation(points3DExisting);
 
-				/*
-					var dataPoints = data["points"];
-	console.log(dataPoints);
-	console.log(lookupViewFromIndex);
-	project._embedTrackPoints(world, dataPoints, lookupViewFromIndex); // TODO: THIS DOES NOT NEED INTERSECTION CHECKING
-	// project._embedTrackPoints(world, dataPoints, lookupViewFromID);
-
-	console.log("setup");
-	world.copyRelativeTransformsFromAbsolute(); // transforms avail
-	world.printPoint3DTrackCount();
-	world.relativeFFromSamples();
-	world.estimate3DErrors(true, true);
-				*/
+				// add new points with intersection:
+				world.embedPoints3D(additionalPoints);
 
 
-				// insert 'new' track points
 
-				//
+				world.relativeFFromSamples();
+				
+				world.estimate3DErrors(true);
+				world.printPoint3DTrackCount();
 
-				throw "........ tracks"
+				var worldObject = world.toObject();
+				trackData["points"] = worldObject["points"];
+				trackData["views"] = worldObject["views"];
+				
+				// mote to next track
+				console.log("save graph file");
+				graphData["loadPairIndex"] = loadPairIndex + 1;
+				console.log(graphData);
+
+
+				var fullGraphPath = graphFile;
+
+				console.log("save to track file");
+
+
+				
+				console.log(worldObject);
+				console.log(trackData);
+				console.log(fullTrackPath);
+				console.log(fullGraphPath);
+throw "before save ???"
+				var savedTrackComplete = function(){
+					console.log("savedTrackComplete: "+trackFilename);
+				}
+				var savedGraphComplete = function(){
+					console.log("savedGraphComplete: "+fullGraphPath);
+				}
+				console.log("GRAPH");
+				project.saveFileFromData(graphData, fullGraphPath, savedGraphComplete);
+				console.log("TRACK");
+				project.saveFileFromData(trackData, fullTrackPath, savedTrackComplete);
+
+				console.log(" end  doWorldTrackAdd");
+				return;
 			}
 
 
 			
 
 		} // done track data loaded
+		var currentTrackFileLoadComplete = function(d){
+			console.log("currentTrackFileLoadComplete");
+			console.log(d);
+			trackData = d;
+			fxnGroupTrackLoaded();
+		}
 		if(!trackData){
+			console.log(trackData);
+			project.loadDataFromFile(fullTrackPath, currentTrackFileLoadComplete);
 			throw "need to load trackData";
 		}else{
 			fxnGroupTrackLoaded();
 		}
-		//
+		return;
 	}
 	
 	project.loadDataFromFile(graphFile, fxnGraphLoaded, project);
@@ -9213,7 +9253,7 @@ App3DR.ProjectManager.defaultTrackFile = function(){ // summary
 	var tracks = {};
 		tracks["views"] = null; // to be filled with absolute orientations
 		tracks["pairs"] = null; // necessary?
-		tracks["points"] = [];
+		tracks["points"] = null;
 	return tracks;
 }
 /*

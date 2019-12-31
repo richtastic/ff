@@ -279,19 +279,39 @@
 
 | de | ph | en |
 | --- | --- | --- |
+|  |  |  |
+|  |  |  |
+| kind/kinder |  | child/kid/s |
 | bruder |  | brother |
 | schwester |  | sister |
-|  |  | mother |
-|  |  | father |
-|  |  | grandma |
-|  |  | grandpa |
+| mutter |  | mother |
+| vader |  | father |
+| Großmutter/oma |  | grandma |
+| Großvater |  | grandpa |
 |  |  | daughter |
 |  |  | son |
-|  |  | wife |
-|  |  | husband |
+| ehefrau |  | wife |
+| mann |  | husband |
+|  |  |  |
+|  |  | nose |
+|  |  | head |
+|  |  | mouth |
+|  |  | eye/s |
+|  |  | eyebrow/s |
+|  |  | ear/s |
+|  |  | finger/s |
+|  |  | hand/s |
+|  |  | arm/s |
+|  |  | foot/feet |
 |  |  |  |
 |  |  |  |
 |  |  |  |
+|  |  |  |
+
+
+
+
+
 
 
 #### food
@@ -353,17 +373,17 @@
 |  |  |  |
 |  |  |  |
 |  |  |  |
+| jede |  | each |
 |  |  |  |
-|  |  |  |
-|  |  |  |
-|  |  |  |
-|  |  |  |
+|  |  | open |
+|  |  | close/d |
+|  |  | near/close |
 |  |  |  |
 |  |  |  |
 | Badezimmer | bad-eh-zimmer | bathroom |
 | Schlafzimmer | schlaf-zimmer | bedroom |
-|  |  |  |
-|  |  |  |
+|  |  | kitchen |
+|  |  | office |
 |  |  |  |
 |  |  |  |
 |  |  |  |
@@ -373,8 +393,14 @@
 | hören | whore-in | hear |
 |  |  |  |
 |  |  |  |
-|  |  |  |
-|  |  |  |
+|  |  | do/ing |
+|  |  | want |
+|  |  | like |
+|  |  | touch |
+|  |  | feel |
+|  |  | hear |
+|  |  | see |
+|  |  | taste |
 |  |  |  |
 |  |  |  |
 |  |  |  |
@@ -671,6 +697,16 @@ Rammstein - Amerika
 | We're all living in Amerika, |  | We're all living in America |
 | Amerika, Amerika |  | America, America |
 |  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
 | Wenn getanzt wird, will ich führen, |  |  |
 | Auch wenn ihr euch alleine dreht, |  |  |
 | Lasst euch ein wenig kontrollieren, |  |  |
@@ -731,6 +767,7 @@ We form a dear round,
 Freedom plays on all violins
 Music comes from the white house
 And in front of Paris is Mickey Mouse
+
 We're all living in America,
 America is wonderful
 We're all living in America,
@@ -771,6 +808,28 @@ America, America
 
 
 https://deutsch.lingolia.com/en/grammar/pronouns/possessive-pronouns
+
+
+
+
+https://www.youtube.com/watch?v=rVlQgJnHwgI
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
