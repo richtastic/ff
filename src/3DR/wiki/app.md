@@ -427,6 +427,75 @@ refinement - dates
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+how is it the case that with 3 views loaded & 2 pairs, there are no triple tracks?
+
+
+
+- BA groups:
+	- load track file
+	- save deltas for reduced R error 
+		- max iterations depend on # n [ 3 + n^0.5  |  3 + n ] : 2=4 3=5 4=6 
+		- minimum error reduction difference
+
+
+BA PROCESS:
+	- move a single view?
+		- rMean + rSigma / fMean + fSigma
+	- move a pair of views?
+		- use transform's F & R error
+
+BA:
+	views:
+		- 
+			id: A
+			errorR: [what it is]
+			deltaErrorR: [what it changed from A: in process, B: from previous errorR?]
+			deltaErrorF:
+			updated: timestamp
+			count: # total points
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+- init full view graph using skeleton + groups
+	- 
+
+- load all pair tracks into tracks_full.yaml
+
+- BA on tracks_full.yaml
+	- ""
+
+- get dense putative estimates
+	- load final sparse file, create graph from the views & edges from pair count [don't need stereopsis]
+	- direct & 0-1-2-3 best next neighbors
+		views:
+			- 
+				id: A
+				R: [1,2,3,4,5,6,7,8,9,0,1,2,3,4,5,6]
+			...
+		pairs:
+			- 
+				A:A
+				B:B
+				R: [1,2,3,4,5,6,7,8,9,0,1,2,3,4,5,6]
+			...
+	- save to dense.yaml
+
+
 - thinking in terms of CELL SIZE and not IMAGE SIZE / resolution ...
 	- cell size is effectively highest resolution [+cell dimension]
 	- when comparing errors / numbers between different images, they should be converted to cell-distances, not pixel-distances
@@ -434,41 +503,11 @@ refinement - dates
 => convert reprojection error to terms of CELL SIZE, not pixel size
 
 
---- using scene 3D geometry to:
-	- decide if 2 3D points are too different?
-	- decide if individual pieces of a 3D point is OK?
-	- how to compare 3D point error?
-
-
-3D GEOM TRACK MERGING STEPS:.....
-
-- calculate all current 2D reprojection errors for each point A & B
-- point A := point with lowest average 3D->2D reprojection error [in terms of cell sizes?]
-	- if all images are normalized then 'pixels' could be used?
-- if a subsumes B || B subsumes A => keep point with A) more track views B) lower avg reproj err
-- use closest intersection view to find center offset
-- calculate best guess points for each other view in B
-	- affine transfer A->X + X->B
-- if any DOU/INT views have distances between 'best guess B' and B point >> ~ 2sigma? / cell size?
-	-> drop that view/2D-point
-	-- if no new points, readd A, stop
-- estimate new point C 3D location from averaging separate match pairs from final best-set of 2D-points
-- calc new reprojection errors for each view
-- keep ALL 2D points if reprojection error for EACH 2D point is < ~ 2sigma for each view
-	- else: remove all intersecting views in B, readd A, readdB if view count > 1
-- create new point C from info
-- calc patch from geometry
 
 
 
 
-
-
-
-
-
-
-
+- affine from patch is only scale / angle ... need skew & such too ... linear soln may be too slow tho?
 
 
 

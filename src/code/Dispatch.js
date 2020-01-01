@@ -37,6 +37,7 @@ Dispatch.prototype.alertAll = function(str,a,b,c,d,e,f,g,h,i,j){ // limit 10 arg
 				console.log("CAUGHT ERROR FOR EVENT: ",str);
 				console.log(e);
 				console.log(this.list[str][i]);
+				// throw e;
 			}
 		}else{
 			this.list[str][i](a);//,b,c,d,e,f,g,h,i,j);

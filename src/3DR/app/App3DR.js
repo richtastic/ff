@@ -7424,65 +7424,16 @@ console.log("checkPerformNextTask");
 		return;
 	}
 
-
-/*
-
-does a sparse file exist? [sparseFile != null]
-	no > init it with a putative set
-
-does sparse file have all pairs? [triple exists]
-	no > iterate putative list
-		- get a F
-		- errorF
-		- f count
-		- get a R
-		- errorR
-		- r count
-		- track count
-
-does sparse file have graph? [sparse graph exists]
-	no > generate graph from tripes
-
-does sparse file have track BA file [?]
-	no > assemble points into sparse . bundle
-
-is BA groups / final done? [?]
-	no > iterate on BA
-
-
-.............
-
-does a dense file exist?
-	no > init with a putative set from sparse results
-		- F
-		- errorF
-		- R
-		- errorR
-
-
-^ REPEAT: PAIRS, TRIPLES, 'TRACKS = BEST', GRAPH, BA,
-
-
-..... points, tris, text, model
-
-
-
-
-calculatePairMatch
-
-*/
-
 // throw "task pair feature match";
 	// does a feature-match pair exist (even a bad match) between every (putative) view pair?
-
 	if(!project.checkHasSparseStarted()){
 		project.calculatePairPutatives(view);
 		return;
 	}
-
+// throw "iterate sparse ?";
 	if(!project.checkHasSparseEnded()){
 		project.iterateSparseProcess();
-		throw "iterate sparse ?";
+		return;
 	}
 
 throw "iterate dense";
@@ -8027,11 +7978,51 @@ App3DR.ProjectManager.prototype._iterateSparseTracks = function(sourceData, sour
 		var loadPairIndex = graphData["loadPairIndex"];
 			loadPairIndex = Code.valueOrDefault(loadPairIndex, -1);
 			loadPairIndex = Math.max(loadPairIndex,0);
-		console.log(loadPairIndex,loadGroupIndex);
+		var bundleGroupIndex = graphData["bundleGroupIndex"];
+			bundleGroupIndex = Code.valueOrDefault(bundleGroupIndex, -1);
+			bundleGroupIndex = Math.max(bundleGroupIndex,0);
+		console.log(loadPairIndex,loadGroupIndex,bundleGroupIndex);
 
+		if(graphGroups.length==bundleGroupIndex){
+			throw "all group BA complete -- generate initial viewgraph from skeleton + groups"
+			// load all tracks from pairs into full track file
+			// BA this group too
+		}
 		// special case for full yaml: views & pairs are from graph
 		if(graphGroups.length==loadGroupIndex){
-			throw "do full BA?"
+			console.log(bundleGroupIndex);
+			var graphGroup = graphGroups[bundleGroupIndex];
+			console.log("graphGroup");
+			console.log(graphGroup);
+			var trackFilename = graphGroup["filename"];
+			var fullTrackPath = Code.appendToPath(basePath,"tracks",trackFilename);
+			// load the track
+			var baTrackFileLoadComplete = function(data){
+				console.log("baTrackFileLoadComplete");
+				console.log(data);
+
+				var points = data["points"];
+				for(var i=0; i<points.length; ++i){
+					var point = points[i];
+					var views = point["v"];
+					console.log(views.length);
+				}
+
+				// create world
+
+				// add points
+
+				// create an error list entry for BA
+
+				// world iterate error reduce for single view
+
+
+			}
+			project.loadDataFromFile(fullTrackPath, baTrackFileLoadComplete);
+			throw "do BA for each group";
+			return;
+		}else if(graphGroups.length>loadGroupIndex){
+			throw "?"
 		}
 		var graphGroup = graphGroups[loadGroupIndex];
 		console.log("graphGroup");
@@ -8057,11 +8048,19 @@ App3DR.ProjectManager.prototype._iterateSparseTracks = function(sourceData, sour
 				//    load 'previous' pair images
 				//    load missed pair images
 			}else{
-				if(loadPairIndex>=graphGroupEdges.length){ // all pairs loaded into track
-					// set views as default graph views
-					// increment group pair index
+				if(loadPairIndex>=graphGroupEdges.length){ // all pairs loaded into track for this group
+					console.log("done all pairs");
+					graphData["loadPairIndex"] = -1;
+					graphData["loadGroupIndex"] = loadGroupIndex + 1;
+					console.log(graphData);
+					var savedGraphComplete = function(){
+						console.log("savedGraphComplete: "+graphFile);
+					}
+					console.log("GRAPH");
+					project.saveFileFromData(graphData, graphFile, savedGraphComplete);
 					// save 
-					throw "done all pairs";
+					
+					return;
 				}else{
 					var edge = graphGroupEdges[loadPairIndex];
 					var viewAID = edge["A"];
@@ -8258,14 +8257,18 @@ App3DR.ProjectManager.prototype._iterateSparseTracks = function(sourceData, sour
 
 				// add original points no intersection:
 				var points3DExisting = App3DR.ProjectManager._worldPointFromSaves(world, existingPoints, worldViewLookup);
+				// have patch, but need to degenerate affine:
+				// world.patchAffineFromMatchesList(points3DExisting);
+				world.patchInitBasicSphere(true,points3DExisting);
 				console.log(points3DExisting);
+
 				// patches should already be set from previous steps?
+				console.log("old");
 				world.embedPoints3DNoValidation(points3DExisting);
 
 				// add new points with intersection:
+				console.log("new");
 				world.embedPoints3D(additionalPoints);
-
-
 
 				world.relativeFFromSamples();
 				
@@ -8321,7 +8324,7 @@ throw "before save ???"
 		if(!trackData){
 			console.log(trackData);
 			project.loadDataFromFile(fullTrackPath, currentTrackFileLoadComplete);
-			throw "need to load trackData";
+			// throw "need to load trackData";
 		}else{
 			fxnGroupTrackLoaded();
 		}

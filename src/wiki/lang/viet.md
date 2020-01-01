@@ -102,13 +102,7 @@ tiền bạc
 | con trai |  | boy |
 |  |  |  |
 |  |  |  |
-| hươu cao cổ |  | giraffe |
-| con ngựa |  | horse |
-| con mèo |  | cat |
-| con chó |  | dog |
-|  |  |  |
-|  |  |  |
-| cá |  | fish |
+
 | cà (chua) |  | tomato |
 |  |  |  |
 | cỏ |  | grass |
@@ -287,6 +281,53 @@ WEATHER
 |  |  |  |
 |  |  |  |
 |  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+
+#### animals
+
+| vi | pr | en |
+| - | - | - |
+|  |  | rabbit |
+| con mèo | meh-oh | cat |
+| con chó | chahw | dog |
+| hươu cao cổ |  | giraffe |
+| con ngựa | nguah | horse |
+|  |  | pig |
+|  |  | cow |
+| cá |  | fish |
+|  |  | bear |
+|  |  | bird |
+|  |  | squirrel |
+|  |  | rat |
+|  |  | mouse |
+|  |  | chicken |
+|  |  | rooster |
+|  |  | dragon |
+|  |  | monkey |
+|  |  | ox |
+|  |  | tiger |
+|  |  | goat |
+|  |  | snake |
+|  |  |  |
+|  |  |  |
+|  |  | camel |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+
+
+
+#### ?
+
+| vi | pr | en |
+| - | - | - |
 |  |  |  |
 |  |  |  |
 |  |  |  |
