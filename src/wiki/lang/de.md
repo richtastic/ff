@@ -559,23 +559,62 @@ Rammstein - Ich Will
 |  | (Refrain 2) |  |
 |  |  |  |
 | Ich will x 2 |  | I want |
-
-
+|  |  |  |
 | Könnt ihr mich hören? (Wir hören dich) | Can you hear me? (We hear you) |  |
 | Könnt ihr mich sehen? (Wir sehen dich) |  | Can you see me? (We see you) |
 | Könnt ihr mich fühlen? (Wir fühlen dich) |  | Can you feel me? (We feel you) |
 | Ich verstehe euch nicht |  | I do not understand you |
 
 
+<br/>
+
 
 Rammstein - Sonne
 
 | du | | en |
 |-|-|-|
+| Eins, zwei, drei, vier, fünf, sechs, sieben, acht, neun |  | 1, 2, 3, 4, 5, 6, 7, 8, 9 |
+| Aus! |  | Out! |
 |  |  |  |
+| Alle warten auf das Licht |  | Everyone is waiting for the light |
+| Fürchtet euch fürchtet euch nicht |  | Fear, do not fear |
+| Die Sonne scheint mir aus den Augen |  | The sun shines out of my eyes |
+| Sie wird heute Nacht nicht untergehen |  | It won't go down tonight (today) |
+| Und die Welt zählt laut bis zehn |  | And the world counts out loud to ten |
 |  |  |  |
+|  | Refrain 1: |  |
 |  |  |  |
+| (Eins) Hier kommt die Sonne |  | (1) Here comes the Sun |
+| (Zwei) Hier kommt die Sonne |  | (2) Here comes the Sun |
+| (Drei) sie ist der hellste Stern von allen |  | (3) she/it is the brightest star of all |
+| (Vier) Hier kommt die Sonne |  | (4) Here comes the Sun |
 |  |  |  |
+| Die Sonne scheint mir aus den Händen |  | The sun shines out of my hands |
+| Kann verbrennen, kann euch blenden |  | Can burn, can blind you |
+| Wenn sie aus den Fäusten bricht |  | When she breaks her fists |
+| Legt sich heiß auf das Gesicht |  | Lays hot on the face |
+| Sie wird heute Nacht nicht untergehen |  | It won't go down tonight (today) |
+| (Und die Welt zählt laut bis zehn) |  | (And the world counts out loud to ten) |
+|  |  |  |
+|  | (Refrain 1) |  |
+|  |  |  |
+|  | Refrain 2: |  |
+|  |  |  |
+| (Fünf) Hier kommt die Sonne |  | (5) Here comes the Sun |
+| (Sechs) Hier kommt die Sonne |  | (6) Here comes the Sun |
+| (Sieben) sie ist der hellste Stern von allen |  | (7) she/it is the brightest star of all |
+| (Acht) Hier kommt die Sonne|  | (8) Here comes the Sun |
+|  |  |  |
+|  | (Refrain 1 - swap last line) |  |
+| (Vier) Und wird nie vom Himmel fallen |  | (4) and will never fall from the sky |
+|  |  |  |
+|  | (Refrain 2) |  |
+|  |  |  |
+| Aus! |  | Out! |
+|  |  |  |
+
+
+<br/>
 
 
 Rammstein - Du Hast
@@ -592,7 +631,7 @@ Rammstein - Du Hast
 | Du hast mich gefragt x 2 |  |  |
 | Du hast mich gefragt und ich hab nichts gesagt |  | You asked me and I did not say anything |
 |  |  |  |
-|  | Regfrain 2: |  |
+|  | Refrain 2: |  |
 | Willst du bis der Tod uns scheidet |  | Do you want us to die until death |
 | Treue sein für alle Tage |  | Be loyal for every day |
 | Nein x 2 |  | No |
@@ -613,14 +652,9 @@ Rammstein - Du Hast
 | Treue sein |  | be loyal (you? to you?) |
 |  |  |  |
 | Nein x 2 |  | No |
-Nein
-Nein
-
-Nein
-Nein
 
 
-
+<br/>
 
 
 Rammstein - Radio
@@ -640,7 +674,7 @@ Rammstein - Radio
 | Meine Ohren werden Augen |  | My ears become eyes |
 | Radio, mein Radio |  | Radio, my radio |
 | So höre ich, was ich nicht seh' |  | So I hear what I don't see |
-| Stille heimlich fernes Weh |  | Silent, distant ache |
+| Stille heimlich fernes Weh |  | Silent secret, distant woe/ache |
 |  |  |  |
 | Wir durften nicht dazugehören |  | We were not allowed to belong |
 | Nichts sehen, reden oder stören |  | Do not see, speak or disturb anything |
@@ -660,10 +694,12 @@ Rammstein - Radio
 | Schwebe so durch helle Räume |  | So float through bright rooms |
 | Keine Grenzen, keine Zäune |  | No borders, no fences |
 |  |  |  |
-| Radio, Radio x 2 |  | Radio, radio x 2 |
+| Radio, Radio x 2 |  | Radio, radio |
 |  |  |  |
 |  | (Refrain) |  |
 
+
+<br/>
 
 
 Rammstein - Ausländer
@@ -711,105 +747,51 @@ Rammstein - Ausländer
 |  |  |  |
 |  | (Refrain 1) |  |
 |  |  |  |
-|  |  |  |
-|  |  |  |
 | Du kommen mit, ich dir machen gut x 3 |  | You come with me, I make you good x 3 |
 
+
+<br/>
 
 Rammstein - Ich Tu Dir Weh
 
 | du | | en |
 |-|-|-|
+| Nur für mich bist du am leben |  | You are alive only for me |
+| Ich steck' dir Orden ins Gesicht |  | I put medals in your face |
+| Du bist mir ganz und gar ergeben |  | You are completely devoted to me |
+| Du liebst mich denn ich lieb' dich nicht |  | You love me because I don't love you |
+| Du blutest für mein Seelenheil |  | You bleed for my salvation |
+| Ein kleiner Schnitt und du wirst geil |  | A small cut and you will be horny |
+| Der Körper schon total entstellt |  | The body is totally disfigured |
+| Egal, erlaubt ist was gefällt |  | No matter what is allowed |
 |  |  |  |
+|  | Refrain: |  |
+| Ich tu dir weh |  | I hurt you |
+| Tut mir nicht leid |  | I am not sorry |
+| Das tut dir gut |  | That's good for you |
+| Hört wie es schreit |  | Hear, how it screams |
 |  |  |  |
+| Bei dir hab ich die Wahl der Qual |  |With you I have a choice of agony |
+| Stacheldraht im Harnkanal |  | Barbed wire in the urinary canal |
+| Leg' dein Fleisch in Salz und Eiter |  | Put your meat in salt and pus |
+| Erst stirbst du doch dann lebst du weiter |  | First you die, then you live on |
+| Bisse, Tritte, harte Schläge |  | Bites, kicks, hard blows |
+| Nagelzangen, stumpfe säge |  | Nail pliers, blunt saw |
+| Wünsch' dir was ich sag' nicht nein |  | Do not wish what I say no |
+| Und führ' dir Nagetiere ein |  | And introduce rodents |
 |  |  |  |
+|  | (Refrain) |  |
 |  |  |  |
+| Du bist das Schiff ich der Kapitän |  | You are the ship and I am the captain |
+| Wohin soll denn die reise gehn' |  | Where should the trip go? |
+| Ich seh' im Spiegel dein Gesicht |  | I see your face in the mirror |
+| Du liebst mich denn ich lieb' dich nicht |  | You love me because I don't love you |
 |  |  |  |
+|  | (Refrain) |  |
 |  |  |  |
-|  |  |  |
-|  |  |  |
-|  |  |  |
-|  |  |  |
-|  |  |  |
-|  |  |  |
-|  |  |  |
-|  |  |  |
-|  |  |  |
-|  |  |  |
-|  |  |  |
-|  |  |  |
-|  |  |  |
-|  |  |  |
-|  |  |  |
-|  |  |  |
-|  |  |  |
-|  |  |  |
-|  |  |  |
-|  |  |  |
-|  |  |  |
-|  |  |  |
-Nur für mich bist du am leben
-Ich steck' dir Orden ins Gesicht
-Du bist mir ganz und gar ergeben
-Du liebst mich denn ich lieb' dich nicht
-Du blutest für mein Seelenheil
-Ein kleiner Schnitt und du wirst geil
-Der Körper schon total entstellt
-Egal, erlaubt ist was gefällt
-Ich tu dir weh
-Tut mir nicht leid
-Das tut dir gut
-Hört wie es schreit
-Bei dir hab ich die Wahl der Qual
-Stacheldraht im Harnkanal
-Leg' dein Fleisch in Salz und Eiter
-Erst stirbst du doch dann lebst du weiter
-Bisse, Tritte, harte Schläge
-Nagelzangen, stumpfe säge
-Wünsch' dir was ich sag' nicht nein
-Und führ' dir Nagetiere ein
-Ich tu dir weh
-Tut mir nicht leid
-Das tut dir gut
-Hört wie es schreit
-Ich tu dir weh
-Tut mir nicht leid
-Das tut…
 
 
-You are alive only for me
-I put medals in your face
-You are completely devoted to me
-You love me because I don't love you
-You bleed for my salvation
-A small cut and you will be horny
-The body is totally disfigured
-No matter what is allowed
-I hurt you
-I am not sorry
-That's good for you
-Hear, how it screams
-With you I have a choice of agony
-Barbed wire in the urinary canal
-Put your meat in salt and pus
-First you die, then you live on
-Bites, kicks, hard blows
-Nail pliers, blunt saw
-Do not wish what I say no
-And introduce rodents
-I hurt you
-I am not sorry
-That's good for you
-Hear, how it screams
-I hurt you
-I am not sorry
-That does ...
-
-
-
-
-
-
+<br/>
 
 Rammstein - Amerika
 
@@ -923,6 +905,8 @@ America, America
 
 
 
+<br/>
+
 
 
 
@@ -930,95 +914,114 @@ Rammstein - Deutschland
 
 | du | | en |
 |-|-|-|
+| Du (du hast, du hast, du hast, du hast) |  |  |
+| Hast viel geweint (geweint, geweint, geweint, geweint) |  |  |
+| Im Geist getrennt (getrennt, getrennt, getrennt, getrennt) |  |  |
+| Im Herz vereint (vereint, vereint, vereint, vereint) |  |  |
+| Wir (wir sind, wir sind, wir sind, wir sind) |  |  |
+| Sind schon sehr lang zusammen (ihr seid, ihr seid, ihr seid, ihr seid) |  |  |
+| Dein Atem kalt (so kalt, so kalt, so kalt, so kalt) |  |  |
+| Das Herz in Flammen (so heiß, so heiß, so heiß, so heiß) |  |  |
+| Du (du kannst, du kannst, du kannst, du kannst) |  |  |
+| Ich (ich weiß, ich weiß, ich weiß, ich weiß) |  |  |
+| Wir (wir sind, wir sind, wir sind, wir sind) |  |  |
+| Ihr (ihr bleibt, ihr bleibt, ihr bleibt, ihr bleibt) |  |  |
 |  |  |  |
+|  | Refrain 1: |  |
 |  |  |  |
+| Deutschland, mein Herz in Flammen |  |  |
+| Will dich lieben und verdammen |  |  |
+| Deutschland, dein Atem kalt |  |  |
+| So jung, und doch so alt |  |  |
+| Deutschland! |  |  |
 |  |  |  |
+| Ich (du hast, du hast, du hast, du hast) |  |  |
 |  |  |  |
+| Ich will dich nie verlassen (du weinst, du weinst, du weinst, du weinst) |  |  |
+| Man kann dich lieben (du liebst, du liebst, du liebst, du liebst) |  |  |
+| Und will dich hassen (du hasst, du hasst, du hasst, du hasst) |  |  |
+| Überheblich, überlegen |  |  |
+| Übernehmen, übergeben |  |  |
+| Überraschen, überfallen |  |  |
+| Deutschland, Deutschland über allen |  |  |
+| Deutschland! |  |  |
 |  |  |  |
+|  | (Refrain 1) |  |
 |  |  |  |
+|  | Refrain 2: |  |
+| Deutschland, deine Liebe |  |  |
+| Ist Fluch und Segen |  |  |
+| Deutschland, meine Liebe |  |  |
+| Kann ich dir nicht geben |  |  |
+| Deutschland! |  |  |
 |  |  |  |
+| Du |  |  |
+| Ich |  |  |
+| Wir |  |  |
+| Ihr |  |  |
+| Du (übermächtig, überflüssig) |  |  |
+| Ich (Übermenschen, überdrüssig) |  |  |
+| Wir (wer hoch steigt, der wird tief fallen) |  |  |
+| Ihr (Deutschland, Deutschland über allen) |  |  |
 |  |  |  |
+|  | (Refrain 1) |  |
 |  |  |  |
-|  |  |  |
-|  |  |  |
-|  |  |  |
-|  |  |  |
-|  |  |  |
-|  |  |  |
-|  |  |  |
-|  |  |  |
-|  |  |  |
-|  |  |  |
-|  |  |  |
-|  |  |  |
-|  |  |  |
-|  |  |  |
-|  |  |  |
-|  |  |  |
-|  |  |  |
-|  |  |  |
-|  |  |  |
-|  |  |  |
-|  |  |  |
-|  |  |  |
-|  |  |  |
-|  |  |  |
-|  |  |  |
-|  |  |  |
+|  | (Refrain 2) |  |
 |  |  |  |
 
 
-Du (du hast, du hast, du hast, du hast)
-Hast viel geweint (geweint, geweint, geweint, geweint)
-Im Geist getrennt (getrennt, getrennt, getrennt, getrennt)
-Im Herz vereint (vereint, vereint, vereint, vereint)
-Wir (wir sind, wir sind, wir sind, wir sind)
-Sind schon sehr lang zusammen (ihr seid, ihr seid, ihr seid, ihr seid)
-Dein Atem kalt (so kalt, so kalt, so kalt, so kalt)
-Das Herz in Flammen (so heiß, so heiß, so heiß, so heiß)
-Du (du kannst, du kannst, du kannst, du kannst)
-Ich (ich weiß, ich weiß, ich weiß, ich weiß)
-Wir (wir sind, wir sind, wir sind, wir sind)
-Ihr (ihr bleibt, ihr bleibt, ihr bleibt, ihr bleibt)
-Deutschland, mein Herz in Flammen
-Will dich lieben und verdammen
-Deutschland, dein Atem kalt
-So jung, und doch so alt
-Deutschland!
-Ich (du hast, du hast, du hast, du hast)
-Ich will dich nie verlassen (du weinst, du weinst, du weinst, du weinst)
-Man kann dich lieben (du liebst, du liebst, du liebst, du liebst)
-Und will dich hassen (du hasst, du hasst, du hasst, du hasst)
-Überheblich, überlegen
-Übernehmen, übergeben
-Überraschen, überfallen
-Deutschland, Deutschland über allen
-Deutschland, mein Herz in Flammen
-Will dich lieben und verdammen
-Deutschland, dein Atem kalt
-So jung, und doch so alt
-Deutschland, deine Liebe
-Ist Fluch und Segen
-Deutschland, meine Liebe
-Kann ich dir nicht geben
-Deutschland!
-Du
-Ich
-Wir
-Ihr
-Du (übermächtig, überflüssig)
-Ich (Übermenschen, überdrüssig)
-Wir (wer hoch steigt, der wird tief fallen)
-Ihr (Deutschland, Deutschland über allen)
-Deutschland, mein Herz in Flammen
-Will dich lieben und verdammen
-Deutschland, dein Atem kalt
-So jung, und doch so alt
-Deutschland, deine Liebe
-Ist Fluch und Segen
-Deutschland, meine Liebe
-Kann ich dir nicht geben
-Deutschland!
+You (you have, you have, you have, you have)
+Cried a lot (cried, cried, cried, cried)
+Separated in the spirit (separated, separated, separated, separated)
+United in the heart (united, united, united, united)
+We (we are, we are, we are, we are)
+Have been together for a long time (you are, you are, you are, you are)
+Your breath cold (so cold, so cold, so cold, so cold)
+The heart on fire (so hot, so hot, so hot, so hot)
+You (you can, you can, you can, you can)
+I (I know, I know, I know, I know)
+We (we are, we are, we are, we are)
+You (you stay, you stay, you stay, you stay)
+Germany, my heart on fire
+Want to love and damn you
+Germany, your breath cold
+So young and yet so old
+Germany!
+I (you have, you have, you have, you have)
+I never want to leave you (you cry, you cry, you cry, you cry)
+You can love you (you love, you love, you love, you love)
+And want to hate you (you hate, you hate, you hate, you hate)
+Arrogant, superior
+Take over, hand over
+Surprise, ambush
+Germany, Germany above all
+Germany, my heart on fire
+Want to love and damn you
+Germany, your breath cold
+So young and yet so old
+Germany, your love
+It is a curse and a blessing
+Germany, my dear
+I can't give you
+Germany!
+You
+I
+We
+you
+You (overpowering, superfluous)
+I (superhuman, weary)
+We (those who climb high will fall deep)
+Yours (Germany, Germany above all)
+Germany, my heart on fire
+Want to love and damn you
+Germany, your breath cold
+So young and yet so old
+Germany, your love
+It is a curse and a blessing
+Germany, my dear
+I can't give you
+Germany!
+
 
 
 
@@ -1074,7 +1077,7 @@ Heidis Küken - Das kleine Küken piept
 | Der Gockel Kickericki |  | The Gockel Kickericki |
 | Und Die Henne Goack |  | And The Hen Goack |
 | und Das Küken piept |  | and the chick beeps |
-| das kleine Küken piept x3 |  | The Little Chicks Cheep |
+| das kleine Küken piept x2 |  | The Little Chicks Cheep |
 |  |  |  |
 | Im Radio ist eine Taube x2 |  | There is a pigeon on the radio |
 | und die macht Gurr |  | and that makes Gurr |
@@ -1085,7 +1088,7 @@ Heidis Küken - Das kleine Küken piept
 |  |  |  |
 | Im Radio ist eine Katze x2 |  | There's a cat on the radio |
 | Die macht Miau |  | it makes Meows|
-| und die macht Gurr |  | and that makes Gurr |
+| und die Taube Gurr |  | and that makes Gurr |
 | Die macht gugelugu |  | That makes gugelugu |
 | Der Gockel Kickericki |  | The Gockel Kickericki |
 | Und Die Henne Goack |  | And The Hen Goack |
@@ -1094,7 +1097,7 @@ Heidis Küken - Das kleine Küken piept
 | Im Radio ist ein Hund x2 |  | There's a dog on the radio |
 | Der macht Wau Wau |  | It makes woof woof |
 | Und die Katze Miau |  | And the cat meow |
-| und die macht Gurr |  | and that makes Gurr |
+| und die Taube Gurr |  | and that makes Gurr |
 | Die macht gugelugu |  | That makes gugelugu |
 | Der Gockel Kickericki |  | The Gockel Kickericki |
 | Und Die Henne Goack |  | And The Hen Goack |
@@ -1102,10 +1105,9 @@ Heidis Küken - Das kleine Küken piept
 |  |  |  |
 | Im Radio ist ein Schaf x2 |  | There is a sheep on the radio |
 | und das macht Määäh |  | and it makes määäh |
-| Und der Hund Wau Wau |  | And the dog Wau Wau |
-| Und der macht Wau Wau |  | It makes woof woof |
+| Und der Hund Wau Wau |  | And the dog woof woof |
 | Und die Katze Miau |  | And the cat meow |
-| und die macht Gurr |  | and that makes Gurr |
+| und die Taube Gurr |  | and that makes Gurr |
 | Die macht gugelugu |  | That makes gugelugu |
 | Der Gockel Kickericki |  | The Gockel Kickericki |
 | Und Die Henne Goack |  | And The Hen Goack |
@@ -1115,9 +1117,8 @@ Heidis Küken - Das kleine Küken piept
 | Und die macht bääh |  |  And that makes you wack|
 | und der Schaf Määäh |  | and it makes määäh |
 | Und der Hund Wau Wau |  | And the dog Wau Wau |
-| Und der macht Wau Wau |  | It makes woof woof |
 | Und die Katze Miau |  | And the cat meow |
-| und die macht Gurr |  | and that makes Gurr |
+| und die Taube Gurr |  | and that makes Gurr |
 | Die macht gugelugu |  | That makes gugelugu |
 | Der Gockel Kickericki |  | The Gockel Kickericki |
 | Und Die Henne Goack |  | And The Hen Goack |
@@ -1128,9 +1129,8 @@ Heidis Küken - Das kleine Küken piept
 | die Ziege Bääh |  | the goat wah |
 | und der Schaf Määäh |  | and it makes määäh |
 | Und der Hund Wau Wau |  | And the dog Wau Wau |
-| Und der macht Wau Wau |  | It makes woof woof |
 | Und die Katze Miau |  | And the cat meow |
-| und die macht Gurr |  | and that makes Gurr |
+| und die Taube Gurr |  | and that makes Gurr |
 | Die macht gugelugu |  | That makes gugelugu |
 | Der Gockel Kickericki |  | The Gockel Kickericki |
 | Und Die Henne Goack |  | And The Hen Goack |
@@ -1142,9 +1142,8 @@ Heidis Küken - Das kleine Küken piept
 | die Ziege Bääh |  | the goat wah |
 | und der Schaf Määäh |  | and it makes määäh |
 | Und der Hund Wau Wau |  | And the dog Wau Wau |
-| Und der macht Wau Wau |  | It makes woof woof |
 | Und die Katze Miau |  | And the cat meow |
-| und die macht Gurr |  | and that makes Gurr |
+| und die Taube Gurr |  | and that makes Gurr |
 | Die macht gugelugu |  | That makes gugelugu |
 | Der Gockel Kickericki |  | The Gockel Kickericki |
 | Und Die Henne Goack |  | And The Hen Goack |
@@ -1353,77 +1352,50 @@ Wir gehen zusammen, nicht allein
 
 
 
-Jan Pillemann Otze
-Mickie Krause
+Mickie Krause - Jan Pillemann Otze
+
+| du | | en |
+|-|-|-|
+| Dieses Lied habe ich von einem Freund von mir entwickeln lassen, |  | I had this song developed by a friend of mine, |
+| der einen sehr lustigen Namen hatte, aber darüber sehr traurig wahr. |  | who had a very funny name but was very sad about it. |
+| UND DIESER NAME LAUTETE TE TE |  | AND THIS NAME WAS TE TE |
+|  |  |  |
+|  | Refrain: (x2) |  |
+|  |  |  |
+| Jan Pillemann otze, |  | Jan Pillemann cunt|
+| Pillemann otze Arsch |  | Pillemann cunt ass |
+| Jan Pillemann otze, |  | Jan Pillemann cunt |
+| otze Arsch |  | cunt ass |
+|  |  |  |
+| er konnte feiern |  | he could celebrate |
+| ohne Schlaf. |  | without sleep. |
+|  |  |  |
+| Es gibt Menschen die heißen krause singen Lieder von zu hause. |  | There are people who sing hot krause songs from home. |
+| Dann gibt es Menschen die heißen Meier: |  | Then there are people called Meier: |
+| Mindestens einer auf jeder Feier. |  | At least one at every celebration. |
+| Und es gibt einen das ist interresant, Den hat man Jan Pillemann otze Arsch genannt. |  | And there is one that is interesting, it was called Jan Pillemann otze ass. |
+|  |  |  |
+|  | (Refrain) x 4 |  |
+|  |  |  |
+| Es gibt Menschen die heißen Becker oder Konstantin oder Wecker. |  | There are people called Becker or Konstantin or Wecker. |
+| Wie die anderer einfach heißen einfach Oliver oder Geißen |  | Like the others, it's simply called Oliver or Goats |
+| Es gibt einen das ist interresant. |  | There is one that is interesting. |
+| Den hat man Jan Pillemann otze Arsch genannt. |  | He was called Jan Pillemann otze ass. |
+|  |  |  |
+|  | (Refrain) x 4 |  |
+|  |  |  |
+| La La La ... |  |  |
 
 
-Dieses Lied habe ich von einem Freund von mir entwickeln lassen,
-der einen sehr lustigen Namen hatte, aber darüber sehr traurig wahr.
-UND DIESER NAME LAUTETE TE TE
-Refrain: (x2)
-Jan Pillemann otze,
-Pillemann otze Arsch
-Jan Pillemann otze,
-otze Arsch
-Jan Pillemann otze,
-Pillemann otze Arsch
-Jan Pillemann otze,
-otze Arsch,
-er konnte feiern
-ohne Schlaf.
-Es gibt Menschen die heißen krause singen Lieder von zu hause.
-Dann gibt es Menschen die heißen Meier:
-Mindestens einer auf jeder Feier.
-Und es gibt einen das ist interresant, Den hat man Jan Pillemann otze Arsch genannt.
-Jan Pillemann
-Jan Pillemann otze Arsch
-Jan Pillemann otze,
-Pillemann otze Arsch,
-Jan Pillemann otze,
-otze Arsch
-Jan Pillemann otze,
-Pillemann otze Arsch
-Jan Pillemann otze,
-otze Arsch,
-er konnte feiern
-ohne Schlaf.
-Jan Pillemann otze,
-Pillemann otze Arsch,
-Jan Pillemann otze,
-otze Arsch
-er konnte feiern
-ohne Schlaf
-Jan Pillemann otze,
-Pillemann otze Arsch,
-Jan Pillemann otze,
-otze Arsch
-Es gibt Menschen die heißen Becker oder Konstantin oder Wecker.
-Wie die anderer einfach heißen einfach Oliver oder Geißen
-Es gibt einen das ist interresant.
-Den hat man Jan Pillemann otze Arsch genannt.
-Jan Pillemann
-Jan Pillemann otze Arsch
-Refrain: (x2)
-Jan Pillemann otze,
-Pillemann otze Arsch,
-Jan Pillemann otze,
-otze Arsch
-Jan Pillemann otze,
-Pillemann otze Arsch
-Jan Pillemann otze,
-otze Arsch,
-er konnte feiern
-ohne Schlaf.
-Jan Pillemann otze,
-Pillemann otze Arsch,
-Jan Pillemann otze,
-otze Arsch
-er konnte feiern
-ohne Schlaf
-Jan Pillemann otze,
-Pillemann otze Arsch,
-Jan Pillemann otze,
-otze Arsch.
+
+
+
+
+
+
+
+
+
 
 
 ?

@@ -427,20 +427,24 @@ refinement - dates
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+- SAVE VIEW ABSOLUTE TRANSFORMS TO A FILE
+
+- IF bundleError != null
+	-> ALREADY DONE
+- IF bundle track index > pairs to load
+	- estimate best possible pairs
+		- create graph from edges [with minimum count and maximum error]
+		- find +1 neighbors
+		- save views + pairs to info.yaml as putative dense object
+	- set bundle Error 
+- IF the bundle file is set [tracks_full.yaml] -> continue loading at bundle track index
+	- load next pair tracks into tracks_full.yaml
+	- increment bundle track index
 
 
 
-- init full view graph using skeleton + groups
-	- initialize a hash with the skeleton's views
-	- go thru each group:
-		- find the SINGLE view that should already exist in the skeleton/hash
-		- offset all other views in group by this origin, & add to hash
-			... or don't need to ...
-
-	- save these orientations into a tracks_full.yaml
 
 
-- load all pair tracks into tracks_full.yaml
 
 - BA on tracks_full.yaml
 	- ""

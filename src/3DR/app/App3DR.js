@@ -7984,16 +7984,100 @@ App3DR.ProjectManager.prototype._iterateSparseTracks = function(sourceData, sour
 		var bundleGroupIndex = graphData["bundleGroupIndex"];
 			bundleGroupIndex = Code.valueOrDefault(bundleGroupIndex, -1);
 			bundleGroupIndex = Math.max(bundleGroupIndex,0);
+		var bundleFullFile = graphData["bundleFullFile"];
+			Code.valueOrDefault(bundleFullFile, null);
+		var bundleFullIndex = graphData["bundleFullIndex"];
+			bundleFullIndex = Code.valueOrDefault(bundleFullIndex, -1);
+			bundleFullIndex = Math.max(bundleGroupIndex,0);
 		console.log(loadPairIndex,loadGroupIndex,bundleGroupIndex);
-
-		if(graphGroups.length==bundleGroupIndex){
-
-			console.log(graphGroups);
-
+		if(bundleFullIndex>graphPairs.length){
+			// done loading all pairs into full file
+			// - create graph
+			throw "bundleFullIndex: "+bundleFullIndex;
+		}
+		if(bundleFullFile){
+			// load pairs into file
 			
-			throw "all group BA complete -- generate initial viewgraph from skeleton + groups"
-			// load all tracks from pairs into full track file
-			// BA this group too
+			var fullBundlePath = Code.appendToPath(basePath,"tracks",bundleFullFile);
+
+			throw "bundleFullFile: "+fullBundlePath;
+		}
+		if(graphGroups.length==bundleGroupIndex){
+			console.log(graphGroups);
+			var transformLookup = {};
+			for(var i=0; i<graphGroups.length; ++i){
+				var group = graphGroups[i];
+				console.log(group);
+				var views = group["views"];
+				var transforms = group["transforms"];
+				var reference = null;
+				// var referenceTransform = null;
+				for(var j=0; j<views.length; ++j){
+					var viewID = views[j];
+					var ref = transformLookup[viewID];
+					if(ref){
+						console.log("found ref");
+						reference = ref;
+						// referenceTransform = viewID;
+					}
+				}
+				var originR = null;
+				var originID = null;
+				if(reference){
+					originR = reference["R"];
+					originID = reference["id"];
+					originR = Matrix.inverse(originR);
+				}else{
+					originR = new Matrix(4,4).identity();
+				}
+				for(var j=0; j<views.length; ++j){
+					var viewID = views[j];
+					if(originID!=viewID){ // don't override reference
+						var transform = transforms[j];
+						transform = Matrix.fromObject(transform);
+						// relative transform
+						var ext = transform;
+						var abs = Matrix.inverse(ext);
+						var rel = R3D.relativeTransformMatrix2(originR,abs); // R3D.relativeTransformMatrix2(absA,absB);
+						ext = Matrix.inverse(rel);
+						transform = ext;
+						// set
+						transformLookup[viewID] = {"id":viewID, "R":transform};
+					}
+				}
+			}
+			// to array
+			var viewList = [];
+			var keys = Code.keys(transformLookup);
+			for(var i=0; i<keys.length; ++i){
+				var key = keys[i];
+				var view = transformLookup[key];
+				var viewID = view["id"];
+				var R = view["R"];
+				viewList.push({"id":viewID, "transform":R});
+				// , "camera": ?
+			}
+			console.log(viewList);
+			var bundleData = {};
+			bundleData["views"] = viewList;
+			var bundleFilename = "track_full.yaml";
+			graphData["bundleFullFile"] = bundleFilename;
+			var fullBundlePath = Code.appendToPath(basePath,"tracks",bundleFilename);
+
+			// throw "before saving";
+
+			var savedGraphComplete = function(){
+				console.log("savedGraphComplete: "+graphFile);
+			}
+			var savedBundleComplete = function(){
+				console.log("savedBundleComplete: "+fullBundlePath);
+				project.saveFileFromData(graphData, graphFile, savedGraphComplete);
+			}
+			
+			project.saveFileFromData(bundleData, fullBundlePath, savedBundleComplete);
+
+			console.log("all group BA complete -- generate initial viewgraph from skeleton + groups");
+			return;// load all tracks from pairs into full track file
 		}
 		// special case for full yaml: views & pairs are from graph
 		if(graphGroups.length==loadGroupIndex){
