@@ -428,51 +428,17 @@ refinement - dates
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-how is it the case that with 3 views loaded & 2 pairs, there are no triple tracks?
-
-
-
-- BA groups:
-	- load track file
-	- save deltas for reduced R error 
-		- max iterations depend on # n [ 3 + n^0.5  |  3 + n ] : 2=4 3=5 4=6 
-		- minimum error reduction difference
-
-
-BA PROCESS:
-	- move a single view?
-		- rMean + rSigma / fMean + fSigma
-	- move a pair of views?
-		- use transform's F & R error
-
-BA:
-	views:
-		- 
-			id: A
-			errorR: [what it is]
-			deltaErrorR: [what it changed from A: in process, B: from previous errorR?]
-			deltaErrorF:
-			updated: timestamp
-			count: # total points
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 - init full view graph using skeleton + groups
-	- 
+	- initialize a hash with the skeleton's views
+	- go thru each group:
+		- find the SINGLE view that should already exist in the skeleton/hash
+		- offset all other views in group by this origin, & add to hash
+			... or don't need to ...
+
+	- save these orientations into a tracks_full.yaml
+
 
 - load all pair tracks into tracks_full.yaml
 

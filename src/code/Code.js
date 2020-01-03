@@ -2507,7 +2507,7 @@ Code.gradientDescent = function(fxn, args, x, dx, iter, diff, epsilon, lambda){
 			lambda /= scaler;
 		}
 		if(diffCost<minDifference){
-			console.log("exit 1: "+diffCost+" "+dx+" #@ "+lambda+" ... "+dy);
+			//  console.log("exit 1: "+diffCost+" "+dx+" #@ "+lambda+" ... "+dy);
 			break;
 		}
 	}

@@ -5,9 +5,12 @@
 
 | fr | pr | en |
 | --- | --- | --- |
+| oui | weih | yes |
+| non | nnuoh | no |
 |  |  |  |
 |  |  |  |
 |  |  |  |
+| salut | sah-lou | hi |
 | bonjour | bon-jour | hello |
 | au revoir | or ggrevah | bye |
 | s'il vous plaît | see vu play | please |
@@ -21,6 +24,12 @@
 |  |  |  |
 |  |  |  |
 |  |  |  |
+| grand | growh | big |
+| petit | peh-teet | small |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+| c'est |  | that |
 |  |  |  |
 |  |  |  |
 |  |  |  |

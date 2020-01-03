@@ -36200,6 +36200,7 @@ R3D.BundleAdjustCameraExtrinsic = function(intrinsics, inverses, extrinsics, pai
 	args.push(intrinsicsOthers);
 	args.push(inversesOthers);
 	args.push(extrinsicsOthers);
+console.log(args);
 // console.log(pairPointList2D);
 // console.log(pairPointList3D);
 // 	throw "?"
@@ -36309,7 +36310,7 @@ if(i>=variableCount && j>=variableCount){
 				pairError += error;
 			}
 			if(pointCount>0){
-				pairError /= pointCount; // AVERAGE POINT ERROR FOR VIEW PAIR [MORE POINTS ~ LESS POINTS @ SAME SCALE]
+				// pairError /= pointCount; // AVERAGE POINT ERROR FOR VIEW PAIR [MORE POINTS ~ LESS POINTS @ SAME SCALE]
 				totalError += pairError;
 			}
 			// if(isUpdate){
@@ -36326,6 +36327,9 @@ if(i>=variableCount && j>=variableCount){
 		console.log(pairPointLists3D);
 
 		throw totalError;
+	}
+	if(isUpdate){
+		console.log("updated error: "+totalError);
 	}
 	return totalError;
 }

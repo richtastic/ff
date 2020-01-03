@@ -7914,6 +7914,9 @@ console.log("GOT : matchCount: "+matchCount);
 App3DR.ProjectManager.prototype._iterateSparseTracks = function(sourceData, sourceFilename){
 	var project = this;
 	var maximumImagesLoad = 4; // 3 ~ 6
+
+	var cellCount = 40; // ???? from somewhere
+
 	console.log(sourceData);
 	var graphFile = sourceData["graph"];
 	console.log(graphFile);
@@ -7984,6 +7987,10 @@ App3DR.ProjectManager.prototype._iterateSparseTracks = function(sourceData, sour
 		console.log(loadPairIndex,loadGroupIndex,bundleGroupIndex);
 
 		if(graphGroups.length==bundleGroupIndex){
+
+			console.log(graphGroups);
+
+			
 			throw "all group BA complete -- generate initial viewgraph from skeleton + groups"
 			// load all tracks from pairs into full track file
 			// BA this group too
@@ -8001,28 +8008,204 @@ App3DR.ProjectManager.prototype._iterateSparseTracks = function(sourceData, sour
 				console.log("baTrackFileLoadComplete");
 				console.log(data);
 
-				var points = data["points"];
-				for(var i=0; i<points.length; ++i){
-					var point = points[i];
-					var views = point["v"];
-					console.log(views.length);
+				// var points = data["points"];
+				// var lookup = {};
+				// for(var i=0; i<points.length; ++i){
+				// 	var point = points[i];
+				// 	var views = point["v"];
+				// 	// console.log(views.length);
+				// 	var was = lookup[views.length];
+				// 	if(!was){
+				// 		was = 1;
+				// 	}else{
+				// 		was = was + 1;
+				// 	}
+				// 	lookup[views.length] = was;
+				// }
+				// // var k = Code.keys(lookup);
+				// console.log(lookup);
+
+
+				console.log(data);
+				var baViews = data["views"];
+				var baPoints = data["points"];
+				var baOptimizations = data["ba"];
+				var baIterations = data["iteration"];
+				baIterations = Code.valueOrDefault(baIterations, 0);
+
+				var minimumPixelErrorBA = 0.001; // 1/1000
+				var maxIterationsBA = 10*baViews.length;
+
+				if(!baOptimizations){
+					baOptimizations = [];
+					for(var i=0; i<baViews.length; ++i){
+						var view = baViews[i];
+						var opt = {};
+						opt["id"] = view["id"];
+						opt["deltaErrorR"] = null;
+						// opt["deltaErrorF"] = null;
+						opt["errorR"] = null;
+						// opt["errorF"] = null;
+						opt["updated"] = null;
+						opt["count"] = null;
+						baOptimizations[i] = opt;
+					}
+					data["ba"] = baOptimizations;
+				}
+				var sortErrorRFxn = function(a,b){
+					a = a["deltaErrorR"];
+					b = b["deltaErrorR"];
+					// do null first
+					if(a===null && b===null){
+						return -1;
+					}
+					if(a===null && b!==null){
+						return -1;
+					}
+					if(b===null && a!==null){
+						return 1;
+					}
+					return a > b ? -1 : 1; // do highest-reduction-error first
+				}
+				baOptimizations.sort(sortErrorRFxn);
+
+
+				var nextViewBA = baOptimizations[0];
+				console.log(nextViewBA);
+
+				// if the next error is very low, or max iterations reached => done
+				var isDone = false;
+				var deltaErrorR = nextViewBA["deltaErrorR"];
+				if(deltaErrorR!==null && deltaErrorR!==undefined){
+					if(deltaErrorR<minimumPixelErrorBA){
+						console.log("min error reached");
+						isDone = true;
+					}
 				}
 
+				if(baIterations>maxIterationsBA){
+					console.log("max iterations reached");
+					isDone = true;
+				}
+
+				if(isDone){
+// console.log(baOptimizations)
+// throw "???"
+					graphData["bundleGroupIndex"] = bundleGroupIndex + 1;
+
+					var graphTransforms = [];
+					var graphViews = graphGroup["views"];
+					for(var i=0; i<graphViews.length; ++i){
+						var viewID = graphViews[i];
+						console.log(viewID);
+						for(var j=0; j<baViews.length; ++j){
+							var view = baViews[j];
+							if(view["id"]==viewID){
+								graphTransforms[i] = view["transform"];
+								break;
+							}
+						}
+
+					}
+					graphGroup["transforms"] = graphTransforms;
+// console.log(graphGroup);
+// throw "should save the final group view transforms to the graphGroup";
+
+					var savedGraphComplete = function(){
+						console.log("savedGraphComplete: "+graphFile);
+					}
+console.log(graphData);
+					project.saveFileFromData(graphData, graphFile, savedGraphComplete);
+
+					console.log("no more -- move onto next group");
+					return;
+				}
+
+				
+
+
+
+
+
+
+				var cameras = project.cameras(); // should this come from the graph ?
+
+				// var info = project.fillInWorldViews(world, cameras, graphGroupViews, graphDataViews);
+				var info = project.fillInWorldViews(world, cameras, baViews);
+console.log(info);
+				var views = info["views"];
+				var images = info["images"];
+				var cellSizes = info["cellSizes"];
+				var transforms = info["transforms"];
+
 				// create world
+				var world = new Stereopsis.World();
+				var WORLDCAMS = App3DR.ProjectManager.addCamerasToWorld(world, cameras);
+				console.log(WORLDCAMS);
+				var WORLDVIEWS = project.createWorldViewsForViews(world, views, images, cellSizes, transforms);
+				console.log(WORLDVIEWS);
+				var WORLDVIEWSLOOKUP = project.createWorldViewLookup(world);
+				console.log(WORLDVIEWSLOOKUP);
 
+				world.copyRelativeTransformsFromAbsolute();
+				world.resolveIntersectionByPatchGeometry();
 				// add points
+				console.log(baPoints);
+				var points3DExisting = App3DR.ProjectManager._worldPointFromSaves(world, baPoints, WORLDVIEWSLOOKUP);
+				console.log(points3DExisting);
+				world.patchInitBasicSphere(true,points3DExisting);
+				world.embedPoints3DNoValidation(points3DExisting);
+				// world.embedPoints3D(additionalPoints);
 
-				// create an error list entry for BA
+				world.relativeFFromSamples();
+				world.estimate3DErrors(true);
+				world.printPoint3DTrackCount();
 
-				// world iterate error reduce for single view
+				// pick view to optimize:
+				
+				var nextViewID = nextViewBA["id"];
+				var worldView = world.viewFromData(nextViewID);
 
+				console.log("optimize with view:");
+				console.log(worldView);
 
+				// optimize view orientation
+				var info = world.solveOptimizeSingleView(worldView);
+				console.log(info);
+
+				nextViewBA["deltaErrorR"] = Math.abs(info["deltaR"]); // expected always negative
+				nextViewBA["errorR"] = info["errorR"];
+				nextViewBA["updated"] = Code.getTimeMilliseconds();//Code.getTimeStampFromMilliseconds();
+				nextViewBA["count"] = worldView.pointCount();
+
+				// update views:
+				var worldObject = world.toObject();
+				console.log(worldObject);
+
+				data["points"] = worldObject["points"]; // not change ?
+				data["views"] = worldObject["views"];
+				data["iteration"] = baIterations + 1;
+
+				console.log("fullTrackPath: "+fullTrackPath);
+				console.log(data);
+
+				
+
+				// SAVE TO FILE
+				var savedTrackComplete = function(){
+					console.log("saved track");
+				}
+
+			// throw "before saving track";
+
+				project.saveFileFromData(data, fullTrackPath, savedTrackComplete, project);
 			}
+
 			project.loadDataFromFile(fullTrackPath, baTrackFileLoadComplete);
 			throw "do BA for each group";
 			return;
-		}else if(graphGroups.length>loadGroupIndex){
-			throw "?"
+		}else if(loadGroupIndex>graphGroups.length){
+			throw " more than ?"
 		}
 		var graphGroup = graphGroups[loadGroupIndex];
 		console.log("graphGroup");
@@ -8049,7 +8232,7 @@ App3DR.ProjectManager.prototype._iterateSparseTracks = function(sourceData, sour
 				//    load missed pair images
 			}else{
 				if(loadPairIndex>=graphGroupEdges.length){ // all pairs loaded into track for this group
-					console.log("done all pairs");
+					console.log("done all pairs for group: "+loadGroupIndex);
 					graphData["loadPairIndex"] = -1;
 					graphData["loadGroupIndex"] = loadGroupIndex + 1;
 					console.log(graphData);
@@ -8165,7 +8348,7 @@ App3DR.ProjectManager.prototype._iterateSparseTracks = function(sourceData, sour
 				console.log("doWorldTrackAdd");
 				console.log(sourceData);
 
-				var graphDataViews = graphData["views"]
+				var graphDataViews = graphData["views"];
 				var graphViewIDToTransform = {};
 				for(var i=0; i<graphDataViews.length; ++i){
 					var view = graphDataViews[i];
@@ -8179,7 +8362,6 @@ App3DR.ProjectManager.prototype._iterateSparseTracks = function(sourceData, sour
 				var graphGroupViews = graphGroup["views"];
 				var views = [];
 				var images = [];
-				var cellCount = 40; // ???? from somewhere
 				var cellSizes = [];
 				var transforms = [];
 				for(var i=0; i<graphGroupViews.length; ++i){
@@ -8220,15 +8402,17 @@ App3DR.ProjectManager.prototype._iterateSparseTracks = function(sourceData, sour
 				//var WORLDVIEWS = App3DR.ProjectManager.addViewsToWorld(world, views, images, transforms, cellSizes);
 				var WORLDVIEWS = project.createWorldViewsForViews(world, views, images, cellSizes, transforms);
 				console.log(WORLDVIEWS);
-				world.copyRelativeTransformsFromAbsolute();
 				
-
 				// LOOKUP
-				var worldViews = world.toViewArray();
-				var worldViewLookup = {};
-				for(var i=0; i<worldViews.length; ++i){
-					worldViewLookup[worldViews[i].data()] = worldViews[i];
-				}
+				// var worldViews = world.toViewArray();
+				// var worldViewLookup = {};
+				// for(var i=0; i<worldViews.length; ++i){
+				// 	worldViewLookup[worldViews[i].data()] = worldViews[i];
+				// }
+				var worldViewLookup = project.createWorldViewLookup(world);
+
+
+				world.copyRelativeTransformsFromAbsolute();
 
 				// world.resolveIntersectionByPatchVisuals();
 				world.resolveIntersectionByPatchGeometry();
@@ -8295,7 +8479,7 @@ App3DR.ProjectManager.prototype._iterateSparseTracks = function(sourceData, sour
 				console.log(trackData);
 				console.log(fullTrackPath);
 				console.log(fullGraphPath);
-throw "before save ???"
+// throw "before save ???"
 				var savedTrackComplete = function(){
 					console.log("savedTrackComplete: "+trackFilename);
 				}
@@ -8873,6 +9057,76 @@ App3DR.ProjectManager.prototype.createWorldCamerasForViews = function(world, vie
 		}
 	}
 	return BACAMS;
+}
+
+
+App3DR.ProjectManager.prototype.fillInWorldViews = function(world, cameras, graphGroupViews, graphDataViews){
+	var project = this;
+
+	var graphViewIDToTransform = {};
+	if(graphDataViews){
+		for(var i=0; i<graphDataViews.length; ++i){
+			var view = graphDataViews[i];
+			var viewID = view["id"];
+			var transform = view["transform"];
+			graphViewIDToTransform[viewID] = Matrix.fromObject(transform);
+		}
+	}else{
+		for(var i=0; i<graphGroupViews.length; ++i){
+			var view = graphGroupViews[i];
+			var viewID = view["id"];
+			var transform = view["transform"];
+			graphViewIDToTransform[viewID] = Matrix.fromObject(transform);
+		}
+	}
+
+	var views = [];
+	var images = [];
+	var cellSizes = [];
+	var transforms = [];
+	for(var i=0; i<graphGroupViews.length; ++i){
+		var viewID = graphGroupViews[i];
+// console.log(viewID);
+		if(Code.isObject(viewID)){
+			viewID = viewID["id"];
+		}
+		var transform = graphViewIDToTransform[viewID];
+		transforms.push(transform);
+		view = project.viewFromID(viewID);
+// console.log(view);
+		views[i] = view;
+		var image = view.anyLoadedImage();
+		// console.log("anyLoadedImage")
+		// console.log(image)
+		var wid, hei;
+		if(image){
+			var matrix = GLOBALSTAGE.getImageAsFloatRGB(image);
+				matrix = new ImageMat(matrix["width"], matrix["height"], matrix["red"], matrix["grn"], matrix["blu"]);
+			images[i] = matrix;
+			wid = matrix.width();
+			hei = matrix.height()
+		}else{
+			var ratio = view.aspectRatio(); // w to h
+			var size = new V2D(ratio,1.0);
+			images[i] = size; // is size ~ 1.0 ok?
+			wid = size.x;
+			hei = size.y;
+		}
+		var cellCount = 40;
+		cellSizes.push(R3D.cellSizingRoundWithDimensions(wid,hei,cellCount, false));
+	}
+
+	return {"views":views, "transforms":transforms, "images":images, "cellSizes":cellSizes};
+}
+
+App3DR.ProjectManager.prototype.createWorldViewLookup = function(world, views, images, cells, transforms){
+	var WORLDVIEWSLOOKUP = {};
+	var worldViews = world.toViewArray();
+	var worldViewLookup = {};
+	for(var i=0; i<worldViews.length; ++i){
+		WORLDVIEWSLOOKUP[worldViews[i].data()] = worldViews[i];
+	}
+	return WORLDVIEWSLOOKUP;
 }
 
 App3DR.ProjectManager.prototype.createWorldViewsForViews = function(world, views, images, cells, transforms){

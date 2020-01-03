@@ -390,7 +390,7 @@
 |  |  |  |
 |  |  |  |
 |  |  |  |
-|  |  |  |
+| für | foo-uhr | for |
 |  |  |  |
 | jede |  | each |
 |  |  |  |
@@ -421,8 +421,12 @@
 | sehen |  | see/ing |
 | schmecken |  | taste/ing |
 |  |  |  |
+| leben |  | life/alive/to live |
 |  |  |  |
 |  |  |  |
+|  |  |  |
+|  |  |  |
+| tanz | tdahnse | dance |
 |  |  |  |
 | Lebensmittel | leibensmittle | food |
 |  |  |  |
@@ -433,13 +437,12 @@
 |  |  |  |
 |  |  |  |
 |  |  |  |
-|  |  |  |
-|  |  |  |
+| lacht |  | laugh/laughs |
+| vorteil |  | advantage |
 |  |  |  |
 |  |  |  |
 |  |  |  |
 | Sachen |  | stuff/things |
-|  |  |  |
 |  |  |  |
 |  |  |  |
 |  |  |  |
@@ -468,6 +471,11 @@
 
 
 
+#### longer phrases
+
+
+| Andere Seite |  | other side |
+| auf der anderen Seite | . | on the other side / on the other hand |
 
 
 
@@ -597,6 +605,21 @@ Rammstein - Du Hast
 |  |  |  |
 |  | (Refrain 2) |  |
 |  |  |  |
+| Willst du bis zum Tod, der scheidet |  | Do you want to death, who separates |
+| Sie lieben auch in schlechten Tagen |  | They love even in bad days |
+|  |  |  |
+| Nein x 2 |  | No |
+| Willst du bis der Tod uns scheidet |  | Do you want us to die until death |
+| Treue sein |  | be loyal (you? to you?) |
+|  |  |  |
+| Nein x 2 |  | No |
+Nein
+Nein
+
+Nein
+Nein
+
+
 
 
 
@@ -704,6 +727,88 @@ Rammstein - Ich Tu Dir Weh
 |  |  |  |
 |  |  |  |
 |  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+Nur für mich bist du am leben
+Ich steck' dir Orden ins Gesicht
+Du bist mir ganz und gar ergeben
+Du liebst mich denn ich lieb' dich nicht
+Du blutest für mein Seelenheil
+Ein kleiner Schnitt und du wirst geil
+Der Körper schon total entstellt
+Egal, erlaubt ist was gefällt
+Ich tu dir weh
+Tut mir nicht leid
+Das tut dir gut
+Hört wie es schreit
+Bei dir hab ich die Wahl der Qual
+Stacheldraht im Harnkanal
+Leg' dein Fleisch in Salz und Eiter
+Erst stirbst du doch dann lebst du weiter
+Bisse, Tritte, harte Schläge
+Nagelzangen, stumpfe säge
+Wünsch' dir was ich sag' nicht nein
+Und führ' dir Nagetiere ein
+Ich tu dir weh
+Tut mir nicht leid
+Das tut dir gut
+Hört wie es schreit
+Ich tu dir weh
+Tut mir nicht leid
+Das tut…
+
+
+You are alive only for me
+I put medals in your face
+You are completely devoted to me
+You love me because I don't love you
+You bleed for my salvation
+A small cut and you will be horny
+The body is totally disfigured
+No matter what is allowed
+I hurt you
+I am not sorry
+That's good for you
+Hear, how it screams
+With you I have a choice of agony
+Barbed wire in the urinary canal
+Put your meat in salt and pus
+First you die, then you live on
+Bites, kicks, hard blows
+Nail pliers, blunt saw
+Do not wish what I say no
+And introduce rodents
+I hurt you
+I am not sorry
+That's good for you
+Hear, how it screams
+I hurt you
+I am not sorry
+That does ...
+
+
+
+
+
 
 
 Rammstein - Amerika
@@ -917,7 +1022,427 @@ Deutschland!
 
 
 
+Rammstein - Rosenrot 
 
+| du | | en |
+|-|-|-|
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+
+
+
+
+
+
+Faun - Tanz mit mir
+
+
+
+Heidis Küken - Das kleine Küken piept
+
+| du | | en |
+|-|-|-|
+| Im Radio ist ein Küken x2 |  | There's a chick on the radio |
+| Und das Küken Piept |  | And the chick peeps |
+| kleine Küken Piept x2 |  | little chick cheeps |
+| das kleine Küken Piept x3 |  | The Little Chicks Cheep |
+|  |  |  |
+| Im Radio ist eine Henne x2 |  | There is a hen on the radio |
+| Und sie macht Goack |  | And she does goack |
+| und das Küken Piept |  | and the chick peeps |
+| das kleine Küken piept x4 |  | The Little Chicks Cheep |
+|  |  |  |
+| Im Radio ist ein Gockel x2 |  | There's a rooster on the radio |
+| Der macht Kickericki |  | That makes Kickericki |
+| Und Die Henne Goack |  | And The Hen Goack |
+| und Das Küken piept |  | and the chick beeps |
+| das kleine Küken piept x3 |  | The Little Chicks Cheep |
+|  |  |  |
+| Im Radio ist eine Pute x2 |  | There is a turkey on the radio |
+| Die macht gugelugu |  | That makes gugelugu |
+| Der Gockel Kickericki |  | The Gockel Kickericki |
+| Und Die Henne Goack |  | And The Hen Goack |
+| und Das Küken piept |  | and the chick beeps |
+| das kleine Küken piept x3 |  | The Little Chicks Cheep |
+|  |  |  |
+| Im Radio ist eine Taube x2 |  | There is a pigeon on the radio |
+| und die macht Gurr |  | and that makes Gurr |
+| Die macht gugelugu |  | That makes gugelugu |
+| Der Gockel Kickericki |  | The Gockel Kickericki |
+| Und Die Henne Goack |  | And The Hen Goack |
+| und Das Küken piept x3 |  | and the chick beeps |
+|  |  |  |
+| Im Radio ist eine Katze x2 |  | There's a cat on the radio |
+| Die macht Miau |  | it makes Meows|
+| und die macht Gurr |  | and that makes Gurr |
+| Die macht gugelugu |  | That makes gugelugu |
+| Der Gockel Kickericki |  | The Gockel Kickericki |
+| Und Die Henne Goack |  | And The Hen Goack |
+| und Das Küken piept x3 |  | and the chick beeps |
+|  |  |  |
+| Im Radio ist ein Hund x2 |  | There's a dog on the radio |
+| Der macht Wau Wau |  | It makes woof woof |
+| Und die Katze Miau |  | And the cat meow |
+| und die macht Gurr |  | and that makes Gurr |
+| Die macht gugelugu |  | That makes gugelugu |
+| Der Gockel Kickericki |  | The Gockel Kickericki |
+| Und Die Henne Goack |  | And The Hen Goack |
+| und Das Küken piept x3 |  | and the chick beeps |
+|  |  |  |
+| Im Radio ist ein Schaf x2 |  | There is a sheep on the radio |
+| und das macht Määäh |  | and it makes määäh |
+| Und der Hund Wau Wau |  | And the dog Wau Wau |
+| Und der macht Wau Wau |  | It makes woof woof |
+| Und die Katze Miau |  | And the cat meow |
+| und die macht Gurr |  | and that makes Gurr |
+| Die macht gugelugu |  | That makes gugelugu |
+| Der Gockel Kickericki |  | The Gockel Kickericki |
+| Und Die Henne Goack |  | And The Hen Goack |
+| und Das Küken piept x3 |  | and the chick beeps |
+|  |  |  |
+| Im Radio ist eine Ziege x2 |  | There's a goat on the radio |
+| Und die macht bääh |  |  And that makes you wack|
+| und der Schaf Määäh |  | and it makes määäh |
+| Und der Hund Wau Wau |  | And the dog Wau Wau |
+| Und der macht Wau Wau |  | It makes woof woof |
+| Und die Katze Miau |  | And the cat meow |
+| und die macht Gurr |  | and that makes Gurr |
+| Die macht gugelugu |  | That makes gugelugu |
+| Der Gockel Kickericki |  | The Gockel Kickericki |
+| Und Die Henne Goack |  | And The Hen Goack |
+| und Das Küken piept x3 |  | and the chick beeps |
+|  |  |  |
+| Im Radio ist eine Kuh x2 |  | There's a cow on the radio |
+| und die macht Muh |  | and that makes Muh |
+| die Ziege Bääh |  | the goat wah |
+| und der Schaf Määäh |  | and it makes määäh |
+| Und der Hund Wau Wau |  | And the dog Wau Wau |
+| Und der macht Wau Wau |  | It makes woof woof |
+| Und die Katze Miau |  | And the cat meow |
+| und die macht Gurr |  | and that makes Gurr |
+| Die macht gugelugu |  | That makes gugelugu |
+| Der Gockel Kickericki |  | The Gockel Kickericki |
+| Und Die Henne Goack |  | And The Hen Goack |
+| und Das Küken piept x3 |  | and the chick beeps |
+|  |  |  |
+| Im Radio ist ein Stier x2 |  | There's a bull on the radio |
+| Und der macht Bruuh |  | And that makes Bruuh |
+| Die Kuh macht Muuh |  | The cow makes moo |
+| die Ziege Bääh |  | the goat wah |
+| und der Schaf Määäh |  | and it makes määäh |
+| Und der Hund Wau Wau |  | And the dog Wau Wau |
+| Und der macht Wau Wau |  | It makes woof woof |
+| Und die Katze Miau |  | And the cat meow |
+| und die macht Gurr |  | and that makes Gurr |
+| Die macht gugelugu |  | That makes gugelugu |
+| Der Gockel Kickericki |  | The Gockel Kickericki |
+| Und Die Henne Goack |  | And The Hen Goack |
+| und Das Küken piept x3 |  | and the chick beeps |
+|  |  |  |
+| Im Radio ist ein Träcker x2 |  | There's a tracker on the radio |
+| Und der macht Brum |  | And that makes Brum |
+| Der Träcker macht Bruumm x2 |  | The tracker makes Bruumm |
+| und das Küken ...ouh ouh |  | and the chick ... ouh ouh |
+|  |  |  |
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Mo-Do Eins, zwei, Polizei
+
+Eins zwei Polizei
+Drei vier Grenadier
+Fünf Sechs Alte Hex
+Sieben Acht Gute Nacht
+Ja ja ja was ist los?
+Was ist das?
+
+
+
+Mon-Thu One, two, police
+
+One two police
+Three four Grenadier
+Five Six Old Hex
+Seven eight good night
+Yes yes yes what's going on
+What's this?
+
+
+
+
+
+
+Vanessa Mai - Und wenn ich träum
+
+Ich kann es nicht verstehen, was du mir sagen willst
+Mein Kopf, er dröhnt, mein Traum zerschmilzt
+Haben viel gewonnen und viel verloren
+Doch durch dich fühl' ich mich neugeboren
+Wir haben Träume oft gemalt
+Haben viel riskiert und viel gezahlt
+Wir kommen da schon wieder raus
+Die Liebe ist nicht aufgebraucht
+Und wenn ich träum', träum' ich von dir
+(Ja, ich träume nur von dir)
+Und wenn du gehst, was bleibt dann hier?
+(Ja, was bleibt dann noch?)
+Sag mir, wohin soll ich dann gehen?
+(Wohin soll ich dann noch gehen?)
+Mein Herz ist leer das darf nicht geschehen
+Ja, dieser Augenblick, er hat mir wehgetan
+Dieses Hin und Her wie auf der Autobahn
+Das Kissen riecht noch nach dir
+Ich brauche dich, komm zurück zu mir
+Es ist alles nicht so wie du denkst
+So 'ne Wahnsinnsliebe gibt es nicht geschenkt
+Lass uns kämpfen um ein Stück vom Glück
+Unsre Liebe kommt bestimmt zurück
+Und wenn ich träum', träum' ich von dir
+(Ja, ich träume nur von dir)
+Und wenn du gehst, was bleibt dann hier?
+(Ja, was bleibt dann noch?)
+Sag mir, wohin soll ich dann gehen?
+(Wohin soll ich dann noch gehen?)
+Mein Herz ist leer das darf nicht geschehen
+Ich werde kämpfen für mein Glück
+Ich will nach vorn und nicht zurück
+Ja ich glaube an den Morgen nur mit dir
+Und wenn ich träum', träum' ich von dir
+(Ja, ich träume nur von dir)
+Und wenn du gehst, was bleibt dann hier?
+(Ja, was bleibt dann noch?)
+Sag mir, wohin soll ich dann gehen?
+(Wohin soll ich dann noch gehen?)
+Mein Herz ist leer das darf nicht geschehen
+
+
+
+
+
+Eisbrecher - Vergissmeinnicht
+
+
+dein herz schlgt
+am abgrund
+die Nacht verhllt
+dein letztes wort
+so grausam
+so achtlos
+reisst dich das schicksal
+von mir fort
+ich lass dich los
+muss mich befrein
+denn meine Sehnsucht holt mich ein
+Auf ewig dein...
+verzeih mir-bleib bei mir
+und ich sagte noch vergissmeinnicht
+ich schenk dir zum abschied
+ein letztes licht
+vergissmeinnicht
+Vergissmeinnicht
+Vergissmeinnicht
+Vergissmeinnicht
+Vergissmeinnicht
+mein blick sinkt
+ins nachtrot
+ich reiss mich los
+mit letzter kraft
+so grausam
+so heilig
+liegst du vor mir
+es ist vollbracht
+ich lass dich los
+muss mich befrein
+denn meine Sehnsucht holt mich ein
+Auf ewig dein...
+verzeih mir-bleib bei mir
+und ich sagte noch vergissmeinnicht
+ich schenk dir zum abschied
+ein letztes licht
+vergissmeinnicht
+Vergissmeinnicht
+Vergissmeinnicht…
+
+
+
+
+Sieben Tage lang - bots
+
+Was wollen wir trinken sieben Tage lang
+Was wollen wir trinken? So ein Durst
+
+Was wollen wir trinken sieben Tage lang?
+Was wollen wir trinken? So ein Durst
+
+Es wird genug für alle sein
+Wir trinken zusammen, roll das Fass mal rein!
+Wir trinken zusammen, nicht allein
+
+Es wird genug für alle sein
+Wir trinken zusammen, roll das Fass mal rein!
+Wir trinken zusammen, nicht allein
+
+Dann wollen wir schaffen sieben Tage lang
+Dann wollen wir schaffen, komm fass an!
+
+Dann wollen wir schaffen sieben Tage lang
+Dann wollen wir schaffen, komm fass an!
+
+Und dass wird keine Plagerei
+Wir schaffen zusammen sieben Tage lang
+Ja, schaffen zusammen, nicht allein
+
+Und dass wird keine Plagerei
+Wir schaffen zusammen sieben Tage lang
+Ja, schaffen zusammen, nicht allein
+
+Jetzt müssen wir streiten, keiner weiß wie lang
+Ja, für ein Leben ohne Zwang
+
+Jetzt müssen wir streiten, keiner weiß wie lang
+Ja, für ein Leben ohne Zwang
+
+Dann kriegt der Frust uns nicht mehr klein
+Wir halten zusammen, keiner kämpft allein
+Wir gehen zusammen, nicht allein
+
+Dann kriegt der Frust uns nicht mehr klein
+Wir halten zusammen, keiner kämpft allein
+Wir gehen zusammen, nicht allein
+
+
+
+
+Jan Pillemann Otze
+Mickie Krause
+
+
+Dieses Lied habe ich von einem Freund von mir entwickeln lassen,
+der einen sehr lustigen Namen hatte, aber darüber sehr traurig wahr.
+UND DIESER NAME LAUTETE TE TE
+Refrain: (x2)
+Jan Pillemann otze,
+Pillemann otze Arsch
+Jan Pillemann otze,
+otze Arsch
+Jan Pillemann otze,
+Pillemann otze Arsch
+Jan Pillemann otze,
+otze Arsch,
+er konnte feiern
+ohne Schlaf.
+Es gibt Menschen die heißen krause singen Lieder von zu hause.
+Dann gibt es Menschen die heißen Meier:
+Mindestens einer auf jeder Feier.
+Und es gibt einen das ist interresant, Den hat man Jan Pillemann otze Arsch genannt.
+Jan Pillemann
+Jan Pillemann otze Arsch
+Jan Pillemann otze,
+Pillemann otze Arsch,
+Jan Pillemann otze,
+otze Arsch
+Jan Pillemann otze,
+Pillemann otze Arsch
+Jan Pillemann otze,
+otze Arsch,
+er konnte feiern
+ohne Schlaf.
+Jan Pillemann otze,
+Pillemann otze Arsch,
+Jan Pillemann otze,
+otze Arsch
+er konnte feiern
+ohne Schlaf
+Jan Pillemann otze,
+Pillemann otze Arsch,
+Jan Pillemann otze,
+otze Arsch
+Es gibt Menschen die heißen Becker oder Konstantin oder Wecker.
+Wie die anderer einfach heißen einfach Oliver oder Geißen
+Es gibt einen das ist interresant.
+Den hat man Jan Pillemann otze Arsch genannt.
+Jan Pillemann
+Jan Pillemann otze Arsch
+Refrain: (x2)
+Jan Pillemann otze,
+Pillemann otze Arsch,
+Jan Pillemann otze,
+otze Arsch
+Jan Pillemann otze,
+Pillemann otze Arsch
+Jan Pillemann otze,
+otze Arsch,
+er konnte feiern
+ohne Schlaf.
+Jan Pillemann otze,
+Pillemann otze Arsch,
+Jan Pillemann otze,
+otze Arsch
+er konnte feiern
+ohne Schlaf
+Jan Pillemann otze,
+Pillemann otze Arsch,
+Jan Pillemann otze,
+otze Arsch.
+
+
+?
+
+| du | | en |
+|-|-|-|
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
 
 https://deutsch.lingolia.com/en/grammar/pronouns/possessive-pronouns
 
