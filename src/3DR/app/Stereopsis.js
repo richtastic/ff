@@ -769,7 +769,7 @@ console.log("new cell size ...: "+countX+" | "+countY+" = "+count+"  ("+cellSize
 	}
 
 	// reinit queues:
-	console.log("reset search queues");
+	// console.log("reset search queues");
 
 // TODO: only add back cells that are empty &  have 1+ filled neighbors
 
@@ -817,11 +817,11 @@ Stereopsis.View.prototype.cellCount = function(){
 }
 
 Stereopsis.View.prototype._initProbe2DImage = function(){
-	console.log("_initProbe2DImage");
+	// console.log("_initProbe2DImage");
 	var compareWindow = this.compareSize();
 	var compareSize = 11;
 	var scale = compareWindow/compareSize;
-	console.log(scale);
+	// console.log(scale);
 	// ... create an image such that the needle sizes are scaled the same as the haystack image -- this might be origin-image resolution dependent
 }
 Stereopsis.View.prototype.cellForPoint = function(p){

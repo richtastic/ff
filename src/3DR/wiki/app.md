@@ -427,7 +427,13 @@ refinement - dates
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-- SAVE VIEW ABSOLUTE TRANSFORMS TO A FILE
+
+
+
+x fix absolute view offsets
+
+
+x SAVE VIEW ABSOLUTE TRANSFORMS TO A FILE
 
 - IF bundleError != null
 	-> ALREADY DONE
