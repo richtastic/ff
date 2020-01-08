@@ -8025,20 +8025,141 @@ App3DR.ProjectManager.prototype._iterateSparseTracks = function(sourceData, sour
 
 			throw "already done .. should have putatives saved into main info.yaml"
 		}
-		if(false){ // done with bundle adjustment
-			// - create graph
-			throw "create graph";
-		}
 		if(bundleFullIndex>=graphPairs.length){ // done loading all pairs into full file
-			
-			// - bundle-adjust
-			
-			throw "bundleFullIndex: "+bundleFullIndex;
-		}
-		if(bundleFullFile){
-			// load current file:
+			console.log("bundle adjust full file ...");
 
-			// load full
+			// - bundle-adjust
+			var fullBundlePath = Code.appendToPath(basePath,"tracks",bundleFullFile);
+			var fullData = null;
+
+			var checkReadyRunWorld = function(){
+				if(!fullData){
+					return;
+				}
+// throw "before run";
+				var allViews = fullData["views"];
+				var allPoints = Code.valueOrDefault(fullData["points"], []);
+				// if(bundleFullIndex==0){ // force new set
+				// 	allPoints = [];
+				// }
+				console.log(allPoints);
+				var baOptimizations = App3DR.ProjectManager._BAPairsDefaultOrSorted(allViews, fullData);
+				var nextViewBA = baOptimizations[0];
+				console.log(nextViewBA);
+				var baIterations = fullData["iteration"];
+					baIterations = Code.valueOrDefault(baIterations, 0);
+
+				var minimumPixelErrorBA = 0.001; // 1/1000
+				var maxIterationsBA = 10*allViews.length;
+
+
+				// if the next error is very low, or max iterations reached => done
+				var isDone = false;
+				var deltaErrorR = nextViewBA["deltaErrorR"];
+				if(deltaErrorR!==null && deltaErrorR!==undefined){
+					if(deltaErrorR<minimumPixelErrorBA){
+						console.log("min error reached");
+						isDone = true;
+					}
+				}
+
+				if(baIterations>maxIterationsBA){
+					console.log("max iterations reached");
+					isDone = true;
+				}
+
+				// isDone = true;
+				if(isDone){
+					console.log("BA is done -> find ");
+					console.log("find best putatives for dense");
+					// 
+					// - create graph
+					//    - world views as nodes
+					//    - world relative transforms errors -- optionally store transforms as part of data?
+					// get summations of errors locally and globally
+					// - find best +0/1/2 neighbors
+					//    - limit based on error & count [account for: assume some percent are bad matches, eg: ~50%]
+					//    - ...
+					// - consolidate full best pair list
+					// - 
+					// 
+					throw "create graph";
+				}
+
+				var info = project.fillInWorldAll(allViews);
+				console.log(info);
+				//
+				var WORLDCAMS = info["cameras"];
+				var WORLDVIEWS = info["views"];
+				var WORLDVIEWSLOOKUP = info["lookup"];
+				var world = info["world"];
+
+				world.copyRelativeTransformsFromAbsolute();
+				world.resolveIntersectionByPatchGeometry();
+
+				var points3DExisting = App3DR.ProjectManager._worldPointFromSaves(world, allPoints, WORLDVIEWSLOOKUP);
+				console.log(points3DExisting);
+				world.patchInitBasicSphere(true,points3DExisting);
+				world.embedPoints3DNoValidation(points3DExisting);
+
+				world.relativeFFromSamples();
+				world.estimate3DErrors(true);
+				world.printPoint3DTrackCount();
+
+				var nextViewID = nextViewBA["id"];
+				console.log("nextViewID: "+nextViewID);
+				var worldView = world.viewFromData(nextViewID);
+				console.log("optimize with view:");
+				console.log(worldView);
+				// optimize view orientation
+
+				var info = world.solveDropWorstViewNeighbors(worldView);
+
+throw "check for poor views"
+				var info = world.solveOptimizeSingleView(worldView);
+				console.log(info);
+				
+				
+				nextViewBA["deltaErrorR"] = Math.abs(info["deltaR"]); // expected always negative
+				nextViewBA["errorR"] = info["errorR"];
+				nextViewBA["updated"] = Code.getTimeMilliseconds();//Code.getTimeStampFromMilliseconds();
+				nextViewBA["count"] = worldView.pointCount();
+
+				// update views:
+				var worldObject = world.toObject();
+				console.log(worldObject);
+
+				fullData["points"] = worldObject["points"];
+				fullData["views"] = worldObject["views"];
+				fullData["transforms"] = worldObject["transforms"]; // want for final relative counts & errors
+				fullData["iteration"] = baIterations + 1;
+
+				console.log("fullBundlePath: "+fullBundlePath);
+				console.log(fullData);
+
+				
+
+				// SAVE TO FILE
+				var savedBundleComplete = function(){
+					console.log("saved bundle track");
+				}
+
+			// throw "before saving bundle";
+
+				project.saveFileFromData(fullData, fullBundlePath, savedBundleComplete, project);
+				return;
+			} // end fxn
+
+			var loadBundleComplete = function(data){
+				console.log("loaded bundle");
+				console.log(data);
+				fullData = data;
+				checkReadyRunWorld();
+			}
+			project.loadDataFromFile(fullBundlePath, loadBundleComplete);
+			return;
+		}
+		if(bundleFullFile){ // load current file:
 			var fullBundlePath = Code.appendToPath(basePath,"tracks",bundleFullFile);
 
 			var fullData = null;
@@ -8048,7 +8169,6 @@ App3DR.ProjectManager.prototype._iterateSparseTracks = function(sourceData, sour
 					return;
 				}
 				console.log("checkReadyRunWorld");
-
 
 				var allViews = fullData["views"];
 				var fullPoints = Code.valueOrDefault(fullData["points"], []);
@@ -8142,7 +8262,7 @@ App3DR.ProjectManager.prototype._iterateSparseTracks = function(sourceData, sour
 
 			return;
 		}
-		throw "WHAT?"
+		// throw "WHAT?"
 		if(graphGroups.length==bundleGroupIndex){
 			console.log(graphGroups);
 			var transformLookup = {};
@@ -8167,35 +8287,32 @@ App3DR.ProjectManager.prototype._iterateSparseTracks = function(sourceData, sour
 				var newOriginID = null;
 				if(referenceSkeleton){
 					oldOriginR = transforms[referenceGroupIndex];
-					// console.log(transform);
 						oldOriginR = Matrix.fromObject(oldOriginR);
-						oldOriginR = Matrix.inverse(oldOriginR);
+						oldOriginR = Matrix.inverse(oldOriginR); // ext -> abs
 					newOriginID = referenceSkeleton["id"];
 					newOriginR = referenceSkeleton["R"];
-						newOriginR = Matrix.inverse(newOriginR);
+						newOriginR = Matrix.inverse(newOriginR); // ext -> abs
 				}else{
 					oldOriginR = new Matrix(4,4).identity();
 					newOriginR = new Matrix(4,4).identity();
 				}
 				for(var j=0; j<views.length; ++j){
 					var viewID = views[j];
-					// if(true){
+					// skeletons pass because newOriginID=null; groups non-references pass because they are not reference
 					if(newOriginID!=viewID){ // don't override reference
 						var extA, absA;
 						var extB, absB;
 						// remove current offset => only relative orientation
 						var transform = transforms[j];
 							extB = Matrix.fromObject(transform);
-							absB = Matrix.inverse(extB);
+							absB = Matrix.inverse(extB); // ext -> abs
 							absA = oldOriginR;
 						var relativeAB = R3D.relativeTransformMatrix2(absA,absB);
-						
 						// console.log("RELATIVE: "+relativeAB);
 						absA = newOriginR;
-						absB = Matrix.mult(relativeAB, absA);
-						extB = Matrix.inverse(extB);
+						absB = Matrix.mult(relativeAB, absA); // prepend new origin
+						extB = Matrix.inverse(extB); // abs -> ext
 						transform = extB;
-						
 						// set
 						transformLookup[viewID] = {"id":viewID, "R":transform};
 					}
@@ -8267,48 +8384,52 @@ App3DR.ProjectManager.prototype._iterateSparseTracks = function(sourceData, sour
 				console.log(data);
 				var baViews = data["views"];
 				var baPoints = data["points"];
-				var baOptimizations = data["ba"];
+				// var baOptimizations = data["ba"];
 				var baIterations = data["iteration"];
-				baIterations = Code.valueOrDefault(baIterations, 0);
-
+					baIterations = Code.valueOrDefault(baIterations, 0);
+				var baOptimizations = App3DR.ProjectManager._BAPairsDefaultOrSorted(baViews, data);
 				var minimumPixelErrorBA = 0.001; // 1/1000
 				var maxIterationsBA = 10*baViews.length;
 
-				if(!baOptimizations){
-					baOptimizations = [];
-					for(var i=0; i<baViews.length; ++i){
-						var view = baViews[i];
-						var opt = {};
-						opt["id"] = view["id"];
-						opt["deltaErrorR"] = null;
-						// opt["deltaErrorF"] = null;
-						opt["errorR"] = null;
-						// opt["errorF"] = null;
-						opt["updated"] = null;
-						opt["count"] = null;
-						baOptimizations[i] = opt;
-					}
-					data["ba"] = baOptimizations;
-				}
-				var sortErrorRFxn = function(a,b){
-					a = a["deltaErrorR"];
-					b = b["deltaErrorR"];
-					// do null first
-					if(a===null && b===null){
-						return -1;
-					}
-					if(a===null && b!==null){
-						return -1;
-					}
-					if(b===null && a!==null){
-						return 1;
-					}
-					return a > b ? -1 : 1; // do highest-reduction-error first
-				}
-				baOptimizations.sort(sortErrorRFxn);
+				// if(!baOptimizations){
+				// 	baOptimizations = [];
+				// 	for(var i=0; i<baViews.length; ++i){
+				// 		var view = baViews[i];
+				// 		var opt = {};
+				// 		opt["id"] = view["id"];
+				// 		opt["deltaErrorR"] = null;
+				// 		// opt["deltaErrorF"] = null;
+				// 		opt["errorR"] = null;
+				// 		// opt["errorF"] = null;
+				// 		opt["updated"] = null;
+				// 		opt["count"] = null;
+				// 		baOptimizations[i] = opt;
+				// 	}
+				// 	data["ba"] = baOptimizations;
+				// }
+				// var sortErrorRFxn = function(a,b){
+				// 	a = a["deltaErrorR"];
+				// 	b = b["deltaErrorR"];
+				// 	// do null first
+				// 	if(a===null && b===null){
+				// 		return -1;
+				// 	}
+				// 	if(a===null && b!==null){
+				// 		return -1;
+				// 	}
+				// 	if(b===null && a!==null){
+				// 		return 1;
+				// 	}
+				// 	return a > b ? -1 : 1; // do highest-reduction-error first
+				// }
+				// baOptimizations.sort(sortErrorRFxn);
+				// var nextViewBA = baOptimizations[0];
 
-
+				
 				var nextViewBA = baOptimizations[0];
+
+				
+
 				console.log(nextViewBA);
 
 				// if the next error is very low, or max iterations reached => done
@@ -8757,6 +8878,44 @@ console.log(graphData);
 	// combine from closeness only
 	// TODO: TRACK COLLISION RESOLUTION?
 }
+
+App3DR.ProjectManager._BAPairsDefaultOrSorted = function(baViews, data){
+	baOptimizations = data["ba"];
+	if(!baOptimizations){
+		baOptimizations = [];
+		for(var i=0; i<baViews.length; ++i){
+			var view = baViews[i];
+			var opt = {};
+			opt["id"] = view["id"];
+			opt["deltaErrorR"] = null;
+			// opt["deltaErrorF"] = null;
+			opt["errorR"] = null;
+			// opt["errorF"] = null;
+			opt["updated"] = null;
+			opt["count"] = null;
+			baOptimizations[i] = opt;
+		}
+		data["ba"] = baOptimizations;
+	}
+	var sortErrorRFxn = function(a,b){
+		a = a["deltaErrorR"];
+		b = b["deltaErrorR"];
+		// do null first
+		if(a===null && b===null){
+			return -1;
+		}
+		if(a===null && b!==null){
+			return -1;
+		}
+		if(b===null && a!==null){
+			return 1;
+		}
+		return a > b ? -1 : 1; // do highest-reduction-error first
+	}
+	baOptimizations.sort(sortErrorRFxn);
+	return baOptimizations;
+}
+
 
 App3DR.ProjectManager.prototype.fillInWorldAll = function(inViews){
 	var project = this;

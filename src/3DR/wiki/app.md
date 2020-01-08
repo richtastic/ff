@@ -401,25 +401,26 @@ https://cloud.google.com/appengine/docs/nodejs/
 refinement - dates
 12/20 x dropping poorest sparse F/R based on defined criteria
 12/23 x pair/triple/scale -> absolute graph 'generalization'
-12/27 - skeleton and group and final BA algorithm defined
-12/?? - loading all tracks into their groups
-12/?? - BA on groups/tracks
-12/?? - combining grouped BA into final BA init
-12/?? - BA on final group
-12/?? - hole filling?
-12/31 - dense pair candidate decisions
+12/27 x skeleton and group and final BA algorithm defined
+12/31 x loading all tracks into their groups
+01/02 x BA on groups/tracks
+01/04 x combining grouped BA into final BA init
+01/10 - BA on final group
+01/15 - BA identify/remove view if it's position is very bad?
+01/19 - hole filling?
+01/26 - dense pair candidate decisions
 		- want to have a bunch up to a point
 		- minimum 2 other neighbors to create triple
 		- want more to spread error
 		- 3-9 (depending on connectivity)
 			- getting 'further' - more global help reducing error but inaccurate
 			- getting 'closer' - more accurate but very local
-01/01 - dense.yaml incorporated
-01/08 - dense replica of sparse incorporated
-01/10 - multi-view point propagation from dense
-01/17 - triangulation algorithm updates
-01/24 - texture-triangle-edge problems
-01/31 - test new set of 10 ~ 20 images
+02/01 - dense.yaml incorporated
+02/08 - dense replica of sparse incorporated
+02/10 - multi-view point propagation from dense
+02/17 - triangulation algorithm updates
+02/24 - texture-triangle-edge problems
+02/31 - test new set of 10 ~ 20 images
 
 - triangle - texture loading groups at a time to get local approx blending
 - out-of-core octtree (stereopsis focused)
@@ -428,24 +429,72 @@ refinement - dates
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+- track 0 - good
+- track 1 - bad - exactly wrong
+- track 2 - good
 
 
-x fix absolute view offsets
+
+- how to identify views that are much worse & should be dropped BEFORE OPTIMIZATION
+	- each view does population estimate and votes to remove a neighbor if it is much worse than the population
+
+	for each view:
+		- get list of transforms (above ~12 matches) ordered on error (avg or min+sig)
+		- if number of neighbors is:
+			- 0/1 -> do nothing
+			- 2 -> vote to drop if error2/error1 > 2
+			- 3+ find index of largest delta error (on sorted errors)
+				- find sigma/avg of full & best portion
+				- if error2/error1 > 2 -> vote to drop all of worst portion
+	for each view:
+		- tally votes on self
+		- drop if votes >= some % [ (count/2) + (count%2==1 ? 1 : 0) ]
+			- 2 >= 50% (1)
+			- 3 >= 66% (2)
+			- 4 >= 50% (2)
+			- 5 >= 60% (3)
+			- 6 >= 50% (3)
+			- 7 >= 57% (4)
+	...
+- best putative estimates [dense]
+	- max matches = max(3,2 x sqrt(n)) [1=3,2=3,3=3,4=4, 5=4, 6=5, 7=5, 8=6, 10=6, 20=9, 50=14, 100=20]
+	- min matches = 6 [50% error, wanting 3 => 6]
+	- max neighborhood adjacency = 2-3 [direct=0, +1,+2,+3]
+	- max error ratio = 2-4 []
+	for each view:
+		- find min path to every other view (get neighborhood distance) BFS
+		count = 0
+		while count < max matches
+			list append next adjacency set of views
+			for each next:
+				if error < max error
+					add to putative, count++
+		- order putatives on error
+		- drop at capped max
+	unique set = {}
+	for each view
+		add putative set pair to unique set
+	get list of unique pairs
+	=> output:
+		- list of pairs, list of view abs orientations
+		
 
 
-x SAVE VIEW ABSOLUTE TRANSFORMS TO A FILE
 
-- IF bundleError != null
-	-> ALREADY DONE
-- IF bundle track index > pairs to load
-	- estimate best possible pairs
-		- create graph from edges [with minimum count and maximum error]
-		- find +1 neighbors
-		- save views + pairs to info.yaml as putative dense object
-	- set bundle Error 
-- IF the bundle file is set [tracks_full.yaml] -> continue loading at bundle track index
-	- load next pair tracks into tracks_full.yaml
-	- increment bundle track index
+- sparse process: graph.yaml view orientations seems much better than track_full.yaml orientations
+	- which views are bad?
+	- which pairs/groups are bad? [how to know = display group tracks?]
+	- is it the offset / combine process?
+	- is the bad view just very wrong?
+		- how to detect? [maybe at least flag it if the error is way different?]
+
+	-- DISPLAY WORLD GRAPH FROM ABOVE???
+
+-> see if full bundle process re-fixes things?
+
+....
+
+
 
 
 

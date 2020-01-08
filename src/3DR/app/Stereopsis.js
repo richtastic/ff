@@ -141,6 +141,17 @@ Stereopsis.World.prototype.addView = function(image, cam, data){
 	this._views[viewB.id()+""] = viewB;
 	return viewB;
 }
+Stereopsis.World.prototype.transformsWithView = function(view){
+	var transforms = Code.objectToArray(this._transforms);
+	var included = [];
+	for(var i=0; i<transforms.length; ++i){
+		var transform = transforms[i];
+		if(transform.viewA()==view || transform.viewB()==view){
+			included.push(transform);
+		}
+	}
+	return included;
+}
 Stereopsis.World.prototype.transformFromViews = function(viewA,viewB){
 	var index = Stereopsis.indexFromObjectIDs(viewA,viewB);
 	return this._transforms[index];
@@ -549,6 +560,7 @@ Stereopsis.ViewCell.prototype.kill = function(r){
 Stereopsis.View = function(image, camera, data){
 	this._id = Stereopsis.View.ID++;
 	this._data = null;
+	this._temp = null;
 	this._camera = null;
 	this._K = null;
 	this._Kinv = null;
@@ -599,6 +611,12 @@ Stereopsis.View.prototype.data = function(data){
 		this._data = data;
 	}
 	return this._data;
+}
+Stereopsis.View.prototype.temp = function(temp){
+	if(temp!==undefined){
+		this._temp = temp;
+	}
+	return this._temp;
 }
 Stereopsis.View.prototype.pointSpace = function(){
 	return this._pointSpace;
@@ -1545,6 +1563,14 @@ Stereopsis.Transform3D.prototype.viewB = function(viewB){
 	}
 	return this._viewB;
 }
+Stereopsis.Transform3D.prototype.oppositeView = function(view){
+	if(view==this.viewA()){
+		return this.viewB();
+	}else if(view==this.viewB()){
+		return this.viewA();
+	}
+	return null;
+}
 Stereopsis.Transform3D.prototype.world = function(world){
 	if(world!==undefined){
 		this._world = world;
@@ -1613,18 +1639,6 @@ Stereopsis.Transform3D.prototype.R = function(viewA,viewB, R){
 	}
 	return null;
 }
-// Stereopsis.Transform3D.prototype.mMean = function(mean){
-// 	if(mean!==undefined){
-// 		this._errorMMean = mean;
-// 	}
-// 	return this._errorMMean;
-// }
-// Stereopsis.Transform3D.prototype.mSigma = function(sigma){
-// 	if(sigma!==undefined){
-// 		this._errorMSigma = sigma;
-// 	}
-// 	return this._errorMSigma;
-// }
 Stereopsis.Transform3D.prototype.sadMean = function(mean){
 	if(mean!==undefined){
 		this._errorSADMean = mean;
@@ -1672,6 +1686,12 @@ Stereopsis.Transform3D.prototype.rSigma = function(sigma){
 		this._errorRSigma = sigma;
 	}
 	return this._errorRSigma;
+}
+Stereopsis.Transform3D.prototype.rAverage = function(mean){
+	if(mean!==undefined){
+		this._errorRAverage = mean;
+	}
+	return this._errorRAverage;
 }
 Stereopsis.Transform3D.prototype.insertMatch = function(match){
 	var index = match.id();
@@ -1896,11 +1916,13 @@ Stereopsis.Transform3D.prototype.calculateErrorR = function(R){
 	for(var i=0; i<orderedPoints.length; ++i){
 		rDistances.push(orderedPoints[i][0]);
 	}
-	var rMean = Code.min(rDistances);
+	var rMin = Code.min(rDistances);
+	var rMean = Code.mean(rDistances);
 	var rSigma = Code.stdDev(rDistances, rMean);
 	// var rHalf = Code.median(rDistances);
 		// rSigma = Math.min(rSigma,rHalf);
-	this._errorRMean = rMean;
+	this._errorRAverage = rMean;
+	this._errorRMean = rMin;
 	this._errorRSigma = rSigma;
 }
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -3887,8 +3909,8 @@ Stereopsis.World.prototype.bundleAdjustViews = function(viewsChange, viewsConsta
 			totalPointsReferenced += points3D.length;
 		}
 	}
-	console.log(Ps,P2s);
-	console.log(pairPoints2D,pairPoints3D);
+	// console.log(Ps,P2s);
+	// console.log(pairPoints2D,pairPoints3D);
 	if(totalPointsReferenced==0){
 		console.log(totalPointsReferenced);
 		console.log(Ks,Is,Ps, pairPoints2D, pairPoints3D, maxIterations, K2s,I2s,P2s);
@@ -5047,6 +5069,141 @@ Code.printMatlabArray(behinds,"b");
 }
 Stereopsis.World.prototype.x = function(){
 	//
+}
+
+
+// ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Stereopsis.World.prototype.solveDropWorstViewNeighbors = function(viewSolve){ // move view to a more optimal position
+	console.log("solveDropWorstViewNeighbors");
+	var world = this;
+	var minimumMatches = 12;
+	var views = world.toViewArray();
+	var sortLowestError = function(a,b){
+		return a[0] < b[0] ? -1 : 1;
+	}
+	var scoreMapFxn = function(a){
+		return a[0];
+	}
+
+	// votes to empty
+	for(var i=0; i<views.length; ++i){
+		var view = views[i];
+		view.temp([]);
+	}
+
+	for(var i=0; i<views.length; ++i){
+		console.log("............................ "+i);
+		var view = views[i];
+		var transforms = world.transformsWithView(view);
+		var keep = [];
+		// console.log(" +"+transforms.length);
+		for(var j=0; j<transforms.length; ++j){
+			var transform = transforms[j];
+			var matchCount = transform.matchCount();
+			// console.log(matchCount+" >?> "+minimumMatches);
+			if(matchCount>=minimumMatches){
+				var error = transform.rMean() + transform.rSigma();
+				// error /= matchCount;
+				var error2 = transform.rAverage();
+				keep.push([error2, transform]);
+				// keep.push([error, transform]);
+				// console.log(error+" | "+error2);
+			}
+		}
+		keep.sort(sortLowestError);
+		scores = Code.copyArray(keep);
+		Code.arrayMap(scores, scoreMapFxn);
+		// console.log(scores);
+		var vote = null;
+		var maxIndex = null;
+		if(keep.length==1){
+			console.log("1: nothing");
+		}else if(keep.length==2){
+			var averageA = scores[0];
+			var averageB = Code.mean(scores);
+			var averageR = averageB/averageA;
+			var maxIndex = 1;
+			console.log("2",averageA,averageB,averageR);
+			if(averageR>2.0){
+				vote = 1;
+			}else{
+				vote = 0;
+			}
+		}else if(keep.length>=3){
+					// get deltas:
+					var deltas = [];
+					for(var d=1; d<keep.length; ++d){
+						var a = scores[d];
+						var b = scores[d-1];
+						deltas.push(a-b);
+					}
+					maxIndex = Code.maxIndex(deltas);
+					// console.log(maxIndex);
+			var averageA = Code.mean(scores,null,maxIndex+1);
+			var averageB = Code.mean(scores); // all
+			var averageR = averageB/averageA;
+			console.log("3",averageA,averageB,averageR);
+			if(averageR>2.0){
+				vote = 1;
+			}else{
+				vote = 0;
+			}
+			// var sigma = ;
+		}else{
+			console.log("0: also no");
+		}
+		if(vote!==null){
+			console.log(keep)
+			for(var t=0; t<keep.length; ++t){
+				var transform = keep[t][1];
+				var oppositeView = transform.oppositeView(view);
+				var v = 0;
+				if(t>=maxIndex){
+					v = vote;
+				}
+				oppositeView.temp().push(v);
+			}
+		}
+		
+		// compare best half and full and see if sigma / error > max
+
+
+		// console.log(deltas+"")
+		// throw "???"
+	}
+
+	for(var i=0; i<views.length; ++i){
+		var view = views[i];
+		console.log(view.data(),view.temp());
+		view.temp(null);
+	}
+
+	//
+	/*
+	- how to identify views that are much worse & should be dropped BEFORE OPTIMIZATION
+	- each view does population estimate and votes to remove a neighbor if it is much worse than the population
+
+	for each view:
+		- get list of transforms (above ~12 matches) ordered on error (avg or min+sig)
+		- if number of neighbors is:
+			- 0/1 -> do nothing
+			- 2 -> vote to drop if error2/error1 > 2
+			- 3+ find index of largest delta error (on sorted errors)
+				- find sigma/avg of full & best portion
+				- if error2/error1 > 2 -> vote to drop all of worst portion
+	for each view:
+		- tally votes on self
+		- drop if votes >= some % [ (count/2) + (count%2==1 ? 1 : 0) ]
+			- 2 >= 50% (1)
+			- 3 >= 66% (2)
+			- 4 >= 50% (2)
+			- 5 >= 60% (3)
+			- 6 >= 50% (3)
+			- 7 >= 57% (4)
+	...
+	*/
+
+	throw "?";
 }
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -9266,7 +9423,7 @@ Stereopsis.World.prototype.estimate3DErrors = function(skipCalc, shouldLog){ // 
 		view.rSigma(rSigma);
 		// console.log(" V M : "+view.mMean()+" +/- "+view.mSigma());
 		// console.log(" V F : "+view.fMean()+" +/- "+view.fSigma());
-		console.log(".       points: "+points2D.length+"       "+view.id()+" ");
+		console.log(".       points: "+points2D.length+"       "+view.id()+" "+view.data()+" ");
 		console.log(" V R "+""+" : "+view.rMean()+" : "+view.rMin()+" +/- "+view.rSigma());
 	}
 
