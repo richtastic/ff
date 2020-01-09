@@ -8072,17 +8072,8 @@ App3DR.ProjectManager.prototype._iterateSparseTracks = function(sourceData, sour
 				if(isDone){
 					console.log("BA is done -> find ");
 					console.log("find best putatives for dense");
-					// 
-					// - create graph
-					//    - world views as nodes
-					//    - world relative transforms errors -- optionally store transforms as part of data?
-					// get summations of errors locally and globally
-					// - find best +0/1/2 neighbors
-					//    - limit based on error & count [account for: assume some percent are bad matches, eg: ~50%]
-					//    - ...
-					// - consolidate full best pair list
-					// - 
-					// 
+					var allTransforms = fullData["transforms"];
+					var info = App3DR.ProjectManager._putativePairsFromViewsAndTransforms(allViews,allTransforms);
 					throw "create graph";
 				}
 
@@ -8112,32 +8103,53 @@ App3DR.ProjectManager.prototype._iterateSparseTracks = function(sourceData, sour
 				console.log("optimize with view:");
 				console.log(worldView);
 				// optimize view orientation
+// ???
 
-				var info = world.solveDropWorstViewNeighbors(worldView);
+				// identify / ignore worst views on first iteration:
+				// if(baIterations==0){
+				if(true){
+					var info = world.solveDropWorstViewNeighbors();
+					console.log(info);
+					world.estimate3DErrors(true);
+					var views = info["removed"];
+					for(var v=0; v<views.length; ++v){
+						var view = views[v];
+						console.log(view);
+						var viewID = view.data();
+						for(var e=0; e<baOptimizations.length; ++e){
+							var entry = baOptimizations[e];
+							if(entry["id"]==viewID){
+								entry["deltaErrorR"] = 0;
+								entry["errorR"] = 0;
+								entry["count"] = 0;
+								entry["updated"] = Code.getTimeMilliseconds();;
+							}
+						}
+						// set optimization entry to 0
+					}
 
-throw "check for poor views"
-				var info = world.solveOptimizeSingleView(worldView);
-				console.log(info);
+					// console.log(baOptimizations);
+				}
+					// throw "baOptimizations"
+				// }else{ // optimize
+				if(true){
+					// throw "optimize now"
+					var info = world.solveOptimizeSingleView(worldView);
+					console.log(info);
+					nextViewBA["deltaErrorR"] = Math.abs(info["deltaR"]); // expected always negative
+					nextViewBA["errorR"] = info["errorR"];
+					nextViewBA["count"] = worldView.pointCount();
+					nextViewBA["updated"] = Code.getTimeMilliseconds();
+				}
 				
-				
-				nextViewBA["deltaErrorR"] = Math.abs(info["deltaR"]); // expected always negative
-				nextViewBA["errorR"] = info["errorR"];
-				nextViewBA["updated"] = Code.getTimeMilliseconds();//Code.getTimeStampFromMilliseconds();
-				nextViewBA["count"] = worldView.pointCount();
-
 				// update views:
 				var worldObject = world.toObject();
-				console.log(worldObject);
-
 				fullData["points"] = worldObject["points"];
 				fullData["views"] = worldObject["views"];
 				fullData["transforms"] = worldObject["transforms"]; // want for final relative counts & errors
 				fullData["iteration"] = baIterations + 1;
-
 				console.log("fullBundlePath: "+fullBundlePath);
 				console.log(fullData);
-
-				
 
 				// SAVE TO FILE
 				var savedBundleComplete = function(){
@@ -8288,10 +8300,10 @@ throw "check for poor views"
 				if(referenceSkeleton){
 					oldOriginR = transforms[referenceGroupIndex];
 						oldOriginR = Matrix.fromObject(oldOriginR);
-						oldOriginR = Matrix.inverse(oldOriginR); // ext -> abs
+						// oldOriginR = Matrix.inverse(oldOriginR); // ext -> abs
 					newOriginID = referenceSkeleton["id"];
 					newOriginR = referenceSkeleton["R"];
-						newOriginR = Matrix.inverse(newOriginR); // ext -> abs
+						// newOriginR = Matrix.inverse(newOriginR); // ext -> abs
 				}else{
 					oldOriginR = new Matrix(4,4).identity();
 					newOriginR = new Matrix(4,4).identity();
@@ -8304,15 +8316,37 @@ throw "check for poor views"
 						var extB, absB;
 						// remove current offset => only relative orientation
 						var transform = transforms[j];
+							extA = oldOriginR;
 							extB = Matrix.fromObject(transform);
-							absB = Matrix.inverse(extB); // ext -> abs
-							absA = oldOriginR;
-						var relativeAB = R3D.relativeTransformMatrix2(absA,absB);
+var original = extB;
+							// absB = Matrix.inverse(extB); // ext -> abs
+							// absA = oldOriginR;
+						// var relativeAB = R3D.relativeTransformMatrix2(absA,absB);
+						// var relativeAB = R3D.relativeTransformMatrix2(absB, absA);
+						var extrinsicAB = R3D.relativeTransformMatrix2(extA,extB);
+						var relativeAB = Matrix.inverse(extrinsicAB);
 						// console.log("RELATIVE: "+relativeAB);
-						absA = newOriginR;
+						// absA = newOriginR;
+						extA = newOriginR;
+						absA = Matrix.inverse(extA);
 						absB = Matrix.mult(relativeAB, absA); // prepend new origin
-						extB = Matrix.inverse(extB); // abs -> ext
+						// absB = Matrix.mult(absA,relativeAB);
+						extB = Matrix.inverse(absB); // abs -> ext
 						transform = extB;
+var final = transform;
+if(newOriginID==null){
+	console.log("SKELETON: ");
+	console.log("\n"+original);
+	// console.log("\n"+oldOriginR);
+	// console.log("\n"+relativeAB);
+	console.log("\n"+final);
+	console.log("\n");
+}else{
+	console.log("OTHER: ");
+	console.log("\n"+original);
+	console.log("\n"+final);
+	console.log("\n");
+}
 						// set
 						transformLookup[viewID] = {"id":viewID, "R":transform};
 					}
@@ -8335,7 +8369,7 @@ throw "check for poor views"
 			graphData["bundleFullFile"] = bundleFilename;
 			var fullBundlePath = Code.appendToPath(basePath,"tracks",bundleFilename);
 
-			// throw "before saving";
+throw "before saving initial bundle full";
 
 			var savedGraphComplete = function(){
 				console.log("savedGraphComplete: "+graphFile);
@@ -8877,6 +8911,47 @@ console.log(graphData);
 	// + FOR FULL GROUP [all possible pairs]
 	// combine from closeness only
 	// TODO: TRACK COLLISION RESOLUTION?
+}
+
+App3DR.ProjectManager._putativePairsFromViewsAndTransforms = function(views, transforms){
+console.log("_putativePairsFromViewsAndTransforms");
+console.log(views);
+console.log(transforms);
+	var viewCount = views.length;
+var graph = new Graph();
+
+var minMatchesForEdge = 16;
+	// create nodes
+
+	// create edges
+
+	// 
+
+console.log(graph);
+
+	var averageGraphConnectivity = average number of edges per vertex (excluding empty ones?);
+	var averageGraphComplexity = ;
+
+	to limit maximumNeighborhoodAdjacency:
+
+
+	(adjacency)^(connectivity) = # views
+
+	
+	2^3 = 8
+	2^4 = 16
+
+	// find bests:
+	var maximumPairMatches = Math.min(Math.max(2*Math.sqrt(viewCount),3),20); // don't want too many matches
+	var minimumPairMatches = 2 * 3; // assuming @ 50% error -- don't want too few matches
+	var maximumNeighborhoodAdjacency = 2; // direct=0, +1,+2,+3] -- don't want to try too far away
+	var maximumPropagetedErrorRatio = 4; // 2-4 -- don't want high-error guesses
+
+	
+
+	...
+
+	return {};
 }
 
 App3DR.ProjectManager._BAPairsDefaultOrSorted = function(baViews, data){

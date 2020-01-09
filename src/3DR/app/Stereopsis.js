@@ -5073,7 +5073,7 @@ Stereopsis.World.prototype.x = function(){
 
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-Stereopsis.World.prototype.solveDropWorstViewNeighbors = function(viewSolve){ // move view to a more optimal position
+Stereopsis.World.prototype.solveDropWorstViewNeighbors = function(){ // move view to a more optimal position
 	console.log("solveDropWorstViewNeighbors");
 	var world = this;
 	var minimumMatches = 12;
@@ -5105,8 +5105,9 @@ Stereopsis.World.prototype.solveDropWorstViewNeighbors = function(viewSolve){ //
 				var error = transform.rMean() + transform.rSigma();
 				// error /= matchCount;
 				var error2 = transform.rAverage();
-				keep.push([error2, transform]);
-				// keep.push([error, transform]);
+				// OR MAYBE BOTH ?
+				// keep.push([error2, transform]);
+				keep.push([error, transform]);
 				// console.log(error+" | "+error2);
 			}
 		}
@@ -5116,29 +5117,17 @@ Stereopsis.World.prototype.solveDropWorstViewNeighbors = function(viewSolve){ //
 		// console.log(scores);
 		var vote = null;
 		var maxIndex = null;
-		if(keep.length==1){
-			console.log("1: nothing");
-		}else if(keep.length==2){
-			var averageA = scores[0];
-			var averageB = Code.mean(scores);
-			var averageR = averageB/averageA;
-			var maxIndex = 1;
-			console.log("2",averageA,averageB,averageR);
-			if(averageR>2.0){
-				vote = 1;
-			}else{
-				vote = 0;
+		if(keep.length>=2){
+			// get deltas:
+			var deltas = [];
+			for(var d=1; d<keep.length; ++d){
+				var a = scores[d];
+				var b = scores[d-1];
+				deltas.push(a-b);
 			}
-		}else if(keep.length>=3){
-					// get deltas:
-					var deltas = [];
-					for(var d=1; d<keep.length; ++d){
-						var a = scores[d];
-						var b = scores[d-1];
-						deltas.push(a-b);
-					}
-					maxIndex = Code.maxIndex(deltas);
-					// console.log(maxIndex);
+			maxIndex = Code.maxIndex(deltas);
+			// console.log(maxIndex);
+			// TODO - try looking at 'sigma' - error spread before and after
 			var averageA = Code.mean(scores,null,maxIndex+1);
 			var averageB = Code.mean(scores); // all
 			var averageR = averageB/averageA;
@@ -5148,62 +5137,63 @@ Stereopsis.World.prototype.solveDropWorstViewNeighbors = function(viewSolve){ //
 			}else{
 				vote = 0;
 			}
-			// var sigma = ;
 		}else{
-			console.log("0: also no");
+			console.log("no");
 		}
 		if(vote!==null){
-			console.log(keep)
 			for(var t=0; t<keep.length; ++t){
 				var transform = keep[t][1];
 				var oppositeView = transform.oppositeView(view);
 				var v = 0;
-				if(t>=maxIndex){
+				if(t>maxIndex){
 					v = vote;
 				}
 				oppositeView.temp().push(v);
 			}
 		}
 		
+
+// world.dropNegative3D();
+// world.dropFurthest();
+
 		// compare best half and full and see if sigma / error > max
 
 
 		// console.log(deltas+"")
 		// throw "???"
 	}
-
+	var viewsToRemove = [];
 	for(var i=0; i<views.length; ++i){
 		var view = views[i];
-		console.log(view.data(),view.temp());
+		var votes = view.temp();
+		
+		var totalVotes = votes.length;
+		var maximumVotesToRemove = Math.floor(totalVotes*0.5) + (totalVotes%2==1 ? 1 : 0);
+			maximumVotesToRemove = totalVotes; // TODO ... maybe high bar?
+		var totalRemoveVotes = Code.sum(votes);
+		console.log(view.data(),votes,totalRemoveVotes+"/"+totalVotes+" >= "+maximumVotesToRemove);
+		if(totalRemoveVotes>=maximumVotesToRemove){
+			viewsToRemove.push(view);
+		}
 		view.temp(null);
 	}
+	console.log(viewsToRemove);
+	// remove all points/matches for 'bad' views
+	for(var i=0; i<viewsToRemove.length; ++i){
+		var view = viewsToRemove[i];
+		var space = view.pointSpace();
+		var points = space.toArray();
+		for(var p=0; p<points.length; ++p){
+			var point2D = points[p];
+			world.removePoint2DAndMatchesFromPoint3D(point2D);
+			// console.log(point2D);
+			// view.removePoint2D(point2D);
+			// Stereopsis.World.prototype.removePoint2DAndMatchesFromPoint3D = function(point2D){
+		}
+		// space.clear();
+	}
 
-	//
-	/*
-	- how to identify views that are much worse & should be dropped BEFORE OPTIMIZATION
-	- each view does population estimate and votes to remove a neighbor if it is much worse than the population
-
-	for each view:
-		- get list of transforms (above ~12 matches) ordered on error (avg or min+sig)
-		- if number of neighbors is:
-			- 0/1 -> do nothing
-			- 2 -> vote to drop if error2/error1 > 2
-			- 3+ find index of largest delta error (on sorted errors)
-				- find sigma/avg of full & best portion
-				- if error2/error1 > 2 -> vote to drop all of worst portion
-	for each view:
-		- tally votes on self
-		- drop if votes >= some % [ (count/2) + (count%2==1 ? 1 : 0) ]
-			- 2 >= 50% (1)
-			- 3 >= 66% (2)
-			- 4 >= 50% (2)
-			- 5 >= 60% (3)
-			- 6 >= 50% (3)
-			- 7 >= 57% (4)
-	...
-	*/
-
-	throw "?";
+	return {"removed":viewsToRemove};
 }
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -12395,6 +12385,9 @@ throw "....."
 Stereopsis.World.prototype.removePoint2DAndMatchesFromPoint3D = function(point2D){
 	var point3D = point2D.point3D();
 	var matches = point2D.toMatchArray();
+
+this.disconnectPoint3D(point3D);
+	// this.removeP2DFromP3D(point2D);
 	for(var i=0; i<matches.length; ++i){
 		var match = matches[i];
 		var p2DA = match.point2DA();
@@ -12416,7 +12409,10 @@ Stereopsis.World.prototype.removePoint2DAndMatchesFromPoint3D = function(point2D
 	view.removePoint2D(point2D);
 	point3D.removePoint2D(point2D);
 	point2D.kill();
-	return;
+
+if(point3D.matchCount()>0){
+	this.connectPoint3D(point3D);
+}
 }
 Stereopsis.World.prototype.removePoint2DFromPoint3D = function(point2D){ // assume connected & reconnect
 	var point3D = point2D.point3D();

@@ -429,32 +429,24 @@ refinement - dates
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-- track 0 - good
-- track 1 - bad - exactly wrong
-- track 2 - good
+
+- how bad is it if incorrect views/pairs are kept in ba process?
+	- could prevent other views from getting better approx
+	- 
+
+- assuming incorrect matches / placements made it thru the initial filters, what are full-BA ways to detect a bad view?
+	- if view has a transform with lot of its points 'behind' it
+		-> that transform is likely bad
+	- if a view has a lot of error compared to neighbor views
+		-> view is likely bad
+	- ...
 
 
 
-- how to identify views that are much worse & should be dropped BEFORE OPTIMIZATION
-	- each view does population estimate and votes to remove a neighbor if it is much worse than the population
+- try different set with likely better pairs ...
 
-	for each view:
-		- get list of transforms (above ~12 matches) ordered on error (avg or min+sig)
-		- if number of neighbors is:
-			- 0/1 -> do nothing
-			- 2 -> vote to drop if error2/error1 > 2
-			- 3+ find index of largest delta error (on sorted errors)
-				- find sigma/avg of full & best portion
-				- if error2/error1 > 2 -> vote to drop all of worst portion
-	for each view:
-		- tally votes on self
-		- drop if votes >= some % [ (count/2) + (count%2==1 ? 1 : 0) ]
-			- 2 >= 50% (1)
-			- 3 >= 66% (2)
-			- 4 >= 50% (2)
-			- 5 >= 60% (3)
-			- 6 >= 50% (3)
-			- 7 >= 57% (4)
+
+
 	...
 - best putative estimates [dense]
 	- max matches = max(3,2 x sqrt(n)) [1=3,2=3,3=3,4=4, 5=4, 6=5, 7=5, 8=6, 10=6, 20=9, 50=14, 100=20]
@@ -477,7 +469,7 @@ refinement - dates
 	get list of unique pairs
 	=> output:
 		- list of pairs, list of view abs orientations
-		
+
 
 
 
