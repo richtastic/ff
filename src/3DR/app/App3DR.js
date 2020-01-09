@@ -6106,6 +6106,8 @@ App3DR.ProjectManager = function(relativePath, operatingStage, readyFxn){ // ver
 	this._viewSimilarity = [];
 	this._pairPutative = [];
 
+	this._densePutative = [];
+
 	this._cameras = [];
 	this._scenes = [];
 	this._bundleFilename = null; // TO BE REMOVED
@@ -6578,6 +6580,7 @@ App3DR.ProjectManager.prototype.setFromYAML = function(object){
 	// }
 	this._viewSimilarity = similars;
 	this._pairPutative = putatives;
+	// this._pairPutative = putatives;
 
 	this._cameras = [];
 	if(cameras){
@@ -7465,11 +7468,11 @@ console.log("checkPerformNextTask");
 		return;
 	}
 
-throw "iterate dense";
-if(!project.checkHasDenseEnded()){
-	project.iterateDenseProcess();
-	throw "iterate dense ?";
-}
+// throw "iterate dense";
+	if(!project.checkHasDenseEnded()){
+		project.iterateDenseProcess();
+		throw "iterate dense ?";
+	}
 
 
 throw "increase resolution / fill gaps?"
@@ -7531,6 +7534,13 @@ App3DR.ProjectManager.prototype.checkHasSparseEnded = function(){
 	var count = this._sparseCount;
 	return count != null && count != undefined;
 }
+
+App3DR.ProjectManager.prototype.checkHasDenseEnded = function(){
+	var count = this._denseCount;
+	return count != null && count != undefined;
+}
+
+
 
 App3DR.ProjectManager.prototype.iterateSparseProcess = function(){
 	var project = this;
@@ -8069,12 +8079,54 @@ App3DR.ProjectManager.prototype._iterateSparseTracks = function(sourceData, sour
 				}
 
 				// isDone = true;
-				if(isDone){
-					console.log("BA is done -> find ");
-					console.log("find best putatives for dense");
+				if(isDone){ // BA is done -> find best putatives for dense
 					var allTransforms = fullData["transforms"];
 					var info = App3DR.ProjectManager._putativePairsFromViewsAndTransforms(allViews,allTransforms);
-					throw "create graph";
+					console.log(allViews,allTransforms);
+					console.log(info);
+					var pairs = info["lookup"];
+					// var pairs = info["lookup"];
+					// for(var p=0; p<pairs.length; ++p){
+					// 	var pair = pairs[p];
+					// 	var viewIDA = pair["A"];
+					// 	var viewIDB = pair["B"];
+					// }
+					var putativeViews = [];
+					var putativePairs = pairs;
+					var putatives = {};
+						putatives["pairs"] = putativePairs;
+						putatives["views"] = putativeViews;
+					for(var i=0; i<allViews.length; ++i){
+						var view = allViews[i];
+						var v = {};
+							v["id"] = view["id"];
+							v["R"] = view["transform"];
+						putativeViews.push(v);
+					}
+					// for(var t=0; t<allTransforms.length; ++t){
+					// 	var transform = allTransforms[t];
+					// 	var viewIDA = transform["A"];
+					// 	var viewIDB = transform["B"];
+					// 	var pairID = App3DR.ProjectManager.pairIDFromViewIDs(viewIDA,viewIDB);
+					// 	var pair = pairs[pairID];
+					// 	if(pair){
+					// 		// console.log(transform);
+					// 		console.log(pair);
+					// 	}
+					// }
+
+					console.log(putatives);
+
+???
+
+					// save these putatives to sparse.yaml ?
+
+					// save the putative / pairs to dense.yaml
+
+					// set sparseCount to info.yaml
+
+
+					throw "make putative object ... ";
 				}
 
 				var info = project.fillInWorldAll(allViews);
@@ -8914,44 +8966,114 @@ console.log(graphData);
 }
 
 App3DR.ProjectManager._putativePairsFromViewsAndTransforms = function(views, transforms){
-console.log("_putativePairsFromViewsAndTransforms");
-console.log(views);
-console.log(transforms);
 	var viewCount = views.length;
-var graph = new Graph();
+	var graph = new Graph();
+	var minMatchesForEdge = 16;
 
-var minMatchesForEdge = 16;
 	// create nodes
+	// var viewIDToObject = {};
+	var viewIDToVertex = {};
+	var vertexes = [];
+	for(var i=0; i<views.length; ++i){
+		var view = views[i];
+		var viewID = view["id"];
+		var vertex = graph.addVertex();
+		vertex.data(view);
+		// viewIDToObject[viewID] = view;
+		viewIDToVertex[viewID] = vertex;
+		vertexes.push(vertex);
+	}
 
 	// create edges
+	for(var i=0; i<transforms.length; ++i){
+		var transform = transforms[i];
+		var matchCount = transform["matches"];
+		if(matchCount<minMatchesForEdge){
+			continue;
+		}
+		var viewIDA = transform["A"];
+		var viewIDB = transform["B"];
+		var errorR = transform["errorRMean"] + transform["errorRSigma"];
+		var vertexA = viewIDToVertex[viewIDA];
+		var vertexB = viewIDToVertex[viewIDB];
+		var data = {};
+			data["error"] = errorR;
+			data["transform"] = transform;
+		var edge = graph.addEdgeDuplex(vertexA,vertexB, errorR);
+		edge.data(data);
+	}
+	var averageConnectivity = graph.averageConnectivity();
+	console.log("averageGraphConnectivity: "+averageConnectivity);
+	var maxNodes = 20;
+	var maxAdjacency = Math.pow(maxNodes, 1.0/averageConnectivity);
+	console.log("maxAdjacency: "+maxAdjacency);
 
-	// 
-
-console.log(graph);
-
-	var averageGraphConnectivity = average number of edges per vertex (excluding empty ones?);
-	var averageGraphComplexity = ;
-
-	to limit maximumNeighborhoodAdjacency:
-
-
-	(adjacency)^(connectivity) = # views
-
-	
-	2^3 = 8
-	2^4 = 16
+	var sort0Fxn = function(a,b){
+		return a[0] < b[0] ? -1 : 1;
+	}
 
 	// find bests:
 	var maximumPairMatches = Math.min(Math.max(2*Math.sqrt(viewCount),3),20); // don't want too many matches
 	var minimumPairMatches = 2 * 3; // assuming @ 50% error -- don't want too few matches
-	var maximumNeighborhoodAdjacency = 2; // direct=0, +1,+2,+3] -- don't want to try too far away
+	var maximumNeighborhoodAdjacency = 3; // direct=0, +1,+2,+3] -- don't want to try too far away
 	var maximumPropagetedErrorRatio = 4; // 2-4 -- don't want high-error guesses
-
-	
-
-	...
-
-	return {};
+	var pairLookup = {};
+	for(var i=0; i<vertexes.length; ++i){
+		var vertex = vertexes[i];
+		var paths = graph.minPaths(vertex);
+		var neighborhoodLookup = [];
+		for(var j=0; j<paths.length; ++j){
+			var path = paths[j];
+			var p = path["path"];
+			var count = p.length;
+			if(count>0){
+				var list = neighborhoodLookup[count];
+				if(!list){
+					list = [];
+					neighborhoodLookup[count] = list;
+				}
+				list.push(path);
+			}
+		}
+		// console.log(neighborhoodLookup);
+		var foundPairsList = [];
+		for(var d=0; d<=maximumNeighborhoodAdjacency; ++d){
+			var paths = neighborhoodLookup[d];
+			if(paths){
+				for(var p=0; p<paths.length; ++p){
+					var path = paths[p];
+					var es = path["edges"];
+					var v = path["vertex"];
+					var costD = path["cost"];
+					var cost0 = es[0].weight();
+					var costMax = cost0*maximumPropagetedErrorRatio;
+					// console.log(cost0,costD,costMax);
+					if(costD<costMax){
+						foundPairsList.push([costD,v]);
+					}
+				}
+			}
+			if(foundPairsList.length>maximumPairMatches){
+				break;
+			}
+		}
+		foundPairsList.sort(sort0Fxn);
+		console.log(foundPairsList);
+		// Code.truncateArray(foundPairsList,maximumPairMatches);
+		var viewID = vertex.data()["id"];
+		for(var j=0; j<foundPairsList.length; ++j){
+			var p = foundPairsList[j];
+			var score = p[0];
+			var pID = p[1].data()["id"];
+			var idA = viewID < pID ? viewID : pID;
+			var idB = viewID < pID ? pID : viewID;
+			var pairID = idA+"-"+idB;
+			pairLookup[pairID] = {"A":idA,"B":idB,"s":score};
+		} // App3DR.ProjectManager.pairIDFromViewIDs
+	}
+	// console.log(pairLookup);
+	var pairs = Code.objectToArray(pairLookup);
+	return {"pairs":pairs, "lookup":pairLookup};
 }
 
 App3DR.ProjectManager._BAPairsDefaultOrSorted = function(baViews, data){

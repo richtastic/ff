@@ -842,6 +842,25 @@ Graph.DFS = function(){
 	// use stack
 	throw "TODO";
 }
+Graph.prototype.breadthSearchFromVertex = function(root, fxn){ // fxn(vertex,from,root)
+	throw "todo";
+	var queue = new PriorityQueue();
+	queue.push(root);
+	var visited = [];
+	while( !queue.isEmpty() ){
+		var current = queue.pop();
+		current.temp();
+		var edges = current.edges();
+		for(i=0;i<edges.length;++i){
+			var next = edges[i].opposite();
+		}
+		visited.push(current);
+	}
+	for(i=0;i<visited.length;++i){
+		var vertex = visited[i];
+		vertex.temp(null);
+	}
+}
 Graph.indexAndCopyVertexFromList = function(copyVertexList, vertexList){ // copy list verbatim
 	for(var i=0;i<vertexList.length;++i){
 		var v = vertexList[i];
@@ -1041,6 +1060,20 @@ Graph.prototype.removeEdge = function(e, keepVertexes){
 }
 Graph.prototype.vertexCount = function(){
 	return this._vertexes.length;
+}
+Graph.prototype.averageConnectivity = function(){
+	var vertexes = this._vertexes;
+	var len = vertexes.length;
+	var count = 0;
+	for(var i=0; i<len; ++i){
+		var vertex = vertexes[i];
+		var edgeCount = vertex.degree();
+		count += edgeCount;
+	}
+	if(len>0){
+		count = count/len;
+	}
+	return count;
 }
 Graph.prototype.addEdge = function(a,b,w,d){
 	var edge = null;

@@ -1378,7 +1378,7 @@ Wir gehen zusammen, nicht allein
 
 
 
-Mickie Krause - Jan Pillemann Otze
+Mickie Krause - Jan Pillemann Otze [Fotze]
 
 | du | | en |
 |-|-|-|
@@ -1393,20 +1393,19 @@ Mickie Krause - Jan Pillemann Otze
 | Jan Pillemann otze, |  | Jan Pillemann cunt |
 | otze Arsch |  | cunt ass |
 |  |  |  |
-| er konnte feiern |  | he could celebrate |
-| ohne Schlaf. |  | without sleep. |
+| er konnte feiern ohne Schlaf. |  | he could celebrate without sleep. |
 |  |  |  |
 | Es gibt Menschen die heißen krause singen Lieder von zu hause. |  | There are people who sing hot krause songs from home. |
 | Dann gibt es Menschen die heißen Meier: |  | Then there are people called Meier: |
 | Mindestens einer auf jeder Feier. |  | At least one at every celebration. |
-| Und es gibt einen das ist interresant, Den hat man Jan Pillemann otze Arsch genannt. |  | And there is one that is interesting, it was called Jan Pillemann otze ass. |
+| Und es gibt einen das ist interresant, Den hat man Jan Pillemann otze Arsch genannt. |  | And there is one that is interesting, it was called Jan Pillemann cunt ass. |
 |  |  |  |
 |  | (Refrain) x 4 |  |
 |  |  |  |
 | Es gibt Menschen die heißen Becker oder Konstantin oder Wecker. |  | There are people called Becker or Konstantin or Wecker. |
 | Wie die anderer einfach heißen einfach Oliver oder Geißen |  | Like the others, it's simply called Oliver or Goats |
 | Es gibt einen das ist interresant. |  | There is one that is interesting. |
-| Den hat man Jan Pillemann otze Arsch genannt. |  | He was called Jan Pillemann otze ass. |
+| Den hat man Jan Pillemann otze Arsch genannt. |  | He was called Jan Pillemann cunt ass. |
 |  |  |  |
 |  | (Refrain) x 4 |  |
 |  |  |  |

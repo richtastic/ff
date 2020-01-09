@@ -13524,6 +13524,7 @@ Stereopsis.World.prototype.toPointFile = function(withNormals){ // len | pnts | 
 }
 Stereopsis.World.prototype.toObject = function(){
 	var object = {};
+	var minimumMatchCountForTransform = 8;
 	// OBJECTS
 	var cameras = this._cameras;
 	var views = this.toViewArray();
@@ -13605,11 +13606,15 @@ console.log("SCALE THIS?")
 				if(relativeTransform){
 					var avgWidth = (viewA.size().x + viewB.size().x) * 0.5;
 					var objectTransform = {};
-					objectTransforms.push(objectTransform);
+					var matchCount = 0;
 					objectTransform["matches"] = null;
 					if(relativeTransform.matches()){
-						objectTransform["matches"] = relativeTransform.matches().length;
+						matchCount = relativeTransform.matches().length;
 					}
+					if(minimumMatchCountForTransform){
+						continue;
+					}
+					objectTransform["matches"] = matchCount
 					objectTransform["errorRMean"] = relativeTransform.rMean()/avgWidth;
 					objectTransform["errorRSigma"] = relativeTransform.rSigma()/avgWidth;
 					objectTransform["errorFMean"] = relativeTransform.fMean()/avgWidth;
@@ -13623,6 +13628,7 @@ console.log("SCALE THIS?")
 					objectTransform["A"] = viewA.data();
 					objectTransform["B"] = viewB.data();
 					objectTransform["transform"] = R3D.relativeTransformMatrix2(viewA.absoluteTransform(),viewB.absoluteTransform());
+					objectTransforms.push(objectTransform);
 				}
 			}
 		}
