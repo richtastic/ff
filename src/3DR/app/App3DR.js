@@ -6202,8 +6202,11 @@ App3DR.ProjectManager.RECONSTRUCT_TEXTURES_DIRECTORY = "textures";
 App3DR.ProjectManager.BUNDLE_SPARSE_DIRECTORY = "sparse";
 App3DR.ProjectManager.BUNDLE_SPARSE_FILE_NAME = "sparse.yaml";
 
-
+App3DR.ProjectManager.BUNDLE_DENSE_DIRECTORY = "dense";
 App3DR.ProjectManager.BUNDLE_DENSE_FILE_NAME = "dense.yaml";
+
+
+// App3DR.ProjectManager.BUNDLE_DENSE_FILE_NAME = "dense.yaml";
 App3DR.ProjectManager.RECONSTRUCT_DENSE_DIRECTORY = "dense";
 App3DR.ProjectManager.RECONSTRUCT_DENSE_FILENAME = "dense.yaml";
 App3DR.ProjectManager.RECONSTRUCT_POINTS_FILE_NAME = "points.yaml"; // result of compiled points.yaml
@@ -6303,6 +6306,9 @@ App3DR.ProjectManager.prototype.sparseData = function(){
 App3DR.ProjectManager.prototype.setSparseCount = function(count){
 	this._sparseCount = count;
 }
+App3DR.ProjectManager.prototype.sparseCount = function(count){
+	return this._sparseCount;
+}
 App3DR.ProjectManager.prototype.sparseDone = function(){
 	return this._sparseCount != null;
 }
@@ -6318,6 +6324,9 @@ App3DR.ProjectManager.prototype.denseData = function(){
 }
 App3DR.ProjectManager.prototype.setDenseCount = function(count){
 	this._denseCount = count;
+}
+App3DR.ProjectManager.prototype.denseCount = function(count){
+	return this._denseCount;
 }
 App3DR.ProjectManager.prototype.denseDone = function(){
 	return this._denseCount != null;
@@ -6712,6 +6721,11 @@ App3DR.ProjectManager.prototype.toYAML = function(){
 	// sparse
 	yaml.writeString("sparse",this._sparseFilename);
 	yaml.writeNumber("sparseCount",this._sparseCount);
+	yaml.writeBlank();
+
+	// dense
+	yaml.writeString("dense",this._denseFilename);
+	yaml.writeNumber("denseCount",this._denseCount);
 	yaml.writeBlank();
 
 /*
@@ -7176,7 +7190,7 @@ App3DR.ProjectManager.prototype.saveDense = function(string, filename, callback,
 	this.addOperation("SET", {"path":path, "data":yamlBinary}, callback, context);
 }
 App3DR.ProjectManager.prototype.loadDense = function(callback, context, object){
-	var path = Code.appendToPath(this._workingPath, App3DR.ProjectManager.RECONSTRUCT_DIRECTORY, this.denseFilename());
+	var path = Code.appendToPath(this._workingPath, this.denseFilename());
 	console.log("loadDense: "+path);
 	var object = {};
 		object["callback"] = callback;
@@ -7459,7 +7473,7 @@ console.log("checkPerformNextTask");
 // throw "task pair feature match";
 	// does a feature-match pair exist (even a bad match) between every (putative) view pair?
 	if(!project.checkHasSparseStarted()){
-		project.calculatePairPutatives(view);
+		project.calculatePairPutatives();
 		return;
 	}
 // throw "iterate sparse ?";
@@ -7468,6 +7482,11 @@ console.log("checkPerformNextTask");
 		return;
 	}
 
+// throw "start dense";
+	if(!project.checkHasDenseStarted()){
+		project.calculateDensePairPutatives();
+		return;
+	}
 // throw "iterate dense";
 	if(!project.checkHasDenseEnded()){
 		project.iterateDenseProcess();
@@ -7535,6 +7554,10 @@ App3DR.ProjectManager.prototype.checkHasSparseEnded = function(){
 	return count != null && count != undefined;
 }
 
+App3DR.ProjectManager.prototype.checkHasDenseStarted = function(){
+	var filename = this._denseFilename;
+	return filename != null && filename != undefined;
+}
 App3DR.ProjectManager.prototype.checkHasDenseEnded = function(){
 	var count = this._denseCount;
 	return count != null && count != undefined;
@@ -7544,27 +7567,50 @@ App3DR.ProjectManager.prototype.checkHasDenseEnded = function(){
 
 App3DR.ProjectManager.prototype.iterateSparseProcess = function(){
 	var project = this;
+
+	var sparseConfiguration = {};
+		sparseConfiguration["what"] = "what";
+
 	// LOAD SPARSE FILE
 	var filename = this.sparseFilename();
 	var fxn = function(){
-		project._iterateSparseLoaded(filename, project.sparseData());
+		project._iterateSparseDenseLoaded(filename, project.sparseData(), sparseConfiguration);
 	}
 	project.loadSparse(fxn, project);
 }
-App3DR.ProjectManager.prototype._iterateSparseLoaded = function(filename, data){
+
+
+App3DR.ProjectManager.prototype.iterateDenseProcess = function(){
+	var project = this;
+
+	var denseConfiguration = {};
+		denseConfiguration["what"] = "what";
+	// LOAD SPARSE FILE
+	var filename = this.denseFilename();
+	var fxn = function(){
+		project._iterateSparseDenseLoaded(filename, project.denseData(), denseConfiguration);
+	}
+	project.loadDense(fxn, project);
+}
+
+App3DR.ProjectManager.prototype._iterateSparseDenseLoaded = function(inputFilename, inputData, configuration){
 	var project = this;
 	console.log("_iterateSparseLoaded");
-	var sparseData = this.sparseData();
-	console.log(sparseData);
-	var pairs = sparseData["pairs"];
+	// var sparseData = this.sparseData();
+	// console.log(sparseData);
+	var pairs = inputData["pairs"];
 
-	var sparseFilename = project.sparseFilename();
-	console.log(sparseFilename);
-	var basePath = Code.pathRemoveLastComponent(sparseFilename);
+	// var sparseFilename = project.sparseFilename();
+	// console.log(sparseFilename);
+	var basePath = Code.pathRemoveLastComponent(inputFilename);
 	console.log(basePath);
+
+
 	if(!pairs){
-		throw "sparse data not have pairs";
+		throw "input data not have pairs";
 	}
+
+
 	var currentPair = null;
 	var completePairFxn = function(data){
 		console.log("completePairFxn");
@@ -7580,6 +7626,7 @@ App3DR.ProjectManager.prototype._iterateSparseLoaded = function(filename, data){
 		var trackCount = 0;
 		// SAVE MATCHES
 		var matches = data["matches"];
+throw "on completePairFxn";
 		if(matches){
 			console.log("matches");
 			console.log(matches);
@@ -7632,6 +7679,8 @@ console.log("GOT : matchCount: "+matchCount);
 		console.log(relativeFilename);
 		console.log(tracksFilename);
 
+		throw "before save ..."
+
 		var saveFileOrAlternateFxn = function(data,filename,fxn,cxt){
 			if(data){
 				console.log("saving ... ");
@@ -7664,8 +7713,21 @@ console.log("GOT : matchCount: "+matchCount);
 		saveMatchesFxn();
 	}
 
+// throw ">A";
+
 	// LOAD EACH PAIR & DO MATCH | F | R | DENSE
 	for(var i=0; i<pairs.length; ++i){
+// i = 0; // good
+i = 1; // ok
+// i = 2; // poor
+// i = 3; // bad
+// i = 4; // good
+// i = 5; // poor
+// i = 6; // bad
+// i = 7; // bad
+// i = 8; // ok
+// i = 9; // ok
+// i = 10; ....
 		var pair = pairs[i];
 		var idA = pair["A"];
 		var idB = pair["B"];
@@ -7673,10 +7735,18 @@ console.log("GOT : matchCount: "+matchCount);
 		if(!Code.isSet(matches)){
 			console.log("need to try pair: "+idA+" & "+idB);
 			currentPair = pair;
+			console.log(pair);
+			var relativeAB = pair["relativeTransform"];
+			if(relativeAB){
+				this.calculatePairMatchWithRFromViewIDs(idA,idB, relativeAB, completePairFxn,project, configuration);
+			}
+
+throw "dense just cares about initial relative using R as base ..."
 			this.calculatePairMatchFromViewIDs(idA,idB, completePairFxn,project);
 			return;
 		}
 	}
+throw ">B";
 	var triples = sparseData["triples"];
 	if(!triples){
 		// make every possible triple from pairs
@@ -7718,6 +7788,7 @@ console.log("GOT : matchCount: "+matchCount);
 		}
 		sparseData["triples"] = triples;
 	}
+	throw ">C";
 	// LOAD EACH POSSIBLE TRIPLE
 	var saveProjectFxn = function(){
 		console.log("saveProjectFxn");	
@@ -7732,6 +7803,7 @@ console.log("GOT : matchCount: "+matchCount);
 		currentTriple["gauge"] = {"AB":ab, "AC":ac, "BC":bc};
 		project.saveSparseFromData(sparseData, saveProjectFxn,project);
 	}
+	throw ">D";
 	var currentTriple = null;
 	for(var i=0; i<triples.length; ++i){
 		var triple = triples[i];
@@ -7745,7 +7817,7 @@ console.log("GOT : matchCount: "+matchCount);
 			return;
 		}
 	}
-	
+	throw ">E";
 	// CREATE GRAPH FROM PAIRWISE & TRIPLE SCALE
 	var graph = sparseData["graph"];
 	if(!graph){
@@ -7850,7 +7922,7 @@ console.log("GOT : matchCount: "+matchCount);
 		project.saveFileFromData(data,graphFilename, saveSparseFxn,project);
 		return;
 	}
-
+throw ">F";
 	// AGGREGATE TRACKS INTO POINT FILE
 	// trackCount: # = done ?
 	var trackCount = sparseData["trackCount"]; // number of loaded tracks
@@ -7859,7 +7931,7 @@ console.log("GOT : matchCount: "+matchCount);
 		this._iterateSparseTracks(sparseData, sparseFilename);
 		return;
 	}
-
+throw ">G";
 	var bundleCount = sparseData["bundleCount"]; // some number of iterations /
 	if(bundleCount===null || bundleCount===undefined){
 		// for each group in graph groups:
@@ -7874,7 +7946,7 @@ console.log("GOT : matchCount: "+matchCount);
 		// 
 		throw "no bundleCount ---> keep iterating on graph groups"
 	}
-
+throw ">H";
 	// ONLY FOR DENSE:
 	if(false){
 		// loading points into a single track file
@@ -7893,7 +7965,7 @@ console.log("GOT : matchCount: "+matchCount);
 			throw "want to drop most high error points"
 		}
 	}
-
+throw ">I";
 	// TODO:
 	// INCREASE POINT DENSITY STEP?
 	// requires out-of-core sectioning
@@ -7916,7 +7988,7 @@ console.log("GOT : matchCount: "+matchCount);
 	// output view transforms => bundle.yaml
 	// output points => points.yaml [unused for sparse, ]
 	// output best-pair guess => info.yaml
-
+throw ">X";
 	var bestPairs = sparseData["bestPairs"];
 	if(bestPairs===null || bestPairs===undefined){
 		throw "predict best set of pairs for next sequence";
@@ -7946,8 +8018,7 @@ console.log("GOT : matchCount: "+matchCount);
 
 	*/
 
-	// calculateBundleAdjustPair
-	throw "next";
+
 }
 
 App3DR.ProjectManager.prototype._iterateSparseTracks = function(sourceData, sourceFilename){
@@ -8084,7 +8155,8 @@ App3DR.ProjectManager.prototype._iterateSparseTracks = function(sourceData, sour
 					var info = App3DR.ProjectManager._putativePairsFromViewsAndTransforms(allViews,allTransforms);
 					console.log(allViews,allTransforms);
 					console.log(info);
-					var pairs = info["lookup"];
+					// var pairs = info["lookup"];
+					var pairs = info["pairs"];
 					// var pairs = info["lookup"];
 					// for(var p=0; p<pairs.length; ++p){
 					// 	var pair = pairs[p];
@@ -8093,6 +8165,7 @@ App3DR.ProjectManager.prototype._iterateSparseTracks = function(sourceData, sour
 					// }
 					var putativeViews = [];
 					var putativePairs = pairs;
+					var sparseCount = pairs.length;
 					var putatives = {};
 						putatives["pairs"] = putativePairs;
 						putatives["views"] = putativeViews;
@@ -8117,16 +8190,37 @@ App3DR.ProjectManager.prototype._iterateSparseTracks = function(sourceData, sour
 
 					console.log(putatives);
 
-???
+// ???
+					// save to graph?:
+					// graphData["putativePairs"];
 
 					// save these putatives to sparse.yaml ?
+					sourceData["putativePairs"] = putatives;
 
+					console.log(sourceData);
 					// save the putative / pairs to dense.yaml
 
 					// set sparseCount to info.yaml
+					console.log("sparseCount: "+sparseCount);
+					project.setSparseCount(sparseCount);
 
+					console.log(project.sparseCount());
+					// save sparse
 
-					throw "make putative object ... ";
+					// save project
+					var savedDataComplete = function(){
+						console.log("saved data (sparse/dense)");
+						project.saveProjectFile(savedProjectComplete, project);
+						
+					}
+					var savedProjectComplete = function(){
+						console.log("saved project");
+					}
+
+				// throw "before saving";
+
+					project.saveFileFromData(sourceData, sourceFilename, savedDataComplete, project);
+					return;
 				}
 
 				var info = project.fillInWorldAll(allViews);
@@ -9114,11 +9208,11 @@ App3DR.ProjectManager._BAPairsDefaultOrSorted = function(baViews, data){
 }
 
 
-App3DR.ProjectManager.prototype.fillInWorldAll = function(inViews){
+App3DR.ProjectManager.prototype.fillInWorldAll = function(inViews, cellSize){
 	var project = this;
 	var world = new Stereopsis.World();
 	var cameras = project.cameras(); // should this come from the graph ?
-	var info = project.fillInWorldViews(cameras, inViews);
+	var info = project.fillInWorldViews(cameras, inViews, null, cellSize);
 	var views = info["views"];
 	var images = info["images"];
 	var cellSizes = info["cellSizes"];
@@ -9209,9 +9303,84 @@ App3DR.ProjectManager.prototype._absoluteViewsFromDatas = function(views, pairs,
 	return {"transforms":transforms, "views":viewIDs, "skeleton":backbone, "groups":groups, "skeletonEdges":skeleton["skeletonEdges"], "groupEdges":skeleton["groupEdges"]};
 }
 
+App3DR.ProjectManager.prototype.calculatePairMatchWithRFromViewIDs = function(viewAID, viewBID, relativeAB, completeFxn, completeCxt, settings){ // R => better initial matches
+	var project = this;
+	if(!settings){
+		settings = {};
+		// settings["relativeAB"] = null;
+		// settings["cellCount"] = 80;
+		// settings["maximumMatchFeatures"] = 1100;
+		// settings["minimumMatchPoints"] = 16;
+		settings["incrementResolution"] = 0;
+		// settings["maximumErrorTracksF"] = 0.002; // 0.002 @ 500 = 1
+		settings["maximumErrorTracksR"] = 0.002; // 0.002 @ 500 = 1
+	}
+	console.log("calculatePairMatchWithRFromViewIDs");
+
+console.log(relativeAB);
+
+	// create 2 fake views:
+	var origin = new Matrix(4,4).identity().toObject();
+	var vA = {"id":viewAID, "transform":origin};
+	var vB = {"id":viewBID, "transform":relativeAB};
+	var allViews = [vA,vB];
+
+	// var cellSize = 80;
+	var cellSize = 60; // beween sparse and dense
+	// var cellSize = 40;
+
+	// load view dense-resolution images
+	var expectedImages = allViews.length;
+	var loadedImages = 0;
+
+	
+	var checkLoadedAllImages = function(){
+		console.log("checkLoadedAllImages");
+		++loadedImages;
+		if(expectedImages>loadedImages){
+			return;
+		}
+		console.log("loadedImages");
+		solveWorld();
+	}
+
+	var solveWorld = function(){
+		// build world
+		var info = project.fillInWorldAll(allViews, cellSize);
+		console.log(info);
+		//
+		var WORLDCAMS = info["cameras"];
+		var WORLDVIEWS = info["views"];
+		var WORLDVIEWSLOOKUP = info["lookup"];
+		var world = info["world"];
+		console.log("solveDensePair");
+		world.solveDensePair();
+		
+	}
+
+
+	for(var i=0; i<allViews.length; ++i){
+		var view = allViews[i];
+		var viewID = view["id"];
+		view = project.viewFromID(viewID);
+		view.loadDenseHiImage(checkLoadedAllImages, project);
+	}
+	// solveDensePair
+
+
+/*
+	use R to limit F searching
+
+*/
+	///...
+
+throw "?"
+}
+
 App3DR.ProjectManager.prototype.calculatePairMatchFromViewIDs = function(viewAID, viewBID, completeFxn, completeCxt, settings){ // matches, F, R, tracks
 	if(!settings){
 		settings = {};
+		// settings["relativeAB"] = null;
 		settings["cellCount"] = 40;
 		settings["maximumMatchFeatures"] = 1100;
 		settings["minimumMatchPoints"] = 16;
@@ -9680,8 +9849,9 @@ App3DR.ProjectManager.prototype.createWorldCamerasForViews = function(world, vie
 }
 
 
-App3DR.ProjectManager.prototype.fillInWorldViews = function(cameras, graphGroupViews, graphDataViews){
+App3DR.ProjectManager.prototype.fillInWorldViews = function(cameras, graphGroupViews, graphDataViews, cellCount){
 	var project = this;
+	cellCount = cellCount!==null && cellCount!==undefined ? cellCount : 40;
 
 	var graphViewIDToTransform = {};
 	if(graphDataViews){
@@ -9732,7 +9902,6 @@ App3DR.ProjectManager.prototype.fillInWorldViews = function(cameras, graphGroupV
 			wid = size.x;
 			hei = size.y;
 		}
-		var cellCount = 40;
 		cellSizes.push(R3D.cellSizingRoundWithDimensions(wid,hei,cellCount, false));
 	}
 
@@ -9768,8 +9937,7 @@ App3DR.ProjectManager.prototype.createWorldViewsForViews = function(world, views
 	return BAVIEWS;
 }
 
-App3DR.ProjectManager.prototype.iterateDenseProcess = function(){
-	throw "iterateDenseProcess"
+
 	// STEPS:
 
 	// LOAD DENSE FILE
@@ -9787,9 +9955,6 @@ App3DR.ProjectManager.prototype.iterateDenseProcess = function(){
 	// BUNDLE ADJUST GRAPH TO MINIMIZE ERROR
 
 	// OUTPUT DENSE POINTS FOR BA STEP
-
-	throw "???"
-}
 
 
 App3DR.ProjectManager.prototype.iterateBundleAdjustProcess = function(){
@@ -9976,6 +10141,76 @@ console.log(scores);
 	}
 }
 
+App3DR.ProjectManager.prototype.calculateDensePairPutatives = function(){
+	console.log("calculateDensePairPutatives");
+	var project = this;
+
+	var sparseFilename = project.sparseFilename();
+	console.log("sparseFilename: "+sparseFilename);
+	var denseFilename = Code.appendToPath(App3DR.ProjectManager.BUNDLE_DENSE_DIRECTORY, App3DR.ProjectManager.BUNDLE_DENSE_FILE_NAME);
+	console.log("denseFilename: "+denseFilename);
+		project.setDenseFilename(denseFilename);
+
+
+
+	var fxnLoadSparseComplete = function(data){
+		console.log("fxnLoadSparseComplete");
+		console.log(data);
+		var sparseData = data;
+		
+
+		var putativePairs = sparseData["putativePairs"];
+		if(!putativePairs){
+			throw "no sparse putativePairs";
+		}
+		var pairs = putativePairs["pairs"];
+		var views = putativePairs["views"];
+		// convert views to lookup + transforms
+		var viewLookup = {};
+		for(var i=0; i<views.length; ++i){
+			var view = views[i];
+			var viewID = view["id"];
+			var viewR = view["R"];
+			var transform = Matrix.fromObject(viewR);
+			viewLookup[viewID] = {"id":viewID, "transform":transform};
+		}
+		// convert to pair listing:
+		var denseData = {};
+		var densePairs = [];
+		denseData["pairs"] = densePairs;
+		for(var i=0; i<pairs.length; ++i){
+			var pair = pairs[i];
+			var viewIDA = pair["A"];
+			var viewIDB = pair["B"];
+			var extA = viewLookup[viewIDA]["transform"];
+			var extB = viewLookup[viewIDB]["transform"];
+			var extrinsicAB = R3D.relativeTransformMatrix2(extA,extB);
+			// var relativeAB = Matrix.inverse(extrinsicAB);
+			var pairID = App3DR.ProjectManager.pairIDFromViewIDs(viewIDA,viewIDB);
+			var densePair = {};
+				densePair["A"] = viewIDA;
+				densePair["B"] = viewIDB;
+				densePair["id"] = pairID;
+				densePair["relativeError"] = null;
+				densePair["relativeTransform"] = extrinsicAB;
+				densePair["matches"] = null;
+				densePair["relative"] = null;
+				densePair["tracks"] = null;
+			densePairs.push(densePair);
+		}
+		console.log(denseData);
+		project.saveFileFromData(denseData, denseFilename, fxnSaveDenseComplete, project);
+	}
+	var fxnSaveDenseComplete = function(data){
+		console.log("fxnSaveDenseComplete");
+		project.saveProjectFile(fxnSaveProjectComplete, project);
+	}
+	var fxnSaveProjectComplete = function(data){
+		console.log("fxnSaveProjectComplete");
+	}
+	
+	project.loadDataFromFile(sparseFilename, fxnLoadSparseComplete, project);
+}
 
 App3DR.ProjectManager.prototype.calculatePairPutatives = function(){
 	console.log("calculatePairPutatives");
@@ -14916,7 +15151,7 @@ App3DR.bundleAdjustObjectToWorld = function(object, project){
 	App3DR.bundleAdjustObjectToPoints(world,object["points"]);
 	// cameras
 	// console.log(cameras);
-	return {"world":world, "cameras":BACAMS};
+	return {"world":world, "cameras":BACAMS, "views":BAVIEWS};
 }
 
 App3DR.bundleAdjustObjectToCameras = function(world, cameras, source){
@@ -16863,7 +17098,7 @@ App3DR.ProjectManager.View.prototype.loadFeaturesImage = function(callback, cont
 	this._loadImage(App3DR.ProjectManager.View.IMAGE_LOAD_TYPE_FEATURES, callback, context);
 }
 App3DR.ProjectManager.View.prototype.loadDenseHiImage = function(callback, context){
-	throw "???";
+	this._loadImage(App3DR.ProjectManager.View.IMAGE_LOAD_TYPE_DENSE_HI, callback, context);
 }
 App3DR.ProjectManager.View.prototype.loadTrackImage = function(callback, context){
 	this._loadImage(App3DR.ProjectManager.View.IMAGE_LOAD_TYPE_DENSE_HI, callback, context);
@@ -16937,12 +17172,13 @@ App3DR.ProjectManager.View.prototype._loadImage = function(type, callback, conte
 	console.log(desiredPixelCount+" -> "+maximumPixelCount);
 	var closestPicture = -1;
 	var currentPixels = 0;
+console.log(pictures.length);
 	for(var i=0; i<pictures.length; ++i){
 		var picture = pictures[i];
 		var width = picture["width"];
 		var height = picture["height"];
 		var pixels = width*height;
-		console.log(i+": "+pixels);
+		console.log(i+": "+pixels+" of: ["+maximumPixelCount+"]");
 		if(pixels<=maximumPixelCount && pixels>currentPixels){
 			closestPicture = i;
 			currentPixels = pixels;

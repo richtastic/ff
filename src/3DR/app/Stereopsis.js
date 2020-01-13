@@ -5485,20 +5485,25 @@ Stereopsis.World.prototype.solveDensePair = function(){ // pairwise
 	console.log("solveDensePair");
 	var world = this;
 
-
-
-
 	// initial setup
-	var viewSizePercent = 0.05; // 45 -> 23 -> 11 -> 5 (3?)
-	var minViewCellSize = 5;
-	var viewGridSizePercent = 0.02; // ~9 & 5
+	// var viewSizePercent = 0.05; // 45 -> 23 -> 11 -> 5 (3?)
+	// var minViewCellSize = 5;
+	// var viewGridSizePercent = 0.02; // ~9 & 5
 	// var viewGridSizePercent = 0.05; // ~11 & 5
-	var maxFSamples = 500;
+	// var maxFSamples = 500;
+
+
+	// var errorPercentage = 0.002; // 0.002 @ 500 = 1 px
+	// var errorPercentage = 0.002; // 0.002 @ 1000 = 2 px
+	var errorPercentage = 0.01; 
+
+
 
 	// create seed points:
 	var transforms = this.toTransformArray();
 	var limitsR = [];
 	var limitsF = [];
+	
 	for(var i=0; i<transforms.length; ++i){
 		var transform = transforms[i];
 		transform.copyRelativeFromAbsolute();
@@ -5511,36 +5516,49 @@ Stereopsis.World.prototype.solveDensePair = function(){ // pairwise
 		var images = [];
 		var sizes = [];
 		var Ks = [];
+		var imageHypotenuse = 0;
 		for(var j=0; j<views.length; ++j){
 			var view = views[j];
 			var K = view.K();
 			var image = view.image();
-			var gridSize = view.sizeFromPercent(viewGridSizePercent);
+				var hyp = Math.sqrt(Math.pow(image.width(),2) + Math.pow(image.height(),2));
+				imageHypotenuse = Math.min(hyp);
+			///var gridSize = view.sizeFromPercent(viewGridSizePercent);
+			var gridSize = view.cellSize();
 			console.log("gridSize: "+gridSize);
 			sizes.push(gridSize);
 			images.push(image);
 			Ks.push(K);
 
-		} //
-//
+		}
+		// imageHypotenuse /= views.length;
 
-//
+		
 
+
+var errorR = errorPercentage*imageHypotenuse;
 // 
-console.log("errorR IS IN TERMS OF SEARCHED SIZE -- NOT NECESSARILY THIS SIZE ?");
-console.log("ERR: "+errorR);
-errorR *= 2;
+// console.log("errorR IS IN TERMS OF SEARCHED SIZE -- NOT NECESSARILY THIS SIZE ?");
+console.log("GET MATCHES FROM 3D: "+errorR);
+// errorR *= 2;
 // 
+
+
 		// get corners
 		// keep only peak corners within grid size distance
 		console.log(transform);
 		var errorPixels = Math.max(errorR,1.0);
 		console.log("ERROR: "+errorR+" | "+errorPixels);
-// relativeAB = R3D.cameraMatrixFromExtrinsicMatrix(relativeAB);
 		var matches = R3D.searchMatchPoints3D(images, sizes, relativeAB, Ks, errorPixels);
 		console.log(matches);
 
+		// find best inlier set?
 
+		// throw away worst matches ?
+
+
+
+// throw "???";
 
 		// insert matching points:
 
@@ -5586,10 +5604,14 @@ errorR *= 2;
 	
 	} // end transform loop (only should be 1 ... )
 
-
-	var subdivisions = 1;
+// throw ">>>>>C";
+	
 	// var subdivisions = 0;
+	var subdivisions = 1;
+	// var subdivisions = 2;
+	
 	var iterations = 3; // per grid size
+	// var iterations = 5;
 	// var iterations = 1;
 	var maxIterations = (subdivisions+1)*iterations;
 
@@ -5642,8 +5664,7 @@ errorR *= 2;
 		world.patchInitBasicSphere(true);
 
 		// add new points
-		// world.probe2DPairwise(); // OLD
-		world.probe2DNNAffine(3.0);
+		world.probe2DNNAffine(2.0); // 1-2
 		world.averagePoints3DFromMatches(true); // only newly added points
 
 		// drop poor tracks
@@ -5654,6 +5675,8 @@ errorR *= 2;
 		world.filterPairwiseSphere3D(3.0); // 2-3
 // ?: start more rigid, allow for more error, finish rigid
 		if(subdivision<1){
+			// iteration % 2 == 1 ...
+
 			world.filterGlobalMatches(false, 0, 2.0,2.0,2.0,2.0, false);
 		}else{
 			world.filterGlobalMatches(false, 0, 3.0,3.0,3.0,3.0, false);
@@ -5666,6 +5689,8 @@ errorR *= 2;
 		// world.relativeFFromSamples();
 		// world.estimate3DErrors(true);
 		world.printPoint3DTrackCount();
+
+throw "loop end";
 	}
 
 	// final output:
@@ -10236,7 +10261,7 @@ Stereopsis.World.prototype.probe2DNNAffine = function(sigma){ //
 	var perimeterSearchMultiplier = 2.0; // max distance a permiter point can be
 	var minimumTransformMatchCount = 8;
 	var world = this;
-	var transforms = this.toTransformArray();
+	var transforms = world.toTransformArray();
 	var min = new V2D();
 	var max = new V2D();
 var propagations = [];
@@ -10269,6 +10294,7 @@ var propagations = [];
 			var spaceA = viewA.pointSpace();
 			var cellSizeA = viewA.cellSize();
 			var compareSizeA = viewA.compareSize();
+console.log("compareSizeA: "+compareSizeA);
 			var viewB = oppositeList[v];
 			var maxSearchRadius = cellSizeA*perimeterSearchMultiplier;
 			// image
@@ -10329,6 +10355,8 @@ var propagations = [];
 					var centerB = point2DB.point2D();
 					var newPointA = empty.center();
 					var newMatch = world.bestMatch2DFromLocation(affine,centerA,centerB, newPointA, viewA,viewB);
+console.log(newMatch);
+throw "new best match"
 					if(newMatch){
 						Stereopsis.updateErrorForMatch(newMatch);
 						var fError = newMatch.errorF();
@@ -13337,13 +13365,14 @@ Stereopsis.World.prototype.bestAffine2DFromLocation = function(affine,centerA,ce
 	return result;
 }
 Stereopsis.World.prototype.bestMatch2DFromLocation = function(affine,centerA,centerB, existingA, viewA,viewB, forwardBackwardCheck, skipOptimum){
-	var result = this.bestAffine2DFromLocation(affine,centerA,centerB, existingA, viewA,viewB, forwardBackwardCheck, skipOptimum);
+	var world = this;
+	var result = world.bestAffine2DFromLocation(affine,centerA,centerB, existingA, viewA,viewB, forwardBackwardCheck, skipOptimum);
 	if(result){
 		var pointA = result["A"];
 		var pointB = result["B"];
 		var optimum = result["affine"];
 		if(optimum){
-			var match = this.newMatchFromInfo(viewA,pointA,viewB,pointB,optimum);
+			var match = world.newMatchFromInfo(viewA,pointA,viewB,pointB,optimum);
 			return match;
 		}
 	}
@@ -13597,7 +13626,6 @@ console.log("SCALE THIS?")
 
 		// TRANSFORMS:
 		var objectTransforms = [];
-		object["transforms"] = objectTransforms;
 		for(var i=0; i<views.length; ++i){
 			var viewA = views[i];
 			for(var j=i+1; j<views.length; ++j){
@@ -13611,7 +13639,7 @@ console.log("SCALE THIS?")
 					if(relativeTransform.matches()){
 						matchCount = relativeTransform.matches().length;
 					}
-					if(minimumMatchCountForTransform){
+					if(matchCount<minimumMatchCountForTransform){
 						continue;
 					}
 					objectTransform["matches"] = matchCount
@@ -13631,6 +13659,9 @@ console.log("SCALE THIS?")
 					objectTransforms.push(objectTransform);
 				}
 			}
+		}
+		if(objectTransforms.length>0){
+			object["transforms"] = objectTransforms;
 		}
 	}
 

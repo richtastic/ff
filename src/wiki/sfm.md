@@ -586,6 +586,7 @@ TODO:
     - Preprocessing
         - remove exact duplicates -- pixel-by-pixel matching ? 
         - rotate any portrait images to landscape [make note of it in picture settings]
+        - increase contrast / color matching ?
 
     - Feature Detection / Description: for each input image, find subset of points repeatably localizable
         - one time search for features
@@ -616,8 +617,11 @@ TODO:
         - use tracks and initial view graph to find nonlinear best orientation
         - find new view pairs (and add to existing) via projection
         - use skeletal set (and edge groups) for first iteration & combine groups as final step
+    
     - Pairwise Dense (use updated R to get better initial points [& ignore first iteration possible poor matches])
+        - search for initial corner matches using R: search along line + error & have affine mapping
         - get dense points using R
+
     - Triple Dense from Pairs (need relative scales again)
         - load common pairs & get 2 or 3 way relative scales
     - Absolute Orientation 2 (use updated pairwise transforms (lower error) & counts (more points))

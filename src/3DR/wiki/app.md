@@ -405,7 +405,7 @@ refinement - dates
 12/31 x loading all tracks into their groups
 01/02 x BA on groups/tracks
 01/04 x combining grouped BA into final BA init
-01/10 - BA on final group
+01/10 x BA on final group
 01/15 - BA identify/remove view if it's position is very bad?
 01/19 - hole filling?
 01/26 - dense pair candidate decisions
@@ -415,8 +415,8 @@ refinement - dates
 		- 3-9 (depending on connectivity)
 			- getting 'further' - more global help reducing error but inaccurate
 			- getting 'closer' - more accurate but very local
-02/01 - dense.yaml incorporated
-02/08 - dense replica of sparse incorporated
+02/01 x dense.yaml incorporated
+02/08 x dense replica of sparse incorporated
 02/10 - multi-view point propagation from dense
 02/17 - triangulation algorithm updates
 02/24 - texture-triangle-edge problems
@@ -428,6 +428,125 @@ refinement - dates
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
+x how to find the 'least transformed projection' affine matrix ?
+	- point along line which is 'most similar' to 
+		- don't care about rotation / scale
+		- DO CARE about
+			- skew (x/y angle)
+			- asymm scale (x/y ratio)
+		- 
+- account for more and less degraded situations:
+	- if poor/few matches found
+		- try just using rot/sca affine matching?
+		- increase allowed pixel error range
+
+
+
+
+- yaml error on reading after empty object / array
+	=> should detect indent is less or equal to current & end the array
+
+
+- propagation seems to halt, even with <1px error
+	- 'allowed' areas of propagation is limiter [only those with low BLA error]
+
+	=> RECHECK PROBING CODE .... ?
+
+	- might be able to use affine from predicted  3D point rather than from propagated source ...
+		- or is this how its done already from the patches?
+
+- back to blotches of correct / incorrect patches
+	- 
+
+--- how can the blotches be removed across all views in 3D world together ?
+
+
+
+
+- DISCOVERY NOTES:
+	- what are the sizes of the patches used? [expect zoomed in to be OK]
+		- compareSizeA: 25
+		- needleSize = 11;
+	- what do some of the example success/failure 2D propageted patches look like?
+		- 
+
+
+
+
+
+
+
+
+----- NEED TO ADD IMAGE-SCALES FOR ZOOMINGS ???
+
+- allow searching in un-mapped areas
+	- [not using seeds]
+	- if error is low enough,
+		- pick center of cell from A
+		- use the R/F to:
+			- limit search along line
+			- how to get discrete search set? ????
+
+			- still needs to be salient feature ....
+				- any way to do a search strip?
+
+
+
+-- projection of SPHERE vs projection of CIRCLE-PLANE
+
+				probe2DNNAffine
+
+
+....
+
+
+
+NOTES ON STEREOPSIS / ...
+
+
+stereopsis patch view graph filetype:pdf
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+- limit a lot of processing by removing worst of affine transforms
+	- very thin [large scale]
+	- very skewed [small angle]
+	=> 
 
 
 - how bad is it if incorrect views/pairs are kept in ba process?
@@ -444,32 +563,6 @@ refinement - dates
 
 
 - try different set with likely better pairs ...
-
-
-
-	...
-- best putative estimates [dense]
-	- max matches = max(3,2 x sqrt(n)) [1=3,2=3,3=3,4=4, 5=4, 6=5, 7=5, 8=6, 10=6, 20=9, 50=14, 100=20]
-	- min matches = 6 [50% error, wanting 3 => 6]
-	- max neighborhood adjacency = 2-3 [direct=0, +1,+2,+3]
-	- max error ratio = 2-4 []
-	for each view:
-		- find min path to every other view (get neighborhood distance) BFS
-		count = 0
-		while count < max matches
-			list append next adjacency set of views
-			for each next:
-				if error < max error
-					add to putative, count++
-		- order putatives on error
-		- drop at capped max
-	unique set = {}
-	for each view
-		add putative set pair to unique set
-	get list of unique pairs
-	=> output:
-		- list of pairs, list of view abs orientations
-
 
 
 
