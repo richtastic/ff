@@ -16129,7 +16129,7 @@ var errors = [];
 		}
 		// console.log("space count: "+space.count());
 
-
+if(false){
 // display source images
 var img = imageMatrixScaled;
 	img = GLOBALSTAGE.getFloatRGBAsImage(img.red(),img.grn(),img.blu(), img.width(),img.height());
@@ -16137,7 +16137,7 @@ var d = new DOImage(img);
 d.graphics().alpha(0.2);
 d.matrix().translate(0 + i*600, 0);
 GLOBALSTAGE.addChild(d);
-
+} // end false
 		// convert to objects
 		corners = space.toArray();
 		console.log("corners :"+corners.length);
@@ -16774,6 +16774,8 @@ var imageB = imagesList[1];
 
 // draw display show matches:
 
+if(false){
+
 var color0 = new V3D(1,0,0);
 var color1 = new V3D(0,1,0);
 var color2 = new V3D(0,0,1);
@@ -16833,7 +16835,7 @@ for(var i=0; i<matches.length; ++i){
 	GLOBALSTAGE.addChild(d);
 
 }
-
+} // if false
 
 	console.log(matches);
 

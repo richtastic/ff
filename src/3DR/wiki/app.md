@@ -429,14 +429,26 @@ refinement - dates
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+- search 2D again
+	- get best point adjacent to cell that satisfies:
+		- N & R & F errors all below EXISTING ERROR SIGMA (2.0)
+	- use original affine only (no need to nonlinear adjust find 'best affine')
+		- predicted point @ = B + affine(old->new)
+	- search for needle inside 2x window [11 & 21]
+		- extract rects using imagescales
+		- ncc / sad
+	- choose best point
+	- create new match if statisfies:
+		- N & R & F errors all below EXISTING ERROR SIGMA (2.0)
+	- ...
 
-x how to find the 'least transformed projection' affine matrix ?
-	- point along line which is 'most similar' to 
-		- don't care about rotation / scale
-		- DO CARE about
-			- skew (x/y angle)
-			- asymm scale (x/y ratio)
-		- 
+- is projection of patch to affine good?
+	- plane vs sphere
+	
+
+
+....
+
 - account for more and less degraded situations:
 	- if poor/few matches found
 		- try just using rot/sca affine matching?
@@ -466,16 +478,19 @@ x how to find the 'least transformed projection' affine matrix ?
 
 
 - DISCOVERY NOTES:
+	- are the corner images using imagescales to do image comparing/extracting?
+		- 
 	- what are the sizes of the patches used? [expect zoomed in to be OK]
 		- compareSizeA: 25
 		- needleSize = 11;
-	- what do some of the example success/failure 2D propageted patches look like?
+	- what do some of the example success/failure 2D propagated patches look like?
 		- 
 
 
 
 
 
+[PP-4584] Update Addressables platform directories & add async file-exists code path for android specifically [???]
 
 
 

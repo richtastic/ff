@@ -940,113 +940,62 @@ Rammstein - Deutschland
 
 | du | | en |
 |-|-|-|
-| Du (du hast, du hast, du hast, du hast) |  |  |
-| Hast viel geweint (geweint, geweint, geweint, geweint) |  |  |
-| Im Geist getrennt (getrennt, getrennt, getrennt, getrennt) |  |  |
-| Im Herz vereint (vereint, vereint, vereint, vereint) |  |  |
-| Wir (wir sind, wir sind, wir sind, wir sind) |  |  |
-| Sind schon sehr lang zusammen (ihr seid, ihr seid, ihr seid, ihr seid) |  |  |
-| Dein Atem kalt (so kalt, so kalt, so kalt, so kalt) |  |  |
-| Das Herz in Flammen (so heiß, so heiß, so heiß, so heiß) |  |  |
-| Du (du kannst, du kannst, du kannst, du kannst) |  |  |
-| Ich (ich weiß, ich weiß, ich weiß, ich weiß) |  |  |
-| Wir (wir sind, wir sind, wir sind, wir sind) |  |  |
-| Ihr (ihr bleibt, ihr bleibt, ihr bleibt, ihr bleibt) |  |  |
+| Du (du hast, du hast, du hast, du hast) |  | You (you have, you have, you have, you have) |
+| Hast viel geweint (geweint, geweint, geweint, geweint) |  | Cried a lot (cried, cried, cried, cried) |
+| Im Geist getrennt (getrennt, getrennt, getrennt, getrennt) |  | Separated in the spirit (separated, separated, separated, separated) |
+| Im Herz vereint (vereint, vereint, vereint, vereint) |  | United in the heart (united, united, united, united) |
+| Wir (wir sind, wir sind, wir sind, wir sind) |  | We (we are, we are, we are, we are) |
+| Sind schon sehr lang zusammen (ihr seid, ihr seid, ihr seid, ihr seid) |  | Have been together for a long time (you are, you are, you are, you are) |
+| Dein Atem kalt (so kalt, so kalt, so kalt, so kalt) |  | Your breath cold (so cold, so cold, so cold, so cold) |
+| Das Herz in Flammen (so heiß, so heiß, so heiß, so heiß) |  | The heart on fire (so hot, so hot, so hot, so hot) |
+|  |  |  |
+| Du (du kannst, du kannst, du kannst, du kannst) |  | You (you can, you can, you can, you can) |
+| Ich (ich weiß, ich weiß, ich weiß, ich weiß) |  | I (I know, I know, I know, I know) |
+| Wir (wir sind, wir sind, wir sind, wir sind) |  | We (we are, we are, we are, we are) |
+| Ihr (ihr bleibt, ihr bleibt, ihr bleibt, ihr bleibt) |  | You (you stay, you stay, you stay, you stay) |
 |  |  |  |
 |  | Refrain 1: |  |
 |  |  |  |
-| Deutschland, mein Herz in Flammen |  |  |
-| Will dich lieben und verdammen |  |  |
-| Deutschland, dein Atem kalt |  |  |
-| So jung, und doch so alt |  |  |
-| Deutschland! |  |  |
+| Deutschland, mein Herz in Flammen |  | Germany, my heart on fire |
+| Will dich lieben und verdammen |  | Want to love and damn you |
+| Deutschland, dein Atem kalt |  | Germany, your breath cold |
+| So jung, und doch so alt |  | So young and yet so old |
+| Deutschland! |  | Germany! |
 |  |  |  |
-| Ich (du hast, du hast, du hast, du hast) |  |  |
+| Ich (du hast, du hast, du hast, du hast) |  | I (you have, you have, you have, you have) |
 |  |  |  |
-| Ich will dich nie verlassen (du weinst, du weinst, du weinst, du weinst) |  |  |
-| Man kann dich lieben (du liebst, du liebst, du liebst, du liebst) |  |  |
-| Und will dich hassen (du hasst, du hasst, du hasst, du hasst) |  |  |
-| Überheblich, überlegen |  |  |
-| Übernehmen, übergeben |  |  |
-| Überraschen, überfallen |  |  |
-| Deutschland, Deutschland über allen |  |  |
+| Ich will dich nie verlassen (du weinst, du weinst, du weinst, du weinst) |  | I never want to leave you (you cry, you cry, you cry, you cry) |
+| Man kann dich lieben (du liebst, du liebst, du liebst, du liebst) |  | You can love you (you love, you love, you love, you love) |
+| Und will dich hassen (du hasst, du hasst, du hasst, du hasst) |  | And want to hate you (you hate, you hate, you hate, you hate) |
+| Überheblich, überlegen |  | Arrogant, superior |
+| Übernehmen, übergeben |  | Take over, hand over |
+| Überraschen, überfallen |  | Surprise, ambush |
+| Deutschland, Deutschland über allen |  | Germany, Germany above all |
 | Deutschland! |  |  |
 |  |  |  |
 |  | (Refrain 1) |  |
 |  |  |  |
 |  | Refrain 2: |  |
-| Deutschland, deine Liebe |  |  |
-| Ist Fluch und Segen |  |  |
-| Deutschland, meine Liebe |  |  |
-| Kann ich dir nicht geben |  |  |
-| Deutschland! |  |  |
+| Deutschland, deine Liebe |  | Germany, your love |
+| Ist Fluch und Segen |  | It is a curse and a blessing |
+| Deutschland, meine Liebe |  | Germany, my dear |
+| Kann ich dir nicht geben |  | I can't give you |
+| Deutschland! |  | Germany! |
 |  |  |  |
-| Du |  |  |
-| Ich |  |  |
-| Wir |  |  |
-| Ihr |  |  |
-| Du (übermächtig, überflüssig) |  |  |
-| Ich (Übermenschen, überdrüssig) |  |  |
-| Wir (wer hoch steigt, der wird tief fallen) |  |  |
-| Ihr (Deutschland, Deutschland über allen) |  |  |
+| Du |  | You |
+| Ich |  | I |
+| Wir |  | We |
+| Ihr |  | You |
+| Du (übermächtig, überflüssig) |  | You (overpowering, superfluous) |
+| Ich (Übermenschen, überdrüssig) |  | I (superhuman, weary) |
+| Wir (wer hoch steigt, der wird tief fallen) |  | We (those who climb high will fall deep) |
+| Ihr (Deutschland, Deutschland über allen) |  | Yours (Germany, Germany above all) |
 |  |  |  |
 |  | (Refrain 1) |  |
 |  |  |  |
 |  | (Refrain 2) |  |
 |  |  |  |
 
-
-You (you have, you have, you have, you have)
-Cried a lot (cried, cried, cried, cried)
-Separated in the spirit (separated, separated, separated, separated)
-United in the heart (united, united, united, united)
-We (we are, we are, we are, we are)
-Have been together for a long time (you are, you are, you are, you are)
-Your breath cold (so cold, so cold, so cold, so cold)
-The heart on fire (so hot, so hot, so hot, so hot)
-You (you can, you can, you can, you can)
-I (I know, I know, I know, I know)
-We (we are, we are, we are, we are)
-You (you stay, you stay, you stay, you stay)
-Germany, my heart on fire
-Want to love and damn you
-Germany, your breath cold
-So young and yet so old
-Germany!
-I (you have, you have, you have, you have)
-I never want to leave you (you cry, you cry, you cry, you cry)
-You can love you (you love, you love, you love, you love)
-And want to hate you (you hate, you hate, you hate, you hate)
-Arrogant, superior
-Take over, hand over
-Surprise, ambush
-Germany, Germany above all
-Germany, my heart on fire
-Want to love and damn you
-Germany, your breath cold
-So young and yet so old
-Germany, your love
-It is a curse and a blessing
-Germany, my dear
-I can't give you
-Germany!
-You
-I
-We
-you
-You (overpowering, superfluous)
-I (superhuman, weary)
-We (those who climb high will fall deep)
-Yours (Germany, Germany above all)
-Germany, my heart on fire
-Want to love and damn you
-Germany, your breath cold
-So young and yet so old
-Germany, your love
-It is a curse and a blessing
-Germany, my dear
-I can't give you
-Germany!
 
 
 

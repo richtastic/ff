@@ -5033,6 +5033,22 @@ function ImageMatScaled(image){
 	this._images = images["images"];
 	this._scales = images["scales"];
 }
+ImageMatScaled.prototype.width = function(){
+	var image = this._images;
+	if(image){
+		image = image[0];
+		return image.width();
+	}
+	return null;
+}
+ImageMatScaled.prototype.height = function(){
+	var image = this._images;
+	if(image){
+		image = image[0];
+		return image.height();
+	}
+	return null;
+}
 ImageMatScaled.prototype.infoForScale = function(scale){
 	var container = this._container;
 	var images = this._images;
@@ -5051,6 +5067,35 @@ ImageMatScaled.prototype.scales = function(){
 	return this._scales;
 }
 
+
+
+ImageMatScaled.prototype.extractRect = function(resultCenter, resultScale, resultWidth,resultHeight, matrix){ // extract appropriate image at scale
+
+// need to offset the matrix's scale
+// var info = R3D.infoFromAffine2D(affine);
+// var applyScale = info["scale"];
+// affine.scale(1.0/applyScale);
+// applyScale = applyScale*minimumScale; // additional scale for including entirety of cell-compare size
+
+	var imageScales = this;
+	var info = imageScales.infoForScale(resultScale);
+	var imageMatrix = info["image"];
+	var effScale = info["effectiveScale"];
+	var actScale = info["actualScale"];
+	var needle = imageMatrix.extractRectFromFloatImage(resultCenter.x*actScale,resultCenter.y*actScale,1.0/effScale,null, resultWidth,resultHeight, matrix);
+	return needle;
+}
+ImageMatScaled.extractRect = function(imageScales, resultCenter, resultScale, resultWidth,resultHeight, matrix){
+	var info = imageScales.infoForScale(resultScale);
+	var imageMatrix = info["image"];
+	var imageGray = imageMatrix.gry();
+	var imageWidth = imageMatrix.width();
+	var imageHeight = imageMatrix.height();
+	var effScale = info["effectiveScale"];
+	var actScale = info["actualScale"];
+	var needle = ImageMat.extractRectFromFloatImage(resultCenter.x*actScale,resultCenter.y*actScale,1.0/effScale,null,resultWidth,resultWidth, matrix);
+	return needle;
+}
 
 
 

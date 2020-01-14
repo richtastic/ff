@@ -9364,17 +9364,8 @@ console.log(relativeAB);
 		var viewID = view["id"];
 		view = project.viewFromID(viewID);
 		view.loadDenseHiImage(checkLoadedAllImages, project);
+		// view.loadFeaturesImage(checkLoadedAllImages, project);
 	}
-	// solveDensePair
-
-
-/*
-	use R to limit F searching
-
-*/
-	///...
-
-throw "?"
 }
 
 App3DR.ProjectManager.prototype.calculatePairMatchFromViewIDs = function(viewAID, viewBID, completeFxn, completeCxt, settings){ // matches, F, R, tracks
