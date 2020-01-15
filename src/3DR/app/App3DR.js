@@ -7717,8 +7717,8 @@ console.log("GOT : matchCount: "+matchCount);
 
 	// LOAD EACH PAIR & DO MATCH | F | R | DENSE
 	for(var i=0; i<pairs.length; ++i){
-// i = 0; // good
-i = 1; // ok
+i = 0; // good
+// i = 1; // ok
 // i = 2; // poor
 // i = 3; // bad
 // i = 4; // good

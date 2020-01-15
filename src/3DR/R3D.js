@@ -7675,6 +7675,24 @@ R3D.infoFromAffine2D = function(affine){
 	var angle = Code.averageAngles([angleX,angleY]);
 	return {"offset":o, "scale":scale, "scaleX":scaleX, "scaleY":scaleY, "angle":angle};
 }
+
+
+R3D.infoFromAffineMatrix2D = function(affine){
+	var o = new V2D();
+	o.set( affine.x, affine.y );
+	var v = new V2D();
+	v.set( affine.a, affine.c );
+	var scaleX = v.length();
+	var angleX = V2D.angle(V2D.DIRX,v);
+	v.set( affine.b, affine.d );
+	var scaleY = v.length();
+	var angleY = V2D.angle(V2D.DIRY,v);
+	var scale = (scaleX+scaleY)*0.5;
+	var angle = Code.averageAngles([angleX,angleY]);
+	return {"offset":o, "scale":scale, "scaleX":scaleX, "scaleY":scaleY, "angle":angle};
+}
+
+
 R3D.DLT2D = function(pointsFr,pointsTo){
 	var i, j, fr, to, len = pointsFr.length;
 	var v = new V2D(), u = new V2D();
@@ -36007,6 +36025,7 @@ R3D.minimumFromValues = function(values, valueWidth, valueHeight, pointB, cellSc
 	var xLoc = index % valueWidth;
 	var yLoc = (index/valueWidth) | 0;
 	var peak = new V3D(xLoc,yLoc,zLoc);
+console.log(peak+" ... peak");
 	// sub-pixel interpolation
 	if(0<xLoc && xLoc<valueWidth-1 && 0<yLoc && yLoc<valueHeight-1){
 		var d0 = values[(yLoc-1)*valueWidth + (xLoc-1)];
@@ -36019,10 +36038,12 @@ R3D.minimumFromValues = function(values, valueWidth, valueHeight, pointB, cellSc
 		var d7 = values[(yLoc+1)*valueWidth + (xLoc+0)];
 		var d8 = values[(yLoc+1)*valueWidth + (xLoc+1)];
 		Code.extrema2DFloatInterpolate(peak, d0,d1,d2,d3,d4,d5,d6,d7,d8);
+console.log(peak+" ... found");
 		peak.x += xLoc;
 		peak.y += yLoc;
 	}
-	var p = new V2D(pointB.x + (-valueWidth*0.5 + peak.x)*cellScale, pointB.y + (-valueHeight*0.5 + peak.y)*cellScale);
+console.log(cellScale+" ... cellScale");
+	var p = new V2D(pointB.x + (peak.x - valueWidth*0.5)*cellScale, pointB.y + (peak.y - valueHeight*0.5)*cellScale);
 	return {"location":p, "score":peak.z};
 }
 

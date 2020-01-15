@@ -429,6 +429,13 @@ refinement - dates
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+test Stereopsis.optimumNeedleHaystackALocation on full images at beginning
+
+
+
+
+
+
 - search 2D again
 	- get best point adjacent to cell that satisfies:
 		- N & R & F errors all below EXISTING ERROR SIGMA (2.0)
@@ -444,7 +451,29 @@ refinement - dates
 
 - is projection of patch to affine good?
 	- plane vs sphere
-	
+
+
+
+--- NCC location of peak seems like it could be off 
+... perhaps try to average scores in ~ 3x3 window to pick best -- average the change in position?
+
+- add fwd bak check
+- add sad & ncc agreement
+
+DIFFERENCES? : 
+world.probe2DNNAffine(2.0); // 1-2
+	- bad
+world.probe2DCells(2.0); // 1-2
+	- such low error?
+
+
+
+
+- add more filtering on initial search:
+	- add more corner points total
+		- limit used points to only closest 20-50
+	- filter out worst RIFT / NCC / F / R scores
+
 
 
 ....
