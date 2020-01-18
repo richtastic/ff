@@ -16056,24 +16056,123 @@ R3D.optimalFeaturePointsInImage = function(imageMatrixA){
 	return featuresA;
 }
 
+
+R3D.affineDistortionMetric = function(a,b,c,d){
+	var x = new V2D(a,c);
+	var y = new V2D(b,d);
+	var lX = x.length();
+	var lY = y.length();
+
+	var z = V2D.add(x,y);
+	var lZ = z.length();
+
+	var lXY = 0.5*(lX+lY);
+
+	var rX = lX/lXY;
+		rX = rX<1.0 ? 1.0/rX : rX;
+	var rY = lY/lXY;
+		rY = rY<1.0 ? 1.0/rY : rY;
+
+	var rXY = Math.max(rX,rY);
+
+	var area = V2D.cross(x,y);
+		area = Math.abs(area);
+
+
+	var r = lX/lY;
+	if(r<1.0){
+		r = 1.0/r;
+	}
+	// r = Math.sqrt(r);
+
+	// good:
+	// var error = lZ/(0.5*(lX+lY));
+
+	var totArea = lZ;
+	var avgArea = lXY;
+
+		// totArea = totArea*totArea;
+		// avgArea = avgArea*avgArea;
+
+		// totArea = Math.sqrt(totArea);
+		// avgArea = Math.sqrt(avgArea);
+
+	// var error =  (totArea/avgArea);
+	// var error = Math.sqrt(rXY) * (totArea/avgArea);
+	// var error = rXY * (totArea/avgArea);
+	// var error = (totArea/avgArea);
+
+
+	// var error = (lZ*lZ)/area;
+
+
+	// var error = lZ/lXY;
+	var error = lZ/Math.min(lX,lY);
+
+
+	// var error = lZ/(Math.min(lX,lY)/Math.max(lX,lY));
+
+	
+
+
+	// var error = (lZ*lZ)/area;
+
+	// var error = lZ/( (lX+lY) );
+
+	// var error = lZ/lX +lZ/lY;
+
+
+	// var error = area/lZ;
+
+
+	// var error = lZ/Math.sqrt(lX*lX+lY*lY);
+
+	/*
+	var r = lX/lY;
+	if(r<1.0){
+		r = 1.0/r;
+	}
+	var dot = V2D.dot(x,y)/lX/lY;
+		dot = Math.abs(dot);
+		// dot = dot*dot;
+	var s = 1.0 + dot;
+		s = s*s;
+		// r = r*r;
+		r = Math.sqrt(r);
+	var error = r*s;
+	*/
+	return error;
+}
+
 R3D.searchMatchPoints3D = function(images, cellSizes, relativeAB, Ks, errorPixels){
-	var imageScale = 0.5; // TODO: determined from source size => ~600x400
-
+	var idealPixelCount = 600*400; // for finding corners
 	var affineReuse = new Matrix2D();
-
-console.log(relativeAB+"")
-console.log(errorPixels+"")
-
-var eigenA = new Matrix(2,2);
+	var eigenA = new Matrix(2,2);
 
 	var imageA = images[0];
 	var imageB = images[1];
 	var cellA = cellSizes[0];
 	var cellB = cellSizes[1];
+	// find desired image scale
+	var averagePixels = 0;
+	var imageCount = images.length;
+	for(var i=0; i<images.length; ++i){
+		var image = images[i];
+		console.log(image+"")
+		averagePixels += image.width()*image.height();
+	}
+	averagePixels /= imageCount;
+	var imageScale = Math.sqrt(idealPixelCount/averagePixels); // area to dimension
+	console.log("imageScale: "+imageScale+"")
+
+	
+
+
+
 	// var errorA = errorPixels[0];
 	// var errorB = errorPixels[1];
 	var imageScalesList = [];
-	var featureScale = 2.0; // multiple of cell size 1-2
+	var featureScale = 1.0; // multiple of cell size 1-2
 	var distanceScale = 0.25; // local maximal suppression 0.25-0.5
 	var cameraA = new Matrix(4,4).identity();
 	var cameraB = relativeAB;
@@ -16106,7 +16205,14 @@ var eigenA = new Matrix(2,2);
 	var toPointObject = function(a){
 		return a["point"];
 	};
+	var sortLessFirst = function(a,b){
+		return a < b ? -1 : 1;
+	};
+	var sortLessFirstT = function(a,b){
+		return a.t > b.t ? -1 : 1;
+	};
 	var spaces = [];
+	var actualScalesList = [];
 // throw "before"
 var errors = [];
 // TODO: GET IMAGE SCALE SEQUENCE
@@ -16123,18 +16229,18 @@ var errors = [];
 		var space = new QuadTree(toPointPoint, new V2D(0,0), imageSize);
 		// size for appropriate corner discovery
 		var imageMatrixScaled = imageMatrix.getScaledImage(imageScale);
+		var actualImageScale = ImageMat.relativeScale(imageMatrixScaled, imageMatrix);
+		actualScalesList[i] = actualImageScale;
 		// sizings for 
 		var imageScales = new ImageMatScaled(imageMatrix);
 		imageScalesList.push(imageScales);
 		var corners = R3D.extractImageCorners(imageMatrixScaled, nonMaximalPercent, maxCount, single, scalable, limitPixels);
-		corners.sort(function(a,b){
-			return a.t > b.t ? -1 : 1;
-		})
+		corners.sort(sortLessFirstT);
 		// console.log("corner count: "+corners.length);
 		// add points to space limited by largest in radius
 		for(var j=0; j<corners.length; ++j){
 			var c = corners[j];
-				c = new V2D(c.x/imageScale, c.y/imageScale);
+				c = new V2D(c.x/actualImageScale, c.y/actualImageScale);
 			var closest = space.closestObject(c);
 			if(closest){
 				var distance = V2D.distance(c,closest);
@@ -16147,7 +16253,9 @@ var errors = [];
 		}
 		// console.log("space count: "+space.count());
 
-if(false){
+
+// if(false){
+if(true){
 // display source images
 var img = imageMatrixScaled;
 	img = GLOBALSTAGE.getFloatRGBAsImage(img.red(),img.grn(),img.blu(), img.width(),img.height());
@@ -16166,11 +16274,11 @@ GLOBALSTAGE.addChild(d);
 			var o = R3D.objectProgressiveR3D(c, imageScales, featureSize, null);
 			o["i"] = j;
 			space.insertObject(o);
-if(false){
-// if(true){
+// if(false){
+if(true){
 // display source points
 var q = o["point"].copy();
-	q.scale(imageScale);
+	q.scale(actualImageScale);
 var d = new DO();
 	d.graphics().clear();
 	d.graphics().setLine(1.0, 0xFF00FF99);
@@ -16195,8 +16303,6 @@ d.matrix().translate(0 + i*600, 0);
 	var originalObjectsB = objectsB;
 	var originalImageA = imageA;
 	var originalImageB = imageB;
-
-
 	var widthA = imageA.width();
 	var heightA = imageA.height();
 	var imagesList = [imageA,imageB];
@@ -16224,51 +16330,70 @@ d.matrix().translate(0 + i*600, 0);
 var doDebug = true;
 var debugOffY = 300;
 doDebug = false;
+// throw "before loop"
 	for(var k=0; k<objList.length; ++k){
 		console.log("ITERATION: "+k+" / "+objList.length);
 		var objsA = objList[k];
 		var spaceB = oppList[k];
-		var Ffwd = fList[k%2];
-		var Frev = fList[(k+1)%2];
-		var Ka = kList[k%2];
-		var Kb = kList[(k+1)%2];
-		var KaInv = iList[k%2];
-		var KbInv = iList[(k+1)%2];
-		var cameraA = matList[k%2];
-		var cameraB = matList[(k+1)%2];
+		var indexA = k%2;
+		var indexB = (k+1)%2;
 
-// console.log(cameraA+"");
-// console.log(cameraB+"");
-// console.log(Ka+"");
-// console.log(Kb+"");
-// console.log(KaInv+"");
-// console.log(KbInv+"");
+		var Ffwd = fList[indexA];
+		var Frev = fList[indexB];
+		var Ka = kList[indexA];
+		var Kb = kList[indexB];
+		var KaInv = iList[indexA];
+		var KbInv = iList[indexB];
+		var cameraA = matList[indexA];
+		var cameraB = matList[indexB];
 
-		// var imageA = imagesList[k%2];
-		// var imageB = imagesList[(k+1)%2];
-		var imageA = imageScalesList[k%2];
-		var imageB = imageScalesList[(k+1)%2];
-		var cellSizeA = cellSizes[k%2];
-		var cellSizeB = cellSizes[(k+1)%2];
+		var imageA = imageScalesList[indexA];
+		var imageB = imageScalesList[indexB];
+		var cellSizeA = cellSizes[indexA];
+		var cellSizeB = cellSizes[indexB];
 		var featureSizeA = cellSizeA*featureScale;
 		var featureSizeB = cellSizeB*featureScale;
+// only used for displaying:
+var imageScaleA = actualScalesList[indexA];
+var imageScaleB = actualScalesList[indexB];
 		// var imageScales = imageScalesList[k];
 		for(var i=0; i<objsA.length; ++i){
 			// if(i%100==0){
 			// 	console.log(i+" / "+objectsA.length);
 			// }
 if(doDebug){
+	// i = 10;
 	// i = 100;
 	// i = 200;
+	// i = 250;
 	// i = 300;
-	i = 400;
+	// i = 400;
 	// i = 500;
 	// i = 600;
 	// i = 700;
+	// i = 750;
+	// i = 755;
 	// i = 800;
+	i = 805;
 	// i = 900;
+	// i = 950;
+	// i = 960;
+	// i = 965;
+	// i = 1000;
 // i = 650;
 // i = 210;
+	// i = 1005;
+	// i = 1010;
+	// i = 1015;
+
+	// i = 1100;
+	// i = 1200;
+	// i = 1300;
+	// i = 1350;
+	// i = 1400;
+	// i = 1500;
+
+
 // var c = new V2D(400,300);
 // var c = new V2D(600,300);//
 // var c = new V2D(610,300);// too far right
@@ -16276,6 +16401,7 @@ if(doDebug){
 // featureSize = 51;
 // c = objsA[i]["point"];
 // objsA[i] = R3D.objectProgressiveR3D(c, imageScales, featureSize, null , true);
+
 }
 			var objectA = objsA[i];
 			var point2DA = objectA["point"];
@@ -16286,8 +16412,13 @@ if(doDebug){
 				continue;
 			}
 			var sortedB = objsB;
+
+
+
 			// console.log(sortedB.length);
 if(doDebug){
+
+
 var ints = Code.clipRayRect2D(org,dir,new V2D(0,0), new V2D(widthA,0), new V2D(widthA,heightA), new V2D(0,heightA));
 var p = point2DA;
 console.log(ints);
@@ -16295,9 +16426,9 @@ var a = ints["a"].copy();
 var b = ints["b"].copy();
 
 p = p.copy();
-p.scale(imageScale);
-a.scale(imageScale);
-b.scale(imageScale);
+p.scale(imageScaleA);
+a.scale(imageScaleA);
+b.scale(imageScaleB);
 
 var d = new DO();
 	d.graphics().clear();
@@ -16312,15 +16443,15 @@ var d = new DO();
 ort = dir.copy().rotate(Math.PI*0.5);
 	d.graphics().setLine(1.0, 0xFFFF00FF);
 	d.graphics().beginPath();
-	d.graphics().moveTo(a.x + ort.x*errSearch*imageScale,a.y + ort.y*errSearch*imageScale);
-	d.graphics().lineTo(b.x + ort.x*errSearch*imageScale,b.y + ort.y*errSearch*imageScale);
+	d.graphics().moveTo(a.x + ort.x*errSearch*imageScaleA,a.y + ort.y*errSearch*imageScaleA);
+	d.graphics().lineTo(b.x + ort.x*errSearch*imageScaleB,b.y + ort.y*errSearch*imageScaleB);
 	d.graphics().strokeLine();
 	d.graphics().endPath();
 
 	d.graphics().setLine(1.0, 0xFFFF00FF);
 	d.graphics().beginPath();
-	d.graphics().moveTo(a.x - ort.x*errSearch*imageScale,a.y - ort.y*errSearch*imageScale);
-	d.graphics().lineTo(b.x - ort.x*errSearch*imageScale,b.y - ort.y*errSearch*imageScale);
+	d.graphics().moveTo(a.x - ort.x*errSearch*imageScaleA,a.y - ort.y*errSearch*imageScaleA);
+	d.graphics().lineTo(b.x - ort.x*errSearch*imageScaleB,b.y - ort.y*errSearch*imageScaleB);
 	d.graphics().strokeLine();
 	d.graphics().endPath();
 	
@@ -16333,7 +16464,7 @@ var d = new DO();
 	d.graphics().clear();
 	d.graphics().setLine(1.0, 0xFFFF0000);
 	d.graphics().beginPath();
-	d.graphics().drawRect(p.x -featureSize*0.5*imageScale,p.y-featureSize*0.5*imageScale, featureSize*imageScale,featureSize*imageScale);
+	d.graphics().drawRect(p.x -featureSize*0.5*imageScaleA,p.y-featureSize*0.5*imageScaleA, featureSize*imageScaleA,featureSize*imageScaleA);
 	// d.graphics().drawCircle(p.x,p.y, 4);
 	d.graphics().endPath();
 	d.graphics().strokeLine();
@@ -16357,12 +16488,12 @@ for(var b=0; b<sortedB.length; ++b){
 	var objectB = sortedB[b];
 	var p = objectB["point"];
 		p = p.copy();
-		p.scale(imageScale);
+		p.scale(imageScaleB);
 	var img = objectB["icon"];
 	img = GLOBALSTAGE.getFloatRGBAsImage(img.red(),img.grn(),img.blu(), img.width(),img.height());
 	var d = new DOImage(img);
 	d.matrix().scale(3.0);
-	d.matrix().translate(10 + 50*b, debugOffY + 150 + 100);
+	d.matrix().translate(10 + 50*b, debugOffY + 250);
 	GLOBALSTAGE.addChild(d);
 
 /*
@@ -16395,6 +16526,19 @@ for(var b=0; b<sortedB.length; ++b){
 	// console.log(patch3D);
 
 
+	// project the normal to the surface ... want closest to orthogonal ?
+var lenProjection = null;
+// if(doDebug){
+	var distortions = 0;
+	var o2D = R3D.projectPoint3DToCamera2DForward(point3D, cameraB, Kb, distortions, false);
+	var forward3D = V3D.add(point3D,normal3D);
+	var f2D = R3D.projectPoint3DToCamera2DForward(forward3D, cameraB, Kb, distortions, false);
+	var l2D = V2D.sub(f2D,o2D);
+	var len = l2D.length();
+	// lenProjection = len;
+// }
+
+
 	var affine2D = R3D.patchAffine2DFromPatch3D(point3D,normal3D,up3D,right3D,size3D, cameraA,Ka, cameraB,Kb, point2DA,point2DB, affineReuse);
 	
 	eigenA.fromArray([affine2D.a,affine2D.b,affine2D.c,affine2D.d]);
@@ -16408,6 +16552,10 @@ for(var b=0; b<sortedB.length; ++b){
 	if(ratio<1.0){
 		ratio = 1.0/ratio;
 	}
+
+	// if(lenProjection!==null){
+	// 	ratio = lenProjection;
+	// }
 
 	// affine2D.inverse();
 	
@@ -16430,16 +16578,16 @@ for(var b=0; b<sortedB.length; ++b){
 	var d = new DO();
 		d.graphics().clear();
 		if(ratio<affineRatioKeepMax){
-			d.graphics().setLine(1.0, 0xFF0000FF);
+			d.graphics().setLine(1.0, 0xCC0000FF);
 		}else{
-			d.graphics().setLine(1.0, 0xCCCC0000);
+			d.graphics().setLine(1.0, 0x66CC0000);
 		}
 		d.graphics().beginPath();
 		// d.graphics().drawRect(p.x -featureSize*0.5*imageScale,p.y-featureSize*0.5*imageScale, featureSize*imageScale,featureSize*imageScale);
-		d.graphics().moveTo(p.x + bl.x*imageScale,p.y + bl.y*imageScale);
-		d.graphics().lineTo(p.x + br.x*imageScale,p.y + br.y*imageScale);
-		d.graphics().lineTo(p.x + tr.x*imageScale,p.y + tr.y*imageScale);
-		d.graphics().lineTo(p.x + tl.x*imageScale,p.y + tl.y*imageScale);
+		d.graphics().moveTo(p.x + bl.x*imageScaleB,p.y + bl.y*imageScaleB);
+		d.graphics().lineTo(p.x + br.x*imageScaleB,p.y + br.y*imageScaleB);
+		d.graphics().lineTo(p.x + tr.x*imageScaleB,p.y + tr.y*imageScaleB);
+		d.graphics().lineTo(p.x + tl.x*imageScaleB,p.y + tl.y*imageScaleB);
 		d.graphics().endPath();
 		d.graphics().strokeLine();
 		GLOBALSTAGE.addChild(d);
@@ -16451,14 +16599,47 @@ for(var b=0; b<sortedB.length; ++b){
 }
 
 		// filter on color average
-		sortedB = R3D._sortCompareProgressiveColor(objectA, sortedB, 20);
+		sortedB = R3D._sortCompareProgressiveColor(objectA, sortedB, 20, 0.5);
 		// console.log(sortedB.length);
+
+if(doDebug){
+// SHOW PATCHES
+for(var b=0; b<sortedB.length; ++b){
+	var objectB = sortedB[b];
+		var p = objectB["point"];
+		p = p.copy();
+		p.scale(imageScaleB);
+	var img = objectB["icon"];
+	img = GLOBALSTAGE.getFloatRGBAsImage(img.red(),img.grn(),img.blu(), img.width(),img.height());
+	var d = new DOImage(img);
+	d.matrix().scale(3.0);
+	d.matrix().translate(10 + 50*b, debugOffY + 350);
+	GLOBALSTAGE.addChild(d);
+}
+}
 
 		// search for colors with close color histograms
-		sortedB = R3D._sortCompareProgressiveColorHistogram(objectA, sortedB, 10);
+		sortedB = R3D._sortCompareProgressiveColorHistogram(objectA, sortedB, 10, 0.5);
 		// console.log(sortedB.length);
 
+if(doDebug){
+// SHOW PATCHES
+for(var b=0; b<sortedB.length; ++b){
+	var objectB = sortedB[b];
+		var p = objectB["point"];
+		p = p.copy();
+		p.scale(imageScaleB);
+	var img = objectB["icon"];
+	img = GLOBALSTAGE.getFloatRGBAsImage(img.red(),img.grn(),img.blu(), img.width(),img.height());
+	var d = new DOImage(img);
+	d.matrix().scale(3.0);
+	d.matrix().translate(10 + 50*b, debugOffY + 400);
+	GLOBALSTAGE.addChild(d);
+}
+}
+
 		// calculate P3D / projections
+		var affineRatios = [];
 		for(var b=0; b<sortedB.length; ++b){
 			var objectB = sortedB[b];
 			var point2DB = objectB["point"];
@@ -16484,6 +16665,12 @@ var errorR = info["error"];
 			// could also try basic scale and rotation -- keep in ballpark
 
 				eigenA.fromArray([affine2D.a,affine2D.b,affine2D.c,affine2D.d]);
+
+				var distortion = R3D.affineDistortionMetric(affine2D.a,affine2D.b,affine2D.c,affine2D.d);
+
+
+// distortion = lenProjection;
+
 				var eigen = Matrix.eigenValuesAndVectors(eigenA);
 				// console.log(eigen);
 				var values = eigen["values"];
@@ -16505,17 +16692,16 @@ var errorR = info["error"];
 				affine2D.inverse();
 				temp = R3D.objectProgressiveR3D_Z(point2DB,imageB, featureSizeB, affine2D);
 				// SKIP: R3D.objectProgressiveR3D_A(temp);
-				temp["match"] = {"affine":affine2D, "point3D":point3D, "source":objectB };
+				temp["match"] = {"affine":affine2D, "point3D":point3D, "source":objectB, "affineScore": ratio, "distortion":distortion};
 				//"error":errorR, "pta":point2DA.copy(),  "ptb":point2DB.copy(), "cA":cameraA, "cB":cameraB, "iA":KaInv, "iB":KbInv};
 				temp["i"] = objectB["i"];
+				// affineRatios.push(ratio);
+				affineRatios.push(distortion);
 			}
 			sortedB[b] = temp;
 		}
 
-		// COULD SORT ON RATIOS ...
 
-
-		
 		// remove nulls
 		for(var b=0; b<sortedB.length; ++b){
 			var objectB = sortedB[b];
@@ -16525,6 +16711,45 @@ var errorR = info["error"];
 			}
 		}
 
+
+		// COULD SORT ON RATIOS ...
+		affineRatios.sort(sortLessFirst);
+		var minRatio = affineRatios[0];
+		// console.log(affineRatios);
+
+
+
+
+if(doDebug){
+	console.log("minRatio: "+minRatio);
+// SHOW BEST AFFINE LOCATION
+console.log(sortedB)
+console.log(affineRatios);
+
+for(var b=0; b<sortedB.length; ++b){
+	var objectB = sortedB[b];
+		// var r = objectB["match"]["affineScore"];
+		var r = objectB["match"]["distortion"];
+		var p = objectB["point"];
+		p = p.copy();
+		p.scale(imageScaleB);
+	if(r==minRatio){
+		// console.log(r,minRatio)
+		// throw "show";
+		var d = new DO();
+		d.graphics().clear();
+		d.graphics().setLine(3.0, 0xFF660066);
+		d.graphics().beginPath();
+		d.graphics().drawCircle(p.x,p.y, 21);
+		d.graphics().endPath();
+		d.graphics().strokeLine();
+		GLOBALSTAGE.addChild(d);
+		d.matrix().translate(0 + 1*600, 0);
+		break;
+	}
+}
+}
+		
 		// get orientated
 		for(var b=0; b<sortedB.length; ++b){
 			var objectB = sortedB[b];
@@ -16537,12 +16762,12 @@ for(var b=0; b<sortedB.length; ++b){
 	var objectB = sortedB[b];
 		var p = objectB["point"];
 		p = p.copy();
-		p.scale(imageScale);
+		p.scale(imageScaleB);
 	var img = objectB["icon"];
 	img = GLOBALSTAGE.getFloatRGBAsImage(img.red(),img.grn(),img.blu(), img.width(),img.height());
 	var d = new DOImage(img);
 	d.matrix().scale(3.0);
-	d.matrix().translate(10 + 50*b, debugOffY + 350);
+	d.matrix().translate(10 + 50*b, debugOffY + 450);
 	GLOBALSTAGE.addChild(d);
 }
 }
@@ -16551,11 +16776,50 @@ for(var b=0; b<sortedB.length; ++b){
 		sortedB = R3D._sortCompareProgressiveColorFlatSSD(objectA, sortedB, 8);
 		// console.log(sortedB.length);
 
+		sortedB = R3D._sortCompareProgressiveSIFTFullScoreCache(objectA, sortedB, 8, R3D._progressiveReturnCacheProperty, "sadCache");
 
-		// search for colors with close flat color - ncc
-		sortedB = R3D._sortCompareProgressiveColorFlatNCC(objectA, sortedB, 6);
-		// console.log(sortedB.length);
 
+if(doDebug){
+// SHOW PATCHES
+for(var b=0; b<sortedB.length; ++b){
+	var objectB = sortedB[b];
+		var p = objectB["point"];
+		p = p.copy();
+		p.scale(imageScaleB);
+	var img = objectB["icon"];
+	img = GLOBALSTAGE.getFloatRGBAsImage(img.red(),img.grn(),img.blu(), img.width(),img.height());
+	var d = new DOImage(img);
+	d.matrix().scale(3.0);
+	d.matrix().translate(10 + 50*b, debugOffY + 500);
+	GLOBALSTAGE.addChild(d);
+}
+}
+
+		// // search for colors with close flat color - ncc
+		// sortedB = R3D._sortCompareProgressiveColorFlatNCC(objectA, sortedB, 6);
+
+		// // console.log(sortedB.length);
+		// sortedB = R3D._sortCompareProgressiveSIFTFullScoreCache(objectA, sortedB, 6, R3D._progressiveReturnCacheProperty, "nccCache");
+
+		
+
+
+if(doDebug){
+// SHOW PATCHES
+for(var b=0; b<sortedB.length; ++b){
+	var objectB = sortedB[b];
+		var p = objectB["point"];
+		p = p.copy();
+		p.scale(imageScaleB);
+	var img = objectB["icon"];
+	img = GLOBALSTAGE.getFloatRGBAsImage(img.red(),img.grn(),img.blu(), img.width(),img.height());
+	var d = new DOImage(img);
+	d.matrix().scale(3.0);
+	d.matrix().translate(10 + 50*b, debugOffY + 650);
+	GLOBALSTAGE.addChild(d);
+}
+}
+/*
 		// prep sift:
 		for(var b=0; b<sortedB.length; ++b){
 			var objectB = sortedB[b];
@@ -16567,7 +16831,6 @@ for(var b=0; b<sortedB.length; ++b){
 		// search for SIFT-FLAT
 		sortedB = R3D._sortCompareProgressiveSIFTFlat(objectA, sortedB, 4);
 		// console.log(sortedB.length);
-
 
 		// prep sift grad:
 		for(var b=0; b<sortedB.length; ++b){
@@ -16581,7 +16844,23 @@ for(var b=0; b<sortedB.length; ++b){
 		// search for SIFT-FULL
 		sortedB = R3D._sortCompareProgressiveSIFTFullScoreCache(objectA, sortedB, 2);
 		// console.log(sortedB.length);
-		
+
+if(doDebug){
+// SHOW PATCHES
+for(var b=0; b<sortedB.length; ++b){
+	var objectB = sortedB[b];
+		var p = objectB["point"];
+		p = p.copy();
+		p.scale(imageScaleB);
+	var img = objectB["icon"];
+	img = GLOBALSTAGE.getFloatRGBAsImage(img.red(),img.grn(),img.blu(), img.width(),img.height());
+	var d = new DOImage(img);
+	d.matrix().scale(3.0);
+	d.matrix().translate(10 + 50*b, debugOffY + 550);
+	GLOBALSTAGE.addChild(d);
+}
+}
+*/
 		// keep top 2
 		var finalCount = sortedB.length;
 		var best = sortedB[0];
@@ -16590,19 +16869,32 @@ for(var b=0; b<sortedB.length; ++b){
 
 
 if(doDebug){
-	// show best
-	var objectB = sortedB[0];
-	var p = objectB["point"];
-		p = p.copy();
-		p.scale(imageScale);
-	var img = objectB["icon"];
-	img = GLOBALSTAGE.getFloatRGBAsImage(img.red(),img.grn(),img.blu(), img.width(),img.height());
+	// show original
+
+	var img = objectA["icon"];
+		img = GLOBALSTAGE.getFloatRGBAsImage(img.red(),img.grn(),img.blu(), img.width(),img.height());
 	var d = new DOImage(img);
 	d.matrix().scale(3.0);
-	d.matrix().translate(10 + 50*b, debugOffY + 150 + 100);
+	d.matrix().translate(10 + 0, debugOffY + 100 + 50);
 	GLOBALSTAGE.addChild(d);
 
 
+console.log(sortedB[0]);
+console.log(best);
+	// show best
+	// var objectB = sortedB[0];
+	var objectB = best;
+	var img = objectB["icon"];
+		img = GLOBALSTAGE.getFloatRGBAsImage(img.red(),img.grn(),img.blu(), img.width(),img.height());
+	var d = new DOImage(img);
+	d.matrix().scale(3.0);
+	d.matrix().translate(10 + 100, debugOffY + 100 + 50);
+	GLOBALSTAGE.addChild(d);
+
+
+	var p = objectB["point"];
+		p = p.copy();
+		p.scale(imageScaleB);
 	var d = new DO();
 		d.graphics().clear();
 		d.graphics().setLine(1.0, 0xFFFF0066);
@@ -16613,6 +16905,9 @@ if(doDebug){
 		GLOBALSTAGE.addChild(d);
 		d.matrix().translate(0 + 1*600, 0);
 
+console.log("BESTES ?");
+console.log(objectA);
+console.log(objectB);
 
 }
 
@@ -16648,12 +16943,17 @@ var maximumRatio = 0.90; // eg 0.028/0.051 = 0.56    | 25% ~ 0.5 | 50% ~ 0.75
 
 	// maximumRatio = 0.95;
 var scoreIndex = "scoreSIFT";
+// var scoreIndex = "flatOrientated";
 var skipped = 0;
 
 // THIS OBJECTS A IS A DIFFERENT OBJECTS A
 
-// objectsA = originalObjectsA;
-// objectsB = originalObjectsB;
+
+console.log(objectsA);
+console.log(objectsB);
+
+
+
 
 for(var i=0; i<objectsA.length; ++i){
 	var objectA = objectsA[i];
@@ -16677,7 +16977,7 @@ for(var i=0; i<objectsA.length; ++i){
 				// var d = V2D.distance(objectA["point"],oA["point"]);
 				// console.log(d+" | "+objectA["i"]+" & "+oA["i"]+" ? "+(objectA==oA));
 				if(objectA==oA){ // 583
-					// ratios.push(ratioA,ratioB);
+					// console.log("found one top"+" = "+ratioA+" & "+ratioB);
 					// ratios.push(ratioA);
 					var ratio = Math.max(ratioA,ratioB);
 					if(ratio<maximumRatio){
@@ -16704,17 +17004,20 @@ var imageB = imagesList[1];
 
 	// DROP WORST BASED ON R
 	var k = 0;
-	var Ka = kList[k%2];
-	var Kb = kList[(k+1)%2];
-	var KaInv = iList[k%2];
-	var KbInv = iList[(k+1)%2];
-	var cameraA = matList[k%2];
-	var cameraB = matList[(k+1)%2];
+	var indexA = k%2;
+	var indexB = (k+1)%2;
+	var Ka = kList[indexA];
+	var Kb = kList[indexB];
+	var KaInv = iList[indexA];
+	var KbInv = iList[indexB];
+	var cameraA = matList[indexA];
+	var cameraB = matList[indexB];
 
 	// var errors = [];
 	var entries = [];
 	var errorR = 0;
-// console.log(matches);
+console.log("matches: ");
+console.log(matches);
 // throw "?"
 	for(var i=0; i<matches.length; ++i){
 		var match = matches[i];
@@ -16730,7 +17033,7 @@ var imageB = imagesList[1];
 		var affine = matched["affine"]; // A to B
 		// console.log(matched);
 		// throw "?"
-		var score = matched["source"]["best"]["scoreSIFT"];
+		var score = matched["source"]["best"][scoreIndex];
 		// do optimized sub-pixel matching:
 		// var info = R3D.subpixelHaystack(imageA,imageB, pointA,pointB, affine);
 		// info has updated A / B ?
@@ -16792,12 +17095,14 @@ var imageB = imagesList[1];
 
 // draw display show matches:
 
-if(false){
+// if(false){
+if(true){
 
 var color0 = new V3D(1,0,0);
 var color1 = new V3D(0,1,0);
 var color2 = new V3D(0,0,1);
-var color3 = new V3D(1,1,1);
+// var color3 = new V3D(1,1,1);
+var color3 = new V3D(0,0,0);
 var colors = [color0,color1,color2,color3];
 
 for(var i=0; i<matches.length; ++i){
@@ -16856,7 +17161,7 @@ for(var i=0; i<matches.length; ++i){
 } // if false
 
 	console.log(matches);
-
+// throw "before release"
 	return matches;
 
 }
@@ -17210,6 +17515,10 @@ R3D._progressiveCompare1DArrayV3DNCC = function(histA,histB){
 		ncc = (1.0 - ncc)*0.5;
 	return ncc;
 }
+R3D._progressiveReturnCacheProperty = function(object, property){
+	property = property!==undefined ? property : "?";
+	return object[property];
+}
 R3D._progressiveCompareSIFTCache = function(object){
 	var scoreFlat = object["scoreFlatSIFT"];
 	var scoreGrad = object["scoreGradSIFT"];
@@ -17223,41 +17532,41 @@ R3D._sortCompareProgressiveFxn = function(a,b){
 	return a[1] < b[1] ? -1 : 1;
 }
 
-R3D._sortCompareProgressiveColor = function(objectA, objectsB, minCount){
+R3D._sortCompareProgressiveColor = function(objectA, objectsB, minCount, percentDrop){
 	minCount = minCount!==undefined ? minCount : 10;
-	return R3D._sortCompareProgressiveType(objectA, objectsB, R3D._progressiveCompareV3DDistance, "color",null,null, minCount);
+	return R3D._sortCompareProgressiveType(objectA, objectsB, R3D._progressiveCompareV3DDistance, "color",null,null, minCount, percentDrop);
 }
-R3D._sortCompareProgressiveColorHistogram = function(objectA, objectsB, minCount){
+R3D._sortCompareProgressiveColorHistogram = function(objectA, objectsB, minCount, percentDrop){
 	minCount = minCount!==undefined ? minCount : 9;
-	return R3D._sortCompareProgressiveType(objectA, objectsB, R3D._progressiveCompare1DArraySAD, "flatHistogram",null,null, minCount);
+	return R3D._sortCompareProgressiveType(objectA, objectsB, R3D._progressiveCompare1DArraySAD, "flatHistogram",null,null, minCount, percentDrop);
 }
-R3D._sortCompareProgressiveColorFlatSSD = function(objectA, objectsB, minCount){
+R3D._sortCompareProgressiveColorFlatSSD = function(objectA, objectsB, minCount, percentDrop){
 	minCount = minCount!==undefined ? minCount : 8;
-	return R3D._sortCompareProgressiveType(objectA, objectsB, R3D._progressiveCompare1DArrayV3DSAD, "flatOrientated",null,null, minCount);
+	return R3D._sortCompareProgressiveType(objectA, objectsB, R3D._progressiveCompare1DArrayV3DSAD, "flatOrientated",null,"sadCache", minCount, percentDrop);
 }
-R3D._sortCompareProgressiveColorFlatNCC = function(objectA, objectsB, minCount){
+R3D._sortCompareProgressiveColorFlatNCC = function(objectA, objectsB, minCount, percentDrop){
 	minCount = minCount!==undefined ? minCount : 7;
-	return R3D._sortCompareProgressiveType(objectA, objectsB, R3D._progressiveCompare1DArrayV3DNCC, "flatOrientated",null,null, minCount);
+	return R3D._sortCompareProgressiveType(objectA, objectsB, R3D._progressiveCompare1DArrayV3DNCC, "flatOrientated",null,"nccCache", minCount, percentDrop);
 }
 // R3D._sortCompareProgressiveColorGradHistogram = function(objectA, objectsB){
 // 	return R3D._sortCompareProgressiveType(objectA, objectsB, R3D._progressiveCompare1DArraySAD, "gradHistogram",null,null, 6);
 // }
-R3D._sortCompareProgressiveSIFTFlat = function(objectA, objectsB, minCount){
+R3D._sortCompareProgressiveSIFTFlat = function(objectA, objectsB, minCount, percentDrop){
 	minCount = minCount!==undefined ? minCount : 4;
-	return R3D._sortCompareProgressiveType(objectA, objectsB, R3D._progressiveCompareMultiArraySAD, "flatSIFT", null, "scoreFlatSIFT",null,null, minCount);
+	return R3D._sortCompareProgressiveType(objectA, objectsB, R3D._progressiveCompareMultiArraySAD, "flatSIFT", null, "scoreFlatSIFT",null,null, minCount, percentDrop);
 }
-R3D._sortCompareProgressiveSIFTGrad = function(objectA, objectsB, minCount){
+R3D._sortCompareProgressiveSIFTGrad = function(objectA, objectsB, minCount, percentDrop){
 	minCount = minCount!==undefined ? minCount : 3;
-	return R3D._sortCompareProgressiveType(objectA, objectsB, R3D._progressiveCompareMultiArraySAD, "gradSIFT", null, "scoreGradSIFT",null,null, minCount);
+	return R3D._sortCompareProgressiveType(objectA, objectsB, R3D._progressiveCompareMultiArraySAD, "gradSIFT", null, "scoreGradSIFT",null,null, minCount, percentDrop);
 }
-R3D._sortCompareProgressiveSIFTFullScoreCache = function(objectA, objectsB, minCount){
+R3D._sortCompareProgressiveSIFTFullScoreCache = function(objectA, objectsB, minCount, fxn, data){
 	var keepMinCount = Math.max(2,minCount);
 	var saveIndex = "scoreSIFT";
-	var fxn = R3D._progressiveCompareSIFTCache;
+	fxn = fxn !== undefined ? fxn : R3D._progressiveCompareSIFTCache;
 	var best = [];
 	for(var i=0; i<objectsB.length; ++i){
 		var objectB = objectsB[i];
-		var score = fxn(objectB);
+		var score = fxn(objectB, data);
 		if(saveIndex){
 			objectB[saveIndex] = score;
 		}
@@ -17272,8 +17581,8 @@ R3D._sortCompareProgressiveSIFTFullScoreCache = function(objectA, objectsB, minC
 	}
 	return best;
 }
-
-R3D._sortCompareProgressiveType = function(objectA, objectsB, fxn, indexA, indexB, saveIndex, keepMinCount){
+// return R3D._sortCompareProgressiveType(objectA, objectsB, R3D._progressiveCompare1DArrayV3DNCC, "flatOrientated",null,null, minCount);
+R3D._sortCompareProgressiveType = function(objectA, objectsB, fxn, indexA, indexB, saveIndex, keepMinCount, percentDrop){
 	indexB = indexB!==undefined && indexB!==null ? indexB : indexA;
 	var best = [];
 	for(var i=0; i<objectsB.length; ++i){
@@ -17285,7 +17594,7 @@ R3D._sortCompareProgressiveType = function(objectA, objectsB, fxn, indexA, index
 		best.push([objectB, score]);
 	}
 	best.sort(R3D._sortCompareProgressiveFxn);
-	R3D._sortCompareProgressiveDropWorst(best, keepMinCount);
+	R3D._sortCompareProgressiveDropWorst(best, keepMinCount, percentDrop);
 
 	var histogram = best.map(function(a){return a[0];});
 	for(var i=0; i<best.length; ++i){
@@ -17293,12 +17602,12 @@ R3D._sortCompareProgressiveType = function(objectA, objectsB, fxn, indexA, index
 	}
 	return best;
 }
-R3D._sortCompareProgressiveDropWorst = function(best, minCount){
+R3D._sortCompareProgressiveDropWorst = function(best, minCount, percentDrop, sigmaDrop){
 	minCount = minCount!==undefined && minCount!==null ? minCount : 3;
 	minCount = Math.min(minCount,best.length);
 	// var p = 0.75; // 0.5-0.90
-	var p = 0.50;
-	// var p = 0.75;
+	var p = Code.valueOrDefault(percentDrop,0.5); // percentDrop!==null && percentDrop!==undefined ? percentDrop : 0.50;
+	var sigma = Code.valueOrDefault(sigmaDrop,2.0);
 	var m = Math.round(best.length*p);
 	m = Math.min(m,best.length-1);
 	if(best.length<=minCount){ // no middle section to even do
@@ -17314,7 +17623,7 @@ R3D._sortCompareProgressiveDropWorst = function(best, minCount){
 		var max = Code.max(scores);
 		var sigMin = Code.stdDev(scores,min);
 		var sigMax = Code.stdDev(scores,max);
-		var limitMin = min + sigMin*1.5; // left distributed drop worst
+		var limitMin = min + sigMin*sigmaDrop; // left distributed drop worst
 		var limitMax = limitMin;
 		// var limitMax = max - sigMax*sigma; // right destributed remove
 		var limitB = Math.min(limitMin,limitMax);
@@ -36025,7 +36334,7 @@ R3D.minimumFromValues = function(values, valueWidth, valueHeight, pointB, cellSc
 	var xLoc = index % valueWidth;
 	var yLoc = (index/valueWidth) | 0;
 	var peak = new V3D(xLoc,yLoc,zLoc);
-console.log(peak+" ... peak");
+// console.log(peak+" ... peak");
 	// sub-pixel interpolation
 	if(0<xLoc && xLoc<valueWidth-1 && 0<yLoc && yLoc<valueHeight-1){
 		var d0 = values[(yLoc-1)*valueWidth + (xLoc-1)];
@@ -36038,11 +36347,11 @@ console.log(peak+" ... peak");
 		var d7 = values[(yLoc+1)*valueWidth + (xLoc+0)];
 		var d8 = values[(yLoc+1)*valueWidth + (xLoc+1)];
 		Code.extrema2DFloatInterpolate(peak, d0,d1,d2,d3,d4,d5,d6,d7,d8);
-console.log(peak+" ... found");
+// console.log(peak+" ... found");
 		peak.x += xLoc;
 		peak.y += yLoc;
 	}
-console.log(cellScale+" ... cellScale");
+// console.log(cellScale+" ... cellScale");
 	var p = new V2D(pointB.x + (peak.x - valueWidth*0.5)*cellScale, pointB.y + (peak.y - valueHeight*0.5)*cellScale);
 	return {"location":p, "score":peak.z};
 }

@@ -352,8 +352,8 @@ vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 - global structure & motion bundle adjust
 	- quasi-local-global bundle adjustment
 	- increase resolution to finer detail
-	x skeletal view graph grouping isolated BA
-	x all view BA
+	- skeletal view graph grouping isolated BA
+	- all view BA
 	=> final structure & motion
 - pipelining
 	- graph init
@@ -379,12 +379,11 @@ vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 	- VR device
 		x ios: scenekit
 		- oculus = unity / blender
-HERE --- REFINE PROCESS
-(12/31)
+(01/31)
 - MVP
 	- example models
 	- example screens
-(01/31)
+(02/28)
 
 google app engine project - nodejs
 https://cloud.google.com/appengine/docs/nodejs/
@@ -406,6 +405,9 @@ refinement - dates
 01/02 x BA on groups/tracks
 01/04 x combining grouped BA into final BA init
 01/10 x BA on final group
+
+- dense pair matching is bad
+
 01/15 - BA identify/remove view if it's position is very bad?
 01/19 - hole filling?
 01/26 - dense pair candidate decisions
@@ -429,10 +431,69 @@ refinement - dates
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-test Stereopsis.optimumNeedleHaystackALocation on full images at beginning
+x test Stereopsis.optimumNeedleHaystackALocation on full images at beginning
 
 
 
+- stereopsis propagation seems to stop in places for not particular reason?
+
+- INITIAL R-MATCHING PROBLEMS:
+	- compare methods aren't any better than SAD
+	- several wrong matches
+	- lots of places without seeds - blank/barren areas
+	- seeds are 'closest' corners, not necessarily exact locations (+/- Rerror pixels)
+		=> need subpixel step
+	- 
+
+
+- find the least-error affine projection
+	- minimization along F-line?
+- extract an area around the best projection (along F-line) (haystack = 4 x needle +  2 x needle)
+- search needle in haystack along line
+
+algorithm assuming most perpendicular normal point (or lowest affine error metric) along F-line is optimum location:
+	- for each corner in image A:
+		- get F-line in image B
+		- get normal projection length at each end
+		- subdivide line to find minimum normal projection length location on line
+		- get affine transform at optimal location
+		- use relative overall scale of optimum affine transform to determine extracted haystack scale|height
+			- haystack oriented along F-line
+			- haystack height = needle height x 2
+			- haystack with = needle height x 2
+			- needle height = cell-feature-size
+		- needle-haystack search optimal SAD location
+		- keep best location if error < max R error
+	- drop worst SAD score points
+
+...
+
+
+
+
+- initial points seem just bad ?
+
+	searchMatchPoints3D
+
+	- do search in 'best' candidate area?
+		- better pixel localization
+	- drop worst matches by scores after
+		- which score(s)?
+- least distorted affine might be best?
+	- keep only affines in lowest error ?
+
+
+	- filter by:
+		A) more correct SAD on larger scale (zoomed out)
+		B) more correct SAD on a smaller scale (zoomed in)
+
+
+these are bad:
+
+
+		sortedB = R3D._sortCompareProgressiveSIFTFlat(objectA, sortedB, 4);
+		sortedB = R3D._sortCompareProgressiveSIFTGrad(objectA, sortedB, 3);
+		sortedB = R3D._sortCompareProgressiveSIFTFullScoreCache(objectA, sortedB, 2);
 
 
 
@@ -452,6 +513,7 @@ test Stereopsis.optimumNeedleHaystackALocation on full images at beginning
 - is projection of patch to affine good?
 	- plane vs sphere
 
+- maybe just use SAD/NCC on R-F-line search
 
 
 --- NCC location of peak seems like it could be off 

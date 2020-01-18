@@ -5480,6 +5480,138 @@ if(doRelaxed){
 	return false;
 }
 
+
+Stereopsis.World.prototype.testOutFinding = function(viewA,viewB, transformAB){
+
+	console.log(transformAB);
+
+	console.log("testOutFinding")
+
+// 5SNAS7PP & QE8XO2VA
+
+	// var pointA = new V2D(230,462);
+	// var pointB = new V2D(220,460);
+
+	// var pointA = new V2D(500,462);
+	// var pointB = new V2D(520,460);
+
+	// var pointA = new V2D(720,502);
+	// var pointB = new V2D(760,500);
+
+
+	// var pointA = new V2D(270,220);
+	// var pointB = new V2D(370,220);
+
+	// var pointA = new V2D(310,190);
+	// var pointB = new V2D(400,190);
+
+	// var pointA = new V2D(330,150);
+	// var pointB = new V2D(420,130);
+
+	// var pointA = new V2D(520,210);
+	// var pointB = new V2D(610,210);
+
+	// var pointA = new V2D(570,260);
+	// var pointB = new V2D(700,220);
+
+	// var pointA = new V2D(370,360);
+	// var pointB = new V2D(300,360);
+
+	var pointA = new V2D(690,500);
+	var pointB = new V2D(700,500);
+
+	var needleSize = 31;
+	var haystackSize = needleSize*7;
+	var affineAB = null;
+
+	var result = Stereopsis.optimumNeedleHaystackALocation(viewA.imageScales(),pointA, viewB.imageScales(),pointB, needleSize,haystackSize, affineAB, 11, true);
+
+	console.log(result);
+
+
+	pointB = result["point"];
+
+	console.log("point: "+pointB);
+
+
+
+// on original:
+var offY = 400;
+var sca = 0.75;
+var image = viewA.image();
+img = GLOBALSTAGE.getFloatRGBAsImage(image.red(), image.grn(), image.blu(), image.width(),image.height());
+var d = new DOImage(img);
+d.matrix().scale(sca);
+// d.graphics().alpha(0.5);
+d.matrix().translate(10 + 0, 10 + offY);
+GLOBALSTAGE.addChild(d);
+
+var image = viewB.image();
+img = GLOBALSTAGE.getFloatRGBAsImage(image.red(), image.grn(), image.blu(), image.width(),image.height());
+var d = new DOImage(img);
+d.matrix().scale(sca);
+// d.graphics().alpha(0.5);
+d.matrix().translate(10 + viewA.image().size().x*sca, 10 + offY);
+GLOBALSTAGE.addChild(d);
+
+var s = 7;
+var d = new DO();
+d.graphics().setLine(2.0,0xFFFF0066);
+d.graphics().beginPath();
+d.graphics().drawCircle(0,0, s);
+d.graphics().strokeLine();
+d.graphics().endPath();
+d.matrix().translate(10 + pointA.x*sca + 0, 10 + pointA.y*sca + offY);
+GLOBALSTAGE.addChild(d);
+
+var d = new DO();
+d.graphics().setLine(2.0,0xFFFF0066);
+d.graphics().beginPath();
+d.graphics().drawCircle(0,0, s);
+d.graphics().strokeLine();
+d.graphics().endPath();
+d.matrix().translate(10 + pointB.x*sca + viewA.image().size().x*sca, 10 + pointB.y*sca + offY);
+GLOBALSTAGE.addChild(d);
+
+
+
+
+
+	var cellScale = 0.250;
+	var needleSize = 51;
+	var haystackSize = 51;
+	var imageA = viewA.imageScales()._images[0];
+	var needle = imageA.extractRectFromFloatImage(pointA.x,pointA.y,cellScale,null,needleSize,needleSize, null);
+
+	var imageB = viewB.imageScales()._images[0];
+	var haystack = imageB.extractRectFromFloatImage(pointB.x,pointB.y,cellScale,null,haystackSize,haystackSize, null);
+
+
+
+	var sca = 1.0;
+	var image = needle;
+	console.log(image)
+	img = GLOBALSTAGE.getFloatRGBAsImage(image.red(), image.grn(), image.blu(), image.width(),image.height());
+	var d = new DOImage(img);
+	// d.matrix().scale(sca);
+	d.matrix().translate(10 + 0, 300);
+	GLOBALSTAGE.addChild(d);
+
+	var sca = 1.0;
+	var image = haystack;
+	console.log(image)
+	img = GLOBALSTAGE.getFloatRGBAsImage(image.red(), image.grn(), image.blu(), image.width(),image.height());
+	var d = new DOImage(img);
+	// d.matrix().scale(sca);
+	d.matrix().translate(10 + 200, 300);
+	GLOBALSTAGE.addChild(d);
+
+
+
+
+	throw "testing out fxn";
+}
+
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 Stereopsis.World.prototype.solveDensePair = function(){ // pairwise
 	// use R abs positions to get good initial points + iterate on expanding confident points
@@ -5499,7 +5631,7 @@ Stereopsis.World.prototype.solveDensePair = function(){ // pairwise
 	// var errorPercentage = 0.002; // 0.002 @ 1000 = 2 px
 	var errorPercentage = 0.01; 
 
-
+	var cellFeatureScale = 2.0;
 
 	// create seed points:
 	var transforms = this.toTransformArray();
@@ -5528,7 +5660,7 @@ Stereopsis.World.prototype.solveDensePair = function(){ // pairwise
 			///var gridSize = view.sizeFromPercent(viewGridSizePercent);
 			var gridSize = view.cellSize();
 			console.log("gridSize: "+gridSize);
-			sizes.push(gridSize);
+			sizes.push(gridSize*cellFeatureScale);
 			images.push(image);
 			Ks.push(K);
 
@@ -5546,6 +5678,16 @@ console.log("GET MATCHES FROM 3D: "+errorR);
 // 
 
 
+
+
+// this.testOutFinding(viewA,viewB, relativeAB);
+
+
+
+
+
+
+
 		// get corners
 		// keep only peak corners within grid size distance
 		console.log(transform);
@@ -5560,7 +5702,8 @@ console.log("GET MATCHES FROM 3D: "+errorR);
 
 
 
-// throw "???";
+// throw "before dense world";
+
 
 		// insert matching points:
 
@@ -5609,11 +5752,11 @@ console.log("GET MATCHES FROM 3D: "+errorR);
 // throw ">>>>>C";
 	
 	// var subdivisions = 0;
-	var subdivisions = 1;
-	// var subdivisions = 2;
+	// var subdivisions = 1;
+	var subdivisions = 2;
 	
-	var iterations = 3; // per grid size
-	// var iterations = 5;
+	// var iterations = 3; // per grid size
+	var iterations = 5;
 	// var iterations = 1;
 	var maxIterations = (subdivisions+1)*iterations;
 
@@ -5669,6 +5812,7 @@ console.log("GET MATCHES FROM 3D: "+errorR);
 		// world.probe2DNNAffine(2.0); // 1-2
 		// world.probe2DCells(2.0); // 1-2
 		world.probe2DCells(3.0);
+		// world.probe2DCells(4.0);
 		
 		world.averagePoints3DFromMatches(true); // only newly added points
 
@@ -5679,7 +5823,8 @@ console.log("GET MATCHES FROM 3D: "+errorR);
 		// world.filterLocal3D(); // ...
 		world.filterPairwiseSphere3D(3.0); // 2-3
 // ?: start more rigid, allow for more error, finish rigid
-		if(subdivision<1){
+		if(false){
+		// if(subdivision<1){
 			// iteration % 2 == 1 ...
 
 			world.filterGlobalMatches(false, 0, 2.0,2.0,2.0,2.0, false);
@@ -10357,52 +10502,7 @@ var addedCount = 0;
 					var centerA = point2DA.point2D();
 					var centerB = point2DB.point2D();
 					var newPointA = empty.center();
-
-// centerA.add(200,300);
-// centerB.add(200,300);
-// newPointA.add(180,300);
-
-// centerA.add(190,350);
-// newPointA.add(190,350);
-// centerB.add(50,370);
-
-// centerA.add(220,440);
-// newPointA.add(220,440);
-// centerB.add(0,470);
-
-// centerA.add(220,430);
-// newPointA.add(220,430);
-// centerB.add(0,470);
-
-// centerA.add(220,460);
-// newPointA.add(220,460);
-// centerB.add(0,480);
-
-
-// centerA.add(220,430);
-// newPointA.add(220,430);
-// centerB.add(0,480);
-
-
-// centerA.add(200,460);
-// newPointA.add(200,460);
-// centerB.add(-20,500);
-
-
-// centerA.add(54,420);
-// newPointA.add(54,420);
-// centerB.add(-200,430);
-
-// centerA.add(57,460);
-// newPointA.add(57,460);
-// centerB.add(-220,470);
-
-// centerA.add(220,450);
-// newPointA.add(220,450);
-// centerB.add(0,480);
-
 					var newMatch = world.bestNeedleHaystackMatchFromLocation(centerA,centerB, newPointA, affine, viewA,viewB);
-
 					if(newMatch){
 						Stereopsis.updateErrorForMatch(newMatch);
 						var fError = newMatch.errorF();
@@ -13629,58 +13729,48 @@ Stereopsis.World.prototype.bestNeedleHaystackMatchFromLocation = function(center
 	var world = this;
 	var predictedB = affineAB.multV2D( V2D.sub(existingA,centerA) ).add(centerB);
 	var needleSize = Stereopsis.compareSizeForViews2D(viewA,centerA,viewB,centerB);
-// needleSize = 50;
-// needleSize = 5;
-// ???
-	var haystackSize = needleSize * 3; // 2-4
-	// console.log("compareSize: "+needleSize+" + "+haystackSize);
-	// var result = R3D.bestAffine2DFromExisting(affine,imageA,centerA,imageB,centerB, existingA, compareSize, forwardBackwardCheck, skipOptimum);
+	var haystackSize = needleSize * 4; // 2-4 --- if F/R error is low, can limit this more towards ~ 2
 	var result = Stereopsis.optimumNeedleHaystackALocation(viewA.imageScales(),existingA, viewB.imageScales(),predictedB, needleSize,haystackSize, affineAB);
-	// match from best spot
-	// Stereopsis.World.prototype.newMatchFromInfo = function(viewA,pointA,viewB,pointB, affineAB, noConnect, display){
-	
-	// var match = world.newMatchFromInfo(viewA,existingA,viewB,predictedB,affineAB,     true);
-	var match = world.newMatchFromInfo(viewA,existingA,viewB,predictedB,affineAB);
+	var pointB = result["point"];
+	var match = world.newMatchFromInfo(viewA,existingA,viewB,pointB,affineAB);
 
 	return match;
 }
 
 
 
-Stereopsis.optimumNeedleHaystackALocation = function(imageScalesA,pointA, imageScalesB,pointB, needleSize,haystackRelativeSize, matrix){ // search needle/haystack at points
-	var compareSize = 11;
-	// var compareSize = 7;
+Stereopsis.optimumNeedleHaystackALocation = function(imageScalesA,pointA, imageScalesB,pointB, needleSize,haystackRelativeSize, matrix, compareSize, debug){ // search needle/haystack at points
+	compareSize = compareSize!==undefined ? compareSize : 11;
+	// compareSize = 11;
+	// compareSize = 9;
+	// compareSize = 7;
 
 	var cellScale = (compareSize/needleSize);
 	var haystackSize = Math.ceil((haystackRelativeSize/needleSize)*compareSize);
 		haystackSize = Math.max(haystackSize,compareSize);
-	// console.log("extract",compareSize, needleSize, haystackSize);
 
 	var needle = imageScalesA.extractRect(pointA,cellScale,compareSize,compareSize, matrix);
 	var haystack = imageScalesB.extractRect(pointB,cellScale,haystackSize,haystackSize, null);
 
 
-	// cellScale = 1.0/cellScale;
 	// var imageA = imageScalesA._images[0];
 	// var imageB = imageScalesB._images[0];
-	// var needle = imageA.extractRectFromFloatImage(pointA.x,pointA.y,cellScale,null,compareSize,compareSize, matrix);
-	// var haystack = imageB.extractRectFromFloatImage(pointB.x,pointB.y,cellScale,null,haystackSize,haystackSize, null);
+	// var needle = imageA.extractRectFromFloatImage(pointA.x,pointA.y,1.0/cellScale,null,compareSize,compareSize, matrix);
+	// var haystack = imageB.extractRectFromFloatImage(pointB.x,pointB.y,1.0/cellScale,null,haystackSize,haystackSize, null);
 
 
-
-
-	// var scoreSAD = R3D.searchNeedleHaystackSADColor(needle,haystack);
-	var scoreNCC = R3D.searchNeedleHaystackNCCColor(needle,haystack);
+	var scoreSAD = R3D.searchNeedleHaystackSADColor(needle,haystack);
+	// var scoreNCC = R3D.searchNeedleHaystackNCCColor(needle,haystack);
 	// var scoreMul = Code.arrayVectorMul(scoreSAD["value"],scoreNCC["value"]);
 
 	var scores = {
-		// "width": scoreSAD["width"],
-		// "height": scoreSAD["height"],
-		// "value": scoreSAD["value"]
+		"width": scoreSAD["width"],
+		"height": scoreSAD["height"],
+		"value": scoreSAD["value"]
 
-		"width": scoreNCC["width"],
-		"height": scoreNCC["height"],
-		"value": scoreNCC["value"]
+		// "width": scoreNCC["width"],
+		// "height": scoreNCC["height"],
+		// "value": scoreNCC["value"]
 
 		// "value": scoreMul
 	}
@@ -13691,21 +13781,21 @@ Stereopsis.optimumNeedleHaystackALocation = function(imageScalesA,pointA, imageS
 	// get peak location:
 	var finalSize = scores["width"];
 	// var cellScale = (needleSize/compareSize);
-console.log("inside size: "+finalSize+"x"+finalSize)
+// console.log("inside size: "+finalSize+"x"+finalSize)
 	// cellScale
 
-	var minimum = R3D.minimumFromValues(scores["value"], finalSize, finalSize, pointB, cellScale);
+	var minimum = R3D.minimumFromValues(scores["value"], finalSize, finalSize, pointB, 1.0/cellScale);
 	var absoluteLocation = minimum["location"];
 	var absoluteScore = minimum["score"];
 
-	console.log(minimum);
+	// console.log(minimum);
 
 	
-
+if(debug){
 // if(false){
-if(true){
+// if(true){
 
-var sca = 4.0;
+var sca = 3.0;
 var image = needle;
 img = GLOBALSTAGE.getFloatRGBAsImage(image.red(), image.grn(), image.blu(), image.width(),image.height());
 var d = new DOImage(img);
@@ -13760,7 +13850,7 @@ console.log(u,v);
 d.matrix().translate(10 + 200 + o + u, 10 + o + v);
 d.graphics().setLine(2.0,0xFF00FF00);
 d.graphics().beginPath();
-d.graphics().drawCircle(0,0, compareSize);
+d.graphics().drawCircle(0,0, 5);
 d.graphics().strokeLine();
 d.graphics().endPath();
 
@@ -13793,12 +13883,11 @@ GLOBALSTAGE.addChild(d);
 
 
 
-throw "shown"
+// throw "shown"
 
 }
 
 
-throw "is the above right ?"
 	
 	return {"point":absoluteLocation, "score":absoluteScore};
 }

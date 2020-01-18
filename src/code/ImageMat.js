@@ -60,6 +60,9 @@ ImageMat.prototype.unset = function(){
 	this._g = null;
 	this._b = null;
 }
+ImageMat.prototype.toString = function(){
+	return "[ImageMat: "+this.width()+"x"+this.height()+"]";
+}
 ImageMat.prototype.kill = function(){
 	if(this._y){
 		Code.emptyArray(this._y);
@@ -68,6 +71,9 @@ ImageMat.prototype.kill = function(){
 	Code.emptyArray(this._g);
 	Code.emptyArray(this._b);
 	this.unset();
+}
+ImageMat.relativeScale = function(imageA,imageB){
+	return (imageA.width()/imageB.width() + imageA.height()/imageB.height())*0.5;
 }
 // ------------------------------------------------------------------------------------------------------------------------ static
 ImageMat.debugImage = function(width,height){
@@ -5073,12 +5079,12 @@ ImageMatScaled.prototype.extractRect = function(resultCenter, resultScale, resul
 
 // remove scale
 // var info = R3D.infoFromAffine2D(matrix);
-// if(matrix){
-// var info = R3D.infoFromAffineMatrix2D(matrix);
-// var applyScale = info["scale"];
-// matrix.scale(1.0/applyScale);
-// resultScale = applyScale*resultScale; // additional scale for including entirety of cell-compare size
-// }
+if(matrix){
+var info = R3D.infoFromAffineMatrix2D(matrix);
+var applyScale = info["scale"];
+matrix.scale(1.0/applyScale);
+resultScale = applyScale*resultScale; // additional scale for including entirety of cell-compare size
+}
 	var imageScales = this;
 	var info = imageScales.infoForScale(resultScale);
 	var imageMatrix = info["image"];
@@ -5086,9 +5092,9 @@ ImageMatScaled.prototype.extractRect = function(resultCenter, resultScale, resul
 	var actScale = info["actualScale"];
 	var needle = imageMatrix.extractRectFromFloatImage(resultCenter.x*actScale,resultCenter.y*actScale,1.0/effScale,null, resultWidth,resultHeight, matrix);
 // add back scale
-// if(matrix){
-// matrix.scale(applyScale);
-// }
+if(matrix){
+matrix.scale(applyScale);
+}
 	return needle;
 }
 ImageMatScaled.extractRect = function(imageScales, resultCenter, resultScale, resultWidth,resultHeight, matrix){

@@ -7720,9 +7720,9 @@ console.log("GOT : matchCount: "+matchCount);
 i = 0; // good
 // i = 1; // ok
 // i = 2; // poor
-// i = 3; // bad
+// i = 3; // bad -- R is bad
 // i = 4; // good
-// i = 5; // poor
+// i = 5; // poor 
 // i = 6; // bad
 // i = 7; // bad
 // i = 8; // ok
@@ -9326,8 +9326,8 @@ console.log(relativeAB);
 	var allViews = [vA,vB];
 
 	// var cellSize = 80;
-	var cellSize = 60; // beween sparse and dense
-	// var cellSize = 40;
+	// var cellSize = 60; // beween sparse and dense
+	var cellSize = 40;
 
 	// load view dense-resolution images
 	var expectedImages = allViews.length;
