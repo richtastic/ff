@@ -445,6 +445,16 @@ x test Stereopsis.optimumNeedleHaystackALocation on full images at beginning
 		=> need subpixel step
 	- 
 
+=> add sub-pixel step on top choices
+=> add error dropping step
+
+
+searchMatchPoints3D
+
+- try center-F-line algorithm:
+
+
+
 
 - find the least-error affine projection
 	- minimization along F-line?
@@ -469,6 +479,12 @@ algorithm assuming most perpendicular normal point (or lowest affine error metri
 ...
 
 
+
+
+- more educated patch outlier dropping: group patch together dropping 
+	- local connectivity connection based on depth 
+		- boundary segmentation
+	- visibility constraints
 
 
 - initial points seem just bad ?

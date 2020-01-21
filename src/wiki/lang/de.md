@@ -504,6 +504,11 @@
 | auf der anderen Seite | . | on the other side / on the other hand |
 
 
+volksgemeinschaft -  people's community : propaganda - created - community
+
+
+
+
 
 <br/>
 
@@ -1234,48 +1239,68 @@ Mein Herz ist leer das darf nicht geschehen
 
 
 Eisbrecher - Vergissmeinnicht
+Eisbrecher- Antikorper- Vergissmeinnicht
 
 
-dein herz schlgt
-am abgrund
-die Nacht verhllt
-dein letztes wort
-so grausam
-so achtlos
-reisst dich das schicksal
-von mir fort
-ich lass dich los
-muss mich befrein
-denn meine Sehnsucht holt mich ein
-Auf ewig dein...
-verzeih mir-bleib bei mir
-und ich sagte noch vergissmeinnicht
-ich schenk dir zum abschied
-ein letztes licht
-vergissmeinnicht
-Vergissmeinnicht
-Vergissmeinnicht
-Vergissmeinnicht
-Vergissmeinnicht
-mein blick sinkt
-ins nachtrot
-ich reiss mich los
-mit letzter kraft
-so grausam
-so heilig
-liegst du vor mir
-es ist vollbracht
-ich lass dich los
-muss mich befrein
-denn meine Sehnsucht holt mich ein
-Auf ewig dein...
-verzeih mir-bleib bei mir
-und ich sagte noch vergissmeinnicht
-ich schenk dir zum abschied
-ein letztes licht
-vergissmeinnicht
-Vergissmeinnicht
-Vergissmeinnicht…
+
+
+
+
+
+| du | | en |
+|-|-|-|
+
+| dein herz schlgt |  | your heart beats |
+| am abgrund |  | In the abyss |
+| die Nacht verhllt |  | hiding the night |
+| dein letztes wort |  | your last word |
+| so grausam, so achtlos |  | so cruel, so careless |
+| reisst dich das schicksal |  | destiny will tear you |
+| von mir fort |  | away from me |
+| ich lass dich los |  | i let you go |
+| muss mich befrein |  | must free me |
+| denn meine Sehnsucht holt mich ein |  | because my longing catches up with me |
+| Auf ewig dein... |  | Forever Your's... |
+|  |  |  |
+|  | Refrain: |  |
+| verzeih mir-bleib bei mir |  | pardon me - stay with me |
+| und ich sagte noch vergissmeinnicht |  | and I still said forget-me-not |
+| ich schenk dir zum abschied |  | I give you goodbye |
+| ein letztes licht |  | one last light |
+| vergissmeinnicht x5 |  | forget Me Not |
+| (Bleib bei mir!) |  | (Stay with me!) |
+|  |  |  |
+| mein blick sinkt |  | my eyes(gaze/view/perspective) sink |
+| ins nachtrot |  | into the night red |
+| ich reiss mich los |  | I tear myself away |
+| mit letzter kraft |  | with the last strength |
+| so grausam |  | so cruel |
+| so heilig |  | so sacred |
+| liegst du vor mir |  | you lie in front of me |
+| es ist vollbracht |  | it is finished |
+| ich lass dich los |  | i let you go |
+| muss mich befrein |  | must free me |
+| denn meine Sehnsucht holt mich ein |  | because my longing catches up with me |
+| Auf ewig dein... |  | Forever Your's... |
+|  |  |  |
+|  | (Refrain) |  |
+|  |  |  |
+| diesmal wird es fr immer sein |  | this time it will be forever |
+| auch diese wunde wird verheiln |  | this wound will also heal |
+| ich reiss mich los muss mich befrein |  | I have to break free |
+| denn unser schicksal holt uns ein |  | because our fate catches up with us |
+|  |  |  |
+| verzeih mir-bleib bei mir |  | pardon me - stay with me |
+| und ich sagte noch vergissmeinnicht |  | and I still said forget-me-not |
+| ich schenk dir zum abschied |  | I give you goodbye |
+| ein letztes licht |  | one last light |
+| vergissmeinnicht x5 |  | forget Me Not |
+| (Verzieh mir!) |  | Pardon me |
+|  |  |  |
+
+
+
+
 
 
 

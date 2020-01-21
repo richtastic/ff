@@ -5055,6 +5055,14 @@ ImageMatScaled.prototype.height = function(){
 	}
 	return null;
 }
+ImageMatScaled.prototype.size = function(){
+	var image = this._images;
+	if(image){
+		image = image[0];
+		return image.size();
+	}
+	return null;
+}
 ImageMatScaled.prototype.infoForScale = function(scale){
 	var container = this._container;
 	var images = this._images;
@@ -5071,6 +5079,23 @@ ImageMatScaled.prototype.images = function(){
 }
 ImageMatScaled.prototype.scales = function(){
 	return this._scales;
+}
+
+ImageMatScaled.prototype.getScaledImage = function(scale, doCeil){
+	var wid = this.width();
+	var hei = this.height();
+	var wm1 = wid-1;
+	var hm1 = hei-1;
+	var center = new V2D(wm1*0.5,hm1*0.5);
+	var resultWidth = Math.round(scale*wid);
+	var resultHeight = Math.round(scale*hei);
+	if(doCeil){
+		resultWidth = Math.ceil(scale*wid);
+		resultHeight = Math.ceil(scale*hei);
+	}
+	var resultScale = (resultWidth/wid + resultHeight/hei)*0.5;
+	var image = this.extractRect(center, resultScale, resultWidth,resultHeight);
+	return image;
 }
 
 

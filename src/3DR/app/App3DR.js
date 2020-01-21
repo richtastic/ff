@@ -9363,7 +9363,9 @@ console.log(relativeAB);
 		var view = allViews[i];
 		var viewID = view["id"];
 		view = project.viewFromID(viewID);
-		view.loadDenseHiImage(checkLoadedAllImages, project);
+		view.loadBundleAdjustImage(checkLoadedAllImages, project);
+		// view.loadTextureImage(checkLoadedAllImages, project);
+		//view.loadDenseHiImage(checkLoadedAllImages, project);
 		// view.loadFeaturesImage(checkLoadedAllImages, project);
 	}
 }
