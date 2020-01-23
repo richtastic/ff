@@ -16169,6 +16169,7 @@ R3D.searchMatchPoints3D = function(images, cellSizes, relativeAB, Ks, errorPixel
 	// var errorB = errorPixels[1];
 	var imageScalesList = [];
 	var featureScale = 1.0; // multiple of cell size 1-2
+		featureScale = 2.0; // want a large area
 	var distanceScale = 0.25; // local maximal suppression 0.25-0.5
 	var cameraA = new Matrix(4,4).identity();
 	var cameraB = relativeAB;
@@ -16211,7 +16212,6 @@ R3D.searchMatchPoints3D = function(images, cellSizes, relativeAB, Ks, errorPixel
 	var actualScalesList = [];
 // throw "before"
 var errors = [];
-// TODO: GET IMAGE SCALE SEQUENCE
 	for(var i=0; i<images.length; ++i){
 		var imageMatrix = images[i];
 		var cellSize = cellSizes[i];
@@ -16314,16 +16314,18 @@ d.matrix().translate(0 + i*600, 0);
 	// find best match candidates fwd & bak
 	var hyp = Math.sqrt(widthA*widthA + heightA*heightA);
 	var minPix = 0.001*hyp;
-	var maxPix = 0.01*hyp;
+	// var maxPix = 0.01*hyp;
+	var maxPix = 0.05*hyp;
 	console.log(minPix,maxPix);
 	var errSearch = Math.min(Math.max(2.0*errorPixels,minPix),maxPix); // todo percent
 	console.log("errSearch: "+errSearch);
 	var dir = new V2D();
 	var org = new V2D();
-	var affineRatioKeepMax = 4; // 2-5
+	var affineRatioKeepMax = 2; // 2-5
+	affineRatioKeepMax = 1.5;
 var doDebug = true;
 var debugOffY = 300;
-doDebug = false;
+// doDebug = false;
 // throw "before loop"
 
 
@@ -16369,7 +16371,7 @@ if(doDebug){
 	// i = 250;
 	// i = 300;
 	// i = 400;
-	i = 450;
+	// i = 450;
 	// i = 500;
 	// i = 600;
 	// i = 700;
@@ -16384,8 +16386,13 @@ if(doDebug){
 	// i = 960;
 	// i = 965;
 	// i = 1000;
-// i = 650;
-// i = 210;
+i = 233;
+// i = 915; // good match opportunity
+// i = 940; // good edge
+// i = 950; // good corner
+// i = 995;
+// i = 1005;
+// i = 1250;
 	// i = 1005;
 	// i = 1010;
 	// i = 1015;
@@ -16407,6 +16414,7 @@ if(doDebug){
 // objsA[i] = R3D.objectProgressiveR3D(c, imageScales, featureSize, null , true);
 
 }
+console.log(objectA);
 			var objectA = objsA[i];
 			var point2DA = objectA["point"];
 
@@ -16499,24 +16507,7 @@ for(var b=0; b<sortedB.length; ++b){
 	d.matrix().scale(3.0);
 	d.matrix().translate(10 + 50*b, debugOffY + 250);
 	GLOBALSTAGE.addChild(d);
-
-/*
-	var d = new DO();
-		d.graphics().clear();
-		d.graphics().setLine(1.0, 0xFF0000FF);
-		d.graphics().beginPath();
-		// d.graphics().drawRect(p.x -featureSize*0.5*imageScale,p.y-featureSize*0.5*imageScale, featureSize*imageScale,featureSize*imageScale);
-		// console.log(p+" ? ")
-		d.graphics().drawCircle(p.x,p.y, 4);
-		d.graphics().endPath();
-		d.graphics().strokeLine();
-		GLOBALSTAGE.addChild(d);
-		d.matrix().translate(0 + 1*600, 0);
-*/
-
 // show affine patch ...
-
-
 	// var objectB = sortedB[b];
 			var point2DB = objectB["point"];
 			var points2D = [point2DA, point2DB];
@@ -16603,7 +16594,8 @@ var lenProjection = null;
 }
 
 		// filter on color average
-		sortedB = R3D._sortCompareProgressiveColor(objectA, sortedB, 20, 0.5);
+		// sortedB = R3D._sortCompareProgressiveColor(objectA, sortedB, 50, 0.5);
+		sortedB = R3D._sortCompareProgressiveColor(objectA, sortedB, sortedB.length, 0.5);
 		// console.log(sortedB.length);
 
 if(doDebug){
@@ -16623,7 +16615,8 @@ for(var b=0; b<sortedB.length; ++b){
 }
 
 		// search for colors with close color histograms
-		sortedB = R3D._sortCompareProgressiveColorHistogram(objectA, sortedB, 10, 0.5);
+		sortedB = R3D._sortCompareProgressiveColorHistogram(objectA, sortedB, sortedB.length, 0.5);
+		// sortedB = R3D._sortCompareProgressiveColorHistogramBest(objectA, sortedB, 0.50, 50, 0.5);
 		// console.log(sortedB.length);
 
 if(doDebug){
@@ -16641,6 +16634,31 @@ for(var b=0; b<sortedB.length; ++b){
 	GLOBALSTAGE.addChild(d);
 }
 }
+
+
+		// sortedB = R3D._sortCompareProgressiveColorHistogram(objectA, sortedB, 50, 0.5);
+		sortedB = R3D._sortCompareProgressiveColorHistogramBest(objectA, sortedB, 0.50, sortedB.length, 0.5);
+		// console.log(sortedB.length);
+
+if(doDebug){
+// SHOW PATCHES
+for(var b=0; b<sortedB.length; ++b){
+	var objectB = sortedB[b];
+		var p = objectB["point"];
+		p = p.copy();
+		p.scale(imageScaleB);
+	var img = objectB["icon"];
+	img = GLOBALSTAGE.getFloatRGBAsImage(img.red(),img.grn(),img.blu(), img.width(),img.height());
+	var d = new DOImage(img);
+	d.matrix().scale(3.0);
+	d.matrix().translate(10 + 50*b, debugOffY + 450);
+	GLOBALSTAGE.addChild(d);
+}
+}
+
+// throw "after best"
+
+
 
 		// calculate P3D / projections
 		var affineRatios = [];
@@ -16683,13 +16701,10 @@ var errorR = info["error"];
 					ratio = 1.0/ratio;
 				}
 				
-				// console.log(ratio);
-
 			// patchAffine2DFromPatch3D
 // DOES AFFINE NEED TO BE INVERSE ????
-// affine2D = null;
-
-// TODO: CAN IGNORE AFFINES THAT ARE VERY BAD
+affine2D.inverse();
+			// want to see B as would be shown in A
 
 			var temp = null;
 			if(ratio<=affineRatioKeepMax){
@@ -16760,6 +16775,31 @@ for(var b=0; b<sortedB.length; ++b){
 			R3D.objectProgressiveR3D_B(objectB);
 		}
 
+// if(doDebug){
+// // SHOW PATCHES
+// for(var b=0; b<sortedB.length; ++b){
+// 	var objectB = sortedB[b];
+// 		var p = objectB["point"];
+// 		p = p.copy();
+// 		p.scale(imageScaleB);
+// 	var img = objectB["icon"];
+// 	img = GLOBALSTAGE.getFloatRGBAsImage(img.red(),img.grn(),img.blu(), img.width(),img.height());
+// 	var d = new DOImage(img);
+// 	d.matrix().scale(3.0);
+// 	d.matrix().translate(10 + 50*b, debugOffY + 450);
+// 	GLOBALSTAGE.addChild(d);
+// }
+// }
+
+
+
+
+		// search for colors with close flat color - ssd
+		sortedB = R3D._sortCompareProgressiveColorFlatSSD(objectA, sortedB, sortedB.length, 0.5);
+		// console.log(sortedB.length);
+
+
+
 if(doDebug){
 // SHOW PATCHES
 for(var b=0; b<sortedB.length; ++b){
@@ -16771,14 +16811,13 @@ for(var b=0; b<sortedB.length; ++b){
 	img = GLOBALSTAGE.getFloatRGBAsImage(img.red(),img.grn(),img.blu(), img.width(),img.height());
 	var d = new DOImage(img);
 	d.matrix().scale(3.0);
-	d.matrix().translate(10 + 50*b, debugOffY + 450);
+	d.matrix().translate(10 + 50*b, debugOffY + 500);
 	GLOBALSTAGE.addChild(d);
 }
 }
 
-		// search for colors with close flat color - ssd
-		sortedB = R3D._sortCompareProgressiveColorFlatSSD(objectA, sortedB, 8);
-		// console.log(sortedB.length);
+
+throw "after SAD"
 
 		sortedB = R3D._sortCompareProgressiveSIFTFullScoreCache(objectA, sortedB, 8, R3D._progressiveReturnCacheProperty, "sadCache");
 
@@ -16794,7 +16833,7 @@ for(var b=0; b<sortedB.length; ++b){
 	img = GLOBALSTAGE.getFloatRGBAsImage(img.red(),img.grn(),img.blu(), img.width(),img.height());
 	var d = new DOImage(img);
 	d.matrix().scale(3.0);
-	d.matrix().translate(10 + 50*b, debugOffY + 500);
+	d.matrix().translate(10 + 50*b, debugOffY + 550);
 	GLOBALSTAGE.addChild(d);
 }
 }
@@ -16939,6 +16978,275 @@ break;
 
 }else if(matchingMethod==1){
 	console.log("matchingMethod 1");
+
+	for(var k=0; k<objList.length; ++k){
+		console.log("ITERATION: "+k+" / "+objList.length);
+		var objsA = objList[k];
+		var spaceB = oppList[k];
+		var indexA = k%2;
+		var indexB = (k+1)%2;
+
+		var Ffwd = fList[indexA];
+		var Frev = fList[indexB];
+		var Ka = kList[indexA];
+		var Kb = kList[indexB];
+		var KaInv = iList[indexA];
+		var KbInv = iList[indexB];
+		var cameraA = matList[indexA];
+		var cameraB = matList[indexB];
+
+		var imageA = imageScalesList[indexA];
+		var imageB = imageScalesList[indexB];
+		var cellSizeA = cellSizes[indexA];
+		var cellSizeB = cellSizes[indexB];
+		var featureSizeA = cellSizeA*featureScale;
+		var featureSizeB = cellSizeB*featureScale;
+// only used for displaying:
+var imageScaleA = actualScalesList[indexA];
+var imageScaleB = actualScalesList[indexB];
+
+
+		var widthA = imageA.width();
+		var heightA = imageA.height();
+		var widthB = imageB.width();
+		var heightB = imageB.height();
+
+
+var doDebug = true;
+		for(var i=0; i<objsA.length; ++i){
+if(doDebug){
+	// i = 100;
+	// i = 200;
+	// i = 400;
+	// i = 450;
+	i = 915;
+}
+
+			var objectA = objsA[i];
+			var point2DA = objectA["point"];
+			// get physical line in image B -- clip at ends
+			var lB = R3D.lineFromF(Ffwd,point2DA, org,dir);
+			// clip to image B
+			var ints = Code.clipRayRect2D(org,dir,new V2D(0,0), new V2D(widthB,0), new V2D(widthB,heightB), new V2D(0,heightB));
+			console.log(ints);
+			if(!ints){
+				continue;
+			}
+			var a = ints["a"];
+			var b = ints["b"];
+			if(!a || !b){
+				continue;
+			}
+			// find minimum distortion
+			var valueA = null;
+			var valueB = null;
+			var valueMid = null;
+
+
+// original:
+var p = point2DA.copy().scale(imageScaleA);
+var d = new DO();
+d.graphics().clear();
+d.graphics().setLine(1.0, 0xFFFF0000);
+d.graphics().beginPath();
+d.graphics().drawRect(p.x -featureSize*0.5*imageScaleA,p.y-featureSize*0.5*imageScaleA, featureSize*imageScaleA,featureSize*imageScaleA);
+d.graphics().endPath();
+d.graphics().strokeLine();
+GLOBALSTAGE.addChild(d);
+
+
+var a2 = a.copy();
+var b2 = b.copy();
+
+a2.scale(imageScaleB);
+b2.scale(imageScaleB);
+
+var d = new DO();
+	d.graphics().clear();
+	d.graphics().setLine(1.0, 0xFFFF0000);
+	d.graphics().beginPath();
+	d.graphics().moveTo(a2.x,a2.y);
+	d.graphics().lineTo(b2.x,b2.y);
+	d.graphics().strokeLine();
+	d.graphics().endPath();
+
+	// // limits:
+	// ort = dir.copy().rotate(Math.PI*0.5);
+	// d.graphics().setLine(1.0, 0xFFFF00FF);
+	// d.graphics().beginPath();
+	// d.graphics().moveTo(a2.x + ort.x*errSearch*imageScaleA,a.y + ort.y*errSearch*imageScaleA);
+	// d.graphics().lineTo(b2.x + ort.x*errSearch*imageScaleB,b.y + ort.y*errSearch*imageScaleB);
+	// d.graphics().strokeLine();
+	// d.graphics().endPath();
+
+	// d.graphics().setLine(1.0, 0xFFFF00FF);
+	// d.graphics().beginPath();
+	// d.graphics().moveTo(a2.x - ort.x*errSearch*imageScaleA,a2.y - ort.y*errSearch*imageScaleA);
+	// d.graphics().lineTo(b2.x - ort.x*errSearch*imageScaleB,b2.y - ort.y*errSearch*imageScaleB);
+	// d.graphics().strokeLine();
+	// d.graphics().endPath();
+	
+GLOBALSTAGE.addChild(d);
+d.matrix().translate(0 + 1*600, 0);
+
+
+
+			// var point2DB = null;
+			var maxBSIterations = 10;
+			// var isInside = false;
+
+// throw "need to survey entire line & subdivide";
+			
+			var bsSubdivisions = 9; // 5-9
+
+			for(var iBS=0; iBS<maxBSIterations; ++iBS){
+
+				// if(valueA===null){
+				// 	point2DB = a;
+				// }else if(valueB===null){
+				// 	point2DB = b;
+				// }else{
+				// 	isInside = true;
+				// 	point2DB = V2D.midpoint(a,b);
+				// }
+				// //
+				var ab = V2D.sub(b,a);
+				var minValue = null;
+				var minPoint = null;
+				// 
+				for(var sub=0; sub<bsSubdivisions; ++sub){
+					var percent = sub/(bsSubdivisions-1);
+					var point2DB = ab.copy().scale(percent).add(a);
+					// console.log(iBS+" : "+point2DB+" : ");
+					var points2D = [point2DA, point2DB];
+					var point3D = R3D.triangulatePointDLT(point2DA,point2DB, cameraA,cameraB, KaInv, KbInv);
+					var patch3D = R3D.patch3DFromPoint3DCameras(point3D, cameraCentersList, cameraNormalsList, cameraRightsList, cameraSizesList, points2D);
+					var normal3D = patch3D["normal"];
+					var up3D = patch3D["up"];
+					var right3D = patch3D["right"];
+					var size3D = patch3D["size"];
+					var affine2D = R3D.patchAffine2DFromPatch3D(point3D,normal3D,up3D,right3D,size3D, cameraA,Ka, cameraB,Kb, point2DA,point2DB, affineReuse);
+					var distortion = R3D.affineDistortionMetric(affine2D.a,affine2D.b,affine2D.c,affine2D.d);
+					console.log("distortion: "+distortion);
+					if(!minPoint || distortion<minValue){
+						minPoint = point2DB;
+						minValue = distortion;
+					}
+
+					// show:
+					var p = point2DB.copy().scale(imageScaleB);
+					var ss = featureSize*0.5*imageScaleB;	
+					var bl = new V2D(-1,-1);
+					var br = new V2D(1,-1);
+					var tl = new V2D(-1,1);
+					var tr = new V2D(1,1);
+					bl.scale(ss);
+					br.scale(ss);
+					tl.scale(ss);
+					tr.scale(ss);
+					bl = affine2D.multV2DtoV2D(bl);
+					br = affine2D.multV2DtoV2D(br);
+					tl = affine2D.multV2DtoV2D(tl);
+					tr = affine2D.multV2DtoV2D(tr);
+					
+					var d = new DO();
+					d.graphics().clear();
+					// if(ratio<affineRatioKeepMax){
+						d.graphics().setLine(1.0, 0xCC0000FF);
+					// }else{
+					// 	d.graphics().setLine(1.0, 0x66CC0000);
+					// }
+					d.graphics().beginPath();
+					// d.graphics().drawRect(p.x -featureSize*0.5*imageScale,p.y-featureSize*0.5*imageScale, featureSize*imageScale,featureSize*imageScale);
+					d.graphics().moveTo(p.x + bl.x*imageScaleB,p.y + bl.y*imageScaleB);
+					d.graphics().lineTo(p.x + br.x*imageScaleB,p.y + br.y*imageScaleB);
+					d.graphics().lineTo(p.x + tr.x*imageScaleB,p.y + tr.y*imageScaleB);
+					d.graphics().lineTo(p.x + tl.x*imageScaleB,p.y + tl.y*imageScaleB);
+					d.graphics().endPath();
+					d.graphics().strokeLine();
+					GLOBALSTAGE.addChild(d);
+
+					d.matrix().translate(0 + 1*600, 0);
+
+
+				}
+
+
+				if(size<featureSizeB*0.25){ // close enough
+					console.log("sized: "+size+" < "+featureSizeB);
+
+					var p = minPoint.copy().scale(imageScaleB);
+
+
+					var d = new DO();
+					d.graphics().clear();
+					d.graphics().setLine(2.0, 0xFF00CC00);
+					d.graphics().beginPath();
+					d.graphics().drawCircle(p.x,p.y, 20.0);
+					d.graphics().endPath();
+					d.graphics().strokeLine();
+					GLOBALSTAGE.addChild(d);
+
+					d.matrix().translate(0 + 1*600, 0);
+
+
+					break;
+				}
+				var size = ab.length();
+				ab.length(size*0.25);
+				a = V2D.sub(minPoint,ab);
+				b = V2D.add(minPoint,ab);
+
+
+
+
+
+				// // save:
+				// if(valueA===null){
+				// 	valueA = distortion;
+				// }else if(valueB===null){
+				// 	valueB = distortion;
+				// 	if(valueB<valueA){
+				// 		var t = a;
+				// 		b = a;
+				// 		a = t;
+				// 		t = valueA;
+				// 		valueA = valueB;
+				// 		valueB = t;
+				// 	}
+				// }else{
+				// 	valueMid = distortion;
+				// 	console.log("VALS: "+valueA+" | "+valueMid+" | "+valueB);
+					
+				// 	if(valueMid<=valueA){ // new smaller value
+				// 		valueB = valueA;
+				// 		valueA = valueMid;
+				// 		b = a;
+				// 		a = point2DB;
+				// 	}else if(valueMid<valueB || true){
+				// 		b = point2DB;
+				// 		valueB = valueMid;
+				// 	}else{ // higher than both....
+				// 		throw "valueMid is high ...";
+				// 	}
+				// }
+
+			}
+
+			throw "...";
+
+if(doDebug){
+	break;
+}
+		}
+if(doDebug){
+	break;
+}
+	}
+if(doDebug){
+	throw "do debug";
+}
+
 	throw "only search haystack around projected point in B along F line";
 
 
@@ -17052,7 +17360,7 @@ console.log("skipped: "+skipped+" / matchingCount: "+matchingCount);
 	var cellSizeA = cellSizes[indexA];
 	var cellSizeB = cellSizes[indexB];
 
-	var needleSize = cellSizeA;
+	var needleSize = cellSizeA; // featureScale
 	var haystackSize = needleSize*2;
 	console.log(needleSize,haystackSize);
 	console.log("pixel localization");
@@ -17064,6 +17372,9 @@ console.log("skipped: "+skipped+" / matchingCount: "+matchingCount);
 		var pointB = objectB["point"];
 		var matchA = match[2];
 		var affineAB = matchA["affine"];
+
+		
+
 		var result = R3D.optimumNeedleHaystackAtLocation(imageScaleA,pointA, imageScaleB,pointB, needleSize,haystackSize, affineAB);
 		var newB = result["point"];
 		var score = result["score"];
@@ -17279,9 +17590,6 @@ for(var i=0; i<matches.length; ++i){
 
 }
 
-
-
-// TODO: subpixelHaystack USING ORIGINAL IMAGE B AS HAYSTACKs
 
 R3D.subpixelMinimumPeak1D = function(values,width){
 	var minX = Code.minIndex(values);
@@ -17738,6 +18046,36 @@ R3D._progressiveCompare1DArraySAD = function(histA,histB, count){
 	return sum/count;
 }
 
+
+R3D._progressiveCompare1DArraySADPercent = function(histA,histB, percentUse){
+	// console.log("_progressiveCompare1DArraySADPercent");
+	var sum = 0;
+	var scores = [];
+	if( !Code.isObject(histA) ){
+		throw "should be object ..";
+	}
+	var keys = Code.keysUnion(histA,histB);
+	// var count = Math.max(keys.length;
+	// var count = Math.max(histA.length,histB.length);
+	var count = keys.length;
+	for(var i=0; i<keys.length; ++i){
+		var key = keys[i];
+		var a = Code.valueOrDefault(histA[key], 0);
+		var b = Code.valueOrDefault(histB[key], 0);
+		scores.push( Math.abs(a-b) );
+	}
+	scores.sort();
+	// console.log(scores);
+
+	var maxCount = Math.ceil(count*percentUse);
+	if(maxCount>0){
+		Code.truncateArray(scores, maxCount);
+		var sum = Code.sumArray(scores);
+		sum /= scores.length;
+	}
+	return sum;
+}
+
 R3D._progressiveCompareMultiArraySAD = function(a,b){
 	var sum = 0;
 	var count = a.length;
@@ -17755,7 +18093,8 @@ R3D._progressiveCompare1DArrayV3DSAD = function(histA,histB, count){
 	var count = histA.length;
 	var sum = 0;
 	for(var i=histA.length; i--;){
-		sum += V3D.distance(histA[i],histB[i]);
+		var diff = V3D.distance(histA[i],histB[i]);
+		sum += diff;
 	}
 	return sum/count;
 }
@@ -17813,6 +18152,12 @@ R3D._sortCompareProgressiveColorHistogram = function(objectA, objectsB, minCount
 	minCount = minCount!==undefined ? minCount : 9;
 	return R3D._sortCompareProgressiveType(objectA, objectsB, R3D._progressiveCompare1DArraySAD, "flatHistogram",null,null, minCount, percentDrop);
 }
+
+R3D._sortCompareProgressiveColorHistogramBest = function(objectA, objectsB, percent, minCount, percentDrop){
+	minCount = minCount!==undefined ? minCount : 9;
+	return R3D._sortCompareProgressiveType(objectA, objectsB, R3D._progressiveCompare1DArraySADPercent, "flatHistogram",null,null, minCount, percentDrop,   percent);
+}
+
 R3D._sortCompareProgressiveColorFlatSSD = function(objectA, objectsB, minCount, percentDrop){
 	minCount = minCount!==undefined ? minCount : 8;
 	return R3D._sortCompareProgressiveType(objectA, objectsB, R3D._progressiveCompare1DArrayV3DSAD, "flatOrientated",null,"sadCache", minCount, percentDrop);
@@ -17855,12 +18200,12 @@ R3D._sortCompareProgressiveSIFTFullScoreCache = function(objectA, objectsB, minC
 	return best;
 }
 // return R3D._sortCompareProgressiveType(objectA, objectsB, R3D._progressiveCompare1DArrayV3DNCC, "flatOrientated",null,null, minCount);
-R3D._sortCompareProgressiveType = function(objectA, objectsB, fxn, indexA, indexB, saveIndex, keepMinCount, percentDrop){
+R3D._sortCompareProgressiveType = function(objectA, objectsB, fxn, indexA, indexB, saveIndex, keepMinCount, percentDrop, params){
 	indexB = indexB!==undefined && indexB!==null ? indexB : indexA;
 	var best = [];
 	for(var i=0; i<objectsB.length; ++i){
 		var objectB = objectsB[i];
-		var score = fxn(objectA[indexA],objectB[indexB]);
+		var score = fxn(objectA[indexA],objectB[indexB], params);
 		if(saveIndex){
 			objectB[saveIndex] = score;
 		}
@@ -18010,6 +18355,7 @@ R3D._progressiveR3DColorAverage = function(block){
 	color.scale(1.0/count);
 	return color;
 }
+// R3D._progressiveR3DColorHistogramCount = 1000; // 10*10*10
 R3D._progressiveR3DColorHistogram = function(block){
 	var mask = R3D._progressiveR3DMask();
 	// original

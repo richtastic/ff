@@ -5629,9 +5629,10 @@ Stereopsis.World.prototype.solveDensePair = function(){ // pairwise
 
 	// var errorPercentage = 0.002; // 0.002 @ 500 = 1 px
 	// var errorPercentage = 0.002; // 0.002 @ 1000 = 2 px
-	var errorPercentage = 0.01; 
+	// var errorPercentage = 0.01;
+	var errorPercentage = 0.015; //
 
-	var cellFeatureScale = 2.0; // 1-2
+	var cellFeatureScale = 1.0; // 1-2
 
 	// create seed points:
 	var transforms = this.toTransformArray();
@@ -5707,7 +5708,7 @@ console.log("GET MATCHES FROM 3D: "+errorR);
 
 
 
-// throw "before dense world";
+throw "before dense world";
 
 
 		// insert matching points:
@@ -5757,8 +5758,8 @@ console.log("GET MATCHES FROM 3D: "+errorR);
 // throw ">>>>>C";
 	
 	// var subdivisions = 0;
-	var subdivisions = 1;
-	// var subdivisions = 2;
+	// var subdivisions = 1;
+	var subdivisions = 2;
 	
 	// var iterations = 3; // per grid size
 	var iterations = 5;
@@ -5803,7 +5804,7 @@ console.log("GET MATCHES FROM 3D: "+errorR);
 		world.estimate3DErrors(true);
 		world.averagePoints3DFromMatches();
 		// ...
-		world.refineCameraAbsoluteOrientation(null, 100);
+		world.refineCameraAbsoluteOrientation(null, 1000);
 		world.copyRelativeTransformsFromAbsolute();
 		world.relativeFFromSamples();
 
@@ -5819,6 +5820,13 @@ console.log("GET MATCHES FROM 3D: "+errorR);
 		// world.probe2DCells(3.0);
 		// world.probe2DCells(4.0);
 		world.probe2DCells(999);
+
+
+		// udpate world estimate
+		world.refineCameraAbsoluteOrientation(null, 1000);
+		world.copyRelativeTransformsFromAbsolute();
+		world.relativeFFromSamples();
+		world.estimate3DErrors(true);
 		
 		world.averagePoints3DFromMatches(true); // only newly added points
 
@@ -5830,6 +5838,12 @@ console.log("GET MATCHES FROM 3D: "+errorR);
 		// world.filterLocal3D(); // ...
 		world.filterPairwiseSphere3D(2.0); // 2-3
 // ?: start more rigid, allow for more error, finish rigid
+
+		// var sig = 1.5;
+		var sig = 2.0;
+		world.filterGlobalMatches(false, 0, sig,sig,3.0,3.0, false);
+
+		/*
 		if(true){
 		// if(false){
 		// if(subdivision>0){ // cleanup at beginning
@@ -5840,6 +5854,7 @@ console.log("GET MATCHES FROM 3D: "+errorR);
 		}else{
 			world.filterGlobalMatches(false, 0, 3.0,3.0,3.0,3.0, false);
 		}
+		*/
 
 		// world.filterLocal3Dto2DProjection(); // not implemented yet
 
@@ -13741,7 +13756,7 @@ Stereopsis.World.prototype.bestNeedleHaystackMatchFromLocation = function(center
 	var world = this;
 	var predictedB = affineAB.multV2D( V2D.sub(existingA,centerA) ).add(centerB);
 	var needleSize = Stereopsis.compareSizeForViews2D(viewA,centerA,viewB,centerB);
-	var haystackSize = needleSize * 4; // 2-4 --- if F/R error is low, can limit this more towards ~ 2
+	var haystackSize = needleSize * 2; // 2-4 --- if F/R error is low, can limit this more towards ~ 2
 	var result = R3D.optimumNeedleHaystackAtLocation(viewA.imageScales(),existingA, viewB.imageScales(),predictedB, needleSize,haystackSize, affineAB);
 	var pointB = result["point"];
 	var match = world.newMatchFromInfo(viewA,existingA,viewB,pointB,affineAB);

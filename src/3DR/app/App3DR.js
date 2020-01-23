@@ -3927,8 +3927,8 @@ App3DR.App.Model3D.prototype.setPoints = function(input3D, input2D, hasImages, n
 
 	var colors = [];
 // ONLY WORKS FOR PAIR OF IMAGES
-// var useErrors = true;
-var useErrors = false;
+var useErrors = true;
+// var useErrors = false;
 	useErrors = useErrors && hasImages;
 	if(useErrors){
 		var views = this._views;
@@ -9363,8 +9363,8 @@ console.log(relativeAB);
 		var view = allViews[i];
 		var viewID = view["id"];
 		view = project.viewFromID(viewID);
-		view.loadBundleAdjustImage(checkLoadedAllImages, project);
-		// view.loadTextureImage(checkLoadedAllImages, project);
+		// view.loadBundleAdjustImage(checkLoadedAllImages, project);
+		view.loadTextureImage(checkLoadedAllImages, project);
 		//view.loadDenseHiImage(checkLoadedAllImages, project);
 		// view.loadFeaturesImage(checkLoadedAllImages, project);
 	}

@@ -431,7 +431,100 @@ refinement - dates
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-x test Stereopsis.optimumNeedleHaystackALocation on full images at beginning
+- RE-IMAGINE FILTERING PROCESS:
+
+
+- histogram doesn't seem like it is working too well
+
+
+
+
+- any comparison has to assume there's some misalignment & some error in objects in image
+	=> pixel perfect comparisons can penalize too much in cases
+
+
+
+FILTERS:
+	- goal is to remove the more likely outliers at each step before more-time-consuming comparators are made
+	0.90 ^ 5 = 0.6
+	0.75 ^ 5 = 0.25
+	0.50 ^ 5 = 0.03
+
+- overlapping 'histograms'
+- 
+
+
+avg color 							AS-IS  --------- only good for very different matches -- maybe this is better calculated using blur + center pixel ?
+color histogram 					AS-IS  --------- OK
+	- best-50% histogram 			AS-IS  --------- doesn't work well for unknown histogram length --- & most are 
+low res [filtered] icon SAD 		ORIENTED 	[@ x2 zoomed out?] 5x5 -> avg -> 3x3
+	- best 50% SAD 					ORIENTED
+low res gradient histogram 			ORIENTED 	grayscale 8-bin magnitude ...............
+lowest-error SAD 					ORIENTED
+best needle-haystack SAD 			ORIENTED 	[use inner block to avoid re-getting]
+
+11x11 -> 9x9 -> 7x7 -> 5x5 -> 3x3
+
+
+sortCompareProgressiveColorHistogramBest
+
+
+... pre-calc each object
+average color 
+	- drop 2+ sigma outliers ???? 
+histogram
+	- top 50%
+... calculate affine
+affine scores
+	- top 50%
+... extract 5x5 interrior + avg filter to 3x3=9 + grayscale gradient histogram
+blurred 3x3 match
+	- top 50%
+gradient histogram
+	- top 50%
+best-SAD 50% scores [5x5/2=25/2=12 ]
+	- top 50%
+... extract 11x11
+best needle-haystack 5x5 center inside of 11x11 opposite
+	- top 50%
+COLOR GRADIENT HISTOGRAM THING
+	- top 1&2
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+- low res SIFT / RIFT to narrow search
+
+
+
+- WHERE ARE EXTRACTED OBJECTS ORIENTED ?
+	-> need to use affine
+
+
+
+
+- best match is only semi-close so SAD will be unforgiving if not exact
+	- could try blurred / smaller scale
+	- could try searching AROUND needle/haystack ...
+	- 
+
+
+
+
+
 
 
 
@@ -485,6 +578,40 @@ algorithm assuming most perpendicular normal point (or lowest affine error metri
 	- local connectivity connection based on depth 
 		- boundary segmentation
 	- visibility constraints
+	- image segmentation:
+		- RGB values
+		- histogram
+	- neighbor consistency
+	- 
+
+..... ways to find outliers:
+	SINGLES:
+
+		- difference in normals?
+	GROUPS:
+		- need way to SEGMENT groups:
+			- average distance from each visible camera = patch depth
+				- average neighbors to get sigma
+				- each neighbor within 2 sigma is considered same group
+			- ...
+
+
+- segments BG:
+	https://researchspace.ukzn.ac.za/bitstream/handle/10413/14540/Khuboni_Ray_2015.pdf?sequence=1&isAllowed=y
+...
+
+
+~ reduce haystack search area
+
+
+
+- 
+
+
+
+
+
+
 
 
 - initial points seem just bad ?
