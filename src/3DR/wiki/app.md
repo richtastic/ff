@@ -433,8 +433,23 @@ refinement - dates
 
 - RE-IMAGINE FILTERING PROCESS:
 
+MOST FORGIVING / LESS ACCURATE => TO => MOST SELECTIVE / MOST PRECICE 
 
-- histogram doesn't seem like it is working too well
+
+2 kinds of best:
+	1:1 & sort & keep top
+	1:9 & keep top
+
+x see if averaging behaves differently when doing 5x5 => 3x3 => center value [slightly better]
+x see if blurred histogram works better (7x7 => 5x5) [no]
++ see if spatial histogramming: 5x5 => 9 (7x7 => 9) histograms works well
++ see if grayscale gradient binning (5x5 & 7x7 => 9 x 8 = 72) binning works well
+x see if 'best' spatial SAD (11x11 top 50%) works well [OK]
+x see if 'closest' spatial SAD (11x11) works well [OK]
++ see if 'best' spatial SAD - nearest neighbor - (5x5 => 3x3 = 9 & 7x7 => 5x5 = 25) works well
++ see if theres a color gradient binning / histogram that works well
+
+blurred + best 50%
 
 
 

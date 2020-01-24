@@ -3834,6 +3834,45 @@ ImageMat.meanFilter = function(src,wid,hei, w,h){
 	var n = 1.0/9.0;
 	return ImageMat.convolve(src,wid,hei, [n,n,n, n,n,n, n,n,n], 3,3);
 }
+ImageMat.prototype.meanFilter = function(){
+	var image = this;
+	var red = image._r;
+	var grn = image._g;
+	var blu = image._b;
+	var wid = image._width;
+	var hei = image._height;
+	var wm1 = wid-1;
+	var hm1 = hei-1;
+	var newWid = wid - 2;
+	var newHei = hei - 2;
+	if(newWid<=0 || newHei<=0){
+		return null;
+	}
+	var result = new ImageMat(newWid,newHei);
+	var r = result._r;
+	var g = result._g;
+	var b = result._b;
+	for(var j=1; j<hm1; ++j){
+		for(var i=1; i<wm1; ++i){
+			var x = 0;
+			var y = 0;
+			var z = 0;
+			for(var jj=-1; jj<=1; ++jj){
+				for(var ii=-1; ii<=1; ++ii){
+					var index = (j + jj)*wid + (i + ii);
+					x += red[index];
+					y += grn[index];
+					z += blu[index];
+				}
+			}
+			var ind = (j-1)*newWid + (i-1);
+			r[ind] = x/9.0;
+			g[ind] = y/9.0;
+			b[ind] = z/9.0;
+		}
+	}
+	return result;
+}
 ImageMat.medianFilter = function(src,wid,hei, w,h){
 	// .. nonlinear
 	throw "todo";
