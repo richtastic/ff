@@ -3608,6 +3608,49 @@ ImageMat.prototype.derivativeY = function(){
 	var db = ImageMat.derivativeY(this._b,this._width,this._height).value;
 	return new ImageMat(this._width,this._height, dr,dg,db);
 }
+ImageMat.prototype.colorGradientVector = function(){ // insetted by 1 on each side .. not really an actual working thing yet
+	var wid = this.width();
+	var hei = this.height();
+	var red = this.red();
+	var grn = this.grn();
+	var blu = this.blu();
+	var wm1 = wid-1;
+	var hm1 = hei-1;
+	var newWid = Math.max(wid-2,0);
+	var newHei = Math.max(hei-2,0);
+	var vectors = [];
+	var dx = new V3D();
+	var dy = new V3D();
+	if(newWid>0 && newHei>0){
+		for(var j=1; j<hm1; ++j){
+			for(var i=1; i<wm1; ++i){
+				var cn = (j+0)*wid + (i+0);
+				var lf = (j+0)*wid + (i-1);
+				var ri = (j+0)*wid + (i+1);
+				var to = (j-1)*wid + (i+0);
+				var bo = (j+1)*wid + (i+0);
+				var dxR = red[ri] - red[lf];
+				var dxG = grn[ri] - grn[lf];
+				var dxB = blu[ri] - blu[lf];
+				var dyR = red[bo] - red[to];
+				var dyG = grn[bo] - grn[to];
+				var dyB = blu[bo] - blu[to];
+				dx.x = dxR*0.5;
+				dx.y = dxG*0.5;
+				dx.z = dxB*0.5;
+				dy.x = dyR*0.5;
+				dy.y = dyG*0.5;
+				dy.z = dyB*0.5;
+				var v = V3D.add(dx,dy);
+				var index = (j-1)*newWid + (i-1);
+				vectors[index] = v;
+			}
+		}
+	}
+	return {"value":vectors, "width":newWid, "height":newHei};
+}
+
+
 ImageMat.derivativeX = function(src,wid,hei, x,y){
 	if(x!==undefined && y!==undefined){
 		var xm1 = Math.max(x-1,0);
@@ -4518,6 +4561,28 @@ ImageMat.prototype.normalize = function(){ // convert existing scale to 0-1
 	ImageMat.scaleFloatSame(this.red(), scale);
 	ImageMat.scaleFloatSame(this.grn(), scale);
 	ImageMat.scaleFloatSame(this.blu(), scale);
+}
+
+ImageMat.prototype.getSubRect = function(x,y,w,h){
+	var wid = this.width();
+	var hei = this.height();
+	var red = this.red();
+	var grn = this.grn();
+	var blu = this.blu();
+	var r = [];
+	var g = [];
+	var b = [];
+	var eI = x+w;
+	var eJ = y+h;
+	for(var j=y; j<eJ; ++j){
+		for(var i=x; i<eI; ++i){
+			var index = j*wid + i;
+			r.push(red[index]);
+			g.push(grn[index]);
+			b.push(blu[index]);
+		}
+	}
+	return new ImageMat(w,h, r,g,b);
 }
 
 ImageMat._watershedPointSort = function(a,b){

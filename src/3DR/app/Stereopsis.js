@@ -5523,8 +5523,8 @@ Stereopsis.World.prototype.testOutFinding = function(viewA,viewB, transformAB){
 	var needleSize = 31;
 	var haystackSize = needleSize*7;
 	var affineAB = null;
-
-	var result = Stereopsis.optimumNeedleHaystackALocation(viewA.imageScales(),pointA, viewB.imageScales(),pointB, needleSize,haystackSize, affineAB, 11, true);
+	
+	var result = R3D.optimumNeedleHaystackAtLocation(viewA.imageScales(),pointA, viewB.imageScales(),pointB, needleSize,haystackSize, affineAB, 11, true);
 
 	console.log(result);
 

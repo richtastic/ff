@@ -4220,6 +4220,58 @@ Code.HSVFromRGB = function(vout, vin){//, r,g,b){ // in [0,1]
 	//return {"h":h, "s":s, "v":v};
 }
 // Code.HSVFromRGB(new V3D(1,1,1))
+Code.XYZFromRGB = function(vout, vin){
+	// [ R ]   [  3.240479 -1.537150 -0.498535 ]   [ X ]
+	// [ G ] = [ -0.969256  1.875992  0.041556 ] * [ Y ]
+	// [ B ]   [  0.055648 -0.204043  1.057311 ]   [ Z ]
+	// X =  0.412453 * R + 0.35758 * G + 0.180423 * B
+	// Y =  0.212671 * R + 0.71516 * G + 0.072169 * B
+	// Z =  0.019334 * R + 0.119193* G + 0.950227 * B
+	var x = 0.412453*vin.x + 0.357580*vin.y + 0.180423*vin.z;
+	var y = 0.212671*vin.x + 0.715160*vin.y + 0.072169*vin.z;
+	var z = 0.019334*vin.x + 0.119193*vin.y + 0.950227*vin.z;
+	vout.x = x;
+	vout.y = y;
+	vout.z = z;
+}
+Code.CIELabFromXYZ = function(vout, vin){
+	var Xw =  94.811;
+	var Yw = 100.000;
+	var Zw = 107.304;
+	// Illuminant	X2	Y2	Z2	X10	Y10	Z10
+	// D65	95.047	100.000	108.883	94.811	100.000	107.304	Daylight, sRGB, Adobe-RGB
+	var x = vin.x/Xw;
+	var y = vin.y/Yw;
+	var z = vin.z/Zw;
+	var min = 0.008856;
+	if(x > min){
+		x = Math.pow(x,1/3);
+	}else{
+		x = (7.787*x) + (16/116);
+	}
+	if(y > min){
+		y = Math.pow(y,1/3);
+	}else{
+		y = (7.787*y) + (16/116);
+	}
+	if(z > min){
+		z = Math.pow(z,1/3);
+	}else{
+		z = (7.787*z) + (16/116);
+	}
+	vout.x = (116*y) - 16; // L
+	vout.y = 500*( x - y );
+	vout.z = 200*( y - z );
+	return vout;
+}
+Code.CIELabFromRGB = function(vout, vin){
+	Code.XYZFromRGB(vout,vin);
+	Code.CIELabFromXYZ(vout,vout);
+	return vout;
+}
+Code.CIEDelta = function(a,b){
+	return Math.sqrt( Math.pow(a.x-b.x, 2) + Math.pow(a.y-b.y, 2) + Math.pow(a.z-b.z, 2) );
+}
 Code.RGBFromHSV = function(vout, vin){ // h in [0,1], s in [0,1], v in [0,1]       (h usually 0-360 deg)
 
 // some color yellow? is turned to black

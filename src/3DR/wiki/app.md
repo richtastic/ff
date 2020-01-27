@@ -431,27 +431,69 @@ refinement - dates
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-- RE-IMAGINE FILTERING PROCESS:
+- how to best remove outliers
+	- 
+
+
+- make visualizers for:
+	- grayscale-sift
+	- color-gradient-rift [self - avg]
+	- color-sift [dCx + dCy]
+SIFT - percent binning
+
+
+is color gradient some sort of surface normal? --- ie orthogonal to 'surface ?'
 
 MOST FORGIVING / LESS ACCURATE => TO => MOST SELECTIVE / MOST PRECICE 
 
 
 2 kinds of best:
-	1:1 & sort & keep top
+	1:1 & sort & keep top / scale scores by some percent [eg linear falloff]
 	1:9 & keep top
 
+- plot some of the score distributions
+
+--- what does it mean to have an outlier with various 'error' distributions ?
+	- what does sigma look like:
+	eg:
+		- only a few are similar, others are very diff
+			| ...  . ..  .  . .  . .............
+		- many are similar, few are diff
+			| ... ...... .. .      . .    .. . .   .
+		- even spread
+			| .... ...... .. . ..... . .
+		- 
+x see why average color is not working well
+	x maybe compare in other color space ... non-RGB
 x see if averaging behaves differently when doing 5x5 => 3x3 => center value [slightly better]
 x see if blurred histogram works better (7x7 => 5x5) [no]
-+ see if spatial histogramming: 5x5 => 9 (7x7 => 9) histograms works well
-+ see if grayscale gradient binning (5x5 & 7x7 => 9 x 8 = 72) binning works well
+x see if spatial histogramming: 5x5 => 9 (7x7 => 9) + overlap histograms works well [OK]
+x see if grayscale gradient single (5x5) binning works well [bad]
+x see if grayscale gradient binning (5x5 & 7x7 => 9 x 8 = 72, 11x11 & 25-binning) binning works well [POOR]
 x see if 'best' spatial SAD (11x11 top 50%) works well [OK]
 x see if 'closest' spatial SAD (11x11) works well [OK]
-+ see if 'best' spatial SAD - nearest neighbor - (5x5 => 3x3 = 9 & 7x7 => 5x5 = 25) works well
-+ see if theres a color gradient binning / histogram that works well
+x see if theres a color gradient binning / histogram that works well
+	x flat gradient [3D]
+	x color 3-grad [6D]
+x try needle-haystack best SAD & 'closest' SAD - crop 5x5 or 7x7 from 11x11
+
 
 blurred + best 50%
 
 
+SIFT-SINGLE-GRAYSCALE
+	- get 7x7
+	- blur to 5x5
+	- gradientX
+	- gradientY
+	- inner 3x3 bin gradients into 8 [percentage-wise]
+SIFT-SINGLE-COLOR-FLAT
+	- ...
+	- 
+SIFT-SINGLE-COLOR-GRAD
+	- ..
+
+SIFT-HISTOGRAM-GRAY/COLOR-/FLAT/GRAD
 
 
 - any comparison has to assume there's some misalignment & some error in objects in image
@@ -485,12 +527,12 @@ sortCompareProgressiveColorHistogramBest
 
 
 ... pre-calc each object
-average color 
+x average color 
 	- drop 2+ sigma outliers ???? 
-histogram
+v histogram
 	- top 50%
 ... calculate affine
-affine scores
+v affine scores
 	- top 50%
 ... extract 5x5 interrior + avg filter to 3x3=9 + grayscale gradient histogram
 blurred 3x3 match
@@ -506,9 +548,32 @@ COLOR GRADIENT HISTOGRAM THING
 	- top 1&2
 
 
+=>>>>>>>>>>>>>>>>>>>>>>>>>> CONCLUSIONS:
+only have limited filtering that can be done before each patch is made:
+
+
+2000 * 0.05 * 0.50 * .50 * .50 * .50 = 6
+2000 * 0.10 * 0.90 * .90 * .50 * .50 = 40
+
+* F-line distance search [5%-10%]									(90-95)
+...
+* blur-color histogram SAD [50%-90%]								(50-90)
+* affine drop worst [50%-90%] 										(25-81)
+=> extract 11x11
+=> filter blur to 9x9
+* SAD closest 9x9 [50%] 											(13-40)
+=> filter to 7x7
+* oriented histogram 11x11 &  [50%] ?								(7-20)
+=> cut 5x5
+* SAD best needle-haystack 5x5 (or 7x7) in 11x11 [top 2] 			(2)
+	- top 2 should be distinct points -- its possible the haystacks have overlap
+... CHOOSE
 
 
 
+still todo:
+* SIFT GRAD?
+* best needle-haystack
 
 
 
