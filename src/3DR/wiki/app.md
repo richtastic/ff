@@ -430,16 +430,32 @@ refinement - dates
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+- need to do efficient object extraction
 
-- how to best remove outliers
-	- 
+
+- on 2D probing: - local pruning
+	- if 'neighbor' error is much higher than self/others
+		=> remove neighbor
+
+
+- affine is inaccurate -- rotation ?
+	- R3D.patchAffine2DFromPatch3D
+
+- why so few matches (~100)?
+	- top choice might be very close to second choice?
+	-...
+-
 
 
 - make visualizers for:
 	- grayscale-sift
 	- color-gradient-rift [self - avg]
 	- color-sift [dCx + dCy]
-SIFT - percent binning
+
+
+
+
+
 
 
 is color gradient some sort of surface normal? --- ie orthogonal to 'surface ?'
@@ -475,7 +491,8 @@ x see if 'closest' spatial SAD (11x11) works well [OK]
 x see if theres a color gradient binning / histogram that works well
 	x flat gradient [3D]
 	x color 3-grad [6D]
-x try needle-haystack best SAD & 'closest' SAD - crop 5x5 or 7x7 from 11x11
+x try needle-haystack best SAD & 'closest' SAD - crop 5x5 or 7x7 from 11x11 [OK-BAD]
+	-> try 'closest' SAD scoring
 
 
 blurred + best 50%
@@ -555,25 +572,22 @@ only have limited filtering that can be done before each patch is made:
 2000 * 0.05 * 0.50 * .50 * .50 * .50 = 6
 2000 * 0.10 * 0.90 * .90 * .50 * .50 = 40
 
-* F-line distance search [5%-10%]									(90-95)
+* F-line distance search [5%-10%]									(90-95)			v
 ...
-* blur-color histogram SAD [50%-90%]								(50-90)
-* affine drop worst [50%-90%] 										(25-81)
+* blur-color histogram SAD [50%-90%]								(50-90)			v
+* affine drop worst [50%-90%] 										(25-81)			v
 => extract 11x11
 => filter blur to 9x9
-* SAD closest 9x9 [50%] 											(13-40)
+* blur single histogram [50%]?										(.....)			?
+* SAD closest blur 9x9 [50%] 										(13-40)			v
 => filter to 7x7
-* oriented histogram 11x11 &  [50%] ?								(7-20)
+* oriented 3x3 histogram (11x11) [50%] ?							(7-20)			?
 => cut 5x5
-* SAD best needle-haystack 5x5 (or 7x7) in 11x11 [top 2] 			(2)
+* SAD best needle-haystack 5x5 (or 7x7) in 11x11 [top 2] 			(2)				x?
 	- top 2 should be distinct points -- its possible the haystacks have overlap
 ... CHOOSE
 
-
-
-still todo:
-* SIFT GRAD?
-* best needle-haystack
+- TRY MULTIPLYING EACH CACHED score to get final score to choose from?
 
 
 
@@ -581,24 +595,11 @@ still todo:
 
 
 
+- ISOLATION FOREST
 
 
 
 
-
-- low res SIFT / RIFT to narrow search
-
-
-
-- WHERE ARE EXTRACTED OBJECTS ORIENTED ?
-	-> need to use affine
-
-
-
-
-- best match is only semi-close so SAD will be unforgiving if not exact
-	- could try blurred / smaller scale
-	- could try searching AROUND needle/haystack ...
 	- 
 
 
@@ -608,23 +609,7 @@ still todo:
 
 
 
-- stereopsis propagation seems to stop in places for not particular reason?
 
-- INITIAL R-MATCHING PROBLEMS:
-	- compare methods aren't any better than SAD
-	- several wrong matches
-	- lots of places without seeds - blank/barren areas
-	- seeds are 'closest' corners, not necessarily exact locations (+/- Rerror pixels)
-		=> need subpixel step
-	- 
-
-=> add sub-pixel step on top choices
-=> add error dropping step
-
-
-searchMatchPoints3D
-
-- try center-F-line algorithm:
 
 
 

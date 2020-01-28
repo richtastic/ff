@@ -682,26 +682,31 @@ R3D.rotationScaleCornerMatrixLinear = function(pointsA,pointsB, reuse){
 	if (pointsA && pointsB && pointsA.length>=2 && pointsB.length>=2){
 		// return R3D.rotationScaleCornerDLT(pointsA,pointsB, reuse);
 		var scale = 0;
-		var rotations = [];
+		var angles = [];
 		var count = pointsA.length;
 		for(var i=0; i<count; ++i){
 			var a = pointsA[i];
 			var b = pointsB[i];
 			var ang = V2D.angle(a,b);
+			angles.push(ang);
 			var lenA = a.length();
 			if(lenA>0){
 				var sca = b.length()/lenA;
-				scale += sca;
+scale += Math.log(sca);
+// console.log(sca);
 			}
 		}
 		scale /= count;
-		var angle = 0;
+scale = Math.exp(scale);
+// console.log(scale);
+		var angle = Code.averageAngles(angles);
 		if(!reuse){
 			reuse = new Matrix2D();
 		}
 		reuse.identity();
 		reuse.rotate(angle);
 		reuse.scale(scale);
+		return reuse;
 	}
 	return null;
 }
@@ -16170,6 +16175,7 @@ R3D.searchMatchPoints3D = function(images, cellSizes, relativeAB, Ks, errorPixel
 	var imageScalesList = [];
 	var featureScale = 1.0; // multiple of cell size 1-2
 		featureScale = 2.0; // want a large area
+// featureScale = 4.0;
 	var distanceScale = 0.25; // local maximal suppression 0.25-0.5
 	var cameraA = new Matrix(4,4).identity();
 	var cameraB = relativeAB;
@@ -16190,11 +16196,16 @@ R3D.searchMatchPoints3D = function(images, cellSizes, relativeAB, Ks, errorPixel
 	var Fba = R3D.fundamentalInverse(Fab);
 
 	var nonMaximalPercent = 0.9999; // 0.999-0.9999 === 1.5k-2.0k ?
+
+// var nonMaximalPercent = 0.99; // ~ 700
+// var nonMaximalPercent = 0.999; // ~1300
+
 	var scalable = 1.0;
 	var limitPixelScale = 2.0;
 	var single = false;
 	var maxCount = 5000;
 	var limitPixelPercent = 0.01; // 0.01 - 0.002 is neighbor too close ? 0.005 @ 500 = 2.5
+// limitPixelPercent = 0.02;
 	//
 	var toPointPoint = function(a){
 		return a;
@@ -16208,6 +16219,13 @@ R3D.searchMatchPoints3D = function(images, cellSizes, relativeAB, Ks, errorPixel
 	var sortLessFirstT = function(a,b){
 		return a.t > b.t ? -1 : 1;
 	};
+
+
+	var sortOnAffineScore = function(a,b){
+		return a["affineScore"] < b["affineScore"] ? -1 : 1;
+	};
+
+
 	var spaces = [];
 	var actualScalesList = [];
 // throw "before"
@@ -16315,8 +16333,10 @@ d.matrix().translate(0 + i*600, 0);
 	// find best match candidates fwd & bak
 	var hyp = Math.sqrt(widthA*widthA + heightA*heightA);
 	var minPix = 0.001*hyp;
-	// var maxPix = 0.01*hyp;
-	var maxPix = 0.05*hyp;
+	// var maxPix = 0.01*hyp; // fairly narrow
+	// var maxPix = 0.02*hyp;
+	var maxPix = 0.05*hyp; // fairly wide
+	
 	console.log(minPix,maxPix);
 	var errSearch = Math.min(Math.max(2.0*errorPixels,minPix),maxPix); // todo percent
 	console.log("errSearch: "+errSearch);
@@ -16325,9 +16345,9 @@ d.matrix().translate(0 + i*600, 0);
 	var affineRatioKeepMax = 2; // 2-5
 	affineRatioKeepMax = 1.5;
 var doDebug = true;
-var debugOffY = 200;
-// var debugOffY = 300;
-// doDebug = false;
+var debugOffY = 300;
+var debugOY = 0;
+doDebug = false;
 // throw "before loop"
 
 
@@ -16362,6 +16382,7 @@ if(matchingMethod==0){
 var imageScaleA = actualScalesList[indexA];
 var imageScaleB = actualScalesList[indexB];
 		// var imageScales = imageScalesList[k];
+console.log("B LENGTH - ALL: "+spaceB.count());
 		for(var i=0; i<objsA.length; ++i){
 			// if(i%100==0){
 			// 	console.log(i+" / "+objectsA.length);
@@ -16389,7 +16410,7 @@ if(doDebug){
 	// i = 965;
 	// i = 1000;
 
-	i = 101;
+	// i = 121;
 
 // 
 
@@ -16397,20 +16418,40 @@ if(doDebug){
 
 
 // i = 213; // good left door
-// var i = 144; // door window left corner
+// i = 144; // door window left corner
 // i = 221; // door corner
 // i = 228; // good corner
 // i = 504; // red jacket
-// i = 571; // gradientish
+// i = 511; // unique grass
+// i = 526; // coat corner nexis
 // i = 555; // stone wall
 // i = 559; // edge
-i = 600; // good wall fingerprint
+// i = 571; // corner gradientish
+// i = 600; // good wall fingerprint
+// i = 639; // wall top of light left
+// i = 710; // left light corner
+// i = 720; // fingerprint bush/grass
+
+// i = 760; // chair -- should be quite easy
+// i = 780; // perfect match by all metrics
+// i = 790; // char left corner
+
 // i = 915; // hard match opportunity
 // i = 940; // good edge
 // i = 950; // good corner
 // i = 995;
-// i = 1005;
-// i = 1250;
+// i = 801; // sliver
+// i = 820; // bench leg corner
+// i = 1066;
+
+
+// i = 996; //. 
+
+
+
+// i = 1160; // good divit/corner
+
+// i = 1060; // unique bush
 	// i = 1005;
 	// i = 1010;
 	// i = 1015;
@@ -16432,7 +16473,6 @@ i = 600; // good wall fingerprint
 // objsA[i] = R3D.objectProgressiveR3D(c, imageScales, featureSize, null , true);
 
 }
-console.log(objectA);
 			var objectA = objsA[i];
 			var point2DA = objectA["point"];
 
@@ -16442,6 +16482,10 @@ console.log(objectA);
 				continue;
 			}
 			var sortedB = objsB;
+
+if(doDebug){
+console.log("B LENGTH - F-LINE: "+sortedB.length);
+}
 
 
 
@@ -16503,18 +16547,19 @@ GLOBALSTAGE.addChild(d);
 
 
 if(doDebug){
+debugOY += 100;
 // show initial object A
 var img = objectA["icon"];
 img = GLOBALSTAGE.getFloatRGBAsImage(img.red(),img.grn(),img.blu(), img.width(),img.height());
 var d = new DOImage(img);
 d.matrix().scale(3.0);
 // d.matrix().scale(7.0);
-d.matrix().translate(10, debugOffY + 100);
+d.matrix().translate(10, debugOffY + debugOY);
 GLOBALSTAGE.addChild(d);
 
 // show average color:
 
-
+/*
 var color = objectA["1x1"];
 console.log(color);
 color = Code.getColARGBFromFloat(1.0,color.x,color.y,color.z);
@@ -16527,12 +16572,13 @@ d.graphics().endPath();
 d.graphics().fill();
 GLOBALSTAGE.addChild(d);
 d.matrix().translate(10 + 100, debugOffY + 100);
-
+*/
 // throw "?";
 
 }
 
 if(doDebug){
+	debugOY += 100;
 for(var b=0; b<sortedB.length; ++b){
 	var objectB = sortedB[b];
 	var p = objectB["point"];
@@ -16542,7 +16588,7 @@ for(var b=0; b<sortedB.length; ++b){
 	img = GLOBALSTAGE.getFloatRGBAsImage(img.red(),img.grn(),img.blu(), img.width(),img.height());
 	var d = new DOImage(img);
 	d.matrix().scale(3.0);
-	d.matrix().translate(10 + 50*b, debugOffY + 250);
+	d.matrix().translate(10 + 50*b, debugOffY + debugOY);
 	GLOBALSTAGE.addChild(d);
 // show affine patch ...
 	// var objectB = sortedB[b];
@@ -16572,7 +16618,7 @@ var lenProjection = null;
 
 
 	var affine2D = R3D.patchAffine2DFromPatch3D(point3D,normal3D,up3D,right3D,size3D, cameraA,Ka, cameraB,Kb, point2DA,point2DB, affineReuse);
-	
+	// affine2D.inverse();
 	eigenA.fromArray([affine2D.a,affine2D.b,affine2D.c,affine2D.d]);
 	var eigen = Matrix.eigenValuesAndVectors(eigenA);
 	// console.log(eigen);
@@ -16630,6 +16676,7 @@ var lenProjection = null;
 }
 }
 
+/*
 		// filter on color average
 		// sortedB = R3D._sortCompareProgressiveColor(objectA, sortedB, 50, 0.5);
 		sortedB = R3D._sortCompareProgressiveColor(objectA, sortedB, sortedB.length, 0.5);
@@ -16653,9 +16700,9 @@ for(var b=0; b<sortedB.length; ++b){
 	GLOBALSTAGE.addChild(d);
 }
 }
+*/
 
-
-
+/*
 sortedB = R3D._sortCompareProgressiveColor_1x1(objectA, sortedB, sortedB.length, 0.5);
 
 
@@ -16679,39 +16726,20 @@ for(var b=0; b<sortedB.length; ++b){
 	GLOBALSTAGE.addChild(d);
 }
 }
+*/
 
 		// search for colors with close color histograms
-		sortedB = R3D._sortCompareProgressiveColorHistogram(objectA, sortedB, sortedB.length, 0.5);
-		// sortedB = R3D._sortCompareProgressiveColorHistogramBest(objectA, sortedB, 0.50, 50, 0.5);
-		// console.log(sortedB.length);
-
-if(doDebug){
-var d = new DOText("color hist", 12, DOText.FONT_ARIAL, 0xFFCC0033, DOText.ALIGN_LEFT);
-d.matrix().translate(1, debugOffY + 450);
-GLOBALSTAGE.addChild(d);
-// SHOW PATCHES
-for(var b=0; b<sortedB.length; ++b){
-	var objectB = sortedB[b];
-		var p = objectB["point"];
-		p = p.copy();
-		p.scale(imageScaleB);
-	var img = objectB["icon"];
-	img = GLOBALSTAGE.getFloatRGBAsImage(img.red(),img.grn(),img.blu(), img.width(),img.height());
-	var d = new DOImage(img);
-	d.matrix().scale(3.0);
-	d.matrix().translate(10 + 50*b, debugOffY + 450);
-	GLOBALSTAGE.addChild(d);
-}
-}
-
-/*
 		// sortedB = R3D._sortCompareProgressiveColorHistogram(objectA, sortedB, sortedB.length, 0.5);
-		sortedB = R3D._sortCompareProgressiveColorHistogramBest(objectA, sortedB, 0.50, sortedB.length, 0.5);
-		// console.log(sortedB.length);
+		sortedB = R3D._sortCompareProgressiveColorHistogram(objectA, sortedB, 64, 0.5);
+if(doDebug){
+console.log("B LENGTH - HISTOGRAM: "+sortedB.length);
+}
+
 
 if(doDebug){
-var d = new DOText("color hist 11x11 best", 12, DOText.FONT_ARIAL, 0xFFCC0033, DOText.ALIGN_LEFT);
-d.matrix().translate(1, debugOffY + 500);
+debugOY += 50;
+var d = new DOText("color hist", 12, DOText.FONT_ARIAL, 0xFFCC0033, DOText.ALIGN_LEFT);
+d.matrix().translate(1, debugOffY + debugOY);
 GLOBALSTAGE.addChild(d);
 // SHOW PATCHES
 for(var b=0; b<sortedB.length; ++b){
@@ -16723,13 +16751,10 @@ for(var b=0; b<sortedB.length; ++b){
 	img = GLOBALSTAGE.getFloatRGBAsImage(img.red(),img.grn(),img.blu(), img.width(),img.height());
 	var d = new DOImage(img);
 	d.matrix().scale(3.0);
-	d.matrix().translate(10 + 50*b, debugOffY + 500);
+	d.matrix().translate(10 + 50*b, debugOffY + debugOY);
 	GLOBALSTAGE.addChild(d);
 }
 }
-*/
-// throw "after best"
-
 
 
 		// calculate P3D / projections
@@ -16756,6 +16781,8 @@ var errorR = info["error"];
 // THIS IS BAD
 // size3D = 0.0001;
 			var affine2D = R3D.patchAffine2DFromPatch3D(point3D,normal3D,up3D,right3D,size3D, cameraA,Ka, cameraB,Kb, point2DA,point2DB, affineReuse);
+// DOES AFFINE NEED TO BE INVERSE ????
+// affine2D.inverse();
 			// could also try basic scale and rotation -- keep in ballpark
 
 				eigenA.fromArray([affine2D.a,affine2D.b,affine2D.c,affine2D.d]);
@@ -16774,8 +16801,8 @@ var errorR = info["error"];
 				}
 				
 			// patchAffine2DFromPatch3D
-// DOES AFFINE NEED TO BE INVERSE ????
-affine2D.inverse();
+
+
 			// want to see B as would be shown in A
 
 			var temp = null;
@@ -16804,11 +16831,12 @@ affine2D.inverse();
 			}
 		}
 
-
-		// COULD SORT ON RATIOS ...
 		affineRatios.sort(sortLessFirst);
 		var minRatio = affineRatios[0];
 		// console.log(affineRatios);
+
+
+
 
 
 
@@ -16842,41 +16870,45 @@ for(var b=0; b<sortedB.length; ++b){
 	}
 }
 }
+
+
+
+		// sort on ratios
+		sortedB.sort(sortOnAffineScore);
+		var currentLen = sortedB.length;
+		var halfLen = Math.min(Math.ceil(0.75*currentLen), currentLen);
+		Code.truncateArray(sortedB, halfLen);
+
+if(doDebug){
+console.log("B LENGTH - AFFINE: "+sortedB.length);
+}
+
+
+
+
+
+
 		
-		// get orientated
-		for(var b=0; b<sortedB.length; ++b){
-			var objectB = sortedB[b];
-			R3D.objectProgressiveR3D_B(objectB);
-		}
-
-// sortedB = R3D._sortCompareProgressiveColor_1x1(objectA, sortedB, sortedB.length, 0.5);
-
-// if(doDebug){
-// // SHOW PATCHES
-// for(var b=0; b<sortedB.length; ++b){
-// 	var objectB = sortedB[b];
-// 		var p = objectB["point"];
-// 		p = p.copy();
-// 		p.scale(imageScaleB);
-// 	var img = objectB["icon"];
-// 	img = GLOBALSTAGE.getFloatRGBAsImage(img.red(),img.grn(),img.blu(), img.width(),img.height());
-// 	var d = new DOImage(img);
-// 	d.matrix().scale(3.0);
-// 	d.matrix().translate(10 + 50*b, debugOffY + 500);
-// 	GLOBALSTAGE.addChild(d);
-// }
-// }
+		// // get orientated
+		// for(var b=0; b<sortedB.length; ++b){
+		// 	var objectB = sortedB[b];
+		// 	R3D.objectProgressiveR3D_B(objectB);
+		// }
 
 
 
 
-sortedB = R3D._sortCompareProgressiveColor_5x5_Histogram(objectA, sortedB, sortedB.length, 0.5);
+sortedB = R3D._sortCompareProgressiveColor_5x5_Histogram(objectA, sortedB, 32, 0.5);
 
+if(doDebug){
+console.log("B LENGTH - ORIENTATED HISTOGRAM: "+sortedB.length);
+}
 
 
 if(doDebug){
+debugOY += 50;
 var d = new DOText("color 5x5 blur hist", 12, DOText.FONT_ARIAL, 0xFFCC0033, DOText.ALIGN_LEFT);
-d.matrix().translate(1, debugOffY + 550);
+d.matrix().translate(1, debugOffY + debugOY);
 GLOBALSTAGE.addChild(d);
 // SHOW PATCHES
 for(var b=0; b<sortedB.length; ++b){
@@ -16888,14 +16920,14 @@ for(var b=0; b<sortedB.length; ++b){
 	img = GLOBALSTAGE.getFloatRGBAsImage(img.red(),img.grn(),img.blu(), img.width(),img.height());
 	var d = new DOImage(img);
 	d.matrix().scale(3.0);
-	d.matrix().translate(10 + 50*b, debugOffY + 550);
+	d.matrix().translate(10 + 50*b, debugOffY + debugOY);
 	GLOBALSTAGE.addChild(d);
 }
 }
 
 
 
-
+/*
 
 		// search for colors with close flat color - ssd
 		sortedB = R3D._sortCompareProgressiveColorFlatSSD(objectA, sortedB, sortedB.length, 0.5);
@@ -16926,7 +16958,9 @@ for(var b=0; b<sortedB.length; ++b){
 
 
 
+*/
 
+/*
 		// search for colors with close flat color - ssd
 		sortedB = R3D._sortCompareProgressiveColorFlatSSD_BEST(objectA, sortedB, sortedB.length, 0.5);
 		// console.log(sortedB.length);
@@ -16952,16 +16986,53 @@ for(var b=0; b<sortedB.length; ++b){
 	GLOBALSTAGE.addChild(d);
 }
 }
+*/
+
+
+
+// sortedB = R3D._sortCompareProgressiveColor_7x7_ColorHistogramOriented(objectA, sortedB, 10, 0.5);
+
+if(doDebug){
+console.log("B LENGTH - COLOR HISTOGRAM: "+sortedB.length);
+}
+
+
+
+
+
+if(doDebug){
+debugOY += 50;
+var d = new DOText("color 7x7 blur color hist", 12, DOText.FONT_ARIAL, 0xFFCC0033, DOText.ALIGN_LEFT);
+d.matrix().translate(1, debugOffY + debugOY);
+GLOBALSTAGE.addChild(d);
+// SHOW PATCHES
+for(var b=0; b<sortedB.length; ++b){
+	var objectB = sortedB[b];
+		var p = objectB["point"];
+		p = p.copy();
+		p.scale(imageScaleB);
+	var img = objectB["icon"];
+	img = GLOBALSTAGE.getFloatRGBAsImage(img.red(),img.grn(),img.blu(), img.width(),img.height());
+	var d = new DOImage(img);
+	d.matrix().scale(3.0);
+	d.matrix().translate(10 + 50*b, debugOffY + debugOY);
+	GLOBALSTAGE.addChild(d);
+}
+}
+
 
 
 // search for colors with close flat color - ssd
-		sortedB = R3D._sortCompareProgressiveColorFlatSSD_CLOSEST(objectA, sortedB, sortedB.length, 0.5);
-
+		sortedB = R3D._sortCompareProgressiveColorFlatSSD_CLOSEST(objectA, sortedB, 16, 0.5);
+if(doDebug){
+console.log("B LENGTH - SAD CLOSEST: "+sortedB.length);
+}
 
 
 if(doDebug){
+debugOY += 50;
 var d = new DOText("SAD 11x11 Closest", 12, DOText.FONT_ARIAL, 0xFFCC0033, DOText.ALIGN_LEFT);
-d.matrix().translate(1, debugOffY + 700);
+d.matrix().translate(1, debugOffY + debugOY);
 GLOBALSTAGE.addChild(d);
 // SHOW PATCHES
 for(var b=0; b<sortedB.length; ++b){
@@ -16973,34 +17044,7 @@ for(var b=0; b<sortedB.length; ++b){
 	img = GLOBALSTAGE.getFloatRGBAsImage(img.red(),img.grn(),img.blu(), img.width(),img.height());
 	var d = new DOImage(img);
 	d.matrix().scale(3.0);
-	d.matrix().translate(10 + 50*b, debugOffY + 700);
-	GLOBALSTAGE.addChild(d);
-}
-}
-
-
-
-
-
-sortedB = R3D._sortCompareProgressiveColor_7x7_ColorHistogramOriented(objectA, sortedB, sortedB.length, 0.5);
-
-
-
-if(doDebug){
-var d = new DOText("color 7x7 blur color hist", 12, DOText.FONT_ARIAL, 0xFFCC0033, DOText.ALIGN_LEFT);
-d.matrix().translate(1, debugOffY + 750);
-GLOBALSTAGE.addChild(d);
-// SHOW PATCHES
-for(var b=0; b<sortedB.length; ++b){
-	var objectB = sortedB[b];
-		var p = objectB["point"];
-		p = p.copy();
-		p.scale(imageScaleB);
-	var img = objectB["icon"];
-	img = GLOBALSTAGE.getFloatRGBAsImage(img.red(),img.grn(),img.blu(), img.width(),img.height());
-	var d = new DOImage(img);
-	d.matrix().scale(3.0);
-	d.matrix().translate(10 + 50*b, debugOffY + 750);
+	d.matrix().translate(10 + 50*b, debugOffY + debugOY);
 	GLOBALSTAGE.addChild(d);
 }
 }
@@ -17010,6 +17054,8 @@ for(var b=0; b<sortedB.length; ++b){
 
 
 
+
+/*
 sortedB = R3D._sortCompareProgressiveGrayscale_5x5_Single(objectA, sortedB, sortedB.length, 0.5);
 
 
@@ -17032,16 +17078,21 @@ for(var b=0; b<sortedB.length; ++b){
 	GLOBALSTAGE.addChild(d);
 }
 }
+*/
 
+// sortedB = R3D._sortCompareProgressiveGrayscale_7x7_List(objectA, sortedB, 4, 0.5);
 
-sortedB = R3D._sortCompareProgressiveGrayscale_7x7_List(objectA, sortedB, sortedB.length, 0.5);
-
-console.log(sortedB)
 
 
 if(doDebug){
-var d = new DOText("color SIFT 7x7 list", 12, DOText.FONT_ARIAL, 0xFFCC0033, DOText.ALIGN_LEFT);
-d.matrix().translate(1, debugOffY + 850);
+console.log("B LENGTH - SIFT GRAYSCALE: "+sortedB.length);
+}
+
+
+if(doDebug){
+debugOY += 50;
+var d = new DOText("gray SIFT 7x7 list", 12, DOText.FONT_ARIAL, 0xFFCC0033, DOText.ALIGN_LEFT);
+d.matrix().translate(1, debugOffY + debugOY);
 GLOBALSTAGE.addChild(d);
 // SHOW PATCHES
 for(var b=0; b<sortedB.length; ++b){
@@ -17053,14 +17104,14 @@ for(var b=0; b<sortedB.length; ++b){
 	img = GLOBALSTAGE.getFloatRGBAsImage(img.red(),img.grn(),img.blu(), img.width(),img.height());
 	var d = new DOImage(img);
 	d.matrix().scale(3.0);
-	d.matrix().translate(10 + 50*b, debugOffY + 850);
+	d.matrix().translate(10 + 50*b, debugOffY + debugOY);
 	GLOBALSTAGE.addChild(d);
 }
 }
 
 
 
-
+/*
 sortedB = R3D._sortCompareProgressiveColorRIFT_5x5_Single(objectA, sortedB, sortedB.length, 0.5);
 
 console.log(sortedB)
@@ -17084,10 +17135,10 @@ for(var b=0; b<sortedB.length; ++b){
 	GLOBALSTAGE.addChild(d);
 }
 }
+*/
 
 
-
-
+/*
 sortedB = R3D._sortCompareProgressiveColorRIFT_7x7_List(objectA, sortedB, sortedB.length, 0.5);
 
 
@@ -17110,17 +17161,22 @@ for(var b=0; b<sortedB.length; ++b){
 	GLOBALSTAGE.addChild(d);
 }
 }
+*/
 
 
 
 
+// sortedB = R3D._sortCompareProgressiveColorSAD_needle_haystack(objectA, sortedB, 2, 0.5);
 
-sortedB = R3D._sortCompareProgressiveColorSAD_needle_haystack(objectA, sortedB, sortedB.length, 0.5);
+if(doDebug){
+console.log("B LENGTH - SAD NEEDLE/HAYSTACK: "+sortedB.length);
+}
 
 
 if(doDebug){
+debugOY += 50;
 var d = new DOText("SAD needle haystack", 12, DOText.FONT_ARIAL, 0xFFCC0033, DOText.ALIGN_LEFT);
-d.matrix().translate(1, debugOffY + 1000);
+d.matrix().translate(1, debugOffY + debugOY);
 GLOBALSTAGE.addChild(d);
 // SHOW PATCHES
 for(var b=0; b<sortedB.length; ++b){
@@ -17133,25 +17189,25 @@ for(var b=0; b<sortedB.length; ++b){
 	img = GLOBALSTAGE.getFloatRGBAsImage(img.red(),img.grn(),img.blu(), img.width(),img.height());
 	var d = new DOImage(img);
 	d.matrix().scale(3.0);
-	d.matrix().translate(10 + 50*b, debugOffY + 1000);
+	d.matrix().translate(10 + 50*b, debugOffY + debugOY);
 	GLOBALSTAGE.addChild(d);
 }
 }
 
 
 
+// save final:
+
+sortedB = R3D._sortCompareProgressiveSIFTFullScoreCache(objectA, sortedB, 2, R3D._progressiveReturnCacheProperty, "sadCache");
 
 
+
+
+
+/*
 throw "after SAD"
 
 		sortedB = R3D._sortCompareProgressiveSIFTFullScoreCache(objectA, sortedB, 8, R3D._progressiveReturnCacheProperty, "sadCache");
-
-
-
-
-
-
-
 
 
 if(doDebug){
@@ -17194,6 +17250,7 @@ for(var b=0; b<sortedB.length; ++b){
 	GLOBALSTAGE.addChild(d);
 }
 }
+*/
 /*
 		// prep sift:
 		for(var b=0; b<sortedB.length; ++b){
@@ -17627,20 +17684,58 @@ var matches = [];
 // var ratios = [];
 var maximumRatio = 0.90; // eg 0.028/0.051 = 0.56    | 25% ~ 0.5 | 50% ~ 0.75
 
-	// maximumRatio = 0.95;
+// maximumRatio = 0.95;
+// maximumRatio = 0.99;
+
+
+maximumRatio = 1.0;
+
+
 var scoreIndex = "scoreSIFT";
 // var scoreIndex = "flatOrientated";
 var skipped = 0;
 
-// THIS OBJECTS A IS A DIFFERENT OBJECTS A
 
 
 console.log(objectsA);
 console.log(objectsB);
 
 
+/*
+for(var i=0; i<objectsA.length; ++i){
+	var objectA = objectsA[i];
+	var bestA = objectA["best"];
+	if(bestA){
+		var objectB = bestA["match"]["source"];
+		if(objectB){
+			bestB = objectB["best"];
+			if(bestB){
+				matches.push([objectA,objectB, bestA["match"],bestB["match"]]);
+				matchingCount += 1;
+			}
+		}
+	}
+}
 
 
+for(var i=0; i<objectsB.length; ++i){
+	var objectB = objectsB[i];
+	var bestB = objectB["best"];
+	if(bestB){
+		var objectA = bestB["match"]["source"];
+		if(objectA){
+			bestA = objectA["best"];
+			if(bestA){
+				matches.push([objectA,objectB, bestA["match"],bestB["match"]]);
+				matchingCount += 1;
+			}
+		}
+	}
+}
+*/
+
+
+/*
 for(var i=0; i<objectsA.length; ++i){
 	var objectA = objectsA[i];
 	var bestA = objectA["best"];
@@ -17677,6 +17772,38 @@ for(var i=0; i<objectsA.length; ++i){
 		}
 	}
 }
+*/
+
+
+
+// look at final position only:
+
+var maximumDistanceMatch = 5.0;
+
+for(var i=0; i<objectsA.length; ++i){
+	var objectA = objectsA[i];
+	var bestA = objectA["best"];
+	var scndA = objectA["second"];
+	if(bestA && scndA){
+		var objectB = bestA["match"]["source"];
+		if(objectB){
+			var bestB = objectB["best"];
+			if(bestB){
+				var oA = bestB["match"]["source"];
+				var dA = V2D.distance(objectA["point"],oA["point"]);
+				if(dA<maximumDistanceMatch){ // close enough
+					console.log(dA);
+					matches.push([objectA,objectB, bestA["match"],bestB["match"]]);
+					matchingCount += 1;
+				}
+			}
+		}
+	}
+}
+
+
+
+
 // Code.printMatlabArray(ratios,"ratios");
 // console.log("matchingCount: "+matchingCount);
 console.log("skipped: "+skipped+" / matchingCount: "+matchingCount);
@@ -17794,7 +17921,8 @@ console.log("matches: "+matches.length);
 
 		var min = Code.min(errors);
 		var sigma = Code.stdDev(errors, min);
-		var limit = min + sigma*2;
+		// var limit = min + sigma*2;
+		var limit = min + sigma*3;
 		console.log(repeat+" SIGMA: "+sigma+" | "+limit);
 		for(var i=0; i<entries.length; ++i){
 			var match = entries[i];
@@ -18346,9 +18474,10 @@ R3D.patchAffine2DFromPatch3D = function(point3D,normal3D,up3D,right3D,size3D, ca
 	var pA = points2D[1];
 	var pointsB = sets2D[1];
 	var affine = R3D.affineCornerMatrixLinear(pointsA,pointsB, reuse);
-
 	// var affine = R3D.rotationScaleCornerMatrixLinear(pointsA,pointsB, reuse);
-
+	var affine = reuse;
+	// console.log (affine);
+	// throw "?"
 	return affine;
 }
 
@@ -18583,13 +18712,13 @@ R3D._sortCompareProgressiveColorFlatSSD_BEST = function(objectA, objectsB, minCo
 }
 R3D._sortCompareProgressiveColorFlatSSD_CLOSEST = function(objectA, objectsB, minCount, percentDrop){
 	minCount = minCount!==undefined ? minCount : 8;
-	return R3D._sortCompareProgressiveType(objectA, objectsB, R3D._progressiveCompare2DArrayV3DSADClosest, "11x11",null,null, minCount, percentDrop, [11,11]);
+	return R3D._sortCompareProgressiveType(objectA, objectsB, R3D._progressiveCompare2DArrayV3DSADClosest, "11x11",null,"sadCache", minCount, percentDrop, [11,11]);
 }
 
 
 R3D._sortCompareProgressiveColor_7x7_ColorHistogramOriented = function(objectA, objectsB, minCount, percentDrop){
 	minCount = minCount!==undefined ? minCount : 9;
-	return R3D._sortCompareProgressiveType(objectA, objectsB, R3D._progressiveCompareHistogramList, "7x7_hist_oriented",null,null, minCount, percentDrop);
+	return R3D._sortCompareProgressiveType(objectA, objectsB, R3D._progressiveCompareHistogramList, "7x7_hist_oriented",null,"sadCache", minCount, percentDrop);
 }
 
 R3D._sortCompareProgressiveGrayscale_5x5_Single = function(objectA, objectsB, minCount, percentDrop){
@@ -18598,7 +18727,7 @@ R3D._sortCompareProgressiveGrayscale_5x5_Single = function(objectA, objectsB, mi
 }
 R3D._sortCompareProgressiveGrayscale_7x7_List = function(objectA, objectsB, minCount, percentDrop){
 	minCount = minCount!==undefined ? minCount : 9;
-	return R3D._sortCompareProgressiveType(objectA, objectsB, R3D._progressiveCompareGrayscaleSIFTList, "7x7_sift_list",null,null, minCount, percentDrop);
+	return R3D._sortCompareProgressiveType(objectA, objectsB, R3D._progressiveCompareGrayscaleSIFTList, "7x7_sift_list",null,"sadCache", minCount, percentDrop);
 }
 
 R3D._sortCompareProgressiveColorRIFT_5x5_Single = function(objectA, objectsB, minCount, percentDrop){
@@ -18613,7 +18742,7 @@ R3D._sortCompareProgressiveColorRIFT_7x7_List = function(objectA, objectsB, minC
 
 R3D._sortCompareProgressiveColorSAD_needle_haystack = function(objectA, objectsB, minCount, percentDrop){
 	minCount = minCount!==undefined ? minCount : 9;
-	return R3D._sortCompareProgressiveType(objectA, objectsB, R3D._progressiveCompareSADNeedleHaystack, "5x5_needle_11x11_haystack",null,null, minCount, percentDrop);
+	return R3D._sortCompareProgressiveType(objectA, objectsB, R3D._progressiveCompareSADNeedleHaystack, "5x5_needle_11x11_haystack",null, "sadCache", minCount, percentDrop);
 }
 
 
@@ -18709,14 +18838,16 @@ if(false){
 R3D._sortCompareProgressiveDropWorst = function(best, minCount, percentDrop, sigmaDrop){
 	minCount = minCount!==undefined && minCount!==null ? minCount : 3;
 	minCount = Math.min(minCount,best.length);
+	sigmaDrop
 	// var p = 0.75; // 0.5-0.90
 	var p = Code.valueOrDefault(percentDrop,0.5); // percentDrop!==null && percentDrop!==undefined ? percentDrop : 0.50;
 	var sigma = Code.valueOrDefault(sigmaDrop,2.0);
-	var m = Math.round(best.length*p);
-	m = Math.min(m,best.length-1);
+		sigma = 2.0;
 	if(best.length<=minCount){ // no middle section to even do
 		return;
 	}
+	var m = Math.round(best.length*p);
+	m = Math.min(m,best.length-1);
 		var limitA = best[m][1];
 		// var sigma = 1.5; // 1 - 2 too much
 		var scores = [];
@@ -18727,8 +18858,14 @@ R3D._sortCompareProgressiveDropWorst = function(best, minCount, percentDrop, sig
 		var max = Code.max(scores);
 		var sigMin = Code.stdDev(scores,min);
 		var sigMax = Code.stdDev(scores,max);
-		var limitMin = min + sigMin*sigmaDrop; // left distributed drop worst
+		var limitMin = min + sigMin*sigma; // left distributed drop worst
 		var limitMax = limitMin;
+// if(Code.isNaN(limitMin)){
+// 	console.log("min/max:",min,max);
+// 	console.log("???1",sigMin,sigMax);
+// 	console.log("??2",sigmaDrop);
+// 	throw "???";
+// }
 		// var limitMax = max - sigMax*sigma; // right destributed remove
 		var limitB = Math.min(limitMin,limitMax);
 	// remove obviously worst elements
@@ -18742,7 +18879,18 @@ R3D._sortCompareProgressiveDropWorst = function(best, minCount, percentDrop, sig
 	if(Code.isArray(index)){
 		index = index[0];
 	}
-		index = Math.max(index, minCount);
+	// console.log("percentDrop "+percentDrop+" | "+minCount+" | "+sigma+" = "+index+" ? "+limit+" / "+limitMin+"-"+limitMax);
+// if(Code.isNaN(limitMin)){
+// console.log("m:",m);
+// console.log("min/max:",min,max);
+// console.log("sM/M:",sigMin,sigMax);
+// console.log("lA/B:",limitA,limitB);
+// console.log("lM/M:",limitMin,limitMax);
+// console.log(best);
+// console.log(scores);
+// throw "???"
+// }
+	index = Math.max(index, minCount);
 	Code.truncateArray(best,index);
 	return best;
 }
@@ -19023,9 +19171,20 @@ R3D._progressiveR3DGrayscaleSIFTSingle = function(image){
 		for(var i=0; i<wid; ++i){
 			var index = j*wid + i;
 			var g = gradient[index];
-			var angle = (Code.angleZeroTwoPi( V2D.angleDirection(g,V2D.DIRX) ) / (Math.PI*2));
-			var bin = Math.floor(angle*binCount);
-			bins[bin] += g.length();
+			// single bucket
+			// var angle = (Code.angleZeroTwoPi( V2D.angleDirection(g,V2D.DIRX) ) / (Math.PI*2));
+			// var bin = Math.floor(angle*binCount);
+			// bins[bin] += g.length();
+
+			var percent = (Code.angleZeroTwoPi( V2D.angleDirection(g,V2D.DIRX) ) / (Math.PI*2));
+			var bin = percent*binCount;
+			var binLo = Math.floor(bin);
+			var binHi = Math.ceil(bin) % binCount;
+			var hi = bin-binLo;
+			var lo = 1.0 - hi;
+			var len = g.length();
+			bins[binLo] += len*lo;
+			bins[binHi] += len*hi;
 		}
 	}
 	// normailze to 0-1 - remove overall intensity
@@ -19033,6 +19192,8 @@ R3D._progressiveR3DGrayscaleSIFTSingle = function(image){
 		// SCALE to 0 - 1 ???
 	// sqrt - remove speculars
 	// ImageMat.pow(bins,0.5);
+	// console.log(bins);
+	// throw "?";
 	return bins;
 }
 
@@ -19051,16 +19212,9 @@ R3D._progressiveR3DGrayscaleSIFTList = function(image){
 if(wid==10){
 	// size = 3;
 	// shift = 0;
-	size = 5;
-	shift = 2;
+	// size = 5;
+	// shift = 2;
 }
-///     01234567890
-///.    -----
-///.       -----
-///.          -----
-
-// console.log(image);
-
 if(wid==11){
 	size = 5;
 	shift = 2;
@@ -19084,9 +19238,21 @@ if(wid==11){
 					for(var i=sI; i<eI; ++i){
 						var index = j*wid + i;
 						var g = gradient[index];
-						var angle = (Code.angleZeroTwoPi( V2D.angleDirection(g,V2D.DIRX) ) / (Math.PI*2));
-						var bin = Math.floor(angle*binCount);
-						bins[bin] += g.length();
+
+						// var angle = (Code.angleZeroTwoPi( V2D.angleDirection(g,V2D.DIRX) ) / (Math.PI*2));
+						// var bin = Math.floor(angle*binCount);
+						// bins[bin] += g.length();
+
+						var percent = (Code.angleZeroTwoPi( V2D.angleDirection(g,V2D.DIRX) ) / (Math.PI*2));
+						var bin = percent*binCount;
+						var binLo = Math.floor(bin);
+						var binHi = Math.ceil(bin) % binCount;
+						var hi = bin-binLo;
+						var lo = 1.0 - hi;
+						var len = g.length();
+						bins[binLo] += len*lo;
+						bins[binHi] += len*hi;
+
 					}
 				}
 
@@ -19096,12 +19262,13 @@ if(wid==11){
 		}
 	}
 	// normailze to 0-1 - remove overall intensity
-	// ImageMat.normalFloat01(list);
+	ImageMat.normalFloat01(list);
 
-	var max = Code.max(list);
-	if(max>0){
-		ImageMat.mulConst(list,1.0/max);
-	}
+	// var max = Code.max(list);
+	// if(max>0){
+	// 	ImageMat.mulConst(list,1.0/max);
+	// }
+
 	// SCALE to 0 - 1 ???
 	// sqrt - remove speculars
 	// ImageMat.pow(bins,0.5);
@@ -19148,7 +19315,7 @@ R3D._progressiveCompareSADNeedleHaystack = function(objA,objB){
 
 	// TODO: penalize non-same optimal location?
 	var score = (scoreAB + scoreBA)*0.5;
-	console.log("_progressiveCompareSADNeedleHaystack: "+score);
+	// console.log("_progressiveCompareSADNeedleHaystack: "+score);
 	// throw "?"
 	return score;
 }
@@ -19386,24 +19553,25 @@ R3D.objectProgressiveR3D_FLAT_1 = function(object, imageMatrixScales, cellSize, 
 	// var flatHistogram = R3D._progressiveR3DColorHistogram(icon);
 	// 	object["color"] = flatColor;
 	// 	object["flatHistogram"] = flatHistogram;
-	var icon11 = R3D._progressiveR3DSizing(point, imageMatrixScales, 11, cellSize, matrix);
+	// var icon11 = R3D._progressiveR3DSizing(point, imageMatrixScales, 11, cellSize, matrix);
+	var icon11 = icon;
 	var icon9 = R3D._progressiveR3DSizing(point, imageMatrixScales, 9, cellSize, matrix);
 	var icon7 = R3D._progressiveR3DSizing(point, imageMatrixScales, 7, cellSize, matrix);
-	var icon5 = R3D._progressiveR3DSizing(point, imageMatrixScales, 5, cellSize, matrix);
+	// var icon5 = R3D._progressiveR3DSizing(point, imageMatrixScales, 5, cellSize, matrix);
 	// console.log(icon5);
-	var icon3 = icon5.meanFilter();
-	var icon1 = icon3.meanFilter();
+	// var icon3 = icon5.meanFilter();
+	// var icon1 = icon3.meanFilter();
 	// console.log(icon3);
 	object["11x11"] = icon11; // 11x11 = 121
-		object["9x9_blur"] = icon11.meanFilter();
-	object["9x9"] = icon9; // 9x9 = 81
-		object["7x7_blur"] = icon9.meanFilter();
-	object["7x7"] = icon7; // 49
-		object["5x5_blur"] = icon7.meanFilter();
-	object["5x5"] = icon5; // 25
-	object["3x3"] = icon3; // 9
+// object["9x9_blur"] = icon11.meanFilter();
+// object["9x9"] = icon9; // 9x9 = 81
+object["7x7_blur"] = icon9.meanFilter();
+// object["7x7"] = icon7; // 49
+ object["5x5_blur"] = icon7.meanFilter();
+// object["5x5"] = icon5; // 25
+// object["3x3"] = icon3; // 9
 	// object["1x1"] = icon3.get(1,1, new V3D());
-	object["1x1"] = icon1.get(0,0, new V3D());
+// object["1x1"] = icon1.get(0,0, new V3D());
 	// console.log(object);
 	// throw "..."
 	
@@ -19426,12 +19594,13 @@ R3D.objectProgressiveR3D_FLAT_1 = function(object, imageMatrixScales, cellSize, 
 	// object["7x7_sift_histogram"] = R3D._progressiveR3DGrayscaleSIFTList(object["7x7_blur"]);
 
 	// object["5x5_rift_single"] = R3D._progressiveR3DColorRIFTSingle(object["5x5_blur"]); // 3x3
-	object["5x5_rift_single"] = R3D._progressiveR3DColorRIFTSingle(object["7x7_blur"]); // 5x5
-	object["7x7_rift_list"] = R3D._progressiveR3DColorRIFTList(object["9x9_blur"]); // 7x7
+// object["5x5_rift_single"] = R3D._progressiveR3DColorRIFTSingle(object["7x7_blur"]); // 5x5
+// object["7x7_rift_list"] = R3D._progressiveR3DColorRIFTList(object["9x9_blur"]); // 7x7
 
 	// => or 5x5 on a 11x11
 
-	var icon5From11 = icon11.getSubRect(3,3, 5,5); // 11-5/3
+	// var icon5From11 = icon11.getSubRect(3,3, 5,5); // 11-5/2 = 3
+	var icon5From11 = icon11.getSubRect(2,2, 7,7); // 11-7/2 = 2
 	// console.log(icon5From11);
 	// throw "?";
 	object["5x5_needle_11x11_haystack"] = {"needle":icon5From11, "haystack":icon11};

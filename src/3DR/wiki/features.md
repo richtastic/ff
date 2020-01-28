@@ -1,6 +1,105 @@
 # Features
 
 
+
+## Investigated Zoom Levels
+
+### Scale Space (Gaussian - SIFT)
+	- use peak response of DoG in scale space
+	- extracted points are very dependent on level of spatial divisions
+	- fewer points (eg 20%-50% than corner counterpart)
+	=> OK
+
+### Entropy Level
+	- zoom out until entropy is equal to some value (eg: 0.25)
+	- the precise reading is sporadic based on window / rounding
+	=> POOR
+
+### Range Peaking
+	- zoom out until range is equal to some value (eg 0.25)
+	- precise reading is sporadic at each level
+	=> POOR
+
+### Corner Peaking
+	- zoom out on a corner until the corner response peaks
+	=> OK
+
+
+
+
+
+## Investigated Comparators
+
+### Average Color
+	- RGB / HSV / CIELab compare
+	=> BAD
+
+### Color Histogram
+	- non-oriented list of higher-frequency color palette
+	=> POOR
+
+### NCC
+	- very different images are scaled and introduces more candidates rather than fewer
+	- not useful in scenes with brightness constancy
+	=> POOR
+
+### SSD
+	- penalizes single errors highly
+	=> OK
+
+### SAD
+	- more satisfactory error penalizing
+	=> OK
+
+### SIFT
+	- candidate matches seem 
+	- grayscale conversion makes very different colors have similar weight despite obviously wrong
+		- extending to R/G/B/Y is marginally better with much more processing
+	=> OK
+
+
+### Spatial Color Gradient
+	- SIFT but in 'color'
+	- not sure exactly what dx = <r,g,b> & dy = <r,g,b> added together is
+	- don't know how to percentage-distribute magnitude into bins
+	=> POOR
+
+### Color Delta (Color Difference/Gradient From Average)
+	- more of a histogram, less of a spatially-fixed 
+	- might be a good corner metric?
+	=> BAD
+
+### Best-SAD
+	- each pixel score is sorted best first in array
+	- scores are then multiplied by location in array 1 -> 0 [1,0.9,0.8,...,0.2,0.1,0.0] * score
+	=> OK
+
+### Closest-SAD
+	- each pixel uses lowest score between all 9 neighbor counterparts
+	- allows for many movements in picture
+	=> OK
+
+### Oriented Color Histogram
+	- multiple (3x3 - 5x5) individual histograms in single image
+	=> POOR
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 <br/>
 **Laplacean (Laplace operator):** &nabla;&middot;&nabla; = &nabla;<sup>2</sup> = &Sigma;<sub>i</sub> &part;<sup>2</sup>f/&part;x<sub>i</sub><sup>2</sup>
 <br/>

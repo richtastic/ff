@@ -5708,7 +5708,7 @@ console.log("GET MATCHES FROM 3D: "+errorR);
 
 
 
-throw "before dense world";
+// throw "before dense world";
 
 
 		// insert matching points:
