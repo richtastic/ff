@@ -3972,7 +3972,6 @@ var useErrors = false;
 				pointB = pointB.copy().scale(imageSizeB.x,imageSizeB.y);
 			var point3D = points3D[i];
 			// var error = R3D.fError(F, Finv, pointA, pointB);
-						// var error = R3D.reprojectionError(point3D, pointA,pointB, extrinsicA, extrinsicB, Ka, Kb); // NO
 			var error = R3D.reprojectionError(point3D, pointA,pointB, cameraA, cameraB, Ka, Kb);
 			errors.push(error["error"]);
 		}

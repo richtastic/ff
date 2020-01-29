@@ -5523,7 +5523,7 @@ Stereopsis.World.prototype.testOutFinding = function(viewA,viewB, transformAB){
 	var needleSize = 31;
 	var haystackSize = needleSize*7;
 	var affineAB = null;
-	
+
 	var result = R3D.optimumNeedleHaystackAtLocation(viewA.imageScales(),pointA, viewB.imageScales(),pointB, needleSize,haystackSize, affineAB, 11, true);
 
 	console.log(result);
@@ -5811,7 +5811,7 @@ console.log("GET MATCHES FROM 3D: "+errorR);
 		// refine points
 		world.estimate3DErrors(true);
 		world.averagePoints3DFromMatches();
-		world.refinePoint3DAbsoluteLocation();
+// world.refinePoint3DAbsoluteLocation();
 		world.patchInitBasicSphere(true);
 
 		// add new points
@@ -5869,7 +5869,7 @@ console.log("GET MATCHES FROM 3D: "+errorR);
 
 	// final output:
 	world.averagePoints3DFromMatches();
-	world.refinePoint3DAbsoluteLocation();
+// world.refinePoint3DAbsoluteLocation();
 	world.patchInitBasicSphere(true);
 
 	// check it out

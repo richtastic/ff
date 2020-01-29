@@ -430,12 +430,113 @@ refinement - dates
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-- need to do efficient object extraction
+- do efficient object extraction
 
+- inconsistent neighbor single patch dropping
+
+
+- rerror & ferror don't track with poor edges, need better way to remove bad points
+	=> READ ABOUT HOW TO GROUP DROP?
+		- fix incorrectly made points
+	=> how to correct bad patches / globs on global view ?
+
+	A) remove patches that are not visible in at least 3 images
+	B) expand -> filter -> repeat
+	C) depth map for pixels to remove spurious
+	D) 'new/putative' patches are discarded if no existing neighbor patches project to the same cells in the opposite image
+	E) 'should be visible' constraint ?
+	F) 'close' but not neighbors () ?
+	G) group discontinuities with neighbors () ?
+	-) single cell size @ 1x1 | 2x2 (no progression)
+	-) single-camera-depth neighbor filtering: for a single view/image: patches are marked as consistent based on distance from single view []
+	p48)
+		1) neighbor-occluding response ? => NCC outliers
+		2) any occluded by neighbor patches
+		3) neighbor-consistency & depth consistency 
+		4) small-sized groups (size 6 or fewer) are removed ... not helpful
+=> useful to mark patched as ESTABLISHED / vs / PUTATIVE when filtering, so that new erronious points don't overwhelm/skew the filter
+
+
+Poisson Surface Reconstruction algorithm by Kazhdan et al. [30] i
+
+
+
+FILTER - ALGS:
+	- SINGLE: no common 2d neighbors (or low percent, <20%)
+	- GROUP: ?
+		- rerror, ferror, nerror are all consistent
+		- neighbors are (falsely) consistent
+
+
+=> IDENTIFY BORDERS:
+	- for every point, where there is a large inconsistency between:
+		- depth ?
+		- expected opposite-point location ?
+
+=> HOW TO IDENTIFY GROUPS?
+	- all neighbors have similar distances to (each respective) view image
+		- put all points into queue
+		- pop of top while queue is not empty:
+			- if p already processed, continue
+			mark p as processed
+			- if p has no group assignment, assign it one
+			- get average 3D distance to neighbor / depth to view
+			- for each neighbor q of p: [if q close enough to p / view]
+				if q doesn't have a group:
+					assign q to group p
+					put q at top of queue
+
+	... any occlusion between a single patch corresponds to an occlusion between groups
+
+	... choose which group is better based on?: 
+		- avg rerror
+		- avg ferror
+		- avg nerror
+		- avg surface error (average list of sigmas)?
+
+	... try to trim away at borders ?
+		- meeting group edges will have inconsistent neighbors in at least 1 image
+
+
+
+... keeping track of surface 'connectivity'
+	-> at borders: resolve whether there is a depth discontinuity else a join of surfaces should be consuming the other
+		-> how to decide which group is more right?
+			- some metric?
+			- local average sad / ncc ?
+			- 
+	-> how to account for sub-dividing?
+
+
+
+
+- ...
 
 - on 2D probing: - local pruning
 	- if 'neighbor' error is much higher than self/others
 		=> remove neighbor
+
+
+
+- combine DoG and corner feature matching [& others?]
+- make sure features are pre-smoothed to remove noise
+- should be getting 1000s of feature pairs, not 100s
+
+
+- why is R-ERROR equivalent to the 'middle' plane? => dropping based on R-ERROR & F-ERROR is not useful
+	=> other metrics (filters) need to be used to get rid of the higher-frequency points?
+- 
+
+
+
+
+
+
+
+
+..........................
+
+
 
 
 - affine is inaccurate -- rotation ?
@@ -452,6 +553,12 @@ refinement - dates
 	- color-gradient-rift [self - avg]
 	- color-sift [dCx + dCy]
 
+
+
+
+
+TEST:
+var info = R3D.cornersFromColorGradient(imageMatrixScaled);
 
 
 

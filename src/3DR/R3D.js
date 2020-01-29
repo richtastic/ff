@@ -16246,6 +16246,27 @@ var errors = [];
 		var limitPixels = Math.max(2.0,limitPixelPercent*imageHypotenuse);
 		var space = new QuadTree(toPointPoint, new V2D(0,0), imageSize);
 		console.log(featureSize+" featureSize --- cellSize: "+cellSize+" --- limitPixels : "+limitPixels);
+/*
+var info = R3D.cornersFromColorGradient(imageMatrixScaled);
+console.log(info);
+// var corners = info["value"];
+var heat = info["value"];
+var wid = info["width"];
+var hei = info["height"];
+var colors = [0xFF000000, 0xFF0000CC, 0xFFCC00CC, 0xFFFF0000, 0xFF990000, 0xFFFFFFFF];
+ImageMat.normalFloat01(heat);
+// heat = ImageMat.pow(heat,2.0);
+// heat = ImageMat.pow(heat,0.50);
+var img = ImageMat.heatImage(heat, wid, hei, false, colors);
+	img = GLOBALSTAGE.getFloatRGBAsImage(img.red(),img.grn(),img.blu(), img.width(),img.height());
+var d = new DOImage(img);
+// d.graphics().alpha(0.2);
+d.matrix().translate(0 , 0);
+GLOBALSTAGE.addChild(d);
+throw "?";
+*/
+
+
 		var corners = R3D.extractImageCorners(imageMatrixScaled, nonMaximalPercent, maxCount, single, scalable, limitPixels);
 		corners.sort(sortLessFirstT);
 		// console.log("corner count: "+corners.length);
@@ -17021,9 +17042,36 @@ for(var b=0; b<sortedB.length; ++b){
 }
 
 
+sortedB = R3D._sortCompareProgressiveGrayscale_7x7_List(objectA, sortedB, 8, 0.5);
+if(doDebug){
+console.log("B LENGTH - SIFT GRAYSCALE: "+sortedB.length);
+}
+
+
+if(doDebug){
+debugOY += 50;
+var d = new DOText("gray SIFT 7x7 list", 12, DOText.FONT_ARIAL, 0xFFCC0033, DOText.ALIGN_LEFT);
+d.matrix().translate(1, debugOffY + debugOY);
+GLOBALSTAGE.addChild(d);
+// SHOW PATCHES
+for(var b=0; b<sortedB.length; ++b){
+	var objectB = sortedB[b];
+		var p = objectB["point"];
+		p = p.copy();
+		p.scale(imageScaleB);
+	var img = objectB["icon"];
+	img = GLOBALSTAGE.getFloatRGBAsImage(img.red(),img.grn(),img.blu(), img.width(),img.height());
+	var d = new DOImage(img);
+	d.matrix().scale(3.0);
+	d.matrix().translate(10 + 50*b, debugOffY + debugOY);
+	GLOBALSTAGE.addChild(d);
+}
+}
+
+
 
 // search for colors with close flat color - ssd
-		sortedB = R3D._sortCompareProgressiveColorFlatSSD_CLOSEST(objectA, sortedB, 16, 0.5);
+		sortedB = R3D._sortCompareProgressiveColorFlatSSD_CLOSEST(objectA, sortedB, 2, 0.5);
 if(doDebug){
 console.log("B LENGTH - SAD CLOSEST: "+sortedB.length);
 }
@@ -17080,34 +17128,6 @@ for(var b=0; b<sortedB.length; ++b){
 }
 */
 
-// sortedB = R3D._sortCompareProgressiveGrayscale_7x7_List(objectA, sortedB, 4, 0.5);
-
-
-
-if(doDebug){
-console.log("B LENGTH - SIFT GRAYSCALE: "+sortedB.length);
-}
-
-
-if(doDebug){
-debugOY += 50;
-var d = new DOText("gray SIFT 7x7 list", 12, DOText.FONT_ARIAL, 0xFFCC0033, DOText.ALIGN_LEFT);
-d.matrix().translate(1, debugOffY + debugOY);
-GLOBALSTAGE.addChild(d);
-// SHOW PATCHES
-for(var b=0; b<sortedB.length; ++b){
-	var objectB = sortedB[b];
-		var p = objectB["point"];
-		p = p.copy();
-		p.scale(imageScaleB);
-	var img = objectB["icon"];
-	img = GLOBALSTAGE.getFloatRGBAsImage(img.red(),img.grn(),img.blu(), img.width(),img.height());
-	var d = new DOImage(img);
-	d.matrix().scale(3.0);
-	d.matrix().translate(10 + 50*b, debugOffY + debugOY);
-	GLOBALSTAGE.addChild(d);
-}
-}
 
 
 
@@ -17165,8 +17185,8 @@ for(var b=0; b<sortedB.length; ++b){
 
 
 
-
-// sortedB = R3D._sortCompareProgressiveColorSAD_needle_haystack(objectA, sortedB, 2, 0.5);
+/*
+sortedB = R3D._sortCompareProgressiveColorSAD_needle_haystack(objectA, sortedB, 2, 0.5);
 
 if(doDebug){
 console.log("B LENGTH - SAD NEEDLE/HAYSTACK: "+sortedB.length);
@@ -17193,7 +17213,7 @@ for(var b=0; b<sortedB.length; ++b){
 	GLOBALSTAGE.addChild(d);
 }
 }
-
+*/
 
 
 // save final:
@@ -18420,6 +18440,53 @@ R3D.patch3DFromPoint3DCameras = function(point3D, cameraCenters, cameraNormals, 
 	return {"normal":normal,"up":up, "right":right, "size":patchSize};
 }
 
+
+R3D.cornersFromColorGradient = function(image, asVector){
+	asVector = Code.valueOrDefault(asVector,false);
+	var corners = [];
+	var wid = image.width();
+	var hei = image.height();
+	var red = image.red();
+	var grn = image.grn();
+	var blu = image.blu();
+	var wm1 = wid-1;
+	var hm1 = hei-1;
+	var avg = new V3D();
+	for(var j=0; j<hei; ++j){
+		for(var i=0; i<wid; ++i){
+			var sI = Math.max(i-1,0);
+			var sJ = Math.max(j-1,0);
+			var eI = Math.min(i+1,wm1);
+			var eJ = Math.min(j+1,hm1);
+			avg.set(0,0,0);
+			var count = (eI-sI+1)*(eJ-sJ+1);
+			for(var jj=sJ; jj<=eJ; ++jj){
+				for(var ii=sI; ii<=eI; ++ii){
+					var ind = jj*wid + i;
+					avg.x += red[ind];
+					avg.y += grn[ind];
+					avg.z += blu[ind];
+				}
+			}
+			// console.log(sI,eI,sJ,eJ);
+			// console.log(count);
+			// console.log(avg+"");
+			avg.x /= count;
+			avg.y /= count;
+			avg.z /= count;
+			var index = j*wid+i;
+			avg.x = red[index] - avg.x;
+			avg.y = grn[index] - avg.y;
+			avg.z = blu[index] - avg.z;
+			if(asVector){
+				corners[index] = avg.copy();
+			}else{
+				corners[index] = avg.length();
+			}
+		}
+	}
+	return {"value":corners, "width":wid, "height":hei};
+}
 
 
 R3D.projectPoint3DForPoint2DInfo = function(center3D,normal3D,up3D,ri3D,size3D, extrinsicCamera,K,distortions, point2D){
