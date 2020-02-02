@@ -5757,9 +5757,10 @@ console.log("GET MATCHES FROM 3D: "+errorR);
 
 // throw ">>>>>C";
 	
-	// var subdivisions = 0;
-	// var subdivisions = 1;
-	var subdivisions = 2;
+	// var subdivisions = 0; // ~1k
+	// var subdivisions = 1; // ~5k
+	var subdivisions = 2; // ~40k
+	// var subdivisions = 3; // ~100k
 	
 	// var iterations = 3; // per grid size
 	var iterations = 5;
@@ -5811,7 +5812,7 @@ console.log("GET MATCHES FROM 3D: "+errorR);
 		// refine points
 		world.estimate3DErrors(true);
 		world.averagePoints3DFromMatches();
-// world.refinePoint3DAbsoluteLocation();
+world.refinePoint3DAbsoluteLocation();
 		world.patchInitBasicSphere(true);
 
 		// add new points
@@ -5835,8 +5836,11 @@ console.log("GET MATCHES FROM 3D: "+errorR);
 		world.dropFurthest();
 		world.filterLocal3Dto2DSize();
 
+		world.filterNeighborConsistency();
+
 		// world.filterLocal3D(); // ...
-		world.filterPairwiseSphere3D(2.0); // 2-3
+		world.filterPairwiseSphere3D(1.0); // 2-3
+
 // ?: start more rigid, allow for more error, finish rigid
 
 		// var sig = 1.5;
@@ -5869,7 +5873,7 @@ console.log("GET MATCHES FROM 3D: "+errorR);
 
 	// final output:
 	world.averagePoints3DFromMatches();
-// world.refinePoint3DAbsoluteLocation();
+world.refinePoint3DAbsoluteLocation();
 	world.patchInitBasicSphere(true);
 
 	// check it out
@@ -9041,6 +9045,64 @@ Stereopsis.World.prototype.filterTransform2D3D = function(sigmaDrop2D,sigmaDrop3
 		}
 	}
 	// ...
+}
+
+Stereopsis.World.prototype.filterNeighborConsistency = function(){ // drop 3D outlier noise
+	console.log("filterNeighborConsistency");
+	var minCountNeighbors = 3;
+	var searchCellMultiplier = 1.5; // hyp = 1.414 = 1.5->2.0
+	var worstNeighborPercent = 0.25; // progression: 0.10 => 0.50 : (forgiving) => (strict)
+	var world = this;
+	var transforms = world.toTransformArray();
+	var totalRemovedCount = 0;
+	var totalCheckedCount = 0;
+	for(var i=0; i<transforms.length; ++i){
+		var transform = transforms[i];
+		var matches = transform.matches();
+		var viewA = transform.viewA();
+		var viewB = transform.viewB();
+		var cellSizeA = viewA.cellSize();
+		var cellSizeB = viewB.cellSize();
+		var searchRadiusA = cellSizeA*searchCellMultiplier;
+		var searchRadiusB = cellSizeB*searchCellMultiplier;
+		var removeMatchList = [];
+		for(var j=0; j<matches.length; ++j){
+			var match = matches[j];
+			var point2DA = match.pointForView(viewA);
+			var point2DB = match.pointForView(viewB);
+			var pA = point2DA.point2D();
+			var pB = point2DB.point2D();
+			var neighborsA = viewA.pointsInCircle(pA,searchRadiusA);
+			var neighborsB = viewB.pointsInCircle(pB,searchRadiusB);
+			if(neighborsA.length>=minCountNeighbors || neighborsB.length>=minCountNeighbors){
+				var common = [];
+				for(var iA=0; iA<neighborsA.length; ++iA){
+					var p3DA = neighborsA[iA].point3D();
+					for(var iB=0; iB<neighborsB.length; ++iB){
+						var p3DB = neighborsB[iB].point3D();
+						if(p3DA==p3DB){
+							common.push(p3DA);
+							break;
+						}
+					}
+				}
+				var ratioA = neighborsA.length>0 ? common.length/neighborsA.length : 0;
+				var ratioB = neighborsB.length>0 ? common.length/neighborsB.length : 0;
+				// console.log(" "+common.length+" : "+neighborsA.length+" & "+neighborsB.length+" = "+ratioA+" : "+ratioB);
+				if(ratioA<worstNeighborPercent || ratioB<worstNeighborPercent){
+					removeMatchList.push(match);
+				}
+			}
+		}
+		console.log("REMOVE: "+removeMatchList.length+" / "+matches.length);
+		totalCheckedCount += matches.length;
+		totalRemovedCount += removeMatchList.length;
+		for(var j=0; j<removeMatchList.length; ++j){
+			var match = removeMatchList[j];
+			world.removeMatchFromPoint3D(match);
+		}
+	}
+	console.log("filterNeighborConsistency total removed: "+totalRemovedCount+" / "+totalCheckedCount+" = "+(totalRemovedCount/totalCheckedCount));
 }
 Stereopsis.World.prototype.filterLocal3Dto2DSize = function(){ // drop 3D outlier noise
 	console.log("filterLocal3Dto2DSize");

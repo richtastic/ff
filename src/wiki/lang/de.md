@@ -1430,8 +1430,30 @@ https://www.youtube.com/watch?v=rVlQgJnHwgI
 
 
 
+### VERBS
+
+eat : essen
+
+i / he / she / it / we / they / you / you formal
 
 
+ich esse
+er isst
+sie isst
+es isst
+wir essen
+Sie essen
+du isst
+??
+
+
+
+
+| verb | i/ich | he/she/it er/sie/es | we/wir | you(fam)/you(form) | they/Sie | en |
+|-|-|-|
+|  |  |  |
+|  |  |  |
+|  |  |  |
 
 
 

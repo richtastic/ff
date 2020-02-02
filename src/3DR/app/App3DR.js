@@ -3576,6 +3576,7 @@ console.log("TODO: UNDO");
 	// this._keyboard.addFunction(Keyboard.EVENT_KEY_UP,this.handleKeyboardUp,this);
 	// this._keyboard.addFunction(Keyboard.EVENT_KEY_DOWN,this.handleKeyboardDown,this);
 	// this._keyboard.addFunction(Keyboard.EVENT_KEY_STILL_DOWN,this.handleKeyboardStill,this);
+	this._keyboard.addFunction(Keyboard.EVENT_KEY_DOWN,this.onKeyboardDown,this);
 	this._keyboard.addListeners();
 
 
@@ -3927,8 +3928,12 @@ App3DR.App.Model3D.prototype.setPoints = function(input3D, input2D, hasImages, n
 
 	var colors = [];
 // ONLY WORKS FOR PAIR OF IMAGES
-// var useErrors = true;
 var useErrors = false;
+// var useErrors = true;
+// var errorType = 0; // F
+var errorType = 1; // R
+// var errorType = 2; // NCC
+// var errorType = 0;
 	useErrors = useErrors && hasImages;
 	if(useErrors){
 		var views = this._views;
@@ -3948,17 +3953,43 @@ var useErrors = false;
 
 		var imageA = viewA["matrix"];
 		var imageB = viewB["matrix"];
-
 		var imageSizeA = imageA.size().copy();
 		var imageSizeB = imageB.size().copy();
+
+		var featureSizeA = imageSizeA.length()*0.01; // 1% of image
+		var featureSizeB = imageSizeB.length()*0.01; // 1% of image
+
+		var imageScalesA = new ImageMatScaled(imageA);
+		var imageScalesB = new ImageMatScaled(imageB);
+		var compareSize = 7; // 11
+		var needleSize = featureSizeA; // feature/scale size
+		var haystackRelativeSize = needleSize;
+		var matrix2D = new Matrix2D();
+			matrix2D.identity();
+
+		var cameraCenterA = cameraA.multV3DtoV3D(new V3D(0,0,0));
+		var cameraCenterB = cameraB.multV3DtoV3D(new V3D(0,0,0));
+		var cameraNormalA = cameraA.multV3DtoV3D(new V3D(0,0,1));
+			cameraNormalA.sub(cameraCenterA);
+		var cameraNormalB = cameraB.multV3DtoV3D(new V3D(0,0,1));
+			cameraNormalB.sub(cameraCenterB);
+		var cameraRightA = cameraA.multV3DtoV3D(new V3D(1,0,0));
+			cameraRightA.sub(cameraCenterA);
+		var cameraRightB = cameraB.multV3DtoV3D(new V3D(1,0,0));
+			cameraRightB.sub(cameraCenterB);
+
+		var points2D = [pointsA, pointsB];
+		var cameraCentersList = [cameraCenterA,cameraCenterB];
+		var cameraNormalsList = [cameraNormalA,cameraNormalB];
+		var cameraRightsList = [cameraRightA,cameraRightB];
+		var cameraSizesList = [featureSizeA,featureSizeB];
+
 
 		var Ka = viewA["K"];
 		var Kb = viewB["K"];
 
 			Ka = R3D.cameraFromScaledImageSize(Ka, imageSizeA);
 			Kb = R3D.cameraFromScaledImageSize(Kb, imageSizeB);
-
-
 
 		var errors = [];
 		// console.log(pointsA);
@@ -3971,16 +4002,70 @@ var useErrors = false;
 				pointA = pointA.copy().scale(imageSizeA.x,imageSizeA.y);
 				pointB = pointB.copy().scale(imageSizeB.x,imageSizeB.y);
 			var point3D = points3D[i];
-			// var error = R3D.fError(F, Finv, pointA, pointB);
-			var error = R3D.reprojectionError(point3D, pointA,pointB, cameraA, cameraB, Ka, Kb);
-			errors.push(error["error"]);
+			
+			if(errorType==0){
+				var error = R3D.fError(F, Finv, pointA, pointB);
+				errors.push(error["error"]);
+			}else if(errorType==1){
+				var error = R3D.reprojectionError(point3D, pointA,pointB, cameraA, cameraB, Ka, Kb);
+				errors.push(error["error"]);
+			}else if(errorType==2){
+
+
+				// var ncc = new ImageMatScaled(this._image);
+				// matrix2D ... i have a patch ...
+
+				
+				// console.log(pointA);
+				// console.log(pointB);
+				// console.log(point3D);
+				// console.log(cameraA);
+				// console.log(cameraB);
+				// console.log(Ka);
+				// console.log(Kb);
+
+
+// console.log(points2D);
+// console.log(cameraCentersList);
+// console.log(cameraNormalsList);
+// console.log(cameraRightsList);
+// console.log(cameraSizesList);
+
+				var patch3D = R3D.patch3DFromPoint3DCameras(point3D, cameraCentersList, cameraNormalsList, cameraRightsList, cameraSizesList, points2D);
+				var normal3D = patch3D["normal"];
+				var up3D = patch3D["up"];
+				var right3D = patch3D["right"];
+				var size3D = patch3D["size"];
+				matrix2D = R3D.patchAffine2DFromPatch3D(point3D,normal3D,up3D,right3D,size3D, cameraA,Ka, cameraB,Kb, pointA,pointB, matrix2D);
+				// console.log(": "+matrix2D);
+
+
+				var result = R3D.optimumNeedleHaystackAtLocation(imageScalesA,pointA, imageScalesB,pointB, needleSize,haystackRelativeSize, matrix2D, compareSize);
+				var error = result["score"];
+
+				// error = Math.pow(error,0.5);
+
+				errors.push(error);
+
+
+
+
+
+				// throw "calc ncc error";
+
+				if(i%100 == 0){
+					console.log(i+"/"+pointsA.length);
+				}
+			}else{
+				throw "unknown error type "+errorType;
+			}
 		}
 		// Code.printMatlabArray(errors,"errors");
 		// console.log(errors);
 		ImageMat.normalFloat01(errors);
 		// exaggerate
 		// ImageMat.pow(errors, 2); // fewer red
-		// ImageMat.pow(errors, 0.5); // more red
+		ImageMat.pow(errors, 0.5); // more red
 		var colorList = [0xFF0000FF, 0xFFFF0000];
 		var locationList = [0.0,1.0];
 		for(var i=0; i<errors.length; ++i){
@@ -4279,8 +4364,11 @@ if(this._keyboard.isKeyDown(Keyboard.KEY_LET_O)){ // left/right
 	var scaleAngle = 0.001;
 
 	if(this._keyboard.isKeyDown(Keyboard.KEY_SHIFT)){
-		scaleSize *= 0.1;
-		scaleAngle *= 0.25;
+		// scaleSize *= 0.1;
+		// scaleAngle *= 0.25;
+
+		scaleSize *= 0.01;
+		scaleAngle *= 0.01;
 	}
 
 
@@ -4329,7 +4417,15 @@ App3DR.App.Model3D.prototype.onMouseClickFxn3D = function(e){
 App3DR.App.Model3D.prototype.onMouseExitFxn3D = function(e){
 
 }
-
+App3DR.App.Model3D.prototype.onKeyboardDown = function(e){
+	// console.log(e);
+	var key = Code.getKeyCodeFromKeyboardEvent(e);
+	// console.log(key);
+	if(key==Keyboard.KEY_LET_P){
+		this._modelRenderCameraViews = !Code.valueOrDefault(this._modelRenderCameraViews, true);
+		console.log("TOGGLE CAMERA VIEWS");
+	}
+}
 App3DR.App.Model3D.prototype._eff = function(){
 	++this._time;
 
@@ -4337,13 +4433,15 @@ App3DR.App.Model3D.prototype._eff = function(){
 
 
 
+var renderCameraViews = Code.valueOrDefault(this._modelRenderCameraViews, true);
+
 	// RENDERING:
 	this._stage3D.clear();
 
 	this._stage3D.setViewport(StageGL.VIEWPORT_MODE_FULL_SIZE);
 
 	// RENDER TEXTURES
-	if(this._textureUVPoints && this._textureUVPoints.length>0){
+	if(renderCameraViews && this._textureUVPoints && this._textureUVPoints.length>0){
 // console.log(this._textures.length, this._textureUVPoints);
 		// console.log("this._textureUVPoints: "+this._textureUVPoints.length);
 		this._stage3D.selectProgram(1);

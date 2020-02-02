@@ -407,6 +407,7 @@ refinement - dates
 01/10 x BA on final group
 
 - dense pair matching is bad
+	=> sample comparing is poor (primarily RIFT & avg-color compares)
 
 01/15 - BA identify/remove view if it's position is very bad?
 01/19 - hole filling?
@@ -430,9 +431,53 @@ refinement - dates
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-- do efficient object extraction
 
-- inconsistent neighbor single patch dropping
+x inconsistent neighbor single patch dropping
+
+x why do near / far points have worse F/R - error ?
+	R: division by Z
+		- median center area is an average of the far away error & the near close error
+
+x visualize stereopsis NCC / SAD errors to see if that can help inform filtering
+	- .. really only shows edges -- which is where the variablity would be expected to exist
+
+
+- need to redo initial feature matching without rift / color etc ..
+
+- do efficient pairwise object extraction
+
+
+...
+
+
+- how will removal of obstructing patches with all views loaded at same time?
+	- transform - pairwise
+	- single view loads any 3D point it sees into a single scene
+		=> better propagates errors across scenes
+	- what about 'SHOULD SEE' points ?
+
+
+
+
+
+
+
+thinking experiment A:
+	- label every seed with a #
+	- seeds propagated take on the # they inherited
+		- what about collisions?
+			- take on 'group' # with better NCC score
+	- at sites of collision, group A can evaluate group B
+		- if predicted points coinside => merge group numbers
+		- else
+			- A) remove all of opposite group
+			- B) replace conflicted location with group with better avg ncc scores
+				- increment opposite group's loss count
+				- remove group if it has acquired a large amount of losses
+
+........
+
+
 
 
 - rerror & ferror don't track with poor edges, need better way to remove bad points
@@ -452,7 +497,7 @@ refinement - dates
 	p48)
 		1) neighbor-occluding response ? => NCC outliers
 		2) any occluded by neighbor patches
-		3) neighbor-consistency & depth consistency 
+		3) neighbor-consistency & depth consistency (& not enough neighbors?)
 		4) small-sized groups (size 6 or fewer) are removed ... not helpful
 => useful to mark patched as ESTABLISHED / vs / PUTATIVE when filtering, so that new erronious points don't overwhelm/skew the filter
 
@@ -462,7 +507,7 @@ Poisson Surface Reconstruction algorithm by Kazhdan et al. [30] i
 
 
 FILTER - ALGS:
-	- SINGLE: no common 2d neighbors (or low percent, <20%)
+	- SINGLE: no common 2d neighbors (or low percent, <20% : 0.7 lowered to 0.2)
 	- GROUP: ?
 		- rerror, ferror, nerror are all consistent
 		- neighbors are (falsely) consistent
