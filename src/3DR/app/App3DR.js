@@ -3931,7 +3931,7 @@ App3DR.App.Model3D.prototype.setPoints = function(input3D, input2D, hasImages, n
 var useErrors = false;
 // var useErrors = true;
 // var errorType = 0; // F
-var errorType = 1; // R
+// var errorType = 1; // R
 // var errorType = 2; // NCC
 // var errorType = 0;
 	useErrors = useErrors && hasImages;
@@ -7579,7 +7579,7 @@ console.log("checkPerformNextTask");
 		return;
 	}
 
-// throw "start dense";
+throw "start dense";
 	if(!project.checkHasDenseStarted()){
 		project.calculateDensePairPutatives();
 		return;
@@ -7723,7 +7723,7 @@ App3DR.ProjectManager.prototype._iterateSparseDenseLoaded = function(inputFilena
 		var trackCount = 0;
 		// SAVE MATCHES
 		var matches = data["matches"];
-throw "on completePairFxn";
+throw "on completePairFxn - before save";
 		if(matches){
 			console.log("matches");
 			console.log(matches);
@@ -7834,11 +7834,12 @@ i = 0; // good
 			currentPair = pair;
 			console.log(pair);
 			var relativeAB = pair["relativeTransform"];
+			// dense = with R
 			if(relativeAB){
 				this.calculatePairMatchWithRFromViewIDs(idA,idB, relativeAB, completePairFxn,project, configuration);
+				return;
 			}
-
-throw "dense just cares about initial relative using R as base ..."
+			// sparse = w/o known R
 			this.calculatePairMatchFromViewIDs(idA,idB, completePairFxn,project);
 			return;
 		}
@@ -9445,6 +9446,7 @@ console.log(relativeAB);
 		// build world
 		var info = project.fillInWorldAll(allViews, cellSize);
 		console.log(info);
+throw "solve?"
 		//
 		var WORLDCAMS = info["cameras"];
 		var WORLDVIEWS = info["views"];
@@ -9492,12 +9494,14 @@ App3DR.ProjectManager.prototype.calculatePairMatchFromViewIDs = function(viewAID
 	console.log(viewA,viewB);
 	var fxnA = function(){ // load features A
 		viewA.loadFeatureData(function(){
+			console.log("A");
 			featureDataA = viewA.featureData();
 			fxnReadyCheck();
 		}, self);
 	}
 	var fxnB = function(v){ // load features B
 		viewB.loadFeatureData(function(){
+			console.log("B");
 			featureDataB = viewB.featureData();
 			fxnReadyCheck();
 		}, self);
@@ -9522,10 +9526,12 @@ App3DR.ProjectManager.prototype.calculatePairMatchFromViewIDs = function(viewAID
 	var pairData = App3DR.ProjectManager.defaultPairFile(viewAID,viewBID);
 
 	var fxnReadyCheck = function(){
+console.log("fxnReadyCheck?")
 		if(!(featureDataA && featureDataB && imageA && imageB)){
 			return;
 		}
 GLOBALDISPLAY = GLOBALSTAGE;
+console.log("INSIDE")
 		var pairDoneSaveFxn = function(){
 			// SAVE DATA & SAVE SUMMARY & SAVE PROJECT ?
 			console.log(pairData);
@@ -9581,6 +9587,7 @@ GLOBALDISPLAY = GLOBALSTAGE;
 		// console.log(objectsA);
 		// console.log(objectsB);
 		// BASIC MATCH w/ F-ASSISTED
+console.log("progressiveFullMatchingDense ... ")
 		var result = R3D.progressiveFullMatchingDense(objectsA, imageMatrixA, objectsB, imageMatrixB);
 		console.log(result);
 		var pointsA = result["A"];
@@ -9588,6 +9595,100 @@ GLOBALDISPLAY = GLOBALSTAGE;
 		var F = result["F"];
 		var Finv = result["Finv"];
 		var goodEnoughMatches = false;
+// DISPLAY MATCHES:
+
+
+console.log(pointsA);
+console.log(pointsB);
+
+// if(false){
+if(true){
+
+	var alp = 0.25;
+
+	var img = imageMatrixA;
+		img = GLOBALSTAGE.getFloatRGBAsImage(img.red(),img.grn(),img.blu(), img.width(),img.height());
+	var d = new DOImage(img);
+	d.graphics().alpha(alp);
+	d.matrix().translate(0,0);
+	GLOBALSTAGE.addChild(d);
+
+	var img = imageMatrixB;
+		img = GLOBALSTAGE.getFloatRGBAsImage(img.red(),img.grn(),img.blu(), img.width(),img.height());
+	var d = new DOImage(img);
+	d.graphics().alpha(alp);
+	d.matrix().translate(imageMatrixA.width(),0);
+	GLOBALSTAGE.addChild(d);
+
+
+
+	var color0 = new V3D(1,0,0);
+	var color1 = new V3D(0,1,0);
+	var color2 = new V3D(0,0,1);
+	// var color3 = new V3D(1,1,1);
+	var color3 = new V3D(0,0,0);
+	var colors = [color0,color1,color2,color3];
+
+	var imageScale = 1.0;
+	for(var k=0; k<pointsA.length; ++k){
+	// break;
+		var pointA = pointsA[k];
+		var pointB = pointsB[k];
+
+		// var affine = matched["affine"];
+		// do optimized sub-pixel matching:
+		// var info = R3D.subpixelHaystack(imageA,imageB, pointA,pointB, affine);
+
+		var p = pointA.copy();
+		var q = pointB.copy();
+
+		var px = (p.x/imageMatrixA.width());
+		var py = (p.y/imageMatrixA.height());
+		var qx = 1 - px;
+		var qy = 1 - py;
+		var p0 = qx*qy;
+		var p1 = px*qy;
+		var p2 = qx*py;
+		var p3 = px*py;
+		// console.log(p0,p1,p2,p3, p0+p1+p2+p3);
+		var color = V3D.average(colors, [p0,p1,p2,p3]);
+		color = Code.getColARGBFromFloat(1.0,color.x,color.y,color.z);
+		// color = 0xFFFF0000;
+		// p.scale(imageScale);
+		// q.scale(imageScale);
+		q.add(imageMatrixA.width(),0);
+
+		var d = new DO();
+			d.graphics().clear();
+			// d.graphics().setLine(2.0, 0xFFFF0000);
+			d.graphics().setLine(3.0, color);
+			d.graphics().beginPath();
+			d.graphics().drawCircle(p.x,p.y, 5);
+			d.graphics().endPath();
+			d.graphics().strokeLine();
+			//
+			// d.graphics().setLine(2.0, 0xFF0000FF);
+			d.graphics().setLine(3.0, color);
+			d.graphics().beginPath();
+			d.graphics().drawCircle(q.x,q.y, 5);
+			d.graphics().endPath();
+			d.graphics().strokeLine();
+			//
+			// d.graphics().setLine(1.0, 0x66FF00FF);
+			// d.graphics().beginPath();
+			// d.graphics().moveTo(p.x,p.y);
+			// d.graphics().lineTo(q.x,q.y);
+			// d.graphics().endPath();
+			// d.graphics().strokeLine();
+		GLOBALSTAGE.addChild(d);
+
+	}
+
+} // if false
+
+
+
+// throw "now with F ?"
 		if(F && pointsA && pointsA.length>minimumMatchPoints){
 			var info = R3D.fundamentalError(F,Finv,pointsA,pointsB);
 			console.log(info);
@@ -9663,7 +9764,7 @@ GLOBALDISPLAY = GLOBALSTAGE;
 
 var str = world.toYAMLString();
 console.log(str);
-
+throw "now with world ?"
 					var transform = world.transformFromViews(vA,vB);
 					var count = transform.matches().length; // doesn't count if P has 0 matches
 					var matches = transform.matches();
@@ -10106,9 +10207,14 @@ App3DR.ProjectManager.prototype._calculateFeaturesLoaded = function(view){
 	var idealCount = 1000;
 	var maxCount = 1200;
 	var features = R3D.calculateScaleCornerFeaturesIdealCount(imageMatrix, idealCount, maxCount);
-	var normalizedFeatures = R3D.normalizeSIFTObjects(features, imageMatrix.width(), imageMatrix.height());
-	// console.log(features);
 
+	console.log(features);
+	var features = R3D.colorGradientFeaturesFromImage(imageMatrix, idealCount, maxCount);
+	console.log(features);
+
+	throw "features ....";
+	var normalizedFeatures = R3D.normalizeSIFTObjects(features, imageMatrix.width(), imageMatrix.height());
+	
 	var wordsMax = 100;
 	var info = R3D.bagOfWords(imageMatrix, wordsMax);
 	var words = info["features"];
@@ -10127,7 +10233,7 @@ App3DR.ProjectManager.prototype._calculateFeaturesLoaded = function(view){
 
 	console.log(features.length+" | "+normalizedWords.length+" | "+Code.keys(normalizedHistogram).length);
 	R3D.showFeaturesForImage(imageMatrix, features);
-	// throw "now save ...";
+//	throw "now save ...";
 
 	view.setFeatureData(data, this._calculateFeaturesComplete, this);
 }

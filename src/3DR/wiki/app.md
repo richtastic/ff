@@ -442,9 +442,77 @@ x visualize stereopsis NCC / SAD errors to see if that can help inform filtering
 	- .. really only shows edges -- which is where the variablity would be expected to exist
 
 
-- need to redo initial feature matching without rift / color etc ..
+
+x sift gradients maybe shouldnt be scaled to normalized 0-1 --- high & low contrast should not be the same
+
+x need to redo initial feature matching without rift / color etc ..
+
+x remove RIFT final compare into some other metric
+
+x remove filter by F * R * N = the worst of worst ?
+
+
 
 - do efficient pairwise object extraction
+
+
+- corner points across images don't seem repeatable
+	- check if color gradient points are any better
+
+- plot propagation groups / dense results in 2D ?
+
+COMPARE:
+searchMatchPoints3D
+
+
+progressiveFullMatchingDense
+
+progressiveSparseMatches
+
+
+progressiveMatchSubset
++
+generateProgressiveSIFTObjects
+
+
+
+
+- HOW TO REMOVE POOR GROUPS
+	- on add:
+		- if a neighbor can find a 'better' spot -> remove old one
+	- on group-collision
+		- compare 'best' of each group:
+			- NCC & R & F scores
+
+- what matters is the perimeter -- 
+	- a group may be correct in 1 area but not in another -- so removing the ENTIRE thing must be thoughful if at all
+	- 
+
+	geometric inconsistency:
+		- get all neighbors in 1-1.5 cell distance
+		- predicted neighbor position & actual neighbor position  >  1-2 x cell size
+		=> if R (| &) N score is better/worse:
+			- remove others/self
+
+	>>>>>>>>>>>>>>>>>>>>>>>>>>
+	ON-ABOUT-TO-ADD-MATCH
+		- check neighborhood in viewA and in viewB (for matches that only have views A&B)
+			- search radius ~ 1 cell size
+			- for each neighbor:
+				- if predicted geometic location vs actual location in opposite view is > ~ 1 cell size
+					- add inconsistent match to list
+			- for all inconsistent neighbors:
+				- find closest one ?
+				- average R / N errors
+			- if representative / averaged R & N errors are:
+				- better than this:
+					=> don't add THIS match
+				- worse than this:
+					=> remove all inconsistent neighbors
+					=> add THIS match
+	<<<<<<<<<<<<<<<<<<<<<<<<<<
+
+probe2DCells
 
 
 ...

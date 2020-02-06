@@ -355,7 +355,7 @@ ImageMat.subImage = function(image,width,height, offX,offY,wid,hei){ // include
 	}
 	return sub;
 }
-ImageMat.prototype.subImage = function(offX,offY,wid,hei){
+ImageMat.prototype.subImage = function(offX,offY,wid,hei){ // exact-pixel imaging
 	var image = new ImageMat(wid,hei);
 	var width = this.width();
 	var height = this.height();
@@ -4574,9 +4574,20 @@ ImageMat.prototype.getSubRect = function(x,y,w,h){
 	var b = [];
 	var eI = x+w;
 	var eJ = y+h;
+	var wm1 = wid-1;
+	var hm1 = hei-1;
+		// x = Math.max(x,0);
+		// y = Math.max(y,0);
+		// eI = Math.min(eI,wid-1);
+		// eJ = Math.min(eJ,hei-1);
+	var ii, jj;
 	for(var j=y; j<eJ; ++j){
 		for(var i=x; i<eI; ++i){
-			var index = j*wid + i;
+			ii = Math.max(i,0);
+			ii = Math.min(ii,wm1);
+			jj = Math.max(j,0);
+			jj = Math.min(jj,hm1);
+			var index = jj*wid + ii;
 			r.push(red[index]);
 			g.push(grn[index]);
 			b.push(blu[index]);

@@ -5325,7 +5325,7 @@ Stereopsis.World.prototype.iteration = function(iterationIndex, maxIterations, d
 	var isFirst = iterationIndex == 0;
 	var isLast = iterationIndex == maxIterations-1;
 	console.log("-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ "+iterationIndex+"/"+maxIterations+" ( "+isFirst+" & "+isLast+" ) ");
-
+	var world = this;
 	// SUBDIVIDE:
 	var views = this.toViewArray();
 	var transforms = this.toTransformArray();
@@ -5417,15 +5417,16 @@ if(transform0.rSigma()>5){
 	// EXPAND
 	if(shouldPropagate){
 		var propagationPercent = 0;
-		if(doRelaxed){
-			propagationPercent = this.probe2DNNAffine(3.0);
-		}else{
-			propagationPercent = this.probe2DNNAffine(2.0);
-		}
-		console.log("propagationPercent: "+propagationPercent);
-		if(propagationPercent<0.05){
-			console.log("can split");
-		}
+		// if(doRelaxed){
+		// 	propagationPercent = this.probe2DNNAffine(3.0);
+		// }else{
+		// 	propagationPercent = this.probe2DNNAffine(2.0);
+		// }
+		world.probe2DCells(999);
+		// console.log("propagationPercent: "+propagationPercent);
+		// if(propagationPercent<0.05){
+		// 	console.log("can split");
+		// }
 	}
 
 	// reassess
@@ -5441,9 +5442,9 @@ if(doRelaxed){
 	this.filterGlobalMatches(false, 0, 3.0,3.0,3.0,3.0, false);
 }else{
 	// this.filterGlobalMatches(false, 0, 3.0,3.0,3.0,3.0, false);
-	this.filterGlobalMatches(false, 0, 2.0,2.0,2.0,2.0, false); // slowly drops points
+	this.filterGlobalMatches(false, 0, 2.0,2.0,2.0,2.0, false);
 }
-	this.filterPairwiseSphere3D(3.0); // 2-3
+	world.filterPairwiseSphere3D(1.0); // 2-3
 
 	// FILTER 2D F / R / M errpr
 
@@ -5453,6 +5454,8 @@ if(doRelaxed){
 	this.filterLocal3Dto2DSize();
 
 	this.filterLocal3Dto2DProjection();
+
+	world.filterNeighborConsistency();
 
 	this.recordTransformErrorEnd();
 
@@ -5708,7 +5711,7 @@ console.log("GET MATCHES FROM 3D: "+errorR);
 
 
 
-// throw "before dense world";
+throw "before dense world";
 
 
 		// insert matching points:
@@ -8285,12 +8288,15 @@ console.log("filterGlobalMatches");
 	F = F!==undefined ? F : 3.0;
 	N = N!==undefined ? N : 3.0;
 	S = S!==undefined ? S : 3.0;
+	var M = 3.0; // or some average x percent
 	linearly = linearly!==undefined ? linearly : false;
 	var limitMatchSigmaR = R;
 	var limitMatchSigmaF = F;
 	var limitMatchSigmaNCC = N;
 	var limitMatchSigmaSAD = S;
 
+
+var limitMatchSigmaMulti = M;
 	var transforms = this.toTransformArray();
 	for(var i=0; i<transforms.length; ++i){
 		var transform = transforms[i];
@@ -8299,6 +8305,7 @@ console.log("filterGlobalMatches");
 		var listMatchF = [];
 		var listMatchNCC = [];
 		var listMatchSAD = [];
+var listMatchMulti = [];
 		// estimate
 		for(var j=0; j<matches.length; ++j){
 			var match = matches[j];
@@ -8318,13 +8325,18 @@ console.log("filterGlobalMatches");
 			if(errorSAD!=null){
 				listMatchSAD.push(errorSAD);
 			}
+var multi = errorR*errorF*errorSAD*errorNCC;
+listMatchMulti.push(multi);
 		}
 		var minCount = 16;
 		var limitF = null;
 		var limitR = null;
 		var limitN = null;
 		var limitS = null;
+		var limitM = null;
 
+// Code.printMatlabArray(listMatchMulti,"listMatchMulti");
+// throw "listMatchMulti";
 		if(listMatchNCC.length>minCount){
 			var min = Code.min(listMatchNCC);
 			var sig = Code.stdDev(listMatchNCC, min);
@@ -8351,18 +8363,12 @@ console.log("filterGlobalMatches");
 			limitR = min + sig*limitMatchSigmaR;
 		}
 
-
-		// if(limitR>dropPixelsR){ // meet at center
-		// 	// var lag = 0.75;
-		// 	var lag = 0.5;
-		// 	limitR = dropPixelsR + (limitR-dropPixelsR)*lag;
-		// }
-
-		// if(iterationIndex!==undefined){
-		// 	if(iterationIndex>5){
-		// 		limitR = ;
-		// 	}
-		// }
+		if(listMatchMulti.length>minCount){
+			var min = Code.min(listMatchMulti);
+			var sig = Code.stdDev(listMatchMulti, min);
+			console.log("M: "+min+" +/- "+sig);
+			limitM = min + sig*limitMatchSigmaMulti;
+		}
 
 
 // console.log(" point count: "+this._pointSpace.count());
@@ -8418,18 +8424,22 @@ if(listMatchR.length>minCount){
 		var dropList = [];
 		for(var j=0; j<matches.length; ++j){
 			var match = matches[j];
-			var errorR = match.errorR();
-			var errorF = match.errorF();
-			var errorN = match.errorNCC()
-			var errorS = match.errorSAD();
+			// var errorR = match.errorR();
+			// var errorF = match.errorF();
+			// var errorN = match.errorNCC()
+			// var errorS = match.errorSAD();
+			var errorR = listMatchR[j];
+			var errorF = listMatchF[j];
+			var errorN = listMatchNCC[j];
+			var errorS = listMatchSAD[j];
+			var errorM = listMatchMulti[j];
 			var dropR = R ? (limitR && errorR>limitR) : false;
 			var dropF = F ? (limitF && errorF>limitF) : false;
 			var dropN = N ? (limitN && errorN>limitN) : false;
 			var dropS = S ? (limitS && errorS>limitS) : false;
+			var dropM = M ? (limitM && errorM>limitM) : false;
 			if(
-				// dropR
-				// (dropR || dropF)
-				(dropR || dropF || dropN) // dropS
+				(dropR || dropF || dropN || dropM) // dropS
 			){
 				dropList.push(match);
 				var point3D = match.point3D();
@@ -8437,8 +8447,7 @@ if(listMatchR.length>minCount){
 			}
 			matchCounts[matchCount] += 1;
 		}
-		console.log("MATCH CHECKS: matches: "+matchCounts);
-		console.log("DROP COUNT 3D: "+dropList.length);
+		console.log("MATCH CHECKS: matches: "+matchCounts+" DROPPED: "+dropList.length);
 		matches = dropList;
 		for(var j=0; j<matches.length; ++j){
 			var match = matches[j];
@@ -8447,8 +8456,6 @@ if(listMatchR.length>minCount){
 			this.removeCheckP3D(p3D);
 		}
 	}
-
-
 }
 
 Stereopsis.World.prototype.filterGlobalPoints = function(sigmaR){
@@ -8496,7 +8503,6 @@ Stereopsis.World.prototype.checkNullP2D = function(){
 				console.log(point2D.point2D()+"");
 				throw "NULL POINT IN VIEW";
 			}
-			// console.log(point2D.point2D()+" ? ");
 		}
 	}
 }
@@ -10485,7 +10491,43 @@ Stereopsis.World.prototype.probeCorners = function(){
 	// 	}
 	// }
 }
-
+Stereopsis.World.prototype.matchNeighborConsistentResolveAdd = function(match){ // check for neighbor consistency : decide to add/remove this/neighbors
+	var world = this;
+	var viewA = match.viewA();
+	var viewB = match.viewB();
+	/*
+	
+		- check neighborhood in viewA and in viewB (for matches that only have views A&B)
+			- search radius ~ 1 cell size
+			- for each neighbor:
+				- if predicted geometic location vs actual location in opposite view is > ~ 1 cell size
+					- add inconsistent match to list
+			- for all inconsistent neighbors:
+				- find closest one ?
+				- average R / N errors
+			- if representative / averaged R & N errors are:
+				- better than this:
+					=> don't add THIS match
+				- worse than this:
+					=> remove all inconsistent neighbors
+					=> add THIS match
+	<<<<<<<<<<<<<<<<<<<<<<<<<<
+	*/
+	var shouldAdd = true;
+	if(shouldAdd){
+		var point3D = match.point3D();
+		point3D = world.embedPoint3D(point3D);
+		if(point3D){
+			var matches = point3D.toMatchArray();
+			for(var m=0; m<matches.length; ++m){
+				var match = matches[m];
+				Stereopsis.updateErrorForMatch(match);
+			}
+			point3D.calculateAbsoluteLocation(world);
+		}
+	}
+	return shouldAdd;
+}
 Stereopsis.World.prototype.probe2DCells = function(sigmaExistingRFN){
 	var world = this;
 	var minimumTransformMatchCount = 16; // min match counts to consider a transform
@@ -10620,16 +10662,7 @@ console.log("TO CHECK: "+empties.length);
 		console.log("AFFINE-2D PROBE : ADD MATCHES: "+matchesAddList.length);
 		for(var j=0; j<matchesAddList.length; ++j){
 			var match = matchesAddList[j];
-			var point3D = match.point3D();
-			point3D = world.embedPoint3D(point3D);
-			if(point3D){
-				var matches = point3D.toMatchArray();
-				for(var m=0; m<matches.length; ++m){
-					var match = matches[m];
-					Stereopsis.updateErrorForMatch(match);
-				}
-				point3D.calculateAbsoluteLocation(world);
-			}
+			var shouldAdd = world.matchNeighborConsistentResolveAdd(match);
 		}
 
 	} // end each transform
