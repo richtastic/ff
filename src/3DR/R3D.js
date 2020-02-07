@@ -10999,7 +10999,7 @@ R3D._progressiveMatchIndex = function(objects){
 	}
 }
 R3D._progressiveMatchChooseBest = function(objectsA,objectsB,  minimumRatio,minScore){ // check to see if top match comparisons
-	minimumRatio = minimumRatio!==undefined && minimumRatio!==null ? minimumRatio : 0.90; // defaults for unknown searching
+	minimumRatio = minimumRatio!==undefined && minimumRatio!==null ? minimumRatio : 0.99; // defaults for unknown searching
 	minScore = minScore!==undefined && minScore!==null ? minScore : 0.15;
 	var bestMatches = [];
 	for(i=0; i<objectsA.length; ++i){
@@ -11866,15 +11866,18 @@ R3D.colorGradientFeaturesFromImage = function(image){
 	}
 	cornersA = space.toArray();
 	var features = R3D.colorGradientFeaturesFromPoints(cornersA, imageScales);
+	// var features = R3D.basicScaleFeaturesFromPoints(cornersA, imageScales, 11.0); // 11-21
 
 	return features;
 }
 
 R3D.colorGradientFeaturesFromPoints = function(points, imageScales){
-	var featureSizeNeighborhood = 2.0; // from peak scale to size
+	// 1 - 3 - 5
+	var featureSizeNeighborhood = 5.0; // from peak scale to size
 	var features = [];
 	for(var i=0; i<points.length; ++i){
 		var point = points[i];
+		// var scale = R3D.colorGradientScalePeak(point,imageScales);
 		var scale = R3D.colorGradientScalePeak(point,imageScales);
 		if(scale===null){
 			continue;
@@ -11943,8 +11946,8 @@ R3D.colorGradientScalePeak = function(point, imageScales){
 }
 
 
-R3D.basicScaleFeaturesFromPoints = function(points, imageScales){
-	var diaNeighborhood = 21; //  [15 - 25]
+R3D.basicScaleFeaturesFromPoints = function(points, imageScales, diaNeighborhood){
+	diaNeighborhood = Code.valueOrDefault(diaNeighborhood,21); //  [15 - 25]
 	// var diaNeighborhood = 15;
 	// var diaNeighborhood = 11;
 	// reuse items

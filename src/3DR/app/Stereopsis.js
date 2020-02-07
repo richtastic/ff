@@ -861,6 +861,19 @@ Stereopsis.View.prototype.cellForXY = function(xIn,yIn){
 	return this._cells[i];
 }
 Stereopsis.View.prototype.corners = function(){
+	if(!this._corners){
+		var image = this._image;
+		if(image){
+			var gry = image.gry();
+			var width = image.width();
+			var height = image.height();
+			// var corners = R3D.cornerScaleScores(gry, width, height, true);
+			// console.log(corners)
+			// corners = corners["value"];
+			var corners = R3D.harrisCornerDetection(gry, width, height);
+			this._corners = corners;
+		}
+	}
 	return this._corners;
 }
 Stereopsis.View.prototype.size = function(size){
@@ -882,10 +895,11 @@ Stereopsis.View.prototype.camera = function(camera){
 	}
 	return this._camera;
 }
+
 Stereopsis.View.prototype._cornersFromImage = function(){
 	var image = this._image;
 	if(image){
-return; // NOT USED CURRENTLY
+// return; // NOT USED CURRENTLY
 		var gry = image.gry();
 		var width = image.width();
 		var height = image.height();
@@ -2310,6 +2324,9 @@ Stereopsis.P2D.prototype.removeMatch = function(match){
 }
 Stereopsis.P2D.prototype.matchForView = function(view){
 	var index = Stereopsis.indexFromObjectIDs(this._view,view);
+	if(view==this._view){
+		throw "don't supply known view, supply opposite view";
+	}
 	// console.log("index: "+index);
 	var match = this._matches[index];
 	if(match){
@@ -7011,6 +7028,7 @@ Stereopsis.World.prototype.solveForTracks = function(completeFxn, completeContex
 		var image = view.image();
 		var imageWidth = image.width();
 		var imageHeight = image.height();
+console.log(corners,maxSampleSize,randomSampleSize);
 		var cornerSample = Code.randomSampleRepeatsMaximum(corners,maxSampleSize,randomSampleSize);
 			cornerSample.sort(fxnSortNumeric);
 		var limitCornerValue = Code.percentile(cornerSample, 0.5);
@@ -10495,25 +10513,96 @@ Stereopsis.World.prototype.matchNeighborConsistentResolveAdd = function(match){ 
 	var world = this;
 	var viewA = match.viewA();
 	var viewB = match.viewB();
-	/*
-	
-		- check neighborhood in viewA and in viewB (for matches that only have views A&B)
-			- search radius ~ 1 cell size
-			- for each neighbor:
-				- if predicted geometic location vs actual location in opposite view is > ~ 1 cell size
-					- add inconsistent match to list
-			- for all inconsistent neighbors:
-				- find closest one ?
-				- average R / N errors
-			- if representative / averaged R & N errors are:
-				- better than this:
-					=> don't add THIS match
-				- worse than this:
-					=> remove all inconsistent neighbors
-					=> add THIS match
-	<<<<<<<<<<<<<<<<<<<<<<<<<<
-	*/
 	var shouldAdd = true;
+	var radiusSearch = 1.0; // 1.0-1.5 : 1==4-neighbor, 1.5==8-neighbor
+	var radiusDifference = 2.0; // 1.5-2.0
+	var views = [viewA,viewB];
+	var vector = new V2D();
+	var inconsistentNeighbors = [];
+if(true){
+	for(var i=0; i<views.length; ++i){
+		var vA = views[i];
+		var vB = views[(i+1)%2];
+		var p2DA = match.pointForView(vA);
+		var p2DB = match.pointForView(vB);
+		var pA = p2DA.point2D();
+		var pB = p2DB.point2D();
+		var affineAB = match.affineForViews(vA,vB);
+		var cA = vA.cellSize();
+		var cB = vB.cellSize();
+		var radiusA = cA*radiusSearch;
+		var radiusB = cB*radiusDifference;
+		var neighborsA = vA.pointSpace().objectsInsideCircle(pA, radiusA);
+		if(neighborsA.length>1){ // save a wasted loop
+			for(var n=0; n<neighborsA.length; ++n){
+				var n2DA = neighborsA[n];
+				if(n2DA==p2DA){
+					continue;
+				}
+				var nAm = n2DA.matchForView(vB);
+				var n2DB = nAm.pointForView(vB);
+				var nAp = n2DA.point2D();
+				var nBp = n2DB.point2D();
+				// predicted vs actual location
+				V2D.sub(vector, nAp,pA);
+				affineAB.multV2DtoV2D(vector,vector);
+				vector.add(pB);
+				var diff = V2D.distance(vector,nBp);
+				// var diff = V2D.distance(pB,nBp);
+				if(diff>radiusB){
+					// console.log("DISTANCE: "+diff+" / "+radiusB);
+					inconsistentNeighbors.push(nAm);
+				}
+			}
+		}
+	}
+
+	if(inconsistentNeighbors.length>0){
+		// per average or per individual?
+		var errorR = match.errorR();
+		var errorF = match.errorF();
+		var errorN = match.errorNCC();
+		var errorS = match.errorSAD();
+		var avgR = 0;
+		var avgF = 0;
+		var avgN = 0;
+		var avgS = 0;
+		for(var n=0; n<inconsistentNeighbors.length; ++n){
+			var neighbor = inconsistentNeighbors[n];
+			avgR += neighbor.errorR();
+			avgF += neighbor.errorF();
+			avgN += neighbor.errorNCC();
+			avgS += neighbor.errorSAD();
+		}
+		avgR /= inconsistentNeighbors.length;
+		avgF /= inconsistentNeighbors.length;
+		avgN /= inconsistentNeighbors.length;
+		avgS /= inconsistentNeighbors.length;
+		if(
+			   avgR>errorR
+			// && avgF>errorF
+			&& avgS>errorS
+			&& avgN>errorN
+			){ // keep THIS, remove others
+			for(var n=0; n<inconsistentNeighbors.length; ++n){
+				var neighbor = inconsistentNeighbors[n];
+				world.removeMatchFromPoint3D(neighbor);
+			}
+		}else if(
+			   avgR<errorR
+			// && avgF<errorF
+			&& avgS<errorS
+			&& avgN<errorN
+		){ // drop THIS, keep others
+			shouldAdd = false;
+		} // else: no obvious winner, keep both
+		// remove existing ... 
+
+		// throw "inconsistentNeighbors"
+	}
+
+} // if true
+	
 	if(shouldAdd){
 		var point3D = match.point3D();
 		point3D = world.embedPoint3D(point3D);
@@ -10526,7 +10615,6 @@ Stereopsis.World.prototype.matchNeighborConsistentResolveAdd = function(match){ 
 			point3D.calculateAbsoluteLocation(world);
 		}
 	}
-	return shouldAdd;
 }
 Stereopsis.World.prototype.probe2DCells = function(sigmaExistingRFN){
 	var world = this;

@@ -379,11 +379,11 @@ vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 	- VR device
 		x ios: scenekit
 		- oculus = unity / blender
-(01/31)
+(02/29)
 - MVP
 	- example models
 	- example screens
-(02/28)
+(03/31)
 
 google app engine project - nodejs
 https://cloud.google.com/appengine/docs/nodejs/
@@ -396,35 +396,17 @@ https://cloud.google.com/appengine/docs/nodejs/
 - compression
 - encryption
 
-
 refinement - dates
-12/20 x dropping poorest sparse F/R based on defined criteria
-12/23 x pair/triple/scale -> absolute graph 'generalization'
-12/27 x skeleton and group and final BA algorithm defined
-12/31 x loading all tracks into their groups
-01/02 x BA on groups/tracks
-01/04 x combining grouped BA into final BA init
-01/10 x BA on final group
-
-- dense pair matching is bad
-	=> sample comparing is poor (primarily RIFT & avg-color compares)
-
-01/15 - BA identify/remove view if it's position is very bad?
-01/19 - hole filling?
-01/26 - dense pair candidate decisions
-		- want to have a bunch up to a point
-		- minimum 2 other neighbors to create triple
-		- want more to spread error
-		- 3-9 (depending on connectivity)
-			- getting 'further' - more global help reducing error but inaccurate
-			- getting 'closer' - more accurate but very local
-02/01 x dense.yaml incorporated
-02/08 x dense replica of sparse incorporated
+02/10 - updated corner & feature matching
+02/17 - hole filling?
 02/10 - multi-view point propagation from dense
-02/17 - triangulation algorithm updates
-02/24 - texture-triangle-edge problems
-02/31 - test new set of 10 ~ 20 images
+		- projecting known 3D points
+		- projecting unknown corners?
+02/24 - triangulation algorithm updates
+03/02 - texture-triangle-edge problems -- rendering on device shows lines at the edges of triangles -- should be smooth
+03/09 - test new set of 10 ~ 20 images
 
+? - BA identify/remove view if it's position is very bad????
 - triangle - texture loading groups at a time to get local approx blending
 - out-of-core octtree (stereopsis focused)
 ...
@@ -432,48 +414,34 @@ refinement - dates
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-x inconsistent neighbor single patch dropping
-
-x why do near / far points have worse F/R - error ?
-	R: division by Z
-		- median center area is an average of the far away error & the near close error
-
-x visualize stereopsis NCC / SAD errors to see if that can help inform filtering
-	- .. really only shows edges -- which is where the variablity would be expected to exist
-
-
-
-x sift gradients maybe shouldnt be scaled to normalized 0-1 --- high & low contrast should not be the same
-
-x need to redo initial feature matching without rift / color etc ..
-
-x remove RIFT final compare into some other metric
-
-x remove filter by F * R * N = the worst of worst ?
 
 
 
 - do efficient pairwise object extraction
 
 
+
+
+
+
+
+
+
 - corner points across images don't seem repeatable
 	- check if color gradient points are any better
 
-- plot propagation groups / dense results in 2D ?
-
-COMPARE:
-searchMatchPoints3D
+- plot propagation groups / dense point results in 2D ?
+	- see how poor-isolated-groups look like
 
 
-progressiveFullMatchingDense
-
-progressiveSparseMatches
-
-
-progressiveMatchSubset
-+
-generateProgressiveSIFTObjects
-
+- how to determine optimum angle?
+	- dominant SIFT?
+	- gradients
+		- dots have gradients in all directions
+		- 
+	- cov
+		- 
+	- ...
 
 
 
