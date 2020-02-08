@@ -1,5 +1,6 @@
 // YAML.js
 // documental
+YAML.DECLARATION="%";
 YAML.COMMENT="#";
 YAML.SEPARATOR=":";
 YAML.INDENT="\t";
@@ -11,7 +12,10 @@ YAML.ARRAY_SEPARATOR="-";
 YAML.DOCUMENT_SEPARATOR="---";
 YAML.IGNORE="...";
 YAML.NEWLINE="\n";
+YAML.STRING_QUOTE="\"";
 YAML.NULL="null";
+YAML.TRUE="true";
+YAML.FALSE="false";
 YAML.REFERENCE_SUFFIX="ref";
 // functional
 YAML.STACK_UNKNOWN=0;
@@ -36,18 +40,10 @@ YAML.parse = function(inputString){
 YAML.prototype.parse = function(inputString){
 	return this._parse(inputString);
 }
-// YAML.prototype.clear = function(){
-// 	Code.emptyArray(this._lines);
-// 	Code.emptyArray(this._stack);
-// 	Code.emptyArray(this._documents);
-// 	this._lineNumber = 0;
-// 	this._indent = 0;
-// 	this._refCount = 0;
-// }
 // -------------------------------------------------------------------------------------------------- REFERENCE TABLE
 YAML.prototype._addRefenceTableReference = function(referenceName,object,key){
 	if(this._references[referenceName]===undefined){
-		this._references[referenceName] = {ref:object, list:[]};
+		this._references[referenceName] = {ref:null, list:[]};
 	}
 	this._references[referenceName].list.push([object,key]);
 }
@@ -60,8 +56,12 @@ YAML.prototype._addRefenceTableDefinition = function(referenceName,object){
 }
 YAML.prototype._fillInReferences = function(){
 	var s, obj, arr, key, ref, table, referenceTable = this._references;
+	var unfound = [];
     for(s in referenceTable){
         table = referenceTable[s]; ref = table.ref; list = table.list;
+        if(ref==null){
+        	unfound.push(s);
+        }
         while(list.length>0){
             arr = list.pop(); obj = arr[0]; key = arr[1];
             obj[key] = ref;
@@ -71,6 +71,9 @@ YAML.prototype._fillInReferences = function(){
         table.ref = null; table.list = null;
         referenceTable[s] = null;
         delete referenceTable[s];
+    }
+    if(unfound.length>0){
+    	console.log("found "+unfound.length+" undefined references");
     }
 }
 // writing oriented
@@ -91,50 +94,432 @@ YAML.prototype._lookupReferenceFromObject = function(object){
     this._addRefenceTableDefinition(s,object);
 	return s;
 }
+
+
 // -------------------------------------------------------------------------------------------------- ------------------------ READING
-YAML.prototype._thisLine = function(){
-	if(this._lineNumber<this._lines.length){
-		return this._removeComment(this._lines[this._lineNumber]);
-	}
-	return null;
-}
-YAML.prototype._nextLine = function(){
-	if((this._lineNumber+1)<this._lines.length){
-		return this._removeComment(this._lines[this._lineNumber+1]);
-	}
-	return null;
-}
-YAML.prototype._gotoNextLine = function(){
-	++this._lineNumber;
-	var thisLine = this._thisLine();
-	while(thisLine!=null && this._removeLeadingAndTrailingWhitespace(thisLine)==""){ // ignore empty lines
-		++this._lineNumber;
-		thisLine = this._thisLine();
-	}
-}
-YAML.prototype._parse = function(inputString){
+// YAML.prototype._thisLine = function(){
+// 	if(this._lineNumber<this._lines.length){
+// 		return YAML._removeComment(this._lines[this._lineNumber]);
+// 	}
+// 	return null;
+// }
+// YAML.prototype._nextLine = function(){
+// 	if((this._lineNumber+1)<this._lines.length){
+// 		return YAML._removeComment(this._lines[this._lineNumber+1]);
+// 	}
+// 	return null;
+// }
+// YAML.prototype._gotoNextLine = function(){
+// 	++this._lineNumber;
+// 	var thisLine = this._thisLine();
+// 	while(thisLine!=null && YAML._removeLeadingAndTrailingWhitespace(thisLine)==""){ // ignore empty lines
+// 		++this._lineNumber;
+// 		thisLine = this._thisLine();
+// 	}
+// }
+// YAML.prototype._parse = function(inputString){
+// 	this._documents = new Array();
+// 	this._references = new Object();
+// 	this._lines = inputString.split(YAML.NEWLINE);
+// 	this._lineNumber = 0;
+// 	this._indent = 0;
+// 	var doc;
+// 	var iteration = 0;
+// 	while(this._thisLine()!=null){
+// 		var line = this._thisLine();
+// 		// console.log("line "+iteration+" :"+line);
+// 		if( YAML._removeLeadingAndTrailingWhitespace(line)==YAML.IGNORE ){
+// 			break;
+// 		}
+// 		doc = new Object();
+// 		this._documents.push(doc);
+// 		this._parseNextItem(doc,0);
+// 		var line = this._thisLine();
+// 		if(line!=null && YAML._removeLeadingAndTrailingWhitespace(line)==YAML.DOCUMENT_SEPARATOR ){
+// 			this._gotoNextLine();
+// 		}
+// 		++iteration;
+// 	}
+// 	this._fillInReferences();
+// 	return this._documents;
+// }
+// YAML.prototype._isNextItemArrayItem = function(index){
+// 	index = (index!==undefined)?index:this._lineNumber;
+// 	var i, line;
+// 	for(i = index;i<this._lines.length;++i){
+// 		line = YAML._removeLeadingAndTrailingWhitespace( YAML._removeComment(this._lines[i]) );
+// 		if( line!="" ){
+// 			return this._isLineArrayItem(line);
+// 		}
+// 	}
+// 	return false;
+// }
+// YAML.prototype._parseNextItem = function(object,indents){
+// 	var i, len, ch, str, key, value, thisLine, isArrayItem, obj, isNextArray, isKVP;
+// 	var thisItemIndentCount, lineIndents;
+// 	var isArrayObject = Code.isArray(object);
+// 	thisLine = this._thisLine();
+// console.log("_parseNextItem --- "+thisLine);
+// 	if(thisLine!=null){
+// 		thisItemIndentCount = YAML._countLineIndents(thisLine);
+// 		lineIndents = thisItemIndentCount;
+// 		// base for this object/array
+// 		while(lineIndents>=thisItemIndentCount){
+// //console.log(this._prefixIndent(lineIndents)+"indents: "+lineIndents);
+// 			thisLine = this._thisLine();
+// var removed = this._removeLeadingAndTrailingWhitespace(this._thisLine());
+// if( removed == YAML.DOCUMENT_SEPARATOR ){
+// 	return object;
+// }else if(removed==YAML.IGNORE){
+// 	return object;
+// }
+// 			lineIndents = this._countLineIndents(thisLine);
+// 			isArrayItem = this._isLineArrayItem(thisLine);
+// 			thisLine =  this._removeLeadingAndTrailingWhitespace( thisLine );
+// 			if(isArrayItem){ // - ...
+// 				thisLine = thisLine.substring(1,thisLine.length);
+// 				thisLine =  this._removeLeadingAndTrailingWhitespace( thisLine );
+// 			}else{ // ...
+// 				//
+// 			}
+// 			i = thisLine.indexOf(YAML.SEPARATOR);
+// 			if(i>0){
+// 				key = thisLine.substring(0,i);
+// 				value = thisLine.substring(i+1,thisLine.length);
+// 				isKVP = true;
+// 			}else{
+// 				key = "";
+// 				value = thisLine;
+// 				isKVP = false;
+// 			}
+// 			key = this._removeLeadingAndTrailingWhitespace(key);
+// 			value = this._removeLeadingAndTrailingWhitespace(value);
+// this._gotoNextLine();
+// 			if(key==""&&value==""){
+// 				if(isArrayItem){ // pushing on a new object/array
+// 					isNextArray = this._isNextItemArrayItem();
+// 					if(isNextArray){
+// 						obj = new Array();
+// 					}else{
+// 						obj = new Object();
+// 					}
+// 					if(isArrayObject){
+// 						object.push(obj);
+// 						this._parseNextItem(obj);
+// 					}else{
+// 						console.log("ERROR - ARRAY ITEM IS LISTED FOR OBJECT PARENT");
+// 					}
+// 				}else{ // empty line got thru (start of document?)
+// 					//console.log("? '"+thisLine+"'");
+// 				}
+// 			}else{
+// 				var isRefValue = false;
+// 				var isRefDefine = false;
+// 				var referenceName = null;
+// 				if(value.charAt(0)==YAML.REFERENCE_DEFINE){
+// 					referenceName = value.substring(1,value.length);
+// 					isRefDefine = true;
+// 					value = "";
+// 				}else if(value.charAt(0)==YAML.REFERENCE_VALUE){
+// 					referenceName = value.substring(1,value.length);
+// 					isRefValue = true;
+// 					value = "";
+// 				}
+// 				if(value==""){
+// 					if(isArrayObject){
+// 						if(isRefValue){ // reference
+// 							key = object.length;
+// 							this._addRefenceTableReference(referenceName,object,key);
+// 						}else if(isRefDefine){ // defined
+// 							console.log("Can you define an object as an array item?");
+// 						}else{
+// 							value = this._getTerminal(key);
+// 							object.push(value);
+// 						}
+// 					}else{
+// 						isNextArray = this._isNextItemArrayItem();
+// 						if(isNextArray){
+// 							obj = new Array();
+// 						}else{
+// 							obj = new Object();
+// 						}
+// 						if(isRefValue){ // reference
+// 							this._addRefenceTableReference(referenceName,object,key);
+// 						}else{ // define
+// 							object[key] = obj;
+// 							this._addRefenceTableDefinition(referenceName,obj);
+// 							this._parseNextItem(obj);
+// 						}
+// 					}
+// 				}else{ // key=value
+// 					value = this._getTerminal(value);
+// 					if(isArrayItem){
+// 						object.push(value);
+// 					}else{
+// 						object[key] = value;
+// 					}
+// 				}
+// 			}
+// 			// check that next line is still same object
+// 			lineIndents = this._countLineIndents( this._thisLine() );
+// 		}
+// 	}
+// 	return object;
+// }
+// YAML.prototype._getTerminal = function(value){
+//     if(value=="true" || value=="false"){ // boolean
+//         if(value=="true"){ value=true; }else{ value=false; }
+//     }else if(value==YAML.NULL){
+//     	return null;
+//     }else if( !isNaN(value) ){ // number
+//         if( value.indexOf(".")>=0  ){ // floating point
+//             value = parseFloat(value);
+//         }else{ // integer
+//             value = parseInt(value);
+//         }
+//     }else if(value.length>1 && value.charAt(0)=='"' && value.charAt(value.length-1)=='"' ){ // explicit string
+//         value = value.substr(1,value.length-2);
+//         value = this._cleanUpString(value);
+//     }else{
+//         value = this._cleanUpString(value);
+//     }
+//     return value;
+// }
+
+
+
+// -------------------------------------------------------------------------------------------------------------------------- READING
+
+YAML.prototype.parse2 = function(inputString){
 	this._documents = new Array();
 	this._references = new Object();
 	this._lines = inputString.split(YAML.NEWLINE);
 	this._lineNumber = 0;
 	this._indent = 0;
-	var doc;
-	while(this._thisLine()!=null){
-		if( this._removeLeadingAndTrailingWhitespace(this._thisLine())==YAML.IGNORE ){
-			break;
-		}
-		doc = new Object();
-		this._documents.push(doc);
-		this._parseNextItem(doc,0);
-		if(this._thisLine()!=null && this._removeLeadingAndTrailingWhitespace(this._thisLine())==YAML.DOCUMENT_SEPARATOR ){
-			this._gotoNextLine();
-		}
+	// go to first non-empty line
+	this._gotoNextLine(false);
+	this._createNextDoc();
+	var keep = true;
+	// var maxCount = 10000;
+	while(keep){ // iterate thru lines / objects
+		keep = this._parseNext();
+		// --maxCount;
+		// if(maxCount<0){
+		// 	break;
+		// }
 	}
 	this._fillInReferences();
-	//console.log(this._references);
 	return this._documents;
 }
-YAML.prototype._countLineIndents = function(str){
+YAML.prototype._createNextDoc = function(auto){
+	var doc = new Object();
+	this._documents.push(doc);
+	this._stack = [[doc,-1]];
+	return doc;
+}
+YAML.prototype._nextLineIndex = function(index){
+	var keep = true;
+	var lines = this._lines;
+	var maxIndex = lines.length;
+	while(index<maxIndex){
+		var line = lines[index];
+		var clean = line;
+			clean = YAML._removeComment(clean);
+			clean = YAML._removeLeadingAndTrailingWhitespace(clean);
+		if(clean===""){
+			++index;
+			continue;
+		}
+		break;
+	}
+	if(index>=maxIndex){
+		return null;
+	}
+	return index;
+}
+YAML.prototype._gotoNextLine = function(auto){
+	auto = Code.valueOrDefault(auto, true);
+	if(auto){
+		++this._lineNumber;
+	}
+	var nextLine = this._nextLineIndex(this._lineNumber);
+	// console.log("nextLine: "+nextLine);
+	this._lineNumber = nextLine;
+}
+YAML.prototype._getNextLine = function(){ // look-ahead
+	var nextLine = this._nextLineIndex(this._lineNumber+1);
+	nextLine = this._lines[nextLine];
+	nextLine = YAML._removeComment(nextLine);
+	return nextLine;
+}
+YAML.prototype._getNextLineObject = function(lineIndentCount){ // need to look at next line to see if: empty, object, array
+	var nextLine = this._getNextLine();
+	var nextIndentCount = YAML._countLineIndents(nextLine);
+	var subContainer = null;
+	if(nextIndentCount>lineIndentCount){ // else null item
+		var isArray = YAML._isLineArrayItem(nextLine);
+		if(isArray){
+			subContainer = [];
+		}else{
+			subContainer = {};
+		}
+		this._stack.push( [subContainer, lineIndentCount] );
+	}
+	return subContainer;
+}
+
+YAML.prototype._parseNext = function(){
+	// reached end of content
+	if(this._lineNumber===null){
+		return false;
+	}
+	// get status from stack
+	var top = this._stack[this._stack.length-1];
+	var container = top[0];
+	var containerIndents = top[1];
+	// get next line data
+	var line = this._line(0);
+	var clean = YAML._removeLeadingAndTrailingWhitespace(line);
+	// explicit end
+	if(clean==YAML.DOCUMENT_SEPARATOR){ // of document
+		this._createNextDoc();
+		this._gotoNextLine();
+		return true;
+	}else if(clean==YAML.IGNORE){ // of content
+		return false;
+	}
+	var lineIndentCount = YAML._countLineIndents(line);
+	// done with item if without indentation
+	if(lineIndentCount<=containerIndents){
+		this._stack.pop();
+		return true;
+
+	}
+	// check for content
+	var isArrayItem = YAML._isLineArrayItem(clean);
+	if(isArrayItem){
+		if(!Code.isArray(container)){
+			console.log(container);
+			console.log("? '"+clean+"'");
+			throw "found array item on non array object?";
+		}
+		var val = clean;
+		val = val.substring(1,val.length);
+		val = YAML._removeLeadingAndTrailingWhitespace(val);
+		if(val===YAML.STRING_MULTILINE){
+			throw "multiline handle B";
+		}
+		val = this._checkAddReferenceValue(container,container.length,val);
+		if(val===""){
+			var subContainer = this._getNextLineObject(lineIndentCount);
+			container.push(subContainer);
+		}else{
+			val = this._checkSubstituteValue(val);
+			container.push(val);
+		}
+		this._gotoNextLine();
+		return true;
+	}
+	var separatorIndex = clean.indexOf(YAML.SEPARATOR);
+	var key = null;
+	var val = null;
+	if(separatorIndex>0){ // object
+		key = clean.substring(0,separatorIndex);
+		val = clean.substring(separatorIndex+1,clean.length);
+		key = YAML._removeLeadingAndTrailingWhitespace(key);
+		val = YAML._removeLeadingAndTrailingWhitespace(val);
+		if(key===""){
+			console.log(container);
+			console.log(clean);
+			throw "no key?";
+		}
+		if(val===YAML.STRING_MULTILINE){
+			throw "multiline handle A";
+		}
+		val = this._checkAddReferenceValue(container,key,val);
+		if(val===""){
+			var subContainer = this._getNextLineObject(lineIndentCount);
+			container[key] = subContainer;
+		}else{
+			if(!Code.isObject(container)){
+				console.log(container);
+				console.log(clean);
+				console.log(key,val);
+				throw "found object on non object"
+			}
+			val = this._checkSubstituteValue(val);
+			container[key] = val;
+		}
+		this._gotoNextLine();
+		return true;
+	}
+	throw "unhandled line";
+}
+YAML.prototype._line = function(offset){
+	offset = offset!==undefined ? offset : 0;
+	var index = this._lineNumber + offset;
+	if(index>this._lines.length){
+		return null;
+	}
+	return YAML._removeComment(this._lines[index]);
+}
+
+YAML.prototype._checkAddReferenceValue = function(object,key,value){
+	if(value!==null || value!==""){
+		if(value.charAt(0)==YAML.REFERENCE_DEFINE){
+			referenceName = value.substring(1,value.length);
+			this._addRefenceTableDefinition(referenceName,object,key);
+			return "";
+		}else if(value.charAt(0)==YAML.REFERENCE_VALUE){
+			referenceName = value.substring(1,value.length);
+			this._addRefenceTableReference(referenceName,object,key);
+			return "";
+		}
+	}
+	return value;
+}
+YAML.prototype._checkSubstituteValue = function(value){
+	if(value==YAML.TRUE){
+		value = true;
+	}else if(value==YAML.FALSE){
+		value = false;
+	}else if(value===YAML.NULL){
+		value = null;
+	}else if(value.length>1 && value.charAt(0)==YAML.STRING_QUOTE && value.charAt(value.length-1)==YAML.STRING_QUOTE){
+		value = value.substring(1,value.length-1);
+		value = YAML._cleanUpString(value);
+	}else if( !Code.isNaN(value) ){ // number
+        if( value.indexOf(".")>=0 ){ // floating point
+            value = parseFloat(value);
+        }else{ // integer
+            value = parseInt(value);
+        }
+	}else{
+		value = YAML._cleanUpString(value);
+	}
+	return value;
+}
+
+
+
+// -------------------------------------------------------------------------------------------------- HELPERS READ
+YAML._cleanUpString = function(str){
+    return str.replace(/\\n/g,"\n");
+}
+YAML._removeLeadingAndTrailingWhitespace = function(str){
+    return YAML._removeTrailingWhitespace( YAML._removeLeadingWhitespace(str) );
+}
+YAML._removeLeadingWhitespace = function(str){
+    return str.replace(/^[ \t]+/,"");
+}
+YAML._removeTrailingWhitespace = function(str){
+    return str.replace(/[ \t]+$/,"");
+}
+YAML._removeComment = function(str){
+	return str.replace(/(%|#).*/g,"");
+    // return str.replace(/#.*/g,"");
+}
+YAML._countLineIndents = function(str){
 	if(str==null){return -1;}
 	var i, ch, count=0, len=str.length;
 	for(i=0;i<len;++i){
@@ -145,7 +530,7 @@ YAML.prototype._countLineIndents = function(str){
 	}
 	return count;
 }
-YAML.prototype._isLineArrayItem = function(str){
+YAML._isLineArrayItem = function(str){
 	var i, ch, len=str.length;
 	for(i=0;i<len;++i){
 		ch = str.charAt(i);
@@ -158,163 +543,6 @@ YAML.prototype._isLineArrayItem = function(str){
 		}
 	}
 	return false;
-}
-YAML.prototype._isNextItemArrayItem = function(index){
-	index = (index!==undefined)?index:this._lineNumber;
-	var i, line;
-	for(i = index;i<this._lines.length;++i){
-		line = this._removeLeadingAndTrailingWhitespace( this._removeComment(this._lines[i]) );
-		if( line!="" ){
-			return this._isLineArrayItem(line);
-		}
-	}
-	return false;
-}
-YAML.prototype._parseNextItem = function(object,indents){
-	var i, len, ch, str, key, value, thisLine, isArrayItem, obj, isNextArray, isKVP;
-	var thisItemIndentCount, lineIndents;
-	var isArrayObject = Code.isArray(object);
-	thisLine = this._thisLine();
-	if(thisLine!=null){
-		thisItemIndentCount = this._countLineIndents(thisLine);
-		lineIndents = thisItemIndentCount;
-		// base for this object/array
-		while(lineIndents>=thisItemIndentCount){
-//console.log(this._prefixIndent(lineIndents)+"indents: "+lineIndents);
-			thisLine = this._thisLine();
-var removed = this._removeLeadingAndTrailingWhitespace(this._thisLine());
-if( removed ==YAML.DOCUMENT_SEPARATOR ){
-	return object;
-}else if(removed==YAML.IGNORE){
-	return object;
-}
-			lineIndents = this._countLineIndents(thisLine);
-			isArrayItem = this._isLineArrayItem(thisLine);
-			thisLine =  this._removeLeadingAndTrailingWhitespace( thisLine );
-			if(isArrayItem){ // - ...
-				thisLine = thisLine.substring(1,thisLine.length);
-				thisLine =  this._removeLeadingAndTrailingWhitespace( thisLine );
-			}else{ // ...
-				//
-			}
-			i = thisLine.indexOf(YAML.SEPARATOR);
-			if(i>0){
-				key = thisLine.substring(0,i);
-				value = thisLine.substring(i+1,thisLine.length);
-				isKVP = true;
-			}else{
-				key = "";
-				value = thisLine;
-				isKVP = false;
-			}
-			key = this._removeLeadingAndTrailingWhitespace(key);
-			value = this._removeLeadingAndTrailingWhitespace(value);
-this._gotoNextLine();
-			if(key==""&&value==""){
-				if(isArrayItem){ // pushing on a new object/array
-					isNextArray = this._isNextItemArrayItem();
-					if(isNextArray){
-						obj = new Array();
-					}else{
-						obj = new Object();
-					}
-					if(isArrayObject){
-						object.push(obj);
-						this._parseNextItem(obj);
-					}else{
-						console.log("ERROR - ARRAY ITEM IS LISTED FOR OBJECT PARENT");
-					}
-				}else{ // empty line got thru (start of document?)
-					//console.log("? '"+thisLine+"'");
-				}
-			}else{
-				var isRefValue = false;
-				var isRefDefine = false;
-				var referenceName = null;
-				if(value.charAt(0)==YAML.REFERENCE_DEFINE){
-					referenceName = value.substring(1,value.length);
-					isRefDefine = true;
-					value = "";
-				}else if(value.charAt(0)==YAML.REFERENCE_VALUE){
-					referenceName = value.substring(1,value.length);
-					isRefValue = true;
-					value = "";
-				}
-				if(value==""){
-					if(isArrayObject){
-						if(isRefValue){ // reference
-							key = object.length;
-							this._addRefenceTableReference(referenceName,object,key);
-						}else if(isRefDefine){ // defined
-							console.log("Can you define an object as an array item?");
-						}else{
-							value = this._getTerminal(key);
-							object.push(value);
-						}
-					}else{
-						isNextArray = this._isNextItemArrayItem();
-						if(isNextArray){
-							obj = new Array();
-						}else{
-							obj = new Object();
-						}
-						if(isRefValue){ // reference
-							this._addRefenceTableReference(referenceName,object,key);
-						}else{ // define
-							object[key] = obj;
-							this._addRefenceTableDefinition(referenceName,obj);
-							this._parseNextItem(obj);
-						}
-					}
-				}else{ // key=value
-					value = this._getTerminal(value);
-					if(isArrayItem){
-						object.push(value);
-					}else{
-						object[key] = value;
-					}
-				}
-			}
-			// check that next line is still same object
-			lineIndents = this._countLineIndents( this._thisLine() );
-		}
-	}
-	return object;
-}
-YAML.prototype._getTerminal = function(value){
-    if(value=="true" || value=="false"){ // boolean
-        if(value=="true"){ value=true; }else{ value=false; }
-    }else if(value==YAML.NULL){
-    	return null;
-    }else if( !isNaN(value) ){ // number
-        if( value.indexOf(".")>=0  ){ // floating point
-            value = parseFloat(value);
-        }else{ // integer
-            value = parseInt(value);
-        }
-    }else if(value.length>1 && value.charAt(0)=='"' && value.charAt(value.length-1)=='"' ){ // explicit string
-        value = value.substr(1,value.length-2);
-        value = this._cleanUpString(value);
-    }else{
-        value = this._cleanUpString(value);
-    }
-    return value;
-}
-// -------------------------------------------------------------------------------------------------- HELPERS READ
-YAML.prototype._cleanUpString = function(str){
-    return str.replace(/\\n/g,"\n");
-}
-YAML.prototype._removeLeadingAndTrailingWhitespace = function(str){
-    return this._removeTrailingWhitespace( this._removeLeadingWhitespace(str) );
-}
-YAML.prototype._removeLeadingWhitespace = function(str){
-    return str.replace(/^[ \t]+/,"");
-}
-YAML.prototype._removeTrailingWhitespace = function(str){
-    return str.replace(/[ \t]+$/,"");
-}
-YAML.prototype._removeComment = function(str){
-    return str.replace(/#.*/g,"");
 }
 // -------------------------------------------------------------------------------------------------- HELPERS WRITE
 YAML.prototype._stackIsObject = function(){
@@ -595,3 +823,9 @@ YAML.prototype.toString = function(){
 	}
 	return str;
 }
+
+
+
+
+
+

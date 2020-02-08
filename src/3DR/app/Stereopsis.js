@@ -10514,8 +10514,8 @@ Stereopsis.World.prototype.matchNeighborConsistentResolveAdd = function(match){ 
 	var viewA = match.viewA();
 	var viewB = match.viewB();
 	var shouldAdd = true;
-	var radiusSearch = 1.0; // 1.0-1.5 : 1==4-neighbor, 1.5==8-neighbor
-	var radiusDifference = 2.0; // 1.5-2.0
+	var radiusSearch = 1.5; // 1.0-1.5 : 1==4-neighbor, 1.5==8-neighbor
+	var radiusDifference = 2.0; // 1.5-3.0
 	var views = [viewA,viewB];
 	var vector = new V2D();
 	var inconsistentNeighbors = [];
@@ -10549,8 +10549,9 @@ if(true){
 				vector.add(pB);
 				var diff = V2D.distance(vector,nBp);
 				// var diff = V2D.distance(pB,nBp);
+// console.log("DISTANCE: "+diff+" / "+radiusB);
 				if(diff>radiusB){
-					// console.log("DISTANCE: "+diff+" / "+radiusB);
+// console.log("DISTANCE: "+diff+" / "+radiusB);
 					inconsistentNeighbors.push(nAm);
 				}
 			}
@@ -10559,6 +10560,10 @@ if(true){
 
 	if(inconsistentNeighbors.length>0){
 		// per average or per individual?
+// console.log(match);
+// console.log(inconsistentNeighbors);
+// throw "?";
+
 		var errorR = match.errorR();
 		var errorF = match.errorF();
 		var errorN = match.errorNCC();
@@ -10581,7 +10586,7 @@ if(true){
 		if(
 			   avgR>errorR
 			// && avgF>errorF
-			&& avgS>errorS
+			// && avgS>errorS
 			&& avgN>errorN
 			){ // keep THIS, remove others
 			for(var n=0; n<inconsistentNeighbors.length; ++n){
@@ -10591,7 +10596,7 @@ if(true){
 		}else if(
 			   avgR<errorR
 			// && avgF<errorF
-			&& avgS<errorS
+			// && avgS<errorS
 			&& avgN<errorN
 		){ // drop THIS, keep others
 			shouldAdd = false;
@@ -10754,6 +10759,7 @@ console.log("TO CHECK: "+empties.length);
 		}
 
 	} // end each transform
+// throw "done add";
 }
 
 ADDED_MATCH = 0;

@@ -13,19 +13,22 @@ boyfriend:
 	double: 89.0001
 	awesome: *id_abc
 	boolean: false
+	non: *unref
 happy:
 	-	terminal\nline\new\nis\nyes.
 	-	*ref
-	-	OBJ1: :::V:A:L:1:
+	-
+		OBJ1: :::V:A:L:1:
 		OBJ2: VAL2
 		OBJ3: VAL3
 		arr:
 			- 123
 			- 234
 			- 345
-	-	ANOTHER: VALUE
+	-
+		ANOTHER: VALUE
 	- hat
-
+empty:
 ref1: *id_01
 
 ---
@@ -44,3 +47,9 @@ skillz: &id_abc
 ...
 
 # This down here should never be processed
+
+
+my notes
+can be without any formatting
+
+?

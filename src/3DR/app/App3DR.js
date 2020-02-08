@@ -7683,6 +7683,7 @@ App3DR.ProjectManager.prototype.iterateDenseProcess = function(){
 	var denseConfiguration = {};
 		denseConfiguration["what"] = "what";
 	// LOAD SPARSE FILE
+throw "NEED TO DIFFERENTIATE SPARSE & DENSE FILE SAVING LOCATIONS ..."
 	var filename = this.denseFilename();
 	var fxn = function(){
 		project._iterateSparseDenseLoaded(filename, project.denseData(), denseConfiguration);
@@ -7695,8 +7696,6 @@ App3DR.ProjectManager.prototype._iterateSparseDenseLoaded = function(inputFilena
 	console.log("_iterateSparseLoaded");
 	var pairs = inputData["pairs"];
 
-	// var sparseFilename = project.sparseFilename();
-	// console.log(sparseFilename);
 	var basePath = Code.pathRemoveLastComponent(inputFilename);
 	console.log(basePath);
 
@@ -7774,7 +7773,7 @@ console.log("GOT : matchCount: "+matchCount);
 		console.log(relativeFilename);
 		console.log(tracksFilename);
 
-		throw "before save ...";
+		// throw "before save ...";
 
 		var saveFileOrAlternateFxn = function(data,filename,fxn,cxt){
 			if(data){
@@ -7799,7 +7798,8 @@ console.log("GOT : matchCount: "+matchCount);
 		}
 		var saveSparseFxn = function(){
 			console.log("saveSparseFxn");
-			project.saveSparseFromData(inputData, saveProjectFxn,project);
+			// project.saveSparseFromData(inputData, saveProjectFxn,project);
+			project.saveFileFromData(inputData,inputFilename, saveProjectFxn,project);
 		}
 		var saveProjectFxn = function(){
 			console.log("saveProjectFxn");	
@@ -7811,19 +7811,27 @@ console.log("GOT : matchCount: "+matchCount);
 // throw ">A";
 
 	// LOAD EACH PAIR & DO MATCH | F | R | DENSE
+/*
+good = low error & visually accurate & cameras in correct location -- camera orientation + many points
+ok   = med/low error and visually & cameras in correct location -- camera orientation + some points
+poor = camera positions are generally correct, ~50% of scene is mapped correctly -- relative camera orientation
+bad = cameras are wrong or accidentally correct, <50% of scene is mapped
+*/
+ // good | ok | poor | bad
+// console.log("pair count: "+pairs.length+" ............");
 	for(var i=0; i<pairs.length; ++i){
 // i = 0; // good
-i = 1; // ok
-console.log("PICKED");
+// i = 1; // ok
 // i = 2; // poor
-// i = 3; // bad -- R is bad
+// i = 3; // poor
 // i = 4; // good
-// i = 5; // poor 
-// i = 6; // bad
-// i = 7; // bad
+// i = 5; // poor
+// i = 6; // poor
+// i = 7; // poor
 // i = 8; // ok
-// i = 9; // ok
-// i = 10; ....
+// i = 9; // bad
+// i = 10; // bad
+// console.log("PICKED");
 		var pair = pairs[i];
 		var idA = pair["A"];
 		var idB = pair["B"];
@@ -7835,16 +7843,17 @@ console.log("PICKED");
 			var relativeAB = pair["relativeTransform"];
 			// dense = with R
 			if(relativeAB){
-				this.calculatePairMatchWithRFromViewIDs(idA,idB, relativeAB, completePairFxn,project, configuration);
+				project.calculatePairMatchWithRFromViewIDs(idA,idB, relativeAB, completePairFxn,project, configuration);
+
 				return;
 			}
 			// sparse = w/o known R
-			this.calculatePairMatchFromViewIDs(idA,idB, completePairFxn,project);
+			project.calculatePairMatchFromViewIDs(idA,idB, completePairFxn,project);
 			return;
 		}
 	}
-throw ">B";
-	var triples = sparseData["triples"];
+// throw ">triples";
+	var triples = inputData["triples"];
 	if(!triples){
 		// make every possible triple from pairs
 		var minimumRelativeCount = 100;
@@ -7883,9 +7892,12 @@ throw ">B";
 				}
 			}
 		}
-		sparseData["triples"] = triples;
+		inputData["triples"] = triples;
+console.log(triples);
+throw ">triple match?";
 	}
-	throw ">C";
+// console.log("PAIRS  COUNT: "+inputData["pairs"].length);
+// console.log("TRIPLE COUNT: "+inputData["triples"].length);
 	// LOAD EACH POSSIBLE TRIPLE
 	var saveProjectFxn = function(){
 		console.log("saveProjectFxn");	
@@ -7898,9 +7910,9 @@ throw ">B";
 		var ac = scales["AC"];
 		var bc = scales["BC"];
 		currentTriple["gauge"] = {"AB":ab, "AC":ac, "BC":bc};
-		project.saveSparseFromData(sparseData, saveProjectFxn,project);
+		// project.saveSparseFromData(inputData, saveProjectFxn,project);
+		project.saveFileFromData(inputData,inputFilename, saveProjectFxn,project);
 	}
-	throw ">D";
 	var currentTriple = null;
 	for(var i=0; i<triples.length; ++i){
 		var triple = triples[i];
@@ -7910,13 +7922,13 @@ throw ">B";
 		var gauge = triple["gauge"];
 		if(!gauge){
 			currentTriple = triple;
-			this.calculateTripleMatchFromViewIDs(idA,idB,idC, completeTripleFxn,project);
+			project.calculateTripleMatchFromViewIDs(idA,idB,idC, completeTripleFxn,project);
 			return;
 		}
 	}
-	throw ">E";
+// throw ">graph";
 	// CREATE GRAPH FROM PAIRWISE & TRIPLE SCALE
-	var graph = sparseData["graph"];
+	var graph = inputData["graph"];
 	if(!graph){
 		var views = project.views();
 		var graphViews = [];
@@ -7954,7 +7966,7 @@ throw ">B";
 			graphGroups.unshift(graph["skeleton"]);
 		var graphGroupPairs = graph["groupEdges"]
 			graphGroupPairs.unshift(graph["skeletonEdges"]);
-		var basePath = Code.pathRemoveLastComponent(filename);
+		var basePath = Code.pathRemoveLastComponent(inputFilename);
 		// console.log(basePath);
 		var graphFilename = Code.appendToPath(basePath, App3DR.ProjectManager.RECONSTRUCT_GRAPH_FILE_NAME);
 		var dataViews = [];
@@ -8011,25 +8023,26 @@ throw ">B";
 		}
 		console.log(data);
 		// save graph & reference it
-		sparseData["graph"] = graphFilename;
+		inputData["graph"] = graphFilename;
 		var saveSparseFxn = function(){
 			console.log("saveSparseFxn");
-			project.saveSparseFromData(sparseData, saveProjectFxn,project);
+			project.saveFileFromData(inputData,inputFilename, saveProjectFxn,project);
 		}
+		// throw "SAVE SPARSE VS SAVE DENSE ????";
 		project.saveFileFromData(data,graphFilename, saveSparseFxn,project);
 		return;
 	}
-throw ">F";
+// throw ">F";
 	// AGGREGATE TRACKS INTO POINT FILE
 	// trackCount: # = done ?
-	var trackCount = sparseData["trackCount"]; // number of loaded tracks
+	var trackCount = inputData["trackCount"]; // number of loaded tracks
 	if(trackCount===null || trackCount===undefined){
 		console.log("no trackCount ---> load tracks into track_GROUP.yaml & full (tracks or dense points) into tracks_all.yaml");
-		this._iterateSparseTracks(sparseData, sparseFilename);
+		this._iterateSparseTracks(inputData, inputFilename);
 		return;
 	}
 throw ">G";
-	var bundleCount = sparseData["bundleCount"]; // some number of iterations /
+	var bundleCount = inputData["bundleCount"]; // some number of iterations /
 	if(bundleCount===null || bundleCount===undefined){
 		// for each group in graph groups:
 		// load the first group with non-existant or R-error above some min & under max iterations [skip pairs]
@@ -8844,7 +8857,7 @@ console.log(graphData);
 		var graphGroup = graphGroups[loadGroupIndex];
 		console.log("graphGroup");
 		console.log(graphGroup);
-		var graphGroupEdges = graphGroup["edges"];
+		var graphGroupEdges = Code.valueOrDefault(graphGroup["edges"],[]);
 		var trackFilename = graphGroup["filename"];
 		var trackData = null;
 		if(!trackFilename){
@@ -8857,6 +8870,7 @@ console.log(graphData);
 		console.log(trackData);
 
 		var fxnGroupTrackLoaded = function(){
+			console.log("fxnGroupTrackLoaded");
 			var pending = trackData["pending"];
 			var loadViews = [];
 			var loadPairs = [];
@@ -8879,43 +8893,49 @@ console.log(graphData);
 					
 					return;
 				}else{
-					var edge = graphGroupEdges[loadPairIndex];
-					var viewAID = edge["A"];
-					var viewBID = edge["B"];
+					console.log("graphGroupEdges");
+					console.log(graphGroupEdges);
+					// if(graphGroupEdges.length==0){
+					// 	console.log("no edges -- skeleton w/o edges?")
+					// }else{
+						var edge = graphGroupEdges[loadPairIndex];
+						var viewAID = edge["A"];
+						var viewBID = edge["B"];
 
-					loadPairs.push([viewAID,viewBID]);
-					// graphGroupEdges
-					var bestNextViews = bestNextViewsForViews([viewAID,viewBID], graphGroupEdges, null);
-						loadViews = {};
-						loadViews[viewAID] = 1;
-						loadViews[viewBID] = 1;
-					var loadCount = 2;
-					var index = 0;
-					var maxIterations = 100; // 
-					for(var iter=0; iter<maxIterations; ++iter){
-						var checked = false;
-						for(var i=0; i<bestNextViews.length; ++i){
-							var list = bestNextViews[i];
-							if(list.length>index){
-								checked = true;
-								var v = list[index];
-								if(!loadViews[v]){
-									loadViews[v] = 1;
-									// added = true;
-									++loadCount;
+						loadPairs.push([viewAID,viewBID]);
+						// graphGroupEdges
+						var bestNextViews = bestNextViewsForViews([viewAID,viewBID], graphGroupEdges, null);
+							loadViews = {};
+							loadViews[viewAID] = 1;
+							loadViews[viewBID] = 1;
+						var loadCount = 2;
+						var index = 0;
+						var maxIterations = 100; // 
+						for(var iter=0; iter<maxIterations; ++iter){
+							var checked = false;
+							for(var i=0; i<bestNextViews.length; ++i){
+								var list = bestNextViews[i];
+								if(list.length>index){
+									checked = true;
+									var v = list[index];
+									if(!loadViews[v]){
+										loadViews[v] = 1;
+										// added = true;
+										++loadCount;
+									}
+								}
+								if(loadCount>=maximumImagesLoad){
+									break;
 								}
 							}
-							if(loadCount>=maximumImagesLoad){
+							index++;
+							if(!checked || loadCount>=maximumImagesLoad){
 								break;
 							}
 						}
-						index++;
-						if(!checked || loadCount>=maximumImagesLoad){
-							break;
-						}
-					}
-					loadViews = Code.keys(loadViews);
-					console.log(loadViews);
+						loadViews = Code.keys(loadViews);
+						console.log(loadViews);
+					// }
 				}
 			}
 			// don't care about images for the moment:
@@ -9032,6 +9052,7 @@ console.log(graphData);
 				var WORLDCAMS = App3DR.ProjectManager.addCamerasToWorld(world, cameras);
 				console.log(WORLDCAMS);
 				//var WORLDVIEWS = App3DR.ProjectManager.addViewsToWorld(world, views, images, transforms, cellSizes);
+				console.log("createWorldViewsForViews");
 				var WORLDVIEWS = project.createWorldViewsForViews(world, views, images, cellSizes, transforms);
 				console.log(WORLDVIEWS);
 				
@@ -9041,12 +9062,15 @@ console.log(graphData);
 				// for(var i=0; i<worldViews.length; ++i){
 				// 	worldViewLookup[worldViews[i].data()] = worldViews[i];
 				// }
+
+				console.log("createWorldViewLookup");
 				var worldViewLookup = project.createWorldViewLookup(world);
 
-
+				console.log("copyRelativeTransformsFromAbsolute");
 				world.copyRelativeTransformsFromAbsolute();
 
 				// world.resolveIntersectionByPatchVisuals();
+				console.log("resolveIntersectionByPatchGeometry");
 				world.resolveIntersectionByPatchGeometry();
 				
 
@@ -9685,7 +9709,7 @@ if(true){
 
 
 
-throw "now with F ?"
+// throw "now with F ?"
 
 		if(F && pointsA && pointsA.length>minimumMatchPoints){
 			var info = R3D.fundamentalError(F,Finv,pointsA,pointsB);
@@ -9762,7 +9786,7 @@ throw "now with F ?"
 
 					var str = world.toYAMLString();
 					console.log(str);
-					// throw "now with world ?"
+// throw "now with world ?"
 						var transform = world.transformFromViews(vA,vB);
 						var count = transform.matches().length; // doesn't count if P has 0 matches
 						var matches = transform.matches();
@@ -9808,6 +9832,7 @@ throw "now with F ?"
 
 App3DR.ProjectManager.prototype.calculateTripleMatchFromViewIDs = function(viewAID, viewBID, viewCID, completeFxn, completeCxt, settings){
 	console.log("calculateTripleMatchFromViewIDs");
+	throw "this references sparse data ?"
 	var project = this;
 	if(!settings){
 		settings = {};
@@ -10108,6 +10133,8 @@ App3DR.ProjectManager.prototype.createWorldViewLookup = function(world, views, i
 }
 
 App3DR.ProjectManager.prototype.createWorldViewsForViews = function(world, views, images, cells, transforms){
+	console.log(world, views, images, cells, transforms);
+	throw "???"
 	var BAVIEWS = [];
 	for(var i=0; i<views.length; ++i){
 		var view = views[i];
@@ -10206,11 +10233,12 @@ App3DR.ProjectManager.prototype._calculateFeaturesLoaded = function(view){
 	var maxCount = 1200;
 	var features = R3D.calculateScaleCornerFeaturesIdealCount(imageMatrix, idealCount, maxCount);
 
-	console.log(features);
-	var features = R3D.colorGradientFeaturesFromImage(imageMatrix, idealCount, maxCount);
-	console.log(features);
+	// this doesn't seem much better ...
+	// console.log(features);
+	// var features = R3D.colorGradientFeaturesFromImage(imageMatrix, idealCount, maxCount);
+	// console.log(features);
+	// throw "features ....";
 
-	throw "features ....";
 	var normalizedFeatures = R3D.normalizeSIFTObjects(features, imageMatrix.width(), imageMatrix.height());
 	
 	var wordsMax = 100;

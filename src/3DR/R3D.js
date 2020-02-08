@@ -11238,26 +11238,26 @@ console.log("delta: "+time);
 }
 
 R3D._sortCompareProgressiveColor_9x9_Histogram = function(objectA, objectsB, minCount, percentDrop){
-	minCount = minCount!==undefined ? minCount : 9;
+	minCount = minCount!==undefined ? minCount : 16;
 	return R3D._sortCompareProgressiveType(objectA, objectsB, R3D._progressiveCompare1DArraySAD, "9x9_histogram",null,"cacheHist", minCount, percentDrop);
 }
 R3D._sortCompareProgressiveGrayscale_9x9_SIFT = function(objectA, objectsB, minCount, percentDrop){
-	minCount = minCount!==undefined ? minCount : 9;
+	minCount = minCount!==undefined ? minCount : 12;
 	return R3D._sortCompareProgressiveType(objectA, objectsB, R3D._progressiveCompareGrayscaleSIFTList, "9x9_SIFT_gray",null,"cacheSIFT", minCount, percentDrop);
 }
 R3D._sortCompareProgressiveColor_9x9_SIFT = function(objectA, objectsB, minCount, percentDrop){
-	minCount = minCount!==undefined ? minCount : 9;
+	minCount = minCount!==undefined ? minCount : 8;
 	return R3D._sortCompareProgressiveType(objectA, objectsB, R3D._progressiveCompareGrayscaleSIFTList, "9x9_SIFT_color",null,"cacheSIFTRGB", minCount, percentDrop);
 }
 R3D._sortCompareProgressiveColorFlatSSD_11x11_CLOSEST = function(objectA, objectsB, minCount, percentDrop){
-	minCount = minCount!==undefined ? minCount : 8;
+	minCount = minCount!==undefined ? minCount : 4;
 	// return R3D._sortCompareProgressiveType(objectA, objectsB, R3D._progressiveCompare2DArrayV3DSADClosest, "9x9_blur",null,"cacheSAD", minCount, percentDrop);
 	return R3D._sortCompareProgressiveType(objectA, objectsB, R3D._progressiveCompare2DArrayV3DSADClosest, "11x11",null,"cacheClosest", minCount, percentDrop);
 }
 R3D._sortCompareProgressiveColorFlatSSD_9x9 = function(objectA, objectsB, minCount, percentDrop){
-	minCount = minCount!==undefined ? minCount : 8;
-	// return R3D._sortCompareProgressiveType(objectA, objectsB, R3D._progressiveCompareImageSAD, "9x9_blur",null,"cacheSAD", minCount, percentDrop);
-	return R3D._sortCompareProgressiveType(objectA, objectsB, R3D._progressiveCompareImageSAD, "11x11",null,"cacheSAD", minCount, percentDrop);
+	minCount = minCount!==undefined ? minCount : 2;
+	return R3D._sortCompareProgressiveType(objectA, objectsB, R3D._progressiveCompareImageSAD, "9x9_blur",null,"cacheSAD", minCount, percentDrop);
+	// return R3D._sortCompareProgressiveType(objectA, objectsB, R3D._progressiveCompareImageSAD, "11x11",null,"cacheSAD", minCount, percentDrop);
 }
 
 R3D._dispListDebug = function(sortedB, debugOffY, doDebug){
@@ -11417,6 +11417,10 @@ R3D._dispListDebug(putativeB, 550, doDebug);
 		putativeB = R3D._sortCompareProgressiveColorFlatSSD_11x11_CLOSEST(objectA, putativeB, 8, 0.5);
 		// console.log(putativeB);
 R3D._dispListDebug(putativeB, 600, doDebug);
+
+
+// unknown F/R force to be more generalx
+// MAYBE MORE BLURRED ?
 		// blur SAD
 		putativeB = R3D._sortCompareProgressiveColorFlatSSD_9x9(objectA, putativeB, 4, 0.5);
 		// console.log(putativeB);
@@ -11434,7 +11438,11 @@ R3D._dispListDebug(putativeB, 650, doDebug);
 			var scoreClosest = match["cacheClosest"];
 			var scoreSAD = match["cacheSAD"];
 			// var score = scoreRBG*scoreSAD;
-			var score = scoreHist*scoreRBG*scoreClosest*scoreSAD;
+			// var score = scoreHist*scoreRBG*scoreClosest*scoreSAD;
+
+			// var score = scoreClosest*scoreRBG;
+			var score = scoreHist*scoreClosest*scoreRBG;
+			// var score = scoreSIFT*scoreRBG;
 			// if(score===undefined){
 			// 	console.log(scoreHist,scoreRBG,scoreClosest,scoreSAD);
 			// 	throw "?"
@@ -33213,8 +33221,13 @@ console.log("getting actual edges");
 		var values = [];
 		var errors = [];
 		if(list.length>0){
-			if(list.length>1){
-				throw "ONLY EVER AT MOST 1 EDGE BETWEEN VIEW-PAIRS"
+			if(list.length>1){ // average them ?
+				// console.log(edges);
+				// console.log(list);
+				// for(var l=1;l<list.length; ++l){
+				// 	list[]
+				// }
+				// console.log("ONLY EVER AT MOST 1 EDGE BETWEEN VIEW-PAIRS");
 			}
 			for(var j=0; j<list.length; ++j){
 				var e = list[j];
@@ -33225,6 +33238,7 @@ console.log("getting actual edges");
 			var error = percents["error"];
 				percents = percents["percents"];
 			var value = Code.averageNumbers(values, percents);
+			// console.log(" => "+value+" @ "+error+" : "+percents);
 			edge["value"] = value;
 			edge["error"] = error;
 		}

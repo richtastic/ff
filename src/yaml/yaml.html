@@ -8,7 +8,7 @@ function pageLoadedFxn(){
 	ff = new FF("../code/",defaultClassesLoadedFxn,defaultClassesProgressFxn);
 }
 function defaultClassesProgressFxn(o){
-	console.log(o);
+	// console.log(o);
 }
 function defaultClassesLoadedFxn(o){
 	console.log(o);
@@ -20,10 +20,12 @@ function customClassesProgressFxn(o){
 	console.log(o);
 }
 function customClassesLoadedFxn(o){
-	console.log(o);
-	console.log("loading complete");
-	var ajax = new Ajax();
-	ajax.load("");
+	// console.log(o);
+	// console.log("loading complete");
+	// var ajax = new Ajax();
+	// ajax.load("");
+	var y = new yaml();
+
 }
 function main(){
 	console.log("DO");

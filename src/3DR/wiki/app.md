@@ -398,6 +398,7 @@ https://cloud.google.com/appengine/docs/nodejs/
 
 refinement - dates
 02/10 - updated corner & feature matching
+02/?? - best next dense pairs to load
 02/17 - hole filling?
 02/10 - multi-view point propagation from dense
 		- projecting known 3D points
@@ -419,9 +420,14 @@ refinement - dates
 
 - do efficient pairwise object extraction
 
+	- 2 purpose procedures
+		- F: to use general area
+		- R: to have specific distinctions
 
 
 
+
+- allow more iterations on searching to reduce error
 
 
 
@@ -944,7 +950,7 @@ world.probe2DCells(2.0); // 1-2
 
 
 
-- yaml error on reading after empty object / array
+x yaml error on reading after empty object / array
 	=> should detect indent is less or equal to current & end the array
 
 
