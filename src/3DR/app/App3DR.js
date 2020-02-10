@@ -8216,6 +8216,7 @@ App3DR.ProjectManager.prototype._iterateSparseTracks = function(sourceData, sour
 
 			throw "already done .. should have putatives saved into main info.yaml"
 		}
+// throw "A";
 		if(bundleFullIndex>=graphPairs.length){ // done loading all pairs into full file
 			console.log("bundle adjust full file ...");
 
@@ -8427,11 +8428,13 @@ App3DR.ProjectManager.prototype._iterateSparseTracks = function(sourceData, sour
 			project.loadDataFromFile(fullBundlePath, loadBundleComplete);
 			return;
 		}
+		// throw "B";
 		if(bundleFullFile){ // load current file:
 			var fullBundlePath = Code.appendToPath(basePath,"tracks",bundleFullFile);
-
 			var fullData = null;
 			var pairData = null;
+console.log("fullBundlePath: "+fullBundlePath);
+throw "?"
 			var checkReadyRunWorld = function(){
 				if(!(fullData && pairData)){
 					return;
@@ -8530,7 +8533,7 @@ App3DR.ProjectManager.prototype._iterateSparseTracks = function(sourceData, sour
 
 			return;
 		}
-		// throw "WHAT?"
+// throw "C"
 		if(graphGroups.length==bundleGroupIndex){
 			console.log(graphGroups);
 			var transformLookup = {};
@@ -8640,6 +8643,7 @@ throw "before saving initial bundle full";
 			console.log("all group BA complete -- generate initial viewgraph from skeleton + groups");
 			return;// load all tracks from pairs into full track file
 		}
+// throw "D"
 		// special case for full yaml: views & pairs are from graph
 		if(graphGroups.length==loadGroupIndex){
 			console.log(bundleGroupIndex);
@@ -8738,6 +8742,7 @@ throw "before saving initial bundle full";
 				}
 
 				if(isDone){
+console.log("isDone ?: "+isDone);
 // console.log(baOptimizations)
 // throw "???"
 					graphData["bundleGroupIndex"] = bundleGroupIndex + 1;
@@ -8769,14 +8774,7 @@ console.log(graphData);
 					console.log("no more -- move onto next group");
 					return;
 				}
-
-				
-
-
-
-
-
-
+console.log("isDone --- no");
 				var cameras = project.cameras(); // should this come from the graph ?
 				// var info = project.fillInWorldViews(world, cameras, graphGroupViews, graphDataViews);
 				var info = project.fillInWorldViews(cameras, baViews);
@@ -8835,25 +8833,21 @@ console.log(graphData);
 
 				console.log("fullTrackPath: "+fullTrackPath);
 				console.log(data);
-
-				
-
 				// SAVE TO FILE
 				var savedTrackComplete = function(){
-					console.log("saved track");
+					console.log("saved track --- done bundle iteration:  "+baIterations);
 				}
-
-			// throw "before saving track";
-
+				// throw "before saving track";
 				project.saveFileFromData(data, fullTrackPath, savedTrackComplete, project);
 			}
-
+			console.log("fullTrackPath: "+fullTrackPath)
 			project.loadDataFromFile(fullTrackPath, baTrackFileLoadComplete);
 			throw "do BA for each group";
 			return;
 		}else if(loadGroupIndex>graphGroups.length){
 			throw " more than ?"
 		}
+// throw "E"
 		var graphGroup = graphGroups[loadGroupIndex];
 		console.log("graphGroup");
 		console.log(graphGroup);
@@ -8868,6 +8862,7 @@ console.log(graphData);
 		var fullTrackPath = Code.appendToPath(basePath,"tracks",trackFilename);
 		console.log(fullTrackPath);
 		console.log(trackData);
+// throw "before tracks?: "+trackFilename;
 
 		var fxnGroupTrackLoaded = function(){
 			console.log("fxnGroupTrackLoaded");
@@ -8879,7 +8874,11 @@ console.log(graphData);
 				//    load 'previous' pair images
 				//    load missed pair images
 			}else{
+				if(graphGroupEdges.length==0){
+					throw "no graph edges .. need to save an empty track file anyway ?"
+				}
 				if(loadPairIndex>=graphGroupEdges.length){ // all pairs loaded into track for this group
+throw "INSIDE A"
 					console.log("done all pairs for group: "+loadGroupIndex);
 					graphData["loadPairIndex"] = -1;
 					graphData["loadGroupIndex"] = loadGroupIndex + 1;
@@ -8893,11 +8892,13 @@ console.log(graphData);
 					
 					return;
 				}else{
+throw "INSIDE B"
 					console.log("graphGroupEdges");
 					console.log(graphGroupEdges);
 					// if(graphGroupEdges.length==0){
 					// 	console.log("no edges -- skeleton w/o edges?")
 					// }else{
+
 						var edge = graphGroupEdges[loadPairIndex];
 						var viewAID = edge["A"];
 						var viewBID = edge["B"];
@@ -8938,6 +8939,7 @@ console.log(graphData);
 					// }
 				}
 			}
+throw "... loading?";
 			// don't care about images for the moment:
 			loadViews = [];
 			console.log(loadViews);
@@ -9009,7 +9011,6 @@ console.log(graphData);
 					graphViewIDToTransform[viewID] = Matrix.fromObject(transform);
 				}
 
-
 				var cameras = project.cameras();
 				var graphGroupViews = graphGroup["views"];
 				var views = [];
@@ -9042,11 +9043,7 @@ console.log(graphData);
 					var cellCount = 40;
 					cellSizes.push(R3D.cellSizingRoundWithDimensions(wid,hei,cellCount, false));
 				}
-				console.log(cameras);
-				console.log(views);
-				console.log(images);
-				console.log(transforms);
-				console.log(cellSizes);
+throw "???"
 				// fill world in
 				var world = new Stereopsis.World();
 				var WORLDCAMS = App3DR.ProjectManager.addCamerasToWorld(world, cameras);
@@ -9079,8 +9076,8 @@ console.log(graphData);
 				var existingPoints = Code.valueOrDefault(trackData["points"], []);
 				console.log(existingPoints);
 				console.log(loadPairs);
-				console.log("embed points");
-
+				console.log("embed points ?");
+throw "???"
 				//project._embedTrackPoints(world, existingPoints, worldViewLookup);
 				var additionalPoints = [];
 				for(var i=0; i<loadPairs.length; ++i){
@@ -9135,7 +9132,7 @@ console.log(graphData);
 				console.log(trackData);
 				console.log(fullTrackPath);
 				console.log(fullGraphPath);
-// throw "before save ???"
+throw "before save tracks???+ "+trackFilename;
 				var savedTrackComplete = function(){
 					console.log("savedTrackComplete: "+trackFilename);
 				}
@@ -9152,9 +9149,11 @@ console.log(graphData);
 			}
 
 
-			
+throw "what ?"
 
 		} // done track data loaded
+// throw "F";
+console.log("WHAT?");
 		var currentTrackFileLoadComplete = function(d){
 			console.log("currentTrackFileLoadComplete");
 			console.log(d);
@@ -9163,9 +9162,11 @@ console.log(graphData);
 		}
 		if(!trackData){
 			console.log(trackData);
+			throw "no trackData";
 			project.loadDataFromFile(fullTrackPath, currentTrackFileLoadComplete);
 			// throw "need to load trackData";
 		}else{
+			// throw "anyway ?fxnGroupTrackLoaded";
 			fxnGroupTrackLoaded();
 		}
 		return;
@@ -10133,8 +10134,6 @@ App3DR.ProjectManager.prototype.createWorldViewLookup = function(world, views, i
 }
 
 App3DR.ProjectManager.prototype.createWorldViewsForViews = function(world, views, images, cells, transforms){
-	console.log(world, views, images, cells, transforms);
-	throw "???"
 	var BAVIEWS = [];
 	for(var i=0; i<views.length; ++i){
 		var view = views[i];
@@ -10150,6 +10149,7 @@ App3DR.ProjectManager.prototype.createWorldViewsForViews = function(world, views
 		v.data(view.id());
 		BAVIEWS.push(v);
 	}
+	console.log(BAVIEWS);
 	return BAVIEWS;
 }
 

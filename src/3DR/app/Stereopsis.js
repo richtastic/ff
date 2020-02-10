@@ -584,13 +584,20 @@ Stereopsis.View = function(image, camera, data){
 	this._up = null;
 	this._size = null;
 	// init:
-	// this.cellSize(3); // default
+	console.log("NEW VIEW",image,camera,data);
 	if(Code.isa(image, V2D)){
+		console.log(image);
+		console.log("SET SIZE");
 		this.size(image);
+		console.log("DONE A");
 	}else{
+		console.log("SET IMAGE");
 		this.image(image);
+		console.log("DONE B");
 	}
+	console.log("add camera");
 	this.camera(camera);
+	console.log("set data");
 	this.data(data);
 }
 Stereopsis.View.prototype._resetCacheItems = function(){
@@ -623,10 +630,13 @@ Stereopsis.View.prototype.pointSpace = function(){
 }
 Stereopsis.View.prototype.sizeFromPercent = function(percent){
 	var size = this.size();
+	console.log("HAVE A SIZE?: "+size);
 	if(size){
+
 		var width = size.x;
 		var height = size.y;
 		var length = Math.sqrt(width*height); // square perimeter
+console.log("length: "+length+" x "+percent);
 		// var length = Math.sqrt(width*width + height*height); // hypotenuse -- bigger
 		return length*percent;
 	}
@@ -635,7 +645,7 @@ Stereopsis.View.prototype.sizeFromPercent = function(percent){
 Stereopsis.View.prototype.image = function(image){
 	if(image!==undefined){
 		this._image = image;
-		this._cornersFromImage();
+		// this._cornersFromImage();
 		this._updateInternalParams();
 		if(image){
 			this.defaultCells();
@@ -655,7 +665,10 @@ Stereopsis.View.prototype.imageScales = function(){
 	return this._imageScales;
 }
 Stereopsis.View.prototype.defaultCells = function(){
-	var size = Math.round( this.sizeFromPercent(0.01) );
+	console.log("size?: "+this.size());
+	// var size = Math.round( this.sizeFromPercent(0.01) );
+	var size = this.sizeFromPercent(0.01);
+	console.log("defaultCells: "+size)
 	// if(size%2==0){
 	// 	size -= 1;
 	// }
@@ -747,9 +760,17 @@ Stereopsis.View.prototype._initCells = function(oldSize){
 	var cells = [];
 	this._cells = cells;
 	var cellSize = this.cellSize();
+if(cellSize==0){
+	throw "no cell size of zero";
+}
 	var countX = Math.ceil(size.x/cellSize);
 	var countY = Math.ceil(size.y/cellSize);
+console.log(countX,countY);
 	var count = countX*countY;
+console.log("_initCells: "+count);
+if(count>1E9){
+	throw "too many cells?: "+count;
+}
 	for(var i=0; i<count; ++i){
 		cells.push(new Stereopsis.ViewCell(i));
 	}
@@ -862,6 +883,7 @@ Stereopsis.View.prototype.cellForXY = function(xIn,yIn){
 }
 Stereopsis.View.prototype.corners = function(){
 	if(!this._corners){
+throw "make corners";
 		var image = this._image;
 		if(image){
 			var gry = image.gry();
@@ -899,6 +921,7 @@ Stereopsis.View.prototype.camera = function(camera){
 Stereopsis.View.prototype._cornersFromImage = function(){
 	var image = this._image;
 	if(image){
+throw "_cornersFromImage";
 // return; // NOT USED CURRENTLY
 		var gry = image.gry();
 		var width = image.width();

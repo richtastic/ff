@@ -9,8 +9,8 @@ function yaml(){
 	var blob = null;
 	// self.ajax.get(self.document_url,self.handle_ajax_success,self.handle_ajax_failure);
 	// url,con,comp,params
-	// ajax.get(document_url,this, this.handle_ajax_success, {});
-	this.testWrite();
+	ajax.get(document_url,this, this.handle_ajax_success, {});
+	// this.testWrite();
 }
 yaml.prototype.testWrite = function(){
 
@@ -52,7 +52,7 @@ yaml.prototype.handle_ajax_success = function(data){
 	console.log(data);
 	// var yaml = new YAML();
 	// var object = YAML.parse(data);
-	var object = new YAML().parse2(data);
+	var object = YAML.parse(data);
 	// 
 	console.log(object);
 

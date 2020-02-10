@@ -415,6 +415,7 @@ refinement - dates
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+- track_0 is never created with 0 edges
 
 
 
@@ -673,22 +674,6 @@ MOST FORGIVING / LESS ACCURATE => TO => MOST SELECTIVE / MOST PRECICE
 		- even spread
 			| .... ...... .. . ..... . .
 		- 
-x see why average color is not working well
-	x maybe compare in other color space ... non-RGB
-x see if averaging behaves differently when doing 5x5 => 3x3 => center value [slightly better]
-x see if blurred histogram works better (7x7 => 5x5) [no]
-x see if spatial histogramming: 5x5 => 9 (7x7 => 9) + overlap histograms works well [OK]
-x see if grayscale gradient single (5x5) binning works well [bad]
-x see if grayscale gradient binning (5x5 & 7x7 => 9 x 8 = 72, 11x11 & 25-binning) binning works well [POOR]
-x see if 'best' spatial SAD (11x11 top 50%) works well [OK]
-x see if 'closest' spatial SAD (11x11) works well [OK]
-x see if theres a color gradient binning / histogram that works well
-	x flat gradient [3D]
-	x color 3-grad [6D]
-x try needle-haystack best SAD & 'closest' SAD - crop 5x5 or 7x7 from 11x11 [OK-BAD]
-	-> try 'closest' SAD scoring
-
-
 blurred + best 50%
 
 
@@ -889,13 +874,6 @@ algorithm assuming most perpendicular normal point (or lowest affine error metri
 		A) more correct SAD on larger scale (zoomed out)
 		B) more correct SAD on a smaller scale (zoomed in)
 
-
-these are bad:
-
-
-		sortedB = R3D._sortCompareProgressiveSIFTFlat(objectA, sortedB, 4);
-		sortedB = R3D._sortCompareProgressiveSIFTGrad(objectA, sortedB, 3);
-		sortedB = R3D._sortCompareProgressiveSIFTFullScoreCache(objectA, sortedB, 2);
 
 
 

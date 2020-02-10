@@ -35,10 +35,8 @@ YAML.parse = function(input){
 	var yaml = new YAML();
 	var output = null;
 	if(Code.isString(input)){
-		console.log("READ STRING");
 		output = yaml.parse(input);
 	}else{
-		console.log("WRITE OBJECT");
 		yaml.startWrite();
 		yaml.writeObjectLiteral(input);
 		output = yaml.toString();
@@ -250,14 +248,6 @@ YAML.prototype._parseNext = function(){
 			throw "multiline handle B";
 		}
 		this._checkAddNextValue(container,container.length,val, lineIndentCount);
-		// var hasReference = this._checkAddReferenceValue(container,container.length,val);
-		// var subContainer = this._getNextLineObject(lineIndentCount);
-		// if(subContainer){
-		// 	container.push(subContainer);
-		// }else if(!hasReference){
-		// 	val = this._checkSubstituteValue(val);
-		// 	container.push(val);
-		// }
 		this._gotoNextLine();
 		return true;
 	}
@@ -283,18 +273,11 @@ YAML.prototype._parseNext = function(){
 		if(val===YAML.STRING_MULTILINE){
 			throw "multiline handle A";
 		}
-		// var hasReference = this._checkAddReferenceValue(container,key,val);
-		// var subContainer = this._getNextLineObject(lineIndentCount);
-		// if(subContainer){
-		// 	container[key] = subContainer;
-		// }else if(!hasReference){
-		// 	val = this._checkSubstituteValue(val);
-		// 	container[key] = val;
-		// }
 		this._checkAddNextValue(container,key,val, lineIndentCount);
 		this._gotoNextLine();
 		return true;
 	}
+	console.log(line);
 	throw "unhandled line";
 }
 YAML.prototype._line = function(offset){
@@ -305,25 +288,6 @@ YAML.prototype._line = function(offset){
 	}
 	return YAML._removeComment(this._lines[index]);
 }
-// YAML.prototype._checkIsReferenceValue = function(value){
-// 	if(value!==null || value!==""){
-// 		if(value.charAt(0)==YAML.REFERENCE_DEFINE){
-// 			return true;
-// 		}else if(value.charAt(0)==YAML.REFERENCE_VALUE){
-// 			return true;
-// 		}
-// 	}
-// 	return false;
-// }
-// YAML.prototype._addReferenceValue = function(object,key,value){
-// 	if(value.charAt(0)==YAML.REFERENCE_DEFINE){
-// 		referenceName = value.substring(1,value.length);
-// 		this._addRefenceTableDefinition(referenceName,object,key);
-// 	}else if(value.charAt(0)==YAML.REFERENCE_VALUE){
-// 		referenceName = value.substring(1,value.length);
-// 		this._addRefenceTableReference(referenceName,object,key);
-// 	}
-// }
 YAML.prototype._checkAddReferenceValue = function(object,key,value){
 	if(value!==null || value!==""){
 		if(value.charAt(0)==YAML.REFERENCE_DEFINE){
