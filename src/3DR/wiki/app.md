@@ -397,10 +397,9 @@ https://cloud.google.com/appengine/docs/nodejs/
 - encryption
 
 refinement - dates
-02/10 - updated corner & feature matching
-02/?? - best next dense pairs to load
+	putativePairsFromViewsAndTransforms
 02/17 - hole filling?
-02/10 - multi-view point propagation from dense
+02/20 - multi-view point propagation from dense
 		- projecting known 3D points
 		- projecting unknown corners?
 02/24 - triangulation algorithm updates
@@ -415,7 +414,92 @@ refinement - dates
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-- track_0 is never created with 0 edges
+resolveIntersectionPatchGeometry
+resolveIntersectionPatchGeometryImplementation
+
+
+
+corner flow --- try to find 'peaks' & most stable points (edges are highly different ?)
+	- likely peaks on BOTH sides of a corner
+	- average of neighbors (weighted)?
+	-> is there a way to make despite which side of the corner it's on => be consistent direction (not 180?)
+
+
+
+
+corner find 'narrowness' / angle:
+	with com known (angle) interpolate from left & right to get location where value becomes:
+	1/2 of range
+	interrior width distance is metric of wideness of angle
+
+
+
+
+
+com of differentials
+
+corner score:
+	- average of differentials
+	- length of distance of differential...
+
+
+
+
+- unoriented gradient histogram by aligning peaks together [or doing 8 x N compares and using best]
+...
+
+
+
+- experiment with getting consistent orientation for things
+	- color, grad, hist, cov, com, ...
+	GRAD:
+		- see how small changes in position can affect gradient [measurement of gradient stability]
+			- very cornery locations will be consistent
+			- places with lots of noise will be variable
+			...
+	- come combination of logic to choose orientation?:
+		- find edge?
+		- find gradient?
+
+- initial fat match F poor for off-size
+
+	=> ANGLE IS VERY WRONG FOR DIFFERENCES -- large variability
+	=> SIZE/SCALE IS DIFFERENT
+
+
+- need some other metric to define HOW GOOD a pair match is
+	[and therefore: when a transform needs to be re-initialized & which pairs should be ignored]
+	R-F ratio ?
+
+
+
+=> find out where problems first occurr & figure out how to  prevent / account & ignore
+
+- repeated outlier dropping to find group of best inliers
+
+- how to better identify bad transform pairs ?
+	- sporadic point-ness?
+		- relative noise per 2D pixel / 3D kNN neighborhood?
+
+
+- be able to recalculate R if error is high
+	- several points:
+		- before / BA
+		- during tracks
+		- dense-
+
+- ...
+
+
+
+- BA optimized view-group to very bad in-line orientation
+	- initial error for some view-pairs is really high?
+	- next: R-error looks good, except there are a lot of negative points
+
+- negative R-errors set high -- for when doing BA to ignore bad-transforms?
+
+...............
+
 
 
 

@@ -13524,6 +13524,27 @@ Code.radixSort = function(a,f){ // n*k
 
 
 // --------------------------------------------------------------------------------------------------------------------------------------------
+Code.clusterHierarchical1D = function(values, fromMax){
+	fromMax = fromMax ? fromMax : true;
+	var orderingFxn = function(a,b){
+		if(a===b){
+			return 0;
+		}
+	}
+	var sorted = [];
+
+	for(var i=0; i<values.length; ++i){
+		sorted.push([values[i], i]);
+	}
+	var queue = new PriorityQueue(orderingFxn);
+
+
+
+	
+
+	throw "clusterHierarchical1D";
+
+}
 Code.clusterHierarchicalPoints2D = function(points,distinctDistance,toPointFxn){ // hierarchical clustering 2D [agglomerative]
 // single(minimum) | complete(maximum) | average | ward |
 	toPointFxn = toPointFxn ? toPointFxn : function(a){ return a; };

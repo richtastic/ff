@@ -24,7 +24,7 @@ function Corners(){
 	// var imageList = ["A.png"];
 
 	var directory = "./images/";
-	// var imageList = ["bench_C.png","bench_D.png"];
+	var imageList = ["bench_C.png","bench_D.png"];
 	// var imageList = ["room0.png","room2.png"];
 	// var imageList = ["castle.000.jpg","castle.009.jpg"];
 	// var imageList = ["medusa_1.png","medusa_2.png"];
@@ -41,7 +41,7 @@ function Corners(){
 	// var imageList = ["iowa/0.JPG","iowa/1.JPG"];
 	// var imageList = ["iowa/8.JPG","iowa/9.JPG"];
 	// var imageList = ["yA_small.jpg","yB_small.jpg"];
-	var imageList = ["zA_small.jpg","zB_small.jpg"];
+	// var imageList = ["zA_small.jpg","zB_small.jpg"];
 	
 	
 	
@@ -52,9 +52,414 @@ function Corners(){
 	// var imageList = ["calib-0.png","calib-1.png","calib-2.png","../../calibration1-0.jpg","../../desktop1.png"];
 	//,"../../dense_test_a.png","../../F_S_1_1.jpg","../../zoom_03.png"];
 	// , "../../catHat.jpg"];//,"calib-3.png","calib-4.png","calib-5.png","calib-6.png"];
-	var imageLoader = new ImageLoader(directory,imageList, this,this.handleImagesLoadedBasic,null);
+
+
+	// var imageLoader = new ImageLoader(directory,imageList, this,this.handleImagesLoadedBasic,null);
+
+	// var imageLoader = new ImageLoader(directory,imageList, this,this.handleImagesLoadShow,null);
+
+	var imageLoader = new ImageLoader(directory,imageList, this,this.handleImagesLoadExperiment,null);
+
 	imageLoader.load();
 	
+}
+
+
+Corners.prototype.handleImagesLoadExperiment = function(imageInfo){
+	var imageList = imageInfo.images;
+	// var fileList = imageInfo.files;
+	// var i, j, k, list = [];
+	// var x = 0, y = 0;
+	var images = [];
+	var imageMatrixList = [];
+	var imageScalesList = [];
+	for(var i=0;i<imageList.length;++i){
+		// var file = fileList[i];
+		var img = imageList[i];
+		images[i] = img;
+		var imageSource = images[i];
+		var imageFloat = GLOBALSTAGE.getImageAsFloatRGB(imageSource);
+		var imageMatrix = new ImageMat(imageFloat["width"],imageFloat["height"], imageFloat["red"], imageFloat["grn"], imageFloat["blu"]);
+		imageMatrixList.push(imageMatrix);
+		var imageScales = new ImageMatScaled(imageMatrix);
+		imageScalesList.push(imageScales);
+	}
+
+	console.log(imageScalesList);
+
+
+	// 
+	var imageScales = imageScalesList[0];
+	var imageMatrix = imageMatrixList[0];
+
+	
+	// var point = new V2D(292,195); // bench right large angle
+		// var point = new V2D(291,195);
+		// var point = new V2D(292,196);
+	// var point = new V2D(288,157); // bench right 90
+		// var point = new V2D(288.5,157);
+		// var point = new V2D(287,157);
+
+
+// var point = new V2D(90,188);
+var point = new V2D(90,189);
+
+
+	// var point = new V2D(202,225);
+
+	// var point = new V2D(304,304);
+	// var point = new V2D(306,304);
+
+
+
+// random:
+var point = new V2D(230,220);
+
+
+	var gry = imageMatrix.gry();
+	var width = imageMatrix.width();
+	var height = imageMatrix.height();
+	var keepPercentScore = 0.999;
+	var nonMaximalPercent = 0.01;
+
+
+	var peak = R3D.imageCornerPeakDifferential(imageScales, point);
+	console.log(peak);
+
+	throw "?"
+
+	var result = R3D.imageCornersDifferential(imageMatrix);
+	console.log(result)
+
+	throw "?"
+
+	var corners = R3D.pointsCornerMaxima(gry, width, height, keepPercentScore, nonMaximalPercent);
+
+	console.log(corners);
+
+	var point = corners[250];
+
+
+
+
+	// var point = new V2D(290,190);
+
+	// resultCenter, resultScale, resultWidth,resultHeight, matrix
+	// var size = 31;
+	// var size = 11;
+	// var size = 7;
+	var size = 5;
+	// var size = 3;
+	var matrix = null;
+	var image = imageScales.extractRect(point, 1.0, size,size, matrix);
+	var mask = ImageMat.circleMask(size);
+	console.log(mask);
+
+	// image = image.getBlurredImage(1.0);
+
+	
+	var alp = 1.0;
+	var sca = 5.0;
+	var img = GLOBALSTAGE.getFloatRGBAsImage(image.red(),image.grn(),image.blu(), image.width(),image.height());
+	var d = new DOImage(img);
+	d.graphics().alpha(alp);
+	d.matrix().translate(0,0);
+	GLOBALSTAGE.addChild(d);
+	// d.matrix().translate(x,y);
+	d.matrix().translate(10,10);
+	d.matrix().scale(sca);
+
+
+
+
+	var half = (size*0.5 | 0);
+	var centerIndex = half*size + half;
+	console.log("SIZE: "+size+" | "+half+" = "+centerIndex)
+
+	var diffs = [];
+	var red = image.red();
+	var grn = image.grn();
+	var blu = image.blu();
+	var a = new V3D(red[centerIndex],grn[centerIndex],blu[centerIndex]);
+	var b = new V3D();
+	// 0, 45, 90, 135, 180, 225, 270, 315
+
+
+
+
+	// var u = new V2D();
+	var v = new V2D();
+	// var index = 0;
+	// for(var i=0; i<pixels; ++i){
+	var com = new V2D();
+	var diffTotal = 0;
+var dd = [];
+	for(var j=0; j<size; ++j){
+		for(var i=0; i<size; ++i){
+			// if(i==half && j==half){
+			// 	continue;
+			// }
+			var index = j*size + i;
+			if(mask[index]==0){
+				continue;
+			}
+			v.set(i-half,j-half);
+
+			b.set(red[index],grn[index],blu[index]);
+			var diff = V3D.distance(a,b);
+			diffTotal += diff;
+
+			// console.log(v+" = "+diff);
+
+			com.x += diff*v.x;
+			com.y += diff*v.y;
+
+			// diffs.push(diff);
+			// v.set(1.0,0.0);
+			// var ang = angleDelta*i;
+			// angles.push(ang);
+			// angles.push(Code.degrees(ang));
+			// v.rotate(ang);
+			// gradients.push(v.copy());
+
+			dd[index] = diff;
+		}
+	}
+	com.scale(1.0/diffTotal);
+	console.log("com: "+com);
+	var angle = V2D.angleDirection(V2D.DIRX,com);
+	
+
+		
+		corners = dd;
+		ImageMat.normalFloat01(corners);
+		img = GLOBALSTAGE.getFloatRGBAsImage(corners,corners,corners, size,size);
+		var d = new DOImage(img);
+		d.graphics().alpha(alp);
+		d.matrix().scale(4.0);
+		d.matrix().translate(0,0);
+		GLOBALSTAGE.addChild(d);
+		// d.matrix().translate(x,y);
+
+
+
+/*
+	var indexes = [];
+	if(size==3){
+		indexes = [5,2,1,0,3,6,7,8];
+	}else if(size==5){
+		indexes = [14,9,4,3,2,1,0, 5,10,15, 20,21,22,23,24,19];
+	}
+
+	// fill out perimeter
+	// var indexes = [];
+	// // top
+	// for(var i=0; i<size-1; ++i){
+	// 	indexes.push(i);
+	// }
+	console.log(indexes);
+
+	// throw "?"
+
+	var angleDelta = Math.PI*2.0/indexes.length;
+// console.log(Code.degrees(angleDelta))
+	var gradients = [];
+	var angles = [];
+	var v = new V2D();
+	var diffTotal = 0;
+	for(var i=0; i<indexes.length; ++i){
+		var j = indexes[i];
+		b.set(red[j],grn[j],blu[j]);
+		var diff = V3D.distance(a,b);
+		diffTotal += diff;
+		diffs.push(diff);
+		v.set(1.0,0.0);
+		var ang = angleDelta*i;
+		angles.push(ang);
+		// angles.push(Code.degrees(ang));
+		v.rotate(ang);
+		gradients.push(v.copy());
+	}
+	// console.log(diffs);
+	var percents = [];
+	for(var i=0; i<diffs.length; ++i){
+		percents[i] = diffs[i]/diffTotal;
+	}
+	console.log(angles);
+	console.log(percents);
+	console.log(gradients);
+	var gradientAverage = Code.averageAngleVector2D(gradients, percents);
+	var angleAverage = Code.averageAngles(angles,percents);
+	// gradientAverage.scale(1.0/indexes.length);
+// console.log(angles,percents);
+	// console.log(gradientAverage);
+	// console.log(angleAverage);
+	console.log("gra ang: "+Code.degrees(V2D.angleDirection(V2D.DIRX,gradientAverage)));
+	console.log("avg ang: "+Code.degrees(angleAverage));
+	Code.printMatlabArray(percents,"d");
+	Code.printMatlabArray(angles,"a");
+
+
+
+
+	// var siz = 10.0;
+	var angle = V2D.angleDirection(V2D.DIRX,gradientAverage);
+
+
+	var angle = angleAverage;
+*/
+
+
+
+
+	var d = new DO();
+				d.graphics().setLine(1.0, 0xFFFF0000);
+				d.graphics().beginPath();
+				d.graphics().moveTo(0,0);
+				d.graphics().lineTo(sca*size*Math.cos(angle), sca*size*Math.sin(angle));
+				d.graphics().strokeLine();
+				d.graphics().endPath();
+	GLOBALSTAGE.addChild(d);
+	// d.matrix().translate(x,y);
+	d.matrix().translate(10*sca + image.width()*0.5*sca, 10*sca + image.height()*0.5*sca );
+
+
+
+
+	// Code.clusterHierarchical1D(diffs);
+
+}
+
+Corners.averageGradient = function(point, imageScales){
+	var size = 3;
+	var matrix = null;
+	var image = imageScales.extractRect(point, 1.0, size,size, matrix);
+	var diffs = [];
+	var red = image.red();
+	var grn = image.grn();
+	var blu = image.blu();
+	var a = new V3D(red[4],grn[4],blu[4]);
+	var b = new V3D();
+	// 0, 45, 90, 135, 180, 225, 270, 315
+	var indexes = [5,2,1,0,3,6,7,8];
+	var angleDelta = Math.PI*2.0/indexes.length;
+console.log(Code.degrees(angleDelta))
+	var gradients = [];
+	var v = new V2D();
+	var diffTotal = 0;
+	for(var i=0; i<indexes.length; ++i){
+		var j = indexes[i];
+		b.set(red[j],grn[j],blu[j]);
+		var diff = V2D.distance(a,b);
+		diffTotal += diff;
+		diffs.push(diff);
+		v.set(1.0,0.0);
+		v.rotate(angleDelta*i);
+		gradients.push(v.copy());
+	}
+	console.log(diffs);
+	var percents = [];
+	for(var i=0; i<diffs.length; ++i){
+		percents[i] = diffs[i]/diffTotal;
+	}
+	console.log(percents);
+	console.log(gradients);
+	var gradientAverage = Code.averageAngleVector2D(gradients, percents);
+	// gradientAverage.scale(1.0/indexes.length);
+	console.log(gradientAverage);
+
+	Code.printMatlabArray(diffs);
+
+
+
+	var alp = 1.0;
+	var sca = 5.0;
+	var img = GLOBALSTAGE.getFloatRGBAsImage(image.red(),image.grn(),image.blu(), image.width(),image.height());
+	var d = new DOImage(img);
+	d.graphics().alpha(alp);
+	d.matrix().translate(0,0);
+	GLOBALSTAGE.addChild(d);
+	// d.matrix().translate(x,y);
+	d.matrix().translate(10,10);
+	d.matrix().scale(sca);
+
+	// var siz = 10.0;
+	var angle = V2D.angleDirection(V2D.DIRX,gradientAverage);
+	var d = new DO();
+				d.graphics().setLine(1.0, 0xFFFF0000);
+				d.graphics().beginPath();
+				d.graphics().moveTo(0,0);
+				d.graphics().lineTo(sca*size*Math.cos(angle), -sca*size*Math.sin(angle));
+				d.graphics().strokeLine();
+				d.graphics().endPath();
+	GLOBALSTAGE.addChild(d);
+	// d.matrix().translate(x,y);
+	d.matrix().translate(10*sca + image.width()*0.5*sca, 10*sca + image.height()*0.5*sca );
+
+
+
+
+}
+
+Corners.prototype.handleImagesLoadShow = function(imageInfo){
+	var imageList = imageInfo.images;
+	var fileList = imageInfo.files;
+	var i, j, k, list = [];
+	var x = 0, y = 0;
+	var images = [];
+	var imageMatrixList = [];
+	for(i=0;i<imageList.length;++i){
+		var file = fileList[i];
+		var img = imageList[i];
+		images[i] = img;
+		var d = new DOImage(img);
+		this._root.addChild(d);
+		// d.graphics().alpha(0.05);
+		// d.graphics().alpha(0.50);
+		d.matrix().translate(x,y);
+
+
+		//
+		var imageSource = images[i];
+		var imageFloat = GLOBALSTAGE.getImageAsFloatRGB(imageSource);
+		var imageMatrix = new ImageMat(imageFloat["width"],imageFloat["height"], imageFloat["red"], imageFloat["grn"], imageFloat["blu"]);
+		imageMatrixList.push(imageMatrix);
+
+		console.log(imageMatrix);
+
+		
+		// var cornersA = R3D.colorGradientFeaturesFromImage(image);
+
+
+		// var corners = R3D.cornerPeaksColorGradient(idealImage, nonMaximalPercent, 0.95); // 0.90-0.99
+		// var alp = 0.75;
+		var alp = 1.0;
+
+
+
+		var corners = R3D.cornersFromColorGradient(imageMatrix, false);
+			corners = corners["value"];
+			ImageMat.normalFloat01(corners);
+
+		// var corners = R3D.cornerScaleScores(imageMatrix.gry(),imageMatrix.width(),imageMatrix.height());
+		// 	corners = corners["value"];
+		// 	ImageMat.normalFloat01(corners);
+		// 	ImageMat.pow(corners, 0.25);
+
+
+
+
+		img = GLOBALSTAGE.getFloatRGBAsImage(corners,corners,corners, imageMatrix.width(),imageMatrix.height());
+		var d = new DOImage(img);
+		d.graphics().alpha(alp);
+		d.matrix().translate(0,0);
+		GLOBALSTAGE.addChild(d);
+		d.matrix().translate(x,y);
+
+	
+
+		x += imageMatrix.width();
+	}
 }
 
 Corners.prototype.handleImagesLoadedBasic = function(imageInfo){
@@ -106,7 +511,6 @@ continue;
 		var nonMaximalPercent = 0.020; // 0.01 - 0.005
 		// var nonRepeatPercent = nonMaximalPercent*.50; // 1.5;
 		// var corners = R3D.pointsCornerMaxima(gry, width, height,  R3D.CORNER_SELECT_REGULAR); // CORNER_SELECT_AVERAGE CORNER_SELECT_RELAXED CORNER_SELECT_RESTRICTED
-		// R3D.pointsCornerMaxima = function(src, width, height, keepPercentScore, nonMaximalPercent){		
 		// var keepPercentScore = 1.0;
 		var cornersA = R3D.pointsCornerMaxima(gry, width, height, keepPercentScore, nonMaximalPercent);
 		// var cornersB = R3D.pointsCornerMaximaRaw(gry, width, height, keepPercentScore, nonMaximalPercent);
@@ -227,8 +631,8 @@ continue;
 				size = size * 0.5;
 				d.graphics().setLine(1.0, color);
 				d.graphics().beginPath();
-				// d.graphics().drawCircle(corner.x, corner.y, size);
-				d.graphics().drawCircle(corner.x, corner.y, 1.0);
+				d.graphics().drawCircle(corner.x, corner.y, size);
+				// d.graphics().drawCircle(corner.x, corner.y, 1.0);
 				d.graphics().moveTo(corner.x, corner.y);
 				d.graphics().lineTo(corner.x + size*Math.cos(angle), corner.y + size*Math.sin(angle));
 				d.graphics().strokeLine();
@@ -241,8 +645,8 @@ continue;
 		x += width;
 	}
 
-// console.log(cornersLists)
-// throw "?"
+console.log(cornersLists)
+throw "?"
 
 	var imageMatrixA = imageMatrixList[0];
 	var imageMatrixB = imageMatrixList[1];

@@ -584,20 +584,13 @@ Stereopsis.View = function(image, camera, data){
 	this._up = null;
 	this._size = null;
 	// init:
-	console.log("NEW VIEW",image,camera,data);
+	// console.log("NEW VIEW",image,camera,data);
 	if(Code.isa(image, V2D)){
-		console.log(image);
-		console.log("SET SIZE");
 		this.size(image);
-		console.log("DONE A");
 	}else{
-		console.log("SET IMAGE");
 		this.image(image);
-		console.log("DONE B");
 	}
-	console.log("add camera");
 	this.camera(camera);
-	console.log("set data");
 	this.data(data);
 }
 Stereopsis.View.prototype._resetCacheItems = function(){
@@ -630,13 +623,10 @@ Stereopsis.View.prototype.pointSpace = function(){
 }
 Stereopsis.View.prototype.sizeFromPercent = function(percent){
 	var size = this.size();
-	console.log("HAVE A SIZE?: "+size);
 	if(size){
-
 		var width = size.x;
 		var height = size.y;
 		var length = Math.sqrt(width*height); // square perimeter
-console.log("length: "+length+" x "+percent);
 		// var length = Math.sqrt(width*width + height*height); // hypotenuse -- bigger
 		return length*percent;
 	}
@@ -754,7 +744,7 @@ Stereopsis.View.prototype.emptyNeighborCellsForViewOld = function(otherView){
 Stereopsis.View.prototype._initCells = function(oldSize){
 	var size = this.size();
 	if(!size){
-		throw "?";
+		throw "no size";
 	}
 	var oldCells = this._cells; // keep for resetting
 	var cells = [];
@@ -765,16 +755,14 @@ if(cellSize==0){
 }
 	var countX = Math.ceil(size.x/cellSize);
 	var countY = Math.ceil(size.y/cellSize);
-console.log(countX,countY);
 	var count = countX*countY;
-console.log("_initCells: "+count);
-if(count>1E9){
-	throw "too many cells?: "+count;
-}
+	if(count>1E9){
+		throw "too many cells?: "+count;
+	}
 	for(var i=0; i<count; ++i){
 		cells.push(new Stereopsis.ViewCell(i));
 	}
-console.log("new cell size ...: "+countX+" | "+countY+" = "+count+"  ("+cellSize+")");
+// console.log("new cell size ...: "+countX+" | "+countY+" = "+count+"  ("+cellSize+")");
 	// neighbors & centers
 	for(var j=0; j<countY; ++j){
 		for(var i=0; i<countX; ++i){
@@ -3865,7 +3853,15 @@ Stereopsis.averageMatrixEstimates = function(matrixes, errors){ // average locat
 // 	// var relAtoB = R3D.relativeTransformMatrix(absA,absB);
 // 	return {"relative":relAtoB, "error":error};
 // }
+Stereopsis.World.prototype.setNegativeZErrors = function(shouldBe){
+	if(shouldBe){
+		this._countNegativeZErrors = 1E9;
+	}else{
+		this._countNegativeZErrors = 0;
+	}
+}
 Stereopsis.World.prototype.bundleAdjustViews = function(viewsChange, viewsConstant, minimumPoints, maxIterations, maximumPoints3D, higherOrderPoints){
+var countNegativeZErrors = Code.valueOrDefault(this._countNegativeZErrors,0);
 	console.log("bundleAdjustViews start ...................................................................");
 	maximumPoints3D = maximumPoints3D!==undefined && maximumPoints3D!==null ? maximumPoints3D : 1000;
 	maxIterations = maxIterations!==undefined && maxIterations!==null ? maxIterations : 50;
@@ -3960,7 +3956,7 @@ Stereopsis.World.prototype.bundleAdjustViews = function(viewsChange, viewsConsta
 	}
 	console.log("bundleAdjustViews end ................................................................... "+totalPointsReferenced);
 
-	var result = R3D.BundleAdjustCameraExtrinsic(Ks,Is,Ps, pairPoints2D, pairPoints3D, maxIterations, K2s,I2s,P2s);
+	var result = R3D.BundleAdjustCameraExtrinsic(Ks,Is,Ps, pairPoints2D, pairPoints3D, maxIterations, K2s,I2s,P2s,  countNegativeZErrors);
 	return result;
 }
 
@@ -5364,6 +5360,7 @@ Code.printMatlabArray(data["errors"]);
 Stereopsis.World.prototype.iteration = function(iterationIndex, maxIterations, data){
 	var isFirst = iterationIndex == 0;
 	var isLast = iterationIndex == maxIterations-1;
+	var maxErrorRetryInit = 5.0;
 	console.log("-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ "+iterationIndex+"/"+maxIterations+" ( "+isFirst+" & "+isLast+" ) ");
 	var world = this;
 	// SUBDIVIDE:
@@ -5402,11 +5399,12 @@ data["errors"].push(error);
 
 	if(iterationIndex==0){
 		shouldRetryInit = true;
-	}else if(transform0.rSigma()>10){ // transform.rMean()+" +/- "+transform.rSigma()
+	}else if(transform0.rSigma()>maxErrorRetryInit){ // transform.rMean()+" +/- "+transform.rSigma()
 		shouldRetryInit = true;
 	}else{
-		shouldPropagate = true;
+		// shouldPropagate = true;
 	}
+	shouldPropagate = true;
 
 console.log("START");
 	if(shouldRetryInit){ // subsequent approximations are always worse than the refined estimates
@@ -5455,8 +5453,8 @@ if(transform0.rSigma()>5){
 	this.patchInitBasicSphere(true);
 
 	// EXPAND
-	if(shouldPropagate){
-		var propagationPercent = 0;
+	// if(shouldPropagate){
+		// var propagationPercent = 0;
 		// if(doRelaxed){
 		// 	propagationPercent = this.probe2DNNAffine(3.0);
 		// }else{
@@ -5467,7 +5465,7 @@ if(transform0.rSigma()>5){
 		// if(propagationPercent<0.05){
 		// 	console.log("can split");
 		// }
-	}
+	// }
 
 	// reassess
 	this.estimate3DErrors(true);
@@ -5710,10 +5708,6 @@ Stereopsis.World.prototype.solveDensePair = function(){ // pairwise
 
 		}
 		// imageHypotenuse /= views.length;
-
-		
-
-
 var errorR = errorPercentage*imageHypotenuse;
 // 
 // console.log("errorR IS IN TERMS OF SEARCHED SIZE -- NOT NECESSARILY THIS SIZE ?");
@@ -5737,21 +5731,11 @@ console.log("GET MATCHES FROM 3D: "+errorR);
 		console.log(transform);
 		var errorPixels = Math.max(errorR,1.0);
 		console.log("ERROR: "+errorR+" | "+errorPixels);
+console.log(images, sizes, relativeAB, Ks, errorPixels)
 		var matches = R3D.searchMatchPoints3D(images, sizes, relativeAB, Ks, errorPixels);
-
-
-		// ??
-
-
 		console.log(matches);
 
-		// find best inlier set?
-
-		// throw away worst matches ?
-
-
-
-throw "before dense world";
+// throw "before dense world";
 
 
 		// insert matching points:
@@ -5798,8 +5782,6 @@ throw "before dense world";
 	
 	} // end transform loop (only should be 1 ... )
 
-// throw ">>>>>C";
-	
 	// var subdivisions = 0; // ~1k
 	// var subdivisions = 1; // ~5k
 	var subdivisions = 2; // ~40k
@@ -5824,6 +5806,26 @@ throw "before dense world";
 		// 	world.relativeFFromSamples(); // update F
 		// 	world.estimate3DErrors(true, false); // update errors using absolute-relative transforms
 		// }
+
+		// if any transforms are really bad -- try re-estimating from scratch:
+		var transforms = this.toTransformArray();
+		var minMatchesTransform = 16;
+		var maxErrorRetry = 5;
+		for(var i=0; i<transforms.length; ++i){
+			var transform = transforms[i];
+			// ...transform
+			shouldRetryInit = transform.rSigma()>maxErrorRetry;
+			if(shouldRetryInit){ // subsequent approximations are always worse than the refined estimates
+				console.log("RETRY INIT");
+				world.estimate3DErrors(false); // find initial F, P, estimate all errors from this
+				world.estimate3DViews(); // find absolute view locations
+				world.averagePoints3DFromMatches(); // find absolute point locations
+			}
+			break;
+		}
+
+
+
 
 		// subdivisions
 		if(iteration!==0 && iteration%iterations==0){
@@ -5924,914 +5926,9 @@ world.refinePoint3DAbsoluteLocation();
 	console.log(str);
 	
 
+throw "before return";
 
-
-return;
-
-	throw "?"
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/*
-	- pick matching A-B with good scores
-	- drop worst R outliers
-*/
-
-	
-
-
-	throw "here"
-console.log("older stuff after here");
-
-	// initial setup
-	var viewSizePercent = 0.05; // 45 -> 23 -> 11 -> 5 (3?)
-	var minViewCellSize = 5;
-
-	var viewGridSizePercent = 0.02;
-
-	var maxFSamples = 500;
-
-
-// var viewGridSizePercent = 0.01;
-	// create seed points:
-	var transforms = this.toTransformArray();
-	var limitsR = [];
-	var limitsF = [];
-	for(var i=0; i<transforms.length; ++i){
-		var transform = transforms[i];
-		transform.copyRelativeFromAbsolute();
-		// world.copyRelativeTransformsFromAbsolute();
-		var viewA = transform.viewA();
-		var viewB = transform.viewB();
-		var relativeAB = transform.R(viewA,viewB);
-		var errorR = transform.rMean() + transform.rSigma();
-		var views = [viewA,viewB];
-		var images = [];
-		var sizes = [];
-		var Ks = [];
-		for(var j=0; j<views.length; ++j){
-			var view = views[j];
-			var K = view.K();
-			var image = view.image();
-			var gridSize = view.sizeFromPercent(viewGridSizePercent);
-			console.log("gridSize: "+gridSize);
-			sizes.push(gridSize);
-			images.push(image);
-			Ks.push(K);
-
-		} //
-
-/*
-
-// TEST SUBPIXEL PEAK:
-
-var imageMatrixA = images[0];
-var imageMatrixB = images[1];
-
-var matrix = new Matrix2D();
-// var a = new V2D(400,500);
-// var b = new V2D(450,500);
-
-// var a = new V2D(400,400);
-// var b = new V2D(450,400);
-
-// var a = new V2D(500,400);
-// var b = new V2D(500,400);
-
-// var a = new V2D(550,380);
-// var b = new V2D(550,400);
-
-
-// var a = new V2D(560,425);
-// var b = new V2D(590,450);
-
-// var a = new V2D(570,470);
-// var b = new V2D(620,500);
-
-// var a = new V2D(650,500);
-// var b = new V2D(700,500);
-
-
-// var a = new V2D(485,380);
-
-// var a = new V2D(570,430);
-// var a = new V2D(500,390);
-// var b = new V2D(520,380);
-// B: V2D {x: 517.4956094823938, y: 384.09953738627837
-
-var a = new V2D(650,520);
-var b = new V2D(600,500);
-
-
-// var a = new V2D(580,450);
-// var b = new V2D(600,500);
-
-var needleZoom = 1.0;
-var needleSize = 21;
-var haystackSize = needleSize*9;
-var pointA = a;
-var pointB = b;
-var needle = imageMatrixA.extractRectFromFloatImage(pointA.x,pointA.y,needleZoom,null,needleSize,needleSize, null);
-var haystack = imageMatrixB.extractRectFromFloatImage(pointB.x,pointB.y,needleZoom,null,haystackSize,haystackSize, null);
-
-
-var scoresNCC = R3D.searchNeedleHaystackNCCColor(needle,haystack); // 0.01
-// var scoresNCC = R3D.searchNeedleHaystackSADColor(needle,haystack); // 0.11 * 10
-console.log(scoresNCC);
-var values = scoresNCC["value"];
-var width = scoresNCC["width"];
-var height = scoresNCC["height"];
-var result = scoresNCC;
-
-var hist = Code.histogram(values, null, 10);
-console.log(hist);
-hist = hist["histogram"];
-var s = Code.printHistogram(hist, 50);
-console.log(s);
-
-// throw "???"
-
-
-// var s = 11;
-// var info = R3D.subpixelHaystack(imageMatrixA,imageMatrixB, a,b, matrix,   s,s+100, 1.0,  true); //
-// console.log(info);
-// var result = info["B"];
-
-
-// var pointA = a;
-// var pointB = b;
-//
-// var needleZoom = 1.0;
-// var affine = null;
-// var needleSize = 21;
-// var haystackSize = needleSize*4;
-// var offsetX = Math.round(pointB.x - haystackSize*0.5);
-// var offsetY = Math.round(pointB.y - haystackSize*0.5);
-// var needle = imageMatrixA.extractRectFromFloatImage(pointA.x,pointA.y,needleZoom,null,needleSize,needleSize, affine);
-//
-// var result = R3D.searchNeedleHaystackSSDColorFull(needle,imageMatrixB, offsetX,offsetY,haystackSize,haystackSize);
-// console.log(result);
-// var values = result["value"];
-// var width = result["width"];
-// var height = result["height"];
-//
-var peak = R3D.subpixelMinimumPeak(result);
-console.log(peak)
-
-var R3DDEBUGC = 0;
-
-// var haystack = imageMatrixB.extractRectFromFloatImage(pointB.x,pointB.y,needleZoom,null,haystackSize,haystackSize, null);
-
-	var iii = needle;
-	var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
-	var d = new DOImage(img);
-	d.matrix().translate(10 + R3DDEBUGC*100, 10);
-	GLOBALSTAGE.addChild(d);
-
-	var iii = haystack;
-	var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
-	var d = new DOImage(img);
-	d.matrix().translate(10 + R3DDEBUGC*100, 10 + 100);
-	GLOBALSTAGE.addChild(d);
-
-	var wid = width;
-	var hei = height;
-	var colors = [0xFF000099, 0xFF0000FF, 0xFFCC00CC, 0xFFFF0000, 0xFF990000, 0xFFFFFFFF];
-	var heat = Code.copyArray(values);
-
-	ImageMat.normalFloat01(heat);
-	// ImageMat.pow(heat,0.5);
-	// ImageMat.pow(heat,2.0);
-	heat = ImageMat.heatImage(heat, wid, hei, true, colors);
-	img = GLOBALSTAGE.getFloatRGBAsImage(heat.red(), heat.grn(), heat.blu(), wid, hei);
-	d = new DOImage(img);
-	d.matrix().translate(10 + R3DDEBUGC*100 + (haystackSize-width)*0.5, 10 + 100 + (haystackSize-height)*0.5 );
-	GLOBALSTAGE.addChild(d);
-	d.graphics().alpha(0.50);
-
-
-	var iii = haystack;
-	var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
-	var d = new DOImage(img);
-	d.matrix().translate(10 + R3DDEBUGC*100, 10 + 300);
-	GLOBALSTAGE.addChild(d);
-	d.graphics().alpha(0.5);
-
-	var iii = needle;
-	var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
-	var d = new DOImage(img);
-	d.matrix().translate(10 + R3DDEBUGC*100 + (haystackSize-needleSize)*0.5 + (peak.x-width*0.5), 10 + 300 + (haystackSize-needleSize)*0.5 + (peak.y-height*0.5));
-	GLOBALSTAGE.addChild(d);
-
-
-	++R3DDEBUGC;
-
-
-
-var info = R3D.subpixelHaystack(imageMatrixA,imageMatrixB, pointA,pointB, affine,  needleSize,haystackSize, 1.0, null);
-	console.log(info);
-
-
-throw "???"
-*/
-
-console.log("R3D.searchMatchPoints3D called");
-
-		// get best matches using R
-		console.log(transform);
-		var errorPixels = Math.max(errorR,1.0);
-		console.log("ERROR: "+errorR+" | "+errorPixels);
-		var matches = R3D.searchMatchPoints3D(images, sizes, relativeAB, Ks, errorR);
-		console.log(matches);
-
-
-
-
-
-throw "...";
-
-
-
-// WHAT IS ALL THIS STUFF ? NECESSARY ANY MORE?
-
-
-
-var KA = Ks[0];
-var KB = Ks[1];
-var KAInv = Matrix.inverse(KA);
-var KBInv = Matrix.inverse(KB);
-var Pidentity = new Matrix(4,4).identity();
-var PA = Pidentity;
-		var pointsA = [];
-		var pointsB = [];
-		for(var m=0; m<matches.length; ++m){
-			var match = matches[m];
-			var pointA = match["pointA"];
-			var pointB = match["pointB"];
-			pointsA.push(pointA);
-			pointsB.push(pointB);
-		}
-		console.log(pointsA);
-		console.log(pointsB);
-
-		var minCountPoints = Math.max( Math.round(pointsA.length * 0.5), 100);
-		var minErrorPixels = 0.25;
-		// drop worst points -- repeatidly
-		// do until: A) percent drops below 50% of original points B) error drops below 0.5 pixels C) max iterations
-		var Fkeep = null;
-		var errorPosition = 5; // high
-		for(var k=0; k<10; ++k){
-
-			// var F = R3D.fundamentalFromUnnormalized(pointsA,pointsB);
-			// var Finv = R3D.fundamentalInverse(F);
-			// var error = R3D.fErrorList(F,Finv,pointsA,pointsB);
-			// console.log(error);
-			// var limit = 0 + error["sigma"]*1.0;
-
-			// TODO: IF POINTSA & POINTSB > 1000 => subsample
-			// var errorPosition = 1 + (4/(k+1)); // 5
-			// errorPosition = 1 + (4/(k+1)); // 5
-			var pOutlier = 0.50;
-			var pDesired = 0.99;
-			var info = R3D.fundamentalRANSACFromPoints(pointsA,pointsB, errorPosition, null, pOutlier, pDesired);
-			console.log(info);
-			var F = info["F"];
-			if(!Fkeep){
-				Fkeep = F;
-			}
-			// R3D.fundamentalRANSACFromPoints = function(pointsAIn,pointsBIn, errorPosition, initialF, pOutlier, pDesired){
-
-			// var F = R3D.fundamentalFromUnnormalized(pointsA,pointsB);
-			var PB = R3D.transformFromFundamental(pointsA,pointsB, F, KA,KAInv,KB,KBInv, PA, true);
-
-			var points3D = [];
-			var errors = [];
-				// var maxRSamples = 500;
-			for(var p=0; p<pointsA.length; ++p){
-				var point2DA = pointsA[p];
-				var point2DB = pointsB[p];
-				var point3D = R3D.triangulatePointDLT(point2DA,point2DB, PA,PB, KAInv, KBInv);
-				points3D[p] = point3D;
-					var error = R3D.reprojectionError(point3D, point2DA,point2DB, PA,PB, KA,KB);
-					error = error["error"];
-					errors.push(error);
-			}
-			// TODO: COMPARE:
-			// if(errors.length>maxRSamples){
-			// 	errors = Code.randomSampleRepeats(errors,maxRSamples);
-			// }
-			// drop worst points
-
-errors.sort();
-
-			var mini = Code.min(errors);
-			var maxi = Code.max(errors);
-			var sigma = Code.stdDev(errors, mini);
-			var halfError = Code.percentile(errors,0.5);
-			var limitS = mini + sigma*2.0; // 1-2
-			var limitL = mini + 2*halfError;
-			var limit = Math.min(limitS,limitL);
-			errorPosition = Math.min(errorPosition, halfError);
-			// low variablity stuff -> 2.0 sigma
-			// high variabaliity -> 1.0 sigma
-			// -> LINEAR DROPPING for high variability
-				limit = Math.min(limit,maxi);
-			console.log(mini+" +/- "+sigma+" = "+limitS+" | "+limitL+" = "+limit+" @ "+points3D.length+" | ERROR: "+errorPosition);
-
-Code.printMatlabArray(errors,"x_"+k);
-// throw "?"
-			// var R = R3D.cameraExtrinsicRANSACFromPoints
-			// R3D.cameraExtrinsicRANSACFromPointsAutomated = function(pointsA,pointsB, Ka,Kb,KaInv,KbInv, Pinitial){
-			if(limit<minErrorPixels){
-				console.log("exit error min");
-				break;
-			}
-			// drop worst
-			var keepA = [];
-			var keepB = [];
-			for(var i=0; i<pointsA.length; ++i){
-				var pointA = pointsA[i];
-				var pointB = pointsB[i];
-				// var error = R3D.fError(F,Finv,pointA,pointB);
-				var point3D = points3D[i];
-				var error = R3D.reprojectionError(point3D, pointA,pointB, PA,PB, KA,KB);
-				error = error["error"];
-				if(error<limit){
-					keepA.push(pointA);
-					keepB.push(pointB);
-				}
-			}
-			if(pointsA.length==keepA.length){
-				console.log("exit no change");
-				break;
-			}
-			if(keepA.length<minCountPoints){
-				console.log("exit min");
-				break;
-			}
-			Fkeep = F;
-			pointsA = keepA;
-			pointsB = keepB;
-		}
-// throw "yup"
-
-
-
-
-
-
-		// var info = R3D.fundamentalFromUnnormalizedMaxCheck(pointsA, pointsB, maxFSamples);
-		// 	var F = info["F"];
-		F = Fkeep;
-
-		var Finv = R3D.fundamentalInverse(F);
-		// dense
-		var imageMatrixA = viewA.image();
-		var imageMatrixB = viewB.image();
-
-		// scaled image:
-		var scale = 0.25; // 0.5 ~ ?
-		var imageA = imageMatrixA.getScaledImage(scale);
-		var imageB = imageMatrixB.getScaledImage(scale);
-		var Ffull = F;
-		F = R3D.fundamentalNormalize(Ffull, Matrix.transform2DScale(Matrix.transform2DIdentity(),1.0/scale,1.0/scale), Matrix.transform2DScale(Matrix.transform2DIdentity(),1.0/scale,1.0/scale));
-
-		// var ptsA = [];
-		// var ptsB = [];
-		for(var i=0; i<pointsA.length; ++i){
-			// ptsA[i] = pointsA[i].copy().scale(scale);
-			// ptsB[i] = pointsB[i].copy().scale(scale);
-			pointsA[i].scale(scale);
-			pointsB[i].scale(scale);
-		}
-		// var result = R3D.stereoHighConfidenceMatches(imageA,imageB, ptsA,ptsB,F);
-		var result = R3D.stereoHighConfidenceMatches(imageA,imageB, pointsA,pointsB,F);
-
-
-throw "HCM"
-
-
-		// to parallel arrays
-		var matches = result;
-		var pointsA = [];
-		var pointsB = [];
-		for(var m=0; m<matches.length; ++m){
-			var match = matches[m];
-			var pointA = match["A"];
-			var pointB = match["B"];
-				pointsA.push(pointA);
-				pointsB.push(pointB);
-		}
-
-		// search for better location iteritively
-		var currentScale = scale;
-		var iA = imageA;
-		var iB = imageB;
-		// var maxScale = 2.0;
-		var maxScale = 1.0;
-
-		while(currentScale<=maxScale){
-			console.log("OPTIMUM: @ "+currentScale+" = "+pointsA.length);
-			// updated approximate F
-			var info = R3D.fundamentalFromUnnormalizedMaxCheck(pointsA, pointsB, maxFSamples);
-				var F = info["F"];
-				var ptsA = info["A"];
-				var ptsB = info["B"];
-				var Finv = R3D.fundamentalInverse(F);
-			// console.log("F: \n"+F);
-			var error = R3D.fErrorList(F,Finv,ptsA,ptsB);
-			console.log(error);
-			var limit = 0 + error["sigma"]*3.0; // 2-3
-error["errors"].sort();
-Code.printMatlabArray(error["errors"]);
-			var percentCheck = 0.75;
-			var percentError = Code.percentile(error["errors"],percentCheck);
-			limit = Math.min(limit,percentError/percentCheck);
-			// drop worst
-			var keepA = [];
-			var keepB = [];
-			for(var i=0; i<pointsA.length; ++i){
-				var pointA = pointsA[i];
-				var pointB = pointsB[i];
-				var error = R3D.fError(F,Finv,pointA,pointB);
-				error = error["error"];
-				if(error<limit){
-					keepA.push(pointA);
-					keepB.push(pointB);
-				}
-			}
-			pointsA = keepA;
-			pointsB = keepB;
-			console.log(" F drop => "+pointsA.length);
-			// ..
-			var result = R3D.optimumLocationRefineTransform(pointsA,pointsB, F, KA,KB,KAInv,KBInv, iA,iB,   false);
-
-			// drop points falling outside window:
-			var keepA = [];
-			var keepB = [];
-			var maxXA = currentScale*imageMatrixA.width();
-			var maxYA = currentScale*imageMatrixA.height();
-			var maxXB = currentScale*imageMatrixB.width();
-			var maxYB = currentScale*imageMatrixB.height();
-			for(var i=0; i<pointsA.length; ++i){
-				var pointA = pointsA[i];
-				var pointB = pointsB[i];
-
-				if( 0<=pointA.x && pointA.x<maxXA && 0<=pointA.y && pointA.y<maxYA &&
-					0<=pointB.x && pointB.x<maxXB && 0<=pointB.y && pointB.y<maxYB ){
-					keepA.push(pointA);
-					keepB.push(pointB);
-				}
-			}
-			pointsA = keepA;
-			pointsB = keepB;
-			console.log(" I drop => "+pointsA.length);
-
-			// NEXT ROUND:
-			var nextScale = currentScale*2.0;
-			if(nextScale>maxScale){
-				break;
-			}
-			currentScale = nextScale;
-			if(currentScale==1.0){
-				iA = imageMatrixA;
-				iB = imageMatrixB;
-				debug = true;
-			}else{
-				iA = imageMatrixA.getScaledImage(currentScale);
-				iB = imageMatrixB.getScaledImage(currentScale);
-			}
-			for(var m=0; m<pointsA.length; ++m){
-				var pointA = pointsA[m];
-				var pointB = pointsB[m];
-				pointA.scale(2.0);
-				pointB.scale(2.0);
-			}
-		}
-
-		if(currentScale!=1.0){
-			var inverse = 1.0/currentScale;
-			for(var m=0; m<pointsA.length; ++m){
-				var pointA = pointsA[m];
-				var pointB = pointsB[m];
-				pointA.scale(inverse);
-				pointB.scale(inverse);
-			}
-		}
-
-		// final F
-		var info = R3D.fundamentalFromUnnormalizedMaxCheck(pointsA, pointsB, maxFSamples);
-		Ffull = info["F"];
-		console.log("F:\n"+Ffull);
-
-
-// TODO: THE WORST OFFENDERS CAN BE DROPPED BEFOREHAND; R-ERROR
-
-
-		for(var m=0; m<pointsA.length; ++m){
-			var pointA = pointsA[m];
-			var pointB = pointsB[m];
-			if(viewA.isPointInside(pointA) && viewB.isPointInside(pointB) ){
-			var affine = null;
-			var match = world.newMatchFromInfo(viewA,pointA,viewB,pointB,affine);
-				// match.estimated3D()
-				// Stereopsis.updateErrorForMatch(match);
-				var point3D = match.point3D();
-				// 	point3D.point( match.estimated3D().copy() );
-				// world.patchInitBasicSphere(true, [point3D]);
-				// world.embedPoint3D(point3D);
-// EMBED WITHOUT INTERSECTIONS:
-			world.connectPoint3D(point3D);
-
-			}
-		}
-	}
-	world.printPoint3DTrackCount();
-
-
-
-
-
-	// world.patchInitBasicSphere(true);
-/*
-
-
-	// get errors
-	world.copyRelativeTransformsFromAbsolute();
-	world.relativeFFromSamples();
-	world.estimate3DErrors(true);
-	world.averagePoints3DFromMatches();
-	world.patchInitBasicSphere(true);
-
-	console.log("Drop worst ...")
-	// drop only inital worst matches
-	world.filterGlobalMatches(false, 0, 2.0,3.0,2.5,2.5, false); // R F N S
-	world.relativeFFromSamples();
-	world.estimate3DErrors(true);
-*/
-
-/*
-world.visualizePatches();
-throw "?"
-*/
-
-
-// world.filterPairwiseSphere3D();
-
-	// throw "?"
-
-	// drop conflicting 3d points:
-	// ...
-
-
-	// ...
-	// world.averagePoints3DFromMatches();
-	// world.patchInitBasicSphere(true);
-
-/*
-	// continue;
-	var points3D = world.toPointArray();
-	for(var p=0; p<points3D.length; ++p){
-		if(!points3D[p].point()){
-			console.log(points3D);
-			console.log(points3D[p]);
-			world.patchInitBasicSphere(true, [points3D[p]]);
-			throw "no point before a";
-		}
-	}
-*/
-	// world.printPoint3DTrackCount();
-	// world.averagePoints3DFromMatches(true);
-
-
-// TESTING
-var views = world.toViewArray();
-for(var i=0; i<views.length; ++i){
-var view = views[i];
-// view.cellSize(43);
-// view.cellSize(33);
-// view.cellSize(21);
-// view.cellSize(11);
-view.cellSize(5);
-}
-
-/*
-	//
-	console.log("removing poor");
-	// incrementing point density:
-	var maxIterations = 0;
-	// var maxIterations = 1; // 45 --- ~1000
-	// var maxIterations = 2; // 23 --- ~2000
-	// var maxIterations = 3; // 11 ~5000
-	// var maxIterations = 4; // 5 ~10,000
-	for(var iteration=0; iteration<maxIterations; ++iteration){
-		console.log("prep --------------------------------------------------------------------------------------------------------- "+iteration+" / "+maxIterations);
-		world.printPoint3DTrackCount();
-		// increase (or start) resolution
-		var views = world.toViewArray();
-		var doneCount = 0;
-		for(var i=0; i<views.length; ++i){
-			var view = views[i];
-			var currentSize = view.cellSize();
-			var size = view.sizeFromPercent(viewSizePercent);
-				size = Math.round(size);
-				size = size%2==0 ? size+1 : size; // odd
-			if(size>=minViewCellSize){
-				console.log("cellsize => "+size);
-				view.cellSize(size);
-			}else{
-				++doneCount;
-			}
-		}
-		if(doneCount==views.length){ // done increasing resolution for all views
-			break;
-		}
-		viewSizePercent = viewSizePercent * 0.5;
-
-		// var subIterations = 1;
-		var subIterations = 3;
-		for(var iter=0; iter<subIterations; ++iter){
-			// refine loosly
-			world.refineCameraAbsoluteOrientation(null, 100);
-			world.copyRelativeTransformsFromAbsolute();
-			world.averagePoints3DFromMatches();
-			world.patchInitBasicSphere(true);
-
-			// get new points
-			world.probe2DPairwise();
-			// update new points
-			world.averagePoints3DFromMatches(true);
-			world.patchInitBasicSphere(true);
-			// world.relativeFFromSamples();
-
-			// drop points
-			// world.filterPatch3D();
-			world.filterPairwiseSphere3D();
-			world.dropNegative3D();
-			// world.filterLocal2D();
-			world.filterLocal3D();
-			world.filterGlobalMatches(false, 0, 2.0,3.0,2.5,2.5, false); // R F N S
-			// world.filterGlobalMatches(false, 0, 1.5,2.0,2.0,2.0, false);
-
-			// update locations from new error
-			world.estimate3DErrors(true);
-			world.averagePoints3DFromMatches();
-			world.patchInitBasicSphere(true);
-		}
-	}
-*/
-
-/*
-	// console.log("out - prep");
-	// world.printPoint3DTrackCount();
-	// world.relativeFFromSamples();
-	// world.estimate3DErrors(true);
-
-	// increase R | F accuracy
-	// var maxIterations = 15;
-	// var maxIterations = 10;
-	var maxIterations = 3;
-	// var maxIterations = 2;
-	// var maxIterations = 1;
-	// var maxIterations = 0;
-	for(var iteration=0; iteration<maxIterations; ++iteration){
-		console.log("refine: ========================================================================================= "+iteration+" / "+maxIterations);
-
-
-
-
-		// // initial estimate:
-		// world.estimate3DErrors(false); // find initial F, P, estimate all errors from this
-		// world.estimate3DViews(); // find absolute view locations
-		// // world.estimate3DErrors(true);
-		// // world.averagePoints3DFromMatches();
-		// // filter
-		// world.dropNegative3D();
-		// world.filterGlobalMatches(false, 0, 2.0,2.0,3.0,3.0, false);
-
-
-// if(iteration==0){
-// 	world.estimate3DErrors(false);
-// 	world.estimate3DViews();
-// 	// ...
-// 	world.averagePoints3DFromMatches();
-// 	world.patchInitBasicSphere(true);
-// }
-
-
-
-		// refine cameras
-		world.estimate3DErrors(true);
-		world.averagePoints3DFromMatches();
-		// ...
-		world.refineCameraAbsoluteOrientation(null, 100);
-		world.copyRelativeTransformsFromAbsolute();
-		world.relativeFFromSamples();
-
-		// refine points
-		world.estimate3DErrors(true);
-		world.averagePoints3DFromMatches();
-		// world.refinePoint3DAbsoluteLocation();
-		world.patchInitBasicSphere(true);
-
-		// add new points
-// world.probe2DPairwise();
-		// world.averagePoints3DFromMatches(true); // only newly added points
-
-		// drop poor tracks
-		world.dropNegative3D();
-		// world.filterLocal3D();
-		world.filterPairwiseSphere3D(3.0);
-		// world.filterGlobalMatches(false, 0, 1.5,2.0,2.0,2.0, false);
-		world.filterGlobalMatches(false, 0, 2.0,2.0,3.0,3.0, false);
-
-		// update
-		// world.averagePoints3DFromMatches();
-		// world.relativeFFromSamples();
-		// world.estimate3DErrors(true);
-
-
-		world.printPoint3DTrackCount();
-	}
-
-
-
-
-	// var maxIterations = 10;
-	// var maxIterations = 5;
-	// var maxIterations = 2;
-	var maxIterations = 3;
-	// var maxIterations = 1;
-	// var maxIterations = 0;
-	for(var iteration=0; iteration<maxIterations; ++iteration){
-		console.log("expand: ========================================================================================= "+iteration+" / "+maxIterations);
-
-		// refine cameras
-		world.estimate3DErrors(true);
-		world.averagePoints3DFromMatches();
-		// ...
-		world.refineCameraAbsoluteOrientation(null, 100);
-		world.copyRelativeTransformsFromAbsolute();
-		world.relativeFFromSamples();
-
-		// refine points
-		world.estimate3DErrors(true);
-		world.averagePoints3DFromMatches();
-		world.refinePoint3DAbsoluteLocation();
-		world.patchInitBasicSphere(true);
-
-		// add new points
-		world.probe2DPairwise();
-		world.averagePoints3DFromMatches(true); // only newly added points
-
-		// drop poor tracks
-		world.dropNegative3D();
-		world.filterPairwiseSphere3D(2.0);
-		world.filterGlobalMatches(false, 0, 2.0,2.0,3.0,3.0, false);
-
-		// update
-		// world.averagePoints3DFromMatches();
-		// world.relativeFFromSamples();
-		// world.estimate3DErrors(true);
-		world.printPoint3DTrackCount();
-	}
-
-
-	var maxIterations = 3;
-	// var maxIterations = 1;
-	// var maxIterations = 0;
-	for(var iteration=0; iteration<maxIterations; ++iteration){
-		console.log("consolidate: ========================================================================================= "+iteration+" / "+maxIterations);
-
-		// refine cameras
-		world.estimate3DErrors(true);
-		world.averagePoints3DFromMatches();
-		// ...
-		world.refineCameraAbsoluteOrientation(null, 100);
-		world.copyRelativeTransformsFromAbsolute();
-		world.relativeFFromSamples();
-
-		// refine points
-		world.estimate3DErrors(true);
-		world.averagePoints3DFromMatches();
-		world.refinePoint3DAbsoluteLocation();
-		world.patchInitBasicSphere(true);
-
-		// add new points
-		world.probe2DPairwise();
-		world.averagePoints3DFromMatches(true); // only newly added points
-
-		// drop poor tracks
-		world.dropNegative3D();
-		world.filterLocal3D();
-		world.filterPairwiseSphere3D(1.0);
-		world.filterGlobalMatches(false, 0, 2.0,2.0,2.0,2.0, false);
-
-		// update
-		// world.averagePoints3DFromMatches();
-		// world.relativeFFromSamples();
-		// world.estimate3DErrors(true);
-		world.printPoint3DTrackCount();
-	}
-
-*/
-
-
-	// var maxIterations = 10;
-	var maxIterations = 5;
-	// var maxIterations = 1;
-	for(var iteration=0; iteration<maxIterations; ++iteration){
-		console.log("all: ========================================================================================= "+iteration+" / "+maxIterations);
-		// ..
-
-		// refine cameras
-		world.estimate3DErrors(true);
-		world.averagePoints3DFromMatches();
-		// ...
-		world.refineCameraAbsoluteOrientation(null, 100);
-		world.copyRelativeTransformsFromAbsolute();
-		world.relativeFFromSamples();
-
-		// refine points
-		world.estimate3DErrors(true);
-		world.averagePoints3DFromMatches();
-		world.refinePoint3DAbsoluteLocation();
-		world.patchInitBasicSphere(true);
-
-		// add new points
-		world.probe2DPairwise();
-		world.averagePoints3DFromMatches(true); // only newly added points
-
-		// drop poor tracks
-		world.dropNegative3D();
-		// world.filterLocal3D(); // ...
-		world.filterPairwiseSphere3D(2.0); // 2-3
-		world.filterGlobalMatches(false, 0, 2.0,2.0,2.0,2.0, false);
-
-		// update
-		// world.averagePoints3DFromMatches();
-		// world.relativeFFromSamples();
-		// world.estimate3DErrors(true);
-		world.printPoint3DTrackCount();
-	}
-
-// final output:
-world.averagePoints3DFromMatches();
-world.refinePoint3DAbsoluteLocation();
-world.patchInitBasicSphere(true);
-
-
-// world.averagePoints3DFromMatches();
-// world.patchInitBasicSphere(true);
-
-
-// throw "..."
-// console.log(world);
-
-// check it out
-var str = world.toYAMLString();
-console.log(str);
-// copy(str);
-
-
-throw "..."
-		/*
-		// main loop:
-		var maxIterations = 1;
-		for(var iteration=0; iteration<maxIterations; ++iteration){
-			// add new points
-			// world.probe3D();
-			// world.refinePoint3DAbsoluteLocation(); // TODO: only update newly added points
-			// TODO: LIMIT TO TOP CORNER POINTS ONLY -- with ~3x3 added locations
-
-			// filter patch inconsistencies
-			console.log("filterPatch3D");
-			world.filterPatch3D();
-
-			// pairs
-			// console.log("filter PAIRS");
-			// world.estimate3DErrors(true);
-			// world.filterGlobalMatches(null,null, 2.0);
-
-			console.log("filter 3D");
-			world.filterGlobalPoints(3.0); // 2 - 3
-
-			// just for printing
-			world.estimate3DErrors(true);
-		}
-		*/
-
+	return;
 }
 Stereopsis.World.prototype.solveFullDenseIterate = function(){ // multiwise BA full scene/group
 	console.log("solveFullDenseIterate");
@@ -12204,7 +11301,7 @@ Stereopsis.World.prototype._resolveIntersectionPatchViewsLoaded = function(point
 
 }
 
-Stereopsis.World.prototype._resolveIntersectionPatchGeometryImplementation = function(point3DA,point3DB){
+Stereopsis.World.prototype._resolveIntersectionPatchGeometryImplementation = function(point3DA,point3DB){ // ???
 	var world = this;
 	// console.log("_resolveIntersectionPatchGeometryImplementation");
 	// remove
@@ -12248,17 +11345,28 @@ Stereopsis.World.prototype._resolveIntersectionPatchGeometryImplementation = fun
 	}
 	if(separateA==0){
 		if(separateB==0){
-			console.log("keep A");
+			// console.log("keep A");
+			world.killPoint3D(point3DB);
+			return world.embedPoint3D(point3DA);
+
 		}else{ // 
-			console.log("keep all of A & separate B points up?");
+			// console.log("keep all of A & separate B points up?");
 		}
+		world.killPoint3D(point3DA);
+		return world.embedPoint3D(point3DB);
 		throw "subsumed by B";
 	}
 	if(separateB==0){
-		console.log("keep A");
+		// console.log("keep A");
+			world.killPoint3D(point3DB);
+		return world.embedPoint3D(point3DA);
 		throw "subsumed by A";
 	}
-	if(overlapAB.length>1){
+	if(false && overlapAB.length>1){ // TODO: FIND BEST VIEW TO USE
+		console.log(".................")
+		console.log(separateA);
+		console.log(separateB);
+		console.log(overlapAB);
 		throw "find 'closest' intersection view";
 		// get lowest-distance intersection view
 	}
@@ -14283,7 +13391,7 @@ console.log("SCALE THIS?")
 			object["transforms"] = objectTransforms;
 		}
 	}
-
+	object["points"] = null; // if not present
 	if(points3D && points3D.length>0){
 		console.log("PRINT OUT THE ERROR IN RELATIVE AND ABSOLUTE LOCATION, HOW FAR ARE THE INDIVIDUAL / AVERAGES OFF FOR EACH TRANSFORM PAIR ?");
 		console.log("max match types "+R3D.BA.maxiumMatchesFromViewCount(totalViewCount) );

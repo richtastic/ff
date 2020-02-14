@@ -7587,7 +7587,7 @@ throw "start dense";
 // throw "iterate dense";
 	if(!project.checkHasDenseEnded()){
 		project.iterateDenseProcess();
-		throw "iterate dense ?";
+		return;
 	}
 
 
@@ -7664,11 +7664,7 @@ App3DR.ProjectManager.prototype.checkHasDenseEnded = function(){
 
 App3DR.ProjectManager.prototype.iterateSparseProcess = function(){
 	var project = this;
-
 	var sparseConfiguration = {};
-		sparseConfiguration["what"] = "what";
-
-	// LOAD SPARSE FILE
 	var filename = this.sparseFilename();
 	var fxn = function(){
 		project._iterateSparseDenseLoaded(filename, project.sparseData(), sparseConfiguration);
@@ -7679,11 +7675,7 @@ App3DR.ProjectManager.prototype.iterateSparseProcess = function(){
 
 App3DR.ProjectManager.prototype.iterateDenseProcess = function(){
 	var project = this;
-
 	var denseConfiguration = {};
-		denseConfiguration["what"] = "what";
-	// LOAD SPARSE FILE
-throw "NEED TO DIFFERENTIATE SPARSE & DENSE FILE SAVING LOCATIONS ..."
 	var filename = this.denseFilename();
 	var fxn = function(){
 		project._iterateSparseDenseLoaded(filename, project.denseData(), denseConfiguration);
@@ -7693,21 +7685,24 @@ throw "NEED TO DIFFERENTIATE SPARSE & DENSE FILE SAVING LOCATIONS ..."
 
 App3DR.ProjectManager.prototype._iterateSparseDenseLoaded = function(inputFilename, inputData, configuration){
 	var project = this;
-	console.log("_iterateSparseLoaded");
+	console.log("_iterateSparseDenseLoaded");
 	var pairs = inputData["pairs"];
-
 	var basePath = Code.pathRemoveLastComponent(inputFilename);
 	console.log(basePath);
+	console.log(inputData);
+	// console.log(basePath);
 
 
 	if(!pairs){
 		throw "input data not have pairs";
 	}
 
+// throw "S/D";
 
 	var currentPair = null;
 	var completePairFxn = function(data){
 		console.log("completePairFxn");
+		throw "completePairFxn";
 		var idA = currentPair["A"];
 		var idB = currentPair["B"];
 		var uniqueStrings = [idA,idB];
@@ -7818,11 +7813,11 @@ poor = camera positions are generally correct, ~50% of scene is mapped correctly
 bad = cameras are wrong or accidentally correct, <50% of scene is mapped
 */
  // good | ok | poor | bad
-// console.log("pair count: "+pairs.length+" ............");
+console.log("pair count: "+pairs.length+" ............");
 	for(var i=0; i<pairs.length; ++i){
 // i = 0; // good
 // i = 1; // ok
-// i = 2; // poor
+i = 2; // poor
 // i = 3; // poor
 // i = 4; // good
 // i = 5; // poor
@@ -7831,7 +7826,7 @@ bad = cameras are wrong or accidentally correct, <50% of scene is mapped
 // i = 8; // ok
 // i = 9; // bad
 // i = 10; // bad
-// console.log("PICKED");
+console.log("PICKED: "+i);
 		var pair = pairs[i];
 		var idA = pair["A"];
 		var idB = pair["B"];
@@ -7844,7 +7839,6 @@ bad = cameras are wrong or accidentally correct, <50% of scene is mapped
 			// dense = with R
 			if(relativeAB){
 				project.calculatePairMatchWithRFromViewIDs(idA,idB, relativeAB, completePairFxn,project, configuration);
-
 				return;
 			}
 			// sparse = w/o known R
@@ -7852,7 +7846,7 @@ bad = cameras are wrong or accidentally correct, <50% of scene is mapped
 			return;
 		}
 	}
-// throw ">triples";
+throw ">triples";
 	var triples = inputData["triples"];
 	if(!triples){
 		// make every possible triple from pairs
@@ -8242,7 +8236,9 @@ App3DR.ProjectManager.prototype._iterateSparseTracks = function(sourceData, sour
 					baIterations = Code.valueOrDefault(baIterations, 0);
 
 				var minimumPixelErrorBA = 0.001; // 1/1000
-				var maxIterationsBA = 10*allViews.length;
+				// var maxIterationsBA = 10*allViews.length;
+				// var maxIterationsBA = 2*allViews.length;
+				var maxIterationsBA = 1*allViews.length;
 
 
 				// if the next error is very low, or max iterations reached => done
@@ -8262,6 +8258,7 @@ App3DR.ProjectManager.prototype._iterateSparseTracks = function(sourceData, sour
 
 				// isDone = true;
 				if(isDone){ // BA is done -> find best putatives for dense
+console.log("isDone - FULL DONE")
 					var allTransforms = fullData["transforms"];
 					var info = App3DR.ProjectManager._putativePairsFromViewsAndTransforms(allViews,allTransforms);
 					console.log(allViews,allTransforms);
@@ -8300,12 +8297,7 @@ App3DR.ProjectManager.prototype._iterateSparseTracks = function(sourceData, sour
 					// }
 
 					console.log(putatives);
-
-// ???
-					// save to graph?:
-					// graphData["putativePairs"];
-
-					// save these putatives to sparse.yaml ?
+					// save these putatives to sparse.yaml
 					sourceData["putativePairs"] = putatives;
 
 					console.log(sourceData);
@@ -8328,7 +8320,7 @@ App3DR.ProjectManager.prototype._iterateSparseTracks = function(sourceData, sour
 						console.log("saved project");
 					}
 
-				// throw "before saving";
+				throw "before saving full bundle done";
 
 					project.saveFileFromData(sourceData, sourceFilename, savedDataComplete, project);
 					return;
@@ -8434,7 +8426,6 @@ App3DR.ProjectManager.prototype._iterateSparseTracks = function(sourceData, sour
 			var fullData = null;
 			var pairData = null;
 console.log("fullBundlePath: "+fullBundlePath);
-throw "?"
 			var checkReadyRunWorld = function(){
 				if(!(fullData && pairData)){
 					return;
@@ -8460,13 +8451,20 @@ throw "?"
 				// 
 
 				world.copyRelativeTransformsFromAbsolute();
+				// TODO: RESPLVE BY GEOMETRY AGAIN
+				// world.resolveIntersectionByPatchGeometry();
 				world.resolveIntersectionByPatchGeometry();
+
+// 
+
 
 				// existing
 				var points3DExisting = App3DR.ProjectManager._worldPointFromSaves(world, fullPoints, WORLDVIEWSLOOKUP);
 				console.log(points3DExisting);
 				world.patchInitBasicSphere(true,points3DExisting);
 				world.embedPoints3DNoValidation(points3DExisting);
+
+//  world.estimate3DErrors(true);
 
 				// new
 				var points3DAdditional = App3DR.ProjectManager._worldPointFromSaves(world, pairPoints, WORLDVIEWSLOOKUP);
@@ -8648,9 +8646,10 @@ throw "before saving initial bundle full";
 		if(graphGroups.length==loadGroupIndex){
 			console.log(bundleGroupIndex);
 			var graphGroup = graphGroups[bundleGroupIndex];
-			console.log("graphGroup");
+			console.log("graphGroup A");
 			console.log(graphGroup);
 			var trackFilename = graphGroup["filename"];
+			console.log("trackFilename: "+trackFilename);
 			var fullTrackPath = Code.appendToPath(basePath,"tracks",trackFilename);
 			// load the track
 			var baTrackFileLoadComplete = function(data){
@@ -8682,8 +8681,9 @@ throw "before saving initial bundle full";
 				var baIterations = data["iteration"];
 					baIterations = Code.valueOrDefault(baIterations, 0);
 				var baOptimizations = App3DR.ProjectManager._BAPairsDefaultOrSorted(baViews, data);
-				var minimumPixelErrorBA = 0.001; // 1/1000
-				var maxIterationsBA = 10*baViews.length;
+				var minimumPixelErrorBA = 0.001; // 1/1000 -- TODO: different for SPARSE/DENSE
+				// var maxIterationsBA = 10*baViews.length;
+				var maxIterationsBA = 2*baViews.length;
 
 				// if(!baOptimizations){
 				// 	baOptimizations = [];
@@ -8741,10 +8741,13 @@ throw "before saving initial bundle full";
 					isDone = true;
 				}
 
+				if(baPoints==null || baViews==null || baViews.length==1){
+					console.log("can't BA no points / pairs");
+					isDone = true;
+				}
+
 				if(isDone){
 console.log("isDone ?: "+isDone);
-// console.log(baOptimizations)
-// throw "???"
 					graphData["bundleGroupIndex"] = bundleGroupIndex + 1;
 
 					var graphTransforms = [];
@@ -8775,6 +8778,8 @@ console.log(graphData);
 					return;
 				}
 console.log("isDone --- no");
+				
+
 				var cameras = project.cameras(); // should this come from the graph ?
 				// var info = project.fillInWorldViews(world, cameras, graphGroupViews, graphDataViews);
 				var info = project.fillInWorldViews(cameras, baViews);
@@ -8847,7 +8852,8 @@ console.log("isDone --- no");
 		}else if(loadGroupIndex>graphGroups.length){
 			throw " more than ?"
 		}
-// throw "E"
+		// 
+		console.log("here for what reason?")
 		var graphGroup = graphGroups[loadGroupIndex];
 		console.log("graphGroup");
 		console.log(graphGroup);
@@ -8874,11 +8880,11 @@ console.log("isDone --- no");
 				//    load 'previous' pair images
 				//    load missed pair images
 			}else{
-				if(graphGroupEdges.length==0){
-					throw "no graph edges .. need to save an empty track file anyway ?"
-				}
-				if(loadPairIndex>=graphGroupEdges.length){ // all pairs loaded into track for this group
-throw "INSIDE A"
+				// if(graphGroupEdges.length==0){
+				// 	throw "no graph edges .. need to save an empty track file anyway ?"
+				// }
+				if(graphGroupEdges.length!==0 && loadPairIndex>=graphGroupEdges.length){ // all pairs loaded into track for this group
+// throw "INSIDE A"
 					console.log("done all pairs for group: "+loadGroupIndex);
 					graphData["loadPairIndex"] = -1;
 					graphData["loadGroupIndex"] = loadGroupIndex + 1;
@@ -8889,57 +8895,61 @@ throw "INSIDE A"
 					console.log("GRAPH");
 					project.saveFileFromData(graphData, graphFile, savedGraphComplete);
 					// save 
-					
 					return;
+				} // else there are more to load
+// throw "INSIDE B"
+				console.log("graphGroupEdges");
+				console.log(graphGroupEdges);
+				if(graphGroupEdges.length==0){
+					console.log("no edges -- skeleton w/o edges?");
+					loadViews = [];
+					loadPairs = [];
+					// loadPairIndex = -1;
+					// loadGroupIndex = loadGroupIndex + 1;
 				}else{
-throw "INSIDE B"
-					console.log("graphGroupEdges");
-					console.log(graphGroupEdges);
-					// if(graphGroupEdges.length==0){
-					// 	console.log("no edges -- skeleton w/o edges?")
-					// }else{
 
-						var edge = graphGroupEdges[loadPairIndex];
-						var viewAID = edge["A"];
-						var viewBID = edge["B"];
+					var edge = graphGroupEdges[loadPairIndex];
+					var viewAID = edge["A"];
+					var viewBID = edge["B"];
 
-						loadPairs.push([viewAID,viewBID]);
-						// graphGroupEdges
-						var bestNextViews = bestNextViewsForViews([viewAID,viewBID], graphGroupEdges, null);
-							loadViews = {};
-							loadViews[viewAID] = 1;
-							loadViews[viewBID] = 1;
-						var loadCount = 2;
-						var index = 0;
-						var maxIterations = 100; // 
-						for(var iter=0; iter<maxIterations; ++iter){
-							var checked = false;
-							for(var i=0; i<bestNextViews.length; ++i){
-								var list = bestNextViews[i];
-								if(list.length>index){
-									checked = true;
-									var v = list[index];
-									if(!loadViews[v]){
-										loadViews[v] = 1;
-										// added = true;
-										++loadCount;
-									}
-								}
-								if(loadCount>=maximumImagesLoad){
-									break;
+					loadPairs.push([viewAID,viewBID]);
+					// graphGroupEdges
+					var bestNextViews = bestNextViewsForViews([viewAID,viewBID], graphGroupEdges, null);
+						loadViews = {};
+						loadViews[viewAID] = 1;
+						loadViews[viewBID] = 1;
+					var loadCount = 2;
+					var index = 0;
+					var maxIterations = 100; // 
+					for(var iter=0; iter<maxIterations; ++iter){
+						var checked = false;
+						for(var i=0; i<bestNextViews.length; ++i){
+							var list = bestNextViews[i];
+							if(list.length>index){
+								checked = true;
+								var v = list[index];
+								if(!loadViews[v]){
+									loadViews[v] = 1;
+									// added = true;
+									++loadCount;
 								}
 							}
-							index++;
-							if(!checked || loadCount>=maximumImagesLoad){
+							if(loadCount>=maximumImagesLoad){
 								break;
 							}
 						}
-						loadViews = Code.keys(loadViews);
-						console.log(loadViews);
-					// }
+						index++;
+						if(!checked || loadCount>=maximumImagesLoad){
+							break;
+						}
+					}
+					loadViews = Code.keys(loadViews);
+					console.log(loadViews);
 				}
+			
 			}
-throw "... loading?";
+			console.log(graphGroupEdges.length);
+// throw "... loading?";
 			// don't care about images for the moment:
 			loadViews = [];
 			console.log(loadViews);
@@ -9043,7 +9053,7 @@ throw "... loading?";
 					var cellCount = 40;
 					cellSizes.push(R3D.cellSizingRoundWithDimensions(wid,hei,cellCount, false));
 				}
-throw "???"
+// throw "make world"
 				// fill world in
 				var world = new Stereopsis.World();
 				var WORLDCAMS = App3DR.ProjectManager.addCamerasToWorld(world, cameras);
@@ -9077,7 +9087,7 @@ throw "???"
 				console.log(existingPoints);
 				console.log(loadPairs);
 				console.log("embed points ?");
-throw "???"
+// throw "EMBED"
 				//project._embedTrackPoints(world, existingPoints, worldViewLookup);
 				var additionalPoints = [];
 				for(var i=0; i<loadPairs.length; ++i){
@@ -9119,6 +9129,11 @@ throw "???"
 				// mote to next track
 				console.log("save graph file");
 				graphData["loadPairIndex"] = loadPairIndex + 1;
+if(graphGroupEdges.length==0){
+console.log("no edges -- skeleton w/o edges? => force to next");
+graphData["loadGroupIndex"] = graphData["loadGroupIndex"] + 1;
+graphData["loadPairIndex"] = -1;
+}
 				console.log(graphData);
 
 
@@ -9132,7 +9147,7 @@ throw "???"
 				console.log(trackData);
 				console.log(fullTrackPath);
 				console.log(fullGraphPath);
-throw "before save tracks???+ "+trackFilename;
+// throw "before save tracks???+ "+trackFilename;
 				var savedTrackComplete = function(){
 					console.log("savedTrackComplete: "+trackFilename);
 				}
@@ -9149,11 +9164,16 @@ throw "before save tracks???+ "+trackFilename;
 			}
 
 
-throw "what ?"
 
+			if(loadViews.length==0 && loadPairs.length==0){
+				// skip to next too
+				// loadPairIndex = ???
+				loadedReadyCheck();
+			}
+
+			return; // end loading pairs/views for tracks
 		} // done track data loaded
-// throw "F";
-console.log("WHAT?");
+console.log("load the track file: "+fullTrackPath);
 		var currentTrackFileLoadComplete = function(d){
 			console.log("currentTrackFileLoadComplete");
 			console.log(d);
@@ -9161,8 +9181,8 @@ console.log("WHAT?");
 			fxnGroupTrackLoaded();
 		}
 		if(!trackData){
-			console.log(trackData);
-			throw "no trackData";
+			// console.log(trackData);
+			// throw "no trackData";
 			project.loadDataFromFile(fullTrackPath, currentTrackFileLoadComplete);
 			// throw "need to load trackData";
 		}else{
@@ -9470,7 +9490,6 @@ console.log(relativeAB);
 		// build world
 		var info = project.fillInWorldAll(allViews, cellSize);
 		console.log(info);
-throw "solve?"
 		//
 		var WORLDCAMS = info["cameras"];
 		var WORLDVIEWS = info["views"];
@@ -9478,6 +9497,9 @@ throw "solve?"
 		var world = info["world"];
 		console.log("solveDensePair");
 		world.solveDensePair();
+
+
+		throw "now what?"
 		
 	}
 

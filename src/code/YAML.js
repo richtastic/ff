@@ -534,7 +534,7 @@ YAML.prototype._writeUnknownLiteral = function(key,val, startObject){
 		}else{
 			this.writeBoolean(val);
 		}
-	}else if(Code.isNull(val)){
+	}else if(Code.isNull(val) || Code.isUndefined(val)){
 		if(key){
 			this.writeNull(key);
 		}else{
