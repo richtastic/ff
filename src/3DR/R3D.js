@@ -13950,7 +13950,6 @@ R3D.imageCornersDifferential = function(image){
 
 
 	var angles = Code.newArrayZeros(pixels);
-
 	var scores = Code.newArrayZeros(pixels);
 	for(var y=half; y<hmh; ++y){
 		for(var x=half; x<wmh; ++x){
@@ -14075,6 +14074,229 @@ GLOBALSTAGE.addChild(d);
 	throw "?";
 	return {};
 }
+
+
+R3D.imageCornerDifferentialSingle = function(imageScales, point){
+	var size = 3;
+	// var indexes = [5,2,1,0,3,6,7,8];
+	var indexes = [5,8,7,6,3,0,1,2];
+	var half = (size*0.5 | 0);
+	var centerIndex = half*size + half;
+
+	var scale = 1.0;
+	var matrix = null;
+		matrix = new Matrix2D();
+		matrix.identity();
+		// matrix.rotate(Code.radians(45));
+		// matrix.rotate(Code.radians(90));
+		// matrix.rotate(Code.radians(120));
+		// matrix.rotate(Code.radians(170));
+		// matrix.rotate(Code.radians(-45));
+	var image = imageScales.extractRect(point, scale, size,size, matrix);
+
+	
+	var red = image.red();
+	var grn = image.grn();
+	var blu = image.blu();
+	var a = new V3D(red[centerIndex],grn[centerIndex],blu[centerIndex]);
+	var b = new V3D();
+	var v = new V2D();
+	// var index = 0;
+	// for(var i=0; i<pixels; ++i){
+	var com = new V2D();
+	var diffTotal = 0;
+	var diffs = [];
+	for(var ind=0; ind<indexes.length; ++ind){
+		var index = indexes[ind];
+		if(index==centerIndex){
+			continue;
+		}
+		var i = index%size;
+		var j = (index/size) | 0;
+		b.set(red[index],grn[index],blu[index]);
+		var diff = V3D.distance(a,b);
+		v.set(i-half,j-half);
+// console.log(v+"");
+		v.length(diff);
+		com.add(v);
+		diffs[ind] = diff;
+		diffTotal += diff;
+	}
+	// com.scale(1.0/diffTotal);
+	console.log("com: "+com);
+	var angle = V2D.angleDirection(V2D.DIRX,com);
+		angle = Code.angleZeroTwoPi(angle);
+	console.log("angle: "+Code.degrees(angle));
+	var oppositeAngle = angle + Math.PI;
+		oppositeAngle = Code.angleZeroTwoPi(oppositeAngle);
+	var oppositeIndex = (indexes.length+1)*oppositeAngle/(2*Math.PI);
+
+	console.log("MIN INDEX ~"+oppositeIndex);
+
+
+	Code.printMatlabArray(diffs,"x");
+
+	var info = Code.infoArray(diffs);
+
+	console.log(info);
+
+
+	var min = info["min"];
+	var max = info["max"];
+	var ran = info["range"];
+	var mid = min + ran*0.5;
+	var avg = info["mean"];
+
+	console.log(min,mid,avg,max);
+	var searchValue = avg*0.5;
+	// var searchValue = avg*0.25;
+	// var searchValue = avg*0.01;
+	// var searchValue = avg;
+
+
+	// find left & right crossing starting at oppositeIndex
+	var info = R3D.crossingDual1DCircular(diffs,oppositeIndex,searchValue);
+	console.log(info);
+
+	var narrowness = info["size"];
+	var indexA = info["left"];
+	var indexB = info["right"];
+	
+	var angleA = 2*Math.PI*(indexA/(indexes.length+1));
+	var angleB = 2*Math.PI*(indexB/(indexes.length+1));
+		angleA = Code.angleZeroTwoPi(angleA);
+		angleB = Code.angleZeroTwoPi(angleB);
+	var angleC = Code.averageAngles([angleA,angleB]);
+	// var angleC = Code.averageAngles([angleB,angleA]);
+
+console.log("ANGLES: "+Code.degrees(angleA)+" => "+Code.degrees(angleB)+" = "+Code.degrees(angleC));
+
+// if A & B are over 180 -> will average smaller angle
+
+
+
+	// display image
+	var dCenter = new V2D(100,100);
+	var dScale = 11.0;
+	var img = GLOBALSTAGE.getFloatRGBAsImage(image.red(),image.grn(),image.blu(), image.width(),image.height());
+	var d = new DOImage(img);
+	d.matrix().scale(dScale);
+	d.matrix().translate(-size*dScale*0.5,-size*dScale*0.5);
+	d.matrix().translate(dCenter.x,dCenter.y);
+	GLOBALSTAGE.addChild(d);
+
+	// display direction
+	var dAngle = angle;
+	var d = new DO();
+		d.graphics().setLine(2.0, 0xFFFF0000);
+		d.graphics().beginPath();
+		d.graphics().moveTo(0,0);
+		d.graphics().lineTo(dScale*size*Math.cos(dAngle)*2, dScale*size*Math.sin(dAngle)*2);
+		d.graphics().strokeLine();
+		d.graphics().endPath();
+	d.matrix().translate(dCenter.x,dCenter.y);
+	GLOBALSTAGE.addChild(d);
+	// d.matrix().translate(10*sca + image.width()*0.5*sca, 10*sca + image.height()*0.5*sca );
+
+
+	
+
+
+	// display deltas
+	var d = new DO();
+		d.graphics().setLine(2.0, 0xFF0000FF);
+		d.graphics().beginPath();
+		d.graphics().arc(0,0, size*dScale, angleA,angleB,false);
+		d.graphics().strokeLine();
+		d.graphics().endPath();
+	d.matrix().translate(dCenter.x,dCenter.y);
+	GLOBALSTAGE.addChild(d);
+
+
+	// display 
+	var dAngle = angleC;
+	var d = new DO();
+		d.graphics().setLine(2.0, 0xFF00CC00);
+		d.graphics().beginPath();
+		d.graphics().moveTo(0,0);
+		d.graphics().lineTo(dScale*size*Math.cos(dAngle)*2, dScale*size*Math.sin(dAngle)*2);
+		d.graphics().strokeLine();
+		d.graphics().endPath();
+	d.matrix().translate(dCenter.x,dCenter.y);
+	GLOBALSTAGE.addChild(d);
+	
+
+	
+
+	// display narrowness
+
+	// display corner middle
+
+
+
+	
+	throw "?";
+	return {};
+
+}
+R3D.crossingDual1DCircular = function(values,indexCenter,crossing){
+	var count = values.length;
+	// from left:
+	var floor = Math.floor(indexCenter);
+	var ceil = Math.ceil(indexCenter);
+	var round = Math.round(indexCenter);
+
+	console.log(indexCenter+" -> "+round)
+	// right
+	var minimumIndex = round;
+	var minimumValue = values[minimumIndex];
+	var rightSize = 0;
+	var rightIndex = null;
+	for(var i=0; i<count; ++i){
+		var indexA = (round + i) % count;
+		var indexB = (round + i + 1) % count;
+		var valueA = values[indexA];
+		var valueB = values[indexB];
+		if(valueA<minimumValue){
+			minimumIndex = indexA;
+			minimumValue = valueA;
+		}
+		// console.log(valueA,valueB,crossing)
+		if((valueA<crossing && valueB>=crossing) || (valueB<crossing && valueA>=crossing)){
+			var pB = (crossing-valueA)/(valueB-valueA);
+			console.log(indexA,indexB);
+			rightIndex = indexA + pB;
+			rightSize += pB;
+			break;
+		}
+		++rightSize;
+	}
+	// left
+	var leftSize = 0;
+	var leftIndex = null;
+	for(var i=0; i<count; ++i){
+		var indexA = (count + round - i) % count;
+		var indexB = (count + round - i - 1) % count;
+		var valueA = values[indexA];
+		var valueB = values[indexB];
+		// console.log(valueA,valueB,crossing)
+		if(valueA<minimumValue){
+			minimumIndex = indexA;
+			minimumValue = valueA;
+		}
+		if((valueA<crossing && valueB>=crossing) || (valueB<crossing && valueA>=crossing)){
+			var pB = (crossing-valueA)/(valueB-valueA);
+			console.log(indexA,indexB);
+			leftIndex = indexA - pB;
+			leftSize += pB;
+			break;
+		}
+		++leftSize;
+	}
+	var size = leftSize + rightSize;
+	return {"left":leftIndex, "right":rightIndex, "size":size, "center":indexCenter, "minValue":minimumValue, "minIndex":minimumIndex};
+}
+
 R3D.ANMS = function(image, features, maxCount, supression){ // adaptive nonmaximal supression
 	var hyp = (Math.pow(image.width(),2) + Math.pow(image.height(),2));
 	supression = (supression!==undefined && supression!==null) ? supression : 0.95;

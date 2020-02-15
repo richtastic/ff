@@ -101,19 +101,22 @@ Corners.prototype.handleImagesLoadExperiment = function(imageInfo){
 		// var point = new V2D(287,157);
 
 
-// var point = new V2D(90,188);
-var point = new V2D(90,189);
+// var point = new V2D(90,188); // slit
+// var point = new V2D(90,189);
 
 
 	// var point = new V2D(202,225);
 
-	// var point = new V2D(304,304);
-	// var point = new V2D(306,304);
+	// var point = new V2D(304,304); // corner
+	// var point = new V2D(206,104);
+
+	// var point = new V2D(249,200);
+	var point = new V2D(251,200);
 
 
 
 // random:
-var point = new V2D(230,220);
+// var point = new V2D(230,220);
 
 
 	var gry = imageMatrix.gry();
@@ -122,6 +125,12 @@ var point = new V2D(230,220);
 	var keepPercentScore = 0.999;
 	var nonMaximalPercent = 0.01;
 
+
+
+	var info = R3D.imageCornerDifferentialSingle(imageScales, point);
+	console.log(info);
+
+	throw "?"
 
 	var peak = R3D.imageCornerPeakDifferential(imageScales, point);
 	console.log(peak);

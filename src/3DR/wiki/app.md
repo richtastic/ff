@@ -403,7 +403,7 @@ refinement - dates
 		- projecting known 3D points
 		- projecting unknown corners?
 02/24 - triangulation algorithm updates
-03/02 - texture-triangle-edge problems -- rendering on device shows lines at the edges of triangles -- should be smooth
+03/02 - texture-triangle-edge problems -- rendering on device shows lines at the edges of triangles -- should be smooth -- DIALATION of texture after it's created (post process requires map)
 03/09 - test new set of 10 ~ 20 images
 
 ? - BA identify/remove view if it's position is very bad????
@@ -424,7 +424,10 @@ corner flow --- try to find 'peaks' & most stable points (edges are highly diffe
 	- average of neighbors (weighted)?
 	-> is there a way to make despite which side of the corner it's on => be consistent direction (not 180?)
 
-
+- corner metric:
+- the further away a 'similar' color is, the worse the score
+- opposite: the closer away a different color is, the worse the score
+	=> are these both necessary?
 
 
 corner find 'narrowness' / angle:
