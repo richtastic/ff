@@ -414,8 +414,37 @@ refinement - dates
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+- optimum scales are also very wrong [corner score peak]
+	- COM confidence
+	- similar corner narrowness [1/sigma]
+	- different corner wideness [sigma]
+		=> ratio seems to be bad/wrong
+
+
+R3D.differentialOptimumCornerScale
+
+
+
+
+
+
+
+
+- test COM corner direction for features & compare
+	- 5x5 vs 3x3 ?
+
+
+- get some corner-peak score method to find best
+	- 5x5 (circle mask) vs 3x3 
+
+
+...
+
+
 resolveIntersectionPatchGeometry
 resolveIntersectionPatchGeometryImplementation
+
+
 
 
 
@@ -430,10 +459,10 @@ corner flow --- try to find 'peaks' & most stable points (edges are highly diffe
 	=> are these both necessary?
 
 
-corner find 'narrowness' / angle:
+x corner find 'narrowness' / angle:
 	with com known (angle) interpolate from left & right to get location where value becomes:
-	1/2 of range
-	interrior width distance is metric of wideness of angle
+	1/2 of range / median
+	interior width distance is metric of wideness of angle
 
 
 

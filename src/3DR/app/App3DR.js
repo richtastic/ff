@@ -9609,6 +9609,18 @@ GLOBALDISPLAY = GLOBALSTAGE;
 		console.log("A: "+featuresA.length+" | "+featuresB.length)
 		featuresA = R3D.denormalizeSIFTObjects(featuresA, imageAWidth, imageAHeight);
 		featuresB = R3D.denormalizeSIFTObjects(featuresB, imageBWidth, imageBHeight);
+
+
+// make new features from scratch ...
+featuresA = R3D.differentialFeaturesFromImage(imageMatrixA);
+featuresB = R3D.differentialFeaturesFromImage(imageMatrixB);
+console.log(featuresA);
+console.log(featuresB);
+
+throw "?"
+
+
+
 				// MAKE WORLD FROM START POINTS
 				console.log("MAKE WORLD");
 				var world = new Stereopsis.World();
