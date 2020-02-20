@@ -5735,7 +5735,7 @@ console.log(images, sizes, relativeAB, Ks, errorPixels)
 		var matches = R3D.searchMatchPoints3D(images, sizes, relativeAB, Ks, errorPixels);
 		console.log(matches);
 
-// throw "before dense world";
+throw "before dense world";
 
 
 		// insert matching points:

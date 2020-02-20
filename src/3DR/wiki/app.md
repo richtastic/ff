@@ -398,13 +398,15 @@ https://cloud.google.com/appengine/docs/nodejs/
 
 refinement - dates
 	putativePairsFromViewsAndTransforms
-02/17 - hole filling?
-02/20 - multi-view point propagation from dense
+
+02/24 - new simpler geometry data set w/ redundancy
+02/29 - hole filling?
+03/02 - multi-view point propagation from dense
 		- projecting known 3D points
 		- projecting unknown corners?
-02/24 - triangulation algorithm updates
-03/02 - texture-triangle-edge problems -- rendering on device shows lines at the edges of triangles -- should be smooth -- DIALATION of texture after it's created (post process requires map)
-03/09 - test new set of 10 ~ 20 images
+03/10 - triangulation algorithm updates
+03/20 - texture-triangle-edge problems -- rendering on device shows lines at the edges of triangles -- should be smooth -- DIALATION of texture after it's created (post process requires map)
+03/20 - test new set of 10 ~ 20 images
 
 ? - BA identify/remove view if it's position is very bad????
 - triangle - texture loading groups at a time to get local approx blending
@@ -414,31 +416,29 @@ refinement - dates
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-- optimum scales are also very wrong [corner score peak]
-	- COM confidence
-	- similar corner narrowness [1/sigma]
-	- different corner wideness [sigma]
-		=> ratio seems to be bad/wrong
+- more restrictive in final F features => help limit number of incorrect matches
+- are top matched being ignored in F even if top 2 features match? [confidence ratio]
+	=> need to allow for 'unmatched' points
 
 
-R3D.differentialOptimumCornerScale
+- what does dense R-searching step use as the matching feature locations?
+	=> can just use harris corners?
+	=> don't use differential corner features
+
+
+- R sigma error is bad metric for comparing the accuracy of a pairwise R-image
+	=> need some other metric to define HOW GOOD a pair match is
+	[and therefore: when a transform needs to be re-initialized & which pairs should be ignored]
+	R-F ratio ?
+	- occluded
+	- ability to reconstruct each image & to what percent complete?
+	- segmentation / groupings [how continuous?]
+	- local 2D neighborhood metrics?
 
 
 
+- update App initial view - feature step with differential corners
 
-
-
-
-
-- test COM corner direction for features & compare
-	- 5x5 vs 3x3 ?
-
-
-- get some corner-peak score method to find best
-	- 5x5 (circle mask) vs 3x3 
-
-
-...
 
 
 resolveIntersectionPatchGeometry
@@ -448,124 +448,22 @@ resolveIntersectionPatchGeometryImplementation
 
 
 
-corner flow --- try to find 'peaks' & most stable points (edges are highly different ?)
-	- likely peaks on BOTH sides of a corner
-	- average of neighbors (weighted)?
-	-> is there a way to make despite which side of the corner it's on => be consistent direction (not 180?)
-
-- corner metric:
-- the further away a 'similar' color is, the worse the score
-- opposite: the closer away a different color is, the worse the score
-	=> are these both necessary?
-
-
-x corner find 'narrowness' / angle:
-	with com known (angle) interpolate from left & right to get location where value becomes:
-	1/2 of range / median
-	interior width distance is metric of wideness of angle
+- allow corners / features with large scale difference to still be located nearby in 2D
+	=> 3D location = x,y, ~ 2 x lg(scale)
+		8.0 => 4
+		0.25 => -4
 
 
 
-
-
-com of differentials
-
-corner score:
-	- average of differentials
-	- length of distance of differential...
-
-
-
-
-- unoriented gradient histogram by aligning peaks together [or doing 8 x N compares and using best]
-...
-
-
-
-- experiment with getting consistent orientation for things
-	- color, grad, hist, cov, com, ...
-	GRAD:
-		- see how small changes in position can affect gradient [measurement of gradient stability]
-			- very cornery locations will be consistent
-			- places with lots of noise will be variable
-			...
-	- come combination of logic to choose orientation?:
-		- find edge?
-		- find gradient?
-
-- initial fat match F poor for off-size
-
-	=> ANGLE IS VERY WRONG FOR DIFFERENCES -- large variability
-	=> SIZE/SCALE IS DIFFERENT
-
-
-- need some other metric to define HOW GOOD a pair match is
-	[and therefore: when a transform needs to be re-initialized & which pairs should be ignored]
-	R-F ratio ?
-
-
-
-=> find out where problems first occurr & figure out how to  prevent / account & ignore
-
-- repeated outlier dropping to find group of best inliers
-
-- how to better identify bad transform pairs ?
-	- sporadic point-ness?
-		- relative noise per 2D pixel / 3D kNN neighborhood?
-
-
-- be able to recalculate R if error is high
-	- several points:
-		- before / BA
-		- during tracks
-		- dense-
-
-- ...
-
-
-
-- BA optimized view-group to very bad in-line orientation
-	- initial error for some view-pairs is really high?
-	- next: R-error looks good, except there are a lot of negative points
-
-- negative R-errors set high -- for when doing BA to ignore bad-transforms?
-
-...............
-
-
-
-
+DENSE MATCHING R-STEP:
 - do efficient pairwise object extraction
-
 	- 2 purpose procedures
 		- F: to use general area
 		- R: to have specific distinctions
 
 
-
-
-- allow more iterations on searching to reduce error
-
-
-
-
-
-- corner points across images don't seem repeatable
-	- check if color gradient points are any better
-
 - plot propagation groups / dense point results in 2D ?
 	- see how poor-isolated-groups look like
-
-
-- how to determine optimum angle?
-	- dominant SIFT?
-	- gradients
-		- dots have gradients in all directions
-		- 
-	- cov
-		- 
-	- ...
-
 
 
 - HOW TO REMOVE POOR GROUPS
@@ -616,6 +514,9 @@ probe2DCells
 	- what about 'SHOULD SEE' points ?
 
 
+
+
+- unoriented gradient histogram by aligning peaks together [or doing 8 x N compares and using best]
 
 
 

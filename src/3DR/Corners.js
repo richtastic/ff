@@ -24,7 +24,8 @@ function Corners(){
 	// var imageList = ["A.png"];
 
 	var directory = "./images/";
-	var imageList = ["bench_C.png","bench_D.png"];
+	var imageList = ["bench_A.png","bench_D.png"];
+	// var imageList = ["bench_C.png","bench_D.png"];
 	// var imageList = ["room0.png","room2.png"];
 	// var imageList = ["castle.000.jpg","castle.009.jpg"];
 	// var imageList = ["medusa_1.png","medusa_2.png"];
@@ -54,9 +55,9 @@ function Corners(){
 	// , "../../catHat.jpg"];//,"calib-3.png","calib-4.png","calib-5.png","calib-6.png"];
 
 
-	// var imageLoader = new ImageLoader(directory,imageList, this,this.handleImagesLoadedBasic,null);
+	var imageLoader = new ImageLoader(directory,imageList, this,this.handleImagesLoadedBasic,null);
 
-	var imageLoader = new ImageLoader(directory,imageList, this,this.handleImagesLoadShow,null);
+	// var imageLoader = new ImageLoader(directory,imageList, this,this.handleImagesLoadShow,null);
 
 	// var imageLoader = new ImageLoader(directory,imageList, this,this.handleImagesLoadExperiment,null);
 
@@ -511,71 +512,64 @@ Corners.prototype.handleImagesLoadShow = function(imageInfo){
 	var x = 0, y = 0;
 	var images = [];
 	var imageMatrixList = [];
-	for(i=0;i<imageList.length;++i){
+	for(var i=0;i<imageList.length;++i){
 		var file = fileList[i];
 		var img = imageList[i];
 		images[i] = img;
 		var d = new DOImage(img);
-		this._root.addChild(d);
+		GLOBALSTAGE.addChild(d);
 		// d.graphics().alpha(0.05);
 		// d.graphics().alpha(0.50);
+		d.graphics().alpha(0.90);
 		d.matrix().translate(x,y);
 
-
-		//
 		var imageSource = images[i];
 		var imageFloat = GLOBALSTAGE.getImageAsFloatRGB(imageSource);
 		var imageMatrix = new ImageMat(imageFloat["width"],imageFloat["height"], imageFloat["red"], imageFloat["grn"], imageFloat["blu"]);
-		imageMatrixList.push(imageMatrix);
-
-		console.log(imageMatrix);
-		// var alp = 0.75;
-		// var alp = 0.9;
-		var alp = 1.0;
-
-		// HARRIS CORNERS
-		// var corners = R3D.cornerPeaksColorGradient(idealImage, nonMaximalPercent, 0.95); // 0.90-0.99
-		
-		// COLOR GRADIENT SCORES
-		// var corners = R3D.cornersFromColorGradient(imageMatrix, false);
-		// 	corners = corners["value"];
-		// 	ImageMat.normalFloat01(corners);
-
-		// HARRIS CORNERS ?
-		// var corners = R3D.cornerScaleScores(imageMatrix.gry(),imageMatrix.width(),imageMatrix.height());
-		// 	corners = corners["value"];
-		// 	ImageMat.normalFloat01(corners);
-		// 	ImageMat.pow(corners, 0.25);
+		// console.log(imageMatrix);
+		var features = R3D.differentialCornersForImage(imageMatrix);
+		console.log(features);
 
 
-		var width = imageMatrix.width();
-		var height = imageMatrix.height();
-		var corners = R3D.imageCornersDifferential(imageMatrix, false);
-		console.log(corners)
-			corners = corners["value"];
-		console.log(corners);
+
+
+for(var f=0; f<features.length; ++f){
+	var feature = features[f];
+	var point = feature["point"];
+	var size = feature["size"];
+	var angle = feature["angle"];
+	var d = new DO();
+	// size = size * 0.5;
+	size = Math.sqrt(size); // display purposes
+	// size = 5;
+	d.graphics().setLine(1.0, 0xFFFF0000);
+	d.graphics().beginPath();
+	d.graphics().drawCircle(point.x, point.y, size);
+	d.graphics().moveTo(point.x, point.y);
+	d.graphics().lineTo(point.x + size*Math.cos(angle), point.y + size*Math.sin(angle));
+	d.graphics().strokeLine();
+	d.graphics().endPath();
+	d.matrix().translate(x,y);
+	GLOBALSTAGE.addChild(d);
+}
+
+		// throw "..."
+
+
 /*
-		// AVERAGE FILTER ?
-		corners = ImageMat.meanFilter(corners,width,height);
-			corners = corners["value"];
-		console.log(corners);
 
 
-		var peaks = Code.findMaxima2DFloat(corners, width,height);
-		console.log("PEAKS: "+peaks.length);
 		var scores = Code.newArrayZeros(width*height);
 		for(var i=0; i<peaks.length; ++i){
 			var peak = peaks[i];
-			var x = Math.round(peak.x);
-			var y = Math.round(peak.y);
+			var dx = Math.round(peak.x);
+			var dy = Math.round(peak.y);
 			var s = peak.z;
-			var index = y*width + x;
+			var index = dy*width + dx;
 			scores[index] = s;
 		}
-		// console.log(scores);
 		var corners = Code.copyArray(scores);
 
-*/
 
 
 		ImageMat.normalFloat01(corners);
@@ -594,21 +588,22 @@ Corners.prototype.handleImagesLoadShow = function(imageInfo){
 		d.graphics().alpha(alp);
 		d.matrix().translate(0,0);
 		GLOBALSTAGE.addChild(d);
+		d.matrix().translate(x,y);
 
 // ???
 			// PEAKS ????
 
-			throw "?";
+		// 	throw "?";
 
 
-		img = GLOBALSTAGE.getFloatRGBAsImage(corners,corners,corners, imageMatrix.width(),imageMatrix.height());
-		var d = new DOImage(img);
-		d.graphics().alpha(alp);
-		d.matrix().translate(0,0);
-		GLOBALSTAGE.addChild(d);
-		d.matrix().translate(x,y);
+		// img = GLOBALSTAGE.getFloatRGBAsImage(corners,corners,corners, imageMatrix.width(),imageMatrix.height());
+		// var d = new DOImage(img);
+		// d.graphics().alpha(alp);
+		// d.matrix().translate(0,0);
+		// GLOBALSTAGE.addChild(d);
+		// d.matrix().translate(x,y);
 
-	
+*/
 
 		x += imageMatrix.width();
 	}
@@ -743,7 +738,11 @@ continue;
 		var height = image.height();
 
 		// var cornersA = R3D.colorGradientFeaturesFromImage(image);
-		var cornersA = R3D.differentialFeaturesFromImage(image);
+		// var cornersA = R3D.differentialFeaturesFromImage(image);
+		var cornersA = R3D.differentialCornersForImage(image);
+		// console.log(features);
+
+
 		var cornersB = [];
 		cornersLists.push(cornersA);
 

@@ -7815,17 +7815,17 @@ bad = cameras are wrong or accidentally correct, <50% of scene is mapped
  // good | ok | poor | bad
 console.log("pair count: "+pairs.length+" ............");
 	for(var i=0; i<pairs.length; ++i){
-// i = 0; // good
-// i = 1; // ok
-i = 2; // poor
-// i = 3; // poor
-// i = 4; // good
-// i = 5; // poor
-// i = 6; // poor
-// i = 7; // poor
-// i = 8; // ok
-// i = 9; // bad
-// i = 10; // bad
+// i = 0; // good - very good? [although R-error is @ 2 pixels]
+// i = 1; // ok - ok?
+// i = 2; // poor - ok?
+i = 3; // poor - poor?
+// i = 4; // good - good?
+// i = 5; // poor - ok?
+// i = 6; // poor - good?
+// i = 7; // poor - good?
+// i = 8; // ok - ok?
+// i = 9; // bad - bad?
+// i = 10; // bad - poor?
 console.log("PICKED: "+i);
 		var pair = pairs[i];
 		var idA = pair["A"];
@@ -9516,6 +9516,7 @@ console.log(relativeAB);
 }
 
 App3DR.ProjectManager.prototype.calculatePairMatchFromViewIDs = function(viewAID, viewBID, completeFxn, completeCxt, settings){ // matches, F, R, tracks
+console.log("calculatePairMatchFromViewIDs")
 	if(!settings){
 		settings = {};
 		// settings["relativeAB"] = null;
@@ -9612,12 +9613,12 @@ GLOBALDISPLAY = GLOBALSTAGE;
 
 
 // make new features from scratch ...
-featuresA = R3D.differentialFeaturesFromImage(imageMatrixA);
-featuresB = R3D.differentialFeaturesFromImage(imageMatrixB);
+console.log("TODO - GET THESE SOMEWHERE ELSE");
+featuresA = R3D.differentialCornersForImage(imageMatrixA);
+featuresB = R3D.differentialCornersForImage(imageMatrixB);
 console.log(featuresA);
 console.log(featuresB);
-
-throw "?"
+// throw "?"
 
 
 
