@@ -24,8 +24,15 @@ function Corners(){
 	// var imageList = ["A.png"];
 
 	var directory = "./images/";
-	var imageList = ["bench_A.png","bench_D.png"];
-	// var imageList = ["bench_C.png","bench_D.png"];
+	// var imageList = ["bench_A.png","bench_B.png"]; // big angle
+	// var imageList = ["bench_A.png","bench_C.png"]; // big angle
+	// var imageList = ["bench_A.png","bench_D.png"]; // angle
+	// var imageList = ["bench_A.png","bench_E.png"]; // scale/zoom
+	// var imageList = ["bench_A.png","bench_F.png"]; // big zoom, big angle, minimal area
+	
+	var imageList = ["bench_C.png","bench_D.png"]; // shift, small angle
+	// var imageList = ["bench_B.png","bench_E.png"];
+	// var imageList = ["bench_A.png","bench_F.png"];
 	// var imageList = ["room0.png","room2.png"];
 	// var imageList = ["castle.000.jpg","castle.009.jpg"];
 	// var imageList = ["medusa_1.png","medusa_2.png"];
@@ -55,9 +62,10 @@ function Corners(){
 	// , "../../catHat.jpg"];//,"calib-3.png","calib-4.png","calib-5.png","calib-6.png"];
 
 
-	var imageLoader = new ImageLoader(directory,imageList, this,this.handleImagesLoadedBasic,null);
+	// var imageLoader = new ImageLoader(directory,imageList, this,this.handleImagesLoadedBasic,null);
 
-	// var imageLoader = new ImageLoader(directory,imageList, this,this.handleImagesLoadShow,null);
+	var imageLoader = new ImageLoader(directory,imageList, this,this.handleImagesLoadShowCorners,null);
+	// var imageLoader = new ImageLoader(directory,imageList, this,this.handleImagesLoadShowFeatures,null);
 
 	// var imageLoader = new ImageLoader(directory,imageList, this,this.handleImagesLoadExperiment,null);
 
@@ -505,7 +513,136 @@ console.log(Code.degrees(angleDelta))
 
 }
 
-Corners.prototype.handleImagesLoadShow = function(imageInfo){
+
+Corners.prototype.handleImagesLoadShowCorners = function(imageInfo){
+	var imageList = imageInfo.images;
+	var fileList = imageInfo.files;
+	var i, j, k, list = [];
+	var x = 0, y = 0;
+	var images = [];
+	var imageMatrixList = [];
+	for(var i=0;i<imageList.length;++i){
+		var file = fileList[i];
+		var img = imageList[i];
+		images[i] = img;
+		var d = new DOImage(img);
+		GLOBALSTAGE.addChild(d);
+		// d.graphics().alpha(0.05);
+		// d.graphics().alpha(0.50);
+		d.graphics().alpha(0.90);
+		d.matrix().translate(x,y);
+
+		var imageSource = images[i];
+		var imageFloat = GLOBALSTAGE.getImageAsFloatRGB(imageSource);
+		var imageMatrix = new ImageMat(imageFloat["width"],imageFloat["height"], imageFloat["red"], imageFloat["grn"], imageFloat["blu"]);
+		// console.log(imageMatrix);
+		
+		var width = imageMatrix.width();
+		var height = imageMatrix.height();
+		var alp = 1.0;
+
+		// var corners = R3D.imageCornersDifferential(imageMatrix, false);
+		// 	corners = corners["value"];
+
+		// var grad = imageMatrix.colorGradientVector();
+		var grad = imageMatrix.colorGradient();
+			grad = grad["value"];
+			Code.arrayMap(grad,function(a){return a.length()});
+		var corners = grad;
+
+			var sigma = 1.0;
+			corners = ImageMat.getBlurredImage(corners,width,height,sigma);
+
+
+
+
+/*
+		ImageMat.normalFloat01(corners);
+		// ImageMat.pow(corners, 0.5);
+		// ImageMat.pow(corners, 2.0);
+		var colors = [0xFF000000, 0xFF000099, 0xFFCC00CC, 0xFFFF0000, 0xFFFFFFFF];
+		var img = ImageMat.heatImage(corners, width, height, false, colors);
+			img = GLOBALSTAGE.getFloatRGBAsImage(img.red(),img.grn(),img.blu(), img.width(),img.height());
+		
+		// var img = GLOBALSTAGE.getFloatRGBAsImage(corners,corners,corners, width,height);
+		
+		var d = new DOImage(img);
+		d.graphics().alpha(alp);
+		d.matrix().translate(0,0);
+		GLOBALSTAGE.addChild(d);
+		d.matrix().translate(x,y);
+
+*/
+
+
+
+
+
+/*
+
+var suppressDistancePercent = 0.01; // 0.002 - 0.01
+var maxDistance = suppressDistancePercent*Math.sqrt(width*width+height*height);
+var peaks = Code.findMaxima2DFloat(corners, width,height);
+console.log("PEAKS: "+peaks.length);
+// to space prioritized
+var sortCorners = function(a,b){
+return a.z > b.z ? -1 : 1;
+};
+var toV2D = function(a){
+return a;
+};
+peaks.sort(sortCorners);
+
+var space = new QuadTree(toV2D);
+space.initWithMinMax(new V2D(0,0), new V2D(width,height));
+var scores = [];
+for(var j=0; j<peaks.length; ++j){
+var point = peaks[j];
+var neighbors = space.objectsInsideCircle(point,maxDistance);
+if(neighbors.length==0){ // keep best corners first
+space.insertObject(point);
+scores.push(point.z);
+}
+}
+var pass = space.toArray();
+space.clear();
+space.kill();
+console.log("SPACE: "+pass.length);
+// return pass;
+
+
+*/
+
+var pass = R3D.differentialCornersForImageSingle(imageMatrix);
+console.log(pass);
+
+
+
+for(var f=0; f<pass.length; ++f){
+	var point = pass[f];
+	var d = new DO();
+	var size = 2;
+	// size = size * 0.5;
+	// size = Math.sqrt(size); // display purposes
+	// size = 5;
+	d.graphics().setLine(1.0, 0xFFFF0000);
+	d.graphics().beginPath();
+	d.graphics().drawCircle(point.x, point.y, size);
+	// d.graphics().moveTo(point.x, point.y);
+	// d.graphics().lineTo(point.x + size*Math.cos(angle), point.y + size*Math.sin(angle));
+	d.graphics().strokeLine();
+	d.graphics().endPath();
+	d.matrix().translate(x,y);
+	GLOBALSTAGE.addChild(d);
+}
+
+
+
+		x += imageMatrix.width();
+	}
+}
+
+Corners.prototype.handleImagesLoadShowFeatures = function(imageInfo){
 	var imageList = imageInfo.images;
 	var fileList = imageInfo.files;
 	var i, j, k, list = [];

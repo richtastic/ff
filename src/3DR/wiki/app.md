@@ -416,14 +416,39 @@ refinement - dates
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-- more restrictive in final F features => help limit number of incorrect matches
-- are top matched being ignored in F even if top 2 features match? [confidence ratio]
+x more restrictive in final F features => help limit number of incorrect matches
+x are top matched being ignored in F even if top 2 features match? [confidence ratio]
 	=> need to allow for 'unmatched' points
 
 
+- test some reconstruction accuracy metrics [solvePair]
+	...
+	- 2D neighbor distance in 3D
+	- baseline => always 1 -- need some relative metric
+	- world extent
+
+- add parameter to pairs:
+	- accuracy/ - metric
+
+- add step to assess which pairs should be discarded, after all pairs are complete, before triples are done:
+	- ignore R> ~ 10
+	- for each view:
+		- sort pairs on METRIC
+		- limit to top ~ 10
+		- limit on sigma = 1-2 [68-95%]
+
 - what does dense R-searching step use as the matching feature locations?
-	=> can just use harris corners?
-	=> don't use differential corner features
+	=> choose points to use for R
+		-> harris corners?
+		-> differential corners?
+		=> display the different selections
+		- with R to narrow options, can stand 1-2k points
+
+
+
+- update App initial view - feature step with differential corners
+
+
 
 
 - R sigma error is bad metric for comparing the accuracy of a pairwise R-image
@@ -432,12 +457,12 @@ refinement - dates
 	R-F ratio ?
 	- occluded
 	- ability to reconstruct each image & to what percent complete?
+		=> % of cells with match
 	- segmentation / groupings [how continuous?]
 	- local 2D neighborhood metrics?
-
-
-
-- update App initial view - feature step with differential corners
+	- use camera baseline as reference size?
+	- use world point extent as reference size?
+	=> (average 2D knn 3D distance)/(average scene volume - covariance matrix) ---- smaller is better
 
 
 
@@ -445,7 +470,9 @@ resolveIntersectionPatchGeometry
 resolveIntersectionPatchGeometryImplementation
 
 
-
+- patch obstruction using all 3D points from single view [not pairs]
+	- removing points based on score in local group
+	- removing points based on score globally
 
 
 - allow corners / features with large scale difference to still be located nearby in 2D

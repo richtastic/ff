@@ -5520,7 +5520,93 @@ if(doRelaxed){
 
 	return false;
 }
+Stereopsis.World.prototype.reconstructionRelativeMetrics = function(){ // makes assumptions that only a single pair is present
+	var transforms = this.toTransformArray();
+	var metricList = [];
 
+	var neighborhoodCount = 8;
+	var viewReference = null;
+	var evalFxn = function(p){
+		var m = p.matchForView(viewReference);
+		return m!==null;
+	};
+	
+	for(var i=0; i<transforms.length; ++i){
+		var transform = transforms[i];
+		var relativeAB = transform.R();
+			var locationA = new V3D(0,0,0);
+			var locationB = relativeAB.multV3DtoV3D(locationA);
+		var baselineDistance = V3D.distance(locationA,locationB);
+		var matches = transform.matches();
+		var dropPoints = [];
+		var averageDistance = 0;
+		var countedMatches = 0;
+			var viewA = transform.viewA();
+			var viewB = transform.viewB();
+			var views = [viewA,viewB];
+			var oppos = [viewB,viewA];
+		for(var j=0; j<matches.length; ++j){
+			var match = matches[j];
+			var distance = 0;
+			// var viewA = match.viewA();
+			// var viewB = match.viewB();
+			// var views = [viewA,viewB];
+			// var oppos = [viewB,viewA];
+			// var points = [point2DA,point2DB];
+			for(var v=0; v<views.length; ++v){ // get neighborhood in 2D -- knn vs cell radius ?
+				var viewCurrent = views[v];
+					viewReference = oppos[v];
+				var pointCurrent = match.pointForView(viewReference);
+				var point = pointCurrent.point2D();
+				var neighborhood = viewCurrent.kNN(point,neighborhoodCount,evalFxn);
+				if(neighborhood.length<=1){
+					console.log("no neighbors")
+					continue;
+				}
+				// get distances in 3D
+				for(var n=0; n<neighborhood.length; ++n){
+					var neighbor = neighborhood[n];
+					if(neighbor==pointCurrent){
+						continue;
+					}
+					distance += V2D.distance(point, neighbor.point2D());
+				}
+				distance /= (neighborhood.length-1);
+				// console.log(".  "+j+" = "+distance);
+				countedMatches++;
+				averageDistance += distance;
+			}
+		}
+		averageDistance = averageDistance/countedMatches;
+		console.log("averageDistance: "+averageDistance);
+		console.log("baselineDistance: "+baselineDistance);
+		var distanceRatio = averageDistance/baselineDistance;
+		console.log("distanceRatio: "+distanceRatio);
+		metricList.push(distanceRatio);
+	}
+
+	return {"list":metricList};
+}
+/*
+GOOD:
+Stereopsis.js:5580 averageDistance: 10.320856459150141
+Stereopsis.js:5582 baselineDistance: 1
+Stereopsis.js:5584 distanceRatio: 10.320856459150141
+
+OK:
+Stereopsis.js:5580 averageDistance: 9.96433711349655
+Stereopsis.js:5582 baselineDistance: 0.9999999999999996
+Stereopsis.js:5584 distanceRatio: 9.964337113496553
+
+POOR:
+Stereopsis.js:5580 averageDistance: 27.10733382030832
+Stereopsis.js:5582 baselineDistance: 0.9999999999999998
+Stereopsis.js:5584 distanceRatio: 27.107333820308327
+
+BAD:
+
+
+*/
 
 Stereopsis.World.prototype.testOutFinding = function(viewA,viewB, transformAB){
 

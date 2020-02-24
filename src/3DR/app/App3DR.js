@@ -7818,13 +7818,13 @@ console.log("pair count: "+pairs.length+" ............");
 // i = 0; // good - very good? [although R-error is @ 2 pixels]
 // i = 1; // ok - ok?
 // i = 2; // poor - ok?
-i = 3; // poor - poor?
+// i = 3; // poor - poor?
 // i = 4; // good - good?
 // i = 5; // poor - ok?
 // i = 6; // poor - good?
 // i = 7; // poor - good?
 // i = 8; // ok - ok?
-// i = 9; // bad - bad?
+i = 9; // bad - bad?
 // i = 10; // bad - poor?
 console.log("PICKED: "+i);
 		var pair = pairs[i];
@@ -9822,7 +9822,10 @@ if(true){
 
 					var str = world.toYAMLString();
 					console.log(str);
-// throw "now with world ?"
+
+world.reconstructionRelativeMetrics();
+
+throw "now with world ?"
 						var transform = world.transformFromViews(vA,vB);
 						var count = transform.matches().length; // doesn't count if P has 0 matches
 						var matches = transform.matches();

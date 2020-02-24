@@ -30,6 +30,9 @@ beatsaber: 1 mill downloads @ $30. @ ~ 50% paid ~ 500k
 
 ## Profitability
 
+
+70% dev 30% store revenue split
+
 | price | low | med | high |
 | --- | --- | --- | --- |
 | free | ? | ? | ? | 
@@ -49,6 +52,9 @@ $5 x 10k = $50k
 https://ganbattegame.com/blog/2018/01/14/analysing-the-vr-market-based-on-2017-steam-data/
 
 
+https://www.statista.com/statistics/605411/global-oculus-rift-revenue-by-category/
+
+https://thinkmobiles.com/blog/how-much-vr-application-development-cost/
 
 
 
@@ -57,3 +63,24 @@ https://ganbattegame.com/blog/2018/01/14/analysing-the-vr-market-based-on-2017-s
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+...

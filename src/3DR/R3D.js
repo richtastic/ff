@@ -9583,7 +9583,9 @@ R3D._progressiveSparseMatches = function(imageMatrixA,objectsA, imageMatrixB,obj
 	// var maxIterations = 10;
 	var maxIterations = 20;
 	// var maxIterations = 5;
-	var minimumRatio = 0.90; // full area should be more unique?
+	// var minimumRatio = 0.90; // full area should be more unique?
+	// var minimumRatio = 0.75;
+	var minimumRatio = 0.50;
 	var mininumScore = null; //0.25;
 	var minimumDeltaRatio = 1.01; // 1.01 -> 1.1
 	var previousErrorF = null;
@@ -14168,7 +14170,8 @@ R3D.imageCornersDifferential = function(image, whatelse){
 				if(averageSame>0){
 					score = Math.pow(magCOM,0.50);
 					// score = magCOM;
-					score = score * (1.0/averageSame) * (averageDiff);
+					score = score * (averageDiff/averageSame);
+					score = Math.pow(score, 0.5); // more manageble ratios
 				}
 
 				// if(sigmaSame>0){

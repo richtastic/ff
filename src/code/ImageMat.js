@@ -3608,6 +3608,7 @@ ImageMat.prototype.derivativeY = function(){
 	var db = ImageMat.derivativeY(this._b,this._width,this._height).value;
 	return new ImageMat(this._width,this._height, dr,dg,db);
 }
+/*
 ImageMat.prototype.colorGradientVector = function(){ // insetted by 1 on each side .. not really an actual working thing yet
 	var wid = this.width();
 	var hei = this.height();
@@ -3649,7 +3650,46 @@ ImageMat.prototype.colorGradientVector = function(){ // insetted by 1 on each si
 	}
 	return {"value":vectors, "width":newWid, "height":newHei};
 }
-
+*/
+ImageMat.prototype.colorGradient = function(){
+	var image = this;
+	var wid = image.width();
+	var hei = image.height();
+	var vR = image.red();
+	var vG = image.grn();
+	var vB = image.blu();
+	var vectors = [];
+	var wm1 = wid-1;
+	var hm1 = hei-1;
+	var averageColor = new V3D();
+	for(var j=0; j<=hm1; ++j){
+		for(var i=0; i<=wm1; ++i){
+			var minI = Math.max(i-1,0);
+			var maxI = Math.min(i+1,wm1);
+			var minJ = Math.max(j-1,0);
+			var maxJ = Math.min(j+1,hm1);
+			averageColor.set(0,0,0);
+			for(var jj=minJ;jj<=maxJ;++jj){
+				for(var ii=minI;ii<=maxI;++ii){
+					var ind = jj*wid + ii;
+					var r = vR[ind];
+					var g = vG[ind];
+					var b = vB[ind];
+					averageColor.add(r,g,b);
+				}
+			}
+			averageColor.scale(1.0/( (maxI-minI+1) * (maxJ-minJ+1) ));
+			var index = j*wid + i;
+			var r = vR[index];
+			var g = vG[index];
+			var b = vB[index];
+			var v = new V3D(r,g,b);
+			v.sub(averageColor);
+			vectors.push(v);
+		}
+	}
+	return {"value":vectors, "width":wid, "height":hei};
+}
 
 ImageMat.derivativeX = function(src,wid,hei, x,y){
 	if(x!==undefined && y!==undefined){
