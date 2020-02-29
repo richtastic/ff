@@ -421,14 +421,21 @@ x are top matched being ignored in F even if top 2 features match? [confidence r
 	=> need to allow for 'unmatched' points
 
 
-- test some reconstruction accuracy metrics [solvePair]
+x test some reconstruction accuracy metrics [solvePair]
 	...
-	- 2D neighbor distance in 3D
-	- baseline => always 1 -- need some relative metric
-	- world extent
+	x 2D neighbor distance in 3D
+	x baseline => always 1 -- need some relative metric
+	x world extent
 
 - add parameter to pairs:
 	- accuracy/ - metric
+	- not R
+
+
+x why is view / transform R error different?
+
+...
+
 
 - add step to assess which pairs should be discarded, after all pairs are complete, before triples are done:
 	- ignore R> ~ 10
@@ -447,6 +454,15 @@ x are top matched being ignored in F even if top 2 features match? [confidence r
 
 
 - update App initial view - feature step with differential corners
+
+
+
+- notes:
+	- way to help discard poor points?:
+		- difference in total energy change drop : log : high & low ratio
+	- try also using blobs/SIFT as additional feature type
+		- add parameter to feature type
+
 
 
 

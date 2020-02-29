@@ -10328,6 +10328,62 @@ Code.pointOnPositiveSidePlane3D = function(location, planePoint, planeNormal, er
 	}
 	return dot>=error;
 }
+Code.covariance3D = function(points, weights, center){
+
+	console.log(points, weights, center);
+
+	var com = null;
+	// find com
+	// if(center){
+	// 	com = center;
+	// }else{
+		com = new V3D();
+	// }
+	var len = points.length;
+	if(len<1){
+		return null;
+	}
+	var weight = 1.0;
+	var weightTotal = 0.0;
+	for(var i=len; i--;){
+		point = points[i];
+		// if(weights){
+		// 	weight = weights[i];
+		// }
+		com.add(point.x*weight, point.y*weight, point.z*weight);
+		weightTotal += weight;
+	}
+	com.scale(1.0/weightTotal);
+	console.log(com);
+	// get cov
+	var A=0, B=0; C=0, E=0, F=0, I=0;
+	var sigma = 0;
+	for(var i=len; i--;){
+		point = points[i];
+		// if(weights[i]){
+		// 	weight = weights[i]/weightTotal;
+		// }
+		dx = point.x-com.x;
+		dy = point.y-com.y;
+		dz = point.z-com.z;
+		A += weight*dx*dx; B += weight*dx*dy; C += weight*dx*dz;
+		E += weight*dy*dy; F += weight*dy*dz; I += weight*dz*dz;
+		sigma += weight*V3D.distanceSquare(point,com);
+	}
+	sigma = Math.sqrt(sigma/len);
+	var cov = new Matrix(3,3).fromArray([A,B,C, B,E,F, C,F,I]);
+	// get eigenvalues = variance
+	var eig = Matrix.eigenValuesAndVectors(cov);
+	console.log(eig);
+	var values = eig["values"];
+	var vectors = eig["vectors"];
+	// get sigmas
+	for(var i=0; i<values.length; ++i){
+		values[i] = Math.sqrt(values[i]);
+	}
+	// object
+	return {"directions":vectors, "sigmas":[A,B,C], "sigma":sigma};
+}
 Code.planeFromPoints3D = function(center, points, weights, cov){
 	if(points==undefined){ // single argument scenario
 		points = center;
@@ -13540,7 +13596,7 @@ Code.clusterHierarchical1D = function(values, fromMax){
 
 
 
-	
+
 
 	throw "clusterHierarchical1D";
 

@@ -21312,13 +21312,11 @@ var affineRatio = 1.0;
 				var image = R3D.imageFromParameters(imageMatrix, location,scale,ang,skewX,skewY, sizeCovariance,sizeCovariance);
 				pointAngles = R3D.angleImageRGB(image,maskCOV);
 			}
-
+			// 
 			for(var a=0; a<pointAngles.length; ++a){
 				var pointAngle = pointAngles[a];
 //var pointAngle = ang["angle"];
 //var pointScale = ang["scale"];
-
-
 // TODO: GET COV ANGLE / SCALE
 // var circleMask = ImageMat.circleMask(overallSize,overallSize);
 // var areaCenter = new V2D( (overallSize-1)*0.5, (overallSize-1)*0.5 );
@@ -21326,8 +21324,6 @@ var affineRatio = 1.0;
 // var covarianceRatio = covariance[0].z/covariance[1].z;
 // var covarianceAngle = V2D.angleDirection(V2D.DIRX, covariance[0]);
 // var covarianceScale = Math.pow(covarianceRatio,1.0);
-
-
 				/*
 				if(k<10){
 				var img = GLOBALSTAGE.getFloatRGBAsImage(image.red(), image.grn(), image.blu(), image.width(), image.height());
@@ -21354,7 +21350,6 @@ var affineRatio = 1.0;
 matrix = Matrix.transform2DRotate(matrix, affineAngle);
 matrix = Matrix.transform2DScale(matrix, 1.0/affineRatio,affineRatio);
 matrix = Matrix.transform2DRotate(matrix, -affineAngle);
-
 				var vectorSAD = R3D.SADVectorCircular(imageMatrix, location,diaNeighborhood,matrix);
 				var vectorSIFT = R3D.SIFTVectorCircular(imageMatrix, location,diaNeighborhood,matrix, true);
 				var object = {"point":location, "angle":pointAngle, "size":diaNeighborhood, "sift":vectorSIFT, "sad":vectorSAD};

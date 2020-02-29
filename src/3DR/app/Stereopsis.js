@@ -1840,8 +1840,8 @@ Stereopsis.Transform3D.prototype.calculateErrorM = function(){
 		this._errorNCCSigma = nSigma;
 		var sMean = Code.min(sadScores);
 		var sSigma = Code.stdDev(sadScores, sMean);
-		var sHalf = Code.median(nccScores);
-			sSigma = Math.min(sSigma,sHalf);
+		// var sHalf = Code.median(nccScores);
+			// sSigma = Math.min(sSigma,sHalf);
 		this._errorSADMean = sMean;
 		this._errorSADSigma = sSigma;
 	}else{
@@ -1891,8 +1891,6 @@ Stereopsis.Transform3D.prototype.calculateErrorF = function(F){
 	}
 	var fMean = Code.min(fDistances);
 	var fSigma = Code.stdDev(fDistances, fMean);
-	// var fHalf = Code.median(fDistances);
-		// fSigma = Math.min(fSigma,fHalf);
 	this._errorFMean = fMean;
 	this._errorFSigma = fSigma;
 }
@@ -1944,7 +1942,8 @@ Stereopsis.Transform3D.prototype.calculateErrorR = function(R){
 	}
 	var rMin = Code.min(rDistances);
 	var rMean = Code.mean(rDistances);
-	var rSigma = Code.stdDev(rDistances, rMean);
+	// var rSigma = Code.stdDev(rDistances, rMean);
+	var rSigma = Code.stdDev(rDistances, rMin);
 	// var rHalf = Code.median(rDistances);
 		// rSigma = Math.min(rSigma,rHalf);
 	this._errorRAverage = rMean;
@@ -5541,6 +5540,7 @@ Stereopsis.World.prototype.reconstructionRelativeMetrics = function(){ // makes 
 		var dropPoints = [];
 		var averageDistance = 0;
 		var countedMatches = 0;
+		var pointList3D = [];
 			var viewA = transform.viewA();
 			var viewB = transform.viewB();
 			var views = [viewA,viewB];
@@ -5553,6 +5553,7 @@ Stereopsis.World.prototype.reconstructionRelativeMetrics = function(){ // makes 
 			// var views = [viewA,viewB];
 			// var oppos = [viewB,viewA];
 			// var points = [point2DA,point2DB];
+			pointList3D.push(match.estimated3D());
 			for(var v=0; v<views.length; ++v){ // get neighborhood in 2D -- knn vs cell radius ?
 				var viewCurrent = views[v];
 					viewReference = oppos[v];
@@ -5582,6 +5583,22 @@ Stereopsis.World.prototype.reconstructionRelativeMetrics = function(){ // makes 
 		console.log("baselineDistance: "+baselineDistance);
 		var distanceRatio = averageDistance/baselineDistance;
 		console.log("distanceRatio: "+distanceRatio);
+
+		console.log(pointList3D);
+		var cov = Code.covariance3D(pointList3D);
+
+		console.log(cov);
+		var sigmas = cov["sigmas"];
+		var sigma = (sigmas[0] + sigmas[1] + sigmas[2])/3.0;
+		console.log("sigma: "+sigma);
+		//
+		// console.log(eigen);
+
+		distanceRatio = averageDistance/sigma;
+		console.log("distanceRatio: "+distanceRatio);
+
+
+
 		metricList.push(distanceRatio);
 	}
 
@@ -5589,19 +5606,61 @@ Stereopsis.World.prototype.reconstructionRelativeMetrics = function(){ // makes 
 }
 /*
 GOOD:
-Stereopsis.js:5580 averageDistance: 10.320856459150141
-Stereopsis.js:5582 baselineDistance: 1
-Stereopsis.js:5584 distanceRatio: 10.320856459150141
+
+
+Stereopsis.js:8854       matches: 9075           :  0 - 1
+Stereopsis.js:8855  T 0 0->1  N : 0.005024164694019617 +/- 0.20031656757470825
+Stereopsis.js:8857  T 0 0->1  F : 0.000017991303805421803 +/- 1.814663182885398
+Stereopsis.js:8858  T 0 0->1  R : 0.00039979365646096427 +/- 0.7779453339122067
+Stereopsis.js:8917 .       points: 9075       0 BTLZWLLY 
+Stereopsis.js:8918  V M : 0.17610232502530337 +/- 0.20031656757470778
+Stereopsis.js:8919  V F : 1.1967418165250805 +/- 1.8146631828853972
+Stereopsis.js:8920  V R : 0.9660335692156375 : 0.00039979365646096427 +/- 1.2400191656004513
+Stereopsis.js:8917 .       points: 9075       1 081TMCFX 
+Stereopsis.js:8918  V M : 0.17610232502530318 +/- 0.20031656757470792
+Stereopsis.js:8919  V F : 1.1967418165250803 +/- 1.8146631828853974
+Stereopsis.js:8920  V R : 0.9660335692156383 : 0.00039979365646096427 +/- 1.2400191656004504
+
+sigma: 5504.138098063205
+distanceRatio: 0.001888170997284722
+
+sigma: 8181.484119528519
+distanceRatio: 0.0012646173173034084
+
 
 OK:
-Stereopsis.js:5580 averageDistance: 9.96433711349655
-Stereopsis.js:5582 baselineDistance: 0.9999999999999996
-Stereopsis.js:5584 distanceRatio: 9.964337113496553
+
+
+Stereopsis.js:8872       matches: 3293           :  0 - 1
+Stereopsis.js:8873  T 0 0->1  N : 0.009624925962485653 +/- 0.16326833365568105
+Stereopsis.js:8875  T 0 0->1  F : 0.005561265240199545 +/- 17.588928064825083
+Stereopsis.js:8876  T 0 0->1  R : 26.46892369342944 +/- 10.369464678407315
+Stereopsis.js:8935 .       points: 3293       0 BTLZWLLY 
+Stereopsis.js:8936  V M : 0.2681304745340904 +/- 0.2823780662619929
+Stereopsis.js:8937  V F : 13.42209290129691 +/- 17.58892806482508
+Stereopsis.js:8938  V R : 60.40324513889493 : 26.46892369342944 +/- 35.483291415550994
+Stereopsis.js:8935 .       points: 3293       1 4Y5BJC44 
+Stereopsis.js:8936  V M : 0.2681304745340904 +/- 0.28237806626199274
+Stereopsis.js:8937  V F : 13.422092901296919 +/- 17.588928064825083
+Stereopsis.js:8938  V R : 60.403245138895 : 26.46892369342944 +/- 35.483291415551015
+R3D.js:33707 edges:
+R3D.js:33708 [Array(4)]
+
+
+sigma: 1117.1488422651646
+distanceRatio: 0.01746356550385961
+
+
 
 POOR:
-Stereopsis.js:5580 averageDistance: 27.10733382030832
-Stereopsis.js:5582 baselineDistance: 0.9999999999999998
-Stereopsis.js:5584 distanceRatio: 27.107333820308327
+
+
+
+
+sigma: 18581.970882172343
+distanceRatio: 0.0017620663267356913
+
+
 
 BAD:
 
@@ -8842,7 +8901,6 @@ Stereopsis.World.prototype.estimate3DErrors = function(skipCalc, shouldLog){ // 
 		// console.log(" T "+i+" "+viewA.id()+"->"+viewB.id()+"  S : "+transform.sadMean()+" +/- "+transform.sadSigma());
 		console.log(" T "+i+" "+viewA.id()+"->"+viewB.id()+"  F : "+transform.fMean()+" +/- "+transform.fSigma());
 		console.log(" T "+i+" "+viewA.id()+"->"+viewB.id()+"  R : "+transform.rMean()+" +/- "+transform.rSigma());
-
 // var nextR = transform.rMean() + transform.rSigma();
 // deltas.push(nextR-previousR);
 	}
@@ -8868,8 +8926,6 @@ Stereopsis.World.prototype.estimate3DErrors = function(skipCalc, shouldLog){ // 
 		for(var j=0; j<points2D.length; ++j){
 			var point2D = points2D[j];
 			// point2D = point2D.point3D();
-			// console.log(point2D);
-			// throw "?"
 			var n = point2D.averageNCCError();
 			var s = point2D.averageSADError();
 			var f = point2D.averageFError();
@@ -8902,10 +8958,10 @@ Stereopsis.World.prototype.estimate3DErrors = function(skipCalc, shouldLog){ // 
 		view.rMin(rMin);
 		view.rMean(rMean);
 		view.rSigma(rSigma);
-		// console.log(" V M : "+view.mMean()+" +/- "+view.mSigma());
-		// console.log(" V F : "+view.fMean()+" +/- "+view.fSigma());
 		console.log(".       points: "+points2D.length+"       "+view.id()+" "+view.data()+" ");
-		console.log(" V R "+""+" : "+view.rMean()+" : "+view.rMin()+" +/- "+view.rSigma());
+		console.log(" V M : "+view.nccMean()+" +/- "+view.nccSigma());
+		console.log(" V F : "+view.fMean()+" +/- "+view.fSigma());
+		console.log(" V R : "+view.rMean()+" : "+view.rMin()+" +/- "+view.rSigma());
 	}
 
 

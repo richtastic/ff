@@ -7815,7 +7815,7 @@ bad = cameras are wrong or accidentally correct, <50% of scene is mapped
  // good | ok | poor | bad
 console.log("pair count: "+pairs.length+" ............");
 	for(var i=0; i<pairs.length; ++i){
-// i = 0; // good - very good? [although R-error is @ 2 pixels]
+i = 0; // good - very good? [although R-error is @ 2 pixels]
 // i = 1; // ok - ok?
 // i = 2; // poor - ok?
 // i = 3; // poor - poor?
@@ -7824,7 +7824,7 @@ console.log("pair count: "+pairs.length+" ............");
 // i = 6; // poor - good?
 // i = 7; // poor - good?
 // i = 8; // ok - ok?
-i = 9; // bad - bad?
+// i = 9; // bad - bad?
 // i = 10; // bad - poor?
 console.log("PICKED: "+i);
 		var pair = pairs[i];
