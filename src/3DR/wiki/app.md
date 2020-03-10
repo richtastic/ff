@@ -416,33 +416,186 @@ refinement - dates
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-x more restrictive in final F features => help limit number of incorrect matches
-x are top matched being ignored in F even if top 2 features match? [confidence ratio]
-	=> need to allow for 'unmatched' points
+x update App initial view - feature step with differential corners
 
-
-x test some reconstruction accuracy metrics [solvePair]
-	...
-	x 2D neighbor distance in 3D
-	x baseline => always 1 -- need some relative metric
-	x world extent
-
-- add parameter to pairs:
+x add parameter to pairs:
 	- accuracy/ - metric
 	- not R
 
 
-x why is view / transform R error different?
+- path costs for sparse-dense putativePairs seem very off
+
+- HURE R ERROR is not reflective of actual abilities
+	-- may be affecting how errors are processed now
+	- calculateErrorR
+
+- PLOT STEREOPSIS ERRORS AGAIN & SEE IF CORRECT ERROR DROPPING IS WORKING
+
+...
+	- initial F
+	- repeat:
+		- F + K -> R
+
+
+-------------------------> ALL Rs are too bad to have useful F-matches
+- are relative transforms from absolute correct?
+
+
+	- how does a scale in R change the F / search ?
+
+=> TRACK OPTIMIZING IS NOT MAKING BETTER
+
+
+- print out the view orientations as-is after optimization ...
+	...
+
+
+
+
+
+- are the graph error reduction parameters working  correctly?
+
+
+=> SHOW ORIGINAL ESTIMATE:
+
+
+- show original & estimated scales visually
+	- calculate AVERAGE scale
+	- for each pair:
+		- find minimum path to each other view starting at this view
+			- display expected relative size
+	- for each pair
+		- display actual size outline
+
+
+
+- only pairs are scaled ????????????
+
+
+
+WHAT DOES THIS DO?:
+	optimumScaling1D
+
+
+
+- for each view:
+	- if view doesn't have a location [should only be first view:]
+		- pick an absolute location for one of the views [0,0,0]
+	- find minimum path to each other view starting at this view
+	- place point at predicted absolute location
 
 ...
 
 
+=> TRY WITHOUT SEPARATE ORIENTATION / TRANSLATION STEP ?
+
+=> ...
+
+
+
+
+
+
+
+
+
+
+AT SOME POINT:
+- remove outlier rotations / translations
+	- Bayesian interference
+	- the graph is checked & cleaned
+- global rotations are computed using a sparse eigenvalue solver
+
+
+
+
+
+
+
+::::::::: graph  initial global absolute values from relative edges with error  optimal: based on spreading error & including all estimates proportional to error  NOT propagated error
+
+
+
+- each vertex knows where every other vertex is WITH SOME ERROR VALUE, further away vertexes (edge distance) are typically higher in error
+
+- simultaneous solving
+
+
+
+1D case: v_j = v_i + v_ij
+[adding logs ~ mult scales]
+
+
+[    ...    ]   [v_0]
+[    ...    ]   [v_1]
+[    v_ij   ] x [...]
+[    ...    ]   [v_n]
+
+EX:
+
+b + 0.5 = c
+
+[ 0 1 0 0.5] = 
+
+
+
+2D position case: v_j = v_i + v_ij
+error: ||v_j - v_i||  -  ||v_ij||
+
+EX:
+
+
+......................................................
+x pick some random vertex to be at origin
+x calculate the propagated-absolute position of ever other vertex based on transform + error
+???? what if all locations are inited to 0 ?
+- set everything at origin
+- for every vertex (now with some starting place)
+	- ^ re-estimate
+- for every vertex
+	- set absolute position based on cummulative error averaging
+.. REPEAT?
+
+
+
+=> using indirect paths/pairs results in wrong answers
+	A) going thru other edges is just a bad idea?
+	B) the correct error averaging isn't right
+
+=> iteritive initial estimate requires many iterations (100-1k)
+- 
+
+
+
+
+STEREOPSIS ABSOLUTE TRANSFORMS FROM RELATIVE
+	=> SHOULD THIS INCLUDE ANY RELATIVE ESTIMATIONS / OR BE EXACT?
+
+
+need to combine initialization / iteration processes for averaging / optimizing:-------------------------------------
+
+
+- linear initial estimate (matrixes)
+	- need some linear metric for all steps
+- linear iterative updates (graph)
+	- combined vs separate metric for (rot + tra)
+- nonlinear error adjustment (gradient descent)
+	- need 'combined' error for transforms (rot + tra)
+......................................................
+
+
+
+
+- RECHECK:
 - add step to assess which pairs should be discarded, after all pairs are complete, before triples are done:
-	- ignore R> ~ 10
+	- ignore R > ~ 10
+	- ignore score > ???
+	- ignore: F / NCC / ... ?
 	- for each view:
 		- sort pairs on METRIC
 		- limit to top ~ 10
 		- limit on sigma = 1-2 [68-95%]
+	- need to MARK the pairs as included / excluded in further steps
 
 - what does dense R-searching step use as the matching feature locations?
 	=> choose points to use for R
@@ -452,8 +605,6 @@ x why is view / transform R error different?
 		- with R to narrow options, can stand 1-2k points
 
 
-
-- update App initial view - feature step with differential corners
 
 
 

@@ -2996,7 +2996,42 @@ Code.averageAngleVector2D_2 = function(vectors, percents){ // vectors assumed no
 	return avg;
 }
 
-
+Code.averageTransforms3D = function(transforms, percents){
+	// separate
+	var locations3D = [];
+	var directions3D = [];
+	var directions2D = [];
+	for(var i=0; i<transforms.length; ++i){
+		var transform = transforms[i];
+		var location = transform.transform3DLocation();
+		var quaternion = V4D.qFromMatrix(transform);
+		var twist = Code.vectorTwistFromQuaternion(quaternion);
+			var direction3D = twist["direction"];
+			var angle = twist["angle"];
+			var direction2D = new V2D(1,0).rotate(angle);
+		locations3D.push(location);
+		directions3D.push(direction3D);
+		directions2D.push(direction2D);
+	}
+	// averaging
+	var avgTra = V3D.average(locations3D,percents);
+	var avgDir = Code.averageAngleVector3D(directions3D,percents);
+// console.log("avgDir: "+avgDir);
+// avgDir = Code.averageV3D(directions3D,percents);
+// avgDir.norm();
+// console.log("avgDir: "+avgDir);
+// throw "?"
+	var avgAng = Code.averageAngleVector2D(directions2D,percents);
+		avgAng = V2D.angleDirection(V2D.DIRX,avgAng);
+	// to absolute qualities
+	var twist = {"direction":avgDir, "angle":avgAng};
+	var quaternion = Code.quaternionFromVectorTwist(twist);
+	// to 4x4 matrix
+	var matrix = V4D.qMatrix(quaternion, new Matrix(3,3));
+		matrix.appendColFromArray(avgTra.toArray());
+		matrix.appendRowFromArray([0,0,0,1]);
+	return matrix;
+}
 
 
 Code.twistAdd = function(a,b){

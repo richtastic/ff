@@ -517,6 +517,12 @@ Matrix.scale2D = function(a){
 }
 
 
+
+
+Matrix.prototype.transform3DTranslate = function(){
+	throw "..."
+}
+
 //
 Matrix._transformTemp3D = new Matrix(4,4);
 Matrix.transform3DTranslate = function(a,tX,tY,tZ){
@@ -661,8 +667,16 @@ Matrix.prototype.normalize = function(){
 	if(len!=0){
 		len = 1.0/len;
 	}
-	this.scale( len );
+	this.scale(len);
 	return this;
+}
+Matrix.prototype.transform3DLocation = function(){
+	var rows = this._rows;
+	var location = new V3D(rows[0][3], rows[1][3], rows[2][3]);
+	// console.log(this+"");
+	// console.log(location+"");
+	// throw "?"
+	return location;
 }
 // ------------------------------------------------------------------------------------------------------------------------ CLASS
 /*

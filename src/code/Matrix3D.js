@@ -274,6 +274,14 @@ Matrix3D.prototype.scale = function(sX,sY,sZ){
 	this.mult(mat,this);
 	return this;
 }
+Matrix3D.prototype.scaleTranslation = function(sX,sY,sZ){
+	if(sY===undefined){ sY = sX; }
+	if(sZ===undefined){ sZ = sX; }
+	this.d = this.d*sX;
+	this.h = this.h*sY;
+	this.l = this.l*sZ;
+	return this;
+}
 Matrix3D.prototype.premult = function(mat){
 	this.mult(this,mat);
 	return this;
@@ -387,6 +395,9 @@ Matrix3D.matrix3DFromMatrix = function(mat){
 			mat.get(1,0),mat.get(1,1),mat.get(1,2),mat.get(1,3),
 			mat.get(2,0),mat.get(2,1),mat.get(2,2),mat.get(2,3));
 	return m3D;
+}
+Matrix3D.fromMatrix = function(mat){
+	return Matrix3D.matrix3DFromMatrix(mat);
 }
 Matrix3D.matrixFromMatrix3D = function(mat){
 	return new Matrix(4,4).fromArray([mat.a,mat.b,mat.c,mat.d, mat.e,mat.f,mat.g,mat.h, mat.i,mat.j,mat.k,mat.l, 0,0,0,1]);

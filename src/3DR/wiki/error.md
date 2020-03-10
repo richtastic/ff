@@ -1,3 +1,4 @@
+
 # Error
 
 
@@ -21,18 +22,17 @@ measurement X = T (true value) + e<sub>r</sub> (random error) + e<sub>s</sub> (s
 
 
 
-**Measurement 1** : v<sub>1</sub> &plusmn; e<sub>1</sub>
-**Measurement 2** : v<sub>2</sub> &plusmn; e<sub>2</sub>
-&sigma;<sub>1</sub>
-&sigma;<sub>2</sub>
+**Measurement 1** : v<sub>1</sub> &plusmn; e<sub>1</sub> @ &sigma;<sub>1</sub>
+**Measurement 2** : v<sub>2</sub> &plusmn; e<sub>2</sub> @ &sigma;<sub>2</sub>
 
 
-**Combined Measurement** : v<sub>3</sub> &plusmn; e<sub>3</sub>
+**Combined Measurement** : v<sub>3</sub> &plusmn; e<sub>3</sub> @ &sigma;<sub>3</sub>
 
 
 
-v<sub>3</sub> = ?
+v<sub>3</sub> =  v<sub>1</sub> +  v<sub>2</sub>
 e<sub>3</sub> = ?
+&sigma;<sub>3</sub> = &sigma;<sub>1</sub> + &sigma;<sub>2</sub>
 
 
 #### Uncertainty Propagation
@@ -281,4 +281,26 @@ str = str + "\n";
 
 return;
 ```
+
+
+
+
+
+measurements = [1 2];
+errors = [1 2];
+x = measurements;
+w = errors;
+x_avg = sum(x./w) ./ sum(1./w);  % combined measurement
+w_avg = ( 1./sum( w.^-2 ) )^0.5; % combined window
+
+x
+w
+x_avg
+w_avg
+
+
+
+
+
+
 

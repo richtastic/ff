@@ -7579,7 +7579,7 @@ console.log("checkPerformNextTask");
 		return;
 	}
 
-throw "start dense";
+// throw "start dense";
 	if(!project.checkHasDenseStarted()){
 		project.calculateDensePairPutatives();
 		return;
@@ -7702,7 +7702,7 @@ App3DR.ProjectManager.prototype._iterateSparseDenseLoaded = function(inputFilena
 	var currentPair = null;
 	var completePairFxn = function(data){
 		console.log("completePairFxn");
-		throw "completePairFxn";
+		// throw "completePairFxn";
 		var idA = currentPair["A"];
 		var idB = currentPair["B"];
 		var uniqueStrings = [idA,idB];
@@ -7740,9 +7740,9 @@ console.log("GOT : matchCount: "+matchCount);
 				if(viewA!=idA){
 					relativeTransform = R3D.inverseCameraMatrix(relativeTransform);
 				}
-			
 			currentPair["relativeError"] = relativeError;
 			currentPair["relativeTransform"] = relativeTransform;
+console.log("GOT : relative: "+relativeCount);
 		}
 		// SAVE TRACKS
 		var tracks = data["tracks"];
@@ -7753,21 +7753,27 @@ console.log("GOT : matchCount: "+matchCount);
 			tracks["B"] = data["B"];
 			trackCount = tracks["points"].length;
 			// this may have 'better' transform?
+			console.log("GOT : tracks: "+trackCount);
 		}
 		// SAVE SUMMARY
 		currentPair["matches"] = matchCount;
 		currentPair["relative"] = relativeCount;
 		currentPair["tracks"] = trackCount;
+		currentPair["metricNeighborsToWorld"] = data["metricNeighborsToWorld"];
+		console.log("data");
 		console.log(data);
+		console.log("currentPair");
+		console.log(currentPair);
 
 		var pairBase = Code.appendToPath(basePath, App3DR.ProjectManager.PAIRS_DIRECTORY, pairID);
 		var matchesFilename = Code.appendToPath(pairBase, App3DR.ProjectManager.INITIAL_MATCHES_FILE_NAME);
 		var relativeFilename = Code.appendToPath(pairBase, App3DR.ProjectManager.PAIR_RELATIVE_FILE_NAME);
 		var tracksFilename = Code.appendToPath(pairBase, App3DR.ProjectManager.PAIR_TRACKS_FILE_NAME);
-		console.log(matchesFilename);
-		console.log(relativeFilename);
-		console.log(tracksFilename);
+		// console.log(matchesFilename);
+		// console.log(relativeFilename);
+		// console.log(tracksFilename);
 
+		
 		// throw "before save ...";
 
 		var saveFileOrAlternateFxn = function(data,filename,fxn,cxt){
@@ -7794,6 +7800,7 @@ console.log("GOT : matchCount: "+matchCount);
 		var saveSparseFxn = function(){
 			console.log("saveSparseFxn");
 			// project.saveSparseFromData(inputData, saveProjectFxn,project);
+			console.log(inputData);
 			project.saveFileFromData(inputData,inputFilename, saveProjectFxn,project);
 		}
 		var saveProjectFxn = function(){
@@ -7815,18 +7822,18 @@ bad = cameras are wrong or accidentally correct, <50% of scene is mapped
  // good | ok | poor | bad
 console.log("pair count: "+pairs.length+" ............");
 	for(var i=0; i<pairs.length; ++i){
-i = 0; // good - very good? [although R-error is @ 2 pixels]
-// i = 1; // ok - ok?
-// i = 2; // poor - ok?
-// i = 3; // poor - poor?
-// i = 4; // good - good?
-// i = 5; // poor - ok?
-// i = 6; // poor - good?
-// i = 7; // poor - good?
-// i = 8; // ok - ok?
-// i = 9; // bad - bad?
-// i = 10; // bad - poor?
-console.log("PICKED: "+i);
+// i = 0;  // 
+// i = 1;  // 
+// i = 2;  // 
+// i = 3;  // 
+// i = 4;  // 
+// i = 5;  // 
+// i = 6;  // 
+// i = 7;  //
+i = 8; // 
+// i = 9;  // 
+// i = 10; // 
+// console.log("PICKED: "+i);
 		var pair = pairs[i];
 		var idA = pair["A"];
 		var idB = pair["B"];
@@ -7836,8 +7843,19 @@ console.log("PICKED: "+i);
 			currentPair = pair;
 			console.log(pair);
 			var relativeAB = pair["relativeTransform"];
+
+
+// var m = Matrix.fromObject(relativeAB);
+// m = Matrix.inverse(m);
+// relativeAB = m.toObject();
+
+// console.log(relativeAB)
+// throw "?";
+				// relativeAB = Matrix.inverse(relativeAB);
 			// dense = with R
 			if(relativeAB){
+				// throw "HOW TO DO WITH R"
+				configuration = {};
 				project.calculatePairMatchWithRFromViewIDs(idA,idB, relativeAB, completePairFxn,project, configuration);
 				return;
 			}
@@ -7846,18 +7864,21 @@ console.log("PICKED: "+i);
 			return;
 		}
 	}
-throw ">triples";
+// throw ">triples";
 	var triples = inputData["triples"];
 	if(!triples){
 		// make every possible triple from pairs
 		var minimumRelativeCount = 100;
 		triples = [];
+		var haveTriples = 0;
 		for(var i=0; i<pairs.length; ++i){
 			var pairA = pairs[i];
 			var relativeCountA = pairA["tracks"];
+// console.log(pairA);
 			if(!(relativeCountA && relativeCountA>minimumRelativeCount)){
 				continue;
 			}
+			++haveTriples;
 			var idAA = pairA["A"];
 			var idAB = pairA["B"];
 			for(var j=i+1; j<pairs.length; ++j){
@@ -7886,9 +7907,10 @@ throw ">triples";
 				}
 			}
 		}
+// console.log("haveTriples: "+haveTriples)
 		inputData["triples"] = triples;
 console.log(triples);
-throw ">triple match?";
+// throw ">triple match?";
 	}
 // console.log("PAIRS  COUNT: "+inputData["pairs"].length);
 // console.log("TRIPLE COUNT: "+inputData["triples"].length);
@@ -7904,6 +7926,8 @@ throw ">triple match?";
 		var ac = scales["AC"];
 		var bc = scales["BC"];
 		currentTriple["gauge"] = {"AB":ab, "AC":ac, "BC":bc};
+console.log("inputFilename: "+inputFilename);
+// throw "before save";
 		// project.saveSparseFromData(inputData, saveProjectFxn,project);
 		project.saveFileFromData(inputData,inputFilename, saveProjectFxn,project);
 	}
@@ -7916,13 +7940,15 @@ throw ">triple match?";
 		var gauge = triple["gauge"];
 		if(!gauge){
 			currentTriple = triple;
-			project.calculateTripleMatchFromViewIDs(idA,idB,idC, completeTripleFxn,project);
+			project.calculateTripleMatchFromViewIDs(inputData,inputFilename, idA,idB,idC, completeTripleFxn,project);
 			return;
 		}
 	}
+	console.log("triples count: "+triples.length+" ............");
 // throw ">graph";
 	// CREATE GRAPH FROM PAIRWISE & TRIPLE SCALE
 	var graph = inputData["graph"];
+// graph = null;
 	if(!graph){
 		var views = project.views();
 		var graphViews = [];
@@ -8022,11 +8048,13 @@ throw ">triple match?";
 			console.log("saveSparseFxn");
 			project.saveFileFromData(inputData,inputFilename, saveProjectFxn,project);
 		}
-		// throw "SAVE SPARSE VS SAVE DENSE ????";
+		console.log(inputData);
+		// throw "SAVE GRAPH";
+		console.log("save graph ? ");
 		project.saveFileFromData(data,graphFilename, saveSparseFxn,project);
 		return;
 	}
-// throw ">F";
+// throw ">aggregate";
 	// AGGREGATE TRACKS INTO POINT FILE
 	// trackCount: # = done ?
 	var trackCount = inputData["trackCount"]; // number of loaded tracks
@@ -8127,6 +8155,7 @@ throw ">X";
 
 App3DR.ProjectManager.prototype._iterateSparseTracks = function(sourceData, sourceFilename){
 	var project = this;
+	// ?
 	var maximumImagesLoad = 4; // 3 ~ 6
 
 	var cellCount = 40; // ???? from somewhere
@@ -8302,12 +8331,18 @@ console.log("isDone - FULL DONE")
 
 					console.log(sourceData);
 					// save the putative / pairs to dense.yaml
-
+					var currentSparseCount = project.sparseCount();
+					console.log( "currentSparseCount: "+currentSparseCount );
 					// set sparseCount to info.yaml
-					console.log("sparseCount: "+sparseCount);
-					project.setSparseCount(sparseCount);
+					console.log("SET sparseCount: "+sparseCount);
+					if(currentSparseCount===null){
+						project.setSparseCount(sparseCount);
+					}else{
+						project.setDenseCount(sparseCount);
+					}
+					// throw "set sparse count -- only for sparse ... change for dense ? is sparse already present?"
 
-					console.log(project.sparseCount());
+					// console.log(project.sparseCount());
 					// save sparse
 
 					// save project
@@ -8320,7 +8355,7 @@ console.log("isDone - FULL DONE")
 						console.log("saved project");
 					}
 
-				throw "before saving full bundle done";
+				// throw "before saving full bundle done";
 
 					project.saveFileFromData(sourceData, sourceFilename, savedDataComplete, project);
 					return;
@@ -8626,7 +8661,7 @@ if(newOriginID==null){
 			graphData["bundleFullFile"] = bundleFilename;
 			var fullBundlePath = Code.appendToPath(basePath,"tracks",bundleFilename);
 
-throw "before saving initial bundle full";
+// throw "before saving initial bundle full";
 
 			var savedGraphComplete = function(){
 				console.log("savedGraphComplete: "+graphFile);
@@ -9205,7 +9240,6 @@ App3DR.ProjectManager._putativePairsFromViewsAndTransforms = function(views, tra
 	var viewCount = views.length;
 	var graph = new Graph();
 	var minMatchesForEdge = 16;
-
 	// create nodes
 	// var viewIDToObject = {};
 	var viewIDToVertex = {};
@@ -9221,6 +9255,7 @@ App3DR.ProjectManager._putativePairsFromViewsAndTransforms = function(views, tra
 	}
 
 	// create edges
+	// var transformLookupPairID = {};
 	for(var i=0; i<transforms.length; ++i){
 		var transform = transforms[i];
 		var matchCount = transform["matches"];
@@ -9304,7 +9339,10 @@ App3DR.ProjectManager._putativePairsFromViewsAndTransforms = function(views, tra
 			var idA = viewID < pID ? viewID : pID;
 			var idB = viewID < pID ? pID : viewID;
 			var pairID = idA+"-"+idB;
-			pairLookup[pairID] = {"A":idA,"B":idB,"s":score};
+
+
+
+			pairLookup[pairID] = {"A":idA,"B":idB,"s":score};//, "r":rError};
 		} // App3DR.ProjectManager.pairIDFromViewIDs
 	}
 	// console.log(pairLookup);
@@ -9407,6 +9445,7 @@ App3DR.ProjectManager.prototype._absoluteViewsFromDatas = function(views, pairs,
 		// 	throw "ID MISMATCH ?"
 		// }
 		var R = pair["R"];
+		// R = Matrix.inverse(R);
 		return R;
 	};
 	var tripleToIDs = function(triple){
@@ -9421,6 +9460,11 @@ App3DR.ProjectManager.prototype._absoluteViewsFromDatas = function(views, pairs,
 		// console.log(gauge);
 		return gauge;
 	};
+
+
+
+// this.displayOriginalViewGraph(views, pairs, triples, viewToID,pairToIDs,tripleToIDs, pairToError,pairToTransform,tripleToScales);
+
 
 	var info = R3D.optimumTransform3DFromObjectLookup(views, pairs, triples, viewToID,pairToIDs,tripleToIDs, pairToError,pairToTransform,tripleToScales);
 	var transforms = info["transforms"];
@@ -9453,10 +9497,17 @@ App3DR.ProjectManager.prototype.calculatePairMatchWithRFromViewIDs = function(vi
 		// settings["cellCount"] = 80;
 		// settings["maximumMatchFeatures"] = 1100;
 		// settings["minimumMatchPoints"] = 16;
-		settings["incrementResolution"] = 0;
+		
 		// settings["maximumErrorTracksF"] = 0.002; // 0.002 @ 500 = 1
-		settings["maximumErrorTracksR"] = 0.002; // 0.002 @ 500 = 1
+		
 	}
+	var SETTING_INC_RES = "incrementResolution";
+	var SETTING_MAX_ERR_R = "maximumErrorTracksR";
+	var SETTING_CEL_SIZ = "cellSize";
+	settings[SETTING_INC_RES] = Code.valueOrDefault(settings[SETTING_INC_RES], 0);
+	settings[SETTING_MAX_ERR_R] = Code.valueOrDefault(settings[SETTING_MAX_ERR_R], 0.002);
+	settings[SETTING_CEL_SIZ] = Code.valueOrDefault(settings[SETTING_CEL_SIZ], 40);
+
 	console.log("calculatePairMatchWithRFromViewIDs");
 
 console.log(relativeAB);
@@ -9469,7 +9520,10 @@ console.log(relativeAB);
 
 	// var cellSize = 80;
 	// var cellSize = 60; // beween sparse and dense
-	var cellSize = 40;
+	// var cellSize = 40;
+
+	var cellSize = settings[SETTING_CEL_SIZ];
+	console.log("cellSize: "+cellSize);
 
 	// load view dense-resolution images
 	var expectedImages = allViews.length;
@@ -9490,6 +9544,7 @@ console.log(relativeAB);
 		// build world
 		var info = project.fillInWorldAll(allViews, cellSize);
 		console.log(info);
+// throw "before solve"
 		//
 		var WORLDCAMS = info["cameras"];
 		var WORLDVIEWS = info["views"];
@@ -9500,7 +9555,40 @@ console.log(relativeAB);
 
 
 		throw "now what?"
+
+		// if good enough, record matches
+
+		// if good enougn, record relative
+
+		// try for tracks
+
+		// save
+
+			var pairData = App3DR.ProjectManager.defaultPairFile(viewAID,viewBID);
+			
+			var viewAverageWidth = (imageAWidth+imageBWidth)*0.5;
+
+			var matchData = {};
+				matchData["F"] = fNorm;
+				matchData["errorFMean"] = fMean/viewAverageWidth;
+				matchData["errorFSigma"] = fSigma/viewAverageWidth;
+				matchData["points"] = matchesAB;
+				matchData["count"] = matchesAB.length;
+			pairData["matches"] = matchData;
 		
+		
+
+		if(errorR<maximumRErrorTracks && errorF<maximumFErrorTracks){
+			pairData["metricNeighborsToWorld"] = reconstructionMetric;
+
+			world.solveForTracks();
+			pairData["tracks"] = world.toObject();
+
+		
+		}
+
+		throw "save ?"
+		completeFxn.call(completeCxt, data);
 	}
 
 
@@ -9613,9 +9701,9 @@ GLOBALDISPLAY = GLOBALSTAGE;
 
 
 // make new features from scratch ...
-console.log("TODO - GET THESE SOMEWHERE ELSE");
-featuresA = R3D.differentialCornersForImage(imageMatrixA);
-featuresB = R3D.differentialCornersForImage(imageMatrixB);
+// console.log("TODO - GET THESE SOMEWHERE ELSE");
+// featuresA = R3D.differentialCornersForImage(imageMatrixA);
+// featuresB = R3D.differentialCornersForImage(imageMatrixB);
 console.log(featuresA);
 console.log(featuresB);
 // throw "?"
@@ -9820,12 +9908,17 @@ if(true){
 
 					pairData["relative"] = world.toObject();
 
+					var reconstructionMetric = world.reconstructionRelativeMetrics();
+					if(reconstructionMetric){
+						reconstructionMetric = reconstructionMetric["list"]; // && Code.isArray(reconstructionMetric)){
+						reconstructionMetric = reconstructionMetric[0];
+					}
+					console.log("reconstructionMetric: "+reconstructionMetric)
+
 					var str = world.toYAMLString();
 					console.log(str);
 
-world.reconstructionRelativeMetrics();
-
-throw "now with world ?"
+// throw "now with world ?"
 						var transform = world.transformFromViews(vA,vB);
 						var count = transform.matches().length; // doesn't count if P has 0 matches
 						var matches = transform.matches();
@@ -9851,7 +9944,14 @@ throw "now with world ?"
 						// get only best points
 						world.solveForTracks();
 						pairData["tracks"] = world.toObject();
+
+						pairData["metricNeighborsToWorld"] = reconstructionMetric;
+						// overall measurement of:
+						// accuracy, error, variability
+						// neighbor size TO world size
 					}
+console.log(pairData);
+// throw "before save"
 					pairDoneSaveFxn();
 				}
 				world.solvePair(internalCompleteFxn, project);
@@ -9869,9 +9969,11 @@ throw "now with world ?"
 }
 
 
-App3DR.ProjectManager.prototype.calculateTripleMatchFromViewIDs = function(viewAID, viewBID, viewCID, completeFxn, completeCxt, settings){
+App3DR.ProjectManager.prototype.calculateTripleMatchFromViewIDs = function(inputData,inputFilename, viewAID, viewBID, viewCID, completeFxn, completeCxt, settings){
 	console.log("calculateTripleMatchFromViewIDs");
-	throw "this references sparse data ?"
+
+	console.log(inputData,inputFilename);
+	// throw "this references sparse data ?"
 	var project = this;
 	if(!settings){
 		settings = {};
@@ -9889,10 +9991,10 @@ App3DR.ProjectManager.prototype.calculateTripleMatchFromViewIDs = function(viewA
 		return minimumStringFirst(iA,iB);
 	}
 	// get internals
-	var sparseData = this.sparseData();
-	console.log(sparseData);
-	var sparseFilename = project.sparseFilename();
-		var basePath = Code.pathRemoveLastComponent(sparseFilename);
+	// var sparseData = this.sparseData();
+	// console.log(sparseData);
+	// var sparseFilename = project.sparseFilename();
+		var basePath = Code.pathRemoveLastComponent(inputFilename);
 	var viewA = project.viewFromID(viewAID);
 	var viewB = project.viewFromID(viewBID);
 	var viewC = project.viewFromID(viewCID);
@@ -9903,7 +10005,7 @@ App3DR.ProjectManager.prototype.calculateTripleMatchFromViewIDs = function(viewA
 	var includedViews = [viewA,viewB,viewC];
 	
 	// find all existing / expected pairs
-	var pairs = sparseData["pairs"];
+	var pairs = inputData["pairs"];
 	var includedPairs = [];
 	for(var i=0; i<pairs.length; ++i){
 		var pair = pairs[i];
@@ -10267,9 +10369,10 @@ App3DR.ProjectManager.prototype.calculateFeatures = function(view){
 App3DR.ProjectManager.prototype._calculateFeaturesLoaded = function(view){
 	var image = view.featuresImage();
 	var imageMatrix = R3D.imageMatrixFromImage(image, this._stage);
-	var idealCount = 1000;
-	var maxCount = 1200;
-	var features = R3D.calculateScaleCornerFeaturesIdealCount(imageMatrix, idealCount, maxCount);
+	// var idealCount = 1000;
+	// var maxCount = 1200;
+	// OLD -- BAS ORIENTATION / SCALE:
+	// var features = R3D.calculateScaleCornerFeaturesIdealCount(imageMatrix, idealCount, maxCount);
 
 	// this doesn't seem much better ...
 	// console.log(features);
@@ -10277,13 +10380,16 @@ App3DR.ProjectManager.prototype._calculateFeaturesLoaded = function(view){
 	// console.log(features);
 	// throw "features ....";
 
+	var features = R3D.differentialCornersForImage(imageMatrix, new V2D(600,400));
 	var normalizedFeatures = R3D.normalizeSIFTObjects(features, imageMatrix.width(), imageMatrix.height());
+	console.log("FEATURES: "+normalizedFeatures.length);
 	
 	var wordsMax = 100;
-	var info = R3D.bagOfWords(imageMatrix, wordsMax);
-	var words = info["features"];
+	// var info = R3D.bagOfWords(imageMatrix, wordsMax, wordsMax);
+	// var words = info["features"];
+	var words = R3D.differentialCornersForImage(imageMatrix, new V2D(100,50));
 	var normalizedWords = R3D.normalizeSIFTObjects(words, imageMatrix.width(), imageMatrix.height());
-	// console.log(normalizedWords);
+	console.log("WORDS: "+normalizedWords.length);
 
 	var histogramSamples = 1000;
 	var info = R3D.imageHistogramSamples(imageMatrix, histogramSamples);
@@ -10297,7 +10403,7 @@ App3DR.ProjectManager.prototype._calculateFeaturesLoaded = function(view){
 
 	console.log(features.length+" | "+normalizedWords.length+" | "+Code.keys(normalizedHistogram).length);
 	R3D.showFeaturesForImage(imageMatrix, features);
-//	throw "now save ...";
+	// throw "now save ...";
 
 	view.setFeatureData(data, this._calculateFeaturesComplete, this);
 }
@@ -10418,12 +10524,12 @@ App3DR.ProjectManager.prototype.calculateDensePairPutatives = function(){
 		console.log(data);
 		var sparseData = data;
 		
-
 		var putativePairs = sparseData["putativePairs"];
 		if(!putativePairs){
 			throw "no sparse putativePairs";
 		}
 		var pairs = putativePairs["pairs"];
+// console.log(pairs);
 		var views = putativePairs["views"];
 		// convert views to lookup + transforms
 		var viewLookup = {};
@@ -10441,7 +10547,8 @@ App3DR.ProjectManager.prototype.calculateDensePairPutatives = function(){
 		for(var i=0; i<pairs.length; ++i){
 			var pair = pairs[i];
 			var viewIDA = pair["A"];
-			var viewIDB = pair["B"];
+			var viewIDB = pair["B"]
+			// var pairError = pair["relativeError"];
 			var extA = viewLookup[viewIDA]["transform"];
 			var extB = viewLookup[viewIDB]["transform"];
 			var extrinsicAB = R3D.relativeTransformMatrix2(extA,extB);
@@ -10451,6 +10558,7 @@ App3DR.ProjectManager.prototype.calculateDensePairPutatives = function(){
 				densePair["A"] = viewIDA;
 				densePair["B"] = viewIDB;
 				densePair["id"] = pairID;
+				// densePair["errorR"] = pairError;
 				densePair["relativeError"] = null;
 				densePair["relativeTransform"] = extrinsicAB;
 				densePair["matches"] = null;
@@ -10458,7 +10566,8 @@ App3DR.ProjectManager.prototype.calculateDensePairPutatives = function(){
 				densePair["tracks"] = null;
 			densePairs.push(densePair);
 		}
-		console.log(denseData);
+		// console.log(denseData);
+		// throw "before save";
 		project.saveFileFromData(denseData, denseFilename, fxnSaveDenseComplete, project);
 	}
 	var fxnSaveDenseComplete = function(data){
@@ -11636,6 +11745,988 @@ this.setTracksFilename(App3DR.ProjectManager.RECONSTRUCT_TRACKS_FILE_NAME);
 
 }
 
+App3DR.ProjectManager.prototype.displayOriginalViewGraph = function(views, pairs, triples, viewToID,pairToIDs,tripleToIDs, pairToError,pairToTransform,tripleToScales,  originalTransforms){
+	// ..
+	var minimumStringFirst = function(a,b){
+		return a < b ? (a+"-"+b) : (b+"-"+a);
+	}
+	var viewIDsToPairID = function(iA,iB){
+		return minimumStringFirst(iA,iB);
+	}
+	var setOrFlip = function(table,iA,iB,scale, error){
+		var key = viewIDsToPairID(iA,iB);
+		var edge = table[key];
+		if(edge["A"]==iA && edge["B"]==iB){
+			edge["list"].push([scale,error]);
+		}else if(edge["A"]==iB && edge["B"]==iA){
+			edge["list"].push([1.0/scale,error]);
+		}else{
+			throw "?";
+		}
+	}
+
+
+	console.log(views, pairs, triples);
+	// make graph based on relative pair scales
+	for(var i=0; i<pairs.length; ++i){
+		var pair = pairs[i];
+		// console.log(pair);
+	}
+	
+	// init scale edges
+	var edges = [];
+	var tableViewPairToEdge = {};
+	var tableViewPairToPair = {};
+	// var tablePairIDToIndex = {};
+	// var tablePairIndexToID = {};
+	for(var i=0; i<pairs.length; ++i){
+		var pairA = pairs[i];
+		var pairIDs = pairToIDs(pairA);
+		var idA = pairIDs[0];
+		var idB = pairIDs[1];
+		var nodeA = viewIDsToPairID(idA,idB);
+		// tablePairIDToIndex[nodeA] = i;
+		// tablePairIndexToID[i+""] = nodeA;
+		tableViewPairToPair[nodeA] = pairA;
+		for(var j=i+1; j<pairs.length; ++j){
+			var pairB = pairs[j];
+			var pairIDs = pairToIDs(pairB);
+			var idC = pairIDs[0];
+			var idD = pairIDs[1];
+			var nodeB = viewIDsToPairID(idC,idD);
+			var index = viewIDsToPairID(nodeA,nodeB);
+			// console.log(" INDEX ... "+index);
+			var edge = {"A":nodeA, "B":nodeB, "list":[], "pairA":pairA,"pairB":pairB};
+			edges.push(edge); // directional
+			tableViewPairToEdge[index] = edge;
+		}
+	}
+
+
+	// record edges for relative scales:
+	for(var i=0; i<triples.length; ++i){
+		var triple = triples[i];
+		var tripleIDs = tripleToIDs(triple);
+		// views
+		var idA = tripleIDs[0];
+		var idB = tripleIDs[1];
+		var idC = tripleIDs[2];
+		// pairs
+		var idAB = viewIDsToPairID(idA,idB);
+		var idAC = viewIDsToPairID(idA,idC);
+		var idBC = viewIDsToPairID(idB,idC);
+		var pairAB = tableViewPairToPair[idAB];
+		var pairAC = tableViewPairToPair[idAC];
+		var pairBC = tableViewPairToPair[idBC];
+		// errors
+		var errorAB = 0;
+		var errorAC = 0;
+		var errorBC = 0;
+		if(pairAB){
+			errorAB = pairToError(pairAB);
+		}
+		if(pairAC){
+			errorAC = pairToError(pairAC);
+		}
+		if(pairBC){
+			errorBC = pairToError(pairBC);
+		}
+		// scales
+		var scales = tripleToScales(triple);
+		// console.log(scales);
+		var scaleAB = scales["AB"];
+		var scaleAC = scales["AC"];
+		var scaleBC = scales["BC"];
+		// record edge
+		if(scaleAB>0 && scaleAC>0){
+			var scaleABtoAC = scaleAC/scaleAB;
+			setOrFlip(tableViewPairToEdge,idAB,idAC,scaleABtoAC,errorAB+errorAC);
+		}
+		if(scaleAC>0 && scaleBC>0){
+			var scaleACtoBC = scaleBC/scaleAC;
+			setOrFlip(tableViewPairToEdge,idAC,idBC,scaleACtoBC,errorAC+errorBC);
+		}
+		if(scaleAB>0 && scaleBC>0){
+			var scaleBCtoAB = scaleAB/scaleBC;
+			setOrFlip(tableViewPairToEdge,idBC,idAB,scaleBCtoAB,errorBC+errorAB);
+		}
+	}
+	// console.log(tableViewPairToEdge);
+	// combine multi-edges into single edge based on error
+	var keys = Code.keys(tableViewPairToEdge);
+	var graphEdges = [];
+	for(var i=0; i<keys.length; ++i){
+		var key = keys[i];
+		var edge = tableViewPairToEdge[key];
+		var list = edge["list"];
+		if(list.length>0){
+			var values = [];
+			var errors = [];
+			// console.log(".  "+key+",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,");
+			for(var j=0; j<list.length; ++j){
+				// console.log(list[j][0]+" - "+list[j][1]);
+				var e = list[j];
+				values.push(e[0]);
+				errors.push(e[1]);
+			}
+			var info = Code.errorsToPercents(errors);
+			var error = info["error"];
+			var percents = info["percents"];
+			var value = Code.averageNumbers(values, percents);
+			edge["value"] = value;
+			edge["error"] = error;
+			// console.log("=  "+value+" - "+error);
+			graphEdges.push(edge);
+		}
+	}
+	// create graph from edges
+	// console.log(graphEdges)
+	var graph = new Graph();
+
+	// create vertexes:
+	var pairIDToVertex = [];
+	for(var i=0; i<pairs.length; ++i){
+		var pair = pairs[i];
+		var pairIDs = pairToIDs(pair);
+		var idA = pairIDs[0];
+		var idB = pairIDs[1];
+		var pairID = viewIDsToPairID(idA,idB);
+		var vertex = graph.addVertex();
+		vertex.data({"pair":pair});
+		pairIDToVertex[pairID] = vertex;
+	}
+
+	// create edges:
+	for(var i=0; i<graphEdges.length; ++i){
+		var infoEdge = graphEdges[i];
+		var error = infoEdge["error"];
+		var value = infoEdge["value"];
+		var idA = infoEdge["A"];
+		var idB = infoEdge["B"];
+		var vertexA = pairIDToVertex[idA];
+		var vertexB = pairIDToVertex[idB];
+		var edge = graph.addEdgeDuplex(vertexA,vertexB, error);
+		edge.data({"error":error, "value":value});
+		vertex.data({"pair":pair});
+	}
+	// 
+var vertexes = graph.vertexes();
+
+/*
+// INSERT TEST DATA HERE
+vertexes[0].data()["value"] = 1.0;
+vertexes[1].data()["value"] = 2.0;
+vertexes[2].data()["value"] = 3.0;
+vertexes[3].data()["value"] = 4.0;
+vertexes[4].data()["value"] = 5.0;
+vertexes[5].data()["value"] = 10.0;
+vertexes[6].data()["value"] = 1.75;
+vertexes[7].data()["value"] = 1.0;
+vertexes[8].data()["value"] = 1.50;
+for(var i=0; i<vertexes.length; ++i){
+	var vertex = vertexes[i];
+	var data = vertex.data();
+	data["original"] = data["value"];
+}
+// fill in values
+	var edges = graph.edges();
+	for(var i=0; i<edges.length; ++i){
+		var edge = edges[i];
+		// console.log(edge);
+		var a = edge.A();
+		var b = edge.B();
+		// make up an error
+		// var mag = 0.1;
+		// var mag = 1.0;
+		// var mag = 0.50;
+		// var mag = 0.1;
+		var mag = 0;
+		var error = Math.random()*mag;
+		var relative = b.data()["value"]/a.data()["value"];
+		// console.log("relative: "+relative);
+
+
+		relative = Math.exp( Math.log(relative) + (error - mag*0.5) );
+
+		edge.weight(error);
+		edge.data()["error"] = error;
+		edge.data()["value"] = relative;
+	}
+*/
+
+
+
+	// find best root vertex:
+	var bestVertex = null;
+	var bestCost = null;
+	var bestPaths = null;
+	for(var i=0; i<vertexes.length; ++i){
+		var vertex = vertexes[i];
+		var paths = graph.minPaths(vertex);
+		var costTotal = 0;
+		var costCount = 0;
+		for(var p=0; p<paths.length; ++p){
+			var path = paths[p];
+			var cost = path["cost"];
+			if(cost!==null && cost>0){
+				costCount += 1;
+				costTotal += cost;
+			}
+		}
+		if(path["vertex"]!=vertex){
+			var avg = costTotal/costCount;
+			if(bestVertex==null || avg<bestCost){
+				bestVertex = vertex;
+				bestCost = avg;
+				bestPaths = paths;
+			}
+		}
+	}
+	// console.log(bestVertex);
+
+	bestVertex.data()["size"] = 1.0;
+
+	// initialize absolute sizes based on start vertex:
+	for(var i=0; i<bestPaths.length; ++i){
+		var path = bestPaths[i];
+		var edges = path["edges"];
+		var currentVertex = bestVertex;
+		var currentSize = bestVertex.data()["size"];
+		for(var e=0; e<edges.length; ++e){
+			var edge = edges[e];
+			var scale = edge.data()["value"];
+			if(edge.A()!=currentVertex){
+				scale = 1.0/scale;
+			}
+			currentSize *= scale;
+			currentVertex = edge.opposite(currentVertex);
+		}
+		var vertex = path["vertex"];
+		vertex.data()["size"] = currentSize;
+		vertex.data()["size"] = 1.0;
+	}
+
+
+	// ITERITIVLEY AVERAGE LOCATIONS
+	var maxIterations = 1000;
+	var maxAccuracy = 1.0 + 0.001;
+	// todo: also acceleration
+	for(var iteration=0; iteration<maxIterations; ++iteration){
+var debug = iteration == maxIterations-1;
+// console.log("+++++++++++++++++++++++++++++++++++ "+iteration);
+		// init accumulators
+		for(var i=0; i<vertexes.length; ++i){
+			var vertex = vertexes[i];
+			vertex.data()["list"] = [];
+		}
+		// each starting vertex
+		for(var i=0; i<vertexes.length; ++i){
+			// find path to all other vertexes + error
+			var vertex = vertexes[i];
+			var paths = graph.minPaths(vertex); // TODO: THIS IS CONSTANT
+			for(var p=0; p<paths.length; ++p){
+				var path = paths[p];
+				var cost = path["cost"];
+				// var cost = 1.0;
+				var vert = path["vertex"];
+				if(vert==vertex){
+					continue;
+				}
+				var size = vertex.data()["size"];
+				var edges = path["edges"];
+				// LIMIT PATHS BY ONY DIRECT EGES
+				if(edges.length!==1){
+					continue;
+				}
+				var currentVertex = vertex;
+				for(var e=0; e<edges.length; ++e){
+					var edge = edges[e];
+					var data = edge.data();
+					var scale = data["value"];
+						// cost /= data["error"];
+					if(edge.A()!=currentVertex){
+						scale = 1.0/scale;
+					}
+					size *= scale;
+					currentVertex = edge.opposite();
+				}
+				vert.data()["list"].push([size, cost]);
+			}
+		}
+		for(var i=0; i<vertexes.length; ++i){
+			var vertex = vertexes[i];
+			var list = vertex.data()["list"];
+			var errors = [];
+			var values = [];
+			for(var l=0; l<list.length; ++l){
+				var li = list[l];
+				values.push(li[0]);
+				errors.push(li[1]);
+			}
+			var info = Code.errorsToPercents(errors);
+			var error = info["error"];
+			var percents = info["percents"];
+			var value = Code.averageNumbers(values, percents);
+			vertex.data()["value"] = value;
+		}
+
+		// each vertex averages it's initial position based on error-average sum
+		// console.log(vertexes);
+
+		var smallest = null;
+		var largestRatio = null;
+		var prevLargestRatio = null;
+		for(var i=0; i<vertexes.length; ++i){
+			var vertex = vertexes[i];
+			var data = vertex.data();
+
+			var ratio = data["size"]/data["value"];
+			if(ratio<1){
+				ratio = 1/ratio;
+			}
+			if(largestRatio===null || ratio>largestRatio){
+				largestRatio = ratio;
+			}
+if(debug){
+console.log(i+": "+data["size"]+" => "+data["value"]+" ("+ratio+")");
+}
+			var value = data["value"];
+			data["size"] = value;
+			if(smallest===null || value<smallest){
+				smallest = value;
+			}
+		}
+		// console.log("largestRatio: "+largestRatio);
+
+		// normalize around 1
+		for(var i=0; i<vertexes.length; ++i){
+			var vertex = vertexes[i];
+			var data = vertex.data();
+			data["size"] = data["size"]/smallest;
+		}
+
+
+		// if(largestRatio<maxAccuracy){
+		// 	console.log("break early "+iteration);
+		// 	break;
+		// }
+		
+	}
+
+// DISLPAY SCALES
+	// display all pairs optimum scales:
+	var displaySpacing = 20;
+	var displaySize = 50;
+	for(var i=0; i<vertexes.length; ++i){
+		var vertex = vertexes[i];
+		var data = vertex.data();
+		var pair = data["pair"];
+		var size = data["size"];
+		var c = new V2D(10 + displaySpacing*i + displaySize*i + displaySize*0.5, 10 + displaySize*0.5);
+		// go thru all paths to find out what neighbors thing of size
+		var paths = graph.minPaths(vertex); // TODO: THIS IS CONSTANT
+		for(var p=0; p<paths.length; ++p){
+			var path = paths[p];
+			var cost = path["cost"];
+			// var cost = 1.0;
+			var vert = path["vertex"];
+			if(vert==vertex){
+				continue;
+			}
+			var scaleForward = 1.0;
+			var scaleReverse = 1.0;
+			var edges = path["edges"];
+			// LIMIT PATHS BY ONY DIRECT EGES
+			if(edges.length!==1){
+				continue;
+			}
+			var currentVertex = vertex;
+			for(var e=0; e<edges.length; ++e){
+				var edge = edges[e];
+				var data = edge.data();
+				var scale = data["value"];
+					// cost /= data["error"];
+				if(edge.A()!=currentVertex){
+					scale = 1.0/scale;
+				}
+				scaleForward *= scale;
+				scaleReverse /= scale;
+				currentVertex = edge.opposite();
+			}
+			//
+			var expected = vert.data()["size"] / vertex.data()["size"];
+			// scaleAccumulator = 1.0/scaleAccumulator;
+			//console.log("scaleAccumulator: "+scaleAccumulator+" - "+path["cost"]);
+			// console.log(".   vs: "+scaleForward+" - "+scaleReverse+" ~ "+(1.0/scaleReverse)+" =?= "+expected+" : COST: "+cost);
+
+			var scaleAccumulator = path["vertex"].data()["size"] * scaleReverse;
+
+
+			var circleSize = scaleAccumulator*displaySize*0.25;
+			var d = new DO();
+			// d.graphics().setLine(2.0,0xCC0000FF);
+			d.graphics().beginPath();
+			d.graphics().drawCircle(0,0, circleSize);
+			d.graphics().endPath();
+			// d.graphics().strokeLine();
+			d.graphics().setFill(0x110000FF);
+			d.graphics().fill();
+			d.matrix().translate(c.x, c.y);
+			GLOBALSTAGE.addChild(d);
+		}
+
+		var circleSize = size*displaySize*0.25;
+		var d = new DO();
+		d.graphics().setLine(1.0,0xFFFF0000);
+		d.graphics().beginPath();
+		d.graphics().drawCircle(0,0, circleSize);
+		d.graphics().endPath();
+		d.graphics().strokeLine();
+		d.matrix().translate(c.x, c.y);
+		GLOBALSTAGE.addChild(d);
+	}
+
+
+	
+
+	console.log("nonlinear update");
+	var x = [];
+	var args = [];
+	var iterations = 100;
+	var fxn = function(args, x, isUpdate){
+		var totalError = 0;
+		for(var i=0; i<args.length; ++i){
+			var edge = args[i];
+			var indexA = edge[0];
+			var indexB = edge[1];
+			var valueAB = edge[2];
+			var errorAB = edge[3];
+			var actualA = x[indexA];
+			var actualB = x[indexB];
+			var actualAB = actualB/actualA;
+			// console.log(valueAB+" vs "+actualAB);
+			var error = Math.abs( Math.log(valueAB) - Math.log(actualAB) );
+			if(errorAB>0){
+				error /= errorAB;
+			}
+			totalError += error;
+		}
+		// if(isUpdate){
+		// 	console.log("error: "+totalError);
+		// }
+		if(isUpdate){
+			// normalize smallest to 1.0
+			var minValue = Code.min(x);
+			for(var i=0; i<x.length; ++i){
+				x[i] /= minValue;
+			}
+			return;
+		}
+
+		return totalError;
+	}
+
+
+
+	// absolutes
+	var vertexes = graph.vertexes();
+	for(var i=0; i<vertexes.length; ++i){
+		var vertex = vertexes[i];
+		var data = vertex.data();
+		var size = data["size"];
+		vertex.temp(i);
+		x[i] = size;
+	}
+for(var i=0; i<x.length; ++i){
+	console.log(i+" : "+x[i]);
+}
+	// relatives
+	var edges = graph.edges();
+	for(var i=0; i<edges.length; ++i){
+		var edge = edges[i];
+		var data = edge.data();
+		var value = data["value"];
+		var error = data["error"];
+		var a = edge.A();
+		var b = edge.B();
+		args.push([a.temp(),b.temp(), value,error]);
+	}
+	console.log(args);
+	var result = Code.gradientDescent(fxn, args, x, null, iterations, 1E-16);
+	console.log(result);
+	var x = result["x"];
+for(var i=0; i<x.length; ++i){
+	console.log(i+" : "+x[i]);
+}
+	// put back in:
+	for(var i=0; i<vertexes.length; ++i){
+		var vertex = vertexes[i];
+		var data = vertex.data();
+			data["value"] = x[i];
+	}
+
+	// update transforms by INVERSING SCALES
+	var pairIDToRLookup = {};
+	for(var i=0; i<vertexes.length; ++i){
+		var vertex = vertexes[i];
+		var data = vertex.data();
+		var value = data["value"];
+		var pair = data["pair"];
+		var R = pairToTransform(pair);
+		// TO ABS:
+			// R = Matrix.inverse(R);
+			R = Matrix3D.fromMatrix(R);
+			R.scaleTranslation(1.0/value);
+			// R.scaleTranslation(value);
+			R = R.toMatrix();
+		// data["R"] = R;
+		var pairIDs = pairToIDs(pair);
+		var idA = pairIDs[0];
+		var idB = pairIDs[1];
+		var pairID = viewIDsToPairID(idA,idB);
+		pairIDToRLookup[pairID] = R;
+	}
+
+
+
+
+
+
+
+
+
+	// NEW GRAPH:
+	var viewGraph = new Graph();
+	var viewIDToVertex = {};
+	for(var i=0; i<views.length; ++i){
+		var view = views[i];
+		viewID = viewToID(view);
+		var vertex = viewGraph.addVertex();
+		vertex.data({"view":view, "i":i});
+		viewIDToVertex[viewID] = vertex;
+	}
+	for(var i=0; i<pairs.length; ++i){
+		var pair = pairs[i];
+		var idA = pair["A"];
+		var idB = pair["B"];
+		var vertexA = viewIDToVertex[idA];
+		var vertexB = viewIDToVertex[idB];
+		var error = pairToError(pair);
+		var edge = viewGraph.addEdgeDuplex(vertexA,vertexB, error);
+		
+		// GET UPDATED PAIR R
+		var pairIDs = pairToIDs(pair);
+		var idA = pairIDs[0];
+		var idB = pairIDs[1];
+		var pairID = viewIDsToPairID(idA,idB);
+		var R = pairIDToRLookup[pairID];
+
+		// 
+		var data = {};
+			data["pair"] = pair;
+			data["error"] = pairToError(pair);
+			data["forward"] = R;
+			data["reverse"] = Matrix.inverse(R);
+			// data["reverse"] = R3D.inverseCameraMatrix(R);
+		edge.data(data);
+	}
+
+
+
+
+
+/*
+
+// INSERT FAKE DATA HERE
+var vertexes = viewGraph.vertexes();
+var edges = viewGraph.edges();
+var R;
+R = new Matrix(4,4); R.identity(); R = Matrix.transform3DTranslate(R, 1,0,0);
+vertexes[0].data()["value"] = R;
+R = new Matrix(4,4); R.identity(); R = Matrix.transform3DTranslate(R, 2,1,0);
+vertexes[1].data()["value"] = R;
+R = new Matrix(4,4); R.identity(); R = Matrix.transform3DTranslate(R, 2,2,0);
+vertexes[2].data()["value"] = R;
+R = new Matrix(4,4); R.identity(); R = Matrix.transform3DTranslate(R, 3,2,0);
+vertexes[3].data()["value"] = R;
+R = new Matrix(4,4); R.identity(); R = Matrix.transform3DTranslate(R, 3,1,0);
+vertexes[4].data()["value"] = R;
+R = new Matrix(4,4); R.identity(); R = Matrix.transform3DTranslate(R, 4,3,0);
+vertexes[5].data()["value"] = R;
+// vertexes[6].data()["value"] = R;
+// vertexes[7].data()["value"] = R;
+// vertexes[8].data()["value"] = R;
+for(var i=0; i<vertexes.length; ++i){
+	var vertex = vertexes[i];
+	var data = vertex.data();
+	var R = data["value"];
+		R = Matrix.inverse(R);
+	data["value"] = R;
+	data["original"] = R;
+}
+// fill in values
+for(var i=0; i<edges.length; ++i){
+	var edge = edges[i];
+	var a = edge.A();
+	var b = edge.B();
+	var data = edge.data();
+	// make up an error
+	// var mag = 0.1;
+	var mag = 1.0;
+	// var mag = 0.50;
+	// var mag = 0.1;
+	// var mag = 0;
+	var error = Math.random()*mag;
+	// var relative = b.data()["value"]/a.data()["value"];
+	// relative = Math.exp( Math.log(relative) + (error - mag*0.5) );
+	var R = R3D.relativeTransformMatrix2(a.data()["value"], b.data()["value"]);
+	edge.weight(error);
+	data["error"] = error;
+	data["forward"] = R;
+	data["reverse"] = Matrix.inverse(R);
+	// console.log("fwd: \n "+data["forward"]+" & \n"+data["reverse"]);
+}
+
+// console.log(edges);
+// throw "?"
+
+
+*/
+
+
+
+
+
+	// initialize view locations to origin
+	var vertexes = viewGraph.vertexes();
+	for(var i=0; i<vertexes.length; ++i){
+		var vertex = vertexes[i];
+		var data = vertex.data();
+		var R = new Matrix(4,4);
+			R.identity();
+		data["value"] = R;		
+	}
+
+	var edges = viewGraph.edges();
+	// linear / iteritive estimate transform absolute locations from relative
+	var maxIterations = 10;
+	var maxAccuracy = 1.0 + 0.001;
+	// todo: also acceleration
+	for(var iteration=0; iteration<maxIterations; ++iteration){
+// var debug = iteration == maxIterations-1;
+console.log("+++++++++++++++++++++++++++++++++++ "+iteration);
+		// init accumulators
+		for(var i=0; i<vertexes.length; ++i){
+			var vertex = vertexes[i];
+			vertex.data()["list"] = [];
+		}
+
+		// get all edges and add
+		for(var i=0; i<vertexes.length; ++i){
+			var vertex = vertexes[i];
+			var origin = vertex.data()["value"];
+			var edges = vertex.edges();
+// console.log(edges);
+			for(var e=0; e<edges.length; ++e){
+				var edge = edges[e];
+				var data = edge.data();
+				var transform = data["forward"];
+				if(edge.A()!=vertex){
+					transform = data["reverse"];
+				}
+
+// transform = Matrix.inverse(transform);
+
+				var cost = data["error"];
+				var R = Matrix.mult(transform, origin);
+// console.log(""+origin);
+// console.log(""+transform);
+// console.log(""+R);
+// console.log("+++++++++++++++++");
+				// var R = Matrix.mult(origin, transform);
+				vertex.data()["list"].push([R, cost]);
+			}
+		}
+		// average each new position
+		for(var i=0; i<vertexes.length; ++i){
+			var vertex = vertexes[i];
+			var list = vertex.data()["list"];
+			var errors = [];
+			var values = [];
+			for(var l=0; l<list.length; ++l){
+				var li = list[l];
+				values.push(li[0]);
+				errors.push(li[1]);
+			}
+			var info = Code.errorsToPercents(errors);
+			var error = info["error"];
+			var percents = info["percents"];
+			var value = Code.averageTransforms3D(values, percents);
+// console.log(""+values);
+// console.log("=================");
+// console.log(""+value);
+// throw "?"
+			vertex.data()["next"] = value;
+		}
+
+		// check update deltas
+		for(var i=0; i<vertexes.length; ++i){
+			var vertex = vertexes[i];
+			var data = vertex.data();
+			var value = data["value"];
+			var next = data["next"];
+				var p = value.transform3DLocation();
+				var n = next.transform3DLocation();
+			var delta = V3D.distance(p,n);
+			console.log(i+" = "+delta);//+ "  "+p);
+			data["value"] = next;
+
+			// var avg = Code.averageTransforms3D([value,next], [0.5,0.5]);
+			// data["value"] = avg;
+			// console.log("NEXT: \n "+next);
+		}
+		// move COM to origin ?
+		// throw "end"
+	}
+
+	// nonlinear update absolute transforms from
+
+
+
+
+	console.log("nonlinear update");
+	var x = [];
+	var args = [];
+	var iterations = 100;
+	var fxn = function(args, x, isUpdate){ // position error only
+		var totalError = 0;
+		for(var i=0; i<args.length; ++i){
+			var edge = args[i];
+			var indexA = edge[0];
+			var indexB = edge[1];
+			var valueAB = edge[2];
+			var errorAB = edge[3];
+			var actualAx = x[indexA*3+0];
+			var actualAy = x[indexA*3+1];
+			var actualAz = x[indexA*3+2];
+			var actualBx = x[indexB*3+0];
+			var actualBy = x[indexB*3+1];
+			var actualBz = x[indexB*3+2];
+
+			var actualAB = new V3D(actualBx-actualAx, actualBy-actualAy, actualBz-actualAz);
+			// var actualAB = actualB/actualA;
+			// console.log(valueAB+" vs "+actualAB);
+			var error = V3D.distanceSquare( actualAB, valueAB );
+			if(errorAB>0){
+				error /= errorAB;
+			}
+			totalError += error;
+		}
+		// if(isUpdate){
+		// 	console.log("error: "+totalError);
+		// }
+		if(isUpdate){
+			// normalize smallest to origin?
+			console.log(totalError);	
+			return;
+		}
+
+		return totalError;
+	}
+
+
+
+	// absolutes
+	var vertexes = viewGraph.vertexes();
+	for(var i=0; i<vertexes.length; ++i){
+		var vertex = vertexes[i];
+		var data = vertex.data();
+		var R = data["value"];
+			vertex.temp(i);
+			console.log(data);
+			console.log(R);
+		var t = R.transform3DLocation();
+		x[i*3 + 0] = t.x;
+		x[i*3 + 1] = t.y;
+		x[i*3 + 2] = t.z;
+	}
+	// relatives
+	var edges = viewGraph.edges();
+	for(var i=0; i<edges.length; ++i){
+		var edge = edges[i];
+		var data = edge.data();
+		var R = data["forward"];
+		var error = data["error"];
+		var a = edge.A();
+		var b = edge.B();
+		var value = R.transform3DLocation();
+		args.push([a.temp(),b.temp(), value,error]);
+	}
+	console.log(args);
+	var result = Code.gradientDescent(fxn, args, x, null, iterations, 1E-16);
+	console.log(result);
+	var x = result["x"];
+
+	// put back in:
+	for(var i=0; i<vertexes.length; ++i){
+		var vertex = vertexes[i];
+		var data = vertex.data();
+		var p = new V3D(x[i*3+0], x[i*3+1], x[i*3+2]);
+
+		var R = new Matrix(4,4);
+			R.identity();
+			R = Matrix.transform3DTranslate(R, p.x,p.y,p.z);
+			data["value"] = R;
+	}
+
+	// // update transforms by INVERSING SCALES
+	// var pairIDToRLookup = {};
+	// for(var i=0; i<vertexes.length; ++i){
+	// 	var vertex = vertexes[i];
+	// 	var data = vertex.data();
+	// 	var value = data["value"];
+	// 	var pair = data["pair"];
+
+		// var R = new Matrix(4,4);
+		// 	R.identity();
+		// 	Matrix.transform3DTranslate();
+		// data["value"] = ;
+
+	// 	// var R = pairToTransform(pair);
+	// 	// TO ABS:
+	// 		// R = Matrix.inverse(R);
+	// 		// R = Matrix3D.fromMatrix(R);
+	// 		// R.scaleTranslation(1.0/value);
+	// 		// // R.scaleTranslation(value);
+	// 		// R = R.toMatrix();
+	// 	// data["R"] = R;
+	// 	// var pairIDs = pairToIDs(pair);
+	// 	// var idA = pairIDs[0];
+	// 	// var idB = pairIDs[1];
+	// 	// var pairID = viewIDsToPairID(idA,idB);
+	// 	// pairIDToRLookup[pairID] = R;
+	// }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	// plot orthogonal plane ???
+	var edges = viewGraph.edges();
+	var listPairs = [];
+	var transforms = [];
+	for(var i=0; i<vertexes.length; ++i){
+		var vertex = vertexes[i];
+		var R = vertex.data()["value"];
+		console.log(i+" : \n "+R);
+		transforms.push(R);
+	}
+	for(var i=0; i<edges; ++i){
+		var edge = edges[i];
+		var a = edge.A();
+		var b = edge.B();
+		var error = edge.data()["error"];
+		var fwd = R3D.relativeTransformMatrix2(a.data()["value"], b.data()["value"]);
+		// var absoluteAtoB = R3D.relativeTransformMatrix2(vA.absoluteTransformInverse(),vB.absoluteTransformInverse());
+		// var extrinsicAtoB = Matrix.inverse(absoluteAtoB);
+		// transform.R(vA,vB,extrinsicAtoB);
+		listPairs.push([a.data()["i"], b.data()["i"], fwd, error ]);
+	}
+	this.displayViewGraph(transforms,listPairs, 100);
+
+
+
+	throw "..."
+/*
+
+
+*/
+
+
+/*
+	var graph = new Graph();
+	// create vertexes:
+	// var vertexes = [];
+	var viewIDToVertex = [];
+	for(var i=0; i<views.length; ++i){
+		var view = views[i];
+		var vertex = graph.addVertex();
+			vertex.data(view);
+		// vertexes.push(vertex);
+		viewIDToVertex[viewToID(view)] = vertex;
+	}
+
+	// create edges:
+	// var edges = [];
+	for(var i=0; i<pairs.length; ++i){
+		var pair = pairs[i];
+		console.log(pair);
+		var idA = pair["A"];
+		var idB = pair["B"];
+		var vertexA = viewIDToVertex[idA];
+		var vertexB = viewIDToVertex[idB];
+		// var vertexA = ?;
+		// var vertexB = ?;
+		var error = pairToError(pair);
+		var edge = graph.addEdgeDuplex(vertexA,vertexB, error);
+		// edges.push(edge);
+	}
+	console.log(graph);
+*/
+
+	// optimum scale:
+
+
+
+	// consolidate each multi-edge into single edge by doing percent averaging
+
+	// create graph with edges
+
+	// pick lowest - error node as root, set scale to 1
+		// lowest-error ?
+
+	// follow minimum path from each edge  / just use direct edges ? (direct?) 
+
+	// ...
+
+
+
+
+	throw "?"
+}
 
 App3DR.ProjectManager.prototype.displayViewGraph = function(transforms, pairs, offsetX){
 	offsetX = offsetX!==undefined ? offsetX : 0.0;
@@ -11738,7 +12829,8 @@ App3DR.ProjectManager.prototype.displayViewGraph = function(transforms, pairs, o
 	display.graphics().strokeLine();
 
 	var normalSize = 25.0;
-	var cameraSize = 5.0;
+	// var cameraSize = 5.0;
+	var cameraSize = 2.0;
 	var centersDisplay2D = [];
 	for(var i=0; i<centers2D.length; ++i){
 		var center2D = centers2D[i];
@@ -11822,10 +12914,10 @@ App3DR.ProjectManager.prototype.displayViewGraph = function(transforms, pairs, o
 
 		var c2D = V2D.avg(p2DA,p2DB);
 
-		var text = new DOText(Code.fixed(""+err,5), 16, DOText.FONT_ARIAL, 0xFF990099, DOText.ALIGN_CENTER);
-		// text.matrix().scale(1,-1);
-		text.matrix().translate(c2D.x, c2D.y);
-		display.addChild(text);
+		// var text = new DOText(Code.fixed(""+err,5), 16, DOText.FONT_ARIAL, 0xFF990099, DOText.ALIGN_CENTER);
+		// // text.matrix().scale(1,-1);
+		// text.matrix().translate(c2D.x, c2D.y);
+		// display.addChild(text);
 	}
 	
 	// display.matrix().scale(1,-1);
@@ -13322,8 +14414,8 @@ App3DR.ProjectManager.prototype._absoluteViewsFromDensePairs = function(views, p
 		// ...
 		// return 1/pair["errorR"];
 		// return 1.0;
-		// return pair["errorR"];
-		return pair["errorR"]/pair["pointCount"];
+		return pair["errorR"];
+		// return pair["errorR"]/pair["pointCount"];
 	};
 	var pairToTransform = function(pair, idA,idB){
 		var A = pair["A"];
@@ -13343,13 +14435,13 @@ App3DR.ProjectManager.prototype._absoluteViewsFromDensePairs = function(views, p
 	};
 
 
-var originalTransforms = [];
-for(var i=0; i<views.length; ++i){
-	var view = views[i];
-	var R = view["R"];
-		R = new Matrix().fromObject(R);
-	originalTransforms[i] = R;
-}
+	var originalTransforms = [];
+	for(var i=0; i<views.length; ++i){
+		var view = views[i];
+		var R = view["R"];
+			R = new Matrix().fromObject(R);
+		originalTransforms[i] = R;
+	}
 
 	var info = R3D.optimumTransform3DFromObjectLookup(views, pairs, triples, viewToID,pairToIDs,tripleToIDs, pairToError,pairToTransform,tripleToScales,  originalTransforms);
 	var transforms = info["transforms"];
@@ -13357,6 +14449,12 @@ for(var i=0; i<views.length; ++i){
 	var viewIDs = info["views"];
 
 	console.log(info);
+
+
+
+
+
+	
 /*
 // TESTING KEEPING ORIGINAL:
 

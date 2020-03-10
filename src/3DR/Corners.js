@@ -30,10 +30,10 @@ function Corners(){
 	// var imageList = ["bench_A.png","bench_E.png"]; // scale/zoom
 	// var imageList = ["bench_A.png","bench_F.png"]; // big zoom, big angle, minimal area
 	
-	var imageList = ["bench_C.png","bench_D.png"]; // shift, small angle
+	// var imageList = ["bench_C.png","bench_D.png"]; // shift, small angle
 	// var imageList = ["bench_B.png","bench_E.png"];
 	// var imageList = ["bench_A.png","bench_F.png"];
-	// var imageList = ["room0.png","room2.png"];
+	var imageList = ["room0.png","room2.png"];
 	// var imageList = ["castle.000.jpg","castle.009.jpg"];
 	// var imageList = ["medusa_1.png","medusa_2.png"];
 	// var imageList = ["office_stereo1_all.jpg","office_stereo2_all.jpg"];
@@ -62,9 +62,9 @@ function Corners(){
 	// , "../../catHat.jpg"];//,"calib-3.png","calib-4.png","calib-5.png","calib-6.png"];
 
 
-	// var imageLoader = new ImageLoader(directory,imageList, this,this.handleImagesLoadedBasic,null);
+	var imageLoader = new ImageLoader(directory,imageList, this,this.handleImagesLoadedBasic,null);
 
-	var imageLoader = new ImageLoader(directory,imageList, this,this.handleImagesLoadShowCorners,null);
+	// var imageLoader = new ImageLoader(directory,imageList, this,this.handleImagesLoadShowCorners,null);
 	// var imageLoader = new ImageLoader(directory,imageList, this,this.handleImagesLoadShowFeatures,null);
 
 	// var imageLoader = new ImageLoader(directory,imageList, this,this.handleImagesLoadExperiment,null);
@@ -228,7 +228,7 @@ Corners.prototype.handleImagesLoadExperiment = function(imageInfo){
 console.log(featureA);
 console.log(featureB);
 
-	throw "?"
+	// throw "?"
 
 
 

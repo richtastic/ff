@@ -871,7 +871,7 @@ Stereopsis.View.prototype.cellForXY = function(xIn,yIn){
 }
 Stereopsis.View.prototype.corners = function(){
 	if(!this._corners){
-throw "make corners";
+// throw "make corners";
 		var image = this._image;
 		if(image){
 			var gry = image.gry();
@@ -1829,7 +1829,6 @@ Stereopsis.Transform3D.prototype.calculateErrorM = function(){
 		var sortFxn = function(a,b){
 			return a[0] < b[0] ? -1 : 1;
 		}
-		// console.log(nccScores)
 		nccScores.sort(sortFxn);
 		sadScores.sort(sortFxn);
 		var nMean = Code.min(nccScores);
@@ -1840,8 +1839,6 @@ Stereopsis.Transform3D.prototype.calculateErrorM = function(){
 		this._errorNCCSigma = nSigma;
 		var sMean = Code.min(sadScores);
 		var sSigma = Code.stdDev(sadScores, sMean);
-		// var sHalf = Code.median(nccScores);
-			// sSigma = Math.min(sSigma,sHalf);
 		this._errorSADMean = sMean;
 		this._errorSADSigma = sSigma;
 	}else{
@@ -1889,9 +1886,9 @@ Stereopsis.Transform3D.prototype.calculateErrorF = function(F){
 	for(var i=0; i<orderedPoints.length; ++i){
 		fDistances.push(orderedPoints[i][0]);
 	}
-	var fMean = Code.min(fDistances);
-	var fSigma = Code.stdDev(fDistances, fMean);
-	this._errorFMean = fMean;
+	var fMin = Code.min(fDistances);
+	var fSigma = Code.stdDev(fDistances, fMin);
+	this._errorFMean = fMin;
 	this._errorFSigma = fSigma;
 }
 Stereopsis.Transform3D.prototype.calculateErrorR = function(R){
@@ -1942,7 +1939,6 @@ Stereopsis.Transform3D.prototype.calculateErrorR = function(R){
 	}
 	var rMin = Code.min(rDistances);
 	var rMean = Code.mean(rDistances);
-	// var rSigma = Code.stdDev(rDistances, rMean);
 	var rSigma = Code.stdDev(rDistances, rMin);
 	// var rHalf = Code.median(rDistances);
 		// rSigma = Math.min(rSigma,rHalf);
@@ -5548,11 +5544,6 @@ Stereopsis.World.prototype.reconstructionRelativeMetrics = function(){ // makes 
 		for(var j=0; j<matches.length; ++j){
 			var match = matches[j];
 			var distance = 0;
-			// var viewA = match.viewA();
-			// var viewB = match.viewB();
-			// var views = [viewA,viewB];
-			// var oppos = [viewB,viewA];
-			// var points = [point2DA,point2DB];
 			pointList3D.push(match.estimated3D());
 			for(var v=0; v<views.length; ++v){ // get neighborhood in 2D -- knn vs cell radius ?
 				var viewCurrent = views[v];
@@ -5579,22 +5570,16 @@ Stereopsis.World.prototype.reconstructionRelativeMetrics = function(){ // makes 
 			}
 		}
 		averageDistance = averageDistance/countedMatches;
-		console.log("averageDistance: "+averageDistance);
-		console.log("baselineDistance: "+baselineDistance);
-		var distanceRatio = averageDistance/baselineDistance;
-		console.log("distanceRatio: "+distanceRatio);
-
-		console.log(pointList3D);
+		// console.log("averageDistance: "+averageDistance);
+		// console.log("baselineDistance: "+baselineDistance);
+		// var distanceRatio = averageDistance/baselineDistance;
+		// console.log("distanceRatio: "+distanceRatio);
 		var cov = Code.covariance3D(pointList3D);
-
 		console.log(cov);
 		var sigmas = cov["sigmas"];
 		var sigma = (sigmas[0] + sigmas[1] + sigmas[2])/3.0;
 		console.log("sigma: "+sigma);
-		//
-		// console.log(eigen);
-
-		distanceRatio = averageDistance/sigma;
+		var distanceRatio = averageDistance/sigma;
 		console.log("distanceRatio: "+distanceRatio);
 
 
@@ -5627,6 +5612,16 @@ distanceRatio: 0.001888170997284722
 sigma: 8181.484119528519
 distanceRatio: 0.0012646173173034084
 
+sigma: 4411.348906849993
+distanceRatio: 0.0023463957273532374
+
+
+GOOD-OK:
+sigma: 1597.3088384001665
+distanceRatio: 0.00656039105059871
+
+sigma: 327.41801720616894
+distanceRatio: 0.038232647076990305
 
 OK:
 
@@ -5643,10 +5638,11 @@ Stereopsis.js:8935 .       points: 3293       1 4Y5BJC44
 Stereopsis.js:8936  V M : 0.2681304745340904 +/- 0.28237806626199274
 Stereopsis.js:8937  V F : 13.422092901296919 +/- 17.588928064825083
 Stereopsis.js:8938  V R : 60.403245138895 : 26.46892369342944 +/- 35.483291415551015
-R3D.js:33707 edges:
-R3D.js:33708 [Array(4)]
 
 
+
+
+OK-POOR
 sigma: 1117.1488422651646
 distanceRatio: 0.01746356550385961
 
@@ -5654,9 +5650,7 @@ distanceRatio: 0.01746356550385961
 
 POOR:
 
-
-
-
+????: ?????
 sigma: 18581.970882172343
 distanceRatio: 0.0017620663267356913
 
@@ -5816,7 +5810,9 @@ Stereopsis.World.prototype.solveDensePair = function(){ // pairwise
 	// var errorPercentage = 0.002; // 0.002 @ 500 = 1 px
 	// var errorPercentage = 0.002; // 0.002 @ 1000 = 2 px
 	// var errorPercentage = 0.01;
-	var errorPercentage = 0.015; //
+	// var errorPercentage = 0.005; //
+	// var errorPercentage = 0.020; //
+	var errorPercentage = 0.010; // 1% error + no wiggle room
 
 	var cellFeatureScale = 1.0; // 1-2
 
@@ -5867,7 +5863,7 @@ console.log("GET MATCHES FROM 3D: "+errorR);
 
 
 
-
+// throw " before corners"
 
 
 

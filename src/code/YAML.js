@@ -464,6 +464,8 @@ YAML.prototype.writeString = function(name,value){ // if intending to write null
 		this._lines[this._lineNumber++] = this._prefixIndent()+YAML.ARRAY_SEPARATOR+YAML.SPACE+value;
 	}else{
 		if(name==null){ // this is do to some bug / bad usage
+			console.log(name,value);
+
 			name = value;
 			value = null;
 			throw "name is null but is object ?"
@@ -493,6 +495,11 @@ YAML.prototype.writeObjectLiteral = function(name,value){
 		for(var i=0; i<keys.length; ++i){
 			var key = keys[i];
 			var val = value[key];
+			if(val===undefined){
+				// could CONTINUE or REPLACE WITH NULL
+				val = null;
+				console.log("replacing an undefined value with null: '"+key+"'");
+			}
 			this._writeUnknownLiteral(key,val);
 		}
 	}

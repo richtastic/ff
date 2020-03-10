@@ -14366,9 +14366,12 @@ GLOBALSTAGE.addChild(d);
 	return {"value":scores};
 }
 
-R3D.differentialCornersForImage = function(inputImage){
+R3D.differentialCornersForImage = function(inputImage, idealImageSize){
 	var imageScales = new ImageMatScaled(inputImage);
 	var idealPixelCount = 600*400;
+	if(idealImageSize){
+		idealPixelCount = idealImageSize.x * idealImageSize.y;
+	}
 	var averagePixels = inputImage.width()*inputImage.height();
 	var imageScale = Math.sqrt(idealPixelCount/averagePixels); // area to dimension
 	if(imageScale<1.0){ // TODO: could also scale up?
@@ -18004,7 +18007,7 @@ d.matrix().translate(0 + i*600, 0);
 var doDebug = true;
 var debugOffY = 300;
 var debugOY = 0;
-doDebug = false;
+// doDebug = false;
 // throw "before loop"
 
 
@@ -18052,20 +18055,20 @@ if(doDebug){
 	// i = 300;
 	// i = 400;
 	// i = 450;
-	// i = 500;
+	i = 500;
 	// i = 600;
 	// i = 700;
 	// i = 750;
 	// i = 755;
 	// i = 800;
 	// i = 805;
-	// i = 810; // FG
+	// i = 810;
 	// i = 890;
 	// i = 900;
 	// i = 950;
 	// i = 960;
 	// i = 965;
-	i = 1000;
+	// i = 1000;
 
 	// i = 121;
 
@@ -33986,7 +33989,7 @@ R3D.optimumTransform3DFromObjectLookup = function(views, pairs, triples,  viewTo
 
 	// prep
 	var viewCount = views.length;
-
+	// 
 	// view lookup
 	var tableViewIDToIndex = {};
 	var tableViewIndexToID = {};
@@ -34222,14 +34225,15 @@ console.log(bestEdges);
 	}
 	absoluteScales = scales;
 
-
 	var listPairs = [];
 	for(var i=0; i<pairs.length; ++i){
 		var scaler = absoluteScales[i+""];
 // console.log("scaler: "+scaler);
+// throw "should this be inverse scale ?";
 		if(!scaler){
 			continue;
 		}
+		scaler = 1.0/scaler;
 		var pair = pairs[i];
 		var pairIDs = pairToIDs(pair);
 		var idA = pairIDs[0];
@@ -34464,7 +34468,7 @@ console.log(percents)
 // 	rememberQ = quaternion.copy();
 // }
 			var twist = Code.vectorTwistFromQuaternion(quaternion);
-				// console.log("  "+j+": "+translation+" & "+twist["direction"]+" @ "+Code.degrees(twist["angle"]));
+			// console.log("  "+j+": "+translation+" & "+twist["direction"]+" @ "+Code.degrees(twist["angle"]));
 			translations.push(translation);
 			dirs3D.push(twist["direction"]);
 			dirs2D.push(new V2D(1,0).rotate(twist["angle"]));
@@ -34474,7 +34478,7 @@ console.log(percents)
 		var avgDir = Code.averageAngleVector3D(dirs3D,percents);
 		var avgAng = Code.averageAngleVector2D(dirs2D,percents);
 			avgAng = V2D.angleDirection(V2D.DIRX,avgAng);
-			// console.log("AVG: "+avgTra+" & "+avgDir+" @ "+Code.degrees(avgAng));
+		// console.log("AVG: "+avgTra+" & "+avgDir+" @ "+Code.degrees(avgAng));
 		// to absolute qualities
 		var twist = {"direction":avgDir, "angle":avgAng};
 		var quaternion = Code.quaternionFromVectorTwist(twist);
