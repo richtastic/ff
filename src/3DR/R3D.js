@@ -33711,6 +33711,7 @@ R3D.optimumTransform3DFromRelativePairTransforms = function(pairs, maxIterations
 	console.log(edges);
 	return R3D.optimumTransform3D(edges, maxIterations,  originalTransforms); // nodeA, nodeB, scale, error
 }
+
 R3D.optimumScaling1D = function(edges){ // assume all connectes vertexes
 	var nonlinear = true;
 	// nonlinear = false;
@@ -34218,6 +34219,8 @@ console.log(bestEdges);
 	var results = R3D.optimumScaling1D(graphEdges);
 	console.log(results);
 	var absoluteScales = results["absolute"];
+// console.log(absoluteScales);
+// throw "?"
 	var scales = [];
 	for(var i=0; i<includedPairs.length; ++i){
 		var j = mappingIndexToExistPairs[i+""];
@@ -34233,7 +34236,7 @@ console.log(bestEdges);
 		if(!scaler){
 			continue;
 		}
-		scaler = 1.0/scaler;
+		// scaler = 1.0/scaler;
 		var pair = pairs[i];
 		var pairIDs = pairToIDs(pair);
 		var idA = pairIDs[0];

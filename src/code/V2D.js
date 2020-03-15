@@ -90,7 +90,20 @@ V2D.sub = function(c,a,b){
 	}
 	return new V2D(c.x-a.x,c.y-a.y);
 }
-
+V2D.random = function(magX,magY){
+	if(magX===undefined){
+		magX = 1.0;
+	}
+	if(magY===undefined){
+		magY = magX;
+	}
+	return new V2D( magX*(Math.random()-0.5), magY*(Math.random()-0.5) );
+}
+// V2D.weightedAverage = function(a,b,c,p,q){
+// 	if(q===undefined){ q = p; p = c; c = b; b = a; a = new V2D(); }
+// 	a.set( b.x*p + c.x*q, b.y*p + c.y*q );
+// 	return a;
+// }
 V2D.avg = function(a,b,c){ // a = average(b,c) === midpoint
 	if(c===undefined){ c = b; b = a; a = new V2D(); }
 	a.set( (b.x+c.x)*0.5, (b.y+c.y)*0.5 );

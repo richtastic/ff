@@ -42,6 +42,106 @@ nonlinear gradient descent
 
 
 
+### 1D:
+
+edge:
+	v_j = v_i * s_ij
+	log(v_j) = log(v_i) + log(s_ij)
+
+
+additively:
+
+
+a_i = a_j + s_ij
+=>
+0 = a_j - a_i + s_ij
+
+
+	 a_i     a_j      c         ... 
+[ ... -1 ...  1  ... s_ij ]   [ a_i ]   [ 0 ]
+[                         ] x [ a_j ] = [ 0 ]
+                               ...
+
+EIGEN VECTORS
+SVD
+OTHER THING?
+
+
+NONLINEAR ERROR:
+?
+
+
+
+---
+
+
+### 2D translation:
+
+edge:
+	v_i = v_j + r_ij
+	< v_i.x , v_i.y >  =  < v_j.x, v_j.y >  +  < r_ij.x, r_ij.y >
+
+
+A) 
+
+|| v_i - v_j || = || r_ij || 
+
+
+(v_i.x - v_j.x)^2 + (v_i.y - v_j.y)^2  = r_ij.x^2 + r_ij.y^2
+v_i.x^2 + v_j.x - 2&middot;v_i.x^2&middot;v_j.x  +  v_i.y^2 + v_j.y - 2&middot;v_i.y^2&middot;v_j.y  = r_ij.x^2 + r_ij.y^2
+...
+
+
+B) incorrectly independent simplification:
+v_j.x = v_i.x + r_ij.x
+v_j.y = v_i.y + r_ij.y
+
+=> simplifies to 1D
+
+
+### 2D orientation:
+
+edge: angle differentials
+	v_i = v_j + r_ij (modulo 2&pi;)
+
+nonlinearity of modulo 2&pi;
+
+
+nonlinear error:
+	angular:
+		minAngle(a,b)
+		= 
+	vector:
+		angle( vector(a), vector(b) )
+
+
+### 3D translation:
+
+
+edge: 
+	v_i = v_j + r_ij
+
+
+
+### 3D orientation:
+	locations on sphere are only 2 dof
+	- representations:
+		- 3-Vector 
+		- 
+
+
+	twist = normal direction + 2D angular difference
+
+	average:
+		- normal direction = unit sphere normal weighted averaging
+		- angular average = 2D angular average of DIFFERENCES of angles 
+
+
+
+
+### 3D translation + orientation
+
+...
 
 
 
@@ -51,22 +151,143 @@ nonlinear gradient descent
 
 
 
+NONLINEAR ERROR:
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+distance between x/y/z axis unit vectors
 
 
 ...
+
+
+
+### Combined Process for View Graph Error Minimizing
+
+
+#### Scaling
+
+
+#### Init Locations
+
+
+#### Init Orientations
+
+
+#### Init Combined Location + Orientation
+
+
+#### Nonlinear Error Locations
+
+
+#### Nonlinear Error Orientations
+
+
+#### Nonlinear Error Combined Location + Orientations
+
+
+
+
+functions:
+	- scale -> log & log -> scale
+	edges: [idA, idB, value, error]
+	- graphEdgeAverage1D(edges)
+		- init
+		- linear
+		- nonlinear
+	- graphEdgeAverageV2D(edges)
+		- init
+		- linear
+		- nonlinear
+	- graphEdgeAverageV3D(edges)
+		- init
+		- linear
+		- nonlinear
+	- graphEdgeAverageAngle2D(edges)
+		- init
+		- linear
+		- nonlinear
+	- graphEdgeAverageAngle3D(edges)
+		- init
+		- linear
+		- nonlinear
+	- graphEdgeAverageOrientation3D(edges)
+		- init angle2D
+		- init angle3D
+		- nonlinear axes3D
+	- graphEdgeAverageCombined3D(edges)
+		- init orientation 3D
+		- init location 3D
+		- nonlinear axes3D
+
+
+
+
+
+#### Combined Location + Orientations
+	- need some way to connect the location & orientation at same time ...
+		=> solved rotations will have no relation to translations
+	- need to solve together simultaneously
+		-> average ABSOLUTE transtorms at same time, but relative isn't enough
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+---
+
+
+
+
+

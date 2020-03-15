@@ -71,6 +71,9 @@ V4D.qMul = function(c, a,b){ // c = a*b // non-unit  == a x b
 	c.set(x,y,z,t);
 	return c;
 }
+V4D.prototype.qMatrix = function(m){
+	return V4D.qMatrix(this,m);
+}
 V4D.qMatrix = function (q,m){
 	if(m===undefined){ m = new Matrix3D(); }
 	var xx  = q.x*q.x;

@@ -58,7 +58,10 @@ function Ajax(auto){ // http://www.w3.org/TR/XMLHttpRequest/
 	}
 }
 
-
+Ajax.load = function(url,comp,con, params){
+	var ajax = new Ajax();
+	return ajax.get(url,con,comp,params);
+}
 
 // --- get/set ---------------------------------------
 Ajax.prototype.binary = function(b){

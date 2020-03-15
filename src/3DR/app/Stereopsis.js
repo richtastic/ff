@@ -8731,17 +8731,22 @@ Stereopsis.World.prototype.estimate3DViews = function(){ // get absolution of vi
 		}
 	}
 	// optimized absolute transforms
+console.log(pairs);
 	var results = R3D.optimumTransform3DFromRelativePairTransforms(pairs);
-	// set resulting absolute transforms
-	var absolutes = results["absolute"];
-	for(var i=0; i<views.length; ++i){
-		var viewA = views[i];
-		var absolute = absolutes[i];
-		var extrinsic = Matrix.inverse(absolute);
-		viewA.absoluteTransform(extrinsic);
+	if(!results){
+		console.log("unable to find optimal relative pair transforms ...");
+	}else{
+		// set resulting absolute transforms
+		var absolutes = results["absolute"];
+		for(var i=0; i<views.length; ++i){
+			var viewA = views[i];
+			var absolute = absolutes[i];
+			var extrinsic = Matrix.inverse(absolute);
+			viewA.absoluteTransform(extrinsic);
+		}
+		// relative from new absolute transforms
+		this.copyRelativeTransformsFromAbsolute();
 	}
-	// relative from new absolute transforms
-	this.copyRelativeTransformsFromAbsolute();
 }
 Stereopsis.World.prototype.estimate3DTransforms = function(){ // nonlinear camera optimization
 	var world = this;

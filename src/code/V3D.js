@@ -160,6 +160,12 @@ V3D.sub = function(c,a,b){
 	}
 	return new V3D(c.x-a.x,c.y-a.y,c.z-a.z);
 }
+V3D.random = function(magX,magY,magZ){
+	if(magX===undefined){ magX = 1.0; }
+	if(magY===undefined){ magY = magX; }
+	if(magZ===undefined){ magZ = magY; }
+	return new V3D( magX*(Math.random()-0.5), magY*(Math.random()-0.5), magZ*(Math.random()-0.5) );
+}
 V3D.avg = function(a,b,c){ // a = average(b,c) === midpoint
 	if(c===undefined){ c = b; b = a; a = new V3D(); }
 	a.set( (b.x+c.x)*0.5, (b.y+c.y)*0.5, (b.z+c.z)*0.5 );

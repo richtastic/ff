@@ -13,8 +13,11 @@ Matrix3D.YAML = {
 	K:"k",
 	L:"l"
 }
-function Matrix3D(){
+function Matrix3D(m){
 	this.a=1; this.b=0; this.c=0; this.d=0; this.e=0; this.f=1; this.g=0; this.h=0; this.i=0; this.j=0; this.k=1; this.l=0;
+	if(m){
+		this.copy(m);
+	}
 }
 Matrix3D.prototype.fromArray = function(a){
 	if(!a){ return; }
@@ -90,7 +93,6 @@ mat4.postMultM3D = function(a,b,m){
 	}
 	//return mat4.multiply(a,[m.a,m.b,m.c,m.d, m.e,m.f,m.g,m.h, m.i,m.j,m.k,m.l, 0,0,0,1],b); // OLD
 	return mat4.multiply(a,[m.a,m.e,m.i,0, m.b,m.f,m.j,0, m.c,m.g,m.k,0, m.d,m.h,m.l,1],b);
-	return null;
 }
 mat4.toArray = function(mat4){
 	var arr = [ mat4[0],mat4[4],mat4[8],mat4[12],  mat4[1],mat4[5],mat4[9],mat4[13],  mat4[2],mat4[6],mat4[10],mat4[14],  mat4[3],mat4[7],mat4[11],mat4[15] ]; // 3==0, 7==0, 11==0, 15==1
@@ -291,6 +293,10 @@ Matrix3D.prototype.postmult = function(mat){
 	return this;
 }
 Matrix3D.prototype.mult = function(mA,mB){
+	if(!mB){
+		mB = mA;
+		mA = this;
+	}
 	var aA=mA.a,aB=mA.b,aC=mA.c,aD=mA.d,aE=mA.e,aF=mA.f,aG=mA.g,aH=mA.h,aI=mA.i,aJ=mA.j,aK=mA.k,aL=mA.l;
 	var bA=mB.a,bB=mB.b,bC=mB.c,bD=mB.d,bE=mB.e,bF=mB.f,bG=mB.g,bH=mB.h,bI=mB.i,bJ=mB.j,bK=mB.k,bL=mB.l;
 	this.a = aA*bA + aB*bE + aC*bI;
@@ -306,6 +312,14 @@ Matrix3D.prototype.mult = function(mA,mB){
 	this.k = aI*bC + aJ*bG + aK*bK;
 	this.l = aI*bD + aJ*bH + aK*bL + aL;
 	return this;
+}
+Matrix3D.mult = function(mC, mA,mB){
+	if(!mB){
+		mB = mA;
+		mA = mC;
+		mC = new Matrix3D();
+	}
+	return mC.mult(mA,mB);
 }
 Matrix3D.prototype.multV3D = function(aV,bV){ // a = trans(b)
 	if(bV===undefined){ bV = aV; aV = new V3D(); }
@@ -335,12 +349,18 @@ Matrix3D.prototype.copy = function(m){
 	this.set(m.a,m.b,m.c,m.d,m.e,m.f,m.g,m.h,m.i,m.j,m.k,m.l);
 	return this;
 }
-Matrix3D.inverse = function(m){
-	var n = new Matrix3D();
+Matrix3D.inverse = function(n,m){
+	if(!m){
+		m = n;
+		n = new Matrix3D();
+	}
 	n.inverse(m);
 	return n;
 }
 Matrix3D.prototype.inverse = function(m){ // http://www.cg.info.hiroshima-cu.ac.jp/~miyazaki/knowledge/teche23.html
+	if(!m){
+		m = this;
+	}
 	// http://www.cg.info.hiroshima-cu.ac.jp/~miyazaki/knowledge/teche53.html ----- R|t specific
 	var det = 1/(m.a*m.f*m.k + m.b*m.g*m.i + m.c*m.e*m.j - m.a*m.g*m.j - m.b*m.e*m.k - m.c*m.f*m.i);
 	var a = (m.f*m.k - m.g*m.j)*det;
@@ -354,7 +374,7 @@ Matrix3D.prototype.inverse = function(m){ // http://www.cg.info.hiroshima-cu.ac.
 	var i = (m.e*m.j - m.f*m.i)*det;
 	var j = (m.b*m.i - m.a*m.j)*det;
 	var k = (m.a*m.f - m.b*m.e)*det;
-	var l = (m.a*m.h*m.j + m.b*m.e*m.l + m.d*m.f*m.i - m.a*m.f*m.k - m.b*m.h*m.i - m.d*m.e*m.j)*det;
+	var l = (m.a*m.h*m.j + m.b*m.e*m.l + m.d*m.f*m.i - m.a*m.f*m.l - m.b*m.h*m.i - m.d*m.e*m.j)*det;
 	this.a = a; this.b = b; this.c = c; this.d = d; this.e = e; this.f = f; this.g = g; this.h = h; this.i = i; this.j = j; this.k = k; this.l = l;
 	return this;
 }
@@ -388,6 +408,21 @@ Matrix3D.prototype.kill = function(){
 // -----------------------------------------------------------------------------------------------
 Matrix3D.temp = new Matrix3D(); // internal
 Matrix3D.TEMP = new Matrix3D(); // external
+
+Matrix3D.relative = function(relAB,absA,absB){
+	if(!absB){
+		absB = absA;
+		absA = relAB;
+		relAB = new Matrix3D();
+	}
+	var invA = Matrix3D.inverse(Matrix3D.temp, absA);
+	Matrix3D.mult(relAB, absB, invA);
+	return relAB;
+
+	// var invA = Matrix.inverse(absA);
+	// var relativeAtoB = Matrix.mult(absB,invA);
+	// return relativeAtoB;
+}
 
 Matrix3D.matrix3DFromMatrix = function(mat){
 	var m3D = new Matrix3D();

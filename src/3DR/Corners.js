@@ -24,7 +24,7 @@ function Corners(){
 	// var imageList = ["A.png"];
 
 	var directory = "./images/";
-	// var imageList = ["bench_A.png","bench_B.png"]; // big angle
+	var imageList = ["bench_A.png","bench_B.png"]; // big angle
 	// var imageList = ["bench_A.png","bench_C.png"]; // big angle
 	// var imageList = ["bench_A.png","bench_D.png"]; // angle
 	// var imageList = ["bench_A.png","bench_E.png"]; // scale/zoom
@@ -33,7 +33,7 @@ function Corners(){
 	// var imageList = ["bench_C.png","bench_D.png"]; // shift, small angle
 	// var imageList = ["bench_B.png","bench_E.png"];
 	// var imageList = ["bench_A.png","bench_F.png"];
-	var imageList = ["room0.png","room2.png"];
+	// var imageList = ["room0.png","room2.png"];
 	// var imageList = ["castle.000.jpg","castle.009.jpg"];
 	// var imageList = ["medusa_1.png","medusa_2.png"];
 	// var imageList = ["office_stereo1_all.jpg","office_stereo2_all.jpg"];
@@ -53,7 +53,48 @@ function Corners(){
 	
 	
 	
-	
+	// var imageList = ["IMG_9864.JPG","IMG_9866.JPG"];
+	// var imageList = ["IMG_9864.JPG","IMG_9865.JPG"]; // 0.72
+	// var imageList = ["IMG_9865.JPG","IMG_9866.JPG"]; // 0.84
+	// var imageList = ["bench_A.png","bench_C.png"];
+	// var imageList = ["bench_A.png","bench_A.png"];
+
+
+
+	/*
+		histograms: 1000 samples
+
+		same scene, exact:
+			0.96
+			0.97
+		
+		same scene, close:
+			0.90
+		
+		same scene, offset only:
+			0.88
+		
+		same scene, disparate angle:
+			0.87
+		
+		same scene, different object/focus:
+			0.38
+			0.40
+			0.42
+
+		different:
+			0.24
+			0.27
+			0.30
+			0.35
+			0.50
+
+		conclusions:
+			0.0-0.50 - entirely different
+			0.50-0.70 - possibly same scene, but different focus
+			0.70-0.90 - same scene, possibly same focus
+			0.90-1.00 - same focus, possibly identical
+	*/
 
 
 	// var directory = "./images/phone6/calibrate/";
@@ -62,15 +103,73 @@ function Corners(){
 	// , "../../catHat.jpg"];//,"calib-3.png","calib-4.png","calib-5.png","calib-6.png"];
 
 
-	var imageLoader = new ImageLoader(directory,imageList, this,this.handleImagesLoadedBasic,null);
+	// var imageLoader = new ImageLoader(directory,imageList, this,this.handleImagesLoadedBasic,null);
 
 	// var imageLoader = new ImageLoader(directory,imageList, this,this.handleImagesLoadShowCorners,null);
 	// var imageLoader = new ImageLoader(directory,imageList, this,this.handleImagesLoadShowFeatures,null);
 
 	// var imageLoader = new ImageLoader(directory,imageList, this,this.handleImagesLoadExperiment,null);
 
+
+	var imageLoader = new ImageLoader(directory,imageList, this,this.handleImagesLoadedHistograms,null);
+
 	imageLoader.load();
 	
+}
+
+
+Corners.prototype.handleImagesLoadedHistograms = function(imageInfo){
+	var imageList = imageInfo.images;
+	// var fileList = imageInfo.files;
+	// var i, j, k, list = [];
+	// var x = 0, y = 0;
+	var images = [];
+	var imageMatrixList = [];
+	var imageScalesList = [];
+	for(var i=0;i<imageList.length;++i){
+		// var file = fileList[i];
+		var img = imageList[i];
+		images[i] = img;
+		var imageSource = images[i];
+		var imageFloat = GLOBALSTAGE.getImageAsFloatRGB(imageSource);
+		var imageMatrix = new ImageMat(imageFloat["width"],imageFloat["height"], imageFloat["red"], imageFloat["grn"], imageFloat["blu"]);
+		imageMatrixList.push(imageMatrix);
+		// var imageScales = new ImageMatScaled(imageMatrix);
+		// imageScalesList.push(imageScales);
+	}
+
+	console.log(imageScalesList);
+
+
+	// 
+	// var imageScales = imageScalesList[0];
+	var imageMatrixA = imageMatrixList[0];
+	var imageMatrixB = imageMatrixList[1];
+
+
+	var histogramSamples = 10000;
+	var histograms = [];
+	for(var i=0;i<imageMatrixList.length;++i){
+		var imageMatrix = imageMatrixList[i];
+		var info = R3D.imageHistogramSamples(imageMatrix, histogramSamples);
+		var normalizedHistogram = info["histogram"];
+		histograms.push(normalizedHistogram);
+	}
+
+	for(var i=0;i<histograms.length;++i){
+		var histA = histograms[i];
+		for(var j=i+1;j<histograms.length;++j){
+			var histB = histograms[j];
+			var score = R3D.compareImageHistograms(histA,histB);
+			// obj = {};
+			// obj["A"] = idA;
+			// obj["B"] = idB;
+			// obj["s"] = score;
+			console.log(" "+i+" - "+j+" = "+score);
+		}
+	}
+
+
 }
 
 

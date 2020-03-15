@@ -7515,7 +7515,7 @@ console.log("checkPerformNextTask");
 
 // throw "task pair bag of words";
 	if(!this.hasViewSimilarity()){
-		this.calculateViewSimilarities(view);
+		this.calculateViewSimilarities();
 		return;
 	}
 
@@ -7579,7 +7579,7 @@ console.log("checkPerformNextTask");
 		return;
 	}
 
-// throw "start dense";
+throw "start dense";
 	if(!project.checkHasDenseStarted()){
 		project.calculateDensePairPutatives();
 		return;
@@ -7672,7 +7672,28 @@ App3DR.ProjectManager.prototype.iterateSparseProcess = function(){
 	project.loadSparse(fxn, project);
 }
 
+App3DR.ProjectManager.prototype.testDEL = function(){
+	var url = "http://localhost/web/ff/3DR/app/x.yaml";
+	var project = this;
+	var loaded = function(str){
+		console.log(str);
+		var yaml = YAML.parse(str);
+		console.log(yaml);
+		yaml = yaml[0];
 
+		var views = yaml["views"];
+		var transforms = [];
+		for(var i=0; i<views.length; ++i){
+			var view = views[i];
+			var transform = view["transform"];
+				transform = Matrix.fromObject(transform);
+			transforms.push(transform);
+		}
+		var listPairs = [];
+		project.displayViewGraph(transforms,listPairs, 100);
+	}
+	Ajax.load(url, loaded);
+}
 App3DR.ProjectManager.prototype.iterateDenseProcess = function(){
 	var project = this;
 	var denseConfiguration = {};
@@ -7686,10 +7707,16 @@ App3DR.ProjectManager.prototype.iterateDenseProcess = function(){
 App3DR.ProjectManager.prototype._iterateSparseDenseLoaded = function(inputFilename, inputData, configuration){
 	var project = this;
 	console.log("_iterateSparseDenseLoaded");
+
+
+	// this.testDEL();
+	// throw "???"
+
+
 	var pairs = inputData["pairs"];
 	var basePath = Code.pathRemoveLastComponent(inputFilename);
 	console.log(basePath);
-	console.log(inputData);
+
 	// console.log(basePath);
 
 
@@ -7810,6 +7837,8 @@ console.log("GOT : relative: "+relativeCount);
 		saveMatchesFxn();
 	}
 
+	console.log(inputData)
+
 // throw ">A";
 
 	// LOAD EACH PAIR & DO MATCH | F | R | DENSE
@@ -7830,7 +7859,7 @@ console.log("pair count: "+pairs.length+" ............");
 // i = 5;  // 
 // i = 6;  // 
 // i = 7;  //
-i = 8; // 
+// i = 8; // 
 // i = 9;  // 
 // i = 10; // 
 // console.log("PICKED: "+i);
@@ -7948,7 +7977,8 @@ console.log("inputFilename: "+inputFilename);
 // throw ">graph";
 	// CREATE GRAPH FROM PAIRWISE & TRIPLE SCALE
 	var graph = inputData["graph"];
-// graph = null;
+// force redo:
+graph = null;
 	if(!graph){
 		var views = project.views();
 		var graphViews = [];
@@ -9461,9 +9491,9 @@ App3DR.ProjectManager.prototype._absoluteViewsFromDatas = function(views, pairs,
 		return gauge;
 	};
 
+this.displayOriginalViewGraph(views, pairs, triples, viewToID,pairToIDs,tripleToIDs, pairToError,pairToTransform,tripleToScales);
 
 
-// this.displayOriginalViewGraph(views, pairs, triples, viewToID,pairToIDs,tripleToIDs, pairToError,pairToTransform,tripleToScales);
 
 
 	var info = R3D.optimumTransform3DFromObjectLookup(views, pairs, triples, viewToID,pairToIDs,tripleToIDs, pairToError,pairToTransform,tripleToScales);
@@ -9538,7 +9568,15 @@ console.log(relativeAB);
 		}
 		console.log("loadedImages");
 		solveWorld();
+		// doDisplay();
 	}
+
+	// var doDisplay = function(){
+	// 	console.log("doDisplay");
+
+	// 	console.log(allViews);
+
+	// }
 
 	var solveWorld = function(){
 		// build world
@@ -10391,7 +10429,8 @@ App3DR.ProjectManager.prototype._calculateFeaturesLoaded = function(view){
 	var normalizedWords = R3D.normalizeSIFTObjects(words, imageMatrix.width(), imageMatrix.height());
 	console.log("WORDS: "+normalizedWords.length);
 
-	var histogramSamples = 1000;
+	var histogramSamples = 10000; /// 1000 min .... 100x100 image = 10000
+	// 10x10x10 = MAXIMUM of 1000 entries -- more like 10-100
 	var info = R3D.imageHistogramSamples(imageMatrix, histogramSamples);
 	var normalizedHistogram = info["histogram"];
 	// console.log(normalizedHistogram);
@@ -10485,10 +10524,10 @@ App3DR.ProjectManager.prototype.calculateViewSimilarities = function(){
 					scores.push(obj);
 				}
 			}
-scores.sort(function(a,b){
-	return a["s"]>b["s"] ? -1 : 1;
-});
-console.log(scores);
+			scores.sort(function(a,b){
+				return a["s"]>b["s"] ? -1 : 1;
+			});
+			console.log(scores);
 // throw "now go save";
 			project.setViewSimilarity(scores);
 			project.setSparseFilename(null);
@@ -10589,9 +10628,12 @@ App3DR.ProjectManager.prototype.calculatePairPutatives = function(){
 	var similarity = this._viewSimilarity;
 
 	var minimumPairCount = 3; // need at least 2 + 1 other views to try
-	var maximumPairCount = minimumPairCount + 2*Math.ceil(Math.sqrt(viewCount));
+		minimumPairCount = 6; // double in cases of error
+	// 4  -> 2
+	// 9  -> 3
+	// 16 -> 4
+	var maximumPairCount = minimumPairCount + 1*Math.ceil(Math.sqrt(viewCount));
 	console.log("VIEWS: "+viewCount+" | RANGE: "+minimumPairCount+" : "+maximumPairCount);
-
 	var sortScoresFxn = function(a,b){
 		a = a["s"];
 		b = b["s"];
@@ -10690,7 +10732,7 @@ App3DR.ProjectManager.prototype.calculatePairPutatives = function(){
 	}
 	var fxnSavedSparse = function(){
 		console.log("fxnSavedSparse");
-		// throw "BEFORE SAVE PROJECT";
+// throw "BEFORE SAVE PROJECT";
 		project.saveProjectFile(fxnSavedProject, project);
 	}
 	project.saveSparseFromData(sparseData, fxnSavedSparse, project);
@@ -11770,7 +11812,16 @@ App3DR.ProjectManager.prototype.displayOriginalViewGraph = function(views, pairs
 	// make graph based on relative pair scales
 	for(var i=0; i<pairs.length; ++i){
 		var pair = pairs[i];
-		// console.log(pair);
+		console.log(pair);
+		// if(i==7-1){
+		// 	pair["relativeError"] = 1;
+		// }
+		// if(i==9-1){
+		// 	pair["relativeError"] = 1;
+		// }
+		// if(i==6-1){
+		// 	pair["relativeError"] = 1;
+		// }
 	}
 	
 	// init scale edges
@@ -11801,6 +11852,8 @@ App3DR.ProjectManager.prototype.displayOriginalViewGraph = function(views, pairs
 			tableViewPairToEdge[index] = edge;
 		}
 	}
+
+
 
 
 	// record edges for relative scales:
@@ -11879,6 +11932,8 @@ App3DR.ProjectManager.prototype.displayOriginalViewGraph = function(views, pairs
 			graphEdges.push(edge);
 		}
 	}
+
+
 	// create graph from edges
 	// console.log(graphEdges)
 	var graph = new Graph();
@@ -11893,6 +11948,7 @@ App3DR.ProjectManager.prototype.displayOriginalViewGraph = function(views, pairs
 		var pairID = viewIDsToPairID(idA,idB);
 		var vertex = graph.addVertex();
 		vertex.data({"pair":pair});
+		vertex.temp(i);
 		pairIDToVertex[pairID] = vertex;
 	}
 
@@ -11907,10 +11963,16 @@ App3DR.ProjectManager.prototype.displayOriginalViewGraph = function(views, pairs
 		var vertexB = pairIDToVertex[idB];
 		var edge = graph.addEdgeDuplex(vertexA,vertexB, error);
 		edge.data({"error":error, "value":value});
-		vertex.data({"pair":pair});
+		// vertex.data({"pair":pair});
 	}
+
+
 	// 
 var vertexes = graph.vertexes();
+// console.log(vertexes);
+// throw "?"
+
+
 
 /*
 // INSERT TEST DATA HERE
@@ -11922,7 +11984,7 @@ vertexes[4].data()["value"] = 5.0;
 vertexes[5].data()["value"] = 10.0;
 vertexes[6].data()["value"] = 1.75;
 vertexes[7].data()["value"] = 1.0;
-vertexes[8].data()["value"] = 1.50;
+// vertexes[8].data()["value"] = 1.50;
 for(var i=0; i<vertexes.length; ++i){
 	var vertex = vertexes[i];
 	var data = vertex.data();
@@ -11936,11 +11998,12 @@ for(var i=0; i<vertexes.length; ++i){
 		var a = edge.A();
 		var b = edge.B();
 		// make up an error
-		// var mag = 0.1;
-		// var mag = 1.0;
+		// var mag = 0.01;
+		var mag = 0.10;
 		// var mag = 0.50;
+		// var mag = 1.0;
 		// var mag = 0.1;
-		var mag = 0;
+		// var mag = 0;
 		var error = Math.random()*mag;
 		var relative = b.data()["value"]/a.data()["value"];
 		// console.log("relative: "+relative);
@@ -11952,7 +12015,49 @@ for(var i=0; i<vertexes.length; ++i){
 		edge.data()["error"] = error;
 		edge.data()["value"] = relative;
 	}
+
 */
+
+// TEST CODE VERSION
+var edges = graph.edges();
+var pairEdges = [];
+for(var i=0; i<edges.length; ++i){
+	var edge = edges[i];
+	console.log(edge);
+	var idA = edge.A().temp();
+	var idB = edge.B().temp();
+	var weight = edge.data()["error"];
+	var value = edge.data()["value"];
+		value = Math.log(value);
+	pairEdges.push([idA,idB,value,weight]);
+}
+
+console.log(pairEdges);
+// 
+
+var result = Code.graphAbsoluteFromRelative1D(pairEdges);
+console.log(result);
+
+var values = result["values"];
+console.log("TEST TEST TEST TEST TEST TEST ");
+for(var i=0; i<values.length; ++i){
+	var value = values[i];
+		value = Math.exp(value);
+	console.log(" "+i+" : "+value);
+	values[i] = value;
+}
+var testedScales = values;
+// throw "???"
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -12113,7 +12218,7 @@ console.log(i+": "+data["size"]+" => "+data["value"]+" ("+ratio+")");
 		
 	}
 
-// DISLPAY SCALES
+// DISPLAY SCALES
 	// display all pairs optimum scales:
 	var displaySpacing = 20;
 	var displaySize = 50;
@@ -12192,7 +12297,7 @@ console.log(i+": "+data["size"]+" => "+data["value"]+" ("+ratio+")");
 	console.log("nonlinear update");
 	var x = [];
 	var args = [];
-	var iterations = 100;
+	var iterations = 1000;
 	var fxn = function(args, x, isUpdate){
 		var totalError = 0;
 		for(var i=0; i<args.length; ++i){
@@ -12258,6 +12363,13 @@ for(var i=0; i<x.length; ++i){
 for(var i=0; i<x.length; ++i){
 	console.log(i+" : "+x[i]);
 }
+
+
+console.log(x);
+x = testedScales;
+console.log(testedScales);
+// throw "?"
+
 	// put back in:
 	for(var i=0; i<vertexes.length; ++i){
 		var vertex = vertexes[i];
@@ -12320,6 +12432,8 @@ for(var i=0; i<x.length; ++i){
 		var idB = pairIDs[1];
 		var pairID = viewIDsToPairID(idA,idB);
 		var R = pairIDToRLookup[pairID];
+// TO ABS ?
+R = R3D.inverseCameraMatrix(R);
 
 		// 
 		var data = {};
@@ -12327,7 +12441,7 @@ for(var i=0; i<x.length; ++i){
 			data["error"] = pairToError(pair);
 			data["forward"] = R;
 			data["reverse"] = Matrix.inverse(R);
-			// data["reverse"] = R3D.inverseCameraMatrix(R);
+			// data["reverse"] = 
 		edge.data(data);
 	}
 
@@ -12409,12 +12523,12 @@ for(var i=0; i<edges.length; ++i){
 
 	var edges = viewGraph.edges();
 	// linear / iteritive estimate transform absolute locations from relative
-	var maxIterations = 10;
+	var maxIterations = 100;
 	var maxAccuracy = 1.0 + 0.001;
 	// todo: also acceleration
 	for(var iteration=0; iteration<maxIterations; ++iteration){
 // var debug = iteration == maxIterations-1;
-console.log("+++++++++++++++++++++++++++++++++++ "+iteration);
+// console.log("+++++++++++++++++++++++++++++++++++ "+iteration);
 		// init accumulators
 		for(var i=0; i<vertexes.length; ++i){
 			var vertex = vertexes[i];
@@ -12478,7 +12592,7 @@ console.log("+++++++++++++++++++++++++++++++++++ "+iteration);
 				var p = value.transform3DLocation();
 				var n = next.transform3DLocation();
 			var delta = V3D.distance(p,n);
-			console.log(i+" = "+delta);//+ "  "+p);
+// console.log(i+" = "+delta);//+ "  "+p);
 			data["value"] = next;
 
 			// var avg = Code.averageTransforms3D([value,next], [0.5,0.5]);
@@ -12497,7 +12611,7 @@ console.log("+++++++++++++++++++++++++++++++++++ "+iteration);
 	console.log("nonlinear update");
 	var x = [];
 	var args = [];
-	var iterations = 100;
+	var iterations = 1000;
 	var fxn = function(args, x, isUpdate){ // position error only
 		var totalError = 0;
 		for(var i=0; i<args.length; ++i){
@@ -12527,7 +12641,7 @@ console.log("+++++++++++++++++++++++++++++++++++ "+iteration);
 		// }
 		if(isUpdate){
 			// normalize smallest to origin?
-			console.log(totalError);	
+			// console.log(totalError);	
 			return;
 		}
 

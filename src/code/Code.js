@@ -3466,6 +3466,7 @@ Code.angleZeroTwoPi = function(ang){ // [-inf,inf] => [0,2pi]
 	return ang;
 }
 Code.anglePi = function(ang){ // [-inf,inf] => [0,2pi]
+	throw "is this used ?"
 	var pi = Math.PI;
 	var pi2 = Math.PI*2;
 	while(ang>=pi){
@@ -3478,6 +3479,7 @@ Code.anglePi = function(ang){ // [-inf,inf] => [0,2pi]
 }
 
 Code.angleTwoPi = function(ang){ // [-inf,inf] => [-2pi,2pi]
+	throw "is this used ?"
 	var pi2 = Math.PI*2;
 	while(ang>pi2){
 		ang -= pi2;
@@ -13999,6 +14001,909 @@ Array.prototype.last = function(){
 }
 
 
+// -------------------------------------------------------------------------------------------------------------------------------------------- absolute graph from relative edges
+// FORMAT: [idA, idB, value, weight]
+Code.graphAbsoluteFromRelative1D = function(edges){ // value: vA = vB + edge
+	// settings
+	var minimumChangeQuit = 1E-6; // use edges to find 0.01% of that
+	var maxIterationsLinear = 1000;
+	var maxIterationsNonLinear = 1000;
+	var decayRate = 0.0; // percent of old value to keep
+	// derived
+	var dRO = 1.0 - decayRate;
+	// lookup table
+	var maxIndex = -1;
+	var averageEdge = 0;
+	for(var i=0; i<edges.length; ++i){
+		var edge = edges[i];
+		averageEdge += Math.abs(edge[2]);
+		maxIndex = Math.max(maxIndex,edge[0]);
+		maxIndex = Math.max(maxIndex,edge[1]);
+	}
+	minimumChangeQuit *= (averageEdge/edges.length);
+
+	// initial estimate
+	var vertexes = [];
+	for(var i=0; i<=maxIndex; ++i){
+		vertexes[i] = {"value":0, "next":0, "list":null};
+// vertexes[i] = {"value":1.0, "next":1.0, "list":null};
+	}
+	// iteritive averaging
+	for(var iteration=0; iteration<maxIterationsLinear; ++iteration){
+		// init accumulators
+		for(var i=0; i<vertexes.length; ++i){
+			vertexes[i]["list"] = [];
+		}
+		// accumulate expecteds
+		for(var i=0; i<edges.length; ++i){
+			var edge = edges[i];
+			var idA = edge[0];
+			var idB = edge[1];
+			var val = edge[2];
+			var err = edge[3];
+			var value;
+				value = vertexes[idA]["value"] + val;
+				vertexes[idB]["list"].push([value, err]);
+				value = vertexes[idB]["value"] - val;
+				vertexes[idA]["list"].push([value, err]);
+// value = vertexes[idA]["value"]*val;
+// vertexes[idB]["list"].push([value, err]);
+// value = vertexes[idB]["value"]/val;
+// vertexes[idA]["list"].push([value, err]);
+		}
+		// update locations
+		var maxDelta = null;
+		for(var i=0; i<vertexes.length; ++i){
+			var vertex = vertexes[i];
+			var list = vertex["list"];
+			var errors = [];
+			var values = [];
+			for(var l=0; l<list.length; ++l){
+				var li = list[l];
+				values.push(li[0]);
+				errors.push(li[1]);
+			}
+			var info = Code.errorsToPercents(errors);
+			var error = info["error"];
+			var percents = info["percents"];
+			var value = Code.averageNumbers(values, percents);
+			vertex["next"] = value;
+			var delta = value["next"] - value["value"];
+				delta = Math.abs(delta);
+			if(maxDelta===null || maxDelta<delta){
+				maxDelta = delta;
+			}
+			// set to new
+			vertex["value"] = vertex["next"]*dRO + decayRate*vertex["value"];
+		}
+		// move minimum to 0
+		var smallestValue = null;
+		for(var i=0; i<vertexes.length; ++i){
+			var value = vertexes[i]["value"];
+			if(smallestValue===null || value<smallestValue){
+				smallestValue = value;
+			}
+		}
+		for(var i=0; i<vertexes.length; ++i){
+			vertexes[i]["value"] -= smallestValue;
+// vertexes[i]["value"] /= smallestValue;
+		}
+		// quit early?:
+		if(maxDelta<minimumChangeQuit){
+			console.log("break early: "+maxDelta);
+			break;
+		}
+	}
+
+	// nonlinear update estimate
+	var fxn = function(args, x, isUpdate){
+		if(isUpdate){
+			// normalize smallest to 0
+			var minValue = Code.min(x);
+			for(var i=0; i<x.length; ++i){
+				x[i] -= minValue;
+// x[i] /= minValue;
+			}
+			return;
+		}
+		var totalError = 0;
+		var edges = args[0];
+		for(var i=0; i<edges.length; ++i){
+			var edge = edges[i];
+			var indexA = edge[0];
+			var indexB = edge[1];
+			var valueAB = edge[2];
+			var errorAB = edge[3];
+			var actualA = x[indexA];
+			var actualB = x[indexB];
+			var actualAB = actualB - actualA;
+			var error = Math.abs( valueAB - actualAB );
+// var actualAB = actualB/actualA;
+// var error = Math.abs( Math.log(valueAB) - Math.log(actualAB) );
+			//error = error*error;
+			if(errorAB>0){
+				error /= errorAB;
+			}
+			totalError += error;
+		}
+		if(isUpdate){
+			// console.log("error: "+totalError);
+			// throw "?"
+		}
+		return totalError;
+	}
+
+	var x = [];
+	for(var i=0; i<vertexes.length; ++i){
+		var vertex = vertexes[i];
+		x[i] = vertex["value"];
+	}
+
+	var args = [edges];
+	var result = Code.gradientDescent(fxn, args, x, null, maxIterationsNonLinear, 1E-16);
+	
+	var values = result["x"];
+	return {"values":values};
+}
+
+Code.graphAbsoluteFromRelativeV2D = function(edges){ // V2D: vA = vB + edge
+	// settings
+	var minimumChangeQuit = 1E-6;
+		// minimumChangeQuit = 0;
+	var maxIterationsLinear = 1000;
+	var maxIterationsNonLinear = 1000;
+	var decayRate = 0.0; // percent of old value to keep
+	// derived
+	var dRO = 1.0 - decayRate;
+	// lookup table
+	var maxIndex = -1;
+	var averageEdge = 0;
+	for(var i=0; i<edges.length; ++i){
+		var edge = edges[i];
+		averageEdge += Math.abs(edge[2].length());
+		maxIndex = Math.max(maxIndex,edge[0]);
+		maxIndex = Math.max(maxIndex,edge[1]);
+	}
+	minimumChangeQuit *= (averageEdge/edges.length);
+
+	// initial estimate
+	var vertexes = [];
+	for(var i=0; i<=maxIndex; ++i){
+		vertexes[i] = {"value":new V2D(), "next":new V2D(), "list":null};
+	}
+	
+	// iteritive averaging
+	for(var iteration=0; iteration<maxIterationsLinear; ++iteration){
+		// init accumulators
+		for(var i=0; i<vertexes.length; ++i){
+			vertexes[i]["list"] = [];
+		}
+		// accumulate expecteds
+		for(var i=0; i<edges.length; ++i){
+			var edge = edges[i];
+			var idA = edge[0];
+			var idB = edge[1];
+			var val = edge[2];
+			var err = edge[3];
+			var value;
+				value = V2D.add(vertexes[idA]["value"],val);
+				vertexes[idB]["list"].push([value, err]);
+				value = V2D.sub(vertexes[idB]["value"],val);
+				vertexes[idA]["list"].push([value, err]);
+		}
+		// update locations
+		var maxDelta = null;
+		for(var i=0; i<vertexes.length; ++i){
+			var vertex = vertexes[i];
+			var list = vertex["list"];
+			var errors = [];
+			var values = [];
+			for(var l=0; l<list.length; ++l){
+				var li = list[l];
+				values.push(li[0]);
+				errors.push(li[1]);
+			}
+			var info = Code.errorsToPercents(errors);
+			var error = info["error"];
+			var percents = info["percents"];
+			var value = Code.averageV2D(values, percents);
+			vertex["next"] = value;
+			var delta = V2D.sub(vertex["next"],vertex["value"]);
+				delta = delta.length();
+			if(maxDelta===null || maxDelta<delta){
+				maxDelta = delta;
+			}
+			// set to new
+			vertex["value"] = Code.averageV2D([vertex["next"],vertex["value"]], [dRO,decayRate]);
+		}
+		// throw "???";
+		// move minimum to 0
+		var smallestValue = null;
+		var smallestDistance = null;
+		for(var i=0; i<vertexes.length; ++i){
+			var value = vertexes[i]["value"];
+			var distance = value.length();
+			if(smallestValue===null || distance<smallestDistance){
+				smallestValue = value;
+				smallestDistance = distance;
+			}
+		}
+		for(var i=0; i<vertexes.length; ++i){
+			vertexes[i]["value"].sub(smallestValue);
+		}
+		// quit early?:
+		if(maxDelta<minimumChangeQuit){
+			console.log("break early: "+maxDelta);
+			break;
+		}
+	}
+
+
+
+	// nonlinear update estimate
+	var tmp = new V2D();
+	var fxn = function(args, x, isUpdate){
+		// if(isUpdate){ // normalize smallest to 0
+		// 	var minValue = Code.min(x);
+		// 	for(var i=0; i<x.length; ++i){
+		// 		x[i] -= minValue;
+		// 	}
+		// 	return;
+		// }
+		var totalError = 0;
+		var edges = args[0];
+		for(var i=0; i<edges.length; ++i){
+			var edge = edges[i];
+			var indexA = edge[0];
+			var indexB = edge[1];
+			var valueAB = edge[2];
+			var errorAB = edge[3];
+			var actualAX = x[indexA*2+0];
+			var actualAY = x[indexA*2+1];
+			var actualBX = x[indexB*2+0];
+			var actualBY = x[indexB*2+1];
+			var actualAB = tmp.set(actualBX-actualAX, actualBY-actualAY);
+			var error = V2D.distance(valueAB, actualAB);
+			error = error*error;
+			if(errorAB>0){
+				error /= errorAB;
+			}
+			totalError += error;
+		}
+		return totalError;
+	}
+
+	var x = [];
+	for(var i=0; i<vertexes.length; ++i){
+		var vertex = vertexes[i];
+		var value = vertex["value"];
+		x[i*2+0] = value.x;
+		x[i*2+1] = value.y;
+	}
+
+	var args = [edges];
+	var result = Code.gradientDescent(fxn, args, x, null, maxIterationsNonLinear, 1E-16);
+	var values = result["x"];
+	console.log(values)
+	var vectors = [];
+	for(var i=0; i<vertexes.length; ++i){
+		vectors[i] = new V2D( values[i*2+0], values[i*2+1] );
+	}
+	return {"values":vectors};
+}
+
+Code.graphAbsoluteFromRelativeV3D = function(edges){ // V3D: vA = vB + edge
+	// settings
+	var minimumChangeQuit = 1E-6;
+		// minimumChangeQuit = 0;
+	var maxIterationsLinear = 1000;
+	var maxIterationsNonLinear = 1000;
+	var decayRate = 0.0; // percent of old value to keep
+	// derived
+	var dRO = 1.0 - decayRate;
+	// lookup table
+	var maxIndex = -1;
+	var averageEdge = 0;
+	for(var i=0; i<edges.length; ++i){
+		var edge = edges[i];
+		averageEdge += Math.abs(edge[2].length());
+		maxIndex = Math.max(maxIndex,edge[0]);
+		maxIndex = Math.max(maxIndex,edge[1]);
+	}
+	minimumChangeQuit *= (averageEdge/edges.length);
+
+	// initial estimate
+	var vertexes = [];
+	for(var i=0; i<=maxIndex; ++i){
+		vertexes[i] = {"value":new V3D(), "next":new V3D(), "list":null};
+	}
+	
+	// iteritive averaging
+	for(var iteration=0; iteration<maxIterationsLinear; ++iteration){
+		// init accumulators
+		for(var i=0; i<vertexes.length; ++i){
+			vertexes[i]["list"] = [];
+		}
+		// accumulate expecteds
+		for(var i=0; i<edges.length; ++i){
+			var edge = edges[i];
+			var idA = edge[0];
+			var idB = edge[1];
+			var val = edge[2];
+			var err = edge[3];
+			var value;
+				value = V3D.add(vertexes[idA]["value"],val);
+				vertexes[idB]["list"].push([value, err]);
+				value = V3D.sub(vertexes[idB]["value"],val);
+				vertexes[idA]["list"].push([value, err]);
+		}
+		// update locations
+		var maxDelta = null;
+		for(var i=0; i<vertexes.length; ++i){
+			var vertex = vertexes[i];
+			var list = vertex["list"];
+			var errors = [];
+			var values = [];
+			for(var l=0; l<list.length; ++l){
+				var li = list[l];
+				values.push(li[0]);
+				errors.push(li[1]);
+			}
+			var info = Code.errorsToPercents(errors);
+			var error = info["error"];
+			var percents = info["percents"];
+			var value = Code.averageV3D(values, percents);
+			vertex["next"] = value;
+			var delta = V3D.sub(vertex["next"],vertex["value"]);
+				delta = delta.length();
+			if(maxDelta===null || maxDelta<delta){
+				maxDelta = delta;
+			}
+			// set to new
+			vertex["value"] = Code.averageV3D([vertex["next"],vertex["value"]], [dRO,decayRate]);
+		}
+		// move minimum to 0
+		var smallestValue = null;
+		var smallestDistance = null;
+		for(var i=0; i<vertexes.length; ++i){
+			var value = vertexes[i]["value"];
+			var distance = value.length();
+			if(smallestValue===null || distance<smallestDistance){
+				smallestValue = value;
+				smallestDistance = distance;
+			}
+		}
+		for(var i=0; i<vertexes.length; ++i){
+			vertexes[i]["value"].sub(smallestValue);
+		}
+		// quit early?:
+		if(maxDelta<minimumChangeQuit){
+			console.log("break early: "+maxDelta);
+			break;
+		}
+	}
+// console.log(vertexes)
+// var vectors = [];
+// for(var i=0; i<vertexes.length; ++i){
+// 	var value = vertexes[i]["value"];
+// 	vectors[i] = value;
+// }
+// return {"values":vectors};
+
+	// nonlinear update estimate
+	var tmp = new V3D();
+	var fxn = function(args, x, isUpdate){
+		if(isUpdate){ // normalize COM to 0
+			var comX = 0;
+			var comY = 0;
+			var comZ = 0;
+			
+			// for(var i=0; i<x.length; ++i){
+			// 	x[i] -= minValue;
+			// }
+			return;
+		}
+		var totalError = 0;
+		var edges = args[0];
+		for(var i=0; i<edges.length; ++i){
+			var edge = edges[i];
+			var indexA = edge[0];
+			var indexB = edge[1];
+			var valueAB = edge[2];
+			var errorAB = edge[3];
+			var actualAX = x[indexA*3+0];
+			var actualAY = x[indexA*3+1];
+			var actualAZ = x[indexA*3+2];
+			var actualBX = x[indexB*3+0];
+			var actualBY = x[indexB*3+1];
+			var actualBZ = x[indexB*3+2];
+			var actualAB = tmp.set(actualBX-actualAX, actualBY-actualAY, actualBZ-actualAZ);
+			var error = V3D.distance(valueAB, actualAB);
+			error = error*error;
+			if(errorAB>0){
+				error /= errorAB;
+			}
+			totalError += error;
+		}
+		return totalError;
+	}
+
+	var x = [];
+	for(var i=0; i<vertexes.length; ++i){
+		var vertex = vertexes[i];
+		var value = vertex["value"];
+		x[i*3+0] = value.x;
+		x[i*3+1] = value.y;
+		x[i*3+2] = value.z;
+	}
+
+	var args = [edges];
+	var result = Code.gradientDescent(fxn, args, x, null, maxIterationsNonLinear, 1E-16);
+	var values = result["x"];
+	console.log(values)
+	var vectors = [];
+	for(var i=0; i<vertexes.length; ++i){
+		vectors[i] = new V3D( values[i*3+0], values[i*3+1], values[i*3+2] );
+	}
+	return {"values":vectors};
+}
+
+Code.graphAbsoluteFromRelativeAngle2D = function(edges){ // angle: vA = vB + edge
+	// settings
+	var minimumChangeQuit = 1E-6; // use edges to find 0.01% of that
+	var maxIterationsLinear = 1000;
+	var maxIterationsNonLinear = 1000;
+	var decayRate = 0.0; // percent of old value to keep
+	// derived
+	var dRO = 1.0 - decayRate;
+	// lookup table
+	var maxIndex = -1;
+	var averageEdge = 0;
+	for(var i=0; i<edges.length; ++i){
+		var edge = edges[i];
+		averageEdge += Math.abs(edge[2]);
+		maxIndex = Math.max(maxIndex,edge[0]);
+		maxIndex = Math.max(maxIndex,edge[1]);
+	}
+	minimumChangeQuit *= (averageEdge/edges.length);
+
+	// initial estimate
+	var vertexes = [];
+	for(var i=0; i<=maxIndex; ++i){
+		vertexes[i] = {"value":0, "next":0, "list":null};
+	}
+	
+	for(var iteration=0; iteration<maxIterationsLinear; ++iteration){
+		// init accumulators
+		for(var i=0; i<vertexes.length; ++i){
+			vertexes[i]["list"] = [];
+		}
+		// accumulate expecteds
+		for(var i=0; i<edges.length; ++i){
+			var edge = edges[i];
+			var idA = edge[0];
+			var idB = edge[1];
+			var val = edge[2];
+			var err = edge[3];
+			var value;
+				value = vertexes[idA]["value"] + val;
+					value = Code.angleZeroTwoPi(value);
+				vertexes[idB]["list"].push([value, err]);
+				value = vertexes[idB]["value"] - val;
+					value = Code.angleZeroTwoPi(value);
+				vertexes[idA]["list"].push([value, err]);
+		}
+		// update locations
+		var maxDelta = null;
+		for(var i=0; i<vertexes.length; ++i){
+			var vertex = vertexes[i];
+			var list = vertex["list"];
+			var errors = [];
+			var values = [];
+			for(var l=0; l<list.length; ++l){
+				var li = list[l];
+				values.push(li[0]);
+				errors.push(li[1]);
+			}
+			var info = Code.errorsToPercents(errors);
+			var error = info["error"];
+			var percents = info["percents"];
+			var value = Code.averageAngles(values, percents);
+			vertex["next"] = value;
+			var delta = Code.minAngle(vertex["next"],vertex["value"]);
+				delta = Math.abs(delta);
+			if(maxDelta===null || maxDelta<delta){
+				maxDelta = delta;
+			}
+			// set to new
+			vertex["value"] = vertex["next"]*dRO + decayRate*vertex["value"];
+		}
+		// move COM to 0
+		// var smallestValue = null;
+		// for(var i=0; i<vertexes.length; ++i){
+		// 	var value = vertexes[i]["value"];
+		// 	if(smallestValue===null || value<smallestValue){
+		// 		smallestValue = value;
+		// 	}
+		// }
+		// for(var i=0; i<vertexes.length; ++i){
+		// 	vertexes[i]["value"] -= smallestValue;
+		// }
+		// quit early?:
+		if(maxDelta<minimumChangeQuit){
+			console.log("break early: "+maxDelta);
+			break;
+		}
+	}
+// console.log(vertexes)
+// var angles = [];
+// for(var i=0; i<vertexes.length; ++i){
+// 	var value = vertexes[i]["value"];
+// 	angles[i] = value;
+// }
+// return {"values":angles};
+
+	// nonlinear update estimate
+	var fxn = function(args, x, isUpdate){
+		if(isUpdate){
+			// normalize com to 0
+			
+			// keep between 0-2pi
+			for(var i=0; i<x.length; ++i){
+				x[i] = Code.angleZeroTwoPi(x[i]);
+			}
+			return;
+		}
+		var totalError = 0;
+		var edges = args[0];
+		for(var i=0; i<edges.length; ++i){
+			var edge = edges[i];
+			var indexA = edge[0];
+			var indexB = edge[1];
+			var valueAB = edge[2];
+			var errorAB = edge[3];
+			var actualA = x[indexA];
+			var actualB = x[indexB];
+			var actualAB = Code.angleDirection(actualA,actualB);
+			var error = Code.minAngle(valueAB,actualAB);
+				error = Math.abs(error);
+				// error = error*error;
+			if(errorAB>0){
+				error /= errorAB;
+			}
+			totalError += error;
+		}
+		return totalError;
+	}
+
+	var x = [];
+	for(var i=0; i<vertexes.length; ++i){
+		var vertex = vertexes[i];
+		x[i] = vertex["value"];
+	}
+
+	var args = [edges];
+	var result = Code.gradientDescent(fxn, args, x, null, maxIterationsNonLinear, 1E-16);
+	
+	var values = result["x"];
+	return {"values":values};
+}
+
+
+Code.graphAbsoluteFromRelativeAngle3D = function(edges){ // angle: vA = vB + edge -- vectors on unit spehre
+	// settings
+	var minimumChangeQuit = 1E-6; // use edges to find 0.01% of that
+	var maxIterationsLinear = 1000;
+	var maxIterationsNonLinear = 1000;
+	var decayRate = 0.0; // percent of old value to keep
+	// derived
+	var dRO = 1.0 - decayRate;
+	// lookup table
+	var maxIndex = -1;
+	var averageEdge = 0;
+	for(var i=0; i<edges.length; ++i){
+		var edge = edges[i];
+		var value = edge[2];
+		averageEdge += V3D.angle(V3D.DIRZ, value);
+		maxIndex = Math.max(maxIndex,edge[0]);
+		maxIndex = Math.max(maxIndex,edge[1]);
+	}
+	// console.log( Code.degrees(averageEdge/edges.length) );
+	minimumChangeQuit *= (averageEdge/edges.length);
+
+	// initial estimate
+	var vertexes = [];
+	for(var i=0; i<=maxIndex; ++i){
+		vertexes[i] = {"value":new V3D(0,0,1), "next":new V3D(0,0,1), "list":null};
+	}
+	
+	for(var iteration=0; iteration<maxIterationsLinear; ++iteration){
+		// init accumulators
+		for(var i=0; i<vertexes.length; ++i){
+			vertexes[i]["list"] = [];
+		}
+		// accumulate expecteds
+		for(var i=0; i<edges.length; ++i){
+			var edge = edges[i];
+			var idA = edge[0];
+			var idB = edge[1];
+			var val = edge[2];
+			var err = edge[3];
+			var value;
+			var valueA = vertexes[idA]["value"];
+			var valueB = vertexes[idB]["value"];
+
+			var ang = V3D.angle(V3D.DIRZ,val);
+			var dir = V3D.cross(V3D.DIRZ,val).norm();
+			// console.log(val,ang,dir);
+			
+			if(ang>0){
+				valueA = V3D.rotateAngle(valueA, dir,ang);
+				valueB = V3D.rotateAngle(valueB, dir,-ang);
+			} // else keep values 
+			vertexes[idB]["list"].push([valueA, err]);
+			vertexes[idA]["list"].push([valueB, err]);
+		}
+		// update locations
+		var maxDelta = null;
+		for(var i=0; i<vertexes.length; ++i){
+			var vertex = vertexes[i];
+			var list = vertex["list"];
+			var errors = [];
+			var values = [];
+			for(var l=0; l<list.length; ++l){
+				var li = list[l];
+				values.push(li[0]);
+				errors.push(li[1]);
+			}
+			var info = Code.errorsToPercents(errors);
+			var error = info["error"];
+			var percents = info["percents"];
+			// console.log(values, percents)
+			// throw "?"
+			var value = Code.averageAngleVector3D(values, percents);
+				value.norm();
+			vertex["next"] = value;
+			var delta = V3D.angle(vertex["next"],vertex["value"]);
+			if(maxDelta===null || maxDelta<delta){
+				maxDelta = delta;
+			}
+			// set to new
+			vertex["value"] = Code.averageAngleVector3D( [vertex["next"],vertex["value"]], [dRO, decayRate]);
+		}
+		// quit early?:
+		if(maxDelta<minimumChangeQuit){
+			console.log("break early: "+maxDelta);
+			break;
+		}
+	}
+console.log(vertexes)
+var angles = [];
+for(var i=0; i<vertexes.length; ++i){
+	var value = vertexes[i]["value"];
+	angles[i] = value;
+}
+return {"values":angles};
+
+
+
+	// nonlinear update estimate
+	var fxn = function(args, x, isUpdate){
+		if(isUpdate){
+			// normalize com to 0
+			
+			// keep between 0-2pi
+			for(var i=0; i<x.length; ++i){
+				x[i] = Code.angleZeroTwoPi(x[i]);
+			}
+			return;
+		}
+		var totalError = 0;
+		var edges = args[0];
+		for(var i=0; i<edges.length; ++i){
+			var edge = edges[i];
+			var indexA = edge[0];
+			var indexB = edge[1];
+			var valueAB = edge[2];
+			var errorAB = edge[3];
+			var actualA = x[indexA];
+			var actualB = x[indexB];
+			var actualAB = Code.angleDirection(actualA,actualB);
+			var error = Code.minAngle(valueAB,actualAB);
+				error = Math.abs(error);
+				// error = error*error;
+			if(errorAB>0){
+				error /= errorAB;
+			}
+			totalError += error;
+		}
+		return totalError;
+	}
+
+	var x = [];
+	for(var i=0; i<vertexes.length; ++i){
+		var vertex = vertexes[i];
+		x[i] = vertex["value"];
+	}
+
+	var args = [edges];
+	var result = Code.gradientDescent(fxn, args, x, null, maxIterationsNonLinear, 1E-16);
+	
+	var values = result["x"];
+	return {"values":values};
+}
+
+Code.graphAbsoluteFromRelativePose2D = function(edges){ // transation + rotation 2D: vA = vB + edge
+/*
+	- graphEdgeAverageCombined3D(edges)
+		- use combinations of other fxns
+		- nonlinear combined
+*/
+	throw "TODO";
+}
+
+Code.graphAbsoluteFromRelativeOrientation3D = function(edges){ // orienation: vA = vB + edge
+	// settings
+	var minimumChangeQuit = 1E-6; // use edges to find 0.01% of that
+	var maxIterationsLinear = 1000;
+	var maxIterationsNonLinear = 1000;
+	var decayRate = 0.0; // percent of old value to keep
+	// derived
+	var dRO = 1.0 - decayRate;
+	// lookup table
+	var maxIndex = -1;
+	var averageEdge = 0;
+	var edgeTwists = [];
+	for(var i=0; i<edges.length; ++i){
+		var edge = edges[i];
+		
+		maxIndex = Math.max(maxIndex,edge[0]);
+		maxIndex = Math.max(maxIndex,edge[1]);
+		var twist = edge[2];
+		if(Code.isa(twist, Matrix)){
+			twist = Code.vectorTwistFromMatrix3D(twist);
+		}
+		// averageEdge += Math.abs(edge[2]);
+		edgeTwists[i] = twist;
+	}
+	minimumChangeQuit *= (averageEdge/edges.length);
+
+	// initial estimate
+	var vertexes = [];
+	for(var i=0; i<=maxIndex; ++i){
+		// Code.twistIdentity()
+		vertexes[i] = {"value":{"direction":new V3D(0,0,1), "angle":0}, "next":{"direction":new V3D(0,0,1), "angle":0}, "list":null};
+	}
+	// 
+	// console.log(vertexes);
+	// 
+
+	for(var iteration=0; iteration<maxIterationsLinear; ++iteration){
+		// init accumulators
+		for(var i=0; i<vertexes.length; ++i){
+			vertexes[i]["list"] = [];
+		}
+		// accumulate expecteds
+		for(var i=0; i<edges.length; ++i){
+			var edge = edges[i];
+			var idA = edge[0];
+			var idB = edge[1];
+			var val = edge[2];
+			var err = edge[3];
+			var value;
+				value = vertexes[idA]["value"] + val;
+					value = Code.angleZeroTwoPi(value);
+				vertexes[idB]["list"].push([value, err]);
+				value = vertexes[idB]["value"] - val;
+					value = Code.angleZeroTwoPi(value);
+				vertexes[idA]["list"].push([value, err]);
+		}
+		// update locations
+		var maxDelta = null;
+		for(var i=0; i<vertexes.length; ++i){
+			var vertex = vertexes[i];
+			var list = vertex["list"];
+			var errors = [];
+			var values = [];
+			for(var l=0; l<list.length; ++l){
+				var li = list[l];
+				values.push(li[0]);
+				errors.push(li[1]);
+			}
+			var info = Code.errorsToPercents(errors);
+			var error = info["error"];
+			var percents = info["percents"];
+			var value = Code.averageAngles(values, percents);
+			vertex["next"] = value;
+			var delta = Code.minAngle(vertex["next"],vertex["value"]);
+				delta = Math.abs(delta);
+			if(maxDelta===null || maxDelta<delta){
+				maxDelta = delta;
+			}
+			// set to new
+			vertex["value"] = vertex["next"]*dRO + decayRate*vertex["value"];
+		}
+		// move COM to 0
+		// var smallestValue = null;
+		// for(var i=0; i<vertexes.length; ++i){
+		// 	var value = vertexes[i]["value"];
+		// 	if(smallestValue===null || value<smallestValue){
+		// 		smallestValue = value;
+		// 	}
+		// }
+		// for(var i=0; i<vertexes.length; ++i){
+		// 	vertexes[i]["value"] -= smallestValue;
+		// }
+		// quit early?:
+		if(maxDelta<minimumChangeQuit){
+			console.log("break early: "+maxDelta);
+			break;
+		}
+	}
+// console.log(vertexes)
+// var angles = [];
+// for(var i=0; i<vertexes.length; ++i){
+// 	var value = vertexes[i]["value"];
+// 	angles[i] = value;
+// }
+// return {"values":angles};
+
+	// nonlinear update estimate
+	var fxn = function(args, x, isUpdate){
+		if(isUpdate){
+			// normalize com to 0
+			
+			// keep between 0-2pi
+			for(var i=0; i<x.length; ++i){
+				x[i] = Code.angleZeroTwoPi(x[i]);
+			}
+			return;
+		}
+		var totalError = 0;
+		var edges = args[0];
+		for(var i=0; i<edges.length; ++i){
+			var edge = edges[i];
+			var indexA = edge[0];
+			var indexB = edge[1];
+			var valueAB = edge[2];
+			var errorAB = edge[3];
+			var actualA = x[indexA];
+			var actualB = x[indexB];
+			var actualAB = Code.angleDirection(actualA,actualB);
+			var error = Code.minAngle(valueAB,actualAB);
+				error = Math.abs(error);
+				// error = error*error;
+			if(errorAB>0){
+				error /= errorAB;
+			}
+			totalError += error;
+		}
+		return totalError;
+	}
+
+	var x = [];
+	for(var i=0; i<vertexes.length; ++i){
+		var vertex = vertexes[i];
+		x[i] = vertex["value"];
+	}
+
+	var args = [edges];
+	var result = Code.gradientDescent(fxn, args, x, null, maxIterationsNonLinear, 1E-16);
+	
+	var values = result["x"];
+	return {"values":values};
+
+}
+
+Code.graphAbsoluteFromRelativePose3D = function(edges){ // transation + rotation 3D: vA = vB + edge
+/*
+	- graphEdgeAverageCombined3D(edges)
+		- use combinations of other fxns
+		- nonlinear combined
+*/
+	throw "TODO";
+}
+
 
 
 
@@ -14006,3 +14911,13 @@ Array.prototype.last = function(){
 if(isNode){
 	module.exports = Code;
 }
+
+
+
+
+
+
+
+
+
+
