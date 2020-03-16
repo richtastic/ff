@@ -229,7 +229,23 @@ functions:
 		-> average ABSOLUTE transtorms at same time, but relative isn't enough
 
 
-
+	- init
+		- @ 0,0,0
+	- linear:
+		- average a set of absolute matrices:
+		- translation
+		- direction Z
+		- rotation @ Z
+	- nonlinear:
+		- values:
+			tx, ty, tz, rx, ry, rz
+		- error:
+			relative ACTUAL (MODEL)
+			relative EDGE (SAMPLES)
+			d(a_o,e_o)^2 +  ??? 
+			d(a_x,e_x)^2 + 
+			d(a_y,e_y)^2 + 
+			d(a_z,e_z)^2
 
 
 

@@ -673,10 +673,39 @@ Matrix.prototype.normalize = function(){
 Matrix.prototype.transform3DLocation = function(){
 	var rows = this._rows;
 	var location = new V3D(rows[0][3], rows[1][3], rows[2][3]);
-	// console.log(this+"");
-	// console.log(location+"");
-	// throw "?"
 	return location;
+}
+Matrix.prototype.transform2DLocation = function(){
+	var rows = this._rows;
+	// var location = this.multV2DtoV2D(new V2D(0,0));
+	var location = new V2D(rows[0][2], rows[1][2]);
+	return location;
+}
+Matrix.prototype.transform2DRotation = function(){
+	var rows = this._rows;
+	var a = rows[0][0];
+	var b = rows[0][1];
+	var c = rows[1][0];
+	var d = rows[1][1];
+		var v = new V2D();
+		v.set(a, c);
+		var angleX = V2D.angleDirection(V2D.DIRX,v);
+return angleX;
+		v.set(b, d);
+		var angleY = V2D.angleDirection(V2D.DIRY,v);
+	var angle = Code.averageAngles([angleX,angleY]);
+	return angle;
+}
+
+Matrix.relative = function(relAB,absA,absB){
+	if(!absB){
+		absB = absA;
+		absA = relAB;
+		relAB = new Matrix();
+	}
+	var invA = Matrix.inverse(absA);
+	Matrix.mult(relAB, absB, invA);
+	return relAB;
 }
 // ------------------------------------------------------------------------------------------------------------------------ CLASS
 /*

@@ -10,7 +10,21 @@ function pageLoadedFxn(){
 function ffLoadedFxn(){
 	(new ScriptLoader("./",["R3D.js"],this,classesLoadedFxn)).load();
 }
+function setupDisplay(){
+	this._canvas = new Canvas(null,0,0,Canvas.STAGE_FIT_FILL, false,false, true);
+	this._stage = new Stage(this._canvas, 1000/20);
+	this._root = new DO();
+	this._stage.addChild(this._root);
+	GLOBALSTAGE = this._stage;
+
+	this._canvas.addListeners();
+	this._stage.addListeners();
+	this._stage.start();
+	
+	console.log(this._stage)
+}
 function classesLoadedFxn(){
+	setupDisplay();
 	// counts 1D
 	console.log("--- counts 1D");
 	//              0     1    2    3    4     5    6    7
@@ -131,11 +145,11 @@ function classesLoadedFxn(){
 	for(var i=0; i<angles.length; ++i){
 		console.log(" "+i+" : "+Code.degrees(Code.angleZeroTwoPi(angles[i]))+" =?= "+Code.degrees(Code.angleZeroTwoPi(values[i]-min)) );
 	}
-
+/*
 	// angles 3d
 	console.log("--- angles 3D");
 	var m, t, q;
-m = new Matrix3D(); m.rotateZ(Code.radians(10.0)); m.rotateX(Code.radians(10.0));  m.rotateY(Code.radians( 10.0));
+m = new Matrix3D(); m.rotateZ(Code.radians(-10.0)); m.rotateX(Code.radians(10.0));  m.rotateY(Code.radians( 10.0));
 var same = m;
 // console.log(same+"")
 	var orientations = [];
@@ -156,16 +170,18 @@ var same = m;
 		var valueA = orientations[edge[0]];
 		var valueB = orientations[edge[1]];
 		var valueAB = Matrix3D.relative(valueA,valueB);
+		
 		// random quaternion - orientation
-		var q = new V4D();
-			q.qIdentity();
-		var v = new V3D();
-			v.random(2,2,2);
-			v.norm();
-			q.qRotateDir(v.x,v.y,v.z, delta);
-		// apply error
-		var m = q.qMatrix();
-		valueAB.mult(m);
+		// var q = new V4D();
+		// 	q.qIdentity();
+		// var v = new V3D();
+		// 	v.random(2,2,2);
+		// 	v.norm();
+		// 	q.qRotateDir(v.x,v.y,v.z, delta);
+		// // apply error
+		// var m = q.qMatrix();
+		// valueAB.mult(m);
+		
 		// to vector:
 		valueAB = valueAB.multV3DtoV3D(new V3D(0,0,1));
 		valueAB.norm();
@@ -190,8 +206,9 @@ var same = m;
 	console.log(result);
 	var values = result["values"];
 
-values = sames;
-
+// values = sames;
+	
+	// solve for similarity rotation comparison
 	var dirOA = orientations[0];
 	var dirOB = orientations[1];
 	var dirVA = values[0];
@@ -199,25 +216,23 @@ values = sames;
 	var dir0 = V3D.cross(dirOA,dirVA);
 		dir0.norm();
 	var ang0 = V3D.angle(dirOA,dirVA);
-
 		dirVB = V3D.rotateAngle(dirVB, dir0,-ang0);
-	// var dir1 = V3D.cross(dirA,dirC);
-	// 	dir1.norm();
-	// var ang1 = V3D.angle(dirA,dirC);
-
-	var ang1 = Code.radians(-25);
+	var points2D = Code.projectPointsTo2DPlane([dirOB,dirVB], new V3D(0,0,0), dirOA);
+	console.log(points2D);
+	var va = points2D[0];
+	var vb = points2D[1];
+	var ang1 = V2D.angleDirection(va,vb);
+	console.log(Code.degrees(ang1));
 
 	for(var i=0; i<orientations.length; ++i){
 		var a = orientations[i];
 		var b = values[i];
 			// OFFSET
 			b = V3D.rotateAngle(b, dir0,-ang0);
-			// b = V3D.rotateAngle(b, dirOA,-ang1);
+			b = V3D.rotateAngle(b, dirOA,-ang1);
 
 		var diff = V3D.angle(a,b);
 		console.log(" "+i+" : "+Code.degrees(diff)+" =?= "+a+" & "+b);
-		// console.log("             "+a+" , "+b);
-		// console.log(" "+i+" : "+Code.degrees(Code.angleZeroTwoPi())+" =?= "+Code.degrees(Code.angleZeroTwoPi(-min)) );
 	}
 
 	throw "?"
@@ -292,16 +307,223 @@ values = sames;
 		console.log(" "+i+" : "+Code.degrees(Code.angleZeroTwoPi(angles[i]))+" =?= "+Code.degrees(Code.angleZeroTwoPi(values[i]-min)) );
 	}
 
-
+*/
 	// pose 2D
 	console.log("--- pose 2D");
 	//                         0             1             2             3             4             5             6             7
-	// var positions = [new V2D(1,2), new V2D(3,5), new V2D(4,1), new V2D(6,2), new V2D(5,4), new V2D(7,7), new V2D(6,2), new V2D(5,0) ];
-	// var edges = [ [0,1], [0,2], [1,3], [2,4], [2,5], [3,4], [4,5], [5,6], [5,7], [6,7] ];
-	// var errorMagnitude = 0.1;
+	var poses = [];
+		m = new Matrix2D(); m.rotate(Code.radians(20.0));  m.translate(0,0); poses.push(m); // 0
+		m = new Matrix2D(); m.rotate(Code.radians(10.0));  m.translate(2,1); poses.push(m); // 1
+		m = new Matrix2D(); m.rotate(Code.radians(-10.0)); m.translate(1,1); poses.push(m); // 2
+		m = new Matrix2D(); m.rotate(Code.radians(20.0));  m.translate(3,2); poses.push(m); // 3
+		m = new Matrix2D(); m.rotate(Code.radians(-20.0)); m.translate(4,3); poses.push(m); // 4
+		m = new Matrix2D(); m.rotate(Code.radians(60.0));  m.translate(1,4); poses.push(m); // 5
+		m = new Matrix2D(); m.rotate(Code.radians(50.0));  m.translate(3,6); poses.push(m); // 6
+		m = new Matrix2D(); m.rotate(Code.radians(10.0));  m.translate(4,5); poses.push(m); // 7
+		// m = new Matrix2D(); m.rotate(Code.radians(0.0));  m.translate(0,0); poses.push(m); // 0
+		// m = new Matrix2D(); m.rotate(Code.radians(0.0));  m.translate(2,1); poses.push(m); // 1
+		// m = new Matrix2D(); m.rotate(Code.radians(0.0));  m.translate(1,1); poses.push(m); // 2
+		// m = new Matrix2D(); m.rotate(Code.radians(0.0));  m.translate(3,2); poses.push(m); // 3
+		// m = new Matrix2D(); m.rotate(Code.radians(0.0));  m.translate(4,3); poses.push(m); // 4
+		// m = new Matrix2D(); m.rotate(Code.radians(0.0));  m.translate(1,4); poses.push(m); // 5
+		// m = new Matrix2D(); m.rotate(Code.radians(0.0));  m.translate(3,6); poses.push(m); // 6
+		// m = new Matrix2D(); m.rotate(Code.radians(0.0));  m.translate(4,5); poses.push(m); // 7
+	var edges = [ [0,1], [0,2], [1,3], [2,4], [2,5], [3,4], [4,5], [5,6], [5,7], [6,7] ];
+	var errorMagnitude = 0.1;
+	for(var i=0; i<edges.length; ++i){
+		var edge = edges[i];
+		var error = errorMagnitude*Math.random();
+error = 1;
+		var delta = error*(Math.random()-0.5);
+		var valueA = poses[edge[0]];
+		var valueB = poses[edge[1]];
+		var valueAB = Matrix2D.relative(valueA,valueB);
+		// console.log(valueAB+"");
+		// console.log(Matrix.relative(valueA.toMatrix(),valueB.toMatrix())+"");
+		// apply error
+		// var m = new Matrix2D();
+		// 	m.rotate(delta);
+		// valueAB.mult(m);
+		edge[2] = valueAB.toMatrix();
+		edge[3] = error;
+	}
+	
+
+
+	var displayScale = 100.0;
+var displayOffX = 10;
+var displayOffY = 10;
+
+	// draw:
+	for(var i=0; i<poses.length; ++i){
+		var pose = poses[i];
+
+			pose = pose.toMatrix();
+
+		var p = pose.transform2DLocation();
+		var a = pose.transform2DRotation();
+
+		var d = new DO();
+			d.graphics().clear();
+			d.graphics().setFill(0xFFCC0000);
+			d.graphics().beginPath();
+			d.graphics().drawCircle(p.x*displayScale,p.y*displayScale, 5.0);
+			d.graphics().endPath();
+			d.graphics().fill();
+
+			// d.graphics().setLine(1.0, 0xFFFF0000);
+			// d.graphics().beginPath();
+			// d.graphics().moveTo(a.x*displayScale,a.y*displayScale);
+			// d.graphics().lineTo(b.x*displayScale,b.y*displayScale);
+			// d.graphics().endPath();
+
+		GLOBALSTAGE.addChild(d);
+		d.matrix().translate(0 + displayOffX, 0 + displayOffY);
+	}
+
+
+	for(var i=0; i<edges.length; ++i){
+		var edge = edges[i];
+		var idA = edge[0];
+		var idB = edge[1];
+		var mAB = edge[2];
+		// mAB = Matrix.inverse(mAB);
+
+		var mA = poses[idA];
+		var mB = poses[idB];
+
+			// mAB = mAB.toMatrix();
+			mA = mA.toMatrix();
+			mB = mB.toMatrix();
+
+		var offA = mA.transform2DLocation();
+		var angA = mA.transform2DRotation();
+
+		var offB = mB.transform2DLocation();
+		var angB = mB.transform2DRotation();
+
+		var offAB = mAB.transform2DLocation();
+		var angAB = mAB.transform2DRotation();
+
+
+		// console.log("  "+mAB.multV2DtoV2D(new V2D(0,0))+" ...");
+
+// continue;
+
+
+		these are 'absolute' translations / rotations --- how to make them relative to the location?
+
+/*
+
+console.log(Code.degrees(angA)+" + "+Code.degrees(angAB)+" =?= "+Code.degrees(angB)+" : "+" .. ");
+console.log("   "+offA+" + "+offAB+" =?= "+offB);
+
+
+var res = Matrix.mult(mAB,mA);
+	res = res.multV2DtoV2D(new V2D(0,0));
+
+console.log(" A "+mA.multV2DtoV2D(new V2D(0,0))+" ...");
+console.log(" C "+mAB.multV2DtoV2D(new V2D(0,0))+" ...");
+console.log(" B "+res+" ...");
+
+// console.log(" ? "+mA.multV2DtoV2D(offAB)+" ...");
+// copy().rotate(angAB)
+		var a = new V2D();
+			a.copy(offA);
+		var b = new V2D(0,0);
+		console.log(".      0) "+b);
+		b = mA.multV2DtoV2D(b);
+		console.log(".      1) "+b);
+		b = mAB.multV2DtoV2D(b);
+		console.log(".      2) "+b);
+
+
+		b = new V2D(0,0);
+		b.add(offA);
+		b.rotate(angAB);
+		b.add(offAB);
+
+*/
+
+
+// b = offA.copy().rotate(angAB).add(offAB);
+
+			// b.rotate(angAB);
+			// b.rotate(2*angA);
+			// b.rotate(angA);
+			// b.add(offA);
+			//  + angAB
+			// b.rotate(angA);
+			// b.rotate(angA + angAB);
+// b.copy(offB);
+
+// b.copy(res);
+
+
+		var d = new DO();
+			d.graphics().clear();
+			d.graphics().setLine(2.0, 0xCC0000CC);
+			d.graphics().beginPath();
+			d.graphics().moveTo(a.x*displayScale,a.y*displayScale);
+			d.graphics().lineTo(b.x*displayScale,b.y*displayScale);
+			d.graphics().endPath();
+			d.graphics().strokeLine();
+		GLOBALSTAGE.addChild(d);
+		d.matrix().translate(0 + displayOffX, 0 + displayOffY);
+	}
 	// Code.graphAbsoluteFromRelativePose2D
 
 
+
+
+
+
+
+	// convert
+	for(var i=0; i<poses.length; ++i){
+		var pose = poses[i];
+			pose = pose.toMatrix();
+		var offset = pose.transform2DLocation();
+		var angle = pose.transform2DRotation();
+		poses[i] = {"offset":offset, "angle":angle};
+	}
+	var result = Code.graphAbsoluteFromRelativePose2D(edges);
+	var values = result["values"];
+	// console.log(values);
+	// console.log(poses);
+	var minOffset = V2D.sub(values[0]["offset"],poses[0]["offset"]);
+	var minAngle = Code.angleDirection(poses[0]["angle"],values[0]["angle"]);
+		var angleP01 = V2D.sub(poses[1]["offset"],poses[0]["offset"]);
+			// angleP01 = V2D.angleDirection(V2D.DIRX,angleP01);
+		var angleV01 = V2D.sub(values[1]["offset"],values[0]["offset"]);
+			// angleV01 = V2D.angleDirection(V2D.DIRX,angleV01);
+		var worldAngle = V2D.angleDirection(angleP01,angleV01);
+	console.log(minOffset);
+	console.log(minAngle);
+	console.log(worldAngle);
+
+	for(var i=0; i<poses.length; ++i){
+		var pose = poses[i];
+		var value = values[i];
+		var o = V2D.sub(value["offset"], minOffset);
+			o.rotate(-worldAngle);
+		var a = value["angle"];
+			a = Code.angleZeroTwoPi(a-worldAngle);
+		// Code.degrees(Code.angleZeroTwoPi(angles[i]))
+		// Code.degrees(Code.angleZeroTwoPi(values[i]-min)) 
+		console.log(" "+i+" : "+pose["offset"]+" =?= "+o+"              "+Code.degrees(Code.angleZeroTwoPi(pose["angle"]))+" =?="+Code.degrees(Code.angleZeroTwoPi(a)) );
+		var p = pose["offset"];
+	}
+	
+
+
+
+
+
+
+
+
+throw "???"
 
 	// pose 3D
 	console.log("--- pose 3D");

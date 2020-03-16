@@ -7672,10 +7672,10 @@ R3D.infoFromAffine2D = function(affine){
 	var v = new V2D();
 	v.set( affine.get(0,0), affine.get(1,0) );
 	var scaleX = v.length();
-	var angleX = V2D.angle(V2D.DIRX,v);
+	var angleX = V2D.angleDirection(V2D.DIRX,v);
 	v.set( affine.get(0,1), affine.get(1,1) );
 	var scaleY = v.length();
-	var angleY = V2D.angle(V2D.DIRY,v);
+	var angleY = V2D.angleDirection(V2D.DIRY,v);
 	var scale = (scaleX+scaleY)*0.5;
 	var angle = Code.averageAngles([angleX,angleY]);
 	return {"offset":o, "scale":scale, "scaleX":scaleX, "scaleY":scaleY, "angle":angle};
@@ -7696,6 +7696,7 @@ R3D.infoFromAffineMatrix2D = function(affine){
 	var angle = Code.averageAngles([angleX,angleY]);
 	return {"offset":o, "scale":scale, "scaleX":scaleX, "scaleY":scaleY, "angle":angle};
 }
+
 
 
 R3D.DLT2D = function(pointsFr,pointsTo){

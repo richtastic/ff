@@ -105,6 +105,7 @@ Matrix2D.prototype.postmult = function(mat){
 	return this;
 }
 Matrix2D.prototype.mult = function(mA,mB){
+	if(!mB){ mB=mA; mA=this; }
 	var aA=mA.a,aB=mA.b,aC=mA.c,aD=mA.d,aX=mA.x,aY=mA.y;
 	var bA=mB.a,bB=mB.b,bC=mB.c,bD=mB.d,bX=mB.x,bY=mB.y;
 	this.a = aA*bA + aB*bC;
@@ -114,6 +115,11 @@ Matrix2D.prototype.mult = function(mA,mB){
 	this.d = aC*bB + aD*bD;
 	this.y = aC*bX + aD*bY + aY;
 	return this;
+}
+Matrix2D.mult = function(mC, mA,mB){
+	if(!mB){ mB = mA; mA = mC; mC = new Matrix2D(); }
+	mC.mult(mA,mB);
+	return mC;
 }
 Matrix2D.prototype.multV2D = function(aV,bV){ // a = trans(b)
 	if(bV==undefined){
@@ -150,6 +156,14 @@ Matrix2D.prototype.copy = function(m){
 	if(m===undefined){ return new Matrix2D().copy(this); }
 	this.set(m.a,m.b,m.c,m.d,m.x,m.y);
 	return this;
+}
+Matrix2D.inverse = function(a,b){
+	if(!b){
+		b = a;
+		a = new Matrix2D();
+	}
+	a.inverse(b);
+	return a;
 }
 Matrix2D.prototype.inverse = function(m){ // http://www.dr-lex.be/random/matrix_inv.html
 	if(m===undefined){
@@ -205,9 +219,25 @@ Matrix2D.prototype.kill = function(){
 	this.a = undefined; this.b = undefined; this.c = undefined; this.d = undefined; this.x = undefined; this.y = undefined;
 }
 // -----------------------------------------------------------------------------------------------
+Matrix2D.prototype.toMatrix = function(){
+	return Matrix2D.toMatrix(this);
+}
+Matrix2D.toMatrix = function(mat){
+	return new Matrix(3,3).fromArray([mat.a,mat.b, mat.x, mat.c,mat.d, mat.y, 0,0,1]);
+}
+
 Matrix2D.temp = new Matrix2D();
 
-
+Matrix2D.relative = function(relAB,absA,absB){
+	if(!absB){
+		absB = absA;
+		absA = relAB;
+		relAB = new Matrix2D();
+	}
+	var invA = Matrix2D.inverse(Matrix2D.temp, absA);
+	Matrix2D.mult(relAB, absB, invA);
+	return relAB;
+}
 // Matrix2D.matrix2DfromMatrix = function(mat){
 Matrix2D.fromMatrix = function(mat){
 	var m2D = new Matrix2D();

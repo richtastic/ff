@@ -418,10 +418,6 @@ Matrix3D.relative = function(relAB,absA,absB){
 	var invA = Matrix3D.inverse(Matrix3D.temp, absA);
 	Matrix3D.mult(relAB, absB, invA);
 	return relAB;
-
-	// var invA = Matrix.inverse(absA);
-	// var relativeAtoB = Matrix.mult(absB,invA);
-	// return relativeAtoB;
 }
 
 Matrix3D.matrix3DFromMatrix = function(mat){
