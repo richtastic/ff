@@ -416,7 +416,8 @@ Matrix3D.relative = function(relAB,absA,absB){
 		relAB = new Matrix3D();
 	}
 	var invA = Matrix3D.inverse(Matrix3D.temp, absA);
-	Matrix3D.mult(relAB, absB, invA);
+	// Matrix3D.mult(relAB, absB, invA); // PROBABLY EXTRINSIC
+	Matrix3D.mult(relAB, invA, absB);
 	return relAB;
 }
 

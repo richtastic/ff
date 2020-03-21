@@ -42963,7 +42963,7 @@ R3D.cameraMatricesFromF
 }
 
 
-R3D.relativeTransformMatrix2 = function(absA,absB){
+R3D.relativeTransformMatrix2 = function(absA,absB){ // THIS IS PROBABLY FOR EXTRINSIC MATRIXES
 	var invA = Matrix.inverse(absA);
 	var relativeAtoB = Matrix.mult(absB,invA);
 	return relativeAtoB;

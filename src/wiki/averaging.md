@@ -229,6 +229,17 @@ functions:
 		-> average ABSOLUTE transtorms at same time, but relative isn't enough
 
 
+	- find optimal rotations first:
+		- &theta;<sub>B</sub> = &theta;<sub>A</sub> = &theta;<sub>AB</sub>
+		- linear initialize
+		- nonlinear optimize
+	- find optimal combined rotation + translation second:
+		- t<sub>B</sub> = t<sub>A</sub> + t<sub>AB</sub> &ang; &theta;<sub>AB</sub>
+		- linear initialize
+		- nonlinear optimize
+
+
+
 	- init
 		- @ 0,0,0
 	- linear:
@@ -255,7 +266,12 @@ functions:
 
 
 
+https://censi.science/pub/research/2013-mole2d-slides.pdf
 
+
+
+
+https://www.ecse.rpi.edu/~qji/Papers/isprs_pose2.pdf
 
 
 

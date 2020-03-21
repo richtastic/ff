@@ -235,7 +235,8 @@ Matrix2D.relative = function(relAB,absA,absB){
 		relAB = new Matrix2D();
 	}
 	var invA = Matrix2D.inverse(Matrix2D.temp, absA);
-	Matrix2D.mult(relAB, absB, invA);
+	// Matrix2D.mult(relAB, absB, invA); // EXTRINSIC
+	Matrix2D.mult(relAB, invA, absB);
 	return relAB;
 }
 // Matrix2D.matrix2DfromMatrix = function(mat){

@@ -413,7 +413,20 @@ https://cloud.google.com/appengine/docs/nodejs/
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-- is the twisting stuff cummulative ?
+- ROTATION AVERAGING
+- 2D COMBINED AVERAGING
+
+
+
+
+
+
+vectors AB & BA are not the same ... each is in the other's representation
+
+
+
+
+
 
 
 

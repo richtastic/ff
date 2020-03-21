@@ -49,6 +49,14 @@ Matrix.prototype.toObject = function(){
 Matrix.prototype.fromObject = function(obj){
 	return this.loadFromObject(obj);
 }
+
+Matrix.prototype.colCount = function(obj){
+	return this._colCount;
+}
+
+Matrix.prototype.rowCount = function(obj){
+	return this._rowCount;
+}
 Matrix.prototype.loadFromObject = function(obj){
 	var DATA = Matrix.YAML;
 	var rows = obj[DATA.ROWS];
@@ -555,6 +563,23 @@ Matrix.transform3DRotateZ = function(a,angle){
 	var b = Matrix._transformTemp3D.fromArray([c,-s,0.0,0.0, s,c,0.0,0.0, 0.0,0.0,1.0,0.0, 0.0,0.0,0.0,1.0]);
 	return Matrix.mult(b,a);
 }
+
+Matrix._transformTemp2D = new Matrix(3,3);
+Matrix.transform2DRotate = function(a,angle){
+	var c = Math.cos(angle), s = Math.sin(angle);
+	var b = Matrix._transformTemp2D.fromArray([c,-s,0.0, s,c,0.0,0.0, 0.0,0.0,1.0]);
+	return Matrix.mult(b,a);
+}
+Matrix.transform2DTranslate = function(a,tX,tY){
+	if(tY===undefined){
+		tY = tX.y;
+		tX = tX.x;
+	}
+	// console.log(tX+","+tY)
+	var b = Matrix._transformTemp2D.fromArray([1.0,0.0,tX, 0.0,1.0,tY, 0.0,0.0,1.0]);
+	return Matrix.mult(b,a);
+}
+
 Matrix.transform3DRotate = function(a,vector,angle){
 	// create rotation matix
 	// multiply
@@ -676,9 +701,9 @@ Matrix.prototype.transform3DLocation = function(){
 	return location;
 }
 Matrix.prototype.transform2DLocation = function(){
-	var rows = this._rows;
-	// var location = this.multV2DtoV2D(new V2D(0,0));
-	var location = new V2D(rows[0][2], rows[1][2]);
+	var location = this.multV2DtoV2D(new V2D(0,0));
+	// var rows = this._rows;
+	// var location = new V2D(rows[0][2], rows[1][2]);
 	return location;
 }
 Matrix.prototype.transform2DRotation = function(){
@@ -690,7 +715,7 @@ Matrix.prototype.transform2DRotation = function(){
 		var v = new V2D();
 		v.set(a, c);
 		var angleX = V2D.angleDirection(V2D.DIRX,v);
-return angleX;
+// return angleX;
 		v.set(b, d);
 		var angleY = V2D.angleDirection(V2D.DIRY,v);
 	var angle = Code.averageAngles([angleX,angleY]);
@@ -704,7 +729,8 @@ Matrix.relative = function(relAB,absA,absB){
 		relAB = new Matrix();
 	}
 	var invA = Matrix.inverse(absA);
-	Matrix.mult(relAB, absB, invA);
+	// Matrix.mult(relAB, absB, invA); // PROBABLY EXTRINSID
+	Matrix.mult(relAB, invA, absB);
 	return relAB;
 }
 // ------------------------------------------------------------------------------------------------------------------------ CLASS
