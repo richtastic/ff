@@ -927,7 +927,8 @@ if(true){
 	var x = radius*Math.sin(angle) + 10;
 	var z = radius*Math.cos(angle) + 10;
 	var y = 10; // 50 vs 200
-	this._camera.location( new V3D(x,y,z) );
+// console.log(this._camera)
+	this._camera.position( new V3D(x,y,z) );
 	//this._camera.updateFromTarget();
 	//this._camera.rotation( new V3D(0,radius,0) );
 

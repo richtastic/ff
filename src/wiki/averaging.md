@@ -268,7 +268,7 @@ functions:
 
 https://censi.science/pub/research/2013-mole2d-slides.pdf
 
-
+http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.116.8981&rep=rep1&type=pdf
 
 
 https://www.ecse.rpi.edu/~qji/Papers/isprs_pose2.pdf

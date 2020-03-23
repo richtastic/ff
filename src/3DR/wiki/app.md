@@ -413,27 +413,45 @@ https://cloud.google.com/appengine/docs/nodejs/
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-- ROTATION AVERAGING
-- 2D COMBINED AVERAGING
+- turn quaternions into twists
+- make sure twists are assoc/cummu
+- investigate the relativeness of world/frame references
+
+
+graphAbsoluteFromRelativeAngle3D
+
+
+
+- linear iteritive initialize 
+- nonlinear error ?
+	=> 3-axes
+
+
+- why is inverse wrong in 2D ?
+
+	- FRAME-RELATIVE
+	vs
+	- WORLD-RELATIVE ....
+
+var AB = Matrix.mult(B,invA);
+var BA = Matrix.mult(A,invB);
+
+
+
+- 3D rotation averaging
+
+- 3D orientation averaging
+
+
+
+- why 2D 
+- are Xs & Ys connected?
+-> try separate 1D each
 
 
 
 
 
-
-vectors AB & BA are not the same ... each is in the other's representation
-
-
-
-
-
-
-
-
-
-- simultaneous translation / orientation transforms ...
-
-- plan out algorithm steps/logic
 
 
 BAD: (2 is closest, 4 & 5 should be behind all)

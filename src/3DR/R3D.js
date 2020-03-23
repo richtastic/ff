@@ -31742,83 +31742,9 @@ R3D.projectedPoint3DFromPoint3D = function(point3D, P, K, distortions){
 	}
 	return location;
 }
-R3D.rotationMatrixToEulerRodriguez = function(R){
-	var p = new V3D(R.get(2,1)-R.get(1,2), R.get(0,2)-R.get(2,0), R.get(1,0)-R.get(0,1) ); // cross
-	p.scale(0.5);
-	var c = 0.5*(R.get(0,0) + R.get(1,1) + R.get(2,2) - 1); // trace
-//		c = Math.round(c);
-	var rho;
-	var pMag = p.length();
-	pMag = pMag > 1E-6 ? pMag : 0;
-	if(pMag==0 && c==1){
-		rho = new V3D(0,0,0);
-	}else if(pMag==0 && c==-1){
-		var r1 = new V3D(R.get(0,0) + 1,R.get(1,0),R.get(2,0));
-		var r2 = new V3D(R.get(0,1),R.get(1,1) + 1,R.get(2,1));
-		var r3 = new V3D(R.get(0,2),R.get(1,2),R.get(2,2) + 1);
-		var r1Norm = r1.length();
-		var r2Norm = r2.length();
-		var r3Norm = r3.length();
-		var v;
-		if(r1Norm>=r2Norm && r1Norm>=r3Norm){
-			v = r1;
-		}else if(r2Norm>=r1Norm && r2Norm>=r3Norm){
-			v = r2;
-		}else{ // r3Norm>=r1Norm && r3Norm>=r2Norm){
-			v = r3;
-		}
-		var u = v.copy().norm();
-		if( (u.x<0) || (u.x==0 && u.y<0) || (u.x==0 && u.y==0 && u.z<0) ){
-			u.scale(-1);
-		}
-		rho = u.copy().scale(Math.PI);
-	}else if(pMag==0){
-		throw "some other error with c: "+c;
-	}else{ // p!=0
-		var u = p.copy().scale(1.0/pMag);
-		var theta = Math.atan2(pMag, c); //var theta = Math.atan(pMag/c);
-		rho = u.copy().scale(theta);
-	}
-	return rho;
-}
-R3D.rotationEulerRodriguezToMatrix = function(mat, v){ // http://www.sciencedirect.com/science/article/pii/S0094114X15000415
-// THIS IS SAME AS Matrix3D.rotateVector
-	if(v==undefined){
-		v = mat;
-		mat = new Matrix(3,3);
-	}
-	var theta = v.length();
-	var n = v.copy().norm();
-	var x = n.x;
-	var y = n.y;
-	var z = n.z;
-	var cos = Math.cos(theta);
-	var sin = Math.sin(theta);
-	var cm1 = 1.0 - cos;
 
-	var a =    cos + x*x*cm1;
-	var b = -z*sin + x*y*cm1;
-	var c =  y*sin + x*z*cm1;
-	var d =  z*sin + x*y*cm1;
-	var e =    cos + y*y*cm1;
-	var f = -x*sin + y*z*cm1;
-	var g = -y*sin + x*z*cm1;
-	var h =  x*sin + y*z*cm1;
-	var i =    cos + z*z*cm1;
-
-	mat.set(0,0, a);
-	mat.set(0,1, b);
-	mat.set(0,2, c);
-	mat.set(1,0, d);
-	mat.set(1,1, e);
-	mat.set(1,2, f);
-	mat.set(2,0, g);
-	mat.set(2,1, h);
-	mat.set(2,2, i);
-	return mat;
-}
 /*
-R3D.rotationMatrixToEulerRodriguez2 = function(R){
+Code.rotationMatrixToEulerRodriguez2 = function(R){
 	var a11 = R.get(0,0);
 	var a12 = R.get(0,1);
 	var a13 = R.get(0,2);
@@ -34529,7 +34455,7 @@ console.log(percents)
 				var matrix = V4D.qMatrix(rotation, new Matrix(3,3));
 				matrix.appendColFromArray(translation.toArray());
 				matrix.appendRowFromArray([0,0,0,1]);
-				// matrix = R3D.rotationEulerRodriguezToMatrix(new Matrix(3,3), new V3D(rx,ry,rz));
+				// matrix = Code.rotationEulerRodriguezToMatrix(new Matrix(3,3), new V3D(rx,ry,rz));
 				// matrix.appendColFromArray([tx,ty,tz]);
 				// matrix.appendRowFromArray([0,0,0,1]);
 			// throw "?";
@@ -34661,7 +34587,7 @@ R3D._gdTranslationRotation3D = function(vs,es,values,rootIndex,iterations, type)
 			var v = values[i];
 			var q = v["quaternion"];
 			var matrix = V4D.qMatrix(q,new Matrix(3,3));
-			var r = R3D.rotationMatrixToEulerRodriguez(matrix);
+			var r = Code.rotationMatrixToEulerRodriguez(matrix);
 			x.push(r.x,r.y,r.z);
 		}
 	}else if(type==2){ // combined
@@ -34672,7 +34598,7 @@ R3D._gdTranslationRotation3D = function(vs,es,values,rootIndex,iterations, type)
 			var t = v["translation"];
 			var q = v["quaternion"];
 			var matrix = V4D.qMatrix(q,new Matrix(3,3));
-			var r = R3D.rotationMatrixToEulerRodriguez(matrix);
+			var r = Code.rotationMatrixToEulerRodriguez(matrix);
 			x.push(t.x,t.y,t.z, r.x,r.y,r.z);
 		}
 		// throw "type 2"
@@ -34703,7 +34629,7 @@ R3D._gdTranslationRotation3D = function(vs,es,values,rootIndex,iterations, type)
 			var rx = values[i+3];
 			var ry = values[i+4];
 			var rz = values[i+5];
-			var matrix = R3D.rotationEulerRodriguezToMatrix(new Matrix(3,3), new V3D(rx,ry,rz));
+			var matrix = Code.rotationEulerRodriguezToMatrix(new Matrix(3,3), new V3D(rx,ry,rz));
 				matrix.appendColFromArray([tx,ty,tz]);
 				matrix.appendRowFromArray([0,0,0,1]);
 			vectors.push(matrix);
@@ -34716,7 +34642,7 @@ R3D._gdTranslationRotation3D = function(vs,es,values,rootIndex,iterations, type)
 		// as-is vector
 	}else if(type==1){  // rotation
 		for(var i=0; i<vectors.length; ++i){
-			var matrix = R3D.rotationEulerRodriguezToMatrix(new Matrix(3,3), vectors[i]);
+			var matrix = Code.rotationEulerRodriguezToMatrix(new Matrix(3,3), vectors[i]);
 			var quaternion = V4D.qFromMatrix(matrix);
 			vectors[i] = quaternion;
 		}
@@ -34779,8 +34705,8 @@ R3D._gdLocationRotationOperation3D = function(args, x, isUpdate, type){
 				rel = value["translation"];
 				error = R3D._gdErrorLocation3DFxn(rel,abs);
 			}else if(type==1){ // rotation
-				var matrixA = R3D.rotationEulerRodriguezToMatrix(new Matrix(3,3), new V3D(ax,ay,az));
-				var matrixB = R3D.rotationEulerRodriguezToMatrix(new Matrix(3,3), new V3D(bx,by,bz));
+				var matrixA = Code.rotationEulerRodriguezToMatrix(new Matrix(3,3), new V3D(ax,ay,az));
+				var matrixB = Code.rotationEulerRodriguezToMatrix(new Matrix(3,3), new V3D(bx,by,bz));
 				var inverseA = Matrix.inverse(matrixA);
 				var matrixAB = Matrix.mult(matrixB,inverseA);
 				abs = Code.axisFromMatrix3D(matrixAB);
@@ -34822,10 +34748,10 @@ R3D._gdLocationRotationOperation3D = function(args, x, isUpdate, type){
 			// console.log(a_tx,a_ty,a_tz,a_rx,a_ry,a_rz);
 			// console.log(b_tx,b_ty,b_tz,b_rx,b_ry,b_rz);
 			// console.log("do combined");
-			var matrixA = R3D.rotationEulerRodriguezToMatrix(new Matrix(3,3), new V3D(a_rx,a_ry,a_rz));
+			var matrixA = Code.rotationEulerRodriguezToMatrix(new Matrix(3,3), new V3D(a_rx,a_ry,a_rz));
 				matrixA.appendColFromArray([a_tx,a_ty,a_tz]);
 				matrixA.appendRowFromArray([0,0,0,1]);
-			var matrixB = R3D.rotationEulerRodriguezToMatrix(new Matrix(3,3), new V3D(b_rx,b_ry,b_rz));
+			var matrixB = Code.rotationEulerRodriguezToMatrix(new Matrix(3,3), new V3D(b_rx,b_ry,b_rz));
 				matrixB.appendColFromArray([b_tx,b_ty,b_tz]);
 				matrixB.appendRowFromArray([0,0,0,1]);
 
@@ -35707,7 +35633,7 @@ R3D._gdDirectionAngleTranslation3D = function(vs,es,values, isAngles){
 	var x = [];
 	var output = [];
 	/*if(isAngles==3){
-		var rodrigues = R3D.rotationMatrixToEulerRodriguez(R);
+		var rodrigues = Code.rotationMatrixToEulerRodriguez(R);
 		// throw "NO QUATS";
 		// fxn = R3D._gdAngleQuaternion;
 		// x = null;
@@ -40137,7 +40063,7 @@ R3D._gd_BACamera = function(args, x, isUpdate){ // TODO: can limit processing if
 }
 R3D.transform3DFromParameters = function(P, rx,ry,rz, tx,ty,tz){
 	var rodrigues = new V3D(rx,ry,rz);
-	R3D.rotationEulerRodriguezToMatrix(P, rodrigues);
+	Code.rotationEulerRodriguezToMatrix(P, rodrigues);
 	P.set(0,3, tx);
 	P.set(1,3, ty);
 	P.set(2,3, tz);
@@ -42964,6 +42890,7 @@ R3D.cameraMatricesFromF
 
 
 R3D.relativeTransformMatrix2 = function(absA,absB){ // THIS IS PROBABLY FOR EXTRINSIC MATRIXES
+	throw "WHERE IS THIS USED ?"
 	var invA = Matrix.inverse(absA);
 	var relativeAtoB = Matrix.mult(absB,invA);
 	return relativeAtoB;
@@ -43211,7 +43138,7 @@ R3D._gdBAPoints3D = function(args, x, isUpdate){
 	// create transform matrix from x
 	var rodrigues = new V3D(rx,ry,rz);
 	var transform = R3D._gdBAPoints3D_temp_A;
-	R3D.rotationEulerRodriguezToMatrix(transform, rodrigues);
+	Code.rotationEulerRodriguezToMatrix(transform, rodrigues);
 	transform.set(0,3, tx);
 	transform.set(1,3, ty);
 	transform.set(2,3, tz);
@@ -43261,9 +43188,9 @@ R3D.BAPoints2DGD = function(pointsA2D,pointsB2D,points3D, Ka,Kb,distortionsA,dis
 	var R = transform.getSubMatrix(0,0, 3,3);
 	// console.log("R: "+R);
 		R = R3D.rotationFromApproximate(R);
-	var rodrigues = R3D.rotationMatrixToEulerRodriguez(R);
+	var rodrigues = Code.rotationMatrixToEulerRodriguez(R);
 	// console.log(rodrigues);
-	// var Q = R3D.rotationEulerRodriguezToMatrix(rodrigues);
+	// var Q = Code.rotationEulerRodriguezToMatrix(rodrigues);
 	// console.log("Q: "+Q);
 
 	var tx = transform.get(0,3);
@@ -43288,7 +43215,7 @@ R3D.BAPoints2DGD = function(pointsA2D,pointsB2D,points3D, Ka,Kb,distortionsA,dis
 	rodrigues = new V3D(rx,ry,rz);
 
 	transform = new Matrix(4,4);
-	R3D.rotationEulerRodriguezToMatrix(transform, rodrigues);
+	Code.rotationEulerRodriguezToMatrix(transform, rodrigues);
 	transform.set(0,3, tx);
 	transform.set(1,3, ty);
 	transform.set(2,3, tz);
@@ -43338,7 +43265,7 @@ R3D.BACamerasAll = function(absoluteTransforms,listK,pointGroups2D){ // nonlinea
 	console.log(result);
 	xVals = result["x"];
 
-	// var Q = R3D.rotationEulerRodriguezToMatrix(rodrigues);
+	// var Q = Code.rotationEulerRodriguezToMatrix(rodrigues);
 	// console.log("Q: "+Q);
 
 	var tx = transform.get(0,3);
@@ -43461,7 +43388,7 @@ R3D._gdBACamerasAll = function(args, x, isUpdate){
 R3D.transformMatrixToComponentArray = function(transform){
 	var R = transform.getSubMatrix(0,0, 3,3);
 	R = R3D.rotationFromApproximate(R);
-	var rodrigues = R3D.rotationMatrixToEulerRodriguez(R);
+	var rodrigues = Code.rotationMatrixToEulerRodriguez(R);
 	var tx = transform.get(0,3);
 	var ty = transform.get(1,3);
 	var tz = transform.get(2,3);
@@ -43476,7 +43403,7 @@ R3D.transformMatrixFromRodriguesElement = function(transform, rx,ry,rz, tx,ty,tz
 		transform = new Matrix(4,4);
 	}
 	var rodrigues = new V3D(rx,ry,rz);
-	var Q = R3D.rotationEulerRodriguezToMatrix(rodrigues);
+	var Q = Code.rotationEulerRodriguezToMatrix(rodrigues);
 	console.log("Q: "+Q);
 	transform.setSubMatrix(Q);
 	transform.set(0,3, tx);

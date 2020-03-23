@@ -3250,20 +3250,65 @@ Code._vectorTwistFromCanonical = function(o,x,y,z){
 	// find the angle Z has made with Z
 	var dir = V3D.cross(V3D.DIRZ,z).norm();
 	var ang = V3D.angle(V3D.DIRZ,z);
+	// console.log("Z ANGLE: "+ang);
 	// undo the z movement
-	x = V3D.rotateAngle(x,dir,-ang);
-	// y = V3D.rotateAngle(y,dir,-ang);
+	x = V3D.rotateAngle(x,dir,-ang);	
 	// find the x & y angles (sould be identical)
-	var crossX = V3D.cross(V3D.DIRX,x);
-	// var crossY = V3D.cross(V3D.DIRY,y);
+	var crossX = V3D.cross(V3D.DIRX,x);	
 	var angleX = V3D.angle(V3D.DIRX,x);
+
+	// y = V3D.rotateAngle(y,dir,-ang);
+	// var crossY = V3D.cross(V3D.DIRY,y);
 	// var angleY = V3D.angle(V3D.DIRY,y);
+	// console.log(angleX,angleY)
+
 	var angle = angleX; // (angleX+angleY)*0.5; // TODO: average small error ?
 	if(crossX.z<0){
 		angle = -angle;
 	}
 	var direction = z.copy();
 	return {"direction":direction, "angle":angle, "offset":o};
+}
+Code.vectorTwistInverse = function(twist){
+	console.log(twist)
+
+	var dir = twist["direction"];
+	var ang = twist["angle"];
+	var off = twist["offset"];
+		off = off ? off : new V3D();
+	var angZ = V3D.angle(V3D.DIRZ, dir);
+	var dirZ = V3D.cross(V3D.DIRZ, dir);
+		dirZ.norm();
+	dir = dir.copy().rotate(dirZ, -2*angZ);
+	return {"direction":dir, "angle":-ang, "offset":off};
+/*
+	{direction: V3D, angle: 0.47567917772109625, offset: V3D}
+direction: V3D {x: 0.7808416417740233, y: -0.20910889098907925, z: 0.5886933006081905}
+angle: 0.47567917772109625
+offset: V3D {x: 0, y: 0, z: 0}
+__proto__: Object
+*/
+
+
+
+/*
+	var location = Code.valueOrDefault(twist["offset"], new V3D() );
+	var matrix = Code.Matrix3DFromVectorTwist(location, twist);
+	console.log(matrix);
+	console.log(matrix+"");
+	// matrix.inverse();
+	matrix = Matrix.inverse(matrix);
+	var inverse = Code.vectorTwistFromMatrix3D(matrix);
+	return inverse;
+*/
+/*
+	{direction: V3D, angle: 0.47567917772109625, offset: V3D}
+	direction: V3D {x: 0.7808416417740233, y: -0.20910889098907925, z: 0.5886933006081905}
+	angle: 0.47567917772109625
+	offset: V3D {x: 0, y: 0, z: 0}
+	__proto__: Object
+*/
+	
 }
 Code.Matrix3DFromVectorTwist = function(location, rotation){
 	if(rotation===undefined){
@@ -14601,22 +14646,24 @@ Code.graphAbsoluteFromRelativeAngle3D = function(edges){ // angle: vA = vB + edg
 	// lookup table
 	var maxIndex = -1;
 	var averageEdge = 0;
+	var edgeQuaternions = [];
 	for(var i=0; i<edges.length; ++i){
 		var edge = edges[i];
 		var value = edge[2];
-		averageEdge += V3D.angle(V3D.DIRZ, value);
+		quaternion = V4D.qFromMatrix(value);
+		edgeQuaternions[i] = quaternion;
 		maxIndex = Math.max(maxIndex,edge[0]);
 		maxIndex = Math.max(maxIndex,edge[1]);
 	}
 	// console.log( Code.degrees(averageEdge/edges.length) );
 	minimumChangeQuit *= (averageEdge/edges.length);
-
 	// initial estimate
 	var vertexes = [];
 	for(var i=0; i<=maxIndex; ++i){
-		vertexes[i] = {"value":new V3D(0,0,1), "next":new V3D(0,0,1), "list":null};
+		vertexes[i] = {"value":V4D.qIdentity(), "next":V4D.qIdentity(), "list":null};
 	}
 	
+	// interitive linear
 	for(var iteration=0; iteration<maxIterationsLinear; ++iteration){
 		// init accumulators
 		for(var i=0; i<vertexes.length; ++i){
@@ -14627,45 +14674,20 @@ Code.graphAbsoluteFromRelativeAngle3D = function(edges){ // angle: vA = vB + edg
 			var edge = edges[i];
 			var idA = edge[0];
 			var idB = edge[1];
-			var val = edge[2];
 			var err = edge[3];
-			var value;
+			// var value;
+			var edgeAB = edgeQuaternions[i];
+			var edgeBA = edgeAB.copy().qInverse();
+
 			var valueA = vertexes[idA]["value"];
 			var valueB = vertexes[idB]["value"];
 
-			// // PREFIX
-			// var valAB = val;
-			// var ang = V3D.angle(V3D.DIRZ,val);
-			// var dir = V3D.cross(V3D.DIRZ,val).norm();
-			// var valBA = V3D.rotateAngle(new V3D(0,0,1), dir,-ang);
-			// // prefix:
-			// var ang = V3D.angle(V3D.DIRZ,valueA);
-			// var dir = V3D.cross(V3D.DIRZ,valueA).norm();
-			// var nextB = V3D.rotateAngle(valAB, dir, ang);
-			// // ...
-			// var ang = V3D.angle(V3D.DIRZ,valueB);
-			// var dir = V3D.cross(V3D.DIRZ,valueB).norm();
-			// var nextA = V3D.rotateAngle(valBA, dir, ang);
-			// // ...
-			// vertexes[idA]["list"].push([nextA, err]);
-			// vertexes[idB]["list"].push([nextB, err]);
-// console.log("nextA: "+nextA);
-// console.log("nextB: "+nextB);
+			// append quaternions:
+			var nextB = V4D.qMul(valueA,edgeAB);
+			var nextA = V4D.qMul(valueB,edgeBA);
 
-			
-			// POSTFIX
-			var ang = V3D.angle(V3D.DIRZ,val);
-			var dir = V3D.cross(V3D.DIRZ,val).norm();
-			// if(Math.abs(ang)>0){
-			var nextB = V3D.rotateAngle(valueA, dir, ang);
-			var nextA = V3D.rotateAngle(valueB, dir, -ang);
-			// } // else keep values 
 			vertexes[idA]["list"].push([nextA, err]);
 			vertexes[idB]["list"].push([nextB, err]);
-// console.log("nextA: "+nextA);
-// console.log("nextB: "+nextB);
-			
-// throw "..."
 		}
 		// update locations
 		var maxDelta = null;
@@ -14673,25 +14695,34 @@ Code.graphAbsoluteFromRelativeAngle3D = function(edges){ // angle: vA = vB + edg
 			var vertex = vertexes[i];
 			var list = vertex["list"];
 			var errors = [];
-			var values = [];
+			var directions = [];
+			var angles = [];
+			// console.log(list);
 			for(var l=0; l<list.length; ++l){
 				var li = list[l];
-				values.push(li[0]);
+				var quaternion = li[0];
+				var twist = Code.vectorTwistFromQuaternion(quaternion);
+				directions.push(twist["direction"]);
+				angles.push(twist["angle"]);
 				errors.push(li[1]);
 			}
 			var info = Code.errorsToPercents(errors);
 			var error = info["error"];
 			var percents = info["percents"];
-			var value = Code.averageAngleVector3D(values, percents);
-			// var value = Code.averageV3D(values, percents);
-				value.norm();
-			vertex["next"] = value;
-			var delta = V3D.angle(vertex["next"],vertex["value"]);
-			if(maxDelta===null || maxDelta<delta){
-				maxDelta = delta;
-			}
+			// average
+			var direction = Code.averageAngleVector3D(directions, percents);
+			var angle  = Code.averageAngles(angles, percents);
+			var quaternion = Code.quaternionFromVectorTwist({"direction":direction, "angle":angle});
+			vertex["next"] = quaternion;
+			// vertex["next"]["direction"] = direction;
+			// vertex["next"]["angle"] = angle;
+			// var delta = V3D.angle(vertex["next"],vertex["value"]);
+			// if(maxDelta===null || maxDelta<delta){
+			// 	maxDelta = delta;
+			// }
 			// set to new
 			// vertex["value"] = Code.averageAngleVector3D( [vertex["next"],vertex["value"]], [dRO, decayRate]);
+
 			vertex["value"] = vertex["next"].copy();
 		}
 		// quit early?:
@@ -14700,14 +14731,16 @@ Code.graphAbsoluteFromRelativeAngle3D = function(edges){ // angle: vA = vB + edg
 			break;
 		}
 	}
-console.log(vertexes)
-var angles = [];
+
+/*
+var matrixes = [];
 for(var i=0; i<vertexes.length; ++i){
 	var value = vertexes[i]["value"];
-	angles[i] = value;
+	var matrix = value.qMatrix();
+	matrixes[i] = matrix;
 }
-return {"values":angles};
-
+return {"values":matrixes};
+*/
 
 
 	// nonlinear update estimate
@@ -14716,10 +14749,10 @@ return {"values":angles};
 			// normalize com to 0
 			
 			// keep between 0-2pi
-			for(var i=0; i<x.length; ++i){
-				x[i] = Code.angleZeroTwoPi(x[i]);
-			}
-			return;
+			// for(var i=0; i<x.length; ++i){
+			// 	x[i] = Code.angleZeroTwoPi(x[i]);
+			// }
+			// return;
 		}
 		var totalError = 0;
 		var edges = args[0];
@@ -14746,13 +14779,25 @@ return {"values":angles};
 	var x = [];
 	for(var i=0; i<vertexes.length; ++i){
 		var vertex = vertexes[i];
-		x[i] = vertex["value"];
+		var quaternion = vertex["value"];
+		var matrix = quaternion.qMatrix();
+		var rodrigues = Code.rotationMatrixToEulerRodriguez(matrix);
+		x[i*3+0] = rodrigues.x;
+		x[i*3+1] = rodrigues.y;
+		x[i*3+2] = rodrigues.z;
 	}
-
+	console.log(x);
+throw "?";
 	var args = [edges];
 	var result = Code.gradientDescent(fxn, args, x, null, maxIterationsNonLinear, 1E-16);
 	
 	var values = result["x"];
+
+
+	var matrix = Code.rotationEulerRodriguezToMatrix(new Matrix(), rodrigues);
+	throw "??"
+
+
 	return {"values":values};
 }
 
@@ -14847,73 +14892,59 @@ Code.graphAbsoluteFromRelativePose2D = function(edges){ // transation + rotation
 		// console.log(" "+offsetBA);
 		edgeOffsets[i] = offsetAB;
 	}
+
+
+
+
+
+
+
+
+
 /*
 	console.log(edgeOffsets);
-	console.log("SAME ?");
+	console.log("LINEAR ALGEBRA SOLVER");
 
 	// create linear solver:
-	var rows = edges.length*2;
-	var cols = 2*(maxIndex+1);
-	var X = new Matrix(rows,cols);
-	var y = new Matrix(rows,1);
-	// console.log(X,y)
+	var rows = edges.length*2; // edges * <x,y>
+	var cols = 2*(maxIndex+1); // views * <x,y>
+	var A = new Matrix(rows,cols);
+	var b = new Matrix(rows,1);
+	// fill in knowns
 	for(var i=0; i<edges.length; ++i){
 		var edge = edges[i];
 		var idA = edge[0];
 		var idB = edge[1];
 		var o = edgeOffsets[i];
-
-		X.set(i*2+0, idA*2+0, -1 );
-		X.set(i*2+0, idB*2+0,  1 );
-		y.set(i*2+0, 0, -o.x );
-
-		X.set(i*2+1, idA*2+1, -1 );
-		X.set(i*2+1, idB*2+1,  1 );
-		y.set(i*2+1, 0, -o.y );
+		// x
+		A.set(i*2+0, idA*2+0,  1 );
+		A.set(i*2+0, idB*2+0, -1 );
+		b.set(i*2+0, 0, -o.x );
+		// y
+		A.set(i*2+1, idA*2+1,  1 );
+		A.set(i*2+1, idB*2+1, -1 );
+		b.set(i*2+1, 0, -o.y );
 	}
-	// console.log("X:"+X);
-	// console.log("y:"+y);
-	// console.log("X:"+X.rowCount()+"x"+X.colCount());
-	// console.log("y:"+y.rowCount()+"x"+y.colCount());
-
-	// throw "?"
-	// var Xt = Matrix.transpose(X);
-	// var inv = Matrix.mult(X,Xt);
-	// 	Matrix.inverse(inv);
-	// var x = Matrix.mult(inv,X);
-	// // console.log("x:\n"+x+"");
-	// var b = Matrix.mult(x,y);
-	// console.log("b:\n"+b+"");
-
-	var Xt = Matrix.transpose(X);
-	var inv = Matrix.mult(Xt,X);
-		Matrix.inverse(inv);
-	var b = Matrix.mult(Xt,y);
-	var x = Matrix.mult(inv,b);
-
-		// console.log("Xt:"+Xt.rowCount()+"x"+Xt.colCount());
-		// console.log("inv:"+inv.rowCount()+"x"+inv.colCount());
-		// console.log("b:"+b.rowCount()+"x"+b.colCount());
-		// console.log("X:\n"+X+"");
-		// console.log("Xt:\n"+Xt+"");
-		// console.log("y:\n"+y+"");
-		// console.log("b:\n"+b+"");
-		// console.log("x:"+x.rowCount()+"x"+x.colCount());
-		// console.log("x:\n"+x+"");
-
-	b = x.toArray();
-	// console.log(b+"");
-	// console.log(b.length+" ???????????????")
-	var x0 = b[0];
-	var y0 = b[1];
+	console.log("A:\n"+A);
+	console.log("b:\n"+b);
+	// solve uknowns
+	var At = Matrix.transpose(A);
+	var pInv = Matrix.mult(At,A);
+		Matrix.inverse(pInv);
+	var B = Matrix.mult(pInv,At);
+	var x = Matrix.mult(B,b);
+	console.log("x: "+x);
+		x = x.toArray();
+	// convert to output
+	var x0 = x[0];
+	var y0 = x[1];
 	var offsets = [];
 	for(var i=0; i<=maxIndex; ++i){
-		var v = new V2D( b[i*2+0]-x0, b[i*2+1]-y0 );
-		// var v = new V2D( b[i*2+0], b[i*2+1] );
+		// var v = new V2D( b[i*2+0]-x0, b[i*2+1]-y0 );
+		var v = new V2D( x[i*2+0], x[i*2+1] );
 		offsets.push(v);
 		console.log(" "+i+":  "+v+"")
 	}
-	// console.log(offsets);
 
 	var values = [];
 	for(var i=0; i<=maxIndex; ++i){
@@ -14922,21 +14953,28 @@ Code.graphAbsoluteFromRelativePose2D = function(edges){ // transation + rotation
 		var value = {"offset":offset, "angle":angle};
 		values[i] = value;
 	}
-// console.log(values);
 
-return {"values":values, "edges":[]};
-
-
-throw "?";
+// return {"values":values, "edges":[]};
 
 */
+
+
+
+
+
+
 
 
 	// to relatives:
 	var vertexes = [];
 	for(var i=0; i<=maxIndex; ++i){
 		var angle = angles[i];
-		vertexes[i] = {"value":{"offset":new V2D(), "angle":angle}, "next":{"offset":new V2D(), "angle":angle}, "list":null};
+		if(offsets){
+			var offset = offsets[i];
+			vertexes[i] = {"value":{"offset":offset.copy(), "angle":angle}, "next":{"offset":offset.copy(), "angle":angle}, "list":null};
+		}else{
+			vertexes[i] = {"value":{"offset":new V2D(), "angle":angle}, "next":{"offset":new V2D(), "angle":angle}, "list":null};
+		}
 	}
 	console.log(vertexes);
 
@@ -15058,6 +15096,7 @@ throw "?";
 	// console.log(vertexes);
 	// throw "?"
 
+/*
 var values = [];
 for(var i=0; i<vertexes.length; ++i){
 	var value = vertexes[i]["value"];
@@ -15073,6 +15112,8 @@ for(var i=0; i<edges.length; ++i){
 // throw "?"
 return {"values":values, "edges":deltas};
 
+*/
+
 // map these:
 // return {"values":values};
 // // var values = [];
@@ -15083,18 +15124,120 @@ return {"values":values, "edges":deltas};
 
 
 
+var deltas = [];
+for(var i=0; i<edges.length; ++i){
+	var edge = edges[i];
+	var edgeD = edgeData[i];
+	deltas.push([edge[0], edge[1], edgeD, edge[3]]);
+}
 
 
 
+var valuesBefore = [];
+for(var i=0; i<vertexes.length; ++i){
+	var value = vertexes[i]["value"];
+	valuesBefore[i] = {"offset":value["offset"], "angle":value["angle"]};
+}
+
+	console.log("nonlinear");
+
+	// nonlinear update estimate
+	var tmpA = new V2D();
+	var tmpB = new V2D();
+	var fxn = function(args, x, isUpdate){
+		// if(isUpdate){ // normalize smallest to 0
+		// 	var minValue = Code.min(x);
+		// 	for(var i=0; i<x.length; ++i){
+		// 		x[i] -= minValue;
+		// 	}
+		// 	return;
+		// }
+		var totalError = 0;
+		var edges = args[0];
+		var edgeData = args[1];
+		for(var i=0; i<edges.length; ++i){
+			var edge = edges[i];
+			var indexA = edge[0];
+			var indexB = edge[1];
+			//var valueAB = edge[2];
+			var valueAB = edgeData[i];
+			var errorAB = edge[3];
+			var actualAX = x[indexA*3+0];
+			var actualAY = x[indexA*3+1];
+			var actualAT = x[indexA*3+2];
+			var actualBX = x[indexB*3+0];
+			var actualBY = x[indexB*3+1];
+			var actualBT = x[indexB*3+2];
 
 
+			tmpA.set(actualAX,actualAY);
+			tmpB.set(actualBX,actualBY);
 
+			var actualAAxisX = new V2D(1,0).rotate(actualAT).add(tmpA);
+			var actualAAxisY = new V2D(0,1).rotate(actualAT).add(tmpA);
 
-	// ...
+			var actualBAxisX = new V2D(1,0).rotate(actualBT).add(tmpB);
+			var actualBAxisY = new V2D(0,1).rotate(actualBT).add(tmpB);
 
+			var forward = valueAB["forward"];
+			var offsetAB = forward["offset"];
+			var angleAB = forward["angle"];
 
+			var reverse = valueAB["reverse"];
+			var offsetBA = reverse["offset"];
+			var angleBA = reverse["angle"];
 
-	throw "?";
+			var predictedBO = offsetAB.copy().rotate(actualAT).add(tmpA);
+			var predictedAO = offsetBA.copy().rotate(actualBT).add(tmpB);
+
+			var predictedBAxisX = new V2D(1,0).rotate(angleAB).add(offsetAB).rotate(actualAT).add(tmpA);
+			var predictedAAxisX = new V2D(1,0).rotate(angleBA).add(offsetBA).rotate(actualBT).add(tmpB);
+
+			var predictedBAxisY = new V2D(0,1).rotate(angleAB).add(offsetAB).rotate(actualAT).add(tmpA);
+			var predictedAAxisY = new V2D(0,1).rotate(angleBA).add(offsetBA).rotate(actualBT).add(tmpB);
+
+			var errorAO = V2D.distance(predictedAO, tmpA);
+			var errorBO = V2D.distance(predictedBO, tmpB);
+
+			var errorAX = V2D.distance(predictedAAxisX, actualAAxisX);
+			var errorAY = V2D.distance(predictedAAxisY, actualAAxisY);
+
+			var errorBX = V2D.distance(predictedBAxisX, actualBAxisX);
+			var errorBY = V2D.distance(predictedBAxisY, actualBAxisY);
+			
+			var error = errorAO*errorAO + errorBO*errorBO + errorAX*errorAX + errorAY*errorAY + errorBX*errorBX + errorAY*errorBY;
+			if(errorAB>0){
+				error /= errorAB;
+			}
+			totalError += error;
+		}
+		// console.log(totalError);
+		// throw "?";
+		return totalError;
+	}
+
+	var x = [];
+	for(var i=0; i<vertexes.length; ++i){
+		var vertex = vertexes[i];
+		console.log(vertex);
+		var value = vertex["value"];
+		var offset = value["offset"];
+		var angle = value["angle"];
+		x[i*3+0] = offset.x;
+		x[i*3+1] = offset.y;
+		x[i*3+2] = angle;
+	}
+	console.log(x);
+
+	var args = [edges, edgeData];
+	var result = Code.gradientDescent(fxn, args, x, null, maxIterationsNonLinear, 1E-16);
+	var values = result["x"];
+	// console.log(values)
+	var poses = [];
+	for(var i=0; i<vertexes.length; ++i){
+		poses[i] = {"offset":new V2D( values[i*3+0], values[i*3+1]), "angle":values[i*3+2] };
+	}
+	return {"values":poses, "valuesBefore":valuesBefore, "edges":deltas};
 }
 
 Code.graphAbsoluteFromRelativePose2D_A = function(edges){ // transation + rotation 2D: vA = vB + edge -- matrix(3x3)
@@ -15733,6 +15876,82 @@ throw "?"
 	return {"A":{"offset":tAB, "angle":angleAB}, "B":{"offset":tBA, "angle":angleBA}};
 }
 
+Code.rotationMatrixToEulerRodriguez = function(R){
+	var p = new V3D(R.get(2,1)-R.get(1,2), R.get(0,2)-R.get(2,0), R.get(1,0)-R.get(0,1) ); // cross
+	p.scale(0.5);
+	var c = 0.5*(R.get(0,0) + R.get(1,1) + R.get(2,2) - 1); // trace
+//		c = Math.round(c);
+	var rho;
+	var pMag = p.length();
+	pMag = pMag > 1E-6 ? pMag : 0;
+	if(pMag==0 && c==1){
+		rho = new V3D(0,0,0);
+	}else if(pMag==0 && c==-1){
+		var r1 = new V3D(R.get(0,0) + 1,R.get(1,0),R.get(2,0));
+		var r2 = new V3D(R.get(0,1),R.get(1,1) + 1,R.get(2,1));
+		var r3 = new V3D(R.get(0,2),R.get(1,2),R.get(2,2) + 1);
+		var r1Norm = r1.length();
+		var r2Norm = r2.length();
+		var r3Norm = r3.length();
+		var v;
+		if(r1Norm>=r2Norm && r1Norm>=r3Norm){
+			v = r1;
+		}else if(r2Norm>=r1Norm && r2Norm>=r3Norm){
+			v = r2;
+		}else{ // r3Norm>=r1Norm && r3Norm>=r2Norm){
+			v = r3;
+		}
+		var u = v.copy().norm();
+		if( (u.x<0) || (u.x==0 && u.y<0) || (u.x==0 && u.y==0 && u.z<0) ){
+			u.scale(-1);
+		}
+		rho = u.copy().scale(Math.PI);
+	}else if(pMag==0){
+		throw "some other error with c: "+c;
+	}else{ // p!=0
+		var u = p.copy().scale(1.0/pMag);
+		var theta = Math.atan2(pMag, c); //var theta = Math.atan(pMag/c);
+		rho = u.copy().scale(theta);
+	}
+	return rho;
+}
+
+Code.rotationEulerRodriguezToMatrix = function(mat, v){ // http://www.sciencedirect.com/science/article/pii/S0094114X15000415
+// THIS IS SAME AS Matrix3D.rotateVector
+	if(v==undefined){
+		v = mat;
+		mat = new Matrix(3,3);
+	}
+	var theta = v.length();
+	var n = v.copy().norm();
+	var x = n.x;
+	var y = n.y;
+	var z = n.z;
+	var cos = Math.cos(theta);
+	var sin = Math.sin(theta);
+	var cm1 = 1.0 - cos;
+
+	var a =    cos + x*x*cm1;
+	var b = -z*sin + x*y*cm1;
+	var c =  y*sin + x*z*cm1;
+	var d =  z*sin + x*y*cm1;
+	var e =    cos + y*y*cm1;
+	var f = -x*sin + y*z*cm1;
+	var g = -y*sin + x*z*cm1;
+	var h =  x*sin + y*z*cm1;
+	var i =    cos + z*z*cm1;
+
+	mat.set(0,0, a);
+	mat.set(0,1, b);
+	mat.set(0,2, c);
+	mat.set(1,0, d);
+	mat.set(1,1, e);
+	mat.set(1,2, f);
+	mat.set(2,0, g);
+	mat.set(2,1, h);
+	mat.set(2,2, i);
+	return mat;
+}
 
 
 // NODE JS INCLUSION:
