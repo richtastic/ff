@@ -261,7 +261,7 @@ functions:
 
 
 
-
+A = UDV^T
 
 
 
@@ -273,22 +273,29 @@ http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.116.8981&rep=rep1&type=
 
 https://www.ecse.rpi.edu/~qji/Papers/isprs_pose2.pdf
 
+http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.116.8981&rep=rep1&type=pdf
+https://www.ece.ucsb.edu/~hespanha/published/cdc07_asymtime.pdf
+http://ece-research.unm.edu/chaouki/PAPERS/Journals/Complex%20Networks%20CSM-Special%20Issue/Full%20papers/Hespanha.pdf
+
+https://pdfs.semanticscholar.org/17da/80fc3cd55c3572ac3a411cd1a61dc267b505.pdf
+
+
+
+
+
+???
+http://faculty.washington.edu/sbrunton/me565/pdf/CHAPTER1.pdf
+
+http://graphics.stanford.edu/~smr/ICP/comparison/eggert_comparison_mva97.pdf
 
 
 
 
 
 
-
-
-
-
-
-
-
-
-
-
+---
+https://www.cs.toronto.edu/~urtasun/courses/CV/lecture09.pdf
+https://www.cs.toronto.edu/~urtasun/courses/CV/cv.html
 
 
 

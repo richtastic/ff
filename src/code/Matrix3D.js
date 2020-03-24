@@ -409,14 +409,24 @@ Matrix3D.prototype.kill = function(){
 Matrix3D.temp = new Matrix3D(); // internal
 Matrix3D.TEMP = new Matrix3D(); // external
 
-Matrix3D.relative = function(relAB,absA,absB){
+Matrix3D.relativeWorld = function(relAB,absA,absB){
 	if(!absB){
 		absB = absA;
 		absA = relAB;
 		relAB = new Matrix3D();
 	}
 	var invA = Matrix3D.inverse(Matrix3D.temp, absA);
-	// Matrix3D.mult(relAB, absB, invA); // PROBABLY EXTRINSIC
+	Matrix3D.mult(relAB, absB, invA);
+	return relAB;
+}
+
+Matrix3D.relativeReference = function(relAB,absA,absB){
+	if(!absB){
+		absB = absA;
+		absA = relAB;
+		relAB = new Matrix3D();
+	}
+	var invA = Matrix3D.inverse(Matrix3D.temp, absA);
 	Matrix3D.mult(relAB, invA, absB);
 	return relAB;
 }

@@ -228,18 +228,28 @@ Matrix2D.toMatrix = function(mat){
 
 Matrix2D.temp = new Matrix2D();
 
-Matrix2D.relative = function(relAB,absA,absB){
+Matrix2D.relativeWorld = function(relAB,absA,absB){
 	if(!absB){
 		absB = absA;
 		absA = relAB;
 		relAB = new Matrix2D();
 	}
 	var invA = Matrix2D.inverse(Matrix2D.temp, absA);
-	// Matrix2D.mult(relAB, absB, invA); // EXTRINSIC
+	Matrix2D.mult(relAB, absB, invA);
+	return relAB;
+}
+Matrix2D.relativeReference = function(relAB,absA,absB){
+	if(!absB){
+		absB = absA;
+		absA = relAB;
+		relAB = new Matrix2D();
+	}
+	var invA = Matrix2D.inverse(Matrix2D.temp, absA);
 	Matrix2D.mult(relAB, invA, absB);
 	return relAB;
 }
-// Matrix2D.matrix2DfromMatrix = function(mat){
+
+
 Matrix2D.fromMatrix = function(mat){
 	var m2D = new Matrix2D();
 	m2D.set(mat.get(0,0),mat.get(0,1), mat.get(1,0),mat.get(1,1), mat.get(0,2),mat.get(1,2));

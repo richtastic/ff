@@ -721,15 +721,27 @@ Matrix.prototype.transform2DRotation = function(){
 	var angle = Code.averageAngles([angleX,angleY]);
 	return angle;
 }
+Matrix.prototype.transform3DRotation = function(){
+	return this.getSubMatrix(0,0, 3,3);
+}
 
-Matrix.relative = function(relAB,absA,absB){
+Matrix.relativeWorld = function(relAB,absA,absB){ // where B is relative to A in world reference frame
 	if(!absB){
 		absB = absA;
 		absA = relAB;
 		relAB = new Matrix();
 	}
 	var invA = Matrix.inverse(absA);
-	// Matrix.mult(relAB, absB, invA); // PROBABLY EXTRINSID
+	Matrix.mult(relAB, absB, invA);
+	return relAB;
+}
+Matrix.relativeReference = function(relAB,absA,absB){ // where B is in A's reference frame
+	if(!absB){
+		absB = absA;
+		absA = relAB;
+		relAB = new Matrix();
+	}
+	var invA = Matrix.inverse(absA);
 	Matrix.mult(relAB, invA, absB);
 	return relAB;
 }

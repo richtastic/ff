@@ -413,9 +413,8 @@ https://cloud.google.com/appengine/docs/nodejs/
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-- turn quaternions into twists
-- make sure twists are assoc/cummu
-- investigate the relativeness of world/frame references
+http://localhost/web/ff/3DR/averaging.html
+
 
 
 graphAbsoluteFromRelativeAngle3D
