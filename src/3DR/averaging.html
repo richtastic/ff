@@ -618,7 +618,8 @@ function classesLoadedFxn(){
 	// positions 3D
 	var positions = [new V3D(1,2,0), new V3D(3,5,1), new V3D(4,1,2), new V3D(6,2,1), new V3D(5,4,0), new V3D(7,7,2), new V3D(6,2,0), new V3D(5,0,3) ];
 	var edges = [ [0,1], [0,2], [1,3], [2,4], [2,5], [3,4], [4,5], [5,6], [5,7], [6,7] ];
-	var errorMagnitude = 0.1;
+	var errorMagnitude = 0.0;
+	// var errorMagnitude = 0.1;
 	for(var i=0; i<edges.length; ++i){
 		var edge = edges[i];
 		var error = errorMagnitude*Math.random();
@@ -634,7 +635,7 @@ function classesLoadedFxn(){
 	var values = result["values"];
 	var min = V3D.sub(values[0],positions[0]);
 	for(var i=0; i<positions.length; ++i){
-		console.log(" "+i+" : "+positions[i]+" =?= "+V3D.sub(values[i],min) );
+		console.log(" "+i+" : "+V3D.distance( positions[i] , V3D.sub(values[i],min) )+" - "+positions[i]+" =?= "+V3D.sub(values[i],min) );
 	}
 
 	// orientations 2D
@@ -663,8 +664,8 @@ function classesLoadedFxn(){
 	}
 */
 
-/*
 
+/*
 	// angles 3d
 	console.log("--- angles 3D");
 
@@ -683,10 +684,10 @@ function classesLoadedFxn(){
 		m = new Matrix3D(); m.rotateZ(Code.radians( 30.0)); m.rotateX(Code.radians( 10.0)); m.rotateY(Code.radians( 60.0)); orientations.push( m ); // 6
 		m = new Matrix3D(); m.rotateZ(Code.radians( 10.0)); m.rotateX(Code.radians( 30.0)); m.rotateY(Code.radians( 50.0)); orientations.push( m ); // 7
 	var edges = [ [0,1], [0,2], [1,3], [2,4], [2,5], [3,4], [4,5], [5,6], [5,7], [6,7] ];
-	// var errorMagnitude = 0.0;
+	var errorMagnitude = 0.0;
 	// var errorMagnitude = 0.1;
 	// var errorMagnitude = 0.5;
-	var errorMagnitude = 1.0;
+	// var errorMagnitude = 1.0;
 	for(var i=0; i<edges.length; ++i){
 		var edge = edges[i];
 		var error = 1;
@@ -766,6 +767,7 @@ function classesLoadedFxn(){
 	//                          0                 1                  2                 3                  4                 5                 6                 7
 	var m, t, q;
 	var orientations = [];
+		
 		m = new Matrix3D(); m.rotateZ(Code.radians( 20.0)); m.rotateX(Code.radians(-20.0)); m.rotateY(Code.radians( 20.0)); m.translate( 0, 0, 0); orientations.push( m ); // 0
 		m = new Matrix3D(); m.rotateZ(Code.radians(-10.0)); m.rotateX(Code.radians( 10.0)); m.rotateY(Code.radians( 10.0)); m.translate( 2, 0, 1); orientations.push( m ); // 1
 		m = new Matrix3D(); m.rotateZ(Code.radians( 10.0)); m.rotateX(Code.radians( 20.0)); m.rotateY(Code.radians(-10.0)); m.translate( 1, 3, 0); orientations.push( m ); // 2
@@ -789,39 +791,127 @@ function classesLoadedFxn(){
 			valueA = valueA.toMatrix();
 			valueB = valueB.toMatrix();
 		var valueAB = Matrix.relativeReference(valueA,valueB);
+		error = 1.0;
 		// random quaternion - orientation
-		if(false){
-			var q = new V4D();
-				q.qIdentity();
-			var v = new V3D();
-				v.random(2,2,2);
-				v.norm();
-				q.qRotateDir(v.x,v.y,v.z, delta);
-			// apply error
-			var m = q.qMatrix();
-				m = m.toMatrix();
-			valueAB = Matrix.mult(valueAB,m);
-		}
-
+		// if(false){
+		// 	var q = new V4D();
+		// 		q.qIdentity();
+		// 	var v = new V3D();
+		// 		v.random(2,2,2);
+		// 		v.norm();
+		// 		q.qRotateDir(v.x,v.y,v.z, delta);
+		// 	// apply error
+		// 	var m = q.qMatrix();
+		// 		m = m.toMatrix();
+		// 	valueAB = Matrix.mult(valueAB,m);
+		// }
 		edge[2] = valueAB;
 		edge[3] = error;
 	}
+
+
 	console.log(edges);
+	for(var i=0; i<orientations.length; ++i){
+		orientations[i] = orientations[i].toMatrix();
+	}
 	
-	var result = Code.graphAbsoluteFromRelativePose3D(edges);
+	var result = Code.graphAbsoluteFromRelativePose3D(edges, orientations);
 	console.log(result);
 	var values = result["values"];
-	var min = Code.angleDirection(orientations[0],values[0]);
-	console.log(min);
+
+
+	// var min = Code.angleDirection(orientations[0],values[0]);
+	// console.log(min);
+	// change reference to first location, rotate toward second
+	var v0 = values[0];
+	var v1 = values[1];
+	var v2 = values[2];
+	var o0 = orientations[0];
+	var o1 = orientations[1];
+	var o2 = orientations[2];
+
+	var origin0 = o0.transform3DLocation();
+	var origin1 = v0.transform3DLocation();
+
+	var A = origin1.copy();
+	var a = origin0.copy();
+
+	var B = v1.transform3DLocation();
+	var b = o1.transform3DLocation();
+
+	var C = v2.transform3DLocation();
+	var c = o2.transform3DLocation();
+
+// throw "?";
+	console.log("to same reference");
+	// to origin reference frame
+	c.sub(a);
+	b.sub(a);
+	// a.sub(a);
+
+	C.sub(A);
+	B.sub(A);
+	// A.sub(A);
+
+	// relative 1
+	var directionB = V3D.cross(B,b);
+		directionB.norm();
+	var angleBA = V3D.angle(B,b);
+
+	console.log("directionBA: "+directionB);
+	console.log("angleBA: "+Code.degrees(angleBA));
+
+	B.rotate(directionB,angleBA);
+	C.rotate(directionB,angleBA);
+
+	// relative 2
+	var normal0 = V3D.cross(b,c);
+	var normal1 = V3D.cross(B,C);
+	var perp0 = V3D.perpendicularComponent(b,normal0);
+		perp0.norm();
+	var perp1 = V3D.perpendicularComponent(b,normal1);
+		perp1.norm();
+
+	console.log("perp0: "+perp0);
+	console.log("perp1: "+perp1);
+
+	var angleBC = V3D.angle(perp1,perp0);
+	var normalB = b.copy().norm();
+	console.log("normalB: "+normalB);
+	console.log("angleBC: "+Code.degrees(angleBC));
+
+	C.rotate(normalB,angleBC);
+
+	console.log("A: "+V3D.distance(a,A));
+	console.log("B: "+V3D.distance(b,B));
+	console.log("C: "+V3D.distance(c,C));
+
+	var transformWorld = new Matrix(4,4);
+		transformWorld.identity();
+	// move to 0
+		transformWorld = Matrix.transform3DTranslate(transformWorld,-origin1.x,-origin1.y,-origin1.z);
+	// rotate along vector 1
+		transformWorld = Matrix.transform3DRotate(transformWorld,directionB,angleBA);
+	// rotate along vector 2
+		transformWorld = Matrix.transform3DRotate(transformWorld,normalB,angleBC);
+	// move to origin a
+		transformWorld = Matrix.transform3DTranslate(transformWorld,origin0.x,origin0.y,origin0.z);
+
+	console.log("transformWorld: \n "+transformWorld);
+
+	// var offsetRotationWorld = null;
 	for(var i=0; i<orientations.length; ++i){
+		var orientation = orientations[i];
+		var value = values[i];
+		var p0 = orientation.transform3DLocation();
+		var p1 = value.transform3DLocation();
+			p1 = transformWorld.multV3DtoV3D(p1,p1);
+		console.log(" "+i+" : "+V3D.distance(p0,p1));
+		
+		// also show normal directions angular difference
+
 		// console.log(" "+i+" : "+Code.degrees(Code.angleZeroTwoPi(angles[i]))+" =?= "+Code.degrees(Code.angleZeroTwoPi(values[i]-min)) );
 	}
-
-
-
-
-
-
 
 
 
@@ -853,7 +943,7 @@ throw "???"
 		var deltaPosY = error*(Math.random()-0.5);
 		var valueA = poses[edge[0]];
 		var valueB = poses[edge[1]];
-		var valueAB = Matrix2D.relative(valueA,valueB);
+		var valueAB = Matrix2D.relativeReference(valueA,valueB);
 		console.log(" "+i+" : "+V2D.sub( valueB.toMatrix().transform2DLocation(),valueA.toMatrix().transform2DLocation() ) + " : "  );
 		// apply error
 		if(true){

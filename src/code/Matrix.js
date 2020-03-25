@@ -306,7 +306,7 @@ Matrix.prototype.appendColFromArray = function(col){
 		this._rows[i][cols] = col[i];
 	}
 	for(;i<rows;++i){ // remaining = 0
-		console.log(i,cols,len)
+		// console.log(i,cols,len)
 		this._rows[i][cols] = 0.0;
 	}
 	this._colCount += 1;
@@ -580,11 +580,37 @@ Matrix.transform2DTranslate = function(a,tX,tY){
 	return Matrix.mult(b,a);
 }
 
-Matrix.transform3DRotate = function(a,vector,angle){
-	// create rotation matix
-	// multiply
-	throw "TODO";
+Matrix.transform3DRotate = function(a,v,t){ // vector, theta
+	var c = Math.cos(t), s = Math.sin(t);
+	
+	var x = v.x, y = v.y, z = v.z;
+	var xx = x*x, yy = y*y, zz = z*z;
+	var xy = x*y, xz = x*z, yz = y*z;
+	var o = 1-c;
+
+	var b = Matrix._transformTemp3D.fromArray(
+		[   xx*o +   c, xy*o - z*s, xz*o + y*s, 0,
+			xy*o + z*s, yy*o +   c, yz*o - x*s, 0,
+			xz*o - y*s, yz*o + x*s, zz*o +   c, 0,
+			0, 0, 0, 1]);
+
+	return Matrix.mult(b,a);
 }
+/*
+Matrix3D.prototype.rotateVector = function(v,t){ // vector, theta
+	var mat = Matrix3D.temp;
+	var c = Math.cos(t), s = Math.sin(t);
+	var x = v.x, y = v.y, z = v.z;
+	var xx = x*x, yy = y*y, zz = z*z;
+	var xy = x*y, xz = x*z, yz = y*z;
+	var o = 1-c;
+	mat.set(xx*o +   c, xy*o - z*s, xz*o + y*s, 0,
+			xy*o + z*s, yy*o +   c, yz*o - x*s, 0,
+			xz*o - y*s, yz*o + x*s, zz*o +   c, 0);
+	this.mult(mat,this);
+	return this;
+}
+*/
 
 //
 Matrix.crossMatrixFromV3D = function(min,vin){ // v*M(u) = v x u      (skew symmetric)
@@ -699,6 +725,12 @@ Matrix.prototype.transform3DLocation = function(){
 	var rows = this._rows;
 	var location = new V3D(rows[0][3], rows[1][3], rows[2][3]);
 	return location;
+}
+Matrix.prototype.transform3DSetLocation = function(v){
+	var rows = this._rows;
+	rows[0][3] = v.x;
+	rows[1][3] = v.y;
+	rows[2][3] = v.z;
 }
 Matrix.prototype.transform2DLocation = function(){
 	var location = this.multV2DtoV2D(new V2D(0,0));
