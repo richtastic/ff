@@ -33895,7 +33895,10 @@ R3D.bestConnectedViewSubgraph = function(edges, viewCount){ // subgraph with mos
 }
 
 
-R3D.optimumTransform3DFromObjectLookup = function(views, pairs, triples,  viewToID,pairToIDs,tripleToIDs, pairToError,pairToTransform, tripleToScales,   originalTransforms){ 
+
+
+
+R3D.optimumTransform3DFromObjectLookup_OLD = function(views, pairs, triples,  viewToID,pairToIDs,tripleToIDs, pairToError,pairToTransform, tripleToScales,   originalTransforms){ 
 	// helpers
 	var minimumStringFirst = function(a,b){
 		return a < b ? (a+"-"+b) : (b+"-"+a);

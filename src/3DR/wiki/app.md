@@ -415,31 +415,19 @@ https://cloud.google.com/appengine/docs/nodejs/
 
 http://localhost/web/ff/3DR/averaging.html
 
+absoluteViewsFromDatas
 
+displayOriginalViewGraph
 
 graphAbsoluteFromRelativeAngle3D
 
 
-
-- linear iteritive initialize 
-- nonlinear error ?
-	=> 3-axes
-
-
-- why is inverse wrong in 2D ?
-
-	- FRAME-RELATIVE
-	vs
-	- WORLD-RELATIVE ....
-
-var AB = Matrix.mult(B,invA);
-var BA = Matrix.mult(A,invB);
+graphAbsoluteFromRelative1D
 
 
 
-- 3D rotation averaging
 
-- 3D orientation averaging
+
 
 
 

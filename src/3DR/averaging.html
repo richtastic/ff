@@ -762,12 +762,13 @@ function classesLoadedFxn(){
 
 */
 
+/*
+
 	// orientations 3d
 	console.log("--- orientation 3D");
 	//                          0                 1                  2                 3                  4                 5                 6                 7
 	var m, t, q;
 	var orientations = [];
-		
 		m = new Matrix3D(); m.rotateZ(Code.radians( 20.0)); m.rotateX(Code.radians(-20.0)); m.rotateY(Code.radians( 20.0)); m.translate( 0, 0, 0); orientations.push( m ); // 0
 		m = new Matrix3D(); m.rotateZ(Code.radians(-10.0)); m.rotateX(Code.radians( 10.0)); m.rotateY(Code.radians( 10.0)); m.translate( 2, 0, 1); orientations.push( m ); // 1
 		m = new Matrix3D(); m.rotateZ(Code.radians( 10.0)); m.rotateX(Code.radians( 20.0)); m.rotateY(Code.radians(-10.0)); m.translate( 1, 3, 0); orientations.push( m ); // 2
@@ -913,7 +914,142 @@ function classesLoadedFxn(){
 		// console.log(" "+i+" : "+Code.degrees(Code.angleZeroTwoPi(angles[i]))+" =?= "+Code.degrees(Code.angleZeroTwoPi(values[i]-min)) );
 	}
 
+*/
 
+
+	console.log("--- Full Pairs 3D");
+	var viewIDs = ["A","B","C","D","E","F","G","H","I","J","K","L"];
+	var views = [];
+		m = new Matrix3D(); m.rotateZ(Code.radians( 0.0)); m.rotateX(Code.radians( 0.0)); m.rotateY(Code.radians( 0.0)); m.translate(-2,  0, 0); views.push( m ); // 0 - A
+		m = new Matrix3D(); m.rotateZ(Code.radians( 0.0)); m.rotateX(Code.radians( 0.0)); m.rotateY(Code.radians( 0.0)); m.translate(-1,  1, 0); views.push( m ); // 1 - B
+		m = new Matrix3D(); m.rotateZ(Code.radians( 0.0)); m.rotateX(Code.radians( 0.0)); m.rotateY(Code.radians( 0.0)); m.translate(-1,  0, 0); views.push( m ); // 2 - C
+		m = new Matrix3D(); m.rotateZ(Code.radians( 0.0)); m.rotateX(Code.radians( 0.0)); m.rotateY(Code.radians( 0.0)); m.translate( 2,  0, 0); views.push( m ); // 3 - D
+		m = new Matrix3D(); m.rotateZ(Code.radians( 0.0)); m.rotateX(Code.radians( 0.0)); m.rotateY(Code.radians( 0.0)); m.translate( 1,  1, 0); views.push( m ); // 4 - E
+		m = new Matrix3D(); m.rotateZ(Code.radians( 0.0)); m.rotateX(Code.radians( 0.0)); m.rotateY(Code.radians( 0.0)); m.translate( 2,1.5, 0); views.push( m ); // 5 - F
+		m = new Matrix3D(); m.rotateZ(Code.radians( 0.0)); m.rotateX(Code.radians( 0.0)); m.rotateY(Code.radians( 0.0)); m.translate( 3,  0, 0); views.push( m ); // 6 - G
+		m = new Matrix3D(); m.rotateZ(Code.radians( 0.0)); m.rotateX(Code.radians( 0.0)); m.rotateY(Code.radians( 0.0)); m.translate( 2, -1, 0); views.push( m ); // 7 - H
+		m = new Matrix3D(); m.rotateZ(Code.radians( 0.0)); m.rotateX(Code.radians( 0.0)); m.rotateY(Code.radians( 0.0)); m.translate( 3, -2, 0); views.push( m ); // 8 - I
+		m = new Matrix3D(); m.rotateZ(Code.radians( 0.0)); m.rotateX(Code.radians( 0.0)); m.rotateY(Code.radians( 0.0)); m.translate( 4, -1, 0); views.push( m ); // 9 - J
+	var pairs = [
+			[0,1],   // 0 - A-B
+			[0,2],   // 1 - A-C
+			[1,2],   // 2 - B-C
+			[2,3],   // 3 - C-D
+			[2,4],   // 4 - C-E
+			[3,4],   // 5 - D-E
+			[4,5],   // 6 - E-F
+			[5,6],   // 7 - E-G
+			[6,7],   // 8 - G-H
+			[7,8],   // 9 - H-I
+			[8,9],   // 10- I-J
+
+			// [1,3],	 // 11 - B-D
+		];
+	var triples = [
+			// pairID - IS SCALED, pairID - IS SCALED, pairID - IS SCALED, 
+			[0,1,  1,1, 2,1],
+			[2,1,  3,1, null,0],
+		// [2,1, 3,1, 11,1],
+			[3,1,  4,1, 5,1],
+			[5,1,  6,1, null,0],
+
+			[7,0,  8,0, null,0],
+			[8,1,  9,1, null,0],
+
+			[9,1, 10,0, null,0],
+
+			// [2,1, 3,1, 11,1],
+		];
+	for(var i=0; i<views.length; ++i){
+		var transform = views[i];
+			transform = transform.toMatrix();
+		views[i] = {"id":viewIDs[i], "absolute":transform};
+	}
+	for(var i=0; i<pairs.length; ++i){
+		var pair = pairs[i];
+		var vA = pair[0];
+		var vB = pair[1];
+		var viewA = views[vA];
+		var viewB = views[vB];
+		var transformA = viewA["absolute"];
+		var transformB = viewB["absolute"];
+		var pairID = viewA["id"]+"-"+viewB["id"];
+		var transformAB = Matrix.relativeReference(transformA,transformB);
+		var scale = 1.0;
+		var error = 1.0;
+		pairs[i] = {"id":pairID, "transform":transformAB, "A":viewA, "B":viewB, "scale":scale, "error":error};
+	}
+	for(var i=0; i<triples.length; ++i){
+		var triple = triples[i];
+		var sList = {};
+		var viewIDs = {};
+		// console.log("  "+i+" ...................");
+
+		for(var j=0; j<triple.length; j+=2){
+			var pairID = triple[j];
+			var scale = triple[j+1];
+			// console.log(" "+pairID+" @ "+scale)
+			if(pairID!==null){
+				var pair = pairs[pairID];
+					pairID = pair["id"];
+					// console.log(" = "+pairID);
+				var viewA = pair["A"];
+				var viewB = pair["B"];
+				viewIDs[viewA["id"]] = viewA;
+				viewIDs[viewB["id"]] = viewB;
+				sList[pairID] = scale;
+			}
+		}
+		var viewKeys = Code.keys(viewIDs);
+		viewKeys.sort();
+		var vA = viewKeys[0];
+		var vB = viewKeys[1];
+		var vC = viewKeys[2];
+		// pair list
+		var pairA = vA+"-"+vB;
+		var pairB = vA+"-"+vC;
+		var pairC = vB+"-"+vC;
+		var pList = [pairA,pairB,pairC];
+		// scale lise
+		var scaleA = Code.valueOrDefault(sList[pairA],0);
+		var scaleB = Code.valueOrDefault(sList[pairB],0);
+		var scaleC = Code.valueOrDefault(sList[pairC],0);
+		var scales = [scaleA,scaleB,scaleC];
+		var tripleID = vA+"-"+vB+"-"+vC;
+
+		triples[i] = {"id":tripleID, "views":viewKeys, "pairs":pList, "scales":scales};
+	}
+console.log(views);
+console.log(pairs);
+console.log(triples);
+	var viewToID = function(view){
+		return view["id"];
+	}
+	var pairToIDs = function(pair){
+		return [pair["A"]["id"],pair["B"]["id"]];
+	}
+	var tripleToIDs = function(triple){
+		return triple["views"];
+	}
+	var pairToError = function(pair){
+		return pair["error"];
+	}
+	var pairToTransform = function(pair){
+		return pair["transform"];
+	}
+	var tripleToScales = function(triple){
+		return triple["scales"];
+	}
+/*
+return [triple["A"],triple["B"],triple["C"]];
+	};
+	var tripleToScales = function(triple){
+		// console.log(triple);
+		// throw "triple scales";
+		var gauge = triple["gauge"];
+*/
+
+	var result = Code.graphAbsoluteFromObjectLookup3D(views, pairs, triples, viewToID,pairToIDs,tripleToIDs, pairToError,pairToTransform, tripleToScales);
 
 throw "???"
 

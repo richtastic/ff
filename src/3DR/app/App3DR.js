@@ -7980,6 +7980,7 @@ console.log("inputFilename: "+inputFilename);
 // force redo:
 graph = null;
 	if(!graph){
+console.log("RICHIE - START GRAPH");
 		var views = project.views();
 		var graphViews = [];
 		var graphPairs = [];
@@ -8072,6 +8073,7 @@ graph = null;
 			dataGroups.push(g);
 		}
 		console.log(data);
+throw "BEFORE SAVE GRAPH"
 		// save graph & reference it
 		inputData["graph"] = graphFilename;
 		var saveSparseFxn = function(){
@@ -9492,7 +9494,7 @@ App3DR.ProjectManager.prototype._absoluteViewsFromDatas = function(views, pairs,
 	};
 
 this.displayOriginalViewGraph(views, pairs, triples, viewToID,pairToIDs,tripleToIDs, pairToError,pairToTransform,tripleToScales);
-
+// throw "?"
 
 
 

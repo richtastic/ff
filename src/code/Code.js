@@ -15658,6 +15658,7 @@ Code.graphAbsoluteFromRelativePose3D = function(edges, orientations){ // orienat
 
 
 console.log("ROTATIONS ARE EQUAL ?")
+if(orientations){
 var values = rotations;
 console.log(orientations);
 // world twist difference
@@ -15692,7 +15693,7 @@ for(var i=0; i<orientations.length; ++i){
 	var diff = V3D.angle(pA,pB);
 	console.log(" "+i+" : "+Code.degrees(diff)+" =?= "+pA+" & "+pB);
 }
-
+}
 
 
 
@@ -15774,30 +15775,93 @@ return {"values":matrixes};
 
 
 	// nonlinear update estimate
+	// var tmpA = new V3D();
+	// var tmpB = new V3D();
+	var tmpMA = new Matrix(4,4);
+	var tmpMB = new Matrix(4,4);
+	var rodrigues = new V3D();
 	var fxn = function(args, x, isUpdate){
 		if(isUpdate){
+			// move first to origin
 			// normalize com to 0
-			
-			// keep between 0-2pi
-			for(var i=0; i<x.length; ++i){
-				x[i] = Code.angleZeroTwoPi(x[i]);
-			}
+			// // keep between 0-2pi
+			// for(var i=0; i<x.length; ++i){
+			// 	x[i] = Code.angleZeroTwoPi(x[i]);
+			// }
 			return;
 		}
 		var totalError = 0;
 		var edges = args[0];
 		var edgeData = args[1];
-throw "?"
 		for(var i=0; i<edges.length; ++i){
 			var edge = edges[i];
 			var indexA = edge[0];
 			var indexB = edge[1];
-			var valueAB = edge[2];
 			var errorAB = edge[3];
-			var actualA = x[indexA];
-			var actualB = x[indexB];
-			throw "what"
-				// error = error*error;
+			var value = edgeData[i];
+
+			var valueAB = value["forward"];
+			var valueBA = value["reverse"];
+
+			var offsetAB = valueAB["offset"];
+			var rotationAB = valueAB["rotation"];
+
+			var offsetBA = valueBA["offset"];
+			var rotationBA = valueBA["rotation"];
+
+			var actualARX = x[indexA*6+0];
+			var actualARY = x[indexA*6+1];
+			var actualARZ = x[indexA*6+2];
+			var actualATX = x[indexA*6+3];
+			var actualATY = x[indexA*6+4];
+			var actualATZ = x[indexA*6+5];
+
+			var actualBRX = x[indexB*6+0];
+			var actualBRY = x[indexB*6+1];
+			var actualBRZ = x[indexB*6+2];
+			var actualBTX = x[indexB*6+3];
+			var actualBTY = x[indexB*6+4];
+			var actualBTZ = x[indexB*6+5];
+			
+			rodrigues.set(actualARX,actualARY,actualARZ);
+			Code.rotationEulerRodriguezToMatrix(tmpMA, rodrigues);
+			tmpMA.transform3DSetLocation(actualATX,actualATY,actualATZ);
+
+			rodrigues.set(actualBRX,actualBRY,actualBRZ);
+			Code.rotationEulerRodriguezToMatrix(tmpMB, rodrigues);
+			tmpMB.transform3DSetLocation(actualBTX,actualBTY,actualBTZ);
+
+			var actualAAxisO = tmpMA.multV3DtoV3D(new V3D(0,0,0));
+			var actualAAxisX = tmpMA.multV3DtoV3D(new V3D(1,0,0));
+			var actualAAxisY = tmpMA.multV3DtoV3D(new V3D(0,1,0));
+			var actualAAxisZ = tmpMA.multV3DtoV3D(new V3D(0,0,1));
+
+			var actualBAxisO = tmpMB.multV3DtoV3D(new V3D(0,0,0));
+			var actualBAxisX = tmpMB.multV3DtoV3D(new V3D(1,0,0));
+			var actualBAxisY = tmpMB.multV3DtoV3D(new V3D(0,1,0));
+			var actualBAxisZ = tmpMB.multV3DtoV3D(new V3D(0,0,1));
+
+			var predictedBAxisO = tmpMA.multV3DtoV3D( rotationAB.multV3DtoV3D( new V3D(0,0,0) ).add(offsetAB) );
+			var predictedBAxisX = tmpMA.multV3DtoV3D( rotationAB.multV3DtoV3D( new V3D(1,0,0) ).add(offsetAB) );
+			var predictedBAxisY = tmpMA.multV3DtoV3D( rotationAB.multV3DtoV3D( new V3D(0,1,0) ).add(offsetAB) );
+			var predictedBAxisZ = tmpMA.multV3DtoV3D( rotationAB.multV3DtoV3D( new V3D(0,0,1) ).add(offsetAB) );
+
+			var predictedAAxisO = tmpMB.multV3DtoV3D( rotationBA.multV3DtoV3D( new V3D(0,0,0) ).add(offsetBA) );
+			var predictedAAxisX = tmpMB.multV3DtoV3D( rotationBA.multV3DtoV3D( new V3D(1,0,0) ).add(offsetBA) );
+			var predictedAAxisY = tmpMB.multV3DtoV3D( rotationBA.multV3DtoV3D( new V3D(0,1,0) ).add(offsetBA) );
+			var predictedAAxisZ = tmpMB.multV3DtoV3D( rotationBA.multV3DtoV3D( new V3D(0,0,1) ).add(offsetBA) );
+
+			var errorAO = V3D.distanceSquare(predictedAAxisO, actualAAxisO);
+			var errorAX = V3D.distanceSquare(predictedAAxisX, actualAAxisX);
+			var errorAY = V3D.distanceSquare(predictedAAxisY, actualAAxisY);
+			var errorAZ = V3D.distanceSquare(predictedAAxisZ, actualAAxisZ);
+
+			var errorBO = V3D.distanceSquare(predictedBAxisO, actualBAxisO);
+			var errorBX = V3D.distanceSquare(predictedBAxisX, actualBAxisX);
+			var errorBY = V3D.distanceSquare(predictedBAxisY, actualBAxisY);
+			var errorBZ = V3D.distanceSquare(predictedBAxisZ, actualBAxisZ);
+			
+			var error = errorAO + errorBO + errorAX + errorAY + errorAZ + errorBX + errorBY + errorBZ;
 			if(errorAB>0){
 				error /= errorAB;
 			}
@@ -15805,40 +15869,42 @@ throw "?"
 		}
 		return totalError;
 	}
-
-throw "decompose into pices";
-
+// console.log("nonlinear");
+	// decompose into usable variables
 	var x = [];
 	for(var i=0; i<vertexes.length; ++i){
 		var vertex = vertexes[i];
-
-		console.log(vertex);
-		//x[i] = vertex["value"];
-		x[i*6+0] = 0;
-		x[i*6+1] = 0;
-		x[i*6+2] = 0;
-		x[i*6+3] = 0;
-		x[i*6+4] = 0;
-		x[i*6+5] = 0;
+		var value = vertex["value"];
+		var offset = value["offset"];
+		var rotation = value["rotation"]
+		var rodrigues = Code.rotationMatrixToEulerRodriguez(rotation);
+		// console.log(vertex);
+		x[i*6+0] = rodrigues.x;
+		x[i*6+1] = rodrigues.y;
+		x[i*6+2] = rodrigues.z;
+		x[i*6+3] = offset.x;
+		x[i*6+4] = offset.y;
+		x[i*6+5] = offset.z;
 	}
 
 	var args = [edges,edgeData];
 	var result = Code.gradientDescent(fxn, args, x, null, maxIterationsNonLinear, 1E-16);
-	
 	var x = result["x"];
-	var values = [];
+	
+	var matrixes = [];
 	for(var i=0; i<vertexes.length; ++i){
 		var rx = x[i*6+0];
-		var ry = x[i*6+0];
-		var rz = x[i*6+0];
-		var tx = x[i*6+0];
-		var ty = x[i*6+0];
-		var tz = x[i*6+0];
-
-		var matrix = (new Matrix());
-		values[i] = null;
+		var ry = x[i*6+1];
+		var rz = x[i*6+2];
+		var tx = x[i*6+3];
+		var ty = x[i*6+4];
+		var tz = x[i*6+5];
+		var rodrigues = new V3D(rx,ry,rz);
+		var matrix = Code.rotationEulerRodriguezToMatrix(new Matrix(4,4).identity(), rodrigues);
+		matrix.transform3DSetLocation(tx,ty,tz);
+		matrixes[i] = matrix;
 	}
-	return {"values":values};
+	return {"values":matrixes};
 
 }
 
@@ -15883,6 +15949,260 @@ Code.relativeComponentsFromMatrixes3D = function(mA,mB){
 	
 	return {"A":{"offset":tAB, "rotation":rotAB}, "B":{"offset":tBA, "rotation":rotBA}};
 }
+Code.graphAbsoluteFromObjectLookup3D = function(views, pairs, triples,  viewToID,pairToIDs,tripleToIDs, pairToError,pairToTransform, tripleToScales){
+	
+	// helpers
+	var minimumStringFirst = function(a,b){
+		return a < b ? (a+"-"+b) : (b+"-"+a);
+	}
+	var viewIDsToPairID = function(iA,iB){
+		return minimumStringFirst(iA,iB);
+	}
+	var pairToPairID = function(pair){
+		var viewIDs = pairToIDs(pair);
+		return viewIDsToPairID(viewIDs[0],viewIDs[1]);
+	}
+	// var setOrFlip = function(table,iA,iB,scale, error){
+	// 	var key = viewIDsToPairID(iA,iB);
+	// 	var edge = table[key];
+	// 	if(edge["A"]==iA && edge["B"]==iB){
+	// 		edge["list"].push([scale,error]);
+	// 	}else if(edge["A"]==iB && edge["B"]==iA){
+	// 		edge["list"].push([1.0/scale,error]);
+	// 	}else{
+	// 		throw "?";
+	// 	}
+	// }
+
+	// some logic for detecting bad pairs / triples 
+		// ...
+	// find connected/separate graphs
+	var pairGraph = new Graph();
+	var pairIDToVertex = {};
+	for(var i=0; i<pairs.length; ++i){
+		var pair = pairs[i];
+		var pairID = pairToPairID(pair);
+		var vertex = pairGraph.addVertex();
+			vertex.data({"pair":pair});
+		pairIDToVertex[pairID] = vertex;
+	}
+	console.log(pairIDToVertex);
+	var pairIDsToEdge = {};
+	var checkAddEdge = function(pairA,pairB, scaleAB){
+		console.log("checkAddEdge")
+		var doublePair = minimumStringFirst(pairA,pairB);
+		var vertexA = pairIDToVertex[pairA];
+		var vertexB = pairIDToVertex[pairB];
+		var errorA = pairToError(pairA);
+		var errorB = pairToError(pairB);
+		var weight = errorA + errorB;
+
+		var edge = pairIDsToEdge[doublePair];
+		if(edge){
+			throw "how would this be possible ?"
+			console.log("ratio exists")
+			if(edge.A()!=vertexA){ // other direction
+				scaleAB = 1.0/scaleAB;
+			}
+			edge.data()["list"].push( [scaleAB, weight] );
+		}else{
+			
+			var edge = pairGraph.addEdgeDuplex(vertexA,vertexB, weight);
+				edge.data({ "data":null, "list":[ [scaleAB, weight] ] });
+			pairIDsToEdge[doublePair] = edge;
+		}
+	}
+	for(var i=0; i<triples.length; ++i){
+		var triple = triples[i];
+		var viewIDs = tripleToIDs(triple);
+		var scales = tripleToScales(triple);
+		var viewA = viewIDs[0];
+		var viewB = viewIDs[1];
+		var viewC = viewIDs[2];
+		var pairA = viewIDsToPairID(viewA,viewB);
+		var pairB = viewIDsToPairID(viewA,viewC);
+		var pairC = viewIDsToPairID(viewB,viewC);
+		var scaleA = scales[0];
+		var scaleB = scales[1];
+		var scaleC = scales[2];
+console.log(pairA,pairB,pairC);
+console.log(scaleA,scaleB,scaleC);
+		if(scaleA>0 && scaleB>0){
+			checkAddEdge(pairA,pairB, scaleB/scaleA);
+		}
+		if(scaleA>0 && scaleC>0){
+			checkAddEdge(pairA,pairC, scaleC/scaleA);
+		}
+		if(scaleB>0 && scaleC>0){
+			checkAddEdge(pairB,pairC, scaleC/scaleB);
+		}
+	}
+	console.log(pairIDsToEdge);
+
+
+	var groups = pairGraph.subgraphVertexes();
+	groups.sort(function(a,b){
+		return a.length>b.length ? -1 : 1;
+	});
+	console.log(groups);
+
+HERE
+	for(var i=0; i<groups.length; ++i){
+		// solve for relative scales for group pairs
+		var group = groups[i];
+
+		// valueAB = Math.log(scaleAB);
+
+		var edge = [indexA,indexB,valueAB,error];
+	}
+	var result = Code.graphAbsoluteFromRelative1D(edges);
+	var values = result["values"];
+
+	for(var i=0; i<scales.length; ++i){
+		console.log(" "+i+" : "+Math.exp(values[i]));
+	}
+
+
+
+	var errorMagnitude = 0.1;
+	for(var i=0; i<edges.length; ++i){
+		var edge = edges[i];
+		var error = errorMagnitude*Math.random();
+		var delta = error*(Math.random()-0.5);
+		var valueA = counts[edge[0]];
+		var valueB = counts[edge[1]];
+		var valueAB = Math.log(valueB/valueA) + delta;
+			valueAB = Math.exp(valueAB);
+			valueAB = Math.log(valueAB); // LOG SPACE
+		edge[2] = valueAB;
+		edge[3] = error;
+	}
+	var min = Code.min(scales);
+	
+	
+
+
+
+
+
+
+
+
+// ------------------- DISPLAY
+
+	console.log("pairGraph:");
+	var info = pairGraph.display2D();
+	console.log(info);
+	var positions = info["positions"];
+	var vertexes = info["vertexes"];
+	var edges = info["edges"];
+
+
+var vertexIDtoIndex = {};
+for(var i=0; i<vertexes.length; ++i){
+	var vertex = vertexes[i];
+	vertexIDtoIndex[vertex.id()] = i;
+}
+
+var worldScale = 600.0;
+	var rad = 0.01;
+	var worldOffset = new V2D(400,400);
+	for(var i=0; i<positions.length; ++i){
+		var vertex = vertexes[i];
+		var position = positions[i];
+		var isLeaf = vertex.data()["leaf"];
+		// CIRCLES
+			var p = new V2D(position.x*worldScale,position.y*worldScale);
+			var d = new DO();
+
+			if(isLeaf){
+				d.graphics().setLine(2.0,0xFFFF0000);
+			}else{
+				d.graphics().setLine(2.0,0xFF0000FF);
+			}
+			d.graphics().beginPath();
+			d.graphics().drawCircle(p.x,p.y,rad*worldScale);
+			d.graphics().endPath();
+			d.graphics().strokeLine();
+			d.matrix().translate(worldOffset.x, worldOffset.y);
+			GLOBALSTAGE.addChild(d);
+		// LABEL:
+		// var label = indexToLetter[vertex.id()]["n"];
+		var label = vertex.id();
+		var d = new DOText(""+label, 14, DOText.FONT_ARIAL, 0xFF009900, DOText.ALIGN_CENTER);
+			d.matrix().translate(worldOffset.x - 0 + p.x, worldOffset.y - 10 + p.y);
+			GLOBALSTAGE.addChild(d);
+	}
+
+	// edges
+	var d = new DO();
+	
+	GLOBALSTAGE.addChild(d);
+	for(var i=0; i<edges.length; ++i){
+		
+		var edge = edges[i];
+		var vA = edge.A();
+		var vB = edge.B();
+		var idA = vA.id();
+		var idB = vB.id();
+			idA = vertexIDtoIndex[idA];
+			idB = vertexIDtoIndex[idB];
+		var positionA = positions[idA];
+		var positionB = positions[idB];
+		var leafA = vA.data()["leaf"];
+		var leafB = vB.data()["leaf"];
+
+		var isSkeletal = edge.data()["skeleton"] === true;
+		// console.log(edge.data()["skeleton"])
+		
+		if(isSkeletal){
+			if(leafA || leafB){
+				d.graphics().setLine(1.0,0xFF6600FF);
+			}else{
+				d.graphics().setLine(3.0,0xFF330033);
+			}
+		}else{
+			d.graphics().setLine(1.0,0xFF00FF00);
+		}
+
+		positionA = positionA.copy();
+		positionA.scale(worldScale);
+		positionB = positionB.copy();
+		positionB.scale(worldScale);
+
+		d.graphics().beginPath();
+		d.graphics().moveTo(positionA.x,positionA.y);
+		d.graphics().lineTo(positionB.x,positionB.y);
+		d.graphics().endPath();
+		d.graphics().strokeLine();
+
+		// var label = edge.weight();
+		var label = edge.data()["weight"];
+		/*
+		var t = new DOText(""+label, 14, DOText.FONT_ARIAL, 0xFF000099, DOText.ALIGN_CENTER);
+		var p = V2D.avg(positionA,positionB);
+			t.matrix().translate(worldOffset.x - 0 + p.x, worldOffset.y - 0 + p.y);
+			GLOBALSTAGE.addChild(t);
+			*/
+	}
+	
+	d.matrix().translate(worldOffset.x, worldOffset.y);
+
+	// for each separate graph:
+
+		// get set of transforms with inversed relative scales
+
+		// 
+
+
+	throw "?";
+
+
+	return {"graph":null, "what":null};
+}
+
+
+
 
 
 Code.rotationMatrixToEulerRodriguez = function(R){

@@ -582,7 +582,7 @@ Matrix.transform2DTranslate = function(a,tX,tY){
 
 Matrix.transform3DRotate = function(a,v,t){ // vector, theta
 	var c = Math.cos(t), s = Math.sin(t);
-	
+
 	var x = v.x, y = v.y, z = v.z;
 	var xx = x*x, yy = y*y, zz = z*z;
 	var xy = x*y, xz = x*z, yz = y*z;
@@ -726,11 +726,17 @@ Matrix.prototype.transform3DLocation = function(){
 	var location = new V3D(rows[0][3], rows[1][3], rows[2][3]);
 	return location;
 }
-Matrix.prototype.transform3DSetLocation = function(v){
+Matrix.prototype.transform3DSetLocation = function(v,u,w){
 	var rows = this._rows;
-	rows[0][3] = v.x;
-	rows[1][3] = v.y;
-	rows[2][3] = v.z;
+	if(u===undefined){
+		rows[0][3] = v.x;
+		rows[1][3] = v.y;
+		rows[2][3] = v.z;
+	}else{
+		rows[0][3] = v;
+		rows[1][3] = u;
+		rows[2][3] = w;
+	}
 }
 Matrix.prototype.transform2DLocation = function(){
 	var location = this.multV2DtoV2D(new V2D(0,0));
