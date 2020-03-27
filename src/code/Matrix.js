@@ -563,7 +563,16 @@ Matrix.transform3DRotateZ = function(a,angle){
 	var b = Matrix._transformTemp3D.fromArray([c,-s,0.0,0.0, s,c,0.0,0.0, 0.0,0.0,1.0,0.0, 0.0,0.0,0.0,1.0]);
 	return Matrix.mult(b,a);
 }
-
+Matrix.transform3DScale = function(a,x,y,z){
+	if(y===undefined){
+		y = x;
+	}
+	if(z===undefined){
+		z = x;
+	}
+	var b = Matrix._transformTemp3D.fromArray([x,0,0.0,0.0, 0,y,0.0,0.0, 0.0,0.0,z,0, 0.0,0.0,0.0,1.0]);
+	return Matrix.mult(b,a);
+}
 Matrix._transformTemp2D = new Matrix(3,3);
 Matrix.transform2DRotate = function(a,angle){
 	var c = Math.cos(angle), s = Math.sin(angle);

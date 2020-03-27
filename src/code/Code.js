@@ -14485,7 +14485,7 @@ Code.graphAbsoluteFromRelativeV3D = function(edges){ // V3D: vA = vB + edge
 	var args = [edges];
 	var result = Code.gradientDescent(fxn, args, x, null, maxIterationsNonLinear, 1E-16);
 	var values = result["x"];
-	console.log(values)
+	// console.log(values)
 	var vectors = [];
 	for(var i=0; i<vertexes.length; ++i){
 		vectors[i] = new V3D( values[i*3+0], values[i*3+1], values[i*3+2] );
@@ -15622,7 +15622,6 @@ Code.graphAbsoluteFromRelativePose3D = function(edges, orientations){ // orienat
 		edgeData[i] = {"forward":A, "reverse":B};
 	}
 	minimumChangeQuit *= (averageEdge/edges.length);
-	console.log(edgeData);
 
 	// average rotations first:
 	var edgeRotations = [];
@@ -15640,7 +15639,7 @@ Code.graphAbsoluteFromRelativePose3D = function(edges, orientations){ // orienat
 
 		edgeRotations.push([idA,idB,rotationAB,error]);
 	}
-	console.log(edgeRotations);
+	// console.log(edgeRotations);
 
 	var result = Code.graphAbsoluteFromRelativeAngle3D(edgeRotations);
 	var rotations = result["values"];
@@ -15719,7 +15718,7 @@ for(var i=0; i<orientations.length; ++i){
 		var offsetBA = rotationB.multV3DtoV3D(rev["offset"]);
 
 
-console.log(" "+idA+" - "+idB+" : "+offsetAB.length()+ " & "+offsetAB.length());
+// console.log(" "+idA+" - "+idB+" : "+offsetAB.length()+ " & "+offsetAB.length());
 
 		// console.log("original?: "+ data["reverse"]["rotation"].multV3DtoV3D( data["forward"]["rotation"].multV3DtoV3D( new V3D(0,0,1)) ) );
 		// console.log(" "+idA+" - "+idB+" : "+offsetAB+ "        @ \n" +rotationA+" ? ");
@@ -15949,7 +15948,7 @@ Code.relativeComponentsFromMatrixes3D = function(mA,mB){
 	
 	return {"A":{"offset":tAB, "rotation":rotAB}, "B":{"offset":tBA, "rotation":rotBA}};
 }
-Code.graphAbsoluteFromObjectLookup3D = function(views, pairs, triples,  viewToID,pairToIDs,tripleToIDs, pairToError,pairToTransform, tripleToScales){
+Code.graphAbsoluteFromObjectLookup3D = function(views, pairs, triples,  viewToID,pairToIDs,tripleToIDs, pairToError,pairToTransform, tripleToScales, absolutes){
 	
 	// helpers
 	var minimumStringFirst = function(a,b){
@@ -15962,20 +15961,20 @@ Code.graphAbsoluteFromObjectLookup3D = function(views, pairs, triples,  viewToID
 		var viewIDs = pairToIDs(pair);
 		return viewIDsToPairID(viewIDs[0],viewIDs[1]);
 	}
-	// var setOrFlip = function(table,iA,iB,scale, error){
-	// 	var key = viewIDsToPairID(iA,iB);
-	// 	var edge = table[key];
-	// 	if(edge["A"]==iA && edge["B"]==iB){
-	// 		edge["list"].push([scale,error]);
-	// 	}else if(edge["A"]==iB && edge["B"]==iA){
-	// 		edge["list"].push([1.0/scale,error]);
-	// 	}else{
-	// 		throw "?";
-	// 	}
-	// }
 
 	// some logic for detecting bad pairs / triples 
 		// ...
+
+	// lookupts:
+	// var viewIDToView = {};
+	var viewIDToViewIndex = {};
+	for(var i=0; i<views.length; ++i){
+		var view = views[i];
+		var viewID = viewToID(view);
+		// viewIDToView[viewID] = view;
+		viewIDToViewIndex[viewID] = i;
+	}
+
 	// find connected/separate graphs
 	var pairGraph = new Graph();
 	var pairIDToVertex = {};
@@ -15989,29 +15988,35 @@ Code.graphAbsoluteFromObjectLookup3D = function(views, pairs, triples,  viewToID
 	console.log(pairIDToVertex);
 	var pairIDsToEdge = {};
 	var checkAddEdge = function(pairA,pairB, scaleAB){
-		console.log("checkAddEdge")
+		// console.log("checkAddEdge")
 		var doublePair = minimumStringFirst(pairA,pairB);
 		var vertexA = pairIDToVertex[pairA];
 		var vertexB = pairIDToVertex[pairB];
-		var errorA = pairToError(pairA);
-		var errorB = pairToError(pairB);
+		var errorA = pairToError(vertexA.data()["pair"]);
+		var errorB = pairToError(vertexB.data()["pair"]);
 		var weight = errorA + errorB;
-
 		var edge = pairIDsToEdge[doublePair];
 		if(edge){
-			throw "how would this be possible ?"
-			console.log("ratio exists")
-			if(edge.A()!=vertexA){ // other direction
-				scaleAB = 1.0/scaleAB;
+			console.log("ratio exists -- ignoring: "+scaleAB+" / "+edge.data()["scale"]);
+			if(false){
+				console.log(edge);
+				console.log(scaleAB);
+				throw "how would this be possible ?"
+				
+				if(edge.A()!=vertexA){ // other direction
+					scaleAB = 1.0/scaleAB;
+				}
+				edge.data()["list"].push( [scaleAB, weight] );
 			}
-			edge.data()["list"].push( [scaleAB, weight] );
 		}else{
-			
 			var edge = pairGraph.addEdgeDuplex(vertexA,vertexB, weight);
-				edge.data({ "data":null, "list":[ [scaleAB, weight] ] });
+				// edge.data({ "data":null, "list":[ [scaleAB, weight] ] });
+				edge.data({ "data":null, "scale":scaleAB, "error":weight });
 			pairIDsToEdge[doublePair] = edge;
 		}
 	}
+console.log("TRIPLES: "+triples.length);
+// throw "?"
 	for(var i=0; i<triples.length; ++i){
 		var triple = triples[i];
 		var viewIDs = tripleToIDs(triple);
@@ -16025,8 +16030,8 @@ Code.graphAbsoluteFromObjectLookup3D = function(views, pairs, triples,  viewToID
 		var scaleA = scales[0];
 		var scaleB = scales[1];
 		var scaleC = scales[2];
-console.log(pairA,pairB,pairC);
-console.log(scaleA,scaleB,scaleC);
+// console.log(pairA,pairB,pairC);
+// console.log(scaleA,scaleB,scaleC);
 		if(scaleA>0 && scaleB>0){
 			checkAddEdge(pairA,pairB, scaleB/scaleA);
 		}
@@ -16039,49 +16044,182 @@ console.log(scaleA,scaleB,scaleC);
 	}
 	console.log(pairIDsToEdge);
 
-
 	var groups = pairGraph.subgraphVertexes();
 	groups.sort(function(a,b){
 		return a.length>b.length ? -1 : 1;
 	});
-	console.log(groups);
+	console.log("groups: "+groups.length);
+	var groupEdges = [];
 
-HERE
+	var groupResults = [];
+	// solve for relative scales for groups
 	for(var i=0; i<groups.length; ++i){
-		// solve for relative scales for group pairs
-		var group = groups[i];
+		var vertexes = groups[i];
+		console.log("GROUP: "+i+" = "+vertexes.length);
+		// get list of all edges & index vertexes
+		for(var j=0; j<vertexes.length; ++j){
+			var vertex = vertexes[j];
+			// vertex.temp(j);
+			vertex.data()["groupID"] = j;
+		}
+		console.log("reachableEdges")
+		var edges = pairGraph.reachableEdges(vertexes[0]);
+		// console.log(edges);
+		// throw "..."
+		groupEdges[i] = edges;
+		// fill out edges
+		var solveEdges = [];
+		for(var j=0; j<edges.length; ++j){
+			var edge = edges[j];
+			var data = edge.data();
+			var indexA = edge.A().data()["groupID"];
+			var indexB = edge.B().data()["groupID"];
+			var error = data["error"];
+			var scaleAB = data["scale"];
+			var valueAB = Math.log(scaleAB);
+			var solveEdge = [indexA,indexB,valueAB,error];
+			solveEdges[j] = solveEdge;
+		}
 
-		// valueAB = Math.log(scaleAB);
+		// solve for relative pair scales
+console.log("solve relative scales");
+		var result = Code.graphAbsoluteFromRelative1D(solveEdges);
+		var values = result["values"];
+		// console.log(values);
+		for(var j=0; j<values.length; ++j){
+			values[j] = Math.exp(values[j]);
+			console.log(" "+j+" @ "+values[j])
+		}
+		var optimalScales = values;
 
-		var edge = [indexA,indexB,valueAB,error];
-	}
-	var result = Code.graphAbsoluteFromRelative1D(edges);
-	var values = result["values"];
+		// number views for solver
+		var viewIDs = {};
+		for(var j=0; j<vertexes.length; ++j){
+			var vertex = vertexes[j];
+			var pair = vertex.data()["pair"];
+			var pairIDs = pairToIDs(pair);
+			var viewIDA = pairIDs[0];
+			var viewIDB = pairIDs[1];
+			viewIDs[viewIDA] = 1;
+			viewIDs[viewIDB] = 1;
+		}
+		viewIDs = Code.keys(viewIDs);
+		var groupIDToViewID = {};
+		var viewIDToGroupID = {};
+		for(var j=0; j<viewIDs.length; ++j){
+			var viewID = viewIDs[j];
+			groupIDToViewID[j] = viewID;
+			viewIDToGroupID[viewID] = j;
+		}
 
-	for(var i=0; i<scales.length; ++i){
-		console.log(" "+i+" : "+Math.exp(values[i]));
-	}
+		// invert pair transforms by scale
+console.log("invert pair transforms")
+		var relativeEdges = [];
+		for(var j=0; j<vertexes.length; ++j){
+			var vertex = vertexes[j];
+			var data = vertex.data();
+			var groupID = data["groupID"];
+			var pair = data["pair"];
+			var pairIDs = pairToIDs(pair);
+			var viewIDA = pairIDs[0];
+			var viewIDB = pairIDs[1];
+			var indexA = viewIDToGroupID[viewIDA];
+			var indexB = viewIDToGroupID[viewIDB];
+			var error = pairToError(pair);
+			var transform = pairToTransform(pair);
+
+			var scale = optimalScales[groupID];
+			var invertedScale = 1.0/scale;
+
+			transform = Matrix.transform3DScale(transform, invertedScale);
+			relativeEdges.push([indexA,indexB,transform,error]);
+		}
+console.log(relativeEdges);
+// throw "?"
+		// absolute from relative
+console.log("solve for absolute orientations")
+		var result = Code.graphAbsoluteFromRelativePose3D(relativeEdges);
+		console.log(result);
+		var values = result["values"];
+		var groupTransforms = values;
 
 
+/*
+		if(absolutes){
+			// MAP VALUE INDEX TO ABSOUTE INDEX ->
+			// var resultToAbsoluteLookup = {};
+			var viewIDToAbsoluteIndex = {};
+			for(var j=0; j<views.length; ++j){
+				var viewID = viewToID(views[j]);
+				viewIDToAbsoluteIndex[viewID] = j;
+			}
+			console.log(viewIDToAbsoluteIndex);
+			console.log(absolutes);
+			var groupAbsolutes = [];
+			for(var j=0; j<values.length; ++j){
+				var value = values[j];
+				var viewID = groupIDToViewID[j];
+				var viewIndex = viewIDToAbsoluteIndex[viewID];
+				console.log(" "+j+" -> "+viewID+" -> "+viewIndex);
+				groupAbsolutes[j] = absolutes[viewIndex];
+			}
+			
 
-	var errorMagnitude = 0.1;
-	for(var i=0; i<edges.length; ++i){
-		var edge = edges[i];
-		var error = errorMagnitude*Math.random();
-		var delta = error*(Math.random()-0.5);
-		var valueA = counts[edge[0]];
-		var valueB = counts[edge[1]];
-		var valueAB = Math.log(valueB/valueA) + delta;
-			valueAB = Math.exp(valueAB);
-			valueAB = Math.log(valueAB); // LOG SPACE
-		edge[2] = valueAB;
-		edge[3] = error;
-	}
-	var min = Code.min(scales);
-	
-	
+			var v0 = values[0];
+			var v1 = values[1];
+			var v2 = values[2];
+			var o0 = groupAbsolutes[0];
+			var o1 = groupAbsolutes[1];
+			var o2 = groupAbsolutes[2];
 
+			var transformWorld = Code.referenceTransform3DFromPoints(o0,o1,o2, v0,v1,v2);
 
+			// var offsetRotationWorld = null;
+			for(var i=0; i<groupAbsolutes.length; ++i){
+				var orientation = groupAbsolutes[i];
+				var value = values[i];
+				var p0 = orientation.transform3DLocation();
+				var p1 = value.transform3DLocation();
+					p1 = transformWorld.multV3DtoV3D(p1,p1);
+				console.log(" "+i+" : "+V3D.distance(p0,p1));
+				// also show normal directions angular difference
+				// console.log(" "+i+" : "+Code.degrees(Code.angleZeroTwoPi(angles[i]))+" =?= "+Code.degrees(Code.angleZeroTwoPi(values[i]-min)) );
+			}
+		}
+*/
+
+		// TO VIEWS
+		var groupViews = [];
+		for(var j=0; j<groupTransforms.length; ++j){
+			var viewID = groupIDToViewID[j];
+			console.log(" "+j+" - "+viewID);
+			var view = viewIDToViewIndex[viewID];
+			groupViews[j] = view;
+		}
+
+		// TO PAIRS
+		var groupPairs = [];
+		for(var j=0; j<vertexes.length; ++j){
+			var vertex = vertexes[j];
+			var data = vertex.data();
+			var pair = data["pair"];
+			var viewIDs = pairToIDs(pair);
+			var idA = viewIDs[0];
+			var idB = viewIDs[1];
+				idA = viewIDToViewIndex[idA];
+				idB = viewIDToViewIndex[idB];
+			var error = pairToError(pair);
+			groupPairs.push([idA,idB,error]);
+		}
+
+		var groupResult = {"transforms":groupTransforms, "views":groupViews, "pairs":groupPairs};
+		groupResults.push(groupResult);
+
+	} // for each grup
+
+	console.log(groupResults);
+
+	return {"groups":groupResults};
 
 
 
@@ -16201,6 +16339,65 @@ var worldScale = 600.0;
 	return {"graph":null, "what":null};
 }
 
+
+Code.referenceTransform3DFromPoints = function(o0,o1,o2, v0,v1,v2){ // quick way to align 2 separate rigid 3D models
+	console.log(o0,o1,o2, v0,v1,v2)
+	console.log("Code.referenceTransform3DFromPoints");
+	var origin0 = o0.transform3DLocation();
+	var origin1 = v0.transform3DLocation();
+	var A = origin1.copy();
+	var a = origin0.copy();
+	var B = v1.transform3DLocation();
+	var b = o1.transform3DLocation();
+	var C = v2.transform3DLocation();
+	var c = o2.transform3DLocation();
+
+	// to origin reference frame
+	c.sub(a);
+	b.sub(a);
+	C.sub(A);
+	B.sub(A);
+
+	// relative 1
+	var directionB = V3D.cross(B,b);
+		directionB.norm();
+	var angleBA = V3D.angle(B,b);
+	// console.log("directionBA: "+directionB);
+	// console.log("angleBA: "+Code.degrees(angleBA));
+	B.rotate(directionB,angleBA);
+	C.rotate(directionB,angleBA);
+
+	// relative 2
+	var normal0 = V3D.cross(b,c);
+	var normal1 = V3D.cross(B,C);
+	var perp0 = V3D.perpendicularComponent(b,normal0);
+		perp0.norm();
+	var perp1 = V3D.perpendicularComponent(b,normal1);
+		perp1.norm();
+	// console.log("perp0: "+perp0);
+	// console.log("perp1: "+perp1);
+	var angleBC = V3D.angle(perp1,perp0);
+	var normalB = b.copy().norm();
+	// console.log("normalB: "+normalB);
+	// console.log("angleBC: "+Code.degrees(angleBC));
+	C.rotate(normalB,angleBC);
+	// console.log("A: "+V3D.distance(a,A));
+	// console.log("B: "+V3D.distance(b,B));
+	// console.log("C: "+V3D.distance(c,C));
+
+	var transformWorld = new Matrix(4,4);
+		transformWorld.identity();
+	// move to 0
+		transformWorld = Matrix.transform3DTranslate(transformWorld,-origin1.x,-origin1.y,-origin1.z);
+	// rotate along vector 1
+		transformWorld = Matrix.transform3DRotate(transformWorld,directionB,angleBA);
+	// rotate along vector 2
+		transformWorld = Matrix.transform3DRotate(transformWorld,normalB,angleBC);
+	// move to origin a
+		transformWorld = Matrix.transform3DTranslate(transformWorld,origin0.x,origin0.y,origin0.z);
+	
+	return transformWorld;
+}
 
 
 

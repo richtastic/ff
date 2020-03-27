@@ -757,6 +757,70 @@ Graph.verticesReachableFromVertexWithoutEdges = function(graph, startVertex, ski
 	graph.clearVertexTemps();
 	return reachable;
 }
+Graph.reachableEdges = function(graph,source){
+	return Graph.reachableEdgesAndVertexes(graph,source)["edges"];
+}
+Graph.reachableVertexes = function(graph,source){
+	return Graph.reachableEdgesAndVertexes(graph,source)["vertexes"];
+}
+Graph.reachableEdgesAndVertexes = function(graph,source){
+	var Q = [];
+	var edgeList = [];
+	var vertexList = [];
+	Q.push(source);
+	var maxCount = 25;
+	while(Q.length>0){
+		// console.log("LOOP: "+Q.length)
+		--maxCount;
+		if(maxCount<=0){
+			throw "max count"
+		}
+		var vertex = Q.shift();
+		// console.log(vertex.temp()+" ?");
+		if(vertex.temp()!==Graph.BFS_COLOR_WHITE){
+			vertex.temp(Graph.BFS_COLOR_WHITE);
+			vertexList.push(vertex);
+			
+			var edges = vertex.edges();
+			for(var i=0; i<edges.length; ++i){
+				var edge = edges[i];
+				if(edge.temp()!==Graph.BFS_COLOR_WHITE){
+					var direction = edge.direction();
+					var add = false;
+					if(direction == Graph.Edge.DIRECTION_DUPLEX){
+						add = true;
+						Q.push(edge.opposite(vertex));
+					}else if(direction == Graph.Edge.DIRECTION_FORWARD){
+						var B = edge.B();
+						if(vertex!=B){
+							Q.push(B);
+							add = true;
+						}
+					}else if(direction == Graph.Edge.DIRECTION_REVERSE){
+						var A = edge.A();
+						if(vertex!=A){
+							Q.push(A);
+							add = true;
+						}
+					} // else UNKNOWN
+					if(add){
+						if(edge.temp!==Graph.BFS_COLOR_WHITE){
+							edge.temp(Graph.BFS_COLOR_WHITE);
+							edgeList.push(edge);
+						}
+					}
+				}
+			}
+		}
+	}
+	graph.clearEdgeTemps(edgeList);
+	graph.clearVertexTemps(vertexList);
+	// throw "tbd";
+	return {"edges":edgeList, "vertexes":vertexList};
+}
+Graph.prototype.reachableEdges = function(source){
+	return Graph.reachableEdges(this,source);
+}
 
 Graph.BFS_COLOR_UNKNOWN = 0;
 Graph.BFS_COLOR_WHITE = 1; // unvisited
@@ -954,14 +1018,20 @@ function Graph(){
 Graph.prototype.toString = function(){
 	return "[Graph V:"+this._vertexes.length+" E:"+this._edges.length+"]";
 }
-Graph.prototype.clearEdgeTemps = function(){
-	for(var i=this._vertexes.length; i--;){
-		this._vertexes[i].temp(null);
+Graph.prototype.clearEdgeTemps = function(edges){
+	if(!edges){
+		edges = this._edges;
+	}
+	for(var i=edges.length; i--;){
+		edges[i].temp(null);
 	}
 }
-Graph.prototype.clearVertexTemps = function(){
-	for(var i=this._edges.length; i--;){
-		this._edges[i].temp(null);
+Graph.prototype.clearVertexTemps = function(vertexes){
+	if(!vertexes){
+		vertexes = this._vertexes;
+	}
+	for(var i=vertexes.length; i--;){
+		vertexes[i].temp(null);
 	}
 }
 Graph.prototype.edges = function(){

@@ -34219,8 +34219,10 @@ console.log(bestEdges);
 
 	// calculate skeletal graph
 	console.log(listPairs);
-	var result = R3D.skeletalViewGraph(listPairs);
-	return {"transforms":transforms, "views":viewIDs, "listPairs":listPairs, "skeleton":result};
+	var skeleton = R3D.skeletalViewGraph(listPairs);
+
+	
+	return {"transforms":transforms, "views":viewIDs, "listPairs":listPairs, "skeleton":skeleton};
 }
 
 

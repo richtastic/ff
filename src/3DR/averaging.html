@@ -920,16 +920,16 @@ function classesLoadedFxn(){
 	console.log("--- Full Pairs 3D");
 	var viewIDs = ["A","B","C","D","E","F","G","H","I","J","K","L"];
 	var views = [];
-		m = new Matrix3D(); m.rotateZ(Code.radians( 0.0)); m.rotateX(Code.radians( 0.0)); m.rotateY(Code.radians( 0.0)); m.translate(-2,  0, 0); views.push( m ); // 0 - A
-		m = new Matrix3D(); m.rotateZ(Code.radians( 0.0)); m.rotateX(Code.radians( 0.0)); m.rotateY(Code.radians( 0.0)); m.translate(-1,  1, 0); views.push( m ); // 1 - B
-		m = new Matrix3D(); m.rotateZ(Code.radians( 0.0)); m.rotateX(Code.radians( 0.0)); m.rotateY(Code.radians( 0.0)); m.translate(-1,  0, 0); views.push( m ); // 2 - C
-		m = new Matrix3D(); m.rotateZ(Code.radians( 0.0)); m.rotateX(Code.radians( 0.0)); m.rotateY(Code.radians( 0.0)); m.translate( 2,  0, 0); views.push( m ); // 3 - D
-		m = new Matrix3D(); m.rotateZ(Code.radians( 0.0)); m.rotateX(Code.radians( 0.0)); m.rotateY(Code.radians( 0.0)); m.translate( 1,  1, 0); views.push( m ); // 4 - E
-		m = new Matrix3D(); m.rotateZ(Code.radians( 0.0)); m.rotateX(Code.radians( 0.0)); m.rotateY(Code.radians( 0.0)); m.translate( 2,1.5, 0); views.push( m ); // 5 - F
-		m = new Matrix3D(); m.rotateZ(Code.radians( 0.0)); m.rotateX(Code.radians( 0.0)); m.rotateY(Code.radians( 0.0)); m.translate( 3,  0, 0); views.push( m ); // 6 - G
-		m = new Matrix3D(); m.rotateZ(Code.radians( 0.0)); m.rotateX(Code.radians( 0.0)); m.rotateY(Code.radians( 0.0)); m.translate( 2, -1, 0); views.push( m ); // 7 - H
-		m = new Matrix3D(); m.rotateZ(Code.radians( 0.0)); m.rotateX(Code.radians( 0.0)); m.rotateY(Code.radians( 0.0)); m.translate( 3, -2, 0); views.push( m ); // 8 - I
-		m = new Matrix3D(); m.rotateZ(Code.radians( 0.0)); m.rotateX(Code.radians( 0.0)); m.rotateY(Code.radians( 0.0)); m.translate( 4, -1, 0); views.push( m ); // 9 - J
+		m = new Matrix3D(); m.rotateZ(Code.radians( 0.0)); m.rotateX(Code.radians( 0.0)); m.rotateY(Code.radians( 0.0)); m.translate(-2,  0,  1); views.push( m ); // 0 - A
+		m = new Matrix3D(); m.rotateZ(Code.radians( 0.0)); m.rotateX(Code.radians( 0.0)); m.rotateY(Code.radians( 0.0)); m.translate(-1,  1,0.5); views.push( m ); // 1 - B
+		m = new Matrix3D(); m.rotateZ(Code.radians( 0.0)); m.rotateX(Code.radians( 0.0)); m.rotateY(Code.radians( 0.0)); m.translate(-1,  0, -1); views.push( m ); // 2 - C
+		m = new Matrix3D(); m.rotateZ(Code.radians( 0.0)); m.rotateX(Code.radians( 0.0)); m.rotateY(Code.radians( 0.0)); m.translate( 2,  0,  0); views.push( m ); // 3 - D
+		m = new Matrix3D(); m.rotateZ(Code.radians( 0.0)); m.rotateX(Code.radians( 0.0)); m.rotateY(Code.radians( 0.0)); m.translate( 1,  1,  1); views.push( m ); // 4 - E
+		m = new Matrix3D(); m.rotateZ(Code.radians( 0.0)); m.rotateX(Code.radians( 0.0)); m.rotateY(Code.radians( 0.0)); m.translate( 2,1.5, -1); views.push( m ); // 5 - F
+		m = new Matrix3D(); m.rotateZ(Code.radians( 0.0)); m.rotateX(Code.radians( 0.0)); m.rotateY(Code.radians( 0.0)); m.translate( 3,  0,  0); views.push( m ); // 6 - G
+		m = new Matrix3D(); m.rotateZ(Code.radians( 0.0)); m.rotateX(Code.radians( 0.0)); m.rotateY(Code.radians( 0.0)); m.translate( 2, -1,  1); views.push( m ); // 7 - H
+		m = new Matrix3D(); m.rotateZ(Code.radians( 0.0)); m.rotateX(Code.radians( 0.0)); m.rotateY(Code.radians( 0.0)); m.translate( 3, -2,  2); views.push( m ); // 8 - I
+		m = new Matrix3D(); m.rotateZ(Code.radians( 0.0)); m.rotateX(Code.radians( 0.0)); m.rotateY(Code.radians( 0.0)); m.translate( 4, -1,  1); views.push( m ); // 9 - J
 	var pairs = [
 			[0,1],   // 0 - A-B
 			[0,2],   // 1 - A-C
@@ -945,6 +945,7 @@ function classesLoadedFxn(){
 
 			// [1,3],	 // 11 - B-D
 		];
+	var pairScales = [1,2,3,1,2,2,1,2,1,2];
 	var triples = [
 			// pairID - IS SCALED, pairID - IS SCALED, pairID - IS SCALED, 
 			[0,1,  1,1, 2,1],
@@ -960,6 +961,17 @@ function classesLoadedFxn(){
 
 			// [2,1, 3,1, 11,1],
 		];
+	var errorPairs = 0.0;
+	var errorScales = 0.0;
+
+	// var errorPairs = 0.1;
+	// var errorScales = 0.1;
+
+	// var errorPairs = 0.5;
+	// var errorScales = 0.5;
+
+	// var errorPairs = 1.0;
+	// var errorScales = 0.5;
 	for(var i=0; i<views.length; ++i){
 		var transform = views[i];
 			transform = transform.toMatrix();
@@ -975,8 +987,39 @@ function classesLoadedFxn(){
 		var transformB = viewB["absolute"];
 		var pairID = viewA["id"]+"-"+viewB["id"];
 		var transformAB = Matrix.relativeReference(transformA,transformB);
-		var scale = 1.0;
+
+		var pairScale = pairScales[i];
+		var scale = pairScale;
+			transformAB = Matrix.transform3DScale(transformAB,scale);
 		var error = 1.0;
+		// add error in relative
+		// if(false){
+
+		if(true){
+			error = Math.random()*errorPairs;
+			// roration
+			var delta = error*(Math.random()-0.5);
+			console.log("errorAngle: "+Code.degrees(delta));
+			var q = new V4D();
+				q.qIdentity();
+			var v = new V3D();
+				v.random(2,2,2);
+				v.norm();
+				q.qRotateDir(v.x,v.y,v.z, delta);
+			var m = q.qMatrix();
+				m = m.toMatrix();
+			transformAB = Matrix.mult(transformAB,m);
+			// location
+			v.random(2,2,2);
+			v.scale(error);
+			console.log("errorTransform "+v.length());
+			transformAB = Matrix.transform3DTranslate(transformAB,v);
+			// scale
+			var errorScale = Math.exp( error*(Math.random()-0.5) );
+console.log("errorScale: "+errorScale)
+			transformAB = Matrix.transform3DScale(transformAB,errorScale);
+
+		}
 		pairs[i] = {"id":pairID, "transform":transformAB, "A":viewA, "B":viewB, "scale":scale, "error":error};
 	}
 	for(var i=0; i<triples.length; ++i){
@@ -988,15 +1031,20 @@ function classesLoadedFxn(){
 		for(var j=0; j<triple.length; j+=2){
 			var pairID = triple[j];
 			var scale = triple[j+1];
-			// console.log(" "+pairID+" @ "+scale)
 			if(pairID!==null){
 				var pair = pairs[pairID];
 					pairID = pair["id"];
-					// console.log(" = "+pairID);
 				var viewA = pair["A"];
 				var viewB = pair["B"];
+				var pairScale = pair["scale"];
 				viewIDs[viewA["id"]] = viewA;
 				viewIDs[viewB["id"]] = viewB;
+				if(scale!==0){
+					scale = scale * pairScale;
+					var error = Math.exp( errorScales*(Math.random()-0.5) );
+					scale = scale*error;
+					console.log("triple error scale: "+error);
+				}
 				sList[pairID] = scale;
 			}
 		}
@@ -1040,16 +1088,14 @@ console.log(triples);
 	var tripleToScales = function(triple){
 		return triple["scales"];
 	}
-/*
-return [triple["A"],triple["B"],triple["C"]];
-	};
-	var tripleToScales = function(triple){
-		// console.log(triple);
-		// throw "triple scales";
-		var gauge = triple["gauge"];
-*/
+	
+	var absolutes = [];
+	for(var i=0; i<views.length; ++i){
+		absolutes.push(views[i]["absolute"]);
+	}
+	var result = Code.graphAbsoluteFromObjectLookup3D(views, pairs, triples, viewToID,pairToIDs,tripleToIDs, pairToError,pairToTransform, tripleToScales, absolutes);
 
-	var result = Code.graphAbsoluteFromObjectLookup3D(views, pairs, triples, viewToID,pairToIDs,tripleToIDs, pairToError,pairToTransform, tripleToScales);
+	console.log(result);
 
 throw "???"
 

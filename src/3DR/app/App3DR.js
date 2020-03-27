@@ -7898,12 +7898,11 @@ console.log("pair count: "+pairs.length+" ............");
 	if(!triples){
 		// make every possible triple from pairs
 		var minimumRelativeCount = 100;
-		triples = [];
+		triples = {};
 		var haveTriples = 0;
 		for(var i=0; i<pairs.length; ++i){
 			var pairA = pairs[i];
 			var relativeCountA = pairA["tracks"];
-// console.log(pairA);
 			if(!(relativeCountA && relativeCountA>minimumRelativeCount)){
 				continue;
 			}
@@ -7913,7 +7912,7 @@ console.log("pair count: "+pairs.length+" ............");
 			for(var j=i+1; j<pairs.length; ++j){
 				var pairB = pairs[j];
 				var relativeCountB = pairB["tracks"];
-				if(!(relativeCountB && relativeCountA>minimumRelativeCount)){
+				if(!(relativeCountB && relativeCountB>minimumRelativeCount)){
 					continue;
 				}
 				var idBA = pairB["A"];
@@ -7931,15 +7930,24 @@ console.log("pair count: "+pairs.length+" ............");
 						triple["A"] = idA;
 						triple["B"] = idB;
 						triple["C"] = idC;
-					// console.log(triple);
-					triples.push(triple);
+					if(triples[tripleID]){
+						console.log(triples[tripleID]);
+						console.log(triple);
+						throw "triple already exists?";
+					}
+					triples[tripleID] = triple;
 				}
 			}
 		}
+		// TRIM TRIPLES ?
 // console.log("haveTriples: "+haveTriples)
-		inputData["triples"] = triples;
+		
 console.log(triples);
-// throw ">triple match?";
+	triples = Code.objectToArray(triples);
+console.log(triples);
+throw ">are any triple match DUPLICATED?";
+
+	inputData["triples"] = triples;
 	}
 // console.log("PAIRS  COUNT: "+inputData["pairs"].length);
 // console.log("TRIPLE COUNT: "+inputData["triples"].length);
@@ -9452,49 +9460,60 @@ App3DR.ProjectManager.pairIDFromViewIDs = function(idA,idB){
 }
 App3DR.ProjectManager.prototype._absoluteViewsFromDatas = function(views, pairs, triples){
 	var viewToID = function(view){
-		// console.log(view);
-		// throw "view id?";
 		return view["id"];
 	};
 	var pairToIDs = function(pair){
-		// console.log(pair);
-		// throw "pair id?";
 		return [pair["A"],pair["B"]];
 	};
 	var pairToError = function(pair){
-		// console.log(pair);
-		// throw "pair error";
+		// return pair["relativeError"];
 		return pair["relativeError"]/pair["relative"];
-		// return pair["errorR"]/pair["pointCount"];
 	};
 	var pairToTransform = function(pair, idA,idB){
-		// console.log(pair);
-		// throw "pair trans";
-		// var A = pair["A"];
-		// var B = pair["B"];
-		// if(A!=idA || B!=idB){
-		// 	console.log(pair);
-		// 	throw "ID MISMATCH ?"
-		// }
-		var R = pair["R"];
-		// R = Matrix.inverse(R);
+		var R = pair["R"]; // extrinsic
+		R = Matrix.inverse(R); // absolute
 		return R;
 	};
 	var tripleToIDs = function(triple){
-		// console.log(triple);
-		// throw "triple ids";
 		return [triple["A"],triple["B"],triple["C"]];
 	};
 	var tripleToScales = function(triple){
-		// console.log(triple);
-		// throw "triple scales";
 		var gauge = triple["gauge"];
-		// console.log(gauge);
-		return gauge;
+		var list = [gauge["AB"],gauge["AC"],gauge["BC"]];
+		return list;
 	};
 
-this.displayOriginalViewGraph(views, pairs, triples, viewToID,pairToIDs,tripleToIDs, pairToError,pairToTransform,tripleToScales);
-// throw "?"
+// this.displayOriginalViewGraph(views, pairs, triples, viewToID,pairToIDs,tripleToIDs, pairToError,pairToTransform,tripleToScales);
+
+
+
+var result = Code.graphAbsoluteFromObjectLookup3D(views, pairs, triples, viewToID,pairToIDs,tripleToIDs, pairToError,pairToTransform, tripleToScales);
+
+console.log(result);
+
+var first = result["groups"][0];
+
+var transforms = first["transforms"];
+var pairs = first["pairs"];
+var views = first["views"];
+
+
+var skeleton = R3D.skeletalViewGraph(pairs);
+console.log(skeleton);
+// var skeleton = first["skeleton"];
+
+
+pairs = [];
+
+this.displayViewGraph(transforms,pairs, 500);
+
+throw "?"
+
+	var backbone = skeleton["skeletonVertexes"];
+	var groups = skeleton["groupVertexes"];
+
+
+return {"transforms":transforms, "views":viewIDs, "skeleton":backbone, "groups":groups, "skeletonEdges":skeleton["skeletonEdges"], "groupEdges":skeleton["groupEdges"]};
 
 
 
@@ -11870,6 +11889,7 @@ App3DR.ProjectManager.prototype.displayOriginalViewGraph = function(views, pairs
 		var idAB = viewIDsToPairID(idA,idB);
 		var idAC = viewIDsToPairID(idA,idC);
 		var idBC = viewIDsToPairID(idB,idC);
+console.log(i+" : "+idAB+" "+idAC+" "+idBC);
 		var pairAB = tableViewPairToPair[idAB];
 		var pairAC = tableViewPairToPair[idAC];
 		var pairBC = tableViewPairToPair[idBC];
@@ -11906,6 +11926,7 @@ App3DR.ProjectManager.prototype.displayOriginalViewGraph = function(views, pairs
 			setOrFlip(tableViewPairToEdge,idBC,idAB,scaleBCtoAB,errorBC+errorAB);
 		}
 	}
+
 	// console.log(tableViewPairToEdge);
 	// combine multi-edges into single edge based on error
 	var keys = Code.keys(tableViewPairToEdge);
@@ -11914,6 +11935,13 @@ App3DR.ProjectManager.prototype.displayOriginalViewGraph = function(views, pairs
 		var key = keys[i];
 		var edge = tableViewPairToEdge[key];
 		var list = edge["list"];
+var idA = pairToIDs(edge["pairA"]);
+var idB = pairToIDs(edge["pairB"]);
+console.log(" "+i+" = "+viewIDsToPairID(idA[0],idA[1])+" & "+viewIDsToPairID(idB[0],idB[1]))
+console.log(list);
+// if(list.length>1){
+// throw "what is the deal? - multiple ratios for same pairs, get outta here"
+// }
 		if(list.length>0){
 			var values = [];
 			var errors = [];
@@ -11935,7 +11963,7 @@ App3DR.ProjectManager.prototype.displayOriginalViewGraph = function(views, pairs
 		}
 	}
 
-
+// throw "yup"
 	// create graph from edges
 	// console.log(graphEdges)
 	var graph = new Graph();

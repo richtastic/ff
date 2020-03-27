@@ -396,14 +396,23 @@ https://cloud.google.com/appengine/docs/nodejs/
 - compression
 - encryption
 
-
-03/29 - hole filling?
-04/02 - multi-view point propagation from dense
+03/28 - retry 6 images using new sparse absolute orientation algorithms
+		- is BA helpful? (show before and after)
+03/29 - retry dense selection using known R
+		- better this time around?
+04/04 - retry dense global bundle adjust
+04/05 - fix triple duplicates?
+04/11 - hole filling?
+04/12 - multi-view point propagation from dense
 		- projecting known 3D points
 		- projecting unknown corners?
-04/10 - triangulation algorithm updates
-04/20 - texture-triangle-edge problems -- rendering on device shows lines at the edges of triangles -- should be smooth -- DIALATION of texture after it's created (post process requires map)
-04/20 - test new set of 10 ~ 20 images
+04/18 - triangulation algorithm updates
+04/19 - output test to device
+04/25 - texture-triangle-edge problems -- rendering on device shows lines at the edges of triangles -- should be smooth -- DIALATION of texture after it's created (post process requires map)
+05/02 - test new set of 10 ~ 20 images
+05/09 - test set of ~50 images
+05/23 - test set of ~100 images
+05/30 - MVP
 
 ? - BA identify/remove view if it's position is very bad????
 - triangle - texture loading groups at a time to get local approx blending
@@ -413,31 +422,7 @@ https://cloud.google.com/appengine/docs/nodejs/
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-http://localhost/web/ff/3DR/averaging.html
-
-absoluteViewsFromDatas
-
-displayOriginalViewGraph
-
-graphAbsoluteFromRelativeAngle3D
-
-
-graphAbsoluteFromRelative1D
-
-
-
-
-
-
-
-
-- why 2D 
-- are Xs & Ys connected?
--> try separate 1D each
-
-
-
-
+- triple duplicates - order doesn't matter in triples
 
 
 
@@ -467,63 +452,6 @@ BAD: (2 is closest, 4 & 5 should be behind all)
 
 
 
-
-
-
-
-
-NEW:
-
-App3DR.js:12310 0 : 1.6802258944145583
-App3DR.js:12310 1 : 1.778793136722835
-App3DR.js:12310 2 : 4.423180585207434
-App3DR.js:12310 3 : 1.7462861835218162
-App3DR.js:12310 4 : 2.5011322062848063
-App3DR.js:12310 5 : 1.7318770511862616
-App3DR.js:12310 6 : 1
-App3DR.js:12310 7 : 1.3052268678240964
-
-
-
-
-OLD:
-
-0.8026893958635262,
-0.6219133718292525,
-0.7228368876140061,
-0.7867665661201007,
-1, 0.695120660344005,
-0.4505421347237046,
-0.5206730435118385]
-
-
-
-
-=> TRY: HIGHEST-HISTOGRAMMING SECTION
-	- possible overlapping cells ?
-
-min-dimension = 3 cells, extend to fit
-	- use center of grid cells too
-
-
-=>>>>>>>>>>>>>>> 
-calculateViewSimilarities
-
-...
-
-
-
-- where is starting wrong?
-	- which edges are really poor? yet still used?
-	- after initialization of pair estimate?
-		=> YES, 4+5 POOR
-			=> WHY IS THERE NO 3-4 OR 3-5 PAIR ?
-	- after sparse BA?
-		=> YES, BAD
-
-
-
-- path costs for sparse-dense putativePairs seem very off
 
 - HUGE R ERROR is not reflective of actual abilities
 	-- may be affecting how errors are processed now
@@ -556,45 +484,6 @@ calculateViewSimilarities
 - are the graph error reduction parameters working  correctly?
 
 
-=> SHOW ORIGINAL ESTIMATE:
-
-
-- show original & estimated scales visually
-	- calculate AVERAGE scale
-	- for each pair:
-		- find minimum path to each other view starting at this view
-			- display expected relative size
-	- for each pair
-		- display actual size outline
-
-
-
-- only pairs are scaled ????????????
-
-
-
-WHAT DOES THIS DO?:
-	optimumScaling1D
-
-
-
-- for each view:
-	- if view doesn't have a location [should only be first view:]
-		- pick an absolute location for one of the views [0,0,0]
-	- find minimum path to each other view starting at this view
-	- place point at predicted absolute location
-
-...
-
-
-=> TRY WITHOUT SEPARATE ORIENTATION / TRANSLATION STEP ?
-
-=> ...
-
-
-
-
-
 
 
 
@@ -609,61 +498,7 @@ AT SOME POINT:
 
 
 
-
-
-
-::::::::: graph  initial global absolute values from relative edges with error  optimal: based on spreading error & including all estimates proportional to error  NOT propagated error
-
-
-
 - each vertex knows where every other vertex is WITH SOME ERROR VALUE, further away vertexes (edge distance) are typically higher in error
-
-- simultaneous solving
-
-
-
-1D case: v_j = v_i + v_ij
-[adding logs ~ mult scales]
-
-
-[    ...    ]   [v_0]
-[    ...    ]   [v_1]
-[    v_ij   ] x [...]
-[    ...    ]   [v_n]
-
-EX:
-
-b + 0.5 = c
-
-[ 0 1 0 0.5] = 
-
-
-
-2D position case: v_j = v_i + v_ij
-error: ||v_j - v_i||  -  ||v_ij||
-
-EX:
-
-
-......................................................
-x pick some random vertex to be at origin
-x calculate the propagated-absolute position of ever other vertex based on transform + error
-???? what if all locations are inited to 0 ?
-- set everything at origin
-- for every vertex (now with some starting place)
-	- ^ re-estimate
-- for every vertex
-	- set absolute position based on cummulative error averaging
-.. REPEAT?
-
-
-
-=> using indirect paths/pairs results in wrong answers
-	A) going thru other edges is just a bad idea?
-	B) the correct error averaging isn't right
-
-=> iteritive initial estimate requires many iterations (100-1k)
-- 
 
 
 
