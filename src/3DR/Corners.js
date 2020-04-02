@@ -24,11 +24,21 @@ function Corners(){
 	// var imageList = ["A.png"];
 
 	var directory = "./images/";
-	var imageList = ["bench_A.png","bench_B.png"]; // big angle
+	// var imageList = ["bench_A.png","bench_B.png"]; // big angle
 	// var imageList = ["bench_A.png","bench_C.png"]; // big angle
 	// var imageList = ["bench_A.png","bench_D.png"]; // angle
 	// var imageList = ["bench_A.png","bench_E.png"]; // scale/zoom
 	// var imageList = ["bench_A.png","bench_F.png"]; // big zoom, big angle, minimal area
+
+
+	// var imageList = ["bench_A.png","bench_B.png"];
+	// var imageList = ["bench_A.png","bench_E.png"];
+
+
+	var imageList = ["BTLZWLLY.png","081TMCFX.png"];
+
+	
+
 	
 	// var imageList = ["bench_C.png","bench_D.png"]; // shift, small angle
 	// var imageList = ["bench_B.png","bench_E.png"];
@@ -105,13 +115,13 @@ function Corners(){
 
 	// var imageLoader = new ImageLoader(directory,imageList, this,this.handleImagesLoadedBasic,null);
 
-	// var imageLoader = new ImageLoader(directory,imageList, this,this.handleImagesLoadShowCorners,null);
+	var imageLoader = new ImageLoader(directory,imageList, this,this.handleImagesLoadShowCorners,null);
 	// var imageLoader = new ImageLoader(directory,imageList, this,this.handleImagesLoadShowFeatures,null);
 
 	// var imageLoader = new ImageLoader(directory,imageList, this,this.handleImagesLoadExperiment,null);
 
 
-	var imageLoader = new ImageLoader(directory,imageList, this,this.handleImagesLoadedHistograms,null);
+	// var imageLoader = new ImageLoader(directory,imageList, this,this.handleImagesLoadedHistograms,null);
 
 	imageLoader.load();
 	
@@ -614,6 +624,75 @@ console.log(Code.degrees(angleDelta))
 
 
 Corners.prototype.handleImagesLoadShowCorners = function(imageInfo){
+
+	var images = [];
+
+		images.push([ Code.radians(10), "A" ]);
+		images.push([ Code.radians(30), "C" ]);
+		images.push([ Code.radians(80), "H" ]);
+		images.push([ Code.radians(180), "P" ]);
+		images.push([ Code.radians(320), "X" ]);
+		images.push([ Code.radians(350), "Z" ]);
+
+	console.log(images);
+/*
+	var entryToAngle = function(entry, searchAngle){
+		var angleValue = entry[0];
+		var a = new V2D(1,0);
+		var b = new V2D(1,0);
+
+		a.rotate(searchAngle); // want
+		b.rotate(angleValue); // have
+
+		var difference = V2D.angleDirection(b,a); // direction have to want
+		console.log(Code.degrees(searchAngle)+" to "+Code.degrees(angleValue)+" =: "+difference);
+		return difference;
+	}
+
+	// var searchValue = Code.radians(0);
+	var searchValue = Code.radians(360);
+	var args = searchValue;
+	var result = Code.binarySearchCircular(images, entryToAngle, args);
+	console.log(result);
+
+*/
+	
+	var value = [ Code.radians(120), "K" ]; // new, middle
+	// var value = [ Code.radians(1), "K" ]; // new, beginning
+	// var value = [ Code.radians(359), "K" ]; // new, end
+	// var value = [ Code.radians(320), "K" ]; // equal, middle
+	// var value = [ Code.radians(10), "K" ]; // equal, beginning
+	// var value = [ Code.radians(350), "K" ]; // equal, end
+	var fxn = function(a, b){
+		var diff = b[0] - a[0];
+		return diff;
+		
+	}
+	var args = value;
+	Code.arrayOrderedInsert(images, value, fxn, args);
+
+	console.log(images);
+	/*
+
+	var toValueFxn = function(entry){
+		return entry[0];
+	}
+	// var searchValue = 30;
+	var searchValue = 35;
+	var result = Code.binarySearchCircular6(images, searchValue, toValueFxn);
+	console.log(result);
+
+*/
+
+/*
+	var result = Code.binarySearchCircular(images, entryToAngle);
+	console.log(result);
+*/
+
+	throw " done ?"
+
+
+
 	var imageList = imageInfo.images;
 	var fileList = imageInfo.files;
 	var i, j, k, list = [];
@@ -628,7 +707,8 @@ Corners.prototype.handleImagesLoadShowCorners = function(imageInfo){
 		GLOBALSTAGE.addChild(d);
 		// d.graphics().alpha(0.05);
 		// d.graphics().alpha(0.50);
-		d.graphics().alpha(0.90);
+		d.graphics().alpha(0.75);
+		// d.graphics().alpha(0.90);
 		d.matrix().translate(x,y);
 
 		var imageSource = images[i];
@@ -644,6 +724,7 @@ Corners.prototype.handleImagesLoadShowCorners = function(imageInfo){
 		// 	corners = corners["value"];
 
 		// var grad = imageMatrix.colorGradientVector();
+		/*
 		var grad = imageMatrix.colorGradient();
 			grad = grad["value"];
 			Code.arrayMap(grad,function(a){return a.length()});
@@ -652,7 +733,7 @@ Corners.prototype.handleImagesLoadShowCorners = function(imageInfo){
 			var sigma = 1.0;
 			corners = ImageMat.getBlurredImage(corners,width,height,sigma);
 
-
+		*/
 
 
 /*
@@ -712,23 +793,54 @@ console.log("SPACE: "+pass.length);
 
 */
 
-var pass = R3D.differentialCornersForImageSingle(imageMatrix);
+
+
+
+
+var pass = R3D.differentialCornersForImage(imageMatrix, 0.015);
 console.log(pass);
+
+// differentialCornersForImageScales
+
+// var pass = R3D.differentialCornersForImageSingle(imageMatrix, 0.015);
+// console.log(pass);
+
+
+
+// WHAT IS USED CURRENTLY ??
+
+
+
+// ????
+
 
 
 
 for(var f=0; f<pass.length; ++f){
-	var point = pass[f];
+	// var point = pass[f];
+
+	var feature = pass[f];
+	var point = feature["point"];
+	var scale = feature["scale"];
+	var size = feature["size"];
+	var angle = feature["angle"];
+
+
+	size = Math.sqrt(size);
+	// size = 5;
+// console.log(point+"")
+
 	var d = new DO();
-	var size = 2;
+	// var size = 2;
 	// size = size * 0.5;
 	// size = Math.sqrt(size); // display purposes
 	// size = 5;
-	d.graphics().setLine(1.0, 0xFFFF0000);
+	// d.graphics().setLine(1.0, 0xFFFF0000);
+	d.graphics().setLine(1.0, 0xFF000000);
 	d.graphics().beginPath();
 	d.graphics().drawCircle(point.x, point.y, size);
-	// d.graphics().moveTo(point.x, point.y);
-	// d.graphics().lineTo(point.x + size*Math.cos(angle), point.y + size*Math.sin(angle));
+		d.graphics().moveTo(point.x, point.y);
+		d.graphics().lineTo(point.x + size*Math.cos(angle), point.y + size*Math.sin(angle));
 	d.graphics().strokeLine();
 	d.graphics().endPath();
 	d.matrix().translate(x,y);
@@ -739,6 +851,37 @@ for(var f=0; f<pass.length; ++f){
 
 		x += imageMatrix.width();
 	}
+
+
+
+
+// MATCHIN ???
+
+
+		var objectsA = R3D.generateProgressiveSIFTObjects(featuresA, imageMatrixA);
+		var objectsB = R3D.generateProgressiveSIFTObjects(featuresB, imageMatrixB);
+		// console.log(objectsA);
+		// console.log(objectsB);
+		// BASIC MATCH w/ F-ASSISTED
+console.log("progressiveFullMatchingDense ... ")
+		var result = R3D.progressiveFullMatchingDense(objectsA, imageMatrixA, objectsB, imageMatrixB);
+		console.log(result);
+		var pointsA = result["A"];
+		var pointsB = result["B"];
+		var F = result["F"];
+		var Finv = result["Finv"];
+		var goodEnoughMatches = false;
+
+
+		// _progressiveSparseMatches
+
+		// _progressiveMatchChooseBest
+
+
+
+
+
+	GLOBALSTAGE.root().matrix().scale(2.0);
 }
 
 Corners.prototype.handleImagesLoadShowFeatures = function(imageInfo){

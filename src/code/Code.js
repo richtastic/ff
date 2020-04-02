@@ -995,7 +995,7 @@ Code._middleCircularArrayIndexes = function(a,l,r){
 	return (l+r)*0.5 | 0;
 }
 // to search in CCW orientation: new angle = zeroTo2Pi(2pi - old angle)
-Code.binarySearchCircular = function(a, f, log){ // f returns a direction LEFT or RIGHT or EQUAL and a MAGNITUDE for better/worse
+Code.binarySearchCircular = function(a, f, args, log){ // f returns a direction LEFT or RIGHT or EQUAL and a MAGNITUDE for better/worse
 	if(a.length==0){
 		return null;
 	}
@@ -1005,8 +1005,8 @@ Code.binarySearchCircular = function(a, f, log){ // f returns a direction LEFT o
 	var temp, mIndex, mValue;
 	var aIndex = 0;
 	var bIndex = a.length/2 | 0;
-	var aValue = f(a[aIndex]);
-	var bValue = f(a[bIndex]);
+	var aValue = f(a[aIndex], args);
+	var bValue = f(a[bIndex], args);
 	// endpoint checks
 	if(aValue==0){
 		return [aIndex];
@@ -1026,7 +1026,7 @@ Code.binarySearchCircular = function(a, f, log){ // f returns a direction LEFT o
 		}
 	}else if(aValue<=0 && bValue>=0){ // - +
 		isOppsite = true;
-	}
+	} // avalue>=0 && bvalue<=0  +  -
 
 
 	if(isOppsite){
@@ -1053,7 +1053,7 @@ console.log("END ADJACENT: "+aIndex,bIndex);
 		return [aIndex,bIndex];
 	}
 	mIndex = Code._middleCircularArrayIndexes(a,aIndex,bIndex);
-	mValue = f(a[mIndex]);
+	mValue = f(a[mIndex], args);
 if(log){
 console.log("  ["+aIndex+": "+aValue+" | "+mIndex+": "+mValue+" | "+bIndex+": "+bValue+" ] ");
 }
@@ -1154,6 +1154,177 @@ console.log("    => R");
 
 throw "bad";
 }
+
+Code.binarySearchCircular2 = function(array, compareFxn, args){ // found: [index] , closest []
+	if(array.length==0){
+		return null;
+	}
+	if(array.length==1){
+		return [0];
+	}
+
+	var lm1 = array.length-1;
+	var lIndex = 0;
+	var rIndex = lm1;
+
+	var lValue = compareFxn(array[lIndex], args);
+	var rValue = compareFxn(array[rIndex], args);
+
+	if(lValue==0){
+		return [lIndex];
+	}else if(rValue==0){
+		return [rIndex];
+	}
+
+
+	/*
+	var lm1 = array.length-1;
+	var lIndex = 0;
+	var rIndex = lm1;
+
+	var lValue = compareFxn(array[lIndex], args);
+	var rValue = compareFxn(array[rIndex], args);
+
+	if(lValue==0){
+		return [lIndex];
+	}else if(rValue==0){
+		return [rIndex];
+	}
+
+	console.log(lIndex,lValue);
+	console.log(rIndex,rValue);
+
+	if( (lValue<0 && rValue<0) || (lValue>0 && rValue>0) ){
+		console.log("both same sign");
+		throw "A";
+	}else{
+		console.log("binary");
+		var mIndex = Code._middleCircularArrayIndexes(array,lIndex,rIndex);
+		var mValue = compareFxn(array[mIndex], args);
+		
+		console.log(mIndex,mValue);
+
+		var lAbs = Math.abs(lValue);
+		var rAbs = Math.abs(rValue);
+		var mAbs = Math.abs(mValue);
+		if(mAbs>lAbs || lAbs>rAbs){
+			throw "wrong side"
+		}
+
+		if(lAbs<rAbs){
+			console.log("search left");
+		}else{
+			console.log("search right");
+		}
+		throw "B";
+	}
+*/
+	throw "?"
+
+	/*
+	if both ends are positive or negative => 
+		use closest end & adjacent index will be 
+
+	*/
+}
+
+
+Code.binarySearchCircular6 = function(array, searchValue, toValueFxn){ // found: [index] , closest []
+	if(array.length==0){
+		return null;
+	}
+	if(array.length==1){
+		return [0];
+	}
+
+/*
+	var lm1 = array.length-1;
+	var lIndex = 0;
+	var rIndex = lm1;
+
+console.log("search for: "+searchValue);
+	var count = 10;
+	var i = 0;
+	while(lIndex<=rIndex){
+		var lValue = toValueFxn(array[lIndex]);
+		var rValue = toValueFxn(array[rIndex]);
+		
+		var mIndex = (lIndex+rIndex)*0.5 | 0;
+		var mValue = toValueFxn(array[mIndex]);
+		console.log(" "+i+" ...................................... ");
+		// console.log(lIndex,mIndex,rIndex);
+		console.log("   "+lIndex+" : "+lValue);
+		console.log("   "+mIndex+" : "+mValue);
+		console.log("   "+rIndex+" : "+rValue);
+		
+		// check middle
+		if(mValue==searchValue){
+			return [mIndex];
+		}
+
+		// check right end:
+		r2Index = ;
+		if(){
+
+		}
+
+		// check left end:
+
+
+
+		if(mValue<=rValue){ // right half sorted
+			if(searchValue>mValue && searchValue<=rValue){
+				lIndex = mIndex + 1; // goto right
+			}else{
+				rIndex = mIndex - 1; // goto left
+			}
+		}else{ // left half is sorted
+			if(searchValue>=lValue && searchValue>mValue){
+				rIndex = mIndex - 1; // goto left
+			}else{
+				lIndex = mIndex + 1; // goto right
+			}
+		}
+
+		++i;
+
+		--count;
+		if(count<=0){
+			throw "too many counts";
+		}
+	}
+	*/
+	throw "never ..."
+	return null;
+}
+Code.arrayOrderedInsert = function(a, value, fxn,arg){
+	var indexes = Code.binarySearch(a, fxn, false, arg);
+	console.log(indexes);
+	if(indexes!==null){
+		if(Code.isArray(indexes) && indexes.length==2){
+			// console.log("A");
+			Code.arrayInsert(a, indexes[0]+1, value);
+		}else{
+			var index = Code.isArray(indexes) ? indexes[0] : indexes;
+			if(index==0){ // before
+				// console.log("B 1");
+				// Code.arrayInsert(a, 0, value);
+				a.unshift(value);
+			}else if(index==a.length-1){ // before or after
+				// console.log("B 2");
+				// Code.arrayInsert(a, a.length-1, value);
+				a.push(value);
+			}else{ // before other equals
+				// console.log("B 3");
+				Code.arrayInsert(a, index, value);
+			}
+		}
+	}else{ // empty
+		a.push(value);
+	}
+	return a;
+}
+
 Code.binarySearch = function(a, f, noEnds, args){ // assumed increasing | if AT INDEX: return index, if BETWEEN INDEX: return [a,b], if OUTSIDE: return [end]
 	if(a.length==0){
 		return null;
@@ -1187,6 +1358,62 @@ Code.binarySearch = function(a, f, noEnds, args){ // assumed increasing | if AT 
 		return [0];
 	}
 	return [maxIndex,minIndex];
+}
+
+Code.binarySearchCircularExact = function(array, searchValue, toValueFxn){ // found: index, else: -1
+	if(array.length==0){
+		return null;
+	}
+	if(array.length==1){
+		return [0];
+	}
+
+	var lm1 = array.length-1;
+	var lIndex = 0;
+	var rIndex = lm1;
+
+	console.log("search for: "+searchValue);
+	var count = 10;
+	var i = 0;
+	while(lIndex<=rIndex){
+		var lValue = toValueFxn(array[lIndex]);
+		var rValue = toValueFxn(array[rIndex]);
+		
+		var mIndex = (lIndex+rIndex)*0.5 | 0;
+		var mValue = toValueFxn(array[mIndex]);
+		console.log(" "+i+" ...................................... ");
+		// console.log(lIndex,mIndex,rIndex);
+		console.log("   "+lIndex+" : "+lValue);
+		console.log("   "+mIndex+" : "+mValue);
+		console.log("   "+rIndex+" : "+rValue);
+		
+		// check middle
+		if(mValue==searchValue){
+			return [mIndex];
+		}
+
+		if(mValue<=rValue){ // right half sorted
+			if(searchValue>mValue && searchValue<=rValue){
+				lIndex = mIndex + 1; // goto right
+			}else{
+				rIndex = mIndex - 1; // goto left
+			}
+		}else{ // left half is sorted
+			if(searchValue>=lValue && searchValue>mValue){
+				rIndex = mIndex - 1; // goto left
+			}else{
+				lIndex = mIndex + 1; // goto right
+			}
+		}
+
+		++i;
+
+		--count;
+		if(count<=0){
+			throw "too many counts";
+		}
+	}
+	return -1;
 }
 Code.recursiveProperty = function(object, def){
 	if(object){
@@ -15965,7 +16192,7 @@ Code.graphAbsoluteFromObjectLookup3D = function(views, pairs, triples,  viewToID
 	// some logic for detecting bad pairs / triples 
 		// ...
 
-	// lookupts:
+	// lookups:
 	// var viewIDToView = {};
 	var viewIDToViewIndex = {};
 	for(var i=0; i<views.length; ++i){

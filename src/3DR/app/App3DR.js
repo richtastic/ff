@@ -7851,17 +7851,22 @@ bad = cameras are wrong or accidentally correct, <50% of scene is mapped
  // good | ok | poor | bad
 console.log("pair count: "+pairs.length+" ............");
 	for(var i=0; i<pairs.length; ++i){
-// i = 0;  // 
+i = 0;  // 
 // i = 1;  // 
 // i = 2;  // 
 // i = 3;  // 
 // i = 4;  // 
+
 // i = 5;  // 
 // i = 6;  // 
 // i = 7;  //
 // i = 8; // 
 // i = 9;  // 
 // i = 10; // 
+// i = 11; // 
+// i = 12; // 
+// i = 13; // 
+// i = 14; // 
 // console.log("PICKED: "+i);
 		var pair = pairs[i];
 		var idA = pair["A"];
@@ -8020,7 +8025,12 @@ console.log("RICHIE - START GRAPH");
 
 		console.log("_absoluteViewsFromDatas");
 		var graph = this._absoluteViewsFromDatas(graphViews, graphPairs, graphTriples);
+console.log(graph);
 		var viewIndextoViewID = graph["views"];
+for(var v=0; v<viewIndextoViewID.length; ++v){
+	var index = viewIndextoViewID[v];
+	viewIndextoViewID[v] = graphViews[index]["id"];
+}
 		var graphGroups = graph["groups"];
 			graphGroups.unshift(graph["skeleton"]);
 		var graphGroupPairs = graph["groupEdges"]
@@ -9484,36 +9494,27 @@ App3DR.ProjectManager.prototype._absoluteViewsFromDatas = function(views, pairs,
 	};
 
 // this.displayOriginalViewGraph(views, pairs, triples, viewToID,pairToIDs,tripleToIDs, pairToError,pairToTransform,tripleToScales);
+	
+	var result = Code.graphAbsoluteFromObjectLookup3D(views, pairs, triples, viewToID,pairToIDs,tripleToIDs, pairToError,pairToTransform, tripleToScales);
 
-
-
-var result = Code.graphAbsoluteFromObjectLookup3D(views, pairs, triples, viewToID,pairToIDs,tripleToIDs, pairToError,pairToTransform, tripleToScales);
-
-console.log(result);
-
-var first = result["groups"][0];
-
-var transforms = first["transforms"];
-var pairs = first["pairs"];
-var views = first["views"];
-
-
-var skeleton = R3D.skeletalViewGraph(pairs);
-console.log(skeleton);
-// var skeleton = first["skeleton"];
-
-
-pairs = [];
+	var first = result["groups"][0];
+	var transforms = first["transforms"];
+	var pairs = first["pairs"];
+	var views = first["views"];
 
 this.displayViewGraph(transforms,pairs, 500);
-
-throw "?"
-
+	
+	console.log("Should these be extrinsic?")
+	// // absolute to extrinsic
+	// for(var i=0; i<transforms.length; ++i){
+	// 	transforms[i] = Matrix.inverse(transforms[i]);
+	// }
+	var skeleton = R3D.skeletalViewGraph(pairs);
 	var backbone = skeleton["skeletonVertexes"];
 	var groups = skeleton["groupVertexes"];
 
 
-return {"transforms":transforms, "views":viewIDs, "skeleton":backbone, "groups":groups, "skeletonEdges":skeleton["skeletonEdges"], "groupEdges":skeleton["groupEdges"]};
+return {"transforms":transforms, "views":views, "skeleton":backbone, "groups":groups, "skeletonEdges":skeleton["skeletonEdges"], "groupEdges":skeleton["groupEdges"]};
 
 
 
@@ -9674,6 +9675,7 @@ console.log("calculatePairMatchFromViewIDs")
 		settings["maximumErrorTracksF"] = 0.02; // 0.02 @ 500 = 10
 		settings["maximumErrorTracksR"] = 0.01; // 0.01 @ 500 = 5
 	}
+	// ???
 	console.log("calculatePairMatchFromViewIDs: "+viewAID+" & "+viewBID);
 	var project = this;
 	var featureDataA = null;
@@ -9788,22 +9790,37 @@ console.log(featuresB);
 		// TO SIFT OBJECTS
 		var objectsA = R3D.generateProgressiveSIFTObjects(featuresA, imageMatrixA);
 		var objectsB = R3D.generateProgressiveSIFTObjects(featuresB, imageMatrixB);
-		// console.log(objectsA);
-		// console.log(objectsB);
+		console.log(objectsA);
+		console.log(objectsB);
 		// BASIC MATCH w/ F-ASSISTED
 console.log("progressiveFullMatchingDense ... ")
 		var result = R3D.progressiveFullMatchingDense(objectsA, imageMatrixA, objectsB, imageMatrixB);
+		console.log("result");
 		console.log(result);
 		var pointsA = result["A"];
 		var pointsB = result["B"];
 		var F = result["F"];
 		var Finv = result["Finv"];
+		var Ferror = result["error"];
 		var goodEnoughMatches = false;
+
+
+		// need to go over F & get better ones:
+
+
+		// progressiveFullMatchingDense
+
+
+
+
+
+
 // DISPLAY MATCHES:
 
 
 console.log(pointsA);
 console.log(pointsB);
+console.log("Ferror: "+Ferror);
 
 // if(false){
 if(true){
@@ -9834,6 +9851,7 @@ if(true){
 	var colors = [color0,color1,color2,color3];
 
 	var imageScale = 1.0;
+// console.log(pointsA,pointsB)
 	for(var k=0; k<pointsA.length; ++k){
 	// break;
 		var pointA = pointsA[k];
@@ -9870,14 +9888,14 @@ if(true){
 			d.graphics().drawCircle(p.x,p.y, 5);
 			d.graphics().endPath();
 			d.graphics().strokeLine();
-			//
+			// 
 			// d.graphics().setLine(2.0, 0xFF0000FF);
 			d.graphics().setLine(3.0, color);
 			d.graphics().beginPath();
 			d.graphics().drawCircle(q.x,q.y, 5);
 			d.graphics().endPath();
 			d.graphics().strokeLine();
-			//
+			// 
 			// d.graphics().setLine(1.0, 0x66FF00FF);
 			// d.graphics().beginPath();
 			// d.graphics().moveTo(p.x,p.y);
@@ -9891,8 +9909,26 @@ if(true){
 } // if false
 
 
+/*
+console.log("R3D.showFundamental");
+R3D.showFundamental(pointsA, pointsB, F, Finv, GLOBALSTAGE, imageMatrixA,imageMatrixB);
+*/
 
-// throw "now with F ?"
+
+
+
+// Ferror = Math.min(Ferror,20);
+
+
+var result = R3D.findDenseCornerFMatches(imageMatrixA,imageMatrixB, F, Ferror, null, pointsA,pointsB);
+console.log(result);
+
+
+
+
+
+GLOBALSTAGE.root().matrix().scale(2.0);
+throw "now with F ?"
 
 		if(F && pointsA && pointsA.length>minimumMatchPoints){
 			var info = R3D.fundamentalError(F,Finv,pointsA,pointsB);
@@ -10010,7 +10046,7 @@ if(true){
 						// neighbor size TO world size
 					}
 console.log(pairData);
-// throw "before save"
+throw "before save"
 					pairDoneSaveFxn();
 				}
 				world.solvePair(internalCompleteFxn, project);
@@ -13010,7 +13046,7 @@ App3DR.ProjectManager.prototype.displayViewGraph = function(transforms, pairs, o
 	var errors = [];
 	for(var i=0; i<pairs.length; ++i){
 		var pair = pairs[i];
-		errors.push(pair[3]);
+		errors.push(pair[ pairs.length-1 ]);
 	}
 	var info = Code.infoArray(errors);
 	var minError = info["min"];
@@ -13019,6 +13055,7 @@ App3DR.ProjectManager.prototype.displayViewGraph = function(transforms, pairs, o
 		var pair = pairs[i];
 		var a = pair[0];
 		var b = pair[1];
+		/*
 		var fwd = pair[2];
 		var error = pair[3];
 		var bak = Matrix.inverse(fwd); // i
@@ -13047,6 +13084,7 @@ App3DR.ProjectManager.prototype.displayViewGraph = function(transforms, pairs, o
 			display.graphics().fill();
 			display.graphics().strokeLine();
 		}
+		*/
 		var p2DA = centersDisplay2D[a];
 		var p2DB = centersDisplay2D[b];
 		display.graphics().setLine(2.0,0x990000CC);
@@ -13063,6 +13101,7 @@ App3DR.ProjectManager.prototype.displayViewGraph = function(transforms, pairs, o
 		// text.matrix().translate(c2D.x, c2D.y);
 		// display.addChild(text);
 	}
+	
 	
 	// display.matrix().scale(1,-1);
 	// display.matrix().translate(0,displaySize);

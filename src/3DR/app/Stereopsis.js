@@ -1756,7 +1756,8 @@ Stereopsis.Transform3D.prototype.copyRelativeFromAbsolute = function(){
 	if(absA && absB){
 		// var cameraAtoB = R3D.relativeTransformMatrix2(vA.absoluteTransform(),vB.absoluteTransform());
 		// transform.R(vA,vB,cameraAtoB);
-		var absoluteAtoB = R3D.relativeTransformMatrix2(vA.absoluteTransformInverse(),vB.absoluteTransformInverse());
+		// var absoluteAtoB = R3D.relativeTransformMatrix2(vA.absoluteTransformInverse(),vB.absoluteTransformInverse());
+		var absoluteAtoB = Matrix.relativeWorld(vA.absoluteTransformInverse(),vB.absoluteTransformInverse());
 		var extrinsicAtoB = Matrix.inverse(absoluteAtoB);
 		transform.R(vA,vB,extrinsicAtoB);
 	}
@@ -13525,7 +13526,8 @@ console.log("SCALE THIS?")
 					var viewB = relativeTransform.viewB();
 					objectTransform["A"] = viewA.data();
 					objectTransform["B"] = viewB.data();
-					objectTransform["transform"] = R3D.relativeTransformMatrix2(viewA.absoluteTransform(),viewB.absoluteTransform());
+					objectTransform["transform"] = Matrix.relativeWorld(viewA.absoluteTransform(),viewB.absoluteTransform());
+					// objectTransform["transform"] = R3D.relativeTransformMatrix2(viewA.absoluteTransform(),viewB.absoluteTransform());
 					objectTransforms.push(objectTransform);
 				}
 			}

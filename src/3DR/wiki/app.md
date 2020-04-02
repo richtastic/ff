@@ -396,12 +396,13 @@ https://cloud.google.com/appengine/docs/nodejs/
 - compression
 - encryption
 
-03/28 - retry 6 images using new sparse absolute orientation algorithms
+04/04 - initial dense F because error sigma 3-6 px => 1-2 px
+04/01 - retry 6 images using new sparse absolute orientation algorithms
 		- is BA helpful? (show before and after)
-03/29 - retry dense selection using known R
+04/03 - retry dense selection using known R
 		- better this time around?
-04/04 - retry dense global bundle adjust
-04/05 - fix triple duplicates?
+04/06 - retry dense global bundle adjust
+04/09 - fix triple duplicates?
 04/11 - hole filling?
 04/12 - multi-view point propagation from dense
 		- projecting known 3D points
@@ -422,7 +423,198 @@ https://cloud.google.com/appengine/docs/nodejs/
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+- F has very high error for fairly good points
+
+- investigate F calculation
+
+F FFROM RAW MATChING IS BETTER HTAN fundamentalRANSACFromPoints
+
+
+
+- print out F
+	- before refinement
+	- after refinement
+
+- make algorithm for:
+	- get dense corners (~ 1% of image radius ~ 2k points)
+	- extract points along F line (+/- sigma)
+		- 1-2% image size
+	- first image keeps axis-aligned points
+	- second image extracts points at multiple angles (cache them locally)
+		- is ENTIRE LINE at same angle?
+	- compare using relaxed (best) SAD scoring
+	
+
+
+------------------ iteritive F refinement needs to drop WORST matches so they stop being used in next loop ...
+
+
+should F fwd & bak both be checked?
+
+
+- hold on to BEST F/count
+
+
+
+initial F is not accurate enough
+	need much more dense corners after initial
+
+-> get corners [2k-4k]
+-> static-size compare SAD/closest-SAD
+	-> rotate to F-line
+		-> cache each point by rotation
+			[if a rotation within ~ 5 - 10 degrees exists, use that ]
+
+
+
+
+
+
+
+- GET CONSISTENT POINT SELECTION ACROSS SIMILAR IMAGES
+	- display debug
+
+
+
+	what affects consistent point finding?:
+		- blurr
+			=> sizes are more consistent
+			=> locations are more consistent
+		- 
+
+
+- revisit F sequence finding ...
+	- only include 'best matches' before F test ?
+
+
+
+
+- get fairly dense initial feature count & filter density based on score at point of necessity [2k-4k points]
+	=> need to also store 'score' / 'prevalence' / 'magnitude' / 'predominance' / 'rank' / 'quality' / 'importance' / 'strength' / 'amplitude'
+
+
+...
+
+
+
+- use different density of points for different parts of algorithm
+- 500-1000 features for coarse F
+	[long comparison]
+	[exhaustive searches]
+	[off by large % of image]
+
+=> reassess image relative angles
+	- f-line changes in local angle ? 
+- 1000-2000 features for more accurate F
+	[long comparison]
+	[search along F-line reduces candidates to < ~ 10%]
+	- higher density means to differentiate the covered area should be smaller (1/2 ?)
+	- re-extract compare features
+
+
+
+
+calculatePairMatchFromViewIDs
+
+R3D.progressiveFullMatchingDense(objectsA, imageMatrixA, objectsB, imageMatrixB);
+
+progressiveMatchObjectsSubset
+
+progressiveSparseMatches
+
+
+fundamentalRANSACFromPoints
+
+
+
+
+
+
+	- features should be larger ?
+	- points selected are not consistent across images
+	- scale size varies too much
+		...
+	- how is comparrision ALG ?
+
+
+- high overview level of sparse (500) points?
+- normal iteration with rough F (2000) points
+
+
+
+spittin ideas:
+	
+	- coarse ~500 points:
+		- oriented?
+		- color histograms?
+		=> uniqueness is important (no close-second matches)
+		- use LARGE features to get overall image rotation (and offset?)
+
+	- fix feature point angles to global average
+	- medium ~1000 fixed orientation points:
+		- 
+		- get initial F match
+
+	- dense ~2000 fixed orientation points (@ scale?)
+		- 
+		- get good F match
+
+
+
+
+
+- solve for angle?
+- solve for location & angle?
+- solve for H ?
+
+
+
+- pairwise matches still start with HIGH F error
+	0+1 => 15+
+
+
+
+R3D.relativeTransformMatrix2
+
+Matrix.relativeWorld
+
+
+
+
+
+
+
+
+
+- R comparisson should have much more features to compare with for accuracy (2000-4000)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 - triple duplicates - order doesn't matter in triples
+
+
+- does 'new' sets of pairs include the best ones (eg 1-3 ?)
+
+
+
+- logic for 'dense' pair putative list
+
+
 
 
 
