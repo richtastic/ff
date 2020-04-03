@@ -31,9 +31,345 @@ function Fun(){
 	this._root = new DO();
 //this._root.matrix().translate(50,350);
 	this._stage.root().addChild(this._root);
+GLOBALSTAGE = this._stage;
 	// load images
-	new ImageLoader("./images/",["F_S_1_1.jpg","F_S_1_2.jpg"],this,this.imagesLoadComplete).load();
+	// new ImageLoader("./images/",["F_S_1_1.jpg","F_S_1_2.jpg"],this,this.imagesLoadComplete).load();
+	new ImageLoader("./images/",["F_S_1_1.jpg","F_S_1_2.jpg"],this,this.imagesLoadCompleteFBasic).load();
+	// new ImageLoader("./images/",["F_S_1_1.jpg","F_S_1_2.jpg"],this,this.imagesLoadCompleteCOV).load();
 }
+
+Fun.prototype.imagesLoadCompleteCOV = function(o){
+
+	var pointCount = 200;
+	var rangeX = 10;
+	var rangeY = 5;
+	var offsetX = 2;
+	var offsetY = 5;
+	var rangeXToY = rangeX/rangeY;
+	var angleX = Code.radians(25);
+
+	var points2D = [];
+
+	for(var i=0; i<pointCount; ++i){
+		// var distance = Math.random();
+		// var angle = Math.random()*Math.PI2;
+		// var point = new V2D(distance,0);
+		// point.rotate(angle);
+		// point.scale(rangeX,rangeY);
+
+		var dx = Code.randomNormal(rangeX);
+		var dy = Code.randomNormal(rangeY);
+		var point = new V2D(dx,dy);
+
+		point.rotate(angleX);
+		point.add(offsetX,offsetY);
+		points2D.push(point);
+	}
+
+
+	var x = 400;
+	var y = 300;
+	var scale = 10.0;
+
+
+		var d = new DO();
+		d.graphics().setLine(2.0, 0xFF0000FF);
+		d.graphics().beginPath();
+		d.graphics().moveTo(-100*scale,    -0*scale);
+		d.graphics().lineTo( 100*scale,    -0*scale);
+		d.graphics().moveTo(   0*scale,  100*scale);
+		d.graphics().lineTo(   0*scale, -100*scale);
+		d.graphics().strokeLine();
+		d.graphics().endPath();
+		d.matrix().translate(x,y);
+		GLOBALSTAGE.addChild(d);
+
+	for(var i=0; i<points2D.length; ++i){
+		var point = points2D[i];
+
+		var size = 3;
+
+		var d = new DO();
+		d.graphics().setLine(size, 0xFFFF0000);
+		d.graphics().beginPath();
+		d.graphics().drawCircle(point.x*scale, -point.y*scale, size);
+		d.graphics().strokeLine();
+		d.graphics().endPath();
+		d.matrix().translate(x,y);
+		GLOBALSTAGE.addChild(d);
+
+	}
+
+
+	var info = Code.covariance2D(points2D);
+	console.log(info);
+
+	var cov = info["matrix"];
+	var com = info["center"];
+
+	var angleX = info["angleX"];
+	var sigmaX = info["sigmaX"];
+	var sigmaY = info["sigmaY"];
+
+	console.log(sigmaX,sigmaY);
+	console.log(com+"");
+
+	console.log(" "+cov+"");
+
+	// draw summary
+
+		var d = new DO();
+		d.graphics().setLine(2.0, 0xFF009900);
+		d.graphics().beginPath();
+		d.graphics().moveTo((com.x-10)*scale, -(com.y+ 0)*scale);
+		d.graphics().lineTo((com.x+10)*scale, -(com.y+ 0)*scale);
+		d.graphics().moveTo((com.x+ 0)*scale, -(com.y-10)*scale);
+		d.graphics().lineTo((com.x+ 0)*scale, -(com.y+10)*scale);
+		d.graphics().strokeLine();
+		d.graphics().endPath();
+		d.matrix().translate(x,y);
+		GLOBALSTAGE.addChild(d);
+
+
+
+		var d = new DO();
+		d.graphics().setLine(2.0, 0xFF000000);
+		d.graphics().beginPath();
+		d.graphics().drawEllipse(0,0, sigmaX*scale,sigmaY*scale);
+		// d.graphics().lineTo((com.x+10)*scale, (com.y+ 0)*scale);
+		// d.graphics().moveTo((com.x+ 0)*scale, (com.y-10)*scale);
+		// d.graphics().lineTo((com.x+ 0)*scale, (com.y+10)*scale);
+		d.graphics().strokeLine();
+		d.graphics().endPath();
+		d.matrix().rotate(-angleX);
+		d.matrix().translate(com.x*scale,-com.y*scale);
+		d.matrix().translate(x,y);
+		GLOBALSTAGE.addChild(d);
+
+
+	// undo transform to manalhabalis 
+		var reverse = new Matrix2D();
+		reverse.identity();
+		reverse.translate(-com.x,-com.y);
+		reverse.rotate(-angleX);
+		reverse.scale(1.0/sigmaX,1.0/sigmaY);
+		var forward = reverse.copy();
+			forward.inverse();
+
+
+	var info = Code.normalizedPoints2D(points2D);
+	var normalized2D = info["normalized"];
+	var forward = info["forward"];
+	var reverse = info["reverse"];
+
+	for(var i=0; i<points2D.length; ++i){
+		var point = points2D[i];
+			point = reverse.multV2DtoV2D(point);
+			// point = forward.multV2DtoV2D(point);
+		points2D[i] = point;
+	}
+	// redraw
+
+	x += 500;
+
+		var d = new DO();
+		d.graphics().setLine(2.0, 0xFF0000FF);
+		d.graphics().beginPath();
+		d.graphics().moveTo(-100*scale,    -0*scale);
+		d.graphics().lineTo( 100*scale,    -0*scale);
+		d.graphics().moveTo(   0*scale,  100*scale);
+		d.graphics().lineTo(   0*scale, -100*scale);
+		d.graphics().strokeLine();
+		d.graphics().endPath();
+		d.matrix().translate(x,y);
+		GLOBALSTAGE.addChild(d);
+
+	for(var i=0; i<points2D.length; ++i){
+		var point = points2D[i];
+
+		var size = 3;
+
+		var d = new DO();
+		d.graphics().setLine(size, 0xFFFF0000);
+		d.graphics().beginPath();
+		d.graphics().drawCircle(point.x*scale, -point.y*scale, size);
+		d.graphics().strokeLine();
+		d.graphics().endPath();
+		d.matrix().translate(x,y);
+		GLOBALSTAGE.addChild(d);
+
+	}
+
+
+}
+
+Fun.prototype.imagesLoadCompleteFBasic = function(o){
+	var images = o.images;
+	
+	
+	var imageMatrixes = [];
+	for(var i=0; i<images.length; ++i){
+		var image = images[i];
+		var imageFloat = GLOBALSTAGE.getImageAsFloatRGB(image);
+		var imageMatrix = new ImageMat(imageFloat["width"],imageFloat["height"], imageFloat["red"], imageFloat["grn"], imageFloat["blu"]);
+		imageMatrixes.push(imageMatrix);
+	}
+
+	// data
+
+
+
+	var putativePointsA = [ new V3D(0.235,0.075), new V3D(0.587,0.085), new V3D(0.836,0.0336), new V3D(0.430,0.440), new V3D(0.795,0.330), new V3D(0.805,0.430), new V3D(0.215,0.555), new V3D(0.880,0.580), new V3D(0.750,0.670), new V3D(0.235,0.733) ];
+	var putativePointsB = [ new V3D(0.175,0.113), new V3D(0.525,0.150), new V3D(0.770,0.115), new V3D(0.370,0.490), new V3D(0.730,0.395), new V3D(0.740,0.495), new V3D(0.150,0.600), new V3D(0.820,0.635), new V3D(0.695,0.730), new V3D(0.170,0.790) ];
+	
+	var putatives = [putativePointsA, putativePointsB];
+	for(var i=0; i<putatives.length; ++i){
+		var putativePoints = putatives[i];
+		var imageMatrix = imageMatrixes[i];
+		for(var j=0; j<putativePoints.length; ++j){
+			putativePoints[j].scale( imageMatrix.width(), imageMatrix.height() );
+		}
+	}
+
+
+	var pointsA = putativePointsA;
+	var pointsB = putativePointsB;
+
+
+	// A - 0.75
+	var pointsANorm = Code.normalizedPoints2D(pointsA);
+	var pointsBNorm = Code.normalizedPoints2D(pointsB);
+	var F = R3D.fundamentalMatrix(pointsANorm["normalized"],pointsBNorm["normalized"]);
+		F = R3D.fundamentalMatrixNonlinear(F, pointsANorm["normalized"],pointsBNorm["normalized"]);
+	F = Matrix.mult(F, pointsANorm["forward"]);
+	F = Matrix.mult(Matrix.transpose(pointsBNorm["forward"]), F); // FORWARD ?
+
+/*
+	// B - 0.85
+	var F = R3D.fundamentalMatrix(pointsA,pointsB); // OK 
+		F = R3D.fundamentalMatrixNonlinear(F, pointsA, pointsB);
+*/
+	
+
+	/*
+	var pointsANorm = R3D.calculateNormalizedPoints([pointsA]);
+	var pointsBNorm = R3D.calculateNormalizedPoints([pointsB]);
+	var F = R3D.fundamentalMatrix(pointsANorm.normalized[0],pointsBNorm.normalized[0]);
+	F = Matrix.mult(F, pointsANorm.forward[0]);
+	F = Matrix.mult(Matrix.transpose(pointsBNorm.forward[0]), F); // FORWARD ?
+	*/
+
+/*
+R3D.fundamentalFromUnnormalized = function(pointsA,pointsB, skipNonlinear){
+	skipNonlinear = skipNonlinear!==undefined ? skipNonlinear : false;
+	var pointsANorm = R3D.calculateNormalizedPoints([pointsA]);
+	var pointsBNorm = R3D.calculateNormalizedPoints([pointsB]);
+	var F = R3D.fundamentalMatrix(pointsANorm.normalized[0],pointsBNorm.normalized[0]);
+	F = Matrix.mult(F, pointsANorm.forward[0]);
+	F = Matrix.mult(Matrix.transpose(pointsBNorm.forward[0]), F); // FORWARD ?
+	if(!skipNonlinear){
+		F = R3D.fundamentalMatrixNonlinear(F, pointsA, pointsB);
+	}
+	return F;
+}
+*/
+
+
+// this increases error ?
+F = R3D.fundamentalMatrixNonlinear(F, pointsA, pointsB);
+
+
+
+	var Finv = R3D.fundamentalInverse(F);
+	var Ferror = R3D.fundamentalError(F,Finv,pointsA,pointsB);
+	console.log(pointsA);
+	console.log(pointsB);
+	console.log(F);
+	console.log(Finv);
+	console.log(Ferror);
+
+
+
+
+	// var pointsANorm = R3D.calculateNormalizedPoints([pointsA]);
+	// var pointsBNorm = R3D.calculateNormalizedPoints([pointsB]);
+	// var normA = pointsANorm.normalized[0];
+	// var normB = pointsBNorm.normalized[0];
+	// if(!F){
+	// 	F = R3D.fundamentalMatrix(normA,normB);
+	// 	F = R3D.forceRank2F(F);
+	// }else{ // convert F to normalized F
+	// 	F = Matrix.mult(F, pointsANorm.reverse[0]);
+		
+
+
+	/*
+	F = R3D.fundamentalFromUnnormalized(pointsA,pointsB);
+	Finv = R3D.fundamentalInverse(F);
+	Ferror = R3D.fundamentalError(F,Finv,pointsA,pointsB);
+	console.log(pointsA);
+	console.log(pointsB);
+	console.log(F);
+	console.log(Finv);
+	console.log(Ferror);
+	Ferror = Ferror["mean"] + Ferror["sigma"];
+	
+	console.log("Ferror: "+Ferror + " px ?")
+
+
+
+
+var refinedError = Math.min(Ferror*0.25, 5.0);
+console.log("refinedError: "+refinedError);
+
+// WHY IS THIS WORSE ?
+
+// stuff
+// 100 - 1000 points
+	console.log("fundamentalRANSACFromPoints ... ")
+	var info = R3D.fundamentalRANSACFromPoints(pointsA,pointsB, refinedError, null, 0.99, 0.999);
+	*/
+
+	var x = 0;
+	var y = 0;
+	var alp = 0.75;
+	for(var i=0; i<imageMatrixes.length; ++i){
+		var imageMatrix = imageMatrixes[i];
+		var img = imageMatrix;
+			img = GLOBALSTAGE.getFloatRGBAsImage(img.red(),img.grn(),img.blu(), img.width(),img.height());
+		var d = new DOImage(img);
+		d.graphics().alpha(alp);
+		d.matrix().translate(x,y);
+		GLOBALSTAGE.addChild(d);
+
+
+		var putativePoints = putatives[i];
+		for(var j=0; j<putativePoints.length; ++j){
+			var point = putativePoints[j];
+			var size = 5;
+
+			var d = new DO();
+			d.graphics().setLine(2.0, 0xFF000000);
+			d.graphics().beginPath();
+			d.graphics().drawCircle(point.x, point.y, size);
+				//d.graphics().moveTo(point.x, point.y);
+				//d.graphics().lineTo(point.x + size*Math.cos(angle), point.y + size*Math.sin(angle));
+			d.graphics().strokeLine();
+			d.graphics().endPath();
+			d.matrix().translate(x,y);
+			GLOBALSTAGE.addChild(d);
+		}
+
+		x += imageMatrix.width();
+	}
+
+
+	GLOBALSTAGE.root().matrix().scale(2.0);
+	throw "imagesLoadCompleteFBasic"
+}
+
+
+
 Fun.prototype.imagesLoadComplete = function(o){
 	this._inputImages = o.images;
 	this._inputFilenames = o.files;

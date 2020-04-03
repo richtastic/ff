@@ -397,14 +397,14 @@ https://cloud.google.com/appengine/docs/nodejs/
 - encryption
 
 04/04 - initial dense F because error sigma 3-6 px => 1-2 px
-04/01 - retry 6 images using new sparse absolute orientation algorithms
+04/06 - retry 6 images using new sparse absolute orientation algorithms
 		- is BA helpful? (show before and after)
-04/03 - retry dense selection using known R
+04/08 - retry dense selection using known R
 		- better this time around?
-04/06 - retry dense global bundle adjust
-04/09 - fix triple duplicates?
-04/11 - hole filling?
-04/12 - multi-view point propagation from dense
+04/10 - retry dense global bundle adjust
+04/12 - fix triple duplicates?
+04/14 - hole filling?
+04/16 - multi-view point propagation from dense
 		- projecting known 3D points
 		- projecting unknown corners?
 04/18 - triangulation algorithm updates
@@ -422,28 +422,30 @@ https://cloud.google.com/appengine/docs/nodejs/
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-
-- F has very high error for fairly good points
-
-- investigate F calculation
-
-F FFROM RAW MATChING IS BETTER HTAN fundamentalRANSACFromPoints
+=> nonlinear F needed more iterations & gradient descent is picky
 
 
+~ 10 px ~ 100 pts
+x reduce error from original fat match to keep only the points with most accuracy
+	- calc each point pair's error
+	- drop top distance outliers [2-3 sigma]
+	- recalculate F with outliers dropped
+	=> repeat
 
-- print out F
-	- before refinement
-	- after refinement
+~ 1 px ~ 50 pts
 
-- make algorithm for:
-	- get dense corners (~ 1% of image radius ~ 2k points)
-	- extract points along F line (+/- sigma)
-		- 1-2% image size
-	- first image keeps axis-aligned points
-	- second image extracts points at multiple angles (cache them locally)
-		- is ENTIRE LINE at same angle?
-	- compare using relaxed (best) SAD scoring
-	
+- reduce error using dense samples
+	- each pointA: search F line within error for candidates
+		- relative rotation
+		- 1.0 scale
+	- only choose points with same top match
+	- iteritive drop worst pair scores @ 2 sigma
+	- iteritive drop worst distance error points
+	=> repeat [re-search along F]
+ 
+ < 1 px ~ 100 pts
+
+
 
 
 ------------------ iteritive F refinement needs to drop WORST matches so they stop being used in next loop ...

@@ -800,6 +800,8 @@ console.log("SPACE: "+pass.length);
 var pass = R3D.differentialCornersForImage(imageMatrix, 0.015);
 console.log(pass);
 
+
+
 // differentialCornersForImageScales
 
 // var pass = R3D.differentialCornersForImageSingle(imageMatrix, 0.015);

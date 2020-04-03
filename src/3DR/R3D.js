@@ -148,6 +148,7 @@ R3D.nonUniformScale3D = function(pointsA,pointsB, cov, centroidA, centroidB){
 	return scale;
 }
 R3D.calculateCovariance2D = function(points){ // self covariance
+	throw "where is this used?"
 	var i, len, meanX, meanY, normX, normY, sigXX, sigXY, sigYY;
 	len = points.length;
 	meanX = 0; meanY = 0;
@@ -582,10 +583,13 @@ R3D.calculatePrinciple = function(points){
 	var cov = points;
 	if(Code.isArray(points)){ //cov = cov!==undefined ? cov : this.calculateCovariance2D(points);
 		cov = this.calculateCovariance2D(points);
+		// calculateCovariance2D
+
+		// throw "COV?"
 	}
-	var svd = Matrix.SVD(cov);
-	var sigmas = svd.S;
-	var sigDir = svd.V;
+	// var svd = Matrix.SVD(cov);
+	// var sigmas = svd.S;
+	// var sigDir = svd.V;
 	var eigs = Matrix.eigenValuesAndVectors(cov);
 	var eigVal = eigs.values;
 	var eigDir = eigs.vectors;
@@ -597,6 +601,7 @@ R3D.calculatePrinciple = function(points){
 	return {direction:dirEigA, angle:angle, scale:ratio}
 }
 R3D.calculateNormalizedPoints = function(inputPoints, ignoreZ){ // array of arrays ---- 2D
+	throw "where is this used"
 	ignoreZ = ignoreZ!==undefined ? ignoreZ : true; // ALWAYS IGNORING THE Z VALUE
 	//if(!Code.isArray(inputPoints)){ inputPoints = [inputPoints]; }
 	var i, j, len, T, cenX, cenY, rmsX, rmsY;
@@ -6858,9 +6863,6 @@ R3D.essentialMatrixNonlinear = function(E,pointsA,pointsB){ // nonlinearLeastSqu
 R3D._gdFun_A = new Matrix(3,3);
 R3D._gdFun_B = new Matrix(3,3);
 R3D._gdFun = function(args, x, isUpdate, descriptive){
-	if(Code.isNaN(x[0])){
-		throw "x is NaN";
-	}
 	if(isUpdate){
 		var Ffwd = new Matrix(3,3).fromArray(x);
 		Ffwd = R3D.forceRank2F(Ffwd);
@@ -6895,10 +6897,14 @@ pointB = pntB;
 		Code.lineOriginAndDirection2DFromEquation(orgB,dirB, lineB.x,lineB.y,lineB.z);
 		onA = Code.closestPointLine2D(orgA,dirA, pointB);
 		onB = Code.closestPointLine2D(orgB,dirB, pointA);
-		var distA = V2D.distance(onB,pointA);
-		var distB = V2D.distance(onA,pointB);
-		errorA += distA*distA;
-		errorB += distB*distB;
+		// var distA = V2D.distance(onB,pointA);
+		// var distB = V2D.distance(onA,pointB);
+		// errorA += distA*distA;
+		// errorB += distB*distB;
+		var distA = V2D.distanceSquare(onB,pointA);
+		var distB = V2D.distanceSquare(onA,pointB);
+		errorA += distA;
+		errorB += distB;
 	}
 	var error = errorA + errorB;
 	if(descriptive===true){
@@ -6909,8 +6915,13 @@ pointB = pntB;
 R3D.fundamentalMatrixNonlinearGD = function(fundamental,pointsA,pointsB){ // nonlinearLeastSquares : input normalized points
 	var xVals = fundamental.toArray();
 	var args = [pointsA,pointsB];
-	try {
-		result = Code.gradientDescent(R3D._gdFun, args, xVals, null, 100, 1E-10);
+	try{
+		// Code.gradientDescent = function(fxn, args, x, dx, iter, diff, epsilon, lambda){
+		result = Code.gradientDescent(R3D._gdFun, args, xVals, null, 10000, 1E-10);
+		// result = Code.gradientDescent(R3D._gdFun, args, xVals, null, 100000, 1E-10, 1E-6, 1.0);
+		// result = Code.gradientDescent(R3D._gdFun, args, result["x"], null, 100, 1E-10, 1E-10, 1.0);
+// Code.gradientDescent2 = function(fxn, args, x, iter, diff, eps){
+		// result = Code.gradientDescent2(R3D._gdFun, args, xVals, 1000, 1E-10, 1E-6);
 	}catch(e){
 		throw "got e: "+e;
 	}
@@ -6949,7 +6960,7 @@ R3D.fundamentalMatrixNonlinear = function(fundamental,pointsA,pointsB){
 		// fundamental = R3D.fundamentalMatrixNonlinearLM(fundamental,pointsA,pointsB);
 	}
 	// do anyway ...
-	fundamental = R3D.fundamentalMatrixNonlinearLM(fundamental,pointsA,pointsB);
+	// fundamental = R3D.fundamentalMatrixNonlinearLM(fundamental,pointsA,pointsB);
 	return fundamental;
 }
 
@@ -6968,11 +6979,22 @@ R3D.fundamentalFromUnnormalizedMaxCheck = function(pointsA,pointsB, maxCount, sk
 }
 R3D.fundamentalFromUnnormalized = function(pointsA,pointsB, skipNonlinear){
 	skipNonlinear = skipNonlinear!==undefined ? skipNonlinear : false;
+	var pointsANorm = Code.normalizedPoints2D(pointsA);
+	var pointsBNorm = Code.normalizedPoints2D(pointsB);
+	var F = R3D.fundamentalMatrix(pointsANorm["normalized"],pointsBNorm["normalized"]);
+	if(!skipNonlinear){
+		// F = R3D.fundamentalMatrixNonlinear(F, pointsANorm["normalized"],pointsBNorm["normalized"]);
+	}
+	F = Matrix.mult(F, pointsANorm["forward"]);
+	F = Matrix.mult(Matrix.transpose(pointsBNorm["forward"]), F); // FORWARD ?
+
+	/*
 	var pointsANorm = R3D.calculateNormalizedPoints([pointsA]);
 	var pointsBNorm = R3D.calculateNormalizedPoints([pointsB]);
 	var F = R3D.fundamentalMatrix(pointsANorm.normalized[0],pointsBNorm.normalized[0]);
 	F = Matrix.mult(F, pointsANorm.forward[0]);
 	F = Matrix.mult(Matrix.transpose(pointsBNorm.forward[0]), F); // FORWARD ?
+	*/
 	if(!skipNonlinear){
 		F = R3D.fundamentalMatrixNonlinear(F, pointsA, pointsB);
 	}
@@ -7079,18 +7101,14 @@ R3D.fundamentalRANSACFromPoints = function(pointsAIn,pointsBIn, errorPosition, i
 		//console.log(" ___ RANSAC ___ "+i+" ---- ---- ---- ---- ---- ---- ---- ---- ---- "+indexes.length+"");
 		Code.copyArrayIndexes(subsetPointsA, pointsA, indexes);
 		Code.copyArrayIndexes(subsetPointsB, pointsB, indexes);
-		var pointsANorm = R3D.calculateNormalizedPoints([subsetPointsA]);
-		var pointsBNorm = R3D.calculateNormalizedPoints([subsetPointsB]);
-// if(!pointsANorm.forward[0]){
-// 	console.log("? pointsANorm.forward[0]");
-// 	continue;
-// }
-		var m = R3D.fundamentalMatrix(pointsANorm.normalized[0],pointsBNorm.normalized[0]);
+		var pointsANorm = Code.normalizedPoints2D(subsetPointsA);
+		var pointsBNorm = Code.normalizedPoints2D(subsetPointsB);
+		var m = R3D.fundamentalMatrix(pointsANorm["normalized"],pointsBNorm["normalized"]);
 		if(!Code.isArray(m)){ m = [m]; } // if have 7 => multiple possible
 		for(k=0; k<m.length; ++k){
 			var arr = m[k];
-			arr = Matrix.mult(arr, pointsANorm.forward[0]);
-			arr = Matrix.mult(Matrix.transpose(pointsBNorm.forward[0]), arr);
+			arr = Matrix.mult(arr, pointsANorm["forward"]);
+			arr = Matrix.mult(Matrix.transpose(pointsBNorm["forward"]), arr);
 			var FFwd = arr;
 			var FRev = Matrix.inverse(FFwd);
 			var FRev = R3D.fundamentalInverse(FFwd);
@@ -9582,17 +9600,20 @@ return {"A":pointsA, "B":pointsB, "F":F, "Finv":Finv}; // GENERAL MATCHES
 */
 }
 
-R3D._fundamentalIteritiveDropWorst = function(pointsA,pointsB, F,Finv, objectToPoint){
+R3D._fundamentalIteritiveDropWorst = function(pointsA,pointsB, objectToPoint){
+	console.log("_fundamentalIteritiveDropWorst");
 	console.log(pointsA,pointsB);
-	var sigmaDrop = 3.0;
-	// var maxIterations = 10;
-	var maxIterations = 1;
+	var sigmaDrop = 2.0;
+	var maxIterations = 10;
+	// var maxIterations = 1;
+	var errorSigma = null;
+	var minimumErrorSigma = 0.50; // can't expect better than this
 	for(var i=0; i<maxIterations; ++i){
-		// console.log(" "+i+" : -------------------------  "+pointsA.length+" ");
-		if(!F){
-			F = R3D.fundamentalFromUnnormalized(pointsA,pointsB);
-			Finv = R3D.fundamentalInverse(F);
-		}
+		console.log(" "+i+" : -------------------------  "+pointsA.length+" ");
+		// if(!F){
+		F = R3D.fundamentalFromUnnormalized(pointsA,pointsB);
+		Finv = R3D.fundamentalInverse(F);
+		// }
 		var ptsA = pointsA;
 		var ptsB = pointsB;
 		if(objectToPoint){
@@ -9610,7 +9631,7 @@ R3D._fundamentalIteritiveDropWorst = function(pointsA,pointsB, F,Finv, objectToP
 		var info = R3D.fundamentalError(F,Finv,ptsA,ptsB);
 		// console.log(info);
 		var errorMean = info["mean"];
-		var errorSigma = info["sigma"];
+		errorSigma = info["sigma"];
 		var errorLimit = errorMean + errorSigma*sigmaDrop;
 		console.log(" "+i+" : "+errorMean+" +/- "+errorSigma+" px  = "+errorLimit+" px ");
 		var keepA = [];
@@ -9637,10 +9658,12 @@ R3D._fundamentalIteritiveDropWorst = function(pointsA,pointsB, F,Finv, objectToP
 		}
 		pointsA = keepA;
 		pointsB = keepB;
+		if(errorSigma<minimumErrorSigma){
+			break;
+		}
 	}
-	return {"A":pointsA, "B":pointsB};
+	return {"A":pointsA, "B":pointsB, "F":F, "inv":Finv, "error":errorSigma};
 }
-
 
 
 
@@ -9863,20 +9886,21 @@ console.log(matchesA,matchesB);
 	var epipoleB = epipole["B"];
 console.log(epipoleA,epipoleB);
 	for(var i=0;i<featuresA.length;++i){
-// i = 400; // B
+// i = 300;
+i = 400; // B
 // i = 500; // A
 // i = 600;
 // i = 700;
 // i = 800;
 // i = 900;
 // i = 1000;
-// i = 1100;
+// i = 1150;
 // i = 1200;
 // i = 1300;
 // i = 1400;
 // i = 1500;
 // i = 1600;
-i = 1900;
+// i = 1900;
 		var featureA = featuresA[i];
 
 		console.log(featureA);
@@ -9903,7 +9927,7 @@ GLOBALSTAGE.addChild(d);
 		var bestFeature = null;
 		var bestImage = null;
 
-		var relativeAngle = R3D.fundamentalRelativeAngleForPoint(pointA,Fab,Fba, epipoleA, epipoleB, matchesA,matchesB);
+		var relativeAngle = -R3D.fundamentalRelativeAngleForPoint(pointA,Fab,Fba, epipoleA, epipoleB, matchesA,matchesB);
 		console.log("relative: "+Code.degrees(relativeAngle));
 		for(var j=0; j<putativeB.length; ++j){
 			featureB = putativeB[j];
@@ -10108,9 +10132,6 @@ console.log("objectsA: "+objectsA.length);
 			continue;
 		}
 
-
-
-
 // show  initial matches 
 
 console.log(info);
@@ -10128,63 +10149,41 @@ console.log(info);
 	F = R3D.fundamentalFromUnnormalized(pointsA,pointsB);
 	Finv = R3D.fundamentalInverse(F);
 	Ferror = R3D.fundamentalError(F,Finv,pointsA,pointsB);
-	console.log(pointsA);
-	console.log(pointsB);
-	console.log(F);
-	console.log(Finv);
-	console.log(Ferror);
+	// console.log(pointsA);
+	// console.log(pointsB);
+	// console.log(F);
+	// console.log(Finv);
+	// console.log(Ferror);
 	Ferror = Ferror["mean"] + Ferror["sigma"];
 	
-	console.log("Ferror: "+Ferror + " px ?")
+	console.log("RICHIE - STARTING : Ferror: "+Ferror + " px ?")
 
 
-
-
-var refinedError = Math.min(Ferror*0.25, 5.0);
-console.log("refinedError: "+refinedError);
-
-// WHY IS THIS WORSE ?
-
-// stuff
-// 100 - 1000 points
-	console.log("fundamentalRANSACFromPoints ... ")
-	var info = R3D.fundamentalRANSACFromPoints(pointsA,pointsB, refinedError, null, 0.99, 0.999);
-console.log("RICHIE 2");
+	var info = R3D._fundamentalIteritiveDropWorst(pointsA,pointsB);
 	console.log(info);
-	var F2 = info["F"];
-	var Finv2 = R3D.fundamentalInverse(F2);
-
-
-	var matches2 = info["matches"];
-	console.log(matches2);
-	pointsA2 = matches2[0];
-	pointsB2 = matches2[1];
-
-var Ferror2 = R3D.fundamentalError(F2,Finv2,pointsA2,pointsB2);
-console.log("error before");
-	console.log(Ferror2);
-F2 = R3D.fundamentalFromUnnormalized(pointsA2,pointsB2);
-Finv2 = R3D.fundamentalInverse(F2);
-
-	// F = R3D.fundamentalFromUnnormalized(pointsA,pointsB);
-	var Ferror2 = R3D.fundamentalError(F2,Finv2,pointsA2,pointsB2);
-console.log("error after");
-	console.log(Ferror2);
-
-	pointsA = pointsA2;
-	pointsB = pointsB2;
-	Finv = F2;
-	Finv = Finv2;
-	Ferror = Ferror2["sigma"];
-
+	F = info["F"];
+	Finv = info["inv"];
+	pointsA = info["A"];
+	pointsB = info["B"];
+	Ferror = info["error"];
 
 	bestData = {"F":F, "inv":Finv, "error":Ferror, "A":pointsA, "B":pointsB};
-// console.log(bestData);
-// throw "?????????????????????????????????"
+	console.log(bestData);
 	return bestData;
 
-	// var info = R3D._fundamentalIteritiveDropWorst(pointsA,pointsB);
-	// console.log(info);
+	throw "?"
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

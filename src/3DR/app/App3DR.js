@@ -7861,11 +7861,14 @@ i = 0;  //
 // i = 6;  // 
 // i = 7;  //
 // i = 8; // 
+
 // i = 9;  // 
 // i = 10; // 
 // i = 11; // 
+
 // i = 12; // 
 // i = 13; // 
+
 // i = 14; // 
 // console.log("PICKED: "+i);
 		var pair = pairs[i];
@@ -9919,6 +9922,9 @@ R3D.showFundamental(pointsA, pointsB, F, Finv, GLOBALSTAGE, imageMatrixA,imageMa
 
 // Ferror = Math.min(Ferror,20);
 
+
+Ferror = 2.0*Ferror; // 2 sigma difference
+Ferror = Math.max(Ferror,2.0)
 
 var result = R3D.findDenseCornerFMatches(imageMatrixA,imageMatrixB, F, Ferror, null, pointsA,pointsB);
 console.log(result);

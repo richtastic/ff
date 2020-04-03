@@ -2671,8 +2671,15 @@ Code.optimizerSimplex = function(fxn, args, x, ix, iter, diff, epsilon){ // Neld
 
 
 Code.optimizerBinarySearch = function(fxn, args, x, ranges, iter, diff, epsilon){
+	// 
 }
-
+/*
+dx = initial values of the x delta
+iter = maximum iterations
+diff = minimum difference in error to be good enough to stop iterating
+epsilon = if dx is not defined is the scale of the delta to evalutate
+lambda = initial scale of gradient to use for next iteration
+*/
 Code.gradientDescent = function(fxn, args, x, dx, iter, diff, epsilon, lambda){
 	var i, j, k, c;
 	var sizeX = x.length;
@@ -2684,6 +2691,7 @@ Code.gradientDescent = function(fxn, args, x, dx, iter, diff, epsilon, lambda){
 	var minDifference = diff!=null ? diff : 1E-10;
 		// lambda = lambda!==undefined && lambda!==null ? lambda : 1.0/epsilon; // start at on par with 1.0
 		lambda = 1.0;
+		// lambda = lambda!==undefined && lambda!==null ? lambda : epsilon;
 	var scaler = 2.0; // smaller is more accurate, larger is quicker initially
 	var nextX = Code.newArrayZeros(sizeX);
 	var prevX = Code.copyArray(x); // local instance of x
@@ -2744,6 +2752,75 @@ Code.gradientDescent = function(fxn, args, x, dx, iter, diff, epsilon, lambda){
 	Code.copyArray(x,prevX);
 	return {"x":x,"cost":cost};
 }
+
+
+
+Code.gradientDescent2 = function(fxn, args, x, iter, diff, eps){
+	var epsilon = eps!==undefined && eps!==null ? eps : 1E-6;
+	var maxIterations = iter!=null ? iter : 100;
+	var minDifference = diff!=null ? diff : 1E-10;
+	var sizeX = x.length;
+	var currCost, nextCost;
+	var lambda = 1.0/epsilon;
+	var scaler = 2.0; // smaller is more accurate, larger is quicker initially
+	var nextX = Code.newArrayZeros(sizeX);
+	var prevX = Code.copyArray(x); // local instance of x
+	var dy = Code.newArrayZeros(sizeX);
+	var tx = Code.newArrayZeros(sizeX);
+	var dx = Code.newArrayZeros(sizeX);
+	var cost = fxn(args, x, false, -1); // current cost
+	for(var i=0; i<sizeX; ++i){
+		dx[i] = epsilon;
+	}
+	for(var k=0; k<maxIterations; ++k){
+		// console.log("dx: "+dx+"  @  "+lambda);
+		// get change in cost for every variable
+		for(var i=0; i<sizeX; ++i){
+			Code.copyArray(tx,prevX);
+			tx[i] += dx[i];
+			c = fxn(args, tx, false, i);
+			dy[i] = c - cost;
+			tx[i] = 0;
+		}
+		// initial best guess:
+		for(var i=0; i<sizeX; ++i){
+			nextX[i] = prevX[i] - lambda*dy[i];
+		}
+		var newCost = fxn(args, nextX, false, -1);
+		// scale down lambda as necessary:
+		var iter = 10;
+		while(newCost>=cost && iter>0){
+			lambda /= scaler;
+			for(i=0; i<sizeX; ++i){
+				nextX[i] = prevX[i] - lambda*dy[i];
+			}
+			newCost = fxn(args, nextX, false, -1);
+			--iter;
+		}
+		// should be good by now, following gradient
+		var diffCost = Math.abs(newCost-cost);
+		if(newCost<cost){
+			// console.log("NEW COST: "+newCost+" / "+cost);
+			cost = newCost;
+			var temp = prevX;
+			prevX = nextX;
+			nextX = temp;
+			fxn(args,prevX, true, -1);
+			lambda *= scaler;
+		}else{ // should not happen much
+			lambda /= scaler;
+		}
+		if(diffCost<minDifference){
+			break;
+		}
+	}
+	return {"x":prevX,"cost":cost};
+}
+
+
+
+
+
 // https://www.topcoder.com/community/data-science/data-science-tutorials/assignment-problem-and-hungarian-algorithm/
 Code.minimizedAssignmentProblem = function(costMatrix){ // hungarian solution to assignment problem O(n^3) : list of edges
 	var WEIGHT_INFINITY = 1E10;
@@ -3091,6 +3168,77 @@ Code.reverseBits = function(value,bits){
 		rev |= ((value >> i)&0x1);
 	}
 	return rev;
+}
+// V2D operations ----------------------------------------------------
+Code.covariance2D = function(points){
+	var i, len, meanX, meanY, normX, normY, sigXX, sigXY, sigYY;
+	len = points.length;
+	meanX = 0; meanY = 0;
+	for(i=0;i<len;++i){
+		meanX += points[i].x; meanY += points[i].y;
+	}
+	sigXX = 0; sigXY = 0; sigYY = 0;
+	meanX /= len; meanY /= len;
+	for(i=0;i<len;++i){
+		normX = points[i].x - meanX;
+		normY = points[i].y - meanY;
+		sigXX += normX*normX;
+		sigXY += normX*normY;
+		sigYY += normY*normY;
+	}
+	len -= 1;
+	sigXX /= len; sigXY /= len; sigYY /= len;
+	var cov = new Matrix(2,2).fromArray([sigXX, sigXY, sigXY, sigYY]);
+	var eigs = Matrix.eigenValuesAndVectors(cov);
+	// console.log(eigs);
+	var vectors = eigs["vectors"];
+	var values = eigs["values"];
+	var vector0 = new V2D().fromArray(vectors[0].toArray());
+	var vector1 = new V2D().fromArray(vectors[1].toArray());
+	// console.log(Code.degrees(V2D.angleDirection(vector0,vector1)));
+	if(V2D.cross(vector0,vector1)<0){
+		vector1.scale(-1);
+	}
+	var angle0 = V2D.angleDirection(V2D.DIRX,vector0);
+	var angle1 = V2D.angleDirection(V2D.DIRX,vector1);
+	var eigen0 = values[0];
+	var eigen1 = values[1];
+	var sigma0 = Math.sqrt(eigen0);
+	var sigma1 = Math.sqrt(eigen1);
+	return {"matrix":cov, "center":new V2D(meanX,meanY), "angleX":angle0, "angleX":angle0, "angleY":angle1, "directionX":vector0, "directionY":vector1, "sigmaX":sigma0, "sigmaY":sigma1};
+}
+Code.covarianceMatrix3D = function(points){
+	throw "?"
+}
+// 
+Code.normalizedPoints2D = function(points2D){ // orientate distribution into circle @ distance of 1 = 1 sigma
+ 	// get statistical summary of points / distribution
+	var info = Code.covariance2D(points2D);
+	var cov = info["matrix"];
+	var com = info["center"];
+	var angleX = info["angleX"];
+	var sigmaX = info["sigmaX"];
+	var sigmaY = info["sigmaY"];
+	// calculate forward/reverse
+	var reverse = new Matrix2D();
+		reverse.identity();
+		reverse.translate(-com.x,-com.y);
+		reverse.rotate(-angleX);
+		reverse.scale(1.0/sigmaX,1.0/sigmaY);
+	var forward = reverse.copy();
+		forward.inverse();
+	// get normalized versions
+	var normalizedPoints = [];
+	for(var i=0; i<points2D.length; ++i){
+		var point = points2D[i];
+			point = reverse.multV2DtoV2D(point);
+		normalizedPoints[i] = point;
+	}
+	// forward|reverse are opposite of definition
+	return {"normalized":normalizedPoints, "forward":reverse.toMatrix(), "reverse":forward.toMatrix()};
+}
+Code.normalizedPoints3D = function(points3D){ // orientate distribution into circle @ distance of 1 = 1 sigma
+	throw "todo"
 }
 // angles ----------------------------------------------------
 Code.numbersToWindownNormalPercents = function(distances){
@@ -4021,6 +4169,14 @@ Code.randomFloat = function(min,max){
 	}
 	return min + Math.random()*(max-min);
 }
+Code.randomNormal = function(mean, sigma){
+	if(sigma===undefined){
+		sigma = mean;
+		mean = 0;
+	}
+	var x = Code.randGauss()*sigma + mean;
+	return x;
+}
 Code.randomIntArray = function(count, min,max){
 	var i, a = [];
 	for(i=0; i<count; ++i){
@@ -4777,7 +4933,7 @@ Code.randGauss = function(){ // box muller - randn, normal, gaussian
 	var a, r;
 	if(Code._randGaussSin){
 		a = Code._randGaussSin;
-		Code._randGaussSin = null
+		Code._randGaussSin = null;
 		return a;
 	}
 	r = Math.sqrt(-2.0*Math.log(Math.random()));
