@@ -1179,6 +1179,9 @@ Stereopsis.View.prototype.cellSize = function(cellSize){
 			this._cellSize = cellSize;
 			// var compareSize = Math.round(cellSize*1.5);
 			var compareSize = Math.round(cellSize*2.0);
+
+			// var compareSize = Math.round(cellSize*4.0);
+
 			if(compareSize%2==0){
 				compareSize += 1;
 			}
@@ -5356,7 +5359,6 @@ Code.printMatlabArray(data["errors"]);
 Stereopsis.World.prototype.iteration = function(iterationIndex, maxIterations, data){
 	var isFirst = iterationIndex == 0;
 	var isLast = iterationIndex == maxIterations-1;
-	var maxErrorRetryInit = 5.0;
 	console.log("-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ "+iterationIndex+"/"+maxIterations+" ( "+isFirst+" & "+isLast+" ) ");
 	var world = this;
 	// SUBDIVIDE:
@@ -5364,6 +5366,10 @@ Stereopsis.World.prototype.iteration = function(iterationIndex, maxIterations, d
 	var transforms = this.toTransformArray();
 	var transform0 = transforms[0];
 	// increase cover toward end
+	var view0 = views[0];
+	var maxErrorRPercent = 0.02; // 5-10 pixels
+	var maxErrorRPixels = maxErrorRPercent*view0.size().length();
+	console.log("maxErrorRPixels: "+maxErrorRPixels);
 
 var splitIndex = Code.valueOrDefault(data["splits"][0], -1);
 var error = Code.valueOrDefault(transform0.rMean()+transform0.rSigma(), 0);
@@ -5395,12 +5401,12 @@ data["errors"].push(error);
 
 	if(iterationIndex==0){
 		shouldRetryInit = true;
-	}else if(transform0.rSigma()>maxErrorRetryInit){ // transform.rMean()+" +/- "+transform.rSigma()
+	}else if(transform0.rSigma()>maxErrorRPixels){ // transform.rMean()+" +/- "+transform.rSigma()
 		shouldRetryInit = true;
 	}else{
-		// shouldPropagate = true;
+		shouldPropagate = true;
 	}
-	shouldPropagate = true;
+	// shouldPropagate = true;
 
 console.log("START");
 	if(shouldRetryInit){ // subsequent approximations are always worse than the refined estimates
@@ -5430,8 +5436,9 @@ console.log("continue ...");
 // var doRelaxed = true;
 var doRelaxed = iterationIndex%2==0;
 
-if(transform0.rSigma()>5){
+if(transform0.rSigma()>maxErrorRPixels){
 	console.log("BAD R");
+	this.recalculateMatchVisualErrors();
 	doRelaxed = true;
 }
 
@@ -5449,7 +5456,7 @@ if(transform0.rSigma()>5){
 	this.patchInitBasicSphere(true);
 
 	// EXPAND
-	// if(shouldPropagate){
+	if(shouldPropagate){
 		// var propagationPercent = 0;
 		// if(doRelaxed){
 		// 	propagationPercent = this.probe2DNNAffine(3.0);
@@ -5461,7 +5468,7 @@ if(transform0.rSigma()>5){
 		// if(propagationPercent<0.05){
 		// 	console.log("can split");
 		// }
-	// }
+	}
 
 	// reassess
 	this.estimate3DErrors(true);
@@ -5516,6 +5523,11 @@ if(doRelaxed){
 
 	return false;
 }
+Stereopsis.World.prototype.recalculateMatchVisualErrors = function(){ // increase visual cell size tfor all views to discard ones that look ok zoomed in
+	console.log("recalculateMatchVisualErrors");
+	// recalculateMatchVisualErrors
+}
+
 Stereopsis.World.prototype.reconstructionRelativeMetrics = function(){ // makes assumptions that only a single pair is present
 	var transforms = this.toTransformArray();
 	var metricList = [];
@@ -5575,10 +5587,12 @@ Stereopsis.World.prototype.reconstructionRelativeMetrics = function(){ // makes 
 		// console.log("baselineDistance: "+baselineDistance);
 		// var distanceRatio = averageDistance/baselineDistance;
 		// console.log("distanceRatio: "+distanceRatio);
-		var cov = Code.covariance3D(pointList3D);
+		var cov = Code.covariance3DInfo(pointList3D);
 		console.log(cov);
-		var sigmas = cov["sigmas"];
-		var sigma = (sigmas[0] + sigmas[1] + sigmas[2])/3.0;
+		var sigmaX = cov["sigmaX"];
+		var sigmaY = cov["sigmaY"];
+		var sigmaZ = cov["sigmaZ"];
+		var sigma = (sigmaX + sigmaY + sigmaZ)/3.0;
 		console.log("sigma: "+sigma);
 		var distanceRatio = averageDistance/sigma;
 		console.log("distanceRatio: "+distanceRatio);

@@ -3169,10 +3169,13 @@ Code.reverseBits = function(value,bits){
 	}
 	return rev;
 }
-// V2D operations ----------------------------------------------------
-Code.covariance2D = function(points){
+// covariance operations ----------------------------------------------------
+Code.covariance2D = function(points,weights){
 	var i, len, meanX, meanY, normX, normY, sigXX, sigXY, sigYY;
 	len = points.length;
+	if(len<2){
+		return null;
+	}
 	meanX = 0; meanY = 0;
 	for(i=0;i<len;++i){
 		meanX += points[i].x; meanY += points[i].y;
@@ -3189,13 +3192,48 @@ Code.covariance2D = function(points){
 	len -= 1;
 	sigXX /= len; sigXY /= len; sigYY /= len;
 	var cov = new Matrix(2,2).fromArray([sigXX, sigXY, sigXY, sigYY]);
+	return {"matrix":cov, "center":new V2D(meanX,meanY)}
+}
+Code.covariance3D = function(points,weights){
+	var i, len, meanX, meanY, meanZ, normX, normY, normZ, sigXX, sigXY, sigXZ, sigYY, sigYZ, sigZZ;
+	len = points.length;
+	if(len<2){
+		return null;
+	}
+	meanX = 0; meanY = 0; meanZ = 0;
+	for(i=0;i<len;++i){
+		meanX += points[i].x; meanY += points[i].y; meanZ += points[i].z;
+	}
+	sigXX = 0; sigXY = 0; sigXZ = 0; sigYY = 0; sigYZ = 0; sigZZ = 0;
+	meanX /= len; meanY /= len;
+	for(i=0;i<len;++i){
+		normX = points[i].x - meanX;
+		normY = points[i].y - meanY;
+		normZ = points[i].z - meanZ;
+		sigXX += normX*normX;
+		sigXY += normX*normY;
+		sigXZ += normX*normZ;
+		sigYY += normY*normY;
+		sigYZ += normY*normZ;
+		sigZZ += normZ*normZ;
+	}
+	len -= 1;
+	sigXX /= len; sigXY /= len; sigXZ /= len; sigYY /= len; sigYZ /= len; sigZZ /= len;
+	var cov = new Matrix(3,3).fromArray([sigXX, sigXY, sigXZ,  sigXY, sigYY, sigYZ,  sigXZ, sigYZ, sigZZ]);
+	return {"matrix":cov, "center":new V3D(meanX,meanY,meanZ)}
+}
+Code.covariance2DInfo = function(points){
+	var info = Code.covariance2D(points);
+	if(!info){
+		return null;
+	}
+	var cov = info["matrix"];
+	// primary & secondary directions
 	var eigs = Matrix.eigenValuesAndVectors(cov);
-	// console.log(eigs);
 	var vectors = eigs["vectors"];
 	var values = eigs["values"];
 	var vector0 = new V2D().fromArray(vectors[0].toArray());
 	var vector1 = new V2D().fromArray(vectors[1].toArray());
-	// console.log(Code.degrees(V2D.angleDirection(vector0,vector1)));
 	if(V2D.cross(vector0,vector1)<0){
 		vector1.scale(-1);
 	}
@@ -3205,15 +3243,116 @@ Code.covariance2D = function(points){
 	var eigen1 = values[1];
 	var sigma0 = Math.sqrt(eigen0);
 	var sigma1 = Math.sqrt(eigen1);
-	return {"matrix":cov, "center":new V2D(meanX,meanY), "angleX":angle0, "angleX":angle0, "angleY":angle1, "directionX":vector0, "directionY":vector1, "sigmaX":sigma0, "sigmaY":sigma1};
+	// wrap additional info
+	info["angleX"] = angle0;
+	info["angleY"] = angle1;
+	info["directionX"] = vector0;
+	info["directionY"] = vector1;
+	info["sigmaX"] = sigma0;
+	info["sigmaY"] = sigma1;
+	return info;
 }
-Code.covarianceMatrix3D = function(points){
-	throw "?"
+Code.covariance3DInfo = function(points){
+	var info = Code.covariance3D(points);
+	if(!info){
+		return null;
+	}
+	var cov = info["matrix"];
+	// primary & secondary directions
+	var eigs = Matrix.eigenValuesAndVectors(cov);
+	var vectors = eigs["vectors"];
+	var values = eigs["values"];
+	var vector0 = new V2D().fromArray(vectors[0].toArray());
+	var vector1 = new V2D().fromArray(vectors[1].toArray());
+	var vector2 = new V2D().fromArray(vectors[2].toArray());
+	var dirZ = V3D.cross(vector0,vector1);
+	if(V3D.dot(vector2,dirZ)<0){
+		vector2.scale(-1);
+	}
+	// var angle0 = V2D.angleDirection(V3D.DIRX,vector0);
+	// var angle1 = V2D.angleDirection(V3D.DIRX,vector1);
+	var eigen0 = values[0];
+	var eigen1 = values[1];
+	var eigen2 = values[2];
+	var sigma0 = Math.sqrt(eigen0);
+	var sigma1 = Math.sqrt(eigen1);
+	var sigma2 = Math.sqrt(eigen2);
+	// wrap additional info
+	// info["angleX"] = angle0;
+	// info["angleY"] = angle1;
+	// info["angleZ"] = angle0;
+	info["directionX"] = vector0;
+	info["directionY"] = vector1;
+	info["sigmaX"] = sigma0;
+	info["sigmaY"] = sigma1;
+	info["sigmaZ"] = sigma2;
+	return info;
 }
+Code.covariance3DInfo_OLD = function(points, weights, center){
+
+	console.log(points, weights, center);
+
+	var com = null;
+	// find com
+	// if(center){
+	// 	com = center;
+	// }else{
+		com = new V3D();
+	// }
+	var len = points.length;
+	if(len<1){
+		return null;
+	}
+	var weight = 1.0;
+	var weightTotal = 0.0;
+	for(var i=len; i--;){
+		point = points[i];
+		// if(weights){
+		// 	weight = weights[i];
+		// }
+		com.add(point.x*weight, point.y*weight, point.z*weight);
+		weightTotal += weight;
+	}
+	com.scale(1.0/weightTotal);
+	console.log(com);
+	// get cov
+	var A=0, B=0; C=0, E=0, F=0, I=0;
+	var sigma = 0;
+	for(var i=len; i--;){
+		point = points[i];
+		// if(weights[i]){
+		// 	weight = weights[i]/weightTotal;
+		// }
+		dx = point.x-com.x;
+		dy = point.y-com.y;
+		dz = point.z-com.z;
+		A += weight*dx*dx; B += weight*dx*dy; C += weight*dx*dz;
+		E += weight*dy*dy; F += weight*dy*dz; I += weight*dz*dz;
+		sigma += weight*V3D.distanceSquare(point,com);
+	}
+	sigma = Math.sqrt(sigma/len);
+	var cov = new Matrix(3,3).fromArray([A,B,C, B,E,F, C,F,I]);
+	// get eigenvalues = variance
+	var eig = Matrix.eigenValuesAndVectors(cov);
+	console.log(eig);
+	var values = eig["values"];
+	var vectors = eig["vectors"];
+	// get sigmas
+	for(var i=0; i<values.length; ++i){
+		values[i] = Math.sqrt(values[i]);
+	}
+	// object
+	return {"directions":vectors, "sigmas":[A,B,C], "sigma":sigma};
+}
+
+
+// Code.covarianceMatrix3D = function(points){
+// 	throw "?"
+// }
 // 
 Code.normalizedPoints2D = function(points2D){ // orientate distribution into circle @ distance of 1 = 1 sigma
  	// get statistical summary of points / distribution
-	var info = Code.covariance2D(points2D);
+	var info = Code.covariance2DInfo(points2D);
 	var cov = info["matrix"];
 	var com = info["center"];
 	var angleX = info["angleX"];
@@ -10792,62 +10931,6 @@ Code.pointOnPositiveSidePlane3D = function(location, planePoint, planeNormal, er
 		console.log("     "+dot+" >= "+error);
 	}
 	return dot>=error;
-}
-Code.covariance3D = function(points, weights, center){
-
-	console.log(points, weights, center);
-
-	var com = null;
-	// find com
-	// if(center){
-	// 	com = center;
-	// }else{
-		com = new V3D();
-	// }
-	var len = points.length;
-	if(len<1){
-		return null;
-	}
-	var weight = 1.0;
-	var weightTotal = 0.0;
-	for(var i=len; i--;){
-		point = points[i];
-		// if(weights){
-		// 	weight = weights[i];
-		// }
-		com.add(point.x*weight, point.y*weight, point.z*weight);
-		weightTotal += weight;
-	}
-	com.scale(1.0/weightTotal);
-	console.log(com);
-	// get cov
-	var A=0, B=0; C=0, E=0, F=0, I=0;
-	var sigma = 0;
-	for(var i=len; i--;){
-		point = points[i];
-		// if(weights[i]){
-		// 	weight = weights[i]/weightTotal;
-		// }
-		dx = point.x-com.x;
-		dy = point.y-com.y;
-		dz = point.z-com.z;
-		A += weight*dx*dx; B += weight*dx*dy; C += weight*dx*dz;
-		E += weight*dy*dy; F += weight*dy*dz; I += weight*dz*dz;
-		sigma += weight*V3D.distanceSquare(point,com);
-	}
-	sigma = Math.sqrt(sigma/len);
-	var cov = new Matrix(3,3).fromArray([A,B,C, B,E,F, C,F,I]);
-	// get eigenvalues = variance
-	var eig = Matrix.eigenValuesAndVectors(cov);
-	console.log(eig);
-	var values = eig["values"];
-	var vectors = eig["vectors"];
-	// get sigmas
-	for(var i=0; i<values.length; ++i){
-		values[i] = Math.sqrt(values[i]);
-	}
-	// object
-	return {"directions":vectors, "sigmas":[A,B,C], "sigma":sigma};
 }
 Code.planeFromPoints3D = function(center, points, weights, cov){
 	if(points==undefined){ // single argument scenario

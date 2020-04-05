@@ -326,23 +326,66 @@ Canvas.prototype.drawTriangleList = function(count, offset){
 }
 
 Canvas.prototype.bindTextureImageRGBA = function(image){
-	var texture = this._context.createTexture();//image);
 	var gl = this._context;
-	this._context.bindTexture(gl.TEXTURE_2D,texture);
-	this._context.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-	this._context.texImage2D(gl.TEXTURE_2D, 0, this._context.RGBA, this._context.RGBA, this._context.UNSIGNED_BYTE, image);
-	this._context.texParameteri(gl.TEXTURE_2D, this._context.TEXTURE_MAG_FILTER, this._context.NEAREST);
-	this._context.texParameteri(gl.TEXTURE_2D, this._context.TEXTURE_MIN_FILTER, this._context.NEAREST);
+	var texture = gl.createTexture();
+console.log("IMAGE SOURCE ...");
+// Code.addChild( Code.getBody(), image);
+
+
+// image = new Uint8Array([0, 0, 255, 255]);
+
+	console.log(image);
+
+
+// is maybe image not 'loaded' when this runs?
+
+
+	gl.bindTexture(gl.TEXTURE_2D,texture);
+	gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+	gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+	
+	// gl.generateMipmap(gl.TEXTURE_2D); // why not
+
+	// gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
+	// gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
+	
+	// gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+	// gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+
+	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+
+
+	
+	
+
+
+/*
+	gl.bindTexture(gl.TEXTURE_2D,texture);
+	// gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+	gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, image);
+	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
 	// this._context.texParameteri(gl.TEXTURE_2D, this._context.TEXTURE_MAG_FILTER, this._context.LINEAR);
 	// this._context.texParameteri(gl.TEXTURE_2D, this._context.TEXTURE_MIN_FILTER, this._context.LINEAR);
 		// this fixes some sort of edge problem :  RENDER WARNING: texture bound to texture unit 0 is not renderable. It maybe non-power-of-2 and have incompatible texture filtering.
+		
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
 		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
+
 		// gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
 		// gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
 		// gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.MIRRORED_REPEAT);
 		// gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.MIRRORED_REPEAT);
-	this._context.bindTexture(gl.TEXTURE_2D,null);
+	
+	// gl.bindTexture(gl.TEXTURE_2D, texture);
+    // gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA,gl.UNSIGNED_BYTE, image);
+    // gl.generateMipmap(gl.TEXTURE_2D);
+
+
+	// gl.bindTexture(gl.TEXTURE_2D,null);
+*/
 	return texture;
 }
 

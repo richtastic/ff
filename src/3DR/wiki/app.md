@@ -396,8 +396,8 @@ https://cloud.google.com/appengine/docs/nodejs/
 - compression
 - encryption
 
-04/04 - initial dense F because error sigma 3-6 px => 1-2 px
-04/06 - retry 6 images using new sparse absolute orientation algorithms
+
+04/04 - retry 6 images using new sparse absolute orientation algorithms
 		- is BA helpful? (show before and after)
 04/08 - retry dense selection using known R
 		- better this time around?
@@ -422,157 +422,51 @@ https://cloud.google.com/appengine/docs/nodejs/
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-=> nonlinear F needed more iterations & gradient descent is picky
 
 
-~ 10 px ~ 100 pts
-x reduce error from original fat match to keep only the points with most accuracy
-	- calc each point pair's error
-	- drop top distance outliers [2-3 sigma]
-	- recalculate F with outliers dropped
-	=> repeat
+x if initial F is bad ... next steps are SOL
 
-~ 1 px ~ 50 pts
 
-- reduce error using dense samples
-	- each pointA: search F line within error for candidates
-		- relative rotation
-		- 1.0 scale
-	- only choose points with same top match
-	- iteritive drop worst pair scores @ 2 sigma
-	- iteritive drop worst distance error points
-	=> repeat [re-search along F]
- 
- < 1 px ~ 100 pts
+- keep track of second-best pair too for dense F
+- filter on second/best score ratios first
 
 
 
+- check how F is determined / calculated in stereopsis pair solve 
 
------------------- iteritive F refinement needs to drop WORST matches so they stop being used in next loop ...
 
 
-should F fwd & bak both be checked?
 
+x drop some of the worst scoring features in DENSE, until the score error is below threshold? [0.10 ? ]
+	- GOOD:  9 = 828 @ 0.0678728375143095
+	- BAD:  6 = 589 @ 0.12313712615497271
 
-- hold on to BEST F/count
 
 
 
-initial F is not accurate enough
-	need much more dense corners after initial
 
--> get corners [2k-4k]
--> static-size compare SAD/closest-SAD
-	-> rotate to F-line
-		-> cache each point by rotation
-			[if a rotation within ~ 5 - 10 degrees exists, use that ]
 
+- can feature size(scale) be chosen optimally for denser iteration?
 
 
 
+- if F / R errors are too high => try expanding feature windows to drop worst scores again
+STEREOPSIS
+> recalculateMatchVisualErrors
 
 
 
-- GET CONSISTENT POINT SELECTION ACROSS SIMILAR IMAGES
-	- display debug
 
 
 
-	what affects consistent point finding?:
-		- blurr
-			=> sizes are more consistent
-			=> locations are more consistent
-		- 
 
+- check nonlinear iterations for best R
 
-- revisit F sequence finding ...
-	- only include 'best matches' before F test ?
 
 
+should F fwd & bak both be checked? --- are these always parallel lines ?
 
 
-- get fairly dense initial feature count & filter density based on score at point of necessity [2k-4k points]
-	=> need to also store 'score' / 'prevalence' / 'magnitude' / 'predominance' / 'rank' / 'quality' / 'importance' / 'strength' / 'amplitude'
-
-
-...
-
-
-
-- use different density of points for different parts of algorithm
-- 500-1000 features for coarse F
-	[long comparison]
-	[exhaustive searches]
-	[off by large % of image]
-
-=> reassess image relative angles
-	- f-line changes in local angle ? 
-- 1000-2000 features for more accurate F
-	[long comparison]
-	[search along F-line reduces candidates to < ~ 10%]
-	- higher density means to differentiate the covered area should be smaller (1/2 ?)
-	- re-extract compare features
-
-
-
-
-calculatePairMatchFromViewIDs
-
-R3D.progressiveFullMatchingDense(objectsA, imageMatrixA, objectsB, imageMatrixB);
-
-progressiveMatchObjectsSubset
-
-progressiveSparseMatches
-
-
-fundamentalRANSACFromPoints
-
-
-
-
-
-
-	- features should be larger ?
-	- points selected are not consistent across images
-	- scale size varies too much
-		...
-	- how is comparrision ALG ?
-
-
-- high overview level of sparse (500) points?
-- normal iteration with rough F (2000) points
-
-
-
-spittin ideas:
-	
-	- coarse ~500 points:
-		- oriented?
-		- color histograms?
-		=> uniqueness is important (no close-second matches)
-		- use LARGE features to get overall image rotation (and offset?)
-
-	- fix feature point angles to global average
-	- medium ~1000 fixed orientation points:
-		- 
-		- get initial F match
-
-	- dense ~2000 fixed orientation points (@ scale?)
-		- 
-		- get good F match
-
-
-
-
-
-- solve for angle?
-- solve for location & angle?
-- solve for H ?
-
-
-
-- pairwise matches still start with HIGH F error
-	0+1 => 15+
 
 
 
@@ -582,28 +476,10 @@ Matrix.relativeWorld
 
 
 
+stereopsis - estimate3DViews -- ????????????????? what does this do?
 
 
-
-
-
-
-- R comparisson should have much more features to compare with for accuracy (2000-4000)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+- R comparison should have much more features to compare with for accuracy (2000-4000)
 
 
 

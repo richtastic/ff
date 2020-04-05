@@ -179,6 +179,12 @@ Stage.prototype.getImageAsFloatRGB = function(originalImage, expand){
 	img.unset();
 	return {width:wid, height:hei, red:red, grn:grn, blu:blu};
 }
+Stage.prototype.getImageAsIntRGBA = function(originalImage){
+	var i, j, dat, img, wid = originalImage.width, hei = originalImage.height;
+	var doImage = new DOImage(originalImage);
+	dat = this.getDOAsARGB(doImage, wid,hei);
+	return dat;
+}
 Stage.prototype.getImageAsFloatRGBA = function(originalImage, expand){
 	var i, j, dat, img, wid = originalImage.width, hei = originalImage.height;
 	var doImage = new DOImage(originalImage);

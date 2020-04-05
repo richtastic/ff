@@ -41,8 +41,8 @@ GLOBALSTAGE = this._stage;
 Fun.prototype.imagesLoadCompleteCOV = function(o){
 
 	var pointCount = 200;
-	var rangeX = 10;
-	var rangeY = 5;
+	var rangeX = 6;
+	var rangeY = 2;
 	var offsetX = 2;
 	var offsetY = 5;
 	var rangeXToY = rangeX/rangeY;
@@ -51,19 +51,42 @@ Fun.prototype.imagesLoadCompleteCOV = function(o){
 	var points2D = [];
 
 	for(var i=0; i<pointCount; ++i){
+		
+		// ring
+		var ratio = 0.75; // skinny
+		// var ratio = 0.5;
+		// var ratio = 0.25; // thick
+		var distance = ratio + Math.random()*(1.0-ratio);
+		var angle = Math.random()*Math.PI2;
+		var point = new V2D(distance,0);
+		point.rotate(angle);
+		point.scale(rangeX,rangeY);
+		point.scale(2);
+		point.rotate(angleX);
+		point.add(offsetX,offsetY);
+		points2D.push(point);
+		
+		// // flat disk
 		// var distance = Math.random();
 		// var angle = Math.random()*Math.PI2;
 		// var point = new V2D(distance,0);
 		// point.rotate(angle);
 		// point.scale(rangeX,rangeY);
+		// point.scale(2);
+		// point.rotate(angleX);
+		// point.add(offsetX,offsetY);
+		// points2D.push(point);
+		
 
-		var dx = Code.randomNormal(rangeX);
-		var dy = Code.randomNormal(rangeY);
-		var point = new V2D(dx,dy);
-
-		point.rotate(angleX);
-		point.add(offsetX,offsetY);
-		points2D.push(point);
+		
+		// // normal distribution
+		// var dx = Code.randomNormal(rangeX);
+		// var dy = Code.randomNormal(rangeY);
+		// var point = new V2D(dx,dy);
+		// point.rotate(angleX);
+		// point.add(offsetX,offsetY);
+		// points2D.push(point);
+		
 	}
 
 
@@ -101,7 +124,7 @@ Fun.prototype.imagesLoadCompleteCOV = function(o){
 	}
 
 
-	var info = Code.covariance2D(points2D);
+	var info = Code.covariance2DInfo(points2D);
 	console.log(info);
 
 	var cov = info["matrix"];
@@ -135,7 +158,7 @@ Fun.prototype.imagesLoadCompleteCOV = function(o){
 		var d = new DO();
 		d.graphics().setLine(2.0, 0xFF000000);
 		d.graphics().beginPath();
-		d.graphics().drawEllipse(0,0, sigmaX*scale,sigmaY*scale);
+		d.graphics().drawEllipse(0,0, 2*sigmaX*scale,2*sigmaY*scale);
 		// d.graphics().lineTo((com.x+10)*scale, (com.y+ 0)*scale);
 		// d.graphics().moveTo((com.x+ 0)*scale, (com.y-10)*scale);
 		// d.graphics().lineTo((com.x+ 0)*scale, (com.y+10)*scale);
@@ -159,8 +182,8 @@ Fun.prototype.imagesLoadCompleteCOV = function(o){
 
 	var info = Code.normalizedPoints2D(points2D);
 	var normalized2D = info["normalized"];
-	var forward = info["forward"];
-	var reverse = info["reverse"];
+	var forward = info["reverse"];
+	var reverse = info["forward"];
 
 	for(var i=0; i<points2D.length; ++i){
 		var point = points2D[i];
