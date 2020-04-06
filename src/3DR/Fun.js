@@ -34,7 +34,8 @@ function Fun(){
 GLOBALSTAGE = this._stage;
 	// load images
 	// new ImageLoader("./images/",["F_S_1_1.jpg","F_S_1_2.jpg"],this,this.imagesLoadComplete).load();
-	new ImageLoader("./images/",["F_S_1_1.jpg","F_S_1_2.jpg"],this,this.imagesLoadCompleteFBasic).load();
+	// new ImageLoader("./images/",["F_S_1_1.jpg","F_S_1_2.jpg"],this,this.imagesLoadCompleteFBasic).load();
+	new ImageLoader("./images/",["F_S_1_1.jpg","F_S_1_2.jpg"],this,this.imagesLoadCompleteHBasic).load();
 	// new ImageLoader("./images/",["F_S_1_1.jpg","F_S_1_2.jpg"],this,this.imagesLoadCompleteCOV).load();
 }
 
@@ -225,6 +226,194 @@ Fun.prototype.imagesLoadCompleteCOV = function(o){
 
 
 }
+
+Fun.prototype.imagesLoadCompleteHBasic = function(o){
+	var images = o.images;
+	
+	// var noisePercent = 0.0;
+	var noisePercent = 0.25;
+	// var noisePercent = 0.0;
+	
+	var imageMatrixes = [];
+	for(var i=0; i<images.length; ++i){
+		var image = images[i];
+		var imageFloat = GLOBALSTAGE.getImageAsFloatRGB(image);
+		var imageMatrix = new ImageMat(imageFloat["width"],imageFloat["height"], imageFloat["red"], imageFloat["grn"], imageFloat["blu"]);
+		imageMatrixes.push(imageMatrix);
+	}
+	var imageMatrixA = imageMatrixes[0];
+	var imageMatrixB = imageMatrixes[1];
+
+	var putativePointsA = [ new V3D(0.235,0.075), new V3D(0.587,0.085), new V3D(0.836,0.0336), new V3D(0.430,0.440), new V3D(0.795,0.330), new V3D(0.805,0.430), new V3D(0.215,0.555), new V3D(0.880,0.580), new V3D(0.750,0.670), new V3D(0.235,0.733) ];
+	var putativePointsB = [ new V3D(0.175,0.113), new V3D(0.525,0.150), new V3D(0.770,0.115), new V3D(0.370,0.490), new V3D(0.730,0.395), new V3D(0.740,0.495), new V3D(0.150,0.600), new V3D(0.820,0.635), new V3D(0.695,0.730), new V3D(0.170,0.790) ];
+	
+	var putatives = [putativePointsA, putativePointsB];
+	for(var i=0; i<putatives.length; ++i){
+		var putativePoints = putatives[i];
+		var imageMatrix = imageMatrixes[i];
+		for(var j=0; j<putativePoints.length; ++j){
+			var p = putativePoints[j];
+			putativePoints[j] = new V2D(p.x,p.y);
+			putativePoints[j].scale( imageMatrix.width(), imageMatrix.height() );
+		}
+	}
+	var pointsA = putativePointsA;
+	var pointsB = putativePointsB;
+
+	var noiseCount = Math.floor(noisePercent*pointsA.length);
+	console.log("noiseCount: "+noiseCount)
+	for(var i=0; i<noiseCount; ++i){
+
+		var pointA = new V2D(Math.random()*imageMatrixA.width(), Math.random()*imageMatrixA.height());
+		var pointB = new V2D(Math.random()*imageMatrixB.width(), Math.random()*imageMatrixB.height());
+
+		pointsA.push(pointA);
+		pointsB.push(pointB);
+	}
+	console.log(pointsA);
+	console.log(pointsB);
+	var H = R3D.homographyMatrixFromUnnormalized(pointsA,pointsB);
+	console.log("H: \n "+H);
+	// ...
+
+
+	// PREDICT POINTS ON GRID:
+
+	var sizePercent = 0.10;
+	var sizeX = Math.floor(imageMatrixA.width()*sizePercent);
+	var sizeY = Math.floor(imageMatrixA.height()*sizePercent);
+	var sizeCountX = imageMatrixA.width()/sizeX;
+	var sizeCountY = imageMatrixA.height()/sizeY;
+	var samplesA = [];
+
+	for(var j=0; j<sizeCountY; ++j){
+		for(var i=0; i<sizeCountX; ++i){
+			var pointA = new V2D(i*sizeX, j*sizeY);
+			samplesA.push(pointA);
+		}
+	}
+	var v = new V3D();
+	var samplesB = [];
+	for(var i=0; i<samplesA.length; ++i){
+		var pointA = samplesA[i];
+		v.set(pointA.x,pointA.y,1.0);
+		var u = H.multV3DtoV3D(v);
+		// console.log(u+"")
+			u.homo();
+		// console.log(u+"")
+		var pointB = new V2D(u.x,u.y);
+		// var pointB = H.multV2DtoV2D(pointA);
+		samplesB.push(pointB);
+	}
+
+
+	// Fun.colorPairPoints(imageMatrixA,pointsA, imageMatrixB,pointsB);
+	Fun.colorPairPoints(imageMatrixA,samplesA, imageMatrixB,samplesB);
+
+
+
+	GLOBALSTAGE.root().matrix().scale(2.0);
+	throw "imagesLoadCompleteHBasic"
+
+}
+
+
+Fun.colorPairPoints = function(imageMatrixA,pointsA,imageMatrixB,pointsB){
+
+	var imageMatrixes = [imageMatrixA,imageMatrixB];
+	// show images:
+	var x = 0;
+	var y = 0;
+	var alp = 0.75;
+	for(var i=0; i<imageMatrixes.length; ++i){
+		var imageMatrix = imageMatrixes[i];
+		var img = imageMatrix;
+			img = GLOBALSTAGE.getFloatRGBAsImage(img.red(),img.grn(),img.blu(), img.width(),img.height());
+		var d = new DOImage(img);
+		d.graphics().alpha(alp);
+		d.matrix().translate(x,y);
+		GLOBALSTAGE.addChild(d);
+
+
+		x += imageMatrix.width();
+	}
+
+
+
+	var color0 = new V3D(1,0,0);
+	var color1 = new V3D(0,1,0);
+	var color2 = new V3D(0,0,1);
+	// var color3 = new V3D(1,1,1);
+	var color3 = new V3D(0,0,0);
+	var colors = [color0,color1,color2,color3];
+
+	var imageScale = 1.0;
+// console.log(pointsA,pointsB)
+	for(var k=0; k<pointsA.length; ++k){
+	// break;
+		var pointA = pointsA[k];
+		var pointB = pointsB[k];
+
+		// var affine = matched["affine"];
+		// do optimized sub-pixel matching:
+		// var info = R3D.subpixelHaystack(imageA,imageB, pointA,pointB, affine);
+
+		var p = pointA.copy();
+		var q = pointB.copy();
+
+		var px = (p.x/imageMatrixA.width());
+		var py = (p.y/imageMatrixA.height());
+		var qx = 1 - px;
+		var qy = 1 - py;
+		var p0 = qx*qy;
+		var p1 = px*qy;
+		var p2 = qx*py;
+		var p3 = px*py;
+		// console.log(p0,p1,p2,p3, p0+p1+p2+p3);
+		var color = V3D.average(colors, [p0,p1,p2,p3]);
+		color = Code.getColARGBFromFloat(1.0,color.x,color.y,color.z);
+		// color = 0xFFFF0000;
+		// p.scale(imageScale);
+		// q.scale(imageScale);
+		q.add(imageMatrixA.width(),0);
+
+		var d = new DO();
+			d.graphics().clear();
+			// d.graphics().setLine(2.0, 0xFFFF0000);
+			d.graphics().setLine(3.0, color);
+			d.graphics().beginPath();
+			d.graphics().drawCircle(p.x,p.y, 5);
+			d.graphics().endPath();
+			d.graphics().strokeLine();
+			// 
+			// d.graphics().setLine(2.0, 0xFF0000FF);
+			d.graphics().setLine(3.0, color);
+			d.graphics().beginPath();
+			d.graphics().drawCircle(q.x,q.y, 5);
+			d.graphics().endPath();
+			d.graphics().strokeLine();
+			// 
+			// d.graphics().setLine(1.0, 0x66FF00FF);
+			// d.graphics().beginPath();
+			// d.graphics().moveTo(p.x,p.y);
+			// d.graphics().lineTo(q.x,q.y);
+			// d.graphics().endPath();
+			// d.graphics().strokeLine();
+		GLOBALSTAGE.addChild(d);
+
+	}
+
+	// var samples = Code.randomSampleRepeatsParallelArrays([pointsA,pointsB], 100);
+	// samplesA = samples[0];
+	// samplesB = samples[1];
+	// console.log(pointsA.length)
+	// console.log("R3D.showFundamental");
+	// R3D.showFundamental(samplesA, samplesB, F, Finv, GLOBALSTAGE, imageMatrixA,imageMatrixB);
+
+} // if false
+
+
+
 
 Fun.prototype.imagesLoadCompleteFBasic = function(o){
 	var images = o.images;

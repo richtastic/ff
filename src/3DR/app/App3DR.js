@@ -3937,9 +3937,9 @@ App3DR.App.Model3D.prototype.setPoints = function(input3D, input2D, hasImages, n
 	var colors = [];
 // ONLY WORKS FOR PAIR OF IMAGES
 var useErrors = false;
-// var useErrors = true;
+var useErrors = true;
 // var errorType = 0; // F
-// var errorType = 1; // R
+var errorType = 1; // R
 // var errorType = 2; // NCC
 // var errorType = 0;
 	useErrors = useErrors && hasImages;
@@ -4013,10 +4013,17 @@ var useErrors = false;
 			
 			if(errorType==0){
 				var error = R3D.fError(F, Finv, pointA, pointB);
-				errors.push(error["error"]);
+					error = error["error"];
+				// error = error/point3D.z;
+				errors.push(error);
+				// errors.push(error["error"]);
 			}else if(errorType==1){
 				var error = R3D.reprojectionError(point3D, pointA,pointB, cameraA, cameraB, Ka, Kb);
-				errors.push(error["error"]);
+					error = error["error"];
+// console.log(point3D);
+error = error/point3D.z;
+// console.log(error);
+				errors.push(error);
 			}else if(errorType==2){
 
 
@@ -7883,7 +7890,9 @@ console.log("pair count: "+pairs.length+" ............");
 // i = 8; // 
 
 // i = 9;  // 
+
 i = 10; // unlucky ? 
+
 // i = 11; // 
 
 // i = 12; // 
@@ -7895,12 +7904,15 @@ i = 10; // unlucky ?
 		var idA = pair["A"];
 		var idB = pair["B"];
 		var matches = pair["matches"];
+matches = null;
 		if(!Code.isSet(matches)){
 			console.log("need to try pair: "+idA+" & "+idB);
 			currentPair = pair;
 			console.log(pair);
 			var relativeAB = pair["relativeTransform"];
 
+
+relativeAB = null;
 
 // var m = Matrix.fromObject(relativeAB);
 // m = Matrix.inverse(m);
@@ -7911,17 +7923,19 @@ i = 10; // unlucky ?
 				// relativeAB = Matrix.inverse(relativeAB);
 			// dense = with R
 			if(relativeAB){
+throw "no R yet ... ";
 				// throw "HOW TO DO WITH R"
 				configuration = {};
 				project.calculatePairMatchWithRFromViewIDs(idA,idB, relativeAB, completePairFxn,project, configuration);
 				return;
 			}
+console.log("calculatePairMatchFromViewIDs");
 			// sparse = w/o known R
 			project.calculatePairMatchFromViewIDs(idA,idB, completePairFxn,project);
 			return;
 		}
 	}
-// throw ">triples";
+throw ">triples";
 	var triples = inputData["triples"];
 	if(!triples){
 		// make every possible triple from pairs
@@ -9697,8 +9711,8 @@ console.log("calculatePairMatchFromViewIDs")
 		settings["incrementResolution"] = 0;
 		settings["maximumErrorFInit"] = 0.02; // 0.02 @ 500 = 10 -- initial F estimate [~100 features]
 		settings["maximumErrorFDense"] = 0.01; // 0.01 @ 500 = 5 -- dense F estimate [~500 features]
-		settings["maximumErrorTracksF"] = 0.01; // 0.01 @ 500 = 5 -- final stereopsis estimate
-		settings["maximumErrorTracksR"] = 0.01; // 0.01 @ 500 = 5 -- final stereopsis estimate
+		settings["maximumErrorTracksF"] = 0.01; // 0.01 @ 500 = 5 -- final stereopsis estimate F
+		settings["maximumErrorTracksR"] = 0.01; // 0.01 @ 500 = 5 -- final stereopsis estimate R
 	}
 	console.log("calculatePairMatchFromViewIDs: "+viewAID+" & "+viewBID);
 	var project = this;
@@ -9820,13 +9834,26 @@ console.log(featuresB);
 			console.log("Ferror: "+Ferror);
 			if(Ferror>maxErrorFInitPixels || pointsA.length<minimumMatchPoints){
 				console.log(" INIT F ERROR TOO HIGH");
-				goodEnoughMatches = false;
+				// goodEnoughMatches = false;
 			}
 		}
 
+
+/*
+		HERE
+
+		try average affine matrix & picture
+
+*/
+
+
+
 		// DENSE CORNER MATCH - GUIDED F
 		if(goodEnoughMatches){
-			var searchDensePixelError = Math.max(Ferror, 0.05*(hyp) ); // want SOME wiggle room to change F --- 0.01 x 500 = 6 px
+			var maximumError = 0.05*(hyp);
+			var minimumError = 0.005*(hyp);
+			var searchDensePixelError = Math.min(Math.max(Ferror, minimumError),maximumError); // want SOME wiggle room to change F --- 0.01 x 500 = 6 px
+			searchDensePixelError = 5;
 			console.log("searchDensePixelError: "+searchDensePixelError)
 			result = R3D.findDenseCornerFMatches(imageMatrixA,imageMatrixB, F, searchDensePixelError, null, pointsA,pointsB);
 			console.log(result);
@@ -9840,6 +9867,7 @@ console.log(featuresB);
 				goodEnoughMatches = false;
 			}
 		}
+
 
 // DISPLAY MATCHES:
 
@@ -9936,7 +9964,7 @@ if(true){
 
 } // if false
 
-// throw "before R"
+throw "before R"
 
 		// STEROPSIS R SEARCH
 		if(goodEnoughMatches){
@@ -9953,8 +9981,6 @@ if(true){
 			var cellCount = settings["cellCount"];
 			var cellSizes = [R3D.cellSizingRoundWithDimensions(imageAWidth,imageAHeight,cellCount), R3D.cellSizingRoundWithDimensions(imageBWidth,imageBHeight,cellCount)];
 			var BAVIEWS = project.createWorldViewsForViews(world, views, images, cellSizes);
-
-
 
 var info = R3D.fundamentalError(F,Finv,pointsA,pointsB);
 var fMean = info["mean"];
@@ -10049,26 +10075,41 @@ R3D.drawMatches(matches, 0,0, imageMatrixA.width(),0, GLOBALSTAGE, 0xFFFF0000);
 					pBs.push(pB);
 				}
 
-				// calculate errors on small count
-				matches = [pAs,pBs];
-				Code.randomPopParallelArrays(matches, 500);
-				R3D.drawMatches(matches, 0,0, imageMatrixA.width(),0, GLOBALSTAGE, 0x9900FFFF);
-				var errorR = (transform.rSigma() + transform.rMean()) / transform.viewA().size().x;
-				var errorF = (transform.fSigma() + transform.fMean()) / transform.viewA().size().x;
-				console.log("transform error R: "+errorR);
-				console.log("transform error F: "+errorF);
+// draw some of the matches
+matches = [pAs,pBs];
+Code.randomPopParallelArrays(matches, 500);
+R3D.drawMatches(matches, 0,0, imageMatrixA.width(),0, GLOBALSTAGE, 0x9900FFFF);
+				var errorR = (transform.rSigma() + transform.rMean());// / transform.viewA().size().x;
+				var errorF = (transform.fSigma() + transform.fMean());// / transform.viewA().size().x;
+				console.log("transform error R: "+errorR+" of "+maxErrorRTrackPixels);
+				console.log("transform error F: "+errorF+" of "+maxErrorFTrackPixels);
 
-				if(errorR>maximumRErrorTracks || errorF>maximumFErrorTracks){
+				
+				// get only best track points ~ 25% of original points
+				// if(goodEnoughMatches){
+				console.log("do tracks");
+				world.solveForTracks();
+				// }
+
+
+				var errorR = (transform.rSigma() + transform.rMean());// / transform.viewA().size().x;
+				var errorF = (transform.fSigma() + transform.fMean());// / transform.viewA().size().x;
+				console.log("transform error R: "+errorR+" of "+maxErrorRTrackPixels);
+				console.log("transform error F: "+errorF+" of "+maxErrorFTrackPixels);
+
+				// if(errorR>maximumRErrorTracks || errorF>maximumFErrorTracks){
+				if(errorR>maxErrorRTrackPixels || errorF>maxErrorFTrackPixels){
 					goodEnoughMatches = false;
 				}
-				// get only best track points ~ 25% of original points
+
 				if(goodEnoughMatches){
-					world.solveForTracks();
 					pairData["tracks"] = world.toObject();
 					pairData["metricNeighborsToWorld"] = reconstructionMetric;
 				}
+
+
 console.log(pairData);
-throw "before save"
+throw "before save pair B"
 				pairDoneSaveFxn();
 			}
 
@@ -10076,7 +10117,7 @@ throw "before save"
 		
 		}else{ // save without further operation
 console.log(pairData);
-throw "before save"
+throw "before save pair A"
 			pairDoneSaveFxn();
 		}
 	}

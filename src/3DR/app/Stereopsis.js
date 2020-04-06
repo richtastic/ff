@@ -5410,7 +5410,7 @@ data["errors"].push(error);
 
 console.log("START");
 	if(shouldRetryInit){ // subsequent approximations are always worse than the refined estimates
-		console.log("RETRY INIT");
+		console.log("RETRY INIT: "+maxErrorRPixels+" px ");
 		this.estimate3DErrors(false); // find initial F, P, estimate all errors from this
 // don't need to do this if only 2 views ?
 		this.estimate3DViews(); // find absolute view locations
@@ -5486,6 +5486,12 @@ if(doRelaxed){
 	this.filterGlobalMatches(false, 0, 2.0,2.0,2.0,2.0, false);
 }
 	world.filterPairwiseSphere3D(1.0); // 2-3
+
+
+
+
+	// console.log("after drop");
+	// this.estimate3DErrors(true);
 
 	// FILTER 2D F / R / M errpr
 
@@ -7607,6 +7613,18 @@ var listMatchMulti = [];
 			var errorF = match.errorF();
 			var errorNCC = match.errorNCC()
 			var errorSAD = match.errorSAD();
+
+
+			// distance related error:
+			var p3D = match.estimated3D();
+			if(p3D){
+				var dist = Math.abs(p3D.z);
+				errorR = errorR/dist;
+			}
+			// TODO THIS SHOULD BE AVERAGE DISTANCE TO CAMERA A & B
+
+
+
 			if(errorR!=null){
 				listMatchR.push(errorR);
 			}

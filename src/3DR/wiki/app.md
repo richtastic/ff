@@ -397,7 +397,7 @@ https://cloud.google.com/appengine/docs/nodejs/
 - encryption
 
 
-04/04 - retry 6 images using new sparse absolute orientation algorithms
+04/06 - retry 6 images using new sparse absolute orientation algorithms
 		- is BA helpful? (show before and after)
 04/08 - retry dense selection using known R
 		- better this time around?
@@ -424,18 +424,85 @@ https://cloud.google.com/appengine/docs/nodejs/
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
-x if initial F is bad ... next steps are SOL
+- why can't go back to doing basic 2D transform?
+	- average translation
+	- average corner affine [scale & roate & skew]
+	- search error = feature size + local point area transfer error (average or sigma) -- up to ~ 4x feature size
+x homography
+	- garbage with error points
+
+
+- get initial F - opt for allowing in poor matches in order to keep some good matches [ie rank ~0.9 limit]
+- only get accuracy to < 5px (0.01) to not focus in on happenstance (wrong) points & allow next step some error room to change F
+- F UPDATING ALGORITHM:
+	- get F-error esimate
+		- use 1-2 sigma search window?
+	- search along F-lines to get matches, orientated using relative-F line angle
+	- filter on score [2 sigma iteritive]
+	- filter on rank [2 sigma iteritive]
+	- update F with top matches
+	- filter on F error [2 sigma single]
+	- REPEAT
+
+
+
+A) need very good set of initial matches
+B) when iteritively dropping points based on some criteria: points may accidentally be favored because of initial conditions and not intrinsic worth
+=> need summary data of points that cancels outliers
+=> reduce search space 
+=> repeatable criteria (robust) for varying images
+
+
+
+=> initial F is too far off, even though it has several quite good points
+	=> just passes by the correct points
+- search around best points [might be small region, but will get neighbors]
+
+=> go back to iteritive F
+	- determine how to keep better match points thru estimation
+
+- seems it focuses on some points and not others
+	- not necessarily wrong, but it brings the epipole too close in and makes some points have much more error account for them
+
+	- the matches are localized but their nearest match isn't necessarily going to be exactly on
+	=> can't expect a really low error [eg <1]
+	=> any focusing may be toward pairs that happen to be aligned while dropping otherwise good pairs
+
+	- if there is point dropping, the newly obtained set should consider scores as they are dropped, rather than blindly dropping until F error is particularly low
+
+
+
+
+
+- when the epipoles are close / in the image, the F search lines are prone to more error
+
+
+... could do a step where the initial points are searched only in the area around them
+	- near-term F-expansion [2d stereopsis ....]
+	.....
+
+
+- R error is high on a good set of points
+- MAYBE R ERROR IS TAKEN AT BAD POINT BEFORE WORST POINTS ARE DROPPED -- WHAT IS THE DISPARITY?
+- Rerror / z-depth 
+
+
 
 
 x keep track of second-best pair too for dense F
 x filter on second/best score ratios first
+x fwd / bak A - B : F line searching
 
-- fwd / bak A - B : F line searching
+
 
 - larger area doesn't seem to help ?
 
 
 ...
+
+
+
+- RERROR USING DEPTH IS A BETTER METRIC OF R-ERROR ----- make systematic ?
 
 
 
