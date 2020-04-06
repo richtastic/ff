@@ -9826,7 +9826,8 @@ console.log(featuresB);
 
 		// DENSE CORNER MATCH - GUIDED F
 		if(goodEnoughMatches){
-			var searchDensePixelError = Math.max(Ferror, 0.002*(hyp) ); // want SOME wiggle room to change F --- 0.002 x 500 = 1 px
+			var searchDensePixelError = Math.max(Ferror, 0.05*(hyp) ); // want SOME wiggle room to change F --- 0.01 x 500 = 6 px
+			console.log("searchDensePixelError: "+searchDensePixelError)
 			result = R3D.findDenseCornerFMatches(imageMatrixA,imageMatrixB, F, searchDensePixelError, null, pointsA,pointsB);
 			console.log(result);
 			F = result["F"];
@@ -9935,7 +9936,7 @@ if(true){
 
 } // if false
 
-throw "before R"
+// throw "before R"
 
 		// STEROPSIS R SEARCH
 		if(goodEnoughMatches){

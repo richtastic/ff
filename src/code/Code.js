@@ -1297,9 +1297,45 @@ console.log("search for: "+searchValue);
 	throw "never ..."
 	return null;
 }
-Code.arrayOrderedInsert = function(a, value, fxn,arg){
-	var indexes = Code.binarySearch(a, fxn, false, arg);
-	console.log(indexes);
+
+
+Code.binaryInsert = function(a, v, f, args){  // f(a,b) = 0 if same | -1 is a is before b | 1 if a is after b
+	if(a.length==0){
+		a.push(v);
+	}
+	var minIndex = 0;
+	var maxIndex = a.length-1;
+	var value, result, middleIndex;
+	while(minIndex<=maxIndex){
+		middleIndex = (minIndex+maxIndex) >> 1;
+		value = a[middleIndex];
+		result = f(v,value);
+		if(result==0){
+			Code.arrayInsert(a,middleIndex,v);
+			return middleIndex;
+		}else if(result<0){
+			maxIndex = middleIndex - 1;
+		}else{ // result>0
+			minIndex = middleIndex + 1;
+		}
+	}
+	if(minIndex==a.length){ // end
+		a.push(v);
+		return a.length-1;
+	}
+	if(maxIndex==-1){ // beginning
+		a.unshift(v);
+		return 0;
+	}
+	Code.arrayInsert(a,maxIndex+1,v); // after
+	return maxIndex;
+}
+
+
+Code.arrayOrderedInsert = function(a, value, fxn){ // binaryInsert
+	throw "this is extra complicated ... use Code.binaryInsert"
+	var indexes = Code.binarySearch(a, fxn, false, value);
+	// console.log(indexes);
 	if(indexes!==null){
 		if(Code.isArray(indexes) && indexes.length==2){
 			// console.log("A");
@@ -1919,10 +1955,15 @@ Code.arrayIntersect = function(c,a,b, equalFxn, combineFxn){
 	}
 	return c;
 };
-Code.elementExists = function(a,o){ // O(n)   --- this wont work for an array of functions ....
-	if( Code.isFunction(o) ){ // function
+Code.elementExists = function(a,o,f){ // O(n)   --- this wont work for an array of functions ....
+	// if( Code.isFunction(o) ){ // function
+	// 	for(var i=0; i<a.length; ++i){
+	// 		if( o(a[i],v) ){ return true; }
+	// 	}
+	if(f!==undefined){
 		for(var i=0; i<a.length; ++i){
-			if( o(a) ){ return true; }
+			var v = f(a[i],o);
+			if(v===0 || v===true){ return true; }
 		}
 	}else{ // object
 		for(var i=0; i<a.length; ++i){

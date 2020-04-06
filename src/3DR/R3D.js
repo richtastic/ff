@@ -9785,23 +9785,59 @@ break;
 		return image;
 	}
 
+	var bestSortFxn = function(a,b){
+		if(a["feature"==b["feature"]]){
+			return 0;
+		}
+		a = a["score"];
+		b = b["score"];
+		return a==b ? 0 : (a<b ? -1 : 1);
+	}
 
 	var updateFeatureBestScores = function(feature, opposite, score, image){
 		var best = feature["best"];
 		if(!best){
-			feature["best"] = {"feature":opposite, "score":score, "image":image};
-		}else{
-			var bestScore = best["score"];
-			if(bestScore>score){
-				best["score"] = score;
-				best["feature"] = opposite;
-				best["image"] = image;
-			}
+			best = [];
+			feature["best"] = best;
+		}
+		var entry = {"feature":opposite, "score":score, "image":image};
+		// Code.arrayOrderedInsert(best, entry, bestSortFxn);
+		var exists = Code.elementExists(best,a, bestSortFxn);
+		if(exists){
+			console.log("exists");
+			throw "shy?"
+		}
+		Code.binaryInsert(best,entry,bestSortFxn);
+		if(best.length>2){
+			best.pop();
 		}
 	}
 
 var debugShow = false;
+// var debugShow = true;
 
+
+if(debugShow){
+
+	// draw images
+
+
+var iii = imageMatrixA;
+var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
+var d = new DOImage(img);
+// d.matrix().scale(5.0);
+d.matrix().translate(0, 0);
+GLOBALSTAGE.addChild(d);
+
+var iii = imageMatrixB;
+var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
+var d = new DOImage(img);
+// d.matrix().scale(5.0);
+d.matrix().translate(imageMatrixA.width(), 0);
+GLOBALSTAGE.addChild(d);
+
+
+}
 
 console.log(matchesA,matchesB);
 
@@ -9810,7 +9846,7 @@ console.log(matchesA,matchesB);
 	var pixelError = Ferror;
 	var Fab = F;
 	var Fba = R3D.fundamentalInverse(Fab);
-	console.log("pixelError: "+pixelError);
+	// console.log("pixelError: "+pixelError);
 	var epipole = R3D.getEpipolesFromF(Fab);
 	var epipoleA = epipole["A"];
 	var epipoleB = epipole["B"];
@@ -9818,7 +9854,7 @@ console.log(epipoleA,epipoleB);
 	for(var i=0;i<featuresA.length;++i){
 if(debugShow){
 // i = 300;
-i = 400; // B
+// i = 400; // B
 // i = 500; // A
 // i = 600;
 // i = 700;
@@ -9828,7 +9864,7 @@ i = 400; // B
 // i = 1150;
 // i = 1200;
 // i = 1300;
-// i = 1400;
+i = 1400;
 // i = 1500;
 // i = 1600;
 // i = 1900;
@@ -9874,6 +9910,11 @@ GLOBALSTAGE.addChild(d);
 			var score = R3D._progressiveCompare2DArrayV3DSADClosestSingle(imageA,imageB); // cutoff ~ 0.10
 			// var score = R3D._progressiveCompareImageSAD(imageA,imageB); // cutoff ~ 0.25
 
+			// I don't believe this;
+			// if(debugShow){
+			// 	console.log(score);
+			// }
+
 			// keep best
 			updateFeatureBestScores(featureA, featureB, score, imageB);
 			updateFeatureBestScores(featureB, featureA, score, imageA);
@@ -9885,10 +9926,13 @@ GLOBALSTAGE.addChild(d);
 
 if(debugShow){
 var bestA = featureA["best"];
-if(bestA){
+if(bestA && bestA.length>0){
+	bestA = bestA[0];
 	var bestScore = bestA["score"];
 	var bestFeature = bestA["feature"];
 	var bestImage = bestA["image"];
+
+console.log("bestScore: "+bestScore);
 
 // SHOW THE IMAGES:
 var iii = bestImage;
@@ -9899,17 +9943,6 @@ d.matrix().translate(10 + 0, 0 + 450);
 GLOBALSTAGE.addChild(d);
 
 
-// SHOW POINT OF B
-var pointB = bestFeature["point"];
-var p = pointB;
-var d = new DO();
-d.graphics().setLine(3.0, 0xFF00CC00);
-d.graphics().beginPath();
-d.graphics().drawCircle(p.x,p.y, 5);
-d.graphics().endPath();
-d.graphics().strokeLine();
-// d.matrix().translate(imageMatrixA.width());
-GLOBALSTAGE.addChild(d);
 
 
 // SHOW LINE OF B
@@ -9941,6 +9974,22 @@ for(var j=0; j<putativeB.length; ++j){
 	d.matrix().translate(imageMatrixA.width(),0);
 	GLOBALSTAGE.addChild(d);
 }
+
+
+
+// SHOW POINT OF B
+var pointB = bestFeature["point"];
+var p = pointB;
+var d = new DO();
+d.graphics().setLine(3.0, 0xFF00CC00);
+d.graphics().beginPath();
+d.graphics().drawCircle(p.x,p.y, 5);
+d.graphics().endPath();
+d.graphics().strokeLine();
+d.matrix().translate(imageMatrixA.width(),0);
+GLOBALSTAGE.addChild(d);
+
+
 }
 }
 
@@ -9951,34 +10000,83 @@ if(debugShow){
 	var bestMatchesA = [];
 	var bestMatchesB = [];
 	var scores = [];
+	var ratios = [];
+	var minRatio = 0.90; // 0.90 - 0.95
 	for(var i=0;i<featuresA.length;++i){
 		var featureA = featuresA[i];
 		var bestA = featureA["best"];
-		if(bestA){
+		if(bestA && bestA.length>1){
+			var scndA = bestA[1];
+				bestA = bestA[0];
 			var featureB = bestA["feature"];
 			var bestB = featureB["best"];
-if(featureB==featureA){
-	throw "i am my own best ?"
-}
-			if(bestB){
+			if(bestB && bestB.length>1){
+				var scndB = bestB[1];
+					bestB = bestB[0];
 				var checkA = bestB["feature"];
 				if(checkA==featureA){ // forward backward match
-					var score = bestA["score"];
-					scores.push(score);
-					bestMatchesA.push(featureA);
-					bestMatchesB.push(featureB);
+					var scoreAB = bestA["score"];
+						var scoreA = scndA["score"];
+						var scoreB = scndB["score"];
+					var ratioA = scoreAB/scoreA;
+					var ratioB = scoreAB/scoreB;
+					var ratio = Math.max(ratioA,ratioB);
+					if(ratio<minRatio){
+						scores.push(scoreAB);
+						ratios.push(ratio);
+						bestMatchesA.push(featureA);
+						bestMatchesB.push(featureB);
+					}
 				}
 			}
 		}
 	}
+	console.log(scores);
+	console.log(ratios);
+	console.log(featuresA);
+	console.log(featuresB);
 	console.log(featuresA.length+" vs "+featuresB.length);
-
+	// ...
 	console.log(bestMatchesA.length);
 	console.log(bestMatchesA);
 	console.log(bestMatchesB);
 
 
-	// TODO: REPEAT
+
+// throw "show images of best matches"
+
+// Code.printMatlabArray(ratios,"ratios");
+// Code.printMatlabArray(scores,"scores");
+	
+	// RATIOS
+	var maxIterations = 10;
+	var sigmaDrop = 2.0;
+	for(var iter=0; iter<maxIterations; ++iter){
+		// drop worst based on ratios
+		var scoreMin = Code.min(ratios);
+		var scoreSigma = Code.stdDev(ratios,scoreMin);
+		var limit = scoreMin + scoreSigma*sigmaDrop;
+		console.log(" "+iter+" = "+ratios.length+" @ "+limit);
+		var previousLength = ratios.length;
+		for(var i=0; i<ratios.length; ++i){
+			var ratio = ratios[i];
+			if(ratio>limit){
+				Code.removeElementAt(ratios,i);
+				Code.removeElementAt(scores,i);
+				Code.removeElementAt(bestMatchesA,i);
+				Code.removeElementAt(bestMatchesB,i);
+				--i;
+			}
+		}
+		if(ratios.length==previousLength){
+			break;
+		}
+	}
+	console.log(bestMatchesA.length);
+
+
+
+	// SCORES
 	var maxIterations = 10;
 	var sigmaDrop = 2.0;
 	for(var iter=0; iter<maxIterations; ++iter){
@@ -9988,7 +10086,7 @@ if(featureB==featureA){
 		var limit = scoreMin + scoreSigma*sigmaDrop;
 		console.log(" "+iter+" = "+scores.length+" @ "+limit);
 
-			limit = Math.min(limit, 0.10); // hard limit for  SADClosestSingle
+		// limit = Math.min(limit, 0.10); // hard limit for  SADClosestSingle
 
 		var previousLength = scores.length;
 		for(var i=0; i<scores.length; ++i){

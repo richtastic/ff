@@ -427,8 +427,19 @@ https://cloud.google.com/appengine/docs/nodejs/
 x if initial F is bad ... next steps are SOL
 
 
-- keep track of second-best pair too for dense F
-- filter on second/best score ratios first
+x keep track of second-best pair too for dense F
+x filter on second/best score ratios first
+
+- fwd / bak A - B : F line searching
+
+- larger area doesn't seem to help ?
+
+
+...
+
+
+
+
 
 
 
