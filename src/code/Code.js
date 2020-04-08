@@ -4015,6 +4015,102 @@ Code.averageAffineMatrices = function(affines, percents, result){
 	var affine = R3D.affineMatrixExact([V2D.ZERO,V2D.DIRX,V2D.DIRY],[offset,a,b], result);
 	return affine;
 }
+
+
+
+Code.averagePointsAffine2D = function(pointsA,pointsB){
+	/*
+	// average offset:
+	var comA = V2D.average(pointsA);
+	var comB = V2D.average(pointsB);
+
+	console.log(comA+"");
+	console.log(comB+"");
+	var tx = comB.x - comA.x;
+	var ty = comB.y - comA.y;
+	console.log("delta: "+tx+","+ty+"");
+
+	var len = pointsA.length;
+	var rows = len*2;
+	var cols = 5;
+	var A = new Matrix(rows,cols);
+	for(var i=0; i<len; ++i){
+		var a = pointsA[i];
+		var b = pointsB[i];
+		A.set(i*2+0,0, a.x-comA.x);
+		A.set(i*2+0,1, a.y-comA.y);
+		A.set(i*2+0,2, 0.0);
+		A.set(i*2+0,3, 0.0);
+		A.set(i*2+0,4, -(b.x-comB.x));
+		//
+		A.set(i*2+1,0, 0.0);
+		A.set(i*2+1,1, 0.0);
+		A.set(i*2+1,2, a.x-comA.x);
+		A.set(i*2+1,3, a.y-comA.y);
+		A.set(i*2+1,4, -(b.y-comB.y));
+	}
+	var svd = Matrix.SVD(A);
+	var coeff = svd.V.colToArray(4);
+	coeff = [ coeff[0]/coeff[4], coeff[1]/coeff[4], coeff[2]/coeff[4], coeff[3]/coeff[4], tx, ty]; // a b c d x y
+	var affine = new Matrix2D().fromArray();
+	// TODO: nonlinear ?
+	return affine;
+	*/
+	var len = pointsA.length;
+	if(len<4){ // not enough points
+		return null;
+	}
+	var rows = len*2;
+	var cols = 7;
+	var A = new Matrix(rows,cols); // a b x   c d y   1
+	for(i=0;i<len;++i){
+		var a = pointsA[i];
+		var b = pointsB[i];
+		A.set(i*2+0,0, a.x);
+		A.set(i*2+0,1, a.y);
+		A.set(i*2+0,2, 1.0);
+		A.set(i*2+0,3, 0.0);
+		A.set(i*2+0,4, 0.0);
+		A.set(i*2+0,5, 0.0);
+		A.set(i*2+0,6, -b.x);
+		//
+		A.set(i*2+1,0, 0.0);
+		A.set(i*2+1,1, 0.0);
+		A.set(i*2+1,2, 0.0);
+		A.set(i*2+1,3, a.x);
+		A.set(i*2+1,4, a.y);
+		A.set(i*2+1,5, 1.0);
+		A.set(i*2+1,6, -b.y);
+	}
+	var svd = Matrix.SVD(A);
+	var c = svd.V.colToArray(6);
+	c = [ c[0]/c[6], c[1]/c[6], c[3]/c[6], c[4]/c[6],   c[2]/c[6],  c[5]/c[6] ]; // a b c d x y
+	var affine = new Matrix2D(3,3).fromArray(c);
+	return affine;
+}
+
+
+Code.stdDevAngles = function(list, mean){
+	var i, sig=0, item, len=list.length;
+	if(len==0){ return 0; }
+	// if(count!==undefined){
+	// 	len = Math.min(len,count);
+	// }
+	if(!mean){
+		mean = Code.averageAngles(angles);
+	}
+	for(i=len;i--;){
+		item = list[i];
+		// if(key!==undefined && key!==null){
+		// 	item = item[key];
+		// }
+		var ang = Code.minAngle(mean,item);
+		// console.log(Code.degrees(mean)+" & "+Code.degrees(item)+" = "+Code.degrees(ang));
+		sig += Math.pow(ang,2);
+	}
+	return Math.sqrt(sig/len); // len-1 is typical number
+}
+
 Code.averageAngles = function(angles, percents){
 	var i, count = angles.length;
 	var sumSin = 0;

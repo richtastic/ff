@@ -3937,7 +3937,7 @@ App3DR.App.Model3D.prototype.setPoints = function(input3D, input2D, hasImages, n
 	var colors = [];
 // ONLY WORKS FOR PAIR OF IMAGES
 var useErrors = false;
-var useErrors = true;
+// var useErrors = true;
 // var errorType = 0; // F
 var errorType = 1; // R
 // var errorType = 2; // NCC
@@ -7884,14 +7884,14 @@ console.log("pair count: "+pairs.length+" ............");
 // i = 3;  // 
 // i = 4;  // 
 
-// i = 5;  // 
+i = 5;  // 
 // i = 6;  // 
 // i = 7;  //
 // i = 8; // 
 
 // i = 9;  // 
 
-i = 10; // unlucky ? 
+// i = 10; // unlucky ? 
 
 // i = 11; // 
 
@@ -9853,7 +9853,7 @@ console.log(featuresB);
 			var maximumError = 0.05*(hyp);
 			var minimumError = 0.005*(hyp);
 			var searchDensePixelError = Math.min(Math.max(Ferror, minimumError),maximumError); // want SOME wiggle room to change F --- 0.01 x 500 = 6 px
-			searchDensePixelError = 5;
+			// searchDensePixelError = 5;
 			console.log("searchDensePixelError: "+searchDensePixelError)
 			result = R3D.findDenseCornerFMatches(imageMatrixA,imageMatrixB, F, searchDensePixelError, null, pointsA,pointsB);
 			console.log(result);

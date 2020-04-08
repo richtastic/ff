@@ -35,7 +35,8 @@ GLOBALSTAGE = this._stage;
 	// load images
 	// new ImageLoader("./images/",["F_S_1_1.jpg","F_S_1_2.jpg"],this,this.imagesLoadComplete).load();
 	// new ImageLoader("./images/",["F_S_1_1.jpg","F_S_1_2.jpg"],this,this.imagesLoadCompleteFBasic).load();
-	new ImageLoader("./images/",["F_S_1_1.jpg","F_S_1_2.jpg"],this,this.imagesLoadCompleteHBasic).load();
+	// new ImageLoader("./images/",["F_S_1_1.jpg","F_S_1_2.jpg"],this,this.imagesLoadCompleteHBasic).load();
+	new ImageLoader("./images/",["F_S_1_1.jpg","F_S_1_2.jpg"],this,this.imagesLoadCompleteDenseBasic).load();
 	// new ImageLoader("./images/",["F_S_1_1.jpg","F_S_1_2.jpg"],this,this.imagesLoadCompleteCOV).load();
 }
 
@@ -226,6 +227,308 @@ Fun.prototype.imagesLoadCompleteCOV = function(o){
 
 
 }
+
+
+
+
+
+Fun.prototype.imagesLoadCompleteDenseBasic = function(o){
+	var images = o.images;
+
+	GLOBALSTAGE.root().matrix().scale(2.0);
+	
+	// var noisePercent = 0.0;
+	// var noisePercent = 0.25;
+	var noisePercent = 0.0;
+	
+	var imageMatrixes = [];
+	for(var i=0; i<images.length; ++i){
+		var image = images[i];
+		var imageFloat = GLOBALSTAGE.getImageAsFloatRGB(image);
+		var imageMatrix = new ImageMat(imageFloat["width"],imageFloat["height"], imageFloat["red"], imageFloat["grn"], imageFloat["blu"]);
+		imageMatrixes.push(imageMatrix);
+	}
+	var imageMatrixA = imageMatrixes[0];
+	var imageMatrixB = imageMatrixes[1];
+
+	var putativePointsA = [ new V3D(0.235,0.075), new V3D(0.587,0.085), new V3D(0.836,0.0336), new V3D(0.430,0.440), new V3D(0.795,0.330), new V3D(0.805,0.430), new V3D(0.215,0.555), new V3D(0.880,0.580), new V3D(0.750,0.670), new V3D(0.235,0.733) ];
+	var putativePointsB = [ new V3D(0.175,0.113), new V3D(0.525,0.150), new V3D(0.770,0.115), new V3D(0.370,0.490), new V3D(0.730,0.395), new V3D(0.740,0.495), new V3D(0.150,0.600), new V3D(0.820,0.635), new V3D(0.695,0.730), new V3D(0.170,0.790) ];
+	
+	var putatives = [putativePointsA, putativePointsB];
+	for(var i=0; i<putatives.length; ++i){
+		var putativePoints = putatives[i];
+		var imageMatrix = imageMatrixes[i];
+		for(var j=0; j<putativePoints.length; ++j){
+			var p = putativePoints[j];
+			putativePoints[j] = new V2D(p.x,p.y);
+			putativePoints[j].scale( imageMatrix.width(), imageMatrix.height() );
+		}
+	}
+	var pointsA = putativePointsA;
+	var pointsB = putativePointsB;
+
+	var noiseCount = Math.floor(noisePercent*pointsA.length);
+	console.log("noiseCount: "+noiseCount)
+	for(var i=0; i<noiseCount; ++i){
+
+		var pointA = new V2D(Math.random()*imageMatrixA.width(), Math.random()*imageMatrixA.height());
+		var pointB = new V2D(Math.random()*imageMatrixB.width(), Math.random()*imageMatrixB.height());
+
+		pointsA.push(pointA);
+		pointsB.push(pointB);
+	}
+	console.log(pointsA);
+	console.log(pointsB);
+
+
+	var affine = R3D.affineBasicFromPoints2D(pointsA,pointsB);
+	console.log(affine)
+
+
+// throw "?";
+R3D.findLocalSupportingCornerMatches(imageMatrixA,imageMatrixB,  pointsA,pointsB);//imageCornerDensityPercent);
+
+throw "JERE"
+
+
+	// PREDICT POINTS ON GRID:
+
+	var sizePercent = 0.10;
+	var sizeX = Math.floor(imageMatrixA.width()*sizePercent);
+	var sizeY = Math.floor(imageMatrixA.height()*sizePercent);
+	var sizeCountX = imageMatrixA.width()/sizeX;
+	var sizeCountY = imageMatrixA.height()/sizeY;
+	var samplesA = [];
+
+	for(var j=0; j<sizeCountY; ++j){
+		for(var i=0; i<sizeCountX; ++i){
+			var pointA = new V2D(i*sizeX, j*sizeY);
+			samplesA.push(pointA);
+		}
+	}
+	var v = new V3D();
+	var samplesB = [];
+	for(var i=0; i<samplesA.length; ++i){
+		var pointA = samplesA[i];
+		v.set(pointA.x,pointA.y,1.0);
+		var u = H.multV3DtoV3D(v);
+		// console.log(u+"")
+			u.homo();
+		// console.log(u+"")
+		var pointB = new V2D(u.x,u.y);
+		// var pointB = H.multV2DtoV2D(pointA);
+		samplesB.push(pointB);
+	}
+
+
+	// Fun.colorPairPoints(imageMatrixA,pointsA, imageMatrixB,pointsB);
+	Fun.colorPairPoints(imageMatrixA,samplesA, imageMatrixB,samplesB);
+
+
+
+	GLOBALSTAGE.root().matrix().scale(2.0);
+	throw "imagesLoadCompleteHBasic"
+
+}
+
+Fun.prototype.imagesLoadCompleteAffineBasic = function(o){
+
+	var origin = new V2D(5,3);
+	var radius = 10.0;
+	// var errorPercent = 0.1;
+	var errorPercent = 1.0;
+	var pointCount = 10;
+
+
+	var transform = new Matrix2D();
+		transform.rotate(Code.radians(30.0));
+		transform.translate(-1,-1);
+
+	// source points
+	var pointsA = [];
+	for(var i=0; i<pointCount; ++i){
+		var p = new V2D();
+			p.x = (Math.random()-0.5)*radius*2.0;
+			p.y = (Math.random()-0.5)*radius*2.0;
+		p.add(origin);
+		pointsA.push(p);
+	}
+
+	// apply actual transform
+	var pointsB = [];
+	for(var i=0; i<pointCount; ++i){
+		var error = radius*errorPercent;
+		var a = pointsA[i];
+		var b = transform.multV2DtoV2D(a);
+			p.x += (Math.random()-0.5)*error*2.0;
+			p.y += (Math.random()-0.5)*error*2.0;
+		pointsB.push(b);
+	}
+
+	// find average :
+
+
+	/*
+affineMatrixExact
+	*/
+
+	var affine = Code.averagePointsAffine2D(pointsA,pointsB);
+	console.log(affine);
+	console.log(affine+"");
+	var inverse = affine.copy();
+		inverse.inverse();
+
+
+
+	// show source points:
+var displayScale = 10.0;
+var displayCenter = new V2D(400,300);
+	for(var i=0; i<pointsA.length; ++i){
+		var a = pointsA[i];
+		var d = new DO();
+		d.graphics().clear();
+		d.graphics().setLine(4.0, 0xFFFF0000);
+		d.graphics().beginPath();
+		d.graphics().drawCircle(a.x*displayScale,-a.y*displayScale, 5);
+		d.graphics().endPath();
+		d.graphics().strokeLine();
+		d.matrix().translate(displayCenter.x,displayCenter.y);
+		GLOBALSTAGE.addChild(d);
+
+		var b = affine.multV2DtoV2D(a);
+		var d = new DO();
+		d.graphics().clear();
+		d.graphics().setLine(6.0, 0xFFFF00FF);
+		d.graphics().beginPath();
+		d.graphics().drawCircle(b.x*displayScale,-b.y*displayScale, 5);
+		d.graphics().endPath();
+		d.graphics().strokeLine();
+		d.matrix().translate(displayCenter.x,displayCenter.y);
+		GLOBALSTAGE.addChild(d);
+	}
+
+
+	for(var i=0; i<pointsB.length; ++i){
+		var b = pointsB[i];
+		var d = new DO();
+		d.graphics().clear();
+		d.graphics().setLine(2.0, 0xFF0000FF);
+		d.graphics().beginPath();
+		d.graphics().drawCircle(b.x*displayScale,-b.y*displayScale, 5);
+		d.graphics().endPath();
+		d.graphics().strokeLine();
+		d.matrix().translate(displayCenter.x,displayCenter.y);
+		GLOBALSTAGE.addChild(d);
+
+
+		var a = inverse.multV2DtoV2D(b);
+		var d = new DO();
+		d.graphics().clear();
+		d.graphics().setLine(6.0, 0xFF00CCCC);
+		d.graphics().beginPath();
+		d.graphics().drawCircle(a.x*displayScale,-a.y*displayScale, 5);
+		d.graphics().endPath();
+		d.graphics().strokeLine();
+		d.matrix().translate(displayCenter.x,displayCenter.y);
+		GLOBALSTAGE.addChild(d);
+	}
+
+	/*
+	var images = o.images;
+	
+	// var noisePercent = 0.0;
+	var noisePercent = 0.25;
+	// var noisePercent = 0.0;
+	
+	var imageMatrixes = [];
+	for(var i=0; i<images.length; ++i){
+		var image = images[i];
+		var imageFloat = GLOBALSTAGE.getImageAsFloatRGB(image);
+		var imageMatrix = new ImageMat(imageFloat["width"],imageFloat["height"], imageFloat["red"], imageFloat["grn"], imageFloat["blu"]);
+		imageMatrixes.push(imageMatrix);
+	}
+	var imageMatrixA = imageMatrixes[0];
+	var imageMatrixB = imageMatrixes[1];
+
+	var putativePointsA = [ new V3D(0.235,0.075), new V3D(0.587,0.085), new V3D(0.836,0.0336), new V3D(0.430,0.440), new V3D(0.795,0.330), new V3D(0.805,0.430), new V3D(0.215,0.555), new V3D(0.880,0.580), new V3D(0.750,0.670), new V3D(0.235,0.733) ];
+	var putativePointsB = [ new V3D(0.175,0.113), new V3D(0.525,0.150), new V3D(0.770,0.115), new V3D(0.370,0.490), new V3D(0.730,0.395), new V3D(0.740,0.495), new V3D(0.150,0.600), new V3D(0.820,0.635), new V3D(0.695,0.730), new V3D(0.170,0.790) ];
+	
+	var putatives = [putativePointsA, putativePointsB];
+	for(var i=0; i<putatives.length; ++i){
+		var putativePoints = putatives[i];
+		var imageMatrix = imageMatrixes[i];
+		for(var j=0; j<putativePoints.length; ++j){
+			var p = putativePoints[j];
+			putativePoints[j] = new V2D(p.x,p.y);
+			putativePoints[j].scale( imageMatrix.width(), imageMatrix.height() );
+		}
+	}
+	var pointsA = putativePointsA;
+	var pointsB = putativePointsB;
+
+	var noiseCount = Math.floor(noisePercent*pointsA.length);
+	console.log("noiseCount: "+noiseCount)
+	for(var i=0; i<noiseCount; ++i){
+
+		var pointA = new V2D(Math.random()*imageMatrixA.width(), Math.random()*imageMatrixA.height());
+		var pointB = new V2D(Math.random()*imageMatrixB.width(), Math.random()*imageMatrixB.height());
+
+		pointsA.push(pointA);
+		pointsB.push(pointB);
+	}
+	console.log(pointsA);
+	console.log(pointsB);
+	var H = R3D.homographyMatrixFromUnnormalized(pointsA,pointsB);
+	console.log("H: \n "+H);
+	// ...
+
+
+	// PREDICT POINTS ON GRID:
+
+	var sizePercent = 0.10;
+	var sizeX = Math.floor(imageMatrixA.width()*sizePercent);
+	var sizeY = Math.floor(imageMatrixA.height()*sizePercent);
+	var sizeCountX = imageMatrixA.width()/sizeX;
+	var sizeCountY = imageMatrixA.height()/sizeY;
+	var samplesA = [];
+
+	for(var j=0; j<sizeCountY; ++j){
+		for(var i=0; i<sizeCountX; ++i){
+			var pointA = new V2D(i*sizeX, j*sizeY);
+			samplesA.push(pointA);
+		}
+	}
+	var v = new V3D();
+	var samplesB = [];
+	for(var i=0; i<samplesA.length; ++i){
+		var pointA = samplesA[i];
+		v.set(pointA.x,pointA.y,1.0);
+		var u = H.multV3DtoV3D(v);
+		// console.log(u+"")
+			u.homo();
+		// console.log(u+"")
+		var pointB = new V2D(u.x,u.y);
+		// var pointB = H.multV2DtoV2D(pointA);
+		samplesB.push(pointB);
+	}
+
+
+	// Fun.colorPairPoints(imageMatrixA,pointsA, imageMatrixB,pointsB);
+	Fun.colorPairPoints(imageMatrixA,samplesA, imageMatrixB,samplesB);
+
+
+
+	GLOBALSTAGE.root().matrix().scale(2.0);
+
+
+	*/
+
+
+
+	throw "imagesLoadCompleteAffineBasic"
+
+}
+
 
 Fun.prototype.imagesLoadCompleteHBasic = function(o){
 	var images = o.images;

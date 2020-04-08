@@ -424,6 +424,139 @@ https://cloud.google.com/appengine/docs/nodejs/
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
+=> could go with BETTER QUALITY MATCHES  - OR -  BETTER AREA COVERAGE ...
+
+
+
+
+
+- try to do average affine with noise
+
+
+putative matches have a rotation
+- if local rotation doesn't agree with match rotation, exclude match
+- if local translation doesn't agree with match 
+...
+
+=> want some consensus
+
+
+
+
+
+AFFINE METHODS:
+A) get 6-10 and remove outliers [too different scale, too different rotation]
+C) get 3 and use rounded rotation & scale 
+B) get 2 and use exact rotation & scale
+
+=> grab the ones that AGREE in rotation & scale ....
+
+
+
+- local candidate matching via putative matches using local affine orientation in neighborhood search region
+	=> goals:
+		- find more matches
+			- using approx rotation & scale of local region [affine]
+		- find most reliable matches
+			- using score ratios to filter out less unique/confident matches
+		- 
+
+ALG ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+for each putative point-pair
+	- create local mapping for image transfer (affine | rot+scale)
+		- get nearest 3-6 putative matches
+		- estimate corner transform
+	- get all local candidates within 2-4 feature-size-radius region around putative-pair
+		- region A
+		- region B
+	REPEAT FOR SETS B->A too: [different affine, etc]
+	- for each local candidate A:
+		- imageA = identity
+		- for each local candidate B:
+			- imageB = applied affine transform
+			- calculate score match
+			- add candidate match to A & B
+
+- keep only best top matches
+- repeat filter on best RANK
+- repeat filter on best SCORE
+
+=> output set
+
+
+DETERMINING LOCAL AFFINE TRANSFORM:
+	- get nearest 6 neighbors
+	- create vectors from current point to each neighbor
+	each vector has
+		- A) scale
+		- B) rotation
+	- repeatidly drop by scale [immediatly drop scales over 10 and under 1/10 (2.3 & -2.3)]
+	- repeatidly drop by rotation
+	- any points dropped in A OR B should not be included in final assessment
+	- use average of remaining vectors as final rotation + scale
+
+	vector:
+		value: V2D
+		angle: true
+		scale: true
+	=> only include in final assessment if angle && scale === true
+
+:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+
+
+
+200 putative
+2000 candidates
+10 candidates in window
+200 * 10 * 10 = 20k iterations
+
+
+create match objects in A & B
+
+
+
+for each match in A
+	- get nearest putative match
+	- if ehough 
+
+
+
+
+
+
+- initial F from initial points is wrong
+	- some areas (away from epipole) are good
+	- areas closer to epipole have higher error and don't even have a chance to compare
+- many matches are correct tho
+
+
+
+
+
+=> need some secondary process to do searching based not on F
+	- overall & local affine transforms
+	- 
+
+- each individual match should be able to look around it's general area for other potential matches
+- give candidate points a chance to try each option
+=> this gives a blotchy solution, but with hopefully better candidate matches
+
+LOCATION TRANSFER = local point difference
+AFFINE MATRIX = dependent on local set of point transformations (3+ points) 6?
+search area A = feature size + ... some candidate window [2-3] smaller?
+search area B = feature size + ... some error window ? [2-4] bigger?
+
+each point has had some set of ~ 10 x 10 candidates []
+
+each point can order candidates
+
+
+
+
+
+
+
 - why can't go back to doing basic 2D transform?
 	- average translation
 	- average corner affine [scale & roate & skew]
