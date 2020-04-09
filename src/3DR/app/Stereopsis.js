@@ -1927,6 +1927,10 @@ Stereopsis.Transform3D.prototype.calculateErrorR = function(R){
 			continue;
 		}
 		var error = R3D.reprojectionError(estimated3D, pA,pB, extrinsicA, extrinsicB, Ka, Kb);
+		if(!error){
+			console.log(error);
+			throw "no error?"
+		}
 		var distanceA = error["distanceA"];
 		var distanceB = error["distanceB"];
 		var distance = error["error"];
@@ -5399,9 +5403,10 @@ data["errors"].push(error);
 	var shouldRetryInit = false;
 	var shouldPropagate = false;
 
+	var errorT0 = transform0.rMean() + transform0.rSigma();
 	if(iterationIndex==0){
 		shouldRetryInit = true;
-	}else if(transform0.rSigma()>maxErrorRPixels){ // transform.rMean()+" +/- "+transform.rSigma()
+	}else if(false && errorT0>maxErrorRPixels){ // transform.rMean()+" +/- "+transform.rSigma()
 		shouldRetryInit = true;
 	}else{
 		shouldPropagate = true;
@@ -5412,13 +5417,17 @@ console.log("START");
 	if(shouldRetryInit){ // subsequent approximations are always worse than the refined estimates
 		console.log("RETRY INIT: "+maxErrorRPixels+" px ");
 		this.estimate3DErrors(false); // find initial F, P, estimate all errors from this
+		console.log("A");
 // don't need to do this if only 2 views ?
 		this.estimate3DViews(); // find absolute view locations
+		console.log("B");
 		this.averagePoints3DFromMatches(); // find absolute point locations
+		console.log("C");
 	}else{
 		this.relativeFFromSamples(); // update F
 		this.estimate3DErrors(true, false); // update errors using absolute-relative transforms
 	}
+	console.log("continue ...");
 	this.recordTransformErrorStart();
 console.log("continue ...");
 	// this.patchInitOnly();
@@ -8915,6 +8924,8 @@ Stereopsis.World.prototype.estimate3DErrors = function(skipCalc, shouldLog){ // 
 			P = transform.R(viewA,viewB);
 		}else{
 			var info = Stereopsis.ransacTransformF(transform);
+			console.log("RICHIE - CALCULATED F/R:");
+			console.log(info);
 			F = info["F"];
 			P = info["P"];
 		}
@@ -9163,45 +9174,11 @@ Stereopsis.ransacTransformF = function(transform, maximumSamples, skipP){ // F &
 		var bestPointsA = pointsA;
 		var bestPointsB = pointsB;
 		var errorDecay = 0.5;
-		/*
-		// console.log("     BEST POINTS: "+pointsA.length+" / "+minimumRansacCountF);
-		if(pointsA.length>minimumRansacCountF){
-			console.log("DOING RANSAC");
-			var errorInfo = R3D.fundamentalMatrixError(F, pointsA,pointsB, true);
-			// console.log(errorInfo);
-			var error = errorInfo["error"];
-			var errorA = errorInfo["A"];
-			var errorB = errorInfo["B"];
-			error = Math.sqrt(error);
-			error =  error * errorDecay; // first match doesn't seem do much
-			// TODO: get sigma => for dropping bad matches later
-			var minimumRANSACCount = Math.max(Math.round(pointsA.length*minimumRansacMatchPercent), minimumRansacMatchCount);
-			// RANSAC
-			for(var i=0; i<10; ++i){
-				var result = R3D.fundamentalRANSACFromPoints(pointsA,pointsB, error, F);
-				// console.log(result);
-				var matches = result["matches"];
-				var matchesA = matches[0];
-				var matchesB = matches[1];
-				var errorInfo = R3D.fundamentalMatrixError(F, matchesA,matchesB, true);
-				console.log(i+": limit error: "+error+" = compliant count: "+matchesA.length+" => new error " + Math.sqrt(errorInfo["error"]) );
-				// if count is too low => end early
-				if(matchesA.length>=minimumRANSACCount){
-					bestPointsA = matchesA;
-					bestPointsB = matchesB;
-				}else{ // subsequent loops
-					break;
-				}
-				error = error * errorDecay;
-			}
-			// TODO: binary search
-		}
-		*/
-
 		// TODO: IS THIS NECESSARRY?
 		// if(F){
 		// 	F = R3D.fundamentalMatrixNonlinear(F,bestPointsA,bestPointsB);
 		// }
+		console.log("bestPointsA: "+bestPointsA.length+" >?> "+minimumTransformMatchCountR);
 		if(!skipP && bestPointsA.length>minimumTransformMatchCountR){
 			var Ka = viewA.K();
 			var Kb = viewB.K();
@@ -9210,6 +9187,12 @@ Stereopsis.ransacTransformF = function(transform, maximumSamples, skipP){ // F &
 			var force = true;
 			console.log("transformFromFundamental");
 			P = R3D.transformFromFundamental(bestPointsA, bestPointsB, F, Ka,KaInv, Kb,KbInv, null, force, true);
+			if(!P){
+				console.log("try again ?");
+				throw "..."
+				// P = R3D.transformFromFundamental(bestPointsB, bestPointsA, Matrix.inverse(F), Kb,KbInv, Ka,KaInv, null, force, true);
+				// P = R3D.inverseCameraMatrix(P);
+			}
 		}
 	}
 	/*

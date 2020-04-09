@@ -424,9 +424,17 @@ https://cloud.google.com/appengine/docs/nodejs/
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
-=> could go with BETTER QUALITY MATCHES  - OR -  BETTER AREA COVERAGE ...
+
+REDO ... problems with:
+R3D.transformFromFundamental3
+-> use proj error?
+-> better estimates of front / behind camera
+-> special cases handling?
 
 
+
+- caching / lookup needs to be much faster
+	- keep list of ALREADY DONE calculations - stored on each featureA
 
 
 

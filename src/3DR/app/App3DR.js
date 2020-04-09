@@ -7879,24 +7879,25 @@ bad = cameras are wrong or accidentally correct, <50% of scene is mapped
 console.log("pair count: "+pairs.length+" ............");
 	for(var i=0; i<pairs.length; ++i){
 // i = 0;  // 
-// i = 1;  // 
+i = 1;  // 
 // i = 2;  // 
 // i = 3;  // 
 // i = 4;  // 
 
-i = 5;  // 
+// i = 5;  //  PROBLEMATIC HORIZONTAL
+
 // i = 6;  // 
 // i = 7;  //
 // i = 8; // 
 
-// i = 9;  // 
+// i = 9;  // actually front/back - center epipole?
 
 // i = 10; // unlucky ? 
 
-// i = 11; // 
+// i = 11; // actually front/back - center epipole?
 
-// i = 12; // 
-// i = 13; // 
+// i = 12; // actually front/back - center epipole?
+// i = 13; // almost front/back - center epipole
 
 // i = 14; // 
 // console.log("PICKED: "+i);
@@ -9845,13 +9846,29 @@ console.log(featuresB);
 		try average affine matrix & picture
 
 */
+		if(goodEnoughMatches){
+			var result = R3D.findLocalSupportingCornerMatches(imageMatrixA,imageMatrixB, pointsA,pointsB);
+			console.log(result);
 
 
+			// throw "now get an updated F ?"
+			F = result["F"];
+			Finv = result["inv"];
+			pointsA = result["A"];
+			pointsB = result["B"];
+			Ferror = result["error"];
+			// if(Ferror>maxErrorFDensePixels){
+			// 	console.log(" GUIDED MATCH ERROR TOO HIGH");
+			// 	goodEnoughMatches = false;
+			// }
+		}
+
+// throw "..."
 
 		// DENSE CORNER MATCH - GUIDED F
 		if(goodEnoughMatches){
 			var maximumError = 0.05*(hyp);
-			var minimumError = 0.005*(hyp);
+			var minimumError = 0.01*(hyp);
 			var searchDensePixelError = Math.min(Math.max(Ferror, minimumError),maximumError); // want SOME wiggle room to change F --- 0.01 x 500 = 6 px
 			// searchDensePixelError = 5;
 			console.log("searchDensePixelError: "+searchDensePixelError)
@@ -9964,7 +9981,7 @@ if(true){
 
 } // if false
 
-throw "before R"
+// throw "before R"
 
 		// STEROPSIS R SEARCH
 		if(goodEnoughMatches){

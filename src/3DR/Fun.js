@@ -239,7 +239,7 @@ Fun.prototype.imagesLoadCompleteDenseBasic = function(o){
 	
 	// var noisePercent = 0.0;
 	// var noisePercent = 0.25;
-	var noisePercent = 0.0;
+	var noisePercent = 0.50;
 	
 	var imageMatrixes = [];
 	for(var i=0; i<images.length; ++i){

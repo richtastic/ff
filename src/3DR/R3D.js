@@ -388,27 +388,60 @@ R3D.transformFromFundamental = function(pointsA, pointsB, F, Ka,KaInv, Kb,KbInv,
 }
 
 R3D.transformFromFundamental3 = function(pointsA, pointsB, F, Ka,KaInv, Kb,KbInv, M1, forceSolution, log){ // find relative transformation matrix  // points use F
+var repro = false;
+if(repro){
+	var str = "\n";
+
+
+	console.log(str);
+}
+
+
+
 log = false;
 	M1 = M1 ? M1.getSubMatrix(0,0, 3,4) : new Matrix(3,4).fromArray([1,0,0,0, 0,1,0,0, 0,0,1,0]);
 	var M1Full = M1.copy().appendRowFromArray([0,0,0,1]);
 	Kb = Kb ? Kb : Ka;
 	KbInv = KbInv ? KbInv : KaInv;
+
+// console.log("F: \n "+F);
+// F = R3D.forceRank2F(F);
+
+console.log("F: \n "+F);
+
 	// E from F + K
 	var KbT = Matrix.transpose(Kb);
 	var E = Matrix.mult(F,Ka);
 		E = Matrix.mult(KbT,E);
+
+console.log("Ka: \n "+Ka);
+
+console.log("Kb: \n "+Kb);
+
+console.log("E1: \n "+E);
 	// to components
+	var UisZero = false;
 	var svd = Matrix.SVD(E);
 	var U = svd.U;
 	var S = svd.S;
 	var V = svd.V;
 	var Vt = Matrix.transpose(V);
 	/*
+	console.log("U: \n "+U);
+	console.log("S: \n "+S);
+	console.log("V: \n "+V);
+if(U.determinant()==0){
+	console.log("U IS ZERO");
+	console.log("t must be zero");
+	UisZero = true;
+}
 	// // RE-GET matrix
 	// force D = 1,1,0 ----------------------
-	var diag110 = new Matrix(3,3).fromArray([1,0,0, 0,1,0, 0,0,0]);
-	E = Matrix.mult(diag110,Vt);
-	E = Matrix.mult(U,E);
+	if(!UisZero){
+		var diag110 = new Matrix(3,3).fromArray([1,0,0, 0,1,0, 0,0,0]);
+		E = Matrix.mult(diag110,Vt);
+		E = Matrix.mult(U,E);
+	}
 	// new decomposition
 	svd = Matrix.SVD(E);
 	U = svd.U;
@@ -416,6 +449,11 @@ log = false;
 	V = svd.V;
 	Vt = Matrix.transpose(V);
 	*/
+console.log("U2: \n "+U);
+console.log("S2: \n "+S);
+console.log("V2: \n "+V);
+console.log("E2: \n "+E);
+
 	var Z = new Matrix(3,3).fromArray([0.0,  1.0, 0.0, -1.0, 0.0, 0.0,  0.0, 0.0, 0.0]);
 	var W = new Matrix(3,3).fromArray([0.0, -1.0, 0.0,  1.0, 0.0, 0.0,  0.0, 0.0, 1.0]);
 	var Wt = Matrix.transpose(W);
@@ -425,8 +463,14 @@ log = false;
 	t = t.toArray();
 	tNeg = tNeg.toArray();
 	// rotations
-	var R1 = Matrix.mult(U,Matrix.mult(W, Vt));
-	var R2 = Matrix.mult(U,Matrix.mult(Wt,Vt));
+	var R1 = Matrix.mult(W, Vt);
+	var R2 = Matrix.mult(Wt,Vt);
+	if(!UisZero){
+		R1 = Matrix.mult(U,R1);
+		R2 = Matrix.mult(U,R2);
+	}
+console.log("R1: \n "+R1);
+console.log("R2: \n "+R2);
 	// positive rotations
 	if(R1.det()<0){
 		R1.scale(-1.0);
@@ -436,6 +480,13 @@ log = false;
 	}
 	R1 = R3D.rotationFromApproximate(R1);
 	R2 = R3D.rotationFromApproximate(R2);
+
+	console.log("R1: \n "+R1);
+	console.log("R2: \n "+R2);
+	console.log(" t: \n "+t);
+	console.log("-t: \n "+tNeg);
+
+
 	// one of 4 possible solutions
 	var possibles = []; // U*W*V | t
 	var bottom = [0,0,0,1];
@@ -461,13 +512,14 @@ log = false;
 		var distortions = null;
 		for(var j=0; j<points3D.length; ++j){ // project point to both cameras:
 			var point3D = points3D[j];
+// console.log(i+" - "+j+": "+point3D+" | ");
 			var p2D1 = R3D.projectPoint3DToCamera2DForward(point3D, M1, Ka, distortions, true);
 			var p2D2 = R3D.projectPoint3DToCamera2DForward(point3D, M2, Kb, distortions, true);
 			countsTotal[i] += p2D1 ? 1 : -1;
 			countsTotal[i] += p2D2 ? 1 : -1;
 		}
 	}
-	// console.log(countsTotal);
+	console.log("countsTotal: "+countsTotal);
 	var bestTotalCount = Code.max(countsTotal);
 	if(bestTotalCount>=0){ // ?
 		var bestProjections = [];
@@ -483,7 +535,19 @@ log = false;
 			return bestProjection;
 		}
 	}
+	// var anyPositive = false;
+	// for(var i=0; i<countsTotal.length; ++i){
+	// 	var count = countsTotal[i];
+	// 	if(count>0){
+	// 		anyPositive = true;
+	// 		break;
+	// 	}
+	// }
+	// if(!anyPositive){
+	// 	return possibles[3];
+	// }
 	console.log("none");
+	return new Matrix(4,4).identity();
 	return null;
 }
 
@@ -9837,8 +9901,8 @@ break;
 
 
 
-// var debugShow = false;
-var debugShow = true;
+var debugShow = false;
+// var debugShow = true;
 
 
 if(debugShow){
@@ -10017,8 +10081,8 @@ if(debugShow){
 	var finalPointsB = null;
 
 	// var maxFIterations = 10;
-	// var maxFIterations = 5;
 	var maxFIterations = 5;
+	// var maxFIterations = 3;
 	for(var iteration=0; iteration<maxFIterations; ++iteration){
 		console.log("FINDING F ITERATION : ---------------------------------------------------------------- : "+iteration+"  error: "+Ferror);
 
@@ -10041,12 +10105,13 @@ if(debugShow){
 		for(var i=0;i<featuresA.length;++i){
 if(debugShow){
 // i = 300;
+i = 340;
 // i = 400; // B
 // i = 500; // A
 // i = 600;
 // i = 700;
 // i = 800;
-i = 900;
+// i = 900;
 // i = 1000;
 // i = 1150;
 // i = 1200;
@@ -10177,7 +10242,7 @@ throw "end loop";
 		var bestMatchesB = [];
 		var scores = [];
 		var ratios = [];
-		var minRatio = 0.50; // 0.80 - 0.90
+		var minRatio = 0.90; // 0.80 - 0.90
 		for(var i=0;i<featuresA.length;++i){
 			var featureA = featuresA[i];
 			var bestA = featureA["best"];
@@ -10408,7 +10473,7 @@ throw "end loop";
 
 
 
-R3D.affineBasicFromPoints2D = function(pointsA,pointsB, sourceA,sourceB, affine){
+R3D.affineBasicFromPoints2D = function(pointsA,pointsB, sourceA,sourceB, affine, returnInfo){
 	var maxIterations = 10; // pointsA.length;
 	var sigmaDrop = 1.5; // 1 - 2
 	var startIndex = 0;
@@ -10516,8 +10581,11 @@ R3D.affineBasicFromPoints2D = function(pointsA,pointsB, sourceA,sourceB, affine)
 			averageScale = Math.exp(averageScale);
 		averageAngle = Code.averageAngles(angles);
 	}
-	console.log("scale: "+averageScale);
-	console.log("angle: "+Code.degrees(averageAngle));
+	// console.log("scale: "+averageScale);
+	// console.log("angle: "+Code.degrees(averageAngle));
+	if(returnInfo){
+		return {"angle":averageAngle, "scale":averageScale};
+	}
 	if(!affine){
 		affine = new Matrix2D();
 	}
@@ -10538,9 +10606,10 @@ R3D.findLocalSupportingCornerMatches = function(imageMatrixA,imageMatrixB, point
 	imageCornerDensityPercent = Code.valueOrDefault(imageCornerDensityPercent, 0.01); // 2k - 4k
 
 	var featureSizePercent = 0.02; // 0.01 - 0.04
-	var searchSizeFeatureScale = 2; // 2 - 4
+	var searchSizeFeatureScale = 1; // 2 - 4
+	var maximumScaleDifference = 0.1;
 	var maximumAngleDifference = 10; // 5-20 degrees : 10=> 36 | 12=>30 | 18=>20 | 22.5=>16
-	var maximumTableEntries = 360.0/(maximumAngleDifference);
+	var maximumTableEntries = Math.round(360.0/maximumAngleDifference);
 
 	var imageScalesA = new ImageMatScaled(imageMatrixA);
 	var imageScalesB = new ImageMatScaled(imageMatrixB);
@@ -10569,6 +10638,9 @@ R3D.findLocalSupportingCornerMatches = function(imageMatrixA,imageMatrixB, point
 	}
 
 
+// prevent repeats calculations?
+// need to store an entry for 'already did' --- feature | angle | scale
+
 var doDebug = true;
 
 if(doDebug){
@@ -10576,7 +10648,6 @@ if(doDebug){
 var x = 0;
 var y = 0;
 for(var i=0;i<images.length;++i){
-
 	var featureList = features[i];
 	var imageMatrix = images[i];
 	
@@ -10591,27 +10662,28 @@ for(var i=0;i<images.length;++i){
 	var height = imageMatrix.height();
 	var alp = 1.0;
 
-	for(var f=0; f<featureList.length; ++f){
-		var feature = featureList[f];
-		var point = feature["point"];
-		var scale = feature["scale"];
-		var size = feature["size"];
-		var angle = feature["angle"];
+	// for(var f=0; f<featureList.length; ++f){
+	// 	var feature = featureList[f];
+	// 	var point = feature["point"];
+	// 	var scale = feature["scale"];
+	// 	var size = feature["size"];
+	// 	var angle = feature["angle"];
 
-		// size = Math.sqrt(size);
-		size = 3;
+	// 	// size = Math.sqrt(size);
+	// 	size = 3;
 
-		var d = new DO();
-		d.graphics().setLine(1.0, 0xFF000000);
-		d.graphics().beginPath();
-		d.graphics().drawCircle(point.x, point.y, size);
-			// d.graphics().moveTo(point.x, point.y);
-			// d.graphics().lineTo(point.x + size*Math.cos(angle), point.y + size*Math.sin(angle));
-		d.graphics().strokeLine();
-		d.graphics().endPath();
-		d.matrix().translate(x,y);
-		GLOBALSTAGE.addChild(d);
-	}
+	// 	var d = new DO();
+	// 	d.graphics().setLine(1.0, 0xFF000000);
+	// 	d.graphics().beginPath();
+	// 	d.graphics().drawCircle(point.x, point.y, size);
+	// 		// d.graphics().moveTo(point.x, point.y);
+	// 		// d.graphics().lineTo(point.x + size*Math.cos(angle), point.y + size*Math.sin(angle));
+	// 	d.graphics().strokeLine();
+	// 	d.graphics().endPath();
+	// 	d.matrix().translate(x,y);
+	// 	GLOBALSTAGE.addChild(d);
+	// }
+
 	x += imageMatrix.width();
 }
 }
@@ -10633,18 +10705,61 @@ for(var i=0;i<images.length;++i){
 		return a==b ? 0 : (a<b ? -1 : 1);
 	};
 
-	var createImageForFeature = function(feature, matrix, imageMatrixScales){
-		var index = Math.round(maximumTableEntries * Code.angleZeroTwoPi(angle)/Math.PI2 );
-		var getAngle = (index/maximumTableEntries)*Math.PI2;
+	var roundedScale = function(scale){
+		// console.log(" in: "+scale);
+		scale = Math.log(scale);
+		// console.log("  a: "+scale);
+		scale = Math.round(scale/maximumScaleDifference);
+		// console.log("  b: "+scale);
+		scale = scale*maximumScaleDifference;
+		// console.log("  c: "+scale);
+		return scale;
+	};
+
+	var roundedAngle = function(angle){
+		var indexAngle = Math.round(maximumTableEntries * Code.angleZeroTwoPi(angle)/Math.PI2 );
+		angle = (indexAngle/maximumTableEntries)*Math.PI2;
+		return angle;
+	};
+
+	var infoForAngleScale = function(angle, scale){
+		angle = roundedAngle(angle);
+		scale = roundedScale(scale);
+		var index = angle+"-"+scale;
+		return {"index":index, "angle":angle, "scale":scale};
+	}
+
+	var createImageForFeature = function(feature, matrix, imageMatrixScales, angle, scale){
 		var point = feature["point"];
 		var cellSize = feature["size"];
+		var info = infoForAngleScale(angle,scale);
+			matrix.identity();
+			matrix.scale(scale);
+			matrix.rotate(angle);
 		var image  = R3D._progressiveR3DSizing(point, imageMatrixScales, 9, cellSize, matrix);
-		// var images = feature["images"];
-		// images[index] = {"image":image};
+		var images = feature["images"];
+			images[info["index"]] = {"image":image};
 		return image;
 	};
 
-// CACHING OF IMAGES ................
+	var getImageForFeature = function(feature, angle, scale){
+		var images = feature["images"];
+		var index = infoForAngleScale(angle, scale)["index"];
+		var value = images[value];
+		if(!value){
+			return null;
+		}
+		return value["image"];
+	}
+
+
+	var checkGetImageForFeature = function(feature, matrix, imageMatrixScales, angle, scale){
+		var image = getImageForFeature(feature, angle, scale);
+		if(!image){
+			image = createImageForFeature(feature, matrix, imageMatrixScales, angle, scale);
+		}
+		return image;
+	}
 
 	var updateFeatureBestScores = function(feature, opposite, score, image){
 		var best = feature["best"];
@@ -10652,8 +10767,18 @@ for(var i=0;i<images.length;++i){
 			best = [];
 			feature["best"] = best;
 		}
-		// IF FEATURE INDEX ALREADY EXISTS IN ARRAY, UPDATE IT (IF ITS BETTER) INSTEAD OF ADDING 'DUPLICATE ENTRY'
+		
 		var entry = {"feature":opposite, "score":score, "image":image};
+
+		// IF FEATURE INDEX ALREADY EXISTS IN ARRAY, UPDATE IT (IF ITS BETTER) INSTEAD OF ADDING 'DUPLICATE ENTRY'
+		for(var i=0; i<best.length; ++i){
+			if(best[i]["feature"]==opposite){
+				if(best[i]["score"]>score){
+					best[i] = entry;
+				}
+				return;
+			}
+		}
 		Code.binaryInsert(best,entry,bestSortFxn);
 		if(best.length>2){
 			best.pop();
@@ -10709,6 +10834,14 @@ for(var i=0;i<images.length;++i){
 		var imgScalesB = imgScalesListB[i];
 		// forward / backward:
 		for(var j=0; j<putativeListA.length; ++j){
+
+// j = 90;
+
+// j = 120;
+
+			if(j%10==0){
+				console.log("          "+j+" / "+putativeListA.length);
+			}
 			var putativeA = putativeListA[j];
 			var putativeB = putativeA["opposite"];
 			var putativePointA = putativeA["point"];
@@ -10724,15 +10857,18 @@ for(var i=0;i<images.length;++i){
 					ptsB.push(neighbor["opposite"]["point"]);
 				}
 			}
-			R3D.affineBasicFromPoints2D(ptsA,ptsB, putativePointA,putativePointB, affine2D);
-				affine2D.inverse(); // want to transform B to A
+			// R3D.affineBasicFromPoints2D(ptsA,ptsB, putativePointA,putativePointB, affine2D);
+				// affine2D.inverse(); // want to transform B to A
+			var info = R3D.affineBasicFromPoints2D(ptsB,ptsA, putativePointB,putativePointA, null, true);
+			var affineAngle = info["angle"];
+			var affineScale = info["scale"];
 			// console.log(affine2D+"");
 			// get all local candidates within region around putative-pair A & B
 			var candidatesA = fSpaceA.objectsInsideCircle(putativePointA,searchSizeRadius);
 			var candidatesB = fSpaceB.objectsInsideCircle(putativePointB,searchSizeRadius);
 			// console.log(candidatesA);
 			// console.log(candidatesB);
-
+/*
 // SHOW CANDIDATES
 if(doDebug){
 for(var z=0; z<candidatesA.length; ++z){
@@ -10762,19 +10898,21 @@ for(var z=0; z<candidatesB.length; ++z){
 	GLOBALSTAGE.addChild(d);
 }
 }
+*/
 			// add compare for every feature pair
 			for(var a=0; a<candidatesA.length; ++a){
 				var featureA = candidatesA[a];
-				var imageA = createImageForFeature(featureA, null, imgScalesA);
+				var imageA = checkGetImageForFeature(featureA, affine2D, imgScalesA, 0, 1.0);
 				featureA["image"] = imageA;
 				for(var b=0; b<candidatesB.length; ++b){
 					var featureB = candidatesB[b];
-					var imageB = createImageForFeature(featureB, affine2D, imgScalesB);
+					var imageB = checkGetImageForFeature(featureB, affine2D, imgScalesB, affineAngle, affineScale);
 					var score = compareImagesFxn(imageA,imageB);
 					updateFeatureBestScores(featureA, featureB, score, imageB);
 					updateFeatureBestScores(featureB, featureA, score, imageA);
 				}
 			}
+
 /*
 // show top matches
 if(doDebug){
@@ -10788,18 +10926,19 @@ for(var z=0; z<candidatesA.length; ++z){
 	var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
 	var d = new DOImage(img);
 	d.matrix().scale(3.0);
-	d.matrix().translate(10 + z*30, 300);
+	d.matrix().translate(10 + z*30, 350);
 	GLOBALSTAGE.addChild(d);
 
 	var iii = best["image"];
 	var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
 	var d = new DOImage(img);
 	d.matrix().scale(3.0);
-	d.matrix().translate(10 + z*30, 350);
+	d.matrix().translate(10 + z*30, 400);
 	GLOBALSTAGE.addChild(d);
 }
 }
-*/			
+*/
+			
 			// throw "end inner";
 		}
 
@@ -10813,7 +10952,9 @@ for(var z=0; z<candidatesA.length; ++z){
 	var bestMatchesB = [];
 	var scores = [];
 	var ratios = [];
-	var minRatio = 0.90 // 0.80 - 0.90
+	// var minRatio = 0.50; // 0.80 - 0.90
+	var minRatio = 0.75;
+	// var minRatio = 1.0;
 	for(var i=0;i<featuresA.length;++i){
 		var featureA = featuresA[i];
 		var bestA = featureA["best"];
@@ -10875,609 +11016,32 @@ for(var z=0; z<bestMatchesA.length; ++z){
 }
 
 
-throw ",,,"
-
-
-	// cache helpers
-	var getImageForFeature = function(feature, angle){
-		var images = feature["images"];
-		var index = Math.round(maximumTableEntries * Code.angleZeroTwoPi(angle)/Math.PI2);
-		var value = images[value];
-		if(!value){
-			return null;
-		}
-		return value["image"];
+	var finalPointsA = [];
+	var finalPointsB = [];
+	for(var i=0; i<bestMatchesA.length; ++i){
+		var featureA = bestMatchesA[i];
+		var featureB = bestMatchesB[i];
+		var a = featureA["point"];
+		var b = featureB["point"];
+		finalPointsA.push(a);
+		finalPointsB.push(b);
 	}
 
-	var createImageForFeature = function(feature, angle, imageMatrixScales){
-		var index = Math.round(maximumTableEntries * Code.angleZeroTwoPi(angle)/Math.PI2 );
-		var getAngle = (index/maximumTableEntries)*Math.PI2;
-		var point = feature["point"];
-		var cellSize = feature["size"];
-		var matrix = new Matrix2D();
-			matrix.rotate(getAngle);
-		var image  = R3D._progressiveR3DSizing(point, imageMatrixScales, 9, cellSize, matrix);
-		var images = feature["images"];
-			images[index] = {"image":image};
-		return image;
-	}
-
-	var checkGetImageForFeature = function(feature, angle, imageMatrixScales){
-		var image = getImageForFeature(feature, angle);
-		if(!image){
-			image = createImageForFeature(feature,angle, imageMatrixScales);
-		}
-		return image;
-	}
-
-	var bestSortFxn = function(a,b){
-		if(a["feature"==b["feature"]]){
-			return 0;
-		}
-		a = a["score"];
-		b = b["score"];
-		return a==b ? 0 : (a<b ? -1 : 1);
-	}
-
-
-
-
-	var compareImagesFxn = R3D._progressiveCompare2DArrayV3DSADClosestSingle;
-	// var compareImagesFxn = R3D._progressiveCompareImageSAD;
-
-
-
-	console.log(matchesA,matchesB);
-
-	var org = new V2D();
-	var dir = new V2D();
-	var pixelError = Ferror;
-	var Fab = F;
-	var Fba = R3D.fundamentalInverse(Fab);
-	// console.log("pixelError: "+pixelError);
-	var epipole = R3D.getEpipolesFromF(Fab);
-	var epipoleA = epipole["A"];
-	var epipoleB = epipole["B"];
-	// console.log(epipoleA,epipoleB);
-
-
-
-
-// var debugShow = false;
-var debugShow = true;
-
-
-if(debugShow){
-	// draw images
-var iii = imageMatrixA;
-var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
-var d = new DOImage(img);
-// d.matrix().scale(5.0);
-d.matrix().translate(0, 0);
-GLOBALSTAGE.addChild(d);
-
-var iii = imageMatrixB;
-var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
-var d = new DOImage(img);
-// d.matrix().scale(5.0);
-d.matrix().translate(imageMatrixA.width(), 0);
-GLOBALSTAGE.addChild(d);
-}
-
-
-
-/*
-	for(var i=0;i<featuresA.length;++i){
-if(debugShow){
-// i = 300;
-// i = 400; // B
-// i = 500; // A
-// i = 600;
-// i = 700;
-// i = 800;
-// i = 900;
-// i = 1000;
-// i = 1150;
-// i = 1200;
-// i = 1300;
-i = 1400;
-// i = 1500;
-// i = 1600;
-// i = 1900;
-}
-		var featureA = featuresA[i];
-
-		// console.log(featureA);
-		var pointA = featureA["point"];
-		// get image
-		var imageA = checkGetImageForFeature(featureA, 0, imageScalesA);
-
-if(debugShow){
-// SHOW THE IMAGES:
-var iii = imageA;
-var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
-var d = new DOImage(img);
-d.matrix().scale(5.0);
-d.matrix().translate(10 + 0, 0 + 350);
-GLOBALSTAGE.addChild(d);
-}
-		// get line of features in B
-		
-		var lineB = R3D.lineFromF(Fab,pointA, org,dir);
-		var putativeB = spaceB.objectsInsideRay(org,dir,pixelError,true);
-			// putativeB = R3D._sortCompareProgressiveColor_9x9_Histogram(objectA, putativeB, 64, 0.5);
-		// console.log(putativeB);
-
-		var relativeAngle = -R3D.fundamentalRelativeAngleForPoint(pointA,Fab,Fba, epipoleA, epipoleB, matchesA,matchesB);
-		// console.log("relative: "+Code.degrees(relativeAngle));
-		for(var j=0; j<putativeB.length; ++j){
-			featureB = putativeB[j];
-			var imageB = checkGetImageForFeature(featureB, relativeAngle, imageScalesB);
-if(debugShow){
-// SHOW THE IMAGES:
-var iii = imageB;
-var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
-var d = new DOImage(img);
-d.matrix().scale(5.0);
-d.matrix().translate(10 + j*50, 0 + 400);
-GLOBALSTAGE.addChild(d);
-}
-			// compare:
-			var score = R3D._progressiveCompare2DArrayV3DSADClosestSingle(imageA,imageB); // cutoff ~ 0.10
-			// var score = R3D._progressiveCompareImageSAD(imageA,imageB); // cutoff ~ 0.25
-
-			// I don't believe this;
-			// if(debugShow){
-			// 	console.log(score);
-			// }
-
-			// keep best
-			updateFeatureBestScores(featureA, featureB, score, imageB);
-			updateFeatureBestScores(featureB, featureA, score, imageA);
-		}
-		// console.log(bestFeature);
-		// console.log(bestScore);
-
-		
-
-if(debugShow){
-var bestA = featureA["best"];
-if(bestA && bestA.length>0){
-	bestA = bestA[0];
-	var bestScore = bestA["score"];
-	var bestFeature = bestA["feature"];
-	var bestImage = bestA["image"];
-
-console.log("bestScore: "+bestScore);
-
-// SHOW THE IMAGES:
-var iii = bestImage;
-var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
-var d = new DOImage(img);
-d.matrix().scale(5.0);
-d.matrix().translate(10 + 0, 0 + 450);
-GLOBALSTAGE.addChild(d);
-
-
-
-
-// SHOW LINE OF B
-var pointA = featureA["point"];
-var p = pointA;
-
-var d = new DO();
-
-d.graphics().setLine(3.0, 0xFFFF0000);
-d.graphics().beginPath();
-d.graphics().drawCircle(p.x,p.y, 5);
-d.graphics().endPath();
-d.graphics().strokeLine();
-// d.matrix().translate(imageMatrixA.width());
-GLOBALSTAGE.addChild(d);
-
-for(var j=0; j<putativeB.length; ++j){
-	featureB = putativeB[j];
-	var pointB = featureB["point"];
-	var p = pointB;
-
-	var d = new DO();
-	
-	d.graphics().setLine(3.0, 0xFF0000FF);
-	d.graphics().beginPath();
-	d.graphics().drawCircle(p.x,p.y, 3);
-	d.graphics().endPath();
-	d.graphics().strokeLine();
-	d.matrix().translate(imageMatrixA.width(),0);
-	GLOBALSTAGE.addChild(d);
-}
-
-
-
-// SHOW POINT OF B
-var pointB = bestFeature["point"];
-var p = pointB;
-var d = new DO();
-d.graphics().setLine(3.0, 0xFF00CC00);
-d.graphics().beginPath();
-d.graphics().drawCircle(p.x,p.y, 5);
-d.graphics().endPath();
-d.graphics().strokeLine();
-d.matrix().translate(imageMatrixA.width(),0);
-GLOBALSTAGE.addChild(d);
-
-
-}
-}
-
-
-
-if(debugShow){
-		throw "end loop";
-}
-	}
-
-*/
-
-
-	var finalPointsA = null;
-	var finalPointsB = null;
-
-	// var maxFIterations = 10;
-	// var maxFIterations = 5;
-	var maxFIterations = 5;
-	for(var iteration=0; iteration<maxFIterations; ++iteration){
-		console.log("FINDING F ITERATION : ---------------------------------------------------------------- : "+iteration+"  error: "+Ferror);
-
-		// reset all scores:
-		var images = [imageMatrixA,imageMatrixB];
-		var features = [featuresA,featuresB];
-		for(var i=0;i<images.length;++i){
-			var featureList = features[i];
-			for(var f=0; f<featureList.length; ++f){
-				var feature = featureList[f];
-				feature["best"] = null;
-			}
-		}
-
-		// get scores:
-		var doBoth = false;
-		// var doBoth = true;
-		console.log("start A");
-		// A
-		for(var i=0;i<featuresA.length;++i){
-if(debugShow){
-// i = 300;
-// i = 400; // B
-// i = 500; // A
-// i = 600;
-// i = 700;
-// i = 800;
-i = 900;
-// i = 1000;
-// i = 1150;
-// i = 1200;
-// i = 1300;
-// i = 1400;
-// i = 1500;
-// i = 1600;
-// i = 1900;
-}
-			var featureA = featuresA[i];
-			var pointA = featureA["point"];
-			var lineB = R3D.lineFromF(Fab,pointA, org,dir);
-			var putativeB = spaceB.objectsInsideRay(org,dir,pixelError,true);
-			var relativeAngle = -R3D.fundamentalRelativeAngleForPoint(pointA,Fab,Fba, epipoleA, epipoleB, matchesA,matchesB);
-			var imageA = checkGetImageForFeature(featureA, 0, imageScalesA);
-			for(var j=0; j<putativeB.length; ++j){
-				var featureB = putativeB[j];
-				var imageB = checkGetImageForFeature(featureB, relativeAngle, imageScalesB);
-				var score = compareImagesFxn(imageA,imageB);
-				updateFeatureBestScores(featureA, featureB, score, imageB);
-				if(!doBoth){
-					updateFeatureBestScores(featureB, featureA, score, imageA);
-				}
-			}
-
-if(debugShow){
-var bestA = featureA["best"];
-if(bestA && bestA.length>0){
-bestA = bestA[0];
-var bestScore = bestA["score"];
-var bestFeature = bestA["feature"];
-var bestImage = bestA["image"];
-
-console.log("bestScore: "+bestScore);
-
-// SHOW THE IMAGES:
-var iii = bestImage;
-var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
-var d = new DOImage(img);
-d.matrix().scale(5.0);
-d.matrix().translate(10 + 0, 0 + 450);
-GLOBALSTAGE.addChild(d);
-
-
-
-
-// SHOW LINE OF B
-var pointA = featureA["point"];
-var p = pointA;
-
-var d = new DO();
-
-d.graphics().setLine(3.0, 0xFFFF0000);
-d.graphics().beginPath();
-d.graphics().drawCircle(p.x,p.y, 5);
-d.graphics().endPath();
-d.graphics().strokeLine();
-// d.matrix().translate(imageMatrixA.width());
-GLOBALSTAGE.addChild(d);
-
-console.log("putativeB");
-
-for(var j=0; j<putativeB.length; ++j){
-featureB = putativeB[j];
-var pointB = featureB["point"];
-var p = pointB;
-
-var d = new DO();
-
-d.graphics().setLine(3.0, 0xFF0000FF);
-d.graphics().beginPath();
-d.graphics().drawCircle(p.x,p.y, 3);
-d.graphics().endPath();
-d.graphics().strokeLine();
-d.matrix().translate(imageMatrixA.width(),0);
-GLOBALSTAGE.addChild(d);
-}
-
-
-
-// SHOW POINT OF B
-var pointB = bestFeature["point"];
-var p = pointB;
-var d = new DO();
-d.graphics().setLine(3.0, 0xFF00CC00);
-d.graphics().beginPath();
-d.graphics().drawCircle(p.x,p.y, 5);
-d.graphics().endPath();
-d.graphics().strokeLine();
-d.matrix().translate(imageMatrixA.width(),0);
-GLOBALSTAGE.addChild(d);
-
-
-}
-}
-
-
-
-if(debugShow){
-throw "end loop";
-}
-
-
-		}
-		if(doBoth){
-		console.log("start B");
-			// B
-			for(var i=0;i<featuresB.length;++i){
-				var featureB = featuresB[i];
-				var pointB = featureB["point"];
-				var lineB = R3D.lineFromF(Fba,pointB, org,dir);
-				var putativeA = spaceA.objectsInsideRay(org,dir,pixelError,true);
-				var relativeAngle = -R3D.fundamentalRelativeAngleForPoint(pointB,Fba,Fab, epipoleB, epipoleA, matchesB,matchesA);
-				// var imageB = checkGetImageForFeature(featureB, 0, imageScalesB);
-				var imageB = checkGetImageForFeature(featureB, relativeAngle, imageScalesB);
-				for(var j=0; j<putativeA.length; ++j){
-					var featureA = putativeA[j];
-					// var imageA = checkGetImageForFeature(featureA, relativeAngle, imageScalesA);
-					var imageA = checkGetImageForFeature(featureA, 0, imageScalesA);
-					var score = compareImagesFxn(imageB,imageA);
-					updateFeatureBestScores(featureB, featureA, score, imageA);
-				}
-			}
-		}
-
-		// pick matches : same top match & minimum difference - ratio
-		var bestMatchesA = [];
-		var bestMatchesB = [];
-		var scores = [];
-		var ratios = [];
-		var minRatio = 0.50; // 0.80 - 0.90
-		for(var i=0;i<featuresA.length;++i){
-			var featureA = featuresA[i];
-			var bestA = featureA["best"];
-			if(bestA && bestA.length>1){
-				var scndA = bestA[1];
-					bestA = bestA[0];
-				var featureB = bestA["feature"];
-				var bestB = featureB["best"];
-				if(bestB && bestB.length>1){
-					var scndB = bestB[1];
-						bestB = bestB[0];
-					var checkA = bestB["feature"];
-					if(checkA==featureA){ // forward backward match
-						var scoreAB = bestA["score"];
-							var scoreA = scndA["score"];
-							var scoreB = scndB["score"];
-						var ratioA = scoreAB/scoreA;
-						var ratioB = scoreAB/scoreB;
-						var ratio = Math.max(ratioA,ratioB);
-						if(ratio<minRatio){
-							scores.push(scoreAB);
-							ratios.push(ratio);
-							bestMatchesA.push(featureA);
-							bestMatchesB.push(featureB);
-						}
-					}
-				}
-			}
-		}
-		console.log("top matches > "+bestMatchesA.length);
-		
-		// REPEAT-DROP BASD ON RATIOS
-		var maxIterations = 10;
-		var sigmaDrop = 2.0;
-		for(var iter=0; iter<maxIterations; ++iter){
-			// drop worst based on ratios
-			var scoreMin = Code.min(ratios);
-			var scoreSigma = Code.stdDev(ratios,scoreMin);
-			var limit = scoreMin + scoreSigma*sigmaDrop;
-			// console.log(" "+iter+" = "+ratios.length+" @ "+limit);
-			var previousLength = ratios.length;
-			for(var i=0; i<ratios.length; ++i){
-				var ratio = ratios[i];
-				if(ratio>limit){
-					Code.removeElementAt(ratios,i);
-					Code.removeElementAt(scores,i);
-					Code.removeElementAt(bestMatchesA,i);
-					Code.removeElementAt(bestMatchesB,i);
-					--i;
-				}
-			}
-			if(ratios.length==previousLength){
-				break;
-			}
-		}
-		console.log("ratio > "+bestMatchesA.length);
-
-		// REPEAT-DROP BASED ON SCORES
-		var maximumScoreError = 0.10;
-		var maxIterations = 10;
-		var sigmaDrop = 2.0;
-		for(var iter=0; iter<maxIterations; ++iter){
-			// drop worst based on scores
-			var scoreMin = Code.min(scores);
-			var scoreSigma = Code.stdDev(scores,scoreMin);
-			var limit = scoreMin + scoreSigma*sigmaDrop;
-			// console.log(" "+iter+" = "+scores.length+" @ "+limit);
-
-			limit = Math.min(limit, maximumScoreError); // hard limit for  SADClosestSingle
-
-			var previousLength = scores.length;
-			for(var i=0; i<scores.length; ++i){
-				var score = scores[i];
-				if(score>limit){
-					Code.removeElementAt(scores,i);
-					Code.removeElementAt(bestMatchesA,i);
-					Code.removeElementAt(bestMatchesB,i);
-					--i;
-				}
-			}
-			if(scores.length==previousLength){
-				break;
-			}
-		}
-		console.log("scores > "+bestMatchesA.length);
-
-		// get points to estimate new F
-		var pointsA = [];
-		var pointsB = [];
-		for(var i=0; i<bestMatchesA.length; ++i){
-			var pointA = bestMatchesA[i]["point"];
-			var pointB = bestMatchesB[i]["point"];
-			pointsA.push(pointA);
-			pointsB.push(pointB);
-		}
-		// console.log("points: "+pointsA.length);
-/*
-		// estimate new F
-		F = R3D.fundamentalFromUnnormalized(pointsA,pointsB);
-		Finv = R3D.fundamentalInverse(F);
-		var info = R3D.fundamentalError(F,Finv,pointsA,pointsB);
-		
-		// drop worst points:
-		// var sigmaDrop = 2.0;
-		var sigmaDrop = 1.5;
-		var errorMean = info["mean"];
-		var errorSigma = info["sigma"];
-		var errorLimit = errorMean + errorSigma*sigmaDrop;
-		var errors = info["values"];
-		console.log("errorSigma A: "+errorSigma);
-		// do some F - dropping ?
-		for(var i=0; i<pointsA.length; ++i){
-			var error = errors[i];
-			if(error>errorLimit){
-				Code.removeElementAt(pointsA,i);
-				Code.removeElementAt(pointsB,i);
-				Code.removeElementAt(errors,i);
-				--i;
-			}
-		}
-		console.log("F error > "+pointsA.length);
-
-		// next error for next iteration
-		F = R3D.fundamentalFromUnnormalized(pointsA,pointsB);
-		Finv = R3D.fundamentalInverse(F);
-		var info = R3D.fundamentalError(F,Finv,pointsA,pointsB);
-		var errorMean = info["mean"];
-		var errorSigma = info["sigma"];
-		var errorLimit = errorMean + errorSigma*sigmaDrop;
-		console.log("errorSigma B: "+errorSigma);
-
-		// next iteration
-		Ferror = errorSigma;
-		Fab = F;
-		Fba = Finv;
-		finalPointsA = pointsA;
-		finalPointsB = pointsB;
-*/
-
-		// BLA:
-
-		var minimumDesiredError = 2.0;
-		// var info = R3D._fundamentalIteritiveDropWorst(finalPointsA,finalPointsB, minimumDesiredError);
-		var info = R3D._fundamentalIteritiveDropWorst(pointsA,pointsB, minimumDesiredError);
-		Fab = info["F"];
-		Fba = info["inv"];
-		finalPointsA = info["A"];
-		finalPointsB = info["B"];
-		Ferror = info["error"];
-
-		Ferror = Ferror * 3;
-
-
-	} // iterations
-	
-	// return as is:
-	// var bestData = {"F":Fab, "inv":Fba, "error":Ferror, "A":finalPointsA, "B":finalPointsB};
-	// console.log(bestData);
-	// return bestData;
-
-
-	// focus in on final solution:
-	var minimumDesiredError = 1.0;
+	var minimumDesiredError = 5.0;
 	var info = R3D._fundamentalIteritiveDropWorst(finalPointsA,finalPointsB, minimumDesiredError);
 	console.log(info);
-	var F = info["F"];
-	var Finv = info["inv"];
-	var pointsA = info["A"];
-	var pointsB = info["B"];
+
+	var Fab = info["F"];
+	var Fba = info["inv"];
+	var finalPointsA = info["A"];
+	var finalPointsB = info["B"];
 	var Ferror = info["error"];
-	var bestData = {"F":F, "inv":Finv, "error":Ferror, "A":pointsA, "B":pointsB};
-	return bestData;
 
 
-/*
-	var minimumDesiredError = 1.0;
-	var info = R3D._fundamentalIteritiveDropWorst(pointsA,pointsB, minimumDesiredError);
-	console.log(info);
-	var F = info["F"];
-	var Finv = info["inv"];
-	pointsA = info["A"];
-	pointsB = info["B"];
-	var Ferror = info["error"];
-	bestData = {"F":F, "inv":Finv, "error":Ferror, "A":pointsA, "B":pointsB};
-	
-
-	console.log(pointsA.length);
-	console.log(pointsA);
-	console.log(pointsB);
+	R3D.showFundamental(finalPointsA, finalPointsB, Fab, Fba, GLOBALSTAGE, imageMatrixA,imageMatrixB);
 
 
-	return bestData;
-*/
-
+	return {"F":Fab, "inv":Fba, "A":finalPointsA, "B":finalPointsB, "error":Ferror};
 
 	throw "?"
 }
@@ -11586,6 +11150,7 @@ console.log(info);
 	
 	console.log("RICHIE - STARTING : Ferror: "+Ferror + " px ?")
 
+/*
 	var info = R3D._fundamentalIteritiveDropWorst(pointsA,pointsB, 5.0);
 	// console.log(info);
 	F = info["F"];
@@ -11593,7 +11158,7 @@ console.log(info);
 	pointsA = info["A"];
 	pointsB = info["B"];
 	Ferror = info["error"];
-
+*/
 	bestData = {"F":F, "inv":Finv, "error":Ferror, "A":pointsA, "B":pointsB};
 	// console.log(bestData);
 	return bestData;
