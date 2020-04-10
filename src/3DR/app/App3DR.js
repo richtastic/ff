@@ -4021,7 +4021,7 @@ var errorType = 1; // R
 				var error = R3D.reprojectionError(point3D, pointA,pointB, cameraA, cameraB, Ka, Kb);
 					error = error["error"];
 // console.log(point3D);
-error = error/point3D.z;
+// error = error/point3D.z;
 // console.log(error);
 				errors.push(error);
 			}else if(errorType==2){
@@ -7878,8 +7878,8 @@ bad = cameras are wrong or accidentally correct, <50% of scene is mapped
  // good | ok | poor | bad
 console.log("pair count: "+pairs.length+" ............");
 	for(var i=0; i<pairs.length; ++i){
-// i = 0;  // 
-i = 1;  // 
+i = 0;  // 
+// i = 1;  // 
 // i = 2;  // 
 // i = 3;  // 
 // i = 4;  // 

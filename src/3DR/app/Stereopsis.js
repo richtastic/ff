@@ -5445,11 +5445,13 @@ console.log("continue ...");
 // var doRelaxed = true;
 var doRelaxed = iterationIndex%2==0;
 
-if(transform0.rSigma()>maxErrorRPixels){
-	console.log("BAD R");
-	this.recalculateMatchVisualErrors();
-	doRelaxed = true;
-}
+doRelaxed = false;
+
+// if(transform0.rSigma()>maxErrorRPixels){
+// 	console.log("BAD R");
+// 	this.recalculateMatchVisualErrors();
+// 	doRelaxed = true;
+// }
 
 	// TODO: ONLY BREAK IF ERROR IS VERY LOW OR IF ERROR CHANGE IS TINY
 
@@ -7623,7 +7625,7 @@ var listMatchMulti = [];
 			var errorNCC = match.errorNCC()
 			var errorSAD = match.errorSAD();
 
-
+			/*
 			// distance related error:
 			var p3D = match.estimated3D();
 			if(p3D){
@@ -7631,7 +7633,7 @@ var listMatchMulti = [];
 				errorR = errorR/dist;
 			}
 			// TODO THIS SHOULD BE AVERAGE DISTANCE TO CAMERA A & B
-
+			*/
 
 
 			if(errorR!=null){
@@ -9192,6 +9194,14 @@ Stereopsis.ransacTransformF = function(transform, maximumSamples, skipP){ // F &
 				throw "..."
 				// P = R3D.transformFromFundamental(bestPointsB, bestPointsA, Matrix.inverse(F), Kb,KbInv, Ka,KaInv, null, force, true);
 				// P = R3D.inverseCameraMatrix(P);
+			}
+			// incorrect points may distort this ?
+			// if(false && P){
+			if(P){
+				console.log("nonlinear P");
+				var result = R3D.transformCameraExtrinsicNonlinear(P, bestPointsA, bestPointsB, Ka,KaInv, Kb,KbInv);
+				console.log(result);
+				P = result["P"];
 			}
 		}
 	}

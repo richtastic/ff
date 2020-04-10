@@ -2035,22 +2035,41 @@ Code.removeElements = function(a,f){ // preserves order O(n)
 	}
 	return removed;
 }
-Code.printPoints = function(points){
+Code.printPoints = function(points, arrayName){
 	var i, point, str = "";
+	arrayName = Code.valueOrDefault(arrayName, "points");
+	str = str + "\n"+arrayName+" = [];\n";
 	for(i=0; i<points.length; ++i){
 		point = points[i];
 		if(point.v!==undefined){
-			str = str + "var pt = new V4D("+point.x+","+point.y+","+point.z+","+point.t+"); pt.u = "+point.u+"; pt.v = "+point.v+"; points.push( pt ); // " + i + "\n";
+			str = str + "var pt = new V4D("+point.x+","+point.y+","+point.z+","+point.t+"); pt.u = "+point.u+"; pt.v = "+point.v+"; "+arrayName+".push( pt ); // " + i + "\n";
 		}else if(point.t!==undefined){
-			str = str + "points.push( new V4D("+point.x+","+point.y+","+point.z+","+point.t+") ); // " + i + "\n";
+			str = str + arrayName+".push( new V4D("+point.x+","+point.y+","+point.z+","+point.t+") ); // " + i + "\n";
 		}else if(point.z!==undefined){
-			str = str + "points.push( new V3D("+point.x+","+point.y+","+point.z+") ); // " + i + "\n";
+			str = str + arrayName+".push( new V3D("+point.x+","+point.y+","+point.z+") ); // " + i + "\n";
 		}else{
-			str = str + "points.push( new V2D("+point.x+","+point.y+") ); // " + i + "\n";
+			str = str + arrayName+".push( new V2D("+point.x+","+point.y+") ); // " + i + "\n";
 		}
 	}
-	console.log("\n\n"+str+"\n\n");
+	return "\n"+str+"\n";
 }
+Code.printMatrix = function(matrix, matrixName){
+	var str = "\n";
+	matrixName = Code.valueOrDefault(matrixName, "matrix");
+	var cols = matrix.colCount();
+	var rows = matrix.rowCount();
+	str = str +matrixName+" = new Matrix("+rows+","+cols+");\n";
+	str = str +matrixName+".fromArray(["+matrix.toArray()+"]);\n";
+	return str;
+}
+
+Code.printArray = function(array, arrayName){
+	var str = "\n";
+	arrayName = Code.valueOrDefault(arrayName, "array");
+	str = str +arrayName+" = ["+array+"];\n";
+	return str;
+}
+
 Code.removeElement = function(a,o){  // preserves order O(n)
 	var i, len = a.length;
 	for(i=0;i<len;++i){
