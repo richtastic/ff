@@ -428,18 +428,42 @@ R3D._transformCameraExtrinsicNonlinearGD = function(args, x, isUpdate){
 	var extrinsicA = R3D._transformCameraExtrinsicNonlinearGD_Identity;
 	var extrinsicB = R3D._transformCameraExtrinsicNonlinearGD_Matrix;
 	R3D.transform3DFromParameters(extrinsicB, rx,ry,rz, tx,ty,tz);
-
 	var pointCount = pointsA2D.length;
 	var totalError = 0;
 	for(var i=0; i<pointCount; ++i){
 		var pA = pointsA2D[i];
 		var pB = pointsB2D[i];
-		// var p3D = R3D.triangulationDLT(pointsA,pointsB, M1,M2, Ka, Kb, KaInv, KbInv);
 		var p3D = R3D.triangulatePointDLT(pA,pB, extrinsicA,extrinsicB, KaInv, KbInv);
-		var distanceSquareA = R3D.reprojectionErrorSingle(p3D,pA,extrinsicA,Ka);
-		var distanceSquareB = R3D.reprojectionErrorSingle(p3D,pB,extrinsicB,Kb);
-		var error = distanceSquareA + distanceSquareB;
-		totalError += error;
+
+
+		if(!p3D){ // very far away
+			totalError += 1E9;
+			continue;
+		}
+
+		// var projectedA2D = R3D.projectPoint3DToCamera2DForward(p3D, extrinsicA, K, null);
+
+		var v3DA = extrinsicA.multV3DtoV3D(p3D);
+		var p3DA = Ka.multV3DtoV3D(v3DA);
+		var v3DB = extrinsicB.multV3DtoV3D(p3D);
+		var p3DB = Kb.multV3DtoV3D(v3DB);
+		if(p3DA.z<=0 || p3DB.z<=0){ // behind camera
+			totalError += 1E9;
+		}else{
+			p3DA.homo();
+			p3DB.homo();
+			var distanceSquareA = V2D.distanceSquare(pA, p3DA);
+			var distanceSquareB = V2D.distanceSquare(pB, p3DB);
+			var error = distanceSquareA + distanceSquareB;
+			totalError += error;
+		}
+		// var distanceSquareA = R3D.reprojectionErrorSingle(p3D,pA,extrinsicA,Ka);
+		// var distanceSquareB = R3D.reprojectionErrorSingle(p3D,pB,extrinsicB,Kb);
+		// var error = distanceSquareA + distanceSquareB;
+		// totalError += error;
+
+		// WHAT ABOUT NEGSATIVE Z ERROR ????
+
 	}
 	// if(isUpdate){
 	// 	console.log(totalError);
@@ -452,7 +476,7 @@ R3D.transformFromFundamental = function(pointsA, pointsB, F, Ka,KaInv, Kb,KbInv,
 
 R3D.transformFromFundamental4 = function(pointsA, pointsB, F, Ka,KaInv, Kb,KbInv, M1, forceSolution, log){ // find relative transformation matrix  // points use F
 var repro = false;
-repro = true;
+// repro = true;
 if(repro){
 	var str = "\n";
 	str += Code.printPoints(pointsA,"pointsA");
@@ -8416,6 +8440,7 @@ R3D.triangulatePointDLT = function(fr,to, cameraA,cameraB, KaInv, KbInv){ // get
 	var point = new V3D(coeff[0],coeff[1],coeff[2]);
 	var den = coeff[3];
 	if(Math.abs(den)<1E-10){ // too close numerically
+		// console.log("den: "+den); eg: den: -9.960308109223141e-11
 		return null;
 	}
 	point.scale(1.0/den);

@@ -4396,6 +4396,7 @@ Code.randomSampleArray = function(array){
 	return null;
 }
 Code.randomSampleRepeatsMaximum = function(array, maximumCount, randomCount){ // use array as-is if too small, else subsample
+	randomCount = Code.valueOrDefault(randomCount, maximumCount);
 	var samples = null;
 	if(array.length<maximumCount){
 		samples = Code.copyArray(array);

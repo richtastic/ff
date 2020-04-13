@@ -3758,6 +3758,51 @@ Stereopsis.World.prototype.refineSelectCameraAbsoluteOrientation = function(view
 	Code.removeDuplicates(views,viewsChange);
 	this._refineCameraAbs(viewsChange, views, minimumPoints, maxIterations);
 }
+
+
+Stereopsis.World.prototype.refineCameraPairRelativeToAbsolute = function(transform){
+	console.log("refineCameraPairRelativeToAbsolute");
+	var I = new Matrix(4,4).identity();
+	var B = transform.R();
+	var pointsA = [];
+	var pointsB = [];
+	var viewA = transform.viewA();
+	var viewB = transform.viewB();
+	var matches = transform.matches();
+	var Ka = viewA.K();
+	var KaInv = viewA.Kinv();
+	var Kb = viewB.K();
+	var KbInv = viewB.Kinv();
+
+	// pick random subset:
+	var maximumPointCount = 400; // 100 - 1000
+	if(matches.length>maximumPointCount){
+		matches = Code.randomSampleRepeatsMaximum(matches,maximumPointCount,maximumPointCount);
+	}
+	
+	// TODO: could pick best subset? -- lowest match R error sigma < 1.0
+
+	for(var i=0; i<matches.length; ++i){
+		var match = matches[i];
+		var p2DA = match.pointForView(viewA);
+		var p2DB = match.pointForView(viewB);
+		var pA = p2DA.point2D();
+		var pB = p2DB.point2D();
+		pointsA.push(pA);
+		pointsB.push(pB);
+	}
+	console.log("POINTS: "+pointsA.length);
+	console.log("B: \n "+B);
+	var result = R3D.transformCameraExtrinsicNonlinear(B, pointsA, pointsB, Ka,KaInv, Kb,KbInv,  500);
+	console.log(result);
+	var P = result["P"];
+	// set relative and absolute
+	transform.R(P);
+	viewA.absoluteTransform(I);
+	viewB.absoluteTransform(P);
+}
+
+
 Stereopsis.World.prototype.refineCameraAbsoluteOrientation = function(minimumPoints, maxIterations, higherOrderPoints){
 	var views = this.toViewArray();
 	this._refineCameraAbs(views, [], minimumPoints, maxIterations, higherOrderPoints);
@@ -5371,7 +5416,8 @@ Stereopsis.World.prototype.iteration = function(iterationIndex, maxIterations, d
 	var transform0 = transforms[0];
 	// increase cover toward end
 	var view0 = views[0];
-	var maxErrorRPercent = 0.02; // 5-10 pixels
+	var maxErrorRPercent = 0.01; // 5-10 pixels
+		maxErrorRPercent = 0.005;
 	var maxErrorRPixels = maxErrorRPercent*view0.size().length();
 	console.log("maxErrorRPixels: "+maxErrorRPixels);
 
@@ -5406,7 +5452,7 @@ data["errors"].push(error);
 	var errorT0 = transform0.rMean() + transform0.rSigma();
 	if(iterationIndex==0){
 		shouldRetryInit = true;
-	}else if(false && errorT0>maxErrorRPixels){ // transform.rMean()+" +/- "+transform.rSigma()
+	}else if(errorT0>maxErrorRPixels){ // transform.rMean()+" +/- "+transform.rSigma()
 		shouldRetryInit = true;
 	}else{
 		shouldPropagate = true;
@@ -5417,12 +5463,12 @@ console.log("START");
 	if(shouldRetryInit){ // subsequent approximations are always worse than the refined estimates
 		console.log("RETRY INIT: "+maxErrorRPixels+" px ");
 		this.estimate3DErrors(false); // find initial F, P, estimate all errors from this
-		console.log("A");
+		// console.log("A");
 // don't need to do this if only 2 views ?
 		this.estimate3DViews(); // find absolute view locations
-		console.log("B");
+		// console.log("B");
 		this.averagePoints3DFromMatches(); // find absolute point locations
-		console.log("C");
+		// console.log("C");
 	}else{
 		this.relativeFFromSamples(); // update F
 		this.estimate3DErrors(true, false); // update errors using absolute-relative transforms
@@ -5457,8 +5503,17 @@ doRelaxed = false;
 
 
 	// try to distribute the error between depths
-	this.refineCameraAbsoluteOrientation(100); // refine initial absolute camera locations
-	this.copyRelativeTransformsFromAbsolute();
+	
+	// this.refineCameraAbsoluteOrientation(100); // refine initial absolute camera locations
+	// this.copyRelativeTransformsFromAbsolute();
+
+
+	// RE-TRIANGULATE POINTS ALONG WITH MOVING VIEWB:
+	this.refineCameraPairRelativeToAbsolute(transform0);
+
+
+
+	
 
 	this.averagePoints3DFromMatches(); // camera orientions have changed => points have new locations
 	this.refinePoint3DAbsoluteLocation();
@@ -5485,7 +5540,11 @@ doRelaxed = false;
 	this.estimate3DErrors(true);
 
 	// drop worst
+
+
 	this.dropNegative3D();
+
+
 	this.dropFurthest();
 
 

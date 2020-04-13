@@ -7878,28 +7878,25 @@ bad = cameras are wrong or accidentally correct, <50% of scene is mapped
  // good | ok | poor | bad
 console.log("pair count: "+pairs.length+" ............");
 	for(var i=0; i<pairs.length; ++i){
-i = 0;  // 
-// i = 1;  // 
-// i = 2;  // 
-// i = 3;  // 
-// i = 4;  // 
+// i = 0;  // | good
+// i = 1;  // | ok
+// i = 2;  // | ok
+// i = 3;  // | ok/poor (not much possible)
+// i = 4;  // | ok/poor (not much possible)
 
-// i = 5;  //  PROBLEMATIC HORIZONTAL
+// i = 5;  // | ok
+// i = 6;  // | ok
+// i = 7;  // | good
+// i = 8; // | ok
 
-// i = 6;  // 
-// i = 7;  //
-// i = 8; // 
+// i = 9;  // actually front/back - center epipole? | ok
+// i = 10; // unlucky | ok
+// i = 11; // actually front/back - center epipole? | ok
 
-// i = 9;  // actually front/back - center epipole?
+// i = 12; // actually front/back - center epipole? | great
+// i = 13; // almost front/back - center epipole | great
 
-// i = 10; // unlucky ? 
-
-// i = 11; // actually front/back - center epipole?
-
-// i = 12; // actually front/back - center epipole?
-// i = 13; // almost front/back - center epipole
-
-// i = 14; // 
+// i = 14; //  | good
 // console.log("PICKED: "+i);
 		var pair = pairs[i];
 		var idA = pair["A"];
@@ -10096,6 +10093,11 @@ R3D.drawMatches(matches, 0,0, imageMatrixA.width(),0, GLOBALSTAGE, 0xFFFF0000);
 matches = [pAs,pBs];
 Code.randomPopParallelArrays(matches, 500);
 R3D.drawMatches(matches, 0,0, imageMatrixA.width(),0, GLOBALSTAGE, 0x9900FFFF);
+				var errorRMean = transform.rMean();
+				var errorRSigma = transform.rSigma();
+				if(errorRMean>0.5){
+					console.log("errorRMean way too big, at most 0.1 px => likely wrong ordering in Z-depth");
+				}
 				var errorR = (transform.rSigma() + transform.rMean());// / transform.viewA().size().x;
 				var errorF = (transform.fSigma() + transform.fMean());// / transform.viewA().size().x;
 				console.log("transform error R: "+errorR+" of "+maxErrorRTrackPixels);

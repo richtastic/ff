@@ -424,26 +424,6 @@ https://cloud.google.com/appengine/docs/nodejs/
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
-
-x caching / lookup needs to be much faster
-	- keep list of ALREADY DONE calculations - stored on each featureA
-
-
-x visualize linear R:
-	- record a session
-	- run thru process using record
-	- plot points in octave
-	- add processes:
-		- cameras have to point within 90 degrees of eachother
-		- z-depth for each camera is the ray from each camera to point DOT camera normal vector
-
-
-x nonlinear iterations for best R
-	- first camera matrix is Identity
-	- move R around [tx,ty,tz, rx,ry,rz] until reprojection error (/z?) is minimized
-
-
-
 - should nonlinear R in stereopsis recalculate P3D too ? [or top 1 sigma points ? or some random count up to ~ 1K] 
 
 
@@ -452,6 +432,18 @@ x nonlinear iterations for best R
 	- each pair picks ~ 100 pts at random?
 
 
+
+
+- what are next steps once good absolute orientations are found?
+	- STILL SEARCHING ALONG F-LINE?
+	- lower search error (~ 1px)
+	- know relative angle
+	- can ignore bad affine mappings?
+	- more accurate local mapping of image
+		=> can use SAD exactly to compare
+		=> can use lower error tolerance
+
+- stereopsis still needs to be better at discarding outliers
 
 
 
@@ -468,7 +460,6 @@ R3D.transformFromFundamental3
 - R error is high on a good set of points
 - MAYBE R ERROR IS TAKEN AT BAD POINT BEFORE WORST POINTS ARE DROPPED -- WHAT IS THE DISPARITY?
 - Rerror / z-depth 
-
 - RERROR USING DEPTH IS A BETTER METRIC OF R-ERROR ----- make systematic ?
 
 
