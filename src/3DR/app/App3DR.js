@@ -3667,11 +3667,10 @@ console.log(bind)
 			this._textures.push(bind);
 
 // TODO: PROJECT TL/TR/BR/BL TO RAY & INTERSECT WITH PLANE+NORM*delta
-//
-//
-//console.log(K)
+// console.log(K)
 			var wid = image.width;
 			var hei = image.height;
+
 			var fx = K.get(0,0);
 			var fy = K.get(1,1);
 			var cx = K.get(0,2);
@@ -7902,7 +7901,7 @@ console.log("pair count: "+pairs.length+" ............");
 		var idA = pair["A"];
 		var idB = pair["B"];
 		var matches = pair["matches"];
-matches = null;
+// matches = null;
 		if(!Code.isSet(matches)){
 			console.log("need to try pair: "+idA+" & "+idB);
 			currentPair = pair;
@@ -7910,7 +7909,7 @@ matches = null;
 			var relativeAB = pair["relativeTransform"];
 
 
-relativeAB = null;
+// relativeAB = null;
 
 // var m = Matrix.fromObject(relativeAB);
 // m = Matrix.inverse(m);
@@ -7933,17 +7932,18 @@ console.log("calculatePairMatchFromViewIDs");
 			return;
 		}
 	}
-throw ">triples";
+// throw ">triples";
 	var triples = inputData["triples"];
 	if(!triples){
 		// make every possible triple from pairs
-		var minimumRelativeCount = 100;
+		var minimumRelativeCount = 100; // should be some % of image ?
 		triples = {};
 		var haveTriples = 0;
 		for(var i=0; i<pairs.length; ++i){
 			var pairA = pairs[i];
 			var relativeCountA = pairA["tracks"];
 			if(!(relativeCountA && relativeCountA>minimumRelativeCount)){
+				console.log("SKIP A: "+relativeCountA);
 				continue;
 			}
 			++haveTriples;
@@ -7953,6 +7953,7 @@ throw ">triples";
 				var pairB = pairs[j];
 				var relativeCountB = pairB["tracks"];
 				if(!(relativeCountB && relativeCountB>minimumRelativeCount)){
+					console.log("SKIP B: "+relativeCountB);
 					continue;
 				}
 				var idBA = pairB["A"];
@@ -7965,16 +7966,18 @@ throw ">triples";
 					var idB = uniqueStrings[1];
 					var idC = uniqueStrings[2];
 					var tripleID = idA+"-"+idB+"-"+idC;
+					console.log(tripleID);
+					if(triples[tripleID]){
+						// console.log(triples[tripleID]);
+						// console.log("triple already exists: "+tripleID);
+						// throw "triple already exists?";
+						continue;
+					}
 					var triple = {};
 						triple["id"] = tripleID;
 						triple["A"] = idA;
 						triple["B"] = idB;
 						triple["C"] = idC;
-					if(triples[tripleID]){
-						console.log(triples[tripleID]);
-						console.log(triple);
-						throw "triple already exists?";
-					}
 					triples[tripleID] = triple;
 				}
 			}
@@ -7985,12 +7988,14 @@ throw ">triples";
 console.log(triples);
 	triples = Code.objectToArray(triples);
 console.log(triples);
-throw ">are any triple match DUPLICATED?";
+
+// throw "TRIPLES"
 
 	inputData["triples"] = triples;
 	}
-// console.log("PAIRS  COUNT: "+inputData["pairs"].length);
-// console.log("TRIPLE COUNT: "+inputData["triples"].length);
+
+	console.log("TRIPLE COUNT: "+inputData["triples"].length);
+
 	// LOAD EACH POSSIBLE TRIPLE
 	var saveProjectFxn = function(){
 		console.log("saveProjectFxn");	
@@ -8026,7 +8031,7 @@ console.log("inputFilename: "+inputFilename);
 	// CREATE GRAPH FROM PAIRWISE & TRIPLE SCALE
 	var graph = inputData["graph"];
 // force redo:
-graph = null;
+// graph = null;
 	if(!graph){
 console.log("RICHIE - START GRAPH");
 		var views = project.views();
@@ -8061,6 +8066,8 @@ console.log("RICHIE - START GRAPH");
 		console.log("_absoluteViewsFromDatas");
 		var graph = this._absoluteViewsFromDatas(graphViews, graphPairs, graphTriples);
 console.log(graph);
+
+// ???
 		var viewIndextoViewID = graph["views"];
 for(var v=0; v<viewIndextoViewID.length; ++v){
 	var index = viewIndextoViewID[v];
@@ -8126,7 +8133,7 @@ for(var v=0; v<viewIndextoViewID.length; ++v){
 			dataGroups.push(g);
 		}
 		console.log(data);
-throw "BEFORE SAVE GRAPH"
+// throw "BEFORE SAVE GRAPH"
 		// save graph & reference it
 		inputData["graph"] = graphFilename;
 		var saveSparseFxn = function(){
@@ -8140,6 +8147,7 @@ throw "BEFORE SAVE GRAPH"
 		return;
 	}
 // throw ">aggregate";
+console.log("aggregate ...")
 	// AGGREGATE TRACKS INTO POINT FILE
 	// trackCount: # = done ?
 	var trackCount = inputData["trackCount"]; // number of loaded tracks
@@ -8232,7 +8240,17 @@ throw ">X";
 		order all neighbors on path error
 		select up to ~ 10-16? best [~6 is good, allow for some incorrect matches]
 		consolidate all pair matches in global lookup to drop repeats, etc
+	
 
+		ALG:
+			decide which edges to include:
+				- for each view:
+					- get mean/sigma / limit (2~3 sigma) for each 
+
+
+			create graph:
+				- 1 vertex for every view
+				- 1 edge for every 
 	*/
 
 
@@ -8353,6 +8371,9 @@ App3DR.ProjectManager.prototype._iterateSparseTracks = function(sourceData, sour
 				// var maxIterationsBA = 10*allViews.length;
 				// var maxIterationsBA = 2*allViews.length;
 				var maxIterationsBA = 1*allViews.length;
+				// var maxIterationsBA = -1;
+				// var maxIterationsBA = 1;
+				maxIterationsBA = 1E9;
 
 
 				// if the next error is very low, or max iterations reached => done
@@ -8364,7 +8385,7 @@ App3DR.ProjectManager.prototype._iterateSparseTracks = function(sourceData, sour
 						isDone = true;
 					}
 				}
-
+console.log("ITERATION NUMBER: "+baIterations+" / "+maxIterationsBA);
 				if(baIterations>maxIterationsBA){
 					console.log("max iterations reached");
 					isDone = true;
@@ -8374,9 +8395,12 @@ App3DR.ProjectManager.prototype._iterateSparseTracks = function(sourceData, sour
 				if(isDone){ // BA is done -> find best putatives for dense
 console.log("isDone - FULL DONE")
 					var allTransforms = fullData["transforms"];
-					var info = App3DR.ProjectManager._putativePairsFromViewsAndTransforms(allViews,allTransforms);
+					console.log(fullData);
 					console.log(allViews,allTransforms);
+					var info = App3DR.ProjectManager._putativePairsFromViewsAndTransforms(allViews,allTransforms);
+					
 					console.log(info);
+throw "putative here ..."
 					// var pairs = info["lookup"];
 					var pairs = info["pairs"];
 					// var pairs = info["lookup"];
@@ -8501,6 +8525,9 @@ console.log("isDone - FULL DONE")
 				}
 					// throw "baOptimizations"
 				// }else{ // optimize
+
+// HERE
+
 				if(true){
 					// throw "optimize now"
 					var info = world.solveOptimizeSingleView(worldView);
@@ -8510,6 +8537,7 @@ console.log("isDone - FULL DONE")
 					nextViewBA["count"] = worldView.pointCount();
 					nextViewBA["updated"] = Code.getTimeMilliseconds();
 				}
+// throw "wat";
 				
 				// update views:
 				var worldObject = world.toObject();
@@ -8613,6 +8641,7 @@ console.log("fullBundlePath: "+fullBundlePath);
 				console.log(graphData);
 
 // throw "before save"
+console.log(" save graph ");
 				// SAVE
 				var savedGraphComplete = function(){
 					console.log("savedGraphComplete: "+graphFile);
@@ -8700,7 +8729,8 @@ var original = extB;
 							// absA = oldOriginR;
 						// var relativeAB = R3D.relativeTransformMatrix2(absA,absB);
 						// var relativeAB = R3D.relativeTransformMatrix2(absB, absA);
-						var extrinsicAB = R3D.relativeTransformMatrix2(extA,extB);
+						// var extrinsicAB = R3D.relativeTransformMatrix2(extA,extB);
+						var extrinsicAB = Matrix.relativeWorld(extA,extB);
 						var relativeAB = Matrix.inverse(extrinsicAB);
 						// console.log("RELATIVE: "+relativeAB);
 						// absA = newOriginR;
@@ -8804,6 +8834,7 @@ if(newOriginID==null){
 				var minimumPixelErrorBA = 0.001; // 1/1000 -- TODO: different for SPARSE/DENSE
 				// var maxIterationsBA = 10*baViews.length;
 				var maxIterationsBA = 2*baViews.length;
+// maxIterationsBA = -1;
 
 				// if(!baOptimizations){
 				// 	baOptimizations = [];
@@ -9341,6 +9372,7 @@ App3DR.ProjectManager._putativePairsFromViewsAndTransforms = function(views, tra
 
 	// create edges
 	// var transformLookupPairID = {};
+console.log(transforms)
 	for(var i=0; i<transforms.length; ++i){
 		var transform = transforms[i];
 		var matchCount = transform["matches"];
@@ -9431,6 +9463,7 @@ App3DR.ProjectManager._putativePairsFromViewsAndTransforms = function(views, tra
 		} // App3DR.ProjectManager.pairIDFromViewIDs
 	}
 	// console.log(pairLookup);
+throw "before have putatives for dense"
 	var pairs = Code.objectToArray(pairLookup);
 	return {"pairs":pairs, "lookup":pairLookup};
 }
@@ -9504,6 +9537,7 @@ App3DR.ProjectManager.pairIDFromViewIDs = function(idA,idB){
 	return idA < idB ? (idA+"-"+idB) : (idB+"-"+idA);
 }
 App3DR.ProjectManager.prototype._absoluteViewsFromDatas = function(views, pairs, triples){
+	// throw "is ths used?"
 	var viewToID = function(view){
 		return view["id"];
 	};
@@ -9537,13 +9571,13 @@ App3DR.ProjectManager.prototype._absoluteViewsFromDatas = function(views, pairs,
 	var pairs = first["pairs"];
 	var views = first["views"];
 
-this.displayViewGraph(transforms,pairs, 500);
+	this.displayViewGraph(transforms,pairs, 500);
 	
 	console.log("Should these be extrinsic?")
-	// // absolute to extrinsic
-	// for(var i=0; i<transforms.length; ++i){
-	// 	transforms[i] = Matrix.inverse(transforms[i]);
-	// }
+	// absolute to extrinsic
+	for(var i=0; i<transforms.length; ++i){
+		transforms[i] = Matrix.inverse(transforms[i]);
+	}
 	var skeleton = R3D.skeletalViewGraph(pairs);
 	var backbone = skeleton["skeletonVertexes"];
 	var groups = skeleton["groupVertexes"];
@@ -10125,10 +10159,8 @@ R3D.drawMatches(matches, 0,0, imageMatrixA.width(),0, GLOBALSTAGE, 0x9900FFFF);
 					pairData["tracks"] = world.toObject();
 					pairData["metricNeighborsToWorld"] = reconstructionMetric;
 				}
-
-
 console.log(pairData);
-throw "before save pair B"
+// throw "before save pair B"
 				pairDoneSaveFxn();
 			}
 
@@ -14603,8 +14635,8 @@ App3DR.ProjectManager.prototype._denseAbsoluteOrientation = function(data){
 		// console.log(sourceView);
 		var camID = sourceView["camera"];
 		var size = sourceView["size"];
-		var extrinsic = transforms[i];
-			// var extrinsic = Matrix.inverse(transform);
+		var absolute = transforms[i];
+			var extrinsic = Matrix.inverse(absolute);
 			// var extrinsic = transform;
 		view = {"id":viewID, "R":extrinsic, "camera":camID, "size":size};
 		pointViews.push(view);
@@ -14670,7 +14702,7 @@ App3DR.ProjectManager.prototype.iterateSparseTracks = function(){
 
 App3DR.ProjectManager.prototype._absoluteViewsFromDensePairs = function(views, pairs, triples){
 	console.log("_absoluteViewsFromDensePairs");
-
+throw "is this used ?"
 	var viewToID = function(view){
 		return view["id"];
 	};
@@ -14687,6 +14719,7 @@ App3DR.ProjectManager.prototype._absoluteViewsFromDensePairs = function(views, p
 	var pairToTransform = function(pair, idA,idB){
 		var A = pair["A"];
 		var B = pair["B"];
+console.log("PAIR TO  TRANS ???");
 		// console.log(A,idA,B,idB);
 		var R = pair["R"];
 			R = new Matrix().fromObject(R);

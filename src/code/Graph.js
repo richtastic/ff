@@ -768,7 +768,7 @@ Graph.reachableEdgesAndVertexes = function(graph,source){
 	var edgeList = [];
 	var vertexList = [];
 	Q.push(source);
-	var maxCount = 25;
+	var maxCount = 9999;
 	while(Q.length>0){
 		// console.log("LOOP: "+Q.length)
 		--maxCount;

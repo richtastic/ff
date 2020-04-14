@@ -396,7 +396,7 @@ https://cloud.google.com/appengine/docs/nodejs/
 - compression
 - encryption
 
-04/10 - fixing / updating F->R process
+
 04/12 - retry 6 images using new sparse absolute orientation algorithms
 		- is BA helpful? (show before and after)
 04/14 - retry dense selection using known R
@@ -423,36 +423,69 @@ https://cloud.google.com/appengine/docs/nodejs/
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-
-- should nonlinear R in stereopsis recalculate P3D too ? [or top 1 sigma points ? or some random count up to ~ 1K] 
-
-
-
-- BA [many views] is too big to?
-	- each pair picks ~ 100 pts at random?
+BUNDLE ADJUSTMENT:
+- R error looks very low but the visuals look bad
+=> if R matrixes are offset by some random H, is the reprojection error still low (because the triangulated point is a fxn of A & B ?)
+- 
 
 
 
+
+x TEST TRIANGULATION TO OPTIMIZE VIEW ABSOLUTE MATRIXES
+- are estimated3D averaging from source matrixes correctly?
+
+
+=> having some points behind camera shouldn't be too bad --- there might be some actually  bad points that should be dropped
+
+
+- ABSOLUTE GRAPH:
+	- bundle adjustments
+		-> use re-triangulation to update R locations
+		- how to do 'en masse ?'
+
+	
+
+- negative z values in projection error aren't currently considered bad
+
+solveOptimizeSingleView
+
+
+
+
+- DENSE PAIR - R:
 
 - what are next steps once good absolute orientations are found?
-	- STILL SEARCHING ALONG F-LINE?
-	- lower search error (~ 1px)
-	- know relative angle
-	- can ignore bad affine mappings?
-	- more accurate local mapping of image
+	- SEARCHING ALONG F-LINE?
+	- low F-search error (~ 1px)
+	- know relative angle from F
+	- know affine for each compare - more accurate local mapping of image
 		=> can use SAD exactly to compare
 		=> can use lower error tolerance
-
-- stereopsis still needs to be better at discarding outliers
-
+	- can ignore bad affine mappings? [limit search-line width]
 
 
 
-REDO ... problems with:
-R3D.transformFromFundamental3
--> use proj error?
--> better estimates of front / behind camera
--> special cases handling?
+
+- logic for calculating 'dense' pair putative list
+	- 
+
+
+
+
+- R comparison should have much more features to compare with for accuracy (2000-4000)
+
+
+
+
+- NONLINEAR R - STEREOPSIS - DLT TRIANGULATION + PROCESSING:
+	- should nonlinear R in stereopsis recalculate P3D too ? [or top 1 sigma points ? or some random count up to ~ 1K] 
+	- BA [many views] is too big to?
+		- each pair picks ~ 100 pts at random?
+
+
+
+- stereopsis still needs to be better at discarding outliers (groups of points outside error)
+
 
 
 
@@ -465,17 +498,8 @@ R3D.transformFromFundamental3
 
 
 
-- if F / R errors are too high => try expanding feature windows to drop worst scores again
-STEREOPSIS
-> recalculateMatchVisualErrors
-
-
-
-
 
 should F fwd & bak both be checked? --- are these always parallel lines ?
-
-
 
 
 
@@ -486,20 +510,6 @@ Matrix.relativeWorld
 
 
 stereopsis - estimate3DViews -- ????????????????? what does this do?
-
-
-- R comparison should have much more features to compare with for accuracy (2000-4000)
-
-
-
-- triple duplicates - order doesn't matter in triples
-
-
-- does 'new' sets of pairs include the best ones (eg 1-3 ?)
-
-
-
-- logic for 'dense' pair putative list
 
 
 
@@ -538,10 +548,6 @@ BAD: (2 is closest, 4 & 5 should be behind all)
 
 - PLOT STEREOPSIS ERRORS AGAIN & SEE IF CORRECT ERROR DROPPING IS WORKING
 
-...
-	- initial F
-	- repeat:
-		- F + K -> R
 
 
 -------------------------> ALL Rs are too bad to have useful F-matches

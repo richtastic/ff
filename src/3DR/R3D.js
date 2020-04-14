@@ -383,10 +383,117 @@ R3D.PFromKRT = function(K,R,t){
 	// transform[:,-1] = -c[:]
 	// return transform
 }
+
+R3D.optimizeMultipleCameraExtrinsicNonlinear = function(listP, listK, listKinv, pointsAB2DList, maxIterations){ // very last P/K is assumed variable one
+	console.log("R3D.optimizeMultipleCameraExtrinsicNonlinear");
+	console.log(listP);
+	console.log(listK);
+	console.log(listKinv);
+	console.log(pointsAB2DList);
+	console.log(maxIterations);
+
+	var lastIndex = listP.length-1;
+	
+	maxIterations = Code.valueOrDefault(maxIterations, 1000);
+	var args = [listP, listK, listKinv, pointsAB2DList];
+	var P = listP[lastIndex];
+	var x = R3D.transformMatrixToComponentArray(P);
+
+	var result = Code.gradientDescent(R3D._transformCameraExtrinsicMultipleNonlinearGD, args, x, null, maxIterations, 1E-1); // sub pixel 
+	var x = result["x"];
+	var cost = result["cost"];
+
+	var P = new Matrix(4,4);
+	var tx = x[0];
+	var ty = x[1];
+	var tz = x[2];
+	var rx = x[3];
+	var ry = x[4];
+	var rz = x[5];
+	R3D.transform3DFromParameters(P, rx,ry,rz, tx,ty,tz);
+	return {"P":P, "error":cost};
+}
+
+R3D._transformCameraExtrinsicMultipleNonlinearGD = function(args, x, isUpdate){
+	// if(isUpdate){
+	// 	return;
+	// }
+	var listP = args[0];
+	var listK = args[1];
+	var listKinv = args[2];
+	var pointsAB2DList = args[3];
+	var firstVariableIndex = listP.length-1;
+
+	var tx = x[0];
+	var ty = x[1];
+	var tz = x[2];
+	var rx = x[3];
+	var ry = x[4];
+	var rz = x[5];
+	
+	if(!R3D._transformCameraExtrinsicNonlinearGD_Matrix){
+		R3D._transformCameraExtrinsicNonlinearGD_Matrix = new Matrix(4,4);
+		// R3D._transformCameraExtrinsicNonlinearGD_Identity = new Matrix(4,4).identity();
+	}
+	// var extrinsicA = R3D._transformCameraExtrinsicNonlinearGD_Identity;
+	var extrinsicB = R3D._transformCameraExtrinsicNonlinearGD_Matrix;
+	R3D.transform3DFromParameters(extrinsicB, rx,ry,rz, tx,ty,tz);
+	
+	var Kb = listK[firstVariableIndex];
+	var KbInv = listKinv[firstVariableIndex];
+
+	var totalError = 0;
+
+	var pointSetCount = pointsAB2DList.length;
+	for(var k=0; k<pointSetCount; ++k){
+		var pointsAB2D = pointsAB2DList[k];
+		var indexA = pointsAB2D[0];
+		var indexB = pointsAB2D[1]; // should always be 
+		var pointsA2D = pointsAB2D[2];
+		var pointsB2D = pointsAB2D[3];
+		var pointCount = pointsA2D.length;
+		// loop values
+		var extrinsicA = listP[indexA];
+		var Ka = listK[k];
+		var KaInv = listKinv[k];
+		// get error for entire point set
+		for(var i=0; i<pointCount; ++i){
+			var pA = pointsA2D[i];
+			var pB = pointsB2D[i];
+			var p3D = R3D.triangulatePointDLT(pA,pB, extrinsicA,extrinsicB, KaInv, KbInv);
+			if(!p3D){ // very far away [or close ?]
+				// totalError += 1E9;
+				totalError += 0;
+				continue;
+			}
+			var v3DA = extrinsicA.multV3DtoV3D(p3D);
+			var p3DA = Ka.multV3DtoV3D(v3DA);
+			var v3DB = extrinsicB.multV3DtoV3D(p3D);
+			var p3DB = Kb.multV3DtoV3D(v3DB);
+			// if(p3DA.z<=0 || p3DB.z<=0){ // behind camera
+			if(false){
+				totalError += 1E9;
+			}else{
+				p3DA.homo();
+				p3DB.homo();
+				var distanceSquareA = V2D.distanceSquare(pA, p3DA);
+				var distanceSquareB = V2D.distanceSquare(pB, p3DB);
+				var error = distanceSquareA + distanceSquareB;
+				totalError += error;
+			}
+		} // point-pair list
+	} // view-pair list
+	if(isUpdate){
+		console.log(totalError);
+	}
+	return totalError;
+}
+
 R3D.transformCameraExtrinsicNonlinear = function(P, pointsA2D,pointsB2D, Ka,KaInv, Kb,KbInv, maxIterations){
 	console.log("R3D.transformCameraExtrinsicNonlinear");
+	throw "map to other fxn"
 	maxIterations = Code.valueOrDefault(maxIterations, 1000);
-	var args = [pointsA2D,pointsB2D, Ka,KaInv, Kb,KbInv];
+	var args = [pointsA2D,pointsA2B, Ka,KaInv, Kb,KbInv];
 	var x = R3D.transformMatrixToComponentArray(P);
 
 	var result = Code.gradientDescent(R3D._transformCameraExtrinsicNonlinearGD, args, x, null, maxIterations, 1E-1); // sub pixel 
@@ -470,7 +577,7 @@ R3D._transformCameraExtrinsicNonlinearGD = function(args, x, isUpdate){
 	// }
 	return totalError;
 }
-R3D.transformFromFundamental = function(pointsA, pointsB, F, Ka,KaInv, Kb,KbInv, M1, forceSolution, log){ // find relative transformation matrix  // points use Fg
+R3D.transformFromFundamental = function(pointsA, pointsB, F, Ka,KaInv, Kb,KbInv, M1, forceSolution, log){ // find relative transformation matrix  // points use F
 	return R3D.transformFromFundamental4(pointsA, pointsB, F, Ka,KaInv, Kb,KbInv, M1, forceSolution, log);
 }
 

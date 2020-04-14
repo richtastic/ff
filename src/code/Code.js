@@ -16676,6 +16676,7 @@ console.log("TRIPLES: "+triples.length);
 
 	var groupResults = [];
 	// solve for relative scales for groups
+	console.log("relative scales ...");
 	for(var i=0; i<groups.length; ++i){
 		var vertexes = groups[i];
 		console.log("GROUP: "+i+" = "+vertexes.length);
@@ -16685,12 +16686,13 @@ console.log("TRIPLES: "+triples.length);
 			// vertex.temp(j);
 			vertex.data()["groupID"] = j;
 		}
-		console.log("reachableEdges")
+		console.log("reachableEdges: ...")
 		var edges = pairGraph.reachableEdges(vertexes[0]);
-		// console.log(edges);
+		console.log(edges.length + "reachable");
 		// throw "..."
 		groupEdges[i] = edges;
 		// fill out edges
+
 		var solveEdges = [];
 		for(var j=0; j<edges.length; ++j){
 			var edge = edges[j];
@@ -16834,12 +16836,12 @@ console.log("solve for absolute orientations")
 			var error = pairToError(pair);
 			groupPairs.push([idA,idB,error]);
 		}
-
+		console.log("result: "+i);
 		var groupResult = {"transforms":groupTransforms, "views":groupViews, "pairs":groupPairs};
 		groupResults.push(groupResult);
 
 	} // for each grup
-
+	console.log("groups?");
 	console.log(groupResults);
 
 	return {"groups":groupResults};
