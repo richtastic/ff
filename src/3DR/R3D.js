@@ -384,14 +384,127 @@ R3D.PFromKRT = function(K,R,t){
 	// return transform
 }
 
-R3D.optimizeMultipleCameraExtrinsicNonlinear = function(listP, listK, listKinv, pointsAB2DList, maxIterations){ // very last P/K is assumed variable one
+
+R3D.optimizeMultipleCameraExtrinsicDLTNonlinear = function(listP, listK, listKinv, variablePIndex, listPoints2D, maxIterations){ // very last P/K is assumed variable one
+	maxIterations = Code.valueOrDefault(maxIterations, 1000);
 	console.log("R3D.optimizeMultipleCameraExtrinsicNonlinear");
 	console.log(listP);
 	console.log(listK);
 	console.log(listKinv);
-	console.log(pointsAB2DList);
+	console.log(listPoints2D);
 	console.log(maxIterations);
 
+	var args = [listP, listK, listKinv, variablePIndex, listPoints2D];
+	
+	// make a temporary matrix for iterating on
+	var O = listP[variablePIndex];
+		P = O.copy();
+	listP[variablePIndex] = P;
+
+	var x = R3D.transformMatrixToComponentArray(P);
+	var result = Code.gradientDescent(R3D._transformCameraExtrinsicDLTNonlinearGD, args, x, null, maxIterations, 1E-10);
+	var x = result["x"];
+	var cost = result["cost"];
+
+	// repalce as-was
+	listP[variablePIndex] = O;
+
+	var P = new Matrix(4,4);
+	var tx = x[0];
+	var ty = x[1];
+	var tz = x[2];
+	var rx = x[3];
+	var ry = x[4];
+	var rz = x[5];
+	R3D.transform3DFromParameters(P, rx,ry,rz, tx,ty,tz);
+	return {"P":P, "error":cost};
+}
+R3D._transformCameraExtrinsicDLTNonlinearGD = function(args, x, isUpdate){
+	// if(isUpdate){
+	// 	return;
+	// }
+	var listP = args[0];
+	var listK = args[1];
+	var listKinv = args[2];
+	var variableIndex = args[3];
+	var listPoints2D = args[4];
+	
+	var tx = x[0];
+	var ty = x[1];
+	var tz = x[2];
+	var rx = x[3];
+	var ry = x[4];
+	var rz = x[5];
+	
+	var extrinsicP = listP[variableIndex];
+	R3D.transform3DFromParameters(extrinsicP, rx,ry,rz, tx,ty,tz);
+	
+	var totalError = 0;
+
+	var pointSetCount = listPoints2D.length;
+	var tempP3D = new V3D();
+	for(var k=0; k<pointSetCount; ++k){
+		var track = listPoints2D[k];
+// console.log(track);
+		// get predicted 3D point
+		var points2D = [];
+		var extrinsics = [];
+		var invKs = [];
+		for(var t=0; t<track.length; ++t){
+			var entry = track[t];
+			var point2D = entry[0];
+			var indexP = entry[1];
+			points2D.push(point2D);
+			extrinsics.push(listP[indexP]);
+			invKs.push(listKinv[indexP]);
+		}
+		var point3D = R3D.triangulatePointDLTList(points2D, extrinsics, invKs);
+		// console.log(point3D);
+		if(!point3D){
+			console.log("null point3D");
+			continue;
+		}
+		// reprojection error:
+		var error = 0;
+		for(var t=0; t<track.length; ++t){
+			var entry = track[t];
+			var point2D = entry[0];
+			var indexP = entry[1];
+
+			var P = listP[indexP];
+			var K = listK[indexP];
+
+			P.multV3DtoV3D(tempP3D,point3D);
+			K.multV3DtoV3D(tempP3D,tempP3D);
+			// if tempP3D <= 0 => behind camera
+				tempP3D.homo();
+			var distanceSquare = V2D.distanceSquare(point2D, tempP3D);
+				// console.log("DISTANCE: "+Math.sqrt(distanceSquare));
+			error += distanceSquare;
+		}
+		// console.log(error);
+		totalError += error;
+
+	} // track list
+	// console.log(totalError);
+	if(isUpdate){
+		console.log(totalError);
+	}
+	// throw "?"
+	return totalError;
+}
+
+
+
+
+
+
+
+
+
+
+R3D.optimizeMultipleCameraExtrinsicNonlinear = function(listP, listK, listKinv, pointsAB2DList, maxIterations){ // very last P/K is assumed variable one
+	console.log("R3D.optimizeMultipleCameraExtrinsicNonlinear");
 	var lastIndex = listP.length-1;
 	
 	maxIterations = Code.valueOrDefault(maxIterations, 1000);
@@ -399,7 +512,7 @@ R3D.optimizeMultipleCameraExtrinsicNonlinear = function(listP, listK, listKinv, 
 	var P = listP[lastIndex];
 	var x = R3D.transformMatrixToComponentArray(P);
 
-	var result = Code.gradientDescent(R3D._transformCameraExtrinsicMultipleNonlinearGD, args, x, null, maxIterations, 1E-1); // sub pixel 
+	var result = Code.gradientDescent(R3D._transformCameraExtrinsicMultipleNonlinearGD, args, x, null, maxIterations, 1E-10); // sub pixel  ???
 	var x = result["x"];
 	var cost = result["cost"];
 
@@ -496,7 +609,7 @@ R3D.transformCameraExtrinsicNonlinear = function(P, pointsA2D,pointsB2D, Ka,KaIn
 	var args = [pointsA2D,pointsA2B, Ka,KaInv, Kb,KbInv];
 	var x = R3D.transformMatrixToComponentArray(P);
 
-	var result = Code.gradientDescent(R3D._transformCameraExtrinsicNonlinearGD, args, x, null, maxIterations, 1E-1); // sub pixel 
+	var result = Code.gradientDescent(R3D._transformCameraExtrinsicNonlinearGD, args, x, null, maxIterations, 1E-6); // 1E-1 = sub pixel ?
 	var x = result["x"];
 	var cost = result["cost"];
 
@@ -8492,6 +8605,51 @@ R3D.triangulationDLT = function(pointsFr,pointsTo, cameraExtrinsicA,cameraExtrin
 	return points3D;
 }
 
+
+R3D.triangulatePointDLTList = function(points2D, extrinsics, Kinvs){ 
+	var entryCount = points2D.length;
+	var cols = 4;
+	var rows = 2*entryCount; // total number of pairs
+	var A = new Matrix(rows,cols);
+	var p = new V3D();
+	for(var i=0; i<entryCount; ++i){
+		var i2 = i*2;
+		var p2D = points2D[i];
+		var Kinv = Kinvs[i];
+		var extrinsic = extrinsics[i];
+		p.set(p2D.x,p2D.y,1.0);
+		Kinv.multV3DtoV3D(p,p);
+		var A00 = extrinsic.get(0,0);
+		var A01 = extrinsic.get(0,1);
+		var A02 = extrinsic.get(0,2);
+		var A03 = extrinsic.get(0,3);
+		var A10 = extrinsic.get(1,0);
+		var A11 = extrinsic.get(1,1);
+		var A12 = extrinsic.get(1,2);
+		var A13 = extrinsic.get(1,3);
+		var A20 = extrinsic.get(2,0);
+		var A21 = extrinsic.get(2,1);
+		var A22 = extrinsic.get(2,2);
+		var A23 = extrinsic.get(2,3);
+		A.set(0+i2,0, p.x*A20 - A00 ); // X
+		A.set(0+i2,1, p.x*A21 - A01 ); // Y
+		A.set(0+i2,2, p.x*A22 - A02 ); // Z
+		A.set(0+i2,3, p.x*A23 - A03 ); // W
+		A.set(1+i2,0, p.y*A20 - A10 ); // X
+		A.set(1+i2,1, p.y*A21 - A11 ); // Y
+		A.set(1+i2,2, p.y*A22 - A12 ); // Z
+		A.set(1+i2,3, p.y*A23 - A13 ); // W
+	}
+	var svd = Matrix.SVD(A);
+	var coeff = svd.V.colToArray(3);
+	var point = new V3D(coeff[0],coeff[1],coeff[2]);
+	var den = coeff[3];
+	if(Math.abs(den)<=1E-12){ // too close numerically ?
+		return null;
+	}
+	point.scale(1.0/den);
+	return point;
+}
 
 R3D.triangulatePointDLT = function(fr,to, cameraA,cameraB, KaInv, KbInv){ // get 3D point from extrinsic camera
 	var rows = 4, cols = 4;

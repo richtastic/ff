@@ -8527,6 +8527,7 @@ throw "putative here ..."
 				// }else{ // optimize
 
 // HERE
+baIterations -= 1;
 
 				if(true){
 					// throw "optimize now"

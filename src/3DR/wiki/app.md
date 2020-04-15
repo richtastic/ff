@@ -427,6 +427,96 @@ BUNDLE ADJUSTMENT:
 - R error looks very low but the visuals look bad
 => if R matrixes are offset by some random H, is the reprojection error still low (because the triangulated point is a fxn of A & B ?)
 - 
+x print out average R error per track count
+
+
+=> TRIPLE REPROJECTION ERROR IS REALLY GOOD TOO ???? (SUB PIXEL ???)
+
+
+=> error not correlated with visual problems
+...
+
+=> what are the deltas between 3+ tracks & predicted location
+	- want to minimize the distance between average & predicted track points (3+ views)
+
+
+
+=> the projected 3D points & reprojection errors are all self-consistent in a 2-view scenario
+	=> self-consistent, not cross-consistent
+
+=> in order to bring the error of neighbors into account, need to incoporate multiple views' estimates
+	- need tracks with 3+ views
+	
+
+
+: have single view to update
+	- get all P3D involving viewI, with at least 3 views (more than 1 match)
+		P3D's will look like:
+			[ p2Di, indexi, p2Dj, indexj, p2Dk, indexk, ... ]
+			[ p2Di, extrinsici, p2Dj, extrinsicj, p2Dk, extrinsick, ... ]
+	-3D triangulated point will be:
+		a) average of separate 3D locations (by error)
+		b) DLT of multiple cameras/points at once
+	- reprojection error is calculated from simultaneous 3D point & separate 2D points
+		error = for each  2d point:
+			distanceSquare( p2d, projected (3D) )
+	- ...
+
+
+
+
+triangulation DLT
+
+https://filebox.ece.vt.edu/~jbhuang/teaching/ece5554-4554/fa17/lectures/Lecture_15_StructureFromMotion.pdf
+
+http://www.cs.cmu.edu/~16385/s17/Slides/11.4_Triangulation.pdf
+
+
+TFT ???
+
+https://www.robots.ox.ac.uk/~vgg/hzbook/hzbook2/HZtrifocal.pdf
+
+https://pdfs.semanticscholar.org/0757/436862dba2d98dfb6b0947a9d76156b37b11.pdf
+
+https://pdfs.semanticscholar.org/31f9/a0c864f4d7cf2b2f298eac11321fb32e51a7.pdf
+
+
+
+
+
+
+
+
+
+
+
+
+
+TRACK COUNT:
+
+0: 0
+1: 0
+2: 4317
+3: 874
+4: 220
+5: 62
+6: 18
+...
+R:
+error 2 : 0.0000030801659901249406 +/- 0.15094025235893935
+error 3 : 0.010559779666180354 +/- 0.10686896649803862
+error 4 : 0.02684107700507035 +/- 0.08516434240687706
+error 5 : 0.06201356670334037 +/- 0.04705939813118085
+error 6 : 0.06556721818588808 +/- 0.032345805782957766
+F:
+
+
+
+
+
+
+
+
 
 
 
