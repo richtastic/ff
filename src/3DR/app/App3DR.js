@@ -4439,6 +4439,10 @@ App3DR.App.Model3D.prototype.onKeyboardDown = function(e){
 		this._modelRenderCameraViews = !Code.valueOrDefault(this._modelRenderCameraViews, true);
 		console.log("TOGGLE CAMERA VIEWS");
 	}
+	if(key==Keyboard.KEY_LET_O){
+		this._modelRenderPoints = !Code.valueOrDefault(this._modelRenderPoints, true);
+		console.log("TOGGLE CAMERA VIEWS");
+	}
 }
 App3DR.App.Model3D.prototype._eff = function(){
 	++this._time;
@@ -4449,6 +4453,7 @@ App3DR.App.Model3D.prototype._eff = function(){
 
 
 var renderCameraViews = Code.valueOrDefault(this._modelRenderCameraViews, true);
+var renderPoints = Code.valueOrDefault(this._modelRenderPoints, true);
 
 	// RENDERING:
 	this._stage3D.clear();
@@ -4487,7 +4492,7 @@ var renderCameraViews = Code.valueOrDefault(this._modelRenderCameraViews, true);
 	}
 	// RENDER POINTS
 
-	if(this._pointPointBuffer && this._pointPointBuffer.length>0){
+	if(renderPoints && this._pointPointBuffer && this._pointPointBuffer.length>0){
 	// if(false){
 		this._stage3D.selectProgram(3);
 		this._stage3D.disableCulling();
@@ -7605,7 +7610,7 @@ console.log("checkPerformNextTask");
 		return;
 	}
 
-throw "start dense";
+// throw "start dense";
 	if(!project.checkHasDenseStarted()){
 		project.calculateDensePairPutatives();
 		return;
@@ -7615,7 +7620,6 @@ throw "start dense";
 		project.iterateDenseProcess();
 		return;
 	}
-
 
 throw "increase resolution / fill gaps?"
 if(!project.checkHasBundleAdjustEnded()){
@@ -7896,7 +7900,27 @@ console.log("pair count: "+pairs.length+" ............");
 // i = 13; // almost front/back - center epipole | great
 
 // i = 14; //  | good
-// console.log("PICKED: "+i);
+
+
+// DENSE:
+
+i = 0;
+// i = 1;
+// i = 2;
+// i = 3;
+// i = 4;
+// i = 5;
+// i = 6;
+// i = 7; // close
+// i = 8;
+// i = 9;
+// i = 10;
+// i = 11; // big skew
+// i = 12;
+// i = 13;
+// i = 14;
+
+console.log("PICKED: "+i);
 		var pair = pairs[i];
 		var idA = pair["A"];
 		var idB = pair["B"];
@@ -7920,13 +7944,14 @@ console.log("pair count: "+pairs.length+" ............");
 				// relativeAB = Matrix.inverse(relativeAB);
 			// dense = with R
 			if(relativeAB){
-throw "no R yet ... ";
+// throw "no R yet ... ";
 				// throw "HOW TO DO WITH R"
 				configuration = {};
 				project.calculatePairMatchWithRFromViewIDs(idA,idB, relativeAB, completePairFxn,project, configuration);
 				return;
 			}
 console.log("calculatePairMatchFromViewIDs");
+throw "this is for sparse"
 			// sparse = w/o known R
 			project.calculatePairMatchFromViewIDs(idA,idB, completePairFxn,project);
 			return;
@@ -8367,18 +8392,19 @@ App3DR.ProjectManager.prototype._iterateSparseTracks = function(sourceData, sour
 				var baIterations = fullData["iteration"];
 					baIterations = Code.valueOrDefault(baIterations, 0);
 
-				var minimumPixelErrorBA = 0.001; // 1/1000
+				// var minimumPixelErrorBA = 0.001; // 1/1000
+				var minimumPixelErrorBA = 0.00001; // not sure what units these are ???
 				// var maxIterationsBA = 10*allViews.length;
-				// var maxIterationsBA = 2*allViews.length;
-				var maxIterationsBA = 1*allViews.length;
+				var maxIterationsBA = 2*allViews.length;
+				// var maxIterationsBA = 1*allViews.length;
 				// var maxIterationsBA = -1;
 				// var maxIterationsBA = 1;
-				maxIterationsBA = 1E9;
-
+				// maxIterationsBA = 1E9;
 
 				// if the next error is very low, or max iterations reached => done
 				var isDone = false;
 				var deltaErrorR = nextViewBA["deltaErrorR"];
+console.log("minimum deltaErrorR: "+deltaErrorR);
 				if(deltaErrorR!==null && deltaErrorR!==undefined){
 					if(deltaErrorR<minimumPixelErrorBA){
 						console.log("min error reached");
@@ -8398,9 +8424,8 @@ console.log("isDone - FULL DONE")
 					console.log(fullData);
 					console.log(allViews,allTransforms);
 					var info = App3DR.ProjectManager._putativePairsFromViewsAndTransforms(allViews,allTransforms);
-					
 					console.log(info);
-throw "putative here ..."
+// throw "putative here ..."
 					// var pairs = info["lookup"];
 					var pairs = info["pairs"];
 					// var pairs = info["lookup"];
@@ -8437,8 +8462,6 @@ throw "putative here ..."
 					console.log(putatives);
 					// save these putatives to sparse.yaml
 					sourceData["putativePairs"] = putatives;
-
-					console.log(sourceData);
 					// save the putative / pairs to dense.yaml
 					var currentSparseCount = project.sparseCount();
 					console.log( "currentSparseCount: "+currentSparseCount );
@@ -8464,7 +8487,8 @@ throw "putative here ..."
 						console.log("saved project");
 					}
 
-				// throw "before saving full bundle done";
+					console.log(sourceData);
+					// throw "before saving full bundle done";
 
 					project.saveFileFromData(sourceData, sourceFilename, savedDataComplete, project);
 					return;
@@ -8500,7 +8524,8 @@ throw "putative here ..."
 
 				// identify / ignore worst views on first iteration:
 				// if(baIterations==0){
-				if(true){
+				// if(true){
+				if(false){
 					var info = world.solveDropWorstViewNeighbors();
 					console.log(info);
 					world.estimate3DErrors(true);
@@ -8518,16 +8543,8 @@ throw "putative here ..."
 								entry["updated"] = Code.getTimeMilliseconds();;
 							}
 						}
-						// set optimization entry to 0
 					}
-
-					// console.log(baOptimizations);
 				}
-					// throw "baOptimizations"
-				// }else{ // optimize
-
-// HERE
-baIterations -= 1;
 
 				if(true){
 					// throw "optimize now"
@@ -8538,6 +8555,8 @@ baIterations -= 1;
 					nextViewBA["count"] = worldView.pointCount();
 					nextViewBA["updated"] = Code.getTimeMilliseconds();
 				}
+// var str = world.toYAMLString();
+// console.log(str);
 // throw "wat";
 				
 				// update views:
@@ -8553,8 +8572,6 @@ baIterations -= 1;
 				var savedBundleComplete = function(){
 					console.log("saved bundle track");
 				}
-
-			// throw "before saving bundle";
 
 				project.saveFileFromData(fullData, fullBundlePath, savedBundleComplete, project);
 				return;
@@ -9402,10 +9419,12 @@ console.log(transforms)
 	}
 
 	// find bests:
-	var maximumPairMatches = Math.min(Math.max(2*Math.sqrt(viewCount),3),20); // don't want too many matches
 	var minimumPairMatches = 2 * 3; // assuming @ 50% error -- don't want too few matches
+	var maximumPairMatches = Math.min(Math.max(Math.round(2*Math.sqrt(viewCount)),3),20); // don't want too many matches
+	console.log("pair limits: [ "+minimumPairMatches+" - "+maximumPairMatches+" ]");
+		maximumPairMatches = Math.max(minimumPairMatches,maximumPairMatches);
 	var maximumNeighborhoodAdjacency = 3; // direct=0, +1,+2,+3] -- don't want to try too far away
-	var maximumPropagetedErrorRatio = 4; // 2-4 -- don't want high-error guesses
+	var maximumPropagatedErrorRatio = 4; // 2-4 -- don't want high-error guesses
 	var pairLookup = {};
 	for(var i=0; i<vertexes.length; ++i){
 		var vertex = vertexes[i];
@@ -9424,7 +9443,6 @@ console.log(transforms)
 				list.push(path);
 			}
 		}
-		// console.log(neighborhoodLookup);
 		var foundPairsList = [];
 		for(var d=0; d<=maximumNeighborhoodAdjacency; ++d){
 			var paths = neighborhoodLookup[d];
@@ -9435,20 +9453,20 @@ console.log(transforms)
 					var v = path["vertex"];
 					var costD = path["cost"];
 					var cost0 = es[0].weight();
-					var costMax = cost0*maximumPropagetedErrorRatio;
+					var costMax = cost0*maximumPropagatedErrorRatio;
 					// console.log(cost0,costD,costMax);
 					if(costD<costMax){
 						foundPairsList.push([costD,v]);
 					}
 				}
 			}
-			if(foundPairsList.length>maximumPairMatches){
-				break;
-			}
+			// if(foundPairsList.length>maximumPairMatches){
+			// 	break;
+			// }
 		}
 		foundPairsList.sort(sort0Fxn);
-		console.log(foundPairsList);
-		// Code.truncateArray(foundPairsList,maximumPairMatches);
+		// console.log(foundPairsList);
+		Code.truncateArray(foundPairsList,maximumPairMatches);
 		var viewID = vertex.data()["id"];
 		for(var j=0; j<foundPairsList.length; ++j){
 			var p = foundPairsList[j];
@@ -9457,15 +9475,13 @@ console.log(transforms)
 			var idA = viewID < pID ? viewID : pID;
 			var idB = viewID < pID ? pID : viewID;
 			var pairID = idA+"-"+idB;
-
-
-
 			pairLookup[pairID] = {"A":idA,"B":idB,"s":score};//, "r":rError};
 		} // App3DR.ProjectManager.pairIDFromViewIDs
 	}
 	// console.log(pairLookup);
-throw "before have putatives for dense"
 	var pairs = Code.objectToArray(pairLookup);
+	// console.log(pairs);
+	// throw "before have putatives for dense"
 	return {"pairs":pairs, "lookup":pairLookup};
 }
 
@@ -9619,9 +9635,7 @@ App3DR.ProjectManager.prototype.calculatePairMatchWithRFromViewIDs = function(vi
 		// settings["cellCount"] = 80;
 		// settings["maximumMatchFeatures"] = 1100;
 		// settings["minimumMatchPoints"] = 16;
-		
 		// settings["maximumErrorTracksF"] = 0.002; // 0.002 @ 500 = 1
-		
 	}
 	var SETTING_INC_RES = "incrementResolution";
 	var SETTING_MAX_ERR_R = "maximumErrorTracksR";
@@ -9665,9 +9679,7 @@ console.log(relativeAB);
 
 	// var doDisplay = function(){
 	// 	console.log("doDisplay");
-
 	// 	console.log(allViews);
-
 	// }
 
 	var solveWorld = function(){
@@ -9684,7 +9696,7 @@ console.log(relativeAB);
 		world.solveDensePair();
 
 
-		throw "now what?"
+throw "after solve"
 
 		// if good enough, record matches
 
@@ -10764,7 +10776,8 @@ App3DR.ProjectManager.prototype.calculateDensePairPutatives = function(){
 			// var pairError = pair["relativeError"];
 			var extA = viewLookup[viewIDA]["transform"];
 			var extB = viewLookup[viewIDB]["transform"];
-			var extrinsicAB = R3D.relativeTransformMatrix2(extA,extB);
+			// var extrinsicAB = R3D.relativeTransformMatrix2(extA,extB);
+			var extrinsicAB = Matrix.relativeWorld(extA,extB);
 			// var relativeAB = Matrix.inverse(extrinsicAB);
 			var pairID = App3DR.ProjectManager.pairIDFromViewIDs(viewIDA,viewIDB);
 			var densePair = {};

@@ -38,6 +38,25 @@ R = | s; u'; -L|
 
 
 
+---
+m = # images [P]
+n = # of fixed 3D points [X]
+
+x<sub>i,j</sub> = P<sub>i</sub>&middot;X<sub>j</sub>
+
+11 = DoF in P<sub>i</sub>
+3 = DoF in X
+15 = 4x4 projective matrix 
+
+2&middot;m&middot;n = 11&middot;m + 3&middot;n - 15
+
+
+
+
+---
+
+
+
 
 
 
