@@ -9685,13 +9685,19 @@ console.log(relativeAB);
 	var solveWorld = function(){
 		// build world
 		var info = project.fillInWorldAll(allViews, cellSize);
-		console.log(info);
 // throw "before solve"
 		//
 		var WORLDCAMS = info["cameras"];
 		var WORLDVIEWS = info["views"];
 		var WORLDVIEWSLOOKUP = info["lookup"];
 		var world = info["world"];
+
+
+	//world.transformFromViews()
+
+
+
+
 		console.log("solveDensePair");
 		world.solveDensePair();
 

@@ -421,8 +421,8 @@ https://cloud.google.com/appengine/docs/nodejs/
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-- BA algorithm worked at some point but is no longer ...
-	=> iterate on pairs before iterating on separates? [together doesn't seem to work]
+=> pass initial P as world relative transforms
+=> use new iterating method to reduce P error on pairs ...
 
 
 
@@ -472,13 +472,6 @@ http://mi.eng.cam.ac.uk/~cipolla/publications/contributionToEditedBook/2008-SFM-
 
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-
-HOW IS AFFINE TRANSFORM FOUND ?
-
-
-var point3D = R3D.triangulatePointDLT(point2DA,point2DB, cameraA,cameraB, KaInv, KbInv);
-var patch3D = R3D.patch3DFromPoint3DCameras(point3D, cameraCentersList, cameraNormalsList, cameraRightsList, cameraSizesList, points2D);
-var affine2D = R3D.patchAffine2DFromPatch3D(point3D,normal3D,up3D,right3D,size3D, cameraA,Ka, cameraB,Kb, point2DA,point2DB, affineReuse);
 
 
 solveDensePair

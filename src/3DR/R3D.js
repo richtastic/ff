@@ -603,9 +603,9 @@ R3D._transformCameraExtrinsicMultipleNonlinearGD = function(args, x, isUpdate){
 
 R3D.transformCameraExtrinsicNonlinear = function(P, pointsA2D,pointsB2D, Ka,KaInv, Kb,KbInv, maxIterations){
 	console.log("R3D.transformCameraExtrinsicNonlinear");
-	throw "map to other fxn"
+	// throw "map to other fxn"
 	maxIterations = Code.valueOrDefault(maxIterations, 1000);
-	var args = [pointsA2D,pointsA2B, Ka,KaInv, Kb,KbInv];
+	var args = [pointsA2D,pointsB2D, Ka,KaInv, Kb,KbInv];
 	var x = R3D.transformMatrixToComponentArray(P);
 
 	var result = Code.gradientDescent(R3D._transformCameraExtrinsicNonlinearGD, args, x, null, maxIterations, 1E-6); // 1E-1 = sub pixel ?
@@ -21169,107 +21169,14 @@ console.log("here ?");
 
 var matchingCount = 0;
 var matches = [];
-// var ratios = [];
 var maximumRatio = 0.90; // 0.75 - 0.95
-
-// maximumRatio = 0.95;
-// maximumRatio = 0.99;
-
-
-// maximumRatio = 1.0;
-
-
-// var scoreIndex = "scoreSIFT";
-// var scoreIndex = "flatOrientated";
 var skipped = 0;
-
-
 
 console.log(objectsA);
 console.log(objectsB);
 
-
-/*
-for(var i=0; i<objectsA.length; ++i){
-	var objectA = objectsA[i];
-	var bestA = objectA["best"];
-	if(bestA){
-		var objectB = bestA["match"]["source"];
-		if(objectB){
-			bestB = objectB["best"];
-			if(bestB){
-				matches.push([objectA,objectB, bestA["match"],bestB["match"]]);
-				matchingCount += 1;
-			}
-		}
-	}
-}
-
-
-for(var i=0; i<objectsB.length; ++i){
-	var objectB = objectsB[i];
-	var bestB = objectB["best"];
-	if(bestB){
-		var objectA = bestB["match"]["source"];
-		if(objectA){
-			bestA = objectA["best"];
-			if(bestA){
-				matches.push([objectA,objectB, bestA["match"],bestB["match"]]);
-				matchingCount += 1;
-			}
-		}
-	}
-}
-*/
-
-
-/*
-for(var i=0; i<objectsA.length; ++i){
-	var objectA = objectsA[i];
-	var bestA = objectA["best"];
-	var scndA = objectA["second"];
-	if(bestA && scndA){
-		var ratioA = 0;
-		if(scndA){
-			ratioA = bestA[scoreIndex]/scndA[scoreIndex];
-		}
-		var objectB = bestA["match"]["source"];
-		if(objectB){
-			var bestB = objectB["best"];
-			var scndB = objectB["second"];
-			if(bestB){
-				var ratioB = 0;
-				if(scndB){
-					ratioB = bestB[scoreIndex]/scndB[scoreIndex];
-				}
-				var oA = bestB["match"]["source"];
-				// var d = V2D.distance(objectA["point"],oA["point"]);
-				// console.log(d+" | "+objectA["i"]+" & "+oA["i"]+" ? "+(objectA==oA));
-				if(objectA==oA){ // 583
-					// console.log("found one top"+" = "+ratioA+" & "+ratioB);
-					// ratios.push(ratioA);
-					var ratio = Math.max(ratioA,ratioB);
-					if(ratio<maximumRatio){
-						matches.push([objectA,objectB, bestA["match"],bestB["match"]]);
-						matchingCount += 1;
-					}else{
-						skipped++;
-					}
-				}
-			}
-		}
-	}
-}
-*/
-
-
-
-console.log("OUT ..");
-
 // look at final position only:
-
 var maximumDistanceMatch = 5.0;
-
 var scoreIndex = "score";
 
 for(var i=0; i<objectsA.length; ++i){
@@ -21293,6 +21200,8 @@ for(var i=0; i<objectsA.length; ++i){
 					if(ratio<maximumRatio){
 						matches.push([objectA,objectB, bestA["match"],bestB["match"]]);
 						matchingCount += 1;
+					}else{
+						skipped++;
 					}
 
 				}
@@ -21542,7 +21451,7 @@ for(var i=0; i<matches.length; ++i){
 }
 } // if false
 
-throw "before return";
+// throw "before return";
 	console.log(matches);
 	return matches;
 
