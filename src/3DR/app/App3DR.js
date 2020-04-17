@@ -7904,14 +7904,14 @@ console.log("pair count: "+pairs.length+" ............");
 
 // DENSE:
 
-i = 0;
+// i = 0;
 // i = 1;
 // i = 2;
 // i = 3;
 // i = 4;
 // i = 5;
 // i = 6;
-// i = 7; // close
+// i = 7; // close -- some wrong?
 // i = 8;
 // i = 9;
 // i = 10;
