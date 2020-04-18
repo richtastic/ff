@@ -3938,8 +3938,8 @@ App3DR.App.Model3D.prototype.setPoints = function(input3D, input2D, hasImages, n
 var useErrors = false;
 // var useErrors = true;
 // var errorType = 0; // F
-var errorType = 1; // R
-// var errorType = 2; // NCC
+// var errorType = 1; // R
+var errorType = 2; // NCC
 // var errorType = 0;
 	useErrors = useErrors && hasImages;
 	if(useErrors){
@@ -3985,6 +3985,11 @@ var errorType = 1; // R
 		var cameraRightB = cameraB.multV3DtoV3D(new V3D(1,0,0));
 			cameraRightB.sub(cameraCenterB);
 
+		var cameraUpA = cameraA.multV3DtoV3D(new V3D(0,1,0));
+			cameraUpA.sub(cameraCenterA);
+		var cameraUpB = cameraB.multV3DtoV3D(new V3D(0,1,0));
+			cameraUpB.sub(cameraCenterB);
+
 		var points2D = [pointsA, pointsB];
 		var cameraCentersList = [cameraCenterA,cameraCenterB];
 		var cameraNormalsList = [cameraNormalA,cameraNormalB];
@@ -3992,12 +3997,19 @@ var errorType = 1; // R
 		var cameraSizesList = [featureSizeA,featureSizeB];
 
 
+		var absoluteA = Matrix.inverse(cameraA);
+		var absoluteB = Matrix.inverse(cameraB);
+
 		var Ka = viewA["K"];
 		var Kb = viewB["K"];
 
 			Ka = R3D.cameraFromScaledImageSize(Ka, imageSizeA);
 			Kb = R3D.cameraFromScaledImageSize(Kb, imageSizeB);
 
+			var KaInv = Matrix.inverse(Ka);
+			var KbInv = Matrix.inverse(Kb);
+
+		var affineReuse = new Matrix2D();
 		var errors = [];
 		// console.log(pointsA);
 		// throw "?";
@@ -4045,13 +4057,29 @@ var errorType = 1; // R
 // console.log(cameraRightsList);
 // console.log(cameraSizesList);
 
-				var patch3D = R3D.patch3DFromPoint3DCameras(point3D, cameraCentersList, cameraNormalsList, cameraRightsList, cameraSizesList, points2D);
-				var normal3D = patch3D["normal"];
-				var up3D = patch3D["up"];
-				var right3D = patch3D["right"];
-				var size3D = patch3D["size"];
-				matrix2D = R3D.patchAffine2DFromPatch3D(point3D,normal3D,up3D,right3D,size3D, cameraA,Ka, cameraB,Kb, pointA,pointB, matrix2D);
+				// var patch3D = R3D.patch3DFromPoint3DCameras(point3D, cameraCentersList, cameraNormalsList, cameraRightsList, cameraSizesList, points2D);
+				// var normal3D = patch3D["normal"];
+				// var up3D = patch3D["up"];
+				// var right3D = patch3D["right"];
+				// var size3D = patch3D["size"];
+				// matrix2D = R3D.patchAffine2DFromPatch3D(point3D,normal3D,up3D,right3D,size3D, cameraA,Ka, cameraB,Kb, pointA,pointB, matrix2D);
 				// console.log(": "+matrix2D);
+
+
+				var points2D = [pointA,pointB];
+				var extrinsics = [cameraA,cameraB];
+				var absolutes = [absoluteA,absoluteB];
+				var Ks = [Ka,Kb];
+				var Kinvs = [KaInv,KbInv];
+				var centers = [cameraCenterA,cameraCenterB];
+				var normals = [cameraNormalA,cameraNormalB];
+				var rights = [cameraRightA,cameraRightB];
+				var ups = [cameraUpA,cameraUpB];
+				var sizes = [1,1];
+				var reuse = affineReuse;
+
+				var result = R3D.patch3DFromInfo(points2D,   extrinsics,absolutes,Ks,Kinvs, centers,normals,rights,ups,  sizes,  reuse);
+				var matrix2D = result["affine"];
 
 
 				var result = R3D.optimumNeedleHaystackAtLocation(imageScalesA,pointA, imageScalesB,pointB, needleSize,haystackRelativeSize, matrix2D, compareSize);
@@ -7904,17 +7932,17 @@ console.log("pair count: "+pairs.length+" ............");
 
 // DENSE:
 
-// i = 0;
-// i = 1;
-// i = 2;
-// i = 3;
-// i = 4;
-// i = 5;
-// i = 6;
-// i = 7; // close -- some wrong?
-// i = 8;
-// i = 9;
-// i = 10;
+// i = 0; // GOOD
+// i = 1; // OK
+// i = 2; // OK
+// i = 3; // OK
+// i = 4; // OK
+// i = 5; // OK
+// i = 6; // OK
+// i = 7; // OK    close -- some wrong?
+// i = 8; // GOOD
+// i = 9; // OK
+i = 10; // 
 // i = 11; // big skew
 // i = 12;
 // i = 13;
@@ -9686,21 +9714,13 @@ console.log(relativeAB);
 		// build world
 		var info = project.fillInWorldAll(allViews, cellSize);
 // throw "before solve"
-		//
 		var WORLDCAMS = info["cameras"];
 		var WORLDVIEWS = info["views"];
 		var WORLDVIEWSLOOKUP = info["lookup"];
 		var world = info["world"];
 
-
-	//world.transformFromViews()
-
-
-
-
 		console.log("solveDensePair");
 		world.solveDensePair();
-
 
 throw "after solve"
 

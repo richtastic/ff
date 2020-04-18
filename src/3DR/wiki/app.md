@@ -421,19 +421,57 @@ https://cloud.google.com/appengine/docs/nodejs/
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-=> pass initial P as world relative transforms
-=> use new iterating method to reduce P error on pairs ...
+x pass initial P as world relative transforms
+x use new iterating method to reduce P error on pairs ...
+x patches are wrong (estimated normal / affine)
+	- how to do rays from a specific pixel?
+		- image point
+		- inverse k
+
+x dense starts out with very high error
+x errors don't match
+
+x filter on F first before R
+
+=> speed up world view/transform lookups
+	- world stores a list of transforms for each view
+		=> lazy init
 
 
 
-triangulation DLT
-
-https://filebox.ece.vt.edu/~jbhuang/teaching/ece5554-4554/fa17/lectures/Lecture_15_StructureFromMotion.pdf
-
-https://filebox.ece.vt.edu/~jbhuang/teaching/ece5554-4554/fa17/lectures
 
 
-http://www.cs.cmu.edu/~16385/s17/Slides/11.4_Triangulation.pdf
+- method for removing bad matches after/during probe searching
+
+
+
+
+
+
+- NEXT STEPS:
+	- DENSE TRACKS
+		- 10-50k points
+		- 5-20k tracks - per image
+			- filter on R
+			- filter on corner
+	- DENSE ASBOLUTE
+	- DENSE BA
+		- after including a bunch of points, keep separate TRACK file that is only points with 3+ views
+
+	- DENSE SURFACES
+		- 'novel' points not yet recovered [eg missed background points]
+		- blank area filling ?
+	- DROPPING WORST POINTS (low local density compared to sampled averages)
+	- SURFACE TRIANGULATION/TESSELATION
+	- TEXTURING
+
+
+- STEREPOSIS FAILURES:
+	- removing / retrying neighbors and opting for better R/N/supporting-# match
+	- not loosing background objects
+	- how to 
+
+=> do match scores need to be re-assessed when R is updated? previously good/bad matches might be different after a while
 
 
 TFT ???
@@ -443,6 +481,12 @@ https://www.robots.ox.ac.uk/~vgg/hzbook/hzbook2/HZtrifocal.pdf
 https://pdfs.semanticscholar.org/0757/436862dba2d98dfb6b0947a9d76156b37b11.pdf
 
 https://pdfs.semanticscholar.org/31f9/a0c864f4d7cf2b2f298eac11321fb32e51a7.pdf
+
+
+
+
+Read lots of papers: IJCV, PAMI, CVPR, ICCV, ECCV,
+NIPS
 
 
 
@@ -462,6 +506,12 @@ https://en.wikipedia.org/wiki/Levenberg%E2%80%93Marquardt_algorithm
 Photosynth - Microsoft
 https://en.wikipedia.org/wiki/Photosynth
 
+distance-ratio - constrain nearby features in second image by limits of first image
+
+Iterative closest point
+
+brightness constancy
+
 
 
 TO PRINT:
@@ -469,65 +519,9 @@ https://www.cse.huji.ac.il/~csip/sfm.pdf
 http://mi.eng.cam.ac.uk/~cipolla/publications/contributionToEditedBook/2008-SFM-chapters.pdf
 
 
+TO LOOK AT:
+https://www.youtube.com/watch?v=kyIzMr917Rc
 
-++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-
-
-solveDensePair
-
-- window 9x9
-
-for each corner point A:
-	- extract 9x9 window
-	- search for points along line in B [1%]
-	- filter on color histogram [50%]
-	- filter on affine distortion [90%] - scale
-	- extract 9x9 window for each B
-	- get closest-SAD score
-	- keep top 2 points/scores
-- keep only features whos top match is each other
-- do needle/haystack SAD search for top 2 matches
-- recalc rank for top 2 matches
-- keep only features whos rank is 90% better
-- filter on RANK score, iterate keep top 2-sigma
-- filter on SAD score, iterate keep top 2-sigma
-RECALC F & R ?
-- filter on F error iterate keep top 2-sigma
-- filter on R error iterate keep top 2-sigma
-
-=> dense points
-
-
-++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-
-
-- DENSE PAIR - R:
-
-- what are next steps once good absolute orientations are found?
-	- SEARCHING ALONG F-LINE?
-	- low F-search error (~ 1px)
-	- know relative angle from F
-	- know affine for each compare - more accurate local mapping of image
-		=> can use SAD exactly to compare
-		=> can use lower error tolerance
-	- can ignore bad affine mappings? [limit search-line width]
-
-
-
---- something might be wrong with patches -- the affine projection is bad compared to manually done
-
-
-- R comparison should have much more features to compare with for accuracy (2000-4000)
-
-
-
-
-- NONLINEAR R - STEREOPSIS - DLT TRIANGULATION + PROCESSING:
-	- should nonlinear R in stereopsis recalculate P3D too ? [or top 1 sigma points ? or some random count up to ~ 1K] 
-	- BA [many views] is too big to?
-		- each pair picks ~ 100 pts at random?
 
 
 
@@ -535,18 +529,6 @@ RECALC F & R ?
 
 
 
-
-
-- R error is high on a good set of points
-- MAYBE R ERROR IS TAKEN AT BAD POINT BEFORE WORST POINTS ARE DROPPED -- WHAT IS THE DISPARITY?
-- Rerror / z-depth 
-- RERROR USING DEPTH IS A BETTER METRIC OF R-ERROR ----- make systematic ?
-
-
-
-
-
-should F fwd & bak both be checked? --- are these always parallel lines ?
 
 
 
@@ -562,39 +544,6 @@ stereopsis - estimate3DViews -- ????????????????? what does this do?
 
 
 
-BAD: (2 is closest, 4 & 5 should be behind all)
-	absoluteViewsFromDatas
-		optimumTransform3DFromObjectLookup
-
-	displayOriginalViewGraph
-
-	- optimal scale: [scale space v log space ?]
-		- linear average best location
-		- nonlinear update
-
-	- initial placement should use total averaging, not 'best root'
-		- separate location
-		- separate rotation
-	- nonlinear:
-		A) separate location & separate rotation
-		B) combined location & rotation
-
-- is scale in old version 1/s or s ????
-
-
-
-
-
-
-
-
-
-- HUGE R ERROR is not reflective of actual abilities
-	-- may be affecting how errors are processed now
-	- calculateErrorR
-
-- PLOT STEREOPSIS ERRORS AGAIN & SEE IF CORRECT ERROR DROPPING IS WORKING
-
 
 
 -------------------------> ALL Rs are too bad to have useful F-matches
@@ -606,14 +555,8 @@ BAD: (2 is closest, 4 & 5 should be behind all)
 => TRACK OPTIMIZING IS NOT MAKING BETTER
 
 
-- print out the view orientations as-is after optimization ...
-	...
 
 
-
-
-
-- are the graph error reduction parameters working  correctly?
 
 
 

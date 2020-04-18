@@ -52,10 +52,37 @@ x<sub>i,j</sub> = P<sub>i</sub>&middot;X<sub>j</sub>
 
 
 
+---
+
+M = K &middot; [R | t]
+=> RQ factorization (not QR)
+R (right diagonal) is K
+Q (orthogonal basis) is R
+t is inv(K) &middot; M(last column)
++ post process to make valid
+
+
+calibrate by vanishing point
+
+
+
+
 
 ---
 
 
+
+
+## Ray Thru a Pixel:
+X = 3D point
+x = pixel in camera image, projected from X
+K = camera intrinsic matrix
+P = camera extrinsic matrix [P<sup>-1</sup> = camera absolute matrix]
+
+x ~ K &middot; P &middot; X
+
+P<sup>-1</sup> &middot; K<sup>-1</sup>  &middot; x ~ X
+ray ~ X
 
 
 

@@ -3881,10 +3881,10 @@ Stereopsis.World.prototype.refineCameraPairRelativeToAbsolute = function(transfo
 		pointsA.push(pA);
 		pointsB.push(pB);
 	}
-	console.log("POINTS: "+pointsA.length);
-	console.log("B: \n "+B);
+	// console.log("POINTS: "+pointsA.length);
+	// console.log("B: \n "+B);
 	var result = R3D.transformCameraExtrinsicNonlinear(B, pointsA, pointsB, Ka,KaInv, Kb,KbInv,  500);
-	console.log(result);
+	// console.log(result);
 	var P = result["P"];
 	// set relative and absolute
 	transform.R(P);
@@ -6229,17 +6229,15 @@ Stereopsis.World.prototype.solveDensePair = function(){ // pairwise
 	// var viewGridSizePercent = 0.05; // ~11 & 5
 	// var maxFSamples = 500;
 
-	// var errorPercentage = 0.002; // 0.002 @ 500 = 1 px
-	// var errorPercentage = 0.002; // 0.002 @ 1000 = 2 px
-	// var errorPercentage = 0.01;
-	// var errorPercentage = 0.005; //
-	// var errorPercentage = 0.020; //
 	var errorPercentage = 0.005; // 1% error + no wiggle room   --- 0.001 - 0.005  |  0.001=2.5px 0.005=12.5px
 
 	var cellFeatureScale = 1.0; // 1-2
 
 	var views = world.toViewArray();
 	var view0 = views[0];
+
+	var transforms = world.toTransformArray();
+	var transform0 = transforms[0];
 
 	// create seed points:
 	var transforms = this.toTransformArray();
@@ -6274,60 +6272,65 @@ Stereopsis.World.prototype.solveDensePair = function(){ // pairwise
 
 		}
 		// imageHypotenuse /= views.length;
-var errorR = errorPercentage*imageHypotenuse;
-// 
-// console.log("errorR IS IN TERMS OF SEARCHED SIZE -- NOT NECESSARILY THIS SIZE ?");
-console.log("GET MATCHES FROM 3D: "+errorR);
-// errorR *= 2;
-// 
-
-
-
-
-// this.testOutFinding(viewA,viewB, relativeAB);
-
-
-
-// throw " before corners"
-
-
-
+		var errorR = errorPercentage*imageHypotenuse;
+		console.log("GET MATCHES FROM 3D: "+errorR);
+		
 		// get corners
 		// keep only peak corners within grid size distance
-		console.log(transform);
+		// console.log(transform);
 		var errorPixels = Math.max(errorR,1.0);
-		console.log("ERROR: "+errorR+" | "+errorPixels);
-console.log(images, sizes, relativeAB, Ks, errorPixels)
-		var matches = R3D.searchMatchPoints3D(images, sizes, relativeAB, Ks, errorPixels);
+		console.log("ALLOWABLE DENSE ERROR: "+errorR+" | "+errorPixels);
+		var result = R3D.searchMatchPoints3D(images, sizes, relativeAB, Ks, errorPixels);
+		console.log(result);
+		var P = result["P"];
+		var matches = result["matches"];
 		console.log(matches);
 
+console.log("P: \n "+P+"\n");
+// throw "before dense"
 
+// P = Matrix.inverse(P);
 
-
-
-
-// throw "before dense world";
-
+// SET P NOW ?
+viewA.absoluteTransform(new Matrix(4,4).identity());
+viewB.absoluteTransform(P);
+world.copyRelativeTransformsFromAbsolute();
+world.relativeFFromSamples();
 
 		// insert matching points:
-
 		var matchesAddList = [];
-		for(var i=0; i<matches.length; ++i){
-			var match = matches[i];
+var errorsR = [];
+		for(var j=0; j<matches.length; ++j){
+			var match = matches[j];
 			var p2DA = match["pointA"];
 			var p2DB = match["pointB"];
+			var point3D = match["point3D"];
 			var affineAB = match["affine"];
+			var errR = match["error"];
 			// world match object
-			var newMatch = world.newMatchFromInfo(viewA,p2DA.copy(),viewB,p2DB,affineAB);
+			var newMatch = world.newMatchFromInfo(viewA,p2DA.copy(),viewB,p2DB.copy(),affineAB);
 				Stereopsis.updateErrorForMatch(newMatch); // estimated3D
+
+// var inf = R3D.reprojectionError(point3D, p2DA,p2DB, viewA.absoluteTransform(), viewB.absoluteTransform(), viewA.K(), viewB.K());
+// var err = inf["error"];
+// console.log( Code.postpendFixed(j," ",5) + " - "+Code.postpendFixed(errR+""," ",25) + " v "+Code.postpendFixed(err+""," ",25) + " v "+ Code.postpendFixed(newMatch.errorR()+""," ",2) );
+// world.patchInitBasicSphere(true);
+
 			var m3D = newMatch.point3D();
 				m3D.point( m3D.calculateAbsoluteLocation(world,true) ); // point3D
 				world.patchInitBasicSphere(false,[m3D]); // patch3D
 			matchesAddList.push(newMatch);
 
-		}
+errorsR.push(newMatch.errorR());
 
-		console.log(matchesAddList);
+		}
+errorsR.sort();
+console.log(errorsR);
+var min = Code.min(errorsR);
+var sig = Code.stdDev(errorsR,min);
+console.log(" ERR "+min+" +/- "+sig);
+
+// console.log(matchesAddList);
 
 		var averageErrorB = 0;
 		var count = 0;
@@ -6347,14 +6350,17 @@ console.log(images, sizes, relativeAB, Ks, errorPixels)
 				++count;
 			}
 		}
+// ????
 		averageErrorB /= count;
 		console.log("added "+count);
 		console.log("averageError: "+" => "+averageErrorB);
-	
 	} // end transform loop (only should be 1 ... )
 
+
+	// throw "????"
+
 	// var subdivisions = 0; // ~1k
-	// var subdivisions = 1; // ~5k
+	// var subdivisions = 1; // 5-10k
 	var subdivisions = 2; // ~40k
 	// var subdivisions = 3; // ~100k
 	var iterations = 3; // per grid size
@@ -6365,45 +6371,15 @@ console.log(images, sizes, relativeAB, Ks, errorPixels)
 	var subdivision = 0;
 	for(var iteration=0; iteration<maxIterations; ++iteration){
 		console.log("all: ========================================================================================= "+iteration+" / "+maxIterations);
-		// inif?
-		// if(iteration==0){ // subsequent approximations are always worse than the refined estimates
-		// 	console.log("INIT");
-		// 	world.estimate3DErrors(false); // find initial F, P, estimate all errors from this
-		// 	world.estimate3DViews(); // find absolute view locations
-		// 	world.averagePoints3DFromMatches(); // find absolute point locations
-		// }else{
-		// 	console.log("REFINE");
-		// 	world.relativeFFromSamples(); // update F
-		// 	world.estimate3DErrors(true, false); // update errors using absolute-relative transforms
-		// }
-
-		// if any transforms are really bad -- try re-estimating from scratch:
-		var transforms = this.toTransformArray();
-		var minMatchesTransform = 16;
-		var maxErrorRetry = 5;
-		// for(var i=0; i<transforms.length; ++i){
-		// 	var transform = transforms[i];
-		// 	// ...transform
-		// 	shouldRetryInit = transform.rSigma()>maxErrorRetry;
-		// 	if(shouldRetryInit){ // subsequent approximations are always worse than the refined estimates
-		// 		console.log("RETRY INIT");
-		// 		world.estimate3DErrors(false); // find initial F, P, estimate all errors from this
-		// 		world.estimate3DViews(); // find absolute view locations
-		// 		world.averagePoints3DFromMatches(); // find absolute point locations
-		// 	}
-		// 	break;
-		// }
-
+		world.printPoint3DTrackCount();
 		// subdivisions
 		if(iteration!==0 && iteration%iterations==0){
 			++subdivision;
 			var views = world.toViewArray();
-			// var transforms = world.toTransformArray();
-			// var transform0 = transforms[0];
 			for(var i=0; i<views.length; ++i){
 				var view = views[i];
-				var size = view.cellSize();
-				size = size*0.5 | 0;
+				var currentSize = view.cellSize();
+				var size = currentSize*0.5 | 0;
 				if(size%2==0){
 					size += 1;
 				}
@@ -6411,59 +6387,59 @@ console.log(images, sizes, relativeAB, Ks, errorPixels)
 				view.cellSize(size);
 			}
 		}
-
-		// refine cameras
+// console.log("A: \n"+viewA.absoluteTransform());
+// console.log("B: \n"+viewB.absoluteTransform());
+// console.log("T: \n"+transform0.R());
+		// current estimates
 		world.estimate3DErrors(true);
 		world.averagePoints3DFromMatches();
-		// ...
-		// world.refineCameraAbsoluteOrientation(null, 1000);
-world.refineSelectCameraAbsoluteOrientationTriangulate(view0);
-		// 
+
+		// refine cameras
+			// world.refineCameraAbsoluteOrientation(null, 1000); // OLD
+			// world.refineSelectCameraAbsoluteOrientationTriangulate(view0, 500); // BAD
+		world.refineCameraPairRelativeToAbsolute(transform0, 500);
 		world.copyRelativeTransformsFromAbsolute();
 		world.relativeFFromSamples();
-		// 
+		
 		// refine points
 		world.estimate3DErrors(true);
 		world.averagePoints3DFromMatches();
-world.refinePoint3DAbsoluteLocation();
+		world.refinePoint3DAbsoluteLocation();
 		world.patchInitBasicSphere(true);
 
 		// add new points
-		// world.probe2DCells(4.0);
 		world.probe2DCells(999);
 
-
 		// udpate world estimate
-		world.refineCameraAbsoluteOrientation(null, 1000);
+			// world.refineCameraAbsoluteOrientation(null, 1000); // OLD
+			// world.refineSelectCameraAbsoluteOrientationTriangulate(view0, 100); // BAD
+		world.refineCameraPairRelativeToAbsolute(transform0, 500);
 		world.copyRelativeTransformsFromAbsolute();
 		world.relativeFFromSamples();
+		// world.averagePoints3DFromMatches(true); // only newly added points
+
+		// new errors
 		world.estimate3DErrors(true);
 		
-		world.averagePoints3DFromMatches(true); // only newly added points
-
 		// drop poor tracks
 		world.dropNegative3D();
 		world.dropFurthest();
 		world.filterLocal3Dto2DSize();
-
 		world.filterNeighborConsistency();
-
 		// world.filterLocal3D(); // ...
 		world.filterPairwiseSphere3D(1.0); // 2-3
 
-// ?: start more rigid, allow for more error, finish rigid
-
+		// ?: start more rigid, allow for more error, finish rigid
+		// world.filterGlobalMatches(false, 0, 2.0,2.0,2.0,2.0, false);
 		world.filterGlobalMatches(false, 0, 3.0,3.0,3.0,3.0, false);
 
 		world.printPoint3DTrackCount();
-
-// throw "loop end";
 	}
 
 	// final output:
 	world.averagePoints3DFromMatches();
-world.refinePoint3DAbsoluteLocation();
-	world.patchInitBasicSphere(true);
+	// world.refinePoint3DAbsoluteLocation();
+	// world.patchInitBasicSphere(true);
 
 	// check it out
 	var str = world.toYAMLString();
@@ -9280,7 +9256,6 @@ Stereopsis.World.prototype.sampleErrorsDebug = function(){
 Stereopsis.World.prototype.estimate3DErrors = function(skipCalc, shouldLog){ // triangulate locations for matches (P3D) & get errors from this
 	// TRANSFORMS
 	var transforms = this.toTransformArray();
-	// console.log("transforms.length: "+transforms.length);
 	for(var i=0; i<transforms.length; ++i){
 		var transform = transforms[i];
 		var matches = transform.matches(); // these are non-putative matches
@@ -9294,8 +9269,6 @@ Stereopsis.World.prototype.estimate3DErrors = function(skipCalc, shouldLog){ // 
 			P = transform.R(viewA,viewB);
 		}else{
 			var info = Stereopsis.ransacTransformF(transform);
-			console.log("RICHIE - CALCULATED F/R:");
-			console.log(info);
 			F = info["F"];
 			P = info["P"];
 		}
