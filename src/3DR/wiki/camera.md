@@ -65,7 +65,18 @@ t is inv(K) &middot; M(last column)
 calibrate by vanishing point
 
 
+P = K[R| t]
+  = K[R| -Rc]
+  = [M| -Mc]
+&Rarr; M = K&middot;R
+&Rarr; RQ decomposition
 
+
+---
+
+
+camera center: c @ P&middot;c = 0
+&Rarr; SVD(P)
 
 
 ---

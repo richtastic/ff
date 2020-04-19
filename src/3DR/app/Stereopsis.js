@@ -6361,7 +6361,7 @@ console.log(" ERR "+min+" +/- "+sig);
 
 	// var subdivisions = 0; // ~1k
 	// var subdivisions = 1; // 5-10k
-	var subdivisions = 2; // ~40k
+	var subdivisions = 2; // ~40k  --- select
 	// var subdivisions = 3; // ~100k
 	var iterations = 3; // per grid size
 	// var iterations = 5;
@@ -6442,11 +6442,11 @@ console.log(" ERR "+min+" +/- "+sig);
 	// world.patchInitBasicSphere(true);
 
 	// check it out
-	var str = world.toYAMLString();
-	console.log(str);
+	// var str = world.toYAMLString();
+	// console.log(str);
 	
 
-throw "before return";
+// throw "before return";
 
 	return;
 }

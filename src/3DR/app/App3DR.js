@@ -7754,7 +7754,7 @@ App3DR.ProjectManager.prototype.testDEL = function(){
 }
 App3DR.ProjectManager.prototype.iterateDenseProcess = function(){
 	var project = this;
-	var denseConfiguration = {};
+	var denseConfiguration = {"isDense":true};
 	var filename = this.denseFilename();
 	var fxn = function(){
 		project._iterateSparseDenseLoaded(filename, project.denseData(), denseConfiguration);
@@ -7766,17 +7766,12 @@ App3DR.ProjectManager.prototype._iterateSparseDenseLoaded = function(inputFilena
 	var project = this;
 	console.log("_iterateSparseDenseLoaded");
 
-
-	// this.testDEL();
-	// throw "???"
-
+	configuration = Code.valueOrDefault(configuration, {});
+	var isDense = Code.valueOrDefault(configuration["isDense"], false);
 
 	var pairs = inputData["pairs"];
 	var basePath = Code.pathRemoveLastComponent(inputFilename);
 	console.log(basePath);
-
-	// console.log(basePath);
-
 
 	if(!pairs){
 		throw "input data not have pairs";
@@ -7942,13 +7937,13 @@ console.log("pair count: "+pairs.length+" ............");
 // i = 7; // OK    close -- some wrong?
 // i = 8; // GOOD
 // i = 9; // OK
-i = 10; // 
-// i = 11; // big skew
-// i = 12;
-// i = 13;
-// i = 14;
+// i = 10; // GOOD
+// i = 11; // OK       big skew
+// i = 12; // OK     large rotation & skew
+// i = 13; // GOOD
+// i = 14; // GOOD     similar
 
-console.log("PICKED: "+i);
+// console.log("PICKED: "+i);
 		var pair = pairs[i];
 		var idA = pair["A"];
 		var idB = pair["B"];
@@ -7959,27 +7954,13 @@ console.log("PICKED: "+i);
 			currentPair = pair;
 			console.log(pair);
 			var relativeAB = pair["relativeTransform"];
-
-
-// relativeAB = null;
-
-// var m = Matrix.fromObject(relativeAB);
-// m = Matrix.inverse(m);
-// relativeAB = m.toObject();
-
-// console.log(relativeAB)
-// throw "?";
-				// relativeAB = Matrix.inverse(relativeAB);
-			// dense = with R
-			if(relativeAB){
-// throw "no R yet ... ";
-				// throw "HOW TO DO WITH R"
+			if(relativeAB){ // dense
+				// throw "this is for dense";
 				configuration = {};
 				project.calculatePairMatchWithRFromViewIDs(idA,idB, relativeAB, completePairFxn,project, configuration);
 				return;
-			}
-console.log("calculatePairMatchFromViewIDs");
-throw "this is for sparse"
+			} // else sparse
+			throw "this is for sparse"
 			// sparse = w/o known R
 			project.calculatePairMatchFromViewIDs(idA,idB, completePairFxn,project);
 			return;
@@ -7988,65 +7969,12 @@ throw "this is for sparse"
 // throw ">triples";
 	var triples = inputData["triples"];
 	if(!triples){
-		// make every possible triple from pairs
-		var minimumRelativeCount = 100; // should be some % of image ?
-		triples = {};
-		var haveTriples = 0;
-		for(var i=0; i<pairs.length; ++i){
-			var pairA = pairs[i];
-			var relativeCountA = pairA["tracks"];
-			if(!(relativeCountA && relativeCountA>minimumRelativeCount)){
-				console.log("SKIP A: "+relativeCountA);
-				continue;
-			}
-			++haveTriples;
-			var idAA = pairA["A"];
-			var idAB = pairA["B"];
-			for(var j=i+1; j<pairs.length; ++j){
-				var pairB = pairs[j];
-				var relativeCountB = pairB["tracks"];
-				if(!(relativeCountB && relativeCountB>minimumRelativeCount)){
-					console.log("SKIP B: "+relativeCountB);
-					continue;
-				}
-				var idBA = pairB["A"];
-				var idBB = pairB["B"];
-				// any overlap:
-				if(idAA==idBA || idAA==idBB || idAB==idBA || idAB==idBB){
-					var uniqueStrings = Code.uniqueStrings([idAA,idAB,idBA,idBB]);
-					uniqueStrings.sort();
-					var idA = uniqueStrings[0];
-					var idB = uniqueStrings[1];
-					var idC = uniqueStrings[2];
-					var tripleID = idA+"-"+idB+"-"+idC;
-					console.log(tripleID);
-					if(triples[tripleID]){
-						// console.log(triples[tripleID]);
-						// console.log("triple already exists: "+tripleID);
-						// throw "triple already exists?";
-						continue;
-					}
-					var triple = {};
-						triple["id"] = tripleID;
-						triple["A"] = idA;
-						triple["B"] = idB;
-						triple["C"] = idC;
-					triples[tripleID] = triple;
-				}
-			}
-		}
-		// TRIM TRIPLES ?
-// console.log("haveTriples: "+haveTriples)
-		
-console.log(triples);
-	triples = Code.objectToArray(triples);
-console.log(triples);
-
-// throw "TRIPLES"
-
-	inputData["triples"] = triples;
+		inputData["triples"] = project.triplesFromBestPairs(pairs, isDense);
+		console.log(inputData);
+		triples = inputData["triples"];
+		// throw "BEFORE TRIPLES DONE"
 	}
-
+// throw "..."
 	console.log("TRIPLE COUNT: "+inputData["triples"].length);
 
 	// LOAD EACH POSSIBLE TRIPLE
@@ -8063,7 +7991,6 @@ console.log(triples);
 		currentTriple["gauge"] = {"AB":ab, "AC":ac, "BC":bc};
 console.log("inputFilename: "+inputFilename);
 // throw "before save";
-		// project.saveSparseFromData(inputData, saveProjectFxn,project);
 		project.saveFileFromData(inputData,inputFilename, saveProjectFxn,project);
 	}
 	var currentTriple = null;
@@ -8074,6 +8001,7 @@ console.log("inputFilename: "+inputFilename);
 		var idC = triple["C"];
 		var gauge = triple["gauge"];
 		if(!gauge){
+			console.log(idA,idB,idC);
 			currentTriple = triple;
 			project.calculateTripleMatchFromViewIDs(inputData,inputFilename, idA,idB,idC, completeTripleFxn,project);
 			return;
@@ -8307,6 +8235,107 @@ throw ">X";
 	*/
 
 
+}
+
+App3DR.ProjectManager.prototype.triplesFromBestPairs = function(pairs, isDense){ // TODO: does this guarantee scale coverage for every pair ?
+	var minimumRelativeCount = 100; // tracks:  poor-avg-good  |  sparse =  100-200-500   |  dense = 400-1000-2000
+	var maximumIndividualPairCount = 5; // 3 - 6 [at least 2 others to guarantee relative-ness, at least 4 for error]
+	if(isDense){
+		minimumRelativeCount = 400;
+		maximumIndividualPairCount = 4; // 2 - 4
+	}
+
+	// bookkeeping
+	var viewLookup = {};
+	var pairLookup = {};
+	var sortByScore = function(a,b){
+		return a["score"] < b["score"] ? -1 : 1;
+	}
+	var addViewLookupPair = function(viewIDA,viewIDB,score){
+		var list = viewLookup[viewIDA];
+		if(!list){
+			list = [];
+			viewLookup[viewIDA] = list;
+		}
+		list.push({"opposite":viewIDB, "score":score});
+	}
+	// get each view's possible pairs:
+	for(var i=0; i<pairs.length; ++i){
+		var pair = pairs[i];
+		var relativeCount = pair["tracks"];
+		if(!(relativeCount && relativeCount>minimumRelativeCount)){
+			console.log("SKIP: "+relativeCount);
+			continue;
+		}
+		var errorR = pair["relativeError"];
+		addViewLookupPair(pair["A"],pair["B"],errorR);
+		addViewLookupPair(pair["B"],pair["A"],errorR);
+	}
+
+	console.log(viewLookup);
+	// get each view's top pairs, limit to max count
+	var viewIDs = Code.keys(viewLookup);
+	for(var i=0; i<viewIDs.length; ++i){
+		var viewID = viewIDs[i];
+		var list = viewLookup[viewID];
+		list.sort(sortByScore);
+		// TODO: should use sigma or something else to limit really poor matches?
+		Code.truncateArray(list,maximumIndividualPairCount);
+		// add pair to possible pair list:
+		for(var j=0; j<list.length; ++j){
+			var entry = list[j];
+			var viewOpp = entry["opposite"];
+			var isLess = viewID < viewOpp;
+			var viewAID = isLess ? viewID : viewOpp;
+			var viewBID = isLess ? viewOpp : viewID;
+			var pairID = viewAID+"-"+viewBID;
+			pairLookup[pairID] = {"id":pairID,"A":viewAID,"B":viewBID};
+		}
+	}
+	var pairArray = Code.objectToArray(pairLookup);
+
+	// console.log(pairArray);
+	// throw "?"
+	
+	// create triples from truncated pair array
+	triples = {};
+	var haveTriples = 0;
+	for(var i=0; i<pairArray.length; ++i){
+		var pairA = pairArray[i];
+		var idAA = pairA["A"];
+		var idAB = pairA["B"];
+		for(var j=i+1; j<pairArray.length; ++j){
+			var pairB = pairArray[j];
+			var idBA = pairB["A"];
+			var idBB = pairB["B"];
+			// any overlap:
+			if(idAA==idBA || idAA==idBB || idAB==idBA || idAB==idBB){
+				var uniqueStrings = Code.uniqueStrings([idAA,idAB,idBA,idBB]);
+					uniqueStrings.sort();
+				var idA = uniqueStrings[0];
+				var idB = uniqueStrings[1];
+				var idC = uniqueStrings[2];
+				var tripleID = idA+"-"+idB+"-"+idC;
+				// console.log(tripleID);
+				if(triples[tripleID]){
+					// console.log(triples[tripleID]);
+					// console.log("triple already exists: "+tripleID);
+					// throw "triple already exists?";
+					continue;
+				}
+				var triple = {};
+					triple["id"] = tripleID;
+					triple["A"] = idA;
+					triple["B"] = idB;
+					triple["C"] = idC;
+				triples[tripleID] = triple;
+			}
+		}
+	}
+	// console.log(triples);
+	triples = Code.objectToArray(triples);
+	// console.log(triples);
+	return triples;
 }
 
 App3DR.ProjectManager.prototype._iterateSparseTracks = function(sourceData, sourceFilename){
@@ -9672,6 +9701,11 @@ App3DR.ProjectManager.prototype.calculatePairMatchWithRFromViewIDs = function(vi
 	settings[SETTING_MAX_ERR_R] = Code.valueOrDefault(settings[SETTING_MAX_ERR_R], 0.002);
 	settings[SETTING_CEL_SIZ] = Code.valueOrDefault(settings[SETTING_CEL_SIZ], 40);
 
+	var maxErrorRDensePixels = 10;
+	var maxErrorFDensePixels = 10;
+	var maxErrorRTrackPixels = 5;
+	var maxErrorFTrackPixels = 5;
+
 	console.log("calculatePairMatchWithRFromViewIDs");
 
 console.log(relativeAB);
@@ -9722,41 +9756,51 @@ console.log(relativeAB);
 		console.log("solveDensePair");
 		world.solveDensePair();
 
-throw "after solve"
+		var transform = world.toTransformArray()[0];
+		var errorR = (transform.rSigma() + transform.rMean());
+		var errorF = (transform.fSigma() + transform.fMean());
+		console.log("transform error R: "+errorR+" of "+maxErrorRDensePixels);
+		console.log("transform error F: "+errorF+" of "+maxErrorFDensePixels);
+
+var pairData = App3DR.ProjectManager.defaultPairFile(viewAID,viewBID);
+
+		pairData["relative"] = world.toObject();
+
+// var str = world.toYAMLString();
+// console.log(str);
+
+		console.log("do tracks");
+		world.solveForTracks();
+
+pairData["tracks"] = world.toObject();
+
+		var errorR = (transform.rSigma() + transform.rMean());
+		var errorF = (transform.fSigma() + transform.fMean());
+		console.log("transform error R: "+errorR+" of "+maxErrorRTrackPixels);
+		console.log("transform error F: "+errorF+" of "+maxErrorFTrackPixels);
+
+var str = world.toYAMLString();
+console.log(str);
+
+// throw "after solve"
 
 		// if good enough, record matches
 
 		// if good enougn, record relative
+		// 	var viewAverageWidth = (imageAWidth+imageBWidth)*0.5;
+		// 	var matchData = {};
+		// 		matchData["F"] = fNorm;
+		// 		matchData["errorFMean"] = fMean/viewAverageWidth;
+		// 		matchData["errorFSigma"] = fSigma/viewAverageWidth;
+		// 		matchData["points"] = matchesAB;
+		// 		matchData["count"] = matchesAB.length;
+		// 	pairData["matches"] = matchData;
+		// if(errorR<maximumRErrorTracks && errorF<maximumFErrorTracks){
+		// 	pairData["metricNeighborsToWorld"] = reconstructionMetric;
+		// }
 
-		// try for tracks
-
-		// save
-
-			var pairData = App3DR.ProjectManager.defaultPairFile(viewAID,viewBID);
-			
-			var viewAverageWidth = (imageAWidth+imageBWidth)*0.5;
-
-			var matchData = {};
-				matchData["F"] = fNorm;
-				matchData["errorFMean"] = fMean/viewAverageWidth;
-				matchData["errorFSigma"] = fSigma/viewAverageWidth;
-				matchData["points"] = matchesAB;
-				matchData["count"] = matchesAB.length;
-			pairData["matches"] = matchData;
-		
-		
-
-		if(errorR<maximumRErrorTracks && errorF<maximumFErrorTracks){
-			pairData["metricNeighborsToWorld"] = reconstructionMetric;
-
-			world.solveForTracks();
-			pairData["tracks"] = world.toObject();
-
-		
-		}
-
-		throw "save ?"
-		completeFxn.call(completeCxt, data);
+		// throw "before save ?"
+		completeFxn.call(completeCxt, pairData);
 	}
 
 

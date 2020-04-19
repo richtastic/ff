@@ -21102,7 +21102,7 @@ for(var i=0; i<matches.length; ++i){
 		// d.graphics().strokeLine();
 	GLOBALSTAGE.addChild(d);
 
-}
+} // for loop
 } // if false
 
 // throw "before return";

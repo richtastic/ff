@@ -144,27 +144,27 @@ If the source camera is available taking photos of a known geometry allows for v
 Modern Cameras and phones store metadata in images, with useful info like:
 
 - EXIF (Exchangeable image file format)
-    - date:create: 2019-03-06T09:22:11-08:00
-    - date:modify: 2019-03-06T09:22:05-08:00
-    - exif:ApertureValue: 54823/32325
-    - exif:BrightnessValue: 97923/25988
-    - exif:DateTime: 2019:03:06 08:46:43
-    - exif:ExifImageLength: 3024
-    - exif:ExifImageWidth: 4032
-    - exif:FocalLength: 399/100
-    - exif:FocalLengthIn35mmFilm: 28
-    - exif:GPSAltitude: 237463/1937
-    - exif:GPSDateStamp: 2019:03:06
-    - exif:GPSDestBearing: 575385/4598
-    - exif:GPSImgDirection: 575385/4598
-    - exif:GPSLatitude: 34/1, 6/1, 21/100
-    - exif:GPSLatitudeRef: N
-    - exif:GPSLongitude: 118/1, 16/1, 4827/100
-    - exif:GPSLongitudeRef: W
-    - exif:Model: iPhone 7
-    - exif:Orientation: 1
-    - exif:ShutterSpeedValue: 63436/12923
-    - ...
+	- date:create: 2019-03-06T09:22:11-08:00
+	- date:modify: 2019-03-06T09:22:05-08:00
+	- exif:ApertureValue: 54823/32325
+	- exif:BrightnessValue: 97923/25988
+	- exif:DateTime: 2019:03:06 08:46:43
+	- exif:ExifImageLength: 3024
+	- exif:ExifImageWidth: 4032
+	- exif:FocalLength: 399/100
+	- exif:FocalLengthIn35mmFilm: 28
+	- exif:GPSAltitude: 237463/1937
+	- exif:GPSDateStamp: 2019:03:06
+	- exif:GPSDestBearing: 575385/4598
+	- exif:GPSImgDirection: 575385/4598
+	- exif:GPSLatitude: 34/1, 6/1, 21/100
+	- exif:GPSLatitudeRef: N
+	- exif:GPSLongitude: 118/1, 16/1, 4827/100
+	- exif:GPSLongitudeRef: W
+	- exif:Model: iPhone 7
+	- exif:Orientation: 1
+	- exif:ShutterSpeedValue: 63436/12923
+	- ...
 
 ```
 identify -verbose ./test.jpg
@@ -175,8 +175,8 @@ identify -verbose ./test.jpg
 For images without any camera data, *reasonable* values can be assumed, and final values rely on agorithms to solve for finding the best value.
 
 - methods:
-    - using lines in images
-    -
+	- using lines in images
+	-
 
 *TODO: research methods*
 
@@ -193,48 +193,48 @@ The intrinsic camera (K) and distortion parameters are first approximated using 
 ### Feature Matching
 
 #### Features
-    - repeatably detectable locations in image
-        - corners (per harris [eigenvalue] or similar detector)
-        - blobs (as having a scale space extrema)
-    - want to be able to orientate the feature for matching
-    - size / area of influence:
-        - scale space extrema (peaks only usually only for blob-type features) (good)
-        - corner scale space extrema (scale at which a point is most corner-like) (smaller sized)
-        - constant entropy (scale out until entropy reaches some constant) (difficult, poor)
-        - range (scale out until range reaches some value) (noisy, poor)
-        -
-    - angle (rotation invariant):
-        - covariance (mass direction) (ok)
-        - center of mass (noisy)
-        - dominant gradient (noisy)
-        - histogram of gradients (ok)
-        -
-    - affine invariant:
-        -
-    - examples:
-        - SIFT: Scale Invariant Feature Transforms
-            - grayscale gradient (8-bin) histograms with 16 samples (4x4) repeated in 16 oriented (4x4 grid) locations
-            - blob size is really well defined; total feature size ~ 2-8 x size of blob
-            -
-        - MSER: Maximally Stable Extremal Regions
-            - very accurate outline, repeatable
-            - typically only handful of points [10~100]
-        - SURF:
-        - DAISY:
-        - MOPS: Multi Scale Oriented Patche(S)
-            - 40x40 => 8x8 window ; subtract mean ; divide by sigma;
-        - ORB:
-        - GLOH: Gradient Location Oriented Histogram
-            - circular SIFT binning
-        - BRIEF:
-        - BRISK:
-        - BGM:
-        - LATCH:
-        - KVLD:
-        - CODE:
-        - GMS:
-        - LDA-HASH:
-        - BINBOOST - Binary
+	- repeatably detectable locations in image
+		- corners (per harris [eigenvalue] or similar detector)
+		- blobs (as having a scale space extrema)
+	- want to be able to orientate the feature for matching
+	- size / area of influence:
+		- scale space extrema (peaks only usually only for blob-type features) (good)
+		- corner scale space extrema (scale at which a point is most corner-like) (smaller sized)
+		- constant entropy (scale out until entropy reaches some constant) (difficult, poor)
+		- range (scale out until range reaches some value) (noisy, poor)
+		-
+	- angle (rotation invariant):
+		- covariance (mass direction) (ok)
+		- center of mass (noisy)
+		- dominant gradient (noisy)
+		- histogram of gradients (ok)
+		-
+	- affine invariant:
+		-
+	- examples:
+		- SIFT: Scale Invariant Feature Transforms
+			- grayscale gradient (8-bin) histograms with 16 samples (4x4) repeated in 16 oriented (4x4 grid) locations
+			- blob size is really well defined; total feature size ~ 2-8 x size of blob
+			-
+		- MSER: Maximally Stable Extremal Regions
+			- very accurate outline, repeatable
+			- typically only handful of points [10~100]
+		- SURF:
+		- DAISY:
+		- MOPS: Multi Scale Oriented Patche(S)
+			- 40x40 => 8x8 window ; subtract mean ; divide by sigma;
+		- ORB:
+		- GLOH: Gradient Location Oriented Histogram
+			- circular SIFT binning
+		- BRIEF:
+		- BRISK:
+		- BGM:
+		- LATCH:
+		- KVLD:
+		- CODE:
+		- GMS:
+		- LDA-HASH:
+		- BINBOOST - Binary
 
 
 
@@ -277,8 +277,8 @@ P<sub>B</sub> = [[e<sub>A</sub>]<sub>&times;</sub>&midot;F|e<sub>B</sub>]
 
 
 - rectification to parallel lines
-    - homography
-    - nonlinear
+	- homography
+	- nonlinear
 
 reduce searching to single line
 
@@ -305,14 +305,14 @@ Some summary statistics / features of each image can be used to compare overlap
 	- can find clusters / nearest neighbors / overlap
 
 #### vocabulary options:
-    - flat color histogram (R/G/B binning)
-        - convolution / SAD compare
-    - gradients?
-        - requires orientation compare
-            - highest-frequency gradient?
-    - SAD/SIFT features
-        - requires orientation compare
-    - 
+	- flat color histogram (R/G/B binning)
+		- convolution / SAD compare
+	- gradients?
+		- requires orientation compare
+			- highest-frequency gradient?
+	- SAD/SIFT features
+		- requires orientation compare
+	- 
 
 
 
@@ -329,39 +329,39 @@ progressive comparisons
 <a name="DENSE"></a>
 ### Dense Matching
 input:
-    - fair number of accurate sparse matches [&approx;10+]
-    - low reprojection error F [&approx;<1]
+	- fair number of accurate sparse matches [&approx;10+]
+	- low reprojection error F [&approx;<1]
 output:
-    - dense (on order of image pixels: 10%-100%) matches
+	- dense (on order of image pixels: 10%-100%) matches
 
 #### Stereo Matching
 - pair matches with only small disparity changes (small baseline)
 
-    - hierarchical ordered stereo matching
-        - minimum path calculation
-            - depends on only few occlusions per line sequence
+	- hierarchical ordered stereo matching
+		- minimum path calculation
+			- depends on only few occlusions per line sequence
 
-    - Image Rectification
-        - simply homogaphy of dominant plane
-        - nonlinear common F-line mapping
+	- Image Rectification
+		- simply homogaphy of dominant plane
+		- nonlinear common F-line mapping
 
 #### Image Registration
 - wide baseline / high disparity / sporatic disparity
-    - cost functions:
-        - SSD | SAD | NCC | Entropy | Mututal Information
+	- cost functions:
+		- SSD | SAD | NCC | Entropy | Mututal Information
 
-    - hierarchical progressive localization
+	- hierarchical progressive localization
 
-    - minor affine changes
-        - inital guess/state is assumed very close to
-            - affine cost minimization of patch
-            - change in corner location to define affine transform
+	- minor affine changes
+		- inital guess/state is assumed very close to
+			- affine cost minimization of patch
+			- change in corner location to define affine transform
 
 #### Belief Propagation / Message Passing
-    - Specific application of MP: 2D 'stereo' searching
-    - rather than minimize costs along a 1D path, try to minimize 2D costs using neighbor
-    - cost: data term (match cost) + neighbor difference term (regularization) + drift term (non-textured areas)
-    - messages use neighborhood to update current best guess of flow (eg avg / lowest cost)
+	- Specific application of MP: 2D 'stereo' searching
+	- rather than minimize costs along a 1D path, try to minimize 2D costs using neighbor
+	- cost: data term (match cost) + neighbor difference term (regularization) + drift term (non-textured areas)
+	- messages use neighborhood to update current best guess of flow (eg avg / lowest cost)
 
 
 
@@ -408,7 +408,7 @@ Method 3:
 - something to do with solving an SVD related to the Pab and Pac
 
 #### Camera Intrinsic from TFT?
-    - ? simple camera intrinsic matrix assumption + TF + Absolute Conic = 4 possible solutions => choose positive semi-definite
+	- ? simple camera intrinsic matrix assumption + TF + Absolute Conic = 4 possible solutions => choose positive semi-definite
 
 
 
@@ -423,11 +423,11 @@ graph relating transforms - "image connectivity" - "view graph" - ""
 - translation / rotation averaging
 
 - outlier detection / rejection:
-    - inconsistent rotation / translation
-        - eg: A->B->C not in similar orientation  within similar error as: A->D->C & A->D->F->C
-        - orientation can be done but location requires known relative scales
-    - bad pairs:
-        - much higher error than neighbors
+	- inconsistent rotation / translation
+		- eg: A->B->C not in similar orientation  within similar error as: A->D->C & A->D->F->C
+		- orientation can be done but location requires known relative scales
+	- bad pairs:
+		- much higher error than neighbors
 
 
 
@@ -438,7 +438,7 @@ sequence of a single point tracked along multiple images
 #### Skeletal Graph
 - time complexity should depend on complexity of scene geometry not the number of photos
 - simplify possibly complicated connected view graph that narrows calculations to more critical paths
-    - "maximize accuracy (minimize uncertainty) & minimize computation time"
+	- "maximize accuracy (minimize uncertainty) & minimize computation time"
 
 - minimum connected dominating set . . == maximum leaf spanning tree
 
@@ -451,8 +451,8 @@ normal, size
 
 #### Bundle Adjust
 - minimize cost function
-    - camera - 6 params = MOTION
-    - 3d points - 3 params  = STRUCTURE
+	- camera - 6 params = MOTION
+	- 3d points - 3 params  = STRUCTURE
 Dense:
 
 
@@ -476,18 +476,18 @@ iteratively solved
 - points to triangles
 
 #### Surface modeling
-    - model local area with plane
-        - at what point does
-    - model local area with a sphere
-        - ...
+	- model local area with plane
+		- at what point does
+	- model local area with a sphere
+		- ...
 
-    - how many points to include?
-        - need local estimate of 'noise' - sigma distance from true surface
-        - the sample sphere size needs to be larger than the error [2-4 x] to find preferential direction
+	- how many points to include?
+		- need local estimate of 'noise' - sigma distance from true surface
+		- the sample sphere size needs to be larger than the error [2-4 x] to find preferential direction
 
-    - 3 points is perfect plane
-    - as add more points: average distance goes up
-    - add too many points ->
+	- 3 points is perfect plane
+	- as add more points: average distance goes up
+	- add too many points ->
 
 
 <a name="BACKGROUND"></a>
@@ -513,13 +513,13 @@ The triangle image resolution can also be reduced separately to reduce scene dat
 <br/>
 
 - triangles
-    - edge swap
-    - edge collapse
-    - vertex collapse
+	- edge swap
+	- edge collapse
+	- vertex collapse
 - image textures
-    - re-lookup texture blending step
-    - use model as base, and reduce from there?
-        - get color from closest point on original surface
+	- re-lookup texture blending step
+	- use model as base, and reduce from there?
+		- get color from closest point on original surface
 - ...
 
 
@@ -535,129 +535,130 @@ The triangle image resolution can also be reduced separately to reduce scene dat
 ### BIG DATA
 *handling input data over 10~100 images [1k+]*
 - start
-    =>
-    => parallel
-        - image summary data [eg: color histogram]
-    => reduce - wait
-    => parallel
-        - image similarity bag of words search
-    => reduce - wait
-    => parallel
-        - pairwise image F & R matching
-    => reduce - wait
-    => parallel
-        - triples of 3D orientations
-    => reduce - wait
-    => serial
-        - absolute orientation init
-    => parallel
-        - pairwise dense features
-    => reduce - wait
+	=>
+	=> parallel
+		- image summary data [eg: color histogram]
+	=> reduce - wait
+	=> parallel
+		- image similarity bag of words search
+	=> reduce - wait
+	=> parallel
+		- pairwise image F & R matching
+	=> reduce - wait
+	=> parallel
+		- triples of 3D orientations
+	=> reduce - wait
+	=> serial
+		- absolute orientation init
+	=> parallel
+		- pairwise dense features
+	=> reduce - wait
 
-    => serial (1)
-        - absolute orientation update
+	=> serial (1)
+		- absolute orientation update
 
-    => serial
-        - skeletal graph:
-            - separate views into groups
-                - spine O(logn)
-                - leaves O(logn)
-    => parallel (each group):
-        => serial (logn) - global point accumulation for world init
-        => serial (n/c) - bundle adjust: random view update
-        => 
-            - hole filling?
-            - track propagation?
-        => serial (n) - surface triangulation
-    => reduce - groups
-    => serial
-        - identify overlap ?
-        - combine triangulations into single [? overlapping edges?]
+	=> serial
+		- skeletal graph:
+			- separate views into groups
+				- spine O(logn)
+				- leaves O(logn)
+	=> parallel (each group):
+		=> serial (logn) - global point accumulation for world init
+		=> serial (n/c) - bundle adjust: random view update
+		=> 
+			- hole filling?
+			- track propagation?
+		=> serial (n) - surface triangulation
+	=> reduce - groups
+	=> serial
+		- identify overlap ?
+		- combine triangulations into single [? overlapping edges?]
 
 
 
 
 #### Pipeline
 *Summary of steps & purpose/goals*
-    - Camera Calibration
-        - need K (at least initial estimate)
-        - remove camera distortion from images
+	- Camera Calibration
+		- need K (at least initial estimate)
+		- remove camera distortion from images
 TODO:
-    - Preprocessing
-        - remove exact duplicates -- pixel-by-pixel matching ? 
-        - rotate any portrait images to landscape [make note of it in picture settings]
-        - increase contrast / color matching ?
+	- Preprocessing
+		- remove exact duplicates -- pixel-by-pixel matching ? 
+		- rotate any portrait images to landscape [make note of it in picture settings]
+		- increase contrast / color matching ?
 
-    - Feature Detection / Description: for each input image, find subset of points repeatably localizable
-        - one time search for features
-        - one time search for summary statistics: (color histograms, ??)
-    - Image Similar Pair Search
-        - limit total possible search space to pictures most likely to be successful in pairwise matching
-            - color histogram to limit total number of pairs to test
-            - load each other image to do feature compare
-    - Image Pair F
-        - good seed match points
-        - find good F (1-5px error) to initialize R in next step
-    - Image Pair R
-        - find semi-dense set of points starting with seed points
-        - find good R (1-5px error)
-    - Tracks (from view pairs)
-        - Smaller subset of best features to use in full view graph optimization, shared in at least 2 images
-            - good corner score / textured, low R error, low F error, dominant corners first
-        - good initial patch estimates
-    - Image Triplets (from view pairs)
-        - find relative scale of pairs
-        - decrease relative error between camera matrices [only used to optimize TFT]
-        - calculate TFT
-    - Absolute Orientations (from pair & triplet camera matrices)
-        - global absolute orientation of views in view graph
-            - increase accuracy of camera initial orientations / reduce errors by using multiple measurements
-    - Absolute RANSAC (from sparse track points) (using smaller set of points in order to use images )
-        - build up multi-view-spanning tracks from individual pair-tracks (for long sequences if possible)
-        - use tracks and initial view graph to find nonlinear best orientation
-        - find new view pairs (and add to existing) via projection
-        - use skeletal set (and edge groups) for first iteration & combine groups as final step
-    
-    - Pairwise Dense (use updated R to get better initial points [& ignore first iteration possible poor matches])
-        - search for initial corner matches using R: search along line + error & have affine mapping
-        - get dense points using R
-
-    - Triple Dense from Pairs (need relative scales again)
-        - load common pairs & get 2 or 3 way relative scales
-    - Absolute Orientation 2 (use updated pairwise transforms (lower error) & counts (more points))
-        - find improved absolute orientations of views, reducing error, using added & better estimates in view graph
-    - Dense to Tracks: 2D point intersection resolving (combine dense pairs into long-ish tracks)
-        - TODO: load P3Ds a pair at a time, and do collision resolving by loading the images (combine into track vs separate/drop)
-        - helps reduce total number of P3Ds (50% to 10% of original - duplicate coverage)
-    - Global RANSAC (load all dense 'track' points at same time [& views])
-        - use skeleton sets for first iteration, combine groups as final step, then full set on final few iterations
-        - reduce error of all view transforms at same time (or in randomized bunches [single camera - load ones who's error R reduces most rapidly])
-            - no new points are added
-            - only remove on full BA
-        - Hole filling / exending support == probe2D & project3D
-            - Multiwise Dense (group dense iteration - use images: only load small subset of views at a time)
-                - reduce errors on existing pairs using updated orientation
-                - fill out more points in possibly mission sections [use TFT to estimate missing locations | project using known point]
-                - create new pairs from previously unmatched relative orientations
-        - possible more/final BA with aid of new points
-        -> final absolute camera orientations
-        -> final set of surface points
-    - TODO: hi-res surfacing:
-        - Dense (increase surface resolution over what can fit in memory)
-        - load pair/triple/group & allow each 2d cell area on order of pixels (3-5) opportunity to
-            - support sectioning: store 'database' in single large or multiple file
-                - index between:
-                    - track
-                    - view
-                    - voxel [divided/combined to max point count ~ 1E6]
-                - surface triangulation: only find surface a voxel at a time - propagation madness
-        - COULD 
-        - triangle subdivisions?
-    - VOXEL LOADING BASED ON EACH VIEW'S POINTS -- keep track on view
-    - Triangulate (simplify surface using curvature to estimate triangulated locations)
-        - triangles
-    - Texture (sourced from unobstructed views & blending)
-        - textured triangles
+	- Feature Detection / Description: for each input image, find subset of points repeatably localizable
+		- one time search for features
+		- one time search for summary statistics: (color histograms, ??)
+	- Image Similar Pair Search
+		- limit total possible search space to pictures most likely to be successful in pairwise matching
+			- color histogram to limit total number of pairs to test
+			- load each other image to do feature compare
+	- Image Pair F
+		- good seed match points
+		- find good F (1-5px error) to initialize R in next step
+	- Image Pair R
+		- find semi-dense set of points starting with seed points
+		- find good R (1-5px error)
+	- Tracks (from view pairs)
+		- Smaller subset of best features to use in full view graph optimization, shared in at least 2 images
+			- good corner score / textured, low R error, low F error, dominant corners first
+		- good initial patch estimates
+	- Image Triplets (from view pairs)
+		- find relative scale of pairs
+		- decrease relative error between camera matrices [only used to optimize TFT]
+		- calculate TFT
+	- Absolute Orientations (from pair & triplet camera matrices)
+		- global absolute orientation of views in view graph
+			- increase accuracy of camera initial orientations / reduce errors by using multiple measurements
+	- Absolute bundle adjust (from sparse track points) (using smaller set of points in order to use images )
+		- build up multi-view-spanning tracks from individual pair-tracks (for long sequences if possible)
+		- use tracks and initial view graph to find nonlinear best orientation
+		- find new view pairs (and add to existing) via projection
+		- use skeletal set (and edge groups) for first iteration & combine groups as final step
+	- Pairwise Dense (use updated R to get better initial points [& ignore first iteration possible poor matches])
+		- search for initial corner matches using R: search along line + error & have affine mapping
+		- get dense points using R
+	- Triple Dense from Pairs (need relative scales again)
+		- load common pairs & get 2 or 3 way relative scales
+HERE
+	- Absolute Orientation 2 (use updated pairwise transforms (lower error) & counts (more points))
+		- find improved absolute orientations of views, reducing error, using added & better estimates in view graph
+	
+	- Dense to Tracks: 2D point intersection resolving (combine dense pairs into long-ish tracks)
+		- TODO: load P3Ds a pair at a time, and do collision resolving by loading the images (combine into track vs separate/drop)
+		- helps reduce total number of P3Ds (50% to 10% of original - duplicate coverage)
+	- Global RANSAC (load all dense 'track' points at same time [& views])
+		- use skeleton sets for first iteration, combine groups as final step, then full set on final few iterations
+		- reduce error of all view transforms at same time (or in randomized bunches [single camera - load ones who's error R reduces most rapidly])
+			- no new points are added
+			- only remove on full BA
+		-> final absolute camera orientations
+		-> final set of surface points
+	- Dense Point Cloud
+		- Multiwise Dense : load groups of views at a time to get approximate surface points [6-10 images at a time, with overlap - 20-50%]
+		- use lowest error track points as starting seeds for stereopsis
+		- Hole filling / exending support == probe2D & project3D
+			- fill out more points in possibly mission sections [use TFT to estimate missing locations | project using known point]
+		- view matrixes can't move === no possible more/final BA with aid of new points ????
+		- iterate over groups and accumulate points (add & merge) into single file
+	- Hi Res Surface Points:
+		- increase surface resolution over what can fit in memory)
+		- extent of 3D volume is known based on extrema of groups [remove 3-5 sigma point distances]
+		- load group & allow each 2d cell area on order of pixels (3-5) opportunity to
+			- support sectioning: store 'database' in single large or multiple file
+				- index between:
+					- track
+					- view
+					- voxel [divided/combined to max point count ~ 1E6]
+				- surface triangulation: only find surface a voxel at a time - propagation madness
+		- triangle subdivisions?
+		- VOXEL LOADING BASED ON EACH VIEW'S POINTS -- keep track on view
+	- Triangulate (simplify surface using curvature to estimate triangulated locations)
+		- surface points to triangles
+	- Texture (sourced from unobstructed views & blending)
+		- textured triangles
 
 
 - sparse seeds starts in 11x11 grid

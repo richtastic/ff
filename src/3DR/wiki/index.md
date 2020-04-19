@@ -1711,7 +1711,7 @@ epipole: F&middot;e<sub></sub> = 0 ; F<sup>T</sup>&middot;e' = 0
 <br/>
 e / e' = eigenvectors..
 <br/>
-e = right null vector of V (of F)  (right null vector of F?)
+e = right null vector of V (of F)  (right null space of F)
 <br/>
 e' = right null vector of U (of F)  (left null vector of F?)
 <br/>
@@ -1720,6 +1720,9 @@ e = svd(F).V.col(2).homo()
 <br/>
 <br/>
 epipolar lines: l = F&middot;x
+
+
+P1 = [I|0] => P2 = [[e1]<sub>&times;</sub>F| e2]
 
 
 

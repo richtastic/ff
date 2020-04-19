@@ -221,8 +221,9 @@ project typical numbers:
 	~N*N(0.2) pairs [ (n.(n-1))/2 - 2 pairs possible ]		CURRENT GUESS OF AVERAGE GRAPH CONNECTIVITY
 	~N*N(0.1) triples [(n)*(n-1)*(n-2)/6 triples possible] - tetrahedral number
 
-	20~200 pairs
-	10~100 triples
+	20~200 pairs -- blind pairs will be high, dense pairs capped at ~ 10N
+	10~100 triples -- sparse triples will be medium, dense triples capped at ~ 6N
+	tesselation ~ 1/10th original dense points
 
 	[max 4032 x 3024]
 	2016x1512 image @ hi res [triangles]
@@ -236,25 +237,34 @@ project typical numbers:
 
 	100~1000 initial features
 	50~100 matched pair features
-	10k~50k matched dense pairs
-	100~1000 track points per pair
+	1k-10k matched sparse points
+	0.5k-1k tracks per sparse pair
+	10k~50k matched dense points
+	1k~10k tracks per dense pair
 	2-5 avg track length CURRENT GUESS OF AVG TRACK LENGTH
-
-	[100-1000] * N track points total
-	10K * N 2D dense points total
-	10K * N/3 3D dense points total
-
-	10 images:
+		- 2 @ 60%
+		- 3 @ 25%
+		- 4 @ 10%
+		- 5+ @ 5%
+	100-1k * N sparse track points total
+	1k-10k * N dense track points total
+	50k * N 2D dense points total
+	50k * N/3 3D dense points total
+	10k triangles per view
+	10 images: [10-45-120]
 		20 pairs
-		10 triples
-		1E3-1E4 track points [10,000]
-		1E5 2D dense points [100,000]
-	100 images:
-		2000 pairs
-		1000 triples
-		1E4-1E5 track points [100,000]
-		1E6 dense points [1,000,000]
-
+		60 triples
+		1E4 sparse track points [10,000]
+		1E5 dense track points [100,000]
+		5E5 dense points [500,000]
+		1E5 triangles [100,000]
+	100 images: [100-4950-162k]
+		1000 pairs
+		600 triples
+		1E5 sparse track points [100,000]
+		1E6 dense track points [1,000,000]
+		5E6 dense points [5,000,000]
+		1E5 triangles [1,000,000]
 	10 images:
 		0.25 redundant coverage
 		50E3 dense points
@@ -262,9 +272,20 @@ project typical numbers:
 		px3 + nx3 + (v,x,y)x3 = 15 floats per point
 		= 2,000,000 x 8 bytes = 15MB
 	100 images
+		0.25 redundant
 		= 1,250,000 dense points
 		= 1,250,000 = 150MB
 
+image resolution: 2000 x 1500 = 3E6 pixels
+point size ~ 1/10 = 200 x 150 = 3E4 points
+redundancy ~ 33% = 1E4 unique points
+100 pictures x 1E4 points = 1E6 points
+
+
+
+20-50k for dense pair
+group of 6 dense stereopsis: 25k x 6 = 150k points per group
+~ 100 / 6  ~  20 groups @ 150k  ~ 3E6 points total
 
 
 CELL / DENSITY FOR IMAGES:
@@ -278,11 +299,15 @@ CELL / DENSITY FOR IMAGES:
 
 
 
-
-ABSOLUTE TERMS : define cell SIZE
-RELATIVE TERMS : define image percent (for minimum size)
-				: define cell count (for minimum size)
-
+CURRENT RUNTIMES:
+features ~ 20 seconds
+sparse pairs ~ 1 minute
+sparse track BA ~ 10 minutes
+dense pairs ~ 10 minutes
+dense track BA ~ (20?) minutes
+group stereopsis ~ (30?) minutes
+triangulation ~ (10?) minutes
+texturing ~ (10?) minutes
 
 
 
@@ -379,11 +404,11 @@ vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 	- VR device
 		x ios: scenekit
 		- oculus = unity / blender
-(02/29)
+(06/01)
 - MVP
 	- example models
 	- example screens
-(03/31)
+(07/18)
 
 google app engine project - nodejs
 https://cloud.google.com/appengine/docs/nodejs/
@@ -397,10 +422,9 @@ https://cloud.google.com/appengine/docs/nodejs/
 - encryption
 
 
-04/16 - retry 6 images using new sparse absolute orientation algorithms
-04/18 - retry dense selection using known R
-		- better this time around?
+04/19 - dense triples
 04/20 - retry dense global bundle adjust
+04/22 - how to include mass-dense points in stereopsis / final file ?
 04/24 - hole filling?
 04/26 - multi-view point propagation from dense
 		- projecting known 3D points
@@ -410,7 +434,7 @@ https://cloud.google.com/appengine/docs/nodejs/
 05/03 - texture-triangle-edge problems -- rendering on device shows lines at the edges of triangles -- should be smooth -- DIALATION of texture after it's created (post process requires map)
 05/06 - test new set of 10 ~ 20 images
 05/13 - test set of ~50 images
-05/20 - test set of ~100 images
+05/20 - test set of ~100 images x
 05/27 - MVP
 
 ? - BA identify/remove view if it's position is very bad????
@@ -421,47 +445,47 @@ https://cloud.google.com/appengine/docs/nodejs/
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-x pass initial P as world relative transforms
-x use new iterating method to reduce P error on pairs ...
-x patches are wrong (estimated normal / affine)
-	- how to do rays from a specific pixel?
-		- image point
-		- inverse k
 
-x dense starts out with very high error
-x errors don't match
 
-x filter on F first before R
+- with the original bundle-adjust sparse graph, could just use this instead of starting the 
+	- then scales / preprocessing are useless ? 
+	- would just continue bundle adjust from prior 
+
+
+- dense initial view graph looks bad
+	- display could just be really weird angle ?
+
+
+
 
 => speed up world view/transform lookups
 	- world stores a list of transforms for each view
 		=> lazy init
 
-
-
-
-
 - method for removing bad matches after/during probe searching
 
-
-
-
+- top of bench is frequently wrong & assigned as part of tree BG
 
 
 - NEXT STEPS:
-	- DENSE TRACKS
-		- 10-50k points
-		- 5-20k tracks - per image
-			- filter on R
-			- filter on corner
-	- DENSE ASBOLUTE
-	- DENSE BA
-		- after including a bunch of points, keep separate TRACK file that is only points with 3+ views
-
+	- DENSE TRIPLES (SCALES)
+	- DENSE ASBOLUTE ORIENTATIONS
+	- DENSE BA 3+ tracks
+		- after including a bunch of points, keep separate TRACK file that are only points with 3+ views [don't care about pairs -- not processed]
+=> well-placed views - NOW STATIC
+=> good track seed points (some outliers)
 	- DENSE SURFACES
-		- 'novel' points not yet recovered [eg missed background points]
+		---- load smaller sets of points / images at once
+			- skeletalish scenes
+		- load groups of views at a time (3-6)
+		- project track points not visible in view I to get more support
+			- 'novel' points not yet recovered [eg missed background points]
 		- blank area filling ?
-	- DROPPING WORST POINTS (low local density compared to sampled averages)
+	- COMBINE SEPARATE SCENES' POINT TOGETHER INTO SINGLE SCENE ------ AGGREGATION
+		- only P3D are brought in (and normals & size)
+		- discard / merge repeated areas
+
+
 	- SURFACE TRIANGULATION/TESSELATION
 	- TEXTURING
 
@@ -474,53 +498,38 @@ x filter on F first before R
 => do match scores need to be re-assessed when R is updated? previously good/bad matches might be different after a while
 
 
-TFT ???
 
-https://www.robots.ox.ac.uk/~vgg/hzbook/hzbook2/HZtrifocal.pdf
+DENSE GROUPS:
+	have graph of n views (100)
+	cluster groups of size g (6)
+	want minimum overlap of o (2)
+	- want to minimize total number of groups (n/(g-o)) : 100/(6-2) = 25
+	- each group should have a locally 'strong' vertex
+		- skeletal node
+	- spread 'good' vertexes around
+	- relate edges as error or number of tracks
+	- keep related vertexes together (connected sub-graph of main graph)
 
-https://pdfs.semanticscholar.org/0757/436862dba2d98dfb6b0947a9d76156b37b11.pdf
+clique
 
-https://pdfs.semanticscholar.org/31f9/a0c864f4d7cf2b2f298eac11321fb32e51a7.pdf
+better = [next lowest error or next highest tracks]
+A)
+each vertex is in its own group of size 1
+queue vertexes based on next-best edge
+- if group size less than desired size, expand group by merging next best (worst?) edge
+- if group size is more than desired size, remove worst (best?) edge
+=> no overlap
+add overlap: include next 2 best edges belonging to another group
+	- would prefer they be separate ?
 
+B) entire graph is single group - only skeletal edges
+- remove best edge from group
+-- some edges can't be removed without dropping the vertex
 
-
-
-Read lots of papers: IJCV, PAMI, CVPR, ICCV, ECCV,
-NIPS
-
-
-
-
-ADD GLOSSARY PAGE FOR:
-
-automatic vanashing point detection
-
-plane sweep stereo
-
-Ceres Solver
-http://ceres-solver.org/
-
-Levenberg Marquardt Algorithm
-https://en.wikipedia.org/wiki/Levenberg%E2%80%93Marquardt_algorithm
-
-Photosynth - Microsoft
-https://en.wikipedia.org/wiki/Photosynth
-
-distance-ratio - constrain nearby features in second image by limits of first image
-
-Iterative closest point
-
-brightness constancy
+- should edges between groups be BETTER or WORSE ?
+- should edges in groups be BETTER OR WORSE ?
 
 
-
-TO PRINT:
-https://www.cse.huji.ac.il/~csip/sfm.pdf
-http://mi.eng.cam.ac.uk/~cipolla/publications/contributionToEditedBook/2008-SFM-chapters.pdf
-
-
-TO LOOK AT:
-https://www.youtube.com/watch?v=kyIzMr917Rc
 
 
 
@@ -584,14 +593,6 @@ STEREOPSIS ABSOLUTE TRANSFORMS FROM RELATIVE
 
 need to combine initialization / iteration processes for averaging / optimizing:-------------------------------------
 
-
-- linear initial estimate (matrixes)
-	- need some linear metric for all steps
-- linear iterative updates (graph)
-	- combined vs separate metric for (rot + tra)
-- nonlinear error adjustment (gradient descent)
-	- need 'combined' error for transforms (rot + tra)
-......................................................
 
 
 
