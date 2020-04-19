@@ -7649,7 +7649,18 @@ console.log("checkPerformNextTask");
 		return;
 	}
 
+	project.loadDenseGroupsStereopsis();
+throw ">stereopsis - dense groups";
+
+	// load all of track_full.yaml from dense into scene
+	// remove worst outliers (negative, high R error, etc)
+	// group-wise stereopsis
+	// subdivide 40 -> 80 -> 160
+
 throw "increase resolution / fill gaps?"
+
+
+
 if(!project.checkHasBundleAdjustEnded()){
 	project.iterateBundleAdjustProcess();
 	throw "iterate ba ?";
@@ -7777,8 +7788,6 @@ App3DR.ProjectManager.prototype._iterateSparseDenseLoaded = function(inputFilena
 		throw "input data not have pairs";
 	}
 
-// throw "S/D";
-
 	var currentPair = null;
 	var completePairFxn = function(data){
 		console.log("completePairFxn");
@@ -7890,7 +7899,7 @@ console.log("GOT : relative: "+relativeCount);
 		saveMatchesFxn();
 	}
 
-	console.log(inputData)
+	console.log(inputData);
 
 // throw ">A";
 
@@ -8134,10 +8143,14 @@ console.log("aggregate ...")
 	var trackCount = inputData["trackCount"]; // number of loaded tracks
 	if(trackCount===null || trackCount===undefined){
 		console.log("no trackCount ---> load tracks into track_GROUP.yaml & full (tracks or dense points) into tracks_all.yaml");
-		this._iterateSparseTracks(inputData, inputFilename);
+		this._iterateSparseTracks(inputData, inputFilename, isDense);
 		return;
 	}
-throw ">G";
+
+throw "this isn't used yet"
+
+
+throw "bundle adjust with better tracks?"
 	var bundleCount = inputData["bundleCount"]; // some number of iterations /
 	if(bundleCount===null || bundleCount===undefined){
 		// for each group in graph groups:
@@ -8338,12 +8351,15 @@ App3DR.ProjectManager.prototype.triplesFromBestPairs = function(pairs, isDense){
 	return triples;
 }
 
-App3DR.ProjectManager.prototype._iterateSparseTracks = function(sourceData, sourceFilename){
+App3DR.ProjectManager.prototype._iterateSparseTracks = function(sourceData, sourceFilename, isDense){
 	var project = this;
-	// ?
-	var maximumImagesLoad = 4; // 3 ~ 6
+	isDense = Code.valueOrDefault(isDense, false);
+	var maximumImagesLoad = 4; // 3 ~ 6 // ----- currently not used, approximating with geometry
 
 	var cellCount = 40; // ???? from somewhere
+	if(isDense){
+		cellCount = 60; // 60-80
+	}
 
 	console.log(sourceData);
 	var graphFile = sourceData["graph"];
@@ -8493,7 +8509,7 @@ console.log("isDone - FULL DONE")
 					// }
 					var putativeViews = [];
 					var putativePairs = pairs;
-					var sparseCount = pairs.length;
+					var solutionPairCount = pairs.length;
 					var putatives = {};
 						putatives["pairs"] = putativePairs;
 						putatives["views"] = putativeViews;
@@ -8504,35 +8520,21 @@ console.log("isDone - FULL DONE")
 							v["R"] = view["transform"];
 						putativeViews.push(v);
 					}
-					// for(var t=0; t<allTransforms.length; ++t){
-					// 	var transform = allTransforms[t];
-					// 	var viewIDA = transform["A"];
-					// 	var viewIDB = transform["B"];
-					// 	var pairID = App3DR.ProjectManager.pairIDFromViewIDs(viewIDA,viewIDB);
-					// 	var pair = pairs[pairID];
-					// 	if(pair){
-					// 		// console.log(transform);
-					// 		console.log(pair);
-					// 	}
-					// }
 
 					console.log(putatives);
 					// save these putatives to sparse.yaml
 					sourceData["putativePairs"] = putatives;
 					// save the putative / pairs to dense.yaml
-					var currentSparseCount = project.sparseCount();
-					console.log( "currentSparseCount: "+currentSparseCount );
+					// var currentSparseCount = project.sparseCount();
+					// console.log( "currentSparseCount: "+currentSparseCount );
 					// set sparseCount to info.yaml
-					console.log("SET sparseCount: "+sparseCount);
-					if(currentSparseCount===null){
-						project.setSparseCount(sparseCount);
+					console.log("SET solutionPairCount: "+solutionPairCount);
+					// if(currentSparseCount===null){
+					if(!isDense){
+						project.setSparseCount(solutionPairCount);
 					}else{
-						project.setDenseCount(sparseCount);
+						project.setDenseCount(solutionPairCount);
 					}
-					// throw "set sparse count -- only for sparse ... change for dense ? is sparse already present?"
-
-					// console.log(project.sparseCount());
-					// save sparse
 
 					// save project
 					var savedDataComplete = function(){
@@ -10586,7 +10588,126 @@ App3DR.ProjectManager.prototype.createWorldViewsForViews = function(world, views
 	console.log(BAVIEWS);
 	return BAVIEWS;
 }
+App3DR.ProjectManager.prototype.loadDenseGroupsStereopsis = function(){
+	console.log("loadDenseGroupsStereopsis");
+	var project = this;
+	var worldFilename = "dense/tracks/track_full.yaml";
+	var dataLoadedFxn = function(data){
+		console.log("track world loaded");
+		project._doDenseGroupsStereopsis(data);
+	}
+	project.loadDataFromFile(worldFilename, dataLoadedFxn, project, {});
+}
+App3DR.ProjectManager.prototype._doDenseGroupsStereopsis = function(data){
+	console.log(data);
+	var project = this;
 
+	var allViews = data["views"];
+	var allCameras = data["cameras"];
+	var allPoints = data["points"];
+	
+	var loadedImages = 0;
+	var expectedImages = allViews.length;
+	var checkAllViewImagesLoaded = function(){
+		++loadedImages;
+		console.log(" status: "+loadedImages+"/"+expectedImages);
+		if(loadedImages==expectedImages){
+			console.log("done");
+			loadWorld();
+		}
+	}
+
+	var loadWorld = function() {
+		var projectViews = project.views();
+		var viewIDToView = {};
+		// var denseViewLookupIndex = {};
+		// var cellSizes = [];
+		for(var i=0; i<allViews.length; ++i){
+			var view = allViews[i];
+			var viewID = view["id"];
+			var projectView = project.viewFromID(viewID);
+			// viewIDToView[viewID] = projectView;
+			viewIDToView[viewID] = view;
+			// denseViewLookupIndex[vid] = i;
+			// var image = projectView.anyLoadedImage();
+			// var wid = image.width;
+			// var hei = image.height;
+			// // var cellCount = 40;
+			// var cellCount = 60;
+			// // var cellCount = 80;
+			// cellSizes.push(R3D.cellSizingRoundWithDimensions(wid,hei,cellCount, false));
+		}
+		// console.log("cellSizes");
+		// console.log(cellSizes);
+		// add views
+		var cameras = allCameras;
+		var views = allViews;
+		var stage = GLOBALSTAGE;
+		var world = new Stereopsis.World();
+		var info = project._addGraphViews(world, viewIDToView, stage);
+		var images = info["images"];
+		var transforms = info["transforms"];
+		var worldCams = App3DR.ProjectManager.addCamerasToWorld(world, cameras);
+		var worldViews = App3DR.ProjectManager.addViewsToWorld(world, views, images, transforms);
+		// var worldViews = project.createWorldViewsForViews(world, views, images, cellSizes, transforms);
+
+		// set cell sizes
+			// var cellCount = 40;
+			var cellCount = 60;
+			// var cellCount = 80;
+		for(var i=0; i<worldViews.length; ++i){
+			var view = worldViews[i];
+			var size = view.size();
+			var wid = size.x;
+			var hei = size.y;
+			var size = R3D.cellSizingRoundWithDimensions(wid,hei,cellCount, false);
+			view.cellSize(size);
+		}
+			world.copyRelativeTransformsFromAbsolute();
+		console.log(worldViews);
+		// set view cell density
+
+		// add track points to world
+		var existingPoints = data["points"];
+		console.log(existingPoints);
+		var worldViewLookup = {};
+		for(var i=0; i<worldViews.length; ++i){
+			var view = worldViews[i];
+			var viewID = view.data();
+			worldViewLookup[viewID] = view;
+		}
+		console.log(worldViewLookup);
+		console.log("embedding points");
+		// init P3D 
+		world.checkForIntersections(false);
+		var points3D = App3DR.ProjectManager._worldPointFromSaves(world, existingPoints, worldViewLookup);
+		// world.checkForIntersections(false);
+		// var timeA = Code.getTimeMilliseconds();
+		// world.embedPoints3D(points3DNew);
+		// var timeB = Code.getTimeMilliseconds();
+		// console.log("DELTA: "+(timeB-timeA));
+		// // 
+		console.log(points3D);
+		world.checkForIntersections(true);
+		// world.resolveIntersectionByGeometry();
+		world.resolveIntersectionByPatchVisuals();
+		
+		world.solveGroup();
+
+		throw "done ?"
+	}
+
+	// load all view images [at some point will be groups]
+	for(var i=0; i<allViews.length; ++i){
+		var allView = allViews[i];
+		var viewID = allView["id"];
+		console.log(viewID);
+		var view = project.viewFromID(viewID);
+		console.log(view);
+		view.loadDenseHiImage(checkAllViewImagesLoaded, project); // 1008 x 768
+		// view.loadBundleAdjustImage(checkAllViewImagesLoaded, project); // 2016 x 1512
+	}
+}
 
 	// STEPS:
 
@@ -15535,6 +15656,9 @@ App3DR.ProjectManager.prototype._addGraphViews = function(world, graphViewLookup
 
 		var gv = graphViewLookup[view.id()];
 		var image = view.bundleAdjustImage();
+		if(!image){
+			image = view.anyLoadedImage();
+		}
 		var matrix = null;
 		if(image){ // try image
 			matrix = R3D.imageMatrixFromImage(image, stage);
@@ -17407,13 +17531,16 @@ App3DR.ProjectManager.addCamerasToWorld = function(world, cameras){
 		var K = null;
 		var distortion = null;
 		var camID = null;
-// console.log(camera);
+console.log(camera);
 		if(Code.ofa(camera, App3DR.ProjectManager.Camera)){
 			camID = camera.id();
 			K = camera.K();
 			distortion = camera.distortion();
 		}else{ // object
 			camID = camera["camera"]; // ...
+			if(!camID){
+				camID = camera["id"];
+			}
 			K = camera["K"];
 			distortion = camera["distortion"];
 		}
@@ -17431,6 +17558,7 @@ App3DR.ProjectManager.addCamerasToWorld = function(world, cameras){
 // console.log(K);
 console.log(world);
 console.log(K);
+
 		var c = world.addCamera(K, distortion);
 		c.data(camID);
 		// camera.temp(c);
@@ -18845,11 +18973,11 @@ App3DR.ProjectManager.View.prototype.loadDenseHiImage = function(callback, conte
 App3DR.ProjectManager.View.prototype.loadTrackImage = function(callback, context){
 	this._loadImage(App3DR.ProjectManager.View.IMAGE_LOAD_TYPE_DENSE_HI, callback, context);
 }
-App3DR.ProjectManager.View.prototype.loadTextureImage = function(callback, context){
-	this._loadImage(App3DR.ProjectManager.View.IMAGE_LOAD_TYPE_TEXTURE, callback, context);
-}
 App3DR.ProjectManager.View.prototype.loadBundleAdjustImage = function(callback, context){
 	this._loadImage(App3DR.ProjectManager.View.IMAGE_LOAD_TYPE_BUNDLE_ADJUST, callback, context);
+}
+App3DR.ProjectManager.View.prototype.loadTextureImage = function(callback, context){
+	this._loadImage(App3DR.ProjectManager.View.IMAGE_LOAD_TYPE_TEXTURE, callback, context);
 }
 App3DR.ProjectManager.View.prototype.loadMaskImage = function(callback, context){
 	var object = {};
@@ -18871,8 +18999,8 @@ App3DR.ProjectManager.View.IMAGE_LOAD_TYPE_ICON = 0;
 App3DR.ProjectManager.View.IMAGE_LOAD_TYPE_DENSE_LO = 1;
 App3DR.ProjectManager.View.IMAGE_LOAD_TYPE_FEATURES = 2;
 App3DR.ProjectManager.View.IMAGE_LOAD_TYPE_DENSE_HI = 3;
-App3DR.ProjectManager.View.IMAGE_LOAD_TYPE_TEXTURE = 4;
-App3DR.ProjectManager.View.IMAGE_LOAD_TYPE_BUNDLE_ADJUST = 5;
+App3DR.ProjectManager.View.IMAGE_LOAD_TYPE_BUNDLE_ADJUST = 4;
+App3DR.ProjectManager.View.IMAGE_LOAD_TYPE_TEXTURE = 5;
 App3DR.ProjectManager.View.IMAGE_LOAD_TYPE_MASK = 100;
 App3DR.ProjectManager.View.prototype._loadImage = function(type, callback, context){
 	// average : size of / space between : feature
@@ -18914,7 +19042,6 @@ App3DR.ProjectManager.View.prototype._loadImage = function(type, callback, conte
 	console.log(desiredPixelCount+" -> "+maximumPixelCount);
 	var closestPicture = -1;
 	var currentPixels = 0;
-console.log(pictures.length);
 	for(var i=0; i<pictures.length; ++i){
 		var picture = pictures[i];
 		var width = picture["width"];

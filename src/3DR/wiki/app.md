@@ -242,10 +242,10 @@ project typical numbers:
 	10k~50k matched dense points
 	1k~10k tracks per dense pair
 	2-5 avg track length CURRENT GUESS OF AVG TRACK LENGTH
-		- 2 @ 60%
-		- 3 @ 25%
-		- 4 @ 10%
-		- 5+ @ 5%
+		- 2 @ 80%
+		- 3 @ 15%
+		- 4 @  5%
+		- 5+ @ 1%
 	100-1k * N sparse track points total
 	1k-10k * N dense track points total
 	50k * N 2D dense points total
@@ -422,8 +422,7 @@ https://cloud.google.com/appengine/docs/nodejs/
 - encryption
 
 
-04/19 - dense triples
-04/20 - retry dense global bundle adjust
+04/20 - dense group stereopsis / global bundle adjust
 04/22 - how to include mass-dense points in stereopsis / final file ?
 04/24 - hole filling?
 04/26 - multi-view point propagation from dense
@@ -445,16 +444,45 @@ https://cloud.google.com/appengine/docs/nodejs/
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+- 
 
 
-- with the original bundle-adjust sparse graph, could just use this instead of starting the 
-	- then scales / preprocessing are useless ? 
-	- would just continue bundle adjust from prior 
 
 
-- dense initial view graph looks bad
-	- display could just be really weird angle ?
+- after the minimization of errors on the tracks, could remove a lot of the BAD track points
+	- negative
+	- high error
+	=> more iterations
 
+
+
+- if views are adjusted in GROUPS of stereopsis (mildly) to optimize the dense process
+	=> how could the groups be combined later to be a single ?
+	
+- yet another bundle adjust now with tracks from dense groups
+- start with dense world graph
+- nonlinear minimize error using relative edges from dense groups
+
+
+
+
+- stereopsis:
+	- P3D focused
+	- seed track point pre-filtering worst out
+	- re-logic for P3D triangulation
+	- re-logic for patches
+	- re-logic for patch-sphere filtering -- GLOBALLY = WORLD, not transform
+
+
+
+
+
+
+8971/11367 = 79%
+1653/11367 = 14%
+515/11367 = 4%
+179/11367 = 1.5%
+49/11367 = 0.5%
 
 
 
@@ -462,21 +490,15 @@ https://cloud.google.com/appengine/docs/nodejs/
 	- world stores a list of transforms for each view
 		=> lazy init
 
-- method for removing bad matches after/during probe searching
-
-- top of bench is frequently wrong & assigned as part of tree BG
-
 
 - NEXT STEPS:
-	- DENSE TRIPLES (SCALES)
-	- DENSE ASBOLUTE ORIENTATIONS
-	- DENSE BA 3+ tracks
-		- after including a bunch of points, keep separate TRACK file that are only points with 3+ views [don't care about pairs -- not processed]
 => well-placed views - NOW STATIC
 => good track seed points (some outliers)
-	- DENSE SURFACES
+-> need to drop a lot of these before using as seeds
+	- DENSE SURFACE POINTS
+		=> STEREOPSIS
 		---- load smaller sets of points / images at once
-			- skeletalish scenes
+		- skeletalish scenes
 		- load groups of views at a time (3-6)
 		- project track points not visible in view I to get more support
 			- 'novel' points not yet recovered [eg missed background points]
@@ -537,6 +559,9 @@ B) entire graph is single group - only skeletal edges
 - stereopsis still needs to be better at discarding outliers (groups of points outside error)
 
 
+
+
+- top of bench is frequently wrong & assigned as part of tree BG
 
 
 

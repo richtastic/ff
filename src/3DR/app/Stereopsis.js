@@ -6450,6 +6450,46 @@ console.log(" ERR "+min+" +/- "+sig);
 
 	return;
 }
+
+
+Stereopsis.World.prototype.solveGroup = function(){ // multiwise BA full scene/group
+	console.log("solveGroup");
+
+	// filter tracks
+
+
+	// calculate NCC match scores
+	// [11x11 => 9x9 compare ?]
+
+	// LOOP:
+	var iterationsPerDivision = 3;
+	var subDivisions = 0;
+	var maxIterations = iterationsPerDivision*(subDivisions+1);
+
+	for(var i=0; i<maxIterations; ++i){
+
+		// subdivide
+
+		
+		// triangulate P3D from all views
+			// NOT MATCHES
+		// update point errors/location
+			// P3D total
+			// matches
+		// update patches
+
+		// global-world patch-sphere filtering
+
+
+	}
+
+
+
+	// var str = world.toYAMLString();
+	// console.log(str);
+	throw "?"
+}
+
 Stereopsis.World.prototype.solveFullDenseIterate = function(){ // multiwise BA full scene/group
 	console.log("solveFullDenseIterate");
 

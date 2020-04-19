@@ -622,10 +622,8 @@ TODO:
 		- get dense points using R
 	- Triple Dense from Pairs (need relative scales again)
 		- load common pairs & get 2 or 3 way relative scales
-HERE
 	- Absolute Orientation 2 (use updated pairwise transforms (lower error) & counts (more points))
 		- find improved absolute orientations of views, reducing error, using added & better estimates in view graph
-	
 	- Dense to Tracks: 2D point intersection resolving (combine dense pairs into long-ish tracks)
 		- TODO: load P3Ds a pair at a time, and do collision resolving by loading the images (combine into track vs separate/drop)
 		- helps reduce total number of P3Ds (50% to 10% of original - duplicate coverage)
@@ -635,14 +633,16 @@ HERE
 			- no new points are added
 			- only remove on full BA
 		-> final absolute camera orientations
-		-> final set of surface points
+HERE
 	- Dense Point Cloud
+		- TODO: divide up view graph (using skeletal tree) into clusters (~6) with overlap (~2) to minimize total number of groups
 		- Multiwise Dense : load groups of views at a time to get approximate surface points [6-10 images at a time, with overlap - 20-50%]
 		- use lowest error track points as starting seeds for stereopsis
 		- Hole filling / exending support == probe2D & project3D
 			- fill out more points in possibly mission sections [use TFT to estimate missing locations | project using known point]
 		- view matrixes can't move === no possible more/final BA with aid of new points ????
 		- iterate over groups and accumulate points (add & merge) into single file
+		-> final set of surface points
 	- Hi Res Surface Points:
 		- increase surface resolution over what can fit in memory)
 		- extent of 3D volume is known based on extrema of groups [remove 3-5 sigma point distances]
