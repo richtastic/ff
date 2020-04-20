@@ -1,10 +1,18 @@
 ## Structure From Motion: (SFM)
 
 
+| |
+| :---: |
+| ![SFM](./images/sfm/cover.png "SFM") |
+| *Structure From Motion - Bench Scene* |
+
+
+<p align="center" width="100%">
 
 ![SFM](./images/sfm/cover.png "SFM")
 <br/>
 *Structure From Motion - Bench Scene*
+</p>
 <br/>
 
 
