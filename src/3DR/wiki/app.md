@@ -444,11 +444,33 @@ https://cloud.google.com/appengine/docs/nodejs/
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-- patches:
-calculatePoint3DPatches
 
 
-- TRANSFORMS ARE INVERSED ?
+
+- stereopsis- P3D focused
+	x seed track point pre-filtering worst out
+	x re-logic for P3D triangulation
+	x re-logic for patches
+	- re-logic for patch-sphere filtering -- GLOBALLY = WORLD, not transform
+	- upate filtering types
+		- patch obstruction
+		- local 2D -> 3D distances : vote on removal of outliers
+		- single-view's z-distance [LOG?] removing too far or too close
+		- globally removing points outside ~ 5 sigma distance from centroid
+		- 
+	- project P3D into other views
+		- should this check for intersections with content first ?
+			=> only do points that are non-obstructed by other patches ?
+	
+
+
+	resolveIntersectionPatchViewsLoaded
+
+
+// size from distances & relative affine scales ?
+// var averageSize = 1;
+
+
 
 
 
@@ -468,31 +490,6 @@ calculatePoint3DPatches
 - nonlinear minimize error using relative edges from dense groups
 
 
-
-
-- stereopsis:
-	- P3D focused
-	- seed track point pre-filtering worst out
-	- re-logic for P3D triangulation
-	- re-logic for patches
-	- re-logic for patch-sphere filtering -- GLOBALLY = WORLD, not transform
-
-
-
-
-
-// size from distances & relative affine scales ?
-// var averageSize = 1;
-
-
-
-
-
-8971/11367 = 79%
-1653/11367 = 14%
-515/11367 = 4%
-179/11367 = 1.5%
-49/11367 = 0.5%
 
 
 

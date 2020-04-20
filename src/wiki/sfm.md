@@ -2,6 +2,13 @@
 
 
 
+<br/>
+![SFM](./images/sfm/cover.png "SFM")
+<br/>
+*Structure From Motion - Bench Scene*
+<br/>
+
+
 ### Chapters
 
 0) [Summary](#SUMMARY)
@@ -28,11 +35,70 @@
 <a name="SUMMARY"></a>
 ### Summary
 
-Computer Vision
-- Structure From Motion
-- 3D Reconstruction
-- Multiple View Geometry
+*Structure From Motion* (SFM) is the process (problem) of using multiple camera images (2D) to reconstruct the 3D geometry encoded in the image sequence.
+<br/>
+_SFM_ is a group of problems in the more general field of *3D Reconstruction* which also covers related problems such as: stationary camera with moving targets, . All of these topics are associated under the umbrella term of *Computer Vision*.
+<br/>
 
+
+The input is a collection of images. If the images are not ordered (eg: by time or location) then the images are first related to each other before camera geometry can be found. If the number of images is very high (eg 100s or 1000s) then the images are first compared statistically using methods like *Bag of Words* to estimate how similar images are likely to be _en masse_. With a smaller set of potentially similar images, they can be compared more detailed by comparing many areas of distinctivness called *features*. With more error comes the possibility of incorrectle matching areas between the images. Statistics, heuristics, filtering, etc. are employed to most accurately estimate the camera geometry.
+
+<br/>
+![Camera Images](./images/sfm/summary_unordered_images.png "Camera Images")
+<br/>
+*Example Input of Unordered Images*
+<br/>
+
+Although the problem of relating images (knowing which images are similar) can be performed quicker if the images are ordered, and event quicker if the _difference_ between them is small. For example, a video is a time-ordered image sequence, where the *frames* before and after are likely highly similar. In this case, the movement of objects in the scene (*Optical Flow*) can be found by only needing to search the nearby space. The local changes in scene lighting, rotation, translation, etc. are small and make relating image areas easier and finding the camera geometry simpler and faster.
+
+<br/>
+![Video Images](./images/sfm/summary_ordered_images.png "Video Images")
+<br/>
+*Example Input of Ordered Image Sequence*
+<br/>
+
+
+- Camera Geometry
+= motion
+*Multiple View Geometry*
+
+
+<br/>
+![Camera Location](./images/sfm/summary_views.png "Camera Location")
+<br/>
+*Example Camera (View) Location Geometry*
+<br/>
+
+
+- World Geometry
+= structure
+Points
+
+
+<br/>
+![Camera Images](./images/sfm/summary_points.png "Point Location")
+<br/>
+*Example Point Structure Calculated From View Geometry*
+<br/>
+
+
+
+The output can simply be the camera geometry (orientations), world geometry (point cloud), or similar. A more interesting result of the process is a surface model of the scene. Converting the point cloud into a dense point cloud and then extimating the surface results in a tesselated (triangulated) polygon model. Further texturing this model using the images themselves can provide a truthful reconstruction of the original input images.
+
+<br/>
+![Surface Model](./images/sfm/summary_surface.png "Surface Model")
+<br/>
+*Example Surface Model Output*
+<br/>
+
+
+
+
+
+
+
+<br/>
+<br/>
 
 
 <a name="PHOTOS"></a>
@@ -42,6 +108,9 @@ Computer Vision
 - older camera: poloroid, disposable, digital, ...
 - estimated focal length vs known/calibrated
 
+
+<br/>
+<br/>
 
 
 <a name="CALIBRATION"></a>
@@ -135,9 +204,17 @@ principle point is too mixed in for linear, but nonlinearly
 
 *TODO: DIAGRAM*
 
+<br/>
+<br/>
+
+
 
 #### Known Camera Calibration
 If the source camera is available taking photos of a known geometry allows for values at each stage of projection to be known, to allow solving for the unknown model parameters
+
+
+<br/>
+<br/>
 
 
 #### Calibration From Minimal Data
@@ -169,6 +246,10 @@ Modern Cameras and phones store metadata in images, with useful info like:
 ```
 identify -verbose ./test.jpg
 ```
+
+<br/>
+<br/>
+
 
 #### Calibration from unknown data:
 

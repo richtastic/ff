@@ -6466,25 +6466,21 @@ Stereopsis.World.prototype.solveGroup = function(){ // multiwise BA full scene/g
 
 	world.copyRelativeTransformsFromAbsolute();
 	// 
-	var iterationsBAViewSingle = 10; // 10-100
+	var iterationsBAFilterViewSingle = 20; // 10-100
+	var iterationsBAUpdateViewSingle = 10;
 
 	// Stereopsis.COMPARE_MATCH_AFFINE_NEEDLE_SIZE = 11; 121
 	Stereopsis.COMPARE_MATCH_AFFINE_NEEDLE_SIZE = 9; // 81 ~ 66%
 
 	var points3D = world.toPointArray();
-	console.log(points3D);
 
 	// calculate each P3D patch && set each P3D's match affine
 	// world.calculatePoint3DPatches(points3D, true, false, false); /// ????
-	// world.calculatePoint3DPatches(points3D);
+	world.calculatePoint3DPatches(points3D);
 
-// this.visualizePatches();
-
-
-
-// 
+console.log("track count start");	
+	world.printPoint3DTrackCount();
 	
-	// Stereopsis.setMatchInfoFromParamerers = function(match, viewA,pointA,viewB,pointB,affine){
 	// calculate 2D SAD & NCC match scores
 	// [11x11 => 9x9 compare ?]
 	world.calculatePoint3DMatchErrors(points3D);
@@ -6501,17 +6497,15 @@ console.log("errors");
 	// this for point averaging or DLT for multiple views ?
 	// world.averagePoints3DFromMatches();
 	
-
-console.log("printPoint3DTrackCount");
 	
 
 	// world.printErrorsDebugMatchCount();
 	// world.printPoint3DTrackCount();
 
 // throw "here"
-/*
+
 	// filter tracks
-	for(var i=0; i<1; ++i){
+	for(var i=0; i<3; ++i){
 		console.log("track filter iteration: "+i);
 		// world.filterGlobalMatches(false, 0, 3.0,3.0,3.0,3.0, false);
 		world.filterGlobalMatches(false, 0, 2.0,2.0,2.0,2.0, false);
@@ -6519,14 +6513,16 @@ console.log("printPoint3DTrackCount");
 		// world.refineCameraPairRelativeToAbsolute(transform0, 500);
 		for(var v=0; v<views.length; ++v){
 			var view = views[v];
-			world.refineSelectCameraMultiViewTriangulation(view, iterationsBAViewSingle);
+			world.refineSelectCameraMultiViewTriangulation(view, iterationsBAFilterViewSingle);
 			world.copyRelativeTransformsFromAbsolute();
 		}
 		world.estimate3DErrors(true);
 		world.relativeFFromSamples();
+
+console.log("track count filtered "+i);
+		world.printPoint3DTrackCount();
 	}
-*/
-	world.printPoint3DTrackCount();
+
 
 
 
@@ -6537,49 +6533,96 @@ console.log("printPoint3DTrackCount");
 	var maxIterations = iterationsPerDivision*(subDivisions+1);
 
 	for(var i=0; i<maxIterations; ++i){
-break;
+// break;
 		// subdivide
 
+
+
+
+		// optimize camera orientations
+		// world.refineCameraPairRelativeToAbsolute(transform0, 500);
+		for(var v=0; v<views.length; ++v){ // TODO: randomize
+			var view = views[v];
+			world.refineSelectCameraMultiViewTriangulation(view, iterationsBAUpdateViewSingle);
+			world.copyRelativeTransformsFromAbsolute();
+		}
+
+		// PROBE FOR NEW POINTS
+			// expand - 2d probe
+			world.probe2DCells(999);
+			// expand - 3d project to other views
+//		world.probe3D(2.0);
 		
+		// update/add triangulation for only new P3D ?
+		// world.calculatePoint3DPatches(points3D, true, false, false);
+
+		// FILTERING OUT NEW POINTS (and exising)
+			// R / F / N scores - pairwise
+			world.filterGlobalMatches(false, 0, 2.0,2.0,2.0,2.0, false);
+			// global patch-sphere obstruction
+				// ?
+			// 2D neighborhood R / F / N error
+				// ?
+			// 3D-2D distance-noise filter
+points that are very far from 2D neighbors ?
+				// ?
+			// negative (behind) points:
+points who are view-dot-normal negative to any NOT PAIRWIZE
+				world.dropGlobalBehindView(???);
+
+
+HERE
+TO-DO
+				// world.dropNegative3D();
+			// far / close
+				world.dropFurthest(5.0, 5.0);
+
+points that are very far away from most other points (halo points)
+
+			// ...
+		
+		
+		// world.filterLocal3Dto2DSize();
+		// world.filterNeighborConsistency();
+		// world.filterLocal3D(); // ...
+		// world.filterPairwiseSphere3D(1.0); // 2-3
+
+
 		// triangulate P3D from all views
 			// NOT MATCHES
-		// update point errors/location
-			// P3D total
-			// matches
-		// update patches
+		
+		// update estimates
+	// WHY IS THIS NECESSARY?
+	points3D = world.toPointArray();
+	for(var p=0; p<points3D.length; ++p){
+		var point3D = points3D[p];
+		world.removeCheckP3D(point3D);
+	}
+		points3D = world.toPointArray();
+		world.calculatePoint3DPatches(points3D);
 
-		// R / F / N - score filter
-		// world.filterGlobalMatches(false, 0, 2.0,2.0,2.0,2.0, false);
+		// update point errors/location
+		world.estimate3DErrors(true);
+		world.relativeFFromSamples();
 
 
 		// update point patches (not affines ?)
-		points3D = world.toPointArray();
-		world.calculatePoint3DPatches(points3D, true, true, false);
+		// points3D = world.toPointArray();
+		// world.calculatePoint3DPatches(points3D, true, true, false);
 		// world.calculatePoint3DPatches(points3D, true, false, false);
-
-		// expand - 2d probe
-		// expand - 3d project to other views
-
-
-		// global-world patch-sphere filtering
-
-
-		// neighbor filter
-
-
-		// 3D-2D noise filter
-
 
 		// nonlinear optimize each view separately ~100 iterations
 		// random POP views
 			// world.refineCameraAbsoluteOrientation(null, 1000);
 			// world.copyRelativeTransformsFromAbsolute();
 
+console.log("track count iteration");
+world.printPoint3DTrackCount();
 		// throw "end loop";
 		break;
 	}
 
-
+// throw "..."
 
 	var str = world.toYAMLString();
 	console.log(str);
@@ -8228,7 +8271,7 @@ if(listMatchR.length>minCount){
 		var maxMatchCount = transforms.length;
 		var maxViewCounts = this.viewCount();
 		var matchCounts = Code.newArrayZeros(maxMatchCount+1);
-		var viewCounts = Code.newArrayZeros(maxViewCounts);
+		// var viewCounts = Code.newArrayZeros(maxViewCounts);
 
 		var dropList = [];
 		for(var j=0; j<matches.length; ++j){
@@ -8257,6 +8300,7 @@ if(listMatchR.length>minCount){
 			matchCounts[matchCount] += 1;
 		}
 		console.log("MATCH CHECKS: matches: "+matchCounts+" DROPPED: "+dropList.length);
+		// console.log("MATCH CHECKS: matches: "+viewCounts+" DROPPED: "+dropList.length);
 		matches = dropList;
 		for(var j=0; j<matches.length; ++j){
 			var match = matches[j];
@@ -10315,6 +10359,9 @@ if(true){
 					continue;
 				}
 				var nAm = n2DA.matchForView(vB);
+				if(!nAm){
+					continue;
+				}
 				var n2DB = nAm.pointForView(vB);
 				var nAp = n2DA.point2D();
 				var nBp = n2DB.point2D();
@@ -10481,6 +10528,9 @@ console.log("TO CHECK: "+empties.length);
 					for(var o=0; o<objects.length; ++o){
 						var object = objects[o];
 						var match = object.matchForView(viewB);
+						if(!match){ // neighbor doesn't share
+							continue;
+						}
 						var distance = V2D.distance(object.point2D(), emptyCenter);
 						var nerr = match.errorNCC();
 						var ferr = match.errorF();
@@ -11949,7 +11999,9 @@ Stereopsis.World.prototype._resolveIntersectionPatchViewsLoaded = function(point
 */
 
 	// if there are not any views loaded in point a -> throw
+	if(world._resolvePatchVisualsCallback){
 		world._resolvePatchVisualsCallback(point3DA,point3DB);
+	}
 		// world.embedPoint3D(point3DA);
 	throw "at least 1 view from each needs to be loaded & patches need to exist [other than intersection view]";
 
@@ -13233,7 +13285,14 @@ if(!doAffines){
 // console.log(centers2D);
 		// patch directions
 		var normal = Code.averageAngleVector3D(pointToCenters);
+try{
 		var right = Code.averageAngleVector3DSameDirection(rights);
+}catch(e){
+	console.log(point3D);
+	console.log(rights);
+	console.log(e);
+	throw "averageAngleVector3DSameDirection";
+}
 		var up = V3D.cross(normal,right);
 		point3D.normal(normal);
 		point3D.up(up);

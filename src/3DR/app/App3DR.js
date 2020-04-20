@@ -10623,6 +10623,7 @@ App3DR.ProjectManager.prototype._doDenseGroupsStereopsis = function(data){
 		for(var i=0; i<allViews.length; ++i){
 			var view = allViews[i];
 			var viewID = view["id"];
+console.log(i+": "+viewID);
 			var projectView = project.viewFromID(viewID);
 			viewIDToView[viewID] = view;
 		}
@@ -10631,19 +10632,27 @@ App3DR.ProjectManager.prototype._doDenseGroupsStereopsis = function(data){
 		var views = allViews;
 		var stage = GLOBALSTAGE;
 		var world = new Stereopsis.World();
-		var info = project._addGraphViews(world, viewIDToView, stage);
+		var info = project._addGraphViews(world, viewIDToView, stage, views);
 		var images = info["images"];
 // ???
 // HERE
 		var transforms = info["transforms"];
+// console.log(transforms);
+// for(var i=0; i<transforms.length; ++i){
+// var transform = transforms[i];
+// var view = allViews[i];
+// var viewID = view["id"];
+// console.log(i+" "+viewID+" \n "+transform+"\n...\n");
+// }
+// throw "?"
 		var worldCams = App3DR.ProjectManager.addCamerasToWorld(world, cameras);
 		var worldViews = App3DR.ProjectManager.addViewsToWorld(world, views, images, transforms);
 		// var worldViews = project.createWorldViewsForViews(world, views, images, cellSizes, transforms);
-		
+
 		// set view cell density
-		// var cellCount = 40;
+		// var cellCount = 40; // too sparse
 		var cellCount = 60;
-		// var cellCount = 80;
+		// var cellCount = 80; // too dense ?
 		for(var i=0; i<worldViews.length; ++i){
 			var view = worldViews[i];
 			var size = view.size();
@@ -10653,8 +10662,6 @@ App3DR.ProjectManager.prototype._doDenseGroupsStereopsis = function(data){
 			view.cellSize(size);
 		}
 		world.copyRelativeTransformsFromAbsolute();
-
-throw "are the transforms in the right place here ?"
 
 		// add track points to world
 		var existingPoints = data["points"];
@@ -10677,7 +10684,9 @@ throw "are the transforms in the right place here ?"
 
 		world.checkForIntersections(true);
 		// world.resolveIntersectionByGeometry();
-		world.resolveIntersectionByPatchVisuals();
+		world.resolveIntersectionByDefault();
+		// _resolveIntersectionPatch
+		// world.resolveIntersectionByPatchVisuals();
 
 		world.solveGroup();
 
@@ -15634,14 +15643,26 @@ if(deltaR<0){
 	App3DR.ProjectManager.loadViewsImages(loadViews,fxnViewsLoaded, project);
 }
 
-App3DR.ProjectManager.prototype._addGraphViews = function(world, graphViewLookup, stage){
-	var views = this.views();
+App3DR.ProjectManager.prototype._addGraphViews = function(world, graphViewLookup, stage, alternateViews){
+	var internalViews = this.views();
+	var views = internalViews;
+	if(alternateViews){
+		views = alternateViews;
+	}
 	var images = [];
 	var transforms = [];
+	var transformLookup = {};
+	var imageLookup = {};
 	for(var i=0; i<views.length; ++i){
 		var view = views[i];
-
-		var gv = graphViewLookup[view.id()];
+		var viewID = null;
+		if(alternateViews){
+			viewID = view["id"];
+			view = this.viewFromID(viewID);
+		}else{
+			viewID = view.id();
+		}
+		var gv = graphViewLookup[viewID];
 		var image = view.bundleAdjustImage();
 		if(!image){
 			image = view.anyLoadedImage();
@@ -15659,11 +15680,12 @@ App3DR.ProjectManager.prototype._addGraphViews = function(world, graphViewLookup
 		if(!transform){
 			transform = gv["transform"];
 		}
-			transform = Matrix.fromObject(transform);
-			transforms.push(transform);
+		transform = Matrix.fromObject(transform);
+		transforms.push(transform);
 		images.push(matrix);
+		transformLookup[""]
 	}
-	return {"transforms":transforms, "images":images};
+	return {"transforms":transforms, "images":images};//, "imageLookup":imageLookup};
 }
 
 App3DR.ProjectManager.prototype._embedMatchPoints = function(world, trackData, worldViewLookup){
