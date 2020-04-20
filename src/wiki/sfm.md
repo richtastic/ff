@@ -1,9 +1,9 @@
 ## Structure From Motion: (SFM)
 
 
--> ![SFM](./images/sfm/cover.png "SFM") <-
+![SFM](./images/sfm/cover.png "SFM")
 <br/>
--> *Structure From Motion - Bench Scene* <-
+*Structure From Motion - Bench Scene*
 <br/>
 
 
