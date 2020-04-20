@@ -1,9 +1,15 @@
 ## Structure From Motion: (SFM)
 
-
 <br/>
 
 ![SFM](./images/sfm/cover.png "SFM")
+
+<br/>
+
+||
+|:--:|
+| ![SFM](./images/sfm/cover.png "SFM") |
+| *Structure From Motion - Bench Scene* |
 
 <br/>
 
@@ -11,7 +17,6 @@
 
 <br/>
 
-![alt text](https://github.com/adam-p/markdown-here/raw/master/src/common/images/icon48.png "Logo Title Text 1")
 
 
 
