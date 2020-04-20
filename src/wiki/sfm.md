@@ -1,16 +1,12 @@
 ## Structure From Motion: (SFM)
 
 
-<p align="center">
-	
-![SFM](./images/sfm/cover.png "SFM")
+| |
+| :---: |
+| ![SFM](./images/sfm/cover.png "SFM") |
+| *Structure From Motion - Bench Scene* |
 
 <br/>
-*Structure From Motion - Bench Scene*
-<br/>
-</p>p>
-
-
 
 
 ### Chapters
