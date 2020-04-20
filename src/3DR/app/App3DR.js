@@ -10620,25 +10620,12 @@ App3DR.ProjectManager.prototype._doDenseGroupsStereopsis = function(data){
 	var loadWorld = function() {
 		var projectViews = project.views();
 		var viewIDToView = {};
-		// var denseViewLookupIndex = {};
-		// var cellSizes = [];
 		for(var i=0; i<allViews.length; ++i){
 			var view = allViews[i];
 			var viewID = view["id"];
 			var projectView = project.viewFromID(viewID);
-			// viewIDToView[viewID] = projectView;
 			viewIDToView[viewID] = view;
-			// denseViewLookupIndex[vid] = i;
-			// var image = projectView.anyLoadedImage();
-			// var wid = image.width;
-			// var hei = image.height;
-			// // var cellCount = 40;
-			// var cellCount = 60;
-			// // var cellCount = 80;
-			// cellSizes.push(R3D.cellSizingRoundWithDimensions(wid,hei,cellCount, false));
 		}
-		// console.log("cellSizes");
-		// console.log(cellSizes);
 		// add views
 		var cameras = allCameras;
 		var views = allViews;
@@ -10646,15 +10633,17 @@ App3DR.ProjectManager.prototype._doDenseGroupsStereopsis = function(data){
 		var world = new Stereopsis.World();
 		var info = project._addGraphViews(world, viewIDToView, stage);
 		var images = info["images"];
+// ???
+// HERE
 		var transforms = info["transforms"];
 		var worldCams = App3DR.ProjectManager.addCamerasToWorld(world, cameras);
 		var worldViews = App3DR.ProjectManager.addViewsToWorld(world, views, images, transforms);
 		// var worldViews = project.createWorldViewsForViews(world, views, images, cellSizes, transforms);
-
-		// set cell sizes
-			// var cellCount = 40;
-			var cellCount = 60;
-			// var cellCount = 80;
+		
+		// set view cell density
+		// var cellCount = 40;
+		var cellCount = 60;
+		// var cellCount = 80;
 		for(var i=0; i<worldViews.length; ++i){
 			var view = worldViews[i];
 			var size = view.size();
@@ -10663,35 +10652,33 @@ App3DR.ProjectManager.prototype._doDenseGroupsStereopsis = function(data){
 			var size = R3D.cellSizingRoundWithDimensions(wid,hei,cellCount, false);
 			view.cellSize(size);
 		}
-			world.copyRelativeTransformsFromAbsolute();
-		console.log(worldViews);
-		// set view cell density
+		world.copyRelativeTransformsFromAbsolute();
+
+throw "are the transforms in the right place here ?"
 
 		// add track points to world
 		var existingPoints = data["points"];
-		console.log(existingPoints);
+		// console.log(existingPoints);
 		var worldViewLookup = {};
 		for(var i=0; i<worldViews.length; ++i){
 			var view = worldViews[i];
 			var viewID = view.data();
 			worldViewLookup[viewID] = view;
 		}
-		console.log(worldViewLookup);
+		// console.log(worldViewLookup);
 		console.log("embedding points");
 		// init P3D 
 		world.checkForIntersections(false);
 		var points3D = App3DR.ProjectManager._worldPointFromSaves(world, existingPoints, worldViewLookup);
-		// world.checkForIntersections(false);
-		// var timeA = Code.getTimeMilliseconds();
-		// world.embedPoints3D(points3DNew);
-		// var timeB = Code.getTimeMilliseconds();
-		// console.log("DELTA: "+(timeB-timeA));
-		// // 
 		console.log(points3D);
+		console.log("add points with patches");
+		world.embedPoints3DNoValidation(points3D);
+		// world.embedPoints3D(points3D);
+
 		world.checkForIntersections(true);
 		// world.resolveIntersectionByGeometry();
 		world.resolveIntersectionByPatchVisuals();
-		
+
 		world.solveGroup();
 
 		throw "done ?"

@@ -3725,7 +3725,20 @@ Code.averageAngleVector3D = function(vectors, percents, count){ // center of vec
 		total.norm();
 	}
 	return total;
-
+}
+Code.averageAngleVector3DSameDirection = function(vectors, percents, count){
+	var sames = [];
+	var vector0 = vectors[0];
+	sames[0] = vector0;
+	for(var i=1; i<vectors.length; ++i){
+		var vector = vectors[i];
+		if(V3D.dot(vector0,vector)<0){
+			vector = vector.copy().flip();
+		}
+		sames[i] = vector;
+	}
+	var value = Code.averageAngleVector3D(sames, percents, count);
+	return value;
 }
 Code.averageVectorTwist3D = function(twists, percents){
 	var count = twists.length;

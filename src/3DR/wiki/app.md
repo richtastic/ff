@@ -444,7 +444,11 @@ https://cloud.google.com/appengine/docs/nodejs/
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-- 
+- patches:
+calculatePoint3DPatches
+
+
+- TRANSFORMS ARE INVERSED ?
 
 
 
@@ -473,6 +477,12 @@ https://cloud.google.com/appengine/docs/nodejs/
 	- re-logic for patches
 	- re-logic for patch-sphere filtering -- GLOBALLY = WORLD, not transform
 
+
+
+
+
+// size from distances & relative affine scales ?
+// var averageSize = 1;
 
 
 
