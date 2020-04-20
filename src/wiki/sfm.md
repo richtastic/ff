@@ -6,6 +6,17 @@
 | ![SFM](./images/sfm/cover.png "SFM") |
 | *Structure From Motion - Bench Scene* |
 
+
+<p align="justify">
+
+![SFM](./images/sfm/cover.png "SFM")
+
+<br/>
+
+*Structure From Motion - Bench Scene*
+
+</p>
+
 <br/>
 
 
