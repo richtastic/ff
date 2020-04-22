@@ -9948,7 +9948,7 @@ Code.intersectRaySphere3D = function(org,dir, cen,rad){ // infinite ray & sphere
 	return r;
 }
 
-Code.pointInsideCone3DBoolean = function(cen,dir,ratio, point){
+Code.pointInsideCone3DBoolean = function(cen,dir,ratio, point){ // ratio = opposite / adjacent
 	var c = Code.closestPointLine3D(cen,dir,point);
 	var cToC = V3D.sub(c,cen);
 	var dot = V3D.dot(dir,cToC);

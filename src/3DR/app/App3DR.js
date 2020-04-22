@@ -3953,10 +3953,10 @@ var errorType = 2; // NCC
 		var F = R3D.fundamentalFromLargeDataset(pointsA,pointsB,1000);
 		var Finv = R3D.fundamentalInverse(F);
 		// var fError = R3D.fErrorList(F, Finv, pointsA, pointsB);
-		var cameraA = viewA["transform"];
-		var cameraB = viewB["transform"];
-		var extrinsicA = R3D.extrinsicMatrixFromCameraMatrix(cameraA);
-		var extrinsicB = R3D.extrinsicMatrixFromCameraMatrix(cameraB);
+		var extrinsicA = viewA["transform"];
+		var extrinsicB = viewB["transform"];
+		// var extrinsicA = R3D.extrinsicMatrixFromCameraMatrix(cameraA);
+		// var extrinsicB = R3D.extrinsicMatrixFromCameraMatrix(cameraB);
 
 		var imageA = viewA["matrix"];
 		var imageB = viewB["matrix"];
@@ -3974,20 +3974,20 @@ var errorType = 2; // NCC
 		var matrix2D = new Matrix2D();
 			matrix2D.identity();
 
-		var cameraCenterA = cameraA.multV3DtoV3D(new V3D(0,0,0));
-		var cameraCenterB = cameraB.multV3DtoV3D(new V3D(0,0,0));
-		var cameraNormalA = cameraA.multV3DtoV3D(new V3D(0,0,1));
+		var cameraCenterA = extrinsicA.multV3DtoV3D(new V3D(0,0,0));
+		var cameraCenterB = extrinsicB.multV3DtoV3D(new V3D(0,0,0));
+		var cameraNormalA = extrinsicA.multV3DtoV3D(new V3D(0,0,1));
 			cameraNormalA.sub(cameraCenterA);
-		var cameraNormalB = cameraB.multV3DtoV3D(new V3D(0,0,1));
+		var cameraNormalB = extrinsicB.multV3DtoV3D(new V3D(0,0,1));
 			cameraNormalB.sub(cameraCenterB);
-		var cameraRightA = cameraA.multV3DtoV3D(new V3D(1,0,0));
+		var cameraRightA = extrinsicA.multV3DtoV3D(new V3D(1,0,0));
 			cameraRightA.sub(cameraCenterA);
-		var cameraRightB = cameraB.multV3DtoV3D(new V3D(1,0,0));
+		var cameraRightB = extrinsicB.multV3DtoV3D(new V3D(1,0,0));
 			cameraRightB.sub(cameraCenterB);
 
-		var cameraUpA = cameraA.multV3DtoV3D(new V3D(0,1,0));
+		var cameraUpA = extrinsicA.multV3DtoV3D(new V3D(0,1,0));
 			cameraUpA.sub(cameraCenterA);
-		var cameraUpB = cameraB.multV3DtoV3D(new V3D(0,1,0));
+		var cameraUpB = extrinsicB.multV3DtoV3D(new V3D(0,1,0));
 			cameraUpB.sub(cameraCenterB);
 
 		var points2D = [pointsA, pointsB];
@@ -3997,8 +3997,8 @@ var errorType = 2; // NCC
 		var cameraSizesList = [featureSizeA,featureSizeB];
 
 
-		var absoluteA = Matrix.inverse(cameraA);
-		var absoluteB = Matrix.inverse(cameraB);
+		var absoluteA = Matrix.inverse(extrinsicA);
+		var absoluteB = Matrix.inverse(extrinsicB);
 
 		var Ka = viewA["K"];
 		var Kb = viewB["K"];
@@ -4029,7 +4029,7 @@ var errorType = 2; // NCC
 				errors.push(error);
 				// errors.push(error["error"]);
 			}else if(errorType==1){
-				var error = R3D.reprojectionError(point3D, pointA,pointB, cameraA, cameraB, Ka, Kb);
+				var error = R3D.reprojectionError(point3D, pointA,pointB, extrinsicA, extrinsicB, Ka, Kb);
 					error = error["error"];
 // console.log(point3D);
 // error = error/point3D.z;
@@ -4067,7 +4067,7 @@ var errorType = 2; // NCC
 
 
 				var points2D = [pointA,pointB];
-				var extrinsics = [cameraA,cameraB];
+				var extrinsics = [extrinsicA,extrinsicB];
 				var absolutes = [absoluteA,absoluteB];
 				var Ks = [Ka,Kb];
 				var Kinvs = [KaInv,KbInv];
@@ -6266,7 +6266,7 @@ App3DR.ProjectManager = function(relativePath, operatingStage, readyFxn){ // ver
 
 	this._cameras = [];
 	this._scenes = [];
-	this._bundleFilename = null; // TO BE REMOVED
+	
 	// reconstruction related:
 	this._graphFilename = null;
 		this._graphData = null;
@@ -6281,22 +6281,23 @@ App3DR.ProjectManager = function(relativePath, operatingStage, readyFxn){ // ver
 	this._denseFilename = null;
 	this._denseCount = null;
 
-	this._pointsFilename = null;
-	this._pointsCount = null;
-	this._pointData = null;
+	// this._pointsFilename = null;
+	// this._pointsCount = null;
+	// this._pointData = null;
 
-	this._bundledFilename = null;
-	this._bundledCount = null;
-	this._bundledData = null;
+	// this._bundledFilename = null;
+	// this._bundledCount = null;
+	// this._bundledData = null;
 
 	// this is a debugging parameter:
 	this._bundleFilename = null;
 	this._bundleData = null;
+	this._bundleCount = null;
 
-	this._triangleFilename = null;
-	this._triangleCount = null;
-	this._textureCount = null;
-	this._triangleData = null;
+	// this._triangleFilename = null;
+	// this._triangleCount = null;
+	// this._textureCount = null;
+	// this._triangleData = null;
 
 
 
@@ -6487,6 +6488,22 @@ App3DR.ProjectManager.prototype.denseCount = function(count){
 App3DR.ProjectManager.prototype.denseDone = function(){
 	return this._denseCount != null;
 }
+
+App3DR.ProjectManager.prototype.bundleData = function(){
+	return this._bundleData;
+}
+App3DR.ProjectManager.prototype.setBundleCount = function(count){
+	this._bundleCount = count;
+}
+App3DR.ProjectManager.prototype.bundleCount = function(count){
+	return this._bundleCount;
+}
+App3DR.ProjectManager.prototype.bundleDone = function(){
+	return this._bundleCount != null;
+}
+
+
+
 
 App3DR.ProjectManager.prototype.pointsFilename = function(){
 	return this._pointsFilename;
@@ -7067,33 +7084,33 @@ App3DR.ProjectManager.prototype.loadFeaturesForView = function(view, filename, c
 	this.addOperation("GET", {"path":path}, callback, context, object);
 }
 
-App3DR.ProjectManager.prototype.hasBundleInit = function(){
-	throw "?";
-	return this._bundleFilename !== null;
-}
-App3DR.ProjectManager.prototype.loadBundleAdjust = function(callback, context, object){
-	throw "?";
-	var filename = this._bundleFilename;
-	// filename = "info.yaml";
-	console.log("loadBundleAdjust: "+filename);
-	if(filename){
-		var path = Code.appendToPath(this._workingPath, App3DR.ProjectManager.BUNDLE_ADJUST_DIRECTORY, filename);
-		console.log(path);
-		this.addOperation("GET", {"path":path}, callback, context, object);
-	}
-}
-App3DR.ProjectManager.prototype.saveBundleAdjust = function(string, callback, context, object){
-	console.log("saveBundleAdjust");
-	throw "?";
-	var filename = this._bundleFilename;
+// App3DR.ProjectManager.prototype.hasBundleInit = function(){
+// 	throw "?";
+// 	return this._bundleFilename !== null;
+// }
+// App3DR.ProjectManager.prototype.loadBundleAdjust = function(callback, context, object){
+// 	throw "?";
+// 	var filename = this._bundleFilename;
+// 	// filename = "info.yaml";
+// 	console.log("loadBundleAdjust: "+filename);
+// 	if(filename){
+// 		var path = Code.appendToPath(this._workingPath, App3DR.ProjectManager.BUNDLE_ADJUST_DIRECTORY, filename);
+// 		console.log(path);
+// 		this.addOperation("GET", {"path":path}, callback, context, object);
+// 	}
+// }
+// App3DR.ProjectManager.prototype.saveBundleAdjust = function(string, callback, context, object){
+// 	console.log("saveBundleAdjust");
+// 	throw "?";
+// 	var filename = this._bundleFilename;
 
-	if(filename){
-		var path = Code.appendToPath(this._workingPath, App3DR.ProjectManager.BUNDLE_ADJUST_DIRECTORY, filename);
-		console.log(path);
-		var binary = Code.stringToBinary(string);
-		this.addOperation("SET", {"path":path,"data":binary}, callback, context, object);
-	}
-}
+// 	if(filename){
+// 		var path = Code.appendToPath(this._workingPath, App3DR.ProjectManager.BUNDLE_ADJUST_DIRECTORY, filename);
+// 		console.log(path);
+// 		var binary = Code.stringToBinary(string);
+// 		this.addOperation("SET", {"path":path,"data":binary}, callback, context, object);
+// 	}
+// }
 
 App3DR.ProjectManager.prototype.savePairRelative = function(pair, string, callback, context, object){
 	console.log("savePairRelative: "+pair.id());
@@ -7648,23 +7665,21 @@ console.log("checkPerformNextTask");
 		project.iterateDenseProcess();
 		return;
 	}
+// bundle - groups: view graph from dense -> group list -> iteritive dense groups -> aggregate to points.yaml
+// throw ">start bundle";
+// throw ">bundle : stereopsis - dense groups";
+	// if(!project.checkHasBundleStarted()){
+	// }
+	if(!project.checkHasBundleEnded()){
+		project.loadDenseGroupsStereopsis();
+		return;
+	}
 
-	project.loadDenseGroupsStereopsis();
-throw ">stereopsis - dense groups";
+throw ">start surface"; // copy point files & create surface.yaml
 
-	// load all of track_full.yaml from dense into scene
-	// remove worst outliers (negative, high R error, etc)
-	// group-wise stereopsis
-	// subdivide 40 -> 80 -> 160
+throw ">iterate surface"; // great triangles & textures
 
-throw "increase resolution / fill gaps?"
-
-
-
-if(!project.checkHasBundleAdjustEnded()){
-	project.iterateBundleAdjustProcess();
-	throw "iterate ba ?";
-}
+throw ">copy surface to a scene/ID/ directory"; 
 
 
 throw "surface - triangles";
@@ -7701,10 +7716,6 @@ this.sceneToDAE();
 this.sceneToOBJ();
 
 
-
-
-throw "scene";
-
 	// does each (good) pair have a high-q dense depth match?
 	console.log("NO TASKS TO PERFORM");
 	this._taskBusy = false;
@@ -7726,6 +7737,17 @@ App3DR.ProjectManager.prototype.checkHasDenseStarted = function(){
 }
 App3DR.ProjectManager.prototype.checkHasDenseEnded = function(){
 	var count = this._denseCount;
+	return count != null && count != undefined;
+}
+
+
+App3DR.ProjectManager.prototype.checkHasBundleStarted = function(){
+	var filename = this._bundleFilename;
+	return filename != null && filename != undefined;
+}
+App3DR.ProjectManager.prototype.checkHasBundleEnded = function(){
+	var count = this._bundleCount;
+	console.log()
 	return count != null && count != undefined;
 }
 
@@ -10690,6 +10712,9 @@ console.log(i+": "+viewID);
 
 		world.solveGroup();
 
+
+		// save to a group file & iterate
+
 		throw "done ?"
 	}
 
@@ -10700,8 +10725,8 @@ console.log(i+": "+viewID);
 		console.log(viewID);
 		var view = project.viewFromID(viewID);
 		console.log(view);
-		view.loadDenseHiImage(checkAllViewImagesLoaded, project); // 1008 x 768
-		// view.loadBundleAdjustImage(checkAllViewImagesLoaded, project); // 2016 x 1512
+		// view.loadDenseHiImage(checkAllViewImagesLoaded, project); // 1008 x 768
+		view.loadBundleAdjustImage(checkAllViewImagesLoaded, project); // 2016 x 1512
 	}
 }
 

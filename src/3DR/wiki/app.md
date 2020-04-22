@@ -422,27 +422,158 @@ https://cloud.google.com/appengine/docs/nodejs/
 - encryption
 
 
-04/20 - dense group stereopsis / global bundle adjust
-04/22 - how to include mass-dense points in stereopsis / final file ?
-04/24 - hole filling?
-04/26 - multi-view point propagation from dense
-		- projecting known 3D points
-		- projecting unknown corners?
-04/30 - triangulation algorithm updates
+
+04/24 - triangulation algorithm updates
 05/01 - output test to device
 05/03 - texture-triangle-edge problems -- rendering on device shows lines at the edges of triangles -- should be smooth -- DIALATION of texture after it's created (post process requires map)
 05/06 - test new set of 10 ~ 20 images
 05/13 - test set of ~50 images
 05/20 - test set of ~100 images x
 05/27 - MVP
+MISSING:
+- divide final track into groups & do dense group at a time
+- mass-dense point aggregation via merging separate P3D files
+- hole filling
 
-? - BA identify/remove view if it's position is very bad????
+- BA identify/remove view if it's position is very bad????
 - triangle - texture loading groups at a time to get local approx blending
 - out-of-core octtree (stereopsis focused)
 ...
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+FAKE GROUP BY:
+bundle: bundle/bundle.yaml -- basically empty
+bundleCount: 123
+
+surface: null
+
+
+bundle: bundle/bundle.yaml
+	views:
+		...
+	groups:
+		views:
+			- idA
+			- idB
+		file: groups_i_tracks.yaml # copy points from tracks ONLY RELEVANT TO GROUP  [10k]
+		points: group_i_points.yaml # final points only: P3D, N3D, size, views: id, point [50k]
+		density: # some metric of how spread out points are
+	points:
+		file: points.yaml # final merged P3D point set [groups x 50k ~ views x 10k]
+		count: total point count in file
+
+bundleCount: # total points
+
+surface: surface/surface.yaml
+	views:
+		...
+	points: points.yaml
+	triangles: triangles.yaml
+	textures:
+		...
+
+
+	points: points.yaml
+
+
+scenes:
+	- sceneID
+
+
+
+
+- NEXT STEPS:
+	- COMBINE SEPARATE SCENES' POINT TOGETHER INTO SINGLE SCENE ------ AGGREGATION
+		- only P3D are brought in (and normals & size)
+		- discard / merge repeated areas
+
+
+	- SURFACE TRIANGULATION/TESSELATION
+	- TEXTURING
+
+
+
+
+
+...........
+
+ // 1008 x 768
+
+track count start
+Stereopsis.js:2837 (17) [0, 0, 8971, 1653, 515, 179, 49, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+
+
+Stereopsis.js:6714 track count filtered 0
+Stereopsis.js:2837 (17) [0, 0, 8602, 1340, 376, 91, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+
+track count filtered 2
+Stereopsis.js:2837 (17) [0, 0, 7518, 871, 161, 19, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+
+track count iteration
+Stereopsis.js:2837 (17) [0, 0, 13381, 4278, 547, 54, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+
+track count iteration
+Stereopsis.js:2837 (17) [0, 0, 16613, 5338, 894, 159, 22, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+
+12.6 -> 9
+
+
+Stereopsis.js:6802 track count iteration
+Stereopsis.js:2837 (17) [0, 0, 28481, 10837, 1778, 305, 34, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+
+track count iteration
+Stereopsis.js:2837 (17) [0, 0, 29880, 10909, 2071, 419, 55, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+
+
+Stereopsis.js:6806 track count done 
+Stereopsis.js:2837 (17) [0, 0, 29880, 10909, 2071, 419, 55, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+
+
+=> 43334 points
+
+
+
+
+
+// 2016 x 1512
+
+Stereopsis.js:6806 track countstart
+Stereopsis.js:2837 (17) [0, 0, 8971, 1653, 515, 179, 49, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+
+
+ iteration
+Stereopsis.js:2837 (17) [0, 0, 12812, 3879, 347, 22, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+
+ iteration
+Stereopsis.js:2837 (17) [0, 0, 28344, 5445, 729, 80, 10, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+
+
+ 25.2 -> 19
+
+ iteration
+Stereopsis.js:2837 (17) [0, 0, 56790, 10709, 1123, 151, 6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+
+ iteration
+Stereopsis.js:2837 (17) [0, 0, 96178, 11545, 1566, 231, 15, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+
+track count done 
+Stereopsis.js:2837 (17) [0, 0, 173720, 11879, 1684, 310, 23, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+
+=> 187616
+
+
+WHY 200k? - 4 x as much?
+
+
+
+
+
+
+
+probe3D
+possiblyVisibleViews
 
 
 
@@ -451,27 +582,33 @@ https://cloud.google.com/appengine/docs/nodejs/
 	x seed track point pre-filtering worst out
 	x re-logic for P3D triangulation
 	x re-logic for patches
-	- re-logic for patch-sphere filtering -- GLOBALLY = WORLD, not transform
+	x re-logic for patch-sphere filtering -- GLOBALLY = WORLD, not transform
 	- upate filtering types
-		- patch obstruction
-		- local 2D -> 3D distances : vote on removal of outliers
-		- single-view's z-distance [LOG?] removing too far or too close
+		x patch obstruction
+		x local 2D -> 3D distances : vote on removal of outliers
+		- single-view's z-distance [LOG(D)] removing too far or too close
 		- globally removing points outside ~ 5 sigma distance from centroid
 		- 
-	- project P3D into other views
+	x project P3D into other views
 		- should this check for intersections with content first ?
 			=> only do points that are non-obstructed by other patches ?
 	
 
-
-	resolveIntersectionPatchViewsLoaded
-
-
-// size from distances & relative affine scales ?
-// var averageSize = 1;
+propagate 3d: -- non-blind probe3D
+	each P3D look at kNN
+		if theres any view neighbor doesn't have
+			=> estimate projection & affine , and search
 
 
 
+
+@ 60  cells : 1x   = 20k  [1x area]
+@ 80? cells : 1.25 = 40k ? [2x area]
+@ 120 cells : 2x   = 90k  [4x area]
+
+11x11 = 121
+9x9 = 81
+7x7 = 49
 
 
 
@@ -497,26 +634,6 @@ https://cloud.google.com/appengine/docs/nodejs/
 	- world stores a list of transforms for each view
 		=> lazy init
 
-
-- NEXT STEPS:
-=> well-placed views - NOW STATIC
-=> good track seed points (some outliers)
--> need to drop a lot of these before using as seeds
-	- DENSE SURFACE POINTS
-		=> STEREOPSIS
-		---- load smaller sets of points / images at once
-		- skeletalish scenes
-		- load groups of views at a time (3-6)
-		- project track points not visible in view I to get more support
-			- 'novel' points not yet recovered [eg missed background points]
-		- blank area filling ?
-	- COMBINE SEPARATE SCENES' POINT TOGETHER INTO SINGLE SCENE ------ AGGREGATION
-		- only P3D are brought in (and normals & size)
-		- discard / merge repeated areas
-
-
-	- SURFACE TRIANGULATION/TESSELATION
-	- TEXTURING
 
 
 - STEREPOSIS FAILURES:
@@ -563,6 +680,20 @@ B) entire graph is single group - only skeletal edges
 
 
 
+
+
+- probe2DCells - want to update patches using new global version
+
+
+2D neighborhood R / F / N error
+	- filtering how would this look?
+		- large survey and remove small pockets of outliers?
+
+
+
+
+
+
 - stereopsis still needs to be better at discarding outliers (groups of points outside error)
 
 
@@ -574,8 +705,14 @@ B) entire graph is single group - only skeletal edges
 
 
 R3D.relativeTransformMatrix2
-
+=>
 Matrix.relativeWorld
+
+
+filterPairwiseSphere3D
+=>
+filterGlobalPatchSphere3D
+
 
 
 
@@ -1712,8 +1849,11 @@ project-ID/
 		dense.yaml
 			... SAME AS SPARSE
 	bundle/
-		bundle.yaml 					# view absolute orientations -- move
-		points.yaml 					# points -- move
+		bundle.yaml 					# view absolute orientations & groups to load dense at a time
+		points.yaml 					# final aggregation of points
+		groups/
+			group_i_tracks.yaml 		# tracks from 'dense' only relevant to group [10k]
+			group_i_points.yaml 		# dense points [50k]
 	surface/
 		surface.yaml 					# summary data of progress: views, points, triangles, textures, packing
 		points.yaml 					# surface points
@@ -1789,10 +1929,8 @@ info.yaml:
 	dense: dense/dense.yaml 				# higher-res pair / triple / graph / absolute
 	denseCount: #
 
-	bundle: reconstruction/bundle.yaml 		# fill-in absolute / triangles / textures
+	bundle: bundle/bundle.yaml 				# fill-in absolute / triangles / textures
 	bundleCount:
-
-
 
 	scenes: 								# copy of last step of reconstruction
 		-
@@ -1801,11 +1939,9 @@ info.yaml:
 
 
 bundle.yaml
-	points: model/points.yaml 				# fill in points [2d & 3d propagation]
-	triangles: model/triangles.yaml 		# create surface
-	textures: model/textures.yaml 			# update surface & create textures
-
-
+	points: points.yaml 					# fill in points [2d & 3d propagation]
+	triangles: triangles.yaml 				# create surface
+	textures: textures.yaml 				# update surface & create textures
 
 
 
@@ -1824,15 +1960,15 @@ bundle.yaml
 	points: "points.yaml"
 	pointsCount: 68212
 
-	bundled: "bundle.yaml"
-	bundledCount: null
+	bundle: "bundle.yaml"
+	bundleCount: 1,234,569
 
-	triangles: "triangles.yaml"
+	surface: "surface.yaml"
 	triangleCount: 8337
 	textureCount: 2
 
-	currentSceneID: null
-	bundle: "test0.yaml"
+	scenes:
+		- "ABCDEFGH"
 
 
 

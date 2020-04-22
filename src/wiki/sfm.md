@@ -33,9 +33,9 @@
 <a name="SUMMARY"></a>
 ### Summary
 
-*Structure From Motion* (SFM) is the process (problem) of using multiple camera images (2D) to reconstruct the 3D geometry encoded in the image sequence.
+**Structure From Motion** (SFM) is the process (problem) of using multiple camera images (2D) to reconstruct the 3D geometry encoded in the image sequence.
 <br/>
-_SFM_ is a group of problems in the more general field of *3D Reconstruction* which also covers related problems such as: stationary camera with moving targets, . All of these topics are associated under the umbrella term of *Computer Vision*.
+_SFM_ is a group of problems in the more general field of **3D Reconstruction** which also covers related problems such as: stationary camera with moving targets, estimating human poses, voxel carving, ... All of these topics are associated under the umbrella term of **Computer Vision**.
 <br/>
 
 
@@ -47,7 +47,7 @@ The input is a collection of images. If the images are not ordered (eg: by time 
 *Example Input of Unordered Images*
 <br/>
 
-Although the problem of relating images (knowing which images are similar) can be performed quicker if the images are ordered, and event quicker if the _difference_ between them is small. For example, a video is a time-ordered image sequence, where the *frames* before and after are likely highly similar. In this case, the movement of objects in the scene (*Optical Flow*) can be found by only needing to search the nearby space. The local changes in scene lighting, rotation, translation, etc. are small and make relating image areas easier and finding the camera geometry simpler and faster.
+Although the problem of relating images (knowing which images are similar) can be performed quicker if the images are ordered, and event quicker if the _difference_ between them is small. For example, a video is a time-ordered image sequence, where the *frames* before and after are likely highly similar. In this case, the movement of objects in the scene (**Optical Flow**) can be found by only needing to search the nearby space. The local changes in scene lighting, rotation, translation, etc. are small and make relating image areas easier and finding the camera geometry simpler and faster.
 
 <br/>
 ![Video Images](./images/sfm/summary_ordered_images.png "Video Images")
@@ -56,9 +56,7 @@ Although the problem of relating images (knowing which images are similar) can b
 <br/>
 
 
-- Camera Geometry
-= motion
-*Multiple View Geometry*
+**Camera Geometry** is the solution of finding how camera images are related in the 3D world. In general with many views at a time, this is termed **Multiple View Geometry**. In *SFM*, the camera orientations *is* the motion.
 
 
 <br/>
@@ -68,9 +66,7 @@ Although the problem of relating images (knowing which images are similar) can b
 <br/>
 
 
-- World Geometry
-= structure
-Points
+**World Geometry** (Scene geometry) is *structure* of SFM. Many implementation solutions will stop with a result of a set of 3D Points orientated in the 3D world, termed a **Point Cloud**. Converting the points into a tesselated surface (eg polygon) is then left as a problem for **Surface Reconstruction**, another category of problems of which there are many working algorithms, such as: **Delaunay Triangulation**, **Poisson Surfaces**, **CRUST**, **MLS Surfaces**...
 
 
 <br/>
@@ -80,8 +76,7 @@ Points
 <br/>
 
 
-
-The output can simply be the camera geometry (orientations), world geometry (point cloud), or similar. A more interesting result of the process is a surface model of the scene. Converting the point cloud into a dense point cloud and then extimating the surface results in a tesselated (triangulated) polygon model. Further texturing this model using the images themselves can provide a truthful reconstruction of the original input images.
+The output can simply be the camera geometry (orientations), world geometry (point cloud), or similar depending on the application. A more interesting result of the process is a surface model of the scene where the point cloud upsampled into a dense point cloud, then the surface is estimated and tesselated (triangulated) into a polygon model. Further texturing this model using the images themselves can provide a truthful reconstruction of the original scene.
 
 <br/>
 ![Surface Model](./images/sfm/summary_surface.png "Surface Model")
