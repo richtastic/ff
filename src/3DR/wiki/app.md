@@ -443,28 +443,32 @@ MISSING:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
+- density samples need to be done in more dense areas first
+-> else the search neighborhood will be very big
+
+- get samples of denity - ceil((n/10)^0.5)
+
+- get samples of search radius R @ ceil((n/10)^0.5)
+
+- interpolating with a very large radius in the mix ?
+
+
+
+
+- see points in MLS test case
+hi: 74651
+me: 35358
+lo: 20890
+
+
+
 FAKE GROUP BY:
-bundle: bundle/bundle.yaml -- basically empty
-bundleCount: 123
+bundle: bundle/bundle.yaml
+bundleCount: 1234567
 
 surface: null
 
-
-bundle: bundle/bundle.yaml
-	views:
-		...
-	groups:
-		views:
-			- idA
-			- idB
-		file: groups_i_tracks.yaml # copy points from tracks ONLY RELEVANT TO GROUP  [10k]
-		points: group_i_points.yaml # final points only: P3D, N3D, size, views: id, point [50k]
-		density: # some metric of how spread out points are
-	points:
-		file: points.yaml # final merged P3D point set [groups x 50k ~ views x 10k]
-		count: total point count in file
-
-bundleCount: # total points
 
 surface: surface/surface.yaml
 	views:
@@ -495,76 +499,13 @@ scenes:
 
 
 
+Stereopsis.js:2837 (17) [0, 0, 13473, 6041, 949, 180, 29, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+20672
 
+20890
+-> increase patch dropping:
 
-...........
-
- // 1008 x 768
-
-track count start
-Stereopsis.js:2837 (17) [0, 0, 8971, 1653, 515, 179, 49, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-
-
-Stereopsis.js:6714 track count filtered 0
-Stereopsis.js:2837 (17) [0, 0, 8602, 1340, 376, 91, 12, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-
-track count filtered 2
-Stereopsis.js:2837 (17) [0, 0, 7518, 871, 161, 19, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-
-track count iteration
-Stereopsis.js:2837 (17) [0, 0, 13381, 4278, 547, 54, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-
-track count iteration
-Stereopsis.js:2837 (17) [0, 0, 16613, 5338, 894, 159, 22, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-
-12.6 -> 9
-
-
-Stereopsis.js:6802 track count iteration
-Stereopsis.js:2837 (17) [0, 0, 28481, 10837, 1778, 305, 34, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-
-track count iteration
-Stereopsis.js:2837 (17) [0, 0, 29880, 10909, 2071, 419, 55, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-
-
-Stereopsis.js:6806 track count done 
-Stereopsis.js:2837 (17) [0, 0, 29880, 10909, 2071, 419, 55, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-
-
-=> 43334 points
-
-
-
-
-
-// 2016 x 1512
-
-Stereopsis.js:6806 track countstart
-Stereopsis.js:2837 (17) [0, 0, 8971, 1653, 515, 179, 49, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-
-
- iteration
-Stereopsis.js:2837 (17) [0, 0, 12812, 3879, 347, 22, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-
- iteration
-Stereopsis.js:2837 (17) [0, 0, 28344, 5445, 729, 80, 10, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-
-
- 25.2 -> 19
-
- iteration
-Stereopsis.js:2837 (17) [0, 0, 56790, 10709, 1123, 151, 6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-
- iteration
-Stereopsis.js:2837 (17) [0, 0, 96178, 11545, 1566, 231, 15, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-
-track count done 
-Stereopsis.js:2837 (17) [0, 0, 173720, 11879, 1684, 310, 23, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-
-=> 187616
-
-
-WHY 200k? - 4 x as much?
+(17) [0, 0, 1976, 400, 20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 
 
 
@@ -572,27 +513,24 @@ WHY 200k? - 4 x as much?
 
 
 
-probe3D
-possiblyVisibleViews
 
 
 
 
-- stereopsis- P3D focused
-	x seed track point pre-filtering worst out
-	x re-logic for P3D triangulation
-	x re-logic for patches
-	x re-logic for patch-sphere filtering -- GLOBALLY = WORLD, not transform
-	- upate filtering types
-		x patch obstruction
-		x local 2D -> 3D distances : vote on removal of outliers
-		- single-view's z-distance [LOG(D)] removing too far or too close
-		- globally removing points outside ~ 5 sigma distance from centroid
-		- 
-	x project P3D into other views
-		- should this check for intersections with content first ?
-			=> only do points that are non-obstructed by other patches ?
-	
+Stereopsis.js:6620 track count iteration
+Stereopsis.js:2837 (17) [0, 0, 13047, 5906, 845, 140, 23, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+CHANGE CELL SIZE: 25.2 -> 19
+
+
+
+
+
+
+
+
+
+- filter: single-view's z-distance [LOG(D)] removing too far or too close
+- filter: globally removing points outside ~ 5 sigma distance from centroid
 
 propagate 3d: -- non-blind probe3D
 	each P3D look at kNN
@@ -674,6 +612,53 @@ B) entire graph is single group - only skeletal edges
 
 - should edges between groups be BETTER or WORSE ?
 - should edges in groups be BETTER OR WORSE ?
+
+
+
+
+
+
+
+CLUSTERING NOTES:
+
+
+https://www.sciencedirect.com/science/article/pii/S1572528610000642
+https://www.ee.columbia.edu/~jghaderi/allerton_overlap.pdf
+https://www.sciencedirect.com/science/article/pii/S1572528610000642
+https://dollar.biz.uiowa.edu/~nstreet/research/oedm12.pdf
+http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.591.5987&rep=rep1&type=pdf
+https://cme.h-its.org/exelixis/pubs/Exelixis-RRDR-2011-7.pdf
+https://pdfs.semanticscholar.org/726a/387efd9927f4fc5d80f9da02b160d56d615a.pdf
+clustering-general:
+https://www-users.cs.umn.edu/~kumar001/dmbook/ch8.pdf
+
+
+community
+network
+network decomposition
+cluster
+overlap
+clustering
+classification
+sparsness
+graph
+
+
+KNOWN k - cluster [MINIMUM] =  CEIL( (vertex count) / (group size - overlap size) )
+
+
+
+- remove vertexes
+- remove edges ???
+- add fake edges?
+- random walk
+
+
+
+
+
+
+
 
 
 
@@ -1930,7 +1915,7 @@ info.yaml:
 	denseCount: #
 
 	bundle: bundle/bundle.yaml 				# fill-in absolute / triangles / textures
-	bundleCount:
+	bundleCount: #
 
 	scenes: 								# copy of last step of reconstruction
 		-
@@ -1938,7 +1923,7 @@ info.yaml:
 			?
 
 
-bundle.yaml
+surface.yaml
 	points: points.yaml 					# fill in points [2d & 3d propagation]
 	triangles: triangles.yaml 				# create surface
 	textures: textures.yaml 				# update surface & create textures

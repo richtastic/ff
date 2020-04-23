@@ -955,7 +955,8 @@ App3DR.prototype._projectBALoad = function(projectManager){
 		console.log("fxn")
 		app._projectBALoaded(data);
 	}
-	var filename = "bundle/"+projectManager._testFilename;
+	// var filename = "bundle/"+projectManager._testFilename;
+	var filename = projectManager._testFilename;
 	if(filename){
 		projectManager.loadDataFromFile(filename, fxn, app);
 	}else{
@@ -4214,7 +4215,7 @@ if(this._points3D && this._normals3D){
 			nms3D.push(n);
 		}
 		var str = Code.pointsToPtsFileString(pts3D,nms3D);
-		// console.log(str);
+		console.log(str);
 }
 
 	this._pointVertexPositionAttrib = this._stage3D.enableVertexAttribute("aVertexPosition");
@@ -6294,8 +6295,10 @@ App3DR.ProjectManager = function(relativePath, operatingStage, readyFxn){ // ver
 	this._bundleData = null;
 	this._bundleCount = null;
 
-	// this._triangleFilename = null;
-	// this._triangleCount = null;
+	this._surfaceFilename = null;
+	this._surfaceData = null;
+	this._surfaceCount = null;
+
 	// this._textureCount = null;
 	// this._triangleData = null;
 
@@ -6714,12 +6717,11 @@ App3DR.ProjectManager.prototype.setFromYAML = function(object){
 	var sparseCount = object["sparseCount"];
 	var dense = object["dense"];
 	var denseCount = object["denseCount"];
-	
+	var bundleCount = object["bundleCount"];
+	var bundle = object["bundle"];
 	// var pointsCount = object["pointsCount"];
 	// var points = object["points"];
 
-	// var bundledCount = object["bundledCount"];
-	// var bundled = object["bundled"];
 
 	// var textureCount = object["textureCount"];
 	// var triangleCount = object["triangleCount"];
@@ -6785,11 +6787,15 @@ App3DR.ProjectManager.prototype.setFromYAML = function(object){
 
 	this._denseFilename = Code.valueOrDefault(dense, null);
 	this._denseCount = Code.valueOrDefault(denseCount, null);
+
+	this._bundleFilename = Code.valueOrDefault(bundle, null);
+	this._bundleCount = Code.valueOrDefault(bundleCount, null);
+
+
 	// this._pointsFilename = Code.valueOrDefault(points, null);
 	// this._pointsCount = Code.valueOrDefault(pointsCount, null);
 
-	// this._bundledFilename = Code.valueOrDefault(bundled, null);
-	// this._bundledCount = Code.valueOrDefault(bundledCount, null);
+	
 
 	// this._triangleFilename = Code.valueOrDefault(triangles, null);
 	// this._triangleCount = Code.valueOrDefault(triangleCount, null);
@@ -6901,15 +6907,11 @@ App3DR.ProjectManager.prototype.toYAML = function(){
 	yaml.writeNumber("denseCount",this._denseCount);
 	yaml.writeBlank();
 
-/*
-	// reconstruction
-	yaml.writeString("graph",this._graphFilename);
+	yaml.writeString("bundle",this._bundleFilename);
+	yaml.writeNumber("bundleCount",this._bundleCount);
 	yaml.writeBlank();
 
-	yaml.writeString("tracks",this._tracksFilename); // not using
-	yaml.writeNumber("trackCount",this._trackCount);
-	yaml.writeBlank();
-	
+/*
 	// dense
 	yaml.writeString("dense",this._denseFilename);
 	yaml.writeNumber("denseCount",this._denseCount);
@@ -7668,16 +7670,29 @@ console.log("checkPerformNextTask");
 // bundle - groups: view graph from dense -> group list -> iteritive dense groups -> aggregate to points.yaml
 // throw ">start bundle";
 // throw ">bundle : stereopsis - dense groups";
-	// if(!project.checkHasBundleStarted()){
-	// }
+	if(!project.checkHasBundleStarted()){
+		throw "checkHasBundleStarted"
+		project.initializeBundleGroupsFromDense();
+		return;
+	}
 	if(!project.checkHasBundleEnded()){
-		project.loadDenseGroupsStereopsis();
+		throw "checkHasBundleEnded"
+		// project.loadDenseGroupsStereopsis(); // TEST EXAMPLE
+		project.iterateBundleProcess();
 		return;
 	}
 
-throw ">start surface"; // copy point files & create surface.yaml
+// throw ">start surface"; // copy point files & create surface.yaml
+	if(!project.checkHasSurfaceStarted()){
+		project.initializeSurfaceFromBundle();
+	}
+throw ">iterate surface"; // create triangles & textures
+	if(!project.checkHasSurfaceEnded()){
+		throw "surface continue"
+		project.iterateSurfaceProcess();
+	}
 
-throw ">iterate surface"; // great triangles & textures
+
 
 throw ">copy surface to a scene/ID/ directory"; 
 
@@ -7747,7 +7762,15 @@ App3DR.ProjectManager.prototype.checkHasBundleStarted = function(){
 }
 App3DR.ProjectManager.prototype.checkHasBundleEnded = function(){
 	var count = this._bundleCount;
-	console.log()
+	return count != null && count != undefined;
+}
+
+App3DR.ProjectManager.prototype.checkHasSurfaceStarted = function(){
+	var filename = this._surfaceFilename;
+	return filename != null && filename != undefined;
+}
+App3DR.ProjectManager.prototype.checkHasSurfaceEnded = function(){
+	var count = this._surfaceCount;
 	return count != null && count != undefined;
 }
 
@@ -10730,41 +10753,94 @@ console.log(i+": "+viewID);
 	}
 }
 
-	// STEPS:
 
-	// LOAD DENSE FILE
-
-	// LOAD EACH PAIR & DO R | DENSE
-		// R & F & points
-		// TRACKS
-
-	// LOAD EACH POSSIBLE TRIPLE
-
-	// CREATE GRAPH FROM PAIRWISE & TRIPLE SCALE
-
-	// AGGREGATE TRACKS INTO POINT FILE
-
-	// BUNDLE ADJUST GRAPH TO MINIMIZE ERROR
-
-	// OUTPUT DENSE POINTS FOR BA STEP
-
-
-App3DR.ProjectManager.prototype.iterateBundleAdjustProcess = function(){
-	throw "iterateBundleAdjustProcess"
-	// STEPS:
-
-	// LOAD BA FILE
-
-	// LOAD SOME GROUP ?TBD?
-		// FILL-IN: PROPAGATE POINTS IN BARREN AREAS
-		// EXPAND: TRY TO INCREASE TRACK CARDINALITY VIA PROJECTION
-		// REMOVE POINT OUTLIERS
-		// MOVE CAMERAS AROUND TO REDUCE PROJECTION ERROR
-
-	// OUTPUT FINAL POINTS & CAMERA POSITIONS
+App3DR.ProjectManager.prototype.initializeBundleGroupsFromDense = function(){
+	throw "initializeBundleGroupsFromDense"
+	// load dense data
+	// convert skeleton graph into list of groups
+	// for each group:
+	// copy over only the track points relevant to the group (truncate any points shared with views outside group)
+	// save group track file
+	// ...
+	// save bundle.yaml
 
 	throw "???"
 }
+
+App3DR.ProjectManager.prototype.iterateBundleProcess = function(){
+	throw "iterateBundleProcess";
+	// load the next group that doesn't have a dense file
+	// import tracks into world
+	// world.sovegroup
+	// save points to group's dense point file
+	// save views & non-zero-pair info to group's dense view file
+	//
+
+	// initialize a graph with views (and edges?) from dense final graph
+	// add view-edges from all groups
+	// nonlinearly find minimum from 
+	// save final view location to bundle/views.yaml
+	// 
+
+	// if all groups are done:
+	// iterate thru each group's dense file
+	// update point's triangulation using optimized view orientations
+	// put points into OctTree
+	// merge with existing points when points are too close (global size or local size from group)
+	// AVG POINT, AVG NORMAL, UNION VIEWS
+	// possibly clean up points?
+	// save final set of points to bundle/points.yaml
+	//
+
+}
+
+
+App3DR.ProjectManager.prototype.initializeSurfaceFromBundle = function(){
+	console.log("initializeSurfaceFromBundle");
+
+	//
+	// load points.yaml
+	// load views.yaml
+	//
+	// 
+	// create surface.yaml
+	// ...
+	//
+	// save
+
+	throw "?";
+}
+
+App3DR.ProjectManager.prototype.iterateSurfaceProcess = function(){
+	throw "iterateSurfaceProcess";
+	// create triangulation from points
+	// create triangle-view best-vertex mapping
+	// iterate thru triangle generation
+	//
+
+}
+
+
+App3DR.ProjectManager.prototype.moreStuff = function(){
+	throw "moreStuff";
+	// ...
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 App3DR.ProjectManager.prototype.setViewSimilarity = function(similarity){
 	this._viewSimilarity = similarity;
 }

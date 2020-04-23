@@ -283,7 +283,13 @@ Mesh3D.prototype.generateSurfaces = function(){
 	}
 */
 
-	this._iterateFronts();
+	
+
+// MAIN ALGORITHM:
+	// this._iterateFronts();
+
+
+
 	// this._testSurface();
 	// this._toSurfaceProjections();
 
