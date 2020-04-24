@@ -710,8 +710,8 @@ SurfaceTri.prototype.loadPointFile = function(){
 	// var sourceFileName = "./images/points/pika_1.pts";
 
 	// var sourceFileName = "./images/points/bench_lo.pts"; // 20890
-	// var sourceFileName = "./images/points/bench_me.pts"; // 35358
-	var sourceFileName = "./images/points/bench_hi.pts"; // 74651
+	var sourceFileName = "./images/points/bench_me.pts"; // 35358
+	// var sourceFileName = "./images/points/bench_hi.pts"; // 74651
 
 
 	// var doNormalizing = false;
@@ -1004,8 +1004,8 @@ var spherePoints = [];
 
 
 // push in triangles for markers
-var showMarkers = true;
-// var showMarkers = false;
+// var showMarkers = true;
+var showMarkers = false;
 if(showMarkers){
 	console.log("MARKERS");
 	var markers = mesh._neighborhoodSpace;

@@ -444,30 +444,94 @@ MISSING:
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
-- density samples need to be done in more dense areas first
--> else the search neighborhood will be very big
+- does moving along normal actually bring points into line ?
 
-- get samples of denity - ceil((n/10)^0.5)
-
-- get samples of search radius R @ ceil((n/10)^0.5)
-
-- interpolating with a very large radius in the mix ?
+- spread out along parallel plane ?
 
 
+- test curvature on highly accurate surface with high curvature
+	- wavy toroid
 
 
-- see points in MLS test case
-hi: 74651
-me: 35358
-lo: 20890
+- is curvature high because points are very close together ?
 
 
 
-FAKE GROUP BY:
-bundle: bundle/bundle.yaml
-bundleCount: 1234567
 
-surface: null
+
+- curvature seems highly inaccurate ....
+
+
+
+
+
+
+
+- numbers of points needed in samples is very high, eg 100-300
+=> a perfect surface would have like 10
+=> a noisy surface would have like 20
+
+=> want below 50 
+
+
+https://h2t.anthropomatik.kit.edu/pdf/Roehl2011.pdf
+https://pdfs.semanticscholar.org/31b7/08290e42f8a6a9333fa59755222da786733a.pdf
+https://people.csail.mit.edu/changil/assets/point-cloud-noise-removal-3dv-2016-wolff-et-al.pdf
+https://www.uni-konstanz.de/mmsp/pubsys/publishedFiles/DaHaOc07.pdf
+
+http://www.sci.utah.edu/~shachar/Publications/FleishmanThes.pdf
+
+
+
+
+
+
+-> point smoothing ?
+	A) each point:
+		- get 3-6 NN
+		- get centroid
+		- move toward centroid
+
+
+
+- drop halo points too far away
+- stop triangle propagation to small groups of triangles
+
+
+
+
+
+
+x initialize with minimum 'search radius R' samples @ ceil((n)^0.5)
+	(100)^0.5 = 10
+	(1,000)^0.5 = 32
+	(10,000)^0.5 = 100
+	(100,000)^0.5 = 316
+x for i = 0 to sample count:
+	- pick a random point
+	- get 6 nn actual points
+	- pt = average point
+	- calc search radius R @ pt
+
+
+- initial marker searches need to start small
+	- 3 -> 6
+	- 12
+	- 24
+	- 48
+	- ...
+
+- searching both directions around point
+	- left = x-1
+	- right = x+1
+	- is the value between these?
+		=> done
+	- search left and right simultaneously
+
+- source point smoothing / noise reduction?
+
+	- 
+
 
 
 surface: surface/surface.yaml
@@ -482,10 +546,6 @@ surface: surface/surface.yaml
 	points: points.yaml
 
 
-scenes:
-	- sceneID
-
-
 
 
 - NEXT STEPS:
@@ -497,29 +557,6 @@ scenes:
 	- SURFACE TRIANGULATION/TESSELATION
 	- TEXTURING
 
-
-
-Stereopsis.js:2837 (17) [0, 0, 13473, 6041, 949, 180, 29, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-20672
-
-20890
--> increase patch dropping:
-
-(17) [0, 0, 1976, 400, 20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-
-
-
-
-
-
-
-
-
-
-
-Stereopsis.js:6620 track count iteration
-Stereopsis.js:2837 (17) [0, 0, 13047, 5906, 845, 140, 23, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-CHANGE CELL SIZE: 25.2 -> 19
 
 
 
@@ -537,16 +574,6 @@ propagate 3d: -- non-blind probe3D
 		if theres any view neighbor doesn't have
 			=> estimate projection & affine , and search
 
-
-
-
-@ 60  cells : 1x   = 20k  [1x area]
-@ 80? cells : 1.25 = 40k ? [2x area]
-@ 120 cells : 2x   = 90k  [4x area]
-
-11x11 = 121
-9x9 = 81
-7x7 = 49
 
 
 

@@ -6719,6 +6719,8 @@ App3DR.ProjectManager.prototype.setFromYAML = function(object){
 	var denseCount = object["denseCount"];
 	var bundleCount = object["bundleCount"];
 	var bundle = object["bundle"];
+	var surfaceCount = object["surfaceCount"];
+	var surface = object["surface"];
 	// var pointsCount = object["pointsCount"];
 	// var points = object["points"];
 
@@ -6790,6 +6792,9 @@ App3DR.ProjectManager.prototype.setFromYAML = function(object){
 
 	this._bundleFilename = Code.valueOrDefault(bundle, null);
 	this._bundleCount = Code.valueOrDefault(bundleCount, null);
+
+	this._surfaceFilename = Code.valueOrDefault(surface, null);
+	this._surfaceCount = Code.valueOrDefault(surfaceCount, null);
 
 
 	// this._pointsFilename = Code.valueOrDefault(points, null);
@@ -6909,6 +6914,10 @@ App3DR.ProjectManager.prototype.toYAML = function(){
 
 	yaml.writeString("bundle",this._bundleFilename);
 	yaml.writeNumber("bundleCount",this._bundleCount);
+	yaml.writeBlank();
+
+	yaml.writeString("surface",this._surfaceFilename);
+	yaml.writeNumber("surfaceCount",this._surfaceCount);
 	yaml.writeBlank();
 
 /*
@@ -7685,10 +7694,10 @@ console.log("checkPerformNextTask");
 // throw ">start surface"; // copy point files & create surface.yaml
 	if(!project.checkHasSurfaceStarted()){
 		project.initializeSurfaceFromBundle();
+		return;
 	}
-throw ">iterate surface"; // create triangles & textures
+// throw ">iterate surface"; // create triangles & textures
 	if(!project.checkHasSurfaceEnded()){
-		throw "surface continue"
 		project.iterateSurfaceProcess();
 	}
 
@@ -7772,6 +7781,12 @@ App3DR.ProjectManager.prototype.checkHasSurfaceStarted = function(){
 App3DR.ProjectManager.prototype.checkHasSurfaceEnded = function(){
 	var count = this._surfaceCount;
 	return count != null && count != undefined;
+}
+App3DR.ProjectManager.prototype.surfaceFilename = function(file){
+	if(file!==undefined){
+		this._surfaceFilename = file;
+	}
+	return this._surfaceFilename;
 }
 
 
@@ -10795,28 +10810,138 @@ App3DR.ProjectManager.prototype.iterateBundleProcess = function(){
 }
 
 
-App3DR.ProjectManager.prototype.initializeSurfaceFromBundle = function(){
-	console.log("initializeSurfaceFromBundle");
-
-	//
-	// load points.yaml
-	// load views.yaml
-	//
-	// 
-	// create surface.yaml
-	// ...
-	//
-	// save
-
-	throw "?";
+App3DR.ProjectManager.prototype.initializeSurfaceFromBundle = function(){ // create surface.yaml
+	var project = this;
+	var parentDirectory = "bundle";
+	var viewsFilename = "views.yaml";
+	var pointsFilename = "points.yaml";
+	viewsFilename = Code.appendToPath(parentDirectory,viewsFilename);
+	pointsFilename = Code.appendToPath(parentDirectory,pointsFilename);
+	// var viewData = null;
+	// var pointsData = null;
+	var parentDirectory = "surface";
+	var surfaceFilename = "surface.yaml";
+	var surfaceViewsFilename = "views.yaml";
+	var pointsViewsFilename = "points.yaml";
+	var surfaceFilenameFull = Code.appendToPath(parentDirectory,surfaceFilename);
+	var surfaceViewsFilenameFull = Code.appendToPath(parentDirectory,surfaceViewsFilename);
+	var surfacePointsFilenameFull = Code.appendToPath(parentDirectory,pointsViewsFilename);
+	var savedCount = 0;
+	var viewCount = null;
+	var pointCount = null;
+	var loadedViewsFxn = function(data){
+		var views = data["views"];
+		var cameras = data["cameras"];
+		viewCount = views.length;
+		var viewData = {};
+		viewData["cameras"] = cameras;
+		viewData["views"] = views;
+		project.saveFileFromData(viewData, surfaceViewsFilenameFull, checkDone, project);
+	}
+	var loadedPointsFxn = function(data){
+		var points = data["points"];
+		pointCount = points.length;
+		var pointsData = {};
+		pointsData["points"] = points;
+		project.saveFileFromData(pointsData, surfacePointsFilenameFull, checkDone, project);
+	}
+	var checkDone = function(){
+		++savedCount;
+		if(savedCount!==2){
+			return;
+		}
+		console.log("checkDone");
+		var data = {};
+		data["views"] = surfaceViewsFilename;
+		data["viewCount"] = viewCount;
+		data["points"] = pointsViewsFilename;
+		data["pointCount"] = pointCount;
+		data["triangles"] = null;
+		data["textures"] = null;
+		console.log(data);
+		project.saveFileFromData(data, surfaceFilenameFull, savedSurfaceCompleteFxn, project);
+	}
+	var savedSurfaceCompleteFxn = function(){
+		console.log("savedSurfaceCompleteFxn");
+		project.surfaceFilename(surfaceFilenameFull);
+		project.saveProjectFile(savedProjectCompleteFxn);
+	}
+	var savedProjectCompleteFxn = function(){
+		console.log("savedProjectCompleteFxn");
+	}
+	project.loadDataFromFile(viewsFilename, loadedViewsFxn);
+	project.loadDataFromFile(pointsFilename, loadedPointsFxn);
 }
 
 App3DR.ProjectManager.prototype.iterateSurfaceProcess = function(){
-	throw "iterateSurfaceProcess";
-	// create triangulation from points
+	var project = this;
+	var surfaceFilename = project.surfaceFilename();
+	console.log(surfaceFilename);
+	var surfaceDirectory = Code.pathRemoveLastComponent(surfaceFilename);
+	console.log(surfaceDirectory);
+	var surfaceData = null;
+	var loadedSurfaceFxn = function(data){
+		console.log("loadedSurfaceFxn");
+		console.log(data);
+		surfaceData = data;
+		var points = data["points"];
+		var triangles = data["triangles"];
+		var textures = data["textures"];
+		var textureCount = data["textureCount"];
+		if(!triangles){ // create triangulation from points
+			var pointsFilename = Code.appendToPath(surfaceDirectory, points);
+			project.loadDataFromFile(pointsFilename, loadedPointsFxn);
+			return;
+		}
+		if(!textures){
+			throw "load triangles & map out textures"
+			return;
+		}
+		if(!textureCount){
+			throw "load textures & continue iterating texture creation"
+			return;
+		}
+		throw "done - copy triangels & textures to scene file & save surfaceCount to main project file"
+	}
+	var loadedPointsFxn = function(data){
+		console.log("loadedSurfaceFxn");
+		console.log(data);
+		var pointsAll = data["points"];
+		var points = [];
+		var normals = [];
+		for(var i=0; i<pointsAll.length; ++i){
+			var source = pointsAll[i];
+			var point = new V3D(source["X"],source["Y"],source["Z"]);
+			var normal = new V3D(source["y"],source["y"],source["z"]);
+			normals.push(normal);
+			points.push(point);
+		}
+		console.log(normals);
+		console.log(points);
+
+		throw "do surface here:"
+		// var mesh = new Mesh3D(points,normals);
+		// var triangles = mesh.generateSurfaces();
+
+		// what to do with the triangles
+
+		// TODO: drop triangles that don't face  toward any of the views ?
+	}
+
+
 	// create triangle-view best-vertex mapping
+	var loadedTrianglesFxn = function(data){
+		// ..
+		throw "for each triangle corner: find possible views to use; solve for best mapping sets"
+	}
 	// iterate thru triangle generation
-	//
+	var loadedTexturessFxn = function(data){
+		// ..
+		throw "iterate on texture loadings"
+	}
+
+	project.loadDataFromFile(surfaceFilename, loadedSurfaceFxn);
+	
 
 }
 
