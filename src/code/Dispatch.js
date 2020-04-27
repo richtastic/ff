@@ -23,9 +23,11 @@ Dispatch.prototype.showList = function(){
 	return str;
 }
 Dispatch.prototype.alertAll = function(str,a,b,c,d,e,f,g,h,i,j){ // limit 10 arguments ...
-	if(this.list[str] == undefined){ return; }
-	for(var i=0;i<this.list[str].length;++i){
-		if( this.list[str][i] instanceof Array){
+	var list = this.list[str];
+	if(list == undefined){ return; }
+	list = Code.copyArray(list); // need a copy to iterate on
+	for(var i=0;i<list.length;++i){
+		// if( list[i] instanceof Array){
 			try{
 				var entry = this.list[str][i];
 				if(entry.length>2){ // obj
@@ -36,37 +38,40 @@ Dispatch.prototype.alertAll = function(str,a,b,c,d,e,f,g,h,i,j){ // limit 10 arg
 			}catch(e){
 				console.log("CAUGHT ERROR FOR EVENT: ",str);
 				console.log(e);
-				console.log(this.list[str][i]);
+				console.log(list[i]);
 				// throw e;
 			}
-		}else{
-			this.list[str][i](a);//,b,c,d,e,f,g,h,i,j);
-		}
-		if(!this.list){ // .kill() called
-			return;
-		}
-		if(!this.list[str]){
-			return;
-		}
+		// }
+		// }else{
+		// 	this.list[str][i](a);//,b,c,d,e,f,g,h,i,j);
+		// }
+		// if(!this.list){ // .kill() called
+		// 	return;
+		// }
+		// if(!this.list[str]){
+		// 	return;
+		// }
 	}
 }
 Dispatch.prototype.addFunction = function(str,fxn,ctx,obj){
-	if(this.list[str] == undefined){
-		this.list[str] = new Array();
+	var list = this.list[str];
+	if(list == undefined){
+		list = [];
+		this.list[str] = list;
 	}
 	if(ctx!==undefined){
 		if(obj!==undefined){
-			this.list[str].push([fxn,ctx,obj]);
+			list.push([fxn,ctx,obj]);
 		}else{
-			this.list[str].push([fxn,ctx]);
+			list.push([fxn,ctx]);
 		}
 	}else{
-		this.list[str].push(fxn);
+		list.push(fxn);
 	}
 }
 Dispatch.prototype.removeFunction = function(str,fxn,ctx,obj){
-	if( this.list[str] == undefined){ return; }
 	var arr = this.list[str];
+	// if( list == undefined){ return; }
 	if(!arr){ return; }
 	var i, len = arr.length;
 	for(i=0;i<len;++i){
@@ -87,16 +92,17 @@ Dispatch.prototype.removeFunction = function(str,fxn,ctx,obj){
 			}
 		}
 	}
-	if(this.list[str].length == 0){
+	if(arr.length == 0){
 		this.list[str] = undefined;
 		delete this.list[str];
 	}
 }
 Dispatch.prototype.kill = function(){
-	for(var key in this.list){
-		Code.emptyArray(this.list[key]);
-		this.list[key] = undefined;
-		delete this.list[key];
+	var list = this.list;
+	for(var key in list){
+		Code.emptyArray(list[key]);
+		list[key] = undefined;
+		delete list[key];
 	}
 	this.list = null;
 }

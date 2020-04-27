@@ -1113,21 +1113,24 @@ for(i=0;i<foundPoints.length;++i){
 
 
 
-// var showProjected = true;
-var showProjected = false;
+var showProjected = true;
+// var showProjected = false;
 if(showProjected){
-	var infoPoints = GLOBAL_DATA["points"];
-	console.log("GLOBAL_DATA: "+infoPoints.length);
+	// var infoPoints = GLOBAL_DATA["points"];
+	var infoPoints = mesh._pointSpace.toArray();
+	console.log("infoPoints: "+infoPoints.length);
+	console.log(infoPoints);
 	for(i=0;i<infoPoints.length;++i){
 		var p = infoPoints[i];
+			p = p.point();
 		points.push(p.x,p.y,p.z);
 		//colors.push(0.5*Math.random()+0.5,0.0,0.5*Math.random(),0.90);
 		colors.push(1.0,0,0,0.50);
 	}
 }
 
-// var showSource = false;
-var showSource = true;
+var showSource = false;
+// var showSource = true;
 if(showSource){ // show source points
 	console.log("SOURCE POINTS: "+pts.length);
 	for(i=0;i<pts.length;++i){

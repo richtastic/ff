@@ -423,45 +423,62 @@ https://cloud.google.com/appengine/docs/nodejs/
 
 
 
-04/24 - triangulation algorithm updates
-05/01 - output test to device
-05/03 - texture-triangle-edge problems -- rendering on device shows lines at the edges of triangles -- should be smooth -- DIALATION of texture after it's created (post process requires map)
-05/06 - test new set of 10 ~ 20 images
-05/13 - test set of ~50 images
-05/20 - test set of ~100 images x
-05/27 - MVP
+04/28 - triangulation algorithm incorporated
+04/30 - texturing algorithm incorporated
+05/03 - scene info from triangles + textures
+05/06 - output test to device [dae]
+05/10 - texture-triangle-edge problems -- rendering on device shows lines at the edges of triangles -- should be smooth -- DIALATION of texture after it's created (post process requires map)
+05/17 - test new set of 10 ~ 20 images
+	- implement groupings
+05/24 - test set of ~50 images
+05/31 - test set of ~100 images x
+06/07 - MVP
+
 MISSING:
 - divide final track into groups & do dense group at a time
+	- algorithm [3d]
 - mass-dense point aggregation via merging separate P3D files
+	- logistics [2d]
 - hole filling
-
+	- ?
 - BA identify/remove view if it's position is very bad????
+	- inconsistent / contrary / high error
 - triangle - texture loading groups at a time to get local approx blending
+	- logistics [5d]
 - out-of-core octtree (stereopsis focused)
-...
+	- system design [10d]
+- triangulation algorithm updates
+	- not smooth enough
+	- curvature wrong
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+- review why tesselation is failing
+- failing thoughts:
+	- get sphere around kNN count? [is there much of a difference]
+	- notmal = direction AWAY from point COM
+	- cov calculated correctly (normal?)
+	- display / visualize when curvature is high & why
+	- display some groups
 
-- does moving along normal actually bring points into line ?
+- try lower degree polynomial (2,2)?
 
-- spread out along parallel plane ?
+
+- does moving along normal actually bring noisy points into line ?
+
+- push out along parallel plane (remove concensed points)?
+
+
+- is curvature high because? :
+	- points are very close together ?
+	- surface normal is not 
+
+
 
 
 - test curvature on highly accurate surface with high curvature
 	- wavy toroid
-
-
-- is curvature high because points are very close together ?
-
-
-
-
-
-- curvature seems highly inaccurate ....
-
-
 
 
 
@@ -495,6 +512,8 @@ http://www.sci.utah.edu/~shachar/Publications/FleishmanThes.pdf
 
 
 - drop halo points too far away
+	- get samples of local density (3-6 NN distance average)
+	- remove points that are way outside of these numbers
 - stop triangle propagation to small groups of triangles
 
 

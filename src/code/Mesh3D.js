@@ -40,8 +40,8 @@ function Mesh3D(points, norms, angle){
 	// this._cappedMaxK = 1.0/0.02; // 50
 	// this._cappedMaxK = 1.0/0.01; // 100
 	// this._cappedMaxK = 1.0/0.005; // 200
-	this._cappedMaxK = 1.0/0.002; // 500
-	// this._cappedMaxK = 1.0/0.001; // 1000
+	// this._cappedMaxK = 1.0/0.002; // 500
+	this._cappedMaxK = 1.0/0.001; // 1000
 
 
 	// this._cappedMaxK = 1.0/0.01;
@@ -239,23 +239,97 @@ Mesh3D.prototype.addEdge = function(edge){
 Mesh3D.prototype.removeEdge = function(edge){
 	this._edgeSpace.removeObject(edge);
 }
+Mesh3D.prototype.dropLowDensityPoints = function(){
+	var space = this._pointSpace;
+	var allPoints = space.toArray();
+	var pointCount = allPoints.length;
+	var neighborhoodCount = 5; // 3-6
+	// var sampleCount = 100;
+var densities = [];
+	for(var i=0; i<pointCount; ++i){
+		// var index = Code.randomIndexArray(allPoints);
+		var source = allPoints[i];
+		var location = source.point();
+		var neighbors = space.kNN(location, neighborhoodCount);
+		var points = [];
+		for(var n=0; n<neighbors.length; ++n){
+			var neighbor = neighbors[n];
+			var point = neighbor.point();
+			points.push(point);
+		}
+		var centroid = V3D.average(points);
+		var averageDistance = 0;
+		for(var p=0; p<points.length; ++p){
+			var point = points[p];
+			var distance = V3D.distance(centroid,point);
+			averageDistance += distance;
+		}
+		averageDistance /= points.length;
+		// save
+		var density = averageDistance;
+		densities.push(density);
+		source.temp(density);
+	}
+	var sampleCount = 1000;
+	Code.randomPopArray(densities, sampleCount);
+
+
+
+// remove neighbors if they have much lower density ?
+
+
+// densities.sort();
+// Code.printMatlabArray(densities);
+	var mean = Code.averageNumbers(densities);
+	var min = Code.min(densities);
+	var sigma = Code.stdDev(densities, mean);
+	var limit = mean + sigma*3.0; // 2= 95, 3 = 99
+	console.log("mean: "+mean+" sigma: "+sigma+" limit: "+limit)
+
+	// drop lowest
+	for(var i=0; i<pointCount; ++i){
+		var source = allPoints[i];
+		var density = source.temp();
+		source.temp(null);
+		if(density>limit){
+			space.removeObject(source);
+		}
+	}
+	console.log("COUNT CHANGE: "+pointCount+" -> "+space.count());
+}
 Mesh3D.prototype.generateSurfaces = function(){
 	console.log("generateSurfaces");
+
+	this.dropLowDensityPoints();
+	// GLOBAL_DATA = {};
+	// GLOBAL_DATA["points"] = this._pointSpace.toArray();
+
 
 
 	// smooth input:
 	console.log("_smoothSurface"); // larger numbers segment more
-	var smoothIterations = 1;
+	// var smoothIterations = 1;
 	// var smoothIterations = 3;
 	// var smoothIterations = 5;
 	// var smoothIterations = 7;
 	// var smoothIterations = 10;
-	for(var i=0; i<smoothIterations; ++i){
-		this._smoothSurfaceAlongNormals();
+	// for(var i=0; i<smoothIterations; ++i){
+	// 	this._smoothSurfaceAlongNormals();
+	// }
+
+	console.log("_smoothSurface");
+	for(var i=0; i<1; ++i){
+		this._smoothSurface();
+		// this._smoothSurfacePush();
 	}
+
+// return [];
+// throw "?"
 
 	this._sizeSpaces();
 	this._setCurvaturePoints_MLS();
+
+
 
 
 
@@ -290,6 +364,8 @@ Mesh3D.prototype.generateSurfaces = function(){
 	this._preprocessPoints_MLS();
 
 
+// return [];
+// throw "?"
 
 	// console.log("_smoothSurface");
 	// for(var i=0; i<1; ++i){
@@ -3595,9 +3671,10 @@ Mesh3D.prototype.growTriangle = function(front, edge, vertex){
 
 Mesh3D.prototype._setCurvaturePoints_MLS = function(){
 	if(!this._bivariate){
-		this._bivariate = new BivariateSurface(3, 50);
+		// this._bivariate = new BivariateSurface(3, 50);
 		// this._bivariate = new BivariateSurface(3, 100);
-		// this._bivariate = new BivariateSurface(2, 50);
+		this._bivariate = new BivariateSurface(2, 50);
+		// this._bivariate = new BivariateSurface(1, 50); // can't have curvature with this
 	}
 	this._projectPointToSurface = this._projectPointToSurface_MLS;
 
@@ -3676,11 +3753,12 @@ Mesh3D.prototype._preprocessPoint_MLS = function(point, queue){
 	var surfaceNormal = surface["normal"];
 	var surfaceTangent = surface["tangent"];
 	var surfaceCurvature = surface["curvature"];
-// if(false){
-if(surfaceCurvature>1E6){ // HUGE
+if(false){
+// if(surfaceCurvature>1E6){ // HUGE
+// if(surfaceCurvature>=this._cappedMaxK){ // HUGE
 // if(surfaceCurvature>1E3){ // 1K
 // if(surfaceCurvature>100){ // 100
-	console.log("bad point: "+point+" @ "+surfaceCurvature);
+	console.log("bad point: "+point+" @ "+surfaceCurvature+" / "+this._cappedMaxK);
 	console.log(surface);
 	// this.testProjectionSampling(location);
 
@@ -4448,6 +4526,21 @@ Mesh3D.prototype._projectPointIteration_MLS = function(startingLocation, neighbo
 	// get neighborhood
 	// var neighbors = space.objectsInsideSphere(neighborhoodCenter, neighborhoodRadius);
 	var neighbors = space.kNN(neighborhoodCenter, neighborhoodCount);
+
+
+	// get radius of furthest point & then get all points within that radius
+	var maxDistanceSquare = 0;
+	for(var i=0; i<neighbors.length; ++i){
+		var d = V3D.distanceSquare(neighbors[i].point(),neighborhoodCenter);
+		maxDistanceSquare = Math.max(d,maxDistanceSquare);
+	}
+	var maxDistance = Math.sqrt(maxDistanceSquare);
+	neighbors = space.objectsInsideSphere(neighborhoodCenter, maxDistance*2);
+	// SIMILAR TO:
+	// var neighbors = space.kNN(neighborhoodCenter, neighborhoodCount*4); // larger radius = less crazy polynomials
+
+
+
 	if(neighbors.length<neighborhoodCount){
 	// if(neighbors.length<=5){
 		console.log(neighbors, neighborhoodCount);
