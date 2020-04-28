@@ -10857,7 +10857,9 @@ App3DR.ProjectManager.prototype.initializeSurfaceFromBundle = function(){ // cre
 		data["points"] = pointsViewsFilename;
 		data["pointCount"] = pointCount;
 		data["triangles"] = null;
+		data["triangleCount"] = null;
 		data["textures"] = null;
+		data["textureCount"] = null;
 		console.log(data);
 		project.saveFileFromData(data, surfaceFilenameFull, savedSurfaceCompleteFxn, project);
 	}
@@ -10880,12 +10882,17 @@ App3DR.ProjectManager.prototype.iterateSurfaceProcess = function(){
 	var surfaceDirectory = Code.pathRemoveLastComponent(surfaceFilename);
 	console.log(surfaceDirectory);
 	var surfaceData = null;
+	var fileNameTriangles = "triangles.yaml";
+	var fileNameTextures = "textures.yaml";
+	// var fileName??? = "??.yaml";
 	var loadedSurfaceFxn = function(data){
 		console.log("loadedSurfaceFxn");
 		console.log(data);
 		surfaceData = data;
+		var views = data["views"];
 		var points = data["points"];
 		var triangles = data["triangles"];
+		var triangleCount = data["triangleCount"];
 		var textures = data["textures"];
 		var textureCount = data["textureCount"];
 		if(!triangles){ // create triangulation from points
@@ -10893,12 +10900,31 @@ App3DR.ProjectManager.prototype.iterateSurfaceProcess = function(){
 			project.loadDataFromFile(pointsFilename, loadedPointsFxn);
 			return;
 		}
-		if(!textures){
-			throw "load triangles & map out textures"
+		if(!textures){ // load triangles & map out textures
+			var viewsFilename = Code.appendToPath(surfaceDirectory, views);
+			var trianglesFilename = Code.appendToPath(surfaceDirectory, triangles);
+			var triangleData = null;
+			var viewData = null;
+			var checkLoadedAll = function(){
+				if(triangleData && viewData){
+					loadedTrianglesFxn(viewData,triangleData);
+				}
+			}
+			var loadedViewsFxn = function(data){
+				viewData = data;
+				checkLoadedAll();
+			}
+			var loadedTrisFxn = function(data){
+				triangleData = data;
+				checkLoadedAll();
+			}
+			project.loadDataFromFile(trianglesFilename, loadedTrisFxn);
+			project.loadDataFromFile(viewsFilename, loadedViewsFxn);
 			return;
 		}
-		if(!textureCount){
-			throw "load textures & continue iterating texture creation"
+		if(!textureCount){ // oad textures & continue iterating texture creation
+			var texturesFilename = Code.appendToPath(surfaceDirectory, textures);
+			project.loadDataFromFile(texturesFilename, loadedTexturesFxn);
 			return;
 		}
 		throw "done - copy triangels & textures to scene file & save surfaceCount to main project file"
@@ -10918,31 +10944,95 @@ App3DR.ProjectManager.prototype.iterateSurfaceProcess = function(){
 		}
 		console.log(normals);
 		console.log(points);
-
-		throw "do surface here:"
-		// var mesh = new Mesh3D(points,normals);
-		// var triangles = mesh.generateSurfaces();
-
-		// what to do with the triangles
-
+		var mesh = new Mesh3D(points,normals);
+		// console.log("mesh");
+		// console.log(mesh);
+		var triangles = mesh.generateSurfaces();
+		// console.log("triangles");
+		// console.log(triangles);
+		var triangleCount = triangles.length;
+		var pointList = Tri3D.arrayToUniquePointList(triangles);
+		console.log(pointList);
 		// TODO: drop triangles that don't face  toward any of the views ?
+		var triangleData = {};
+		triangleData["points"] = pointList["points"];
+		triangleData["triangles"] = pointList["triangles"];
+		var triangleFullPath = Code.appendToPath(surfaceDirectory,fileNameTriangles);
+		surfaceData["triangles"] = fileNameTriangles;
+		surfaceData["triangleCount"] = triangleCount;
+		var fxnSaveSurfaceComplete = function(){
+			console.log("saved surfaceData");
+		}
+		var fxnSaveTrianglesComplete = function(){
+			console.log("saved triangleData");
+			project.saveFileFromData(surfaceData, surfaceFilename, fxnSaveSurfaceComplete, project);
+		}
+		project.saveFileFromData(triangleData, triangleFullPath, fxnSaveTrianglesComplete, project);
 	}
-
 
 	// create triangle-view best-vertex mapping
-	var loadedTrianglesFxn = function(data){
-		// ..
+	var loadedTrianglesFxn = function(viewData,triangleData){
+		var textureDimension = 2048;
+		var resolutionScale = 0.5; // of maximum possible source input
+		console.log("loadedTrianglesFxn");
+		console.log(viewData,triangleData);
+		// output texture size
+		var textureSize = new V2D(textureDimension,textureDimension);
+		// camera lookup
+		var cameras = viewData["cameras"];
+		var cameraFromID = {};
+		for(var i=0; i<cameras.length; ++i){
+			var cam = cameras[i];
+			var K = cam["K"];
+				K = Matrix.fromObject(K);
+			cameraFromID[cam["id"]] = K;
+		}
+		// views to transforms & resolutions
+		var views = viewData["views"];
+		var resolutions = [];
+		var transforms = [];
+		var cameras = [];
+		for(var i=0; i<views.length; ++i){
+			var tv = views[i];
+			var viewID = tv["id"]
+			var camID = tv["camera"];
+			var K = cameraFromID[camID];
+			var viewTransform = tv["transform"];
+			var transform = Matrix.fromObject(viewTransform); // extrinsic
+			var view = project.viewFromID(viewID);
+			var size = view.maximumImageSize();
+			resolutions.push(size);
+			transforms.push(transform);
+			cameras.push(K);
+		}
+		// points+lists to triangles
+		var points = triangleData["points"];
+		var triangles = triangleData["triangles"];
+		var triangles3D = Tri3D.uniquePointListToTriangles(points,triangles); 
+		// 
+		console.log(transforms,cameras,resolutions,triangles3D,textureSize,resolutionScale);
+		var info = R3D.optimumTriangleTextureImageAssignment(transforms,cameras,resolutions,triangles3D,textureSize,resolutionScale);
+
+		console.log(info);
+
+
+		// 			// var size = view.aspectRatio();
+
+
+
+
+
+
 		throw "for each triangle corner: find possible views to use; solve for best mapping sets"
 	}
+
 	// iterate thru triangle generation
-	var loadedTexturessFxn = function(data){
+	var loadedTexturesFxn = function(data){
 		// ..
 		throw "iterate on texture loadings"
 	}
 
 	project.loadDataFromFile(surfaceFilename, loadedSurfaceFxn);
-	
-
 }
 
 
@@ -16583,48 +16673,50 @@ App3DR.ProjectManager.prototype.trianglesTexturize = function(){ // find uv sour
 		// get view orientations
 		//
 		// convert to common format:
-		vertexes = Code.copyArray(vertexes);
-		triangles = Code.copyArray(triangles);
-		for(var i=0; i<vertexes.length; ++i){
-			var vertex = vertexes[i];
-			var x = vertex["X"];
-			var y = vertex["Y"];
-			var z = vertex["Z"];
-			if(x===undefined){
-				x = vertex["x"];
-				y = vertex["y"];
-				z = vertex["z"];
-			}
-			vertexes[i] = new V3D(x,y,z);
-		}
-		for(var i=0; i<triangles.length; ++i){
-			var triangle = triangles[i];
-			var a = triangle["A"];
-			var b = triangle["B"];
-			var c = triangle["C"];
-				a = a["i"];
-				b = b["i"];
-				c = c["i"];
-			triangles[i] = [a,b,c];
-		}
-		// // 
-		// load from triangle file
-		console.log(triangles);
-		console.log(vertexes);
+		// vertexes = Code.copyArray(vertexes);
+		// triangles = Code.copyArray(triangles);
+		// for(var i=0; i<vertexes.length; ++i){
+		// 	var vertex = vertexes[i];
+		// 	var x = vertex["X"];
+		// 	var y = vertex["Y"];
+		// 	var z = vertex["Z"];
+		// 	if(x===undefined){
+		// 		x = vertex["x"];
+		// 		y = vertex["y"];
+		// 		z = vertex["z"];
+		// 	}
+		// 	vertexes[i] = new V3D(x,y,z);
+		// }
+		// for(var i=0; i<triangles.length; ++i){
+		// 	var triangle = triangles[i];
+		// 	var a = triangle["A"];
+		// 	var b = triangle["B"];
+		// 	var c = triangle["C"];
+		// 		a = a["i"];
+		// 		b = b["i"];
+		// 		c = c["i"];
+		// 	triangles[i] = [a,b,c];
+		// }
+		// // // 
+		// // load from triangle file
+		// console.log(triangles);
+		// console.log(vertexes);
 
-		var triangles3D = [];
-		for(var i=0; i<triangles.length; ++i){
-			var triangle = triangles[i];
-			var a = triangle[0];
-			var b = triangle[1];
-			var c = triangle[2];
-			a = vertexes[a];
-			b = vertexes[b];
-			c = vertexes[c];
-			var t = new Tri3D(a.copy(),b.copy(),c.copy());
-			triangles3D.push(t);
-		}
-		console.log("TRIANGLES START: "+triangles3D.length);
+		// var triangles3D = [];
+		// for(var i=0; i<triangles.length; ++i){
+		// 	var triangle = triangles[i];
+		// 	var a = triangle[0];
+		// 	var b = triangle[1];
+		// 	var c = triangle[2];
+		// 	a = vertexes[a];
+		// 	b = vertexes[b];
+		// 	c = vertexes[c];
+		// 	var t = new Tri3D(a.copy(),b.copy(),c.copy());
+		// 	triangles3D.push(t);
+		// }
+		// console.log("TRIANGLES START: "+triangles3D.length);
+		var triangles3D = Tri3D.uniquePointListToTriangles(vertexes,triangles);
+		console.log("updated not checked");
 // throw "?";
 		// 3D-2D texture sourcing
 		var info = R3D.optimumTriangleTextureImageAssignment(transforms,cameras,resolutions,triangles3D,textureSize,resolutionScale);

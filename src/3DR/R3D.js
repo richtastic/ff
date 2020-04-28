@@ -6,6 +6,7 @@ function R3D(){
 
 // ------------------------------------------------------------------------------------------- conditioning utilities
 R3D.centroid2D = function(points2D){
+	// throw "V2D.average";
 	var p, weight, cen = new V2D(0,0);
 	var weightTotal = 0.0;
 	for(var i=points2D.length-1; i>=0; i--){
@@ -22,6 +23,7 @@ R3D.centroid2D = function(points2D){
 	return cen;
 }
 R3D.centroid3D = function(points3D){ // currently assumes constant weights
+	// throw "V3D.average";
 	var i, len=points3D.length;
 	var cen = new V3D();
 	for(i=0;i<len;++i){
@@ -28302,22 +28304,27 @@ R3D.TextureTriangle.prototype.subdivide = function(){
 	var verts = [];
 	return {"triangles":tris, "vertexes":verts};
 }
-R3D.optimumTriangleTextureImageAssignment = function(transforms,cameras,resolutions,triangles3D,textureSize,resolutionScale){ // COULD HAVE NEW TRIANGLES
+R3D.optimumTriangleTextureImageAssignment = function(extrinsics,cameras,resolutions,triangles3D,textureSize,resolutionScale){ // can generate new triangles
 	console.log("optimumTriangleTextureImageAssignment");
-	console.log(triangles3D);
 	resolutionScale = resolutionScale!==undefined ? resolutionScale : 1.0;
-	// console.log(transforms,cameras,resolutions,triangles3D,textureSize,resolutionScale);
-	// scale camera matrices up to resolution:
+	var texturePadding = 4; // 2 - 8 - should base off of textureSize 16=0 32=0 64=1 128=1 256=1 512=2 1024=4 2048=8 4096=16
+	// absolutes
+	var absolutes = [];
+	for(var i=0; i<extrinsics.length; ++i){
+		var extrinsic = extrinsics[i];
+		var absolute = Matrix.inverse(extrinsic);
+		absolutes[i] = absolute;
+	}
+	// scale camera matrices up to resolution
 	cameras = Code.copyArray(cameras);
 	for(var i=0; i<cameras.length; ++i){
-		var size = resolutions[i];
-		var cam = cameras[i].copy();
-		cam = R3D.cameraFromScaledImageSize(cam, size);
-		cameras[i] = cam;
+		var resolution = resolutions[i];
+		var camera = cameras[i].copy();
+		camera = R3D.cameraFromScaledImageSize(camera, resolution);
+		cameras[i] = camera;
 	}
 	var maxDimension = Math.min(textureSize.x,textureSize.y);
-	// console.log("MAX DIM: "+maxDimension+" @ "+resolutionScale)
-	maxDimension = (maxDimension*resolutionScale) - 2; // 2 = padding
+		maxDimension = (maxDimension*resolutionScale) - 2*texturePadding;
 console.log("maxDimension: "+maxDimension);
 	// triangles are typically connected at the vertex -> make sure triangles are connected components
 	var tris = [];
@@ -28328,10 +28335,13 @@ console.log("maxDimension: "+maxDimension);
 	var toPoint = function(a){
 		return a.point();
 	}
-	var space = new OctTree(toPoint);
+	// get size of space 
+	var vs = [];
 	for(var i=0; i<triangles3D.length; ++i){
 		var triangle = triangles3D[i];
-		var vs = [triangle.A(),triangle.B(),triangle.C()];
+		vs[0] = triangle.A();
+		vs[1] = triangle.B();
+		vs[2] = triangle.C();
 		for(var j=0; j<vs.length; ++j){
 			var v = vs[j];
 			if(!minSpace){
@@ -28341,10 +28351,25 @@ console.log("maxDimension: "+maxDimension);
 				V3D.max(maxSpace,maxSpace,v);
 				V3D.min(minSpace,minSpace,v);
 			}
+		}
+	}
+	var size = V3D.sub(maxSpace,minSpace);
+
+	var vertexEpsilon = 1E-16; // 1/10,000,000,000,000,000
+		vertexEpsilon = vertexEpsilon * size.length();
+	var space = new OctTree(toPoint);
+		space.initWithSize(minSpace,maxSpace);
+	for(var i=0; i<triangles3D.length; ++i){
+		var triangle = triangles3D[i];
+		vs[0] = triangle.A();
+		vs[1] = triangle.B();
+		vs[2] = triangle.C();
+		for(var j=0; j<vs.length; ++j){
+			var v = vs[j];
 			var existing = space.closestObject(v);
 			if(existing){
 				var distance = V3D.distanceSquare(v,existing.point());
-				if(distance>1E-12){ // different
+				if(distance>vertexEpsilon){ // different
 					existing = null;
 				}
 			}
@@ -28361,20 +28386,17 @@ console.log("maxDimension: "+maxDimension);
 			var v = vs[j];
 			v.addTriangle(tri);
 		}
-	} // done
+	} // done converting triangles & vertexes
+	vs = null;
 	space.kill();
-	// console.log("triangles: "+tris.length);
-	// console.log("vertexes: "+verts.length);
-	// console.log("SIZE: "+minSpace+" - "+maxSpace);
 	var epsilon = V3D.sub(maxSpace,minSpace).scale(0.01);
 	minSpace.sub(epsilon);
 	maxSpace.add(epsilon);
-
+throw "CHECKED THIS FAR"
 	// triangles
 	var toCuboid = function(a){
 		return a.toCuboid();
 	}
-	//var triangleSpace = new OctSpace(toCuboid,minSpace,maxSpace);
 	// Q
 	var sortRank = function(a,b){
 		if(a==b){
@@ -28430,6 +28452,12 @@ console.log(viewCenters);
 			if(angle>maxViewAngle){
 				continue;
 			}
+
+
+			// TODO: ignore views the point is behind
+
+
+
 			// triangle occlusions
 			var org = vertPoint;
 			var des = viewCenter;
@@ -28496,6 +28524,7 @@ console.log(viewCenters);
 			--i;
 			tri.removeFromAll();
 		}else{
+			// entirely possible for a poor triangulation to result in triangles not facing views == drop these triangles anyway
 			if(tri.views().length==0){
 				throw "0";
 			}
@@ -28696,16 +28725,30 @@ index = null;
 				}
 			}
 			tri.scale(maxScale);
-			if(overMax){
-				throw "need to subdivide triangle to fit at desired resolution"
-				//			divide triangle * adjacent triangles up
-				//			new vertex possible views = all of triangle's initial settings
-				//			add any adjacent frontier vertices to Q
-				// 			check = true
-				// newCheckTris.push(new tris go here);
-			}
+			// if(overMax){
+			// 	throw "need to subdivide triangle to fit at desired resolution -- at this location, this only subdivides frontier triangles"
+			// 	//			divide triangle * adjacent triangles up
+			// 	//			new vertex possible views = all of triangle's initial settings
+			// 	//			add any adjacent frontier vertices to Q
+			// 	// 			check = true
+			// 	// newCheckTris.push(new tris go here);
+			// }
 		}
 		console.log("MAX EDGE SIZE: "+maxEdgeLength+" / "+maxDimension);
+	}
+
+
+
+	throw "DO MAX SIZE CHECK FOR EVERY TRIANGLE & SUBDIVIDE TRIANGLES AS NECESSARY"
+	// overMax
+	if(overMax){
+		console.log("each vertex on each of 3 edges picks the view with highest priority");
+		throw "need to subdivide triangle to fit at desired resolution"
+		//			divide triangle * adjacent triangles up
+		//			new vertex possible views = all of triangle's initial settings
+		//			add any adjacent frontier vertices to Q
+		// 			check = true
+		// newCheckTris.push(new tris go here);
 	}
 
 

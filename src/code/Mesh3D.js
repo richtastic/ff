@@ -4526,8 +4526,8 @@ Mesh3D.prototype._projectPointIteration_MLS = function(startingLocation, neighbo
 	// get neighborhood
 	// var neighbors = space.objectsInsideSphere(neighborhoodCenter, neighborhoodRadius);
 	var neighbors = space.kNN(neighborhoodCenter, neighborhoodCount);
-
-
+	
+	
 	// get radius of furthest point & then get all points within that radius
 	var maxDistanceSquare = 0;
 	for(var i=0; i<neighbors.length; ++i){

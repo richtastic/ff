@@ -320,3 +320,46 @@ Tri3D.arrayToUniquePointList = function(tris3D){
 	}
 	return {"points":points, "triangles":triObjects};
 }
+Tri3D.uniquePointListToTriangles = function(vertexes,triangles){
+	// local copy for changing
+	vertexes = Code.copyArray(vertexes);
+	triangles = Code.copyArray(triangles);
+	for(var i=0; i<vertexes.length; ++i){
+		var vertex = vertexes[i];
+		var x = vertex["X"];
+		var y = vertex["Y"];
+		var z = vertex["Z"];
+		if(x===undefined){
+			x = vertex["x"];
+			y = vertex["y"];
+			z = vertex["z"];
+		}
+		vertexes[i] = new V3D(x,y,z);
+	}
+	for(var i=0; i<triangles.length; ++i){
+		var triangle = triangles[i];
+		var a = triangle["A"];
+		var b = triangle["B"];
+		var c = triangle["C"];
+		if(Code.isObject(a)){
+			a = a["i"];
+			b = b["i"];
+			c = c["i"];
+		}
+		triangles[i] = [a,b,c];
+	}
+	var triangles3D = [];
+	for(var i=0; i<triangles.length; ++i){
+		var triangle = triangles[i];
+		var a = triangle[0];
+		var b = triangle[1];
+		var c = triangle[2];
+		a = vertexes[a];
+		b = vertexes[b];
+		c = vertexes[c];
+		var t = new Tri3D(a.copy(),b.copy(),c.copy());
+		triangles3D.push(t);
+	}
+	console.log("TRIANGLES START: "+triangles3D.length);
+	return triangles3D;
+}

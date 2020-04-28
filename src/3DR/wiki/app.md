@@ -454,6 +454,78 @@ MISSING:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+iterateSurfaceProcess
+
+
+triangle -> texture steps:
+x A) load points
+- get triangles to approx surface
+=> save triangles
+B) load views + triangles
+- each triangle vertex is assigned some views that it's visible in
+	- for each view (center / normal)
+		get list of views:
+			- in front of point
+			- facing point avg normal?
+			- not intersecting any triangle geometry
+			- projects inside image
+- optimize triangles by minimizing the number of multi-textured(frontier) triangles
+	- each vertex/triangle picks prioritized image source
+- subdivide large triangles
+- triangle pack textures into atlas
+=> save textures
+C) load views + textures
+- load a view image at a time
+- get a list of texture images that need to be updated:
+	- for each triangle / vertex
+		- if any vertex references this view: add it to hash-list
+- for every texture referencing view:
+	- load texture
+	- update every triangle
+	- save texture
+=> save (update) textures
+D) load textures, load views
+	- make new scene entry 
+	- save union of data to scene file
+	- update project file
+E) load scene
+	- convert triangle+texture references to DAE
+=> save 
+
+DAE [print to console]
+
+
+
+- padding value needs to be carried along to when triangles are filled in
+
+
+exiusting:
+trianglesTexturize
+
+
+
+var info = R3D.optimumTriangleTextureImageAssignment(transforms,cameras,resolutions,triangles3D,textureSize,resolutionScale);
+
+R3D.optimumTriangleTextureImageAssignment
+
+trianglesPacking
+
+sceneToDAE
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 - review why tesselation is failing
 - failing thoughts:
 	- get sphere around kNN count? [is there much of a difference]
