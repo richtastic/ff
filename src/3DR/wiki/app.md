@@ -422,8 +422,6 @@ https://cloud.google.com/appengine/docs/nodejs/
 - encryption
 
 
-
-04/28 - triangulation algorithm incorporated
 04/30 - texturing algorithm incorporated
 05/03 - scene info from triangles + textures
 05/06 - output test to device [dae]
@@ -455,6 +453,27 @@ MISSING:
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 iterateSurfaceProcess
+
+
+- each triangle is initialized with a view that has support from all vertexes [view intersect]
+- OTHERWISE it has no view intersect and is dropped as an impossible view
+
+- each vertex is initialized with the best view that is consistent with each of it's triangles
+- OTHERWISE the vertex view is assigned null []
+
+- if a vertex is assigned a NULL index => it is not able to flip
+- if a vertex does 
+
+
+on output:
+	- if any of a triangle's vertexes are null
+	=> use the assigned triangle view for each output texture assignment
+	- else use the individual vertexes for texture assignment
+
+
+
+of it's triangle parent
+
 
 
 triangle -> texture steps:
@@ -496,6 +515,10 @@ DAE [print to console]
 
 
 
+- can a vertex also have a per-triangle texture assignment ?
+
+
+
 - padding value needs to be carried along to when triangles are filled in
 
 
@@ -515,7 +538,20 @@ sceneToDAE
 
 
 
-
+- increase texturizing accuracy
+	- instead of using projected points as source of truth:
+	- use projected point as approximate location
+	- search neighborhood (pixels) for more precise projection location
+	=> requires loading multiple images at a time to have needle/haystack finding
+		- first & second images loaded
+		- first is taken as source of truth
+		- secondary are used as discovered locations
+		- estimated point => found point
+		=> further estimated points must first load a view with a found point 
+	=> primary view may need to be view with:
+		- most normal/close ranking
+		- highest number of triangle references
+...
 
 
 

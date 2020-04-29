@@ -11009,11 +11009,14 @@ App3DR.ProjectManager.prototype.iterateSurfaceProcess = function(){
 		var points = triangleData["points"];
 		var triangles = triangleData["triangles"];
 		var triangles3D = Tri3D.uniquePointListToTriangles(points,triangles); 
-		// 
+		// source image assignment
 		console.log(transforms,cameras,resolutions,triangles3D,textureSize,resolutionScale);
 		var info = R3D.optimumTriangleTextureImageAssignment(transforms,cameras,resolutions,triangles3D,textureSize,resolutionScale);
 
 		console.log(info);
+		// texture packing
+		// var info = R3D.optimumTriangleTexturePacking(textureSize,triangles2D,resolutionScale,maxSize);
+		// console.log(info);
 
 
 		// 			// var size = view.aspectRatio();

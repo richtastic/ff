@@ -27990,28 +27990,19 @@ R3D.TextureVertex.prototype.point = function(point){
 	}
 	return this._point;
 }
-R3D.TextureVertex.prototype.setPointsForViews = function(views,points){
-	this._projectedViews = views;
-	this._projectedPoints = points;
-}
-R3D.TextureVertex.prototype.pointForView = function(viewIndex){
-	var views = this._projectedViews;
-	for(var i=0; i<views.length; ++i){
-		if(views[i]==viewIndex){
-			return this._projectedPoints[i];
-		}
-	}
-	return null;
-	/*
-	var views = this._views;
-	for(var i=0; i<views.length; ++i){
-		if(views[i]==viewIndex){
-			return this._points[i];
-		}
-	}
-	return null;
-	*/
-}
+// R3D.TextureVertex.prototype. = function(views,points){
+// 	this._projectedViews = views;
+// 	this._projectedPoints = points;
+// }
+// R3D.TextureVertex.prototype.pointForView = function(viewIndex){
+// 	var views = this._views;
+// 	for(var i=0; i<views.length; ++i){
+// 		if(views[i]==viewIndex){
+// 			return this._projectedPoints[i];
+// 		}
+// 	}
+// 	return null;
+// }
 R3D.TextureVertex.prototype.rank = function(){
 	var index = this._index;
 	if(index>=0){
@@ -28030,10 +28021,10 @@ R3D.TextureVertex.prototype.views = function(){
 }
 R3D.TextureVertex.prototype.view = function(){
 	var index = this._index;
-	if(index>=0){
+	if(index!==null && index>=0){
 		return this._views[index];
 	}
-	return 0;
+	return null;
 }
 R3D.TextureVertex.prototype.adjacentVertexes = function(){
 	var list = [];
@@ -28060,7 +28051,20 @@ R3D.TextureVertex.prototype.viewAndRanks = function(vs,rs,ps){
 		this._index = -1;
 	}
 }
+R3D.TextureVertex.prototype.projectedPointForView = function(viewID){
+	var views = this._views;
+	for(var i=0; i<views.length; ++i){
+		if(views[i]==viewID){
+			var point = this._points[i];
+			return point;
+		}
+	}
+	return null;
+}
 R3D.TextureVertex.prototype.isFrontier = function(){
+	if(this._index===null){
+		return false;
+	}
 	var adj = this.adjacentVertexes();
 	var view = this.view();
 	var frontier = false;
@@ -28072,7 +28076,8 @@ R3D.TextureVertex.prototype.isFrontier = function(){
 	}
 	return frontier;
 }
-R3D.TextureVertex.prototype.selectFirstAllowedView = function(){
+R3D.TextureVertex.prototype.selectFirstAllowedView = function(){ // pick a view that is consistent with all tris, or null
+	this._index = null;
 	var views = this._views;
 	if(views.length>0){
 		var tris = this._triangles;
@@ -28092,8 +28097,13 @@ R3D.TextureVertex.prototype.selectFirstAllowedView = function(){
 			}
 		}
 	}
+	// console.log(this);
+	// console.log(this._triangles);
+	// throw "no possible union"
 	return false;
 }
+
+
 // R3D.TextureTriangle.prototype.initFromAllowedViews = function(){
 // 	var tris = this._triangles;
 // 	var views = this._views;
@@ -28113,7 +28123,7 @@ R3D.TextureVertex.prototype.selectFirstAllowedView = function(){
 // 		}
 // 	}
 // }
-R3D.TextureVertex.prototype.canFlipView = function(){
+R3D.TextureVertex.prototype.canFlipView = function(){ // check to see if the vertex can flip to another view wich will reduce frontier count
 	var views = this._views;
 	if(views.length>0){
 		var tris = this._triangles;
@@ -28121,21 +28131,20 @@ R3D.TextureVertex.prototype.canFlipView = function(){
 		var minCount = null;
 		var minIndex = null;
 		var wasCount = null;
-		// console.log("canFlipView: "+views.length+" ? ");
 		for(var i=0; i<views.length; ++i){
 			var view = views[i];
-			// console.log(view)
 			var canUse = true;
 			for(var j=0; j<tris.length; ++j){
 				var tri = tris[j];
 				if(!tri.allowedView(view)){
 					canUse = false;
+					break;
 				}
 			}
 			var count = null;
 			if(canUse){
+				var count = 0;
 				this._index = i;
-				count = 0;
 				for(var j=0; j<tris.length; ++j){
 					var tri = tris[j];
 					if(tri.isFrontier()){
@@ -28154,10 +28163,6 @@ R3D.TextureVertex.prototype.canFlipView = function(){
 			}
 		}
 		this._index = wasIndex; // restore state
-		// can change if : min index exists & current DNE  |  min count < current count
-		if(wasCount===null){
-			return null;
-		}
 		// console.log(" ->: "+wasIndex+" @ "+wasCount+" & "+minIndex+" @ "+minCount+" ? ");
 		if(wasCount===null){
 			if(minCount!==null){
@@ -28175,6 +28180,9 @@ R3D.TextureVertex.prototype.flipView = function(newIndex){
 	}
 }
 R3D.TextureVertex.prototype.activeViews = function(){
+	if(this._index===null){
+		return [];
+	}
 	var views = [];
 	var tris = this._triangles;
 	for(var i=0; i<tris.length; ++i){
@@ -28226,7 +28234,7 @@ R3D.TextureTriangle.prototype.toCuboid = function(){
 	}
 	return this._cuboid;
 }
-R3D.TextureTriangle.prototype.initAllowedViews = function(l){
+R3D.TextureTriangle.prototype.initAllowedViews = function(){ // a list of only the views all vertexes have in common
 	var verts = this._vertexes;
 	var intersect = null;
 	for(var i=0; i<verts.length; ++i){
@@ -28236,21 +28244,18 @@ R3D.TextureTriangle.prototype.initAllowedViews = function(l){
 		}else{
 			intersect = Code.arrayIntersect(intersect,views);
 		}
-if(l){
-	console.log("   "+i+" = "+intersect);
-}
 	}
-if(l){
-	console.log(" => "+intersect);
-}
-	this._views = intersect;
+	this._views = intersect; // TODO: prioritize on angle/distance
 	return intersect.length>0;
 }
 R3D.TextureTriangle.prototype.activeViews = function(){
 	var views = [];
 	var v = this._vertexes;
 	for(var i=0; i<v.length; ++i){
-		Code.addUnique(views,v[i].view());
+		var view = v[i].view();
+		if(view){
+			Code.addUnique(views,view);
+		}
 	}
 	return views;
 }
@@ -28353,8 +28358,12 @@ console.log("maxDimension: "+maxDimension);
 			}
 		}
 	}
+	// add padding to size
 	var size = V3D.sub(maxSpace,minSpace);
-
+	var epsilon = size.scale(0.001);
+	minSpace.sub(epsilon);
+	maxSpace.add(epsilon);
+	V3D.sub(size,maxSpace,minSpace);
 	var vertexEpsilon = 1E-16; // 1/10,000,000,000,000,000
 		vertexEpsilon = vertexEpsilon * size.length();
 	var space = new OctTree(toPoint);
@@ -28389,10 +28398,7 @@ console.log("maxDimension: "+maxDimension);
 	} // done converting triangles & vertexes
 	vs = null;
 	space.kill();
-	var epsilon = V3D.sub(maxSpace,minSpace).scale(0.01);
-	minSpace.sub(epsilon);
-	maxSpace.add(epsilon);
-throw "CHECKED THIS FAR"
+
 	// triangles
 	var toCuboid = function(a){
 		return a.toCuboid();
@@ -28405,25 +28411,21 @@ throw "CHECKED THIS FAR"
 		return a.rank() < b.rank() ? -1 : 1;
 	}
 	var Q = new PriorityQueue(sortRank);
-
-	// aux
-	var viewCount = transforms.length;
+	// get view info
+	var viewCount = absolutes.length;
 	var viewNormals = [];
 	var viewCenters = [];
 	for(var i=0; i<viewCount; ++i){
-		var transform = transforms[i];
-			var org = new V3D(0,0,0);
-			var normal = new V3D(0,0,1);
-			transform.multV3DtoV3D(org,org);
-			transform.multV3DtoV3D(normal,normal);
-			normal.sub(org);
-			normal.norm();
-		var center = org;
+		var absolute = absolutes[i];
+		var center = new V3D(0,0,0);
+		var normal = new V3D(0,0,1);
+		absolute.multV3DtoV3D(center,center);
+		absolute.multV3DtoV3D(normal,normal);
+		normal.sub(center);
+		normal.norm();
 		viewNormals.push(normal);
 		viewCenters.push(center);
 	}
-console.log(viewNormals);
-console.log(viewCenters);
 	// insert triangles into space
 	var triangleSpace = new OctSpace(toCuboid,minSpace,maxSpace);
 	triangleSpace.initWithObjects(tris);
@@ -28432,42 +28434,46 @@ console.log(viewCenters);
 		return a["rank"] > b["rank"] ? -1 : 1; // larger number first
 	}
 	var intersectionCount = 0;
+	var maxNormalAngle = Code.radians(90.0);
 	var maxViewAngle = Code.radians(90.0);
+	var ray = new V3D(); // reuse
+	var viewToPoint = new V3D(); // reuse
 	for(var i=0; i<verts.length; ++i){
 		var vert = verts[i];
 		var vertPoint = vert.point();
 		var vertNormal = vert.normal();
+		var vertNormalInverse = vertNormal.copy().flip();
 		// get list of views acceptible to project to
 		var viewList = [];
 		// view facing opposite to triangle normal
 		for(var j=0; j<viewCount; ++j){
 			var viewCenter = viewCenters[j];
 			var viewNormal = viewNormals[j];
-			var viewTransform = transforms[j];
+			var viewExtrinsic = extrinsics[j];
 			var viewSize = resolutions[j];
 			var K = cameras[j];
 			var distortions = null;
-			// aiming toward camera
-			var angle = Math.PI - V3D.angle(viewNormal,vertNormal); // 180 = good | 0 = bad
+			// aiming toward camera - culling
+			var angle = V3D.angle(viewNormal,vertNormalInverse);
+			if(angle>maxNormalAngle){
+				continue;
+			}
+			// in front of camera
+			viewToPoint = V3D.sub(viewToPoint, vertPoint,viewCenter);
+			var angle = V3D.angle(viewNormal,viewToPoint);
 			if(angle>maxViewAngle){
 				continue;
 			}
-
-
-			// TODO: ignore views the point is behind
-
-
-
-			// triangle occlusions
-			var org = vertPoint;
-			var des = viewCenter;
-			var dir = V3D.sub(des,org);
+			// triangle occlusions - intersections [view to point]
+			var org = viewCenter;
+			var dir = viewToPoint;
+			// V3D.sub(ray, );
 			var potentialTriangles = triangleSpace.objectsIntersectRay(org,dir);
 			if(potentialTriangles.length>0){
 				var intersection = null;
 				for(var t=0; t<potentialTriangles.length; ++t){
 					var tri = potentialTriangles[t];
-					if(tri.hasVertex(vert)){ // ignore tris containing vertex
+					if(tri.hasVertex(vert)){ // ignore tris containing vertex - no self intersection
 						continue;
 					}
 					var intersect = Code.intersectRayTri(org,dir, tri.A(),tri.B(),tri.C(),tri.normal());
@@ -28482,12 +28488,12 @@ console.log(viewCenters);
 				}
 			}
 			// get projected point for view
-			var projected2D = R3D.projectPoint3DToCamera2DForward(vertPoint, viewTransform, K, distortions, false);
+			var projected2D = R3D.projectPoint3DToCamera2DForward(vertPoint, viewExtrinsic, K, distortions, false);
 			if(!projected2D){
-				console.log(vertPoint, viewTransform, K, distortions, false);
+				console.log(vertPoint, viewExtrinsic, K, distortions, false);
 				throw "BAD PROJECTED POINT ??? "+i;
 			}
-			// inside image:
+			// inside image
 			if( !((0<=projected2D.x && projected2D.x<viewSize.x) && (0<=projected2D.y && projected2D.y<viewSize.y)) ){
 				continue;
 			}
@@ -28512,9 +28518,9 @@ console.log(viewCenters);
 	}
 	console.log("INTERSECTIONS FOUND: intersectionCount:"+intersectionCount);
 	triangleSpace.kill(); // done
-	// triangles init states
+
+	// triangles init states - remove triangles with no
 	badTris = 0;
-	console.log(tris);
 	for(var i=0; i<tris.length; ++i){
 		var tri = tris[i];
 		var result = tri.initAllowedViews();
@@ -28524,14 +28530,13 @@ console.log(viewCenters);
 			--i;
 			tri.removeFromAll();
 		}else{
-			// entirely possible for a poor triangulation to result in triangles not facing views == drop these triangles anyway
 			if(tri.views().length==0){
 				throw "0";
 			}
 		}
 	}
-	console.log("impossible Tris: "+badTris);
-	// init vert states
+	console.log("impossible Tris: "+badTris+" / "+tris.length);
+	// remove verts with no triangles (which were removed)
 	var badVerts = 0;
 	for(var i=0; i<verts.length; ++i){
 		var vert = verts[i];
@@ -28539,73 +28544,54 @@ console.log(viewCenters);
 			badVerts += 1;
 			Code.removeElementAt(verts,i);
 			--i;
-			continue;
 		}
-		/*
-		var result = vert.selectFirstAllowedView();
-		if(!result){
-			console.log(" .. no allowed views:");
-			console.log(vert);
-			console.log(vert.view());
-			console.log(vert.views());
-			var tris = vert.triangles();
-			for(var t=0; t<tris.length; ++t){
-				console.log(" ................. ");
-				var tri = tris[t];
-				console.log(tri.views());
-				console.log(tri.allowedView(vert.view()));
-
-				var result = tri.initAllowedViews(true);
-				console.log("RESULT: "+result);
-
-			}
-			console.log(tris);
-			console.log(vert);
-			console.log();
-
-
-			throw "I'm a vertex without an allowed view ?";
-			badVerts.push(vert);
-			Code.removeElementAt(verts,i);
-			--i;
-			continue;
-		}
-		*/
 	}
-	console.log("impossibleVerts: "+badVerts);
+	console.log("empty Verts: "+badVerts+" / "+verts.length);
+
+	// initialize vertexes with an assignment
+	for(var i=0; i<verts.length; ++i){
+		var vert = verts[i];
+		vert.selectFirstAllowedView();
+	}
+
+	// debug check that no impossible tris still exist
+	for(var i=0; i<tris.length; ++i){
+		var tri = tris[i];
+		if(tri._views.length==0){
+			throw "NOOO"
+		}
+	}
+
+	// vertexes that are impossible (but will belong to )
+	badVerts = 0;
+	for(var i=0; i<verts.length; ++i){
+		var vert = verts[i];
+		if(vert._index===null){
+			++badVerts;
+		}
+	}
+	console.log("impossible vertex fadings: "+badVerts);
+
 	// get all initial frontier vertexes
+	var badVerts = 0;
 	for(var i=0; i<verts.length; ++i){
 		var vert = verts[i];
 		if(vert.isFrontier()){
 			Q.push(vert);
 		}
-		// TEST:
-		/*
-		var c = vert.view();
-		for(var j=0; j<vert._triangles.length; ++j){
-			var t = vert._triangles[j];
-			var allowed = t.allowedView(c);
-			if(!allowed){
-				throw "set to un allowed view";
-			}
-		}
-		*/
 	}
 
-
-
-
-
-
-
+// throw "HERE"
 
 	// place all frontier vertices into queue (any triangle with vertices not pointing to same texture)
 	var check = true;
-	var sizeCheckTris = Code.copyArray(tris);
-	while(check){
+var count = 10;
+	while(check && count>0){
+--count;
 		console.log("frontier vertexes: "+Q.length());
 		check = false;
 		var iteration = 0;
+		var flipCount = 0;
 		while(!Q.isEmpty()){
 			++iteration;
 			var vertex = Q.pop();
@@ -28614,20 +28600,27 @@ console.log(viewCenters);
 				continue;
 			}
 			var index = vertex.canFlipView();
-// to do: uncomment
-index = null;
 			if(index!==null && index>=0){
+				++flipCount;
 				vertex.flipView(index);
 				var adj = vertex.adjacentVertexes();
 				adj.push(vertex);
 				for(var i=0; i<adj.length; ++i){
-					if(!adj[i].isFrontier()){
-						Q.removeObject(adj[i]);
+					var a = adj[i];
+					var isFrontier = a.isFrontier();
+					if(isFrontier){
+						if(!Q.exists(a)){
+							Q.push(a);
+						}
+					}else{
+						PriorityQueue
+						Q.removeObject(a);
 					}
 				}
 			}
 		}
-
+		// check = flipCount>0;
+console.log("iterated thru frontiers: "+flipCount);
 		// feedback:
 		var cnt1 = 0;
 		for(var i=0; i<verts.length; ++i){
@@ -28638,104 +28631,126 @@ index = null;
 			cnt2 += tris[i].isFrontier() ? 1 : 0;
 		}
 		console.log(iteration+"  count: "+Q.length()+" ---- frontiers: "+cnt1+" / "+cnt2);
+	}
 
-
-
-		// need to get all projected points for deciding views:
-		for(var iV=0; iV<verts.length; ++iV){
-			var vert = verts[iV];
-			var vertPoint = vert.point();
-			var union = vert.activeViews();
-			// TODO: ONLY NEED TO REPEAT IF PROJECTIONS DON'T ALREADY EXIST
-			var points = [];
-			for(var jV=0; jV<union.length; ++jV){
-				var v = union[jV];
-				var viewTransform = transforms[v];
+	/*
+	// need to get all projected points for deciding views:
+	for(var iV=0; iV<verts.length; ++iV){
+		var vert = verts[iV];
+		var vertPoint = vert.point();
+		var union = vert.activeViews();
+		var points = [];
+		for(var jV=0; jV<union.length; ++jV){
+			var v = union[jV];
+			var projected2D = vert.projectedPointForView(v);
+			if(!projected2D){
+				console.log("view not found -- why would this happen?");
+				throw "?";
+				// throw "get point"
+				var extrinsic = extrinsics[v];
 				var viewSize = resolutions[v];
 				var K = cameras[v];
 				var distortions = null;
-				var projected2D = R3D.projectPoint3DToCamera2DForward(vertPoint, viewTransform, K, distortions, false);
+				var projected2D = R3D.projectPoint3DToCamera2DForward(vertPoint, extrinsic, K, distortions, false);
 				if(!projected2D){
 					throw "bad point";
 				}
-				points.push(projected2D);
 			}
-			vert.setPointsForViews(union,points);
+			points.push(projected2D);
 		}
-
-		var maxEdgeLength = null;
-		var newCheckTris = [];
-		for(var i=0; i<sizeCheckTris.length; ++i){
-			var tri = sizeCheckTris[i];
-			var vx = tri.vertexes();
-			var vs = tri.activeViews();
-			var overMax = false;
-			var x0 = vx[0];
-			var x1 = vx[1];
-			var x2 = vx[2];
-			var l01 = V3D.distance(x0.point(),x1.point());
-			var l02 = V3D.distance(x0.point(),x2.point());
-			var l12 = V3D.distance(x1.point(),x2.point());
-			var maxScale = null;
-			for(var j=0; j<vs.length; ++j){
-				var v = vs[j];
-				var ps = [];
-				for(var k=0; k<vx.length; ++k){
-					var x = vx[k];
-					var p = x.pointForView(v);
-					if(!p){
-						console.log(tri);
-						console.log(vx);
-						console.log(x);
-						console.log(tri.allowedView(v));
-						throw "don't have a p: "+i+":"+j+" = "+v;
-					}
-					ps.push(p);
-				}
-				if(ps[0] && ps[1] && ps[2]){
-					var d01 = V2D.distance(ps[0],ps[1]);
-					var d02 = V2D.distance(ps[0],ps[2]);
-					var d12 = V2D.distance(ps[1],ps[2]);
-					d01 *= resolutionScale;
-					d02 *= resolutionScale;
-					d12 *= resolutionScale;
-					// scale up into proportional size:
-					var r01 = d01/l01;
-					var r02 = d02/l02;
-					var r12 = d12/l12;
-					// projected-scaled lengths might be different
-					d01 = Math.max(l01*r02,l01*r12,d01);
-					d02 = Math.max(l02*r01,l02*r12,d02);
-					d12 = Math.max(l12*r01,l12*r02,d12);
-					// POSSIBLE VERY SKEWED TRIANGLE / PROJECTION => LIMIT ITERATIONS
-					var max = Math.max(d01,d02,d12);
-						if(maxEdgeLength===null){
-							maxEdgeLength = max;
-						}
-						maxEdgeLength = Math.max(maxEdgeLength,max);
-					if(max>maxDimension){
-						console.log("too big: "+max+" / "+maxDimension);
-						overMax = true;
-						break;
-					}
-					var scale = Math.max(d01/l01,d02/l02,d12/l12);
-					if(maxScale===null || scale>maxScale){
-						maxScale = scale;
-					}
-				}
-			}
-			tri.scale(maxScale);
-			// if(overMax){
-			// 	throw "need to subdivide triangle to fit at desired resolution -- at this location, this only subdivides frontier triangles"
-			// 	//			divide triangle * adjacent triangles up
-			// 	//			new vertex possible views = all of triangle's initial settings
-			// 	//			add any adjacent frontier vertices to Q
-			// 	// 			check = true
-			// 	// newCheckTris.push(new tris go here);
-			// }
-		}
-		console.log("MAX EDGE SIZE: "+maxEdgeLength+" / "+maxDimension);
+		vert.setPointsForViews(union,points);
 	}
+	*/
+
+	// max edge length
+	var sizeCheckTris = Code.copyArray(tris);
+	var maxEdgeLength = null;
+	var newCheckTris = [];
+	for(var i=0; i<sizeCheckTris.length; ++i){
+		var tri = sizeCheckTris[i];
+		var vx = tri.vertexes();
+		var vs = tri.activeViews();
+		var overMax = false;
+		var x0 = vx[0];
+		var x1 = vx[1];
+		var x2 = vx[2];
+		var l01 = V3D.distance(x0.point(),x1.point());
+		var l02 = V3D.distance(x0.point(),x2.point());
+		var l12 = V3D.distance(x1.point(),x2.point());
+		for(var k=0; k<vx.length; ++k){
+			var x = vx[k];
+			if(x._index===null){
+				console.log(tri);
+				console.log(vx);
+				var vs = tri.views();
+
+				console.log("use these vs instead:");
+				
+				// console.log(vs);
+				// throw "i have a null index --"
+			}
+		}
+		var maxScale = null;
+		for(var j=0; j<vs.length; ++j){
+			var v = vs[j];
+			var ps = [];
+			for(var k=0; k<vx.length; ++k){
+				var x = vx[k];
+				var p = x.projectedPointForView(v);
+				// var p = x.pointForView(v);
+				if(!p){
+					console.log(tri);
+					console.log(vx);
+					console.log(x);
+					console.log(tri.allowedView(v));
+					throw "don't have a p: "+i+":"+j+" = "+v;
+				}
+				ps.push(p);
+			}
+			if(ps[0] && ps[1] && ps[2]){
+				var d01 = V2D.distance(ps[0],ps[1]);
+				var d02 = V2D.distance(ps[0],ps[2]);
+				var d12 = V2D.distance(ps[1],ps[2]);
+				d01 *= resolutionScale;
+				d02 *= resolutionScale;
+				d12 *= resolutionScale;
+				// scale up into proportional size:
+				var r01 = d01/l01;
+				var r02 = d02/l02;
+				var r12 = d12/l12;
+				// projected-scaled lengths might be different
+				d01 = Math.max(l01*r02,l01*r12,d01);
+				d02 = Math.max(l02*r01,l02*r12,d02);
+				d12 = Math.max(l12*r01,l12*r02,d12);
+				// POSSIBLE VERY SKEWED TRIANGLE / PROJECTION => LIMIT ITERATIONS
+				var max = Math.max(d01,d02,d12);
+					if(maxEdgeLength===null){
+						maxEdgeLength = max;
+					}
+					maxEdgeLength = Math.max(maxEdgeLength,max);
+				if(max>maxDimension){
+					console.log("too big: "+max+" / "+maxDimension);
+					overMax = true;
+					break;
+				}
+				var scale = Math.max(d01/l01,d02/l02,d12/l12);
+				if(maxScale===null || scale>maxScale){
+					maxScale = scale;
+				}
+			}
+		}
+		tri.scale(maxScale);
+		if(overMax){
+			throw "need to subdivide triangle to fit at desired resolution -- at this location, this only subdivides frontier triangles"
+			//			divide triangle * adjacent triangles up
+			//			new vertex possible views = all of triangle's initial settings
+			//			add any adjacent frontier vertices to Q
+			// 			check = true
+			// newCheckTris.push(new tris go here);
+		}
+	}
+	console.log("MAX EDGE SIZE: "+maxEdgeLength+" / "+maxDimension);
+
 
 
 
@@ -28815,7 +28830,7 @@ index = null;
 		outputTri2D.push(locations);
 		outputViews2D.push(vs);
 	}
-
+throw "before return"
 	// up to 3 triangles2D for each triangle3D
 	return {"vertexes3D":outputVertexes3D,"triangles3D":outputTri3D, "sources2D":outputTri2D, "destinations2D":outputTriFinal2D, "views2D":outputViews2D, "views":outputViews};
 }
