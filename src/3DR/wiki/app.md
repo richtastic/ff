@@ -454,6 +454,9 @@ MISSING:
 
 iterateSurfaceProcess
 
+- how does a null - vertex affect the surrounding tris?
+	- should other vertexes be assigned to first tri view?
+
 
 - each triangle is initialized with a view that has support from all vertexes [view intersect]
 - OTHERWISE it has no view intersect and is dropped as an impossible view

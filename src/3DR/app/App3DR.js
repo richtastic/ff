@@ -10973,7 +10973,9 @@ App3DR.ProjectManager.prototype.iterateSurfaceProcess = function(){
 	// create triangle-view best-vertex mapping
 	var loadedTrianglesFxn = function(viewData,triangleData){
 		var textureDimension = 2048;
-		var resolutionScale = 0.5; // of maximum possible source input
+		// var textureDimension = 1024;
+		// var textureDimension = 512;
+		var resolutionScale = 0.50; // of maximum possible source input
 		console.log("loadedTrianglesFxn");
 		console.log(viewData,triangleData);
 		// output texture size
@@ -11011,12 +11013,15 @@ App3DR.ProjectManager.prototype.iterateSurfaceProcess = function(){
 		var triangles3D = Tri3D.uniquePointListToTriangles(points,triangles); 
 		// source image assignment
 		console.log(transforms,cameras,resolutions,triangles3D,textureSize,resolutionScale);
+		// throw "???"
 		var info = R3D.optimumTriangleTextureImageAssignment(transforms,cameras,resolutions,triangles3D,textureSize,resolutionScale);
 
 		console.log(info);
+
+		var triangles2D = info["triangles2D"];
 		// texture packing
-		// var info = R3D.optimumTriangleTexturePacking(textureSize,triangles2D,resolutionScale,maxSize);
-		// console.log(info);
+		var info = R3D.optimumTriangleTexturePacking(textureSize,triangles2D);
+		console.log(info);
 
 
 		// 			// var size = view.aspectRatio();
@@ -11026,7 +11031,7 @@ App3DR.ProjectManager.prototype.iterateSurfaceProcess = function(){
 
 
 
-		throw "for each triangle corner: find possible views to use; solve for best mapping sets"
+		throw "BEFORE DONE"
 	}
 
 	// iterate thru triangle generation

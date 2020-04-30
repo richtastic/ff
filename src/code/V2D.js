@@ -17,7 +17,7 @@ V2D.crossOrigin = function(o,a,b){ // cross vectors oa & ob
 	return (a.x-o.x)*(b.y-o.y)-(a.y-o.y)*(b.x-o.x);
 }
 V2D.areaTri = function(a,b,c){
-	return V2D.crossTri(a,b,c)*0.5; // abs ?
+	return Math.abs(V2D.crossTri(a,b,c)*0.5);
 }
 V2D.signedAreaTri = function(a,b,c){
 	return V2D.crossTri(a,b,c)*0.5;

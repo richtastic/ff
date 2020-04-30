@@ -807,6 +807,17 @@ Code.keysUnion = function(a,b){
 	keys = Code.keys(hash);
 	return keys;
 }
+Code.unionArrays = function(arrays){ // expecting integers or strings or something that can be used as index
+	var union = {};
+	for(var i=0; i<arrays.length; ++i){
+		var array = arrays[i];
+		for(var j=0; j<array.length; ++j){
+			var value = array[j];
+			union[value+""] = value;
+		}
+	}
+	return Code.objectToArray(union);
+}
 
 Code.hasKey = function(object, key){
 	if(object){
