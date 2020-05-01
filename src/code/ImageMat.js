@@ -157,6 +157,17 @@ ImageMat.prototype.getPoint = function(val, x,y){
 	this.getPointInterpolateCubic(val,x,y);
 	//return getPointInterpolateNearest(val,x,y);
 }
+ImageMat.prototype.fill = function(color){
+	var r = this._r;
+	var g = this._g;
+	var b = this._b;
+	var len = r.length;
+	for(var i=len-1; i>=0; i--){
+		r[i] = color.x;
+		g[i] = color.y;
+		b[i] = color.z;
+	}
+}
 ImageMat.prototype.getPointInterpolateCubic = function(val, x,y){ // 4^2 = 16 points
 	var wid = this._width, hei = this._height, r = this._r, g = this._g, b = this._b;
 	var hm1 = hei-1, wm1 = wid-1;

@@ -64,8 +64,8 @@ TextureAtlas.prototype.pack = function(){
 	var packing = Rect.packBins(rects, bounds);
 	var impossible = packing["impossible"];
 	var bins = packing["bins"];
-	console.log(impossible);
-	console.log(bins);
+	// console.log(impossible);
+	// console.log(bins);
 	// wrap & pass back
 	var failed = [];
 	for(var i=0; i<impossible.length; ++i){

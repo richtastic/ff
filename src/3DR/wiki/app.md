@@ -422,12 +422,8 @@ https://cloud.google.com/appengine/docs/nodejs/
 - encryption
 
 
-04/30 - texturing algorithm incorporated
-05/03 - scene info from triangles + textures
-05/06 - output test to device [dae]
-05/10 - texture-triangle-edge problems -- rendering on device shows lines at the edges of triangles -- should be smooth -- DIALATION of texture after it's created (post process requires map)
-05/17 - test new set of 10 ~ 20 images
-	- implement groupings
+05/02 - bundle groupings algorithm
+05/06 - test new set of 10 ~ 20 images
 05/24 - test set of ~50 images
 05/31 - test set of ~100 images x
 06/07 - MVP
@@ -439,7 +435,7 @@ MISSING:
 	- logistics [2d]
 - hole filling
 	- ?
-- BA identify/remove view if it's position is very bad????
+- BA identify/remove view if it's position is very bad???? [outliers]
 	- inconsistent / contrary / high error
 - triangle - texture loading groups at a time to get local approx blending
 	- logistics [5d]
@@ -448,99 +444,96 @@ MISSING:
 - triangulation algorithm updates
 	- not smooth enough
 	- curvature wrong
+- world-sphere projection & minimum mapping
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-iterateSurfaceProcess
-
-- how does a null - vertex affect the surrounding tris?
-	- should other vertexes be assigned to first tri view?
-
-
-- each triangle is initialized with a view that has support from all vertexes [view intersect]
-- OTHERWISE it has no view intersect and is dropped as an impossible view
-
-- each vertex is initialized with the best view that is consistent with each of it's triangles
-- OTHERWISE the vertex view is assigned null []
-
-- if a vertex is assigned a NULL index => it is not able to flip
-- if a vertex does 
-
-
-on output:
-	- if any of a triangle's vertexes are null
-	=> use the assigned triangle view for each output texture assignment
-	- else use the individual vertexes for texture assignment
-
-
-
-of it's triangle parent
-
-
-
-triangle -> texture steps:
-x A) load points
-- get triangles to approx surface
-=> save triangles
-B) load views + triangles
-- each triangle vertex is assigned some views that it's visible in
-	- for each view (center / normal)
-		get list of views:
-			- in front of point
-			- facing point avg normal?
-			- not intersecting any triangle geometry
-			- projects inside image
-- optimize triangles by minimizing the number of multi-textured(frontier) triangles
-	- each vertex/triangle picks prioritized image source
-- subdivide large triangles
-- triangle pack textures into atlas
-=> save textures
-C) load views + textures
-- load a view image at a time
-- get a list of texture images that need to be updated:
-	- for each triangle / vertex
-		- if any vertex references this view: add it to hash-list
-- for every texture referencing view:
-	- load texture
-	- update every triangle
-	- save texture
-=> save (update) textures
-D) load textures, load views
-	- make new scene entry 
-	- save union of data to scene file
-	- update project file
-E) load scene
-	- convert triangle+texture references to DAE
-=> save 
-
-DAE [print to console]
-
-
-
-- can a vertex also have a per-triangle texture assignment ?
-
-
-
-- padding value needs to be carried along to when triangles are filled in
-
-
-exiusting:
-trianglesTexturize
-
-
-
-var info = R3D.optimumTriangleTextureImageAssignment(transforms,cameras,resolutions,triangles3D,textureSize,resolutionScale);
-
-R3D.optimumTriangleTextureImageAssignment
-
-trianglesPacking
-
-sceneToDAE
 
 
 
 
+DENSE GROUPS:
+	have graph of n views (100)
+	cluster groups of size g (6)
+	want minimum overlap of o (2)
+	- want to minimize total number of groups (n/(g-o)) : 100/(6-2) = 25
+	- each group should have a locally 'strong' vertex
+		- skeletal node
+	- spread 'good' vertexes around
+	- relate edges as error or number of tracks
+	- keep related vertexes together (connected sub-graph of main graph)
+
+clique
+
+better = [next lowest error or next highest tracks]
+A)
+each vertex is in its own group of size 1
+queue vertexes based on next-best edge
+- if group size less than desired size, expand group by merging next best (worst?) edge
+- if group size is more than desired size, remove worst (best?) edge
+=> no overlap
+add overlap: include next 2 best edges belonging to another group
+	- would prefer they be separate ?
+
+B) entire graph is single group - only skeletal edges
+- remove best edge from group
+-- some edges can't be removed without dropping the vertex
+
+- should edges between groups be BETTER or WORSE ?
+- should edges in groups be BETTER OR WORSE ?
+
+
+
+
+
+
+
+CLUSTERING NOTES:
+
+
+https://www.sciencedirect.com/science/article/pii/S1572528610000642
+https://www.ee.columbia.edu/~jghaderi/allerton_overlap.pdf
+https://dollar.biz.uiowa.edu/~nstreet/research/oedm12.pdf
+http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.591.5987&rep=rep1&type=pdf
+https://cme.h-its.org/exelixis/pubs/Exelixis-RRDR-2011-7.pdf
+https://pdfs.semanticscholar.org/726a/387efd9927f4fc5d80f9da02b160d56d615a.pdf
+clustering-general:
+https://www-users.cs.umn.edu/~kumar001/dmbook/ch8.pdf
+
+
+community
+network
+network decomposition
+cluster
+overlap
+clustering
+classification
+sparsness
+graph
+
+
+KNOWN k - cluster [MINIMUM] =  CEIL( (vertex count) / (group size - overlap size) )
+
+
+
+- remove vertexes
+- remove edges ???
+- add fake edges?
+- random walk
+
+
+
+
+
+
+
+
+
+
+
+
+TEXTURING UPDATE:
 - increase texturizing accuracy
 	- instead of using projected points as source of truth:
 	- use projected point as approximate location
@@ -555,14 +548,6 @@ sceneToDAE
 		- most normal/close ranking
 		- highest number of triangle references
 ...
-
-
-
-
-
-
-
-
 
 
 - review why tesselation is failing
@@ -731,87 +716,7 @@ propagate 3d: -- non-blind probe3D
 
 
 
-- STEREPOSIS FAILURES:
-	- removing / retrying neighbors and opting for better R/N/supporting-# match
-	- not loosing background objects
-	- how to 
-
 => do match scores need to be re-assessed when R is updated? previously good/bad matches might be different after a while
-
-
-
-DENSE GROUPS:
-	have graph of n views (100)
-	cluster groups of size g (6)
-	want minimum overlap of o (2)
-	- want to minimize total number of groups (n/(g-o)) : 100/(6-2) = 25
-	- each group should have a locally 'strong' vertex
-		- skeletal node
-	- spread 'good' vertexes around
-	- relate edges as error or number of tracks
-	- keep related vertexes together (connected sub-graph of main graph)
-
-clique
-
-better = [next lowest error or next highest tracks]
-A)
-each vertex is in its own group of size 1
-queue vertexes based on next-best edge
-- if group size less than desired size, expand group by merging next best (worst?) edge
-- if group size is more than desired size, remove worst (best?) edge
-=> no overlap
-add overlap: include next 2 best edges belonging to another group
-	- would prefer they be separate ?
-
-B) entire graph is single group - only skeletal edges
-- remove best edge from group
--- some edges can't be removed without dropping the vertex
-
-- should edges between groups be BETTER or WORSE ?
-- should edges in groups be BETTER OR WORSE ?
-
-
-
-
-
-
-
-CLUSTERING NOTES:
-
-
-https://www.sciencedirect.com/science/article/pii/S1572528610000642
-https://www.ee.columbia.edu/~jghaderi/allerton_overlap.pdf
-https://www.sciencedirect.com/science/article/pii/S1572528610000642
-https://dollar.biz.uiowa.edu/~nstreet/research/oedm12.pdf
-http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.591.5987&rep=rep1&type=pdf
-https://cme.h-its.org/exelixis/pubs/Exelixis-RRDR-2011-7.pdf
-https://pdfs.semanticscholar.org/726a/387efd9927f4fc5d80f9da02b160d56d615a.pdf
-clustering-general:
-https://www-users.cs.umn.edu/~kumar001/dmbook/ch8.pdf
-
-
-community
-network
-network decomposition
-cluster
-overlap
-clustering
-classification
-sparsness
-graph
-
-
-KNOWN k - cluster [MINIMUM] =  CEIL( (vertex count) / (group size - overlap size) )
-
-
-
-- remove vertexes
-- remove edges ???
-- add fake edges?
-- random walk
-
-
-
 
 
 
