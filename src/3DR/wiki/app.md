@@ -450,6 +450,15 @@ MISSING:
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
+- visually test out graph partitioning algorithms
+	- make a random graph (2D)
+	- connect nearby components with some randomness
+	- show steps
+	- show 'disjoint' (semi) groupings
+	- show final groupings
+
+
+
 
 
 
@@ -512,6 +521,20 @@ classification
 sparsness
 graph
 
+"cluster editing"
+maximal cliques
+clique percolation method CPM
+network community profile plot
+
+Intra-cluster density vs. inter-cluster sparsity
+Minimum-Cut Tree
+
+
+
+
+
+
+
 
 KNOWN k - cluster [MINIMUM] =  CEIL( (vertex count) / (group size - overlap size) )
 
@@ -521,6 +544,95 @@ KNOWN k - cluster [MINIMUM] =  CEIL( (vertex count) / (group size - overlap size
 - remove edges ???
 - add fake edges?
 - random walk
+
+edge-collapse
+
+
+
+"minimize conductance"
+
+
+k-way graph partitioning
+
+
+
+
+ALG F: theft
+- 
+- all vertexes are initialized into group size = 1
+- Q on each group, prioritized on best edge to add:
+- if group has U - do nothing []
+- if group has less than U: if any neighbors have more than U -> steal best neighbor
+- if group has more than U: if any neighbors have less than U -> pust out neighbor
+-> some possibly oscilating equlibrium
+- while each group overlap count < O: includes neighbor from top O neighbors (or same neighbor until )
+X -> ends will fight over common point
+
+ALG G: flow
+- push group in thru end to another end
+
+ALG H: continuous divide
+- continually cut skeleton graph until size of each part is <= N
+X -> no way to cut a lot of graph scenarios along edge
+=> cut VERTEX ?
+
+
+- find 2 vertexes furthest apart (longest path count)
+- cut along middle vertex if TIE [every verted in shared-distance neighbor is divided in half and half kept], middle vertex repeated 2ce in remaining group
+- cut along EDGE if not
+- 
+
+ALG I: repeated minimum K cutting [gen. graph] | bisect-cutting [MSP]
+- find 'end' vertex
+- BFT to collect K nearest
+- prune from tree, keep any vertex of degree greater than 1
+- repeat
+=> no?
+
+ALG J:
+- each vertex has 'ideal group'
+- union / intersect?
+
+ALG K:
+
+
+
+
+K-WAY GRPAH PARTITIONING:
+https://pdfs.semanticscholar.org/b981/195b306c39ef40939113bdc7e2bec5665191.pdf
+https://patterns.eecs.berkeley.edu/?page_id=571
+http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.585.7194&rep=rep1&type=pdf
+https://surface.syr.edu/cgi/viewcontent.cgi?article=1029&context=npac
+BOOK:
+http://algo2.iti.kit.edu/schulz/gpgc_vorlesung/graphpartitioning_lecture.pdf
+STUDY:
+https://www.lume.ufrgs.br/bitstream/handle/10183/67181/000872783.pdf;sequence=1
+
+
+several types of partitions:
+https://www.cs.cornell.edu/~bindel/class/cs5220-f11/slides/lec19.pdf
+
+
+
+
+KaHyPar	GPL	direct k-way and recursive bisection based multilevel hypergraph partitioning framework
+kMetis	Apache 2.0	graph partitioning package based on multilevel techniques and k-way local search
+
+
+
+
+stretch factor:
+	- would like a size exactly 6, but if the size stretched up to 8 or down to 4, ok
+	- eg: having a set of 6 and a set of 2 is not useful
+
+
+
+
+
+
+
+
+
 
 
 
