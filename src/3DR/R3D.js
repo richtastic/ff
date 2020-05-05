@@ -37224,7 +37224,7 @@ R3D.skeletalViewGraph = function(edges, maxErrorMultiple){ // get critical nodes
 	var t = Code.valueOrDefault(maxErrorMultiple, 4.0); // 4-16
 	var importanceMinumum = Math.min(4.0/t,1);
 	console.log("importanceMinumum: "+importanceMinumum);
-	console.log(edges);
+	// console.log(edges);
 	// construct graph from simple edges
 	var maxVertex = null;
 	for(var i=0; i<edges.length; ++i){
@@ -37560,7 +37560,8 @@ if(doDisplayStuff){
 		var vertex = vertexes[i];
 		vertexIDtoIndex[vertex.id()] = i;
 	}
-		
+
+if(false){
 	var worldScale = 600.0;
 	var rad = 0.01;
 	var worldOffset = new V2D(400,400);
@@ -37673,7 +37674,7 @@ console.log(positions);
 		d.matrix().translate(worldOffset.x, worldOffset.y);
 		GLOBALSTAGE.addChild(d);
 	}
-
+}
 }
 	// convert from vertexes to original pair indexes
 	// pairs:

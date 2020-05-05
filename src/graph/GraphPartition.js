@@ -29,20 +29,202 @@ GraphPartition.prototype.addListeners = function(){
 GraphPartition.prototype.test1 = function(){
 	console.log("test1");
 
+	// var rectSize = 10;
+	// var vertexCount = 20;
+	// var neighborMin = 1;
+	// var neighborRand = 3;
+
+	var rectSize = new V2D(20,15);
+	var vertexCount = 50;
+	var neighborMin = 3;
+	var neighborRand = 5;
+
+
+	// var rectSize = new V2D(30,20);
+	// var vertexCount = 150;
+	// var neighborMin = 3;
+	// var neighborRand = 10;
+
 	// make random graph - 2D geometry
+	var toPoint = function(v){
+		return v.data()["point"];
+	}
+	var space = new QuadTree(toPoint);
+	var graph = new Graph();
+	var vertexes = [];
+	
+	for(var i=0; i<vertexCount; ++i){
+		var p = new V2D();
+		p.x = (Math.random()-0.5)*rectSize.x;
+		p.y = (Math.random()-0.5)*rectSize.y;
+		var data = {};
+			data["index"] = i;
+			data["point"] = p;
+			data["group"] = null;
+		v = graph.addVertex();
+		v.data(data);
+		vertexes.push(v);
+		space.insertObject(v);
+	}
+	
+	// add edges: connect local components (wth some randomness)
+	var edges = [];
+	for(var i=0; i<vertexCount; ++i){
+		var vertex = vertexes[i];
+		var data = vertex.data();
+		var p = data["point"];
+		var n = neighborMin + Math.round(Math.random()*neighborRand) + 1;
+		// vertex,neighbor
+		var neighbors = space.kNN(p,n);
+		for(var n=0; n<neighbors.length; ++n){
+			var neighbor = neighbors[n];
+			if(vertex==neighbor){
+				continue;
+			}
+			var edge = graph.edgeForVertexes(vertex,neighbor);
+			if(!edge){ // vertex , neighbor
+				var weight = Math.random();
+				weight = 1.0;
+				var edge = graph.addEdgeDuplex(vertex,neighbor, weight);
+				edges.push(edge);
+			}
+		}
+	}
 
-	// connect local components (wth some randomness)
-
+	// skeleton backbone:	
+	var skeletalEdges = [];
+	for(var i=0; i<edges.length; ++i){
+		var edge = edges[i];
+		var a = edge.A();
+			a = a.data()["index"];
+		var b = edge.B();
+			b = b.data()["index"];
+		var w = edge.weight();
+		skeletalEdges.push([a,b,w]);
+	}
+	console.log(skeletalEdges);
 	// make skeletal graph
+	var info = R3D.skeletalViewGraph(skeletalEdges);
+	console.log(info);
+	var skeletonVertexes = info["skeletonVertexes"];
+	var skeletonEdges = info["skeletonEdges"];
+	var skeletonGroupEdges = info["groupEdges"];
+
 
 	// partition groups
-	
+	var k = 5;
+	var partitions = Graph.partitionFromEdges(skeletonEdges, k);
+	// ...
 	// add overlap
 
 	// display
+	var displayScale = 50.0;
+	var displayOffset = new V2D(800,500);
+
+	for(var i=0; i<vertexCount; ++i){
+		var v = vertexes[i];
+		var data = v.data();
+		var p = data["point"];
+		// console.log(p);
+
+		var d = new DO();
+		// d.graphics().setLine(1.0,0xCC00FF00);
+		d.graphics().setFill(0xFFFF0000);
+		d.graphics().beginPath();
+		d.graphics().drawCircle(p.x*displayScale + 0, p.y*displayScale + 0, 4.0);
+		// d.graphics().moveTo(pA.x,pA.y);
+		// d.graphics().lineTo(pB.x,pB.y + imageA.height());
+		// d.graphics().strokeLine();
+		d.graphics().fill();
+		d.graphics().endPath();
+
+		d.matrix().translate(displayOffset.x, displayOffset.y);
+		GLOBALSTAGE.addChild(d);
+	}
+
+
+	for(var i=0; i<edges.length; ++i){
+		var edge = edges[i];
+		var a = edge.A().data();
+		var b = edge.B().data();
+		var pA = a["point"];
+		var pB = b["point"];
+
+		var d = new DO();
+		d.graphics().setLine(1.0,0xFFCC00FF);
+		// d.graphics().setFill(0xFFFF0000);
+		d.graphics().beginPath();
+		// d.graphics().drawCircle(p.x*displayScale + 0, p.y*displayScale + 0, 3);
+		d.graphics().moveTo(pA.x*displayScale,pA.y*displayScale);
+		d.graphics().lineTo(pB.x*displayScale,pB.y*displayScale);
+		d.graphics().strokeLine();
+		// d.graphics().fill();
+		d.graphics().endPath();
+
+		d.matrix().translate(displayOffset.x, displayOffset.y);
+		GLOBALSTAGE.addChild(d);
+	}
+
+	for(var i=0; i<skeletonEdges.length; ++i){
+		var edge = skeletonEdges[i];
+		var a = edge[0];
+		var b = edge[1];
+			a = vertexes[a];
+			b = vertexes[b];
+		var edge = graph.edgeForVertexes(a,b);
+		// 
+		var a = edge.A().data();
+		var b = edge.B().data();
+		var pA = a["point"];
+		var pB = b["point"];
+		var d = new DO();
+		d.graphics().setLine(2.0,0xFF330033);
+		d.graphics().beginPath();
+		d.graphics().moveTo(pA.x*displayScale,pA.y*displayScale);
+		d.graphics().lineTo(pB.x*displayScale,pB.y*displayScale);
+		d.graphics().strokeLine();
+		d.graphics().endPath();
+		// 
+		d.matrix().translate(displayOffset.x, displayOffset.y);
+		GLOBALSTAGE.addChild(d);
+	}
+
+	for(var i=0; i<skeletonGroupEdges.length; ++i){
+		var group = skeletonGroupEdges[i];
+		console.log(group);
+
+
+		for(var j=0; j<group.length; ++j){
+			var edge = group[j];
+				
+			var a = edge[0];
+			var b = edge[1];
+				a = vertexes[a];
+				b = vertexes[b];
+			var edge = graph.edgeForVertexes(a,b);
+			var a = edge.A().data();
+			var b = edge.B().data();
+			var pA = a["point"];
+			var pB = b["point"];
+
+			var d = new DO();
+			d.graphics().setLine(1.0,0xFF0000FF);
+			d.graphics().beginPath();
+			d.graphics().moveTo(pA.x*displayScale,pA.y*displayScale);
+			d.graphics().lineTo(pB.x*displayScale,pB.y*displayScale);
+			d.graphics().strokeLine();
+			d.graphics().endPath();
+			// 
+			d.matrix().translate(displayOffset.x, displayOffset.y);
+			GLOBALSTAGE.addChild(d);
+		}
+	}
+	
 
 
 
+
+throw "?"
 
 
 

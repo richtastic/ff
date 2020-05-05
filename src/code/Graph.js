@@ -963,6 +963,130 @@ Graph.indexAndCopyEdgesFromLists = function(copyEdgeList, copyVertexList, vertex
 	}
 	return copyEdgeList;
 }
+Graph.partitionFromEdges = function(edges, k, initialVertexes){
+	console.log(edges);
+	console.log(k);
+	if(initialVertexes){
+		console.lgo(initialVertexes);
+		throw "initialVertexes"
+	}
+	var graph = new Graph();
+	var maxVertex = -1;
+	for(var i=0; i<edges.length; ++i){
+		var edge = edges[i];
+		var a = edge[0];
+		var b = edge[1];
+		maxVertex = Math.max(a, maxVertex);
+		maxVertex = Math.max(b, maxVertex);
+	}
+	var vertexCount = maxVertex-1;
+	if(k>=vertexCount){
+		throw "too many groups";
+	}
+	var graphVertexes = [];
+	for(var i=0; i<=maxVertex; ++i){
+		var v = graph.addVertex();
+		graphVertexes.push(v);
+	}
+	console.log(graphVertexes);
+	var graphEdges = [];
+	for(var i=0; i<edges.length; ++i){
+		var edge = edges[i];
+		var a = edge[0];
+		var b = edge[1];
+		var w = edge[2];
+		if(!w){
+			w = 1.0;
+		}
+		a = graphVertexes[a];
+		b = graphVertexes[b];
+		var e = graph.addEdgeDuplex(a,b,w);
+		graphEdges.push(e);
+	}
+	var groupSize = k;
+	var groupCount = Math.ceil(vertexCount/groupSize);
+	console.log(graphEdges);
+	console.log(groupSize);
+	console.log(groupCount);
+	// make 
+	var masses = [];
+	var availableVertexes = Code.copyArray(graphVertexes);
+	for(var i=0; i<groupCount; ++i){
+		var index = Code.randomIndexArray(availableVertexes);
+		var v = availableVertexes[index];
+		var mass = {};
+			mass["vertex"] = v;
+		masses.push(mass);
+		v.data(mass);
+		Code.removeElementAt(availableVertexes, i);
+	}
+	console.log(masses);
+	// iterate
+	var maxIterations = 10;
+	// calcualate forces from all directions
+	console.log(graph);
+	console.log("minPaths");
+	var paths = graph.minPathsAll();
+	console.log(paths);
+	for(var a=0; a<masses.length; ++a){
+		masses[a]["forces"] = {};
+	}
+	for(var iteration=0; iteration<maxIterations; ++iteration){
+		for(var a=0; a<masses.length; ++a){
+			var massA = masses[a];
+			var vA = massA["vertex"];
+			// console.log(massA);
+			var path = paths[a];
+			for(var b=0; b<masses.length; ++b){
+				if(a==b){
+					continue;
+				}
+				var massB = masses[b];
+				var vB = massB["vertex"];
+				// console.log(massB);
+				var p = null;
+				for(var i=0; i<path.length; ++i){
+					if(path["vertex"]==vB){
+						p = i;
+						break;
+					}
+				}
+var ppp = graph.minPath(vA,vB);
+// console.log(ppp);
+var edges = ppp["edges"];
+var edge = edges[edges.length-1];
+var distance = ppp["cost"];
+console.log(edge.id());
+console.log("... "+distance);
+				console.log(p);
+				p = path[p];
+				console.log(p);
+
+				var entryAB = {};
+
+				// 
+
+				console.log(massA);
+				console.log(massB);
+				console.log(path);
+				console.log(p);
+				// origin edge & 
+				throw "jere"
+			}
+		}
+		// update - sum forces
+		for(var a=0; a<masses.length; ++a){
+			// 
+		}
+		/*
+			move vertexes - but can't occupy the same location
+
+		*/
+		break;
+	}
+
+	throw "partitionFromEdges";
+}
 Graph.splitGraphFromEdgeCut = function(graph,cut){ // this will likely break if the cut isn't a true cut
 	if(!cut || cut.length==0){
 		return null;
@@ -1070,6 +1194,16 @@ Graph.prototype.vertexFromData = function(data){
 	}
 	return null;
 }
+Graph.prototype.edgeForVertexes = function(a,b){
+	var edges = a.edges();
+	for(var i=0; i<edges.length; ++i){
+		var edge = edges[i];
+		if(edge.opposite(a)==b){
+			return edge;
+		}
+	}
+	return null;
+}
 Graph.prototype.containsEdge = function(e){
 	return Code.elementExists(this._edges, e);
 }
@@ -1158,7 +1292,6 @@ Graph.prototype.addEdge = function(a,b,w,d){
 		// edge.B(null);
 		edge.A(a);
 		edge.B(b);
-		console.log(edge);
 		// TODO: make sure edge is removed
 	}else{
 		edge = new Graph.Edge(a,b,w,d);
@@ -1188,6 +1321,16 @@ Graph.prototype.splitWithCut = function(cut){
 }
 Graph.prototype.minPaths = function(source){
 	return Graph._minPaths(this,source);
+}
+Graph.prototype.minPathsAll = function(){
+	var list = Code.copyArray(this._vertexes);
+	// var hash = {}
+	for(var i=0; i<list.length; ++i){
+		var vertex = list[i];
+		var paths = this.minPaths(vertex);
+		list[i] = paths;
+	}
+	return list;
 }
 Graph.prototype.allPaths = function(source,target){
 	return Graph._allPaths(this,source,target);
