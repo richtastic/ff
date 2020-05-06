@@ -5,7 +5,7 @@
 
 
 ---
-http://www.cs.utah.edu/~hari/teaching/bigdata/SIREV41.00-Karypis.Kumar-Parallel.Multilevel.Graph.Partitioning.pdf
+http://www.cs.utah.edu/~hari/teaching/bigdata/SIREV41.00-Karypis.Kumar-Parallel.Multilevel.Graph.Partitioning.pdf - coloring
 http://glaros.dtc.umn.edu/gkhome/fetch/papers/pkwaymlSIAMREVIEW99.pdf
 http://downloads.hindawi.com/archive/2000/019436.pdf
 
@@ -37,10 +37,22 @@ graph uncoarsen phase
 
 ---
 
+
+
+
+
 ---
 https://www.cs.utexas.edu/~pingali/CS395T/2009fa/papers/metis.pdf
 
 bisection
+
+Spectral bisection (SB) [45, 2, 26].
+
+Laplacian matrix Q = D − A,
+Fiedler vector.
+
+The eigenvector y is computed using the Lanczos algorithm [42].
+we set the accuracy to 10−2 and the maximum number of iterations to 100.
 
 
 
@@ -75,8 +87,10 @@ n [9].
 
 ---
 
+https://people.csail.mit.edu/jshun/6886-s18/lectures/lecture13-1.pdf
+demonstration
+http://adl.stanford.edu/cme342/Lecture_Notes_files/lecture7-14.pdf
 
-x
 
 ---
 

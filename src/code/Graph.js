@@ -963,7 +963,164 @@ Graph.indexAndCopyEdgesFromLists = function(copyEdgeList, copyVertexList, vertex
 	}
 	return copyEdgeList;
 }
+
+Graph.groupsFromEdges = function(edges, k){
+	console.log(edges);
+	console.log(k);
+	// if(initialVertexes){
+	// 	console.lgo(initialVertexes);
+	// 	throw "initialVertexes"
+	// }
+	var graph = new Graph();
+	var maxVertex = -1;
+	for(var i=0; i<edges.length; ++i){
+		var edge = edges[i];
+		var a = edge[0];
+		var b = edge[1];
+		maxVertex = Math.max(a, maxVertex);
+		maxVertex = Math.max(b, maxVertex);
+	}
+	var vertexCount = maxVertex-1;
+	if(k>=vertexCount){
+		throw "too many groups";
+	}
+	var graphVertexes = [];
+	for(var i=0; i<=maxVertex; ++i){
+		var v = graph.addVertex();
+		v.data({"id":i, "vertex":v, "cost":0, "groups":[]});
+		graphVertexes.push(v);
+	}
+	// console.log(graphVertexes);
+	var graphEdges = [];
+	for(var i=0; i<edges.length; ++i){
+		var edge = edges[i];
+		var a = edge[0];
+		var b = edge[1];
+		var w = edge[2];
+		if(!w){
+			w = 1.0;
+		}
+		a = graphVertexes[a];
+		b = graphVertexes[b];
+		var e = graph.addEdgeDuplex(a,b,w);
+		graphEdges.push(e);
+	}
+	var groupSize = k;
+	var groupCount = Math.ceil(vertexCount/groupSize);
+	console.log(vertexCount+" => "+groupSize+" = "+groupCount);
+
+	// sprinkle group objects around vertexes
+	var groups = [];
+	var randomVertexes = Code.copyArray(graphVertexes);
+	for(var i=0; i<groupCount; ++i){
+		var index = Code.randomIndexArray(randomVertexes);
+		var vertex = randomVertexes[index];
+		Code.removeElementAt(randomVertexes,index);
+		var data = vertex.data();
+		var group = {};
+		group["id"] = i;
+		group["nodes"] = [data];
+		group["cost"] = 1;
+		groups.push(group);
+			data["cost"] = 1;
+			data["groups"].push(group);
+	}
+
+	// iterate:
+	var sortMinCost = function(a,b){
+		// console.log(a,b);
+		// throw "?"
+		return a["cost"] < b["cost"] ? -1 : 1;
+	};
+	var maxIterations = 10;
+	for(var iteration=0; iteration<maxIterations; ++iteration){
+		// for each group perform operations locally
+		for(var i=0; i<groups.length; ++i){
+			var group = groups[i];
+			// find ajacent vertexes
+			var adjacent = {};
+			var internal = {};
+			var nodes = group["nodes"];
+			for(var j=0; j<nodes.length; ++j){
+				var node = nodes[j];
+				var id = node["id"];
+				var vertex = node["vertex"];
+				internal[id] = node;
+				var adj = vertex.adjacent();
+				for(var k=0; k<adj.length; ++k){
+					var data = adj[k].data();
+					adjacent[data["id"]] = data;
+				}
+			}
+			// remove internal from adj
+			internal = Code.objectToArray(internal);
+			for(var j=0; j<internal.length; ++j){
+				var node = internal[j];
+				adjacent[node["id"]] = null;
+			}
+			adjacent = Code.objectToArray(adjacent);
+			for(var j=0; j<adjacent.length; ++j){
+				var node = adjacent[j];
+				if(node==null){
+					Code.removeElementAt(adjacent,j);
+					--j;
+				}
+			}
+			adjacent.sort(sortMinCost);
+			internal.sort(sortMinCost);
+			// console.log(adjacent);
+			// console.log(internal);
+			// console.log(adjacent.length);
+			// console.log(adjacent);
+			// console.log(internal);
+			var size = group["nodes"].length;
+			if(adjacent.length>0 && adjacent[0]["cost"]==0){ // always grab available vertex
+				if(internal[internal.length-1]["cost"]>1){
+					console.log("MOVE");
+					// - swap worst overlapping for new vertex [MOVE]
+				}else{
+					console.log("GROW");
+					var node = adjacent[0];
+					node["cost"] += 1;
+					node["groups"].push(group);
+					group["cost"] += 1;
+					group["nodes"].push(node);
+				}
+			}else if(size<groupSize){ // grab vertex if too small
+				// console.log("GROW");
+				//  grow with best overlapping vertex [GROW]
+			}else if(size>groupSize){ // remove vertex if too large
+				// console.log("SHRINK");
+				// - if group contains any overlapping vertex:
+				// - remove worst overlapping [SHRINK]
+			} // else same size or no vertexes
+			// throw "single";
+		}
+		console.log("loop");
+		// throw "loop";
+		// break;
+	}
+
+	// convert groups to sets of vertexes
+	var lists = [];
+	for(var i=0; i<groups.length; ++i){
+		var group = groups[i];
+		var vList = group["nodes"];
+		var ids = [];
+		for(var j=0; j<vList.length; ++j){
+			ids.push(vList[j]["id"]);
+		}
+		lists.push(ids);
+	}
+	return {"groups":lists, "overlap":[]};
+}
+
+
 Graph.partitionFromEdges = function(edges, k, initialVertexes){
+	throw "partitionFromEdges";
+}
+
+Graph.groupsFromEdges2 = function(edges, k, initialVertexes){
 	console.log(edges);
 	console.log(k);
 	if(initialVertexes){
@@ -1028,9 +1185,21 @@ Graph.partitionFromEdges = function(edges, k, initialVertexes){
 	console.log("minPaths");
 	var paths = graph.minPathsAll();
 	console.log(paths);
-	for(var a=0; a<masses.length; ++a){
-		masses[a]["forces"] = {};
+
+	// set carriers
+	for(var i=0; i<masses.length; ++i){
+		var mass = masses[i];
+		var forces = {};
+		mass["forces"] = forces;
+		var v = mass["vertex"];
+		var adjacent = v.adjacent();
+console.log(adjacent);
+		for(var j=0; j<adjacent.length; ++j){
+			var id = adjacent[j].id();
+			forces[id] = 0;
+		}
 	}
+	throw "?";
 	for(var iteration=0; iteration<maxIterations; ++iteration){
 		for(var a=0; a<masses.length; ++a){
 			var massA = masses[a];
@@ -1056,20 +1225,22 @@ var ppp = graph.minPath(vA,vB);
 var edges = ppp["edges"];
 var edge = edges[edges.length-1];
 var distance = ppp["cost"];
-console.log(edge.id());
+console.log(edge);
 console.log("... "+distance);
 				console.log(p);
 				p = path[p];
 				console.log(p);
 
-				var entryAB = {};
+				var force = 1.0/distance;
+				var entryAB = {"force":force};
 
-				// 
+				var forcesA = massA["forces"];
+
 
 				console.log(massA);
 				console.log(massB);
-				console.log(path);
-				console.log(p);
+				// console.log(path);
+				// console.log(p);
 				// origin edge & 
 				throw "jere"
 			}
@@ -1078,14 +1249,21 @@ console.log("... "+distance);
 		for(var a=0; a<masses.length; ++a){
 			// 
 		}
-		/*
-			move vertexes - but can't occupy the same location
+		// move masses
+		for(var a=0; a<masses.length; ++a){
+			// force large enough?
+			// space available?
+			// move
+		}
 
-		*/
 		break;
 	}
 
-	throw "partitionFromEdges";
+	throw "groupsFromEdges";
+
+	//
+
+	return {"groups":null};
 }
 Graph.splitGraphFromEdgeCut = function(graph,cut){ // this will likely break if the cut isn't a true cut
 	if(!cut || cut.length==0){

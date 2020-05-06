@@ -103,6 +103,7 @@ GraphPartition.prototype.test1 = function(){
 		skeletalEdges.push([a,b,w]);
 	}
 	console.log(skeletalEdges);
+
 	// make skeletal graph
 	var info = R3D.skeletalViewGraph(skeletalEdges);
 	console.log(info);
@@ -111,11 +112,40 @@ GraphPartition.prototype.test1 = function(){
 	var skeletonGroupEdges = info["groupEdges"];
 
 
+	// full
+	var fullSkeletonEdges = [];
+skeletonGroupEdges.push(skeletonEdges);
+	// Code.arrayPushArrays(fullSkeletonEdges,skeletonGroupEdges);
+	for(var i=0; i<skeletonGroupEdges.length; ++i){
+		var group = skeletonGroupEdges[i];
+		console.log(group);
+		Code.arrayPushArray(fullSkeletonEdges, group);
+	}
+skeletonGroupEdges.pop();
+
+console.log(fullSkeletonEdges);
+
+	// for(var j=0; j<group.length; ++j){
+	// 	var edge = group[j];
+	// }
+
+
+	var info = Graph.groupsFromEdges(fullSkeletonEdges, 4);
+	var partitionGroups = info["groups"];
+	console.log(partitionGroups);
+
+// throw "?"
+/*
+
 	// partition groups
 	var k = 5;
-	var partitions = Graph.partitionFromEdges(skeletonEdges, k);
+	var groups = Graph.groupsFromEdges(skeletonEdges, k);
+	console.log(groups);
+throw "?"
+	// var partitions = Graph.partitionFromEdges(skeletonEdges, k);
 	// ...
 	// add overlap
+*/
 
 	// display
 	var displayScale = 50.0;
@@ -178,7 +208,7 @@ GraphPartition.prototype.test1 = function(){
 		var pA = a["point"];
 		var pB = b["point"];
 		var d = new DO();
-		d.graphics().setLine(2.0,0xFF330033);
+		d.graphics().setLine(3.0,0xFF990000);
 		d.graphics().beginPath();
 		d.graphics().moveTo(pA.x*displayScale,pA.y*displayScale);
 		d.graphics().lineTo(pB.x*displayScale,pB.y*displayScale);
@@ -191,7 +221,7 @@ GraphPartition.prototype.test1 = function(){
 
 	for(var i=0; i<skeletonGroupEdges.length; ++i){
 		var group = skeletonGroupEdges[i];
-		console.log(group);
+		// console.log(group);
 
 
 		for(var j=0; j<group.length; ++j){
@@ -219,7 +249,58 @@ GraphPartition.prototype.test1 = function(){
 			GLOBALSTAGE.addChild(d);
 		}
 	}
+
+
+	for(var i=0; i<fullSkeletonEdges.length; ++i){
+		var edge = fullSkeletonEdges[i];
+		var a = edge[0];
+		var b = edge[1];
+			a = vertexes[a];
+			b = vertexes[b];
+		var edge = graph.edgeForVertexes(a,b);
+		// 
+		var a = edge.A().data();
+		var b = edge.B().data();
+		var pA = a["point"];
+		var pB = b["point"];
+		var d = new DO();
+		d.graphics().setLine(8.0,0x6600CC00);
+		d.graphics().beginPath();
+		d.graphics().moveTo(pA.x*displayScale,pA.y*displayScale);
+		d.graphics().lineTo(pB.x*displayScale,pB.y*displayScale);
+		d.graphics().strokeLine();
+		d.graphics().endPath();
+		// 
+		d.matrix().translate(displayOffset.x, displayOffset.y);
+		GLOBALSTAGE.addChild(d);
+	}
 	
+	// display groups:
+	// var rad = 9.0;
+	var colors = [0xFFFF0000,0xFF00FF00,0xFF0000FF,0xFFCCCC00,0xFFCC00CC,0xFF00CCCC,0xFFCCCCCC,0xFF6600CC,0xFFCC0066,0xFF0066CC,0xFF00CC66,0xFF333333];
+	for(var i=0; i<partitionGroups.length; ++i){
+		var group = partitionGroups[i];
+		for(var j=0; j<group.length; ++j){
+			var vertexID = group[j];
+			var vertex = vertexes[vertexID];
+			var data = vertex.data();
+			var p = data["point"];
+			// console.log(p);
+			var d = new DO();
+			// d.graphics().setLine(1.0,0xFF00CC00);
+			var color = colors[i%colors.length];
+			d.graphics().setFill(color);
+			d.graphics().beginPath();
+			d.graphics().drawCircle(p.x*displayScale,p.y*displayScale, 21.0);
+			// d.graphics().lineTo(pB.x*displayScale,pB.y*displayScale);
+			// d.graphics().strokeLine();
+			d.graphics().endPath();
+			d.graphics().fill();
+			// 
+			d.matrix().translate(displayOffset.x, displayOffset.y);
+			GLOBALSTAGE.addChild(d);
+		}
+	}
 
 
 

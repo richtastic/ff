@@ -450,6 +450,34 @@ MISSING:
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
+=> organic type iterative grouping:
+	- each group (G) has a set of rules: GROW (& MOVE) | SWAP | SHRINK
+		- if any adjacent empty vertexes:
+			- if group has any overlapping vertexes:
+				- swap worst overlapping for new vertex [MOVE]
+			- else:
+				- grow with new vertex [GROW]
+		- else if ideal > size (smaller)
+			- grow with best overlapping vertex [GROW]
+		- else if ideal < size (larger)
+			- if group contains any overlapping vertex:
+				- remove worst overlapping [SHRINK]
+	- vertex weight:
+		- # of groups assigned to
+	- iterate on rules until stable ot steady state oscillation
+=> output: groups of ideal size (+ 1 margin?) possible overlap
+
+
+
+
+...
+
+
+
+
+
+
+
 -- need a requirement that every vertex 'moved' between groups ALSO moves every ????
 - what is OK -> think about extreme cases
 
