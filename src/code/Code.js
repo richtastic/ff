@@ -9077,6 +9077,31 @@ Code.convexHull = function(pointList){ // V2D point list
 	Code.arrayPushArray(bot,top);
 	return bot;
 }
+Code.expandPolygon2D = function(points, distance){ // triangle or greater
+	var output = [];
+	var len = points.length;
+	if(len<3){
+		for(var i=0; i<len; ++i){
+			output.push(points[i].copy());
+		}
+		return output;
+	}
+	var p = new V2D();
+	for(var i=0; i<len; ++i){
+		var a = (i-1+len)%len;
+		var b = (i)%len;
+		var c = (i+1)%len;
+		a = points[a];
+		b = points[b];
+		c = points[c];
+		V2D.sub(p,c,a);
+		p.norm();
+		p.scale(distance);
+		output.push( V2D.add(p,b) );
+	}
+	return output;
+}
+
 Code.minRect = function(pointList){ // minimum area rectangle / bounding box for convex hull : V2D list - exhaustive O(n^2) -- todo: rotating calipers
 	if(pointList.length<3){
 		return null;

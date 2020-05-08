@@ -1012,8 +1012,12 @@ Graph.groupsFromEdges = function(edges, k){
 	// sprinkle group objects around vertexes
 	var groups = [];
 	var randomVertexes = Code.copyArray(graphVertexes);
+
+var randomVertexesIndex = [0,1,3,9,10,18];
 	for(var i=0; i<groupCount; ++i){
 		var index = Code.randomIndexArray(randomVertexes);
+index = randomVertexesIndex[i];
+console.log(index+"/"+groupCount)
 		var vertex = randomVertexes[index];
 		Code.removeElementAt(randomVertexes,index);
 		var data = vertex.data();
@@ -1033,6 +1037,10 @@ Graph.groupsFromEdges = function(edges, k){
 		return a["cost"] < b["cost"] ? -1 : 1;
 	};
 	var maxIterations = 10;
+	// var maxIterations = 20;
+
+	// var maxIterations = 1;
+	// var maxIterations = 2;
 	for(var iteration=0; iteration<maxIterations; ++iteration){
 		// for each group perform operations locally
 		for(var i=0; i<groups.length; ++i){
@@ -1040,6 +1048,8 @@ Graph.groupsFromEdges = function(edges, k){
 			// find ajacent vertexes
 			var adjacent = {};
 			var internal = {};
+			var interrior = {};
+			var perimeter = [];
 			var nodes = group["nodes"];
 			for(var j=0; j<nodes.length; ++j){
 				var node = nodes[j];
@@ -1052,8 +1062,37 @@ Graph.groupsFromEdges = function(edges, k){
 					adjacent[data["id"]] = data;
 				}
 			}
+			// find contained points = vertex with only interrior edges
+			var internalList = Code.objectToArray(internal);
+			for(var j=0; j<internalList.length; ++j){
+				var node = internalList[j];
+				var id = node["id"];
+				var vertex = node["vertex"];
+				var adj = vertex.adjacent();
+				var isInterrior = true;
+				for(var k=0; k<adj.length; ++k){
+					var data = adj[k].data();
+					if(!internal[data["id"]]){
+						isInterrior = false;
+						break;
+					}
+				}
+				if(isInterrior){
+					interrior[id] = node;
+				}
+			}
+			// find perimeter:
+			for(var j=0; j<internalList.length; ++j){
+				var node = internalList[j];
+				var id = node["id"];
+				var vertex = node["vertex"];
+				if(!interrior[id]){
+					perimeter.push(node);
+				}
+			}
+			interrior = Code.objectToArray(interrior);
 			// remove internal from adj
-			internal = Code.objectToArray(internal);
+			internal = internalList;
 			for(var j=0; j<internal.length; ++j){
 				var node = internal[j];
 				adjacent[node["id"]] = null;
@@ -1066,6 +1105,8 @@ Graph.groupsFromEdges = function(edges, k){
 					--j;
 				}
 			}
+			perimeter.sort(sortMinCost);
+			interrior.sort(sortMinCost);
 			adjacent.sort(sortMinCost);
 			internal.sort(sortMinCost);
 			// console.log(adjacent);
@@ -1073,29 +1114,78 @@ Graph.groupsFromEdges = function(edges, k){
 			// console.log(adjacent.length);
 			// console.log(adjacent);
 			// console.log(internal);
+			console.log(i+" : "+internal.length+"("+interrior.length+" - "+perimeter.length+") & "+adjacent.length);
 			var size = group["nodes"].length;
 			if(adjacent.length>0 && adjacent[0]["cost"]==0){ // always grab available vertex
-				if(internal[internal.length-1]["cost"]>1){
-					console.log("MOVE");
+				if(false && perimeter.length>0 && perimeter[perimeter.length-1]["cost"]>1){
+// 'movement' may split up node
+// only allow movement that keeps all nodes connected directly
+// CALCUALTE BEFOREHAND?
+
 					// - swap worst overlapping for new vertex [MOVE]
+					console.log("MOVE: "+perimeter.length);
+					// var node = perimeter[perimeter.length-1];
+					var node = perimeter[0];
+					node["cost"] -= 1;
+					Code.removeElement(node["groups"],group);
+					group["cost"] -= 1;
+					Code.removeElement(group["nodes"],node);
 				}else{
-					console.log("GROW");
+//					console.log("GROW");
+				}
+				var node = adjacent[0];
+				node["cost"] += 1;
+				node["groups"].push(group);
+				group["cost"] += 1;
+				group["nodes"].push(node);
+			}else if(size<groupSize){ // grab vertex if too small
+				if(adjacent.length>0){
 					var node = adjacent[0];
+					console.log("GROW: "+node["cost"]);
 					node["cost"] += 1;
 					node["groups"].push(group);
 					group["cost"] += 1;
 					group["nodes"].push(node);
+					// grow with best overlapping vertex [GROW]
 				}
-			}else if(size<groupSize){ // grab vertex if too small
-				// console.log("GROW");
-				//  grow with best overlapping vertex [GROW]
 			}else if(size>groupSize){ // remove vertex if too large
-				// console.log("SHRINK");
-				// - if group contains any overlapping vertex:
-				// - remove worst overlapping [SHRINK]
+				if(perimeter.length>0 && perimeter[perimeter.length-1]["cost"]>1){ // can only remove a perimeter & if it has overlap cost
+					console.log("SHRINK");
+					var node = perimeter[perimeter.length-1];
+					// var node = perimeter[0];
+					node["cost"] -= 1;
+					Code.removeElement(node["groups"],group);
+					group["cost"] -= 1;
+					Code.removeElement(group["nodes"],node);
+				}
 			} // else same size or no vertexes
 			// throw "single";
 		}
+		// INTERACT WITH NEIGHBORS:
+	// 
+
+// if highly overlapped -> 50% or more & count >= n-1 -> merge with most overlap
+// iv count > n+1 : choose least-overlapping point to split group
+// 
+//
+
+
+// if size is 'constant' < n-1 or n+1 for more than ~3 iterations: do merge & split
+		
+		// if neighbor A is larger than expected (size>=n+1) & larger than neighbor (+1?)
+			// force swap out perimeter vertex
+
+		// if group is very big
+			// split off vertex 
+
+		// if group has high overlap
+			// merge with smallest / largest neighbor
+
+		// (after a while)
+		// if a group is really big -> separate a perimeter vertex
+		// if a group is reall small -> combine with neighbor
+
+
 		console.log("loop");
 		// throw "loop";
 		// break;

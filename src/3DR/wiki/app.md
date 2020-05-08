@@ -336,80 +336,6 @@ texturing ~ (10?) minutes
 
 
 
-
-
-
-APP TODO:
-
-NEXT-STEPS-TO-DO:
-
-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
-
-- individual image feature detection
-	- high-cornerness
-	- get feature absolute size / angle
-	=> image features to compare to other images
-- pairwise possibility limiting
-	- limit possible match pairs by using eg bag-of-words
-	=> final list of pairs to test for
-- pairwise image feature matching
-	- generate feature descriptors for each image
-	- find best matching features
-	=> matching feature points w/ relative affine transform
-- pair-view relative orientation transforms
-	- iterate cell size for finer detail (~5 iterations to cell~3 pixels)
-	=> pairwise 3D transform
-	=> pairwise dense point matches
-- global absolute orientation initialization
-	- rotation averaging
-	- translation averaging
-	=> initial abs camera locations & orientations
-- global absolute orientation nonlinear minimization
-	- use match count / reprojection error as edge weight
-	- nonlinear minimize angle & trans.
-	=> updated abs camera locations & orientations
-- global absolute orientation bundle adjust
-	- quasi-local-global bundle adjustment
-	- group-bundle adjustment to iterate cameras to more optimal orientations
-		- reupdate scene 3D points?
-	=> final abs camera locations & orientations [motion final]
-- global structure & motion bundle adjust
-	- quasi-local-global bundle adjustment
-	- increase resolution to finer detail
-	- skeletal view graph grouping isolated BA
-	- all view BA
-	=> final structure & motion
-- pipelining
-	- graph init
-	- sparse tracks
-	- dense points
-	- redo affine features
-	- multi-view combining into single 3D scene - minimizing errors
-		- sparse tracks
-		- dense points
-	- dense tracks
-	=> dense point tracks
-- surface triangulation(tessellation)
-	- advancing-front, curvature-based tessellation
-	=> scene triangle model
-- texturing
-	- view-based surface texturing
-	- blending between triangles
-	- separate triangles into texture lookup / files
-		- TextureMap (from textures to atlas)
-	=> scene textured model
-- viewing output
-	- locally
-	- VR device
-		x ios: scenekit
-		- oculus = unity / blender
-(06/01)
-- MVP
-	- example models
-	- example screens
-(07/18)
-
 google app engine project - nodejs
 https://cloud.google.com/appengine/docs/nodejs/
 - hello world
@@ -421,11 +347,12 @@ https://cloud.google.com/appengine/docs/nodejs/
 - compression
 - encryption
 
+TIMELINES:
 
-05/06 - bundle groupings algorithm
 05/10 - test new set of 10 ~ 20 images
+05/12 - use bundle groupings algorithm
 05/24 - test set of ~50 images
-05/31 - test set of ~100 images x
+05/31 - test set of ~100 images x (this will require 2-10 x speed ups)
 06/07 - MVP
 
 MISSING:
@@ -448,6 +375,24 @@ MISSING:
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
+- seems groups are splitting up physically
+
+- is there a way to have groups be like 'HEY HELP ME OUT'
+	- fat guy could force swap with a neighbor
+
+
+- ADD SPLITTING OF FAT GUYS
+
+- ADD MERGING OF SMALL GUYS
+
+
+x create example graph to see behaviors
+
+- checks:
+	- each vertex is in a group
+	- groups are all sized: n +/- 1
 
 
 => organic type iterative grouping:
