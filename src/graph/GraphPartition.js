@@ -231,6 +231,8 @@ GraphPartition.prototype.test1 = function(){
 	}
 	console.log(skeletalEdges);
 
+	
+
 	// make skeletal graph
 	var info = R3D.skeletalViewGraph(skeletalEdges);
 	console.log(info);

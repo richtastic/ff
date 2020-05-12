@@ -377,7 +377,64 @@ MISSING:
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
-- seems groups are splitting up physically
+- with disparate groups: highly likely fat guys will need to split in sparse areas
+	=> what does starting every vertex as a group do?
+	=> what does starting with a single group @ verex do?
+
+
+- splitting fat groups by most recently aquired perimeter node
+
+
+
+ranges:
+
+
+[0] - [S-T : S+T] - [INF]
+[small] - [ok] - [big]
+
+
+OPTIONS:
+	A - grow free
+	B - merge with overlap group if size <= S+T
+	C - grow overlap
+	D - remove overlap
+	E - drop perimeter of 1) adj-free 2) other
+
+SMALL:
+	A, B, C
+OK:
+	A, B, -, D, -
+BIG:
+	A, B, -, D, E
+
+
+
+
+
+
+
+PRIORITIES:
+- too small:
+	- grow: empty
+	- merge: with another overlapping small if overlap >=50% & final size is not too fat
+	- grow: overlap
+- too fat
+	- remove rimeter overlap 
+	- split: use perimeter (adjacent to empty first)
+- exactly:
+	- move: swap an overlap for an empty
+	continue: [birth next generation]
+	- grow: empty
+
+
+
+x ADD BACK MOVING as single action ...
+
+
+- LARGE GROUPS push off vertexes to smaller groups (transfer away)
+
+
+
 
 - is there a way to have groups be like 'HEY HELP ME OUT'
 	- fat guy could force swap with a neighbor

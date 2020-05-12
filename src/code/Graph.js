@@ -743,6 +743,16 @@ Graph.prototype.subgraphVertexes = function(){
 	}
 	return groups;
 }
+// Graph.reachableFromVertex = function(graph, startVertex){
+// 	for(i=0; i<vertexes.length; ++i){
+// 		vertex = vertexes[i];
+// 		vertex.temp(Graph.BFS_COLOR_WHITE);
+// 	}
+// 	graph.clearEdgeTemps();
+// 	graph.clearVertexTemps();
+// 	return reached;
+// }
+
 Graph.verticesReachableFromVertexWithoutEdges = function(graph, startVertex, skippedEdges){
 	var i, vertex;
 	var reachable = [];
@@ -964,14 +974,9 @@ Graph.indexAndCopyEdgesFromLists = function(copyEdgeList, copyVertexList, vertex
 	return copyEdgeList;
 }
 
-Graph.groupsFromEdges = function(edges, k){
-	console.log(edges);
-	console.log(k);
-	// if(initialVertexes){
-	// 	console.lgo(initialVertexes);
-	// 	throw "initialVertexes"
-	// }
-	var graph = new Graph();
+Graph.satelliteVertexesFromEdges = function(edges){ // assuming an incoming connected set from edges
+	// console.log(edges);
+	// find max vertex id
 	var maxVertex = -1;
 	for(var i=0; i<edges.length; ++i){
 		var edge = edges[i];
@@ -980,17 +985,78 @@ Graph.groupsFromEdges = function(edges, k){
 		maxVertex = Math.max(a, maxVertex);
 		maxVertex = Math.max(b, maxVertex);
 	}
-	var vertexCount = maxVertex-1;
+	var vertexCount = maxVertex+1;
+	if(vertexCount<=0){
+		return {"satellite":[0]}; // assuming single vertex
+	}
+	// console.log(vertexCount+"/"+maxVertex);
+	// make graph
+	var graph = new Graph();
+	var vertexes = [];;
+	for(var i=0; i<vertexCount; ++i){
+		var vertex = graph.addVertex();
+			vertex.data({"id":i});
+		vertexes[i] = vertex;
+	}
+	for(var i=0; i<edges.length; ++i){
+		var edge = edges[i];
+		graph.addEdgeDuplex(vertexes[edge[0]], vertexes[edge[1]]);
+	}
+	// for each vertex removal, see if all other vertexes are reachable
+	var completes = [];
+	for(var i=0; i<vertexCount; ++i){
+		var vertexA = vertexes[i];
+		// remove edges
+		var es = Code.copyArray(vertexA.edges());
+		for(var j=0; j<es.length; ++j){
+			var e = es[j];
+			graph.removeEdge(e, true);
+		}
+		// check reached:
+		var startIndex = i==0 ? 1 : 0;
+		var startVertex = vertexes[startIndex];
+		var visited = Graph.verticesReachableFromVertexWithoutEdges(graph, startVertex, null);
+		// console.log(" VISIT COUNT: "+visited.length+" ("+es.length+")");
+		if(visited.length==vertexCount-1){
+			completes.push(i);
+		}
+		// add back edges
+		for(var j=0; j<es.length; ++j){
+			var e = es[j];
+			graph.addEdge(e);
+		}
+	}
+	return {"satellite":completes};
+}
+
+Graph.groupsFromEdges = function(edges, k, tolerance, overlapDesired){ // k groups as independent as possible + some desired overlap
+	tolerance = Code.valueOrDefault(tolerance, 1);
+k = 6;
+// tolerance = 0;
+tolerance = 1;
+	overlapDesired = Code.valueOrDefault(overlapDesired, Math.max(Math.round(k*0.25),1) ); // 25%: 4=>1, 6=>1, 8=>2
+	var graph = new Graph();
+	// find maximum vertex index
+	var maxVertex = -1;
+	for(var i=0; i<edges.length; ++i){
+		var edge = edges[i];
+		var a = edge[0];
+		var b = edge[1];
+		maxVertex = Math.max(a, maxVertex);
+		maxVertex = Math.max(b, maxVertex);
+	}
+	var vertexCount = maxVertex+1;
 	if(k>=vertexCount){
 		throw "too many groups";
 	}
+	// create vertexes
 	var graphVertexes = [];
 	for(var i=0; i<=maxVertex; ++i){
 		var v = graph.addVertex();
-		v.data({"id":i, "vertex":v, "cost":0, "groups":[]});
+		v.data({"id":i, "vertex":v, "count":0, "groups":{}});
 		graphVertexes.push(v);
 	}
-	// console.log(graphVertexes);
+	// create edges
 	var graphEdges = [];
 	for(var i=0; i<edges.length; ++i){
 		var edge = edges[i];
@@ -1005,44 +1071,240 @@ Graph.groupsFromEdges = function(edges, k){
 		var e = graph.addEdgeDuplex(a,b,w);
 		graphEdges.push(e);
 	}
+	// set limits
 	var groupSize = k;
+	var groupSizeMin = groupSize - tolerance;
+	var groupSizeMax = groupSize + tolerance;
 	var groupCount = Math.ceil(vertexCount/groupSize);
-	console.log(vertexCount+" => "+groupSize+" = "+groupCount);
-
+// groupCount = 6;
+groupCount = 1;
 	// sprinkle group objects around vertexes
 	var groups = [];
 	var randomVertexes = Code.copyArray(graphVertexes);
 
-var randomVertexesIndex = [0,1,3,9,10,18];
+var randomVertexesIndex = [0,1,3,5,9,10,18,20];
 	for(var i=0; i<groupCount; ++i){
 		var index = Code.randomIndexArray(randomVertexes);
 index = randomVertexesIndex[i];
-console.log(index+"/"+groupCount)
+// console.log(index+"/"+groupCount)
 		var vertex = randomVertexes[index];
 		Code.removeElementAt(randomVertexes,index);
 		var data = vertex.data();
 		var group = {};
 		group["id"] = i;
 		group["nodes"] = [data];
-		group["cost"] = 1;
+		group["count"] = 1;
 		groups.push(group);
-			data["cost"] = 1;
-			data["groups"].push(group);
+			data["count"] = 1;
+			data["groups"][group["id"]] = group;
 	}
 
 	// iterate:
 	var sortMinCost = function(a,b){
-		// console.log(a,b);
-		// throw "?"
-		return a["cost"] < b["cost"] ? -1 : 1;
+		return a["count"] < b["count"] ? -1 : 1;
 	};
-	var maxIterations = 10;
+
+	var groupFxnGrowFree = function(groupContext){ // if there is an adjacent vertex with 0 groups => add
+		var adjacent = groupContext["adjacent"];
+		if(adjacent && adjacent.length>0 && adjacent[0]["count"]==0){
+			var group = groupContext["group"];
+				// console.log("GROW - FREE");
+				var node = adjacent[0];
+				node["count"] += 1;
+				node["groups"][group["id"]] = group;
+				group["count"] += 1;
+				group["nodes"].push(node);
+			return true;
+		}
+		return false;
+	}
+
+	var groupFxnMergeOverlap = function(groupContext){ // for each overlapping group: if the union of nodes is < max size => join & second group = {}
+		var overlaps = groupContext["overlaps"];
+		// console.log(overlaps);
+		if(overlaps){
+			var groups = groupContext["groups"];
+			var group = groupContext["group"];
+			var nodes = group["nodes"];
+			var groupID = group["id"];
+			var overlapKeys = Code.keys(overlaps);
+			var bestMergeID = null;
+			var bestMergeSize = null;
+			var bestMergeUnion = null;
+			for(var i=0; i<overlapKeys.length; ++i){
+				var gid = overlapKeys[i];
+				if(gid==groupID){
+					continue;
+				}
+				var grp = groups[gid];
+				var nds = grp["nodes"];
+				var union = {};
+				// console.log(nodes);
+				// console.log(nds);
+				// console.log(grp);
+				var uns = [nodes,nds];
+				for(var j=0; j<uns.length; ++j){
+					var ns = uns[j];
+					for(var k=0; k<ns.length; ++k){
+						union[ns[k]["id"]] = ns[k];
+					}
+				}
+				// for(var j=0; j<nds.length; ++j){
+				// 	union[nds[j]["id"]] = nds[j];
+				// }
+				var unionCount = Code.keys(union).length;
+				if(0<unionCount && unionCount<=groupSizeMax){
+					if(bestMergeID===null || unionCount>bestMergeSize){
+						bestMergeID = grp["id"];
+						bestMergeSize = unionCount;
+						bestMergeUnion = union;
+					}
+				}
+			}
+			if(bestMergeID!==null){
+				console.log("MERGE "+groupID+" & "+bestMergeID+" = "+bestMergeSize);
+				var groupA = group;
+				var groupB = groups[bestMergeID];
+				// remove references from current groups:
+				var grps = [groupA,groupB];
+				for(var i=0; i<grps.length; ++i){
+					var grp = grps[i];
+					var nds = grp["nodes"];
+					var gID = grp["id"];
+					console.log("OF GROUP: "+i+" : "+gID);
+					for(var j=0; j<nds.length; ++j){
+						console.log("node count: "+nds[j]["count"]+" -> "+nds[j]["count"]);
+						nds[j]["count"] -= 1;
+						nds[j]["groups"][gID] = null;
+						delete nds[j]["groups"][gID];
+					}
+					grp["count"] = 0;
+					grp["nodes"] = [];
+				}
+				var nodes = Code.objectToArray(bestMergeUnion);
+				console.log(nodes.length);
+				console.log(nodes);
+				// var groupNew = {"id":groupA["id"], "nodes":nodes, "count":nodes.length};
+				// keep THIS group, remove other group
+				groupA["nodes"] = nodes;
+				groupA["count"] = nodes.length;
+				var groupAID = groupA["id"];
+				for(var j=0; j<nodes.length; ++j){
+					nodes[j]["count"] += 1;
+					nodes[j]["groups"][groupAID] = groupA;
+				}
+				return true;
+			}
+		}
+		return false;
+	}
+
+	var groupFxnGrowOverlap = function(groupContext){ // if there is any adjacent => add
+		var adjacent = groupContext["adjacent"];
+		var group = groupContext["group"];
+		var groupSize = group["count"];
+		if(adjacent && adjacent.length>0 && groupSize<groupSizeMax){
+				console.log("GROW - OVERLAP");
+				var node = adjacent[0];
+				node["count"] += 1;
+				node["groups"][group["id"]] = group;
+				group["count"] += 1;
+				group["nodes"].push(node);
+			return true;
+		}
+		return false;
+	}
+
+	var groupFxnShrinkOverlap = function(groupContext){
+		var satellite = groupContext["satellite"];
+		console.log(satellite)
+		if(satellite && satellite.length>0){ // remove the most overlapping vertex first? maybe least overlapping?
+			var node = satellite[satellite.length-1];
+			var group = groupContext["group"];
+			var groupCount = group["count"];
+			if(node["count"]>1 && groupCount>groupSizeMin){ // at least 1 overlap & group will be large enough
+				console.log("SHRINK - OVERLAP: "+groupCount);
+				var node = satellite[0];
+				node["count"] -= 1;
+					delete node["groups"][group["id"]];
+				group["count"] -= 1;
+				Code.removeElement(group["nodes"],node);
+			}
+			return true;
+		}
+		return false;
+	}
+
+	var groupFxnNewPerimeter = function(groupContext){ // turn a satellite vertex into a new group ...
+		var satellite = groupContext["satellite"];
+		// find satellite with most adjacent 
+		// console.log(satellite)
+		if(satellite && satellite.length>0){ // remove the most overlapping vertex first? maybe least overlapping?
+			console.log("NEW - PERIMETER");
+			console.log(satellite);
+			var maxAdjNode = null;
+			var maxAdjCount = null;
+			for(var i=0; i<satellite.length; ++i){
+				var node = satellite[i];
+				var vert = node["vertex"];
+				var emptyCount = 0;
+				var adjacent = vert.adjacent();
+				for(var j=0; j<adjacent.length; ++j){
+					var adj = adjacent[j];
+					var data = adj.data();
+					console.log(data["count"]);
+					if(data["count"]==0){
+						++emptyCount;
+					}
+
+				}
+				if(maxAdjNode===null || emptyCount>maxAdjCount){
+					maxAdjNode = node;
+					maxAdjCount = emptyCount;
+				}
+			}
+			// remove node from group
+			var group = groupContext["group"];
+				Code.removeElement(group["nodes"],maxAdjNode);
+				group["count"] -= 1;
+			maxAdjNode["count"] -= 1;
+			delete maxAdjNode["groups"][group["id"]];
+			
+			// create new group of size 1:
+			var groups = groupContext["groups"];
+			var newGroup = {"id":groups.length, "nodes":[maxAdjNode],"count":1};
+			maxAdjNode["count"] += 1;
+			maxAdjNode["groups"][newGroup["id"]] = newGroup;
+			console.log(newGroup);
+			groups.push(newGroup);
+// throw "????????"
+			return true;
+		}
+// throw "...";
+		return false;
+	}
+
+	console.log("GROUP SIZE: "+groupSize+": ["+groupSizeMin+" - "+groupSizeMax+"]  vertexCount "+vertexCount);
+// throw "..."
+	// var maxIterations = 10;
 	// var maxIterations = 20;
 
 	// var maxIterations = 1;
 	// var maxIterations = 2;
+	// var maxIterations = 3;
+	// var maxIterations = 4;
+	// var maxIterations = 5;
+	// var maxIterations = 6;
+	// var maxIterations = 7;
+	// var maxIterations = 8;
+	// var maxIterations = 9;
+	// var maxIterations = 10;
+	// var maxIterations = 13;
+	// var maxIterations = 20;
+	var maxIterations = 30;
 	for(var iteration=0; iteration<maxIterations; ++iteration){
 		// for each group perform operations locally
+		console.log(iteration+" ......................................................................................... ")
 		for(var i=0; i<groups.length; ++i){
 			var group = groups[i];
 			// find ajacent vertexes
@@ -1050,9 +1312,31 @@ console.log(index+"/"+groupCount)
 			var internal = {};
 			var interrior = {};
 			var perimeter = [];
+
 			var nodes = group["nodes"];
+			if(nodes.length==0){
+				continue;
+				// throw "empty group, continue";
+			}
+			var overlapGroupsCount = 0;
+			var overlapTable = {};
 			for(var j=0; j<nodes.length; ++j){
 				var node = nodes[j];
+				if(node["count"].length>1){ // keep track of overlap
+					overlapGroupsCount += 1;
+				}
+				// get list of 
+				var nodeGroups = node["groups"];
+				var nodeKeys = Code.keys(nodeGroups);
+				for(var k=0; k<nodeKeys.length; ++k){
+					var key = nodeKeys[k];
+					var val = overlapTable[key];
+					if(!val){
+						val = 0;
+					}
+					val += 1;
+					overlapTable[key] = val;
+				}
 				var id = node["id"];
 				var vertex = node["vertex"];
 				internal[id] = node;
@@ -1062,34 +1346,35 @@ console.log(index+"/"+groupCount)
 					adjacent[data["id"]] = data;
 				}
 			}
+			var overlapMaxCount = 0;
 			// find contained points = vertex with only interrior edges
 			var internalList = Code.objectToArray(internal);
-			for(var j=0; j<internalList.length; ++j){
-				var node = internalList[j];
-				var id = node["id"];
-				var vertex = node["vertex"];
-				var adj = vertex.adjacent();
-				var isInterrior = true;
-				for(var k=0; k<adj.length; ++k){
-					var data = adj[k].data();
-					if(!internal[data["id"]]){
-						isInterrior = false;
-						break;
-					}
-				}
-				if(isInterrior){
-					interrior[id] = node;
-				}
-			}
+			// for(var j=0; j<internalList.length; ++j){
+			// 	var node = internalList[j];
+			// 	var id = node["id"];
+			// 	var vertex = node["vertex"];
+			// 	var adj = vertex.adjacent();
+			// 	var isInterrior = true;
+			// 	for(var k=0; k<adj.length; ++k){
+			// 		var data = adj[k].data();
+			// 		if(!internal[data["id"]]){
+			// 			isInterrior = false;
+			// 			break;
+			// 		}
+			// 	}
+			// 	if(isInterrior){
+			// 		interrior[id] = node;
+			// 	}
+			// }
 			// find perimeter:
-			for(var j=0; j<internalList.length; ++j){
-				var node = internalList[j];
-				var id = node["id"];
-				var vertex = node["vertex"];
-				if(!interrior[id]){
-					perimeter.push(node);
-				}
-			}
+			// for(var j=0; j<internalList.length; ++j){
+			// 	var node = internalList[j];
+			// 	var id = node["id"];
+			// 	var vertex = node["vertex"];
+			// 	if(!interrior[id]){
+			// 		perimeter.push(node);
+			// 	}
+			// }
 			interrior = Code.objectToArray(interrior);
 			// remove internal from adj
 			internal = internalList;
@@ -1105,91 +1390,116 @@ console.log(index+"/"+groupCount)
 					--j;
 				}
 			}
-			perimeter.sort(sortMinCost);
-			interrior.sort(sortMinCost);
+
+
+			var internalEdges = [];
+			for(var a=0; a<internal.length; ++a){
+				var vA = internal[a]["vertex"];
+				for(var b=a+1; b<internal.length; ++b){
+					var vB = internal[b]["vertex"];
+					var edge = vA.isAdjacent(vB);
+					if(edge){
+						internalEdges.push([a,b]);
+					}
+				}
+			}
+			// console.log("internalEdges: ",internalEdges);
+			var satellite = Graph.satelliteVertexesFromEdges(internalEdges); // list of vertexes that can be removed and remain in-tact list
+				satellite = satellite["satellite"];
+			for(var s=0; s<satellite.length; ++s){
+				satellite[s] = internal[satellite[s]];
+			}
+			// perimeter.sort(sortMinCost);
+			// interrior.sort(sortMinCost);
 			adjacent.sort(sortMinCost);
-			internal.sort(sortMinCost);
-			// console.log(adjacent);
-			// console.log(internal);
-			// console.log(adjacent.length);
-			// console.log(adjacent);
-			// console.log(internal);
-			console.log(i+" : "+internal.length+"("+interrior.length+" - "+perimeter.length+") & "+adjacent.length);
-			var size = group["nodes"].length;
-			if(adjacent.length>0 && adjacent[0]["cost"]==0){ // always grab available vertex
-				if(false && perimeter.length>0 && perimeter[perimeter.length-1]["cost"]>1){
-// 'movement' may split up node
-// only allow movement that keeps all nodes connected directly
-// CALCUALTE BEFOREHAND?
+			// internal.sort(sortMinCost);
+			satellite.sort(sortMinCost);
+			
+			// console.log(i+" : "+internal.length+"("+interrior.length+" - "+perimeter.length+") & "+adjacent.length);
+			console.log(i+" : "+interrior.length+" -- "+adjacent.length);
+			var nodeCount = group["nodes"].length;
 
-					// - swap worst overlapping for new vertex [MOVE]
-					console.log("MOVE: "+perimeter.length);
-					// var node = perimeter[perimeter.length-1];
-					var node = perimeter[0];
-					node["cost"] -= 1;
-					Code.removeElement(node["groups"],group);
-					group["cost"] -= 1;
-					Code.removeElement(group["nodes"],node);
-				}else{
-//					console.log("GROW");
+			var groupContext = {};
+				groupContext["internal"] = internal;
+				// groupContext["interrior"] = interrior;
+				// groupContext["perimeter"] = perimeter;
+				groupContext["satellite"] = satellite;
+				
+				groupContext["adjacent"] = adjacent; // external neighbors
+				groupContext["group"] = group;
+				groupContext["groups"] = groups;
+				groupContext["overlaps"] = overlapTable; // groups with vertexes in common
+				
+			//
+			var handledGroup = false;
+			// SMALL
+			if(nodeCount<groupSizeMin){
+				if(!handledGroup){
+					handledGroup = groupFxnGrowFree(groupContext);
 				}
-				var node = adjacent[0];
-				node["cost"] += 1;
-				node["groups"].push(group);
-				group["cost"] += 1;
-				group["nodes"].push(node);
-			}else if(size<groupSize){ // grab vertex if too small
-				if(adjacent.length>0){
-					var node = adjacent[0];
-					console.log("GROW: "+node["cost"]);
-					node["cost"] += 1;
-					node["groups"].push(group);
-					group["cost"] += 1;
-					group["nodes"].push(node);
-					// grow with best overlapping vertex [GROW]
+				if(!handledGroup){
+					handledGroup = groupFxnMergeOverlap(groupContext);
 				}
-			}else if(size>groupSize){ // remove vertex if too large
-				if(perimeter.length>0 && perimeter[perimeter.length-1]["cost"]>1){ // can only remove a perimeter & if it has overlap cost
-					console.log("SHRINK");
-					var node = perimeter[perimeter.length-1];
-					// var node = perimeter[0];
-					node["cost"] -= 1;
-					Code.removeElement(node["groups"],group);
-					group["cost"] -= 1;
-					Code.removeElement(group["nodes"],node);
+				if(!handledGroup){
+					handledGroup = groupFxnGrowOverlap(groupContext);
 				}
-			} // else same size or no vertexes
-			// throw "single";
-		}
-		// INTERACT WITH NEIGHBORS:
-	// 
+			// MEDIUM
+			}else if(groupSizeMin<=nodeCount && nodeCount<=groupSizeMax){
+				if(!handledGroup){
+					handledGroup = groupFxnGrowFree(groupContext);
+				}
+				if(!handledGroup){
+					handledGroup = groupFxnMergeOverlap(groupContext);
+				}
+				if(!handledGroup){
+					handledGroup = groupFxnShrinkOverlap(groupContext);
+				}
+			// LARGE
+			}else{
+				console.log("LARGE: ")
+				console.log(satellite.length)
+				if(!handledGroup){
+					handledGroup = groupFxnNewPerimeter(groupContext);
+				}
+				if(!handledGroup){
+					handledGroup = groupFxnGrowFree(groupContext);
+				}
+				if(!handledGroup){
+					handledGroup = groupFxnMergeOverlap(groupContext);
+				}
+				if(!handledGroup){
+					handledGroup = groupFxnShrinkOverlap(groupContext);
+				}
+			}
 
-// if highly overlapped -> 50% or more & count >= n-1 -> merge with most overlap
-// iv count > n+1 : choose least-overlapping point to split group
-// 
-//
-
-
-// if size is 'constant' < n-1 or n+1 for more than ~3 iterations: do merge & split
-		
-		// if neighbor A is larger than expected (size>=n+1) & larger than neighbor (+1?)
-			// force swap out perimeter vertex
-
-		// if group is very big
-			// split off vertex 
-
-		// if group has high overlap
-			// merge with smallest / largest neighbor
-
-		// (after a while)
-		// if a group is really big -> separate a perimeter vertex
-		// if a group is reall small -> combine with neighbor
-
-
-		console.log("loop");
-		// throw "loop";
-		// break;
+			if(!handledGroup){
+				console.log("no op: "+nodeCount);
+			}
+	// loop
 	}
+
+	// make sure each group has some overlap with other groups:
+	for(var i=0; i<groups.length; ++i){
+		var group = groups[i];
+		var vList = group["nodes"];
+		// overlapDesired
+
+		// get count of current overlap
+
+		// if need more:
+
+		// get list of adjacent cells
+
+		// sort cells on existing overlap
+
+		// add overlapping cells in order
+
+		// if reached all of cells => i-- & continue
+		// if no more cells => continue
+	}
+
+
+	console.log(overlapDesired);
 
 	// convert groups to sets of vertexes
 	var lists = [];
