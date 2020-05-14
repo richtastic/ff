@@ -603,11 +603,12 @@ R3D._transformCameraExtrinsicMultipleNonlinearGD = function(args, x, isUpdate){
 	return totalError;
 }
 
-R3D.transformCameraExtrinsicNonlinear = function(P, pointsA2D,pointsB2D, Ka,KaInv, Kb,KbInv, maxIterations){
+R3D.transformCameraExtrinsicNonlinear = function(P, pointsA2D,pointsB2D, Ka,KaInv, Kb,KbInv, maxIterations, negativeIsBad){
 	console.log("R3D.transformCameraExtrinsicNonlinear");
+	negativeIsBad = Code.valueOrDefault(negativeIsBad, false);
 	// throw "map to other fxn"
 	maxIterations = Code.valueOrDefault(maxIterations, 1000);
-	var args = [pointsA2D,pointsB2D, Ka,KaInv, Kb,KbInv];
+	var args = [pointsA2D,pointsB2D, Ka,KaInv, Kb,KbInv, negativeIsBad];
 	var x = R3D.transformMatrixToComponentArray(P);
 
 	var result = Code.gradientDescent(R3D._transformCameraExtrinsicNonlinearGD, args, x, null, maxIterations, 1E-6); // 1E-1 = sub pixel ?
@@ -634,6 +635,7 @@ R3D._transformCameraExtrinsicNonlinearGD = function(args, x, isUpdate){
 	var KaInv = args[3];
 	var Kb = args[4];
 	var KbInv = args[5];
+	var negativeIsBad = args[6];
 
 	var tx = x[0];
 	var ty = x[1];
@@ -677,6 +679,11 @@ R3D._transformCameraExtrinsicNonlinearGD = function(args, x, isUpdate){
 			var distanceSquareA = V2D.distanceSquare(pA, p3DA);
 			var distanceSquareB = V2D.distanceSquare(pB, p3DB);
 			var error = distanceSquareA + distanceSquareB;
+
+			if(negativeIsBad && (p3DA.z<=0 || p3DB.z<=0)){ // behind camera
+				error *= 2;
+			}
+
 			totalError += error;
 		}
 		// var distanceSquareA = R3D.reprojectionErrorSingle(p3D,pA,extrinsicA,Ka);
@@ -10100,8 +10107,12 @@ R3D._fundamentalIteritiveDropWorst = function(pointsA,pointsB, minimumErrorSigma
 	var sigmaDrop = 2.0;
 	var maxIterations = 15; // 10-20
 	var errorSigma = null;
+
+// ?
+console.log(pointsA.length);
 	for(var i=0; i<maxIterations; ++i){
-		// if(!F){
+		console.log("F ITERATION: "+i+" @ "+pointsA.length);
+		console.log(pointsA,pointsB);
 		F = R3D.fundamentalFromUnnormalized(pointsA,pointsB);
 		Finv = R3D.fundamentalInverse(F);
 		// }
@@ -11485,8 +11496,13 @@ for(var z=0; z<bestMatchesA.length; ++z){
 		finalPointsA.push(a);
 		finalPointsB.push(b);
 	}
+	var minimumFPoints = 8;
+	if(finalPointsA.length<minimumFPoints){
+		return {"F":null, "inv":null, "A":null, "B":null, "error":null};
+	}
 
 	var minimumDesiredError = 5.0;
+	console.log(finalPointsA,finalPointsB, minimumDesiredError);
 	var info = R3D._fundamentalIteritiveDropWorst(finalPointsA,finalPointsB, minimumDesiredError);
 	console.log(info);
 
@@ -11495,14 +11511,10 @@ for(var z=0; z<bestMatchesA.length; ++z){
 	var finalPointsA = info["A"];
 	var finalPointsB = info["B"];
 	var Ferror = info["error"];
-
-
 	R3D.showFundamental(finalPointsA, finalPointsB, Fab, Fba, GLOBALSTAGE, imageMatrixA,imageMatrixB);
 
 
 	return {"F":Fab, "inv":Fba, "A":finalPointsA, "B":finalPointsB, "error":Ferror};
-
-	throw "?"
 }
 
 

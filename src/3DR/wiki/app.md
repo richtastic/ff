@@ -349,10 +349,11 @@ https://cloud.google.com/appengine/docs/nodejs/
 
 TIMELINES:
 
-05/10 - test new set of 10 ~ 20 images
-05/12 - use bundle groupings algorithm
-05/24 - test set of ~50 images
-05/31 - test set of ~100 images x (this will require 2-10 x speed ups)
+05/16 - test 'medium' set of 11 images
+05/18 - use bundle groupings algorithm
+05/24 - test 'full' set of 25 images
+		- automate URL refresh for sections of code
+05/31 - test set of ~ 50 images x (this will require 2-10 x speed ups & AUTOMATION OF NEXT TASK)
 06/07 - MVP
 
 MISSING:
@@ -377,181 +378,72 @@ MISSING:
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
-- with disparate groups: highly likely fat guys will need to split in sparse areas
-	=> what does starting every vertex as a group do?
-	=> what does starting with a single group @ verex do?
 
+http://localhost/web/ff/3DR/app/app.html?iterations=2
 
-- splitting fat groups by most recently aquired perimeter node
 
+- start process again with medium group
 
+- incorporate groups
+	6 +/- 1 [5-7] w/ 2 overlap
 
-ranges:
 
 
-[0] - [S-T : S+T] - [INF]
-[small] - [ok] - [big]
 
+- how is the matching great, but the R is off left/right ?
 
-OPTIONS:
-	A - grow free
-	B - merge with overlap group if size <= S+T
-	C - grow overlap
-	D - remove overlap
-	E - drop perimeter of 1) adj-free 2) other
+- HOW TO DESTINGUISH BETWEEN LEFT / RIGHT ORIENTATIONS
+	=> picking most 'relaiable' point pairs ?
+		-> NCC / SAD ?
 
-SMALL:
-	A, B, C
-OK:
-	A, B, -, D, -
-BIG:
-	A, B, -, D, E
 
+forwardCounts: 26,55,0,0
+R3D.js:927 bakwardCounts: 55,26,81,81
 
+forwardCounts: 0,93,0,0
+R3D.js:927 bakwardCounts: 93,0,93,93
 
+forwardCounts: 271,0,0,0
+R3D.js:927 bakwardCounts: 0,271,271,271
 
+R3D.js:919 forwardCounts: 515,485,0,0
+R3D.js:920 bakwardCounts: 485,515,1000,1000
 
+R3D.js:919 forwardCounts: 482,518,0,0
+R3D.js:920 bakwardCounts: 518,482,1000,1000
 
+forwardCounts: 73,1,0,0
+R3D.js:927 bakwardCounts: 1,73,74,74
 
-PRIORITIES:
-- too small:
-	- grow: empty
-	- merge: with another overlapping small if overlap >=50% & final size is not too fat
-	- grow: overlap
-- too fat
-	- remove rimeter overlap 
-	- split: use perimeter (adjacent to empty first)
-- exactly:
-	- move: swap an overlap for an empty
-	continue: [birth next generation]
-	- grow: empty
+forwardCounts: 245,1,0,0
+R3D.js:927 bakwardCounts: 1,245,246,246
 
+forwardCounts: 0,99,0,0
+R3D.js:927 bakwardCounts: 99,0,99,99
 
 
-x ADD BACK MOVING as single action ...
 
 
-- LARGE GROUPS push off vertexes to smaller groups (transfer away)
 
 
 
 
-- is there a way to have groups be like 'HEY HELP ME OUT'
-	- fat guy could force swap with a neighbor
+- the nonlinear step put it behind
+	=> need a cost for behind errors
 
+	- in different scenarios this is different:
+		- initializing: BIG ERROR -> want to keep points
+		- updating approx: mild error -> want to get rid of points
 
-- ADD SPLITTING OF FAT GUYS
 
-- ADD MERGING OF SMALL GUYS
+- logic to end solvePair if R / count / error not changing
 
 
-x create example graph to see behaviors
 
-- checks:
-	- each vertex is in a group
-	- groups are all sized: n +/- 1
+- too many pairs
+	11 V -> 51 P
 
 
-=> organic type iterative grouping:
-	- each group (G) has a set of rules: GROW (& MOVE) | SWAP | SHRINK
-		- if any adjacent empty vertexes:
-			- if group has any overlapping vertexes:
-				- swap worst overlapping for new vertex [MOVE]
-			- else:
-				- grow with new vertex [GROW]
-		- else if ideal > size (smaller)
-			- grow with best overlapping vertex [GROW]
-		- else if ideal < size (larger)
-			- if group contains any overlapping vertex:
-				- remove worst overlapping [SHRINK]
-	- vertex weight:
-		- # of groups assigned to
-	- iterate on rules until stable ot steady state oscillation
-=> output: groups of ideal size (+ 1 margin?) possible overlap
-
-
-
-
-...
-
-
-
-
-
-
-
--- need a requirement that every vertex 'moved' between groups ALSO moves every ????
-- what is OK -> think about extreme cases
-
-
-- bisection is heavily dependent on choice of groups
-	- want groups to be locally close to each other
-
-	- initial groups:
-		- place ceil(N/K) = G groups into skeleton at random locations
-		- for some interations
-			- move group around based on FORCE from other groups
-			- force is based on edge-distance
-			- direction of force is on 'opposite' direction of sorce (ie every other direction)
-			- update locations (1 step at a time) based on n^2 force summations
-		- exit on stable [osillating or no movement] or max iterations
-
-	- place groups into larger graph now comtaining skeletal ends
-		- repeat force loop
-	- possibly repeat with full graph - but edge weights may need to play a role in force estimate (weak edges have weak force carrying)
-
-	- groups initialized as expanded until they contain k nodes
-
-	- overlapping vertexes are removed from larger groups and given to smaller groups until mutually exclusive groups exist
-
-.....
-
-	k - way group swap update: r k n ^ 3 ?
-
-
-
-
-
-
-
-- visually test out graph partitioning algorithms
-	- make a random graph (2D)
-	- connect nearby components with some randomness
-	- show steps
-	- show 'disjoint' (semi) groupings
-	- show final groupings
-
-
-
-DENSE GROUPS:
-	have graph of n views (100)
-	cluster groups of size g (6)
-	want minimum overlap of o (2)
-	- want to minimize total number of groups (n/(g-o)) : 100/(6-2) = 25
-	- each group should have a locally 'strong' vertex
-		- skeletal node
-	- spread 'good' vertexes around
-	- relate edges as error or number of tracks
-	- keep related vertexes together (connected sub-graph of main graph)
-
-clique
-
-better = [next lowest error or next highest tracks]
-A)
-each vertex is in its own group of size 1
-queue vertexes based on next-best edge
-- if group size less than desired size, expand group by merging next best (worst?) edge
-- if group size is more than desired size, remove worst (best?) edge
-=> no overlap
-add overlap: include next 2 best edges belonging to another group
-	- would prefer they be separate ?
-
-B) entire graph is single group - only skeletal edges
-- remove best edge from group
--- some edges can't be removed without dropping the vertex
-
-- should edges between groups be BETTER or WORSE ?
-- should edges in groups be BETTER OR WORSE ?
 
 
 

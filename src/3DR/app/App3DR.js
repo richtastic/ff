@@ -7681,7 +7681,7 @@ console.log("checkPerformNextTask");
 		return;
 	}
 
-// throw "start dense";
+throw "start dense";
 	if(!project.checkHasDenseStarted()){
 		project.calculateDensePairPutatives();
 		return;
@@ -7968,7 +7968,8 @@ console.log("GOT : relative: "+relativeCount);
 			project.saveFileFromData(inputData,inputFilename, saveProjectFxn,project);
 		}
 		var saveProjectFxn = function(){
-			console.log("saveProjectFxn");	
+			console.log("saveProjectFxn");
+			project._taskDoneCheckReloadURL();
 		}
 		// SAVE SEQUENCE
 		saveMatchesFxn();
@@ -7988,46 +7989,6 @@ bad = cameras are wrong or accidentally correct, <50% of scene is mapped
  // good | ok | poor | bad
 console.log("pair count: "+pairs.length+" ............");
 	for(var i=0; i<pairs.length; ++i){
-// i = 0;  // | good
-// i = 1;  // | ok
-// i = 2;  // | ok
-// i = 3;  // | ok/poor (not much possible)
-// i = 4;  // | ok/poor (not much possible)
-
-// i = 5;  // | ok
-// i = 6;  // | ok
-// i = 7;  // | good
-// i = 8; // | ok
-
-// i = 9;  // actually front/back - center epipole? | ok
-// i = 10; // unlucky | ok
-// i = 11; // actually front/back - center epipole? | ok
-
-// i = 12; // actually front/back - center epipole? | great
-// i = 13; // almost front/back - center epipole | great
-
-// i = 14; //  | good
-
-
-// DENSE:
-
-// i = 0; // GOOD
-// i = 1; // OK
-// i = 2; // OK
-// i = 3; // OK
-// i = 4; // OK
-// i = 5; // OK
-// i = 6; // OK
-// i = 7; // OK    close -- some wrong?
-// i = 8; // GOOD
-// i = 9; // OK
-// i = 10; // GOOD
-// i = 11; // OK       big skew
-// i = 12; // OK     large rotation & skew
-// i = 13; // GOOD
-// i = 14; // GOOD     similar
-
-// console.log("PICKED: "+i);
 		var pair = pairs[i];
 		var idA = pair["A"];
 		var idB = pair["B"];
@@ -8044,13 +8005,13 @@ console.log("pair count: "+pairs.length+" ............");
 				project.calculatePairMatchWithRFromViewIDs(idA,idB, relativeAB, completePairFxn,project, configuration);
 				return;
 			} // else sparse
-			throw "this is for sparse"
+			// throw "this is for sparse"
 			// sparse = w/o known R
 			project.calculatePairMatchFromViewIDs(idA,idB, completePairFxn,project);
 			return;
 		}
 	}
-// throw ">triples";
+throw ">triples";
 	var triples = inputData["triples"];
 	if(!triples){
 		inputData["triples"] = project.triplesFromBestPairs(pairs, isDense);
@@ -10025,7 +9986,7 @@ console.log(featuresB);
 			// need to go over F & get better ones:
 			console.log("Ferror: "+Ferror);
 			if(Ferror>maxErrorFInitPixels || pointsA.length<minimumMatchPoints){
-				console.log(" INIT F ERROR TOO HIGH");
+				console.log(" INIT F ERROR TOO HIGH: "+Ferror+" / "+maxErrorFInitPixels);
 				// goodEnoughMatches = false;
 			}
 		}
@@ -10038,6 +9999,7 @@ console.log(featuresB);
 
 */
 		if(goodEnoughMatches){
+			console.log(imageMatrixA,imageMatrixB, pointsA,pointsB)
 			var result = R3D.findLocalSupportingCornerMatches(imageMatrixA,imageMatrixB, pointsA,pointsB);
 			console.log(result);
 
@@ -10048,10 +10010,12 @@ console.log(featuresB);
 			pointsA = result["A"];
 			pointsB = result["B"];
 			Ferror = result["error"];
-			// if(Ferror>maxErrorFDensePixels){
-			// 	console.log(" GUIDED MATCH ERROR TOO HIGH");
-			// 	goodEnoughMatches = false;
-			// }
+			if(!F || Ferror>maxErrorFDensePixels){
+				console.log(" GUIDED MATCH ERROR TOO HIGH (OR F NULL): "+Ferror+" / "+maxErrorFDensePixels);
+				goodEnoughMatches = false;
+				pointsA = [];
+				pointsB = [];
+			}
 		}
 
 // throw "..."
@@ -10071,7 +10035,7 @@ console.log(featuresB);
 			pointsB = result["B"];
 			Ferror = result["error"];
 			if(Ferror>maxErrorFDensePixels){
-				console.log(" GUIDED F ERROR TOO HIGH");
+				console.log(" GUIDED F ERROR TOO HIGH: "+Ferror+" / "+maxErrorFDensePixels);
 				goodEnoughMatches = false;
 			}
 		}
@@ -10168,7 +10132,9 @@ if(true){
 	samplesB = samples[1];
 	console.log(pointsA.length)
 	console.log("R3D.showFundamental");
-	R3D.showFundamental(samplesA, samplesB, F, Finv, GLOBALSTAGE, imageMatrixA,imageMatrixB);
+	if(F){
+		R3D.showFundamental(samplesA, samplesB, F, Finv, GLOBALSTAGE, imageMatrixA,imageMatrixB);
+	}
 
 } // if false
 
@@ -10328,7 +10294,7 @@ console.log(pairData);
 		
 		}else{ // save without further operation
 console.log(pairData);
-throw "before save pair A"
+// throw "before save pair A"
 			pairDoneSaveFxn();
 		}
 	}
@@ -11711,12 +11677,19 @@ App3DR.ProjectManager.prototype.calculatePairPutatives = function(){
 	var viewCount = views.length;
 	var similarity = this._viewSimilarity;
 
-	var minimumPairCount = 3; // need at least 2 + 1 other views to try
-		minimumPairCount = 6; // double in cases of error
-	// 4  -> 2
-	// 9  -> 3
-	// 16 -> 4
-	var maximumPairCount = minimumPairCount + 1*Math.ceil(Math.sqrt(viewCount));
+	
+	var cappedMinimumPairCount = 3; // need at least 2 + 1 other views to try + error (~2)
+	var cappedMaximumPairCount = 10; // 3 + 100^0.5 => 10
+	var minimumPairCount = cappedMinimumPairCount;
+	// 4  -> 4
+	// 9  -> 5
+	// 16 -> 6
+	// 25 -> 7
+	// 36 -> 8
+	// 49 -> 9
+	// 64 -> 10
+	var maximumPairCount = 2 + Math.ceil(Math.sqrt(viewCount));
+		maximumPairCount = Math.min(Math.max(maximumPairCount, cappedMinimumPairCount), cappedMaximumPairCount);
 	console.log("VIEWS: "+viewCount+" | RANGE: "+minimumPairCount+" : "+maximumPairCount);
 	var sortScoresFxn = function(a,b){
 		a = a["s"];
@@ -16351,6 +16324,29 @@ if(deltaR<0){
 	}
 
 	App3DR.ProjectManager.loadViewsImages(loadViews,fxnViewsLoaded, project);
+}
+
+App3DR.ProjectManager.prototype._taskDoneCheckReloadURL = function(){
+	console.log("_taskDoneCheckReloadURL");
+	var url = Code.getURL();
+	var iterations = Code.getURLParameter(url,"iterations");
+	console.log(iterations);
+	console.log(iterations!==null);
+	console.log(iterations!==undefined);
+	console.log(iterations!==0);
+	if(iterations!==null && iterations!==undefined && iterations!==0){
+		iterations -= 1;
+		console.log("NEW ITERATION "+iterations);
+		var url = Code.setURLParameter(url,"iterations",iterations);
+		console.log("NEW URL "+url);
+		if(iterations>0){
+			// console.log(url);
+			setTimeout(function() {
+				console.log("LOAD URL: "+url);
+				Code.setURL(url);
+			}, 100);
+		}
+	}
 }
 
 App3DR.ProjectManager.prototype._addGraphViews = function(world, graphViewLookup, stage, alternateViews){
