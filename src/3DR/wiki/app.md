@@ -378,6 +378,13 @@ MISSING:
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
+- CHECK THAT GENERATED GRAPH IS CORRECT
+
+=> IDs may be wrong ?
+
+
+
+
 
 http://localhost/web/ff/3DR/app/app.html?iterations=2
 
@@ -442,6 +449,106 @@ R3D.js:927 bakwardCounts: 99,0,99,99
 
 - too many pairs
 	11 V -> 51 P
+
+
+- too many triples
+	98 triples
+	triplesFromBestPairs
+
+- what does it mean for a pair-graph to have non-reachable nodes?
+	- the pair was not involved in a calculatd triple?
+
+
+EX:
+73GY9M9Y-DSHJ9MKP
+
+
+
+- graph is trying to include an edge that doesn't exist
+
+pair 2 -- 7
+01 - LQ
+
+
+01E7YJ4K-LQTUF4AH
+
+01E7YJ4K-LQTUF4AH
+01E7YJ4K,LQTUF4AH
+
+App3DR.js:8128 0 = DSHJ9MKP
+App3DR.js:8128 1 = KX9HK4DL
+App3DR.js:8128 2 = LQTUF4AH
+App3DR.js:8128 3 = 5YWTR5Q9
+App3DR.js:8128 4 = TWHFT2XA
+App3DR.js:8128 5 = LN4JZNU6
+App3DR.js:8128 6 = WT52QVTI
+App3DR.js:8128 7 = 01E7YJ4K
+App3DR.js:8128 8 = GTR6DGS0
+App3DR.js:8128 9 = 73GY9M9Y
+App3DR.js:8128 10 = BO1U5B2F
+
+
+
+pair 2 -- 7
+
+
+
+
+=> double check if pairs exist
+
+- maybe mis-labeling?
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -6645,6 +6645,7 @@ App3DR.ProjectManager.prototype.checkOperations = function(){
 	var param = operation["param"];
 		var path = param["path"];
 		var data = param["data"];
+// console.log(" "+path+" ... ");
 	if(op=="GET"){
 		this._clientFile.get(path);
 	}else if(op=="SET"){
@@ -8011,7 +8012,8 @@ console.log("pair count: "+pairs.length+" ............");
 			return;
 		}
 	}
-throw ">triples";
+// throw ">triples";
+
 	var triples = inputData["triples"];
 	if(!triples){
 		inputData["triples"] = project.triplesFromBestPairs(pairs, isDense);
@@ -8019,12 +8021,13 @@ throw ">triples";
 		triples = inputData["triples"];
 		// throw "BEFORE TRIPLES DONE"
 	}
-// throw "..."
+console.log(triples);
 	console.log("TRIPLE COUNT: "+inputData["triples"].length);
-
+// throw "..."
 	// LOAD EACH POSSIBLE TRIPLE
 	var saveProjectFxn = function(){
-		console.log("saveProjectFxn");	
+		console.log("saveProjectFxn");
+		project._taskDoneCheckReloadURL();
 	}
 	var completeTripleFxn = function(scales){
 		console.log("completeTripleFxn");
@@ -8057,7 +8060,7 @@ console.log("inputFilename: "+inputFilename);
 	// CREATE GRAPH FROM PAIRWISE & TRIPLE SCALE
 	var graph = inputData["graph"];
 // force redo:
-// graph = null;
+graph = null;
 	if(!graph){
 console.log("RICHIE - START GRAPH");
 		var views = project.views();
@@ -8091,9 +8094,8 @@ console.log("RICHIE - START GRAPH");
 
 		console.log("_absoluteViewsFromDatas");
 		var graph = this._absoluteViewsFromDatas(graphViews, graphPairs, graphTriples);
+console.log("graph:");
 console.log(graph);
-
-// ???
 		var viewIndextoViewID = graph["views"];
 for(var v=0; v<viewIndextoViewID.length; ++v){
 	var index = viewIndextoViewID[v];
@@ -8123,6 +8125,7 @@ for(var v=0; v<viewIndextoViewID.length; ++v){
 			var d = {};
 				d["id"] = vs[i];
 				d["transform"] = vt[i];
+console.log(i+" = "+vs[i]);
 			dataViews.push(d);
 		}
 		// TODO: find edge outliers -- eg: node voting
@@ -8288,10 +8291,10 @@ throw ">X";
 
 App3DR.ProjectManager.prototype.triplesFromBestPairs = function(pairs, isDense){ // TODO: does this guarantee scale coverage for every pair ?
 	var minimumRelativeCount = 100; // tracks:  poor-avg-good  |  sparse =  100-200-500   |  dense = 400-1000-2000
-	var maximumIndividualPairCount = 5; // 3 - 6 [at least 2 others to guarantee relative-ness, at least 4 for error]
+	var maximumIndividualPairCount = 3; // 3 - 6 [at least 2 others to guarantee relative-ness, at least 4 for error]
 	if(isDense){
 		minimumRelativeCount = 400;
-		maximumIndividualPairCount = 4; // 2 - 4
+		maximumIndividualPairCount = 3; // 2 - 4
 	}
 
 	// bookkeeping
@@ -8758,6 +8761,7 @@ console.log(" save graph ");
 				// SAVE
 				var savedGraphComplete = function(){
 					console.log("savedGraphComplete: "+graphFile);
+					project._taskDoneCheckReloadURL();
 				}
 				var savedFullComplete = function(){
 					console.log("savedFullComplete: "+fullBundlePath);
@@ -9039,6 +9043,7 @@ console.log(graphData);
 					project.saveFileFromData(graphData, graphFile, savedGraphComplete);
 
 					console.log("no more -- move onto next group");
+					project._taskDoneCheckReloadURL();
 					return;
 				}
 console.log("isDone --- no");
@@ -9105,6 +9110,7 @@ console.log("isDone --- no");
 				// SAVE TO FILE
 				var savedTrackComplete = function(){
 					console.log("saved track --- done bundle iteration:  "+baIterations);
+					project._taskDoneCheckReloadURL();
 				}
 				// throw "before saving track";
 				project.saveFileFromData(data, fullTrackPath, savedTrackComplete, project);
@@ -9261,6 +9267,7 @@ console.log("isDone --- no");
 				view.loadTrackImage(loadedImageComplete, project);
 			}
 			// insert original track points
+console.log(loadPairs);
 			console.log("load merging tracks: pair");
 			for(var i=0; i<loadPairs.length; ++i){
 				var pair = loadPairs[i];
@@ -9412,11 +9419,21 @@ graphData["loadPairIndex"] = -1;
 				console.log(fullTrackPath);
 				console.log(fullGraphPath);
 // throw "before save tracks???+ "+trackFilename;
+				var savedFiles = 0;
 				var savedTrackComplete = function(){
 					console.log("savedTrackComplete: "+trackFilename);
+					++savedFiles;
 				}
 				var savedGraphComplete = function(){
 					console.log("savedGraphComplete: "+fullGraphPath);
+					++savedFiles;
+				}
+
+				var savedBothComplete = function(){
+					if(savedFiles==2){
+						console.log("savedBothComplete ");
+						project._taskDoneCheckReloadURL();
+					}
 				}
 				console.log("GRAPH");
 				project.saveFileFromData(graphData, fullGraphPath, savedGraphComplete);
@@ -9649,7 +9666,6 @@ App3DR.ProjectManager.pairIDFromViewIDs = function(idA,idB){
 	return idA < idB ? (idA+"-"+idB) : (idB+"-"+idA);
 }
 App3DR.ProjectManager.prototype._absoluteViewsFromDatas = function(views, pairs, triples){
-	// throw "is ths used?"
 	var viewToID = function(view){
 		return view["id"];
 	};
@@ -9675,9 +9691,12 @@ App3DR.ProjectManager.prototype._absoluteViewsFromDatas = function(views, pairs,
 	};
 
 // this.displayOriginalViewGraph(views, pairs, triples, viewToID,pairToIDs,tripleToIDs, pairToError,pairToTransform,tripleToScales);
-	
+console.log(pairs);
+console.log("pairs");
+// throw "?"
 	var result = Code.graphAbsoluteFromObjectLookup3D(views, pairs, triples, viewToID,pairToIDs,tripleToIDs, pairToError,pairToTransform, tripleToScales);
-
+console.log(result);
+// throw "whaaa"
 	var first = result["groups"][0];
 	var transforms = first["transforms"];
 	var pairs = first["pairs"];
@@ -9693,7 +9712,9 @@ App3DR.ProjectManager.prototype._absoluteViewsFromDatas = function(views, pairs,
 	var skeleton = R3D.skeletalViewGraph(pairs);
 	var backbone = skeleton["skeletonVertexes"];
 	var groups = skeleton["groupVertexes"];
+console.log(skeleton);
 
+throw "??????"
 
 return {"transforms":transforms, "views":views, "skeleton":backbone, "groups":groups, "skeletonEdges":skeleton["skeletonEdges"], "groupEdges":skeleton["groupEdges"]};
 
@@ -16300,7 +16321,7 @@ if(deltaR<0){
 		});
 		sparseData["pairs"] = pairObjectsNew;
 
-// throw "NO SAVE"
+throw "NO SAVE"
 
 		var doneFxn = function(){
 			console.log("saved sparse data");
@@ -16320,6 +16341,7 @@ if(deltaR<0){
 				}
 			}
 		}
+
 		this.saveSparseFromData(sparseData, doneFxn);
 	}
 
