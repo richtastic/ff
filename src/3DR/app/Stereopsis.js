@@ -6562,7 +6562,8 @@ console.log(" ERR "+min+" +/- "+sig);
 		world.filterLocal3Dto2DSize();
 		world.filterNeighborConsistency();
 		// world.filterLocal3D(); // ...
-		world.filterPairwiseSphere3D(1.0); // 2-3
+			// world.filterPairwiseSphere3D(1.0); // 2-3
+		world.filterGlobalPatchSphere3D(2.0, false);
 
 		// ?: start more rigid, allow for more error, finish rigid
 		// world.filterGlobalMatches(false, 0, 2.0,2.0,2.0,2.0, false);

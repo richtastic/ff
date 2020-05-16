@@ -242,10 +242,16 @@ project typical numbers:
 	10k~50k matched dense points
 	1k~10k tracks per dense pair
 	2-5 avg track length CURRENT GUESS OF AVG TRACK LENGTH
-		- 2 @ 80%
-		- 3 @ 15%
-		- 4 @  5%
-		- 5+ @ 1%
+		SMALL LISTS:
+			- 2 @ 80%
+			- 3 @ 15%
+			- 4 @  5%
+			- 5+ @ 1%
+		LARGE LISTS:
+			- 2 @ 50%
+			- 3 @ 25%
+			- 4 @ 12%
+			- 5+ @ 6%
 	100-1k * N sparse track points total
 	1k-10k * N dense track points total
 	50k * N 2D dense points total
@@ -378,159 +384,41 @@ MISSING:
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
-- CHECK THAT GENERATED GRAPH IS CORRECT
-
-=> IDs may be wrong ?
-
-
-
-
-
-http://localhost/web/ff/3DR/app/app.html?iterations=2
-
-
-- start process again with medium group
-
-- incorporate groups
-	6 +/- 1 [5-7] w/ 2 overlap
-
-
-
-
-- how is the matching great, but the R is off left/right ?
-
-- HOW TO DESTINGUISH BETWEEN LEFT / RIGHT ORIENTATIONS
-	=> picking most 'relaiable' point pairs ?
-		-> NCC / SAD ?
-
-
-forwardCounts: 26,55,0,0
-R3D.js:927 bakwardCounts: 55,26,81,81
-
-forwardCounts: 0,93,0,0
-R3D.js:927 bakwardCounts: 93,0,93,93
-
-forwardCounts: 271,0,0,0
-R3D.js:927 bakwardCounts: 0,271,271,271
-
-R3D.js:919 forwardCounts: 515,485,0,0
-R3D.js:920 bakwardCounts: 485,515,1000,1000
-
-R3D.js:919 forwardCounts: 482,518,0,0
-R3D.js:920 bakwardCounts: 518,482,1000,1000
-
-forwardCounts: 73,1,0,0
-R3D.js:927 bakwardCounts: 1,73,74,74
-
-forwardCounts: 245,1,0,0
-R3D.js:927 bakwardCounts: 1,245,246,246
-
-forwardCounts: 0,99,0,0
-R3D.js:927 bakwardCounts: 99,0,99,99
-
-
-
-
-
-
-
-
-- the nonlinear step put it behind
-	=> need a cost for behind errors
-
-	- in different scenarios this is different:
-		- initializing: BIG ERROR -> want to keep points
-		- updating approx: mild error -> want to get rid of points
-
-
-- logic to end solvePair if R / count / error not changing
-
-
-
 - too many pairs
 	11 V -> 51 P
-
 
 - too many triples
 	98 triples
 	triplesFromBestPairs
 
+- putative dense pairs
+	- too many
+	- should try to only include minimum needed to keep graph connected
+		- then add to minimal set to beef up?
+	- need enough to create conected pair graphs where every > view < is accounted for
+		- 
+
+
+- logic to end solvePair if R / count / error not changing
+
+
 - what does it mean for a pair-graph to have non-reachable nodes?
 	- the pair was not involved in a calculatd triple?
 
 
-EX:
-73GY9M9Y-DSHJ9MKP
+                               2      3     4     5     6    7    8    9    10  11
+Stereopsis.js:2918 (57) [0, 0, 12048, 4749, 2156, 1040, 576, 385, 247, 161, 110, 75]
 
 
 
-- graph is trying to include an edge that doesn't exist
-
-pair 2 -- 7
-01 - LQ
-
-
-01E7YJ4K-LQTUF4AH
-
-01E7YJ4K-LQTUF4AH
-01E7YJ4K,LQTUF4AH
-
-App3DR.js:8128 0 = DSHJ9MKP
-App3DR.js:8128 1 = KX9HK4DL
-App3DR.js:8128 2 = LQTUF4AH
-App3DR.js:8128 3 = 5YWTR5Q9
-App3DR.js:8128 4 = TWHFT2XA
-App3DR.js:8128 5 = LN4JZNU6
-App3DR.js:8128 6 = WT52QVTI
-App3DR.js:8128 7 = 01E7YJ4K
-App3DR.js:8128 8 = GTR6DGS0
-App3DR.js:8128 9 = 73GY9M9Y
-App3DR.js:8128 10 = BO1U5B2F
-
-
-
-pair 2 -- 7
-
-
-
-
-=> double check if pairs exist
-
-- maybe mis-labeling?
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+12048/21547
+56
+4749/21547
+22
+2156/21547
+10
+5
+...
 
 
 

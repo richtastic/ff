@@ -7682,7 +7682,7 @@ console.log("checkPerformNextTask");
 		return;
 	}
 
-throw "start dense";
+// throw "start dense";
 	if(!project.checkHasDenseStarted()){
 		project.calculateDensePairPutatives();
 		return;
@@ -7693,7 +7693,7 @@ throw "start dense";
 		return;
 	}
 // bundle - groups: view graph from dense -> group list -> iteritive dense groups -> aggregate to points.yaml
-// throw ">start bundle";
+throw ">start bundle";
 // throw ">bundle : stereopsis - dense groups";
 	if(!project.checkHasBundleStarted()){
 		throw "checkHasBundleStarted"
@@ -8060,7 +8060,7 @@ console.log("inputFilename: "+inputFilename);
 	// CREATE GRAPH FROM PAIRWISE & TRIPLE SCALE
 	var graph = inputData["graph"];
 // force redo:
-graph = null;
+// graph = null;
 	if(!graph){
 console.log("RICHIE - START GRAPH");
 		var views = project.views();
@@ -8096,11 +8096,20 @@ console.log("RICHIE - START GRAPH");
 		var graph = this._absoluteViewsFromDatas(graphViews, graphPairs, graphTriples);
 console.log("graph:");
 console.log(graph);
-		var viewIndextoViewID = graph["views"];
-for(var v=0; v<viewIndextoViewID.length; ++v){
-	var index = viewIndextoViewID[v];
-	viewIndextoViewID[v] = graphViews[index]["id"];
+// throw "?????????"
+// 		var viewIndextoViewID = graph["views"];
+// for(var v=0; v<viewIndextoViewID.length; ++v){
+// 	var index = viewIndextoViewID[v];
+// 	viewIndextoViewID[v] = graphViews[index]["id"];
+// }
+
+var viewIndextoViewID = [];
+for(var v=0; v<graphViews.length; ++v){
+	viewIndextoViewID[v] = graphViews[v]["id"];
 }
+// console.log(graphViews);
+// console.log(viewIndextoViewID);
+
 		var graphGroups = graph["groups"];
 			graphGroups.unshift(graph["skeleton"]);
 		var graphGroupPairs = graph["groupEdges"]
@@ -8123,9 +8132,9 @@ for(var v=0; v<viewIndextoViewID.length; ++v){
 		var vt = graph["transforms"];
 		for(var i=0; i<vs.length; ++i){
 			var d = {};
-				d["id"] = vs[i];
+				d["id"] = vs[i]["id"];
 				d["transform"] = vt[i];
-console.log(i+" = "+vs[i]);
+console.log(i+" = ",vs[i]);
 			dataViews.push(d);
 		}
 		// TODO: find edge outliers -- eg: node voting
@@ -8157,6 +8166,7 @@ console.log(i+" = "+vs[i]);
 					a = viewIndextoViewID[a];
 				var b = pair[1];
 					b = viewIndextoViewID[b];
+// console.log(a+"-"+b);
 				gEdges.push({"A":a,"B":b});
 			}
 			dataGroups.push(g);
@@ -8506,6 +8516,8 @@ App3DR.ProjectManager.prototype._iterateSparseTracks = function(sourceData, sour
 
 				// var minimumPixelErrorBA = 0.001; // 1/1000
 				var minimumPixelErrorBA = 0.00001; // not sure what units these are ???
+					// FASTER:
+					var minimumPixelErrorBA = 0.00005;
 				// var maxIterationsBA = 10*allViews.length;
 				var maxIterationsBA = 2*allViews.length;
 				// var maxIterationsBA = 1*allViews.length;
@@ -8583,6 +8595,7 @@ console.log("isDone - FULL DONE")
 					}
 					var savedProjectComplete = function(){
 						console.log("saved project");
+						project._taskDoneCheckReloadURL();
 					}
 
 					console.log(sourceData);
@@ -8669,6 +8682,7 @@ console.log("isDone - FULL DONE")
 				// SAVE TO FILE
 				var savedBundleComplete = function(){
 					console.log("saved bundle track");
+					project._taskDoneCheckReloadURL();
 				}
 
 				project.saveFileFromData(fullData, fullBundlePath, savedBundleComplete, project);
@@ -9161,6 +9175,7 @@ console.log("isDone --- no");
 					console.log(graphData);
 					var savedGraphComplete = function(){
 						console.log("savedGraphComplete: "+graphFile);
+						// project._taskDoneCheckReloadURL();
 					}
 					console.log("GRAPH");
 					project.saveFileFromData(graphData, graphFile, savedGraphComplete);
@@ -9256,6 +9271,7 @@ console.log("isDone --- no");
 					}
 				}
 				++loadedTracks;
+				// console.log(loadPairs);
 				loadedReadyCheck();
 			}
 			
@@ -9282,7 +9298,6 @@ console.log(loadPairs);
 			var doWorldTrackAdd = function(){
 				console.log("doWorldTrackAdd");
 				console.log(sourceData);
-
 				var graphDataViews = graphData["views"];
 				var graphViewIDToTransform = {};
 				for(var i=0; i<graphDataViews.length; ++i){
@@ -9333,7 +9348,8 @@ console.log(loadPairs);
 				console.log("createWorldViewsForViews");
 				var WORLDVIEWS = project.createWorldViewsForViews(world, views, images, cellSizes, transforms);
 				console.log(WORLDVIEWS);
-				
+// console.log(transforms)
+// throw "???"
 				// LOOKUP
 				// var worldViews = world.toViewArray();
 				// var worldViewLookup = {};
@@ -9396,7 +9412,7 @@ console.log(loadPairs);
 				var worldObject = world.toObject();
 				trackData["points"] = worldObject["points"];
 				trackData["views"] = worldObject["views"];
-				
+// throw "here"
 				// mote to next track
 				console.log("save graph file");
 				graphData["loadPairIndex"] = loadPairIndex + 1;
@@ -9423,10 +9439,12 @@ graphData["loadPairIndex"] = -1;
 				var savedTrackComplete = function(){
 					console.log("savedTrackComplete: "+trackFilename);
 					++savedFiles;
+					savedBothComplete();
 				}
 				var savedGraphComplete = function(){
 					console.log("savedGraphComplete: "+fullGraphPath);
 					++savedFiles;
+					savedBothComplete();
 				}
 
 				var savedBothComplete = function(){
@@ -9531,11 +9549,19 @@ console.log(transforms)
 	}
 
 	// find bests:
-	var minimumPairMatches = 2 * 3; // assuming @ 50% error -- don't want too few matches
-	var maximumPairMatches = Math.min(Math.max(Math.round(2*Math.sqrt(viewCount)),3),20); // don't want too many matches
+	var minimumPairMatches = 4; // assuming @ 50% error -- backup pair to create triple
+	var maximumPairMatches = 10; // don't want too many matches
+// 4  - 2
+// 9  - 3
+// 16 - 4
+// 25 - 5
+// 36 - 6
+// 49 - 7
+// 64 - 8
+		maximumPairMatches = Math.min( Math.round(2 + Math.sqrt(viewCount)), maximumPairMatches);
 	console.log("pair limits: [ "+minimumPairMatches+" - "+maximumPairMatches+" ]");
 		maximumPairMatches = Math.max(minimumPairMatches,maximumPairMatches);
-	var maximumNeighborhoodAdjacency = 3; // direct=0, +1,+2,+3] -- don't want to try too far away
+	var maximumNeighborhoodAdjacency = 2; // direct=0, +1,+2,+3] -- don't want to try too far away
 	var maximumPropagatedErrorRatio = 4; // 2-4 -- don't want high-error guesses
 	var pairLookup = {};
 	for(var i=0; i<vertexes.length; ++i){
@@ -9566,15 +9592,11 @@ console.log(transforms)
 					var costD = path["cost"];
 					var cost0 = es[0].weight();
 					var costMax = cost0*maximumPropagatedErrorRatio;
-					// console.log(cost0,costD,costMax);
 					if(costD<costMax){
 						foundPairsList.push([costD,v]);
 					}
 				}
 			}
-			// if(foundPairsList.length>maximumPairMatches){
-			// 	break;
-			// }
 		}
 		foundPairsList.sort(sort0Fxn);
 		// console.log(foundPairsList);
@@ -9590,10 +9612,7 @@ console.log(transforms)
 			pairLookup[pairID] = {"A":idA,"B":idB,"s":score};//, "r":rError};
 		} // App3DR.ProjectManager.pairIDFromViewIDs
 	}
-	// console.log(pairLookup);
 	var pairs = Code.objectToArray(pairLookup);
-	// console.log(pairs);
-	// throw "before have putatives for dense"
 	return {"pairs":pairs, "lookup":pairLookup};
 }
 
@@ -9698,25 +9717,43 @@ console.log("pairs");
 console.log(result);
 // throw "whaaa"
 	var first = result["groups"][0];
-	var transforms = first["transforms"];
-	var pairs = first["pairs"];
-	var views = first["views"];
+	var groupTransforms = first["transforms"];
+	var groupPairs = first["pairs"];
+	var groupViews = first["views"];
 
-	this.displayViewGraph(transforms,pairs, 500);
-	
+
+	var orderedTransforms = Code.newArrayNulls(views.length);
+	for(var i=0; i<groupViews.length; ++i){
+		var viewIndex = groupViews[i];
+		var transform = groupTransforms[i];
+		orderedTransforms[viewIndex] = transform;
+	}
+// var viewIndextoViewID = graph["views"];
+// for(var v=0; v<viewIndextoViewID.length; ++v){
+// 	var index = viewIndextoViewID[v];
+// 	viewIndextoViewID[v] = graphViews[index]["id"];
+// }
+// throw "the transforms are implied in order in views ... should order .... "
+
+// REORDER VIEWS TO BE USIN THE CORRECT INDEXES
+
+// still problem with edges ?
+
+	this.displayViewGraph(orderedTransforms,groupPairs, 500);
+
 	console.log("Should these be extrinsic?")
 	// absolute to extrinsic
-	for(var i=0; i<transforms.length; ++i){
-		transforms[i] = Matrix.inverse(transforms[i]);
+	for(var i=0; i<orderedTransforms.length; ++i){
+		orderedTransforms[i] = Matrix.inverse(orderedTransforms[i]);
 	}
-	var skeleton = R3D.skeletalViewGraph(pairs);
+	var skeleton = R3D.skeletalViewGraph(groupPairs);
 	var backbone = skeleton["skeletonVertexes"];
 	var groups = skeleton["groupVertexes"];
 console.log(skeleton);
 
-throw "??????"
+// throw "??????"
 
-return {"transforms":transforms, "views":views, "skeleton":backbone, "groups":groups, "skeletonEdges":skeleton["skeletonEdges"], "groupEdges":skeleton["groupEdges"]};
+return {"transforms":orderedTransforms, "views":views, "skeleton":backbone, "groups":groups, "skeletonEdges":skeleton["skeletonEdges"], "groupEdges":skeleton["groupEdges"]};
 
 
 
@@ -11686,6 +11723,7 @@ App3DR.ProjectManager.prototype.calculateDensePairPutatives = function(){
 	}
 	var fxnSaveProjectComplete = function(data){
 		console.log("fxnSaveProjectComplete");
+		project._taskDoneCheckReloadURL();
 	}
 	
 	project.loadDataFromFile(sparseFilename, fxnLoadSparseComplete, project);

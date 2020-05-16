@@ -16813,12 +16813,9 @@ console.log("TRIPLES: "+triples.length);
 
 		for(var j=0; j<groupTransforms.length; ++j){
 			var viewID = groupIDToViewID[j];
-			console.log(j+" - "+viewID);
 			var view = viewIDToViewIndex[viewID];
 			groupViews[j] = view;
 		}
-// ^ THESE ARE THE CORRECT INDEXES ?
-
 		// TO PAIRS (of group)
 		var groupPairs = [];
 		for(var j=0; j<vertexes.length; ++j){
@@ -16828,28 +16825,17 @@ console.log("TRIPLES: "+triples.length);
 			var viewIDs = pairToIDs(pair);
 			var viewIDA = viewIDs[0];
 			var viewIDB = viewIDs[1];
-// console.log(viewIDA+"-"+viewIDB);
-			// var idA = viewIDToViewIndex[viewIDA];
-			// var idB = viewIDToViewIndex[viewIDB];
-			var idA = viewIDToGroupID[viewIDA];
-			var idB = viewIDToGroupID[viewIDB];
-// console.log("  "+idA+"-"+idB);
-			// it is possible to have a pair (generated from a triple) that doesn't exist
+			var idA = viewIDToViewIndex[viewIDA];
+			var idB = viewIDToViewIndex[viewIDB];
+			// var idA = viewIDToGroupID[viewIDA];
+			// var idB = viewIDToGroupID[viewIDB];
+			// is it possible to have a pair (generated from a triple) that doesn't exist
 			var pairID = viewIDsToPairID(viewIDA,viewIDB);
 			var exists = pairIDToVertex[pairID];
-
-
-// console.log(exists);
 			console.log("  "+idA+"-"+idB+" =?= "+viewIDA+"-"+viewIDB);
 			// console.log("  "+idA+"-"+idB+" =?= "+viewIDA+"-"+viewIDB);
-			// if(exists){
-				// console.log("exists");
-				var error = pairToError(pair);
-				groupPairs.push([idA,idB,error]);
-			// }else{
-			// 	console.log("DNE");
-			// 	throw "DNE"
-			// }
+			var error = pairToError(pair);
+			groupPairs.push([idA,idB,error]);
 		}
 		// console.log(groupIDToViewID)
 // throw "THESE ARE IN TERMS OF GROUPS - NOT OF ABSOLUTE VIEWS"
