@@ -1031,11 +1031,11 @@ Graph.satelliteVertexesFromEdges = function(edges){ // assuming an incoming conn
 
 Graph.groupsFromEdges = function(edges, k, tolerance, overlapDesired){ // k groups as independent as possible + some desired overlap
 	tolerance = Code.valueOrDefault(tolerance, 1);
-k = 6;
+// k = 6;
 // tolerance = 0;
-tolerance = 1;
+// tolerance = 1;
 	overlapDesired = Code.valueOrDefault(overlapDesired, Math.max(Math.round(k*0.25),1) ); // 25%: 4=>1, 6=>1, 8=>2
-overlapDesired = 4;
+// overlapDesired = 4;
 	var graph = new Graph();
 	// find maximum vertex index
 	var maxVertex = -1;
@@ -1389,10 +1389,11 @@ overlapDesired = 4;
 	// var maxIterations = 13;
 	// var maxIterations = 20;
 	// var maxIterations = 30;
-	var maxIterations = 50;
+	// var maxIterations = 50;
+	var maxIterations = groupSizeMax*2; // full growing + split gorwing
 	for(var iteration=0; iteration<maxIterations; ++iteration){
 		// for each group perform operations locally
-		console.log(iteration+" ......................................................................................... ")
+		// console.log(iteration+" ......................................................................................... ")
 		for(var i=0; i<groups.length; ++i){
 			var group = groups[i];
 			// skip empty groups
@@ -1470,10 +1471,14 @@ overlapDesired = 4;
 	var leastEntries = function(groupA, groupB, table){
 		var overlapA = overlapMinimum(groupA, table);
 		var overlapB = overlapMinimum(groupB, table);
-		console.log(overlapA,overlapB);
+		// console.log(overlapA,overlapB);
 		return overlapA<overlapB ? -1 : 1;
 	}
 	// make sure each group has some overlap with other groups:
+	// start with smaller groups first:
+	groups.sort(function(a,b){
+		return a["count"] < b["count"] ? -1 : 1;
+	});
 	console.log("ADD OVERLAP WITH NEIGHBORS");
 	for(var i=0; i<groups.length; ++i){
 		var group = groups[i];
@@ -1514,14 +1519,13 @@ overlapDesired = 4;
 		for(var a=0; a<adjacent.length; ++a){
 			var adj = adjacent[a];
 			// ADD:
-			// console.log(adj);
 				group["nodes"].push(adj);
 				group["count"] += 1;
 				adj["groups"][groupID] = group;
 				adj["count"] += 1;
 			++overlapCount;
 			if(overlapCount>=overlapDesired){
-				console.log("done early");
+				// console.log("done early");
 				break;
 			}
 		}
@@ -1530,7 +1534,7 @@ overlapDesired = 4;
 			continue;
 		}
 		// if no more cells => repeat
-		console.log("add more - repeat");
+		// console.log("add more - repeat");
 		--i; // repeat
 	}
 

@@ -37313,6 +37313,8 @@ R3D.skeletalViewGraph = function(edges, maxErrorMultiple){ // get critical nodes
 		var pairID = pairIDFxn(vertexA.id(),vertexB.id());
 		var minPathCost = minPathLookup[pairID];
 		if(minPathCost==0){
+			console.log(pairID);
+			console.log(minPathLookup);
 			throw "no zeros";
 		}
 		var importance = minPathCost/weight;

@@ -7692,27 +7692,24 @@ console.log("checkPerformNextTask");
 		project.iterateDenseProcess();
 		return;
 	}
-// bundle - groups: view graph from dense -> group list -> iteritive dense groups -> aggregate to points.yaml
-throw ">start bundle";
-// throw ">bundle : stereopsis - dense groups";
+// throw ">start bundle";
 	if(!project.checkHasBundleStarted()){
-		throw "checkHasBundleStarted"
 		project.initializeBundleGroupsFromDense();
 		return;
 	}
+// throw "> continue bundle";
 	if(!project.checkHasBundleEnded()){
-		throw "checkHasBundleEnded"
 		// project.loadDenseGroupsStereopsis(); // TEST EXAMPLE
 		project.iterateBundleProcess();
 		return;
 	}
 
-// throw ">start surface"; // copy point files & create surface.yaml
+throw ">start surface"; // copy point files & create surface.yaml
 	if(!project.checkHasSurfaceStarted()){
 		project.initializeSurfaceFromBundle();
 		return;
 	}
-// throw ">iterate surface"; // create triangles & textures
+throw ">iterate surface"; // create triangles & textures
 	if(!project.checkHasSurfaceEnded()){
 		project.iterateSurfaceProcess();
 	}
@@ -8911,6 +8908,7 @@ if(newOriginID==null){
 
 			var savedGraphComplete = function(){
 				console.log("savedGraphComplete: "+graphFile);
+				project._taskDoneCheckReloadURL();
 			}
 			var savedBundleComplete = function(){
 				console.log("savedBundleComplete: "+fullBundlePath);
@@ -9175,7 +9173,7 @@ console.log("isDone --- no");
 					console.log(graphData);
 					var savedGraphComplete = function(){
 						console.log("savedGraphComplete: "+graphFile);
-						// project._taskDoneCheckReloadURL();
+						project._taskDoneCheckReloadURL();
 					}
 					console.log("GRAPH");
 					project.saveFileFromData(graphData, graphFile, savedGraphComplete);
@@ -10430,6 +10428,9 @@ App3DR.ProjectManager.prototype.calculateTripleMatchFromViewIDs = function(input
 		// pairData.push(data);
 		var idA = data["A"];
 		var idB = data["B"];
+if(idA===undefined || idB===undefined){
+	throw "bad data for triples";
+}
 		pairData[viewIDsToPairID(idA,idB)] = data;
 		++loadedPairs;
 		fxnReadyCheck();
@@ -10445,9 +10446,11 @@ App3DR.ProjectManager.prototype.calculateTripleMatchFromViewIDs = function(input
 			return;
 		}
 		console.log("SOLVE TRIPLE");
+console.log(pairData)
 		var matchAB = pairData[viewIDsToPairID(viewAID,viewBID)];
 		var matchAC = pairData[viewIDsToPairID(viewAID,viewCID)];
 		var matchBC = pairData[viewIDsToPairID(viewBID,viewCID)];
+		console.log(matchAB,matchAC,matchBC);
 		var imageA = R3D.imageMatrixFromImage(viewA.featuresImage(), project._stage);
 		var imageB = R3D.imageMatrixFromImage(viewB.featuresImage(), project._stage);
 		var imageC = R3D.imageMatrixFromImage(viewC.featuresImage(), project._stage);
@@ -10809,33 +10812,332 @@ console.log(i+": "+viewID);
 
 
 App3DR.ProjectManager.prototype.initializeBundleGroupsFromDense = function(){
-	throw "initializeBundleGroupsFromDense"
-	// load dense data
+	var project = this;
+	var bundleBaseDirectory = "bundle";
+	var bundleDataFilename = "bundle.yaml";
+	var fullBundleDataPath = Code.appendToPath(bundleBaseDirectory,bundleDataFilename);
+	// load dense data -> graph -> track full
+	var denseFilename = project.denseFilename();
+	var denseDirectory = Code.pathRemoveLastComponent(denseFilename);
+	// console.log(denseFilename);
+	var denseData = null;
+	var graphData = null;
+	var trackData = null;
+
+	var loadedDenseDataFxn = function(data){
+		// console.log(data);
+		denseData = data;
+		var graphFilename = denseData["graph"];
+		// console.log(graphFilename);
+		project.loadDataFromFile(graphFilename, loadedGraphDataFxn);
+	}
+
+	var loadedGraphDataFxn = function(data){
+		// console.log(data);
+		graphData = data;
+		var bundleFilename = graphData["bundleFullFile"];
+		bundleFilename = Code.appendToPath(denseDirectory, "tracks", bundleFilename);
+		// console.log(bundleFilename);
+		project.loadDataFromFile(bundleFilename, loadedTrackDataFxn);
+	}
+	var loadedTrackDataFxn = function(data){
+		// console.log(data);
+		trackData = data;
+		calculateGraphFxn();
+	}
+	var calculateGraphFxn = function(){
+		var denseViews = trackData["views"];
+		var densePairs = trackData["transforms"];
+		var densePoints = trackData["points"];
+		var denseCameras = trackData["cameras"];
+		console.log(denseViews);
+		console.log(densePairs);
+		console.log(densePoints);
+		// make graph edges with full pair data
+		var graph = new Graph();
+		var viewIDToVertex = {};
+		var viewIDToViewIndex = {};
+		var transforms = [];
+		var vertexEdgeList = [];
+		for(var i=0; i<denseViews.length; ++i){
+			var view = denseViews[i];
+			var viewID = view["id"];
+			// var vertex = graph.addVertex();
+			// viewIDToVertex[viewID] = vertex;
+			// vertex.data(view);
+			viewIDToViewIndex[viewID] = i;
+			// viewIDToView[i] = viewID;
+			transforms[i] = Matrix.fromObject(view["transform"]);
+				transforms[i] = Matrix.inverse(transforms[i]);
+			vertexEdgeList[i] = [];
+		}
+		var listPairs = [];
+
+		for(var i=0; i<densePairs.length; ++i){
+			var pair = densePairs[i];
+				var idA = pair["A"];
+				var idB = pair["B"];
+			var extrinsicAtoB = pair["transform"]
+			var relativeAtoB = Matrix.inverse(extrinsicAtoB);
+			// var vertexA = viewIDToVertex[idA];
+			// var vertexB = viewIDToVertex[idB];
+			// // vertex.data(denseViews[i]);
+			// // var weight = (pair["errorRMean"]+pair["errorRsigma"])/pair["matches"];
+			// var weight = (pair["errorRMean"])/pair["matches"];
+			// // console.log(weight);
+			// var edge = graph.addEdgeDuplex(vertexA,vertexB, weight);
+			// 	edge.data(pair);
+			var matchCount = pair["matches"]
+			var matchError = pair["errorRMean"];
+			var edge = null;
+			if(matchCount>8){ // some minimum
+				var errorAB = matchError/matchCount;
+				var indexA = viewIDToViewIndex[idA];
+				var indexB = viewIDToViewIndex[idB];
+				edge = [indexA,indexB,errorAB];
+				vertexEdgeList[indexA].push(i);
+				vertexEdgeList[indexB].push(i);
+			}
+			listPairs.push(edge);
+		}
+
+		// pick edges from list of best pairs:
+		var bestPairsMaxCount = 3;
+
+		var sortEdge = function(a,b){ // lower error first
+			return listPairs[a][2] < listPairs[b][2] ? -1 : 1;
+		}
+		var listBestPairs = {};
+		for(var i=0; i<vertexEdgeList.length; ++i){
+			var list = vertexEdgeList[i];
+				list.sort(sortEdge);
+			var maxJ = Math.min(list.length, bestPairsMaxCount);
+			for(var j=0; j<maxJ; ++j){
+				var edgeIndex = list[j];
+				listBestPairs[edgeIndex] = listPairs[edgeIndex];
+			}
+		}
+		listBestPairs = Code.objectToArray(listBestPairs);
+	console.log("PAIR REDUCTION ("+bestPairsMaxCount+")"+listBestPairs.length+" / "+listPairs.length);
+		var result = R3D.skeletalViewGraph(listBestPairs);
+
+
+		// get skeleton graph 
+		// console.log(listPairs);
+		// var result = R3D.skeletalViewGraph(listPairs);
+		// console.log(result);
+		// construct minimally set MST from skeleton
+		
+		// get group graph
+
+		// small
+		// var groupSize = 4;
+		// var groupTolerance = 1; // 3-5
+		// var overlapDesired = 2; // up to 7
+
+		// med
+		var groupSize = 6;
+		var groupTolerance = 1; // 5-7
+		var overlapDesired = 3; // up to 10 | avg 6-1+3 = 8
+
+		var result = Graph.groupsFromEdges(listBestPairs, groupSize, groupTolerance, overlapDesired)
+		console.log(result);
+		var groups = result["groups"];
+
+		// display this monstrosity
+
+		var info = project.displayViewGraph(transforms,listBestPairs);
+		var centers = info["points"];
+		var displayOffset = info["offset"];
+		var colors = [0xFFFF0000,0xFF009900,0xFF0000FF,0xFFCCCC00,0xFFCC00CC,0xFF00CCCC,0xFFCCCCCC];
+		var sizes = [11,15,19,23,27];
+		for(var i=0; i<groups.length; ++i){
+			var group = groups[i];
+			for(var j=0; j<group.length; ++j){
+				var vertexID = group[j];
+				var p = centers[vertexID];
+				var d = new DO();
+				var color = colors[i%colors.length];
+				var size = sizes[i%sizes.length]
+				d.graphics().setLine(3.0,color);
+				d.graphics().beginPath();
+				d.graphics().drawCircle(p.x,p.y, size);
+				d.graphics().strokeLine();
+				d.graphics().endPath();
+				d.matrix().translate(displayOffset.x, displayOffset.y);
+				GLOBALSTAGE.addChild(d);
+			}
+		}
+
+		calculateBundleGroupsFxn(denseViews, groups, densePoints, denseCameras);
+	}
+
+	var bundleData = null;
+	var calculateBundleGroupsFxn = function(views, groups, points, cameras){
+		var bundleGroupList = [];
+		bundleData = {};
+			bundleData["groupCount"] = groups.length;
+			bundleData["groups"] = bundleGroupList;
+			bundleData["cameras"] = cameras;
+			bundleData["views"] = views;
+			bundleData["points"] = null;
+			bundleData["aggregateIndex"] = -1;
+			bundleData["surface"] = null;
+		// make groups
+		expectedGroupCount = groups.length;
+		completedGroupCount = 0;
+		console.log("source points: "+points.length);
+		for(var i=0; i<groups.length; ++i){
+			var group = groups[i];
+			// console.log("GROUP "+i+": "+group.length);
+			// get list of IDs in group
+			var groupIDLookup = {};
+			var groupDataCameras = cameras;
+			var groupDataViews = [];
+			for(var j=0; j<group.length; ++j){
+				var viewIndex = group[j];
+				var view = views[viewIndex];
+				var viewID = view["id"];
+				groupIDLookup[viewID] = 1;
+				groupDataViews.push(view);
+			}
+			// get list of points for group:
+			var groupPointList = [];
+			for(var p=0; p<points.length; ++p){
+				var point = points[p];
+				var pointViews = point["v"];
+				var groupViews = [];
+				for(var v=0; v<pointViews.length; ++v){
+					var pointView = pointViews[v];
+					var pointViewID = pointView["i"];
+					if(groupIDLookup[pointViewID]===1){
+						groupViews.push(pointView);
+					}
+				}
+				if(groupViews.length>1){ // 2+
+					var groupPoint = {};
+					groupPoint["v"] = groupViews;
+					groupPoint["X"] = point["X"];
+					groupPoint["Y"] = point["Y"];
+					groupPoint["Z"] = point["Z"];
+					groupPoint["x"] = point["x"];
+					groupPoint["y"] = point["y"];
+					groupPoint["z"] = point["z"];
+					groupPoint["s"] = point["s"];
+					groupPointList.push(groupPoint);
+				}
+				// break;
+			}
+			// console.log(groupPointList);
+			var groupData = {};
+				groupData["cameras"] = groupDataCameras;
+				groupData["views"] = groupDataViews;
+				groupData["points"] = groupPointList;
+			console.log(groupData);
+
+			var groupFilename = "groups/group_"+i+".yaml";
+			bundleGroupData = {};
+				bundleGroupData["filename"] = groupFilename;
+				bundleGroupData["viewCount"] = groupDataViews.length;
+				bundleGroupData["pointCount"] = groupPointList.length;
+				bundleGroupData["transforms"] = null;
+			bundleGroupList.push(bundleGroupData);
+			// SAVE GROUP TO FILE:
+			var fullGroupPath = Code.appendToPath(bundleBaseDirectory, groupFilename);
+			project.saveFileFromData(groupData, fullGroupPath, saveGroupFileFxn, project);
+		}
+	}
+	var expectedGroupCount = null;
+	var completedGroupCount = null;
+
+	var saveGroupFileFxn = function(){
+		++completedGroupCount;
+		console.log("saveGroupFileFxn: "+completedGroupCount+" / "+expectedGroupCount);
+		if(completedGroupCount==expectedGroupCount){
+			project.saveFileFromData(bundleData, fullBundleDataPath, saveBundleFileFxn, project);
+			console.log(bundleData);
+		}
+	}
+
+	var saveBundleFileFxn = function(){
+		console.log("saved bundle");
+		project.bundleFilename(fullBundleDataPath);
+		project.saveProjectFile(savedProjectComplete, project);
+	}
+
+	var savedProjectComplete = function(){
+		console.log("saved project");
+		project._taskDoneCheckReloadURL();
+	}
+
+	project.loadDataFromFile(denseFilename, loadedDenseDataFxn);
+
+	// 
+
 	// convert skeleton graph into list of groups
 	// for each group:
 	// copy over only the track points relevant to the group (truncate any points shared with views outside group)
-	// save group track file
-	// ...
-	// save bundle.yaml
 
-	throw "???"
+
+
+// // bundle - groups: view graph from dense -> group list -> iteritive dense groups -> aggregate to points.yaml
 }
 
 App3DR.ProjectManager.prototype.iterateBundleProcess = function(){
+	var project = this;
+	console.log("iterateBundleProcess");
+	var bundleData = null;
+	var loadedBundleDataFxn = function(data){
+		console.log(data);
+		bundleData = data;
+		// get next group to stereopsis
+		var groups = bundleData["groups"];
+		for(var i=0; i<groups.length; ++i){
+			var group = groups[i];
+			if(!group["transforms"]){
+				var groupFilename = group["filename"];
+				var groupFullPath = Code.appendToPath(bundlePathBase,groupFilename);
+				console.log(groupFullPath);
+				project.loadDataFromFile(groupFullPath, loadedGroupDataFxn);
+				return;
+			}
+		}
+		// aggregate ?
+	}
+	var loadedGroupDataFxn = function(data){
+		console.log(data);
+		var groupData = data;
+		project._doDenseGroupsStereopsis(groupData);
+		// throw "... sovle group?"
+	}
+	var bundleFilename = project.bundleFilename();
+	var bundlePathBase = Code.pathRemoveLastComponent(bundleFilename);
+	console.log(bundleFilename);
+	console.log(bundlePathBase);
+	project.loadDataFromFile(bundleFilename, loadedBundleDataFxn);
+
+	// project._doDenseGroupsStereopsis(data);
+
 	throw "iterateBundleProcess";
+
+// A) build up group dense points
 	// load the next group that doesn't have a dense file
 	// import tracks into world
-	// world.sovegroup
+	// world.solvegroup
 	// save points to group's dense point file
+	// TRACK FILES AGAIN?
 	// save views & non-zero-pair info to group's dense view file
 	//
-
+// B) global absolute initilization
 	// initialize a graph with views (and edges?) from dense final graph
 	// add view-edges from all groups
-	// nonlinearly find minimum from 
+	// nonlinearly find minimum from  TRACKS ? ERROR ?
 	// save final view location to bundle/views.yaml
 	// 
 
+// global bundle adjust?
+
+// C) 
 	// if all groups are done:
 	// iterate thru each group's dense file
 	// update point's triangulation using optimized view orientations
@@ -14164,10 +14466,12 @@ App3DR.ProjectManager.prototype.displayViewGraph = function(transforms, pairs, o
 	
 	// display.matrix().scale(1,-1);
 	// display.matrix().translate(0,displaySize);
+	var off = new V2D(300+offsetX, 100);
 	GLOBALSTAGE.addChild(display);
-	display.matrix().translate(300,100);
-	display.matrix().translate(offsetX,0);
+	// display.matrix().translate(300,100);
+	display.matrix().translate(off.x,off.y);
 
+	return {"points":centersDisplay2D, "offset":off};
 }
 
 App3DR.ProjectManager.prototype.iterateGraphTracks = function(){ // aggregate / accumulate tracks
@@ -16400,6 +16704,7 @@ App3DR.ProjectManager.prototype._taskDoneCheckReloadURL = function(){
 		var url = Code.setURLParameter(url,"iterations",iterations);
 		console.log("NEW URL "+url);
 		if(iterations>0){
+		// if(false){
 			// console.log(url);
 			setTimeout(function() {
 				console.log("LOAD URL: "+url);

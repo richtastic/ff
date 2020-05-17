@@ -355,8 +355,10 @@ https://cloud.google.com/appengine/docs/nodejs/
 
 TIMELINES:
 
-05/16 - test 'medium' set of 11 images
-05/18 - use bundle groupings algorithm
+05/16 - 
+		- bundle groupings algorithm
+		- solveGroup => get good result
+05/18 - ???
 05/24 - test 'full' set of 25 images
 		- automate URL refresh for sections of code
 05/31 - test set of ~ 50 images x (this will require 2-10 x speed ups & AUTOMATION OF NEXT TASK)
@@ -421,23 +423,87 @@ Stereopsis.js:2918 (57) [0, 0, 12048, 4749, 2156, 1040, 576, 385, 247, 161, 110
 ...
 
 
+36k track points (~ 20k correct?)
+
+
+initializeBundleGroupsFromDense
+
+iterateBundleProcess
+
+
+
+BUNDLING PROCESS SOURCE:
+	- tracks from dense iterations
+		- have to re-calculate dense aspects
+	- dense relative data calculated previously
+		- will have more bad patches
+
+	- updating optimal view locations AND point locations?
+		- re-calculate view absolute transforms from pairs
+		- need to re-calculate points & normals
+			-> redo it in each group
+			-> do it with or without images
 
 
 
 
+design backend system to keep track of everything
+- storage
+- tasks ?
+	- possibility of non-completing / error ?
 
 
 
 
+bundle/bundle.yaml
+	views
+		-> absolute positions & info 
+	cameras
+		-> lookup for all views
+	groups
+		- 
+			file: group_i.yaml
+			pointCount: N
+			viewCount: N
+			transforms:
+				- all transforms between group views passing some minimum (point count & error?)
+	ba:
+		points: points.yaml
+		aggregateIndex: -1 # update each group's views/points & save to file
+			
+
+bundle/groups/group_i.yaml
+	views
+		-> subset only needed for this group
+	points
+		- 
+	cameras
+		- 
+	transforms
+		-> after first iteration
 
 
 
+BUNDLE PROCESS:
+	save initial groups as tracks
+	for each group -> solveGroup [while group_i transforms is null]
+		- remove bad pts: behind, obscured, 
+		- increase point counts to dense
+		- update camera positions
 
 
+	A) 
+	update absolute view location
+		- use separate group data to nonlinear update initial absolute graph
+		-> scales may have drifted
+			- use overlapping transforms to re-scale pairs
+	for each group: update point estimates
+		- update group_i's view absolute locations
+		- update point location & normal & size
 
-
-
-
+	B) 
+	each group has a set of best tracks
+	load group-tracks into single file to update absolute locations
 
 
 
