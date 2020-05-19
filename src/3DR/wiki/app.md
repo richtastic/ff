@@ -385,50 +385,102 @@ MISSING:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+- how well is the point 3D projection helping with point placement ?
+	- this hasn't been A/B tested / calibrated
 
-- too many pairs
-	11 V -> 51 P
+- bundle group has too much noise
+	x try reducing obscuring tolerance patches
+		- filterGlobalPatchSphere3D
+		- drops too many points
+	x try more subdividing
+		- mildly better but bad spots are still fuzzy
+	x try loading dense pairs?
+		=> too many points: 500k ~ 500 MB
 
-- too many triples
-	98 triples
-	triplesFromBestPairs
 
-- putative dense pairs
-	- too many
-	- should try to only include minimum needed to keep graph connected
-		- then add to minimal set to beef up?
-	- need enough to create conected pair graphs where every > view < is accounted for
+	- sequentially add views to world
+		x use track points
+		x use pair points
+		- MAKE UP SEED POINTS ON THE FLY - USE R + ERROR
+
+=> TRACKS AREN'T NECESSARILY BEST POINTS TO COMBINE
+
+
+CREATING VIEW GROUPS:
+	- get group subset from fll graph
+	- get all incorporated pairs in sub-group
+	- each view pick top 3 pairs in sub-group-pair list
+	- keep subset of all pairs
+
+LOADING VIEW GROUPS:
+	- have:
+		- absolute orientations
+			=> relative R
+		- list of best pairs
 		- 
+
+	- ALG A:  solveDenseGroup
+		- load all view images
+		- for each pair:
+			- get seed matches from R:
+				R3D.searchMatchPoints3D
+		- add all seed matches to world
+		- iteritive grow
+		- iteritive drop worst
+		- iteritive subdivide (x2)
+
+AGGREGATING VIEW GROUPS:
+	- scales of groups could have drifted
+		- find each group's overlapping pairs
+		- relative scales are translation distance ratios
+		- scale initial estimate to best average scale differences between group subsets
+			- average of: NEW OFFSET / OLD OFFSET : for all pairs
+	- nonlinear update absolute view graph:
+		- minimize each groups's pairs:
+			- distance between expected & distance between actual: ORIGIN & AXES
+	- points need to be recalculated
+		- DLT to find point from N views
+		- normal = average direction to views
+
+...
+
+
+calculatePairMatchWithRFromViewIDs
+
+solveDensePair
+
+var result = R3D.searchMatchPoints3D(images, sizes, relativeAB, Ks, errorPixels);
+		var P = result["P"];
+		var matches = result["matches"];
+
+
+
+
+
+
+
+- logic for updating patches only -- not recalculating sizes & whatnot
+	- assume little change in position / orientation when group solving
+
+
+
+15k - 40k in each dense pair file
+pairs ~ 8(8-1)/2 * 0.5 = 14
+14 x 40 = 500k
+
+
+
+
+
+
+
+
 
 
 - logic to end solvePair if R / count / error not changing
 
 
-- what does it mean for a pair-graph to have non-reachable nodes?
-	- the pair was not involved in a calculatd triple?
 
-
-                               2      3     4     5     6    7    8    9    10  11
-Stereopsis.js:2918 (57) [0, 0, 12048, 4749, 2156, 1040, 576, 385, 247, 161, 110, 75]
-
-
-
-12048/21547
-56
-4749/21547
-22
-2156/21547
-10
-5
-...
-
-
-36k track points (~ 20k correct?)
-
-
-initializeBundleGroupsFromDense
-
-iterateBundleProcess
 
 
 
@@ -590,68 +642,6 @@ http://www.sci.utah.edu/~shachar/Publications/FleishmanThes.pdf
 	- get samples of local density (3-6 NN distance average)
 	- remove points that are way outside of these numbers
 - stop triangle propagation to small groups of triangles
-
-
-
-
-
-
-x initialize with minimum 'search radius R' samples @ ceil((n)^0.5)
-	(100)^0.5 = 10
-	(1,000)^0.5 = 32
-	(10,000)^0.5 = 100
-	(100,000)^0.5 = 316
-x for i = 0 to sample count:
-	- pick a random point
-	- get 6 nn actual points
-	- pt = average point
-	- calc search radius R @ pt
-
-
-- initial marker searches need to start small
-	- 3 -> 6
-	- 12
-	- 24
-	- 48
-	- ...
-
-- searching both directions around point
-	- left = x-1
-	- right = x+1
-	- is the value between these?
-		=> done
-	- search left and right simultaneously
-
-- source point smoothing / noise reduction?
-
-	- 
-
-
-
-surface: surface/surface.yaml
-	views:
-		...
-	points: points.yaml
-	triangles: triangles.yaml
-	textures:
-		...
-
-
-	points: points.yaml
-
-
-
-
-- NEXT STEPS:
-	- COMBINE SEPARATE SCENES' POINT TOGETHER INTO SINGLE SCENE ------ AGGREGATION
-		- only P3D are brought in (and normals & size)
-		- discard / merge repeated areas
-
-
-	- SURFACE TRIANGULATION/TESSELATION
-	- TEXTURING
-
-
 
 
 

@@ -5312,8 +5312,6 @@ console.log("intersectionsFound: "+intersectionsFound);
 	console.log("F: "+minF+" : "+avgF+" +/- "+sigF+" --- "+limF);
 	console.log("B: "+minB+" : "+avgB+" +/- "+sigB+" --- "+limB);
 
-	
-
 	// mark worst front
 	var dropList = [];
 	for(var i=0; i<pointsFront.length; ++i){
@@ -6631,8 +6629,8 @@ console.log("errors");
 	// world.printPoint3DTrackCount();
 
 	// filter tracks
-	var filterIterations = 3;
-	// var filterIterations = 1;
+	// var filterIterations = 3;
+	var filterIterations = 1;
 	for(var i=0; i<filterIterations; ++i){
 		console.log("track filter iteration: "+i);
 		world.filterGlobalMatches(false, 0, 2.0,2.0,2.0,2.0, false);
@@ -6653,21 +6651,22 @@ console.log("track count filtered "+i);
 
 
 	// LOOP:
-	var iterationsPerDivision = 3;
+	var iterationsPerDivision = 0;
+	// var iterationsPerDivision = 3;
 	// var iterationsPerDivision = 5; // subdivision needs more iterations to A) cleanup prior & B) cleanup after
 	var subDivisions = 0;
 	// var subDivisions = 1;
 	var maxIterations = iterationsPerDivision*(subDivisions+1);
 	for(var i=0; i<maxIterations; ++i){
-console.log("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ "+i);
+console.log("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ "+i+" ------------------------------------------------");
 		// subdivide
 		// if(i==maxIterations-1){
 		if(i!==0 && i%iterationsPerDivision==0){
 			for(var v=0; v<views.length; ++v){
 				var view = views[v];
 				var size = view.cellSize();
-				// size = size*0.75 | 0; // double
-				size = size*0.5 | 0; // quadruple
+				size = size*0.75 | 0; // double
+				// size = size*0.5 | 0; // quadruple
 				if(size%2==0){
 					size += 1;
 				}
@@ -6708,7 +6707,7 @@ console.log("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ "+i
 			// R / F / N scores - pairwise
 			world.filterGlobalMatches(false, 0, 2.0,2.0,2.0,2.0, false);
 			// global patch-sphere obstruction
-			world.filterGlobalPatchSphere3D(2.0, false); // 1.0-2.0
+			world.filterGlobalPatchSphere3D(1.0, false); // 1.0-2.0
 			// 2D neighborhood R / F / N error
 				// ?
 			// 3D-2D distance-noise filter
@@ -12933,8 +12932,10 @@ Stereopsis.World.prototype._resolveIntersectionPatch = function(point3DA,point3D
 				var d7 = values[width*yMax + minX];
 				var d8 = values[width*yMax + xMax];
 				var result = Code.extrema2DFloatInterpolate(new V3D(), d0,d1,d2,d3,d4,d5,d6,d7,d8);
-				peak.x += result.x;
-				peak.y += result.y;
+				if(result){ // rare ?
+					peak.x += result.x;
+					peak.y += result.y;
+				}
 				// set new point
 				var q = p.copy().add((peak.x-width*0.5)*needleZoom,(peak.y-height*0.5)*needleZoom);
 				p2D.point2D(q);
