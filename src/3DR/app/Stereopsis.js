@@ -2037,9 +2037,20 @@ Stereopsis.Transform3D.prototype.calculateErrorR = function(R){
 			continue;
 		}
 		var error = R3D.reprojectionError(estimated3D, pA,pB, extrinsicA, extrinsicB, Ka, Kb);
-		if(!error){
+		if(!error){			
+			console.log(matches);
+			console.log(pA);
+			console.log(pB);
+			console.log(extrinsicA);
+			console.log(extrinsicB);
+
+			console.log(estimated3D);
+			
+			console.log(Ka);
+			console.log(Kb);
 			console.log(error);
 			throw "no error?"
+			match.errorR(0);
 		}
 		var distanceA = error["distanceA"];
 		var distanceB = error["distanceB"];
@@ -6347,6 +6358,218 @@ GLOBALSTAGE.addChild(d);
 
 
 	throw "testing out fxn";
+}
+// ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Stereopsis.World.prototype.solveDenseGroup = function(inputPairs){ // multiple (3+)
+	var world = this;
+
+	var transforms = world.toTransformArray();
+	var views = world.toViewArray();
+
+	world.copyRelativeTransformsFromAbsolute();
+	// for(var i=0; i<transforms.length; ++i){
+	// 	var transform = transforms[i];
+	// 	transform.copyRelativeFromAbsolute();
+	// }
+	
+
+	var featureSize = 0.02;
+	var errorSize = 0.005;  // should be very accurate  - 0.001 - 0.005
+	console.log("find top matches");
+	var pairMatches = [];
+	for(var i=0; i<inputPairs.length; ++i){
+		console.log("PAIR CREATING +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ "+i+" / "+pairMatches.length);
+		var pair = inputPairs[i];
+		var viewA = pair[0];
+		var viewB = pair[1];
+		var transformA = viewA.absoluteTransform();
+		var transformB = viewB.absoluteTransform();
+		var extrinsicAB = Matrix.relativeWorld(transformA,transformB);
+		var imageA = viewA.image();
+		var imageB = viewB.image();
+		var images = [imageA,imageB];
+		var Ka = viewA.K();
+		var Kb = viewB.K();
+		var Ks = [Ka,Kb];
+		
+		var sizes = [imageA.size().length()*featureSize,imageB.size().length()*featureSize];
+		// var sizes = [viewA.cellSize(),viewB.cellSize()];
+		var errorPixels = imageA.size().length()*errorSize;
+
+		var relativeAB = extrinsicAB;
+
+		var result = R3D.searchMatchPoints3D(images, sizes, relativeAB, Ks, errorPixels);
+		var matches = result["matches"];
+		console.log(matches);
+		pairMatches[i] = matches;
+		if(i>3){
+			break;
+		}
+	}
+	// console.log(views);
+// throw "??????????"
+	console.log("insert matches into world");
+	for(var i=0; i<pairMatches.length; ++i){
+		console.log("PAIR MATCHING +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ "+i+" / "+pairMatches.length);
+		var pair = inputPairs[i];
+		var viewA = pair[0];
+		var viewB = pair[1];
+		var matches = pairMatches[i];
+		var errorsR = [];
+		var matchesAddList = [];
+		for(var j=0; j<matches.length; ++j){
+			var match = matches[j];
+			var p2DA = match["pointA"];
+			var p2DB = match["pointB"];
+			var point3D = match["point3D"];
+			var affineAB = match["affine"];
+			var errR = match["error"];
+			var newMatch = world.newMatchFromInfo(viewA,p2DA.copy(),viewB,p2DB.copy(),affineAB);
+				Stereopsis.updateErrorForMatch(newMatch);
+			var m3D = newMatch.point3D();
+				m3D.point( m3D.calculateAbsoluteLocation(world,true) ); // point3D
+				world.patchInitBasicSphere(false,[m3D]); // patch3D
+			matchesAddList.push(newMatch);
+			errorsR.push(newMatch.errorR());
+		}
+		// errorsR.sort();
+		// console.log(errorsR);
+		var min = Code.min(errorsR);
+		var sig = Code.stdDev(errorsR,min);
+		console.log(" ERR "+min+" +/- "+sig);
+
+		var averageErrorB = 0;
+		var count = 0;
+		for(var j=0; j<matchesAddList.length; ++j){
+			var match = matchesAddList[j];
+			var point3D = match.point3D();
+			point3D = world.embedPoint3D(point3D);
+			if(point3D){
+				var matches = point3D.toMatchArray();
+				for(var m=0; m<matches.length; ++m){
+					var match = matches[m];
+					Stereopsis.updateErrorForMatch(match);
+				}
+				point3D.calculateAbsoluteLocation(world);
+				averageErrorB += newMatch.errorR();
+				++count;
+			}
+		}
+		averageErrorB /= count;
+		console.log("added "+count);
+		console.log("averageError: "+" => "+averageErrorB);
+	}
+
+
+// console.log(views);
+// console.log(transforms);
+// throw "??????????"
+
+	var subdivisions = 0; // ~1k
+	// var subdivisions = 1; // 5-10k
+	// var subdivisions = 2; // ~40k  --- select
+	// var subdivisions = 3; // ~100k
+	var iterations = 3; // per grid size
+	// var iterations = 5;
+	// var iterations = 1;
+	var maxIterations = (subdivisions+1)*iterations;
+
+
+	for(var iteration=0; iteration<maxIterations; ++iteration){
+		console.log("all: ========================================================================================= "+iteration+" / "+maxIterations);
+		world.printPoint3DTrackCount();
+		// subdivisions
+		if(iteration!==0 && iteration%iterations==0){
+			++subdivision;
+			var views = world.toViewArray();
+			for(var i=0; i<views.length; ++i){
+				var view = views[i];
+				var currentSize = view.cellSize();
+				var size = currentSize*0.5 | 0;
+				if(size%2==0){
+					size += 1;
+				}
+				console.log("CHANGE CELL SIZE: "+view.cellSize()+" -> "+size);
+				view.cellSize(size);
+			}
+		}
+		// current estimates
+		world.estimate3DErrors(true);
+		world.averagePoints3DFromMatches();
+
+
+		// refine cameras
+		for(var v=0; v<views.length; ++v){
+			var view = views[v];
+			world.refineSelectCameraMultiViewTriangulation(view, 100);
+			world.copyRelativeTransformsFromAbsolute();
+		}
+		for(var t=0; t<transforms.length; ++t){
+			var transform = transforms[t];
+			console.log(transform.R());
+		}
+
+		// for(var t=0; t<transforms.length; ++t){
+		// 	var transform = transforms[t];
+		// 	world.refineCameraPairRelativeToAbsolute(transform, 100);
+		// 	world.copyRelativeTransformsFromAbsolute();
+		// 	world.relativeFFromSamples();
+		// }
+		
+		// refine points
+		world.estimate3DErrors(true);
+		world.averagePoints3DFromMatches();
+		world.refinePoint3DAbsoluteLocation();
+		world.patchInitBasicSphere(true);
+
+		// add new points
+		world.probe2DCells(999);
+		//
+		// world.probe3DGlobal(1.5, 1.5); // 1 - 2
+
+		// update world estimate
+		for(var v=0; v<views.length; ++v){
+			var view = views[v];
+			world.refineSelectCameraMultiViewTriangulation(view, 100);
+			world.copyRelativeTransformsFromAbsolute();
+		}
+		// for(var t=0; t<transforms.length; ++t){
+		// 	var transform = transforms[t];
+		// 	world.refineCameraPairRelativeToAbsolute(transform, 100);
+		// 	world.copyRelativeTransformsFromAbsolute();
+		// 	world.relativeFFromSamples();
+		// }
+
+		// new errors
+		world.estimate3DErrors(true);
+		
+		// drop poor tracks
+		world.dropNegativePoints3D();
+		world.dropFurthest();
+		// world.filterLocal3Dto2DSize(); // N/A
+		world.filterNeighborConsistency();
+		// world.filterLocal3D(); // ...
+		world.filterGlobalPatchSphere3D(2.0, false);
+
+		// ?: start more rigid, allow for more error, finish rigid
+		// world.filterGlobalMatches(false, 0, 2.0,2.0,2.0,2.0, false);
+		world.filterGlobalMatches(false, 0, 3.0,3.0,3.0,3.0, false);
+				world.filterLocal2Dto3DSize();
+
+				// negative (behind) points:
+				world.dropNegativeMatches3D();
+				world.dropNegativePoints3D();
+
+		world.printPoint3DTrackCount();
+	}
+
+	// final output:
+	// world.averagePoints3DFromMatches();
+
+	var str = world.toYAMLString();
+	console.log(str);
+
+	throw "solve dense group .. ";
 }
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

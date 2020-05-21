@@ -20074,8 +20074,8 @@ throw "?";
 		// console.log("space count: "+space.count());
 
 
-// if(false){
-if(true){
+if(false){
+// if(true){
 // display source images
 var img = imageMatrixScaled;
 	img = GLOBALSTAGE.getFloatRGBAsImage(img.red(),img.grn(),img.blu(), img.width(),img.height());
@@ -20109,8 +20109,8 @@ GLOBALSTAGE.addChild(d);
 
 
 			space.insertObject(feature);
-// if(false){
-if(true){
+if(false){
+// if(true){
 // display source points
 var q = feature["point"].copy();
 	q.scale(actualImageScale);
@@ -21055,8 +21055,8 @@ match["point3D"] = point3D;
 
 
 	// draw final:
-// if(false){
-if(true){
+if(false){
+// if(true){
 
 var color0 = new V3D(1,0,0);
 var color1 = new V3D(0,1,0);

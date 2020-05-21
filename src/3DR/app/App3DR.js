@@ -10701,7 +10701,217 @@ App3DR.ProjectManager.prototype.loadDenseGroupsStereopsis = function(){
 	project.loadDataFromFile(worldFilename, dataLoadedFxn, project, {});
 }
 App3DR.ProjectManager.prototype._doDenseGroupsStereopsis = function(data){
-	throw "_doDenseGroupsStereopsis";
+	var project = this;
+
+	var groupViews = data["views"];
+	var groupCameras = data["cameras"];
+	var groupPairs = data["pairs"];
+
+	var groupCameraFromID = {};
+	for(var i=0; i<groupCameras.length; ++i){
+		var groupCamera = groupCameras[i];
+		var cameraID = groupCamera["id"];
+			groupCamera["K"] = Matrix.fromObject(groupCamera["K"]);
+		groupCameraFromID[cameraID] = groupCamera;
+	}
+
+	var groupViewFromID = {};
+	for(var i=0; i<groupViews.length; ++i){
+		var groupView = groupViews[i];
+		var viewID = groupView["id"];
+			groupView["R"] = Matrix.fromObject(groupView["transform"]);
+		groupViewFromID[viewID] = groupView;
+	}
+	
+	// var pairSeeds = [];
+
+	var completePairFxn = function(){
+		throw "completePairFxn";
+	}
+
+	var stage = GLOBALSTAGE;
+
+	var imagesFromViewID = {};
+	var calculatePairSeedsFxn = function(){
+		/*
+		console.log("create image matrixes");
+		var groupImages = [];
+		for(var i=0; i<groupViews.length; ++i){
+			var groupView = groupViews[i];
+			var viewID = groupView["id"];
+			var view = project.viewFromID(viewID);
+			var image = view.anyLoadedImage();
+			var imageMatrix  = R3D.imageMatrixFromImage(image, stage);
+			imagesFromViewID[viewID] = imageMatrix;
+			groupImages[i] = imageMatrix;
+		}
+		console.log("get pair matches");
+		var pairMatches = [];
+		for(var i=0; i<groupPairs.length; ++i){
+			break;
+			var groupPair = groupPairs[i];
+			// console.log(groupPair);
+			var viewAID = groupPair["A"];
+			var viewBID = groupPair["B"];
+			// console.log(groupViewFromID);
+			var viewA = groupViewFromID[viewAID];
+			var viewB = groupViewFromID[viewBID];
+			var transformA = viewA["R"];
+			var transformB = viewB["R"];
+			var extrinsicAB = Matrix.relativeWorld(transformA,transformB);
+			var cameraAID = viewA["camera"];
+			var cameraBID = viewB["camera"];
+			var cameraA = groupCameraFromID[cameraAID];
+			var cameraB = groupCameraFromID[cameraBID];
+			var projectViewA = project.viewFromID(viewAID);
+			var projectViewB = project.viewFromID(viewBID);
+			var imageA = imagesFromViewID[viewAID];
+			var imageB = imagesFromViewID[viewBID];
+			console.log(imageA,imageB);
+			var images = [imageA,imageB];
+
+			var Ka = cameraA["K"];
+			var Kb = cameraB["K"];
+				Ka = R3D.cameraFromScaledImageSize(Ka, imageA.size());
+				Kb = R3D.cameraFromScaledImageSize(Kb, imageB.size());
+			var Ks = [Ka,Kb];
+
+			// var sizes = [imageA.size(),imageB.size()];
+
+			var featureSize = 0.02;
+			var sizes = [imageA.size().length()*featureSize,imageB.size().length()*featureSize];
+			var errorPixels = imageA.size().length()*0.005; // should be very accurate 
+
+			var relativeAB = extrinsicAB;
+			var result = R3D.searchMatchPoints3D(images, sizes, relativeAB, Ks, errorPixels);
+			console.log(result);
+			var matches = result["matches"];
+			console.log(matches);
+			pairMatches[i] = matches;
+			break;
+		}
+		*/
+
+		console.log("create world");
+		var cameras = groupCameras;
+		var views = groupViews;
+		// var images = groupImages;
+		var world = new Stereopsis.World();
+		var info = project._addGraphViews(world, groupViewFromID, stage, views);
+		console.log(info)
+		var images = info["images"];
+		var transforms = info["transforms"];
+		console.log("transforms");
+		console.log(transforms);
+
+		var worldCams = App3DR.ProjectManager.addCamerasToWorld(world, cameras);
+		console.log(worldCams);
+		
+		var worldViews = App3DR.ProjectManager.addViewsToWorld(world, views, images, transforms);
+		// console.log(worldViews);
+		// throw "?????????"
+
+		// pairs to craete 
+		var comparePairs = [];
+		for(var i=0; i<groupPairs.length; ++i){
+			var groupPair = groupPairs[i];
+			var viewAID = groupPair["A"];
+			var viewBID = groupPair["B"];
+			var viewA = world.viewFromData(viewAID);
+			var viewB = world.viewFromData(viewBID);
+			comparePairs.push([viewA,viewB]);
+		}
+
+
+		var cellCount = 40; // too sparse
+		// var cellCount = 60;
+		// var cellCount = 80; // too dense ?
+		for(var i=0; i<worldViews.length; ++i){
+			var view = worldViews[i];
+			var size = view.size();
+			var wid = size.x;
+			var hei = size.y;
+			var size = R3D.cellSizingRoundWithDimensions(wid,hei,cellCount, false);
+			view.cellSize(size);
+		}
+		world.copyRelativeTransformsFromAbsolute();
+
+		console.log(world);
+		console.log("solve dense group world");
+		
+		world.checkForIntersections(true);
+		world.resolveIntersectionByDefault();
+		// world.resolveIntersectionByPatchVisuals();
+// throw "???"
+		world.solveDenseGroup(comparePairs);
+		console.log("?????????????????????????????");
+
+		// save to group file
+		// set bundle group transforms to SOME NUMBER ?
+	}
+
+
+	var loadWorld = function() {
+		
+
+		// add track points to world
+		var existingPoints = data["points"];
+		// console.log(existingPoints);
+		var worldViewLookup = {};
+		for(var i=0; i<worldViews.length; ++i){
+			var view = worldViews[i];
+			var viewID = view.data();
+			worldViewLookup[viewID] = view;
+		}
+		// console.log(worldViewLookup);
+		console.log("embedding points");
+		// init P3D 
+		world.checkForIntersections(false);
+		var points3D = App3DR.ProjectManager._worldPointFromSaves(world, existingPoints, worldViewLookup);
+		console.log(points3D);
+		console.log("add points with patches");
+		world.embedPoints3DNoValidation(points3D);
+		// world.embedPoints3D(points3D);
+
+
+		// extract points & re-add
+
+
+
+		world.checkForIntersections(true);
+		// world.resolveIntersectionByGeometry();
+		world.resolveIntersectionByDefault();
+		// _resolveIntersectionPatch
+		// world.resolveIntersectionByPatchVisuals();
+
+		world.solveGroup();
+
+		throw "done ?"
+	}
+
+	// load all images
+	var loadedImages = 0;
+	var expectedImages = groupViews.length;
+	var checkAllViewImagesLoaded = function(){
+		++loadedImages;
+		console.log(" status: "+loadedImages+"/"+expectedImages);
+		if(loadedImages==expectedImages){
+			console.log("done");
+			calculatePairSeedsFxn();
+		}
+	}
+
+	// load all view images [at some point will be groups]
+	for(var i=0; i<groupViews.length; ++i){
+		var groupView = groupViews[i];
+		var viewID = groupView["id"];
+		console.log(viewID);
+		var view = project.viewFromID(viewID);
+		console.log(view);
+		view.loadDenseHiImage(checkAllViewImagesLoaded, project); // 1008 x 768
+		// view.loadBundleAdjustImage(checkAllViewImagesLoaded, project); // 2016 x 1512
+	}
+
 }
 App3DR.ProjectManager.prototype._doDenseGroupsStereopsisOLD = function(data){
 	console.log(data);
@@ -11257,7 +11467,7 @@ App3DR.ProjectManager.prototype.initializeBundleGroupsFromDense = function(){
 	var saveBundleFileFxn = function(){
 		console.log("saved bundle");
 		project.bundleFilename(fullBundleDataPath);
-		// project.saveProjectFile(savedProjectComplete, project);
+		project.saveProjectFile(savedProjectComplete, project);
 	}
 
 	var savedProjectComplete = function(){
@@ -16947,7 +17157,9 @@ App3DR.ProjectManager.prototype._addGraphViews = function(world, graphViewLookup
 		if(!transform){
 			transform = gv["transform"];
 		}
-		transform = Matrix.fromObject(transform);
+		if(!Code.isa(transform,Matrix)){
+			transform = Matrix.fromObject(transform);
+		}
 		transforms.push(transform);
 		images.push(matrix);
 		transformLookup[""]
@@ -18834,7 +19046,9 @@ console.log(camera);
 		if(K["fx"]!==undefined){
 			K = new Matrix(3,3).fromArray([K["fx"],K["s"],K["cx"], 0,K["fy"],K["cy"], 0,0,1]);
 		}else{
-			K = Matrix.loadFromObject(K);
+			if(!Code.isa(K,Matrix)){
+				K = Matrix.loadFromObject(K);
+			}
 		}
 // console.log(K);
 console.log(world);
