@@ -19912,7 +19912,6 @@ R3D.searchMatchPoints3D = function(images, cellSizes, relativeAB, Ks, errorPixel
 	var imageCount = images.length;
 	for(var i=0; i<images.length; ++i){
 		var image = images[i];
-		console.log(image+"")
 		averagePixels += image.width()*image.height();
 	}
 	averagePixels /= imageCount;
@@ -20020,7 +20019,12 @@ var errors = [];
 	for(var i=0; i<images.length; ++i){
 		var imageMatrix = images[i];
 		var cellSize = cellSizes[i];
-		var imageScales = new ImageMatScaled(imageMatrix);
+		var imageScales = imageMatrix;
+		if(Code.isa(imageMatrix,ImageMatScaled)){
+			imageMatrix = imageScales.images()[0];
+		}else{
+			imageScales = new ImageMatScaled(imageMatrix);
+		}
 		var imageMatrixScaled = imageScales.getScaledImage(imageScale);
 			imageScalesList.push(imageScales);
 		var actualImageScale = ImageMat.relativeScale(imageMatrixScaled, imageMatrix);

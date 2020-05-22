@@ -385,6 +385,46 @@ MISSING:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+this messes up views tranforms to all identity
+world.refineCameraPairRelativeToAbsolute(transform, 100);
+
+
+
+WHY: 
+Stereopsis.js:11203 ERROR INFO: F:0.9690652716912441@2.699581110718354=2697.8505948793268
+Stereopsis.js:11204 ERROR INFO: R:19.43197197415138@17.039264088896605=17041.65679678186
+Stereopsis.js:11205 ERROR INFO: N:null@null=0
+
+
+      matches: 9           :  2 - 7
+Stereopsis.js:9980  T 23 2->7  N : null +/- null
+Stereopsis.js:9982  T 23 2->7  F : null +/- null
+Stereopsis.js:9983  T 23 2->7  R : 1.9234224154564552 +/- 41.26468153157985
+Stereopsis.js:1807 relativeEstimatePoints3D - triangulate points
+Stereopsis.js:9979       matches: 2           :  3 - 7
+Stereopsis.js:9980  T 24 3->7  N : null +/- null
+Stereopsis.js:9982  T 24 3->7  F : null +/- null
+Stereopsis.js:9983  T 24 3->7  R : 1.704415047821888 +/- 0.8798028981297149
+
+
+=> if it has a R -> it should have a F & N
+
+
+- not as much point overlap as expected:
+all: ========================================================================================= 8 / 9
+Stereopsis.js:2949 (30) [0, 0, 99724, 6299, 62, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+
+
+- try with smaller groups: 3-4
+- don't want to spend time optimizing cameras 
+
+
+
+
+
+
+
+
 - how well is the point 3D projection helping with point placement ?
 	- this hasn't been A/B tested / calibrated
 
