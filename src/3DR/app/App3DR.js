@@ -11044,7 +11044,6 @@ App3DR.ProjectManager.prototype.initializeBundleGroupsFromDense = function(){
 	var trackData = null;
 
 	var loadedDenseDataFxn = function(data){
-		// console.log(data);
 		denseData = data;
 		var graphFilename = denseData["graph"];
 		// console.log(graphFilename);
@@ -11052,7 +11051,6 @@ App3DR.ProjectManager.prototype.initializeBundleGroupsFromDense = function(){
 	}
 
 	var loadedGraphDataFxn = function(data){
-		// console.log(data);
 		graphData = data;
 		var bundleFilename = graphData["bundleFullFile"];
 		bundleFilename = Code.appendToPath(denseDirectory, "tracks", bundleFilename);
@@ -11060,7 +11058,6 @@ App3DR.ProjectManager.prototype.initializeBundleGroupsFromDense = function(){
 		project.loadDataFromFile(bundleFilename, loadedTrackDataFxn);
 	}
 	var loadedTrackDataFxn = function(data){
-		// console.log(data);
 		trackData = data;
 		calculateGraphFxn();
 	}
@@ -11149,15 +11146,20 @@ App3DR.ProjectManager.prototype.initializeBundleGroupsFromDense = function(){
 		
 		// get group graph
 
+		// TEST
+		var groupSize = 3;
+		var groupTolerance = 1;
+		var overlapDesired = 1;
+
 		// small
 		// var groupSize = 4;
 		// var groupTolerance = 1; // 3-5
 		// var overlapDesired = 2; // up to 7
 
 		// med
-		var groupSize = 6;
-		var groupTolerance = 1; // 5-7
-		var overlapDesired = 3; // up to 10 | avg 6-1+3 = 8
+		// var groupSize = 6;
+		// var groupTolerance = 1; // 5-7
+		// var overlapDesired = 3; // up to 10 | avg 6-1+3 = 8
 
 		var result = Graph.groupsFromEdges(listBestPairs, groupSize, groupTolerance, overlapDesired)
 		console.log(result);
@@ -11187,7 +11189,10 @@ App3DR.ProjectManager.prototype.initializeBundleGroupsFromDense = function(){
 				GLOBALSTAGE.addChild(d);
 			}
 		}
-
+		groups.sort(function(a,b){
+			return a.length < b.length ? -1 : 1;
+		});
+		console.log(groups);
 		// calculateBundleGroupsFxn(denseViews, groups, densePoints, denseCameras);
 		// loadAllGroupPairs(denseViews, groups, densePoints, denseCameras);
 		calculateBundleGroupsBasicFxn(denseViews, groups, densePoints, denseCameras);

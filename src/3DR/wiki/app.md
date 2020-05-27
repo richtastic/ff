@@ -421,6 +421,42 @@ Stereopsis.js:2949 (30) [0, 0, 99724, 6299, 62, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
 
 
 
+PROBE2D ALGORITHM UPDATE:
+	- each point should have opportunity to extend reach to any views not already referenced
+
+	for each viewA
+		for each pointA
+			for each currently-referenced-other-viewB: [any view a point in viewA has a reference to (that isn't viewA)]
+			A) EXPAND TRACKS
+				if pointA does not have a reference to viewB:
+					search nearby neighbors to get closest that does have a match-> need affine mapping
+					if neighbor does exist:
+						try to add a match with new points
+B) EXPAND AREA
+	find empty spaces ?
+		=> same as previous ?
+
+
+
+
+probe2DCells - PROBLEM SUMMARY:
+	- if points don't coinside @ ~ 10% of a cell side, then only pairs will continue to exist [no track growing]
+	- points will only grow around perimeter from existing pair-matches [isolated growing]
+	- 
+
+
+emptyNeighborCellsForView
+
+
+
+
+
+
+
+Stereopsis.World.MIN_DISTANCE_EQUALITY = 0.1; // 10%-25% of a cell
+Stereopsis.World.MIN_DISTANCE_EQUALITY_MIN = 0.50; // hard stop ~ 0.1-1.0 --- this should be in terms of TOTAL IMAGE SIZE -- NOT PIXELS?
+
+
 
 
 
