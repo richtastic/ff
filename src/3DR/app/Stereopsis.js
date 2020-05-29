@@ -2335,6 +2335,26 @@ Stereopsis.P3D.prototype.calculateAbsoluteLocation = function(world, dontInsert)
 		return location;
 	}
 }
+
+
+Stereopsis.P3D.prototype.calculateAbsoluteLocationDLT = function(world, dontInsert){
+	dontInsert = dontInsert!==undefined ? dontInsert : false;
+	var point3D = this;
+	var location = point3D.estimated3D();
+	if(!dontInsert){ // disconnected points shouldn't necessarily be added
+		if(location && Code.isNaN(location.x) ){
+			console.log(errors);
+			console.log(percents);
+			console.log(locations);
+			console.log(matches);
+			console.log("dontInsert "+location);
+			throw "NANNN";
+		}
+		world.updatePoint3DLocation(point3D,location);
+	}else{
+		return location;
+	}
+}
 Stereopsis.P3D.prototype.copyAbsoluteLocationToMatches = function(){
 	var point3D = this;
 	var matches = point3D.toMatchArray();
@@ -4262,6 +4282,20 @@ Stereopsis.World.prototype.averagePoints3DFromMatches = function(onlyNull){ // a
 	}
 }
 
+Stereopsis.World.prototype.points3DFromDLT = function(onlyNull){
+	onlyNull = onlyNull!==undefined ? onlyNull : false;
+	var world = this;
+	var points3D = this.toPointArray();
+	for(var i=0; i<points3D.length; ++i){
+		var point3D = points3D[i];
+		if(onlyNull && point3D.point()){
+			continue;
+		}
+		point3D.calculateAbsoluteLocationDLT(world);
+	}
+}
+
+
 Stereopsis.World.prototype.patchInitOrUpdate = function(limit, init, update){
 console.log("patchInitOrUpdate");
 	init = init!==undefined ? init : true;
@@ -5645,11 +5679,13 @@ Stereopsis.World.prototype.refineSelectCameraMultiViewTriangulation = function(s
 	var viewPointHash = {};
 	var pointKeepList = [];
 	var points2D = selectView.toPointArray();
+console.log(selectView.data()+" : "+points2D.length);
 	for(var i=0; i<points2D.length; ++i){
 		var point2D = points2D[i];
 		var point3D = point2D.point3D();
 		var pointsP3DP2D = point3D.toPointArray();
-		if(pointsP3DP2D.length>2){ // more than 1 match
+		// if(pointsP3DP2D.length>2){ // more than 1 match -- TODO: IS THIS NEEDED FOR TRACKS OPTIMIZING ?
+		if(true){ // ... any number of matches
 			for(var j=0; j<pointsP3DP2D.length; ++j){
 				var pt2D = pointsP3DP2D[j];
 				var view = pt2D.view();
@@ -5662,9 +5698,12 @@ Stereopsis.World.prototype.refineSelectCameraMultiViewTriangulation = function(s
 			}
 			pointKeepList.push(point2D);
 		}
-
 	}
+
+
+console.log(" total: "+pointKeepList.length);
 	// console.log(viewPointHash);
+
 
 	// get count list not including self & above minimum
 	var viewMatchCounts = [];
@@ -5717,7 +5756,10 @@ Stereopsis.World.prototype.refineSelectCameraMultiViewTriangulation = function(s
 			}
 		}
 		// add entries if enough matches still exist
-		if(totalIncludedViews<=2){
+		// if(totalIncludedViews<=2){
+		// 	continue;
+		// }
+		if(totalIncludedViews<=1){ // at least 1 view ...
 			continue;
 		}
 		for(var j=0; j<pointsP3DP2D.length; ++j){
@@ -5781,8 +5823,10 @@ Stereopsis.World.prototype.refineSelectCameraMultiViewTriangulation = function(s
 		}
 		listPoints2D.push(entryP3D);
 	}
+	// console.log(listPoints2D);
 	// console.log(listExts, listKs, listKinvs, selectViewIndex, listPoints2D, maxIterations);
 	if(listPoints2D.length<minimumMatchCountTransform){
+		console.log("below: "+listPoints2D.length+" / "+minimumMatchCountTransform);
 		return false;
 	}
 	var result = R3D.optimizeMultipleCameraExtrinsicDLTNonlinear(listExts, listKs, listKinvs, selectViewIndex, listPoints2D, maxIterations);
@@ -6409,12 +6453,9 @@ GLOBALSTAGE.addChild(d);
 Stereopsis.World.prototype.solveDenseGroup = function(inputPairs){ // multiple (3+)
 	var world = this;
 console.log("solveDenseGroup");
-// throw "solveDenseGroup";
 	var transforms = world.toTransformArray();
 	var views = world.toViewArray();
-
 	world.copyRelativeTransformsFromAbsolute();
-
 	var featureSize = 0.02; // large enough to be distinguishing, small enough to allow for perspective changes
 	var errorSize = 0.005;  // should be very accurate  - 0.001 - 0.005
 	console.log("find top matches");
@@ -6424,13 +6465,14 @@ console.log("solveDenseGroup");
 		var viewA = pair[0];
 		var viewB = pair[1];
 		console.log("PAIR CREATING +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ "+i+" / "+inputPairs.length+" ("+viewA.data()+"-"+viewB.data()+") ...");
-		var transformA = viewA.absoluteTransform();
-		var transformB = viewB.absoluteTransform();
-		var extrinsicAB = Matrix.relativeWorld(transformA,transformB);
+		var absoluteA = viewA.absoluteTransform();
+		var absoluteB = viewB.absoluteTransform();
+		var extrinsicAB = Matrix.relativeWorld(absoluteA,absoluteB);
 		var imageA = viewA.image();
 		var imageB = viewB.image();
 			imageA = viewA.imageScales();
 			imageB = viewB.imageScales();
+
 		var images = [imageA,imageB];
 		var Ka = viewA.K();
 		var Kb = viewB.K();
@@ -6440,19 +6482,31 @@ console.log("solveDenseGroup");
 		// var sizes = [viewA.cellSize(),viewB.cellSize()];
 		var errorPixels = imageA.size().length()*errorSize;
 
-		var relativeAB = extrinsicAB;
-
-		var result = R3D.searchMatchPoints3D(images, sizes, relativeAB, Ks, errorPixels);
+		var result = R3D.searchMatchPoints3D(images, sizes, extrinsicAB, Ks, errorPixels, false);
+		console.log(result);
 		var matches = result["matches"];
 		console.log(matches);
 		pairMatches[i] = matches;
-		// if(i>3){
+
+
+		var R1 = result["P"];
+		var R2 = world.transformFromViews(viewA,viewB).R(viewA,viewB);
+
+		console.log(R1+"");
+		console.log(R2+"");
+
+		var dirA = R2.multV3DtoV3D(V3D.DIRZ);
+		var dirB = R2.multV3DtoV3D(V3D.DIRZ);
+		console.log("ANGLE: "+Code.degrees( V3D.angle(dirA,dirB) ));
+
+
+		throw "?"
+		// if(i==1){
 		// 	break;
 		// }
-// break;
+		break;
 	}
-	// console.log(views);
-// throw "??????????"
+// throw "dooooooone";
 	console.log("insert matches into world");
 	for(var i=0; i<pairMatches.length; ++i){
 		var pair = inputPairs[i];
@@ -6462,23 +6516,42 @@ console.log("solveDenseGroup");
 		var matches = pairMatches[i];
 		var errorsR = [];
 		var matchesAddList = [];
+
+// var imageA = viewA.imageScales();
+// var imageB = viewB.imageScales();
+// console.log(imageA.size()+" | "+imageB.size());
+// var minP = null;
+// var maxP = null;
 		for(var j=0; j<matches.length; ++j){
 			var match = matches[j];
 			var p2DA = match["pointA"];
 			var p2DB = match["pointB"];
 			var point3D = match["point3D"];
-			var affineAB = match["affine"];
+			var affineAB = match["affine"]; // undefined ?
 			var errR = match["error"];
+
+// if(!minP){
+// 	minP = p2DA.copy();
+// 	maxP = p2DA.copy();
+// }else{
+// 	V2D.min(minP,minP,p2DA);
+// 	V2D.max(maxP,maxP,p2DA);
+// }
 			var newMatch = world.newMatchFromInfo(viewA,p2DA.copy(),viewB,p2DB.copy(),affineAB);
 				Stereopsis.updateErrorForMatch(newMatch);
 			var m3D = newMatch.point3D();
 				m3D.point( m3D.calculateAbsoluteLocation(world,true) ); // point3D
 				world.patchInitBasicSphere(false,[m3D]); // patch3D
 			matchesAddList.push(newMatch);
+			// console.log(errR+" vs "+newMatch.errorR());
 			errorsR.push(newMatch.errorR());
 		}
+
+// console.log("size: "+minP+" : "+maxP);
+
 		// errorsR.sort();
 		// console.log(errorsR);
+// Code.printMatlabArray(errorsR,"errorsR");
 		var min = Code.min(errorsR);
 		var sig = Code.stdDev(errorsR,min);
 		console.log(" ERR "+min+" +/- "+sig);
@@ -6504,16 +6577,44 @@ console.log("solveDenseGroup");
 		console.log("added "+count);
 		console.log("averageError: "+" => "+averageErrorB);
 	}
+	// have R & N (& S) => get F 
 	world.relativeFFromSamples();
-
 	world.estimate3DErrors(true);
 
 	console.log("transforms:");
 	console.log(transforms);
 
-	// var subdivisions = 0; // ~1k
+// refineSelectCameraMultiViewTriangulation
+	
+	// try getting updated view locations:
+	console.log("minimal erroring ...");
+
+	for(var v=0; v<views.length; ++v){
+		var view = views[v];
+		world.refineSelectCameraMultiViewTriangulation(view, 1000);
+		world.copyRelativeTransformsFromAbsolute();
+	}
+	world.relativeFFromSamples();
+
+	// this breaks ...
+	// for(var t=0; t<transforms.length; ++t){
+	// 	var transform = transforms[t];
+	// 	world.refineCameraPairRelativeToAbsolute(transform, 1000);
+	// 	world.copyRelativeTransformsFromAbsolute();
+	// 	world.relativeFFromSamples();
+	// }
+	// world.relativeFFromSamples();
+
+
+	world.estimate3DErrors(true);
+
+
+
+throw "before main loop"
+
+	var subdivisions = 0; // ~1k
 	// var subdivisions = 1; // 5-10k
-	var subdivisions = 2; // ~40k  --- select
+	// var subdivisions = 2; // ~40k  --- select
 	// var subdivisions = 3; // ~100k
 	var iterations = 3; // per grid size
 	// var iterations = 5;
@@ -6543,7 +6644,9 @@ console.log("solveDenseGroup");
 		world.relativeFFromSamples();
 
 		world.estimate3DErrors(true);
-		world.averagePoints3DFromMatches();
+
+		//world.averagePoints3DFromMatches();
+		world.points3DFromDLT();
 
 		// refine cameras
 		for(var v=0; v<views.length; ++v){
@@ -6561,13 +6664,14 @@ console.log("solveDenseGroup");
 		
 		// refine points
 		world.estimate3DErrors(true);
-		world.averagePoints3DFromMatches();
-		world.refinePoint3DAbsoluteLocation();
+		// world.averagePoints3DFromMatches();
+		world.points3DFromDLT();
+		// world.refinePoint3DAbsoluteLocation();
 		world.patchInitBasicSphere(true);
 
 		// add new points
-		world.probe2DCells(999);
-		world.expand2DTracks(999);
+		world.probe2DCells(3.0);
+		world.expand2DTracks(3.0);
 		//
 		// world.probe3DGlobal(1.5, 1.5); // 1 - 2
 
@@ -8630,11 +8734,12 @@ listMatchMulti.push(multi);
 
 
 // console.log(" point count: "+this._pointSpace.count());
-/*
+
+
+
 if(linearly){
 // if(false){
 // PRINT HERE
-
 // TODO: ONLY NEED POPULATION SUBSET ~ 1000
 
 var numerical = function(a,b){
@@ -8645,9 +8750,8 @@ listMatchNCC.sort(numerical);
 listMatchR.sort(numerical);
 listMatchF.sort(numerical);
 
-
-// var percent = 0.5;
-var percent = 0.75;
+var percent = 0.5;
+// var percent = 0.75;
 
 // LINEAR DROPPING:
 if(listMatchF.length>minCount){
@@ -8672,7 +8776,9 @@ if(listMatchR.length>minCount){
 // 	limitSAD = Math.min(limitSAD,limitS2);
 // }
 }
-*/
+
+
+
 		// var totalViewCount = ;
 		var maxMatchCount = transforms.length;
 		var maxViewCounts = this.viewCount();
@@ -10058,7 +10164,7 @@ Stereopsis.World.prototype.estimate3DErrors = function(skipCalc, shouldLog){ // 
 	}
 
 
-
+shouldLog = true;
 if(shouldLog){
 	var points3D = this.toPointArray();
 
@@ -10115,6 +10221,8 @@ if(shouldLog){
 		errorsF.push(info[i][2]);
 	}
 
+
+// errorsR.sort();
 // if(true){
 // if(false){
 // if(skipCalc){
@@ -11182,9 +11290,10 @@ if(true){
 }
 Stereopsis.World.prototype.expand2DTracks = function(maxSigmaView, maxSigmaMatch){ // use existing 2D matches to check neighbors in views that are not currently matched
 	// probing, but for existing points to increase track coverage
-	var sigmaFKeep = 1.0;
-	var sigmaRKeep = 1.0;
-	var sigmaNKeep = 1.0;
+	maxSigmaView = Code.valueOrDefault(maxSigmaView, 2.0);
+	var sigmaFKeep = maxSigmaView;
+	var sigmaRKeep = maxSigmaView;
+	var sigmaNKeep = maxSigmaView;
 	console.log("expand2DTracks");
 	var world = this;
 	var views = world.toViewArray();

@@ -10842,10 +10842,10 @@ App3DR.ProjectManager.prototype._doDenseGroupsStereopsis = function(data){
 		world.checkForIntersections(true);
 		world.resolveIntersectionByDefault();
 		// world.resolveIntersectionByPatchVisuals();
-// throw "???"
+		// throw "???"
+		// solveDenseGroup
 		world.solveDenseGroup(comparePairs);
 		console.log("?????????????????????????????");
-
 		// save to group file
 		// set bundle group transforms to SOME NUMBER ?
 	}

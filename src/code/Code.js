@@ -393,8 +393,15 @@ Code.parseURL = function(url){ // https://tools.ietf.org/html/rfc3986#section-4.
 	datum["path"] = fullpath;
 	datum["parameters"] = parameters;
 	datum["fragment"] = anchor;
-	return datum;
+	return datum; 
 }
+Code.infoMemory = function(){ // CHROME - --enable-precise-memory-info  |  /Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome --enable-precise-memory-info
+	var info = window.performance.memory;
+	console.log(info);
+	return info["usedJSHeapSize"];
+	// return info["totalJSHeapSize"];
+}
+
 Code.fileExtensionFromName = function(filename){
 	var regex = /\.(\w+)$/g;
 	var ext = filename.match(regex);

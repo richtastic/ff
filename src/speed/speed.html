@@ -1,0 +1,26 @@
+<html>
+<head>
+<title>Speed</title>
+<script src="../code/FF.js"></script>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<script type="text/javascript">
+function pageLoadedFxn(){
+	var ff = new FF("../code/",defaultClassesLoadedFxn,defaultClassesProgressFxn);
+}
+function defaultClassesProgressFxn(o){}
+function defaultClassesLoadedFxn(){
+	var list = ["SpeedTest.js"];
+	scriptLoader = new ScriptLoader("./",list,this,customClassesLoadedFxn,customClassesProgressFxn);
+	scriptLoader.load();
+}
+function customClassesProgressFxn(o){}
+function customClassesLoadedFxn(o){
+	var speed = new SpeedTest();
+}
+
+</script>
+</head>
+<body onload="pageLoadedFxn();" style="border:0px;margin:0px;border:0px;">
+</body>
+</html>
+

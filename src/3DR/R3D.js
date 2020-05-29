@@ -389,7 +389,7 @@ R3D.PFromKRT = function(K,R,t){
 
 R3D.optimizeMultipleCameraExtrinsicDLTNonlinear = function(listP, listK, listKinv, variablePIndex, listPoints2D, maxIterations){ // very last P/K is assumed variable one
 	maxIterations = Code.valueOrDefault(maxIterations, 1000);
-	console.log("R3D.optimizeMultipleCameraExtrinsicNonlinear");
+	console.log("R3D.optimizeMultipleCameraExtrinsicNonlinear: "+listPoints2D.length+" points ");
 	// console.log(listP);
 	// console.log(listK);
 	// console.log(listKinv);
@@ -488,11 +488,9 @@ R3D._transformCameraExtrinsicDLTNonlinearGD = function(args, x, isUpdate){
 		totalError += error;
 
 	} // track list
-	// console.log(totalError);
-	if(isUpdate){
-		console.log(totalError);
-	}
-	// throw "?"
+	// if(isUpdate){
+	// 	console.log(totalError);
+	// }
 	return totalError;
 }
 
@@ -19898,7 +19896,13 @@ R3D.projectivePatchAffine3D = function(point3D,normal3D, cameraNormals, cameraRi
 }
 // var affine2D = R3D.patchAffine2DFromPatch3D(point3D,normal3D,up3D,right3D,size3D, cameraA,Ka, cameraB,Kb, point2DA,point2DB, affineReuse);
 
-R3D.searchMatchPoints3D = function(images, cellSizes, relativeAB, Ks, errorPixels){
+R3D_SMP3DCOUNT = -1;
+R3D.searchMatchPoints3D = function(images, cellSizes, relativeAB, Ks, errorPixels, showDebug){
+	var SHOWOFFSETY = 0;
+	if(showDebug){
+		++R3D_SMP3DCOUNT;
+		SHOWOFFSETY = 400 * R3D_SMP3DCOUNT;
+	}
 	var idealPixelCount = 600*400; // for finding corners
 	var affineReuse = new Matrix2D();
 	var eigenA = new Matrix(2,2);
@@ -19923,7 +19927,6 @@ R3D.searchMatchPoints3D = function(images, cellSizes, relativeAB, Ks, errorPixel
 	var imageScalesList = [];
 	var featureScale = 1.0; // multiple of cell size 1-2
 		featureScale = 2.0; // want a large area
-// featureScale = 4.0;
 	var distanceScale = 0.25; // local maximal suppression 0.25-0.5
 	var cameraA = new Matrix(4,4).identity();
 	var cameraB = relativeAB;
@@ -20077,15 +20080,15 @@ throw "?";
 		}
 		// console.log("space count: "+space.count());
 
-
-if(false){
+if(showDebug){
+// if(false){
 // if(true){
 // display source images
 var img = imageMatrixScaled;
 	img = GLOBALSTAGE.getFloatRGBAsImage(img.red(),img.grn(),img.blu(), img.width(),img.height());
 var d = new DOImage(img);
 d.graphics().alpha(0.2);
-d.matrix().translate(0 + i*600, 0);
+d.matrix().translate(0 + i*600, SHOWOFFSETY);
 GLOBALSTAGE.addChild(d);
 } // end false
 		// convert to objects
@@ -20113,7 +20116,8 @@ GLOBALSTAGE.addChild(d);
 
 
 			space.insertObject(feature);
-if(false){
+if(showDebug){
+// if(false){
 // if(true){
 // display source points
 var q = feature["point"].copy();
@@ -20126,7 +20130,7 @@ var d = new DO();
 	d.graphics().endPath();
 	d.graphics().strokeLine();
 GLOBALSTAGE.addChild(d);
-d.matrix().translate(0 + i*600, 0);
+d.matrix().translate(0 + i*600, SHOWOFFSETY);
 }
 		}
 		spaces.push(space);
@@ -20170,10 +20174,10 @@ d.matrix().translate(0 + i*600, 0);
 	var org = new V2D();
 	var affineRatioKeepMax = 2; // 2-5
 	affineRatioKeepMax = 1.5;
-var doDebug = true;
+// var doDebug = true;
 var debugOffY = 300;
 var debugOY = 0;
-doDebug = false;
+var doDebug = false;
 // throw "before loop"
 
 
@@ -20329,7 +20333,7 @@ ort = dir.copy().rotate(Math.PI*0.5);
 	d.graphics().endPath();
 	
 GLOBALSTAGE.addChild(d);
-d.matrix().translate(0 + 1*600, 0);
+d.matrix().translate(0 + 1*600, SHOWOFFSETY);
 
 
 
@@ -21059,7 +21063,8 @@ match["point3D"] = point3D;
 
 
 	// draw final:
-if(false){
+if(showDebug){
+// if(false){
 // if(true){
 
 var color0 = new V3D(1,0,0);
@@ -21119,6 +21124,7 @@ for(var i=0; i<matches.length; ++i){
 		// d.graphics().lineTo(q.x,q.y);
 		// d.graphics().endPath();
 		// d.graphics().strokeLine();
+		d.matrix().translate(0,SHOWOFFSETY);
 	GLOBALSTAGE.addChild(d);
 
 } // for loop

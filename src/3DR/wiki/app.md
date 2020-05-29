@@ -365,8 +365,6 @@ TIMELINES:
 06/07 - MVP
 
 MISSING:
-- divide final track into groups & do dense group at a time
-	- algorithm [3d]
 - mass-dense point aggregation via merging separate P3D files
 	- logistics [2d]
 - hole filling
@@ -384,6 +382,63 @@ MISSING:
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+
+
+solveDenseGroup
+
+
+why does grouping (3+) do poorly: have much noise & wrong points
+	x show preliminary points for each pair
+		- 120 @ 0.70
+		- 122 @ 0.92
+		- 105 @ 0.43
+		- 90+% accurate [appear]
+- error with initial absolute R is really high: 
+	0.43 => 12
+
+
+- is the absolute R wrong ?
+	- look at the angle difference in predicted orientations 
+
+
+	
+
+	- is at least 'close'
+		- if close why is nonlinear optimizing not useful?
+			- what are the different nonlinear options?
+		- try linear optimizing
+			- which?
+
+=> how to combine absolute R with relative R's found from pair matches?
+
+
+- borrow the rotation
+- borrow the translation direction (keep the scale)?
+
+
+x are match x&y or image dimesions wrong ?
+
+x F base is ok: ( ~ 0.0.. px minimum)
+x F sigma is good (1.5-2.5 px error)
+
+- affine is undefined
+
+=> view refine only using 3+ points and not single view pairs ?
+- ...
+
+
+	- show merged points
+		...
+	- show triples ?
+		... 
+	- show error R / F / N ?
+	- check algorithms used
+
+....
+
+
+
 
 this messes up views tranforms to all identity
 world.refineCameraPairRelativeToAbsolute(transform, 100);
