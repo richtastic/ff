@@ -16592,6 +16592,138 @@ console.log("nonlinear");
 }
 
 
+
+Code.graphAbsoluteUpdateFromRelativeTransforms = function(initialP, edges){ // use starting matrices & upate to match 
+	var maxIterations = 1000;
+	// 
+	var viewCount = initialP.length;
+	var edgeCount = edges.length;
+	// copy starting matrixes
+	var absolutes = [];
+	for(var i=0; i<viewCount; ++i){
+		var abs = initialP[i];
+		absolutes[i] = abs.copy();
+	}
+
+	// prep relatives for vectors
+	var relatives = [];
+	for(var i=0; i<edgeCount; ++i){
+		var edge = edges[i];
+		var relAB = edge[2];
+		relatives[i] = relAB;
+	}
+
+	var updateVectorsFromMatrixes = function(matrixes,vectors){
+		for(var i=0; i<matrixes.length; ++i){
+			var matrix = matrixes[i];
+			var origin = matrix.multV3DtoV3D(new V3D(0,0,0));
+			var axisX = matrix.multV3DtoV3D(new V3D(1,0,0));
+			var axisY = matrix.multV3DtoV3D(new V3D(0,1,0));
+			var axisZ = matrix.multV3DtoV3D(new V3D(0,0,1));
+				axisX.sub(origin);
+				axisY.sub(origin);
+				axisZ.sub(origin);
+				origin.norm();
+				axisX.norm();
+				axisY.norm();
+				axisZ.norm();
+			vectors[i] = [origin, axisX, axisY, axisZ];
+		}
+		return vectors;
+	}
+
+	// to vectors
+	var relativeVectors = [];
+	updateVectorsFromMatrixes(relatives,relativeVectors);
+
+	var tempMatrix = new Matrix(4,4);
+		tempMatrix.identity();
+	var tempV3D = new V3D();
+	var matrixesFromXs = function(matrixes, x){
+		for(var i=0; i<matrixes.length; ++i){
+			var rx = x[i*6+0];
+			var ry = x[i*6+1];
+			var rz = x[i*6+2];
+			var tx = x[i*6+3];
+			var ty = x[i*6+4];
+			var tz = x[i*6+5];
+			var rodrigues = tempV3D;
+				rodrigues.set(rx,ry,rz);
+			var matrix = matrixes[i];
+				matrix = Code.rotationEulerRodriguezToMatrix(matrix, rodrigues);
+				matrix.transform3DSetLocation(tx,ty,tz);
+		}
+	}
+
+	var fxn = function(args, x, isUpdate){
+		if(isUpdate){
+			// throw "isUpdate";
+			// return;
+		}
+		var edges = args[0];
+		var rVectors = args[1];
+		var aMatrixes = args[2];
+
+		// setup absolutes from current x vector
+		matrixesFromXs(aMatrixes, x);
+
+		// get all absolute locations & X Y Z direction vectors
+		var totalError = 0;
+		for(var i=0; i<edges.length; ++i){
+			var edge = edges[i];
+			var indexA = edge[0];
+			var indexB = edge[1];
+			var r = rVectors[i];
+			// console.log(indexA,indexB);
+			var absA = aMatrixes[indexA];
+			var absB = aMatrixes[indexB];
+			var relAB = Matrix.relativeReference(tempMatrix, absA,absB);
+			var a = updateVectorsFromMatrixes([relAB], []);
+				a = a[0];
+			// direction error
+			var angleD = V3D.angle(a[0],r[0]);
+			// axes error:
+			var angleX = V3D.angle(a[1],r[1]);
+			var angleY = V3D.angle(a[2],r[2]);
+			var angleZ = V3D.angle(a[3],r[3]);
+			// console.log(Code.degrees(angleD)+" | "+Code.degrees(angleX)+" | "+Code.degrees(angleY)+" | "+Code.degrees(angleZ));
+			var error = 2*angleD + angleX + angleY + angleZ;
+			totalError += error;
+		}
+		if(isUpdate){
+			console.log(totalError);
+		}
+		// throw "?"
+		return totalError;
+	}
+
+	// create unknowns x vector
+	var x = [];
+	for(var i=0; i<absolutes.length; ++i){
+		var absolute = absolutes[i];
+		var rodrigues = Code.rotationMatrixToEulerRodriguez(absolute);
+		var offset = absolute.transform3DLocation();
+		x[i*6+0] = rodrigues.x;
+		x[i*6+1] = rodrigues.y;
+		x[i*6+2] = rodrigues.z;
+		x[i*6+3] = offset.x;
+		x[i*6+4] = offset.y;
+		x[i*6+5] = offset.z;
+	}
+	// console.log(x);
+	
+	// update by reducing error
+	var args = [edges, relativeVectors, absolutes];
+	var result = Code.gradientDescent(fxn, args, x, null, maxIterations, 1E-16);
+	var x = result["x"];
+	// console.log(x);
+
+	matrixesFromXs(absolutes, x);
+
+	return {"absolutes":absolutes}; // updated matrixes
+}
+
+
 Code.relativeComponentsFromMatrixes2D = function(mA,mB){
 	var offA = mA.transform2DLocation();
 	var angA = mA.transform2DRotation();

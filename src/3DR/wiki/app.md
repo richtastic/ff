@@ -384,8 +384,20 @@ MISSING:
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
+- optimizing based on angles only is not helping?
+
+
+
+
 
 solveDenseGroup
+
+try solutions / get insights:
+=> nonlinear optimize direction & orientation by using angle as errors (don't know scale)
+	- input = starting R estimates
+	- absolute = current global 
+=> try global minimizing N views reprojection error
+	- all views params
 
 
 why does grouping (3+) do poorly: have much noise & wrong points
@@ -400,9 +412,9 @@ why does grouping (3+) do poorly: have much noise & wrong points
 
 - is the absolute R wrong ?
 	- look at the angle difference in predicted orientations 
+		- 7 11 5 degrees
 
 
-	
 
 	- is at least 'close'
 		- if close why is nonlinear optimizing not useful?

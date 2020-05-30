@@ -389,7 +389,7 @@ R3D.PFromKRT = function(K,R,t){
 
 R3D.optimizeMultipleCameraExtrinsicDLTNonlinear = function(listP, listK, listKinv, variablePIndex, listPoints2D, maxIterations){ // very last P/K is assumed variable one
 	maxIterations = Code.valueOrDefault(maxIterations, 1000);
-	console.log("R3D.optimizeMultipleCameraExtrinsicNonlinear: "+listPoints2D.length+" points ");
+	console.log("R3D.optimizeMultipleCameraExtrinsicNonlinear: "+listP.length+" views  & "+listPoints2D.length+" points ");
 	// console.log(listP);
 	// console.log(listK);
 	// console.log(listKinv);

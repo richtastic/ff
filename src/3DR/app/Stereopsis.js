@@ -6460,6 +6460,7 @@ console.log("solveDenseGroup");
 	var errorSize = 0.005;  // should be very accurate  - 0.001 - 0.005
 	console.log("find top matches");
 	var pairMatches = [];
+	var pairRs = [];
 	for(var i=0; i<inputPairs.length; ++i){
 		var pair = inputPairs[i];
 		var viewA = pair[0];
@@ -6472,7 +6473,7 @@ console.log("solveDenseGroup");
 		var imageB = viewB.image();
 			imageA = viewA.imageScales();
 			imageB = viewB.imageScales();
-
+			// 
 		var images = [imageA,imageB];
 		var Ka = viewA.K();
 		var Kb = viewB.K();
@@ -6485,27 +6486,81 @@ console.log("solveDenseGroup");
 		var result = R3D.searchMatchPoints3D(images, sizes, extrinsicAB, Ks, errorPixels, false);
 		console.log(result);
 		var matches = result["matches"];
+		var R = result["P"];
 		console.log(matches);
 		pairMatches[i] = matches;
-
-
+		pairRs[i] = R;
+		//
 		var R1 = result["P"];
 		var R2 = world.transformFromViews(viewA,viewB).R(viewA,viewB);
-
+		// 
 		console.log(R1+"");
 		console.log(R2+"");
-
-		var dirA = R2.multV3DtoV3D(V3D.DIRZ);
+		// 
+		var dirA = R1.multV3DtoV3D(V3D.DIRZ);
 		var dirB = R2.multV3DtoV3D(V3D.DIRZ);
-		console.log("ANGLE: "+Code.degrees( V3D.angle(dirA,dirB) ));
-
-
-		throw "?"
+		console.log("ANGLE R1 - R2: "+Code.degrees( V3D.angle(dirA,dirB) ));
+		// 
+		// throw "?"
 		// if(i==1){
 		// 	break;
 		// }
-		break;
+		// break;
 	}
+
+console.log("UPDATE FROM PAIRS ...");
+
+var initialP = [];
+for(var i=0; i<views.length; ++i){
+	var view = views[i];
+	initialP[i] = view.absoluteTransformInverse();
+	console.log(" "+i+" = "+view.id());
+}
+// pairs
+var solveEdges = [];
+for(var i=0; i<inputPairs.length; ++i){
+	var pair = inputPairs[i];
+	var viewA = pair[0];
+	var viewB = pair[1];
+	var R = pairRs[i]; // extrinsic
+		R = Matrix.inverse(R); // absolute
+	solveEdges.push([viewA.id(),viewB.id(),R]);
+}
+console.log(initialP);
+console.log(solveEdges);
+var result = Code.graphAbsoluteUpdateFromRelativeTransforms(initialP, solveEdges);
+console.log(result);
+
+console.log("NEW ABSOLUTES");
+var absolutes = result["absolutes"];
+for(var i=0; i<views.length; ++i){
+	var view = views[i];
+	var absolute = absolutes[i];
+	var extrinsic = Matrix.inverse(absolute);
+	view.absoluteTransform(extrinsic);
+}
+world.copyRelativeTransformsFromAbsolute();
+
+
+
+// CHECK
+console.log("CHECK - BETTER?");
+for(var i=0; i<inputPairs.length; ++i){
+	var pair = inputPairs[i];
+	var viewA = pair[0];
+	var viewB = pair[1];
+	var R1 = pairRs[i]; // extrinsic
+	var R2 = world.transformFromViews(viewA,viewB).R(viewA,viewB);
+	// 
+	console.log(R1+"");
+	console.log(R2+"");
+	// 
+	var dirA = R1.multV3DtoV3D(V3D.DIRZ);
+	var dirB = R2.multV3DtoV3D(V3D.DIRZ);
+	console.log("ANGLE R1 - R2 AGAIN: "+Code.degrees( V3D.angle(dirA,dirB) ));
+}
+
+
 // throw "dooooooone";
 	console.log("insert matches into world");
 	for(var i=0; i<pairMatches.length; ++i){
@@ -6577,6 +6632,10 @@ console.log("solveDenseGroup");
 		console.log("added "+count);
 		console.log("averageError: "+" => "+averageErrorB);
 	}
+
+
+
+
 	// have R & N (& S) => get F 
 	world.relativeFFromSamples();
 	world.estimate3DErrors(true);

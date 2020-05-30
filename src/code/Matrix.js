@@ -730,9 +730,12 @@ Matrix.prototype.normalize = function(){
 	this.scale(len);
 	return this;
 }
-Matrix.prototype.transform3DLocation = function(){
+Matrix.prototype.transform3DLocation = function(location){
 	var rows = this._rows;
-	var location = new V3D(rows[0][3], rows[1][3], rows[2][3]);
+	if(!location){
+		location = new V3D();
+	}
+	location.set(rows[0][3], rows[1][3], rows[2][3]);
 	return location;
 }
 Matrix.prototype.transform3DSetLocation = function(v,u,w){

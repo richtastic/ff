@@ -25,6 +25,93 @@ function setupDisplay(){
 }
 
 
+function classesLoadedFxn(){
+	setupDisplay();
+
+	// create absolute locations
+	var m;
+
+	var absolutes = [];
+		m = new Matrix3D(); m.rotateZ(Code.radians(0.0)); m.rotateX(Code.radians(0.0)); m.rotateY(Code.radians(0.0)); m.translate(-1,1,-1);
+	absolutes.push(m.toMatrix());
+		m = new Matrix3D(); m.rotateZ(Code.radians(10.0)); m.rotateX(Code.radians(20.0)); m.rotateY(Code.radians(25.0)); m.translate(1,1,1);
+	absolutes.push(m.toMatrix());
+		m = new Matrix3D(); m.rotateZ(Code.radians(-10.0)); m.rotateX(Code.radians(10.0)); m.rotateY(Code.radians(50.0)); m.translate(3,2,2);
+	absolutes.push(m.toMatrix());
+
+	// generate extrinsic matrices
+	var extrinsics = [];
+	for(var i=0; i<absolutes.length; ++i){
+		var absolute = absolutes[i];
+		var extrinsic = Matrix.inverse(absolute);
+		extrinsics[i] = extrinsic;
+	}
+	console.log(extrinsics);
+
+	// create absolute inital graph (error)
+	var initials = [];
+	for(var i=0; i<extrinsics.length; ++i){
+		var extrinsic = extrinsics[i];//.copy();
+		var initial = Matrix.inverse(extrinsic);
+			// ADD ERROR
+			var mag = 0.50;
+			var errorA = (Math.random()-0.5)*mag;
+			var errorB = (Math.random()-0.5)*mag;
+			var errorC = (Math.random()-0.5)*mag;
+			var gam = 0.10;
+			var errorX = (Math.random()-0.5)*gam;
+			var errorY = (Math.random()-0.5)*gam;
+			var errorZ = (Math.random()-0.5)*gam;
+console.log(errorA,errorB,errorC, errorX,errorY,errorZ)
+			var m = new Matrix3D(); m.rotateZ(Code.radians(errorA)); m.rotateX(Code.radians(errorB)); m.rotateY(Code.radians(errorC)); m.translate(errorX,errorY,errorZ);
+				m = m.toMatrix();
+// console.log("A:\n"+initial+"");
+			initial = Matrix.mult(initial,m);
+		initials[i] = initial;
+// console.log("B:\n"+initial+"");
+	}
+	// throw "??????????";
+
+	// create pair edges [truth]
+	var edges = [];
+		edges.push([0,1]);
+		edges.push([0,2]);
+		edges.push([1,2]);
+	for(var i=0; i<edges.length; ++i){
+		var edge = edges[i];
+		var indexA = edge[0];
+		var indexB = edge[1];
+		var absoluteA = Matrix.inverse(extrinsics[indexA]);
+		var absoluteB = Matrix.inverse(extrinsics[indexB]);
+		// var absoluteAtoB = Matrix.relativeWorld(absoluteA,absoluteB);
+		var absoluteAtoB = Matrix.relativeReference(absoluteA,absoluteB);
+		//
+console.log("A:\n"+Matrix.relativeReference(initials[indexA],initials[indexB])+"");
+console.log("B:\n"+absoluteAtoB+"");
+		//
+		edge[2] = absoluteAtoB;
+	}
+// throw "???"
+	// test
+	console.log(initials);
+	console.log(edges);
+	var result = Code.graphAbsoluteUpdateFromRelativeTransforms(initials, edges);
+	console.log(result);
+	var optimums = result["absolutes"];
+
+	for(var i=0; i<extrinsics.length; ++i){
+		var extrinsic = extrinsics[i];
+		var absolute = Matrix.inverse(extrinsic);
+		var optimum = optimums[i];
+		console.log(i+" : ");
+		console.log("  A \n"+absolute);
+		console.log("  B \n"+optimum);
+	}
+	// ...
+	throw "..."
+}
+
+
 function classesLoadedFxn_Q(){
 	var m;
 
@@ -538,7 +625,7 @@ var displayOffY = 600;
 	var relativeAtoB = Matrix.mult(absB,invA);
 	return relativeAtoB;
 */
-function classesLoadedFxn(){
+function classesLoadedFxn_GRAPH(){
 	setupDisplay();
 	// counts 1D
 /*
