@@ -387,38 +387,24 @@ R3D.PFromKRT = function(K,R,t){
 }
 
 
-R3D.optimizeMultipleCameraExtrinsicDLTNonlinear = function(listP, listK, listKinv, variablePIndex, listPoints2D, maxIterations){ // very last P/K is assumed variable one
+R3D.optimizeMultipleCameraExtrinsicDLTNonlinear = function(listP, listK, listKinv, variablePIndex, listPoints2D, maxIterations, negativeIsBad){
 	maxIterations = Code.valueOrDefault(maxIterations, 1000);
-	console.log("R3D.optimizeMultipleCameraExtrinsicNonlinear: "+listP.length+" views  & "+listPoints2D.length+" points ");
-	// console.log(listP);
-	// console.log(listK);
-	// console.log(listKinv);
-	// console.log(listPoints2D);
-	// console.log(maxIterations);
-
-	var args = [listP, listK, listKinv, variablePIndex, listPoints2D];
-	
+	negativeIsBad = Code.valueOrDefault(negativeIsBad, false);
+	console.log("R3D.optimizeMultipleCameraExtrinsicDLTNonlinear: "+listP.length+" views  & "+listPoints2D.length+" points @ "+variablePIndex);
+	var args = [listP, listK, listKinv, variablePIndex, listPoints2D, negativeIsBad];
 	// make a temporary matrix for iterating on
 	var O = listP[variablePIndex];
 		P = O.copy();
 	listP[variablePIndex] = P;
-
 	var x = R3D.transformMatrixToComponentArray(P);
 	var result = Code.gradientDescent(R3D._transformCameraExtrinsicDLTNonlinearGD, args, x, null, maxIterations, 1E-10);
 	var x = result["x"];
 	var cost = result["cost"];
-
-	// repalce as-was
+	// replace as-was
 	listP[variablePIndex] = O;
-
-	var P = new Matrix(4,4);
-	var tx = x[0];
-	var ty = x[1];
-	var tz = x[2];
-	var rx = x[3];
-	var ry = x[4];
-	var rz = x[5];
-	R3D.transform3DFromParameters(P, rx,ry,rz, tx,ty,tz);
+	// to output
+	// var P = new Matrix(4,4); // not necessary ?
+	R3D.transform3DFromComponentArray(P, x);
 	return {"P":P, "error":cost};
 }
 R3D._transformCameraExtrinsicDLTNonlinearGD = function(args, x, isUpdate){
@@ -430,24 +416,14 @@ R3D._transformCameraExtrinsicDLTNonlinearGD = function(args, x, isUpdate){
 	var listKinv = args[2];
 	var variableIndex = args[3];
 	var listPoints2D = args[4];
-	
-	var tx = x[0];
-	var ty = x[1];
-	var tz = x[2];
-	var rx = x[3];
-	var ry = x[4];
-	var rz = x[5];
-	
+	var negativeIsBad = args[5];
 	var extrinsicP = listP[variableIndex];
-	R3D.transform3DFromParameters(extrinsicP, rx,ry,rz, tx,ty,tz);
-	
+	R3D.transform3DFromComponentArray(extrinsicP, x);
 	var totalError = 0;
-
 	var pointSetCount = listPoints2D.length;
 	var tempP3D = new V3D();
 	for(var k=0; k<pointSetCount; ++k){
 		var track = listPoints2D[k];
-// console.log(track);
 		// get predicted 3D point
 		var points2D = [];
 		var extrinsics = [];
@@ -461,13 +437,14 @@ R3D._transformCameraExtrinsicDLTNonlinearGD = function(args, x, isUpdate){
 			invKs.push(listKinv[indexP]);
 		}
 		var point3D = R3D.triangulatePointDLTList(points2D, extrinsics, invKs);
-		// console.log(point3D);
 		if(!point3D){
 			console.log("null point3D");
+			// throw "?"
 			continue;
 		}
 		// reprojection error:
 		var error = 0;
+		var isBehind = false;
 		for(var t=0; t<track.length; ++t){
 			var entry = track[t];
 			var point2D = entry[0];
@@ -478,13 +455,15 @@ R3D._transformCameraExtrinsicDLTNonlinearGD = function(args, x, isUpdate){
 
 			P.multV3DtoV3D(tempP3D,point3D);
 			K.multV3DtoV3D(tempP3D,tempP3D);
-			// if tempP3D <= 0 => behind camera
+			isBehind |= (tempP3D.z<=0 || tempP3D.z<=0);
 				tempP3D.homo();
+
 			var distanceSquare = V2D.distanceSquare(point2D, tempP3D);
-				// console.log("DISTANCE: "+Math.sqrt(distanceSquare));
 			error += distanceSquare;
 		}
-		// console.log(error);
+		if(negativeIsBad && isBehind){ // behind camera
+			error *= 2;
+		}
 		totalError += error;
 
 	} // track list
@@ -504,9 +483,9 @@ R3D._transformCameraExtrinsicDLTNonlinearGD = function(args, x, isUpdate){
 
 
 R3D.optimizeMultipleCameraExtrinsicNonlinear = function(listP, listK, listKinv, pointsAB2DList, maxIterations){ // very last P/K is assumed variable one
-	console.log("R3D.optimizeMultipleCameraExtrinsicNonlinear");
+	throw "USE optimizeMultipleCameraExtrinsicNonlinear"
+	console.log("R3D.optimizeMultipleCameraExtrinsicDLTNonlinear");
 	var lastIndex = listP.length-1;
-	
 	maxIterations = Code.valueOrDefault(maxIterations, 1000);
 	var args = [listP, listK, listKinv, pointsAB2DList];
 	var P = listP[lastIndex];
@@ -517,13 +496,7 @@ R3D.optimizeMultipleCameraExtrinsicNonlinear = function(listP, listK, listKinv, 
 	var cost = result["cost"];
 
 	var P = new Matrix(4,4);
-	var tx = x[0];
-	var ty = x[1];
-	var tz = x[2];
-	var rx = x[3];
-	var ry = x[4];
-	var rz = x[5];
-	R3D.transform3DFromParameters(P, rx,ry,rz, tx,ty,tz);
+	R3D.transform3DFromComponentArray(P, x);
 	return {"P":P, "error":cost};
 }
 
@@ -602,10 +575,8 @@ R3D._transformCameraExtrinsicMultipleNonlinearGD = function(args, x, isUpdate){
 }
 
 R3D.transformCameraExtrinsicNonlinear = function(P, pointsA2D,pointsB2D, Ka,KaInv, Kb,KbInv, maxIterations, negativeIsBad){
-	console.log("R3D.transformCameraExtrinsicNonlinear");
-	negativeIsBad = Code.valueOrDefault(negativeIsBad, false);
-	// throw "map to other fxn"
 	maxIterations = Code.valueOrDefault(maxIterations, 1000);
+	negativeIsBad = Code.valueOrDefault(negativeIsBad, false);
 	var args = [pointsA2D,pointsB2D, Ka,KaInv, Kb,KbInv, negativeIsBad];
 	var x = R3D.transformMatrixToComponentArray(P);
 
@@ -614,19 +585,20 @@ R3D.transformCameraExtrinsicNonlinear = function(P, pointsA2D,pointsB2D, Ka,KaIn
 	var cost = result["cost"];
 
 	var P = new Matrix(4,4);
-	var tx = x[0];
-	var ty = x[1];
-	var tz = x[2];
-	var rx = x[3];
-	var ry = x[4];
-	var rz = x[5];
-	R3D.transform3DFromParameters(P, rx,ry,rz, tx,ty,tz);
+	// var tx = x[0];
+	// var ty = x[1];
+	// var tz = x[2];
+	// var rx = x[3];
+	// var ry = x[4];
+	// var rz = x[5];
+	// R3D.transform3DFromParameters(P, rx,ry,rz, tx,ty,tz);
+	R3D.transform3DFromComponentArray(P, x);
 	return {"P":P, "error":cost};
 }
 R3D._transformCameraExtrinsicNonlinearGD = function(args, x, isUpdate){
-	if(isUpdate){
-		return;
-	}
+	// if(isUpdate){
+	// 	return;
+	// }
 	var pointsA2D = args[0];
 	var pointsB2D = args[1];
 	var Ka = args[2];
@@ -661,36 +633,21 @@ R3D._transformCameraExtrinsicNonlinearGD = function(args, x, isUpdate){
 			// totalError += 1E9; // remove ?
 			continue;
 		}
-
-		// var projectedA2D = R3D.projectPoint3DToCamera2DForward(p3D, extrinsicA, K, null);
-
 		var v3DA = extrinsicA.multV3DtoV3D(p3D);
 		var p3DA = Ka.multV3DtoV3D(v3DA);
 		var v3DB = extrinsicB.multV3DtoV3D(p3D);
 		var p3DB = Kb.multV3DtoV3D(v3DB);
-		if(false){
-		// if(p3DA.z<=0 || p3DB.z<=0){ // behind camera
-			totalError += 1E9;
-		}else{
-			p3DA.homo();
-			p3DB.homo();
-			var distanceSquareA = V2D.distanceSquare(pA, p3DA);
-			var distanceSquareB = V2D.distanceSquare(pB, p3DB);
-			var error = distanceSquareA + distanceSquareB;
-
-			if(negativeIsBad && (p3DA.z<=0 || p3DB.z<=0)){ // behind camera
-				error *= 2;
-			}
-
-			totalError += error;
+		// 
+		p3DA.homo();
+		p3DB.homo();
+		var distanceSquareA = V2D.distanceSquare(pA, p3DA);
+		var distanceSquareB = V2D.distanceSquare(pB, p3DB);
+		var error = distanceSquareA + distanceSquareB;
+		if(negativeIsBad && (p3DA.z<=0 || p3DB.z<=0)){ // behind camera
+			error *= 2;
 		}
-		// var distanceSquareA = R3D.reprojectionErrorSingle(p3D,pA,extrinsicA,Ka);
-		// var distanceSquareB = R3D.reprojectionErrorSingle(p3D,pB,extrinsicB,Kb);
-		// var error = distanceSquareA + distanceSquareB;
-		// totalError += error;
 
-		// WHAT ABOUT NEGSATIVE Z ERROR ????
-
+		totalError += error;
 	}
 	// if(isUpdate){
 	// 	console.log(totalError);
@@ -42026,13 +41983,14 @@ R3D.BundleAdjustCameraExtrinsicSingle = function(K, Kinv, P, points3D, points2D,
 	var cost = result["cost"];
 
 	var P = new Matrix(4,4);
-	var tx = x[0];
-	var ty = x[1];
-	var tz = x[2];
-	var rx = x[3];
-	var ry = x[4];
-	var rz = x[5];
-	R3D.transform3DFromParameters(P, rx,ry,rz, tx,ty,tz);
+	// var tx = x[0];
+	// var ty = x[1];
+	// var tz = x[2];
+	// var rx = x[3];
+	// var ry = x[4];
+	// var rz = x[5];
+	// R3D.transform3DFromParameters(P, rx,ry,rz, tx,ty,tz);
+	R3D.transform3DFromComponentArray(P, x);
 	return {"P":P, "error":cost};
 }
 R3D._gd_SingleCameraExtrinsic_Matrix = new Matrix(4,4);
@@ -42463,6 +42421,16 @@ R3D.transform3DFromParameters = function(P, rx,ry,rz, tx,ty,tz){
 	P.set(3,2, 0.0);
 	P.set(3,3, 1.0);
 	return P;
+}
+R3D.transform3DFromComponentArray = function(P, x, offset){
+	offset = offset!==undefined ? offset : 0;
+	var tx = x[0+offset];
+	var ty = x[1+offset];
+	var tz = x[2+offset];
+	var rx = x[3+offset];
+	var ry = x[4+offset];
+	var rz = x[5+offset];
+	R3D.transform3DFromParameters(P, rx,ry,rz, tx,ty,tz);
 }
 
 R3D.surfaceThicknessFromPoint2D = function(location,space, toNormalFxn){

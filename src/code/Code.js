@@ -16674,7 +16674,6 @@ Code.graphAbsoluteUpdateFromRelativeTransforms = function(initialP, edges){ // u
 			var indexA = edge[0];
 			var indexB = edge[1];
 			var r = rVectors[i];
-			// console.log(indexA,indexB);
 			var absA = aMatrixes[indexA];
 			var absB = aMatrixes[indexB];
 			var relAB = Matrix.relativeReference(tempMatrix, absA,absB);

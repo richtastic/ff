@@ -384,135 +384,33 @@ MISSING:
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
-- optimizing based on angles only is not helping?
+- how are matches/tracks/points calculating intersections / good / bad?
+	=> visual patches ?
+	
+
+
+track expansion NN not gaining as many 
+	=> should have ~ 2 : 1 ratio, instead is 
+background / far points have lots of error
+	=> ?
+average reprojection error SIGMA still ~ 2 px => should be < 1
+	=> ?
 
 
 
 
 
-solveDenseGroup
 
-try solutions / get insights:
-=> nonlinear optimize direction & orientation by using angle as errors (don't know scale)
-	- input = starting R estimates
-	- absolute = current global 
-=> try global minimizing N views reprojection error
-	- all views params
+=> this is wrong:
+copyRelativeTransformsFromAbsolute
+copyRelativeFromAbsolute
 
-
-why does grouping (3+) do poorly: have much noise & wrong points
-	x show preliminary points for each pair
-		- 120 @ 0.70
-		- 122 @ 0.92
-		- 105 @ 0.43
-		- 90+% accurate [appear]
-- error with initial absolute R is really high: 
-	0.43 => 12
-
-
-- is the absolute R wrong ?
-	- look at the angle difference in predicted orientations 
-		- 7 11 5 degrees
-
-
-
-	- is at least 'close'
-		- if close why is nonlinear optimizing not useful?
-			- what are the different nonlinear options?
-		- try linear optimizing
-			- which?
-
-=> how to combine absolute R with relative R's found from pair matches?
-
-
-- borrow the rotation
-- borrow the translation direction (keep the scale)?
-
-
-x are match x&y or image dimesions wrong ?
-
-x F base is ok: ( ~ 0.0.. px minimum)
-x F sigma is good (1.5-2.5 px error)
-
-- affine is undefined
-
-=> view refine only using 3+ points and not single view pairs ?
-- ...
-
-
-	- show merged points
-		...
-	- show triples ?
-		... 
-	- show error R / F / N ?
-	- check algorithms used
-
-....
-
-
-
-
-this messes up views tranforms to all identity
-world.refineCameraPairRelativeToAbsolute(transform, 100);
-
-
-
-WHY: 
-Stereopsis.js:11203 ERROR INFO: F:0.9690652716912441@2.699581110718354=2697.8505948793268
-Stereopsis.js:11204 ERROR INFO: R:19.43197197415138@17.039264088896605=17041.65679678186
-Stereopsis.js:11205 ERROR INFO: N:null@null=0
-
-
-      matches: 9           :  2 - 7
-Stereopsis.js:9980  T 23 2->7  N : null +/- null
-Stereopsis.js:9982  T 23 2->7  F : null +/- null
-Stereopsis.js:9983  T 23 2->7  R : 1.9234224154564552 +/- 41.26468153157985
-Stereopsis.js:1807 relativeEstimatePoints3D - triangulate points
-Stereopsis.js:9979       matches: 2           :  3 - 7
-Stereopsis.js:9980  T 24 3->7  N : null +/- null
-Stereopsis.js:9982  T 24 3->7  F : null +/- null
-Stereopsis.js:9983  T 24 3->7  R : 1.704415047821888 +/- 0.8798028981297149
-
-
-=> if it has a R -> it should have a F & N
-
-
-- not as much point overlap as expected:
-all: ========================================================================================= 8 / 9
-Stereopsis.js:2949 (30) [0, 0, 99724, 6299, 62, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
 
 
 - try with smaller groups: 3-4
 - don't want to spend time optimizing cameras 
 
 
-
-
-PROBE2D ALGORITHM UPDATE:
-	- each point should have opportunity to extend reach to any views not already referenced
-
-	for each viewA
-		for each pointA
-			for each currently-referenced-other-viewB: [any view a point in viewA has a reference to (that isn't viewA)]
-			A) EXPAND TRACKS
-				if pointA does not have a reference to viewB:
-					search nearby neighbors to get closest that does have a match-> need affine mapping
-					if neighbor does exist:
-						try to add a match with new points
-B) EXPAND AREA
-	find empty spaces ?
-		=> same as previous ?
-
-
-
-
-probe2DCells - PROBLEM SUMMARY:
-	- if points don't coinside @ ~ 10% of a cell side, then only pairs will continue to exist [no track growing]
-	- points will only grow around perimeter from existing pair-matches [isolated growing]
-	- 
-
-
-emptyNeighborCellsForView
 
 
 
@@ -525,28 +423,8 @@ Stereopsis.World.MIN_DISTANCE_EQUALITY_MIN = 0.50; // hard stop ~ 0.1-1.0 --- th
 
 
 
-
-
-
 - how well is the point 3D projection helping with point placement ?
 	- this hasn't been A/B tested / calibrated
-
-- bundle group has too much noise
-	x try reducing obscuring tolerance patches
-		- filterGlobalPatchSphere3D
-		- drops too many points
-	x try more subdividing
-		- mildly better but bad spots are still fuzzy
-	x try loading dense pairs?
-		=> too many points: 500k ~ 500 MB
-
-
-	- sequentially add views to world
-		x use track points
-		x use pair points
-		- MAKE UP SEED POINTS ON THE FLY - USE R + ERROR
-
-=> TRACKS AREN'T NECESSARILY BEST POINTS TO COMBINE
 
 
 CREATING VIEW GROUPS:
