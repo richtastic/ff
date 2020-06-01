@@ -384,13 +384,34 @@ MISSING:
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
+- save groups to file
+	- want view summary separate from points
+	- want transform-pair errorR # for each existing pair
+- aggregate groups
+	- need updated location estimates (from drift)
+
+- update P3D & drop worst & save to file
+	- limit = 2 sigma of original view R error
+
+
+
+
+
+
+
+
+
+
 - how are matches/tracks/points calculating intersections / good / bad?
 	=> visual patches ?
-	
 
 
-track expansion NN not gaining as many 
-	=> should have ~ 2 : 1 ratio, instead is 
+- need period of not expanding, but just removing bad matches
+
+
+
+track expansion NN not gaining as many large tracks (3+)
+	- loosing points based on new bad matches ?
 background / far points have lots of error
 	=> ?
 average reprojection error SIGMA still ~ 2 px => should be < 1
@@ -401,25 +422,34 @@ average reprojection error SIGMA still ~ 2 px => should be < 1
 
 
 
-=> this is wrong:
-copyRelativeTransformsFromAbsolute
-copyRelativeFromAbsolute
 
 
 
-- try with smaller groups: 3-4
-- don't want to spend time optimizing cameras 
+AGGREGATING VIEW GROUPS:
+	- scales of groups could have drifted
+		- find each group's overlapping pairs [not necessarily listed edges]
+			for each group
+				for each view 
+					for each other view 
+						add/update entry viewI-viewJ = [groups: 0,1,5,...]
+		- solve for relative scales for all overlapping view pairs
+		- set minimal pair scale to 1, and update all other groups to be in same absolute scale
+		- convert ALL edges to relative transforms (in absolute scale)
+		- initialize global orientations from initial bundle locations
+		- minimize expected vs actual pair difference
+		=> final absolute view locations
+	- points need to be recalculated
+		- for each group
+			- for each point
+				- DLT find point from N views
+				- calculate R error
+				- drop points whos error > 2 sigma of view (from original group calculation)
+				- P3D normal = average direction to views
+		=> save points to single file
 
 
 
 
-
-
-
-
-
-Stereopsis.World.MIN_DISTANCE_EQUALITY = 0.1; // 10%-25% of a cell
-Stereopsis.World.MIN_DISTANCE_EQUALITY_MIN = 0.50; // hard stop ~ 0.1-1.0 --- this should be in terms of TOTAL IMAGE SIZE -- NOT PIXELS?
 
 
 
@@ -427,52 +457,15 @@ Stereopsis.World.MIN_DISTANCE_EQUALITY_MIN = 0.50; // hard stop ~ 0.1-1.0 --- th
 	- this hasn't been A/B tested / calibrated
 
 
-CREATING VIEW GROUPS:
-	- get group subset from fll graph
-	- get all incorporated pairs in sub-group
-	- each view pick top 3 pairs in sub-group-pair list
-	- keep subset of all pairs
-
-LOADING VIEW GROUPS:
-	- have:
-		- absolute orientations
-			=> relative R
-		- list of best pairs
-		- 
-
-	- ALG A:  solveDenseGroup
-		- load all view images
-		- for each pair:
-			- get seed matches from R:
-				R3D.searchMatchPoints3D
-		- add all seed matches to world
-		- iteritive grow
-		- iteritive drop worst
-		- iteritive subdivide (x2)
-
-AGGREGATING VIEW GROUPS:
-	- scales of groups could have drifted
-		- find each group's overlapping pairs
-		- relative scales are translation distance ratios
-		- scale initial estimate to best average scale differences between group subsets
-			- average of: NEW OFFSET / OLD OFFSET : for all pairs
-	- nonlinear update absolute view graph:
-		- minimize each groups's pairs:
-			- distance between expected & distance between actual: ORIGIN & AXES
-	- points need to be recalculated
-		- DLT to find point from N views
-		- normal = average direction to views
-
-...
 
 
-calculatePairMatchWithRFromViewIDs
 
-solveDensePair
 
-var result = R3D.searchMatchPoints3D(images, sizes, relativeAB, Ks, errorPixels);
-		var P = result["P"];
-		var matches = result["matches"];
+
+
+
+
+
 
 
 

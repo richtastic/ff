@@ -11147,14 +11147,14 @@ App3DR.ProjectManager.prototype.initializeBundleGroupsFromDense = function(){
 		// get group graph
 
 		// TEST
-		var groupSize = 3;
-		var groupTolerance = 1;
-		var overlapDesired = 1;
+		// var groupSize = 3;
+		// var groupTolerance = 1;
+		// var overlapDesired = 1;
 
 		// small
-		// var groupSize = 4;
-		// var groupTolerance = 1; // 3-5
-		// var overlapDesired = 2; // up to 7
+		var groupSize = 4;
+		var groupTolerance = 1; // 3-5
+		var overlapDesired = 2; // up to 7
 
 		// med
 		// var groupSize = 6;
