@@ -355,14 +355,12 @@ https://cloud.google.com/appengine/docs/nodejs/
 
 TIMELINES:
 
-05/16 - 
-		- bundle groupings algorithm
-		- solveGroup => get good result
-05/18 - ???
-05/24 - test 'full' set of 25 images
+06/01 - aggregate groups
+06/03 - aggregate points
+06/06 - test 'full' set of 25 images
 		- automate URL refresh for sections of code
-05/31 - test set of ~ 50 images x (this will require 2-10 x speed ups & AUTOMATION OF NEXT TASK)
-06/07 - MVP
+06/13 - test set of ~ 50 images x (this will require 2-10 x speed ups)
+06/27 - MVP
 
 MISSING:
 - mass-dense point aggregation via merging separate P3D files
@@ -383,20 +381,15 @@ MISSING:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+- point is added  / updated to world with no views / points2D ?
 
-- save groups to file
-	- want view summary separate from points
-	- want transform-pair errorR # for each existing pair
+
+
 - aggregate groups
 	- need updated location estimates (from drift)
 
 - update P3D & drop worst & save to file
 	- limit = 2 sigma of original view R error
-
-
-
-
-
 
 
 

@@ -10700,12 +10700,12 @@ App3DR.ProjectManager.prototype.loadDenseGroupsStereopsis = function(){
 	}
 	project.loadDataFromFile(worldFilename, dataLoadedFxn, project, {});
 }
-App3DR.ProjectManager.prototype._doDenseGroupsStereopsis = function(data){
+App3DR.ProjectManager.prototype._doDenseGroupsStereopsis = function(groupData, completeFxn){
 	var project = this;
 
-	var groupViews = data["views"];
-	var groupCameras = data["cameras"];
-	var groupPairs = data["pairs"];
+	var groupViews = groupData["views"];
+	var groupCameras = groupData["cameras"];
+	var groupPairs = groupData["pairs"];
 
 	var groupCameraFromID = {};
 	for(var i=0; i<groupCameras.length; ++i){
@@ -10846,14 +10846,15 @@ App3DR.ProjectManager.prototype._doDenseGroupsStereopsis = function(data){
 		// solveDenseGroup
 		world.solveDenseGroup(comparePairs);
 		console.log("?????????????????????????????");
-		// save to group file
-		// set bundle group transforms to SOME NUMBER ?
+
+		var str = world.toYAMLString();
+		console.log(str);
+		// throw "solve dense group .. ";
+		completeFxn(world.toObject());
 	}
 
 
 	var loadWorld = function() {
-		
-
 		// add track points to world
 		var existingPoints = data["points"];
 		// console.log(existingPoints);
@@ -10911,8 +10912,88 @@ App3DR.ProjectManager.prototype._doDenseGroupsStereopsis = function(data){
 		view.loadDenseHiImage(checkAllViewImagesLoaded, project); // 1008 x 768
 		// view.loadBundleAdjustImage(checkAllViewImagesLoaded, project); // 2016 x 1512
 	}
-
 }
+
+App3DR.ProjectManager.prototype. = function(viewsInitial, groups){ // aggregate groups
+
+
+	console.log(viewsInitial);
+
+	console.log(groups);
+
+	var pairIDFromViewIDs = App3DR.ProjectManager.pairIDFromViewIDs;
+
+	var pairLookup = {};
+	for(var i=0; i<groups.length; ++i){
+		var group = groups[i];
+		var transforms = group["transforms"];
+
+		var pairToTransform = {};
+		for(var j=0; j<transforms.length; ++j){
+			var transform = transforms[j];
+			var viewAID = transforms["A"];
+			var viewBID = transforms["B"];
+			var pairID = pairIDFromViewIDs(viewAID,viewBID);
+			pairToTransform[pairID] = transform;
+		}
+
+		var views = group["views"];
+		for(var j=0; j<views.length; ++j){
+			var viewA = views[j];
+			var viewAID = viewA["id"];
+			for(var k=j+1; j<views.length; ++j){
+				var viewB = views[j];
+				var viewBID = viewB["id"];
+				var pairID = pairIDFromViewIDs(viewAID,viewBID);
+				var pair = pairLookup[pairID];
+				if(!pair){
+					pair = {"groups":[]};
+					pairLookup[pairID] = pair;
+				}
+				var transform = pairToTransform[pairID];
+				var baseline = transform["?"];
+
+				var pairGroups = pair["groups"];
+				pairGroups.push( [j, baseline] );
+			}
+		}
+
+	}
+
+	console.log(pairGroups);
+
+	throw "find relative scales of groups";
+
+
+	throw "create initial view graph from initial views";
+
+
+	throw "scale initial view graph to match average edges";
+
+
+	throw "make list of edges from groops' pairs";
+
+
+	throw "nonlinear solve current absolute graph & pair differences";
+
+/*
+	- scales of groups could have drifted
+		- find each group's overlapping pairs [not necessarily listed edges]
+			for each group
+				for each view 
+					for each other view 
+						add/update entry viewI-viewJ = [groups: 0,1,5,...]
+		- solve for relative scales for all overlapping view pairs
+		- set minimal pair scale to 1, and update all other groups to be in same absolute scale
+		- convert ALL edges to relative transforms (in absolute scale)
+		- initialize global orientations from initial bundle locations
+		- minimize expected vs actual pair difference
+		=> final absolute view locations
+*/
+
+	throw "return views absolute locations";
+}
+
 App3DR.ProjectManager.prototype._doDenseGroupsStereopsisOLD = function(data){
 	console.log(data);
 	var project = this;
@@ -11494,6 +11575,9 @@ App3DR.ProjectManager.prototype.iterateBundleProcess = function(){
 	var project = this;
 	console.log("iterateBundleProcess");
 	var bundleData = null;
+	var selectedGroup = null;
+	var groupData = null;
+	var groupDataPath = null;
 	var loadedBundleDataFxn = function(data){
 		console.log(data);
 		bundleData = data;
@@ -11505,60 +11589,93 @@ App3DR.ProjectManager.prototype.iterateBundleProcess = function(){
 				var groupFilename = group["filename"];
 				var groupFullPath = Code.appendToPath(bundlePathBase,groupFilename);
 				console.log(groupFullPath);
+				selectedGroup = group;
+				groupDataPath = groupFullPath;
 				project.loadDataFromFile(groupFullPath, loadedGroupDataFxn);
 				return;
 			}
 		}
 		// aggregate ?
-		/*
-		*/
+		var viewsFileName = bundleData["viewsFile"];
+		if(!viewsFileName){
+
+
+			project._initializeAbsoluteViewsFromGroups(bundleData["views"],bundleData["groups"]);
+
+			throw "aggregate groups"
+			// B) global absolute locations
+			// initialize a graph with views (and edges?) from dense final graph [bundle initial graph]
+			// update average scale of initial views to be (EDGE_I_NEW/EDGE_I_OLD)
+			// add view-edges from all groups
+			// nonlinearly find minimum from all groups all edges: transform edges
+			// A) location & axes
+			// B) directions only (trans & 3x axes)
+			// save final view location to bundle/views.yaml
+			// 
+
+		// global bundle adjust?
+		// best group tracks [limited by:  tracks length > 2  &  1E6/groups]
+			return;
+		}
+		var pointsFileName = bundleData["pointsFile"];
+		if(!pointsFileName){
+			throw "update points"
+
+			// load next group file
+
+			// C) update points
+				// iterate thru each group's dense file
+				// update point's triangulation using optimized view orientations
+				// put points into OctTree
+				// merge with existing points when points are too close (global size or local size from group)
+				// AVG POINT, AVG NORMAL, UNION VIEWS
+				// possibly clean up points?
+				// save final set of points to bundle/points.yaml
+				//
+			return;
+		}
+		// set bundle group transforms to SOME NUMBER ?
+		throw "should be done?"
 	}
 	var loadedGroupDataFxn = function(data){
-		var groupData = data;
-		project._doDenseGroupsStereopsis(groupData, completedDenseGroupsStereopsis);
+		groupData = data;
+		project._doDenseGroupsStereopsis(groupData, completedDenseGroupsStereopsis, project);
 	}
-	var completedDenseGroupsStereopsis = function(){
+	var completedDenseGroupsStereopsis = function(worldData){
+		console.log("completedDenseGroupsStereopsis");
+console.log(worldData);
+		var worldViews = worldData["views"];
+		var worldTransforms = worldData["transforms"];
+		var worldPoints = worldData["points"];
+		var worldCameras = worldData["cameras"];
+console.log(selectedGroup);
+console.log(groupData);
+		// save summary data to bundle file
+			selectedGroup["views"] = worldViews;
+			selectedGroup["transforms"] = worldTransforms;
+		// save to group file
+			groupData["views"] = worldViews;
+			groupData["transforms"] = worldTransforms;
+			groupData["cameras"] = worldCameras;
+			groupData["points"] = worldPoints;
+		project.saveFileFromData(groupData, groupDataPath, completedSaveGroupFxn, project);
+	}
 
-		throw "done?"
+	var completedSaveGroupFxn = function(){
+		console.log("completedSaveGroupFxn");
+		project.saveFileFromData(bundleData, bundleFilename, completedSaveBundleFxn, project);
 	}
+
+	var completedSaveBundleFxn = function(){
+		console.log("completedSaveBundleFxn");
+		project._taskDoneCheckReloadURL();
+	}
+
 	var bundleFilename = project.bundleFilename();
 	var bundlePathBase = Code.pathRemoveLastComponent(bundleFilename);
 	console.log(bundleFilename);
 	console.log(bundlePathBase);
 	project.loadDataFromFile(bundleFilename, loadedBundleDataFxn);
-
-	// project._doDenseGroupsStereopsis(data);
-
-	throw "iterateBundleProcess";
-
-// A) build up group dense points
-	// load the next group that doesn't have a dense file
-	// import tracks into world
-	// world.solvegroup
-	// save points to group's dense point file
-	// TRACK FILES AGAIN?
-	// save views & non-zero-pair info to group's dense view file
-	//
-// B) global absolute initilization
-	// initialize a graph with views (and edges?) from dense final graph
-	// add view-edges from all groups
-	// nonlinearly find minimum from  TRACKS ? ERROR ?
-	// save final view location to bundle/views.yaml
-	// 
-
-// global bundle adjust?
-
-// C) 
-	// if all groups are done:
-	// iterate thru each group's dense file
-	// update point's triangulation using optimized view orientations
-	// put points into OctTree
-	// merge with existing points when points are too close (global size or local size from group)
-	// AVG POINT, AVG NORMAL, UNION VIEWS
-	// possibly clean up points?
-	// save final set of points to bundle/points.yaml
-	//
-
 }
 
 

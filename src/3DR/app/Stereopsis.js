@@ -4528,6 +4528,11 @@ Stereopsis.World.prototype.patchInitBasicSphere = function(doMatches, points3D, 
 		}
 		var p3D = point3D.point();
 		var info = Stereopsis.estimateP3DNormalFromViews(point3D);
+		if(!info){
+			console.log("bad point");
+			console.log(point3D);
+			continue;
+		}
 		var normal = info["normal"];
 		var up = info["up"];
 		point3D.normal(normal);
@@ -6460,7 +6465,7 @@ console.log("solveDenseGroup");
 	var views = world.toViewArray();
 	world.copyRelativeTransformsFromAbsolute();
 	var featureSize = 0.02; // large enough to be distinguishing, small enough to allow for perspective changes
-	var errorSize = 0.005;  // should be very accurate  - 0.001 - 0.005
+	var errorSize = 0.002;  // should be very accurate  - 0.001 - 0.005
 	console.log("find top matches");
 	var pairMatches = [];
 	var pairRs = [];
@@ -6699,9 +6704,9 @@ console.log("RICHIE REFINE A SINGLE VIEW ???");
 
 // throw "before main loop"
 
-	// var subdivisions = 0; // ~1k
+	var subdivisions = 0; // ~1k
 	// var subdivisions = 1; // 5-10k
-	var subdivisions = 2; // ~40k  --- select
+	// var subdivisions = 2; // ~40k  --- select
 	// var subdivisions = 3; // ~100k
 	var iterations = 3; // per grid size
 	// var iterations = 5;
@@ -6752,6 +6757,7 @@ console.log("RICHIE REFINE A SINGLE VIEW ???");
 		world.expand2DTracks(3.0);
 		// world.expand2DTracks(999);
 		//
+		// ???
 		// world.probe3DGlobal(1.5, 1.5); // 1 - 2
 
 		// update world estimate
@@ -6778,14 +6784,12 @@ console.log("RICHIE REFINE A SINGLE VIEW ???");
 //				world.filterLocal2Dto3DSize();
 		world.printPoint3DTrackCount();
 	}
-
 	// final output:
 	// world.averagePoints3DFromMatches();
 
-	var str = world.toYAMLString();
-	console.log(str);
-
-	throw "solve dense group .. ";
+	// var str = world.toYAMLString();
+	// console.log(str);
+	// throw "solve dense group .. ";
 }
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -8731,7 +8735,6 @@ var listMatchMulti = [];
 			var errorF = match.errorF();
 			var errorNCC = match.errorNCC()
 			var errorSAD = match.errorSAD();
-
 			/*
 			// distance related error:
 			var p3D = match.estimated3D();
@@ -8741,8 +8744,6 @@ var listMatchMulti = [];
 			}
 			// TODO THIS SHOULD BE AVERAGE DISTANCE TO CAMERA A & B
 			*/
-
-
 			if(errorR!=null){
 				listMatchR.push(errorR);
 			}
@@ -8764,9 +8765,6 @@ listMatchMulti.push(multi);
 		var limitN = null;
 		var limitS = null;
 		var limitM = null;
-
-// Code.printMatlabArray(listMatchMulti,"listMatchMulti");
-// throw "listMatchMulti";
 		if(listMatchNCC.length>minCount){
 			var min = Code.min(listMatchNCC);
 			var sig = Code.stdDev(listMatchNCC, min);
@@ -8792,15 +8790,12 @@ listMatchMulti.push(multi);
 			console.log("R: "+min+" +/- "+sig);
 			limitR = min + sig*limitMatchSigmaR;
 		}
-
 		if(listMatchMulti.length>minCount){
 			var min = Code.min(listMatchMulti);
 			var sig = Code.stdDev(listMatchMulti, min);
 			console.log("M: "+min+" +/- "+sig);
 			limitM = min + sig*limitMatchSigmaMulti;
 		}
-
-
 // console.log(" point count: "+this._pointSpace.count());
 
 
@@ -8814,23 +8809,27 @@ if(true){
 var numerical = function(a,b){
 	return a < b ? -1 : 1;
 }
-listMatchSAD.sort(numerical);
-listMatchNCC.sort(numerical);
-listMatchR.sort(numerical);
-listMatchF.sort(numerical);
+// listMatchSAD2 = Code.copyArray(listMatchSAD);
+// listMatchNCC2 = Code.copyArray(listMatchNCC);
+// listMatchSAD2.sort(numerical);
+// listMatchNCC2.sort(numerical);
+
+listMatchR2 = Code.copyArray(listMatchR);
+listMatchF2 = Code.copyArray(listMatchF);
+listMatchR2.sort(numerical);
+listMatchF2.sort(numerical);
 
 var percent = 0.5;
 // var percent = 0.75;
 
 // LINEAR DROPPING:
-if(listMatchF.length>minCount){
-	// var mid = Code.median(listMatchF);
-	var val = Code.percentile(listMatchF,percent);
+if(listMatchF2.length>minCount){
+	var val = Code.percentile(listMatchF2,percent);
 	var limitF2 = val / percent;
 	limitF = Math.min(limitF,limitF2);
 }
-if(listMatchR.length>minCount){
-	var val = Code.percentile(listMatchR,percent);
+if(listMatchR2.length>minCount){
+	var val = Code.percentile(listMatchR2,percent);
 	var limitR2 = val / percent;
 	limitR = Math.min(limitR,limitR2);
 }
@@ -8845,10 +8844,6 @@ if(listMatchR.length>minCount){
 // 	limitSAD = Math.min(limitSAD,limitS2);
 // }
 }
-
-
-
-		// var totalViewCount = ;
 		var maxMatchCount = transforms.length;
 		var maxViewCounts = this.viewCount();
 		var matchCounts = Code.newArrayZeros(maxMatchCount+1);
@@ -8861,6 +8856,7 @@ if(listMatchR.length>minCount){
 			// var errorF = match.errorF();
 			// var errorN = match.errorNCC()
 			// var errorS = match.errorSAD();
+			// THIS WONT WORK IF THE ARRAYS ARE SORTED:
 			var errorR = listMatchR[j];
 			var errorF = listMatchF[j];
 			var errorN = listMatchNCC[j];
@@ -8870,7 +8866,8 @@ if(listMatchR.length>minCount){
 			var dropF = F ? (limitF && errorF>limitF) : false;
 			var dropN = N ? (limitN && errorN>limitN) : false;
 			var dropS = S ? (limitS && errorS>limitS) : false;
-			var dropM = M ? (limitM && errorM>limitM) : false;
+			// var dropM = M ? (limitM && errorM>limitM) : false;
+			var dropM = false;
 			if(
 				(dropR || dropF || dropN || dropM) // dropS
 			){
@@ -14111,6 +14108,13 @@ Stereopsis.estimateP3DNormalFromViews = function(point3D){
 	var percents = []; // based on orthogonality to camera
 	var patchSize = 0;
 	var percentTotal = 0;
+if(visibleViews.length==0){
+	console.log("no visible views ?");
+	console.log(point3D);
+	console.log(visibleViews);
+	console.log(isLocation);
+	return null;
+}
 	for(var i=0; i<visibleViews.length; ++i){
 		var view = visibleViews[i];
 		var x = view.right().copy().scale(-1);
@@ -14135,6 +14139,15 @@ Stereopsis.estimateP3DNormalFromViews = function(point3D){
 	var right = Code.averageAngleVector3D(rights,percents); // not necessarily orthogonal
 	patchSize /= visibleViews.length;
 	// make sure 90 degrees
+if(!normal || !right){
+	console.log(normals);
+	console.log(rights);
+	console.log(percents);
+	console.log(percentTotal);
+	console.log(normal);
+	console.log(right);
+	throw "???"
+}
 	var up = V3D.cross(normal,right);
 	up.norm();
 	return {"normal":normal, "up":up, "size":patchSize};
