@@ -381,7 +381,76 @@ MISSING:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
+- individual track groups look good
+- full track combining locations are bad?
+	- relative offset + combine ?
+	- algorithm?
+		- points used [dense vs tracks]?
+		- error reduction method (camera matrix soln)
+
+
+iterateSparseTracks = loading sparse tracks into graph
+	=> var info = world.solveOptimizeSingleView(worldView);
+
+- is track_full using intial starting points ? because it starts out bad
+- is solveOptimizeSingleView only using 3_ tracks?
+
+solveOptimizeSingleView
+
+solveDenseGroup
+
+
+-> go back to using final tracks as initial points ?
+
+
+
 - point is added  / updated to world with no views / points2D ?
+
+
+project._taskDoneCheckReloadURL();
+
+
+
+
+- use ABSOLUTE VIEWS - not extrinsic
+
+- check reprojection errors
+
+...
+
+
+
+triangulatePointDLTList
+
+var result = Code.graphAbsoluteUpdateFromRelativeTransforms(initialP, solveEdges);
+
+
+
+
+
+			
+			// groups,views,pointsFileName
+
+
+			// throw "update points"
+
+			// load next group file
+			// "points.yaml"
+
+			// C) update points
+				// iterate thru each group's dense file
+				// update point's triangulation using optimized view orientations
+				// put points into OctTree
+				// merge with existing points when points are too close (global size or local size from group)
+				// AVG POINT, AVG NORMAL, UNION VIEWS
+				// possibly clean up points?
+				// save final set of points to bundle/points.yaml
+				//
+
+
+
+
 
 
 

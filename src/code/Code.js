@@ -16593,8 +16593,8 @@ console.log("nonlinear");
 
 
 
-Code.graphAbsoluteUpdateFromRelativeTransforms = function(initialP, edges){ // use starting matrices & upate to match 
-	var maxIterations = 1000;
+Code.graphAbsoluteUpdateFromRelativeTransforms = function(initialP, edges, maxIterations){ // use starting matrices & upate to match  (ignore unknown scales)
+	maxIterations = Code.valueOrDefault(maxIterations,1000);
 	// 
 	var viewCount = initialP.length;
 	var edgeCount = edges.length;
@@ -16658,7 +16658,7 @@ Code.graphAbsoluteUpdateFromRelativeTransforms = function(initialP, edges){ // u
 	var fxn = function(args, x, isUpdate){
 		if(isUpdate){
 			// throw "isUpdate";
-			// return;
+			return;
 		}
 		var edges = args[0];
 		var rVectors = args[1];
@@ -16685,14 +16685,12 @@ Code.graphAbsoluteUpdateFromRelativeTransforms = function(initialP, edges){ // u
 			var angleX = V3D.angle(a[1],r[1]);
 			var angleY = V3D.angle(a[2],r[2]);
 			var angleZ = V3D.angle(a[3],r[3]);
-			// console.log(Code.degrees(angleD)+" | "+Code.degrees(angleX)+" | "+Code.degrees(angleY)+" | "+Code.degrees(angleZ));
-			var error = 2*angleD + angleX + angleY + angleZ;
+			var error = 3*angleD + angleX + angleY + angleZ; // 2-10
 			totalError += error;
 		}
 		if(isUpdate){
 			console.log(totalError);
 		}
-		// throw "?"
 		return totalError;
 	}
 
@@ -16721,7 +16719,6 @@ Code.graphAbsoluteUpdateFromRelativeTransforms = function(initialP, edges){ // u
 
 	return {"absolutes":absolutes}; // updated matrixes
 }
-
 
 Code.relativeComponentsFromMatrixes2D = function(mA,mB){
 	var offA = mA.transform2DLocation();

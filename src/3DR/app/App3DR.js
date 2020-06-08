@@ -7692,7 +7692,7 @@ console.log("checkPerformNextTask");
 		project.iterateDenseProcess();
 		return;
 	}
-// throw ">start bundle";
+throw ">start bundle";
 	if(!project.checkHasBundleStarted()){
 		project.initializeBundleGroupsFromDense();
 		return;
@@ -7704,12 +7704,12 @@ console.log("checkPerformNextTask");
 		return;
 	}
 
-throw ">start surface"; // copy point files & create surface.yaml
+// throw ">start surface"; // copy point files & create surface.yaml
 	if(!project.checkHasSurfaceStarted()){
 		project.initializeSurfaceFromBundle();
 		return;
 	}
-throw ">iterate surface"; // create triangles & textures
+// throw ">iterate surface"; // create triangles & textures
 	if(!project.checkHasSurfaceEnded()){
 		project.iterateSurfaceProcess();
 	}
@@ -8059,7 +8059,6 @@ console.log("inputFilename: "+inputFilename);
 // force redo:
 // graph = null;
 	if(!graph){
-console.log("RICHIE - START GRAPH");
 		var views = project.views();
 		var graphViews = [];
 		var graphPairs = [];
@@ -8179,7 +8178,7 @@ console.log(i+" = ",vs[i]);
 		console.log(inputData);
 		// throw "SAVE GRAPH";
 		console.log("save graph ? ");
-		project.saveFileFromData(data,graphFilename, saveSparseFxn,project);
+		project.saveFileFromData(data, graphFilename, saveSparseFxn,project);
 		return;
 	}
 // throw ">aggregate";
@@ -8665,7 +8664,7 @@ console.log("isDone - FULL DONE")
 				}
 // var str = world.toYAMLString();
 // console.log(str);
-// throw "wat";
+// throw "before save";
 				
 				// update views:
 				var worldObject = world.toObject();
@@ -8726,7 +8725,7 @@ console.log("fullBundlePath: "+fullBundlePath);
 				// 
 
 				world.copyRelativeTransformsFromAbsolute();
-				// TODO: RESPLVE BY GEOMETRY AGAIN
+				// TODO: RESOLVE BY GEOMETRY AGAIN
 				// world.resolveIntersectionByPatchGeometry();
 				world.resolveIntersectionByPatchGeometry();
 
@@ -8858,8 +8857,11 @@ var original = extB;
 						// var relativeAB = R3D.relativeTransformMatrix2(absA,absB);
 						// var relativeAB = R3D.relativeTransformMatrix2(absB, absA);
 						// var extrinsicAB = R3D.relativeTransformMatrix2(extA,extB);
-						var extrinsicAB = Matrix.relativeWorld(extA,extB);
+						
+						// var extrinsicAB = Matrix.relativeWorld(extA,extB);
+						var extrinsicAB = Matrix.relativeReference(extA,extB);
 						var relativeAB = Matrix.inverse(extrinsicAB);
+throw "should this be relativeReference ? "
 						// console.log("RELATIVE: "+relativeAB);
 						// absA = newOriginR;
 						extA = newOriginR;
@@ -8904,7 +8906,9 @@ if(newOriginID==null){
 			graphData["bundleFullFile"] = bundleFilename;
 			var fullBundlePath = Code.appendToPath(basePath,"tracks",bundleFilename);
 
-// throw "before saving initial bundle full";
+var str = YAML.parse(bundleData);
+console.log(str);
+throw "before saving initial bundle full";
 
 			var savedGraphComplete = function(){
 				console.log("savedGraphComplete: "+graphFile);
@@ -9103,6 +9107,7 @@ console.log("isDone --- no");
 				// optimize view orientation
 				var info = world.solveOptimizeSingleView(worldView);
 				console.log(info);
+throw "FULL solveOptimizeSingleView"
 
 				nextViewBA["deltaErrorR"] = Math.abs(info["deltaR"]); // expected always negative
 				nextViewBA["errorR"] = info["errorR"];
@@ -10846,10 +10851,10 @@ App3DR.ProjectManager.prototype._doDenseGroupsStereopsis = function(groupData, c
 		// solveDenseGroup
 		world.solveDenseGroup(comparePairs);
 		console.log("?????????????????????????????");
-
+		// 
 		var str = world.toYAMLString();
 		console.log(str);
-		// throw "solve dense group .. ";
+		throw "solve dense group .. ";
 		completeFxn(world.toObject());
 	}
 
@@ -10914,7 +10919,7 @@ App3DR.ProjectManager.prototype._doDenseGroupsStereopsis = function(groupData, c
 	}
 }
 
-App3DR.ProjectManager.prototype. = function(viewsInitial, groups){ // aggregate groups
+App3DR.ProjectManager.prototype._initializeAbsoluteViewsFromGroups = function(viewsInitial, groups){ // aggregate groups
 
 
 	console.log(viewsInitial);
@@ -10923,6 +10928,96 @@ App3DR.ProjectManager.prototype. = function(viewsInitial, groups){ // aggregate 
 
 	var pairIDFromViewIDs = App3DR.ProjectManager.pairIDFromViewIDs;
 
+	// make lookup from view ID to indev
+	var viewIDToViewIndex = {};
+	var viewIndexToViewID = {};
+	var initialP = [];
+	for(var i=0; i<viewsInitial.length; ++i){
+		var view = viewsInitial[i];
+		var viewID = view["id"];
+		viewIDToViewIndex[viewID] = i;
+		viewIndexToViewID[i] = viewID;
+		var extrinsicAB = Matrix.fromObject(view["transform"]);
+		console.log(extrinsicAB);
+		var absoluteAB = Matrix.inverse(extrinsicAB);
+		// var absoluteAB = Matrix.relativeWorld(extrinsicAB);
+		initialP[i] = absoluteAB;
+	}
+
+	var edgeList = []; // [viewA, viewB, transform, error]
+	for(var i=0; i<groups.length; ++i){
+		var group = groups[i];
+		var transforms = group["transforms"];
+		for(var j=0; j<transforms.length; ++j){
+			var transform = transforms[j];
+			var viewAID = transform["A"];
+			var viewBID = transform["B"];
+			var pairRMean = transform["errorRMean"];
+			var pairRSigma = transform["errorRSigma"];
+			var pairMatches = transform["matches"];
+			var transformAB = transform["transform"];
+				transformAB = Matrix.fromObject(transformAB);
+				var absoluteAB = Matrix.inverse(transformAB);
+			// var absoluteAB = Matrix.relativeReference(transformAB);
+			var viewAIndex = viewIDToViewIndex[viewAID];
+			var viewBIndex = viewIDToViewIndex[viewBID];
+			var edgeError = (pairRMean+pairRSigma)/pairMatches;
+			var edge = [viewAIndex,viewBIndex,absoluteAB,edgeError];
+			edgeList.push(edge);
+		}
+	}
+	console.log(edgeList);
+
+	// only keep track of top pair edges from each group:
+	/*
+		A) each view marks 2-3 top pairs to keep
+		B) globally mark views to keep:
+			- get match counts (or error counts)
+			- weight on match count size
+
+				Code.stdDevWeights(locations,magnitudes,mean);
+
+				sigma = Code.stdDevWeights(x,y,Code.max(x));
+
+			threshold = max - sigma * 1
+
+			if pair match count is above threshold:
+				- mark to keep
+		C) keep only pairs marked
+
+		matches:
+		x = [
+		51,
+		85,
+		126,
+		151,
+		207,
+		230,
+		239,
+		386,
+		...  AVG = 436
+		527,
+		590,
+		.... COM = 744
+		789,
+		1101,
+		1187,
+		];
+		y = Code.countsToPercents(x);
+		z = Code.arrayVectorMul(x,y);
+		a = Code.sum(z);
+
+
+		Code.stdDevWeights(x,y,a);
+		Code.stdDevWeights(x,y,Code.max(x));
+
+		pair error = errorRMean / matches
+
+	*/
+
+
+
+	/*
 	var pairLookup = {};
 	for(var i=0; i<groups.length; ++i){
 		var group = groups[i];
@@ -10957,41 +11052,40 @@ App3DR.ProjectManager.prototype. = function(viewsInitial, groups){ // aggregate 
 				pairGroups.push( [j, baseline] );
 			}
 		}
+	}
+	console.log(pairGroups);
+	*/
 
+	this.displayViewGraph(initialP,edgeList, 100);
+
+	var result = Code.graphAbsoluteUpdateFromRelativeTransforms(initialP, edgeList, 1000); 
+	console.log(result);
+	var finalP = result["absolutes"];
+
+	this.displayViewGraph(finalP,edgeList, 600);
+
+	// to extrinsic:
+	for(var i=0; i<finalP.length; ++i){
+		var final = finalP[i];
+		finalP[i] = Matrix.inverse(final);
 	}
 
-	console.log(pairGroups);
+	// to output
+	var viewsFinal = [];
+	for(var i=0; i<viewsInitial.length; ++i){
+		var view = viewsInitial[i];
+		var viewFinal = {};
+		var viewKeys = Code.keys(view);
+		for(var j=0; j<viewKeys.length; ++j){
+			var key = viewKeys[j];
+			viewFinal[key] = view[key];
+		}
+		viewFinal["transform"] = finalP[i].toObject();
+		viewsFinal.push(viewFinal);
+	}
 
-	throw "find relative scales of groups";
 
-
-	throw "create initial view graph from initial views";
-
-
-	throw "scale initial view graph to match average edges";
-
-
-	throw "make list of edges from groops' pairs";
-
-
-	throw "nonlinear solve current absolute graph & pair differences";
-
-/*
-	- scales of groups could have drifted
-		- find each group's overlapping pairs [not necessarily listed edges]
-			for each group
-				for each view 
-					for each other view 
-						add/update entry viewI-viewJ = [groups: 0,1,5,...]
-		- solve for relative scales for all overlapping view pairs
-		- set minimal pair scale to 1, and update all other groups to be in same absolute scale
-		- convert ALL edges to relative transforms (in absolute scale)
-		- initialize global orientations from initial bundle locations
-		- minimize expected vs actual pair difference
-		=> final absolute view locations
-*/
-
-	throw "return views absolute locations";
+	return {"views":viewsFinal};
 }
 
 App3DR.ProjectManager.prototype._doDenseGroupsStereopsisOLD = function(data){
@@ -11578,6 +11672,12 @@ App3DR.ProjectManager.prototype.iterateBundleProcess = function(){
 	var selectedGroup = null;
 	var groupData = null;
 	var groupDataPath = null;
+	
+	var bundleFilename = project.bundleFilename();
+	var bundlePathBase = Code.pathRemoveLastComponent(bundleFilename);
+	console.log(bundleFilename);
+	console.log(bundlePathBase);
+
 	var loadedBundleDataFxn = function(data){
 		console.log(data);
 		bundleData = data;
@@ -11595,43 +11695,69 @@ App3DR.ProjectManager.prototype.iterateBundleProcess = function(){
 				return;
 			}
 		}
-		// aggregate ?
+		// aggregate views
 		var viewsFileName = bundleData["viewsFile"];
 		if(!viewsFileName){
+			var result = project._initializeAbsoluteViewsFromGroups(bundleData["views"],bundleData["groups"]);
+			console.log(result);
+			var views = result["views"];
+			var viewsData = {};
+				viewsData["views"] = views;
+				viewsData["cameras"] = bundleData["cameras"];
+			
+			// throw "before save"
+			// global bundle adjust?
+			// best group tracks [limited by:  tracks length > 2  &  1E6/groups]
 
-
-			project._initializeAbsoluteViewsFromGroups(bundleData["views"],bundleData["groups"]);
-
-			throw "aggregate groups"
-			// B) global absolute locations
-			// initialize a graph with views (and edges?) from dense final graph [bundle initial graph]
-			// update average scale of initial views to be (EDGE_I_NEW/EDGE_I_OLD)
-			// add view-edges from all groups
-			// nonlinearly find minimum from all groups all edges: transform edges
-			// A) location & axes
-			// B) directions only (trans & 3x axes)
-			// save final view location to bundle/views.yaml
-			// 
-
-		// global bundle adjust?
-		// best group tracks [limited by:  tracks length > 2  &  1E6/groups]
+			viewsFileName = "views.yaml";
+			bundleData["viewsFile"] = viewsFileName;
+			var savedViewsCompleteFxn = function(s){
+				console.log("savedViewsCompleteFxn");
+				project.saveFileFromData(bundleData, bundleFilename, savedBundleCompleteFxn, project);
+			}
+			var savedBundleCompleteFxn = function(s){
+				console.log("savedBundleCompleteFxn");
+			}
+			console.log(bundlePathBase,viewsFileName);
+			var viewsDataPath = Code.appendToPath(bundlePathBase,viewsFileName);
+			console.log("viewsDataPath: "+viewsDataPath);
+			project.saveFileFromData(viewsData, viewsDataPath, savedViewsCompleteFxn, project);
 			return;
 		}
 		var pointsFileName = bundleData["pointsFile"];
 		if(!pointsFileName){
-			throw "update points"
+			var viewsDataPath = Code.appendToPath(bundlePathBase,viewsFileName);
 
-			// load next group file
+			var pointsFileName = "points.yaml";
+			bundleData["pointsFile"] = pointsFileName;
+			pointsDataPath = Code.appendToPath(bundlePathBase,pointsFileName);
+			var viewData = null;
 
-			// C) update points
-				// iterate thru each group's dense file
-				// update point's triangulation using optimized view orientations
-				// put points into OctTree
-				// merge with existing points when points are too close (global size or local size from group)
-				// AVG POINT, AVG NORMAL, UNION VIEWS
-				// possibly clean up points?
-				// save final set of points to bundle/points.yaml
-				//
+			var pointsSavedFxn = function(pointCount){
+				console.log("pointsSavedFxn");
+				// throw "before save";
+				project.setBundleCount(pointCount);
+				project.saveFileFromData(bundleData, bundleFilename, bundleSavedFxn, project);
+			}
+
+			var bundleSavedFxn = function(){
+				console.log("bundleSavedFxn");
+				project.saveProjectFile(projectSavedFxn);
+			}
+
+			var projectSavedFxn = function(){
+				console.log("projectSavedFxn");
+			}
+
+			var loadedViewDataFxn = function(data){
+				viewData = data;
+				console.log(viewData);
+				var views = viewData["views"];
+				var cameras = bundleData["cameras"];
+				project.aggregateGroupPointsToSingleFile(groups, views, cameras, pointsDataPath, bundlePathBase, pointsSavedFxn);
+			}
+
+			project.loadDataFromFile(viewsDataPath, loadedViewDataFxn);
 			return;
 		}
 		// set bundle group transforms to SOME NUMBER ?
@@ -11671,13 +11797,158 @@ console.log(groupData);
 		project._taskDoneCheckReloadURL();
 	}
 
-	var bundleFilename = project.bundleFilename();
-	var bundlePathBase = Code.pathRemoveLastComponent(bundleFilename);
-	console.log(bundleFilename);
-	console.log(bundlePathBase);
 	project.loadDataFromFile(bundleFilename, loadedBundleDataFxn);
 }
 
+App3DR.ProjectManager.prototype.aggregateGroupPointsToSingleFile = function(groups,views,cameras,pointsFileName, filePrefix, completeFxn){
+	var project = this;
+	// TODO: this should load & append, not keep all points in memory
+
+	var camIDToCam = {};
+	for(var i=0; i<cameras.length; ++i){
+		var cam = cameras[i];
+			cam["K"] = Matrix.fromObject(cam["K"]);
+			cam["Kinv"] = Matrix.inverse(cam["K"]);
+		var camID = cam["id"];
+		camIDToCam[camID] = cam;
+	}
+
+	var viewIDToView = {};
+	for(var i=0; i<views.length; ++i){
+		var view = views[i];
+			view["transform"] = Matrix.fromObject(view["transform"]);
+		var camID = view["camera"];
+		var cam = camIDToCam[camID];
+		// var size = view["imageSize"]
+			view["K"] = cam["K"];
+			view["Kinv"] = cam["Kinv"];
+			view["origin"] = view["transform"].multV3DtoV3D(new V3D(0,0,0));
+			view["normal"] = view["transform"].multV3DtoV3D(new V3D(0,0,1));
+				view["normal"].sub(view["origin"]);
+				view["normal"].norm();
+		var viewID = view["id"];
+		viewIDToView[viewID] = view;
+	}
+
+	var allPoints = [];
+	var totalPointCount;
+	var pointsSavedFxn = function(){
+		completeFxn(totalPointCount);
+	}
+
+	var groupIndex = 0;
+	var checkLoadNextGroup = function(){
+		console.log("checkLoadNextGroup");
+		if(groupIndex>=groups.length){
+			totalPointCount = allPoints.length;
+			// SAVE FILE
+			var pointsData = {};
+				pointsData["points"] = allPoints;
+			console.log(allPoints);
+			console.log(pointsFileName);
+			project.saveFileFromData(pointsData, pointsFileName, pointsSavedFxn, project);
+			return;
+		}
+		var group = groups[groupIndex];
+		console.log(group);
+		var groupFilename = group["filename"];
+		var groupDataPath = Code.appendToPath(filePrefix,groupFilename);
+		console.log(groupDataPath);
+		project.loadDataFromFile(groupDataPath, loadedGroupCompleteFxn);
+	}
+	var loadedGroupCompleteFxn = function(data){
+		console.log("loadedGroupCompleteFxn");
+		console.log(data);
+		var groupPoints = data["points"];
+		for(var i=0; i<groupPoints.length; ++i){
+			var point = groupPoints[i];
+			// console.log(point);
+			var vList = point["v"];
+			var p2Ds = [];
+			var extrinsics = [];
+			var Kinvs = [];
+			var Ks = [];
+			for(var j=0; j<vList.length; ++j){
+				var view = vList[j];
+				var viewID = view["i"];
+				var p2D = new V2D(view["x"],view["y"]);
+					view = viewIDToView[viewID];
+				var ext = view["transform"];
+				var Kinv = view["Kinv"];
+				var K = view["K"];
+				var org = view["origin"];
+				p2Ds.push(p2D);
+				extrinsics.push(ext);
+				Kinvs.push(Kinv);
+				Ks.push(K);
+			}
+			// console.log(p2Ds, extrinsics, Kinvs);
+			var p3D = R3D.triangulatePointDLTList(p2Ds, extrinsics, Kinvs);
+			// console.log(p3D);
+			var keep = true;
+			for(var j=0; j<p2Ds.length; ++j){
+				var p2D = p2Ds[j];
+				var extrinsic = extrinsics[j];
+				var K = Ks[j];
+				var error = R3D.reprojectionErrorSingle(p3D, p2D, extrinsic, K);
+				// console.log(error);
+				if(false){
+					throw "drop if poor reprojection error";
+					keep = false;
+					break;
+				}
+			}
+			// if(!keep){
+			// 	continue;
+			// }
+			// R3D.reprojectionErrorSingle = function(p3D, p2D, extrinsic, K);
+			// var error = R3D.reprojectionErrorList(estimated3D, reprojected2DA, reprojected2DB, camIdentity,camAtoB, K,K);
+
+			
+			// normal
+			// var Math.PI
+			var pointToCenters = [];
+			for(var j=0; j<vList.length; ++j){
+				var view = vList[j];
+				var viewID = view["i"];
+					view = viewIDToView[viewID];
+				var org = view["origin"];
+				var nrm = view["normal"];
+				pToC = V3D.sub(org,p3D);
+				pToC.norm();
+				pointToCenters.push(pToC);
+				// console.log(V3D.dot(nrm,pToC),Code.degrees(V3D.angle(nrm,pToC)));
+				// if(V3D.angle(nrm,pToC) < degrees90){
+				if(V3D.dot(nrm,pToC)>0){ // behind
+					keep = false;
+					break;
+				}
+			}
+			if(!keep){
+				console.log("SKIPPED");
+				continue;
+			}
+// throw "????"
+			var n3D = Code.averageAngleVector3D(pointToCenters);
+			// console.log(n3D);
+			var point3D = {};
+				point3D["v"] = vList; // is this used ?
+				point3D["X"] = p3D.x;
+				point3D["Y"] = p3D.y;
+				point3D["Z"] = p3D.z;
+				point3D["x"] = n3D.x;
+				point3D["y"] = n3D.y;
+				point3D["z"] = n3D.z;
+			allPoints.push(point3D);
+			
+		}
+		++groupIndex;
+		checkLoadNextGroup();
+	}
+
+	console.log(groups,views,pointsFileName);
+	checkLoadNextGroup();
+}
 
 App3DR.ProjectManager.prototype.initializeSurfaceFromBundle = function(){ // create surface.yaml
 	var project = this;
@@ -12001,7 +12272,7 @@ App3DR.ProjectManager.prototype.iterateSurfaceProcess = function(){
 	// });
 	// iterate thru triangle generation
 	var loadedTexturesFxn = function(data){
-throw "not this again"
+// throw "not this again"
 		var textureData = data;
 		var infoTextures = textureData["textures"];
 		var infoVertexes = textureData["vertexes"];
@@ -12056,6 +12327,7 @@ throw "not this again"
 				console.log("done with all views");
 				var fxnSaveSurfaceComplete = function(){
 					console.log("saved surfaceData");
+					project._taskDoneCheckReloadURL();
 				}
 				surfaceData["textureCount"] = infoTextures.length;
 				project.saveFileFromData(surfaceData, surfaceFilename, fxnSaveSurfaceComplete, project);
@@ -12172,20 +12444,6 @@ throw "before save updated texture";
 				project.saveFileFromBinary(imageBinary, fullPath, completedFxn, project);
 			});
 		}
-
-
-		// ++currentViewIndex;
-
-		// 		for each required texture
-		// 			load texture_i
-		// 			for each triangle
-		// 				if triangle uses texture_i
-		// 					update texture matrix
-		// 			save texture_i
-
-		// DONE
-
-
 
 		var initTexturesBlank = true;
 		// var initTexturesBlank = false;

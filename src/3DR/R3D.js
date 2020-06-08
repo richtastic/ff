@@ -473,9 +473,102 @@ R3D._transformCameraExtrinsicDLTNonlinearGD = function(args, x, isUpdate){
 	return totalError;
 }
 
+R3D.optimizeAllCameraExtrinsicDLTNonlinear = function(listP, listK, listKinv, variablePIndex, listPoints2D, maxIterations, negativeIsBad){
+	maxIterations = Code.valueOrDefault(maxIterations, 1000);
+	negativeIsBad = Code.valueOrDefault(negativeIsBad, false);
+	console.log("R3D.optimizeAllCameraExtrinsicDLTNonlinear: "+listP.length+" views  & "+listPoints2D.length+" points @ "+variablePIndex);
+	// 
+	// make a temporary matrix for iterating on
+	var listM = [];
+	for(var i=0; i<listP.length; ++i){
+		var P = listP[i];
+		listM[i] = P.copy();
+	}
+	var args = [listM, listK, listKinv, variablePIndex, listPoints2D, negativeIsBad];
+	var x = [];
+	for(var i=0; i<listP.length; ++i){
+		var M = listM[i];
+		var y = R3D.transformMatrixToComponentArray(M);
+		Code.arrayPushArray(x,y);
+	}
+	var result = Code.gradientDescent(R3D._transformCameraAllExtrinsicDLTNonlinearGD, args, x, null, maxIterations, 1E-10);
+	var x = result["x"];
+	var cost = result["cost"];
+	for(var i=0; i<listM.length; ++i){
+		var M = listM[i];
+		R3D.transform3DFromComponentArray(M, x, i*6);
+	}
+	return {"matrixes":listM, "error":cost};
+}
+R3D._transformCameraAllExtrinsicDLTNonlinearGD = function(args, x, isUpdate){
+	// if(isUpdate){
+	// 	return;
+	// }
+	var listP = args[0];
+	var listK = args[1];
+	var listKinv = args[2];
+	var variableIndex = args[3];
+	var listPoints2D = args[4];
+	var negativeIsBad = args[5];
 
+	// TODO: DON'T RECALCULATE IF NOT NEEDED
+	for(var i=0; i<listP.length; ++i){
+		R3D.transform3DFromComponentArray(listP[i], x, 6*i);
+	}
+	// 
+	var totalError = 0;
+	var pointSetCount = listPoints2D.length;
+	var tempP3D = new V3D();
+	for(var k=0; k<pointSetCount; ++k){
+		var track = listPoints2D[k];
+		// get predicted 3D point
+		var points2D = [];
+		var extrinsics = [];
+		var invKs = [];
+		for(var t=0; t<track.length; ++t){
+			var entry = track[t];
+			var point2D = entry[0];
+			var indexP = entry[1];
+			points2D.push(point2D);
+			extrinsics.push(listP[indexP]);
+			invKs.push(listKinv[indexP]);
+		}
+		var point3D = R3D.triangulatePointDLTList(points2D, extrinsics, invKs);
+		if(!point3D){
+			console.log("null point3D");
+			// throw "?"
+			continue;
+		}
+		// reprojection error:
+		var error = 0;
+		var isBehind = false;
+		for(var t=0; t<track.length; ++t){
+			var entry = track[t];
+			var point2D = entry[0];
+			var indexP = entry[1];
 
+			var P = listP[indexP];
+			var K = listK[indexP];
 
+			P.multV3DtoV3D(tempP3D,point3D);
+			K.multV3DtoV3D(tempP3D,tempP3D);
+			isBehind |= (tempP3D.z<=0 || tempP3D.z<=0);
+				tempP3D.homo();
+
+			var distanceSquare = V2D.distanceSquare(point2D, tempP3D);
+			error += distanceSquare;
+		}
+		if(negativeIsBad && isBehind){ // behind camera
+			error *= 2;
+		}
+		totalError += error;
+
+	} // track list
+	if(isUpdate){
+		console.log(totalError);
+	}
+	return totalError;
+}
 
 
 

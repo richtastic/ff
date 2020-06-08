@@ -5669,6 +5669,62 @@ Stereopsis.World.prototype.solveOptimizeSingleView = function(viewSolve){ // mov
 
 
 
+Stereopsis.World.prototype.refineAllCameraMultiViewTriangulation = function(maxIterations, onlyLongTracks){
+	onlyLongTracks = Code.valueOrDefault(onlyLongTracks, false);
+	console.log("refineAllCameraMultiViewTriangulation: "+maxIterations);
+	var world = this;
+	var listExts = [];
+	var listKs = [];
+	var listKinvs = [];
+	
+	var views = world.toViewArray();
+	var viewIDToIndexHash = {};
+	for(var i=0; i<views.length; ++i){
+		var view = views[i];
+		var P = view.absoluteTransform();
+		var K = view.K();
+		var Kinv = view.Kinv();
+		listExts.push(P);
+		listKs.push(K);
+		listKinvs.push(Kinv);
+		viewIDToIndexHash[view.id()] = i;
+	}
+	
+	var listPoints2D = [];
+
+	var points3D = world.toPointArray();
+console.log(" points total : "+points3D.length);
+	for(var i=0; i<points3D.length; ++i){
+		var point3D = points3D[i];
+		var points2D = point3D.toPointArray();
+		if( (onlyLongTracks && pointsP3DP2D.length<=2) ){ // more than 1 match
+			continue;
+		}
+		var entryP3D = [];
+		for(var j=0; j<points2D.length; ++j){
+			var p2D = points2D[j];
+			var view = pt2D.view();
+			var viewID = view.id();
+			var viewIndex = viewIDToIndexHash[viewID];
+			var entryP2D = [pt2D.point2D(),viewIndex];
+			entryP3D.push(entryP2D);
+		}
+		listPoints2D.push(entryP3D);
+	}
+
+
+	var result = R3D.optimizeAllCameraExtrinsicDLTNonlinear(listExts, listKs, listKinvs, listPoints2D, maxIterations);
+	var listP = result["matrixes"];
+	for(var i=0; i<views.length; ++i){
+		var p = listP[i];
+		var view = views[i];
+		view.absoluteTransform(P);
+	}
+	
+
+	throw "?"
+}
+
 Stereopsis.World.prototype.refineSelectCameraMultiViewTriangulation = function(selectView, maxIterations, onlyLongTracks){ 
 	console.log("refineSelectCameraMultiViewTriangulation");
 	onlyLongTracks = false;
@@ -6460,10 +6516,11 @@ GLOBALSTAGE.addChild(d);
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 Stereopsis.World.prototype.solveDenseGroup = function(inputPairs){ // multiple (3+)
 	var world = this;
-console.log("solveDenseGroup");
+// throw "..."
 	var transforms = world.toTransformArray();
 	var views = world.toViewArray();
 	world.copyRelativeTransformsFromAbsolute();
+	console.log("solveDenseGroup: "+views.length);
 	var featureSize = 0.02; // large enough to be distinguishing, small enough to allow for perspective changes
 	var errorSize = 0.002;  // should be very accurate  - 0.001 - 0.005
 	console.log("find top matches");
@@ -6693,13 +6750,16 @@ console.log("RICHIE REFINE A SINGLE VIEW ???");
 	for(var i=0; i<wiggleCount; ++i){
 		for(var v=0; v<views.length; ++v){
 			var view = views[v];
-			world.refineSelectCameraMultiViewTriangulation(view, 500);
+			world.refineSelectCameraMultiViewTriangulation(view, 100);
 			world.copyRelativeTransformsFromAbsolute();
 		}
 	}
 	world.relativeFFromSamples();
 	world.estimate3DErrors(true);
 
+
+world.refineAllCameraMultiViewTriangulation(1000);
+throw "minimize all at once"
 
 
 // throw "before main loop"
@@ -6787,9 +6847,9 @@ console.log("RICHIE REFINE A SINGLE VIEW ???");
 	// final output:
 	// world.averagePoints3DFromMatches();
 
-	// var str = world.toYAMLString();
-	// console.log(str);
-	// throw "solve dense group .. ";
+	var str = world.toYAMLString();
+	console.log(str);
+	throw "solve dense group .. ";
 }
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -7031,6 +7091,7 @@ console.log(" ERR "+min+" +/- "+sig);
 
 Stereopsis.World.prototype.solveGroup = function(){ // multiwise BA full scene/group
 	console.log("solveGroup");
+	throw "where is this used?"
 	var world = this;
 
 	var transforms = world.toTransformArray();
