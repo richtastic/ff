@@ -8729,9 +8729,6 @@ console.log("fullBundlePath: "+fullBundlePath);
 				// world.resolveIntersectionByPatchGeometry();
 				world.resolveIntersectionByPatchGeometry();
 
-// 
-
-
 				// existing
 				var points3DExisting = App3DR.ProjectManager._worldPointFromSaves(world, fullPoints, WORLDVIEWSLOOKUP);
 				console.log(points3DExisting);
@@ -8809,10 +8806,14 @@ console.log(" save graph ");
 		}
 // throw "C"
 		if(graphGroups.length==bundleGroupIndex){
+
+/*
+			// combine groups to single graph using skeleton view's offset as origin
 			console.log(graphGroups);
 			var transformLookup = {};
 			for(var i=0; i<graphGroups.length; ++i){
 				var group = graphGroups[i];
+console.log(i+" ? ..................................................................");
 				console.log(group);
 				var views = group["views"];
 				var transforms = group["transforms"];
@@ -8822,9 +8823,10 @@ console.log(" save graph ");
 					var viewID = views[j];
 					var ref = transformLookup[viewID];
 					if(ref){
-						console.log("found ref");
+						console.log("found ref: "+ref+" @ "+j);
 						referenceSkeleton = ref;
 						referenceGroupIndex = j;
+						break; // should only be 1 anyway
 					}
 				}
 				var oldOriginR = null;
@@ -8841,6 +8843,7 @@ console.log(" save graph ");
 					oldOriginR = new Matrix(4,4).identity();
 					newOriginR = new Matrix(4,4).identity();
 				}
+
 				for(var j=0; j<views.length; ++j){
 					var viewID = views[j];
 					// skeletons pass because newOriginID=null; groups non-references pass because they are not reference
@@ -8848,47 +8851,112 @@ console.log(" save graph ");
 						var extA, absA;
 						var extB, absB;
 						// remove current offset => only relative orientation
+
+
 						var transform = transforms[j];
-							extA = oldOriginR;
-							extB = Matrix.fromObject(transform);
-var original = extB;
-							// absB = Matrix.inverse(extB); // ext -> abs
-							// absA = oldOriginR;
-						// var relativeAB = R3D.relativeTransformMatrix2(absA,absB);
-						// var relativeAB = R3D.relativeTransformMatrix2(absB, absA);
-						// var extrinsicAB = R3D.relativeTransformMatrix2(extA,extB);
+							transform = Matrix.fromObject(transform);
+
+							absA = Matrix.inverse(oldOriginR);
+							absB = Matrix.inverse(transform);
+							relAB = Matrix.relativeReference(absA,absB);
+
+
+							absA = Matrix.inverse(newOriginR);
+							absB = Matrix.mult(relAB, absA);
+							extB = Matrix.inverse(absB);
+							
+							transform = extB;
+
+
 						
-						// var extrinsicAB = Matrix.relativeWorld(extA,extB);
-						var extrinsicAB = Matrix.relativeReference(extA,extB);
-						var relativeAB = Matrix.inverse(extrinsicAB);
-throw "should this be relativeReference ? "
-						// console.log("RELATIVE: "+relativeAB);
-						// absA = newOriginR;
-						extA = newOriginR;
-						absA = Matrix.inverse(extA);
-						absB = Matrix.mult(relativeAB, absA); // prepend new origin
-						// absB = Matrix.mult(absA,relativeAB);
-						extB = Matrix.inverse(absB); // abs -> ext
-						transform = extB;
-var final = transform;
-if(newOriginID==null){
-	console.log("SKELETON: ");
-	console.log("\n"+original);
-	// console.log("\n"+oldOriginR);
-	// console.log("\n"+relativeAB);
-	console.log("\n"+final);
-	console.log("\n");
-}else{
-	console.log("OTHER: ");
-	console.log("\n"+original);
-	console.log("\n"+final);
-	console.log("\n");
-}
+						// var transform = transforms[j];
+						// 	extA = oldOriginR;
+						// 	extB = newOriginR;
+						// 	absA = Matrix.inverse(extA);
+						// 	absB = Matrix.inverse(extB);
+						// 	var relativeAB = Matrix.relativeWorld(absA,absB);
+
+						// 	extC = Matrix.fromObject(transform);
+						// 	absC = Matrix.inverse(extC);
+
+						// 	var newC = Matrix.mult(relativeAB, absC);
+						// 		extC = Matrix.inverse(newC);
+
+						// 	transform = extC;
+
+
+						// if(newOriginID!=null){
+						// 	console.log(" ........... ");
+						// 	// console.log(transform+" ");
+						// 	// console.log(relativeAB+" ");
+						// 	console.log(Matrix.fromObject(transforms[j])+" ");
+						// 	console.log( Matrix.inverse( Matrix.mult(Matrix.inverse(relativeAB), Matrix.inverse(transform)) )  +" ");
+						// }else{
+						// 	// console.log(" ........... ");
+						// 	// console.log(transform+" ");
+						// 	// console.log(relativeAB+" ");
+						// }
+
+						
+
+
+// var original = extB;
+// 							// absB = Matrix.inverse(extB); // ext -> abs
+// 							// absA = oldOriginR;
+// 						// var relativeAB = R3D.relativeTransformMatrix2(absA,absB);
+// 						// var relativeAB = R3D.relativeTransformMatrix2(absB, absA);
+// 						// var extrinsicAB = R3D.relativeTransformMatrix2(extA,extB);
+						
+// 						var extrinsicAB = Matrix.relativeWorld(extA,extB);
+// 						// var extrinsicAB = Matrix.relativeReference(extA,extB);
+// 						var relativeAB = Matrix.inverse(extrinsicAB);
+
+// // throw "should this be relativeReference ? "
+// 						// console.log("RELATIVE: "+relativeAB);
+// 						// absA = newOriginR;
+// 						extA = newOriginR;
+// 						absA = Matrix.inverse(extA);
+// 						absB = Matrix.mult(relativeAB, absA); // prepend new origin
+// 						// absB = Matrix.mult(absA,relativeAB);
+// 						extB = Matrix.inverse(absB); // abs -> ext
+// 						transform = extB;
+// var final = transform;
+// if(newOriginID==null){
+// 	// console.log("SKELETON: ");
+// 	// console.log("\n"+original);
+// 	// console.log("\n"+oldOriginR);
+// 	// console.log("\n"+relativeAB);
+// 	// console.log("\n"+final);
+// 	// console.log("\n");
+// }else{
+// 	console.log("OTHER: ");
+// 	console.log("\n"+original);
+// 	console.log("\n"+final);
+// 	console.log("\n");
+// }
+
 						// set
 						transformLookup[viewID] = {"id":viewID, "R":transform};
 					}
 				}
 			}
+*/
+
+
+// TODO: use skeletons as base, and groups relative's as edges to minimize angle differences (scale drift)
+
+
+// Code.graphAbsoluteUpdateFromRelativeTransforms = function(initialP, edges, maxIterations){
+
+
+
+throw "nonlinear Code.graphAbsoluteUpdateFromRelativeTransforms"
+
+
+
+
+
+throw "get list of pairs including only top 3 view pairs -- from original graph pairs"
 			// to array
 			var viewList = [];
 			var keys = Code.keys(transformLookup);
@@ -8908,7 +8976,7 @@ if(newOriginID==null){
 
 var str = YAML.parse(bundleData);
 console.log(str);
-throw "before saving initial bundle full";
+// throw "before saving initial bundle full";
 
 			var savedGraphComplete = function(){
 				console.log("savedGraphComplete: "+graphFile);

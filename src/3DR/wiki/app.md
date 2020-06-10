@@ -390,22 +390,34 @@ MISSING:
 		- error reduction method (camera matrix soln)
 
 
-iterateSparseTracks = loading sparse tracks into graph
-	=> var info = world.solveOptimizeSingleView(worldView);
-
-- is track_full using intial starting points ? because it starts out bad
-- is solveOptimizeSingleView only using 3_ tracks?
-
-solveOptimizeSingleView
-
-solveDenseGroup
 
 
--> go back to using final tracks as initial points ?
+- find initial starting locations using nonlinear skeleton-static? angle-error
+Code.graphAbsoluteUpdateFromRelativeTransforms = function(initialP, edges, maxIterations){
+
+- limit full group track combine to only ones for view's top 3 pairs 
+full_pairs: ~ views x 3 ~ 33, not 11 x (10) / 2 ~ 50
 
 
 
-- point is added  / updated to world with no views / points2D ?
+- solveOptimizeSingleView
+
+- optimize all at once?
+	solveDenseGroup
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 project._taskDoneCheckReloadURL();
@@ -413,11 +425,12 @@ project._taskDoneCheckReloadURL();
 
 
 
-- use ABSOLUTE VIEWS - not extrinsic
 
-- check reprojection errors
+- optimizing skeleton only, then other views should be updated nonlinear
+	- keeping skeletons constant ? ()
+	- variable non-skeletons
+	- use relative transforms angle-error (scale may have drifted)
 
-...
 
 
 
