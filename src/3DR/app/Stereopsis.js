@@ -1852,6 +1852,9 @@ console.log("relativeEstimatePoints3D - triangulate points");
 		var p3D = match.point3D();
 		//var point3D = R3D.triangulatePointDLT(pA,pB, extrinsicA,extrinsicB, KaInv, KbInv);
 		var point3D = R3D.triangulatePointDLT(pA,pB, cameraA,cameraB, KaInv, KbInv);
+
+		// ??
+
 		match.estimated3D(point3D); // relative
 	}
 }
@@ -2352,6 +2355,9 @@ Stereopsis.P3D.prototype.calculateAbsoluteLocationDLT = function(world, dontInse
 			console.log(matches);
 			console.log("dontInsert "+location);
 			throw "NANNN";
+		}
+		if(location===null){
+			console.log("calculateAbsoluteLocationDLT => "+null);
 		}
 		world.updatePoint3DLocation(point3D,location);
 	}else{
@@ -4603,6 +4609,16 @@ if(debug){
 			if(s==Infinity){
 				throw "infinite size";
 			}
+if( Code.isNaN(up2D.x) ){
+	console.log(point3D);
+	console.log(p3D);
+	console.log(points2D);
+	console.log([up2D.copy(),dn2D.copy(),lf2D.copy(),ri2D.copy()]);
+	console.log(parallelUp);
+	console.log(parallelRi);
+	console.log(center2D);
+	throw "NAN pts";
+}
 			sizes.push(s);
 			pts.push([up2D.copy(),dn2D.copy(),lf2D.copy(),ri2D.copy()]);
 			// 3D distance
@@ -4631,10 +4647,16 @@ if(debug){
 					// affine directly: more accurate for actual projections
 					// if(false){
 					if(true){
+						try{
 						var affine = R3D.affineCornerMatrixLinear(ptsA,ptsB, new Matrix2D());
 						var match = point3D.matchForViews(viewA,viewB);
 							match.affineForViews(viewA,viewB, affine);
+						}catch(e){
+							console.log("affineCornerMatrixLinear - convergence error?");
+							console.log(ptsA,ptsB);
+							throw e;
 							// match.affineForViews(viewB,viewA, affine);
+						}
 					// affine from summary stats:
 					}else{
 						var scale = distB/distA; // TODO: is scale distance or PERPENDICULAR-NORMAL distance ratio?
@@ -5671,13 +5693,19 @@ Stereopsis.World.prototype.solveOptimizeSingleView = function(viewSolve){ // mov
 
 Stereopsis.World.prototype.refineAllCameraMultiViewTriangulation = function(maxIterations, onlyLongTracks){
 	onlyLongTracks = Code.valueOrDefault(onlyLongTracks, false);
-	console.log("refineAllCameraMultiViewTriangulation: "+maxIterations);
 	var world = this;
 	var listExts = [];
 	var listKs = [];
 	var listKinvs = [];
 	
 	var views = world.toViewArray();
+
+	if(!maxIterations){
+		maxIterations = 100*views.length;
+		maxIterations = Math.min(maxIterations, 100);
+	}
+	console.log("refineAllCameraMultiViewTriangulation: "+maxIterations);
+
 	var viewIDToIndexHash = {};
 	for(var i=0; i<views.length; ++i){
 		var view = views[i];
@@ -5689,11 +5717,11 @@ Stereopsis.World.prototype.refineAllCameraMultiViewTriangulation = function(maxI
 		listKinvs.push(Kinv);
 		viewIDToIndexHash[view.id()] = i;
 	}
-	
+
 	var listPoints2D = [];
 
 	var points3D = world.toPointArray();
-console.log(" points total : "+points3D.length);
+	console.log(" points total : "+points3D.length);
 	for(var i=0; i<points3D.length; ++i){
 		var point3D = points3D[i];
 		var points2D = point3D.toPointArray();
@@ -5703,26 +5731,23 @@ console.log(" points total : "+points3D.length);
 		var entryP3D = [];
 		for(var j=0; j<points2D.length; ++j){
 			var p2D = points2D[j];
-			var view = pt2D.view();
+			var view = p2D.view();
 			var viewID = view.id();
 			var viewIndex = viewIDToIndexHash[viewID];
-			var entryP2D = [pt2D.point2D(),viewIndex];
+			var entryP2D = [p2D.point2D(),viewIndex];
 			entryP3D.push(entryP2D);
 		}
 		listPoints2D.push(entryP3D);
 	}
-
-
-	var result = R3D.optimizeAllCameraExtrinsicDLTNonlinear(listExts, listKs, listKinvs, listPoints2D, maxIterations);
+	var result = R3D.optimizeAllCameraExtrinsicDLTNonlinear(listExts, listKs, listKinvs, listPoints2D, maxIterations, true); // negative bad?
 	var listP = result["matrixes"];
 	for(var i=0; i<views.length; ++i){
-		var p = listP[i];
+		var P = listP[i];
+		// console.log("P_"+i+" = \n"+p);
 		var view = views[i];
 		view.absoluteTransform(P);
 	}
-	
-
-	throw "?"
+	// throw "?"
 }
 
 Stereopsis.World.prototype.refineSelectCameraMultiViewTriangulation = function(selectView, maxIterations, onlyLongTracks){ 
@@ -5771,10 +5796,6 @@ console.log(selectView.data()+" : "+points2D.length);
 			}
 		// }
 	}
-	// console.log("viewMatchCounts");
-	// console.log(viewMatchCounts);
-
-
 	// get statistical information
 	var countMax = Code.max(viewMatchCounts);
 	var countSig = Code.stdDev(viewMatchCounts, countMax);
@@ -5791,11 +5812,6 @@ console.log(selectView.data()+" : "+points2D.length);
 			passingViewHash[key] = 0;
 		}
 	}
-// console.log("viewPointHash");
-// console.log(viewPointHash);
-
-// console.log("passingViewHash");
-// console.log(passingViewHash);
 
 	// recount with included views
 	var points3DKeep = [];
@@ -5834,10 +5850,6 @@ console.log(selectView.data()+" : "+points2D.length);
 		}
 		points3DKeep.push(point3D);
 	}
-	// console.log(passingViewHash);
-	// console.log(points3DKeep.length);
-	// console.log(viewsKeepHash);
-
 	// sample included lists if over max
 	if(points3DKeep.length>maximumMatchTotal){
 		Code.randomPopArray(points3DKeep,maximumMatchTotal);
@@ -5892,9 +5904,13 @@ console.log(selectView.data()+" : "+points2D.length);
 		throw "??????????????"
 		return false;
 	}
+	// var result = R3D.optimizeMultipleCameraExtrinsicDLTNonlinear(listExts, listKs, listKinvs, selectViewIndex, listPoints2D, maxIterations);
+	console.log(listExts, listKs, listKinvs, selectViewIndex, listPoints2D, maxIterations);
+	console.log("? optimizeMultipleCameraExtrinsicDLTNonlinear ?");
 	var result = R3D.optimizeMultipleCameraExtrinsicDLTNonlinear(listExts, listKs, listKinvs, selectViewIndex, listPoints2D, maxIterations);
 	var P = result["P"];
 	selectView.absoluteTransform(P);
+	// throw "?"
 	return true;
 }
 
@@ -6514,7 +6530,7 @@ GLOBALSTAGE.addChild(d);
 	throw "testing out fxn";
 }
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-Stereopsis.World.prototype.solveDenseGroup = function(inputPairs){ // multiple (3+)
+Stereopsis.World.prototype.solveDenseGroup = function(inputPairs, completeSolveFxn){ // multiple (3+)
 	var world = this;
 // throw "..."
 	var transforms = world.toTransformArray();
@@ -6681,9 +6697,6 @@ for(var i=0; i<inputPairs.length; ++i){
 	world.relativeFFromSamples();
 	world.estimate3DErrors(true);
 
-	// console.log("transforms:");
-	// console.log(transforms);
-
 // refineSelectCameraMultiViewTriangulation
 	
 	// try getting updated view locations:
@@ -6746,7 +6759,7 @@ console.log("RICHIE REFINE A SINGLE VIEW ???");
 	
 
 	// each view ...
-	var wiggleCount = 2;
+	var wiggleCount = 1;
 	for(var i=0; i<wiggleCount; ++i){
 		for(var v=0; v<views.length; ++v){
 			var view = views[v];
@@ -6754,19 +6767,44 @@ console.log("RICHIE REFINE A SINGLE VIEW ???");
 			world.copyRelativeTransformsFromAbsolute();
 		}
 	}
-	world.relativeFFromSamples();
-	world.estimate3DErrors(true);
+	// world.relativeFFromSamples();
+	// world.estimate3DErrors(true);
+
+console.log("minimize error of all cameras at once");
+world.refineAllCameraMultiViewTriangulation();
+world.copyRelativeTransformsFromAbsolute();
+for(var v=0; v<views.length; ++v){
+	var view = views[v];
+	console.log(" "+v+"::::::::::::::::::::::::::::\n"+view.absoluteTransform());
+}
+
+for(var t=0; t<transforms.length; ++t){
+	var transform = transforms[t];
+	console.log(" "+t+"++++++++++++++++++++\n"+transform.R());
+}
+
+// throw "ALL THE SAME ?";
+
+var points = world.toPointArray();
+console.log(points);
+
+world.relativeFFromSamples();
+world.estimate3DErrors(true);
+world.points3DFromDLT();
+
+console.log("SPHERE .............................");
+world.patchInitBasicSphere(true);
 
 
-world.refineAllCameraMultiViewTriangulation(1000);
-throw "minimize all at once"
 
+// throw "minimize all at once"
 
 // throw "before main loop"
 
-	var subdivisions = 0; // ~1k
+console.log("RICHIE MAIN LOOP");
+	// var subdivisions = 0; // ~1k
 	// var subdivisions = 1; // 5-10k
-	// var subdivisions = 2; // ~40k  --- select
+	var subdivisions = 2; // ~40k  --- select
 	// var subdivisions = 3; // ~100k
 	var iterations = 3; // per grid size
 	// var iterations = 5;
@@ -6798,7 +6836,7 @@ throw "minimize all at once"
 		world.estimate3DErrors(true);
 
 		world.points3DFromDLT();
-
+console.log("refine a - refineSelectCameraMultiViewTriangulation")
 		// refine cameras
 		for(var v=0; v<views.length; ++v){
 			var view = views[v];
@@ -6819,7 +6857,7 @@ throw "minimize all at once"
 		//
 		// ???
 		// world.probe3DGlobal(1.5, 1.5); // 1 - 2
-
+console.log("refine b - refineSelectCameraMultiViewTriangulation")
 		// update world estimate
 		for(var v=0; v<views.length; ++v){
 			var view = views[v];
@@ -6849,7 +6887,10 @@ throw "minimize all at once"
 
 	var str = world.toYAMLString();
 	console.log(str);
-	throw "solve dense group .. ";
+	console.log("solve dense group .. ");
+	if(completeSolveFxn){
+		completeSolveFxn(world);
+	}
 }
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

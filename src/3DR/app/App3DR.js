@@ -7692,7 +7692,7 @@ console.log("checkPerformNextTask");
 		project.iterateDenseProcess();
 		return;
 	}
-throw ">start bundle";
+// throw ">start bundle";
 	if(!project.checkHasBundleStarted()){
 		project.initializeBundleGroupsFromDense();
 		return;
@@ -8806,6 +8806,8 @@ console.log(" save graph ");
 		}
 // throw "C"
 		if(graphGroups.length==bundleGroupIndex){
+
+			console.log(graphGroups);
 
 /*
 			// combine groups to single graph using skeleton view's offset as origin
@@ -10917,12 +10919,14 @@ App3DR.ProjectManager.prototype._doDenseGroupsStereopsis = function(groupData, c
 		// world.resolveIntersectionByPatchVisuals();
 		// throw "???"
 		// solveDenseGroup
-		world.solveDenseGroup(comparePairs);
+		world.solveDenseGroup(comparePairs, solveDenseGroupComplete);
 		console.log("?????????????????????????????");
-		// 
-		var str = world.toYAMLString();
-		console.log(str);
-		throw "solve dense group .. ";
+	}
+
+	var solveDenseGroupComplete = function(world){
+		console.log("solveDenseGroupComplete");
+		// var str = world.toYAMLString();
+		// console.log(str);
 		completeFxn(world.toObject());
 	}
 
@@ -11137,7 +11141,7 @@ App3DR.ProjectManager.prototype._initializeAbsoluteViewsFromGroups = function(vi
 		var final = finalP[i];
 		finalP[i] = Matrix.inverse(final);
 	}
-
+/*
 	// to output
 	var viewsFinal = [];
 	for(var i=0; i<viewsInitial.length; ++i){
@@ -11151,8 +11155,10 @@ App3DR.ProjectManager.prototype._initializeAbsoluteViewsFromGroups = function(vi
 		viewFinal["transform"] = finalP[i].toObject();
 		viewsFinal.push(viewFinal);
 	}
-
-
+*/
+	console.log("just keep initial views ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+	viewsFinal = viewsInitial;
+// throw "?"
 	return {"views":viewsFinal};
 }
 
@@ -11785,6 +11791,7 @@ App3DR.ProjectManager.prototype.iterateBundleProcess = function(){
 			}
 			var savedBundleCompleteFxn = function(s){
 				console.log("savedBundleCompleteFxn");
+				project._taskDoneCheckReloadURL();
 			}
 			console.log(bundlePathBase,viewsFileName);
 			var viewsDataPath = Code.appendToPath(bundlePathBase,viewsFileName);
@@ -11815,6 +11822,7 @@ App3DR.ProjectManager.prototype.iterateBundleProcess = function(){
 
 			var projectSavedFxn = function(){
 				console.log("projectSavedFxn");
+				project._taskDoneCheckReloadURL();
 			}
 
 			var loadedViewDataFxn = function(data){
@@ -11852,6 +11860,7 @@ console.log(groupData);
 			groupData["transforms"] = worldTransforms;
 			groupData["cameras"] = worldCameras;
 			groupData["points"] = worldPoints;
+// throw "save group ?";
 		project.saveFileFromData(groupData, groupDataPath, completedSaveGroupFxn, project);
 	}
 
@@ -12078,6 +12087,7 @@ App3DR.ProjectManager.prototype.initializeSurfaceFromBundle = function(){ // cre
 	}
 	var savedProjectCompleteFxn = function(){
 		console.log("savedProjectCompleteFxn");
+		project._taskDoneCheckReloadURL();
 	}
 	project.loadDataFromFile(viewsFilename, loadedViewsFxn);
 	project.loadDataFromFile(pointsFilename, loadedPointsFxn);
@@ -12182,6 +12192,7 @@ App3DR.ProjectManager.prototype.iterateSurfaceProcess = function(){
 		surfaceData["triangleCount"] = triangleCount;
 		var fxnSaveSurfaceComplete = function(){
 			console.log("saved surfaceData");
+			project._taskDoneCheckReloadURL();
 		}
 		var fxnSaveTrianglesComplete = function(){
 			console.log("saved triangleData");
@@ -12321,8 +12332,9 @@ App3DR.ProjectManager.prototype.iterateSurfaceProcess = function(){
 		var texturePageCount = pagesCount;
 		// console.log(textureTriCount,texturePageCount);
 		console.log(textureData);
-		var fxnSaveSurfaceComplete = function(){
+		var fxnSaveSurfaceComplete = function(){ // initial copy / setup done
 			console.log("saved surfaceData");
+			project._taskDoneCheckReloadURL();
 		}
 		var fxnSaveTexturesComplete = function(){
 			console.log("saved textureData");

@@ -355,12 +355,13 @@ https://cloud.google.com/appengine/docs/nodejs/
 
 TIMELINES:
 
-06/01 - aggregate groups
-06/03 - aggregate points
-06/06 - test 'full' set of 25 images
+
+06/13 - test 'full' set of 25 images
 		- automate URL refresh for sections of code
-06/13 - test set of ~ 50 images x (this will require 2-10 x speed ups)
-06/27 - MVP
+06/20 - update track_full logic: pairs + nonlinear estimate + solve all views at once
+06/23 - use track points as seeds / not from-scratch pairs?
+06/27 - test set of ~ 50 images x (this will require 2-10 x speed ups)
+07/18 - MVP
 
 MISSING:
 - mass-dense point aggregation via merging separate P3D files
@@ -381,16 +382,24 @@ MISSING:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+- try dense group with entire view graph together to know what the best COULD be -- single group
+	- use seed points as passed original track points (not found new seeds)
+	- 
 
-- individual track groups look good
-- full track combining locations are bad?
-	- relative offset + combine ?
-	- algorithm?
-		- points used [dense vs tracks]?
-		- error reduction method (camera matrix soln)
+- dense points are still fairly fuzzy
+	- higher resolution images
+	- prevent groups from optimizing view locations?
+
+	- do point 2d intersections on group combines ? [1/4-1/10 cell size ?]
 
 
-
+- dense points are not getting combined correctly
+	- TRY:
+		- use original view locations
+		A)
+			- same dense point2Ds
+		B) 
+			- separate dense groups not optimize orientation
 
 - find initial starting locations using nonlinear skeleton-static? angle-error
 Code.graphAbsoluteUpdateFromRelativeTransforms = function(initialP, edges, maxIterations){
@@ -409,6 +418,12 @@ full_pairs: ~ views x 3 ~ 33, not 11 x (10) / 2 ~ 50
 
 
 
+
+
+
+- how to handle points very far away => infinity
+	- need to recognize when they exists
+	- project to sphere surface ?
 
 
 
