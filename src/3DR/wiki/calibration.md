@@ -9,11 +9,11 @@ http://studierstube.icg.tugraz.at/thesis/marker_detection.pdf
 http://drops.dagstuhl.de/opus/volltexte/2011/3095/pdf/6.pdf
 
 - detect grid on the screen
-    - find corner points
-    - detect squares / rects
-    - estimate lines
-    - hough transform
-    - 
+	- find corner points
+	- detect squares / rects
+	- estimate lines
+	- hough transform
+	- 
 
 - orientate grid & find known points
 - map known points into 
@@ -28,18 +28,18 @@ calibrateCameraMatrix
 
 
 ALG:
-    - find blobs (black squares)
-    - find corners
-    - find corners of blobs (based on nearest 4? points) => squares
-    - join neighbor square corners => connected grid => (use local topology to drop extra connections ?)
-        - items with 4 connections are interrior
-        - others are exterrior
-            - edges = 2 connections
-            - corners = 1 connection
-    - opposite of 4 corners is exterrior box
-        - choose one corner to be 0 | 0
-            - closest to R | G | B squares ?
-    - iterate thru points
+	- find blobs (black squares)
+	- find corners
+	- find corners of blobs (based on nearest 4? points) => squares
+	- join neighbor square corners => connected grid => (use local topology to drop extra connections ?)
+		- items with 4 connections are interrior
+		- others are exterrior
+			- edges = 2 connections
+			- corners = 1 connection
+	- opposite of 4 corners is exterrior box
+		- choose one corner to be 0 | 0
+			- closest to R | G | B squares ?
+	- iterate thru points
 
 
 
@@ -64,7 +64,7 @@ lense distortion:
 
 
 dx = [2*k3*x*y + k4*(r^2 + 2*x^2)]
-     [k3*(r^2 + 2*y^2) + 2*k4*x*y]
+	 [k3*(r^2 + 2*y^2) + 2*k4*x*y]
 
 
 [xp] = [f1*xd + cc1]
@@ -109,9 +109,9 @@ cx ? cy ?
 r_clean^2 = x_clean^2 + y_clean^2
 
 x_distorted = x_clean + k1*x_clean*r_distorted^2 + k2*x_clean*r_distorted^4 + k3*x_clean*r_distorted^6
-            + 2*p1*x_clean*y_clean + p2*(r_clean^2 + 2*x_clean^2)
+			+ 2*p1*x_clean*y_clean + p2*(r_clean^2 + 2*x_clean^2)
 y_distorted = y_clean + k1*y_clean*r_distorted^2 + k2*y_clean*r_distorted^4 + k3*y_clean*r_distorted^6
-            + 2*p2*x_clean*y_clean + p1*(r_clean^2 + 2*y_clean^2)
+			+ 2*p2*x_clean*y_clean + p1*(r_clean^2 + 2*y_clean^2)
 
 
 [coeff] * [variables]' = [0]
@@ -175,14 +175,14 @@ find: x_u
 from DISTORTED (original) image to => UNDISTORTED (rectified) image
 
 for each pixel in rectified image: x_u,y_u
-    x_d,y_d = f(x_u,y_u)
-    pixel value = distorted(x_d,y_d)
-    rectified(x_u,y_u) = pixel value
+	x_d,y_d = f(x_u,y_u)
+	pixel value = distorted(x_d,y_d)
+	rectified(x_u,y_u) = pixel value
 
 
 
 function that takes undistorted locations, outputs: distorted locations:
-    f(x_u,y_u) => x_d,y_d
+	f(x_u,y_u) => x_d,y_d
 
 
 
@@ -190,14 +190,107 @@ function that takes undistorted locations, outputs: distorted locations:
 
 
 iterate on all values:
-    K(5?), k1,k2,k3, p1,p2
+	K(5?), k1,k2,k3, p1,p2
 calculate total error:
-    SUM( (x_d_i,y_d_i) - f(x_i,y_i) )
+	SUM( (x_d_i,y_d_i) - f(x_i,y_i) )
 
-    f(3D point, K, ki, pi)
-        3D => K => ki,pi => x_u_i,y_u_i => distort() => x_d'_i,y_d'_i
+	f(3D point, K, ki, pi)
+		3D => K => ki,pi => x_u_i,y_u_i => distort() => x_d'_i,y_d'_i
 
 follow error gradient to solution
+
+
+
+
+
+### GRID - MANUAL CALIBRATION
+
+http://staff.fh-hagenberg.at/burger/publications/reports/2016Calibration/Burger-CameraCalibration-20160516.pdf
+https://imagingbook.files.wordpress.com/2013/06/burgerburgeen20071104_ijreference_letter.pdf
+
+
+- input = grid plane
+
+- intial estimate K
+	- linear?
+	- nonlinear?
+
+- initial estimate distortion (D)
+	- linear
+	- nonlinear
+
+- repeat K & D estimate (nonlinearly)
+	- separate?
+	- together?
+
+
+- estimate all Pi?
+
+- nonlinear minimize reprojection error:
+	- K: fx fy s cx cy
+	- D: k0 k1 p0 p1 p2
+	derived:
+		Xi
+		Pi
+
+undistorting image:
+	forward transform:
+	X -> P -> X' 			# extrinsic camera orientate point to local coordinates
+	X' -> X'/Z' -> x 		# ideal point projection for pinhole camera
+	x -> distort -> x' 		# radial/tangental distortion of lense
+	x' -> K -> x'' 			# intrinsic camera mapping
+
+	for each pixel in undistored image:
+		apply transform to get distorted (observed source) image location:
+			x_undistorted -> Kinv -> distortion -> K -> x_distorted  [interpolate color value]
+	if any undistorted perimeter points are NOT OUTSIDE:
+		double size of grid and solve for remaining image pixels [this has new image center offset]
+	crop undistorted image
+	K must be updated to new center of image offset
+	include INTERRIOR & EXTERRIOR MASKING
+
+can use grid if transform takes a long time:
+	make a grid of points at some resolution size of original image
+	interpolate final location based on 2D interpolation in grid
+
+
+
+### AUTO CALIBRATION / SELF CALIBRATION
+
+http://www.robots.ox.ac.uk:5000/~vgg/publications/1996/Armstrong96a/armstrong96a.pdf
+
+
+- find similar features in images: a -> b
+
+- estimate F
+
+- estimate TFT ?
+
+- assume initial K: 
+[f, 0, w/2]
+[0, f, h/2]
+[0, 0,   1]
+
+	- can F be picked as eg: 1?
+
+- estimate K
+
+- estimate D
+
+....
+
+...
+
+
+
+
+
+
+
+
+
+
+
 
 
 

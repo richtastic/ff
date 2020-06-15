@@ -7699,7 +7699,6 @@ console.log("checkPerformNextTask");
 	}
 // throw "> continue bundle";
 	if(!project.checkHasBundleEnded()){
-		// project.loadDenseGroupsStereopsis(); // TEST EXAMPLE
 		project.iterateBundleProcess();
 		return;
 	}
@@ -10917,7 +10916,7 @@ App3DR.ProjectManager.prototype._doDenseGroupsStereopsis = function(groupData, c
 		world.checkForIntersections(true);
 		world.resolveIntersectionByDefault();
 		// world.resolveIntersectionByPatchVisuals();
-		// throw "???"
+		throw "??? before solveDenseGroup "
 		// solveDenseGroup
 		world.solveDenseGroup(comparePairs, solveDenseGroupComplete);
 		console.log("?????????????????????????????");
@@ -11401,9 +11400,14 @@ App3DR.ProjectManager.prototype.initializeBundleGroupsFromDense = function(){
 		// var overlapDesired = 1;
 
 		// small
-		var groupSize = 4;
-		var groupTolerance = 1; // 3-5
-		var overlapDesired = 2; // up to 7
+		// var groupSize = 4;
+		// var groupTolerance = 1; // 3-5
+		// var overlapDesired = 2; // up to 7
+
+		// single group
+		var groupSize = 100;
+		var groupTolerance = 0;
+		var overlapDesired = 0;
 
 		// med
 		// var groupSize = 6;
@@ -11442,9 +11446,9 @@ App3DR.ProjectManager.prototype.initializeBundleGroupsFromDense = function(){
 			return a.length < b.length ? -1 : 1;
 		});
 		console.log(groups);
-		// calculateBundleGroupsFxn(denseViews, groups, densePoints, denseCameras);
-		// loadAllGroupPairs(denseViews, groups, densePoints, denseCameras);
-		calculateBundleGroupsBasicFxn(denseViews, groups, densePoints, denseCameras);
+		calculateBundleGroupsFxn(denseViews, groups, densePoints, denseCameras); // load & keep only relevant tracks 
+		// loadAllGroupPairs(denseViews, groups, densePoints, denseCameras); // load points from pairs (relative / track)
+		// calculateBundleGroupsBasicFxn(denseViews, groups, densePoints, denseCameras); // do nothing
 	}
 
 	var bundleData = null;
@@ -11544,13 +11548,21 @@ App3DR.ProjectManager.prototype.initializeBundleGroupsFromDense = function(){
 				bundleGroupData["transforms"] = null;
 			bundleGroupList.push(bundleGroupData);
 			// SAVE GROUP TO FILE:
+throw "before save basic";
 			var fullGroupPath = Code.appendToPath(bundleBaseDirectory, groupFilename);
 			project.saveFileFromData(groupData, fullGroupPath, saveGroupFileFxn, project);
 		}
 	}
-/*
-	var calculateBundleGroupsFxn = function(views, groups, points, cameras){
 
+
+
+
+
+
+
+
+	var calculateBundleGroupsFxn = function(views, groups, points, cameras){
+throw "calculateBundleGroupsFxn ... ";
 		var bundleGroupList = [];
 		bundleData = {};
 			bundleData["groupCount"] = groups.length;
@@ -11624,8 +11636,12 @@ App3DR.ProjectManager.prototype.initializeBundleGroupsFromDense = function(){
 			project.saveFileFromData(groupData, fullGroupPath, saveGroupFileFxn, project);
 		}
 	}
-*/
+
+
+
+
 /*
+
 	var expectedGroupCount = null;
 	var completedGroupCount = null;
 
@@ -11689,26 +11705,30 @@ App3DR.ProjectManager.prototype.initializeBundleGroupsFromDense = function(){
 		// 
 	}
 
-		var totalPointCount = 0;
-		var expectedFileCount = 0;
-		var loadedFileCount = 0;
+	var totalPointCount = 0;
+	var expectedFileCount = 0;
+	var loadedFileCount = 0;
 
-		var handleGroupDensePairLoaded = function(data){
-			// console.log("handleGroupDensePairLoaded");
-			++loadedFileCount;
-			var points = data["points"];
-			var pointCount = points.length;
-			totalPointCount += pointCount;
-			console.log(pointCount,totalPointCount);
-			Code.arrayPushArray(singleGroupData["points"],points);
-			if(loadedFileCount==expectedFileCount){
-				console.log(singleGroupData["points"].length);
-				var str = YAML.parse(singleGroupData);
-				console.log(str);
-			} 
-		}
-
+	var handleGroupDensePairLoaded = function(data){
+		// console.log("handleGroupDensePairLoaded");
+		++loadedFileCount;
+		var points = data["points"];
+		var pointCount = points.length;
+		totalPointCount += pointCount;
+		console.log(pointCount,totalPointCount);
+		Code.arrayPushArray(singleGroupData["points"],points);
+		if(loadedFileCount==expectedFileCount){
+			console.log(singleGroupData["points"].length);
+			var str = YAML.parse(singleGroupData);
+			console.log(str);
+		} 
+	}
 */
+
+
+
+
+
 	var saveGroupFileFxn = function(){
 		++completedGroupCount;
 		console.log("saveGroupFileFxn: "+completedGroupCount+" / "+expectedGroupCount);

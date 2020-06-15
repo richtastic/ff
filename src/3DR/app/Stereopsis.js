@@ -5905,8 +5905,7 @@ console.log(selectView.data()+" : "+points2D.length);
 		return false;
 	}
 	// var result = R3D.optimizeMultipleCameraExtrinsicDLTNonlinear(listExts, listKs, listKinvs, selectViewIndex, listPoints2D, maxIterations);
-	console.log(listExts, listKs, listKinvs, selectViewIndex, listPoints2D, maxIterations);
-	console.log("? optimizeMultipleCameraExtrinsicDLTNonlinear ?");
+	// console.log("? optimizeMultipleCameraExtrinsicDLTNonlinear ?");
 	var result = R3D.optimizeMultipleCameraExtrinsicDLTNonlinear(listExts, listKs, listKinvs, selectViewIndex, listPoints2D, maxIterations);
 	var P = result["P"];
 	selectView.absoluteTransform(P);
@@ -6532,6 +6531,9 @@ GLOBALSTAGE.addChild(d);
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 Stereopsis.World.prototype.solveDenseGroup = function(inputPairs, completeSolveFxn){ // multiple (3+)
 	var world = this;
+
+	var doCameraViewRefine = false;
+
 // throw "..."
 	var transforms = world.toTransformArray();
 	var views = world.toViewArray();
@@ -6838,10 +6840,13 @@ console.log("RICHIE MAIN LOOP");
 		world.points3DFromDLT();
 console.log("refine a - refineSelectCameraMultiViewTriangulation")
 		// refine cameras
-		for(var v=0; v<views.length; ++v){
-			var view = views[v];
-			world.refineSelectCameraMultiViewTriangulation(view, 500);
-			world.copyRelativeTransformsFromAbsolute();
+		if(doCameraViewRefine){
+			for(var v=0; v<views.length; ++v){
+				var view = views[v];
+				// world.refineSelectCameraMultiViewTriangulation(view, 500);
+				world.refineSelectCameraMultiViewTriangulation(view, 100);
+				world.copyRelativeTransformsFromAbsolute();
+			}
 		}
 		world.relativeFFromSamples();
 		// refine points
@@ -6859,10 +6864,13 @@ console.log("refine a - refineSelectCameraMultiViewTriangulation")
 		// world.probe3DGlobal(1.5, 1.5); // 1 - 2
 console.log("refine b - refineSelectCameraMultiViewTriangulation")
 		// update world estimate
-		for(var v=0; v<views.length; ++v){
-			var view = views[v];
-			world.refineSelectCameraMultiViewTriangulation(view, 500);
-			world.copyRelativeTransformsFromAbsolute();
+		if(doCameraViewRefine){
+			for(var v=0; v<views.length; ++v){
+				var view = views[v];
+				// world.refineSelectCameraMultiViewTriangulation(view, 500);
+				world.refineSelectCameraMultiViewTriangulation(view, 100);
+				world.copyRelativeTransformsFromAbsolute();
+			}
 		}
 		world.relativeFFromSamples();
 		// new errors

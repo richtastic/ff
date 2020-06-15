@@ -356,12 +356,17 @@ https://cloud.google.com/appengine/docs/nodejs/
 TIMELINES:
 
 
-06/13 - test 'full' set of 25 images
-		- automate URL refresh for sections of code
+
+- 360 object scene ~ 10 images
+
+
 06/20 - update track_full logic: pairs + nonlinear estimate + solve all views at once
 06/23 - use track points as seeds / not from-scratch pairs?
-06/27 - test set of ~ 50 images x (this will require 2-10 x speed ups)
-07/18 - MVP
+
+? - test 'full' set of 25 images
+		- automate URL refresh for sections of code
+? - test set of ~ 50 images x (this will require 2-10 x speed ups)
+? - MVP
 
 MISSING:
 - mass-dense point aggregation via merging separate P3D files
@@ -382,12 +387,69 @@ MISSING:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
+R3D.linearCameraDistortion
+
+R3D.BundleAdjustCameraParameters(
+
+R3D.applyCameraDistortion
+
+
+
+
+- triangulation:
+	- some triangles are black?
+		- pulling texture from points outside image?
+		- pulling texture form 
+	- edges are choppy
+
+	- missing triangles in random places
+
+
+- camera calibration - CHECK TO SEE IF UNDISTORTED IMAGES IS MUCH DIFFERENT (to help accuracy?)
+
+	- test synthetic scenarios
+		...
+	- image rectify
+		...
+	- 
+
+
+
 - try dense group with entire view graph together to know what the best COULD be -- single group
 	- use seed points as passed original track points (not found new seeds)
 	- 
+	- towards end: drop everything with error > 1-2 pixel ?
+
+
+
+
+
+
+
+- triangulation should be ok with some 'holes' -- large disparity -- in size
+
+- triangulating recognizing empty perimeter => fill in hole with triangles
+
+- 
+
+
+initializeBundleGroupsFromDense
+
+
+
+iterateBundleProcess
+
+
+
+
+
+
+
+
 
 - dense points are still fairly fuzzy
-	- higher resolution images
+	- higher resolution images?
 	- prevent groups from optimizing view locations?
 
 	- do point 2d intersections on group combines ? [1/4-1/10 cell size ?]

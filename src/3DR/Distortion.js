@@ -46,11 +46,11 @@ Distortion.prototype.imagesLoadComplete = function(imageInfo){
 	// K
 	var K = [ 3.7576E+2 , -1.7370E+0 , 1.9356E+2 ,  0.0000E+0 , 3.8050E+2 , 1.6544E+2 ,  0.0000E+0 , 0.0000E+0 , 1.0000E+0 ];
 	K = new Matrix(3,3).fromArray(K);
-
+	
 	// distortion
 	var distFwd = [0.000008307734426799319, -3.377152135790497e-10, 3.5230315771502345e-15, 0.000013584543511478514, 0.000012701653003035555]; // forward
 	var distRev = [-0.0000078775062568953, 2.739331666780191e-10, -2.6835259486512955e-15, 0.000014738976576623628, -0.00001788406255261619]; // inverted
-
+	
 	var dist = distFwd;
 	var distortion = {};
 	distortion["k1"] = dist[0];
@@ -59,7 +59,7 @@ Distortion.prototype.imagesLoadComplete = function(imageInfo){
 	distortion["p1"] = dist[3];
 	distortion["p2"] = dist[4];
 	var distortionFwd = distortion;
-
+	
 	var dist = distRev;
 	var distortion = {};
 	distortion["k1"] = dist[0];
@@ -68,7 +68,6 @@ Distortion.prototype.imagesLoadComplete = function(imageInfo){
 	distortion["p1"] = dist[3];
 	distortion["p2"] = dist[4];
 	var distortionRev = distortion;
-
 
 	// // // playing
 	// distortion = distortionFwd;

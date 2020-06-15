@@ -155,7 +155,19 @@ ImageMat.prototype.get = function(x,y, val){
 }
 ImageMat.prototype.getPoint = function(val, x,y){
 	this.getPointInterpolateCubic(val,x,y);
-	//return getPointInterpolateNearest(val,x,y);
+	
+}
+ImageMat.prototype.getPointNearest = function(val, x,y){
+	throw "todo";
+	// return getPointInterpolateNearest(val,x,y);
+}
+ImageMat.prototype.getPointLinear = function(val, x,y){
+	throw "todo";
+	// return getPointInterpolateLinear(val,x,y);
+}
+ImageMat.prototype.getPointCubic = function(val, x,y){
+	throw "todo";
+	// this.getPointInterpolateCubic(val,x,y);
 }
 ImageMat.prototype.fill = function(color){
 	var r = this._r;

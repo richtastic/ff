@@ -1047,9 +1047,9 @@ Graph.groupsFromEdges = function(edges, k, tolerance, overlapDesired){ // k grou
 		maxVertex = Math.max(b, maxVertex);
 	}
 	var vertexCount = maxVertex+1;
-	if(k>=vertexCount){
-		throw "too many groups";
-	}
+	// if(k>=vertexCount){
+	// 	throw "too many groups: "+k+" >= "+vertexCount;
+	// }
 	// create vertexes
 	var graphVertexes = [];
 	for(var i=0; i<=maxVertex; ++i){
@@ -1076,7 +1076,7 @@ Graph.groupsFromEdges = function(edges, k, tolerance, overlapDesired){ // k grou
 	var groupSize = k;
 	var groupSizeMin = groupSize - tolerance;
 	var groupSizeMax = groupSize + tolerance;
-	var groupCount = Math.ceil(vertexCount/groupSize);
+	var groupCount = Math.max(Math.round(vertexCount/groupSize),1);
 // groupCount = 6;
 // groupCount = 1;
 	// sprinkle group objects around vertexes

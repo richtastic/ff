@@ -3283,7 +3283,7 @@ Code.covariance3D = function(points,weights){
 		meanX += points[i].x; meanY += points[i].y; meanZ += points[i].z;
 	}
 	sigXX = 0; sigXY = 0; sigXZ = 0; sigYY = 0; sigYZ = 0; sigZZ = 0;
-	meanX /= len; meanY /= len;
+	meanX /= len; meanY /= len; meanZ /= len;
 	for(i=0;i<len;++i){
 		normX = points[i].x - meanX;
 		normY = points[i].y - meanY;
@@ -3336,14 +3336,19 @@ Code.covariance3DInfo = function(points){
 		return null;
 	}
 	var cov = info["matrix"];
+// console.log(cov+"")
 	// primary & secondary directions
 	var eigs = Matrix.eigenValuesAndVectors(cov);
 	var vectors = eigs["vectors"];
 	var values = eigs["values"];
-	var vector0 = new V2D().fromArray(vectors[0].toArray());
-	var vector1 = new V2D().fromArray(vectors[1].toArray());
-	var vector2 = new V2D().fromArray(vectors[2].toArray());
+	var vector0 = new V3D().fromArray(vectors[0].toArray());
+	var vector1 = new V3D().fromArray(vectors[1].toArray());
+	var vector2 = new V3D().fromArray(vectors[2].toArray());
 	var dirZ = V3D.cross(vector0,vector1);
+console.log(vector0+"?")
+console.log(vector1+"?")
+console.log(vector2+"?")
+
 	if(V3D.dot(vector2,dirZ)<0){
 		vector2.scale(-1);
 	}
@@ -3352,6 +3357,10 @@ Code.covariance3DInfo = function(points){
 	var eigen0 = values[0];
 	var eigen1 = values[1];
 	var eigen2 = values[2];
+console.log(eigen0+"?")
+console.log(eigen1+"?")
+console.log(eigen2+"?")
+console.log(points)
 	var sigma0 = Math.sqrt(eigen0);
 	var sigma1 = Math.sqrt(eigen1);
 	var sigma2 = Math.sqrt(eigen2);
@@ -3361,6 +3370,7 @@ Code.covariance3DInfo = function(points){
 	// info["angleZ"] = angle0;
 	info["directionX"] = vector0;
 	info["directionY"] = vector1;
+	info["directionZ"] = vector2;
 	info["sigmaX"] = sigma0;
 	info["sigmaY"] = sigma1;
 	info["sigmaZ"] = sigma2;
@@ -3437,24 +3447,70 @@ Code.normalizedPoints2D = function(points2D){ // orientate distribution into cir
 	var sigmaX = info["sigmaX"];
 	var sigmaY = info["sigmaY"];
 	// calculate forward/reverse
-	var reverse = new Matrix2D();
-		reverse.identity();
-		reverse.translate(-com.x,-com.y);
-		reverse.rotate(-angleX);
-		reverse.scale(1.0/sigmaX,1.0/sigmaY);
-	var forward = reverse.copy();
-		forward.inverse();
+// console.log(sigmaX,sigmaY);
+	var forward = new Matrix2D();
+		forward.identity();
+		forward.translate(-com.x,-com.y);
+		forward.rotate(-angleX);
+		var mulX = 1.0;
+		if(sigmaX>0){
+			mulX = 1.0/sigmaX;
+		}
+		var mulY = 1.0;
+		if(sigmaY>0){
+			mulY = 1.0/sigmaY;
+		}
+		forward.scale(mulX,mulY);
+	var reverse = forward.copy();
+		reverse.inverse();
 	// get normalized versions
 	var normalizedPoints = [];
 	for(var i=0; i<points2D.length; ++i){
 		var point = points2D[i];
-			point = reverse.multV2DtoV2D(point);
+			point = forward.multV2DtoV2D(point);
 		normalizedPoints[i] = point;
 	}
-	// forward|reverse are opposite of definition
-	return {"normalized":normalizedPoints, "forward":reverse.toMatrix(), "reverse":forward.toMatrix()};
+	return {"normalized":normalizedPoints, "forward":forward.toMatrix(), "reverse":reverse.toMatrix()};
 }
 Code.normalizedPoints3D = function(points3D){ // orientate distribution into circle @ distance of 1 = 1 sigma
+	// get statistical summary of points / distribution
+	var info = Code.covariance3DInfo(points3D);
+	var cov = info["matrix"];
+	var com = info["center"];
+	// var angleX = info["angleX"];
+	var sigmaX = info["sigmaX"];
+	var sigmaY = info["sigmaY"];
+	var sigmaZ = info["sigmaZ"];
+console.log(info);
+throw "?"
+	// calculate forward/reverse
+	var forward = new Matrix3D();
+		forward.identity();
+		forward.translate(-com.x,-com.y,-com.z);
+		// forward.rotate(-angleX);
+		var mulX = 1.0;
+		if(sigmaX>0){
+			mulX = 1.0/sigmaX;
+		}
+		var mulY = 1.0;
+		if(sigmaY>0){
+			mulY = 1.0/sigmaY;
+		}
+		var mulZ = 1.0;
+		if(sigmaZ>0){
+			mulZ = 1.0/sigmaZ;
+		}
+		forward.scale(mulX,mulY,mulZ);
+	var reverse = forward.copy();
+		reverse.inverse();
+	// get normalized versions
+	var normalizedPoints = [];
+	for(var i=0; i<points3D.length; ++i){
+		var point = points3D[i];
+			point = forward.multV3DtoV3D(point);
+		normalizedPoints[i] = point;
+	}
+	// return {"normalized":normalizedPoints, "forward":forward.toMatrix(), "reverse":reverse.toMatrix()};
 	throw "todo"
 }
 // angles ----------------------------------------------------
@@ -17196,7 +17252,8 @@ Code.rotationMatrixToEulerRodriguez = function(R){
 		rho = u.copy().scale(Math.PI);
 	}else if(pMag==0){
 		console.log(R+"");
-		throw "some other error with c: "+c;
+		console.log("some other error with c: "+c+" (is C almost 1.0 ?)");
+		rho = new V3D(0,0,0);
 	}else{ // p!=0
 		var u = p.copy().scale(1.0/pMag);
 		var theta = Math.atan2(pMag, c); //var theta = Math.atan(pMag/c);
