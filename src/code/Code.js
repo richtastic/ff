@@ -3336,38 +3336,38 @@ Code.covariance3DInfo = function(points){
 		return null;
 	}
 	var cov = info["matrix"];
-// console.log(cov+"")
-	// primary & secondary directions
+	// primary directions -- cov eigenvectors are orthogonal
 	var eigs = Matrix.eigenValuesAndVectors(cov);
+	if(!eigs){
+		console.log(cov+"")
+		console.log("take this to mean the distribution is uniform?")
+		return null;
+	}
 	var vectors = eigs["vectors"];
 	var values = eigs["values"];
 	var vector0 = new V3D().fromArray(vectors[0].toArray());
 	var vector1 = new V3D().fromArray(vectors[1].toArray());
 	var vector2 = new V3D().fromArray(vectors[2].toArray());
-	var dirZ = V3D.cross(vector0,vector1);
-console.log(vector0+"?")
-console.log(vector1+"?")
-console.log(vector2+"?")
-
-	if(V3D.dot(vector2,dirZ)<0){
-		vector2.scale(-1);
+	for(var i=0; i<values.length; ++i){
+		values[i] = Math.abs(values[i]);
 	}
-	// var angle0 = V2D.angleDirection(V3D.DIRX,vector0);
-	// var angle1 = V2D.angleDirection(V3D.DIRX,vector1);
 	var eigen0 = values[0];
 	var eigen1 = values[1];
 	var eigen2 = values[2];
-console.log(eigen0+"?")
-console.log(eigen1+"?")
-console.log(eigen2+"?")
-console.log(points)
 	var sigma0 = Math.sqrt(eigen0);
 	var sigma1 = Math.sqrt(eigen1);
 	var sigma2 = Math.sqrt(eigen2);
-	// wrap additional info
-	// info["angleX"] = angle0;
-	// info["angleY"] = angle1;
-	// info["angleZ"] = angle0;
+	// sort largest to smallest
+	var list = [[sigma0,vector0],[sigma1,vector1],[sigma2,vector2]];
+	list.sort(function(a,b){
+		return a[0]<b[0] ? 1 : -1; // bigger first
+	})
+	sigma0 = list[0][0];
+	vector0 = list[0][1];
+	sigma1 = list[1][0];
+	vector1 = list[1][1];
+	sigma2 = list[2][0];
+	vector2 = list[2][1];
 	info["directionX"] = vector0;
 	info["directionY"] = vector1;
 	info["directionZ"] = vector2;
@@ -3470,37 +3470,150 @@ Code.normalizedPoints2D = function(points2D){ // orientate distribution into cir
 			point = forward.multV2DtoV2D(point);
 		normalizedPoints[i] = point;
 	}
+	// var info = Code.covariance2DInfo(normalizedPoints);
+	// console.log(info);
 	return {"normalized":normalizedPoints, "forward":forward.toMatrix(), "reverse":reverse.toMatrix()};
 }
 Code.normalizedPoints3D = function(points3D){ // orientate distribution into circle @ distance of 1 = 1 sigma
 	// get statistical summary of points / distribution
+	var maxRatio = 1E6; // likely 2D
 	var info = Code.covariance3DInfo(points3D);
+	console.log(info);
 	var cov = info["matrix"];
 	var com = info["center"];
-	// var angleX = info["angleX"];
 	var sigmaX = info["sigmaX"];
 	var sigmaY = info["sigmaY"];
 	var sigmaZ = info["sigmaZ"];
-console.log(info);
-throw "?"
-	// calculate forward/reverse
+	var directionX = info["directionX"];
+	var directionY = info["directionY"];
+	var directionZ = info["directionZ"];
+	// console.log(" x "+sigmaX);
+	// console.log(" y "+sigmaY);
+	// console.log(" z "+sigmaZ);
+	// console.log(" X "+directionX);
+	// console.log(" Y "+directionY);
+	// console.log(" Z "+directionZ);
+	// console.log(V3D.dot(directionX,directionY));
+	// console.log(V3D.dot(directionX,directionZ));
+	// console.log(V3D.dot(directionY,directionZ));
+	var orthogonalXY = V3D.cross(directionX,directionY); 
+		orthogonalXY.norm();
+	var dot = V3D.dot(directionZ,orthogonalXY);
+	// console.log("DOT: "+dot);
+	if(dot<0){ // negative
+		directionZ.scale(-1);
+	}
+	// direction 1
+	var angleToX = V3D.angle(directionX,V3D.DIRX);
+	var orthogonalX = V3D.cross(directionX,V3D.DIRX);
+		orthogonalX.norm();
+	// directionX = V3D.rotateAngle(directionX, orthogonalX,angleToX);
+	directionY = V3D.rotateAngle(directionY, orthogonalX,angleToX);
+	directionZ = V3D.rotateAngle(directionZ, orthogonalX,angleToX);
+	// direction 2 & 3
+	var orthogonalY = V3D.cross(directionY,V3D.DIRY);
+	var angleToY = V3D.angle(directionY,V3D.DIRY);
+		orthogonalY.norm();
+	var angleToZ = V3D.angle(directionZ,V3D.DIRZ);
+	var orthogonalZ = V3D.cross(directionZ,V3D.DIRZ);
+		orthogonalZ.norm();
+	console.log(Code.degrees(angleToY),Code.degrees(angleToZ));
+// console.log("ARE THESE X ?");
+// 	console.log(orthogonalY+"");
+// 	console.log(orthogonalZ+"");
+// console.log("...");
+// if(V3D.dot(orthogonalY,V3D.DIRX)<0){
+// 	orthogonalY.flip();
+// 	orthogonalZ.flip();
+// 	// angleToY = V3D.angle(directionY,V3D.DIRY);
+// 	// angleToZ = V3D.angle(directionZ,V3D.DIRZ);
+// 	console.log("angles 2: ",Code.degrees(angleToY),Code.degrees(angleToZ));
+// }
+	// directionX = V3D.rotateAngle(directionX, V3D.DIRX,angleToY);
+	// directionY = V3D.rotateAngle(directionY, V3D.DIRX,angleToY);
+	// directionZ = V3D.rotateAngle(directionZ, V3D.DIRX,angleToY);
+
+	// directionX = V3D.rotateAngle(directionX, orthogonalY,angleToY);
+	// directionY = V3D.rotateAngle(directionY, orthogonalY,angleToY);
+	// directionZ = V3D.rotateAngle(directionZ, orthogonalY,angleToY);
+	// console.log(directionX+" 2");
+	// console.log(directionY+" 2");
+	// console.log(directionZ+" 2");
+
+	// check for 0D / 1D / 2D data
+	var mulX = 1.0;
+	var mulY = 1.0;
+	var mulZ = 1.0;
+	if(sigmaX>0){
+		mulX = 1.0/sigmaX;
+	}
+	if(sigmaY>0 && sigmaX/sigmaY<maxRatio){
+		mulY = 1.0/sigmaY;
+	}
+	if(sigmaZ>0 && sigmaX/sigmaZ<maxRatio){
+		mulZ = 1.0/sigmaZ;
+	}
+	// console.log(sigmaX/sigmaY,sigmaY/sigmaZ);
+	// console.log(mulX,mulY,mulZ);
 	var forward = new Matrix3D();
-		forward.identity();
-		forward.translate(-com.x,-com.y,-com.z);
-		// forward.rotate(-angleX);
-		var mulX = 1.0;
-		if(sigmaX>0){
-			mulX = 1.0/sigmaX;
-		}
-		var mulY = 1.0;
-		if(sigmaY>0){
-			mulY = 1.0/sigmaY;
-		}
-		var mulZ = 1.0;
-		if(sigmaZ>0){
-			mulZ = 1.0/sigmaZ;
-		}
-		forward.scale(mulX,mulY,mulZ);
+	forward.identity();
+	forward.translate(-com.x,-com.y,-com.z);
+	forward.rotateVector(orthogonalX,angleToX);
+	forward.rotateVector(orthogonalY,angleToY);
+	forward.scale(mulX,mulY,mulZ);
+	var reverse = forward.copy();
+		reverse.inverse();
+	var normalizedPoints = [];
+	for(var i=0; i<points3D.length; ++i){
+		var point = points3D[i];
+			point = forward.multV3DtoV3D(point);
+		normalizedPoints[i] = point;
+	}
+	console.log(normalizedPoints);
+	// var info = Code.covariance3DInfo(normalizedPoints);
+	// if(info){
+	// 	console.log(info);
+	// 	console.log(info["sigmaX"]);
+	// 	console.log(info["sigmaY"]);
+	// 	console.log(info["sigmaZ"]);
+	// }
+	// 
+/*
+	if(sigmaX>0){
+		console.log("DO X");
+		var mulX = 1.0/sigmaX;
+		var angleToX = V3D.angle(directionX,V3D.DIRX);
+		var orthogonalX = V3D.cross(directionX,V3D.DIRX);
+			orthogonalX.norm();
+console.log("angleToX: "+Code.degrees(angleToX)+" : "+mulX+" = "+orthogonalX);
+			forward.rotateVector(orthogonalX,angleToX);
+			forward.scale(mulX,1.0,1.0);
+			forward.rotateVector(orthogonalX,-angleToX);
+	}
+	if(sigmaY>0 && (sigmaX/sigmaY)<maxRatio){
+		console.log("DO Y");
+		var mulY = 1.0/sigmaY;
+		var angleToY = V3D.angle(directionY,V3D.DIRX);
+		var orthogonalY = V3D.cross(directionY,V3D.DIRX);
+			orthogonalY.norm();
+console.log("angleToY: "+Code.degrees(angleToY)+" : "+mulY+" = "+orthogonalY);
+			forward.rotateVector(orthogonalY,angleToY);
+			forward.scale(mulY,1.0,1.0);
+			forward.rotateVector(orthogonalY,-angleToY);
+	}
+	if(sigmaZ>0 && (sigmaX/sigmaZ)<maxRatio){
+		console.log("DO Z");
+		var mulZ = 1.0/sigmaZ;
+		var angleToZ = V3D.angle(directionZ,V3D.DIRX);
+		var orthogonalZ = V3D.cross(directionZ,V3D.DIRX);
+			orthogonalZ.norm();
+console.log("angleToZ: "+Code.degrees(angleToZ)+" : "+mulZ+" = "+orthogonalZ);
+			forward.rotateVector(orthogonalZ,angleToZ);
+			forward.scale(mulZ,1.0,1.0);
+			forward.rotateVector(orthogonalZ,-angleToZ);
+	}
+// console.log(forward+"");
+	// opposite
 	var reverse = forward.copy();
 		reverse.inverse();
 	// get normalized versions
@@ -3510,8 +3623,8 @@ throw "?"
 			point = forward.multV3DtoV3D(point);
 		normalizedPoints[i] = point;
 	}
-	// return {"normalized":normalizedPoints, "forward":forward.toMatrix(), "reverse":reverse.toMatrix()};
-	throw "todo"
+	*/
+	return {"normalized":normalizedPoints, "forward":forward.toMatrix(), "reverse":reverse.toMatrix()};
 }
 // angles ----------------------------------------------------
 Code.numbersToWindownNormalPercents = function(distances){

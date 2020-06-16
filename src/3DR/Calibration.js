@@ -38,6 +38,8 @@ function Calibration(){
 GLOBALSTAGE = this._stage;
 
 
+// this.normalizingTest();
+// return;
 	this.syntheticTest();
 	return;
 /*
@@ -60,8 +62,134 @@ GLOBALSTAGE = this._stage;
 }
 
 
+
+Calibration.prototype.normalizingTest = function(){
+	var pointCount = 1000;
+	var rangeX = 10;
+	var rangeY = 6;
+	var rangeZ = 2;
+	var offsetX = 2;
+	var offsetY = 5;
+	var offsetZ = 3;
+	var rangeXToY = rangeX/rangeY;
+	// var angleX = Code.radians(35);
+	// var angleY = Code.radians(50);
+	// var angleZ = Code.radians(10);
+	var angleX = Code.radians(0);
+	var angleY = Code.radians(0);
+	var angleZ = Code.radians(0);
+
+	var transform = new Matrix3D();
+		transform.rotateX(angleX);
+		transform.rotateY(angleY);
+		transform.rotateZ(angleZ);
+
+	transform.translate(offsetX,offsetY,offsetZ);
+
+	var points3D = [];
+
+	for(var i=0; i<pointCount; ++i){
+		
+		// // ring
+		// var ratio = 0.75; // skinny
+		// // var ratio = 0.5;
+		// // var ratio = 0.25; // thick
+		// var distance = ratio + Math.random()*(1.0-ratio);
+		// var angle = Math.random()*Math.PI2;
+		// var point = new V2D(distance,0);
+		// point.rotate(angle);
+		// point.scale(rangeX,rangeY);
+		// point.scale(2);
+		// point.rotate(angleX);
+		// point.add(offsetX,offsetY);
+		// points2D.push(point);
+		
+		// // sphere
+		// var distance = Math.random();
+		// var angle = Math.random()*Math.PI2;
+		// // var angleY = Math.random()*Math.PI2;
+		// // var angleZ = Math.random()*Math.PI2;
+		// // var vector
+		// var point = new V3D(distance,0,0);
+		// point.rotate(angle);
+		// point.scale(rangeX,rangeY,rangeZ);
+		// point.scale(2);
+		// point.rotate(angleX);
+		// point.add(offsetX,offsetY);
+		// points2D.push(point);
+		
+
+		
+		// normal distribution
+		var dx = Code.randomNormal(rangeX);
+		var dy = Code.randomNormal(rangeY);
+		// var dz = Code.randomNormal(rangeZ);
+		var dz = 0;
+		var point = new V3D(dx,dy,dz);
+			transform.multV3DtoV3D(point,point);
+		// point.add(offsetX,offsetY,offsetZ);
+		points3D.push(point);
+	}
+
+	console.log(points3D);
+	var xList = [];
+	var yList = [];
+	var zList = [];
+	
+	for(var i=0; i<points3D.length; ++i){
+		var p = points3D[i];
+		xList.push(p.x);
+		yList.push(p.y);
+		zList.push(p.z);
+	}
+
+// var str = "";
+// str += "\n";
+// str += Code.printMatlabArray(xList,"x",true) + "\n";
+// str += Code.printMatlabArray(yList,"y",true) + "\n";
+// str += Code.printMatlabArray(zList,"z",true) + "\n";
+// str += "\n";
+// console.log(str);
+	// var info = Code.covariance3DInfo(points3D);
+	// console.log(info);
+	// console.log(info["sigmaX"]);
+	// console.log(info["sigmaY"]);
+	// console.log(info["sigmaZ"]);
+	// console.log(info["directionX"]+"");
+	// console.log(info["directionY"]+"");
+	// console.log(info["directionZ"]+"");
+	var result = Code.normalizedPoints3D(points3D);
+	console.log(result);
+
+points3D = result["normalized"];
+
+xList = [];
+yList = [];
+zList = [];
+	for(var i=0; i<points3D.length; ++i){
+		var p = points3D[i];
+		xList.push(p.x);
+		yList.push(p.y);
+		zList.push(p.z);
+	}
+
+// var str = "";
+// str += "\n";
+// str += Code.printMatlabArray(xList,"x",true) + "\n";
+// str += Code.printMatlabArray(yList,"y",true) + "\n";
+// str += Code.printMatlabArray(zList,"z",true) + "\n";
+// str += "\n";
+// console.log(str);
+
+
+
+	throw "points3D"
+}
+
 Calibration.prototype.syntheticTest = function(){
 	console.log("syntheticTest");
+
+
 
 	// parameters
 	var imageSizeX = 400;
@@ -76,18 +204,18 @@ Calibration.prototype.syntheticTest = function(){
 	// var p1 = 0.0;
 
 	// pincushion
-	// var k0 = 4.0;
-	// var k1 = 1.0;
-	// var k2 = 0.10;
-	// var p0 = 0.0;
-	// var p1 = 0.0;
-
-	// barrel
-	var k0 = -4.0;
-	var k1 = -1.0;
-	var k2 = -0.10;
+	var k0 = 4.0;
+	var k1 = 1.0;
+	var k2 = 0.10;
 	var p0 = 0.0;
 	var p1 = 0.0;
+
+	// barrel
+	// var k0 = -4.0;
+	// var k1 = -1.0;
+	// var k2 = -0.10;
+	// var p0 = 0.0;
+	// var p1 = 0.0;
 	
 	var distortion = {"k0":k0, "k1":k1, "k2":k2, "p0":p0, "p1":p1};
 
@@ -100,13 +228,6 @@ Calibration.prototype.syntheticTest = function(){
 	// 
 	console.log(K+"")
 	console.log(Matrix.inverse(K)+"")
-	// 
-	// var p = new V2D(0,0);
-	// var p = new V2D(1,0);
-	// var q = R3D.applyCameraDistortion(new V2D(), p, distortion);
-	// console.log(p+"");
-	// console.log(q+"");
-	// throw "RBF";
 
 	// make grid points
 	var points3D = [];
@@ -116,12 +237,19 @@ Calibration.prototype.syntheticTest = function(){
 	var maxY =  1.0;
 	var cntX = 10;
 	var cntY = 10;
+
+var plane = (new Matrix3D()).rotateX(Code.radians(  45.0)).rotateY(Code.radians(  45.0)).rotateZ(Code.radians(  0.0)).translate(0,1,0).toMatrix();
+
 	for(var i=0; i<cntX; ++i){
 		var x = minX + (maxX-minX) * i/(cntX-1);
 		for(var j=0; j<cntY; ++j){
 			var y = minY + (maxX-minX) * j/(cntY-1);
-			// var point3D = new V3D(x,y,1.0);
+			// var point3D = new V3D(x,y,Math.random());
 			var point3D = new V3D(x,y,1.0);
+			// var point3D = new V3D(x,1.0,y);
+
+			// point3D = plane.multV3DtoV3D(point3D);
+
 			points3D.push(point3D);
 		}
 	}
@@ -210,12 +338,7 @@ Calibration.prototype.syntheticTest = function(){
 	var result = R3D.calibrateCameraK(pointList3D,pointList2D);
 	console.log(result);
 
-	// solve for D initial
-
-	// simultaneous K + D update
-
-	// nonlinear all at once
-
+	throw "..."
 
 	// undistort image2:
 	for(var i=0; i<images.length; ++i){

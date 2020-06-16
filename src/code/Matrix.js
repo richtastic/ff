@@ -1190,7 +1190,18 @@ Matrix.toQuaternion = function(){
 	return Code.rotationMatrixToQuaternion(this.get(0,0),this.get(0,1),this.get(0,2), this.get(1,0),this.get(1,1),this.get(1,2), this.get(2,0),this.get(2,1),this.get(2,2));
 }
 Matrix.eigenValuesAndVectors = function(A){
-	var x = numeric.eig(A._rows); // these aren't necessarily ordered
+	var maxIterations = 10000;
+	//  maxiter = 10000;
+	var x = null;
+	try{
+		// maxIterations *= 10;
+		maxIterations = 1000;
+		x = numeric.eig(A._rows, maxIterations); // these aren't necessarily ordered
+	}catch(e){
+		console.log("eig error -- is this because there are repeated values?");
+		return null;
+		throw "e";
+	}
 	var values = x.lambda.x;
 	var vectors = x.E.x;
 	var vects = new Array();

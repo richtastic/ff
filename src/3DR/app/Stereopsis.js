@@ -6853,7 +6853,7 @@ console.log("refine a - refineSelectCameraMultiViewTriangulation")
 		world.estimate3DErrors(true);
 		// world.refinePoint3DAbsoluteLocation();
 		world.patchInitBasicSphere(true);
-
+		// 
 		// add new points
 		world.probe2DCells(3.0);
 		// world.probe2DCells(999);

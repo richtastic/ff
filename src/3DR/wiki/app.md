@@ -388,11 +388,34 @@ MISSING:
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
+
+- camera parameter minmization
+	- K only
+	- K + radial + tangental
+- all paramterts minimization
+	- K + D + Pi
+
+
+
+display normalized 3D points somewhere
+
+
+applyCameraDistortion
+
+
 R3D.linearCameraDistortion
+
+
 
 R3D.BundleAdjustCameraParameters(
 
+
+
 R3D.applyCameraDistortion
+
+
+var listM = R3D.extrinsicCalibratedMatrixFromGroups(pointGroups2D, pointGroups3D, listH, K, Kinv);
+listM = R3D.extrinsicNonLinearFromGroups(pointGroups2D, pointGroups3D, listM, K, Kinv);
 
 
 
@@ -413,6 +436,13 @@ R3D.applyCameraDistortion
 	- image rectify
 		...
 	- 
+
+
+- SURFACING:
+	- keep triangles on 'top' of surface (points), not in the 'middle' of point plane
+
+
+
 
 
 

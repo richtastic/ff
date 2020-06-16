@@ -272,7 +272,8 @@ Matrix3D.prototype.scale = function(sX,sY,sZ){
 	var mat = Matrix3D.temp;
 	if(sY===undefined){ sY = sX; }
 	if(sZ===undefined){ sZ = sX; }
-	mat.set(sY,0,0,0, 0,sY,0,0, 0,0,sZ,0);
+	mat.set(sX,0,0,0, 0,sY,0,0, 0,0,sZ,0);
+// console.log(mat+"")
 	this.mult(mat,this);
 	return this;
 }

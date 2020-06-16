@@ -301,7 +301,7 @@ Mesh3D.prototype.generateSurfaces = function(){
 	console.log("generateSurfaces");
 
 	// this.dropLowDensityPoints();
-	
+
 	// GLOBAL_DATA = {};
 	// GLOBAL_DATA["points"] = this._pointSpace.toArray();
 
@@ -309,7 +309,9 @@ Mesh3D.prototype.generateSurfaces = function(){
 
 	// smooth input:
 	// console.log("_smoothSurface"); // larger numbers segment more
+	// 
 	var smoothIterations = 0;
+	// 
 	// var smoothIterations = 1;
 	// var smoothIterations = 3;
 	// var smoothIterations = 5;

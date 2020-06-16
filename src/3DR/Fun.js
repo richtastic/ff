@@ -37,9 +37,9 @@ GLOBALSTAGE = this._stage;
 	// new ImageLoader("./images/",["F_S_1_1.jpg","F_S_1_2.jpg"],this,this.imagesLoadCompleteFBasic).load();
 	// new ImageLoader("./images/",["F_S_1_1.jpg","F_S_1_2.jpg"],this,this.imagesLoadCompleteHBasic).load();
 	// new ImageLoader("./images/",["F_S_1_1.jpg","F_S_1_2.jpg"],this,this.imagesLoadCompleteDenseBasic).load();
-	// new ImageLoader("./images/",["F_S_1_1.jpg","F_S_1_2.jpg"],this,this.imagesLoadCompleteCOV).load();
+	new ImageLoader("./images/",["F_S_1_1.jpg","F_S_1_2.jpg"],this,this.imagesLoadCompleteCOV).load();
 
-	this.experimentFR();
+	// this.experimentFR();
 }
 Fun.prototype.experimentFR = function(){
 
