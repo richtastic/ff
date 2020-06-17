@@ -6619,8 +6619,11 @@ App3DR.ProjectManager.prototype.addOperation = function(operation, param, callba
 	this.checkOperations();
 }
 App3DR.ProjectManager.prototype._handleFileClientComplete = function(data){
+	console.log("_handleFileClientComplete");
+	console.log(data);
 	var operation = this._operation;
 	this._operation = null;
+	console.log(operation);
 	if(operation){
 		var object = operation["object"];
 		var callback = operation["callback"];
@@ -6732,9 +6735,11 @@ App3DR.ProjectManager.prototype.setFromYAML = function(object){
 	var scenes = object["scenes"];
 	// var currentSceneID = object["currentSceneID"];
 
-	this._titleName = title;
-	this._createdTimestamp = created;
-	this._modifiedTimestamp = modified;
+	var timestamp = Code.getTimeStampFromMilliseconds();
+
+	this._titleName = Code.valueOrDefault(title,"title");
+	this._createdTimestamp = Code.valueOrDefault(created,timestamp);
+	this._modifiedTimestamp = Code.valueOrDefault(modified,timestamp);
 	this._views = [];
 	if(views){
 		len = views.length;
@@ -7270,6 +7275,8 @@ App3DR.ProjectManager.prototype.addCamera = function(callback, context){
 	this.addOperation("SET", {"path":path}, this._addCameraComplete, this, object);
 }
 App3DR.ProjectManager.prototype._addCameraComplete = function(object, data){
+	console.log("_addCameraComplete");
+
 	var callback = object["callback"];
 	var context = object["context"];
 	var camera = object["camera"];
@@ -7606,6 +7613,7 @@ console.log("checkPerformNextTask");
 	var project = this;
 	// assumed all views already have entry & images
 // throw "view summaries";
+// console.log("summaries");
 	len = views.length;
 	for(i=0; i<len; ++i){
 		var view = views[i];
@@ -7615,15 +7623,15 @@ console.log("checkPerformNextTask");
 			return;
 		}
 	}
-
+// console.log("words");
 // throw "task pair bag of words";
-	if(!this.hasViewSimilarity()){
+	if(views.length>0 && !this.hasViewSimilarity()){
 		this.calculateViewSimilarities();
 		return;
 	}
 
 
-
+console.log("cams");
 // throw "calculate cameras";
 	// cameras:
 	var cameras = this._cameras;
@@ -7648,7 +7656,7 @@ console.log("checkPerformNextTask");
 		return;
 	}
 
-// throw "task default assign views camera";
+throw "task default assign views camera";
 	// make sure every view has a camera:
 	len = views.length;
 	var wasCameraAdded = false;
@@ -10661,11 +10669,11 @@ App3DR.ProjectManager.prototype.createWorldCamerasForViews = function(world, vie
 			var s = K["s"];
 			var cx = K["cx"];
 			var cy = K["cy"];
+			var k0 = distortion["k0"];
 			var k1 = distortion["k1"];
 			var k2 = distortion["k2"];
-			var k3 = distortion["k3"];
+			var p0 = distortion["p0"];
 			var p1 = distortion["p1"];
-			var p2 = distortion["p2"];
 			var K = new Matrix(3,3).fromArray([fx,s,cx, 0,fy,cy, 0,0,1]);
 			var c = world.addCamera(K, distortion);
 			c.data(cameraID);
@@ -13625,13 +13633,13 @@ App3DR.ProjectManager.prototype.calculateCameraParameters = function(camera, cal
 			var cx = K.get(0,2);
 			var fy = K.get(1,1);
 			var cy = K.get(1,2);
+			var k0 = distortion["k0"];
 			var k1 = distortion["k1"];
 			var k2 = distortion["k2"];
-			var k3 = distortion["k3"];
+			var p0 = distortion["p0"];
 			var p1 = distortion["p1"];
-			var p2 = distortion["p2"];
 			camera.setK(fx,fy,s,cx,cy);
-			camera.setDistortion(k1,k2,k3,p1,p2);
+			camera.setDistortion(k0,k1,k2,p0,p1);
 			camera.setCalculatedCount(calibrationImages.length);
 // throw "NOW SAVE AFTER CALIBRATE";
 			self.saveProjectFile(fxnSavedProjectComplete, project);
@@ -15573,11 +15581,11 @@ throw "save ?"
 						"s":K["s"],
 						"cx":K["cx"],
 						"cy":K["cy"],
+						"k0":d["k0"],
 						"k1":d["k1"],
 						"k2":d["k2"],
-						"k3":d["k3"],
+						"p0":d["p0"],
 						"p1":d["p1"],
-						"p2":d["p2"],
 					};
 					var cid = c["id"];
 					sparseCameras.push(c);
@@ -18766,11 +18774,11 @@ console.log("_calculateGlobalOrientationNonlinearB");
 			var s = K["s"];
 			var cx = K["cx"];
 			var cy = K["cy"];
+			var k0 = distortion["k0"];
 			var k1 = distortion["k1"];
 			var k2 = distortion["k2"];
-			var k3 = distortion["k3"];
+			var p0 = distortion["p0"];
 			var p1 = distortion["p1"];
-			var p2 = distortion["p2"];
 			var K = new Matrix(3,3).fromArray([fx,s,cx, 0,fy,cy, 0,0,1]);
 			var c = world.addCamera(K, distortion);
 			c.data(camera.id()+"");
@@ -19012,11 +19020,12 @@ App3DR.bundleAdjustObjectToCameras = function(world, cameras, source){
 			}else{
 				K = Matrix.fromObject(K);
 			}
+			var k0 = distortion["k0"];
 			var k1 = distortion["k1"];
 			var k2 = distortion["k2"];
-			var k3 = distortion["k3"];
+			var p0 = distortion["p0"];
 			var p1 = distortion["p1"];
-			var p2 = distortion["p2"];
+			
 			// console.log(K+"");
 			var c = world.addCamera(K, distortion);
 			c.data(camID);
@@ -21663,13 +21672,13 @@ App3DR.ProjectManager.Camera.prototype.newCalibrationImage = function(){
 App3DR.ProjectManager.Camera.prototype.setCalculatedCount = function(count){
 	this._calculatedCount = count;
 }
-App3DR.ProjectManager.Camera.prototype.setDistortion = function(k1,k2,k3,p1,p2){
+App3DR.ProjectManager.Camera.prototype.setDistortion = function(k0,k1,k2,p0,p1){
 	distortion = {};
+	distortion["k0"] = k0;
 	distortion["k1"] = k1;
 	distortion["k2"] = k2;
-	distortion["k3"] = k3;
+	distortion["p0"] = p0;
 	distortion["p1"] = p1;
-	distortion["p2"] = p2;
 	this._distortion = distortion;
 	return this._distortion;
 }
@@ -21677,11 +21686,11 @@ App3DR.ProjectManager.Camera.prototype.distortion = function(){
 	var distortion = null;
 	if(this._K){
 		distortion = {};
+		distortion["k0"] = this._distortion["k0"];
 		distortion["k1"] = this._distortion["k1"];
 		distortion["k2"] = this._distortion["k2"];
-		distortion["k3"] = this._distortion["k3"];
+		distortion["p0"] = this._distortion["p0"];
 		distortion["p1"] = this._distortion["p1"];
-		distortion["p2"] = this._distortion["p2"];
 	}
 	return distortion;
 }
@@ -21728,11 +21737,11 @@ App3DR.ProjectManager.Camera.prototype.toYAML = function(yaml){
 	if(this._distortion){
 		var d = this._distortion;
 		yaml.writeObjectStart("distortion");
+			yaml.writeNumber("k0", d["k0"]);
 			yaml.writeNumber("k1", d["k1"]);
 			yaml.writeNumber("k2", d["k2"]);
-			yaml.writeNumber("k3", d["k3"]);
+			yaml.writeNumber("p0", d["p0"]);
 			yaml.writeNumber("p1", d["p1"]);
-			yaml.writeNumber("p2", d["p2"]);
 		yaml.writeObjectEnd();
 	}
 	// images
@@ -21781,12 +21790,12 @@ App3DR.ProjectManager.Camera.prototype.readFromObject = function(object){
 	}
 	this._distortions = null;
 	if(distortion){
+		var k0 = distortion["k0"];
 		var k1 = distortion["k1"];
 		var k2 = distortion["k2"];
-		var k3 = distortion["k3"];
+		var p0 = distortion["p0"];
 		var p1 = distortion["p1"];
-		var p2 = distortion["p2"];
-		this._distortion = {"k1":k1, "k2":k2, "k3":k3, "p1":p1, "p2":p2};
+		this._distortion = {"k0":k0, "k1":k1, "k2":k2, "p3":p0, "p1":p1};
 	}
 }
 

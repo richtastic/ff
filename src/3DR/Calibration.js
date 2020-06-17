@@ -40,7 +40,9 @@ GLOBALSTAGE = this._stage;
 
 // this.normalizingTest();
 // return;
-	this.syntheticTest();
+	// this.syntheticTest();
+	// return;
+	this.undistortTest();
 	return;
 /*
 
@@ -185,7 +187,162 @@ zList = [];
 
 	throw "points3D"
 }
+Calibration.prototype.undistortTest = function(){
+	console.log("undistortTest");
+	var directory = "./images/calib_test_2/";
+	var imageList = ["A.png"];
+	var imageLoader = new ImageLoader(directory,imageList, this,this.undistortTestLoaded,null);
+	imageLoader.load();
+}
+Calibration.prototype.undistortTestLoaded = function(imageInfo){
+	GLOBALSTAGE = this._stage;
+	var imageList = imageInfo.images;
+	var fileList = imageInfo.files;
+	var i, j, k, list = [];
+	var x = 0, y = 0;
+	var images = [];
+	var imageMatrixList = [];
+	for(i=0;i<imageList.length;++i){
+		var file = fileList[i];
+		var img = imageList[i];
+		images[i] = img;
+		var d = new DOImage(img);
+		this._root.addChild(d);
+		d.graphics().alpha(0.10);
+		d.matrix().translate(x,y);
+		x += img.width;
+		//
+		var imageSource = images[i];
+		var imageFloat = GLOBALSTAGE.getImageAsFloatRGB(imageSource);
+		var imageMatrix = new ImageMat(imageFloat["width"],imageFloat["height"], imageFloat["red"], imageFloat["grn"], imageFloat["blu"]);
+		imageMatrixList.push(imageMatrix);
+	}
 
+	var imageMatrix = imageMatrixList[0];
+	console.log(imageMatrix);
+
+	var fx = 0.8592861736651791;
+	var fy = 1.1418058416661925;
+	var s = -0.0005632049516738247;
+	var cx = 0.5043367199848997;
+	var cy = 0.48762588746404817;
+
+	var k0 = 0.00252808475270938;
+	var k1 = -0.0002274327956517015;
+	var k2 = -0.00020459226072626737;
+	var p0 = 0.00007473017472305228;
+	var p1 = -0.000729737573036716;
+
+
+// 	  fx: 0.8527606938615921
+//    fy: 1.1331349465442495
+//    s: 0.0011444212715210522
+//    cx: 0.4997899287776882
+//    cy: 0.48812553464621766
+//    k0: 0
+//    k1: 0
+//    k2: 0
+//    p0: 0
+//    p1: 0
+
+
+// D:
+   // fx: 0.8592861736651791
+   // fy: 1.1418058416661925
+   // s: -0.0005632049516738247
+   // cx: 0.5043367199848997
+   // cy: 0.48762588746404817
+
+   // k0: 0.00252808475270938
+   // k1: -0.0002274327956517015
+   // k2: -0.00020459226072626737
+   // p0: 0.00007473017472305228
+   // p1: -0.000729737573036716
+
+// C - no dist
+   // fx: 0.8592861736651791
+   // fy: 1.1418058416661925
+   // s: -0.0005632049516738247
+   // cx: 0.5043367199848997
+   // cy: 0.48762588746404817
+   // k0: 0.00252808475270938
+   // k1: -0.0002274327956517015
+   // k2: -0.00020459226072626737
+   // p0: 0.00007473017472305228
+   // p1: -0.000729737573036716
+
+// B
+// 	  fx: 0.8633615898190186
+//    fy: 1.1465648455507855
+//    s: -0.007298988017178323
+//    cx: 0.5185076046661992
+//    cy: 0.5066546749719018
+//    k0: 1.758859161061823
+//    k1: -12.216778044196756
+//    k2: 23.272736834548912
+//    p0: -0.012221826580420259
+//    p1: -0.026058368357006118
+
+// A
+//    fx: 0.692357182756953
+//    fy: 0.9197449106511039
+//    s: -0.0028900515369346663
+//    cx: 0.5185583862253019
+//    cy: 0.41754450877336696
+//    k0: 1.4368401672596973
+//    k1: -7.068533002979137
+//    k2: 9.661998889347874
+//    p0: -0.015552350745824749
+//    p1: -0.010651740750496935
+
+	var K = new Matrix(3,3).fromArray([fx, s, cx, 0, fy, cy, 0, 0, 1]);
+	var distortion = {"k0":k0, "k1":k1, "k2":k2, "p0":p0, "p1":p1};
+
+	var size = imageMatrix.size();
+	K = R3D.cameraFromScaledImageSize(K, size);
+	console.log("K\n"+K);
+
+	var observed = imageMatrix;
+
+	var undistorted = R3D.undistortCameraImage(observed, K, distortion, null);
+	var imageMask = undistorted["mask"];
+		undistorted = undistorted["image"];
+
+
+	var offX = 10;
+	var offY = 10;
+	var display = this._root;
+
+
+	image = observed;
+	var img = GLOBALSTAGE.getFloatRGBAsImage(image.red(),image.grn(),image.blu(), image.width(),image.height());
+		var d = new DOImage(img);
+		// d.matrix().scale(1.0);
+		d.matrix().translate(offX, offY);
+		// d.graphics().alpha(0.4);
+		display.addChild(d);
+
+	offY += image.height() + 10;
+
+	// display
+	image = undistorted;
+	var img = GLOBALSTAGE.getFloatRGBAsImage(image.red(),image.grn(),image.blu(), image.width(),image.height());
+		var d = new DOImage(img);
+		// d.matrix().scale(1.0);
+		d.matrix().translate(offX, offY);
+		// d.graphics().alpha(0.4);
+		display.addChild(d);
+	// 
+	var img = GLOBALSTAGE.getFloatRGBAsImage(imageMask,imageMask,imageMask, image.width(),image.height());
+		var d = new DOImage(img);
+		d.matrix().translate(offX, offY);
+		d.graphics().alpha(0.25);
+		display.addChild(d);
+
+
+
+
+}
 Calibration.prototype.syntheticTest = function(){
 	console.log("syntheticTest");
 
@@ -197,18 +354,19 @@ Calibration.prototype.syntheticTest = function(){
 	var wm1 = imageSizeX-1;
 	var hm1 = imageSizeY-1;
 
-	// var k0 = 0.0;
-	// var k1 = 0.0;
-	// var k2 = 0.0;
-	// var p0 = 0.0;
-	// var p1 = 0.0;
+	// ideal
+	var k0 = 0.0;
+	var k1 = 0.0;
+	var k2 = 0.0;
+	var p0 = 0.0;
+	var p1 = 0.0;
 
 	// pincushion
 	var k0 = 4.0;
 	var k1 = 1.0;
-	var k2 = 0.10;
-	var p0 = 0.0;
-	var p1 = 0.0;
+	var k2 = 0.50;
+	// var p0 = 0.0;
+	// var p1 = 0.0;
 
 	// barrel
 	// var k0 = -4.0;
@@ -244,12 +402,8 @@ var plane = (new Matrix3D()).rotateX(Code.radians(  45.0)).rotateY(Code.radians(
 		var x = minX + (maxX-minX) * i/(cntX-1);
 		for(var j=0; j<cntY; ++j){
 			var y = minY + (maxX-minX) * j/(cntY-1);
-			// var point3D = new V3D(x,y,Math.random());
-			var point3D = new V3D(x,y,1.0);
-			// var point3D = new V3D(x,1.0,y);
-
+			var point3D = new V3D(x,y,0.0);
 			// point3D = plane.multV3DtoV3D(point3D);
-
 			points3D.push(point3D);
 		}
 	}
@@ -264,6 +418,10 @@ var plane = (new Matrix3D()).rotateX(Code.radians(  45.0)).rotateY(Code.radians(
 	Ps.push(  (new Matrix3D()).rotateX(Code.radians( 20.0)).rotateY(Code.radians( 30.0)).rotateZ(Code.radians( 10.0)).translate(0, 0.1,4).toMatrix() );
 	Ps.push(  (new Matrix3D()).rotateX(Code.radians(-30.0)).rotateY(Code.radians(-40.0)).rotateZ(Code.radians( 10.0)).translate(1,-0.1,5).toMatrix() );
 	console.log(Ps);
+	// for(var i=0; i<Ps.length; ++i){
+	// 	var P = Ps[i];
+	// 	console.log(i+"\n"+P);
+	// }
 
 	var images = [];
 	var projectedPoints = [];
@@ -285,7 +443,6 @@ var plane = (new Matrix3D()).rotateX(Code.radians(  45.0)).rotateY(Code.radians(
 			// 3D x = X/Z
 			if(X1.z!==0 && X1.z>0){
 				var x0 = new V2D(X1.x/X1.z, X1.y/X1.z);
-				
 				// 2D distortion
 				var x1 = x0.copy();
 				R3D.applyCameraDistortion(x1,x0,distortion);
@@ -338,7 +495,12 @@ var plane = (new Matrix3D()).rotateX(Code.radians(  45.0)).rotateY(Code.radians(
 	var result = R3D.calibrateCameraK(pointList3D,pointList2D);
 	console.log(result);
 
-	throw "..."
+	// use result:
+
+	K = result["K"];
+	distortion = result["distortion"];
+
+	// throw "..."
 
 	// undistort image2:
 	for(var i=0; i<images.length; ++i){

@@ -2783,7 +2783,7 @@ Code.gradientDescent = function(fxn, args, x, dx, iter, diff, epsilon, lambda){
 		}
 	}
 	for(k=0; k<maxIterations; ++k){
-		// console.log("dx: "+dx+"  @  "+lambda);
+		// console.log("dx: "+dx+"  @  "+lambda+" = "+k);
 		for(i=0; i<sizeX; ++i){
 			Code.copyArray(tx,prevX);
 			tx[i] += dx[i];

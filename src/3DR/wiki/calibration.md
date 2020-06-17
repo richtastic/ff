@@ -258,7 +258,7 @@ can use grid if transform takes a long time:
 ### AUTO CALIBRATION / SELF CALIBRATION
 
 http://www.robots.ox.ac.uk:5000/~vgg/publications/1996/Armstrong96a/armstrong96a.pdf
-
+https://www.tnt.uni-hannover.de/papers/data/407/ACCV06_TTHBPM_1.pdf
 
 - find similar features in images: a -> b
 

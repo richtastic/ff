@@ -387,17 +387,38 @@ MISSING:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+- camera extrinsics wrong:
 
-
-- camera parameter minmization
-	- K only
-	- K + radial + tangental
-- all paramterts minimization
-	- K + D + Pi
+extrinsicCalibratedMatrixFromGroups
 
 
 
-display normalized 3D points somewhere
+R3D.BundleAdjustCameraParameters
+
+
+
+   fx: 0.8592861736651791
+   fy: 1.1418058416661925
+   s: -0.0005632049516738247
+   cx: 0.5043367199848997
+   cy: 0.48762588746404817
+
+R3D.js:42570    k0: 0.00252808475270938
+   k1: -0.0002274327956517015
+   k2: -0.00020459226072626737
+   p0: 0.00007473017472305228
+   p1: -0.000729737573036716
+
+
+   
+
+
+P3D -> P -> L3D -> PROJ -> p2d -> D -> d2d -> K -> i2d
+
+K(fx,fy,s,cx,cy) & radial(p0,p1,p2) & tang(k0,k1) & EXTRINSICS (6) ???
+
+
+BundleAdjustCameraParameters
 
 
 applyCameraDistortion
