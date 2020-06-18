@@ -1,0 +1,19 @@
+<html>
+<head>
+<title>JPG: EXIF</title>
+<script src="../code/FF.js"></script>
+</head>
+<script type="text/javascript">
+function pageLoadedFxn(){
+	var ff = new FF("../code/",ffLoadedFxn);
+}
+function ffLoadedFxn(){
+	(new ScriptLoader("./",["TestExif.js"],this,funLoadedFxn)).load();
+}
+function funLoadedFxn(){
+	var test = new TestExif();
+}
+</script>
+<body onload="pageLoadedFxn();">
+</body>
+</html>

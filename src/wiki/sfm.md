@@ -240,6 +240,12 @@ Modern Cameras and phones store metadata in images, with useful info like:
 identify -verbose ./test.jpg
 ```
 
+
+	Orientation: 1 = TopLeft
+	Orientation: 6 = RightTop
+	Orientation: 8 = LeftBottom
+	Orientation: 3 = BottomRight
+
 <br/>
 <br/>
 

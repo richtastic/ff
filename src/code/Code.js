@@ -6321,13 +6321,16 @@ Code.newInputTextArea = function(a, r,c){
 	}
 	return sub;
 };
-
 Code.newImage = function(t){
 	var i = new Image();
 	if(t!==undefined){
-		Code.appendChild(t,i);
+		Code.addChild(t,i);
 	}
 	return i;
+};
+Code.setImageSource = function(i,s,fxn,cxt){
+	i.onload = fxn;
+	i.src = s;
 }
 
 Code.getTextAreaValue = function(a){
@@ -14216,6 +14219,13 @@ Code.uint16FromByteArray = function(binaryArray,offset){
 }
 Code.uint8FromByteArray = function(binaryArray,offset){
 	return binaryArray[offset+0] >>> 0;
+}
+Code.int32FromByteArray = function(binaryArray,offset){
+	// var value = Code.uint32FromByteArray(binaryArray,offset);
+		//value = ~value + 1; // guess
+		// value = value >> 0;
+	var out = binaryArray[offset+0]<<24 | binaryArray[offset+1]<<16 |  binaryArray[offset+2]<<8 |  binaryArray[offset+3]<<0;
+	return out;
 }
 Code.charStringFromByteArray = function(binaryArray,offset, count){
 	var i, c, str = "";

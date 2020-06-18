@@ -387,30 +387,24 @@ MISSING:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-- camera extrinsics wrong:
-
-extrinsicCalibratedMatrixFromGroups
+- automate process of converting all input images to rotated same orientation (landscape right-top?)
 
 
-
-R3D.BundleAdjustCameraParameters
+img.exifdata
 
 
 
-   fx: 0.8592861736651791
-   fy: 1.1418058416661925
-   s: -0.0005632049516738247
-   cx: 0.5043367199848997
-   cy: 0.48762588746404817
-
-R3D.js:42570    k0: 0.00252808475270938
-   k1: -0.0002274327956517015
-   k2: -0.00020459226072626737
-   p0: 0.00007473017472305228
-   p1: -0.000729737573036716
+Code.int32FromByteArray
 
 
-   
+
+- new camera collection set of images for calibration (10+) accuracy
+- go thru process with new easy set: 10-15 images
+- walk thru process and fix bugs
+
+
+
+
 
 
 P3D -> P -> L3D -> PROJ -> p2d -> D -> d2d -> K -> i2d
