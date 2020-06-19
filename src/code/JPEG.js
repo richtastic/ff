@@ -4,6 +4,7 @@
 function JPEG(){
 	this._width = null;
 	this._height = null;
+	this._metadata = {};
 }
 JPEG.prototype.width = function(w){
 	if(w!==undefined){
@@ -17,29 +18,42 @@ JPEG.prototype.height = function(h){
 	}
 	return this._height;
 }
-
+JPEG.prototype.metadata = function(m){
+	return this._metadata;
+}
 
 
 
 JPEG.EXIF = function(imageDOM, callback, context){
-	// console.log(imageDOM);
-	var imageSRC = imageDOM.src;
-	console.log(imageSRC);
-	if(/^data\:/.test(imageSRC)){
-		console.log("base 64 encoded");
-		var binary = Code.base64StringToBinary(imageSRC);
-		console.log(binary);
+	console.log(typeof imageDOM);
+	if(Code.isa(imageDOM,Uint8Array)){
+		JPEG._EXIF_binary(imageDOM, callback, context);
+	}else{ // DOM OBJECT
+		// console.log(imageDOM);
+		var imageSRC = imageDOM.src;
+		// console.log(imageSRC);
+		if(/^data\:/.test(imageSRC)){
+			console.log("base 64 encoded");
+			var binary = Code.base64StringToBinary(imageSRC);
+			JPEG._EXIF_binary(data, callback, context);
+		}else{
+			console.log("url");
+			// Ajax.prototype.get = function(url,con,comp,params){
+			var ajax = new Ajax();
+			ajax.binary(true);
+			ajax.get(imageSRC, JPEG.EXIF, function(data){
+				JPEG._EXIF_binary(data, callback, context);
+			});
+		}
+	}
+}
+JPEG._EXIF_binary = function(binary, callback, context){
+	console.log("JPEG._EXIF_binary");
+	var info = JPEG.EXIFFomData(binary);
+	if(context){
+		callback.apply(context, [info]);
 	}else{
-		console.log("url");
-		// Ajax.prototype.get = function(url,con,comp,params){
-		var ajax = new Ajax();
-		ajax.binary(true);
-		ajax.get(imageSRC, JPEG.EXIF, function(data){
-			console.log("got");
-			console.log(typeof data);
-			var info = JPEG.EXIFFomData(data);
-			console.log(info);
-		});
+		callback(info);
 	}
 }
 
@@ -94,8 +108,8 @@ JPEG.EXIFFomData = function(binaryArray){
 			offset += itemLength;
 		}else if(item==0xE1){ // 225 = 
 			console.log(">> exif");
-			// JPEG._EXIFFromOffset(binaryArray, offset+2,itemLength-2, hashEXIF);
-			// console.log(hashEXIF);
+			JPEG._EXIFFromOffset(binaryArray, offset+2,itemLength-2, hashEXIF);
+			console.log(hashEXIF);
 			offset += itemLength;
 			// console.log("DONE EXIF DATA");
 			// continueReading = false;
@@ -110,24 +124,23 @@ JPEG.EXIFFomData = function(binaryArray){
 			console.log(">> other");
 			console.log(item);
 			offset += itemLength;
-			throw "?"
+			// throw "?"
+			break;
 		}
-
-
 		--c;
 	}
 
+	// var makerNote = hashEXIF["MakerNote"];
+	// console.log(makerNote)
+	// if(makerNote){
+	// 	var str = Code.charStringFromByteArray(makerNote, 0, 10);
+	// 	console.log(str);
+	// }
+
+	var jpg = new JPEG();
+		jpg._metadata = hashEXIF;
 	
-	var makerNote = hashEXIF["MakerNote"];
-	console.log(makerNote)
-	if(makerNote){
-		var str = Code.charStringFromByteArray(makerNote, 0, 10);
-		console.log(str);
-	}
-
-
-	throw "..."
-	return null;
+	return jpg;
 }
 
 JPEG._EXIFFromOffset = function(binaryArray, offset, length, hash){
@@ -330,12 +343,14 @@ JPEG._EXIFTag_GPSOffset = "GPSInfo";
 JPEG._EXIFTags = {};
 
 
+JPEG.EXIF_TAG_ORIENTATION = "Orientation";
+
 JPEG._EXIFTags[0x0005] = "GPS";
 
 
 JPEG._EXIFTags[0x010F] = "Make";
 JPEG._EXIFTags[0x0110] = "Model";
-JPEG._EXIFTags[0x0112] = "Orientation";
+JPEG._EXIFTags[0x0112] = JPEG.EXIF_TAG_ORIENTATION;
 JPEG._EXIFTags[0x011A] = "XResolution";
 JPEG._EXIFTags[0x011B] = "YResolution";
 JPEG._EXIFTags[0x0128] = "ResolutionUnit";
@@ -397,8 +412,12 @@ JPEG._EXIFTags[0x3133] = "";
 // JPEG._EXIFTags[0x] = "";
 // JPEG._EXIFTags[0x] = "";
 
-
-
+// EXIF VALUES:
+// JPEG.EXIF = {};
+JPEG.EXIF_ORIENTATION_TOP_UP = 1; // 0
+JPEG.EXIF_ORIENTATION_TOP_LEFT = 8; // -90
+JPEG.EXIF_ORIENTATION_TOP_DOWN = 3; // -180
+JPEG.EXIF_ORIENTATION_TOP_RIGHT = 6; // 90
 
 
 

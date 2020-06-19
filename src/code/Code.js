@@ -5,7 +5,7 @@
 // 	// var root = this;
 // 	if (typeof module !== 'undefined' && module.exports) {
 // 		isNode = true;
-// 	}
+// 	} 
 // 	if (typeof window !== 'undefined' && window.navigator) {
 // 		isBrowser = true;
 // 	}
@@ -780,8 +780,54 @@ Code._evaluateJSONElementToString = function(element){
 	} // function
 	return null;
 }
+
+// ------------------------------------------------------------------------------------------ MIMETYPE
+Code.MIMETYPE_UNKNOWN = 0;
+Code.MIMETYPE_JPG = 1; // JPEG / EXIF
+Code.MIMETYPE_PNG = 2;
+Code.MIMETYPES = {};
+Code.MIMETYPES[Code.MIMETYPE_JPG] = "image/jpeg";
+Code.MIMETYPES[Code.MIMETYPE_PNG] = "image/png";
+Code.mimeTypeFromBinaryData = function(data){
+	
+	if(!data){
+		return Code.MIMETYPE_UNKNOWN;
+	}
+	var offset = 0;
+	var headerJPG = [0xFF,0xD8];
+	var headerPNG = [0x89,0x50,0x4E,0x47,0x0D,0x0A,0x1A,0x0A];
+	if( Code.arraySubArrayEquality(data,offset, headerJPG) ){
+		return Code.MIMETYPE_JPG;
+	}else if( Code.arraySubArrayEquality(data,offset, headerPNG) ){
+		return Code.MIMETYPE_PNG;
+	}
+	return Code.MIMETYPE_UNKNOWN;
+}
+Code.arraySubArrayEquality = function(dataA,startA, dataB){ 
+	return Code.arraySegmentEquality(dataA,startA,startA+dataB.length-1, dataB,0,0+dataB.length-1);
+}
+Code.arraySegmentEquality = function(dataA,startA,endA, dataB,startB,endB){ // B is fully contained in A
+	var lenA = dataA.length;
+	var lenB = dataB.length;
+	var countA = endA-startA+1;
+	var countB = endB-startB+1;
+	if(startA<0 || endA>=lenA || startB<0 || endB>=lenB || countA!=countB){
+		return false;
+	}
+	console.log("++++++");
+	for(var i=0; i<countA; ++i){
+		var a = dataA[i];
+		var b = dataB[i];
+		// console.log(Code.getHexNumber(a,2))
+		// console.log(a,b);
+		if(a!==b){
+			return false;
+		}
+	}
+	return true;
+}
 // ------------------------------------------------------------------------------------------ CLASS SUB/SUPER EXTEND
-Code.extendClass = function extendClass(target, source) {
+Code.extendClass = function extendClass(target, source){
 	if(Object && Object.getOwnPropertyNames!==undefined){
 	    Object.getOwnPropertyNames(source).forEach(function(propName) {
 	        Object.defineProperty(target, propName, Object.getOwnPropertyDescriptor(source, propName));

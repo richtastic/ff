@@ -5,6 +5,10 @@ function PNG(){
 	this._width = null;
 	this._height = null;
 	this._frames = [];
+	this._metadata = {};
+}
+PNG.prototype.metadata = function(m){
+	return this._metadata;
 }
 PNG.prototype.width = function(w){
 	if(w!==undefined){
@@ -209,12 +213,39 @@ PNG._APNG_BLEND_OP_OVER = 1; // blend (alpha)
 //    0xedb88320
 //    1110|1101|1011|1000|1000|0011|0010|0000
 
-
-
+PNG.METADATA = function(imageDOM, completeFxn, completeCxt){
+	console.log("PNG.METADATA");
+	// console.log(imageDOM);
+	var imageSRC = imageDOM.src;
+	console.log(imageSRC);
+	if(/^data\:/.test(imageSRC)){
+		console.log("base 64 encoded");
+		var binary = Code.base64StringToBinary(imageSRC);
+		console.log(binary);
+	}else{
+		console.log("url");
+		// Ajax.prototype.get = function(url,con,comp,params){
+		var ajax = new Ajax();
+		ajax.binary(true);
+		ajax.get(imageSRC, PNG.METADATA, function(data){
+			console.log("got");
+			console.log(data);
+			console.log(typeof data);
+			var info = PNG.binaryArrayToPNG(data, true);
+			// var info = JPEG.EXIFFomData(data);
+			console.log(info);
+			if(completeCxt){
+				completeFxn.apply(completeCxt, [info]);
+			}else{
+				completeFxn(info);
+			}
+		});
+	}
+}
 
 //PNG.binaryArrayToFloatARGB = function(binaryArray){
-PNG.binaryArrayToPNG = function(binaryArray){
-//	console.log(binaryArray)
+PNG.binaryArrayToPNG = function(binaryArray, onlyMetadata){
+	onlyMetadata = Code.valueOrDefault(onlyMetadata,false);
 	if(!binaryArray){
 		return null;
 	}
@@ -228,7 +259,6 @@ PNG.binaryArrayToPNG = function(binaryArray){
 	}
 	var i, j, k, a, b;
 	for(i=0; i<headerLen; ++i){
-
 		a = binaryArray[i];
 		b = PNG._HEADER_INT_LIST[i];
 		if(a!==b){
@@ -239,39 +269,42 @@ PNG.binaryArrayToPNG = function(binaryArray){
 
 	var chunk = PNG._readChunk(binaryArray,i);
 	while(chunk!=null){
-		var redo = PNG._processChunk(chunk,binaryArray,outputResult);
-		// if(redo){
-		// 	continue;
-		// }
+		
+		var redo = PNG._processChunk(chunk,binaryArray,outputResult, onlyMetadata);
+
 		i = chunk.next;
-		//console.log(" chunk: "+i+" / "+binaryArray.length);
 		chunk = PNG._readChunk(binaryArray,i);
 	}
+console.log(outputResult);
 	// put data into class structure
 	var imagePNG = new PNG();
-	imagePNG.width(outputResult["width"]);
-	imagePNG.height(outputResult["height"]);
-	// FRAMES
-	var frames = outputResult["frames"];
-	for(i=0; i<frames.length; ++i){
-		var frame = frames[i];
-		console.log("frame: "+i)
-		var imageFrame = new PNG.Frame();
-			imageFrame.x(frame["offsetX"]);
-			imageFrame.y(frame["offsetY"]);
-//console.log("SET THE SIZE: "+frame["width"]+" x "+frame["height"]);
-			imageFrame.width(frame["width"]);
-			imageFrame.height(frame["height"]);
-			imageFrame.imageData( frame["image"] );
-			imageFrame.blendType( frame["blend"] );
-			imageFrame.removeType( frame["dispose"] );
-			console.log(frame["delay"])
-			imageFrame.duration( frame["delay"] );
-			imagePNG.addFrame(imageFrame);
+	if(!onlyMetadata){
+		imagePNG.width(outputResult["width"]);
+		imagePNG.height(outputResult["height"]);
+		// FRAMES
+		var frames = outputResult["frames"];
+		for(i=0; i<frames.length; ++i){
+			var frame = frames[i];
+			console.log("frame: "+i)
+			var imageFrame = new PNG.Frame();
+				imageFrame.x(frame["offsetX"]);
+				imageFrame.y(frame["offsetY"]);
+				imageFrame.width(frame["width"]);
+				imageFrame.height(frame["height"]);
+				imageFrame.imageData( frame["image"] );
+				imageFrame.blendType( frame["blend"] );
+				imageFrame.removeType( frame["dispose"] );
+				console.log(frame["delay"])
+				imageFrame.duration( frame["delay"] );
+				imagePNG.addFrame(imageFrame);
+		}
 	}
+	// METADATA
+	imagePNG._metadata = outputResult["text"];
+	// DONE
 	return imagePNG;
 }
-PNG._processChunk = function(chunk,binaryArray,outputResult){
+PNG._processChunk = function(chunk,binaryArray,outputResult, onlyMetadata){
 	var readyToProcessImage = false;
 var frameData = outputResult["frameData"];
 //console.log(frameData)
@@ -281,7 +314,10 @@ var frameData = outputResult["frameData"];
 	var end = start + length;
 	//console.log("----------------------------------------------------------------------- start:"+start+" length: "+length);
 	var type = chunk.type;
-	console.log("type:                                               "+chunk.type);
+	if(onlyMetadata && type!=PNG._CHUNK_TYPE_TEXT){
+		type = null;
+	}
+	// console.log("type:                                               "+chunk.type);
 	if(type==PNG._CHUNK_TYPE_IHDR){ // 4 | 4 | 1 | 1 | 1 | 1 | 1 = 13 bytes
 		var width = Code.uint32FromByteArray(binaryArray,start+0);
 		var height = Code.uint32FromByteArray(binaryArray,start+4);
@@ -465,29 +501,28 @@ console.log("sequenceNumber: "+sequenceNumber)
 }
 
 PNG._preProcessImage = function(outputResult, frameData, binaryArray){
-		if(outputResult["imageData"]){
-			console.log("new frame ++++++++++++++++++++++++++++++++++++++++++++++++ "+frameData["width"]+"x"+frameData["height"]);
-//			console.log(frameData);
-			var imageData = PNG._processImage(outputResult,binaryArray, frameData["width"], frameData["height"]);
-			if(!outputResult["frames"]){
-				outputResult["frames"] = [];
-			}
-
-			var frame = {};
-			frame["delay"] = frameData["delay"];
-			frame["offsetX"] = frameData["offsetX"];
-			frame["offsetY"] = frameData["offsetY"];
-			frame["width"] = frameData["width"];
-			frame["height"] = frameData["height"];
-			frame["image"] = imageData["image"];
-			frame["blend"] = frameData["blend"];
-			frame["dispose"] = frameData["dispose"];
-			
-			outputResult["frames"].push(frame);
-			Code.emptyArray( outputResult["imageData"] );
-			//outputResult["frameData"] = {};
-			outputResult["imageData"] = null;
+	if(outputResult["imageData"]){
+		console.log("new frame ++++++++++++++++++++++++++++++++++++++++++++++++ "+frameData["width"]+"x"+frameData["height"]);
+		var imageData = PNG._processImage(outputResult,binaryArray, frameData["width"], frameData["height"]);
+		if(!outputResult["frames"]){
+			outputResult["frames"] = [];
 		}
+
+		var frame = {};
+		frame["delay"] = frameData["delay"];
+		frame["offsetX"] = frameData["offsetX"];
+		frame["offsetY"] = frameData["offsetY"];
+		frame["width"] = frameData["width"];
+		frame["height"] = frameData["height"];
+		frame["image"] = imageData["image"];
+		frame["blend"] = frameData["blend"];
+		frame["dispose"] = frameData["dispose"];
+		
+		outputResult["frames"].push(frame);
+		Code.emptyArray( outputResult["imageData"] );
+		//outputResult["frameData"] = {};
+		outputResult["imageData"] = null;
+	}
 }
 
 PNG._processImage = function(outputResult, binaryArray, imageWidth, imageHeight){
@@ -568,7 +603,7 @@ outputDataArray[i] = Code.getColARGB(a,r,g,b);
 	var indexOut = 0;
 	for(j=0; j<imageHeight; ++j){
 		var filterType = decompressed[indexIn++];
-		console.log("  => "+j+"     --- filterType: "+filterType);
+		// console.log("  => "+j+"     --- filterType: "+filterType);
 		if(filterType==0){ // N/A : recon(x) = filt(x)
 			for(i=0; i<lineWidthOut; ++i){
 				var val = decompressed[indexIn+i];

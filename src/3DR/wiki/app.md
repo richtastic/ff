@@ -390,13 +390,6 @@ MISSING:
 - automate process of converting all input images to rotated same orientation (landscape right-top?)
 
 
-img.exifdata
-
-
-
-Code.int32FromByteArray
-
-
 
 - new camera collection set of images for calibration (10+) accuracy
 - go thru process with new easy set: 10-15 images

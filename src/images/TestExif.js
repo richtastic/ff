@@ -32,22 +32,53 @@ function TestExif(){
 	// ajax.get("./mri.png",this,this._handleLoaded,null);
 	//ajax.();
 GLOBALSTAGE = this._stage;
-
+	
+	// var doPNG = false;
+	var doPNG = true;
 	
 	var domBody = Code.getBody();
 	var domImage = Code.newImage(domBody);
 	console.log(domImage);
-	// var source = "./exif.png";
-	var source = "./exif.jpg";
+	var source;
+	if(doPNG){
+		source = "./exif.png";
+	}else{
+		source = "./exif.jpg";
+	}
 	Code.setImageSource(domImage, source, function(i){
 		console.log("loaded");
 		console.log(i)
-		console.log(domImage)
-		JPEG.EXIF(domImage, function(data){
-			console.log("data");
+		console.log(domImage);
+
+		var imageSRC = domImage.src;
+
+		var ajax = new Ajax();
+		ajax.binary(true);
+		ajax.get(imageSRC, Code, function(data){
+			console.log("got");
 			console.log(data);
+			var mime = Code.mimeTypeFromBinaryData(data);
+			console.log(mime);
+			if(mime==Code.MIMETYPE_PNG){
+				console.log("PNG");
+				PNG.METADATA(domImage, function(data){
+					console.log(data);
+					var orientation = data.metadata()["Orientation"];
+					console.log("orientation: "+orientation);
+				});
+			}else if(mime==Code.MIMETYPE_JPG){
+				console.log("JPG");
+				JPEG.EXIF(domImage, function(data){
+					console.log(data);
+					var orientation = data.metadata()["Orientation"];
+					console.log("orientation: "+orientation);
+				});
+			}else{
+				console.log("unknown");
+			}
+			
 		});
-		// console.log(domImage.exifdata);
+
 	});
 	
 }

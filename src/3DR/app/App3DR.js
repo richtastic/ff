@@ -2218,7 +2218,50 @@ App3DR.App.UploadAdapterToPictures.prototype._processCurrentFile = function(){
 				if(sizes.length==0){ // push original image as default
 					sizes.push( new V3D(originalWidth,originalHeight, 1.0) );
 				}
-				self._processPictures(image, extension, sizes);
+// 
+// JPEG.EXIF(domImage, function(data){
+// 					// console.log("data");
+// 					console.log(data);
+// 					var orientation = data.metadata()["Orientation"];
+// 					console.log("orientation: "+orientation);
+// 				});
+// var mime = Code.mimeTypeFromBinaryData(data);
+var base64Data = image.src;
+var binaryData = Code.base64StringToBinary(base64Data);
+console.log(binaryData);
+console.log("PROCESS PICTURE");
+var mime = Code.mimeTypeFromBinaryData(binaryData);
+console.log(mime);
+console.log(mime==Code.MIMETYPE_JPG);
+if(mime==Code.MIMETYPE_JPG){
+	console.log("IS JPG");
+	JPEG.EXIF(binaryData, function(data){
+		console.log(data);
+		var orientation = data.metadata()[JPEG.EXIF_TAG_ORIENTATION];
+		console.log(orientation);
+		var angle = 0;
+		if(orientation==JPEG.EXIF_ORIENTATION_TOP_UP){
+			console.log("UP");
+			angle = 0;
+		}else if(orientation==JPEG.EXIF_ORIENTATION_TOP_LEFT){
+			console.log("LEFT");
+			angle = 270;
+		}else if(orientation==JPEG.EXIF_ORIENTATION_TOP_RIGHT){
+			console.log("RIGHT");
+			angle = 90;
+		}else if(orientation==JPEG.EXIF_ORIENTATION_TOP_DOWN){
+			console.log("DOWN");
+			angle = 180;
+		}
+		self._processPictures(image, extension, sizes, angle);
+	});
+}else{
+	throw "unknown MIME TYPE";
+}
+// console.log(image);
+// console.log(extension);
+// console.log(sizes);
+				// self._processPictures(image, extension, sizes);
 			}
 			image.src = imageSrc;
 		}
@@ -2228,7 +2271,7 @@ App3DR.App.UploadAdapterToPictures.prototype._processCurrentFile = function(){
 App3DR.App.UploadAdapterToPictures.prototype._processPicturesLoaded = function(i){
 	console.log("_processPicturesLoaded: "+i);
 }
-App3DR.App.UploadAdapterToPictures.prototype._processPictures = function(image, extension, sizes){
+App3DR.App.UploadAdapterToPictures.prototype._processPictures = function(image, extension, sizes, angle){
 //var uploadImageTypeCamera = true;
 //var uploadImageTypeCamera = false;
 var uploadImageTypeCamera = this.uploadImageTypeCamera;
@@ -2245,7 +2288,29 @@ var uploadImageTypeCamera = this.uploadImageTypeCamera;
 		var i;
 		var pictureList = [];
 		var mat = R3D.imageMatrixFromImage(image, stage);
-		console.log(view)
+		console.log(view);
+console.log("angle: "+angle);
+// console.log(mat.size());
+var flipSizes = false;
+if(angle==90){
+	mat = mat.rotate90();
+	flipSizes = true;
+}else if(angle==180){
+	mat = mat.rotate180();
+}else if(angle==270){
+	mat = mat.rotate270();
+	flipSizes = true;
+}
+if(flipSizes){
+	for(var i=0; i<sizes.length; ++i){
+		var x = sizes[i].x;
+		var y = sizes[i].y;
+		sizes[i].x = y;
+		sizes[i].y = x;
+	}
+}
+// console.log(mat.size());
+// throw "?"
 		// if(uploadImageTypeCamera){
 		// 	view.camera()
 		// }else{
@@ -2270,6 +2335,7 @@ var uploadImageTypeCamera = this.uploadImageTypeCamera;
 				var self = this;
 				this.fxn = function(){
 					var size = self.size;
+					// console.log(size+"");
 					var pictureList = self.pictureList;
 					var app = self.app;
 					var scaledImage = self.scaledImage;
@@ -2283,6 +2349,9 @@ var uploadImageTypeCamera = this.uploadImageTypeCamera;
 						// d.graphics().strokeLine();
 						// d.graphics().fill();
 						var doScale = false;
+						// if(size.x<200){ // debug test
+						// 	GLOBALSTAGE.addChild(d);
+						// }
 						//var doScale = true;
 						d.matrix().identity();
 						if(doScale){
@@ -2302,6 +2371,7 @@ var uploadImageTypeCamera = this.uploadImageTypeCamera;
 						object["view"] = view;
 					pictureList.push(object);
 					console.log(pictureList.length+" / "+countTotal);
+// throw "before upload .."
 					if(pictureList.length==countTotal){
 						//if(uploadImageTypeCamera){
 						app._uploadedViewPicture(view, pictureList);
