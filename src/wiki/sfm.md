@@ -109,7 +109,28 @@ The output can simply be the camera geometry (orientations), world geometry (poi
 <a name="CALIBRATION"></a>
 ### Camera Calibration
 
-The goal here is to obtain an accurate Intrinsic Camera matrix:
+Projection Steps:
+
+W3D (world 3D point)
+v
+[extrinsic camera parameters - P]
+v
+L3D (local 3D point wrt camera)
+v
+[projection to ideal camera]
+v
+p2D (p.x = L3D.x/L3D.z, L3D.y/L3D.z)
+v
+[nonlinear distortion - radial & tangental model]
+v
+d2D (distorted 2D point)
+v
+[K camera intrinsic parameters]
+v
+i2d (image 2D point)
+
+
+The goal of calibration is to obtain an accurate Intrinsic Camera matrix:
 
 K:
 ```
@@ -206,6 +227,24 @@ principle point is too mixed in for linear, but nonlinearly
 If the source camera is available taking photos of a known geometry allows for values at each stage of projection to be known, to allow solving for the unknown model parameters
 
 
+
+object / blob based:
+
+input: image of grid
+- get corners
+- get blobs (inset pixels)
+- center-to-center check connect blobs
+	- passing a corner connects the 2 blobs & evaluates corner point
+	- blob size is min/max: shortes & longest distance to edge pixel
+- find one of the corner blobs (only connected to a single blob)
+- determine connectivity from graph
+- inner checkerboard points are more reliable
+
+=> todo: handle partial cases...
+=> todo: more robust
+...
+
+...
 <br/>
 <br/>
 
@@ -240,11 +279,10 @@ Modern Cameras and phones store metadata in images, with useful info like:
 identify -verbose ./test.jpg
 ```
 
-
-	Orientation: 1 = TopLeft
-	Orientation: 6 = RightTop
-	Orientation: 8 = LeftBottom
-	Orientation: 3 = BottomRight
+	Orientation: 1 = TopLeft [normal landscape]
+	Orientation: 6 = RightTop [90 CW]x
+	Orientation: 8 = LeftBottom [90 CCW]
+	Orientation: 3 = BottomRight [180]
 
 <br/>
 <br/>

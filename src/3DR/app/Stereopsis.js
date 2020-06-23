@@ -1166,8 +1166,9 @@ Stereopsis.View.prototype.projectPoint3D = function(point2D,point3D){
 		point2D = new V2D();
 	}
 	var K = this._K;
-	var distortions = null;
-	var projected2D = R3D.projectPoint3DToCamera2DForward(point3D, this.absoluteTransform(), K, distortions, false, point2D);
+	var distortion = null;
+	// var projected2D = R3D.projectPoint3DToCamera2DForward(point3D, this.absoluteTransform(), K, distortions, false, point2D);
+	var projected2D = R3D.projectPoint3DCamera2DDistortion(point3D, this.absoluteTransform(), K, distortion, point2D, false);
 	return projected2D;
 }
 Stereopsis.View.prototype.compareSize = function(compareSize){
@@ -6035,6 +6036,7 @@ Stereopsis.World.prototype.iteration = function(iterationIndex, maxIterations, d
 	var view0 = views[0];
 	var maxErrorRPercent = 0.01; // 5-10 pixels
 		maxErrorRPercent = 0.005;
+		// maxErrorRPercent = 0.0025; // ?
 	var maxErrorRPixels = maxErrorRPercent*view0.size().length();
 	console.log("maxErrorRPixels: "+maxErrorRPixels);
 

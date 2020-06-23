@@ -360,10 +360,9 @@ TIMELINES:
 - 360 object scene ~ 10 images
 
 
-06/20 - update track_full logic: pairs + nonlinear estimate + solve all views at once
-06/23 - use track points as seeds / not from-scratch pairs?
-
-? - test 'full' set of 25 images
+??/?? - update track_full logic: pairs + nonlinear estimate + solve all views at once
+??/?? - use track points as seeds / not from-scratch pairs?
+? - test set of ~ 25 images
 		- automate URL refresh for sections of code
 ? - test set of ~ 50 images x (this will require 2-10 x speed ups)
 ? - MVP
@@ -386,6 +385,178 @@ MISSING:
 
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+- F is too unreliable to produce R for repetitive scenes
+	- F->R accuracy [muffin scene]
+		- are the points 
+	- propagating seed points:
+		- get RANSAC average scale & average rotation for neighborhood
+		- vote on neighbors to drop
+	- dropping outliers:
+		- GLOBAL:
+			- F error
+			- N error
+			- S error
+		- LOCAL:
+			- scale differences
+			- rotation differences
+			- F error ?
+		- ...
+
+
+
+R3D.affineBasicFromPoints2D
+
+
+
+
+
+
+- Feature Points - ACCURACY
+	- BLOBS COMBINED WITH CORNERS
+
+
+
+
+- skeleton combining & scale drift
+
+
+
+
+
+
+- final group stereopsis still very blurry
+	- separate reconstructions for each pair
+	- noisy points
+
+
+
+
+
+
+
+
+solveDenseGroup -- try seeds from tracks
+
+
+- F is not reliable enough to create accurate R in situations
+	=> 
+
+- F DENSE BEFORE R DENSE ?
+	- add step after seed Fs are found
+		- filter on:
+			- N error
+			- S error
+			- F error
+		
+		- affine from:
+			local average (6 to 3+ best pionts)
+		- single point:
+			only get rotation
+		=> this is already sone somewhere
+
+		- propagation only based on F transform
+
+		- don't need patches
+
+		- pick to 50% F & 50% N & 50% corner => 12.5 seeds
+	- 
+
+SKELETAL PROCESS CHANGE:
+- what to do about combining view matrixes (scale drift?)
+	- track_skeleton.yaml
+		-> iterate on solution
+	- track_full.yaml
+		-> iterate on solution
+- ???
+
+
+
+
+
+- camera calibration: allow to solve 2 cameras with s = 0 ?
+- larger camera resolution for camera accuracy
+- 
+calculateCameraCheckerboard
+loadCalibrationImage
+
+
+- muffin series has a lot more similar views, maybe best pairs aren't being found ?
+
+- lots of close view-pairs are initialized to opposite (wrong) sides
+	- low R error, but messed up image
+	-> try solving simultaneously with alternate solutions?
+		- reprojection error ?
+
+
+even when absolutely clear ...
+	=> bad starting matches ?
+
+forwardCounts
+bakwardCounts
+
+=> HOW TO INCREASE RELIABILITY OF INITIAL R:
+	- better matches
+		- bigger feature size region?
+		- 
+	- allow region expanding while initting ?
+		- 
+	- detect bad triangulations (points behind view ?)
+		- 
+
+
+	- can't drop negative points - in case is opposite...
+
+
+HOW TO DECIDE?:
+forwardCounts: 83,83,83,83
+R3D.js:973 bakwardCounts: 0,0,0,0
+R3D.js:986 (4) [Matrix, Matrix, Matrix, Matrix]
+R3D.js:987 (4) [83, 83, 83, 83]
+R3D.js:989 none or multiple?
+
+
+
+
+OTHER UPDATES:
+
+- track iterating => try ALL-CAMERA simultaneous optimizing
+
+- combining tracks => can't re-estimate 3D locations / combine separate tracks
+
+
+
+
+id: "FOA6MFXX-QIDRJ3GU"
+
+
+
+
+
+
+
+
+
+
+
+// var projected2D = R3D.projectPoint3DToCamera2DForward(point3D, this.absoluteTransform(), K, distortions, false, point2D);
+	var projected2D = R3D.projectPoint3DCamera2DDistortion(point3D, this.absoluteTransform(), K, distortion, point2D, false);
+
+
+
+
+project._taskDoneCheckReloadURL();
+
+
+
+last checked:
+
+id: "F4G0C10T-YOC1JXLQ"
+id: "KXI5RI6F-YOC1JXLQ" <<<
+
+
+
+
 
 - automate process of converting all input images to rotated same orientation (landscape right-top?)
 
@@ -528,14 +699,6 @@ full_pairs: ~ views x 3 ~ 33, not 11 x (10) / 2 ~ 50
 
 
 
-
-
-
-
-
-
-
-project._taskDoneCheckReloadURL();
 
 
 

@@ -6689,19 +6689,15 @@ App3DR.ProjectManager.prototype.addOperation = function(operation, param, callba
 	this.checkOperations();
 }
 App3DR.ProjectManager.prototype._handleFileClientComplete = function(data){
-	console.log("_handleFileClientComplete");
-	console.log(data);
+	// console.log("_handleFileClientComplete");
+	// console.log(data);
 	var operation = this._operation;
 	this._operation = null;
-	console.log(operation);
+	// console.log(operation);
 	if(operation){
 		var object = operation["object"];
 		var callback = operation["callback"];
 		var context = operation["context"];
-		// console.log(callback);
-		// console.log(context);
-		// console.log(object);
-		// console.log(data);
 		callback.call(context, object, data);
 	}
 	this.checkOperations();
@@ -7726,7 +7722,7 @@ console.log("cams");
 		return;
 	}
 
-throw "task default assign views camera";
+// throw "task default assign views camera";
 	// make sure every view has a camera:
 	len = views.length;
 	var wasCameraAdded = false;
@@ -8886,7 +8882,7 @@ console.log(" save graph ");
 
 			console.log(graphGroups);
 
-/*
+
 			// combine groups to single graph using skeleton view's offset as origin
 			console.log(graphGroups);
 			var transformLookup = {};
@@ -9019,7 +9015,10 @@ console.log(i+" ? ..............................................................
 					}
 				}
 			}
-*/
+
+
+
+
 
 
 // TODO: use skeletons as base, and groups relative's as edges to minimize angle differences (scale drift)
@@ -9029,13 +9028,26 @@ console.log(i+" ? ..............................................................
 
 
 
+
+/*
+
+// TODO
 throw "nonlinear Code.graphAbsoluteUpdateFromRelativeTransforms"
 
 
 
 
-
+// TODO
 throw "get list of pairs including only top 3 view pairs -- from original graph pairs"
+
+
+*/
+
+
+
+
+
+
 			// to array
 			var viewList = [];
 			var keys = Code.keys(transformLookup);
@@ -9254,7 +9266,8 @@ console.log("isDone --- no");
 				// optimize view orientation
 				var info = world.solveOptimizeSingleView(worldView);
 				console.log(info);
-throw "FULL solveOptimizeSingleView"
+
+// throw "FULL solveOptimizeSingleView"
 
 				nextViewBA["deltaErrorR"] = Math.abs(info["deltaR"]); // expected always negative
 				nextViewBA["errorR"] = info["errorR"];
@@ -10220,6 +10233,7 @@ console.log(featuresB);
 			Ferror = result["error"];
 			if(!F || Ferror>maxErrorFDensePixels){
 				console.log(" GUIDED MATCH ERROR TOO HIGH (OR F NULL): "+Ferror+" / "+maxErrorFDensePixels);
+				F = null;
 				goodEnoughMatches = false;
 				pointsA = [];
 				pointsB = [];
@@ -10341,6 +10355,7 @@ if(true){
 	console.log(pointsA.length)
 	console.log("R3D.showFundamental");
 	if(F){
+		console.log(samplesA, samplesB, F, Finv, GLOBALSTAGE, imageMatrixA,imageMatrixB);
 		R3D.showFundamental(samplesA, samplesB, F, Finv, GLOBALSTAGE, imageMatrixA,imageMatrixB);
 	}
 
@@ -10857,7 +10872,9 @@ App3DR.ProjectManager.prototype._doDenseGroupsStereopsis = function(groupData, c
 
 	var groupViews = groupData["views"];
 	var groupCameras = groupData["cameras"];
+	var groupPoints = groupData["points"];
 	var groupPairs = groupData["pairs"];
+	// console.log(groupPairs);
 
 	var groupCameraFromID = {};
 	for(var i=0; i<groupCameras.length; ++i){
@@ -10944,6 +10961,7 @@ App3DR.ProjectManager.prototype._doDenseGroupsStereopsis = function(groupData, c
 		}
 		*/
 
+
 		console.log("create world");
 		var cameras = groupCameras;
 		var views = groupViews;
@@ -10963,7 +10981,13 @@ App3DR.ProjectManager.prototype._doDenseGroupsStereopsis = function(groupData, c
 		// console.log(worldViews);
 		// throw "?????????"
 
-		// pairs to craete 
+
+		console.log("TODO: use groupPoints as seeds");
+		
+
+// console.log(groupPairs);
+
+		// pairs to create 
 		var comparePairs = [];
 		for(var i=0; i<groupPairs.length; ++i){
 			var groupPair = groupPairs[i];
@@ -10994,7 +11018,7 @@ App3DR.ProjectManager.prototype._doDenseGroupsStereopsis = function(groupData, c
 		world.checkForIntersections(true);
 		world.resolveIntersectionByDefault();
 		// world.resolveIntersectionByPatchVisuals();
-		throw "??? before solveDenseGroup "
+		throw "??? before solveDenseGroup --- change seed method to make much faster"
 		// solveDenseGroup
 		world.solveDenseGroup(comparePairs, solveDenseGroupComplete);
 		console.log("?????????????????????????????");
@@ -11399,6 +11423,7 @@ App3DR.ProjectManager.prototype.initializeBundleGroupsFromDense = function(){
 		var graph = new Graph();
 		var viewIDToVertex = {};
 		var viewIDToViewIndex = {};
+		var viewIndexToViewID = {};
 		var transforms = [];
 		var vertexEdgeList = [];
 		for(var i=0; i<denseViews.length; ++i){
@@ -11408,6 +11433,7 @@ App3DR.ProjectManager.prototype.initializeBundleGroupsFromDense = function(){
 			// viewIDToVertex[viewID] = vertex;
 			// vertex.data(view);
 			viewIDToViewIndex[viewID] = i;
+			viewIndexToViewID[i] = viewID;
 			// viewIDToView[i] = viewID;
 			transforms[i] = Matrix.fromObject(view["transform"]);
 				transforms[i] = Matrix.inverse(transforms[i]);
@@ -11463,6 +11489,15 @@ App3DR.ProjectManager.prototype.initializeBundleGroupsFromDense = function(){
 	console.log("PAIR REDUCTION ("+bestPairsMaxCount+")"+listBestPairs.length+" / "+listPairs.length);
 		var result = R3D.skeletalViewGraph(listBestPairs);
 
+		// NOT USED
+		var listPairsIDs = [];
+		for(var i=0; i<listBestPairs.length; ++i){
+			var pair = listBestPairs[i];
+			console.log(pair)
+			var viewIDA = viewIndexToViewID[pair[0]];
+			var viewIDB = viewIndexToViewID[pair[1]];
+			listPairsIDs[i] = {"A":viewIDA, "B":viewIDB};
+		}
 
 		// get skeleton graph 
 		// console.log(listPairs);
@@ -11524,7 +11559,7 @@ App3DR.ProjectManager.prototype.initializeBundleGroupsFromDense = function(){
 			return a.length < b.length ? -1 : 1;
 		});
 		console.log(groups);
-		calculateBundleGroupsFxn(denseViews, groups, densePoints, denseCameras); // load & keep only relevant tracks 
+		calculateBundleGroupsFxn(denseViews, groups, densePoints, denseCameras, listBestPairs); // load & keep only relevant tracks 
 		// loadAllGroupPairs(denseViews, groups, densePoints, denseCameras); // load points from pairs (relative / track)
 		// calculateBundleGroupsBasicFxn(denseViews, groups, densePoints, denseCameras); // do nothing
 	}
@@ -11639,8 +11674,10 @@ throw "before save basic";
 
 
 
-	var calculateBundleGroupsFxn = function(views, groups, points, cameras){
-throw "calculateBundleGroupsFxn ... ";
+	var calculateBundleGroupsFxn = function(views, groups, points, cameras, bestPairs){
+		// console.log(bestPairs);
+		// console.log(groups);
+// throw "calculateBundleGroupsFxn ... here";
 		var bundleGroupList = [];
 		bundleData = {};
 			bundleData["groupCount"] = groups.length;
@@ -11668,6 +11705,23 @@ throw "calculateBundleGroupsFxn ... ";
 				groupIDLookup[viewID] = 1;
 				groupDataViews.push(view);
 			}
+			var groupDataPairs = [];
+			for(var j=0; j<bestPairs.length; ++j){
+				var pair = bestPairs[j];
+				var indexA = pair[0];
+				var indexB = pair[1];
+				var viewA = views[indexA];
+				var viewB = views[indexB];
+				var viewIDA = viewA["id"];
+				var viewIDB = viewB["id"];
+				if(groupIDLookup[viewIDA] && groupIDLookup[viewIDB]){
+					groupDataPairs.push({"A":viewIDA, "B":viewIDB});
+				}
+			}
+			// console.log(bestPairs);
+			// console.log(groupIDLookup);
+			// console.log(groupDataPairs);
+			// throw "..."
 			// get list of points for group:
 			var groupPointList = [];
 			for(var p=0; p<points.length; ++p){
@@ -11700,6 +11754,7 @@ throw "calculateBundleGroupsFxn ... ";
 				groupData["cameras"] = groupDataCameras;
 				groupData["views"] = groupDataViews;
 				groupData["points"] = groupPointList;
+				groupData["pairs"] = groupDataPairs;
 			console.log(groupData);
 
 			var groupFilename = "groups/group_"+i+".yaml";
@@ -11708,8 +11763,11 @@ throw "calculateBundleGroupsFxn ... ";
 				bundleGroupData["viewCount"] = groupDataViews.length;
 				bundleGroupData["pointCount"] = groupPointList.length;
 				bundleGroupData["transforms"] = null;
+				// bundleGroupData["pairs"] = null; // TODO: PAIR FOR GROUP ?
 			bundleGroupList.push(bundleGroupData);
 			// SAVE GROUP TO FILE:
+			// console.log(groupData);
+			// throw "before save group calculateBundleGroupsFxn";
 			var fullGroupPath = Code.appendToPath(bundleBaseDirectory, groupFilename);
 			project.saveFileFromData(groupData, fullGroupPath, saveGroupFileFxn, project);
 		}
@@ -12822,8 +12880,10 @@ App3DR.ProjectManager.prototype._calculateFeaturesLoaded = function(view){
 App3DR.ProjectManager.prototype._calculateFeaturesComplete = function(view){
 	console.log("_calculateFeaturesComplete");
 	console.log(view);
-	//this._taskBusy = false;
+	// this._taskBusy = false;
 	// this.checkPerformNextTask();
+	var project = this;
+	project._taskDoneCheckReloadURL();
 }
 App3DR.ProjectManager.prototype.loadImageForView = function(view, filename, callback, context, object){
 	var path = Code.appendToPath(this._workingPath, App3DR.ProjectManager.VIEWS_DIRECTORY, view.id(), App3DR.ProjectManager.PICTURES_DIRECTORY, filename);
@@ -12909,7 +12969,8 @@ App3DR.ProjectManager.prototype.calculateViewSimilarities = function(){
 		}
 	}
 	var fxnSavedProject = function(){
-		console.log("fxnSavedProject");
+		console.log("fxnSavedProject - view similarities");
+		project._taskDoneCheckReloadURL();
 	}
 	for(var i=0; i<views.length; ++i){
 		var view = views[i];
@@ -13003,7 +13064,7 @@ App3DR.ProjectManager.prototype.calculatePairPutatives = function(){
 	var similarity = this._viewSimilarity;
 
 	
-	var cappedMinimumPairCount = 3; // need at least 2 + 1 other views to try + error (~2)
+	var cappedMinimumPairCount = 4; // need at least 2 + 1 other views to try + error (~2) 3->4 -- for very similar scenes
 	var cappedMaximumPairCount = 10; // 3 + 100^0.5 => 10
 	var minimumPairCount = cappedMinimumPairCount;
 	// 4  -> 4
@@ -13110,7 +13171,8 @@ App3DR.ProjectManager.prototype.calculatePairPutatives = function(){
 	console.log(sparseData);
 
 	var fxnSavedProject = function(){
-		console.log("fxnSavedProject");
+		console.log("fxnSavedProject - pair putatives");
+		project._taskDoneCheckReloadURL();
 	}
 	var fxnSavedSparse = function(){
 		console.log("fxnSavedSparse");
@@ -13615,7 +13677,8 @@ App3DR.tripleInfo = function(imageMatrixA,imageMatrixB,imageMatrixC, viewA,viewB
 App3DR.ProjectManager.prototype.calculateCameraCheckerboard = function(camera, callback, context, object){
 	console.log("calculateCameraCheckerboard");
 	var image = camera.needsDetectionImage();
-	// console.log(image);
+	console.log(image);
+console.log("needsDetectionImage");
 	var self = this;
 	var fxnA = function(img){
 		console.log("LOADED IMAGE");
@@ -13624,6 +13687,9 @@ App3DR.ProjectManager.prototype.calculateCameraCheckerboard = function(camera, c
 		var imageMatrix = R3D.imageMatrixFromImage(img, stage);
 		var imageWidth = imageMatrix.width();
 		var imageHeight = imageMatrix.height();
+// console.log(imageWidth,imageHeight);		
+// console.log("CALIB IMAGE");
+// throw "..."
 		var pointMatches = R3D.detectCheckerboard(imageMatrix, 10,10, true);
 console.log(pointMatches);
 // return;
@@ -13691,8 +13757,8 @@ App3DR.ProjectManager.prototype.calculateCameraParameters = function(camera, cal
 				pointList2D.push(points2D); // in [0,1], [0,h/w]
 				pointList3D.push(points3D);
 			}
-			// console.log(pointList2D)
-			// console.log(pointList3D)
+			console.log(pointList2D)
+			console.log(pointList3D)
 			// pointList2D are aspect-ratioed points to fill [0,0]->[wid,h2w], eg: [0,0]->[1,0.75]
 			var result = R3D.calibrateCameraK(pointList3D,pointList2D);
 			console.log(result);
@@ -17662,6 +17728,7 @@ App3DR.ProjectManager.prototype._taskDoneCheckReloadURL = function(){
 	console.log(iterations!==null);
 	console.log(iterations!==undefined);
 	console.log(iterations!==0);
+	// throw "?"
 	if(iterations!==null && iterations!==undefined && iterations!==0){
 		iterations -= 1;
 		console.log("NEW ITERATION "+iterations);
@@ -20058,6 +20125,8 @@ if(SHOULD_CORRECT_DISTOTION){
 }
 
 
+throw "no"
+
 // START STEREOPSIS
 console.log(" > CREATE WORLD");
 // world
@@ -21750,6 +21819,8 @@ App3DR.ProjectManager.Camera.prototype.setDistortion = function(k0,k1,k2,p0,p1){
 	distortion["p0"] = p0;
 	distortion["p1"] = p1;
 	this._distortion = distortion;
+	console.log("SET CAMERA DISTORTION");
+	console.log(distortion);
 	return this._distortion;
 }
 App3DR.ProjectManager.Camera.prototype.distortion = function(){
@@ -21806,6 +21877,8 @@ App3DR.ProjectManager.Camera.prototype.toYAML = function(yaml){
 	// distortions
 	if(this._distortion){
 		var d = this._distortion;
+console.log("SAVE CAMERA DISTORTION");
+console.log(d);
 		yaml.writeObjectStart("distortion");
 			yaml.writeNumber("k0", d["k0"]);
 			yaml.writeNumber("k1", d["k1"]);
@@ -21865,7 +21938,7 @@ App3DR.ProjectManager.Camera.prototype.readFromObject = function(object){
 		var k2 = distortion["k2"];
 		var p0 = distortion["p0"];
 		var p1 = distortion["p1"];
-		this._distortion = {"k0":k0, "k1":k1, "k2":k2, "p3":p0, "p1":p1};
+		this._distortion = {"k0":k0, "k1":k1, "k2":k2, "p0":p0, "p1":p1};
 	}
 }
 
@@ -21876,7 +21949,7 @@ App3DR.ProjectManager.Camera.CalibrationImage = function(camera, directory){
 	this._widthToHeightRatio = null;
 	this._matchesCount = null;
 	this._calibrationData = null;
-	self._calibrationImage = null;
+	this._calibrationImage = null; // SELF ?
 }
 App3DR.ProjectManager.Camera.CalibrationImage.prototype.directory = function(){
 	return this._directory;
@@ -22027,12 +22100,19 @@ App3DR.ProjectManager.Camera.CalibrationImage.prototype._setCheckerboardMatchesC
 	}
 }
 App3DR.ProjectManager.Camera.CalibrationImage.prototype.loadCalibrationImage = function(callback, context){
+	// full res: 
+	// var desiredPixelCount = 4000*3000;
+	// var maximumPixelCount = 9999*9999;
+	// hi res:
+	var desiredPixelCount = 2016*1512;
+	var maximumPixelCount = 3000*2000;
+	// med res:
 	// var desiredPixelCount = 1600*1200;
 	// var maximumPixelCount = 1920*1080;
-	var desiredPixelCount = 800*600;
-	var maximumPixelCount = 1024*800;
+	// low res:
+	// var desiredPixelCount = 800*600;
+	// var maximumPixelCount = 1024*800;
 	var closest = App3DR.ProjectManager._closestPictureSize(this._pictureInfo, desiredPixelCount, maximumPixelCount);
-	console.log(closest);
 	if(closest){
 		var filename = closest["file"];
 console.log("CAMERA FILE: "+filename);

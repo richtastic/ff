@@ -920,6 +920,7 @@ console.log(allStr);
 	var forwardRays = [];
 	var originV3Ds = [];
 	var limitAngle90 = Math.PI*0.5;
+	var viewAngles = [];
 	for(var i=0; i<possibles.length; ++i){
 		var P = possibles[i];
 		var A = Matrix.inverse(P);
@@ -928,6 +929,7 @@ console.log(allStr);
 		var dirZ = A.multV3DtoV3D(new V3D(0,0,1));
 		dirZ.sub(dirO);
 		var angle = V3D.angle(V3D.DIRZ, dirZ);
+		viewAngles[i] = Code.degrees(angle);
 		// console.log("ANGLE: "+Code.degrees(angle));
 		if(false && angle>=limitAngle90){
 			Code.removeElementAt(possibles,i);
@@ -943,6 +945,7 @@ console.log(allStr);
 	var projection = null;
 	var forwardCounts = Code.newArrayZeros(possibles.length);
 	var bakwardCounts = Code.newArrayZeros(possibles.length);
+	var errorCounts = Code.newArray();
 	for(var i=0; i<possibles.length; ++i){
 		var possible = possibles[i];
 		var M1 = M1Full;
@@ -953,8 +956,11 @@ console.log(allStr);
 		var originB = originV3Ds[i];
 		var dirA = new V3D(0,0,1);
 		var dirB = forwardRays[i];
+		var errors = [];
 		for(var j=0; j<points3D.length; ++j){ // project point to both cameras:
 			var point3D = points3D[j];
+			var point2DA = pointsA[j];
+			var point2DB = pointsB[j];
 
 			var aToP = V3D.sub(point3D,originA);
 			var angleA = V3D.angle(aToP, dirA);
@@ -967,10 +973,24 @@ console.log(allStr);
 			}else{
 				bakwardCounts[i] += 1;
 			}
+			var reprojectionErrorA = R3D.reprojectionErrorSingle(point3D, point2DA, M1, Ka, null);
+			var reprojectionErrorB = R3D.reprojectionErrorSingle(point3D, point2DB, M2, Kb, null);
+			var error = reprojectionErrorA + reprojectionErrorB;
+			errors.push(error);
 		}
+		var min = Code.min(errors);
+		var sig = Code.stdDev(errors, min);
+		var error = min + sig;
+		errorCounts.push(error);
 	}
 	console.log("forwardCounts: "+forwardCounts);
 	console.log("bakwardCounts: "+bakwardCounts);
+	console.log("       angles: "+viewAngles);
+	console.log("       errors: "+errorCounts);
+
+	// errors are about identical
+	// other / nonlinear way to tell which is better (top best ~50% ?)
+	
 	var bestTotalCount = Code.max(forwardCounts);
 	if(bestTotalCount>=0){ // ?
 		var bestProjections = [];
@@ -982,10 +1002,16 @@ console.log(allStr);
 		}
 		if(bestProjections.length==1){
 			bestProjection = bestProjections[0];
-		}else{
+		}else if(bestProjections.length>1){
 			console.log(bestProjections);
 			console.log(forwardCounts);
-			throw "none or multiple?"
+			// throw "none or multiple?"
+			console.log("none or multiple?");
+			bestProjection = bestProjections[0];
+
+			console.log("pick lowest reprojection error matrix")
+		}else{
+			throw "no best projection"
 		}
 		return bestProjection;
 	}
@@ -1039,12 +1065,11 @@ R3D.reprojectionError = function(p3D, pA,pB, extrinsicA, extrinsicB, Ka, Kb){ //
 	var average = (distanceA+distanceB); // removed 0.5
 	return {"error":distance, "errorA":distanceSquareA, "errorB":distanceSquareB, "distanceA":distanceA, "distanceB":distanceB, "average":average};
 }
-R3D.reprojectionErrorSingle = function(p3D, p2D, extrinsic, K){ // SINGLE CAMERA REPROJECTION ERROR
-	
+R3D.reprojectionErrorSingle = function(p3D, p2D, extrinsic, K, distortion){ // SINGLE CAMERA REPROJECTION ERROR
+	distortion = null;
 	// var projected2D = R3D.projectPoint3DToCamera2DForward(p3D, extrinsic, K, null);
-	var projected2D = R3D.projectPoint3DCamera2DDistortion(p3D, extrinsic, K, null);
-	
-
+	var projected2D = R3D.projectPoint3DCamera2DDistortion(p3D, extrinsic, K, distortion);
+	// R3D.projectPoint3DCamera2DDistortion = function(in3D, extrinsic, K, distortion, p2D, dropNegativeZ)
 	if(!projected2D){
 		return null;
 	}
@@ -9684,7 +9709,7 @@ R3D.showFeaturesForImage = function(imageMatrix, features, offX){
 		// break;
 		
 		// size = 1.0;
-		size *= 0.20;
+		// size *= 0.20;
 		var p = point;
 		var d = new DO();
 			d.graphics().clear();
@@ -10161,6 +10186,7 @@ R3D._fundamentalIteritiveDropWorst = function(pointsA,pointsB, minimumErrorSigma
 	var sigmaDrop = 2.0;
 	var maxIterations = 15; // 10-20
 	var errorSigma = null;
+	var minCount = 8;
 
 // ?
 console.log(pointsA.length);
@@ -10208,6 +10234,9 @@ console.log(pointsA.length);
 		}
 		if(keepA.length==pointsA.length){
 			// console.log("SAME - BREAK EARLY");
+			break;
+		}
+		if(keepA.length<minCount){
 			break;
 		}
 		pointsA = keepA;
@@ -11476,7 +11505,8 @@ for(var z=0; z<candidatesA.length; ++z){
 	var scores = [];
 	var ratios = [];
 	// var minRatio = 0.50; // 0.80 - 0.90
-	var minRatio = 0.75;
+	// var minRatio = 0.75; // WAS -- good for unique, not good for poor
+	var minRatio = 0.85; // using for very similar images
 	// var minRatio = 1.0;
 	for(var i=0;i<featuresA.length;++i){
 		var featureA = featuresA[i];
@@ -20962,7 +20992,7 @@ console.log("SCORE matches: "+matches.length);
 			points2DA.push(pointA);
 			points2DB.push(pointB);
 		}
-
+console.log(points2DA,points2DB)
 		var F = R3D.fundamentalFromUnnormalized(points2DA,points2DB);
 		var Finv = R3D.fundamentalInverse(F);
 
@@ -20970,7 +21000,6 @@ console.log("SCORE matches: "+matches.length);
 			var match = matches[i];
 			var pointA = match["A"];
 			var pointB = match["B"];
-
 			var affine = match["affine"]; // A to B
 			var info = R3D.fundamentalErrorSingle(F,Finv, pointA,pointB);
 			var error = info["error"];
@@ -21730,8 +21759,10 @@ R3D.patch3DFromInfo = function(points2D,   extrinsics,absolutes,Ks,Kinvs, center
 	// var point3D = R3D.triangulatePointDLT(point2DA,point2DB, extrinsicA,extrinsicB, KaInv, KbInv);
 	var point3D = R3D.triangulatePointDLTList(points2D, extrinsics, Kinvs);
 	var centers2D = [];
+	var distortion = null;
 	for(var i=0; i<points2D.length; ++i){
-		var center2D = R3D.projectPoint3DToCamera2DForward(point3D, extrinsics[i], Ks[i], null, false);
+		// var center2D = R3D.projectPoint3DToCamera2DForward(point3D, extrinsics[i], Ks[i], null, false);
+		var center2D = R3D.projectPoint3DCamera2DDistortion(point3D, extrinsics[i], Ks[i], distortion);
 		centers2D[i] = center2D;
 	}
 	var center2DA = centers2D[0];
@@ -21780,13 +21811,16 @@ R3D.patch3DFromInfo = function(points2D,   extrinsics,absolutes,Ks,Kinvs, center
 	var pointCount = 4;
 	var p2DAs = [];
 	var p2DBs = [];
+	var distortion = null;
 	for(var p=0; p<pointCount; ++p){
 		v.set(right.x,right.y,right.z);
 		v.rotate(normal, (p/pointCount) * Math.PI2);
 		v.scale(averageSize);
 		v.add(point3D);
-		var p2DA = R3D.projectPoint3DToCamera2DForward(v, extrinsicA, Ka, null, false);
-		var p2DB = R3D.projectPoint3DToCamera2DForward(v, extrinsicB, Kb, null, false);
+		// var p2DA = R3D.projectPoint3DToCamera2DForward(v, extrinsicA, Ka, null, false);
+		// var p2DB = R3D.projectPoint3DToCamera2DForward(v, extrinsicB, Kb, null, false);
+		var p2DA = R3D.projectPoint3DCamera2DDistortion(v, extrinsicA, Ka, distortion);
+		var p2DB = R3D.projectPoint3DCamera2DDistortion(v, extrinsicB, Kb, distortion);
 		p2DA.sub(center2DA);
 		p2DB.sub(center2DB);
 		p2DAs.push(p2DA);
@@ -28564,7 +28598,7 @@ R3D.UpdateTextureVertexFromViews = function(vert, viewIndexes, extrinsics,viewCe
 		var viewExtrinsic = extrinsics[j];
 		var viewSize = resolutions[j];
 		var K = cameras[j];
-		var distortions = null;
+		var distortion = null;
 		
 		// aiming toward camera - culling
 		var angle = V3D.angle(viewNormal,vertNormalInverse);
@@ -28603,9 +28637,11 @@ R3D.UpdateTextureVertexFromViews = function(vert, viewIndexes, extrinsics,viewCe
 			}
 		}
 		// get projected point for view
-		var projected2D = R3D.projectPoint3DToCamera2DForward(vertPoint, viewExtrinsic, K, distortions, false);
+		// var projected2D = R3D.projectPoint3DToCamera2DForward(vertPoint, viewExtrinsic, K, distortions, false);
+		var projected2D = R3D.projectPoint3DCamera2DDistortion(vertPoint, viewExtrinsic, K, distortion);
+		// R3D. = function(in3D, extrinsic, K, distortion, p2D, dropNegativeZ){
 		if(!projected2D){
-			console.log(vertPoint, viewExtrinsic, K, distortions, false);
+			console.log(vertPoint, viewExtrinsic, K, distortion, false);
 			throw "BAD PROJECTED POINT ??? "+i;
 		}
 		// inside image
