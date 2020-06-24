@@ -330,13 +330,6 @@ The intrinsic camera (K) and distortion parameters are first approximated using 
 	- affine invariant:
 		-
 	- examples:
-		- SIFT: Scale Invariant Feature Transforms
-			- grayscale gradient (8-bin) histograms with 16 samples (4x4) repeated in 16 oriented (4x4 grid) locations
-			- blob size is really well defined; total feature size ~ 2-8 x size of blob
-			-
-		- MSER: Maximally Stable Extremal Regions
-			- very accurate outline, repeatable
-			- typically only handful of points [10~100]
 		- SURF:
 		- DAISY:
 		- MOPS: Multi Scale Oriented Patche(S)
@@ -354,6 +347,83 @@ The intrinsic camera (K) and distortion parameters are first approximated using 
 		- LDA-HASH:
 		- BINBOOST - Binary
 
+**Corners** Points with high variablity in all directions
+<br/>
+	- Harris
+	- Hessian
+	- ...
+	- x,y location
+	- rotation angle
+		- dominant gradient direction [noisy]
+		- mean angle of color differences
+			- ring of color around 
+	- scale:
+		- response to some function reaches peak
+			- corner score
+			- DoG score
+			- ...
+
+<br/>
+
+**SIFT** Scale Invariant Feature Transforms
+<br/>
+https://www.cs.ubc.ca/~lowe/papers/ijcv04.pdf
+https://aishack.in/tutorials/sift-scale-invariant-feature-transform-introduction/
+https://milania.de/blog/Scale_invariance_through_Gaussian_scale_space
+https://courses.cs.washington.edu/courses/cse576/06sp/notes/Interest2.pdf
+https://www.youtube.com/watch?v=NPcMS49V5hg
+http://vision.stanford.edu/teaching/cs231a_autumn1112/lecture/lecture11_detectors_descriptors_cs231a_marked.pdf
+
+<br/>
+	- grayscale gradient (8-bin) histograms with 16 samples (4x4) repeated in 16 oriented (4x4 grid) locations
+	- blob size is really well defined; total feature size ~ 2-8 x size of blob
+
+
+<br/>
+
+<br/>
+**MSER** Maximally Stable Extremal Regions
+<br/>
+	- very accurate outline, repeatable
+	- typically only larger handful of points are useful [10~100]
+	- features on edge of image are less helpful
+
+<br/>
+
+
+<br/>
+**Harris-Laplace**
+<br/>
+https://www.robots.ox.ac.uk/~vgg/research/affine/det_eval_files/mikolajczyk_ijcv2004.pdf
+http://lear.imag.fr/people/verbeek/mlcr.slides.12.13/student1.pdf
+
+<br/>
+
+
+#### Descriptors
+
+Feature points are found by one or multiple previous methods, the goal now is to 'describe' each point in order to compare it to other points to find matches
+
+Information Feature Points may have available
+	- x,y coordinate
+	- characteristic scale
+	- rotation angle
+	- affine matrix
+
+Characteristics that are available to descripe point/area:
+	- flat image pixel values
+		- r,g,b,y
+	- gradient directions
+		- r,g,b,y
+	- entropy
+	- color range
+	- ...
+
+**SIFT**:
+	- binning of gradients around point
+
+**?**:
+	- color values
 
 
 #### Matching

@@ -9700,7 +9700,7 @@ R3D.showFeaturesForImage = function(imageMatrix, features, offX){
 	d.graphics().alpha(0.50);
 	d.matrix().translate(0 + offX, 0);
 	GLOBALSTAGE.addChild(d);
-
+var drawAngle = true;
 	for(k=0; k<features.length; ++k){
 		var feature = features[k];
 		var point = feature["point"];
@@ -9716,6 +9716,10 @@ R3D.showFeaturesForImage = function(imageMatrix, features, offX){
 			d.graphics().setLine(1.0, 0xCC000099);
 			d.graphics().beginPath();
 			d.graphics().drawCircle(p.x,p.y, size*0.5);
+			if(drawAngle){
+				d.graphics().moveTo(p.x,p.y);
+				d.graphics().lineTo(p.x + size*0.5*Math.cos(angle),p.y + size*0.5*Math.sin(angle));
+			}
 			d.graphics().endPath();
 			d.graphics().strokeLine();
 		GLOBALSTAGE.addChild(d);
@@ -14035,7 +14039,7 @@ R3D.optimalCountFeaturesFromImageScales = function(imageScales, nonMaximalPercen
 	// get processor/time-optimal size to start with
 	var idealSize = 500*400;
 	var actualSize = image.width()*image.height();
-	var idealScale = idealSize/actualSize;
+	var idealScale = Math.sqrt(idealSize/actualSize);
 	if(idealScale>1.0){
 		idealScale = 1.0;
 	}
@@ -16214,7 +16218,7 @@ throw "?"
 	return {"scale":0, "point":point, "angle":0};
 
 }
-R3D.imageCornersDifferential = function(image, whatelse){
+R3D.imageCornersDifferential = function(image, whatelse, testPoint){
 	// console.log("R3D.imageCornersDifferential");
 	var width = image.width();
 	var height = image.height();
@@ -16222,11 +16226,10 @@ R3D.imageCornersDifferential = function(image, whatelse){
 
 	var size = 5;
 	var mask = [0,1,1,1,0, 1,1,1,1,1, 1,1,0,1,1, 1,1,1,1,1, 0,1,1,1,0];
+	// var mask = [0,1,1,1,0, 1,1,0,1,1, 1,0,0,0,1, 1,1,0,1,1, 0,1,1,1,0];
 
-	// WHY DOES THIS BREAK:?
 	// var size = 3;
 	// var mask = [1,1,1, 1,0,1, 1,1,1];
-
 
 	var iList = [];
 
@@ -16241,19 +16244,29 @@ R3D.imageCornersDifferential = function(image, whatelse){
 
 	var a = new V3D();
 	var b = new V3D();
-	// var v = new V2D();
 	var com = new V2D();
 	var opp = new V2D();
 	var scores = Code.newArrayZeros(pixels);
 	var angles = Code.newArrayZeros(pixels);
 	var hasVectors = false;
 	var vectors = [];
+	// for(var i=0; i<mask.length; ++i){
+	// 	if(mask[i]==0){
+	// 		continue;
+	// 	}
+	// 	vectors.push(new V2D());
+	// }
 	for(var y=half; y<hmh; ++y){
 		for(var x=half; x<wmh; ++x){
 			com.set(0,0);
 			var diffs = [];
 			var sames = [];
 			var diffMax = 0;
+			// var diffMin = 0;
+// var doDebug = false;
+// if(testPoint){
+// 	doDebug = x == testPoint.x && y == testPoint.y;
+// }
 			var centerIndex = y*width + x;
 			a.set(red[centerIndex],grn[centerIndex],blu[centerIndex]);
 			for(var j=0; j<size; ++j){
@@ -16271,20 +16284,35 @@ R3D.imageCornersDifferential = function(image, whatelse){
 					var diff = V3D.distance(a,b);
 					diffs.push(diff);
 					diffMax = Math.max(diffMax,diff);
-					if(!hasVectors){
-						vectors.push(new V2D(dx,dy));
+					if(!hasVectors){  // very first time
+						var v = new V2D(dx,dy);
+						v.norm();
+						vectors.push(v);
 					}
+// if(doDebug){
+// 	console.log(diff);
+// }
 					var v = vectors[diffs.length-1];
-					var len = v.length();
-					com.x += diff*v.x/len;
-					com.y += diff*v.y/len;
+					com.x += diff*v.x;
+					com.y += diff*v.y;
 				}
 			}
 			hasVectors = true;
 
 			// magnitude score
 			var magCOM = com.length();
+// if(doDebug){
+// 	console.log(com+"");
+// }
 			if(magCOM>0){
+				var angleCOM = V2D.angleDirection(V2D.DIRX, com);
+				com.length(1);
+				opp.copy(com);
+				opp.scale(-1);
+
+
+				// var angleCOM = V2D.angle(V2D.DIRX, opp);
+
 				// same from diff
 				var sameTotal = 0;
 				var diffTotal = 0;
@@ -16300,10 +16328,8 @@ R3D.imageCornersDifferential = function(image, whatelse){
 					diffs[i] = diffs[i]/diffTotal;
 					sames[i] = sames[i]/sameTotal;
 				}
+
 				// forward & back
-				com.length(1);
-				opp.copy(com);
-				opp.scale(-1);
 				// sigmas
 				var sigmaSame = 0;
 				var sigmaDiff = 0;
@@ -16313,31 +16339,62 @@ R3D.imageCornersDifferential = function(image, whatelse){
 					var diff = diffs[i];
 					var same = sames[i];
 					var v = vectors[i];
-					var angleCOM = V2D.angle(com, v);
-					var angleOPP = V2D.angle(opp, v);
+					// var angleDIF = V2D.angleDirection(com, v);
+					// var angleSAM = V2D.angleDirection(opp, v);
+					// angleDIF = Math.abs(angleDIF);
+					// angleSAM = Math.abs(angleSAM);
+					var angleDIF = V2D.angle(com, v);
+					var angleSAM = V2D.angle(opp, v);
 
-					sigmaDiff += angleCOM*angleCOM*diff;
-					sigmaSame += angleOPP*angleOPP*same;
-					averageDiff += angleCOM*diff;
-					averageSame += angleOPP*same;
+					sigmaDiff += angleDIF*angleDIF*diff;
+					sigmaSame += angleSAM*angleSAM*same;
+					averageDiff += angleDIF*diff;
+					averageSame += angleSAM*same;
+					// averageDiff += diff;
+					// averageSame += same;
 				}
-				averageDiff = averageDiff*0.5;
-				averageSame = averageSame*0.5;
+				// averageDiff = averageDiff*0.5;
+				// averageSame = averageSame*0.5;
 				sigmaSame = Math.sqrt(sigmaSame);
 				sigmaDiff = Math.sqrt(sigmaDiff);
+
+
 				// final score:
-				// var score = magCOM * (1.0/sigmaDiff) * (sigmaSame);
-				// var score = magCOM;
-				// var score = magCOM * (1.0/sigmaSame);
-				// var score = magCOM * (1.0/sigmaSame) * (sigmaDiff);
-				// var score = magCOM * (1.0/averageSame) * (averageDiff);
 				var score = 0;
-				
-				if(averageSame>0){
-					score = Math.pow(magCOM,0.50);
+				if(averageSame>0 && averageDiff>0 && sigmaSame>0 && sigmaDiff>0){
+					// score = sigmaSame*sigmaDiff;
+					// var maxVal = Math.PI;
+					// var maxVal = 1.0;
+					// score = Math.max(Math.min(maxVal - sigmaSame,maxVal),0.0);
+
+					// score = Math.pow(magCOM,0.5)/Math.pow(sigmaSame,0.25);
+					// score = Math.pow(sigmaSame,0.25);
+					// score = magCOM/sigmaSame;
+					score = magCOM/sigmaSame;
+
+					// score = 1.0/Math.pow(sigmaSame,0.1);
+					// score = 1.0/Math.pow(sigmaSame,2.0);
+					// score = averageDiff/sigmaSame;
+					// score = sigmaDiff/sigmaSame;
+					// score = averageSame/sigmaSame;
+					// score = sigmaDiff;
+					// score = sigmaDiff;
+					
+					// score = magCOM * sigmaDiff;
+					// score = sigmaDiff*sigmaDiff/sigmaSame;
+
+					// score = Math.pow(magCOM,0.25) * sigmaDiff;
+
+					// score = Math.pow(magCOM,0.50);
 					// score = magCOM;
-					score = score * (averageDiff/averageSame);
-					score = Math.pow(score, 0.5); // more manageble ratios
+					// score = score * (averageDiff);
+					// score = score * (averageDiff/averageSame);
+					// score = Math.pow(score, 0.5); // more manageble ratios
+					score = Math.pow(score, 0.1);
+					// score = Math.pow(score, 0.25);
+					// score = Math.pow(score, 0.5);
+					// score = Math.pow(score, 2.0);
+					// score = Math.pow(score, 4.0);
 				}
 
 				// if(sigmaSame>0){
@@ -16365,9 +16422,11 @@ R3D.imageCornersDifferential = function(image, whatelse){
 					console.log(sigmaDiff);
 					throw "?"
 				}
-				
 				// save
-				var angleCOM = V2D.angle(V2D.DIRX, com);
+				// var angleCOM = V2D.angle(V2D.DIRX, com);
+// if(doDebug){
+// 	console.log(Code.degrees(angleCOM)+" @ "+centerIndex);
+// }
 				angles[centerIndex] = angleCOM;
 			}else{
 				scores[centerIndex] = 0;
@@ -16375,6 +16434,11 @@ R3D.imageCornersDifferential = function(image, whatelse){
 			}
 		}
 	}
+var doBlur = false;
+if(doBlur){
+	var blurSigma = 1.0;
+	var scores = ImageMat.getBlurredImage(scores,width,height, blurSigma);
+}
 	return {"value":scores, "angles":angles};
 }
 
@@ -16656,20 +16720,20 @@ R3D.differentialCornersForImageScales = function(imageScales, suppressDistancePe
 
 R3D.differentialCornersForImageSingle = function(imageMatrix, suppressDistancePercent){
 	// constants
-	suppressDistancePercent = Code.valueOrDefault(suppressDistancePercent, 0.01); // 0.002 - 0.01
+	suppressDistancePercent = Code.valueOrDefault(suppressDistancePercent, 0.01); // 0.001 - 0.01
 	var keepBestPercent = 0.99;
 
 	// info
 	var width = imageMatrix.width();
 	var height = imageMatrix.height();
-
 	
 	// filter out noisy corners / blends differences somewhat
 		var blurSigma = 1.0;
 		var image = imageMatrix.getBlurredImage(blurSigma);
-		var corners = R3D.imageCornersDifferential(image, false);
+		var info = R3D.imageCornersDifferential(image, false);
+		var angles = info["angles"];
 	// var corners = R3D.imageCornersDifferential(imageMatrix, false);
-		corners = corners["value"];
+		var corners = info["value"];
 
 	// derived
 	var maxDistance = suppressDistancePercent*Math.sqrt(width*width+height*height);
@@ -16687,6 +16751,13 @@ R3D.differentialCornersForImageSingle = function(imageMatrix, suppressDistancePe
 	}
 	var peaks = Code.findMaxima2DFloat(corners, width,height);
 	console.log("PEAKS: "+peaks.length);
+
+	// drop corners near edges:
+
+	// 
+	// throw "edge score"
+
+
 
 	// to space prioritized
 	var sortCorners = function(a,b){
@@ -16712,8 +16783,21 @@ R3D.differentialCornersForImageSingle = function(imageMatrix, suppressDistancePe
 	space.clear();
 	space.kill();
 	console.log("SPACE: "+pass.length);
-	return pass;
+	// return pass;
+	var points = pass;
+	pointAngles = [];
+	for(var i=0; i<points.length; ++i){
+		var point = points[i];
+		var x = Math.round(point.x);
+		var y = Math.round(point.y);
+		var index = y*width + x;
+		var angle = angles[index];
+		pointAngles[i] = angle;
+	}
+	console.log(points,pointAngles);
+	return {"points":points, "angles":pointAngles};
 
+/*
 	// this limits a lot of points when there's a close division by zero
 	// limit keeping
 	var info = Code.infoArray(scores);
@@ -16730,7 +16814,18 @@ R3D.differentialCornersForImageSingle = function(imageMatrix, suppressDistancePe
 		// } // else skip
 	}
 	console.log("OUTPUT: "+points.length);
-	return points;
+	*/
+	// pointAngles = [];
+	// for(var i=0; i<points.length; ++i){
+	// 	var point = points[i];
+	// 	var x = Math.round(point.x);
+	// 	var y = Math.round(point.y);
+	// 	var index = y*width + x;
+	// 	var angle = angles[index];
+	// 	pointAngles[i] = angle;
+	// }
+	// console.log(points,pointAngles);
+	// return {"point":points, "angles":pointAngles};
 }
 
 R3D.differentialDirectionFeaturesFromPoints = function(imageScales,points){
@@ -25767,7 +25862,7 @@ var blobImage = [blobImageA,blobImageB,blobImageC];
 			region.recordPixels(blobImage, width, height, i/regions.length);
 		}
 	}
-/*
+
 var sca = 1.5;
 var img = GLOBALSTAGE.getFloatRGBAsImage(blobImageA,blobImageB,blobImageC, width, height);
 var d = new DOImage(img);
@@ -25778,7 +25873,7 @@ d.matrix().translate(0 + R3D.XCOUNT*width*sca, 0);
 //d.matrix().translate(10 + (i%counting)*width, 10 + (i/counting | 0)*height + ((R3D.XCOUNT/counting | 0)*height) );
 GLOBALSTAGE.addChild(d);
 ++R3D.XCOUNT;
-*/
+
 	return features;
 }
 R3D.MSER = function(delta, minArea, maxArea, maxVariation, minDiversity){ // 8-connected
@@ -30541,6 +30636,157 @@ var pending = [];
 
 	return siftPoints;
 }
+
+
+/*
+	effective sigma of scaling:
+
+*/
+R3D.SIFTBlobsForImage = function(imageInput, idealSize){
+	if(!idealSize){ // maxium starting resolution
+		// idealSize = new V2D(600,400);
+		idealSize = new V2D(800,600);
+		// idealSize = new V2D(1000,800); // tiny things
+	}
+	// convert to scale image
+	var image = imageInput;
+	if(!Code.isa(image, ImageMatScaled)){
+		image = new ImageMatScaled(image);
+	}
+	var originalWidth = imageInput.width();
+	var originalHeight = imageInput.height();
+	// resize to usable dimension
+	var idealPixelCount = idealSize.x*idealSize.y;
+	var actualPixelCount = image.width()*image.height();
+	var idealScale = Math.sqrt(idealPixelCount/actualPixelCount);
+	var maxScale = 2.0;
+	idealScale = Math.min(idealScale,maxScale);
+	var startImage = image.getScaledImage(idealScale);
+	// settings
+	var octaveCount = 5;
+	// var octaveCount = 6;
+	var dogCount = 4; // 2^0.5
+	// var dogCount = 6; // 3^0.5
+	var blurCount = dogCount + 1;
+	var k = Math.sqrt(dogCount/2);
+	var sigmaStart = 1.4;
+	var sigmaBlur = 1.6;
+	// separate into pyramid sections
+	var featurePoints = [];
+var OFFY = 0;
+	var octaveImage = startImage;
+	var octaveGrayImage = octaveImage.gry();
+	var octaveGrayImageWidth = octaveImage.width();
+	var octaveGrayImageHeight = octaveImage.height();
+
+	
+	octaveGrayImage = ImageMat.getBlurredImage(octaveGrayImage,octaveGrayImageWidth,octaveGrayImageHeight, sigmaStart);
+
+	for(var o=0; o<octaveCount; ++o){
+		// find subdivision blurred images - progressively blurred:
+		var blurList = [];
+		for(var b=0; b<blurCount; ++b){
+			var img = octaveGrayImage;
+			if(b>0){
+				var sigma = Math.pow(k,b)*sigmaBlur;
+				img = ImageMat.getBlurredImage(octaveGrayImage,octaveGrayImageWidth,octaveGrayImageHeight, sigma);
+			} // else first, 0 blurr
+			blurList.push(img);
+		}
+		// create DoG list:
+		var dogList = [];
+		for(var b=1; b<blurCount; ++b){
+			var imageA = blurList[b];
+			var imageB = blurList[b-1];
+			var dogImage = ImageMat.subFloat(imageA,imageB);
+			dogList.push(dogImage);
+		}
+if(false){
+// if(true){
+// if(o==0){
+// if(o==1){
+// if(o==2){
+// if(o==3){
+// if(o==4){
+// if(o==5){
+	for(var i=0; i<dogList.length; ++i){
+	var image = dogList[i];
+	image = Code.copyArray(image);
+	image = ImageMat.getNormalFloat01(image);
+	var img = GLOBALSTAGE.getFloatRGBAsImage(image,image,image, octaveGrayImageWidth,octaveGrayImageHeight);
+	var d = new DOImage(img);
+	GLOBALSTAGE.addChild(d);
+	d.graphics().alpha(1.0);
+	// d.matrix().scale(2.0);
+	// d.matrix().scale(4.0);
+	d.matrix().translate(10 + i*octaveGrayImageWidth, 10 + OFFY);
+	}
+// throw "?"
+OFFY += octaveGrayImageHeight + 10;
+}
+
+
+		// find extrema in volume [mark max v min]
+		var extrema = Code.findExtrema3DVolume(dogList, octaveGrayImageWidth,octaveGrayImageHeight);
+		// console.log(extrema);
+		var scaleX = (originalWidth-1)/(octaveGrayImageWidth-1);
+		var scaleY = (originalHeight-1)/(octaveGrayImageHeight-1);
+		for(var i=0; i<extrema.length; ++i){
+			extrema[i].x *= scaleX;
+			extrema[i].y *= scaleY;
+			var z = extrema[i].z;
+			var size = Math.pow(2, 1 + o + (z/(dogCount-1)) ) * sigmaBlur;
+			extrema[i].z = size;
+		}
+		Code.arrayPushArray(featurePoints,extrema);
+		console.log(" "+o+": "+extrema.length);
+		
+		// next loop:
+		if(o<octaveCount-1){
+			var referenceImage = blurList[ blurList.length/2 | 0];
+			// console.log(referenceImage);
+			var info = ImageMat.getScaledImage(referenceImage,octaveGrayImageWidth,octaveGrayImageHeight, 0.5, 1.0);
+			octaveGrayImageWidth = info["width"];
+			octaveGrayImageHeight = info["height"];
+			octaveGrayImage = info["value"];
+			// console.log(info);
+			// throw ""
+		}
+	}
+	var minValue = null;
+	var maxValue = null;
+	// drop low contrast points
+		// 
+
+	// drop points along edges
+		// hessian
+	// 
+
+	// convert to feature
+	var features = [];
+	for(i=0; i<featurePoints.length; ++i){
+		var point = featurePoints[i];
+		var feature = {};
+		feature["point"] = new V2D(point.x,point.y);
+		// feature["size"] = point.z * 5.0;
+		feature["size"] = point.z;
+		feature["angle"] = 0;
+		features.push(feature);
+	}
+console.log(features);
+	return features;
+}
+
+
+
+
+
+
+
+
+
+
+
 R3D.SS = function(x,y, radius){
 	this._point = new V2D(x,y);
 	this._radius = radius;

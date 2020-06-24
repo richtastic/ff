@@ -4531,8 +4531,8 @@ ImageMat.getScaledImageInteger = function(src,wid,hei, scale, forceWidth,forceHe
 	return ImageMat.getScaledImage(src,wid,hei, scale, null, forceWidth,forceHeight);
 }
 ImageMat.getBlurredImage = function(source,wid,hei, sigma){ // does auto padding and unpadding to avoid shadow on image edges
-	var x = wid*0.5;
-	var y = hei*0.5;
+	// var x = (wid-1)*0.5;
+	// var y = (hei-1)*0.5;
 	gaussSize = Math.round(5.0 + sigma*2.0)*2+1;
 	//gauss1D = ImageMat.getGaussianWindow(gaussSize,1, sigma);
 	gauss1D = ImageMat.getGaussianWindow(gaussSize,1, sigma,null,   false, false);

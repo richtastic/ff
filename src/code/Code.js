@@ -789,7 +789,7 @@ Code.MIMETYPES = {};
 Code.MIMETYPES[Code.MIMETYPE_JPG] = "image/jpeg";
 Code.MIMETYPES[Code.MIMETYPE_PNG] = "image/png";
 Code.mimeTypeFromBinaryData = function(data){
-	
+
 	if(!data){
 		return Code.MIMETYPE_UNKNOWN;
 	}
@@ -8717,12 +8717,15 @@ Code.findExtrema3DVolume = function(volume, wid,hei){ // list of 2D images
 	var hm1 = hei-1;
 	var lm1 = len-1;
 	for(k=1; k<lm1; ++k){ // brute force extrema checking
+		// console.log(k);
 		for(j=1; j<hm1; ++j){
 			for(i=1; i<wm1; ++i){
 				var isExtrema = Code.isExtrema3D(volume,wid,hei,i,j,k);
 				if(isExtrema){
 					// console.log("isExtrema: "+i+","+j+","+k)
+					// throw "got an extrema";
 					var point = Code.extrema3DInterpolateRecursive(volume,wid,hei,i,j,k);
+					// var point = Code.extrema3DInterpolateSingle(volume,wid,hei,i,j,k);
 					if(point){
 						list.push(point);
 					}
@@ -8759,6 +8762,12 @@ Code.extrema3DInterpolateRecursive = function(volume, wid,hei, inI,inJ,inK){
 		if(!offset){
 			return null;
 		}
+
+// offset.x += i;
+// offset.y += j;
+// offset.z += k;
+// return offset;
+
 		if( Math.abs(offset.x)<0.5 && Math.abs(offset.y)<0.5 && Math.abs(offset.z)<0.5){ // found it
 			offset.x += i;
 			offset.y += j;
@@ -8777,11 +8786,42 @@ Code.extrema3DInterpolateRecursive = function(volume, wid,hei, inI,inJ,inK){
 	// b4 = volume[inK][inJ*wid+inI];
 	return new V4D(inI,inJ,inK, b4);
 }
+
+
+Code.extrema3DInterpolateSingle = function(volume, wid,hei, inI,inJ,inK){
+	var i = inI;
+	var j = inJ;
+	var k = inK;
+	var len = volume.length;
+	var wm1 = wid-1;
+	var hm1 = hei-1;
+	var lm1 = len-1;
+	var a0,a1,a2,a3,a4,a5,a6,a7,a8, b0,b1,b2,b3,b4,b5,b6,b7,b8, c0,c1,c2,c3,c4,c5,c6,c7;
+	var jW0,jW1,jW2, i0,i1,i2;
+	var a,b,c;
+	a = volume[k-1];
+	b = volume[k+0];
+	c = volume[k+1];
+	jW0 = (j-1)*wid, jW1 = j*wid, jW2 = (j+1)*wid;
+	i0 = i-1; i1 = i; i2 = i+1;
+	a0 = a[jW0+i0]; a1 = a[jW0+i1]; a2 = a[jW0+i2]; a3 = a[jW1+i0]; a4 = a[jW1+i1]; a5 = a[jW1+i2]; a6 = a[jW2+i0]; a7 = a[jW2+i1]; a8 = a[jW2+i2];
+	b0 = b[jW0+i0]; b1 = b[jW0+i1]; b2 = b[jW0+i2]; b3 = b[jW1+i0]; b4 = b[jW1+i1]; b5 = b[jW1+i2]; b6 = b[jW2+i0]; b7 = b[jW2+i1]; b8 = b[jW2+i2];
+	c0 = c[jW0+i0]; c1 = c[jW0+i1]; c2 = c[jW0+i2]; c3 = c[jW1+i0]; c4 = c[jW1+i1]; c5 = c[jW1+i2]; c6 = c[jW2+i0]; c7 = c[jW2+i1]; c8 = c[jW2+i2];
+	var offset = Code.extrema3DInterpolate(new V4D(),a1,a3,a4,a5,a7, b0,b1,b2,b3,b4,b5,b6,b7,b8, c1,c3,c4,c5,c7);
+	if(!offset){
+		return null;
+	}
+	offset.x += i;
+	offset.y += j;
+	offset.z += k;
+	return offset;
+	// return new V4D(inI,inJ,inK, b4);
+}
+
+
 Code.isExtrema3D = function(volume, wid,hei, i,j,k, simple){
 	var a0,a1,a2,a3,a4,a5,a6,a7,a8, b0,b1,b2,b3,b4,b5,b6,b7,b8, c0,c1,c2,c3,c4,c5,c6,c7;
 	var jW0,jW1,jW2, i0,i1,i2, result;
-	var isMaxima = false;
-	var isMinima = false;
 	var a = volume[k-1];
 	var b = volume[k+0];
 	var c = volume[k+1];
@@ -8790,6 +8830,7 @@ Code.isExtrema3D = function(volume, wid,hei, i,j,k, simple){
 	a0 = a[jW0+i0]; a1 = a[jW0+i1]; a2 = a[jW0+i2]; a3 = a[jW1+i0]; a4 = a[jW1+i1]; a5 = a[jW1+i2]; a6 = a[jW2+i0]; a7 = a[jW2+i1]; a8 = a[jW2+i2];
 	b0 = b[jW0+i0]; b1 = b[jW0+i1]; b2 = b[jW0+i2]; b3 = b[jW1+i0]; b4 = b[jW1+i1]; b5 = b[jW1+i2]; b6 = b[jW2+i0]; b7 = b[jW2+i1]; b8 = b[jW2+i2];
 	c0 = c[jW0+i0]; c1 = c[jW0+i1]; c2 = c[jW0+i2]; c3 = c[jW1+i0]; c4 = c[jW1+i1]; c5 = c[jW1+i2]; c6 = c[jW2+i0]; c7 = c[jW2+i1]; c8 = c[jW2+i2];
+
 	/*
 	if(simple===true){
 		isMaxima = b3<b4&&b5<b4 && b1<b4&&b7<b4 && a4<b4&&c4<b4;
@@ -8807,17 +8848,35 @@ Code.isExtrema3D = function(volume, wid,hei, i,j,k, simple){
 	}
 	return false;
 	*/
-	if(b4>=0){ // maxima
-		isMaxima = (a0<=b4&&a1<=b4&&a2<=b4&&a3<=b4&&a4<=b4&&a5<=b4&&a6<=b4&&a7<=b4&&a8<=b4
-				 && b0<=b4&&b1<=b4&&b2<=b4&&b3<=b4    &&   b5<=b4&&b6<=b4&&b7<=b4&&b8<=b4
-				 && c0<=b4&&c1<=b4&&c2<=b4&&c3<=b4&&c4<=b4&&c5<=b4&&c6<=b4&&c7<=b4&&c8<=b4);
-		return isMaxima;
-	}else{
-		isMinima = (a0>=b4&&a1>=b4&&a2>=b4&&a3>=b4&&a4>=b4&&a5>=b4&&a6>=b4&&a7>=b4&&a8>=b4 // minima
-				 && b0>=b4&&b1>=b4&&b2>=b4&&b3>=b4    &&   b5>=b4&&b6>=b4&&b7>=b4&&b8>=b4
-				 && c0>=b4&&c1>=b4&&c2>=b4&&c3>=b4&&c4>=b4&&c5>=b4&&c6>=b4&&c7>=b4&&c8>=b4);
-		return isMinima;
-	}
+	
+	var isMaxima = (a0<=b4&&a1<=b4&&a2<=b4&&a3<=b4&&a4<=b4&&a5<=b4&&a6<=b4&&a7<=b4&&a8<=b4 // maxima
+			 && b0<=b4&&b1<=b4&&b2<=b4&&b3<=b4    &&   b5<=b4&&b6<=b4&&b7<=b4&&b8<=b4
+			 && c0<=b4&&c1<=b4&&c2<=b4&&c3<=b4&&c4<=b4&&c5<=b4&&c6<=b4&&c7<=b4&&c8<=b4);
+	var isMinima = (a0>=b4&&a1>=b4&&a2>=b4&&a3>=b4&&a4>=b4&&a5>=b4&&a6>=b4&&a7>=b4&&a8>=b4 // minima
+			 && b0>=b4&&b1>=b4&&b2>=b4&&b3>=b4    &&   b5>=b4&&b6>=b4&&b7>=b4&&b8>=b4
+			 && c0>=b4&&c1>=b4&&c2>=b4&&c3>=b4&&c4>=b4&&c5>=b4&&c6>=b4&&c7>=b4&&c8>=b4);
+
+
+	// var isMaxima = (a0<=b4&&a1<=b4&&a2<=b4&&a3<=b4&&a4<=b4&&a5<=b4&&a6<=b4&&a7<=b4&&a8<=b4 // maxima
+	// 		 && b0<=b4&&b1<=b4&&b2<=b4&&b3<=b4    &&   b5<=b4&&b6<=b4&&b7<=b4&&b8<=b4
+	// 		 && c0<=b4&&c1<=b4&&c2<=b4&&c3<=b4&&c4<=b4&&c5<=b4&&c6<=b4&&c7<=b4&&c8<=b4);
+	// var isMinima = (a0>=b4&&a1>=b4&&a2>=b4&&a3>=b4&&a4>=b4&&a5>=b4&&a6>=b4&&a7>=b4&&a8>=b4 // minima
+	// 		 && b0>=b4&&b1>=b4&&b2>=b4&&b3>=b4    &&   b5>=b4&&b6>=b4&&b7>=b4&&b8>=b4
+	// 		 && c0>=b4&&c1>=b4&&c2>=b4&&c3>=b4&&c4>=b4&&c5>=b4&&c6>=b4&&c7>=b4&&c8>=b4);
+
+	// var isMaxima, isMinima;
+
+	// simple: l/r & u/d & n/s
+	// isMaxima = b3<=b4&&b5<=b4 && b1<=b4&&b7<=b4 && a4<=b4&&c4<=b4;
+	// isMinima = b3>=b4&&b5>=b4 && b1>=b4&&b7>=b4 && a4>=b4&&c4>=b4;
+
+
+	// isMaxima = b3<=b4&&b5<=b4 && b1<=b4&&b7<=b4 && a4<=b4&&c4<=b4;
+	// isMinima = b3>=b4 && b5>=b4 && b1>=b4 && b7>=b4 && b0>=b4 && b2>=b4 && b6>=b4 && b8>=b4;
+	// isMinima = isMinima && a4>=b4; // && a3>=b4 && a5>=b4 && a1>=b4 && a7>=b4;
+	// isMinima = isMinima && c4>=b4;
+
+	return isMinima || isMaxima;
 }
 
 Code.findExtrema3D = function(a,b,c, wid,hei, k, simple){ // a=-1, b=0, c=+1
@@ -8854,7 +8913,6 @@ Code.findExtrema3D = function(a,b,c, wid,hei, k, simple){ // a=-1, b=0, c=+1
 					result = new V4D(i,j,k,b4);
 					list.push(result);
 				}
-
 			}
 		}
 	}

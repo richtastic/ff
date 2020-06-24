@@ -386,6 +386,45 @@ MISSING:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
+- detected features don't seem repeatable:
+	- corners
+	- blobs
+	- MSER
+
+
+
+- corner detector:
+	- needs to have more obvious peaks, and less prevalent edges
+		- overall color difference [to high and low]
+		- smaller interrior angle
+	- are directions good ?
+
+	- what fxn 'response' is used for peak scale?
+		- DoG ?
+		- cornerness ?
+		- ...
+		- plot this
+
+
+...
+
+
+
+R3D.SIFTBlobsForImage
+
+
+- blobs:
+	- are corner scale space extrema useful ?
+	- are corner corner-space extrema useful ?
+
+
+
+- MSER:
+	- 
+
+
+
 - F is too unreliable to produce R for repetitive scenes
 	- F->R accuracy [muffin scene]
 		- are the points 
@@ -407,7 +446,7 @@ MISSING:
 
 R3D.affineBasicFromPoints2D
 
-
+R3D.SIFTExtract
 
 
 
