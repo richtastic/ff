@@ -387,18 +387,84 @@ MISSING:
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
+- check F initial estimates again
+
+
+
+- drop low contrast (flat) regions : ~ 7x7 area , get range, minimum ~ 0.05
+	- before feature?
+	- feature?
+	
+
+
+
+STEPS:
+	get image at ideal size in pixels (600x400 or smaller)
+	for each image scale [1, 0.5, 0.25, 0.125?]
+		- get best corners for image at size [1000, 200, 50, 10]
+			- space peak first maximal suppression
+	add all best corners
+		- space peak first maximal suppression
+	for each remaining corner [1k ~ 2k]
+		- for each scale size [2.0 to 0.25, 10-15 samples] - [2.0, 1.5, 1.0, 0.75, 0.5, 0.4, 0.3, 0.25]
+			- get response for image metric in ~ 5x5 window
+		- if corner reaches a maximum not including ends
+			- add to keep list, include scale
+	
+	interum: ~ 1.5k feature points
+
+	remove most similar features [SAD / NCC]
+		- for each feature
+			- get a flat example image [7x7-11x11] @ point, angle, scale
+		- for each feature
+			- for each other feature
+				- compare flat SAD area & append score to each feature's score list
+		- drop most common features:
+			- find where scores crossing is 50% between most similar and least similar scores
+			- if percent of probable mismatches > ~ 10%
+			- if first 3-5 scores approx. line is fairly shallow -> too similar
+				- drop point
+=> PLOT SOME OF THESE GRAPHS
+
+
+	output: ~ 1k feature points
+
+
+
+
+
+
+
+
+
+
+
+
+
 - detected features don't seem repeatable:
 	- corners
+		- find peaks of COM
+			- corners
+			- edges
+			- noise
+		- remove low-response corner scores
+		- remove low-contrast flat-image
+		- remove edges
 	- blobs
 	- MSER
 
 
+RESPONSE PEAK IDEAS:
+	- COM magnitude maximum 
+	- sigmaDiff/sigmaSame maximum [most narrow corner]
+	- direction gradient / (avg perpendicular gradient) minimum [gradient in all directions]
 
-- corner detector:
-	- needs to have more obvious peaks, and less prevalent edges
-		- overall color difference [to high and low]
-		- smaller interrior angle
-	- are directions good ?
+
+
+
+
+
+
 
 	- what fxn 'response' is used for peak scale?
 		- DoG ?
