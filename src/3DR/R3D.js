@@ -10096,7 +10096,6 @@ console.log("progressiveFullMatchingDense");
 	var info, F, Finv, Ferror, pointsA, pointsB, matches;
 	R3D._progressiveMatchIndex(objectsA);
 	R3D._progressiveMatchIndex(objectsB);
-	// console.log(objectsA,objectsB)
 	// get approximate F from sparse matches
 	info = R3D._progressiveSparseMatches(imageMatrixA,objectsA, imageMatrixB,objectsB);
 	console.log(info);
@@ -10109,7 +10108,6 @@ console.log("progressiveFullMatchingDense");
 		console.log("MINIMUM MATCHES");
 		return null;
 	}
-// console.log("progressiveFullMatchingDense FOUND MATCHES: "+pointsA.length);
 	return {"A":pointsA, "B":pointsB, "F":F, "Finv":Finv, "error":Ferror}; // SPARSE RESULTS
 
 
@@ -10271,7 +10269,15 @@ R3D.findDenseCornerFMatches = function(imageMatrixA,imageMatrixB, F,Ferror, imag
 
 	// var cornersA = R3D.differentialCornersForImageScales(imageScalesA, imageCornerDensityPercent, false);
 	// var cornersB = R3D.differentialCornersForImageScales(imageScalesB, imageCornerDensityPercent, false);
-	throw "huh?"
+	// throw "huh?"
+
+
+
+
+// this should maybe just get CORNERS - don't care about size / scale ?
+
+
+
 	var featuresA = R3D.differentialCornersForImageScales(imageScalesA, imageCornerDensityPercent, true);
 	var featuresB = R3D.differentialCornersForImageScales(imageScalesB, imageCornerDensityPercent, true);
 
@@ -11138,15 +11144,15 @@ R3D.affineBasicFromPoints2D = function(pointsA,pointsB, sourceA,sourceB, affine,
 
 
 
-R3D.findLocalSupportingCornerMatches = function(imageMatrixA,imageMatrixB, pointsA,pointsB, imageCornerDensityPercent){
+R3D.findLocalSupportingCornerMatches = function(imageMatrixA,imageMatrixB, pointsA,pointsB, imageCornerDensityPercent){ // 
 	var averageSizeA = (imageMatrixA.width()+imageMatrixA.height());
 	Ferror = Code.valueOrDefault(Ferror, averageSizeA*0.02 ) ;
-	imageCornerDensityPercent = Code.valueOrDefault(imageCornerDensityPercent, 0.01); // 2k - 4k
+	imageCornerDensityPercent = Code.valueOrDefault(imageCornerDensityPercent, 0.001); // 0.001-0.01 : 1k - 10k
 
 	var featureSizePercent = 0.02; // 0.01 - 0.04
 	var searchSizeFeatureScale = 1; // 1 - 2
-	var maximumScaleDifference = 0.1;
-	var maximumAngleDifference = 10; // 5-20 degrees : 10=> 36 | 12=>30 | 18=>20 | 22.5=>16
+	var maximumScaleDifference = 0.1; // 0.1 - 0.2
+	var maximumAngleDifference = 18; // 5-20 degrees : 10=> 36 | 12=>30 | 18=>20 | 22.5=>16
 	var maximumTableEntries = Math.round(360.0/maximumAngleDifference);
 
 	var imageScalesA = new ImageMatScaled(imageMatrixA);
@@ -11154,6 +11160,12 @@ R3D.findLocalSupportingCornerMatches = function(imageMatrixA,imageMatrixB, point
 
 	var featuresA = R3D.differentialCornersForImageScales(imageScalesA, imageCornerDensityPercent, true);
 	var featuresB = R3D.differentialCornersForImageScales(imageScalesB, imageCornerDensityPercent, true);
+
+	// var cornersA = R3D.differentialCornersForImageSingle(imageScalesA);
+	// var cornersB = R3D.differentialCornersForImageSingle(imageScalesB);
+
+	// ???
+	// ???
 
 	// create objects for A
 	var affineMappingNeighborCount = 6 + 1;
@@ -11247,13 +11259,9 @@ for(var i=0;i<images.length;++i){
 	};
 
 	var roundedScale = function(scale){
-		// console.log(" in: "+scale);
 		scale = Math.log(scale);
-		// console.log("  a: "+scale);
 		scale = Math.round(scale/maximumScaleDifference);
-		// console.log("  b: "+scale);
 		scale = scale*maximumScaleDifference;
-		// console.log("  c: "+scale);
 		return scale;
 	};
 
@@ -11375,6 +11383,7 @@ for(var i=0;i<images.length;++i){
 		featureSpaceB.insertObject(featuresB[i]);
 	}
 
+console.log("TOTAL SEARCH POINTS: "+featureSpaceA.count()+" | "+featureSpaceB.count());
 	// main algorithm
 	var pSpacesA = [putativeSpaceA,putativeSpaceB];
 	var pSpacesB = [putativeSpaceB,putativeSpaceA];
@@ -11421,8 +11430,6 @@ for(var i=0;i<images.length;++i){
 			// get all local candidates within region around putative-pair A & B
 			var candidatesA = fSpaceA.objectsInsideCircle(putativePointA,searchSizeRadius);
 			var candidatesB = fSpaceB.objectsInsideCircle(putativePointB,searchSizeRadius);
-			// console.log(candidatesA);
-			// console.log(candidatesB);
 /*
 // SHOW CANDIDATES
 if(doDebug){
@@ -11502,7 +11509,7 @@ for(var z=0; z<candidatesA.length; ++z){
 			// throw "end inner";
 		}
 
-		break; // doing a second round is only minimally helpful while being double processing
+		// break; // doing a second round is only minimally helpful while being double processing
 	}
 
 	// show top same matches:
@@ -11647,12 +11654,8 @@ R3D._progressiveSparseMatches = function(imageMatrixA,objectsAIn, imageMatrixB,o
 	var F=null, Finv=null, Ferror=null;
 	var pointsA, pointsB;
 	var maxIterations = 10;
-	// var maxIterations = 20;
-	// var maxIterations = 5;
-	// var minimumRatio = 0.90; // full area should be more unique?
-	// var minimumRatio = 0.75;
-	var minimumRatio = 0.50;
-	var mininumScore = null; //0.25;
+	var minimumRatio = 0.75;
+	var mininumScore = 0.20; // 0.25;  // what are typical values [dependent on the score algorithm used]?
 	var minimumDeltaRatio = 1.01; // 1.01 -> 1.1
 	var previousErrorF = null;
 	var errorDelta = 0;
@@ -11670,15 +11673,11 @@ R3D._progressiveSparseMatches = function(imageMatrixA,objectsAIn, imageMatrixB,o
 	}
 	for(var iteration=0; iteration<maxIterations; ++iteration){
 		console.log("        ITERATION + "+iteration+" ................................................................................... ["+(F!==null)+"] ("+Ferror+" px) + "+ (Code.valueOrDefault(pointsA,[]).length) );
-
 		var strict = F!==null; 
 		// var minScore = strict ? (null) : mininumScore;
 		// var minRatio = strict ? (0.90) : minimumRatio;
-
-		var minScore = 0.20; // what are typical values [dependent on the score algorithm used]?
-		// var minRatio = 0.50; // 0.50 - 0.90
-		var minRatio = 0.75;
-
+		var minScore = mininumScore;
+		var minRatio = minimumRatio;
 
 		R3D.progressiveMatchObjectsSubset(imageMatrixA,imageMatrixB, objectsA,objectsB, objectsB,objectsA, F,Finv, Ferror);
 		info = R3D._progressiveMatchChooseBest(objectsA,objectsB, minRatio,minScore);
@@ -13199,7 +13198,7 @@ R3D._progressiveMatchIndex = function(objects){
 }
 R3D._progressiveMatchChooseBest = function(objectsA,objectsB,  minimumRatio,minScore){ // check to see if top match comparisons
 	minimumRatio = minimumRatio!==undefined && minimumRatio!==null ? minimumRatio : 0.99; // defaults for unknown searching
-	minScore = minScore!==undefined && minScore!==null ? minScore : 0.15;
+	// minScore = minScore!==undefined && minScore!==null ? minScore : 0.15;
 	var bestMatches = [];
 	for(i=0; i<objectsA.length; ++i){
 		var objectA = objectsA[i];
@@ -16226,109 +16225,21 @@ throw "?"
 
 }
 R3D.imageCornersDifferential = function(image, whatelse, testPoint){
+	var red = image.red();
+	var grn = image.grn();
+	var blu = image.blu();
 	var width = image.width();
 	var height = image.height();
 	var pixels = width*height;
-
-/*
-	var size = 5;
-	// var mask = [1,1,1,1,1, 1,1,1,1,1, 1,1,0,1,1, 1,1,1,1,1, 1,1,1,1,1]; // square full - x
-	// var mask = [0,1,1,1,0, 1,1,1,1,1, 1,1,0,1,1, 1,1,1,1,1, 0,1,1,1,0]; // circle full
-	// var mask = [0,1,1,1,0, 1,1,0,1,1, 1,0,0,0,1, 1,1,0,1,1, 0,1,1,1,0];
-	// var mask = [0,1,1,1,0, 0,1,1,1,0, 0,1,0,1,0, 0,1,1,1,0, 0,1,1,1,0];
-
-
-	// var mask = [ // circle ring importance
-	// 0.00,0.75,1.00,0.75,0.00,
-	// 0.75,0.50,0.25,0.50,0.75,
-	// 1.00,0.25,0.00,0.25,1.00,
-	// 0.75,0.50,0.25,0.50,0.75,
-	// 0.00,0.75,1.00,0.75,0.00
-	// ];
-	// var mask = [ // circle ring importance
-	// 0.00,1.00,1.00,1.00,0.00,
-	// 1.00,0.25,0.00,0.25,1.00,
-	// 1.00,0.00,0.00,0.00,1.00,
-	// 1.00,0.25,0.00,0.25,1.00,
-	// 0.00,1.00,1.00,1.00,0.00
-	// ];
-	// var mask = [ // circle ring importance
-	// 0.25,1.00,1.00,1.00,0.25,
-	// 1.00,0.25,0.00,0.25,1.00,
-	// 1.00,0.00,0.00,0.00,1.00,
-	// 1.00,0.25,0.00,0.25,1.00,
-	// 0.25,1.00,1.00,1.00,0.25
-	// ];
-	// var mask = [ // circle ring importance
-	// 0.00,1.00,1.00,1.00,0.00,
-	// 1.00,0.00,0.00,0.00,1.00,
-	// 1.00,0.00,0.00,0.00,1.00,
-	// 1.00,0.00,0.00,0.00,1.00,
-	// 0.00,1.00,1.00,1.00,0.00,
-	// ];
-	// var mask = [ // circle ring importance
-	// 0.25,1.00,1.00,1.00,0.25,
-	// 1.00,0.50,0.00,0.50,1.00,
-	// 1.00,0.00,0.00,0.00,1.00,
-	// 1.00,0.50,0.00,0.50,1.00,
-	// 0.25,1.00,1.00,1.00,0.25,
-	// ];
-
-	// var mask = [ // circle ring importance
-	// 0.25,0.75,1.00,0.75,0.25,
-	// 0.75,0.50,0.25,0.50,0.75,
-	// 1.00,0.25,0.00,0.25,1.00,
-	// 0.75,0.50,0.25,0.50,0.75,
-	// 0.25,0.75,1.00,0.75,0.25,
-	// ];
-
-	// var mask = [ // circle ring importance
-	// 0.25,1.00,1.00,1.00,0.25,
-	// 1.00,0.50,0.25,0.50,1.00,
-	// 1.00,0.25,0.00,0.25,1.00,
-	// 1.00,0.50,0.25,0.50,1.00,
-	// 0.25,1.00,1.00,1.00,0.25,
-	// ];
-
-	// var mask = [ // circle ring importance
-	// 0.25,1.00,1.00,1.00,0.25,
-	// 1.00,1.00,0.50,1.00,1.00,
-	// 1.00,0.50,0.00,0.50,1.00,
-	// 1.00,1.00,0.50,1.00,1.00,
-	// 0.25,1.00,1.00,1.00,0.25,
-	// ];
-
-	var mask = [ // circle ring importance
-	0.25,1.00,1.00,1.00,0.25,
-	1.00,0.50,0.25,0.50,1.00,
-	1.00,0.25,0.00,0.25,1.00,
-	1.00,0.50,0.25,0.50,1.00,
-	0.25,1.00,1.00,1.00,0.25,
-	];
-
-	// var mask = [0,1,1,1,0, 1,1,0,1,1, 1,0,0,0,1, 1,1,0,1,1, 0,1,1,1,0]; // circle ring thick - x
-	// var mask = [0,1,1,1,0, 1,0,0,0,1, 1,0,0,0,1, 1,0,0,0,1, 0,1,1,1,0]; // circle ring thin - OK
-	// var mask = [1,1,1,1,1, 1,0,0,0,1, 1,0,0,0,1, 1,0,0,0,1, 1,1,1,1,1]; // square ring thin - OK
-
-	// var size = 3;
-	// var mask = [1,1,1, 1,0,1, 1,1,1];
-
-*/
-
 	var size = R3D.imageCornerDifferentialInfoSize;
 	var mask = R3D.imageCornerDifferentialInfoMask;
-
-	var iList = [];
 
 	var half = (size*0.5 | 0);
 	var centerIndex = half*size + half;
 	var wmh = width - half;
 	var hmh = height - half;
 	var matrix = null;
-	var red = image.red();
-	var grn = image.grn();
-	var blu = image.blu();
-
+	
 	var a = new V3D();
 	var b = new V3D();
 	var com = new V2D();
@@ -16344,10 +16255,10 @@ R3D.imageCornersDifferential = function(image, whatelse, testPoint){
 			var sames = [];
 			var diffMax = 0;
 			var diffMin = 3; // max would be sqrt(3) ~ 1.73 [black to white]
-var doDebug = false;
-if(testPoint){
-	doDebug = x == testPoint.x && y == testPoint.y;
-}
+// var doDebug = false;
+// if(testPoint){
+// 	doDebug = x == testPoint.x && y == testPoint.y;
+// }
 			var centerIndex = y*width + x;
 			a.set(red[centerIndex],grn[centerIndex],blu[centerIndex]);
 			for(var j=0; j<size; ++j){
@@ -16385,9 +16296,12 @@ if(testPoint){
 // }
 			// magnitude score
 			var magCOM = com.length();
-if(doDebug){
-	console.log("com: "+com+"");
-}
+			var angleCOM = V2D.angleDirection(V2D.DIRX, com);
+			var score = magCOM;
+/*
+// if(doDebug){
+// 	console.log("com: "+com+"");
+// }
 			if(magCOM>0){
 				var angleCOM = V2D.angleDirection(V2D.DIRX, com);
 				com.length(1);
@@ -16401,9 +16315,9 @@ if(doDebug){
 					var diff = diffs[i];
 					var same = (diffMax - diff);
 					var mul = mask[i];
-if(doDebug){
-	console.log(diff,same,mul);
-}
+// if(doDebug){
+// 	console.log(diff,same,mul);
+// }
 					diff *= mul;
 					same *= mul;
 					// 
@@ -16504,7 +16418,8 @@ if(doDebug){
 					// score = Math.pow(score, 2.0);
 					// score = Math.pow(score, 4.0);
 				}
-
+*/
+				
 				// if(sigmaSame>0){
 				// 	score = Math.pow(magCOM,0.50);
 				// 	score = score * (1.0/sigmaSame) * (averageDiff);
@@ -16530,23 +16445,23 @@ if(doDebug){
 					console.log(sigmaDiff);
 					throw "?"
 				}
-				// save
-				// var angleCOM = V2D.angle(V2D.DIRX, com);
 // if(doDebug){
 // 	console.log(Code.degrees(angleCOM)+" @ "+centerIndex);
 // }
 				angles[centerIndex] = angleCOM;
+			/*
 			}else{
 				scores[centerIndex] = 0;
 				angles[centerIndex] = 0;
 			}
+			*/
 		}
 	}
-var doBlur = false;
-if(doBlur){
-	var blurSigma = 1.0;
-	var scores = ImageMat.getBlurredImage(scores,width,height, blurSigma);
-}
+// var doBlur = false;
+// if(doBlur){
+// 	var blurSigma = 1.0;
+// 	var scores = ImageMat.getBlurredImage(scores,width,height, blurSigma);
+// }
 	return {"value":scores, "angles":angles};
 }
 
@@ -16816,9 +16731,8 @@ R3D.differentialCornersForImage = function(inputImage, idealImageSize){
 		imageScales = new ImageMatScaled(idealImage);
 	}
 	imageScale = (inputImage.width()/imageScales.width() + inputImage.height()/imageScales.height())*0.5;
-	console.log("imageScale: "+imageScale);
+	// console.log("imageScale: "+imageScale);
 	var features = R3D.differentialCornersForImageScales(imageScales);
-
 	// scale points back up
 	for(var i=0; i<features.length; ++i){
 		var feature = features[i];
@@ -16830,11 +16744,10 @@ R3D.differentialCornersForImage = function(inputImage, idealImageSize){
 }
 R3D.differentialCornersForImageScales = function(imageScales, suppressDistancePercent){//, pointsOnly){
 	// settings
-	var standardAreaSize = 25; // 21 - 31
-	suppressDistancePercent = Code.valueOrDefault(suppressDistancePercent,0.015); // 0.01(2K) - 0.015(1+K) - 0.02(.75K)
+	var standardAreaSize = 31; // 21 - 31
+	suppressDistancePercent = Code.valueOrDefault(suppressDistancePercent,0.010); // 0.01(2K) - 0.015(1+K) - 0.02(.75K)
 	var scaleCount = 4; // 1.00  0.50  0.25  0.125
 	var scaleDivisions = 20; // 10-20
-
 	// derived
 	var width = imageScales.width();
 	var height = imageScales.height();
@@ -16850,43 +16763,38 @@ R3D.differentialCornersForImageScales = function(imageScales, suppressDistancePe
 		var points = info["points"];
 		Code.arrayPushArray(allPoints,points);
 	}
-	// console.log(allPoints);
 	console.log("ALL SCALE TOTAL POINTS: "+allPoints.length);
 	
 	// TODO: might have duplicated locations
 
+	// scales: linear in exponential domain
+	var scales = Code.divSpace(2,-2, scaleDivisions);
+	for(var i=0; i<scales.length; ++i){
+		var scale = scales[i];
+		scale = Math.pow(2,scale);
+		scales[i] = scale;
+	}
+	// find best peaks
 	var features = [];
-		// find best peaks
-		var scales = Code.divSpace(2,-2, scaleDivisions);
-		// var scales = Code.divSpace(2,-2, 20); // 4.0  2.0  1.0  0.50  0.25
-		// var scales = Code.divSpace(1,-1, 10);
-		for(var i=0; i<scales.length; ++i){
-			var scale = scales[i];
-			scale = Math.pow(2,scale);
-			scales[i] = scale;
+	for(var i=0; i<allPoints.length; ++i){
+		var point = allPoints[i];
+		var info = R3D.optimiumScaleForCornerPoint(point, imageScales, scales);
+		if(!info){
+			continue;
 		}
-
-		for(var i=0; i<allPoints.length; ++i){
-			var point = allPoints[i];
-			var info = R3D.optimiumScaleForCornerPoint(point, imageScales, scales);
-			if(!info){
-				continue;
-			}
-			var peakScale = info["scale"];
-			var peakAngle = info["angle"];
-			var peakScore = info["score"];
-// console.log("peakScale: "+peakScale);
-			feature = {};
-			feature["score"] = peakScore;
-			feature["point"] = new V2D(point.x,point.y);
-			feature["scale"] = peakScale;
-			feature["angle"] = peakAngle;
-			feature["size"] = peakScale*standardAreaSize;
-			features.push(feature);
-		}
-		console.log("FEATURES: "+features.length);
-// throw "insert";
-	// prioritized
+		var peakScale = info["scale"];
+		var peakAngle = info["angle"];
+		var peakScore = info["score"];
+		feature = {};
+		feature["score"] = peakScore;
+		feature["point"] = new V2D(point.x,point.y);
+		feature["scale"] = peakScale;
+		feature["angle"] = peakAngle;
+		feature["size"] = peakScale*standardAreaSize;
+		features.push(feature);
+	}
+	console.log("PEAKED-SCALE FEATURES: "+features.length);
+	// prioritized on cornerness score first
 	var sortScores = function(a,b){
 		return a["score"] > b["score"] ? -1 : 1;
 	};
@@ -16894,7 +16802,6 @@ R3D.differentialCornersForImageScales = function(imageScales, suppressDistancePe
 		return a["point"];
 	};
 	features.sort(sortScores);
-	
 	// to space
 	var space = new QuadTree(toV2D);
 	space.initWithMinMax(new V2D(0,0), new V2D(width,height));
@@ -16916,19 +16823,16 @@ R3D.differentialCornersForImageScales = function(imageScales, suppressDistancePe
 R3D.differentialCornersForImageSingle = function(imageMatrix, suppressDistancePercent){
 	// constants
 	suppressDistancePercent = Code.valueOrDefault(suppressDistancePercent, 0.01); // 0.001 - 0.01
-	var keepBestPercent = 0.99;
-
+	// var keepBestPercent = 0.99;
 	// info
 	var width = imageMatrix.width();
 	var height = imageMatrix.height();
-	
 	// filter out noisy corners / blends differences somewhat
-		var blurSigma = 1.0;
-		var image = imageMatrix.getBlurredImage(blurSigma);
-		var info = R3D.imageCornersDifferential(image, false);
-		var angles = info["angles"];
-	// var corners = R3D.imageCornersDifferential(imageMatrix, false);
-		var corners = info["value"];
+	var blurSigma = 1.0;
+	var image = imageMatrix.getBlurredImage(blurSigma);
+	var info = R3D.imageCornersDifferential(image, false);
+	var angles = info["angles"];
+	var corners = info["value"];
 
 	// derived
 	var maxDistance = suppressDistancePercent*Math.sqrt(width*width+height*height);
@@ -16945,7 +16849,7 @@ R3D.differentialCornersForImageSingle = function(imageMatrix, suppressDistancePe
 		corners = ImageMat.getBlurredImage(corners,width,height,sigma);
 	}
 	var peaks = Code.findMaxima2DFloat(corners, width,height);
-	console.log("PEAKS: "+peaks.length);
+	// console.log("PEAKS: "+peaks.length);
 
 	// drop corners with low corner score:
 	var pixelCount = width*height;
@@ -16962,12 +16866,9 @@ R3D.differentialCornersForImageSingle = function(imageMatrix, suppressDistancePe
 	}
 	var scoreRange = maxScore-minScore;
 	var limitMinScore = minScore + scoreRange * 0.10; // 0.10 - 0.50
-	// limitMinScore = 0.5; // 
 	console.log(minScore,maxScore,limitMinScore);
 
-
-
-	// // drop corners in low contrast areas -- flat color locations
+	// // drop corners in low contrast areas -- flat color locations ? 
 
 	// throw "contrast score"
 
@@ -16979,21 +16880,6 @@ R3D.differentialCornersForImageSingle = function(imageMatrix, suppressDistancePe
 
 	// 
 	// throw "edge score"
-
-
-
-
-	
-
-
-
-
-
-
-
-
-
-
 
 
 	// to space prioritized
@@ -17014,6 +16900,7 @@ R3D.differentialCornersForImageSingle = function(imageMatrix, suppressDistancePe
 	var space = new QuadTree(toV2D);
 	space.initWithMinMax(new V2D(0,0), new V2D(width,height));
 	var scores = [];
+	var maximumGradientRatioEdge = 4; //  2 - 8 --- too strong in single direction
 	for(var j=0; j<peaks.length; ++j){
 		var point = peaks[j];
 		// ignore low corner peaks
@@ -17021,46 +16908,28 @@ R3D.differentialCornersForImageSingle = function(imageMatrix, suppressDistancePe
 			// console.log("ignore1");
 			continue;
 		}
-		// ignore edges
-
+		// ignore edges: gradient is much more dominant in single direction
 		var x = Math.round(point.x);
 		var y = Math.round(point.y);
 		var index = y*width + x;
 		var angle = angles[index];
 		dir.set(1,0);
 		dir.rotate(angle);
-		// dir.rotate(Math.PI);
-		// console.log(dir);
-		// pnt.x = point.x + dir.x;
-		// pnt.y = point.y + dir.y;
+		// 
 		imageMatrix.getPoint(col, point.x,point.y);
 		imageMatrix.getPoint(colC, point.x+dir.x,point.y+dir.y);
 		dir.rotate(Math.PI*0.5); // 90 orth
 		imageMatrix.getPoint(colA, point.x-dir.x,point.y-dir.y);
 		imageMatrix.getPoint(colB, point.x+dir.x,point.y+dir.y);
-		// dir.rotate(Math.PI); // opp
-		// imageMatrix.getPoint(col, pnt.x,pnt.y);
 		var dA = V3D.distance(col,colA);
 		var dB = V3D.distance(col,colB);
 		var dC = V3D.distance(col,colC);
 		var dAB = (dA+dB)*0.5;
 		var ratio = dC/dAB;
-		// console.log(ratio);
-
-		if(ratio>8){ // 2 - 8 --- too strong in single direction
-			console.log("ignore2");
+		if(ratio>maximumGradientRatioEdge){
+			// console.log("ignore2");
 			continue;
 		}
-
-		// var index = Math.round(point.y)*width + Math.round(point.x);
-		// // console.log(index,point.x,point.y)
-		// var score = hessian[index];
-		// score = Math.abs(score);
-		// // console.log(score)
-		// if(score<hessianThreshold){
-		// 	console.log("ignore2");
-		// 	continue;
-		// }
 		// else - keep
 		var neighbors = space.objectsInsideCircle(point,maxDistance);
 		if(neighbors.length==0){ // keep best corners first
@@ -17071,7 +16940,7 @@ R3D.differentialCornersForImageSingle = function(imageMatrix, suppressDistancePe
 	var pass = space.toArray();
 	space.clear();
 	space.kill();
-	console.log("SPACE: "+pass.length);
+	// console.log("SPACE: "+pass.length);
 	// return pass;
 	var points = pass;
 	pointAngles = [];
@@ -17083,38 +16952,7 @@ R3D.differentialCornersForImageSingle = function(imageMatrix, suppressDistancePe
 		var angle = angles[index];
 		pointAngles[i] = angle;
 	}
-	// console.log(points,pointAngles);
 	return {"points":points, "angles":pointAngles};
-
-/*
-	// this limits a lot of points when there's a close division by zero
-	// limit keeping
-	var info = Code.infoArray(scores);
-	// console.log(info);
-	var min = info["min"];
-	var max = info["max"];
-	var ran = info["range"];
-	var limitMin = min + (1.0-keepBestPercent)*ran;
-	var points = [];
-	for(var j=0; j<pass.length; ++j){
-		var point = pass[j];
-		// if(point.z>=limitMin){
-			points.push(point);
-		// } // else skip
-	}
-	console.log("OUTPUT: "+points.length);
-	*/
-	// pointAngles = [];
-	// for(var i=0; i<points.length; ++i){
-	// 	var point = points[i];
-	// 	var x = Math.round(point.x);
-	// 	var y = Math.round(point.y);
-	// 	var index = y*width + x;
-	// 	var angle = angles[index];
-	// 	pointAngles[i] = angle;
-	// }
-	// console.log(points,pointAngles);
-	// return {"point":points, "angles":pointAngles};
 }
 
 R3D.differentialDirectionFeaturesFromPoints = function(imageScales,points){

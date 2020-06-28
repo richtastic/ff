@@ -10,6 +10,12 @@ function BlobTest(){
 	this._stage.root().addChild(this._root);
 
 	// new ImageLoader("../images/muffin/",["IMG_6097_25.JPG", "IMG_6099_25.JPG"],this,this.imagesLoadComplete).load();
+	// new ImageLoader("../images/muffin/",["IMG_6099_25.JPG", "IMG_6101_25.JPG"],this,this.imagesLoadComplete).load();
+	new ImageLoader("../images/muffin/",["IMG_6101_25.JPG", "IMG_6103_25.JPG"],this,this.imagesLoadComplete).load(); // bad
+	// new ImageLoader("../images/muffin/",["IMG_6103_25.JPG", "IMG_6105_25.JPG"],this,this.imagesLoadComplete).load(); // poor
+
+
+	// new ImageLoader("../images/muffin/",["IMG_6097_25.JPG", "IMG_6101_25.JPG"],this,this.imagesLoadComplete).load(); // TOO DIFFERENT | NOTHING TO MATCH
 	
 	// new ImageLoader("../images/muffin/",["../sunflowers.png", "IMG_6099_25.JPG"],this,this.imagesLoadComplete).load();
 	// new ImageLoader("../images/muffin/",["../sunflowers_real.png", "IMG_6099_25.JPG"],this,this.imagesLoadComplete).load();
@@ -23,7 +29,7 @@ function BlobTest(){
 	
 	// new ImageLoader("../images/muffin/",["../bench_B.png", "IMG_6099_25.JPG"],this,this.imagesLoadComplete).load();
 	
-	new ImageLoader("../images/muffin/",["../bench_A.png", "../bench_B.png"],this,this.imagesLoadComplete).load(); // hard
+	// new ImageLoader("../images/muffin/",["../bench_A.png", "../bench_B.png"],this,this.imagesLoadComplete).load(); // hard
 	// new ImageLoader("../images/muffin/",["../bench_A.png", "../bench_E.png"],this,this.imagesLoadComplete).load(); // ok
 	// new ImageLoader("../images/muffin/",["../bench_D.png", "../bench_F.png"],this,this.imagesLoadComplete).load(); // scale
 
@@ -311,16 +317,60 @@ console.log("FROM INDEX: "+index);//+" X "+V2D.DIRX);
 
 	var objectsA = R3D.generateProgressiveSIFTObjects(featuresA, imageMatrixA);
 	var objectsB = R3D.generateProgressiveSIFTObjects(featuresB, imageMatrixB);
-	console.log(objectsA);
-	console.log(objectsB);
+	// console.log(objectsA);
+	// console.log(objectsB);
+
+	// A) BLINDLY FIND MATCHES BASED ON FEATURE COMPARE 50~100 pxw
 	var result = R3D.progressiveFullMatchingDense(objectsA, imageMatrixA, objectsB, imageMatrixB);
 	console.log(result);
 
 	var F = result["F"];
 	var pointsA = result["A"];
 	var pointsB = result["B"];
+	var Finv = result["Finv"];
 
 
+
+	// B) USE FEATURE POINTS AS SEEDS & FIND NEARBY GOOD MATCHES ~ 10 px 
+	var result = R3D.findLocalSupportingCornerMatches(imageMatrixA,imageMatrixB, pointsA,pointsB);
+	console.log(result);
+	F = result["F"];
+	Finv = result["inv"];
+	pointsA = result["A"];
+	pointsB = result["B"];
+	Ferror = result["error"];
+
+/*
+
+	// FROM LOCAL F -> FIND GLOBAL F [CORNER DENSE]
+	var imageAWidth = imageMatrixA.width();
+	var imageAHeight = imageMatrixA.height();
+	var imageBWidth = imageMatrixB.width();
+	var imageBHeight = imageMatrixB.height();
+	var hypA = Math.sqrt(imageAWidth*imageAWidth + imageAHeight*imageAHeight);
+	var hypB = Math.sqrt(imageBWidth*imageBWidth + imageBHeight*imageBHeight);
+	var hyp = Math.max(hypA,hypB);
+
+	var maximumError = 0.05*(hyp);
+	var minimumError = 0.01*(hyp);
+	var searchDensePixelError = Math.min(Math.max(Ferror, minimumError),maximumError); // want SOME wiggle room to change F --- 0.01 x 500 = 6 px
+	// searchDensePixelError = 5;
+	console.log("searchDensePixelError: "+searchDensePixelError)
+	result = R3D.findDenseCornerFMatches(imageMatrixA,imageMatrixB, F, searchDensePixelError, null, pointsA,pointsB);
+	console.log(result);
+	F = result["F"];
+	Finv = result["inv"];
+	pointsA = result["A"];
+	pointsB = result["B"];
+	Ferror = result["error"];
+
+*/
+
+	// KEEP ONLY THE VERY BEST MATCHES AND LOW ERROR POINTS - DENSE F MATCHING ~ 1px
+		// ACTUAL DENSE
+
+
+		// HERE
 
 
 
@@ -408,9 +458,11 @@ if(true){
 
 	}
 
-	var samples = Code.randomSampleRepeatsParallelArrays([pointsA,pointsB], 100);
-	samplesA = samples[0];
-	samplesB = samples[1];
+	// var samples = Code.randomSampleRepeatsParallelArrays([pointsA,pointsB], 1000);
+	// samplesA = samples[0];
+	// samplesB = samples[1];
+	var samplesA = pointsA;
+	var samplesB = pointsB;
 	console.log(pointsA.length)
 	console.log("R3D.showFundamental");
 	if(F){

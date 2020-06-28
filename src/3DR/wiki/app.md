@@ -386,8 +386,69 @@ MISSING:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+- change alg to be F focused, not BOTH F & point focused?
 
-- check F initial estimates again
+
+
+
+
+R3D.findLocalSupportingCornerMatches
+	- corner - local increase of matches -- 2-10x as big as initial corner search
+		- different ways to get angle
+		- different ways to get scale
+		- ignore F ?
+	=> how to be fast
+
+
+
+
+
+
+
+pair matching steps:
+A) unknown feature matching [100px 100m]
+	- some correct matches, possibly a lot of noise (1:2)
+B) local corner-feature matching [20 px 200m]
+	- added matches around the correct matches
+	- drop some of the worst matches
+	- initial, useable F
+C) corner-dense matching [5px 100m]
+	- increase seed-point matches around image
+	- reduced F error
+D) dense F point matching [1px 500m]
+	- spread good seed points
+	- remove poor points
+	- keep only the best: F, N, S
+	- reduced F error
+
+=> good F & seed 
+
+E) sparse-dense R point matching [1px 1000m]
+	- R initial
+	- spread good seed points
+
+D) dense-dense R [<1px 10,000m]
+	- new seed points => propagated points
+	- updated R
+
+G) dense-group
+	...
+
+
+
+- ignore low contrast features
+	- range filter for each point - max middle pixel difference
+	- drop worst ~ 10 %
+	- drop constant < 0.04
+
+- ignore low entropy features:
+	- 
+
+
+
+
+
+
 
 
 
