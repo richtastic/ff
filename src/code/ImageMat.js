@@ -5210,7 +5210,6 @@ ImageMat.colorFilter = function(srcR,srcG,srcB, wid, hei, colorTarget, colorDist
 
 
 
-
 function ImageMatScaled(image){
 	var images = ImageMat.getProgressiveScaledImage(image);
 	this._container = images;
@@ -5275,6 +5274,26 @@ ImageMatScaled.prototype.getScaledImage = function(scale, doCeil){
 	var image = this.extractRect(center, resultScale, resultWidth,resultHeight);
 	return image;
 }
+
+ImageMatScaled.prototype.getImageSize = function(idealSize, maxScale, minScale){ // V2D
+	var image = this;
+	var originalWidth = image.width();
+	var originalHeight = image.height();
+	// resize to usable dimension
+	var idealPixelCount = idealSize.x*idealSize.y;
+	var actualPixelCount = image.width()*image.height();
+	var idealScale = Math.sqrt(idealPixelCount/actualPixelCount);
+	if(maxScale!==undefined){
+		idealScale = Math.min(idealScale,maxScale);
+	}
+	if(minScale!==undefined){
+		idealScale = Math.max(idealScale,minScale);
+	}
+	var outputImage = image.getScaledImage(idealScale);
+	var imageScale = (image.width()/outputImage.width() + image.height()/outputImage.height())*0.5;
+	return {"image":outputImage, "scale":imageScale};
+}
+
 
 
 

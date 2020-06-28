@@ -389,6 +389,20 @@ MISSING:
 - change alg to be F focused, not BOTH F & point focused?
 
 
+RANSAC AFTER DENSE? --- too high error & too many possibly wrong matches
+
+DENSE F
+
+
+
+---- DENSE CORNER POINTS 
+
+- some fxns only want corner points, not features fitting criteria
+	var cornersB = R3D.differentialCornersForImageSingle(imageIdealB, imageCornerDensityPercent);
+
+-  may also want to:
+	- drop low contrast areas
+	- drop low corner score points
 
 
 
@@ -398,6 +412,15 @@ R3D.findLocalSupportingCornerMatches
 		- different ways to get scale
 		- ignore F ?
 	=> how to be fast
+
+
+
+
+
+
+
+
+
 
 
 

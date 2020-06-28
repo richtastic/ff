@@ -340,9 +340,8 @@ console.log("FROM INDEX: "+index);//+" X "+V2D.DIRX);
 	pointsB = result["B"];
 	Ferror = result["error"];
 
-/*
 
-	// FROM LOCAL F -> FIND GLOBAL F [CORNER DENSE]
+	// C) FROM LOCAL F -> FIND GLOBAL F [CORNER DENSE]
 	var imageAWidth = imageMatrixA.width();
 	var imageAHeight = imageMatrixA.height();
 	var imageBWidth = imageMatrixB.width();
@@ -351,8 +350,8 @@ console.log("FROM INDEX: "+index);//+" X "+V2D.DIRX);
 	var hypB = Math.sqrt(imageBWidth*imageBWidth + imageBHeight*imageBHeight);
 	var hyp = Math.max(hypA,hypB);
 
-	var maximumError = 0.05*(hyp);
-	var minimumError = 0.01*(hyp);
+	var maximumError = 0.02*hyp; // 0.02 ~ 10 px
+	var minimumError = 0.002*hyp; // 0.001 ~ 1 px
 	var searchDensePixelError = Math.min(Math.max(Ferror, minimumError),maximumError); // want SOME wiggle room to change F --- 0.01 x 500 = 6 px
 	// searchDensePixelError = 5;
 	console.log("searchDensePixelError: "+searchDensePixelError)
@@ -364,10 +363,29 @@ console.log("FROM INDEX: "+index);//+" X "+V2D.DIRX);
 	pointsB = result["B"];
 	Ferror = result["error"];
 
-*/
+	// D) RANSAC BEST SEEDS:
+		// SCORE ERROR?
+		// F ERROR?
+
+	/*
+		input: pointsA & pointsB
+		RANSAC:
+			- pick 7 random points 
+	*/
+
+	var result = R3D.fundamentalRANSACFromPoints(pointsA,pointsB, Ferror*0.5, F);
+	console.log(result);
+	var matches = result["matches"];
+	pointsA = matches[0];
+	pointsB = matches[1];
+	F = result["F"];
+	Finv = R3D.fundamentalInverse(F);
+	Ferror = R3D.fundamentalError(F,Finv,pointsA,pointsB);
+
+
 
 	// KEEP ONLY THE VERY BEST MATCHES AND LOW ERROR POINTS - DENSE F MATCHING ~ 1px
-		// ACTUAL DENSE
+		// ACTUAL DENSE ?
 
 
 		// HERE
@@ -472,7 +490,10 @@ if(true){
 
 } // if false
 
-	throw "..."
+
+
+	throw "done"
+
 /*
 	var objectsA = featureList[0];
 	var objectsB = featureList[1];
