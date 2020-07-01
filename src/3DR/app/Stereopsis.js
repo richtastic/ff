@@ -5991,6 +5991,50 @@ Stereopsis.World.prototype.refineSelectCameraAbsoluteOrientationTriangulate = fu
 
 }
 // globalBundleAdjust
+
+// ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Stereopsis.World.prototype.solvePairF = function(completeFxn, completeContext){ // F-based algorithms first
+	console.log("solvePairF");
+
+	// points should already have been injected via optimizing local affine area
+
+	// var maxIterations = 5;
+	var maxIterations = 1;
+	for(var iteration=0; iteration<maxIterations; ++iteration){
+		console.log("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ iteration "+iteration+" / "+maxIterations);
+		// estimate current error
+
+		// expand points:
+			/*
+				find empty cells next to a filled cell
+				for each cell:
+					find best NN (F / N / S error ?)
+						- affine | rotation/scale
+					find best predicted location in opposite view
+						- optimize local affine | rotation/scale
+					add new match
+			*/
+		// globally drop points with high error:
+			// F
+			// N
+			// S
+		// locally drop points with high error:
+			// F
+			// N
+			// S
+		// 
+	}
+
+	/*
+world.relativeFFromSamples(); // update F
+world.estimate3DErrors(true, false); // update errors using absolute-relative transforms
+	*/
+
+	throw "solvePairF";
+	// if(completeFxn){
+	// 	completeFxn.call(completeContext);
+	// }
+}
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 Stereopsis.World.prototype.solvePair = function(completeFxn, completeContext){ // pairwise
 	console.log("SOLVE");

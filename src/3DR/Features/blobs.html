@@ -8,7 +8,7 @@ function pageLoadedFxn(){
 	var ff = new FF("../../code/",ffLoadedFxn);
 }
 function ffLoadedFxn(){
-	(new ScriptLoader("./",["../R3D.js","BlobTest.js"],this,classesLoadedFxn)).load();
+	(new ScriptLoader("./",["../R3D.js","../app/Stereopsis.js","BlobTest.js"],this,classesLoadedFxn)).load();
 }
 function classesLoadedFxn(){
 	var blob = new BlobTest();

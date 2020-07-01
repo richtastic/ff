@@ -7612,7 +7612,7 @@ R3D.fundamentalRANSACFromPoints = function(pointsAIn,pointsBIn, errorPosition, i
 	var consensus=[], consensusSet = [];
 	var support, maxSupportCount = 0, maxSupportError = null;
 	var minCount = 7;
-	var errorMinfactor = 10.0; // 2.0
+	var errorMinfactor = 2.0; // 2.0 - 10.0
 	var maxIterations = errorMinfactor * R3D.iterationsFromProbabilities(pDesired, pOutlier, minCount);
 	var errorFxn = function(a){
 		return a[2];
@@ -7620,7 +7620,7 @@ R3D.fundamentalRANSACFromPoints = function(pointsAIn,pointsBIn, errorPosition, i
 	var dir = new V2D();
 	var org = new V2D();
 	for(i=0;i<maxIterations;++i){
-		if(i%100==0){
+		if(i%1000==0){
 			console.log(" - "+i+" / "+maxIterations+" @ "+maxSupportCount+" of "+pointsAIn.length);
 		}
 		// reset for iteration
@@ -10259,7 +10259,7 @@ R3D.findDenseCornerFMatches = function(imageMatrixA,imageMatrixB, F,Ferror, imag
 
 	var averageSizeA = (imageMatrixA.width()+imageMatrixA.height());
 
-	var featureSizePercent = 0.02; // 0.01 - 0.04
+	var featureSizePercent = 0.04; // 0.01 - 0.04
 	var maximumAngleDifference = 10; // 5-20 degrees : 10=> 36 | 12=>30 | 18=>20 | 22.5=>16
 	var maximumTableEntries = 360.0/(maximumAngleDifference);
 
@@ -10750,8 +10750,9 @@ throw "end loop";
 		var bestMatchesB = [];
 		var scores = [];
 		var ratios = [];
-		var minRatio = 0.95; // 0.80 - 0.90
+		// var minRatio = 0.95; // 0.80 - 0.90
 		// var minRatio = 1.0;
+		var minRatio = 0.90;
 		for(var i=0;i<featuresA.length;++i){
 			var featureA = featuresA[i];
 			var bestA = featureA["best"];
@@ -10960,6 +10961,85 @@ throw "end loop";
 
 
 
+R3D.progressiveMatchingAllSteps = function(imageMatrixA,objectsA, imageMatrixB,objectsB){
+	// A) BLINDLY FIND MATCHES BASED ON FEATURE COMPARE 50~100 pxw
+	var result = R3D.progressiveFullMatchingDense(objectsA, imageMatrixA, objectsB, imageMatrixB);
+	console.log(result);
+
+	var Ferror = 0;
+	var F = result["F"];
+	var pointsA = result["A"];
+	var pointsB = result["B"];
+	var Finv = result["Finv"];
+
+
+
+	// B) USE FEATURE POINTS AS SEEDS & FIND NEARBY GOOD MATCHES ~ 10 px 
+	var result = R3D.findLocalSupportingCornerMatches(imageMatrixA,imageMatrixB, pointsA,pointsB);
+	console.log(result);
+	F = result["F"];
+	Finv = result["inv"];
+	pointsA = result["A"];
+	pointsB = result["B"];
+	Ferror = result["error"];
+
+
+
+	// C) FROM LOCAL F -> FIND GLOBAL F [CORNER DENSE]
+	var imageAWidth = imageMatrixA.width();
+	var imageAHeight = imageMatrixA.height();
+	var imageBWidth = imageMatrixB.width();
+	var imageBHeight = imageMatrixB.height();
+	var hypA = Math.sqrt(imageAWidth*imageAWidth + imageAHeight*imageAHeight);
+	var hypB = Math.sqrt(imageBWidth*imageBWidth + imageBHeight*imageBHeight);
+	var hyp = Math.max(hypA,hypB);
+
+	var maximumError = 0.02*hyp; // 0.02 ~ 10 px
+	var minimumError = 0.002*hyp; // 0.001 ~ 1 px
+	var searchDensePixelError = Math.min(Math.max(Ferror, minimumError),maximumError); // want SOME wiggle room to change F --- 0.01 x 500 = 6 px
+	// searchDensePixelError = 5;
+	console.log("searchDensePixelError: "+searchDensePixelError)
+	result = R3D.findDenseCornerFMatches(imageMatrixA,imageMatrixB, F, searchDensePixelError, null, pointsA,pointsB);
+	console.log(result);
+	F = result["F"];
+	Finv = result["inv"];
+	pointsA = result["A"];
+	pointsB = result["B"];
+	Ferror = result["error"];
+
+
+	
+	// D) RANSAC BEST
+		// SCORE ERROR?
+		// F ERROR?
+	var maximumFError = 2.0; // 2 pixels max
+	var ransacFerror = Math.min(Ferror*0.5,maximumFError);
+	var result = R3D.fundamentalRANSACFromPoints(pointsA,pointsB, ransacFerror, F);
+	console.log(result);
+	var matches = result["matches"];
+	pointsA = matches[0];
+	pointsB = matches[1];
+	F = result["F"];
+	Finv = R3D.fundamentalInverse(F);
+	var info = R3D.fundamentalError(F,Finv,pointsA,pointsB);
+	console.log(info);
+	Ferror = info["mean"] + info["sigma"];
+	console.log("Ferror: "+Ferror);
+
+	
+
+	
+
+	console.log("return");
+
+	var result = {};
+	result["F"] = F;
+	result["Finv"] = Finv;
+	result["A"] = pointsA;
+	result["B"] = pointsB;
+	result["error"] = Ferror;
+	return result;
+}
 
 
 
@@ -10984,10 +11064,178 @@ throw "end loop";
 
 
 
+R3D.average2DTranformForIndividualPoints = function(pointsA,pointsB, imageA,imageB, optimize){ // each point use neighborhood to approx scale & angle
+	console.log("R3D.average2DTranformForIndividualPoints");
+	// settings
+	var neighborSampleSize = 5 + 1;
+	var toPoint = function(p){
+		return p["point"];
+	}
+	// create spaces
+	var pointLists = [pointsA,pointsB];
+	var imageLists = [imageA,imageB];
+	var spaces = [];
+	for(var i=0; i<pointLists.length; ++i){
+		console.log(imageLists[i]);
+		var space = new QuadTree(toPoint, new V2D(0,0), imageLists[i].size());
+		spaces.push(space);
+	}
+	var spaceA = spaces[0];
+	var spaceB = spaces[1];
+	// make match objects & insert pA & pB into spaces
+	var matches = [];
+	for(var i=0; i<pointsA.length; ++i){
+		var match = {};
+		var A = {"point":pointsA[i], "i":i, "match":match};
+		var B = {"point":pointsB[i], "i":i, "match":match};
+			match["i"] = i;
+			match["A"] = A;
+			match["B"] = B;
+		matches.push(match);
+		spaceA.insertObject(A);
+		spaceB.insertObject(B);
+	}
+	// find mappings
+	var transforms = [];
+	for(var i=0; i<matches.length; ++i){
+		var match = matches[i];
+		var A = match["A"];
+		var B = match["B"];
+		var pointA = A["point"];
+		var pointB = B["point"];
+		var neighborsA = spaceA.kNN(pointA,neighborSampleSize);
+		// to points list:
+		var pAs = [];
+		var pBs = [];
+		for(var j=0; j<neighborsA.length; ++j){
+			var oA = neighborsA[j];
+			var m = oA["match"];
+			var oB = m["B"];
+			pAs.push(oA["point"]);
+			pBs.push(oB["point"]);
+		}
+		var info = R3D.affineBasicFromPoints2D(pAs,pBs, null,null, null, true);
+		// console.log(info);
+		transforms.push(info);
+	}
+	console.log(transforms);
+	var newPointsA = [];
+	var newPointsB = [];
+	if(optimize){
+		var affine = new Matrix2D();
+		if(!Code.isa(imageA,ImageMatScaled)){
+			imageA = new ImageMatScaled(imageA);
+		}
+		if(!Code.isa(imageB,ImageMatScaled)){
+			imageB = new ImageMatScaled(imageB);
+		}
+		console.log(imageA);
+		console.log(imageB);
+		var hyp = imageA.size().length();
+		console.log(hyp);
+		var featureSize = 0.05 * hyp; // 0.01 - 0.05
+			// featureSize = Math.round(featureSize);
+			var haystackSize = featureSize*2;
+		var compareSize = 11;
+		
+		var featureScale = compareSize/featureSize;
+		console.log(featureScale);
+		for(var i=0; i<transforms.length; ++i){
+			var pointA = pointsA[i];
+			var pointB = pointsB[i];
+			var info = transforms[i];
+			var angle = info["angle"];
+			var scale = info["scale"];
+
+
+			if(i<1){
+				continue;
+			}
+			
 
 
 
+				// inverse:
+				// scale = 1.0/scale;
+				// angle = -angle;
 
+
+			affine.identity();
+			// affine.scale(scale);
+			affine.rotate(angle);
+			// resultCenter, resultScale, resultWidth,resultHeight, matrix
+			transforms[i] = affine.copy();
+
+			// // find best location
+			// var result = R3D.optimumNeedleHaystackAtLocation(imageA,pointA, imageB,pointB, featureSize,haystackSize, affine, compareSize,  true);
+			// var bestB = result["point"];
+			// console.log(pointB+" -> "+bestB);
+			// throw "?";
+
+			// find best transform
+
+			HERE
+
+			R3D.optimizeMatchingRotationScale();
+
+
+			var imgA = imageA.extractRect(pointA, scale*featureScale, compareSize,compareSize, affine);
+			var imgB = imageB.extractRect(pointB,   1.0*featureScale, compareSize,compareSize, null);
+
+			// if(i==7){
+
+				var sca = 5.0;
+				var imgs = [imgA,imgB];
+				for(var k=0; k<imgs.length; ++k){
+					var imageMatrix = imgs[k];
+					var img = GLOBALSTAGE.getFloatRGBAsImage(imageMatrix.red(),imageMatrix.grn(),imageMatrix.blu(), imageMatrix.width(),imageMatrix.height());
+					var d = new DOImage(img);
+					GLOBALSTAGE.addChild(d);
+					d.matrix().scale(sca);
+					d.matrix().translate(10 + (compareSize*sca+10)*k, 10 + (compareSize*sca + 10)*i);
+					// d.matrix().translate(0,0,);
+				}
+				// throw "?";
+			// }
+			
+		}
+	}
+	// throw ".."
+	spaceA.kill();
+	spaceB.kill();
+	return {"transforms":transforms, "A":newPointsA, "B":newPointsB};
+}
+
+
+R3D.optimizeMatchingRotationScale = function(pointA,pointB, imageScalesA,imageScalesB, angle,scale, limitAngle,limitScale, maxIterations){
+	limitAngleA = Code.valueOrDefault(limitAngleA, Math.PI*0.25); // 45 degrees
+	limitScale = Code.valueOrDefault(limitScale, 2.0);
+	maxIterations = Code.valueOrDefault(maxIterations, 100);
+	limitScale = Math.log2(limitScale);
+	var affine = new Matrix2D();
+
+
+...
+
+	var xVals = [0,0];
+	var args = [imageScalesA,affine];
+	var result = Code.gradientDescent(R3D._gdOptimizeMatchingRotationScale, args, xVals, null, maxIterations, 1E-10);
+	xVals = result["x"];
+
+	throw "R3D.optimizeMatchingRotationScale";
+	return {"angle":angle, "scale":scale};
+}
+R3D._gdOptimizeMatchingRotationScale = function(args, x, isUpdate){
+	var totalError = 0;
+	var sampleB = args[0];
+	var imageA = args[1];
+	var affin = args[2];
+
+	var sampleA = imageA.extractRect();
+
+
+	throw "error";
+}
 
 
 R3D.affineBasicFromPoints2D = function(pointsA,pointsB, sourceA,sourceB, affine, returnInfo){

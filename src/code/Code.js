@@ -2133,6 +2133,13 @@ Code.printArray = function(array, arrayName){
 	str = str +arrayName+" = ["+array+"];\n";
 	return str;
 }
+Code.printPrimitive = function(value, name){
+	var str = "\n";
+	name = Code.valueOrDefault(name, "x");
+	str = str +name+" = "+value+";\n";
+	return str;
+}
+
 
 Code.removeElement = function(a,o){  // preserves order O(n)
 	var i, len = a.length;
@@ -8722,8 +8729,6 @@ Code.findExtrema3DVolume = function(volume, wid,hei){ // list of 2D images
 			for(i=1; i<wm1; ++i){
 				var isExtrema = Code.isExtrema3D(volume,wid,hei,i,j,k);
 				if(isExtrema){
-					// console.log("isExtrema: "+i+","+j+","+k)
-					// throw "got an extrema";
 					var point = Code.extrema3DInterpolateRecursive(volume,wid,hei,i,j,k);
 					// var point = Code.extrema3DInterpolateSingle(volume,wid,hei,i,j,k);
 					if(point){

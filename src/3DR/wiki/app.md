@@ -386,12 +386,63 @@ MISSING:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+- use higher resolution images for various phases
+
+
+
+R3D.progressiveMatchingAllSteps
+
+world.solvePair(internalCompleteFxn, project);
+
+
+
+
+
+
+
+
+resolveIntersectionDefault
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 - change alg to be F focused, not BOTH F & point focused?
 
 
-RANSAC AFTER DENSE? --- too high error & too many possibly wrong matches
 
-DENSE F
+- DENSE F :
+	- enter views into world [should NOT need cameras]
+	- set cell size
+	- enter initial points
+	- init points:
+		- pic scale/rotation that optimizes 2D compare
+
+	- expand neighbors
+		- 2d transform?:
+			- angle:
+				- nearest neighbor
+				- neighborhood consensus
+				- relative F
+			- scale:
+				- nearest neighbor
+				- neighborhood consensus
 
 
 

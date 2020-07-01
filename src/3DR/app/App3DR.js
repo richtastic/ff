@@ -10179,8 +10179,8 @@ GLOBALDISPLAY = GLOBALSTAGE;
 		featuresB = R3D.denormalizeSIFTObjects(featuresB, imageBWidth, imageBHeight);
 // featuresA = R3D.differentialCornersForImage(imageMatrixA);
 // featuresB = R3D.differentialCornersForImage(imageMatrixB);
-console.log(featuresA);
-console.log(featuresB);
+// console.log(featuresA);
+// console.log(featuresB);
 		// TO SIFT OBJECTS
 		var objectsA = R3D.generateProgressiveSIFTObjects(featuresA, imageMatrixA);
 		var objectsB = R3D.generateProgressiveSIFTObjects(featuresB, imageMatrixB);
@@ -10194,6 +10194,10 @@ console.log(featuresB);
 		var pointsA;
 		var pointsB;
 
+throw "MATCH INIT, MATCH NEIGHBORS, F INIT, F RANSAC, F DENSE"
+
+
+		// .
 		// BASIC MATCH - SEARCHING IN THE DARK
 		if(goodEnoughMatches){
 			console.log("UNKNOWN FEATURE MATCHING");
@@ -10512,8 +10516,12 @@ console.log(pairData);
 // throw "before save pair B"
 				pairDoneSaveFxn();
 			}
-
-			world.solvePair(internalCompleteFxn, project);
+			var internalCompleteFxnF = function(){
+				console.log("internalCompleteFxnF");
+				// world.solvePair(internalCompleteFxn, project);
+			}
+			// ???
+			world.solvePairF(internalCompleteFxnF, project);
 		
 		}else{ // save without further operation
 console.log(pairData);
@@ -12838,24 +12846,10 @@ App3DR.ProjectManager.prototype.calculateFeatures = function(view){
 App3DR.ProjectManager.prototype._calculateFeaturesLoaded = function(view){
 	var image = view.featuresImage();
 	var imageMatrix = R3D.imageMatrixFromImage(image, this._stage);
-	// var idealCount = 1000;
-	// var maxCount = 1200;
-	// OLD -- BAS ORIENTATION / SCALE:
-	// var features = R3D.calculateScaleCornerFeaturesIdealCount(imageMatrix, idealCount, maxCount);
-
-	// this doesn't seem much better ...
-	// console.log(features);
-	// var features = R3D.colorGradientFeaturesFromImage(imageMatrix, idealCount, maxCount);
-	// console.log(features);
-	// throw "features ....";
-
 	var features = R3D.differentialCornersForImage(imageMatrix, new V2D(600,400));
 	var normalizedFeatures = R3D.normalizeSIFTObjects(features, imageMatrix.width(), imageMatrix.height());
 	console.log("FEATURES: "+normalizedFeatures.length);
-	
 	var wordsMax = 100;
-	// var info = R3D.bagOfWords(imageMatrix, wordsMax, wordsMax);
-	// var words = info["features"];
 	var words = R3D.differentialCornersForImage(imageMatrix, new V2D(100,50));
 	var normalizedWords = R3D.normalizeSIFTObjects(words, imageMatrix.width(), imageMatrix.height());
 	console.log("WORDS: "+normalizedWords.length);
@@ -12873,7 +12867,7 @@ App3DR.ProjectManager.prototype._calculateFeaturesLoaded = function(view){
 
 	console.log(features.length+" | "+normalizedWords.length+" | "+Code.keys(normalizedHistogram).length);
 	R3D.showFeaturesForImage(imageMatrix, features);
-	// throw "now save ...";
+	// throw "features - now save ...";
 
 	view.setFeatureData(data, this._calculateFeaturesComplete, this);
 }

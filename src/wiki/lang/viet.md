@@ -35,8 +35,8 @@
 |  |  | pen |
 |  |  | pencil |
 |  |  |  |
-|  |  |  |
-|  |  |  |
+| vườn | vu-ahn | garden |
+| làm vườn | lahm vu-ahn | gardening |
 |  |  |  |
 |  |  |  |
 |  |  |  |
