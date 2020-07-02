@@ -444,12 +444,9 @@ var Finv = R3D.fundamentalInverse(F);
 	// AFFINE
 	var info = R3D.average2DTranformForIndividualPoints(pointsA,pointsB, imageMatrixA,imageMatrixB, true);
 	// console.log(info);
-	var affines = info["transforms"];
-
-
+	var transforms = info["transforms"];
 
 // throw "..."
-
 
 	// DENSE F - world
 	console.log("DENSE - WORLD - F");
@@ -460,8 +457,6 @@ var Finv = R3D.fundamentalInverse(F);
 	var views = [];
 	for(var i=0; i<images.length; ++i){
 		var image = images[i];
-		// console.log();
-		// var width = image.width();
 		var cellSize = R3D.cellSizingRoundWithDimensions(image.width(),image.height(),cellCount);
 		var view = world.addView(image,null,i);
 		view.cellSize(cellSize);
@@ -475,22 +470,29 @@ var Finv = R3D.fundamentalInverse(F);
 	for(var i=0; i<pointsA.length; ++i){
 		var pointA = pointsA[i];
 		var pointB = pointsB[i];
+		var affine = transforms[i];
 		var vs = [viewA,viewB];
 		var ps = [pointA,pointB];
-
-		var affine = null;
-
+affine = new Matrix2D().identity();
+		var as = [affine];
+// console.log(pointA+" - "+pointB);
+// console.log(affine+"")
 		// need to get affine from rotation / scale ...
 
-		affines = [affine];
-
-		console.log(vs,ps,affines);
-
-		var point3D = world.newPoint3DFromPieces(vs,ps,affines);
-		console.log(point3D);
-		throw "?";
 		
+		var point3D = world.newPoint3DFromPieces(vs,ps,as, false);
+		// console.log(point3D);
+
+		
+
+		var matches = point3D.toMatchArray();
+		for(var m=0; m<matches.length; ++m){
+			var match = matches[m];
+			world.updateMatchInfo(match);
+		}
+
 		world.embedPoint3D(point3D);
+
 	}
 	// solve
 	var result = world.solvePairF();

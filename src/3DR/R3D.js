@@ -11147,24 +11147,9 @@ R3D.average2DTranformForIndividualPoints = function(pointsA,pointsB, imageA,imag
 			var angle = info["angle"];
 			var scale = info["scale"];
 
-
-			if(i<1){
-				continue;
-			}
-			
-
-
-
 				// inverse:
 				// scale = 1.0/scale;
 				// angle = -angle;
-
-
-			affine.identity();
-			// affine.scale(scale);
-			affine.rotate(angle);
-			// resultCenter, resultScale, resultWidth,resultHeight, matrix
-			transforms[i] = affine.copy();
 
 			// // find best location
 			// var result = R3D.optimumNeedleHaystackAtLocation(imageA,pointA, imageB,pointB, featureSize,haystackSize, affine, compareSize,  true);
@@ -11174,18 +11159,34 @@ R3D.average2DTranformForIndividualPoints = function(pointsA,pointsB, imageA,imag
 
 			// find best transform
 
-			HERE
+			
+			// pointA,pointB, imageScalesA,imageScalesB, angle,scale, limitAngle,limitScale, maxIterations
+var result = R3D.optimizeMatchingRotationScale(pointA,pointB, imageA,imageB, featureScale, angle,scale);
+affine.identity();
+affine.scale(result["scale"]);
+affine.rotate(result["angle"]);
+transforms[i] = affine.copy();
 
-			R3D.optimizeMatchingRotationScale();
-
-
+// var doDisplay = true;
+var doDisplay = false;
+if(doDisplay){
+			affine.identity();
+			// affine.scale(scale);
+			affine.rotate(angle);
+			// resultCenter, resultScale, resultWidth,resultHeight, matrix
+			transforms[i] = affine.copy();
 			var imgA = imageA.extractRect(pointA, scale*featureScale, compareSize,compareSize, affine);
 			var imgB = imageB.extractRect(pointB,   1.0*featureScale, compareSize,compareSize, null);
+var scale = result["scale"];
+var angle = result["angle"];
+affine.identity();
+affine.rotate(angle);
+var imgC = imageA.extractRect(pointA, scale*featureScale, compareSize,compareSize, affine);
 
-			// if(i==7){
-
+			
 				var sca = 5.0;
 				var imgs = [imgA,imgB];
+imgs.push(imgC);
 				for(var k=0; k<imgs.length; ++k){
 					var imageMatrix = imgs[k];
 					var img = GLOBALSTAGE.getFloatRGBAsImage(imageMatrix.red(),imageMatrix.grn(),imageMatrix.blu(), imageMatrix.width(),imageMatrix.height());
@@ -11195,9 +11196,7 @@ R3D.average2DTranformForIndividualPoints = function(pointsA,pointsB, imageA,imag
 					d.matrix().translate(10 + (compareSize*sca+10)*k, 10 + (compareSize*sca + 10)*i);
 					// d.matrix().translate(0,0,);
 				}
-				// throw "?";
-			// }
-			
+}
 		}
 	}
 	// throw ".."
@@ -11207,34 +11206,100 @@ R3D.average2DTranformForIndividualPoints = function(pointsA,pointsB, imageA,imag
 }
 
 
-R3D.optimizeMatchingRotationScale = function(pointA,pointB, imageScalesA,imageScalesB, angle,scale, limitAngle,limitScale, maxIterations){
-	limitAngleA = Code.valueOrDefault(limitAngleA, Math.PI*0.25); // 45 degrees
+R3D.optimizeMatchingRotationScale = function(pointA,pointB, imageScalesA,imageScalesB, featureScale, angle,scale, limitAngle,limitScale, maxIterations){
+	// var compareSize = 11;
+	var compareSize = 7; // 5 - 11
+	limitAngle = Code.valueOrDefault(limitAngle, Math.PI*0.25); // 0.25 = 45 deg | 0.1666 = 30 deg
 	limitScale = Code.valueOrDefault(limitScale, 2.0);
-	maxIterations = Code.valueOrDefault(maxIterations, 100);
+	maxIterations = Code.valueOrDefault(maxIterations, 50);
 	limitScale = Math.log2(limitScale);
 	var affine = new Matrix2D();
-
-
-...
+	var imageB = imageScalesB.extractRect(pointB,   1.0*featureScale, compareSize,compareSize, null);
 
 	var xVals = [0,0];
-	var args = [imageScalesA,affine];
+	var args = [imageB, pointA,imageScalesA, featureScale,angle,scale, affine, limitAngle,limitScale, compareSize];
 	var result = Code.gradientDescent(R3D._gdOptimizeMatchingRotationScale, args, xVals, null, maxIterations, 1E-10);
 	xVals = result["x"];
-
-	throw "R3D.optimizeMatchingRotationScale";
+	
+	angle += xVals[0];
+	scale *= Math.pow(2,xVals[1]);
 	return {"angle":angle, "scale":scale};
 }
+
+var ITR_CHK = 0;
+R3D._gd_SAD_IMAGES = function(imageA,imageB){
+	var aR = imageA.red();
+	var aG = imageA.grn();
+	var aB = imageA.blu();
+	var bR = imageB.red();
+	var bG = imageB.grn();
+	var bB = imageB.blu();
+	var count = aR.length;
+	var sum = 0;
+	var a = new V3D();
+	var b = new V3D();
+	for(var i=0; i<count; ++i){
+		a.set(aR[i],aG[i],aB[i]);
+		b.set(bR[i],bG[i],bB[i]);
+		// sum += V3D.distance(a,b);
+		sum += V3D.distanceSquare(a,b);
+	}
+	return sum;
+}
 R3D._gdOptimizeMatchingRotationScale = function(args, x, isUpdate){
+	if(isUpdate){
+		return;
+	}
 	var totalError = 0;
 	var sampleB = args[0];
-	var imageA = args[1];
-	var affin = args[2];
+	var pointA = args[1];
+	var imageA = args[2];
+	var featureScale = args[3];
+	var angle = args[4];
+	var scale = args[5];
+	var affine = args[6];
+	var limitAngle = args[7];
+	var limitScale = args[8];
+	var compareSize = args[9];
+	// x	
+	var xAngle = x[0];
+	var xScale = x[1];
+	// console.log(sampleB);
+	// console.log(pointA);
+	// console.log(imageA);
+	// console.log(featureScale);
+	// console.log(angle);
+	// console.log(scale);
+	// console.log(affine);
+	// console.log(limitAngle);
+	// console.log(limitScale);
+	// console.log(compareSize);
+	if(xAngle>limitAngle || xAngle<-limitAngle || xScale>limitScale || xScale<-limitScale){
+		// console.log("too far");
+		return 1E99;
+	}
+	xScale = Math.pow(2,xScale) * scale;
+	xAngle = xAngle + angle;
+	affine.identity();
+	affine.rotate(xAngle);
 
-	var sampleA = imageA.extractRect();
+	var sampleA = imageA.extractRect(pointA, xScale*featureScale, compareSize,compareSize, affine);
+	
+	var diff = R3D._gd_SAD_IMAGES(sampleA,sampleB);
 
-
-	throw "error";
+	if(isUpdate){ // TESTING - // display
+		// console.log(diff);
+		var sca = 5.0;
+		var imageMatrix = sampleA;
+		var img = GLOBALSTAGE.getFloatRGBAsImage(imageMatrix.red(),imageMatrix.grn(),imageMatrix.blu(), imageMatrix.width(),imageMatrix.height());
+		var d = new DOImage(img);
+		GLOBALSTAGE.addChild(d);
+		d.matrix().scale(sca);
+		d.matrix().translate(10 + (compareSize*sca+10)*(3+ITR_CHK), 10 + (compareSize*sca + 10)*0);
+		++ITR_CHK;
+	}
+	
+	return diff;
 }
 
 

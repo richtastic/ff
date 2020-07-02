@@ -389,6 +389,8 @@ MISSING:
 - use higher resolution images for various phases
 
 
+errorNCC\([a-z,A-Z,0-9].*\)
+
 
 R3D.progressiveMatchingAllSteps
 
@@ -398,7 +400,7 @@ world.solvePair(internalCompleteFxn, project);
 
 
 
-
+R3D.rotationScaleCornerMatrixLinear = function(pointsA,pointsB, reuse){
 
 
 resolveIntersectionDefault
@@ -407,10 +409,13 @@ resolveIntersectionDefault
 
 
 
+R3D.affineBasicFromPoints2D = function(pointsA,pointsB, sourceA,sourceB, affine, returnInfo){
 
 
 
 
+this seems bad: 
+Stereopsis.setMatchInfoFromParamerers
 
 
 

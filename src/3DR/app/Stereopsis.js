@@ -222,10 +222,13 @@ Stereopsis.setMatchInfoFromParamerers = function(match, viewA,pointA,viewB,point
 	var imageB = viewB.image();
 	// console.log("setMatchInfoFromParamerers: "+(imageA!=null && imageB!=null));
 	if(imageA && imageB){
+		// console.log(imageA,pointA,imageB,pointB,affine,compareSize);
+		// throw "?"
 		var info = Stereopsis.infoFromMatrix2D(imageA,pointA,imageB,pointB,affine,compareSize);
 		var ncc = info["ncc"];
 		var sad = info["sad"];
 		var range = info["range"]/compareSize; // range per pixel
+		// console.log("get info ... "+ncc+","+sad+","+range);
 		// return {"ncc":ncc, "sad":sad, "range":range};
 		// console.log(ncc,sad,range);
 		match.errorNCC(ncc);
@@ -284,7 +287,7 @@ Stereopsis.World.prototype.newMatchFromInfo = function(viewA,pointA,viewB,pointB
 	var point2DA = null;
 	var point2DB = null;
 	if(noConnect){
-		point3D = new Stereopsis.P3D();
+		point3D = new Stereopsis.P3D();x
 		point2DA = new Stereopsis.P2D(viewA,pointA,point3D);
 		point2DB = new Stereopsis.P2D(viewB,pointB,point3D);
 	}
@@ -5995,7 +5998,7 @@ Stereopsis.World.prototype.refineSelectCameraAbsoluteOrientationTriangulate = fu
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 Stereopsis.World.prototype.solvePairF = function(completeFxn, completeContext){ // F-based algorithms first
 	console.log("solvePairF");
-
+	var world = this;
 	// points should already have been injected via optimizing local affine area
 
 	// var maxIterations = 5;
@@ -6003,8 +6006,10 @@ Stereopsis.World.prototype.solvePairF = function(completeFxn, completeContext){ 
 	for(var iteration=0; iteration<maxIterations; ++iteration){
 		console.log("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ iteration "+iteration+" / "+maxIterations);
 		// estimate current error
-
+		world.relativeFFromSamples();
+		world.estimate3DErrors(false);
 		// expand points:
+		world.probe2DCellsF();
 			/*
 				find empty cells next to a filled cell
 				for each cell:
@@ -6014,15 +6019,17 @@ Stereopsis.World.prototype.solvePairF = function(completeFxn, completeContext){ 
 						- optimize local affine | rotation/scale
 					add new match
 			*/
-		// globally drop points with high error:
-			// F
-			// N
-			// S
+		world.filterLocal2DF();
 		// locally drop points with high error:
 			// F
 			// N
 			// S
-		// 
+			// affine: scale / rotation ?
+		world.filterGlobal2DF();
+		// globally drop points with high error:
+			// F
+			// N
+			// S
 	}
 
 	/*
@@ -10571,24 +10578,26 @@ Stereopsis.ransacTransformF = function(transform, maximumSamples, skipP){ // F &
 		if(!skipP && bestPointsA.length>minimumTransformMatchCountR){
 			var Ka = viewA.K();
 			var Kb = viewB.K();
-			var KaInv = viewA.Kinv();
-			var KbInv = viewB.Kinv();
-			var force = true;
-			// console.log("transformFromFundamental");
-			P = R3D.transformFromFundamental(bestPointsA, bestPointsB, F, Ka,KaInv, Kb,KbInv, null, force, true);
-			if(!P){
-				console.log("try again ?");
-				throw "..."
-				// P = R3D.transformFromFundamental(bestPointsB, bestPointsA, Matrix.inverse(F), Kb,KbInv, Ka,KaInv, null, force, true);
-				// P = R3D.inverseCameraMatrix(P);
-			}
-			// incorrect points may distort this ?
-			// if(false && P){
-			if(P){
-				console.log("nonlinear P");
-				var result = R3D.transformCameraExtrinsicNonlinear(P, bestPointsA, bestPointsB, Ka,KaInv, Kb,KbInv);
-				console.log(result);
-				P = result["P"];
+			if(Ka && Kb){
+				var KaInv = viewA.Kinv();
+				var KbInv = viewB.Kinv();
+				var force = true;
+				// console.log("transformFromFundamental");
+				P = R3D.transformFromFundamental(bestPointsA, bestPointsB, F, Ka,KaInv, Kb,KbInv, null, force, true);
+				if(!P){
+					console.log("try again ?");
+					throw "..."
+					// P = R3D.transformFromFundamental(bestPointsB, bestPointsA, Matrix.inverse(F), Kb,KbInv, Ka,KaInv, null, force, true);
+					// P = R3D.inverseCameraMatrix(P);
+				}
+				// incorrect points may distort this ?
+				// if(false && P){
+				if(P){
+					console.log("nonlinear P");
+					var result = R3D.transformCameraExtrinsicNonlinear(P, bestPointsA, bestPointsB, Ka,KaInv, Kb,KbInv);
+					console.log(result);
+					P = result["P"];
+				}
 			}
 		}
 	}
@@ -11610,6 +11619,16 @@ Stereopsis.World.prototype.expand2DTracks = function(maxSigmaView, maxSigmaMatch
 		}
 	}
 }
+Stereopsis.World.prototype.probe2DCellsF = function(){
+	console.log("probe F only");
+}
+Stereopsis.World.prototype.filterLocal2DF = function(){
+	console.log("filter local poor F / N / S / affine:scale|rotation / predicted");
+}
+Stereopsis.World.prototype.filterGlobal2DF = function(){
+	console.log("filter global poor F / N / S");
+}
+
 Stereopsis.World.prototype.probe2DCells = function(sigmaExistingRFN, initPatches){ // use empty cells neighboring points to check for nearby matches
 	var world = this;
 	var minimumTransformMatchCount = 16; // min match counts to consider a transform
