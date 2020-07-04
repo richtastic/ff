@@ -457,6 +457,7 @@ var Finv = R3D.fundamentalInverse(F);
 	var views = [];
 	for(var i=0; i<images.length; ++i){
 		var image = images[i];
+		// image = new ImageMatScaled(image);
 		var cellSize = R3D.cellSizingRoundWithDimensions(image.width(),image.height(),cellCount);
 		var view = world.addView(image,null,i);
 		view.cellSize(cellSize);
@@ -473,7 +474,7 @@ var Finv = R3D.fundamentalInverse(F);
 		var affine = transforms[i];
 		var vs = [viewA,viewB];
 		var ps = [pointA,pointB];
-affine = new Matrix2D().identity();
+// affine = new Matrix2D().identity();
 		var as = [affine];
 // console.log(pointA+" - "+pointB);
 // console.log(affine+"")

@@ -348,3 +348,59 @@ problem small like rabbit
 
 
 https://l-lingo.com/free-lessons/en/learn-vietnamese
+
+
+
+
+
+songs:
+
+when I was 21:
+
+
+
+ca phe sua da:
+
+
+
+kitty
+
+con meo meo
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -386,11 +386,21 @@ MISSING:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
+
+_resolveIntersectionFlat
+
+
+
+
 - use higher resolution images for various phases
 
 
 errorNCC\([a-z,A-Z,0-9].*\)
 
+
+
+‘interp2’
 
 R3D.progressiveMatchingAllSteps
 
@@ -398,6 +408,21 @@ world.solvePair(internalCompleteFxn, project);
 
 
 
+
+affine - use synthetic normal vector &project 
+
+
+- image error
+
+- homography
+
+- image alignment
+
+- 
+
+
+- color profile mapping
+	-> mapping colors (continuous ?)
 
 
 R3D.rotationScaleCornerMatrixLinear = function(pointsA,pointsB, reuse){

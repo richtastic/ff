@@ -11136,10 +11136,10 @@ R3D.average2DTranformForIndividualPoints = function(pointsA,pointsB, imageA,imag
 		var featureSize = 0.05 * hyp; // 0.01 - 0.05
 			// featureSize = Math.round(featureSize);
 			var haystackSize = featureSize*2;
-		var compareSize = 11;
+		// var compareSize = 11;
+		var compareSize = 7;
 		
-		var featureScale = compareSize/featureSize;
-		console.log(featureScale);
+		
 		for(var i=0; i<transforms.length; ++i){
 			var pointA = pointsA[i];
 			var pointB = pointsB[i];
@@ -11161,7 +11161,8 @@ R3D.average2DTranformForIndividualPoints = function(pointsA,pointsB, imageA,imag
 
 			
 			// pointA,pointB, imageScalesA,imageScalesB, angle,scale, limitAngle,limitScale, maxIterations
-var result = R3D.optimizeMatchingRotationScale(pointA,pointB, imageA,imageB, featureScale, angle,scale);
+			// ??
+var result = R3D.optimizeMatchingRotationScale(pointA,pointB, imageA,imageB, featureSize,compareSize, angle,scale);
 affine.identity();
 affine.scale(result["scale"]);
 affine.rotate(result["angle"]);
@@ -11170,6 +11171,8 @@ transforms[i] = affine.copy();
 // var doDisplay = true;
 var doDisplay = false;
 if(doDisplay){
+		var featureScale = compareSize/featureSize;
+		console.log(featureScale);
 			affine.identity();
 			// affine.scale(scale);
 			affine.rotate(angle);
@@ -11206,9 +11209,10 @@ imgs.push(imgC);
 }
 
 
-R3D.optimizeMatchingRotationScale = function(pointA,pointB, imageScalesA,imageScalesB, featureScale, angle,scale, limitAngle,limitScale, maxIterations){
+R3D.optimizeMatchingRotationScale = function(pointA,pointB, imageScalesA,imageScalesB, featureSize,compareSize, angle,scale, limitAngle,limitScale, maxIterations){
+	var featureScale = compareSize/featureSize;
 	// var compareSize = 11;
-	var compareSize = 7; // 5 - 11
+	// var compareSize = 7; // 5 - 11
 	limitAngle = Code.valueOrDefault(limitAngle, Math.PI*0.25); // 0.25 = 45 deg | 0.1666 = 30 deg
 	limitScale = Code.valueOrDefault(limitScale, 2.0);
 	maxIterations = Code.valueOrDefault(maxIterations, 50);
@@ -26822,10 +26826,16 @@ R3D.showRansac = function(pointsA, pointsB, matrixFfwd, matrixFrev, display, ima
 		d.graphics().endPath();
 		d.graphics().strokeLine();
 		display.addChild(d);
-
-
+		//
+		//
 		var d = new DOText(""+k, 10, DOText.FONT_ARIAL, 0xFF0000FF, DOText.ALIGN_CENTER);
 		d.matrix().translate(pointA.x - 10,pointA.y - 10);
+		display.addChild(d);
+		//
+		//
+		var d = new DOText(""+k, 10, DOText.FONT_ARIAL, 0xFF0000FF, DOText.ALIGN_CENTER);
+		d.matrix().translate(imageWidth, 0);
+		d.matrix().translate(pointB.x - 10,pointB.y - 10);
 		display.addChild(d);
 	}
 }
