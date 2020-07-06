@@ -10521,7 +10521,7 @@ console.log(pairData);
 				// world.solvePair(internalCompleteFxn, project);
 			}
 			// ???
-			world.solvePairF(internalCompleteFxnF, project);
+			world.showForwardBackwardCells(internalCompleteFxnF, project);
 		
 		}else{ // save without further operation
 console.log(pairData);

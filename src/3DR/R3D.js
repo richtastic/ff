@@ -11168,6 +11168,11 @@ affine.scale(result["scale"]);
 affine.rotate(result["angle"]);
 transforms[i] = affine.copy();
 
+
+if(affine.a===undefined  || Code.isNaN(affine.a) ){
+	throw "bad affine";
+}
+
 // var doDisplay = true;
 var doDisplay = false;
 if(doDisplay){
@@ -26828,6 +26833,29 @@ R3D.showRansac = function(pointsA, pointsB, matrixFfwd, matrixFrev, display, ima
 		display.addChild(d);
 		//
 		//
+
+		color = Code.setAlpARGB(color,0xFF);
+
+		var c = new DO();
+		c.graphics().setLine(2.0, color);
+		c.graphics().beginPath();
+		c.graphics().drawCircle(pointA.x, pointA.y, 5);
+		c.graphics().strokeLine();
+		c.graphics().endPath();
+		// c.matrix().translate(imageWidth, 0);
+		display.addChild(c);
+
+		// color = Code.setAlpARGB(color,0xFF);
+		var c = new DO();
+		c.graphics().setLine(2.0, color);
+		c.graphics().beginPath();
+		c.graphics().drawCircle(pointB.x, pointB.y, 5);
+		c.graphics().strokeLine();
+		c.graphics().endPath();
+		c.matrix().translate(imageWidth, 0);
+		display.addChild(c);
+
+
 		var d = new DOText(""+k, 10, DOText.FONT_ARIAL, 0xFF0000FF, DOText.ALIGN_CENTER);
 		d.matrix().translate(pointA.x - 10,pointA.y - 10);
 		display.addChild(d);
@@ -26838,6 +26866,54 @@ R3D.showRansac = function(pointsA, pointsB, matrixFfwd, matrixFrev, display, ima
 		d.matrix().translate(pointB.x - 10,pointB.y - 10);
 		display.addChild(d);
 	}
+}
+
+R3D.showForwardBackwardCells = function(pointsA, pointsB, affines, imageMatrixA,imageMatrixB, display, cellSize){
+	console.log("R3D.showForwardBackwardCells");
+	// console.log(pointsA, pointsB, affines, imageMatrixA,imageMatrixB, display, cellSize)
+	// throw "..........."
+	cellSize = Code.valueOrDefault(cellSize, 0.025*imageMatrixA.size().length());
+	cellSize = Math.round(cellSize);
+	var halfSize = cellSize*0.5;
+	var needleSize = cellSize;
+	for(var i=0; i<pointsA.length; ++i){
+		var pointA = pointsA[i];
+		var pointB = pointsB[i];
+		var affine = affines[i];
+		// console.log(affine);
+		var inverse = affine.copy().inverse();
+
+		var imageA = imageMatrixA.extractRectFromFloatImage(pointA.x,pointA.y,1.0,null,needleSize,needleSize, affine);
+		var imageB = imageMatrixB.extractRectFromFloatImage(pointB.x,pointB.y,1.0,null,needleSize,needleSize, inverse);
+
+		
+		var img = imageA;
+			img = GLOBALSTAGE.getFloatRGBAsImage(imageA.red(),imageA.grn(),imageA.blu(), imageA.width(), imageA.height());
+		var d = new DOImage(img);
+		// d.matrix().translate(pointA.x, pointA.y);
+		// d.matrix().translate(0, 0);
+		d.matrix().translate(pointB.x, pointB.y);
+		d.matrix().translate(-halfSize, -halfSize);
+		d.matrix().translate(imageMatrixA.width(), 0);
+		GLOBALSTAGE.addChild(d);
+
+		var img = imageB;
+			img = GLOBALSTAGE.getFloatRGBAsImage(imageB.red(),imageB.grn(),imageB.blu(), imageB.width(), imageB.height());
+		var d = new DOImage(img);
+		d.matrix().translate(pointA.x, pointA.y);
+		d.matrix().translate(-halfSize, -halfSize);
+		d.matrix().translate(0, 0);
+		// d.matrix().translate(pointB.x, pointB.y);
+		// d.matrix().translate(imageMatrixA.width(), 0);
+		GLOBALSTAGE.addChild(d);
+
+	}
+
+}
+
+
+R3D.maxiumMatchesFromViewCount = function(viewCount){ // what and why
+	return viewCount*(viewCount-1)/2;
 }
 
 

@@ -387,6 +387,166 @@ MISSING:
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
+- need to identify non-unique matching and disreguard in options
+	........
+
+
+
+
+
+
+x DISPLAY: SHOW POINTS ACROSS IMAGES
+
+x START R PROCESS AFTER F
+	- DISPLAY points & transform
+
+
+- remove points with lots of scale differences
+
+- ignore points that are non-unique in area ?
+
+
+- regularization for final connected point set
+	- allow to move slightly and increase local error if it reduces global error (somehow?)
+
+
+- F-rotation & affine-rotation should be consistent
+	- find worst offenders (difference in angle) & drop
+.........
+
+
+
+
+R3D.maxiumMatchesFromViewCount
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+NCC/SAD scores are similar to 1-2 sigma ?
+	- get peaks in haystck ?
+
+	FILTER:
+		- get needle & haystack
+		- drop points if (with multiple peaks) scoreA/scoreB < 1.X
+
+
+
+	PROPAGATE:
+		- use wider size of haystack
+		- don't include new matches if (with multiple peaks) scoreA/scoreB < 1.X
+
+
+
+
+
+
+
+
+
+
+
+
+
+NEIGHBOR DISTANCE DROPPING:
+	if average difference between neighbors is high -> remove
+
+
+// SHOW LOCAL AFFINE MAPPINGS
+
+
+
+
+NEIGHBOR PREDICTION ERROR DROPPING:
+	- each feature gets ~ 8 neighbors
+		- estimate predicted location vs actual location
+		- add error to accumulator
+	- each feature average accumulator error
+		- ...
+	- get global distribution of prediction errors
+		- drop worst
+
+accumulator: SELF
+good + good => good:low
+good + bad => good:med, bad:hig
+bad + bad => bad:hig, bad:hig
+
+accumulator: OPPOSITE
+good + good => good:low
+good + bad => good:med, bad:hig
+bad + bad => bad:hig, bad:hig
+
+
+
+
 
 _resolveIntersectionFlat
 

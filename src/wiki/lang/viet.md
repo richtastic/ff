@@ -355,17 +355,105 @@ https://l-lingo.com/free-lessons/en/learn-vietnamese
 
 songs:
 
-when I was 21:
+KHI TOI 20 (Đoan Trang) - when I was 20:
+https://www.youtube.com/watch?v=xB5NMm0mTp0
+https://www.youtube.com/watch?v=ya_28w1SZUA
+
+| REFRAIN A: |  |  |
+| ngày đó khi tôi hai mươi |  | That day when I was twenty |
+| tôi thật lớ ngớ chắng biết gì |  | I was really stupid and didn't know anything |
+| ngày đó anh hay sang chơi |  | That day he often went to play |
+| anh chẳng dám nói năng gì |  | He did not dare say anything |
+| chỉ trái cây chỉ bánh quy |  | Just fruit, just bisquits |
+| rồi bước đi |  | Then walked away |
+| oh yeah, oh yeah, oh yeah |  |  |
+|  |  |  |
+| REFRAIN B: |  |  |
+| ngày đó khi tôi hai mươi |  | That day when I was twenty |
+| tôi thật ngốc ngếch (nghếch?) chẳng biết gì |  | I was stupid and ignorant |
+| ngày đó anh hay sang chơi |  | That day he often went to play |
+| anh cũng lí nhí câu gì ... rồi nín thinh |  | He muttered something ... then stop talking |
+| nhìn lũ chim ngoài mái hiên |  | Look at the birds on the porch |
+| oh yeah, oh yeah, oh yeah |  |  |
+|  |  |  |
+| REFRAIN C: |  |  |
+| tình yêu ngày |  | love day |
+| đồ khù khờ ôi tình đó ngây thơ |  | that silly(moron), naive fool |
+| trong tôi còn mãi từng giờ |  | inside me forever and ever |
+| tôi còn nhớ đến bây giờ |  | i still remember it |
+| phải chi ngày đó đưng khờ |  | Spending days ... that's dumb / was stupid ?? |
+| ôi ngày đó đưng chờ |  | Oh that day don't wait |
+| tôi không phải tiếc từng giờ |  | I don't have to regret every hour |
+| ôi tình đó cứ trong mơ |  | Oh, that dream is in my dreams |
+| uh oh oh. Tình đã xa - ía ía ía |  | ... Love is far away |
+| oh oh oh |  | ... |
+| oh yeah, oh yeah, oh yeah |  |  |
+|  |  |  |
+| REFRAIN A |  |  |
+|  |  |  |
+| REFRAIN B |  |  |
+|  |  |  |
+| REFRAIN C |  |  |
+|  |  |  |
+|  |  |  |
+| REFRAIN A |  |  |
+|  |  |  |
+| REFRAIN B |  |  |
+|  |  |  |
+| REFRAIN C |  |  |
+|  |  |  |
 
 
 
-ca phe sua da:
+Sài Gòn Cafe Sữa Đá 
+https://www.youtube.com/watch?v=PZw1_6IB7c4
+|  |  |  |
+| da da da da |  |  |
+|  |  |  |
+| Cho tôi một ly cafe cafe sữa đá |  | Give me a cup of iced milk coffee cafe |
+| Cho tôi ngồi bên hàng cây hàng cây tán lá |  | Let me sit by the row of trees and foliage |
+| Cho tôi được nhìn con đường xa xa |  | Let me see the road far away |
+| Dòng người dòng đời ngày ngày trôi qua |  | The influx of people day by day passed |
+| Cho tôi dừng chân ở nơi, ở nơi quán xá bên đường |  |  |
+|  |  |  |
+| Sài Gòn cafe sữa đá |  |  |
+| Vẫn mãi như thế ai uống hay chưa? |  |  |
+| Sài Gòn hàng cây ghế đá |  |  |
+| Vẫn cứ như thế khi nắng khi mưa |  |  |
+| Nắng sớm mưa chiều |  |  |
+| Muốn nói bao điều |  |  |
+| Người người còn nhắc đến mai sau |  |  |
+| Sài Gòn cafe sữa đá |  |  |
+| Vẫn sẽ như thế khi đón khi đưa |  |  |
+| Nơi đây là nơi bọn tôi vẫn nhớ như là... |  |  |
+| Mới hôm qua |  |  |
+| Ngồi cafe nơi công viên quán xá bên đường... |  |  |
+| Có đâu xa |  |  |
+| Huyên thuyên cùng nhau vài câu chuyện... |  |  |
+| Rồi lại bận bịu lo việc riêng |  |  |
+| Đôi khi ngồi chơi,… |  |  |
+|  |  |  |
+|  |  |  |
 
 
 
-kitty
+kitty - con meo meo:
+Rửa Mặt Như Mèo - Meo Meo rửa mặt như Mèo - Bé Mon | Nhạc Thiếu Nhi Vui Nhộn Sôi Động Hay Nhất
+https://www.youtube.com/watch?v=oFGz1kcRPfY&app=desktop
 
-con meo meo
+| REFRAIN A |  |  |
+| meo meo meo |  | cat cat cat |
+| rửa mặt như mèo |  | Wash your face like a cat |
+| xấu xấu lắm chẳng được mẹ yêu |  | ugly ugly, mom doesn't love you |
+| khăn mặt đâu  mà ngồi liếm mép |  | wheres the towel, licked his lips |
+| lau mặt rồi lại khóc meo meo |  | wipe my face and cry |
+|  |  |  |
+| REFRAIN A |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
 
 
 
@@ -373,14 +461,10 @@ con meo meo
 
 
 
+NEWS
 
 
-
-
-
-
-
-
+https://www.baocalitoday.com/
 
 
 
