@@ -83,7 +83,7 @@ YAML.prototype._fillInReferences = function(){
 	        while(list.length>0){
 	            arr = list.pop(); obj = arr[0]; key = arr[1];
 	            obj[key] = ref;
-	            console.log("SET: "+key+" = ", obj, ref,obj==ref);
+	            // console.log("SET: "+key+" = ", obj, ref,obj==ref);
 	            delete arr[0];
 	            delete arr[1];
 	        }

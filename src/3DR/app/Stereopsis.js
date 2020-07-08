@@ -6028,7 +6028,7 @@ Stereopsis.World.prototype.solvePairF = function(completeFxn, completeContext){ 
 // var subdivide = true;
 // var subdivide = false;
 // var subdivide = iteration==2;
-var subdivide = iteration==4;
+var subdivide = iteration==(maxIterations*0.5 | 0);
 if(subdivide){
 for(var i=0; i<views.length; ++i){
 	var view = views[i];
@@ -11710,11 +11710,13 @@ Stereopsis.World.prototype.expand2DTracks = function(maxSigmaView, maxSigmaMatch
 }
 Stereopsis.World.prototype.probe2DCellsF = function(sigmaMaximumSelect, sigmaMaximumNew){ // propagate points using only 2D mapping attributes
 	console.log("probe2DCellsF - probe F only ....................................................................");
-	sigmaMaximumSelect = Code.valueOrDefault(sigmaMaximumSelect, 2.0);
+	sigmaMaximumSelect = Code.valueOrDefault(sigmaMaximumSelect, 3.0);
 	sigmaMaximumNew = Code.valueOrDefault(sigmaMaximumNew, 2.0); // 1.0-2.0 (68%-95%)
 
-sigmaMaximumSelect = 999;
+// sigmaMaximumSelect = 999;
 // sigmaMaximumNew = 999;
+// sigmaMaximumSelect = 3.0;
+// sigmaMaximumSelect = 4.0;
 
 	var world = this;
 	var transforms = world.toTransformArray();
@@ -11808,10 +11810,11 @@ sigmaMaximumSelect = 999;
 						var keep = fError<maxNewErrorF && sError<maxNewErrorS && nError<maxNewErrorN;
 						// console.log("keep?: "+keep+" : "+fError+"<?<"+maxNewErrorF+" "+nError+"<?<"+maxNewErrorN+" "+sError+"<?<"+maxNewErrorS);
 						if(keep){
-							// var m3D = newMatch.point3D();
-							// console.log(newMatch);
-							// optimize affine:
-							// ??????????
+							var maximumUniquenessScore = 0.99; // 0.95-0.99
+							// check to see if there are other score 'peaks' nearby
+							var uniquenessScore = world.matchUniqueness(newMatch);
+							// console.log("uniquenessScore: "+uniquenessScore);
+							if(uniquenessScore<maximumUniquenessScore){
 							var info = R3D.infoFromAffineMatrix2D(affine);
 							var angle = info["angle"];
 							var scale = info["scale"];
@@ -11834,15 +11837,9 @@ sigmaMaximumSelect = 999;
 							// console.log(affine);
 							// ........
 							matchesAddList.push(newMatch);
-							// throw "KEEP FOUND";
-							// var pointLocation = m3D.calculateAbsoluteLocation(world,true);
-							// if(pointLocation){
-							// 	console.log(pointLocation+" ... ");
-							// 	m3D.point( pointLocation );
-							// 	matchesAddList.push(newMatch);
-							// 	throw "KEEP FOUND"
-							// }else{
-							// 	console.log("got null location");
+							} // uniqueness
+							// else{
+							// 	console.log("drop uniquenessScore: "+uniquenessScore);
 							// }
 						}
 					} // end new match
@@ -13324,7 +13321,7 @@ if(affine){
 }
 */
 
-/*
+
 	//var minRange = 0.04/(5*5);
 	// var minRange = 0.10/(5*5)
 	var minRange = 0.001; // based on size? ---- 1/255 ~ 0.004
@@ -13335,7 +13332,7 @@ if(affine){
 		}
 		return false;
 	}
-*/
+
 
 
 /*
@@ -15809,6 +15806,40 @@ Stereopsis._errorAffine = function(size){
 	return Stereopsis._errorAffineMatrix;
 }
 Stereopsis.World.minimumUniqueness = 0.10; // 0.0 -> 0.59
+
+
+Stereopsis.World.prototype.matchUniqueness = function(match){
+	var viewA = match.viewA();
+	var viewB = match.viewB();
+	var imageScalesA = viewA.imageScales();
+	var imageScalesB = viewB.imageScales();
+	var pointA = match.point2DA().point2D();
+	var pointB = match.point2DB().point2D();
+	var matrix = match.affine();
+	var needleSize = Stereopsis.compareSizeForViews2D(viewA,pointA,viewB,pointB);
+	var haystackSize = needleSize * 4; // 3-5 --- if F/R error is low, can limit this more towards ~ 2
+	var compareSize = 9; // 5 - 11
+	var cellScale = (compareSize/needleSize);
+	var needle = imageScalesA.extractRect(pointA,cellScale,compareSize,compareSize, matrix);
+	var haystack = imageScalesB.extractRect(pointB,cellScale,haystackSize,haystackSize, null);
+	var scoreSAD = R3D.searchNeedleHaystackSADColor(needle,haystack);
+
+	var value = scoreSAD["value"];
+	var width = scoreSAD["width"];
+	var height = scoreSAD["height"];
+
+	var peaks = Code.findMinima2DFloat(value, width, height, true);
+		peaks.sort( function(a,b){ return a.z<b.z ? -1 : 1; } );
+	// console.log(peaks);
+	var uniqueness = 0;
+	if(peaks.length>1){
+		var first = peaks[0].z;
+		var second = peaks[1].z;
+		uniqueness = first/second;
+	}
+	// console.log("uniqueness: "+uniqueness);
+	return uniqueness;
+}
 
 Stereopsis.COMPARE_HAYSTACK_NEEDLE_SIZE = 11;
 Stereopsis.World.prototype.bestNeedleHaystackMatchFromLocation = function(centerA,centerB, existingA, affineAB, viewA,viewB){

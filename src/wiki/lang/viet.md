@@ -373,12 +373,12 @@ https://www.youtube.com/watch?v=ya_28w1SZUA
 | tôi thật ngốc ngếch (nghếch?) chẳng biết gì |  | I was stupid and ignorant |
 | ngày đó anh hay sang chơi |  | That day he often went to play |
 | anh cũng lí nhí câu gì ... rồi nín thinh |  | He muttered something ... then stop talking |
-| nhìn lũ chim ngoài mái hiên |  | Look at the birds on the porch |
+| nhìn lũ chim,  ngoài mái hiên |  | Look at the birds on the porch |
 | oh yeah, oh yeah, oh yeah |  |  |
 |  |  |  |
 | REFRAIN C: |  |  |
 | tình yêu ngày |  | love day |
-| đồ khù khờ ôi tình đó ngây thơ |  | that silly(moron), naive fool |
+| đồ khù  khờ ôi tình đó ngây thơ |  | that silly(moron), naive fool |
 | trong tôi còn mãi từng giờ |  | inside me forever and ever |
 | tôi còn nhớ đến bây giờ |  | i still remember it |
 | phải chi ngày đó đưng khờ |  | Spending days ... that's dumb / was stupid ?? |
@@ -404,36 +404,74 @@ https://www.youtube.com/watch?v=ya_28w1SZUA
 |  |  |  |
 
 
+love - Tình
+
+ngày - day
+there - đó
+fruits - trái cây
+cookies / biscuits - bánh quy
+chỉ - just
+is / already - đã 
+far away - xa ía
+dare - dám
+
+
+
+
 
 Sài Gòn Cafe Sữa Đá 
 https://www.youtube.com/watch?v=PZw1_6IB7c4
 |  |  |  |
-| da da da da |  |  |
+| reh- da da da da |  |  |
+|  ..da da da da |  |  |
+|  |  |  |
 |  |  |  |
 | Cho tôi một ly cafe cafe sữa đá |  | Give me a cup of iced milk coffee cafe |
 | Cho tôi ngồi bên hàng cây hàng cây tán lá |  | Let me sit by the row of trees and foliage |
 | Cho tôi được nhìn con đường xa xa |  | Let me see the road far away |
 | Dòng người dòng đời ngày ngày trôi qua |  | The influx of people day by day passed |
-| Cho tôi dừng chân ở nơi, ở nơi quán xá bên đường |  |  |
+| Cho tôi dừng chân ở nơi, ở nơi quán xá bên đường |  | Let me stop at a place, at a roadside shop |
 |  |  |  |
-| Sài Gòn cafe sữa đá |  |  |
-| Vẫn mãi như thế ai uống hay chưa? |  |  |
-| Sài Gòn hàng cây ghế đá |  |  |
-| Vẫn cứ như thế khi nắng khi mưa |  |  |
-| Nắng sớm mưa chiều |  |  |
-| Muốn nói bao điều |  |  |
-| Người người còn nhắc đến mai sau |  |  |
-| Sài Gòn cafe sữa đá |  |  |
-| Vẫn sẽ như thế khi đón khi đưa |  |  |
-| Nơi đây là nơi bọn tôi vẫn nhớ như là... |  |  |
-| Mới hôm qua |  |  |
-| Ngồi cafe nơi công viên quán xá bên đường... |  |  |
-| Có đâu xa |  |  |
-| Huyên thuyên cùng nhau vài câu chuyện... |  |  |
-| Rồi lại bận bịu lo việc riêng |  |  |
-| Đôi khi ngồi chơi,… |  |  |
+|  | REFRAIN A |  |
+| Sài Gòn cafe sữa đá |  | Saigon ice milk coffee |
+| Vẫn mãi như thế ai uống hay chưa? |  | Still drink like that forever? |
+| Sài Gòn hàng cây ghế đá |  | Sài Gòn row of benches |
+| Vẫn cứ như thế khi nắng khi mưa |  | Still like that when it's sunny when it rains |
+| Nắng sớm mưa chiều |  | Early afternoon sunshine |
+| Muốn nói bao điều |  | Want to say many things |
+| Người người còn nhắc đến mai sau |  | People also mention tomorrow |
+| Sài Gòn cafe sữa đá |  | Saigon ice milk coffee |
+| Vẫn sẽ như thế khi đón khi đưa |  | It will be the same when picked up |
 |  |  |  |
+| da da da da da |  |  |
 |  |  |  |
+| Nơi đây là nơi bọn tôi vẫn nhớ như là |  | This is where we still remember it |
+| Mới hôm qua |  | Just yesterday |
+| Ngồi cafe nơi công viên quán xá bên đường |  | Sitting cafe at the roadside park park |
+| Có đâu xa |  | There is nowhere |
+| Huyên thuyên cùng nhau vài câu chuyện |  | Chattering several stories together |
+| Rồi lại bận bịu lo việc riêng |  | Then busy with private affairs |
+|  |  |  |
+| Đôi khi ngồi chơi, nghỉ ngơi chốc lát khi đời |  | Sometimes sitting and playing, resting for a while in life |
+| Mãi bôn ba | Forever forever |  |
+|  |  |  |
+|  | REFRAIN A |  |
+|  |  |  |
+| da da da da da |  |  |
+|  |  |  |
+
+
+
+
+row / line - hàng
+
+
+
+
+
+
+
+
 
 
 
@@ -444,16 +482,47 @@ https://www.youtube.com/watch?v=oFGz1kcRPfY&app=desktop
 | REFRAIN A |  |  |
 | meo meo meo |  | cat cat cat |
 | rửa mặt như mèo |  | Wash your face like a cat |
-| xấu xấu lắm chẳng được mẹ yêu |  | ugly ugly, mom doesn't love you |
-| khăn mặt đâu  mà ngồi liếm mép |  | wheres the towel, licked his lips |
-| lau mặt rồi lại khóc meo meo |  | wipe my face and cry |
+| xấu xấu lắm chẳng được mẹ yêu |  | ugly, very ugly, mom doesn't love you / mom barely loves you |
+| khăn mặt đâu  mà ngồi liếm mép |  | wheres the towel, licked his lips / licking the edges |
+| lau mặt rồi lại khóc meo meo (meo) |  | wipe my face already and again cry  cat cat cat |
 |  |  |  |
 | REFRAIN A |  |  |
 |  |  |  |
+| ... |  |  |
 |  |  |  |
-|  |  |  |
-|  |  |  |
-|  |  |  |
+
+
+
+wash - rửa
+towel - khăn mặt / khăn tắm
+
+like/as - như
+very - lắm
+OK - được
+barely - chẳng
+mom - mẹ
+love - yêu
+
+where -  đâu
+
+sit - ngồi 
+lick - liếm
+edge - mép
+
+wipe - lau
+face - mặt
+
+already - rồi
+
+
+
+but sit li
+
+
+
+
+
+
 
 
 
@@ -462,6 +531,8 @@ https://www.youtube.com/watch?v=oFGz1kcRPfY&app=desktop
 
 
 NEWS
+
+
 
 
 https://www.baocalitoday.com/

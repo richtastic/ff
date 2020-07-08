@@ -1,0 +1,26 @@
+<html>
+<head>
+<title>DependencyTest</title>
+<script src="../code/FF.js"></script>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<script type="text/javascript">
+function pageLoadedFxn(){
+	ff = new FF("../code/",defaultClassesLoadedFxn,defaultClassesProgressFxn);
+}
+function defaultClassesProgressFxn(o){
+	//
+}
+function defaultClassesLoadedFxn(){
+	var list = ["DependencyTest.js"];
+	scriptLoader = new ScriptLoader("./",list,this,customClassesLoadedFxn,null);
+	scriptLoader.load();
+}
+function customClassesLoadedFxn(){
+	var test = new DependencyTest();
+}
+</script>
+</head>
+<body onload="pageLoadedFxn();" style="border:0px;margin:0px;border:0px;">
+</body>
+</html>
+

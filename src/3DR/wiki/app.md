@@ -386,10 +386,46 @@ MISSING:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+- drop points that have affine rotation disagree with F worst
+
+x ignore points that are non-unique in area ?
+	=> ON MATCH MAKE
+		-> anywhere along F?
+		-> +/- F-error
+		-> flat haystack = 2-4 x needle
+
+
+- with R/K:
+	- maybe affine mapping is better done using local point inlier finding -> NOT PATCH AFFINE MATCHING ? (don't know normal)
+
+
+
+- speed up patch calculations
+	- first time
+	- subsequent times
+
+- patch using image normal optimizing
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 - need to identify non-unique matching and disreguard in options
 	........
-
+- the R still has a LOT of points behind
+	- the in-front-vs behind is still very bad
 
 
 
@@ -402,9 +438,6 @@ x START R PROCESS AFTER F
 
 
 - remove points with lots of scale differences
-
-- ignore points that are non-unique in area ?
-
 
 - regularization for final connected point set
 	- allow to move slightly and increase local error if it reduces global error (somehow?)
