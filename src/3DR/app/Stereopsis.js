@@ -55,6 +55,8 @@ Stereopsis.World = function(){
 	// this._intersectionResolve2D = Stereopsis.World._INTERSECTION_RESOLVE_DEFAULT;
 	// this.resolveIntersection = this.resolveIntersectionDefault;
 	this.resolveIntersectionByDefault();
+
+	this.shouldValidateMatchRange(true);
 	this._checkInt2D = true;
 
 	this._keyboard = new Keyboard();
@@ -6047,6 +6049,8 @@ for(var i=0; i<views.length; ++i){
 		world.filterLocal2DF();
 
 		world.filterLocal2DAffineError();
+
+		world.filterLocal2DFAngle();
 		
 		world.filterGlobal2DF();
 
@@ -6105,6 +6109,17 @@ d.graphics().alpha(alp);
 d.matrix().translate(imageMatrixA.width(),0);
 GLOBALSTAGE.addChild(d);
 
+
+
+// cover for obviousness:
+var d = new DO();
+d.graphics().beginPath();
+d.graphics().setFill(0x99FFFFFF);
+d.graphics().drawRect(0,0, imageMatrixA.width()+imageMatrixB.width(), Math.max(imageMatrixB.height(),imageMatrixA.height()));
+d.graphics().endPath();
+d.graphics().fill();
+d.matrix().translate(0,0);
+GLOBALSTAGE.addChild(d);
 
 console.log(samplesA, samplesB);
 
@@ -11904,6 +11919,88 @@ Stereopsis.World.prototype.filterLocal2DF = function(){ // locally drop points w
 	*/
 	// throw "filterLocal2DF";
 }
+
+Stereopsis.World.prototype.filterLocal2DFAngle = function(){ // affine not agree with F
+	var limitSigmaAngle = 3.0;
+	var world = this;
+	var transforms = world.toTransformArray();
+	var minCountTransform = 16;
+	var knn = 10; // 9 + 1
+	for(var t=0; t<transforms.length; ++t){
+		var transform = transforms[t];
+		var matches = transform.matches();
+		if(matches.length<minCountTransform){
+			continue;
+		}
+
+		var viewA = transform.viewA();
+		var viewB = transform.viewB();
+		var spaceA = viewA.pointSpace();
+		var Fab = transform.F(viewA,viewB);
+		var Fba = transform.F(viewB,viewA);
+
+		var epipoles = R3D.getEpipolesFromF(Fab);
+		var epipoleA = epipoles["A"];
+		var epipoleB = epipoles["B"];
+		
+		var evalFxn = function(point2D){
+			var match = point2D.matchForView(viewB);
+			return match!=null;
+		}
+		var angles = [];
+		for(var m=0; m<matches.length; ++m){
+			var match = matches[m];
+			// console.log(match);
+			var affine = match.affineForViews(viewA,viewB);
+			var info = R3D.infoFromAffine2D(affine);
+			// console.log(info);
+			var angleA = info["angle"];
+
+			var point2DA = match.pointForView(viewA);
+			var centerA = point2DA.point2D();
+			var neighborsA = spaceA.kNN(centerA,knn,evalFxn);
+			// console.log(neighborsA);
+			var matchesA = [];
+			var matchesB = [];
+			for(var n=0; n<neighborsA.length; ++n){
+				var neighbor = neighborsA[n];
+				var mat = neighbor.matchForView(viewB);
+				if(mat==match){
+					continue;
+				}
+				matchesA.push(mat.pointForView(viewA).point2D());
+				matchesB.push(mat.pointForView(viewB).point2D());
+			}
+			var angleF = R3D.fundamentalRelativeAngleForPoint(centerA,Fab,Fba, epipoleA, epipoleB, matchesA,matchesB);
+			// console.log(angleA, angleF);
+			var diffAngle = Math.abs(angleF-angleA);
+			angles.push(diffAngle);
+		}
+		// console.log(angles);
+		var min = 0;
+		var sig = Code.stdDev(angles,0);
+		var lim = min + sig*limitSigmaAngle;
+		// Code.printMatlabArray(data);
+		console.log(" ANGLES: "+min+" +/- "+sig+" = "+lim+" ("+angles.length+") ");
+		var dropList = [];
+		for(var m=0; m<matches.length; ++m){
+			var match = matches[m];
+			var angle = angles[m];
+			if(angle>lim){
+				dropList.push(match);
+			}
+		}
+		console.log("ANGLE-F DROP: "+dropList.length);
+		for(var m=0; m<dropList.length; ++m){
+			var match = dropList[m];
+			var p3D = match.point3D();
+			world.removeMatchFromPoint3D(match);
+			world.removeCheckP3D(p3D);
+		}
+		// throw "done trans"
+	}
+	// throw "filterLocal2DFAngle"
+}
 Stereopsis.World.prototype.filterLocal2DAffineError = function(){ // locally drop points with high error:
 	var world = this;
 	var transforms = world.toTransformArray();
@@ -13274,6 +13371,12 @@ Stereopsis.World.prototype._probeSearchList = function(viewA,viewB,listA){
 	}
 }
 VALIDATED_COUNT = 0;
+Stereopsis.World.prototype.shouldValidateMatchRange = function(should){
+	if(should!==undefined){
+		this._shouldValidateMatchRange = should;
+	}
+	return this._shouldValidateMatchRange;
+}
 Stereopsis.World.prototype.validateMatch = function(match, special){
 var showLog = false;
 // var showLog = true;
@@ -13321,16 +13424,17 @@ if(affine){
 }
 */
 
-
-	//var minRange = 0.04/(5*5);
-	// var minRange = 0.10/(5*5)
-	var minRange = 0.001; // based on size? ---- 1/255 ~ 0.004
-	var range = match.range(); // range per pixel
-	if(range<minRange){
-		if(showLog){
-		console.log("DROP RANGE: "+range);
+	if(this._shouldValidateMatchRange){
+		//var minRange = 0.04/(5*5);
+		// var minRange = 0.10/(5*5)
+		var minRange = 0.001; // based on size? ---- 1/255 ~ 0.004
+		var range = match.range(); // range per pixel
+		if(range<minRange){
+			if(showLog){
+			console.log("DROP RANGE: "+range);
+			}
+			return false;
 		}
-		return false;
 	}
 
 

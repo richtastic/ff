@@ -9,13 +9,13 @@ function BlobTest(){
 	this._root = new DO();
 	this._stage.root().addChild(this._root);
 
-	// new ImageLoader("../images/muffin/",["IMG_6097_25.JPG", "IMG_6099_25.JPG"],this,this.imagesLoadComplete).load();
+	new ImageLoader("../images/muffin/",["IMG_6097_25.JPG", "IMG_6099_25.JPG"],this,this.imagesLoadComplete).load();
 	// new ImageLoader("../images/muffin/",["IMG_6099_25.JPG", "IMG_6101_25.JPG"],this,this.imagesLoadComplete).load();
 	// new ImageLoader("../images/muffin/",["IMG_6101_25.JPG", "IMG_6103_25.JPG"],this,this.imagesLoadComplete).load(); // bad
 	// new ImageLoader("../images/muffin/",["IMG_6103_25.JPG", "IMG_6105_25.JPG"],this,this.imagesLoadComplete).load(); // poor
 
 	// new ImageLoader("../images/elephant/",["ele_1.JPG", "ele_2.JPG"],this,this.imagesLoadComplete).load(); // 
-	new ImageLoader("../images/elephant/",["ele_2.JPG", "ele_3.JPG"],this,this.imagesLoadComplete).load(); // BAD
+	// new ImageLoader("../images/elephant/",["ele_2.JPG", "ele_3.JPG"],this,this.imagesLoadComplete).load(); // BAD
 	// new ImageLoader("../images/elephant/",["ele_3.JPG", "ele_4.JPG"],this,this.imagesLoadComplete).load(); // impossible
 	// new ImageLoader("../images/elephant/",["ele_4.JPG", "ele_5.JPG"],this,this.imagesLoadComplete).load(); // 
 	// new ImageLoader("../images/elephant/",["ele_5.JPG", "ele_6.JPG"],this,this.imagesLoadComplete).load(); // 
@@ -42,6 +42,26 @@ function BlobTest(){
 	// new ImageLoader("../images/muffin/",["../bench_A.png", "../bench_B.png"],this,this.imagesLoadComplete).load(); // hard
 	// new ImageLoader("../images/muffin/",["../bench_A.png", "../bench_E.png"],this,this.imagesLoadComplete).load(); // ok
 	// new ImageLoader("../images/muffin/",["../bench_D.png", "../bench_F.png"],this,this.imagesLoadComplete).load(); // scale
+
+
+
+
+
+
+	// new ImageLoader("../images/user/beach_pillar/",["0.jpg", "1.jpg"],this,this.imagesLoadComplete).load();
+	// new ImageLoader("../images/user/beach_pillar/",["1.jpg", "2.jpg"],this,this.imagesLoadComplete).load();
+	// new ImageLoader("../images/user/beach_pillar/",["2.jpg", "3.jpg"],this,this.imagesLoadComplete).load();
+
+	// new ImageLoader("../images/",["bt.000.png", "bt.006.png"],this,this.imagesLoadComplete).load();
+
+	// new ImageLoader("../images/",["castle.000.jpg", "castle.009.jpg"],this,this.imagesLoadComplete).load();
+	// new ImageLoader("../images/",["castle.000.jpg", "castle.018.jpg"],this,this.imagesLoadComplete).load(); // no
+	// new ImageLoader("../images/",["castle.009.jpg", "castle.018.jpg"],this,this.imagesLoadComplete).load(); 
+	// new ImageLoader("../images/",["castle.009.jpg", "castle.027.jpg"],this,this.imagesLoadComplete).load(); // no
+	// new ImageLoader("../images/",["castle.018.jpg", "castle.027.jpg"],this,this.imagesLoadComplete).load(); 
+	
+
+	// new ImageLoader("../images/",["temple_1.png", "temple_2.png"],this,this.imagesLoadComplete).load();
 
 }
 BlobTest.prototype.imagesLoadComplete = function(imageInfo){
@@ -355,9 +375,113 @@ console.log("FROM INDEX: "+index);//+" X "+V2D.DIRX);
 }
 
 
-
-
 	// TEST: SKIP:
+
+/*
+
+// IMG_6097_25, "IMG_6099_25
+
+F = new Matrix(3,3);
+F.fromArray([9.249185109827596e-7,0.000004942288059318448,0.000392290518610324,-0.000002983956707813506,-4.3568449235134756e-7,0.004860566999391514,-0.0018277680222530434,-0.006324474721384402,0.5844600773762281]);
+
+
+
+pointsA = [];
+pointsA.push( new V2D(148.1700879104913,289.2416043528338) ); // 0
+pointsA.push( new V2D(419.6156602817702,178.6024319290357) ); // 1
+pointsA.push( new V2D(465.13132818731526,155.11245903953528) ); // 2
+pointsA.push( new V2D(449.03544621773455,294.4134016212778) ); // 3
+pointsA.push( new V2D(484.81718416394057,325.0811734121332) ); // 4
+pointsA.push( new V2D(135.84418489423,477.6203396388581) ); // 5
+pointsA.push( new V2D(287.388488773212,601.0019152560144) ); // 6
+pointsA.push( new V2D(290.0610810820147,620.7804924449175) ); // 7
+pointsA.push( new V2D(427.6013284973148,639.8396572735614) ); // 8
+pointsA.push( new V2D(581.5551355207373,110.9360007580543) ); // 9
+pointsA.push( new V2D(599.9421465924237,139.6477818865616) ); // 10
+pointsA.push( new V2D(670.1314030765155,115.72668761949946) ); // 11
+pointsA.push( new V2D(716.168333997945,125.374045145555) ); // 12
+pointsA.push( new V2D(719.7837714347278,154.26547948485128) ); // 13
+pointsA.push( new V2D(734.4595223997064,152.6212663096932) ); // 14
+pointsA.push( new V2D(739.6690908563296,167.12566644178486) ); // 15
+pointsA.push( new V2D(523.1747920249442,303.6379673901665) ); // 16
+pointsA.push( new V2D(556.4296766598208,370.6203879305455) ); // 17
+pointsA.push( new V2D(589.3874245414564,319.886461514056) ); // 18
+pointsA.push( new V2D(601.2133165514866,332.35537035990933) ); // 19
+pointsA.push( new V2D(697.7583055349756,197.80050007110458) ); // 20
+pointsA.push( new V2D(809.4589927343012,185.89875140811347) ); // 21
+pointsA.push( new V2D(830.3886103591693,207.6535043291126) ); // 22
+pointsA.push( new V2D(847.9814570403717,230.2957345252806) ); // 23
+pointsA.push( new V2D(857.4705622014272,241.3904272067877) ); // 24
+pointsA.push( new V2D(866.5444072369336,252.6587447319017) ); // 25
+pointsA.push( new V2D(869.0373418900642,290.60448027948775) ); // 26
+pointsA.push( new V2D(886.4997133480065,372.06287465501515) ); // 27
+pointsA.push( new V2D(515.2860981398123,379.4287453089824) ); // 28
+pointsA.push( new V2D(518.7121756886133,517.6025308894792) ); // 29
+pointsA.push( new V2D(733.1883325058934,535.6759385437322) ); // 30
+pointsA.push( new V2D(511.0866398920296,645.5545035593583) ); // 31
+pointsA.push( new V2D(527.3259562126839,640.7158833991372) ); // 32
+pointsA.push( new V2D(553.3896788694717,661.4429728117407) ); // 33
+pointsA.push( new V2D(602.3515630810698,613.6817317551381) ); // 34
+pointsA.push( new V2D(647.681334615453,645.4133372559367) ); // 35
+pointsA.push( new V2D(675.7775927880456,637.5149078952729) ); // 36
+pointsA.push( new V2D(720.9810606012885,582.4232363847658) ); // 37
+pointsA.push( new V2D(796.6350633041491,533.453714193517) ); // 38
+pointsA.push( new V2D(838.8878350392147,533.8810740535808) ); // 39
+
+
+
+
+pointsB = [];
+pointsB.push( new V2D(126.87917642255404,295.7022873968392) ); // 0
+pointsB.push( new V2D(139.45938382381462,307.4135885039425) ); // 1
+pointsB.push( new V2D(338.7439736443326,207.10818530541246) ); // 2
+pointsB.push( new V2D(475.77477520433416,299.2770280459623) ); // 3
+pointsB.push( new V2D(521.3711767346886,329.0977395468373) ); // 4
+pointsB.push( new V2D(128.2661567811327,546.5549297608082) ); // 5
+pointsB.push( new V2D(352.2617340685987,659.7913105266753) ); // 6
+pointsB.push( new V2D(356.2456361837774,683.117979740588) ); // 7
+pointsB.push( new V2D(500.796291324828,686.635312923768) ); // 8
+pointsB.push( new V2D(552.1447186943457,118.61382038352363) ); // 9
+pointsB.push( new V2D(308.9675694001239,294.23461071179213) ); // 10
+pointsB.push( new V2D(642.1353441823048,125.5624812813116) ); // 11
+pointsB.push( new V2D(681.291622337275,139.45775412816354) ); // 12
+pointsB.push( new V2D(699.8588755758141,163.09223577632204) ); // 13
+pointsB.push( new V2D(716.3783883287119,161.66749645251807) ); // 14
+pointsB.push( new V2D(718.6050340076843,178.90147725621688) ); // 15
+pointsB.push( new V2D(552.1686049165128,310.80485389399314) ); // 16
+pointsB.push( new V2D(601.4043369569685,371.9070806290166) ); // 17
+pointsB.push( new V2D(606.8068054735763,333.415571152038) ); // 18
+pointsB.push( new V2D(625.8640238286156,339.88303516705645) ); // 19
+pointsB.push( new V2D(628.5479466465752,250.64225427732543) ); // 20
+pointsB.push( new V2D(786.165140356883,192.78425062210593) ); // 21
+pointsB.push( new V2D(799.5138897068617,216.29141758216954) ); // 22
+pointsB.push( new V2D(824.9431147403411,227.8218591411171) ); // 23
+pointsB.push( new V2D(835.0567265729512,238.4307394552722) ); // 24
+pointsB.push( new V2D(843.7530269455137,248.77204959499267) ); // 25
+pointsB.push( new V2D(849.6817681116344,283.09803438077154) ); // 26
+pointsB.push( new V2D(870.4696221552009,357.68586486509065) ); // 27
+pointsB.push( new V2D(559.7142900501032,389.01824937009684) ); // 28
+pointsB.push( new V2D(591.7059581277573,519.7437612870921) ); // 29
+pointsB.push( new V2D(793.5225810360786,486.38234818311406) ); // 30
+pointsB.push( new V2D(583.1998847912498,674.1516936526323) ); // 31
+pointsB.push( new V2D(613.5604757431125,649.380891509928) ); // 32
+pointsB.push( new V2D(638.8928260728891,666.5461204439049) ); // 33
+pointsB.push( new V2D(671.2943266417125,619.8104677710146) ); // 34
+pointsB.push( new V2D(722.4000885747502,629.7039820473638) ); // 35
+pointsB.push( new V2D(746.0878174505773,615.9467051989727) ); // 36
+pointsB.push( new V2D(774.4022514228857,558.4495905479978) ); // 37
+pointsB.push( new V2D(846.5317043301205,470.46685666963515) ); // 38
+pointsB.push( new V2D(878.9392823772885,460.0084102269575) ); // 39
+
+
+
+Ferror = 1.4539811268784852;
+
+var Finv = R3D.fundamentalInverse(F);
+
+*/
+
+
 /*
 F = new Matrix(3,3);
 F.fromArray([-0.0000011036066716467423,-0.000004557664259956219,-0.0007286636208504442,0.000002697131161668794,3.5129211329788286e-7,-0.004267119947048762,0.0023957905435437145,0.005825717099684857,-0.6991178216141651]);
@@ -832,7 +956,116 @@ var Finv = R3D.fundamentalInverse(F);
 
 */
 
+/*
 
+// ele_2 ele_3
+
+F = new Matrix(3,3);
+F.fromArray([5.445819810735322e-7,-0.000002244617458050951,0.0010785828021999237,2.19229040659952e-7,-4.2329999717092334e-7,-0.0035031924698664947,-0.001354464052161862,0.0052723396667658405,-0.13811903991330698]);
+
+
+
+pointsA = [];
+pointsA.push( new V2D(248.0025968202823,199.2755358977086) ); // 0
+pointsA.push( new V2D(331.9194048492556,179.28901088828977) ); // 1
+pointsA.push( new V2D(409.1197350043291,128.10964352706876) ); // 2
+pointsA.push( new V2D(475.6443488623546,130.0931916262859) ); // 3
+pointsA.push( new V2D(446.55316909467894,164.86163149163372) ); // 4
+pointsA.push( new V2D(484.80316026058796,152.92138666385205) ); // 5
+pointsA.push( new V2D(303.14996178787396,223.89053140223564) ); // 6
+pointsA.push( new V2D(213.91823963548586,379.99929845896577) ); // 7
+pointsA.push( new V2D(250.96397734119802,423.43934276039636) ); // 8
+pointsA.push( new V2D(238.22103456835802,462.2042797891208) ); // 9
+pointsA.push( new V2D(265.86,475.02) ); // 10
+pointsA.push( new V2D(257.0795352698528,501.34730709038547) ); // 11
+pointsA.push( new V2D(329.29323995024765,487.39536736946565) ); // 12
+pointsA.push( new V2D(336.6014417124985,545.3068442920345) ); // 13
+pointsA.push( new V2D(356.7367744124063,531.73547956036) ); // 14
+pointsA.push( new V2D(351.5224665522778,552.9015394973854) ); // 15
+pointsA.push( new V2D(384.42098621120806,385.09454859467263) ); // 16
+pointsA.push( new V2D(384.6784332105843,526.8498242044124) ); // 17
+pointsA.push( new V2D(481.0452710720456,531.5916513049773) ); // 18
+pointsA.push( new V2D(476.9596507281404,543.7052852722333) ); // 19
+pointsA.push( new V2D(258.54570668890966,594.1374856420317) ); // 20
+pointsA.push( new V2D(302.4,569.52) ); // 21
+pointsA.push( new V2D(315.12828377043894,578.2113820412437) ); // 22
+pointsA.push( new V2D(399.685105883891,636.2967246560207) ); // 23
+pointsA.push( new V2D(481.5612622364488,646.1342458442937) ); // 24
+pointsA.push( new V2D(424.9226807577108,665.7966617842458) ); // 25
+pointsA.push( new V2D(582.5739102253629,165.39982189229767) ); // 26
+pointsA.push( new V2D(666.4400572323158,160.9982203145005) ); // 27
+pointsA.push( new V2D(506.11247218517065,346.0302774282824) ); // 28
+pointsA.push( new V2D(552.7514283182916,359.52458513560543) ); // 29
+pointsA.push( new V2D(603.6560853051716,374.3858602781908) ); // 30
+pointsA.push( new V2D(615.758202566681,370.84219174936374) ); // 31
+pointsA.push( new V2D(753.9135013333458,206.40857041753407) ); // 32
+pointsA.push( new V2D(775.0540606205382,165.86288682262062) ); // 33
+pointsA.push( new V2D(772.9418840810232,208.82521991619618) ); // 34
+pointsA.push( new V2D(566.5212911866342,394.262758904567) ); // 35
+pointsA.push( new V2D(582.535067299225,484.1999569743431) ); // 36
+pointsA.push( new V2D(593.294191892048,580.0925356584427) ); // 37
+pointsA.push( new V2D(588.0427058099548,592.6625474023634) ); // 38
+pointsA.push( new V2D(610.602810516851,578.6217835567077) ); // 39
+pointsA.push( new V2D(606.2764230613245,591.0346882536709) ); // 40
+pointsA.push( new V2D(626.9269437993203,598.2305503966859) ); // 41
+pointsA.push( new V2D(630.5126292979319,577.5586998378097) ); // 42
+
+
+
+
+pointsB = [];
+pointsB.push( new V2D(276.45734766128317,222.3861772942386) ); // 0
+pointsB.push( new V2D(433.2039322748568,207.71913541449928) ); // 1
+pointsB.push( new V2D(508.01582648251355,143.65728795987798) ); // 2
+pointsB.push( new V2D(575.8047749364721,146.5473659844264) ); // 3
+pointsB.push( new V2D(550.4074484910251,187.44987503292984) ); // 4
+pointsB.push( new V2D(559.5480636056142,163.12747940624425) ); // 5
+pointsB.push( new V2D(389.08931652673573,260.86886497263725) ); // 6
+pointsB.push( new V2D(83.42792129677284,444.83934106614436) ); // 7
+pointsB.push( new V2D(267.21721186046153,503.4059845234031) ); // 8
+pointsB.push( new V2D(248.8856545392123,552.3334296402132) ); // 9
+pointsB.push( new V2D(268.5142387803848,563.3554689348682) ); // 10
+pointsB.push( new V2D(243.29885793687546,594.42578697716) ); // 11
+pointsB.push( new V2D(316.98548700203514,559.4311381894505) ); // 12
+pointsB.push( new V2D(359.2584796894832,626.4746651809038) ); // 13
+pointsB.push( new V2D(365.5300707513797,606.811891335078) ); // 14
+pointsB.push( new V2D(388.0570860728534,632.9705241197345) ); // 15
+pointsB.push( new V2D(429.61070497175234,432.09654749872806) ); // 16
+pointsB.push( new V2D(477.56159845552867,596.9323115931328) ); // 17
+pointsB.push( new V2D(573.1512077539819,580.4233890086124) ); // 18
+pointsB.push( new V2D(581.4375750385288,591.2604958472078) ); // 19
+pointsB.push( new V2D(306.98293254123456,704.9834300733894) ); // 20
+pointsB.push( new V2D(328.78484747901996,663.579547303827) ); // 21
+pointsB.push( new V2D(359.5463636229726,670.263962194541) ); // 22
+pointsB.push( new V2D(509.12669404603827,709.3673239470493) ); // 23
+pointsB.push( new V2D(575.0704918189397,696.5620196626307) ); // 24
+pointsB.push( new V2D(520.8218007981309,731.512742227937) ); // 25
+pointsB.push( new V2D(630.9111832444112,170.59554933520786) ); // 26
+pointsB.push( new V2D(714.9994180913715,170.41206784467448) ); // 27
+pointsB.push( new V2D(597.156782014047,381.24779320262877) ); // 28
+pointsB.push( new V2D(641.2090974968797,387.9261755859789) ); // 29
+pointsB.push( new V2D(662.7792591148503,395.655825637646) ); // 30
+pointsB.push( new V2D(674.1106878575877,389.7080099023515) ); // 31
+pointsB.push( new V2D(756.7807639594444,205.74390513506472) ); // 32
+pointsB.push( new V2D(774.5539802228838,164.47440165211515) ); // 33
+pointsB.push( new V2D(771.0456693722264,207.79318236365884) ); // 34
+pointsB.push( new V2D(654.4524349153116,424.2254482822932) ); // 35
+pointsB.push( new V2D(631.5076972071327,508.4488981839674) ); // 36
+pointsB.push( new V2D(634.4249775265793,602.0270329117552) ); // 37
+pointsB.push( new V2D(636.7921078808828,616.4642152172827) ); // 38
+pointsB.push( new V2D(648.5157662766081,596.2974344237485) ); // 39
+pointsB.push( new V2D(651.8231570917117,609.940977276639) ); // 40
+pointsB.push( new V2D(664.380946233522,612.5158349887344) ); // 41
+pointsB.push( new V2D(663.4288713862384,592.4050211969728) ); // 42
+
+
+
+Ferror = 1.2130534566659563;
+
+
+var Finv = R3D.fundamentalInverse(F);
+
+*/
 
 
 //var Finv = R3D.fundamentalInverse(F);

@@ -386,7 +386,7 @@ MISSING:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-- drop points that have affine rotation disagree with F worst
+x drop points that have affine rotation disagree with F worst
 
 x ignore points that are non-unique in area ?
 	=> ON MATCH MAKE
@@ -395,20 +395,65 @@ x ignore points that are non-unique in area ?
 		-> flat haystack = 2-4 x needle
 
 
+x match 'range' check can be turned off for high-res R final set
+
+
+PATCH THOUGHTS:
+	- IDEAL IMAGE COMPARE
+		- INIT
+		- UPDATE
+	- GEOMETRIC FROM P3D
+		- INIT
+		- UPDATE
+	- AFFINE FROM LOCAL POINT DISTRIBUTION
+	- PATCH COMBINING PAIRS/GROUPS
+
+
+
+- what to do after F iteration
+	- 'keep seeds' : top points:
+		- F error : 68%
+		- N score: 68%
+		- S score : 68%
+		- corner : 68%
+		=> 68% [union] 21% [separate]
+		=> avg: 40-50%
+	- start R process
+		- initial R
+		- optimize R with seeds & propagation & dropping
+	=> R estimate
+
+
+
+
+- 2D voting F
+	- 
+
+
 - with R/K:
 	- maybe affine mapping is better done using local point inlier finding -> NOT PATCH AFFINE MATCHING ? (don't know normal)
-
 
 
 - speed up patch calculations
 	- first time
 	- subsequent times
 
+=> ASSUME: R can't have changed too much from initial estimate / previous iteration
+=> WHEN COMBINING IN GROUP, TRANSFORM NORMAL BY TRANSFORM ROTATION
+
+
+
 - patch using image normal optimizing
 
+	- for low res images use normal-image-projection-optimizing
+
+	- for hi res images use NN inlier initializing normal & size
+		- use geometric updates ???
 
 
 
+
+=> back to testing image sequences
 
 
 
