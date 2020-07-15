@@ -11733,10 +11733,13 @@ Stereopsis.World.prototype.probe2DCellsF = function(sigmaMaximumSelect, sigmaMax
 // sigmaMaximumSelect = 3.0;
 // sigmaMaximumSelect = 4.0;
 
+
+// sigmaMaximumSelect = 999.0;
+
 	var world = this;
 	var transforms = world.toTransformArray();
 	var compareSize = 9; // 5 - 11
-	
+	var possibles = 0;
 	for(var i=0; i<transforms.length; ++i){
 		var transform = transforms[i];
 		var viewA = transform.viewA();
@@ -11753,11 +11756,23 @@ Stereopsis.World.prototype.probe2DCellsF = function(sigmaMaximumSelect, sigmaMax
 		var maxNewErrorF = errorFmean + sigmaMaximumNew*errorFsigma; // new matches worth keeping
 		var maxNewErrorN = errorNmean + sigmaMaximumNew*errorNsigma;
 		var maxNewErrorS = errorSmean + sigmaMaximumNew*errorSsigma;
-		// console.log("max errors: F: "+maxCheckErrorF+" | N: "+maxCheckErrorN+" | S: "+maxCheckErrorS);
+		console.log("allowed max errors: F: "+maxCheckErrorF+" | N: "+maxCheckErrorN+" | S: "+maxCheckErrorS);
+
+		// some room
+		maxCheckErrorF = Math.max(maxCheckErrorF,1.0);
+		maxCheckErrorN = Math.max(maxCheckErrorN,0.15);
+		maxCheckErrorS = Math.max(maxCheckErrorS,0.10);
+
+		// ???
+
+		maxNewErrorF = Math.max(maxNewErrorF,1.0);
+		maxNewErrorN = Math.max(maxNewErrorN,0.15);
+		maxNewErrorS = Math.max(maxNewErrorS,0.10);
+
 		var viewsA = [viewA,viewB];
 		var viewsB = [viewB,viewA];
 		for(var v=0; v<viewsA.length; ++v){
-			console.log("             "+v+" / "+viewsA.length);
+			// console.log("             "+v+" / "+viewsA.length);
 			var viewA = viewsA[v];
 			var viewB = viewsB[v];
 			var imageA = viewA.imageScales();
@@ -11801,6 +11816,7 @@ Stereopsis.World.prototype.probe2DCellsF = function(sigmaMaximumSelect, sigmaMax
 				// console.log("bestMatch");
 				// console.log(bestMatch);
 				if(bestMatch){
+					
 					var affine = bestMatch.affineForViews(viewA,viewB);
 					if(!affine || affine.a===undefined  || Code.isNaN(affine.a) ){
 						console.log(bestMatch);
@@ -11817,6 +11833,7 @@ Stereopsis.World.prototype.probe2DCellsF = function(sigmaMaximumSelect, sigmaMax
 					// console.log(centerA,centerB, newPointA, affine, viewA,viewB)
 					var newMatch = world.bestNeedleHaystackMatchFromLocation(centerA,centerB, newPointA, affine, viewA,viewB);
 					if(newMatch){
+						// ++possibles;
 						Stereopsis.updateErrorForMatch(newMatch);
 						// console
 						var fError = newMatch.errorF();
@@ -11825,10 +11842,12 @@ Stereopsis.World.prototype.probe2DCellsF = function(sigmaMaximumSelect, sigmaMax
 						var keep = fError<maxNewErrorF && sError<maxNewErrorS && nError<maxNewErrorN;
 						// console.log("keep?: "+keep+" : "+fError+"<?<"+maxNewErrorF+" "+nError+"<?<"+maxNewErrorN+" "+sError+"<?<"+maxNewErrorS);
 						if(keep){
+							++possibles;
 							var maximumUniquenessScore = 0.99; // 0.95-0.99
 							// check to see if there are other score 'peaks' nearby
 							var uniquenessScore = world.matchUniqueness(newMatch);
 							// console.log("uniquenessScore: "+uniquenessScore);
+
 							if(uniquenessScore<maximumUniquenessScore){
 							var info = R3D.infoFromAffineMatrix2D(affine);
 							var angle = info["angle"];
@@ -11869,7 +11888,7 @@ Stereopsis.World.prototype.probe2DCellsF = function(sigmaMaximumSelect, sigmaMax
 			// throw "matchesAddList";
 		} // end view A-B
 	} // end transforms
-// throw "done ?";
+	console.log("possibles: "+possibles);
 	/*
 		for each transform:
 			for each view A->B & B->A
@@ -12241,6 +12260,8 @@ Stereopsis.World.prototype.filterGlobal2DF = function(sigmaMaximumDrop){ // glob
 		var S = true;
 
 console.log("LIMITS: "+limitF+" | "+" | "+limitN+" | "+limitS);
+
+limitF = Math.max(limitF,1.0);
 
 		var dropList = [];
 		for(var j=0; j<matches.length; ++j){

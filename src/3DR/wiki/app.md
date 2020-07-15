@@ -386,6 +386,10 @@ MISSING:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
+x really good points (F < 0.5) are not letting any propagation happen
+	-> make minimum error ~ 1 px
+
 x drop points that have affine rotation disagree with F worst
 
 x ignore points that are non-unique in area ?
@@ -406,12 +410,40 @@ PATCH THOUGHTS:
 		- INIT
 		- UPDATE
 	- AFFINE FROM LOCAL POINT DISTRIBUTION
+		- angle
+		- scale
+		-> optimize
 	- PATCH COMBINING PAIRS/GROUPS
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 - what to do after F iteration
-	- 'keep seeds' : top points:
+	- 'keep seeds' : top points: use 1-sigma for each of the parameters:
 		- F error : 68%
 		- N score: 68%
 		- S score : 68%
@@ -422,6 +454,28 @@ PATCH THOUGHTS:
 		- initial R
 		- optimize R with seeds & propagation & dropping
 	=> R estimate
+
+
+- can't do affine repetitive iteration
+	=> spirals out of area
+
+
+...
+
+
+PATCHES 
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -9,7 +9,7 @@ function BlobTest(){
 	this._root = new DO();
 	this._stage.root().addChild(this._root);
 
-	new ImageLoader("../images/muffin/",["IMG_6097_25.JPG", "IMG_6099_25.JPG"],this,this.imagesLoadComplete).load();
+	// new ImageLoader("../images/muffin/",["IMG_6097_25.JPG", "IMG_6099_25.JPG"],this,this.imagesLoadComplete).load();
 	// new ImageLoader("../images/muffin/",["IMG_6099_25.JPG", "IMG_6101_25.JPG"],this,this.imagesLoadComplete).load();
 	// new ImageLoader("../images/muffin/",["IMG_6101_25.JPG", "IMG_6103_25.JPG"],this,this.imagesLoadComplete).load(); // bad
 	// new ImageLoader("../images/muffin/",["IMG_6103_25.JPG", "IMG_6105_25.JPG"],this,this.imagesLoadComplete).load(); // poor
@@ -59,6 +59,28 @@ function BlobTest(){
 	// new ImageLoader("../images/",["castle.009.jpg", "castle.018.jpg"],this,this.imagesLoadComplete).load(); 
 	// new ImageLoader("../images/",["castle.009.jpg", "castle.027.jpg"],this,this.imagesLoadComplete).load(); // no
 	// new ImageLoader("../images/",["castle.018.jpg", "castle.027.jpg"],this,this.imagesLoadComplete).load(); 
+
+	// new ImageLoader("../images/flowers_1/",["7131.png", "7141.png"],this,this.imagesLoadComplete).load(); 
+	// new ImageLoader("../images/iowa/",["0.JPG", "1.JPG"],this,this.imagesLoadComplete).load(); 
+	// new ImageLoader("../images/iowa/",["0.JPG", "2.JPG"],this,this.imagesLoadComplete).load(); 
+	// new ImageLoader("../images/iowa/",["0.JPG", "8.JPG"],this,this.imagesLoadComplete).load(); 
+	// new ImageLoader("../images/iowa/",["0.JPG", "3.JPG"],this,this.imagesLoadComplete).load(); // NO
+	// new ImageLoader("../images/iowa/",["1.JPG", "8.JPG"],this,this.imagesLoadComplete).load();
+	// new ImageLoader("../images/iowa/",["4.JPG", "9.JPG"],this,this.imagesLoadComplete).load(); // NO
+	// new ImageLoader("../images/iowa/",["5.JPG", "6.JPG"],this,this.imagesLoadComplete).load();
+	// new ImageLoader("../images/iowa/",["8.JPG", "9.JPG"],this,this.imagesLoadComplete).load();
+
+	// new ImageLoader("../images/",["office_stereo1_all.jpg", "office_stereo2_all.jpg"],this,this.imagesLoadComplete).load();
+
+
+	// new ImageLoader("../images/pika_1/",["image-0.png","image-1.png"],this,this.imagesLoadComplete).load(); // most
+	// new ImageLoader("../images/pika_1/",["image-0.png","image-2.png"],this,this.imagesLoadComplete).load(); // most
+	// new ImageLoader("../images/pika_1/",["image-0.png","image-3.png"],this,this.imagesLoadComplete).load(); // half
+	// new ImageLoader("../images/pika_1/",["image-0.png","image-4.png"],this,this.imagesLoadComplete).load(); // slice
+	// new ImageLoader("../images/pika_1/",["image-0.png","image-5.png"],this,this.imagesLoadComplete).load(); // corner
+	// minus ear - probably non-uniqueness
+	
+
 	
 
 	// new ImageLoader("../images/",["temple_1.png", "temple_2.png"],this,this.imagesLoadComplete).load();
