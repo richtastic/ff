@@ -387,19 +387,18 @@ MISSING:
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
-x really good points (F < 0.5) are not letting any propagation happen
-	-> make minimum error ~ 1 px
+- is there a way to estimate a normal? given 3D location & affine matrix
+??????????????????????????????????????????????????????????????????????
+	given affine:
+		- forward & backward points = 3-4 x 2 x 2 = 12-16 points total [size of cell/2]
+		- project points into rays
+		- find closest distance to point
+		=> average size
+		=> approximate a plane from closest points?
+		=> plane normal is normal
 
-x drop points that have affine rotation disagree with F worst
 
-x ignore points that are non-unique in area ?
-	=> ON MATCH MAKE
-		-> anywhere along F?
-		-> +/- F-error
-		-> flat haystack = 2-4 x needle
-
-
-x match 'range' check can be turned off for high-res R final set
+- make sure size s = radius r for patches = 1/2 of cell size projection
 
 
 PATCH THOUGHTS:
@@ -417,25 +416,138 @@ PATCH THOUGHTS:
 
 
 
+pair-coarse can use image init & image refined patches 
+pair-dense can use neighbor init & image refined patches
+group-coarse - geometric ???
+group-dense - only pre-existing c,n
+world-dense - only pre-existing c,n
+
+
+(stereopsis)
+
+ideal patch - use 3D geometry / projection to get match
 
 
 
 
+- a 3D neighbor is any point that could be projected to the same cell neighborhood in image I
+ if a point is sized with r : r-> cellSize/2
+ 3D distance to project ~ 3 x r - 4 x r
+
+
+
+a total neighbor:
+	- 2D: cell neighbors
+	- 3D: tangent plane + distance
+
+=> if 2D / 3D neighbors are inconsistent: [% 3D neighbors < 0.25 2D neighbors]
+	3D location is in some random place
+
+
+
+-) => initial F should have ok initial affine starting point
+	- local neighborhood point distribution to get:
+		- rotation
+		- scale
+		-> optimize:
+			affine nonlinear
+				A) image match scores
+				B) point-geometry
+	- can affine match be used to estimate normal?
+	- normal estimated as average of center-to-view directions
+	- size estimated as ???
+	- coarse points can use images (photometric) compares to optimize patches
+		- 40x60 ~ 2k points 
+	- dense points can use existing neighbor normals to average initial estimation
+		- 80x120 ~ 10k points
+	- dense points (2):
+		- ~ 50k points
+	- group dense points:
+		- 5-10 * 50k = 200k-500k
+	- world dense points:
+		- millions
 
 
 
 
+=> after view orientations are updated (in same run or after combining worlds), the point patches need to be udpated
+=> after the patches are updated, they need to be re-optimized (likely only minorly = smaller compare size | fewer iterations)
+
+=> after view cell sizes are updated, point patches need to be updated
+=> sizes are reduced by: (new size / prev size)
+
+-) how transformed views change point normals:
+	- 3D point is re-triangulated
+	- 3D normal: average of expected normal directions (what it would be, given the changed direction) -- don't care about 'twist'
+	- 3D size: average of scaled distances (what distance is / what distance was)
+	=> these are only approx, they need to be updated
+
+-) => already dense R/F can use neighbors to initialize parameters
+	- get 2D & 3D neighbors [who are not NEW -- ie not being added in same loop]
+	- get average:
+		- normal
+		- size
+	- UPDATE using .... ?
+		=> if affine could be used to 
+
+-) optimum normal/patch
+	- use 2D affine error minimizing:
+		what patch affine would be vs what established 2D neighborhood affine is
+		---- HOW TO COMPARE AFFINES??
+
+		...
+
+...
+.
+
+
+
+- how to do affine optimization (image OR geometry) without 
+
+
+https://www.di.ens.fr/willow/pdfscurrent/pami09a.pdf
+http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.75.5394&rep=rep1&type=pdf
+- limit cell point expansion by looking at 3D discontinuities in views
+	- 
 
 
 
 
+- re-check how the different intersection resolutions are determined:
+	- images present
+		- patches present
+			- image match scores
+			- & 2D & 3D geometry ?
+		- no patches
+			- 3D & 2D geometry
+	- no images
+		- patches present?
+			- 3D & 2D geometry
+		- no patches?
+			- 2D geometry
 
 
 
+- patch neighbor filter
+	- get all matches in neighbor cells of p in ALL images p is present
+	- if % of neighbors < 0.25 [in 3D? get same count of k neighbors?]
+		-> drop
 
 
 
+- normal->affine vs neighborhood->affine filter
+	- projected normal affine matrix should be similar to local affine matrix
+		- how to compate?
+			- average rotation angle
+			- average scale
+			- ...
 
+
+
+- 2D planar average location filter?
+	- the average 3D point of the 2D neighbors should be close to the calculated 3D point
+		- unless theres an outlier ?
+		- unless the 2D points are side-heavy ?
 
 
 
@@ -467,6 +579,13 @@ PATCHES
 
 
 
+
+
+..... LOOKUP:
+fibinacci sphere
+cube sphere
+icosohedron sphere
+tetrahedron sphere - edges 
 
 
 

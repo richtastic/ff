@@ -1227,6 +1227,8 @@ Stereopsis.View.prototype.cellSize = function(cellSize){
 			if(compareSize%2==0){
 				compareSize += 1;
 			}
+			compareSize = Math.max(compareSize, 5); // smaller than some minimum is useless : 5-11
+
 			// compareSize = Math.max(compareSize,9); // at least as big as comparison
 			this.compareSize(compareSize);
 			this._initCells();
