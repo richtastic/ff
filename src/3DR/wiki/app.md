@@ -387,6 +387,7 @@ MISSING:
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
+
 - is there a way to estimate a normal? given 3D location & affine matrix
 ??????????????????????????????????????????????????????????????????????
 	given affine:
@@ -527,13 +528,28 @@ http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.75.5394&rep=rep1&type=p
 			- 2D geometry
 
 
+1)
+- patch occulding filter: (outlier is in front)
+	get list of occluded patches
+	effectively: compare the NCC average of the occluded vs occluding & drop if worse
+2)
+- patch occluded filter: (outlier is in behind)
+	get list of occluding patches
+	effectively: Should-Be-Visible count is high and Truely-Visible count is lower than threshold (gamma=3?)
 
+3)
 - patch neighbor filter
+	- get all matches in neighbor cells of p in ALL images p is present
+	- if % of these are n-adjacent < 0.25
+		-> drop
+
+		n-adjacent: effectively: close in 3D & normal pointing in same direction
+
+
+- SIMILAR patch neighbor filter
 	- get all matches in neighbor cells of p in ALL images p is present
 	- if % of neighbors < 0.25 [in 3D? get same count of k neighbors?]
 		-> drop
-
-
 
 - normal->affine vs neighborhood->affine filter
 	- projected normal affine matrix should be similar to local affine matrix
@@ -550,8 +566,97 @@ http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.75.5394&rep=rep1&type=p
 		- unless the 2D points are side-heavy ?
 
 
+- kNN neighborhood vs cellSize neighborhood
 
 
+
+SPARSE:
+	views & points change (maybe a lot initially)
+DENSE:
+	views & points change (mostly little, or a little at a time)
+GROUP:
+	views don't change | points change a little
+WORLD:
+	view & points don't change
+
+NEEDED PATCH METHODS:
+	initializePatchPhotometric
+
+	intializePatchNeighbors
+
+	updatePatchPhotometric
+
+
+	updatePatchFromViewChange -- previous & new view absolute locations
+
+	updatePatchFromCellSizeChnage -- cell sizes have been reduced by some %
+
+
+PATCH MODEL:
+	- initial 3D location from triangulation
+	- updated 3D location from optimizing iteration (limits?)
+	- initial 3D normal from relative view locations
+	- updated 3D normal from optimizing iteration (limits?)
+	- initial 3D patch size from relative view location & cell sizes
+	- updated 3D patch size from optimizing iteration (limits?)
+	- 3D 'up'
+
+	- s = size to project to MIN cell size or AVG cell size
+
+
+LIST OF SURFACE CONSTRAINTS FOR POINTS:
+	- neighborhoods
+		- local 2D points should also be present in 3D space
+		- (same in reverse)
+		- local 3D normals should be similar direction
+		- 
+
+	- view visibility (3+ views)
+		- expected visibility
+			- is there a match in a view that patch_i should be visible in?
+				- not too far away in distance
+				- orientated toward point
+				- normals oriented
+		- neighbor visibility
+			- neighbors will have similar lists of views it is visible from
+		- 
+
+	- occlusion
+		- neighbors will likely overlap (occlude) because they are close
+		- with multiple views, outliers likely be in front / behind many other patches, while the inliers will only be obstructing outliers
+			- unique other patches vs sum from each view vs (average per view)
+		-- with a lot of outliers, only very worst are apparent
+			- could consider which patches outlier is occulding: if they're more likely inliers -> more sure, if more likely outliers -> less sure
+				- ratios of:
+					- FRONT_ME / SUM(BEHIND_OTHER_i) [am i in front of a lot of inliers ?]
+					- BEHIND_ME / SUM(FRONT_OTHER_i) [am i beind a lot of outliers ?]
+					=> div by 0 : set den min to 1
+	
+	- connectivity/regularity
+		- neighbors are locally planar & should have consistent orientation (no crossings)
+			- crossing?
+			- metric?
+			- predicted location 2D
+				- every point uses affine (from local point approx or projected patch) to predict where neighbors should be in opposite images
+				- outliers will have larger values than 
+					- use ratio for outlier/inlier ?
+			- 3D ?
+				- backproject 2D neighbors onto 3D point plane
+					- predicted location vs actual 3D
+
+	- planarness
+		- neighbors should be in roughly same place (distance from surface minimal wrt neighbor distance)
+			- point has local plane in 3D
+			- neighbors are some distance away from plane (along normal direction)
+
+
+..........................
+
+how does neighborhood normals behave around corners / sharp aread?
+if normals are different enough, maybe shouldn't be considered neighbors
+
+
+..........................
 
 
 - what to do after F iteration

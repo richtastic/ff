@@ -12,11 +12,17 @@ sudo  npm i -g npm  # update node packet manager
 #### install mongo
 ```
 brew update
-brew install mongodb
-sudo mkdir -p /data/db
-sudo chown -R `id -un` /data/db
+brew tap mongodb/brew
+brew install mongodb-community
+# brew install mongodb-community@4.2
+# brew install mongodb - OLD
+#  sudo mkdir -p /data/db
+#  sudo chown -R `id -un` /data/db
+sudo mkdir -p /Users/<user>/data/db
+sudo chown -R `id -un` /Users/<user>/data/db
 # start
 # shell A:
+sudo mongod --dbpath=/Users/user/data/db
 mongod
 # shell B
 mongo --host 127.0.0.1:27017
@@ -46,6 +52,8 @@ db.movie.find({"name":"tutorials point"})
 # delete
 
 
+
+mongo --port 27017 -u nodejsuser -p 'qwerty' --authenticationDatabase 'admin'
 
 mongo --port 27017 -u myUserAdmin -p 'abc123' --authenticationDatabase 'admin'
 

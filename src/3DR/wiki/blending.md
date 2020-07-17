@@ -18,6 +18,27 @@ Transparent/Alpha from 1-0 & 0-1
 
 
 
+- frequency blending
+    - blending textures at different frequencies (blurr)
+
+pyramid blending
+http://graphics.cs.cmu.edu/courses/15-463/2005_fall/www/Lectures/Pyramids.pdf
+pyramid blending - gradients
+
+http://www.bmva.org/bmvc/2002/papers/49/full_49.pdf
+
+https://web.cs.dal.ca/~sbrooks/thesis/Interactive-Gradient-Domain-Texture-Blending.pdf
+
+process:
+    - graph cut on a low res image (faster)
+        - if separate triangles:
+            - do per-triangle
+            - try to do in some kind of expanded planar way
+    - pyramid blend around seams
+
+
+
+
 
 
 

@@ -6050,7 +6050,7 @@ for(var i=0; i<views.length; ++i){
 		// retract bad points:
 		world.filterLocal2DF();
 
-		world.filterLocal2DAffineError();
+		world.filterLocal2DAffineError(); // maybe be updated?
 
 		world.filterLocal2DFAngle();
 		
