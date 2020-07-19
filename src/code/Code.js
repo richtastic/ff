@@ -2828,6 +2828,7 @@ Code.gradientDescent = function(fxn, args, x, dx, iter, diff, epsilon, lambda){
 	var prevX = Code.copyArray(x); // local instance of x
 	var dy = Code.newArrayZeros(sizeX);
 	var tx = Code.newArrayZeros(sizeX);
+console.log("epsilon: "+epsilon)
 	// TODO: individual epsilon for each variable
 	if(!dx){
 		dx = Code.newArrayZeros(sizeX);

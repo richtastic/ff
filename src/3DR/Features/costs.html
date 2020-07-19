@@ -1,0 +1,19 @@
+<html>
+<head>
+<title>Features - Matching Costs</title>
+<script src="../../code/FF.js"></script>
+</head>
+<script type="text/javascript">
+function pageLoadedFxn(){
+	var ff = new FF("../../code/",ffLoadedFxn);
+}
+function ffLoadedFxn(){
+	(new ScriptLoader("./",["../R3D.js","../app/Stereopsis.js","CostTest.js"],this,classesLoadedFxn)).load();
+}
+function classesLoadedFxn(){
+	var test = new CostTest();
+}
+</script>
+<body onload="pageLoadedFxn();">
+</body>
+</html>

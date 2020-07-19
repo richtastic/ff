@@ -387,6 +387,13 @@ MISSING:
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
+- use gradient / gradient magnitude to find optimal location / affine transform
+
+
+
+- pixel values -- where is interpolation & where is value ?
+
+
 
 - is there a way to estimate a normal? given 3D location & affine matrix
 ??????????????????????????????????????????????????????????????????????
@@ -399,7 +406,66 @@ MISSING:
 		=> plane normal is normal
 
 
+??????????????????????
+given affine:
+	=> known (infinite) set of points 
+	=> back-project these points into world (triangulate)
+	=> approximate a best-fit plane (optionally: thru the center point)
+
+
+
+
+
+
 - make sure size s = radius r for patches = 1/2 of cell size projection
+
+- use exponential decay window (window is 1 sigma) for SAD compare ?
+
+- SAD cost function incorporate gradient info ?
+	- gradient magnitude
+
+
+- print out 'gradient magnitude' image (corner color gradient)
+	- magnitude & pixel direction & gradient color direction
+
+
+
+=> optimum patch needle/haystack placement:
+	- 
+	- 
+	- ...
+
+=> OPTIMUM MATCH ORIENTATION TESTS ^
+	- optimizing a point's location / affine (rot / sca) using nonlinear method:
+		- compare different cost functions:
+			- SAD FLAT
+			- NCC FLAT
+			- SAD PRIMARY COLOR GRAD MAG
+			- SAD PRIMARY COLOR GRAD VALUE [3-vector RGB]
+			- FLAT + GRAD combined error (%F + %G = 1)
+			- 
+
+=> INITIAL PATCH ORIENTAITON TESTS ^
+	- estimate initial patch using match-affine data
+
+
+.......
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 PATCH THOUGHTS:

@@ -89,12 +89,41 @@
 
 
 
+## Optimizing Matching Methods
+
+
+- comparators:
+	- RGB flat
+	- RGB peak griadient magnitude
+	- RGB peak griadient color 'direction'
+
+### Optimum Location [Fixed Orientation]
 
 
 
 
 
+### Optimum Affine 2D Orientation/Transform [Fixed Location]
 
+- Gradient Descent:
+	- unlimited control may result in optimum solution spiraling out of control
+		- eg: scale &Rarr; 0 | &inf;
+
+- Exhaustive Search Range:
+	- use discritized parameter space
+	- pick best match with given parameters
+	- half search range & search around new parameters
+	- eg:
+		- scale: 2^[-1,0,1] & rotation [-30,0,+30]
+		- scale: 2^[-0.5,0,0.5] & rotation [-15,0,+15]
+		- ...
+
+
+#### Rotation + Scale: 2 DoF
+	- ...
+
+#### Affine: 4 DoF
+	- ...
 
 
 

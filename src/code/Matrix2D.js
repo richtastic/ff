@@ -87,6 +87,12 @@ Matrix2D.prototype.rotate = function(theta){
 	this.mult(mat,this);
 	return this;
 }
+Matrix2D.prototype.scaleX = function(sx){
+	return this.scale(sx,1.0);
+}
+Matrix2D.prototype.scaleY = function(sy){
+	return this.scale(1.0,sy);
+}
 Matrix2D.prototype.scale = function(sx,sy){
 	var mat = Matrix2D.temp;
 	if(sy===undefined || sy==null){
@@ -208,6 +214,26 @@ Matrix2D.prototype.get = function(r,c){
 		}
 	}
 	return new Array(this.a,this.b,this.c,this.d,this.x,this.y);
+}
+Matrix2D.prototype.averageScale = function(){
+/*
+console.log(Code.eigenValuesAndVectors2D(this.a, this.b, this.c, this.d));
+	var mat = new Matrix(2,2).fromArray([this.a, this.b, this.c, this.d]);
+	// var mat = new Matrix(2,2).fromArray([this.a, this.c, this.b, this.d]);
+	var eig = Matrix.eigenValuesAndVectors(mat);
+	var vec = eig["vectors"];
+	var val = eig["values"];
+console.log(vec);
+console.log(val);
+*/
+	// faster way to do this for 2D
+	V = new Matrix(2,2).fromArray([this.a, this.b, this.c, this.d]);
+	var svd = Matrix.SVD(V);
+	var S = svd.S;
+	var sigma0 = S.get(0,0);
+	var sigma1 = S.get(1,1);
+	scale = (sigma0+sigma1)*0.5;
+	return scale;
 }
 Matrix2D.prototype.toString = function(){
 	return "[ "+this.a+" "+this.b+" "+this.x+" | "+this.c+" "+this.d+" "+this.y+" ]";
