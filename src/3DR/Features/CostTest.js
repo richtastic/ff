@@ -155,24 +155,23 @@ throw ".."
 	magnitudeA = ImageMat.getNormalFloat01(magnitudeA);
 	magnitudeB = ImageMat.getNormalFloat01(magnitudeB);
 
-
+	// simple magnitude
 	var gradA = new ImageMat(gradientA["width"],gradientA["height"],magnitudeA,magnitudeA,magnitudeA);
 	var gradB = new ImageMat(gradientB["width"],gradientB["height"],magnitudeB,magnitudeB,magnitudeB);
+	
+	// color gradient
 	// var gradA = new ImageMat(gradientA["width"],gradientA["height"],gradientA["red"],gradientA["grn"],gradientA["blu"]);
 	// var gradB = new ImageMat(gradientB["width"],gradientB["height"],gradientB["red"],gradientB["grn"],gradientB["blu"]);
 
 	gradientA = new ImageMatScaled(gradA);
 	gradientB = new ImageMatScaled(gradB);
-
-console.log(gradientA);
-console.log(gradientB);
-
+// console.log(gradientA);
+// console.log(gradientB);
 	var wid = imageScalesA.width();
 	var hei = imageScalesA.height();
-
-
 	var scores = ImageMat.normalFloat01(magnitudeA);
-		var colors = [0xFF000000, 0xFF000099, 0xFFCC00CC, 0xFFFF0000, 0xFFFFFFFF];
+		// var colors = [0xFF000000, 0xFF000099, 0xFFCC00CC, 0xFFFF0000, 0xFFFFFFFF];
+		var colors = [0xFF000000, 0xFFFFFFFF];
 		var img = ImageMat.heatImage(scores, wid, hei, false, colors);
 
 // img = gradA;
@@ -184,10 +183,11 @@ console.log(gradientB);
 
 
 	// settings
+	// var cellSize = 201;
 	// var cellSize = 151;
 	// var cellSize = 101;
-	// var cellSize = 51;
-	var cellSize = 31;
+	var cellSize = 51;
+	// var cellSize = 31;
 	var compareSize = 11;
 	var scaleCell = (compareSize/cellSize);
 	// var scaleCell = (cellSize/compareSize);
@@ -198,16 +198,50 @@ console.log(gradientB);
 	// var pointB = new V2D(422,574);
 
 	// bird face
-	// var pointA = new V2D(590,410);
-	// var pointB = new V2D(627,381);
+	var pointA = new V2D(590,410);
+	var pointB = new V2D(627,381);
 
 	// squares corner
 	// var pointA = new V2D(835,343);
 	// var pointB = new V2D(699,325);
 
-	// RIGHT FOOR
-	var pointA = new V2D(653,552);
-	var pointB = new V2D(665,514);
+	// RIGHT FOOT
+	// var pointA = new V2D(653,552);
+	// var pointB = new V2D(665,514);
+
+	// crotch
+	// var pointA = new V2D(540,550);
+	// var pointB = new V2D(550,520);
+
+	// face
+	// var pointA = new V2D(500,350);
+	// var pointB = new V2D(510,330);
+
+// pointB.x += -50;
+// pointB.y += -20;
+
+	// left ear
+	// var pointA = new V2D(235,143);
+	// var pointB = new V2D(299,125);
+
+	// left ear 2 mid
+	// var pointA = new V2D(630,70);
+	// var pointB = new V2D(500,80);
+
+	// left puzzle forner
+	// var pointA = new V2D(230,570);
+	// var pointB = new V2D(300,540);
+
+	// left hand top
+	// var pointA = new V2D(360,470);
+	// var pointB = new V2D(360,480);
+
+	// eyes
+	// var pointA = new V2D(480,350);
+	// var pointB = new V2D(490,330);
+
+	// var pointA = new V2D(480,350);
+	// var pointB = new V2D(490,330);
 
 	var dScale = 5.0;
 
@@ -242,6 +276,7 @@ console.log(gradientB);
 
 	// var newMatch = world.bestNeedleHaystackMatchFromLocation(centerA,centerB, newPointA, affine, viewA,viewB);
 
+	/*
 	var needleSize = cellSize;
 	var haystackSize = 3.0*needleSize;
 	var affineAB = null;
@@ -250,12 +285,14 @@ console.log(gradientB);
 	// var result = R3D.optimizeMatchingRotationScale(pointA,pointB, imageA,imageB, featureSize,compareSize, angle,scale);
 
 	console.log(result);
-	var pointC = result["point"];
-
-	var angle = 0;
-	var scale = 1.0;
-	var result = R3D.optimizeMatchingRotationScale(pointA,pointB, imageScalesA,imageScalesB, cellSize,compareSize, angle,scale);
-	console.log(result);
+	var pointB2 = result["point"];
+	*/
+	
+		/*
+		var angle = 0;
+		var scale = 1.0;
+		var result = R3D.optimizeMatchingRotationScale(pointA,pointB, imageScalesA,imageScalesB, cellSize,compareSize, angle,scale);
+		console.log(result);
 		var angle = result["angle"];
 		var scale = result["scale"];
 		var matrix = new Matrix2D();
@@ -263,11 +300,9 @@ console.log(gradientB);
 			// matrix.scale(scale);
 			matrix.scaleX(scale);
 			matrix.inverse(); // make B look like A
-	// pointA,pointB, imageScalesA,imageScalesB, featureSize,compareSize, angle,scale, limitAngle,limitScale, maxIterations){
-	// ...
-	// var pointC = result["point"];
-	// ...
-	var matrixIn = new Matrix2D();
+		*/
+		/*
+		var matrixIn = new Matrix2D();
 		matrixIn.scaleY(1.1);
 		matrixIn.rotate(Code.radians(20.0));
 		
@@ -280,44 +315,77 @@ console.log(gradientB);
 		var y = matrixIn.multV2DtoV2D(new V2D(0,1));
 		console.log(x+""+x.length());
 		console.log(y+""+y.length());
-// a = [ 1.149066664678467 -0.7070663706551933;  0.9641814145298089 0.8426488874308758 ];
-// a = [0.99586 , 0.81134i]
-// sum((a.*a).^0.5)
-// 1.8072
-// a = [ 1.4095389311788626 -0.37622215765823563  ;  0.5130302149885031 1.0336618828644994 ];
-// a = [1.2216 , 0.3971]
-// sum((a.*a).^0.5)
-// 1.618
-// eig(a);
+		*/
+
+var matrixIn = new Matrix2D();
+	// matrixIn.fromArray([1,0, 0,1, 0,0]); // 5
+	// matrixIn.fromArray([ 0.8639324778315964, -0.15921063053701295,  -0.08211012564271253, 0.984302939534412, 0,0 ]); // 11
+	// matrixIn.fromArray([0.9535748951722105,-0.21955509292638228, -0.1332866316446622,0.8843620599969264,0,0]); // 21
+	// matrixIn.fromArray([0.9763456183444861,-0.2823825617388705, -0.09959759103099824,0.9113740655201175,0,0]); // ...
+	console.log(matrixIn+"");
+// var result = R3D.optimizeMatchingFlatGradient(pointA,pointB, imageScalesA,imageScalesB, gradientA,gradientB, cellSize,compareSize, matrixIn);
+var result = R3D.optimizeMatchingFlatGradient(pointA,pointB, imageScalesA,imageScalesB, gradientA,gradientB, cellSize,21, matrixIn);
+console.log(result);
+
+var pointB2 = result["point"];
+console.log(pointB+" -> "+pointB2);
 
 
-// a = [ 1.149066664678467 -0.7070663706551933;  0.9641814145298089 0.8426488874308758 ]
-// eig(a)
 
-		matrixIn = null;
-	var result = R3D.optimizeMatchingAffineCorner(pointA,pointB, imageScalesA,imageScalesB, cellSize,compareSize, matrixIn, null, gradientA,gradientB);
+//throw "?"
+	matrixIn = null;
+	var result = R3D.optimizeMatchingAffineCorner(pointA,pointB2, imageScalesA,imageScalesB, cellSize,compareSize, matrixIn, null, gradientA,gradientB);
 	console.log(result);
 
-	matrix = result["affine"];
+	// var matrixB2 = result["affine"];
+	// var matrixA2 = matrixB2.copy().inverse();
+
+	var matrixA2 = result["affine"];
+	var matrixB2 = matrixA2.copy().inverse();
+
+	console.log(matrixA2.toArray()+"");
+
 // console.log(matrix+"");
-
 // throw "?"
-
 // console.log(pointC+"?");
-console.log(pointB+"?");
-pointC = pointB;
+// console.log(pointB+"?");
+// pointC = pointB;
 
-	var matrixC = null;
-	var scaleC = 1.0 * scaleCell;
-matrixC = matrix;
-	var needleC = imageScalesB.extractRect(pointC, scaleC, compareSize,compareSize, matrixC);
+	
+	// var matrixA2 = null;
+	// var matrixB2 = null;
 
-		var img = needleC;
+
+	// var zoomOut = 2.0;
+
+	var zoomOut = 1.0;
+	// var zoomOut = 0.50;
+
+	
+	var scaleB2 = 1.0 * scaleCell * zoomOut;
+
+	var needleB2 = imageScalesB.extractRect(pointB2, scaleB2, compareSize,compareSize, matrixB2);
+
+		var img = needleB2;
 		img = GLOBALSTAGE.getFloatRGBAsImage(img.red(),img.grn(),img.blu(), img.width(),img.height());
 		var d = new DOImage(img);
 		d.graphics().alpha(1.0);
 		d.matrix().scale(dScale);
-		d.matrix().translate(10 + 300, 10);
+		d.matrix().translate(10 + 0, 100);
+		GLOBALSTAGE.addChild(d);
+
+
+
+	var scaleA2 = 1.0 * scaleCell * zoomOut;
+	var pointA2 = pointA;
+	var needleA2 = imageScalesA.extractRect(pointA2, scaleA2, compareSize,compareSize, matrixA2);
+
+		var img = needleA2;
+		img = GLOBALSTAGE.getFloatRGBAsImage(img.red(),img.grn(),img.blu(), img.width(),img.height());
+		var d = new DOImage(img);
+		d.graphics().alpha(1.0);
+		d.matrix().scale(dScale);
+		d.matrix().translate(10 + 200, 100);
 		GLOBALSTAGE.addChild(d);
 
 	/*

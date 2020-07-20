@@ -389,9 +389,52 @@ MISSING:
 
 - use gradient / gradient magnitude to find optimal location / affine transform
 
+optimizing = A->B & B->A
+	- forward / backward
+	- use circular mask
+		-> circular image-get function ? optimize 25%
+
 
 
 - pixel values -- where is interpolation & where is value ?
+
+
+=> local affine image optimizng is still plagued by visually poor results
+x retry with rotation / scale only ?
+
+
+- 2 (multi) phase location search:
+	- low res search best matches in area (needle = d, haystack = 3d) @ 5px size => general position, 
+		= 5^2 * ( 5^2 * 2 )
+		= 1250
+	- hi res search best match in area (needle = d, haystack = 2d) @ 11 px size => accurate position, limited outliers
+		= 11^2 * ( 11^2 * 1 )
+		= 14641
+	------------------- total: 15891 / 29282 ~ 55% + extract overhead
+
+
+- try to use local neighborhood of point distribution to optimize affine estimate?
+	- initial points are optimized only with rotation and scale
+	- when making new point:
+		=> get point matches in area
+		=> pick best? (9 -> 3)
+		=> create affine matrix from 3+ points
+			OR from average of affine matrixes ?
+		====> need some visual validation?
+
+
+=> low density / coarse grid:
+	- use visual refinement to get local affine transform
+	- use some blurring to allow more fluid / movable optimization / prevent local minima
+		- low res comparitors
+
+=> hi density / fine grid:
+	- use local neighborhood to get affine transform
+		A) point matches => affine
+		B) average affine matrixes
+
+
+
 
 
 
