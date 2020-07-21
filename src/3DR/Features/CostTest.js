@@ -198,8 +198,8 @@ throw ".."
 	// var pointB = new V2D(422,574);
 
 	// bird face
-	var pointA = new V2D(590,410);
-	var pointB = new V2D(627,381);
+	// var pointA = new V2D(590,410);
+	// var pointB = new V2D(627,381);
 
 	// squares corner
 	// var pointA = new V2D(835,343);
@@ -224,9 +224,13 @@ throw ".."
 	// var pointA = new V2D(235,143);
 	// var pointB = new V2D(299,125);
 
-	// left ear 2 mid
-	// var pointA = new V2D(630,70);
-	// var pointB = new V2D(500,80);
+	// left ear 2 corner
+	// var pointA = new V2D(400,190);
+	// var pointB = new V2D(400,190);
+
+	// left ear mid
+	var pointA = new V2D(300,190);
+	var pointB = new V2D(300,190);
 
 	// left puzzle forner
 	// var pointA = new V2D(230,570);

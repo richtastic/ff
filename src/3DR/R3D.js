@@ -11405,11 +11405,11 @@ GLOBALSTAGE.addChild(d);
 }
 
 R3D.optimizeMatchingAffineCorner = function(pointA,pointB, imageScalesA,imageScalesB, featureSize,compareSize,    matrixIn, maxIterations, gradientA,gradientB){
-	var compareSize = 21;
+	// var compareSize = 21;
 	// var compareSize = 11;
 	// var compareSize = 9;
 	// var compareSize = 7; // 5 - 11
-	// var compareSize = 5; // too small
+	var compareSize = 5; // too small
 	var scaleIn = 1.0;
 	var xIn = new V2D(1,0);
 	var yIn = new V2D(0,1);
@@ -11506,7 +11506,6 @@ R3D._gdOptimizeMatchingAffineCorner = function(args, x, isUpdate){
 	// affine.identity();
 	// affine.rotate(x[0]);
 	// affine.scale(x[1]);
-
 
 	var averageScale = affine.averageScale();
 // averageScale = 1.0;

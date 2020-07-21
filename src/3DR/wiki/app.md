@@ -386,17 +386,22 @@ MISSING:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+=> 2-way SAD FLAT 5x5 affine updater
 
-- use gradient / gradient magnitude to find optimal location / affine transform
+=> 2-mode SAD FLAT 5x5 & 11x11 locator
+	5x5 + 15x15 search area
+	11x11 + 13x13 - 15x15 - 22x22
 
-optimizing = A->B & B->A
-	- forward / backward
-	- use circular mask
+
+
+
+
+x use gradient / gradient magnitude to find optimal location / affine transform
+
+x optimizing = A->B & B->A
+	x forward / backward
+	x use circular mask
 		-> circular image-get function ? optimize 25%
-
-
-
-- pixel values -- where is interpolation & where is value ?
 
 
 => local affine image optimizng is still plagued by visually poor results
