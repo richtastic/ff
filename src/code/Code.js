@@ -2608,13 +2608,13 @@ Code.points2DToZeroOne = function(arr, width, height){
 	}
 }
 
-Code.sum = function(a){
-	var i, sum=0;
-	for(i=a.length; i--;){
-		sum += a[i];
-	}
-	return sum;
-}
+// Code.sum = function(a){
+// 	var i, sum=0;
+// 	for(i=a.length; i--;){
+// 		sum += a[i];
+// 	}
+// 	return sum;
+// }
 // Code.combineErrorMeasurements([4,1,2,3],[0.1,0.3,0.2,0.1])
 Code.errorsToPercents = function(errors){ // literally just normalized, but with final error approx
 	var percents = [];
@@ -3725,6 +3725,19 @@ Code.averageNumbers = function(values, percents){
 		sum += value*p;
 	}
 	return sum;
+}
+Code.averageNumbersLog = function(values, percents){
+	var i, count = values.length;
+	var sum = 0;
+	var p = 1.0/count;
+	for(i=0; i<count; ++i){
+		var value = values[i];
+		if(percents){
+			p = percents[i];
+		}
+		sum += Math.log2(value)*p;
+	}
+	return Math.pow(2,sum);
 }
 Code.avg = Code.averageNumbers;
 Code.averageV2D = function(values, percents){

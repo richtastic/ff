@@ -229,8 +229,11 @@ throw ".."
 	// var pointB = new V2D(400,190);
 
 	// left ear mid
-	var pointA = new V2D(300,190);
-	var pointB = new V2D(300,190);
+	// var pointA = new V2D(300,190);
+	// var pointB = new V2D(300,190);
+
+	var pointA = new V2D(350,70);
+	var pointB = new V2D(150,60);
 
 	// left puzzle forner
 	// var pointA = new V2D(230,570);
@@ -321,6 +324,24 @@ throw ".."
 		console.log(y+""+y.length());
 		*/
 
+
+
+var matrixIn = new Matrix2D();
+
+// var result = R3D.optimumSADLocationSearchFlatRGB(pointA,pointB, imageScalesA,imageScalesB, cellSize,11, 11*3, matrixIn);
+
+var needleSizes = [5,11,21];
+var haystackSizes = [5*3,11+2,21+3];
+var result = R3D.optimumSADLocationSearchFlatRGBIteritive(pointA,pointB, imageScalesA,imageScalesB, cellSize, needleSizes,haystackSizes, matrixIn);
+
+console.log(result);
+
+var pointB2 = result["point"];
+console.log(pointB+" -> "+pointB2);
+
+/*
+// throw "?"
+
 var matrixIn = new Matrix2D();
 	// matrixIn.fromArray([1,0, 0,1, 0,0]); // 5
 	// matrixIn.fromArray([ 0.8639324778315964, -0.15921063053701295,  -0.08211012564271253, 0.984302939534412, 0,0 ]); // 11
@@ -328,18 +349,25 @@ var matrixIn = new Matrix2D();
 	// matrixIn.fromArray([0.9763456183444861,-0.2823825617388705, -0.09959759103099824,0.9113740655201175,0,0]); // ...
 	console.log(matrixIn+"");
 // var result = R3D.optimizeMatchingFlatGradient(pointA,pointB, imageScalesA,imageScalesB, gradientA,gradientB, cellSize,compareSize, matrixIn);
-var result = R3D.optimizeMatchingFlatGradient(pointA,pointB, imageScalesA,imageScalesB, gradientA,gradientB, cellSize,21, matrixIn);
+var result = R3D.optimizeMatchingFlatGradient(pointA,pointB, imageScalesA,imageScalesB, gradientA,gradientB, cellSize,11, matrixIn);
 console.log(result);
 
 var pointB2 = result["point"];
 console.log(pointB+" -> "+pointB2);
+*/
 
 
-
-//throw "?"
+/*
 	matrixIn = null;
 	var result = R3D.optimizeMatchingAffineCorner(pointA,pointB2, imageScalesA,imageScalesB, cellSize,compareSize, matrixIn, null, gradientA,gradientB);
 	console.log(result);
+
+*/
+
+matrixIn = null;
+	var result = R3D.optimizeSADAffineCorner(pointA,pointB2, imageScalesA,imageScalesB, cellSize,compareSize, matrixIn);
+	console.log(result);
+
 
 	// var matrixB2 = result["affine"];
 	// var matrixA2 = matrixB2.copy().inverse();

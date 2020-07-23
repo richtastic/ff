@@ -386,6 +386,41 @@ MISSING:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
+- clean up tests to use:
+	x 2-mode SAD flat search
+	x affiner SAD update
+	- patch functions
+
+
+R3D.optimumSADLocationSearchFlatRGB
+R3D.optimumSADLocationSearchFlatRGBIteritive
+R3D.optimizeSADAffineCorner
+
+R3D.projectivePatch3DInitFromAffinePair
+
+
+
+
+
+
+
+
+		var result = Code.graphAbsoluteFromRelative1D(solveEdges);
+		var values = result["values"];
+		for(var j=0; j<values.length; ++j){
+			values[j] = Math.exp(values[j]);
+		}
+
+
+
+
+- when cell size is subdivided: old point accuracy isn't as good 
+	=> 60 -> 30 -> 15 
+		- point accuracy goes from (@ 11x11):
+		5.5 -> 2.75 -> 1.36
+		4 -> 2 -> 1
+
 => 2-way SAD FLAT 5x5 affine updater
 
 => 2-mode SAD FLAT 5x5 & 11x11 locator
@@ -393,29 +428,17 @@ MISSING:
 	11x11 + 13x13 - 15x15 - 22x22
 
 
+=> Patch Algorithms:
+	- visual initial patch estimate
+	- visual patch update
+	- geometric affine back-project to get patch initial plane
+???	- geometric patch update 
+	- patch update from cell size change [patch size & location accuracy]
+	- patch update from view change
+	- 2D location update from cell size change (accuracy update)
+	- affine mapping from local point distribution
 
 
-
-x use gradient / gradient magnitude to find optimal location / affine transform
-
-x optimizing = A->B & B->A
-	x forward / backward
-	x use circular mask
-		-> circular image-get function ? optimize 25%
-
-
-=> local affine image optimizng is still plagued by visually poor results
-x retry with rotation / scale only ?
-
-
-- 2 (multi) phase location search:
-	- low res search best matches in area (needle = d, haystack = 3d) @ 5px size => general position, 
-		= 5^2 * ( 5^2 * 2 )
-		= 1250
-	- hi res search best match in area (needle = d, haystack = 2d) @ 11 px size => accurate position, limited outliers
-		= 11^2 * ( 11^2 * 1 )
-		= 14641
-	------------------- total: 15891 / 29282 ~ 55% + extract overhead
 
 
 - try to use local neighborhood of point distribution to optimize affine estimate?
@@ -467,21 +490,8 @@ given affine:
 
 - make sure size s = radius r for patches = 1/2 of cell size projection
 
-- use exponential decay window (window is 1 sigma) for SAD compare ?
-
-- SAD cost function incorporate gradient info ?
-	- gradient magnitude
 
 
-- print out 'gradient magnitude' image (corner color gradient)
-	- magnitude & pixel direction & gradient color direction
-
-
-
-=> optimum patch needle/haystack placement:
-	- 
-	- 
-	- ...
 
 => OPTIMUM MATCH ORIENTATION TESTS ^
 	- optimizing a point's location / affine (rot / sca) using nonlinear method:
