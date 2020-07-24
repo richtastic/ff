@@ -24,6 +24,7 @@
 			- Local F v Affine angle difference
 				- worst outliers affine average angle not aligning with F
 		- Subdivide Cells
+			- update matching location
 => F, Seed Points
 
 ### Coarse Pair
@@ -76,6 +77,7 @@ world.filterGlobalPatchSphere3D(2.0, false);
 world.filterGlobalMatches(false, 0, 3.0,3.0,3.0,3.0, false);
 	
 	- Subdivide Cells
+			- update matching location
 	- Update Point From Size Change
 
 => R

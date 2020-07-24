@@ -97,6 +97,26 @@
 	- RGB peak griadient magnitude
 	- RGB peak griadient color 'direction'
 
+
+
+FLAT + RGB GRAD not much different
+
+	- optimizing a point's location / affine (rot / sca) using nonlinear method:
+		- compare different cost functions:
+			- SAD FLAT
+			- NCC FLAT
+			- SAD PRIMARY COLOR GRAD MAG
+			- SAD PRIMARY COLOR GRAD VALUE [3-vector RGB]
+			- FLAT + GRAD combined error (%F + %G = 1)
+			- 
+
+=> INITIAL PATCH ORIENTAITON TESTS ^
+	- estimate initial patch using match-affine data
+
+
+.......
+
+
 ### Optimum Location [Fixed Orientation]
 
 

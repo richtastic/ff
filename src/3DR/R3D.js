@@ -11231,35 +11231,40 @@ imgs.push(imgC);
 R3D.optimumSADLocationSearchFlatRGBIteritive = function(pointA,pointB, imageScalesA,imageScalesB, featureSize,needleSizes,haystackSizes, matrix){
 	var pointOut = pointB;
 	var scoreOut = null;
-	// console.log(pointOut+"");
 	for(var i=0; i<needleSizes.length; ++i){
 		var needleSize = needleSizes[i];
 		var haystackSize = haystackSizes[i];
-		// console.log(needleSize,haystackSize)
 		var result = R3D.optimumSADLocationSearchFlatRGB(pointA,pointOut, imageScalesA,imageScalesB, featureSize,needleSize,haystackSize, matrix);
 		pointOut = result["point"];
-		// console.log(pointOut+"");
 		scoreOut = result["score"];
 	}
 	return {"point":pointOut, "score":scoreOut};
 }
 
 R3D.DEBUG_SS_A=0;
-R3D.optimumSADLocationSearchFlatRGB = function(pointA,pointB, imageScalesA,imageScalesB, featureSize,needleSize,haystackSize, matrix){
-	var cellScale = (needleSize/featureSize);
+R3D._temp_matrix2D = new Matrix2D();
+R3D.optimumSADLocationSearchFlatRGB = function(pointA,pointB, imageScalesA,imageScalesB, featureSize,needleSize,haystackSize, affine){
+	var cellScale = (needleSize/featureSize); // VERIFIED CORRECT
 
-// TODO: EXTRACT AVERAGE SCALE:
-// var averageScale = affine.averageScale();
-// ..
-	var needle = imageScalesA.extractRect(pointA,cellScale,needleSize,needleSize, matrix);
-	var haystack = imageScalesB.extractRect(pointB,cellScale,haystackSize,haystackSize, null);
+	// revert average scale
+	affine = Stereopsis._temp_matrix2D.copy(affine);
+	var averageScale = affine.averageScale();
+	affine.scale(1.0/averageScale);
+	var scaleA = cellScale*averageScale;
+	var scaleB = cellScale;
+
+	var needle = imageScalesA.extractRect(pointA,scaleA,needleSize,needleSize, affine);
+	var haystack = imageScalesB.extractRect(pointB,scaleB,haystackSize,haystackSize, null);
 	var scores = R3D.searchNeedleHaystackSADColor(needle,haystack);
 	var finalSize = scores["width"];
-	var minimum = R3D.minimumFromValues(scores["value"], finalSize, finalSize, pointB, 1.0/cellScale);
+	var minimum = R3D.minimumFromValues(scores["value"], finalSize, finalSize, pointB, 1.0/scaleB);
+// 1.0/scaleB ?*
+
 	var absoluteLocation = minimum["location"];
 	var absoluteScore = minimum["score"];
 
-if(true){
+if(false){
+// if(true){
 
 var melee = 200;
 var offy = melee*R3D.DEBUG_SS_A;
@@ -11320,7 +11325,7 @@ d.graphics().drawCircle(0,0, 5);
 d.graphics().strokeLine();
 d.graphics().endPath();
 
-var needle = imageScalesA.extractRect(pointA,cellScale,needleSize,needleSize, matrix);
+var needle = imageScalesA.extractRect(pointA,cellScale,needleSize,needleSize, affine);
 var haystack = imageScalesB.extractRect(pointB,cellScale,haystackSize,haystackSize, null);
 
 var image = needle;
@@ -11340,6 +11345,8 @@ GLOBALSTAGE.addChild(d);
 ++R3D.DEBUG_SS_A;
 
 }
+
+// throw "?"
 
 	return {"point":absoluteLocation, "score":absoluteScore};
 }
@@ -11630,8 +11637,10 @@ R3D._gdOptimizeMatchingAffineCorner = function(args, x, isUpdate){
 // averageScale = 1.0;
 	affine.scale(1.0/averageScale);
 
-	var totalScaleA = featureScale * averageScale;
-	var totalScaleB = featureScale / averageScale;
+	// var totalScaleA = featureScale * averageScale;
+	// var totalScaleB = featureScale / averageScale;
+
+	
 
 	var sampleFlatA2 = imageScalesA.extractRect(pointA, totalScaleA, compareSize,compareSize, affine);
 	var sampleGradA2 = gradientA.extractRect(pointA, totalScaleA, compareSize,compareSize, affine);
@@ -11691,22 +11700,32 @@ R3D._gdOptimizeMatchingAffineCorner = function(args, x, isUpdate){
 }
 
 
+
+// var result = R3D.optimizeSADAffineCorner(pointA,pointB, imageA,imageB, featureSize, compareSize, affine, maxIterations);
 R3D.optimizeSADAffineCorner = function(pointA,pointB, imageScalesA,imageScalesB, featureSize,compareSize,    matrixIn, maxIterations){
+	if(!Code.isa(imageScalesA,ImageMatScaled) || !Code.isa(imageScalesB,ImageMatScaled)){
+		throw "expected image scales";
+	}
 	compareSize = Code.valueOrDefault(compareSize, 5); // want some blurring 5-11
 	maxIterations = Code.valueOrDefault(maxIterations, 20);
-	var scaleIn = 1.0;
+	// var scaleIn = 1.0;
 	var xIn = new V2D(1,0);
 	var yIn = new V2D(0,1);
-	if(matrixIn){
-		scaleIn = matrixIn.averageScale();
-		matrixIn.multV2DtoV2D(xIn,xIn);
-		matrixIn.multV2DtoV2D(yIn,yIn);
-	}
-	var featureScale = compareSize/featureSize;
+	// if(matrixIn){
+	// 	scaleIn = matrixIn.averageScale();
+	// 	matrixIn.multV2DtoV2D(xIn,xIn);
+	// 	matrixIn.multV2DtoV2D(yIn,yIn);
+	// }
+	var featureScale = compareSize/featureSize; // WAS
+	// var featureScale = featureSize/compareSize;
+
+
 	var affine = R3D.affineTransformFromVectors(V2D.ZERO,xIn,yIn, new Matrix2D());
 	var imageB = imageScalesB.extractRect(pointB, featureScale, compareSize,compareSize, null);
 	var imageA = imageScalesA.extractRect(pointA, featureScale, compareSize,compareSize, null);
 	var mask = ImageMat.circleMask(compareSize,compareSize);
+
+// console.log(imageA,imageB,featureScale);
 	// AFFINE
 	var xVals = [xIn.x,xIn.y,yIn.x,yIn.y];
 	// ROT | SCALE
@@ -11717,6 +11736,8 @@ R3D.optimizeSADAffineCorner = function(pointA,pointB, imageScalesA,imageScalesB,
 	var diff = 1E-4; // 1E-3 to 1E-6 ------------- depends on metric
 	var result = Code.gradientDescent(R3D._gdOptimizeSADAffineCorner, args, xVals, null, maxIterations, diff, epsilon);
 	var x = result["x"];
+
+	// throw "OUT"
 	// AFFINE:
 	xIn.set(x[0],x[1]);
 	yIn.set(x[2],x[3]);
@@ -11730,9 +11751,9 @@ R3D.optimizeSADAffineCorner = function(pointA,pointB, imageScalesA,imageScalesB,
 
 
 R3D._gdOptimizeSADAffineCorner = function(args, x, isUpdate){
-	// if(isUpdate){
-	// 	return;
-	// }
+	if(isUpdate){
+		return;
+	}
 	var totalError = 0;
 
 	var pointA = args[0];
@@ -11760,6 +11781,13 @@ R3D._gdOptimizeSADAffineCorner = function(args, x, isUpdate){
 	affine.scale(1.0/averageScale);
 	var totalScaleA = featureScale * averageScale;
 	var totalScaleB = featureScale / averageScale;
+
+	// TODO: OR IS IT THIS?:
+	// var totalScaleA = featureScale / averageScale;
+	// var totalScaleB = featureScale * averageScale;
+
+
+// TODO: VALIDATE SCALING INVERSE ?
 
 	var sampleFlatA2 = imageScalesA.extractRect(pointA, totalScaleA, compareSize,compareSize, affine);
 	affine.inverse();
@@ -22575,8 +22603,10 @@ R3D.optimumNeedleHaystackAtLocation = function(imageScalesA,pointA, imageScalesB
 	// compareSize = 11;
 	// compareSize = 9;
 	// compareSize = 7;
-
-	var cellScale = (compareSize/needleSize);
+	//
+	// WAS: var cellScale = (compareSize/needleSize);
+	var cellScale = (needleSize/compareSize);
+throw "is this compare backwards for IMAGE SCALES ?"
 	var haystackSize = Math.ceil((haystackRelativeSize/needleSize)*compareSize);
 		haystackSize = Math.max(haystackSize,compareSize);
 

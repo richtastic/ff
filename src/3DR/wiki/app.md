@@ -386,6 +386,15 @@ MISSING:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+- why is pika missing his head / ears ?
+
+- world.solvePair
+	- patches
+	- searching 2D
+	- updating patches
+
+
+- remove references to view.image() -> view.imageScales();
 
 - clean up tests to use:
 	x 2-mode SAD flat search
@@ -395,37 +404,22 @@ MISSING:
 
 R3D.optimumSADLocationSearchFlatRGB
 R3D.optimumSADLocationSearchFlatRGBIteritive
+
 R3D.optimizeSADAffineCorner
 
 R3D.projectivePatch3DInitFromAffinePair
 
+- initialize affine from neighborhood of points
+
+
+=> IMPLEMENT:
+
+world.subDivideUpdateMatchLocation();
 
 
 
+var newMatch = world.bestNeedleHaystackMatchFromLocation(centerA,centerB, newPointA, affine, viewA,viewB);
 
-
-
-
-		var result = Code.graphAbsoluteFromRelative1D(solveEdges);
-		var values = result["values"];
-		for(var j=0; j<values.length; ++j){
-			values[j] = Math.exp(values[j]);
-		}
-
-
-
-
-- when cell size is subdivided: old point accuracy isn't as good 
-	=> 60 -> 30 -> 15 
-		- point accuracy goes from (@ 11x11):
-		5.5 -> 2.75 -> 1.36
-		4 -> 2 -> 1
-
-=> 2-way SAD FLAT 5x5 affine updater
-
-=> 2-mode SAD FLAT 5x5 & 11x11 locator
-	5x5 + 15x15 search area
-	11x11 + 13x13 - 15x15 - 22x22
 
 
 => Patch Algorithms:
@@ -464,63 +458,7 @@ R3D.projectivePatch3DInitFromAffinePair
 
 
 
-
-
-- is there a way to estimate a normal? given 3D location & affine matrix
-??????????????????????????????????????????????????????????????????????
-	given affine:
-		- forward & backward points = 3-4 x 2 x 2 = 12-16 points total [size of cell/2]
-		- project points into rays
-		- find closest distance to point
-		=> average size
-		=> approximate a plane from closest points?
-		=> plane normal is normal
-
-
-??????????????????????
-given affine:
-	=> known (infinite) set of points 
-	=> back-project these points into world (triangulate)
-	=> approximate a best-fit plane (optionally: thru the center point)
-
-
-
-
-
-
 - make sure size s = radius r for patches = 1/2 of cell size projection
-
-
-
-
-=> OPTIMUM MATCH ORIENTATION TESTS ^
-	- optimizing a point's location / affine (rot / sca) using nonlinear method:
-		- compare different cost functions:
-			- SAD FLAT
-			- NCC FLAT
-			- SAD PRIMARY COLOR GRAD MAG
-			- SAD PRIMARY COLOR GRAD VALUE [3-vector RGB]
-			- FLAT + GRAD combined error (%F + %G = 1)
-			- 
-
-=> INITIAL PATCH ORIENTAITON TESTS ^
-	- estimate initial patch using match-affine data
-
-
-.......
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
