@@ -552,6 +552,61 @@ output:
 	- messages use neighborhood to update current best guess of flow (eg avg / lowest cost)
 
 
+#### Filtering
+	- F (2D) only:
+		- Global Error Filtering:
+			- F-error
+			- N-error
+			- S-error
+		- Local Error Filtering
+			- F-error
+			- N-error
+			- S-error
+		- Local predicted/vs/actual (ir-regularization points)
+			- if local affine predictor of neighbors are far off:
+				- 
+		- local rotation vs F-rotation
+			- 
+	- R (3D) added:
+		- Global Error Filtering:
+			- R-error
+		- Local Error Filtering
+			- R-error
+		- neighborhood consistency
+			- neighbors points in 2D should be similar group as in 3D (and & vv.)
+		- patch obstruction
+			- 3D point patch in front / behind other patch(es) is inconsistent
+			- couting:
+				- good v good : low error
+				- good v bad : med error
+				- bad v bad : high error
+			- remove highest-error points
+		- ?
+		- ?
+
+
+
+
+#### Patches
+	- Calculation Methods:
+		- Visual
+			- init
+				- normal as average of point-to-center
+				- size as ?
+			- udpate 
+				- use images & local area & iteritively project to find best 2D patch match
+					- eg: low SAD error
+				- nonlinear: normal vector angleA & angle B & distance along normal
+		- Geometric Affine
+			- use local 2D affine matrix to predict projected plane in neighbor images
+			- get 3D location of predicted points [4-8]
+			- get approx. plane from set of 3D points
+			- average distance from center = 
+		- Lazy Geometric
+			- use average of point-to-view as normal
+			- average projected-point2D-to-point3D-center distance
+
+
 
 
 <a name="PAIRS"></a>

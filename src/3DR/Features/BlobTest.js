@@ -1420,8 +1420,8 @@ var Finv = R3D.fundamentalInverse(F);
 
 	world.dropWorstParametersF();
 
-	throw "... now R"
-/*
+	// throw "... now R"
+
 	// 	show R process
 console.log("DENSE - WORLD - R");
 	
@@ -1433,7 +1433,7 @@ console.log("DENSE - WORLD - R");
 	var str = world.toYAMLString();
 	console.log(str);
 
-*/
+
 
 
 

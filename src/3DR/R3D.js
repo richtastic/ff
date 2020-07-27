@@ -21188,7 +21188,7 @@ R3D.affineDistortionMetric = function(a,b,c,d){
 }
 
 
-R3D.projectivePatch3DInitFromAffinePair = function(point3D, points2D, affines2D, cellSizes, extrinsics, Ks, Kinvs, centers){//, cameraCenters, cameraNormals, cameraRights){
+R3D.projectivePatch3DInitFromAffinePair = function(point3D, points2D, affines2D, cellSizes, extrinsics, Ks, Kinvs, centers, rights){//, cameraCenters, cameraNormals, cameraRights){
 	var localCount = 8; // 4-8
 	// AFFINES: [ [0,1], [0,2], ... [0,N-1] ]
 	// get local points in each view image:
@@ -21202,7 +21202,7 @@ R3D.projectivePatch3DInitFromAffinePair = function(point3D, points2D, affines2D,
 		var point = new V2D(Math.cos(j*pi2m)*radius, Math.cos(j*pi2m)*radius);
 		points0.push(point);
 	}
-	locals2D.push(points);
+	locals2D.push(points0);
 	sizeRatios2D.push(1.0);
 	// all other neighbors
 	for(var i=1; i<points2D.length; ++i){
@@ -21219,6 +21219,7 @@ R3D.projectivePatch3DInitFromAffinePair = function(point3D, points2D, affines2D,
 		locals2D.push(points);
 		sizeRatios2D.push(distance/localCount/radius);
 	}
+console.log(locals2D);
 console.log(sizeRatios2D);
 	// scale image points such that average expected scale = 1 [some views will be larger, some will be smaller]
 	// & add point offset
@@ -21237,10 +21238,13 @@ console.log(averageScale);
 	for(var i=0; i<localCount; ++i){
 		var group = [];
 		for(var j=0; j<locals2D.length; ++j){
-			group.push(locals2D[i]);
+			group.push(locals2D[j][i]);
 		}
-		var points3D = R3D.triangulatePointDLTList(group, extrinsics, Kinvs);
+		console.log("trianglate points from 2Ds");
+		console.log(group,extrinsics,Kinvs);
+		points3D[i] = R3D.triangulatePointDLTList(group, extrinsics, Kinvs);
 	}
+console.log(point3D);
 console.log(points3D);
 	// find approximated plane
 	var plane = Code.planeFromPoints3D(point3D, points3D);
@@ -21256,27 +21260,66 @@ console.log(normal3D);
 	}
 console.log(radius3D);
 	radius3D /= points3D.length;
-	// use normal facing camera centers
+	// use normal facing camera centers & right sum
 	var direction = 0;
+	var sameRights = [];
 	for(var i=0; i<centers.length; ++i){
 		var center = centers[i];
 		var pToC = V3D.sub(center,point3D);
 		var dot = V3D.dot(pToC,normal3D);
+
+print out all these view / point / directions
+
+
+
 		if(dot>0){ // facing same direction
+			console.log("same");
 			direction += 1;
 		}else{
+			console.log("diff");
 			direction -= 1;
 		}
+		// right accumulator
+		var r = rights[i];
+		if(i>0 && V3D.dot(r,sameRights[0])<0 ){
+			r.copy().scale(-1);
+		}
+		sameRights.push(r);
 	}
 	if(direction<0){
 		normal3D.scale(-1);
 	}
+	console.log(direction);
 	if(Math.abs(direction)!==centers.length){
 		console.log("inconsistent normal / camera directions");
 	}
+	// right orthogonality
+	var right3D = Code.averageAngleVector3D(sameRights);
+	var up3D = V3D.cross(normal3D,right3D);
+		up3D.norm();
+	var right3D = V3D.cross(up3D,normal3D);
+	right3D.norm();
 
-	throw "?"
-	return {"point":point3D, "normal":normal3D, "radius":radius3D};
+
+	// show error as average distance from plane & average distance from center
+	var distancesC = [];
+	var distancesP = [];
+	for(var i=0; i<points3D.length; ++i){
+		var p3D = points3D[i];
+		var dC = V3D.distance(p3D,point3D);
+		var dP = Code.projectPointToPlane3D(p3D, point3D,normal3D);
+			// dP = V3D.distance(dP,point3D);
+			dP = V3D.distance(dP,p3D);
+		distancesP.push(dP);
+		distancesC.push(dC);
+	}
+
+	console.log(distancesC);
+	console.log(distancesP);
+
+	throw "..."
+
+	return {"point":point3D, "normal":normal3D, "right":right3D, "up":up3D, "radius":radius3D};
 }
 
 R3D.projectivePatch3D = function(point3D, cameraCenters, cameraNormals, cameraRights, cameraSizes, points2D){

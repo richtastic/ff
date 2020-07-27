@@ -11401,6 +11401,7 @@ Code.projectPointToPlane3D = function(location, point,normal){
 	var dN = V3D.dot(normal,diff);
 	return new V3D(location.x-dN*normal.x, location.y-dN*normal.y, location.z-dN*normal.z);
 }
+// distance point plane 3D
 Code.projectPointsTo2DPlane = function(points, planePoint, planeNormal){ // x & y directions are after rotation
 	var projections = [];
 	for(var i=0; i<points.length; ++i){

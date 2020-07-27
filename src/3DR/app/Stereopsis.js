@@ -4341,6 +4341,18 @@ Stereopsis.World.prototype.averagePoints3DFromMatches = function(onlyNull){ // a
 	}
 }
 
+Stereopsis.World.prototype.calculateAbsoluteLocationsPoint3D = function(){ // average match locations into final averaged location
+	var world = this;
+	var points3D = this.toPointArray();
+	for(var i=0; i<points3D.length; ++i){
+		var point3D = points3D[i];
+		// if(onlyNull && point3D.point()){
+		// 	continue;
+		// }
+		point3D.calculateAbsoluteLocation(world);
+	}
+}
+
 Stereopsis.World.prototype.points3DFromDLT = function(onlyNull){
 	onlyNull = onlyNull!==undefined ? onlyNull : false;
 	var world = this;
@@ -6106,6 +6118,7 @@ for(var i=0; i<views.length; ++i){
 	}
 	// world.estimate3DErrors(false);
 
+	// world.dropWorstParametersF();
 
 
 		// SHOW:
@@ -6199,10 +6212,11 @@ Stereopsis.World.prototype.dropWorstParametersF = function(){ // ..
 	var transforms = world.toTransformArray();
 	var points3D = world.toPointArray();
 	var views = world.toViewArray();
-	var sigmaKeepF = 1.0;
-	var sigmaKeepN = 1.0;
-	var sigmaKeepS = 1.0;
-	var sigmaKeepC = 1.0;
+	var sigmaKeepF = 2.0;
+	var sigmaKeepN = 2.0;
+	var sigmaKeepS = 2.0;
+	// var sigmaKeepC = 1.0;
+	var percentKeepC = 0.75;
 	// clear each match's temp
 	// for(var i=0; i<points3D.length; ++i){
 	// 	var point3D = points3D[i];
@@ -6212,7 +6226,7 @@ Stereopsis.World.prototype.dropWorstParametersF = function(){ // ..
 	// 		match.temp(true);
 	// 	}
 	// }
-	// mark each P2D as satisfying
+	// get corner scores for P2Ds
 	for(var i=0; i<views.length; ++i){
 		var view = views[i];
 		var corners = view.corners();
@@ -6235,12 +6249,16 @@ Stereopsis.World.prototype.dropWorstParametersF = function(){ // ..
 			var minY = Math.max(0,y-halfSize);
 			var maxX = Math.max(0,x+halfSize);
 			var maxY = Math.max(0,y+halfSize);
+			var count = 0;
 			for(var y=minY; y<=maxY; ++y){
 				for(var x=minX; x<=maxX; ++x){
 					var index = y*width + x;
-					value = Math.max(value, corners[index]);
+					// value = Math.max(value, corners[index]);
+					++count;
+					value += corners[index];
 				}
 			}
+			value /= count;
 			point2D.temp(value);
 			values.push(value);
 		}
@@ -6251,10 +6269,12 @@ Stereopsis.World.prototype.dropWorstParametersF = function(){ // ..
 		// var max = info["max"];
 		// var range = info["range"];
 		// 
-		console.log(values);
-		var min = Code.min(values);
-		var sigma = Code.stdDev(values,min);
-		var limitC = min + sigma*sigmaKeepC;
+		// console.log(values);
+		// var min = Code.min(values);
+		// var sigma = Code.stdDev(values,min);
+		// var limitC = min + sigma*sigmaKeepC;
+		// var limitPercent = Code.percentile(scores,limitPercent);
+		var limitC = Code.percentile(values,1.0-percentKeepC);
 		for(var j=0; j<points2D.length; ++j){
 			var point2D = points2D[j];
 			if(point2D.temp() >= limitC){
@@ -6279,7 +6299,7 @@ Stereopsis.World.prototype.dropWorstParametersF = function(){ // ..
 		var limitN = meanN + sigmaN*sigmaKeepN;
 		var limitS = meanS + sigmaS*sigmaKeepS;
 		console.log(limitF,limitN,limitS);
-		var matches = transform.toMatchArray();
+		var matches = transform.matches();
 		for(var j=0; j<matches.length; ++j){
 			var match = matches[j];
 			var errorF = match.errorF();
@@ -6289,6 +6309,7 @@ Stereopsis.World.prototype.dropWorstParametersF = function(){ // ..
 			var passN = errorN<limitN;
 			var passS = errorS<limitS;
 			var passC = match.point2DA().temp() && match.point2DB().temp();
+			// passC = true;
 			if(passF && passN && passS && passC){
 				console.log();
 				match.temp(true);
@@ -6298,46 +6319,27 @@ Stereopsis.World.prototype.dropWorstParametersF = function(){ // ..
 		}
 	}
 	// only keep P3Ds with ALL matches satisfying
-	var keepP3D = [];
+	var dropP3D = [];
 	for(var i=0; i<points3D.length; ++i){
 		var point3D = points3D[i];
 		var matches = point3D.toMatchArray();
 		var keep = true;
 		for(var j=0; j<matches.length; ++j){
 			var match = matches[j];
-			// console.log(match.temp());
 			if(!match.temp()){
 				keep = false;
 				break;
 			}
 		}
-		if(keep){
-			keepP3D.push(point3D);
+		if(!keep){
+			dropP3D.push(point3D);
 		}
 	}
-	console.log(points3D);
-	console.log(keepP3D);
-	/*
-
-- what to do after F iteration
-	- 'keep seeds' : top points: use 1-sigma for each of the parameters:
-		- F error : 68%
-		- N score: 68%
-		- S score : 68%
-		- corner : 68%
-		=> 68% [union] 21% [separate]
-		=> avg: 40-50%
-	- start R process
-		- initial R
-		- optimize R with seeds & propagation & dropping
-	=> R estimate
-
-
-- can't do affine repetitive iteration
-	=> spirals out of area
-
-	*/
-	throw "..."
+	for(var i=0; i<dropP3D.length; ++i){
+		var point3D = dropP3D[i];
+		world.disconnectPoint3D(point3D);
+		world.killPoint3D(point3D);
+	}
 }
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 Stereopsis.World.prototype.solvePair = function(completeFxn, completeContext){ // pairwise
@@ -6372,10 +6374,179 @@ Code.printMatlabArray(data["errors"]);
 	}
 }
 Stereopsis.World.prototype.iteration = function(iterationIndex, maxIterations, data){
+	var isFirst = iterationIndex == 0;
+	var isLast = iterationIndex == maxIterations-1;
+	console.log("-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ "+iterationIndex+"/"+maxIterations+" ( "+isFirst+" & "+isLast+" ) ");
+	var world = this;
+	var transforms = world.toTransformArray();
+	var views = world.toViewArray();
+
+	
+	var shouldSubdivide = false;
+
+	if(isFirst){ // SET INITIAL VIEW CAMERA EXTRINSICS
+		world.estimate3DErrors(false); // find initial F, P, estimate all errors from this
+		// 
+		// var transform0 = transforms[0];
+		var viewA = views[0];
+		var viewB = views[1];
+		var transAB = world.transformFromViews(viewA,viewB);
+		var R = transAB.R();
+		if(transAB.viewA()!=viewA){
+			viewA = transAB.viewA();
+			viewB = transAB.viewB();
+		}
+		console.log("SETTING 2 VIEW TRANSFORMS AS RELATIVE");
+		viewA.absoluteTransform(new Matrix(4,4).identity());
+		viewB.absoluteTransform(R);
+		world.relativeFFromSamples();
+		// initial P3D locations from Rs
+		world.calculateAbsoluteLocationsPoint3D();
+
+
+	}else{
+		world.estimate3DErrors(true);
+	}
+	// absolute-relative consistency
+	world.copyRelativeTransformsFromAbsolute();
+
+	// update any points that don't have a patch
+	world.initNullP3DPatches();
+
+/*
+	// subdivide
+	if(shouldSubdivide){
+		// increase cell grid resolution & update patches with smaller view angle
+		world.subdivideViewGrids();
+		// update 2D point location precision locally using smaller cell size
+		world.subDivideUpdateMatchLocation();
+	}
+
+	// probe 2D - search empty neighbors for more matches
+
+	// filter global error
+	world.filterGlobal3DR();
+
+	// filter locally 2D with various metrics
+	world.filterLocal2DR();
+	// filter locally 3D with various metrics
+	world.filterLocal3DR();
+	// 
+	// 
+	
+	// retract bad points:
+
+	// world.filterLocal2DAffineError(); // maybe be updated?
+	// world.filterLocal2DFAngle();
+	// 
 
 
 
-	throw "re evaluate stufffff"
+
+	// remember previous orientations - for patch change
+	world.recordViewAbsoluteOrientationStart();
+
+	// refine camera 3D world orientations
+	world.refineCameraPairRelativeToAbsolute(transform0, 100, true);
+	world.copyRelativeTransformsFromAbsolute();
+	world.relativeFFromSamples();
+	
+	// update patches from change in view orientations
+	world.updateP3DPatchesFromAbsoluteOrientationChange();
+
+	
+	// ...
+	
+*/
+
+	throw "..."
+
+}
+Stereopsis.World.prototype.initNullP3DPatches = function(){
+	var world = this;
+	points3D = world.toPointArray();
+	for(var i=0; i<points3D.length; ++i){
+		var point3D = points3D[i];
+		var normal = point3D.normal();
+		if(!normal){
+			world.initP3DPatchFromMatchAffine(point3D);
+		}
+	}
+	// 
+}
+Stereopsis.World.prototype.initP3DPatchFromMatchAffine = function(point3D){
+	var p3D = point3D.point();
+	var points2D = point3D.toPointArray();
+	var p2Ds = [];
+	var sizes = [];
+	var exts = [];
+	var Ks = [];
+	var Kinvs = [];
+	var centers = [];
+	var rights = [];
+	var a2Ds = [];
+	for(var i=0; i<points2D.length; ++i){
+		var p2D = points2D[i];
+		var view = p2D.view();
+		p2Ds[i] = p2D.point2D();
+		sizes[i] = view.cellSize();
+		exts[i] = view.absoluteTransform();
+		Ks[i] = view.K();
+		Kinvs[i] = view.Kinv();
+		centers[i] = view.center();
+		rights[i] = view.right();
+		if(i>0){
+			var p0 = points2D[0];
+			var v0 = p0.view();
+			var match = p0.matchForView(view);
+			var affine = match.affineForViews(v0,view);
+			a2Ds.push(affine);
+		}
+	}
+	console.log(p3D);
+	console.log(a2Ds);
+	console.log(sizes);
+	console.log(exts);
+	console.log(Ks);
+	console.log(Kinvs);
+	console.log(centers);
+	var info = R3D.projectivePatch3DInitFromAffinePair(p3D, p2Ds, a2Ds, sizes, exts, Ks, Kinvs, centers, rights);
+	console.log(info);
+	point3D.normal(info["normal"]);
+	// point3D.right(info["right"]);
+	point3D.up(info["up"]);
+	point3D.size(info["radius"]);
+	throw "?";
+}
+Stereopsis.World.prototype.subdivideViewGrids = function(scaleRatio, minCellSize){
+	scaleRatio = Code.valueOrDefault(scaleRatio, 0.5);
+	minCellSize = Code.valueOrDefault(minCellSize, 5);
+	var world = this;
+	// var transforms = world.toTransformArray();
+	var views = world.toViewArray();
+
+	// remember previous size
+	TODO
+
+	for(var i=0; i<views.length; ++i){
+		var view = views[i];
+		var size = view.cellSize();
+		var newSize = size*scaleRatio | 0;
+		if(newSize%2==0){
+			newSize += 1;
+		}
+		console.log("CHANGE CELL SIZE: "+size+" -> "+newSize);
+		if(size!=newSize){
+			view.cellSize(newSize);
+		}
+	}
+
+	// update patches with new cell size
+	TODO
+
+}
+Stereopsis.World.prototype.iteration_solvePairOld = function(iterationIndex, maxIterations, data){
+	// throw "re evaluate stufffff"
 
 	var isFirst = iterationIndex == 0;
 	var isLast = iterationIndex == maxIterations-1;
@@ -12180,6 +12351,14 @@ var averagePointCount = 0;
 	}
 	console.log("subDivideUpdateMatchLocation - averagePointDistance: "+averagePointDistance+" ("+averagePointCount+")")
 }
+Stereopsis.World.prototype.filterLocal3DR = function(){ 
+	console.log("filter locally 3D space: ??? / 3D-2D neighbor common percentage / ... ");
+	throw "..."
+}
+Stereopsis.World.prototype.filterLocal2DR = function(){ 
+	console.log("filter locally R / F / N error / predicted-vs-actual 2D location");
+	throw "..."
+}
 Stereopsis.World.prototype.filterLocal2DF = function(){ // locally drop points with high error:
 	console.log("filter local poor F / N / S / affine:scale|rotation / predicted");
 
@@ -12433,6 +12612,11 @@ Stereopsis.World.prototype.filterLocal2DAffineError = function(){ // locally dro
 
 	} // end transforms
 
+}
+Stereopsis.World.prototype.filterGlobal3DR = function(sigmaMaximumDrop){
+	// 
+	console.log("filterGlobal2DR - global R / F / N");
+	//
 }
 Stereopsis.World.prototype.filterGlobal2DF = function(sigmaMaximumDrop){ // globally drop points with high error:
 	console.log("filter global poor F / N / S");

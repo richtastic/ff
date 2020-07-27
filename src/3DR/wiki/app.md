@@ -386,6 +386,18 @@ MISSING:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+initNullP3DPatches
+	initP3DPatchFromMatchAffine
+		projectivePatch3DInitFromAffinePair
+subdivideViewGrids
+filterGlobal3DR
+filterLocal2DR
+filterLocal3DR
+recordViewAbsoluteOrientationStart
+updateP3DPatchesFromAbsoluteOrientationChange
+
+
+
 - why is pika missing his head / ears ?
 
 - world.solvePair
@@ -722,27 +734,11 @@ if normals are different enough, maybe shouldn't be considered neighbors
 
 
 - what to do after F iteration
-	- 'keep seeds' : top points: use 1-sigma for each of the parameters:
-		- F error : 68%
-		- N score: 68%
-		- S score : 68%
-		- corner : 68%
-		=> 68% [union] 21% [separate]
-		=> avg: 40-50%
+	x keep best F points
 	- start R process
 		- initial R
 		- optimize R with seeds & propagation & dropping
 	=> R estimate
-
-
-- can't do affine repetitive iteration
-	=> spirals out of area
-
-
-...
-
-
-PATCHES 
 
 
 
