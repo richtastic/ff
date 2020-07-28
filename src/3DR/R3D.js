@@ -780,18 +780,17 @@ log = false;
 // console.log("F: \n "+F);
 // F = R3D.forceRank2F(F);
 
-console.log("F: \n "+F);
+// console.log("F: \n "+F);
 
 	// E from F + K
 	var KbT = Matrix.transpose(Kb);
 	var E = Matrix.mult(F,Ka);
 		E = Matrix.mult(KbT,E);
 
-console.log("Ka: \n "+Ka);
+// console.log("Ka: \n "+Ka);
+// console.log("Kb: \n "+Kb);
+// console.log("E1: \n "+E);
 
-console.log("Kb: \n "+Kb);
-
-console.log("E1: \n "+E);
 	// to components
 	var UisZero = false;
 	var svd = Matrix.SVD(E);
@@ -21190,7 +21189,6 @@ R3D.affineDistortionMetric = function(a,b,c,d){
 
 R3D.projectivePatch3DInitFromAffineList = function(point3D, points2D, affines2D, cellSizes, extrinsics, Ks, Kinvs, centers, rights){//, cameraCenters, cameraNormals, cameraRights){
 	var localCount = 8; // 4-8
-// console.log("point3D in: "+point3D);
 	// AFFINES: [ [0,1], [0,2], ... [0,N-1] ]
 	// get local points in each view image:
 	var locals2D = [];
@@ -21220,8 +21218,6 @@ R3D.projectivePatch3DInitFromAffineList = function(point3D, points2D, affines2D,
 		locals2D.push(points);
 		sizeRatios2D.push(distance/localCount/radius);
 	}
-// console.log(locals2D);
-// console.log(sizeRatios2D);
 	// scale image points such that average expected scale = 1 [some views will be larger, some will be smaller]
 	// & add point offset
 	var averageScale = Code.averageNumbersLog(sizeRatios2D);
@@ -21245,8 +21241,6 @@ R3D.projectivePatch3DInitFromAffineList = function(point3D, points2D, affines2D,
 // console.log(group,extrinsics,Kinvs);
 		points3D[i] = R3D.triangulatePointDLTList(group, extrinsics, Kinvs);
 	}
-// console.log(point3D);
-// console.log(points3D);
 	// find approximated plane
 	var plane = Code.planeFromPoints3D(point3D, points3D);
 // console.log(plane);
@@ -21259,7 +21253,6 @@ R3D.projectivePatch3DInitFromAffineList = function(point3D, points2D, affines2D,
 		var distance = V3D.distance(point3D, p3D);
 		radius3D += distance;
 	}
-// console.log(radius3D);
 	radius3D /= points3D.length;
 // console.log(" to radius: "+radius3D);
 	// use normal facing camera centers & right sum
@@ -21268,12 +21261,8 @@ R3D.projectivePatch3DInitFromAffineList = function(point3D, points2D, affines2D,
 	for(var i=0; i<centers.length; ++i){
 		var center = centers[i];
 		var pToC = V3D.sub(center,point3D);
-pToC.norm();
+// pToC.norm();
 		var dot = V3D.dot(pToC,normal3D);
-// print out all these view / point / directions
-// console.log("   : "+i+" @ "+normal3D);
-// console.log("pToC: "+pToC);
-// console.log("dot: "+dot);
 		if(dot>0){ // facing same direction
 			// console.log("same");
 			direction += 1;
@@ -21301,7 +21290,6 @@ pToC.norm();
 		up3D.norm();
 	var right3D = V3D.cross(up3D,normal3D);
 	right3D.norm();
-
 /*
 	// show error as average distance from plane & average distance from center
 	var distancesC = [];
@@ -21317,7 +21305,6 @@ pToC.norm();
 	}
 // console.log(distancesC);
 // console.log(distancesP);
-// console.log("point3D ot: "+point3D);
 */
 	// throw "..."
 	return {"point":point3D, "normal":normal3D, "right":right3D, "up":up3D, "radius":radius3D};

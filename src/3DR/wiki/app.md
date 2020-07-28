@@ -418,7 +418,8 @@ x show some initial patches
 x initNullP3DPatches
 	x initP3DPatchFromMatchAffine
 		x projectivePatch3DInitFromAffineList
-subdivideViewGrids
+x subdivideViewGrids
+	updatePatchSizeFromViewCellSizeChange
 filterGlobal3DR
 filterLocal2DR
 filterLocal3DR
@@ -560,7 +561,6 @@ a total neighbor:
 			affine nonlinear
 				A) image match scores
 				B) point-geometry
-	- can affine match be used to estimate normal?
 	- normal estimated as average of center-to-view directions
 	- size estimated as ???
 	- coarse points can use images (photometric) compares to optimize patches

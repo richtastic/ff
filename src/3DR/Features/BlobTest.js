@@ -1353,12 +1353,10 @@ var Finv = R3D.fundamentalInverse(F);
 	var views = [];
 	for(var i=0; i<images.length; ++i){
 		var image = images[i];
-		// image = new ImageMatScaled(image);
-		var cellSize = R3D.cellSizingRoundWithDimensions(image.width(),image.height(),cellCount);
 		var view = world.addView(image,null,i);
-		view.cellSize(cellSize);
 		views.push(view);
 	}
+	world.setViewCellCounts(cellCount);
 	console.log(views);
 	var viewA = views[0];
 	var viewB = views[1];
@@ -1379,8 +1377,6 @@ var Finv = R3D.fundamentalInverse(F);
 		
 		var point3D = world.newPoint3DFromPieces(vs,ps,as, false);
 		// console.log(point3D);
-
-		
 
 		var matches = point3D.toMatchArray();
 		for(var m=0; m<matches.length; ++m){
@@ -1426,8 +1422,8 @@ var Finv = R3D.fundamentalInverse(F);
 console.log("DENSE - WORLD - R");
 	
 // world.resolveIntersectionByDefault();
-world.resolveIntersectionBy?();
-
+// world.resolveIntersectionBy();
+	world.setViewCellCounts(cellCount);
 	var result = world.solvePair(function(world){
 		console.log("async");
 	}, this);
