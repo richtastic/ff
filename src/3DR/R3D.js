@@ -21188,18 +21188,19 @@ R3D.affineDistortionMetric = function(a,b,c,d){
 }
 
 
-R3D.projectivePatch3DInitFromAffinePair = function(point3D, points2D, affines2D, cellSizes, extrinsics, Ks, Kinvs, centers, rights){//, cameraCenters, cameraNormals, cameraRights){
+R3D.projectivePatch3DInitFromAffineList = function(point3D, points2D, affines2D, cellSizes, extrinsics, Ks, Kinvs, centers, rights){//, cameraCenters, cameraNormals, cameraRights){
 	var localCount = 8; // 4-8
+// console.log("point3D in: "+point3D);
 	// AFFINES: [ [0,1], [0,2], ... [0,N-1] ]
 	// get local points in each view image:
 	var locals2D = [];
 	var sizeRatios2D = [];
-	var pi2m = 2*Math.PI/(localCount-1);
+	var pi2m = 2*Math.PI/localCount;
 	// 0th:
 	var points0 = [];
 	var radius = cellSizes[0]*0.5;
 	for(var j=0; j<localCount; ++j){
-		var point = new V2D(Math.cos(j*pi2m)*radius, Math.cos(j*pi2m)*radius);
+		var point = new V2D(Math.cos(j*pi2m)*radius, Math.sin(j*pi2m)*radius);
 		points0.push(point);
 	}
 	locals2D.push(points0);
@@ -21219,12 +21220,12 @@ R3D.projectivePatch3DInitFromAffinePair = function(point3D, points2D, affines2D,
 		locals2D.push(points);
 		sizeRatios2D.push(distance/localCount/radius);
 	}
-console.log(locals2D);
-console.log(sizeRatios2D);
+// console.log(locals2D);
+// console.log(sizeRatios2D);
 	// scale image points such that average expected scale = 1 [some views will be larger, some will be smaller]
 	// & add point offset
 	var averageScale = Code.averageNumbersLog(sizeRatios2D);
-console.log(averageScale);
+// console.log(averageScale);
 	averageScale = 1.0/averageScale;
 	for(var i=0; i<locals2D.length; ++i){
 		var points = locals2D[i];
@@ -21240,17 +21241,17 @@ console.log(averageScale);
 		for(var j=0; j<locals2D.length; ++j){
 			group.push(locals2D[j][i]);
 		}
-		console.log("trianglate points from 2Ds");
-		console.log(group,extrinsics,Kinvs);
+// console.log("trianglate points from 2Ds");
+// console.log(group,extrinsics,Kinvs);
 		points3D[i] = R3D.triangulatePointDLTList(group, extrinsics, Kinvs);
 	}
-console.log(point3D);
-console.log(points3D);
+// console.log(point3D);
+// console.log(points3D);
 	// find approximated plane
 	var plane = Code.planeFromPoints3D(point3D, points3D);
-console.log(plane);
+// console.log(plane);
 	var normal3D = plane["normal"];
-console.log(normal3D);
+// console.log(normal3D);
 	var radius3D = 0;
 	for(var i=0; i<points3D.length; ++i){
 		var p3D = points3D[i];
@@ -21258,25 +21259,26 @@ console.log(normal3D);
 		var distance = V3D.distance(point3D, p3D);
 		radius3D += distance;
 	}
-console.log(radius3D);
+// console.log(radius3D);
 	radius3D /= points3D.length;
+// console.log(" to radius: "+radius3D);
 	// use normal facing camera centers & right sum
 	var direction = 0;
 	var sameRights = [];
 	for(var i=0; i<centers.length; ++i){
 		var center = centers[i];
 		var pToC = V3D.sub(center,point3D);
+pToC.norm();
 		var dot = V3D.dot(pToC,normal3D);
-
-print out all these view / point / directions
-
-
-
+// print out all these view / point / directions
+// console.log("   : "+i+" @ "+normal3D);
+// console.log("pToC: "+pToC);
+// console.log("dot: "+dot);
 		if(dot>0){ // facing same direction
-			console.log("same");
+			// console.log("same");
 			direction += 1;
 		}else{
-			console.log("diff");
+			// console.log("diff");
 			direction -= 1;
 		}
 		// right accumulator
@@ -21289,7 +21291,7 @@ print out all these view / point / directions
 	if(direction<0){
 		normal3D.scale(-1);
 	}
-	console.log(direction);
+	// console.log(direction);
 	if(Math.abs(direction)!==centers.length){
 		console.log("inconsistent normal / camera directions");
 	}
@@ -21300,7 +21302,7 @@ print out all these view / point / directions
 	var right3D = V3D.cross(up3D,normal3D);
 	right3D.norm();
 
-
+/*
 	// show error as average distance from plane & average distance from center
 	var distancesC = [];
 	var distancesP = [];
@@ -21313,12 +21315,11 @@ print out all these view / point / directions
 		distancesP.push(dP);
 		distancesC.push(dC);
 	}
-
-	console.log(distancesC);
-	console.log(distancesP);
-
-	throw "..."
-
+// console.log(distancesC);
+// console.log(distancesP);
+// console.log("point3D ot: "+point3D);
+*/
+	// throw "..."
 	return {"point":point3D, "normal":normal3D, "right":right3D, "up":up3D, "radius":radius3D};
 }
 

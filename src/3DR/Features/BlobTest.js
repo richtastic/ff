@@ -1425,6 +1425,9 @@ var Finv = R3D.fundamentalInverse(F);
 	// 	show R process
 console.log("DENSE - WORLD - R");
 	
+// world.resolveIntersectionByDefault();
+world.resolveIntersectionBy?();
+
 	var result = world.solvePair(function(world){
 		console.log("async");
 	}, this);

@@ -6150,7 +6150,10 @@ for(var i=0; i<views.length; ++i){
 			samplesB.push(pointB);
 			affines.push(affine);
 		}
-		// 
+
+
+// SHOW ...
+/*
 // var alp = 1.0;
 var alp = 0.50;
 var img = imageMatrixA;
@@ -6185,9 +6188,7 @@ console.log(samplesA, samplesB);
 
 
 		R3D.showForwardBackwardCells(samplesA, samplesB, affines, imageMatrixA,imageMatrixB, GLOBALSTAGE);
-
-// R3D.showFundamental = function(pointsA, pointsB, affines, imageMatrixA,imageMatrixB, display, cellSize){
-
+*/
 
 		// 
 		// throw "shown"
@@ -6413,7 +6414,17 @@ Stereopsis.World.prototype.iteration = function(iterationIndex, maxIterations, d
 	// update any points that don't have a patch
 	world.initNullP3DPatches();
 
-/*
+
+here
+
+	world.probe2DCellsR();
+		// TODO - init should be inside to use different intersection reolution
+	world.initNullP3DPatches();
+
+
+??
+
+
 	// subdivide
 	if(shouldSubdivide){
 		// increase cell grid resolution & update patches with smaller view angle
@@ -6423,6 +6434,8 @@ Stereopsis.World.prototype.iteration = function(iterationIndex, maxIterations, d
 	}
 
 	// probe 2D - search empty neighbors for more matches
+
+	??
 
 	// filter global error
 	world.filterGlobal3DR();
@@ -6457,7 +6470,14 @@ Stereopsis.World.prototype.iteration = function(iterationIndex, maxIterations, d
 	
 	// ...
 	
-*/
+??
+
+
+	console.log(world);
+	var str = world.toYAMLString();
+	console.log(str);
+
+
 
 	throw "..."
 
@@ -6472,7 +6492,6 @@ Stereopsis.World.prototype.initNullP3DPatches = function(){
 			world.initP3DPatchFromMatchAffine(point3D);
 		}
 	}
-	// 
 }
 Stereopsis.World.prototype.initP3DPatchFromMatchAffine = function(point3D){
 	var p3D = point3D.point();
@@ -6503,20 +6522,10 @@ Stereopsis.World.prototype.initP3DPatchFromMatchAffine = function(point3D){
 			a2Ds.push(affine);
 		}
 	}
-	console.log(p3D);
-	console.log(a2Ds);
-	console.log(sizes);
-	console.log(exts);
-	console.log(Ks);
-	console.log(Kinvs);
-	console.log(centers);
-	var info = R3D.projectivePatch3DInitFromAffinePair(p3D, p2Ds, a2Ds, sizes, exts, Ks, Kinvs, centers, rights);
-	console.log(info);
+	var info = R3D.projectivePatch3DInitFromAffineList(p3D, p2Ds, a2Ds, sizes, exts, Ks, Kinvs, centers, rights);
 	point3D.normal(info["normal"]);
-	// point3D.right(info["right"]);
 	point3D.up(info["up"]);
 	point3D.size(info["radius"]);
-	throw "?";
 }
 Stereopsis.World.prototype.subdivideViewGrids = function(scaleRatio, minCellSize){
 	scaleRatio = Code.valueOrDefault(scaleRatio, 0.5);
@@ -12093,6 +12102,10 @@ Stereopsis.World.prototype.expand2DTracks = function(maxSigmaView, maxSigmaMatch
 		}
 	}
 }
+Stereopsis.World.prototype.probe2DCellsR = function(sigmaMaximumSelect, sigmaMaximumNew){ 
+	console.log("THROW probe2DCellsR");
+	throw "probe2DCellsR";
+}
 Stereopsis.World.prototype.probe2DCellsF = function(sigmaMaximumSelect, sigmaMaximumNew){ // propagate points using only 2D mapping attributes
 	console.log("probe2DCellsF - probe F only ....................................................................");
 	sigmaMaximumSelect = Code.valueOrDefault(sigmaMaximumSelect, 3.0);
@@ -12352,11 +12365,11 @@ var averagePointCount = 0;
 	console.log("subDivideUpdateMatchLocation - averagePointDistance: "+averagePointDistance+" ("+averagePointCount+")")
 }
 Stereopsis.World.prototype.filterLocal3DR = function(){ 
-	console.log("filter locally 3D space: ??? / 3D-2D neighbor common percentage / ... ");
+	console.log("filter locally 3D space: ??? / 3D-2D neighbor common percentage / normal voting");
 	throw "..."
 }
 Stereopsis.World.prototype.filterLocal2DR = function(){ 
-	console.log("filter locally R / F / N error / predicted-vs-actual 2D location");
+	console.log("filter locally R / F / N error / predicted-vs-actual 2D location (regularization) voting");
 	throw "..."
 }
 Stereopsis.World.prototype.filterLocal2DF = function(){ // locally drop points with high error:

@@ -563,8 +563,18 @@ output:
 			- N-error
 			- S-error
 		- Local predicted/vs/actual (ir-regularization points)
+			- error = predicted location - actual location ( / cellSize)
+
+				- using local neighborhood as population (same viewA & viewB): get sigma
+				- if a neighbor's error > 2-3 sigma, mark with bad vote, else mark with ok vote
+				- drop A: 
+					- if a point has 50% or more of neighbors saying it's bad
+				- drop B:
+					- if average error of a point > 50% of a cell size (maybe min of ~ 3 px )
+				...
+
 			- if local affine predictor of neighbors are far off:
-				- 
+				-
 		- local rotation vs F-rotation
 			- 
 	- R (3D) added:
@@ -581,7 +591,9 @@ output:
 				- good v bad : med error
 				- bad v bad : high error
 			- remove highest-error points
-		- ?
+		- normal voting
+			- this may result from poorly determined affine matrices
+			- in local neighborhood, if a neighbor's normal angle is much different, then it is voted as bad
 		- ?
 
 

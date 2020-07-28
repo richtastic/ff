@@ -386,15 +386,47 @@ MISSING:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-initNullP3DPatches
-	initP3DPatchFromMatchAffine
-		projectivePatch3DInitFromAffinePair
+- can probe2D be helped by R / patches ?
+
+
+- once a point has a normal, is there any way to help it get better? / refresh it ?
+		=> instead of using AFFINE, use neighborhood of points ? 
+		=> need to drop outliers ?
+
+
+
+resolveIntersectionFlat
+	- should do needle / haystack if images are loaded ?
+
+resolveIntersectionPatch
+	- doesn't seem to actually need the patches?
+	- uses needle/haystack to find best location
+
+
+
+
+// resolveIntersectionPatchGeometry
+// resolveIntersectionByPatchGeometry -- not very good
+
+
+
+x show some initial patches
+	=> most are good
+		- some noise
+	=> some very wrong
+
+x initNullP3DPatches
+	x initP3DPatchFromMatchAffine
+		x projectivePatch3DInitFromAffineList
 subdivideViewGrids
 filterGlobal3DR
 filterLocal2DR
 filterLocal3DR
 recordViewAbsoluteOrientationStart
 updateP3DPatchesFromAbsoluteOrientationChange
+
+
+
 
 
 

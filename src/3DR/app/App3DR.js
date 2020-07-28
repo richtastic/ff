@@ -4192,8 +4192,8 @@ var errorType = 2; // NCC
 	console.log("COLORED");
 
 
-// var showNormals = true;
-var showNormals = false;
+var showNormals = true;
+// var showNormals = false;
 var lines = [];
 if(showNormals && normals3D){
 	console.log(normals3D);
