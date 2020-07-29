@@ -4540,7 +4540,11 @@ App3DR.App.Model3D.prototype.onKeyboardDown = function(e){
 	}
 	if(key==Keyboard.KEY_LET_O){
 		this._modelRenderPoints = !Code.valueOrDefault(this._modelRenderPoints, true);
-		console.log("TOGGLE CAMERA VIEWS");
+		console.log("TOGGLE POINTS");
+	}
+	if(key==Keyboard.KEY_LET_I){
+		this._modelRenderNormals = !Code.valueOrDefault(this._modelRenderNormals, true);
+		console.log("TOGGLE NORMALS");
 	}
 }
 App3DR.App.Model3D.prototype._eff = function(){
@@ -4553,6 +4557,7 @@ App3DR.App.Model3D.prototype._eff = function(){
 
 var renderCameraViews = Code.valueOrDefault(this._modelRenderCameraViews, true);
 var renderPoints = Code.valueOrDefault(this._modelRenderPoints, true);
+var renderNormals = Code.valueOrDefault(this._modelRenderNormals, true);
 
 	// RENDERING:
 	this._stage3D.clear();
@@ -4602,7 +4607,7 @@ var renderPoints = Code.valueOrDefault(this._modelRenderPoints, true);
 	}
 
 	// RENDER LINES
-	if(this._programLinePoints && this._programLinePoints.length>0){
+	if(renderNormals && this._programLinePoints && this._programLinePoints.length>0){
 		// console.log("lines")
 		this._stage3D.selectProgram(2);
 		this._stage3D.matrixReset();

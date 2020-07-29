@@ -386,7 +386,44 @@ MISSING:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
+- pairwise sparse R doesn't need to be point exhaustive -- only need good Rs
+- pairwise dense & group dense SHOULD be more point exhaustive -- need good points
+
+
+
+- lots of missing spots in elephant face
+	- dropped for some reason?
+		x range
+		- affine (regularization)
+			- a few good 3D points are dropped because affine is bad
+		x local error ? - N/A
+		x global error
+		=> propagation allowable ----
+			=> lots of noise
+
+- affine aren't so good in some areas
+	- try larger cell size compare
+
+
+-> unreliable affine points seem like they would benefit from jsut having a larger area ?
+	- way to do multi-sized grid cells ?
+	.........
+
+=> at some point will need to have 'hole filling' (interpolation inside gaps, followig some gradient / 3D surface)
+...
+
+
 - can probe2D be helped by R / patches ?
+
+
+- expand tracks by: (3+ views)
+	- look at all neighbors in 2D view
+	- if any neighbor P3D missing another view that selected point has
+	- estimate predicted location by 
+		- 2D visual same-point search estimation
+	"hey you're missing a view, try this point @ my affine relationship ?"
+
 
 
 - once a point has a normal, is there any way to help it get better? / refresh it ?
@@ -419,14 +456,19 @@ x initNullP3DPatches
 	x initP3DPatchFromMatchAffine
 		x projectivePatch3DInitFromAffineList
 x subdivideViewGrids
-	updatePatchSizeFromViewCellSizeChange
-filterGlobal3DR
+	x updatePatchSizeFromViewCellSizeChange
+x filterGlobal3DR
 filterLocal2DR
+	- 2d - 2d neighbors
 filterLocal3DR
+	2d - 3d neighbors
+	filterGlobalPatchSphere3D
+
 recordViewAbsoluteOrientationStart
 updateP3DPatchesFromAbsoluteOrientationChange
 
 
+- try first round of patches using visual image (independent of affine transform)
 
 
 
