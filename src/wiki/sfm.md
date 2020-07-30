@@ -577,6 +577,8 @@ output:
 				-
 		- local rotation vs F-rotation
 			- 
+		- 2D-2D neighborhood coverage
+			- except for corners (and edges) point neighborhoods should contain the same points
 	- R (3D) added:
 		- Global Error Filtering:
 			- R-error
@@ -618,7 +620,14 @@ output:
 			- use average of point-to-view as normal
 			- average projected-point2D-to-point3D-center distance
 
-
+#### 2D Intersection Resolution:
+	- some images loaded - need at least 1 view from point3DA & 1 vew in point3DB
+		- 'better' point has lowest average NCC/SAD/R/F scores
+		- use image needle/haystack SAD scores to find best point wrt better point
+			- needle +/- 1 pixel is good enough (intersection should be close)
+		- affine-map remaining (no-view) points
+	- no images loaded
+		- use local offset geometry to affine-map (no-view) points
 
 
 <a name="PAIRS"></a>

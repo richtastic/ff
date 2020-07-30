@@ -68,7 +68,19 @@ Stereopsis.World = function(){
 	this._stage = stage;
 	this._canvas = canvas;
 	// this._canvas.addFunction(Canvas.EVENT_MOUSE_WHEEL,this._handleMouseWheelFxn,this); // TODO: UNCOMMENT FOR SEEING DOTS HERE
+	this._resolutionProcessingMode = Stereopsis.World.RESOLUTION_PROCESSING_MODE_LO;
 }
+Stereopsis.World.RESOLUTION_PROCESSING_MODE_LO = 1;
+Stereopsis.World.RESOLUTION_PROCESSING_MODE_ME = 2;
+Stereopsis.World.RESOLUTION_PROCESSING_MODE_HI = 3;
+Stereopsis.World.RESOLUTION_PROCESSING_MODE_SU = 4;
+Stereopsis.World.prototype.resolutionProcessingMode = function(m){
+	if(m!==undefined){
+		this._resolutionProcessingMode = m;
+	}
+	return this._resolutionProcessingMode;
+}
+
 Stereopsis.World.prototype.pointSpace = function(){
 	return this._pointSpace;
 }

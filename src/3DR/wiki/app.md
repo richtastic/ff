@@ -382,53 +382,86 @@ MISSING:
 	- not smooth enough
 	- curvature wrong
 - world-sphere projection & minimum mapping
-
+- affine matching (& to patches) can get bad
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-
-- pairwise sparse R doesn't need to be point exhaustive -- only need good Rs
-- pairwise dense & group dense SHOULD be more point exhaustive -- need good points
-
-
-
-- lots of missing spots in elephant face
-	- dropped for some reason?
-		x range
-		- affine (regularization)
-			- a few good 3D points are dropped because affine is bad
-		x local error ? - N/A
-		x global error
-		=> propagation allowable ----
-			=> lots of noise
-
-- affine aren't so good in some areas
-	- try larger cell size compare
-
-
--> unreliable affine points seem like they would benefit from jsut having a larger area ?
-	- way to do multi-sized grid cells ?
-	.........
-
-=> at some point will need to have 'hole filling' (interpolation inside gaps, followig some gradient / 3D surface)
-...
-
+A) visual patches
+B) intersection methods 1 for view, 1 for no-view
+C) filter starting F points in 2D to maximize spread -> back to around 1/40th of image
+D) patch filtering logic walkthru
+E) patch updates for view change
+F) multi-resolution patch methods
 
 - can probe2D be helped by R / patches ?
-
-
-- expand tracks by: (3+ views)
-	- look at all neighbors in 2D view
-	- if any neighbor P3D missing another view that selected point has
-	- estimate predicted location by 
-		- 2D visual same-point search estimation
-	"hey you're missing a view, try this point @ my affine relationship ?"
-
-
+	- affine matrixes would be similar
 
 - once a point has a normal, is there any way to help it get better? / refresh it ?
 		=> instead of using AFFINE, use neighborhood of points ? 
 		=> need to drop outliers ?
+
+filterGlobalPatchSphere3D - go thru steps & doublecheck -- think about patches
+
+
+
+recordViewAbsoluteOrientationStart
+updateP3DPatchesFromAbsoluteOrientationChange
+
+
+- try first round of patches using visual image (independent of affine transform)
+
+
+- CHECK: visual initial patch estimate
+- CHECK: visual patch update
+	=> project to 2D to get local affine
+- TRY: approximate affine from point neighborhood
+- TRY: interpolate patch from neighbors
+
+
+limit final F points by area
+	- final F matches should be sorted on best: F error / corner score / SAD score
+
+
+resolution determination:
+0-1k: low
+1k-5k: med
+5k-10k: hig
+10k+: sup
+
+
+patch init for different resolutions:
+	low
+		- use image visuals
+			- size = rotation/scale affine
+			- normal = average pToV
+	med
+		- back-propagate affine to plane
+	hig
+		- copy average of 2D/3D neighbors (with at least 1 of same view) 3-5
+	sup
+		- copy best neighbor
+
+patch update for different resolutions (view location changes):
+	lo
+		- visuals update
+	me
+		- back-project affine to plane
+	hi
+		- orientation delta
+			- size = change in distance
+			- normal = change in rotation
+	sup
+		- N/A
+
+probe2D update for different resolutions:
+	low
+		- affine comes from projected 3D point OR optimized locally with images
+	med
+		- affine comes from optimized locally
+	hig
+		- affine comes from local point neighborhood average
+	sup
+		- affine comes from best neighbor
 
 
 
@@ -441,87 +474,17 @@ resolveIntersectionPatch
 
 
 
+=> at some point will need to have 'hole filling' (interpolation inside gaps, followig some gradient / 3D surface)
+...
 
-// resolveIntersectionPatchGeometry
-// resolveIntersectionByPatchGeometry -- not very good
-
-
-
-x show some initial patches
-	=> most are good
-		- some noise
-	=> some very wrong
-
-x initNullP3DPatches
-	x initP3DPatchFromMatchAffine
-		x projectivePatch3DInitFromAffineList
-x subdivideViewGrids
-	x updatePatchSizeFromViewCellSizeChange
-x filterGlobal3DR
-filterLocal2DR
-	x 2d - 2d neighbors
-filterLocal3DR
-	x 2d - 3d neighbors
-	filterGlobalPatchSphere3D - go thru steps & doublecheck -- think about patches
-
-- really big patch size differences ?
-	- plot a histogram
-
-
-recordViewAbsoluteOrientationStart
-updateP3DPatchesFromAbsoluteOrientationChange
-
-
-- try first round of patches using visual image (independent of affine transform)
-
-
-
-
-- why is pika missing his head / ears ?
-
-- world.solvePair
-	- patches
-	- searching 2D
-	- updating patches
 
 
 - remove references to view.image() -> view.imageScales();
-
-- clean up tests to use:
-	x 2-mode SAD flat search
-	x affiner SAD update
-	- patch functions
-
-
-R3D.optimumSADLocationSearchFlatRGB
-R3D.optimumSADLocationSearchFlatRGBIteritive
-
-R3D.optimizeSADAffineCorner
-
-R3D.projectivePatch3DInitFromAffinePair
-
-- initialize affine from neighborhood of points
-
-
-=> IMPLEMENT:
-
-world.subDivideUpdateMatchLocation();
-
-
 
 var newMatch = world.bestNeedleHaystackMatchFromLocation(centerA,centerB, newPointA, affine, viewA,viewB);
 
 
 
-=> Patch Algorithms:
-	- visual initial patch estimate
-	- visual patch update
-	- geometric affine back-project to get patch initial plane
-???	- geometric patch update 
-	- patch update from cell size change [patch size & location accuracy]
-	- patch update from view change
-	- 2D location update from cell size change (accuracy update)
-	- affine mapping from local point distribution
 
 
 
@@ -577,26 +540,28 @@ group-dense - only pre-existing c,n
 world-dense - only pre-existing c,n
 
 
-(stereopsis)
 
-ideal patch - use 3D geometry / projection to get match
-
-
+- pairwise sparse R doesn't need to be point exhaustive -- only need good Rs
+- pairwise dense & group dense SHOULD be more point exhaustive -- need good points
 
 
-- a 3D neighbor is any point that could be projected to the same cell neighborhood in image I
- if a point is sized with r : r-> cellSize/2
- 3D distance to project ~ 3 x r - 4 x r
+
+
+- expand tracks by: (3+ views)
+	- look at all neighbors in 2D view
+	- if any neighbor P3D missing another view that selected point has
+	- estimate predicted location by 
+		- 2D visual same-point search estimation
+	"hey you're missing a view, try this point @ my affine relationship ?"
+
+
+
 
 
 
 a total neighbor:
 	- 2D: cell neighbors
 	- 3D: tangent plane + distance
-
-=> if 2D / 3D neighbors are inconsistent: [% 3D neighbors < 0.25 2D neighbors]
-	3D location is in some random place
-
 
 
 -) => initial F should have ok initial affine starting point
@@ -652,6 +617,24 @@ a total neighbor:
 
 ...
 .
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// resolveIntersectionPatchGeometry
+// resolveIntersectionByPatchGeometry -- not very good
+
 
 
 
