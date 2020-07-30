@@ -1418,10 +1418,6 @@ Stereopsis.View.prototype.track3AverageError = function(){
 	}
 	return mean;
 }
-
-Stereopsis.View.prototype.pointSpace = function(){
-	return this._pointSpace;
-}
 Stereopsis.View.prototype.toPointArray = function(){
 	return this._pointSpace.toArray();
 }
@@ -2175,6 +2171,11 @@ Stereopsis.P3D = function(point,normal,size){
 	this.point(point);
 	this.normal(normal);
 	this.size(size);
+	this._id = ++Stereopsis.P3D._ID;
+}
+Stereopsis.P3D._ID = 0;
+Stereopsis.P3D.prototype.id = function(){
+	return this._id;
 }
 Stereopsis.P3D.prototype.propagateViewList = function(h){
 	if(h!==undefined){
@@ -6474,15 +6475,15 @@ Stereopsis.World.prototype.iteration = function(iterationIndex, maxIterations, d
 	}
 
 	// probe 2D - search empty neighbors for more matches
-	world.probe2DCellsR(2.0,3.0);
-	// world.probe2DCellsR(3.0,3.0);
-	// world.probe2DCellsR(3.0,4.0);
+	// world.probe2DCellsR(2.0,3.0); // not very daring
+	world.probe2DCellsR(3.0,3.0);
+	// world.probe2DCellsR(3.0,4.0); // maybe too daring
 
 	// filter global error
 	world.filterGlobal3DR(3.0);
 
 
-	//  only do this if error is low enough & most points are in front already
+	// only do this if error is low enough & most points are mostly in front already
 	// world.dropNegativePoints3D();
 
 
@@ -6506,9 +6507,9 @@ Stereopsis.World.prototype.iteration = function(iterationIndex, maxIterations, d
 	// world.updateP3DPatchesFromAbsoluteOrientationChange();
 
 	// refine camera location
-	world.refineAllCameraMultiViewTriangulation();
+	world.refineAllCameraMultiViewTriangulation(100); // pair not so much needed 10-100
 	world.copyRelativeTransformsFromAbsolute();
-
+	// update patches now that camera locations/orientations has changed
 	world.initAllP3DPatches();
 	
 	// ...
@@ -12443,12 +12444,13 @@ Stereopsis.World.prototype.filterLocal3DR = function(){
 	console.log("filter locally 3D space");
 	var world = this;
 
-	// 3D->2D neighbor common percentage 
-	// 2D->3D neighbor common percentage
+	// 2D->3D & 3D->2D neighbor common percentage 
+	world.filterLocal2D3DNeighbors();
 		// union of all 2D neighbors in all views
 		// => unique 3D points 
 
 	// normal angle differences - WORLD ?
+	world.filterLocal3DNeighbors();
 
 	// patch filtering
 	world.filterGlobalPatchSphere3D(2.0, false);
@@ -12458,13 +12460,16 @@ Stereopsis.World.prototype.filterLocal2DR = function(){
 	var world = this;
 	
 	// regularization error
-	// world.filterLocal2DAffineError(true);
+	world.filterLocal2DAffineError(true);
 
 	// local 2D errors 
 	world.filterLocal2DErrors();
 
 	// difference in average angle & f error
 	// world.filterLocal2DFAngle();
+
+	//
+	world.filterLocal2D2DNeighbors();
 
 	
 
@@ -12482,8 +12487,7 @@ Stereopsis.World.prototype.filterLocal2DF = function(){ // locally drop points w
 	world.filterLocal2DFAngle();
 
 	// 2D->2D match neighborhood
-	// for each transform
-	
+	world.filterLocal2D2DNeighbors();
 
 	// separate 2D neighborhoods in views ? (may be less common outside 2-view scenarios)
 	
@@ -12492,6 +12496,232 @@ Stereopsis.World.prototype.filterLocal2DF = function(){ // locally drop points w
 	//  affine:scale|rotation / predicted
 
 
+
+	// throw "filterLocal2DF";
+}
+
+Stereopsis.World.prototype.filterLocal2D2DNeighbors = function(){ // get 2D neighbors & percent of overlap should be minimum 0.50-0.75
+// console.log("filterLocal2D2DNeighbors");
+	var world = this;
+	var transforms = world.toTransformArray();
+	var minCountTransform = 16;
+	
+	var minimumNeighborhoodCount = 5; // 2D OR 3D should be at least this dense [3x3 grid would have 9] : 4-8 + 1
+	var minimumNeighborhoodRatioSingle = 0.25; // minimum neighborhood overlap in 2D EITHER 3D : 0.25-0.50
+	var minimumNeighborhoodRatioBoth = 0.50; // BOTH : 0.333-0.666
+
+	var totalDropCount = 0;
+	var totalCheckCount = 0;
+	for(var t=0; t<transforms.length; ++t){
+		var transform = transforms[t];
+		var matches = transform.matches();
+		if(matches.length<minCountTransform){
+			continue;
+		}
+		var viewA = transform.viewA();
+		var viewB = transform.viewB();
+		var dropList = [];
+		for(var i=0; i<matches.length; ++i){
+			++totalCheckCount;
+			var match = matches[i];
+			var point2DA = match.pointForView(viewA);
+			var point2DB = match.pointForView(viewB);
+			var neighborsA = world.neighborhoodFor2DPoint(point2DA);
+			var neighborsB = world.neighborhoodFor2DPoint(point2DB);
+			var hashA = {};
+			for(var j=0; j<neighborsA.length;++j){
+				hashA[neighborsA[j].point3D().id()] = 1;
+			}
+			var hashB = {};
+			for(var j=0; j<neighborsB.length;++j){
+				hashB[neighborsB[j].point3D().id()] = 1;
+			}
+			// A->B
+			var countAtoB = 0;
+			for(var k=0; k<neighborsA.length; ++k){
+				var neighborA = neighborsA[k];
+				if(hashB[neighborA.point3D().id()]==1){
+					++countAtoB;
+				}
+			}
+			// B->A
+			var countBtoA = 0;
+			for(var k=0; k<neighborsB.length; ++k){
+				var neighborB = neighborsB[k];
+				if(hashA[neighborB.point3D().id()]==1){
+					++countBtoA;
+				}
+			}
+			// check drop
+			var ratioA = countAtoB/(neighborsA.length); // guaranteed to have at least 1
+			var ratioB = countBtoA/(neighborsB.length);
+// console.log("ratios: "+ratioA+" : "+ratioB);
+			if(ratioA<minimumNeighborhoodRatioSingle || ratioB<minimumNeighborhoodRatioSingle ||
+				(ratioA<minimumNeighborhoodRatioBoth && ratioA<minimumNeighborhoodRatioBoth)){
+				dropList.push(match);
+				++totalDropCount;
+			}
+		}
+		for(var i=0; i<dropList.length; ++i){
+			var match = dropList[i];
+			var p3D = match.point3D();
+			world.removeMatchFromPoint3D(match);
+			world.removeCheckP3D(p3D);
+		}
+	}
+	console.log("filterLocal2D2DNeighbors : DROPPED: "+totalDropCount+" / "+totalCheckCount+" : "+(totalDropCount/totalCheckCount));
+}
+
+Stereopsis.World.prototype.filterLocal2D3DNeighbors = function(){ // get 2D & 3D neighbors & percent of overlap should be minimum 0.25-0.50
+	console.log("filterLocal2D3DNeighbors");
+	var world = this;
+	var points3D = world.toPointArray();
+	var minimumNeighborhoodCount = 5; // 2D OR 3D should be at least this dense [3x3 grid would have 9] : 4-8 + 1
+	var minimumNeighborhoodRatioSingle = 0.25; // minimum neighborhood overlap in 2D EITHER 3D : 0.25-0.50
+	var minimumNeighborhoodRatioBoth = 0.50; // BOTH : 0.333-0.666
+	// 1/5 = 0.2
+	// 2/8 = 0.25
+	// 3/12 = 0.25
+
+	// 2/5 = 0.4
+	// 3/6 = 0.5
+	// 4/8 = 0.5
+	// 5/10 = 0.5
+
+	var neighborhoodSizeScale = 1.0; // 1.0-2.0
+	var totalDropCount = 0;
+	var totalCheckCount = 0;
+	for(var i=0; i<points3D.length; ++i){
+		var point3D = points3D[i];
+		var points2D = point3D.toPointArray();
+		var neighbors3D = world.neighborhoodFor3DPointPatch(point3D,neighborhoodSizeScale);
+// console.log("3D count: "+neighbors3D.length);
+		if(neighbors3D.length<minimumNeighborhoodCount){
+			continue;
+		}
+		++totalCheckCount;
+		// TO HASH
+		var hash3D = {}
+		for(var j=0; j<neighbors3D.length; ++j){
+			hash3D[neighbors3D[j].id()] = 1;
+		}
+		var listHash2D = [];
+		var listNeighbor2D = [];
+		// get 2D list
+		for(var j=0; j<points2D.length; ++j){
+			var point2D = points2D[j];
+			var neighbors2D = world.neighborhoodFor2DPoint(point2D,neighborhoodSizeScale);
+// console.log("2D count: "+neighbors3D.length);
+			// TO HASH
+			var hash2D = {};
+			for(var k=0; k<neighbors2D.length; ++k){
+				var p3D = neighbors2D[k].point3D();
+				neighbors2D[k] = p3D;
+				hash2D[p3D.id()] = 1;
+			}
+			listHash2D.push(hash2D);
+			listNeighbor2D.push(neighbors2D);
+		}
+		// check neighborhoods for poor matching:
+		var removeList = [];
+		for(var j=0; j<listNeighbor2D.length; ++j){
+			var neighborhood2D = listNeighbor2D[j];
+			var hash2D = listHash2D[j];
+			if(neighborhood2D.length<minimumNeighborhoodCount){
+				continue;
+			}
+			// 3D -> 2D
+			var count3Dto2D = 0;
+			for(var k=0; k<neighbors3D.length; ++k){
+				var neighbor3D = neighbors3D[k];
+				if(hash2D[neighbor3D.id()]==1){
+					++count3Dto2D;
+				}
+			}
+			// 2D -> 3D
+			var count2Dto3D = 0;
+			for(var k=0; k<neighbors2D.length; ++k){
+				var neighbor2D = neighbors2D[k];
+				if(hash3D[neighbor2D.id()]==1){
+					++count2Dto3D;
+				}
+			}
+			// check drop
+			var ratioA = count3Dto2D/(neighbors3D.length); // guaranteed to have at least 1
+			var ratioB = count2Dto3D/(neighbors2D.length);
+// console.log("ratios: "+ratioA+" : "+ratioB);
+			if(ratioA<minimumNeighborhoodRatioSingle || ratioB<minimumNeighborhoodRatioSingle ||
+				(ratioA<minimumNeighborhoodRatioBoth && ratioA<minimumNeighborhoodRatioBoth)){
+				removeList.push(points2D[j]);
+			}
+		}
+		// remove 
+		totalDropCount += removeList.length;
+		if(removeList.length>=points2D.length-1){ // remove P3D entirely
+			world.disconnectPoint3D(point3D);
+			world.killPoint3D(point3D);
+		}else{
+			for(var j=0; j<removeList.length; ++j){
+				var point2D = removeList[j];
+				world.removePoint2DAndMatchesFromPoint3D(point2D);
+			}
+		}
+	}
+	console.log(" 2D-3D neighborhood totalDropCount: "+totalDropCount + " / "+totalCheckCount+" : "+(totalDropCount/totalCheckCount));
+}
+
+Stereopsis.World.prototype.neighborhoodFor3DPointPatch = function(point3D,sizeScale){
+	var world = this;
+	if(!point3D.hasPatch()){
+		console.log(point3D);
+		throw "no patch - neighborsFor3DPointPatch";
+	}
+	sizeScale = Code.valueOrDefault(sizeScale, 1.0);
+	var space = world.pointSpace();
+	var center = point3D.point();
+	var radius = point3D.size();
+		radius *= 3*Math.sqrt(2); // match 2D sense of neighbor
+	var neighbors = space.objectsInsideSphere(center,radius);
+	// TODO: points need to be facing same direction (within 90 degrees of normal direction)
+	return neighbors;
+}
+Stereopsis.World.prototype.neighborhoodFor2DPoint = function(point2D,sizeScale){
+	sizeScale = Code.valueOrDefault(sizeScale, 1.0);
+	var view = point2D.view();
+	var space = view.pointSpace();
+	var center = point2D.point2D();
+	var radius = view.cellSize()*0.5;
+		radius *= 3*Math.sqrt(2); // 2D sense of neighbor = 3x3 grid
+	var neighbors = space.objectsInsideCircle(center,radius);
+	return neighbors;
+}
+
+
+Stereopsis.World.prototype.filterLocal3DNeighbors = function(){ 
+	/*
+	for each p3d
+		get 3d neighbors
+
+		get difference in normal angles
+
+	for each p3d
+		drop if normals are wild ?
+		normals
+
+		?
+		*/
+}
+
+
+Stereopsis.World.prototype.filter3DRegularization = function(){
+	/*
+	predicted vs actual 3D location ?
+	neighbor distances 2D / 3D ?
+	*/
+}
+
+Stereopsis.World.prototype.filterLocal2DErrors = function(){ 
+	console.log("filter local poor R / F / N / S");
 
 	/*
 			for each view pair A-B & B-A ...
@@ -12519,10 +12749,6 @@ Stereopsis.World.prototype.filterLocal2DF = function(){ // locally drop points w
 			// affine: scale / rotation ?
 			// predicted neighbor location (affine + relative location) - actual location : regularization / consistency check
 	*/
-	// throw "filterLocal2DF";
-}
-Stereopsis.World.prototype.filterLocal2DErrors = function(){ 
-	console.log("filter local poor R / F / N / S");
 }
 
 Stereopsis.World.prototype.filterLocal2DFAngle = function(){ // affine not agree with F

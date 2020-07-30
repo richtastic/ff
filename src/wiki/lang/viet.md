@@ -378,12 +378,12 @@ https://www.youtube.com/watch?v=ya_28w1SZUA
 |  |  |  |
 | REFRAIN C: |  |  |
 | tình yêu ngày |  | love day |
-| đồ khù  khờ ôi tình đó ngây thơ |  | that silly(moron), naive fool |
-| trong tôi còn mãi từng giờ |  | inside me forever and ever |
+| đồ khù  khờ      ôi tình đó ngây thơ |  | that silly(moron), naive fool |
+| trong tôi còn     mãi từng giờ |  | inside me forever and ever |
 | tôi còn nhớ đến bây giờ |  | i still remember it |
-| phải chi ngày đó đưng khờ |  | Spending days ... that's dumb / was stupid ?? |
-| ôi ngày đó đưng chờ |  | Oh that day don't wait |
-| tôi không phải tiếc từng giờ |  | I don't have to regret every hour |
+| phải chi ngày      đó đưng khờ |  | Spending days ... that's dumb / was stupid ?? |
+| ôi ngày     đó đưng chờ |  | Oh that day don't wait |
+| tôi không phải       tiếc từng giờ |  | I don't have to regret every hour |
 | ôi tình đó cứ trong mơ |  | Oh, that dream is in my dreams |
 | uh oh oh. Tình đã xa - ía ía ía |  | ... Love is far away |
 | oh oh oh |  | ... |
@@ -482,7 +482,7 @@ https://www.youtube.com/watch?v=oFGz1kcRPfY&app=desktop
 | REFRAIN A |  |  |
 | meo meo meo |  | cat cat cat |
 | rửa mặt như mèo |  | Wash your face like a cat |
-| xấu xấu lắm chẳng được mẹ yêu |  | ugly, very ugly, mom doesn't love you / mom barely loves you |
+| xấu xấu lắm chẳng được mẹ yêu |  | ugly, very ugly, mom doesn't love you / mom barely loves you / don't get mom's love |
 | khăn mặt đâu  mà ngồi liếm mép |  | wheres the towel, sitting, licked his lips / licking the edges |
 | lau mặt rồi lại khóc meo meo (meo) |  | wipe my face already and again cry  cat cat cat |
 |  |  |  |
@@ -500,12 +500,12 @@ like/as - như
 very - lắm
 OK - được
 barely - chẳng
-chẳng được - NOT BE
+chẳng được - not be, not getting
 
 mom - mẹ
 love - yêu
 
-where -  đâu
+where - đâu
 
 sit - ngồi 
 lick - liếm

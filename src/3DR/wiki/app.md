@@ -459,10 +459,14 @@ x subdivideViewGrids
 	x updatePatchSizeFromViewCellSizeChange
 x filterGlobal3DR
 filterLocal2DR
-	- 2d - 2d neighbors
+	x 2d - 2d neighbors
 filterLocal3DR
-	2d - 3d neighbors
-	filterGlobalPatchSphere3D
+	x 2d - 3d neighbors
+	filterGlobalPatchSphere3D - go thru steps & doublecheck -- think about patches
+
+- really big patch size differences ?
+	- plot a histogram
+
 
 recordViewAbsoluteOrientationStart
 updateP3DPatchesFromAbsoluteOrientationChange
