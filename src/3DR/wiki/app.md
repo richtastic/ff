@@ -387,6 +387,11 @@ MISSING:
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 A) visual patches
+
+
+initP3DPatchFromVisual
+
+
 B) intersection methods 1 for view, 1 for no-view
 C) filter starting F points in 2D to maximize spread -> back to around 1/40th of image
 D) patch filtering logic walkthru
@@ -441,6 +446,7 @@ patch init for different resolutions:
 	sup
 		- copy best neighbor
 
+
 patch update for different resolutions (view location changes):
 	lo
 		- visuals update
@@ -452,6 +458,7 @@ patch update for different resolutions (view location changes):
 			- normal = change in rotation
 	sup
 		- N/A
+
 
 probe2D update for different resolutions:
 	low

@@ -562,9 +562,9 @@ R3D._transformCameraAllExtrinsicDLTNonlinearGD = function(args, x, isUpdate){
 		totalError += error;
 
 	} // track list
-	if(isUpdate){
-		console.log(totalError);
-	}
+	// if(isUpdate){
+	// 	console.log(totalError);
+	// }
 	return totalError;
 }
 
@@ -8704,7 +8704,7 @@ R3D.triangulationDLT = function(pointsFr,pointsTo, cameraExtrinsicA,cameraExtrin
 }
 
 
-R3D.triangulatePointDLTList = function(points2D, extrinsics, Kinvs){ 
+R3D.triangulatePointDLTList = function(points2D, extrinsics, Kinvs){ // 
 	var entryCount = points2D.length;
 	var cols = 4;
 	var rows = 2*entryCount; // total number of pairs
@@ -8813,10 +8813,12 @@ R3D.triangulatePointDLT = function(fr,to, cameraA,cameraB, KaInv, KbInv){ // get
 	point.scale(1.0/den);
 	return point;
 }
-R3D.triangulatePointMidpoint = function(fr,to, cameraAInv,cameraBInv, KaInv, KbInv){
+// R3D.triangulatePointMidpoint = function(fr,to, cameraAInv,cameraBInv, KaInv, KbInv){
+R3D.triangulatePointMidpoint = function(fr,to, cameraAbsoluteA,cameraAbsoluteB, KaInv, KbInv){
 	// TODO: also try epioolar plane
-	var rayA = R3D.projectPoint2DToCamera3DRay(fr, cameraAInv, KaInv, null);
-	var rayB = R3D.projectPoint2DToCamera3DRay(to, cameraBInv, KbInv, null);
+	// throw "should this be the inverse (absolute) matrixes ???"
+	var rayA = R3D.projectPoint2DToCamera3DRay(fr, cameraAbsoluteA, KaInv, null);
+	var rayB = R3D.projectPoint2DToCamera3DRay(to, cameraAbsoluteB, KbInv, null);
 	var closest = Code.closestPointsLines3D(rayA["o"],rayA["d"], rayB["o"],rayB["d"]);
 	var avg = V3D.avg(closest[0],closest[1]);
 	return avg;
@@ -21186,8 +21188,70 @@ R3D.affineDistortionMetric = function(a,b,c,d){
 	return error;
 }
 
+R3D.optimizePatchSizeProjected = function(point3D,size3D,normal3D,up3D, points2D,sizes2D){ // average size such that error in scale is minimized across projections
+	/*
+	does this need to keep track of min / max ?
 
-R3D.projectivePatch3DInitFromAffineList = function(point3D, points2D, affines2D, cellSizes, extrinsics, Ks, Kinvs, centers, rights){//, cameraCenters, cameraNormals, cameraRights){
+	while error change >1%
+		for each point 2d
+			for 4 projected points in 3D
+				project point to view
+			get average size
+			get average size SCALE RATIO
+		get average scale 1D size
+		scale size3D by inverse
+	*/
+	return size3D;
+}
+
+R3D.optimizePatchNonlinearImages = function(point3D,size3D,normal3D,up3D, points2D,imageScales, compareSize){ // position normal to minimize SAD error in reprojected cells
+	compareSize = Code.valueOrDefault(compareSize, 5); // 5 - 9
+
+	???
+
+	
+	/*
+		...
+	*/
+	throw ""
+}
+R3D._optimizePatchNonlinearImagesGD = function(args, x, isUpdate){
+	// if(isUpdate){
+	// 	return;
+	// }
+	var angleRight = x[0];
+	var angleUp = x[1];
+
+	var point3D = args[0];
+	var size3D = args[1];
+	var normal3D = args[2];
+	var right3D = args[3];
+	var up3D = args[3];
+	var points2D = args[4];
+	var imageScales = args[5];
+	var compareSize = args[6];
+	var matrix3D = args[7];
+	matrix3D.identity();
+	matrix3D.rotateVector(right3D,angleRight);
+	matrix3D.rotateVector(up3D,angleUp);
+
+	var normal = matrix3D.multV3DtoV3D(normal3D);
+	var up = matrix3D.multV3DtoV3D(up3D);
+
+	var totalError = 0;
+	for(var i=0; i<points2D.length; ++i){
+		// how to extract a rect ?
+		// need to subtract scale
+		// need a matrix2D -> needs to be affine
+	}
+
+	// if(isUpdate){
+		console.log(totalError);
+		throw "...";
+	// }
+}
+
+R3D.projectivePatch3DInitFromAffineList = function(point3D, points2D, affines2D, cellSizes, extrinsics, Ks, Kinvs, centers, rights){ //, cameraCenters, cameraNormals, cameraRights){
 	var localCount = 8; // 4-8
 	// AFFINES: [ [0,1], [0,2], ... [0,N-1] ]
 	// get local points in each view image:
@@ -47395,14 +47459,18 @@ R3D.projectPoint3DToCamera2DForward3D = function(in3D, extrinsic, K, distortions
 	var p3D = K.multV3DtoV3D(v3D);
 	return p3D;
 }
-R3D.projectPoint2DToCamera3DRay = function(in2D, extrinsic, Kinv, distortions){ // TODO: distortions
+// R3D.projectPoint2DToCamera3DRay = function(in2D, extrinsic, Kinv, distortions){ // TODO: distortions
+
+R3D.projectPoint2DToCamera3DRay = function(in2D, absolute, Kinv, distortions){
 	var dir = new V3D(in2D.x,in2D.y,1);
 	// console.log(" A: "+dir);
 	Kinv.multV3DtoV3D(dir,dir);
 	// console.log(" B: "+dir);
 	var org = new V3D(0,0,0);
-	extrinsic.multV3DtoV3D(org,org);
-	extrinsic.multV3DtoV3D(dir,dir);
+	// extrinsic.multV3DtoV3D(org,org);
+	// extrinsic.multV3DtoV3D(dir,dir);
+	absolute.multV3DtoV3D(org,org);
+	absolute.multV3DtoV3D(dir,dir);
 	// console.log(" C: "+dir);
 	dir.sub(org);
 	dir.norm();

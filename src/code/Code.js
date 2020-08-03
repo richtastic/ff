@@ -10115,7 +10115,7 @@ Code.intersectRayPlane = function(org,dir, pnt,nrm, limit){ // infinite ray - pl
 	var t = num/den;
 	if(limit===1){
 		if(t<0 || t>1.0){
-			return false;
+			return false; // TODO: NULL ?
 		}
 	}
 	return new V3D(org.x+t*dir.x,org.y+t*dir.y,org.z+t*dir.z);
