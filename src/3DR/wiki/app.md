@@ -386,11 +386,8 @@ MISSING:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-A) visual patches
-
-
-initP3DPatchFromVisual
-
+- if visual patches don't have better normals, how are they more useful?
+	-> set local need to get affine from them
 
 B) intersection methods 1 for view, 1 for no-view
 C) filter starting F points in 2D to maximize spread -> back to around 1/40th of image
@@ -406,6 +403,23 @@ F) multi-resolution patch methods
 		=> need to drop outliers ?
 
 filterGlobalPatchSphere3D - go thru steps & doublecheck -- think about patches
+
+
+
+
+
+
+
+
+
+
+
+- direct camera position based on midpoint directions from ray
+	- list of origins (closest ray) & directions (to rotate toward)
+		-> how to turn this into a torque / moment ?
+
+
+
 
 
 

@@ -132,9 +132,10 @@ Stereopsis.World.prototype.resolutionProcessingMode = function(m){
 		this._resolutionProcessingMode = m;
 		if(m==Stereopsis.World.RESOLUTION_PROCESSING_MODE_LO){
 // throw "no not me";
-			this._resolutionProcessingModePatchInit = this.initP3DPatchFromGeometry3D;
+			// this._resolutionProcessingModePatchInit = this.initP3DPatchFromGeometry3D;
+			this._resolutionProcessingModePatchInit = this.initP3DPatchFromVisual;
 			this._resolutionProcessingModePatchUpdate = this.updateP3DPatchFromVisual;
-			this._resolutionProcessingModeAffineSet = this._resolutionProcessingModeAffineFromVisual2D;
+			this._resolutionProcessingModeAffineSet = this._resolutionProcessingModeAffineFromPatch3D;
 		}else if(m==Stereopsis.World.RESOLUTION_PROCESSING_MODE_ME){
 			this._resolutionProcessingModePatchInit = this.initP3DPatchFromMatchAffine;
 			this._resolutionProcessingModePatchUpdate = this.initP3DPatchFromMatchAffine;
@@ -6579,6 +6580,7 @@ Stereopsis.World.prototype.iteration = function(iterationIndex, maxIterations, d
 	// world.probe2DCellsR(2.0,3.0); // not very daring
 	world.probe2DCellsR(3.0,3.0);
 	// world.probe2DCellsR(3.0,4.0); // maybe too daring
+	// world.probe2DCellsR(4.0,4.0);
 
 	// filter global error
 	world.filterGlobal3DR(3.0);
@@ -6621,6 +6623,7 @@ Stereopsis.World.prototype.initAllP3DPatches = function(){
 		var point3D = points3D[i];
 		world.initP3DPatchFromMode(point3D);
 	}
+	// throw "B";
 }
 
 Stereopsis.World.prototype.initNullP3DPatches = function(){
@@ -6632,6 +6635,7 @@ Stereopsis.World.prototype.initNullP3DPatches = function(){
 			world.initP3DPatchFromMode(point3D);
 		}
 	}
+	// throw "A";
 }
 
 Stereopsis.World.prototype.initP3DPatchFromMode = function(point3D){
@@ -6642,24 +6646,31 @@ Stereopsis.World.prototype.updateP3DPatchFromMode = function(point3D){
 	return this._resolutionProcessingModePatchUpdate(point3D);
 }
 
-Stereopsis.World.prototype.affineP2DFromMode = function(point3D){
-	return this._resolutionProcessingModeAffineSet(point3D);
+Stereopsis.World.prototype.affineP2DFromMode = function(newMatch){ // TODO: should this be a point (possibly multiple matches) or a single match
+	return this._resolutionProcessingModeAffineSet(newMatch);
 }
 
-Stereopsis.World.prototype._resolutionProcessingModeAffineFromVisual2D = function(newMatch){
+Stereopsis.World.prototype._resolutionProcessingModeAffineFromVisual2D = function(newMatch){ // for affineP2DFromMode
 	var viewA = newMatch.viewA();
 	var viewB = newMatch.viewB();
-	var featureSize = (viewA.compareSize()+viewB.compareSize());
+	var featureSize = (viewA.compareSize()+viewB.compareSize())*0.5;
 	var affineSize = featureSize * 2.0; // bigger area is more stable ....
 	var compareSize = Math.min(Math.max(affineSize,3),7); // 5 - 9
 	var maxIterations = 15;
-	// var result = R3D.optimizeSADAffineCorner(pointA,pointB, imageA,imageB, featureSize, compareSize, affine, maxIterations);
 	var affine = newMatch.affine();
 	var result = R3D.optimizeSADAffineCorner(newMatch.point2DA().point2D(),newMatch.point2DB().point2D(),
 		viewA.imageScales(),viewB.imageScales(),
 		featureSize, compareSize, affine, maxIterations);
 	var affine = result["affine"];
 	newMatch.affine(affine);
+}
+
+Stereopsis.World.prototype._resolutionProcessingModeAffineFromPatch3D = function(newMatch){
+	/*
+		project patch points to 2D
+		get affine
+	*/
+	throw "......."
 }
 
 Stereopsis.World.prototype.initP3DPatchFromMatchAffine = function(point3D){
@@ -6788,59 +6799,66 @@ Stereopsis.World.prototype.initP3DPatchFromGeometry3D = function(point3D){
 		radii.push(radius);
 	}
 	var radius = Code.averageNumbers(radii);
-	console.log("accurate radius: "+radius);
+	// console.log("accurate radius: "+radius);
+// console.log(normal3D);
+// console.log(up3D);
+// console.log(radius);
 	point3D.normal(normal3D);
 	point3D.up(up3D);
 	point3D.size(radius);
-	// console.log(normal3D);
-	// console.log(up3D);
-	// console.log(radius);
+	
 	// console.log(point3D);
-	throw "initP3DPatchFromVisual"
+	// throw "initP3DPatchFromVisual"
 }
 
 
 Stereopsis.World.prototype.initP3DPatchFromVisual = function(point3D){
+	// console.log(point3D);
 	this.initP3DPatchFromGeometry3D(point3D);
 	this.updateP3DPatchFromVisual(point3D);
 }
 Stereopsis.World.prototype.updateP3DPatchFromVisual = function(point3D){
+	// console.log(point3D);
+	var points2D = point3D.toPointArray();
+	var sizes2D = [];
+	var imageScales = [];
+	var extrinsics = [];
+	var Ks = [];
+	var ps2D = [];
+	for(var i=0; i<points2D.length; ++i){
+		var point2D = points2D[i];
+		var view = point2D.view();
+		var size = view.cellSize();
+		var imageScale = view.imageScales();
+		var K = view.K();
+		var extrinsic = view.absoluteTransform();
+		sizes2D.push(size);
+		imageScales.push(imageScale);
+		extrinsics.push(extrinsic);
+		Ks.push(K);
+		ps2D.push(point2D.point2D());
+	}
 
-	// get size iteritive (from initial size)
+	// get more accurate size - iteritive (from initial size)
+	var location3D = point3D.point();
 	var size3D = point3D.size();
 	var normal3D = point3D.normal();
 	var up3D = point3D.up();
-	var result = R3D.optimizePatchSizeProjected(point3D,size3D,normal3D,up3D, points2D,sizes2D);
-	
+// console.log(location3D,size3D,normal3D,up3D, ps2D,sizes2D, extrinsics,Ks);
+	var result = R3D.optimizePatchSizeProjected(location3D,size3D,normal3D,up3D, ps2D,sizes2D, extrinsics,Ks);
+	// console.log(result);
+	size3D = result["size"];
 
 	// get normal more accurate
-
-	var result = Stereopsis.patchNonlinear(center,size,normal,right,up,moveDirection,visibleViews,point3D,doTranslate);
-
-	var imageScales = [];
-	var points2D = [];
-	// var sizes2D = [];
-	// sizes2D,
-
-	var result = R3D.optimizePatchNonlinearImages(point3D,size3D,normal3D,up3D, points2D,imageScales);
-	();
-
-
-
-	// update patch using:
-	/*
-		3D location constant
-	
-		nonlinear min
-			update size by itself as projection to views that is averaging the projected size/cellsize = 1
-		
-		nonlinear min
-			normal changes based on 2 values: rotation-ud, rotation-lr
-			project 4 points to all P2D views (with images loaded)
-
-		set affine???????????????
-	*/
-	throw "updateP3DPatchFromVisual"
+var updateSize3D = size3D * 2.0; // affine more expanded
+	var result = R3D.optimizePatchNonlinearImages(location3D,updateSize3D,normal3D,up3D, ps2D,imageScales, extrinsics,Ks);
+	// console.log(result);
+	var normal = result["normal"];
+	var up = result["up"];
+	point3D.size(size3D);
+	point3D.normal(normal);
+	point3D.up(up);
+	// throw "updateP3DPatchFromVisual"
 }
 
 Stereopsis.World.prototype.subdivideViewGridsR = function(scaleRatio, minCellSize){
@@ -12597,55 +12615,16 @@ Stereopsis.World.prototype.probe2DCellsRF = function(sigmaMaximumSelect, sigmaMa
 								var point2DB = newMatch.point2DB();
 								var pointA = point2DA.point2D();
 								var pointB = point2DB.point2D();
-								/*
-								var info = R3D.infoFromAffineMatrix2D(affine);
-								var angle = info["angle"];
-								var scale = info["scale"];
-
-								var result = R3D.optimizeMatchingRotationScale(pointA,pointB, imageA,imageB, featureSize,compareSize, angle,scale);
-								// console.log(result)
-								affine = new Matrix2D();
-								affine.identity();
-								affine.scale(result["scale"]);
-								affine.rotate(result["angle"]);
-								if(!affine || affine.a===undefined  || Code.isNaN(affine.a) ){
-									throw "bad affine";
-								}
-								// transforms[i] = affine.copy();
-								*/
-								// TODO:
-								// init affine with local point placement (if at least 6 & largest angle is < 90 degrees)
-								// else use neighbor's affine & updae
-
-								// pointA,pointB2, imageScalesA,imageScalesB, cellSize,compareSize, matrixIn
-
-
-
-// 								// affineSize = featureSize * 2.0; // bigger area is more stable ....
-// 								// var compareSize = Math.min(Math.max(affineSize,3),7); // 5 - 9
-// 								// var maxIterations = 15;
-// 								// var result = R3D.optimizeSADAffineCorner(pointA,pointB, imageA,imageB, featureSize, compareSize, affine, maxIterations);
-// 								// affine = result["affine"];
-// 								// newMatch.affine(affine);
-// 								// matchesAddList.push(newMatch);
-// 							 	// set patch - use affine transform to estimate patch size / normal
-
-// ??
-// updateP3DPatchFromMode
-// ??
-								//
-								newMatch.affine(affine); // use best match neighbor
+								// update affine
+								newMatch.affine(affine); // start with best match neighbor
 								if(isR){
 									var point3D = newMatch.point3D();
 									var location3D = point3D.estimated3D();
 									point3D.point(location3D); // not in world yet
 									world.initP3DPatchFromMode(point3D);
 								}
-								//
 								world.affineP2DFromMode(newMatch);
 								matchesAddList.push(newMatch);
-								//
-
 							} // uniqueness
 							// else{
 							// 	console.log("drop uniquenessScore: "+uniquenessScore);
