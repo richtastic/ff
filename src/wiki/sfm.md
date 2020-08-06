@@ -630,6 +630,49 @@ output:
 		- use local offset geometry to affine-map (no-view) points
 
 
+
+	- R - 3D + PATCH
+	- R - 3D
+	- F - 2D
+	- no images?
+
+
+
+
+if(point3DA.hasPatch() && point3DB.hasPatch()){
+// console.log("has patch ...");
+return this._resolveIntersectionPatch(point3DA,point3DB);
+}
+// console.log("no patch ...");
+	return this._resolveIntersectionFlat(point3DA,point3DB);
+
+
+
+
+- no images:
+	- use error to discriminate between good v bad:
+		- R: RError
+		- else: FError
+	- if worst error > 2x best error or > 2sigma for transform
+		-> drop
+	- else:
+		- pick better average reprojection error (F or R)
+		- affine-predict best location in other images for new points
+- images:
+	- use error to descriminate between good v bad:
+		- SAD / NCC scores
+		- local vs global limits to drop
+	- use better point as base
+	- use affine-predict to get best location in other images for new points
+	- use SAD scores to A: find best spot
+		- only search a few pixels around predicted point
+
+	- if A & B have a patch => (must be R)
+		- init the patch of C
+...
+
+
+
 <a name="PAIRS"></a>
 ### Pair Reconstruction
 

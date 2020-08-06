@@ -21403,6 +21403,47 @@ R3D._optimizePatchNonlinearImagesGD = function(args, x, isUpdate){
 	return totalError;
 }
 
+
+
+R3D.projectivePatch3DToAffineList = function(point3D, size3D, normal3D, up3D, extrinsics, Ks){ // get a list of affine matches from patch
+	var v = new V3D();
+	var points2D = [];
+
+	var projectCount = 4; // 3-6
+	var pi2 = Math.PI*2.0;
+	// points 2D
+	for(var i=0; i<extrinsics.length; ++i){
+		var K = Ks[i];
+		var extrinsic = extrinsics[i];
+		var center2D = R3D.projectPoint3DCamera2DDistortion(point3D, extrinsic, K, new V2D(), false);
+		var points = [];
+		for(var j=0; j<projectCount; ++j){
+			v.set(up3D);
+			v.scale(size3D);
+			V3D.rotateAngle(v,v, normal3D,pi2*j/projectCount);
+			v.add(point3D);
+			var p = R3D.projectPoint3DCamera2DDistortion(v, extrinsic, K, new V2D(), false);
+			p.sub(center2D);
+			points.push(p);
+		}
+		points2D.push(points);
+	}
+	// affines
+	var affines = [];
+	for(var i=0; i<points2D.length; ++i){
+		var pointsA = points2D[i];
+		for(var j = i+1; j<points2D.length; ++j){
+			var pointsB = points2D[j];
+			var matrix2D = new Matrix2D();
+			var affine = R3D.affineCornerMatrixLinear(pointsA,pointsB, matrix2D);
+			affines.push(affine);
+		}
+	}
+
+
+	return {"affines":affines};
+}
+
 R3D.projectivePatch3DInitFromAffineList = function(point3D, points2D, affines2D, cellSizes, extrinsics, Ks, Kinvs, centers, rights){ //, cameraCenters, cameraNormals, cameraRights){
 	var localCount = 8; // 4-8
 	// AFFINES: [ [0,1], [0,2], ... [0,N-1] ]

@@ -386,12 +386,24 @@ MISSING:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
+
+
+ON CELL SUBDIVIDE:	SEARCH FOR CELLS NEEDS TO REMOVE & READD P3D (intersection)
+
 - if visual patches don't have better normals, how are they more useful?
 	-> set local need to get affine from them
 
-B) intersection methods 1 for view, 1 for no-view
+B) intersection RESOLUTION methods 1 for view, 1 for no-view
+	- PATCH
+	- 2D only
+	- no views
+	
+
 C) filter starting F points in 2D to maximize spread -> back to around 1/40th of image
+
 D) patch filtering logic walkthru
+
 E) patch updates for view change
 F) multi-resolution patch methods
 

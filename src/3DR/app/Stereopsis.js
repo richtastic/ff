@@ -39,7 +39,11 @@ Stereopsis._aggregateMatches = function(matches,fxn){
 	for(var i=0; i<matches.length; ++i){
 		var match = matches[i];
 		if(match){
-			aggregate += fxn(match);
+			var value = fxn(match);
+			if(value===null){
+				return null;
+			}
+			aggregate += value;
 		}
 	}
 	return aggregate/matches.length;
@@ -6665,12 +6669,39 @@ Stereopsis.World.prototype._resolutionProcessingModeAffineFromVisual2D = functio
 	newMatch.affine(affine);
 }
 
-Stereopsis.World.prototype._resolutionProcessingModeAffineFromPatch3D = function(newMatch){
-	/*
-		project patch points to 2D
-		get affine
-	*/
-	throw "......."
+Stereopsis.World.prototype._resolutionProcessingModeAffineFromPatch3D = function(newMatch){ // set affines for each match from P3D projection
+	// console.log("_resolutionProcessingModeAffineFromPatch3D");
+	var point3D = newMatch.point3D();
+	var location3D = point3D.point();
+	var normal3D = point3D.normal();
+	var size3D = point3D.size();
+	var up3D = point3D.up();
+	var points2D = point3D.toPointArray();
+	var extrinsics = [];
+	var Ks = [];
+	// var views = [];
+	for(i=0; i<points2D.length; ++i){
+		var view = points2D[i].view();
+		var K = view.K();
+		var extrinsic = view.absoluteTransform();
+		extrinsics.push(extrinsic);
+		Ks.push(K);
+	}
+	// console.log(location3D, size3D, normal3D, up3D, extrinsics, Ks);
+	var result = R3D.projectivePatch3DToAffineList(location3D, size3D, normal3D, up3D, extrinsics, Ks);
+	// console.log(result);
+	var affines = result["affines"];
+	var index = 0;
+	for(i=0; i<points2D.length; ++i){
+		var viewA = points2D[i].view();
+		for(j=i+1; j<points2D.length; ++j){
+			var viewB = points2D[j].view();
+			var match = point3D.matchForViews(viewA,viewB);
+			var affine = affines[index];
+			match.affineForViews(viewA,viewB, affine);
+			++index;
+		}
+	}
 }
 
 Stereopsis.World.prototype.initP3DPatchFromMatchAffine = function(point3D){
@@ -12657,6 +12688,7 @@ var averagePointCount = 0;
 		var point3D = points3D[i];
 		var points2D = point3D.toPointArray();
 		if(points2D.length>1){
+console.log("POINT 3D SHOULD BE REMOVED COMPLETELY & READDED");
 			var referenceIndex = 0; // arbitrary base point to compare -- TODO: now to pick best ?
 			var point2DA = points2D[referenceIndex];
 			var viewA = point2DA.view();
@@ -14804,12 +14836,184 @@ Stereopsis.World.prototype._resolveIntersectionPatchVisuals = function(point3DA,
 	throw " no patches for P3Ds?"
 }
 Stereopsis.World.prototype._resolveIntersectionDefault = function(point3DA,point3DB){
+	return this._resolveIntersectionLayered(point3DA,point3DB);
+}
+Stereopsis.World.prototype._resolveIntersectionDefaultOLD = function(point3DA,point3DB){
 	if(point3DA.hasPatch() && point3DB.hasPatch()){
 		// console.log("has patch ...");
 		return this._resolveIntersectionPatch(point3DA,point3DB);
 	}
 	// console.log("no patch ...");
 	return this._resolveIntersectionFlat(point3DA,point3DB);
+}
+
+
+Stereopsis.World.prototype._resolveIntersectionLayered = function(point3DA,point3DB){
+	var world = this;
+	var doPatch = point3DA.hasPatch() && point3DB.hasPatch(); // should init pointC with a patch
+	var doLocation = point3DA.point() && point3DB.point();
+	// var doVisualLocation = ?; // should try to find optimal location using visual -- per image basis?
+	// var doVisualCompare = ?; // should use SAD scores ?
+	// remove from world
+	world.disconnectPoint3D(point3DA);
+	world.disconnectPoint3D(point3DB);
+
+	// pick best point
+	var nccA = point3DA.averageNCCError();
+	var nccB = point3DB.averageNCCError();
+console.log(nccA,nccB);
+	if(nccA!==null && nccB!==null){ // NCC - views (R or F)
+		best = nccA<nccB ? point3DA : point3DB;
+	}else{ // R or F
+		var errA = point3DA.averageRError();
+		var errB = point3DB.averageRError();
+		if(errA!==null && errB!==null){ // R
+			best = errA<errB ? point3DA : point3DB;
+		}else{ // F
+			errA = point3DA.averageFError();
+			errB = point3DB.averageFError();
+			if(errA!==null && errA!==null){ 
+				best = errA<errB ? point3DA : point3DB;
+			}else{
+				throw "no comparison";
+			}
+		}
+	}
+	if(best!=point3DA){
+		temp = point3DA;
+		point3DB = point3DA;
+		point3DA = temp;
+	}
+
+	// drop worst point if error is too high:
+		// TODO
+
+	// find view statuses
+	var points2DA = point3DA.toPointArray();
+	var points2DB = point3DB.toPointArray();
+	var viewsAllA = {};
+	var viewsAllB = {};
+	var viewsAll = {};
+	var viewsIntersect = {};
+	for(var i=0; i<points2DA.length; ++i){
+		var view = points2DA[i].view();
+		var viewID = view.id();
+		viewsAllA[viewID] = view;
+		viewsAll[viewID] = view;
+	}
+	for(var i=0; i<points2DB.length; ++i){
+		var view = points2DB[i].view();
+		var viewID = view.id();
+		viewsAllB[viewID] = view;
+		viewsAll[viewID] = view;
+		if(viewsAllA[viewID]){
+			viewsIntersect[viewID] = view;
+		}
+	}
+	// check subsumed:
+		// TODO
+
+	// to arrays:
+	var viewsAllList = Code.objectToArray(viewsAll);
+	var viewsAllAList = Code.objectToArray(viewsAllA);
+	var viewsAllBList = Code.objectToArray(viewsAllB);
+	var viewsIntersectList = Code.objectToArray(viewsIntersect);
+
+	// best overlapping view:
+	var relatePoint2DA = null;
+	var relatePoint2DB = null;
+	var relateView = null;
+	var minDistance = null;
+	for(var i=0; i<viewsIntersectList.length; ++i){
+		var view = viewsIntersectList[i];
+		var point2DA = point3DA.pointForView(view);
+		var point2DB = point3DB.pointForView(view);
+		var p2DA = point2DA.point2D();
+		var p2DB = point2DB.point2D();
+		var distance = V2D.distance(p2DA,p2DB);
+		if(relatePoint2DB==null || distance<minDistance){
+			relatePoint2DA = point2DA;
+			relatePoint2DB = point2DB;
+			relateView = view;
+		}
+	}
+	console.log(relatePoint2DA,relatePoint2DB);
+	// predict new locations, thru relative point
+	var newPoint2DAs = [];
+	var affines = [];
+	for(var i=0; i<viewsAllList.length; ++i){
+		var viewA = viewsAllList[i].view();
+		var viewAID = view.id();
+
+		if(viewsAllA[viewIDA]){
+			// already know point A
+		}else{
+			// get from affine
+		}
+
+		for(var j=i+1; j<viewsAllList.length; ++j){
+			var viewB = viewsAllList[j].view();
+			var viewBID = view.id();
+
+			// get match:
+			if(viewsAllA[viewIDA] && viewsAllA[viewIDB]){
+				// already know affine 
+			}else{
+				var match = point3DB.matchForViews(relateView,view);
+				// ... affine map thru 
+			}
+
+			// CONSTRUCT AFFINE FOR EACH VIEW-PAIR
+
+			affines.push(affine);
+		}
+	}
+	// get needle-haystack for loaded views
+		// each loaded view A gets a chance to predict location in B-only view
+
+
+	// create new point 3d from pieces:
+	var point3DC = world.newPoint3DFromPieces(viewsAllList,point2DNs,affines, false);
+
+	if(doLocation){
+		var location3D = point3DC.estimated3D();
+		point3DC.point(location3D);
+	}
+	if(doPatch){
+		// COULD AVERAGE PATCH, THEN UPDATE ONLY ?
+		world.initP3DPatchFromMode(point3DC);
+	}
+
+
+	throw "..."
+
+	return this.embedPoint3D(point3DC);
+
+
+	/*
+
+_resolveIntersectionPatch(point3DA,point3DB);
+_resolveIntersectionFlat
+
+x find overlapping views
+	- if disjoint => error
+	- if A or B doesnt have independent -> readd P3D w/ more views
+x find 'better' P3D
+	- SAD scores?
+	- R scores?
+	- F scores?
+- if worse P3D is too bad -> ignore (or drop P3DB intersection) & readd P3DA
+	- average score > 2 x better's score
+	- average score > 2 x sigma of 
+- predict new locations in P3DB
+	- affine mapping for SAME
+	- affine mapping + additional transform for INDEPENDENT
+- if at least 1 image in A: for each image: get precise needle haystack location for each image in B
+	- average final locations
+- if 
+
+	*/
+	throw "resolve"
 }
 Stereopsis.World.prototype._resolveIntersectionGeometry = function(point3DA,point3DB){ // merge only knowing relative R error and affine transforms
 	this.disconnectPoint3D(point3DA);
@@ -14976,12 +15180,11 @@ Stereopsis.World.prototype._resolveIntersectionDumb = function(point3DA,point3DB
 }
 Stereopsis.World.prototype._resolveIntersectionPatchViewsLoaded = function(point3DA,point3DB){
 	var world = this;
-	var temp;
+	var best, temp;
 	// remove
 	world.disconnectPoint3D(point3DA);
 	world.disconnectPoint3D(point3DB);
-
-
+	
 /*
 	if A subsumes B or B subsumes A:
 		pick point:
