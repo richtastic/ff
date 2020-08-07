@@ -388,23 +388,21 @@ MISSING:
 
 
 
-
-ON CELL SUBDIVIDE:	SEARCH FOR CELLS NEEDS TO REMOVE & READD P3D (intersection)
-
 - if visual patches don't have better normals, how are they more useful?
 	-> set local need to get affine from them
 
-B) intersection RESOLUTION methods 1 for view, 1 for no-view
-	- PATCH
-	- 2D only
-	- no views
-	
 
 C) filter starting F points in 2D to maximize spread -> back to around 1/40th of image
 
 D) patch filtering logic walkthru
 
+
+filterGlobalPatchSphere3D
+
+
+
 E) patch updates for view change
+
 F) multi-resolution patch methods
 
 - can probe2D be helped by R / patches ?
@@ -454,10 +452,10 @@ limit final F points by area
 
 
 resolution determination:
-0-1k: low
-1k-5k: med
-5k-10k: hig
-10k+: sup
+  0-1k: low
+ 1k-10k: med
+10k-50k: hig
+50k+: sup
 
 
 patch init for different resolutions:
@@ -721,7 +719,7 @@ http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.75.5394&rep=rep1&type=p
 
 - normal->affine vs neighborhood->affine filter
 	- projected normal affine matrix should be similar to local affine matrix
-		- how to compate?
+		- how to compare?
 			- average rotation angle
 			- average scale
 			- ...

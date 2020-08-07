@@ -621,55 +621,24 @@ output:
 			- average projected-point2D-to-point3D-center distance
 
 #### 2D Intersection Resolution:
-	- some images loaded - need at least 1 view from point3DA & 1 vew in point3DB
-		- 'better' point has lowest average NCC/SAD/R/F scores
-		- use image needle/haystack SAD scores to find best point wrt better point
-			- needle +/- 1 pixel is good enough (intersection should be close)
-		- affine-map remaining (no-view) points
-	- no images loaded
-		- use local offset geometry to affine-map (no-view) points
-
-
+	- handle case when all, some, none of the images are loaded:
+	- if the error of one point is much worse than the other, likely outlier or bad approx point (metrics: SAD/NCC, R, F)
+		- > 2x best error
+		- > 2 sigma global
+	- new 2D points A are offset from original 2D points B by affine transform
+		- points all related by at least 1 intersecting point location
+		- affines all relatable thru 1 intersecting point view
+	- higher accuracy location using visual needle/haystack NCC/SAD/SSD method
+	- if the resulting point has worse errors than starting, likley not same points or one is bad (SAD/NCC, R, F)
+		- >2 x previous error
+		- >2 sigma individual 'global' transform errors (each individual match)
+	- is the patch useful at all?
 
 	- R - 3D + PATCH
 	- R - 3D
 	- F - 2D
 	- no images?
 
-
-
-
-if(point3DA.hasPatch() && point3DB.hasPatch()){
-// console.log("has patch ...");
-return this._resolveIntersectionPatch(point3DA,point3DB);
-}
-// console.log("no patch ...");
-	return this._resolveIntersectionFlat(point3DA,point3DB);
-
-
-
-
-- no images:
-	- use error to discriminate between good v bad:
-		- R: RError
-		- else: FError
-	- if worst error > 2x best error or > 2sigma for transform
-		-> drop
-	- else:
-		- pick better average reprojection error (F or R)
-		- affine-predict best location in other images for new points
-- images:
-	- use error to descriminate between good v bad:
-		- SAD / NCC scores
-		- local vs global limits to drop
-	- use better point as base
-	- use affine-predict to get best location in other images for new points
-	- use SAD scores to A: find best spot
-		- only search a few pixels around predicted point
-
-	- if A & B have a patch => (must be R)
-		- init the patch of C
-...
 
 
 

@@ -5509,7 +5509,7 @@ console.log("filterGlobalPatchSphere3D @ "+sigmaCount);
 	for(var i=0; i<points3D.length; ++i){
 		var point3D = points3D[i];
 		if(point3D.hasPatch()){
-			point3D.temp({"behind":0,"front":0});
+			point3D.temp({"behind":0,"front":0,"ncc":0,"sad":0});
 		}
 	}
 	// find ray intersections for all patches
@@ -5517,6 +5517,7 @@ console.log("filterGlobalPatchSphere3D @ "+sigmaCount);
 	var size = space.size();
 	var scaleConeSize = size.length()*2.0; // distance to infinity
 	var intersectionsFound = 0;
+	var scaleConeSearchSize = 2.0;
 	for(var i=0; i<points3D.length; ++i){
 		var point3DA = points3D[i];
 		if(i%1000==0){
@@ -5527,15 +5528,15 @@ console.log("filterGlobalPatchSphere3D @ "+sigmaCount);
 			var pointCenterA = point3DA.point();
 			var pointNormalA = point3DA.normal();
 			var views = point3DA.toViewArray();
-			for(var j=0; j<views.length;++j){
+			for(var j=0; j<views.length; ++j){
 				var view = views[j];
 				var viewCenter = view.center();
 				// seach a cone @ radius = 2 x sizeA
 				var dirViewToPoint = V3D.sub(pointCenterA,viewCenter);
 				var distanceA = dirViewToPoint.length();
-				var coneCenter = viewCenter.copy().sub(dirViewToPoint); // 2 x pointSizeA
+				// var coneCenter = viewCenter.copy().sub(dirViewToPoint); // 2 x pointSizeA
 					var coneCenter = viewCenter;
-				var coneRatio = pointSizeA/distanceA;
+				var coneRatio = scaleConeSearchSize*pointSizeA/distanceA;
 				var coneDirection = dirViewToPoint;
 					coneDirection.length(scaleConeSize);
 				var searchPoints = space.objectsInsideCone(coneCenter,coneDirection,coneRatio);
@@ -5553,7 +5554,7 @@ console.log("filterGlobalPatchSphere3D @ "+sigmaCount);
 							var pointSizeB = point3DB.size();
 							// ignore points that start off very close to eachother to begin with:
 							var distAB = V3D.distance(pointCenterA,pointCenterB);
-							var combinedRadius = (pointSizeA+pointSizeB);
+							var combinedRadius = (pointSizeA+pointSizeB); // should there be padding ?
 							if(distAB<=combinedRadius){
 								continue;
 							}
@@ -5573,6 +5574,34 @@ console.log("filterGlobalPatchSphere3D @ "+sigmaCount);
 									point3DB.temp()["front"] += 1;
 									point3DA.temp()["behind"] += 1;
 								}
+								var nccA = point3DA.averageNCCError();
+								var nccB = point3DB.averageNCCError();
+								if(nccA!==null & nccB!==null){
+									// RATIO, DIFFERENCE, COUNT
+									if(nccA<nccB){
+										// var diff = nccB-nccA;
+										var diff = 1;
+										point3DB.temp()["ncc"] += diff;
+									}else{
+										// var diff = nccA-nccB;
+										var diff = 1;
+										point3DA.temp()["ncc"] += diff;
+									}
+								} // else: do R / F ?
+								var sadA = point3DA.averageNCCError();
+								var sadB = point3DB.averageNCCError();
+								if(sadA!==null & sadB!==null){
+									// RATIO, DIFFERENCE, COUNT
+									if(sadA<sadB){
+										// var diff = sadB-sadA;
+										var diff = 1;
+										point3DB.temp()["sad"] += diff;
+									}else{
+										// var diff = sadA-sadB;
+										var diff = 1;
+										point3DA.temp()["sad"] += diff;
+									}
+								}
 								++intersectionsFound;
 							} // end intersection
 						} // end angle check
@@ -5585,6 +5614,12 @@ console.log("intersectionsFound: "+intersectionsFound);
 	// counting
 	var behinds = [];
 	var fronts = [];
+
+var scoreNCCs = [];
+var pointNCCs = [];
+var scoreSADs = [];
+var pointSADs = [];
+
 	var pointsFront = [];
 	var pointsBehind = [];
 	for(var i=0; i<points3D.length; ++i){
@@ -5595,6 +5630,10 @@ console.log("intersectionsFound: "+intersectionsFound);
 			fronts.push(temp["front"]);
 			pointsFront.push(point3D);
 			pointsBehind.push(point3D);
+pointNCCs.push(point3D);
+scoreNCCs.push(temp["ncc"]);
+pointSADs.push(point3D);
+scoreSADs.push(temp["sad"]);
 		}
 	}
 	pointsFront.sort(function(a,b){
@@ -5603,6 +5642,12 @@ console.log("intersectionsFound: "+intersectionsFound);
 	pointsBehind.sort(function(a,b){
 		return a.temp()["behind"] > b.temp()["behind"] ? -1 : 1;
 	});
+pointNCCs.sort(function(a,b){
+	return a.temp()["ncc"] > b.temp()["ncc"] ? -1 : 1;
+});
+pointSADs.sort(function(a,b){
+	return a.temp()["sad"] > b.temp()["sad"] ? -1 : 1;
+});
 	var maxSampleSize = 1000;
 	fronts = Code.randomSampleRepeatsMaximum(fronts,maxSampleSize,maxSampleSize);
 	behinds = Code.randomSampleRepeatsMaximum(behinds,maxSampleSize,maxSampleSize);
@@ -5612,8 +5657,18 @@ console.log("intersectionsFound: "+intersectionsFound);
 	behinds.sort(function(a,b){
 		return a > b ? -1 : 1;
 	});
-	Code.printMatlabArray(fronts,"f");
-	Code.printMatlabArray(behinds,"b");
+scoreNCCs = Code.randomSampleRepeatsMaximum(scoreNCCs,maxSampleSize,maxSampleSize);
+scoreNCCs.sort(function(a,b){
+	return a > b ? -1 : 1;
+});
+scoreSADs = Code.randomSampleRepeatsMaximum(scoreSADs,maxSampleSize,maxSampleSize);
+scoreSADs.sort(function(a,b){
+	return a > b ? -1 : 1;
+});
+	// Code.printMatlabArray(fronts,"f");
+	// Code.printMatlabArray(behinds,"b");
+Code.printMatlabArray(scoreNCCs,"n");
+Code.printMatlabArray(scoreSADs,"s");
 	// front
 	var minF = Code.min(fronts);
 	var avgF = Code.mean(fronts);
@@ -5625,9 +5680,21 @@ console.log("intersectionsFound: "+intersectionsFound);
 	// limits
 	var limF = Math.round(avgF + sigF*sigmaCount);
 	var limB = Math.round(avgB + sigB*sigmaCount);
+// NCC
+var minN = Code.min(scoreNCCs);
+var avgN = Code.mean(scoreNCCs);
+var sigN = Code.stdDev(scoreNCCs,minN);
+var limN = minN + sigN*3.0;
+// SAD
+var minS = Code.min(scoreSADs);
+var avgS = Code.mean(scoreSADs);
+var sigS = Code.stdDev(scoreSADs,minS);
+var limS = minS + sigS*3.0;
 
-	console.log("O F: "+minF+" : "+avgF+" +/- "+sigF+" --- "+limF);
-	console.log("O B: "+minB+" : "+avgB+" +/- "+sigB+" --- "+limB);
+	// console.log("O F: "+minF+" : "+avgF+" +/- "+sigF+" --- "+limF);
+	// console.log("O B: "+minB+" : "+avgB+" +/- "+sigB+" --- "+limB);
+console.log("O N: "+minN+" : "+avgN+" +/- "+sigN+" --- "+limN);
+console.log("O S: "+minS+" : "+avgS+" +/- "+sigS+" --- "+limS);
 
 	// linearly:
 	// var linearF = Math.ceil(Code.percentile(fronts,0.5)*2);
@@ -5635,14 +5702,17 @@ console.log("intersectionsFound: "+intersectionsFound);
 	// limF = Math.min(limF,linearF);
 	// limB = Math.min(limB,linearB);
 
-	limF = Math.max(limF,2);
-	limB = Math.max(limB,2);
-
-	console.log("F: "+minF+" : "+avgF+" +/- "+sigF+" --- "+limF);
-	console.log("B: "+minB+" : "+avgB+" +/- "+sigB+" --- "+limB);
+	// limF = Math.max(limF,2);
+	// limB = Math.max(limB,2);
+	limF = Math.max(limF,1);
+	limB = Math.max(limB,1);
+	// console.log("F: "+minF+" : "+avgF+" +/- "+sigF+" --- "+limF);
+	// console.log("B: "+minB+" : "+avgB+" +/- "+sigB+" --- "+limB);
 
 	// mark worst front
 	var dropList = [];
+
+/*
 	for(var i=0; i<pointsFront.length; ++i){
 		var point3D = pointsFront[i];
 		if(point3D.temp()["front"]>limF){
@@ -5662,6 +5732,26 @@ console.log("intersectionsFound: "+intersectionsFound);
 			break;
 		}
 	}
+*/
+
+// mark worst behind
+for(var i=0; i<pointNCCs.length; ++i){
+	var point3D = pointNCCs[i];
+	if(point3D.temp()["ncc"]>limN){
+		dropList.push(point3D);
+	}else{
+		break;
+	}
+}
+for(var i=0; i<pointSADs.length; ++i){
+	var point3D = pointSADs[i];
+	if(point3D.temp()["sad"]>limS){
+		dropList.push(point3D);
+	}else{
+		break;
+	}
+}
+
 	// deinitialize counting
 	for(var i=0; i<points3D.length; ++i){
 		var point3D = points3D[i];
@@ -6775,6 +6865,12 @@ Stereopsis.World.prototype.initP3DPatchFromGeometry3D = function(point3D){
 		}
 		rights.push(right);
 	}
+// console.log(point3D);
+// console.log(points2D);
+// console.log(normals);
+// console.log(rights);
+// console.log(normal3D);
+// console.log(right3D);
 	var normal3D = Code.averageAngleVector3D(normals);
 	var right3D = Code.averageAngleVector3D(rights);
 	var up3D = V3D.cross(normal3D,right3D); // or opposite
@@ -6844,7 +6940,6 @@ Stereopsis.World.prototype.initP3DPatchFromGeometry3D = function(point3D){
 
 
 Stereopsis.World.prototype.initP3DPatchFromVisual = function(point3D){
-	// console.log(point3D);
 	this.initP3DPatchFromGeometry3D(point3D);
 	this.updateP3DPatchFromVisual(point3D);
 }
@@ -12688,7 +12783,11 @@ var averagePointCount = 0;
 		var point3D = points3D[i];
 		var points2D = point3D.toPointArray();
 		if(points2D.length>1){
-console.log("POINT 3D SHOULD BE REMOVED COMPLETELY & READDED");
+// console.log("POINT 3D SHOULD BE REMOVED COMPLETELY & READDED");
+// REMOVE
+// world.removePoint3D(point3D); // this is only in WORLD SPACE
+world.disconnectPoint3D(point3D);
+
 			var referenceIndex = 0; // arbitrary base point to compare -- TODO: now to pick best ?
 			var point2DA = points2D[referenceIndex];
 			var viewA = point2DA.view();
@@ -12716,12 +12815,14 @@ console.log("POINT 3D SHOULD BE REMOVED COMPLETELY & READDED");
 				averagePointCount += 1;
 
 				// disconnect & re-connect point to update location
-				viewB.removePoint2D(point2DB);
+				// viewB.removePoint2D(point2DB);
 				point2DB.point2D(best);
-				viewB.insertPoint2D(point2DB);
+				// viewB.insertPoint2D(point2DB);
 				// update match info @ new scale:
 				// Stereopsis.setMatchInfoFromParamerers(match, viewA,pointA,viewB,pointB,affine);
 			}
+// READD
+world.embedPoint3D(point3D); // calls connect after intersection resolution
 			// update all match infos
 			world.calculatePoint3DMatchErrors(point3D);
 		}else{
@@ -14850,43 +14951,52 @@ Stereopsis.World.prototype._resolveIntersectionDefaultOLD = function(point3DA,po
 
 Stereopsis.World.prototype._resolveIntersectionLayered = function(point3DA,point3DB){
 	var world = this;
+	var maxErrorRatioStart = 2.0;
 	var doPatch = point3DA.hasPatch() && point3DB.hasPatch(); // should init pointC with a patch
 	var doLocation = point3DA.point() && point3DB.point();
-	// var doVisualLocation = ?; // should try to find optimal location using visual -- per image basis?
-	// var doVisualCompare = ?; // should use SAD scores ?
 	// remove from world
 	world.disconnectPoint3D(point3DA);
 	world.disconnectPoint3D(point3DB);
 
 	// pick best point
-	var nccA = point3DA.averageNCCError();
-	var nccB = point3DB.averageNCCError();
-console.log(nccA,nccB);
-	if(nccA!==null && nccB!==null){ // NCC - views (R or F)
-		best = nccA<nccB ? point3DA : point3DB;
+	var isErrorN = false;
+	var isErrorR = false;
+	var isErrorF = false;
+	var errA = point3DA.averageNCCError();
+	var errB = point3DB.averageNCCError();
+	if(errA!==null && errB!==null){ // NCC - views (R or F)
+		isErrorN = true;
 	}else{ // R or F
-		var errA = point3DA.averageRError();
-		var errB = point3DB.averageRError();
+		errA = point3DA.averageRError();
+		errB = point3DB.averageRError();
 		if(errA!==null && errB!==null){ // R
-			best = errA<errB ? point3DA : point3DB;
+			isErrorR = true;
 		}else{ // F
 			errA = point3DA.averageFError();
 			errB = point3DB.averageFError();
 			if(errA!==null && errA!==null){ 
-				best = errA<errB ? point3DA : point3DB;
+				isErrorF = true;
 			}else{
 				throw "no comparison";
 			}
 		}
 	}
+// console.log(errA,errB);
+	var best = errA<errB ? point3DA : point3DB;
 	if(best!=point3DA){
-		temp = point3DA;
+		var temp = point3DB;
 		point3DB = point3DA;
 		point3DA = temp;
 	}
 
 	// drop worst point if error is too high:
-		// TODO
+	var errMax = Math.max(errA,errB);
+	var errMin = Math.min(errA,errB);
+	if(errMin>0 && errMax/errMin > maxErrorRatioStart){ // point B is much worse than point A
+		console.log("drop worst: "+errMin+" < "+errMax+" @ "+(errMax/errMin));
+		world.killPoint3D(point3DB);
+		return world.embedPoint3D(point3DA);
+	}
 
 	// find view statuses
 	var points2DA = point3DA.toPointArray();
@@ -14910,16 +15020,27 @@ console.log(nccA,nccB);
 			viewsIntersect[viewID] = view;
 		}
 	}
-	// check subsumed:
-		// TODO
-
 	// to arrays:
 	var viewsAllList = Code.objectToArray(viewsAll);
 	var viewsAllAList = Code.objectToArray(viewsAllA);
 	var viewsAllBList = Code.objectToArray(viewsAllB);
 	var viewsIntersectList = Code.objectToArray(viewsIntersect);
+	// check subsumed:
+	if(viewsIntersectList.length==0){
+		throw "no intersection"
+	}
+	if(viewsIntersectList.length==viewsAllAList.length || viewsIntersectList.length==viewsAllBList.length){
+// console.log(viewsAllAList,viewsAllBList,viewsIntersectList);
+		if(viewsAllAList.length>=viewsAllBList.length){
+			world.killPoint3D(point3DB);
+			return world.embedPoint3D(point3DA);
+		}
+		world.killPoint3D(point3DA);
+		return world.embedPoint3D(point3DB);
+		// throw "subsumed - drop minimal";
+	}
 
-	// best overlapping view:
+	// best overlapping view = closest point distance (should this be distance in cell units)
 	var relatePoint2DA = null;
 	var relatePoint2DB = null;
 	var relateView = null;
@@ -14931,49 +15052,128 @@ console.log(nccA,nccB);
 		var p2DA = point2DA.point2D();
 		var p2DB = point2DB.point2D();
 		var distance = V2D.distance(p2DA,p2DB);
+			distance /= view.cellSize(); // units of cell size
 		if(relatePoint2DB==null || distance<minDistance){
 			relatePoint2DA = point2DA;
 			relatePoint2DB = point2DB;
 			relateView = view;
 		}
 	}
-	console.log(relatePoint2DA,relatePoint2DB);
+console.log(relatePoint2DA,relatePoint2DB,relateView);
 	// predict new locations, thru relative point
 	var newPoint2DAs = [];
+	for(var i=0; i<viewsAllList.length; ++i){
+		var view = viewsAllList[i];
+		var viewID = view.id();
+		if(viewsAllA[viewID]){ // exists in A already
+			var point2DA = point3DA.pointForView(view);
+			var p2DA = point2DA.point();
+			newPoint2DAs.push(p2DA);
+		}else{ // get relation thru related view
+			var matchB = point3DB.matchForViews(relateView,view);
+console.log(matchB);
+			var affineAB = matchB.affineForViews(relateView,view);
+			var pointB = matchB.pointForView(view);
+			var point = V2D.sub(relatePoint2DA.point2D(),relatePoint2DB.point2D()); // remove offset B(a)->A
+			affineAB.multV2DtoV2D(point,point);
+			point.add(pointB.point2D()); // add offset to B(b)
+			newPoint2DAs.push(point);
+		}
+	}
+console.log(newPoint2DAs);
+// TODO: is there a case affines wont exists?
+	// get new affine matches
 	var affines = [];
 	for(var i=0; i<viewsAllList.length; ++i){
-		var viewA = viewsAllList[i].view();
+		var viewA = viewsAllList[i];
 		var viewAID = view.id();
-
-		if(viewsAllA[viewIDA]){
-			// already know point A
-		}else{
-			// get from affine
-		}
-
 		for(var j=i+1; j<viewsAllList.length; ++j){
 			var viewB = viewsAllList[j].view();
 			var viewBID = view.id();
-
+			var affine = null;
 			// get match:
-			if(viewsAllA[viewIDA] && viewsAllA[viewIDB]){
-				// already know affine 
+			if(viewsAllA[viewIDA] && viewsAllA[viewIDB]){ // exists in A
+				var match = point3DA.matchForViews(viewA,viewB);
+				affine = match.affineForViews(viewA,viewB);
+			}else if(viewsAllB[viewIDA] && viewsAllB[viewIDB]){ // exists in B
+				var match = point3DB.matchForViews(viewA,viewB);
+				affine = match.affineForViews(viewA,viewB);
 			}else{
-				var match = point3DB.matchForViews(relateView,view);
-				// ... affine map thru 
+				var affineA, affineB;
+				if(viewsAllA[viewIDA]){ // a is in pointA
+					var matchA = point3DA.matchForViews(viewA,relateView);
+					affineA = matchA.affineForViews(viewA,relateView);
+					var matchB = point3DB.matchForViews(relateView,viewB);
+					affineB = matchB.affineForViews(relateView,viewB);
+				}else{ // a is in pointB
+					var matchA = point3DB.matchForViews(viewA,relateView);
+					affineA = matchB.affineForViews(viewA,relateView);
+					var matchB = point3DA.matchForViews(relateView,viewB);
+					affineB = matchA.affineForViews(relateView,viewB);
+				}
+				// relate thru middle
+				// affine = Matrix2D.mult(affineA,affineB);
+				affine = Matrix2D.mult(affineB,affineA); // A then B
 			}
-
-			// CONSTRUCT AFFINE FOR EACH VIEW-PAIR
-
 			affines.push(affine);
 		}
 	}
-	// get needle-haystack for loaded views
-		// each loaded view A gets a chance to predict location in B-only view
-
+console.log(affines);
 
 	// create new point 3d from pieces:
-	var point3DC = world.newPoint3DFromPieces(viewsAllList,point2DNs,affines, false);
+	var point3DC = world.newPoint3DFromPieces(viewsAllList,newPoint2DAs,affines, false);
+console.log(point3DC);
+
+	// get needle-haystack for loaded views
+		// each loaded view A gets a chance to predict location in B-only view
+	console.log("needle - haystack");
+	for(var i=0; i<viewsAllBList.length; ++i){
+		var viewB = viewsAllBList[i];
+		var viewBID = viewB.id();
+		if(!viewsAllA[viewBID]){ // not already known A location
+			var imageB = viewB.imageScales();
+			if(imageB){
+				var locationsB2D = [];
+				for(var j=0; j<viewsAllAList.length; ++j){
+					var viewA = viewsAllAList[j];
+					var imageA = viewA.imageScales();
+					if(imageA){
+						var match = point3DC.matchForViews(viewA,viewB);
+						var affineAB = match.affineForViews();
+						var point2DA = match.pointForView(viewA);
+						var point2DB = match.pointForView(viewB);
+						// ...
+						var featureSize = Stereopsis.compareSizeForViews2D(viewA,centerA,viewB,centerB);
+						var existingA = point2DA.point2D();
+						var predictedB = point2DB.point2D();
+						var needleSize = Stereopsis.COMPARE_HAYSTACK_NEEDLE_SIZE;
+						//var haystackSize = needleSize * 2;
+						var haystackSize = needleSize + 2; // left or right 1 unit
+						// var haystackSize = needleSize + 2;
+						// needle & haystack both large
+						var result = R3D.optimumSADLocationSearchFlatRGB(existingA,predictedB, imageA,imageB, featureSize, needleSize,haystackSize, affineAB);
+						console.log(result);
+						var locationB2D = result["point"];
+						console.log(locationsB2D);
+						locationsB2D.push(locationsB2D);
+					}
+				}
+				if(locationsB2D.length>0){ // average predicted locations
+					var locationB2D = V2D.average(locationsB2D);
+					var point2DB = point3DC.pointForView(viewB);
+					point2DB.point2D(locationB2D);
+				}
+			}
+		}
+	}
+
+	// is this necessary ?
+	var matches = point3DC.toMatchArray();
+	for(var i=0; i<matches.length; ++i){
+		var match = matches[i];
+		world.updateMatchInfo(match);
+	}
+	// Stereopsis.setMatchInfoFromParamerers(match, viewA,pointA,viewB,pointB,affine);
 
 	if(doLocation){
 		var location3D = point3DC.estimated3D();
@@ -14983,11 +15183,12 @@ console.log(nccA,nccB);
 		// COULD AVERAGE PATCH, THEN UPDATE ONLY ?
 		world.initP3DPatchFromMode(point3DC);
 	}
-
+console.log(point3DC);
 
 	throw "..."
-
-	return this.embedPoint3D(point3DC);
+	world.killPoint3D(point3DA);
+	world.killPoint3D(point3DB);
+	return world.embedPoint3D(point3DC);
 
 
 	/*
