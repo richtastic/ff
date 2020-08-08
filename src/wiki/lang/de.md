@@ -689,6 +689,7 @@ Rammstein - Du Hast
 
 
 Rammstein - Radio
+https://www.youtube.com/watch?v=z0NfI2NeDHI&has_verified=1
 
 | du | | en |
 |-|-|-|
@@ -942,6 +943,8 @@ America, America
 
 
 Rammstein - Deutschland
+
+https://www.youtube.com/watch?v=l3QNCrl6EqQ
 
 | du | | en |
 |-|-|-|

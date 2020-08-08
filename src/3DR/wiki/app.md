@@ -386,24 +386,90 @@ MISSING:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+updateP3DPatchesFromAbsoluteOrientationChange
+
+- update patch from subdivision ----- separate function
+	lo
+		- update visual
+	me
+		- init affine
+	hi
+		- none
+	su
+		- none
 
 
-- if visual patches don't have better normals, how are they more useful?
-	-> set local need to get affine from them
+F) multi-resolution patch methods
+- lo / med / hi / sup patch logic
+
+
+- try multiresolution testing
+- [1E3, 2E3, 3E3] // 0-1k, 1k-2k, 2k-3k, 3k+
+
+
+
+patch init for different resolutions:
+	low
+		- use image visuals
+			- size = rotation/scale affine
+			- normal = average pToV
+	med
+		- back-propagate affine to plane  ---- this isn't a 'smooth' transition: affine is optimized separately and may be poor
+	hig
+		- copy average of 2D/3D neighbors (with at least 1 of same view) 3-6
+	sup
+		- copy best neighbor
+
+
+patch update for different resolutions (view location changes):
+	lo
+		- visuals update
+	me
+		- back-project affine to plane
+	hi
+		- orientation delta
+			- size = change in distance
+			- normal = change in rotation
+	sup
+		- N/A - assume change in camera orientations is negligable
+
+
+probe2D update for different resolutions (affine2D update):
+	low
+		- affine comes from projected 3D point (OR optimized locally with images?)
+	med
+		- affine comes from optimized locally
+	hig
+		- affine comes from local point neighborhood average
+	sup
+		- affine comes from best neighbor
+
+
+
+
+
+
+-> try different image pairs
+
+
+=> back to testing image set
+
+
+
+- use higher resolution images for various phases
+
+
+
+
+
 
 
 C) filter starting F points in 2D to maximize spread -> back to around 1/40th of image
 
-D) patch filtering logic walkthru
-
-
-filterGlobalPatchSphere3D
-
-
 
 E) patch updates for view change
 
-F) multi-resolution patch methods
+
 
 - can probe2D be helped by R / patches ?
 	- affine matrixes would be similar
@@ -432,76 +498,14 @@ filterGlobalPatchSphere3D - go thru steps & doublecheck -- think about patches
 
 
 
-
-recordViewAbsoluteOrientationStart
-updateP3DPatchesFromAbsoluteOrientationChange
-
-
-- try first round of patches using visual image (independent of affine transform)
-
-
-- CHECK: visual initial patch estimate
-- CHECK: visual patch update
-	=> project to 2D to get local affine
 - TRY: approximate affine from point neighborhood
 - TRY: interpolate patch from neighbors
-
-
-limit final F points by area
-	- final F matches should be sorted on best: F error / corner score / SAD score
-
 
 resolution determination:
   0-1k: low
  1k-10k: med
 10k-50k: hig
 50k+: sup
-
-
-patch init for different resolutions:
-	low
-		- use image visuals
-			- size = rotation/scale affine
-			- normal = average pToV
-	med
-		- back-propagate affine to plane
-	hig
-		- copy average of 2D/3D neighbors (with at least 1 of same view) 3-5
-	sup
-		- copy best neighbor
-
-
-patch update for different resolutions (view location changes):
-	lo
-		- visuals update
-	me
-		- back-project affine to plane
-	hi
-		- orientation delta
-			- size = change in distance
-			- normal = change in rotation
-	sup
-		- N/A
-
-
-probe2D update for different resolutions:
-	low
-		- affine comes from projected 3D point OR optimized locally with images
-	med
-		- affine comes from optimized locally
-	hig
-		- affine comes from local point neighborhood average
-	sup
-		- affine comes from best neighbor
-
-
-
-resolveIntersectionFlat
-	- should do needle / haystack if images are loaded ?
-
-resolveIntersectionPatch
-	- doesn't seem to actually need the patches?
-	- uses needle/haystack to find best location
 
 
 
@@ -545,22 +549,6 @@ var newMatch = world.bestNeedleHaystackMatchFromLocation(centerA,centerB, newPoi
 
 - make sure size s = radius r for patches = 1/2 of cell size projection
 
-
-
-
-
-PATCH THOUGHTS:
-	- IDEAL IMAGE COMPARE
-		- INIT
-		- UPDATE
-	- GEOMETRIC FROM P3D
-		- INIT
-		- UPDATE
-	- AFFINE FROM LOCAL POINT DISTRIBUTION
-		- angle
-		- scale
-		-> optimize
-	- PATCH COMBINING PAIRS/GROUPS
 
 
 
@@ -619,52 +607,6 @@ a total neighbor:
 
 
 
-=> after view orientations are updated (in same run or after combining worlds), the point patches need to be udpated
-=> after the patches are updated, they need to be re-optimized (likely only minorly = smaller compare size | fewer iterations)
-
-=> after view cell sizes are updated, point patches need to be updated
-=> sizes are reduced by: (new size / prev size)
-
--) how transformed views change point normals:
-	- 3D point is re-triangulated
-	- 3D normal: average of expected normal directions (what it would be, given the changed direction) -- don't care about 'twist'
-	- 3D size: average of scaled distances (what distance is / what distance was)
-	=> these are only approx, they need to be updated
-
--) => already dense R/F can use neighbors to initialize parameters
-	- get 2D & 3D neighbors [who are not NEW -- ie not being added in same loop]
-	- get average:
-		- normal
-		- size
-	- UPDATE using .... ?
-		=> if affine could be used to 
-
--) optimum normal/patch
-	- use 2D affine error minimizing:
-		what patch affine would be vs what established 2D neighborhood affine is
-		---- HOW TO COMPARE AFFINES??
-
-		...
-
-...
-.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// resolveIntersectionPatchGeometry
-// resolveIntersectionByPatchGeometry -- not very good
 
 
 
@@ -675,23 +617,6 @@ a total neighbor:
 https://www.di.ens.fr/willow/pdfscurrent/pami09a.pdf
 http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.75.5394&rep=rep1&type=pdf
 - limit cell point expansion by looking at 3D discontinuities in views
-	- 
-
-
-
-
-- re-check how the different intersection resolutions are determined:
-	- images present
-		- patches present
-			- image match scores
-			- & 2D & 3D geometry ?
-		- no patches
-			- 3D & 2D geometry
-	- no images
-		- patches present?
-			- 3D & 2D geometry
-		- no patches?
-			- 2D geometry
 
 
 1)
@@ -825,14 +750,6 @@ if normals are different enough, maybe shouldn't be considered neighbors
 ..........................
 
 
-- what to do after F iteration
-	x keep best F points
-	- start R process
-		- initial R
-		- optimize R with seeds & propagation & dropping
-	=> R estimate
-
-
 
 
 
@@ -844,70 +761,8 @@ tetrahedron sphere - edges
 
 
 
-
-
-
-
-
-
-
-
-
-
-- 2D voting F
-	- 
-
-
 - with R/K:
 	- maybe affine mapping is better done using local point inlier finding -> NOT PATCH AFFINE MATCHING ? (don't know normal)
-
-
-- speed up patch calculations
-	- first time
-	- subsequent times
-
-=> ASSUME: R can't have changed too much from initial estimate / previous iteration
-=> WHEN COMBINING IN GROUP, TRANSFORM NORMAL BY TRANSFORM ROTATION
-
-
-
-- patch using image normal optimizing
-
-	- for low res images use normal-image-projection-optimizing
-
-	- for hi res images use NN inlier initializing normal & size
-		- use geometric updates ???
-
-
-
-
-=> back to testing image sequences
-
-
-
-
-
-
-
-
-
-
-
-
-
-- need to identify non-unique matching and disreguard in options
-	........
-- the R still has a LOT of points behind
-	- the in-front-vs behind is still very bad
-
-
-
-
-
-x DISPLAY: SHOW POINTS ACROSS IMAGES
-
-x START R PROCESS AFTER F
-	- DISPLAY points & transform
 
 
 - remove points with lots of scale differences
@@ -918,97 +773,8 @@ x START R PROCESS AFTER F
 
 - F-rotation & affine-rotation should be consistent
 	- find worst offenders (difference in angle) & drop
-.........
 
 
-
-
-R3D.maxiumMatchesFromViewCount
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-NCC/SAD scores are similar to 1-2 sigma ?
-	- get peaks in haystck ?
-
-	FILTER:
-		- get needle & haystack
-		- drop points if (with multiple peaks) scoreA/scoreB < 1.X
-
-
-
-	PROPAGATE:
-		- use wider size of haystack
-		- don't include new matches if (with multiple peaks) scoreA/scoreB < 1.X
 
 
 
@@ -1024,12 +790,6 @@ NCC/SAD scores are similar to 1-2 sigma ?
 
 NEIGHBOR DISTANCE DROPPING:
 	if average difference between neighbors is high -> remove
-
-
-// SHOW LOCAL AFFINE MAPPINGS
-
-
-
 
 NEIGHBOR PREDICTION ERROR DROPPING:
 	- each feature gets ~ 8 neighbors
@@ -1053,13 +813,6 @@ bad + bad => bad:hig, bad:hig
 
 
 
-
-_resolveIntersectionFlat
-
-
-
-
-- use higher resolution images for various phases
 
 
 errorNCC\([a-z,A-Z,0-9].*\)
