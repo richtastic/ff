@@ -151,6 +151,16 @@ JPEG._EXIFFromOffset = function(binaryArray, offset, length, hash){
 
 	var header = Code.charStringFromByteArray(binaryArray,offset, 4);
 	console.log("HEADER: "+header)
+
+	if(header=="http"){ // text/xml
+		var sectionLength = Code.uint16FromByteArray(binaryArray, offset - 2) - 1;
+		var xmpString = Code.charStringFromByteArray(binaryArray, offset, sectionLength);
+		console.log(xmpString);
+		tagHash["xmp"] = xmpString;
+		// throw "http header";
+		return tagHash;
+	}
+
 	if(header!="Exif"){
 		throw "no header";
 	}

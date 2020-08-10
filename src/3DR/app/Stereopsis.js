@@ -110,13 +110,14 @@ Stereopsis.World.prototype.setResolutionProcessingModeFromCountP3D = function(){
 	var world = this;
 	// low, med, high, super
 	// 1k-5k, 5k-10k, 10k-50k, +
-	// var limits [5000,10000,50000];
+	
+	var limits = [2E3,5E3,10E3]; // med?
+
+	// var limits [5E3,10E3,20E3]; // high?
 	// var limits = []; // TEST LOW
 	// var limits = [0]; // TEST MED
 	// var limits = [1E3, 2E3, 3E3]; // TEST ALL
-
-	var limits = [1000, 2000]; // TEST HI
-
+	// var limits = [1000, 2000]; // TEST HI
 	// var limits = [1000]; // TEST LOW + MED
 
 	var fxns = [
@@ -149,7 +150,7 @@ Stereopsis.World.prototype.resolutionProcessingMode = function(m){
 			this._resolutionProcessingModeAffineSet = this._resolutionProcessingModeAffineFromPatch3D;
 		}else if(m==Stereopsis.World.RESOLUTION_PROCESSING_MODE_ME){
 			this._resolutionProcessingModePatchInit = this.initP3DPatchFromMatchAffine;
-			this._resolutionProcessingModePatchUpdate = this.initP3DPatchFromMatchAffine; // no real way to 'update' from affine patch
+			this._resolutionProcessingModePatchUpdate = this.initP3DPatchFromMatchAffine; // no real way to 'update' from affine plane triangulation
 			this._resolutionProcessingModeAffineSet = this._resolutionProcessingModeAffineFromVisual2D;
 		}else if(m==Stereopsis.World.RESOLUTION_PROCESSING_MODE_HI){
 			this._resolutionProcessingModePatchInit = this.initP3DPatchFromNeighbors;
@@ -521,7 +522,7 @@ Stereopsis.World.prototype.viewFromID = function(i){
 	}
 	return null;
 }
-Stereopsis.World.prototype.viewFromData = function(data){
+Stereopsis.World.prototype.viewFromData = function(data){ // TODO: INDEX ON DATA, IF DATA != NULL
 	var views = Code.arrayFromHash(this._views);
 	for(var i=0; i<views.length; ++i){
 		var view = views[i];
@@ -2037,7 +2038,8 @@ Stereopsis.Transform3D.prototype.toBestPointArray = function(percentR, percentF,
 	var matches = this.matches();
 	var matchCount = matches.length;
 	// want 100-1000
-	var minimumMatchCount = 16;
+	// var minimumMatchCount = 16;
+	var minimumMatchCount = 32;
 	var percentKeep = 0.50; // 0.5 - 0.75 |   0.5^4=>0.0625   0.75^4=>0.316
 	percentR = Code.valueOrDefault(percentR, percentKeep);
 	percentF = Code.valueOrDefault(percentF, percentKeep);
@@ -4204,35 +4206,39 @@ Stereopsis.World.prototype.recordViewAbsoluteOrientationStart = function(){
 	}
 	world._viewOrientations = viewTransforms;
 }
-Stereopsis.World.prototype.updateP3DPatchesFromAbsoluteOrientationChange = function(){
-	// each P3D update patch based on average view change
+Stereopsis.World.prototype.updateP3DPatchesFromAbsoluteOrientationChange = function(){ // each P3D update patch based on average view change
 	var world = this;
-	// var views = world.toViewArray();
-	// for(var i=0; i<views.length; ++i){
-	// 	var view = views[i];
-	// }
 	var viewTransforms = world._viewOrientations;
+	var views = world.toViewArray();
+	var transformInfo = {};
+	// transformInfo
+	for(var i=0; i<views.length; ++i){
+		var view = views[i];
+		var viewID = view.id();
+		var isExtrinsic = view.absoluteTransform();
+		var isAbsolute = view.absoluteTransformInverse();
+		var wasExtrinsic = viewTransforms[viewID];
+		var wasAbsolute = Matrix.inverse(wasExtrinsic);
+		var delta = Matrix.relativeWorld(wasAbsolute,isAbsolute);
+		var info = {};
+			info["prev"] = {"extrinsic":wasExtrinsic, "absolute":wasAbsolute};
+			info["next"] = {"extrinsic":isExtrinsic,  "absolute":isAbsolute};
+			info["delta"] = delta;
+		transformInfo[viewID] = info;
+	}
+	world._viewOrientations = null;
 	var points3D = world.toPointArray();
 	for(var i=0; i<points3D.length; ++i){
 		var point3D = points3D[i];
-		// if(onlyNull && point3D.point()){
-		// 	continue;
-		// }
 		var location3D = point3D.estimated3D();
+		var wasLocation = point3D.point();
 		world.updatePoint3DLocation(point3D,location3D);
-		world.updateP3DPatchFromMode(point3D, viewTransforms); // TODO: SPECIFIC TO VIEW ORIENTATION CHANGE
-
-		// 
-		// similar order of complexity to just redo patch from affine
-
-
-		/*
-		retriangulate center
-		average expected normals (old delta + new location)
-		average expected sizes (size * new_distance/old_distance )
-		*/
+		if(point3D.hasPatch()){
+			world.updateP3DPatchFromMode(point3D, wasLocation, transformInfo);
+		}else{
+			console.log("no patch")
+		}
 	}
-	world._viewOrientations = null;
 }
 
 
@@ -5688,16 +5694,21 @@ Code.printMatlabArray(scoreSADs,"s");
 	// limits
 	var limF = Math.round(avgF + sigF*sigmaCount);
 	var limB = Math.round(avgB + sigB*sigmaCount);
+var sigmaForVisuals = 3.0;
+// var sigmaForVisuals = 2.0;
 // NCC
 var minN = Code.min(scoreNCCs);
 var avgN = Code.mean(scoreNCCs);
 var sigN = Code.stdDev(scoreNCCs,minN);
-var limN = minN + sigN*3.0;
+var limN = minN + sigN*sigmaForVisuals;
 // SAD
 var minS = Code.min(scoreSADs);
 var avgS = Code.mean(scoreSADs);
 var sigS = Code.stdDev(scoreSADs,minS);
-var limS = minS + sigS*3.0;
+var limS = minS + sigS*sigmaForVisuals;
+
+// limS = Math.max(limS,1);
+// limN = Math.max(limN,1);
 
 	// console.log("O F: "+minF+" : "+avgF+" +/- "+sigF+" --- "+limF);
 	// console.log("O B: "+minB+" : "+avgB+" +/- "+sigB+" --- "+limB);
@@ -6608,10 +6619,11 @@ data["splits"] = [4]; // 0 ... 4 .... 9
 
 
 world.printPoint3DTrackCount();
-	console.log(world);
-	var str = world.toYAMLString();
-	console.log(str);
-	throw "..."
+
+	// console.log(world);
+	// var str = world.toYAMLString();
+	// console.log(str);
+	// throw "..."
 
 // Code.printMatlabArray(data["errors"]);
 	if(world._completeFxn){
@@ -6742,8 +6754,8 @@ Stereopsis.World.prototype.initP3DPatchFromMode = function(point3D){
 	return this._resolutionProcessingModePatchInit(point3D);
 }
 
-Stereopsis.World.prototype.updateP3DPatchFromMode = function(point3D, viewPreviousOrientations){
-	return this._resolutionProcessingModePatchUpdate(point3D, viewPreviousOrientations);
+Stereopsis.World.prototype.updateP3DPatchFromMode = function(point3D, previousLocation3D, transformInfo){
+	return this._resolutionProcessingModePatchUpdate(point3D, previousLocation3D, transformInfo);
 }
 
 Stereopsis.World.prototype.affineP2DFromMode = function(newMatch){ // TODO: should this be a point (possibly multiple matches) or a single match
@@ -7034,28 +7046,66 @@ Stereopsis.World.prototype.initP3DPatchFromGeometry3D = function(point3D){
 	// console.log(point3D);
 	// throw "initP3DPatchFromVisual"
 }
-Stereopsis.World.prototype.updateP3DPatchFromViewDeltas = function(point3D,viewPreviousOrientations){ // use difference in angle and distance to change normal & size
-	console.log(viewPreviousOrientations);
-	var world = this;
-	/*
-
-	*/
-	if(!viewPreviousOrientations){
+Stereopsis.World.prototype.updateP3DPatchFromViewDeltas = function(point3D,prevLocation3D,viewInfo){ // use difference in angle and distance to change normal & size
+// console.log(viewInfo);
+	if(!viewInfo){
 		throw "don't care about cases without view orientation change"
+		return;
 	}
-console.log(point3D);
+	var world = this;
+// console.log(point3D);
+	var location3D = point3D.point();
+	var normal = point3D.normal();
+	var up = point3D.up();
+	var size = point3D.size();
 	var views = point3D.toViewArray();
-	var wasAngles = [];
-	var wasDistances = [];
+	// update
+	var sizes = [];
+	var normals = [];
+	var ups = [];
 	for(var i=0; i<views.length; ++i){
 		var view = views[i];
 		var viewID = view.id();
-		var entry = viewPreviousOrientations[viewID];
-		console.log(entry);
+		var entry = viewInfo[viewID];
+// console.log(entry);
+		var prev = entry["prev"];
+		var next = entry["next"];
+		var prevCenter = prev["absolute"].multV3DtoV3D(V3D.ZERO);
+		var nextCenter = next["absolute"].multV3DtoV3D(V3D.ZERO);
+// console.log(prevCenter,nextCenter);
+		var delta = entry["delta"];
+		var newOrigin = delta.multV3DtoV3D(V3D.ZERO);
+		var newNormal = delta.multV3DtoV3D(normal);
+		var newUp = delta.multV3DtoV3D(up);
+			newNormal.sub(newOrigin);
+			newUp.sub(newOrigin);
+			newNormal.norm();
+			newUp.norm();
+		normals.push(newNormal);
+		ups.push(newUp);
+		var dA = V3D.distance(prevLocation3D,prevCenter);
+		var dB = V3D.distance(location3D,nextCenter);
+		// console.log(dA,dB);
+		newSize = dB*(size/dA);
+		sizes.push(newSize);
 	}
-
-	
-	throw "..."
+// console.log(sizes);
+// console.log(normals);
+// console.log(ups);
+	// average away new expected sizes
+	var normal = Code.averageAngleVector3D(normals);
+	var up = Code.averageAngleVector3D(ups);
+	var size = Code.averageNumbers(sizes);
+// console.log(size);
+// console.log(normal);
+// console.log(up);
+	// var up = point3D.up(); // use existing 
+	var right = V3D.cross(normal,up);
+		up = V3D.cross(right,normal);
+	point3D.size(size);
+	point3D.normal(normal);
+	point3D.up(up);
+	// throw "..."
 }
 
 Stereopsis.World.prototype.updateP3DPatchFromNone = function(point3D){
@@ -7198,7 +7248,7 @@ Stereopsis.World.prototype.initP3DPatchFromBestNeighbor = function(point3D){ //s
 		return false;
 	}
 	var closest3D = space.kNN(location3D,1, evalFxn);
-console.log(closest3D);
+// console.log(closest3D);
 	if(closest3D.length==0){
 		throw "no nearest neighbor";
 	}
@@ -7206,8 +7256,8 @@ console.log(closest3D);
 	point3D.normal(closest3D.normal());
 	point3D.up(closest3D.up());
 	point3D.size(closest3D.size());
-console.log(point3D);
-	throw "initP3DPatchFromBestNeighbor";
+// console.log(point3D);
+	// throw "initP3DPatchFromBestNeighbor";
 }
 
 Stereopsis.World.prototype.subdivideViewGridsR = function(scaleRatio, minCellSize){
@@ -7497,7 +7547,7 @@ Stereopsis.World.prototype.recalculateMatchVisualErrors = function(){ // increas
 	// recalculateMatchVisualErrors
 }
 
-Stereopsis.World.prototype.reconstructionRelativeMetrics = function(){ // makes assumptions that only a single pair is present
+Stereopsis.World.prototype.reconstructionRelativeMetrics = function(){ // makes assumptions that only a single pair is present -- average distance between points
 	var transforms = this.toTransformArray();
 	var metricList = [];
 
@@ -10848,7 +10898,8 @@ Stereopsis.World.prototype.filterNeighborConsistency = function(){ // drop 3D ou
 	console.log("filterNeighborConsistency");
 	var minCountNeighbors = 3;
 	var searchCellMultiplier = 1.5; // hyp = 1.414 = 1.5->2.0
-	var worstNeighborPercent = 0.25; // progression: 0.10 => 0.50 : (forgiving) => (strict)
+	var worstNeighborPercent = 0.3333; // progression: 0.10 => 0.50 : (forgiving) => (strict)
+// WAS -.25;
 	var world = this;
 	var transforms = world.toTransformArray();
 	var totalRemovedCount = 0;
@@ -10907,6 +10958,7 @@ Stereopsis.World.prototype.filterLocal2Dto3DSize = function(){ // get 2D neighbo
 	var neighborCount = 8; // 6-10
 	var minimumVotes = 3;
 	var minimumDropRatio = 0.50; // resolution = 1/count | 8 = 0.125
+// @AS 0.50
 	var world = this;
 	var points3D = world.toPointArray();
 console.log("EXPECTED: "+points3D.length+" & "+world._pointSpace.count()+" &  ? ");
@@ -13128,9 +13180,12 @@ Stereopsis.World.prototype.filterLocal2D2DNeighbors = function(){ // get 2D neig
 	var transforms = world.toTransformArray();
 	var minCountTransform = 16;
 	
-	var minimumNeighborhoodCount = 5; // 2D OR 3D should be at least this dense [3x3 grid would have 9] : 4-8 + 1
+	var minimumNeighborhoodCount = 4; // 2D OR 3D should be at least this dense [3x3 grid would have 9] : 4-8 + 1
 	var minimumNeighborhoodRatioSingle = 0.25; // minimum neighborhood overlap in 2D EITHER 3D : 0.25-0.50
 	var minimumNeighborhoodRatioBoth = 0.50; // BOTH : 0.333-0.666
+
+// minimumNeighborhoodRatioSingle = 0.50;
+// minimumNeighborhoodRatioBoth = 0.666;
 
 	var totalDropCount = 0;
 	var totalCheckCount = 0;
@@ -13198,9 +13253,11 @@ Stereopsis.World.prototype.filterLocal2D3DNeighbors = function(){ // get 2D & 3D
 	console.log("filterLocal2D3DNeighbors");
 	var world = this;
 	var points3D = world.toPointArray();
-	var minimumNeighborhoodCount = 5; // 2D OR 3D should be at least this dense [3x3 grid would have 9] : 4-8 + 1
+	var minimumNeighborhoodCount = 4; // 2D OR 3D should be at least this dense [3x3 grid would have 9] : 4-8 + 1
 	var minimumNeighborhoodRatioSingle = 0.25; // minimum neighborhood overlap in 2D EITHER 3D : 0.25-0.50
 	var minimumNeighborhoodRatioBoth = 0.50; // BOTH : 0.333-0.666
+// minimumNeighborhoodRatioSingle = 0.50;
+// minimumNeighborhoodRatioBoth = 0.666;
 	// 1/5 = 0.2
 	// 2/8 = 0.25
 	// 3/12 = 0.25
@@ -13217,7 +13274,6 @@ Stereopsis.World.prototype.filterLocal2D3DNeighbors = function(){ // get 2D & 3D
 		var point3D = points3D[i];
 		var points2D = point3D.toPointArray();
 		var neighbors3D = world.neighborhoodFor3DPointPatch(point3D,neighborhoodSizeScale);
-// console.log("3D count: "+neighbors3D.length);
 		if(neighbors3D.length<minimumNeighborhoodCount){
 			continue;
 		}

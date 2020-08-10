@@ -9,17 +9,17 @@ function BlobTest(){
 	this._root = new DO();
 	this._stage.root().addChild(this._root);
 
-	// new ImageLoader("../images/muffin/",["IMG_6097_25.JPG", "IMG_6099_25.JPG"],this,this.imagesLoadComplete).load();
+	// new ImageLoader("../images/muffin/",["IMG_6097_25.JPG", "IMG_6099_25.JPG"],this,this.imagesLoadComplete).load(); // muffin 97 - 99
 	// new ImageLoader("../images/muffin/",["IMG_6099_25.JPG", "IMG_6101_25.JPG"],this,this.imagesLoadComplete).load();
 	// new ImageLoader("../images/muffin/",["IMG_6101_25.JPG", "IMG_6103_25.JPG"],this,this.imagesLoadComplete).load(); // bad
 	// new ImageLoader("../images/muffin/",["IMG_6103_25.JPG", "IMG_6105_25.JPG"],this,this.imagesLoadComplete).load(); // poor
 
-	new ImageLoader("../images/elephant/",["ele_1.JPG", "ele_2.JPG"],this,this.imagesLoadComplete).load(); // 
+	// new ImageLoader("../images/elephant/",["ele_1.JPG", "ele_2.JPG"],this,this.imagesLoadComplete).load(); // 
 	// new ImageLoader("../images/elephant/",["ele_2.JPG", "ele_3.JPG"],this,this.imagesLoadComplete).load(); // BAD
 	// new ImageLoader("../images/elephant/",["ele_3.JPG", "ele_4.JPG"],this,this.imagesLoadComplete).load(); // impossible
 	// new ImageLoader("../images/elephant/",["ele_4.JPG", "ele_5.JPG"],this,this.imagesLoadComplete).load(); // 
 	// new ImageLoader("../images/elephant/",["ele_5.JPG", "ele_6.JPG"],this,this.imagesLoadComplete).load(); // 
-	// new ImageLoader("../images/elephant/",["ele_6.JPG", "ele_1.JPG"],this,this.imagesLoadComplete).load(); // 
+	new ImageLoader("../images/elephant/",["ele_6.JPG", "ele_1.JPG"],this,this.imagesLoadComplete).load(); // 
 
 	// new ImageLoader("../images/elephant/",["ele_1.JPG", "ele_3.JPG"],this,this.imagesLoadComplete).load(); // no results
 	// new ImageLoader("../images/elephant/",["ele_2.JPG", "ele_3.JPG"],this,this.imagesLoadComplete).load(); // 
@@ -143,8 +143,8 @@ var imagePathB = fileList[1];
 
 
 // GLOBALSTAGE.root().matrix().scale(2.0);
-var skipCalc = true;
-// skipCalc = false;
+// var skipCalc = true;
+skipCalc = false;
 if(!skipCalc){
 
 	// CORNERS:
@@ -1090,7 +1090,7 @@ var Finv = R3D.fundamentalInverse(F);
 */
 
 
-
+/*
 // ELEPHANT 1 - 2
 
 F = new Matrix(3,3);
@@ -1331,7 +1331,7 @@ Ferror = 0.3619971517666534;
 
 var Finv = R3D.fundamentalInverse(F);
 
-
+*/
 
 
 
@@ -1339,10 +1339,8 @@ var Finv = R3D.fundamentalInverse(F);
 
 	// AFFINE
 	var info = R3D.average2DTranformForIndividualPoints(pointsA,pointsB, imageMatrixA,imageMatrixB, true);
-	// console.log(info);
+	console.log(info);
 	var transforms = info["transforms"];
-
-// throw "..."
 
 	// DENSE F - world
 	console.log("DENSE - WORLD - F");

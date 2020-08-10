@@ -10207,10 +10207,16 @@ R3D._fundamentalIteritiveDropWorst = function(pointsA,pointsB, minimumErrorSigma
 	var minCount = 8;
 
 // ?
-console.log(pointsA.length);
+	console.log(pointsA.length);
+	var F;
+	var Finv;
+
 	for(var i=0; i<maxIterations; ++i){
 		console.log("F ITERATION: "+i+" @ "+pointsA.length);
 		console.log(pointsA,pointsB);
+		if(pointsA.length<8){
+			return null;
+		}
 		F = R3D.fundamentalFromUnnormalized(pointsA,pointsB);
 		Finv = R3D.fundamentalInverse(F);
 		// }
@@ -10913,6 +10919,9 @@ throw "end loop";
 		var minimumDesiredError = 2.0;
 		// var info = R3D._fundamentalIteritiveDropWorst(finalPointsA,finalPointsB, minimumDesiredError);
 		var info = R3D._fundamentalIteritiveDropWorst(pointsA,pointsB, minimumDesiredError);
+		if(!info){
+			return null;
+		}
 		Fab = info["F"];
 		Fba = info["inv"];
 		finalPointsA = info["A"];
@@ -10940,6 +10949,9 @@ throw "end loop";
 	// focus in on final solution:
 	var minimumDesiredError = 1.0;
 	var info = R3D._fundamentalIteritiveDropWorst(finalPointsA,finalPointsB, minimumDesiredError);
+	if(!info){
+		return null;
+	}
 	console.log(info);
 	var F = info["F"];
 	var Finv = info["inv"];
@@ -10998,6 +11010,10 @@ R3D.progressiveMatchingAllSteps = function(imageMatrixA,objectsA, imageMatrixB,o
 	pointsB = result["B"];
 	Ferror = result["error"];
 
+	if(!F){
+		return null;
+	}
+
 
 
 	// C) FROM LOCAL F -> FIND GLOBAL F [CORNER DENSE]
@@ -11016,6 +11032,9 @@ R3D.progressiveMatchingAllSteps = function(imageMatrixA,objectsA, imageMatrixB,o
 	console.log("searchDensePixelError: "+searchDensePixelError)
 	result = R3D.findDenseCornerFMatches(imageMatrixA,imageMatrixB, F, searchDensePixelError, null, pointsA,pointsB);
 	console.log(result);
+	if(!result){
+		return null;
+	}
 	F = result["F"];
 	Finv = result["inv"];
 	pointsA = result["A"];
@@ -11030,17 +11049,19 @@ R3D.progressiveMatchingAllSteps = function(imageMatrixA,objectsA, imageMatrixB,o
 	var maximumFError = 2.0; // 2 pixels max
 	var ransacFerror = Math.min(Ferror*0.5,maximumFError);
 	var result = R3D.fundamentalRANSACFromPoints(pointsA,pointsB, ransacFerror, F);
-	console.log(result);
-	var matches = result["matches"];
-	pointsA = matches[0];
-	pointsB = matches[1];
-	F = result["F"];
-	Finv = R3D.fundamentalInverse(F);
-	var info = R3D.fundamentalError(F,Finv,pointsA,pointsB);
-	console.log(info);
-	Ferror = info["mean"] + info["sigma"];
-	console.log("Ferror: "+Ferror);
-
+	if(result){
+		var matches = result["matches"];
+		pointsA = matches[0];
+		pointsB = matches[1];
+		F = result["F"];
+		Finv = R3D.fundamentalInverse(F);
+		var info = R3D.fundamentalError(F,Finv,pointsA,pointsB);
+		console.log(info);
+		Ferror = info["mean"] + info["sigma"];
+		console.log("Ferror: "+Ferror);
+	}else{
+		return null;
+	}
 	
 
 	

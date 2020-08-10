@@ -356,16 +356,18 @@ https://cloud.google.com/appengine/docs/nodejs/
 TIMELINES:
 
 
+08/10 - 360 object scene ~ 10 images
 
-- 360 object scene ~ 10 images
+
+08/30 - 360 object scene ~ 20 images
 
 
-??/?? - update track_full logic: pairs + nonlinear estimate + solve all views at once
-??/?? - use track points as seeds / not from-scratch pairs?
-? - test set of ~ 25 images
+09/10 - update track_full logic: pairs + nonlinear estimate + solve all views at once
+09/20 - use track points as seeds / not from-scratch pairs?
+09/30 - test set of ~ 25 images
 		- automate URL refresh for sections of code
-? - test set of ~ 50 images x (this will require 2-10 x speed ups)
-? - MVP
+10/10 - test set of ~ 50 images x (this will require 2-10 x speed ups)
+11/01 - MVP
 
 MISSING:
 - mass-dense point aggregation via merging separate P3D files
@@ -386,88 +388,14 @@ MISSING:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-updateP3DPatchesFromAbsoluteOrientationChange
 
-- update patch from subdivision ----- separate function
-	lo
-		- update visual
-	me
-		- init affine
-	hi
-		- none
-	su
-		- none
-
-
-F) multi-resolution patch methods
-- lo / med / hi / sup patch logic
-
-
-- try multiresolution testing
-- [1E3, 2E3, 3E3] // 0-1k, 1k-2k, 2k-3k, 3k+
-
-
-
-patch init for different resolutions:
-	low
-		- use image visuals
-			- size = rotation/scale affine
-			- normal = average pToV
-	med
-		- back-propagate affine to plane  ---- this isn't a 'smooth' transition: affine is optimized separately and may be poor
-	hig
-		- copy average of 2D/3D neighbors (with at least 1 of same view) 3-6
-	sup
-		- copy best neighbor
-
-
-patch update for different resolutions (view location changes):
-	lo
-		- visuals update
-	me
-		- back-project affine to plane
-	hi
-		- orientation delta
-			- size = change in distance
-			- normal = change in rotation
-	sup
-		- N/A - assume change in camera orientations is negligable
-
-
-probe2D update for different resolutions (affine2D update):
-	low
-		- affine comes from projected 3D point (OR optimized locally with images?)
-	med
-		- affine comes from optimized locally
-	hig
-		- affine comes from local point neighborhood average
-	sup
-		- affine comes from best neighbor
-
-
-
-
-
-
--> try different image pairs
-
-
-=> back to testing image set
-
+=> back to testing image sets
 
 
 - use higher resolution images for various phases
 
 
-
-
-
-
-
 C) filter starting F points in 2D to maximize spread -> back to around 1/40th of image
-
-
-E) patch updates for view change
 
 
 
@@ -478,9 +406,7 @@ E) patch updates for view change
 		=> instead of using AFFINE, use neighborhood of points ? 
 		=> need to drop outliers ?
 
-filterGlobalPatchSphere3D - go thru steps & doublecheck -- think about patches
-
-
+- 
 
 
 
