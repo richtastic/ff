@@ -389,10 +389,70 @@ MISSING:
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
-=> back to testing image sets
+
+VIEW OPTIMIZING:
 
 
-- use higher resolution images for various phases
+solveOptimizeSingleView
+
+
+CHECK:
+
+initAffineFromP3DPatches
+
+resolveIntersectionLayered
+
+
+
+
+
+- combining & optimizing tracks:
+	- SPARSE:
+		goal:
+			move points and views around to find best:
+				VIEW locations
+				(dont care about patches)
+	- DENSE:
+		goal:
+			move points and views around to find best
+				VIEW LOCATIONS
+				POINT LOCATIONS
+
+
+NEED PATCHES AT SOME POINT
+
+- GROUPS:
+	- how can patches be reconstituted ?
+
+
+- FROM 'SCRATCH'
+	- normal cam be thought up
+	- size needs to be re-figured out
+
+	=> local neighborhood averaging to get affine
+	=> back project affine to get normal
+
+
+- pair sparse: use patches to optimize
+- pair dense: use patches to optimize
+
+- sparse tracks: don't care about patch
+- dense tracks: don't care about patch
+
+- group/world: initialize patches once absolute is known, using local affine 2Ds 
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 C) filter starting F points in 2D to maximize spread -> back to around 1/40th of image

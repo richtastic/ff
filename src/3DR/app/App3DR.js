@@ -8005,7 +8005,7 @@ console.log("GOT : relative: "+relativeCount);
 		console.log("currentPair");
 		console.log(currentPair);
 
-throw "BEFORE SAVE?";
+// throw "BEFORE SAVE?";
 
 		var pairBase = Code.appendToPath(basePath, App3DR.ProjectManager.PAIRS_DIRECTORY, pairID);
 		var matchesFilename = Code.appendToPath(pairBase, App3DR.ProjectManager.INITIAL_MATCHES_FILE_NAME);
@@ -8376,13 +8376,15 @@ throw ">X";
 }
 
 App3DR.ProjectManager.prototype.triplesFromBestPairs = function(pairs, isDense){ // TODO: does this guarantee scale coverage for every pair ?
-	var minimumRelativeCount = 100; // tracks:  poor-avg-good  |  sparse =  100-200-500   |  dense = 400-1000-2000
-	var maximumIndividualPairCount = 3; // 3 - 6 [at least 2 others to guarantee relative-ness, at least 4 for error]
+	var minimumRelativeCount = 25; // tracks:  poor-avg-good  |  sparse =  100-200-500   |  dense = 400-1000-2000
+	var maximumIndividualPairCount = 4; // 3 - 6 [at least 2 others to guarantee relative-ness, at least 4 for error]
 	if(isDense){
-		minimumRelativeCount = 400;
+		minimumRelativeCount = 200;
 		maximumIndividualPairCount = 3; // 2 - 4
 	}
 
+	console.log(pairs);
+	// throw "???"
 	// bookkeeping
 	var viewLookup = {};
 	var pairLookup = {};
@@ -8398,18 +8400,21 @@ App3DR.ProjectManager.prototype.triplesFromBestPairs = function(pairs, isDense){
 		list.push({"opposite":viewIDB, "score":score});
 	}
 	// get each view's possible pairs:
+	var keepCount = 0;
 	for(var i=0; i<pairs.length; ++i){
 		var pair = pairs[i];
 		var relativeCount = pair["tracks"];
+		// console.log("relativeCount: "+relativeCount);
 		if(!(relativeCount && relativeCount>minimumRelativeCount)){
 			console.log("SKIP: "+relativeCount);
 			continue;
 		}
+		++keepCount;
 		var errorR = pair["relativeError"];
 		addViewLookupPair(pair["A"],pair["B"],errorR);
 		addViewLookupPair(pair["B"],pair["A"],errorR);
 	}
-
+console.log("keepCount: "+keepCount);
 	console.log(viewLookup);
 	// get each view's top pairs, limit to max count
 	var viewIDs = Code.keys(viewLookup);
@@ -8430,6 +8435,7 @@ App3DR.ProjectManager.prototype.triplesFromBestPairs = function(pairs, isDense){
 			pairLookup[pairID] = {"id":pairID,"A":viewAID,"B":viewBID};
 		}
 	}
+	console.log(pairLookup);
 	var pairArray = Code.objectToArray(pairLookup);
 
 	// console.log(pairArray);
@@ -8473,6 +8479,7 @@ App3DR.ProjectManager.prototype.triplesFromBestPairs = function(pairs, isDense){
 	// console.log(triples);
 	triples = Code.objectToArray(triples);
 	// console.log(triples);
+	// throw "?";
 	return triples;
 }
 
@@ -8688,13 +8695,14 @@ console.log("isDone - FULL DONE")
 				var WORLDVIEWS = info["views"];
 				var WORLDVIEWSLOOKUP = info["lookup"];
 				var world = info["world"];
-
+throw "here ?"
 				world.copyRelativeTransformsFromAbsolute();
-				world.resolveIntersectionByPatchGeometry();
+				// world.resolveIntersectionByPatchGeometry();
+				// world.resolveIntersectionByDefault();
 
 				var points3DExisting = App3DR.ProjectManager._worldPointFromSaves(world, allPoints, WORLDVIEWSLOOKUP);
 				console.log(points3DExisting);
-				world.patchInitBasicSphere(true,points3DExisting);
+				// world.patchInitBasicSphere(true,points3DExisting);
 				world.embedPoints3DNoValidation(points3DExisting);
 
 				world.relativeFFromSamples();
@@ -8803,11 +8811,11 @@ console.log("fullBundlePath: "+fullBundlePath);
 				var WORLDVIEWSLOOKUP = info["lookup"];
 				var world = info["world"];
 				// 
-
+throw "here ?"
 				world.copyRelativeTransformsFromAbsolute();
 				// TODO: RESOLVE BY GEOMETRY AGAIN
 				// world.resolveIntersectionByPatchGeometry();
-				world.resolveIntersectionByPatchGeometry();
+				// world.resolveIntersectionByDefault();
 
 				// existing
 				var points3DExisting = App3DR.ProjectManager._worldPointFromSaves(world, fullPoints, WORLDVIEWSLOOKUP);
@@ -9231,6 +9239,8 @@ console.log(graphData);
 console.log("isDone --- no");
 				
 
+// GOAL: move views in direction that minimizes  error
+
 				var cameras = project.cameras(); // should this come from the graph ?
 				// var info = project.fillInWorldViews(world, cameras, graphGroupViews, graphDataViews);
 				var info = project.fillInWorldViews(cameras, baViews);
@@ -9248,13 +9258,19 @@ console.log("isDone --- no");
 				var WORLDVIEWSLOOKUP = project.createWorldViewLookup(world);
 				console.log(WORLDVIEWSLOOKUP);
 
+// throw "here B";
+world.setResolutionProcessingModeNonVisual();
 				world.copyRelativeTransformsFromAbsolute();
-				world.resolveIntersectionByPatchGeometry();
+				// world.resolveIntersectionByPatchGeometry();
 				// add points
 				console.log(baPoints);
 				var points3DExisting = App3DR.ProjectManager._worldPointFromSaves(world, baPoints, WORLDVIEWSLOOKUP);
 				console.log(points3DExisting);
-				world.patchInitBasicSphere(true,points3DExisting);
+				// world.patchInitBasicSphere(true,points3DExisting);
+
+world.initAllP3DPatches(points3DExisting);
+world.initAffineFromP3DPatches(points3DExisting);
+
 				world.embedPoints3DNoValidation(points3DExisting);
 				// world.embedPoints3D(additionalPoints);
 
@@ -9274,7 +9290,7 @@ console.log("isDone --- no");
 				var info = world.solveOptimizeSingleView(worldView);
 				console.log(info);
 
-// throw "FULL solveOptimizeSingleView"
+throw "FULL solveOptimizeSingleView"
 
 				nextViewBA["deltaErrorR"] = Math.abs(info["deltaR"]); // expected always negative
 				nextViewBA["errorR"] = info["errorR"];
@@ -9296,7 +9312,7 @@ console.log("isDone --- no");
 					console.log("saved track --- done bundle iteration:  "+baIterations);
 					project._taskDoneCheckReloadURL();
 				}
-				// throw "before saving track";
+throw "before saving track ITER";
 				project.saveFileFromData(data, fullTrackPath, savedTrackComplete, project);
 			}
 			console.log("fullTrackPath: "+fullTrackPath)
@@ -9518,14 +9534,6 @@ console.log(loadPairs);
 				console.log("createWorldViewsForViews");
 				var WORLDVIEWS = project.createWorldViewsForViews(world, views, images, cellSizes, transforms);
 				console.log(WORLDVIEWS);
-// console.log(transforms)
-// throw "???"
-				// LOOKUP
-				// var worldViews = world.toViewArray();
-				// var worldViewLookup = {};
-				// for(var i=0; i<worldViews.length; ++i){
-				// 	worldViewLookup[worldViews[i].data()] = worldViews[i];
-				// }
 
 				console.log("createWorldViewLookup");
 				var worldViewLookup = project.createWorldViewLookup(world);
@@ -9534,8 +9542,8 @@ console.log(loadPairs);
 				world.copyRelativeTransformsFromAbsolute();
 
 				// world.resolveIntersectionByPatchVisuals();
-				console.log("resolveIntersectionByPatchGeometry");
-				world.resolveIntersectionByPatchGeometry();
+				// console.log("resolveIntersectionByPatchGeometry");
+				// world.resolveIntersectionByPatchGeometry();
 				
 
 				// insert current points
@@ -9545,6 +9553,7 @@ console.log(loadPairs);
 				console.log(loadPairs);
 				console.log("embed points ?");
 // throw "EMBED"
+world.setResolutionProcessingModeNonVisual();
 				//project._embedTrackPoints(world, existingPoints, worldViewLookup);
 				var additionalPoints = [];
 				for(var i=0; i<loadPairs.length; ++i){
@@ -9554,21 +9563,23 @@ console.log(loadPairs);
 					var points3DAdditional = App3DR.ProjectManager._worldPointFromSaves(world, points, worldViewLookup);
 					// INIT PATCHES - currently in terms of 
 					console.log(points3DAdditional);
-						world.patchInitBasicSphere(true,points3DAdditional);
 					Code.arrayPushArray(additionalPoints, points3DAdditional);
 				}
+world.initAllP3DPatches(additionalPoints);
+world.initAffineFromP3DPatches(additionalPoints);
 				console.log(additionalPoints);
 
 				// add original points no intersection:
 				var points3DExisting = App3DR.ProjectManager._worldPointFromSaves(world, existingPoints, worldViewLookup);
-				// have patch, but need to degenerate affine:
-				// world.patchAffineFromMatchesList(points3DExisting);
-				world.patchInitBasicSphere(true,points3DExisting);
+				// have patch, but need to regenerate affine:
+// world.initAllP3DPatches(points3DExisting);
+world.initAffineFromP3DPatches(points3DExisting);
 				console.log(points3DExisting);
 
 				// patches should already be set from previous steps?
 				console.log("old");
 				world.embedPoints3DNoValidation(points3DExisting);
+// world.initNullP3DPatches();
 
 				// add new points with intersection:
 				console.log("new");
@@ -9582,8 +9593,8 @@ console.log(loadPairs);
 				var worldObject = world.toObject();
 				trackData["points"] = worldObject["points"];
 				trackData["views"] = worldObject["views"];
-// throw "here"
-				// mote to next track
+
+				// move to next track
 				console.log("save graph file");
 				graphData["loadPairIndex"] = loadPairIndex + 1;
 if(graphGroupEdges.length==0){
@@ -10093,8 +10104,8 @@ console.log("calculatePairMatchFromViewIDs")
 		settings["minimumCountFInit"] = 25; // fwd-bak matches -- 25-50-100
 		settings["maximumErrorFInit"] = 0.01; // 0.02 @ 500 = 10 -- initial F estimate [~100 features]
 		settings["maximumErrorFDense"] = 0.005; // 0.01 @ 500 = 5 -- dense F estimate [~500 features]
-		settings["maximumErrorTracksF"] = 0.001; // 0.01 @ 500 = 5 -- final stereopsis estimate F
-		settings["maximumErrorTracksR"] = 0.001; // 0.01 @ 500 = 5 -- final stereopsis estimate R
+		settings["maximumErrorTracksF"] = 0.004; // 0.01 @ 500 = 5 -- final stereopsis estimate F
+		settings["maximumErrorTracksR"] = 0.002; // 0.01 @ 500 = 5 -- final stereopsis estimate R
 	}
 	console.log("calculatePairMatchFromViewIDs: "+viewAID+" & "+viewBID);
 	var project = this;
