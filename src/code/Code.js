@@ -2235,6 +2235,21 @@ Code.arrayRandomItem = function(array){
 	var index = Math.floor(Math.random()*array.length);
 	return array[index];
 }
+Code.arrayToPercents = function(array){ // normalize to sum = 1
+	var length = 0;
+	var value, i, len = array.length;
+	for(i=0; i<len; ++i){
+		value = array[i];
+		length += value;
+	}
+	if(length>0){
+		for(i=0; i<len; ++i){
+			array[i] = array[i]/length;
+		}
+	}
+	return array;
+}
+
 Code.normalizeArray = function(array){ // L2 length
 	var length = 0;
 	var value, i, len = array.length;

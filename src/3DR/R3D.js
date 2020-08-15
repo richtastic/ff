@@ -676,13 +676,6 @@ R3D.transformCameraExtrinsicNonlinear = function(P, pointsA2D,pointsB2D, Ka,KaIn
 	var cost = result["cost"];
 
 	var P = new Matrix(4,4);
-	// var tx = x[0];
-	// var ty = x[1];
-	// var tz = x[2];
-	// var rx = x[3];
-	// var ry = x[4];
-	// var rz = x[5];
-	// R3D.transform3DFromParameters(P, rx,ry,rz, tx,ty,tz);
 	R3D.transform3DFromComponentArray(P, x);
 	return {"P":P, "error":cost};
 }
@@ -720,7 +713,7 @@ R3D._transformCameraExtrinsicNonlinearGD = function(args, x, isUpdate){
 		var p3D = R3D.triangulatePointDLT(pA,pB, extrinsicA,extrinsicB, KaInv, KbInv);
 
 
-		if(!p3D){ // very far away
+		if(!p3D){ // very far away ... or at 0 ?
 			// totalError += 1E9; // remove ?
 			continue;
 		}
@@ -734,10 +727,11 @@ R3D._transformCameraExtrinsicNonlinearGD = function(args, x, isUpdate){
 		var distanceSquareA = V2D.distanceSquare(pA, p3DA);
 		var distanceSquareB = V2D.distanceSquare(pB, p3DB);
 		var error = distanceSquareA + distanceSquareB;
+		// .
 		if(negativeIsBad && (p3DA.z<=0 || p3DB.z<=0)){ // behind camera
 			error *= 2;
 		}
-
+		// .
 		totalError += error;
 	}
 	// if(isUpdate){
@@ -9531,7 +9525,10 @@ R3D.subPixelCornerMaximum = function(values, width,height, point){
 }
 
 
-R3D.imageHistogramSamples = function(imageMatrix, samples){
+R3D.imageHistogramSamples = function(imageMatrix, samples, bucketSize){
+	if(bucketSize){
+		throw "use bucketSize";
+	}
 	samples = Code.valueOrDefault(samples, null);
 	var block = imageMatrix;
 	var mask = R3D._progressiveR3DMask();
@@ -9540,7 +9537,8 @@ R3D.imageHistogramSamples = function(imageMatrix, samples){
 	var loopings = [false,false,false];
 	var datas = null;
 	// SAMPLES
-	if(samples!==null){
+	var totalPixels = imageMatrix.width()*imageMatrix.height();
+	if(samples!==null && samples<totalPixels){
 		var red = block.red();
 		var grn = block.grn();
 		var blu = block.blu();
@@ -9557,14 +9555,45 @@ R3D.imageHistogramSamples = function(imageMatrix, samples){
 	}else{ // FULL
 		datas = [block.red(),block.grn(),block.blu()];
 	}
-	var magnitudes = null;
-	var histogram = Code.histogramND(buckets, loopings, datas, magnitudes, true, true); // 6 -> 32
+// var toSequential = function(histogram){
+// 	var dim = 10;
+// 	var keys = Code.keys(histogram);
+// 	var list = Code.newArrayZeros(dim*dim*dim);
+// 	for(var i=0; i<keys.length; ++i){
+// 		var key = keys[i];
+// 		var val = histogram[key];
+// 		var seq = key.split("-");
+// 		var indexA = parseInt(seq[0]);
+// 		var indexB = parseInt(seq[1]);
+// 		var indexC = parseInt(seq[2]);
+// 		list[indexC*dim*dim + indexB*dim + indexA] = val;
+// 	}
+// 	return list;
+// }
+// var histogram = Code.histogramND(buckets, loopings, datas, magnitudes, true, true);
+// var histogramA = histogram["histogram"];
+// var histogram = Code.histogramND(buckets, loopings, datas, magnitudes, true, false);
+// var histogramB = histogram["histogram"];
+// histogramA = toSequential(histogramA);
+// histogramB = toSequential(histogramB);
+// // Code.normalizeArray(histogramA);
+// // Code.normalizeArray(histogramB);
+// Code.arrayToPercents(histogramA);
+// Code.arrayToPercents(histogramB);
+// Code.printMatlabArray(histogramA,"a");
+// Code.printMatlabArray(histogramB,"b");
+// throw "?"
+	// var doRound = false;
+	var histogram = Code.histogramND(buckets, loopings, datas, null, true, false); // 6 ~ 32 bins
 		histogram = histogram["histogram"];
-	R3D.histogramListToUnitLength([histogram]); // ???-- this makes white match everything???
+	// R3D.histogramListToUnitLength([histogram]);
+	R3D.histogramListToPercents([histogram]);
+// console.log(histogram);
+	// throw "??????????????????"
 	return {"histogram":histogram};
 }
 
-R3D.compareImageHistograms = function(histogramA,histogramB){
+R3D.compareImageHistogramsCC = function(histogramA,histogramB){
 	var sum = 0;
 	var keysA = Code.keys(histogramA);
 	for(var i=0; i<keysA.length; ++i){
@@ -9574,6 +9603,88 @@ R3D.compareImageHistograms = function(histogramA,histogramB){
 		if(valA && valB){
 			sum += valA*valB;
 		}
+	}
+	return sum;
+}
+
+R3D.compareImageHistogramsSAD = function(histogramA,histogramB){
+	var sum = 0;
+	var keys = Code.keysUnion(histogramA);
+	for(var i=0; i<keys.length; ++i){
+		var key = keys[i];
+		var valA = histogramA[key];
+		var valB = histogramB[key];
+		valA = Code.valueOrDefault(valA,0.0);
+		valB = Code.valueOrDefault(valB,0.0);
+		sum += Math.abs(valA-valB);
+	}
+	return sum;
+}
+
+R3D.compareImageHistogramsSSD = function(histogramA,histogramB){
+	var sum = 0;
+	var keys = Code.keysUnion(histogramA);
+	for(var i=0; i<keys.length; ++i){
+		var key = keys[i];
+		var valA = histogramA[key];
+		var valB = histogramB[key];
+		valA = Code.valueOrDefault(valA,0.0);
+		valB = Code.valueOrDefault(valB,0.0);
+		sum += Math.pow(valA-valB, 2);
+	}
+	return sum;
+}
+
+
+R3D.compareImageHistogramsChiSquared = function(histogramA,histogramB){ // ~ percentage SSD
+	var sum = 0;
+	var keys = Code.keysUnion(histogramA);
+	for(var i=0; i<keys.length; ++i){
+		var key = keys[i];
+		var valA = histogramA[key];
+		var valB = histogramB[key];
+		valA = Code.valueOrDefault(valA,0.0);
+		valB = Code.valueOrDefault(valB,0.0);
+
+		var den = valA+valB;
+		if(den>0){
+			var num = Math.pow(valA-valB, 2);
+			sum += num/den;
+		}
+	}
+	return sum;
+}
+
+R3D.compareImageHistogramsChiSAD = function(histogramA,histogramB){ // ~ percentage SAD
+	var sum = 0;
+	var keys = Code.keysUnion(histogramA);
+	for(var i=0; i<keys.length; ++i){
+		var key = keys[i];
+		var valA = histogramA[key];
+		var valB = histogramB[key];
+		valA = Code.valueOrDefault(valA,0.0);
+		valB = Code.valueOrDefault(valB,0.0);
+
+		var den = valA+valB;
+		if(den>0){
+			var num = Math.abs(valA-valB);
+			sum += num/den;
+		}
+	}
+	return sum;
+}
+
+
+R3D.compareImageHistogramsMin = function(histogramA,histogramB){
+	var sum = 0;
+	var keys = Code.keysUnion(histogramA);
+	for(var i=0; i<keys.length; ++i){
+		var key = keys[i];
+		var valA = histogramA[key];
+		var valB = histogramB[key];
+		valA = Code.valueOrDefault(valA,0.0);
+		valB = Code.valueOrDefault(valB,0.0);
+		sum += Math.min(valA,valB);
 	}
 	return sum;
 }
@@ -11042,12 +11153,14 @@ R3D.progressiveMatchingAllSteps = function(imageMatrixA,objectsA, imageMatrixB,o
 	Ferror = result["error"];
 
 
-	
+/*	
 	// D) RANSAC BEST
 		// SCORE ERROR?
 		// F ERROR?
+	var minimumFError = 1.0;
 	var maximumFError = 2.0; // 2 pixels max
-	var ransacFerror = Math.min(Ferror*0.5,maximumFError);
+	// var ransacFerror = Math.min(Ferror*0.5,maximumFError);
+	var ransacFerror = Math.max(Ferror*0.5,minimumFError);
 	var result = R3D.fundamentalRANSACFromPoints(pointsA,pointsB, ransacFerror, F);
 	if(result){
 		var matches = result["matches"];
@@ -11063,7 +11176,7 @@ R3D.progressiveMatchingAllSteps = function(imageMatrixA,objectsA, imageMatrixB,o
 		return null;
 	}
 	
-
+*/
 	
 
 	console.log("return");
@@ -17755,7 +17868,10 @@ GLOBALSTAGE.addChild(d);
 }
 
 R3D.differentialCornersForImage = function(inputImage, idealImageSize){
-	var imageScales = new ImageMatScaled(inputImage);
+	var imageScales = inputImage;
+	if(!Code.isa(inputImage,ImageMatScaled)){
+		imageScales = new ImageMatScaled(inputImage);
+	}
 	// get ideal image size
 	var idealPixelCount = 600*400;
 	if(idealImageSize){
@@ -24754,6 +24870,33 @@ R3D.objectProgressiveR3D_SIFT_GRAD = function(object){
 		object["gradSIFT"] = gradSIFT;
 	return object;
 }
+R3D.histogramListToPercents = function(binHistograms){
+	var length = 0;
+	var keyList = [];
+	for(var i=0; i<binHistograms.length; ++i){
+		var h = binHistograms[i];
+		var keys = Code.keys(h);
+		keyList[i] = keys;
+		for(var j=0; j<keys.length; ++j){
+			var key = keys[j];
+			var val = h[key];
+			length += val;
+		}
+	}
+	if(length>0){
+		length = 1.0/length;
+	}
+	for(var i=0; i<binHistograms.length; ++i){
+		var h = binHistograms[i];
+		var keys = keyList[i];
+		for(var j=0; j<keys.length; ++j){
+			var key = keys[j];
+			var val = h[key];
+			val = val*length;
+			h[key] = val;
+		}
+	}
+}
 R3D.histogramListToUnitLength = function(binHistograms){
 	var length = 0;
 	var keyList = [];
@@ -27936,12 +28079,16 @@ R3D.showForwardBackwardCells = function(pointsA, pointsB, affines, imageMatrixA,
 	// throw "..........."
 	cellSize = Code.valueOrDefault(cellSize, 0.025*imageMatrixA.size().length());
 	cellSize = Math.round(cellSize);
+	console.log(cellSize);
+	// cellSize = 7.0;
 	var halfSize = cellSize*0.5;
 	var needleSize = cellSize;
 	for(var i=0; i<pointsA.length; ++i){
 		var pointA = pointsA[i];
 		var pointB = pointsB[i];
 		var affine = affines[i];
+// affine = new Matrix2D();
+// affine.identity();
 		// console.log(affine);
 		var inverse = affine.copy().inverse();
 

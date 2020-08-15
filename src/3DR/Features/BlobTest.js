@@ -19,7 +19,7 @@ function BlobTest(){
 	// new ImageLoader("../images/elephant/",["ele_3.JPG", "ele_4.JPG"],this,this.imagesLoadComplete).load(); // impossible
 	// new ImageLoader("../images/elephant/",["ele_4.JPG", "ele_5.JPG"],this,this.imagesLoadComplete).load(); // 
 	// new ImageLoader("../images/elephant/",["ele_5.JPG", "ele_6.JPG"],this,this.imagesLoadComplete).load(); // 
-	new ImageLoader("../images/elephant/",["ele_6.JPG", "ele_1.JPG"],this,this.imagesLoadComplete).load(); // 
+	// new ImageLoader("../images/elephant/",["ele_6.JPG", "ele_1.JPG"],this,this.imagesLoadComplete).load(); // 
 
 	// new ImageLoader("../images/elephant/",["ele_1.JPG", "ele_3.JPG"],this,this.imagesLoadComplete).load(); // no results
 	// new ImageLoader("../images/elephant/",["ele_2.JPG", "ele_3.JPG"],this,this.imagesLoadComplete).load(); // 
@@ -43,8 +43,17 @@ function BlobTest(){
 	// new ImageLoader("../images/muffin/",["../bench_A.png", "../bench_E.png"],this,this.imagesLoadComplete).load(); // ok
 	// new ImageLoader("../images/muffin/",["../bench_D.png", "../bench_F.png"],this,this.imagesLoadComplete).load(); // scale
 
+	// new ImageLoader("../images/room01/",["small_01.JPG", "small_02.JPG"],this,this.imagesLoadComplete).load(); // 
+	// new ImageLoader("../images/room01/",["small_01.JPG", "small_03.JPG"],this,this.imagesLoadComplete).load(); // 
+	// new ImageLoader("../images/room01/",["small_08.JPG", "small_09.JPG"],this,this.imagesLoadComplete).load(); // 
+	// new ImageLoader("../images/room01/",["small_10.JPG", "small_11.JPG"],this,this.imagesLoadComplete).load(); // 
 
 
+	// new ImageLoader("../images/room01/",["small_01.JPG", "small_06.JPG"],this,this.imagesLoadComplete).load(); // 
+
+	// new ImageLoader("../images/room01/",["small_02.JPG", "small_04.JPG"],this,this.imagesLoadComplete).load();
+
+	new ImageLoader("../images/room01/",["small_08.JPG", "small_10.JPG"],this,this.imagesLoadComplete).load();
 
 
 
@@ -321,10 +330,6 @@ console.log("FROM INDEX: "+index);//+" X "+V2D.DIRX);
 		featureList.push(features);
 
 		R3D.showFeaturesForImage(imageMatrix, features, imageWidth*i);
-
-		// HERE
-
-		// throw "..."
 /*
 		
 		var info = R3D.differentialCornersForImageSingle(imageMatrix, 0.01);
@@ -393,6 +398,13 @@ console.log("FROM INDEX: "+index);//+" X "+V2D.DIRX);
 	str = str + Code.printPrimitive(Ferror,"Ferror") + "\n";
 	str = str +  + "\n";
 	console.log(str);
+
+
+
+	R3D.showFundamental(pointsA, pointsB, F, Finv, GLOBALSTAGE, imageMatrixA,imageMatrixB);
+
+	console.log("ACTUAL SEED POINTS");
+	// throw "."
 
 }
 
@@ -1335,6 +1347,7 @@ var Finv = R3D.fundamentalInverse(F);
 
 
 
+// throw "................"
 //var Finv = R3D.fundamentalInverse(F);
 
 	// AFFINE
@@ -1388,6 +1401,13 @@ var Finv = R3D.fundamentalInverse(F);
 	// solve
 	var result = world.solvePairF();
 	console.log(result);
+
+world.setMatchAffineFromNeighborhood();
+
+	world.showForwardBackwardPair();
+	throw "..........."
+
+
 	// 
 	// add R stuff:
 	// K
@@ -1426,6 +1446,10 @@ console.log("DENSE - WORLD - R");
 		console.log("async");
 	}, this);
 	console.log(result);
+
+
+	world.showForwardBackwardPair();
+
 
 	var str = world.toYAMLString();
 	console.log(str);

@@ -390,10 +390,158 @@ MISSING:
 
 
 
+checkPointsLocation
+
+
+"Processing Addressable Group"
+
+
+WHY WOULD DROP NEGATIVE BE EXACTLY OPPOSITE ????????????????????????????????????
+
+
+
+transformFromFundamental
+
+Stereopsis.ransacTransformF
+
+
+transformFromFundamental4
+
+
+
+???
+transformCameraExtrinsicNonlinear
+
+
+
+-> function to verify point count forward & backward given 2 extrinsics & point list
+
+
+"4ZDQEOLT-QBRFM69C"
+
+
+
+
+
+optimizeAllCameraExtrinsicDLTNonlinear - takes a while - try to stop when change gets down to 1% 
+
+
+
+
+
+
+
+
+- really high initial F (solvePairF), eg 10 can produce R at 1
+
+criteria for dropping matches / relative / tracks is leaving out 'good' sets
+	- increase absolute limits
+	- per point count?
+	- remove points until error is satisfied
+
+
+
+- remove behind points (once R is found ? when R is done ?)
+
+
+L - U ?
+L - Q ?
+
+
+INIT-F: 5 - 10
+
+PEAK PROBE F: 10 - 30
+
+FINAL PROBE F: 5 - 10 
+
+FINAL F: 3 - 8
+FINAL R: 2 - 5
+
+FINAL TRACK F: ?
+FINAL TRACK R: 0.5, 1.0, 1.5
+
+
+
+CHI-SQUARED instead of SAD  IN PLACES ?
+
+
+
+
+
+
+
+
+
+- could reassess local affine transform for matches based on neighborhood points
+
+F
+	setMatchAffineFromNeighborhood
+
+R
+setMatchAffineFromPatch
+
+
+
+
+- better way to relate images than histogram?
+	- more samples ?
+	- finer histogram?
+
+	- sub-histograms ?
+
+	- different histogram comparrison?
+		- compare all 'neighbor' bins too ?
+
+
+=> scale image to sample size
+=?> compare bin + neighbors
+=> pre-spread bin histogram:
+	Code.histogramND = function(buckets,loopings, datas, magnitudes, joinDelimeter, round){
+
+
+- more points 2D -- relax corner requirement ?
+
+
+
+
+- planar case is overriding everything else ...........
+
+
+- regularization in probe2D (or additional step)
+
+
+
+
+
+
+
+
+
+- hole filling in stereopsis
+	- find blank areas that maybe should have content?
+	- 
+
+
+
+
+
+
+
+
+
+
+EVEN SIMPLER IMAGE SEQUENCE
+	~ 7200
+
+
+
+
 VIEW OPTIMIZING:
 
 
 solveOptimizeSingleView
+
+- should points also move during optimization => yes ?
 
 
 CHECK:
@@ -401,6 +549,45 @@ CHECK:
 initAffineFromP3DPatches
 
 resolveIntersectionLayered
+
+
+
+
+- HOW DOES COMBINE AFTER SKELETON WORK?
+	- scales may have drifted
+
+	=> keep track of original vs new view orientations (distances)
+	- inverse absolute scale of group by change in scale (average of all baseline camera distances)
+	- have to re-combine using geometry graph
+
+	x> do point-loading to get average scale difference ?
+		- have to exist overlapping points (and many) to get estimate on relative distances
+	
+	=> ?
+
+
+
+- HOLES TRY SOME IDEAS
+
+
+
+
+
+
+PIPELINE STEPS AGAIN:
+	x get absolute graph from pair & triple relative scales
+	x separate view graph into: groups (4-8) and skeleton (MSP)
+	x optimize groups & skeletion individually
+		x A) load tracks
+		x B) optimize view orientations (points change too)
+	- combine groups & skeleton into single graph again
+		- invert each group's scale by inverse of average scale change (previous/current)
+		- pairwise orientation solve for every pair in group with minimum count of 
+	- optimize all views at same time
+		- load tracks
+		- optimize views (points change too)
+	- 
+
 
 
 

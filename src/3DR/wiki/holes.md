@@ -5,13 +5,13 @@
 - surface completion
 
 
-https://xiaoyuanguo.github.io/website/A%20Survey%20on%20Algorithms%20of%20Hole%20Filling%20in%203D%20Surface%20Reconstruction.pdf
+x https://xiaoyuanguo.github.io/website/A%20Survey%20on%20Algorithms%20of%20Hole%20Filling%20in%203D%20Surface%20Reconstruction.pdf
 
 
-https://www.inf.ufrgs.br/~oliveira/pubs_files/FHPC/Wang_Oliveira_Filling%20Holes%20on%20Locally%20Smooth%20Surfaces_Imavis_2007_Pre-print.pdf
+x https://www.inf.ufrgs.br/~oliveira/pubs_files/FHPC/Wang_Oliveira_Filling%20Holes%20on%20Locally%20Smooth%20Surfaces_Imavis_2007_Pre-print.pdf
 MLS
 
-https://imr.sandia.gov/papers/imr15/branch.pdf
+x https://imr.sandia.gov/papers/imr15/branch.pdf
 
 ~ https://hal.inria.fr/hal-01220900/document
 	laplacian
@@ -39,14 +39,29 @@ HERE http://www.cad.zju.edu.cn/home/hwlin/pdf_files/A-robust-hole-filling-algori
 
 
 http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.409.3685&rep=rep1&type=pdf
+unfold minimize area
 
-http://www.jsoftware.us/vol7/jsw0701-20.pdf
+~ http://www.jsoftware.us/vol7/jsw0701-20.pdf
+mean curvature
+connect triangles
+optimize triangles - bilateral filter 
 
 http://www.apsipa.org/proceedings/2017/CONTENTS/papers2017/13DecWednesday/Poster%201/WA-P1.6.pdf
 pattern-texture matching?
 
 
-https://pdfs.semanticscholar.org/ed27/2c0064c4c077def41bca71760e13a607a39e.pdf
+x https://pdfs.semanticscholar.org/ed27/2c0064c4c077def41bca71760e13a607a39e.pdf
+planar - poor
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -102,8 +117,19 @@ https://www.youtube.com/watch?v=rrIStn9XEkc
 
 
 
+GOALS:
+	- continue the curvature as much as possible
 
 
+
+IDEAS:
+
+- scalar field that is defined as signed distance from planes (inside & outside) (weighted by distance from front triangles)
+	- move point in direction of gradient towards 0
+		- weight needs to be some kind of distribution sigma
+		- 'percent' distance is hard in 2D/3D
+	=> visualize field using discrete grid
+	=> would round out sharp edges
 
 
 
