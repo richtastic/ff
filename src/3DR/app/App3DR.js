@@ -8106,9 +8106,12 @@ console.log("pair count: "+pairs.length+" ............");
 		triples = inputData["triples"];
 		// throw "BEFORE TRIPLES DONE"
 	}
+	//
 console.log(triples);
+	//
+	// 
 	console.log("TRIPLE COUNT: "+inputData["triples"].length);
-// throw "..."
+	// 
 	// LOAD EACH POSSIBLE TRIPLE
 	var saveProjectFxn = function(){
 		console.log("saveProjectFxn");
@@ -8177,7 +8180,7 @@ console.log("inputFilename: "+inputFilename);
 		// throw "Do poor edge pruning / outlier detection / removal ? ";
 
 		console.log("_absoluteViewsFromDatas");
-		var graph = this._absoluteViewsFromDatas(graphViews, graphPairs, graphTriples);
+		var graph = project._absoluteViewsFromDatas(graphViews, graphPairs, graphTriples);
 console.log("graph:");
 console.log(graph);
 // throw "?????????"
@@ -8256,7 +8259,7 @@ console.log(i+" = ",vs[i]);
 			dataGroups.push(g);
 		}
 		console.log(data);
-// throw "BEFORE SAVE GRAPH"
+// throw "BEFORE SAVE GRAPH";
 		// save graph & reference it
 		inputData["graph"] = graphFilename;
 		var saveSparseFxn = function(){
@@ -9920,7 +9923,6 @@ console.log(result);
 	var groupPairs = first["pairs"];
 	var groupViews = first["views"];
 
-
 	var orderedTransforms = Code.newArrayNulls(views.length);
 	for(var i=0; i<groupViews.length; ++i){
 		var viewIndex = groupViews[i];
@@ -10643,6 +10645,7 @@ App3DR.ProjectManager.prototype.calculateTripleMatchFromViewIDs = function(input
 		var idA = data["A"];
 		var idB = data["B"];
 if(idA===undefined || idB===undefined){
+	console.log(data);
 	throw "bad data for triples";
 }
 		pairData[viewIDsToPairID(idA,idB)] = data;
@@ -10776,7 +10779,7 @@ console.log("before ?");
 		var sAB = scales["AB"];
 		var sAC = scales["AC"];
 		var sBC = scales["BC"];
-// throw "HEREEEEEE"
+throw "HEREEEEEE"
 		inputCompleteFxn(scales);
 	}
 	world.solveTriple(worldTripleCompleted, project, null);

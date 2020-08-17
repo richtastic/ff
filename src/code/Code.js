@@ -5865,6 +5865,34 @@ Code.arrayVectorScale = function(a, s){
 	}
 	return c;
 };
+Code.arrayVectorLog2 = function(a){
+	var c = Code.newArray(a.length);
+	for(var i=a.length; i--; ){
+		c[i] = Math.log2(a[i]);
+	}
+	return c;
+};
+Code.arrayVectorLn = function(a){
+	var c = Code.newArray(a.length);
+	for(var i=a.length; i--; ){
+		c[i] = Math.log(a[i]);
+	}
+	return c;
+};
+Code.arrayVectorPow2 = function(a){
+	var c = Code.newArray(a.length);
+	for(var i=a.length; i--; ){
+		c[i] = Math.pow(2,a[i]);
+	}
+	return c;
+};
+Code.arrayVectorExp = function(a){
+	var c = Code.newArray(a.length);
+	for(var i=a.length; i--; ){
+		c[i] = Math.exp(a[i]);
+	}
+	return c;
+};
 Code.arraySub = Code.arrayVectorSub;
 Code.arrayAdd = Code.arrayVectorAdd;
 Code.arrayScale = Code.arrayVectorScale;

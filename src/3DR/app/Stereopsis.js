@@ -119,13 +119,14 @@ Stereopsis.World.prototype.setResolutionProcessingModeNonVisual = function(){
 	// this._resolutionProcessingModePatchUpdate = this.updateP3DPatchFromNone;
 	// this._resolutionProcessingModeAffineSet = this.resolutionProcessingModeAffineFromBestNeighbor2D;
 }
-Stereopsis.World.prototype.setResolutionProcessingModeFromCountP3D = function(){
+Stereopsis.World.prototype.setResolutionProcessingModeFromCountP3D = function(limits){
 	console.log("setResolutionProcessingModeFromCountP3D");
 	var world = this;
 	// low, med, high, super
 	// 1k-5k, 5k-10k, 10k-50k, +
-	
-	var limits = [2E3,5E3,10E3]; // med?
+	if(!limits){
+		limits = [2E3,5E3,10E3]; // med?
+	}
 
 	// var limits [5E3,10E3,20E3]; // high?
 	// var limits = []; // TEST LOW
@@ -6608,8 +6609,11 @@ Stereopsis.World.prototype.iteration = function(iterationIndex, maxIterations, d
 	var world = this;
 	var transforms = world.toTransformArray();
 	var views = world.toViewArray();
-
-	world.setResolutionProcessingModeFromCountP3D();
+	if(isFirst){ // need to guarantee a loop has passed with at least some set
+		world.setResolutionProcessingModeFromCountP3D([2E3]);
+	}else{
+		world.setResolutionProcessingModeFromCountP3D([2E3,5E3,10E3]);
+	}
 
 	if(isFirst){ // SET INITIAL VIEW CAMERA EXTRINSICS
 		world.estimate3DErrors(false); // find initial F, P, estimate all errors from this
@@ -7038,7 +7042,7 @@ Stereopsis.World.prototype.initP3DPatchFromGeometry3D = function(point3D){
 Stereopsis.World.prototype.updateP3DPatchFromViewDeltas = function(point3D,prevLocation3D,viewInfo){ // use difference in angle and distance to change normal & size
 // console.log(viewInfo);
 	if(!viewInfo){
-		throw "don't care about cases without view orientation change"
+		// throw "don't care about cases without view orientation change"
 		return;
 	}
 	var world = this;
@@ -7176,7 +7180,9 @@ Stereopsis.World.prototype.initP3DPatchFromNeighbors = function(point3D){ // set
 	var ups = [];
 	if(neighbors3D.length==0){
 		console.log(point3D);
-		throw "no neighbors 3D";
+		console.log("no neighbors 3D");
+		throw ".... likely no points have had their patches initted yet"
+		return;
 	}
 	// weight by sigma of 3D distance
 	var distances = [];
@@ -9746,14 +9752,16 @@ Stereopsis.World.prototype.relativeScaleFromSampleRatios = function(viewA,viewB,
 		return p2D.point3D().point2DForView(viewC) != null;
 	}
 	// var maximumSampleTries = 1E4;
-	var maximumSampleTries = 1000;
-	var minimumSamples = 10;
-	var enoughSamples = 100; // - probably enough
-	// var samples = 1E4;
+	var maximumSampleTries = 2000;
+	var minimumSamples = 20;
+	var enoughSamples = 200; // - probably enough: 100 - 200
 	var loc2D = new V2D();
 	var maxDistance = 2.0; // might need to be error-size dependent  - reprojection error in AB / AC
+		maxDistance = 0.0025*(widthA+heightA)*0.5; // ~2 px in 1000x750
+console.log(maxDistance+" OF "+widthA+"x"+heightA);
 	var ratios = [];
 	var pointSpace = viewA.pointSpace();
+	console.log("TOTAL POINTS IN VIEW "+pointSpace.count());
 	for(var s=0; s<maximumSampleTries; ++s){
 		var pairs = [];
 		if(s%100==0){
@@ -9813,13 +9821,25 @@ Stereopsis.World.prototype.relativeScaleFromSampleRatios = function(viewA,viewB,
 // ratios.sort(function(a,b){
 // 	return a<b ? -1 : 1;
 // })
-// Code.printMatlabArray(ratios,"ratios");
-	// repeatidly drop outliers:
-console.log("RATIOS:"+ratios);
+	
+	// convert ratios to log scale
+	// for(var i=0; i<ratios.length; ++i){
+	// 	ratios[i] = Math.log2(ratios[i]);
+
+// ratios = [0.056361703924920875,0.06102838044894257,0.08521705983492465,0.017843823113918827,1.0847880111301853,0.006317165655155373,0.0041406136202362855,0.05010117307653204,0.5744582158720574,0.31404187611032547,1.0101290024932232,0.6827775755473505,0.2638041704099374,0.843684820691661,0.0738100727470553,1.2663501123248588,0.14145114266917175,0.16161155733875424,0.1792979341555789,0.38866828392589126,0.066037242125705,0.8058811644863605,0.038097005734535755,0.9195023224087824,0.0011960414902641612,0.090657168553545,0.1653220857869375,0.04707617057940552,0.33016046291522794,1.0819925574610212,0.05666397895772528,0.28127869559633895,0.4368943974466849,1.1822613945629843,0.003044241746827051,0.002781109940106346,0.7168210095974995,0.0735573230470127,0.889773379392342,0.43882511510684585,0.42450374594562307,0.019717723707191954,0.18078114419239166,0.8662492612909775,0.7953506017454525,0.11258513543785877,0.008409567471497043,0.18701221355365158,0.45873002082855324,0.1304239889725917,2.0747286128228057,0.2889236488956473,0.008786636423567579,0.2788531604928826,0.07595095892129583,2.498655385699758,0.14936447120392002,0.6454352152635393,0.010247513372268478,0.2442494760981775,0.14680720580079856,0.03785285877998283,0.16230010198437927,0.4202949749525044,0.04640547560022648,0.2685772325265303,0.5183306031664932,1.0158530900940699,0.21303623936069227,0.3859152971826507,0.057750012429373714,0.9853015540501378,0.2932372941595529,0.07204370095646491,0.4712780530963979,0.21622124917036376,0.2523426132133916,0.8524945657222263,0.6367459659033428,0.002670771971618077,0.10926184869392329,0.2730690309906273,2.3718019317481236,0.359158820474632,0.8612330479533463,0.43303034240487187,0.27369013957332705,0.062491181906429966,0.4301361119331992,0.15707954197549318,1.0021310379100485,0.004643379639635604,0.12016493470281489,0.08381401528147253,0.5958975836780932,0.03498370468297277,0.002357177426089527,0.012716827788584385,0.22672604809061567,0.3689037440407911,0.5098339766949563,0.10055461678386411,1.8858187216725133,0.010600801648960795,1.3647200393316605,0.5340469054770116,0.35753257832066765,0.06239310866134959,0.49655495653822534,0.037938931498975516,0.36491235201272365,0.8213202396417778,0.0030614180286094757,0.40736540589845954,0.04834414807020041,0.06908713256283651,0.44645463426674303,0.0418196280789733,0.4280431790167499,0.19291558651336405,0.38837302292993614,0.830555190260396,0.06668771405117943,0.05013037842723909,0.1308861985310212,0.006282057057083559,0.04834627531572187,0.12042953769214494,0.15169187257338163,0.49801382512341213,0.7392741533772254,0.07217232603719265,1.1285260402282735,0.16191399768941436];
+
+	// }
+Code.printMatlabArray(ratios,"ratios");
+ratios = Code.arrayVectorLn(ratios);
+
+	var sigmaDifferenceMinimum = 0.0001;
+	var lastSigma = null;
 	for(var s=0; s<10; ++s){
 		var lim = 1.0;
 		var mean = Code.mean(ratios);
 		var sigma = Code.stdDev(ratios,mean);
+lastSigma = sigma;
+console.log("SIGMA: "+s+" = "+sigma);
 		var limitMin = mean - lim*sigma;
 		var limitMax = mean + lim*sigma;
 		// console.log(s+" MEAN START: "+mean+" +/- "+sigma+" / "+ratios.length);
@@ -9834,13 +9854,22 @@ console.log("RATIOS:"+ratios);
 		}else{
 			break;
 		}
-		var nextMean = Code.mean(ratios);
-		var rat = nextMean>mean ? nextMean/mean : mean/nextMean;
-		if(rat<1.00001){
+		if(sigma<sigmaDifferenceMinimum){
 			break;
 		}
+		// var nextMean = Code.mean(ratios);
+		// var rat = nextMean>mean ? nextMean/mean : mean/nextMean;
+		// if(rat<1.00001){
+		// 	break;
+		// }
 	}
-	console.log(ratios);
+	var lastRatio = (lastSigma/ratios.length);
+	console.log("LAST SIGMA: "+lastSigma+" / "+ratios.length+" = "+lastRatio); // GOOD: 0.0000# - BAD: 0.00#
+	if(lastRatio>0.001){
+		console.log(ratios);
+		throw "bad";
+	}
+	ratios = Code.arrayVectorExp(ratios);
 	var scale = Code.mean(ratios);
 	return scale;
 }
@@ -12020,10 +12049,9 @@ Stereopsis.ransacTransformF = function(transform, maximumSamples, skipP, onlyBes
 	if(points3D.length>minimumTransformMatchCountF){
 		// get initial F
 		F = R3D.fundamentalFromUnnormalized(pointsA,pointsB);
-		
+		var bestPointsA = pointsA;
+		var bestPointsB = pointsB;
 		if(!skipP && bestPointsA.length>minimumTransformMatchCountR){
-			var bestPointsA = pointsA;
-			var bestPointsB = pointsB;
 			var Ka = viewA.K();
 			var Kb = viewB.K();
 			if(Ka && Kb){
