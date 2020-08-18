@@ -33,9 +33,9 @@ x https://www.scitepress.org/papers/2017/62965/62965.pdf
 	boundaries
 	ROI -> use pixels as formation of statistical hypothesis
 
-HERE http://www.cad.zju.edu.cn/home/hwlin/pdf_files/A-robust-hole-filling-algorithm-for-triangular-mesh.pdf
-	poisson equation w/ Dirichlet boundary
-	advancing - front
+x http://www.cad.zju.edu.cn/home/hwlin/pdf_files/A-robust-hole-filling-algorithm-for-triangular-mesh.pdf
+	advancing - front (can make poor, planar areas)
+	fix triangles using harmonics: poisson equation w/ Dirichlet boundary
 
 
 http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.409.3685&rep=rep1&type=pdf
@@ -133,6 +133,12 @@ IDEAS:
 
 
 
+
+
+A) 
+	advancing front
+	prioritize based on 'generation' closest to source edge
+	post-process
 
 
 

@@ -390,7 +390,7 @@ R3D.PFromKRT = function(K,R,t){
 R3D.optimizeMultipleCameraExtrinsicDLTNonlinear = function(listP, listK, listKinv, variablePIndex, listPoints2D, maxIterations, negativeIsBad){
 	maxIterations = Code.valueOrDefault(maxIterations, 1000);
 	negativeIsBad = Code.valueOrDefault(negativeIsBad, false);
-	console.log("R3D.optimizeMultipleCameraExtrinsicDLTNonlinear: "+listP.length+" views  & "+listPoints2D.length+" points @ "+variablePIndex);
+	console.log("??? R3D.optimizeMultipleCameraExtrinsicDLTNonlinear: "+listP.length+" views  & "+listPoints2D.length+" points @ "+variablePIndex);
 	var args = [listP, listK, listKinv, variablePIndex, listPoints2D, negativeIsBad];
 	// make a temporary matrix for iterating on
 	var O = listP[variablePIndex];
@@ -403,7 +403,6 @@ R3D.optimizeMultipleCameraExtrinsicDLTNonlinear = function(listP, listK, listKin
 	// replace as-was
 	listP[variablePIndex] = O;
 	// to output
-	// var P = new Matrix(4,4); // not necessary ?
 	R3D.transform3DFromComponentArray(P, x);
 	return {"P":P, "error":cost};
 }
@@ -468,14 +467,15 @@ R3D._transformCameraExtrinsicDLTNonlinearGD = function(args, x, isUpdate){
 		totalError += error;
 
 	} // track list
-	// if(isUpdate){
-	// 	console.log(totalError);
-	// }
+	if(isUpdate){
+		console.log(totalError);
+	}
 	return totalError;
 }
-R3D.optimizeAllCameraExtrinsicDLTNonlinear = function(listP, listK, listKinv, listPoints2D, maxIterations, negativeIsBad){
+R3D.optimizeAllCameraExtrinsicDLTNonlinear = function(listP, listK, listKinv, listPoints2D, maxIterations, negativeIsBad, onlyErrorZ){
 	maxIterations = Code.valueOrDefault(maxIterations, 1000);
 	negativeIsBad = Code.valueOrDefault(negativeIsBad, false);
+	onlyErrorZ = Code.valueOrDefault(onlyErrorZ, false);
 	console.log("R3D.optimizeAllCameraExtrinsicDLTNonlinear: "+listP.length+" views  & "+listPoints2D.length+" points ");
 	// make a set of matrixes for iterating on & passing back
 	var listM = [];
@@ -483,14 +483,17 @@ R3D.optimizeAllCameraExtrinsicDLTNonlinear = function(listP, listK, listKinv, li
 		var P = listP[i];
 		listM[i] = P.copy();
 	}
-	var args = [listM, listK, listKinv, listPoints2D, negativeIsBad];
+	console.log("onlyErrorZ: "+onlyErrorZ);
+	var args = [listM, listK, listKinv, listPoints2D, negativeIsBad, onlyErrorZ];
 	var x = [];
 	for(var i=0; i<listP.length; ++i){
 		var M = listM[i];
 		var y = R3D.transformMatrixToComponentArray(M);
 		Code.arrayPushArray(x,y);
 	}
-	var result = Code.gradientDescent(R3D._transformCameraAllExtrinsicDLTNonlinearGD, args, x, null, maxIterations, 1E-10);
+	// var minError = 1E-10;
+	var minError = 1E-16;
+	var result = Code.gradientDescent(R3D._transformCameraAllExtrinsicDLTNonlinearGD, args, x, null, maxIterations, minError);
 	var x = result["x"];
 	var cost = result["cost"];
 	for(var i=0; i<listM.length; ++i){
@@ -508,11 +511,35 @@ R3D._transformCameraAllExtrinsicDLTNonlinearGD = function(args, x, isUpdate){
 	var listKinv = args[2];
 	var listPoints2D = args[3];
 	var negativeIsBad = args[4];
+	var onlyErrorZ = args[5];
+	
 
 	// TODO: DON'T RECALCULATE IF NOT NEEDED
 	for(var i=0; i<listP.length; ++i){
 		R3D.transform3DFromComponentArray(listP[i], x, i*6);
 	}
+
+	var forwardRays = [];
+	var originV3Ds = [];
+if(onlyErrorZ){
+for(var i=0; i<listP.length; ++i){
+	var P = listP[i];
+	var A = Matrix.inverse(P);
+	var dirO = A.multV3DtoV3D(new V3D(0,0,0));
+	var dirZ = A.multV3DtoV3D(new V3D(0,0,1));
+		dirZ.sub(dirO);
+	forwardRays[i] = dirZ;
+	originV3Ds[i] = dirO;
+}
+}
+
+
+
+
+
+
+
+
 	// 
 	var totalError = 0;
 	var pointSetCount = listPoints2D.length;
@@ -544,27 +571,95 @@ R3D._transformCameraAllExtrinsicDLTNonlinearGD = function(args, x, isUpdate){
 			var entry = track[t];
 			var point2D = entry[0];
 			var indexP = entry[1];
-
+			//
 			var P = listP[indexP];
 			var K = listK[indexP];
-
+			//
 			P.multV3DtoV3D(tempP3D,point3D);
 			K.multV3DtoV3D(tempP3D,tempP3D);
-			isBehind |= (tempP3D.z<=0 || tempP3D.z<=0);
+// is this correct?
+// var pz = tempP3D.z;
+			// isBehind |= (tempP3D.z<=0 || tempP3D.z<=0);
+			isBehind |= (tempP3D.z<=0);
 				tempP3D.homo();
 
-			var distanceSquare = V2D.distanceSquare(point2D, tempP3D);
-			error += distanceSquare;
+			if(!onlyErrorZ){
+				var distanceSquare = V2D.distanceSquare(point2D, tempP3D);
+				error += distanceSquare;
+			}
+			// if(negativeIsBad && pz<=0){ 
+			// if(onlyErrorZ && pz<=0){
+			if(onlyErrorZ){
+				var fx = K.get(0,0,0);
+				var fy = K.get(1,1,0);
+				var f = (fx+fy*0.5);
+				var c = originV3Ds[indexP];
+				var n = forwardRays[indexP];
+				var cp = V3D.sub(point3D,c);
+				var dot = V3D.dot(cp,n);
+				if(dot<=f){
+					var dz = f-dot;
+					error += (0.0 + Math.abs(dz)) * 1.0;
+					// console.log("found neg: "+dot+" / "+f);
+					// throw "neg"
+				}
+			}
 		}
-		if(negativeIsBad && isBehind){ // behind camera
+		if(!onlyErrorZ && negativeIsBad && isBehind){ // behind camera -- discontinuous jump
 			error *= 2;
+
+			// error *= 100;
+			// error *= 1000;
+
+			// behind penalty:
+			// error += (1.0 + Math.abs(pz)) * 10000000000.0;
+
+			// console.log("error: "+pz);
+			// throw "...";
+			
 		}
+		// needs to be absolute matrix ?
+/*
+		if(negativeIsBad){ // behind camera -- continuous 
+			// ERROR SHOULD INCREASE BASED ON DISTANCE BEHIND CAMERA
+			for(var t=0; t<track.length; ++t){
+				var entry = track[t];
+				// var point2D = entry[0];
+				var indexP = entry[1];
+				var P = listP[indexP];
+				// behind distance:
+				var c = P.multV3DtoV3D(new V3D(0,0,0)); // center
+				var n = P.multV3DtoV3D(new V3D(0,0,1)); // normal
+					n.sub(c);
+				var cp = V3D.sub(point3D,c);
+				var dot = V3D.dot(cp,n);
+// console.log(P);
+// console.log(c);
+// console.log(n);
+// console.log(cp);
+// console.log(dot);
+// throw "?"
+				// TODO: should distance depend on scale? eg: baseline distance?
+				if(dot<0){
+console.log("-1: "+dot);
+					var alpha = 1.0;
+					// var alpha = 1000.0;
+					// var alpha = 10000000.0;
+					var distance = Math.abs(dot);
+					// d, d^2, sqrt(d)
+					error += alpha*distance; // perpendicular distance behind
+throw "negative";
+				}
+			}
+		}
+*/
 		totalError += error;
 
 	} // track list
-	// if(isUpdate){
-	// 	console.log(totalError);
-	// }
+	if(isUpdate){
+		console.log(totalError);
+		// throw "? total error"
+	}
 	return totalError;
 }
 

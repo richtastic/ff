@@ -8259,7 +8259,7 @@ console.log(i+" = ",vs[i]);
 			dataGroups.push(g);
 		}
 		console.log(data);
-// throw "BEFORE SAVE GRAPH";
+throw "BEFORE SAVE GRAPH";
 		// save graph & reference it
 		inputData["graph"] = graphFilename;
 		var saveSparseFxn = function(){
@@ -8643,7 +8643,7 @@ console.log("isDone - FULL DONE")
 					console.log(allViews,allTransforms);
 					var info = App3DR.ProjectManager._putativePairsFromViewsAndTransforms(allViews,allTransforms);
 					console.log(info);
-// throw "putative here ..."
+throw "putative here ..."
 					// var pairs = info["lookup"];
 					var pairs = info["pairs"];
 					// var pairs = info["lookup"];
@@ -8913,12 +8913,12 @@ console.log(" save graph ");
 			return;
 		}
 // throw "C"
-		if(graphGroups.length==bundleGroupIndex){
+		if(graphGroups.length==bundleGroupIndex){ // combine groups to single graph using skeleton view's offset as origin
 
 			console.log(graphGroups);
 
-
-			// combine groups to single graph using skeleton view's offset as origin
+throw "combine full bundles ..."
+			
 			console.log(graphGroups);
 			var transformLookup = {};
 			for(var i=0; i<graphGroups.length; ++i){
@@ -9125,6 +9125,7 @@ throw "before saving initial bundle full";
 // throw "D"
 		// special case for full yaml: views & pairs are from graph
 		if(graphGroups.length==loadGroupIndex){
+console.log("special case? - should save view transforms to track full yaml");
 			console.log(bundleGroupIndex);
 			var graphGroup = graphGroups[bundleGroupIndex];
 			console.log("graphGroup A");
@@ -9132,6 +9133,7 @@ throw "before saving initial bundle full";
 			var trackFilename = graphGroup["filename"];
 			console.log("trackFilename: "+trackFilename);
 			var fullTrackPath = Code.appendToPath(basePath,"tracks",trackFilename);
+// throw "need to combine group track views ??????????"
 			// load the track
 			var baTrackFileLoadComplete = function(data){
 				console.log("baTrackFileLoadComplete");
@@ -9165,6 +9167,11 @@ throw "before saving initial bundle full";
 				var minimumPixelErrorBA = 0.001; // 1/1000 -- TODO: different for SPARSE/DENSE
 				// var maxIterationsBA = 10*baViews.length;
 				var maxIterationsBA = 2*baViews.length;
+
+// forever
+minimumPixelErrorBA = 0;
+maxIterationsBA = 999;
+
 // maxIterationsBA = -1;
 
 				// if(!baOptimizations){
@@ -9259,9 +9266,13 @@ console.log(graphData);
 					console.log("no more -- move onto next group");
 					project._taskDoneCheckReloadURL();
 					return;
-				}
+				} // optimizing a single track file:
 console.log("isDone --- no");
-				
+
+
+
+
+// throw "WHEN IS THIS A";
 
 // GOAL: move views in direction that minimizes  error
 
@@ -9322,7 +9333,7 @@ console.log("isDone --- no");
 				var worldObject = world.toObject();
 				console.log(worldObject);
 
-				data["points"] = worldObject["points"]; // should not change ?
+				data["points"] = worldObject["points"];
 				data["views"] = worldObject["views"];
 				data["iteration"] = baIterations + 1;
 
@@ -9343,7 +9354,7 @@ console.log("isDone --- no");
 		}else if(loadGroupIndex>graphGroups.length){
 			throw " more than ?"
 		}
-		// 
+// 
 		console.log("here for what reason?")
 		var graphGroup = graphGroups[loadGroupIndex];
 		console.log("graphGroup");
@@ -9359,9 +9370,10 @@ console.log("isDone --- no");
 		var fullTrackPath = Code.appendToPath(basePath,"tracks",trackFilename);
 		console.log(fullTrackPath);
 		console.log(trackData);
+
 // throw "before tracks?: "+trackFilename;
 
-		var fxnGroupTrackLoaded = function(){
+		var fxnGroupTrackLoaded = function(){ // 
 			console.log("fxnGroupTrackLoaded");
 			var pending = trackData["pending"];
 			var loadViews = [];
@@ -9375,7 +9387,6 @@ console.log("isDone --- no");
 				// 	throw "no graph edges .. need to save an empty track file anyway ?"
 				// }
 				if(graphGroupEdges.length!==0 && loadPairIndex>=graphGroupEdges.length){ // all pairs loaded into track for this group
-// throw "INSIDE A"
 					console.log("done all pairs for group: "+loadGroupIndex);
 					graphData["loadPairIndex"] = -1;
 					graphData["loadGroupIndex"] = loadGroupIndex + 1;
@@ -9388,14 +9399,14 @@ console.log("isDone --- no");
 					project.saveFileFromData(graphData, graphFile, savedGraphComplete);
 					// save 
 					return;
-				} // else there are more to load
-// throw "INSIDE B"
+				} // else there are more tracks pairs to load
 				console.log("graphGroupEdges");
 				console.log(graphGroupEdges);
 				if(graphGroupEdges.length==0){
 					console.log("no edges -- skeleton w/o edges?");
 					loadViews = [];
 					loadPairs = [];
+					throw "why?";
 					// loadPairIndex = -1;
 					// loadGroupIndex = loadGroupIndex + 1;
 				}else{
@@ -9446,7 +9457,7 @@ console.log("isDone --- no");
 			loadViews = [];
 			console.log(loadViews);
 			// start async loading
-			var expectedImages = loadViews.length;
+			var expectedImages = loadViews.length; // TODO: VIEW'S AREN'T USED
 			var expectedTracks = loadPairs.length;
 			var loadedImages = 0;
 			var loadedTracks = 0;
@@ -9573,7 +9584,7 @@ console.log(loadPairs);
 				console.log(existingPoints);
 				console.log(loadPairs);
 				console.log("embed points ?");
-// throw "EMBED"
+// throw "EMBED TRACK POINTS"
 world.setResolutionProcessingModeNonVisual();
 				//project._embedTrackPoints(world, existingPoints, worldViewLookup);
 				var additionalPoints = [];
@@ -9590,10 +9601,13 @@ world.setResolutionProcessingModeNonVisual();
 				world.initAffineFromP3DPatches(additionalPoints);
 				console.log(additionalPoints);
 
+console.log(existingPoints);
 				// add original points no intersection:
 				var points3DExisting = App3DR.ProjectManager._worldPointFromSaves(world, existingPoints, worldViewLookup);
+
 				// have patch, but need to regenerate affine:
 				// world.initAllP3DPatches(points3DExisting);
+console.log(points3DExisting);
 				world.initAffineFromP3DPatches(points3DExisting);
 				console.log(points3DExisting);
 
@@ -9604,7 +9618,10 @@ world.setResolutionProcessingModeNonVisual();
 
 				// add new points with intersection:
 				console.log("new");
-				world.embedPoints3D(additionalPoints);
+				// world.embedPoints3D(additionalPoints); // TODO: ADD THIS BACK
+				world.embedPoints3DNoValidation(additionalPoints); // TODO: REMOVE THIS
+
+
 
 				world.relativeFFromSamples();
 				
@@ -9625,18 +9642,14 @@ graphData["loadPairIndex"] = -1;
 }
 				console.log(graphData);
 
-
 				var fullGraphPath = graphFile;
 
-				console.log("save to track file");
-
-
-				
+				console.log("save to track file: "+trackFilename);
 				console.log(worldObject);
 				console.log(trackData);
 				console.log(fullTrackPath);
 				console.log(fullGraphPath);
-// throw "before save tracks???+ "+trackFilename;
+// throw "before save track group: "+trackFilename;
 				var savedFiles = 0;
 				var savedTrackComplete = function(){
 					console.log("savedTrackComplete: "+trackFilename);
@@ -9673,8 +9686,9 @@ graphData["loadPairIndex"] = -1;
 			}
 
 			return; // end loading pairs/views for tracks
-		} // done track data loaded
+		} // done setting INITIAL track data object
 console.log("load the track file: "+fullTrackPath);
+// throw "?";
 		var currentTrackFileLoadComplete = function(d){
 			console.log("currentTrackFileLoadComplete");
 			console.log(d);
@@ -9894,6 +9908,7 @@ App3DR.ProjectManager.prototype._absoluteViewsFromDatas = function(views, pairs,
 		return [pair["A"],pair["B"]];
 	};
 	var pairToError = function(pair){
+		// return 1;
 		// return pair["relativeError"];
 		return pair["relativeError"]/pair["relative"];
 	};
@@ -9922,6 +9937,35 @@ console.log(result);
 	var groupTransforms = first["transforms"];
 	var groupPairs = first["pairs"];
 	var groupViews = first["views"];
+console.log(groupPairs);
+
+
+
+var minimumStringFirst = function(a,b){
+	return a < b ? (a+"-"+b) : (b+"-"+a);
+}
+var pairLookup = {};
+for(var i=0; i<pairs.length; ++i){
+	var pair = pairs[i];
+	var viewIDs = pairToIDs(pair);
+	var pairID = minimumStringFirst(viewIDs[0],viewIDs[1]);
+	pairLookup[pairID] = pair;
+}
+var groupPairsPass = [];
+for(var i=0; i<groupPairs.length; ++i){
+	var groupPair = groupPairs[i];
+	var a = viewToID(views[groupPair[0]]);
+	var b = viewToID(views[groupPair[1]]);
+	var pairID = minimumStringFirst(a,b);
+	var pair = pairLookup[pairID];
+	var AtoB = pairToTransform(pair);
+	var viewIDs = pairToIDs(pair);
+	if(viewIDs[0]!=a){
+		AtoB = Marix.inverse(AtoB);
+	}
+	var p2 = [groupPair[0],groupPair[1],AtoB,groupPair[2]];
+	groupPairsPass[i] = p2;
+}
 
 	var orderedTransforms = Code.newArrayNulls(views.length);
 	for(var i=0; i<groupViews.length; ++i){
@@ -9947,8 +9991,9 @@ for(var i=0; i<views.length; ++i){
 	groupIDs[i] = viewID;
 }
 
-	this.displayViewGraph(orderedTransforms,groupPairs, 100, groupIDs);
+	this.displayViewGraph(orderedTransforms,groupPairsPass, 100, groupIDs);
 
+throw "............."
 
 
 
@@ -15488,18 +15533,41 @@ App3DR.ProjectManager.prototype.displayViewGraph = function(transforms, pairs, o
 	offsetX = offsetX!==undefined ? offsetX : 0.0;
 
 
-
 /*
+
 	for(var i=0; i<transforms.length; ++i){
 		var m = new Matrix(4,4).identity();
 			m = Matrix.transform3DTranslate(m, 0,0,-10);
 			m = Matrix.transform3DRotateY(m, Code.radians(-10*i));
-			// m = Matrix.inverse();
+			m = Matrix.transform3DTranslate(m, 1,2,3);
+			// m = Matrix.inverse(); // if want extrinsic
 		transforms[i] = m;
 	}
+	for(var i=0; i<pairs.length; ++i){
+		var pair = pairs[i];
+		var indexA = pair[0];
+		var indexB = pair[1];
+		var matrixA = transforms[indexA];
+		var matrixB = transforms[indexB];
+			// 
+			var relAB = Matrix.relativeReference(matrixA,matrixB);
+			
+			// var s = 0.0;
+			var s = 0.50;
+
+			// var a = Code.radians(0.0);
+			var a = Code.radians(10.0);
+			
+			relAB = Matrix.transform3DTranslate(relAB, (Math.random()-0.5)*s,(Math.random()-0.5)*s,(Math.random()-0.5)*s);
+			relAB = Matrix.transform3DRotateX(relAB, (Math.random()-0.5)*a);
+			relAB = Matrix.transform3DRotateY(relAB, (Math.random()-0.5)*a);
+			relAB = Matrix.transform3DRotateZ(relAB, (Math.random()-0.5)*a);
+			pair[2] = relAB;
+			// pair[2] = Matrix.relativeWorld(matrixA,matrixB);
+	}
+
+
 */
-
-
 
 
 
@@ -15672,7 +15740,12 @@ App3DR.ProjectManager.prototype.displayViewGraph = function(transforms, pairs, o
 		var pair = pairs[i];
 		var a = pair[0];
 		var b = pair[1];
-		/*
+
+
+// console.log(pair);
+
+// throw "?"
+		
 		var fwd = pair[2];
 		var error = pair[3];
 		var bak = Matrix.inverse(fwd); // i
@@ -15684,24 +15757,67 @@ App3DR.ProjectManager.prototype.displayViewGraph = function(transforms, pairs, o
 		// depends on if relative or if extrinsic
 		// var nb = Matrix.mult(fwd,ta);
 		// var na = Matrix.mult(bak,tb);
-		var nb = Matrix.mult(bak,ta);
-		var na = Matrix.mult(fwd,tb);
+		// var nb = Matrix.mult(bak,ta);
+		// var na = Matrix.mult(fwd,tb);
 
+
+		// var ia = Matrix.inverse(ta);
+		// var ib = Matrix.inverse(tb);
+
+		// var nb = Matrix.mult(fwd,ta); // NO
+		// var na = Matrix.mult(bak,tb);
+
+		// var nb = Matrix.mult(fwd,ia); // NO
+		// var na = Matrix.mult(bak,ib);
+
+		// fwd = Matrix.mult(ia,fwd);
+		// bak = Matrix.mult(ib,bak);
+		// fwd = Matrix.mult(fwd,ia);
+		// bak = Matrix.mult(bak,ib);
+		// var nb = Matrix.mult(fwd,ta);
+		// var na = Matrix.mult(bak,tb);
+		var nb = Matrix.mult(ta,fwd);
+		var na = Matrix.mult(tb,bak);
+
+
+
+							// absA = Matrix.inverse(newOriginR);
+							// absB = Matrix.mult(relAB, absA);
+							// extB = Matrix.inverse(absB);
+
+		// var ns = [na,nb];
+		// var ts = [ta,tb];
 		var ts = [na,nb];
+
+// console.log(fwd);
+// console.log(bak);
+// console.log(ta);
+// console.log(tb);
+// throw "?"
+// console.log(na,nb,ta,tb);
+
 		for(var j=0; j<ts.length; ++j){
 			var c3D = ts[j].multV3DtoV3D(new V3D(0,0,0));
 			var p2D = Code.projectTo2DPlane(c3D.copy(),planeCenter,planeNormal);
 			p2D = transformTo2D.multV2DtoV2D(p2D);
 			// center:
-			display.graphics().setLine(1.0,0xFFCCCCCC);
+			display.graphics().setLine(1.0,0xFF999999);
 			display.graphics().setFill(0x66CCCCCC);
 			display.graphics().beginPath();
-			display.graphics().drawCircle(p2D.x,p2D.y, cameraSize*err);
+			// display.graphics().drawCircle(p2D.x,p2D.y, cameraSize*err);
+			display.graphics().drawCircle(p2D.x,p2D.y, 10.0);
 			display.graphics().endPath();
 			display.graphics().fill();
 			display.graphics().strokeLine();
 		}
-		*/
+		
+
+
+
+
+
+
+
 		var p2DA = centersDisplay2D[a];
 		var p2DB = centersDisplay2D[b];
 		display.graphics().setLine(2.0,0x990000CC);
@@ -17331,8 +17447,8 @@ App3DR.ProjectManager._worldPointFromSaves = function(world, points, viewLookup)
 		point3D.point(p3D);
 		point3D.normal(n3D);
 		point3D.size(s3D);
-		// throw "?";
-		// up ?
+		// up
+		world.setP3DPatchUpFromViews(point3D);
 		points3D.push(point3D);
 	}
 	return points3D;

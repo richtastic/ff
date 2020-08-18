@@ -15073,11 +15073,12 @@ Array.prototype.last = function(){
 
 // -------------------------------------------------------------------------------------------------------------------------------------------- absolute graph from relative edges
 // FORMAT: [idA, idB, value, weight]
-Code.graphAbsoluteFromRelative1D = function(edges){ // value: vA = vB + edge
+Code.graphAbsoluteFromRelative1D = function(edges, maxIterationsLinear, maxIterationsNonLinear){ // value: vA = vB + edge
 	// settings
 	var minimumChangeQuit = 1E-6; // use edges to find 0.01% of that
-	var maxIterationsLinear = 1000;
-	var maxIterationsNonLinear = 1000;
+	var linearMultiplier = Math.ceil(Math.sqrt(edges.length));
+	maxIterationsLinear = Code.valueOrDefault(maxIterationsLinear, linearMultiplier*1000);
+	maxIterationsNonLinear = Code.valueOrDefault(maxIterationsNonLinear, linearMultiplier*1000);
 	var decayRate = 0.0; // percent of old value to keep
 	// derived
 	var dRO = 1.0 - decayRate;
@@ -16619,11 +16620,14 @@ Code.graphAbsoluteFromRelativePose2D_A = function(edges){ // transation + rotati
 	throw "TODO";
 }
 
-Code.graphAbsoluteFromRelativePose3D = function(edges, orientations){ // orienation: vA = vB + edge
+Code.graphAbsoluteFromRelativePose3D = function(edges, orientations, maxIterationsLinear, maxIterationsNonLinear){ // orienation: vA = vB + edge
 	// settings
-	var minimumChangeQuit = 1E-6; // use edges to find 0.01% of that
-	var maxIterationsLinear = 1000;
-	var maxIterationsNonLinear = 1000;
+	var minimumChangeQuit = 1E-8; // use edges to find 0.01% of that
+	var linearMultiplier = Math.ceil(Math.sqrt(edges.length));
+	// var linearMultiplier = orientations.length;
+	maxIterationsLinear = Code.valueOrDefault(maxIterationsLinear, linearMultiplier*1000);
+	maxIterationsNonLinear = Code.valueOrDefault(maxIterationsNonLinear, linearMultiplier*10000);
+// console.log(maxIterationsLinear,maxIterationsNonLinear);
 	var decayRate = 0.0; // percent of old value to keep
 	// derived
 	var dRO = 1.0 - decayRate;
@@ -16684,7 +16688,7 @@ Code.graphAbsoluteFromRelativePose3D = function(edges, orientations){ // orienat
 // throw "???"
 
 
-console.log("ROTATIONS ARE EQUAL ?")
+// console.log("ROTATIONS ARE EQUAL ?")
 if(orientations){
 var values = rotations;
 console.log(orientations);
@@ -17243,6 +17247,8 @@ console.log("TRIPLES: "+triples.length);
 			values[j] = Math.exp(values[j]);
 		}
 		var optimalScales = values;
+// console.log(optimalScales);
+// throw "........."
 		// number views for solver
 		var viewIDs = {}; // all views reached in group
 		for(var j=0; j<vertexes.length; ++j){

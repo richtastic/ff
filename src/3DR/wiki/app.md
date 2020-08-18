@@ -389,6 +389,146 @@ MISSING:
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
+=> SHOW GRAPH ERROR
+
+
+=> initial location of last view is wrong
+	- is there a way to optimize using another method?
+		- pairwise Ps ?
+
+- revisit graph algorithm
+	- are any of the pairs for first view bad?
+	- is there an error in a calculation?
+	- optimize on different variables?
+		- last one: only rotation?
+
+
+var graph = project._absoluteViewsFromDatas(graphViews, graphPairs, graphTriples);
+
+var result = Code.graphAbsoluteFromObjectLookup3D(views, pairs, triples, viewToID,pairToIDs,tripleToIDs, pairToError,pairToTransform, tripleToScales);
+
+...
+
+...
+
+
+
+
+
+with the case of TRACKS:
+	- confident that at least 50% of the matches are good (in fact nearly 100% are good, and are +z when chosen)
+	- for multi-view scenario: 
+	- if any transform's points are all (50%+) behind it, the view is in an incorrect position and should be updated:
+		- move view to COM of points (move in -normal direction to Z)
+		- CAN'T move to behind all points
+
+	=> which view to move, and where to move it to?
+
+		=> nonlinear method just like reprojection error, but only optimizes moving points to in-front
+			-> cameras that don't contribute won't change their variables
+
+
+
+=> TRY:
+	- move transforms in directions that more agree with desired P
+		=> calculate P from transform pair
+		=> scale P up to current baseline
+		=> update each absolute position based on average of edges
+			=> solve absolute transforms
+
+
+
+
+...............
+
+error metric: what matters most is DELTAS
+	=> want to 'push' cameras into place
+- 'how far behind' views a point3D is
+- reprojection error 
+
+
+
+
+0th view is in wrong spot
+=> need the reprojection error to cause camera to move backwards
+
+	=> need to avoid local minimum
+
+
+=> if some % of points are behind cameras -- cameras need to rotate
+	=> distance behind camera matters then
+..........
+
+....
+
+
+
+
+
+
+
+var result = R3D.optimizeAllCameraExtrinsicDLTNonlinear
+	transformCameraAllExtrinsicDLTNonlinearGD
+
+
+
+- single view optimizing is really bad
+- multi view doesn't get to a very optimum minimum location
+
+- initialization may be off ??? 
+	- it doesn't look as good as hoped
+
+
+- try not combining tracks  ?
+
+x try changing weights on graph calculation (to 1) to see if result is different
+
+
+
+solveOptimizeSingleView
+	=> looks bad
+
+		refineSelectCameraMultiViewTriangulation
+		optimizeMultipleCameraExtrinsicDLTNonlinear
+
+	=> could try 'optimize every view' for possibilty
+
+
+- intersection tracks?
+- R3D optimizing fxn?
+
+
+
+
+
+refineAllCameraMultiViewTriangulation
+
+
+
+
+
+optimizeAllCameraExtrinsicDLTNonlinear ............
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+OPTIMIZING & COMBINING
+	- graph.yaml has all original view transforms
+	- track_i.yaml has optimized group view transforms
+	=> at combine:
+
 
 
 

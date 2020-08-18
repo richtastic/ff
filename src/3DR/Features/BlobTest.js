@@ -1403,7 +1403,6 @@ var Finv = R3D.fundamentalInverse(F);
 	console.log(result);
 
 world.setMatchAffineFromNeighborhood();
-
 	world.showForwardBackwardPair();
 	throw "..........."
 

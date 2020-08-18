@@ -1279,7 +1279,7 @@ Stereopsis.View.prototype.normal = function(){
 	var normal = this._normal;
 	if(!normal){
 		// var trans = this._absoluteTransform; // extrinsic
-		var trans = this._absoluteTransformInverse;
+		var trans = this._absoluteTransformInverse; // absolute
 		if(trans){
 			var org = new V3D(0,0,0);
 			var normal = new V3D(0,0,1);
@@ -5938,7 +5938,7 @@ Stereopsis.World.prototype.solveDropWorstViewNeighbors = function(){ // move vie
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 Stereopsis.World.prototype.solveOptimizeSingleView = function(viewSolve){ // move view to a more optimal position - no point3D updates
 	console.log("solveOptimizeSingleView");
-
+// throw "solveOptimizeSingleView";
 	// assume all views set up in absolute positions
 	var world = this;
 	var minimumMatchNeighborCount = 16;
@@ -5966,6 +5966,8 @@ Stereopsis.World.prototype.solveOptimizeSingleView = function(viewSolve){ // mov
 	for(var i=0; i<maxIterations; ++i){
 		console.log(" iteration: :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: "+i+"/"+maxIterations+" ("+viewSolve.id()+") ");
 		// 3+ track groups:
+		
+		/*
 		var result = world.refineSelectCameraMultiViewTriangulation(viewSolve, iterationsMain);
 		world.copyRelativeTransformsFromAbsolute();
 		for(var v=0; v<neighborViews.length; ++v){
@@ -5973,8 +5975,32 @@ Stereopsis.World.prototype.solveOptimizeSingleView = function(viewSolve){ // mov
 			world.refineSelectCameraMultiViewTriangulation(view, iterationsNeighbors);
 			world.copyRelativeTransformsFromAbsolute();
 		}
-		// UPDATE POINT LOCATIONS:
+		
 
+		*/
+
+
+		// throw "............................................ poor"
+
+		// ALL
+		// var minIts = 100;
+		var minIts = 25; // 1 second per iteration
+		// var minIts = 10;
+		// console.log("NEGATIVE");
+		// var result = world.refineAllCameraMultiViewTriangulation(minIts, false, true);
+		console.log("REPROJECTION")
+		throw "........NOPE";
+		var result = world.refineAllCameraMultiViewTriangulation(minIts, false, false);
+		world.copyRelativeTransformsFromAbsolute();
+
+
+		// if a view is in front of all its points (50%?) => move camera to COM of points ?
+
+
+// throw "..........."
+
+
+		// UPDATE POINT LOCATIONS:
 		world.updatePoint3DLocations();
 
 		// PATCHES - don't care
@@ -5986,28 +6012,30 @@ Stereopsis.World.prototype.solveOptimizeSingleView = function(viewSolve){ // mov
 		prevErrorR = nextErrorR;
 		var ratio = Math.abs(delta/startingErrorR);
 		console.log("DELTA: "+delta+" @ "+ratio);
-		if(ratio<0.0001){ // static
-			console.log("break early");
-			break;
-		}
+		// if(ratio<0.0001){ // static
+		// 	console.log("break early");
+		// 	break;
+		// }
 	}
 	// puts points at calculated locations
 	world.estimate3DErrors(true);
-	world.averagePoints3DFromMatches();
+	// world.averagePoints3DFromMatches();
 
 	var endingErrorR = nextErrorR;
 	var differenceErrorR = endingErrorR - startingErrorR;
 	console.log("starting: "+startingErrorR);
 	console.log("  ending: "+endingErrorR);
 	console.log("  delta: "+differenceErrorR);
+	// throw "before exit solveOptimizeSingleView"
 	
 	return {"deltaR":differenceErrorR, "errorR":endingErrorR};
 }
 
 
 
-Stereopsis.World.prototype.refineAllCameraMultiViewTriangulation = function(maxIterations, onlyLongTracks){
+Stereopsis.World.prototype.refineAllCameraMultiViewTriangulation = function(maxIterations, onlyLongTracks, onlyZError){
 	onlyLongTracks = Code.valueOrDefault(onlyLongTracks, false);
+	onlyZError = Code.valueOrDefault(onlyZError, false);
 	var world = this;
 	var listExts = [];
 	var listKs = [];
@@ -6054,7 +6082,7 @@ Stereopsis.World.prototype.refineAllCameraMultiViewTriangulation = function(maxI
 		}
 		listPoints2D.push(entryP3D);
 	}
-	var result = R3D.optimizeAllCameraExtrinsicDLTNonlinear(listExts, listKs, listKinvs, listPoints2D, maxIterations, true); // negative bad?
+	var result = R3D.optimizeAllCameraExtrinsicDLTNonlinear(listExts, listKs, listKinvs, listPoints2D, maxIterations, true, onlyZError); // negative bad?
 	var listP = result["matrixes"];
 	for(var i=0; i<views.length; ++i){
 		var P = listP[i];
@@ -6205,8 +6233,6 @@ console.log(selectView.data()+" : "+points2D.length);
 		}
 		listPoints2D.push(entryP3D);
 	}
-	// console.log(listPoints2D);
-	// console.log(listExts, listKs, listKinvs, selectViewIndex, listPoints2D, maxIterations);
 	if(listPoints2D.length<minimumMatchCountTransform){
 		console.log("below: "+listPoints2D.length+" / "+minimumMatchCountTransform);
 		console.log(viewsKeep);
@@ -6219,7 +6245,8 @@ console.log(selectView.data()+" : "+points2D.length);
 	}
 	// var result = R3D.optimizeMultipleCameraExtrinsicDLTNonlinear(listExts, listKs, listKinvs, selectViewIndex, listPoints2D, maxIterations);
 	// console.log("? optimizeMultipleCameraExtrinsicDLTNonlinear ?");
-	var result = R3D.optimizeMultipleCameraExtrinsicDLTNonlinear(listExts, listKs, listKinvs, selectViewIndex, listPoints2D, maxIterations);
+	var negativeIsBad = true;
+	var result = R3D.optimizeMultipleCameraExtrinsicDLTNonlinear(listExts, listKs, listKinvs, selectViewIndex, listPoints2D, maxIterations, negativeIsBad);
 	var P = result["P"];
 	selectView.absoluteTransform(P);
 	// throw "?"
@@ -7038,6 +7065,25 @@ Stereopsis.World.prototype.initP3DPatchFromGeometry3D = function(point3D){
 	point3D.normal(normal3D);
 	point3D.up(up3D);
 	point3D.size(radius);
+}
+Stereopsis.World.prototype.setP3DPatchUpFromViews = function(point3D){
+	var views = point3D.toViewArray();
+	var ups = [];
+	for(var i=0; i<views.length; ++i){
+		var view = views[i];
+		var up = view.up();
+		if(ups.length>0){ // keep ups in same direction
+			if(V3D.dot(up,ups[0])<0){
+				up = up.copy().scale(-1);
+			}
+		}
+		ups.push(up);
+	}
+	var up = Code.averageAngleVector3D(ups);
+	var normal = point3D.normal();
+	var right = V3D.cross(normal,up);
+		up = V3D.cross(right,normal);
+	point3D.up(up);
 }
 Stereopsis.World.prototype.updateP3DPatchFromViewDeltas = function(point3D,prevLocation3D,viewInfo){ // use difference in angle and distance to change normal & size
 // console.log(viewInfo);
@@ -8148,7 +8194,6 @@ for(var i=0; i<pairMatches.length; ++i){
 
 
 		// NOT WORK:
-console.log("RICHIE REFINE A SINGLE VIEW ???");
 
 // transform3DFromComponentArray
 		world.refineSelectCameraMultiViewTriangulation(viewA, 500);
@@ -8207,9 +8252,7 @@ world.patchInitBasicSphere(true);
 
 // throw "minimize all at once"
 
-// throw "before main loop"
-
-console.log("RICHIE MAIN LOOP");
+throw "before main loop"
 	// var subdivisions = 0; // ~1k
 	// var subdivisions = 1; // 5-10k
 	var subdivisions = 2; // ~40k  --- select
@@ -15464,8 +15507,23 @@ Stereopsis.World.prototype.embedPoints3DNoValidation = function(points3D){
 // 	}
 // }
 Stereopsis.World.prototype.embedPoint3DNoValidation = function(point3D){
+	// throw "this is connect point"
 	this.connectPoint3D(point3D);
 }
+/*
+Stereopsis.World.prototype.connectPoint3DNoValidation = function(point3D){
+	this.connectPoint3D(point3D);
+}
+Stereopsis.World.prototype.connectPoints3DNoValidation = function(points3D){
+	if(!points3D){
+		points3D = world.toPointArray();
+	}
+	for(var i=0; i<points3D.length; ++i){
+		var point3D = points3D[i];
+		this.connectPoint3DNoValidation(point3D);
+	}
+}
+*/
 Stereopsis.World.prototype.embedPoints3D = function(points3D, validCheck){
 	validCheck = validCheck!==undefined ? validCheck : false;
 	for(var i=0; i<points3D.length; ++i){
@@ -15681,7 +15739,7 @@ if(!isErrorNone){
 			relateView = view;
 		}
 	}
-console.log(relatePoint2DA,relatePoint2DB,relateView);
+// console.log(relatePoint2DA,relatePoint2DB,relateView);
 	// predict new locations, thru relative point
 	var newPoint2DAs = [];
 	for(var i=0; i<viewsAllList.length; ++i){
@@ -15689,12 +15747,12 @@ console.log(relatePoint2DA,relatePoint2DB,relateView);
 		var viewID = view.id();
 		if(viewsAllA[viewID]){ // exists in A already
 			var point2DA = point3DA.pointForView(view);
-console.log(point2DA);
+// console.log(point2DA);
 			var p2DA = point2DA.point2D();
 			newPoint2DAs.push(p2DA);
 		}else{ // get relation thru related view
 			var matchB = point3DB.matchForViews(relateView,view);
-console.log(matchB);
+// console.log(matchB);
 			var affineAB = matchB.affineForViews(relateView,view);
 			var pointB = matchB.pointForView(view);
 			var point = V2D.sub(relatePoint2DA.point2D(),relatePoint2DB.point2D()); // remove offset B(a)->A
@@ -15703,7 +15761,7 @@ console.log(matchB);
 			newPoint2DAs.push(point);
 		}
 	}
-console.log(newPoint2DAs);
+// console.log(newPoint2DAs);
 // TODO: is there a case affines wont exists?
 	// get new affine matches
 	var affines = [];
@@ -15766,7 +15824,7 @@ console.log(newPoint2DAs);
 
 	// get needle-haystack for loaded views
 		// each loaded view A gets a chance to predict location in B-only view
-	console.log("needle - haystack");
+	// console.log("needle - haystack");
 	for(var i=0; i<viewsAllBList.length; ++i){
 		var viewB = viewsAllBList[i];
 		var viewBID = viewB.id();
@@ -15792,9 +15850,9 @@ console.log(newPoint2DAs);
 						// var haystackSize = needleSize + 2;
 						// needle & haystack both large
 						var result = R3D.optimumSADLocationSearchFlatRGB(existingA,predictedB, imageA,imageB, featureSize, needleSize,haystackSize, affineAB);
-						console.log(result);
+						// console.log(result);
 						var locationB2D = result["point"];
-						console.log(locationsB2D);
+						// console.log(locationsB2D);
 						locationsB2D.push(locationsB2D);
 					}
 				}

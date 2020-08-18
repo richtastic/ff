@@ -36,6 +36,12 @@
 	- the further above from the surface of the earth, the lower the pressure (falls off inverse squared - ish)
 	- at some point above earth, the pressure gradient approaches zero
 
+- graphic: atmosphereic pressure altitude
+- graphic: water pressure depth
+- graphic: forces on molecules (KE + gravity) - lighter molecules tend to be higher up (on top) of others (weight, reactivity, ...)
+- graphic: full earth pressure spherical
+
+
 ### measurement
 	- velocity
 		- measuring tape distance, drops / hourglass / stopwatch
