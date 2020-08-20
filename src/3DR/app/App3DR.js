@@ -8196,7 +8196,6 @@ for(var v=0; v<graphViews.length; ++v){
 }
 // console.log(graphViews);
 // console.log(viewIndextoViewID);
-
 		var graphGroups = graph["groups"];
 			graphGroups.unshift(graph["skeleton"]);
 		var graphGroupPairs = graph["groupEdges"]
@@ -8871,7 +8870,7 @@ console.log("fullBundlePath: "+fullBundlePath);
 
 				console.log(graphData);
 
-throw "before save graph"
+throw "x before save graph"
 console.log(" save graph ");
 				// SAVE
 				var savedGraphComplete = function(){
@@ -9321,9 +9320,34 @@ console.log("isDone --- no");
 				console.log(worldView);
 
 				// optimize view orientation
+
+// find problematic views / transforms:
+
+/*
+
+
+if worst offender has 50%+
+
+for each transform for offending view:
+	get relative P estimate
+	get absolute estimate from adjacent absolute view + AB
+average absolute locations & orientations
+set view absolute location at average
+update all relative transforms
+	
+=> this average new location MAY STILL HAVE SAME PROBLEM
+
+
+just push view to new location based on offending transform(s) ?
+*/
+
+
+
+
+// throw "BEFORE OPTIMIZE SINGLE VIEW?"
 				var info = world.solveOptimizeSingleView(worldView);
 				console.log(info);
-
+// throw "AFTER OPTIMIZE"
 				nextViewBA["deltaErrorR"] = Math.abs(info["deltaR"]); // expected always negative
 				nextViewBA["errorR"] = info["errorR"];
 				nextViewBA["updated"] = Code.getTimeMilliseconds();//Code.getTimeStampFromMilliseconds();
@@ -9615,11 +9639,10 @@ console.log(points3DExisting);
 				console.log("old");
 				world.embedPoints3DNoValidation(points3DExisting);
 // world.initNullP3DPatches();
-
 				// add new points with intersection:
 				console.log("new");
-				// world.embedPoints3D(additionalPoints); // TODO: ADD THIS BACK
-				world.embedPoints3DNoValidation(additionalPoints); // TODO: REMOVE THIS
+				world.embedPoints3D(additionalPoints); // TODO: ADD THIS BACK
+				// world.embedPoints3DNoValidation(additionalPoints); // TODO: REMOVE THIS
 
 
 
@@ -9715,6 +9738,8 @@ console.log("load the track file: "+fullTrackPath);
 	// combine from closeness only
 	// TODO: TRACK COLLISION RESOLUTION?
 }
+
+
 
 App3DR.ProjectManager._putativePairsFromViewsAndTransforms = function(views, transforms){
 	var viewCount = views.length;
@@ -9901,6 +9926,130 @@ App3DR.ProjectManager.pairIDFromViewIDs = function(idA,idB){
 	return idA < idB ? (idA+"-"+idB) : (idB+"-"+idA);
 }
 App3DR.ProjectManager.prototype._absoluteViewsFromDatas = function(views, pairs, triples){
+
+/*
+console.log(triples.length+" < BEFORE");
+for(var i=0; i<triples.length; ++i){
+	var triple = triples[i];
+	var gauge = triple["gauge"];
+	var AB = gauge["AB"];
+	var AC = gauge["AC"];
+	var BC = gauge["BC"];
+	if(AB==0 || AC==0 || BC==0){
+		// Code.removeElementAt(triples,i);
+		// --i;
+	}else{
+		Code.removeElementAt(triples,i);
+		--i;
+	}
+}
+console.log(triples.length+" < AFTER");
+*/
+
+
+/*
+
+
+// TESTING:
+	console.log(views);
+	console.log(pairs);
+	console.log(triples);
+
+	var newViews = [];
+	var newViewLookup = {};
+	for(var i=0; i<views.length; ++i){
+		var m = new Matrix(4,4).identity();
+			m = Matrix.transform3DTranslate(m, 0,0,-10);
+			m = Matrix.transform3DRotateY(m, Code.radians(-10*i));
+			m = Matrix.transform3DTranslate(m, 1,2,3);
+			// m = Matrix.inverse(); // if want extrinsic
+		var view = views[i];
+		var viewID = view["id"];
+		var newView = {"id":viewID, "absolute":m};
+		newViewLookup[viewID] = newView;
+		newViews[i] = newView;
+	}
+
+// var s = 0.0;
+// var s = 0.10;
+// var s = 0.50;
+var s = 1.00;
+
+// var a = Code.radians(0.0);
+// var a = Code.radians(10.0);
+// var a = Code.radians(30.0);
+var a = Code.radians(45.0);
+
+// var g = 0.0;
+// var g = 0.1;
+// var g = 0.5;
+var g = 1.0; // 0.5 - 2.0
+
+	var newPairs = [];
+	for(var i=0; i<pairs.length; ++i){
+		var pair = pairs[i];
+		var indexA = pair["A"];
+		var indexB = pair["B"];
+		var matrixAB = pair["R"];
+		var entryA = newViewLookup[indexA];
+		var entryB = newViewLookup[indexB];
+		var matrixA = entryA["absolute"];
+		var matrixB = entryB["absolute"];
+		var relAB = Matrix.relativeReference(matrixA,matrixB);
+		// ERROR:
+		relAB = Matrix.transform3DTranslate(relAB, (Math.random()-0.5)*s,(Math.random()-0.5)*s,(Math.random()-0.5)*s);
+		relAB = Matrix.transform3DRotateX(relAB, (Math.random()-0.5)*a);
+		relAB = Matrix.transform3DRotateY(relAB, (Math.random()-0.5)*a);
+		relAB = Matrix.transform3DRotateZ(relAB, (Math.random()-0.5)*a);
+
+		var extAB = Matrix.inverse(relAB);
+		newPair = {};
+		newPair["id"] = pair["id"];
+		newPair["A"] = pair["A"]
+		newPair["B"] = pair["B"];
+		newPair["relative"] = pair["relative"];
+		newPair["relativeError"] = pair["relativeError"];
+		// newPair["R"] = relAB;
+		
+		newPair["R"] = extAB;
+		
+		newPairs[i] = newPair;
+	}
+
+	var newTriples = [];
+	for(var i=0; i<triples.length; ++i){
+		var triple = triples[i];
+		var newTriple = {};
+			newTriple["id"] = triple["id"];
+			newTriple["A"] = triple["A"];
+			newTriple["B"] = triple["B"];
+			newTriple["C"] = triple["C"];
+			var gauge = triple["gauge"];
+			var newGauge = {"AB": 0.0, "AC": 0.0, "BC": 0.0};
+			if(gauge["AB"]>0){
+				newGauge["AB"] = 1.0 * Math.exp((Math.random()-0.5)*g);
+			}
+			if(gauge["AC"]>0){
+				newGauge["AC"] = 1.0 * Math.exp((Math.random()-0.5)*g);
+			}
+			if(gauge["BC"]>0){
+				newGauge["BC"] = 1.0 * Math.exp((Math.random()-0.5)*g);
+			}
+			newTriple["gauge"] = newGauge;
+		newTriples[i] = newTriple;
+	}
+
+views = newViews;
+pairs = newPairs;
+triples = newTriples;
+
+console.log(newViews);
+console.log(newPairs);
+console.log(newTriples);
+
+*/
+
+
 	var viewToID = function(view){
 		return view["id"];
 	};
@@ -9993,7 +10142,7 @@ for(var i=0; i<views.length; ++i){
 
 	this.displayViewGraph(orderedTransforms,groupPairsPass, 100, groupIDs);
 
-throw "............."
+// throw "............. displayViewGraph"
 
 
 
@@ -10004,10 +10153,39 @@ throw "............."
 			orderedTransforms[i] = Matrix.inverse(orderedTransforms[i]);
 		}
 	}
-	var skeleton = R3D.skeletalViewGraph(groupPairs);
-	var backbone = skeleton["skeletonVertexes"];
-	var groups = skeleton["groupVertexes"];
-console.log(skeleton);
+
+var doSkeleton = false;
+// var doSkeleton = true;
+
+var skeleton; // SKELETON EDGES & VERTEXES
+var backbone; // VERTEXES [VIEWS]
+var groups; // GROUP VERTEXES
+
+if(doSkeleton){
+	skeleton = R3D.skeletalViewGraph(groupPairs);
+	backbone = skeleton["skeletonVertexes"];
+	groups = skeleton["groupVertexes"];
+}else{
+	console.log("IN")
+	var allEdges = [];
+	var allVertexes = [];
+	// for(var i=0; i<groupViews.length; ++i){
+	// 	allVertexes.push(groupViews[i]);
+	// }
+	allEdges = groupPairs;
+	allVertexes = groupViews;
+
+	skeleton = {};
+	skeleton["skeletonEdges"] = allEdges;
+	skeleton["groupEdges"] = [];
+	groups = [];
+	backbone = allVertexes;
+	// _absoluteViewsFromDatas
+}
+// console.log("...........................");
+// console.log(skeleton);
+// console.log(backbone);
+// throw "???????????????????????"
 
 // throw "??????"
 
@@ -10795,7 +10973,8 @@ App3DR.ProjectManager.prototype.calculateTripleInfo = function(imageMatrixA,imag
 		var worldViewLookupPair = {};
 		worldViewLookupPair[0] = WORLDVIEWSLOOKUP[idA];
 		worldViewLookupPair[1] = WORLDVIEWSLOOKUP[idB];
-		var points3D = App3DR.ProjectManager._worldPointFromSaves(world, points, WORLDVIEWSLOOKUP);
+// console.log(points);
+		var points3D = App3DR.ProjectManager._worldPointFromSaves(world, points, WORLDVIEWSLOOKUP, true);
 		world.embedPoints3DNoValidation(points3D);
 		console.log(" "+i+" = "+points3D.length);
 		var R = pair["R"];
@@ -10824,7 +11003,7 @@ console.log("before ?");
 		var sAB = scales["AB"];
 		var sAC = scales["AC"];
 		var sBC = scales["BC"];
-throw "HEREEEEEE"
+// throw "HEREEEEEE SCALES SCALE";
 		inputCompleteFxn(scales);
 	}
 	world.solveTriple(worldTripleCompleted, project, null);
@@ -11355,7 +11534,7 @@ App3DR.ProjectManager.prototype._initializeAbsoluteViewsFromGroups = function(vi
 */
 	console.log("just keep initial views ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
 	viewsFinal = viewsInitial;
-// throw "?"
+throw "? is this used ?"
 	return {"views":viewsFinal};
 }
 
@@ -15680,11 +15859,11 @@ App3DR.ProjectManager.prototype.displayViewGraph = function(transforms, pairs, o
 
 	// bounding:
 	var display = new DO();
-	display.graphics().setLine(2.0,0xFF000000);
-	display.graphics().beginPath();
-	display.graphics().drawRect(0,0,displaySize,displaySize);
-	display.graphics().endPath();
-	display.graphics().strokeLine();
+	// display.graphics().setLine(2.0,0xFF000000);
+	// display.graphics().beginPath();
+	// display.graphics().drawRect(0,0,displaySize,displaySize);
+	// display.graphics().endPath();
+	// display.graphics().strokeLine();
 
 	var normalSize = 25.0;
 	// var cameraSize = 5.0;
@@ -15736,16 +15915,12 @@ App3DR.ProjectManager.prototype.displayViewGraph = function(transforms, pairs, o
 	var info = Code.infoArray(errors);
 	var minError = info["min"];
 	// console.log(info);
-	for(var i=0; i<pairs.length; ++i){
+	for(var i=0; i<pairs.length; ++i){ // this is only useful with scales not so 
+// break;
 		var pair = pairs[i];
 		var a = pair[0];
 		var b = pair[1];
-
-
-// console.log(pair);
-
-// throw "?"
-		
+		//
 		var fwd = pair[2];
 		var error = pair[3];
 		var bak = Matrix.inverse(fwd); // i
@@ -15774,12 +15949,10 @@ App3DR.ProjectManager.prototype.displayViewGraph = function(transforms, pairs, o
 		// bak = Matrix.mult(ib,bak);
 		// fwd = Matrix.mult(fwd,ia);
 		// bak = Matrix.mult(bak,ib);
-		// var nb = Matrix.mult(fwd,ta);
-		// var na = Matrix.mult(bak,tb);
-		var nb = Matrix.mult(ta,fwd);
-		var na = Matrix.mult(tb,bak);
-
-
+		var nb = Matrix.mult(fwd,ta);
+		var na = Matrix.mult(bak,tb);
+		// var nb = Matrix.mult(ta,fwd);
+		// var na = Matrix.mult(tb,bak);
 
 							// absA = Matrix.inverse(newOriginR);
 							// absB = Matrix.mult(relAB, absA);
@@ -15788,6 +15961,7 @@ App3DR.ProjectManager.prototype.displayViewGraph = function(transforms, pairs, o
 		// var ns = [na,nb];
 		// var ts = [ta,tb];
 		var ts = [na,nb];
+		var as = [ta,tb];
 
 // console.log(fwd);
 // console.log(bak);
@@ -15797,6 +15971,7 @@ App3DR.ProjectManager.prototype.displayViewGraph = function(transforms, pairs, o
 // console.log(na,nb,ta,tb);
 
 		for(var j=0; j<ts.length; ++j){
+break;
 			var c3D = ts[j].multV3DtoV3D(new V3D(0,0,0));
 			var p2D = Code.projectTo2DPlane(c3D.copy(),planeCenter,planeNormal);
 			p2D = transformTo2D.multV2DtoV2D(p2D);
@@ -15809,6 +15984,20 @@ App3DR.ProjectManager.prototype.displayViewGraph = function(transforms, pairs, o
 			display.graphics().endPath();
 			display.graphics().fill();
 			display.graphics().strokeLine();
+
+
+var c3D = as[j].multV3DtoV3D(new V3D(0,0,0));
+var o2D = Code.projectTo2DPlane(c3D.copy(),planeCenter,planeNormal);
+	o2D = transformTo2D.multV2DtoV2D(o2D);
+
+			display.graphics().setLine(1.0,0xCC990000);
+			display.graphics().beginPath();
+			display.graphics().moveTo(o2D.x,o2D.y);
+			display.graphics().lineTo(p2D.x,p2D.y);
+			display.graphics().endPath();
+			display.graphics().fill();
+			display.graphics().strokeLine();
+
 		}
 		
 
@@ -17418,7 +17607,8 @@ App3DR.ProjectManager.prototype.iterateDenseLoading = function(){
 	project.loadPoints(fxnTracksLoaded, project);
 }
 
-App3DR.ProjectManager._worldPointFromSaves = function(world, points, viewLookup){
+App3DR.ProjectManager._worldPointFromSaves = function(world, points, viewLookup, skipUp){
+	skipUp = Code.valueOrDefault(skipUp, false);
 	var points3D = [];
 	for(var i=0; i<points.length; ++i){
 		var point = points[i];
@@ -17448,7 +17638,9 @@ App3DR.ProjectManager._worldPointFromSaves = function(world, points, viewLookup)
 		point3D.normal(n3D);
 		point3D.size(s3D);
 		// up
-		world.setP3DPatchUpFromViews(point3D);
+		if(!skipUp){
+			world.setP3DPatchUpFromViews(point3D);
+		}
 		points3D.push(point3D);
 	}
 	return points3D;

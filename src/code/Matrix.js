@@ -383,12 +383,14 @@ Matrix.prototype.setColFromCol = function(i, mat,j){
 	for(r=0;r<rows;++r){
 		this._rows[r][i] = mat._rows[r][j];
 	}
+	return this;
 }
 Matrix.prototype.setColFromArray = function(i, arr){
 	var r, rows = Math.min(this.rows(),arr.length);
 	for(r=0;r<rows;++r){
 		this._rows[r][i] = arr[r];
 	}
+	return this;
 }
 Matrix.prototype.setRowFromArray = function(i, arr){
 	while(this._rows.length<=i){
@@ -399,10 +401,12 @@ Matrix.prototype.setRowFromArray = function(i, arr){
 	for(c=0; c<cols; ++c){
 		row[c] = arr[c];
 	}
+	return this;
 }
 Matrix.prototype.dropLastRow = function(){
 	this._rows.pop();
 	this._rowCount--;
+	return this;
 }
 Matrix.prototype.dropLastCol = function(){
 	var r, rows;
@@ -410,12 +414,14 @@ Matrix.prototype.dropLastCol = function(){
 		this._rows[r].pop();
 	}
 	this._colCount--;
+	return this;
 }
 // ------------------------------------------------------------------------------------------------------------------------ FXN
 Matrix.prototype.swapRows = function(rowA,rowB){
 	var temp = this._rows[rowB];
 	this._rows[rowB] = this._rows[rowA];
 	this._rows[rowA] = temp;
+	return this;
 }
 Matrix.prototype.copySizeXXX = function(m){
 	if(m!==undefined){
@@ -484,6 +490,7 @@ Matrix.transform2DTranslate = function(a,tX,tY){
 	return Matrix.mult(b,a);
 }
 Matrix.transform2DScale = function(a,sX,sY){
+	throw "this should only scale the translational components?"
 	sY = sY!==undefined?sY:sX;
 	var b = Matrix._transformTemp2D.fromArray([sX,0.0,0.0, 0.0,sY,0.0, 0.0,0.0,1.0]);
 	return Matrix.mult(b,a);
@@ -564,6 +571,7 @@ Matrix.transform3DRotateZ = function(a,angle){
 	return Matrix.mult(b,a);
 }
 Matrix.transform3DScale = function(a,x,y,z){
+	throw "this should only scale the translation components ?"
 	if(y===undefined){
 		y = x;
 	}

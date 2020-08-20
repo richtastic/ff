@@ -577,8 +577,6 @@ for(var i=0; i<listP.length; ++i){
 			//
 			P.multV3DtoV3D(tempP3D,point3D);
 			K.multV3DtoV3D(tempP3D,tempP3D);
-// is this correct?
-// var pz = tempP3D.z;
 			// isBehind |= (tempP3D.z<=0 || tempP3D.z<=0);
 			isBehind |= (tempP3D.z<=0);
 				tempP3D.homo();

@@ -389,18 +389,167 @@ MISSING:
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
-=> SHOW GRAPH ERROR
+
+
+-> bypass group skeleton addition
+
+-> group optimization methods to use (single view opt + world opt)
+
+
+
+-> back to combining groups from skeleton
+	- invert all groups (including skeleton) by average scale change
+
+
+
+
+
+=> local minimum => go back to figure out why initial graph looks so bad
+	- SCALES
+	- FINAL GRAPH ITERATION
+
+
+- test out local exhaustive reprojection error minimizing method:
+	- single camera
+	- try several descrete options:
+		- px,py,pz, rx,ry,rz
+			N^6
+
+- add error around (simmulated annealing?) to pop out of minimizing location
+
+
+- global BA minimize variables all at same time (matrix ...)?
+
+
+- research camera view location optimization
+	- reprojection error?
+	- LM?
+	- ...
+
+
+
+- SYMPTOMS:
+	- poor initial graph
+	- poor 3D point locations
+	- reprojection errors are much higher than the pair errors
+		pair: < 1px
+		group: 5-10 px
+
+- what precicely is the problem?
+
+	- poor initial value, yes
+	- local minimum?
+	- bad cost function?
+
+
+- ...
+
+
+
+
+- exhaustive method ?
+	- fix first view rot + pos & second view pos
+	- 1 change: rotation of 2nd view: 
+		- +/- 80 Y
+		- +/- 80 X
+		- +/- 170 Z
+		- 10 x 10 x 20 = 2000 [20,20,20]
+	- 2 retest with different halved range around best score:
+		- +/- 40
+		- +/- 40
+		- +/- 80
+		- 9 x 9 x 17 = 1377 [10,10,10]
+	- 3 
+		- +/- 20
+		- +/- 20
+		- +/- 40
+		- 9 x 9 x 17 = 810 [5,5,5]
+	- 4 
+		- +/- 10
+		- +/- 10
+		- +/- 20
+		- 5 x 5 x 9 = 225 [5,5,5]
+	- 45
+		- +/- 4
+		- +/- 4
+		- +/- 8
+		- 5 x 5 x 9 = 225 [2,2,2]
+
+	=> 2k-4k tests
+
+
+- try last step as only optimizing expected orientations?
+[ignore absolute scale]
+
+
+TRY FULL BA WITH ALL VIEWS:
+	- overlapping tracks
+
+
+TRACKS:
+
+[0, 0, 12846, 4512, 1777, 679, 337, 159, 66, 28, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+
+sum([12846, 4512, 1777, 679, 337, 159, 66, 28, 8])
+ans =  20412
+sum([4512, 1777, 679, 337, 159, 66, 28, 8])
+ans =  7566
+
+
+
+- 3D optimizing algorithm seems good - high error: trans,angle,scale
+-> problem is input data?
+	- related scales are off ?
+	- 
+-> even still, the optimizing view orientations needs to not fall into local minima
+
+
+
+
+
+............. if a transform has a bunch of poor matches:
+	- need to identify 'most failing' view & reposition:
+		- get a P from each existing transform
+		- get average new location
+	=> how does this behave in a multi-problematic scenario?
+		- 
+
+
+
+/Users/richard.zirbes/dev/extrepos/ff/src/php/filesystem/projects/0/sparse/tracks/track_0.yaml
+/Users/richard.zirbes/dev/extrepos/ff/src/php/filesystem/projects/0/sparse/tracks/track_all_0.yaml 
+
+sudo cp /Users/richard.zirbes/dev/extrepos/ff/src/php/filesystem/projects/0/sparse/tracks/track_all_0.yaml  /Users/richard.zirbes/dev/extrepos/ff/src/php/filesystem/projects/0/sparse/tracks/track_0.yaml
+
+sudo cp /Users/richard.zirbes/dev/extrepos/ff/src/php/filesystem/projects/0/sparse/tracks/track_0.yaml  /Users/richard.zirbes/dev/extrepos/ff/src/php/filesystem/projects/0/sparse/tracks/track_all_asis.yaml
+
+sudo cp /Users/richard.zirbes/dev/extrepos/ff/src/php/filesystem/projects/0/sparse/tracks/track_0.yaml  /Users/richard.zirbes/dev/extrepos/ff/src/php/filesystem/projects/0/sparse/tracks/track_help_A.yaml
+
+
+
+sudo cp /Users/richard.zirbes/dev/extrepos/ff/src/php/filesystem/projects/0/sparse/tracks/track_0.yaml  /Users/richard.zirbes/dev/extrepos/ff/src/php/filesystem/projects/0/sparse/tracks/track_good_A.yaml
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+x SHOW GRAPH ERROR
 
 
 => initial location of last view is wrong
 	- is there a way to optimize using another method?
 		- pairwise Ps ?
 
-- revisit graph algorithm
-	- are any of the pairs for first view bad?
-	- is there an error in a calculation?
-	- optimize on different variables?
-		- last one: only rotation?
+
 
 
 var graph = project._absoluteViewsFromDatas(graphViews, graphPairs, graphTriples);

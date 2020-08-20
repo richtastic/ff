@@ -15072,6 +15072,32 @@ Array.prototype.last = function(){
 
 
 // -------------------------------------------------------------------------------------------------------------------------------------------- absolute graph from relative edges
+Code.graphAbsoluteFromRelativeScale1D = function(edges, maxIterationsLinear, maxIterationsNonLinear){ 
+	var edgesNew = [];
+	// TO ADD SPACE
+	for(var e=0; e<edges.length; ++e){
+		var edge = edges[e];
+		var newEdge = [];
+		for(var i=0; i<edge.length; ++i){
+			newEdge[i] = edge[i];
+		}
+		edgesNew[e] = newEdge;
+		newEdge[2] = Math.log(newEdge[2]);
+	}
+
+	// BEST ADD AVERAGING
+	var result = Code.graphAbsoluteFromRelative1D(edgesNew, maxIterationsLinear, maxIterationsNonLinear);
+	var values = result["values"];
+
+	// TO MULT SPACE
+	for(var e=0; e<values.length; ++e){
+		var value = values[e];
+		values[e] = Math.exp(value);
+	}
+	
+	// RETURN
+	return {"values":values};
+}
 // FORMAT: [idA, idB, value, weight]
 Code.graphAbsoluteFromRelative1D = function(edges, maxIterationsLinear, maxIterationsNonLinear){ // value: vA = vB + edge
 	// settings
@@ -15363,11 +15389,11 @@ Code.graphAbsoluteFromRelativeV2D = function(edges){ // V2D: vA = vB + edge
 	return {"values":vectors};
 }
 
-Code.graphAbsoluteFromRelativeV3D = function(edges){ // V3D: vA = vB + edge
+Code.graphAbsoluteFromRelativeV3D = function(edges, maxIterationsLinear){ // V3D: vA = vB + edge
 	// settings
 	var minimumChangeQuit = 1E-6;
 		// minimumChangeQuit = 0;
-	var maxIterationsLinear = 1000;
+	maxIterationsLinear = Code.valueOrDefault(maxIterationsLinear,1000);
 	var maxIterationsNonLinear = 1000;
 	var decayRate = 0.0; // percent of old value to keep
 	// derived
@@ -15661,10 +15687,10 @@ Code.graphAbsoluteFromRelativeAngle2D = function(edges){ // angle: vA = vB + edg
 }
 
 
-Code.graphAbsoluteFromRelativeAngle3D = function(edges){ // angle: vA = vB + edge -- vectors on unit spehre
+Code.graphAbsoluteFromRelativeAngle3D = function(edges, maxIterationsLinear){ // angle: vA = vB + edge -- vectors on unit spehre
 	// settings
 	var minimumChangeQuit = 1E-6; // use edges to find 0.01% of that
-	var maxIterationsLinear = 1000;
+	maxIterationsLinear = Code.valueOrDefault(maxIterationsLinear, 1000);
 	var maxIterationsNonLinear = 1000;
 	var decayRate = 0.0; // percent of old value to keep
 	// derived
@@ -16622,7 +16648,7 @@ Code.graphAbsoluteFromRelativePose2D_A = function(edges){ // transation + rotati
 
 Code.graphAbsoluteFromRelativePose3D = function(edges, orientations, maxIterationsLinear, maxIterationsNonLinear){ // orienation: vA = vB + edge
 	// settings
-	var minimumChangeQuit = 1E-8; // use edges to find 0.01% of that
+	var minimumChangeQuit = 1E-6; // use edges to find 0.01% of that
 	var linearMultiplier = Math.ceil(Math.sqrt(edges.length));
 	// var linearMultiplier = orientations.length;
 	maxIterationsLinear = Code.valueOrDefault(maxIterationsLinear, linearMultiplier*1000);
@@ -16652,26 +16678,10 @@ Code.graphAbsoluteFromRelativePose3D = function(edges, orientations, maxIteratio
 	}
 	minimumChangeQuit *= (averageEdge/edges.length);
 
-	// average rotations first:
-	var edgeRotations = [];
-	for(var i=0; i<edges.length; ++i){
-		var edge = edges[i];
-		var idA = edge[0];
-		var idB = edge[1];
-		var error = edge[3];
+	// console.log("ROTATIONS");
+	// console.log(rotations);
+	// throw "."
 
-		var edgeD = edgeData[i];
-		var forward = edgeD["forward"];
-		var reverse = edgeD["reverse"];
-		var rotationAB = forward["rotation"];
-		var rotationBA = reverse["rotation"];
-
-		edgeRotations.push([idA,idB,rotationAB,error]);
-	}
-	// console.log(edgeRotations);
-
-	var result = Code.graphAbsoluteFromRelativeAngle3D(edgeRotations);
-	var rotations = result["values"];
 	/*
 	// point rotation 0 to unity - just because
 	var rotation0 = rotations[0];
@@ -16687,7 +16697,7 @@ Code.graphAbsoluteFromRelativePose3D = function(edges, orientations, maxIteratio
 // console.log(rotations+"");
 // throw "???"
 
-
+/*
 // console.log("ROTATIONS ARE EQUAL ?")
 if(orientations){
 var values = rotations;
@@ -16725,10 +16735,55 @@ for(var i=0; i<orientations.length; ++i){
 	console.log(" "+i+" : "+Code.degrees(diff)+" =?= "+pA+" & "+pB);
 }
 }
+*/
 
 
 
 
+
+	// solve for initial positions
+
+	var offsets = null;
+	var rotations = null;
+
+
+
+
+if(orientations){
+	console.log("use orientations as basis, skip linear")
+	rotations = [];
+	offsets = [];
+	// console.log(offsets);
+	// throw "??"
+	for(var i=0; i<=maxIndex; ++i){
+		var matrix = orientations[i];
+		rotations[i] = matrix.copy().setColFromArray(3,[0,0,0,1]);
+		offsets[i] = matrix.multV3DtoV3D(new V3D(0,0,0));
+	}
+	// console.log(rotations);
+	// console.log(offsets);
+	// throw "..."
+}else{
+	// average rotations first:
+	var edgeRotations = [];
+	for(var i=0; i<edges.length; ++i){
+		var edge = edges[i];
+		var idA = edge[0];
+		var idB = edge[1];
+		var error = edge[3];
+
+		var edgeD = edgeData[i];
+		var forward = edgeD["forward"];
+		var reverse = edgeD["reverse"];
+		var rotationAB = forward["rotation"];
+		var rotationBA = reverse["rotation"];
+
+		edgeRotations.push([idA,idB,rotationAB,error]);
+	}
+	// console.log(edgeRotations);
+
+	var result = Code.graphAbsoluteFromRelativeAngle3D(edgeRotations); // maxIterationsLinear
+	rotations = result["values"];
 
 	// to list of offsets
 	// var offsets = [];
@@ -16748,22 +16803,16 @@ for(var i=0; i<orientations.length; ++i){
 		// console.log(" "+fwd["offset"]+" | "+rev["offset"]);
 		var offsetAB = rotationA.multV3DtoV3D(fwd["offset"]);
 		var offsetBA = rotationB.multV3DtoV3D(rev["offset"]);
-
-
 // console.log(" "+idA+" - "+idB+" : "+offsetAB.length()+ " & "+offsetAB.length());
-
 		// console.log("original?: "+ data["reverse"]["rotation"].multV3DtoV3D( data["forward"]["rotation"].multV3DtoV3D( new V3D(0,0,1)) ) );
 		// console.log(" "+idA+" - "+idB+" : "+offsetAB+ "        @ \n" +rotationA+" ? ");
 		// console.log(" "+idB+" - "+idA+" : "+offsetAB+ "        @ \n" +rotationB+" ? ");
 		// edgeOffsets[i] = offsetAB;
-
 		edgeOffsets[i] = [idA,idB,offsetAB,error];
 	}
 	console.log(edgeOffsets);
 
-
-	// solve for initial positions
-	var result = Code.graphAbsoluteFromRelativeV3D(edgeOffsets);
+	var result = Code.graphAbsoluteFromRelativeV3D(edgeOffsets); // maxIterationsLinear
 	var offsets = result["values"];
 
 	// set first item to 0 - just because
@@ -16774,6 +16823,9 @@ for(var i=0; i<orientations.length; ++i){
 		// console.log(" "+i+" : "+offset);
 	}
 	console.log(offsets);
+}
+
+
 
 	// to relatives:
 	var vertexes = [];
@@ -16783,6 +16835,9 @@ for(var i=0; i<orientations.length; ++i){
 		vertexes[i] = {"value":{"offset":offset.copy(), "rotation":rotation.copy()}, "next":{"offset":offset.copy(), "rotation":rotation.copy()}, "list":null};
 	}
 	console.log(vertexes);
+
+
+
 
 /*
 // before nonlinear
@@ -16902,6 +16957,8 @@ return {"values":matrixes};
 		return totalError;
 	}
 console.log("nonlinear");
+
+
 	// decompose into usable variables
 	var x = [];
 	for(var i=0; i<vertexes.length; ++i){
@@ -16944,7 +17001,8 @@ console.log("nonlinear");
 
 
 Code.graphAbsoluteUpdateFromRelativeTransforms = function(initialP, edges, maxIterations){ // use starting matrices & upate to match  (ignore unknown scales)
-	maxIterations = Code.valueOrDefault(maxIterations,1000);
+	var linearMultiplier = Math.ceil(Math.sqrt(edges.length));
+	maxIterations = Code.valueOrDefault(maxIterations,linearMultiplier*100); // 1000 total takes a wh
 	// 
 	var viewCount = initialP.length;
 	var edgeCount = edges.length;
@@ -17157,6 +17215,7 @@ Code.graphAbsoluteFromObjectLookup3D = function(views, pairs, triples,  viewToID
 		var edge = pairIDsToEdge[doublePair];
 		if(edge){
 			console.log("ratio exists -- ignoring: "+scaleAB+" / "+edge.data()["scale"]);
+			throw "exists ?";
 			if(false){
 				console.log(edge);
 				console.log(scaleAB);
@@ -17284,17 +17343,31 @@ console.log("TRIPLES: "+triples.length);
 			var transform = pairToTransform(pair);
 			var scale = optimalScales[groupID];
 			var invertedScale = 1.0/scale;
-			transform = Matrix.transform3DScale(transform, invertedScale);
+			// transform = Matrix.transform3DScale(transform, invertedScale);
+			transform.set(0,3, transform.get(0,3)*invertedScale);
+			transform.set(1,3, transform.get(1,3)*invertedScale);
+			transform.set(2,3, transform.get(2,3)*invertedScale);
 			relativeEdges.push([indexA,indexB,transform,error]);
 		}
 		console.log(relativeEdges);
 		// absolute from relative orientations
 		console.log("solve for absolute orientations")
-		var result = Code.graphAbsoluteFromRelativePose3D(relativeEdges);
+		var result = Code.graphAbsoluteFromRelativePose3D(relativeEdges,null, 1000,1000);
 		console.log(result);
 		var values = result["values"];
 		var groupTransforms = values;
 
+var finalSolveOrientations = true;
+// var finalSolveOrientations = false;
+if(finalSolveOrientations){
+
+console.log("final optimize only orientation:"); // helps remove error in absolute scale
+var initialP = groupTransforms;
+var edgeList = relativeEdges;
+var result = Code.graphAbsoluteUpdateFromRelativeTransforms(initialP, edgeList, 1000); 
+groupTransforms = result["absolutes"];
+
+}
 		// TO VIEW LIST (of group)
 		var groupViews = [];
 
