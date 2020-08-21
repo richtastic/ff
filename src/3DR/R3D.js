@@ -11475,7 +11475,7 @@ R3D.optimumSADLocationSearchFlatRGB = function(pointA,pointB, imageScalesA,image
 	var cellScale = (needleSize/featureSize); // VERIFIED CORRECT
 
 	// revert average scale
-	affine = Stereopsis._temp_matrix2D.copy(affine);
+	affine = Stereopsis._temp_matrix2D.copy(affine); // TODO: this scale inverse is already done inside imageScaled.extractRect
 	var averageScale = affine.averageScale();
 	affine.scale(1.0/averageScale);
 	var scaleA = cellScale*averageScale;
@@ -21808,6 +21808,9 @@ R3D.projectivePatchAffine3D = function(point3D,normal3D, cameraNormals, cameraRi
 
 R3D_SMP3DCOUNT = -1;
 R3D.searchMatchPoints3D = function(images, cellSizes, relativeAB, Ks, errorPixels, showDebug){
+
+// showDebug = true;
+
 	var SHOWOFFSETY = 0;
 	if(showDebug){
 		++R3D_SMP3DCOUNT;
@@ -21832,8 +21835,6 @@ R3D.searchMatchPoints3D = function(images, cellSizes, relativeAB, Ks, errorPixel
 	var imageScale = Math.sqrt(idealPixelCount/averagePixels); // area to dimension
 	console.log("imageScale: "+imageScale+"")
 
-	// var errorA = errorPixels[0];
-	// var errorB = errorPixels[1];
 	var imageScalesList = [];
 	var featureScale = 1.0; // multiple of cell size 1-2
 		featureScale = 2.0; // want a large area
@@ -21849,42 +21850,35 @@ R3D.searchMatchPoints3D = function(images, cellSizes, relativeAB, Ks, errorPixel
 	var cameraRightB = relativeAB.multV3DtoV3D(cameraRightA);
 		cameraRightB.sub(cameraCenterB);
 
+	var absoluteA = Matrix.inverse(cameraA);
+	var absoluteB = Matrix.inverse(cameraB);
 
+	var centerA = absoluteA.multV3DtoV3D(new V3D(0,0,0));
+	var rightA = absoluteA.multV3DtoV3D(new V3D(1,0,0));
+	var upA = absoluteA.multV3DtoV3D(new V3D(0,1,0));
+	var normalA = absoluteA.multV3DtoV3D(new V3D(0,0,1));
+		rightA.sub(centerA);
+		upA.sub(centerA);
+		normalA.sub(centerA);
+	var centerB = absoluteB.multV3DtoV3D(new V3D(0,0,0));
+	var rightB = absoluteB.multV3DtoV3D(new V3D(1,0,0));
+	var upB = absoluteB.multV3DtoV3D(new V3D(0,1,0));
+	var normalB = absoluteB.multV3DtoV3D(new V3D(0,0,1));
+		rightB.sub(centerB);
+		upB.sub(centerB);
+		normalB.sub(centerB);
 
+	var sameRightB = rightB.copy();
+	if(V3D.dot(rightA,rightB)<0){
+		sameRightB.scale(-1);
+	}
+	var sameUpB = upB.copy();
+	if(V3D.dot(upA,upB)<0){
+		sameUpB.scale(-1);
+	}
 
-
-var absoluteA = Matrix.inverse(cameraA);
-var absoluteB = Matrix.inverse(cameraB);
-
-var centerA = absoluteA.multV3DtoV3D(new V3D(0,0,0));
-var rightA = absoluteA.multV3DtoV3D(new V3D(1,0,0));
-var upA = absoluteA.multV3DtoV3D(new V3D(0,1,0));
-var normalA = absoluteA.multV3DtoV3D(new V3D(0,0,1));
-	rightA.sub(centerA);
-	upA.sub(centerA);
-	normalA.sub(centerA);
-var centerB = absoluteB.multV3DtoV3D(new V3D(0,0,0));
-var rightB = absoluteB.multV3DtoV3D(new V3D(1,0,0));
-var upB = absoluteB.multV3DtoV3D(new V3D(0,1,0));
-var normalB = absoluteB.multV3DtoV3D(new V3D(0,0,1));
-	rightB.sub(centerB);
-	upB.sub(centerB);
-	normalB.sub(centerB);
-
-var sameRightB = rightB.copy();
-if(V3D.dot(rightA,rightB)<0){
-	sameRightB.scale(-1);
-}
-var sameUpB = upB.copy();
-if(V3D.dot(upA,upB)<0){
-	sameUpB.scale(-1);
-}
-
-var rightAverage = Code.averageAngleVector3D([rightA,sameRightB]);
-var normalAverage = Code.averageAngleVector3D([normalA,normalB]);
-
-
-
+	var rightAverage = Code.averageAngleVector3D([rightA,sameRightB]);
+	var normalAverage = Code.averageAngleVector3D([normalA,normalB]);
 
 
 	var Ka = Ks[0];
@@ -21895,16 +21889,14 @@ var normalAverage = Code.averageAngleVector3D([normalA,normalB]);
 	var Fba = R3D.fundamentalInverse(Fab);
 
 	var nonMaximalPercent = 0.9999; // 0.999-0.9999 === 1.5k-2.0k ?
-
-// var nonMaximalPercent = 0.99; // ~ 700
-// var nonMaximalPercent = 0.999; // ~1300
+	// var nonMaximalPercent = 0.99; // ~ 700
+	// var nonMaximalPercent = 0.999; // ~1300
 
 	var scalable = 1.0;
 	var limitPixelScale = 2.0;
 	var single = false;
 	var maxCount = 5000;
 	var limitPixelPercent = 0.01; // 0.01 - 0.002 is neighbor too close ? 0.005 @ 500 = 2.5
-// limitPixelPercent = 0.02;
 	//
 	var toPointPoint = function(a){
 		return a;
@@ -21918,8 +21910,6 @@ var normalAverage = Code.averageAngleVector3D([normalA,normalB]);
 	var sortLessFirstT = function(a,b){
 		return a.t > b.t ? -1 : 1;
 	};
-
-
 	var sortOnAffineScore = function(a,b){
 		return a["affineScore"] < b["affineScore"] ? -1 : 1;
 	};
@@ -21927,8 +21917,7 @@ var normalAverage = Code.averageAngleVector3D([normalA,normalB]);
 
 	var spaces = [];
 	var actualScalesList = [];
-// throw "before"
-var errors = [];
+	var errors = [];
 	for(var i=0; i<images.length; ++i){
 		var imageMatrix = images[i];
 		var cellSize = cellSizes[i];
@@ -21969,11 +21958,8 @@ d.matrix().translate(0 , 0);
 GLOBALSTAGE.addChild(d);
 throw "?";
 */
-
-
 		var corners = R3D.extractImageCorners(imageMatrixScaled, nonMaximalPercent, maxCount, single, scalable, limitPixels);
 		corners.sort(sortLessFirstT);
-		// console.log("corner count: "+corners.length);
 		// add points to space limited by largest in radius
 		for(var j=0; j<corners.length; ++j){
 			var c = corners[j];
@@ -22084,10 +22070,10 @@ d.matrix().translate(0 + i*600, SHOWOFFSETY);
 	var org = new V2D();
 	var affineRatioKeepMax = 2; // 2-5
 	affineRatioKeepMax = 1.5;
-// var doDebug = true;
 var debugOffY = 300;
 var debugOY = 0;
 var doDebug = false;
+// var doDebug = true;
 // throw "before loop"
 
 
@@ -22133,19 +22119,8 @@ if(doDebug){
 	// i = 450;
 	// i = 500; // posts
 	// i = 600;
-// i = 650; // REFERENCE ANGLED LINE
-i = 500;
-
-// i = 240; // rock top
-// i = 250; // rock edge
-// i = 270;
-// i = 280; // door corner
-
-// i = 910; // BENCH CORNER - 1
-
-// i = 8++;
 	// i = 700; // edge
-	// i = 750;
+	i = 750;
 	// i = 755;
 	// i = 800; // bg thing
 	// i = 805;
@@ -22159,28 +22134,7 @@ i = 500;
 	// i = 1100;
 	// i = 1200;
 
-	// i = 121;
 
-
-// i = 1160; // good divit/corner
-
-// i = 1060; // unique bush
-	// i = 1005;
-	// i = 1010;
-	// i = 1015;
-
-	// i = 1100;
-	// i = 1200;
-	// i = 1300;
-	// i = 1350;
-	// i = 1400;
-	// i = 1500;
-
-
-// var c = new V2D(400,300);
-// var c = new V2D(600,300);//
-// var c = new V2D(610,300);// too far right
-// var c = new V2D(650,300);
 // featureSize = 51;
 // c = objsA[i]["point"];
 // objsA[i] = R3D.objectProgressiveR3D(c, imageScales, featureSize, null , true);
@@ -22605,6 +22559,8 @@ if(doDebug){
 		objectA["best"] = best;
 		objectA["second"] = sortedB[1];
 
+// console.log(objectA);
+// throw "HERE";
 
 if(doDebug){
 	// show original
@@ -22661,7 +22617,7 @@ break;
 
 
 
-
+console.log("OUT OF TOP");
 
 // BEST TOP OF MATCHES:
 
@@ -22728,10 +22684,18 @@ console.log("skipped: "+skipped+" / matchingCount: "+matchingCount);
 	var cellSizeA = cellSizes[indexA];
 	var cellSizeB = cellSizes[indexB];
 
-	var needleSize = cellSizeA; // featureScale
-	var haystackSize = needleSize*2;
-	console.log(needleSize,haystackSize);
+	// var needleSize = cellSizeA; // featureScale
+	// var haystackSize = needleSize*2;
+	// console.log(needleSize,haystackSize);
 	console.log("pixel localization");
+
+var needleSize = 11; // 5 - 11
+var haystackSize = 2*needleSize+1;
+var featureSize = cellSizeA;
+
+var limitNewDistance = cellSizeA*0.5;
+
+
 	for(var i=0; i<matches.length; ++i){
 		var match = matches[i];
 		var objectA = match[0];
@@ -22739,11 +22703,33 @@ console.log("skipped: "+skipped+" / matchingCount: "+matchingCount);
 		var pointA = objectA["point"];
 		var pointB = objectB["point"];
 		var matchA = match[2];
-		var affineAB = matchA["affine"];
-		var result = R3D.optimumNeedleHaystackAtLocation(imageScaleA,pointA, imageScaleB,pointB, needleSize,haystackSize, affineAB);
+		var affineAB = objectA["best"]["affine"];
+		// var affineAB = matchA["affine"]; // DNE
+		// var result = R3D.optimumNeedleHaystackAtLocation(imageScaleA,pointA, imageScaleB,pointB, needleSize,haystackSize, affineAB);
+
+		// var result = R3D.optimumNeedleHaystackAtLocation(imageScaleA,pointA, imageScaleB,pointB, needleSize,haystackSize, affineAB);
+		// console.log(result);
+		
+		var result = R3D.optimumSADLocationSearchFlatRGB(pointA,pointB, imageScaleA,imageScaleB, featureSize, needleSize,haystackSize, affineAB);
+		// console.log(result);
+		// throw "?"
+
+
+// // if(affineAB){
+// var averageScale = affineAB.averageScale();
+// console.log( averageScale+" ? ");
+// // }
 		var newB = result["point"];
 		var score = result["score"];
-		// console.log(newB+"->"+pointB);
+
+		var delta = V2D.distance(newB,pointB);
+		if(delta>limitNewDistance){
+			Code.removeElementAt(matches,i);
+			--i;
+			continue;
+		}
+
+// console.log(newB+"->"+pointB+" = "+);
 		var point3D = R3D.triangulatePointDLT(pointA,newB, cameraA,cameraB, KaInv, KbInv);
 		var m = {};
 		m["A"] = pointA;
@@ -22754,7 +22740,8 @@ console.log("skipped: "+skipped+" / matchingCount: "+matchingCount);
 	 	matches[i] = m;
 	}
 	console.log("localized matches: "+matches.length);
-	
+
+
 	// DROP POINTS OUTSIDE B
 	console.log("drop outside B:");
 	var imageSizeB = imageScaleB.size();
@@ -22816,7 +22803,7 @@ console.log("SCORE matches: "+matches.length);
 			points2DA.push(pointA);
 			points2DB.push(pointB);
 		}
-console.log(points2DA,points2DB)
+// console.log(points2DA,points2DB);
 		var F = R3D.fundamentalFromUnnormalized(points2DA,points2DB);
 		var Finv = R3D.fundamentalInverse(F);
 
@@ -22848,25 +22835,6 @@ console.log(points2DA,points2DB)
 			break;
 		}
 	}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -23117,19 +23085,59 @@ R3D.optimumNeedleHaystackImagesScore = function(needle,haystack){ //
 }
 
 R3D.optimumNeedleHaystackAtLocation = function(imageScalesA,pointA, imageScalesB,pointB, needleSize,haystackRelativeSize, matrix, compareSize, debug){ // search needle/haystack at points
+
+throw "use optimumSADLocationSearchFlatRGB"
+
 	compareSize = compareSize!==undefined ? compareSize : 11;
 	// compareSize = 11;
 	// compareSize = 9;
 	// compareSize = 7;
 	//
-	// WAS: var cellScale = (compareSize/needleSize);
-	var cellScale = (needleSize/compareSize);
+
+
+var siz = 4.0;
+needleSize *= siz;
+haystackRelativeSize *= siz;
+compareSize = 21;
+	// WAS
+	// var cellScale = (compareSize/needleSize);
+	// var cellScale = (needleSize/compareSize);
+// NOT SURE WHICH SCALE IS CORRECT
+
 throw "is this compare backwards for IMAGE SCALES ?"
 	var haystackSize = Math.ceil((haystackRelativeSize/needleSize)*compareSize);
 		haystackSize = Math.max(haystackSize,compareSize);
 
 	var needle = imageScalesA.extractRect(pointA,cellScale,compareSize,compareSize, matrix);
 	var haystack = imageScalesB.extractRect(pointB,cellScale,haystackSize,haystackSize, null);
+
+
+
+var scale = 4.0;
+var img = GLOBALSTAGE.getFloatRGBAsImage(needle.red(), needle.grn(), needle.blu(), needle.width(), needle.height());
+var d = new DOImage(img);
+d.matrix().scale(scale);
+d.matrix().translate(100,100);
+GLOBALSTAGE.addChild(d);
+
+var img = GLOBALSTAGE.getFloatRGBAsImage(haystack.red(), haystack.grn(), haystack.blu(), haystack.width(), haystack.height());
+var d = new DOImage(img);
+d.matrix().scale(scale);
+d.matrix().translate(300,100);
+GLOBALSTAGE.addChild(d);
+
+
+
+
+	console.log(imageScalesA);
+	console.log(compareSize);
+	console.log(needleSize);
+	console.log(cellScale);
+	throw "imageScalesA"
+
+
+
+
 
 // 	return R3D.optimumNeedleHaystackSAD(needleA,haystackB, needleSize,haystackRelativeSize, matrix, compareSize, debug);
 // }

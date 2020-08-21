@@ -388,16 +388,180 @@ MISSING:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+- is P/R relative using same same scale @ dense pairs ?
 
 
 
--> bypass group skeleton addition
-
--> group optimization methods to use (single view opt + world opt)
 
 
 
--> back to combining groups from skeleton
+
+Add in the remaining images using pose estimation.
+
+
+have full view graph w/ some error
+have skeleton w/ low error
+-> re-register 'leaf' views
+	-> each skeleton node has an average scale change based on change in baseline with other skeleton nodes
+	-> use edges linked to skeleton nodes to estimate 'initial' position
+		-> scale each edge by skeleton node scale
+		-> leaf node = average of: skeleton node + AB
+-> optimize graph again, using initial graph & STATIC skeleton nodes
+
+
+
+
+var result = Code.graphAbsoluteFromObjectLookup3D(views, pairs, triples, viewToID,pairToIDs,tripleToIDs, pairToError,pairToTransform, tripleToScales);
+
+var result = Code.graphAbsoluteFromObjectLookup3D(views, pairs, triples, viewToID,pairToIDs,tripleToIDs, pairToError,pairToTransform, tripleToScales);
+
+var result = Code.graphAbsoluteFromRelativePose3D(relativeEdges,null, 1000,1000);
+
+var result = Code.graphAbsoluteUpdateFromRelativeTransforms(initialP, edgeList, 1000);
+
+
+
+
+
+
+
+
+
+
+- check how sparse-> dense putative pairs is done
+	- graph selection
+	- 3D geometry relative orientations
+		- relative distances
+		- relative rotations
+		-> how to determine common visibility
+			- near / far / ...
+	- start with MST to guarantee connectivity first
+
+	- dense has too many pairs (too much repetitive overlap)
+		- can't go below 2
+
+
+
+
+
+
+
+- dense graph init:
+	- not use skeleton
+	- use groupings [4 + 2 overlap]
+
+- dense graph group iteration:
+	- solveOptimizeSingleView
+	- save pair info in tracks.yaml
+	- accumulate pair info into graph.yaml
+
+- dense group combine:
+	- use pair info to optimize 3D graph for bundle_full.yaml
+
+- bundle init: initializeBundleGroupsFromDense
+	- use groupings [4 + 2-3 overlap]
+
+- bundle iterate: iterateBundleProcess
+	- view are stored in single file
+	- points are stored in a per-group file
+	- solveDenseGroup?
+	go thru each group:
+		- combine all included view pairs dense points into file
+	go thru each group:
+		- optimize each view in group (3+ tracks), save result view outside of group
+		[overlapping views get optimized multiple times]
+	go thru each group:
+		- drop worst points based on R-error & patch overlap
+		- accumulate points into points file
+
+
+
+=> skeletal set purpose is to limit the total number of views using in process:
+	- only skeleton is used in BA process (eg tracks-group & tracks-full & groups-full)
+	=> 2 -> 10 x smaller
+
+=> initial pairwise of entire set needs to be done regardless
+=> skeleton can be used once coverage is known:
+	- after sparse view-graph construction?
+	- def after dense view-graph construction
+	=> SKIP:
+		- smaller sparse + dense graph BA 
+
+
+WHEN TO USE VIEW GRAPH SKELETON:
+	- need dense pairs
+	+ after sparse & dense view graph is calculated:
+		+ track groups only use skeleton views
+		+ track full only use skeleton views
+	- how to incorporate all views after:
+		- new segment of entire view graph incorporates 
+		- augment skeleton graph with views based on previous known relative orientation offset
+
+
+
+
+
+SPARSE: world-solve
+	assume all tracks from all views can fit into memory
+
+DENSE: world-solve
+	assume all 3+ tracks from all views can fit into memory
+
+BUNDLE-GROUP: group-solve
+	assume all dense points of K-view + images can fit into memory
+
+BUNDLE-ALL:
+	store all dense points into file
+
+
+
+
+
+
+x group optimization methods to use (single view opt + world opt)
+
+
+- split & combine options:
+	- skeleton:
+		pro:
+			- paper recommended
+			- limit world drift to only last branches
+			- easy recombine using offset
+		con:
+			- maximum group size could be huge, on average maybe 50% of world
+	- groups:
+		pro:
+			- group size is mostly customizable (eg 8 views with 2 overlapping)
+			- highly parallizable
+		cons:
+			- possibly world drift?
+			- possibly lots of overlap (maybe 25%)
+			- 
+
+
+GROUPS COMBINING (after separate group optimizing):
+	- list every edge from each GROUP: (not original edges)
+		- need to record relative transform point count & error back to graph.yaml
+	- solve 3D graph:
+		- init with original graph
+		- add each group's final edges (above minimum count, proportional to error)
+		- iterate to done
+
+
+
+
+group combining:
+every group's pair 
+
+
+
+
+
+- combine group track loading + full track loading logic
+
+
+
+-> back to combining groups from groups/skeleton
 	- invert all groups (including skeleton) by average scale change
 
 
@@ -486,22 +650,6 @@ TRY FULL BA WITH ALL VIEWS:
 	- overlapping tracks
 
 
-TRACKS:
-
-[0, 0, 12846, 4512, 1777, 679, 337, 159, 66, 28, 8, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
-
-sum([12846, 4512, 1777, 679, 337, 159, 66, 28, 8])
-ans =  20412
-sum([4512, 1777, 679, 337, 159, 66, 28, 8])
-ans =  7566
-
-
-
-- 3D optimizing algorithm seems good - high error: trans,angle,scale
--> problem is input data?
-	- related scales are off ?
-	- 
--> even still, the optimizing view orientations needs to not fall into local minima
 
 
 
@@ -516,51 +664,117 @@ ans =  7566
 
 
 
-/Users/richard.zirbes/dev/extrepos/ff/src/php/filesystem/projects/0/sparse/tracks/track_0.yaml
-/Users/richard.zirbes/dev/extrepos/ff/src/php/filesystem/projects/0/sparse/tracks/track_all_0.yaml 
 
-sudo cp /Users/richard.zirbes/dev/extrepos/ff/src/php/filesystem/projects/0/sparse/tracks/track_all_0.yaml  /Users/richard.zirbes/dev/extrepos/ff/src/php/filesystem/projects/0/sparse/tracks/track_0.yaml
+TIMINGS EXTIMATIONS:
 
-sudo cp /Users/richard.zirbes/dev/extrepos/ff/src/php/filesystem/projects/0/sparse/tracks/track_0.yaml  /Users/richard.zirbes/dev/extrepos/ff/src/php/filesystem/projects/0/sparse/tracks/track_all_asis.yaml
+- uploading images:
+	- 15 s / image
 
-sudo cp /Users/richard.zirbes/dev/extrepos/ff/src/php/filesystem/projects/0/sparse/tracks/track_0.yaml  /Users/richard.zirbes/dev/extrepos/ff/src/php/filesystem/projects/0/sparse/tracks/track_help_A.yaml
+- finding camera:
+	15 s / image
 
+- view features
+	- 15 s / image
 
+- pair best esimation
+	- 15 s
 
-sudo cp /Users/richard.zirbes/dev/extrepos/ff/src/php/filesystem/projects/0/sparse/tracks/track_0.yaml  /Users/richard.zirbes/dev/extrepos/ff/src/php/filesystem/projects/0/sparse/tracks/track_good_A.yaml
+- pair matches/matches/tracks
+	- 60 s per pair
 
+- triples calculator
+	- 10 s per triple
 
+- calc graph
+	- 1 s per view
 
-
-
-
-
-
-
-
-
-
-
-
-x SHOW GRAPH ERROR
-
-
-=> initial location of last view is wrong
-	- is there a way to optimize using another method?
-		- pairwise Ps ?
+- bundle groups
+	- 60 ; % 60s per iteration x n views
 
 
+cams = 10;
+views = 100;
+pairs = 10*views;
+triples = 6*views;
+
+time_upload_image = 15; % per cam / view
+time_calc_camera = 15; % once
+time_calc_features = 15; % per view
+time_calc_pair_putative = 15; % once
+time_calc_pairs = 60; % per pair
+time_calc_triples = 10; % per triple
+time_calc_graph = 5; % per view
+time_calc_bundle_track_group = 60; % per view
+time_calc_bundle_track_all = 30; % per view
+time_calc_dense_pairs = 10; % constant
+% ...
+time_calc_dense_group = 60; % per view/group?
+time_calc_dense_points = 60; % per view/group?
+% ...
+time_calc_surface_tris = 60; % per view/points?
+time_calc_surface_tex = 60; % per view/tri?
+time_calc_texture_out = 60; % per view/texture?
 
 
-var graph = project._absoluteViewsFromDatas(graphViews, graphPairs, graphTriples);
+total_time = 0;
 
-var result = Code.graphAbsoluteFromObjectLookup3D(views, pairs, triples, viewToID,pairToIDs,tripleToIDs, pairToError,pairToTransform, tripleToScales);
+% startup time
+total_time = total_time + views * time_upload_image; % upload image
+total_time = total_time + cams * time_upload_image + time_calc_camera; % camera upload/calc
+total_time = total_time + views * time_calc_features; % features image
+total_time = total_time + time_calc_pair_putative; % pairs calc
+total_time / 60 / 60
 
-...
+% sparse time
+total_time = total_time + pairs * time_calc_pairs; % pairs sparse
+total_time = total_time + triples * time_calc_triples; % triples sparse
+total_time = total_time + views * time_calc_graph; % view graph init sparse
+total_time = total_time + views * time_calc_bundle_track_group; % view group BA
+total_time = total_time + views * time_calc_bundle_track_all; % view full BA
+total_time = total_time + time_calc_dense_pairs; % putatives for dense
+% to sparse time:
+total_time / 60 / 60
+% 2-3 hours
 
-...
+% dense time:
+total_time = total_time + pairs * time_calc_pairs; % pairs dense
+total_time = total_time + triples * time_calc_triples; % triples dense
+total_time = total_time + views * time_calc_graph; % view graph init dense
+total_time = total_time + views * time_calc_bundle_track_group; % view group BA
+total_time = total_time + views * time_calc_bundle_track_all; % view full BA
+
+% to dense time:
+total_time / 60 / 60
+% 4-5 hours
+
+% surface time:
+total_time = total_time + views * time_calc_dense_group; % dense group BA
+total_time = total_time + views * time_calc_dense_points; % dense point combine
+total_time = total_time + views * time_calc_surface_tris; % triangles
+total_time = total_time + views * time_calc_surface_tex; % textures calc
+total_time = total_time + views * time_calc_texture_out; % textures combine
+
+% to surface time:
+total_time / 60 / 60
+% 5-6 hours
 
 
+% 10 images = 6 hours
+% 20 images = 11 hours = half day
+% 50 images = 26 hours = 1 day
+% 100 images = 52 hours = 3 days
+
+
+% TOP OF THE LINE:
+10 images => < 10 mins
+100 images => 1 hour
+500 images => 5 hours
+1000 images => 10 hours
+
+% SHORT TERM GOAL:
+10 images => 1 hour
+100 images => 10 hours
+1000 images => 2 days
 
 
 
