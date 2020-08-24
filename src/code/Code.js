@@ -16646,7 +16646,7 @@ Code.graphAbsoluteFromRelativePose2D_A = function(edges){ // transation + rotati
 	throw "TODO";
 }
 
-Code.graphAbsoluteFromRelativePose3D = function(edges, orientations, maxIterationsLinear, maxIterationsNonLinear){ // orienation: vA = vB + edge
+Code.graphAbsoluteFromRelativePose3D = function(edges, orientations, maxIterationsLinear, maxIterationsNonLinear, variableIndexes){ // orienation: vA = vB + edge
 	// settings
 	var minimumChangeQuit = 1E-6; // use edges to find 0.01% of that
 	var linearMultiplier = Math.ceil(Math.sqrt(edges.length));
@@ -16678,9 +16678,13 @@ Code.graphAbsoluteFromRelativePose3D = function(edges, orientations, maxIteratio
 	}
 	minimumChangeQuit *= (averageEdge/edges.length);
 
-	// console.log("ROTATIONS");
-	// console.log(rotations);
-	// throw "."
+	// changeable matrixes
+	if(!variableIndexes){
+		variableIndexes = [];
+		for(var i=0; i<=maxIndex; ++i){
+			variableIndexes[i] = i;
+		}
+	}
 
 	/*
 	// point rotation 0 to unity - just because
@@ -16737,20 +16741,13 @@ for(var i=0; i<orientations.length; ++i){
 }
 */
 
-
-
-
-
 	// solve for initial positions
 
 	var offsets = null;
 	var rotations = null;
 
-
-
-
 if(orientations){
-	console.log("use orientations as basis, skip linear")
+	console.log("use input orientations as basis, skip initial linear set")
 	rotations = [];
 	offsets = [];
 	// console.log(offsets);
@@ -16786,7 +16783,6 @@ if(orientations){
 	rotations = result["values"];
 
 	// to list of offsets
-	// var offsets = [];
 	var edgeOffsets = [];
 	for(var i=0; i<edges.length; ++i){
 		var edge = edges[i];
@@ -16836,37 +16832,11 @@ if(orientations){
 	}
 	console.log(vertexes);
 
-
-
-
-/*
-// before nonlinear
-var matrixes = [];
-for(var i=0; i<=maxIndex; ++i){
-	var vertex = vertexes[i];
-	var value = vertex["value"];
-	var rotation = value["rotation"];
-	var offset = value["offset"];
-	var matrix = rotation.copy();
-		matrix.transform3DSetLocation(offset);
-	// matrix.appendColFromArray([offset.x,offset.y,offset.z]);
-	// matrix.appendRowFromArray([0,0,0,1]);
-	matrixes[i] = matrix;
-}
-
-return {"values":matrixes};
-*/
-
-	
-	// is linear estimate useful here ?
-
-
 	// nonlinear update estimate
-	// var tmpA = new V3D();
-	// var tmpB = new V3D();
-	var tmpMA = new Matrix(4,4);
-	var tmpMB = new Matrix(4,4);
 	var rodrigues = new V3D();
+	var cacheValues = []; // tests: 10 => 10-20% | 20 => 5-10% | 50 => 5% | 
+	var cacheHits = 0;
+	var cacheMisses = 0;
 	var fxn = function(args, x, isUpdate){
 		if(isUpdate){
 			// move first to origin
@@ -16880,6 +16850,43 @@ return {"values":matrixes};
 		var totalError = 0;
 		var edges = args[0];
 		var edgeData = args[1];
+		var pList = args[2];
+		var variableIndexes = args[3];
+
+		// setup all matrixes to be used by edge loop
+		for(var i=0; i<variableIndexes.length; ++i){
+			var index = variableIndexes[i];
+			var matrix = pList[index];
+			var actualARX = x[i*6+0];
+			var actualARY = x[i*6+1];
+			var actualARZ = x[i*6+2];
+			var actualATX = x[i*6+3];
+			var actualATY = x[i*6+4];
+			var actualATZ = x[i*6+5];
+			
+			if(cacheValues[i]){
+				var c = cacheValues[i];
+				if( c[0]==actualARX && c[1]==actualARY && c[2]==actualARZ && c[3]==actualATX && c[4]==actualATY && c[5]==actualATZ ){ // cache hit
+					++cacheHits;
+					continue;
+				}
+			}else{ // create index
+				cacheValues[i] = [0,0,0,0,0,0];
+			} // else isn't cached
+			++cacheMisses;
+			cacheValues[i][0] = actualARX;
+			cacheValues[i][1] = actualARY;
+			cacheValues[i][2] = actualARZ;
+			cacheValues[i][3] = actualATX;
+			cacheValues[i][4] = actualATY;
+			cacheValues[i][5] = actualATZ;
+			
+			rodrigues.set(actualARX,actualARY,actualARZ);
+			Code.rotationEulerRodriguezToMatrix(matrix, rodrigues);
+			matrix.transform3DSetLocation(actualATX,actualATY,actualATZ);
+		}
+
+		// sum edge error
 		for(var i=0; i<edges.length; ++i){
 			var edge = edges[i];
 			var indexA = edge[0];
@@ -16896,27 +16903,8 @@ return {"values":matrixes};
 			var offsetBA = valueBA["offset"];
 			var rotationBA = valueBA["rotation"];
 
-			var actualARX = x[indexA*6+0];
-			var actualARY = x[indexA*6+1];
-			var actualARZ = x[indexA*6+2];
-			var actualATX = x[indexA*6+3];
-			var actualATY = x[indexA*6+4];
-			var actualATZ = x[indexA*6+5];
-
-			var actualBRX = x[indexB*6+0];
-			var actualBRY = x[indexB*6+1];
-			var actualBRZ = x[indexB*6+2];
-			var actualBTX = x[indexB*6+3];
-			var actualBTY = x[indexB*6+4];
-			var actualBTZ = x[indexB*6+5];
-			
-			rodrigues.set(actualARX,actualARY,actualARZ);
-			Code.rotationEulerRodriguezToMatrix(tmpMA, rodrigues);
-			tmpMA.transform3DSetLocation(actualATX,actualATY,actualATZ);
-
-			rodrigues.set(actualBRX,actualBRY,actualBRZ);
-			Code.rotationEulerRodriguezToMatrix(tmpMB, rodrigues);
-			tmpMB.transform3DSetLocation(actualBTX,actualBTY,actualBTZ);
+			var tmpMA = pList[indexA];
+			var tmpMB = pList[indexB];
 
 			var actualAAxisO = tmpMA.multV3DtoV3D(new V3D(0,0,0));
 			var actualAAxisX = tmpMA.multV3DtoV3D(new V3D(1,0,0));
@@ -16958,31 +16946,46 @@ return {"values":matrixes};
 	}
 console.log("nonlinear");
 
-
-	// decompose into usable variables
+	// create re-usable matrixes
+	var pList = [];
 	var x = [];
+	console.log(vertexes);
 	for(var i=0; i<vertexes.length; ++i){
 		var vertex = vertexes[i];
 		var value = vertex["value"];
 		var offset = value["offset"];
-		var rotation = value["rotation"]
-		var rodrigues = Code.rotationMatrixToEulerRodriguez(rotation);
-// console.log("rodrigues: "+rodrigues);
-		// console.log(vertex);
+		var rotation = value["rotation"];
+		var matrix = rotation.copy();
+		matrix.transform3DSetLocation(offset.x,offset.y,offset.z);
+		pList.push(matrix);
+	}
+	// decompose into usable variables
+	for(var i=0; i<variableIndexes.length; ++i){
+		var index = variableIndexes[i];
+		var matrix = pList[index];
+		var rodrigues = Code.rotationMatrixToEulerRodriguez(matrix);
 		x[i*6+0] = rodrigues.x;
 		x[i*6+1] = rodrigues.y;
 		x[i*6+2] = rodrigues.z;
-		x[i*6+3] = offset.x;
-		x[i*6+4] = offset.y;
-		x[i*6+5] = offset.z;
+		x[i*6+3] = matrix.get(0,3);
+		x[i*6+4] = matrix.get(1,3);
+		x[i*6+5] = matrix.get(2,3);
 	}
-// throw "???"
-	var args = [edges,edgeData];
+	// nonlinear step
+var startTime = Code.getTimeMilliseconds();
+	var args = [edges,edgeData, pList, variableIndexes];
 	var result = Code.gradientDescent(fxn, args, x, null, maxIterationsNonLinear, 1E-16);
 	var x = result["x"];
+var stopTime = Code.getTimeMilliseconds();
+var diffTime = (stopTime-startTime)/1000;
+console.log("DIFF: "+diffTime);
+
+console.log("CACHE HITS "+cacheHits);
+console.log("CACHE MISS "+cacheMisses);
 	
-	var matrixes = [];
-	for(var i=0; i<vertexes.length; ++i){
+	var matrixes = pList;
+	for(var i=0; i<variableIndexes.length; ++i){
+		var index = variableIndexes[i];
 		var rx = x[i*6+0];
 		var ry = x[i*6+1];
 		var rz = x[i*6+2];
@@ -16990,17 +16993,18 @@ console.log("nonlinear");
 		var ty = x[i*6+4];
 		var tz = x[i*6+5];
 		var rodrigues = new V3D(rx,ry,rz);
-		var matrix = Code.rotationEulerRodriguezToMatrix(new Matrix(4,4).identity(), rodrigues);
+		var matrix = pList[index];
+		Code.rotationEulerRodriguezToMatrix(matrix, rodrigues);
 		matrix.transform3DSetLocation(tx,ty,tz);
-		matrixes[i] = matrix;
 	}
+	// TODO: OFFSET SOME VALUE TO 0,0,0 @ 0,0,0
 	return {"values":matrixes};
 
 }
 
 
 
-Code.graphAbsoluteUpdateFromRelativeTransforms = function(initialP, edges, maxIterations){ // use starting matrices & upate to match  (ignore unknown scales)
+Code.graphAbsoluteUpdateFromRelativeTransforms = function(initialP, edges, maxIterations, variableIndexes){ // use starting matrices & upate to match  (ignore unknown scales)
 	var linearMultiplier = Math.ceil(Math.sqrt(edges.length));
 	maxIterations = Code.valueOrDefault(maxIterations,linearMultiplier*100); // 1000 total takes a wh
 	// 
@@ -17019,6 +17023,14 @@ Code.graphAbsoluteUpdateFromRelativeTransforms = function(initialP, edges, maxIt
 		var edge = edges[i];
 		var relAB = edge[2];
 		relatives[i] = relAB;
+	}
+
+	// changeable matrixes
+	if(!variableIndexes){
+		variableIndexes = [];
+		for(var i=0; i<viewCount; ++i){
+			variableIndexes[i] = i;
+		}
 	}
 
 	var updateVectorsFromMatrixes = function(matrixes,vectors){
@@ -17047,22 +17059,11 @@ Code.graphAbsoluteUpdateFromRelativeTransforms = function(initialP, edges, maxIt
 	var tempMatrix = new Matrix(4,4);
 		tempMatrix.identity();
 	var tempV3D = new V3D();
-	var matrixesFromXs = function(matrixes, x){
-		for(var i=0; i<matrixes.length; ++i){
-			var rx = x[i*6+0];
-			var ry = x[i*6+1];
-			var rz = x[i*6+2];
-			var tx = x[i*6+3];
-			var ty = x[i*6+4];
-			var tz = x[i*6+5];
-			var rodrigues = tempV3D;
-				rodrigues.set(rx,ry,rz);
-			var matrix = matrixes[i];
-				matrix = Code.rotationEulerRodriguezToMatrix(matrix, rodrigues);
-				matrix.transform3DSetLocation(tx,ty,tz);
-		}
-	}
-
+	var cacheValues = [];
+	var cacheHits = 0;
+	var cacheMisses = 0;
+	// C: 19.1 19.2, 19.15 18.9 18.8 18.5
+	// N: 19.3 19.4 19.0 19.1 19.08
 	var fxn = function(args, x, isUpdate){
 		if(isUpdate){
 			// throw "isUpdate";
@@ -17071,9 +17072,41 @@ Code.graphAbsoluteUpdateFromRelativeTransforms = function(initialP, edges, maxIt
 		var edges = args[0];
 		var rVectors = args[1];
 		var aMatrixes = args[2];
+		var variableIndexes = args[3];
 
-		// setup absolutes from current x vector
-		matrixesFromXs(aMatrixes, x);
+		// setup all matrixes to be used by edge loop
+		for(var i=0; i<variableIndexes.length; ++i){
+			var index = variableIndexes[i];
+			var matrix = aMatrixes[index];
+			var rx = x[i*6+0];
+			var ry = x[i*6+1];
+			var rz = x[i*6+2];
+			var tx = x[i*6+3];
+			var ty = x[i*6+4];
+			var tz = x[i*6+5];
+			
+			if(cacheValues[i]){
+				var c = cacheValues[i];
+				if( c[0]==rx && c[1]==ry && c[2]==rz && c[3]==tx && c[4]==ty && c[5]==tz ){ // cache hit
+					++cacheHits;
+					continue;
+				}
+			}else{ // create index
+				cacheValues[i] = [0,0,0,0,0,0];
+			} // else isn't cached
+			++cacheMisses;
+			cacheValues[i][0] = rx;
+			cacheValues[i][1] = ry;
+			cacheValues[i][2] = rz;
+			cacheValues[i][3] = tx;
+			cacheValues[i][4] = ty;
+			cacheValues[i][5] = tz;
+			
+			var rodrigues = tempV3D;
+				rodrigues.set(rx,ry,rz);
+				matrix = Code.rotationEulerRodriguezToMatrix(matrix, rodrigues);
+				matrix.transform3DSetLocation(tx,ty,tz);
+		}
 
 		// get all absolute locations & X Y Z direction vectors
 		var totalError = 0;
@@ -17104,8 +17137,9 @@ Code.graphAbsoluteUpdateFromRelativeTransforms = function(initialP, edges, maxIt
 
 	// create unknowns x vector
 	var x = [];
-	for(var i=0; i<absolutes.length; ++i){
-		var absolute = absolutes[i];
+	for(var i=0; i<variableIndexes.length; ++i){
+		var index = variableIndexes[i];
+		var absolute = absolutes[index];
 		var rodrigues = Code.rotationMatrixToEulerRodriguez(absolute);
 		var offset = absolute.transform3DLocation();
 		x[i*6+0] = rodrigues.x;
@@ -17115,17 +17149,34 @@ Code.graphAbsoluteUpdateFromRelativeTransforms = function(initialP, edges, maxIt
 		x[i*6+4] = offset.y;
 		x[i*6+5] = offset.z;
 	}
-	// console.log(x);
-	
+var startTime = Code.getTimeMilliseconds();
 	// update by reducing error
-	var args = [edges, relativeVectors, absolutes];
+	var args = [edges, relativeVectors, absolutes, variableIndexes];
 	var result = Code.gradientDescent(fxn, args, x, null, maxIterations, 1E-16);
 	var x = result["x"];
-	// console.log(x);
+var stopTime = Code.getTimeMilliseconds();
+var diffTime = (stopTime-startTime)/1000;
+console.log("DIFF: "+diffTime);
+console.log("CACHE HITS "+cacheHits);
+console.log("CACHE MISS "+cacheMisses);
 
-	matrixesFromXs(absolutes, x);
+	// to output matrixes
+	for(var i=0; i<variableIndexes.length; ++i){
+		var index = variableIndexes[i];
+		var rx = x[i*6+0];
+		var ry = x[i*6+1];
+		var rz = x[i*6+2];
+		var tx = x[i*6+3];
+		var ty = x[i*6+4];
+		var tz = x[i*6+5];
+		var rodrigues = tempV3D;
+			rodrigues.set(rx,ry,rz);
+		var matrix = absolutes[index];
+			matrix = Code.rotationEulerRodriguezToMatrix(matrix, rodrigues);
+			matrix.transform3DSetLocation(tx,ty,tz);
+	}
 
-	return {"absolutes":absolutes}; // updated matrixes
+	return {"values":absolutes}; // updated matrixes
 }
 
 Code.relativeComponentsFromMatrixes2D = function(mA,mB){
@@ -17351,7 +17402,8 @@ console.log("TRIPLES: "+triples.length);
 		}
 		console.log(relativeEdges);
 		// absolute from relative orientations
-		console.log("solve for absolute orientations")
+		console.log("solve for absolute orientations");
+		// TODO: ACTUAL ITERATION NUMBERS
 		var result = Code.graphAbsoluteFromRelativePose3D(relativeEdges,null, 1000,1000);
 		console.log(result);
 		var values = result["values"];
@@ -17361,11 +17413,12 @@ var finalSolveOrientations = true;
 // var finalSolveOrientations = false;
 if(finalSolveOrientations){
 
-console.log("final optimize only orientation:"); // helps remove error in absolute scale
+console.log("final optimize only orientation:"); // helps remove error in absolute scale?
 var initialP = groupTransforms;
 var edgeList = relativeEdges;
+// TODO: ACTUAL ITERATION NUMBERS
 var result = Code.graphAbsoluteUpdateFromRelativeTransforms(initialP, edgeList, 1000); 
-groupTransforms = result["absolutes"];
+groupTransforms = result["values"];
 
 }
 		// TO VIEW LIST (of group)

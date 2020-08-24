@@ -8,7 +8,8 @@ function pageLoadedFxn(){
 	var ff = new FF("../code/",ffLoadedFxn);
 }
 function ffLoadedFxn(){
-	(new ScriptLoader("./",["R3D.js"],this,classesLoadedFxn)).load();
+	// (new ScriptLoader("./",["R3D.js"],this,classesLoadedFxn)).load();
+	(new ScriptLoader("./",[],this,classesLoadedFxn)).load();
 }
 function setupDisplay(){
 	this._canvas = new Canvas(null,0,0,Canvas.STAGE_FIT_FILL, false,false, true);
@@ -25,7 +26,7 @@ function setupDisplay(){
 }
 
 
-function classesLoadedFxn(){
+function classesLoadedFxnA(){
 	setupDisplay();
 
 	// create absolute locations
@@ -97,7 +98,7 @@ console.log("B:\n"+absoluteAtoB+"");
 	console.log(edges);
 	var result = Code.graphAbsoluteUpdateFromRelativeTransforms(initials, edges);
 	console.log(result);
-	var optimums = result["absolutes"];
+	var optimums = result["values"];
 
 	for(var i=0; i<extrinsics.length; ++i){
 		var extrinsic = extrinsics[i];
@@ -110,6 +111,366 @@ console.log("B:\n"+absoluteAtoB+"");
 	// ...
 	throw "..."
 }
+
+
+
+
+function classesLoadedFxn(){
+	setupDisplay();
+
+	// var matrixCount = 10;
+	var matrixCount = 20;
+	// var matrixCount = 50;
+	var transforms = [];
+	var variableP = [];
+	// make some absolute matrixes
+	for(var i=0; i<matrixCount; ++i){
+		var m = new Matrix(4,4).identity();
+			m = Matrix.transform3DTranslate(m, 0,0,-10);
+			m = Matrix.transform3DRotateY(m, Code.radians(-10*i));
+			m = Matrix.transform3DTranslate(m, 1,2,3);
+			// m = Matrix.inverse(); // if want extrinsic
+		transforms[i] = m;
+		if(i%2==1){
+			variableP.push(i);
+		}
+	}
+	// make some relative references:
+	var pairs = [];
+	for(var i=0; i<matrixCount; ++i){
+		var staJ = i+1;
+		var endJ = Math.min(staJ+2,matrixCount);
+		for(var j=staJ; j<endJ; ++j){
+			pairs.push([i,j]);
+		}
+	}
+
+
+	var s = 0.0;
+	// var s = 0.10;
+	// var s = 0.50;
+
+	var a = Code.radians(0.0);
+	// var a = Code.radians(10.0);
+	// var a = Code.radians(30.0);
+
+	for(var i=0; i<pairs.length; ++i){
+		var pair = pairs[i];
+		var indexA = pair[0];
+		var indexB = pair[1];
+		var matrixA = transforms[indexA];
+		var matrixB = transforms[indexB];
+			var relAB = Matrix.relativeReference(matrixA,matrixB);
+			relAB = Matrix.transform3DTranslate(relAB, (Math.random()-0.5)*s,(Math.random()-0.5)*s,(Math.random()-0.5)*s);
+			relAB = Matrix.transform3DRotateX(relAB, (Math.random()-0.5)*a);
+			relAB = Matrix.transform3DRotateY(relAB, (Math.random()-0.5)*a);
+			relAB = Matrix.transform3DRotateZ(relAB, (Math.random()-0.5)*a);
+			pair[2] = relAB;
+	}
+
+	// set initial offsets
+	var initialP = [];
+	// var s = 0.0;
+	// var s = 0.50;
+	// var s = 1.0;
+	var s = 2.0;
+	// var a = Code.radians(0.0);
+	// var a = Code.radians(30.0);
+	var a = Code.radians(45.0);
+	for(var i=0; i<matrixCount; ++i){
+		var transform = transforms[i];
+		var P = transform.copy();
+		var center = P.multV3DtoV3D(new V3D());
+			P = Matrix.transform3DTranslate(P, -center.x,-center.y,-center.z);
+			P = Matrix.transform3DRotateX(P, (Math.random()-0.5)*a);
+			P = Matrix.transform3DRotateY(P, (Math.random()-0.5)*a);
+			P = Matrix.transform3DRotateZ(P, (Math.random()-0.5)*a);
+			P = Matrix.transform3DTranslate(P, center.x,center.y,center.z);
+			P = Matrix.transform3DTranslate(P, (Math.random()-0.5)*s,(Math.random()-0.5)*s,(Math.random()-0.5)*s);
+		initialP[i] = P;
+	}
+
+	console.log(transforms);
+	console.log(variableP);
+	console.log(pairs);
+
+
+	// make some static
+
+
+	// variableP
+	// variableP = [0];
+	variableP = null;
+
+	var result = Code.graphAbsoluteFromRelativePose3D(pairs,initialP, 1000,1000, variableP);
+	// var result = Code.graphAbsoluteUpdateFromRelativeTransforms(initialP, pairs, 1000, variableP);
+	console.log(result);
+	var values = result["values"];
+	console.log(values);
+
+	// throw "?"
+	
+	displayViewGraph(initialP,pairs);
+
+	displayViewGraph(values,pairs, 1000,null, 0xFFFF0000);
+	// displayViewGraph(values,pairs, 1000);
+
+	throw "yep"
+}
+
+
+function displayViewGraph(transforms, pairs, offsetX, groupIDs, colorLine){
+	offsetX = offsetX!==undefined ? offsetX : 0.0;
+	colorLine = Code.valueOrDefault(colorLine, 0x990000CC);
+
+	
+	console.log("displayViewGraph");
+	console.log(pairs);
+	console.log(transforms);
+
+	var displaySize = 500;
+	var displayPadding = 20;
+	var displayWidth = displaySize - displayPadding*2.0;
+	var displayHeight = displaySize - displayPadding*2.0;
+	var offset2D = new V2D(displaySize*0.5,displaySize*0.5);
+	// new V2D(displayPadding + displayWidth*0.5, displayPadding + displayHeight*0.5);
+	// console.log("offset2D: "+offset2D);
+
+	var centers = [];
+	var normals = [];
+	var forwards = [];
+	var plus = new V3D(0,0,1);
+	var zero = new V3D(0,0,0);
+	var validCenters = [];
+	var validForwards = [];
+	var validIndexes = [];
+	for(var i=0; i<transforms.length; ++i){
+		var transform = transforms[i];
+		if(!transform){
+			transform = new Matrix(4,4).identity();
+		}	
+		var o, z, normal;
+		if(false){
+			o = null;
+			z = null;
+			normal = null;
+		}else{
+			o = transform.multV3DtoV3D(zero);
+			z = transform.multV3DtoV3D(plus);
+			normal = V3D.sub(z,o);
+		}
+		if(o){
+			validCenters.push(o);
+			validForwards.push(z);
+			validIndexes.push(i);
+		}
+		centers.push(o);
+		normals.push(normal);
+		forwards.push(z);
+	}
+	var plane = Code.planeFromPoints3D(validCenters);
+	var planeCenter = plane["point"];
+	var planeNormal = plane["normal"];
+	var centers2D = Code.projectPointsTo2DPlane(validCenters,planeCenter,planeNormal);
+	var forwards2D = Code.projectPointsTo2DPlane(validForwards,planeCenter,planeNormal);
+	var normals2D = [];
+	for(var i=0; i<centers2D.length; ++i){
+		var c2D = centers2D[i];
+		var f2D = forwards2D[i];
+		var n2D = V2D.sub(f2D,c2D);
+		normals2D[i] = n2D;
+	}
+
+	var info2D = V2D.infoArray(centers2D);
+	var size2D = info2D["size"];
+	var origin2D = info2D["center"];
+	var scaleToDisplay = Math.min(displayWidth/size2D.x, displayHeight/size2D.y);
+
+	var transformTo2D = new Matrix2D();
+		transformTo2D.identity();
+		transformTo2D.translate(-origin2D.x,-origin2D.y);
+		transformTo2D.scale(scaleToDisplay);
+		transformTo2D.translate(offset2D.x,offset2D.y);
+
+	// bounding:
+	var display = new DO();
+	// display.graphics().setLine(2.0,0xFF000000);
+	// display.graphics().beginPath();
+	// display.graphics().drawRect(0,0,displaySize,displaySize);
+	// display.graphics().endPath();
+	// display.graphics().strokeLine();
+
+	var normalSize = 25.0;
+	// var cameraSize = 5.0;
+	var cameraSize = 2.0;
+	var centersDisplay2D = [];
+	for(var i=0; i<centers2D.length; ++i){
+		var center2D = centers2D[i];
+		if(!center2D){
+			continue;
+		}
+		// var p2D = center2D.copy().sub(origin2D).scale(scaleToDisplay).add(offset2D);
+		var p2D = transformTo2D.multV2DtoV2D(center2D);
+		centersDisplay2D.push(p2D);
+		// center:
+		display.graphics().setLine(1.0,0xFF000000);
+		display.graphics().setFill(0xFFFF0000);
+		display.graphics().beginPath();
+		display.graphics().drawCircle(p2D.x,p2D.y, cameraSize);
+		display.graphics().endPath();
+		display.graphics().fill();
+		display.graphics().strokeLine();
+		// normal:
+		var n2D = normals2D[i];
+		n2D.norm().scale(normalSize);
+		// var n2D = V3D.perpendicularComponent(base,normal2D);
+		display.graphics().setLine(1.0,0xFF000000);
+		display.graphics().beginPath();
+		display.graphics().moveTo(p2D.x,p2D.y);
+		display.graphics().lineTo(p2D.x+n2D.x,p2D.y+n2D.y);
+		display.graphics().endPath();
+		display.graphics().strokeLine();
+		var show = i+"";
+		if(groupIDs){
+			show = groupIDs[i]+"";
+		}
+		var text = new DOText(show, 16, DOText.FONT_ARIAL, 0xFF990099, DOText.ALIGN_CENTER);
+		// text.matrix().scale(1,-1);
+		text.matrix().translate(p2D.x, p2D.y-20.0);
+		display.addChild(text);
+
+	}
+
+	// min & max errors:
+	var errors = [];
+	for(var i=0; i<pairs.length; ++i){
+		var pair = pairs[i];
+		errors.push(pair[ pairs.length-1 ]);
+	}
+	var info = Code.infoArray(errors);
+	var minError = info["min"];
+	// console.log(info);
+	for(var i=0; i<pairs.length; ++i){ // this is only useful with scales not so 
+// break;
+		var pair = pairs[i];
+		var a = pair[0];
+		var b = pair[1];
+		//
+		var fwd = pair[2];
+		var error = pair[3];
+		var bak = Matrix.inverse(fwd); // i
+		var err = error/minError;
+
+		// show would-be points:
+		var ta = transforms[a];
+		var tb = transforms[b];
+		// depends on if relative or if extrinsic
+		// var nb = Matrix.mult(fwd,ta);
+		// var na = Matrix.mult(bak,tb);
+		// var nb = Matrix.mult(bak,ta);
+		// var na = Matrix.mult(fwd,tb);
+
+
+		// var ia = Matrix.inverse(ta);
+		// var ib = Matrix.inverse(tb);
+
+		// var nb = Matrix.mult(fwd,ta); // NO
+		// var na = Matrix.mult(bak,tb);
+
+		// var nb = Matrix.mult(fwd,ia); // NO
+		// var na = Matrix.mult(bak,ib);
+
+		// fwd = Matrix.mult(ia,fwd);
+		// bak = Matrix.mult(ib,bak);
+		// fwd = Matrix.mult(fwd,ia);
+		// bak = Matrix.mult(bak,ib);
+		var nb = Matrix.mult(fwd,ta);
+		var na = Matrix.mult(bak,tb);
+		// var nb = Matrix.mult(ta,fwd);
+		// var na = Matrix.mult(tb,bak);
+
+							// absA = Matrix.inverse(newOriginR);
+							// absB = Matrix.mult(relAB, absA);
+							// extB = Matrix.inverse(absB);
+
+		// var ns = [na,nb];
+		// var ts = [ta,tb];
+		var ts = [na,nb];
+		var as = [ta,tb];
+
+// console.log(fwd);
+// console.log(bak);
+// console.log(ta);
+// console.log(tb);
+// throw "?"
+// console.log(na,nb,ta,tb);
+
+		for(var j=0; j<ts.length; ++j){
+break;
+			var c3D = ts[j].multV3DtoV3D(new V3D(0,0,0));
+			var p2D = Code.projectTo2DPlane(c3D.copy(),planeCenter,planeNormal);
+			p2D = transformTo2D.multV2DtoV2D(p2D);
+			// center:
+			display.graphics().setLine(1.0,0xFF999999);
+			display.graphics().setFill(0x66CCCCCC);
+			display.graphics().beginPath();
+			// display.graphics().drawCircle(p2D.x,p2D.y, cameraSize*err);
+			display.graphics().drawCircle(p2D.x,p2D.y, 10.0);
+			display.graphics().endPath();
+			display.graphics().fill();
+			display.graphics().strokeLine();
+
+
+var c3D = as[j].multV3DtoV3D(new V3D(0,0,0));
+var o2D = Code.projectTo2DPlane(c3D.copy(),planeCenter,planeNormal);
+	o2D = transformTo2D.multV2DtoV2D(o2D);
+
+			display.graphics().setLine(1.0,0xCC990000);
+			display.graphics().beginPath();
+			display.graphics().moveTo(o2D.x,o2D.y);
+			display.graphics().lineTo(p2D.x,p2D.y);
+			display.graphics().endPath();
+			display.graphics().fill();
+			display.graphics().strokeLine();
+
+		}
+		
+
+
+
+
+
+
+
+		var p2DA = centersDisplay2D[a];
+		var p2DB = centersDisplay2D[b];
+		display.graphics().setLine(2.0,colorLine);
+		display.graphics().beginPath();
+		display.graphics().moveTo(p2DA.x,p2DA.y);
+		display.graphics().lineTo(p2DB.x,p2DB.y);
+		display.graphics().endPath();
+		display.graphics().strokeLine();
+
+		var c2D = V2D.avg(p2DA,p2DB);
+
+		// var text = new DOText(Code.fixed(""+err,5), 16, DOText.FONT_ARIAL, 0xFF990099, DOText.ALIGN_CENTER);
+		// // text.matrix().scale(1,-1);
+		// text.matrix().translate(c2D.x, c2D.y);
+		// display.addChild(text);
+	}
+	
+	
+	// display.matrix().scale(1,-1);
+	// display.matrix().translate(0,displaySize);
+	var off = new V2D(300+offsetX, 100);
+	GLOBALSTAGE.addChild(display);
+	// display.matrix().translate(300,100);
+	display.matrix().translate(off.x,off.y);
+
+	return {"points":centersDisplay2D, "offset":off};
+}
+
+
 
 
 function classesLoadedFxn_Q(){

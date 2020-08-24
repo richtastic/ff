@@ -111,12 +111,23 @@ Matrix.prototype.set = function(row,col,val){
 Matrix.prototype.get = function(row,col){
 	return this._rows[row][col];
 }
-Matrix.prototype.scale = function(s){
-	var i, j, row = this._rowCount, col = this._colCount;
-	var index = 0;
-	for(j=0;j<row;++j){
-		for(i=0;i<col;++i){
-			this._rows[j][i] = this._rows[j][i]*s;
+// Matrix.prototype.scale = function(s){
+// 	var i, j, row = this._rowCount, col = this._colCount;
+// 	var index = 0;
+// 	for(j=0;j<row;++j){
+// 		for(i=0;i<col;++i){
+// 			this._rows[j][i] = this._rows[j][i]*s;
+// 		}
+// 	}
+// 	return this;
+// }
+Matrix.prototype.scale = function(c){
+	var row, rows = this._rowCount, cols = this._colCount;
+	var i, j;
+	for(j=0;j<rows;++j){
+		row = this._rows[j];
+		for(i=0;i<cols;++i){
+			row[i] = row[i]*c;
 		}
 	}
 	return this;
@@ -549,11 +560,17 @@ Matrix.transform3DTranslate = function(a,tX,tY,tZ){
 	var b = Matrix._transformTemp3D.fromArray([1.0,0.0,0.0,tX, 0.0,1.0,0.0,tY, 0.0,0.0,1.0,tZ, 0.0,0.0,0.0,1.0]);
 	return Matrix.mult(b,a);
 }
-Matrix.transform3DScale = function(a,sX,sY,sZ){
-	sY = sY!==undefined?sY:sX;
-	sZ = sZ!==undefined?sZ:sY;
-	var b = Matrix._transformTemp3D.fromArray([sX,0.0,0.0,0.0, 0.0,sY,0.0,0.0, 0.0,0.0,sZ,0.0, 0.0,0.0,0.0,1.0]);
-	return Matrix.mult(b,a);
+Matrix.transform3DScaleMatrix = function(a,scale){ // scale a metric matrix === scale translation
+	var b = a.copy();
+	var tX = b.get(0,3);
+	var tY = b.get(1,3);
+	var tZ = b.get(2,3);
+	b.setColFromArray(3,[tX,tY,tZ,1]);
+	return b;
+	// sY = sY!==undefined?sY:sX;
+	// sZ = sZ!==undefined?sZ:sY;
+	// var b = Matrix._transformTemp3D.fromArray([sX,0.0,0.0,0.0, 0.0,sY,0.0,0.0, 0.0,0.0,sZ,0.0, 0.0,0.0,0.0,1.0]);
+	// return Matrix.mult(b,a);
 }
 Matrix.transform3DRotateX = function(a,angle){
 	var c = Math.cos(angle), s = Math.sin(angle);
@@ -704,17 +721,6 @@ Matrix.prototype.multV3DtoV3D = function(out, inn){
 	out.z = this._rows[2][0]*inn.x + this._rows[2][1]*inn.y + this._rows[2][2]*inn.z + (this._rows[2].length<4?0:this._rows[2][3]);
 	out.x = x; out.y = y;
 	return out;
-}
-Matrix.prototype.scale = function(c){
-	var row, rows = this._rowCount, cols = this._colCount;
-	var i, j;
-	for(j=0;j<rows;++j){
-		row = this._rows[j];
-		for(i=0;i<cols;++i){
-			row[i] = row[i]*c;
-		}
-	}
-	return this;
 }
 Matrix.prototype.offset = function(c){
 	var row, rows = this._rowCount, cols = this._colCount;

@@ -5951,6 +5951,10 @@ Stereopsis.World.prototype.solveOptimizeSingleView = function(viewSolve, loopIte
 	var iterationsNeighbors = 100; // 10 - 100
 	var iterationsAll = 10; // 10 - 20
 
+	iterationsMain = 500;
+	iterationsNeighbors = 50;
+	iterationsAll = 10;
+
 	var neighborViews = world.neighborsFromView(viewSolve, minimumMatchNeighborCount);
 	console.log("neighborViews: ");
 	console.log(neighborViews);
@@ -5968,9 +5972,7 @@ Stereopsis.World.prototype.solveOptimizeSingleView = function(viewSolve, loopIte
 	var nextErrorR = startingErrorR;
 	for(var i=0; i<maxIterations; ++i){
 		console.log(" iteration: :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: "+i+"/"+maxIterations+" ("+viewSolve.id()+") ");
-		iterationsMain = 500;
-		iterationsNeighbors = 50;
-		iterationsAll = 10;
+		
 		// self
 		var result = world.refineSelectCameraMultiViewTriangulation(viewSolve, iterationsMain);
 		// world.copyRelativeTransformsFromAbsolute();
@@ -5981,9 +5983,9 @@ Stereopsis.World.prototype.solveOptimizeSingleView = function(viewSolve, loopIte
 			// world.copyRelativeTransformsFromAbsolute();
 		}
 		// worldwide
-		if(doWorldOptimization){
-			var result = world.refineAllCameraMultiViewTriangulation(iterationsAll, false);
-		}
+		// if(doWorldOptimization){
+		// 	var result = world.refineAllCameraMultiViewTriangulation(iterationsAll, false);
+		// }
 
 		// copy absolutes back to transforms:
 		world.copyRelativeTransformsFromAbsolute();
@@ -6008,6 +6010,16 @@ Stereopsis.World.prototype.solveOptimizeSingleView = function(viewSolve, loopIte
 		// 	break;
 		// }
 	}
+
+	// worldwide - only once, outside interrior loop
+	if(doWorldOptimization){
+		var result = world.refineAllCameraMultiViewTriangulation(iterationsAll, false);
+		world.copyRelativeTransformsFromAbsolute();
+		world.updatePoint3DLocations();
+	}
+
+	
+
 	// puts points at calculated locations
 	world.estimate3DErrors(true);
 	// world.averagePoints3DFromMatches();
@@ -9325,7 +9337,7 @@ Stereopsis.World.prototype.solveTriple = function(completeFxn, completeContext, 
 	var views = world.toViewArray();
 
 	// triple for relative scaling:
-	console.log("relative scale using relative transforms");
+	console.log("relative scale using relative transforms - need 3 ");
 	if(false){
 		for(var i=0; i<views.length; ++i){
 			var viewI = views[i];

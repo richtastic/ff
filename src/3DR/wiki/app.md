@@ -356,15 +356,15 @@ https://cloud.google.com/appengine/docs/nodejs/
 TIMELINES:
 
 
-08/10 - 360 object scene ~ 10 images
+08/30 - 360 object scene ~ 10 images
 
 
-08/30 - 360 object scene ~ 20 images
+09/10 - 360 object scene ~ 20 images
 
 
-09/10 - update track_full logic: pairs + nonlinear estimate + solve all views at once
-09/20 - use track points as seeds / not from-scratch pairs?
-09/30 - test set of ~ 25 images
+09/20 - update track_full logic: pairs + nonlinear estimate + solve all views at once
+09/30 - use track points as seeds / not from-scratch pairs?
+10/10 - test set of ~ 25 images
 		- automate URL refresh for sections of code
 10/10 - test set of ~ 50 images x (this will require 2-10 x speed ups)
 11/01 - MVP
@@ -388,16 +388,11 @@ MISSING:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-- is P/R relative using same same scale @ dense pairs ?
 
 
-
-
-
-
-
-Add in the remaining images using pose estimation.
-
+- save relative transforms error on exit?
+	- derivable?
+	- has error?
 
 have full view graph w/ some error
 have skeleton w/ low error
@@ -410,19 +405,69 @@ have skeleton w/ low error
 
 
 
+average track pair: 2.0k-2.5k points
 
-var result = Code.graphAbsoluteFromObjectLookup3D(views, pairs, triples, viewToID,pairToIDs,tripleToIDs, pairToError,pairToTransform, tripleToScales);
-
-var result = Code.graphAbsoluteFromObjectLookup3D(views, pairs, triples, viewToID,pairToIDs,tripleToIDs, pairToError,pairToTransform, tripleToScales);
-
-var result = Code.graphAbsoluteFromRelativePose3D(relativeEdges,null, 1000,1000);
-
-var result = Code.graphAbsoluteUpdateFromRelativeTransforms(initialP, edgeList, 1000);
+6-skeleton views: [0, 0, 10270, 1942, 544, 146, 30]
+13k total views
+10k 2-views
+2.6k 3+views
 
 
 
+- full BA should include fewer pairs to reduce processing?
 
 
+- dense group combine:
+	- combine missing leaf views to skeleton:
+		- use pair info to optimize 3D graph for bundle_full.yaml
+	- optimize solveOptimizeSingleView
+
+- bundle init: initializeBundleGroupsFromDense
+	- use groupings [4 + 2-3 overlap]
+
+- bundle iterate: iterateBundleProcess
+	- view are stored in single file
+	- points are stored in a per-group file
+	- solveDenseGroup?
+	go thru each group:
+		- load all images (high dense)
+		- combine all included view pairs dense points into file
+		- combine visually using images
+		- reinit patches (or figure out how to calculate transfer?)
+		- probe2D
+		- probe3D (find more support in other images)
+		- filter S B F R patch
+	go thru each group:
+		- drop worst points based on S & N & R (& F?) error, patch overlap
+		- accumulate 3D points into single points3D file
+
+
+
+- not sure how to load 'only 3+ tracks'
+	- need to keep all tracks until all are loaded
+
+ - not sure how to resolve possible drift:
+	go thru each group: ?????????
+		- optimize each view in group (3+ tracks), save result view outside of group
+		[overlapping views get optimized multiple times]
+
+
+PEAK MEMORY USAGE SITUATIONS:
+
+	SPARSE: world-solve
+		assume all tracks from all views can fit into memory
+
+	DENSE: world-solve
+		assume all 3+ tracks from all views can fit into memory
+
+	BUNDLE-GROUP: group-solve
+		assume all dense points of K views + images can fit into memory
+
+	SURFACE: short term (sub 1E9 3Dpoints)
+		store all 3D dense points + normals & triangles in memory
+
+	SURFACE:
+		store all triangles in memory
 
 
 
@@ -444,91 +489,12 @@ var result = Code.graphAbsoluteUpdateFromRelativeTransforms(initialP, edgeList, 
 
 
 
-
-
-- dense graph init:
-	- not use skeleton
-	- use groupings [4 + 2 overlap]
-
-- dense graph group iteration:
-	- solveOptimizeSingleView
-	- save pair info in tracks.yaml
-	- accumulate pair info into graph.yaml
-
-- dense group combine:
-	- use pair info to optimize 3D graph for bundle_full.yaml
-
-- bundle init: initializeBundleGroupsFromDense
-	- use groupings [4 + 2-3 overlap]
-
-- bundle iterate: iterateBundleProcess
-	- view are stored in single file
-	- points are stored in a per-group file
-	- solveDenseGroup?
-	go thru each group:
-		- combine all included view pairs dense points into file
-	go thru each group:
-		- optimize each view in group (3+ tracks), save result view outside of group
-		[overlapping views get optimized multiple times]
-	go thru each group:
-		- drop worst points based on R-error & patch overlap
-		- accumulate points into points file
-
-
-
-=> skeletal set purpose is to limit the total number of views using in process:
-	- only skeleton is used in BA process (eg tracks-group & tracks-full & groups-full)
-	=> 2 -> 10 x smaller
-
-=> initial pairwise of entire set needs to be done regardless
-=> skeleton can be used once coverage is known:
-	- after sparse view-graph construction?
-	- def after dense view-graph construction
-	=> SKIP:
-		- smaller sparse + dense graph BA 
-
-
-WHEN TO USE VIEW GRAPH SKELETON:
-	- need dense pairs
-	+ after sparse & dense view graph is calculated:
-		+ track groups only use skeleton views
-		+ track full only use skeleton views
-	- how to incorporate all views after:
-		- new segment of entire view graph incorporates 
-		- augment skeleton graph with views based on previous known relative orientation offset
-
-
-
-
-
-SPARSE: world-solve
-	assume all tracks from all views can fit into memory
-
-DENSE: world-solve
-	assume all 3+ tracks from all views can fit into memory
-
-BUNDLE-GROUP: group-solve
-	assume all dense points of K-view + images can fit into memory
-
-BUNDLE-ALL:
-	store all dense points into file
-
-
-
-
-
-
 x group optimization methods to use (single view opt + world opt)
 
 
 - split & combine options:
 	- skeleton:
-		pro:
-			- paper recommended
-			- limit world drift to only last branches
-			- easy recombine using offset
-		con:
-			- maximum group size could be huge, on average maybe 50% of world
+		- maximum group size could be huge, on average maybe 10%-50% of world
 	- groups:
 		pro:
 			- group size is mostly customizable (eg 8 views with 2 overlapping)
@@ -580,34 +546,6 @@ every group's pair
 			N^6
 
 - add error around (simmulated annealing?) to pop out of minimizing location
-
-
-- global BA minimize variables all at same time (matrix ...)?
-
-
-- research camera view location optimization
-	- reprojection error?
-	- LM?
-	- ...
-
-
-
-- SYMPTOMS:
-	- poor initial graph
-	- poor 3D point locations
-	- reprojection errors are much higher than the pair errors
-		pair: < 1px
-		group: 5-10 px
-
-- what precicely is the problem?
-
-	- poor initial value, yes
-	- local minimum?
-	- bad cost function?
-
-
-- ...
-
 
 
 

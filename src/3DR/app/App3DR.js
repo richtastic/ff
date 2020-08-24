@@ -918,9 +918,9 @@ App3DR.prototype._setupModel3DProjectManager = function(projectManager){
 			expectedFeatureImages = views.length;
 			for(var i=0; i<views.length; ++i){
 				var view = views[i];
-				//view.loadFeaturesImage(fxnImageLoaded, self);
-				//view.loadDenseHiImage(fxnImageLoaded, self); // REPLACE 1
-				view.loadFeaturesImage(fxnImageLoaded, self);
+				//view.loadDenseHiImage(fxnImageLoaded, self);
+				// view.loadFeaturesImage(fxnImageLoaded, self); // only needs to be good enough to get some distinction in color
+				view.loadIconImage(fxnImageLoaded, self);
 			}
 		}
 		var fxnImageLoaded = function(){
@@ -8181,19 +8181,19 @@ console.log("inputFilename: "+inputFilename);
 
 		console.log("_absoluteViewsFromDatas");
 		var graph = project._absoluteViewsFromDatas(graphViews, graphPairs, graphTriples);
-console.log("graph:");
-console.log(graph);
-
 var viewIndextoViewID = [];
 for(var v=0; v<graphViews.length; ++v){
 	viewIndextoViewID[v] = graphViews[v]["id"];
 }
-// console.log(graphViews);
-// console.log(viewIndextoViewID);
+// ONLY CARE ABOUT SKELETON GROUP FOR OPTIMIZING:
+		var graphGroups = [graph["skeleton"]];
+		var graphGroupPairs = [graph["skeletonEdges"]];
+		if(false){
 		var graphGroups = graph["groups"];
 			graphGroups.unshift(graph["skeleton"]);
 		var graphGroupPairs = graph["groupEdges"]
 			graphGroupPairs.unshift(graph["skeletonEdges"]);
+		}
 		var basePath = Code.pathRemoveLastComponent(inputFilename);
 		// console.log(basePath);
 		var graphFilename = Code.appendToPath(basePath, App3DR.ProjectManager.RECONSTRUCT_GRAPH_FILE_NAME);
@@ -8250,7 +8250,6 @@ console.log(i+" = ",vs[i]);
 			}
 			dataGroups.push(g);
 		}
-		console.log(data);
 throw "BEFORE SAVE GRAPH";
 		// save graph & reference it
 		inputData["graph"] = graphFilename;
@@ -8266,7 +8265,6 @@ throw "BEFORE SAVE GRAPH";
 // throw ">aggregate";
 console.log("aggregate ...")
 	// AGGREGATE TRACKS INTO POINT FILE
-	// trackCount: # = done ?
 	var trackCount = inputData["trackCount"]; // number of loaded tracks
 	if(trackCount===null || trackCount===undefined){
 		console.log("no trackCount ---> load tracks into track_GROUP.yaml & full (tracks or dense points) into tracks_all.yaml");
@@ -8711,43 +8709,17 @@ console.log("isDone - FULL DONE")
 				var worldView = world.viewFromData(nextViewID);
 				console.log("optimize with view:");
 				console.log(worldView);
+throw "before solveOptimizeSingleView A";
 				// optimize view orientation
-// ???
-
-				// identify / ignore worst views on first iteration:
-				// if(baIterations==0){
-				// if(true){
-				// if(false){
-				// 	var info = world.solveDropWorstViewNeighbors();
-				// 	console.log(info);
-				// 	world.estimate3DErrors(true);
-				// 	var views = info["removed"];
-				// 	for(var v=0; v<views.length; ++v){
-				// 		var view = views[v];
-				// 		console.log(view);
-				// 		var viewID = view.data();
-				// 		for(var e=0; e<baOptimizations.length; ++e){
-				// 			var entry = baOptimizations[e];
-				// 			if(entry["id"]==viewID){
-				// 				entry["deltaErrorR"] = 0;
-				// 				entry["errorR"] = 0;
-				// 				entry["count"] = 0;
-				// 				entry["updated"] = Code.getTimeMilliseconds();;
-				// 			}
-				// 		}
-				// 	}
-				// }
-
-				// optmize
 				var info = world.solveOptimizeSingleView(worldView, 1, false);
 				console.log(info);
 				nextViewBA["deltaErrorR"] = Math.abs(info["deltaR"]); // expected always negative
 				nextViewBA["errorR"] = info["errorR"];
 				nextViewBA["count"] = worldView.pointCount();
 				nextViewBA["updated"] = Code.getTimeMilliseconds();
-// var str = world.toYAMLString();
-// console.log(str);
-// throw "before save";
+var str = world.toYAMLString();
+console.log(str);
+throw "before save";
 				
 				// update views:
 				var worldObject = world.toObject();
@@ -8887,10 +8859,222 @@ console.log("fullBundlePath: "+fullBundlePath);
 
 			return;
 		}
-throw "C"
-		if(graphGroups.length==bundleGroupIndex){ // combine groups to single graph using skeleton view's offset as origin
 
+		if(graphGroups.length==bundleGroupIndex){ // combine groups to single graph using skeleton view's offset as origin
+			var pairIDFromViewIDs = function(a,b){
+				return a<b ? a+"-"+b : b+"-"+a;
+			}
+			console.log(graphData);
 			console.log(graphGroups);
+			// get references:
+			var allViews = graphData["views"];
+			var allPairs = graphData["pairs"];
+			// GROUPED
+			var groupSkeleton = graphGroups[0];
+			var skeletonViews = groupSkeleton["views"];
+			var skeletonPairs = groupSkeleton["pairs"];
+			var skeletonTransforms = groupSkeleton["transforms"];
+
+			// PREVIOUS TRANSFORMS
+			var viewIDToTransformOriginal = {};
+			for(var i=0; i<allViews.length; ++i){
+				var view = allViews[i];
+				var viewID = view["id"];
+				var viewExtrinsic = view["transform"];
+					viewExtrinsic = Matrix.fromObject(viewExtrinsic);
+				var absolute = Matrix.inverse(viewExtrinsic);
+				viewIDToTransformOriginal[viewID] = absolute;
+			}
+			var pairIDToPairOriginal = {};
+			for(var i=0; i<allPairs.length; ++i){
+				var pair = allPairs[i];
+				console.log(pair);
+				var pairID = pair["id"];
+				pairIDToPairOriginal[pairID] = pair;
+			}
+			// 
+			// NEW TRANSFORMS
+			var viewIDToTransformSkeleton = {};
+			var skeletonLookup = {};
+			for(var i=0; i<skeletonViews.length; ++i){
+				var viewID = skeletonViews[i];
+				var viewExtrinsic = skeletonTransforms[i];
+					viewExtrinsic = Matrix.fromObject(viewExtrinsic);
+				var absolute = Matrix.inverse(viewExtrinsic);
+				viewIDToTransformSkeleton[viewID] = absolute;
+				skeletonLookup[viewID] = 1;
+			}
+			// for(var i=0; i<allPairs.length; ++i){
+			// 	var pair = allPairs[i];
+			// 	var pairID = view["id"];
+			// 	pairIDToPairOriginal[viewID] = pair;
+			// }
+			// find all leave views = non-skeleton views
+
+			var pairIDToPairSkeleton = {};
+			for(var i=0; i<skeletonPairs.length; ++i){
+				var pair = skeletonPairs[i];
+				var viewIDA = pair["A"];
+				var viewIDB = pair["B"];
+				var pairID = pairIDFromViewIDs(viewIDA,viewIDB);
+				pairIDToPairSkeleton[pairID] = pair;
+			}
+			// find all leave views = non-skeleton views
+			var leafViews = [];
+			var leafLookup = {};
+			var leafAdjacentSkeletonEdges = {};
+			for(var i=0; i<allViews.length; ++i){
+				var view = allViews[i];
+				var viewID = view["id"];
+				if(!viewIDToTransformSkeleton[viewID]){
+					leafViews.push(viewID);
+					leafLookup[viewID] = 1;
+					leafAdjacentSkeletonEdges[viewID] = [];
+				}
+			}
+			console.log(allViews);
+			console.log("skeletonViews");
+			console.log(skeletonViews);
+			console.log("leafViews");
+			console.log(leafViews);
+
+			// edges between skeleton & leaves
+			for(var i=0; i<allPairs.length; ++i){
+				var pair = allPairs[i];
+				var viewIDA = pair["A"];
+				var viewIDB = pair["B"];
+				if(leafLookup[viewIDA] && skeletonLookup[viewIDB]){
+					console.log("pair L-S");
+					leafAdjacentSkeletonEdges[viewIDA].push(pair);
+				}else if(leafLookup[viewIDB] && skeletonLookup[viewIDA]){
+					console.log("pair S-L");
+					leafAdjacentSkeletonEdges[viewIDB].push(pair);
+				}
+			}
+
+			var addToScaleTable = function(table,index,ratio){
+				var info = table[index];
+				if(!info){
+					var info = {"sum":0, "count":0};
+					table[index] = info;
+				}
+				info["count"] += 1;
+				info["sum"] += Math.log(ratio);
+			}
+			// get each skeleton average scale difference
+			var skeletonIDToScale = {};
+			// EACH EDGE HAS A SCALE
+			var edgeInfos = {};
+			for(var i=0; i<skeletonViews.length; ++i){
+				var viewIDA = skeletonViews[i];
+				for(var j=i+1; j<skeletonViews.length; ++j){
+					var viewIDB = skeletonViews[j];
+					var pairID = pairIDFromViewIDs(viewIDA,viewIDB);
+					var viewPairOriginal = pairIDToPairOriginal[pairID];
+					var viewPairSkeleton = pairIDToPairSkeleton[pairID];
+					//
+					if(viewPairOriginal && viewPairSkeleton){
+						var transformA = viewIDToTransformOriginal[viewIDA];
+						var transformB = viewIDToTransformOriginal[viewIDB];
+						var relativeExtrinsicOriginal = Matrix.relativeReference(transformA,transformB);
+						var distanceO = relativeExtrinsicOriginal.multV3DtoV3D(new V3D(0,0,0));
+							distanceO = distanceO.length();
+						// NEW
+						var transformA = viewIDToTransformSkeleton[viewIDA];
+						var transformB = viewIDToTransformSkeleton[viewIDB];
+						var relativeExtrinsicSkeleton = Matrix.relativeReference(transformA,transformB);
+						var distanceS = relativeExtrinsicSkeleton.multV3DtoV3D(new V3D(0,0,0));
+							distanceS = distanceS.length();
+						// console.log(distanceO);
+						// console.log(distanceS);
+						var ratio = distanceS/distanceO;
+						console.log(ratio);
+						edgeInfos[pairID] = {"ratio":ratio};
+						// 
+						// var infoA = skeletonIDToScale[viewIDA];
+						// if(!infoA){
+						// 	var infoA = {"sum":0, "count":0};
+						// 	skeletonIDToScale[viewIDA] = infoA;
+						// }
+						// infoA["count"] += 1;
+						// infoA["sum"] += Math.log(ratio);
+						addToScaleTable(skeletonIDToScale,viewIDA,ratio);
+						addToScaleTable(skeletonIDToScale,viewIDB,ratio);
+						// skeletonIDToScale[viewIDA];
+						// create relative transform
+					}else{
+						console.log("no pair for both ");
+					}
+					
+				}
+			}
+			// get average scale:
+			var keys = Code.keys(skeletonIDToScale);
+			for(var i=0; i<keys.length; ++i){
+				var key = keys[i];
+				var info = skeletonIDToScale[key];
+				if(info["count"]==0){
+					throw "no edges ?";
+				}
+				var value = info["sum"]/info["count"];
+					value = Math.exp(value);
+				skeletonIDToScale[key] = value;
+			}
+			console.log(edgeInfos);
+			console.log(skeletonIDToScale);
+
+			// find predicted leaf new locations - averaging skeleton-leaf edges
+			for(var i=0; i<leafViews.length; ++i){
+				var leafID = leafViews[i];
+
+				// find all edges in original that include leaf ID & a skeleton
+				var transforms = [];
+				var errors = [];
+				var edgePairs = leafAdjacentSkeletonEdges[leafID];
+				console.log(edgePairs);
+				for(var j=0; j<edgePairs.length; ++j){
+					var pair = edgePairs[j];
+					var skeletonID = null;
+					var error = pair["error"];
+					if(pair["A"]==leafID){
+						skeletonID = pair["B"];
+					}else if(pair["B"]==leafID){
+						skeletonID = pair["A"];
+					}else{
+						throw "wrong"
+					}
+					var leafAbsolute = viewIDToTransformOriginal[leafID];
+					var skelAbsolute = viewIDToTransformOriginal[skeletonID];
+					var relativeOriginal = Matrix.relativeReference(skelAbsolute,leafAbsolute);
+					var skeletonScale = skeletonIDToScale[skeletonID];
+						relativeOriginal = Matrix.transform3DScaleMatrix(relativeOriginal, skeletonScale);
+					// TO NEW
+					var skelNewAbsolute = viewIDToTransformSkeleton[skeletonID];
+					var transform = Matrix.mult(relativeOriginal,skelNewAbsolute);
+					transforms.push(transform);
+					errors.push(error);
+					// console.log(transform);
+					// console.log(error);
+					// throw "here";
+				}
+				console.log(transforms);
+				console.log(errors);
+				var percents = Code.errorsToPercents(errors);
+				console.log(percents);
+					percents = percents["percents"];
+				console.log(percents);
+				var average = Code.averageMatrices3D(transforms, percents);
+				console.log(average);
+				throw "average";
+			}
+
+
+throw "HERE";
+
+			
+			// HAVE ORIGINAL VIEWS ABSOLUTE ORIENTATION IN GRAPH.YAML
+			// HAVE ORIGINAL PAIRS W/ ERROR IN GRAPH.YAML
+
 
 
 			// throw "NEED TO DO INVERSE SCALE & OPTIMIZE VIEW GRAPH "
@@ -9103,7 +9287,7 @@ console.log(str);
 			console.log("all group BA complete -- generate initial viewgraph from skeleton + groups");
 			return;// load all tracks from pairs into full track file
 		}
-throw "D"
+// throw "D"
 		// special case for full yaml: views & pairs are from graph
 		if(graphGroups.length==loadGroupIndex){
 console.log("special case? - should save view transforms to track full yaml");
@@ -9139,6 +9323,7 @@ console.log("special case? - should save view transforms to track full yaml");
 
 
 				console.log(data);
+				var baTransforms = data["transforms"];
 				var baViews = data["views"];
 				var baPoints = data["points"];
 				// var baOptimizations = data["ba"];
@@ -9148,52 +9333,8 @@ console.log("special case? - should save view transforms to track full yaml");
 				var minimumPixelErrorBA = minimumGroupPixelDeltaErrorPerUnity;
 				// var maxIterationsBA = 10*baViews.length; // HIGH
 				var maxIterationsBA = 2*baViews.length; // LOW
-
-// forever
-// minimumPixelErrorBA = 0;
-// maxIterationsBA = 9E9;
-
-// maxIterationsBA = -1;
-
-				// if(!baOptimizations){
-				// 	baOptimizations = [];
-				// 	for(var i=0; i<baViews.length; ++i){
-				// 		var view = baViews[i];
-				// 		var opt = {};
-				// 		opt["id"] = view["id"];
-				// 		opt["deltaErrorR"] = null;
-				// 		// opt["deltaErrorF"] = null;
-				// 		opt["errorR"] = null;
-				// 		// opt["errorF"] = null;
-				// 		opt["updated"] = null;
-				// 		opt["count"] = null;
-				// 		baOptimizations[i] = opt;
-				// 	}
-				// 	data["ba"] = baOptimizations;
-				// }
-				// var sortErrorRFxn = function(a,b){
-				// 	a = a["deltaErrorR"];
-				// 	b = b["deltaErrorR"];
-				// 	// do null first
-				// 	if(a===null && b===null){
-				// 		return -1;
-				// 	}
-				// 	if(a===null && b!==null){
-				// 		return -1;
-				// 	}
-				// 	if(b===null && a!==null){
-				// 		return 1;
-				// 	}
-				// 	return a > b ? -1 : 1; // do highest-reduction-error first
-				// }
-				// baOptimizations.sort(sortErrorRFxn);
-				// var nextViewBA = baOptimizations[0];
-
 				
-				var nextViewBA = baOptimizations[0];
-
-				
-
+				var nextViewBA = baOptimizations[0]; // pre-sorted on nulls
 				console.log(nextViewBA);
 
 				// if the next error is very low, or max iterations reached => done
@@ -9219,12 +9360,11 @@ console.log("special case? - should save view transforms to track full yaml");
 				if(isDone){
 					console.log("track group isDone");
 					graphData["bundleGroupIndex"] = bundleGroupIndex + 1;
-
+					// VIEWS
 					var graphTransforms = [];
 					var graphViews = graphGroup["views"];
 					for(var i=0; i<graphViews.length; ++i){
 						var viewID = graphViews[i];
-						console.log(viewID);
 						for(var j=0; j<baViews.length; ++j){
 							var view = baViews[j];
 							if(view["id"]==viewID){
@@ -9232,24 +9372,32 @@ console.log("special case? - should save view transforms to track full yaml");
 								break;
 							}
 						}
-
+					}
+					// PAIRS
+					var graphPairs = [];
+					for(var i=0; i<baTransforms.length; ++i){
+						var baTransform = baTransforms[i];
+						var pair = {};
+							pair["A"] = baTransform["A"];
+							pair["B"] = baTransform["B"];
+							pair["count"] = baTransform["matches"];
+							pair["error"] = baTransform["errorRMean"]; + baTransform["errorRSigma"]
+						graphPairs.push(pair);
 					}
 					// save final (extrinsic) transforms to graph summary data
 					graphGroup["transforms"] = graphTransforms;
-					graphGroup["RELATIVE ???? "] = WHAT;
-					throw "also want each edge transform"
+					graphGroup["pairs"] = graphPairs;
+					console.log(graphGroup);
 
 					var savedGraphComplete = function(){
 						console.log("savedGraphComplete: "+graphFile);
 						project._taskDoneCheckReloadURL();
 					}
-console.log(graphData);
 // throw "before save track graph end summary"
 					project.saveFileFromData(graphData, graphFile, savedGraphComplete);
 					return;
 				} // optimizing a single track file:
 				console.log("not isDone");
-
 // GOAL: move views in direction that minimizes  error
 
 				var cameras = project.cameras(); // should this come from the graph ?
@@ -9309,9 +9457,10 @@ console.log(graphData);
 				// update views:
 				var worldObject = world.toObject();
 				console.log(worldObject);
-
-				data["points"] = worldObject["points"];
+				data["cameras"] = worldObject["cameras"];
 				data["views"] = worldObject["views"];
+				data["transforms"] = worldObject["transforms"];
+				data["points"] = worldObject["points"];
 				data["iteration"] = baIterations + 1;
 
 				console.log("fullTrackPath: "+fullTrackPath);
@@ -10150,11 +10299,6 @@ for(var i=0; i<views.length; ++i){
 
 	this.displayViewGraph(orderedTransforms,groupPairsPass, 100, groupIDs);
 
-// throw "............. displayViewGraph"
-
-
-
-	console.log("Should these be extrinsic?")
 	// absolute to extrinsic
 	for(var i=0; i<orderedTransforms.length; ++i){
 		if(orderedTransforms[i]){
@@ -10162,66 +10306,29 @@ for(var i=0; i<views.length; ++i){
 		}
 	}
 
-var doSkeleton = false;
-// var doSkeleton = true;
+// var doSkeleton = false;
+var doSkeleton = true;
+// throw "DO WANT a skeleton"
 
-var skeleton; // SKELETON EDGES & VERTEXES
-var backbone; // VERTEXES [VIEWS]
-var groups; // GROUP VERTEXES
+	var skeleton; // SKELETON EDGES & VERTEXES
+	var backbone; // VERTEXES [VIEWS]
+	var groups; // GROUP VERTEXES
 
-if(doSkeleton){
-	skeleton = R3D.skeletalViewGraph(groupPairs);
-	backbone = skeleton["skeletonVertexes"];
-	groups = skeleton["groupVertexes"];
-}else{
-	console.log("IN")
-	var allEdges = [];
-	var allVertexes = [];
-	// for(var i=0; i<groupViews.length; ++i){
-	// 	allVertexes.push(groupViews[i]);
-	// }
-	allEdges = groupPairs;
-	allVertexes = groupViews;
+	if(doSkeleton){
+		skeleton = R3D.skeletalViewGraph(groupPairs);
+		backbone = skeleton["skeletonVertexes"];
+		groups = skeleton["groupVertexes"];
+	}else{ // just include everything as skeleton
+		var allEdges = groupPairs;
+		var allVertexes = groupViews;
+		skeleton = {};
+		skeleton["skeletonEdges"] = allEdges;
+		skeleton["groupEdges"] = [];
+		groups = [];
+		backbone = allVertexes;
+	}
 
-	skeleton = {};
-	skeleton["skeletonEdges"] = allEdges;
-	skeleton["groupEdges"] = [];
-	groups = [];
-	backbone = allVertexes;
-	// _absoluteViewsFromDatas
-}
-// console.log("...........................");
-// console.log(skeleton);
-// console.log(backbone);
-// throw "???????????????????????"
-
-// throw "??????"
-
-return {"transforms":orderedTransforms, "views":views, "skeleton":backbone, "groups":groups, "skeletonEdges":skeleton["skeletonEdges"], "groupEdges":skeleton["groupEdges"]};
-
-
-
-	var info = R3D.optimumTransform3DFromObjectLookup(views, pairs, triples, viewToID,pairToIDs,tripleToIDs, pairToError,pairToTransform,tripleToScales);
-	var transforms = info["transforms"];
-	var listPairs = info["listPairs"];
-	var viewIDs = info["views"];
-	var skeleton = info["skeleton"];
-	var backbone = skeleton["skeletonVertexes"];
-	var groups = skeleton["groupVertexes"];
-	// from index to id
-	// groups.push(backbone);
-	// for(var i=0; i<groups.length; ++i){
-	// 	var group = groups[i];
-	// 	for(var j=0; j<group.length; ++j){
-	// 		console.log(group[j]+" -> "+viewIDs[group[j]]);
-	// 		group[j] = viewIDs[group[j]];
-	// 	}
-	// }
-	// groups.pop();
-
-	this.displayViewGraph(transforms,listPairs, 500);
-	
-	return {"transforms":transforms, "views":viewIDs, "skeleton":backbone, "groups":groups, "skeletonEdges":skeleton["skeletonEdges"], "groupEdges":skeleton["groupEdges"]};
+	return {"transforms":orderedTransforms, "views":views, "skeleton":backbone, "groups":groups, "skeletonEdges":skeleton["skeletonEdges"], "groupEdges":skeleton["groupEdges"]};
 }
 
 App3DR.ProjectManager.prototype.calculatePairMatchWithRFromViewIDs = function(viewAID, viewBID, relativeAB, completeFxn, completeCxt, settings){ // R => better initial matches
@@ -11517,7 +11624,7 @@ App3DR.ProjectManager.prototype._initializeAbsoluteViewsFromGroups = function(vi
 
 	var result = Code.graphAbsoluteUpdateFromRelativeTransforms(initialP, edgeList, 1000); 
 	console.log(result);
-	var finalP = result["absolutes"];
+	var finalP = result["values"];
 
 	this.displayViewGraph(finalP,edgeList, 600);
 
@@ -13481,7 +13588,7 @@ App3DR.ProjectManager.prototype.calculatePairPutatives = function(){
 	var similarity = this._viewSimilarity;
 
 	
-	var cappedMinimumPairCount = 4; // need at least 2 + 1 other views to try + error (~2) 3->4 -- for very similar scenes
+	var cappedMinimumPairCount = 3; // need at least 2 + 1 other views to try + error (~2) 3->4 -- for very similar scenes
 	var cappedMaximumPairCount = 10; // 3 + 100^0.5 => 10
 	var minimumPairCount = cappedMinimumPairCount;
 	// 4  -> 4
