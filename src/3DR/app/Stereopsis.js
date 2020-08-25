@@ -4138,7 +4138,7 @@ Stereopsis.World.prototype.relativeFFromSamples = function(){
 	for(var i=0; i<transforms.length; ++i){
 		console.log("relativeFFromSamples : "+i+" / "+transforms.length);
 		var transform = transforms[i];
-		var matches = transform.matches(); // these are non-putative matches
+		// var matches = transform.matches(); // these are non-putative matches
 		var viewA = transform.viewA();
 		var viewB = transform.viewB();
 		var info = Stereopsis.ransacTransformF(transform,null,true, true);
@@ -4506,9 +4506,10 @@ var countNegativeZErrors = Code.valueOrDefault(this._countNegativeZErrors,0);
 
 Stereopsis.World.prototype.averagePoints3DFromMatches = function(onlyNull){ // average match locations into final averaged location
 	// throw "use - averagePoints3DFromMatches | estimate3DPoints for calculateAbsoluteLocation" // ...
+	throw "don't use this"
 	onlyNull = onlyNull!==undefined ? onlyNull : false;
 	var world = this;
-	var points3D = this.toPointArray();
+	var points3D = world.toPointArray();
 	for(var i=0; i<points3D.length; ++i){
 		var point3D = points3D[i];
 		if(onlyNull && point3D.point()){
@@ -4519,8 +4520,10 @@ Stereopsis.World.prototype.averagePoints3DFromMatches = function(onlyNull){ // a
 }
 
 Stereopsis.World.prototype.calculateAbsoluteLocationsPoint3D = function(){ // average match locations into final averaged location
+	// SAME AS: initPoints3DLocation
+	throw "don't use this"
 	var world = this;
-	var points3D = this.toPointArray();
+	var points3D = world.toPointArray();
 	for(var i=0; i<points3D.length; ++i){
 		var point3D = points3D[i];
 		// if(onlyNull && point3D.point()){
@@ -4533,7 +4536,7 @@ Stereopsis.World.prototype.calculateAbsoluteLocationsPoint3D = function(){ // av
 Stereopsis.World.prototype.points3DFromDLT = function(onlyNull){
 	onlyNull = onlyNull!==undefined ? onlyNull : false;
 	var world = this;
-	var points3D = this.toPointArray();
+	var points3D = world.toPointArray();
 	for(var i=0; i<points3D.length; ++i){
 		var point3D = points3D[i];
 		if(onlyNull && point3D.point()){
@@ -7377,8 +7380,7 @@ Stereopsis.World.prototype.initAffineFromP3DPatches = function(points3D){
 	if(!points3D){
 		points3D = world.toPointArray();
 	}
-	console.log(points3D);
-	
+	// console.log(points3D);
 	var temp = Stereopsis.World._TEMP_PATCH_VS;
 	var center2D = temp[0];
 	var up2D = temp[1];
@@ -8047,7 +8049,82 @@ GLOBALSTAGE.addChild(d);
 	throw "testing out fxn";
 }
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-Stereopsis.World.prototype.solveDenseGroup = function(inputPairs, completeSolveFxn){ // multiple (3+)
+Stereopsis.World.prototype.solveDenseGroup = function(completeSolveFxn){ // multiple (3+)
+	var world = this;
+	throw "solveDenseGroup";
+
+
+
+var timeStart = Code.getTimeMilliseconds();
+	var subdivisions = 0; // ~40k  --- select
+	var iterations = 3; // per grid size
+	var maxIterations = (subdivisions+1)*iterations;
+	var subdivision = 0;
+	for(var iteration=0; iteration<maxIterations; ++iteration){
+		console.log("all: ========================================================================================= "+iteration+" / "+maxIterations);
+		// 
+		// world.setResolutionProcessingModeFromCountP3D([5E3,10E3,20E3]); // 5 , 10 , 20
+
+		// world.setResolutionProcessingModeFromCountP3D([5E3,10E3]); // very hairy
+
+		world.estimate3DErrors(true);
+
+		world.printPoint3DTrackCount();
+		
+		world.copyRelativeTransformsFromAbsolute();
+
+		world.initNullP3DPatches();
+
+
+		// // subdivisions
+		// if(iteration!==0 && iteration%iterations==0){
+		// 	++subdivision;
+		// 	console.log("subdivision: "+subdivision);
+		// 	world.subdivideViewGridsR(0.50);
+		// 	world.subDivideUpdateMatchLocation();
+		// 	if(subdivision>1){ // -0, -1, +2
+		// 		world.shouldValidateMatchRange(false);
+		// 	}
+		// }
+		// // expand - speedup
+		// var compareSize = 9;
+		// if(subdivision==1){
+		// 	compareSize = 7;
+		// }else if(subdivision==2){
+		// 	compareSize = 5;
+		// }
+		// world.probe2DCellsR(3.0,3.0);
+		var compareSize = 5;
+		world.probe2DCellsR(2.0,2.0, compareSize); // 9=>81 7=>49 5=>25
+		world.probe3DR(0);
+
+		// retract
+		world.filterGlobal3DR(2.0);
+		world.filterLocal2DR();
+		world.filterLocal3DR();
+
+		// refine
+		world.recordViewAbsoluteOrientationStart();
+		world.refineAllCameraMultiViewTriangulation(100);
+		world.copyRelativeTransformsFromAbsolute();
+		// 
+		world.updateP3DPatchesFromAbsoluteOrientationChange();
+
+		// retract 2
+		world.dropNegativeMatches3D();
+	}
+
+	// final output:
+	world.estimate3DErrors(true);
+
+	var timeStop = Code.getTimeMilliseconds();
+
+console.log(timeStart,timeStop);
+console.log((timeStop-timeStart)/1000);
+console.log((timeStop-timeStart)/1000/60); // ~ 20 mins
+}
+
+Stereopsis.World.prototype.solveDenseGroupOLD = function(inputPairs, completeSolveFxn){ // multiple (3+)
 	var world = this;
 
 	var doCameraViewRefine = false;
@@ -8417,10 +8494,13 @@ console.log("refine b - refineSelectCameraMultiViewTriangulation")
 }
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-Stereopsis.World.prototype.solveDensePair = function(){ // pairwise, start with R
+Stereopsis.World.prototype.solveDensePair = function(subdivisionScaleSize, subDivisionCounts){ // pairwise, start with R
 	// use R abs positions to get good initial points + iterate on expanding confident points
+	throw "set solveDensePair values"
 	console.log("solveDensePair");
 	var world = this;
+	subdivisionScaleSize = Code.valueOrDefault(subdivisionScaleSize, 0.5);
+	subDivisionCounts = Code.valueOrDefault(subDivisionCounts, 2);
 
 var timeStart = Code.getTimeMilliseconds();
 	
@@ -8532,7 +8612,7 @@ world.copyRelativeTransformsFromAbsolute();
 
 	// var subdivisions = 0; // ~1k
 	// var subdivisions = 1; // 5-10k
-	var subdivisions = 2; // ~40k  --- select - about 
+	var subdivisions = subDivisionCounts; // ~40k  --- select - about 
 	// var subdivisions = 3; // ~100k
 	var iterations = 3; // per grid size - 2-4
 	// var iterations = 5;
@@ -8560,7 +8640,7 @@ world.copyRelativeTransformsFromAbsolute();
 		if(iteration!==0 && iteration%iterations==0){
 			++subdivision;
 			console.log("subdivision: "+subdivision);
-			world.subdivideViewGridsR(0.50);
+			world.subdivideViewGridsR(subdivisionScaleSize);
 			world.subDivideUpdateMatchLocation();
 			if(subdivision>1){ // -0, -1, +2
 				world.shouldValidateMatchRange(false);
@@ -12116,6 +12196,9 @@ Stereopsis.ransacTransformF = function(transform, maximumSamples, skipP, onlyBes
 	if(points3D.length>maximumSamples){
 		// console.log("NEED TO DO SOME SUBSET OF SAMPLES: "+points3D.length+"/"+maximumSamples);
 		var intervals = Code.randomIndexes(maximumSamples, points3D.length);
+
+		// TODO: do random pop
+
 		var p3D = [];
 		var pA = [];
 		var pB = [];
@@ -15865,45 +15948,52 @@ if(!isErrorNone){
 	// create new point 3d from pieces:
 	var point3DC = world.newPoint3DFromPieces(viewsAllList,newPoint2DAs,affines, false);
 // console.log(point3DC);
-
 	// get needle-haystack for loaded views
 		// each loaded view A gets a chance to predict location in B-only view
 	// console.log("needle - haystack");
-	for(var i=0; i<viewsAllBList.length; ++i){
-		var viewB = viewsAllBList[i];
-		var viewBID = viewB.id();
-		if(!viewsAllA[viewBID]){ // not already known A location
-			var imageB = viewB.imageScales();
-			if(imageB){
-				var locationsB2D = [];
-				for(var j=0; j<viewsAllAList.length; ++j){
-					var viewA = viewsAllAList[j];
-					var imageA = viewA.imageScales();
-					if(imageA){
-						var match = point3DC.matchForViews(viewA,viewB);
-						var affineAB = match.affineForViews();
-						var point2DA = match.pointForView(viewA);
-						var point2DB = match.pointForView(viewB);
-						// ...
-						var featureSize = Stereopsis.compareSizeForViews2D(viewA,centerA,viewB,centerB);
-						var existingA = point2DA.point2D();
-						var predictedB = point2DB.point2D();
-						var needleSize = Stereopsis.COMPARE_HAYSTACK_NEEDLE_SIZE;
-						//var haystackSize = needleSize * 2;
-						var haystackSize = needleSize + 2; // left or right 1 unit
-						// var haystackSize = needleSize + 2;
-						// needle & haystack both large
-						var result = R3D.optimumSADLocationSearchFlatRGB(existingA,predictedB, imageA,imageB, featureSize, needleSize,haystackSize, affineAB);
-						// console.log(result);
-						var locationB2D = result["point"];
-						// console.log(locationsB2D);
-						locationsB2D.push(locationsB2D);
+	// var shouldUseNeedleHaystackIfImagesPresent = true;
+	var shouldUseNeedleHaystackIfImagesPresent = false;
+	if(shouldUseNeedleHaystackIfImagesPresent){
+		for(var i=0; i<viewsAllBList.length; ++i){
+			var viewB = viewsAllBList[i];
+			var viewBID = viewB.id();
+			if(!viewsAllA[viewBID]){ // not already known A location
+				var imageB = viewB.imageScales();
+				if(imageB){
+					var locationsB2D = [];
+					for(var j=0; j<viewsAllAList.length; ++j){
+						var viewA = viewsAllAList[j];
+						var imageA = viewA.imageScales();
+						if(imageA){
+							var match = point3DC.matchForViews(viewA,viewB);
+							var affineAB = match.affineForViews(viewA,viewB);
+							var point2DA = match.pointForView(viewA);
+							var point2DB = match.pointForView(viewB);
+							var centerA = point2DA.point2D();
+							var centerB = point2DB.point2D();
+							var featureSize = Stereopsis.compareSizeForViews2D(viewA,centerA,viewB,centerB);
+							// var needleSize = Stereopsis.COMPARE_HAYSTACK_NEEDLE_SIZE;
+							var needleSize = 7; // 5 - 11
+							var haystackSize = needleSize + 2; // left or right 1 unit
+							// var haystackSize = needleSize + 2;
+							var result = R3D.optimumSADLocationSearchFlatRGB(centerA,centerB, imageA,imageB, featureSize, needleSize,haystackSize, affineAB);
+	// console.log(result);
+							var locationB2D = result["point"];
+							console.log(locationB2D);
+							console.log(V2D.distance(centerB,locationB2D),viewA.cellSize(),viewB.cellSize());
+							
+							locationsB2D.push(locationB2D);
+							console.log(locationsB2D);
+							throw "?"
+						}
 					}
-				}
-				if(locationsB2D.length>0){ // average predicted locations
-					var locationB2D = V2D.average(locationsB2D);
-					var point2DB = point3DC.pointForView(viewB);
-					point2DB.point2D(locationB2D);
+					if(locationsB2D.length>0){ // average predicted locations
+						var locationB2D = V2D.average(locationsB2D);
+						var point2DB = point3DC.pointForView(viewB);
+						console.log(V2D.distance(point2DB.point2D(),locationB2D));
+						point2DB.point2D(locationB2D);
+						throw "NEW POINT";
+					}
 				}
 			}
 		}

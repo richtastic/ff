@@ -7773,7 +7773,7 @@ console.log("checkPerformNextTask");
 		project.iterateDenseProcess();
 		return;
 	}
-throw ">start bundle";
+// throw ">start bundle";
 	if(!project.checkHasBundleStarted()){
 		project.initializeBundleGroupsFromDense();
 		return;
@@ -8580,7 +8580,7 @@ App3DR.ProjectManager.prototype._iterateSparseTracks = function(sourceData, sour
 
 			throw "already done .. should have putatives saved into main info.yaml"
 		}
-		if(bundleFullIndex>=graphPairs.length){ // done loading all pairs into full file
+		if(bundleFullIndex>=graphPairs.length){ // done loading all pairs into track full file
 			console.log("bundle adjust full file ...");
 			// - bundle-adjust
 			var fullBundlePath = Code.appendToPath(basePath,"tracks",bundleFullFile);
@@ -8628,7 +8628,7 @@ console.log("isDone - FULL DONE")
 					console.log(allViews,allTransforms);
 					var info = App3DR.ProjectManager._putativePairsFromViewsAndTransforms(allViews,allTransforms);
 					console.log(info);
-// throw "putative here ..."
+throw "putative here ..."
 					// var pairs = info["lookup"];
 					var pairs = info["pairs"];
 					// var pairs = info["lookup"];
@@ -8650,10 +8650,16 @@ console.log("isDone - FULL DONE")
 							v["R"] = view["transform"];
 						putativeViews.push(v);
 					}
-
-					console.log(putatives);
-					// save these putatives to sparse.yaml
 					sourceData["putativePairs"] = putatives;
+					console.log(putatives);
+					// save these putatives to sparse.yaml / dense.yaml -- as starting point
+
+
+
+					sourceData["cameras"] = fullData["cameras"];
+					console.log(sourceData["cameras"]);
+					throw "is this correct camera ^";
+
 					// save the putative / pairs to dense.yaml
 					// var currentSparseCount = project.sparseCount();
 					// console.log( "currentSparseCount: "+currentSparseCount );
@@ -8709,17 +8715,17 @@ console.log("isDone - FULL DONE")
 				var worldView = world.viewFromData(nextViewID);
 				console.log("optimize with view:");
 				console.log(worldView);
-throw "before solveOptimizeSingleView A";
+// throw "before solveOptimizeSingleView - TRACK FULL";
 				// optimize view orientation
-				var info = world.solveOptimizeSingleView(worldView, 1, false);
+				var info = world.solveOptimizeSingleView(worldView, 3, false); // ONLY LOCAL OPTIMIZING, NO GLOBAL
 				console.log(info);
 				nextViewBA["deltaErrorR"] = Math.abs(info["deltaR"]); // expected always negative
 				nextViewBA["errorR"] = info["errorR"];
 				nextViewBA["count"] = worldView.pointCount();
 				nextViewBA["updated"] = Code.getTimeMilliseconds();
-var str = world.toYAMLString();
-console.log(str);
-throw "before save";
+// var str = world.toYAMLString();
+// console.log(str);
+// throw "before save";
 				
 				// update views:
 				var worldObject = world.toObject();
@@ -8861,21 +8867,23 @@ console.log("fullBundlePath: "+fullBundlePath);
 		}
 
 		if(graphGroups.length==bundleGroupIndex){ // combine groups to single graph using skeleton view's offset as origin
+
+			// helper
 			var pairIDFromViewIDs = function(a,b){
 				return a<b ? a+"-"+b : b+"-"+a;
 			}
-			console.log(graphData);
-			console.log(graphGroups);
-			// get references:
+
+			// get original graph:
 			var allViews = graphData["views"];
 			var allPairs = graphData["pairs"];
-			// GROUPED
+			// GROUPED - SKELETON
 			var groupSkeleton = graphGroups[0];
 			var skeletonViews = groupSkeleton["views"];
 			var skeletonPairs = groupSkeleton["pairs"];
 			var skeletonTransforms = groupSkeleton["transforms"];
 
 			// PREVIOUS TRANSFORMS
+var originalTransforms = [];
 			var viewIDToTransformOriginal = {};
 			for(var i=0; i<allViews.length; ++i){
 				var view = allViews[i];
@@ -8884,15 +8892,15 @@ console.log("fullBundlePath: "+fullBundlePath);
 					viewExtrinsic = Matrix.fromObject(viewExtrinsic);
 				var absolute = Matrix.inverse(viewExtrinsic);
 				viewIDToTransformOriginal[viewID] = absolute;
+originalTransforms[i] = absolute;
 			}
 			var pairIDToPairOriginal = {};
 			for(var i=0; i<allPairs.length; ++i){
 				var pair = allPairs[i];
-				console.log(pair);
 				var pairID = pair["id"];
 				pairIDToPairOriginal[pairID] = pair;
 			}
-			// 
+			
 			// NEW TRANSFORMS
 			var viewIDToTransformSkeleton = {};
 			var skeletonLookup = {};
@@ -8904,13 +8912,7 @@ console.log("fullBundlePath: "+fullBundlePath);
 				viewIDToTransformSkeleton[viewID] = absolute;
 				skeletonLookup[viewID] = 1;
 			}
-			// for(var i=0; i<allPairs.length; ++i){
-			// 	var pair = allPairs[i];
-			// 	var pairID = view["id"];
-			// 	pairIDToPairOriginal[viewID] = pair;
-			// }
-			// find all leave views = non-skeleton views
-
+			// skeleton pair lookup
 			var pairIDToPairSkeleton = {};
 			for(var i=0; i<skeletonPairs.length; ++i){
 				var pair = skeletonPairs[i];
@@ -8932,11 +8934,6 @@ console.log("fullBundlePath: "+fullBundlePath);
 					leafAdjacentSkeletonEdges[viewID] = [];
 				}
 			}
-			console.log(allViews);
-			console.log("skeletonViews");
-			console.log(skeletonViews);
-			console.log("leafViews");
-			console.log(leafViews);
 
 			// edges between skeleton & leaves
 			for(var i=0; i<allPairs.length; ++i){
@@ -8944,10 +8941,8 @@ console.log("fullBundlePath: "+fullBundlePath);
 				var viewIDA = pair["A"];
 				var viewIDB = pair["B"];
 				if(leafLookup[viewIDA] && skeletonLookup[viewIDB]){
-					console.log("pair L-S");
 					leafAdjacentSkeletonEdges[viewIDA].push(pair);
 				}else if(leafLookup[viewIDB] && skeletonLookup[viewIDA]){
-					console.log("pair S-L");
 					leafAdjacentSkeletonEdges[viewIDB].push(pair);
 				}
 			}
@@ -8972,7 +8967,7 @@ console.log("fullBundlePath: "+fullBundlePath);
 					var pairID = pairIDFromViewIDs(viewIDA,viewIDB);
 					var viewPairOriginal = pairIDToPairOriginal[pairID];
 					var viewPairSkeleton = pairIDToPairSkeleton[pairID];
-					//
+					// edge needs to exist in both to be useable
 					if(viewPairOriginal && viewPairSkeleton){
 						var transformA = viewIDToTransformOriginal[viewIDA];
 						var transformB = viewIDToTransformOriginal[viewIDB];
@@ -8985,23 +8980,12 @@ console.log("fullBundlePath: "+fullBundlePath);
 						var relativeExtrinsicSkeleton = Matrix.relativeReference(transformA,transformB);
 						var distanceS = relativeExtrinsicSkeleton.multV3DtoV3D(new V3D(0,0,0));
 							distanceS = distanceS.length();
-						// console.log(distanceO);
-						// console.log(distanceS);
 						var ratio = distanceS/distanceO;
 						console.log(ratio);
 						edgeInfos[pairID] = {"ratio":ratio};
-						// 
-						// var infoA = skeletonIDToScale[viewIDA];
-						// if(!infoA){
-						// 	var infoA = {"sum":0, "count":0};
-						// 	skeletonIDToScale[viewIDA] = infoA;
-						// }
-						// infoA["count"] += 1;
-						// infoA["sum"] += Math.log(ratio);
+						// add to each skeleton view list
 						addToScaleTable(skeletonIDToScale,viewIDA,ratio);
 						addToScaleTable(skeletonIDToScale,viewIDB,ratio);
-						// skeletonIDToScale[viewIDA];
-						// create relative transform
 					}else{
 						console.log("no pair for both ");
 					}
@@ -9020,22 +9004,27 @@ console.log("fullBundlePath: "+fullBundlePath);
 					value = Math.exp(value);
 				skeletonIDToScale[key] = value;
 			}
-			console.log(edgeInfos);
-			console.log(skeletonIDToScale);
 
 			// find predicted leaf new locations - averaging skeleton-leaf edges
+			// var leafTransforms = []; // NOT USED
+			var viewIDToTransformLeaf = {};
 			for(var i=0; i<leafViews.length; ++i){
 				var leafID = leafViews[i];
-
 				// find all edges in original that include leaf ID & a skeleton
 				var transforms = [];
 				var errors = [];
 				var edgePairs = leafAdjacentSkeletonEdges[leafID];
-				console.log(edgePairs);
 				for(var j=0; j<edgePairs.length; ++j){
 					var pair = edgePairs[j];
 					var skeletonID = null;
 					var error = pair["error"];
+
+					// TODO: PAIR ERROR /= COUNT ?
+
+					console.log(pair);
+					throw "error over count = average error";
+
+
 					if(pair["A"]==leafID){
 						skeletonID = pair["B"];
 					}else if(pair["B"]==leafID){
@@ -9043,6 +9032,7 @@ console.log("fullBundlePath: "+fullBundlePath);
 					}else{
 						throw "wrong"
 					}
+					// FROM ORIGINAL
 					var leafAbsolute = viewIDToTransformOriginal[leafID];
 					var skelAbsolute = viewIDToTransformOriginal[skeletonID];
 					var relativeOriginal = Matrix.relativeReference(skelAbsolute,leafAbsolute);
@@ -9050,45 +9040,72 @@ console.log("fullBundlePath: "+fullBundlePath);
 						relativeOriginal = Matrix.transform3DScaleMatrix(relativeOriginal, skeletonScale);
 					// TO NEW
 					var skelNewAbsolute = viewIDToTransformSkeleton[skeletonID];
-					var transform = Matrix.mult(relativeOriginal,skelNewAbsolute);
+					var transform = Matrix.mult(skelNewAbsolute,relativeOriginal); // B = A' * (A^-1*B) =  skelAbsNew * (skelAbsOld^-1 * leafAbsOld) = leafAbsNew
 					transforms.push(transform);
 					errors.push(error);
-					// console.log(transform);
-					// console.log(error);
-					// throw "here";
 				}
-				console.log(transforms);
-				console.log(errors);
 				var percents = Code.errorsToPercents(errors);
-				console.log(percents);
 					percents = percents["percents"];
-				console.log(percents);
 				var average = Code.averageMatrices3D(transforms, percents);
-				console.log(average);
-				throw "average";
+				viewIDToTransformLeaf[leafID] = average;
 			}
+			// to list of all final transforms:
+			var allTransforms = [];
+			var viewIDToIndex = {};
+			var groupIDs = [];
+			for(var i=0; i<allViews.length; ++i){
+				var view = allViews[i];
+				var viewID = view["id"];
+				var absolute = viewIDToTransformSkeleton[viewID];
+				var isSkeleton = true;
+				if(!absolute){
+					absolute = viewIDToTransformLeaf[viewID];
+					isSkeleton = false;
+				}
+				console.log(absolute);
+				allTransforms[i] = absolute;
+				viewIDToIndex[viewID] = i;
+				groupIDs[i] = viewID + (isSkeleton ? "-s" : "-l");
+			}
+			var pairsIndexes = [];
+			for(var i=0; i<allPairs.length; ++i){
+				var pair = allPairs[i];
+				var pairID = pair["id"];
+				// pairIDToPairOriginal[pairID] = pair;
+				var viewIDA = pair["A"];
+				var viewIDB = pair["B"];
+				var indexA = viewIDToIndex[viewIDA];
+				var indexB = viewIDToIndex[viewIDB];
+				pairsIndexes.push([indexA,indexB]);
+			}
+			// var allTransforms = Code.arrayPushArrays([],skeletonTransforms,leafTransforms);
+// allTransforms = originalTransforms;
+			// console.log(allTransforms);
+			// console.log(pairsIndexes);
+			// console.log(groupIDs);
+			project.displayViewGraph(allTransforms,pairsIndexes, 100, groupIDs);
+				
+			console.log(allTransforms);
+			// to extrinsic
+			var allExtrinsics = [];
+			var transformLookup = {};
+			for(var i=0; i<allTransforms.length; ++i){
+				var absolute = allTransforms[i];
+				var extrinsic = Matrix.inverse(absolute);
+				allExtrinsics[i] = extrinsic;
+				// to lookup:
+				var view = allViews[i];
+				var viewID = view["id"];
+				var object = {"id":viewID, "R":extrinsic};
+				transformLookup[viewID] = object;
+			}
+// console.log(transformLookup);
+// throw ".."
 
 
-throw "HERE";
-
-			
-			// HAVE ORIGINAL VIEWS ABSOLUTE ORIENTATION IN GRAPH.YAML
-			// HAVE ORIGINAL PAIRS W/ ERROR IN GRAPH.YAML
 
 
-
-			// throw "NEED TO DO INVERSE SCALE & OPTIMIZE VIEW GRAPH "
-
-			// get average group change in scale (final pairs)/(previous pairs)
-
-			// scale drift: invert change in scale
-
-
-			// A: GROUP GRAPH OPTIMIZATION
-
-
-			// B: SKELETON OFFSETTING:
-
+/*
 			// orientation drift/registration: move non-skeleton groups into skeleton placement
 			console.log(graphGroups);
 			var transformLookup = {};
@@ -9221,11 +9238,7 @@ console.log(i+" ? ..............................................................
 					}
 				}
 			}
-
-
-
-
-// Code.graphAbsoluteUpdateFromRelativeTransforms = function(initialP, edges, maxIterations){
+*/
 
 
 
@@ -9265,14 +9278,10 @@ throw "get list of pairs including only top 3 view pairs -- from original graph 
 			var bundleFilename = "track_full.yaml";
 			graphData["bundleFullFile"] = bundleFilename;
 			var fullBundlePath = Code.appendToPath(basePath,"tracks",bundleFilename);
-
+//
 var str = YAML.parse(bundleData);
 console.log(str);
-
-
-// ???
-// throw "before saving initial bundle full";
-
+//
 			var savedGraphComplete = function(){
 				console.log("savedGraphComplete: "+graphFile);
 				project._taskDoneCheckReloadURL();
@@ -9281,13 +9290,12 @@ console.log(str);
 				console.log("savedBundleComplete: "+fullBundlePath);
 				project.saveFileFromData(graphData, graphFile, savedGraphComplete);
 			}
-			
+throw "before saving initial bundle full";
 			project.saveFileFromData(bundleData, fullBundlePath, savedBundleComplete);
-
 			console.log("all group BA complete -- generate initial viewgraph from skeleton + groups");
 			return;// load all tracks from pairs into full track file
 		}
-// throw "D"
+
 		// special case for full yaml: views & pairs are from graph
 		if(graphGroups.length==loadGroupIndex){
 console.log("special case? - should save view transforms to track full yaml");
@@ -9298,7 +9306,7 @@ console.log("special case? - should save view transforms to track full yaml");
 			var trackFilename = graphGroup["filename"];
 			console.log("trackFilename: "+trackFilename);
 			var fullTrackPath = Code.appendToPath(basePath,"tracks",trackFilename);
-// throw "need to combine group track views ??????????"
+
 			// load the track
 			var baTrackFileLoadComplete = function(data){
 				console.log("baTrackFileLoadComplete");
@@ -9445,7 +9453,7 @@ console.log("special case? - should save view transforms to track full yaml");
 				console.log(worldView);
 
 				// optimize view orientation
-// throw "BEFORE OPTIMIZE SINGLE VIEW?"
+throw "BEFORE OPTIMIZE SINGLE VIEW?"
 				var info = world.solveOptimizeSingleView(worldView);
 				console.log(info);
 // throw "AFTER OPTIMIZE"
@@ -11258,14 +11266,18 @@ App3DR.ProjectManager.prototype.loadDenseGroupsStereopsis = function(){
 	}
 	project.loadDataFromFile(worldFilename, dataLoadedFxn, project, {});
 }
-App3DR.ProjectManager.prototype._doDenseGroupsStereopsis = function(groupData, completeFxn){
+App3DR.ProjectManager.prototype._doDenseGroupsStereopsis = function(infoData, completeFxn){
 	var project = this;
 
-	var groupViews = groupData["views"];
-	var groupCameras = groupData["cameras"];
-	var groupPoints = groupData["points"];
-	var groupPairs = groupData["pairs"];
+	var groupViews = infoData["views"];
+	var groupCameras = infoData["cameras"];
+	var groupPoints = infoData["points"];
+	// var groupPairs = infoData["pairs"];
+	
+	console.log(groupCameras);
+	console.log(groupViews);
 	// console.log(groupPairs);
+	console.log(groupPoints);
 
 	var groupCameraFromID = {};
 	for(var i=0; i<groupCameras.length; ++i){
@@ -11279,120 +11291,56 @@ App3DR.ProjectManager.prototype._doDenseGroupsStereopsis = function(groupData, c
 	for(var i=0; i<groupViews.length; ++i){
 		var groupView = groupViews[i];
 		var viewID = groupView["id"];
-			groupView["R"] = Matrix.fromObject(groupView["transform"]);
+			// groupView["R"] = Matrix.fromObject(groupView["transform"]);
+			groupView["R"] = Matrix.fromObject(groupView["R"]);
 		groupViewFromID[viewID] = groupView;
-	}
-	
-	// var pairSeeds = [];
-
-	var completePairFxn = function(){
-		throw "completePairFxn";
 	}
 
 	var stage = GLOBALSTAGE;
 
-	var imagesFromViewID = {};
-	var calculatePairSeedsFxn = function(){
-		/*
-		console.log("create image matrixes");
-		var groupImages = [];
-		for(var i=0; i<groupViews.length; ++i){
-			var groupView = groupViews[i];
-			var viewID = groupView["id"];
-			var view = project.viewFromID(viewID);
-			var image = view.anyLoadedImage();
-			var imageMatrix  = R3D.imageMatrixFromImage(image, stage);
-			imagesFromViewID[viewID] = imageMatrix;
-			groupImages[i] = imageMatrix;
-		}
-		console.log("get pair matches");
-		var pairMatches = [];
-		for(var i=0; i<groupPairs.length; ++i){
-			break;
-			var groupPair = groupPairs[i];
-			// console.log(groupPair);
-			var viewAID = groupPair["A"];
-			var viewBID = groupPair["B"];
-			// console.log(groupViewFromID);
-			var viewA = groupViewFromID[viewAID];
-			var viewB = groupViewFromID[viewBID];
-			var transformA = viewA["R"];
-			var transformB = viewB["R"];
-			var extrinsicAB = Matrix.relativeWorld(transformA,transformB);
-			var cameraAID = viewA["camera"];
-			var cameraBID = viewB["camera"];
-			var cameraA = groupCameraFromID[cameraAID];
-			var cameraB = groupCameraFromID[cameraBID];
-			var projectViewA = project.viewFromID(viewAID);
-			var projectViewB = project.viewFromID(viewBID);
-			var imageA = imagesFromViewID[viewAID];
-			var imageB = imagesFromViewID[viewBID];
-			console.log(imageA,imageB);
-			var images = [imageA,imageB];
 
-			var Ka = cameraA["K"];
-			var Kb = cameraB["K"];
-				Ka = R3D.cameraFromScaledImageSize(Ka, imageA.size());
-				Kb = R3D.cameraFromScaledImageSize(Kb, imageB.size());
-			var Ks = [Ka,Kb];
+	console.log("create world");
+	var cameras = groupCameras;
+	var views = groupViews;
+	// var images = groupImages;
+	var world = new Stereopsis.World();
+	var info = project._addGraphViews(world, groupViewFromID, stage, views);
+	console.log(info)
+	var images = info["images"];
+	var transforms = info["transforms"];
+	console.log("transforms");
+	console.log(transforms);
 
-			// var sizes = [imageA.size(),imageB.size()];
+	var worldCams = App3DR.ProjectManager.addCamerasToWorld(world, cameras);
+	console.log(worldCams);
+	
+	var worldViews = App3DR.ProjectManager.addViewsToWorld(world, views, images, transforms);
+	console.log(worldViews);
 
-			var featureSize = 0.02;
-			var sizes = [imageA.size().length()*featureSize,imageB.size().length()*featureSize];
-			var errorPixels = imageA.size().length()*0.005; // should be very accurate 
+	console.log(world);
 
-			var relativeAB = extrinsicAB;
-			var result = R3D.searchMatchPoints3D(images, sizes, relativeAB, Ks, errorPixels);
-			console.log(result);
-			var matches = result["matches"];
-			console.log(matches);
-			pairMatches[i] = matches;
-			break;
-		}
-		*/
+	var WORLDVIEWSLOOKUP = project.createWorldViewLookup(world);
+	console.log("WORLDVIEWSLOOKUP");
+	console.log(WORLDVIEWSLOOKUP);
 
 
-		console.log("create world");
-		var cameras = groupCameras;
-		var views = groupViews;
-		// var images = groupImages;
-		var world = new Stereopsis.World();
-		var info = project._addGraphViews(world, groupViewFromID, stage, views);
-		console.log(info)
-		var images = info["images"];
-		var transforms = info["transforms"];
-		console.log("transforms");
-		console.log(transforms);
-
-		var worldCams = App3DR.ProjectManager.addCamerasToWorld(world, cameras);
-		console.log(worldCams);
-		
-		var worldViews = App3DR.ProjectManager.addViewsToWorld(world, views, images, transforms);
-		// console.log(worldViews);
-		// throw "?????????"
+		// // pairs to create 
+		// var comparePairs = [];
+		// for(var i=0; i<groupPairs.length; ++i){
+		// 	var groupPair = groupPairs[i];
+		// 	var viewAID = groupPair["A"];
+		// 	var viewBID = groupPair["B"];
+		// 	var viewA = world.viewFromData(viewAID);
+		// 	var viewB = world.viewFromData(viewBID);
+		// 	comparePairs.push([viewA,viewB]);
+		// }
 
 
-		console.log("TODO: use groupPoints as seeds");
-		
+		// set view cell density
 
-// console.log(groupPairs);
-
-		// pairs to create 
-		var comparePairs = [];
-		for(var i=0; i<groupPairs.length; ++i){
-			var groupPair = groupPairs[i];
-			var viewAID = groupPair["A"];
-			var viewBID = groupPair["B"];
-			var viewA = world.viewFromData(viewAID);
-			var viewB = world.viewFromData(viewBID);
-			comparePairs.push([viewA,viewB]);
-		}
-
-
-		var cellCount = 40; // too sparse
+		// var cellCount = 40; // too sparse
 		// var cellCount = 60;
-		// var cellCount = 80; // too dense ?
+		var cellCount = 80; // too dense ?
 		for(var i=0; i<worldViews.length; ++i){
 			var view = worldViews[i];
 			var size = view.size();
@@ -11401,19 +11349,65 @@ App3DR.ProjectManager.prototype._doDenseGroupsStereopsis = function(groupData, c
 			var size = R3D.cellSizingRoundWithDimensions(wid,hei,cellCount, false);
 			view.cellSize(size);
 		}
+
+		// ADD POINTS
+		
+		world.setResolutionProcessingModeNonVisual();
 		world.copyRelativeTransformsFromAbsolute();
+
+		var points3DNew = App3DR.ProjectManager._worldPointFromSaves(world, groupPoints, WORLDVIEWSLOOKUP, true);
+		// console.log(points3DNew);
+		// world.embedPoints3DNoValidation(points3DExisting);
+			world.initPoints3DLocation(points3DNew);
+			world.initAllP3DPatches(points3DNew);
+			world.initAffineFromP3DPatches(points3DNew);
+
+// TODO: THIS NEEDS TO BE ASYNC @ 1-10k iterations
+		// console.log(points3DNew);
+		// world.checkForIntersections(false);
+var timeA = Code.getTimeMilliseconds();
+		world.embedPoints3D(points3DNew);
+var timeB = Code.getTimeMilliseconds();
+console.log("DELTA EMBED: "+((timeB-timeA)/1000)); // NO IMAGE LOOKUP: 2135.247 / 60 = 35 minutes    vs:  WITH IMAGE LOOKUP: ?
+
+// 316.144 / 60 = 6 minutes
+
+
+//  [0, 0, 54388, 36003, 17729, 4251]
+
+world.relativeFFromSamples();
+world.estimate3DErrors(true);
+world.printPoint3DTrackCount();
 
 		console.log(world);
 		console.log("solve dense group world");
+// SHOW ERROR PER GROUP:
+
+
+var errorCount = worldViews.length + 1;
+var errorCounts = Code.newArrayArrays(errorCount);
+var points3D = world.toPointArray();
+for(var i=0; i<points3D.length; ++i){
+var point3D = points3D[i];
+var viewCount = point3D.viewCount();
+var reprojectionError = point3D.totalReprojectionError();
+errorCounts[viewCount].push(reprojectionError);
+}
+for(var i=0; i<errorCounts.length; ++i){
+	var errors3D = errorCounts[i];
+	errors3D.sort();
+	Code.printMatlabArray(errors3D,"e_"+i);
+}
 		
-		world.checkForIntersections(true);
-		world.resolveIntersectionByDefault();
+		// world.checkForIntersections(true);
+		// world.resolveIntersectionByDefault();
 		// world.resolveIntersectionByPatchVisuals();
-		throw "??? before solveDenseGroup --- change seed method to make much faster"
+		throw "??? before solveDenseGroup"
 		// solveDenseGroup
-		world.solveDenseGroup(comparePairs, solveDenseGroupComplete);
+		world.solveDenseGroup(solveDenseGroupComplete);
 		console.log("?????????????????????????????");
-	}
+	
+	/*
 
 	var solveDenseGroupComplete = function(world){
 		console.log("solveDenseGroupComplete");
@@ -11481,6 +11475,7 @@ App3DR.ProjectManager.prototype._doDenseGroupsStereopsis = function(groupData, c
 		view.loadDenseHiImage(checkAllViewImagesLoaded, project); // 1008 x 768
 		// view.loadBundleAdjustImage(checkAllViewImagesLoaded, project); // 2016 x 1512
 	}
+	*/
 }
 
 App3DR.ProjectManager.prototype._initializeAbsoluteViewsFromGroups = function(viewsInitial, groups){ // aggregate groups
@@ -11782,26 +11777,112 @@ App3DR.ProjectManager.prototype.initializeBundleGroupsFromDense = function(){
 	// console.log(denseFilename);
 	var denseData = null;
 	var graphData = null;
-	var trackData = null;
+	// var trackData = null;
 
 	var loadedDenseDataFxn = function(data){
 		denseData = data;
-		var graphFilename = denseData["graph"];
-		// console.log(graphFilename);
-		project.loadDataFromFile(graphFilename, loadedGraphDataFxn);
+		console.log(denseData);
+
+// sourceData["putativePairs"] = putatives;
+		var densePutative = denseData["putativePairs"];
+
+		var denseCameras = denseData["cameras"];
+		// var denseViews = denseData["views"];
+		var denseViews = densePutative["views"];
+		var denseOriginalPairs = denseData["pairs"];
+		// TODO: pairs may possibly be bad - drop obviously bad pairs ?
+		
+		var viewIDToIndex = {};
+		for(var i=0; i<denseViews.length; ++i){
+			var view = denseViews[i];
+			var viewID = view["id"];
+			// console.log(denseViews);
+			viewIDToIndex[viewID] = i;
+		}
+
+		var listPairs = [];
+		for(var i=0; i<denseOriginalPairs.length; ++i){
+			var pair = denseOriginalPairs[i];
+			var viewIDA = pair["A"];
+			var viewIDB = pair["B"];
+			var indexA = viewIDToIndex[viewIDA];
+			var indexB = viewIDToIndex[viewIDB];
+			listPairs.push([indexA, indexB]);
+		}
+
+		var groupSize = 5; // 5
+		var groupTolerance = 1; // 4-6
+		var overlapDesired = 2; // up to 7
+
+		console.log(listPairs);
+		var result = Graph.groupsFromEdges(listPairs, groupSize, groupTolerance, overlapDesired)
+		console.log(result);
+		var groups = result["groups"];
+
+
+
+
+		// display:
+		var transforms = [];
+		for(var i=0; i<denseViews.length; ++i){
+			var view = denseViews[i];
+			var R = view["R"];
+				R = Matrix.fromObject(R);
+				R = Matrix.inverse(R);
+			transforms[i] = R;
+		}
+
+		var info = project.displayViewGraph(transforms,listPairs);
+		var centers = info["points"];
+		var displayOffset = info["offset"];
+		var colors = [0xFFFF0000,0xFF009900,0xFF0000FF,0xFFCCCC00,0xFFCC00CC,0xFF00CCCC,0xFFCCCCCC];
+		var sizes = [11,15,19,23,27];
+		for(var i=0; i<groups.length; ++i){
+			var group = groups[i];
+			for(var j=0; j<group.length; ++j){
+				var vertexID = group[j];
+				var p = centers[vertexID];
+				var d = new DO();
+				var color = colors[i%colors.length];
+				var size = sizes[i%sizes.length]
+				d.graphics().setLine(3.0,color);
+				d.graphics().beginPath();
+				d.graphics().drawCircle(p.x,p.y, size);
+				d.graphics().strokeLine();
+				d.graphics().endPath();
+				d.matrix().translate(displayOffset.x, displayOffset.y);
+				GLOBALSTAGE.addChild(d);
+			}
+		}
+		groups.sort(function(a,b){
+			return a.length < b.length ? -1 : 1;
+		});
+		console.log(groups);
+
+
+
+		initBundleGroupsFxn(denseViews, groups, denseCameras, denseOriginalPairs);
+
+
+		// OLD:
+
+
+		// var graphFilename = denseData["graph"];
+		// console.log(graphFilename+" ???");
+		// project.loadDataFromFile(graphFilename, loadedGraphDataFxn);
 	}
 
-	var loadedGraphDataFxn = function(data){
-		graphData = data;
-		var bundleFilename = graphData["bundleFullFile"];
-		bundleFilename = Code.appendToPath(denseDirectory, "tracks", bundleFilename);
-		// console.log(bundleFilename);
-		project.loadDataFromFile(bundleFilename, loadedTrackDataFxn);
-	}
-	var loadedTrackDataFxn = function(data){
-		trackData = data;
-		calculateGraphFxn();
-	}
+	// var loadedGraphDataFxn = function(data){
+	// 	graphData = data;
+	// 	var bundleFilename = graphData["bundleFullFile"];
+	// 	bundleFilename = Code.appendToPath(denseDirectory, "tracks", bundleFilename);
+	// 	// console.log(bundleFilename);
+	// 	project.loadDataFromFile(bundleFilename, loadedTrackDataFxn);
+	// }
+	// var loadedTrackDataFxn = function(data){
+	// 	trackData = data;
+	// 	calculateGraphFxn();
+	// }
 	var calculateGraphFxn = function(){
 		var denseViews = trackData["views"];
 		var densePairs = trackData["transforms"];
@@ -11831,7 +11912,7 @@ App3DR.ProjectManager.prototype.initializeBundleGroupsFromDense = function(){
 			vertexEdgeList[i] = [];
 		}
 		var listPairs = [];
-
+		// 
 		for(var i=0; i<densePairs.length; ++i){
 			var pair = densePairs[i];
 				var idA = pair["A"];
@@ -11861,7 +11942,9 @@ App3DR.ProjectManager.prototype.initializeBundleGroupsFromDense = function(){
 		}
 
 		// pick edges from list of best pairs:
-		var bestPairsMaxCount = 3;
+		// var bestPairsMaxCount = 3;
+		var bestPairsMaxCount = 5;
+		// var bestPairsMaxCount = 10;
 
 		var sortEdge = function(a,b){ // lower error first
 			return listPairs[a][2] < listPairs[b][2] ? -1 : 1;
@@ -11878,8 +11961,9 @@ App3DR.ProjectManager.prototype.initializeBundleGroupsFromDense = function(){
 		}
 		listBestPairs = Code.objectToArray(listBestPairs);
 	console.log("PAIR REDUCTION ("+bestPairsMaxCount+")"+listBestPairs.length+" / "+listPairs.length);
-		var result = R3D.skeletalViewGraph(listBestPairs);
-
+// 		var result = R3D.skeletalViewGraph(listBestPairs);
+// console.log(result);
+// throw "?????????"
 		// NOT USED
 		var listPairsIDs = [];
 		for(var i=0; i<listBestPairs.length; ++i){
@@ -11904,14 +11988,14 @@ App3DR.ProjectManager.prototype.initializeBundleGroupsFromDense = function(){
 		// var overlapDesired = 1;
 
 		// small
-		// var groupSize = 4;
-		// var groupTolerance = 1; // 3-5
-		// var overlapDesired = 2; // up to 7
+		var groupSize = 5; // 4
+		var groupTolerance = 1; // 3-5
+		var overlapDesired = 2; // up to 7
 
 		// single group
-		var groupSize = 100;
-		var groupTolerance = 0;
-		var overlapDesired = 0;
+		// var groupSize = 100;
+		// var groupTolerance = 0;
+		// var overlapDesired = 0;
 
 		// med
 		// var groupSize = 6;
@@ -11921,7 +12005,7 @@ App3DR.ProjectManager.prototype.initializeBundleGroupsFromDense = function(){
 		var result = Graph.groupsFromEdges(listBestPairs, groupSize, groupTolerance, overlapDesired)
 		console.log(result);
 		var groups = result["groups"];
-
+// throw "USE GROUPS ..."
 		// display this monstrosity
 
 		var info = project.displayViewGraph(transforms,listBestPairs);
@@ -11950,6 +12034,10 @@ App3DR.ProjectManager.prototype.initializeBundleGroupsFromDense = function(){
 			return a.length < b.length ? -1 : 1;
 		});
 		console.log(groups);
+// throw "? calculateBundleGroupsFxn"
+
+// ???		
+
 		calculateBundleGroupsFxn(denseViews, groups, densePoints, denseCameras, listBestPairs); // load & keep only relevant tracks 
 		// loadAllGroupPairs(denseViews, groups, densePoints, denseCameras); // load points from pairs (relative / track)
 		// calculateBundleGroupsBasicFxn(denseViews, groups, densePoints, denseCameras); // do nothing
@@ -11961,6 +12049,67 @@ App3DR.ProjectManager.prototype.initializeBundleGroupsFromDense = function(){
 		return a["error"] < b["error"] ? -1 : 1;
 	}
 
+
+	var initBundleGroupsFxn = function(views, groups, cameras, pairs){
+		console.log("initBundleGroupsFxn");
+		console.log(views, groups, cameras, pairs);
+
+		var bundleGroupList = [];
+		bundleData = {};
+			bundleData["cameras"] = cameras;
+			bundleData["views"] = views;
+			bundleData["groupCount"] = groups.length;
+			bundleData["groups"] = bundleGroupList;
+			bundleData["points"] = null;
+			bundleData["aggregateIndex"] = -1;
+			bundleData["surface"] = null;
+
+		// var groupDataList = [];
+		for(var i=0; i<groups.length; ++i){
+			var group = groups[i];
+			console.log("GROUP "+i+": "+group.length);
+			// get list of IDs in group
+			var groupIDLookup = {};
+			var groupDataViews = [];
+			for(var j=0; j<group.length; ++j){
+				var viewIndex = group[j];
+				var view = views[viewIndex];
+				var viewID = view["id"];
+				groupDataViews.push(viewID);
+				groupIDLookup[viewID] = 1;
+			}
+			var groupDataPairs = [];
+			for(var j=0; j<pairs.length; ++j){
+				var pair = pairs[j];
+				var idA = pair["A"];
+				var idB = pair["B"];
+				if(groupIDLookup[idA] && groupIDLookup[idB]){
+					var groupPair = {};
+						groupPair["id"] = pair["id"];
+						groupPair["A"] = pair["A"];
+						groupPair["B"] = pair["B"];
+					groupDataPairs.push(groupPair);
+				}
+			}
+			//
+			var groupFilename = "groups/group_"+i+".yaml";
+			bundleGroupData = {};
+				bundleGroupData["filename"] = groupFilename;
+				bundleGroupData["views"] = groupDataViews;
+				bundleGroupData["pairs"] = groupDataPairs;
+				bundleGroupData["points"] = null;
+			bundleGroupList.push(bundleGroupData);
+			// var groupData = {};
+			// 	groupData["views"] = groupDataViews;
+			// 	groupData["pairs"] = groupDataPairs;
+			// 	groupData["points"] = null;
+			// groupDataList.push(groupData);
+		}
+		console.log(bundleData);
+		console.log(fullBundleDataPath);
+		project.saveFileFromData(bundleData, fullBundleDataPath, saveBundleFileFxn, project);
+	}
+/*
 	var calculateBundleGroupsBasicFxn = function(views, groups, points, cameras){
 		var densePairs = denseData["pairs"];
 
@@ -12057,17 +12206,12 @@ throw "before save basic";
 			project.saveFileFromData(groupData, fullGroupPath, saveGroupFileFxn, project);
 		}
 	}
+*/
 
-
-
-
-
-
-
-
+/*
 	var calculateBundleGroupsFxn = function(views, groups, points, cameras, bestPairs){
-		// console.log(bestPairs);
-		// console.log(groups);
+		console.log(bestPairs);
+		console.log(groups);
 // throw "calculateBundleGroupsFxn ... here";
 		var bundleGroupList = [];
 		bundleData = {};
@@ -12109,10 +12253,6 @@ throw "before save basic";
 					groupDataPairs.push({"A":viewIDA, "B":viewIDB});
 				}
 			}
-			// console.log(bestPairs);
-			// console.log(groupIDLookup);
-			// console.log(groupDataPairs);
-			// throw "..."
 			// get list of points for group:
 			var groupPointList = [];
 			for(var p=0; p<points.length; ++p){
@@ -12158,12 +12298,13 @@ throw "before save basic";
 			bundleGroupList.push(bundleGroupData);
 			// SAVE GROUP TO FILE:
 			// console.log(groupData);
+			// console.log(bundleGroupList);
 			// throw "before save group calculateBundleGroupsFxn";
 			var fullGroupPath = Code.appendToPath(bundleBaseDirectory, groupFilename);
 			project.saveFileFromData(groupData, fullGroupPath, saveGroupFileFxn, project);
 		}
 	}
-
+*/
 
 
 
@@ -12260,6 +12401,7 @@ throw "before save basic";
 		++completedGroupCount;
 		console.log("saveGroupFileFxn: "+completedGroupCount+" / "+expectedGroupCount);
 		if(completedGroupCount==expectedGroupCount){
+			throw "saved all groups"
 			project.saveFileFromData(bundleData, fullBundleDataPath, saveBundleFileFxn, project);
 			console.log(bundleData);
 		}
@@ -12278,12 +12420,6 @@ throw "before save basic";
 
 	project.loadDataFromFile(denseFilename, loadedDenseDataFxn);
 
-	// 
-
-	// convert skeleton graph into list of groups
-	// for each group:
-	// copy over only the track points relevant to the group (truncate any points shared with views outside group)
-
 }
 
 App3DR.ProjectManager.prototype.iterateBundleProcess = function(){
@@ -12298,24 +12434,72 @@ App3DR.ProjectManager.prototype.iterateBundleProcess = function(){
 	var bundlePathBase = Code.pathRemoveLastComponent(bundleFilename);
 	console.log(bundleFilename);
 	console.log(bundlePathBase);
+	var densePathBase = "dense";//Code.appendToPath(Code.pathRemoveLastComponent(bundlePathBase), "dense");
+// console.log("densePathBase: '"+densePathBase+"'")
+// throw "densePathBase"
+	var expectedImagesCount = 0;
+	var loadedImagesCount = 0;
+	var expectedPairsCount = 0;
+	var loadedPairsCount = 0;
+	var groupsInfo = null;
 
 	var loadedBundleDataFxn = function(data){
 		console.log(data);
 		bundleData = data;
+// throw "bundleData";
 		// get next group to stereopsis
 		var groups = bundleData["groups"];
 		for(var i=0; i<groups.length; ++i){
 			var group = groups[i];
-			if(!group["transforms"]){
-				var groupFilename = group["filename"];
-				var groupFullPath = Code.appendToPath(bundlePathBase,groupFilename);
-				console.log(groupFullPath);
-				selectedGroup = group;
-				groupDataPath = groupFullPath;
-				project.loadDataFromFile(groupFullPath, loadedGroupDataFxn);
+			if(!group["points"]){
+				console.log(group);
+				var allCameras = bundleData["cameras"];
+				var allViews = bundleData["views"];
+				var allViewsLookup = {};
+				for(var j=0; j<allViews.length; ++j){
+					var allView = allViews[j];
+					var viewID = allView["id"];
+					allViewsLookup[viewID] = allView;
+				}
+				var groupViews = group["views"];
+				var worldViews = [];
+				for(var j=0; j<groupViews.length; ++j){
+					var groupViewID = groupViews[j];
+					var view = allViewsLookup[groupViewID];
+					worldViews.push(view);
+				}
+				var groupPairs = group["pairs"];
+				// PASSING DATA:
+				selectedGroup = i;
+				// groupData = group; // ?
+				groupsInfo = {};
+					groupsInfo["cameras"] = allCameras;
+					groupsInfo["views"] = worldViews;
+					groupsInfo["pairs"] = groupPairs;
+					groupsInfo["points"] = [];
+				console.log("start loading");
+				// load points
+				expectedPairsCount = groupPairs.length;
+				for(var j=0; j<groupPairs.length; ++j){
+					var groupPair = groupPairs[j];
+					var groupID = groupPair["id"];
+					var groupPairFilename = Code.appendToPath(densePathBase, "pairs", groupID, "relative.yaml");
+					project.loadDataFromFile(groupPairFilename, completeLoadGroupPair, project);
+				}
+				// load images:
+				expectedImagesCount = worldViews.length;
+				for(var j=0; j<worldViews.length; ++j){
+					var worldView = worldViews[j];
+					var viewID = worldView["id"];
+					var view = project.viewFromID(viewID);
+					view.loadBundleAdjustImage(completeLoadGroupViewImage, project);
+					// view.loadIconImage(completeLoadGroupViewImage, project);
+				}
 				return;
 			}
 		}
+
+throw "aggregate";
 		// aggregate views
 		var viewsFileName = bundleData["viewsFile"];
 		if(!viewsFileName){
@@ -12346,6 +12530,7 @@ App3DR.ProjectManager.prototype.iterateBundleProcess = function(){
 			project.saveFileFromData(viewsData, viewsDataPath, savedViewsCompleteFxn, project);
 			return;
 		}
+throw "points";
 		var pointsFileName = bundleData["pointsFile"];
 		if(!pointsFileName){
 			var viewsDataPath = Code.appendToPath(bundlePathBase,viewsFileName);
@@ -12383,31 +12568,57 @@ App3DR.ProjectManager.prototype.iterateBundleProcess = function(){
 			project.loadDataFromFile(viewsDataPath, loadedViewDataFxn);
 			return;
 		}
+throw "views ?";
 		// set bundle group transforms to SOME NUMBER ?
 		throw "should be done?"
 	}
-	var loadedGroupDataFxn = function(data){
-		groupData = data;
-		project._doDenseGroupsStereopsis(groupData, completedDenseGroupsStereopsis, project);
+
+
+	var completeLoadGroupViewImage = function(data){
+		++loadedImagesCount;
+		checkCompletePairsAndViews();
 	}
+
+	var completeLoadGroupPair = function(data){
+		var points = data["points"];
+		var allPoints = groupsInfo["points"];
+		Code.arrayPushArray(allPoints, points);
+		++loadedPairsCount;
+		checkCompletePairsAndViews();
+	}
+
+	var checkCompletePairsAndViews = function(){
+		console.log(expectedImagesCount+" / "+loadedImagesCount+" && "+expectedPairsCount+" / "+loadedPairsCount);
+		if(expectedImagesCount==loadedImagesCount && expectedPairsCount == loadedPairsCount){
+			console.log("checkCompletePairsAndViews");
+			console.log(groupsInfo);
+			project._doDenseGroupsStereopsis(groupsInfo, completedDenseGroupsStereopsis, project);
+		}
+	}
+
 	var completedDenseGroupsStereopsis = function(worldData){
 		console.log("completedDenseGroupsStereopsis");
 console.log(worldData);
+console.log(groupIndex);
+var group = bundleData["groups"][groupIndex];
+console.log(group);
+HERE
+throw "???"
 		var worldViews = worldData["views"];
 		var worldTransforms = worldData["transforms"];
 		var worldPoints = worldData["points"];
 		var worldCameras = worldData["cameras"];
 console.log(selectedGroup);
-console.log(groupData);
 		// save summary data to bundle file
 			selectedGroup["views"] = worldViews;
 			selectedGroup["transforms"] = worldTransforms;
 		// save to group file
+		var groupData = {};
 			groupData["views"] = worldViews;
 			groupData["transforms"] = worldTransforms;
 			groupData["cameras"] = worldCameras;
 			groupData["points"] = worldPoints;
-// throw "save group ?";
+throw "save group ?";
 		project.saveFileFromData(groupData, groupDataPath, completedSaveGroupFxn, project);
 	}
 
@@ -16039,6 +16250,30 @@ App3DR.ProjectManager.prototype.displayViewGraph = function(transforms, pairs, o
 		//
 		var fwd = pair[2];
 		var error = pair[3];
+
+
+
+
+
+
+		var p2DA = centersDisplay2D[a];
+		var p2DB = centersDisplay2D[b];
+		display.graphics().setLine(2.0,0x990000CC);
+		display.graphics().beginPath();
+		display.graphics().moveTo(p2DA.x,p2DA.y);
+		display.graphics().lineTo(p2DB.x,p2DB.y);
+		display.graphics().endPath();
+		display.graphics().strokeLine();
+
+		var c2D = V2D.avg(p2DA,p2DB);
+		if(!fwd || !err){
+			continue;
+		}
+
+
+
+
+
 		var bak = Matrix.inverse(fwd); // i
 		var err = error/minError;
 
@@ -16120,19 +16355,6 @@ var o2D = Code.projectTo2DPlane(c3D.copy(),planeCenter,planeNormal);
 
 
 
-
-
-
-		var p2DA = centersDisplay2D[a];
-		var p2DB = centersDisplay2D[b];
-		display.graphics().setLine(2.0,0x990000CC);
-		display.graphics().beginPath();
-		display.graphics().moveTo(p2DA.x,p2DA.y);
-		display.graphics().lineTo(p2DB.x,p2DB.y);
-		display.graphics().endPath();
-		display.graphics().strokeLine();
-
-		var c2D = V2D.avg(p2DA,p2DB);
 
 		// var text = new DOText(Code.fixed(""+err,5), 16, DOText.FONT_ARIAL, 0xFF990099, DOText.ALIGN_CENTER);
 		// // text.matrix().scale(1,-1);

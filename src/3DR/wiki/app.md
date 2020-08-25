@@ -389,41 +389,64 @@ MISSING:
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
+- do dense points at half resolution 200k pts -> 50k pts
 
-- save relative transforms error on exit?
-	- derivable?
-	- has error?
-
-have full view graph w/ some error
-have skeleton w/ low error
--> re-register 'leaf' views
-	-> each skeleton node has an average scale change based on change in baseline with other skeleton nodes
-	-> use edges linked to skeleton nodes to estimate 'initial' position
-		-> scale each edge by skeleton node scale
-		-> leaf node = average of: skeleton node + AB
--> optimize graph again, using initial graph & STATIC skeleton nodes
-
+_resolveIntersectionLayered --- with multiple images -> needle/haystack
 
 
 average track pair: 2.0k-2.5k points
 
 6-skeleton views: [0, 0, 10270, 1942, 544, 146, 30]
-13k total views
+13k total all views
 10k 2-views
 2.6k 3+views
 
 
+[0, 0, 20017, 5827, 2733, 1554, 951, 689, 553, 340, 165]
+32829 total tracks
+20017 2 tracks
+12812 3+ tracks
 
-- full BA should include fewer pairs to reduce processing?
 
 
-- dense group combine:
-	- combine missing leaf views to skeleton:
-		- use pair info to optimize 3D graph for bundle_full.yaml
-	- optimize solveOptimizeSingleView
+START: 223584
+[0, 0, 54388, 36003, 17729, 4251]
+END: 112371
+-> 50% repetitive
 
-- bundle init: initializeBundleGroupsFromDense
-	- use groupings [4 + 2-3 overlap]
+
+
+4032 x 3024
+
+
+
+- STEPS:
+	x calculate overlapping groups of views
+	x save BA file:
+		- views
+		- any dense pairs views have in common
+	- for each group: (until group point count != null)
+		- load all view images
+		- load all point pairs
+		- add to world
+		- solve dense group
+			- keep views static
+			- probe 2D
+			- probe 3D
+			- drop worse
+		- save group
+	- if points is null:
+		- go thru each group:
+			- load points
+		- save all points to points file
+		- set pointCount
+	- if viewFile is null
+		- save views to views file
+	-> done:
+		- copy point count to info.yaml
+
+
+
 
 - bundle iterate: iterateBundleProcess
 	- view are stored in single file
@@ -520,6 +543,9 @@ group combining:
 every group's pair 
 
 
+
+
+- full BA should include fewer pairs to reduce processing?
 
 
 
