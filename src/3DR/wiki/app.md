@@ -391,7 +391,11 @@ MISSING:
 
 - do dense points at half resolution 200k pts -> 50k pts
 
+
+probe3DR
+
 _resolveIntersectionLayered --- with multiple images -> needle/haystack
+
 
 
 average track pair: 2.0k-2.5k points
@@ -420,12 +424,31 @@ END: 112371
 
 
 
+
+
+- every so often loadPoints takes a while
+LOAD POINTS: 191584
+
+
+
+Code.unpadArray2DLinear
+
+
+LOAD POINTS: 463205
+[0, 0, 55674, 30297, 23758, 20121, 12672, 6784]
+149306
+
+
+
+
+
+
 - STEPS:
 	x calculate overlapping groups of views
 	x save BA file:
 		- views
 		- any dense pairs views have in common
-	- for each group: (until group point count != null)
+	~ for each group: (until group point count != null)
 		- load all view images
 		- load all point pairs
 		- add to world
@@ -435,7 +458,7 @@ END: 112371
 			- probe 3D
 			- drop worse
 		- save group
-	- if points is null:
+	- if points is null: aggregate
 		- go thru each group:
 			- load points
 		- save all points to points file

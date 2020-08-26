@@ -11266,17 +11266,15 @@ App3DR.ProjectManager.prototype.loadDenseGroupsStereopsis = function(){
 	}
 	project.loadDataFromFile(worldFilename, dataLoadedFxn, project, {});
 }
-App3DR.ProjectManager.prototype._doDenseGroupsStereopsis = function(infoData, completeFxn){
+App3DR.ProjectManager.prototype._doDenseGroupsStereopsis = function(infoData, completeFxn, context){
 	var project = this;
 
 	var groupViews = infoData["views"];
 	var groupCameras = infoData["cameras"];
 	var groupPoints = infoData["points"];
-	// var groupPairs = infoData["pairs"];
 	
 	console.log(groupCameras);
 	console.log(groupViews);
-	// console.log(groupPairs);
 	console.log(groupPoints);
 
 	var groupCameraFromID = {};
@@ -11298,6 +11296,14 @@ App3DR.ProjectManager.prototype._doDenseGroupsStereopsis = function(infoData, co
 
 	var stage = GLOBALSTAGE;
 
+	// on done
+	var solveDenseGroupComplete = function(world){
+		console.log("solveDenseGroupComplete");
+		var str = world.toYAMLString();
+		console.log(str);
+		completeFxn(world.toObject());
+	}
+
 
 	console.log("create world");
 	var cameras = groupCameras;
@@ -11305,24 +11311,28 @@ App3DR.ProjectManager.prototype._doDenseGroupsStereopsis = function(infoData, co
 	// var images = groupImages;
 	var world = new Stereopsis.World();
 	var info = project._addGraphViews(world, groupViewFromID, stage, views);
-	console.log(info)
+	// console.log(info);
 	var images = info["images"];
 	var transforms = info["transforms"];
-	console.log("transforms");
-	console.log(transforms);
-
+	// console.log("transforms");
+	// console.log(transforms);
 	var worldCams = App3DR.ProjectManager.addCamerasToWorld(world, cameras);
-	console.log(worldCams);
-	
+	// console.log(worldCams);	
 	var worldViews = App3DR.ProjectManager.addViewsToWorld(world, views, images, transforms);
-	console.log(worldViews);
+	// console.log(worldViews);
+
+	// trigger world views creation of imagescales
+	console.log("trigger image scales");
+	for(var i=0; i<worldViews.length; ++i){
+		var view = worldViews[i];
+		view.imageScales();
+	}
 
 	console.log(world);
 
 	var WORLDVIEWSLOOKUP = project.createWorldViewLookup(world);
 	console.log("WORLDVIEWSLOOKUP");
 	console.log(WORLDVIEWSLOOKUP);
-
 
 		// // pairs to create 
 		// var comparePairs = [];
@@ -11337,7 +11347,7 @@ App3DR.ProjectManager.prototype._doDenseGroupsStereopsis = function(infoData, co
 
 
 		// set view cell density
-
+console.log("SET CELLS");
 		// var cellCount = 40; // too sparse
 		// var cellCount = 60;
 		var cellCount = 80; // too dense ?
@@ -11351,70 +11361,96 @@ App3DR.ProjectManager.prototype._doDenseGroupsStereopsis = function(infoData, co
 		}
 
 		// ADD POINTS
-		
+console.log("INIT POINTS ...");
 		world.setResolutionProcessingModeNonVisual();
 		world.copyRelativeTransformsFromAbsolute();
 
 		var points3DNew = App3DR.ProjectManager._worldPointFromSaves(world, groupPoints, WORLDVIEWSLOOKUP, true);
-		// console.log(points3DNew);
-		// world.embedPoints3DNoValidation(points3DExisting);
+var timeA = Code.getTimeMilliseconds();
 			world.initPoints3DLocation(points3DNew);
 			world.initAllP3DPatches(points3DNew);
 			world.initAffineFromP3DPatches(points3DNew);
+var timeB = Code.getTimeMilliseconds();
+console.log("DELTA INIT: "+((timeB-timeA)/1000)); // 4-5 seconds
 
 // TODO: THIS NEEDS TO BE ASYNC @ 1-10k iterations
 		// console.log(points3DNew);
 		// world.checkForIntersections(false);
-var timeA = Code.getTimeMilliseconds();
-		world.embedPoints3D(points3DNew);
-var timeB = Code.getTimeMilliseconds();
-console.log("DELTA EMBED: "+((timeB-timeA)/1000)); // NO IMAGE LOOKUP: 2135.247 / 60 = 35 minutes    vs:  WITH IMAGE LOOKUP: ?
-
-// 316.144 / 60 = 6 minutes
 
 
-//  [0, 0, 54388, 36003, 17729, 4251]
-
-world.relativeFFromSamples();
-world.estimate3DErrors(true);
-world.printPoint3DTrackCount();
-
-		console.log(world);
-		console.log("solve dense group world");
-// SHOW ERROR PER GROUP:
-
-
-var errorCount = worldViews.length + 1;
-var errorCounts = Code.newArrayArrays(errorCount);
-var points3D = world.toPointArray();
-for(var i=0; i<points3D.length; ++i){
-var point3D = points3D[i];
-var viewCount = point3D.viewCount();
-var reprojectionError = point3D.totalReprojectionError();
-errorCounts[viewCount].push(reprojectionError);
-}
-for(var i=0; i<errorCounts.length; ++i){
-	var errors3D = errorCounts[i];
-	errors3D.sort();
-	Code.printMatlabArray(errors3D,"e_"+i);
-}
+		var timeA = null;
+		var timeB = null;
 		
-		// world.checkForIntersections(true);
-		// world.resolveIntersectionByDefault();
-		// world.resolveIntersectionByPatchVisuals();
-		throw "??? before solveDenseGroup"
-		// solveDenseGroup
-		world.solveDenseGroup(solveDenseGroupComplete);
-		console.log("?????????????????????????????");
+		var loadPoints = function(){
+			var counterPerIteration = 10E3; // 10k-50k
+			console.log("LOAD POINTS: "+points3DNew.length);
+			if(points3DNew.length>0){
+				var nextSet = [];
+				var maxCount = Math.min(points3DNew.length,counterPerIteration);
+				for(var c=0; c<maxCount; ++c){
+					var p = points3DNew.shift(); // drop 1
+					nextSet.push(p);
+				}
+				world.embedPoints3D(nextSet);
+				Code.functionAfterDelay(loadPoints,project, 1);
+			}else{
+				loadPointsComplete();
+			}
+		}
+		var loadPointsComplete = function(){
+			console.log("loadPointsComplete")
+			timeB = Code.getTimeMilliseconds();
+			console.log("DELTA EMBED: "+((timeB-timeA)/1000)); // NO IMAGE LOOKUP: 2135.247 / 60 = 35 minutes?    vs:  WITH IMAGE LOOKUP: ? ---- try with async
+
+			// 316.144 / 60 = 6 minutes
+
+
+			//  [0, 0, 54388, 36003, 17729, 4251]
+
+			world.relativeFFromSamples();
+			world.estimate3DErrors(true);
+			world.printPoint3DTrackCount();
+
+					console.log(world);
+					console.log("solve dense group world");
+
+
+
+			// SHOW ERROR PER GROUP:
+			
+			// world.checkForIntersections(true);
+			// world.resolveIntersectionByDefault();
+			// world.resolveIntersectionByPatchVisuals();
+			// throw "??? before solveDenseGroup"
+			// solveDenseGroup
+			world.solveDenseGroup(solveDenseGroupComplete);
+			console.log("?????????????????????????????");
+
+
+			var errorCount = worldViews.length + 1;
+			var errorCounts = Code.newArrayArrays(errorCount);
+			var points3D = world.toPointArray();
+			for(var i=0; i<points3D.length; ++i){
+			var point3D = points3D[i];
+			var viewCount = point3D.viewCount();
+			var reprojectionError = point3D.totalReprojectionError();
+			errorCounts[viewCount].push(reprojectionError);
+			}
+			for(var i=0; i<errorCounts.length; ++i){
+				var errors3D = errorCounts[i];
+				errors3D.sort();
+				Code.printMatlabArray(errors3D,"e_"+i);
+			}
+
+			completeFxn(world);
+		}
+
+		timeA = Code.getTimeMilliseconds();
+		Code.functionAfterDelay(loadPoints,project, 1);
 	
 	/*
 
-	var solveDenseGroupComplete = function(world){
-		console.log("solveDenseGroupComplete");
-		// var str = world.toYAMLString();
-		// console.log(str);
-		completeFxn(world.toObject());
-	}
+	
 
 
 	var loadWorld = function() {
@@ -12492,7 +12528,8 @@ App3DR.ProjectManager.prototype.iterateBundleProcess = function(){
 					var worldView = worldViews[j];
 					var viewID = worldView["id"];
 					var view = project.viewFromID(viewID);
-					view.loadBundleAdjustImage(completeLoadGroupViewImage, project);
+					// view.loadBundleAdjustImage(completeLoadGroupViewImage, project); // 4032 x 3024
+					view.loadDenseHiImage(completeLoadGroupViewImage, project); // ...
 					// view.loadIconImage(completeLoadGroupViewImage, project);
 				}
 				return;
@@ -12596,29 +12633,30 @@ throw "views ?";
 		}
 	}
 
-	var completedDenseGroupsStereopsis = function(worldData){
+	var completedDenseGroupsStereopsis = function(world){
 		console.log("completedDenseGroupsStereopsis");
+console.log(world);
+var worldData = world.toObject();
 console.log(worldData);
-console.log(groupIndex);
-var group = bundleData["groups"][groupIndex];
+var group = bundleData["groups"][selectedGroup];
 console.log(group);
-HERE
-throw "???"
 		var worldViews = worldData["views"];
 		var worldTransforms = worldData["transforms"];
 		var worldPoints = worldData["points"];
 		var worldCameras = worldData["cameras"];
-console.log(selectedGroup);
-		// save summary data to bundle file
-			selectedGroup["views"] = worldViews;
-			selectedGroup["transforms"] = worldTransforms;
-		// save to group file
+		
+			group["points"] = worldPoints.length;
+
 		var groupData = {};
+			groupData["cameras"] = worldCameras;
 			groupData["views"] = worldViews;
 			groupData["transforms"] = worldTransforms;
-			groupData["cameras"] = worldCameras;
 			groupData["points"] = worldPoints;
-throw "save group ?";
+console.log(group);
+console.log(groupData);
+var groupDataPath = Code.appendToPath(bundlePathBase,group["filename"]);
+console.log(groupDataPath);
+// throw "save group ?";
 		project.saveFileFromData(groupData, groupDataPath, completedSaveGroupFxn, project);
 	}
 

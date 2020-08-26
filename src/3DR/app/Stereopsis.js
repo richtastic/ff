@@ -8051,21 +8051,16 @@ GLOBALSTAGE.addChild(d);
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 Stereopsis.World.prototype.solveDenseGroup = function(completeSolveFxn){ // multiple (3+)
 	var world = this;
-	throw "solveDenseGroup";
-
-
 
 var timeStart = Code.getTimeMilliseconds();
-	var subdivisions = 0; // ~40k  --- select
-	var iterations = 3; // per grid size
+	var subdivisions = 0; // 
+	var iterations = 3; //
 	var maxIterations = (subdivisions+1)*iterations;
 	var subdivision = 0;
+	// world.setResolutionProcessingModeFromCountP3D([0,0,0]); // to highest
+	world.setResolutionProcessingModeFromCountP3D([0,0]); // neighbor avg
 	for(var iteration=0; iteration<maxIterations; ++iteration){
 		console.log("all: ========================================================================================= "+iteration+" / "+maxIterations);
-		// 
-		// world.setResolutionProcessingModeFromCountP3D([5E3,10E3,20E3]); // 5 , 10 , 20
-
-		// world.setResolutionProcessingModeFromCountP3D([5E3,10E3]); // very hairy
 
 		world.estimate3DErrors(true);
 
@@ -8094,21 +8089,22 @@ var timeStart = Code.getTimeMilliseconds();
 		// 	compareSize = 5;
 		// }
 		// world.probe2DCellsR(3.0,3.0);
-		var compareSize = 5;
-		world.probe2DCellsR(2.0,2.0, compareSize); // 9=>81 7=>49 5=>25
-		world.probe3DR(0);
+
+		// expand
+		// var compareSize = 5;
+		// world.probe2DCellsR(2.0,2.0, compareSize); // 9=>81 7=>49 5=>25
+		world.probe3DR(0); // probe3DGlobal
 
 		// retract
-		world.filterGlobal3DR(2.0);
-		world.filterLocal2DR();
-		world.filterLocal3DR();
+		world.filterGlobal3DR(2.0); // 2 - 3
+		// world.filterLocal2DR();
+		// world.filterLocal3DR();
 
-		// refine
-		world.recordViewAbsoluteOrientationStart();
-		world.refineAllCameraMultiViewTriangulation(100);
-		world.copyRelativeTransformsFromAbsolute();
-		// 
-		world.updateP3DPatchesFromAbsoluteOrientationChange();
+		// refine cameras --- no
+		// world.recordViewAbsoluteOrientationStart();
+		// world.refineAllCameraMultiViewTriangulation(100);
+		// world.copyRelativeTransformsFromAbsolute();
+		// world.updateP3DPatchesFromAbsoluteOrientationChange();
 
 		// retract 2
 		world.dropNegativeMatches3D();
@@ -8117,11 +8113,10 @@ var timeStart = Code.getTimeMilliseconds();
 	// final output:
 	world.estimate3DErrors(true);
 
-	var timeStop = Code.getTimeMilliseconds();
-
+var timeStop = Code.getTimeMilliseconds();
 console.log(timeStart,timeStop);
-console.log((timeStop-timeStart)/1000);
-console.log((timeStop-timeStart)/1000/60); // ~ 20 mins
+console.log("seconds: "+((timeStop-timeStart)/1000));
+console.log("mins: "+((timeStop-timeStart)/1000/60)); // ~ 20 mins
 }
 
 Stereopsis.World.prototype.solveDenseGroupOLD = function(inputPairs, completeSolveFxn){ // multiple (3+)
@@ -13459,6 +13454,29 @@ Stereopsis.World.prototype.probe2DCellsRF = function(sigmaMaximumSelect, sigmaMa
 		} // end view A-B
 	} // end transforms
 	console.log("possibles: "+possibles+" v added: "+addeds);
+}
+
+Stereopsis.World.prototype.probe3DR = function(sigmaMaximumSelect, sigmaMaximumNew){ //
+	console.log("probe3DR");
+	//
+	/*
+
+		for every p3d
+			if at least 1 of P3D's views has an image loaded (prioritize on lowest N/S error):
+			look at neighbors:
+			get list of views neighbors project to (hash map)
+			if list includes a view p3D does not have:
+				if new view has image loaded
+					project P3D point into new view
+					calc affine
+					do needle/haystack search (2 x needle)
+					if error < transform's error+sigma:
+						add new match to list
+
+		add new matches
+
+
+	*/
 }
 
 Stereopsis.World.prototype.setMatchAffineFromNeighborhood = function(){ // update matches using local neighborhood of points

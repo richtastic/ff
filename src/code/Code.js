@@ -6310,6 +6310,14 @@ setTimeout(function() {
 		console.log("?");
 	}
 }
+
+Code.functionAfterDelay = function(fxn,ctx, delay, args){
+	args = Code.valueOrDefault(args, []);
+	delay = Code.valueOrDefault(delay, 1);
+	setTimeout(function() {
+		fxn.apply(delay,args);
+	}, delay);
+}
 Code.startTrackInputRange = function(input, dispatch){
 	dispatch.addJSEventListener(input, Code.JS_EVENT_MOUSE_DOWN, Code._trackInputRangeFxn, Code, {"event":Code.JS_EVENT_MOUSE_DOWN, "input":input});
 	dispatch.addJSEventListener(input, Code.JS_EVENT_MOUSE_UP, Code._trackInputRangeFxn, Code, {"event":Code.JS_EVENT_MOUSE_OUT, "input":input});
