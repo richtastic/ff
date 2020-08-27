@@ -356,9 +356,6 @@ https://cloud.google.com/appengine/docs/nodejs/
 TIMELINES:
 
 
-08/30 - 360 object scene ~ 10 images
-
-
 09/10 - 360 object scene ~ 20 images
 
 
@@ -378,7 +375,7 @@ MISSING:
 	- inconsistent / contrary / high error
 - triangle - texture loading groups at a time to get local approx blending
 	- logistics [5d]
-- out-of-core octtree (stereopsis focused)
+- out-of-core octtree (stereopsis focused - combining large number of points)
 	- system design [10d]
 - triangulation algorithm updates
 	- not smooth enough
@@ -388,40 +385,124 @@ MISSING:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+- new sequence:
+	- want 180 + deg test (360?)
+		- fairly simple geometry
+		- no reflective surfaces - only matte
+	- 15-20 images
+	- sparse pairs can have much lower res (1/4)
+
+	- before triple: identify bad pairs => reassign relative/tracks to 0
+		- RAW R ERROR
+		- ROTATION ERROR
+		- INFERENCE / LOOP ERROR
+
+	- init graph: check for inconsistent pairs again
+		- ?
+
+	- dense putative pairs: use geometry as well as graph for candidates
+	- dense pairs can have little lower res (1/2)
+	- group - probe 3D
+	- group - probe 2D
+	- group - filter patches
+	- detect when subdivide / quit, not just constant iterations
+
+x views aren't storing camera: bundle & surface
+
+
+- multi-file drag image uploading
+	- queue list of images to try
+
 
 - do dense points at half resolution 200k pts -> 50k pts
 
 
-probe3DR
+
+
+BAD METRICS:
+F: F=12.3  |    |  .
+relative: R=4.6 , F = 7.6  |  6,14
+track: R=1.2 , F=1.8  |  2,3
+
+
+OK METRIC:S 
+F: F=6.8  |  ?
+relative: R=2.7 , F = 5.5  |  ?
+track: R=0.8 , F=1.5  |  ?
+
+
+BAD PAIRS: ELEPHANT:
+0GKXM13I-4U5WDZ5O
+0GKXM13I-JE33IUST
+2QPOD9MS-4U5WDZ5O
+JE33IUST-JZV0X8FW
+JE33IUST-XXU13QWF
+
+
+
+
+
+- how to identify inconsistent pairs?
+-> can do in rotation space
+
+1D SFM Outlier detection
+
+
+
+http://www1.maths.lth.se/matematiklth/vision/publdb/reports/pdf/enqvist-kahl-etal-wovcnnc-11.pdf
+http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.613.6464&rep=rep1&type=pdf
+
+
+
+IDEA 0: RAW-EDGE-ERROR STATISTICS
+	- use raw edge-cost (R/count) to find edges that are outliers
+	- views need to have at least 3+ pairs (4 pref)
+
+
+IDEA 1: PAIR-FIND-ERROR STATISTICS
+	- go thru random (exhaustive) (short-ish) paths 
+	- if a particular path has a large error (some cost fxn), then the path likely contains a bad edge
+
+	- start from A, find paths to neighbor B [1,2,3 max paths]
+	- each path sums errors of edges as weight
+	- each path accumulates total rotation
+	- average all rotations by weight
+	- get differences in cost (angle 3D & twist separately OR axis-cost combined)
+	- if pair A-B has much larger cost than average: likely outlier
+
+IDEA 3: LOOP ERROR STATISTICS
+	- go thru (3-4 node) loops & record error in rotation (alignment error)
+	- each edge accumulates an error sum based on all the loops run thru it (averaged by # of loops run)
+	- loops with large error contain at least one bad edge
+	- 
+	=> belief propagation
+	=> voting:
+		- good edges will find bad loops
+			- loops w/ e vs loops w/o e
+			- vote e as outlier if over 2 sigma (95%) of excluded loop error distance
+
+	LOOP:
+		- EDGES
+		- NODES
+		- ERROR
+	EDGE:
+		- NODES
+		- LOOPS
+	NODE:
+		- EDGES
+		- LOOPS
+
+
+	=> how to find out where the error is originating from (isolating bad edges)?
+
+
 
 _resolveIntersectionLayered --- with multiple images -> needle/haystack
 
 
 
-average track pair: 2.0k-2.5k points
-
-6-skeleton views: [0, 0, 10270, 1942, 544, 146, 30]
-13k total all views
-10k 2-views
-2.6k 3+views
-
-
-[0, 0, 20017, 5827, 2733, 1554, 951, 689, 553, 340, 165]
-32829 total tracks
-20017 2 tracks
-12812 3+ tracks
-
-
-
-START: 223584
-[0, 0, 54388, 36003, 17729, 4251]
-END: 112371
--> 50% repetitive
-
-
-
-4032 x 3024
-
+4032 x 3024 @ 100
+2016 x 1512 @ 50
 
 
 
@@ -443,49 +524,20 @@ LOAD POINTS: 463205
 
 
 
-- STEPS:
-	x calculate overlapping groups of views
-	x save BA file:
-		- views
-		- any dense pairs views have in common
-	~ for each group: (until group point count != null)
-		- load all view images
-		- load all point pairs
-		- add to world
-		- solve dense group
-			- keep views static
-			- probe 2D
-			- probe 3D
-			- drop worse
-		- save group
-	- if points is null: aggregate
-		- go thru each group:
-			- load points
-		- save all points to points file
-		- set pointCount
-	- if viewFile is null
-		- save views to views file
-	-> done:
-		- copy point count to info.yaml
+initializeSurfaceFromBundle -- has some memory peaking: copying view/point bundle data to surface data
+	- binary iterating
+	- yaml parsing
 
 
 
 
-- bundle iterate: iterateBundleProcess
-	- view are stored in single file
-	- points are stored in a per-group file
-	- solveDenseGroup?
-	go thru each group:
-		- load all images (high dense)
-		- combine all included view pairs dense points into file
-		- combine visually using images
-		- reinit patches (or figure out how to calculate transfer?)
-		- probe2D
-		- probe3D (find more support in other images)
-		- filter S B F R patch
-	go thru each group:
-		- drop worst points based on S & N & R (& F?) error, patch overlap
-		- accumulate 3D points into single points3D file
+how does a triangle know which views it is visible from?
+- with duplicated / overlapping group points: points may be visible from other views but not recorded on point itself
+
+
+
+- 3D surfaces -> what about projection of image / wrapping as texture ?
+
 
 
 
@@ -535,36 +587,6 @@ PEAK MEMORY USAGE SITUATIONS:
 
 
 
-x group optimization methods to use (single view opt + world opt)
-
-
-- split & combine options:
-	- skeleton:
-		- maximum group size could be huge, on average maybe 10%-50% of world
-	- groups:
-		pro:
-			- group size is mostly customizable (eg 8 views with 2 overlapping)
-			- highly parallizable
-		cons:
-			- possibly world drift?
-			- possibly lots of overlap (maybe 25%)
-			- 
-
-
-GROUPS COMBINING (after separate group optimizing):
-	- list every edge from each GROUP: (not original edges)
-		- need to record relative transform point count & error back to graph.yaml
-	- solve 3D graph:
-		- init with original graph
-		- add each group's final edges (above minimum count, proportional to error)
-		- iterate to done
-
-
-
-
-group combining:
-every group's pair 
-
 
 
 
@@ -574,67 +596,6 @@ every group's pair
 
 - combine group track loading + full track loading logic
 
-
-
--> back to combining groups from groups/skeleton
-	- invert all groups (including skeleton) by average scale change
-
-
-
-
-
-=> local minimum => go back to figure out why initial graph looks so bad
-	- SCALES
-	- FINAL GRAPH ITERATION
-
-
-- test out local exhaustive reprojection error minimizing method:
-	- single camera
-	- try several descrete options:
-		- px,py,pz, rx,ry,rz
-			N^6
-
-- add error around (simmulated annealing?) to pop out of minimizing location
-
-
-
-- exhaustive method ?
-	- fix first view rot + pos & second view pos
-	- 1 change: rotation of 2nd view: 
-		- +/- 80 Y
-		- +/- 80 X
-		- +/- 170 Z
-		- 10 x 10 x 20 = 2000 [20,20,20]
-	- 2 retest with different halved range around best score:
-		- +/- 40
-		- +/- 40
-		- +/- 80
-		- 9 x 9 x 17 = 1377 [10,10,10]
-	- 3 
-		- +/- 20
-		- +/- 20
-		- +/- 40
-		- 9 x 9 x 17 = 810 [5,5,5]
-	- 4 
-		- +/- 10
-		- +/- 10
-		- +/- 20
-		- 5 x 5 x 9 = 225 [5,5,5]
-	- 45
-		- +/- 4
-		- +/- 4
-		- +/- 8
-		- 5 x 5 x 9 = 225 [2,2,2]
-
-	=> 2k-4k tests
-
-
-- try last step as only optimizing expected orientations?
-[ignore absolute scale]
-
-
-TRY FULL BA WITH ALL VIEWS:
-	- overlapping tracks
 
 
 
@@ -648,121 +609,6 @@ TRY FULL BA WITH ALL VIEWS:
 		- get average new location
 	=> how does this behave in a multi-problematic scenario?
 		- 
-
-
-
-
-TIMINGS EXTIMATIONS:
-
-- uploading images:
-	- 15 s / image
-
-- finding camera:
-	15 s / image
-
-- view features
-	- 15 s / image
-
-- pair best esimation
-	- 15 s
-
-- pair matches/matches/tracks
-	- 60 s per pair
-
-- triples calculator
-	- 10 s per triple
-
-- calc graph
-	- 1 s per view
-
-- bundle groups
-	- 60 ; % 60s per iteration x n views
-
-
-cams = 10;
-views = 100;
-pairs = 10*views;
-triples = 6*views;
-
-time_upload_image = 15; % per cam / view
-time_calc_camera = 15; % once
-time_calc_features = 15; % per view
-time_calc_pair_putative = 15; % once
-time_calc_pairs = 60; % per pair
-time_calc_triples = 10; % per triple
-time_calc_graph = 5; % per view
-time_calc_bundle_track_group = 60; % per view
-time_calc_bundle_track_all = 30; % per view
-time_calc_dense_pairs = 10; % constant
-% ...
-time_calc_dense_group = 60; % per view/group?
-time_calc_dense_points = 60; % per view/group?
-% ...
-time_calc_surface_tris = 60; % per view/points?
-time_calc_surface_tex = 60; % per view/tri?
-time_calc_texture_out = 60; % per view/texture?
-
-
-total_time = 0;
-
-% startup time
-total_time = total_time + views * time_upload_image; % upload image
-total_time = total_time + cams * time_upload_image + time_calc_camera; % camera upload/calc
-total_time = total_time + views * time_calc_features; % features image
-total_time = total_time + time_calc_pair_putative; % pairs calc
-total_time / 60 / 60
-
-% sparse time
-total_time = total_time + pairs * time_calc_pairs; % pairs sparse
-total_time = total_time + triples * time_calc_triples; % triples sparse
-total_time = total_time + views * time_calc_graph; % view graph init sparse
-total_time = total_time + views * time_calc_bundle_track_group; % view group BA
-total_time = total_time + views * time_calc_bundle_track_all; % view full BA
-total_time = total_time + time_calc_dense_pairs; % putatives for dense
-% to sparse time:
-total_time / 60 / 60
-% 2-3 hours
-
-% dense time:
-total_time = total_time + pairs * time_calc_pairs; % pairs dense
-total_time = total_time + triples * time_calc_triples; % triples dense
-total_time = total_time + views * time_calc_graph; % view graph init dense
-total_time = total_time + views * time_calc_bundle_track_group; % view group BA
-total_time = total_time + views * time_calc_bundle_track_all; % view full BA
-
-% to dense time:
-total_time / 60 / 60
-% 4-5 hours
-
-% surface time:
-total_time = total_time + views * time_calc_dense_group; % dense group BA
-total_time = total_time + views * time_calc_dense_points; % dense point combine
-total_time = total_time + views * time_calc_surface_tris; % triangles
-total_time = total_time + views * time_calc_surface_tex; % textures calc
-total_time = total_time + views * time_calc_texture_out; % textures combine
-
-% to surface time:
-total_time / 60 / 60
-% 5-6 hours
-
-
-% 10 images = 6 hours
-% 20 images = 11 hours = half day
-% 50 images = 26 hours = 1 day
-% 100 images = 52 hours = 3 days
-
-
-% TOP OF THE LINE:
-10 images => < 10 mins
-100 images => 1 hour
-500 images => 5 hours
-1000 images => 10 hours
-
-% SHORT TERM GOAL:
-10 images => 1 hour
-100 images => 10 hours
-1000 images => 2 days
-
 
 
 with the case of TRACKS:
@@ -1196,6 +1042,130 @@ a total neighbor:
 	- world dense points:
 		- millions
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+TIMINGS EXTIMATIONS:
+
+- uploading images:
+	- 15 s / image
+
+- finding camera:
+	15 s / image
+
+- view features
+	- 15 s / image
+
+- pair best esimation
+	- 15 s
+
+- pair matches/matches/tracks
+	- 60 s per pair
+
+- triples calculator
+	- 10 s per triple
+
+- calc graph
+	- 1 s per view
+
+- bundle groups
+	- 60 ; % 60s per iteration x n views
+
+
+cams = 10;
+views = 100;
+pairs = 10*views;
+triples = 6*views;
+
+time_upload_image = 15; % per cam / view
+time_calc_camera = 15; % once
+time_calc_features = 15; % per view
+time_calc_pair_putative = 15; % once
+time_calc_pairs = 60; % per pair
+time_calc_triples = 10; % per triple
+time_calc_graph = 5; % per view
+time_calc_bundle_track_group = 60; % per view
+time_calc_bundle_track_all = 30; % per view
+time_calc_dense_pairs = 10; % constant
+% ...
+time_calc_dense_group = 60; % per view/group?
+time_calc_dense_points = 60; % per view/group?
+% ...
+time_calc_surface_tris = 60; % per view/points?
+time_calc_surface_tex = 60; % per view/tri?
+time_calc_texture_out = 60; % per view/texture?
+
+
+total_time = 0;
+
+% startup time
+total_time = total_time + views * time_upload_image; % upload image
+total_time = total_time + cams * time_upload_image + time_calc_camera; % camera upload/calc
+total_time = total_time + views * time_calc_features; % features image
+total_time = total_time + time_calc_pair_putative; % pairs calc
+total_time / 60 / 60
+
+% sparse time
+total_time = total_time + pairs * time_calc_pairs; % pairs sparse
+total_time = total_time + triples * time_calc_triples; % triples sparse
+total_time = total_time + views * time_calc_graph; % view graph init sparse
+total_time = total_time + views * time_calc_bundle_track_group; % view group BA
+total_time = total_time + views * time_calc_bundle_track_all; % view full BA
+total_time = total_time + time_calc_dense_pairs; % putatives for dense
+% to sparse time:
+total_time / 60 / 60
+% 2-3 hours
+
+% dense time:
+total_time = total_time + pairs * time_calc_pairs; % pairs dense
+total_time = total_time + triples * time_calc_triples; % triples dense
+total_time = total_time + views * time_calc_graph; % view graph init dense
+total_time = total_time + views * time_calc_bundle_track_group; % view group BA
+total_time = total_time + views * time_calc_bundle_track_all; % view full BA
+
+% to dense time:
+total_time / 60 / 60
+% 4-5 hours
+
+% surface time:
+total_time = total_time + views * time_calc_dense_group; % dense group BA
+total_time = total_time + views * time_calc_dense_points; % dense point combine
+total_time = total_time + views * time_calc_surface_tris; % triangles
+total_time = total_time + views * time_calc_surface_tex; % textures calc
+total_time = total_time + views * time_calc_texture_out; % textures combine
+
+% to surface time:
+total_time / 60 / 60
+% 5-6 hours
+
+
+% 10 images = 6 hours
+% 20 images = 11 hours = half day
+% 50 images = 26 hours = 1 day
+% 100 images = 52 hours = 3 days
+
+
+% TOP OF THE LINE:
+10 images => < 10 mins
+100 images => 1 hour
+500 images => 5 hours
+1000 images => 10 hours
+
+% SHORT TERM GOAL:
+10 images => 1 hour
+100 images => 10 hours
+1000 images => 2 days
 
 
 

@@ -500,8 +500,13 @@ Matrix.transform2DTranslate = function(a,tX,tY){
 	var b = Matrix._transformTemp2D.fromArray([1.0,0.0,tX, 0.0,1.0,tY, 0.0,0.0,1.0]);
 	return Matrix.mult(b,a);
 }
-Matrix.transform2DScale = function(a,sX,sY){
-	throw "this should only scale the translational components?"
+// Matrix.transform2DScale = function(a,sX,sY){
+// 	throw "this should only scale the translational components?"
+// 	sY = sY!==undefined?sY:sX;
+// 	var b = Matrix._transformTemp2D.fromArray([sX,0.0,0.0, 0.0,sY,0.0, 0.0,0.0,1.0]);
+// 	return Matrix.mult(b,a);
+// }
+Matrix.transform2DScalePoints = function(a,sX,sY){
 	sY = sY!==undefined?sY:sX;
 	var b = Matrix._transformTemp2D.fromArray([sX,0.0,0.0, 0.0,sY,0.0, 0.0,0.0,1.0]);
 	return Matrix.mult(b,a);
@@ -587,8 +592,7 @@ Matrix.transform3DRotateZ = function(a,angle){
 	var b = Matrix._transformTemp3D.fromArray([c,-s,0.0,0.0, s,c,0.0,0.0, 0.0,0.0,1.0,0.0, 0.0,0.0,0.0,1.0]);
 	return Matrix.mult(b,a);
 }
-Matrix.transform3DScale = function(a,x,y,z){
-	throw "this should only scale the translation components ?"
+Matrix.transform3DScalePoints = function(a,x,y,z){
 	if(y===undefined){
 		y = x;
 	}

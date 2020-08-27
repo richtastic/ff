@@ -7763,7 +7763,7 @@ console.log("checkPerformNextTask");
 		return;
 	}
 
-// throw "start dense";
+throw "start dense";
 	if(!project.checkHasDenseStarted()){
 		project.calculateDensePairPutatives();
 		return;
@@ -7784,7 +7784,7 @@ console.log("checkPerformNextTask");
 		return;
 	}
 
-throw ">start surface"; // copy point files & create surface.yaml
+// throw ">start surface"; // copy point files & create surface.yaml
 	if(!project.checkHasSurfaceStarted()){
 		project.initializeSurfaceFromBundle();
 		return;
@@ -7797,30 +7797,6 @@ throw ">start surface"; // copy point files & create surface.yaml
 
 
 throw ">copy surface to a scene/ID/ directory"; 
-
-
-throw "surface - triangles";
-console.log("triangle count: "+this.triangleCount());
-if(!this.triangulationDone()){
-	this.surfaceTriangulate();
-	return;
-}
-
-throw "surface triangle textures"
-console.log("texture count: "+this.textureCount());
-if(!this.texturingDone()){
-	this.trianglesTexturize();
-	return;
-}
-
-
-throw "textures";
-var textures = this.textureCount();
-console.log("texture count: "+textures);
-if(!this.texturingPackingDone()){
-	this.trianglesPacking();
-	return;
-}
 
 
 var sceneID = this.currentSceneID();
@@ -7938,6 +7914,7 @@ App3DR.ProjectManager.prototype._iterateSparseDenseLoaded = function(inputFilena
 	console.log(basePath);
 
 	if(!pairs){
+		console.log(inputData);
 		throw "input data not have pairs";
 	}
 
@@ -8013,18 +7990,10 @@ console.log("GOT : relative: "+relativeCount);
 		console.log("currentPair");
 		console.log(currentPair);
 
-// throw "BEFORE SAVE?";
-
 		var pairBase = Code.appendToPath(basePath, App3DR.ProjectManager.PAIRS_DIRECTORY, pairID);
 		var matchesFilename = Code.appendToPath(pairBase, App3DR.ProjectManager.INITIAL_MATCHES_FILE_NAME);
 		var relativeFilename = Code.appendToPath(pairBase, App3DR.ProjectManager.PAIR_RELATIVE_FILE_NAME);
-		var tracksFilename = Code.appendToPath(pairBase, App3DR.ProjectManager.PAIR_TRACKS_FILE_NAME);
-		// console.log(matchesFilename);
-		// console.log(relativeFilename);
-		// console.log(tracksFilename);
-
-		
-		// throw "before save pair data ...";
+		var tracksFilename = Code.appendToPath(pairBase, App3DR.ProjectManager.PAIR_TRACKS_FILE_NAME)
 
 		var saveFileOrAlternateFxn = function(data,filename,fxn,cxt){
 			if(data){
@@ -8063,8 +8032,6 @@ console.log("GOT : relative: "+relativeCount);
 
 	console.log(inputData);
 
-// throw ">A";
-
 	// LOAD EACH PAIR & DO MATCH | F | R | DENSE
 /*
 good = low error & visually accurate & cameras in correct location -- camera orientation + many points
@@ -8079,25 +8046,24 @@ console.log("pair count: "+pairs.length+" ............");
 		var idA = pair["A"];
 		var idB = pair["B"];
 		var matches = pair["matches"];
-// matches = null;
 		if(!Code.isSet(matches)){
 			console.log("need to try pair: "+idA+" & "+idB);
 			currentPair = pair;
 			console.log(pair);
 			var relativeAB = pair["relativeTransform"];
 			if(relativeAB){ // dense
-				// throw "this is for dense";
+				throw "this is for dense";
 				configuration = {};
 				project.calculatePairMatchWithRFromViewIDs(idA,idB, relativeAB, completePairFxn,project, configuration);
 				return;
-			} // else sparse
+			} // else: sparse = w/o known R
 			// throw "this is for sparse"
-			// sparse = w/o known R
+			
 			project.calculatePairMatchFromViewIDs(idA,idB, completePairFxn,project);
 			return;
 		}
 	}
-// throw ">triples";
+throw ">triples";
 
 	var triples = inputData["triples"];
 	if(!triples){
@@ -9270,7 +9236,8 @@ throw "get list of pairs including only top 3 view pairs -- from original graph 
 				var view = transformLookup[key];
 				var viewID = view["id"];
 				var R = view["R"];
-				viewList.push({"id":viewID, "transform":R});
+				var cameraID = view["camera"];
+				viewList.push({"id":viewID, "transform":R, "camera":cameraID});
 			}
 			console.log(viewList);
 			var bundleData = {};
@@ -10472,7 +10439,7 @@ pairData["tracks"] = world.toObject();
 	}
 }
 
-App3DR.ProjectManager.prototype.calculatePairMatchFromViewIDs = function(viewAID, viewBID, completeFxn, completeCxt, settings){ // matches, F, R, tracks
+App3DR.ProjectManager.prototype.calculatePairMatchFromViewIDs = function(viewAID, viewBID, completeFxn, completeCxt, settings){ // matches, F, R, tracks - SPARSE
 console.log("calculatePairMatchFromViewIDs")
 	if(!settings){
 		settings = {};
@@ -10669,11 +10636,6 @@ var Ferror = null;
 			var info = R3D.average2DTranformForIndividualPoints(pointsA,pointsB, imageMatrixA,imageMatrixB, true);
 			console.log(info);
 			var transforms = info["transforms"];
-		// pointsA = info["A"];
-		// pointsB = info["B"];
-
-
-	// throw "..."
 
 	console.log("START WORLD TO FIND DENSE F");
 
@@ -10715,7 +10677,7 @@ var Ferror = null;
 			world.embedPoint3D(point3D);
 		}
 	console.log("SOLVE PAIR F");
-	// throw "???";
+
 		var result = world.solvePairF();
 		console.log(result);
 
@@ -10818,31 +10780,6 @@ console.log(info);
 
 			var relative = world.toObject();
 			pairData["relative"] = relative;
-			// var pairPoints = relative["points"];
-			// if(!pairPoints){
-			// 	relative["points"] = [];
-			// }
-			
-			// var epipoles = R3D.getEpipolesFromF(F);
-			// var epipoleA = epipoles["A"];
-			// var epipoleB = epipoles["B"];
-			// var vA = world.viewFromData(viewAID);
-			// var vB = world.viewFromData(viewBID);
-			// // add matches
-			// world.resolveIntersectionByMatchScore();
-			// var skip = true;
-			// for(var i=0; i<pointsA.length; ++i){
-			// 	var fr = pointsA[i];
-			// 	var to = pointsB[i];
-			// 	var scaleAB = 1.0; // FROM SOMEWHERE?
-			// 	var angleAB = R3D.fundamentalRelativeAngleForPoint(fr, F,Finv, epipoleA,epipoleB, pointsA,pointsB);
-			// 	var m = world.addMatchForViews(vA,fr, vB,to, scaleAB,angleAB, skip);
-			// }
-			// setup
-			// world.resolveIntersectionByDefault();
-				
-
-
 
 			var reconstructionMetric = world.reconstructionRelativeMetrics();
 			console.log(reconstructionMetric);
@@ -10863,7 +10800,6 @@ console.log(transform);
 // 					pAs.push(pA);
 // 					pBs.push(pB);
 // 				}
-
 // // draw some of the matches
 // matches = [pAs,pBs];
 // Code.randomPopParallelArrays(matches, 500);
@@ -10877,7 +10813,7 @@ console.log(transform);
 				console.log("MEAN TRANSFORM ERROR: "+errorRMean+" & SIGMA: "+errorRSigma);
 
 				if(errorRMean>1.0){
-					console.log("errorRMean way too big, at most 0.1 px => likely wrong ordering in Z-depth");
+					console.log("errorRMean way too big, at most 1.0 px => likely wrong ordering in Z-depth");
 				}
 				var errorR = (transform.rSigma() + transform.rMean());
 				var errorF = (transform.fSigma() + transform.fMean());
@@ -10891,13 +10827,11 @@ console.log(transform);
 				world.solveForTracks();
 				// }
 
-
 				var errorR = (transform.rSigma() + transform.rMean());
 				var errorF = (transform.fSigma() + transform.fMean());
 				console.log("TRACK transform error R: "+errorR+" of "+maxErrorRTrackPixels);
 				console.log("TRACK transform error F: "+errorF+" of "+maxErrorFTrackPixels);
 
-				// if(errorR>maximumRErrorTracks || errorF>maximumFErrorTracks){
 				if(errorR>maxErrorRTrackPixels || errorF>maxErrorFTrackPixels){
 					goodEnoughMatches = false;
 				}
@@ -10908,12 +10842,12 @@ console.log(transform);
 				}
 				// ...
 				console.log(pairData);
-// throw "before save pair B"
+// throw "before save pair - world iterate";
 				pairDoneSaveFxn();
 				// ...
 		}else{ // save without further operation
 console.log(pairData);
-// throw "before save pair A"
+// throw "before save pair  - not good enough to iterate on world"
 			pairDoneSaveFxn();
 		}
 	}
@@ -12536,23 +12470,19 @@ App3DR.ProjectManager.prototype.iterateBundleProcess = function(){
 			}
 		}
 
-throw "aggregate";
+// throw "aggregate views";
 		// aggregate views
 		var viewsFileName = bundleData["viewsFile"];
 		if(!viewsFileName){
-			var result = project._initializeAbsoluteViewsFromGroups(bundleData["views"],bundleData["groups"]);
-			console.log(result);
-			var views = result["views"];
+			var views = bundleData["views"];
 			var viewsData = {};
 				viewsData["views"] = views;
 				viewsData["cameras"] = bundleData["cameras"];
-			
-			// throw "before save"
-			// global bundle adjust?
-			// best group tracks [limited by:  tracks length > 2  &  1E6/groups]
 
 			viewsFileName = "views.yaml";
 			bundleData["viewsFile"] = viewsFileName;
+			bundleData["viewsCount"] = views.length;
+
 			var savedViewsCompleteFxn = function(s){
 				console.log("savedViewsCompleteFxn");
 				project.saveFileFromData(bundleData, bundleFilename, savedBundleCompleteFxn, project);
@@ -12567,19 +12497,25 @@ throw "aggregate";
 			project.saveFileFromData(viewsData, viewsDataPath, savedViewsCompleteFxn, project);
 			return;
 		}
-throw "points";
+
+// throw "aggregate points";
 		var pointsFileName = bundleData["pointsFile"];
 		if(!pointsFileName){
-			var viewsDataPath = Code.appendToPath(bundlePathBase,viewsFileName);
-
 			var pointsFileName = "points.yaml";
 			bundleData["pointsFile"] = pointsFileName;
 			pointsDataPath = Code.appendToPath(bundlePathBase,pointsFileName);
 			var viewData = null;
-
+			var fileSourceList = [];
+			for(var i=0; i<groups.length; ++i){
+				var group = groups[i];
+				var filename = group["filename"];
+				filename = Code.appendToPath(bundlePathBase,filename);
+				fileSourceList.push(filename);
+			}
+			console.log(pointsDataPath);
+			console.log(fileSourceList);
 			var pointsSavedFxn = function(pointCount){
-				console.log("pointsSavedFxn");
-				// throw "before save";
+				console.log("pointsSavedFxn: "+pointCount);
 				project.setBundleCount(pointCount);
 				project.saveFileFromData(bundleData, bundleFilename, bundleSavedFxn, project);
 			}
@@ -12594,19 +12530,11 @@ throw "points";
 				project._taskDoneCheckReloadURL();
 			}
 
-			var loadedViewDataFxn = function(data){
-				viewData = data;
-				console.log(viewData);
-				var views = viewData["views"];
-				var cameras = bundleData["cameras"];
-				project.aggregateGroupPointsToSingleFile(groups, views, cameras, pointsDataPath, bundlePathBase, pointsSavedFxn);
-			}
+			// project.loadDataFromFile(viewsDataPath, loadedViewDataFxn);
+			project.aggregateGroupPointsToSingleFile(fileSourceList, pointsDataPath, pointsSavedFxn, project);
 
-			project.loadDataFromFile(viewsDataPath, loadedViewDataFxn);
 			return;
 		}
-throw "views ?";
-		// set bundle group transforms to SOME NUMBER ?
 		throw "should be done?"
 	}
 
@@ -12644,7 +12572,7 @@ console.log(group);
 		var worldTransforms = worldData["transforms"];
 		var worldPoints = worldData["points"];
 		var worldCameras = worldData["cameras"];
-		
+
 			group["points"] = worldPoints.length;
 
 		var groupData = {};
@@ -12672,8 +12600,51 @@ console.log(groupDataPath);
 
 	project.loadDataFromFile(bundleFilename, loadedBundleDataFxn);
 }
+App3DR.ProjectManager.prototype.aggregateGroupPointsToSingleFile = function(sourceFileList, pointsFileName, completeFxn, completeCxt){
+	var project = this;
 
-App3DR.ProjectManager.prototype.aggregateGroupPointsToSingleFile = function(groups,views,cameras,pointsFileName, filePrefix, completeFxn){
+	var pointsAll = [];
+	var currentSourceIndex = 0;
+	var loadedGroupPointFile = function(data){
+		var points = data["points"];
+		console.log("append points: "+points.length);
+		Code.arrayPushArray(pointsAll,points);
+		// next group
+		++currentSourceIndex;
+		Code.functionAfterDelay(loadNextGroupPointFile, 1);
+	}
+
+	var savedPointFileComplete = function(data){
+		console.log("savedPointFileComplete");
+		var pointCount = pointsAll.length;
+		if(completeCxt){
+			completeFxn.call(completeCxt, pointCount);
+		}else{
+			completeFxn(pointCount);
+		}
+	}
+
+	var savePointFileStart = function(){
+		console.log("savePointFileStart");
+		var pointsData = {};
+		pointsData["points"] = pointsAll;
+		console.log(pointsData);
+		project.saveFileFromData(pointsData, pointsFileName, savedPointFileComplete, project);
+	}
+
+	var loadNextGroupPointFile = function(){
+		console.log("loadNextGroupPointFile");
+		if(currentSourceIndex>=sourceFileList.length){
+			savePointFileStart();
+		}else{
+			var filename = sourceFileList[currentSourceIndex]; 
+			project.loadDataFromFile(filename, loadedGroupPointFile);
+		}
+	}
+	
+	loadNextGroupPointFile();
+}
+App3DR.ProjectManager.prototype.aggregateGroupPointsToSingleFileOLD = function(groups,views,cameras,pointsFileName, filePrefix, completeFxn){
 	var project = this;
 	// TODO: this should load & append, not keep all points in memory
 
@@ -12949,7 +12920,7 @@ App3DR.ProjectManager.prototype.iterateSurfaceProcess = function(){
 		var texturesFilename = Code.appendToPath(surfaceDirectory, textures);
 		project.loadDataFromFile(texturesFilename, loadedSceneFxn);
 		
-		throw "done - copy triangels & textures to scene file & save surfaceCount to main project file"
+		throw "done - copy triangles & textures to scene file & save surfaceCount to main project file"
 	}
 	var loadedSceneFxn = function(data){
 		console.log(data);
@@ -12973,13 +12944,14 @@ App3DR.ProjectManager.prototype.iterateSurfaceProcess = function(){
 		var mesh = new Mesh3D(points,normals);
 		// console.log("mesh");
 		// console.log(mesh);
-		var triangles = mesh.generateSurfaces();
-		// console.log("triangles");
-		// console.log(triangles);
+		var triangles = mesh.generateSurfaces(1000);
+// console.log("triangles");
+// console.log(triangles);
+// throw "HERE"
 		var triangleCount = triangles.length;
 		var pointList = Tri3D.arrayToUniquePointList(triangles);
 		console.log(pointList);
-		// TODO: drop triangles that don't face  toward any of the views ?
+		// TODO: drop triangles that don't face toward any of the views ?
 		var triangleData = {};
 		triangleData["points"] = pointList["points"];
 		triangleData["triangles"] = pointList["triangles"];
@@ -13016,6 +12988,7 @@ App3DR.ProjectManager.prototype.iterateSurfaceProcess = function(){
 				K = Matrix.fromObject(K);
 			cameraFromID[cam["id"]] = K;
 		}
+
 		// views to transforms & resolutions
 		var views = viewData["views"];
 		var resolutions = [];
@@ -13026,7 +12999,14 @@ App3DR.ProjectManager.prototype.iterateSurfaceProcess = function(){
 			var viewID = tv["id"]
 			var camID = tv["camera"];
 			var K = cameraFromID[camID];
+if(!K){
+	console.log(tv);
+	throw "missing camera for view";
+}
 			var viewTransform = tv["transform"];
+			if(!viewTransform){
+				viewTransform = tv["R"]; 
+			}
 			var transform = Matrix.fromObject(viewTransform); // extrinsic
 			var view = project.viewFromID(viewID);
 			var size = view.maximumImageSize();
@@ -13038,7 +13018,8 @@ App3DR.ProjectManager.prototype.iterateSurfaceProcess = function(){
 		var points = triangleData["points"];
 		var triangles = triangleData["triangles"];
 		var triangles3D = Tri3D.uniquePointListToTriangles(points,triangles); 
-
+// console.log(transforms,cameras,resolutions,triangles3D,textureSize,resolutionScale);
+// throw "?"
 		// source image assignment
 		var info = R3D.optimumTriangleTextureImageAssignment(transforms,cameras,resolutions,triangles3D,textureSize,resolutionScale);
 		var vertexes3D = info["vertexes3D"];
@@ -13620,7 +13601,7 @@ App3DR.ProjectManager.prototype.calculateViewSimilarities = function(){
 			});
 			console.log(scores);
 project.showViewSimilarities(scores);
-throw "now go save";
+// throw "now go save similarities";
 			project.setViewSimilarity(scores);
 			project.setSparseFilename(null);
 			//project.setPairPutative(null); // unset to recalculate
@@ -13656,8 +13637,8 @@ App3DR.ProjectManager.prototype.showViewSimilarities = function(similarities){
 		view.loadIconImage(fxnViewImageLoaded, project);
 	}
 	var fxnShowSimilarity = function(similarities){
-		var circleRadius = 350;
-		var imageSize = 150;
+		var circleRadius = 400;
+		// var imageSize = 150;
 		var images = [];
 		var matrixes = [];
 		var viewIDs = [];
@@ -13673,8 +13654,12 @@ App3DR.ProjectManager.prototype.showViewSimilarities = function(similarities){
 			matrixes.push(matrix);
 			images.push(image);
 		}
-		// console.log(images);
+		var imageSize = Math.round(circleRadius*1.5*Math.PI/views.length);
+		
 		// put images in circle
+		var totalOffX = 50;
+		var totalOffY = 50;
+		var circleCenter = new V2D(totalOffX + circleRadius,totalOffY + circleRadius);
 		var centers = [];
 		for(var i=0; i<images.length; ++i){
 			var image = images[i];
@@ -13688,15 +13673,15 @@ App3DR.ProjectManager.prototype.showViewSimilarities = function(similarities){
 			// var img = GLOBALSTAGE.getFloatRGBAsImage(image.red(),image.grn(),image.blu(), image.width(),image.height());
 			var d = new DOImage(image);
 			var angle = Math.PI * 2 * i/images.length;
-			var offsetX = 30 + size.x*0.5 + circleRadius + circleRadius*Math.cos(angle);
-			var offsetY = 30 + size.y*0.5 + circleRadius + circleRadius*Math.sin(angle);
+			var offsetX = circleCenter.x + size.x*0.5 + circleRadius*Math.cos(angle);
+			var offsetY = circleCenter.y + size.y*0.5 + circleRadius*Math.sin(angle);
 			d.matrix().scale(imageScale);
 			d.matrix().translate(offsetX - size.x*0.5, offsetY - size.y*0.5);
 			GLOBALSTAGE.addChild(d);
 
-			var text = new DOText(""+viewIDs[i], 32, DOText.FONT_ARIAL, 0xFFCC0099, DOText.ALIGN_CENTER);
-			d.addChild(text);
-			text.matrix().translate(0,-10);
+			// var text = new DOText(""+viewIDs[i], 32, DOText.FONT_ARIAL, 0xFFCC0099, DOText.ALIGN_CENTER);
+			// d.addChild(text);
+			// text.matrix().translate(0,-10);
 			// text.matrix().translate(p2D.x, p2D.y-20.0);
 			// display.addChild(text);
 
@@ -13750,6 +13735,26 @@ console.log(similarities);
 				d.graphics().strokeLine();
 				GLOBALSTAGE.addChild(d);
 
+		}
+
+		// titles over:
+		var textSize = 26;
+		for(var i=0; i<centers.length; ++i){
+			var center = centers[i];
+			var title = ""+viewIDs[i];
+			var textA = new DOText(title, textSize, DOText.FONT_ARIAL, 0xFF3366FF, DOText.ALIGN_CENTER);
+			var textB = new DOText(title, textSize, DOText.FONT_ARIAL, 0xFF000033, DOText.ALIGN_CENTER);
+
+				textA.matrix().translate(-1,-1);
+				textB.matrix().translate(1,1);
+			var textContainer = new DO();
+				textContainer.addChild(textB);
+				textContainer.addChild(textA);
+				
+			d.addChild(textContainer);
+			var dir = V2D.sub(center,circleCenter);
+			dir.length(textSize);
+			textContainer.matrix().translate(center.x + dir.x, center.y + dir.y);
 		}
 	}
 }

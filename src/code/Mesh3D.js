@@ -342,8 +342,9 @@ Mesh3D.prototype.generateSurfaces = function(){
 	// INITIALIZE MINIMUM AMOUNT OF 'RADIUS SEARCH POINTS'
 	var pointSpace = this._pointSpace;
 	var markerSpace = this._neighborhoodSpace;
-	var searchCount = Math.round(Math.sqrt(pointSpace.count()));
-	console.log("init with min samples: "+searchCount);
+	var pointCount = pointSpace.count();
+	var searchCount = Math.round(Math.sqrt(pointCount));
+	console.log("init with min samples: "+searchCount+" for "+pointCount+" points");
 	var points = pointSpace.toArray();
 	for(var i=0; i<searchCount; ++i){
 		// pick random point
@@ -364,7 +365,7 @@ Mesh3D.prototype.generateSurfaces = function(){
 			marker["count"] = info["count"];
 		markerSpace.insertObject(marker);
 	}
-
+console.log("start processing: "+searchCount);
 	this._preprocessPoints_MLS();
 
 
@@ -2005,7 +2006,9 @@ Mesh3D.prototype._iterateFronts = function(){
 console.log(this._triangleSpace.toArray());
 console.log("iterating ...");
 
-// throw "iterate with seed ...";
+
+var maxIter = 50000; // default
+
 		// iterate:
 		// var maxIter = 0;
 		// var maxIter = 1;
@@ -2025,7 +2028,8 @@ console.log("iterating ...");
 // var maxIter = 15000;
 		// var maxIter = 20000;
 		// var maxIter = 40000;
-		var maxIter = 60000;
+
+		// var maxIter = 60000;
 		for(var i=0; i<maxIter; ++i){
 			console.log("+---------------------------------------------------------------------------------------------+ GROUP: "+groupIndex+" +------------------+ ITERATION "+i+" / "+fronts.count()+" ("+this._triangleSpace.count()+")");
 			// next best front

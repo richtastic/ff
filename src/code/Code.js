@@ -6311,12 +6311,22 @@ setTimeout(function() {
 	}
 }
 
-Code.functionAfterDelay = function(fxn,ctx, delay, args){
-	args = Code.valueOrDefault(args, []);
-	delay = Code.valueOrDefault(delay, 1);
-	setTimeout(function() {
-		fxn.apply(delay,args);
-	}, delay);
+Code.functionAfterDelay = function(fxn,cxt, args, delay){
+	if(arguments.length==2){ // fxn delay
+		delay = cxt;
+		setTimeout(function() {
+			fxn();
+		}, delay);
+	}else if(arguments.length==3){ // fxn ctx delay
+		delay = args;
+		setTimeout(function() {
+			fxn.call(cxt);
+		}, delay);
+	}else if(arguments.length==4){ // fxn ctx args delay
+		setTimeout(function() {
+			fxn.apply(cxt,args);
+		}, delay);
+	}	
 }
 Code.startTrackInputRange = function(input, dispatch){
 	dispatch.addJSEventListener(input, Code.JS_EVENT_MOUSE_DOWN, Code._trackInputRangeFxn, Code, {"event":Code.JS_EVENT_MOUSE_DOWN, "input":input});

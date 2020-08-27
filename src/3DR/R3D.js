@@ -1257,12 +1257,12 @@ R3D.calculateNormalizedPoints = function(inputPoints, ignoreZ){ // array of arra
 		T = new Matrix(3,3).identity();
 			T = Matrix.transform2DTranslate(T,-cenX,-cenY);
 			T = Matrix.transform2DRotate(T,-angle);
-			T = Matrix.transform2DScale(T,scaler/rmsX,scaler/rmsY);
+			T = Matrix.transform2DScalePoints(T,scaler/rmsX,scaler/rmsY);
 			T = Matrix.transform2DRotate(T,angle);
 		inputPointTransforms[i] = T;
 		Tinv = new Matrix(3,3).identity();
 			Tinv = Matrix.transform2DRotate(Tinv,-angle);
-			Tinv = Matrix.transform2DScale(Tinv,rmsX/scaler,rmsY/scaler);
+			Tinv = Matrix.transform2DScalePoints(Tinv,rmsX/scaler,rmsY/scaler);
 			Tinv = Matrix.transform2DRotate(Tinv,angle);
 			Tinv = Matrix.transform2DTranslate(Tinv,cenX,cenY);
 		// Tinv = Matrix.inverse(T);
@@ -2304,9 +2304,9 @@ R3D.TFTFromUnnormalized = function(pointsA,pointsB,pointsC, skipNonlinear){
 	return T;
 }
 R3D.normalizeTFTfromSizes = function(T, sizeA, sizeB, sizeC){
-	var H1 = Matrix.transform2DScale(Matrix.transform2DIdentity(),1.0/sizeA.x,1.0/sizeA.y);
-	var H2 = Matrix.transform2DScale(Matrix.transform2DIdentity(),1.0/sizeB.x,1.0/sizeB.y);
-	var H3 = Matrix.transform2DScale(Matrix.transform2DIdentity(),1.0/sizeC.x,1.0/sizeC.y);
+	var H1 = Matrix.transform2DScalePoints(Matrix.transform2DIdentity(),1.0/sizeA.x,1.0/sizeA.y);
+	var H2 = Matrix.transform2DScalePoints(Matrix.transform2DIdentity(),1.0/sizeB.x,1.0/sizeB.y);
+	var H3 = Matrix.transform2DScalePoints(Matrix.transform2DIdentity(),1.0/sizeC.x,1.0/sizeC.y);
 	var H1i = Matrix.inverse(H1);
 	var H2i = Matrix.inverse(H2);
 	var H3i = Matrix.inverse(H3);
@@ -2315,9 +2315,9 @@ R3D.normalizeTFTfromSizes = function(T, sizeA, sizeB, sizeC){
 	return T;
 }
 R3D.denormalizeTFTtoSizes = function(T, sizeA, sizeB, sizeC){
-	var H1 = Matrix.transform2DScale(Matrix.transform2DIdentity(),1.0/sizeA.x,1.0/sizeA.y);
-	var H2 = Matrix.transform2DScale(Matrix.transform2DIdentity(),1.0/sizeB.x,1.0/sizeB.y);
-	var H3 = Matrix.transform2DScale(Matrix.transform2DIdentity(),1.0/sizeC.x,1.0/sizeC.y);
+	var H1 = Matrix.transform2DScalePoints(Matrix.transform2DIdentity(),1.0/sizeA.x,1.0/sizeA.y);
+	var H2 = Matrix.transform2DScalePoints(Matrix.transform2DIdentity(),1.0/sizeB.x,1.0/sizeB.y);
+	var H3 = Matrix.transform2DScalePoints(Matrix.transform2DIdentity(),1.0/sizeC.x,1.0/sizeC.y);
 	var H1i = Matrix.inverse(H1);
 	var H2i = Matrix.inverse(H2);
 	var H3i = Matrix.inverse(H3);
@@ -3722,7 +3722,7 @@ R3D.rectificationRowAssignment = function(rectificationA, rectificationB, rowPai
 // 		}
 // 		var centerB = new V2D(sizeBWidth*0.5,rowB);
 // 		var matrix = new Matrix(3,3).identity();
-// 			matrix = Matrix.transform2DScale(matrix,compareScale,compareScale);
+// 			matrix = Matrix.transform2DScalePoints(matrix,compareScale,compareScale);
 // 		var haystack = imageB.extractRectFromFloatImage(centerB.x,centerB.y,1.0,null, haystackWidth,compareSize, matrix);
 // if(show){
 // var iii = haystack;
@@ -3740,7 +3740,7 @@ R3D.rectificationRowAssignment = function(rectificationA, rectificationB, rowPai
 // 			// slide in disparity range
 // 			var centerA = new V2D(cellSize*(i+0.5),cellSize*(j+0.5));
 // 			var matrix = new Matrix(3,3).identity();
-// 				matrix = Matrix.transform2DScale(matrix,compareScale,compareScale);
+// 				matrix = Matrix.transform2DScalePoints(matrix,compareScale,compareScale);
 // 			var needle = imageA.extractRectFromFloatImage(centerA.x,centerA.y,1.0,null, compareSize,compareSize, matrix);
 
 // 			var scores = R3D.stereoNeedleHaystack(needle, haystack);
@@ -4344,10 +4344,10 @@ var count = 0;
 			var scaleY = info["scaleY"];
 // is this not the same as raw value? ^ v ?
 			var affine = new Matrix(3,3).identity();
-				// affine = Matrix.transform2DScale(affine, scaleA);
-				affine = Matrix.transform2DScale(affine, scaleX, scaleY);
+				// affine = Matrix.transform2DScalePoints(affine, scaleA);
+				affine = Matrix.transform2DScalePoints(affine, scaleX, scaleY);
 				affine = Matrix.transform2DRotate(affine, angleA);
-				// affine = Matrix.transform2DScale(affine, scaleA);
+				// affine = Matrix.transform2DScalePoints(affine, scaleA);
 				//affine = Matrix.transform2DTranslate(affine, transA.x,transA.y);
 			info["affine"] = affine;
 
@@ -8201,7 +8201,7 @@ R3D.homographyFromPoints = function(pointsA,pointsB, angle){
 		//H = new Matrix(3,3).fromArray([scale*c, -scale*s, tx,  scale*s, scale*c, ty,  0, 0, 1]);
 		H = new Matrix(3,3).identity();
 		H = Matrix.transform2DTranslate(H, -pA0.x,-pA0.y);
-		H = Matrix.transform2DScale(H, scale);
+		H = Matrix.transform2DScalePoints(H, scale);
 		H = Matrix.transform2DRotate(H, angle);
 		H = Matrix.transform2DTranslate(H, pA0.x,pA0.y);
 		H = Matrix.transform2DTranslate(H, tx,ty);
@@ -8261,9 +8261,9 @@ R3D.affineMatrixExact = function(pointsA,pointsB, m){ // first 3 points of A & B
 		m = Matrix.transform2DTranslate(m,aTX,aTY);
 		m = Matrix.transform2DRotate(m,aRo);
 		m = Matrix.transform2DSkewX(m,aSK);
-		m = Matrix.transform2DScale(m,aSX,aSY);
+		m = Matrix.transform2DScalePoints(m,aSX,aSY);
 		// reverse B
-		m = Matrix.transform2DScale(m,1.0/bSX,1.0/bSY);
+		m = Matrix.transform2DScalePoints(m,1.0/bSX,1.0/bSY);
 		m = Matrix.transform2DSkewX(m,-bSK);
 		m = Matrix.transform2DRotate(m,-bRo);
 		m = Matrix.transform2DTranslate(m,-bTX,-bTY);
@@ -10023,7 +10023,7 @@ R3D.calculateScaleCornerFeatures_X = function(imageMatrix, maxCount){
 		scales[i] = scale;
 		var matrix = new Matrix(3,3);
 		matrix.identity();
-		matrix = Matrix.transform2DScale(matrix,scale);
+		matrix = Matrix.transform2DScalePoints(matrix,scale);
 		matrixes[i] = matrix;
 	}
 	var compareSize = 9; // 7-11
@@ -10170,7 +10170,7 @@ var MAT = new Matrix2D();
 				matrix = new Matrix(3,3);
 					matrix.identity();
 					matrix = Matrix.transform2DRotate(matrix,-covarianceAngle);
-					matrix = Matrix.transform2DScale(matrix,1.0/covScaleRoot, covScaleRoot); // undo scaling
+					matrix = Matrix.transform2DScalePoints(matrix,1.0/covScaleRoot, covScaleRoot); // undo scaling
 					matrix = Matrix.transform2DRotate(matrix,covarianceAngle);
 				var gry = ImageMat.extractRectFromFloatImage(point.x,point.y,affineScale/sca,2.0,affineSize,affineSize, imageGray,imageWidth,imageHeight, matrix);
 				var moment = ImageMat.calculateMoment(gry, affineSize, affineSize, affineMean, affineMask);
@@ -15976,7 +15976,7 @@ R3D.stationaryFeaturesFromAngle = function(image, corners, angle, size, scale, d
 			ang += a;
 		}
 		var matrix = new Matrix(3,3).identity();
-			matrix = Matrix.transform2DScale(matrix, scale);
+			matrix = Matrix.transform2DScalePoints(matrix, scale);
 			matrix = Matrix.transform2DRotate(matrix, ang);
 		var vectorSAD = R3D.SADVectorCircular(image, point,size,matrix);
 		var vectorSIFT = R3D.SIFTVectorCircular(image, point,size,matrix, true);
@@ -16066,7 +16066,7 @@ console.log(i+": "+scale);
 		var size = new V2D(Math.round(scale*wid),Math.round(scale*hei));
 //		console.log(scale+" "+center+" "+size);
 		var matrix = new Matrix(3,3).identity();
-			matrix = Matrix.transform2DScale(matrix,scale,scale);
+			matrix = Matrix.transform2DScalePoints(matrix,scale,scale);
 
 		var imageScaled = imageSource.extractRectFromFloatImage(center.x,center.y,1.0,null, size.x,size.y, matrix);
 		var entropyImageScaled = ImageMat.entropyInWindow( imageScaled.red(), imageScaled.width(), imageScaled.height(), entropySize, entropySize).value;
@@ -16078,7 +16078,7 @@ console.log(i+": "+scale);
 	GLOBALSTAGE.addChild(d);
 */
 			matrix = new Matrix(3,3).identity();
-			matrix = Matrix.transform2DScale(matrix,1.0/scale,1.0/scale);
+			matrix = Matrix.transform2DScalePoints(matrix,1.0/scale,1.0/scale);
 		var entropyImageNormal = ImageMat.extractRectFromFloatImage(center.x*scale,center.y*scale,1.0,null,wid,hei, entropyImageScaled,size.x,size.y, matrix);
 
 /*
@@ -16208,7 +16208,7 @@ R3D.optimumScaleForPoint = function(imageSource, point, maskOutCenter, size){
 		scale = Math.pow(2, power);
 		// ...
 		var matrix = new Matrix(3,3).identity();
-			matrix = Matrix.transform2DScale(matrix,scale,scale);
+			matrix = Matrix.transform2DScalePoints(matrix,scale,scale);
 		// var featureBlur = imageMatrixOriginal.extractRectFromFloatImage(testPoint.x,testPoint.y,1.0,1.6, testSize.x,testSize.y, testMatrix);
 		// BLUR
 		//var image = imageSource.extractRectFromFloatImage(point.x,point.y,1.0, null, size.x,size.y, matrix);
@@ -16451,7 +16451,7 @@ R3D.optimumScaleForPointEntropy = function(imageSource, point, maskOutCenter, si
 	// 	var power = minScalePower + (maxScalePower - minScalePower)*p;
 	// 	scale = Math.pow(2, power);
 		var matrix = new Matrix(3,3).identity();
-			matrix = Matrix.transform2DScale(matrix,scale,scale);
+			matrix = Matrix.transform2DScalePoints(matrix,scale,scale);
 		// var featureBlur = imageMatrixOriginal.extractRectFromFloatImage(testPoint.x,testPoint.y,1.0,1.6, testSize.x,testSize.y, testMatrix);
 		// BLUR
 		//var image = imageSource.extractRectFromFloatImage(point.x,point.y,1.0, null, size.x,size.y, matrix);
@@ -19552,7 +19552,7 @@ R3D._SIFTchannel = function(source,width,height, insideSet, location, scale, ang
 	// extract image at new orientation
 	var matrix = new Matrix(3,3).identity();
 		matrix = Matrix.transform2DTranslate(matrix, (-location.x) , (-location.y) );
-		matrix = Matrix.transform2DScale(matrix, scale);
+		matrix = Matrix.transform2DScalePoints(matrix, scale);
 		matrix = Matrix.transform2DRotate(matrix, -angle);
 		matrix = Matrix.transform2DTranslate(matrix, (outsideSet*0.5) , (outsideSet*0.5) );
 		matrix = Matrix.inverse(matrix);
@@ -19969,14 +19969,14 @@ size = size / zoom; // zoom in to features
 		var scaleDouble = size/checkDoubleSize;
 			matrix.identity();
 			matrix = Matrix.transform2DTranslate(matrix, -location.x , -location.y );
-			matrix = Matrix.transform2DScale(matrix, scaleDouble);
+			matrix = Matrix.transform2DScalePoints(matrix, scaleDouble);
 			matrix = Matrix.transform2DTranslate(matrix, (checkDoubleSize*0.5) , (checkDoubleSize*0.5) );
 			matrix = Matrix.inverse(matrix);
 		var doubleImage = ImageMat.extractRectFromMatrix(imageSource, imageWidth,imageHeight, checkDoubleSize,checkDoubleSize, matrix);
 		var doubleBlurred = ImageMat.getBlurredImage(doubleImage, checkDoubleSize,checkDoubleSize, 1.0); // TODO:  sigma matters?
 			matrix.identity();
 			matrix = Matrix.transform2DTranslate(matrix, -checkDoubleSize*0.5, -checkDoubleSize*0.5);
-			matrix = Matrix.transform2DScale(matrix, checkSize/checkDoubleSize);
+			matrix = Matrix.transform2DScalePoints(matrix, checkSize/checkDoubleSize);
 			matrix = Matrix.transform2DTranslate(matrix, (checkSize*0.5) , (checkSize*0.5) );
 			matrix = Matrix.inverse(matrix);
 		var singleImage = ImageMat.extractRectFromMatrix(doubleBlurred, checkDoubleSize,checkDoubleSize, checkSize,checkSize, matrix);
@@ -25326,13 +25326,13 @@ var affineRatio = 1.0;
 				var matrix = new Matrix(3,3).identity();
 // // AFFINE - UNDO - FWD
 	// matrix = Matrix.transform2DRotate(matrix, -affineAngle);
-	// matrix = Matrix.transform2DScale(matrix, 1.0/affineRatio,affineRatio);
+	// matrix = Matrix.transform2DScalePoints(matrix, 1.0/affineRatio,affineRatio);
 	// matrix = Matrix.transform2DRotate(matrix, affineAngle);
 				// ANGLE SET
 					matrix = Matrix.transform2DRotate(matrix, -pointAngle);
 // AFFINE - UNDO - BAK
 matrix = Matrix.transform2DRotate(matrix, affineAngle);
-matrix = Matrix.transform2DScale(matrix, 1.0/affineRatio,affineRatio);
+matrix = Matrix.transform2DScalePoints(matrix, 1.0/affineRatio,affineRatio);
 matrix = Matrix.transform2DRotate(matrix, -affineAngle);
 				var vectorSAD = R3D.SADVectorCircular(imageMatrix, location,diaNeighborhood,matrix);
 				var vectorSIFT = R3D.SIFTVectorCircular(imageMatrix, location,diaNeighborhood,matrix, true);
@@ -25932,7 +25932,7 @@ var sizeLarge = 50;
 var scale = 2.0 * peak / sizeLarge;
 var matrix = new Matrix(3,3).identity();
 	matrix = Matrix.transform2DTranslate(matrix, -sizeLarge*0.5, -sizeLarge*0.5);
-	matrix = Matrix.transform2DScale(matrix, scale);
+	matrix = Matrix.transform2DScalePoints(matrix, scale);
 	matrix = Matrix.transform2DTranslate(matrix, point.x, point.y );
 var imageLarge = imageMatrix.extractRectFromMatrix(sizeLarge,sizeLarge, matrix);
 var image = imageLarge;
@@ -26006,14 +26006,14 @@ var sizes = [];
 //				console.log(scale)
 				var matrix = new Matrix(3,3).identity();
 					matrix = Matrix.transform2DTranslate(matrix, -sizeLarge*0.5, -sizeLarge*0.5);
-					matrix = Matrix.transform2DScale(matrix, scale);
+					matrix = Matrix.transform2DScalePoints(matrix, scale);
 					matrix = Matrix.transform2DTranslate(matrix, point.x, point.y );
 				var imageLarge = imageMatrix.extractRectFromMatrix(sizeLarge,sizeLarge, matrix);
 				//imageLarge = imageLarge.getBlurredImage(1.0);
 				imageLarge = imageLarge.getBlurredImage(0.5);
 				var matrix = new Matrix(3,3).identity();
 					matrix = Matrix.transform2DTranslate(matrix, -sizeSmall*0.5, -sizeSmall*0.5);
-					matrix = Matrix.transform2DScale(matrix, sizeLarge/sizeSmall);
+					matrix = Matrix.transform2DScalePoints(matrix, sizeLarge/sizeSmall);
 					matrix = Matrix.transform2DTranslate(matrix, sizeLarge*0.5, sizeLarge*0.5 );
 				var imageSmall = imageLarge.extractRectFromMatrix(sizeSmall,sizeSmall, matrix);
 				var gry = imageSmall.gry();
@@ -26311,14 +26311,14 @@ var sizes = [];
 //				console.log(scale)
 			var matrix = new Matrix(3,3).identity();
 				matrix = Matrix.transform2DTranslate(matrix, -sizeLarge*0.5, -sizeLarge*0.5);
-				matrix = Matrix.transform2DScale(matrix, scale);
+				matrix = Matrix.transform2DScalePoints(matrix, scale);
 				matrix = Matrix.transform2DTranslate(matrix, point.x, point.y );
 			var imageLarge = imageMatrix.extractRectFromMatrix(sizeLarge,sizeLarge, matrix);
 			//imageLarge = imageLarge.getBlurredImage(1.0);
 			imageLarge = imageLarge.getBlurredImage(0.5);
 			var matrix = new Matrix(3,3).identity();
 				matrix = Matrix.transform2DTranslate(matrix, -sizeSmall*0.5, -sizeSmall*0.5);
-				matrix = Matrix.transform2DScale(matrix, sizeLarge/sizeSmall);
+				matrix = Matrix.transform2DScalePoints(matrix, sizeLarge/sizeSmall);
 				matrix = Matrix.transform2DTranslate(matrix, sizeLarge*0.5, sizeLarge*0.5 );
 			var imageSmall = imageLarge.extractRectFromMatrix(sizeSmall,sizeSmall, matrix);
 			var gry = imageSmall.gry();
@@ -26399,7 +26399,7 @@ sizes.unshift(0);
 			var middle = Math.floor(sizeLarge*0.5);
 			var matrix = new Matrix(3,3).identity();
 				matrix = Matrix.transform2DTranslate(matrix, -sizeLarge*0.5, -sizeLarge*0.5);
-				matrix = Matrix.transform2DScale(matrix, 0.5 * R/sizeLarge);
+				matrix = Matrix.transform2DScalePoints(matrix, 0.5 * R/sizeLarge);
 				matrix = Matrix.transform2DTranslate(matrix, point.x, point.y );
 			var imageLarge = imageMatrix.extractRectFromMatrix(sizeLarge,sizeLarge, matrix);
 				imageLarge = imageLarge.getBlurredImage(2.0); // TODO: only gray
@@ -26414,7 +26414,7 @@ sizes.unshift(0);
 			var sizeLarge = 11;
 			var matrix = new Matrix(3,3).identity();
 				matrix = Matrix.transform2DTranslate(matrix, -sizeLarge*0.5, -sizeLarge*0.5);
-				matrix = Matrix.transform2DScale(matrix, 2.0*R/sizeLarge);
+				matrix = Matrix.transform2DScalePoints(matrix, 2.0*R/sizeLarge);
 				matrix = Matrix.transform2DTranslate(matrix, point.x, point.y);
 			var imageLarge = imageMatrix.extractRectFromMatrix(sizeLarge,sizeLarge, matrix);
 			var gry = imageLarge.gry();
@@ -26446,7 +26446,7 @@ sizes.unshift(0);
 			var sizeLarge = 11;
 			var matrix = new Matrix(3,3).identity();
 				matrix = Matrix.transform2DTranslate(matrix, -sizeLarge*0.5, -sizeLarge*0.5);
-				matrix = Matrix.transform2DScale(matrix, R/sizeLarge);
+				matrix = Matrix.transform2DScalePoints(matrix, R/sizeLarge);
 				matrix = Matrix.transform2DTranslate(matrix, point.x, point.y );
 			var imageLarge = imageMatrix.extractRectFromMatrix(sizeLarge,sizeLarge, matrix);
 			var gry = imageLarge.gry();
@@ -27281,11 +27281,11 @@ R3D._refinementGD = function(args, x, isUpdate){
 
 	var matrix = new Matrix(3,3).identity();
 		matrix = Matrix.transform2DTranslate(matrix, -compareSize*0.5, -compareSize*0.5);
-			//matrix = Matrix.transform2DScale(matrix, scaleA/compareSize);
-			//matrix = Matrix.transform2DScale(matrix, compareSize/scaleA);
-			matrix = Matrix.transform2DScale(matrix, scaleA);
+			//matrix = Matrix.transform2DScalePoints(matrix, scaleA/compareSize);
+			//matrix = Matrix.transform2DScalePoints(matrix, compareSize/scaleA);
+			matrix = Matrix.transform2DScalePoints(matrix, scaleA);
 			matrix = Matrix.transform2DRotate(matrix, -angleA);
-			matrix = Matrix.transform2DScale(matrix, scaleAToB);
+			matrix = Matrix.transform2DScalePoints(matrix, scaleAToB);
 			matrix = Matrix.transform2DRotate(matrix, angleAToB);
 			if(!ignoreSkew){
 				matrix = Matrix.transform2DSkewX(matrix, skewXAToB);
@@ -27297,9 +27297,9 @@ R3D._refinementGD = function(args, x, isUpdate){
 
 	var matrix = new Matrix(3,3).identity();
 		matrix = Matrix.transform2DTranslate(matrix, -compareSize*0.5, -compareSize*0.5);
-		//matrix = Matrix.transform2DScale(matrix, scaleB/compareSize);
-		//matrix = Matrix.transform2DScale(matrix, compareSize/scaleB);
-		matrix = Matrix.transform2DScale(matrix, scaleB);
+		//matrix = Matrix.transform2DScalePoints(matrix, scaleB/compareSize);
+		//matrix = Matrix.transform2DScalePoints(matrix, compareSize/scaleB);
+		matrix = Matrix.transform2DScalePoints(matrix, scaleB);
 		matrix = Matrix.transform2DRotate(matrix, -angleB);
 		matrix = Matrix.transform2DTranslate(matrix, pointB.x, pointB.y );
 	var needleB = imageB.extractRectFromMatrix(compareSize,compareSize, matrix);
@@ -27332,12 +27332,12 @@ var compareSize = R3D.sadBinOctantEdgeSize();
 		// find optimal location of image in other image
 		// TODO: ASYMM SCALING
 		matrixA.identity();
-			matrixA = Matrix.transform2DScale(matrixA,compareSize/pointA.z);
+			matrixA = Matrix.transform2DScalePoints(matrixA,compareSize/pointA.z);
 			matrixA = Matrix.transform2DRotate(matrixA,-pointA.t);
 		var needleA = imageA.extractRectFromFloatImage(pointA.x,pointA.y,1.0,null,compareSize,compareSize, matrixA);
 		var haystackA = imageA.extractRectFromFloatImage(pointA.x,pointA.y,1.0,null,neighborhoodSize,neighborhoodSize, matrixA);
 		matrixB.identity();
-			matrixB = Matrix.transform2DScale(matrixB,compareSize/pointB.z);
+			matrixB = Matrix.transform2DScalePoints(matrixB,compareSize/pointB.z);
 			matrixB = Matrix.transform2DRotate(matrixB,-pointB.t);
 		var needleB = imageB.extractRectFromFloatImage(pointB.x,pointB.y,1.0,null,compareSize,compareSize, matrixB);
 		var haystackB = imageB.extractRectFromFloatImage(pointB.x,pointB.y,1.0,null,neighborhoodSize,neighborhoodSize, matrixB);
@@ -27442,19 +27442,19 @@ console.log(i+" :  append: "+Code.degrees(relativeAngleAtoB)+" deg  & "+relative
 
 			// FOR SHOW
 			matrixA.identity();
-				matrixA = Matrix.transform2DScale(matrixA,compareSize/pointA.z);
+				matrixA = Matrix.transform2DScalePoints(matrixA,compareSize/pointA.z);
 				matrixA = Matrix.transform2DRotate(matrixA,-pointA.t);
 				// appended changes
-				matrixA = Matrix.transform2DScale(matrixA,relativeScaleAtoB);
+				matrixA = Matrix.transform2DScalePoints(matrixA,relativeScaleAtoB);
 				matrixA = Matrix.transform2DRotate(matrixA,relativeAngleAtoB);
 				matrixA = Matrix.transform2DRotate(matrixA,-relativeAsymmAngleAtoB);
-				matrixA = Matrix.transform2DScale(matrixA,relativeAsymmScaleAtoB);
+				matrixA = Matrix.transform2DScalePoints(matrixA,relativeAsymmScaleAtoB);
 				matrixA = Matrix.transform2DRotate(matrixA,relativeAsymmAngleAtoB);
 				// inverse to 0
-				matrixA = Matrix.transform2DScale(matrixA,pointB.z/compareSize);
+				matrixA = Matrix.transform2DScalePoints(matrixA,pointB.z/compareSize);
 				matrixA = Matrix.transform2DRotate(matrixA,pointB.t);
 			matrixB.identity();
-				// matrixB = Matrix.transform2DScale(matrixB,compareSize/pointB.z);
+				// matrixB = Matrix.transform2DScalePoints(matrixB,compareSize/pointB.z);
 				// matrixB = Matrix.transform2DRotate(matrixB,-pointB.t);
 
 		var needleA = imageA.extractRectFromFloatImage(pointA.x,pointA.y,1.0,null,compareSize,compareSize, matrixA);
@@ -28329,9 +28329,9 @@ R3D.bestTransformationFromPoints = function(imageA,pointA, imageB,pointB, cellSi
 					sigma = null;
 					matrix = new Matrix(3,3).identity();
 					matrix = Matrix.transform2DRotate(matrix,rotation);
-					matrix = Matrix.transform2DScale(matrix,scale);
+					matrix = Matrix.transform2DScalePoints(matrix,scale);
 					matrix = Matrix.transform2DRotate(matrix,-asymmAngle);
-					matrix = Matrix.transform2DScale(matrix,asymmScale,1.0);
+					matrix = Matrix.transform2DScalePoints(matrix,asymmScale,1.0);
 					matrix = Matrix.transform2DRotate(matrix,asymmAngle);
 					bRed = ImageMat.extractRectFromFloatImage(pointB.x,pointB.y,1.0*calculateScale,sigma,windowSize,windowSize, imageBRed,imageBWidth,imageBHeight, matrix);
 					bGrn = ImageMat.extractRectFromFloatImage(pointB.x,pointB.y,1.0*calculateScale,sigma,windowSize,windowSize, imageBGrn,imageBWidth,imageBHeight, matrix);
@@ -28393,7 +28393,7 @@ angles = Code.lineSpace(-15,5,15);
 			var angle = angles[a];
 			angle = Code.radians(angle);
 			matrix.identity();
-			matrix = Matrix.transform2DScale(matrix,scale);
+			matrix = Matrix.transform2DScalePoints(matrix,scale);
 			matrix = Matrix.transform2DRotate(matrix,angle);
 			var needleB = imageB.extractRectFromFloatImage(locationB.x+x,locationB.y+y,cellScale,null,compareSize,compareSize, matrix);
 			//var score = R3D.searchNeedleHaystackImageFlatSADBin(needleA,needleB);
@@ -28445,16 +28445,16 @@ R3D.transformFromSiftRefine = function(imageMatrixA, imageMatrixB, sA,sB, refine
 
 			// FOR SHOW
 			matrixA.identity();
-				matrixA = Matrix.transform2DScale(matrixA,compareSize/pointA.z);
+				matrixA = Matrix.transform2DScalePoints(matrixA,compareSize/pointA.z);
 				matrixA = Matrix.transform2DRotate(matrixA,-pointA.t);
 				// appended changes
-				matrixA = Matrix.transform2DScale(matrixA,relativeScaleAtoB);
+				matrixA = Matrix.transform2DScalePoints(matrixA,relativeScaleAtoB);
 				matrixA = Matrix.transform2DRotate(matrixA,relativeAngleAtoB);
 				matrixA = Matrix.transform2DRotate(matrixA,-relativeAsymmAngleAtoB);
-				matrixA = Matrix.transform2DScale(matrixA,relativeAsymmScaleAtoB);
+				matrixA = Matrix.transform2DScalePoints(matrixA,relativeAsymmScaleAtoB);
 				matrixA = Matrix.transform2DRotate(matrixA,relativeAsymmAngleAtoB);
 				// inverse to 0
-				matrixA = Matrix.transform2DScale(matrixA,pointB.z/compareSize);
+				matrixA = Matrix.transform2DScalePoints(matrixA,pointB.z/compareSize);
 				matrixA = Matrix.transform2DRotate(matrixA,pointB.t);
 			matrixB.identity();
 
@@ -28463,21 +28463,21 @@ R3D.transformFromSiftRefine = function(imageMatrixA, imageMatrixB, sA,sB, refine
 // TODO: INVERSE ???
 	var matrix = new Matrix(3,3).identity();
 	// TO A
-	matrix = Matrix.transform2DScale(matrix, 1.0/scaleA);
+	matrix = Matrix.transform2DScalePoints(matrix, 1.0/scaleA);
 	matrix = Matrix.transform2DRotate(matrix, -angleA);
 	// BEST COMPARE
-	matrix = Matrix.transform2DScale(matrix, 1.0/scaleAToB);
+	matrix = Matrix.transform2DScalePoints(matrix, 1.0/scaleAToB);
 	matrix = Matrix.transform2DRotate(matrix, -angleAToB);
 	matrix = Matrix.transform2DSkewX(matrix, -skewXAToB);
 	matrix = Matrix.transform2DSkewY(matrix, -skewYAToB);
 	matrix = Matrix.transform2DTranslate(matrix, -transAToB.x, -transAToB.y);
-	// matrix = Matrix.transform2DScale(matrix, scaleAToB);
+	// matrix = Matrix.transform2DScalePoints(matrix, scaleAToB);
 	// matrix = Matrix.transform2DRotate(matrix, angleAToB);
 	// matrix = Matrix.transform2DSkewX(matrix, skewXAToB);
 	// matrix = Matrix.transform2DSkewY(matrix, skewYAToB);
 	// matrix = Matrix.transform2DTranslate(matrix, transAToB.x, transAToB.y);
 	// UNDO B
-	matrix = Matrix.transform2DScale(matrix, scaleB);
+	matrix = Matrix.transform2DScalePoints(matrix, scaleB);
 	matrix = Matrix.transform2DRotate(matrix, angleB);
 	//matrix = Matrix.inverse(matrix);
 	return matrix;
@@ -28576,7 +28576,7 @@ R3D.outputMatchPoints = function(imageMatrixA, imageMatrixB, F, matches, yaml){
 
 	if(F){
 		yaml.writeObjectStart("F");
-			var Fnorm = R3D.fundamentalNormalize(F, Matrix.transform2DScale(Matrix.transform2DIdentity(),1.0/widA,1.0/heiA), Matrix.transform2DScale(Matrix.transform2DIdentity(),1.0/widB,1.0/heiB));
+			var Fnorm = R3D.fundamentalNormalize(F, Matrix.transform2DScalePoints(Matrix.transform2DIdentity(),1.0/widA,1.0/heiA), Matrix.transform2DScalePoints(Matrix.transform2DIdentity(),1.0/widB,1.0/heiB));
 			Fnorm.toYAML(yaml);
 		yaml.writeObjectEnd();
 	}
@@ -28662,7 +28662,7 @@ R3D.inputMatchPoints = function(yaml){
 
 		var matrix = new Matrix(3,3);
 		matrix.identity();
-		matrix = Matrix.transform2DScale(matrix, toS/frS);
+		matrix = Matrix.transform2DScalePoints(matrix, toS/frS);
 		matrix = Matrix.transform2DRotate(matrix, toA-frA);
 		//matrix = Matrix.transform2DTranslate(matrix, toX-frX,toY-frY);
 
@@ -28850,7 +28850,7 @@ R3D.inputDensePoints = function(yaml){
 		var angle = match["angle"];
 		var matrix = new Matrix(3,3);
 		matrix.identity();
-		matrix = Matrix.transform2DScale(matrix,scale);
+		matrix = Matrix.transform2DScalePoints(matrix,scale);
 		matrix = Matrix.transform2DRotate(matrix,angle);
 		transforms.push(matrix);
 		var pointA = new V2D();
@@ -29090,7 +29090,7 @@ R3D.imageFromParameters = function(imageMatrix, point,scale,angle,skewX,skewY, s
 	sizeHeight = sizeHeight!==undefined ? sizeHeight : 11;
 	var matrix = new Matrix(3,3).identity();
 		matrix = Matrix.transform2DTranslate(matrix, -sizeWidth*0.5, -sizeHeight*0.5);
-			matrix = Matrix.transform2DScale(matrix, scale);
+			matrix = Matrix.transform2DScalePoints(matrix, scale);
 			matrix = Matrix.transform2DRotate(matrix, angle);
 			matrix = Matrix.transform2DSkewX(matrix, skewX);
 			matrix = Matrix.transform2DSkewY(matrix, skewY);
@@ -29362,7 +29362,7 @@ R3D.searchNeedleHaystackImageFlatSADBin = function(needle, haystack){ // needle 
 R3D.matrixTransform2D = function(locationA,locationB, sizeA,sizeB, angleA,angleB){
 	var matrix = new Matrix(3,3).identity();
 	if(sizeA && sizeB){
-		matrix = Matrix.transform2DScale(matrix,sizeB/sizeA);
+		matrix = Matrix.transform2DScalePoints(matrix,sizeB/sizeA);
 	}
 	if(angleA && angleB){
 		matrix = Matrix.transform2DRotate(matrix,angleB-angleA);
@@ -29837,11 +29837,11 @@ R3D.refineFromFeatures = function(pointA,sizeA,angleA, pointB,sizeB,angleB, imag
 
 	var matrix = new Matrix(3,3).identity();
 		matrix = Matrix.transform2DTranslate(matrix, -compareSize*0.5, -compareSize*0.5);
-		//matrix = Matrix.transform2DScale(matrix, scaleA*compareSize);
-		//matrix = Matrix.transform2DScale(matrix, compareSize/scaleA);
-		matrix = Matrix.transform2DScale(matrix, scaleA);
+		//matrix = Matrix.transform2DScalePoints(matrix, scaleA*compareSize);
+		//matrix = Matrix.transform2DScalePoints(matrix, compareSize/scaleA);
+		matrix = Matrix.transform2DScalePoints(matrix, scaleA);
 		matrix = Matrix.transform2DRotate(matrix, -angleA);
-			matrix = Matrix.transform2DScale(matrix, scaleAToB);
+			matrix = Matrix.transform2DScalePoints(matrix, scaleAToB);
 			matrix = Matrix.transform2DRotate(matrix, angleAToB);
 			matrix = Matrix.transform2DSkewX(matrix, skewXAToB);
 			matrix = Matrix.transform2DSkewY(matrix, skewYAToB);
@@ -29851,9 +29851,9 @@ R3D.refineFromFeatures = function(pointA,sizeA,angleA, pointB,sizeB,angleB, imag
 
 	var matrix = new Matrix(3,3).identity();
 		matrix = Matrix.transform2DTranslate(matrix, -compareSize*0.5, -compareSize*0.5);
-		//matrix = Matrix.transform2DScale(matrix, scaleB*compareSize);
-		//matrix = Matrix.transform2DScale(matrix, compareSize/scaleB);
-		matrix = Matrix.transform2DScale(matrix, scaleB);
+		//matrix = Matrix.transform2DScalePoints(matrix, scaleB*compareSize);
+		//matrix = Matrix.transform2DScalePoints(matrix, compareSize/scaleB);
+		matrix = Matrix.transform2DScalePoints(matrix, scaleB);
 		matrix = Matrix.transform2DRotate(matrix, -angleB);
 		matrix = Matrix.transform2DTranslate(matrix, pointB.x, pointB.y);
 	var imageB = imageMatrixB.extractRectFromMatrix(compareSize,compareSize, matrix);
@@ -29895,7 +29895,7 @@ R3D.filterFeaturesBasedOn = function(featuresA, imageMatrixA, filterType, percen
 		var overallScale = 0.5 * (compareSize / z);
 		var matrix = new Matrix(3,3).identity();
 			matrix = Matrix.transform2DTranslate(matrix, -x , -y );
-			matrix = Matrix.transform2DScale(matrix, overallScale);
+			matrix = Matrix.transform2DScalePoints(matrix, overallScale);
 			matrix = Matrix.inverse(matrix);
 		var area = imageMatrixA.extractRectFromMatrix(compareSize,compareSize, matrix);
 		var areaGry = area.gry();
@@ -29949,7 +29949,7 @@ R3D.filterFeaturesBasedOn = function(featuresA, imageMatrixA, filterType, percen
 		var halfSize = displaySize*0.5;
 		var matrix = new Matrix(3,3).identity();
 			matrix = Matrix.transform2DTranslate(matrix, (-location.x) , (-location.y) );
-			matrix = Matrix.transform2DScale(matrix, overallScale);
+			matrix = Matrix.transform2DScalePoints(matrix, overallScale);
 			matrix = Matrix.transform2DRotate(matrix, -angle);
 			matrix = Matrix.transform2DTranslate(matrix, halfSize, halfSize);
 			matrix = Matrix.inverse(matrix);
@@ -41108,7 +41108,7 @@ R3D.fundamentalNormalize = function(F, matrixA, matrixB){
 	return fNorm;
 }
 R3D.fundamentalNormalizeImageSizes = function(F, widthA,heightA, widthB,heightB){
-	var Fnorm = R3D.fundamentalNormalize(F, Matrix.transform2DScale(Matrix.transform2DIdentity(),1.0/widthA,1.0/heightA), Matrix.transform2DScale(Matrix.transform2DIdentity(),1.0/widthB,1.0/heightB));
+	var Fnorm = R3D.fundamentalNormalize(F, Matrix.transform2DScalePoints(Matrix.transform2DIdentity(),1.0/widthA,1.0/heightA), Matrix.transform2DScalePoints(Matrix.transform2DIdentity(),1.0/widthB,1.0/heightB));
 	return Fnorm;
 }
 
@@ -41171,9 +41171,9 @@ R3D.triplePointMatches = function(matchesAB, matchesAC, matchesBC, imageMatrixA,
 	var Fab = new Matrix().loadFromObject(matchesAB["F"]);
 	var Fac = new Matrix().loadFromObject(matchesAC["F"]);
 	var Fbc = new Matrix().loadFromObject(matchesBC["F"]);
-	var FabNorm = R3D.fundamentalNormalize(Fab,  Matrix.transform2DScale(Matrix.transform2DIdentity(),sizeAWidth,sizeAHeight),  Matrix.transform2DScale(Matrix.transform2DIdentity(),sizeBWidth,sizeBHeight));
-	var FacNorm = R3D.fundamentalNormalize(Fab,  Matrix.transform2DScale(Matrix.transform2DIdentity(),sizeAWidth,sizeAHeight),  Matrix.transform2DScale(Matrix.transform2DIdentity(),sizeCWidth,sizeCHeight));
-	var FbcNorm = R3D.fundamentalNormalize(Fab,  Matrix.transform2DScale(Matrix.transform2DIdentity(),sizeBWidth,sizeBHeight),  Matrix.transform2DScale(Matrix.transform2DIdentity(),sizeCWidth,sizeCHeight));
+	var FabNorm = R3D.fundamentalNormalize(Fab,  Matrix.transform2DScalePoints(Matrix.transform2DIdentity(),sizeAWidth,sizeAHeight),  Matrix.transform2DScalePoints(Matrix.transform2DIdentity(),sizeBWidth,sizeBHeight));
+	var FacNorm = R3D.fundamentalNormalize(Fab,  Matrix.transform2DScalePoints(Matrix.transform2DIdentity(),sizeAWidth,sizeAHeight),  Matrix.transform2DScalePoints(Matrix.transform2DIdentity(),sizeCWidth,sizeCHeight));
+	var FbcNorm = R3D.fundamentalNormalize(Fab,  Matrix.transform2DScalePoints(Matrix.transform2DIdentity(),sizeBWidth,sizeBHeight),  Matrix.transform2DScalePoints(Matrix.transform2DIdentity(),sizeCWidth,sizeCHeight));
 	// points:
 	var matchesABReg = matchesAB["matches"];
 	var matchesACReg = matchesAC["matches"];
@@ -41865,7 +41865,7 @@ R3D.extractTriBlock = function(point, size, angle, imageMatrix, blockSize, cellS
 	// cellScale = cellScale!==undefined ? cellScale : 0.25;
 	var scale = cellScale * blockSize/size;
 		var matrix = new Matrix(3,3).identity();
-		matrix = Matrix.transform2DScale(matrix,scale);
+		matrix = Matrix.transform2DScalePoints(matrix,scale);
 		matrix = Matrix.transform2DRotate(matrix,angle);
 	var block = imageMatrix.extractRectFromFloatImage(point.x,point.y,1.0,sigma,blockSize,blockSize, matrix);
 	return block;
@@ -47785,7 +47785,7 @@ R3D.getAndPreparePoints2DToUse = function(points2DA, viewA, compareSize, force, 
 					// SAD
 					var matrix = new Matrix(3,3).identity();
 					matrix = Matrix.transform2DTranslate(matrix, -compareSize*0.5, -compareSize*0.5);
-					matrix = Matrix.transform2DScale(matrix, scale);
+					matrix = Matrix.transform2DScalePoints(matrix, scale);
 					matrix = Matrix.transform2DRotate(matrix, -angle);
 					matrix = Matrix.transform2DTranslate(matrix, location.x, location.y);
 					var sift = imageA.extractRectFromMatrix(compareSize,compareSize, matrix);
