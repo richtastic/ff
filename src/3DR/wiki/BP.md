@@ -224,4 +224,65 @@ LBP class:
 
 
 
+- observations
+- evidence
+
+- inference
+
+
+
+
+
+
+
+
+
+## Bayesian Networks / Belief Network
+
+- DAG
+- input nodes are P(x)
+- output nodes are 
+- nodes are rand vars
+- edges are dependence
+
+
+- what is being solved for?
+	- input nodes (eg: P(x) )
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+https://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.296.6522&rep=rep1&type=pdf
+
+
+
+
+
+...
+
+
+
 ...

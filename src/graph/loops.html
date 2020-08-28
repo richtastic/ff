@@ -1,0 +1,83 @@
+<html>
+<head>
+<title>Loops</title>
+<script src="../code/FF.js"></script>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<script type="text/javascript">
+function pageLoadedFxn(){
+	ff = new FF("../code/",defaultClassesLoadedFxn,defaultClassesProgressFxn);
+}
+function defaultClassesProgressFxn(o){ /* don't care */ }
+function defaultClassesLoadedFxn(){
+	var list = [];
+	scriptLoader = new ScriptLoader("./",list,this,customClassesLoadedFxn,null);
+	scriptLoader.load();
+}
+function customClassesLoadedFxn(){
+	var graph = new Graph();
+	console.log(graph);
+
+	var A = graph.addVertex();
+	var B = graph.addVertex();
+	var C = graph.addVertex();
+	var D = graph.addVertex();
+	var E = graph.addVertex();
+	var F = graph.addVertex();
+	var G = graph.addVertex();
+	var H = graph.addVertex();
+	var I = graph.addVertex();
+	var J = graph.addVertex();
+
+	A.data("A");
+	B.data("B");
+	C.data("C");
+	D.data("D");
+	E.data("E");
+	F.data("F");
+	G.data("G");
+	H.data("H");
+	I.data("I");
+	J.data("J");
+
+	graph.addEdgeDuplex(A,B);
+		graph.addEdgeDuplex(A,C);
+	graph.addEdgeDuplex(A,D);
+	graph.addEdgeDuplex(A,E);
+	graph.addEdgeDuplex(A,G);
+	graph.addEdgeDuplex(B,C);
+	graph.addEdgeDuplex(C,D);
+	graph.addEdgeDuplex(D,F);
+	graph.addEdgeDuplex(D,H);
+	graph.addEdgeDuplex(E,F);
+	// graph.addEdgeDuplex(,B);
+	graph.addEdgeDuplex(F,I);
+	graph.addEdgeDuplex(I,J);
+	graph.addEdgeDuplex(E,J);
+
+
+	var root = A;
+	var result = graph.loopsForVertex(root, 4);
+	// console.log(result);
+	var loops = result["loops"];
+	// console.log(loops);
+	for(var i=0; i<loops.length; ++i){
+		var loop = loops[i];
+		var vertex = root;
+		var str = ": "+vertex.data();
+		for(var j=0; j<loop.length; ++j){
+			var edge = loop[j];
+			vertex = edge.opposite(vertex);
+			str = str + "->"+vertex.data();
+		}
+		console.log(str);
+	}
+
+
+}
+</script>
+</head>
+<body onload="pageLoadedFxn();" style="border:0px;margin:0px;border:0px;">
+<div name="feedback" style=""></div>
+</body>
+</html>
+

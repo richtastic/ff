@@ -8063,6 +8063,15 @@ console.log("pair count: "+pairs.length+" ............");
 			return;
 		}
 	}
+
+
+
+
+
+
+project.visualizePairEdges(pairs);
+
+
 throw ">triples";
 
 	var triples = inputData["triples"];
@@ -8339,6 +8348,377 @@ throw ">X";
 	*/
 
 
+}
+
+
+
+App3DR.ProjectManager.prototype.visualizePairEdges = function(pairs){
+	var project = this;
+	console.log(pairs);
+
+
+	// var viewIDToPairs = {};
+	// for(var i=0; i<pairs.length; ++i){
+	// 	var pair = pairs[i];
+	// 	var viewIDA = pair["A"];
+	// }
+
+	var views = project.views();
+	var viewIDToIndex = {};
+	for(var i=0; i<views.length; ++i){
+		var view = views[i];
+		var viewID = view.id();
+		viewIDToIndex[viewID] = i;
+	}
+
+
+
+	// INSERT TEST DATA HERE:
+
+
+
+
+
+
+
+	console.log("INFERENCE");
+	// extract viable pairs & rotation matrixes
+	var viewIDs = {};
+	var viewPairs = [];
+	for(var i=0; i<pairs.length; ++i){
+		var pair = pairs[i];
+		if(pair["relative"]>0){
+			var R = pair["relativeTransform"]; // extrinsic
+				R = Matrix.fromObject(R);
+				R.set(0,3, 0);
+				R.set(1,3, 0);
+				R.set(2,3, 0);
+				// console.log(R);
+				var forward = Matrix.inverse(R);
+				var reverse = Matrix.inverse(forward);
+			var idA = pair["A"];
+			var idB = pair["B"];
+			var viewPair = {};
+				viewPair["A"] = idA;
+				viewPair["B"] = idB;
+				viewPair["id"] = pair["id"];
+				viewPair["forward"] = forward;
+				viewPair["reverse"] = reverse;
+			viewPairs.push(viewPair);
+			// keep list
+			viewIDs[idA] = idA;
+			viewIDs[idB] = idB;
+		}
+	}
+	viewIDs = Code.objectToArray(viewIDs);
+	// console.log(viewPairs);
+	// console.log(viewIDs);
+	// create graph with  pairs
+	var viewGraph = new Graph();
+	var viewIDToVertex = {};
+	for(var i=0; i<viewIDs.length; ++i){
+		var viewID = viewIDs[i];
+		var vertex = viewGraph.addVertex();
+			vertex.data({"view":viewID});
+		viewIDToVertex[viewID] = vertex;
+	}
+	for(var i=0; i<viewPairs.length; ++i){
+		var viewPair = viewPairs[i];
+		var idA = viewPair["A"];
+		var idB = viewPair["B"];
+		var vertexA = viewIDToVertex[idA];
+		var vertexB = viewIDToVertex[idB];
+		var edge = viewGraph.addEdgeDuplex(vertexA,vertexB);
+		viewPair["loops"] = [];
+		edge.data(viewPair);
+	}
+	// console.log(viewGraph);
+	// find all loops in graph
+	// var root = viewGraph.vertexes()[0];
+	// var result = viewGraph.loopsForVertex(root, 3);
+	// var result = viewGraph.allLoops(4);
+	var result = viewGraph.allLoops(5);
+	// var result = viewGraph.allLoops(6);
+	// console.log(result);
+	// 3 = 15
+	// 4 = 38
+	// 5 = 69
+	// 6 = 135
+	var loops = result["loops"];
+	for(var i=0; i<loops.length; ++i){
+		var edges = loops[i];
+		var loop = {"edges":edges};
+		for(var j=0; j<edges.length; ++j){
+			var edge = edges[j];
+			var data = edge.data();
+			data["loops"].push(loop);
+		}
+		loops[i] = loop;
+	}
+	// console.log(viewGraph.edges());
+	console.log(loops);
+
+	// calculate all loops round-trip error (does forward / backward matter ?)
+	var errors = [];
+	var rotation = new Matrix(4,4).identity();
+	for(var i=0; i<loops.length; ++i){
+		var loop = loops[i];
+		var edges = loop["edges"];
+
+		// A needs to be the common value between:
+		var a0 = edges[0].A();
+		var b0 = edges[0].B();
+		var a1 = edges[1].A();
+		var b1 = edges[1].B();
+		var vertex = null;
+		if(a0==a1 || a0==b1){
+			vertex = b0;
+		}else{
+			vertex = a0;
+		}
+		// console.log(edges);
+		for(var j=0; j<edges.length; ++j){
+			var edge = edges[j];
+			var data = edge.data();
+			var next = edge.opposite(vertex);
+			var transform = null;
+			// var str = "";
+			// console.log(vertex,edge.A());
+			// console.log(vertex);
+			// console.log(edge);
+			// throw "?"
+			if(vertex==edge.A()){ // forward
+				transform = data["forward"];
+				// transform = data["reverse"];
+				// console.log(data["A"]+" -> "+data["B"]+" F");
+			}else{ //reverse
+				transform = data["reverse"];
+				// transform = data["forward"];
+				// console.log(data["B"]+" -> "+data["A"]+" R");
+			}
+			rotation = Matrix.mult(transform, rotation);
+			// rotation = Matrix.mult(rotation,transform);
+			console.log(vertex.data()["view"]+" -> "+next.data()["view"]+" ");
+			// if(!next){
+			// 	throw "?"
+			// }
+			vertex = next;
+		}
+		console.log("....................");
+		// console.log(rotation+"");
+		// console.log(rotation);
+		// calculate error
+		var x = rotation.multV3DtoV3D(new V3D(1,0,0));
+		var y = rotation.multV3DtoV3D(new V3D(0,1,0));
+		var z = rotation.multV3DtoV3D(new V3D(0,0,1));
+		var dx = V3D.distanceSquare(V3D.DIRX,x);
+		var dy = V3D.distanceSquare(V3D.DIRY,y);
+		var dz = V3D.distanceSquare(V3D.DIRZ,z);
+		var error = dx + dy + dz;
+		// console.log(error);
+
+		// add angles x & y & z ?
+
+		// error = V3D.angle(V3D.DIRZ,z);
+		loop["error"] = error/edges.length;
+		errors.push(error);
+	}
+	console.log(errors);
+	Code.printMatlabArray(errors,"errors");
+	throw "..."
+
+/*
+
+// find orientation outliers
+	
+
+	
+
+	assign loops average error = RTError / edges
+
+
+	SOLVE FOR WORST EDGES:
+
+
+	A) 
+		create edge objects
+
+		link loop to all edges it contains
+
+		.....
+
+		inference ....
+
+
+	B) 
+
+		find worst 2-3 sigma loops
+		find most common edges in these loops (under 1 sigma?)
+		remove edges
+
+
+
+*/
+
+
+
+
+
+
+
+
+
+
+
+
+	console.log(views);
+	var showPairs = function(){
+		console.log("showPairs");
+
+		var circleRadius = 400;
+		var totalOffX = 50;
+		var totalOffY = 50;
+		var circleCenter = new V2D(totalOffX + circleRadius,totalOffY + circleRadius);
+		var imageSize = Math.round(circleRadius*1.5*Math.PI/views.length);
+
+
+		var images = [];
+		var matrixes = [];
+		var viewIDs = [];
+		var viewIDToIndex = {};
+		for(var i=0; i<views.length; ++i){
+			var view = views[i];
+			var viewID = view.id();
+			var image = view.anyLoadedImage();
+			viewIDToIndex[viewID] = i;
+			viewIDs[i] = viewID;
+			var matrix = R3D.imageMatrixFromImage(image, project._stage);
+			matrixes.push(matrix);
+			images.push(image);
+		}
+		// put images in circle
+		
+		var centers = [];
+		for(var i=0; i<images.length; ++i){
+			var image = images[i];
+			var matrix = matrixes[i];
+			var size = Code.sizeToFitInside(imageSize,imageSize, matrix.width(),matrix.height());
+			var imageScale = (size.x/matrix.width() + size.y/matrix.height())*0.5;
+
+			var d = new DOImage(image);
+			var angle = Math.PI * 2 * i/images.length;
+			var offsetX = circleCenter.x + size.x*0.5 + circleRadius*Math.cos(angle);
+			var offsetY = circleCenter.y + size.y*0.5 + circleRadius*Math.sin(angle);
+			d.matrix().scale(imageScale);
+			d.matrix().translate(offsetX - size.x*0.5, offsetY - size.y*0.5);
+			GLOBALSTAGE.addChild(d);
+
+			centers.push(new V2D(offsetX,offsetY));
+		}
+		// convert to list:
+		var floats = [];
+		var min = null;
+		var max = null;
+		for(var i=0; i<pairs.length; ++i){
+			var pair = pairs[i];
+			var rError = pair["relativeError"];
+			var rCount = pair["relative"];
+			console.log("rCount: "+rCount);
+			// var similarity = similarities[i];
+			// sims2.push( {"A":similarity["A"],"B":similarity["B"],"s":similarity["s"]} );
+			var error = 0;
+			if(rCount>0){
+				error = rError/rCount;
+				floats.push(error);
+				if(min===null || min>error){
+					min = error;
+				}
+				if(max===null || max<error){
+					max = error;
+				}
+			}else{
+				floats.push(-1);
+			}
+		}
+		var ran = max-min;
+		// ImageMat.normalFloat01(floats);
+		console.log(floats);
+		for(var i=0; i<floats.length; ++i){
+			var float = floats[i];
+			if(float>=0){
+				float = (float-min)/ran;
+				floats[i] = float;
+			}
+		}
+		// show lines
+		// var colors = [0xFF000000, 0xFF000099, 0xFFCC00CC, 0xFFFF0000, 0xFFFF9999];
+		var colors = [0xFF0000FF, 0xFF990099, 0xFFFF0000];
+		for(var i=0; i<pairs.length; ++i){
+			var pair = pairs[i];
+			var idA = pair["A"];
+			var idB = pair["B"];
+			var error = floats[i];
+			console.log(error);
+			var indexA = viewIDToIndex[idA];
+			var indexB = viewIDToIndex[idB];
+			var start = centers[indexA];
+			var ending = centers[indexB];
+			var color = null;
+			if(error<0){
+				color = 0xFFCCCCCC;
+			}else{
+				color = Code.interpolateColorGradientARGB(error, colors);
+			}
+				var d = new DO();
+				d.graphics().setLine(3.0,color);
+				d.graphics().beginPath();
+				d.graphics().moveTo(start.x,start.y);
+				d.graphics().lineTo(ending.x,ending.y);
+				d.graphics().endPath();
+				d.graphics().strokeLine();
+				GLOBALSTAGE.addChild(d);
+
+		}
+
+		// titles over:
+		var textSize = 26;
+		for(var i=0; i<centers.length; ++i){
+			var center = centers[i];
+			var title = ""+viewIDs[i];
+			var textA = new DOText(title, textSize, DOText.FONT_ARIAL, 0xFF3366FF, DOText.ALIGN_CENTER);
+			var textB = new DOText(title, textSize, DOText.FONT_ARIAL, 0xFF000033, DOText.ALIGN_CENTER);
+
+				textA.matrix().translate(-1,-1);
+				textB.matrix().translate(1,1);
+			var textContainer = new DO();
+				textContainer.addChild(textB);
+				textContainer.addChild(textA);
+				
+			d.addChild(textContainer);
+			var dir = V2D.sub(center,circleCenter);
+			dir.length(textSize);
+			textContainer.matrix().translate(center.x + dir.x, center.y + dir.y);
+		}
+		
+
+
+	}
+
+	// start
+
+	var checkImagesLoaded = function(thing){
+		++loadedImagesCount;
+		if(expectedImagesCount==loadedImagesCount){
+			showPairs();
+		}
+	}
+	var expectedImagesCount = views.length;
+	var loadedImagesCount = 0;
+	for(var i=0; i<views.length; ++i){
+		var view = views[i];
+		view.loadIconImage(checkImagesLoaded, project);
+	}
+	throw "visualizePairEdges";
 }
 
 App3DR.ProjectManager.prototype.triplesFromBestPairs = function(pairs, isDense){ // TODO: does this guarantee scale coverage for every pair ?
@@ -17425,8 +17805,12 @@ App3DR.ProjectManager.prototype._iterateDenseTracksStart = function(){
 				}
 			}
 		}
+
 		triples = Code.objectToArray(triples);
 		console.log(triples);
+
+throw "before save triples";
+
 		denseTriples = triples;
 		denseData["triples"] = denseTriples;
 		currentTriple = -1;

@@ -8832,6 +8832,7 @@ R3D.triangulatePointDLTList = function(points2D, extrinsics, Kinvs){ //
 	if(Math.abs(den)<=1E-20){ // too close numerically ?
 		// 1E-13, 1E-17
 		console.log("den: "+coeff);
+		// throw "WHERE?"
 		return null;
 	}
 	point.scale(1.0/den);

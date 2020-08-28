@@ -832,6 +832,123 @@ Graph.prototype.reachableEdges = function(source){
 	return Graph.reachableEdges(this,source);
 }
 
+Graph.prototype.loopsForVertex = function(root, maxEdgeCount){
+	maxEdgeCount = Code.valueOrDefault(maxEdgeCount,6); // 3 - 6
+	var queue = [];
+	var cnt = 0;
+	queue.push({"vertex":root, "path":[], "hash":{}});
+	var loops = [];
+	while(queue.length>0){
+		++cnt;
+		if(cnt>1E9){
+			throw "too many loops";
+		}
+		var entry = queue.shift(); // front of queue
+		var vertex = entry["vertex"];
+		var path = entry["path"];
+		var hash = entry["hash"];
+		var edges = vertex.edges();
+		for(var i=0; i<edges.length; ++i){
+			var edge = edges[i];
+			var edgeID = edge.id();
+			if(!hash[edgeID]){ // ignore edges already in list
+				var opposite = edge.opposite(vertex);
+				var nextP = Code.copyArray(path);
+					nextP.push(edge);
+				var nextH = Code.copyObject(hash);
+					nextH[edgeID] = 1;
+				var next = {"vertex":opposite, "path":nextP, "hash":nextH};
+				if(opposite==root){ // done
+					loops.push(next);
+				}else if(nextP.length>=maxEdgeCount){
+					// console.log("max loop: "+nextP.length);
+				}else{
+					queue.push(next);
+				}
+			}
+		}
+		//Z
+	}
+	console.log("iterations: "+cnt);
+	// console.log(loops);
+	// unique only: -- opposite directions have a duplicate
+	for(var i=0; i<loops.length; ++i){
+		var loopA = loops[i];
+		var hashA = loopA["hash"];
+		var keysA = Code.keys(hashA);
+		for(var j=i+1; j<loops.length; ++j){
+			var loopB = loops[j];
+			var hashB = loopB["hash"];
+			var isSame = true;
+			var keysB = Code.keys(hashB);
+			// check equality, break before
+			if(keysA.length!=keysB.length){
+				break;
+			}
+			for(var a=0; a<keysA.length; ++a){
+				var keyA = keysA[a];
+				if(hashA[keyA]!=hashB[keyA]){
+					isSame = false;
+					break;
+				}
+			}
+			if(!isSame){
+				break;
+			}
+			for(var b=0; b<keysB.length; ++b){
+				var keyB = keysB[b];
+				if(hashB[keyB]!=hashA[keyB]){
+					isSame = false;
+					break;
+				}
+			}
+			if(!isSame){
+				break;
+			}// else is same
+			Code.removeElementAt(loops,j);
+			--i;
+			// break; // only should be 1 other (reverse) duplicate?
+		}
+	}
+	// to edge list
+	for(var i=0; i<loops.length; ++i){
+		var loop = loops[i];
+		var edges = loop["path"];
+		loops[i] = edges;
+	}
+	// to object
+	return {"loops":loops};
+}
+Graph.prototype.allLoops = function(maxEdgeCount){
+	var toIDFxn = function(idList){
+		return idList.sort().join("-");
+	}
+	var vertexes = this.vertexes();
+	var loopsByID = {};
+	for(var i=0; i<vertexes.length; ++i){
+		var vertex = vertexes[i];
+		var result = this.loopsForVertex(vertex,maxEdgeCount);
+		var loops = result["loops"];
+		// to unique:
+		for(var j=0; j<loops.length; ++j){
+			var loop = loops[j];
+			var idList = [];
+			for(var k=0; k<loop.length; ++k){
+				var edge = loop[k];
+				var edgeID = edge.id();
+				idList.push(edgeID);
+			}
+			// console.log(idList);
+			var index = toIDFxn(idList);
+			// console.log(index);
+			loopsByID[index] = loop;
+		}
+		// throw"?";
+	}
+	var uniqueLoops = Code.objectToArray(loopsByID);
+	return {"loops":uniqueLoops};
+}
+
 Graph.BFS_COLOR_UNKNOWN = 0;
 Graph.BFS_COLOR_WHITE = 1; // unvisited
 Graph.BFS_COLOR_GRAY = 2; // touched

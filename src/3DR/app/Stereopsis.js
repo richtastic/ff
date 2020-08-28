@@ -504,6 +504,17 @@ Stereopsis.World.prototype.insertPoint3D = function(point3D){
 		this._pointSpace.insertObject(point3D);
 	}
 }
+Stereopsis.World.prototype.removeNullPoints3D = function(point3D){
+	var points3D = this._points3DNull;
+	console.log("REMOVING NULL POINTS3D: "+points3D.length);
+	while(points3D.length>0){
+		var point3D = points3D.pop();
+		this.disconnectPoint3D(point3D); // calls removePoint3D
+		this.killPoint3D(point3D);
+		// this.removePoint3D(point3D);
+
+	}
+}
 Stereopsis.World.prototype.removePoint3D = function(point3D){
 	if(point3D.point()==null){
 		Code.removeElement(this._points3DNull,point3D);
@@ -1847,10 +1858,6 @@ Stereopsis.Transform3D.prototype.matches = function(){
 }
 Stereopsis.Transform3D.prototype.matchCount = function(){
 	return this._matchCount;
-	// if(this._matches){
-	// 	return this._matches.length;
-	// }
-	// return 0;
 }
 Stereopsis.Transform3D.prototype.graphWeight = function(){
 	return 1.0;
@@ -2621,7 +2628,7 @@ Stereopsis.P3D.prototype.estimated3D = function(calculateError){
 	}
 	// console.log(this);
 	// console.log(p2Ds);
-	// console.log(points2D, extrinsics, invsK);
+	// console.log(p2Ds,points2D, extrinsics, invsK);
 	var location3D = R3D.triangulatePointDLTList(points2D, extrinsics, invsK);
 	// error
 	if(calculateError){
@@ -6426,7 +6433,11 @@ Stereopsis.World.prototype.solvePairF = function(completeFxn, completeContext){ 
 	// var maxIterations = 2;
 	// var maxIterations = 3;
 	// var maxIterations = 5;
-	var maxIterations = 10;
+
+
+	// var maxIterations = 6;
+	var maxIterations = 8;
+	// var maxIterations = 10;
 	for(var iteration=0; iteration<maxIterations; ++iteration){
 		console.log("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ iteration "+iteration+" / "+maxIterations);
 		// estimate current error
@@ -6436,9 +6447,6 @@ Stereopsis.World.prototype.solvePairF = function(completeFxn, completeContext){ 
 		world.probe2DCellsF(    3.0, 3.0  );
 		// world.estimate3DErrors(false);
 		// subdivide
-// var subdivide = true;
-// var subdivide = false;
-// var subdivide = iteration==2;
 		var subdivide = iteration==(maxIterations*0.5 | 0);
 		if(subdivide){
 			world.subdivideViewGridsF(subdivisionScaleSize);
@@ -6670,9 +6678,10 @@ Stereopsis.World.prototype.solvePair = function(completeFxn, completeContext){ /
 	// var maxIterations = 7;
 	// var maxIterations = 8;
 	// var maxIterations = 9;
-		var maxIterations = 10;
-	// var maxIterations = 15;
-	// var maxIterations = 17;
+
+	var maxIterations = 8;
+	// var maxIterations = 10;
+
 	var data = {};
 	data["errors"] = [];
 	data["splits"] = [5,15,25];
@@ -6719,13 +6728,18 @@ Stereopsis.World.prototype.iteration = function(iterationIndex, maxIterations, d
 	}else{
 		world.setResolutionProcessingModeFromCountP3D([2E3,5E3,10E3]);
 	}
+	var viewA = views[0];
+	var viewB = views[1];
+	var transAB = world.transformFromViews(viewA,viewB);
+
+	if(transAB.matchCount()<8){
+		return;
+	}
 
 	if(isFirst){ // SET INITIAL VIEW CAMERA EXTRINSICS
 		world.estimate3DErrors(false); // find initial F, P, estimate all errors from this
 		// var transform0 = transforms[0];
-		var viewA = views[0];
-		var viewB = views[1];
-		var transAB = world.transformFromViews(viewA,viewB);
+		
 		var R = transAB.R();
 		if(transAB.viewA()!=viewA){
 			viewA = transAB.viewA();
@@ -6809,6 +6823,7 @@ Stereopsis.World.prototype.iteration = function(iterationIndex, maxIterations, d
 	
 	// ...
 	// if(isFirst){
+		world.removeNullPoints3D();
 		world.dropNegativeMatches3D();
 	// }
 
@@ -7259,6 +7274,16 @@ Stereopsis.World.prototype.updateP3DPatchFromVisual = function(point3D){
 	var size3D = point3D.size();
 	var normal3D = point3D.normal();
 	var up3D = point3D.up();
+	if(!location3D || !size3D || !normal3D || !up3D){
+		// console.log(location3D,size3D,normal3D,up3D, ps2D,sizes2D, extrinsics,Ks);
+		// var new3D = point3D.calculateAbsoluteLocationDLT(this, true);
+		// console.log(new3D);console.log(this._pointSpace.toArray());
+		// console.log(this._points3DNull);
+		// console.log(this.toPointArray());
+		// throw "bad location"
+		console.log("null location - updateP3DPatchFromVisual");
+		return;
+	}
 // console.log(location3D,size3D,normal3D,up3D, ps2D,sizes2D, extrinsics,Ks);
 	var result = R3D.optimizePatchSizeProjected(location3D,size3D,normal3D,up3D, ps2D,sizes2D, extrinsics,Ks);
 	// console.log(result);
@@ -7780,7 +7805,8 @@ Stereopsis.World.prototype.recalculateMatchVisualErrors = function(){ // increas
 }
 
 Stereopsis.World.prototype.reconstructionRelativeMetrics = function(){ // makes assumptions that only a single pair is present -- average distance between points
-	var transforms = this.toTransformArray();
+	var world = this;
+	var transforms = world.toTransformArray();
 	var metricList = [];
 
 	var neighborhoodCount = 8;
@@ -7793,6 +7819,9 @@ Stereopsis.World.prototype.reconstructionRelativeMetrics = function(){ // makes 
 	for(var i=0; i<transforms.length; ++i){
 		var transform = transforms[i];
 		var relativeAB = transform.R();
+		if(!relativeAB){
+			continue;
+		}
 			var locationA = new V3D(0,0,0);
 			var locationB = relativeAB.multV3DtoV3D(locationA);
 		var baselineDistance = V3D.distance(locationA,locationB);
@@ -8677,6 +8706,19 @@ Stereopsis.World.prototype.solveForTracks = function(completeFxn, completeContex
 	world.relativeFFromSamples();
 	world.estimate3DErrors(true);
 
+
+	var transforms = world.toTransformArray();
+	var limitsR = [];
+	var limitsF = [];
+	for(var i=0; i<transforms.length; ++i){
+		var transform = transforms[i];
+		if(!transform.R()){
+			console.log(transform);
+			console.log("transform does not have R");
+			return;
+		}
+	}
+
 	world.updateAbsoluteLocationsPoint3D();
 
 	// this.estimate3DErrors(true);
@@ -8699,7 +8741,7 @@ Stereopsis.World.prototype.solveForTracks = function(completeFxn, completeContex
 	}
 
 	// remove worst based on corner scores
-	var views = this.toViewArray();
+	var views = world.toViewArray();
 	for(var i=0; i<views.length; ++i){
 		var view = views[i];
 		var corners = view.corners();
@@ -8730,7 +8772,7 @@ Stereopsis.World.prototype.solveForTracks = function(completeFxn, completeContex
 console.log("POINT COUNT CORNER: "+world.toPointArray().length);
 
 	// drop worst based on R and F errors
-	var transforms = this.toTransformArray();
+	var transforms = world.toTransformArray();
 	var limitsR = [];
 	var limitsF = [];
 	for(var i=0; i<transforms.length; ++i){
@@ -17726,30 +17768,30 @@ throw "WHAT SHOULD THIS POINT LOCATION BE?"
 	console.log("remaining points: "+this.point3DCount());
 }
 
-Stereopsis.World.prototype.doubleCellResolutionGrid = function(){  // adding more points --- better be very last step -- break all
-	var pointsPerView = this.doubleCellResolutionGrid();
-		pointsPerView = pointsPerView["value"];
-	for(var i=0; i<pointsPerView.length; ++i){
-		var entry = pointsPerView[i];
-		var view = entry["view"];
-		var points = entry["points"];
-		for(var j=0; j<points.length; ++j){
-			var point = points[j];
-			var n3D = point["normal"];
-			var p3D = point["point3D"];
-			var p2D = point["point2D"];
-			var point3D = new Stereopsis.P3D();
-			point3D.point(p3D);
-			var point2D = new Stereopsis.P2D();
-			point2D.point2D(p2D);
-			point2D.view(view);
-			var match = new Stereopsis.Match2D(point2D,point2D,point3D); // pointA,pointB, point3D, affine, ncc, sad, others
-			point3D.addMatch(match);
-			point3D.addPoint2D(point2D);
-			this._points3DNull.push(point3D);
-		}
-	}
-}
+// Stereopsis.World.prototype.doubleCellResolutionGrid = function(){  // adding more points --- better be very last step -- break all
+// 	var pointsPerView = this.doubleCellResolutionGrid();
+// 		pointsPerView = pointsPerView["value"];
+// 	for(var i=0; i<pointsPerView.length; ++i){
+// 		var entry = pointsPerView[i];
+// 		var view = entry["view"];
+// 		var points = entry["points"];
+// 		for(var j=0; j<points.length; ++j){
+// 			var point = points[j];
+// 			var n3D = point["normal"];
+// 			var p3D = point["point3D"];
+// 			var p2D = point["point2D"];
+// 			var point3D = new Stereopsis.P3D();
+// 			point3D.point(p3D);
+// 			var point2D = new Stereopsis.P2D();
+// 			point2D.point2D(p2D);
+// 			point2D.view(view);
+// 			var match = new Stereopsis.Match2D(point2D,point2D,point3D); // pointA,pointB, point3D, affine, ncc, sad, others
+// 			point3D.addMatch(match);
+// 			point3D.addPoint2D(point2D);
+// 			this._points3DNull.push(point3D);
+// 		}
+// 	}
+// }
 
 Stereopsis.World.prototype.doubleCellResolutionGrid = function(){ // very last step to smooth out surface interpolation -- outliers should be gone
 	console.log("doubleCellResolutionGrid");

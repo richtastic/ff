@@ -1848,6 +1848,15 @@ Code.copyArray = function(a,b,start,end){ // a = b
 	}
 	return a;
 };
+Code.copyObject = function(o){ // surface copy
+	var keys = Code.keys(o);
+	var n = {};
+	for(var i=0; i<keys.length; ++i){
+		var key = keys[i];
+		n[key] = o[key];
+	}
+	return n;
+} // todo: deep copy: obj / 
 Code.copyArrayIndexes = function(a,b, indexes){
 	if(indexes===undefined){
 		indexes = b; b = a; a = new Array();

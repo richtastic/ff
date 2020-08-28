@@ -385,12 +385,27 @@ MISSING:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
+var result = graph.loopsForVertex(root, 6);
+
+- get loop errors
+- visualize edge assumed loop error (thickness / color)
+- 
+
+
+
+
+
+
+
+
+
 - new sequence:
 	- want 180 + deg test (360?)
 		- fairly simple geometry
 		- no reflective surfaces - only matte
 	- 15-20 images
-	- sparse pairs can have much lower res (1/4)
+	- sparse pairs can have lower res (1/4 ?)	=> still need to have good amount of tracks
 
 	- before triple: identify bad pairs => reassign relative/tracks to 0
 		- RAW R ERROR
@@ -432,12 +447,26 @@ track: R=0.8 , F=1.5  |  ?
 
 
 BAD PAIRS: ELEPHANT:
-0GKXM13I-4U5WDZ5O
-0GKXM13I-JE33IUST
-2QPOD9MS-4U5WDZ5O
-JE33IUST-JZV0X8FW
-JE33IUST-XXU13QWF
+0GKXM13I-4U5WDZ5O - 
+0GKXM13I-JE33IUST - 
+2QPOD9MS-4U5WDZ5O - 
+2QPOD9MS-JE33IUST - 
+AAKDJLAM-T6MLWWUJ -
+JE33IUST-JZV0X8FW x
+JE33IUST-XXU13QWF - 
 
+
+
+
+
+
+
+
+
+
+Bayesian Network
+
+Belief Propagation
 
 
 
