@@ -17,6 +17,20 @@ sigma = %
 
 
 
+# Exponential distribution
+
+&mu; = average([x])
+&sigma; = &mu;
+&lambda; = 1/&mu;
+
+pdf = &lambda; &middot; e<sup>(-&lambda;&middot;x)</sup>
+cdf = 1 - &middot; e<sup>(-&lambda;&middot;x)</sup>
+
+percent limit: limit = -log(1-p)/&lambda;
+
+
+
+
 
 
 

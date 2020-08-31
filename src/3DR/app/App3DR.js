@@ -8373,10 +8373,81 @@ App3DR.ProjectManager.prototype.visualizePairEdges = function(pairs){
 
 
 
-	// INSERT TEST DATA HERE:
+var removeList = {};
+
+// removeList["0GKXM13I-4U5WDZ5O"] = 1;
+// removeList["0GKXM13I-JE33IUST"] = 1;
+// removeList["2QPOD9MS-4U5WDZ5O"] = 1;
+// removeList["2QPOD9MS-JE33IUST"] = 1;
+// removeList["AAKDJLAM-T6MLWWUJ"] = 1;
+// removeList["JE33IUST-JZV0X8FW"] = 1;
+// removeList["JE33IUST-XXU13QWF"] = 1;
 
 
 
+
+// removeList[""] = 1;
+
+
+// INSERT TEST DATA HERE:
+
+/*
+	
+	var transforms = [];
+	for(var i=0; i<views.length; ++i){
+		var m = new Matrix(4,4).identity();
+			// m = Matrix.transform3DTranslate(m, 0,0,-10);
+			m = Matrix.transform3DRotateY(m, Code.radians(-10*i));
+			// m = Matrix.transform3DTranslate(m, 1,2,3);
+			// m = Matrix.inverse(); // if want extrinsic
+		transforms[i] = m;
+	}
+	for(var i=0; i<pairs.length; ++i){
+		var pair = pairs[i];
+		var idA = pair["A"];
+		var idB = pair["B"];
+		var indexA = viewIDToIndex[idA];
+		var indexB = viewIDToIndex[idB];
+		var matrixA = transforms[indexA];
+		var matrixB = transforms[indexB];
+		// 
+		var relAB = Matrix.relativeReference(matrixA,matrixB);
+		// error
+			var s = 0.0;
+			// var s = 0.50;
+
+			var a = Code.radians(0.0);
+			// var a = Code.radians(10.0);
+
+
+// BAD EDGE:
+// if(i==4){ // less critical?
+// if(i==6){
+// if(i==10){ // less critical?
+// if(i==14){
+	console.log(pair);
+	s = 1;
+	a = Code.radians(45.0);
+	relAB = Matrix.transform3DRotateX(relAB, Code.radians(20));
+	relAB = Matrix.transform3DRotateY(relAB, Code.radians(10));
+	relAB = Matrix.transform3DRotateZ(relAB, Code.radians(-20));
+	pair["INFO"] = "TEST";
+}else{
+			// relAB = Matrix.transform3DTranslate(relAB, (Math.random()-0.5)*s,(Math.random()-0.5)*s,(Math.random()-0.5)*s);
+			// relAB = Matrix.transform3DRotateX(relAB, (Math.random()-0.5)*a);
+			// relAB = Matrix.transform3DRotateY(relAB, (Math.random()-0.5)*a);
+			// relAB = Matrix.transform3DRotateZ(relAB, (Math.random()-0.5)*a);
+}
+
+			// console.log("R: "+pair["A"]+"->"+pair["B"]+"\n"+relAB)
+
+			var R = Matrix.inverse(relAB); // extrinsic
+
+			pair["relativeTransform"] = R.toObject();
+	}
+
+
+*/
 
 
 
@@ -8387,7 +8458,10 @@ App3DR.ProjectManager.prototype.visualizePairEdges = function(pairs){
 	var viewPairs = [];
 	for(var i=0; i<pairs.length; ++i){
 		var pair = pairs[i];
-		if(pair["relative"]>0){
+		var relativeCount = pair["relative"];
+		var relativeError = pair["relativeError"];
+		if(pair["relative"]>0 && !removeList[pair["id"]]){
+			var reprojectionError = relativeError/relativeCount;
 			var R = pair["relativeTransform"]; // extrinsic
 				R = Matrix.fromObject(R);
 				R.set(0,3, 0);
@@ -8402,8 +8476,12 @@ App3DR.ProjectManager.prototype.visualizePairEdges = function(pairs){
 				viewPair["A"] = idA;
 				viewPair["B"] = idB;
 				viewPair["id"] = pair["id"];
+				viewPair["reprojectionError"] = reprojectionError;
+				// viewPair["reprojectionError"] = relativeError;
 				viewPair["forward"] = forward;
 				viewPair["reverse"] = reverse;
+				viewPair["INFO"] = pair["INFO"];
+				viewPair["errors"] = [];
 			viewPairs.push(viewPair);
 			// keep list
 			viewIDs[idA] = idA;
@@ -8411,6 +8489,54 @@ App3DR.ProjectManager.prototype.visualizePairEdges = function(pairs){
 		}
 	}
 	viewIDs = Code.objectToArray(viewIDs);
+
+
+	// filter by dropping worst relative error pairs
+	var errors = [];
+	for(var i=0; i<viewPairs.length; ++i){
+		var viewPair = viewPairs[i];
+		var error = viewPair["reprojectionError"];
+		errors.push(error);
+	}
+
+	// exponential distribution:
+	var dropPercent = 0.95; // 0.95 - 0.99  --- OR DO REPEATED DROPPING @ 0.99-0.999
+	var min = Code.min(errors);
+	var mean = Code.mean(errors);
+	console.log(" min: "+min);
+	console.log("mean: "+mean);
+	var lambda = 1.0/mean;
+	console.log("lambda: "+lambda);
+	var halfLimit = -Math.log(1.0 - dropPercent)/lambda;
+	console.log("halfLimit: "+halfLimit);
+
+// throw "?"
+
+	console.log("drop before: "+viewPairs.length);
+	var min = Code.min(errors);
+	var sigma = Code.stdDev(errors,min);
+	var limit = min + sigma*2.0;
+	console.log("drop values: "+min+" + "+sigma+" = "+limit+" ? "+halfLimit+" : "+(limit-halfLimit));
+	for(var i=0; i<viewPairs.length; ++i){
+		var viewPair = viewPairs[i];
+		var error = viewPair["reprojectionError"];
+		console.log("  error: "+error);
+		// if(error>limit){
+		if(error>halfLimit){
+			console.log("drop pair: "+viewPair["id"]);
+			Code.removeElementAt(viewPairs,i);
+			--i;
+		}
+	}
+	console.log("drop after: "+viewPairs.length);
+	//
+	Code.printMatlabArray(errors,"rError");
+
+// throw "."
+
+
+
+
 	// console.log(viewPairs);
 	// console.log(viewIDs);
 	// create graph with  pairs
@@ -8459,8 +8585,23 @@ App3DR.ProjectManager.prototype.visualizePairEdges = function(pairs){
 	console.log(loops);
 
 	// calculate all loops round-trip error (does forward / backward matter ?)
+
+var relAngleFxn = function(matrix){
+	var x = rotation.multV3DtoV3D(new V3D(1,0,0));
+	var y = rotation.multV3DtoV3D(new V3D(0,1,0));
+	var z = rotation.multV3DtoV3D(new V3D(0,0,1));
+	// var dx = V3D.distanceSquare(V3D.DIRX,x);
+	// var dy = V3D.distanceSquare(V3D.DIRY,y);
+	// var dz = V3D.distanceSquare(V3D.DIRZ,z);
+	var angle = 0;
+	angle += V3D.angle(V3D.DIRZ,z);
+	angle += V3D.angle(V3D.DIRY,y);
+	angle += V3D.angle(V3D.DIRX,x);
+	angle /= 3;
+	return angle;
+}
 	var errors = [];
-	var rotation = new Matrix(4,4).identity();
+	
 	for(var i=0; i<loops.length; ++i){
 		var loop = loops[i];
 		var edges = loop["edges"];
@@ -8476,13 +8617,15 @@ App3DR.ProjectManager.prototype.visualizePairEdges = function(pairs){
 		}else{
 			vertex = a0;
 		}
-		// console.log(edges);
+		var rotation = new Matrix(4,4).identity();
+		var str = "";
+		var relError = 0;
 		for(var j=0; j<edges.length; ++j){
 			var edge = edges[j];
 			var data = edge.data();
 			var next = edge.opposite(vertex);
 			var transform = null;
-			// var str = "";
+			
 			// console.log(vertex,edge.A());
 			// console.log(vertex);
 			// console.log(edge);
@@ -8490,21 +8633,21 @@ App3DR.ProjectManager.prototype.visualizePairEdges = function(pairs){
 			if(vertex==edge.A()){ // forward
 				transform = data["forward"];
 				// transform = data["reverse"];
-				// console.log(data["A"]+" -> "+data["B"]+" F");
 			}else{ //reverse
 				transform = data["reverse"];
 				// transform = data["forward"];
-				// console.log(data["B"]+" -> "+data["A"]+" R");
 			}
-			rotation = Matrix.mult(transform, rotation);
-			// rotation = Matrix.mult(rotation,transform);
-			console.log(vertex.data()["view"]+" -> "+next.data()["view"]+" ");
-			// if(!next){
-			// 	throw "?"
-			// }
+
+			relError += relAngleFxn(transform);
+
+			// rotation = Matrix.mult(transform, rotation);
+			rotation = Matrix.mult(rotation,transform);
+
+			str = str + "" + (vertex.data()["view"]+" -> "+next.data()["view"]+"("+data["INFO"]+")"+"   ");
+			
 			vertex = next;
 		}
-		console.log("....................");
+
 		// console.log(rotation+"");
 		// console.log(rotation);
 		// calculate error
@@ -8514,18 +8657,48 @@ App3DR.ProjectManager.prototype.visualizePairEdges = function(pairs){
 		var dx = V3D.distanceSquare(V3D.DIRX,x);
 		var dy = V3D.distanceSquare(V3D.DIRY,y);
 		var dz = V3D.distanceSquare(V3D.DIRZ,z);
-		var error = dx + dy + dz;
+		// var error = dx + dy + dz;
+			// error = Math.sqrt(error);
 		// console.log(error);
 
 		// add angles x & y & z ?
+		
+		// error = Code.degrees(V3D.angle(V3D.DIRZ,z));
+// console.log(relError);
+		error = 0;
+		error += V3D.angle(V3D.DIRZ,z);
+		error += V3D.angle(V3D.DIRY,y);
+		error += V3D.angle(V3D.DIRX,x);
+		error /= 3;
+		// console.log( Code.degrees(error) );
+		// error /= relError;
 
-		// error = V3D.angle(V3D.DIRZ,z);
-		loop["error"] = error/edges.length;
+		// error = error/edges.length;
+
+// error = Code.degrees(error);
+
+		// console.log( Code.degrees(error) );
+
+
+		loop["error"] = error;
 		errors.push(error);
+
+
+		// send error to edges:
+		for(var j=0; j<edges.length; ++j){
+			var edge = edges[j];
+			var data = edge.data();
+			data["errors"].push(error);
+		}
+
+		console.log(str+" = "+error);
+		console.log("....................");
 	}
 	console.log(errors);
 	Code.printMatlabArray(errors,"errors");
-	throw "..."
+
+
+	// throw "..."
 
 /*
 
@@ -8616,6 +8789,14 @@ App3DR.ProjectManager.prototype.visualizePairEdges = function(pairs){
 			centers.push(new V2D(offsetX,offsetY));
 		}
 		// convert to list:
+
+
+
+		// var list = pairs;
+		// var list = viewPairs;
+
+
+
 		var floats = [];
 		var min = null;
 		var max = null;
@@ -8623,7 +8804,7 @@ App3DR.ProjectManager.prototype.visualizePairEdges = function(pairs){
 			var pair = pairs[i];
 			var rError = pair["relativeError"];
 			var rCount = pair["relative"];
-			console.log("rCount: "+rCount);
+			// console.log("rCount: "+rCount);
 			// var similarity = similarities[i];
 			// sims2.push( {"A":similarity["A"],"B":similarity["B"],"s":similarity["s"]} );
 			var error = 0;
@@ -8653,12 +8834,35 @@ App3DR.ProjectManager.prototype.visualizePairEdges = function(pairs){
 		// show lines
 		// var colors = [0xFF000000, 0xFF000099, 0xFFCC00CC, 0xFFFF0000, 0xFFFF9999];
 		var colors = [0xFF0000FF, 0xFF990099, 0xFFFF0000];
-		for(var i=0; i<pairs.length; ++i){
-			var pair = pairs[i];
+
+
+		var list = viewPairs;
+		// var list = pairs;
+		var floats = [];
+		for(var i=0; i<list.length; ++i){
+			var pair = list[i];
+			// var error = pair["error"];
+			var error = pair["errors"];
+// console.log(pair);
+// console.log(error);
+			error = Code.averageNumbers(error);
+			// error = Code.sum(error);
+// console.log(error);
+			floats.push(error);
+		}
+		ImageMat.normalFloat01(floats);
+
+// var list = pairs;
+
+var list = viewPairs;
+
+		for(var i=0; i<list.length; ++i){
+			var pair = list[i];
 			var idA = pair["A"];
 			var idB = pair["B"];
 			var error = floats[i];
-			console.log(error);
+			// var error = pair["error"];
+			// console.log(error);
 			var indexA = viewIDToIndex[idA];
 			var indexB = viewIDToIndex[idB];
 			var start = centers[indexA];
@@ -8667,19 +8871,24 @@ App3DR.ProjectManager.prototype.visualizePairEdges = function(pairs){
 			if(error<0){
 				color = 0xFFCCCCCC;
 			}else{
-				color = Code.interpolateColorGradientARGB(error, colors);
+				// color = Code.interpolateColorGradientARGB(error, colors);
+				color = 0xFF000033;
 			}
-				var d = new DO();
-				d.graphics().setLine(3.0,color);
-				d.graphics().beginPath();
-				d.graphics().moveTo(start.x,start.y);
-				d.graphics().lineTo(ending.x,ending.y);
-				d.graphics().endPath();
-				d.graphics().strokeLine();
-				GLOBALSTAGE.addChild(d);
+			//
+			// color = 0xFF000033;
+			//
+			var d = new DO();
+			// d.graphics().setLine(3.0,color);
+			d.graphics().setLine(0.5 + error*10.0,color);
+			d.graphics().beginPath();
+			d.graphics().moveTo(start.x,start.y);
+			d.graphics().lineTo(ending.x,ending.y);
+			d.graphics().endPath();
+			d.graphics().strokeLine();
+			GLOBALSTAGE.addChild(d);
 
 		}
-
+		// 
 		// titles over:
 		var textSize = 26;
 		for(var i=0; i<centers.length; ++i){

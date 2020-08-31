@@ -1,0 +1,72 @@
+# architecture.yaml
+entities:
+	- &server
+		name: "server"
+		parent: null
+		connections: null
+	- &ABC
+		name: "ABC"
+		parent: *server
+		connections: null
+	- &ABCD
+		name: "ABCD"
+		parent: *server
+		connections: null
+	- &XYZ
+		name: "XYZ"
+		parent: *server
+		connections: null
+	- &client
+		name: "client"
+		parent: null
+		connections: null
+	- &vendor
+		name: "vendor"
+		parent: *client
+		connections: null
+	- &unity
+		name: "unity"
+		parent: *vendor
+		connections: null
+	- &XYZ2
+		name: "XYZ2"
+		parent: *vendor
+		connections: null
+
+connections:
+	- &vendor-to-client
+		parent: null
+		prev: null
+		from: *vendor
+		to: *unity
+		name: "startup data"
+		data:
+			- 
+				key: "languageCode"
+				value: "string: ISO Language Code"
+				info: "example: en-US"
+			-
+				key: "deviceID"
+				value: "string: device id"
+				info: "random number generated from vendor"
+			-
+				key: "token"
+				value: "string: abc / defgh token"
+				info: "contains: ..."
+	- &unity-to-ABC
+		parent: null
+		prev: null
+		from: *unity
+		to: *ABD
+		name: "login data"
+		data:
+			-
+				key: "login data"
+				value: "???"
+				info: "???"
+
+
+
+
+---
+# ...

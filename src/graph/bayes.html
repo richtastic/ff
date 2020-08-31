@@ -1,0 +1,355 @@
+<html>
+<head>
+<title>Bayes</title>
+<script src="../code/FF.js"></script>
+</head>
+<script type="text/javascript">
+function pageLoadedFxn(){
+	var ff = new FF("../code/",ffLoadedFxn);
+}
+function ffLoadedFxn(){
+	(new ScriptLoader("./",[],this,classesLoadedFxn)).load();
+}
+function setupDisplay(){
+	this._canvas = new Canvas(null,0,0,Canvas.STAGE_FIT_FILL, false,false, true);
+	this._stage = new Stage(this._canvas, 1000/20);
+	this._root = new DO();
+	this._stage.addChild(this._root);
+	GLOBALSTAGE = this._stage;
+	this._canvas.addListeners();
+	this._stage.addListeners();
+	this._stage.start();
+}
+
+
+function classesLoadedFxn(){
+	setupDisplay();
+	// create simulated view graph
+	var viewCount = 10;
+	var transforms = [];
+	for(var i=0; i<viewCount; ++i){
+		var m = new Matrix(4,4).identity();
+			// m = Matrix.transform3DTranslate(m, 0,0,-10);
+			m = Matrix.transform3DRotateY(m, Code.radians(-10*i));
+			// m = Matrix.transform3DTranslate(m, 1,2,3);
+			// m = Matrix.inverse(m); // if want extrinsic
+		transforms[i] = m;
+	}
+
+	// create edges
+	var pairs = [];
+	for(var i=0; i<viewCount; ++i){
+		var staJ = i+1;
+		var endJ = Math.min(staJ+3,viewCount);
+		for(var j=staJ; j<endJ; ++j){
+			pairs.push([i,j]);
+		}
+	}
+
+	var e = 0.10;
+
+	var sBase = 0.0;
+	// var s = sBase;
+	// var s = 0.50;
+
+	// var aBase = Code.radians(0.0);
+	var aBase = Code.radians(1.0);
+	// var aBase = Code.radians(10.0);
+	// var a = Code.radians(30.0);
+
+var badEdges = {};
+	badEdges[4] = 1;
+	badEdges[10] = 1;
+	badEdges[20] = 1;
+
+// console.log(" PAIRS ");
+	for(var i=0; i<pairs.length; ++i){
+		var pair = pairs[i];
+		var indexA = pair[0];
+		var indexB = pair[1];
+		var matrixA = transforms[indexA];
+		var matrixB = transforms[indexB];
+		var error = Math.random()*e;
+		var s = Math.random()*sBase;
+		var a = Math.random()*aBase;
+			var relAB = Matrix.relativeReference(matrixA,matrixB);
+			relAB = Matrix.transform3DTranslate(relAB, (Math.random()-0.5)*s,(Math.random()-0.5)*s,(Math.random()-0.5)*s);
+			relAB = Matrix.transform3DRotateX(relAB, (Math.random()-0.5)*a);
+			relAB = Matrix.transform3DRotateY(relAB, (Math.random()-0.5)*a);
+			relAB = Matrix.transform3DRotateZ(relAB, (Math.random()-0.5)*a);
+if(badEdges[i]===1){
+	console.log("BAD EDGE: "+1);
+	s = 1;
+	a = Code.radians(45);
+	relAB = Matrix.transform3DTranslate(relAB, (Math.random()-0.5)*s,(Math.random()-0.5)*s,(Math.random()-0.5)*s);
+	relAB = Matrix.transform3DRotateX(relAB, (Math.random()-0.5)*a);
+	relAB = Matrix.transform3DRotateY(relAB, (Math.random()-0.5)*a);
+	relAB = Matrix.transform3DRotateZ(relAB, (Math.random()-0.5)*a);
+}
+// console.log(" "+pair[0]+" -> "+pair[1]+" = \n"+relAB);
+			relAB.set(0,3,0);
+			relAB.set(1,3,0);
+			relAB.set(2,3,0);
+			pair[2] = relAB;
+			pair[3] = error;
+	}
+
+	// display edge certanties
+
+
+		var circleRadius = 400;
+		var totalOffX = 50;
+		var totalOffY = 50;
+		var circleCenter = new V2D(totalOffX + circleRadius,totalOffY + circleRadius);
+		var matrixes = [];
+		
+		var centers = [];
+		for(var i=0; i<transforms.length; ++i){
+			var angle = Math.PI * 2 * i/transforms.length;
+			var offsetX = circleCenter.x + circleRadius*Math.cos(angle);
+			var offsetY = circleCenter.y + circleRadius*Math.sin(angle);
+			centers.push(new V2D(offsetX,offsetY));
+		}
+		var floats = [];
+		var min = null;
+		var max = null;
+		for(var i=0; i<pairs.length; ++i){
+			var pair = pairs[i];
+			var error = pair[3];
+			floats[i] = error;
+		}
+		ImageMat.normalFloat01(floats);
+		// var colors = [0xFF000000, 0xFF000099, 0xFFCC00CC, 0xFFFF0000, 0xFFFF9999];
+		var colors = [0xFF0000FF, 0xFF990099, 0xFFFF0000];
+		for(var i=0; i<pairs.length; ++i){
+			var pair = pairs[i];
+			var indexA = pair[0];
+			var indexB = pair[1];
+
+			var error = floats[i];
+
+			var start = centers[indexA];
+			var ending = centers[indexB];
+			var color = null;
+			if(error<0){
+				color = 0xFFCCCCCC;
+			}else{
+				// color = Code.interpolateColorGradientARGB(error, colors);
+				color = 0xFF000033;
+			}
+			var d = new DO();
+			// d.graphics().setLine(3.0,color);
+			d.graphics().setLine(0.5 + error*10.0,color);
+			d.graphics().beginPath();
+			d.graphics().moveTo(start.x,start.y);
+			d.graphics().lineTo(ending.x,ending.y);
+			d.graphics().endPath();
+			d.graphics().strokeLine();
+			GLOBALSTAGE.addChild(d);
+		}
+		// 
+		// titles over:
+		var textSize = 26;
+		for(var i=0; i<centers.length; ++i){
+			var center = centers[i];
+			var title = ""+i;
+			var textA = new DOText(title, textSize, DOText.FONT_ARIAL, 0xFF3366FF, DOText.ALIGN_CENTER);
+			var textB = new DOText(title, textSize, DOText.FONT_ARIAL, 0xFF000033, DOText.ALIGN_CENTER);
+
+				textA.matrix().translate(-1,-1);
+				textB.matrix().translate(1,1);
+			var textContainer = new DO();
+				textContainer.addChild(textB);
+				textContainer.addChild(textA);
+				
+			d.addChild(textContainer);
+			var dir = V2D.sub(center,circleCenter);
+			dir.length(textSize);
+			textContainer.matrix().translate(center.x + dir.x, center.y + dir.y);
+		}
+
+
+	// find all loops:
+	// create graph with  pairs
+	var viewGraph = new Graph();
+	var viewIndexToVertex = {};
+	for(var i=0; i<transforms.length; ++i){
+// console.log(" "+i+" :\n"+transforms[i]);
+		var vertex = viewGraph.addVertex();
+			vertex.data({"i":i});
+		viewIndexToVertex[i] = vertex;
+	}
+	for(var i=0; i<pairs.length; ++i){
+		var viewPair = pairs[i];
+		var indexA = viewPair[0];
+		var indexB = viewPair[1];
+		var vertexA = viewIndexToVertex[indexA];
+		var vertexB = viewIndexToVertex[indexB];
+		var edge = viewGraph.addEdgeDuplex(vertexA,vertexB);
+		edge.data(viewPair);
+	}
+	// find all loops in graph
+	var result = viewGraph.allLoops(5); // 4-6
+	var loops = result["loops"];
+
+	// calculate view loop error:
+	var loopErrors = [];
+	var loopCounts = [];
+	for(var i=0; i<loops.length; ++i){
+		var loop = loops[i];
+		var edges = loop;
+		// A needs to be the common value between:
+		var a0 = edges[0].A();
+		var b0 = edges[0].B();
+		var a1 = edges[1].A();
+		var b1 = edges[1].B();
+		var vertex = null;
+		if(a0==a1 || a0==b1){
+			// console.log('rev 0');
+			vertex = b0;
+		}else{
+			// console.log('fwd 0');
+			vertex = a0;
+		}
+		var rotation = new Matrix(4,4).identity();
+		for(var j=0; j<edges.length; ++j){
+			var edge = edges[j];
+			var data = edge.data();
+			var next = edge.opposite(vertex);
+			var transform = data[2];
+			if(vertex==edge.A()){ // forward
+// console.log(" "+data[0]+" -> "+data[1]);
+				// ...
+			}else{ // reverse
+// console.log(" "+data[1]+" -> "+data[0]);
+				// console.log('rev');
+				transform = Matrix.inverse(transform);
+			}
+// console.log(transform+"")
+// console.log(" "+data[0]+" -> "+data[1]);
+// console.log(data);
+			// relError += relAngleFxn(transform);
+			// rotation = Matrix.mult(transform, rotation);
+			rotation = Matrix.mult(rotation,transform);
+			vertex = next;
+		}
+
+		// calculate error
+		var x = rotation.multV3DtoV3D(new V3D(1,0,0));
+		var y = rotation.multV3DtoV3D(new V3D(0,1,0));
+		var z = rotation.multV3DtoV3D(new V3D(0,0,1));
+
+
+		//
+		// var dx = V3D.distanceSquare(V3D.DIRX,x);
+		// var dy = V3D.distanceSquare(V3D.DIRY,y);
+		// var dz = V3D.distanceSquare(V3D.DIRZ,z);
+		// var error = dx + dy + dz;
+		// 	error = Math.sqrt(error);
+		// console.log(error);
+
+		// add angles x & y & z ?
+		
+		var error = 0;
+		error += V3D.angle(V3D.DIRZ,z);
+		error += V3D.angle(V3D.DIRY,y);
+		error += V3D.angle(V3D.DIRX,x);
+		error /= 3;
+		// console.log( Code.degrees(error) );
+// console.log(" ... "+Code.degrees(error)+" "+x+" | "+z);
+		// loop["error"] = error;
+		loopErrors.push(error);
+		// send error to edges:
+		// for(var j=0; j<edges.length; ++j){
+		// 	var edge = edges[j];
+		// 	var data = edge.data();
+		// 	data["errors"].push(error);
+		// }
+		// console.log(str+" = "+error);
+		// console.log("....................");
+		loopCounts.push(edges.length)
+	}
+	console.log(loopErrors);
+	console.log(loopCounts);
+	Code.printMatlabArray(loopErrors,"loopErrors");
+
+	// bayes inference ???????????????????????????????????????????????????????????????????????????????????????
+
+/*
+
+prior probabilities: 
+*) L(loop error | all edges are correct)
+*) P(loop error | at least one edge is wrong)
+
+
+
+
+
+
+
+PERSPECTIVES:
+	I'm a loop:
+		- if I know that my average error is high globally (compared to other loops), I'm more likely bad
+			- P(outlier) based on global population
+			-> outlier = yes or no
+		- if I know that at least 1 edge i contain is bad => i'm more likely bad
+			- edge would derive this
+	I'm an edge:
+		- initially I don't know if I'm good or bad (50/50)
+
+		- if I know that my average loop error is high globally, I'm more likely bad
+			-> P = sigma lookup
+			- initial value ?
+		- if I know that I am in some good loops, I'm more likely good
+			- % good vs % bad
+				- eg: 9/15 are 'good' (low sigma)
+		- if I know that my average loop scores are worse than my neighbors, I'm probably bad
+			- 
+		- if i have at least 1 bad loop and my neighbors all think theyre good. I'm probably bad
+		...
+
+DIFFERENT METRICS:
+	- loop global error %
+	- loop's edge predicting themselves
+	- edge global average loop error %
+	- edge's loop predicting themselves
+	- edge's good loop to bad loop ratio (only need to be in a few good loops to discard bad loops)
+	- edge neighbor loop scores
+	
+
+	loop:
+		(% global loop distribution)
+		(?)
+	edge:
+		(% global edge distribution)
+		(% local good vs bad loops ratio)
+		(% neighbors average loop score is worse)
+		(?)
+
+edges pass info about their status to all other edges
+
+edge updates its liklihood:
+
+
+-> convergence / end:
+	each edge is decided good / bad 
+	some probability 0-1
+	some threshold, eg 0.9 
+
+
+*/
+
+	// display loop certanties
+
+
+	// ...
+	// .
+	// .
+
+	throw "...";
+}
+
+</script>
+<body onload="pageLoadedFxn();">
+</body>
+</html>

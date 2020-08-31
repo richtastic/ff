@@ -869,7 +869,7 @@ Graph.prototype.loopsForVertex = function(root, maxEdgeCount){
 		}
 		//Z
 	}
-	console.log("iterations: "+cnt);
+	// console.log("iterations: "+cnt);
 	// console.log(loops);
 	// unique only: -- opposite directions have a duplicate
 	for(var i=0; i<loops.length; ++i){

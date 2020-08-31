@@ -386,11 +386,100 @@ MISSING:
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
-var result = graph.loopsForVertex(root, 6);
-
-- get loop errors
-- visualize edge assumed loop error (thickness / color)
 - 
+- simulted example loop filtering
+
+
+- bayesian network
+- what is solved for in general
+- what is solved for in loops => list of xe = 0 for correct, 1 for incorrect
+
+- data:
+	- xe has some % confidence in it's individual Te
+		- can be a sigma % of global Te reprojection error
+			=> population = all edges in view graph's reprojection error
+				- assume half-normal distirbution
+				- get min, sigma
+				- get percent = normalized sigma location from center
+					=> from cdf -> calculated table ...
+				=> P(Te | xe) / P(Te) = confidence Te is a good transform
+					0 : 1 - percent 	[eg = 1 sigma: 100%-68% = 32%]
+					1 : percent 		[eg = 1 sigma: 68%]
+	- xe has some % confidence for all listed loops:
+		- can be a sigma % of global loop error
+		- can be a sigma % of neighborhood loop error
+			=> population = all loops in view graph's average angle error
+				- assume half-normal distribution
+				- get min, sigma
+				- get percent from sigma ratio / cdf
+				=> P(TLerror | xe in L)
+
+	=> max arg:
+		[P(x_i)] x [P(TLerror | xl)]
+
+P table for each xe: sigma percent [eg]
+0 : 0.60 (not confident)
+1 : 0.40 
+
+P table for each loop?:
+
+x0 x1 x2 : 
+0  0  0  .
+0  0  1  .
+0  1  0  .
+0  1  1  .
+1  0  0  .
+1  0  1  .
+1  1  0  .
+1  1  1  .
+
+
+condition on evidence
+query is RV of interest
+P(query | evidence)
+
+P(X0=x0, X1=x1, ... Xn-1=xn-1 | transform confidences, loop confidences)
+
+
+P(xe) = confidence in Te ?
+P(Te | xe) = ?
+	- 
+
+
+
+
+
+
+
+
+
+
+
+- should exp. dist. be used in other places (other p point error ? or view or pair ...)
+
+
+
+=> total actual error is very low: 1-10 degrees
+=> maybe more extreme transforms can be more lenient on error:
+	eg: relative error:
+		a matrix that rotates 90 deg but has 1 deg of error is better than
+		a matrix that rotates 10 deg but has 1 deg of error
+
+
+
+
+http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.613.6464&rep=rep1&type=pdf
+
+
+http://andrewowens.com/papers/disco13pami.pdf
+
+
+https://towardsdatascience.com/belief-propagation-in-bayesian-networks-29f51fdc839c
+
+
+
+
+https://papers.nips.cc/paper/1832-generalized-belief-propagation.pdf
 
 
 
@@ -447,13 +536,54 @@ track: R=0.8 , F=1.5  |  ?
 
 
 BAD PAIRS: ELEPHANT:
-0GKXM13I-4U5WDZ5O - 
-0GKXM13I-JE33IUST - 
-2QPOD9MS-4U5WDZ5O - 
-2QPOD9MS-JE33IUST - 
-AAKDJLAM-T6MLWWUJ -
+                    error | lopps
+0GKXM13I-4U5WDZ5O - n       n | ?
+0GKXM13I-JE33IUST - n       n | ?
+2QPOD9MS-4U5WDZ5O - n       n | 
+2QPOD9MS-JE33IUST - y       m | 
+AAKDJLAM-T6MLWWUJ - y       m | 
 JE33IUST-JZV0X8FW x
-JE33IUST-XXU13QWF - 
+JE33IUST-XXU13QWF - m       y | 
+
+
+B-J ?
+
+
+
+
+PRE DROPPED (why?):
+JE33IUST-JZV0X8FW
+
+R-ERROR DROP:
+
+AAKDJLAM-T6MLWWUJ YES
+2QPOD9MS-JE33IUST YES
+BM0ASD84-JE33IUST NO (has very few points, some points are wrong, views are mostly correct tho)
+
+POSSIBLY LOOP DROP: (FAT)
+JE33IUST-XXU13QWF YES
+0-N
+
+REMAINING:
+0GKXM13I-4U5WDZ5O (maybe)
+0GKXM13I-JE33IUST (maybe)
+2QPOD9MS-4U5WDZ5O (maybe)
+JE33IUST-XXU13QWF (no)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

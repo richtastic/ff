@@ -245,12 +245,125 @@ LBP class:
 - nodes are rand vars
 - edges are dependence
 
+- evidence enters the 'observed' nodes & propagates thru the network
+- nodes send messages, formed from: priors, conditionals, evidence
+- MESSAGE TYPE A: Y->X, Y's opinion of how likely X is
+- MESSAGE TYPE B: U->X, reweight distribution of X
+	- Y = child node
+	- U = parent node
+- BELIEF = normalized product of incoming messages: &alpha; x &lambda;(x) x &pi;(x) &approx; Pr(X=x | E)
+
+- non-parent X initialized with prior: &pi; = Pr(X=x)
+- observed node: x = e (evidence) or 0
+- messages out are normalized : sum to 1
+
+- sum product:
+- max product: (max sum)
 
 - what is being solved for?
 	- input nodes (eg: P(x) )
 
 
 
+EXAMPLE: STEREO:
+	- r & s = image coordinages
+	- D(x,y) = D(r) = disparity field (unknown)
+	- prior smoothness: P(D) = 1/Z x e^(-BETA x V(D))
+		- V(D) = windowing: Sum(r,s) |Dr - Dr| neighbor pixels -- 
+	- m(D) = matching error across entirety of left & right images = |L(x + D, y) - R(x,y)|
+	- P(m(D) | D) = (1/Z) x e^(mu x m x D)
+	- conditional independence assumed: P(m|D) = PRODUCT: P(m(D)|D)
+	- posterior: P(D|m) = P(D) x P(m|D) / P(m)
+	- 
+
+
+
+
+Joint distribution = table of all possible outcomes / probabilities === all possible events / outcomes
+P(a,b,c) is a TABLE of all possible RV & probabilities of outcomes
+probability mass function
+
+
+
+
+
+
+marginal probability =  P(A)  = unconditional probability  = not dependent on anything else = known constant [known function]
+conditional probability = P(A | B) = reduce the 'total' set from universe to B ; of all of B: how likley is A
+	P(A | B) = P(A & B) / P(B)
+joint probability = P(A & B) = intersection 
+union = or = P(A union B) P(A or B) = P(A) + P(B) - P(A&B)
+independent: P(A|B) = P(A)  == knowing event B occurred tells us nothing about outcome of event A
+
+liklihood: L(...) = liklihood of values given data observations
+probability: P(...) = obseriving data given parameters
+
+
+prior = already known event's probability, eg P(A) : known prior to 
+prior distribution = unknown SINGLE value, instead a range of possibilities (eg normal distribution)
+
+posterior = belief in parameter/values after performing calculation involving a prior
+posterior distribution
+
+inference = process to determine properties of a population(distribution) given data
+
+data = evidence
+
+Bayes’ Theorem: P(A|B) x P(B) = P(B|A) x P(A)
+	MODEL FORM: P(model | data) &prop; = P(data|model) x P(model)
+
+Bayesian inference for parameter estimation = 
+
+
+
+random variable = X = represents the outcome of events
+
+
+Naive Bayes’: assumes independence of events, event though they aren't necessarily actually independent (simplifies math)
+
+
+
+MLE : maximum liklihood estimate = method to determine VALUES for a MODEL'S PARAMETERS ; often least squares estimates
+
+
+models:
+	- random forest model
+	- linear model
+	- gaussian
+
+
+
+
+
+factor graph
+arc consistency - remove variable values that don't satisfy the constraint
+constraing statisfay problem CSP
+
+Gibbs sampling - avoid local optima by randomly assigning values until convergence
+
+
+
+particle swarm optimization
+	- genetic algorithms
+	- ...
+
+
+
+
+
+Probabilistic inference 
+
+
+
+variable EVIDENCE - known data
+variable QUERY - to be predicted
+factors - 
+
+=> goal is to assign each variable a value of 0 or 1 (or some discrete set)
+=> maximize probabilities
+=> hidden variables (ones without inputs?)
+	- using the observed / evidence
+=> use output of 'joint distribution' => pick most probable set ?
 
 
 
@@ -258,20 +371,16 @@ LBP class:
 
 
 
+multipy 2 gaussian distributions:
+	?
+	http://www.bzarg.com/p/how-a-kalman-filter-works-in-pictures/
 
 
 
 
 
 
-
-
-
-
-
-
-
-
+https://cseweb.ucsd.edu/classes/sp06/cse151/lectures/belief-propagation.pdf
 
 
 
