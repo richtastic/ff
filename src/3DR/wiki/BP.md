@@ -1,10 +1,172 @@
 ### Belief Propagation
+
+#### types of networks / graph models:
+	
+	naive bayes (assumes independence) [simple bayes, independent bayes]
+		- P(x|y1,y2,...,C) ~ p(x|C) ~ p(C)&PI;p(y_i|C)
+
+	bayes network (directed / acyclic)
+
+	markov random field ()
+
+	constraint graph / hypergraph
+		- 
+
+	factor graph
+
+	=> Markov chain Monte Carlo
+
+	=> loopy belief propagation
+
+	- Restricted Boltzmann machine ?
+
+	Conditional Random Fields 
+
+
+#### Bayesian Network [aka: Bayesian Belief Networks, Bayes Nets, Causal Networks]
+	- 
+	- compute P(X_n = k):
+		- &Sigma; x&isin;values(X1) ...
+		- ...
+	- Variable Elimination (VE)
+		...
+....
+
+#### Markov Field:
+	- Markov Property: memoryless (for stochastic) -- only present state matters
+	- undirected graph of random variables
+	- local markov property: variable is conditionally independent of all other variables given its neighbors
+		x_v &perp; not_neighbors(x_v) | neighbors(x_v)
+	- pairwise markov property: non-neighbors are conditionally independent given all other variables
+		x_u &perp; x_v | all_except(x_u,x_v)
+	- global markov property: any two subsets of variables are conditionally independent given a separating subset
+		X_u &perp; X_v | X_w   (every path from node in A to node in B must pass thru S)
+	...
+
+
+#### Markov Chain:
+	- each state holds a next-state distribution: probability of entering neighbor state i
+	- ~ transition model defines for each state pair, the probability of going from state a -> state b
+		ex: drunken grasshopper
+	- each state is a Random Variable RV
+	- long ter, behavior is how likely each individual state is
+	- reversible markov chain is stationary result
+	- mixing time between portions of graph
+	- contuctance measure of how probable transition edges are
+	flavors: state:(discrete/continuous) & time:(discreete/continuous)
+
+
+#### BN -> MN
+	- BN: evidence e => Gibbs: Z=P(e)
+	- CPS: p(X_i|Pa_Xi) => factor: {X_i,Pa_Xi}
+	- moralized graph: need edge between each of X_i parents
+	- no direct conversion of parameters
+
+#### MN -> BN
+	- minimal i-Map
+
+#### BN == MN
+	- chordal graphs
+	- 
+
+
+
+#### compare MAP & MLE
+	- use log addition rather than product multiplication for numerical stability (underflow)
+	- maximum liklihood estimate (MLE) :
+		- &Theta;<sub>MLE</sub> = arg max<sub>&Theta;</sub> &Sigma;<sub>i</sub> log( P(x<sub>i</sub>|&Theta;) )
+	- maximum a posteriori (MAP) :
+		- &Theta;<sub>MLE</sub> = arg max<sub>&Theta;</sub> &Sigma;<sub>i</sub> log( P(x<sub>i</sub>|&Theta;) ) + log( P(&Theta;) )
+
+
+- 
+https://wiseodd.github.io/techblog/2017/01/01/mle-vs-map/
+
+
+#### Bayesian Inference
+	- A: Query => set RV, get a probabilty
+		- P(query | evidence) = P(Xi, ..., Xn | Ej=vj, ... , Em=vm )
+		- P(Y | E = e):
+			- Y = query variables
+			- E are evidence / observed variables
+			- e = evidence value
+	- B: parameter estimation => find best (mode of posterior distribution) == most common scenario
+		- Max A Posteriori (MAP)
+		- = values of the random variables that are most likeley (max probability in table)
+
+=> CAN YOU PERFORM THE P(A,B,C,D... | evidence) & pick most probable?
+	- is this computationally feasable?
+	P(x0=0 | evidence) A
+	P(x0=1 | evidence) B
+	P(x1=0 | evidence) A
+	P(x1=1 | evidence) B ... pick highest A / B
+	
+	...
+
+
+- Marginal Likelihood  ?
+- Expectation Maximation  ?
+
+
+
+
+
+Sum Product / message passing === Belief Propagation [different flavor for BN v MN]
+	- performs inference
+	- calculates marginal distribution for unobserved node (or var) conditional on observed nodes (or vars)
+	- 
+
+Joint Mass Function:
+	p(x) = &Pi; (a &isin; F) f_a(x_a)
+	x_a = vector of neighboring var nodes to factor node a
+
+	- messages contain 'influence' that one variable exerts on another.
+	- messages v->a and a->v computerd differently
+	- v->a:
+		product of messages from all other neighboring factor nodes (except recipient, ie recipient message = 1)
+		[if no other neighbors, message = uniform distribution (unknown)]
+			&Pi;_a_i message_a_i(x_v)
+	- a->v:
+		product of factor with messages from all other nodes, marginalized over all variables except v
+		[if no other neighbors, message = f_z(x_v)]
+			&Sigma;_v f_a(x_a) &middot; &Pi;_v_i message_v_to_a(x_i)
+
+	- https://en.wikipedia.org/wiki/Belief_propagation
+
+	- on a tree, optimal solution is after single iteration of all messages
+	- on loopy graph, optimal solution is after iterations, updating messages simultaneously : soln is only proportional
+
 BP
 
 Factor graph
 
 
 solve: inference | optimization | constraint
+
+
+
+
+#### Marginal probability
+P(y=1) -- sum up all occurrences with y=1, ignore other variables -- sum in the "margins" of table / reduce dimensionality
+	sum over the variables you don't care about
+
+#### Joint probability
+p(x=1,y=1) -- with multiple parameters in query, get joint marginal intersection
+	sum over all variable that have 'states/values' in common
+
+#### Conditional probability
+P(y=1|x=0) -- with a subset of the universe in interest, only consider this portion as the new universe
+	sum only in values ....?
+
+
+
+
+- beta distribution
+- Dirichlet distribution
+
+
+
+
 
 
 
@@ -230,7 +392,8 @@ LBP class:
 - inference
 
 
-
+A) most likely A,B,C given data
+B) given A,B,C: what is probability?
 
 
 
@@ -239,11 +402,26 @@ LBP class:
 
 ## Bayesian Networks / Belief Network
 
+B = (G,P) (bayesian network = graph?, probability?)
+
+CPD: c-prob-dist?
+
+- VARIABLE ELIMINATION
+- MESSAGE PASSING (believ propagation)
+- INTEGER PROGRAMMING METHODS
+
+p(x_i) = marginal distribution
+p(x_i | x_j) = conditional distribution
+arg max p(x_i | x_j) = maximum a posteriori (most likely)
+
+max marginal
+
 - DAG
 - input nodes are P(x)
 - output nodes are 
 - nodes are rand vars
 - edges are dependence
+- Conditional Probabiity Distribution CPD
 
 - evidence enters the 'observed' nodes & propagates thru the network
 - nodes send messages, formed from: priors, conditionals, evidence
@@ -312,7 +490,7 @@ data = evidence
 Bayes’ Theorem: P(A|B) x P(B) = P(B|A) x P(A)
 	MODEL FORM: P(model | data) &prop; = P(data|model) x P(model)
 
-Bayesian inference for parameter estimation = 
+
 
 
 
@@ -332,7 +510,9 @@ models:
 	- gaussian
 
 
+Marginalize Product of Functions (MPF)
 
+NOT-SUMs
 
 
 factor graph
@@ -367,6 +547,18 @@ factors -
 
 
 
+Exact inference algorithms:
+	– Symbolic inference (D’Ambrosio)
+	– Recursive decomposition/variable elimination (Cooper, Dechter)
+	– Message-passing algorithm (Pearl)
+	– Clustering and joint-tree approach (Lauritzen, Spiegelhalter)
+	– Arc reversal (Olmsted, Schachter)
+Approximate inference algorithms:
+	– Monte Carlo methods:
+		- Rejection sampling, Likelihood sampling
+	– Variational methods 
+
+bayesian factor graph: target node becomes root of tree, items sum up children -> parents (SUM - PRODUCT)
 
 
 
@@ -388,7 +580,59 @@ https://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.296.6522&rep=rep1&type
 
 
 
+Huber or Cauchy cost function
 
+Bayesian inference
+
+Bayesian network
+
+factor graph
+
+Loopy belief propagation
+
+
+
+
+
+
+#### Sum Product Algorithm:
+
+##### Bayes (context)
+	
+	to compute g_i(x_i)
+	for tree rooted at x_i
+	start at leaves, move inward:
+		PRODUCT RULE:
+			at variable node:
+				take product of descendents
+		SUM-PRODUCT RULE:
+			at factor node:
+				take product of f with decendents
+				perform NOT-SUM over parent node
+
+	to compute marginals (probability(x_i)?)
+		simultaneous message passing following sum-product algorithm
+			EX:
+				BP: ?
+				FWD-BAK ALG: ?same?
+
+##### loopy BP
+	Junction Tree
+		- convert to graph w/o loops
+		- (very large graph)
+	Sum Product / message passing
+		- disreguard loops
+		- approx inference
+
+
+variational inference
+	- deterministic
+	- Examples: Mean-field, Bethe, Kikuchi, Expectation Propagation
+
+stochastic inference:
+	- sampling approaches
+	- Examples: Markov Chain Monte Carlo Methods
+	- Gibbs sampling (special case of MCMC)
 
 ...
 

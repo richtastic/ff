@@ -386,12 +386,38 @@ MISSING:
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
+manual iteration method:
+A) find outlier loops:
+
+	- calculate loop scores (difference from identity)
+	- calculate loop population
+	- loop outliers: every loop outside 90%-95% before hand, and outside 95%-99% after removed
+
+	- calculate edge loop scores
+
+	- for each outlier loop:
+		- mark edge with worst loop score in group for drop 
+
+	- drop all marked worst edges
+
+	- remove all loops from list that involve edge i
+
+	=> iterate
+
+
+
+
+
+
+
+
+
 - 
 - simulted example loop filtering
 
 
 - bayesian network
-- what is solved for in general
+- what is solved for in general ? joint probability queries
 - what is solved for in loops => list of xe = 0 for correct, 1 for incorrect
 
 - data:
@@ -444,6 +470,10 @@ P(X0=x0, X1=x1, ... Xn-1=xn-1 | transform confidences, loop confidences)
 P(xe) = confidence in Te ?
 P(Te | xe) = ?
 	- 
+
+
+EXAMPLE BAYES TO CHECK AGAINST:
+notas_de_aula_Parte9.pdf
 
 
 
@@ -571,14 +601,18 @@ REMAINING:
 JE33IUST-XXU13QWF (no)
 
 
+LOOP DROPPED:++++++++++++++++++++++++
+JE33IUST-XXU13QWF : worst edge on a bad loop
 
 
+REMAINING 2:
+0GKXM13I-4U5WDZ5O ...
+0GKXM13I-JE33IUST ...
+2QPOD9MS-4U5WDZ5O ...
 
 
-
-
-
-
+-> once full scale is determined, drop outliers including translation ?
+	=> does this needs a global registration ?
 
 
 

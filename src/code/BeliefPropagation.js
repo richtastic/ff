@@ -183,3 +183,30 @@ BeliefPropagation.prototype.kill = function(){
 BeliefPropagation.prototype.toString = function(){
 	return "[BP]";
 }
+
+
+
+
+// factor graph:
+function FactorGraph(what){
+	// ...
+}
+FactorGraph.prototype.toString = function(){
+	return "[FG]";
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

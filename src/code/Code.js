@@ -4421,6 +4421,46 @@ Code.stdDevAngles = function(list, mean){
 	return Math.sqrt(sig/len); // len-1 is typical number
 }
 
+Code.exponentialDistribution = function(samples){
+	var len = samples.length;
+	if(len<2){ // need at least 2 points
+		return null;
+	}
+	var min = Code.min(samples);
+	var mean = 0;
+	for(var i=0; i<len;++i){
+		mean += (samples[i] - min);
+	}
+	mean /= len;
+	var sigma = mean;
+	var lambda = 1.0/sigma;
+	return {"min":min, "mean":mean, "sigma":sigma, "lambda":lambda};
+}
+Code.exponentialDistributionValueForPercent = function(min,lambda,percent){
+	if(percent===undefined){
+		percent = lambda;
+		lambda = min;
+		min = 0;
+	}
+	var value = -Math.log(1-percent)/lambda;
+	return value;
+};
+Code.exponentialDistributionPercentForValue = function(min,lambda,value){
+	if(value===undefined){
+		value = lambda;
+		lambda = min;
+		min = 0;
+	}
+	value = value - min;
+	var percent = 0.50;
+	var v = -Math.log(1-percent)/lambda;
+	var ratio = value/v;
+
+	throw "inverse lookup / binary search"
+	return percent;
+};
+
+
 Code.averageAngles = function(angles, percents){
 	var i, count = angles.length;
 	var sumSin = 0;

@@ -8065,22 +8065,46 @@ console.log("pair count: "+pairs.length+" ............");
 	}
 
 
+	var saveProjectFxn = function(){
+		console.log("saveProjectFxn");
+		project._taskDoneCheckReloadURL();
+	}
 
 
-
-
-project.visualizePairEdges(pairs);
-
-
-throw ">triples";
+// throw ">triples";
 
 	var triples = inputData["triples"];
 	if(!triples){
+
+
+// filter pairs & generate triples from remaining pairs
+
+var originalPairs = pairs;
+var info = project.visualizePairEdges(pairs);
+console.log(info);
+var pairs = info["pairs"];
+console.log(pairs);
+// throw "PAIRS";
+
+
 		inputData["triples"] = project.triplesFromBestPairs(pairs, isDense);
-		console.log(inputData);
+		// console.log(inputData);
 		triples = inputData["triples"];
-		// throw "BEFORE TRIPLES DONE"
+console.log(triples);
+
+inputData["pairsRaw"] = originalPairs;
+inputData["pairs"] = pairs;
+console.log(inputData);
+
+		
+		project.saveFileFromData(inputData,inputFilename, saveProjectFxn,project);
+
+		throw "BEFORE TRIPLES DONE"
 	}
+
+
+// throw ">triples";
+
 	//
 console.log(triples);
 	//
@@ -8088,10 +8112,7 @@ console.log(triples);
 	console.log("TRIPLE COUNT: "+inputData["triples"].length);
 	// 
 	// LOAD EACH POSSIBLE TRIPLE
-	var saveProjectFxn = function(){
-		console.log("saveProjectFxn");
-		project._taskDoneCheckReloadURL();
-	}
+	
 	var completeTripleFxn = function(scales){
 		console.log("completeTripleFxn");
 		console.log(scales);
@@ -8356,13 +8377,6 @@ App3DR.ProjectManager.prototype.visualizePairEdges = function(pairs){
 	var project = this;
 	console.log(pairs);
 
-
-	// var viewIDToPairs = {};
-	// for(var i=0; i<pairs.length; ++i){
-	// 	var pair = pairs[i];
-	// 	var viewIDA = pair["A"];
-	// }
-
 	var views = project.views();
 	var viewIDToIndex = {};
 	for(var i=0; i<views.length; ++i){
@@ -8456,8 +8470,10 @@ var removeList = {};
 	// extract viable pairs & rotation matrixes
 	var viewIDs = {};
 	var viewPairs = [];
+	var viewPairsIDToPair = {};
 	for(var i=0; i<pairs.length; ++i){
 		var pair = pairs[i];
+			viewPairsIDToPair[pair["id"]] = pair;
 		var relativeCount = pair["relative"];
 		var relativeError = pair["relativeError"];
 		if(pair["relative"]>0 && !removeList[pair["id"]]){
@@ -8586,6 +8602,7 @@ var removeList = {};
 
 	// calculate all loops round-trip error (does forward / backward matter ?)
 
+
 var relAngleFxn = function(matrix){
 	var x = rotation.multV3DtoV3D(new V3D(1,0,0));
 	var y = rotation.multV3DtoV3D(new V3D(0,1,0));
@@ -8600,6 +8617,10 @@ var relAngleFxn = function(matrix){
 	angle /= 3;
 	return angle;
 }
+
+var dropIterations = 2;
+for(var iterations=0; iterations<dropIterations; ++iterations){
+
 	var errors = [];
 	
 	for(var i=0; i<loops.length; ++i){
@@ -8657,7 +8678,9 @@ var relAngleFxn = function(matrix){
 		var dx = V3D.distanceSquare(V3D.DIRX,x);
 		var dy = V3D.distanceSquare(V3D.DIRY,y);
 		var dz = V3D.distanceSquare(V3D.DIRZ,z);
-		// var error = dx + dy + dz;
+		
+		// AXIS - DISTANCE - ERROR - SQARED
+		var error = dx + dy + dz;
 			// error = Math.sqrt(error);
 		// console.log(error);
 
@@ -8665,11 +8688,14 @@ var relAngleFxn = function(matrix){
 		
 		// error = Code.degrees(V3D.angle(V3D.DIRZ,z));
 // console.log(relError);
-		error = 0;
-		error += V3D.angle(V3D.DIRZ,z);
-		error += V3D.angle(V3D.DIRY,y);
-		error += V3D.angle(V3D.DIRX,x);
-		error /= 3;
+	
+		// ANGLE ERROR
+		// error = 0;
+		// error += V3D.angle(V3D.DIRZ,z);
+		// error += V3D.angle(V3D.DIRY,y);
+		// error += V3D.angle(V3D.DIRX,x);
+		// error /= 3;
+
 		// console.log( Code.degrees(error) );
 		// error /= relError;
 
@@ -8697,39 +8723,114 @@ var relAngleFxn = function(matrix){
 	console.log(errors);
 	Code.printMatlabArray(errors,"errors");
 
+	// average each edge's errors:
+	var graphEdges = viewGraph.edges();
+	for(var i=0; i<graphEdges.length; ++i){
+		var edge = graphEdges[i];
+		var data = edge.data();
+		var edgeErrors = data["errors"];
+		var mean = Code.averageNumbers(edgeErrors);
+		data["error"] = mean;
+	}
 
-	// throw "..."
+	// calculate outlier dropping:
+	var info = Code.exponentialDistribution(errors);
+	console.log(info);
+
+	var limit90 = Code.exponentialDistributionValueForPercent(info["min"],info["lambda"], 0.90);
+	console.log("limit90: "+limit90);
+
+	var count = 0;
+	var next = [];
+	var missed = [];
+	for(var i=0; i<errors.length; ++i){
+		var error = errors[i];
+		if(error<=limit90){
+			next.push(error);
+		}else{
+			missed.push(error);
+		}
+	}
+	console.log(next);
+	console.log(missed);
+
+
+	var info = Code.exponentialDistribution(next);
+	console.log(info);
+
+	var limit95 = Code.exponentialDistributionValueForPercent(info["min"],info["lambda"], 0.95);
+	console.log("limit95: "+limit95);
+
+
+	// mark bad edges
+	var dropEdges = [];
+	for(var i=0; i<loops.length; ++i){
+		var loop = loops[i];
+		var loopError = loop["error"];
+		if(loopError>limit90){ // && loopError>limit95
+			console.log("bad loop: "+loopError);
+			var edges = loop["edges"];
+			// console.log(edges);
+			var worstEdge = null;
+			var worstError = null;
+			for(var e=0; e<edges.length; ++e){
+				var edge = edges[e];
+				var data = edge.data();
+				var edgeError = data["error"];
+				if(worstEdge===null || worstError<edgeError){
+					worstEdge = edge;
+					worstError = edgeError;
+				}
+			}
+			dropEdges[worstEdge.id()] = worstEdge;
+		}
+		// console.log();
+	}
+	var dropEdgesList = Code.objectToArray(dropEdges);
+	console.log(dropEdgesList);
+	// console.log(dropEdges);
+	
+	// remove all loops containing bad edges
+	var dropLoops = [];
+	for(var i=0; i<loops.length; ++i){
+		var loop = loops[i];
+		// console.log(loop);
+		var drop = false;
+		var edges = loop["edges"];
+		for(var j=0; j<edges.length; ++j){
+			var edge = edges[j];
+			// console.log(edge);
+			if(dropEdges[edge.id()]){
+				// dropLoops.push(loop);
+				// break;
+				drop = true;
+				break;
+			}
+		}
+		if(drop){
+			Code.removeElementAt(loops,i);
+			--i;
+		}
+	}
+
+	// remove worst edges from graph
+	for(var i=0; i<dropEdgesList.length; ++i){
+		var edge = dropEdgesList[i];
+		var data = edge.data();
+		console.log("DROPPING EDGE "+data["id"]);
+		viewGraph.removeEdge(edge);
+	}
+
+
+	Code.printMatlabArray(next,"next");
+
+}
+
 
 /*
 
-// find orientation outliers
-	
 
-	
-
-	assign loops average error = RTError / edges
-
-
-	SOLVE FOR WORST EDGES:
-
-
-	A) 
-		create edge objects
-
-		link loop to all edges it contains
-
-		.....
-
-		inference ....
-
-
-	B) 
-
-		find worst 2-3 sigma loops
-		find most common edges in these loops (under 1 sigma?)
-		remove edges
-
-
+TODO: FIND ORIENTATION OUTLIERS USING LOOPS + BELIEF PROPAGATION
 
 */
 
@@ -8737,7 +8838,34 @@ var relAngleFxn = function(matrix){
 
 
 
+	var list = viewPairs;
 
+	// REMAINING PAIRS:
+	var edges = viewGraph.edges();
+	list = [];
+	for(var i=0; i<edges.length; ++i){
+		var edge = edges[i];
+		list.push(edge.data());
+	}
+
+	// viewPairs = list;
+
+
+
+	var keepPairs = [];
+	for(var i=0; i<list.length; ++i){
+		var edge = list[i];
+		var id = edge["id"];
+		console.log(id);
+		var pair = viewPairsIDToPair[id];
+		// console.log(index);
+		// var pair = pairs[index];
+		// console.log(pair);
+		keepPairs.push(pair);
+	}
+	viewPairs = keepPairs;
+	// console.log(viewPairs);
+	// throw "?";
 
 
 
@@ -8747,7 +8875,7 @@ var relAngleFxn = function(matrix){
 	console.log(views);
 	var showPairs = function(){
 		console.log("showPairs");
-
+return;
 		var circleRadius = 400;
 		var totalOffX = 50;
 		var totalOffY = 50;
@@ -8843,11 +8971,7 @@ var relAngleFxn = function(matrix){
 			var pair = list[i];
 			// var error = pair["error"];
 			var error = pair["errors"];
-// console.log(pair);
-// console.log(error);
 			error = Code.averageNumbers(error);
-			// error = Code.sum(error);
-// console.log(error);
 			floats.push(error);
 		}
 		ImageMat.normalFloat01(floats);
@@ -8855,6 +8979,16 @@ var relAngleFxn = function(matrix){
 // var list = pairs;
 
 var list = viewPairs;
+
+// // REMAINING PAIRS:
+// var edges = viewGraph.edges();
+// list = [];
+// for(var i=0; i<edges.length; ++i){
+// 	var edge = edges[i];
+// 	list.push(edge.data());
+// }
+
+// throw "?";
 
 		for(var i=0; i<list.length; ++i){
 			var pair = list[i];
@@ -8927,7 +9061,20 @@ var list = viewPairs;
 		var view = views[i];
 		view.loadIconImage(checkImagesLoaded, project);
 	}
-	throw "visualizePairEdges";
+
+
+
+
+
+
+
+
+
+
+
+	// throw "visualizePairEdges";
+
+	return {"pairs":viewPairs};
 }
 
 App3DR.ProjectManager.prototype.triplesFromBestPairs = function(pairs, isDense){ // TODO: does this guarantee scale coverage for every pair ?

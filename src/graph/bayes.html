@@ -22,7 +22,7 @@ function setupDisplay(){
 }
 
 
-function classesLoadedFxn(){
+function classesLoadedFxn2(){
 	setupDisplay();
 	// create simulated view graph
 	var viewCount = 10;
@@ -348,6 +348,203 @@ edge updates its liklihood:
 
 	throw "...";
 }
+
+
+function classesLoadedFxn(){
+	var network = new BayesNetwork();
+	console.log(network);
+
+	// sum([0.16,0.16,0.24,0.04,0.04,0.24,0.06,0.06])
+}
+
+
+function BayesNetwork(something){ // represent a very large probability table | extract some summary data / features
+// A compute marginals
+// B compute most likely
+	var graph = new Graph();
+	this._variables = null;
+	this._factors = null;
+}
+BayesNetwork.prototype.x = function(){
+	// ...
+}
+BayesNetwork.prototype.query = function(what){ // 
+	// ...
+}
+BayesNetwork.prototype.connect = function(parent, child){ // ? parent->child
+	// ...
+}
+BayesNetwork.prototype._joinTree = function(){ // ?
+	// ...
+}
+BayesNetwork.prototype.mostLikely = function(){ // find maximum probability scenario: return list of variable values ?
+	// ...
+}
+
+BayesNetwork.prototype.probabilityGiven = function(listOutput, listInput){ // find the probability of A,B,C, given D,E,F ?
+	// ...
+}
+
+BayesNetwork.prototype._maxProductVE = function(){
+	// ...
+}
+
+BayesNetwork.prototype._notSum = function(){
+	// ...
+}
+
+BayesNetwork.prototype._maxProductEliminateVariable = function(){
+	// ...
+}
+
+BayesNetwork.prototype._tracebackMAP = function(){ // Maximal A Posterior
+	// ...
+}
+
+
+BayesNetwork.prototype._inferenceGraphCut = function(){ // ?
+	// ...
+}
+
+/*
+
+get joint distribution
+
+
+linearize -> multiply products
+
+
+
+INFERENCE TYPES:
+	A) posterrior probabilty: P(query: Q | evidence: Ei=ei, ...)
+		- variable elimination
+			join = multiplication / listing
+			eliminate = summation over hidden vars
+	B) most likely explanation: argmax(q) : P(Q=q | Ei=ei, ...)
+		- Maximum A Posteriori
+		- max product?
+		- max liklihood?
+		- min sum?
+
+		https://en.wikipedia.org/wiki/Maximum_a_posteriori_estimation
+			=== MODE of function ?
+
+		Maximum a Posteriori (MAP), a Bayesian method.
+		Maximum Likelihood Estimation (MLE), a frequentist method.
+
+...
+
+
+
+
+
+
+
+
+
+
+13: Markov Models
+https://www.youtube.com/watch?v=Nxkapm7QlNw
+14: Hidden Markov Models
+https://www.youtube.com/watch?v=XFgdo4czYs4
+15: Applications of HMMs
+https://www.youtube.com/watch?v=KBg97801U40
+
+
+16: Bayes Nets
+https://www.youtube.com/watch?v=gMQZq2O8yDA
+17: Bayes Nets II
+https://www.youtube.com/watch?v=9OajWBYRhRU
+18: Bayes Nets - Inference
+https://www.youtube.com/watch?v=y9jdsPNsU_Q
+
+
+16- sampling:
+https://www.youtube.com/watch?v=FqDjoOC93sE
+
+...
+
+
+BAYES MAX PRODUCT: (most likley)
+
+arg max
+
+maximum likelihood (or maximum posterior : MAP) 
+
+MAX SUM:
+
+SUM PRODUCT: 
+
+http://www.cs.tau.ac.il/~haimk/pgm-seminar/MAP%20Inference.pdf
+(http://www.cs.tau.ac.il/~haimk/pgm-seminar/pgm-main.htm)
+
+https://medium.com/@jonathan_hui/machine-learning-graphical-model-exact-inference-variable-elimination-belief-propagation-f06a980ec7bf
+
+http://ml.informatik.uni-freiburg.de/former/_media/teaching/ws1314/gm/04-exact_inference.pdf
+
+https://www.cc.gatech.edu/~hic/8803-Fall-09/slides/8803-09-lec13.pdf
+
+>>>>
+	http://www.cs.tau.ac.il/~haimk/
+	http://www.cs.tau.ac.il/~haimk/pgm-seminar/pgm-main.htm
+	http://www.cs.tau.ac.il/~haimk/pgm-seminar/part_1_and_3_shimi.pdf
+	http://www.cs.tau.ac.il/~haimk/pgm-seminar/part_2_barak.pdf
+
+
+
+https://www.cs.ubc.ca/~murphyk/Bayes/bnintro.html
+
+http://www.cs.cmu.edu/~awm/15781/slides/Param_Struct_Learning05v1.pdf
+
+https://pdfs.semanticscholar.org/5b14/a67f76038880c92bb7353d249dc4e076f4d6.pdf
+
+https://ipvs.informatik.uni-stuttgart.de/mlr/marc/teaching/15-MachineLearning/07-graphicalModels.pdf
+
+http://www.ee.columbia.edu/~vittorio/Lecture12.pdf
+
+https://www.ics.uci.edu/~dechter/courses/ics-276/spring-18/reading/Updated-Chapters-4-5.pdf
+
+https://createmomo.github.io/2019/01/07/Probabilistic-Graphical-Models-Revision-Notes/
+
+https://journals.plos.org/ploscompbiol/article/file?id=10.1371/journal.pcbi.0030129&type=printable
+
+https://ocw.mit.edu/courses/electrical-engineering-and-computer-science/6-825-techniques-in-artificial-intelligence-sma-5504-fall-2002/lecture-notes/Lecture16FinalPart1.pdf
+
+https://www.youtube.com/watch?v=Z_09OtDZQno
+
+------------------------------
+ALGORITHMS:
+	http://www.cs.tau.ac.il/~haimk/pgm-seminar/MAP%20Inference.pdf
+		- variable elimination MAP
+		- traceback MAP
+...
+
+..
+*/
+function MarkovNetwork(){ // undirected - Markov Random field
+	// ...
+}
+
+MarkovNetwork.prototype.x = function(){ // ?
+	// ...
+}
+
+MarkovNetwork.prototype.x = function(){ //
+	// ...
+}
+
+// Factor Graph
+
+// 
+
+Loopy.prototype.x = function(){ //?
+	// ...
+}
+
+
+// Naive Bayes
+
+
 
 </script>
 <body onload="pageLoadedFxn();">

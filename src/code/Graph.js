@@ -1090,7 +1090,12 @@ Graph.indexAndCopyEdgesFromLists = function(copyEdgeList, copyVertexList, vertex
 	}
 	return copyEdgeList;
 }
-
+Graph.prototype.aStar = function(startVertex,searchVertex){ // shortest path search - prioritized dijkstra
+	// put starting vertex in q
+	// while q empty
+	// 
+	throw "what?"
+}
 Graph.satelliteVertexesFromEdges = function(edges){ // assuming an incoming connected set from edges
 	// console.log(edges);
 	// find max vertex id
