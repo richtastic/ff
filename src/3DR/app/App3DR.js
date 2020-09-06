@@ -16174,7 +16174,7 @@ console.log(i+": "+data["size"]+" => "+data["value"]+" ("+ratio+")");
 			}
 		}
 		// console.log("largestRatio: "+largestRatio);
-
+		// .
 		// normalize around 1
 		for(var i=0; i<vertexes.length; ++i){
 			var vertex = vertexes[i];

@@ -9223,7 +9223,22 @@ Stereopsis.World.prototype.solveTriple = function(completeFxn, completeContext, 
 						abs1 = 0;
 						abs2 = 1.0; // BC
 					}
-				}else if(edges.length==2){
+				}else if(edges.length==2){ // one was bad for some reason
+					console.log("two ratios");
+					console.log(edges);
+					if(scaleABtoAC>0 && scaleACtoBC>0){ // 
+						abs0 = scaleBCtoAB; // AB
+						abs1 = scaleBCtoAB * scaleABtoAC; // AC
+						abs2 = 1.0; // BC
+					}else if(scaleABtoAC>0 && scaleBCtoAB>0){
+						abs0 = 1.0; // AB
+						abs1 = scaleABtoAC; // AC
+						abs2 = scaleABtoAC * scaleACtoBC; // BC
+					}else if(scaleACtoBC>0 && scaleBCtoAB>0){
+						abs0 = scaleACtoBC * scaleBCtoAB; // AB
+						abs1 = 1.0; // AC
+						abs2 = scaleACtoBC; // BC
+					}
 					throw "???????? edge length 2 ???????"
 				}else{ // 3
 					var result = Code.graphAbsoluteFromRelativeScale1D(edges);
@@ -9526,7 +9541,7 @@ Stereopsis.World.prototype.relativeScaleFromSampleRatios = function(viewA,viewB,
 	}
 	// var maximumSampleTries = 1E4;
 	var maximumSampleTries = 2000;
-	var minimumSamples = 25; // 20 - 100
+	var minimumSamples = 100; // 20 - 100
 // TODO: minimumSamples should be some % of average view point count ?
 	var enoughSamples = 1000; // - probably enough: 100 - 200
 	var loc2D = new V2D();
@@ -9618,7 +9633,7 @@ Code.printMatlabArray(ratios,"ratios");
 
 
 
-
+	
 	// distance between random points in each scene
 	var pointCount = pointSpaceA.count(); // ~ 2x 
 	var minPointCount = Math.sqrt(enoughSamples);
@@ -9678,6 +9693,44 @@ Code.printMatlabArray(ratios,"ratios");
 Code.printMatlabArray(ratios,"ratios");
 ratios = Code.arrayVectorLn(ratios);
 
+
+
+
+// flat region check
+var maximumAllowedRange = 0.01; //  scale difference ... 0.1 - 0.01   ... good ~ 0.02
+var percentCheck = 0.10; // 0.1 - 0.25
+// sort sample
+ratios.sort(function(a,b){
+	return a < b ? -1 : 1;
+});
+// console.log(ratios);
+//
+var startIndex = 0;
+var endIndex = Math.ceil(percentCheck*ratios.length);
+var smallestRange = null;
+// until endIndex reaches end:
+for(;endIndex<ratios.length; ++startIndex, ++endIndex){
+	var range = ratios[endIndex] - ratios[startIndex]
+	// console.log(startIndex+" - "+endIndex+" = "+range+" / "+smallestRange);//+" ? "+ratios[endIndex]+" : "+ratios[startIndex]);
+	if(smallestRange===null || range < smallestRange){
+		smallestRange = range;
+	}
+}
+console.log("smallestRange: "+smallestRange);
+// throw "?"
+if(smallestRange>maximumAllowedRange){
+	console.log("best range too large: "+smallestRange);
+	throw "..."
+	return null;
+}
+		// discard everything outside ~ 2x range ? 
+
+// throw "?";
+
+
+
+// throw "?";
+
 	var sigmaDifferenceMinimum = 0.00001;
 	var maxIterations = 25; // 10-50
 	var lastSigma = null;
@@ -9705,16 +9758,26 @@ console.log("SIGMA: "+s+" = "+sigma);
 			break;
 		}
 		var nextMean = Code.mean(ratios);
-		var rat = nextMean>mean ? nextMean/mean : mean/nextMean;
+		var absMean = Math.abs(mean);
+		var absNext = Math.abs(nextMean);
+		var rat = absNext>absMean ? absNext/absMean : absMean/absNext;
 		if(rat<1.00001){
+		// if(rat<1.000001){
+			console.log("break early: "+nextMean+" & "+mean+" = "+rat);
 			break;
 		}
 	}
 	var lastRatio = (lastSigma/ratios.length);
 	console.log("LAST SIGMA: "+lastSigma+" / "+ratios.length+" = "+lastRatio); // GOOD: 0.0000# - BAD: 0.00#
-	if(lastRatio>0.001){
-		console.log(ratios);
-		throw "bad";
+	console.log(ratios);
+	// if(lastSigma==0){
+	// 	throw "no sigma";
+	// }
+	if(lastRatio>0.001){ // 0.001 - 0.0001
+		console.log("bad lastRatio: "+lastRatio);
+		// Code.printMatlabArray(originalRatios);
+		Code.printMatlabArray(ratios);
+		throw "bad -- unreliable scale";
 		return null;
 	}
 	ratios = Code.arrayVectorExp(ratios);
