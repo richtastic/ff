@@ -39590,6 +39590,12 @@ R3D.skeletalViewGraph = function(edges, maxErrorMultiple){ // get critical nodes
 		edge.data(data);
 		edgeDatas.push(data);
 	}
+
+
+
+throw "use graph.skeletalSet"
+
+
 	// get degree
 	for(var i=0; i<vertexCount; ++i){
 		var vertex = gVertexes[i];
@@ -39861,6 +39867,14 @@ if(c>1000){
 		}
 	}
 
+
+
+
+// END GRAPH
+
+
+
+
 // display stuff ------------------------------------------
 var doDisplayStuff = true;
 if(doDisplayStuff){
@@ -39999,7 +40013,8 @@ console.log(positions);
 		GLOBALSTAGE.addChild(d);
 	}
 }
-}
+} // end display stuff
+
 	// convert from vertexes to original pair indexes
 	// pairs:
 	groupPairs.push(skeletonPairs);

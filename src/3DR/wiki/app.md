@@ -616,37 +616,22 @@ REMAINING 2:
 
 
 
-- need better way to get central portion of scale ratio for triples
-	- should be failure but success on happen to get a flat area
+x remove graph views & paris that are null
+x remove small-group items from display geometry
+x how to use 2-edge ratios
 
-	- flat region should be 
-
-	- linear flatness check:
-		- sort sample
-		- sample size has to be at least ~ 10 | length has to be at least length/p
-		- startIndex = 0;
-		- endIndex = ceil(0.25 x length); // 0.10 - 0.25
-		var maximumRange = 0.1;
-		smallestRange = null;
-		until endIndex reaches end:
-			range = list[endIndex] - list[startIndex]
-			if(smallestRange===null || range < smallestRange){
-				smallestRange = range
-			}
-		}
-		if(smallestRange>){
-			console.log(smallestRange);
-			throw "too small"
-		}
-		// discard everything outside ~ 2x range ? 
+- how to do dense putative:
+	+ guarantee connectivity
+		- MST / skeleton
+	+ graph topology (error)
+		- lower error locations
+	+ world-geometry
+		- geometrically close
+			- normal angle
+			- distance
 
 
-
-
-- how to use 2-edge ratios
-
-	egde: 0-1
-	edge: 1-2
+putativePairsFromViewsAndTransforms
 
 
 

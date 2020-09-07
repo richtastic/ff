@@ -8177,6 +8177,12 @@ console.log("inputFilename: "+inputFilename);
 
 		console.log("_absoluteViewsFromDatas");
 		var graph = project._absoluteViewsFromDatas(graphViews, graphPairs, graphTriples);
+
+console.log(graph);
+
+
+// throw "after abs"
+
 var viewIndextoViewID = [];
 for(var v=0; v<graphViews.length; ++v){
 	viewIndextoViewID[v] = graphViews[v]["id"];
@@ -8185,10 +8191,10 @@ for(var v=0; v<graphViews.length; ++v){
 		var graphGroups = [graph["skeleton"]];
 		var graphGroupPairs = [graph["skeletonEdges"]];
 		if(false){
-		var graphGroups = graph["groups"];
-			graphGroups.unshift(graph["skeleton"]);
-		var graphGroupPairs = graph["groupEdges"]
-			graphGroupPairs.unshift(graph["skeletonEdges"]);
+			var graphGroups = graph["groups"];
+				graphGroups.unshift(graph["skeleton"]);
+			var graphGroupPairs = graph["groupEdges"]
+				graphGroupPairs.unshift(graph["skeletonEdges"]);
 		}
 		var basePath = Code.pathRemoveLastComponent(inputFilename);
 		// console.log(basePath);
@@ -8203,6 +8209,15 @@ for(var v=0; v<graphViews.length; ++v){
 		data["skeletonIndex"] = 0;
 		data["loadGroupIndex"] = -1;
 		data["loadPairIndex"] = -1;
+
+
+		// delete empty views
+		var dataViews = data["views"];
+		var dataPairs = data["pairs"];
+
+
+
+
 		// 
 		var vs = graph["views"];
 		var vt = graph["transforms"];
@@ -8225,6 +8240,9 @@ console.log(i+" = ",vs[i]);
 		}
 		for(var i=0; i<graphGroups.length; ++i){
 			var group = graphGroups[i];
+// 
+console.log(group);
+// throw "?"
 			var g = {};
 			var gViews = [];
 			var gEdges = [];
@@ -8246,7 +8264,75 @@ console.log(i+" = ",vs[i]);
 			}
 			dataGroups.push(g);
 		}
+
+// console.log(inputData);
+// console.log(dataGroups);
+// console.log(data);
+
+
+
+// delete nonexistant pairs now with empty views
+var removedViews = {};
+var removedViewCount = 0;
+var validViewIDs = {};
+for(var i=0; i<dataViews.length; ++i){
+	var view = dataViews[i];
+	var viewID = view["id"];
+	if(!view["transform"]){
+		console.log("null transform: "+viewID);
+		Code.removeElementAt(dataViews,i);
+		--i;
+		removedViews[viewID] = true;
+		++removedViewCount;
+	}else{
+		validViewIDs[viewID] = true;
+	}
+}
+for(var i=0; i<dataPairs.length; ++i){
+	var pair = dataPairs[i];
+	var viewIDA = pair["A"];
+	var viewIDB = pair["B"];
+	if(removedViews[viewIDA] || removedViews[viewIDB]){
+		console.log("null pair: "+viewIDA+" | "+viewIDB);
+		Code.removeElementAt(dataPairs,i);
+		--i;
+	}
+}
+
+var dataGroups = data["groups"];
+console.log(dataGroups);
+// throw out any pairs / groups that include an invalid view
+// TODO: THIS MAY MESS UP NON-SKELETON VERSION
+for(var i=0; i<dataGroups.length; ++i){
+	var group = dataGroups[i];
+	var groupViews = group["views"];
+	var groupPairs = group["edges"];
+	for(var j=0; j<groupViews.length; ++j){
+		var viewID = groupViews[j];
+		if(!validViewIDs[viewID]){
+			console.log("remove null group view: "+viewID);
+			Code.removeElementAt(groupViews,j);
+			--j;
+		}
+	}
+	for(var j=0; j<groupPairs.length; ++j){
+		var pair = groupPairs[j];
+		var viewIDA = pair["A"];
+		var viewIDB = pair["B"];
+		if(!validViewIDs[viewIDA] || !validViewIDs[viewIDB]){
+			console.log("remove null group pair: "+viewIDA+" | "+viewIDB);
+			Code.removeElementAt(groupPairs,j);
+			--j;
+		}
+	}
+}
+// ^
+
+
+
+console.log(data);
 throw "BEFORE SAVE GRAPH";
+// ..
 		// save graph & reference it
 		inputData["graph"] = graphFilename;
 		var saveSparseFxn = function(){
@@ -9325,11 +9411,29 @@ console.log("ITERATION NUMBER: "+baIterations+" / "+maxIterationsBA);
 				// isDone = true;
 				if(isDone){ // BA is done -> find best putatives for dense
 console.log("isDone - FULL DONE")
+
+// show the graph:
+var orderedTransforms = [];
+var groupIDs = [];
+for(var v=0; v<allViews.length; ++v){
+	var view = allViews[v];
+	var viewID = view["id"];
+	var trans = view["transform"];
+		trans = Matrix.fromObject(trans);
+	orderedTransforms.push(trans);
+	groupIDs.push(viewID);
+}
+var groupPairsPass = [];
+project.displayViewGraph(orderedTransforms,groupPairsPass, 100, groupIDs);
+					
+					// get best putative pairs
 					var allTransforms = fullData["transforms"];
 					console.log(fullData);
 					console.log(allViews,allTransforms);
 					var info = App3DR.ProjectManager._putativePairsFromViewsAndTransforms(allViews,allTransforms);
 					console.log(info);
+
+
 throw "putative here ..."
 					// var pairs = info["lookup"];
 					var pairs = info["pairs"];
@@ -9689,11 +9793,13 @@ originalTransforms[i] = absolute;
 						addToScaleTable(skeletonIDToScale,viewIDA,ratio);
 						addToScaleTable(skeletonIDToScale,viewIDB,ratio);
 					}else{
-						console.log("no pair for both ");
+						console.log("no pair for both: "+viewIDA+" & "+viewIDB);
 					}
 					
 				}
 			}
+// console.log(skeletonViews);
+			// throw "???"
 			// get average scale:
 			var keys = Code.keys(skeletonIDToScale);
 			for(var i=0; i<keys.length; ++i){
@@ -9723,8 +9829,8 @@ originalTransforms[i] = absolute;
 
 					// TODO: PAIR ERROR /= COUNT ?
 
-					console.log(pair);
-					throw "error over count = average error";
+					// console.log(pair);
+					// throw "NOTE: error over count = average error";
 
 
 					if(pair["A"]==leafID){
@@ -9960,7 +10066,7 @@ throw "get list of pairs including only top 3 view pairs -- from original graph 
 */
 
 
-
+console.log("GOT TO HERE")
 
 
 
@@ -10120,6 +10226,8 @@ console.log("special case? - should save view transforms to track full yaml");
 				var transforms = info["transforms"];
 
 				// create world
+// console.log(views, images, cellSizes, transforms);
+// throw "///"
 				var world = new Stereopsis.World();
 				var WORLDCAMS = App3DR.ProjectManager.addCamerasToWorld(world, cameras);
 				console.log(WORLDCAMS);
@@ -10156,7 +10264,7 @@ console.log("special case? - should save view transforms to track full yaml");
 				console.log(worldView);
 
 				// optimize view orientation
-throw "BEFORE OPTIMIZE SINGLE VIEW?"
+// throw "BEFORE OPTIMIZE SINGLE VIEW?"
 				var info = world.solveOptimizeSingleView(worldView);
 				console.log(info);
 // throw "AFTER OPTIMIZE"
@@ -10359,11 +10467,33 @@ console.log(loadPairs);
 					var view = graphDataViews[i];
 					var viewID = view["id"];
 					var transform = view["transform"];
-					graphViewIDToTransform[viewID] = Matrix.fromObject(transform);
+					graphViewIDToTransform[viewID] = transform ? Matrix.fromObject(transform) : null;
 				}
 
 				var cameras = project.cameras();
 				var graphGroupViews = graphGroup["views"];
+
+
+// console.log(graphGroupViews);
+// filter out unused views:
+console.log(graphGroupViews.length);
+graphGroupViews = Code.copyArray(graphGroupViews);
+// var didRemove = false;
+for(var i=0; i<graphGroupViews.length; ++i){
+	var viewID = graphGroupViews[i];
+	var transform = graphViewIDToTransform[viewID];
+	if(!transform){
+		console.log("no transform for: "+viewID);
+		throw "yup";
+		Code.removeElementAt(graphGroupViews,i);
+		--i;
+	}
+}
+console.log(graphGroupViews.length);
+console.log(graphGroupViews);
+// throw "..."
+
+
 				var views = [];
 				var images = [];
 				var cellSizes = [];
@@ -10371,6 +10501,11 @@ console.log(loadPairs);
 				for(var i=0; i<graphGroupViews.length; ++i){
 					var viewID = graphGroupViews[i];
 					var transform = graphViewIDToTransform[viewID];
+					// if(!transform){
+					// 	console.log("no transform for: "+viewID);
+					// 	throw "..."
+					// 	// continue;
+					// }
 					transforms.push(transform);
 					view = project.viewFromID(viewID);
 					views[i] = view;
@@ -10611,6 +10746,39 @@ var pairIDToError = {};
 	var sort0Fxn = function(a,b){
 		return a[0] < b[0] ? -1 : 1;
 	}
+
+
+
+	console.log("A) GET SKELETON PAIRS");
+	console.log("B) GET LOWEST-ERROR ADDITIONAL PAIRS");
+	console.log("C) CHECK FOR VISUAL CONSISTENCY");
+/*
+	var graphEdges = [];
+	for(var i=0; i<edges.length; ++i){
+		var edge = edges[i];
+		var A = edge.A();
+		var B = edge.B();
+		var data = edge.data();
+		var indexA = viewIDToIndex[A.data()["id"]];
+		var indexB = viewIDToIndex[B.data()["id"]];
+		var e = [indexA,indexB,data["error"]];
+		graphEdges.push(e);
+	}
+	// console.log(graphEdges);
+	var skeleton = R3D.skeletalViewGraph(graphEdges);
+	edges, maxErrorMultiple
+*/
+
+console.log(graph);
+var maxErrorMultiple = 4.0;
+var skeleton = graph.skeletalEdges(maxErrorMultiple);
+console.log(skeleton);
+
+
+// add each edge to each view/vertex
+
+
+throw "graph";
 
 	// find bests:
 	var minimumPairMatches = 4; // assuming @ 50% error -- backup pair to create triple
@@ -10956,6 +11124,7 @@ console.log(result);
 	var groupViews = first["views"];
 console.log(groupPairs);
 
+// throw "?............"
 
 
 var minimumStringFirst = function(a,b){
@@ -11008,6 +11177,15 @@ for(var i=0; i<views.length; ++i){
 	groupIDs[i] = viewID;
 }
 
+
+console.log(orderedTransforms);
+console.log(groupPairs);
+console.log(groupPairsPass);
+console.log(groupIDs);
+
+// throw "..."
+
+// HERE
 	this.displayViewGraph(orderedTransforms,groupPairsPass, 100, groupIDs);
 
 	// absolute to extrinsic
@@ -11017,9 +11195,18 @@ for(var i=0; i<views.length; ++i){
 		}
 	}
 
+
+
+// remove unreachable views from largest group:
+
+
+// need to reduce IDs to new set:
+
+// throw "... reduced set:";
+
+
 // var doSkeleton = false;
 var doSkeleton = true;
-// throw "DO WANT a skeleton"
 
 	var skeleton; // SKELETON EDGES & VERTEXES
 	var backbone; // VERTEXES [VIEWS]
@@ -11027,6 +11214,7 @@ var doSkeleton = true;
 
 	if(doSkeleton){
 		skeleton = R3D.skeletalViewGraph(groupPairs);
+console.log(skeleton);
 		backbone = skeleton["skeletonVertexes"];
 		groups = skeleton["groupVertexes"];
 	}else{ // just include everything as skeleton
@@ -11038,6 +11226,10 @@ var doSkeleton = true;
 		groups = [];
 		backbone = allVertexes;
 	}
+
+console.log(backbone);
+
+// throw "?????????"
 
 	return {"transforms":orderedTransforms, "views":views, "skeleton":backbone, "groups":groups, "skeletonEdges":skeleton["skeletonEdges"], "groupEdges":skeleton["groupEdges"]};
 }
@@ -11865,7 +12057,7 @@ App3DR.ProjectManager.prototype.fillInWorldViews = function(cameras, graphGroupV
 	var transforms = [];
 	for(var i=0; i<graphGroupViews.length; ++i){
 		var viewID = graphGroupViews[i];
-// console.log(viewID);
+console.log(viewID);
 		if(Code.isObject(viewID)){
 			viewID = viewID["id"];
 		}
@@ -11911,6 +12103,7 @@ App3DR.ProjectManager.prototype.createWorldViewsForViews = function(world, views
 	var BAVIEWS = [];
 	for(var i=0; i<views.length; ++i){
 		var view = views[i];
+		console.log(view);
 		var img = images[i];
 		var cellSize = cells[i];
 		var cam = world.cameraFromData(view.cameraID());
@@ -16918,10 +17111,15 @@ App3DR.ProjectManager.prototype.displayViewGraph = function(transforms, pairs, o
 	for(var i=0; i<transforms.length; ++i){
 		var transform = transforms[i];
 		if(!transform){
-			transform = new Matrix(4,4).identity();
-		}	
+			// transform = new Matrix(4,4).identity();
+			var str = ""+i;
+			if(groupIDs){
+				str = "["+i+"] "+groupIDs[i];
+			}
+			console.log("MISSING TRANSFORM FOR: "+str);
+		}
 		var o, z, normal;
-		if(false){
+		if(!transform){
 			o = null;
 			z = null;
 			normal = null;
@@ -16942,6 +17140,10 @@ App3DR.ProjectManager.prototype.displayViewGraph = function(transforms, pairs, o
 	var plane = Code.planeFromPoints3D(validCenters);
 	var planeCenter = plane["point"];
 	var planeNormal = plane["normal"];
+if(false){
+// if(true){ // flip for visual consistency -- in 3D
+	planeNormal.scale(-1);
+}
 	var centers2D = Code.projectPointsTo2DPlane(validCenters,planeCenter,planeNormal);
 	var forwards2D = Code.projectPointsTo2DPlane(validForwards,planeCenter,planeNormal);
 	var normals2D = [];
@@ -16961,7 +17163,22 @@ App3DR.ProjectManager.prototype.displayViewGraph = function(transforms, pairs, o
 		transformTo2D.identity();
 		transformTo2D.translate(-origin2D.x,-origin2D.y);
 		transformTo2D.scale(scaleToDisplay);
+if(false){
+// if(true){ // flip for visual consistency -- in 2D
+	transformTo2D.scale(1,-1);
+}
 		transformTo2D.translate(offset2D.x,offset2D.y);
+
+// insert nulls at invalid locations:
+for(var i=0; i<transforms.length; ++i){
+	var transform = transforms[i];
+	if(!transform){
+		Code.arrayInsert(centers2D,i, null);
+		Code.arrayInsert(forwards2D,i, null);
+		Code.arrayInsert(normals2D,i, null);
+	}
+}
+
 
 	// bounding:
 	var display = new DO();
@@ -16978,6 +17195,7 @@ App3DR.ProjectManager.prototype.displayViewGraph = function(transforms, pairs, o
 	for(var i=0; i<centers2D.length; ++i){
 		var center2D = centers2D[i];
 		if(!center2D){
+			centersDisplay2D.push(null);
 			continue;
 		}
 		// var p2D = center2D.copy().sub(origin2D).scale(scaleToDisplay).add(offset2D);
@@ -17037,6 +17255,9 @@ App3DR.ProjectManager.prototype.displayViewGraph = function(transforms, pairs, o
 
 		var p2DA = centersDisplay2D[a];
 		var p2DB = centersDisplay2D[b];
+		if(!p2DA || !p2DB){
+			continue;
+		}
 		display.graphics().setLine(2.0,0x990000CC);
 		display.graphics().beginPath();
 		display.graphics().moveTo(p2DA.x,p2DA.y);

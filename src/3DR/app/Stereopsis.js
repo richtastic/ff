@@ -9223,23 +9223,24 @@ Stereopsis.World.prototype.solveTriple = function(completeFxn, completeContext, 
 						abs1 = 0;
 						abs2 = 1.0; // BC
 					}
-				}else if(edges.length==2){ // one was bad for some reason
+				}else if(edges.length==2){ // no/few compareable points (or one pair was bad for some reason), infer missing transform
 					console.log("two ratios");
 					console.log(edges);
-					if(scaleABtoAC>0 && scaleACtoBC>0){ // 
-						abs0 = scaleBCtoAB; // AB
-						abs1 = scaleBCtoAB * scaleABtoAC; // AC
-						abs2 = 1.0; // BC
-					}else if(scaleABtoAC>0 && scaleBCtoAB>0){
+					if(scaleABtoAC>0 && scaleACtoBC>0){ // AB first
 						abs0 = 1.0; // AB
 						abs1 = scaleABtoAC; // AC
-						abs2 = scaleABtoAC * scaleACtoBC; // BC
-					}else if(scaleACtoBC>0 && scaleBCtoAB>0){
+						abs2 = scaleABtoAC * scaleACtoBC; // BC first
+					}else if(scaleACtoBC>0 && scaleBCtoAB>0){ // AC first
 						abs0 = scaleACtoBC * scaleBCtoAB; // AB
 						abs1 = 1.0; // AC
 						abs2 = scaleACtoBC; // BC
+					}else if(scaleABtoAC>0 && scaleBCtoAB>0){
+						abs0 = scaleBCtoAB; // AB
+						abs1 = scaleBCtoAB * scaleABtoAC; // AC
+						abs2 = 1.0; // BC
 					}
-					throw "???????? edge length 2 ???????"
+					console.log(abs0+" | "+abs1+" | "+abs2);
+					// throw "???????? edge length 2 ???????"
 				}else{ // 3
 					var result = Code.graphAbsoluteFromRelativeScale1D(edges);
 					var abs = result["values"];
@@ -9686,18 +9687,18 @@ Code.printMatlabArray(ratios,"ratios");
 			break;
 		}
 	}
+Code.printMatlabArray(ratios,"ratios");
+ratios = Code.arrayVectorLn(ratios);
 	if(ratios.length<minimumSamples){
 		return null;
 	}
 
-Code.printMatlabArray(ratios,"ratios");
-ratios = Code.arrayVectorLn(ratios);
 
-
-
+// TODO: SOOTHING OF RATIO SAMPLES?
 
 // flat region check
-var maximumAllowedRange = 0.01; //  scale difference ... 0.1 - 0.01   ... good ~ 0.02
+//  @ 0.10=0.02  @ 0.25=0.05
+var maximumAllowedRange = 0.025; //  scale difference ... 0.1 - 0.01   ... good ~ 0.01 : TODO: LOWER THIS TO ~ 0.01-0.02
 var percentCheck = 0.10; // 0.1 - 0.25
 // sort sample
 ratios.sort(function(a,b){
@@ -9720,14 +9721,10 @@ console.log("smallestRange: "+smallestRange);
 // throw "?"
 if(smallestRange>maximumAllowedRange){
 	console.log("best range too large: "+smallestRange);
-	throw "..."
+	// throw "..."
 	return null;
 }
 		// discard everything outside ~ 2x range ? 
-
-// throw "?";
-
-
 
 // throw "?";
 
@@ -9777,7 +9774,7 @@ console.log("SIGMA: "+s+" = "+sigma);
 		console.log("bad lastRatio: "+lastRatio);
 		// Code.printMatlabArray(originalRatios);
 		Code.printMatlabArray(ratios);
-		throw "bad -- unreliable scale";
+		// throw "bad -- unreliable scale";
 		return null;
 	}
 	ratios = Code.arrayVectorExp(ratios);

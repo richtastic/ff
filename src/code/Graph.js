@@ -2149,6 +2149,295 @@ Graph.prototype.adjacent = function(data){ // connects to vertex via edge : neig
 	}
 	return result;
 }
+
+Graph.prototype.skeletalEdges = function(maxErrorMultiple){ // connected MST with no more than maximum error
+
+
+
+throw "here"
+
+
+
+
+
+
+		// get degree
+	for(var i=0; i<vertexCount; ++i){
+		var vertex = gVertexes[i];
+		var data = vertex.data();
+		var degree = vertex.degree();
+		data["degree"] = degree;
+		data["color"] = 0;
+	}
+	// calculate the shortest path between every pair of vertexes = sum
+	var minPathLookup = {};
+	var pairIDFxn = Graph._pairIDFxn;
+	for(var i=0; i<gVertexes.length; ++i){
+		var vertexA = gVertexes[i];
+		var paths = graph.minPaths(vertexA);
+		for(var j=0; j<paths.length; ++j){
+			var path = paths[j];
+			var vertexB = path["vertex"];
+			var cost = path["cost"];
+			var pairID = pairIDFxn(vertexA.id(),vertexB.id());
+			minPathLookup[pairID] = cost;
+		}
+	}
+	// get edge importance = shortestLength/edgeLength & reset edge weight as importance
+	var removedEdges = [];
+	for(var i=0; i<gEdges.length; ++i){
+		var edge = gEdges[i];
+		var data = edge.data();
+		var vertexA = edge.A();
+		var vertexB = edge.B();
+		var weight = edge.weight();
+		var pairID = pairIDFxn(vertexA.id(),vertexB.id());
+		var minPathCost = minPathLookup[pairID];
+		if(minPathCost==0){
+			console.log(pairID);
+			console.log(minPathLookup);
+			throw "no zeros";
+		}
+		var importance = minPathCost/weight;
+		data["importance"] = importance;
+		edge.weight(importance);
+		// remove edges below some minimum importance
+		if(importance<importanceMinumum){
+			Code.removeElementAt(gEdges,i);
+			--i;
+			graph.removeEdge(edge, true);
+			removedEdges.push(edge);
+		}
+	}
+	// find best vertex to add: highest degree & importance
+	var bestVertex = null;
+	var bestDegree = 0;
+	for(var i=0; i<gVertexes.length; ++i){
+		var vertex = gVertexes[i];
+		var degree = vertex.degree();
+		var data = vertex.data();
+		// get 'average' degree ?
+		// if(degree<=1){
+		// 	degree = 1;
+		// }
+		// degree = data["importance"]/degree;
+		if(!bestVertex){
+			bestVertex = vertex;
+			bestDegree = degree;
+		}else{
+			if(bestDegree<degree){
+				bestVertex = vertex;
+				bestDegree = degree;
+			}
+		}
+	}
+	console.log(bestVertex);
+	// loop - add vertexes to graph from queue
+	var includedEdges = [];
+	var sortVertexFxn = function(a,b){
+		if(a==b){
+			return 0;
+		}
+		// not DEGREE, most white neighbors
+		var da = a.degree();
+		var db = b.degree();
+		if(da==db){
+			// console.log(a);
+			// var ia = a.weight();
+			// var ib = b.weight();
+			// if(ia==ib){
+				return a.id()<b.id() ? -1 : 1;
+			// }
+			// return ia<ib ? -1 : 1;
+		}
+		return da<db ? -1 : 1;
+	}
+	var queue = new PriorityQueue(sortVertexFxn);
+	queue.push(bestVertex);
+		// .data()["color"] = 1;
+var c=0;
+	while(!queue.isEmpty()){
+		var currentVertex = queue.pop();
+		// console.log(currentVertex);
+		var currentData = currentVertex.data();
+		var color = currentData["color"];
+		if(color==2){ // already added all edges
+			continue;
+		}
+		currentData["color"] = 2;
+		// add each unvisited edge to graph
+		var addedCount = 0;
+		var edges = currentVertex.edges();
+		for(var i=0; i<edges.length; ++i){
+			var edge = edges[i];
+			var other = edge.opposite(currentVertex);
+			var otherData = other.data();
+			if(otherData["color"]==0){ // not yet added to group
+				otherData["color"] = 1;
+				queue.push(other);
+				// console.log(edge.A().id()+" & "+edge.B().id())
+				var edgeData = edge.data();
+				edgeData["skeleton"] = true;
+				includedEdges.push(edgeData);
+				++addedCount;
+			}
+		}
+		// if(addedCount>0){
+		// 	currentData["color"] = 2;
+		// }
+++c;
+if(c>1000){
+	console.log("too long");
+	break;
+}
+
+	}
+
+	// remove non-skeleton edges:
+	for(var i=0; i<gEdges.length; ++i){
+		var edge = gEdges[i];
+		var edgeData = edge.data();
+		
+		if(!edgeData["skeleton"]){
+			Code.removeElementAt(gEdges,i);
+			--i;
+			graph.removeEdge(edge, true);
+			removedEdges.push(edge);
+		}
+
+	}
+	// add back edges to satisfy min constraint -------------------------------------
+	// cache calucation for interrior vs exterrior:
+	for(var i=0; i<removedEdges.length; ++i){
+		var edge = removedEdges[i];
+			var interriorA = edge.A().degree()>1;
+			var interriorB = edge.B().degree()>1;
+			edge.data()["interrior"] = interriorA && interriorB;
+	}
+	// set all edges back to weight from importance:
+	for(var i=0; i<edgeDatas.length; ++i){
+		var edgeData = edgeDatas[i];
+		edgeData["edge"].weight(edgeData["weight"]);
+	}
+	// sort by adding unused edges to queue
+	var sortEdgeFxn = function(a,b){
+		if(a==b){
+			return 0;
+		}
+		a = a.data();
+		b = b.data();
+		var intA = a["interrior"];
+		var intB = b["interrior"];
+		if(intA && !intB){
+			return -1;
+		}else if(!intA && intB){
+			return 1;
+		} // else same
+		return a["weight"] < b["weight"] ? -1 : 1; // lower weight or higher importance ?
+	}
+	queue.sorting(sortEdgeFxn);
+	for(var i=0; i<removedEdges.length; ++i){
+		var edge = removedEdges[i];
+		queue.push(edge);
+	}
+	removedEdges = queue.toArray();
+	// add back edges until min stretch factor achieved
+	for(var i=0; i<removedEdges.length; ++i){
+		var edge = removedEdges[i];
+		// this edge cost:
+			// var weight = edge.weight();
+		// original graph min cost
+			var pairID = pairIDFxn(vertexA.id(),vertexB.id());
+			var weight = minPathLookup[pairID];
+		var vertexA = edge.A();
+		var vertexB = edge.B();
+		var path = graph.minPath(vertexA,vertexB);
+		var cost = path["cost"];
+		var maxRatio = weight*t;
+		if(cost>maxRatio){
+			console.log("add back");
+			console.log(cost+" / "+weight+" ? "+maxRatio);
+			graph.addEdge(edge);
+			Code.removeElementAt(removedEdges,i);
+			--i;
+			gEdges.push(edge);
+		}
+	}
+	// mark interrior / leaf nodes:
+	for(var i=0; i<gVertexes.length; ++i){
+		var vertex = gVertexes[i];
+		var degree = vertex.degree();
+		var data = vertex.data();
+		data["leaf"] = false;
+		data["interrior"] = false;
+		if(degree==1){
+			data["leaf"] = true;
+		}else{
+			data["interrior"] = true;
+		}
+	}
+	// collect groups: ------------------------------------------
+	// skeleton is set of interrior nodes
+	var skeleton = [];
+	for(var i=0; i<gVertexes.length; ++i){
+		var vertex = gVertexes[i];
+		var data = vertex.data();
+		if(data["interrior"]){
+			skeleton.push(vertex);
+		}
+	}
+	// groups are interrior nodes + all leaves
+	var groups = [];
+	for(var i=0; i<gVertexes.length; ++i){
+		var vertex = gVertexes[i];
+		var data = vertex.data();
+		if(data["interrior"]){
+			var group = [];
+			var edges = vertex.edges();
+			for(var j=0; j<edges.length; ++j){
+				var edge = edges[j];
+				var opposite = edge.opposite(vertex);
+				if(opposite.data()["leaf"]){
+					group.push(opposite);
+				}
+			}
+			if(group.length>0){
+				group.push(vertex);
+				groups.push(group);
+			}
+		}
+	}
+	// group pairs are all leaf nodes connected to single backbone node
+	var groupPairs = [];
+	console.log("GROUPS: "+groups.length)
+	for(var i=0; i<groups.length; ++i){
+		var group = groups[i];
+		var lm1 = group.length-1;
+		var interrior = group[lm1];
+		var pairs = [];
+		groupPairs.push(pairs);
+		for(var j=0; j<lm1; ++j){
+			var edge = group[j];
+			pairs.push([interrior,edge]);
+		}
+	}
+	// skeleton pairs are all edges in skeleton set:
+	var skeletonPairs = []
+	for(var i=0; i<gEdges.length; ++i){
+		var edge = gEdges[i];
+		var a = edge.A();
+		var b = edge.B();
+		if(a.data()["interrior"] && b.data()["interrior"]){
+			skeletonPairs.push([a,b]);
+		}
+	}
+
+
+
+
+	throw "skeletalSet"
+	return {"edges":skeletonEdges}
+}
 Graph.prototype.kill = function(){
 	//
 }
