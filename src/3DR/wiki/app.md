@@ -385,6 +385,7 @@ MISSING:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+- pairs need more possible graph routes ... increase connectivity allowance for tests?
 
 
 - group - point filtering?:
@@ -393,6 +394,36 @@ MISSING:
 
 
 - groups ?
+
+
+
+solveDenseGroup
+
+
+TASKS:
+	- 3DR:
+		- display putative edges
+		- probe3D
+		- patch filter
+	- BP:
+		- outline factor graph (from doc)
+		- start factor graph (from example code)
+	- 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

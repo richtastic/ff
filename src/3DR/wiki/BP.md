@@ -41,6 +41,7 @@
 		x_u &perp; x_v | all_except(x_u,x_v)
 	- global markov property: any two subsets of variables are conditionally independent given a separating subset
 		X_u &perp; X_v | X_w   (every path from node in A to node in B must pass thru S)
+	- factor nodes _describe_ influence variable nodes have on each other
 	...
 
 
@@ -68,6 +69,11 @@
 #### BN == MN
 	- chordal graphs
 	- 
+
+
+#### Factor Graph
+	- bipartie graph of variable nodes & factor nodes
+	- variable nodes that affect other variable nodes do so thru a factor
 
 
 

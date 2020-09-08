@@ -7773,7 +7773,7 @@ console.log("checkPerformNextTask");
 		project.iterateDenseProcess();
 		return;
 	}
-throw ">start bundle";
+// throw ">start bundle";
 	if(!project.checkHasBundleStarted()){
 		project.initializeBundleGroupsFromDense();
 		return;
@@ -7784,7 +7784,7 @@ throw ">start bundle";
 		return;
 	}
 
-// throw ">start surface"; // copy point files & create surface.yaml
+throw ">start surface"; // copy point files & create surface.yaml
 	if(!project.checkHasSurfaceStarted()){
 		project.initializeSurfaceFromBundle();
 		return;
@@ -8960,7 +8960,7 @@ TODO: FIND ORIENTATION OUTLIERS USING LOOPS + BELIEF PROPAGATION
 	console.log(views);
 	var showPairs = function(){
 		console.log("showPairs");
-return;
+// return;
 		var circleRadius = 400;
 		var totalOffX = 50;
 		var totalOffY = 50;
@@ -9055,8 +9055,11 @@ return;
 		for(var i=0; i<list.length; ++i){
 			var pair = list[i];
 			// var error = pair["error"];
-			var error = pair["errors"];
-			error = Code.averageNumbers(error);
+			// var error = pair["errors"];
+			var error = pair["relativeError"];
+			// console.log(pair);
+			// console.log(error);
+			// error = Code.averageNumbers(error);
 			floats.push(error);
 		}
 		ImageMat.normalFloat01(floats);
@@ -9155,7 +9158,7 @@ var list = viewPairs;
 
 
 
-throw "LOOP BEFORE RETURN ... -- show pairs ?"
+// throw "LOOP BEFORE RETURN ... -- show pairs"
 
 	// throw "visualizePairEdges";
 
@@ -9409,11 +9412,16 @@ console.log("ITERATION NUMBER: "+baIterations+" / "+maxIterationsBA);
 
 				// isDone = true;
 				if(isDone){ // BA is done -> find best putatives for dense
+
+					var allTransforms = fullData["transforms"];
+
+
 console.log("isDone - FULL DONE")
 
 // show the graph:
 var orderedTransforms = [];
 var groupIDs = [];
+var viewIDToIndex = {};
 for(var v=0; v<allViews.length; ++v){
 	var view = allViews[v];
 	var viewID = view["id"];
@@ -9421,15 +9429,30 @@ for(var v=0; v<allViews.length; ++v){
 		trans = Matrix.fromObject(trans);
 	orderedTransforms.push(trans);
 	groupIDs.push(viewID);
+	viewIDToIndex[viewID] = v;
 }
+
 var groupPairsPass = [];
-project.displayViewGraph(orderedTransforms,groupPairsPass, 100, groupIDs);
+for(var v=0; v<allTransforms.length; ++v){
+	var view = allTransforms[v];
+	var viewIDA = view["A"];
+	var viewIDB = view["B"];
+	var viewIndexA = viewIDToIndex[viewIDA];
+	var viewIndexB = viewIDToIndex[viewIDB];
+	groupPairsPass.push( [viewIndexA,viewIndexB] );
+}
+console.log(allTransforms);
+console.log(groupPairsPass);
+
+project.displayViewGraph(orderedTransforms,groupPairsPass, 0, groupIDs);
+
+// throw "???"
 					
 					// get best putative pairs
-					var allTransforms = fullData["transforms"];
+					
 					console.log(fullData);
 					console.log(allViews,allTransforms);
-					var info = App3DR.ProjectManager._putativePairsFromViewsAndTransforms(allViews,allTransforms);
+					var info = project._putativePairsFromViewsAndTransforms(allViews,allTransforms);
 					console.log(info);
 
 
@@ -9870,7 +9893,7 @@ originalTransforms[i] = absolute;
 					absolute = viewIDToTransformLeaf[viewID];
 					isSkeleton = false;
 				}
-				console.log(absolute);
+				// console.log(absolute);
 				allTransforms[i] = absolute;
 				viewIDToIndex[viewID] = i;
 				groupIDs[i] = viewID + (isSkeleton ? "-s" : "-l");
@@ -9893,7 +9916,10 @@ originalTransforms[i] = absolute;
 			// console.log(groupIDs);
 			project.displayViewGraph(allTransforms,pairsIndexes, 100, groupIDs);
 				
-			console.log(allTransforms);
+			// console.log(allTransforms);
+			// console.log(allViews);
+			
+// throw "?"
 			// to extrinsic
 			var allExtrinsics = [];
 			var transformLookup = {};
@@ -9904,7 +9930,13 @@ originalTransforms[i] = absolute;
 				// to lookup:
 				var view = allViews[i];
 				var viewID = view["id"];
-				var object = {"id":viewID, "R":extrinsic};
+				// var cameraID = view["camera"]; // DNE
+					var internal = project.viewFromID(viewID); // TODO: this should be from somewhere else?
+					// console.log(internal);
+					var cameraID = internal.cameraID();
+					// console.log("cameraID: "+cameraID);
+					// throw "????"
+				var object = {"id":viewID, "R":extrinsic, "camera":cameraID};
 				transformLookup[viewID] = object;
 			}
 // console.log(transformLookup);
@@ -10069,7 +10101,7 @@ throw "get list of pairs including only top 3 view pairs -- from original graph 
 console.log("GOT TO HERE")
 
 
-
+console.log(transformLookup);
 			// to array
 			var viewList = [];
 			var keys = Code.keys(transformLookup);
@@ -10079,6 +10111,7 @@ console.log("GOT TO HERE")
 				var viewID = view["id"];
 				var R = view["R"];
 				var cameraID = view["camera"];
+console.log(cameraID);
 				viewList.push({"id":viewID, "transform":R, "camera":cameraID});
 			}
 			console.log(viewList);
@@ -10087,7 +10120,7 @@ console.log("GOT TO HERE")
 			var bundleFilename = "track_full.yaml";
 			graphData["bundleFullFile"] = bundleFilename;
 			var fullBundlePath = Code.appendToPath(basePath,"tracks",bundleFilename);
-//
+// throw "?"
 var str = YAML.parse(bundleData);
 console.log(str);
 //
@@ -10099,6 +10132,7 @@ console.log(str);
 				console.log("savedBundleComplete: "+fullBundlePath);
 				project.saveFileFromData(graphData, graphFile, savedGraphComplete);
 			}
+console.log(fullBundlePath);
 throw "before saving initial bundle full";
 			project.saveFileFromData(bundleData, fullBundlePath, savedBundleComplete);
 			console.log("all group BA complete -- generate initial viewgraph from skeleton + groups");
@@ -10689,7 +10723,9 @@ console.log("load the track file: "+fullTrackPath);
 
 
 
-App3DR.ProjectManager._putativePairsFromViewsAndTransforms = function(views, transforms){
+App3DR.ProjectManager.prototype._putativePairsFromViewsAndTransforms = function(views, transforms){
+	var project = this;
+// throw ".. _putativePairsFromViewsAndTransforms"
 	var viewCount = views.length;
 	var graph = new Graph();
 	var minMatchesForEdge = 16;
@@ -10733,11 +10769,6 @@ var pairIDToError = {};
 		var data = {};
 			data["error"] = errorR;
 			data["transform"] = transform;
-// // console.log(transform);
-// 			var extrinsic = Matrix.fromObject(transform["transform"]);
-// // console.log(extrinsic);
-// 			var absolute = Matrix.inverse(extrinsic);
-// 			data["absolute"] = absolute;
 		var edge = graph.addEdgeDuplex(vertexA,vertexB, errorR);
 		edge.data(data);
 		// used later:
@@ -10767,17 +10798,7 @@ var pairIDToError = {};
 			return b+"-"+a;
 		}
 	}
-
-	// create structure to hold all of each view's best pairs
-	var vertexEdgeChoices = [];
-	for(var i=0; i<vertexes.length; ++i){
-		var vertex = vertexes[i];
-		console.log(vertex);
-		var vertexEdgeChoices = [];
-	}
-
-	
-
+	// 
 	console.log("A) BASE = GET SKELETON PAIRS");
 	console.log(graph);
 	var maxErrorMultiple = 4.0;
@@ -10785,7 +10806,9 @@ var pairIDToError = {};
 	console.log(info);
 	var requiredEdges = info["edges"];
 	console.log(requiredEdges);
-	
+	// 
+	// 
+	// 
 	// final list of putative pairs:
 	var pairLookup = {};
 
@@ -10793,7 +10816,6 @@ var pairIDToError = {};
 	for(var i=0; i<requiredEdges.length; ++i){
 		var edge = requiredEdges[i];
 		var data = edge.data();
-		// console.log(data);
 		var a = edge.A();
 		var b = edge.B();
 		a = a.data();
@@ -10809,21 +10831,21 @@ var pairIDToError = {};
 	// find bests:
 	var minimumPairMatches = 3; // assuming @ 50% error -- backup pair to create triple [sparse->dense] 2-4
 	var maximumPairMatches = 10; // don't want too many matches
-	var maximumViewPairAngle = Code.radians(60.0); // 45-90
+	var maximumViewPairAngle = Code.radians(60.0); // 45-90 | 45+error = 60
 	var maximumViewDistanceMultiple = 4.0; // depends on a neighborhood size ... point targets ...  --- NOT USED YET
 console.log("TODO: get average point location after reconstruction & sigma -- spherical");
-// 4  - 2
-// 9  - 3
-// 16 - 4
-// 25 - 5
-// 36 - 6
-// 49 - 7
-// 64 - 8
-		maximumPairMatches = Math.min( Math.round(2 + Math.sqrt(viewCount)), maximumPairMatches);
+// 4  - 3
+// 9  - 4
+// 16 - 5
+// 25 - 6
+// 36 - 7
+// 49 - 8
+// 64 - 9
+		maximumPairMatches = Math.min( Math.round(3 + Math.sqrt(viewCount)), maximumPairMatches);
 	console.log("pair limits: [ "+minimumPairMatches+" - "+maximumPairMatches+" ]");
 		maximumPairMatches = Math.max(minimumPairMatches,maximumPairMatches);
-	var maximumNeighborhoodAdjacency = 2; // direct=0, +1,+2,+3] -- don't want to try too far away
-	var maximumPropagatedErrorRatio = 4; // 2-4 -- don't want high-error guesses
+	var maximumNeighborhoodAdjacency = 4; // direct=0, +1,+2,+3] -- don't want to try too far away -- 2-3 -- TODO: THIS IS HIGH
+	var maximumPropagatedErrorRatio = 8; // don't want high-error guesses -- 2-4 -- TODO: THIS IS HIGH
 	var pairLookup = {};
 	for(var i=0; i<vertexes.length; ++i){
 		var vertex = vertexes[i];
@@ -10864,14 +10886,20 @@ console.log("TODO: get average point location after reconstruction & sigma -- sp
 						nB.sub(oB);
 					// 
 					var angle = V3D.angle(nA,nB);
+// maximumViewPairAngle = 999;
 					// console.log("ANGLE: "+Code.degrees(angle));
 					// TODO: distance from subject points
 					if(angle<maximumViewPairAngle){
 						if(costD<costMax){
-							foundPairsList.push([costD,v]);
+
+							// var pairCost = costD*Math.pow(d+1,2); // further away graphically is bad too
+							var pairCost = costD;
+							foundPairsList.push([pairCost,v]);
+						}else{
+							// console.log("pair cost too high: "+costD+" of "+costMax);
 						}
 					}else{
-						console.log("angle too large: "+Code.degrees(angle));
+						// console.log("angle too large: "+Code.degrees(angle));
 					}
 				}
 			}
@@ -10892,46 +10920,46 @@ console.log("TODO: get average point location after reconstruction & sigma -- sp
 		} // App3DR.ProjectManager.pairIDFromViewIDs
 	}
 	
-	// var edges = graph.edges();
-	// var graphEdges = [];
-	// for(var i=0; i<edges.length; ++i){
-	// 	var edge = edges[i];
-	// 	var A = edge.A();
-	// 	var B = edge.B();
-	// 	var data = edge.data();
-	// 	var indexA = viewIDToIndex[A.data()["id"]];
-	// 	var indexB = viewIDToIndex[B.data()["id"]];
-	// 	var e = [indexA,indexB,data["error"]];
-	// 	graphEdges.push(e);
-	// }
-	// console.log(graphEdges);
-// 	var skeleton = R3D.skeletalViewGraph(graphEdges);
-// 	// console.log(skeleton);
-// 	var neededEdges = skeleton["skeletonEdges"];
-// 	for(var i=0; i<neededEdges.length; ++i){
-// 		var edge = neededEdges[i];
-// 		var indexA = edge[0];
-// 		var indexB = edge[1];
-// 		var idA = viewIndexToViewID[indexA];
-// 		var idB = viewIndexToViewID[indexB];
-// 		var list = [idA,idB];
-// 		list.sort();
-// 		idA = list[0];
-// 		idB = list[1];
-// 		var pairID = idA+"-"+idB;
-// 		var pair = pairLookup[pairID];
-// 		// console.log(i+"/////////////////////////////////////////////")
-// 		// console.log(pair);
-// 		if(!pair){
-// 			var s = pairIDToError[pairID];
-// 			console.log("MISSING PAIR: "+pairID+" = "+s);
-// 			pairLookup[pairID] = {"A":idA,"B":idB,"s":s};
-// 		}
-// 	}
-// 	// console.log(pairLookup);
 	var pairs = Code.objectToArray(pairLookup);
-// console.log(pairs);
-// throw "before leave";
+
+
+
+
+	console.log(pairs);
+	console.log(pairLookup);
+	console.log(views);
+
+console.log("SHOW THIS GRAPH");
+// show the graph:
+var orderedTransforms = [];
+var groupIDs = [];
+var viewIDToIndex = {};
+for(var v=0; v<views.length; ++v){
+	var view = views[v];
+	// console.log(view);
+	var viewID = view["id"];
+	var trans = view["transform"];
+		trans = Matrix.fromObject(trans);
+	orderedTransforms.push(trans);
+	groupIDs.push(viewID);
+	viewIDToIndex[viewID] = v;
+}
+var groupPairsPass = [];
+for(var v=0; v<pairs.length; ++v){
+	var pair = pairs[v];
+	// console.log(pair);
+	var viewIDA = pair["A"];
+	var viewIDB = pair["B"];
+	var viewIndexA = viewIDToIndex[viewIDA];
+	var viewIndexB = viewIDToIndex[viewIDB];
+	groupPairsPass.push( [viewIndexA,viewIndexB] );
+}
+project.displayViewGraph(orderedTransforms,groupPairsPass, 0, groupIDs, 0x66CC0000, 6.0);
+
+
+
+
+// throw "before leave putative pairs";
 	return {"pairs":pairs, "lookup":pairLookup};
 }
 
@@ -11271,7 +11299,7 @@ console.log(skeleton);
 
 console.log(backbone);
 
-// throw "?????????"
+// throw "????????? _absoluteViewsFromDatas"
 
 	return {"transforms":orderedTransforms, "views":views, "skeleton":backbone, "groups":groups, "skeletonEdges":skeleton["skeletonEdges"], "groupEdges":skeleton["groupEdges"]};
 }
@@ -12326,7 +12354,7 @@ console.log("DELTA INIT: "+((timeB-timeA)/1000)); // 4-5 seconds
 			// world.checkForIntersections(true);
 			// world.resolveIntersectionByDefault();
 			// world.resolveIntersectionByPatchVisuals();
-			
+
 throw "_doDenseGroupsStereopsis -- before solveDenseGroup";
 			world.solveDenseGroup(solveDenseGroupComplete);
 			console.log("?????????????????????????????");
@@ -12914,14 +12942,6 @@ App3DR.ProjectManager.prototype.initializeBundleGroupsFromDense = function(){
 			var viewIDB = viewIndexToViewID[pair[1]];
 			listPairsIDs[i] = {"A":viewIDA, "B":viewIDB};
 		}
-
-		// get skeleton graph 
-		// console.log(listPairs);
-		// var result = R3D.skeletalViewGraph(listPairs);
-		// console.log(result);
-		// construct minimally set MST from skeleton
-		
-		// get group graph
 
 		// TEST
 		// var groupSize = 3;
@@ -14790,7 +14810,7 @@ App3DR.ProjectManager.prototype.calculateDensePairPutatives = function(){
 			densePairs.push(densePair);
 		}
 		console.log(denseData);
-		// throw "before save dense start";
+		throw "before save dense start";
 		project.saveFileFromData(denseData, denseFilename, fxnSaveDenseComplete, project);
 	}
 	var fxnSaveDenseComplete = function(data){
@@ -17049,7 +17069,7 @@ for(var i=0; i<edges.length; ++i){
 	throw "?"
 }
 
-App3DR.ProjectManager.prototype.displayViewGraph = function(transforms, pairs, offsetX, groupIDs){
+App3DR.ProjectManager.prototype.displayViewGraph = function(transforms, pairs, offsetX, groupIDs,  colorLine, thicknessLine){
 	offsetX = offsetX!==undefined ? offsetX : 0.0;
 
 
@@ -17271,7 +17291,8 @@ for(var i=0; i<transforms.length; ++i){
 		display.addChild(text);
 
 	}
-
+colorLine = Code.valueOrDefault(colorLine, 0x990000CC);
+thicknessLine = Code.valueOrDefault(thicknessLine, 2.0);
 	// min & max errors:
 	var errors = [];
 	for(var i=0; i<pairs.length; ++i){
@@ -17300,7 +17321,7 @@ for(var i=0; i<transforms.length; ++i){
 		if(!p2DA || !p2DB){
 			continue;
 		}
-		display.graphics().setLine(2.0,0x990000CC);
+		display.graphics().setLine(thicknessLine, colorLine);
 		display.graphics().beginPath();
 		display.graphics().moveTo(p2DA.x,p2DA.y);
 		display.graphics().lineTo(p2DB.x,p2DB.y);

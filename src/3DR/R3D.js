@@ -39544,10 +39544,12 @@ R3D._gdScales1D = function(vs,es,values,rootIndex,iterations){
 
 R3D.skeletalViewGraph = function(edges, maxErrorMultiple){ // get critical nodes/edges & list of sub-groups
 	var t = Code.valueOrDefault(maxErrorMultiple, 4.0); // 4-16
-	var importanceMinumum = Math.min(4.0/t,1);
-	console.log("importanceMinumum: "+importanceMinumum);
-	// console.log(edges);
-	// construct graph from simple edges
+
+	// create graph:
+
+	var listedVertexes = {};
+
+
 	var maxVertex = null;
 	for(var i=0; i<edges.length; ++i){
 		var edge = edges[i];
@@ -39562,8 +39564,6 @@ R3D.skeletalViewGraph = function(edges, maxErrorMultiple){ // get critical nodes
 	var graph = new Graph();
 	var gVertexes = [];
 	var gEdges = [];
-	// var vertexDatas = [];
-	var edgeDatas = [];
 	// insert vertexes
 	for(var i=0; i<vertexCount; ++i){
 		var vertex = graph.addVertex();
@@ -39588,14 +39588,57 @@ R3D.skeletalViewGraph = function(edges, maxErrorMultiple){ // get critical nodes
 			data["edge"] = edge;
 			data["weight"] = w;
 		edge.data(data);
-		edgeDatas.push(data);
 	}
 
 
+	// TODO?:
+	// keep only largest connected set?
 
-throw "use graph.skeletalSet"
 
+	var info = graph.skeletalEdges();
+	var infoSkeleton = info["skeleton"];
+	var infoGroups = info["groups"];
+		infoGroups.push(infoSkeleton);
+	console.log(info);
 
+	// create index-ed version of skeleton
+	var groups = [];
+	var groupPairs = [];
+	for(var i=0; i<infoGroups.length; ++i){
+		var group = infoGroups[i];
+		// console.log(group);
+		var vs = group["vertexes"];
+		var es = group["edges"];
+		var outVs = [];
+		var outEs = [];
+		for(var j=0; j<vs.length; ++j){
+			var v = vs[j];
+			outVs.push(v.data()["index"]);
+		}
+		for(var j=0; j<es.length; ++j){
+			var e = es[j];
+			outEs.push( [e.A().data()["index"],e.B().data()["index"]] );
+		}
+		groups.push(outVs);
+		groupPairs.push(outEs);
+	}
+
+	// console.log(groups);
+	// console.log(groupPairs);
+
+	var skeleton = groups.pop();
+	var skeletonPairs = groupPairs.pop();
+
+	// done
+	graph.kill();
+
+	var result = {"skeletonVertexes":skeleton, "skeletonEdges":skeletonPairs, "groupVertexes":groups, "groupEdges":groupPairs};
+	console.log(result);
+
+	// throw "use graph.skeletalSet"
+	return result;
+
+/*
 	// get degree
 	for(var i=0; i<vertexCount; ++i){
 		var vertex = gVertexes[i];
@@ -39869,7 +39912,7 @@ if(c>1000){
 
 
 
-
+*/
 // END GRAPH
 
 
