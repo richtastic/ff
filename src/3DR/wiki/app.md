@@ -386,25 +386,13 @@ MISSING:
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
-manual iteration method:
-A) find outlier loops:
 
-	- calculate loop scores (difference from identity)
-	- calculate loop population
-	- loop outliers: every loop outside 90%-95% before hand, and outside 95%-99% after removed
-
-	- calculate edge loop scores
-
-	- for each outlier loop:
-		- mark edge with worst loop score in group for drop 
-
-	- drop all marked worst edges
-
-	- remove all loops from list that involve edge i
-
-	=> iterate
+- group - point filtering?:
+	- (patches & error)
+	- expand probe 3D 
 
 
+- groups ?
 
 
 
@@ -413,7 +401,7 @@ A) find outlier loops:
 
 
 - 
-- simulted example loop filtering
+- simulated example loop filtering
 
 
 - bayesian network
@@ -616,25 +604,12 @@ REMAINING 2:
 
 
 
-x remove graph views & paris that are null
-x remove small-group items from display geometry
-x how to use 2-edge ratios
-
-- how to do dense putative:
-	+ guarantee connectivity
-		- MST / skeleton
-	+ graph topology (error)
-		- lower error locations
-	+ world-geometry
-		- geometrically close
-			- normal angle
-			- distance
-
 
 putativePairsFromViewsAndTransforms
+skeletalViewGraph
 
-
-
+TEST:
+Graph.prototype.skeletalEdges
 
 
 
@@ -655,57 +630,18 @@ Belief Propagation
 
 
 
+
+
+
+
+
+
+
+
+
+
 http://www1.maths.lth.se/matematiklth/vision/publdb/reports/pdf/enqvist-kahl-etal-wovcnnc-11.pdf
 http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.613.6464&rep=rep1&type=pdf
-
-
-
-IDEA 0: RAW-EDGE-ERROR STATISTICS
-	- use raw edge-cost (R/count) to find edges that are outliers
-	- views need to have at least 3+ pairs (4 pref)
-
-
-IDEA 1: PAIR-FIND-ERROR STATISTICS
-	- go thru random (exhaustive) (short-ish) paths 
-	- if a particular path has a large error (some cost fxn), then the path likely contains a bad edge
-
-	- start from A, find paths to neighbor B [1,2,3 max paths]
-	- each path sums errors of edges as weight
-	- each path accumulates total rotation
-	- average all rotations by weight
-	- get differences in cost (angle 3D & twist separately OR axis-cost combined)
-	- if pair A-B has much larger cost than average: likely outlier
-
-IDEA 3: LOOP ERROR STATISTICS
-	- go thru (3-4 node) loops & record error in rotation (alignment error)
-	- each edge accumulates an error sum based on all the loops run thru it (averaged by # of loops run)
-	- loops with large error contain at least one bad edge
-	- 
-	=> belief propagation
-	=> voting:
-		- good edges will find bad loops
-			- loops w/ e vs loops w/o e
-			- vote e as outlier if over 2 sigma (95%) of excluded loop error distance
-
-	LOOP:
-		- EDGES
-		- NODES
-		- ERROR
-	EDGE:
-		- NODES
-		- LOOPS
-	NODE:
-		- EDGES
-		- LOOPS
-
-
-	=> how to find out where the error is originating from (isolating bad edges)?
-
-
-
-_resolveIntersectionLayered --- with multiple images -> needle/haystack
-
-
 
 4032 x 3024 @ 100
 2016 x 1512 @ 50
@@ -715,9 +651,6 @@ _resolveIntersectionLayered --- with multiple images -> needle/haystack
 
 - every so often loadPoints takes a while
 LOAD POINTS: 191584
-
-
-
 Code.unpadArray2DLinear
 
 
@@ -726,6 +659,10 @@ LOAD POINTS: 463205
 149306
 
 
+
+
+
+TODO: store view's track average point location + sigma distance for sparse->dense putative matching phase
 
 
 

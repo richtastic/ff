@@ -7763,7 +7763,7 @@ console.log("checkPerformNextTask");
 		return;
 	}
 
-throw "start dense";
+// throw "start dense";
 	if(!project.checkHasDenseStarted()){
 		project.calculateDensePairPutatives();
 		return;
@@ -7773,14 +7773,14 @@ throw "start dense";
 		project.iterateDenseProcess();
 		return;
 	}
-// throw ">start bundle";
+throw ">start bundle";
 	if(!project.checkHasBundleStarted()){
 		project.initializeBundleGroupsFromDense();
 		return;
 	}
 // throw "> continue bundle";
 	if(!project.checkHasBundleEnded()){
-		project.iterateBundleProcess();
+		project.iterateBundleProcess(); // sets up dense groups
 		return;
 	}
 
@@ -7921,7 +7921,7 @@ App3DR.ProjectManager.prototype._iterateSparseDenseLoaded = function(inputFilena
 	var currentPair = null;
 	var completePairFxn = function(data){
 		console.log("completePairFxn");
-		// throw "completePairFxn";
+// throw "completePairFxn";
 		var idA = currentPair["A"];
 		var idB = currentPair["B"];
 		var uniqueStrings = [idA,idB];
@@ -8052,13 +8052,12 @@ console.log("pair count: "+pairs.length+" ............");
 			console.log(pair);
 			var relativeAB = pair["relativeTransform"];
 			if(relativeAB){ // dense
-				throw "this is for dense";
+				// throw "this is for dense";
 				configuration = {};
 				project.calculatePairMatchWithRFromViewIDs(idA,idB, relativeAB, completePairFxn,project, configuration);
 				return;
 			} // else: sparse = w/o known R
 			// throw "this is for sparse"
-			
 			project.calculatePairMatchFromViewIDs(idA,idB, completePairFxn,project);
 			return;
 		}
@@ -9156,7 +9155,7 @@ var list = viewPairs;
 
 
 
-
+throw "LOOP BEFORE RETURN ... -- show pairs ?"
 
 	// throw "visualizePairEdges";
 
@@ -9434,7 +9433,7 @@ project.displayViewGraph(orderedTransforms,groupPairsPass, 100, groupIDs);
 					console.log(info);
 
 
-throw "putative here ..."
+// throw "putative here ..."
 					// var pairs = info["lookup"];
 					var pairs = info["pairs"];
 					// var pairs = info["lookup"];
@@ -9464,7 +9463,8 @@ throw "putative here ..."
 
 					sourceData["cameras"] = fullData["cameras"];
 					console.log(sourceData["cameras"]);
-					throw "is this correct camera ^";
+					// throw "is this correct camera ^";
+
 
 					// save the putative / pairs to dense.yaml
 					// var currentSparseCount = project.sparseCount();
@@ -10702,7 +10702,13 @@ App3DR.ProjectManager._putativePairsFromViewsAndTransforms = function(views, tra
 		var view = views[i];
 		var viewID = view["id"];
 		var vertex = graph.addVertex();
-		vertex.data(view);
+var data = Code.copyObject(view);
+// console.log(transform);
+var extrinsic = Matrix.fromObject(view["transform"]);
+// console.log(extrinsic);
+var absolute = Matrix.inverse(extrinsic);
+data["absolute"] = absolute;
+		vertex.data(data);
 		viewIDToIndex[viewID] = i;
 		viewIDToVertex[viewID] = vertex;
 		viewIndexToViewID[i] = viewID;
@@ -10727,6 +10733,11 @@ var pairIDToError = {};
 		var data = {};
 			data["error"] = errorR;
 			data["transform"] = transform;
+// // console.log(transform);
+// 			var extrinsic = Matrix.fromObject(transform["transform"]);
+// // console.log(extrinsic);
+// 			var absolute = Matrix.inverse(extrinsic);
+// 			data["absolute"] = absolute;
 		var edge = graph.addEdgeDuplex(vertexA,vertexB, errorR);
 		edge.data(data);
 		// used later:
@@ -10746,43 +10757,61 @@ var pairIDToError = {};
 	var sort0Fxn = function(a,b){
 		return a[0] < b[0] ? -1 : 1;
 	}
-
-
-
-	console.log("A) GET SKELETON PAIRS");
-	console.log("B) GET LOWEST-ERROR ADDITIONAL PAIRS");
-	console.log("C) CHECK FOR VISUAL CONSISTENCY");
-/*
-	var graphEdges = [];
-	for(var i=0; i<edges.length; ++i){
-		var edge = edges[i];
-		var A = edge.A();
-		var B = edge.B();
-		var data = edge.data();
-		var indexA = viewIDToIndex[A.data()["id"]];
-		var indexB = viewIDToIndex[B.data()["id"]];
-		var e = [indexA,indexB,data["error"]];
-		graphEdges.push(e);
+	var sortABFxn = function(a,b){
+		return a < b ? -1 : 1;
 	}
-	// console.log(graphEdges);
-	var skeleton = R3D.skeletalViewGraph(graphEdges);
-	edges, maxErrorMultiple
-*/
+	var pairIDFxn = function(a,b){
+		if(sortABFxn(a,b)<0){
+			return a+"-"+b;
+		}else{
+			return b+"-"+a;
+		}
+	}
 
-console.log(graph);
-var maxErrorMultiple = 4.0;
-var skeleton = graph.skeletalEdges(maxErrorMultiple);
-console.log(skeleton);
+	// create structure to hold all of each view's best pairs
+	var vertexEdgeChoices = [];
+	for(var i=0; i<vertexes.length; ++i){
+		var vertex = vertexes[i];
+		console.log(vertex);
+		var vertexEdgeChoices = [];
+	}
 
+	
 
-// add each edge to each view/vertex
+	console.log("A) BASE = GET SKELETON PAIRS");
+	console.log(graph);
+	var maxErrorMultiple = 4.0;
+	var info = graph.skeletalEdges(maxErrorMultiple);
+	console.log(info);
+	var requiredEdges = info["edges"];
+	console.log(requiredEdges);
+	
+	// final list of putative pairs:
+	var pairLookup = {};
 
-
-throw "graph";
-
+	// add required edges as base layer:
+	for(var i=0; i<requiredEdges.length; ++i){
+		var edge = requiredEdges[i];
+		var data = edge.data();
+		// console.log(data);
+		var a = edge.A();
+		var b = edge.B();
+		a = a.data();
+		b = b.data();
+		a = a["id"];
+		b = b["id"];
+		var pairID = pairIDFxn(a,b);
+		var score = data["error"];
+		pairLookup[pairID] = {"A":a,"B":b,"s":score};
+	}
+	
+	console.log("B) GET LOWEST-ERROR ADDITIONAL PAIRS");
 	// find bests:
-	var minimumPairMatches = 4; // assuming @ 50% error -- backup pair to create triple
+	var minimumPairMatches = 3; // assuming @ 50% error -- backup pair to create triple [sparse->dense] 2-4
 	var maximumPairMatches = 10; // don't want too many matches
+	var maximumViewPairAngle = Code.radians(60.0); // 45-90
+	var maximumViewDistanceMultiple = 4.0; // depends on a neighborhood size ... point targets ...  --- NOT USED YET
+console.log("TODO: get average point location after reconstruction & sigma -- spherical");
 // 4  - 2
 // 9  - 3
 // 16 - 4
@@ -10824,13 +10853,31 @@ throw "graph";
 					var costD = path["cost"];
 					var cost0 = es[0].weight();
 					var costMax = cost0*maximumPropagatedErrorRatio;
-					if(costD<costMax){
-						foundPairsList.push([costD,v]);
+					// check for visual consistency:
+					var absoluteA = vertex.data()["absolute"];
+					var absoluteB = v.data()["absolute"];
+					var oA = absoluteA.multV3DtoV3D(new V3D(0,0,0));
+					var oB = absoluteB.multV3DtoV3D(new V3D(0,0,0));
+					var nA = absoluteA.multV3DtoV3D(new V3D(0,0,1));
+						nA.sub(oA);
+					var nB = absoluteB.multV3DtoV3D(new V3D(0,0,1));
+						nB.sub(oB);
+					// 
+					var angle = V3D.angle(nA,nB);
+					// console.log("ANGLE: "+Code.degrees(angle));
+					// TODO: distance from subject points
+					if(angle<maximumViewPairAngle){
+						if(costD<costMax){
+							foundPairsList.push([costD,v]);
+						}
+					}else{
+						console.log("angle too large: "+Code.degrees(angle));
 					}
 				}
 			}
 		}
 		foundPairsList.sort(sort0Fxn);
+		console.log("foundPairsList: "+foundPairsList.length);
 		// console.log(foundPairsList);
 		Code.truncateArray(foundPairsList,maximumPairMatches);
 		var viewID = vertex.data()["id"];
@@ -10841,55 +10888,50 @@ throw "graph";
 			var idA = viewID < pID ? viewID : pID;
 			var idB = viewID < pID ? pID : viewID;
 			var pairID = idA+"-"+idB;
-			pairLookup[pairID] = {"A":idA,"B":idB,"s":score};//, "r":rError};
+			pairLookup[pairID] = {"A":idA,"B":idB,"s":score};
 		} // App3DR.ProjectManager.pairIDFromViewIDs
 	}
-
-
-
-	console.log("NEED TO GUARANTEE CONNECTIVITY BY INCLUDING CRITICAL PAIRS - update with better algorithm");
-	// make sure MST (skeleton) exists
-	// could also do:
-	//  - arbitrary MST
-	//  - greedy pick-best-edge-first edge-collapse until entire group is contained in single vertex
-	var edges = graph.edges();
-	var graphEdges = [];
-	for(var i=0; i<edges.length; ++i){
-		var edge = edges[i];
-		var A = edge.A();
-		var B = edge.B();
-		var data = edge.data();
-		var indexA = viewIDToIndex[A.data()["id"]];
-		var indexB = viewIDToIndex[B.data()["id"]];
-		var e = [indexA,indexB,data["error"]];
-		graphEdges.push(e);
-	}
+	
+	// var edges = graph.edges();
+	// var graphEdges = [];
+	// for(var i=0; i<edges.length; ++i){
+	// 	var edge = edges[i];
+	// 	var A = edge.A();
+	// 	var B = edge.B();
+	// 	var data = edge.data();
+	// 	var indexA = viewIDToIndex[A.data()["id"]];
+	// 	var indexB = viewIDToIndex[B.data()["id"]];
+	// 	var e = [indexA,indexB,data["error"]];
+	// 	graphEdges.push(e);
+	// }
 	// console.log(graphEdges);
-	var skeleton = R3D.skeletalViewGraph(graphEdges);
-	// console.log(skeleton);
-	var neededEdges = skeleton["skeletonEdges"];
-	for(var i=0; i<neededEdges.length; ++i){
-		var edge = neededEdges[i];
-		var indexA = edge[0];
-		var indexB = edge[1];
-		var idA = viewIndexToViewID[indexA];
-		var idB = viewIndexToViewID[indexB];
-		var list = [idA,idB];
-		list.sort();
-		idA = list[0];
-		idB = list[1];
-		var pairID = idA+"-"+idB;
-		var pair = pairLookup[pairID];
-		// console.log(i+"/////////////////////////////////////////////")
-		// console.log(pair);
-		if(!pair){
-			var s = pairIDToError[pairID];
-			console.log("MISSING PAIR: "+pairID+" = "+s);
-			pairLookup[pairID] = {"A":idA,"B":idB,"s":s};
-		}
-	}
-	// console.log(pairLookup);
+// 	var skeleton = R3D.skeletalViewGraph(graphEdges);
+// 	// console.log(skeleton);
+// 	var neededEdges = skeleton["skeletonEdges"];
+// 	for(var i=0; i<neededEdges.length; ++i){
+// 		var edge = neededEdges[i];
+// 		var indexA = edge[0];
+// 		var indexB = edge[1];
+// 		var idA = viewIndexToViewID[indexA];
+// 		var idB = viewIndexToViewID[indexB];
+// 		var list = [idA,idB];
+// 		list.sort();
+// 		idA = list[0];
+// 		idB = list[1];
+// 		var pairID = idA+"-"+idB;
+// 		var pair = pairLookup[pairID];
+// 		// console.log(i+"/////////////////////////////////////////////")
+// 		// console.log(pair);
+// 		if(!pair){
+// 			var s = pairIDToError[pairID];
+// 			console.log("MISSING PAIR: "+pairID+" = "+s);
+// 			pairLookup[pairID] = {"A":idA,"B":idB,"s":s};
+// 		}
+// 	}
+// 	// console.log(pairLookup);
 	var pairs = Code.objectToArray(pairLookup);
+// console.log(pairs);
+// throw "before leave";
 	return {"pairs":pairs, "lookup":pairLookup};
 }
 
@@ -12284,8 +12326,8 @@ console.log("DELTA INIT: "+((timeB-timeA)/1000)); // 4-5 seconds
 			// world.checkForIntersections(true);
 			// world.resolveIntersectionByDefault();
 			// world.resolveIntersectionByPatchVisuals();
-			// throw "??? before solveDenseGroup"
-			// solveDenseGroup
+			
+throw "_doDenseGroupsStereopsis -- before solveDenseGroup";
 			world.solveDenseGroup(solveDenseGroupComplete);
 			console.log("?????????????????????????????");
 
@@ -13348,7 +13390,7 @@ App3DR.ProjectManager.prototype.iterateBundleProcess = function(){
 // throw "bundleData";
 		// get next group to stereopsis
 		var groups = bundleData["groups"];
-		for(var i=0; i<groups.length; ++i){
+		for(var i=0; i<groups.length; ++i){ // load all group points & views into world & solve group dense
 			var group = groups[i];
 			if(!group["points"]){
 				console.log(group);

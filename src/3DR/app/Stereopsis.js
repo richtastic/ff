@@ -8109,6 +8109,8 @@ var timeStart = Code.getTimeMilliseconds();
 		world.initNullP3DPatches();
 
 
+throw "probe 3D, filter patches 3D, probe2D cells, subdivide ?"
+
 		// // subdivisions
 		// if(iteration!==0 && iteration%iterations==0){
 		// 	++subdivision;
@@ -8126,17 +8128,21 @@ var timeStart = Code.getTimeMilliseconds();
 		// }else if(subdivision==2){
 		// 	compareSize = 5;
 		// }
-		// world.probe2DCellsR(3.0,3.0);
+
+
+// world.probe2DCellsR(3.0,3.0);
 
 		// expand
-		// var compareSize = 5;
-		// world.probe2DCellsR(2.0,2.0, compareSize); // 9=>81 7=>49 5=>25
-		world.probe3DR(0); // probe3DGlobal
+// var compareSize = 5;
+// world.probe2DCellsR(2.0,2.0, compareSize); // 9=>81 7=>49 5=>25
+world.probe3DR(0); // probe3DGlobal
 
 		// retract
 		world.filterGlobal3DR(3.0); // 2 - 3
 		// world.filterLocal2DR();
 		// world.filterLocal3DR();
+
+world.filterGlobalPatchSphere3D(2.0); // 2 - 3
 
 		// refine cameras --- no
 		// world.recordViewAbsoluteOrientationStart();
@@ -8161,7 +8167,7 @@ console.log("mins: "+((timeStop-timeStart)/1000/60)); // ~ 20 mins
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 Stereopsis.World.prototype.solveDensePair = function(subdivisionScaleSize, subDivisionCounts){ // pairwise, start with R
 	// use R abs positions to get good initial points + iterate on expanding confident points
-	throw "set solveDensePair values"
+// throw "set solveDensePair values"
 	console.log("solveDensePair");
 	var world = this;
 	// subdivisionScaleSize = Code.valueOrDefault(subdivisionScaleSize, 0.5); // 40 -> 80 -> 160
@@ -8348,8 +8354,12 @@ console.log((timeStop-timeStart)/1000);
 console.log((timeStop-timeStart)/1000/60); // ~ 20 mins
 	
 	// check it out
-	// var str = world.toYAMLString();
-	// console.log(str);
+	var str = world.toYAMLString();
+	console.log(str);
+
+
+// throw "set solveDensePair values out"
+
 	return;
 }
 
@@ -13210,6 +13220,7 @@ Stereopsis.World.prototype.probe2DCellsRF = function(sigmaMaximumSelect, sigmaMa
 
 Stereopsis.World.prototype.probe3DR = function(sigmaMaximumSelect, sigmaMaximumNew){ //
 	console.log("probe3DR");
+	throw "todo"
 	//
 	/*
 
