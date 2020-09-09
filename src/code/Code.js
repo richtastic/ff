@@ -1732,7 +1732,7 @@ Code.arrayEquality = function(a,b, count, startA,startB){
 	count = Math.min(count,lenB-startB);
 	var u, v, i;
 	var equal = true;
-	for(i=0; i<count; ++i){
+	for(i=0; i<count; ++i){6
 		u = a[startA+i];
 		v = b[startB+i];
 		// console.log(u,v);

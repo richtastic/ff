@@ -385,17 +385,6 @@ MISSING:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-- pairs need more possible graph routes ... increase connectivity allowance for tests?
-
-
-- group - point filtering?:
-	- (patches & error)
-	- expand probe 3D 
-
-
-- groups ?
-
-
 
 solveDenseGroup
 
@@ -412,9 +401,11 @@ TASKS:
 
 
 
+viewFromID should use integers ...
 
 
 
+var toView = world.viewFromID(toViewID+"");
 
 
 

@@ -12355,7 +12355,7 @@ console.log("DELTA INIT: "+((timeB-timeA)/1000)); // 4-5 seconds
 			// world.resolveIntersectionByDefault();
 			// world.resolveIntersectionByPatchVisuals();
 
-throw "_doDenseGroupsStereopsis -- before solveDenseGroup";
+// throw "_doDenseGroupsStereopsis -- before solveDenseGroup";
 			world.solveDenseGroup(solveDenseGroupComplete);
 			console.log("?????????????????????????????");
 
@@ -23085,9 +23085,9 @@ App3DR.ProjectManager.View.prototype._loadImage = function(type, callback, conte
 	var pixelCountSparseLinear = cellSize*cellCountSparse;
 	var pixelCountDenseLinear = cellSize*cellCountDense;
 	var pixelCountDetailLinear = cellSize*cellCountDetails;
-	console.log("sparse size: "+pixelCountSparseLinear);
-	console.log("dense size: "+pixelCountDenseLinear);
-	console.log("detail size: "+pixelCountDetailLinear);
+	// console.log("sparse size: "+pixelCountSparseLinear);
+	// console.log("dense size: "+pixelCountDenseLinear);
+	// console.log("detail size: "+pixelCountDetailLinear);
 	var pixelCountSparse = pixelCountSparseLinear*pixelCountSparseLinear;
 	var pixelCountDense = pixelCountDenseLinear*pixelCountDenseLinear;
 	var pixelCountDetail = pixelCountDetailLinear*pixelCountDetailLinear;
