@@ -358,17 +358,15 @@ TIMELINES:
 
 09/10 - 360 object scene ~ 20 images
 
+10/10 - test set of ~ 50 images
+	- (this will require 2-10 x speed ups)
 
-09/20 - update track_full logic: pairs + nonlinear estimate + solve all views at once
-09/30 - use track points as seeds / not from-scratch pairs?
-10/10 - test set of ~ 25 images
-		- automate URL refresh for sections of code
-10/10 - test set of ~ 50 images x (this will require 2-10 x speed ups)
 11/01 - MVP
 
 MISSING:
 - mass-dense point aggregation via merging separate P3D files
 	- logistics [2d]
+	- reading chunks of a file ? (separate into 10-100MB of file?)
 - hole filling
 	- ?
 - BA identify/remove view if it's position is very bad???? [outliers]
@@ -385,6 +383,10 @@ MISSING:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+during groups ? -- missing camera for view
+GROUPS:
+	probe2DCellsRF : NaN ?
+	filterGlobalMetrics : NaN ?
 
 solveDenseGroup
 
@@ -406,6 +408,70 @@ viewFromID should use integers ...
 
 
 var toView = world.viewFromID(toViewID+"");
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -7784,7 +7784,7 @@ console.log("checkPerformNextTask");
 		return;
 	}
 
-throw ">start surface"; // copy point files & create surface.yaml
+// throw ">start surface"; // copy point files & create surface.yaml
 	if(!project.checkHasSurfaceStarted()){
 		project.initializeSurfaceFromBundle();
 		return;
@@ -13575,7 +13575,7 @@ console.log(group);
 console.log(groupData);
 var groupDataPath = Code.appendToPath(bundlePathBase,group["filename"]);
 console.log(groupDataPath);
-// throw "save group ?";
+// throw "befpre save dense group";
 		project.saveFileFromData(groupData, groupDataPath, completedSaveGroupFxn, project);
 	}
 
@@ -13989,6 +13989,7 @@ App3DR.ProjectManager.prototype.iterateSurfaceProcess = function(){
 			var tv = views[i];
 			var viewID = tv["id"]
 			var camID = tv["camera"];
+console.log(camID);
 			var K = cameraFromID[camID];
 if(!K){
 	console.log(tv);
