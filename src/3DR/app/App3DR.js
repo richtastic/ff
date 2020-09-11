@@ -7750,46 +7750,46 @@ console.log("checkPerformNextTask");
 		return;
 	}
 
-// throw "task pair feature match";
+throw "task pair feature match";
 	// does a feature-match pair exist (even a bad match) between every (putative) view pair?
 	if(!project.checkHasSparseStarted()){
 		project.calculatePairPutatives();
 		return;
 	}
 	// throw "..."
-// throw "iterate sparse ?";
+throw "iterate sparse ?";
 	if(!project.checkHasSparseEnded()){
 		project.iterateSparseProcess();
 		return;
 	}
 
-// throw "start dense";
+throw "start dense";
 	if(!project.checkHasDenseStarted()){
 		project.calculateDensePairPutatives();
 		return;
 	}
-// throw "iterate dense";
+throw "iterate dense";
 	if(!project.checkHasDenseEnded()){
 		project.iterateDenseProcess();
 		return;
 	}
-// throw ">start bundle";
+throw ">start bundle";
 	if(!project.checkHasBundleStarted()){
 		project.initializeBundleGroupsFromDense();
 		return;
 	}
-// throw "> continue bundle";
+throw "> continue bundle";
 	if(!project.checkHasBundleEnded()){
 		project.iterateBundleProcess(); // sets up dense groups
 		return;
 	}
 
-// throw ">start surface"; // copy point files & create surface.yaml
+throw ">start surface"; // copy point files & create surface.yaml
 	if(!project.checkHasSurfaceStarted()){
 		project.initializeSurfaceFromBundle();
 		return;
 	}
-// throw ">iterate surface"; // create triangles & textures
+throw ">iterate surface"; // create triangles & textures
 	if(!project.checkHasSurfaceEnded()){
 		project.iterateSurfaceProcess();
 	}
@@ -14456,12 +14456,12 @@ App3DR.ProjectManager.prototype._calculateFeaturesLoaded = function(view){
 	var features = R3D.differentialCornersForImage(imageScales, new V2D(600,400));
 	var normalizedFeatures = R3D.normalizeSIFTObjects(features, imageMatrix.width(), imageMatrix.height());
 	console.log("FEATURES: "+normalizedFeatures.length);
-	var wordsMax = 100;
-	var words = R3D.differentialCornersForImage(imageScales, new V2D(100,50));
+	var wordsMax = 150; // ~ 100
+	var words = R3D.differentialCornersForImage(imageScales, new V2D(120,90)); // 100x50 ~ 30   |   120x90 ~ 60 |  150x112 = 
 	var normalizedWords = R3D.normalizeSIFTObjects(words, imageMatrix.width(), imageMatrix.height());
 	console.log("WORDS: "+normalizedWords.length);
 
-	var histogramSamples = 10000; /// 1000 min .... 100x100 image = 10000
+	// var histogramSamples = 10000; /// 1000 min .... 100x100 image = 10000
 	// var info = R3D.imageHistogramSamples(imageMatrix, histogramSamples);
 
 
@@ -14482,6 +14482,21 @@ console.log(sampleMatrix);
 	data["features"] = normalizedFeatures;
 	data["words"] = normalizedWords;
 	data["flatHistogram"] = normalizedHistogram;
+
+
+	// extract actual objects to compare
+	// var wordSize = 5; // 21 / 25
+	// var wordSize = 7; // 37 / 49
+	var wordSize = 9; // 69 / 81
+	var wordColor = true;
+	var normalizedLexicon = R3D.lexiconFromImageFeatures(normalizedWords, imageScales, wordSize, wordColor);
+	console.log(normalizedLexicon);
+	data["lexicon"] = normalizedLexicon; // words, vocabulary, glossary, lexicon
+	console.log(data);
+
+	// var str = YAML.parse(data);
+	// console.log(str);
+	// throw "this is the feature data:";
 
 	console.log(features.length+" | "+normalizedWords.length+" | "+Code.keys(normalizedHistogram).length);
 	R3D.showFeaturesForImage(imageMatrix, features);
@@ -14537,19 +14552,56 @@ App3DR.ProjectManager.prototype.calculateViewSimilarities = function(){
 	var views = this._views;
 	var expectedCount = views.length;
 	var loadedCount = 0;
+	var features = {};
 	var histograms = {};
 	var viewLookup = {};
 	// go thru & load each view's features -- only keep histograms
 	var fxnViewFeatureDataLoaded = function(v){
 		var featureData = v.featureData();
 		var histogram = featureData["flatHistogram"];
+		var lexicon = featureData["lexicon"];
 		// remove references to featureData to clear memory
-		v.featureData(null);
-		histograms[v.id()] = histogram;
+		var viewID = v.id();
+		v.featureData(null); // don't save
+		features[viewID] = lexicon;
+		histograms[viewID] = histogram;
 		++loadedCount;
 		if(loadedCount==expectedCount){
 			console.log("completed loading ...");
 			console.log(histograms);
+			console.log(features);
+
+
+			var obj;
+			var scores = [];
+			for(var i=0; i<views.length; ++i){
+				var viewA = views[i];
+				var idA = viewA.id();
+				var featuresA = features[idA];
+				for(var j=i+1; j<views.length; ++j){
+					var viewB = views[j];
+					var idB = viewB.id();
+					var featuresB = features[idB];
+					// console.log(featuresA);
+					// console.log(featuresB);
+					var result = R3D.compareFeatureLexicons(featuresA,featuresB);
+					// console.log(result);
+					var score = result["score"];
+					// console.log(score);
+					// score = ;
+					// throw "?";
+					obj = {};
+					obj["A"] = idA;
+					obj["B"] = idB;
+					obj["s"] = score;
+					scores.push(obj);
+				}
+
+			}
+			console.log(scores);
+			// throw "????";
+
+			/*
 			var obj;
 			var scores = [];
 			// for every view, compare to every other view
@@ -14561,19 +14613,22 @@ App3DR.ProjectManager.prototype.calculateViewSimilarities = function(){
 					var viewB = views[j];
 					var idB = viewB.id();
 					var histB = histograms[idB];
-					// var scoreCC = R3D.compareImageHistogramsCC(histA,histB); // BAD
-					// var scoreSAD = R3D.compareImageHistogramsSAD(histA,histB); // POOR
-					// var scoreSSD = R3D.compareImageHistogramsSSD(histA,histB); // POOR
-					var scoreChi = R3D.compareImageHistogramsChiSquared(histA,histB); // OK
-					// var scoreChi = R3D.compareImageHistogramsChiSAD(histA,histB); // OK
-					// var score = R3D.compareImageHistogramsMin(histA,histB);
+					var scoreMin = R3D.compareImageHistogramsMin(histA,histB); // BAD
+					var scoreCC = R3D.compareImageHistogramsCC(histA,histB); // POOD
+					var scoreSAD = R3D.compareImageHistogramsSAD(histA,histB); // POOR
+					var scoreSSD = R3D.compareImageHistogramsSSD(histA,histB); // POOR
+					var scoreChiSSD = R3D.compareImageHistogramsChiSquared(histA,histB); // OK : 2
+					var scoreChiSAD = R3D.compareImageHistogramsChiSAD(histA,histB); // OK  - BEST : 1
+					
 					// var score = scoreChi*scoreSAD;
 					//score = Math.pow(score,0.5);
 					// var score = scoreCC/scoreSAD;
-					// var score = scoreCC;
+					// var score = scoreMin;
+					// var score = 1.0/scoreCC;
 					// var score = scoreSAD;
 					// var score = scoreSSD;
-					var score = scoreChi;
+					// var score = scoreChiSSD;
+					var score = scoreChiSAD; 
 
 
 					// score = Math.pow(score,2.07);
@@ -14587,13 +14642,14 @@ App3DR.ProjectManager.prototype.calculateViewSimilarities = function(){
 					scores.push(obj);
 				}
 			}
+			*/
 			scores.sort(function(a,b){
 				// return a["s"]>b["s"] ? -1 : 1; // NCC - larger better
 				return a["s"]<b["s"] ? -1 : 1; // SAD - smaller better
 			});
 			console.log(scores);
 project.showViewSimilarities(scores);
-// throw "now go save similarities";
+throw "now go save similarities";
 			project.setViewSimilarity(scores);
 			project.setSparseFilename(null);
 			//project.setPairPutative(null); // unset to recalculate
@@ -14629,7 +14685,8 @@ App3DR.ProjectManager.prototype.showViewSimilarities = function(similarities){
 		view.loadIconImage(fxnViewImageLoaded, project);
 	}
 	var fxnShowSimilarity = function(similarities){
-		var circleRadius = 400;
+		var circleRadius = 700; // ~20
+		// var circleRadius = 400; // ~10
 		// var imageSize = 150;
 		var images = [];
 		var matrixes = [];
@@ -14649,7 +14706,7 @@ App3DR.ProjectManager.prototype.showViewSimilarities = function(similarities){
 		var imageSize = Math.round(circleRadius*1.5*Math.PI/views.length);
 		
 		// put images in circle
-		var totalOffX = 50;
+		var totalOffX = 100;
 		var totalOffY = 50;
 		var circleCenter = new V2D(totalOffX + circleRadius,totalOffY + circleRadius);
 		var centers = [];
@@ -14681,6 +14738,70 @@ App3DR.ProjectManager.prototype.showViewSimilarities = function(similarities){
 		}
 		// convert to list:
 console.log(similarities);
+
+// similarities = Code.copyObject(similarities);
+
+
+// pick top 10 similarities ...
+var bestList = {};
+// var cacheCount = 3;
+var cacheCount = 5;
+// var cacheCount = 10; // too many
+for(var i=0; i<similarities.length; ++i){
+	var similarity = similarities[i];
+	var idA = similarity["A"];
+	var idB = similarity["B"];
+	var listA = bestList[idA];
+	var listB = bestList[idB];
+	if(!listA){
+		listA = [];
+		bestList[idA] = listA;
+	}
+	if(!listB){
+		listB = [];
+		bestList[idB] = listB;
+	}
+	var score = similarity["s"];
+	listA.push(score);
+	listB.push(score);
+}
+var sortFxn = function(a,b){
+	return a<b ? -1 : 1;
+}
+var keys = Code.keys(bestList);
+for(var i=0; i<keys.length; ++i){
+	var key = keys[i];
+	// console.log(key);
+	var list = bestList[key];
+	list.sort(sortFxn);
+	Code.truncateArray(list, cacheCount);
+	// console.log(list);
+}
+for(var i=0; i<similarities.length; ++i){
+	var similarity = similarities[i];
+	var idA = similarity["A"];
+	var idB = similarity["B"];
+	var listA = bestList[idA];
+	var listB = bestList[idB];
+	var maxA = listA[listA.length-1];
+	var maxB = listB[listB.length-1];
+	var max = Math.max(maxA,maxB);
+	var score = similarity["s"];
+	console.log(score,max);
+	if(score>max){
+		Code.removeElementAt(similarities,i);
+		--i;
+	}
+}
+console.log(similarities);
+
+// throw ".." ;
+// ...
+
+
+
+
+
 		var sims2 = [];
 		// var sims1 = Code.objectToArray(similarities);
 		var floats = [];
@@ -14689,6 +14810,8 @@ console.log(similarities);
 			sims2.push( {"A":similarity["A"],"B":similarity["B"],"s":similarity["s"]} );
 			floats.push(similarity["s"]);
 		}
+
+
 		ImageMat.normalFloat01(floats);
 		console.log(floats);
 		// for(var i=0; i<similarities.length; ++i){
@@ -14719,7 +14842,7 @@ console.log(similarities);
 			var ending = centers[indexB];
 			var color = Code.interpolateColorGradientARGB(score, colors);
 				var d = new DO();
-				d.graphics().setLine(3.0,color);
+				d.graphics().setLine(2.0,color);
 				d.graphics().beginPath();
 				d.graphics().moveTo(start.x,start.y);
 				d.graphics().lineTo(ending.x,ending.y);
@@ -14947,7 +15070,7 @@ App3DR.ProjectManager.prototype.calculatePairPutatives = function(){
 	}
 	var fxnSavedSparse = function(){
 		console.log("fxnSavedSparse");
-// throw "BEFORE SAVE PROJECT";
+throw "BEFORE SAVE PROJECT";
 		project.saveProjectFile(fxnSavedProject, project);
 	}
 	project.saveSparseFromData(sparseData, fxnSavedSparse, project);

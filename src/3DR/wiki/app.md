@@ -357,9 +357,11 @@ TIMELINES:
 
 
 09/10 - 360 object scene ~ 20 images
-
+	
 10/10 - test set of ~ 50 images
 	- (this will require 2-10 x speed ups)
+	- what to do about points at infinity
+		=> 
 
 11/01 - MVP
 
@@ -383,6 +385,28 @@ MISSING:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+- histogrammed view similarities only gets rid of the worst, innaccurate on best
+	- keep top 10-20 historgram pairs [10% or 10 : whichever is higher]
+	- do secondary metric?
+
+	=> store entire compare WORDS in yaml ?
+	5x5x3x100 = ~ 10k numbers
+	11x11x3x100 ~ 50k numbers
+	N x 100 images = 5M numbers at same time
+
+
+- sectional histogram?
+
+- show point - test file to see merged result
+	- good ?
+
+
+
+
+
+
+
+
 during groups ? -- missing camera for view
 GROUPS:
 	probe2DCellsRF : NaN ?
@@ -403,21 +427,28 @@ TASKS:
 
 
 
-viewFromID should use integers ...
-
-
-
-var toView = world.viewFromID(toViewID+"");
 
 
 
 
 
+- factor graph
+- bayesian network -> factor graph
 
 
 
 
 
+
+
+
+
+
+POINTS AT INFINITY:
+	- sphere
+	- for each tri in sphere
+		- find most direct view that doesn't have intersection with world geometry
+		- add sphere to triangulated points @ distance ~ 100 x average world size
 
 
 

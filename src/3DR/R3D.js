@@ -18735,6 +18735,153 @@ var deltas = [];//Code.copyArray(diffs);
 	// return {"angle":angleCOM};
 
 }
+
+R3D.compareFeatureLexiconSingle = function(featureA, featureB){
+	// SAD:
+	var count = featureA.length;
+	var score = 0;
+	var a = new V3D();
+	var b = new V3D();
+	for(var i=0; i<count; i+=3){
+		a.set(featureA[i+0],featureA[i+1],featureA[i+2]);
+		b.set(featureB[i+0],featureB[i+1],featureB[i+2]);
+		var diff = V3D.distance(a,b);
+			diff = diff*diff;
+		score += diff;
+	}
+	if(count>0){
+		score /= count;
+	}
+	return score;
+}
+
+R3D.compareFeatureLexicons = function(featuresA, featuresB){
+	var objects = [];
+	// setup
+	var featureList = [featuresA,featuresB];
+	for(var i=0; i<featureList.length; ++i){
+		var features = featureList[i];
+		var list = [];
+		for(var j=0; j<features.length; ++j){
+			var obj = {};
+				obj["i"] = j;
+				obj["values"] = features[j];
+				obj["best"] = null;
+				obj["score"] = null;
+			list.push(obj);
+		}
+		objects.push(list);
+	}
+	var objectsA = objects[0];
+	var objectsB = objects[1];
+	var opposites = [objectsB,objectsA];
+	// compare
+	for(var i=0; i<objects.length; ++i){
+		var objsA = objects[i];
+		var objsB = opposites[i];
+		for(var a=0; a<objsA.length; ++a){
+			var objA = objsA[a];
+			var valA = objA["values"];
+			var best = null;
+			var score = null;
+			for(var b=0; b<objsB.length; ++b){
+				var objB = objsB[b];
+				var valB = objB["values"];
+				var compareScore = R3D.compareFeatureLexiconSingle(valA, valB);
+				// console.log(valA,valB,compareScore);
+				// throw "?";
+				if(!best || score>compareScore){
+					best = objB;
+					score = compareScore;
+				}
+			}
+			objA["best"] = best;
+			objA["score"] = score;
+		}
+	}
+	// score = number of same matches
+	var sames = [];
+	var averageScore = 0;
+	for(var i=0; i<objectsA.length; ++i){
+		var objA = objectsA[i];
+		var objB = objA["best"];
+		var objC = objB["best"];
+		if(objC===objA){
+			averageScore += objA["score"];
+			sames.push(objA);
+		}
+	}
+	var sameCount = sames.length;
+	if(sameCount>0){
+		averageScore = averageScore/sameCount;
+	}
+	var score = Math.min(featuresA.length,featuresB.length)/sameCount; // percent
+		// score *= averageScore; lower score better
+	return {"score":score, "matches":sameCount, "average":averageScore};
+}
+
+R3D.lexiconFromImageFeatures = function(normalizedWords, imageScales, wordSize, wordColor){
+	var circleMask = ImageMat.circleMask(wordSize,wordSize);
+
+	// console.log(Code.sum(circleMask));
+	// throw "circleMask";
+	
+	var imageWidth = imageScales.width();
+	var imageHeight = imageScales.height();
+	var color = new V3D();
+	console.log("lexiconFromImageFeatures: "+normalizedWords.length);
+	var normalizedLexicon = [];
+	var matrix = new Matrix2D();
+	for(var i=0; i<normalizedWords.length; ++i){
+		var normalizedWord = normalizedWords[i];
+		var point = normalizedWord["point"];
+			point.scale(imageWidth);
+		var size = normalizedWord["size"];
+			size *= imageWidth;
+		var toScale = wordSize/size;
+		var angle = normalizedWord["angle"];
+			matrix.identity();
+			matrix.rotate(-angle);
+			matrix.scale(toScale);
+			// matrix.scale(1.0/toScale); // WRONG
+		var block = imageScales.extractRect(point,1.0,wordSize,wordSize, matrix);
+
+/*
+var img = block;
+	img = GLOBALSTAGE.getFloatRGBAsImage(img.red(),img.grn(),img.blu(), img.width(),img.height());
+var d = new DOImage(img);
+// d.graphics().alpha(0.2);
+d.matrix().scale(5.0);
+// d.matrix().scale(10.0);
+d.matrix().translate(10 + i*50, 10);
+GLOBALSTAGE.addChild(d);
+*/
+
+		var word = [];
+		var x=0, y=0;
+		for(j=0; j<circleMask.length; ++j){
+			var m = circleMask[j];
+			// console.log(x,y,m);
+			if(m!==0){
+				block.get(x,y, color);
+				word.push(color.x,color.y,color.z);
+			}
+			++x;
+			if(x%wordSize==0){
+				x = 0;
+				++y;
+			}
+		}
+		normalizedLexicon.push(word);
+	}
+// throw "here";
+	return normalizedLexicon;
+}
+
+
+
+
+
 R3D.crossingDual1DCircular = function(values,indexCenter,crossing){
 	var count = values.length;
 	// from left:

@@ -70,65 +70,6 @@ var sigma = Code.stdDev(a,min);
 
 
 
-maximum a posteriori / parameter esimation / mode / maximum likelihood estimation
-https://ermongroup.github.io/cs228-notes/inference/map/ ============================== https://github.com/ermongroup/cs228-notes/tree/master/inference
-	- MAP inference
-
-https://www.cse.ust.hk/bnbook/pdf/l06.h.pdf
-https://www.cse.ust.hk/bnbook/pdf/l06.h.pdf
-https://arxiv.org/pdf/1703.06045.pdf
-http://pages.cs.wisc.edu/~dpage/cs760/BNall.pdf
-http://www.stat.columbia.edu/~gelman/arm/chap18.pdf
-http://www.cs.cmu.edu/~guestrin/Class/10701-S05/slides/EM-3-30-2005.pdf
-
-
-
-https://www.csd.uoc.gr/~hy473/DHS_book/DHSChap3.pdf
-
-
-
-- Bayesian Estimation MLE
-- log liklihood
-
-- Forward-backward algorithm is an instance of a generalized Expectation-Maximization algorithm. --- MN ?
-- Baum–Welch algorithm -- MN ?
-- Bayesian Expectation-Maximization-Maximization (Bayesian EMM, or BEMM). As a new maximum likelihood estimation (MLE) alternative to the marginal MLE EM (MMLE/EM) 
-
-- The Chow-Liu algorithm
-- GIBBS SAMPLING ???
-
-- Prim’s algorithm for finding an MST
-- Kruskal’s algorithm for finding an MST
-
-
-https://ocw.mit.edu/courses/electrical-engineering-and-computer-science/6-825-techniques-in-artificial-intelligence-sma-5504-fall-2002/lecture-notes/Lecture16FinalPart1.pdf
-- sampling
-
-
-
-
-
-
-
-
-
-
-INFERENCE:
-https://ermongroup.github.io/cs228-notes/inference/jt/
-http://pages.cs.wisc.edu/~dpage/cs760/BNall.pdf
-https://people.eecs.berkeley.edu/~jordan/courses/281A-fall04/lectures/lec-11-16.pdf
-- Junction Tree
-
-
-exact:
-https://www.cs.cmu.edu/~epxing/Class/10708-14/scribe_notes/scribe_note_lecture4.pdf
-- VE
-
-
-
-
-
-
 
 
 
