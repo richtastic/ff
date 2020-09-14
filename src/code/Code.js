@@ -4407,7 +4407,7 @@ Code.stdDevAngles = function(list, mean){
 	// 	len = Math.min(len,count);
 	// }
 	if(!mean){
-		mean = Code.averageAngles(angles);
+		mean = Code.averageAngles(list);
 	}
 	for(i=len;i--;){
 		item = list[i];

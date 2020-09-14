@@ -187,19 +187,260 @@ BeliefPropagation.prototype.toString = function(){
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
 // factor graph:
 function FactorGraph(what){
-	// ...
+	this._factors = [];
+	this._variables = [];
+	this._messages = {};
 }
+FactorGraph.directionPairIDFromIDs = function(idA,idB){
+	var index = idA+"-"+idB;
+	return index;
+}
+// FactorGraph.pairIDFromIDs = function(idA,idB){
+// 	var index = Math.min(idA,idB)+"-"+Math.max(idA,idB);
+// 	return index;
+// }
+FactorGraph.prototype.addFactor = function(variableNodes,potentials, data){ // [x0,x1,x2,...] [ MSB...LSB ]
+	var node = new FactorGraph.FactorNode(variableNodes,potentials, data);
+	this._factors.push(node);
+	return node;
+}
+FactorGraph.prototype.addVariable = function(states, data){
+	var node = new FactorGraph.VariableNode(states, data);
+	this._variables.push(node);
+	return node;
+}
+// FactorGraph.prototype.addEdge = function(nodeA,nodeB){
+// 	var isAFactor = Code.isa(nodeA,FactorGraph.FactorNode);
+// 	var isAVariable = Code.isa(nodeA,FactorGraph.VariableNode);
+// 	var isBFactor = Code.isa(nodeB,FactorGraph.FactorNode);
+// 	var isBVariable = Code.isa(nodeB,FactorGraph.VariableNode);
+// 	if(isAFactor && isBVariable){
+// 		// 
+// 		return;
+// 	}else if(isAVariable && isBFactor){
+// 		// 
+// 		return;
+// 	}
+// 	throw "incorrect situation";
+// }
+FactorGraph.prototype.sumProduct = function(){ // exact: DAG inference
+	// pick root node
+	// ...
+	throw "sumProduct";
+}
+FactorGraph.prototype.maxProduct = function(){ // MAP
+	// ..
+	throw "maxProduct";
+}
+FactorGraph.prototype.maxSum = function(){ // ?
+	// ..
+	throw "maxSum";
+}
+FactorGraph.prototype.loopyBP = function(maxIterations){ // loopy sumProduct
+	// ..
+	// scheduling = factor nodes + variable nodes
+	var nodes = Code.arrayPushArrays([], this._factors, this._variables);
+	console.log(nodes);
+	// initial potentials
+		// equal-probable ?
+	// iterate to convergence
+	var operation = FactorGraph._operationSumProduct;
+	this._iterate(nodes, operation, maxIterations);
+	throw "loopyBP";
+
+	var result = {};
+	return result;
+}
+FactorGraph.prototype.loopyMAP = function(maxIterations){ // loopy maxProduct
+	// ..
+	throw "loopyMAP";
+}
+FactorGraph.prototype._iterate = function(nodes, operation, maxIterations){
+	maxIterations = Code.valueOrDefault(maxIterations,10);
+	for(var i=0; i<maxIterations; ++i){
+		console.log("_iterate +++++++++++++++++++++++++++++++++++++ "+i);
+		// go thru all nodes
+		for(var n=0; n<nodes.length; ++n){
+			var node = nodes[n];
+			var neighbors = node.neighbors();
+			for(var m=0; m<neighbors.length; ++m){
+				var neighbor = neighbors[m];
+				var message = operation(node, neighbor);
+				this.setMessage(node,neighbor,message);
+			}
+		}
+		// update beliefs ?
+		for(var n=0; n<queryNodes.length; ++n){
+			queryNodes[n].belief( what );
+		}
+	}
+}
+
+FactorGraph._operationSumProduct = function(nodeA,nodeB){ // A to B
+	var accumulator = nodeA.base(); // initial
+	if(!nodeA.isObserved()){
+		var neighbors = nodeA.neighbors();
+		for(var i=0; i<neighbors.length; ++i){
+			var neighbor = neighbors[i];
+			if(neighbor!=nodeB){
+				var message = this.getMessage(nodeA,nodeB,message); // switch A & B ?
+				accumulator *= message;
+			}
+		}
+	}
+	throw "_operationSP";
+	return accumulator;
+}
+FactorGraph._operationMaxProduct = function(nodeA,nodeB){
+	throw "_operationMAP";
+}
+
+FactorGraph.prototype.messages = function(){
+	// ..
+}
+FactorGraph.prototype.getMessage = function(nodeFrom,nodeTo){
+	var index = FactorGraph.directionPairIDFromIDs(nodeFrom.id(),nodeTo.id());
+	var message = this._messages[index];
+	return message;
+}
+FactorGraph.prototype.setMessage = function(nodeFrom,nodeTo, message){
+	var index = FactorGraph.directionPairIDFromIDs(nodeFrom.id(),nodeTo.id());
+	this._messages[index] = message;
+}
+
+FactorGraph.prototype.x = function(){
+	// ..
+}
+
 FactorGraph.prototype.toString = function(){
 	return "[FG]";
 }
 
 
 
+FactorGraph._NodeID = 0;
 
+FactorGraph.VariableNode = function(states,data){
+	states = Code.valueOrDefault(states,2); // default binary
+	this._id = FactorGraph._NodeID++;
+	this._data = null;
+	this._states = states;
+	this._marginals = Code.newArrayZeros(this._states); // belief / probabilities for each state
+	this.data(data);
+	this._factors = [];
+}
+FactorGraph.VariableNode.prototype.id = function(i){
+	if(i!==undefined){
+		this._id = i;
+	}
+	return this._id;
+}
+FactorGraph.VariableNode.prototype.data = function(data){
+	if(data!==undefined){
+		this._data = data;
+	}
+	return this._data;
+}
+FactorGraph.VariableNode.prototype.states = function(){
+	return this._states;
+}
+FactorGraph.VariableNode.prototype.marginals = function(){ // is marginal same as belief ?
+	// this._belief
+	return this._marginals;
+}
+FactorGraph.VariableNode.prototype.addFactor = function(f){
+	return this._factors.push(f);
+}
+FactorGraph.VariableNode.prototype.neighbors = function(){
+	return this._factors;
+}
 
+FactorGraph.FactorNode = function(variables, potentials, data){
+	this._id = FactorGraph._NodeID++;
+	this._variables = variables;
+	this._potentials = potentials;
+	for(var i=0; i<variables.length; ++i){
+		var variable = variables[i];
+		variable.addFactor(this);
+	}
+}
+FactorGraph.FactorNode.prototype.id = function(i){
+	if(i!==undefined){
+		this._id = i;
+	}
+	return this._id;
+}
+FactorGraph.FactorNode.prototype.data = function(data){
+	if(data!==undefined){
+		this._data = data;
+	}
+	return this._data;
+}
+FactorGraph.FactorNode.prototype.neighbors = function(){
+	return this._variables;
+}
+FactorGraph.FactorNode.prototype.printTable = function(){
+	var spacingVar = 7;
+	var str = "";
+	var counts = [];
+	var variables = this._variables;
+	var potentials = this._potentials;
+	var variableCount = variables.length;
+	for(var i=0; i<variableCount; ++i){
+		counts.push( variables[i].states() );
+		var s = Code.padStringCenter(""+i, spacingVar);
+		str = str + s + " | ";
+	}
+	str = str + Code.padStringCenter("f", spacingVar);
+	var lineLength = str.length;
+	var s = Code.padString("",lineLength,"-");
+	str = str + "\n" + s + "\n";
+	
+	// 
+	var states = Code.newArrayZeros(variableCount);
+	for(var i=0; i<potentials.length; ++i){
+		var value = potentials[i];
+		var line = "";
+		for(var v=0; v<variableCount; ++v){
+			var val = states[v];
+			var s = Code.padStringCenter(""+val, spacingVar);
+			line = line + s + " | ";
+		}
+		// increment state
+		for(var s=variableCount-1; s>=0; --s){
+			var state = states[s];
+			var count = counts[s];
+			state += 1;
+			if(state>=count){
+				states[s] = 0; // proceed to incrementing next level
+			}else{
+				states[s] = state;
+				break; // done at this level
+			}
+		}
 
+		// line
+		var s = Code.padStringCenter(""+Code.clipStringToMaxChars(value,spacingVar), spacingVar);
+		line = line + s;
+		str = str + line + "\n";
+	}
+	console.log(str);
+	return str;
+}
 
 
 

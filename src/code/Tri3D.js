@@ -187,7 +187,118 @@ Tri3D.extremaFromArray = function(triangles){
 	var size = V3D.sub(max,min);
 	return {"min":min, "max":max, "size":size};
 }
+Tri3D.generateTetrahedraSphere = function(radius, subdivisions, offset){
+	radius = radius!==undefined ? radius : 1;
+	subdivisions = subdivisions!==undefined ? subdivisions : 0;
+	offset = offset!==undefined ? offset : V3D.ZERO;
 
+	// create tetrahedra - side length = 1
+	var angle60 = Code.radians(60.0);
+	var l = 0.5/Math.cos(angle60*0.5);
+console.log("L: "+l);
+	var m = Math.sin(angle60);
+console.log("M: "+m);
+	var k = 0.5*Math.tan(angle60*0.5);
+console.log("K: "+k);
+	var h = Math.sqrt(m*m-k*k);
+console.log("H: "+h);
+	var dirZ = new V3D(0,0,1);
+	var a = new V3D(l,0,0);
+	var b = V3D.rotateAngle(new V3D(),a,dirZ, 2*angle60);
+	var c = V3D.rotateAngle(new V3D(),a,dirZ, -2*angle60);
+	var d = new V3D(0,0,h);
+	// find sphere center: a/b/c cancel, only z-movement
+	// var centroid = V3D.average([a,b,c,d]);
+	var centroid = d.copy().scale(0.25);
+	console.log(a+"");
+	console.log(b+"");
+	console.log(c+"");
+	console.log(d+"");
+	console.log(centroid+"");
+
+	// to zero center:
+	a.sub(centroid);
+	b.sub(centroid);
+	c.sub(centroid);
+	d.sub(centroid);
+	// to unit sphere:
+	a.length(1.0);
+	b.length(1.0);
+	c.length(1.0);
+	d.length(1.0);
+
+	// console.log(a.length());
+	// console.log(b.length());
+	// console.log(c.length());
+	// console.log(d.length());
+
+	var A = new Tri3D(a,c,b);
+	var B = new Tri3D(a,b,d);
+	var C = new Tri3D(b,c,d);
+	var D = new Tri3D(c,a,d);
+
+
+	console.log(A.area());
+	console.log(B.area()); // .
+	console.log(C.area());
+	console.log(D.area()); // .
+
+	var sides = [A,B,C,D];
+
+console.log(sides);
+
+	// for each side: divide into separate triangles:
+	var triangles = [];
+	for(var i=0; i<sides.length; ++i){
+		var side = sides[i];
+		var a = side.A();
+		var b = side.B();
+		var c = side.C();
+		var ac = V3D.sub(c,a);
+		var cb = V3D.sub(b,c);
+		var u = cb.copy().scale(1.0/(subdivisions+1));
+		// for each row (subdivision)
+		for(var r=0; r<subdivisions; ++r){
+			var stripCount = r + 1;
+			console.log(r+" = "+stripCount);
+			var last = stripCount-1;
+			// ...
+			var o = ac.copy().scale((r+0)/stripCount);
+			var p = ac.copy().scale((r+1)/stripCount);
+			// for each strip
+			for(var s=0; s<stripCount; ++s){
+				// first:
+				var ta = u.copy().scale(s+0).add(o);
+				var tb = u.copy().scale(s+0).add(p);
+				var tc = u.copy().scale(s+1).add(p);
+				var t = new Tri3D(ta,tb,tc);
+				triangles.push(t);
+				if(s!=last){ // single tri
+					ta = ta.copy();
+					tb = tc.copy();
+					tc = u.copy().scale(s+1).add(o);
+					var t = new Tri3D(ta,tb,tc);
+					triangles.push(t);
+				}
+			}
+		}
+	}
+	// project to circle center
+	for(var i=0; i<triangles.length; ++i){
+		var triangle = triangles[i];
+		var a = triangle.A();
+		var b = triangle.B();
+		var c = triangle.C();
+		a.norm();
+		b.norm();
+		c.norm();
+	}
+
+	console.log(triangles);
+
+	throw "..."
+	return {"triangles":triangles};
+}
 
 
 Tri3D.generateSphere = function(radius, latNum, lonNum, offset){ // latitude=up/down, longitude=around

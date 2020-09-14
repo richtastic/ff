@@ -385,6 +385,229 @@ MISSING:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
+
+
+
+- why is F still picking points behind ?
+	- critical pair ?
+	- distance to points is >> distance between camera centers
+		~ approx 0 translation
+		=> what do do with nonlinear updates?
+
+
+		checkPointsLocation -- are the far points much farther (1000x?) than center-distances
+
+		- a single very far point can throw off average
+		=> 2-3 sigma distance dropping until stable group
+
+refineAllCameraMultiViewTriangulation
+
+- points at infinity - sphere projection
+	- after triangulation is made:
+	- create sphere: centered at view centroid, extent = ~ 100x point (or triangle) 2-3 sigma 
+	- decide on some sphere triangle density (100-1k-10k triangles)
+		=> method to create triangle sphere
+	- for each vertex on sphere:
+		...
+		vector from camera center to 
+		- facing camera normal?
+		- point projects to inside of image
+		- not intersecting with world triangle geometry
+		- 
+		...
+	- drop triangles with any no-view-vertexes
+
+	Tri3D.generateTetrahedraSphere(radius, subdivisions, offset)
+
+
+
+	-
+		A: "QOSH9VXO"
+		B: "T5WYDW3A"
+		id: "QOSH9VXO-T5WYDW3A"
+		relativeError: 99
+		matches: 0
+		relative: 0
+		tracks: 0
+		skipped: true
+
+
+
+
+x speed up sparse tests: [any less ?]
+	- 6 iterations for F
+	- 6 iterations for R
+
+
+
+
+- chosen triples needs to filter on top ~ 10 for each view
+	- rank on A: double pair exists
+	- rank on B: sum average error
+	- truncate top 10 per view
+	at MOST: 10 x n triples
+	[]
+
+
+
+
+Tri3D.generateTetrahedraSphere = function(radius, subdivisions, offset){
+
+
+
+
+
+
+
+
+
+
+
+DYA8UOP0-GMAOLJJU ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+LINEAR P: 
+Stereopsis.js:11920 checkPointsLocation: FRONT: 1000 | BACK: 0 / 1000 = 1 & 0
+Stereopsis.js:11921 CAM DISTANCE: 1.0000000000000002 POINT DISTANCE: 7.526244086821144 = DISPARITY: 7.526244086821142
+Stereopsis.js:12013 nonlinear P
+Stereopsis.js:12023 {P: Matrix, error: 775.6626524954552}
+Stereopsis.js:12027 NONLINEAR P: 
+Stereopsis.js:11920 checkPointsLocation: FRONT: 1000 | BACK: 0 / 1000 = 1 & 0
+Stereopsis.js:11921 CAM DISTANCE: 1.0000124544866746 POINT DISTANCE: 145806.50048354635 = DISPARITY: 145804.68456104537
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+- semi-dense corners are not reproducible across images ?
+
+
+
+
+EVERYTHING BEFORE:
+id: "7Z5JNVQG-FF31V4E2"
+
+
+
+
+"QOSH9VXO-T5WYDW3A" -- very close together
+
+
+
+
+
+
+
+
+
+progressiveMatchingAllSteps -- final matches are not used matches ?
+	GOOD: findLocalSupportingCornerMatches
+	>>>: findDenseCornerFMatches
+
+
+
+- matches being made on opposite side of F line ?
+
+- expanding probe2DF out to very bad locations
+
+
+- error N / S calculation MEAN v MIN
+
+
+
+
+- exact duplicate image check
+	- filter on very high histogram [99%+]
+	- load each remaining potential image
+		- 
+- near-duplicate image check ?
+	- ignore lighting change
+	- ignore tiny rotations / scale / offset
+	=> how to detect these ?
+
+
+..
+
+
+
+...
+
+
+...
+
+
+GQZMCS4B
+BZ3W23N4
+BZ3W23N4-GQZMCS4B
+
+
+
+{A: "GQZMCS4B", B: "BZ3W23N4", id: "BZ3W23N4-GQZMCS4B"}
+
+filterLocal2D2DNeighbors : DROPPED: 0 / 0 : NaN
+
+
 - histogrammed view similarities only gets rid of the worst, innaccurate on best
 	- keep top 10-20 historgram pairs [10% or 10 : whichever is higher]
 	- do secondary metric?
@@ -403,7 +626,49 @@ MISSING:
 
 
 
+-
+		A: "FF31V4E2"
+		B: "7Z5JNVQG"
+		id: "7Z5JNVQG-FF31V4E2"
+		matches: 59
+		relative: 0
+		tracks: 0
+		metricNeighborsToWorld:
+			list: "NaN"
 
+
+SAME?:
+FF31V4E2 - JVJ5RN0B
+
+
+SIMILAR:
+YLHE0VJQ - FF31V4E2
+
+CLOSE:
+7Z5JNVQG-FF31V4E2
+
+
+
+
+matches: 0
+relative: 0
+tracks: 0
+skipped: true
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+- is probe3D resulting in more points dropped?
 
 
 

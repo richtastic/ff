@@ -5257,6 +5257,14 @@ ImageMatScaled.prototype.images = function(){
 ImageMatScaled.prototype.scales = function(){
 	return this._scales;
 }
+ImageMatScaled.prototype.image = function(){
+	var images = this._images;
+	if(images && images.length>0){
+		return images[0];
+	}
+	return null;
+}
+
 
 ImageMatScaled.prototype.getScaledImage = function(scale, doCeil){
 	var wid = this.width();

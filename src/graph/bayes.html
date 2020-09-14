@@ -351,8 +351,53 @@ edge updates its liklihood:
 
 
 function classesLoadedFxn(){
-	var network = new BayesNetwork();
-	console.log(network);
+	// var network = new BayesNetwork();
+	// console.log(network);
+
+
+// 0=>0  1=>1  2=>4  3=>9  4=>16
+/*
+var radius = 1.0;
+var subdivisions = 2;
+var offset = new V3D(0,0,0);
+var result = Tri3D.generateTetrahedraSphere(radius, subdivisions, offset);
+console.log(result);
+	throw "..."
+	*/
+
+
+
+
+	// FG:
+
+
+	var graph = new FactorGraph();
+
+
+
+	var A = graph.addVariable(2,"A");
+	var B = graph.addVariable(2,"B");
+	var C = graph.addVariable(2,"C");
+	var D = graph.addVariable(2,"D");
+
+
+	var fA = graph.addFactor([A],[0.3,0.7], "fA"); // 2^1 = 2 states
+
+	var fAB = graph.addFactor([A,B],[0.2,0.1, 0.3,0.4], "fAB"); // 2^2 = 4 states
+
+	var fBCD = graph.addFactor([B,C,D],[0.1,0.1, 0.2,0.0,  0.1,0.2, 0.1,0.2 ], "fBCD"); // 2^3 = 8 states
+
+	fA.printTable();
+	fAB.printTable();
+	fBCD.printTable();
+
+	// moralization ?
+
+
+	var result = graph.loopyBP();
+	console.log(result);
+
+
 
 	// sum([0.16,0.16,0.24,0.04,0.04,0.24,0.06,0.06])
 }
@@ -424,7 +469,9 @@ MarkovNetwork.prototype.x = function(){ //
 // Factor Graph
 
 // 
-
+function Loopy(){
+	//
+}
 Loopy.prototype.x = function(){ //?
 	// ...
 }
@@ -434,7 +481,42 @@ Loopy.prototype.x = function(){ //?
 
 
 
+
+
+
+
+
+
+
 </script>
 <body onload="pageLoadedFxn();">
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -4284,6 +4284,8 @@ if(this._points3D && this._normals3D){
 			pts3D.push(p);
 			nms3D.push(n);
 		}
+		console.log(pts3D);
+		console.log(nms3D);
 		var str = Code.pointsToPtsFileString(pts3D,nms3D);
 		console.log(str);
 }
@@ -7750,25 +7752,25 @@ console.log("checkPerformNextTask");
 		return;
 	}
 
-throw "task pair feature match";
+// throw "task pair feature match";
 	// does a feature-match pair exist (even a bad match) between every (putative) view pair?
 	if(!project.checkHasSparseStarted()){
 		project.calculatePairPutatives();
 		return;
 	}
 	// throw "..."
-throw "iterate sparse ?";
+// throw "iterate sparse ?";
 	if(!project.checkHasSparseEnded()){
 		project.iterateSparseProcess();
 		return;
 	}
 
-throw "start dense";
+// throw "start dense";
 	if(!project.checkHasDenseStarted()){
 		project.calculateDensePairPutatives();
 		return;
 	}
-throw "iterate dense";
+// throw "iterate dense";
 	if(!project.checkHasDenseEnded()){
 		project.iterateDenseProcess();
 		return;
@@ -8095,10 +8097,11 @@ inputData["pairsRaw"] = originalPairs;
 inputData["pairs"] = pairs;
 console.log(inputData);
 
+throw "BEFORE TRIPLES DONE"
 		
 		project.saveFileFromData(inputData,inputFilename, saveProjectFxn,project);
 
-		throw "BEFORE TRIPLES DONE"
+		
 	}
 
 
@@ -8621,7 +8624,7 @@ var removeList = {};
 	for(var i=0; i<viewPairs.length; ++i){
 		var viewPair = viewPairs[i];
 		var error = viewPair["reprojectionError"];
-		console.log("  error: "+error);
+		// console.log("  error: "+error);
 		// if(error>limit){
 		if(error>halfLimit){
 			console.log("drop pair: "+viewPair["id"]);
@@ -8703,10 +8706,22 @@ var relAngleFxn = function(matrix){
 	return angle;
 }
 
-var dropIterations = 2;
+var dropIterations = 10;
+// var dropIterations = 1;
+// var dropIterations = 2;
+// var dropIterations = 3;
+// var dropIterations = 5;
 for(var iterations=0; iterations<dropIterations; ++iterations){
 
 	var errors = [];
+
+	// clear all errors:
+	var allEdges = viewGraph.edges();
+	for(var j=0; j<allEdges.length; ++j){
+		var edge = allEdges[j];
+		var data = edge.data();
+		data["errors"] = [];
+	}
 	
 	for(var i=0; i<loops.length; ++i){
 		var loop = loops[i];
@@ -8731,11 +8746,6 @@ for(var iterations=0; iterations<dropIterations; ++iterations){
 			var data = edge.data();
 			var next = edge.opposite(vertex);
 			var transform = null;
-			
-			// console.log(vertex,edge.A());
-			// console.log(vertex);
-			// console.log(edge);
-			// throw "?"
 			if(vertex==edge.A()){ // forward
 				transform = data["forward"];
 				// transform = data["reverse"];
@@ -8743,9 +8753,7 @@ for(var iterations=0; iterations<dropIterations; ++iterations){
 				transform = data["reverse"];
 				// transform = data["forward"];
 			}
-
 			relError += relAngleFxn(transform);
-
 			// rotation = Matrix.mult(transform, rotation);
 			rotation = Matrix.mult(rotation,transform);
 
@@ -8790,10 +8798,8 @@ for(var iterations=0; iterations<dropIterations; ++iterations){
 
 		// console.log( Code.degrees(error) );
 
-
 		loop["error"] = error;
 		errors.push(error);
-
 
 		// send error to edges:
 		for(var j=0; j<edges.length; ++j){
@@ -8801,11 +8807,10 @@ for(var iterations=0; iterations<dropIterations; ++iterations){
 			var data = edge.data();
 			data["errors"].push(error);
 		}
-
-		console.log(str+" = "+error);
-		console.log("....................");
+		// console.log(str+" = "+error);
+		// console.log("....................");
 	}
-	console.log(errors);
+	// console.log(errors);
 	Code.printMatlabArray(errors,"errors");
 
 	// average each edge's errors:
@@ -8822,7 +8827,7 @@ for(var iterations=0; iterations<dropIterations; ++iterations){
 	var info = Code.exponentialDistribution(errors);
 	console.log(info);
 
-	var limit90 = Code.exponentialDistributionValueForPercent(info["min"],info["lambda"], 0.90);
+	var limit90 = Code.exponentialDistributionValueForPercent(info["min"],info["lambda"], 0.99);
 	console.log("limit90: "+limit90);
 
 	var count = 0;
@@ -8843,7 +8848,7 @@ for(var iterations=0; iterations<dropIterations; ++iterations){
 	var info = Code.exponentialDistribution(next);
 	console.log(info);
 
-	var limit95 = Code.exponentialDistributionValueForPercent(info["min"],info["lambda"], 0.95);
+	var limit95 = Code.exponentialDistributionValueForPercent(info["min"],info["lambda"], 0.999);
 	console.log("limit95: "+limit95);
 
 
@@ -8852,10 +8857,10 @@ for(var iterations=0; iterations<dropIterations; ++iterations){
 	for(var i=0; i<loops.length; ++i){
 		var loop = loops[i];
 		var loopError = loop["error"];
-		if(loopError>limit90){ // && loopError>limit95
-			console.log("bad loop: "+loopError);
+		// if(loopError>limit90){ //
+		if(loopError>limit90 && loopError>limit95){ //
+			// console.log("bad loop: "+loopError);
 			var edges = loop["edges"];
-			// console.log(edges);
 			var worstEdge = null;
 			var worstError = null;
 			for(var e=0; e<edges.length; ++e){
@@ -8872,22 +8877,23 @@ for(var iterations=0; iterations<dropIterations; ++iterations){
 		// console.log();
 	}
 	var dropEdgesList = Code.objectToArray(dropEdges);
-	console.log(dropEdgesList);
-	// console.log(dropEdges);
-	
+	if(dropEdgesList.length==0){
+		console.log("dropEdgesList none");
+		break;
+	}else{
+		console.log("dropEdgesList : "+dropEdgesList.length);
+	}
+	// console.log(dropEdgesList);
 	// remove all loops containing bad edges
 	var dropLoops = [];
 	for(var i=0; i<loops.length; ++i){
 		var loop = loops[i];
-		// console.log(loop);
 		var drop = false;
 		var edges = loop["edges"];
 		for(var j=0; j<edges.length; ++j){
 			var edge = edges[j];
 			// console.log(edge);
 			if(dropEdges[edge.id()]){
-				// dropLoops.push(loop);
-				// break;
 				drop = true;
 				break;
 			}
@@ -8905,9 +8911,7 @@ for(var iterations=0; iterations<dropIterations; ++iterations){
 		console.log("DROPPING EDGE "+data["id"]);
 		viewGraph.removeEdge(edge);
 	}
-
-
-	Code.printMatlabArray(next,"next");
+	// Code.printMatlabArray(next,"next");
 
 }
 
@@ -8941,7 +8945,7 @@ TODO: FIND ORIENTATION OUTLIERS USING LOOPS + BELIEF PROPAGATION
 	for(var i=0; i<list.length; ++i){
 		var edge = list[i];
 		var id = edge["id"];
-		console.log(id);
+		// console.log(id);
 		var pair = viewPairsIDToPair[id];
 		// console.log(index);
 		// var pair = pairs[index];
@@ -8957,7 +8961,7 @@ TODO: FIND ORIENTATION OUTLIERS USING LOOPS + BELIEF PROPAGATION
 
 
 
-	console.log(views);
+	// console.log(views);
 	var showPairs = function(){
 		console.log("showPairs");
 // return;
@@ -9166,6 +9170,9 @@ var list = viewPairs;
 }
 
 App3DR.ProjectManager.prototype.triplesFromBestPairs = function(pairs, isDense){ // TODO: does this guarantee scale coverage for every pair ?
+
+console.log("triplesFromBestPairs: --- TODO: cap max amount of triples");
+
 	var minimumRelativeCount = 25; // tracks:  poor-avg-good  |  sparse =  100-200-500   |  dense = 400-1000-2000
 	var maximumIndividualPairCount = 4; // 3 - 6 [at least 2 others to guarantee relative-ness, at least 4 for error]
 	if(isDense){
@@ -9419,7 +9426,7 @@ console.log("ITERATION NUMBER: "+baIterations+" / "+maxIterationsBA);
 console.log("isDone - FULL DONE")
 
 // show the graph:
-var orderedTransforms = [];
+var orderedAbsoluteTransforms = [];
 var groupIDs = [];
 var viewIDToIndex = {};
 for(var v=0; v<allViews.length; ++v){
@@ -9427,7 +9434,8 @@ for(var v=0; v<allViews.length; ++v){
 	var viewID = view["id"];
 	var trans = view["transform"];
 		trans = Matrix.fromObject(trans);
-	orderedTransforms.push(trans);
+	var abs = Matrix.inverse(trans);
+	orderedAbsoluteTransforms.push(abs);
 	groupIDs.push(viewID);
 	viewIDToIndex[viewID] = v;
 }
@@ -9444,9 +9452,9 @@ for(var v=0; v<allTransforms.length; ++v){
 console.log(allTransforms);
 console.log(groupPairsPass);
 
-project.displayViewGraph(orderedTransforms,groupPairsPass, 0, groupIDs);
+project.displayViewGraph(orderedAbsoluteTransforms,groupPairsPass, 0, groupIDs);
 
-// throw "???"
+// throw "done full BA"
 					
 					// get best putative pairs
 					
@@ -10831,6 +10839,11 @@ var pairIDToError = {};
 	// find bests:
 	var minimumPairMatches = 3; // assuming @ 50% error -- backup pair to create triple [sparse->dense] 2-4
 	var maximumPairMatches = 10; // don't want too many matches
+// maximumPairMatches = 3; // 40
+maximumPairMatches = 4; // 51
+// maximumPairMatches = 5; // 62
+// maximumPairMatches = 6; // 77
+// maximumPairMatches = 7; // 87
 	var maximumViewPairAngle = Code.radians(60.0); // 45-90 | 45+error = 60
 	var maximumViewDistanceMultiple = 4.0; // depends on a neighborhood size ... point targets ...  --- NOT USED YET
 console.log("TODO: get average point location after reconstruction & sigma -- spherical");
@@ -10841,7 +10854,7 @@ console.log("TODO: get average point location after reconstruction & sigma -- sp
 // 36 - 7
 // 49 - 8
 // 64 - 9
-		maximumPairMatches = Math.min( Math.round(3 + Math.sqrt(viewCount)), maximumPairMatches);
+		maximumPairMatches = Math.min( Math.round(2 + Math.sqrt(viewCount)), maximumPairMatches);
 	console.log("pair limits: [ "+minimumPairMatches+" - "+maximumPairMatches+" ]");
 		maximumPairMatches = Math.max(minimumPairMatches,maximumPairMatches);
 	var maximumNeighborhoodAdjacency = 4; // direct=0, +1,+2,+3] -- don't want to try too far away -- 2-3 -- TODO: THIS IS HIGH
@@ -10922,16 +10935,15 @@ console.log("TODO: get average point location after reconstruction & sigma -- sp
 	
 	var pairs = Code.objectToArray(pairLookup);
 
-
-
-
+console.log("PAIRS: "+pairs.length);
+// throw "..."
 	console.log(pairs);
 	console.log(pairLookup);
 	console.log(views);
 
 console.log("SHOW THIS GRAPH");
 // show the graph:
-var orderedTransforms = [];
+var orderedAbsoluteTransforms = [];
 var groupIDs = [];
 var viewIDToIndex = {};
 for(var v=0; v<views.length; ++v){
@@ -10940,7 +10952,8 @@ for(var v=0; v<views.length; ++v){
 	var viewID = view["id"];
 	var trans = view["transform"];
 		trans = Matrix.fromObject(trans);
-	orderedTransforms.push(trans);
+	var abs = Matrix.inverse(trans); // absolute
+	orderedAbsoluteTransforms.push(abs);
 	groupIDs.push(viewID);
 	viewIDToIndex[viewID] = v;
 }
@@ -10954,7 +10967,7 @@ for(var v=0; v<pairs.length; ++v){
 	var viewIndexB = viewIDToIndex[viewIDB];
 	groupPairsPass.push( [viewIndexA,viewIndexB] );
 }
-project.displayViewGraph(orderedTransforms,groupPairsPass, 0, groupIDs, 0x66CC0000, 6.0);
+project.displayViewGraph(orderedAbsoluteTransforms,groupPairsPass, 0, groupIDs, 0xFFCC0000, 2.0);
 
 
 
@@ -11620,6 +11633,7 @@ var Ferror = null;
 	}
 
 	console.log("INITIAL F: "+Ferror+" (of "+maxErrorFInitPixels+"?) "+" & "+(pointsA?pointsA.length:0)+" (of "+minimumCountFInit+" ?)");
+// throw "now what"
 // F error has to be less than some number < ~ 5px
 // match cound has to be at least some number > ~50-100
 	if(!F || Ferror>maxErrorFInitPixels || pointsA.length<minimumCountFInit){
@@ -11678,7 +11692,7 @@ var Ferror = null;
 
 		var result = world.solvePairF();
 		console.log(result);
-
+// world.showForwardBackwardPair();
 // throw "BEFORE NEXT F -> R"
 
 		// F error has to be less than some number < ~ 5px
@@ -11729,20 +11743,30 @@ var Ferror = null;
 
 				world.dropWorstParametersF();
 
-
 				console.log("SOLVE INITIAL R");
 				
-				var cellCount = 40;
-				world.setViewCellCounts(cellCount);
+				// var cellCount = 40;
+				// world.setViewCellCounts(cellCount);
+
+				// KEEP PREVIOUS CELL SIZING
+
 				var result = world.solvePair(function(world){
 					console.log("async");
 				}, this);
 				// console.log(result);
-
 				var str = world.toYAMLString();
 				console.log(str);
+
+// throw "here, after solvePair"
 			}
+
+
+
+			// world.showForwardBackwardPair();
+
 		}
+
+		
 
 		// STEROPSIS TRACKS
 
@@ -14483,10 +14507,9 @@ console.log(sampleMatrix);
 	data["words"] = normalizedWords;
 	data["flatHistogram"] = normalizedHistogram;
 
-
 	// extract actual objects to compare
 	// var wordSize = 5; // 21 / 25
-	// var wordSize = 7; // 37 / 49
+	// var wordSize = 7; // 37 / 49 - OK
 	var wordSize = 9; // 69 / 81
 	var wordColor = true;
 	var normalizedLexicon = R3D.lexiconFromImageFeatures(normalizedWords, imageScales, wordSize, wordColor);
@@ -14570,8 +14593,8 @@ App3DR.ProjectManager.prototype.calculateViewSimilarities = function(){
 			console.log("completed loading ...");
 			console.log(histograms);
 			console.log(features);
-
-
+/*
+// FEATURE WORDS:
 			var obj;
 			var scores = [];
 			for(var i=0; i<views.length; ++i){
@@ -14600,8 +14623,10 @@ App3DR.ProjectManager.prototype.calculateViewSimilarities = function(){
 			}
 			console.log(scores);
 			// throw "????";
+*/
 
-			/*
+
+// HISTOGRAMS:
 			var obj;
 			var scores = [];
 			// for every view, compare to every other view
@@ -14642,7 +14667,8 @@ App3DR.ProjectManager.prototype.calculateViewSimilarities = function(){
 					scores.push(obj);
 				}
 			}
-			*/
+
+
 			scores.sort(function(a,b){
 				// return a["s"]>b["s"] ? -1 : 1; // NCC - larger better
 				return a["s"]<b["s"] ? -1 : 1; // SAD - smaller better
@@ -14737,7 +14763,7 @@ App3DR.ProjectManager.prototype.showViewSimilarities = function(similarities){
 			centers.push(new V2D(offsetX,offsetY));
 		}
 		// convert to list:
-console.log(similarities);
+// console.log(similarities);
 
 // similarities = Code.copyObject(similarities);
 
@@ -14787,7 +14813,7 @@ for(var i=0; i<similarities.length; ++i){
 	var maxB = listB[listB.length-1];
 	var max = Math.max(maxA,maxB);
 	var score = similarity["s"];
-	console.log(score,max);
+	// console.log(score,max);
 	if(score>max){
 		Code.removeElementAt(similarities,i);
 		--i;
@@ -15070,7 +15096,7 @@ App3DR.ProjectManager.prototype.calculatePairPutatives = function(){
 	}
 	var fxnSavedSparse = function(){
 		console.log("fxnSavedSparse");
-throw "BEFORE SAVE PROJECT";
+throw "BEFORE SAVE PROJECT BEST PAIRS";
 		project.saveProjectFile(fxnSavedProject, project);
 	}
 	project.saveSparseFromData(sparseData, fxnSavedSparse, project);
@@ -17278,7 +17304,7 @@ App3DR.ProjectManager.prototype.displayViewGraph = function(transforms, pairs, o
 	console.log(pairs);
 	console.log(transforms);
 
-	var displaySize = 900;
+	var displaySize = 1200;
 	var displayPadding = 20;
 	var displayWidth = displaySize - displayPadding*2.0;
 	var displayHeight = displaySize - displayPadding*2.0;

@@ -759,9 +759,11 @@ R3D._transformCameraExtrinsicMultipleNonlinearGD = function(args, x, isUpdate){
 }
 
 R3D.transformCameraExtrinsicNonlinear = function(P, pointsA2D,pointsB2D, Ka,KaInv, Kb,KbInv, maxIterations, negativeIsBad){
+	// var result = R3D.transformCameraExtrinsicNonlinear(P, bestPointsA, bestPointsB, Ka,KaInv, Kb,KbInv, null, true);
 	maxIterations = Code.valueOrDefault(maxIterations, 1000);
 	negativeIsBad = Code.valueOrDefault(negativeIsBad, false);
 	var args = [pointsA2D,pointsB2D, Ka,KaInv, Kb,KbInv, negativeIsBad];
+	// console.log("negativeIsBad: "+negativeIsBad);
 	var x = R3D.transformMatrixToComponentArray(P);
 
 	var result = Code.gradientDescent(R3D._transformCameraExtrinsicNonlinearGD, args, x, null, maxIterations, 1E-6); // 1E-1 = sub pixel ?
@@ -773,9 +775,9 @@ R3D.transformCameraExtrinsicNonlinear = function(P, pointsA2D,pointsB2D, Ka,KaIn
 	return {"P":P, "error":cost};
 }
 R3D._transformCameraExtrinsicNonlinearGD = function(args, x, isUpdate){
-	// if(isUpdate){
-	// 	return;
-	// }
+	if(isUpdate){
+		return;
+	}
 	var pointsA2D = args[0];
 	var pointsB2D = args[1];
 	var Ka = args[2];
@@ -783,6 +785,7 @@ R3D._transformCameraExtrinsicNonlinearGD = function(args, x, isUpdate){
 	var Kb = args[4];
 	var KbInv = args[5];
 	var negativeIsBad = args[6];
+
 
 	var tx = x[0];
 	var ty = x[1];
@@ -800,6 +803,10 @@ R3D._transformCameraExtrinsicNonlinearGD = function(args, x, isUpdate){
 	R3D.transform3DFromParameters(extrinsicB, rx,ry,rz, tx,ty,tz);
 	var pointCount = pointsA2D.length;
 	var totalError = 0;
+
+
+// try using normal ?
+
 	for(var i=0; i<pointCount; ++i){
 		var pA = pointsA2D[i];
 		var pB = pointsB2D[i];
@@ -820,11 +827,14 @@ R3D._transformCameraExtrinsicNonlinearGD = function(args, x, isUpdate){
 		var distanceSquareA = V2D.distanceSquare(pA, p3DA);
 		var distanceSquareB = V2D.distanceSquare(pB, p3DB);
 		var error = distanceSquareA + distanceSquareB;
-		// .
-		if(negativeIsBad && (p3DA.z<=0 || p3DB.z<=0)){ // behind camera
-			error *= 2;
+		// 
+		if(negativeIsBad && (v3DA.z<=0 || v3DB.z<=0)){ // behind camera
+			// console.log("behind");
+			// error = error*error;
+			// error *= 2;
+			// error *= 10;
+			error += 1E9;
 		}
-		// .
 		totalError += error;
 	}
 	// if(isUpdate){
@@ -9926,6 +9936,12 @@ var drawAngle = true;
 		var point = feature["point"];
 		var size = feature["size"];
 		var angle = feature["angle"];
+		if(!size){
+			size = 5;
+		}
+		if(!angle){
+			angle = 0;
+		}
 		// break;
 		
 		// size = 1.0;
@@ -10481,43 +10497,49 @@ R3D._fundamentalIteritiveDropWorst = function(pointsA,pointsB, minimumErrorSigma
 
 R3D.findDenseCornerFMatches = function(imageMatrixA,imageMatrixB, F,Ferror, imageCornerDensityPercent, matchesA,matchesB){
 	Ferror = Code.valueOrDefault(Ferror, averageSizeA*0.02 ) ;
-	imageCornerDensityPercent = Code.valueOrDefault(imageCornerDensityPercent, 0.01); // 2k - 4k
+	imageCornerDensityPercent = Code.valueOrDefault(imageCornerDensityPercent, 0.001); // 0.01 - 2k-4k ; 0.001 = 10k-20k
 
 	var averageSizeA = (imageMatrixA.width()+imageMatrixA.height());
 
-	var featureSizePercent = 0.04; // 0.01 - 0.04
+	var featureSizePercent = 0.05; // 0.01 - 0.04
 	var maximumAngleDifference = 10; // 5-20 degrees : 10=> 36 | 12=>30 | 18=>20 | 22.5=>16
 	var maximumTableEntries = 360.0/(maximumAngleDifference);
 
 	var imageScalesA = new ImageMatScaled(imageMatrixA);
 	var imageScalesB = new ImageMatScaled(imageMatrixB);
 
-	// var cornersA = R3D.differentialCornersForImageScales(imageScalesA, imageCornerDensityPercent, false);
-	// var cornersB = R3D.differentialCornersForImageScales(imageScalesB, imageCornerDensityPercent, false);
-	// throw "huh?"
+	var idealSize = new V2D(800,600);
+	var maxScale = 2.0; // no bigger
+	var infoImageIdealA = imageScalesA.getImageSize(idealSize, maxScale);
+	var infoImageIdealB = imageScalesB.getImageSize(idealSize, maxScale);
+	var imageIdealA = infoImageIdealA["image"];
+	var imageScaleA = infoImageIdealA["scale"];
+	var imageIdealB = infoImageIdealB["image"];
+	var imageScaleB = infoImageIdealB["scale"];
+	var cornersA = R3D.differentialCornersForImageSingle(imageIdealA, imageCornerDensityPercent);
+	var cornersB = R3D.differentialCornersForImageSingle(imageIdealB, imageCornerDensityPercent);
+	cornersA = cornersA["points"];
+	cornersB = cornersB["points"];
+	// resize for sample image
+	var featuresA = R3D._cornerListToFeatureList(cornersA, imageScaleA);
+	var featuresB = R3D._cornerListToFeatureList(cornersB, imageScaleB);
 
 
-var idealSize = new V2D(800,600);
-var maxScale = 2.0; // no bigger
-var infoImageIdealA = imageScalesA.getImageSize(idealSize, maxScale);
-var infoImageIdealB = imageScalesB.getImageSize(idealSize, maxScale);
-var imageIdealA = infoImageIdealA["image"];
-var imageScaleA = infoImageIdealA["scale"];
-var imageIdealB = infoImageIdealB["image"];
-var imageScaleB = infoImageIdealB["scale"];
-var cornersA = R3D.differentialCornersForImageSingle(imageIdealA, imageCornerDensityPercent);
-var cornersB = R3D.differentialCornersForImageSingle(imageIdealB, imageCornerDensityPercent);
-cornersA = cornersA["points"];
-cornersB = cornersB["points"];
-// resize for sample image
-var featuresA = R3D._cornerListToFeatureList(cornersA, imageScaleA);
-var featuresB = R3D._cornerListToFeatureList(cornersB, imageScaleB);
 
-	// var featuresA = R3D.differentialCornersForImageScales(imageScalesA, imageCornerDensityPercent, true);
-	// var featuresB = R3D.differentialCornersForImageScales(imageScalesB, imageCornerDensityPercent, true);
+// SHOW THE CORNERS 
+var d = new DO();
+d.graphics().setFill(0xFFFFFFFF);
+d.graphics().beginPath();
+d.graphics().drawRect(0,0,2000,1000);
+d.graphics().endPath();
+d.graphics().fill();
+GLOBALSTAGE.addChild(d);
+R3D.showFeaturesForImage(imageScalesA.image(),featuresA, 0);
+R3D.showFeaturesForImage(imageScalesB.image(),featuresB, imageScalesA.image().width());
+
 
 	// create objects for A
-	var featureCompareSize = 9;
+	var featureCompareSize = 9; // 9-11
 	var featureSourceSize = Math.ceil(averageSizeA*featureSizePercent);
 
 	console.log("featureSourceSize: "+featureSourceSize);
@@ -10550,12 +10572,9 @@ var featuresB = R3D._cornerListToFeatureList(cornersB, imageScaleB);
 	}
 	// cache helpers
 	var getImageForFeature = function(feature, angle){
-		// console.log("getImageForFeature");
 		var images = feature["images"];
 		var index = Math.round(maximumTableEntries * Code.angleZeroTwoPi(angle)/Math.PI2);
-		// console.log(index);
 		var value = images[value];
-		// console.log(value);
 		if(!value){
 			return null;
 		}
@@ -11037,10 +11056,11 @@ throw "end loop";
 		console.log("ratio > "+bestMatchesA.length);
 
 		// REPEAT-DROP BASED ON SCORES
-		var maximumScoreError = 0.50;
+		// var maximumScoreError = 0.50;
 		// var maximumScoreError = 0.25;
 		var maxIterations = 10;
 		var sigmaDrop = 2.0;
+Code.printMatlabArray(scores,"scores");
 		for(var iter=0; iter<maxIterations; ++iter){
 			// drop worst based on scores
 			var scoreMin = Code.min(scores);
@@ -11133,6 +11153,7 @@ throw "end loop";
 		finalPointsB = info["B"];
 		Ferror = info["error"];
 
+		/*
 		// Ferror = Ferror * 2.0; // 2 sigma
 		if(Ferror>8.0){ // want to reduce wrong inliers too
 			Ferror = Ferror * 1.0;
@@ -11141,6 +11162,7 @@ throw "end loop";
 		}else{ // OK to for only outliers
 			Ferror = Ferror * 2.0;
 		}
+		*/
 
 
 	} // iterations
@@ -11165,36 +11187,12 @@ throw "end loop";
 	var Ferror = info["error"];
 	var bestData = {"F":F, "inv":Finv, "error":Ferror, "A":pointsA, "B":pointsB};
 	return bestData;
-
-
-/*
-	var minimumDesiredError = 1.0;
-	var info = R3D._fundamentalIteritiveDropWorst(pointsA,pointsB, minimumDesiredError);
-	console.log(info);
-	var F = info["F"];
-	var Finv = info["inv"];
-	pointsA = info["A"];
-	pointsB = info["B"];
-	var Ferror = info["error"];
-	bestData = {"F":F, "inv":Finv, "error":Ferror, "A":pointsA, "B":pointsB};
-	
-
-	console.log(pointsA.length);
-	console.log(pointsA);
-	console.log(pointsB);
-
-
-	return bestData;
-*/
-
-
-	throw "?"
 }
 
 
 
 R3D.progressiveMatchingAllSteps = function(imageMatrixA,objectsA, imageMatrixB,objectsB){
-	// A) BLINDLY FIND MATCHES BASED ON FEATURE COMPARE 50~100 pxw
+	// A) BLINDLY FIND MATCHES BASED ON FEATURE COMPARE 50~100 px
 	var result = R3D.progressiveFullMatchingDense(objectsA, imageMatrixA, objectsB, imageMatrixB);
 	console.log(result);
 
@@ -11215,11 +11213,14 @@ R3D.progressiveMatchingAllSteps = function(imageMatrixA,objectsA, imageMatrixB,o
 	pointsB = result["B"];
 	Ferror = result["error"];
 
+// R3D.showFundamental(pointsA,pointsB, F, Finv, GLOBALSTAGE, imageMatrixA,imageMatrixB);
+// throw "STEP B RSULTS"
 	if(!F){
 		return null;
 	}
 
-
+// THIS STEP SEEMS COUNTER PRODUCTIVE:
+/*
 
 	// C) FROM LOCAL F -> FIND GLOBAL F [CORNER DENSE]
 	var imageAWidth = imageMatrixA.width();
@@ -11246,6 +11247,23 @@ R3D.progressiveMatchingAllSteps = function(imageMatrixA,objectsA, imageMatrixB,o
 	pointsB = result["B"];
 	Ferror = result["error"];
 
+	// best neighbors again:
+	var result = R3D.findLocalSupportingCornerMatches(imageMatrixA,imageMatrixB, pointsA,pointsB);
+	console.log(result);
+	F = result["F"];
+	Finv = result["inv"];
+	pointsA = result["A"];
+	pointsB = result["B"];
+	Ferror = result["error"];
+
+
+
+*/
+
+R3D.showFundamental(pointsA,pointsB, F, Finv, GLOBALSTAGE, imageMatrixA,imageMatrixB);
+
+
+// throw "..."
 
 /*	
 	// D) RANSAC BEST
@@ -12852,7 +12870,7 @@ for(var z=0; z<bestMatchesA.length; ++z){
 	var finalPointsA = info["A"];
 	var finalPointsB = info["B"];
 	var Ferror = info["error"];
-	R3D.showFundamental(finalPointsA, finalPointsB, Fab, Fba, GLOBALSTAGE, imageMatrixA,imageMatrixB);
+	// R3D.showFundamental(finalPointsA, finalPointsB, Fab, Fba, GLOBALSTAGE, imageMatrixA,imageMatrixB);
 
 
 	return {"F":Fab, "inv":Fba, "A":finalPointsA, "B":finalPointsB, "error":Ferror};
@@ -16772,6 +16790,9 @@ R3D.harrisCornerDetection = function(src, width, height, sigma){ // harris
 			tra = a + d;
 			det = a*d - c*b;
 			var har = det - 0.000001*tra*tra;
+			if(Code.isNaN(har)){
+				har = 0;
+			}
 			harrisValue[index] = Math.abs(har);
 			/*
 			eigs = Code.eigenValues2D(a,b,c,d);
@@ -18825,7 +18846,7 @@ R3D.lexiconFromImageFeatures = function(normalizedWords, imageScales, wordSize, 
 
 	// console.log(Code.sum(circleMask));
 	// throw "circleMask";
-	
+
 	var imageWidth = imageScales.width();
 	var imageHeight = imageScales.height();
 	var color = new V3D();
