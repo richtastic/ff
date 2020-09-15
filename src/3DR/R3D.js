@@ -831,9 +831,9 @@ R3D._transformCameraExtrinsicNonlinearGD = function(args, x, isUpdate){
 		if(negativeIsBad && (v3DA.z<=0 || v3DB.z<=0)){ // behind camera
 			// console.log("behind");
 			// error = error*error;
-			// error *= 2;
+			error *= 2;
 			// error *= 10;
-			error += 1E9;
+			// error += 1E9;
 		}
 		totalError += error;
 	}
@@ -30670,9 +30670,12 @@ R3D.TextureTriangle.prototype.subDivide = function(extrinsics,viewCenters,viewNo
 	return {"addedTris":newTris, "removedTris":oldTris, "addedVertexes":newVerts};
 }
 R3D.UpdateTextureVertexFromViews = function(vert, viewIndexes, extrinsics,viewCenters,viewNormals,resolutions,cameras, triangleSpace){
+// triangleSpace = null;
 	var intersectionCount = 0;
-	var maxNormalAngle = Code.radians(90.0);
-	var maxViewAngle = Code.radians(90.0);
+	// var maxNormalAngle = Code.radians(90.0);
+	// var maxViewAngle = Code.radians(90.0); // in front / behind camera
+var maxNormalAngle = Code.radians(180.0);
+var maxViewAngle = Code.radians(180.0);
 	var ray = new V3D(); // reuse
 	var viewToPoint = new V3D(); // reuse
 	var fxnSortRank = function(a,b){
@@ -30683,8 +30686,6 @@ R3D.UpdateTextureVertexFromViews = function(vert, viewIndexes, extrinsics,viewCe
 	var vertNormalInverse = vertNormal.copy().flip();
 	// get list of views acceptible to project to
 	var viewList = [];
-
-
 
 	var viewCount = null;
 	var useIndexes = true;
@@ -30713,6 +30714,7 @@ R3D.UpdateTextureVertexFromViews = function(vert, viewIndexes, extrinsics,viewCe
 		
 		// aiming toward camera - culling
 		var angle = V3D.angle(viewNormal,vertNormalInverse);
+var angleViewNormalToVertexNormal = angle;
 		if(angle>maxNormalAngle){
 			continue;
 		}
@@ -30761,11 +30763,11 @@ R3D.UpdateTextureVertexFromViews = function(vert, viewIndexes, extrinsics,viewCe
 		}
 		// valid vertex-view match
 		var distance = V3D.distance(viewCenter,vertPoint);
-		var cosine = Math.cos(angleViewNormal);
+		// var cosine = Math.cos(angleViewNormal);
+		var cosine = Math.cos(angleViewNormalToVertexNormal);
 		var rank = cosine/distance;
 		var entry = {"view":j, "rank":rank, "point":projected2D};
 		viewList.push(entry);
-
 	}
 	viewList.sort(fxnSortRank);
 	var vs = [];
@@ -30855,6 +30857,7 @@ console.log("maxDimension: "+maxDimension);
 	}
 	// add padding to size
 	var size = V3D.sub(maxSpace,minSpace);
+console.log("size: "+size);
 	var epsilon = size.scale(0.001);
 	minSpace.sub(epsilon);
 	maxSpace.add(epsilon);
@@ -30922,16 +30925,22 @@ console.log("maxDimension: "+maxDimension);
 		viewCenters.push(center);
 	}
 
-
+	console.log("insert triangles into space");
 
 	// insert triangles into space
 	var triangleSpace = new OctSpace(toCuboid,minSpace,maxSpace);
+	triangleSpace.maxDivisions(10); // 8 -> 10 ---------------- doesn't seem to help speed up
 	triangleSpace.initWithObjects(tris);
 	var intersectionCount = 0;
 	var viewIndexes = null;
+	var useTriangleSpace = triangleSpace;
+// useTriangleSpace = null; // dont' do intersection test -- speed up
 	for(var i=0; i<verts.length; ++i){
+		if(i%1000==0){
+			console.log(i+"/"+verts.length);
+		}
 		var vert = verts[i];
-		var result = R3D.UpdateTextureVertexFromViews(vert, viewIndexes, extrinsics,viewCenters,viewNormals,resolutions,cameras, triangleSpace);
+		var result = R3D.UpdateTextureVertexFromViews(vert, viewIndexes, extrinsics,viewCenters,viewNormals,resolutions,cameras, useTriangleSpace);
 		intersectionCount += result["intersections"];
 	}
 	console.log("INTERSECTIONS FOUND: intersectionCount:"+intersectionCount);
@@ -30950,8 +30959,10 @@ console.log("maxDimension: "+maxDimension);
 		// var area = V3D.areaTri(tri.A().point(),tri.B().point(),tri.C().point());
 		var area = V3D.areaTri(tri.A(),tri.B(),tri.C());
 		if(area==0){
+			console.log("no area "+i+"/"+tris.length);
 			console.log(tri);
-			throw "no area: "+area;
+			// console.log(tri);
+			// throw "no area: "+area;
 		}
 		if(!result || area==0){
 			badTris += 1;
@@ -31263,8 +31274,9 @@ console.log("convert to parallel array outputs: "+tris.length);
 			var area = V2D.areaTri(ps[0], ps[1], ps[2]);
 			// console.log(area);
 			if(area<0.01){
-				console.log(ps)
-				throw "tiny area";
+				console.log(ps,i,tris.length,area)
+				console.log("tiny area: "+area+" @ "+i+" / "+tris.length);
+				// throw "tiny area";
 			}
 			projections2D.push(ps);
 		}

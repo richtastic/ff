@@ -1158,7 +1158,6 @@ console.log(" possible: "+i+" = "+dot+" @ "+Code.degrees(angle)+" : "+o1+"/"+o2)
 	}
 
 	if(textures){
-console.log("RICHIE - textures");
 		var loadedTextureCount = 0;
 		var expectedTextureCount = textures.length;
 		var loadedTextureImages = Code.newArrayNulls(expectedTextureCount);
@@ -3748,7 +3747,10 @@ console.log(bind)
 			var cy = K.get(1,2);
 			var s = K.get(0,1);
 			var camWid = 1.0;
-camWid = 0.20;
+// camWid = 0.20;
+
+camWid = 0.01;
+
 			var camHei = camWid*(hei/wid);
 			var fyOfx = fy/fx;
 //console.log("CAM WID: "+camWid+" x "+camHei);
@@ -7775,23 +7777,23 @@ console.log("checkPerformNextTask");
 		project.iterateDenseProcess();
 		return;
 	}
-throw ">start bundle";
+// throw ">start bundle";
 	if(!project.checkHasBundleStarted()){
 		project.initializeBundleGroupsFromDense();
 		return;
 	}
-throw "> continue bundle";
+// throw "> continue bundle";
 	if(!project.checkHasBundleEnded()){
 		project.iterateBundleProcess(); // sets up dense groups
 		return;
 	}
 
-throw ">start surface"; // copy point files & create surface.yaml
+// throw ">start surface"; // copy point files & create surface.yaml
 	if(!project.checkHasSurfaceStarted()){
 		project.initializeSurfaceFromBundle();
 		return;
 	}
-throw ">iterate surface"; // create triangles & textures
+// throw ">iterate surface"; // create triangles & textures
 	if(!project.checkHasSurfaceEnded()){
 		project.iterateSurfaceProcess();
 	}
@@ -8827,29 +8829,29 @@ for(var iterations=0; iterations<dropIterations; ++iterations){
 	var info = Code.exponentialDistribution(errors);
 	console.log(info);
 
-	var limit90 = Code.exponentialDistributionValueForPercent(info["min"],info["lambda"], 0.99);
-	console.log("limit90: "+limit90);
+	var limitA = Code.exponentialDistributionValueForPercent(info["min"],info["lambda"], 0.99);
+	console.log("limitA: "+limitA);
 
 	var count = 0;
 	var next = [];
 	var missed = [];
 	for(var i=0; i<errors.length; ++i){
 		var error = errors[i];
-		if(error<=limit90){
+		if(error<=limitA){
 			next.push(error);
 		}else{
 			missed.push(error);
 		}
 	}
-	console.log(next);
-	console.log(missed);
+	// console.log(next);
+	// console.log(missed);
 
 
 	var info = Code.exponentialDistribution(next);
 	console.log(info);
 
-	var limit95 = Code.exponentialDistributionValueForPercent(info["min"],info["lambda"], 0.999);
-	console.log("limit95: "+limit95);
+	var limitB = Code.exponentialDistributionValueForPercent(info["min"],info["lambda"], 0.999);
+	console.log("limitB: "+limitB);
 
 
 	// mark bad edges
@@ -8858,7 +8860,7 @@ for(var iterations=0; iterations<dropIterations; ++iterations){
 		var loop = loops[i];
 		var loopError = loop["error"];
 		// if(loopError>limit90){ //
-		if(loopError>limit90 && loopError>limit95){ //
+		if(loopError>limitA && loopError>limitB){ //
 			// console.log("bad loop: "+loopError);
 			var edges = loop["edges"];
 			var worstEdge = null;
@@ -9171,12 +9173,12 @@ var list = viewPairs;
 
 App3DR.ProjectManager.prototype.triplesFromBestPairs = function(pairs, isDense){ // TODO: does this guarantee scale coverage for every pair ?
 
-console.log("triplesFromBestPairs: --- TODO: cap max amount of triples");
+// console.log("triplesFromBestPairs: --- TODO: cap max amount of triples");
 
-	var minimumRelativeCount = 25; // tracks:  poor-avg-good  |  sparse =  100-200-500   |  dense = 400-1000-2000
+	var minimumRelativeCount = 100; // tracks:  poor-avg-good  |  sparse =  100-200-500   |  dense = 1000-10k
 	var maximumIndividualPairCount = 4; // 3 - 6 [at least 2 others to guarantee relative-ness, at least 4 for error]
 	if(isDense){
-		minimumRelativeCount = 200;
+		minimumRelativeCount = 200; // 
 		maximumIndividualPairCount = 3; // 2 - 4
 	}
 
@@ -13896,13 +13898,17 @@ App3DR.ProjectManager.prototype.iterateSurfaceProcess = function(){
 		var triangleCount = data["triangleCount"];
 		var textures = data["textures"];
 		var textureCount = data["textureCount"];
+
+		var viewsFilename = Code.appendToPath(surfaceDirectory, views);
+		var pointsFilename = Code.appendToPath(surfaceDirectory, points);
+
 		if(!triangles){ // create triangulation from points
-			var pointsFilename = Code.appendToPath(surfaceDirectory, points);
-			project.loadDataFromFile(pointsFilename, loadedPointsFxn);
+			project.loadDataFromFile(viewsFilename, loadedViewsFxnForTris);
+			project.loadDataFromFile(pointsFilename, loadedPointsFxnForTris);
 			return;
 		}
 		if(!textures){ // load triangles & map out textures
-			var viewsFilename = Code.appendToPath(surfaceDirectory, views);
+			
 			var trianglesFilename = Code.appendToPath(surfaceDirectory, triangles);
 			var triangleData = null;
 			var viewData = null;
@@ -13941,10 +13947,29 @@ App3DR.ProjectManager.prototype.iterateSurfaceProcess = function(){
 		console.log(data);
 		App3DR.ProjectManager.sceneDataToDAE(data);
 	}
-	var loadedPointsFxn = function(data){
-		console.log("loadedSurfaceFxn");
-		console.log(data);
-		var pointsAll = data["points"];
+
+	var viewData = null;
+	var pointData = null;
+	var loadedViewsFxnForTris = function(data){
+		viewData = data;
+		console.log("loadedViewsFxn");
+		continueLoadingPointsFxn(pointData,viewData);
+	}
+	var loadedPointsFxnForTris = function(data){
+		pointData = data;
+		console.log("loadedPointsFxn");
+		continueLoadingPointsFxn(pointData,viewData);
+	}
+	var continueLoadingPointsFxn = function(pointData,viewData){
+		console.log("continueLoadingPointsFxn");
+		console.log(pointData);
+		console.log(viewData);
+		if(!pointData || !viewData){
+			return;
+		}
+		var camerasAll = viewData["cameras"];
+		var viewsAll = viewData["views"];
+		var pointsAll = pointData["points"];
 		var points = [];
 		var normals = [];
 		for(var i=0; i<pointsAll.length; ++i){
@@ -13956,12 +13981,24 @@ App3DR.ProjectManager.prototype.iterateSurfaceProcess = function(){
 		}
 		console.log(normals);
 		console.log(points);
+
+console.log(viewsAll);
+
+
+
+var triangles = [];
+var bgTriangles = project.generateBackgroundSphere(viewsAll,camerasAll, triangles);
+console.log(bgTriangles);
+// var bgTriangles = [];
+
+// throw "NEED TO DO BG-SPHERE"
 		var mesh = new Mesh3D(points,normals);
 		// console.log("mesh");
 		// console.log(mesh);
-		var triangles = mesh.generateSurfaces(1000);
-// console.log("triangles");
-// console.log(triangles);
+		var triangles = mesh.generateSurfaces();
+console.log("triangles");
+console.log(triangles);
+		Code.arrayPushArray(triangles, bgTriangles);
 // throw "HERE"
 		var triangleCount = triangles.length;
 		var pointList = Tri3D.arrayToUniquePointList(triangles);
@@ -14216,7 +14253,12 @@ if(!K){
 				totalTextureCount = texturesToLoad.length;
 		// TODO: if totalTextureCount == 0 -> skip
 			if(totalTextureCount==0){
-				throw "move to next imag";
+
+				// throw "move to next image";
+				console.log("move to next image");
+				++currentViewIndex;
+				packViewFxn();
+				return;
 			}
 			var view = project.viewFromID(viewID);
 			view.loadMaximumImage(function(){
@@ -14360,6 +14402,70 @@ throw "before save updated texture";
 	project.loadDataFromFile(surfaceFilename, loadedSurfaceFxn);
 }
 
+App3DR.ProjectManager.prototype.generateBackgroundSphere = function(views,cameras, triangles){
+	// console.log(views);
+	// console.log(cameras);
+	// console.log(triangles);
+	// to useable
+	var absolutes = [];
+	var viewCenters = [];
+	var viewNormals = [];
+	for(var i=0; i<views.length; ++i){
+		var transform = views[i]["R"];
+		var extrinsic = Matrix.fromObject(transform);
+		var absolute = Matrix.inverse(extrinsic);
+		var center = absolute.multV3DtoV3D(new V3D(0,0,0));
+		var normal = absolute.multV3DtoV3D(new V3D(0,0,1));
+		normal.sub(center);
+		absolutes[i] = absolute;
+		viewCenters[i] = center;
+		viewNormals[i] = normal;
+		
+	}
+	var info = V3D.infoFromArray(viewCenters);
+	console.log(info);
+
+	var bgCenter = info["center"];
+	var bgSize = info["size"];
+	var bgRadius = Math.max(bgSize.x,bgSize.y,bgSize.z);
+	console.log(bgRadius);
+	bgRadius *= 1E9; // very far away
+
+	if(!triangles){
+		triangles = [];
+	}
+
+	// find center / extent of geometry
+	var triSpace = new OctSpace(OctSpace.triToCuboid);
+		triSpace.initWithObjects(triangles);
+	console.log(triSpace);
+
+	/*
+		- find center / extent of geometry
+		- create sphere centered at ideal location
+
+		- for each sphere vertex:
+			- find all views with point visible
+				- direction
+				- geometry intersect
+		
+		- for each vertex:
+			- if no views visible: remove any contained triangles
+
+	*/
+	var radius = bgRadius;
+	var subdivisions = 12;
+	var offset = bgCenter;
+	// var radius = 1;
+	// var subdivisions = 5;
+	// var offset = new V3D(0,0,0);
+	var invertNormals = true;
+	var sphere = Tri3D.generateTetrahedraSphere(radius, subdivisions, offset, invertNormals);
+	console.log(sphere);
+
+	return sphere["triangles"];
+	// throw "generateBackgroundSphere";
+}
 
 App3DR.ProjectManager.sceneDataToDAE = function(triangleData){
 	console.log("sceneDataToDAE");

@@ -358,12 +358,29 @@ function classesLoadedFxn(){
 // 0=>0  1=>1  2=>4  3=>9  4=>16
 /*
 var radius = 1.0;
-var subdivisions = 2;
+var subdivisions = 11;
 var offset = new V3D(0,0,0);
-var result = Tri3D.generateTetrahedraSphere(radius, subdivisions, offset);
+// var invert = true;
+var invert = false;
+var result = Tri3D.generateTetrahedraSphere(radius, subdivisions, offset, invert);
 console.log(result);
-	throw "..."
-	*/
+var tris = result["triangles"];
+var min = null;
+var max = null;
+for(var i=0; i<tris.length; ++i){
+	var tri = tris[i];
+	var area = tri.area();
+	if(!min){
+		min = area;
+		max = area;
+	}
+	min = Math.min(min,area);
+	max = Math.max(max,area);
+	// console.log(tri.area());
+}
+console.log("MAX RATIO: "+(max/min));
+throw "..."
+*/
 
 
 

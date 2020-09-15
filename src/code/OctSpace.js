@@ -11,7 +11,21 @@ function OctSpace(toCube,min,max,eps){
 OctSpace.objectToCuboid = function(p){
 	throw "need cuboid function";
 }
+OctSpace.triToCuboid = function(tri){
+	return tri.cuboid();
+}
 // ---------------------------------------------------------------------------------------------------------
+OctSpace.prototype.maxDivisions = function(max){
+	if(max!==undefined){
+		if(max!=this._maxDivisions){
+			var objects = this.toArray();
+			this.clear();
+			this._maxDivisions = max;
+			this.initWithObjects(objects);
+		}
+	}
+	return this._maxDivisions;
+}
 OctSpace.prototype.kill = function(){
 	this.clear();
 	this._root = null;
@@ -35,6 +49,10 @@ OctSpace.prototype.initWithObjects = function(objects, epsilon){
 			min = V3D.min(min, cube.min());
 			max = V3D.max(max, cube.max());
 		}
+	}
+	if(!min){
+		min = new V3D(0,0,0);
+		max = new V3D(0,0,0);
 	}
 	var force = true;
 	var eps = 1E-6;

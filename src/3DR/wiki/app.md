@@ -385,20 +385,53 @@ MISSING:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+- a lot of triangles are dropped during view visibility pass phase
+
+optimumTriangleTextureImageAssignment
+
+UpdateTextureVertexFromViews
+
+- is the intersection code correct?
+
+
+
+
+
+
+- solveDenseGroup fewer points:
+	- neighbor filters drop a lot of points
+	- groups have fuzzying surfaces
+	=> last step of bundle adjustment should do ALL VIEWS at same time ?
+
+
+
+
+
+- MISSING VIEW CAMERA IDS: -- some step overwrites it ?
+sparse/sparse.yaml
+sparse/graph.yaml
+dense/dense.yaml
+dense/graph.yaml
+bundle/bundle.yaml
+bundle/views.yaml
+
+
+
+
 
 
 
 
 - why is F still picking points behind ?
 	- critical pair ?
-	- distance to points is >> distance between camera centers
-		~ approx 0 translation
-		=> what do do with nonlinear updates?
-
+		- minimal translation compared to scene size ?
+		- distance to points is >> distance between camera centers
+			~ approx 0 translation
+			=> what do do with nonlinear updates?
 
 		checkPointsLocation -- are the far points much farther (1000x?) than center-distances
 
-		- a single very far point can throw off average
+		- a single very far point can throw off average ?
 		=> 2-3 sigma distance dropping until stable group
 
 refineAllCameraMultiViewTriangulation

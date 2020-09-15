@@ -187,65 +187,94 @@ Tri3D.extremaFromArray = function(triangles){
 	var size = V3D.sub(max,min);
 	return {"min":min, "max":max, "size":size};
 }
-Tri3D.generateTetrahedraSphere = function(radius, subdivisions, offset){
+Tri3D.generateTetrahedraSphere = function(radius, subdivisions, offset, invertNormals){
+// tet: 0=0, 1=4
+// dub: 0=0, 1=?
+// oct: 0=0, 1=8, 2=32, 3=72, 4=128, 5=200, 6=288, 7=392, 8=512, 9=648, 10=800, 11=968, 12=1152
+// squ: 0=0, 1=? 
+// regular tetrahedron - 4
+// triangle double tetrahedra - 6
+// square double pyriamid - 8
+// cube - 12
+
+
 	radius = radius!==undefined ? radius : 1;
 	subdivisions = subdivisions!==undefined ? subdivisions : 0;
 	offset = offset!==undefined ? offset : V3D.ZERO;
 
-	// create tetrahedra - side length = 1
-	var angle60 = Code.radians(60.0);
-	var l = 0.5/Math.cos(angle60*0.5);
-console.log("L: "+l);
-	var m = Math.sin(angle60);
-console.log("M: "+m);
-	var k = 0.5*Math.tan(angle60*0.5);
-console.log("K: "+k);
-	var h = Math.sqrt(m*m-k*k);
-console.log("H: "+h);
-	var dirZ = new V3D(0,0,1);
-	var a = new V3D(l,0,0);
-	var b = V3D.rotateAngle(new V3D(),a,dirZ, 2*angle60);
-	var c = V3D.rotateAngle(new V3D(),a,dirZ, -2*angle60);
-	var d = new V3D(0,0,h);
-	// find sphere center: a/b/c cancel, only z-movement
-	// var centroid = V3D.average([a,b,c,d]);
-	var centroid = d.copy().scale(0.25);
-	console.log(a+"");
-	console.log(b+"");
-	console.log(c+"");
-	console.log(d+"");
-	console.log(centroid+"");
-
-	// to zero center:
-	a.sub(centroid);
-	b.sub(centroid);
-	c.sub(centroid);
-	d.sub(centroid);
-	// to unit sphere:
-	a.length(1.0);
-	b.length(1.0);
-	c.length(1.0);
-	d.length(1.0);
-
-	// console.log(a.length());
-	// console.log(b.length());
-	// console.log(c.length());
-	// console.log(d.length());
-
-	var A = new Tri3D(a,c,b);
-	var B = new Tri3D(a,b,d);
-	var C = new Tri3D(b,c,d);
-	var D = new Tri3D(c,a,d);
 
 
-	console.log(A.area());
-	console.log(B.area()); // .
-	console.log(C.area());
-	console.log(D.area()); // .
+	var mode = 2;
+	var sides = null;
+	if(mode==0){
+		// create tetrahedra - side length = 1
+		var angle60 = Code.radians(60.0);
+		var l = 0.5/Math.cos(angle60*0.5);
+		var m = Math.sin(angle60);
+		var k = 0.5*Math.tan(angle60*0.5);
+		var h = Math.sqrt(m*m-k*k);
+		var dirZ = new V3D(0,0,1);
+		var a = new V3D(l,0,0);
+		var b = V3D.rotateAngle(new V3D(),a,dirZ, 2*angle60);
+		var c = V3D.rotateAngle(new V3D(),a,dirZ, -2*angle60);
+		var d = new V3D(0,0,h);
+		// find sphere center: a/b/c cancel, only z-movement
+		// var centroid = V3D.average([a,b,c,d]);
+		var centroid = d.copy().scale(0.25);
+		// to zero center:
+		a.sub(centroid);
+		b.sub(centroid);
+		c.sub(centroid);
+		d.sub(centroid);
+		// to unit sphere:
+		a.length(1.0);
+		b.length(1.0);
+		c.length(1.0);
+		d.length(1.0);
+		var A = new Tri3D(a,c,b);
+		var B = new Tri3D(a,b,d);
+		var C = new Tri3D(b,c,d);
+		var D = new Tri3D(c,a,d);
+		sides = [A,B,C,D];
+	}else if(mode==1){
+		// double triangle pyramid
+		throw "todo";
+	}else if(mode==2){
+		// double pyramid (octahedron):
+		var a = new V3D( 1, 0, 0);
+		var b = new V3D( 0, 1, 0);
+		var c = new V3D(-1, 0, 0);
+		var d = new V3D( 0,-1, 0);
+		var e = new V3D( 0, 0, 1);
+		var f = new V3D( 0, 0,-1);
 
-	var sides = [A,B,C,D];
+		var sides = [];
+		sides.push(new Tri3D(a,b,e)); // top
+		sides.push(new Tri3D(b,c,e));
+		sides.push(new Tri3D(c,d,e));
+		sides.push(new Tri3D(d,a,e));
+		sides.push(new Tri3D(a,d,f)); // bot
+		sides.push(new Tri3D(d,c,f));
+		sides.push(new Tri3D(c,b,f));
+		sides.push(new Tri3D(b,a,f));
+	}else if(mode==3){
+		// cube
+		throw "todo";
+	}
 
-console.log(sides);
+	// console.log(sides);
+
+	if(invertNormals){
+		console.log("invertNormals");
+		for(var i=0; i<sides.length; ++i){
+			var side = sides[i];
+			// var a = side.A();
+			var b = side.B();
+			var c = side.C();
+			side.B(c);
+			side.C(b);
+		}
+	}
 
 	// for each side: divide into separate triangles:
 	var triangles = [];
@@ -254,17 +283,15 @@ console.log(sides);
 		var a = side.A();
 		var b = side.B();
 		var c = side.C();
-		var ac = V3D.sub(c,a);
-		var cb = V3D.sub(b,c);
-		var u = cb.copy().scale(1.0/(subdivisions+1));
+		var ab = V3D.sub(b,a);
+		var bc = V3D.sub(c,b);
+		var u = bc.copy().scale(1.0/(subdivisions+1));
 		// for each row (subdivision)
 		for(var r=0; r<subdivisions; ++r){
 			var stripCount = r + 1;
-			console.log(r+" = "+stripCount);
 			var last = stripCount-1;
-			// ...
-			var o = ac.copy().scale((r+0)/stripCount);
-			var p = ac.copy().scale((r+1)/stripCount);
+			var o = ab.copy().scale((r+0)/stripCount).add(a);
+			var p = ab.copy().scale((r+1)/stripCount).add(a);
 			// for each strip
 			for(var s=0; s<stripCount; ++s){
 				// first:
@@ -289,14 +316,17 @@ console.log(sides);
 		var a = triangle.A();
 		var b = triangle.B();
 		var c = triangle.C();
-		a.norm();
-		b.norm();
-		c.norm();
+		a.length(radius);
+		b.length(radius);
+		c.length(radius);
+		if(offset){
+			a.add(offset);
+			b.add(offset);
+			c.add(offset);
+		}
 	}
-
-	console.log(triangles);
-
-	throw "..."
+	// console.log(triangles);
+	// throw "..."
 	return {"triangles":triangles};
 }
 

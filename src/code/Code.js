@@ -17399,9 +17399,8 @@ console.log("TRIPLES: "+triples.length);
 			var vertex = vertexes[j];
 			vertex.data()["groupID"] = j;
 		}
-		console.log("reachableEdges: ...")
 		var edges = pairGraph.reachableEdges(vertexes[0]);
-		console.log(edges.length + "reachable of "+pairGraph.edges().length);
+		console.log(edges.length + " reachable of "+pairGraph.edges().length);
 		groupEdges[i] = edges;
 		// fill out edges
 		var solveEdges = [];

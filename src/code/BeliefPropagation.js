@@ -255,8 +255,6 @@ FactorGraph.prototype.loopyBP = function(maxIterations){ // loopy sumProduct
 	// scheduling = factor nodes + variable nodes
 	var nodes = Code.arrayPushArrays([], this._factors, this._variables);
 	console.log(nodes);
-	// initial potentials
-		// equal-probable ?
 	// iterate to convergence
 	var operation = FactorGraph._operationSumProduct;
 	this._iterate(nodes, operation, maxIterations);
@@ -270,6 +268,7 @@ FactorGraph.prototype.loopyMAP = function(maxIterations){ // loopy maxProduct
 	throw "loopyMAP";
 }
 FactorGraph.prototype._iterate = function(nodes, operation, maxIterations){
+	var graph = this;
 	maxIterations = Code.valueOrDefault(maxIterations,10);
 	for(var i=0; i<maxIterations; ++i){
 		console.log("_iterate +++++++++++++++++++++++++++++++++++++ "+i);
@@ -280,7 +279,7 @@ FactorGraph.prototype._iterate = function(nodes, operation, maxIterations){
 			for(var m=0; m<neighbors.length; ++m){
 				var neighbor = neighbors[m];
 				var message = operation(node, neighbor);
-				this.setMessage(node,neighbor,message);
+				graph.setMessage(node,neighbor,message);
 			}
 		}
 		// update beliefs ?
@@ -291,17 +290,46 @@ FactorGraph.prototype._iterate = function(nodes, operation, maxIterations){
 }
 
 FactorGraph._operationSumProduct = function(nodeA,nodeB){ // A to B
-	var accumulator = nodeA.base(); // initial
-	if(!nodeA.isObserved()){
+	var graph = this;
+	var accumulator = null;
+
+	// VARIABLE
+	if(Code.isa(nodeA,FactorGraph.VariableNode)){
+		accumulator = nodeA.initialBelief();
+		accumulator = Code.copyArray(accumulator);
+		if(!nodeA.isObserved()){
+			var neighbors = nodeA.neighbors();
+			for(var i=0; i<neighbors.length; ++i){
+				var neighbor = neighbors[i];
+				if(neighbor!=nodeB){
+					var message = graph.getMessage(neighbor,nodeA,message); // neighbor -> node
+					Code.arrayVectorMul(accumulator, accumulator,message);
+				}
+			}
+		}
+	}else{ // FACTOR
+		accumulator = nodeA.potentials();
+		accumulator = Code.copyArray(accumulator);
 		var neighbors = nodeA.neighbors();
+		// product
 		for(var i=0; i<neighbors.length; ++i){
 			var neighbor = neighbors[i];
 			if(neighbor!=nodeB){
-				var message = this.getMessage(nodeA,nodeB,message); // switch A & B ?
-				accumulator *= message;
+				var message = graph.getMessage(neighbor,nodeA,message); // neighbor -> node
+				Code.arrayVectorMul(accumulator, accumulator,message);
+			}
+		}
+		console.log(accumulator+"");
+		// sum
+		for(var i=0; i<neighbors.length; ++i){
+			var neighbor = neighbors[i];
+			if(neighbor!=nodeB){
+				accumulator = nodeA.marginalize(neighbor,accumulator);
 			}
 		}
 	}
+
+	console.log(accumulator);
 	throw "_operationSP";
 	return accumulator;
 }
@@ -309,8 +337,24 @@ FactorGraph._operationMaxProduct = function(nodeA,nodeB){
 	throw "_operationMAP";
 }
 
+FactorGraph.prototype.junctionTree = function(){ // reduce graph to connected cliques to speed up message passing
+	// ..
+	throw "make junction tree ?"
+}
+
 FactorGraph.prototype.messages = function(){
 	// ..
+}
+FactorGraph.prototype.makeMessage = function(nodeFrom,nodeTo){
+	var graph = this;
+	var message = null;
+	if(Code.isa(nodeFrom,FactorGraph.VariableNode)){ // v -> f
+
+	}else{ // f -> v
+		// ...
+	}
+	// var message = nodeFrom.makeMessage(nodeTo);
+	return message;
 }
 FactorGraph.prototype.getMessage = function(nodeFrom,nodeTo){
 	var index = FactorGraph.directionPairIDFromIDs(nodeFrom.id(),nodeTo.id());
@@ -334,7 +378,7 @@ FactorGraph.prototype.toString = function(){
 
 FactorGraph._NodeID = 0;
 
-FactorGraph.VariableNode = function(states,data){
+FactorGraph.VariableNode = function(states,data,observations){
 	states = Code.valueOrDefault(states,2); // default binary
 	this._id = FactorGraph._NodeID++;
 	this._data = null;
@@ -342,6 +386,13 @@ FactorGraph.VariableNode = function(states,data){
 	this._marginals = Code.newArrayZeros(this._states); // belief / probabilities for each state
 	this.data(data);
 	this._factors = [];
+	// initial potentials - equal-probable ?
+	this._initialBelief = Code.newArrayOnes(states); // initial belief / prior 
+	this._observed = false;
+	if(observations){
+		this._observed = true;
+		this._initialBelief = observations;
+	}
 }
 FactorGraph.VariableNode.prototype.id = function(i){
 	if(i!==undefined){
@@ -359,24 +410,46 @@ FactorGraph.VariableNode.prototype.states = function(){
 	return this._states;
 }
 FactorGraph.VariableNode.prototype.marginals = function(){ // is marginal same as belief ?
-	// this._belief
 	return this._marginals;
 }
+FactorGraph.VariableNode.prototype.belief = function(){ // ^
+	return this._marginals;
+}
+FactorGraph.VariableNode.prototype.initialBelief = function(){
+	return this._initialBelief;
+}
+
 FactorGraph.VariableNode.prototype.addFactor = function(f){
 	return this._factors.push(f);
 }
-FactorGraph.VariableNode.prototype.neighbors = function(){
-	return this._factors;
+FactorGraph.VariableNode.prototype.neighbors = function(exclude){
+	exclude = Code.valueOrDefault(exclude,null);
+	var nodes = this._factors;
+	if(!exclude){
+		return nodes;
+	} // else pre-filter
+	var neighbors = [];
+	for(var i=0; i<nodes.length;++i){
+		var node = nodes[i];
+		if(node!=exclude){
+			neighbors.push(node);
+		}
+	}
+	return neighbors;
 }
+
 
 FactorGraph.FactorNode = function(variables, potentials, data){
 	this._id = FactorGraph._NodeID++;
 	this._variables = variables;
 	this._potentials = potentials;
+	var hash = {};
 	for(var i=0; i<variables.length; ++i){
 		var variable = variables[i];
 		variable.addFactor(this);
+		hash[variable.id()] = i;
 	}
+	this._variableIDToIndex = hash;
 }
 FactorGraph.FactorNode.prototype.id = function(i){
 	if(i!==undefined){
@@ -390,8 +463,35 @@ FactorGraph.FactorNode.prototype.data = function(data){
 	}
 	return this._data;
 }
-FactorGraph.FactorNode.prototype.neighbors = function(){
-	return this._variables;
+FactorGraph.FactorNode.prototype.potentials = function(){
+	return this._potentials;
+}
+FactorGraph.FactorNode.prototype.neighbors = function(exclude){
+	exclude = Code.valueOrDefault(exclude,null);
+	var nodes = this._variables;
+	if(!exclude){
+		return nodes;
+	} // else pre-filter
+	var neighbors = [];
+	for(var i=0; i<nodes.length;++i){
+		var node = nodes[i];
+		if(node!=exclude){
+			neighbors.push(node);
+		}
+	}
+	return neighbors;
+}
+FactorGraph.FactorNode.prototype.marginalize = function(variableNode, accumulator, normalize){ // remove non-interested node values
+// go thru table and sum all of the same states into single vector with only states/values of variableNode
+
+// ..
+
+if(normalize){
+	// to percents
+}
+
+// new_dims = tuple(d for d in self.dim if d not in dims)
+// return Discrete(pmf, *new_dims)
 }
 FactorGraph.FactorNode.prototype.printTable = function(){
 	var spacingVar = 7;
