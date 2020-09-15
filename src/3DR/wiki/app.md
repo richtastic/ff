@@ -393,6 +393,44 @@ UpdateTextureVertexFromViews
 
 - is the intersection code correct?
 
+=> visualize why it fails?
+
+
+
+- just 1 vertex will stop the triangle from being rendered
+	(hard to believe the vertex isn't visible from ANY cameras?)
+	=> noisy points / triangles can make this possible
+
+=> switch to as long as ANY vertex is visible, the triangle is visible
+	- the part that IS visible should be rendered as such, the obfuscated part will be hidden anyway
+	....
+
+=> expansion step where for every triangle: each vertex is UNIONED
+		=>  take best visibility score?
+		=>  take worst visibility score if not
+		=>  only update array if value doesn't already exist ?
+	- first loop is to set the available union list
+	- second loop is to set the final list from the union list
+
+=> the 'minimize changing triangles' algorithm is causing a flood of triangles to be reset to the worst scenario in some cases
+	- may need to introduce more costs, eg: change in visibility/angle/distance/score
+	=> minimize feathering AND distortion
+
+	single feathered image cost: 0.5
+	double feathered image cost: 0.333
+
+	view angle cost: cos(view-to-normal-angle)
+	view distance cost: 1/d or 1/d^2 (area)
+
+
+	total cost = sum(vertex_i view choice cost)/3 * feathering cost (1 if same, 0.5 if 1 diff, 0.333 if 3 diff)
+
+
+	flipping a vertex to a view that is very straight-on for one triangle may cause a feathering in another triangle
+
+
+	swap an edge only if it reduces the total COST
+	=> need to prioritize on maximal cost-reducing vertex switch (greedy)
 
 
 
