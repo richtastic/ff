@@ -30171,13 +30171,13 @@ R3D.filterFeaturesBasedOn = function(featuresA, imageMatrixA, filterType, percen
 R3D.TextureVertex = function(point){
 	this._point = null;
 	this._triangles = [];
-	this._points = [];
 	this._views = [];
-	this._ranks = [];
-	this._index = -1;
 	this._normal = null;
 	this._data = null;
 	this.point(point);
+	this._ranks = {};
+	this._points = {};
+	this._currentViewID = null;
 }
 R3D.TextureVertex.prototype.data = function(data){
 	if(data!==undefined){
@@ -30217,21 +30217,9 @@ R3D.TextureVertex.prototype.point = function(point){
 	}
 	return this._point;
 }
-// R3D.TextureVertex.prototype. = function(views,points){
-// 	this._projectedViews = views;
-// 	this._projectedPoints = points;
-// }
-// R3D.TextureVertex.prototype.pointForView = function(viewIndex){
-// 	var views = this._views;
-// 	for(var i=0; i<views.length; ++i){
-// 		if(views[i]==viewIndex){
-// 			return this._projectedPoints[i];
-// 		}
-// 	}
-// 	return null;
-// }
 R3D.TextureVertex.prototype.rank = function(){
-	var index = this._index;
+	var viewID = this._currentView;
+	throw "rank ?"
 	if(index>=0){
 		//return this._ranks[index]; // current location in Q
 		if(index<this._ranks.length-1){ // sort by less to lose
@@ -30271,22 +30259,35 @@ R3D.TextureVertex.prototype.adjacentVertexes = function(){
 R3D.TextureVertex.prototype.viewAndRanks = function(vs,rs,ps){
 	Code.copyArray(this._views,vs);
 	Code.copyArray(this._ranks,rs);
-	Code.copyArray(this._points,ps);
+	// Code.copyArray(this._points,ps);
 	if(this._views.length>0){
 		this._index = 0;
 	}else{
 		this._index = -1;
 	}
+	var points = {};
+	for(var i=0; i<vs.length; ++i){
+		var v = vs[i];
+		points[v] = ps[i];
+	}
+	this._points = points;
 }
 R3D.TextureVertex.prototype.projectedPointForView = function(viewID){
-	var views = this._views;
-	for(var i=0; i<views.length; ++i){
-		if(views[i]==viewID){
-			var point = this._points[i];
-			return point;
-		}
+	// var views = this._views;
+	// for(var i=0; i<views.length; ++i){
+	// 	if(views[i]==viewID){
+	// 		var point = this._points[i];
+	// 		return point;
+	// 	}
+	// }
+	var point = this._points[viewID];
+	if(point){
+		return point;
 	}
 	return null;
+}
+R3D.TextureVertex.prototype.addViewProjection = function(viewID, point2D){
+	this._points[viewID] = point2D;
 }
 R3D.TextureVertex.prototype.isFrontier = function(){
 	if(this._index===null){
@@ -30351,6 +30352,10 @@ R3D.TextureVertex.prototype.selectFirstAllowedView = function(){ // pick a view 
 // 	}
 // }
 R3D.TextureVertex.prototype.canFlipView = function(){ // check to see if the vertex can flip to another view wich will reduce frontier count
+
+// look over all triangles, and see if 
+
+	throw "canFlipView";
 	var views = this._views;
 	if(views.length>0){
 		var tris = this._triangles;
@@ -30505,17 +30510,38 @@ R3D.TextureTriangle.prototype.toCuboid = function(){
 }
 R3D.TextureTriangle.prototype.initAllowedViews = function(){ // a list of only the views all vertexes have in common
 	var verts = this._vertexes;
-	var intersect = null;
+
+	// if a view is visible from ANY vertex => is valid
+	var union = null;
 	for(var i=0; i<verts.length; ++i){
 		var views = verts[i].views();
-		if(!intersect){
-			intersect = Code.copyArray(views);
+		if(!union){
+			union = Code.copyArray(views);
 		}else{
-			intersect = Code.arrayIntersect(intersect,views);
+			union = Code.arrayUnion(union,views);
 		}
 	}
-	this._views = intersect; // TODO: prioritize on angle/distance
-	return intersect.length>0;
+	this._views = union; // TODO: prioritize on angle/distance
+	return union.length>0;
+
+	// var intersect = null;
+	// for(var i=0; i<verts.length; ++i){
+	// 	var views = verts[i].views();
+	// 	if(!intersect){
+	// 		intersect = Code.copyArray(views);
+	// 	}else{
+	// 		intersect = Code.arrayIntersect(intersect,views);
+	// 	}
+	// }
+	// this._views = intersect; // TODO: prioritize on angle/distance
+	// return intersect.length>0;
+
+
+	
+
+
+
+	
 }
 R3D.TextureTriangle.prototype.activeViews = function(){
 	var views = [];
@@ -30643,7 +30669,12 @@ R3D.TextureTriangle.prototype.subDivide = function(extrinsics,viewCenters,viewNo
 		}
 		var result = newTri.initAllowedViews();
 		if(!result){ // impossible tri
-			newTri.removeFromAll();
+			console.log(tri);
+			console.log(vertexes);
+			console.log(newTris);
+			console.log(newTri);
+
+			// newTri.removeFromAll();
 			throw "double check handle false result"
 		}else{
 			keepTris.push(newTri);
@@ -30707,7 +30738,6 @@ var maxViewAngle = Code.radians(180.0);
 		var viewExtrinsic = extrinsics[j];
 		var viewCenter = viewCenters[j];
 		var viewNormal = viewNormals[j];
-		var viewExtrinsic = extrinsics[j];
 		var viewSize = resolutions[j];
 		var K = cameras[j];
 		var distortion = null;
@@ -30954,6 +30984,10 @@ console.log("size: "+size);
 	for(var i=0; i<tris.length; ++i){
 		var tri = tris[i];
 		var result = tri.initAllowedViews();
+
+		// if(!result){
+		// 	throw "can't initAllowedViews";
+		// }
 		// console.log(tri)
 		// console.log(tri.A());
 		// var area = V3D.areaTri(tri.A().point(),tri.B().point(),tri.C().point());
@@ -31024,7 +31058,7 @@ console.log("size: "+size);
 	// place all frontier vertices into queue (any triangle with vertices not pointing to same texture)
 	var check = true;
 	var sizeCheckTris = Code.copyArray(tris);
-var count = 10;
+var count = 100;
 	while(check && count>0){
 --count;
 		console.log("frontier vertexes: "+Q.length());
@@ -31108,16 +31142,45 @@ console.log("iterated thru frontiers: "+flipCount);
 					var x = vx[k];
 					var p = x.projectedPointForView(v);
 					if(!p){
-						console.log(tri);
-						console.log(vx);
-						console.log(x);
-						console.log(v);
-						console.log(tri.views()+"");
-						console.log(tri.allowedView(v));
-						console.log(tri.initAllowedViews(v));
-						console.log(tri.views()+"");
+						// possibly assigned from triangle where other vertexes ARE visibl
 
-						throw "don't have a p: "+i+":"+j+" = "+v;
+						console.log("create missing view ponit (not visible)");
+
+
+						// if(useIndexes){
+						// 	j = viewIndexes[v];
+						// }else{
+						// 	j = v;
+						// }
+						var viewExtrinsic = extrinsics[j];
+						// var viewCenter = viewCenters[j];
+						// var viewNormal = viewNormals[j];
+						// var viewSize = resolutions[j];
+						var K = cameras[j];
+						var distortion = null;
+// console.log(j);
+// console.log(v);
+// console.log(viewExtrinsic);
+// console.log(cameras);
+// console.log(x);
+						// console.log(tri);
+						// console.log(vx);
+						// console.log(x);
+						// console.log(v);
+						// console.log(tri.views()+"");
+						// console.log(tri.allowedView(v));
+						// console.log(tri.initAllowedViews(v));
+						// console.log(tri.views()+"");
+						// projectedPointForView
+						var point3D = x.point();
+						var projected2D = R3D.projectPoint3DCamera2DDistortion(point3D, viewExtrinsic, K, distortion);
+						p = projected2D;
+
+						x.addViewProjection(v,p);
+
+						// console.log( x.projectedPointForView(v) );
+
+						// throw "don't have a p: "+i+":"+j+" = "+v;
 					}
 					ps.push(p);
 				}

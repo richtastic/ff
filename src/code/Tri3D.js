@@ -188,14 +188,24 @@ Tri3D.extremaFromArray = function(triangles){
 	return {"min":min, "max":max, "size":size};
 }
 Tri3D.generateTetrahedraSphere = function(radius, subdivisions, offset, invertNormals){
-// tet: 0=0, 1=4
-// dub: 0=0, 1=?
-// oct: 0=0, 1=8, 2=32, 3=72, 4=128, 5=200, 6=288, 7=392, 8=512, 9=648, 10=800, 11=968, 12=1152
-// squ: 0=0, 1=? 
-// regular tetrahedron - 4
-// triangle double tetrahedra - 6
-// square double pyriamid - 8
-// cube - 12
+// tet: 0=0, 1=4,  2=?
+// dub: 0=0, 1=6,  2=?
+// oct: 0=0, 1=8,  2=32, 3=72, 4=128, 5=200, 6=288, 7=392, 8=512, 9=648, 10=800, 11=968, 12=1152
+// squ: 0=0, 1=12, 2=?
+// ico: 0=0. 1=20, 2=?
+// tet:  4*(n^2) : 
+// dub:  6*(n^2) :
+// oct:  8*(n^2) :
+// cub: 12*(n^2) :
+// ico: 20*(n^2) :
+
+// given a side count, pick a polyhedron with closest number
+// c = desired number
+// m = multiplier
+// n = single side count
+// n^0.5 = divisions
+// c/m = n
+// pick method resulting in closest count (under/over?)
 
 
 	radius = radius!==undefined ? radius : 1;
@@ -204,9 +214,9 @@ Tri3D.generateTetrahedraSphere = function(radius, subdivisions, offset, invertNo
 
 
 
-	var mode = 2;
+	var mode = 2; // default = 2 : octahedron
 	var sides = null;
-	if(mode==0){
+	if(mode==0){ // regular tetrahera [3]
 		// create tetrahedra - side length = 1
 		var angle60 = Code.radians(60.0);
 		var l = 0.5/Math.cos(angle60*0.5);
@@ -236,11 +246,9 @@ Tri3D.generateTetrahedraSphere = function(radius, subdivisions, offset, invertNo
 		var C = new Tri3D(b,c,d);
 		var D = new Tri3D(c,a,d);
 		sides = [A,B,C,D];
-	}else if(mode==1){
-		// double triangle pyramid
+	}else if(mode==1){ // trianglular bi-pyramid [6]
 		throw "todo";
-	}else if(mode==2){
-		// double pyramid (octahedron):
+	}else if(mode==2){ // double square pyramid (octahedron): [8]
 		var a = new V3D( 1, 0, 0);
 		var b = new V3D( 0, 1, 0);
 		var c = new V3D(-1, 0, 0);
@@ -257,10 +265,31 @@ Tri3D.generateTetrahedraSphere = function(radius, subdivisions, offset, invertNo
 		sides.push(new Tri3D(d,c,f));
 		sides.push(new Tri3D(c,b,f));
 		sides.push(new Tri3D(b,a,f));
-	}else if(mode==3){
-		// cube
-		throw "todo";
-	}
+	}else if(mode==3){ // cube [12]
+		var a = new V3D( 1, 0,-1);
+		var b = new V3D( 0, 1,-1);
+		var c = new V3D(-1, 0,-1);
+		var d = new V3D( 0,-1,-1);
+		var e = new V3D( 1, 0, 1);
+		var f = new V3D( 0, 1, 1);
+		var g = new V3D(-1, 0, 1);
+		var h = new V3D( 0,-1, 1);
+		sides = [];
+		sides.push(new Tri3D(e,f,h)); // top
+		sides.push(new Tri3D(f,g,h));
+		sides.push(new Tri3D(a,d,b)); //bot
+		sides.push(new Tri3D(d,c,b));
+		sides.push(new Tri3D(a,e,d)); // 1
+		sides.push(new Tri3D(d,e,h));
+		sides.push(new Tri3D(d,h,c)); // 2
+		sides.push(new Tri3D(g,c,h));
+		sides.push(new Tri3D(c,g,b)); // 3
+		sides.push(new Tri3D(f,b,g));
+		sides.push(new Tri3D(b,f,a)); // 4
+		sides.push(new Tri3D(e,a,f));
+	}else if(mode==4){ // icosahedron [20]
+		// ...
+	} // other
 
 	// console.log(sides);
 

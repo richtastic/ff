@@ -4055,18 +4055,20 @@ Stereopsis.relativeTransformFromViews = function(viewA,viewB){
 }
 Stereopsis.World.prototype.refinePoint3DAbsoluteLocation = function(points, maxIterations){ // nonlinear P3D location optimization
 	console.log("refinePoint3DAbsoluteLocation");
+	var world = this;
 	if(!points){
-		points = this.toPointArray();
+		points = world.toPointArray();
  	}
 	for(var i=0; i<points.length; ++i){
 		var point = points[i];
-		this.bundleAdjustPoint(point, maxIterations);
+		world.bundleAdjustPoint(point, maxIterations);
 		if(i>0 && i%10000==0){
 			console.log(i+"/"+points.length);
 		}
 	}
 }
 Stereopsis.World.prototype.bundleAdjustPoint = function(point, maxIterations){
+	var world = this;
 	maxIterations = maxIterations!==null && maxIterations!==undefined ? maxIterations : 10;
 	var point3D = point.point();
 	if(point3D){
@@ -4085,7 +4087,7 @@ Stereopsis.World.prototype.bundleAdjustPoint = function(point, maxIterations){
 		}
 		var result = R3D.BundleAdjustPoint3D(point3D, points2D, intrinsics, inverses, extrinsics, maxIterations);
 		var location = result["point"];
-		this.updatePoint3DLocation(point,location);
+		world.updatePoint3DLocation(point,location);
 	}
 }
 Stereopsis.World.prototype.refineCameraAbsoluteOrientationSubset = function(minimumPoints, maxIterations){
@@ -8114,6 +8116,10 @@ world.printPoint3DTrackCount();
 console.log("after probe 2D");
 world.printPoint3DTrackCount();
 // world.checkTransformMatches();
+	
+
+		// optimize points
+		world.refinePoint3DAbsoluteLocation();
 
 		// retract
 		world.filterGlobal3DR(2.0); // 2 - 3
@@ -8131,6 +8137,9 @@ world.filterGlobalPatchSphere3D(2.0);
 console.log("after local 3D filter");
 world.printPoint3DTrackCount();
 // world.checkTransformMatches();
+
+
+
 
 		// refine cameras --- no 
 		// world.recordViewAbsoluteOrientationStart();
@@ -8344,6 +8353,9 @@ world.copyRelativeTransformsFromAbsolute();
 		}
 		// world.probe2DCellsR(3.0,3.0);
 		world.probe2DCellsR(3.0,3.0, compareSize); // 9=>81 7=>49 5=>25
+
+		// optimize ?
+		world.refinePoint3DAbsoluteLocation();
 
 		// retract
 		world.filterGlobal3DR(3.0);

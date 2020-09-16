@@ -385,21 +385,38 @@ MISSING:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-- a lot of triangles are dropped during view visibility pass phase
 
-optimumTriangleTextureImageAssignment
 
-UpdateTextureVertexFromViews
+- UPDATE:
+	R3D.optimumTriangleTextureImageAssignment
+	- any vertex can be assigned to a view as long it is in the tri.union(views)
+	=> vertex view assignment will be a viewID (no longer index)
 
-- is the intersection code correct?
 
-=> visualize why it fails?
+R3D.TextureVertex
+R3D.TextureTriangle
+	
+
+
+- add nonlinear P3D estimation step
+	- in dense & group-dense
+	=> update P3D location nonlinearly to minimize reprojection error (10+ iterations?)
+
+	Stereopsis.World.prototype.refinePoint3DAbsoluteLocation(points, maxIterations)
+
+
+- update how texture triangle assignments are done
+	=> not all vertexes need be visible
+	=> cost fxn
 
 
 
 - just 1 vertex will stop the triangle from being rendered
 	(hard to believe the vertex isn't visible from ANY cameras?)
 	=> noisy points / triangles can make this possible
+
+
+
 
 => switch to as long as ANY vertex is visible, the triangle is visible
 	- the part that IS visible should be rendered as such, the obfuscated part will be hidden anyway
@@ -431,6 +448,21 @@ UpdateTextureVertexFromViews
 
 	swap an edge only if it reduces the total COST
 	=> need to prioritize on maximal cost-reducing vertex switch (greedy)
+
+
+
+
+
+
+optimumTriangleTextureImageAssignment
+
+UpdateTextureVertexFromViews
+
+- is the intersection code correct?
+
+=> visualize why it fails?
+
+
 
 
 
