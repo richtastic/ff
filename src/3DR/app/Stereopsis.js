@@ -8158,6 +8158,9 @@ world.printPoint3DTrackCount();
 // throw "end loop";
 	}
 
+	
+	// optimize points
+	world.refinePoint3DAbsoluteLocation();
 	// final output:
 	world.estimate3DErrors(true);
 

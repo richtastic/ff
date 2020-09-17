@@ -385,6 +385,113 @@ MISSING:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+- really big triangles might be making the vertex intersection test take a long time
+...
+		R:
+...
+		camera: "V3L4XDFN"
+		R:
+
+
+
+
+
+THIS NEEDS TO ONLY APPLY TO IMPOSSIBLE TRIS -- other tris need to make due
+expansionSetup
+expansionApply
+
+iterate:
+	get all impossible tris adj to a possible tri
+
+
+'push' optimal views in direction of impossible tris
+
+
+
+
+
+
+
+- skip loading textures for views that don't render triangles to it?
+
+
+tri count: 16221
+... 8765 vertexes
+tex: 6606 tris 
+
+
+subdivide tri results in unallowed view?
+var result = newTri.initAllowedViews();
+
+
+- go thru triangle view assignment algorithm:
+	A) get it working with new methods but same design
+		- note of how many triangles are dropped due to 'null'/impossible vertex
+	B) add in vertex spread pre-process
+		- each vertex's list of possible expands to include all touching triangles WHERE ONLY OCCLUSION IS THE DIFFERENCE
+
+
+refinePoint3DAbsoluteLocation
+
+var result = R3D.BundleAdjustPoint3D(point3D, points2D, intrinsics, inverses, extrinsics, maxIterations);
+
+
+
+WHAT IS TEXTURING VIEW ASSIGNMENT LOGIC ?:
+
+- some vertexes aren't visible, or not visible by some views when it would be in reality
+	- caused by:
+		- A) noisy geomtetry
+		- B) vertex isn't visible, but part of triangle is
+
+REAL VISIBILITY:
+	- any part of triangle is visible from view
+
+REAL TEST:
+	- project all triangles in-front of subject (average z-distance) onto view's plane
+	- if there is a triangle cover / intersect:
+		- drop occluded portion
+		- can stop immediately if fully covered
+	- if any part of triangle still exists (some but not full covering):
+		- all vertexes of triangle are visible, but with some penalty:
+		- eg: % of area occluded (0-1)
+	- if all of triangle still exists (no covering)
+		- triangle is fully visible
+		- all vertexes of triangle confident
+
+
+
+SIMPLE VISIBILITY:
+	- check vertexes only:
+		- vertex is on any triangle with normal facing view normal
+		- vertex isn't occluded by a 
+
+
+
+- expansion step: ONLY IF THE OCCLUSION IS THE PROBLEM -- each vertex needs to now keep track of every projectable view
+	for each vertex:
+		- next-array = union of all 
+	for each vertex:
+		- views = old views + WORST CASE RANK of other union
+
+
+
+queue of vertexes, ordered on 'next best cost reduction' [ignore negative (worse) costs]
+
+- each vertex : check to see what cost reduction is:
+	- get current cost
+	- for each of vertex's possible views:
+		- change view & calc cost (can also put current cost in this, as is same as current view)
+
+		- if 
+	
+
+
+
+
+
+
+
 
 
 - UPDATE:

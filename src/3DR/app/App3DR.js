@@ -14026,7 +14026,8 @@ console.log(triangles);
 		var textureDimension = 2048;
 		// var textureDimension = 1024;
 		// var textureDimension = 512;
-		var resolutionScale = 0.50; // of maximum possible source input
+		// var resolutionScale = 0.50; // of maximum possible source input
+		var resolutionScale = 0.25;
 		console.log("loadedTrianglesFxn");
 		console.log(viewData,triangleData);
 		// output texture size
