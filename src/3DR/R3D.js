@@ -30459,6 +30459,13 @@ R3D.TextureVertex.prototype.expansionSetup = function(){ // get union of all adj
 	}
 	this._expansionViews = unionViews;
 }
+R3D.TextureVertex.prototype.expansionSetupWithViews = function(additionalViews){
+	if(this._expansionViews){
+		this._expansionViews = Code.arrayUnion(this._expansionViews, additionalViews);
+		return;
+	} // TODO: should more views be added?
+	this._expansionViews = additionalViews;
+}
 R3D.TextureVertex.prototype.expansionApply = function(){ // 
 	var views = this._views;
 	var maybeViews = this._viewsMaybe;
@@ -30586,6 +30593,44 @@ R3D.TextureTriangle.prototype.initAllowedViews = function(){ // a list of only t
 	}
 	this._views = intersect; // TODO: prioritize on angle/distance
 	return intersect.length>0;	
+}
+R3D.TextureTriangle.prototype.hasPossibleVertexPairs = function(){ // any 2 of the vertexes have a valid union
+	var verts = this._vertexes;
+	var A = verts[0];
+	var B = verts[1];
+	var C = verts[2];
+	// var viewsA = A.views();
+	// var viewsB = B.views();
+	// var viewsC = C.views();
+	var intersect = null;
+	var common = null;
+	var opposite = null;
+	var sets = [ [A,B, C], [A,C, B], [B,C, A] ];
+	for(var i=0; i<sets.length; ++i){
+		var set = sets[i];
+		var v = set[0];
+		var u = set[1];
+		intersect = Code.arrayIntersect(v.views(),u.views());
+		if(intersect.length>0){
+			common = [v,u];
+			opposite = set[2];
+			break;
+		}
+	}
+	return {"intersect":intersect, "common":common, "opposite":opposite};
+	// intersect = Code.arrayIntersect(viewsA,viewsB);
+	// if(intersect.length>0){
+	// 	return intersect;
+	// }
+	// intersect = Code.arrayIntersect(viewsA,viewsC);
+	// if(intersect.length>0){
+	// 	return intersect;
+	// }
+	// intersect = Code.arrayIntersect(viewsB,viewsC);
+	// if(intersect.length>0){
+	// 	return intersect;
+	// }
+	// return null;
 }
 R3D.TextureTriangle.prototype.activeViews = function(){
 	var views = [];
@@ -30783,10 +30828,10 @@ R3D.TextureTriangle.prototype.subDivide = function(extrinsics,viewCenters,viewNo
 R3D.UpdateTextureVertexFromViews = function(vert, viewIndexes, extrinsics,viewCenters,viewNormals,resolutions,cameras, triangleSpace){
 // triangleSpace = null;
 	var intersectionCount = 0;
-	// var maxNormalAngle = Code.radians(90.0);
-	// var maxViewAngle = Code.radians(90.0); // in front / behind camera
-var maxNormalAngle = Code.radians(180.0);
-var maxViewAngle = Code.radians(180.0);
+	var maxNormalAngle = Code.radians(90.0);
+	var maxViewAngle = Code.radians(90.0); // in front / behind camera
+// var maxNormalAngle = Code.radians(180.0);
+// var maxViewAngle = Code.radians(180.0);
 	var ray = new V3D(); // reuse
 	var viewToPoint = new V3D(); // reuse
 	var fxnSortScore = function(a,b){
@@ -30826,14 +30871,14 @@ var maxViewAngle = Code.radians(180.0);
 		var angle = V3D.angle(viewNormal,vertNormalInverse);
 var angleViewNormalToVertexNormal = angle;
 		if(angle>maxNormalAngle){
-			console.log("skipped angleViewNormalToVertexNormal: "+Code.degrees(angleViewNormalToVertexNormal)+" / "+Code.degrees(maxNormalAngle));
+			// console.log("skipped angleViewNormalToVertexNormal: "+Code.degrees(angleViewNormalToVertexNormal)+" / "+Code.degrees(maxNormalAngle));
 			continue;
 		}
 		// in front of camera
 		viewToPoint = V3D.sub(viewToPoint, vertPoint,viewCenter);
 		var angleViewNormal = V3D.angle(viewNormal,viewToPoint);
 		if(angleViewNormal>maxViewAngle){
-			// console.log("skipped maxViewAngle: "+Code.degrees(angleViewNormal)+" / "+Code.degrees(maxViewAngle));
+			console.log("skipped maxViewAngle: "+Code.degrees(angleViewNormal)+" / "+Code.degrees(maxViewAngle));
 			continue;
 		}
 		var intersection = null;
@@ -31104,6 +31149,7 @@ console.log("triangle space volume: "+size);
 
 	// Expansion
 	// allow for view assignments to vertex not directly visible, but adjacent visible
+
 	/*
 	console.log("TODO: expansion step - only impossible tris");
 	for(var i=0; i<verts.length; ++i){
@@ -31116,14 +31162,15 @@ console.log("triangle space volume: "+size);
 	}
 	*/
 	
-console.log(verts);
-throw "verts"
+// console.log(verts);
+// throw "verts"
 
 	// triangles init states - remove triangles with: no area, no consistent view possiblity
 	badTris = 0;
 var badForView = 0;
 var badForArea = 0;
 var badForEmptyView = 0;
+	var impossibleTris = [];
 	for(var i=0; i<tris.length; ++i){
 		var tri = tris[i];
 		var result = tri.initAllowedViews();
@@ -31147,10 +31194,11 @@ var badForEmptyView = 0;
 			++badForArea;
 		}
 		if(!result || area==0){
+impossibleTris.push(tri);
 			badTris += 1;
-			Code.removeElementAt(tris,i);
-			--i;
-			tri.removeFromAll();
+			// Code.removeElementAt(tris,i);
+			// --i;
+			// tri.removeFromAll();
 		}else{
 			if(tri.views().length==0){
 				throw "0";
@@ -31162,7 +31210,61 @@ var badForEmptyView = 0;
 	console.log("badForView: "+badForView);
 	console.log("badForEmptyView: "+badForEmptyView);
 	console.log("badForArea: "+badForArea);
-	
+
+	// expand working triangle set to hidden vertexes
+var feasableVertexLoopMaxCount = 50;
+var totalImpossibleBefore = impossibleTris.length;
+for(var loop=0; loop<feasableVertexLoopMaxCount; ++loop){
+	var hasPossibleVertexPairs = 0;
+	var feasableVertexes = [];
+	var nowPossible = 0;
+	for(var i=0; i<impossibleTris.length; ++i){
+		var tri = impossibleTris[i];
+		var result = tri.initAllowedViews();
+		if(result){ // is possible now
+			++nowPossible;
+			Code.removeElementAt(impossibleTris,i);
+			--i;
+			continue;
+		}
+		var info = tri.hasPossibleVertexPairs();
+		var intersect = info["intersect"];
+		var hasPair = intersect && intersect.length>0;
+		hasPossibleVertexPairs += hasPair ? 1 : 0;
+		if(hasPair){
+			var opposite = info["opposite"];
+			opposite.expansionSetupWithViews(intersect); // vert.expansionSetup();
+			feasableVertexes.push(opposite);
+		}
+	}
+	console.log("LOOP: previously fixed: "+nowPossible+"  next fixed: "+feasableVertexes.length+"  remaining: "+impossibleTris.length);
+	if(nowPossible==0){
+		console.log("can skip now");
+		break;
+	}
+	for(var i=0; i<feasableVertexes.length; ++i){
+		var vertex = feasableVertexes[i];
+		vertex.expansionApply();
+	}
+}
+var totalImpossibleAfter = impossibleTris.length;
+	console.log("fixed impossible tris: "+(totalImpossibleBefore - totalImpossibleAfter) );
+	console.log("remaining impossible tris: "+impossibleTris.length);
+	// go thru original list and remove them:
+	var badTris = 0;
+	for(var i=0; i<tris.length; ++i){
+		var tri = tris[i];
+		var result = tri.initAllowedViews();
+		if(!result){
+			badTris += 1;
+			Code.removeElementAt(tris,i);
+			--i;
+			tri.removeFromAll();
+		}
+	}
+	console.log("removed impossible tris: "+badTris);
+
+
 // throw "here";
 	// remove verts with no triangles (which were removed)
 	var badVerts = 0;

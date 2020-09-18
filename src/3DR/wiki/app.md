@@ -356,7 +356,7 @@ https://cloud.google.com/appengine/docs/nodejs/
 TIMELINES:
 
 
-09/10 - 360 object scene ~ 20 images
+09/20 - 360 object scene ~ 20 images
 	
 10/10 - test set of ~ 50 images
 	- (this will require 2-10 x speed ups)
@@ -385,189 +385,107 @@ MISSING:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
+- TRIANGLE NORMALS ARE NOT VALIDATED
+	- during / after triangle creation:
+		- get neighborhood of points & pick most consistent direction
+		A) get kNN (~10 ?)
+		B) get all inside neighborhood
+		-> normal averaging
+		-> iteritive normal average + dropping
+	- store confidence
+
+- only need to start from the very most confident triangle and check consistency from there ?
+
+	- iterate from most confident to less confident
+		- 
+		- flip inconsistent neighbors as they are reached
+- ...
+
+
+- new data set iteration: (small set 5-10 views):
+
+- multi-file drag image uploading
+	- queue list of images to try
+
+- MISSING VIEW CAMERA IDS: -- some step overwrites it ?
+sparse/sparse.yaml
+sparse/graph.yaml
+dense/dense.yaml
+dense/graph.yaml
+bundle/bundle.yaml
+bundle/views.yaml
+
+
+- sphere projection after surface triangles are made
+	Tri3D.generateTetrahedraSphere(radius, subdivisions, offset)
+		- after triangulation is made:
+		- create sphere: centered at view centroid, extent = ~ 100x point (or triangle) 2-3 sigma 
+		- decide on some sphere triangle density (100-1k-10k triangles)
+			=> method to create triangle sphere
+		- for each vertex on sphere:
+			...
+			vector from camera center to 
+			- facing camera normal?
+			- point projects to inside of image
+			- not intersecting with world triangle geometry
+			- 
+			...
+		- drop triangles with any no-view-vertexes
+
+
+- where are there still "impossible vertexes"
+
+
+- factor graph
+- bayesian network -> factor graph
+
+
+
+.............
+
+
 - really big triangles might be making the vertex intersection test take a long time
-...
-		R:
-...
 		camera: "V3L4XDFN"
 		R:
 
 
 
+- is filter 2D & 3D neighbors is resulting in more points dropped
 
 
-THIS NEEDS TO ONLY APPLY TO IMPOSSIBLE TRIS -- other tris need to make due
-expansionSetup
-expansionApply
 
-iterate:
-	get all impossible tris adj to a possible tri
+- TEXTURE ASSIGNMENT PROBLEM:
+	- some vertexes aren't visible, or not visible by some views when it would be in reality
+		- caused by:
+			- A) noisy geomtetry
+			- B) vertex isn't visible, but part of triangle is
 
+	REAL VISIBILITY:
+		- any part of triangle is visible from view
 
-'push' optimal views in direction of impossible tris
+	REAL TEST:
+		- project all triangles in-front of subject (average z-distance) onto view's plane
+		- if there is a triangle cover / intersect:
+			- drop occluded portion
+			- can stop immediately if fully covered
+		- if any part of triangle still exists (some but not full covering):
+			- all vertexes of triangle are visible, but with some penalty:
+			- eg: % of area occluded (0-1)
+		- if all of triangle still exists (no covering)
+			- triangle is fully visible
+			- all vertexes of triangle confident
 
+	SIMPLE VISIBILITY:
+		- check vertexes only:
+			- vertex is on any triangle with normal facing view normal
+			- vertex isn't occluded by a 
 
 
 
 
 
 
-- skip loading textures for views that don't render triangles to it?
-
-
-tri count: 16221
-... 8765 vertexes
-tex: 6606 tris 
-
-
-subdivide tri results in unallowed view?
-var result = newTri.initAllowedViews();
-
-
-- go thru triangle view assignment algorithm:
-	A) get it working with new methods but same design
-		- note of how many triangles are dropped due to 'null'/impossible vertex
-	B) add in vertex spread pre-process
-		- each vertex's list of possible expands to include all touching triangles WHERE ONLY OCCLUSION IS THE DIFFERENCE
-
-
-refinePoint3DAbsoluteLocation
-
-var result = R3D.BundleAdjustPoint3D(point3D, points2D, intrinsics, inverses, extrinsics, maxIterations);
-
-
-
-WHAT IS TEXTURING VIEW ASSIGNMENT LOGIC ?:
-
-- some vertexes aren't visible, or not visible by some views when it would be in reality
-	- caused by:
-		- A) noisy geomtetry
-		- B) vertex isn't visible, but part of triangle is
-
-REAL VISIBILITY:
-	- any part of triangle is visible from view
-
-REAL TEST:
-	- project all triangles in-front of subject (average z-distance) onto view's plane
-	- if there is a triangle cover / intersect:
-		- drop occluded portion
-		- can stop immediately if fully covered
-	- if any part of triangle still exists (some but not full covering):
-		- all vertexes of triangle are visible, but with some penalty:
-		- eg: % of area occluded (0-1)
-	- if all of triangle still exists (no covering)
-		- triangle is fully visible
-		- all vertexes of triangle confident
-
-
-
-SIMPLE VISIBILITY:
-	- check vertexes only:
-		- vertex is on any triangle with normal facing view normal
-		- vertex isn't occluded by a 
-
-
-
-- expansion step: ONLY IF THE OCCLUSION IS THE PROBLEM -- each vertex needs to now keep track of every projectable view
-	for each vertex:
-		- next-array = union of all 
-	for each vertex:
-		- views = old views + WORST CASE RANK of other union
-
-
-
-queue of vertexes, ordered on 'next best cost reduction' [ignore negative (worse) costs]
-
-- each vertex : check to see what cost reduction is:
-	- get current cost
-	- for each of vertex's possible views:
-		- change view & calc cost (can also put current cost in this, as is same as current view)
-
-		- if 
-	
-
-
-
-
-
-
-
-
-
-- UPDATE:
-	R3D.optimumTriangleTextureImageAssignment
-	- any vertex can be assigned to a view as long it is in the tri.union(views)
-	=> vertex view assignment will be a viewID (no longer index)
-
-
-R3D.TextureVertex
-R3D.TextureTriangle
-	
-
-
-- add nonlinear P3D estimation step
-	- in dense & group-dense
-	=> update P3D location nonlinearly to minimize reprojection error (10+ iterations?)
-
-	Stereopsis.World.prototype.refinePoint3DAbsoluteLocation(points, maxIterations)
-
-
-- update how texture triangle assignments are done
-	=> not all vertexes need be visible
-	=> cost fxn
-
-
-
-- just 1 vertex will stop the triangle from being rendered
-	(hard to believe the vertex isn't visible from ANY cameras?)
-	=> noisy points / triangles can make this possible
-
-
-
-
-=> switch to as long as ANY vertex is visible, the triangle is visible
-	- the part that IS visible should be rendered as such, the obfuscated part will be hidden anyway
-	....
-
-=> expansion step where for every triangle: each vertex is UNIONED
-		=>  take best visibility score?
-		=>  take worst visibility score if not
-		=>  only update array if value doesn't already exist ?
-	- first loop is to set the available union list
-	- second loop is to set the final list from the union list
-
-=> the 'minimize changing triangles' algorithm is causing a flood of triangles to be reset to the worst scenario in some cases
-	- may need to introduce more costs, eg: change in visibility/angle/distance/score
-	=> minimize feathering AND distortion
-
-	single feathered image cost: 0.5
-	double feathered image cost: 0.333
-
-	view angle cost: cos(view-to-normal-angle)
-	view distance cost: 1/d or 1/d^2 (area)
-
-
-	total cost = sum(vertex_i view choice cost)/3 * feathering cost (1 if same, 0.5 if 1 diff, 0.333 if 3 diff)
-
-
-	flipping a vertex to a view that is very straight-on for one triangle may cause a feathering in another triangle
-
-
-	swap an edge only if it reduces the total COST
-	=> need to prioritize on maximal cost-reducing vertex switch (greedy)
-
-
-
-
-
-
-optimumTriangleTextureImageAssignment
-
-UpdateTextureVertexFromViews
-
-- is the intersection code correct?
-
-=> visualize why it fails?
 
 
 
@@ -579,22 +497,6 @@ UpdateTextureVertexFromViews
 	- neighbor filters drop a lot of points
 	- groups have fuzzying surfaces
 	=> last step of bundle adjustment should do ALL VIEWS at same time ?
-
-
-
-
-
-- MISSING VIEW CAMERA IDS: -- some step overwrites it ?
-sparse/sparse.yaml
-sparse/graph.yaml
-dense/dense.yaml
-dense/graph.yaml
-bundle/bundle.yaml
-bundle/views.yaml
-
-
-
-
 
 
 
@@ -614,162 +516,12 @@ bundle/views.yaml
 refineAllCameraMultiViewTriangulation
 
 - points at infinity - sphere projection
-	- after triangulation is made:
-	- create sphere: centered at view centroid, extent = ~ 100x point (or triangle) 2-3 sigma 
-	- decide on some sphere triangle density (100-1k-10k triangles)
-		=> method to create triangle sphere
-	- for each vertex on sphere:
-		...
-		vector from camera center to 
-		- facing camera normal?
-		- point projects to inside of image
-		- not intersecting with world triangle geometry
-		- 
-		...
-	- drop triangles with any no-view-vertexes
-
-	Tri3D.generateTetrahedraSphere(radius, subdivisions, offset)
-
-
-
-	-
-		A: "QOSH9VXO"
-		B: "T5WYDW3A"
-		id: "QOSH9VXO-T5WYDW3A"
-		relativeError: 99
-		matches: 0
-		relative: 0
-		tracks: 0
-		skipped: true
-
-
-
-
-x speed up sparse tests: [any less ?]
-	- 6 iterations for F
-	- 6 iterations for R
-
-
-
-
-- chosen triples needs to filter on top ~ 10 for each view
-	- rank on A: double pair exists
-	- rank on B: sum average error
-	- truncate top 10 per view
-	at MOST: 10 x n triples
-	[]
-
-
-
-
-Tri3D.generateTetrahedraSphere = function(radius, subdivisions, offset){
-
-
-
-
-
-
-
-
-
-
-
-DYA8UOP0-GMAOLJJU ++++++++++++++++++++++++++++++++++++++++++++++++++++++
-
-LINEAR P: 
-Stereopsis.js:11920 checkPointsLocation: FRONT: 1000 | BACK: 0 / 1000 = 1 & 0
-Stereopsis.js:11921 CAM DISTANCE: 1.0000000000000002 POINT DISTANCE: 7.526244086821144 = DISPARITY: 7.526244086821142
-Stereopsis.js:12013 nonlinear P
-Stereopsis.js:12023 {P: Matrix, error: 775.6626524954552}
-Stereopsis.js:12027 NONLINEAR P: 
-Stereopsis.js:11920 checkPointsLocation: FRONT: 1000 | BACK: 0 / 1000 = 1 & 0
-Stereopsis.js:11921 CAM DISTANCE: 1.0000124544866746 POINT DISTANCE: 145806.50048354635 = DISPARITY: 145804.68456104537
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
 
 - semi-dense corners are not reproducible across images ?
-
-
-
-
-EVERYTHING BEFORE:
-id: "7Z5JNVQG-FF31V4E2"
-
-
-
-
-"QOSH9VXO-T5WYDW3A" -- very close together
-
-
-
-
-
-
-
-
+	=> dropped this step
 
 progressiveMatchingAllSteps -- final matches are not used matches ?
 	GOOD: findLocalSupportingCornerMatches
@@ -785,8 +537,6 @@ progressiveMatchingAllSteps -- final matches are not used matches ?
 - error N / S calculation MEAN v MIN
 
 
-
-
 - exact duplicate image check
 	- filter on very high histogram [99%+]
 	- load each remaining potential image
@@ -797,97 +547,7 @@ progressiveMatchingAllSteps -- final matches are not used matches ?
 	=> how to detect these ?
 
 
-..
 
-
-
-...
-
-
-...
-
-
-GQZMCS4B
-BZ3W23N4
-BZ3W23N4-GQZMCS4B
-
-
-
-{A: "GQZMCS4B", B: "BZ3W23N4", id: "BZ3W23N4-GQZMCS4B"}
-
-filterLocal2D2DNeighbors : DROPPED: 0 / 0 : NaN
-
-
-- histogrammed view similarities only gets rid of the worst, innaccurate on best
-	- keep top 10-20 historgram pairs [10% or 10 : whichever is higher]
-	- do secondary metric?
-
-	=> store entire compare WORDS in yaml ?
-	5x5x3x100 = ~ 10k numbers
-	11x11x3x100 ~ 50k numbers
-	N x 100 images = 5M numbers at same time
-
-
-- sectional histogram?
-
-- show point - test file to see merged result
-	- good ?
-
-
-
-
--
-		A: "FF31V4E2"
-		B: "7Z5JNVQG"
-		id: "7Z5JNVQG-FF31V4E2"
-		matches: 59
-		relative: 0
-		tracks: 0
-		metricNeighborsToWorld:
-			list: "NaN"
-
-
-SAME?:
-FF31V4E2 - JVJ5RN0B
-
-
-SIMILAR:
-YLHE0VJQ - FF31V4E2
-
-CLOSE:
-7Z5JNVQG-FF31V4E2
-
-
-
-
-matches: 0
-relative: 0
-tracks: 0
-skipped: true
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-- is probe3D resulting in more points dropped?
-
-
-
-during groups ? -- missing camera for view
-GROUPS:
-	probe2DCellsRF : NaN ?
-	filterGlobalMetrics : NaN ?
-
-solveDenseGroup
 
 
 TASKS:
@@ -906,89 +566,11 @@ TASKS:
 
 
 
-
-- factor graph
-- bayesian network -> factor graph
-
-
-
-
-
-
-
-
-
-
 POINTS AT INFINITY:
 	- sphere
 	- for each tri in sphere
 		- find most direct view that doesn't have intersection with world geometry
 		- add sphere to triangulated points @ distance ~ 100 x average world size
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -1123,87 +705,10 @@ https://papers.nips.cc/paper/1832-generalized-belief-propagation.pdf
 	- group - filter patches
 	- detect when subdivide / quit, not just constant iterations
 
-x views aren't storing camera: bundle & surface
-
-
-- multi-file drag image uploading
-	- queue list of images to try
-
 
 - do dense points at half resolution 200k pts -> 50k pts
 
 
-
-
-BAD METRICS:
-F: F=12.3  |    |  .
-relative: R=4.6 , F = 7.6  |  6,14
-track: R=1.2 , F=1.8  |  2,3
-
-
-OK METRIC:S 
-F: F=6.8  |  ?
-relative: R=2.7 , F = 5.5  |  ?
-track: R=0.8 , F=1.5  |  ?
-
-
-BAD PAIRS: ELEPHANT:
-                    error | lopps
-0GKXM13I-4U5WDZ5O - n       n | ?
-0GKXM13I-JE33IUST - n       n | ?
-2QPOD9MS-4U5WDZ5O - n       n | 
-2QPOD9MS-JE33IUST - y       m | 
-AAKDJLAM-T6MLWWUJ - y       m | 
-JE33IUST-JZV0X8FW x
-JE33IUST-XXU13QWF - m       y | 
-
-
-B-J ?
-
-
-
-
-PRE DROPPED (why?):
-JE33IUST-JZV0X8FW
-
-R-ERROR DROP:
-
-AAKDJLAM-T6MLWWUJ YES
-2QPOD9MS-JE33IUST YES
-BM0ASD84-JE33IUST NO (has very few points, some points are wrong, views are mostly correct tho)
-
-POSSIBLY LOOP DROP: (FAT)
-JE33IUST-XXU13QWF YES
-0-N
-
-REMAINING:
-0GKXM13I-4U5WDZ5O (maybe)
-0GKXM13I-JE33IUST (maybe)
-2QPOD9MS-4U5WDZ5O (maybe)
-JE33IUST-XXU13QWF (no)
-
-
-LOOP DROPPED:++++++++++++++++++++++++
-JE33IUST-XXU13QWF : worst edge on a bad loop
-
-
-REMAINING 2:
-0GKXM13I-4U5WDZ5O ...
-0GKXM13I-JE33IUST ...
-2QPOD9MS-4U5WDZ5O ...
-
-
--> once full scale is determined, drop outliers including translation ?
-	=> does this needs a global registration ?
-
-
-
-
-putativePairsFromViewsAndTransforms
-skeletalViewGraph
-
-TEST:
-Graph.prototype.skeletalEdges
 
 
 
@@ -1213,20 +718,6 @@ Graph.prototype.skeletalEdges
 Bayesian Network
 
 Belief Propagation
-
-
-
-
-- how to identify inconsistent pairs?
--> can do in rotation space
-
-1D SFM Outlier detection
-
-
-
-
-
-
 
 
 

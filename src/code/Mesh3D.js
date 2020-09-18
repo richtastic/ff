@@ -321,7 +321,7 @@ Mesh3D.prototype.generateSurfaces = function(){
 	// 	this._smoothSurfaceAlongNormals();
 	// }
 
-	console.log("_smoothSurface");
+	console.log("_smoothSurface ITERATIONS: "+smoothIterations);
 	for(var i=0; i<smoothIterations; ++i){
 		this._smoothSurface();
 		// this._smoothSurfacePush();
@@ -410,6 +410,9 @@ console.log("start processing: "+searchCount);
 
 	// MAIN ALGORITHM:
 	this._iterateFronts();
+
+
+	this._pickTriangleNormals();
 
 
 
@@ -1961,6 +1964,49 @@ Code.printMatlabArray(list);
 
 }
 
+Mesh3D.prototype._pickTriangleNormals = function(){ // choose correct triangle direction
+	console.log("_pickTriangleNormals");
+
+	var pointSpace = this._pointSpace;
+	var triangles = this._triangleSpace.toArray();
+
+	// var points = this._pointSpace.objectsInsideSphere(location,searchRadius);
+	var minimumPointCount = 6;
+	var maximumPointCount = 10;
+	var center = new V3D();
+	var radius = 0;
+	var flipCount = 0;
+	for(var i=0; i<triangles.length; ++i){
+		var triangle = triangles[i];
+		center = triangle.center(center);
+		radius = triangle.radius(center);
+		// get point samples
+		var neighbors = pointSpace.objectsInsideSphere(center,radius);
+		if(neighbors.length<minimumPointCount){
+			neighbors = pointSpace.kNN(center,minimumPointCount);
+		}
+		if(neighbors.length>maximumPointCount){
+			Code.randomPopArray(neighbors, maximumPointCount);
+		}
+		// to normal list:
+		for(j=0; j<neighbors.length; ++j){
+			var neighbor = neighbors[j];
+			var normal = neighbor.normal();
+			neighbors[j] = normal;
+		}
+		// A: estimate average normal
+		var pointNormal = Code.averageAngleVector3D(neighbors);
+		// B: iteritive outlier drop
+		var triangleNormal = triangle.normal();
+		var dot = V3D.dot(triangleNormal,pointNormal);
+		if(dot<0){
+			triangle.flipDirection();
+			++flipCount;
+		}
+
+	}
+	console.log("flipCount: "+flipCount);
+}
 Mesh3D.prototype._iterateFronts = function(){
 	console.log("_iterateFronts");
 	var fronts = new Mesh3D.Front3D();
