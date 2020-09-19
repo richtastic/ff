@@ -385,6 +385,8 @@ MISSING:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+triangles generated produce a nonorientable surface
+
 
 - TRIANGLE NORMALS ARE NOT VALIDATED
 	- during / after triangle creation:
@@ -397,9 +399,35 @@ MISSING:
 
 - only need to start from the very most confident triangle and check consistency from there ?
 
+- count positive & negative connected components - pick most common one (by count)
+
 	- iterate from most confident to less confident
 		- 
 		- flip inconsistent neighbors as they are reached
+
+
+
+- point 'normals' are mostly just pointing to the views
+	- for a rugged terrain, a good portion of 
+
+
+
+- want to avoid 1 very confident outlier
+	- concensus
+	- 
+
+ALGORITHM
+	- Q sorted on most confident
+	- pop element off Q
+	- check neighbors to see if normal is already set
+		- no?
+			=> set as predicted value
+		- yes?
+			=> use direction consistent with neighbor(s)
+			- what if neighbor conflict?
+				=> ?
+
+
 - ...
 
 

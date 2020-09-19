@@ -149,6 +149,65 @@ Mesh3D.prototype.points = function(points, norms){
 Mesh3D.prototype.addTri = function(tri){
 	var result = this._triangleSpace.insertObject(tri);
 	this._visitPointsNearTri(tri);
+
+
+
+	// check triangle neighbor consistency validation:
+//	this.validateTriangleOrientationNeighborhood(tri);
+
+}
+
+Mesh3D.prototype.validateTriangleOrientationNeighborhood = function(tri){
+
+	/*
+	var triNormal = tri.normal();
+	var center = tri.center();
+	var radius = tri.radius(center);
+	var neighborhood = this._triangleSpace.objectsInsideSphere(center,radius);
+	if(neighborhood.length>1){ // self + other
+		var normals = [];
+		for(var i=0; i<neighborhood.length; ++i){
+			var neighbor = neighborhood[i];
+			if(neighbor!=tri){
+				var normal = neighbor.normal();
+				normals.push(normal);
+			}
+		}
+		var average = Code.averageAngleVector3D(normals);
+		var dot = V3D.dot(triNormal,average);
+		if(dot<0){
+			console.log(tri);
+			console.log(neighborhood);
+			console.log(normals);
+			console.log(average);
+			console.log(triNormal);
+			console.log(dot);
+			console.log(triNormal.copy().scale(-1));
+			// throw "found inconsistent triangle normal with neighbors";
+			console.log("found inconsistent triangle normal with neighbors");
+		}
+	}
+	*/
+	var triNormal = tri.normal();
+	var edges = [tri.edgeAB(),tri.edgeBC(),tri.edgeCA()];
+	for(var i=0; i<edges.length; ++i){
+		var edge = edges[i];
+		var opposite = edge.opposite();
+		if(opposite){
+			var oppo = opposite.tri();
+			if(oppo){
+				var dot = V3D.dot(triNormal, oppo.normal());
+				console.log("DID DO A CHECK: "+dot);
+				if(dot<0){
+					console.log(tri);
+					console.log("found inconsistent triangle normal with neighbors: "+dot);
+				}
+			}
+		}
+	}
+
+	// is ABC normal same as AB BC CA normal?
+	
 }
 Mesh3D.prototype.outputTriangles = function(){
 	var triSpace = this._triangleSpace;
@@ -174,6 +233,7 @@ Mesh3D.prototype.outputTriangles = function(){
 }
 Mesh3D.prototype.consistentTriangleOrientationsFromPoints = function(){
 	console.log("consistentTriangleOrientationsFromPoints");
+throw "huh?"
 	var triSpace = this._triangleSpace;
 	var pointSpace = this._pointSpace;
 	var triangles = triSpace.toArray();
@@ -206,6 +266,150 @@ Mesh3D.prototype.consistentTriangleOrientationsFromPoints = function(){
 			}
 		}
 	}
+}
+Mesh3D.prototype._triangleConfidenceNormalNeighborhood = function(triangle){
+	var minimumPointCount = 6;
+	var maximumPointCount = 10;
+	var center = new V3D();
+	var radius = 0;
+	var pointSpace = this._pointSpace;
+	// var triangle = triangles[i];
+	center = triangle.center(center);
+	radius = triangle.radius(center);
+	// get point samples
+	var neighbors = pointSpace.objectsInsideSphere(center,radius);
+	if(neighbors.length<minimumPointCount){
+		neighbors = pointSpace.kNN(center,minimumPointCount);
+	}
+	if(neighbors.length>maximumPointCount){
+		Code.randomPopArray(neighbors, maximumPointCount);
+	}
+	// to normal list:
+	for(j=0; j<neighbors.length; ++j){
+		var neighbor = neighbors[j];
+		var normal = neighbor.normal();
+		neighbors[j] = normal;
+	}
+	// A: estimate average normal
+	var pointNormal = Code.averageAngleVector3D(neighbors);
+	// B: iteritive outlier drop
+	var triangleNormal = triangle.normal();
+	var dot = V3D.dot(triangleNormal,pointNormal);
+	// if(dot<0){
+	// 	triangle.flipDirection();
+	// 	++flipCount;
+	// }
+	return dot;
+}
+Mesh3D.prototype.getConnectedTriangleSets = function(){
+	var sets = [];
+	var allTriangles = this._triangleSpace.toArray();
+console.log(allTriangles);
+var cntA = 100000;
+	while(allTriangles.length>0){
+--cntA;
+if(cntA<=0){
+	throw "too many cntA";
+}
+		var tri = allTriangles.pop();
+
+		if(tri._visited){
+			continue;
+		}
+		var set = [];
+		sets.push(set);
+		tri._visited = true;
+		var Q = [tri];
+var cntB = 100000;
+		while(Q.length>0){
+--cntB;
+if(cntB<=0){
+	throw "too many cntB";
+}
+			var t = Q.shift(); // will already be set to _visited = true;
+set.push(t);
+			var adj = t.adjacentTris();
+			// console.log(adj.length);
+			for(var a=0; a<adj.length; ++a){
+				var next = adj[a];
+				if(!next._visited){
+					next._visited = true;
+					Q.push(next);
+				}
+			}
+		}
+	}
+	// var triangles = this._triangleSpace.toArray();
+	// var Q = ;
+	return {"sets":sets};
+}
+Mesh3D.prototype._pickTriangleNormals = function(){ // choose correct triangle direction
+	console.log("_pickTriangleNormals");
+	var info = this.getConnectedTriangleSets();
+	var sets = info["sets"];
+// console.log(sets);
+// throw "sets?";
+// ...
+	for(var i=0; i<sets.length; ++i){
+		var set = sets[i];
+		var vote = 0;
+		for(var j=0; j<set.length; ++j){
+			var tri = set[j];
+			var confidence = this._triangleConfidenceNormalNeighborhood(tri);
+			vote += confidence;
+		}
+console.log(vote,set.length);
+		if(vote<0){
+			console.log("flip em");
+			for(var j=0; j<set.length; ++j){
+				var tri = set[j];
+				tri.flipDirection();
+			}
+		}
+	}
+}
+Mesh3D.prototype._pickTriangleNormalsOLD_DUP = function(){ // choose correct triangle direction
+	console.log("_pickTriangleNormals");
+throw "huh?";
+	var pointSpace = this._pointSpace;
+	var triangles = this._triangleSpace.toArray();
+
+	// var points = this._pointSpace.objectsInsideSphere(location,searchRadius);
+	var minimumPointCount = 6;
+	var maximumPointCount = 10;
+	var center = new V3D();
+	var radius = 0;
+	var flipCount = 0;
+	for(var i=0; i<triangles.length; ++i){
+		var triangle = triangles[i];
+		center = triangle.center(center);
+		radius = triangle.radius(center);
+		// get point samples
+		var neighbors = pointSpace.objectsInsideSphere(center,radius);
+		if(neighbors.length<minimumPointCount){
+			neighbors = pointSpace.kNN(center,minimumPointCount);
+		}
+		if(neighbors.length>maximumPointCount){
+			Code.randomPopArray(neighbors, maximumPointCount);
+		}
+		// to normal list:
+		for(j=0; j<neighbors.length; ++j){
+			var neighbor = neighbors[j];
+			var normal = neighbor.normal();
+			neighbors[j] = normal;
+		}
+		// A: estimate average normal
+		var pointNormal = Code.averageAngleVector3D(neighbors);
+		// B: iteritive outlier drop
+		var triangleNormal = triangle.normal();
+		var dot = V3D.dot(triangleNormal,pointNormal);
+		if(dot<0){
+			triangle.flipDirection();
+			++flipCount;
+		}
+
+	}
+	console.log("flipCount: "+flipCount);
 }
 Mesh3D.prototype._visitPointsNearTri = function(tri){ // distance from tri ~ max edge length of tri
 	var a = tri.A();
@@ -412,7 +616,9 @@ console.log("start processing: "+searchCount);
 	this._iterateFronts();
 
 
-	this._pickTriangleNormals();
+
+
+
 
 
 
@@ -1070,6 +1276,24 @@ Mesh3D.Tri3D.prototype.setEdges = function(edgeAB,edgeBC,edgeCA){ // ABBCCA
 	this.edgeBC(edgeBC);
 	this.edgeCA(edgeCA);
 }
+Mesh3D.Tri3D.prototype.adjacentTris = function(){ // direct edge neighbors of this tri
+	var edges = [this._edgeAB,this._edgeBC,this._edgeCA];
+	// console.log(edges)
+	var adjacent = [];
+	for(var i=0; i<edges.length; ++i){
+		var edge = edges[i];
+		if(edge){
+			var oppo = edge.opposite();
+			if(oppo){
+				var tri = oppo.tri();
+				if(tri){
+					adjacent.push(tri);
+				}
+			}
+		}
+	}
+	return adjacent;
+}
 Mesh3D.Tri3D.prototype._updateCuboid = function(){
 	var A = this.A();
 	var B = this.B();
@@ -1106,6 +1330,7 @@ Mesh3D.Edge3D = function(a,b, ideal, front){ // single edge
 	this._boundary = false;
 	this._idealLength = null;
 	this._front = null;
+	this._opposite = null;
 	this.A(a);
 	this.B(b);
 	this.idealLength(ideal);
@@ -1123,6 +1348,12 @@ Mesh3D.Edge3D.prototype.priority = function(p){
 		this._priority = p;
 	}
 	return this._priority;
+}
+Mesh3D.Edge3D.prototype.opposite = function(o){
+	if(o!==undefined){
+		this._opposite = o;
+	}
+	return this._opposite;
 }
 Mesh3D.Edge3D.prototype.priorityType = function(p){
 	if(p!==undefined){
@@ -1878,7 +2109,8 @@ Mesh3D.prototype._toSurfaceProjections = function(){
 
 Mesh3D.prototype._testSurface = function(){
 console.log("_testSurface");
-
+throw "?";
+/*
 	// project a plane onto surface to check smoothness
 	var planeNeighborCount = 10;
 
@@ -1960,53 +2192,10 @@ Code.printMatlabArray(list);
 		}
 	}
 	// build tris:
-
+*/
 
 }
 
-Mesh3D.prototype._pickTriangleNormals = function(){ // choose correct triangle direction
-	console.log("_pickTriangleNormals");
-
-	var pointSpace = this._pointSpace;
-	var triangles = this._triangleSpace.toArray();
-
-	// var points = this._pointSpace.objectsInsideSphere(location,searchRadius);
-	var minimumPointCount = 6;
-	var maximumPointCount = 10;
-	var center = new V3D();
-	var radius = 0;
-	var flipCount = 0;
-	for(var i=0; i<triangles.length; ++i){
-		var triangle = triangles[i];
-		center = triangle.center(center);
-		radius = triangle.radius(center);
-		// get point samples
-		var neighbors = pointSpace.objectsInsideSphere(center,radius);
-		if(neighbors.length<minimumPointCount){
-			neighbors = pointSpace.kNN(center,minimumPointCount);
-		}
-		if(neighbors.length>maximumPointCount){
-			Code.randomPopArray(neighbors, maximumPointCount);
-		}
-		// to normal list:
-		for(j=0; j<neighbors.length; ++j){
-			var neighbor = neighbors[j];
-			var normal = neighbor.normal();
-			neighbors[j] = normal;
-		}
-		// A: estimate average normal
-		var pointNormal = Code.averageAngleVector3D(neighbors);
-		// B: iteritive outlier drop
-		var triangleNormal = triangle.normal();
-		var dot = V3D.dot(triangleNormal,pointNormal);
-		if(dot<0){
-			triangle.flipDirection();
-			++flipCount;
-		}
-
-	}
-	console.log("flipCount: "+flipCount);
-}
 Mesh3D.prototype._iterateFronts = function(){
 	console.log("_iterateFronts");
 	var fronts = new Mesh3D.Front3D();
@@ -2225,7 +2414,8 @@ if(groupIndex>=1){
 }
 	}
 console.log(" -------------------------------------- ");
-	this.consistentTriangleOrientationsFromPoints();
+	// this.consistentTriangleOrientationsFromPoints();
+	this._pickTriangleNormals();
 
 }
 Mesh3D.prototype.close = function(front){ // collape 3 edges to triangle
@@ -2236,8 +2426,25 @@ Mesh3D.prototype.close = function(front){ // collape 3 edges to triangle
 	var edgeA = front._edgeList.head().data();
 	var edgeB = edgeA.next();
 	var edgeC = edgeB.next();
+	var idealA = edgeA.idealLength();
+	var idealB = edgeB.idealLength();
+	var idealC = edgeC.idealLength();
+	var A = edgeA.A();
+	var B = edgeB.A();
+	var C = edgeC.A();
+	// make opposite for each edge:
+	var oppA = new Mesh3D.Edge3D(B,A, idealA, front);
+	var oppB = new Mesh3D.Edge3D(C,B, idealB, front);
+	var oppC = new Mesh3D.Edge3D(A,C, idealC, front);
+// edge opposites
+edgeA.opposite(oppA);
+edgeB.opposite(oppB);
+edgeC.opposite(oppC);
+oppA.opposite(edgeA);
+oppB.opposite(edgeB);
+oppC.opposite(edgeC);
 	// tri
-	var tri = new Mesh3D.Tri3D(edgeA,edgeB,edgeC);
+	var tri = new Mesh3D.Tri3D(oppA,oppC,oppB);
 	this.addTri(tri);
 	// previous edges
 	this.removeEdge(edgeA);
@@ -2424,10 +2631,14 @@ Mesh3D.prototype.seedTriFromPoint = function(fronts, seed){
 	var edgeAB = new Mesh3D.Edge3D(a,b, edgeSize);
 	var edgeBC = new Mesh3D.Edge3D(b,c, edgeSize);
 	var edgeCA = new Mesh3D.Edge3D(c,a, edgeSize);
+// new triangle edges don't have opposites
+edgeAB.opposite(null);
+edgeBC.opposite(null);
+edgeCA.opposite(null);
 	// tri
 	var before = this._triangleSpace.count();
 	var tri = new Mesh3D.Tri3D(edgeAB,edgeBC,edgeCA);
-	console.log(tri);
+//	console.log(tri);
 	this.addTri(tri);
 	var after = this._triangleSpace.count()
 	if(before==after){
@@ -3361,6 +3572,25 @@ Mesh3D.prototype.localTriProjection = function(A,B,C,a,b,c, normal){
 	return false;
 }
 Mesh3D.prototype.cutEar = function(edgeA,edgeB){ // new edges/tri
+
+
+	var prevB = edgeB.prev();
+	var nextA = edgeA.next();
+	if(prevB!=edgeA || nextA!=edgeB){
+		console.log("...");
+		console.log(edgeB);
+		console.log(prevB);
+		console.log("...");
+		console.log(edgeA);
+		console.log(nextA);
+		console.log("...");
+		console.log(prevB!=edgeA);
+		console.log(nextA!=edgeB);
+		console.log("...");
+		throw "previous edge is not a?";
+	}
+
+
 	var front = edgeA.front();
 	var A = edgeA.A();
 	var B = edgeA.B();
@@ -3375,6 +3605,14 @@ Mesh3D.prototype.cutEar = function(edgeA,edgeB){ // new edges/tri
 	var edgeAC = new Mesh3D.Edge3D(A,C, idealAC, front); // new edge
 	var edgeCB = new Mesh3D.Edge3D(C,B, idealBC, front); // opposite
 	var edgeBA = new Mesh3D.Edge3D(B,A, idealAB, front); // opposite
+// opposites
+edgeBC.opposite(edgeCB);
+edgeAB.opposite(edgeBA);
+//
+edgeAC.opposite(null);
+edgeCB.opposite(edgeBC);
+edgeBA.opposite(edgeAB);
+//
 	// new triangle
 	var tri = new Mesh3D.Tri3D(edgeAC,edgeCB,edgeBA);
 	this.addTri(tri);
@@ -3562,7 +3800,19 @@ Mesh3D.prototype.topologicalEvent = function(edge, conflictEdge,conflictPoint){
 	}
 }
 Mesh3D.prototype.merge = function(edge, conflictEdge,conflictPoint){
-	var front = edge.front();
+
+	// this could happen on non-orientable surface ?
+
+	// what if fronts are orientated differently ? (check normal direction of merging triangle to both fronts)
+	// pic a front:
+	// reverse entire front edges
+	// reverse all triangle edges
+	// regerse all triangle points
+	// each triangle/edge has to know the front it belongs / the front needs to know all its edges / triangles
+
+	var edgeAB = edge;
+
+	var front = edgeAB.front();
 	var conflictFront = conflictEdge.front();
 	// get edge with merge point as A
 	var lastEdge = null;
@@ -3576,7 +3826,8 @@ Mesh3D.prototype.merge = function(edge, conflictEdge,conflictPoint){
 	var a = edge.A();
 	var b = edge.B();
 	var c = conflictPoint;
-	var idealAB = edge.idealLength();
+	
+	var idealAB = edgeAB.idealLength();
 	// var idealBC = this.iteritiveEdgeSizeFromPoint(V3D.midpoint(b,c));
 	// var idealAC = this.iteritiveEdgeSizeFromPoint(V3D.midpoint(a,c));
 	var idealBC = this.curvatureAtPoint(V3D.midpoint(b,c));
@@ -3585,26 +3836,33 @@ Mesh3D.prototype.merge = function(edge, conflictEdge,conflictPoint){
 	var edgeAC = new Mesh3D.Edge3D(a,c, idealAC); // new
 	var edgeCB = new Mesh3D.Edge3D(c,b, idealBC); // new
 	var edgeBA = new Mesh3D.Edge3D(b,a, idealAB); // opposite
+// opposites
+edgeAB.opposite(edgeBA);
+//
+edgeAC.opposite(null);
+edgeCB.opposite(null);
+edgeBA.opposite(edgeAB);
+// 
 	// triangle
 	var tri = new Mesh3D.Tri3D(edgeAC,edgeCB,edgeBA);
 	this.addTri(tri);
 	// space
-	this.removeEdge(edge);
+	this.removeEdge(edgeAB);
 	this.addEdge(edgeAC);
 	this.addEdge(edgeCB);
 	// combine edges into front
-	front.pushEdgeBefore(edge, edgeAC);
+	front.pushEdgeBefore(edgeAB, edgeAC);
 	for(var e=lastEdge; e!=edgeEnd; ){
 		var n = e.next();
 		conflictFront.popEdge(e);
-		front.pushEdgeBefore(edge,e);
+		front.pushEdgeBefore(edgeAB,e);
 		e.front(front);
 		e = n;
 	}
 	conflictFront.popEdge(edgeEnd);
-	front.pushEdgeBefore(edge,edgeEnd);
-	front.pushEdgeBefore(edge,edgeCB);
-	front.popEdge(edge);
+	front.pushEdgeBefore(edgeAB,edgeEnd);
+	front.pushEdgeBefore(edgeAB,edgeCB);
+	front.popEdge(edgeAB);
 	edgeEnd.front(front);
 	edgeAC.front(front);
 	edgeCB.front(front);
@@ -3628,7 +3886,8 @@ Mesh3D.prototype.split = function(edge, conflictEdge,conflictPoint){
 	var a = edge.A();
 	var b = edge.B();
 	var c = conflictPoint;
-	var idealAB = edge.idealLength();
+	var edgeAB = edge;
+	var idealAB = edgeAB.idealLength();
 // throw "is this correct here iteritiveEdgeSizeFromPoint"
 	// var idealBC = this.iteritiveEdgeSizeFromPoint(V3D.midpoint(b,c));
 	// var idealAC = this.iteritiveEdgeSizeFromPoint(V3D.midpoint(a,c));
@@ -3637,11 +3896,18 @@ Mesh3D.prototype.split = function(edge, conflictEdge,conflictPoint){
 	var edgeAC = new Mesh3D.Edge3D(a,c, idealAC); // new
 	var edgeCB = new Mesh3D.Edge3D(c,b, idealBC); // new
 	var edgeBA = new Mesh3D.Edge3D(b,a, idealAB); // opposite
+// opposites
+edgeAB.opposite(edgeBA);
+//
+edgeAC.opposite(null);
+edgeCB.opposite(null);
+edgeBA.opposite(edgeAB);
+// 
 	// tri
 	var tri = new Mesh3D.Tri3D(edgeAC,edgeCB,edgeBA);
 	this.addTri(tri);
 	// space
-	this.removeEdge(edge);
+	this.removeEdge(edgeAB);
 	this.addEdge(edgeAC);
 	this.addEdge(edgeCB);
 	// remove old edges from existing front, add to new front
@@ -3655,8 +3921,8 @@ Mesh3D.prototype.split = function(edge, conflictEdge,conflictPoint){
 	}
 	newFront.pushEdge(edgeCB);
 	edgeCB.front(newFront);
-	front.pushEdgeAfter(edge, edgeAC);
-	front.popEdge(edge);
+	front.pushEdgeAfter(edgeAB, edgeAC);
+	front.popEdge(edgeAB);
 	edgeAC.front(front);
 	this._fronts.addFront(newFront);
 	this.checkDropEmptyFront(front);
@@ -3687,12 +3953,19 @@ Mesh3D.prototype.growTriangle = function(front, edge, vertex){
 	// var idealAB = edgeAB.idealLength(); // same @ midpoint
 	// var idealBC = this.iteritiveEdgeSizeFromPoint(V3D.midpoint(b,c));
 	// var idealAC = this.iteritiveEdgeSizeFromPoint(V3D.midpoint(c,a));
-	var idealAB = this.curvatureAtPoint(V3D.midpoint(a,b));
+	var idealAB = this.curvatureAtPoint(V3D.midpoint(a,b)); // THIS SHOULD BE SAME AS AB
 	var idealBC = this.curvatureAtPoint(V3D.midpoint(b,c));
 	var idealAC = this.curvatureAtPoint(V3D.midpoint(c,a));
 	var edgeAC = new Mesh3D.Edge3D(a,c, idealAC); // new
 	var edgeCB = new Mesh3D.Edge3D(c,b, idealBC); // new
 	var edgeBA = new Mesh3D.Edge3D(b,a, idealAB); // opposite
+// opposites
+edgeAB.opposite(edgeBA);
+//
+edgeAC.opposite(null);
+edgeCB.opposite(null);
+edgeBA.opposite(edgeAB);
+// 
 	// triangle
 	var tri = new Mesh3D.Tri3D(edgeAC,edgeCB,edgeBA);
 	this.addTri(tri);

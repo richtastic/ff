@@ -41,6 +41,8 @@ GLOBALSTAGE = this._stage2D;
 
 	// this.setupPlane3D(2000, 1.0, 0.0, 0.0);
 
+	// this.setupTorus3D(4000, 4.0,2.0, 0.50);
+
 
 	this.loadPointFile();
 
@@ -709,8 +711,8 @@ SurfaceTri.prototype.loadPointFile = function(){
 
 	// var sourceFileName = "./images/points/pika_1.pts";
 
-	// var sourceFileName = "./images/points/bench_lo.pts"; // 20890
-	var sourceFileName = "./images/points/bench_me.pts"; // 35358
+	var sourceFileName = "./images/points/bench_lo.pts"; // 20890
+	// var sourceFileName = "./images/points/bench_me.pts"; // 35358
 	// var sourceFileName = "./images/points/bench_hi.pts"; // 74651
 
 
@@ -968,8 +970,6 @@ GLOBAL_DATA["points"] = surface;
 
 
 
-
-
 	// mesh._toSurfaceProjections();
 
 
@@ -996,10 +996,19 @@ var spherePoints = [];
 	// console.log(fronts);
 	// var allTriangles = mesh._triangleSpace.toArray();
 
+/*
+
 
 	// IF ORIGINAL POINTS HAVE NORMALS -> SET CONSISTENT WITH THEM
 	var allTriangles = mesh.outputTriangles();
 	console.log(allTriangles);
+
+
+*/
+
+
+
+var allTriangles = triangles;
 
 
 
@@ -1296,10 +1305,10 @@ for(i=0; i<indexes.length; ++i){
 	//var pnt = point.point();
 	var pnt = point3D.point();
 	var nrm = point3D.curvatureNormal();
-		// if(info.curvature()<0){
-		// 	console.log("flip");
-		// 	nrm.scale(-1);
-		// }
+	// if(info.curvature()<0){
+	// 	console.log("flip");
+	// 	nrm.scale(-1);
+	// }
 	var k = point3D.curvature();
 	var rad = 1.0/k;
 	var cen = nrm.copy().scale(rad).scale(-1.0).add(pnt);
@@ -1307,9 +1316,8 @@ for(i=0; i<indexes.length; ++i){
 	// console.log(rad+"");
 	// console.log(pnt+"");
 	// console.log(cen+"");
-
 	console.log(rad,k,cen,nrm,pnt);
-
+	// 
 	var sphere = Tri3D.generateSphere(1.0, 8, 12);
 	var matrix = new Matrix(4,4);
 	matrix.identity();
@@ -1392,7 +1400,8 @@ tris = inCube;
 var showTriNormals = true;
 if(showTriNormals){
 			// TRIANGLE NORMALS:
-			var normalScale = 0.03;
+			// var normalScale = 0.03;
+			var normalScale = 0.005;
 			var normal = tri.normal();
 			var center = tri.center();
 			var a = center;

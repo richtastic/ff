@@ -30830,8 +30830,13 @@ R3D.UpdateTextureVertexFromViews = function(vert, viewIndexes, extrinsics,viewCe
 	var intersectionCount = 0;
 	var maxNormalAngle = Code.radians(90.0);
 	var maxViewAngle = Code.radians(90.0); // in front / behind camera
-// var maxNormalAngle = Code.radians(180.0);
-// var maxViewAngle = Code.radians(180.0);
+
+
+// ignore:
+var maxNormalAngle = Code.radians(180.0);
+var maxViewAngle = Code.radians(180.0);
+
+
 	var ray = new V3D(); // reuse
 	var viewToPoint = new V3D(); // reuse
 	var fxnSortScore = function(a,b){
@@ -30878,7 +30883,7 @@ var angleViewNormalToVertexNormal = angle;
 		viewToPoint = V3D.sub(viewToPoint, vertPoint,viewCenter);
 		var angleViewNormal = V3D.angle(viewNormal,viewToPoint);
 		if(angleViewNormal>maxViewAngle){
-			console.log("skipped maxViewAngle: "+Code.degrees(angleViewNormal)+" / "+Code.degrees(maxViewAngle));
+			// console.log("skipped maxViewAngle: "+Code.degrees(angleViewNormal)+" / "+Code.degrees(maxViewAngle));
 			continue;
 		}
 		var intersection = null;
@@ -31240,7 +31245,7 @@ for(var loop=0; loop<feasableVertexLoopMaxCount; ++loop){
 	console.log("LOOP: previously fixed: "+nowPossible+"  next fixed: "+feasableVertexes.length+"  remaining: "+impossibleTris.length);
 	if(nowPossible==0){
 		console.log("can skip now");
-		break;
+		// break;
 	}
 	for(var i=0; i<feasableVertexes.length; ++i){
 		var vertex = feasableVertexes[i];

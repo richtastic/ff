@@ -4203,7 +4203,8 @@ if(showNormals && normals3D){
 	// throw "showNormals"
 
 	
-	var normalSize = 0.1; // scale by scene size
+	// var normalSize = 0.1; // scale by scene size
+	var normalSize = 0.01;
 	var s = normalSize;
 	for(var i=0; i<normals3D.length; ++i){
 		var p = input3D[i];
@@ -13993,8 +13994,6 @@ console.log(bgTriangles);
 
 // throw "NEED TO DO BG-SPHERE"
 		var mesh = new Mesh3D(points,normals);
-		// console.log("mesh");
-		// console.log(mesh);
 		var triangles = mesh.generateSurfaces();
 console.log("triangles");
 console.log(triangles);
@@ -14027,7 +14026,10 @@ console.log(triangles);
 		// var textureDimension = 1024;
 		// var textureDimension = 512;
 		// var resolutionScale = 0.50; // of maximum possible source input
-		var resolutionScale = 0.25;
+		// var resolutionScale = 0.25;
+
+var resolutionScale = 1.0/8.0; // do basic geometry test
+
 		console.log("loadedTrianglesFxn");
 		console.log(viewData,triangleData);
 		// output texture size
@@ -17508,6 +17510,7 @@ for(var i=0; i<transforms.length; ++i){
 	// display.graphics().strokeLine();
 
 	var normalSize = 25.0;
+	// var normalSize = 1.0;
 	// var cameraSize = 5.0;
 	var cameraSize = 2.0;
 	var centersDisplay2D = [];
