@@ -385,58 +385,33 @@ MISSING:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-triangles generated produce a nonorientable surface
 
 
-- TRIANGLE NORMALS ARE NOT VALIDATED
-	- during / after triangle creation:
-		- get neighborhood of points & pick most consistent direction
-		A) get kNN (~10 ?)
-		B) get all inside neighborhood
-		-> normal averaging
-		-> iteritive normal average + dropping
-	- store confidence
-
-- only need to start from the very most confident triangle and check consistency from there ?
-
-- count positive & negative connected components - pick most common one (by count)
-
-	- iterate from most confident to less confident
-		- 
-		- flip inconsistent neighbors as they are reached
+- MISSING VIEW CAMERA IDS: -- some step overwrites it ?
+=> maybe camera data should never be in sub-operations?
+=> relative/pairs are for conviencence saved state (debugging)
 
 
 
-- point 'normals' are mostly just pointing to the views
-	- for a rugged terrain, a good portion of 
-
-
-
-- want to avoid 1 very confident outlier
-	- concensus
-	- 
-
-ALGORITHM
-	- Q sorted on most confident
-	- pop element off Q
-	- check neighbors to see if normal is already set
-		- no?
-			=> set as predicted value
-		- yes?
-			=> use direction consistent with neighbor(s)
-			- what if neighbor conflict?
-				=> ?
-
-
-- ...
 
 
 - new data set iteration: (small set 5-10 views):
 
-- multi-file drag image uploading
+
+
+sparse: NO CAMERAS
+	graph: null > YES ?
+	tracks: null - 
+	trackCount: null
+	bundle: null > YES
+
+
+EVENT_FILE_ADDED
+
+x multi-file drag image uploading
 	- queue list of images to try
 
-- MISSING VIEW CAMERA IDS: -- some step overwrites it ?
+
 sparse/sparse.yaml
 sparse/graph.yaml
 dense/dense.yaml
@@ -468,6 +443,12 @@ bundle/views.yaml
 - factor graph
 - bayesian network -> factor graph
 
+
+- dense groups are a lot more fuzzy than dense pairs
+
+- triangles generated produce a nonorientable surface
+- if points were pointing in direction of normal, that would be more accurate on a per-triangle basis
+- is there a way to do more-confident to less-confident (assuming smoothness/regularization) ?
 
 
 .............

@@ -2137,11 +2137,16 @@ App3DR.App.ImageUploader.prototype._handleDragDropUploadFxn = function(e){
 		var filename = file.name;
 		var filetype = file.type;
 		console.log(filename+" "+filetype);
+
+
+
 		if(this._fileTypeAcceptable(filetype)){
 			var package = {"file":file, "filename":filename, "filetype":filetype};
 			this.alertAll(App3DR.App.ImageUploader.EVENT_FILE_ADDED, package);
 
 		}
+
+
 	}
 }
 
@@ -7768,12 +7773,12 @@ console.log("checkPerformNextTask");
 		return;
 	}
 
-// throw "start dense";
+throw "start dense";
 	if(!project.checkHasDenseStarted()){
 		project.calculateDensePairPutatives();
 		return;
 	}
-// throw "iterate dense";
+throw "iterate dense";
 	if(!project.checkHasDenseEnded()){
 		project.iterateDenseProcess();
 		return;
@@ -8336,6 +8341,7 @@ for(var i=0; i<dataGroups.length; ++i){
 
 
 console.log(data);
+throw "these views need cameras"
 throw "BEFORE SAVE GRAPH";
 // ..
 		// save graph & reference it
@@ -12783,6 +12789,9 @@ App3DR.ProjectManager.prototype.initializeBundleGroupsFromDense = function(){
 		var densePutative = denseData["putativePairs"];
 
 		var denseCameras = denseData["cameras"];
+
+throw "bundle groups from dense?";
+
 		// var denseViews = denseData["views"];
 		var denseViews = densePutative["views"];
 		var denseOriginalPairs = denseData["pairs"];
@@ -12887,6 +12896,7 @@ App3DR.ProjectManager.prototype.initializeBundleGroupsFromDense = function(){
 		console.log(denseViews);
 		console.log(densePairs);
 		console.log(densePoints);
+throw "calculateGraphFxn?"
 		// make graph edges with full pair data
 		var graph = new Graph();
 		var viewIDToVertex = {};

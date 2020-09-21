@@ -287,7 +287,7 @@
 | hund |  | dog |
 | rabbit |  | hase |
 | pferd |  | horse |
-|  |  |  |
+| caterpillar |  | raupe |
 | ratte |  | rat |
 |  |  |  |
 |  |  |  |
@@ -435,7 +435,7 @@
 | Abendessen | abbend-essen | dinner |
 |  |  |  |
 |  |  |  |
-|  |  |  |
+| Fuß |  | foot |
 |  |  |  |
 | lacht |  | laugh/laughs |
 | vorteil |  | advantage |
