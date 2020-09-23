@@ -386,38 +386,23 @@ MISSING:
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
-
-- MISSING VIEW CAMERA IDS: -- some step overwrites it ?
-=> maybe camera data should never be in sub-operations?
-=> relative/pairs are for conviencence saved state (debugging)
+track datas need cameras
 
 
 
 
+BIGGEST TASKS:
+	- initial P - nonlinear flips a bunch of points to behind
 
-- new data set iteration: (small set 5-10 views):
-
-
-
-sparse: NO CAMERAS
-	graph: null > YES ?
-	tracks: null - 
-	trackCount: null
-	bundle: null > YES
+	- factor graphs & inference algorithm - bayesian network -> factor graph
 
 
-EVENT_FILE_ADDED
 
-x multi-file drag image uploading
-	- queue list of images to try
+- what if skeleton is empty?
+	-> skeleton should always be nonempty
 
 
-sparse/sparse.yaml
-sparse/graph.yaml
-dense/dense.yaml
-dense/graph.yaml
-bundle/bundle.yaml
-bundle/views.yaml
+
 
 
 - sphere projection after surface triangles are made
@@ -437,11 +422,7 @@ bundle/views.yaml
 		- drop triangles with any no-view-vertexes
 
 
-- where are there still "impossible vertexes"
 
-
-- factor graph
-- bayesian network -> factor graph
 
 
 - dense groups are a lot more fuzzy than dense pairs
@@ -451,7 +432,10 @@ bundle/views.yaml
 - is there a way to do more-confident to less-confident (assuming smoothness/regularization) ?
 
 
+
 .............
+
+
 
 
 - really big triangles might be making the vertex intersection test take a long time
@@ -585,7 +569,29 @@ POINTS AT INFINITY:
 
 
 
-- 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 - simulated example loop filtering
 
 

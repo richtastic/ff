@@ -40109,6 +40109,10 @@ R3D.skeletalViewGraph = function(edges, maxErrorMultiple){ // get critical nodes
 	}
 
 
+
+
+// console.log(gEdges);
+// throw "gEdges";
 	// TODO?:
 	// keep only largest connected set?
 
@@ -40118,6 +40122,10 @@ R3D.skeletalViewGraph = function(edges, maxErrorMultiple){ // get critical nodes
 	var infoGroups = info["groups"];
 		infoGroups.push(infoSkeleton);
 	console.log(info);
+
+// console.log(info);
+// throw "skeletalEdges";
+
 
 	// create index-ed version of skeleton
 	var groups = [];

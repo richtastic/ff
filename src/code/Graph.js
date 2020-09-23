@@ -2373,6 +2373,9 @@ console.log("BACK TO WEIGHT: "+allEdges.length);
 			edges.push(edge);
 		}
 	}
+// console.log(allEdges);
+// console.log(removedEdges);
+// throw "removedEdges"
 
 	// mark interrior / leaf nodes:
 	for(var i=0; i<vertexes.length; ++i){
@@ -2451,6 +2454,17 @@ console.log("BACK TO WEIGHT: "+allEdges.length);
 		}
 	}
 	skeletonVertexes = Code.objectToArray(skeletonVertexes);
+	if(skeletonVertexes.length==0){
+		console.log(vertexDatas);
+		for(var i=0; i<vertexes.length; ++i){
+			var vertex = vertexes[i];
+			// console.log(vertex);
+			if(vertexDatas[vertex.id()]["interrior"]){
+				skeletonVertexes.push(vertex); // should be just 1
+			}
+		}
+		console.log("no edges ... single vertex is skeleton");
+	}
 
 	// restore to original state: add all edges back:
 	console.log("add back remaining: "+removedEdges.length);
