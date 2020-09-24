@@ -1602,62 +1602,67 @@ Graph.groupsFromEdges = function(edges, k, tolerance, overlapDesired){ // k grou
 		return a["count"] < b["count"] ? -1 : 1;
 	});
 	console.log("ADD OVERLAP WITH NEIGHBORS");
-	for(var i=0; i<groups.length; ++i){
-		var group = groups[i];
-		// skip empty groups
-		var nodes = group["nodes"];
-		var nodeCount = nodes.length;
-		if(nodeCount==0){
-			continue;
-		}
-		// get count of current overlap
-		var groupContext = getGroupContext(group, groups);
-		var overlaps = groupContext["overlaps"];
-		var overlapKeys = Code.keys(overlaps);
-		var overlapCount = 0;
-		for(var k=0; k<overlapKeys.length; ++k){
-			var key = overlapKeys[k];
-			var val = overlaps[key];
-			overlapCount += val;
-		}
-		console.log(overlapCount+" /?/ "+overlapDesired);
-		if(overlapCount>=overlapDesired){
-			continue;
-		}
-		// if need more:
-		var sortHaveLeast = function(a,b){
-			var groupA = a["groups"];
-			var groupB = b["groups"];
-			return leastEntries(groupA,groupB, overlaps);
-		}
-		var adjacent = groupContext["adjacent"];
-		if(adjacent.length==0){
-			throw "reached end of adj list?";
-		}
-		adjacent.sort(sortHaveLeast);
-		console.log(adjacent);
-		console.log(overlaps);
-		var groupID = group["id"];
-		for(var a=0; a<adjacent.length; ++a){
-			var adj = adjacent[a];
-			// ADD:
-				group["nodes"].push(adj);
-				group["count"] += 1;
-				adj["groups"][groupID] = group;
-				adj["count"] += 1;
-			++overlapCount;
-			if(overlapCount>=overlapDesired){
-				// console.log("done early");
-				break;
+	if(groups.length>1){
+		for(var i=0; i<groups.length; ++i){
+			var group = groups[i];
+			// skip empty groups
+			var nodes = group["nodes"];
+			var nodeCount = nodes.length;
+			if(nodeCount==0){
+				continue;
 			}
+			// get count of current overlap
+			var groupContext = getGroupContext(group, groups);
+			var overlaps = groupContext["overlaps"];
+			var overlapKeys = Code.keys(overlaps);
+			var overlapCount = 0;
+			for(var k=0; k<overlapKeys.length; ++k){
+				var key = overlapKeys[k];
+				var val = overlaps[key];
+				overlapCount += val;
+			}
+			console.log(overlapCount+" /?/ "+overlapDesired);
+			if(overlapCount>=overlapDesired){
+				continue;
+			}
+			// if need more:
+			var sortHaveLeast = function(a,b){
+				var groupA = a["groups"];
+				var groupB = b["groups"];
+				return leastEntries(groupA,groupB, overlaps);
+			}
+			var adjacent = groupContext["adjacent"];
+			if(adjacent.length==0){
+				// console.log(group);
+				throw "reached end of adj list?";
+				// console.log("reached end of adj list?");
+				continue;
+			}
+			adjacent.sort(sortHaveLeast);
+			console.log(adjacent);
+			console.log(overlaps);
+			var groupID = group["id"];
+			for(var a=0; a<adjacent.length; ++a){
+				var adj = adjacent[a];
+				// ADD:
+					group["nodes"].push(adj);
+					group["count"] += 1;
+					adj["groups"][groupID] = group;
+					adj["count"] += 1;
+				++overlapCount;
+				if(overlapCount>=overlapDesired){
+					// console.log("done early");
+					break;
+				}
+			}
+			// done?
+			if(overlapCount>=overlapDesired){
+				continue;
+			}
+			// if no more cells => repeat
+			// console.log("add more - repeat");
+			--i; // repeat
 		}
-		// done?
-		if(overlapCount>=overlapDesired){
-			continue;
-		}
-		// if no more cells => repeat
-		// console.log("add more - repeat");
-		--i; // repeat
 	}
 
 	console.log(overlapDesired);

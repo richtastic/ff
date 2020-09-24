@@ -7791,7 +7791,7 @@ console.log("checkPerformNextTask");
 		project.initializeBundleGroupsFromDense();
 		return;
 	}
-throw "> continue bundle";
+// throw "> continue bundle";
 	if(!project.checkHasBundleEnded()){
 		project.iterateBundleProcess(); // sets up dense groups
 		return;
@@ -12916,7 +12916,17 @@ App3DR.ProjectManager.prototype.initializeBundleGroupsFromDense = function(){
 		// var denseViews = denseData["views"];
 		var denseViews = densePutative["views"];
 		var denseOriginalPairs = denseData["pairs"];
+		var denseOriginalViews = denseData["views"];
 		// TODO: pairs may possibly be bad - drop obviously bad pairs ?
+
+		var viewOriginalIDToObject = {};
+		for(var i=0; i<denseOriginalViews.length; ++i){
+			var view = denseOriginalViews[i];
+			var viewID = view["id"];
+			// console.log(denseViews);
+			viewOriginalIDToObject[viewID] = view;
+		}
+// throw "copy cameras"
 		
 		var viewIDToIndex = {};
 		for(var i=0; i<denseViews.length; ++i){
@@ -12924,6 +12934,9 @@ App3DR.ProjectManager.prototype.initializeBundleGroupsFromDense = function(){
 			var viewID = view["id"];
 			// console.log(denseViews);
 			viewIDToIndex[viewID] = i;
+
+			var original = viewOriginalIDToObject[viewID];
+			view["camera"] = original["camera"];
 		}
 
 		var listPairs = [];
@@ -12940,16 +12953,10 @@ App3DR.ProjectManager.prototype.initializeBundleGroupsFromDense = function(){
 		var groupTolerance = 1; // 4-6
 		var overlapDesired = 2; // up to 7
 
-console.log("before");
-
 		console.log(listPairs);
 		var result = Graph.groupsFromEdges(listPairs, groupSize, groupTolerance, overlapDesired)
 		console.log(result);
 		var groups = result["groups"];
-
-
-throw "after";
-
 
 		// display:
 		var transforms = [];
@@ -13227,8 +13234,12 @@ throw "calculateGraphFxn?"
 			// 	groupData["points"] = null;
 			// groupDataList.push(groupData);
 		}
+
+
+		
 		console.log(bundleData);
 		console.log(fullBundleDataPath);
+		throw "BEFORE SAVE BUNDLE";
 		project.saveFileFromData(bundleData, fullBundleDataPath, saveBundleFileFxn, project);
 	}
 /*
@@ -13681,7 +13692,7 @@ App3DR.ProjectManager.prototype.iterateBundleProcess = function(){
 				console.log("projectSavedFxn");
 				project._taskDoneCheckReloadURL();
 			}
-
+// throw "before aggregate points";
 			// project.loadDataFromFile(viewsDataPath, loadedViewDataFxn);
 			project.aggregateGroupPointsToSingleFile(fileSourceList, pointsDataPath, pointsSavedFxn, project);
 
@@ -13736,7 +13747,7 @@ console.log(group);
 console.log(groupData);
 var groupDataPath = Code.appendToPath(bundlePathBase,group["filename"]);
 console.log(groupDataPath);
-// throw "befpre save dense group";
+// throw "before save dense group?";
 		project.saveFileFromData(groupData, groupDataPath, completedSaveGroupFxn, project);
 	}
 
@@ -14161,8 +14172,10 @@ console.log(triangles);
 		// var textureDimension = 512;
 		// var resolutionScale = 0.50; // of maximum possible source input
 		// var resolutionScale = 0.25;
-
-var resolutionScale = 1.0/8.0; // do basic geometry test
+// var resolutionScale = 1.0/8.0; // basic geometry test
+var resolutionScale = 1.0/4.0; // debuging scene texture quality
+// var resolutionScale = 1.0/2.0; // VR OK density
+// var resolutionScale = 1.0; // release quality
 
 		console.log("loadedTrianglesFxn");
 		console.log(viewData,triangleData);

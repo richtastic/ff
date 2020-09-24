@@ -386,8 +386,6 @@ MISSING:
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
-track datas need cameras
-
 
 
 
@@ -396,10 +394,17 @@ BIGGEST TASKS:
 
 	- factor graphs & inference algorithm - bayesian network -> factor graph
 
+	- groups/pairs not propagating into blank areas (may need guidance?)
+
+	- fuzzy group points
 
 
-- what if skeleton is empty?
-	-> skeleton should always be nonempty
+- INITIAL P:
+	- A) is the linear step right or wrong?
+		- print out overhead view & locations of points & views
+	- B) is nonlinear step right or wrong
+		- " ^ "
+	- 
 
 
 
@@ -437,10 +442,6 @@ BIGGEST TASKS:
 
 
 
-
-- really big triangles might be making the vertex intersection test take a long time
-		camera: "V3L4XDFN"
-		R:
 
 
 
