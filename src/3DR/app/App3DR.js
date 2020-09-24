@@ -7776,7 +7776,7 @@ console.log("checkPerformNextTask");
 		return;
 	}
 
-// throw "start dense";
+throw "start dense";
 	if(!project.checkHasDenseStarted()){
 		project.calculateDensePairPutatives();
 		return;
@@ -8054,6 +8054,9 @@ bad = cameras are wrong or accidentally correct, <50% of scene is mapped
 */
 
 var views = inputData["views"];
+	// if(!views){
+	// 	putativeData = inputData["views"];
+	// }
 var cameras = inputData["cameras"];
 if(!cameras || !views){
 	throw "data needs cameras in file";
@@ -8076,15 +8079,17 @@ console.log("pair count: "+pairs.length+" ............");
 		var idA = pair["A"];
 		var idB = pair["B"];
 		var matches = pair["matches"];
+
+		var camAID = viewIDsToObject[idA]["camera"];
+		var camBID = viewIDsToObject[idB]["camera"];
+
+
 		if(!Code.isSet(matches)){
 			console.log("need to try pair: "+idA+" & "+idB);
 			currentPair = pair;
 			console.log(pair);
 			var relativeAB = pair["relativeTransform"];
 			if(relativeAB){ // dense
-
-				var camAID = viewIDsToObject[idA]["camera"];
-				var camBID = viewIDsToObject[idB]["camera"];
 				// console.logx(camAID,camBID,cameras);
 				// throw "..."
 				configuration = {};
@@ -8093,11 +8098,11 @@ console.log("pair count: "+pairs.length+" ............");
 			} // else: sparse = w/o known R
 			// throw "this is for sparse"
 			var cameras = inputData["cameras"];
-			if(!cameras){
-				throw "sparse data needs cameras in file";
-			}
-throw "... cameras for sparse?"
-			project.calculatePairMatchFromViewIDs(idA,idB, completePairFxn,project);
+			// console.log(inputData);
+			// console.log(cameras);
+			// console.log(camAID, camBID)
+			// throw "here"
+			project.calculatePairMatchFromViewIDs(idA,idB, camAID,camBID,cameras, completePairFxn,project);
 			return;
 		}
 	}
@@ -11576,7 +11581,7 @@ pairData["tracks"] = world.toObject();
 	}
 }
 
-App3DR.ProjectManager.prototype.calculatePairMatchFromViewIDs = function(viewAID, viewBID, completeFxn, completeCxt, settings){ // matches, F, R, tracks - SPARSE
+App3DR.ProjectManager.prototype.calculatePairMatchFromViewIDs = function(viewAID, viewBID, camAID, camBID, cameras, completeFxn, completeCxt, settings){ // matches, F, R, tracks - SPARSE
 console.log("calculatePairMatchFromViewIDs")
 	if(!settings){
 		settings = {};
@@ -11592,6 +11597,7 @@ console.log("calculatePairMatchFromViewIDs")
 		settings["maximumErrorTracksR"] = 0.002; // 0.01 @ 500 = 5 -- final stereopsis estimate R
 	}
 	console.log("calculatePairMatchFromViewIDs: "+viewAID+" & "+viewBID);
+
 	var project = this;
 	var featureDataA = null;
 	var featureDataB = null;
@@ -11767,9 +11773,6 @@ var Ferror = null;
 
 	}else{
 
-console.log();
-throw "cameras should come from sparse data"
-
 
 	// get 'affine' 2D transform from previous results
 	console.log("GET AFFINE LOCAL");
@@ -11837,26 +11840,18 @@ throw "cameras should come from sparse data"
 		}
 
 		if(goodEnoughMatches){
-console.log();
-throw "cameras should come from sparse data"
+console.log(cameras);
+
 			// 
 			// add K for finding R
-			// 
-			var projectCameras = project.cameras();
 			var worldCams = [];
-			for(var i=0; i<projectCameras.length; ++i){
-				var projectCamera = projectCameras[i];
-		console.log(projectCamera);
-				var K = projectCamera.K();
-		console.log(K);
-		var fx = K["fx"];
-		var fy = K["fy"];
-		var s = K["s"];
-		var cx = K["cx"];
-		var cy = K["cy"];
-		var K = new Matrix(3,3).fromArray([fx,s,cx, 0,fy,cy, 0,0,1]);
-		console.log(K);
-				var cam = world.addCamera(K, null, projectCamera.id());
+			for(var i=0; i<cameras.length; ++i){
+				var camera = cameras[i];
+				var camID = camera["id"];
+				var K = camera["K"];
+					K = Matrix.fromObject(K);
+				// var cam = world.addCamera(K, null, projectCamera.id());
+				var cam = world.addCamera(K, null, camID);
 				worldCams.push(cam);
 			}
 				for(var i=0; i<projectViews.length; ++i){
@@ -15245,6 +15240,7 @@ App3DR.ProjectManager.prototype.calculatePairPutatives = function(){
 	console.log("calculatePairPutatives");
 	var project = this;
 	var views = this._views;
+	var cameras = this._cameras;
 	var viewCount = views.length;
 	var similarity = this._viewSimilarity;
 
@@ -15337,6 +15333,8 @@ App3DR.ProjectManager.prototype.calculatePairPutatives = function(){
 	}
 	// console.log("\n"+str+"\n");
 	// convert keep pairs to list of pairs
+
+	var keepViewIDTable = {};
 	var keys = Code.keys(keepPairs);
 	for(var k=0; k<keys.length; ++k){
 		var key = keys[k];
@@ -15344,20 +15342,58 @@ App3DR.ProjectManager.prototype.calculatePairPutatives = function(){
 		var idA = entry["A"];
 		var idB = entry["B"];
 		putative.push({"A":idA, "B":idB});
+		keepViewIDTable[idA] = true;
+		keepViewIDTable[idB] = true;
 	}
 	console.log(putative);
 	
 	var filename = Code.appendToPath(App3DR.ProjectManager.BUNDLE_SPARSE_DIRECTORY, App3DR.ProjectManager.BUNDLE_SPARSE_FILE_NAME);
 	console.log("filename: "+filename);
 		project.setSparseFilename(filename);
+
+
+	// only keep relevant views:
+	var sparseViews = [];
+	var keepCameraIDTable = {};
+	for(var i=0; i<views.length; ++i){
+		var view = views[i];
+		// console.log(view);
+		var viewID = view.id();
+		if(keepViewIDTable[viewID]){
+			var camID = view.cameraID();
+			// console.log(camID);
+			var v = {"id":viewID,"camera":camID};
+			sparseViews.push(v);			
+			keepCameraIDTable[camID] = true;
+		}
+	}
+
+	var sparseCameras = [];
+	for(var i=0; i<cameras.length; ++i){
+		var camera = cameras[i];
+		var cameraID = camera.id();
+		if(keepCameraIDTable[cameraID]){
+			var K = camera.K();
+			var distortion = camera.distortion();
+			if(K["fx"]){
+				var fx = K["fx"];
+				var fy = K["fy"];
+				var s = K["s"];
+				var cx = K["cx"];
+				var cy = K["cy"];
+				K = new Matrix(3,3).fromArray([fx,s,cx, 0,fy,cy, 0,0,1]);
+				K = K.toObject();
+			}
+			var cam = {"id":cameraID, "K":K, "distortion":distortion};
+			sparseCameras.push(cam);
+		}
+	}
 	
 	// var sparseFile = project.sparseFilename();
 	var sparseData = App3DR.ProjectManager.defaultSparseFile();
 		sparseData["pairs"] = putative;
-	console.log(sparseData);
-
-	sparseData["views"] = "TODO: THIS SHOULD HAVE VIEWS";
-	sparseData["views"] = "TODO: THIS SHOULD HAVE CAMERAS";
+		sparseData["cameras"] = sparseCameras;
+		sparseData["views"] = sparseViews;
 
 	var fxnSavedProject = function(){
 		console.log("fxnSavedProject - pair putatives");
@@ -15365,9 +15401,11 @@ App3DR.ProjectManager.prototype.calculatePairPutatives = function(){
 	}
 	var fxnSavedSparse = function(){
 		console.log("fxnSavedSparse");
-throw "BEFORE SAVE PROJECT BEST PAIRS";
+// throw "BEFORE SAVE PROJECT BEST PAIRS";
 		project.saveProjectFile(fxnSavedProject, project);
 	}
+console.log(sparseData);
+throw "BEFORE SAVE SPARSE"
 	project.saveSparseFromData(sparseData, fxnSavedSparse, project);
 	
 }
@@ -24360,6 +24398,9 @@ App3DR.ProjectManager.Camera.CalibrationImage.prototype.readFromObject = functio
 			this._pictureInfo.push(picture);
 		}
 	}
+}
+App3DR.ProjectManager.Camera.CalibrationImage.prototype.toObject = function(){
+	throw "todo";
 }
 App3DR.ProjectManager.Camera.CalibrationImage.prototype.toYAML = function(yaml){
 	var i, len;

@@ -386,12 +386,12 @@ MISSING:
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
+- new set of images to test process more
+5-10 images
 
 
 
 BIGGEST TASKS:
-	- initial P - nonlinear flips a bunch of points to behind
-
 	- factor graphs & inference algorithm - bayesian network -> factor graph
 
 	- groups/pairs not propagating into blank areas (may need guidance?)
@@ -399,7 +399,14 @@ BIGGEST TASKS:
 	- fuzzy group points
 
 
-- INITIAL P:
+
+	
+
+
+
+
+
+- initial P - nonlinear flips a bunch of points to behind
 	- A) is the linear step right or wrong?
 		- print out overhead view & locations of points & views
 	- B) is nonlinear step right or wrong
@@ -407,7 +414,7 @@ BIGGEST TASKS:
 	- 
 
 
-
+- sparse step needs views in root of file (not under putative)
 
 
 - sphere projection after surface triangles are made

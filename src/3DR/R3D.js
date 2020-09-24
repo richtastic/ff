@@ -16780,9 +16780,10 @@ R3D.harrisCornerDetection = function(src, width, height, sigma){ // harris
 	var ratio;
 	// for(j=1;j<height-1;++j){
 	// 	for(i=1;i<width-1;++i){
+	var index = 0;
 	for(j=0;j<height;++j){
 		for(i=0;i<width;++i){
-			index = j*width + i;
+			// index = j*width + i;
 			a = Ix2[index];
 			b = IxIy[index];
 			c = IxIy[index];
@@ -16790,9 +16791,9 @@ R3D.harrisCornerDetection = function(src, width, height, sigma){ // harris
 			tra = a + d;
 			det = a*d - c*b;
 			var har = det - 0.000001*tra*tra;
-			if(Code.isNaN(har)){
-				har = 0;
-			}
+			// if(Code.isNaN(har)){
+			// 	har = 0;
+			// }
 			harrisValue[index] = Math.abs(har);
 			/*
 			eigs = Code.eigenValues2D(a,b,c,d);
@@ -16806,6 +16807,7 @@ R3D.harrisCornerDetection = function(src, width, height, sigma){ // harris
 			}
 			harrisValue[index] = a*b; - 0.00001*Math.pow(a+b,1);
 			*/
+			++index;
 		}
 	}
 	return harrisValue;

@@ -1092,7 +1092,6 @@ Stereopsis.View.prototype.cellForXY = function(xIn,yIn){
 }
 Stereopsis.View.prototype.corners = function(){
 	if(!this._corners){
-// throw "make corners";
 		var image = this._image;
 		if(image){
 			var gry = image.gry();
@@ -1102,6 +1101,12 @@ Stereopsis.View.prototype.corners = function(){
 			// console.log(corners)
 			// corners = corners["value"];
 			var corners = R3D.harrisCornerDetection(gry, width, height);
+// for(var i=0; i<corners.length; ++i){
+// 	var c = corners[i];
+// 	if(Code.isNaN(c)){
+// 		throw "found NaN in corners";
+// 	}
+// }
 			this._corners = corners;
 		}
 	}
@@ -6414,10 +6419,9 @@ Stereopsis.World.prototype.dropWorstParametersF = function(sigma){ // ..
 	sigma = Code.valueOrDefault(sigma, 2.0);
 console.log("estimate3DErrors ............")
 	world.estimate3DErrors(true);
-	world.estimate3DErrors(true);
+	world.estimate3DErrors(true); // why twice
 
 	// estimate3DErrors
-
 	var transforms = world.toTransformArray();
 	var points3D = world.toPointArray();
 	var views = world.toViewArray();
@@ -6455,10 +6459,10 @@ console.log("estimate3DErrors ............")
 			var value = 0;
 			var x = Math.round(point.x);
 			var y = Math.round(point.y);
-			var minX = Math.max(0,x-halfSize);
-			var minY = Math.max(0,y-halfSize);
-			var maxX = Math.max(0,x+halfSize);
-			var maxY = Math.max(0,y+halfSize);
+			var minX = Math.max(0, x-halfSize);
+			var minY = Math.max(0, y-halfSize);
+			var maxX = Math.min(wm1,x+halfSize);
+			var maxY = Math.min(hm1,y+halfSize);
 			var count = 0;
 			for(var y=minY; y<=maxY; ++y){
 				for(var x=minX; x<=maxX; ++x){
@@ -6467,6 +6471,13 @@ console.log("estimate3DErrors ............")
 					++count;
 					value += corners[index];
 				}
+			}
+			if(Code.isNaN(value)){
+				console.log(value);
+				console.log(count);
+				console.log(point2D);
+				console.log(corners);
+				throw "value is NaN";
 			}
 			// if(Code.isNaN(value)){
 			// 	value = 0;
@@ -6495,13 +6506,14 @@ console.log("estimate3DErrors ............")
 		// var limitC = min + sigma*sigmaKeepC;
 		// var limitPercent = Code.percentile(scores,limitPercent);
 		var p = 1.0-percentKeepC;
-		// console.log("p: "+p);
+		console.log("percent KEEP: "+percentKeepC);
+		console.log("percent REMOVE: "+p);
 		var limitC = Code.percentile(values,p);
 		// console.log(limitC);
-		// Code.printMatlabArray(values);
+		Code.printMatlabArray(values);
 		for(var j=0; j<points2D.length; ++j){
 			var point2D = points2D[j];
-			if(point2D.temp() >= limitC){
+			if(point2D.temp() >= limitC){ // keep big
 				point2D.temp(true);
 			}else{
 				++dropC;
@@ -6585,7 +6597,7 @@ errorListN.push(errorN);
 		// .
 		throw "removing too many" // 0.90 * 0.95 * 0.95 * 0.95 = 0.75
 	}
-	console.log(">> DROP COUNT: "+dropP3D.length);
+	console.log(">> DROP COUNT: "+dropP3D.length+" = "+percent);
 	for(var i=0; i<dropP3D.length; ++i){
 		var point3D = dropP3D[i];
 		world.disconnectPoint3D(point3D);
