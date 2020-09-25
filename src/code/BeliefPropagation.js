@@ -251,7 +251,9 @@ FactorGraph.prototype.maxSum = function(){ // ?
 	throw "maxSum";
 }
 FactorGraph.prototype.loopyBP = function(maxIterations){ // loopy sumProduct
-	// ..
+	// SET UNOBSERVED VARIABLES TO EQUAL-DISTRIBUTION
+	// SET OBSERVED TO INIT STATE ?
+
 	// scheduling = factor nodes + variable nodes
 	var nodes = Code.arrayPushArrays([], this._factors, this._variables);
 	console.log(nodes);

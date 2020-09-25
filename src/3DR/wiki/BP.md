@@ -117,6 +117,15 @@ https://wiseodd.github.io/techblog/2017/01/01/mle-vs-map/
 
 
 
+
+all messages are typically initialized uniformly at the beginning
+
+
+
+
+
+
+
 Sum Product / message passing === Belief Propagation [different flavor for BN v MN]
 	- performs inference
 	- calculates marginal distribution for unobserved node (or var) conditional on observed nodes (or vars)

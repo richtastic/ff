@@ -386,21 +386,18 @@ MISSING:
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
-- new set of images to test process more
-5-10 images
 
-
-
-BIGGEST TASKS:
 	- factor graphs & inference algorithm - bayesian network -> factor graph
-
-	- groups/pairs not propagating into blank areas (may need guidance?)
+	- max-product walkthru
 
 	- fuzzy group points
+	
+	- groups/pairs not propagating into blank areas (may need guidance?)
 
 
 
 	
+
 
 
 

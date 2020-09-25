@@ -7776,7 +7776,7 @@ console.log("checkPerformNextTask");
 		return;
 	}
 
-throw "start dense";
+// throw "start dense";
 	if(!project.checkHasDenseStarted()){
 		project.calculateDensePairPutatives();
 		return;
@@ -7797,7 +7797,7 @@ throw "start dense";
 		return;
 	}
 
-// throw ">start surface"; // copy point files & create surface.yaml
+throw ">start surface"; // copy point files & create surface.yaml
 	if(!project.checkHasSurfaceStarted()){
 		project.initializeSurfaceFromBundle();
 		return;
@@ -8307,10 +8307,6 @@ console.log(group);
 			dataGroups.push(g);
 		}
 
-// console.log(inputData);
-// console.log(dataGroups);
-// console.log(data);
-
 // pass along camera
 var inputViewIDToView = {};
 var inputViews = inputData["views"];
@@ -8389,16 +8385,13 @@ for(var i=0; i<dataGroups.length; ++i){
 
 
 console.log(inputData);
-// console.log(dataGroups);
 console.log(data);
 
 // pass along cameras
 data["cameras"] = inputData["cameras"];
 
+throw "BEFORE SAVE GRAPH";
 
-// throw "these views need cameras"
-// throw "BEFORE SAVE GRAPH";
-// ..
 		// save graph & reference it
 		inputData["graph"] = graphFilename;
 		var saveSparseFxn = function(){
@@ -8419,107 +8412,6 @@ console.log("aggregate ...")
 		this._iterateSparseTracks(inputData, inputFilename, isDense);
 		return;
 	}
-
-throw "this isn't used yet"
-
-
-throw "bundle adjust with better tracks?"
-	var bundleCount = inputData["bundleCount"]; // some number of iterations /
-	if(bundleCount===null || bundleCount===undefined){
-		// for each group in graph groups:
-		// load the first group with non-existant or R-error above some min & under max iterations [skip pairs]
-		// 
-		// MOVE VIEW ORIENTATIONS TO LOWER ERROR
-		// 
-		// when done with groups, initialize view locations:
-		// 		starting with group 0 [skeleton]
-		// 		each group will have some node in skeleton, offset all transforms by existing vertex's transform
-		// BA on full view & point set track
-		// 
-		throw "no bundleCount ---> keep iterating on graph groups"
-	}
-throw ">H";
-	// ONLY FOR DENSE:
-	if(false){
-		// loading points into a single track file
-		// use full pairwise matches [10k-100k] for final points, NOT TRACKS [1~10k]
-	}
-
-	if(false){
-		// fill in holes & increase overlap [only care about in dense iteration]
-		var upSampling = sparseData["upSampling"];
-		if(upSampling===null || upSampling===undefined){
-			//
-			throw "want to fill in holes / interconnect more points"
-			//
-			// possible more BA?
-			// 
-			throw "want to drop most high error points"
-		}
-	}
-throw ">I";
-	// TODO:
-	// INCREASE POINT DENSITY STEP?
-	// requires out-of-core sectioning
-	// requires out-of-core triangulation step
-	// ...
-/*
-	
-	want to increase resolution / point density 1 more sub-size [40 sparse] [80 dense] [160+ surfacing]
-	too many points to load all at once?
-	doing individually would be highly repetitive
-	load only certain points files from OCT TREE ?
-	- do views need to keep track of their point volume ?
-		- no, this is useless in most cases, they need to list out the oct leave they are using
-		- but these change, so maybe need to just query the oct tree
-	- how to do triangle surfacing?
-
-*/
-
-	// done => assemble final view orientation estimate
-	// output view transforms => bundle.yaml
-	// output points => points.yaml [unused for sparse, ]
-	// output best-pair guess => info.yaml
-throw ">X";
-	var bestPairs = sparseData["bestPairs"];
-	if(bestPairs===null || bestPairs===undefined){
-		throw "predict best set of pairs for next sequence";
-	}
-
-	/*
-		// CREATE BEST GUESS FOR PAIRS TO USE IN DENSE PROCESS ---- only care in SPARSE iteration?
-		// putative: list of pairs
-
-		add edges to graph where overlapping tracks have formed where edge (from pairs) did not originally exist
-		-- some sort of minimum threshold on count - minimum (16-100, based on cell density) & ~10-25% of global average
-		-- some sort of minimum threshold on error - average & sigma
-
-		THEN:
-	
-		get average error to nearest direct neighbors
-		get global average error to everyone's neighbors [average of averages]
-		select i-th distance neighbors, stop gathering if:
-			path error > ~2-5 x avg local neighbor error
-			path error > ~2-5 x avg global neighbor error
-			path error > maximum allowable error [~1% [~5 pixels]]
-		remove any views not satisfy:
-			forward direction greater than angle ~ 60-90 degrees
-		order all neighbors on path error
-		select up to ~ 10-16? best [~6 is good, allow for some incorrect matches]
-		consolidate all pair matches in global lookup to drop repeats, etc
-	
-
-		ALG:
-			decide which edges to include:
-				- for each view:
-					- get mean/sigma / limit (2~3 sigma) for each 
-
-
-			create graph:
-				- 1 vertex for every view
-				- 1 edge for every 
-	*/
-
 
 }
 
@@ -8893,6 +8785,9 @@ for(var iterations=0; iterations<dropIterations; ++iterations){
 
 	var limitA = Code.exponentialDistributionValueForPercent(info["min"],info["lambda"], 0.99);
 	console.log("limitA: "+limitA);
+
+
+// limitA = 999999;
 
 	var count = 0;
 	var next = [];
@@ -9348,7 +9243,7 @@ App3DR.ProjectManager.prototype._iterateSparseTracks = function(sourceData, sour
 	var project = this;
 	isDense = Code.valueOrDefault(isDense, false);
 
-
+// throw "is this used - _iterateSparseTracks"
 
 	var maximumImagesLoad = 4; // 3 ~ 6 // ----- currently not used, approximating with geometry
 	// ...
@@ -9441,6 +9336,7 @@ App3DR.ProjectManager.prototype._iterateSparseTracks = function(sourceData, sour
 
 			throw "already done .. should have putatives saved into main info.yaml"
 		}
+
 		if(bundleFullIndex>=graphPairs.length){ // done loading all pairs into track full file
 			console.log("bundle adjust full file ...");
 			// - bundle-adjust
@@ -9462,6 +9358,7 @@ App3DR.ProjectManager.prototype._iterateSparseTracks = function(sourceData, sour
 				var baOptimizations = App3DR.ProjectManager._BAPairsDefaultOrSorted(allViews, fullData);
 				var nextViewBA = baOptimizations[0];
 				console.log(nextViewBA);
+// throw "want to be here ?"
 				var baIterations = fullData["iteration"];
 					baIterations = Code.valueOrDefault(baIterations, 0);
 				var maxIterationsBA = 2*allViews.length; // MED
@@ -9785,6 +9682,13 @@ console.log(allCameras);
 			var skeletonViews = groupSkeleton["views"];
 			var skeletonPairs = groupSkeleton["pairs"];
 			var skeletonTransforms = groupSkeleton["transforms"];
+
+console.log(graphData);
+console.log(graphGroups);
+console.log(groupSkeleton);
+console.log(skeletonTransforms);
+
+// throw "????????"
 			if(!skeletonPairs || !skeletonTransforms){
 				skeletonPairs = [];
 				skeletonTransforms = [];
@@ -9813,6 +9717,8 @@ originalTransforms[i] = absolute;
 			var viewIDToTransformSkeleton = {};
 			var skeletonLookup = {};
 console.log(skeletonViews)
+console.log(skeletonTransforms)
+
 		for(var i=0; i<skeletonViews.length; ++i){
 			var viewID = skeletonViews[i];
 			var viewExtrinsic = skeletonTransforms[i];
@@ -9820,6 +9726,7 @@ console.log(skeletonViews)
 				viewExtrinsic = Matrix.fromObject(viewExtrinsic);
 			}else{ // if(skeletonViews.length==0){
 				// just set to identity
+console.log("just set to identity?")
 				viewExtrinsic = new Matrix(4,4).identity();
 			}
 				
@@ -10262,16 +10169,18 @@ console.log("special case? - should save view transforms to track full yaml");
 				// // var k = Code.keys(lookup);
 				// console.log(lookup);
 
-
 				console.log(data);
 				var baTransforms = data["transforms"];
 				var baViews = data["views"];
 				var baPoints = data["points"];
-if(!baTransforms){
+// this was made for skeleton with a single view
+if(baViews.length<=1){
+// if(false && !baTransforms){
 	baTransforms = [];
 	baViews = [];
 	baPoints = [];
 	deltaErrorR = 0;
+	throw "single vertex skeleton?"
 }
 				// var baOptimizations = data["ba"];
 				var baIterations = data["iteration"];
@@ -10281,16 +10190,20 @@ if(!baTransforms){
 				// var maxIterationsBA = 10*baViews.length; // HIGH
 				var maxIterationsBA = 2*baViews.length; // LOW
 				
+				console.log(baOptimizations);
 				var nextViewBA = baOptimizations.length>0 ? baOptimizations[0] : null; // pre-sorted on nulls
 				console.log(nextViewBA);
 
 				// if the next error is very low, or max iterations reached => done
 				var isDone = false;
-				var deltaErrorR = nextViewBA ? nextViewBA["deltaErrorR"] : 0;
-				if(deltaErrorR!==null && deltaErrorR!==undefined){
-					if(deltaErrorR<minimumPixelErrorBA){
-						console.log("min error reached");
-						isDone = true;
+				// var deltaErrorR = nextViewBA ? nextViewBA["deltaErrorR"] : 0;
+				if(nextViewBA){
+					var deltaErrorR = nextViewBA["deltaErrorR"];
+					if(deltaErrorR!==null && deltaErrorR!==undefined){
+						if(deltaErrorR<minimumPixelErrorBA){
+							console.log("min error reached: "+deltaErrorR+" < "+minimumPixelErrorBA);
+							isDone = true;
+						}
 					}
 				}
 
@@ -10320,6 +10233,8 @@ if(!baTransforms){
 							}
 						}
 					}
+
+console.log(baTransforms);
 					// PAIRS
 					var graphPairs = [];
 					for(var i=0; i<baTransforms.length; ++i){
@@ -10334,8 +10249,8 @@ if(!baTransforms){
 					// save final (extrinsic) transforms to graph summary data
 					graphGroup["transforms"] = graphTransforms;
 					graphGroup["pairs"] = graphPairs;
-					console.log(graphGroup);
-
+console.log(graphGroup);
+// throw "are there pairs & transforms?"
 					var savedGraphComplete = function(){
 						console.log("savedGraphComplete: "+graphFile);
 						project._taskDoneCheckReloadURL();
@@ -11080,6 +10995,8 @@ project.displayViewGraph(orderedAbsoluteTransforms,groupPairsPass, 0, groupIDs, 
 }
 
 App3DR.ProjectManager._BAPairsDefaultOrSorted = function(baViews, data){
+	// console.log(baViews,data);
+	// throw "_BAPairsDefaultOrSorted"
 	baOptimizations = data["ba"];
 	if(!baOptimizations){
 		baOptimizations = [];
@@ -15166,7 +15083,17 @@ App3DR.ProjectManager.prototype.calculateDensePairPutatives = function(){
 		console.log("fxnLoadSparseComplete");
 		console.log(data);
 		var sparseData = data;
-		
+
+		// get view cameras from sparse
+		var sparseViews = sparseData["views"];
+		var sparseViewIDToCameraID = {};
+		for(var i=0; i<sparseViews.length; ++i){
+			var view = sparseViews[i];
+			var viewID = view["id"];
+			var camID = view["camera"];
+			sparseViewIDToCameraID[viewID] = camID;
+		}
+
 		var putativePairs = sparseData["putativePairs"];
 		if(!putativePairs){
 			throw "no sparse putativePairs";
@@ -15185,7 +15112,12 @@ App3DR.ProjectManager.prototype.calculateDensePairPutatives = function(){
 			var viewID = view["id"];
 			var viewR = view["R"];
 			var viewCamera = view["camera"];
-				viewCamera = viewCamera ? viewCamera : null;
+			if(!viewCamera){
+				viewCamera = sparseViewIDToCameraID[viewID];
+			}
+			if(!viewCamera){
+				throw "missing camera";
+			}
 			var transform = Matrix.fromObject(viewR);
 			var viewData = {"id":viewID, "transform":transform, "camera":viewCamera};
 			viewLookup[viewID] = viewData;
