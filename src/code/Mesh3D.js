@@ -41,7 +41,8 @@ function Mesh3D(points, norms, angle){
 	// this._cappedMaxK = 1.0/0.01; // 100
 	// this._cappedMaxK = 1.0/0.005; // 200
 	// this._cappedMaxK = 1.0/0.002; // 500
-	this._cappedMaxK = 1.0/0.001; // 1000
+	// this._cappedMaxK = 1.0/0.001; // 1000
+	this._cappedMaxK = 1.0/0.0001; // 10000
 
 
 	// this._cappedMaxK = 1.0/0.01;
@@ -2259,8 +2260,8 @@ var maxIter = 50000; // default
 		// var maxIter = 3000;
 		// var maxIter = 4000;
 		// var maxIter = 5000;
-		// var maxIter = 10000;
-// var maxIter = 15000;
+		var maxIter = 10000;
+		// var maxIter = 15000;
 		// var maxIter = 20000;
 		// var maxIter = 40000;
 
@@ -2407,9 +2408,9 @@ console.log(closeInfo);
 // if(groupIndex>=200){
 // if(groupIndex>=100){
 // if(groupIndex>=20){
-// if(groupIndex>=10){
+if(groupIndex>=10){
 // if(groupIndex>=3){
-if(groupIndex>=1){
+// if(groupIndex>=1){
 	break;
 }
 	}

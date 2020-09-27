@@ -354,7 +354,7 @@ function classesLoadedFxn(){
 	// var network = new BayesNetwork();
 	// console.log(network);
 
-
+/*
 // 0=>0  1=>1  2=>4  3=>9  4=>16
 
 var radius = 1.0;
@@ -380,17 +380,15 @@ for(var i=0; i<tris.length; ++i){
 }
 console.log("MAX RATIO: "+(max/min));
 throw "..."
-
+*/
 
 
 
 
 	// FG:
 
-
+/*
 	var graph = new FactorGraph();
-
-
 
 	var A = graph.addVariable(2,"A");
 	var B = graph.addVariable(2,"B");
@@ -410,6 +408,58 @@ throw "..."
 
 	// moralization ?
 
+
+	var result = graph.loopyBP();
+	console.log(result);
+
+	*/
+
+
+	// earthquake / burgulry example:
+
+	var graph = new FactorGraph();
+
+	var B = graph.addVariable(2,"B");
+	var E = graph.addVariable(2,"E");
+	var A = graph.addVariable(2,"A");
+	var J = graph.addVariable(2,"J");
+	var M = graph.addVariable(2,"M");
+
+//	var fB = graph.addFactor([B],[0.99,0.01], "fB"); // p(burglary)
+//	var fE = graph.addFactor([E],[0.98,0.02], "fE"); // p(earthquake)
+//	var fA = graph.addFactor([A],[0.99,0.01], "fA"); // p(alarm)
+
+	var fAB = graph.addFactor([A,B],[0.999,0.001, 0.001,0.999], "fAB"); // alarm-burglary
+	var fAE = graph.addFactor([A,E],[0.999,0.001, 0.001,0.999], "fAE"); // alarm-earthquake
+
+	var fAJ = graph.addFactor([A,J],[1.0,  0.0, 0.10,0.90], "fAJ"); // alarm-john
+	var fAM = graph.addFactor([A,M],[0.90,0.10, 0.01,0.99], "fAM"); // alarm-mary
+
+
+//	var fBE = graph.addFactor([B,E],[1.0,1.0, 1.0,0.01], "fBE"); // burglary-earthquake
+
+//	fB.printTable();
+//	fE.printTable();
+//	fA.printTable();
+
+
+
+	fAB.printTable();
+	fAE.printTable();
+
+	fAJ.printTable();
+	fAM.printTable();
+
+	// other
+//	fBE.printTable();
+
+
+// set mary to called
+M.observe([0,1]);
+// J.observe([0,1]);
+// E.observe([0,1]);
+// B.observe([0,1]);
+// A.observe([0,1]);
 
 	var result = graph.loopyBP();
 	console.log(result);

@@ -386,13 +386,18 @@ MISSING:
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
+x increase curvature limit
+
 
 	- factor graphs & inference algorithm - bayesian network -> factor graph
 	- max-product walkthru
 
 	- fuzzy group points
-	
+		- add more BA iterations beforehand? (get camera positions more exact)
+		- drop any points with reprojection error > 1px
+
 	- groups/pairs not propagating into blank areas (may need guidance?)
+
 
 
 

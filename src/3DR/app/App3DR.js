@@ -7797,7 +7797,7 @@ console.log("checkPerformNextTask");
 		return;
 	}
 
-throw ">start surface"; // copy point files & create surface.yaml
+// throw ">start surface"; // copy point files & create surface.yaml
 	if(!project.checkHasSurfaceStarted()){
 		project.initializeSurfaceFromBundle();
 		return;
