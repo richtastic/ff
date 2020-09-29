@@ -436,12 +436,11 @@ throw "..."
 	var fAM = graph.addFactor([A,M],[0.90,0.10, 0.01,0.99], "fAM"); // alarm-mary
 
 
-//	var fBE = graph.addFactor([B,E],[1.0,1.0, 1.0,0.01], "fBE"); // burglary-earthquake
+//	var fBE = graph.addFactor([B,E],[1.0,1.0, 1.0,0.01], "fBE"); // burglary-earthquake -- breaks things if not uniform
 
 //	fB.printTable();
 //	fE.printTable();
 //	fA.printTable();
-
 
 
 	fAB.printTable();
@@ -455,7 +454,7 @@ throw "..."
 
 
 // set mary to called
-M.observe([0,1]);
+// M.observe([0,1]);
 // J.observe([0,1]);
 // E.observe([0,1]);
 // B.observe([0,1]);

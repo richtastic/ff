@@ -7693,6 +7693,8 @@ console.log("checkPerformNextTask");
 	this._taskBusy = true;
 	var i, j, k, len;
 	console.log("next task?");
+
+	// throw "........."
 	var views = this._views;
 	var project = this;
 	// assumed all views already have entry & images
@@ -7776,33 +7778,33 @@ console.log("checkPerformNextTask");
 		return;
 	}
 
-// throw "start dense";
+throw "start dense";
 	if(!project.checkHasDenseStarted()){
 		project.calculateDensePairPutatives();
 		return;
 	}
-// throw "iterate dense";
+throw "iterate dense";
 	if(!project.checkHasDenseEnded()){
 		project.iterateDenseProcess();
 		return;
 	}
-// throw ">start bundle";
+throw ">start bundle";
 	if(!project.checkHasBundleStarted()){
 		project.initializeBundleGroupsFromDense();
 		return;
 	}
-// throw "> continue bundle";
+throw "> continue bundle";
 	if(!project.checkHasBundleEnded()){
 		project.iterateBundleProcess(); // sets up dense groups
 		return;
 	}
 
-// throw ">start surface"; // copy point files & create surface.yaml
+throw ">start surface"; // copy point files & create surface.yaml
 	if(!project.checkHasSurfaceStarted()){
 		project.initializeSurfaceFromBundle();
 		return;
 	}
-// throw ">iterate surface"; // create triangles & textures
+throw ">iterate surface"; // create triangles & textures
 	if(!project.checkHasSurfaceEnded()){
 		project.iterateSurfaceProcess();
 	}
@@ -8139,7 +8141,7 @@ inputData["pairsRaw"] = originalPairs;
 inputData["pairs"] = pairs;
 console.log(inputData);
 
-throw "BEFORE TRIPLES DONE"
+// throw "BEFORE TRIPLES DONE"
 		
 		project.saveFileFromData(inputData,inputFilename, saveProjectFxn,project);
 
@@ -8560,15 +8562,16 @@ var removeList = {};
 	}
 
 	// exponential distribution:
-	var dropPercent = 0.95; // 0.95 - 0.99  --- OR DO REPEATED DROPPING @ 0.99-0.999
+	//var dropPercent = 0.95; // 0.95 - 0.99  --- OR DO REPEATED DROPPING @ 0.99-0.999
+	var dropPercent = 0.99; // very worst
 	var min = Code.min(errors);
 	var mean = Code.mean(errors);
 	console.log(" min: "+min);
 	console.log("mean: "+mean);
 	var lambda = 1.0/mean;
 	console.log("lambda: "+lambda);
-	var halfLimit = -Math.log(1.0 - dropPercent)/lambda;
-	console.log("halfLimit: "+halfLimit);
+	var errorPairLimit = -Math.log(1.0 - dropPercent)/lambda;
+	console.log("errorPairLimit: "+errorPairLimit);
 
 // throw "?"
 
@@ -8576,14 +8579,14 @@ var removeList = {};
 	var min = Code.min(errors);
 	var sigma = Code.stdDev(errors,min);
 	var limit = min + sigma*2.0;
-	console.log("drop values: "+min+" + "+sigma+" = "+limit+" ? "+halfLimit+" : "+(limit-halfLimit));
+	console.log("drop values: "+min+" + "+sigma+" = "+limit+" ? "+errorPairLimit+" : "+(limit-errorPairLimit));
 	for(var i=0; i<viewPairs.length; ++i){
 		var viewPair = viewPairs[i];
 		var error = viewPair["reprojectionError"];
 		// console.log("  error: "+error);
-		// if(error>limit){
-		if(error>halfLimit){
-			console.log("drop pair: "+viewPair["id"]);
+		// if(false){
+		if(error>errorPairLimit){
+			console.log("drop error pair: "+viewPair["id"]);
 			Code.removeElementAt(viewPairs,i);
 			--i;
 		}
@@ -8818,6 +8821,7 @@ for(var iterations=0; iterations<dropIterations; ++iterations){
 		var loopError = loop["error"];
 		// if(loopError>limit90){ //
 		if(loopError>limitA && loopError>limitB){ //
+		// if(false){
 			// console.log("bad loop: "+loopError);
 			var edges = loop["edges"];
 			var worstEdge = null;
@@ -9253,8 +9257,8 @@ App3DR.ProjectManager.prototype._iterateSparseTracks = function(sourceData, sour
 	var minimumBundlePixelDeltaErrorPerUnity = 0.00001;
 	if(isDense){
 		cellCount = 60; // 60-80
-		minimumGroupPixelDeltaErrorPerUnity = 0.000001; // 1/1000 pixel
-		minimumBundlePixelDeltaErrorPerUnity = 0.000001;
+		minimumGroupPixelDeltaErrorPerUnity = 0.0000001; // 1/10000 pixel
+		minimumBundlePixelDeltaErrorPerUnity = 0.0000001;
 	}
 
 	console.log(sourceData);
@@ -9515,7 +9519,8 @@ project.displayViewGraph(orderedAbsoluteTransforms,groupPairsPass, 0, groupIDs);
 				console.log(worldView);
 // throw "before solveOptimizeSingleView - TRACK FULL";
 				// optimize view orientation
-				var info = world.solveOptimizeSingleView(worldView, 3, false); // ONLY LOCAL OPTIMIZING, NO GLOBAL
+				var doWorldViewSolve = isDense;
+				var info = world.solveOptimizeSingleView(worldView, 3, doWorldViewSolve); // ONLY LOCAL OPTIMIZING, NO GLOBAL
 				console.log(info);
 				nextViewBA["deltaErrorR"] = Math.abs(info["deltaR"]); // expected always negative
 				nextViewBA["errorR"] = info["errorR"];
@@ -14648,8 +14653,22 @@ App3DR.ProjectManager.prototype._calculateFeaturesLoaded = function(view){
 	var features = R3D.differentialCornersForImage(imageScales, new V2D(600,400));
 	var normalizedFeatures = R3D.normalizeSIFTObjects(features, imageMatrix.width(), imageMatrix.height());
 	console.log("FEATURES: "+normalizedFeatures.length);
-	var wordsMax = 150; // ~ 100
-	var words = R3D.differentialCornersForImage(imageScales, new V2D(120,90)); // 100x50 ~ 30   |   120x90 ~ 60 |  150x112 = 
+	// 120x90 ~ 60  |  150x100 ~ 80-90  |  200x150 ~ 130-150
+	// | 150x112 = 
+	// var wordsMax = 150; // ~ 100
+	// var words = R3D.differentialCornersForImage(imageScales, new V2D(120,90)); // 
+
+	//
+
+	// var idealSizeWords = new V2D(150,100);
+	var idealSizeWords = new V2D(200,150);
+
+	// 
+
+
+var wordsMax = 999; // ~ 100
+var words = R3D.differentialCornersForImage(imageScales, idealSizeWords); // 100x50 ~ 30   |   120x90 ~ 60 |  150x112 = 
+
 	var normalizedWords = R3D.normalizeSIFTObjects(words, imageMatrix.width(), imageMatrix.height());
 	console.log("WORDS: "+normalizedWords.length);
 
@@ -14761,7 +14780,10 @@ App3DR.ProjectManager.prototype.calculateViewSimilarities = function(){
 			console.log("completed loading ...");
 			console.log(histograms);
 			console.log(features);
-/*
+
+// var doWords = false;
+var doWords = true;
+if(doWords){
 // FEATURE WORDS:
 			var obj;
 			var scores = [];
@@ -14778,6 +14800,7 @@ App3DR.ProjectManager.prototype.calculateViewSimilarities = function(){
 					var result = R3D.compareFeatureLexicons(featuresA,featuresB);
 					// console.log(result);
 					var score = result["score"];
+// score = 1.0/score;
 					// console.log(score);
 					// score = ;
 					// throw "?";
@@ -14791,7 +14814,11 @@ App3DR.ProjectManager.prototype.calculateViewSimilarities = function(){
 			}
 			console.log(scores);
 			// throw "????";
-*/
+			scores.sort(function(a,b){
+				return a["s"]>b["s"] ? -1 : 1; // NCC - larger better
+				// return a["s"]<b["s"] ? -1 : 1; // SAD - smaller better
+			});
+}else{
 
 
 // HISTOGRAMS:
@@ -14821,7 +14848,9 @@ App3DR.ProjectManager.prototype.calculateViewSimilarities = function(){
 					// var score = scoreSAD;
 					// var score = scoreSSD;
 					// var score = scoreChiSSD;
-					var score = scoreChiSAD; 
+					var score = scoreChiSAD;
+
+// var score = 1.0/scoreChiSAD;
 
 
 					// score = Math.pow(score,2.07);
@@ -14838,12 +14867,14 @@ App3DR.ProjectManager.prototype.calculateViewSimilarities = function(){
 
 
 			scores.sort(function(a,b){
-				// return a["s"]>b["s"] ? -1 : 1; // NCC - larger better
-				return a["s"]<b["s"] ? -1 : 1; // SAD - smaller better
+				return a["s"]>b["s"] ? -1 : 1; // NCC - larger better
+				// return a["s"]<b["s"] ? -1 : 1; // SAD - smaller better
 			});
+}
+
 			console.log(scores);
 project.showViewSimilarities(scores);
-throw "now go save similarities";
+throw "BEFORE SAVE SIMILARITIES - now go save similarities";
 			project.setViewSimilarity(scores);
 			project.setSparseFilename(null);
 			//project.setPairPutative(null); // unset to recalculate
@@ -14959,8 +14990,20 @@ for(var i=0; i<similarities.length; ++i){
 	listA.push(score);
 	listB.push(score);
 }
-var sortFxn = function(a,b){
-	return a<b ? -1 : 1;
+
+// var largerIsBetter = true;
+var largerIsBetter = false;
+
+var sortFxn = null;
+
+if(largerIsBetter){// larger is better
+	sortFxn = function(a,b){
+		return a>b ? -1 : 1;
+	}
+}else{ // smaller is better
+	sortFxn = function(a,b){
+		return a<b ? -1 : 1;
+	}
 }
 var keys = Code.keys(bestList);
 for(var i=0; i<keys.length; ++i){
@@ -14969,7 +15012,8 @@ for(var i=0; i<keys.length; ++i){
 	var list = bestList[key];
 	list.sort(sortFxn);
 	Code.truncateArray(list, cacheCount);
-	// console.log(list);
+// console.log(list.length);
+	bestList[key] = list;
 }
 for(var i=0; i<similarities.length; ++i){
 	var similarity = similarities[i];
@@ -14977,24 +15021,26 @@ for(var i=0; i<similarities.length; ++i){
 	var idB = similarity["B"];
 	var listA = bestList[idA];
 	var listB = bestList[idB];
-	var maxA = listA[listA.length-1];
-	var maxB = listB[listB.length-1];
-	var max = Math.max(maxA,maxB);
+	var valA = listA[listA.length-1];
+	var valB = listB[listB.length-1];
+	var max = Math.max(valA,valB);
+	var min = Math.min(valA,valB);
 	var score = similarity["s"];
 	// console.log(score,max);
-	if(score>max){
-		Code.removeElementAt(similarities,i);
-		--i;
+	if(largerIsBetter){
+		if(score<min){
+			Code.removeElementAt(similarities,i);
+			--i;
+		}
+	}else{
+		if(score>max){
+			Code.removeElementAt(similarities,i);
+			--i;
+		}
 	}
 }
+
 console.log(similarities);
-
-// throw ".." ;
-// ...
-
-
-
-
 
 		var sims2 = [];
 		// var sims1 = Code.objectToArray(similarities);
@@ -15004,10 +15050,9 @@ console.log(similarities);
 			sims2.push( {"A":similarity["A"],"B":similarity["B"],"s":similarity["s"]} );
 			floats.push(similarity["s"]);
 		}
-
-
+		// 
 		ImageMat.normalFloat01(floats);
-		console.log(floats);
+		// console.log(floats.length);
 		// for(var i=0; i<similarities.length; ++i){
 		// 	var similarity = similarities[i];
 		// 	// sims2.push( {"A":similarity["A"],"B":similarity["B"],"s":similarity["s"]} );
@@ -15029,7 +15074,7 @@ console.log(similarities);
 			var idA = similarity["A"];
 			var idB = similarity["B"];
 			var score = similarity["s"];
-			console.log(similarity);
+			// console.log(similarity);
 			var indexA = viewIDToIndex[idA];
 			var indexB = viewIDToIndex[idB];
 			var start = centers[indexA];

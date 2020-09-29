@@ -385,18 +385,133 @@ MISSING:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+R3D.showRelativeCameras
 
-x increase curvature limit
 
 
-	- factor graphs & inference algorithm - bayesian network -> factor graph
-	- max-product walkthru
+
+
+- initial P - nonlinear flips a bunch of points to behind
+	- A) is the linear step right or wrong?
+		- print out overhead view & locations of points & views
+		=> it's left-right directional correct
+	- B) is nonlinear step right or wrong
+		- " ^ "
+		=> it's left-right directional correct
+	- 
+
+	
+	->
+
+
+remove too many negative ::::::::::::::
+	{A: "AF1MYLKE", B: "U37EIKSI"}
+	-
+			A: "2183ZM7R"
+			B: "LSHY05RW"
+
+
+---- this is removing some very good matches -- close to center-center 
+
+
+
+
+55 reachable of 108
+
+
+
+
+
+
+- pre-graph abs generating: show circular connected components (known relative scales/transforms)
+
+
+
+
+
+
+
+
+
+
+
+Stereopsis.ransacTransformF
+
+
+P = R3D.transformFromFundamental(bestPointsA, bestPointsB, F, Ka,KaInv, Kb,KbInv, null, force, true);
+
+
+
+R3D.showRelativeCameras(A,B, bestPointsA,bestPointsB);
+
+
+
+
+
+- initial pair estimates:
+	- can the words + histograms be combined:
+		A) user histogram to rule out obviously bad groups [eg sub 50%]
+		B) combine (multiply) word score (match count) by histogram score (differences)
+
+
+
+
+MISSING VALID (& GOOD) PAIRS:
+-
+		A: "3SRZ7XFK"
+		B: "RGIGDTLL"
+-
+		A: "2183ZM7R"
+		B: "LSHY05RW"
+		
+
+
+
+
+
+
+
+
+
+
+
+
+x view similarity poor
+	~ 60 words on average
+	~ 80-90 words on average []
+
+
 
 	- fuzzy group points
 		- add more BA iterations beforehand? (get camera positions more exact)
-		- drop any points with reprojection error > 1px
+		- (dense & group) drop any points with reprojection error > 1px
+
+		=> change search window to disallow fewer candidates?
+			- probe3d & probe2d
+
+		=> more refinement / dropping steps after probing
+		(~2 iterations of only camera update and dropping)
+
+		- add BA all-views optimization step at end of BA steps
+
 
 	- groups/pairs not propagating into blank areas (may need guidance?)
+		- use a predicted R/F location 
+
+	- SLOW
+		- spots that could be sped up by reusing objects (no NEW), or caching?
+		- 
+
+
+	- 2D-3D neighbor filtering logic may need to be altered for groups:
+		- % in 2D or 3D area may be low (not accounted for in THIS pair)
+		- numbers should only be based on shared points & not global points
+		- eg: if only 10% of 2D points in area are THIS pair matches, should not expect more than 10% in 3D points in volume
+
+
+
+- BP find example factor graph (markov field) to check algorithm against
+
 
 
 
@@ -407,13 +522,9 @@ x increase curvature limit
 
 
 
+	- factor graphs & inference algorithm - bayesian network -> factor graph
+	- max-product walkthru
 
-- initial P - nonlinear flips a bunch of points to behind
-	- A) is the linear step right or wrong?
-		- print out overhead view & locations of points & views
-	- B) is nonlinear step right or wrong
-		- " ^ "
-	- 
 
 
 - sparse step needs views in root of file (not under putative)

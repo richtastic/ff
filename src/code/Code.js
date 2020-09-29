@@ -9607,6 +9607,32 @@ Code.sphereDistanceToPoint = function(center,radius, point){
 	}
 	return distance-radius;
 }
+Code.minCircleUnionPoint = function(center,radius, point){
+	var d = V2D.sub(point,center);
+	var len = d.length();
+	if(len>radius){ // center = (p + c - d.norm().scale(radius) )/2
+		d.scale(-radius/len);
+		d.add(center);
+		d.add(point);
+		d.scale(0.5);
+		center = d;
+		radius = V2D.distance(center,point);
+	}else{
+		center = center.copy();
+	}
+	return {"center":center, "radius":radius};
+}
+Code.minCircleUnionPoints = function(center,radius, points){
+	var result = null;
+	for(var i=0; i<points.length; ++i){
+		var point = points[i];
+		var result = Code.minCircleUnionPoint(center,radius, point);
+		center = result["center"];
+		radius = result["radius"];
+	}
+	return {"center":center, "radius":radius};
+}
+
 Code.minCircle2D = function(points){ // smallest circle that contains all points
 	var largestD = -1;
 	var len = points.length;

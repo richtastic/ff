@@ -294,8 +294,7 @@ FactorGraph.prototype.loopyBP = function(maxIterations){ // loopy sumProduct
 	// iterate to convergence
 	var operation = FactorGraph._operationSumProduct;
 	this._iterate(nodes, operation, maxIterations);
-	throw "loopyBP";
-
+	// throw "loopyBP";
 	var result = {"iterations":0};
 	return result;
 }

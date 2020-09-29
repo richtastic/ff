@@ -6697,6 +6697,18 @@ console.log("FIRST TIME - OUT");
 		viewA.absoluteTransform(new Matrix(4,4).identity());
 		viewB.absoluteTransform(R);
 		world.relativeFFromSamples();
+
+
+
+	// console.log("yo start");
+	// world.updateAbsoluteLocationsPoint3D();
+	// world.initNullP3DPatches();
+	// console.log(transAB);
+	// var str = world.toYAMLString();
+	// console.log(str);
+	// console.log("yo end");
+	// throw "nonlinear no"
+
 		// initial P3D locations from Rs
 		world.updateAbsoluteLocationsPoint3D();
 	}else{
@@ -8227,10 +8239,8 @@ var timeStart = Code.getTimeMilliseconds();
 	var limitsR = [];
 	var limitsF = [];
 
-
 	world.setResolutionProcessingModeFromCountP3D([]); // currently 0
 	world.shouldValidateMatchRange(true);
-
 	
 	for(var i=0; i<transforms.length; ++i){
 		var transform = transforms[i];
@@ -8251,14 +8261,14 @@ var timeStart = Code.getTimeMilliseconds();
 			// var image = view.image();
 			var imageScale = view.imageScales();
 				var hyp = Math.sqrt(Math.pow(imageScale.width(),2) + Math.pow(imageScale.height(),2));
-				imageHypotenuse = Math.min(hyp);
+				// imageHypotenuse = Math.min(hyp);
+				imageHypotenuse = hyp;
 			///var gridSize = view.sizeFromPercent(viewGridSizePercent);
 			var gridSize = view.cellSize();
 			console.log("gridSize: "+gridSize);
 			sizes.push(gridSize*cellFeatureScale);
 			imageScales.push(imageScale);
 			Ks.push(K);
-
 		}
 		// imageHypotenuse /= views.length;
 		var errorR = errorPercentage*imageHypotenuse;
@@ -10240,7 +10250,9 @@ var totalMatchListCount = 0;
 	if(ratio>0.5){
 		var str = world.toYAMLString();
 		console.log(str);
+		world.showForwardBackwardPair();
 		throw "remove too many negative";
+		console.log("remove too many negative");
 	}
 	var matches = dropList;
 	for(var j=0; j<matches.length; ++j){
@@ -11686,6 +11698,7 @@ Stereopsis.World.prototype.sampleErrorsDebug = function(){
 	}
 
 }
+GOLBAL_WORLD = null;
 Stereopsis.World.prototype.estimate3DErrors = function(skipCalc, shouldLog){ // triangulate locations for matches (P3D) & get errors from this
 	// TRANSFORMS
 	var transforms = this.toTransformArray();
@@ -11995,7 +12008,6 @@ Stereopsis.checkPointsLocation = function(extrinsicA, extrinsicB, KaInv,KbInv, p
 	console.log("checkPointsLocation: FRONT: "+inFront+" | BACK: "+inBack+" / "+points3D.length+" = "+(inFront/points3D.length)+" & "+(inBack/points3D.length));
 	console.log("CAM DISTANCE: "+distanceAB+" POINT DISTANCE: "+averageDistance+" = DISPARITY: "+(averageDistance/distanceAB));
 }
-
 Stereopsis.ransacTransformF = function(transform, maximumSamples, skipP, onlyBest){ // F & P
 	skipP = skipP!==undefined && skipP!==null ? skipP : false;
 	maximumSamples = maximumSamples!==undefined && maximumSamples!==null ? maximumSamples : 1000; // 200~1000
@@ -12055,6 +12067,10 @@ console.log("CALCULATE F -> P");
 	if(points3D.length>minimumTransformMatchCountF){
 		// get initial F
 		F = R3D.fundamentalFromUnnormalized(pointsA,pointsB);
+
+// TODO: SHOULD TRY RANSAC ?
+
+
 		var bestPointsA = pointsA;
 		var bestPointsB = pointsB;
 		if(!skipP && bestPointsA.length>minimumTransformMatchCountR){
@@ -12083,6 +12099,19 @@ console.log("CALCULATE F -> P");
 					Stereopsis.checkPointsLocation(A, B, KaInv,KbInv, bestPointsA,bestPointsB);
 
 
+
+
+
+R3D.showRelativeCameras(A,B, KaInv,KbInv, bestPointsA,bestPointsB, 0);
+
+
+// if(GOLBAL_WORLD){
+// var world = GOLBAL_WORLD;
+// var str = world.toYAMLString();
+// console.log(str);
+// console.log("yo");
+// }
+
 				// if(false && P){
 				if(P){
 					console.log("nonlinear P");
@@ -12106,7 +12135,7 @@ console.log("CALCULATE F -> P");
 
 
 
-
+R3D.showRelativeCameras(A,B, KaInv,KbInv, bestPointsA,bestPointsB, 1000);
 
 				}
 			}
