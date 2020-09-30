@@ -11804,7 +11804,7 @@ console.log(cameras);
 				var str = world.toYAMLString();
 				console.log(str);
 
-// throw "here, after solvePair"
+throw "here, after solvePair"
 			}
 
 

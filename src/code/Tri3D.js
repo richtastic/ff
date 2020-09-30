@@ -193,34 +193,65 @@ Tri3D.extremaFromArray = function(triangles){
 	var size = V3D.sub(max,min);
 	return {"min":min, "max":max, "size":size};
 }
-Tri3D.generateTetrahedraSphere = function(radius, subdivisions, offset, invertNormals){
-// tet: 0=0, 1=4,  2=?
-// dub: 0=0, 1=6,  2=?
-// oct: 0=0, 1=8,  2=32, 3=72, 4=128, 5=200, 6=288, 7=392, 8=512, 9=648, 10=800, 11=968, 12=1152
-// squ: 0=0, 1=12, 2=?
-// ico: 0=0. 1=20, 2=?
-// tet:  4*(n^2) : 
-// dub:  6*(n^2) :
-// oct:  8*(n^2) :
-// cub: 12*(n^2) :
-// ico: 20*(n^2) :
+Tri3D.generateTetrahedraSpherePoints = function(radius, subdivisions, offset){
+	/*
+	var sides = Tri3D.generateTetrahedraSphereSides();
 
-// given a side count, pick a polyhedron with closest number
-// c = desired number
-// m = multiplier
-// n = single side count
-// n^0.5 = divisions
-// c/m = n
-// pick method resulting in closest count (under/over?)
+	var points = [];
 
+	for(var i=0; i<sides.length; ++i){
+		var side = sides[i];
+		var a = side.A();
+		var b = side.B();
+		var c = side.C();
+		var ab = V3D.sub(b,a);
+		var bc = V3D.sub(c,b);
+		var u = bc.copy().scale(1.0/(subdivisions+1));
+		// for each row (subdivision)
+		for(var r=0; r<subdivisions; ++r){
+			var stripCount = r + 1;
+			var last = stripCount-1;
+			var o = ab.copy().scale((r+0)/stripCount).add(a);
+			var p = ab.copy().scale((r+1)/stripCount).add(a);
+			// for each strip
+			for(var s=0; s<stripCount; ++s){
+				// first:
+				var ta = u.copy().scale(s+0).add(o);
+				var tb = u.copy().scale(s+0).add(p);
+				var tc = u.copy().scale(s+1).add(p);
+				var t = new Tri3D(ta,tb,tc);
+				triangles.push(t);
+				if(s!=last){ // single tri
+					ta = ta.copy();
+					tb = tc.copy();
+					tc = u.copy().scale(s+1).add(o);
+					var t = new Tri3D(ta,tb,tc);
+					triangles.push(t);
+				}
+			}
+		}
+	}
+	// project to circle center
+	for(var i=0; i<points.length; ++i){
+		var point = points[i];
+		point.length(radius);
+		if(offset){
+			point.add(offset);
+		}
+	}
+	*/
 
-	radius = radius!==undefined ? radius : 1;
-	subdivisions = subdivisions!==undefined ? subdivisions : 0;
-	offset = offset!==undefined ? offset : V3D.ZERO;
+	var tris = Tri3D.generateTetrahedraSphere(radius, subdivisions, offset, false);
+console.log(tris);
+		tris = tris["triangles"]
+	var unique = Tri3D.arrayToUniquePointList(tris);
+console.log(unique);
+		var points = unique["points"];
+	return {"points":points};
+}
 
-
-
-	var mode = 2; // default = 2 : octahedron
+Tri3D.generateTetrahedraSphereSides = function(mode){
+	mode = Code.valueOrDefault(mode,2); // default = 2 : octahedron
 	var sides = null;
 	if(mode==0){ // regular tetrahera [3]
 		// create tetrahedra - side length = 1
@@ -298,6 +329,34 @@ Tri3D.generateTetrahedraSphere = function(radius, subdivisions, offset, invertNo
 	} // other
 
 	// console.log(sides);
+	return sides;
+}
+Tri3D.generateTetrahedraSphere = function(radius, subdivisions, offset, invertNormals){
+// tet: 0=0, 1=4,  2=?
+// dub: 0=0, 1=6,  2=?
+// oct: 0=0, 1=8,  2=32, 3=72, 4=128, 5=200, 6=288, 7=392, 8=512, 9=648, 10=800, 11=968, 12=1152
+// squ: 0=0, 1=12, 2=?
+// ico: 0=0. 1=20, 2=?
+// tet:  4*(n^2) : 
+// dub:  6*(n^2) :
+// oct:  8*(n^2) :
+// cub: 12*(n^2) :
+// ico: 20*(n^2) :
+
+// given a side count, pick a polyhedron with closest number
+// c = desired number
+// m = multiplier
+// n = single side count
+// n^0.5 = divisions
+// c/m = n
+// pick method resulting in closest count (under/over?)
+
+
+	radius = radius!==undefined ? radius : 1;
+	subdivisions = subdivisions!==undefined ? subdivisions : 0;
+	offset = offset!==undefined ? offset : V3D.ZERO;
+
+	var sides = Tri3D.generateTetrahedraSphereSides();
 
 	if(invertNormals){
 		console.log("invertNormals");

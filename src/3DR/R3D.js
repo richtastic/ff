@@ -830,10 +830,13 @@ R3D._transformCameraExtrinsicNonlinearGD = function(args, x, isUpdate){
 		// 
 		if(negativeIsBad && (v3DA.z<=0 || v3DB.z<=0)){ // behind camera
 			// console.log("behind");
-			// error = error*error;
-			error *= 2;
+			// var distanceBehind = v3DA.z*v3DA.z + v3DB.z*v3DB.z;
+			error = error*error;
+			// error *= 2;
 			// error *= 10;
 			// error += 1E9;
+			// error = error*2 + distanceBehind;
+			// error = error*2;
 		}
 		totalError += error;
 	}
@@ -9939,15 +9942,14 @@ R3D.showRelativeCameras = function(A,B, KaInv,KbInv, points2DA,points2DB, offset
 	upA.sub(centerA);
 	upB.sub(centerB);
 
-
-console.log(centerA,upA,normalA);
-console.log(centerB,upB,normalB);
+// console.log(centerA,upA,normalA);
+// console.log(centerB,upB,normalB);
 	// var centerA = A.multV3DtoV3D(new V3D(0,0,0));
 	// normal = average of 
 	var planeNormal = Code.averageAngleVector3D([upA,upB]);
 	var planePoint = V3D.average([centerA,centerB]);
 
-	console.log(planeNormal,planePoint);
+	// console.log(planeNormal,planePoint);
 	
 	var points3D = [];
 	for(var i=0; i<points2DA.length; ++i){
@@ -9958,11 +9960,11 @@ console.log(centerB,upB,normalB);
 		points3D.push(p3D);
 	}
 	var points2D = Code.projectPointsTo2DPlane(points3D, planePoint, planeNormal);
-	console.log(points2D);
+	// console.log(points2D);
 
 	// find 2D sigma distance
 	var com2D = V2D.average(points2D);
-	console.log(com2D);
+	// console.log(com2D);
 	var distances = [];
 	for(var i=0; i<points2D.length; ++i){
 		var p2D = points2D[i];
@@ -9970,13 +9972,7 @@ console.log(centerB,upB,normalB);
 		distances.push(d);
 	}
 	var sigma2D = Code.stdDev(distances,0);
-	console.log(com2D+"",sigma2D);
-
-
-
-console.log("CAMA");
-console.log(V2D.add(centerA,normalA));
-console.log(centerA,normalA,upA);
+	console.log("SIZING: "+com2D+"",sigma2D);
 
 	// find camera locations
 	var camA2D = Code.projectPointsTo2DPlane([centerA], planePoint, planeNormal);
@@ -9988,16 +9984,16 @@ console.log(centerA,normalA,upA);
 	var nrmB2D = Code.projectPointsTo2DPlane([V3D.add(centerB,normalB)], planePoint, planeNormal);
 		nrmB2D = nrmB2D[0];
 
-console.log(nrmA2D,nrmB2D)
-console.log(nrmA2D,nrmB2D)
+// console.log(nrmA2D,nrmB2D)
+// console.log(nrmA2D,nrmB2D)
 
 // throw "?";
 
 	var center = com2D;
 	var radius = sigma2D;
-	console.log(camA2D+" - "+camB2D);
+	// console.log(camA2D+" - "+camB2D);
 	var circle = Code.minCircleUnionPoints(center,radius, [camA2D, camB2D]);
-	console.log(circle);
+	// console.log(circle);
 	radius = circle["radius"];
 	center = circle["center"];
 
@@ -10006,6 +10002,7 @@ console.log(nrmA2D,nrmB2D)
 	transform.identity();
 	transform.translate(-center.x,-center.y);
 	transform.scale(dimensionSize/radius);
+transform.scale(0.5);
 	transform.translate(dimensionSize*0.5,dimensionSize*0.5);
 	transform.translate(offsetX,0.0);
 
@@ -10021,7 +10018,7 @@ console.log(nrmA2D,nrmB2D)
 		// d.graphics().setLine(1.0, 0xCC990099);
 		d.graphics().setFill(0xCC990099);
 		d.graphics().beginPath();
-		d.graphics().drawCircle(p.x,p.y, 2.0);
+		d.graphics().drawCircle(p.x,p.y, 5.0);
 		// if(drawAngle){
 		// 	d.graphics().moveTo(p.x,p.y);
 		// 	d.graphics().lineTo(p.x + size*0.5*Math.cos(angle),p.y + size*0.5*Math.sin(angle));
@@ -10038,18 +10035,18 @@ console.log(nrmA2D,nrmB2D)
 	var cams = [ [camA2D,nrmA2D], [camB2D,nrmB2D] ];
 	for(var i=0; i<cams.length; ++i){
 		var cam = cams[i];
-console.log(cam);
+// console.log(cam);
 		var p = cam[0];
 			p = transform.multV2DtoV2D(p);
 		var f = cam[1];
 			f = transform.multV2DtoV2D(f);
-console.log(" 1 "+f);
+// console.log(" 1 "+f);
 		f.sub(p);
-console.log(" 2 "+f);
+// console.log(" 2 "+f);
 		f.norm();
-console.log(" 3 "+f);
+// console.log(" 3 "+f);
 		f.scale(cameraSize);
-console.log(p+" | "+f);
+// console.log(p+" | "+f);
 
 		var d = new DO();
 		d.graphics().clear();
@@ -10070,14 +10067,14 @@ console.log(p+" | "+f);
 		d.graphics().strokeLine();
 		GLOBALSTAGE.addChild(d);
 
-
 		var d = new DOText(""+i, 16, DOText.FONT_ARIAL, 0xFF00CC00, DOText.ALIGN_CENTER);
 		d.matrix().translate(p.x - 0,p.y - 14);
+		GLOBALSTAGE.addChild(d);
 	}
 
 	
 
-	throw "R3D.showRelativeCameras";
+	// throw "R3D.showRelativeCameras";
 }
 R3D.showFeaturesForImage = function(imageMatrix, features, offX){
 	offX = Code.valueOrDefault(offX,0.0);

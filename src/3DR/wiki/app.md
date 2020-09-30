@@ -389,6 +389,39 @@ R3D.showRelativeCameras
 
 
 
+- initial estimate has lots of points behind camera
+- point matches seem fairly good
+	- some incorrect matches
+	- F sigma: ~ 5
+	=> linear P is putting cameras on wrong sides
+-
+	=> check P nonlinear steps
+	=> RANSAC
+
+
+
+R3D.transformCameraExtrinsicNonlinear
+transformCameraExtrinsicNonlinearGD
+
+
+
+
+
+
+
+
+ALGORITHM IDEAS:
+
+	
+A) exhaustive sphere
+	- keep cameras pointed in same direction
+	- pick 32-100 points on unit sphere:
+		- for each location calculate score
+			- score = (only points in front): reprojection error / point count
+	- pick location with best score
+	- do nonlinear step
+
+
 
 
 - initial P - nonlinear flips a bunch of points to behind

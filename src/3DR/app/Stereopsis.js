@@ -12007,6 +12007,12 @@ Stereopsis.checkPointsLocation = function(extrinsicA, extrinsicB, KaInv,KbInv, p
 
 	console.log("checkPointsLocation: FRONT: "+inFront+" | BACK: "+inBack+" / "+points3D.length+" = "+(inFront/points3D.length)+" & "+(inBack/points3D.length));
 	console.log("CAM DISTANCE: "+distanceAB+" POINT DISTANCE: "+averageDistance+" = DISPARITY: "+(averageDistance/distanceAB));
+
+	var percentInFront = 0;
+	if(points3D.length>0){
+		percentInFront = (inFront/points3D.length);
+	}
+	return percentInFront;
 }
 Stereopsis.ransacTransformF = function(transform, maximumSamples, skipP, onlyBest){ // F & P
 	skipP = skipP!==undefined && skipP!==null ? skipP : false;
@@ -12068,9 +12074,6 @@ console.log("CALCULATE F -> P");
 		// get initial F
 		F = R3D.fundamentalFromUnnormalized(pointsA,pointsB);
 
-// TODO: SHOULD TRY RANSAC ?
-
-
 		var bestPointsA = pointsA;
 		var bestPointsB = pointsB;
 		if(!skipP && bestPointsA.length>minimumTransformMatchCountR){
@@ -12082,6 +12085,45 @@ console.log("CALCULATE F -> P");
 				var force = true;
 				console.log("transformFromFundamental");
 				P = R3D.transformFromFundamental(bestPointsA, bestPointsB, F, Ka,KaInv, Kb,KbInv, null, force, true);
+					
+				var A = new Matrix(4,4).identity();
+				var B = P;
+
+
+var centerB = B.multV3DtoV3D(new V3D(0,0,0));
+var normalB = B.multV3DtoV3D(new V3D(0,0,1));
+	normalB.sub(centerB);
+	var angle = V3D.angle(V3D.DIRZ, normalB);
+console.log("P ANGLE: "+Code.degrees(angle));
+
+
+				console.log("LINEAR P: ");
+				var percentInFront = Stereopsis.checkPointsLocation(A, B, KaInv,KbInv, bestPointsA,bestPointsB);
+				console.log("%1: "+percentInFront);
+				// var minPercentInFront = 0.5;
+				var minPercentInFront = 0.75;
+				if(percentInFront<minPercentInFront){ // try F again
+					console.log("try F again 0 ")
+					// var errorPosition = 2.0;
+					var errorPosition = 1.0;
+					// var errorPosition = 0.50; // only top %
+					var info = R3D.fundamentalRANSACFromPoints(bestPointsA,bestPointsB, errorPosition, null, 0.66, 0.999); // 0.99, 0.999
+					// 0.50 ok, 0.75 slow, 0.90 slow, 0.99 too slow
+					console.log("RANSAC RESULTS:");
+					console.log(info);
+					F = info["F"];
+					var m = info["matches"]
+					bestPointsA = m[0];
+					bestPointsB = m[1];
+					P = R3D.transformFromFundamental(bestPointsA, bestPointsB, F, Ka,KaInv, Kb,KbInv, null, force, true);
+					// var info = R3D.FRansac;
+					// TODO: SHOULD TRY RANSAC ?
+					A = new Matrix(4,4).identity();
+					B = P;
+					console.log("LINEAR P (2): ");
+					var percentInFront = Stereopsis.checkPointsLocation(A, B, KaInv,KbInv, bestPointsA,bestPointsB);
+					console.log("%2: "+percentInFront);
+				}
 
 
 
@@ -12093,10 +12135,6 @@ console.log("CALCULATE F -> P");
 				}
 				// incorrect points may distort this ?
 				// if(false && P){
-					var A = new Matrix(4,4).identity();
-					var B = P;
-					console.log("LINEAR P: ");
-					Stereopsis.checkPointsLocation(A, B, KaInv,KbInv, bestPointsA,bestPointsB);
 
 
 
@@ -12121,6 +12159,106 @@ R3D.showRelativeCameras(A,B, KaInv,KbInv, bestPointsA,bestPointsB, 0);
 					// UPDATE? :
 
 
+var centerB = B.multV3DtoV3D(new V3D(0,0,0));
+var normalB = B.multV3DtoV3D(new V3D(0,0,1));
+	normalB.sub(centerB);
+	var angle = V3D.angle(V3D.DIRZ, normalB);
+console.log("P ANGLE: "+Code.degrees(angle));
+
+R3D.showRelativeCameras(A,B, KaInv,KbInv, bestPointsA,bestPointsB, 1000);
+
+
+// var sphere = Tri3D.generateTetrahedraSphere(radius, subdivisions, offset, invertNormals);
+
+var radius = 1.0;
+var subdivisions = 2; // 32-100 : 2 = 32 |  3 = 64 |  4 = ? | 5 = 152 | 6 = ?
+var offset = new V3D(0,0,0);
+var sphere = Tri3D.generateTetrahedraSpherePoints(radius, subdivisions, offset);
+var points = sphere["points"];
+console.log(points);
+var A = new Matrix(4,4).identity();
+var B = new Matrix(4,4).identity();
+var scores = [];
+var Bs = [];
+var counts = [];
+var bestScore = null;
+var bestIndex = null;
+var bestPointListA = null;
+for(var i=0; i<points.length; ++i){
+	var point = points[i];
+	// new
+	B = new Matrix(4,4).identity();
+	B = Matrix.transform3DTranslate(B, point);
+	// console.log(B+"");
+	// var percentInFront = Stereopsis.checkPointsLocation(A, B, KaInv,KbInv, bestPointsA,bestPointsB);
+	// scores.push(percentInFront);
+	var points3D = [];
+	// var point3D = R3D.triangulatePointDLTList(points2D, extrinsics, invKs);
+	var totalError = 0;
+	var pointListA = [];
+	var pointListB = [];
+	for(var j=0; j<bestPointsA.length; ++j){
+		var pA = bestPointsA[j];
+		var pB = bestPointsB[j];
+		var p3D = R3D.triangulatePointDLT(pA,pB, A,B, KaInv, KbInv);
+		//
+		var v3DA = A.multV3DtoV3D(p3D);
+		var p3DA = Ka.multV3DtoV3D(v3DA);
+		var v3DB = B.multV3DtoV3D(p3D);
+		var p3DB = Kb.multV3DtoV3D(v3DB);
+		// 
+		p3DA.homo();
+		p3DB.homo();
+		var distanceSquareA = V2D.distanceSquare(pA, p3DA);
+		var distanceSquareB = V2D.distanceSquare(pB, p3DB);
+		var error = distanceSquareA + distanceSquareB;
+		// 
+		if(v3DA.z<=0 || v3DB.z<=0){
+			// console.log("behind");
+			continue;
+		}
+		pointListA.push(pA);
+		pointListB.push(pB);
+		points3D.push(p3D);
+		totalError += error;
+	}
+	if(points3D.length>8){
+		var score = totalError/points3D.length;
+		// var error = R3D.reprojectionErrorList(points3D, pointsA, pointsB, M1,M2, Ka,Kb);
+		// var reprojectionError = R3D.reprojectionError(estimated3D, pA,pB, extrinsicA, extrinsicB, Ka, Kb);
+		scores.push(percentInFront);
+		Bs.push(B);
+		counts.push(points3D.length);
+		if(bestScore===null || score<bestScore){
+			bestScore = score;
+			bestIndex = Bs.length-1;
+			bestPointListA = pointListA;
+			bestPointListB = pointListB;
+		}
+	}
+}
+console.log(Bs);
+console.log(scores);
+console.log(counts);
+console.log(bestScore);
+console.log(bestIndex);
+console.log(counts[bestIndex]);
+
+P = Bs[bestIndex];
+console.log(P+"");
+
+
+// grab only NEW BEST POINTS
+bestPointsA = bestPointListA;
+bestPointsB = bestPointListB;
+console.log(bestPointsA);
+console.log(bestPointsB);
+
+// F = R3D.fundamentalFromUnnormalized(bestPointsA,bestPointsB);
+// P = R3D.transformFromFundamental(bestPointsA, bestPointsB, F, Ka,KaInv, Kb,KbInv, null, force, true);
+
+
+
 					var result = R3D.transformCameraExtrinsicNonlinear(P, bestPointsA, bestPointsB, Ka,KaInv, Kb,KbInv, null, true);
 
 					// R3D.transformCameraExtrinsicNonlinear = function(P, pointsA2D,pointsB2D, Ka,KaInv, Kb,KbInv, maxIterations, negativeIsBad){
@@ -12131,16 +12269,23 @@ R3D.showRelativeCameras(A,B, KaInv,KbInv, bestPointsA,bestPointsB, 0);
 					console.log("NONLINEAR P: ");
 					var A = new Matrix(4,4).identity();
 					var B = P;
-					Stereopsis.checkPointsLocation(A, B, KaInv,KbInv, bestPointsA,bestPointsB);
-
+					var percentInFront = Stereopsis.checkPointsLocation(A, B, KaInv,KbInv, bestPointsA,bestPointsB);
+					console.log("%: "+percentInFront);
 
 
 R3D.showRelativeCameras(A,B, KaInv,KbInv, bestPointsA,bestPointsB, 1000);
 
+
+// R3D.showRelativeCameras(A,B, KaInv,KbInv, bestPointsA,bestPointsB, 1000);
+// throw "R3D.showRelativeCameras END";
+// world.showForwardBackwardPair();
 				}
 			}
 		}
 	}
+
+
+
 	/*
 	// does this help w/ camera minimizing squared reprojection errors?
 	// var ransacP = true;
