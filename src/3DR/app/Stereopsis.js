@@ -6682,7 +6682,10 @@ Stereopsis.World.prototype.iteration = function(iterationIndex, maxIterations, d
 		return;
 	}
 
-	if(isFirst){ // SET INITIAL VIEW CAMERA EXTRINSICS
+	var highEnoughError = transAB.rMean() + transAB.rSigma() > 2.0;
+
+	if(isFirst || highEnoughError){ // SET INITIAL VIEW CAMERA EXTRINSICS
+console.log(highEnoughError);
 console.log("FIRST TIME - CHECK");
 		world.estimate3DErrors(false); // find initial F, P, estimate all errors from this
 		// var transform0 = transforms[0];
@@ -12140,7 +12143,7 @@ console.log("P ANGLE: "+Code.degrees(angle));
 
 
 
-R3D.showRelativeCameras(A,B, KaInv,KbInv, bestPointsA,bestPointsB, 0);
+// R3D.showRelativeCameras(A,B, KaInv,KbInv, bestPointsA,bestPointsB, 0);
 
 
 // if(GOLBAL_WORLD){
@@ -12165,9 +12168,9 @@ var normalB = B.multV3DtoV3D(new V3D(0,0,1));
 	var angle = V3D.angle(V3D.DIRZ, normalB);
 console.log("P ANGLE: "+Code.degrees(angle));
 
-R3D.showRelativeCameras(A,B, KaInv,KbInv, bestPointsA,bestPointsB, 1000);
+// R3D.showRelativeCameras(A,B, KaInv,KbInv, bestPointsA,bestPointsB, 1000);
 
-
+/*
 // var sphere = Tri3D.generateTetrahedraSphere(radius, subdivisions, offset, invertNormals);
 
 var radius = 1.0;
@@ -12257,6 +12260,7 @@ console.log(bestPointsB);
 // F = R3D.fundamentalFromUnnormalized(bestPointsA,bestPointsB);
 // P = R3D.transformFromFundamental(bestPointsA, bestPointsB, F, Ka,KaInv, Kb,KbInv, null, force, true);
 
+*/
 
 
 					var result = R3D.transformCameraExtrinsicNonlinear(P, bestPointsA, bestPointsB, Ka,KaInv, Kb,KbInv, null, true);
@@ -12273,7 +12277,7 @@ console.log(bestPointsB);
 					console.log("%: "+percentInFront);
 
 
-R3D.showRelativeCameras(A,B, KaInv,KbInv, bestPointsA,bestPointsB, 1000);
+// R3D.showRelativeCameras(A,B, KaInv,KbInv, bestPointsA,bestPointsB, 1000);
 
 
 // R3D.showRelativeCameras(A,B, KaInv,KbInv, bestPointsA,bestPointsB, 1000);

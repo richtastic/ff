@@ -3427,8 +3427,9 @@ ImageMat.extractRectWithProjection = function(source,sW,sH, wid,hei, projection,
 				fr.x /= fr.z; fr.y /= fr.z;
 				destination[index] = ImageMat.getPointInterpolateCubic(source, sW,sH, fr.x,fr.y);
 				// destination[wJ+i] = ImageMat.getPointInterpolateCubic(source, sW,sH, fr.x,fr.y);
-				// destination[wid*j+i] = ImageMat.getPointInterpolateLinear(source, sW,sH, fr.x,fr.y);
-				//destination[wid*j+i] = ImageMat.getPointInterpolateNearest(source, sW,sH, fr.x,fr.y);
+				 // destination[wid*j+i] = ImageMat.getPointInterpolateLinear(source, sW,sH, fr.x,fr.y);
+				 // destination[index] = ImageMat.getPointInterpolateLinear(source, sW,sH, fr.x,fr.y);
+				//destination[index] = ImageMat.getPointInterpolateNearest(source, sW,sH, fr.x,fr.y);
 				++index;
 			}
 		}
@@ -5337,6 +5338,96 @@ ImageMatScaled.extractRect = function(imageScales, resultCenter, resultScale, re
 	var actScale = info["actualScale"];
 	var needle = ImageMat.extractRectFromFloatImage(resultCenter.x*actScale,resultCenter.y*actScale,1.0/effScale,null,resultWidth,resultWidth, matrix);
 	return needle;
+}
+
+
+
+ImageMatScaled.prototype.extractRectFast = function(reuseImage, scale, matrix, isLinear){ // linear or cubic
+	// scale < 1.0 = zoom in (smaller section of image) [] => [   ]
+	// scale > 1.0 = zoom out (larger section of image) [   ] => []
+	// scale should already incorporate output-size differences
+	// matrix should not have any average scale on it
+	// matrix is INVERSE transform image destination TO image source
+	var imageScales = this;
+	var info = imageScales.infoForScale(scale);
+	// var info = imageScales.infoForScale(1.0);
+	var imageMatrix = info["image"];
+	var imageGray = imageMatrix.gry();
+	var imageWidth = imageMatrix.width();
+	var imageHeight = imageMatrix.height();
+	var effScale = info["effectiveScale"];
+	var actScale = info["actualScale"];
+// console.log("effScale: "+effScale);
+// console.log("actScale: "+actScale);
+	var red = imageMatrix.red();
+	var grn = imageMatrix.grn();
+	var blu = imageMatrix.blu();
+	// var wm1 = wid-1;
+	// var hm1 = hei-1;
+	var wm1 = imageWidth-1;
+	var hm1 = imageHeight-1;
+	// use matrix
+	var wid = reuseImage.width();
+	var hei = reuseImage.height();
+	var r = reuseImage.red();
+	var g = reuseImage.grn();
+	var b = reuseImage.blu();
+	var p = new V2D();
+	// var wJ = 0;
+	// console.log(wid,hei);
+	var listTo = [r,g,b];
+	var listFr = [red,grn,blu];
+	for(var y=0; y<hei; ++y){
+		for(var x=0; x<wid; ++x){
+			p.set(x,y);
+			matrix.multV2DtoV2D(p,p);
+			p.scale(actScale);
+			// p.scale(1.0/actScale);
+			// p.scale(effScale);
+			// .
+			// p.x = Math.max(0, Math.min( wm1, Math.round(p.x,1) ));
+			// p.y = Math.max(0, Math.min( hm1, Math.round(p.y,1) ));
+			var index = y*wid + x;
+
+			// closest
+			// var indexImage = p.y*imageWidth + p.x;
+			// r[index] = red[indexImage];
+			// g[index] = grn[indexImage];
+			// b[index] = blu[indexImage];
+			
+			// linear
+			Code.parallelArrayInterpolateLinear(listTo,listFr, index, p.x,p.y, imageWidth,imageHeight);
+			// 
+			
+			// cubic
+			// 
+		}
+	}
+	// .
+
+
+	/*
+destination = new Array(wid*hei);
+var index = 0;
+for(j=0;j<hei;++j){
+	// var wJ = wid*j;
+	for(i=0;i<wid;++i){
+		fr.x = i; fr.y = j;
+		projection.multV2DtoV3D(fr,fr);
+		fr.x /= fr.z; fr.y /= fr.z;
+		destination[index] = ImageMat.getPointInterpolateCubic(source, sW,sH, fr.x,fr.y);
+		// destination[wJ+i] = ImageMat.getPointInterpolateCubic(source, sW,sH, fr.x,fr.y);
+		 // destination[wid*j+i] = ImageMat.getPointInterpolateLinear(source, sW,sH, fr.x,fr.y);
+		 // destination[index] = ImageMat.getPointInterpolateLinear(source, sW,sH, fr.x,fr.y);
+		//destination[index] = ImageMat.getPointInterpolateNearest(source, sW,sH, fr.x,fr.y);
+		++index;
+	}
+}
+	*/
+
+
+	// throw "todo";
+	return reuseImage;
 }
 
 

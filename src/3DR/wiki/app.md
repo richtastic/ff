@@ -385,6 +385,158 @@ MISSING:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
+- 3-4 times as fast: 220/60
+
+- 10 times as fast: 2060/166
+
+
+- test some speedups
+	- linear interpolate vs cubic interpolate image
+		- not big difference: 240/260
+	- imagescales w/o doing padding & gaussian process
+
+	- reuse of variables more
+	- is homography needed ?
+	....
+
+
+
+ImageMatScaled.prototype.extractRect
+
+ImageMat.extractRectFromFloatImage = function(x,y,scale,sigma, w,h, imgSource,imgWid,imgHei, matrix){
+
+
+extractRectWithProjection
+
+ImageMat.extractRectWithProjection = function(source,sW,sH, wid,hei, projection, interpolationType){ // projection is 3x3 Matrix
+
+
+
+
+
+- some near-pairs with initial Rs are very bad
+	-> are the Rs inaccurate?
+		-> EG: 1PYE10VZ-7PIQPNWP
+
+
+
+
+
+ADD SOME DENSE PAIRS TO RUN:
+
+	- 
+		A: "3SRZ7XFK"
+		B: "F1OCOOHP"
+		id: "3SRZ7XFK-F1OCOOHP"
+	- 
+		A: "2183ZM7R"
+		B: "LSHY05RW"
+		id: "2183ZM7R-LSHY05RW"
+	-
+		A: "18RP38IB"
+		B: "2183ZM7R"
+		id: "18RP38IB-2183ZM7R"
+	-
+		A: "LSHY05RW"
+		B: "NK8K8XUH"
+		id: "LSHY05RW-NK8K8XUH"
+	-
+		A: "7PIQPNWP"
+		B: "9340FKF8"
+		id: "7PIQPNWP-9340FKF8"
+	-
+		A: "1PYE10VZ"
+		B: "7PIQPNWP"
+		id: "1PYE10VZ-7PIQPNWP"
+	-
+		A: "9340FKF8"
+		B: "EDTZTWWR"
+		id: "9340FKF8-EDTZTWWR"
+	-
+		A: "F58HBCHH"
+		B: "NTL6RPCD"
+		id: "F58HBCHH-NTL6RPCD"
+	-
+		A: "FEPI5AND"
+		B: "NTL6RPCD"
+		id: "FEPI5AND-NTL6RPCD"
+	-
+		A: "4EAACP4W"
+		B: "F58HBCHH"
+		id: "4EAACP4W-F58HBCHH"
+	-
+		A: "EON0Z5A0"
+		B: "GO62LD69"
+		id: "EON0Z5A0-GO62LD69"
+	-
+		A: "3SRZ7XFK"
+		B: "8XHJ7BN6"
+		id: "3SRZ7XFK-8XHJ7BN6"
+	-
+		A: "2FOQVM53"
+		B: "2ODOD34I"
+		id: "2FOQVM53-2ODOD34I"
+
+
+
+
+
+
+- dense putative pairs should use geometry in addition to graph connections to decide which to use
+	- connected by eg two edges may be OK, but still a huge rotation
+	- ...
+
+
+
+- in general: need more coverage across neighbors in order for triples to be any use
+
+- try score with histogram & words:
+	histogram = difference (smaller better)
+	words = similarity (larger better)
+
+	similarity / word count
+
+
+TEST:
+- try nearest +/- 3 neighbors in sequence (mod length)
+
+
+
+
+- could dense use the initial graph to iteritively pick pairs on-the-fly rather than coming up with them all at once
+	- start at some node, continue to connect to more as pairs are made
+	- once some coverage (duplicate paths) are made, can stop making more pairs in area...
+
+
+
+
+	-
+		A: "F58HBCHH"
+		B: "4EAACP4W"
+		id: "4EAACP4W-F58HBCHH"
+		matches: 0
+		relative: 0
+		tracks: 0
+
+
+
+		A: "F58HBCHH"
+		B: "01IOZ488"
+		id: "01IOZ488-F58HBCHH"
+		matches: 0
+		relative: 0
+		tracks: 0
+		metricNeighborsToWorld: null
+
+
+
+
+
+
+
+
+
 R3D.showRelativeCameras
 
 

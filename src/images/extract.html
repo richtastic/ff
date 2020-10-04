@@ -1,0 +1,170 @@
+<html>
+<head>
+<title>Extract</title>
+<script src="../code/FF.js"></script>
+</head>
+<script type="text/javascript">
+function pageLoadedFxn(){
+	var ff = new FF("../code/",ffLoadedFxn);
+}
+function ffLoadedFxn(){
+	(new ScriptLoader("./",[],this,classesLoadedFxn)).load();
+}
+function classesLoadedFxn(){
+	console.log("extract");
+	setupDisplay();
+	loadImagesStart();
+}
+
+var loadImagesStart = function(){
+	var imageLoader = new ImageLoader("../3DR/images/", ["bench_A.png "], this,imageCompleteFxn,null);
+		imageLoader.load();
+}
+var imageCompleteFxn = function(data){
+	console.log(data)
+	var images = data["images"];
+	var image = images[0];
+	var imageFloat = GLOBALSTAGE.getImageAsFloatRGB(image);
+	var imageMatrix = new ImageMat(imageFloat["width"],imageFloat["height"], imageFloat["red"], imageFloat["grn"], imageFloat["blu"]);
+	console.log(imageMatrix);
+
+	var imageScales = new ImageMatScaled(imageMatrix);
+	console.log(imageScales);
+
+	// new + reuse
+	testNewExtract(imageScales);
+
+	// existing
+	testExtractLinear(imageScales);
+}
+var testNewExtract = function(imageScales, show){
+
+// show = true;
+
+	// var subSize = 11;
+	// var imageSize = 21;
+
+	var subSize = 21;
+	var imageSize = 11;
+
+
+	var center = new V2D(64,168);
+	var scale = imageSize/subSize;
+	var half = (subSize-1) * 0.5;
+	// var size = 21;
+	var reuseImage = new ImageMat(subSize,subSize);
+	
+	// var center = new V2D(100,200);
+	
+	
+	var isLinear = true;
+	var matrix = new Matrix2D();
+		matrix.identity();
+		// matrix.translate(-center.x,-center.y);
+		// matrix.scale(0.5);
+		// matrix.scale(1.0);
+		// matrix.scale(2.0);
+		
+		// matrix.translate(center.x,center.y);
+
+		matrix.translate(-half,-half);
+		matrix.scale(scale);
+		// matrix.scale(0.50); // larger
+		// matrix.scale(2.0); // smaller
+		// matrix.scaleX(2.0);
+		// matrix.scaleY(2.0); // smaller
+		matrix.rotate(Code.radians(25.0));
+		matrix.translate(half,half);
+// reverse
+		matrix.translate(center.x,center.y);
+		matrix.translate(-half,-half);
+
+		// matrix.translate(half,half);
+		// matrix.scale(0.50);
+		// matrix.translate(-half,-half);
+		
+
+		// matrix.translate(half,half);
+		// matrix.rotate(Code.radians(50.0));
+		
+	// .
+	var scale = matrix.averageScale();
+	// matrix.scale(1.0/scale);
+// console.log("scale: "+scale)
+	// var scale = 0.250;
+
+	// .
+	// var info = R3D.infoFromAffineMatrix2D(matrix);
+	// var applyScale = info["scale"];
+	
+	// var iterations = 1;
+// var iterations = 1000;
+var iterations = 10000;
+	var timeStart = Code.getTimeMilliseconds();
+
+	for(var i=0; i<iterations; ++i){
+		// if need different ones:
+		var reuseImage = new ImageMat(subSize,subSize);
+
+		// center.set( Math.random()*width, Math.random()*height );
+		// var image = imageScales.extractRect(center, scale, size,size, matrix);
+		imageScales.extractRectFast(reuseImage, scale, matrix, isLinear);
+		// console.log(image);
+		// extractRect = function(resultCenter, resultScale, resultWidth,resultHeight, matrix){ 
+	}
+	var timeStop = Code.getTimeMilliseconds();
+	var timeDiff = timeStop-timeStart;
+	console.log("time: "+timeDiff);
+	
+if(show){
+	var img = GLOBALSTAGE.getFloatRGBAsImage(reuseImage.red(),reuseImage.grn(),reuseImage.blu(), reuseImage.width(),reuseImage.height());
+	var d = new DOImage(img);
+	// d.matrix().translate(10,10);
+	d.matrix().translate(10 , 10);
+	// d.matrix().translate(0,j*compareSize);
+	d.matrix().scale(5.0);
+	GLOBALSTAGE.addChild(d);
+}
+
+	//reuseImage
+
+}
+var testExtractLinear = function(imageScales){
+	console.log("testExtractLinear");
+
+	// var iterations = 1000;
+	var iterations = 10000;
+
+	// var size = 11;
+	var size = 21;
+	var center = new V2D();
+	var scale = 1.0;
+	var width = imageScales.width();
+	var height = imageScales.height();
+	var timeStart = Code.getTimeMilliseconds();
+	var matrix = null;
+
+	for(var i=0; i<iterations; ++i){
+		center.set( Math.random()*width, Math.random()*height );
+		var image = imageScales.extractRect(center, scale, size,size, matrix);
+		// console.log(image);
+		 // extractRect = function(resultCenter, resultScale, resultWidth,resultHeight, matrix){ 
+	}
+	var timeStop = Code.getTimeMilliseconds();
+	var timeDiff = timeStop-timeStart;
+	console.log("time: "+timeDiff);
+}
+function setupDisplay(){
+	this._canvas = new Canvas(null,0,0,Canvas.STAGE_FIT_FILL, false,false, true);
+	this._stage = new Stage(this._canvas, 1000/20);
+	this._root = new DO();
+	this._stage.addChild(this._root);
+	GLOBALSTAGE = this._stage;
+	this._canvas.addListeners();
+	this._stage.addListeners();
+	this._stage.start();
+}
+</script>
+<body onload="pageLoadedFxn();">
+</body>
+</html>

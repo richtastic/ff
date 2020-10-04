@@ -7778,12 +7778,12 @@ console.log("checkPerformNextTask");
 		return;
 	}
 
-throw "start dense";
+// throw "start dense";
 	if(!project.checkHasDenseStarted()){
 		project.calculateDensePairPutatives();
 		return;
 	}
-throw "iterate dense";
+// throw "iterate dense";
 	if(!project.checkHasDenseEnded()){
 		project.iterateDenseProcess();
 		return;
@@ -7967,9 +7967,9 @@ console.log("GOT : matchCount: "+matchCount);
 			relative["B"] = data["B"];
 			var relativePoints = relative["points"];
 			relativeCount = relativePoints ? relativePoints.length : 0;
-			if(relativeCount>0){
-				var transforms = relative["transforms"];
-					var transform = transforms[0];
+			var transforms = relative["transforms"];
+			if(relativeCount>0 && transforms){
+				var transform = transforms[0];
 				var relativeError = transform["errorRMean"] + transform["errorRSigma"];
 				if(relativeError)
 					var relativeTransform = transform["transform"];
@@ -8091,14 +8091,39 @@ console.log("pair count: "+pairs.length+" ............");
 			currentPair = pair;
 			console.log(pair);
 			var relativeAB = pair["relativeTransform"];
+
+console.log(relativeAB);
+
+if(!relativeAB && isDense){
+	console.log("make extrinsic on the fly");
+	var viewA = viewIDsToObject[idA];
+	var viewB = viewIDsToObject[idB];
+	console.log(viewA);
+	console.log(viewB);
+	var extA = viewA["transform"];
+	var extB = viewB["transform"];
+	if(extA && extB){
+		extA = Matrix.fromObject(extA);
+		extB = Matrix.fromObject(extB);
+		var absA = Matrix.inverse(extA);
+		var absB = Matrix.inverse(extB);
+		var relAB = Matrix.relativeReference(absA,absB);
+		var extAB = Matrix.inverse(relAB);
+		console.log(extAB);
+		relativeAB = extAB.toObject();
+	}
+}
+// throw "this is for dense"
 			if(relativeAB){ // dense
 				// console.logx(camAID,camBID,cameras);
 				// throw "..."
+				console.log(relativeAB);
+// throw "?"
 				configuration = {};
 				project.calculatePairMatchWithRFromViewIDs(idA,idB, relativeAB, camAID,camBID,cameras, completePairFxn,project, configuration);
 				return;
 			} // else: sparse = w/o known R
-			// throw "this is for sparse"
+			throw "this is for sparse"
 			var cameras = inputData["cameras"];
 			// console.log(inputData);
 			// console.log(cameras);
@@ -8119,6 +8144,7 @@ console.log("pair count: "+pairs.length+" ............");
 // throw ">triples";
 
 	var triples = inputData["triples"];
+// var triples = null;
 	if(!triples){
 
 
@@ -8126,9 +8152,9 @@ console.log("pair count: "+pairs.length+" ............");
 
 var originalPairs = pairs;
 var info = project.visualizePairEdges(pairs);
-console.log(info);
-var pairs = info["pairs"];
-console.log(pairs);
+// console.log(info);
+// var pairs = info["pairs"];
+// console.log(pairs);
 // throw "PAIRS";
 
 
@@ -8141,7 +8167,7 @@ inputData["pairsRaw"] = originalPairs;
 inputData["pairs"] = pairs;
 console.log(inputData);
 
-// throw "BEFORE TRIPLES DONE"
+throw "BEFORE TRIPLES DONE"
 		
 		project.saveFileFromData(inputData,inputFilename, saveProjectFxn,project);
 
@@ -8820,8 +8846,8 @@ for(var iterations=0; iterations<dropIterations; ++iterations){
 		var loop = loops[i];
 		var loopError = loop["error"];
 		// if(loopError>limit90){ //
-		if(loopError>limitA && loopError>limitB){ //
-		// if(false){
+		// if(loopError>limitA && loopError>limitB){ //
+		if(false){
 			// console.log("bad loop: "+loopError);
 			var edges = loop["edges"];
 			var worstEdge = null;
@@ -8928,7 +8954,7 @@ TODO: FIND ORIENTATION OUTLIERS USING LOOPS + BELIEF PROPAGATION
 	var showPairs = function(){
 		console.log("showPairs");
 // return;
-		var circleRadius = 400;
+		var circleRadius = 500;
 		var totalOffX = 50;
 		var totalOffY = 50;
 		var circleCenter = new V2D(totalOffX + circleRadius,totalOffY + circleRadius);
@@ -9066,9 +9092,11 @@ var list = viewPairs;
 			//
 			// color = 0xFF000033;
 			//
+// var line = 0.5 + error*10.0;
+var line = 1.0;
 			var d = new DO();
 			// d.graphics().setLine(3.0,color);
-			d.graphics().setLine(0.5 + error*10.0,color);
+			d.graphics().setLine(line,color);
 			d.graphics().beginPath();
 			d.graphics().moveTo(start.x,start.y);
 			d.graphics().lineTo(ending.x,ending.y);
@@ -9129,7 +9157,6 @@ var list = viewPairs;
 
 	// throw "visualizePairEdges";
 
-	return {"pairs":viewPairs};
 }
 
 App3DR.ProjectManager.prototype.triplesFromBestPairs = function(pairs, isDense){ // TODO: does this guarantee scale coverage for every pair ?
@@ -11512,7 +11539,7 @@ console.log("calculatePairMatchFromViewIDs")
 		settings["maximumMatchFeatures"] = 1200;
 		settings["minimumMatchPoints"] = 16;
 		settings["incrementResolution"] = 0;
-		settings["minimumCountFInit"] = 25; // fwd-bak matches -- 25-50-100
+		settings["minimumCountFInit"] = 12; // fwd-bak matches -- 25-50-100
 		settings["maximumErrorFInit"] = 0.01; // 0.02 @ 500 = 10 -- initial F estimate [~100 features]
 		settings["maximumErrorFDense"] = 0.005; // 0.01 @ 500 = 5 -- dense F estimate [~500 features]
 		settings["maximumErrorTracksF"] = 0.004; // 0.01 @ 500 = 5 -- final stereopsis estimate F
@@ -11804,7 +11831,8 @@ console.log(cameras);
 				var str = world.toYAMLString();
 				console.log(str);
 
-throw "here, after solvePair"
+// world.showForwardBackwardPair();
+// throw "here, after solvePair"
 			}
 
 
@@ -14617,6 +14645,10 @@ App3DR.ProjectManager.prototype.hasViewSimilarity = function(){
 	var expectedCount = (viewCount)*(viewCount-1)/2; // 0 = 0 | 1 = 0 | 2 = 1 | 3 = 3
 		expectedCount = Math.max(expectedCount,0);
 	var viewSimilarity = this._viewSimilarity;
+
+	console.log(viewSimilarity,expectedCount);
+	return viewSimilarity && viewSimilarity.length>viewCount;
+
 	// console.log(viewSimilarity.length+" =?= "+expectedCount);
 	return viewSimilarity && viewSimilarity.length === expectedCount;
 }
@@ -14781,12 +14813,15 @@ App3DR.ProjectManager.prototype.calculateViewSimilarities = function(){
 			console.log(histograms);
 			console.log(features);
 
+
+var scores = [];
+if(false){
 // var doWords = false;
-var doWords = true;
-if(doWords){
+// var doWords = true;
+// if(doWords){
 // FEATURE WORDS:
 			var obj;
-			var scores = [];
+			var wordScores = {};
 			for(var i=0; i<views.length; ++i){
 				var viewA = views[i];
 				var idA = viewA.id();
@@ -14808,22 +14843,26 @@ if(doWords){
 					obj["A"] = idA;
 					obj["B"] = idB;
 					obj["s"] = score;
-					scores.push(obj);
+					// wordScores.push(obj);
+					pairID = idA+"-"+idB;
+					obj["id"] = pairID;
+					wordScores[pairID] = obj;
 				}
 
 			}
-			console.log(scores);
+			console.log(wordScores);
 			// throw "????";
-			scores.sort(function(a,b){
-				return a["s"]>b["s"] ? -1 : 1; // NCC - larger better
-				// return a["s"]<b["s"] ? -1 : 1; // SAD - smaller better
-			});
-}else{
+			// wordScores.sort(function(a,b){
+			// 	return a["s"]>b["s"] ? -1 : 1; // NCC - larger better
+			// 	// return a["s"]<b["s"] ? -1 : 1; // SAD - smaller better
+			// });
+// }else{
 
 
 // HISTOGRAMS:
 			var obj;
-			var scores = [];
+			// var scores = [];
+			var histogramScores = {};
 			// for every view, compare to every other view
 			for(var i=0; i<views.length; ++i){
 				var viewA = views[i];
@@ -14861,16 +14900,90 @@ if(doWords){
 					obj["A"] = idA;
 					obj["B"] = idB;
 					obj["s"] = score;
-					scores.push(obj);
+					pairID = idA+"-"+idB;
+					obj["id"] = pairID;
+					histogramScores[pairID] = obj;
+					// scores.push(obj);
 				}
 			}
 
 
-			scores.sort(function(a,b){
-				return a["s"]>b["s"] ? -1 : 1; // NCC - larger better
-				// return a["s"]<b["s"] ? -1 : 1; // SAD - smaller better
-			});
+			// scores.sort(function(a,b){
+			// 	return a["s"]>b["s"] ? -1 : 1; // NCC - larger better
+			// 	// return a["s"]<b["s"] ? -1 : 1; // SAD - smaller better
+			// });
+// }
+
+
+
+	var pairIDs = Code.keys(histogramScores);
+	for(var i=0; i<pairIDs.length; ++i){
+		var pairID = pairIDs[i];
+		var hist = histogramScores[pairID];
+		var word = wordScores[pairID];
+		var finalScore = hist["s"]/word["s"];
+		var obj = {};
+		obj["A"] = hist["A"];
+		obj["B"] = hist["B"];
+		obj["id"] = hist["id"];
+		obj["s"] = finalScore;
+		scores.push(obj);
+	}
+
+	scores.sort(function(a,b){
+		return a["s"]<b["s"] ? -1 : 1; // smaller better
+	});
+
 }
+
+
+	// use 'frame' distance
+	// for every view, compare to every other view
+	var scores = [];
+	var frameDistance = 3;
+	var existsList = {};
+	// var checkLength = views.length;
+	for(var i=0; i<views.length; ++i){
+		var viewA = views[i];
+		var idA = viewA.id();
+		var histA = histograms[idA];
+		var startJ = (i-frameDistance);
+		var endJ = (i+frameDistance);
+// console.log(i+" = "+startJ+" - "+endJ);
+		for(var j=startJ; j<=endJ; ++j){
+			var index = j;
+			while(index<0){
+				index += views.length;
+			}
+			while(index>=views.length){
+				index -= views.length;
+			}
+			if(i==index){
+				continue;
+			}
+			var viewB = views[index];
+			var idB = viewB.id();
+			pairID = App3DR.ProjectManager.pairIDFromViewIDs(idA,idB);
+			if(existsList[pairID]){
+				continue;
+			}
+			existsList[pairID] = true;
+			// var score = Math.abs(i-index);
+			var score = Math.abs(i-j);
+			obj = {};
+			obj["A"] = idA;
+			obj["B"] = idB;
+			obj["s"] = score;
+			
+			obj["id"] = pairID;
+			scores.push(obj);
+			// console.log(i+" "+index+" = "+score);
+		}
+	}
+
+	scores.sort(function(a,b){
+		return a["s"]<b["s"] ? -1 : 1; // smaller better
+	});
 
 			console.log(scores);
 project.showViewSimilarities(scores);
@@ -14970,8 +15083,8 @@ App3DR.ProjectManager.prototype.showViewSimilarities = function(similarities){
 // pick top 10 similarities ...
 var bestList = {};
 // var cacheCount = 3;
-var cacheCount = 5;
-// var cacheCount = 10; // too many
+// var cacheCount = 5;
+var cacheCount = 10; // too many
 for(var i=0; i<similarities.length; ++i){
 	var similarity = similarities[i];
 	var idA = similarity["A"];
@@ -15012,9 +15125,10 @@ for(var i=0; i<keys.length; ++i){
 	var list = bestList[key];
 	list.sort(sortFxn);
 	Code.truncateArray(list, cacheCount);
-// console.log(list.length);
+console.log(list);
 	bestList[key] = list;
 }
+
 for(var i=0; i<similarities.length; ++i){
 	var similarity = similarities[i];
 	var idA = similarity["A"];
@@ -15034,6 +15148,7 @@ for(var i=0; i<similarities.length; ++i){
 		}
 	}else{
 		if(score>max){
+			console.log(score+" > "+max);
 			Code.removeElementAt(similarities,i);
 			--i;
 		}
@@ -15267,6 +15382,8 @@ App3DR.ProjectManager.prototype.calculatePairPutatives = function(){
 		viewListLookup[idA].push(entry);
 		viewListLookup[idB].push(entry);
 	}
+	// console.log(viewListLookup);
+// throw "?"
 	// sort entries & find highest derivatives & add entries
 // var str = "";
 	var keepPairs = {};
@@ -15289,7 +15406,7 @@ App3DR.ProjectManager.prototype.calculatePairPutatives = function(){
 				var diff = prev-next;
 				// console.log(diff+" : "+prev+"-"+next);
 				// diff = Math.abs(diff);
-				if(maxDiff===null || diff>maxDiff){
+				if(maxDiff===null || diff>=maxDiff){
 					maxDiff = diff;
 					maxIndex = j;
 				}
@@ -15297,14 +15414,15 @@ App3DR.ProjectManager.prototype.calculatePairPutatives = function(){
 			prev = next;
 		}
 // str += Code.printMatlabArray(arr,"x"+i,true)+"\n";
-		maxIndex = Math.min(Math.max(maxIndex,minimumPairCount),maximumPairCount);
-		maxIndex = Math.min(maxIndex,list.length);
+		maxIndex = Math.min(Math.max(maxIndex,minimumPairCount-1),maximumPairCount-1);
+		maxIndex = Math.min(maxIndex,list.length-1);
 		console.log("KEEP: "+maxIndex);
-		for(var j=0; j<maxIndex; ++j){
+		for(var j=0; j<=maxIndex; ++j){
 			var entry = list[j];
 			var idA = entry["A"];
 			var idB = entry["B"];
 			var pairID = pairIDFxn(idA,idB);
+// console.log(j+" = "+pairID+" / "+list.length);
 			keepPairs[pairID] = entry;
 		}
 	}
@@ -15313,6 +15431,7 @@ App3DR.ProjectManager.prototype.calculatePairPutatives = function(){
 
 	var keepViewIDTable = {};
 	var keys = Code.keys(keepPairs);
+console.log("keep: "+keys.length);
 	for(var k=0; k<keys.length; ++k){
 		var key = keys[k];
 		var entry = keepPairs[key];
@@ -15382,7 +15501,7 @@ App3DR.ProjectManager.prototype.calculatePairPutatives = function(){
 		project.saveProjectFile(fxnSavedProject, project);
 	}
 console.log(sparseData);
-throw "BEFORE SAVE SPARSE"
+// throw "BEFORE SAVE SPARSE"
 	project.saveSparseFromData(sparseData, fxnSavedSparse, project);
 	
 }
@@ -19068,6 +19187,8 @@ throw "before save triples";
 		}
 		// find best points from stereopsis
 		var worldViewA = world.viewFromData(viewAID);
+
+throw "is this solve dense pair used"
 		var worldViewB = world.viewFromData(viewBID);
 		world.solveDensePair();
 		console.log(worldViewA,worldViewB);

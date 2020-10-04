@@ -8027,6 +8027,42 @@ Code.mult2x2by2x1toV2D = function(v, tbt, tbo){
 	v.x = tbo[0]*tbt[0] + tbo[1]*tbt[1];
 	v.y = tbo[0]*tbt[2] + tbo[1]*tbt[3];
 }
+
+
+Code.parallelArrayInterpolateLinear = function(listTo,listFr, indexTo, x,y, wid,hei){
+	var hm1 = hei-1, wm1 = wid-1;
+	var minX = Math.min( Math.max(Math.floor(x), 0), wm1);
+	var minY = Math.min( Math.max(Math.floor(y), 0), hm1);
+	var maxX = Math.max( Math.min(Math.ceil(x), wm1), 0);
+	var maxY = Math.max( Math.min(Math.ceil(y), hm1), 0);
+	var iyW = minY*wid;
+	var ayW = maxY*wid;
+	var indexA = iyW + minX;
+	var indexB = iyW + maxX;
+	var indexC = ayW + minX;
+	var indexD = ayW + maxX;
+	minX = x - minX;
+	if(x<0||x>wid){ minX=0.0; }
+	minY = y - minY;
+	if(y<0||y>hei){ minY=0.0; }
+	var omx = (1.0-minX);
+	var omy = (1.0-minY);
+	for(var i=listTo.length-1; i>=0; --i){
+		var array = listFr[i];
+		
+		// different levels of speedup:
+
+		// var value = Code.linear2D(minX,minY, array[indexA],array[indexB],array[indexC],array[indexD]);
+
+		// var value = Code.linear1D(minY, Code.linear1D(minX,array[indexA],array[indexB]), Code.linear1D(minX,array[indexC],array[indexD]));
+
+		var A = minX*array[indexB] + omx*array[indexA];
+		var B = minX*array[indexD] + omx*array[indexC];
+		var value = minY*B + omy*A;
+
+		listTo[i][indexTo] = value;
+	}
+}
 //------------------------------------------------------------------------------------------------------------------------------------------------- interpolation - 1D
 Code.findGlobalValue1D = function(array, value){
 	var i, len=array.length;
