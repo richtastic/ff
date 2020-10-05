@@ -247,50 +247,50 @@ https://lyricstranslate.com/en/radio-tapok-deutschland-cover-%D0%BD%D0%B0-%D1%80
 https://www.youtube.com/watch?v=rR19alK6QKM
 
 
-Cover - Rammstein - Ich Will
+Cover - Rammstein - Ich Will - Я жду
 
 | ru | | en |
 |-|-|-|
-| Я жду! (x10) | ya khah-choo | I wait |
+| Я жду! (x10) | ya stchoo | I wait |
 |  |  |  |
-| Я жду, доверия в ваших глазах |  | I'm waiting, trust in your eyes |
-| Я жду, признания в ваших сердцах |  | I'm waiting for recognition in your hearts |
-| Я жду, хочу уловить твой взгляд |  | I'm waiting, I want to catch your eye |
-| Я жду, я хочу знать, о чём говорят |  | I'm waiting, I want to know what they are talking about |
+| Я жду, доверия в ваших глазах |  YA zhdu, doveriya v vashikh glazakh  | I'm waiting, trust in your eyes |
+| Я жду, признания в ваших сердцах |  YA zhdu, priznaniya v vashikh serdtsakh  | I'm waiting for recognition in your hearts |
+| Я жду, хочу уловить твой взгляд |  YA zhdu, khochu ulovit' tvoy vzglyad  | I'm waiting, I want to catch your eye |
+| Я жду, я хочу знать, о чём говорят |  YA zhdu, ya khochu znat', o chom govoryat  | I'm waiting, I want to know what they are talking about |
 |  |  |  |
-| Я жду, хочу созерцать ваш крик |  | I wait, I want to understand/think your shout/cry |
-| Я жду, жду этого каждый миг |  | I'm waiting, waiting for this every moment |
-| Я жду, хочу чтоб могли понять |  | I'm waiting, I want to be able to understand |
-| Я жду, чтобы каждый мог наблюдать |  | I'm waiting, for everyone to watch |
+| Я жду, хочу созерцать ваш крик |  YA zhdu, khochu sozertsat' vash krik  | I wait, I want to understand/think your shout/cry |
+| Я жду, жду этого каждый миг |  YA zhdu, zhdu etogo kazhdyee mig  | I'm waiting, waiting for this every moment |
+| Я жду, хочу чтоб могли понять |  YA zhdu, khochu chtob mogli ponyat'  | I'm waiting, I want to be able to understand |
+| Я жду, чтобы каждый мог наблюдать |  YA zhdu, chtoby kazhdyee mog nablyudat'  | I'm waiting, for everyone to watch |
 |  |  |  |
-| Я жду, жду ваши овации |  | I'm waiting, waiting for your ovation |
-| Я жду, я жду детонации |  | I'm waiting, I'm waiting for detonation |
-| Я жду, готовлю для каждого роль |  | I'm waiting, preparing a role for everyone |
-| Я жду, я хочу получить контроль! |  | I wait, I want to get control |
+| Я жду, жду ваши овации |  YA zhdu, zhdu vashi ovatsii  | I'm waiting, waiting for your ovation |
+| Я жду, я жду детонации |  YA zhdu, ya zhdu detonatsii  | I'm waiting, I'm waiting for detonation |
+| Я жду, готовлю для каждого роль |  YA zhdu, gotovlyu dlya kazhdogo roio  | I'm waiting, preparing a role for everyone |
+| Я жду, я хочу получить контроль! | YA zhdu, ya khochu poluchit' kontrol'! | I wait, I want to get control |
 |  |  |  |
-| Над собой |  | Above oneself |
-| И над судьбой | And over fate |  |
-| Над толпой |  | Over the crowd |
-| Над тобой! |  | Upon you |
+| Над собой |  Nad soboy  | Above oneself |
+| И над судьбой |  I nad sud'boy  | And over fate |
+| Над толпой |  Nad tolpoy  | Over the crowd |
+| Над тобой! | Nad toboy! | Upon you |
 |  |  |  |
 |  | Refrain 1: |  |
 |  |  |  |
-| Узрите бурю! |  | Behold the storm! |
-| (Мы видим вас!) |  | (We see you!) |
-| Мой рёв безумен? |  | Is my roar insane? |
-| (Мы слышим вас!) |  | (We hear you!) |
-| Дайте мне шума! |  | Give me some noise! |
-| (Он для вас!) |  | (He's for you!) |
-| Ваш не слышен крик! |  | Your cry is not heard |
+| Узрите бурю! |  Uzrite buryu!  | Behold the storm! |
+| (Мы видим вас!) |  (My vidim vas!)  | (We see you!) |
+| Мой рёв безумен? |  Moy rov bezumen?  | Is my roar insane? |
+| (Мы слышим вас!) |  (My slyshim vas!)  | (We hear you!) |
+| Дайте мне шума! |  Dayte mne shuma!  | Give me some noise! |
+| (Он для вас!) |  (On dlya vas!)  | (He's for you!) |
+| Ваш не слышен крик! |  Vash ne slyshen krik!  | Your cry is not heard |
 |  |  |  |
-| Мы хотим доверия от вас |  |  |
-| Мы хотим, чтоб ты поверил в нас |  |  |
-| Мы хотим занять ваши сердца |  |  |
-| Мы хотим остаться в них до конца – да. |  |  |
+| Мы хотим доверия от вас |  Mye khotim doveriya ot vas  | We want trust from you |
+| Мы хотим, чтоб ты поверил в нас |  Mye khotim, chtob ty poveril v nas  | We want you to believe in us |
+| Мы хотим занять ваши сердца |  Mye khotim zanyat' vashi serdtsa  | We want to take your hearts |
+| Мы хотим остаться в них до конца – да. |  Mye khotim ostat'sya v nikh do kontsa – da.  | We want to stay in them until the end - yes. |
 |  |  |  |
 |  | [Refrain 1] |  |
 |  |  |  |
-| Я жду! |  |  |
+| Я жду! |  | I wait |
 |  |  |  |
 
 
@@ -374,8 +374,8 @@ https://www.youtube.com/watch?v=0r83o6g6RAQ
 |  |  |  |
 | Я это плач отцов, чаша для всех глупцов | ya eto plach otsov chasha dlya vsekh gluptsov | I am the cry of fathers, a cup for all fools |
 | Жаждущих любви, лёжа в своей крови | Zhazhdushchikh lyubvi, lozha v svoyey krovi | Hungry for love, lying in their blood |
-| Я это стая крыс, жрущая падших низ | YA eto staya krys, zhrushchaya padshikh niz | I am a flock of rats devouring the fallen bottom |
-| Слушая детский плач, я это твой палач |  Slushaya detskiy plach, ya eto tvoi palach | Hearing a child's cry, I am your executioner |
+| Я это стая крыс, жрущая падших низ | ya eto staya krys, zhrushchaya padshikh niz | I am a flock of rats devouring the fallen bottom |
+| Слушая детский плач, я это твой палач |  slushaya detskiy plach, ya eto tvoi palach | Hearing a child's cry, I am your executioner |
 |  |  |  |
 |  | [Refrain 1] |  |
 |  |  |  |
@@ -385,9 +385,9 @@ https://www.youtube.com/watch?v=0r83o6g6RAQ
 | Несись как злобный пёс | Nesis' kak zlobnyy pyos | Ride like a wicked dog |
 |  |  |  |
 | Скрип на моих зубах, твой обгорелый прах | Skrip na moikh zubakh, tvoy obgorelyy prakh | Creak on my teeth, your charred ashes |
-| Я это просто я, я это жизнь твоя | YA eto prosto ya, ya eto zhizn' tvoya |  |
-| Я это злобный пёс, я расхититель грёз | YA eto zlobnyy pos, ya raskhititel' groz | I am the evil dog, I am the thief of dreams |
-| Я за твоей спиной, дьявол всегда с тобой | YA za tvoyey spinoy, d'yavol vsegda s toboy | I'm behind you, the devil is always with you |
+| Я это просто я, я это жизнь твоя | ya eto prosto ya, ya eto zhizn' tvoya |  |
+| Я это злобный пёс, я расхититель грёз | ya eto zlobnyy pos, ya raskhititel' groz | I am the evil dog, I am the thief of dreams |
+| Я за твоей спиной, дьявол всегда с тобой | ys za tvoyey spinoy, d'yavol vsegda s toboy | I'm behind you, the devil is always with you |
 |  |  |  |
 |  | [Refrain 1] |  |
 |  |  |  |

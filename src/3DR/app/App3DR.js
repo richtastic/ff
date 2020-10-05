@@ -8212,7 +8212,18 @@ console.log("inputFilename: "+inputFilename);
 		}
 	}
 	console.log("triples count: "+triples.length+" ............");
-// throw ">graph";
+
+
+console.log(inputData);
+
+console.log(triples);
+
+	this._visualizeTriples(triples);
+throw "visualize triples"
+
+
+
+throw ">graph";
 	// CREATE GRAPH FROM PAIRWISE & TRIPLE SCALE
 	var graph = inputData["graph"];
 // force redo:
@@ -8443,7 +8454,161 @@ console.log("aggregate ...")
 
 }
 
+App3DR.ProjectManager.prototype._visualizeTriples = function(triples){
+	var pairs = {};
+	var project = this;
+	
+	var views = project.views();
+	var viewIDToIndex = {};
+	for(var i=0; i<views.length; ++i){
+		var view = views[i];
+		var viewID = view.id();
+		viewIDToIndex[viewID] = i;
+		for(var j=i+1; j<views.length; ++j){
+			var viewIDB = views[j].id();
+			var pairID = Code.sortedStringID([viewID,viewIDB]);
+			pairs[pairID] = pairID;
+		}
+	}
 
+	pairs = Code.objectToArray(pairs);
+	console.log(pairs);
+
+	var squareSize = Math.ceil(Math.sqrt(pairs.length));
+	console.log(squareSize);
+
+
+
+	// for every triple:
+	var matchedPairs = [];
+	var matchedPairLookup = {};
+	for(var i=0; i<triples.length; ++i){
+		var triple = triples[i];
+		var gauge = triple["gauge"];
+		var AB = gauge["AB"];
+		var AC = gauge["AC"];
+		var BC = gauge["BC"];
+		var idA = triple["A"];
+		var idB = triple["B"];
+		var idC = triple["C"];
+		var pairIDA;
+		if(AB>0 && AC>0){
+			pairIDA = Code.sortedStringID([idA,idB]);
+			pairIDB = Code.sortedStringID([idA,idC]);
+			matchedPairs.push([pairIDA,pairIDB]);
+			matchedPairLookup[pairIDA] = true;
+			matchedPairLookup[pairIDB] = true;
+		}
+		if(AB>0 && BC>0){
+			pairIDA = Code.sortedStringID([idA,idB]);
+			pairIDB = Code.sortedStringID([idB,idC]);
+			matchedPairs.push([pairIDA,pairIDB]);
+			matchedPairLookup[pairIDA] = true;
+			matchedPairLookup[pairIDB] = true;
+		}
+		if(AC>0 && BC>0){
+			pairIDA = Code.sortedStringID([idA,idC]);
+			pairIDB = Code.sortedStringID([idB,idC]);
+			matchedPairs.push([pairIDA,pairIDB]);
+			matchedPairLookup[pairIDA] = true;
+			matchedPairLookup[pairIDB] = true;
+		}
+	}
+	// console.log(matchedPairLookup);
+	// throw "?"
+	// for each gauge AB AC BC
+	// if gauge pair ratio is nonzero
+	// add gauge 
+
+	// put views in circle
+
+var pairSizeX = 90.0;
+var pairSizeY = 46.0;
+	// put pairs in circle?
+	// square: ceil(sqrt(pair count))
+	var pairLocations = [];
+	var index = 0;
+
+	var pairIDToLocation = {};
+
+	for(var j=0; j<squareSize; ++j){
+		for(var i=0; i<squareSize; ++i){
+			if(index>=pairs.length){
+				break;
+			}
+			var pairID = pairs[index];
+			// var pairID = pairID.replace("-","\n");
+			var location = new V2D(10 + (i+0.5)*pairSizeX, 10 + (j+0.5)*pairSizeY);
+			pairIDToLocation[pairID] = location;
+
+			var viewIDs = pairID.split("-");
+			var idA = viewIDs[0];
+			var idB = viewIDs[1];
+			// pairID = index+"";
+			// pairID = "a\nb";
+
+			
+			
+/*
+			var text;
+			var color = 0xFF660066;
+			if(matchedPairLookup[pairID]===true){
+				color = 0xFF33CC66;
+			}			
+			text = new DOText(""+idA, 12, DOText.FONT_ARIAL, color, DOText.ALIGN_CENTER);
+			text.matrix().translate(0,-8);
+			text.matrix().translate(location.x, location.y);
+			GLOBALSTAGE.addChild(text);
+
+			text = new DOText(""+idB, 12, DOText.FONT_ARIAL, color, DOText.ALIGN_CENTER);
+			text.matrix().translate(0,8);
+			text.matrix().translate(location.x, location.y);
+			GLOBALSTAGE.addChild(text);
+*/
+			++index;
+		}
+		if(index>=pairs.length){
+			break;
+		}
+	}
+	// add in circles
+	for(var i=0; i<matchedPairs.length; ++i){
+		var match = matchedPairs[i];
+		var pairIDA = match[0];
+		var pairIDB = match[1];
+		var pointA = pairIDToLocation[pairIDA];
+		var pointB = pairIDToLocation[pairIDB];
+		/*
+		var d = new DO();
+		d.graphics().setLine(1.0,0xFFCC0000);
+		d.graphics().beginPath();
+		d.graphics().moveTo(pointA.x,pointA.y);
+		d.graphics().lineTo(pointB.x,pointB.y);
+		d.graphics().endPath();
+		d.graphics().strokeLine();
+		GLOBALSTAGE.addChild(d);
+		*/
+	}
+
+
+
+
+	// add in views
+
+	var edgesEasy = {};
+	var edgesHard = {};
+	// any triple that has a pair => add a simple edge
+	// and triples that have a pair in common => add a hard edge
+
+	// hyper graph to maximum number of related edges
+
+
+	// ..
+
+
+
+	throw "_visualizeTriples";
+}
 
 App3DR.ProjectManager.prototype.visualizePairEdges = function(pairs){
 	var project = this;

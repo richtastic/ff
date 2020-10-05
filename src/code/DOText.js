@@ -119,8 +119,9 @@ DOText.prototype._updateGraphics = function(){
 	}
 }
 
-// wtf?
+// delete
 DOText.prototype.callback = function(o){
+	throw "where is this used?"
 	console.log(o.width);
 }
 

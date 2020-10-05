@@ -243,32 +243,32 @@ ImageMat.prototype.getPointInterpolateNearest = function(val, x,y){ // 1 point
 	val.z = this._b[index];
 }
 ImageMat.cubicColor = function(colR, x,y, colA,colB,colC,colD, colE,colF,colG,colH, colI,colJ,colK,colL, colM,colN,colO,colP){
-	var r = ImageMat.cubic2D(x,y, colA.x,colB.x,colC.x,colD.x,colE.x,colF.x,colG.x,colH.x,colI.x,colJ.x,colK.x,colL.x,colM.x,colN.x,colO.x,colP.x);
-	var g = ImageMat.cubic2D(x,y, colA.y,colB.y,colC.y,colD.y,colE.y,colF.y,colG.y,colH.y,colI.y,colJ.y,colK.y,colL.y,colM.y,colN.y,colO.y,colP.y);
-	var b = ImageMat.cubic2D(x,y, colA.z,colB.z,colC.z,colD.z,colE.z,colF.z,colG.z,colH.z,colI.z,colJ.z,colK.z,colL.z,colM.z,colN.z,colO.z,colP.z);
+	var r = Code.cubic2D(x,y, colA.x,colB.x,colC.x,colD.x,colE.x,colF.x,colG.x,colH.x,colI.x,colJ.x,colK.x,colL.x,colM.x,colN.x,colO.x,colP.x);
+	var g = Code.cubic2D(x,y, colA.y,colB.y,colC.y,colD.y,colE.y,colF.y,colG.y,colH.y,colI.y,colJ.y,colK.y,colL.y,colM.y,colN.y,colO.y,colP.y);
+	var b = Code.cubic2D(x,y, colA.z,colB.z,colC.z,colD.z,colE.z,colF.z,colG.z,colH.z,colI.z,colJ.z,colK.z,colL.z,colM.z,colN.z,colO.z,colP.z);
 	colR.x = Math.min(Math.max(r,0.0),1.0);
 	colR.y = Math.min(Math.max(g,0.0),1.0);
 	colR.z = Math.min(Math.max(b,0.0),1.0);
 }
-ImageMat.cubic2D = function(x,y, A,B,C,D, E,F,G,H, I,J,K,L, M,N,O,P){
-	var xx = x*x; var xxx = xx*x;
-	var yy = y*y; var yyy = yy*y;
-	var a = ImageMat.cubic1D(x,xx,xxx, A,B,C,D);
-	var b = ImageMat.cubic1D(x,xx,xxx, E,F,G,H);
-	var c = ImageMat.cubic1D(x,xx,xxx, I,J,K,L);
-	var d = ImageMat.cubic1D(x,xx,xxx, M,N,O,P);
-	return ImageMat.cubic1D(y,yy,yyy, a,b,c,d);
-}
-ImageMat.cubic1D = function(t,tt,ttt,A,B,C,D){
-	var a = B;
-	var b = 0.5*(C-A);
-	var c = A - 2.5*B + 2.0*C - 0.5*D;
-	var d = 1.5*(B-C) + 0.5*(D-A);
-	return (a + b*t + c*tt + d*ttt);
-}
-ImageMat.linear2D = function(x,y, colA,colB,colC,colD){
-	return Code.linear2D(x,y, colA,colB,colC,colD);
-}
+// ImageMat.cubic2D = function(x,y, A,B,C,D, E,F,G,H, I,J,K,L, M,N,O,P){
+// 	var xx = x*x; var xxx = xx*x;
+// 	var yy = y*y; var yyy = yy*y;
+// 	var a = ImageMat.cubic1D(x,xx,xxx, A,B,C,D);
+// 	var b = ImageMat.cubic1D(x,xx,xxx, E,F,G,H);
+// 	var c = ImageMat.cubic1D(x,xx,xxx, I,J,K,L);
+// 	var d = ImageMat.cubic1D(x,xx,xxx, M,N,O,P);
+// 	return ImageMat.cubic1D(y,yy,yyy, a,b,c,d);
+// }
+// ImageMat.cubic1D = function(t,tt,ttt,A,B,C,D){
+// 	var a = B;
+// 	var b = 0.5*(C-A);
+// 	var c = A - 2.5*B + 2.0*C - 0.5*D;
+// 	var d = 1.5*(B-C) + 0.5*(D-A);
+// 	return (a + b*t + c*tt + d*ttt);
+// }
+// ImageMat.linear2D = function(x,y, colA,colB,colC,colD){
+// 	return Code.linear2D(x,y, colA,colB,colC,colD);
+// }
 ImageMat.linearColor = function(colR, x,y, colA,colB,colC,colD){
 	var r = Code.linear2D(x,y, colA.x,colB.x,colC.x,colD.x);
 	var g = Code.linear2D(x,y, colA.y,colB.y,colC.y,colD.y);
@@ -3351,7 +3351,7 @@ ImageMat.getPointInterpolateLinear = function(array, wid,hei, x,y){
 	if(x<0||x>wid){ minX=0.0;}
 	minY = y - minY;
 	if(y<0||y>hei){ minY=0.0;}
-	var val = ImageMat.linear2D(minX,minY, colA,colB,colC,colD);
+	var val = Code.linear2D(minX,minY, colA,colB,colC,colD);
 	if(isNaN(val)){
 		console.log("PT",wid,hei,x,y);
 	}
@@ -3387,7 +3387,7 @@ ImageMat.getPointInterpolateCubic = function(array, wid,hei, x,y){
 	var colP = array[maaY*wid + maaX];
 	minX = x - minX;
 	minY = y - minY;
-	var val = ImageMat.cubic2D(minX,minY, colA,colB,colC,colD,colE,colF,colG,colH,colI,colJ,colK,colL,colM,colN,colO,colP);
+	var val = Code.cubic2D(minX,minY, colA,colB,colC,colD,colE,colF,colG,colH,colI,colJ,colK,colL,colM,colN,colO,colP);
 	if(isNaN(val)){
 		//if(isNaN(x))
 		throw("Image Mat NaN "+wid+" "+hei+" "+x+" "+y);
@@ -3425,10 +3425,10 @@ ImageMat.extractRectWithProjection = function(source,sW,sH, wid,hei, projection,
 				fr.x = i; fr.y = j;
 				projection.multV2DtoV3D(fr,fr);
 				fr.x /= fr.z; fr.y /= fr.z;
-				destination[index] = ImageMat.getPointInterpolateCubic(source, sW,sH, fr.x,fr.y);
+				// destination[index] = ImageMat.getPointInterpolateCubic(source, sW,sH, fr.x,fr.y);
 				// destination[wJ+i] = ImageMat.getPointInterpolateCubic(source, sW,sH, fr.x,fr.y);
 				 // destination[wid*j+i] = ImageMat.getPointInterpolateLinear(source, sW,sH, fr.x,fr.y);
-				 // destination[index] = ImageMat.getPointInterpolateLinear(source, sW,sH, fr.x,fr.y);
+				 destination[index] = ImageMat.getPointInterpolateLinear(source, sW,sH, fr.x,fr.y);
 				//destination[index] = ImageMat.getPointInterpolateNearest(source, sW,sH, fr.x,fr.y);
 				++index;
 			}
@@ -5385,25 +5385,158 @@ ImageMatScaled.prototype.extractRectFast = function(reuseImage, scale, matrix, i
 			// p.scale(1.0/actScale);
 			// p.scale(effScale);
 			// .
-			// p.x = Math.max(0, Math.min( wm1, Math.round(p.x,1) ));
-			// p.y = Math.max(0, Math.min( hm1, Math.round(p.y,1) ));
+			
 			var index = y*wid + x;
 
-			// closest
+			// closest: 110
+			// p.x = Math.max(0, Math.min( wm1, Math.round(p.x,1) ));
+			// p.y = Math.max(0, Math.min( hm1, Math.round(p.y,1) ));
 			// var indexImage = p.y*imageWidth + p.x;
 			// r[index] = red[indexImage];
 			// g[index] = grn[indexImage];
 			// b[index] = blu[indexImage];
-			
-			// linear
-			Code.parallelArrayInterpolateLinear(listTo,listFr, index, p.x,p.y, imageWidth,imageHeight);
+
+			// linear: 190
+			// Code.parallelArrayInterpolateLinear(listTo,listFr, index, p.x,p.y, imageWidth,imageHeight);
 			// 
+
 			
-			// cubic
-			// 
+			// linear-local: 160
+			var x2 = p.x;
+			var y2 = p.y;
+			var hm1 = imageHeight-1, wm1 = imageWidth-1;
+			var minX = Math.min( Math.max(Math.floor(x2), 0), wm1);
+			var minY = Math.min( Math.max(Math.floor(y2), 0), hm1);
+			var maxX = Math.max( Math.min(Math.ceil(x2), wm1), 0);
+			var maxY = Math.max( Math.min(Math.ceil(y2), hm1), 0);
+			var iyW = minY*imageWidth;
+			var ayW = maxY*imageWidth;
+			var indexA = iyW + minX;
+			var indexB = iyW + maxX;
+			var indexC = ayW + minX;
+			var indexD = ayW + maxX;
+			minX = x2 - minX;
+			if(x2<0||x2>imageWidth){ minX=0.0; }
+			minY = y2 - minY;
+			if(y2<0||y2>imageHeight){ minY=0.0; }
+			var omx = (1.0-minX);
+			var omy = (1.0-minY);
+			var array, A, B;
+			for(var i=listTo.length-1; i>=0; --i){
+				array = listFr[i];
+				A = minX*array[indexB] + omx*array[indexA];
+				B = minX*array[indexD] + omx*array[indexC];
+				listTo[i][index] = minY*B + omy*A;
+			}
+			
+			
+			// cubic: 520
+			// Code.parallelArrayInterpolateCubic(listTo,listFr, index, p.x,p.y, imageWidth,imageHeight);
+
+			/*
+			// cubic-local: 430
+			var x2 = p.x;
+			var y2 = p.y;
+			// .
+			var hm1 = imageHeight-1, wm1 = imageWidth-1;
+			var minX = Math.min( Math.max(Math.floor(x2), 0), wm1);
+			var minY = Math.min( Math.max(Math.floor(y2), 0), hm1);
+			var miiX = Math.max(minX-1, 0);
+			var miiY = Math.max(minY-1, 0);
+			var maxX = Math.max( Math.min(Math.ceil(x2), wm1), 0);
+			var maxY = Math.max( Math.min(Math.ceil(y2), hm1), 0);
+			var maaX = Math.min(maxX+1, wm1);
+			var maaY = Math.min(maxY+1, hm1);
+			var miiYwid = miiY*imageWidth;
+			var minYwid = minY*imageWidth;
+			var maxYwid = maxY*imageWidth;
+			var maaYwid = maaY*imageWidth;
+			var indexA = miiYwid + miiX;
+			var indexB = miiYwid + minX;
+			var indexC = miiYwid + maxX;
+			var indexD = miiYwid + maaX;
+			var indexE = minYwid + miiX;
+			var indexF = minYwid + minX;
+			var indexG = minYwid + maxX;
+			var indexH = minYwid + maaX;
+			var indexI = maxYwid + miiX;
+			var indexJ = maxYwid + minX;
+			var indexK = maxYwid + maxX;
+			var indexL = maxYwid + maaX;
+			var indexM = maaYwid + miiX;
+			var indexN = maaYwid + minX;
+			var indexO = maaYwid + maxX;
+			var indexP = maaYwid + maaX;
+			minX = x2 - minX;
+			minY = y2 - minY;
+			// .
+			x2 = minX;
+			y2 = minY;
+			var xx = x2*x2; var xxx = xx*x2;
+			var yy = y2*y2; var yyy = yy*y2;
+			// .
+			var a,b,c,d;
+			var A,B,C,D;
+			for(var i=listTo.length-1; i>=0; --i){
+				array = listFr[i];
+				//
+				A = array[indexA];
+				B = array[indexB];
+				C = array[indexC];
+				D = array[indexD];
+				a = B;
+				b = 0.5*(C-A);
+				c = A - 2.5*B + 2.0*C - 0.5*D;
+				d = 1.5*(B-C) + 0.5*(D-A);
+				var alpha = a + b*x2 + c*xx + d*xxx;
+				//
+				A = array[indexE];
+				B = array[indexF];
+				C = array[indexG];
+				D = array[indexH];
+				a = B;
+				b = 0.5*(C-A);
+				c = A - 2.5*B + 2.0*C - 0.5*D;
+				d = 1.5*(B-C) + 0.5*(D-A);
+				var beta = a + b*x2 + c*xx + d*xxx;
+				//
+				A = array[indexI];
+				B = array[indexJ];
+				C = array[indexK];
+				D = array[indexL];
+				a = B;
+				b = 0.5*(C-A);
+				c = A - 2.5*B + 2.0*C - 0.5*D;
+				d = 1.5*(B-C) + 0.5*(D-A);
+				var gamma = a + b*x2 + c*xx + d*xxx;
+				//
+				A = array[indexM];
+				B = array[indexN];
+				C = array[indexO];
+				D = array[indexP];
+				a = B;
+				b = 0.5*(C-A);
+				c = A - 2.5*B + 2.0*C - 0.5*D;
+				d = 1.5*(B-C) + 0.5*(D-A);
+				var delta = a + b*x2 + c*xx + d*xxx;
+				// 
+				A = alpha;
+				B = beta;
+				C = gamma;
+				D = delta;
+				a = B;
+				b = 0.5*(C-A);
+				c = A - 2.5*B + 2.0*C - 0.5*D;
+				d = 1.5*(B-C) + 0.5*(D-A);
+				var value = a + b*y2 + c*yy + d*yyy;
+				// out
+				value = Math.max(0, Math.min(1, value));
+				listTo[i][index] = value;
+			}
+			*/
 		}
 	}
-	// .
+	
 
 
 	/*

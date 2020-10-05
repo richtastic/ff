@@ -4821,6 +4821,20 @@ Code.randomID = function(len){
 	}
 	return str;
 }
+Code.sortedStringID = function(list){
+	var arr = Code.copyArray(list);
+	arr.sort();
+	var str = "";
+	var con = "-";
+	for(var i=0; i<arr.length; ++i){
+		var val = arr[i];
+		if(i>0){
+			str = str + con;
+		}
+		str = str + val;
+	}
+	return str;
+}
 Code.randomPointOnSphere = function(radius){
 	radius = radius!==undefind ? radius : 1.0;
 	var u = Math.random(), v = Math.random();
@@ -8047,22 +8061,178 @@ Code.parallelArrayInterpolateLinear = function(listTo,listFr, indexTo, x,y, wid,
 	if(y<0||y>hei){ minY=0.0; }
 	var omx = (1.0-minX);
 	var omy = (1.0-minY);
+	var array, A, B;
+
+
 	for(var i=listTo.length-1; i>=0; --i){
-		var array = listFr[i];
-		
+	// for(var i=0; i<3; ++i){
+		array = listFr[i];
+
 		// different levels of speedup:
 
 		// var value = Code.linear2D(minX,minY, array[indexA],array[indexB],array[indexC],array[indexD]);
 
 		// var value = Code.linear1D(minY, Code.linear1D(minX,array[indexA],array[indexB]), Code.linear1D(minX,array[indexC],array[indexD]));
 
-		var A = minX*array[indexB] + omx*array[indexA];
-		var B = minX*array[indexD] + omx*array[indexC];
-		var value = minY*B + omy*A;
+		A = minX*array[indexB] + omx*array[indexA];
+		B = minX*array[indexD] + omx*array[indexC];
+		listTo[i][indexTo] = minY*B + omy*A;
+	}
 
+
+/*
+// slower?: 240/190
+	var i;
+	
+	i = 0;
+	array = listFr[i];
+	A = minX*array[indexB] + omx*array[indexA];
+	B = minX*array[indexD] + omx*array[indexC];
+	listTo[i][indexTo] = minY*B + omy*A;
+
+	i = 1;
+	array = listFr[i];
+	A = minX*array[indexB] + omx*array[indexA];
+	B = minX*array[indexD] + omx*array[indexC];
+	listTo[i][indexTo] = minY*B + omy*A;
+
+	i = 2;
+	array = listFr[i];
+	A = minX*array[indexB] + omx*array[indexA];
+	B = minX*array[indexD] + omx*array[indexC];
+	listTo[i][indexTo] = minY*B + omy*A;
+*/
+}
+
+Code.parallelArrayInterpolateCubic = function(listTo,listFr, indexTo, x,y, wid,hei){
+	// var wid = this._width, hei = this._height, r = this._r, g = this._g, b = this._b;
+	var hm1 = hei-1, wm1 = wid-1;
+	var minX = Math.min( Math.max(Math.floor(x), 0), wm1);
+	var minY = Math.min( Math.max(Math.floor(y), 0), hm1);
+	var miiX = Math.max(minX-1, 0);
+	var miiY = Math.max(minY-1, 0);
+	var maxX = Math.max( Math.min(Math.ceil(x), wm1), 0);
+	var maxY = Math.max( Math.min(Math.ceil(y), hm1), 0);
+	var maaX = Math.min(maxX+1, wm1);
+	var maaY = Math.min(maxY+1, hm1);
+	var miiYwid = miiY*wid;
+	var minYwid = minY*wid;
+	var maxYwid = maxY*wid;
+	var maaYwid = maaY*wid;
+	var indexA = miiYwid + miiX;
+	var indexB = miiYwid + minX;
+	var indexC = miiYwid + maxX;
+	var indexD = miiYwid + maaX;
+	var indexE = minYwid + miiX;
+	var indexF = minYwid + minX;
+	var indexG = minYwid + maxX;
+	var indexH = minYwid + maaX;
+	var indexI = maxYwid + miiX;
+	var indexJ = maxYwid + minX;
+	var indexK = maxYwid + maxX;
+	var indexL = maxYwid + maaX;
+	var indexM = maaYwid + miiX;
+	var indexN = maaYwid + minX;
+	var indexO = maaYwid + maxX;
+	var indexP = maaYwid + maaX;
+	minX = x - minX;
+	minY = y - minY;
+
+	x = minX;
+	y = minY;
+	var xx = x*x; var xxx = xx*x;
+	var yy = y*y; var yyy = yy*y;
+
+	var a,b,c,d;
+	var A,B,C,D;
+	// var value;
+	for(var i=listTo.length-1; i>=0; --i){
+		array = listFr[i];
+		
+		// different levels of speedup:
+
+		// var value = Code.cubic2D(minX,minY, array[indexA],array[indexB],array[indexC],array[indexD], array[indexE],array[indexF],array[indexG],array[indexH], array[indexI],array[indexJ],array[indexK],array[indexL], array[indexM],array[indexN],array[indexO],array[indexP]);
+
+		// var a = Code.cubic1D(x,xx,xxx, array[indexA],array[indexB],array[indexC],array[indexD]);
+		// var b = Code.cubic1D(x,xx,xxx, array[indexE],array[indexF],array[indexG],array[indexH]);
+		// var c = Code.cubic1D(x,xx,xxx, array[indexI],array[indexJ],array[indexK],array[indexL]);
+		// var d = Code.cubic1D(x,xx,xxx, array[indexM],array[indexN],array[indexO],array[indexP]);
+		// var value = Code.cubic1D(y,yy,yyy, a,b,c,d);
+
+		//
+		A = array[indexA];
+		B = array[indexB];
+		C = array[indexC];
+		D = array[indexD];
+		a = B;
+		b = 0.5*(C-A);
+		c = A - 2.5*B + 2.0*C - 0.5*D;
+		d = 1.5*(B-C) + 0.5*(D-A);
+		var alpha = a + b*x + c*xx + d*xxx;
+		// var beta = Code.cubic1D(x,xx,xxx, array[indexE],array[indexF],array[indexG],array[indexH]);
+		A = array[indexE];
+		B = array[indexF];
+		C = array[indexG];
+		D = array[indexH];
+		a = B;
+		b = 0.5*(C-A);
+		c = A - 2.5*B + 2.0*C - 0.5*D;
+		d = 1.5*(B-C) + 0.5*(D-A);
+		var beta = a + b*x + c*xx + d*xxx;
+		// var gamma = Code.cubic1D(x,xx,xxx, array[indexI],array[indexJ],array[indexK],array[indexL]);
+		A = array[indexI];
+		B = array[indexJ];
+		C = array[indexK];
+		D = array[indexL];
+		a = B;
+		b = 0.5*(C-A);
+		c = A - 2.5*B + 2.0*C - 0.5*D;
+		d = 1.5*(B-C) + 0.5*(D-A);
+		var gamma = a + b*x + c*xx + d*xxx;
+		// var delta = Code.cubic1D(x,xx,xxx, array[indexM],array[indexN],array[indexO],array[indexP]);
+		A = array[indexM];
+		B = array[indexN];
+		C = array[indexO];
+		D = array[indexP];
+		a = B;
+		b = 0.5*(C-A);
+		c = A - 2.5*B + 2.0*C - 0.5*D;
+		d = 1.5*(B-C) + 0.5*(D-A);
+		var delta = a + b*x + c*xx + d*xxx;
+		// var value = Code.cubic1D(y,yy,yyy, alpha,beta,gamma,delta);
+		A = alpha;
+		B = beta;
+		C = gamma;
+		D = delta;
+		a = B;
+		b = 0.5*(C-A);
+		c = A - 2.5*B + 2.0*C - 0.5*D;
+		d = 1.5*(B-C) + 0.5*(D-A);
+		var value = a + b*y + c*yy + d*yyy;
+		// out
+		value = Math.max(0, Math.min(1, value));
 		listTo[i][indexTo] = value;
 	}
 }
+Code.cubic2D = function(x,y, A,B,C,D, E,F,G,H, I,J,K,L, M,N,O,P){
+	var xx = x*x; var xxx = xx*x;
+	var yy = y*y; var yyy = yy*y;
+	var a = Code.cubic1D(x,xx,xxx, A,B,C,D);
+	var b = Code.cubic1D(x,xx,xxx, E,F,G,H);
+	var c = Code.cubic1D(x,xx,xxx, I,J,K,L);
+	var d = Code.cubic1D(x,xx,xxx, M,N,O,P);
+	return Code.cubic1D(y,yy,yyy, a,b,c,d);
+}
+
+
+Code.cubic1D = function(t,tt,ttt,A,B,C,D){
+	var a = B;
+	var b = 0.5*(C-A);
+	var c = A - 2.5*B + 2.0*C - 0.5*D;
+	var d = 1.5*(B-C) + 0.5*(D-A);
+	return (a + b*t + c*tt + d*ttt);
+}
+
 //------------------------------------------------------------------------------------------------------------------------------------------------- interpolation - 1D
 Code.findGlobalValue1D = function(array, value){
 	var i, len=array.length;

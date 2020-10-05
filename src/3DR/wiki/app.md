@@ -386,9 +386,22 @@ MISSING:
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
-- 3-4 times as fast: 220/60
 
-- 10 times as fast: 2060/166
+- visualize triples completed 
+BEFORE TRIPLES DONE
+
+
+
+
+- affine-to-sub-image algorithm
+	- local affine to total affine (position included)
+	- testing
+
+- change over affine-to-sub-image algorithm
+
+
+
+
 
 
 - test some speedups
@@ -399,6 +412,7 @@ MISSING:
 	- reuse of variables more
 	- is homography needed ?
 	....
+
 
 
 
