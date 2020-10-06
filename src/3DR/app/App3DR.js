@@ -3756,8 +3756,8 @@ console.log(bind)
 
 
 // model camera size
-camWid = 0.10;
-// camWid = 0.01;
+// camWid = 0.10;
+camWid = 0.01;
 
 			var camHei = camWid*(hei/wid);
 			var fyOfx = fy/fx;
@@ -8218,12 +8218,12 @@ console.log(inputData);
 
 console.log(triples);
 
-	this._visualizeTriples(triples);
-throw "visualize triples"
+// 	this._visualizeTriples(triples);
+// throw "visualize triples"
 
 
 
-throw ">graph";
+// throw ">graph";
 	// CREATE GRAPH FROM PAIRWISE & TRIPLE SCALE
 	var graph = inputData["graph"];
 // force redo:
@@ -8482,6 +8482,14 @@ App3DR.ProjectManager.prototype._visualizeTriples = function(triples){
 	// for every triple:
 	var matchedPairs = [];
 	var matchedPairLookup = {};
+	var addEdgeVisit = function(lookup, key){
+		var value = lookup[key];
+		if(value){
+			lookup[key] = value + 1;
+		}else{
+			lookup[key] = 1;
+		}
+	}
 	for(var i=0; i<triples.length; ++i){
 		var triple = triples[i];
 		var gauge = triple["gauge"];
@@ -8496,22 +8504,28 @@ App3DR.ProjectManager.prototype._visualizeTriples = function(triples){
 			pairIDA = Code.sortedStringID([idA,idB]);
 			pairIDB = Code.sortedStringID([idA,idC]);
 			matchedPairs.push([pairIDA,pairIDB]);
-			matchedPairLookup[pairIDA] = true;
-			matchedPairLookup[pairIDB] = true;
+			addEdgeVisit(matchedPairLookup,pairIDA);
+			addEdgeVisit(matchedPairLookup,pairIDB);
+			// matchedPairLookup[pairIDA] = true;
+			// matchedPairLookup[pairIDB] = true;
 		}
 		if(AB>0 && BC>0){
 			pairIDA = Code.sortedStringID([idA,idB]);
 			pairIDB = Code.sortedStringID([idB,idC]);
 			matchedPairs.push([pairIDA,pairIDB]);
-			matchedPairLookup[pairIDA] = true;
-			matchedPairLookup[pairIDB] = true;
+			// matchedPairLookup[pairIDA] = true;
+			// matchedPairLookup[pairIDB] = true;
+			addEdgeVisit(matchedPairLookup,pairIDA);
+			addEdgeVisit(matchedPairLookup,pairIDB);
 		}
 		if(AC>0 && BC>0){
 			pairIDA = Code.sortedStringID([idA,idC]);
 			pairIDB = Code.sortedStringID([idB,idC]);
 			matchedPairs.push([pairIDA,pairIDB]);
-			matchedPairLookup[pairIDA] = true;
-			matchedPairLookup[pairIDB] = true;
+			// matchedPairLookup[pairIDA] = true;
+			// matchedPairLookup[pairIDB] = true;
+			addEdgeVisit(matchedPairLookup,pairIDA);
+			addEdgeVisit(matchedPairLookup,pairIDB);
 		}
 	}
 	// console.log(matchedPairLookup);
@@ -8519,8 +8533,6 @@ App3DR.ProjectManager.prototype._visualizeTriples = function(triples){
 	// for each gauge AB AC BC
 	// if gauge pair ratio is nonzero
 	// add gauge 
-
-	// put views in circle
 
 var pairSizeX = 90.0;
 var pairSizeY = 46.0;
@@ -8552,7 +8564,7 @@ var pairSizeY = 46.0;
 /*
 			var text;
 			var color = 0xFF660066;
-			if(matchedPairLookup[pairID]===true){
+			if(matchedPairLookup[pairID]>0){
 				color = 0xFF33CC66;
 			}			
 			text = new DOText(""+idA, 12, DOText.FONT_ARIAL, color, DOText.ALIGN_CENTER);
@@ -8593,18 +8605,243 @@ var pairSizeY = 46.0;
 
 
 
-	// add in views
 
-	var edgesEasy = {};
-	var edgesHard = {};
+
+
+
+
+
+
+
+
+
+
+
+// pair graph:
+
+	var graph = new Graph();
+	// for(var i=0; i<pairs.length; ++i){
+
+	var keys = Code.keys(matchedPairLookup);
+console.log(views.length);
+console.log(keys.length);
+	var pairIDToVertex = {};
+	for(var i=0; i<keys.length; ++i){
+		var key = keys[i];
+		var ids = key.split("-");
+		var idA = ids[0];
+		var idB = ids[1];
+		var data = {};
+			data["id"] = key;
+			data["A"] = idA;
+			data["B"] = idB;
+		var vertex = graph.addVertex();
+			vertex.data(data);
+		pairIDToVertex[key] = vertex;
+	}
+
+	var addPairGraphEdge = function(graph, pairIDA,pairIDB){
+		var a = pairIDToVertex[pairIDA];
+		var b = pairIDToVertex[pairIDB];
+		// console.log(a,b);
+		if(a && b){
+			graph.addEdgeDuplex(a,b,1.0);
+		}
+	}
+
+	for(var i=0; i<triples.length; ++i){
+		var triple = triples[i];
+		var gauge = triple["gauge"];
+		var AB = gauge["AB"];
+		var AC = gauge["AC"];
+		var BC = gauge["BC"];
+		var idA = triple["A"];
+		var idB = triple["B"];
+		var idC = triple["C"];
+		var pairIDA;
+// AB = 1;
+// AC = 1;
+// BC = 1;
+		if(AB>0 && AC>0){
+			pairIDA = Code.sortedStringID([idA,idB]);
+			pairIDB = Code.sortedStringID([idA,idC]);
+			matchedPairs.push([pairIDA,pairIDB]);
+			addPairGraphEdge(graph, pairIDA,pairIDB);
+		}
+		if(AB>0 && BC>0){
+			pairIDA = Code.sortedStringID([idA,idB]);
+			pairIDB = Code.sortedStringID([idB,idC]);
+			matchedPairs.push([pairIDA,pairIDB]);
+			addPairGraphEdge(graph, pairIDA,pairIDB);
+		}
+		if(AC>0 && BC>0){
+			pairIDA = Code.sortedStringID([idA,idC]);
+			pairIDB = Code.sortedStringID([idB,idC]);
+			matchedPairs.push([pairIDA,pairIDB]);
+			addPairGraphEdge(graph, pairIDA,pairIDB);
+		}
+	}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	// add in views
+console.log(matchedPairLookup);
+	// var edgesEasy = {};
+	// var edgesHard = {};
+	// var edgesVisited = {};
+
+
+	var circleRadius = 500;
+	var totalOffX = 100;
+	var totalOffY = 50;
+	var circleCenter = new V2D(totalOffX + circleRadius, totalOffY + circleRadius);
+	// var imageSize = Math.round(circleRadius*1.5*Math.PI/views.length);
+	var size = new V2D(0,0);
+
+	var viewLocations = {};
+	for(var i=0; i<views.length; ++i){
+		var view = views[i];
+		var viewID = view.id();
+
+
+		
+
+
+		// var d = new DOImage(image);
+		
+		var angle = Math.PI * 2 * i/views.length;
+		var offsetX = circleCenter.x + size.x*0.5 + circleRadius*Math.cos(angle);
+		var offsetY = circleCenter.y + size.y*0.5 + circleRadius*Math.sin(angle);
+		var location = new V2D(offsetX,offsetY);
+			viewLocations[viewID] = location;
+
+		var color = 0xFF990033;
+		var text = new DOText(""+viewID, 16, DOText.FONT_ARIAL, color, DOText.ALIGN_CENTER);
+		// text.matrix().translate(0,8);
+		text.matrix().translate(location.x, location.y);
+		GLOBALSTAGE.addChild(text);
+
+	}
+
+
+
+
+console.log(graph);
+
+var sets = graph.disjointSets();
+
+sets.sort(function(a,b){
+	return a.length>b.length ? -1 : 1;
+})
+
+console.log(sets)
+
+var best = sets[0];
+
+var colors = [0xFFFF0000,0xFF00FF00,0xFF0000FF];
+var sizes = [13,15,19,23,27];
+
+
+console.log(viewLocations);
+for(var s=0; s<sets.length; ++s){
+	var best = sets[s];
+
+	var size = sizes[s%sizes.length];
+	var color = colors[s%colors.length];
+
+var viewCounts = {};
+for(var i=0; i<best.length; ++i){
+	var vertex = best[i];
+	var data = vertex.data();
+	var idA = data["A"];
+	var idB = data["B"];
+	viewCounts[idA] = 1;
+	viewCounts[idB] = 1;
+
+console.log(idA,idB)
+	var points = [viewLocations[idA],viewLocations[idB]];
+	for(var p=0; p<points.length; ++p){
+		var point = points[p];
+		console.log(p,point)
+		var d = new DO();
+		d.graphics().setLine(2.0,color);
+		d.graphics().beginPath();
+		d.graphics().drawCircle(point.x,point.y, size);
+		d.graphics().strokeLine();
+		d.graphics().endPath();
+		GLOBALSTAGE.addChild(d);
+	}
+	/*
+	var d = new DO();
+	d.graphics().setLine(1.0,color);
+	d.graphics().beginPath();
+	d.graphics().moveTo(points[0].x,points[0].y);
+	d.graphics().lineTo(points[1].x,points[1].y);
+	d.graphics().strokeLine();
+	d.graphics().endPath();
+	GLOBALSTAGE.addChild(d);
+	*/
+}
+viewCounts = Code.objectToArray(viewCounts);
+console.log(viewCounts.length);
+}
+
+
+throw "."
+
+
+
+
+/*
 	// any triple that has a pair => add a simple edge
 	// and triples that have a pair in common => add a hard edge
 
 	// hyper graph to maximum number of related edges
+	var keys = Code.keys(matchedPairLookup);
+	for(var i=0; i<keys.length; ++i){
+		var key = keys[i];
+		var ids = key.split("-");
+		var val = matchedPairLookup[key];
+		var idA = ids[0];
+		var idB = ids[1];
+		if(val>1){
+			// console.log("hard");
+			var pointA = viewLocations[idA];
+			var pointB = viewLocations[idB];
 
+				var d = new DO();
+				d.graphics().setLine(3.0,0xFF330033);
+				d.graphics().beginPath();
+				d.graphics().moveTo(pointA.x,pointA.y);
+				d.graphics().lineTo(pointB.x,pointB.y);
+				d.graphics().endPath();
+				d.graphics().strokeLine();
+				GLOBALSTAGE.addChild(d);
+
+		}else{
+			// console.log("soft");
+		}
+	}
 
 	// ..
-
+*/
 
 
 	throw "_visualizeTriples";
@@ -9329,11 +9566,18 @@ App3DR.ProjectManager.prototype.triplesFromBestPairs = function(pairs, isDense){
 // console.log("triplesFromBestPairs: --- TODO: cap max amount of triples");
 
 	var minimumRelativeCount = 100; // tracks:  poor-avg-good  |  sparse =  100-200-500   |  dense = 1000-10k
-	var maximumIndividualPairCount = 4; // 3 - 6 [at least 2 others to guarantee relative-ness, at least 4 for error]
+	// var maximumIndividualPairCount = 4; // 3 - 6 [at least 2 others to guarantee relative-ness, at least 4 for error]
 	if(isDense){
 		minimumRelativeCount = 200; // 
-		maximumIndividualPairCount = 3; // 2 - 4
+		// maximumIndividualPairCount = 3; // 2 - 4
 	}
+
+
+	maximumIndividualPairCount = 10; // 223 v
+	// maximumIndividualPairCount = 4; // 185 ^
+
+
+	// TODO: ANY REDUCTION IN TRIPLES NEEDS TO MAKE SURE THAT ALL VIEWS ARE REACHABLE IN A PAIRGRAPH
 
 	console.log(pairs);
 	// throw "???"
@@ -9408,6 +9652,10 @@ console.log("keepCount: "+keepCount);
 			if(idAA==idBA || idAA==idBB || idAB==idBA || idAB==idBB){
 				var uniqueStrings = Code.uniqueStrings([idAA,idAB,idBA,idBB]);
 					uniqueStrings.sort();
+if(uniqueStrings.length!=3){
+	console.log(uniqueStrings);
+	throw "?"
+}
 				var idA = uniqueStrings[0];
 				var idB = uniqueStrings[1];
 				var idC = uniqueStrings[2];
@@ -9691,15 +9939,12 @@ project.displayViewGraph(orderedAbsoluteTransforms,groupPairsPass, 0, groupIDs);
 				var WORLDVIEWS = info["views"];
 				var WORLDVIEWSLOOKUP = info["lookup"];
 				var world = info["world"];
-
 				world.setResolutionProcessingModeNonVisual();
 				world.copyRelativeTransformsFromAbsolute();
-
 				var points3DExisting = App3DR.ProjectManager._worldPointFromSaves(world, allPoints, WORLDVIEWSLOOKUP);
 				world.embedPoints3DNoValidation(points3DExisting);
 				world.initAllP3DPatches(points3DExisting);
 				world.initAffineFromP3DPatches(points3DExisting);
-
 				world.relativeFFromSamples();
 				world.estimate3DErrors(true);
 				world.printPoint3DTrackCount();

@@ -386,6 +386,33 @@ MISSING:
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
+- understanding triples & pair graph & how to get a relative pair scale & how to 'reach' all views
+
+
+223 v 185  = 38 different triples missing
+
+
+- any way to get a relative ratio indirectly ?
+	=> if there are at least 2 views in common with reconstructions
+		(so far only subsets)
+
+
+
+maximumIndividualPairCount = 10; // 
+maximumIndividualPairCount = 4; // 
+
+
+
+	-
+		A: "6SR6JS8B"
+		B: "GO62LD69"
+		id: "6SR6JS8B-GO62LD69"
+	-
+		A: "8EBBQKGM"
+		B: "EON0Z5A0"
+		id: "8EBBQKGM-EON0Z5A0"
+
+
 
 - visualize triples completed 
 BEFORE TRIPLES DONE

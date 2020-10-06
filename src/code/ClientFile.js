@@ -7,7 +7,9 @@ function ClientFile(url, path){
 	this._serverURL = url;
 	this._workingPath = path;
 	this._operations = [];
-	this._chunkSize = 1E6; // 1E6bytes = 1MB
+	this._chunkSize = null; // 1E6bytes = 1MB
+	// this.chunkSize(1E6);
+	this.chunkSize(1E7);
 }
 Code.inheritClass(ClientFile,Dispatchable);
 
@@ -15,7 +17,12 @@ ClientFile.EVENT_GET_COMPLETE = "client.get.complete";
 ClientFile.EVENT_SET_COMPLETE = "client.set.complete";
 ClientFile.EVENT_DEL_COMPLETE = "client.del.complete";
 ClientFile.EVENT_MOV_COMPLETE = "client.mov.complete";
-
+ClientFile.prototype.chunkSize = function(size){
+	if(size!==undefined){
+		this._chunkSize = size;
+	}
+	return this._chunkSize;
+}
 // ClientFile.prototype._setupClient = function(filePath){
 // 	var operation = new ClientFile.Operation(this._serverURL);
 // 	return operation;

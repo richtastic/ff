@@ -137,7 +137,19 @@ OctTree.prototype.initWithSize = function(min,max, force){
 	min = min.copy();
 	max = max.copy();
 	var force = true;
-	var eps = 1E-6;
+	
+	var diff = V3D.sub(max,min);
+	// var eps = 1E-6;
+	var dif = Math.max(Math.abs(diff.x,diff.y,diff.z));
+	if(dif==0){
+		eps = 1E-6 * Math.max(Math.abs(max.x,max.y,max.z));
+	}else{
+		eps = 1E-6 * dif;
+	}
+	// eps = Math.max(eps, dif);
+	if(eps==0){
+		throw "too small";
+	}
 	min.add(-eps,-eps,-eps);
 	max.add(eps,eps,eps);
 	var size = OctTree.twoDivisionRound(min,max, force);

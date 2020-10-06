@@ -185,6 +185,12 @@ V3D.min = function(a,b,c){ // a = min(b,c)
 }
 V3D.max = function(a,b,c){ // a = max(b,c)
 	if(c===undefined){ c = b; b = a; a = new V3D(); }
+if(b.x===undefined || b.y===undefined || b.z===undefined){
+	throw "B";
+}
+if(c.x===undefined || c.y===undefined || c.z===undefined){
+	throw "C";
+}
 	a.x = b.x>c.x?b.x:c.x;
 	a.y = b.y>c.y?b.y:c.y;
 	a.z = b.z>c.z?b.z:c.z;
