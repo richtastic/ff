@@ -269,7 +269,7 @@ Cover - Rammstein - Ich Will - Я жду
 | Я жду, я хочу получить контроль! | YA zhdu, ya khochu poluchit' kontrol'! | I wait, I want to get control |
 |  |  |  |
 | Над собой |  Nad soboy  | Above oneself |
-| И над судьбой |  I nad sud'boy  | And over fate |
+| И над судьбой | eee nad sud'boy  | And over fate |
 | Над толпой |  Nad tolpoy  | Over the crowd |
 | Над тобой! | Nad toboy! | Upon you |
 |  |  |  |

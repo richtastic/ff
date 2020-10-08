@@ -7,9 +7,9 @@ function ClientFile(url, path){
 	this._serverURL = url;
 	this._workingPath = path;
 	this._operations = [];
-	this._chunkSize = null; // 1E6bytes = 1MB
-	// this.chunkSize(1E6);
-	this.chunkSize(1E7);
+	this._chunkSize = null;
+	// this.chunkSize(1E6); // 1MB
+	this.chunkSize(1E7); // 10MB
 }
 Code.inheritClass(ClientFile,Dispatchable);
 

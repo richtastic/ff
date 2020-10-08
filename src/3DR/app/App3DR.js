@@ -7788,12 +7788,12 @@ console.log("checkPerformNextTask");
 		project.iterateDenseProcess();
 		return;
 	}
-throw ">start bundle";
+// throw ">start bundle";
 	if(!project.checkHasBundleStarted()){
 		project.initializeBundleGroupsFromDense();
 		return;
 	}
-throw "> continue bundle";
+// throw "> continue bundle";
 	if(!project.checkHasBundleEnded()){
 		project.iterateBundleProcess(); // sets up dense groups
 		return;
@@ -10045,7 +10045,9 @@ console.log(allCameras);
 				// world.patchInitBasicSphere(true,points3DAdditional);
 				world.initAllP3DPatches(points3DAdditional);
 				world.initAffineFromP3DPatches(points3DAdditional);
-				world.embedPoints3D(points3DAdditional);
+console.log("UNDO NO VALIDATION FOR TRACK POINTS 1");
+				// world.embedPoints3D(points3DAdditional);
+world.embedPoints3DNoValidation(points3DAdditional);
 
 				// get info ...
 				world.relativeFFromSamples();
@@ -11091,8 +11093,9 @@ console.log(points3DExisting);
 // world.initNullP3DPatches();
 				// add new points with intersection:
 				console.log("new");
-				world.embedPoints3D(additionalPoints); // TODO: ADD THIS BACK
-				// world.embedPoints3DNoValidation(additionalPoints); // TODO: REMOVE THIS
+console.log("UNDO NO VALIDATION FOR TRACK POINTS 2");
+				// world.embedPoints3D(additionalPoints); // TODO: ADD THIS BACK
+world.embedPoints3DNoValidation(additionalPoints); // TODO: REMOVE THIS
 
 
 

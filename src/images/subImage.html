@@ -1,0 +1,247 @@
+<html>
+<head>
+<title>Sum Image</title>
+<script src="../code/FF.js"></script>
+</head>
+<script type="text/javascript">
+function pageLoadedFxn(){
+	var ff = new FF("../code/",ffLoadedFxn);
+}
+function ffLoadedFxn(){
+	(new ScriptLoader("../3DR/",["R3D.js"],this,classesLoadedFxn)).load();
+}
+function classesLoadedFxn(){
+	var sub = new SubImageTest();
+}
+
+
+
+function SubImageTest(){
+	this._canvas = new Canvas(null,0,0,Canvas.STAGE_FIT_FILL, false,false);
+	this._stage = new Stage(this._canvas, 1000/20);
+	this._root = new DO();
+	this._keyboard = new Keyboard();
+	this._stage.addChild(this._root);
+	this._canvas.addListeners();
+	this._stage.addListeners();
+	this._stage.start();
+	this._canvas.addFunction(Canvas.EVENT_MOUSE_CLICK,this.handleMouseClickFxn,this);
+	// this._stage.addFunction(Stage.EVENT_ON_ENTER_FRAME,this.handleEnterFrame,this);
+	// this._keyboard.addFunction(Keyboard.EVENT_KEY_DOWN,this.handleKeyboardDownFxn,this);
+	this._keyboard.addListeners();
+	//
+	var imageList, imageLoader;
+	// import image to work with
+	imageList = ["bench_A.png","bench_F.png"];
+	//imageList = ["snow2.png","snow1.png"];
+
+	imageLoader = new ImageLoader("../3DR/images/",imageList, this,this.handleSceneImagesLoaded,null);
+	imageLoader.load();
+}
+SubImageTest.prototype.handleSceneImagesLoaded = function(imageInfo){
+	var imageList = imageInfo["images"];
+	var i, j, list = [], d, img;
+	var featurePoints = [];
+	var features = [];
+	var matrixOffY = 10;
+	var matrixOffX = 10.0;
+	var x=0, y=0;
+var display = this._root;
+display.matrix().scale(1.5);
+
+
+var polygons = [];
+	polygons.push( [new V2D(51,224), new V2D(72,186), new V2D(117,187), new V2D(98,232)] );
+	polygons.push( [new V2D(129,268), new V2D(131,239), new V2D(172,235), new V2D(176,263)] );
+
+	var matrixes = [];
+	var imageScales = [];
+	for(var i=0;i<imageList.length;++i){
+		img = imageList[i];
+		list[i] = img;
+		d = new DOImage(img);
+		display.addChild(d);
+
+
+		d.matrix().identity();
+		d.matrix().translate(x,y+matrixOffY);
+		// d.graphics().setLine(1.0,0xFFFF0000);
+
+		var poly = polygons[i];
+		if(poly){
+			e = new DO();
+			e.graphics().setLine(2.0, 0xFFFF0000);
+			e.graphics().beginPath();
+			
+			for(var j=0; j<poly.length; ++j){
+				var p = poly[j];
+				if(j==0){
+// console.log("MOVE");
+					e.graphics().moveTo(p.x,p.y);
+				}else{
+// console.log("LINE");
+					e.graphics().lineTo(p.x,p.y);
+				}
+			}
+			
+			// e.graphics().drawCircle(p.x,p.y, 10.0);
+			e.graphics().endPath();
+			e.graphics().strokeLine();
+			d.addChild(e);
+		}
+		//
+		// 
+		x += img.width;
+		// 
+console.log(img.width);
+
+		/*
+		this._root.addChild(d);
+		if(i==0){
+			d.removeParent();
+		}
+
+		d.moveToBack();
+		d.enableDragging();
+		
+		d.graphics().beginPath();
+		d.graphics().endPath();
+		d.graphics().strokeLine();
+		//
+		var imageMat = this._stage.getImageAsFloatGray(img);
+		*/
+		var imageMat = this._stage.getImageAsFloatRGB(img);
+		console.log(imageMat);
+		imageMat = new ImageMat(imageMat["width"],imageMat["height"],imageMat["red"],imageMat["grn"],imageMat["blu"]);
+		var imageScale = new ImageMatScaled(imageMat);
+		console.log(imageScale);
+		matrixes.push(imageMat);
+		imageScales.push(imageScale);
+	}
+
+var outputSize = 51;
+// var outputSize = 21;
+var isLinear = true;
+var half = (outputSize-1) * 0.5;
+
+	console.log(matrixes);
+	var imageScalesA = imageScales[0];
+	var imageScalesB = imageScales[1];
+
+	var pointsA = polygons[0];
+	var pointsB = polygons[1];
+
+	var points0 = [new V2D(0,outputSize), new V2D(0,0), new V2D(outputSize,0), new V2D(outputSize,outputSize)];
+
+	var center0 = V2D.average(points0);
+	var centerA = V2D.average(pointsA);
+	var centerB = V2D.average(pointsB);
+
+	for(var i=0; i<points0.length; ++i){
+		points0[i].sub(center0);
+		pointsA[i].sub(centerA);
+		pointsB[i].sub(centerB);
+
+	}
+
+	var affine = new Matrix2D();
+
+	// var average = R3D.affineCornerMatrixLinear(pointsA,points0, new Matrix2D());
+	var average = R3D.affineCornerMatrixLinear(points0,pointsA, new Matrix2D());
+
+console.log("average: "+average);
+
+
+	var scale = 1.0;
+	affine.identity();
+	affine.translate(-half,-half);
+
+	// affine.scale(scale);
+	// affine.premult(average);
+	affine.postmult(average);
+
+	// affine.rotate(Code.radians(25.0));
+	affine.translate(half,half);
+	// reverse
+	affine.translate(centerA.x,centerA.y);
+	affine.translate(-half,-half);
+
+
+	// R3D.affineCornerMatrixLinear(pointsA,points0, affine);
+
+
+
+
+	// R3D.affineCornerMatrixLinear(pointsA,pointsB, affine);
+	console.log(affine+"");
+
+
+
+
+
+	// test new extraction:
+	var reuseImage = new ImageMat(outputSize,outputSize);
+
+
+	var scale = affine.averageScale();
+	console.log(scale);
+	imageScalesA.extractRectFast(reuseImage, scale, affine, isLinear);
+
+
+
+	var img = this._stage.getFloatRGBAsImage(reuseImage.red(),reuseImage.grn(),reuseImage.blu(), reuseImage.width(),reuseImage.height());
+	var d = new DOImage(img);
+	d.matrix().translate(10, 10);
+	d.matrix().scale(5.0);
+	display.addChild(d);
+
+	// test old extraction:
+
+	
+}
+
+SubImageTest.prototype.handleMouseClickFxn = function(e){
+	// console.log(e)
+	var location = e["location"];
+	var p = new V2D(location.x,location.y);
+	var display = this._root;
+
+	// console.log(p+"");
+	// p = DO.pointLocalUp = function(destinationPoint,sourcePoint,sourceElement,destinationElement){
+	p = DO.pointLocalUp(new V2D(),p, display,this._stage.root());
+p.x -= 504;
+	console.log(p+"");
+	
+	var d = new DO();
+	d.graphics().setLine(2.0, 0xFFFF0000);
+	d.graphics().beginPath();
+	d.graphics().drawCircle(p.x,p.y, 5.0);
+	d.graphics().endPath();
+	d.graphics().strokeLine();
+
+	display.addChild(d);
+}
+
+	
+</script>
+<body onload="pageLoadedFxn();">
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- -->

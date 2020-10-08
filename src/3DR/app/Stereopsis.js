@@ -5904,7 +5904,7 @@ Stereopsis.World.prototype.solveOptimizeSingleView = function(viewSolve, loopIte
 		nextErrorR = viewSolve.track3AverageError();
 		var delta = nextErrorR - prevErrorR;
 		prevErrorR = nextErrorR;
-		var ratio = Math.abs(delta/startingErrorR);
+		var ratio = startingErrorR!=0 ? Math.abs(delta/startingErrorR) : 0;
 		console.log("DELTA: "+delta+" @ "+ratio);
 		// if(ratio<0.00001){ // static
 		// 	console.log("break early");

@@ -356,10 +356,11 @@ https://cloud.google.com/appengine/docs/nodejs/
 TIMELINES:
 
 
-09/20 - 360 object scene ~ 20 images
+10/10 - 360 object scene ~ 20 images
+	- optimize some of the algorithms
 	
-10/10 - test set of ~ 50 images
-	- (this will require 2-10 x speed ups)
+10/20 - test set of ~ 50 images
+	- (this will require 10-100 x speed ups)
 	- what to do about points at infinity
 		=> 
 
@@ -386,37 +387,25 @@ MISSING:
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
-- understanding triples & pair graph & how to get a relative pair scale & how to 'reach' all views
+- track group & full looks horrible
+	x don't do intersection resolution when aggregating points?
+	- nonlinear error fxn?
 
 
-223 v 185  = 38 different triples missing
-
-
-- any way to get a relative ratio indirectly ?
-	=> if there are at least 2 views in common with reconstructions
-		(so far only subsets)
-
-
-
-maximumIndividualPairCount = 10; // 
-maximumIndividualPairCount = 4; // 
+- start replacing slower code with newer code
+	- make some test examples first
+	- compare old & new algorithm: results & performance
+	- A)
+		- extract a section out of an A-B pair
 
 
 
-	-
-		A: "6SR6JS8B"
-		B: "GO62LD69"
-		id: "6SR6JS8B-GO62LD69"
-	-
-		A: "8EBBQKGM"
-		B: "EON0Z5A0"
-		id: "8EBBQKGM-EON0Z5A0"
 
 
-
-- visualize triples completed 
-BEFORE TRIPLES DONE
-
+50x @ 5
+20x @ 11
+15x @ 21
+6x @ 75
 
 
 
@@ -440,6 +429,12 @@ BEFORE TRIPLES DONE
 	- is homography needed ?
 	....
 
+
+
+OPTIMIZATIONS:
+	- reuse objects (no new)
+	- fewer function stack calls
+	- cache data that will be reused
 
 
 
@@ -518,6 +513,14 @@ ADD SOME DENSE PAIRS TO RUN:
 		A: "2FOQVM53"
 		B: "2ODOD34I"
 		id: "2FOQVM53-2ODOD34I"
+	-
+		A: "6SR6JS8B"
+		B: "GO62LD69"
+		id: "6SR6JS8B-GO62LD69"
+	-
+		A: "8EBBQKGM"
+		B: "EON0Z5A0"
+		id: "8EBBQKGM-EON0Z5A0"
 
 
 

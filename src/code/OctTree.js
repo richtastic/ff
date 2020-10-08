@@ -139,14 +139,13 @@ OctTree.prototype.initWithSize = function(min,max, force){
 	var force = true;
 	
 	var diff = V3D.sub(max,min);
-	// var eps = 1E-6;
+	var eps = 1E-6; // additional proportional size padding
 	var dif = Math.max(Math.abs(diff.x,diff.y,diff.z));
 	if(dif==0){
-		eps = 1E-6 * Math.max(Math.abs(max.x,max.y,max.z));
+		eps = eps * Math.max(Math.abs(max.x,max.y,max.z));
 	}else{
-		eps = 1E-6 * dif;
+		eps = eps * dif;
 	}
-	// eps = Math.max(eps, dif);
 	if(eps==0){
 		throw "too small";
 	}

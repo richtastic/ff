@@ -93,9 +93,13 @@ DO.pointLocalUp = function(destinationPoint,sourcePoint,sourceElement,destinatio
 	var ele = sourceElement;
 	DO._tempMatrix.identity();
 	while(ele != destinationElement && ele){
+	// while(ele != null && ele){
 		if(ele){
 			DO._tempMatrix.mult(DO._tempMatrix,ele.matrix());
 		}
+		// if(ele==destinationElement){
+		// 	break;
+		// }
 		ele = ele.parent();
 	}
 	DO._tempMatrix.inverse(DO._tempMatrix);
@@ -107,9 +111,13 @@ DO.pointLocalDown = function(destinationPoint,sourcePoint,sourceElement,destinat
 	var ele = sourceElement;
 	DO._tempMatrix.identity();
 	while(ele != destinationElement && ele != undefined){
+	// while(ele != null && ele != undefined){
 		if(ele){
 			DO._tempMatrix.mult(DO._tempMatrix,ele.matrix());
 		}
+		// if(ele==destinationElement){
+		// 	break;
+		// }
 		ele = ele.parent();
 	}
 	DO._tempMatrix.multV2D(destinationPoint,sourcePoint);
