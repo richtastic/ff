@@ -451,25 +451,39 @@ Stereopsis.infoFromMatrix2D = function(imageA,pointA,imageB,pointB,matrix,featur
 	var zoom = needleSize/featureSize; // VERIFIED CORRECT
 
 	// pre extract scale from matrix ...
+/*
 	matrix = Stereopsis._temp_matrix2D.copy(matrix);
 	var averageScale = matrix.averageScale();
 	matrix.scale(1.0/averageScale);
 	var zoomA = zoom*averageScale;
 	var zoomB = zoom;
 
-// console.log(zoomA,zoomB,zoom,averageScale);
-
-	// var zoomA = zoom;
-	// var zoomB = zoom;
-
-
-	// var needle = imageA.extractRectFromFloatImage(pointA.x,pointA.y,zoomA,null,needleSize,needleSize, matrix);
-	// var haystack = imageB.extractRectFromFloatImage(pointB.x,pointB.y,zoomB,null,needleSize,needleSize, null);
-
-// .extractRect(pointB, featureScale, compareSize,compareSize, null);
-
 	var needle = imageA.extractRect(pointA,zoomA,needleSize,needleSize, matrix);
 	var haystack = imageB.extractRect(pointB,zoomB,needleSize,needleSize, null);
+*/
+
+
+	var needle = new ImageMat(needleSize,needleSize);
+	var haystack = new ImageMat(needleSize,needleSize);
+	var halfCenter = (needleSize-1)*0.5;
+	var iScale = 1.0/zoom;
+
+	matrix = Stereopsis._temp_matrix2D.copy(matrix);
+
+		matrix.inverse();
+		matrix.scale(iScale);
+	var scale = matrix.averageScale();
+		ImageMatScaled.affineToLocationTransform(matrix,matrix, halfCenter,halfCenter, pointA.x,pointA.y);
+		imageA.extractRectFast(needle, scale, matrix);
+		
+		matrix.identity();
+		matrix.scale(iScale);
+	var scale = matrix.averageScale();
+		ImageMatScaled.affineToLocationTransform(matrix,matrix, halfCenter,halfCenter, pointB.x,pointB.y);
+		imageB.extractRectFast(haystack, scale, matrix);
+
+
+
 /*
 var sca = 5.0;
 var image = needle;
@@ -485,7 +499,7 @@ var d = new DOImage(img);
 d.matrix().scale(sca);
 d.matrix().translate(10 + 400, 10 );
 GLOBALSTAGE.addChild(d);
-throw "..."
+// throw "..."
 */
 	var scoreNCC = R3D.searchNeedleHaystackNCCColor(needle,haystack);
 		scoreNCC = scoreNCC["value"][0];
@@ -493,6 +507,11 @@ throw "..."
 		scoreSAD = scoreSAD["value"][0];
 	var range = needle.range()["y"];
 	// console.log(scoreSAD,scoreNCC);
+
+
+// console.log(scoreNCC,scoreSAD,range);
+// throw "here"
+
 	return {"ncc":scoreNCC, "sad":scoreSAD, "range":range};
 }
 Stereopsis.World.prototype.insertPoint3D = function(point3D){
@@ -6855,6 +6874,8 @@ Stereopsis.World.prototype.affineP2DFromMode = function(newMatch){ // TODO: shou
 }
 
 Stereopsis.World.prototype._resolutionProcessingModeAffineFromVisual2D = function(newMatch){ // for affineP2DFromMode
+	// TODO: Add reuse images & mask
+
 	var viewA = newMatch.viewA();
 	var viewB = newMatch.viewB();
 	var featureSize = (viewA.compareSize()+viewB.compareSize())*0.5;
@@ -13457,7 +13478,8 @@ Stereopsis.World.prototype.probe2DCellsRF = function(sigmaMaximumSelect, sigmaMa
 							++possibles;
 							var maximumUniquenessScore = 0.99; // 0.95-0.99
 							// check to see if there are other score 'peaks' nearby
-							var uniquenessScore = world.matchUniqueness(newMatch);
+							// var uniquenessScore = world.matchUniqueness(newMatch);
+							uniquenessScore = 0;
 							// console.log("uniquenessScore: "+uniquenessScore);
 							if(uniquenessScore<maximumUniquenessScore){
 								var point2DA = newMatch.point2DA();
@@ -18642,8 +18664,43 @@ Stereopsis.World.prototype.matchUniqueness = function(match){
 	var haystackSize = needleSize * 4; // 3-5 --- if F/R error is low, can limit this more towards ~ 2
 	var compareSize = 9; // 5 - 11
 	var cellScale = (compareSize/needleSize);
-	var needle = imageScalesA.extractRect(pointA,cellScale,compareSize,compareSize, matrix);
-	var haystack = imageScalesB.extractRect(pointB,cellScale,haystackSize,haystackSize, null);
+
+
+
+	// var needle = imageScalesA.extractRect(pointA,cellScale,compareSize,compareSize, matrix);
+	// var haystack = imageScalesB.extractRect(pointB,cellScale,haystackSize,haystackSize, null);
+
+
+throw "this is not done"
+	var affine = new Matrix2D();
+		affine.copy(matrix);
+
+		var inScale = 1.0/cellScale;
+	var halfNeedle = (needleSize-1)*0.5;
+	var halfHaystack = (haystackSize-1)*0.5;
+
+	var needle = new ImageMat(needleSize,needleSize);
+	var haystack = new ImageMat(haystackSize,haystackSize);
+
+	affine = Stereopsis._temp_matrix2D.copy(affine);
+	affine.inverse();
+	affine.scale(inScale);
+	var averageScale = affine.averageScale();
+		ImageMatScaled.affineToLocationTransform(affine,affine, halfNeedle,halfNeedle, pointA.x,pointA.y);
+		imageScalesA.extractRectFast(needle, averageScale, affine);
+
+	affine.identity();
+	affine.scale(inScale);
+	var averageScale = affine.averageScale();
+		ImageMatScaled.affineToLocationTransform(affine,affine, halfHaystack,halfHaystack, pointB.x,pointB.y);
+		imageScalesB.extractRectFast(haystack, averageScale, affine);
+
+
+
+
+
+
+
 	var scoreSAD = R3D.searchNeedleHaystackSADColor(needle,haystack);
 
 	var value = scoreSAD["value"];
@@ -18685,11 +18742,23 @@ Stereopsis.World.prototype.bestNeedleHaystackFromLocation = function(centerA,cen
 	var needleSize = Stereopsis.COMPARE_HAYSTACK_NEEDLE_SIZE;
 	var haystackSize = needleSize * 2; // 2-4 --- if F/R error is low, can limit this more towards ~ 2
 
+	var reuseNeedle = this._bestNH_needle;
+	if(!reuseNeedle){
+		reuseNeedle = new ImageMat(needleSize,needleSize);
+		this._bestNH_needle = reuseNeedle;
+	}
+	var reuseHaystack = this._bestNH_haystack;
+	if(!reuseHaystack){
+console.log("made new reuse haystack");
+		reuseHaystack = new ImageMat(haystackSize,haystackSize);
+		this._bestNH_haystack = reuseHaystack;
+	}
+
 
 	// var haystackSize = needleSize + 2;
 	// A
 	// needle & haystack both large
-	var result = R3D.optimumSADLocationSearchFlatRGB(existingA,predictedB, viewA.imageScales(),viewB.imageScales(), featureSize, needleSize,haystackSize, affineAB);
+	var result = R3D.optimumSADLocationSearchFlatRGB(existingA,predictedB, viewA.imageScales(),viewB.imageScales(), featureSize, needleSize,haystackSize, affineAB, reuseNeedle, haystackSize);
 
 // A
 // 11 & 22 extract (605)

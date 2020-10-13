@@ -303,10 +303,10 @@ Auslander
 | ru | | en |
 |-|-|-|
 |  |  |  |
-| Я путешествую всегда. |  | I always travel |
-| Туда-сюда, сюда-туда. |  | there-to-here, here-to-there |
-| Мой дом везде, мой друг, словарь. |  | My home is everywhere, my friend: vocabulary/dictionary |
-| Мой язык: интернацьональ! |  |  |
+| Я путешествую всегда. | YA puteshestvuyu vsegda. | I always travel |
+| Туда-сюда, сюда-туда. | Tuda-syuda, syuda-tuda. | there-to-here, here-to-there |
+| Мой дом везде, мой друг, словарь. | Moy dom vezde, moy drug, slovar'. | My home is everywhere, my friend: vocabulary/dictionary |
+| Мой язык: интернациональ! | Moy yazyk: internatsional'! | My language: international! |
 |  |  |  |
 | Я так люблю всем угождать |  |  |
 | Знаю, что кому сказать |  |  |

@@ -2571,23 +2571,29 @@ ImageMat.convolve = function(image,imageWidth,imageHeight, operator,operatorWidt
 	var oW2F = Math.floor(operatorWidth/2); oH2F = Math.floor(operatorHeight/2);
 	// var oW2C = Math.ceil(operatorWidth/2); oH2C = Math.ceil(operatorHeight/2);
 	var result = new Array(total);
+	var jIW = 0;
 	for(j=0;j<imageHeight;++j){
-		jIW = j*imageWidth;
+		// jIW = j*imageWidth;
 		for(i=0;i<imageWidth;++i){
 			staN = Math.max( oW2F-i, 0);
 			endN = Math.min(operatorWidth,oW2F+imageWidth-i);
 			staM = Math.max( oH2F-j, 0);
 			endM = Math.min(operatorHeight,oH2F+imageHeight-j);
 			sum = 0.0;
+			var mW = staM*operatorWidth;
+			var jW = (j+staM-oH2F)*imageWidth;
 			for(m=staM;m<endM;++m){
-				var mW = m*operatorWidth;
-				var jW = (j+m-oH2F)*imageWidth;
+				// var mW = m*operatorWidth;
+				// var jW = (j+m-oH2F)*imageWidth;
 				for(n=staN;n<endN;++n){
 					sum += image[jW+(i+n-oW2F)] * operator[mW+n];
 				}
+				mW += operatorWidth;
+				jW += imageWidth;
 			}
 			result[jIW+i] = sum;
 		}
+		jIW += imageWidth;
 	}
 	return {"value":result,"width":imageWidth,"height":imageHeight};
 }
@@ -3792,7 +3798,8 @@ ImageMat.gradientVector = function(src,wid,hei, x,y){ // not consistent with oth
 	var vectors = [];
 	gradX = gradX.value;
 	gradY = gradY.value;
-	for(var i=0; i<gradX.length; ++i){
+	// for(var i=0; i<gradX.length; ++i){
+	for(var i=gradX.length-1; i>=0; --i){
 		vectors[i] = new V2D(gradX[i],gradY[i]);
 	}
 	return {"value":vectors, "width":wid, "height":hei};
@@ -3941,7 +3948,7 @@ ImageMat.meanFilter = function(src,wid,hei, w,h){
 	var n = 1.0/9.0;
 	return ImageMat.convolve(src,wid,hei, [n,n,n, n,n,n, n,n,n], 3,3);
 }
-ImageMat.prototype.meanFilter = function(){
+ImageMat.prototype.meanFilter = function(reuseImage){
 	var image = this;
 	var red = image._r;
 	var grn = image._g;
@@ -3955,28 +3962,41 @@ ImageMat.prototype.meanFilter = function(){
 	if(newWid<=0 || newHei<=0){
 		return null;
 	}
-	var result = new ImageMat(newWid,newHei);
+	var result = null;
+	if(reuseImage){
+		result = reuseImage;
+	}else{
+		result = new ImageMat(newWid,newHei);
+	}
 	var r = result._r;
 	var g = result._g;
 	var b = result._b;
+	var jWTot = 0;
+	var jNew = 0;
 	for(var j=1; j<hm1; ++j){
 		for(var i=1; i<wm1; ++i){
 			var x = 0;
 			var y = 0;
 			var z = 0;
+			var jW = jWTot; // (j-1)*wid
 			for(var jj=-1; jj<=1; ++jj){
 				for(var ii=-1; ii<=1; ++ii){
-					var index = (j + jj)*wid + (i + ii);
+					// var index = (j + jj)*wid + (i + ii);
+					var index = jW + i + ii;
 					x += red[index];
 					y += grn[index];
 					z += blu[index];
 				}
+				jW += wid;
 			}
-			var ind = (j-1)*newWid + (i-1);
+			// var ind = (j-1)*newWid + (i-1);
+			var ind = jNew + (i-1);
 			r[ind] = x/9.0;
 			g[ind] = y/9.0;
 			b[ind] = z/9.0;
 		}
+		jWTot += wid;
+		jNew += newWid;
 	}
 	return result;
 }
@@ -4403,6 +4423,7 @@ ImageMat.getProgressiveScaledImage = function(imageA){
 	return {"scales":scalesA,"images":imagesA};
 }
 ImageMat.effectiveIndexFromImageScales = function(images,scale){
+	throw "don't use"
 	var scales = images["scales"];
 	var binaryF = function(haystack,needle){
 		if(needle==haystack){
@@ -4412,11 +4433,11 @@ ImageMat.effectiveIndexFromImageScales = function(images,scale){
 	};
 	var effectiveIndex = Code.binarySearch(scales, binaryF, false, scale);
 	if(Code.isArray(effectiveIndex)){
-		// console.log(scale,effectiveIndex,scales);
 		effectiveIndex = effectiveIndex[0]; // return higher resolution possibility
 	}
 	return effectiveIndex;
 }
+
 ImageMat.prototype.getRotatedImage = function(angle){
 	var red = this.red();
 	var grn = this.grn();
@@ -5242,14 +5263,13 @@ ImageMatScaled.prototype.size = function(){
 	return null;
 }
 ImageMatScaled.prototype.infoForScale = function(scale){
-	var container = this._container;
 	var images = this._images;
 	var scales = this._scales;
-	var scaleIndex = ImageMat.effectiveIndexFromImageScales(container,scale);
+	// var scaleIndex = this.effectiveIndexFromScale(scale);
+	var scaleIndex =  Math.min(Math.max( Math.floor(-Math.log2(scale)) ,0),images.length-1); // inline
 	var actualScale = scales[scaleIndex];
 	var effectiveImage = images[scaleIndex];
 	var effectiveScale = scale/actualScale;
-	// var effA = pointA.copy().scale(actualScaleA);
 	return {"image":effectiveImage, "actualScale":actualScale, "effectiveScale":effectiveScale};
 }
 ImageMatScaled.prototype.images = function(){
@@ -5265,7 +5285,11 @@ ImageMatScaled.prototype.image = function(){
 	}
 	return null;
 }
-
+ImageMatScaled.prototype.effectiveIndexFromScale = function(scale){
+	var effectiveIndex = Math.floor(-Math.log2(scale)); // opt for higher resolution image
+		effectiveIndex = Math.min(Math.max(effectiveIndex,0),this._images.length-1); // keep inside available range
+	return effectiveIndex;
+}
 
 ImageMatScaled.prototype.getScaledImage = function(scale, doCeil){
 	var wid = this.width();
@@ -5280,7 +5304,16 @@ ImageMatScaled.prototype.getScaledImage = function(scale, doCeil){
 		resultHeight = Math.ceil(scale*hei);
 	}
 	var resultScale = (resultWidth/wid + resultHeight/hei)*0.5;
-	var image = this.extractRect(center, resultScale, resultWidth,resultHeight);
+// console.log(resultScale+" = "+resultWidth+"x"+resultHeight);
+	// inverse scale from new to old
+	resultScale = 1.0/resultScale;
+	var affine = new Matrix2D();
+	affine.identity();
+	affine.scale(resultScale);
+	ImageMatScaled.affineToLocationTransform(affine, affine, (resultWidth-1)*0.5,(resultHeight-1)*0.5,wm1*0.5,hm1*0.5);
+	var image = new ImageMat(resultWidth,resultHeight);
+	this.extractRectFast(image, resultScale, affine);
+	// var image = this.extractRect(center, resultScale, resultWidth,resultHeight);
 	return image;
 }
 
@@ -5307,7 +5340,7 @@ ImageMatScaled.prototype.getImageSize = function(idealSize, maxScale, minScale){
 
 
 ImageMatScaled.prototype.extractRect = function(resultCenter, resultScale, resultWidth,resultHeight, matrix){ // extract appropriate image at scale
-
+throw "NO";
 // remove scale
 // var info = R3D.infoFromAffine2D(matrix);
 if(matrix){
@@ -5329,6 +5362,7 @@ matrix.scale(applyScale);
 	return needle;
 }
 ImageMatScaled.extractRect = function(imageScales, resultCenter, resultScale, resultWidth,resultHeight, matrix){
+throw "NO";
 	var info = imageScales.infoForScale(resultScale);
 	var imageMatrix = info["image"];
 	var imageGray = imageMatrix.gry();
@@ -5346,10 +5380,11 @@ ImageMatScaled.prototype.extractRectFast = function(reuseImage, scale, matrix, i
 	// scale < 1.0 = zoom in (smaller section of image) [] => [   ]
 	// scale > 1.0 = zoom out (larger section of image) [   ] => []
 	// scale should already incorporate output-size differences
-	// matrix should not have any average scale on it
-	// matrix is INVERSE transform image destination TO image source
+	// matrix has same scale on it as scale passed thru
+	// matrix is INVERSE transform: image source TO image destination
+// scale = 1.0;
 	var imageScales = this;
-	var info = imageScales.infoForScale(scale);
+	var info = imageScales.infoForScale(1.0/scale);
 	// var info = imageScales.infoForScale(1.0);
 	var imageMatrix = info["image"];
 	var imageGray = imageMatrix.gry();
@@ -5357,6 +5392,7 @@ ImageMatScaled.prototype.extractRectFast = function(reuseImage, scale, matrix, i
 	var imageHeight = imageMatrix.height();
 	var effScale = info["effectiveScale"];
 	var actScale = info["actualScale"];
+// console.log("scale: "+scale+" => "+imageMatrix.size());
 // console.log("effScale: "+effScale);
 // console.log("actScale: "+actScale);
 	var red = imageMatrix.red();
@@ -5377,15 +5413,23 @@ ImageMatScaled.prototype.extractRectFast = function(reuseImage, scale, matrix, i
 	// console.log(wid,hei);
 	var listTo = [r,g,b];
 	var listFr = [red,grn,blu];
+
+
+// local linear constants:
+var hm1 = imageHeight-1, wm1 = imageWidth-1;
+var i;
+
+// local cumic constants:
+
+
 	for(var y=0; y<hei; ++y){
 		for(var x=0; x<wid; ++x){
 			p.set(x,y);
 			matrix.multV2DtoV2D(p,p);
-			p.scale(actScale);
+			p.scale(actScale); // for selected image size
 			// p.scale(1.0/actScale);
 			// p.scale(effScale);
-			// .
-			
+			// p.scale(1.0/effScale);
 			var index = y*wid + x;
 
 			// closest: 110
@@ -5400,11 +5444,9 @@ ImageMatScaled.prototype.extractRectFast = function(reuseImage, scale, matrix, i
 			// Code.parallelArrayInterpolateLinear(listTo,listFr, index, p.x,p.y, imageWidth,imageHeight);
 			// 
 
-			
 			// linear-local: 160
 			var x2 = p.x;
 			var y2 = p.y;
-			var hm1 = imageHeight-1, wm1 = imageWidth-1;
 			var minX = Math.min( Math.max(Math.floor(x2), 0), wm1);
 			var minY = Math.min( Math.max(Math.floor(y2), 0), hm1);
 			var maxX = Math.max( Math.min(Math.ceil(x2), wm1), 0);
@@ -5422,7 +5464,7 @@ ImageMatScaled.prototype.extractRectFast = function(reuseImage, scale, matrix, i
 			var omx = (1.0-minX);
 			var omy = (1.0-minY);
 			var array, A, B;
-			for(var i=listTo.length-1; i>=0; --i){
+			for(i=listTo.length-1; i>=0; --i){
 				array = listFr[i];
 				A = minX*array[indexB] + omx*array[indexA];
 				B = minX*array[indexD] + omx*array[indexC];
@@ -5563,6 +5605,34 @@ for(j=0;j<hei;++j){
 	return reuseImage;
 }
 
+
+ImageMatScaled.affineToLocationTransform = function(outMatrix, inMatrix, destX,destY,sourceX,sourceY){ // helper: destination image to source image mapping
+	if(outMatrix==inMatrix){
+		outMatrix.preTranslate(-destX,-destY);
+		outMatrix.translate(sourceX,sourceY);
+	}else{
+		outMatrix.identity();
+		outMatrix.translate(-destX,-destY);
+		outMatrix.postmult(inMatrix);
+		outMatrix.translate(sourceX,sourceY);
+	}
+
+
+/*
+	outMatrix.identity();
+	outMatrix.translate(-sourceX,-sourceY);
+	// outMatrix.postmult(inMatrix);
+	// outMatrix.translate(destX,destY);
+	// outMatrix.translate(-sourceX,-sourceY);
+	// outMatrix.premult(inMatrix);
+	outMatrix.postmult(inMatrix);
+	// outMatrix.translate(destX,destY);
+	// outMatrix.translate(-sourceX,-sourceY);
+*/
+
+
+	return outMatrix;
+}
 
 
 // ...

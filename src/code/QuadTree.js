@@ -728,7 +728,7 @@ QuadTree.Arxel.prototype.objectsInsideRay = function(arr,org,dir,rad,isInfinite,
 	if(this._datas){
 		var datas = this._datas;
 		var len = datas.length;
-		for(var i=0; i<len; ++i){
+		for(var i=len-1; i>=0; --i){
 			var p = toPoint(datas[i]);
 			var d = null;
 			if(isInfinite){
@@ -741,7 +741,7 @@ QuadTree.Arxel.prototype.objectsInsideRay = function(arr,org,dir,rad,isInfinite,
 			}
 		}
 	}else if(this._children){
-		for(var i=0; i<this._children.length; ++i){
+		for(var i=this._children.length-1; i>=0; --i){
 			var child = this._children[i];
 			if(child){
 				var p = child.center();

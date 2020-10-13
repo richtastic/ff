@@ -386,6 +386,24 @@ MISSING:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+- optimizeSADAffineCorner
+	- optimizing affine matrixes not working
+	- error metric?
+	- blurring?
+	- ...
+
+var newMatch = world.bestNeedleHaystackMatchFromLocation(centerA,centerB, newPointA, affine, viewA,viewB);
+
+- 
+
+x R3D.optimumSADLocationSearchFlatRGB
+x minimumFromValues
+
+
+
+
+
+
 
 - track group & full looks horrible
 	x don't do intersection resolution when aggregating points?
@@ -395,17 +413,55 @@ MISSING:
 - start replacing slower code with newer code
 	- make some test examples first
 	- compare old & new algorithm: results & performance
-	- A)
+	x A)
 		- extract a section out of an A-B pair
+	- B) 
+		- feature extraction show
+
+
+
+
+
+objectProgressiveR3D
+	var object = R3D.objectProgressiveR3D_Z(point,imageMatrixScales, cellSize, matrix, debug);
+		progressiveR3DFlat
+	R3D.objectProgressiveR3D_1(object);
+
+		object["9x9_histogram"] = R3D._progressiveR3DColorHistogram(blur9);
+	// grayscale SIFT
+		object["9x9_SIFT_gray"] = R3D._progressiveR3DGrayscaleSIFTList(blur9);
+	// color SIFT
+		object["9x9_SIFT_color"] = R3D._progressiveR3DColorSIFTList(blur9);
+
+
+
+
+
+TEST:
+
+R3D.optimizeSADAffineCorner
+
+R3D.optimizeMatchingRotationScale
+
+
+
+
+
+
+
+
+
+
 
 
 
 
 
 50x @ 5
-20x @ 11
-15x @ 21
-6x @ 75
+25x @ 11
+12x @ 21
+7x @ 41
+6x @ 81
 
 
 

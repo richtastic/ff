@@ -46,6 +46,12 @@ Matrix2D.prototype.set = function(tA,tB,tC,tD,tX,tY){
 	this.a = tA; this.b = tB; this.c = tC; this.d = tD; this.x = tX; this.y = tY;
 	return this;
 }
+Matrix2D.prototype.preTranslate = function(tx,ty){
+	var mat = Matrix2D.temp;
+	mat.set(1,0,0,1,tx,ty);
+	this.mult(this,mat);
+	return this;
+}
 Matrix2D.prototype.translate = function(tx,ty){
 	var mat = Matrix2D.temp;
 	mat.set(1,0,0,1,tx,ty);

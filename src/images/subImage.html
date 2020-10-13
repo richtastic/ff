@@ -1,6 +1,6 @@
 <html>
 <head>
-<title>Sum Image</title>
+<title>Sub Image</title>
 <script src="../code/FF.js"></script>
 </head>
 <script type="text/javascript">
@@ -52,7 +52,7 @@ display.matrix().scale(1.5);
 
 var polygons = [];
 	polygons.push( [new V2D(51,224), new V2D(72,186), new V2D(117,187), new V2D(98,232)] );
-	polygons.push( [new V2D(129,268), new V2D(131,239), new V2D(172,235), new V2D(176,263)] );
+	polygons.push( [new V2D(129,268), new V2D(131,239), new V2D(173,235), new V2D(178,264)] );
 
 	var matrixes = [];
 	var imageScales = [];
@@ -147,12 +147,13 @@ var half = (outputSize-1) * 0.5;
 	var affine = new Matrix2D();
 
 	// var average = R3D.affineCornerMatrixLinear(pointsA,points0, new Matrix2D());
-	var average = R3D.affineCornerMatrixLinear(points0,pointsA, new Matrix2D());
+	// var average = R3D.affineCornerMatrixLinear(points0,pointsA, new Matrix2D());
 
 console.log("average: "+average);
 
-
+/*
 	var scale = 1.0;
+
 	affine.identity();
 	affine.translate(-half,-half);
 
@@ -161,38 +162,62 @@ console.log("average: "+average);
 	affine.postmult(average);
 
 	// affine.rotate(Code.radians(25.0));
-	affine.translate(half,half);
+
+
+//	affine.translate(half,half);
 	// reverse
 	affine.translate(centerA.x,centerA.y);
-	affine.translate(-half,-half);
+//	affine.translate(-half,-half);
+*/
 
-
-	// R3D.affineCornerMatrixLinear(pointsA,points0, affine);
-
-
-
-
-	// R3D.affineCornerMatrixLinear(pointsA,pointsB, affine);
-	console.log(affine+"");
-
-
-
-
-
+	var average;
 	// test new extraction:
 	var reuseImage = new ImageMat(outputSize,outputSize);
-
+	
+	average = R3D.affineCornerMatrixLinear(points0,pointsA, new Matrix2D());
+	// average = R3D.affineCornerMatrixLinear(pointsA,points0, new Matrix2D());
+// average.identity();
+	affine = ImageMatScaled.affineToLocationTransform(affine, average, half,half, centerA.x,centerA.y);//outputSize,outputSize);
 
 	var scale = affine.averageScale();
-	console.log(scale);
+	console.log("scale: "+scale);
+// scale = 1.0;
 	imageScalesA.extractRectFast(reuseImage, scale, affine, isLinear);
-
-
 
 	var img = this._stage.getFloatRGBAsImage(reuseImage.red(),reuseImage.grn(),reuseImage.blu(), reuseImage.width(),reuseImage.height());
 	var d = new DOImage(img);
-	d.matrix().translate(10, 10);
-	d.matrix().scale(5.0);
+	d.matrix().translate(10, 150);
+	d.matrix().scale(3.0);
+	display.addChild(d);
+
+
+
+	average = R3D.affineCornerMatrixLinear(points0,pointsB, new Matrix2D());
+		affine.copy(average);
+		// affine.scale(2.0);
+		// affine.scale(4.0);
+		// affine.scale(8.0);
+		// affine.scale(16.0);
+		// affine.scale(0.25);
+// var scale = affine.averageScale();
+// affine.scale(1.0/scale);
+		ImageMatScaled.affineToLocationTransform(affine, affine, half,half, centerB.x,centerB.y);
+	// affine = ImageMatScaled.affineToLocationTransform(affine, average, half,half, centerB.x,centerB.y);//outputSize,outputSize);
+var scale = affine.averageScale();
+// affine.scale(1.0/scale);
+
+	// var scale = affine.averageScale();
+	// affine.scale(1.0/scale);
+
+	console.log("scale: "+scale);
+	imageScalesB.extractRectFast(reuseImage, scale, affine, isLinear);
+	
+	var img = this._stage.getFloatRGBAsImage(reuseImage.red(),reuseImage.grn(),reuseImage.blu(), reuseImage.width(),reuseImage.height());
+	var d = new DOImage(img);
+	// d.matrix().scale(3.0);
+	d.matrix().translate(600, 400);
+	
+	// d.matrix().scale(2.0);
 	display.addChild(d);
 
 	// test old extraction:
