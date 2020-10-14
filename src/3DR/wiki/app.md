@@ -394,11 +394,28 @@ MISSING:
 
 var newMatch = world.bestNeedleHaystackMatchFromLocation(centerA,centerB, newPointA, affine, viewA,viewB);
 
-- 
+
+
+why is this also used?;
+
+optimizePatchNonlinearImagesGD
+
+
+
+SLOW: "CALCULATE F -> P"
 
 x R3D.optimumSADLocationSearchFlatRGB
 x minimumFromValues
 
+
+
+- do small image group: ~ 10 & look at algorithm performance again
+	- try to optimize slow things
+	- when pair / group matches are bad : find what parts of algorithm may be bad (eg point localization)
+
+- blind initial best pair guessing
+	- drop worst 50% histogram ones?
+	- area-histogram matches ?
 
 
 

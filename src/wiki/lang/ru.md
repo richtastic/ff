@@ -198,6 +198,13 @@ https://lyricstranslate.com/en/radio-tapok-deutschland-cover-%D0%BD%D0%B0-%D1%80
 | Дойчланд! Дитя костра |  | Deutschland! Campfire (fire?) child |
 | Юна и так стара! |  | young and so old |
 |  |  |  |
+|  | Piece 2: |  |
+| Дойчланд! Это счастье? |  | Deutschland! Is this happiness? |
+| Или проклятье? |  | Or a curse? |
+| Дойчланд! Ты забвение? |  | Deutschland! Are you oblivion? |
+| Или же благословенье? |  | Or a blessing? |
+
+|  |  |  |
 | Я... (я твой, я твой, я твой, я твой) |  | I (I am yours, ...) |
 | Не смел тебя обидеть, (всегда, всегда, всегда, всегда) |  | Didn't dare to offend you (always, ...) |
 | Буду любить (одна, одна, одна, одна) |  | I will love (one, ...) |
@@ -211,11 +218,7 @@ https://lyricstranslate.com/en/radio-tapok-deutschland-cover-%D0%BD%D0%B0-%D1%80
 | Дойчланд, Дойчланд – выше всех нас! |  | Deutschland, Deutschland - above all of us |
 |  |  |  |
 |  | [Refrain 1] |  |
-|  |  |  |
-| Дойчланд! Это счастье? |  | Deutschland! Is this happiness? |
-| Или проклятье? |  | Or a curse? |
-| Дойчланд! Ты забвение? |  | Deutschland! Are you oblivion? |
-| Или же благословенье? |  | Or a blessing? |
+
 |  |  |  |
 | Дойчланд! x2 |  |  |
 |  |  |  |

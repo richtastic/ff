@@ -7936,7 +7936,7 @@ App3DR.ProjectManager.prototype._iterateSparseDenseLoaded = function(inputFilena
 	var currentPair = null;
 	var completePairFxn = function(data){
 		console.log("completePairFxn");
-// throw "completePairFxn";
+throw "completePairFxn";
 		var idA = currentPair["A"];
 		var idB = currentPair["B"];
 		var uniqueStrings = [idA,idB];
@@ -8123,7 +8123,7 @@ if(!relativeAB && isDense){
 				project.calculatePairMatchWithRFromViewIDs(idA,idB, relativeAB, camAID,camBID,cameras, completePairFxn,project, configuration);
 				return;
 			} // else: sparse = w/o known R
-			throw "this is for sparse"
+			// throw "this is for sparse"
 			var cameras = inputData["cameras"];
 			// console.log(inputData);
 			// console.log(cameras);

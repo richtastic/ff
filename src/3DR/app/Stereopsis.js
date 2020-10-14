@@ -7302,12 +7302,18 @@ Stereopsis.World.prototype.updateP3DPatchFromVisual = function(point3D){
 		return;
 	}
 // console.log(location3D,size3D,normal3D,up3D, ps2D,sizes2D, extrinsics,Ks);
+
 	var result = R3D.optimizePatchSizeProjected(location3D,size3D,normal3D,up3D, ps2D,sizes2D, extrinsics,Ks);
 	// console.log(result);
 	size3D = result["size"];
 
 	// get normal more accurate
 var updateSize3D = size3D * 2.0; // affine more expanded
+
+
+throw "use optimizeSADAffineCorner ??"
+optimizePatchNonlinearImages
+
 	var result = R3D.optimizePatchNonlinearImages(location3D,updateSize3D,normal3D,up3D, ps2D,imageScales, extrinsics,Ks);
 	// console.log(result);
 	var normal = result["normal"];

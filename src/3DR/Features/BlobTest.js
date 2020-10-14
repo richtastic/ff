@@ -31,9 +31,11 @@ function BlobTest(){
 	// new ImageLoader("../images/muffin/",["../sunflowers_real.png", "IMG_6099_25.JPG"],this,this.imagesLoadComplete).load();
 	// new ImageLoader("../images/muffin/",["../daisies.jpg", "IMG_6099_25.JPG"],this,this.imagesLoadComplete).load();
 
+	// new ImageLoader("../images/muffin/",["../room0.png", "../room1.png"],this,this.imagesLoadComplete).load();
 	// new ImageLoader("../images/muffin/",["../room0.png", "../room2.png"],this,this.imagesLoadComplete).load();
 	// new ImageLoader("../images/muffin/",["../F_S_1_1.jpg", "../F_S_1_2.jpg"],this,this.imagesLoadComplete).load();
 
+	// new ImageLoader("../images/muffin/",["../caseStudy1-20.jpg", "../caseStudy1-24.jpg"],this,this.imagesLoadComplete).load();
 	// new ImageLoader("../images/muffin/",["../caseStudy1-24.jpg", "../caseStudy1-26.jpg"],this,this.imagesLoadComplete).load();
 	// new ImageLoader("../images/muffin/",["../caseStudy1-26.jpg", "../caseStudy1-29.jpg"],this,this.imagesLoadComplete).load(); // none
 	
@@ -53,7 +55,7 @@ function BlobTest(){
 
 	// new ImageLoader("../images/room01/",["small_02.JPG", "small_04.JPG"],this,this.imagesLoadComplete).load();
 
-	new ImageLoader("../images/room01/",["small_08.JPG", "small_10.JPG"],this,this.imagesLoadComplete).load();
+	// new ImageLoader("../images/room01/",["small_08.JPG", "small_10.JPG"],this,this.imagesLoadComplete).load();
 
 
 
@@ -72,12 +74,14 @@ function BlobTest(){
 	// new ImageLoader("../images/flowers_1/",["7131.png", "7141.png"],this,this.imagesLoadComplete).load(); 
 	// new ImageLoader("../images/iowa/",["0.JPG", "1.JPG"],this,this.imagesLoadComplete).load(); 
 	// new ImageLoader("../images/iowa/",["0.JPG", "2.JPG"],this,this.imagesLoadComplete).load(); 
-	// new ImageLoader("../images/iowa/",["0.JPG", "8.JPG"],this,this.imagesLoadComplete).load(); 
 	// new ImageLoader("../images/iowa/",["0.JPG", "3.JPG"],this,this.imagesLoadComplete).load(); // NO
+	// new ImageLoader("../images/iowa/",["0.JPG", "8.JPG"],this,this.imagesLoadComplete).load(); 
 	// new ImageLoader("../images/iowa/",["1.JPG", "8.JPG"],this,this.imagesLoadComplete).load(); // NO
 	// new ImageLoader("../images/iowa/",["4.JPG", "9.JPG"],this,this.imagesLoadComplete).load(); // NO
-	// new ImageLoader("../images/iowa/",["5.JPG", "6.JPG"],this,this.imagesLoadComplete).load();
+	new ImageLoader("../images/iowa/",["5.JPG", "6.JPG"],this,this.imagesLoadComplete).load();
 	// new ImageLoader("../images/iowa/",["8.JPG", "9.JPG"],this,this.imagesLoadComplete).load();
+
+	// new ImageLoader("../images/",["snow1.png", "snow2.png"],this,this.imagesLoadComplete).load();
 
 	// new ImageLoader("../images/",["office_stereo1_all.jpg", "office_stereo2_all.jpg"],this,this.imagesLoadComplete).load();
 
@@ -88,7 +92,30 @@ function BlobTest(){
 	// new ImageLoader("../images/pika_1/",["image-0.png","image-4.png"],this,this.imagesLoadComplete).load(); // slice
 	// new ImageLoader("../images/pika_1/",["image-0.png","image-5.png"],this,this.imagesLoadComplete).load(); // corner
 	// minus ear - probably non-uniqueness
+
+
+	// new ImageLoader("../images/flowers_1/",["7133.png", "7141.png"],this,this.imagesLoadComplete).load(); // 
+	// new ImageLoader("../images/flowers_1/",["7131.png", "7133.png"],this,this.imagesLoadComplete).load(); // 
+	// new ImageLoader("../images/flowers_1/",["7133.png", "7144.png"],this,this.imagesLoadComplete).load(); // 
+
+	// new ImageLoader("../images/",["bt.000.png", "bt.002.png"],this,this.imagesLoadComplete).load(); // 
+	// new ImageLoader("../images/",["bt.000.png", "bt.006.png"],this,this.imagesLoadComplete).load(); // 
+
+	// new ImageLoader("../images/",["keble.000.png", "keble.003.png"],this,this.imagesLoadComplete).load(); // 
+
+	// new ImageLoader("../images/",["medusa_1.png", "medusa_2.png"],this,this.imagesLoadComplete).load(); // 
+	// new ImageLoader("../images/",["medusa_1.png", "medusa_3.png"],this,this.imagesLoadComplete).load(); // 
+
+	// new ImageLoader("../images/",["xA_small.jpg", "xB_small.jpg"],this,this.imagesLoadComplete).load(); // 
+	// new ImageLoader("../images/",["yA_small.jpg", "yB_small.jpg"],this,this.imagesLoadComplete).load(); // 
+	// new ImageLoader("../images/",["zA_small.jpg", "zB_small.jpg"],this,this.imagesLoadComplete).load(); // 
+
+
+	// new ImageLoader("../images/",["stereo_3_left.png", "stereo_3_right.png"],this,this.imagesLoadComplete).load(); // 
+	// new ImageLoader("../images/",["stereo_teddy_2.png", "stereo_teddy_6.png"],this,this.imagesLoadComplete).load(); // 
 	
+	
+
 
 	
 
@@ -169,9 +196,9 @@ GLOBALSTAGE.addChild(d);
 	var imageScalesB = new ImageMatScaled(imageMatrixB);
 
 	// couch corner
-	var pointA = new V2D(351,568);
-	// var pointB = new V2D(244.5,516);
-	var pointB = new V2D(243.69 + 5,515.4 + 5);
+	// var pointA = new V2D(351,568);
+	// // var pointB = new V2D(244.5,516);
+	// var pointB = new V2D(243.69,515.4);
 	// <243.55240987540014,515.2597663452159>
 	// <242.98774878532686,514.5792248597674>
 	// <242.46463060983396,513.7121033006556>
@@ -198,6 +225,16 @@ GLOBALSTAGE.addChild(d);
 	// <436.23639958468084,79.311392447171> 21 = (79.311392447171-79)/21 = 0.014
 	// <436.62530256476543,79.40482465692784> 45 = (79.40482465692784-79)/45 = 0.009
 
+	// pillow tag
+	// var pointA = new V2D(627,546);
+	// // var pointB = new V2D(503,491);
+	// var pointB = new V2D(502,490.5);
+
+	// shelf side
+	var pointA = new V2D(368,141);
+	// var pointB = new V2D(271,120.5);
+	var pointB = new V2D(270.5,120.1);
+
 
 	// var featureSize = 67;
 	// var featureSize = 45; //
@@ -219,7 +256,7 @@ GLOBALSTAGE.addChild(d);
 	var halfCenter = (size-1)*0.5;
 
 // bad examples:
-// scale = 2.5;
+// scale = 2.0;
 // angle = Code.radians(30);
 
 	var imageA = new ImageMat(size,size);
@@ -265,17 +302,19 @@ var matrixIn = affine.copy();
 
 
 
-	/*
-	var needleSize = 11;
-	// var needleSize = 21;
-	var haystackSize = needleSize*2;
-	var result = R3D.optimumSADLocationSearchFlatRGB(pointA,pointB, imageScalesA,imageScalesB, featureSize,needleSize,haystackSize, matrixIn);
-		console.log(result);
-	var point = result["point"];
-	console.log(point+"");
-	throw "?";
-	*/
+	// var needleSize = 11;
+	// // var needleSize = 21;
+	// var haystackSize = needleSize*2;
+	// var result = R3D.optimumSADLocationSearchFlatRGB(pointA,pointB, imageScalesA,imageScalesB, featureSize,needleSize,haystackSize, matrixIn);
+	// 	console.log(result);
+	// var point = result["point"];
+	// console.log(point+"");
+	// throw "?";
 
+
+
+
+// throw "before"
 
 	// R3D.optimizeSADAffineCorner();
 
@@ -374,7 +413,7 @@ var imagePathB = fileList[1];
 
 // this.testBlurMean(imageMatrixA);
 
-this.testCornerOpt(imageMatrixA,imageMatrixB);
+// this.testCornerOpt(imageMatrixA,imageMatrixB);
 
 // throw "..."
 
