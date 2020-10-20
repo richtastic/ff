@@ -3736,7 +3736,7 @@ console.log(texture.width,texture.height);
 			var horz = obj["width"];
 			var vert = obj["height"];
 			var bind = this._canvas3D.bindTextureImageRGBA(texture);
-console.log("RIChIE - bind")
+console.log("RICHIE - bind")
 console.log(bind)
 			obj["bind"] = bind;
 			this._textures.push(bind);
@@ -3756,8 +3756,8 @@ console.log(bind)
 
 
 // model camera size
-// camWid = 0.10;
-camWid = 0.01;
+camWid = 0.10;
+// camWid = 0.01;
 
 			var camHei = camWid*(hei/wid);
 			var fyOfx = fy/fx;
@@ -7936,7 +7936,7 @@ App3DR.ProjectManager.prototype._iterateSparseDenseLoaded = function(inputFilena
 	var currentPair = null;
 	var completePairFxn = function(data){
 		console.log("completePairFxn");
-throw "completePairFxn";
+// throw "completePairFxn";
 		var idA = currentPair["A"];
 		var idB = currentPair["B"];
 		var uniqueStrings = [idA,idB];
@@ -12127,6 +12127,12 @@ var Ferror = null;
 	}
 
 	console.log("INITIAL F: "+Ferror+" (of "+maxErrorFInitPixels+"?) "+" & "+(pointsA?pointsA.length:0)+" (of "+minimumCountFInit+" ?)");
+
+
+// R3D.showFundamental(pointsA, pointsB, F, Finv, GLOBALSTAGE, imageMatrixA,imageMatrixB);
+// throw "initial F matches"
+
+
 // throw "now what"
 // F error has to be less than some number < ~ 5px
 // match cound has to be at least some number > ~50-100
@@ -12201,10 +12207,10 @@ var Ferror = null;
 			goodEnoughMatches = false;
 		}
 
-		if(goodEnoughMatches){
-console.log(cameras);
 
-			// 
+
+
+		if(goodEnoughMatches){
 			// add K for finding R
 			var worldCams = [];
 			for(var i=0; i<cameras.length; ++i){
@@ -12216,42 +12222,38 @@ console.log(cameras);
 				var cam = world.addCamera(K, null, camID);
 				worldCams.push(cam);
 			}
-				for(var i=0; i<projectViews.length; ++i){
-					var projectView = projectViews[i];
-			// console.log(projectView);
-					var projectCamera = project.cameraFromID(projectView.cameraID());
-			// console.log(projectCamera);
-					var view = world.viewFromData(projectView.id());
-					// console.log(view);
-					var cam = world.cameraFromData(projectCamera.id());
-					// console.log(cam);
-					view.camera(cam);
-				}
-
-				world.dropWorstParametersF();
-
-				console.log("SOLVE INITIAL R");
-				
-				// var cellCount = 40;
-				// world.setViewCellCounts(cellCount);
-
-				// KEEP PREVIOUS CELL SIZING
-
-				var result = world.solvePair(function(world){
-					console.log("async");
-				}, this);
-				// console.log(result);
-				var str = world.toYAMLString();
-				console.log(str);
-
-// world.showForwardBackwardPair();
-// throw "here, after solvePair"
+			for(var i=0; i<projectViews.length; ++i){
+				var projectView = projectViews[i];
+		// console.log(projectView);
+				var projectCamera = project.cameraFromID(projectView.cameraID());
+		// console.log(projectCamera);
+				var view = world.viewFromData(projectView.id());
+				// console.log(view);
+				var cam = world.cameraFromData(projectCamera.id());
+				// console.log(cam);
+				view.camera(cam);
 			}
 
+			world.dropWorstParametersF();
 
+			console.log("SOLVE INITIAL R");
+			
+			// var cellCount = 40;
+			// world.setViewCellCounts(cellCount);
 
-			// world.showForwardBackwardPair();
+			// KEEP PREVIOUS CELL SIZING
 
+			var result = world.solvePair(function(world){
+				console.log("async");
+			}, this);
+			// console.log(result);
+			var str = world.toYAMLString();
+			console.log(str);
+
+world.showForwardBackwardPair();
+throw "here, after solvePair"
+			}
+// world.showForwardBackwardPair();
 		}
 
 		

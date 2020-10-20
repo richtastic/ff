@@ -386,13 +386,66 @@ MISSING:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+VALIDATE:
+
+optimizePatchNonlinearImages
+_optimizePatchNonlinearImagesGD
+
+
+
+
+
+optimizePatchSizeProjected
+
+
+
+- need to get a list of all major algoritms and metrics & have tests for each to make sure they're doing as expected
+
+...
+
+
+
+
+
+
+
+var newMatch = world.bestNeedleHaystackMatchFromLocation(centerA,centerB, newPointA, affine, viewA,viewB);
+
+
+
+- large R error
+	- some bad (flat) points being expanded to for F step
+
+
 - optimizeSADAffineCorner
 	- optimizing affine matrixes not working
 	- error metric?
 	- blurring?
 	- ...
 
-var newMatch = world.bestNeedleHaystackMatchFromLocation(centerA,centerB, newPointA, affine, viewA,viewB);
+
+
+
+
+
+- some poor 'flat' matches -> should match error take into account RANGE ?
+- SAD error / range
+
+errorNCC\([a-z]+\)
+
+
+..
+
+
+calculatePairMatchFromViewIDs
+
+
+
+
+
+
+
+
 
 
 

@@ -22028,7 +22028,7 @@ R3D.optimizePatchSizeProjected = function(point3D,size3D,normal3D,up3D, points2D
 R3D.optimizePatchNonlinearImages = function(point3D,size3D,normal3D,up3D, points2D,imageScales,extrinsics,Ks, compareSize){ // position normal to minimize SAD error in reprojected cells
 
 
-	throw "why optimizePatchNonlinearImages, not optimizeSADAffineCorner"
+	// throw "why optimizePatchNonlinearImages, not optimizeSADAffineCorner"
 	// console.log("optimizePatchNonlinearImages");
 	compareSize = Code.valueOrDefault(compareSize, 5); // 5 - 9
 	var mask2D = ImageMat.circleMask(compareSize);
@@ -22063,9 +22063,9 @@ R3D.optimizePatchNonlinearImages = function(point3D,size3D,normal3D,up3D, points
 }
 DEBUGOFFX = 0;
 R3D._optimizePatchNonlinearImagesGD = function(args, x, isUpdate){
-	// if(isUpdate){
-	// 	return;
-	// }
+	if(isUpdate){
+		return;
+	}
 	var angleRight = x[0];
 	var angleUp = x[1];
 
@@ -22120,13 +22120,48 @@ R3D._optimizePatchNonlinearImagesGD = function(args, x, isUpdate){
 			pointsB.push(p);
 		}
 		var affine = R3D.affineCornerMatrixLinear(pointsB,pointsA, matrix2D);
-		var averageScale = affine.averageScale();
+//		var averageScale = affine.averageScale();
 			// affine.scale(1.0/averageScale);
 		var point2D = points2D[i];
 		// console.log(point2D,averageScale,compareSize,compareSize, affine);
 // console.log(affine+"");
-		var needle = imageScale.extractRect(point2D,1.0,compareSize,compareSize, affine);
+
+
+// console.log(imageScales);
+// throw "?"
+
+
+	var needle = new ImageMat(compareSize,compareSize);
+	// var invScale = 1.0/???;
+	var invScale = 1.0; // SCALE IS DONE FROM RELATIVE SIZING ?
+	var halfCenter = (compareSize-1)*0.5;
+	//var block = new ImageMat(displaySize,displaySize);
+	// var affine = matrix.copy();
+	affine.inverse();
+	affine.scale(invScale);
+		var totalScale = affine.averageScale();
+		ImageMatScaled.affineToLocationTransform(affine,affine, halfCenter,halfCenter,point2D.x,point2D.y);
+		imageScale.extractRectFast(needle, totalScale, affine);
+
+
+
+
+
+
+//???
+
+		// var needle = imageScale.extractRect(point2D,1.0,compareSize,compareSize, affine);
+
+
+
+
+
+
+
 		needles.push(needle);
+
+
+
 	}
 	var totalError = 0;
 	for(var i=0; i<needles.length; ++i){

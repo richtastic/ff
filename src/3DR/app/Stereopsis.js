@@ -344,6 +344,17 @@ Stereopsis.setMatchInfoFromParamerers = function(match, viewA,pointA,viewB,point
 		var ncc = info["ncc"];
 		var sad = info["sad"];
 		var range = info["range"]/compareSize; // range per pixel
+
+		// ncc & sad per range
+		var den = Math.max(Math.sqrt(range),1E-12);
+		// var den = Math.max(range,1E-12);
+		ncc = ncc/den;
+		sad = sad/den;
+
+		// ncc = Math.min(ncc/range, 1E9);
+		// sad = Math.min(sad/range, 1E9);
+
+
 		// console.log("get info ... "+ncc+","+sad+","+range);
 		// return {"ncc":ncc, "sad":sad, "range":range};
 		// console.log(ncc,sad,range);
@@ -448,7 +459,7 @@ Stereopsis.infoFromMatrix2D = function(imageA,pointA,imageB,pointB,matrix,featur
 
 	var needleSize = Stereopsis.COMPARE_MATCH_AFFINE_NEEDLE_SIZE;
 
-	var zoom = needleSize/featureSize; // VERIFIED CORRECT
+	var zoom = needleSize/featureSize;
 
 	// pre extract scale from matrix ...
 /*
@@ -7311,11 +7322,13 @@ Stereopsis.World.prototype.updateP3DPatchFromVisual = function(point3D){
 var updateSize3D = size3D * 2.0; // affine more expanded
 
 
-throw "use optimizeSADAffineCorner ??"
-optimizePatchNonlinearImages
+
 
 	var result = R3D.optimizePatchNonlinearImages(location3D,updateSize3D,normal3D,up3D, ps2D,imageScales, extrinsics,Ks);
-	// console.log(result);
+console.log(result);
+throw "optimizePatchNonlinearImages"
+
+	
 	var normal = result["normal"];
 	var up = result["up"];
 	point3D.size(size3D);
