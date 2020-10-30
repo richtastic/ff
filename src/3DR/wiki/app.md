@@ -386,6 +386,30 @@ MISSING:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+VALIDATE EACH STEP/ALG WITH TEST PAGES
+
+- not tested yet: local matches from match -- is angle/etc respected?
+
+
+
+- image extraction: center & affine
+
+- corner points
+- corner peaks
+- corner scale & rotation
+
+- image comparison & alignment optimizing
+- peak localization
+
+- patch alignment
+
+- seed matching
+- increase local matches using seed
+
+- known R matcher
+
+
+
 VALIDATE:
 
 optimizePatchNonlinearImages
@@ -438,6 +462,7 @@ errorNCC\([a-z]+\)
 
 
 calculatePairMatchFromViewIDs
+
 
 
 

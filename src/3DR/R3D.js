@@ -11646,26 +11646,7 @@ R3D.optimumSADLocationSearchFlatRGBIteritive = function(pointA,pointB, imageScal
 R3D.DEBUG_SS_A=0;
 R3D._temp_matrix2D = new Matrix2D();
 R3D.optimumSADLocationSearchFlatRGB = function(pointA,pointB, imageScalesA,imageScalesB, featureSize,needleSize,haystackSize, affine, reuseNeedle, reuseHaystack){
-	var cellScale = (needleSize/featureSize); // VERIFIED CORRECT
-
-	// revert average scale
-/*
-	affine = Stereopsis._temp_matrix2D.copy(affine); // TODO: this scale inverse is already done inside imageScaled.extractRect
-	var averageScale = affine.averageScale();
-	affine.scale(1.0/averageScale);
-	var scaleA = cellScale*averageScale;
-	var scaleB = cellScale;
-
-
-	var needle = imageScalesA.extractRect(pointA,scaleA,needleSize,needleSize, affine);
-	var haystack = imageScalesB.extractRect(pointB,scaleB,haystackSize,haystackSize, null);
-*/
-
-	// affine = Stereopsis._temp_matrix2D.copy(affine); // TODO: this scale inverse is already done inside imageScaled.extractRect
-	// var averageScale = affine.averageScale();
-	// affine.scale(1.0/averageScale);
-	// var scaleA = cellScale*averageScale;
-	// var scaleB = cellScale;
+	var cellScale = (needleSize/featureSize);
 
 	var inScale = 1.0/cellScale;
 	var halfNeedle = (needleSize-1)*0.5;
@@ -11682,7 +11663,7 @@ R3D.optimumSADLocationSearchFlatRGB = function(pointA,pointB, imageScalesA,image
 
 
 
-	affine = Stereopsis._temp_matrix2D.copy(affine);
+	affine = R3D._temp_matrix2D.copy(affine);
 	affine.inverse();
 	affine.scale(inScale);
 	var averageScale = affine.averageScale();
@@ -11697,7 +11678,6 @@ R3D.optimumSADLocationSearchFlatRGB = function(pointA,pointB, imageScalesA,image
 
 	var scores = R3D.searchNeedleHaystackSADColor(needle,haystack);
 	var finalSize = scores["width"];
-	// var minimum = R3D.minimumFromValues(scores["value"], finalSize, finalSize, pointB, 1.0/scaleB);
 	var minimum = R3D.minimumFromValues(scores["value"], finalSize, finalSize, pointB, 1.0/cellScale);
 	var absoluteLocation = minimum["location"];
 	var absoluteScore = minimum["score"];

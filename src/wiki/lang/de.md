@@ -1351,6 +1351,7 @@ Wir gehen zusammen, nicht allein
 
 
 Mickie Krause - Jan Pillemann Otze [Fotze]
+https://www.youtube.com/watch?v=hp_rf3EXs0w
 
 | du | | en |
 |-|-|-|
@@ -1421,6 +1422,113 @@ https://deutsch.lingolia.com/en/grammar/pronouns/possessive-pronouns
 https://www.youtube.com/watch?v=rVlQgJnHwgI
 
 
+
+
+
+
+
+
+
+
+
+Oomph! - Labyrinth
+https://www.youtube.com/watch?v=CJ2u3pRpCjc
+
+| du | | en |
+|-|-|-|
+|  | Intro |  |
+| Links, rechts, geradeaus |  | Left, right, straight ahead |
+| Du kommst hier nicht mehr raus |  | You can't get out of here |
+|  |  |  |
+| Der Wahnsinn hat mich eingesperrt |  | Madness locked me in |
+| Und deine Heile Welt verzerrt |  | And distort your ideal world |
+| Hat sich in deinen Kopf gepflanzt |  | Planted itself in your head |
+| Lauf', Kind, lauf', so schnell do kannst |  | Run, kid, run as fast as you can |
+|  |  |  |
+| Du weißt nicht mehr, wer du bist |  | You don't know who you are anymore |
+| Du weißt nicht mehr, was Liebe ist |  | You don't know what love is anymore |
+| Dein Spiegelbild hat sich entstellt |  | Your reflection has become distorted |
+| Niemand ist hier, der zu dir hält |  | Nobody is here to stand by you |
+| Klopf, klopf, lass' mich rein |  | Knock, knock, let me in |
+| Lass' mich dein Geheimnis sein |  | Let me be your secret |
+|  |  |  |
+| Klopf, klopf  (x3) |  | Knock Knock |
+| lass' mich rein |  | let me in |
+| Lass' mich dein Geheimnis sein |  | Let me be your secret |
+| Klopf klopf, lass' mich rein |  | Knock knock, let me in |
+| Lass' mich dein Geheimnis sein |  | Let me be your secret |
+|  |  |  |
+| Links, rechts, geradeaus |  | Left, right, straight ahead |
+| Du bist im Labyrinth |  | You are in the labyrinth |
+|  |  |  |
+|  | Refrain x2: |  |
+| (Links, rechts, geradeaus)  (x2) |  | Left, right, straight ahead |
+| Keiner kann dir sagen, welche Türen die richtigen sind |  | Nobody can tell you which doors are the right ones |
+| Mein verlorenes Kind |  | My lost child |
+| Links, rechts, geradeaus |  | Left, right, straight ahead |
+| Du bist im Labyrinth |  | You are in the labyrinth |
+|  |  |  |
+| Du hast mich oft aus dir verbannt |  | You have banished me from you many times |
+| An meinem Zorn dein Herz verbrannt |  | Your heart burned in my anger |
+|  |  |  |
+| Dein zweites Ich, die zweite Haut |  |  |
+| Hab' ich in deinem Kopf erbaut |  |  |
+| Wenn ich in deine Seele tauche |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+
+Und dich für meine Lust gebrauche
+Dann werd' ich deine Sinne blenden
+Das Spiel kannst nur du selbst beenden
+Klopf, klopf, lass' mich rein
+Lass' mich dein Geheimnis sein
+
+Klopf, klopf
+Klopf klopf
+Klopf klopf, lass' mich rein
+Lass' mich dein Geheimnis sein
+Klopf klopf, lass' mich rein
+Lass' mich dein Geheimnis sein
+Links, rechts, geradeaus
+Du bist im Labyrinth
+(Links, rechts, geradeaus)
+(Links, rechts, geradeaus)
+Keiner kann dir sagen, welche Türen die richtigen sind
+Mein verlorenes Kind
+Links, rechts, geradeaus
+Du bist im Labyrinth
+(Links, rechts, geradeaus)
+(Links, rechts, geradeaus)
+Keiner kann dir sagen, wer die Guten und die Bösen sind
+Du bist im Labyrinth (du bist im Labyrinth, du bist im Labyrinth)
+Du bist im Labyrinth (du bist im Labyrinth, du bist im Labyrinth)
+Klopf, klopf, lass' mich rein
+Lass' mich dein Geheimnis sein
+Klopf, klopf
+Klopf klopf
+Klopf klopf, lass' mich rein
+Lass' mich dein Geheimnis sein
+Klopf klopf, lass' mich rein
+Lass' mich dein Geheimnis sein
+Links, rechts, geradeaus
+Du bist im Labyrinth
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  | Ending (x4) |  |
+| (Links, rechts, geradeaus) (x2) |  |  |
+| Keiner kann dir sagen, wer die Guten und die Bösen sind |  | No one can tell you who the good guys and the bad guys are |
+|  | Intro x2 |  |
+
+Keiner kann dir sagen, welche Türen die richtigen sind
+Mein verlorenes Kind
 
 
 

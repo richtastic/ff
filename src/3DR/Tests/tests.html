@@ -1,0 +1,205 @@
+<html>
+<head>
+<title>Tests</title>
+<script src="../../code/FF.js"></script>
+</head>
+<script type="text/javascript">
+function pageLoadedFxn(){
+	var ff = new FF("../../code/",ffLoadedFxn);
+}
+function ffLoadedFxn(){
+	(new ScriptLoader("../",["R3D.js"],this,classesLoadedFxn)).load();
+}
+function classesLoadedFxn(){
+
+
+	testExtraction();
+
+
+	throw "tests";
+}
+
+function setupDisplay(){
+	this._canvas = new Canvas(null,1,1,Canvas.STAGE_FIT_FILL);
+	this._stage = new Stage(this._canvas, (1/5)*1000);
+	this._canvas.addListeners();
+	this._stage.addListeners();
+	this._stage.start();
+	this._root = new DO();
+	this._stage.root().addChild(this._root);
+// this._root.matrix().scale(2.0,2.0);
+this._stage.root().matrix().scale(2.0);
+	GLOBALSTAGE = this._stage;
+}
+
+
+
+function testExtraction(){
+	console.log("testExtraction");
+	setupDisplay();
+	var fxnImageLoaded = function(info){
+		var images = info["images"];
+		var image = images[0];
+		var imageFloat = GLOBALSTAGE.getImageAsFloatRGB(image);
+		var imageMatrix = new ImageMat(imageFloat["width"],imageFloat["height"], imageFloat["red"], imageFloat["grn"], imageFloat["blu"]);
+		
+		var imageScales = new ImageMatScaled(imageMatrix);
+
+
+		// var needlePoint = new V2D(125,190); // addr corner
+		// var needlePoint = new V2D(145,199); // bricks
+		var needlePoint = new V2D(225,215); // swing
+		// var needlePoint = new V2D(145,290); // bridk edge
+		// var needlePoint = new V2D(141,270);
+		// var needlePoint = new V2D(145,120); // siding
+		// var needlePoint = new V2D(245,290); // bush
+		// var needlePoint = new V2D(395,280); // grass
+
+
+		// var needlePoint = new V2D(145,120);
+		// var haystackPoint = new V2D().add(needlePoint).add(new V2D(0.0,0.0));
+		var haystackPoint = new V2D().add(needlePoint).add(new V2D(3.0,4.0));
+
+		var needleSize = 21;
+
+		var haystackSize = 8*needleSize + 0;
+
+		var needleHalf = (needleSize-1)*0.5;
+		var haystackHalf = (haystackSize-1)*0.5;
+		var scale = 0.50;
+		// var scale = 1.0;
+		var angle = Code.radians(0.0);
+
+		var affine = new Matrix2D();
+
+var distortionAngle = Code.radians(10.0);
+var distortionScale = 1.1;
+			
+
+		var needle = new ImageMat(needleSize,needleSize);
+		var haystack = new ImageMat(haystackSize,haystackSize);
+
+
+console.log("needleHalf: "+needleHalf);
+console.log("haystackHalf: "+haystackHalf);
+		
+		// needle
+		affine.identity();
+		affine.rotate(angle);
+		affine.scale(scale);
+		ImageMatScaled.affineToLocationTransform(affine, affine, needleHalf,needleHalf,needlePoint.x,needlePoint.y);
+		var averageScale = affine.averageScale();
+		imageScales.extractRectFast(needle, averageScale, affine);
+
+		// haystack
+		affine.identity();
+		affine.rotate(angle);
+		affine.scale(scale);
+// distortion
+// affine.rotate(Code.radians(0.0));
+affine.rotate(distortionAngle);
+affine.scale(distortionScale);
+		ImageMatScaled.affineToLocationTransform(affine, affine, haystackHalf,haystackHalf,haystackPoint.x,haystackPoint.y);
+		var averageScale = affine.averageScale();
+		imageScales.extractRectFast(haystack, averageScale, affine);
+
+
+		// find needle/haystack
+		var needleMask = null;
+		var scores = R3D.searchNeedleHaystackSADColor(needle,haystack,needleMask);
+		var valueScores = scores["value"];
+		var valueWidth = scores["width"];
+		var valueHeight = scores["height"];
+
+		// show:
+		image = imageMatrix;
+		var img = GLOBALSTAGE.getFloatRGBAsImage(image.red(),image.grn(),image.blu(), image.width(),image.height());
+		var d = new DOImage(img);
+		d.matrix().scale(1.0);
+		d.matrix().translate(10 + 0, 10 + 0);
+		GLOBALSTAGE.addChild(d);
+
+
+		image = needle;
+		var img = GLOBALSTAGE.getFloatRGBAsImage(image.red(),image.grn(),image.blu(), image.width(),image.height());
+		var d = new DOImage(img);
+		d.matrix().scale(1.0);
+		d.matrix().translate(10 + 0, 10 + 0);
+		GLOBALSTAGE.addChild(d);
+
+		image = haystack;
+		var img = GLOBALSTAGE.getFloatRGBAsImage(image.red(),image.grn(),image.blu(), image.width(),image.height());
+		var d = new DOImage(img);
+		d.matrix().scale(1.0);
+		d.matrix().translate(10 + 100, 10 + 0);
+		GLOBALSTAGE.addChild(d);
+
+
+		// heat map matches
+		var colors = [0xFF000099, 0xFF0000FF, 0xFFCC00CC, 0xFFFF0000, 0xFF990000, 0x00];
+		// var colors = [0xFFFFFFFF, 0xFF000000];
+		// var colors = [0xFF000000, 0xFFFFFFFF];
+		var values = Code.copyArray(valueScores);
+			ImageMat.normalFloat01(values);
+			ImageMat.pow(values,0.50);
+		var heat = ImageMat.heatImage(values, valueWidth, valueHeight, true, colors);
+
+		image = heat;
+		var img = GLOBALSTAGE.getFloatRGBAsImage(image.red(),image.grn(),image.blu(), image.width(),image.height());
+		var d = new DOImage(img);
+		d.matrix().scale(1.0);
+		d.matrix().translate(10 + 100, 10 + 0);
+		d.matrix().translate((haystack.width()-heat.width())*0.5, (haystack.height()-heat.height())*0.5);
+		d.graphics().alpha(0.50);
+		GLOBALSTAGE.addChild(d);
+
+
+
+		var featureSize = needleSize;
+		
+		// var featureSize = 11;
+		// var needleSize = 11;
+		// var haystackSize = 2*needleSize;
+		// var haystackSize = 4*needleSize;
+		// var haystackSize = 21;
+		var affineAB = new Matrix2D();
+			// distortion:
+			// affineAB.identity();
+			// affineAB.rotate(Code.radians(10.0));
+			// affineAB.scale(1.1);
+			affineAB.rotate(distortionAngle);
+			affineAB.scale(distortionScale);
+
+		var result = R3D.optimumSADLocationSearchFlatRGB(needlePoint,haystackPoint, imageScales,imageScales, featureSize, needleSize,haystackSize, affineAB);
+		// console.log(result);
+		var point = result["point"];
+		console.log(point+"");
+
+		console.log("DIFF: "+V2D.distance(point,needlePoint));
+
+
+
+	}
+	new ImageLoader("../images/iowa/",["5.JPG"],this,fxnImageLoaded).load();
+	// point is extracted
+}
+
+function testFindSame(){
+	// find same point in image given a needle/hastack off-center
+}
+
+
+function testFindWarpedSame(){
+	// find same point in image after needle is distorted affine matrix
+	// 
+}
+
+function testFindNeighbors(){
+	// find matching neighbor points around matching area
+	// 
+}
+
+</script>
+<body onload="pageLoadedFxn();">
+</body>
+</html>
