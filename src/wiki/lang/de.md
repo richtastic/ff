@@ -1436,7 +1436,7 @@ https://www.youtube.com/watch?v=CJ2u3pRpCjc
 
 | du | | en |
 |-|-|-|
-|  | Intro |  |
+|  | Intro (x2) |  |
 | Links, rechts, geradeaus |  | Left, right, straight ahead |
 | Du kommst hier nicht mehr raus |  | You can't get out of here |
 |  |  |  |
@@ -1449,9 +1449,9 @@ https://www.youtube.com/watch?v=CJ2u3pRpCjc
 | Du weißt nicht mehr, was Liebe ist |  | You don't know what love is anymore |
 | Dein Spiegelbild hat sich entstellt |  | Your reflection has become distorted |
 | Niemand ist hier, der zu dir hält |  | Nobody is here to stand by you |
+|  |  |  |
 | Klopf, klopf, lass' mich rein |  | Knock, knock, let me in |
 | Lass' mich dein Geheimnis sein |  | Let me be your secret |
-|  |  |  |
 | Klopf, klopf  (x3) |  | Knock Knock |
 | lass' mich rein |  | let me in |
 | Lass' mich dein Geheimnis sein |  | Let me be your secret |
@@ -1467,6 +1467,10 @@ https://www.youtube.com/watch?v=CJ2u3pRpCjc
 | Mein verlorenes Kind |  | My lost child |
 | Links, rechts, geradeaus |  | Left, right, straight ahead |
 | Du bist im Labyrinth |  | You are in the labyrinth |
+| (Links, rechts, geradeaus) x2 |  | ... |
+Keiner kann dir sagen, wer die Guten und die Bösen sind
+Mein verlorenes Kind
+
 |  |  |  |
 | Du hast mich oft aus dir verbannt |  | You have banished me from you many times |
 | An meinem Zorn dein Herz verbrannt |  | Your heart burned in my anger |
@@ -1474,25 +1478,25 @@ https://www.youtube.com/watch?v=CJ2u3pRpCjc
 | Dein zweites Ich, die zweite Haut |  |  |
 | Hab' ich in deinem Kopf erbaut |  |  |
 | Wenn ich in deine Seele tauche |  |  |
-|  |  |  |
-|  |  |  |
-|  |  |  |
+| Und dich für meine Lust gebrauche |  |  |
+| Dann werd' ich deine Sinne blenden |  |  |
+| Das Spiel kannst nur du selbst beenden |  |  |
 |  |  |  |
 |  |  |  |
 |  |  |  |
 
-Und dich für meine Lust gebrauche
-Dann werd' ich deine Sinne blenden
-Das Spiel kannst nur du selbst beenden
+
+
+
 Klopf, klopf, lass' mich rein
 Lass' mich dein Geheimnis sein
-
 Klopf, klopf
 Klopf klopf
 Klopf klopf, lass' mich rein
 Lass' mich dein Geheimnis sein
 Klopf klopf, lass' mich rein
 Lass' mich dein Geheimnis sein
+
 Links, rechts, geradeaus
 Du bist im Labyrinth
 (Links, rechts, geradeaus)
@@ -1532,6 +1536,26 @@ Mein verlorenes Kind
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Eisbrecher - Zwischen uns
+
+https://www.youtube.com/watch?v=RVTvrzjQAGY
 
 
 

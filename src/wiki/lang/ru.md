@@ -378,7 +378,7 @@ https://www.youtube.com/watch?v=0r83o6g6RAQ
 | Я это плач отцов, чаша для всех глупцов | ya eto plach otsov chasha dlya vsekh gluptsov | I am the cry of fathers, a cup for all fools |
 | Жаждущих любви, лёжа в своей крови | Zhazhdushchikh lyubvi, lozha v svoyey krovi | Hungry for love, lying in their blood |
 | Я это стая крыс, жрущая падших низ | ya eto staya krys, zhrushchaya padshikh niz | I am a flock of rats devouring the fallen bottom |
-| Слушая детский плач, я это твой палач |  slushaya detskiy plach, ya eto tvoi palach | Hearing a child's cry, I am your executioner |
+| Слушая детский плач, я это твой палач |  slushaya detskee plach, ya eto tvoi palach | Hearing a child's cry, I am your executioner |
 |  |  |  |
 |  | [Refrain 1] |  |
 |  |  |  |
@@ -387,9 +387,9 @@ https://www.youtube.com/watch?v=0r83o6g6RAQ
 | Давай бейби, давай бейби (x 2) | dahbye babee | Lets go baby (x2) (x2) |
 | Несись как злобный пёс | Nesis' kak zlobnyy pyos | Ride like a wicked dog |
 |  |  |  |
-| Скрип на моих зубах, твой обгорелый прах | Skrip na moikh zubakh, tvoy obgorelyy prakh | Creak on my teeth, your charred ashes |
+| Скрип на моих зубах, твой обгорелый прах | Skrip na moikh zubakh, tvoy obgorelee prakh | Creak on my teeth, your charred ashes |
 | Я это просто я, я это жизнь твоя | ya eto prosto ya, ya eto zhizn' tvoya |  |
-| Я это злобный пёс, я расхититель грёз | ya eto zlobnyy pos, ya raskhititel' groz | I am the evil dog, I am the thief of dreams |
+| Я это злобный пёс, я расхититель грёз | ya eto zlobnee pos, ya raskhititel' groz | I am the evil dog, I am the thief of dreams |
 | Я за твоей спиной, дьявол всегда с тобой | ys za tvoyey spinoy, d'yavol vsegda s toboy | I'm behind you, the devil is always with you |
 |  |  |  |
 |  | [Refrain 1] |  |

@@ -386,7 +386,48 @@ MISSING:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
+R3D.optimizeSADAffineCorner
+
+
+write out affine algorithms:
+
+rot/ang
+
+x/y vector
+
+exhaustive
+
+lattice exhaustive
+
+
+
+
+
+
 VALIDATE EACH STEP/ALG WITH TEST PAGES
+
+
+- matching expected location in 2 different images
+
+- matching expected transform in same image (distorted version of same image)
+
+- matching expected transform in 2 different images
+
+- patch (3D cameras)?
+
+- finding local matches around point (assuming similar rotation/angle/affine)
+
+
+
+
+- look at entropy extraction again?
+
+
+
+
+
+
 
 - not tested yet: local matches from match -- is angle/etc respected?
 
@@ -606,72 +647,6 @@ ImageMat.extractRectWithProjection = function(source,sW,sH, wid,hei, projection,
 	-> are the Rs inaccurate?
 		-> EG: 1PYE10VZ-7PIQPNWP
 
-
-
-
-
-ADD SOME DENSE PAIRS TO RUN:
-
-	- 
-		A: "3SRZ7XFK"
-		B: "F1OCOOHP"
-		id: "3SRZ7XFK-F1OCOOHP"
-	- 
-		A: "2183ZM7R"
-		B: "LSHY05RW"
-		id: "2183ZM7R-LSHY05RW"
-	-
-		A: "18RP38IB"
-		B: "2183ZM7R"
-		id: "18RP38IB-2183ZM7R"
-	-
-		A: "LSHY05RW"
-		B: "NK8K8XUH"
-		id: "LSHY05RW-NK8K8XUH"
-	-
-		A: "7PIQPNWP"
-		B: "9340FKF8"
-		id: "7PIQPNWP-9340FKF8"
-	-
-		A: "1PYE10VZ"
-		B: "7PIQPNWP"
-		id: "1PYE10VZ-7PIQPNWP"
-	-
-		A: "9340FKF8"
-		B: "EDTZTWWR"
-		id: "9340FKF8-EDTZTWWR"
-	-
-		A: "F58HBCHH"
-		B: "NTL6RPCD"
-		id: "F58HBCHH-NTL6RPCD"
-	-
-		A: "FEPI5AND"
-		B: "NTL6RPCD"
-		id: "FEPI5AND-NTL6RPCD"
-	-
-		A: "4EAACP4W"
-		B: "F58HBCHH"
-		id: "4EAACP4W-F58HBCHH"
-	-
-		A: "EON0Z5A0"
-		B: "GO62LD69"
-		id: "EON0Z5A0-GO62LD69"
-	-
-		A: "3SRZ7XFK"
-		B: "8XHJ7BN6"
-		id: "3SRZ7XFK-8XHJ7BN6"
-	-
-		A: "2FOQVM53"
-		B: "2ODOD34I"
-		id: "2FOQVM53-2ODOD34I"
-	-
-		A: "6SR6JS8B"
-		B: "GO62LD69"
-		id: "6SR6JS8B-GO62LD69"
-	-
-		A: "8EBBQKGM"
-		B: "EON0Z5A0"
-		id: "8EBBQKGM-EON0Z5A0"
 
 
 

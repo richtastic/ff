@@ -11,9 +11,9 @@ function ffLoadedFxn(){
 	(new ScriptLoader("../",["R3D.js"],this,classesLoadedFxn)).load();
 }
 function classesLoadedFxn(){
-
-
-	testExtraction();
+	// 
+	// testExtraction();
+	testLocationSeparate();
 
 
 	throw "tests";
@@ -33,9 +33,172 @@ this._stage.root().matrix().scale(2.0);
 }
 
 
+function testLocationSeparate(){
+	
+	setupDisplay();
+	var fxnImageLoaded = function(info){
+		var images = info["images"];
+		var matrixes = [];
+		var scales = [];
+		//var imageScales = [];
+		for(var i=0; i<images.length; ++i){
+			var image = images[i];
+			var imageFloat = GLOBALSTAGE.getImageAsFloatRGB(image);
+			var imageMatrix = new ImageMat(imageFloat["width"],imageFloat["height"], imageFloat["red"], imageFloat["grn"], imageFloat["blu"]);
+			var imageScales = new ImageMatScaled(imageMatrix);
+				matrixes[i] = imageMatrix;
+				scales[i] = imageScales;
+			// 
+			image = imageMatrix;
+			var img = GLOBALSTAGE.getFloatRGBAsImage(image.red(),image.grn(),image.blu(), image.width(),image.height());
+			var d = new DOImage(img);
+			d.matrix().scale(1.0);
+			d.matrix().translate(10 + i*600, 10 + 0);
+			GLOBALSTAGE.addChild(d);
+		}
+		// ... 
+		var imageScalesA = scales[0];
+		var imageScalesB = scales[1];
+		// CHAIR CORNER
+			// var needlePointA = new V2D(220,210);
+			// var needlePointB = new V2D(290,254);
+		// CAMERA
+			var needlePointA = new V2D(278,160);
+			var needlePointB = new V2D(370,180);
+		// ...
+		// ... 
+		var affine = new Matrix2D();
+		// ...
+		// 
+		// var needleSize = 11;
+		var needleSize = 21;
+		// var needleSize = 41;
+		// var needleSize = 51;
+		var haystackSize = 8*needleSize + 0;
+		var needleHalf = (needleSize-1)*0.5;
+		var needleA = new ImageMat(needleSize,needleSize);
+		var needleB = new ImageMat(needleSize,needleSize);
+//		var haystack = new ImageMat(haystackSize,haystackSize);
+		//
+var averageScale;
+// console.log(imageScalesB);
+// throw "..."
+		//
+		console.log("needleHalf: "+needleHalf);
+//		console.log("haystackHalf: "+haystackHalf);
+		// needle
+		affine.identity();
+		affine.rotate(0.0);
+		affine.scale(1.0);
+		// ..
+		ImageMatScaled.affineToLocationTransform(affine, affine, needleHalf,needleHalf,needlePointA.x,needlePointA.y);
+		var averageScale = affine.averageScale();
+		imageScalesA.extractRectFast(needleA, averageScale, affine);
+		// ..
+		affine.identity();
+		affine.rotate(0.0);
+		affine.scale(1.0);
+		ImageMatScaled.affineToLocationTransform(affine, affine, needleHalf,needleHalf,needlePointB.x,needlePointB.y);
+		var averageScale = affine.averageScale();
+		imageScalesB.extractRectFast(needleB, averageScale, affine);
+		// ..
+		// ..
+			// ...
+// console.log(imageScalesA);
+// console.log(needleA);
+// console.log(affine);
+			
+			// ...
+		/*
+		var needleMask = null;
+		var scores = R3D.searchNeedleHaystackSADColor(needleA,haystackB,needleMask);
+		var valueScores = scores["value"];
+		var valueWidth = scores["width"];
+		var valueHeight = scores["height"];
+		*/
+		image = needleA;
+		var img = GLOBALSTAGE.getFloatRGBAsImage(image.red(),image.grn(),image.blu(), image.width(),image.height());
+		var d = new DOImage(img);
+		d.matrix().scale(3.0);
+		d.matrix().translate(10 + 0, 10 + 0);
+		GLOBALSTAGE.addChild(d);
+			
+		image = needleB;
+		var img = GLOBALSTAGE.getFloatRGBAsImage(image.red(),image.grn(),image.blu(), image.width(),image.height());
+		var d = new DOImage(img);
+		d.matrix().scale(3.0);
+		d.matrix().translate(10 + 100, 10 + 0);
+		GLOBALSTAGE.addChild(d);
+		// ...
+			// ...
+		// ...
+			// ...
+		// ...
+
+
+		var featureSize = needleSize;
+		var haystackSize = needleSize*2;
+		var affineAB = new Matrix2D();
+			affineAB.identity();
+
+		var result = R3D.optimumSADLocationSearchFlatRGB(needlePointA,needlePointB, imageScalesA,imageScalesB, featureSize, needleSize,haystackSize, affineAB);
+		var point = result["point"];
+		console.log(point+"");
+var bestPointB = point;
+
+		console.log("DIFF: "+V2D.distance(point,needlePointB));
+
+		//var result = R3D.optimumAffineCornerTransform(imageA,pointA, imageB,pointB, affine, compareSize, 10);
+		// var result = R3D.optimizeSADAffineCorner(newMatch.point2DA().point2D(),newMatch.point2DB().point2D(),
+
+		var matrixIn = new Matrix2D();
+			matrixIn.identity();
+
+		var compareSize = featureSize;
+compareSize = 11;
+		var result = R3D.optimizeSADAffineCorner(needlePointA,bestPointB, imageScalesA,imageScalesB, featureSize, compareSize, matrixIn);
+
+		var affine = result["affine"];
+		console.log(result);
+
+		console.log(affine==matrixIn);
+
+
+		//R3D.optimizeSADAffineCorner(pointA,pointB, imageScalesA,imageScalesB, featureSize,compareSize,    matrixIn, maxIterations, reuseA,reuseB,mask, reuseC,reuseMatrix){
+
+		
+
+
+
+		var bestB = new ImageMat(needleSize,needleSize);
+
+
+
+affine.inverse();
+		//affine.identity();
+		//affine.rotate(0.0);
+		//affine.scale(1.0);
+		// ..
+		ImageMatScaled.affineToLocationTransform(affine, affine, needleHalf,needleHalf,bestPointB.x,bestPointB.y);
+		var averageScale = affine.averageScale();
+		imageScalesB.extractRectFast(bestB, averageScale, affine);
+
+
+		
+		image = bestB;
+		var img = GLOBALSTAGE.getFloatRGBAsImage(image.red(),image.grn(),image.blu(), image.width(),image.height());
+		var d = new DOImage(img);
+		d.matrix().scale(3.0);
+		d.matrix().translate(10 + 0, 10 + 100);
+		GLOBALSTAGE.addChild(d);
+	}
+
+	new ImageLoader("../images/iowa/",["5.JPG","6.JPG"],this,fxnImageLoaded).load();
+}
+
 
 function testExtraction(){
-	console.log("testExtraction");
+	
 	setupDisplay();
 	var fxnImageLoaded = function(info){
 		var images = info["images"];
@@ -45,10 +208,9 @@ function testExtraction(){
 		
 		var imageScales = new ImageMatScaled(imageMatrix);
 
-
-		// var needlePoint = new V2D(125,190); // addr corner
+		var needlePoint = new V2D(125,190); // addr corner
 		// var needlePoint = new V2D(145,199); // bricks
-		var needlePoint = new V2D(225,215); // swing
+		// var needlePoint = new V2D(225,215); // swing
 		// var needlePoint = new V2D(145,290); // bridk edge
 		// var needlePoint = new V2D(141,270);
 		// var needlePoint = new V2D(145,120); // siding
@@ -72,8 +234,12 @@ function testExtraction(){
 
 		var affine = new Matrix2D();
 
-var distortionAngle = Code.radians(10.0);
-var distortionScale = 1.1;
+
+var distortionAngle = Code.radians(0.0);
+var distortionScale = 1.0;
+
+// var distortionAngle = Code.radians(10.0);
+// var distortionScale = 1.1;
 			
 
 		var needle = new ImageMat(needleSize,needleSize);
@@ -156,6 +322,13 @@ affine.scale(distortionScale);
 
 
 		var featureSize = needleSize;
+
+featureSize = 3;
+// featureSize = 5;
+// featureSize = 11;
+// featureSize = 21;
+// featureSize = 41;
+// featureSize = 81;
 		
 		// var featureSize = 11;
 		// var needleSize = 11;

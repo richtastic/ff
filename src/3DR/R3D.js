@@ -11661,8 +11661,6 @@ R3D.optimumSADLocationSearchFlatRGB = function(pointA,pointB, imageScalesA,image
 		haystack = new ImageMat(haystackSize,haystackSize);
 	}
 
-
-
 	affine = R3D._temp_matrix2D.copy(affine);
 	affine.inverse();
 	affine.scale(inScale);
@@ -12197,9 +12195,9 @@ R3D.optimizeSADAffineCorner = function(pointA,pointB, imageScalesA,imageScalesB,
 
 
 R3D._gdOptimizeSADAffineCorner = function(args, x, isUpdate){
-	if(isUpdate){
-		return;
-	}
+	// if(isUpdate){
+	// 	return;
+	// }
 	var totalError = 0;
 
 	var pointA = args[0];
@@ -12259,8 +12257,9 @@ R3D._gdOptimizeSADAffineCorner = function(args, x, isUpdate){
 
 // var a2 = reuseImage.meanFilter();
 // var b1 = sampleFlatB.meanFilter();
-// var a2 = reuseImage.copy();
-// var b1 = sampleFlatB.copy();
+
+var a2 = reuseImage.copy();
+var b1 = sampleFlatB.copy();
 
 // var diffSADFlatAB = R3D._gd_SAD_IMAGES(b1,a2, mask);
 	var diffSADFlatAB = R3D._gd_SAD_IMAGES(reuseImage,sampleFlatB, mask);
@@ -12279,8 +12278,9 @@ R3D._gdOptimizeSADAffineCorner = function(args, x, isUpdate){
 
 // var b2 = reuseImage.meanFilter();
 // var a1 = sampleFlatA.meanFilter();
-// var b2 = reuseImage.copy();
-// var a1 = sampleFlatA.copy();
+
+var b2 = reuseImage.copy();
+var a1 = sampleFlatA.copy();
 
 // var diffSADFlatBA = R3D._gd_SAD_IMAGES(a1,b2, mask);
 	var diffSADFlatBA = R3D._gd_SAD_IMAGES(reuseImage,sampleFlatA, mask);
@@ -12289,7 +12289,7 @@ R3D._gdOptimizeSADAffineCorner = function(args, x, isUpdate){
 
 
 	var totalError = diffSADFlatAB + diffSADFlatBA;
-	/*
+	
 	if(isUpdate){ // TESTING - // display
 		console.log(totalError);
 		var sca = 5.0;
@@ -12332,7 +12332,7 @@ var imageMatrix = b1;
 
 		// throw "?";
 	}
-	*/
+	
 	return totalError;
 }
 
@@ -44949,6 +44949,7 @@ R3D.bestAffine2DFromExisting = function(affine,imageA,centerA,imageB,centerB, ex
 }
 
 R3D.optimumAffineCornerTransform = function(imageA,pointA, imageB,pointB, affine, size, maxIterations, compareSize){
+	throw "is this used?"
 	var result = R3D._affineCornerTransformNonlinearGD(imageA,pointA, imageB,pointB, affine, size, maxIterations, compareSize);
 	return result;
 }
