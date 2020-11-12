@@ -13,7 +13,14 @@ function ffLoadedFxn(){
 function classesLoadedFxn(){
 	// 
 	// testExtraction();
+	// testLocalize();
 	testLocationSeparate();
+
+	
+	// testLocationNeighborsSparse();
+
+
+	// testLocationNeighborsDense();
 
 
 	throw "tests";
@@ -32,6 +39,108 @@ this._stage.root().matrix().scale(2.0);
 	GLOBALSTAGE = this._stage;
 }
 
+
+function testExtraction(){
+	setupDisplay();
+	var fxnImageLoaded = function(info){
+		console.log("fxnImageLoaded")
+		var images = info["images"];
+		var image = images[0];
+		var imageFloat = GLOBALSTAGE.getImageAsFloatRGB(image);
+		var imageMatrix = new ImageMat(imageFloat["width"],imageFloat["height"], imageFloat["red"], imageFloat["grn"], imageFloat["blu"]);
+		
+		var imageScales = new ImageMatScaled(imageMatrix);
+
+		// var needlePoint = new V2D(125,190); // addr corner
+
+
+		var needlePoint = new V2D(Math.random()*400,Math.random()*300); // addr corner
+
+
+		var affine = new Matrix2D();
+		// ...
+		// 
+		// var needleSize = 11;
+		// var needleSize = 21;
+		var needleSize = 41;
+		// var needleSize = 51;
+		var haystackSize = 8*needleSize + 0;
+		var needleHalf = (needleSize-1)*0.5;
+		var needle = new ImageMat(needleSize,needleSize);
+
+
+		var angle = 0.0;
+		// var scale = 1.0;
+		var scale = 1.5;
+		// var scale = 2.0;
+		// var scale = 2.5;
+var sss = 1.0;
+
+var scales = Code.divSpace(-2,2, 10);
+var entropies = [];
+for(var i=0; i<scales.length; ++i){
+var scale = scales[i];
+scale = Math.pow(2,scale);
+// console.log(scale);
+		affine.identity();
+		affine.rotate(angle);
+		affine.scale(scale);
+		ImageMatScaled.affineToLocationTransform(affine, affine, needleHalf,needleHalf,needlePoint.x,needlePoint.y);
+		var averageScale = affine.averageScale();
+		// 
+		// 
+		imageScales.extractRectCombineFast(needle, averageScale, affine);
+		// console.log(needle);
+		// 
+		// 
+		var data = needle.gry(null);
+		var data = needle.gry();
+// console.log(data);
+		var buckets = 10;
+		var entropy = Code.entropy01(data, buckets);
+		// 
+		console.log("entropy: "+entropy);
+		//
+		entropies.push(entropy);
+
+
+
+		image = needle;
+		var img = GLOBALSTAGE.getFloatRGBAsImage(image.red(),image.grn(),image.blu(), image.width(),image.height());
+		var d = new DOImage(img);
+		d.matrix().scale(sss);
+		d.matrix().translate(10 + 100*i, 10 + 100);
+		GLOBALSTAGE.addChild(d);
+}
+Code.printMatlabArray(entropies);
+
+
+		
+
+
+		image = needle;
+		var img = GLOBALSTAGE.getFloatRGBAsImage(image.red(),image.grn(),image.blu(), image.width(),image.height());
+		var d = new DOImage(img);
+		d.matrix().scale(sss);
+		d.matrix().translate(10 + 0, 10 + 0);
+		GLOBALSTAGE.addChild(d);
+
+
+
+		imageScales.extractRectFast(needle, averageScale, affine);
+		
+
+		image = needle;
+		var img = GLOBALSTAGE.getFloatRGBAsImage(image.red(),image.grn(),image.blu(), image.width(),image.height());
+		var d = new DOImage(img);
+		d.matrix().scale(sss);
+		d.matrix().translate(10 + 200, 10 + 0);
+		GLOBALSTAGE.addChild(d);
+
+
+	}
+	new ImageLoader("../images/iowa/",["5.JPG"],this,fxnImageLoaded).load();
+}
 
 function testLocationSeparate(){
 	
@@ -60,18 +169,69 @@ function testLocationSeparate(){
 		var imageScalesA = scales[0];
 		var imageScalesB = scales[1];
 		// CHAIR CORNER
-			// var needlePointA = new V2D(220,210);
-			// var needlePointB = new V2D(290,254);
+			var needlePointA = new V2D(220,210);
+			var needlePointB = new V2D(290,254);
 		// CAMERA
-			var needlePointA = new V2D(278,160);
-			var needlePointB = new V2D(370,180);
+			// var needlePointA = new V2D(278,160);
+			// var needlePointB = new V2D(370,190);
+		// DOOR HANDLE
+			// var needlePointA = new V2D(90,208);
+			// var needlePointB = new V2D(129,240);
+			// var needlePointA = new V2D(88,203);
+			// var needlePointB = new V2D(129,235);
+
+			// var needlePointA = new V2D(80,200);
+			// var needlePointB = new V2D(120,235);
+
+			// var needlePointA = new V2D(40,170);
+			// var needlePointB = new V2D(70,190);
+
+		// chimes
+			// var needlePointA = new V2D(202,172);
+			// var needlePointB = new V2D(265,205);
+
+		// window
+			// var needlePointA = new V2D(225,90);
+			// var needlePointB = new V2D(300,110);
+		// right win
+			// var needlePointA = new V2D(300,205);
+			// var needlePointB = new V2D(401,255);
+		// chair
+			// var needlePointA = new V2D(140,229);
+			// var needlePointB = new V2D(190,269);
+
+			// var needlePointA = new V2D(100,250);
+			// var needlePointB = new V2D(130,289);
+
+			// var needlePointA = new V2D(275,175);
+			// var needlePointB = new V2D(370,210);
+
+		//
+			// var needlePointA = new V2D(262,150);
+			// var needlePointB = new V2D(350,180);
+
+			// var needlePointA = new V2D(262,165);
+			// var needlePointB = new V2D(350,195);
+
+		// tree
+			// var needlePointA = new V2D(190,49);
+			// var needlePointB = new V2D(260,77);
+
+			// var needlePointA = new V2D(290,115);
+			// var needlePointB = new V2D(375,150);
+
+		// clouds
+			// var needlePointA = new V2D(300,20);
+			// var needlePointB = new V2D(420,60);
+
+// throw "?"
 		// ...
 		// ... 
 		var affine = new Matrix2D();
 		// ...
 		// 
-		// var needleSize = 11;
-		var needleSize = 21;
+		var needleSize = 11;
+		// var needleSize = 21;
 		// var needleSize = 41;
 		// var needleSize = 51;
 		var haystackSize = 8*needleSize + 0;
@@ -116,13 +276,27 @@ var averageScale;
 		var valueWidth = scores["width"];
 		var valueHeight = scores["height"];
 		*/
+
 		image = needleA;
 		var img = GLOBALSTAGE.getFloatRGBAsImage(image.red(),image.grn(),image.blu(), image.width(),image.height());
 		var d = new DOImage(img);
 		d.matrix().scale(3.0);
 		d.matrix().translate(10 + 0, 10 + 0);
+
+		d.graphics().setLine(1.0, 0xFFFF0000);
+		d.graphics().beginPath();
+/*
+		d.graphics().moveTo(needleHalf,0);
+		d.graphics().lineTo(needleHalf,needleSize);
+		d.graphics().moveTo(0,needleHalf);
+		d.graphics().lineTo(needleSize,needleHalf);
+		d.graphics().endPath();
+		d.graphics().strokeLine();
+*/
+
+
 		GLOBALSTAGE.addChild(d);
-			
+		//
 		image = needleB;
 		var img = GLOBALSTAGE.getFloatRGBAsImage(image.red(),image.grn(),image.blu(), image.width(),image.height());
 		var d = new DOImage(img);
@@ -134,19 +308,55 @@ var averageScale;
 		// ...
 			// ...
 		// ...
-
-
+		//
+		//
 		var featureSize = needleSize;
 		var haystackSize = needleSize*2;
+		// var haystackSize = Math.round(needleSize*1.5);
 		var affineAB = new Matrix2D();
 			affineAB.identity();
-
+		//
 		var result = R3D.optimumSADLocationSearchFlatRGB(needlePointA,needlePointB, imageScalesA,imageScalesB, featureSize, needleSize,haystackSize, affineAB);
 		var point = result["point"];
 		console.log(point+"");
-var bestPointB = point;
+
+
+		// var scores = R3D.searchNeedleHaystackSADColorOffsetUnit(needle,haystack);
+
+		var bestPointB = point;
 
 		console.log("DIFF: "+V2D.distance(point,needlePointB));
+
+
+/*
+
+		var result = R3D.testOptimumLocationSAD(needlePointA,needlePointB, imageScalesA,imageScalesB, featureSize, needleSize,haystackSize, affineAB);
+		console.log(result);
+
+		var result = R3D.testOptimumLocationSADOffset(needlePointA,needlePointB, imageScalesA,imageScalesB, featureSize, needleSize,haystackSize, affineAB);
+		console.log(result);
+
+		var result = R3D.testOptimumLocationSADOffsetUnit(needlePointA,needlePointB, imageScalesA,imageScalesB, featureSize, needleSize,haystackSize, affineAB);
+		console.log(result);
+
+		var result = R3D.testOptimumLocationSSD(needlePointA,needlePointB, imageScalesA,imageScalesB, featureSize, needleSize,haystackSize, affineAB);
+		console.log(result);
+
+		var result = R3D.testOptimumLocationSSDOffset(needlePointA,needlePointB, imageScalesA,imageScalesB, featureSize, needleSize,haystackSize, affineAB);
+		console.log(result);
+
+		var result = R3D.testOptimumLocationSSDOffsetUnit(needlePointA,needlePointB, imageScalesA,imageScalesB, featureSize, needleSize,haystackSize, affineAB);
+		console.log(result);
+
+		var result = R3D.testOptimumLocationNCC(needlePointA,needlePointB, imageScalesA,imageScalesB, featureSize, needleSize,haystackSize, affineAB);
+		console.log(result);
+
+		
+*/
+
+// throw "..."
+
+
 
 		//var result = R3D.optimumAffineCornerTransform(imageA,pointA, imageB,pointB, affine, compareSize, 10);
 		// var result = R3D.optimizeSADAffineCorner(newMatch.point2DA().point2D(),newMatch.point2DB().point2D(),
@@ -155,7 +365,7 @@ var bestPointB = point;
 			matrixIn.identity();
 
 		var compareSize = featureSize;
-compareSize = 11;
+			compareSize = 11;
 		var result = R3D.optimizeSADAffineCorner(needlePointA,bestPointB, imageScalesA,imageScalesB, featureSize, compareSize, matrixIn);
 
 		var affine = result["affine"];
@@ -166,9 +376,7 @@ compareSize = 11;
 
 		//R3D.optimizeSADAffineCorner(pointA,pointB, imageScalesA,imageScalesB, featureSize,compareSize,    matrixIn, maxIterations, reuseA,reuseB,mask, reuseC,reuseMatrix){
 
-		
-
-
+		// 
 
 		var bestB = new ImageMat(needleSize,needleSize);
 
@@ -197,7 +405,7 @@ affine.inverse();
 }
 
 
-function testExtraction(){
+function testLocalize(){
 	
 	setupDisplay();
 	var fxnImageLoaded = function(info){

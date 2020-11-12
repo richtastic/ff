@@ -312,7 +312,11 @@ ImageMat.prototype.blu = function(b){
 	}
 	return this._b;
 }
-ImageMat.prototype.gry = function(){
+ImageMat.prototype.gry = function(v){
+	if(v!==undefined){
+		this._y = v;
+		return this._y;
+	}
 	if(!this._y){
 		this._y = ImageMat.grayFromRGBFloat(this._r,this._g,this._b);
 	}
@@ -5272,6 +5276,26 @@ ImageMatScaled.prototype.infoForScale = function(scale){
 	var effectiveScale = scale/actualScale;
 	return {"image":effectiveImage, "actualScale":actualScale, "effectiveScale":effectiveScale};
 }
+
+ImageMatScaled.prototype.infoForScaleCombined = function(scale){
+	var images = this._images;
+	var scales = this._scales;
+	var lm1 = images.length-1;
+	var scale = -Math.log2(scale);
+	var floor = Math.floor(scale,0);
+	var ceil = Math.ceil(scale,0);
+	var scaleIndexA = Math.min(Math.max(floor,0),lm1);
+	var scaleIndexB = Math.min(Math.max(ceil,0),lm1);
+	var percentA = ceil-scale;
+	var percentB = 1.0 - percentA;
+	var actualScaleA = scales[scaleIndexA];
+	var actualScaleB = scales[scaleIndexB];
+	var effectiveScaleA = scale/actualScaleA;
+	var effectiveScaleB = scale/actualScaleB;
+	return {"imageA":images[scaleIndexA], "actualScaleA":actualScaleA, "effectiveScaleA":effectiveScaleA, "percentA":percentA,
+			"imageB":images[scaleIndexB], "actualScaleB":actualScaleB, "effectiveScaleB":effectiveScaleB, "percentB":percentB};
+}
+
 ImageMatScaled.prototype.images = function(){
 	return this._images;
 }
@@ -5604,6 +5628,230 @@ for(j=0;j<hei;++j){
 	// throw "todo";
 	return reuseImage;
 }
+
+
+
+
+
+
+ImageMatScaled.prototype.extractRectCombineFast = function(reuseImage, scale, matrix){ // ceil / floor combine
+	var imageScales = this;
+	var info = imageScales.infoForScaleCombined(1.0/scale);
+	// var info = imageScales.infoForScale(1.0/scale);
+// console.log(info);
+	var wid = reuseImage.width();
+	var hei = reuseImage.height();
+	var r = reuseImage.red();
+	var g = reuseImage.grn();
+	var b = reuseImage.blu();
+	var p = new V2D();
+	var listTo = [r,g,b];
+	var pixelsReuse = r.length;
+	for(var i=pixelsReuse-1; i>=0; --i){
+		r[i] = 0;
+		g[i] = 0;
+		b[i] = 0;
+	}
+	var listImages = [info["imageA"],info["imageB"]];
+	var listConstants = [info["percentA"],info["percentB"]];
+	var listScalesEff = [info["effectiveScaleA"],info["effectiveScaleB"]];
+	var listScalesAct = [info["actualScaleA"],info["actualScaleB"]];
+	for(var list=0; list<2; ++list){
+// console.log(list);
+var multiplier = listConstants[list];
+// console.log(multiplier);
+		var imageMatrix = listImages[list];
+		var effScale = listScalesEff[list];
+		var actScale = listScalesAct[list];
+		// /
+		var imageGray = imageMatrix.gry();
+		var imageWidth = imageMatrix.width();
+		var imageHeight = imageMatrix.height();
+		// /
+		var red = imageMatrix.red();
+		var grn = imageMatrix.grn();
+		var blu = imageMatrix.blu();
+		var wm1 = imageWidth-1;
+		var hm1 = imageHeight-1;
+		// use matrix
+		var listFr = [red,grn,blu];
+		// local linear constants:
+		var hm1 = imageHeight-1, wm1 = imageWidth-1;
+		var i;
+
+		// local cubic constants:
+		for(var y=0; y<hei; ++y){
+			for(var x=0; x<wid; ++x){
+				p.set(x,y);
+				matrix.multV2DtoV2D(p,p);
+				p.scale(actScale); // for selected image size
+				// p.scale(1.0/actScale);
+				// p.scale(effScale);
+				// p.scale(1.0/effScale);
+				var index = y*wid + x;
+
+				// closest: 110
+				// p.x = Math.max(0, Math.min( wm1, Math.round(p.x,1) ));
+				// p.y = Math.max(0, Math.min( hm1, Math.round(p.y,1) ));
+				// var indexImage = p.y*imageWidth + p.x;
+				// r[index] = red[indexImage];
+				// g[index] = grn[indexImage];
+				// b[index] = blu[indexImage];
+
+				// linear: 190
+				// Code.parallelArrayInterpolateLinear(listTo,listFr, index, p.x,p.y, imageWidth,imageHeight);
+				// 
+
+				// linear-local: 160
+				var x2 = p.x;
+				var y2 = p.y;
+				var minX = Math.min( Math.max(Math.floor(x2), 0), wm1);
+				var minY = Math.min( Math.max(Math.floor(y2), 0), hm1);
+				var maxX = Math.max( Math.min(Math.ceil(x2), wm1), 0);
+				var maxY = Math.max( Math.min(Math.ceil(y2), hm1), 0);
+				var iyW = minY*imageWidth;
+				var ayW = maxY*imageWidth;
+				var indexA = iyW + minX;
+				var indexB = iyW + maxX;
+				var indexC = ayW + minX;
+				var indexD = ayW + maxX;
+				minX = x2 - minX;
+				if(x2<0||x2>imageWidth){ minX=0.0; }
+				minY = y2 - minY;
+				if(y2<0||y2>imageHeight){ minY=0.0; }
+				var omx = (1.0-minX);
+				var omy = (1.0-minY);
+				var array, A, B;
+				for(i=listTo.length-1; i>=0; --i){
+					array = listFr[i];
+					A = minX*array[indexB] + omx*array[indexA];
+					B = minX*array[indexD] + omx*array[indexC];
+					var next = multiplier * (minY*B + omy*A);
+					var original = listTo[i][index];
+					listTo[i][index] = original + next;
+				}
+				
+				
+				// cubic: 520
+				// Code.parallelArrayInterpolateCubic(listTo,listFr, index, p.x,p.y, imageWidth,imageHeight);
+
+				/*
+				// cubic-local: 430
+				var x2 = p.x;
+				var y2 = p.y;
+				// .
+				var hm1 = imageHeight-1, wm1 = imageWidth-1;
+				var minX = Math.min( Math.max(Math.floor(x2), 0), wm1);
+				var minY = Math.min( Math.max(Math.floor(y2), 0), hm1);
+				var miiX = Math.max(minX-1, 0);
+				var miiY = Math.max(minY-1, 0);
+				var maxX = Math.max( Math.min(Math.ceil(x2), wm1), 0);
+				var maxY = Math.max( Math.min(Math.ceil(y2), hm1), 0);
+				var maaX = Math.min(maxX+1, wm1);
+				var maaY = Math.min(maxY+1, hm1);
+				var miiYwid = miiY*imageWidth;
+				var minYwid = minY*imageWidth;
+				var maxYwid = maxY*imageWidth;
+				var maaYwid = maaY*imageWidth;
+				var indexA = miiYwid + miiX;
+				var indexB = miiYwid + minX;
+				var indexC = miiYwid + maxX;
+				var indexD = miiYwid + maaX;
+				var indexE = minYwid + miiX;
+				var indexF = minYwid + minX;
+				var indexG = minYwid + maxX;
+				var indexH = minYwid + maaX;
+				var indexI = maxYwid + miiX;
+				var indexJ = maxYwid + minX;
+				var indexK = maxYwid + maxX;
+				var indexL = maxYwid + maaX;
+				var indexM = maaYwid + miiX;
+				var indexN = maaYwid + minX;
+				var indexO = maaYwid + maxX;
+				var indexP = maaYwid + maaX;
+				minX = x2 - minX;
+				minY = y2 - minY;
+				// .
+				x2 = minX;
+				y2 = minY;
+				var xx = x2*x2; var xxx = xx*x2;
+				var yy = y2*y2; var yyy = yy*y2;
+				// .
+				var a,b,c,d;
+				var A,B,C,D;
+				for(var i=listTo.length-1; i>=0; --i){
+					array = listFr[i];
+					//
+					A = array[indexA];
+					B = array[indexB];
+					C = array[indexC];
+					D = array[indexD];
+					a = B;
+					b = 0.5*(C-A);
+					c = A - 2.5*B + 2.0*C - 0.5*D;
+					d = 1.5*(B-C) + 0.5*(D-A);
+					var alpha = a + b*x2 + c*xx + d*xxx;
+					//
+					A = array[indexE];
+					B = array[indexF];
+					C = array[indexG];
+					D = array[indexH];
+					a = B;
+					b = 0.5*(C-A);
+					c = A - 2.5*B + 2.0*C - 0.5*D;
+					d = 1.5*(B-C) + 0.5*(D-A);
+					var beta = a + b*x2 + c*xx + d*xxx;
+					//
+					A = array[indexI];
+					B = array[indexJ];
+					C = array[indexK];
+					D = array[indexL];
+					a = B;
+					b = 0.5*(C-A);
+					c = A - 2.5*B + 2.0*C - 0.5*D;
+					d = 1.5*(B-C) + 0.5*(D-A);
+					var gamma = a + b*x2 + c*xx + d*xxx;
+					//
+					A = array[indexM];
+					B = array[indexN];
+					C = array[indexO];
+					D = array[indexP];
+					a = B;
+					b = 0.5*(C-A);
+					c = A - 2.5*B + 2.0*C - 0.5*D;
+					d = 1.5*(B-C) + 0.5*(D-A);
+					var delta = a + b*x2 + c*xx + d*xxx;
+					// 
+					A = alpha;
+					B = beta;
+					C = gamma;
+					D = delta;
+					a = B;
+					b = 0.5*(C-A);
+					c = A - 2.5*B + 2.0*C - 0.5*D;
+					d = 1.5*(B-C) + 0.5*(D-A);
+					var value = a + b*y2 + c*yy + d*yyy;
+					// out
+					value = Math.max(0, Math.min(1, value));
+					listTo[i][index] = value;
+				}
+				*/
+			}
+		}
+	}
+	
+	return reuseImage;
+}
+
+
+
+
+
+
+
+
+
+
 
 
 ImageMatScaled.affineToLocationTransform = function(outMatrix, inMatrix, destX,destY,sourceX,sourceY){ // helper: destination image to source image mapping

@@ -386,21 +386,74 @@ MISSING:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+A) location needle haystack : pick metric
+B) optimum affine : pick metric
+C) local neighborhood increase point matches sparse
+D) dense point matching using F
+
+optimumSADLocationSearchFlatRGB
+
+- compare different methods:
+	x SAD
+	x SAD @ subtract DC offset
+	x SAD @ subtract DC offset + sigma distance = 1
+	x SSD
+	x SSD @ subtract DC offset
+	x SSD @ subtract DC offset + sigma distance = 1
+	- CC @ subtract DC offset
+	x NCC [dc + sigma]
+	- convert to 'corner' image
+		- SAD , SSD, NCC
+
+
+
+gd_SAD_IMAGES
 
 R3D.optimizeSADAffineCorner
+	=> should this use average offset too?
 
+
+
+- show pixel-pixel error
+
+
+- account for relative lighting difference ?
+
+
+
+
+- try extracting 2 separate images (except at ends):
+	- floor(scale)
+	- ceil(scale)
+	- average result based on percent
+		=> pass in constant scale factor
+
+	=> test in a range-zoom method
+
+	=> test in an entropy method
+
+
+write out location/compare algorithms:
+	- data: gray / color
+	- data: flat / grad
+	- SAD
+	- SSD
+	- CC / NCC
+	- grad
 
 write out affine algorithms:
+	rot/ang
 
-rot/ang
+	x/y vector
 
-x/y vector
+	exhaustive
 
-exhaustive
-
-lattice exhaustive
+	lattice exhaustive
 
 
+
+
+- matching: flat areas are important, but edges more so?
 
 
 
@@ -408,7 +461,7 @@ lattice exhaustive
 VALIDATE EACH STEP/ALG WITH TEST PAGES
 
 
-- matching expected location in 2 different images
+x matching expected location in 2 different images
 
 - matching expected transform in same image (distorted version of same image)
 
@@ -424,6 +477,8 @@ VALIDATE EACH STEP/ALG WITH TEST PAGES
 - look at entropy extraction again?
 
 
+
+=> add regulatization by using F/R estimated location rather than just corner peak ?
 
 
 
