@@ -14,7 +14,8 @@ function classesLoadedFxn(){
 	// 
 	// testExtraction();
 	// testLocalize();
-	testLocationSeparate();
+	testCorners();
+	// testLocationSeparate();
 
 	
 	// testLocationNeighborsSparse();
@@ -35,10 +36,152 @@ function setupDisplay(){
 	this._root = new DO();
 	this._stage.root().addChild(this._root);
 // this._root.matrix().scale(2.0,2.0);
-this._stage.root().matrix().scale(2.0);
+// this._stage.root().matrix().scale(2.0);
+this._stage.root().matrix().scale(2.5);
+// this._stage.root().matrix().scale(4.0);
 	GLOBALSTAGE = this._stage;
 }
 
+
+
+function testCorners(){
+	// R3D.differentialCornersForImageSingle = function(imageMatrix, suppressDistancePercent){
+		setupDisplay();
+	var fxnImageLoaded = function(info){
+		console.log("fxnImageLoaded")
+		var images = info["images"];
+	for(var iii=0; iii<images.length; ++iii){
+		var image = images[iii];
+		var imageFloat = GLOBALSTAGE.getImageAsFloatRGB(image);
+		var imageMatrix = new ImageMat(imageFloat["width"],imageFloat["height"], imageFloat["red"], imageFloat["grn"], imageFloat["blu"]);
+
+
+// imageMatrix.clear();
+// imageMatrix.drawRect( 100,100, 20,50, new V3D(1.0,0.0,0.50));
+// imageMatrix.drawRect( 10,110, 200,4, new V3D(0.0,0.0,0.50));
+// imageMatrix.drawRect( 105,95, 10,100, new V3D(1.0,0.5,0.50));
+
+		var imageScales = new ImageMatScaled(imageMatrix);
+
+
+		image = imageScales.images()[0];
+		var img = GLOBALSTAGE.getFloatRGBAsImage(image.red(),image.grn(),image.blu(), image.width(),image.height());
+		var d = new DOImage(img);
+		d.matrix().scale(1.0);
+		d.matrix().translate(0 + iii*imageMatrix.width(), 0 + 0);
+		GLOBALSTAGE.addChild(d);
+
+
+		var suppressDistancePercent = 0.01;
+		// var suppressDistancePercent = 0.005;
+		// var suppressDistancePercent = 0.001;
+		var info = R3D.differentialCornersForImageSingle(imageMatrix, suppressDistancePercent);
+		console.log(info);
+var points = info["points"];
+var angles = info["angles"];
+var directions = info["directions"];
+
+		// var info = R3D.imageCornersDifferential(image, false);
+		// console.log(info);
+		// var values = info[]
+
+
+		// var colors = [0xFF000000, 0xFF000099, 0xFF0000FF, 0xFFCC00CC, 0xFFFF0000, 0xFF990000, 0xFFFFFFFF];
+		// var colors = [0xFF000000, 0xFFFFFFFF];
+		var colors = [0xFF000000, 0xFF000099, 0xFF9900CC, 0xFFCC0099, 0xFFCC0000, 0xFFFFFFFF];
+		var values = Code.copyArray(info["value"]);
+
+// console.log(values);
+// throw "???"
+
+		// var values = Code.copyArray(info["angles"]);
+			ImageMat.normalFloat01(values);
+			ImageMat.pow(values,0.50);
+			// ImageMat.pow(values,0.25);
+		var heat = ImageMat.heatImage(values, imageMatrix.width(), imageMatrix.height(), false, colors);
+
+		image = heat;
+		var img = GLOBALSTAGE.getFloatRGBAsImage(image.red(),image.grn(),image.blu(), image.width(),image.height());
+		var d = new DOImage(img);
+		d.matrix().scale(1.0);
+		d.matrix().translate(iii*imageMatrix.width(),0);
+		// d.graphics().alpha(0.50);
+		d.graphics().alpha(0.60);
+		// d.graphics().alpha(0.75);
+		// d.graphics().alpha(0.90);
+		GLOBALSTAGE.addChild(d);
+
+		
+
+		var width = imageMatrix.width();
+		var height = imageMatrix.height();
+		var d = new DO();
+		// d.graphics().setFill(0xFFFFFFFF);
+		d.graphics().setLine(1.0,0xFFFFFFFF);
+		var point = new V2D();
+		var sss = 1;
+		var dd = 3;
+		for(var j=0; j<height; j+=dd){
+			break;
+			for(var i=0; i<width; i+=dd){
+				var index = j*width + i;
+				point.set(i,j);
+				var dir = directions[index];
+				// d.graphics().drawCircle(point.x,point.y,1.0);
+				// d.graphics().drawCircle(point.x,point.y,0.5);
+				// d.graphics().endPath();
+				// d.graphics().fill();
+				// 
+				// var dir = new V2D(2.0,0);
+				// var dir = new V2D(1.0,0);
+				// d.graphics().beginPath();
+				// dir.rotate(angles[i]);
+				d.graphics().beginPath();
+				d.graphics().moveTo(point.x-dir.x*sss,point.y-dir.y*sss);
+				d.graphics().lineTo(point.x+dir.x*sss,point.y+dir.y*sss);
+				d.graphics().endPath();
+				d.graphics().strokeLine();
+			}
+		}
+		d.matrix().translate(iii*imageMatrix.width(),0);
+		GLOBALSTAGE.addChild(d);
+
+
+		var d = new DO();
+		d.graphics().setFill(0xFFFFFFFF);
+		d.graphics().setLine(1.0,0xFFFFFFFF);
+console.log("FINAL POINTS: "+points.length)
+		for(var i=0; i<points.length; ++i){
+// break;
+			var point = points[i];
+			d.graphics().beginPath();
+			d.graphics().drawCircle(point.x,point.y,1.0);
+			// d.graphics().drawCircle(point.x,point.y,0.5);
+			d.graphics().endPath();
+			d.graphics().fill();
+
+			var dir = new V2D(2.0,0);
+			// var dir = new V2D(1.0,0);
+			dir.rotate(angles[i]);
+			d.graphics().beginPath();
+			d.graphics().moveTo(point.x,point.y);
+			d.graphics().lineTo(point.x+dir.x,point.y+dir.y);
+			d.graphics().endPath();
+			d.graphics().strokeLine();
+		}
+		d.matrix().translate(iii*imageMatrix.width(),0);
+		GLOBALSTAGE.addChild(d);
+}
+	}
+	// new ImageLoader("../images/iowa/",["5.JPG"],this,fxnImageLoaded).load();
+	new ImageLoader("../images/iowa/",["5.JPG","6.JPG"],this,fxnImageLoaded).load();
+	// new ImageLoader("../images/",["bench_A.png","bench_B.png"],this,fxnImageLoaded).load();
+	// new ImageLoader("../images/",["caseStudy1-0.jpg","caseStudy1-9.jpg"],this,fxnImageLoaded).load();
+	// new ImageLoader("../images/",["zA_small.jpg","zB_small.jpg"],this,fxnImageLoaded).load();
+	// new ImageLoader("../images/",["temple_1.png","temple_2.png"],this,fxnImageLoaded).load();
+	// new ImageLoader("../images/",["room0.png","room2.png"],this,fxnImageLoaded).load();
+	
+}
 
 function testExtraction(){
 	setupDisplay();
@@ -162,7 +305,7 @@ function testLocationSeparate(){
 			var img = GLOBALSTAGE.getFloatRGBAsImage(image.red(),image.grn(),image.blu(), image.width(),image.height());
 			var d = new DOImage(img);
 			d.matrix().scale(1.0);
-			d.matrix().translate(10 + i*600, 10 + 0);
+			d.matrix().translate(0 + i*imageMatrix.width(), 0 + 0);
 			GLOBALSTAGE.addChild(d);
 		}
 		// ... 
@@ -399,6 +542,22 @@ affine.inverse();
 		d.matrix().scale(3.0);
 		d.matrix().translate(10 + 0, 10 + 100);
 		GLOBALSTAGE.addChild(d);
+
+
+
+
+
+
+
+
+
+		// neighbors:
+		var pointsA = [needlePointA];
+		var pointsB = [bestPointB];
+		var affinesAB = [affine];
+		var result = R3D.findLocalSupportingCornerMatches(imageScalesA,imageScalesB, pointsA,pointsB, null, affinesAB);
+		console.log(result);
+
 	}
 
 	new ImageLoader("../images/iowa/",["5.JPG","6.JPG"],this,fxnImageLoaded).load();

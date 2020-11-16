@@ -3793,7 +3793,7 @@ Code.averageV3D = function(values, percents){
 	}
 	return sum;
 }
-Code.averageAngleVector2D = function(vectors, percents){
+Code.averageAngleVector2D = function(vectors, percents){ // TODO: this doesn't handle 0 percents well
 	if(!vectors){
 		return null;
 	}
@@ -3805,10 +3805,19 @@ Code.averageAngleVector2D = function(vectors, percents){
 	if(percents){
 		percent = percents[0];
 	}
-	var total = vectors[0].copy();
-	var sumPercent = percent;
+	// find first non-zero percent vector to set as starting point
+	var total = new V2D();
+	var sumPercent = 0;
+	var i = 0;
+	for(; i<vectors.length; ++i){
+		total.set(vectors[0]);
+		sumPercent += percent;
+		if(sumPercent>0){
+			break;
+		}
+	}
 	total.norm();
-	for(var i=1; i<vectors.length; ++i){
+	for(; i<vectors.length; ++i){
 		var vector = vectors[i];
 		if(percents){
 			percent = percents[i];
@@ -8919,6 +8928,10 @@ var count = 0;
 			var isGT = d0<d4&&d1<d4&&d2<d4&&d3<d4&&d5<d4&&d6<d4&&d7<d4&&d8<d4 && maxi;
 			var isLT = d0>d4&&d1>d4&&d2>d4&&d3>d4&&d5>d4&&d6>d4&&d7>d4&&d8>d4 && mini;
 
+
+			// var isGT = d0<=d4&&d1<=d4&&d2<=d4&&d3<=d4&&d5<=d4&&d6<=d4&&d7<=d4&&d8<=d4 && maxi;
+			// var isLT = d0>=d4&&d1>=d4&&d2>=d4&&d3>=d4&&d5>=d4&&d6>=d4&&d7>=d4&&d8>=d4 && mini;
+
 // var d4 = d[index];
 //console.log(d4,minimum);
 // if(d4==minimum){
@@ -8933,6 +8946,7 @@ var count = 0;
 			//var isLTE = d0>=d4&&d1>=d4&&d2>=d4&&d3>=d4&&d5>=d4&&d6>=d4&&d7>=d4&&d8>=d4;
 //inte = true;
 			if(isGT || isLT){
+// console.log("maybe: "+d4);
 				//console.log("maybe: "+d4);
 				if(inte){
 					result = new V3D(i,j,d4);

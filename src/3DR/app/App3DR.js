@@ -35,7 +35,7 @@ function App3DR(){
 	this._keyboard.addFunction(Keyboard.EVENT_KEY_UP,this._handleKeyboardUp,this);
 	this._keyboard.addFunction(Keyboard.EVENT_KEY_DOWN,this._handleKeyboardDown,this);
 	// this._keyboard.addFunction(Keyboard.EVENT_KEY_STILL_DOWN,this.handleKeyboardStill,this);
-
+	
 	// this._ticker = new Ticker(1);
 	// this._ticker.addFunction(Ticker.EVENT_TICK, this.handleTickerFxn, this);
 	// this._tickCount = 0;

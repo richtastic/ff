@@ -179,7 +179,25 @@ ImageMat.prototype.fill = function(color){
 		g[i] = color.y;
 		b[i] = color.z;
 	}
+	return this;
 }
+ImageMat.prototype.clear = function(){
+	this.fill(new V3D(0,0,0));
+	return this;
+}
+
+ImageMat.prototype.drawRect = function(x,y,w,h,color){
+	// throw ("drawRect");
+	var endX = x+w;
+	var endY = y+h;
+	for(var j=y; j<endY; ++j){
+		for(var i=x; i<endX; ++i){
+			this.setPoint(i,j, color);
+		}
+	}
+	return this;
+}
+
 ImageMat.prototype.getPointInterpolateCubic = function(val, x,y){ // 4^2 = 16 points
 	var wid = this._width, hei = this._height, r = this._r, g = this._g, b = this._b;
 	var hm1 = hei-1, wm1 = wid-1;
@@ -4559,7 +4577,8 @@ ImageMat.getScaledImageInteger = function(src,wid,hei, scale, forceWidth,forceHe
 ImageMat.getBlurredImage = function(source,wid,hei, sigma){ // does auto padding and unpadding to avoid shadow on image edges
 	// var x = (wid-1)*0.5;
 	// var y = (hei-1)*0.5;
-	gaussSize = Math.round(5.0 + sigma*2.0)*2+1;
+	// gaussSize = Math.round(5.0 + sigma*2.0)*2+1;
+	gaussSize = Math.round(5.0 + sigma*3.0)*2+1;
 	//gauss1D = ImageMat.getGaussianWindow(gaussSize,1, sigma);
 	gauss1D = ImageMat.getGaussianWindow(gaussSize,1, sigma,null,   false, false);
 	padding = Math.ceil(gaussSize/2.0);

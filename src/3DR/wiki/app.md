@@ -386,25 +386,79 @@ MISSING:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-A) location needle haystack : pick metric
-B) optimum affine : pick metric
+xA) location needle haystack : pick metric
+xB) optimum affine : pick metric
 C) local neighborhood increase point matches sparse
 D) dense point matching using F
 
-optimumSADLocationSearchFlatRGB
+- point peak scale optimizing
+	- only need to calc COM-ANG & MAG at single pixel (5x5 / neighborhood)
 
-- compare different methods:
-	x SAD
-	x SAD @ subtract DC offset
-	x SAD @ subtract DC offset + sigma distance = 1
-	x SSD
-	x SSD @ subtract DC offset
-	x SSD @ subtract DC offset + sigma distance = 1
-	- CC @ subtract DC offset
-	x NCC [dc + sigma]
-	- convert to 'corner' image
-		- SAD , SSD, NCC
 
+
+R3D.imageCornersDifferential = function(image, whatelse, testPoint){
+
+- change score metric used for feature matching
+
+
+
+
+
+
+- when averaging vectors, do so based on magnitudes
+
+- a pixel's score = based on how quickely it's neighbors change angle
+
+
+
+
+
+
+CORNERS
+	directional color-gradient:
+		- gets LINES
+		- direction is unstable equilibrium [little to left or right is opposite gradient]
+
+
+
+
+- peaks of corner-score field are on inside & outside of line
+=> select only diverging (inside corner) points
+	x convert angle field to vector field
+	x average vector field (angle) to smooth out thing (+/-)
+	x each pixel score is then multiplied by div/conv-ergence factor:
+		- look at left/right neighbor (orthogonal to COM line)
+		- converging line scores go down
+		- diverging line scores go up
+
+=> pick maximums in this field 
+
+CORNER STEPS (used):
+- blur source image ~ 1 px to remove noise
+- get corner values: COM (averaging local color differences) => angle direction & difference magnitude
+- filter COM direction with neighbors to remove noise (use consistent directions)
+- create divergent field values: threshold on positive (+delta) angles
+- remove values that don't pass divergent field
+- find peaks in difference field
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+R3D.progressiveMatchingAllSteps
+	var result = R3D.findLocalSupportingCornerMatches(imageMatrixA,imageMatrixB, pointsA,pointsB);
+solvePairF
 
 
 gd_SAD_IMAGES
@@ -414,15 +468,7 @@ R3D.optimizeSADAffineCorner
 
 
 
-- show pixel-pixel error
-
-
-- account for relative lighting difference ?
-
-
-
-
-- try extracting 2 separate images (except at ends):
+x try extracting 2 separate images (except at ends):
 	- floor(scale)
 	- ceil(scale)
 	- average result based on percent
