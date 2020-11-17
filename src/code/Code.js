@@ -7682,6 +7682,12 @@ Code.padStringRight = function(val,wid,filler){
 	}
 	return str;
 }
+Code.clipString = function(val,max){
+	if(val.length>max){
+		return val.substring(0,max);
+	}
+	return val;
+}
 // ------------------------------------------------------------------------------------------------------------------------------------------------- MATHS
 Code.rangeForceMinMax = function(value, min, max){
 	return Math.min(Math.max(value,min),max);

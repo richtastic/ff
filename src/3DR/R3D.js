@@ -12348,9 +12348,9 @@ R3D.optimizeSADAffineCorner = function(pointA,pointB, imageScalesA,imageScalesB,
 
 
 R3D._gdOptimizeSADAffineCorner = function(args, x, isUpdate){
-	// if(isUpdate){
-	// 	return;
-	// }
+	if(isUpdate){
+		return;
+	}
 	var totalError = 0;
 
 	var pointA = args[0];
@@ -12887,14 +12887,14 @@ R3D._cornerListToFeatureList = function(corners, imageScale){
 }
 
 R3D.findLocalSupportingCornerMatches = function(imageMatrixA,imageMatrixB, pointsA,pointsB, imageCornerDensityPercent, affinesAB){ // 
-	var averageSizeA = (imageMatrixA.width()+imageMatrixA.height());
+	var averageSizeA = (imageMatrixA.width()+imageMatrixA.height())*0.5;
 	Ferror = Code.valueOrDefault(Ferror, averageSizeA*0.02 ) ;
-	imageCornerDensityPercent = Code.valueOrDefault(imageCornerDensityPercent, 0.001); // 0.001-0.01 : 1k - 10k
+	imageCornerDensityPercent = Code.valueOrDefault(imageCornerDensityPercent, 0.01); // 0.001-0.01 : 2k - 20k
 
-	// imageCornerDensityPercent = 0.00001;
+	var useInputAffine = affinesAB != null;
 
-	var featureSizePercent = 0.02; // 0.01 - 0.04
-	var searchSizeFeatureScale = 1; // 1 - 2
+	var featureSizePercent = 0.02; // 0.02 - 0.04
+	var searchSizeFeatureScale = 2; // 1 - 2
 	var maximumScaleDifference = 0.1; // 0.1 - 0.2
 	var maximumAngleDifference = 15; // 5-20 degrees : 10=> 36 | 12=>30 | 15=>24 | 18=>20 | 22.5=>16
 	var maximumTableEntries = Math.round(360.0/maximumAngleDifference);
@@ -12908,7 +12908,6 @@ R3D.findLocalSupportingCornerMatches = function(imageMatrixA,imageMatrixB, point
 	if(!Code.isa(imageScalesB,ImageMatScaled)){
 		imageScalesB = new ImageMatScaled(imageMatrixB);
 	}
-	console.log("here")
 
 	// var featuresA = R3D.differentialCornersForImageScales(imageScalesA, imageCornerDensityPercent, true);
 	// var featuresB = R3D.differentialCornersForImageScales(imageScalesB, imageCornerDensityPercent, true);
@@ -12925,6 +12924,10 @@ R3D.findLocalSupportingCornerMatches = function(imageMatrixA,imageMatrixB, point
 	
 	var cornersA = R3D.differentialCornersForImageSingle(imageIdealA, imageCornerDensityPercent);
 	var cornersB = R3D.differentialCornersForImageSingle(imageIdealB, imageCornerDensityPercent);
+
+console.log(cornersA);
+
+	// throw "here"
 	cornersA = cornersA["points"];
 	cornersB = cornersB["points"];
 
@@ -12941,7 +12944,7 @@ R3D.findLocalSupportingCornerMatches = function(imageMatrixA,imageMatrixB, point
 	// }
 
 	console.log("TOTAL SEARCH POINTS: "+featuresA.length+" | "+featuresB.length);
-
+// throw "what ?"
 // 2601 | 2180
 // 
 
@@ -12951,7 +12954,7 @@ R3D.findLocalSupportingCornerMatches = function(imageMatrixA,imageMatrixB, point
 	// create objects for A
 	var affineMappingNeighborCount = 6 + 1;
 	// var featureCompareSize = 9;
-	var featureCompareSize = 7;
+	var featureCompareSize = 7; // blurring
 	var featureSourceSize = Math.ceil(averageSizeA*featureSizePercent);
 	var searchSizeRadius = averageSizeA*featureSizePercent*searchSizeFeatureScale;
 
@@ -12976,8 +12979,8 @@ R3D.findLocalSupportingCornerMatches = function(imageMatrixA,imageMatrixB, point
 // need to store an entry for 'already did' --- feature | angle | scale
 
 var doDebug = true;
-
-if(doDebug){
+if(false){
+// if(doDebug){
 // SHOW POINTS
 var x = 0;
 var y = 0;
@@ -13025,7 +13028,7 @@ for(var i=0;i<images.length;++i){
 }
 }
 
-throw "..."
+// throw "..."
 
 
 	// utilities
@@ -13075,7 +13078,8 @@ throw "..."
 			matrix.identity();
 			matrix.scale(scale);
 			matrix.rotate(angle);
-		var image  = R3D._progressiveR3DSizing(point, imageMatrixScales, 9, cellSize, matrix);
+		//var image  = R3D._progressiveR3DSizing(point, imageMatrixScales, 9, cellSize, matrix);
+		var image  = R3D._progressiveR3DSizing(point, imageMatrixScales, featureCompareSize, cellSize, matrix);
 		var images = feature["images"];
 			images[info["index"]] = {"image":image};
 		return image;
@@ -13198,31 +13202,56 @@ console.log("TOTAL SEARCH POINTS: "+featureSpaceA.count()+" | "+featureSpaceB.co
 			var putativeB = putativeA["opposite"];
 			var putativePointA = putativeA["point"];
 			var putativePointB = putativeB["point"];
-			// create local mapping for image transfer (affine | rot+scale)
-			var neighbors = pSpaceA.kNN(putativePointA, affineMappingNeighborCount);
-			var ptsA = [];
-			var ptsB = [];
-			for(var n=0; n<neighbors.length; ++n){
-				var neighbor = neighbors[n];
-				if(neighbor!==putativeA){
-					ptsA.push(neighbor["point"]);
-					ptsB.push(neighbor["opposite"]["point"]);
+			var affineAngle = null;
+			var affineScale = null;
+			if(useInputAffine){
+				var affine = affinesAB[j];
+				var info = R3D.infoFromAffineMatrix2D(affine);
+				// console.log(info);
+				affineScale = info["scale"];
+				affineAngle = info["angle"];
+				if(i==1){ // opposite direction
+					affineScale = 1.0/affineScale;
+					affineAngle = -affineAngle;
 				}
+				// throw "get affineAngle & affineScale"
+			}else{
+				// create local mapping for image transfer (affine | rot+scale)
+				var neighbors = pSpaceA.kNN(putativePointA, affineMappingNeighborCount);
+				var ptsA = [];
+				var ptsB = [];
+				for(var n=0; n<neighbors.length; ++n){
+					var neighbor = neighbors[n];
+					if(neighbor!==putativeA){
+						ptsA.push(neighbor["point"]);
+						ptsB.push(neighbor["opposite"]["point"]);
+					}
+				}
+				// R3D.affineBasicFromPoints2D(ptsA,ptsB, putativePointA,putativePointB, affine2D);
+					// affine2D.inverse(); // want to transform B to A
+
+				if(ptsA.length<3){
+					throw "need to use other method... ... keep at null"
+				}
+
+				console.log(matches);
+				console.log(ptsA,ptsB);
+
+							var info = R3D.affineBasicFromPoints2D(ptsB,ptsA, putativePointB,putativePointA, null, true);
+							affineAngle = info["angle"];
+							affineScale = info["scale"];
+				console.log(info);
+				throw "?"
+
 			}
-			// R3D.affineBasicFromPoints2D(ptsA,ptsB, putativePointA,putativePointB, affine2D);
-				// affine2D.inverse(); // want to transform B to A
-
-// OR IF affinesAB
-
-			var info = R3D.affineBasicFromPoints2D(ptsB,ptsA, putativePointB,putativePointA, null, true);
-			var affineAngle = info["angle"];
-			var affineScale = info["scale"];
-console.log(info);
 			// console.log(affine2D+"");
 			// get all local candidates within region around putative-pair A & B
 			var candidatesA = fSpaceA.objectsInsideCircle(putativePointA,searchSizeRadius);
 			var candidatesB = fSpaceB.objectsInsideCircle(putativePointB,searchSizeRadius);
-console.log(candidatesA,candidatesB)
+// console.log(candidatesA,candidatesB)
+
+
+// throw "... candidates"
 
 // SHOW CANDIDATES
 if(true){
@@ -13262,6 +13291,10 @@ for(var z=0; z<candidatesB.length; ++z){
 				featureA["image"] = imageA;
 				for(var b=0; b<candidatesB.length; ++b){
 					var featureB = candidatesB[b];
+					if(affineAngle==null){
+						throw "use other method?"
+					}
+
 					if(hasFeatureAttemptedCompare(featureA,featureB,affineAngle,affineScale)){
 						// console.log("skip");
 						continue;
@@ -13269,6 +13302,9 @@ for(var z=0; z<candidatesB.length; ++z){
 					setFeatureAttemptedCompare(featureA,featureB,affineAngle,affineScale);
 					var imageB = checkGetImageForFeature(featureB, affine2D, imgScalesB, affineAngle, affineScale);
 					var score = compareImagesFxn(imageA,imageB);
+
+
+
 					updateFeatureBestScores(featureA, featureB, score, imageB);
 					updateFeatureBestScores(featureB, featureA, score, imageA);
 				}
@@ -13276,8 +13312,8 @@ for(var z=0; z<candidatesB.length; ++z){
 
 
 // show top matches
-if(false){
-// if(true){
+// if(false){
+if(true){
 // if(doDebug){
 	console.log("SHOW "+candidatesA.length)
 for(var z=0; z<candidatesA.length; ++z){
@@ -13299,6 +13335,16 @@ for(var z=0; z<candidatesA.length; ++z){
 	d.matrix().scale(3.0);
 	d.matrix().translate(10 + z*30, 400);
 	GLOBALSTAGE.addChild(d);
+
+	// console.log(best);
+	var score = best["score"];
+	score = ""+score;
+	score = Code.clipString(score,5);
+	var d = new DOText(score, 7, DOText.FONT_ARIAL, 0xFF0000FF, DOText.ALIGN_LEFT);
+	d.matrix().translate(10 + z*30, 390);
+	GLOBALSTAGE.addChild(d);
+
+	console.log(score);
 }
 }
 
@@ -13306,7 +13352,7 @@ for(var z=0; z<candidatesA.length; ++z){
 			// throw "end inner";
 		}
 
-		// break; // doing a second round is only minimally helpful while being double processing
+		break; // doing a second round is only minimally helpful while being double processing
 	}
 
 	// show top same matches:
@@ -13316,7 +13362,7 @@ for(var z=0; z<candidatesA.length; ++z){
 	var ratios = [];
 	// var minRatio = 0.50; // 0.80 - 0.90
 	// var minRatio = 0.75; // WAS -- good for unique, not good for poor
-	//var minRatio = 0.90; // using for very similar images
+	// var minRatio = 0.90; // using for very similar images
 	var minRatio = 1.0;
 console.log(featuresA);
 console.log(featuresB);
@@ -13339,6 +13385,7 @@ console.log(featuresB);
 					var ratioA = scoreAB/scoreA;
 					var ratioB = scoreAB/scoreB;
 					var ratio = Math.max(ratioA,ratioB);
+					// var ratio = Math.min(ratioA,ratioB);
 console.log(" ratio "+ratio);
 					if(ratio<minRatio){
 						scores.push(scoreAB);
@@ -25057,7 +25104,7 @@ R3D._progressiveCompare2DArrayV3DSADClosest = function(histA,histB, size){ // no
 	// return Math.min(scoreA,scoreB);
 }
 
-R3D._progressiveCompare2DArrayV3DSADClosestSingle = function(histA,histB){ // not symmetric
+R3D._progressiveCompare2DArrayV3DSADClosestSingle = function(histA,histB){ // not symmetric - pick best matching pixel in sub-window to match against
 	var width = histA.width();
 	var height = histA.height();
 	var wm1 = width - 1;

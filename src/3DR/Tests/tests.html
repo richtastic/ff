@@ -14,8 +14,8 @@ function classesLoadedFxn(){
 	// 
 	// testExtraction();
 	// testLocalize();
-	testCorners();
-	// testLocationSeparate();
+	// testCorners();
+	testLocationSeparate();
 
 	
 	// testLocationNeighborsSparse();
@@ -312,11 +312,11 @@ function testLocationSeparate(){
 		var imageScalesA = scales[0];
 		var imageScalesB = scales[1];
 		// CHAIR CORNER
-			var needlePointA = new V2D(220,210);
-			var needlePointB = new V2D(290,254);
+			// var needlePointA = new V2D(220,210);
+			// var needlePointB = new V2D(290,254);
 		// CAMERA
-			// var needlePointA = new V2D(278,160);
-			// var needlePointB = new V2D(370,190);
+			var needlePointA = new V2D(278,160);
+			var needlePointB = new V2D(370,190);
 		// DOOR HANDLE
 			// var needlePointA = new V2D(90,208);
 			// var needlePointB = new V2D(129,240);
@@ -336,7 +336,7 @@ function testLocationSeparate(){
 		// window
 			// var needlePointA = new V2D(225,90);
 			// var needlePointB = new V2D(300,110);
-		// right win
+		// right win // ?????????
 			// var needlePointA = new V2D(300,205);
 			// var needlePointB = new V2D(401,255);
 		// chair
@@ -514,6 +514,10 @@ var averageScale;
 		var affine = result["affine"];
 		console.log(result);
 
+var bestAB = affine.copy();
+bestAB.inverse();
+// bestAB.identity();
+
 		console.log(affine==matrixIn);
 
 
@@ -554,9 +558,46 @@ affine.inverse();
 		// neighbors:
 		var pointsA = [needlePointA];
 		var pointsB = [bestPointB];
-		var affinesAB = [affine];
+		var affinesAB = [bestAB];
+// console.log(affinesAB);
+// throw "?"
+
 		var result = R3D.findLocalSupportingCornerMatches(imageScalesA,imageScalesB, pointsA,pointsB, null, affinesAB);
 		console.log(result);
+
+		var pointsA = result["A"];
+		var pointsB = result["B"];
+		for(var i=0; i<pointsA.length; ++i){
+			var pA = pointsA[i];
+			var pB = pointsB[i];
+
+			var d = new DO();
+			d.graphics().setLine(1.0,0x66FFFFFF);
+			d.graphics().beginPath();
+			d.graphics().drawCircle(pA.x,pA.y,2.0);
+			d.graphics().endPath();
+			d.graphics().strokeLine();
+			GLOBALSTAGE.addChild(d);
+
+			var d = new DOText(""+i, 7, DOText.FONT_ARIAL, 0xFF00CC00, DOText.ALIGN_CENTER);
+			d.matrix().translate(pA.x,pA.y + 3);
+			GLOBALSTAGE.addChild(d);
+
+
+			var d = new DO();
+			d.graphics().setLine(1.0,0x66FFFFFF);
+			d.graphics().beginPath();
+			d.graphics().drawCircle(pB.x,pB.y,2.0);
+			d.graphics().endPath();
+			d.graphics().strokeLine();
+			GLOBALSTAGE.addChild(d);
+			d.matrix().translate(imageScalesA.width(), 0);
+
+			var d = new DOText(""+i, 7, DOText.FONT_ARIAL, 0xFF00CC00, DOText.ALIGN_CENTER);
+			d.matrix().translate(pB.x,pB.y + 3);
+			GLOBALSTAGE.addChild(d);
+			d.matrix().translate(imageScalesA.width(), 0);
+		}
 
 	}
 

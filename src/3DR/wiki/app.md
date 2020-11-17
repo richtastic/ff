@@ -389,7 +389,21 @@ MISSING:
 xA) location needle haystack : pick metric
 xB) optimum affine : pick metric
 C) local neighborhood increase point matches sparse
+	- use expected/known orientation vs use corner orientation
 D) dense point matching using F
+
+
+
+
+
+findLocalSupportingCornerMatches
+	- is 2D affine correct
+	- is image extraction correct 
+	- re-check this metric:
+	var compareImagesFxn = R3D._progressiveCompare2DArrayV3DSADClosestSingle;
+
+		=> convert from BEST-SAD to: SAD-OFFSET-NORMALIZE-BEST
+
 
 - point peak scale optimizing
 	- only need to calc COM-ANG & MAG at single pixel (5x5 / neighborhood)
