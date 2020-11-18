@@ -312,11 +312,11 @@ function testLocationSeparate(){
 		var imageScalesA = scales[0];
 		var imageScalesB = scales[1];
 		// CHAIR CORNER
-			// var needlePointA = new V2D(220,210);
-			// var needlePointB = new V2D(290,254);
+			var needlePointA = new V2D(220,210);
+			var needlePointB = new V2D(290,254);
 		// CAMERA
-			var needlePointA = new V2D(278,160);
-			var needlePointB = new V2D(370,190);
+			// var needlePointA = new V2D(278,160);
+			// var needlePointB = new V2D(370,190);
 		// DOOR HANDLE
 			// var needlePointA = new V2D(90,208);
 			// var needlePointB = new V2D(129,240);
@@ -343,7 +343,7 @@ function testLocationSeparate(){
 			// var needlePointA = new V2D(140,229);
 			// var needlePointB = new V2D(190,269);
 
-			// var needlePointA = new V2D(100,250);
+			// var needlePointA = new V2D(92,245);
 			// var needlePointB = new V2D(130,289);
 
 			// var needlePointA = new V2D(275,175);
@@ -360,12 +360,18 @@ function testLocationSeparate(){
 			// var needlePointA = new V2D(190,49);
 			// var needlePointB = new V2D(260,77);
 
+			// var needlePointA = new V2D(215,40);
+			// var needlePointB = new V2D(289,70);
+
 			// var needlePointA = new V2D(290,115);
 			// var needlePointB = new V2D(375,150);
 
 		// clouds
 			// var needlePointA = new V2D(300,20);
 			// var needlePointB = new V2D(420,60);
+		// broom top
+			// var needlePointA = new V2D(28,202);
+			// var needlePointB = new V2D(49,230);
 
 // throw "?"
 		// ...
@@ -515,7 +521,7 @@ var averageScale;
 		console.log(result);
 
 var bestAB = affine.copy();
-bestAB.inverse();
+// bestAB.inverse();
 // bestAB.identity();
 
 		console.log(affine==matrixIn);

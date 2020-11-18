@@ -388,9 +388,11 @@ MISSING:
 
 xA) location needle haystack : pick metric
 xB) optimum affine : pick metric
-C) local neighborhood increase point matches sparse
+xC) local neighborhood increase point matches sparse
 	- use expected/known orientation vs use corner orientation
-D) dense point matching using F
+D) initial RIFT matches
+	- SAD-OFFST-NORM metric
+E) dense point matching using F - stereopsis
 
 
 
@@ -401,8 +403,7 @@ findLocalSupportingCornerMatches
 	- is image extraction correct 
 	- re-check this metric:
 	var compareImagesFxn = R3D._progressiveCompare2DArrayV3DSADClosestSingle;
-
-		=> convert from BEST-SAD to: SAD-OFFSET-NORMALIZE-BEST
+		x convert from BEST-SAD to: SAD-OFFSET-NORMALIZE-BEST
 
 
 - point peak scale optimizing

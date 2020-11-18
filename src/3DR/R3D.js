@@ -12953,8 +12953,8 @@ console.log(cornersA);
 	
 	// create objects for A
 	var affineMappingNeighborCount = 6 + 1;
-	// var featureCompareSize = 9;
-	var featureCompareSize = 7; // blurring
+	var featureCompareSize = 9;
+	// var featureCompareSize = 7; // blurring
 	var featureSourceSize = Math.ceil(averageSizeA*featureSizePercent);
 	var searchSizeRadius = averageSizeA*featureSizePercent*searchSizeFeatureScale;
 
@@ -25113,6 +25113,33 @@ R3D._progressiveCompare2DArrayV3DSADClosestSingle = function(histA,histB){ // no
 	var v = new V3D();
 	var sum = 0;
 	var count = width*height;
+	var ooCount = 1.0/count;
+	// info A & B
+	var avgA = new V3D();
+	var avgB = new V3D();
+	for(var i=0; i<count; ++i){
+		avgA.add(histA._r[i],histA._g[i],histA._b[i]);
+		avgB.add(histB._r[i],histB._g[i],histB._b[i]);
+	}
+	avgA.scale(ooCount);
+	avgB.scale(ooCount);
+	var sigmaA = 0;
+	var sigmaB = 0;
+	for(var i=0; i<count; ++i){
+		u.set(histA._r[i],histA._g[i],histA._b[i]);
+		sigmaA += V3D.distanceSquare(avgA,u);
+		u.set(histB._r[i],histB._g[i],histB._b[i]);
+		sigmaB += V3D.distanceSquare(avgB,u);
+	}
+	sigmaA = Math.sqrt(sigmaA*ooCount);
+	sigmaB = Math.sqrt(sigmaB*ooCount);
+	sigmaA = 1.0/sigmaA;
+	sigmaB = 1.0/sigmaB;
+// console.log(avgA);
+// console.log(avgB);
+// console.log(sigmaA);
+// console.log(sigmaB);
+// 	throw "here"
 	for(var j=0; j<height; ++j){
 		for(var i=0; i<width; ++i){
 			var minX = Math.max(i-1, 0);
@@ -25120,15 +25147,28 @@ R3D._progressiveCompare2DArrayV3DSADClosestSingle = function(histA,histB){ // no
 			var minY = Math.max(j-1, 0);
 			var maxY = Math.min(j+1,hm1);
 			var index = j*width + i;
-			v.set(histA._r[index],histA._g[index],histA._b[index]);
+			// v.set(histA._r[index],histA._g[index],histA._b[index]);
+
+
+			v.set( (histA._r[index]-avgA.x)*sigmaA , (histA._g[index]-avgA.y)*sigmaA , (histA._b[index]-avgA.z)*sigmaA );
+
+
+
+
 			// u.set(histB._r[index],histB._g[index],histB._b[index]);
 			// var min = V3D.distance(u,v)
 			var min = 999; // largest difference possible is sqrt(3)
 			for(var y=minY; y<=maxY; ++y){
 				for(var x=minX; x<=maxX; ++x){
 					var index = y*width + x;
-					u.set(histB._r[index],histB._g[index],histB._b[index]);
-					min = Math.min(V3D.distance(u,v),min);
+					// u.set(histB._r[index],histB._g[index],histB._b[index]);
+
+					u.set( (histB._r[index]-avgB.x)*sigmaB , (histB._g[index]-avgB.y)*sigmaB , (histB._b[index]-avgB.z)*sigmaB );
+
+
+					var distance = V3D.distance(u,v);
+
+					min = Math.min(distance,min);
 				}
 			}
 			sum += min;
@@ -25138,6 +25178,9 @@ R3D._progressiveCompare2DArrayV3DSADClosestSingle = function(histA,histB){ // no
 }
 
 R3D._progressiveCompareImageSAD = function(imageA,imageB){
+
+
+	throw "offset & sigma"
 	var width = imageA.width();
 	var height = imageA.height();
 	var u = new V3D();
