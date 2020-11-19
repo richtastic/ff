@@ -15890,11 +15890,18 @@ R3D.optimalCountFeaturesFromImageScales = function(imageScales, nonMaximalPercen
 	var image = imageScales.images()[0];
 	var width = image.width();
 	var height = image.height();
-	var nonMaximalPercent = 0.020; // 0.01 - 0.005
-	var nonRepeatPercent = nonMaximalPercent*0.50; // 1.5;
+	nonMaximalPercent = Code.valueOrDefault(nonMaximalPercent,0.020); // 0.01 - 0.005
+	nonRepeatPercent = Code.valueOrDefault(nonRepeatPercent, nonMaximalPercent*0.50); // 1.5;
 
 	// get processor/time-optimal size to start with
-	var idealSize = 500*400;
+	// var idealSize = 500*400;
+	// var idealSize = 600*400;
+	// var idealSize = 800*600;
+
+var idealSize = 600*400;
+// var idealSize = 400*300;
+// var scaleIterations = 1;
+
 	var actualSize = image.width()*image.height();
 	var idealScale = Math.sqrt(idealSize/actualSize);
 	if(idealScale>1.0){
@@ -15902,8 +15909,11 @@ R3D.optimalCountFeaturesFromImageScales = function(imageScales, nonMaximalPercen
 	}
 	// get peaks at several scales
 	var currentScale = idealScale;
-	var scaleIterations = 5;
+	// var scaleIterations = 5;
 	// var scaleIterations = 3;
+	var scaleIterations = 1;
+
+
 	var cornersA = [];
 	for(var iteration=0; iteration<scaleIterations; ++iteration){
 		var idealImage = imageScales.getScaledImage(currentScale);
@@ -15911,8 +15921,16 @@ R3D.optimalCountFeaturesFromImageScales = function(imageScales, nonMaximalPercen
 			break;
 		}
 		var actualScale = (idealImage.width()/image.width() + idealImage.height()/image.height())*0.5;
-		var corners = R3D.cornerPeaksColorGradient(idealImage, nonMaximalPercent, 0.95); // 0.90-0.99
+
+
+		var corners = R3D.differentialCornersForImageSingle(idealImage, nonMaximalPercent);
+
+
+		// OLD
+		//var corners = R3D.cornerPeaksColorGradient(idealImage, nonMaximalPercent, 0.95); // 0.90-0.99
+// console.log(corners)
 		corners = corners["points"];
+console.log(corners);
 		for(var k=0; k<corners.length; ++k){
 			var c = corners[k];
 			c.x /= actualScale;
@@ -15931,6 +15949,7 @@ R3D.optimalCountFeaturesFromImageScales = function(imageScales, nonMaximalPercen
 	};
 	peaks.sort(sortCorners);
 	var maxDistance = nonRepeatPercent*Math.sqrt(width*width+height*height);
+console.log("maxDistance: "+maxDistance);
 	var space = new QuadTree(toV2D);
 	space.initWithMinMax(new V2D(0,0), new V2D(width,height));
 	var scores = [];
@@ -15945,10 +15964,10 @@ R3D.optimalCountFeaturesFromImageScales = function(imageScales, nonMaximalPercen
 	var corners = space.toArray();
 	return corners;
 }
-R3D.colorGradientFeaturesFromImage = function(image){
-
-	
-	var imageScales = new ImageMatScaled(image);
+R3D.colorGradientFeaturesFromImage = function(imageScales){
+	if(!Code.isa(imageScales,ImageMatScaled)){
+		imageScales = new ImageMatScaled(imageScales);
+	}
 
 	var cornersA = R3D.optimalCountFeaturesFromImageScales(imageScales);
 	var features = R3D.colorGradientFeaturesFromPoints(cornersA, imageScales);
@@ -15958,31 +15977,212 @@ R3D.colorGradientFeaturesFromImage = function(image){
 
 R3D.colorGradientFeaturesFromPoints = function(points, imageScales){
 	// 1 - 3 - 5
-	var featureSizeNeighborhood = 5.0; // from peak scale to size
+	// var featureSizeNeighborhood = 5.0; // from peak scale to size
+	var featureSizeNeighborhood = 10.0;
 	var features = [];
 	for(var i=0; i<points.length; ++i){
 		var point = points[i];
 		// var scale = R3D.colorGradientScalePeak(point,imageScales);
-		var scale = R3D.colorGradientScalePeak(point,imageScales);
-		if(scale===null){
+		var info = R3D.colorGradientDirectionScalePeak(point,imageScales);
+		// differentialCornersForImageSingle
+		if(!info){ // no noticeable peak
 			continue;
 		}
+		// console.log(info);
+		var scale = info["scale"];
+		// throw "???"
 		point = new V2D(point.x,point.y);
 		feature = {};
 			feature["point"] = point;
 			feature["size"] = featureSizeNeighborhood/scale;
-				// var img = imageScales.extractRect(point, featureSizeNeighborhood/scale, 3,3, null);
-				var img = imageScales.extractRect(point, scale/featureSizeNeighborhood, 3,3, null);
-				// var img = imageScales.extractRect(point, scale, 3,3, null);
-				var gry = img.gry();
-				var angle = R3D.gradAngleFromGry3x3(gry);
-				// console.log(angle);
-			feature["angle"] = angle;
+				// // var img = imageScales.extractRect(point, featureSizeNeighborhood/scale, 3,3, null);
+				// var img = imageScales.extractRect(point, scale/featureSizeNeighborhood, 3,3, null);
+				// // var img = imageScales.extractRect(point, scale, 3,3, null);
+				// var gry = img.gry();
+				// var angle = R3D.gradAngleFromGry3x3(gry);
+				// // console.log(angle);
+			feature["angle"] = info["angle"];
 		features.push(feature);
 	}
 	return features;
 }
+
+R3D.colorGradientDirectionScalePeak = function(point, imageScales){
+	// console.log("colorGradientDirectionScalePeak");
+	// var images = imageScales.images();
+	// var scales = imageScales.scales();
+	var maskSize = R3D.imageCornerDifferentialInfoSize;
+	var maskValues = R3D.imageCornerDifferentialInfoMask;
+	var maskHalf = maskSize*0.5 | 0;
+	// locals
+	var cen = new V3D();
+	var rgb = new V3D();
+	var v = new V2D();
+	var com = new V2D();
+	var angles = [];
+	var magnitudes = [];
+	// var grad = new V3D();
+	// var len = images.length - 1;
+	// var len = images.length;
+	// var lm1 = len - 1;
+	// for(var i=0; i<=len; ++i){
+
+
+
+// var scales = Code.divSpace(-2,2,20);
+// var scales = Code.divSpace(-1,2,20);
+var scales = Code.divSpace(-1,3,20);
+var len = scales.length;
+// console.log(scales);
+
+for(var i=0; i<len; ++i){
+scales[i] = Math.pow(2,scales[i]);
+}
+// console.log(scales);
+
+// point.x = 220;
+// point.y = 210;
+// point.x = 50;
+// point.y = 250;
+
+var affine = new Matrix2D();
+affine.identity();
+var needle = new ImageMat(maskSize,maskSize);
+var red = needle.red();
+var grn = needle.grn();
+var blu = needle.blu();
+// console.log(scales);
+	for(var i=0; i<len; ++i){
+		var scale = scales[i];
+		// var image = images[i];
+
+		affine.identity();
+		affine.scale(scale);
+		ImageMatScaled.affineToLocationTransform(affine, affine, maskHalf,maskHalf,point.x,point.y);
+		var averageScale = affine.averageScale();
+		// var averageScale = scale;
+		imageScales.extractRectCombineFast(needle, averageScale, affine);
+
+/*
+		var sss = 5.0;
+		var image = needle;
+		var img = GLOBALSTAGE.getFloatRGBAsImage(image.red(),image.grn(),image.blu(), image.width(),image.height());
+		var d = new DOImage(img);
+		d.matrix().scale(sss);
+		d.matrix().translate(10 + 40*i, 10);
+		GLOBALSTAGE.addChild(d);
+// console.log(i);
+*/
+
+		// set center:
+		com.set(0,0);
+		var index = maskHalf*maskSize + maskHalf;
+		cen.set(red[index],grn[index],blu[index]);
+		var ddd = 0;
+		for(var y = 0; y<maskSize; ++y){
+			var py = y - maskHalf;
+			for(var x = 0; x<maskSize; ++x){
+				var px = x - maskHalf;
+				index = y*maskSize + x;
+				var maskValue = maskValues[index];
+				if(maskValue<=0){
+					continue;
+				}
+				v.set(px,py);
+				rgb.set(red[index],grn[index],blu[index]);
+				var diff = V3D.distance(cen,rgb);
+				var mag = diff*maskValue;
+				if(mag>0){
+					ddd += mag;
+					v.length(mag);
+					com.add(v);
+				}else{
+					// console.log(mag,diff,maskValue);
+				}
+			}
+		}
+// console.log(com+" - "+ddd);
+
+// console.log(needle);
+		// throw "???"
+		/*
+		var red = image.red();
+		var grn = image.grn();
+		var blu = image.blu();
+		var wid = image.width();
+		var hei = image.height();
+		var wm1 = wid-1;
+		var hm1 = hei-1;
+		var offX = Math.min(Math.max(Math.round(point.x*scale),0),wm1);
+		var offY = Math.min(Math.max(Math.round(point.y*scale),0),hm1);
+		// set center:
+		com.set(0,0);
+		var imageIndex = offY*wid + offX;
+		cen.set(red[imageIndex],grn[imageIndex],blu[imageIndex]);
+		var ddd = 0;
+		for(var y = 0; y<maskSize; ++y){
+			var py = Math.min(Math.max(offY+y-maskHalf,0),hm1);
+			for(var x = 0; x<maskSize; ++x){
+				var px = Math.min(Math.max(offX+x-maskHalf,0),wm1);
+				var maskIndex = y*maskSize + x;
+				var maskValue = maskValues[maskIndex];
+				if(maskValue<=0){
+					continue;
+				}
+				var imageIndex = py*wid + px;
+				v.set(x-maskHalf,y-maskHalf);
+				rgb.set(red[imageIndex],grn[imageIndex],blu[imageIndex]);
+				var diff = V3D.distance(cen,rgb);
+				var mag = diff*maskValue;
+				if(mag>0){
+// console.log(mag);
+ddd += mag;
+					v.length(mag);
+					com.add(v);
+				}else{
+					// console.log(mag,diff,maskValue);
+				}
+			}
+		}
+		*/
+		// console.log(com+"");
+		magnitudes.push(com.length());
+		// magnitudes.push(ddd);
+		angles.push(V2D.angleDirection(V2D.DIRX,com));
+	}
+	// throw "here";
+	// console.log(angles);
+	// console.log(magnitudes);
+
+	// peak keep track of peaked
+	var peaks = Code.findMaxima1D(magnitudes);
+	// console.log(peaks);
+	if(peaks.length==0){
+		// throw "for now";
+		return null;
+	}
+	var peak = peaks[0];
+	for(var i=1; i<peaks.length; ++i){
+		if(peaks[i].y>peak.y){
+			peak = peaks[i];
+		}
+	}
+	var sMin = Math.floor(peak.x);
+	var sMax = Math.ceil(peak.x);
+	if(sMax>=scales.length){
+		throw "too far ?";
+	}
+	var sPer = peak.x - sMin;
+	var pPer = 1.0-sPer;
+	var scale = scales[sMin]*(pPer) + scales[sMax]*sPer;
+	var angle = Code.averageAngles([ angles[sMin],angles[sMax] ],[pPer,sPer]);
+	// var angle = Code.averageAngles([ angles[sMin],angles[sMax] ],[sPer,pPer]);
+	// var angle = angles[ Math.round(peak.x) ];
+	// throw "out ...."
+	return {"scale":scale, "point":point, "angle":angle};
+}
 R3D.colorGradientScalePeak = function(point, imageScales){
+throw "use the other - colorGradientDirectionScalePeak"
 	var images = imageScales.images();
 	var scales = imageScales.scales();
 	var values = [];

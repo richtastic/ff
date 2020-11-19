@@ -15,7 +15,9 @@ function classesLoadedFxn(){
 	// testExtraction();
 	// testLocalize();
 	// testCorners();
-	testLocationSeparate();
+	// testLocationSeparate();
+
+	testRIFTMatches();
 
 	
 	// testLocationNeighborsSparse();
@@ -36,12 +38,125 @@ function setupDisplay(){
 	this._root = new DO();
 	this._stage.root().addChild(this._root);
 // this._root.matrix().scale(2.0,2.0);
-// this._stage.root().matrix().scale(2.0);
-this._stage.root().matrix().scale(2.5);
+this._stage.root().matrix().scale(2.0);
+// this._stage.root().matrix().scale(2.5);
 // this._stage.root().matrix().scale(4.0);
 	GLOBALSTAGE = this._stage;
 }
 
+
+
+function testRIFTMatches(){
+	// R3D.differentialCornersForImageSingle = function(imageMatrix, suppressDistancePercent){
+		setupDisplay();
+	var fxnImageLoaded = function(info){
+		console.log("fxnImageLoaded")
+		var images = info["images"];
+		var imageScalesList = [];
+		for(var iii=0; iii<images.length; ++iii){
+			var image = images[iii];
+			var imageFloat = GLOBALSTAGE.getImageAsFloatRGB(image);
+			var imageMatrix = new ImageMat(imageFloat["width"],imageFloat["height"], imageFloat["red"], imageFloat["grn"], imageFloat["blu"]);
+
+			var imageScales = new ImageMatScaled(imageMatrix);
+			imageScalesList.push(imageScales);
+
+			image = imageScales.images()[0];
+			var img = GLOBALSTAGE.getFloatRGBAsImage(image.red(),image.grn(),image.blu(), image.width(),image.height());
+			var d = new DOImage(img);
+			d.matrix().scale(1.0);
+			d.matrix().translate(0 + iii*imageMatrix.width(), 0 + 0);
+			GLOBALSTAGE.addChild(d);
+
+
+			var nonMaximalPercent = 0.010;
+			// var nonRepeatPercent = 0.001;
+			var nonRepeatPercent = 0.005;
+			// var imageScales = imageScalesList[0];
+			var corners = R3D.optimalCountFeaturesFromImageScales(imageScales, nonMaximalPercent, nonRepeatPercent);
+			// R3D.differentialFeaturesFromImage = function(image){
+			console.log(corners);
+
+			var features = R3D.colorGradientFeaturesFromPoints(corners,imageScales);
+			console.log(features);
+
+			// throw "???"
+
+			var points = corners;
+
+			// show accumulated corners
+
+			var d = new DO();
+			d.graphics().setFill(0x99FF00FF);
+			// d.graphics().setFill(0xFFFFFFFF);
+			// d.graphics().setLine(1.0,0xFFFFFFFF);
+			console.log("FINAL POINTS: "+points.length)
+			for(var i=0; i<points.length; ++i){
+				var point = points[i];
+				d.graphics().beginPath();
+				d.graphics().drawCircle(point.x,point.y,1.0);
+				d.graphics().endPath();
+				d.graphics().fill();
+				/*
+				var dir = new V2D(2.0,0);
+				// var dir = new V2D(1.0,0);
+				dir.rotate(angles[i]);
+				d.graphics().beginPath();
+				d.graphics().moveTo(point.x,point.y);
+				d.graphics().lineTo(point.x+dir.x,point.y+dir.y);
+				d.graphics().endPath();
+				d.graphics().strokeLine();
+				*/
+			}
+			d.matrix().translate(iii*imageMatrix.width(),0);
+			GLOBALSTAGE.addChild(d);
+
+
+			// show finalized features:
+
+			var d = new DO();
+			d.graphics().setFill(0xFFFFFFFF);
+			// d.graphics().setLine(1.0,0x993366FF);
+			d.graphics().setLine(1.0,0xFFFFFFFF);
+			console.log("FINAL FEATURES: "+features.length)
+			for(var i=0; i<features.length; ++i){
+				var feature = features[i];
+				var point = feature["point"];
+				var angle = feature["angle"];
+				var size = feature["size"];
+
+
+				// size = 2.0;
+				size = size * 0.5;
+				d.graphics().beginPath();
+				// d.graphics().drawCircle(point.x,point.y,1.0);
+				d.graphics().drawCircle(point.x,point.y,size);
+				d.graphics().endPath();
+				// d.graphics().fill();
+				d.graphics().strokeLine();
+				
+				// var dir = new V2D(2.0,0);
+				// var dir = new V2D(1.0,0);
+				var dir = new V2D(size,0);
+				dir.rotate(angle);
+				d.graphics().beginPath();
+				d.graphics().moveTo(point.x,point.y);
+				d.graphics().lineTo(point.x+dir.x,point.y+dir.y);
+				d.graphics().endPath();
+				d.graphics().strokeLine();
+				
+			}
+			d.matrix().translate(iii*imageMatrix.width(),0);
+			GLOBALSTAGE.addChild(d);
+		}
+		
+
+
+
+	}
+	new ImageLoader("../images/iowa/",["5.JPG","6.JPG"],this,fxnImageLoaded).load();
+
+}
 
 
 function testCorners(){
