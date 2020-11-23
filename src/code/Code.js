@@ -1658,13 +1658,15 @@ Code.newArrayZeros = function(len){
 Code.newArrayOnes = function(len){
 	return Code.newArrayConstant(len, 1.0);
 }
-Code.newArrayConstant = function(len,val){
+Code.newArrayValues = function(len,val){
 	var i, arr = new Array(len);
 	for(i=len;i--;){
 		arr[i] = val;
 	}
 	return arr;
 }
+Code.newArrayConstant = Code.newArrayValues;
+
 Code.newArrayIndexes = function(fr,to){
 	if(to===undefined){
 		to = fr;
@@ -2375,6 +2377,21 @@ Code.toMonotonicIncreasing = function(array){
 	}
 	return next;
 }
+Code.normalArray01 = function(data){
+	var i, len = data.length;
+	var max = data[0], min = data[0];
+	for(i=1;i<len;++i){
+		max = Math.max(max,data[i]);
+		min = Math.min(min,data[i]);
+	}
+	var range = max - min;
+	if(range==0){range = 1.0;}
+	range = 1.0/range;
+	for(i=0;i<len;++i){
+		data[i] = (data[i]-min)*range;
+	}
+	return data;
+}
 // ------------------------------------------------------------------------------------------ ARRAY 2D
 Code.newArray2D = function(rows,cols){
 	var i, arr = new Array(rows);
@@ -2463,11 +2480,54 @@ Code.array1Das2DtoString = function(arr, wid,hei, exp, min){
 	}
 	return str;
 }
+
+Code.array2DasArray1D = function(arr){
+	var result = [];
+	var len = arr.length;
+	for(var i=0; i<len; ++i){
+		var a = arr[i];
+		var l = a.length;
+		for(var j=0; j<l; ++j){
+			result.push(a[j]);
+		}
+	}
+	return result;
+}
 Code.max2DArray = function(array2D){
 	return Code.info2DArray["max"];
 }
 Code.min2DArray = function(array2D){
 	return Code.info2DArray["min"];
+}
+
+
+Code.fillSubArray2D = function(src,wid,hei, fillSrc,fillWid,fillHei, offsetX,offsetY){
+	var maxWid = Math.min(fillWid,wid-offsetX);
+	var maxHei = Math.min(fillHei,hei-offsetY);
+	for(var j=0;j<maxHei;++j){
+		jW = (j+offsetX)*wid;
+		jF = j*fillWid;
+		for(i=0;i<maxWid;++i){
+			src[jW+i+offsetX] = fillSrc[jF+i];
+		}
+	}
+	return src;
+}
+
+Code.padArray2DLinear = function(src,wid,hei, left,right,top,bot){
+	var newWid = wid+left+right, newHei = hei+top+bot;
+	var newLen = newWid*newHei;
+	var result = new Array(newLen);
+	var i, j, nJ, nJJ, nI;
+	for(j=0;j<newHei;++j){
+		nJ = Math.min(Math.max(j-top,0),hei-1)*wid;
+		nJJ = j*newWid;
+		for(i=0;i<newWid;++i){
+			nI = Math.min(Math.max(i-left,0),wid-1);
+			result[nJJ+i] = src[nJ+nI];
+		}
+	}
+	return result;
 }
 
 Code.unpadArray2DLinear = function(src,wid,hei, left,right,top,bot){

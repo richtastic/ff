@@ -53,6 +53,7 @@ function testRIFTMatches(){
 		console.log("fxnImageLoaded")
 		var images = info["images"];
 		var imageScalesList = [];
+		var objectsList = [];
 		for(var iii=0; iii<images.length; ++iii){
 			var image = images[iii];
 			var imageFloat = GLOBALSTAGE.getImageAsFloatRGB(image);
@@ -92,6 +93,7 @@ function testRIFTMatches(){
 			// d.graphics().setLine(1.0,0xFFFFFFFF);
 			console.log("FINAL POINTS: "+points.length)
 			for(var i=0; i<points.length; ++i){
+break;
 				var point = points[i];
 				d.graphics().beginPath();
 				d.graphics().drawCircle(point.x,point.y,1.0);
@@ -113,7 +115,7 @@ function testRIFTMatches(){
 
 
 			// show finalized features:
-
+/*
 			var d = new DO();
 			d.graphics().setFill(0xFFFFFFFF);
 			// d.graphics().setLine(1.0,0x993366FF);
@@ -125,9 +127,8 @@ function testRIFTMatches(){
 				var angle = feature["angle"];
 				var size = feature["size"];
 
-
 				// size = 2.0;
-				size = size * 0.5;
+				// size = size * 0.5;
 				d.graphics().beginPath();
 				// d.graphics().drawCircle(point.x,point.y,1.0);
 				d.graphics().drawCircle(point.x,point.y,size);
@@ -148,10 +149,82 @@ function testRIFTMatches(){
 			}
 			d.matrix().translate(iii*imageMatrix.width(),0);
 			GLOBALSTAGE.addChild(d);
+*/
+
+			// var objects = R3D.generateProgressiveSIFTObjects(features, imageScales);
+			var objects = R3D.generateProgressiveRIFTObjects(features, imageScales);
+			console.log("objects:");
+			console.log(objects);
+			objectsList.push(objects);
 		}
-		
+		var objectsA = objectsList[0];
+		var objectsB = objectsList[1];
+		var result = R3D.compareProgressiveRIFTObjectsFull(objectsA, objectsB);
+		console.log(result);
 
 
+		var matches = result["matches"];
+		var d = new DO();
+		// d.graphics().setFill(0xFFFFFFFF);
+		// d.graphics().setLine(1.0,0x993366FF);
+		// d.graphics().setLine(1.0,0xFFFF0000);
+var imageA = imageScalesList[0];
+var color0 = new V3D(1,0,0);
+var color1 = new V3D(0,1,0);
+var color2 = new V3D(0,0,1);
+// var color3 = new V3D(1,1,1);
+var color3 = new V3D(0,0,0);
+var colors = [color0,color1,color2,color3];
+		for(var i=0; i<matches.length; ++i){
+			var match = matches[i];
+			console.log(match);
+			var a = match["A"];
+			var b = match["B"];
+
+			var pointA = a["point"];
+			var pointB = b["point"];
+			var size = 2.0;
+
+var p = pointA.copy();
+var q = pointB.copy();
+
+var px = (p.x/imageA.width());
+var py = (p.y/imageA.height());
+var qx = 1 - px;
+var qy = 1 - py;
+var p0 = qx*qy;
+var p1 = px*qy;
+var p2 = qx*py;
+var p3 = px*py;
+
+// console.log(p0,p1,p2,p3, p0+p1+p2+p3);
+var color = V3D.average(colors, [p0,p1,p2,p3]);
+color = Code.getColARGBFromFloat(1.0,color.x,color.y,color.z);
+			
+			d.graphics().setLine(1.0,color);
+			// var point = feature["point"];
+			// var angle = feature["angle"];
+			// var size = feature["size"];
+			d.graphics().beginPath();
+			d.graphics().drawCircle(pointA.x,pointA.y,size);
+			d.graphics().endPath();
+			d.graphics().strokeLine();
+
+			d.graphics().beginPath();
+			d.graphics().drawCircle(imageA.width() + pointB.x,pointB.y,size);
+			d.graphics().endPath();
+			d.graphics().strokeLine();
+			
+			// var dir = new V2D(size,0);
+			// dir.rotate(angle);
+			// d.graphics().beginPath();
+			// d.graphics().moveTo(point.x,point.y);
+			// d.graphics().lineTo(point.x+dir.x,point.y+dir.y);
+			// d.graphics().endPath();
+			// d.graphics().strokeLine();
+		}
+		d.matrix().translate(0,0);
+		GLOBALSTAGE.addChild(d);
 
 	}
 	new ImageLoader("../images/iowa/",["5.JPG","6.JPG"],this,fxnImageLoaded).load();

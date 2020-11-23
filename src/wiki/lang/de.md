@@ -1036,6 +1036,7 @@ Faun - Tanz mit mir
 
 
 Heidis Küken - Das kleine Küken piept
+https://www.youtube.com/watch?v=WUBYglJibTQ
 
 | du | | en |
 |-|-|-|
@@ -1427,7 +1428,7 @@ https://www.youtube.com/watch?v=rVlQgJnHwgI
 
 
 
-
+https://www.youtube.com/watch?v=CJ2u3pRpCjc
 
 
 

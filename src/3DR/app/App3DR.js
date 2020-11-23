@@ -15097,6 +15097,8 @@ App3DR.ProjectManager.prototype._calculateFeaturesLoaded = function(view){
 	var imageMatrix = R3D.imageMatrixFromImage(image, this._stage);
 	var imageScales = new ImageMatScaled(imageMatrix);
 
+
+throw "here --- features"
 	var features = R3D.differentialCornersForImage(imageScales, new V2D(600,400));
 	var normalizedFeatures = R3D.normalizeSIFTObjects(features, imageMatrix.width(), imageMatrix.height());
 	console.log("FEATURES: "+normalizedFeatures.length);

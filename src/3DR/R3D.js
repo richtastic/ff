@@ -10450,6 +10450,483 @@ R3D._matchestoPoints = function(matches){
 }
 
 
+// ------------------------------------------------------------------------------ PROGRESSIVE MATCHING 2
+
+
+R3D.generateProgressiveRIFTObjects = function(features, imageScales){
+	if(!Code.isa(imageScales, ImageMatScaled)){
+		imageScales = new ImageMatScaled(imageScales);
+	}
+
+	// throw "here"
+	var objects = [];
+	var matrix = new Matrix2D();
+
+var flatSize = 9;
+var blockFlat = new ImageMat(flatSize,flatSize);
+var flatMask = ImageMat.circleMask(flatSize,flatSize);
+
+
+var gradBins = R3D.circularSIFTBinMask(2,2);
+// console.log(gradBins);
+var gradBinMask = gradBins["value"];
+var gradBinSize = gradBins["width"];
+var gradBinCount = gradBins["bins"];
+var padding = 1;
+
+// console.log(gradBinMask);
+// console.log(gradBinSize);
+
+var gradSize = gradBinSize + 2*padding;
+console.log(gradSize);
+var bg = Code.newArrayValues(gradSize*gradSize, -1);
+Code.fillSubArray2D(bg,gradSize,gradSize, gradBinMask,gradBinSize,gradBinSize, padding,padding);
+
+gradBinMask = bg;
+// var str = Code.array2DtoString(gradBins["value"], 4);
+// var str = Code.array1Das2DtoString(gradBins["value"], gradBins["width"],gradBins["height"], 4);
+var str = Code.array1Das2DtoString(gradBinMask,gradSize,gradSize, 4);
+// console.log(str);
+// throw "?";
+
+// var gradSize = 11;
+// var gradSize = gradBins["width"] + 2;
+var gradSizeM1 = gradSize-1;
+var blockGrad = new ImageMat(gradSize,gradSize);
+// var gradMask = ImageMat.circleMask(gradSize,gradSize);
+	// gradMask
+
+
+	// Code.unpadArray2DLinear = function(src,wid,hei, left,right,top,bot){
+
+
+// R3D._SIFVectorRGBCircularVectorAdd = function(vector, redV, binsSize, binCount, vectorLen, bin, weight, offset){
+// 	var redM = redV.length();
+// 	var redA = V2D.angleDirection(V2D.DIRX,redV);
+// 		redA = Code.angleZeroTwoPi(redA);
+// 	var valueR = redM * weight;
+// 	var redB = Math.min(Math.floor((redA/Math.PI2)*binsSize),binsSize-1);
+// 	var vectorIndexR = binsSize*bin + redB + vectorLen*offset;
+// 	vector[vectorIndexR] += valueR;
+// }
+// R3D.SIFVectorGrayCircular = function(imageMatrix, location,diaNeighborhood,pointAngle){
+// 	return R3D.SIFTVectorCircular(imageMatrix, location,diaNeighborhood,pointAngle, false);
+// }
+// R3D.SIFVectorRGBCircular = function(imageMatrix, location,diaNeighborhood,pointAngle){
+// 	var matrix = new Matrix(3,3);
+// 		matrix.identity();
+// 		matrix = Matrix.transform2DRotate(matrix,pointAngle);
+// 	return R3D.SIFTVectorCircular(imageMatrix, location,diaNeighborhood,matrix, true);
+// }
+
+	for(k=features.length-1; k>=0; --k){
+		var feature = features[k];
+		var angle = feature["angle"];
+		var size = feature["size"];
+		var point = feature["point"];
+			point = new V2D(point.x,point.y);
+
+// angle = 0.0;
+// point = new V2D(220,210);
+// size = 11.0;
+
+
+		matrix.identity();
+		matrix.rotate(-angle);
+		var object = {};
+			object["size"] = size;
+			object["angle"] = angle;
+			object["point"] = point;
+
+		// 
+		
+		var flat = R3D._progressiveR3DSizing2(point, imageScales, blockFlat, size, matrix);
+		// console.log(flat);
+		var red = blockFlat.red();
+		var grn = blockFlat.grn();
+		var blu = blockFlat.blu();
+
+		var flat2D = [];
+		for(var i=0; i<flatMask.length; ++i){
+			var mask = flatMask[i];
+			if(mask<=0){
+				continue;
+			}
+			var r = red[i];
+			var g = grn[i];
+			var b = blu[i];
+			flat2D.push(r,g,b);
+		}
+
+
+
+		// ...
+		
+		var grad = R3D._progressiveR3DSizing2(point, imageScales, blockGrad, size, matrix);
+		// console.log(grad);
+
+		var bins2D = [];
+		for(var i=0; i<gradBinSize; ++i){
+			bins2D[i] = Code.newArrayZeros(8);
+		}
+
+		var bins3D = [];
+		for(var i=0; i<gradBinSize; ++i){
+			bins3D[i] = Code.newArrayZeros(8);
+		}
+
+		var com2D = new V2D();
+		var com3D = new V3D();
+		var cen = new V3D();
+		var val = new V3D();
+		var dir = new V2D();
+		var red = blockGrad.red();
+		var grn = blockGrad.grn();
+		var blu = blockGrad.blu();
+		for(var y=1; y<gradSizeM1; ++y){
+			for(var x=1; x<gradSizeM1; ++x){
+				var index = y*gradSize + x;
+				var binIndex = gradBinMask[index];
+				// console.log(binIndex);
+				if(binIndex<0){
+					continue;
+				}
+				cen.set(red[index],grn[index],blu[index]);
+				// console.log(cen+"");
+				com2D.set(0,0);
+				com3D.set(0,0,0);
+				for(var j=-1; j<=1; ++j){
+					for(var i=-1; i<=1; ++i){
+						if(i==0 && j==0){
+							continue;
+						}
+						var ind = (y+j)*gradSize + (x+i);
+						val.set(red[ind],grn[ind],blu[ind]);
+						val.sub(cen);
+						com3D.add(val);
+						var mag = val.length();
+						dir.set(i,j);
+						dir.length(mag);
+						com2D.add(dir);
+					}
+				}
+				// console.log(com2D+"");
+				// console.log(com3D+"");
+
+				var angle2D = V2D.angle(V2D.DIRX,com2D);
+				var binAngle2D = Math.min(  Math.floor( 8*(angle2D/(Math.PI*2)) ),8-1);
+				// console.log(binAngle2D, angle2D*180.0/Math.PI);
+				bins2D[binIndex][binAngle2D] += com2D.length();
+
+				binAngle3D = (com3D.x<0 ? 4 : 0) + (com3D.y<0 ? 2 : 0) + (com3D.z<0 ? 1 : 0);
+				// console.log(binAngle3D, com3D+"");
+				bins3D[binIndex][binAngle3D] += com3D.length();
+
+				// for each pixels (inset 1-2 pixels)
+				// get COV 2D
+				// get COV 3D
+				// throw x+","+y;
+			}
+		}
+		// console.log(bins2D);
+		// console.log(bins3D);
+		// convert into 1D array
+		bins2D = Code.array2DasArray1D(bins2D);
+		bins3D = Code.array2DasArray1D(bins3D);
+		// console.log(bins2D);
+		// console.log(bins3D);
+		Code.normalArray01(bins2D);
+		Code.normalArray01(bins3D);
+		// console.log(bins2D);
+		// console.log(bins3D);
+
+		// normalize min = 0 & max = 1
+
+		// pow() operstions?
+
+
+		// normalize image:
+		var sad = 0;
+		var count = flat2D.length;
+		var invCount = 1.0/count;
+		var v = new V3D();
+		var c = new V3D();
+		for(var i=0; i<count; i+=3){
+			c.add(flat2D[i],flat2D[i+1],flat2D[i+2]);
+		}
+		c.scale(invCount);
+		// find sigma
+		var sigma = 0;
+		for(var i=0; i<count; i+=3){
+			v.set(flat2D[i],flat2D[i+1],flat2D[i+2]);
+			sigma += V3D.distanceSquare(c,v);
+		}
+		sigma = Math.sqrt(sigma*invCount);
+		// update
+		sigma = 1.0/sigma;
+		for(var i=0; i<count; i+=3){
+			v.set(flat2D[i],flat2D[i+1],flat2D[i+2]);
+			v.sub(c);
+			v.scale(sigma);
+			flat2D[i] = v.x;
+			flat2D[i+1] = v.y;
+			flat2D[i+2] = v.z;
+		}
+// console.log(flat2D);
+// throw "?"
+
+		object["flat1D"] = null; // TODO ?
+		object["flat2D"] = flat2D;
+		object["grad2D"] = bins2D;
+		object["grad3D"] = bins3D;
+
+
+		// console.log(object);
+// throw "?"
+
+
+		// var object = R3D.objectProgressiveR3D(point,imageScales, size, matrix);
+		// 	object["size"] = size;
+		// 	object["angle"] = angle;
+		objects.push(object);
+	}
+	return objects;
+}
+
+
+
+R3D.compareProgressiveRIFTObjectsFull = function(objectsA, objectsB){
+	console.log('compareProgressiveRIFTObjectsFull');
+	console.log(objectsA);
+	console.log(objectsB);
+
+
+	R3D._progressiveMatchIndex(objectsA);
+	R3D._progressiveMatchIndex(objectsB);
+
+	var result = R3D.compareProgressiveRIFTObjectsMatches(objectsA,objectsB);
+	console.log(result);
+
+	// R3D.progressiveMatchObjectsSubset(imageMatrixA,imageMatrixB, objectsA,objectsB, objectsB,objectsA, F,Finv, Ferror);
+		// var timeStart = Code.getTimeMilliseconds();
+		// R3D._progressiveMatchSubset(objectsA,imageA, putativeA,imageB, Fab,errorPixels);
+		// R3D._progressiveMatchSubset(objectsB,imageB, putativeB,imageA, Fba,errorPixels);
+		// var timeEnd = Code.getTimeMilliseconds();
+		// var timeDiff = timeEnd-timeStart;
+		// console.log("progressiveMatchObjectsSubset seconds: "+(timeDiff/1000)+" s ");
+			// R3D._progressiveMatchSubset = function(objectsA,imageA, objectsB,imageB, Fab,pixelError){
+	// info = R3D._progressiveMatchChooseBest(objectsA,objectsB, minRatio,minScore);
+	return result;
+
+	throw "R3D.compareProgressiveRIFTObjectsFull";
+
+	return {"what":null};
+}
+
+R3D.compareProgressiveRIFTObjectsMatches = function(objectsA, objectsB){ // find best objects B for A
+	var putativesB = objectsB;
+	var sortBest = function(a,b){
+		return a["score"] < b["score"] ? -1 : 1;
+	}
+	var both = [objectsA,objectsB];
+	for(var i=0; i<2; ++i){
+		var objects = both[i];
+		for(var j=0; j<objects.length; ++j){
+			var object = objects[j];
+			object["best"] = [];
+		}
+	}
+	// score
+	for(var a=0; a<objectsA.length; ++a){
+		var objectA = objectsA[a];
+		var bestA = objectA["best"];
+		if( (a%100)==0){
+			console.log(a+" / "+objectsA.length);
+		}
+		for(var b=0; b<putativesB.length; ++b){
+			var objectB = putativesB[b];
+			var bestB = objectB["best"];
+			var score = R3D.compareProgressiveRIFTObjectsFlat2D(objectA,objectB);
+			var entry = {"A":objectA, "B":objectB, "score":score};
+			bestA.push(entry);
+			bestB.push(entry);
+		}
+	}
+	// sort
+	for(var i=0; i<2; ++i){
+		var objects = both[i];
+		for(var j=0; j<objects.length; ++j){
+			var object = objects[j];
+			var best = object["best"];
+			best.sort(sortBest);
+		}
+	}
+	// pick ..
+	var matches = [];
+	for(var i=0; i<objectsA.length; ++i){
+		var objectA = objectsA[i];
+		var bestA = objectA["best"];
+		var bestA0 = bestA[0];
+		var objectB = bestA0["B"];
+		var bestB = objectB["best"];
+		var bestB0 = bestB[0];
+		var objectA2 = bestB0["A"];
+		if(objectA==objectA2 && objectB==objectB){
+			// same
+			matches.push(bestA0);
+			// check for next-best ratios
+		}
+	}
+	console.log(objectsA);
+	console.log(objectsB);
+	console.log(matches);
+	// throw "R3D.compareProgressiveRIFTObjectsMatches";
+	return {"matches":matches};
+}
+
+// 
+// 	R3D._progressiveMatchIndex(objectsB);
+// 	// get approximate F from sparse matches
+// 	info = R3D._progressiveSparseMatches(imageMatrixA,objectsA, imageMatrixB,objectsB);
+
+R3D.compareProgressiveRIFTObjectsFlat1D = function(objectA, objectB){ // color histogram
+	throw "R3D.compareProgressiveRIFTObjectsFlat1D";
+	var score = 0;
+	return score;
+}
+
+R3D.compareProgressiveRIFTObjectsFlat2D = function(objectA, objectB){ // 
+	var flat2DA = objectA["flat2D"];
+	var flat2DB = objectB["flat2D"];
+	// console.log(objectA);
+	// console.log(objectB);
+	// console.log(flat2DA);
+	// console.log(flat2DB);
+	var sad = 0;
+	var count = flat2DA.length;
+	var invCount = 1.0/count;
+	var a = new V3D();
+	var b = new V3D();
+	// find center
+	// var centerA = new V3D();
+	// var centerB = new V3D();
+	// for(var i=0; i<count; i+=3){
+	// 	centerA.add(flat2DA[i],flat2DA[i+1],flat2DA[i+2]);
+	// 	centerB.add(flat2DB[i],flat2DB[i+1],flat2DB[i+2]);
+	// }
+	// centerA.scale(invCount);
+	// centerB.scale(invCount);
+	// find sigma
+	// var sigmaA = 0;
+	// var sigmaB = 0;
+	// for(var i=0; i<count; i+=3){
+	// 	a.set(flat2DA[i],flat2DA[i+1],flat2DA[i+2]);
+	// 	b.set(flat2DB[i],flat2DB[i+1],flat2DB[i+2]);
+	// 	sigmaA += V3D.distanceSquare(centerA,a);
+	// 	sigmaB += V3D.distanceSquare(centerB,b);
+	// }
+	// sigmaA = Math.sqrt(sigmaA*invCount)
+	// sigmaB = Math.sqrt(sigmaB*invCount)
+	// // calcualte SAD
+	// sigmaA = 1.0/sigmaA;
+	// sigmaB = 1.0/sigmaB;
+	for(var i=0; i<count; i+=3){
+		a.set(flat2DA[i],flat2DA[i+1],flat2DA[i+2]);
+		b.set(flat2DB[i],flat2DB[i+1],flat2DB[i+2]);
+		// a.sub(centerA);
+		// b.sub(centerB);
+		// a.scale(sigmaA);
+		// b.scale(sigmaB);
+		var d = V3D.distance(a,b);
+		sad += d;
+	}
+	return sad;
+}
+
+R3D.compareProgressiveRIFTObjectsGrad2D = function(objectA, objectB){
+
+	// 1D histogram - SAD
+
+	throw "R3D.compareProgressiveRIFTObjectsGrad2D";
+}
+
+R3D.compareProgressiveRIFTObjectsGrad3D = function(objectA, objectB){
+	// 1D histogram - SAD
+	throw "R3D.compareProgressiveRIFTObjects";
+}
+
+R3D.compareProgressiveRIFTObjects = function(objectA, objectB){
+	throw "R3D.compareProgressiveRIFTObjects";
+}
+
+var counting = 0;
+R3D._progressiveR3DSizing2 = function(point, imageMatrixScales, block, sourceSize, matrix){
+	var displaySize = block.width();
+	var scale = sourceSize/displaySize;
+
+// console.log(scale);
+	// var scale = displaySize/sourceSize;
+
+	// scale = 4.0*scale;
+	// scale = 0.25*scale;
+
+
+
+// scale = 100.0;
+// scale = 0.10;
+
+
+// var doShow = true;
+var doShow = false;
+
+// ++counting;
+// if(counting==300){
+// if(counting==1E99){
+// doShow = true;
+// }
+//	var block = imageMatrixScales.extractRect(point,toScale,displaySize,displaySize, matrix);
+
+// if(doShow){
+// var image = block;
+// var img = GLOBALSTAGE.getFloatRGBAsImage(image.red(),image.grn(),image.blu(), image.width(),image.height());
+// var d = new DOImage(img);
+// d.matrix().scale(5.0);
+// d.matrix().translate(10 + 0, 10 + 200);
+// GLOBALSTAGE.addChild(d);
+// }
+
+// var affine = new Matrix2D();
+	
+	// var invScale = 1.0/scale;
+	var halfCenter = (displaySize-1)*0.5;
+	// var block = new ImageMat(displaySize,displaySize);
+	var affine = matrix.copy();
+	affine.inverse();
+	affine.scale(scale);
+		var totalScale = affine.averageScale();
+		ImageMatScaled.affineToLocationTransform(affine,affine, halfCenter,halfCenter,point.x,point.y);
+		imageMatrixScales.extractRectFast(block, totalScale, affine);
+
+if(doShow){
+console.log("SCALE: "+scale);
+console.log(block);
+var image = block;
+var img = GLOBALSTAGE.getFloatRGBAsImage(image.red(),image.grn(),image.blu(), image.width(),image.height());
+var d = new DOImage(img);
+d.matrix().scale(5.0);
+d.matrix().translate(10 + 100*counting, 10 + 0);
+GLOBALSTAGE.addChild(d);
+++counting;
+}
+
+// if(doShow){
+// throw "before";
+// }
+
+	return block;
+}
+
+
 
 // ------------------------------------------------------------------------------ PROGRESSIVE MATCHING
 
@@ -18955,6 +19432,8 @@ R3D.differentialCornersForImage = function(inputImage, idealImageSize){
 	imageScale = (inputImage.width()/imageScales.width() + inputImage.height()/imageScales.height())*0.5;
 	// console.log("imageScale: "+imageScale);
 	var features = R3D.differentialCornersForImageScales(imageScales);
+
+	throw "USE R3D.colorGradientFeaturesFromImage to get features"
 	// scale points back up
 	for(var i=0; i<features.length; ++i){
 		var feature = features[i];

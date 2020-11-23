@@ -3607,19 +3607,7 @@ ImageMat.imageAtPoint = function(x,y,scale, w,h, red,grn,blu,imgWid,imgHei, matr
 
 
 ImageMat.padFloat = function(src,wid,hei, left,right,top,bot){
-	var newWid = wid+left+right, newHei = hei+top+bot;
-	var newLen = newWid*newHei;
-	var result = new Array(newLen);
-	var i, j, nJ, nJJ, nI;
-	for(j=0;j<newHei;++j){
-		nJ = Math.min(Math.max(j-top,0),hei-1)*wid;
-		nJJ = j*newWid;
-		for(i=0;i<newWid;++i){
-			nI = Math.min(Math.max(i-left,0),wid-1);
-			result[nJJ+i] = src[nJ+nI];
-		}
-	}
-	return result;
+	return Code.padArray2DLinear(src,wid,hei, left,right,top,bot);
 }
 
 ImageMat.unpadFloat = function(src,wid,hei, left,right,top,bot){

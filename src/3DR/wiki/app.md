@@ -386,13 +386,105 @@ MISSING:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
+compareProgressiveRIFTObjectsFull
+
+
+
+
 xA) location needle haystack : pick metric
 xB) optimum affine : pick metric
 xC) local neighborhood increase point matches sparse
 	- use expected/known orientation vs use corner orientation
-D) initial RIFT matches
-	- SAD-OFFST-NORM metric
-E) dense point matching using F - stereopsis
+xD) initial features
+E) initial RIFT matching
+	- extract features
+	- COLOR METRIC?:
+		- SAD-OFFST-NORM metric
+	- GRADIENT METRIC?:
+		- ?
+	- COLOR-SPACE METRIC?
+		- 
+F) dense point matching using F - stereopsis
+
+
+
+- color-space histogram (unoriented)
+- SAD-color compare (OFFSET+SIGMA) (blurrier to allow some error)
+- 
+- spatial grayscale gradient histogram
+- colorspace gradient histogram????
+- 2D directional color-gradient (point in 2D direction of largest change / COM of neighbors)
+- 3D directional color-gradient (3D direction of net avg color change of neighbors)
+
+SIFT = binning of binning [gradient angle binning + pixel-group binning]
+
+
+
+
+
+2D-flat :  5x5=25 to 9x9=81 color compares
+2D-c-max:  16x16=> 4x4 angle histogram of max-change direction (angle @ magnitude)
+3D-color:  16x16=> 4x4 solid-angle histogram of net color change to neighbors
+
+
+
+
+R3D.colorGradientFeaturesFromImage = function(imageScales){
+
+var objectsA = R3D.generateProgressiveSIFTObjects(featuresA, imageMatrixA);
+
+
+
+
+var result = R3D.progressiveMatchingAllSteps(imageMatrixA,objectsA, imageMatrixB,objectsB);
+
+		var result = R3D.progressiveFullMatchingDense(objectsA, imageMatrixA, objectsB, imageMatrixB);
+
+
+
+
+
+- COULD A HISTOGRAM BE COMPARED BASED ON COM+OFFSET+NORM rather than ABSOLUTE histogram?
+	[light vs dark?]
+	- 3D 'distance' from center blob 
+		A) 
+			- get data COM & sigma
+			- volume of cube is ~ 2 sigma
+			- divide up space into equal cube [5^3 = 125, 7^3 = 343, 9^3 = 729]
+			- points outside cube are ignored
+			- points inside cube are rounded to nearest center-cube location
+				- make sure lattice is setup correctly
+
+
+
+		object["9x9_histogram"] = R3D._progressiveR3DColorHistogram(blur9);
+	// grayscale SIFT
+		object["9x9_SIFT_gray"] = R3D._progressiveR3DGrayscaleSIFTList(blur9);
+	// color SIFT
+		object["9x9_SIFT_color"] = R3D._progressiveR3DColorSIFTList(blur9);
+
+
+
+var features = R3D.differentialCornersForImage(imageScales, new V2D(600,400));
+	var normalizedFeatures = R3D.normalizeSIFTObjects(features, imageMatrix.width(), imageMatrix.height());
+
+
+
+
+var normalizedFeatures = R3D.normalizeSIFTObjects(features, imageMatrix.width(), imageMatrix.height());
+
+
+
+
+
+COMPARE METRICS:
+	- 2D GRAY SIFT
+	- 2D 3x R,G,B SIFT LIST
+	- 2D SAD+OFFSET+NORM
+
+
+
 
 
 
