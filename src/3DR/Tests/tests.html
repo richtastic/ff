@@ -161,8 +161,8 @@ break;
 		var objectsB = objectsList[1];
 		var result = R3D.compareProgressiveRIFTObjectsFull(objectsA, objectsB);
 		console.log(result);
-
-
+		// 
+		// 
 		var matches = result["matches"];
 		var d = new DO();
 		// d.graphics().setFill(0xFFFFFFFF);
@@ -177,10 +177,9 @@ var color3 = new V3D(0,0,0);
 var colors = [color0,color1,color2,color3];
 		for(var i=0; i<matches.length; ++i){
 			var match = matches[i];
-			console.log(match);
+			// console.log(match);
 			var a = match["A"];
 			var b = match["B"];
-
 			var pointA = a["point"];
 			var pointB = b["point"];
 			var size = 2.0;
@@ -226,8 +225,178 @@ color = Code.getColARGBFromFloat(1.0,color.x,color.y,color.z);
 		d.matrix().translate(0,0);
 		GLOBALSTAGE.addChild(d);
 
+
+
+
+		// show top matches:
+
+		for(var i=0; i<matches.length; ++i){
+			var match = matches[i];
+			// if(i>10){
+			if(i>15){
+			// if(i>20){
+				break;
+			}
+			var a = match["A"];
+			var b = match["B"];
+			var imageA = a["image"];
+			var imageB = b["image"];
+
+
+			// var imageA = a["grad"];
+			// var imageB = b["grad"];
+// console.log(a["grad"]);
+
+			// console.log(imageA);
+
+			var sss = 8;
+
+			var image = imageA;
+			var img = GLOBALSTAGE.getFloatRGBAsImage(image.red(),image.grn(),image.blu(), image.width(),image.height());
+			var d = new DOImage(img);
+			d.matrix().scale(sss);
+			d.matrix().translate(0 + i*80, 0 + 400);
+			GLOBALSTAGE.addChild(d);
+
+			var image = imageB;
+			var img = GLOBALSTAGE.getFloatRGBAsImage(image.red(),image.grn(),image.blu(), image.width(),image.height());
+			var d = new DOImage(img);
+			d.matrix().scale(sss);
+			d.matrix().translate(0 + i*80, 0 + 400 + 80);
+			GLOBALSTAGE.addChild(d);
+
+			// show rift bins:
+			// console.log(a)
+
+			var grad2D = a["grad2DExact"];
+// console.log(grad2D);
+// throw ".."
+			var side = Math.sqrt(grad2D.length);
+// console.log(side);
+			//var sizePixels = image.width()*sss;
+			var sizePixels = image.width()*sss;
+			// console.log(sizePixels);
+			
+
+lll = [ a, b ];
+for(var l=0; l<lll.length; ++l){
+	var offX = i*80;
+	var offY = 400;
+	if(l==1){
+		offY += 80;
 	}
-	new ImageLoader("../images/iowa/",["5.JPG","6.JPG"],this,fxnImageLoaded).load();
+
+	var grad2D = lll[l]["grad2DExact"];
+
+// var sifts = [];
+// SHOW THE SIFTS ????
+
+
+			var d = new DO();
+			var mmm = 25.0;
+			d.graphics().setLine(1.0,0xFF0000CC);
+			for(var y=0; y<side; ++y){
+				for(var x=0; x<side; ++x){
+					var index = y*side + x;
+					var v = grad2D[index];
+					if(v==null){
+						continue;
+						v = V2D.ZERO;
+					}
+					// console.log(v+"");
+					var cx = (x+0.5)*sizePixels/side;
+					var cy = (y+0.5)*sizePixels/side;
+					d.graphics().moveTo( cx, cy );
+					d.graphics().lineTo( cx + mmm*v.x, cy + mmm*v.y);
+				}
+			}
+			d.graphics().strokeLine();
+			// d.matrix().scale(sss);
+			if(l==0){
+				d.matrix().translate(0 + i*80, 0 + 400 + 0);
+			}else{
+				d.matrix().translate(0 + i*80, 0 + 400 + 80);
+			}
+			GLOBALSTAGE.addChild(d);
+}
+
+// throw "ehre"
+		}
+
+		// RANSAC MATCHES:
+
+		var imageMatrixA = imageScalesList[0];
+		var imageMatrixB = imageScalesList[1];
+
+		var pointsA = [];
+		var pointsB = [];
+		for(var i=0; i<matches.length; ++i){
+			var match = matches[i];
+			var a = match["A"];
+			var b = match["B"];
+			pointsA.push(a["point"]);
+			pointsB.push(b["point"]);
+		}
+		// console.log(pointsA);
+		// console.log(pointsB);
+		// console.log("SIZE: "+imageMatrixA.size()); // 504x378
+		var errorPixels = imageMatrixA.size().length() * 0.01; // 5%=31.5px | 1%=6px  0.005=3px
+		// console.log("errorPixels: "+errorPixels);
+		var result = R3D.fundamentalRANSACFromPoints(pointsA,pointsB, errorPixels, null, 0.50, 0.99);
+		console.log(result);
+		var F = result["F"];
+		var best = result["matches"];
+		var bestA = best[0];
+		var bestB = best[1];
+		console.log(bestA,bestB);
+		F = R3D.fundamentalFromUnnormalized(bestA,bestB);
+
+
+		var Finv = R3D.fundamentalInverse(F);
+		console.log(F);
+		var info = R3D.fundamentalError(F,Finv,bestA,bestB);
+			var fMean = info["mean"];
+			var fSigma = info["sigma"];
+			var fError = fMean + fSigma;
+		console.log("F ERROR: "+fMean+" +/- "+fSigma);
+
+
+		// var FFwd = R3D.fundamentalFromUnnormalized(subsetPointsA,subsetPointsB);
+		// var FRev = R3D.fundamentalInverse(FFwd);
+
+
+
+		
+		//R3D.showRansac(pointsA,pointsB, F,Finv, null, imageMatrixA,imageMatrixB);
+		R3D.showRansac(bestA,bestB, F,Finv, null, imageMatrixA,imageMatrixB);
+		
+		// console.log
+		// R3D.fundamentalRANSACFromPoints = function(pointsAIn,pointsBIn, errorPosition, initialF, pOutlier, pDesired){
+		// R3D.fundamentalFromRansacImageMatches = function(imageMatrixA,imageMatrixB, matches){
+		// R3D.showRansac = function(pointsA, pointsB, matrixFfwd, matrixFrev, display, imageMatrixA,imageMatrixB){
+
+
+
+	}
+	// new ImageLoader("../images/iowa/",["0.JPG","1.JPG"],this,fxnImageLoaded).load();
+	new ImageLoader("../images/iowa/",["0.JPG","2.JPG"],this,fxnImageLoaded).load();
+	// new ImageLoader("../images/iowa/",["5.JPG","6.JPG"],this,fxnImageLoaded).load();
+	// new ImageLoader("../images/",["bench_A.png","bench_B.png"],this,fxnImageLoaded).load();
+	// new ImageLoader("../images/",["bench_E.png","bench_F.png"],this,fxnImageLoaded).load();
+	// new ImageLoader("../images/",["room0.png","room2.png"],this,fxnImageLoaded).load();
+	
+	// new ImageLoader("../images/",["caseStudy1-0.jpg","caseStudy1-9.jpg"],this,fxnImageLoaded).load();
+	// new ImageLoader("../images/",["caseStudy1-20.jpg","caseStudy1-24.jpg"],this,fxnImageLoaded).load();
+	// new ImageLoader("../images/",["zA_small.jpg","zB_small.jpg"],this,fxnImageLoaded).load();
+	// new ImageLoader("../images/",["temple_1.png","temple_2.png"],this,fxnImageLoaded).load();
+	// new ImageLoader("../images/",["castle.000.jpg","castle.009.jpg"],this,fxnImageLoaded).load();
+	// new ImageLoader("../images/",["bt.000.png","bt.006.png"],this,fxnImageLoaded).load();
+
+	// new ImageLoader("../images/elephant/",["ele_1.JPG","ele_6.JPG"],this,fxnImageLoaded).load();
+	// new ImageLoader("../images/elephant/",["ele_1.JPG","ele_5.JPG"],this,fxnImageLoaded).load();
+	// new ImageLoader("../images/elephant/",["ele_1.JPG","ele_4.JPG"],this,fxnImageLoaded).load();
+
+
 
 }
 

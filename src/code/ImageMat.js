@@ -1981,6 +1981,39 @@ ImageMat.prototype.range = function(){
 	return {"r":r,"g":g,"b":b,"y":y};
 }
 
+ImageMat.prototype.colorRangeMagnitude = function(){
+	
+	throw "find biggest difference in 3D color";
+	return maxD;
+}
+ImageMat.prototype.colorRangeSigma = function(subsample){ // find the sigma-average distance from average color
+	if(subsample){
+		throw "try getting some sqrt(n) / subsample"
+	}
+	var cen = new V3D();
+	var val = new V3D();
+	var red = this.red();
+	var grn = this.grn();
+	var blu = this.blu();
+	var count = red.length;
+	if(count<=1){
+		return 0;
+	}
+	var invCount = 1.0/count;
+	for(var i=0; i<count; ++i){
+		cen.add(red[i],grn[i],blu[i]);
+	}
+	cen.scale(invCount);
+	var sigma = 0;
+	for(var i=0; i<count; ++i){
+		val.set(red[i],grn[i],blu[i]);
+		var d2 = V3D.distanceSquare(cen,val);
+		sigma += d2;
+	}
+	sigma = Math.sqrt(sigma*invCount);
+	return sigma;
+}
+
 ImageMat.range = function(data, wid,hei){
 	// if(wid==0||hei==0){
 	// 	return 0;
@@ -3086,7 +3119,7 @@ ImageMat.sumFloat = function(a){
 	var i, len = a.length;
 	var result = 0.0;
 	for(i=0;i<len;++i){
-		result += a[i]
+		result += a[i];
 	}
 	return result;
 }
@@ -3144,7 +3177,8 @@ ImageMat.scaleFloat = function(a,b){
 	}
 	return result;
 }
-ImageMat.scaleFloatSame = function(a,b){ // = mulConst
+ImageMat.scaleFloatSame = function(a,b){ // = blockFlatGaussian
+	throw "use mulConst"
 	var i, len = a.length;
 	for(i=0;i<len;++i){
 		a[i] = a[i]*b;

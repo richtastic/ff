@@ -386,10 +386,94 @@ MISSING:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+x distance importance
+
+- overlapping groups:
+	- get original group mask (1:1)
+	- group array = list of pixel indexes (x/y location)
+	- for each group in list
+		- if a neighbor pixel is not in group, add into group
+...
+
+x F RANSAC point tests
+	- how good is F based on metric (# & error & #/error)
+
+
+
+
+
+x flat histogram binning
+	- ~ 9 overlapping neighborhoods
+	- ~ 25 samples per neighborhood
+	- ~ 8x8x8 possible bins
+
+
+- initial fat (oblivious) feature matches => 20-50 matches @ 1-10 F error
+- f-aligned feature matches => 50-100 1-2 F error, 1-5px abs error
+- best matching neighbor searches => 100-1000 seed points @ 1-2px abs error
+
+
+
+
+- IMAGE CANDIDATE MATCHING
+	-> using bag of words to get best features
+		- image:
+			- overall color histogram? [to limit top ~ 10 matches]
+		- corner:
+			- color histogram (undirectional)
+			- grouped color histogram
+			- flat histogram
+			- sift
+
+
+x CORNER SIFT
+	- base colors aren't matched at all
+	- angle averaging vs vector averaging very different
+x there's no +/- direction, only an absolute difference (vector)
+	- a gradient has a black=-, white=+ direction
+
+
+
+DIRECTIONAL-NEIGHBOR-DIFFERENCE-BINNING
+	- doesn't seem good
+
+SOME WAY TO INCORPORATE COLOR, NOT JUST MAGNITUDES ?
+
+
+
+
+- compare corner & gradient RGB together as vector
+	delta = vector distance || distnace square
+
+
+LIST OF FEATURE COMPARISON METHODS
+	x image average color
+	x image color histogram 1D
+
+	OVERLAP ?
+	x image color histogram 1D : 2D overlapping(x) groupings
+	x image flat color 2D : SAD/SSD/NCC
+
+	x image 2D 8-neighbor color difference histogram: gry/rgb (signed differences not absolute differences) : 8(gray) or 8x3(separate) or 8x8(combined)
+		[group][0-7 neighbor]
+	x image 2D gradient direction histogram: gry(8) or rgb(3x8)[separate/vector]
+	- image 3D rgb-color difference histogram (8 directional bins: x,y,z in 2|4|8)
+
+	- 3x2D gradient binning - <rx,ry>,<gx,gy>,<bx,by>
+		- (R/G/B +/-x,+/-y direction) : |2|4| 8|16| 32|64| = 64 bins > what value goes in here? average magnitude?
+		- (R/G/B angle binning) : 8|8|8 = 24 bins > what value goes in here? average magnitude?
+	- 3x?D rgb-neighbor-color difference:
+
+
+
+
+
+- need to ignore low-range corners
+
+
+generateProgressiveRIFTObjects
 
 compareProgressiveRIFTObjectsFull
-
-
 
 
 xA) location needle haystack : pick metric

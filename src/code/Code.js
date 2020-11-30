@@ -2392,6 +2392,20 @@ Code.normalArray01 = function(data){
 	}
 	return data;
 }
+Code.scaleArrayPercent = function(data){
+	var i, len = data.length;
+	var total = 0;
+	for(i=0;i<len;++i){
+		total += data[i];
+	}
+	if(total>0){
+		total = 1.0/total;
+		for(i=0;i<len;++i){
+			data[i] = data[i]*total;
+		}
+	}
+	return data;
+}
 // ------------------------------------------------------------------------------------------ ARRAY 2D
 Code.newArray2D = function(rows,cols){
 	var i, arr = new Array(rows);
@@ -5990,8 +6004,12 @@ Code.arrayVectorLength = function(a){
 	}
 	return Math.sqrt(s);
 }
-Code.arrayVectorScale = function(a, s){
-	var c = Code.newArray(a.length);
+Code.arrayVectorScale = function(c, a, s){
+	if(s===undefined){
+		s = a;
+		a = c;
+		c = Code.newArray(a.length);
+	}
 	for(var i=a.length; i--; ){
 		c[i] = s*a[i];
 	}
@@ -6017,6 +6035,12 @@ Code.arrayVectorPow2 = function(a){
 		c[i] = Math.pow(2,a[i]);
 	}
 	return c;
+};
+Code.arrayVectorPow = function(a, exp){
+	for(var i=a.length; i--; ){
+		a[i] = Math.pow(a[i],exp);
+	}
+	return a;
 };
 Code.arrayVectorExp = function(a){
 	var c = Code.newArray(a.length);

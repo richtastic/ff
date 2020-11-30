@@ -10458,17 +10458,44 @@ R3D.generateProgressiveRIFTObjects = function(features, imageScales){
 		imageScales = new ImageMatScaled(imageScales);
 	}
 
+
+
+// var flatBins = R3D.circularSIFTBinMask(2,2);
+var flatBins = R3D.circularSIFTBinMask(3,2);
+var flatBinsList = flatBins["value"];
+var flatBinSize = flatBins["width"];
+var flatBinCount = flatBins["bins"];
+// console.log(flatBins);
+// throw "?"
+// var str = Code.array1Das2DtoString(flatBins["value"],flatBins["width"],flatBins["height"], 4);
+// console.log(str);
+var blockFlatBin = new ImageMat(flatBinSize,flatBinSize);
+// console.log(blockFlatBin);
+// throw "?"
+	var sigmaRangeMin = 0.10; // 0.05 - 0.10
+	// var sigmaRangeMin = 0.20;
+	// 
 	// throw "here"
 	var objects = [];
 	var matrix = new Matrix2D();
 
 var flatSize = 9;
+// var flatSize = 11;
 var blockFlat = new ImageMat(flatSize,flatSize);
 var flatMask = ImageMat.circleMask(flatSize,flatSize);
 
+var flatSigma = flatSize * 0.50; // 0.5=0.60 : 0.25=0.13
+var blockFlatGaussian = ImageMat.gaussianMask(flatSize,flatSize, flatSigma,flatSigma, false, false);
+// scale up to 1 ?
+Code.arrayVectorScale(blockFlatGaussian, blockFlatGaussian, 1.0/Code.max(blockFlatGaussian));
+//  ImageMat.gaussianMask(width,height, sigmaX, sigmaY, clearCircle, areRatios);
+// console.log(blockFlatGaussian);
+// throw "?";
+
+
 
 var gradBins = R3D.circularSIFTBinMask(2,2);
-// console.log(gradBins);
+
 var gradBinMask = gradBins["value"];
 var gradBinSize = gradBins["width"];
 var gradBinCount = gradBins["bins"];
@@ -10481,43 +10508,58 @@ var gradSize = gradBinSize + 2*padding;
 console.log(gradSize);
 var bg = Code.newArrayValues(gradSize*gradSize, -1);
 Code.fillSubArray2D(bg,gradSize,gradSize, gradBinMask,gradBinSize,gradBinSize, padding,padding);
-
 gradBinMask = bg;
+
+
+
+var gradSigma = gradSize * 0.50; // 0.5=0.60 : 0.25=0.13
+var blockSigmaGaussian = ImageMat.gaussianMask(gradSize,gradSize, gradSigma,gradSigma, false, false);
+Code.arrayVectorScale(blockSigmaGaussian, blockSigmaGaussian, 1.0/Code.max(blockSigmaGaussian));
+// console.log(blockSigmaGaussian);
+// Code.fillSubArray2D(blockSigmaGaussian,gradSize,gradSize, gradBinMask,gradBinSize,gradBinSize, padding,padding);
+// console.log(blockSigmaGaussian);
+// console.log(gradBinMask);
+// throw "..."
+
 // var str = Code.array2DtoString(gradBins["value"], 4);
 // var str = Code.array1Das2DtoString(gradBins["value"], gradBins["width"],gradBins["height"], 4);
-var str = Code.array1Das2DtoString(gradBinMask,gradSize,gradSize, 4);
+// var str = Code.array1Das2DtoString(gradBinMask,gradSize,gradSize, 4);
 // console.log(str);
 // throw "?";
 
-// var gradSize = 11;
-// var gradSize = gradBins["width"] + 2;
+// console.log("circle bin count: "+gradBinCount);
+
 var gradSizeM1 = gradSize-1;
 var blockGrad = new ImageMat(gradSize,gradSize);
 // var gradMask = ImageMat.circleMask(gradSize,gradSize);
-	// gradMask
 
 
-	// Code.unpadArray2DLinear = function(src,wid,hei, left,right,top,bot){
+// var flatSize = gradSize;
+// var blockFlat = new ImageMat(flatSize,flatSize);
+// var flatMask = ImageMat.circleMask(flatSize,flatSize);
 
 
-// R3D._SIFVectorRGBCircularVectorAdd = function(vector, redV, binsSize, binCount, vectorLen, bin, weight, offset){
-// 	var redM = redV.length();
-// 	var redA = V2D.angleDirection(V2D.DIRX,redV);
-// 		redA = Code.angleZeroTwoPi(redA);
-// 	var valueR = redM * weight;
-// 	var redB = Math.min(Math.floor((redA/Math.PI2)*binsSize),binsSize-1);
-// 	var vectorIndexR = binsSize*bin + redB + vectorLen*offset;
-// 	vector[vectorIndexR] += valueR;
-// }
-// R3D.SIFVectorGrayCircular = function(imageMatrix, location,diaNeighborhood,pointAngle){
-// 	return R3D.SIFTVectorCircular(imageMatrix, location,diaNeighborhood,pointAngle, false);
-// }
-// R3D.SIFVectorRGBCircular = function(imageMatrix, location,diaNeighborhood,pointAngle){
-// 	var matrix = new Matrix(3,3);
-// 		matrix.identity();
-// 		matrix = Matrix.transform2DRotate(matrix,pointAngle);
-// 	return R3D.SIFTVectorCircular(imageMatrix, location,diaNeighborhood,matrix, true);
-// }
+// radial gaussian curve
+
+
+
+var pi2 = Math.PI*2;
+var color = new V3D();
+var dirWhite = new V3D(1,1,1).norm();
+
+
+	var flatImportance = [];
+	for(var i=0; i<flatMask.length; ++i){
+		var mask = flatMask[i];
+		if(mask<=0){
+			continue;
+		}
+		flatImportance.push(blockFlatGaussian[i]);
+	}
+	// console.log(flatImportance);
+	// console.log( Code.min(flatImportance) );
+	// throw "importance"
+
 
 	for(k=features.length-1; k>=0; --k){
 		var feature = features[k];
@@ -10525,28 +10567,56 @@ var blockGrad = new ImageMat(gradSize,gradSize);
 		var size = feature["size"];
 		var point = feature["point"];
 			point = new V2D(point.x,point.y);
+// size = size * 2;
+// size = size * 4;
+// size = size * 8;
+// var flatFeatureSize = size*1;
+// var gradFeatureSize = size*1;
 
-// angle = 0.0;
-// point = new V2D(220,210);
-// size = 11.0;
+// var flatFeatureSize = size*2;
+// var gradFeatureSize = size*2;
 
+var flatFeatureSize = size*4;
+var gradFeatureSize = size*4;
+
+// var flatFeatureSize = size*8;
+// var gradFeatureSize = size*8;
+
+// var flatFeatureSize = size*16;
+// var gradFeatureSize = size*16;
+
+
+
+// 2-16 : 4-8
+
+		
+		
 
 		matrix.identity();
 		matrix.rotate(-angle);
+
+		R3D._progressiveR3DSizing2(point, imageScales, blockFlat, flatFeatureSize, matrix);
+		var red = blockFlat.red();
+		var grn = blockFlat.grn();
+		var blu = blockFlat.blu();
+		// limit low-contrast areas
+		var rangeSigma = blockFlat.colorRangeSigma();
+		if(rangeSigma<sigmaRangeMin){
+			continue;
+		}
+
+		
 		var object = {};
 			object["size"] = size;
 			object["angle"] = angle;
 			object["point"] = point;
 
-		// 
-		
-		var flat = R3D._progressiveR3DSizing2(point, imageScales, blockFlat, size, matrix);
-		// console.log(flat);
-		var red = blockFlat.red();
-		var grn = blockFlat.grn();
-		var blu = blockFlat.blu();
-
+		var histogramFlat = {};
+		var histogramFlatBinCount = 8;
+		var histogramFlatBinCountM1 = histogramFlatBinCount-1;
 		var flat2D = [];
+		
+		var pixelCount = 0;
 		for(var i=0; i<flatMask.length; ++i){
 			var mask = flatMask[i];
 			if(mask<=0){
@@ -10556,97 +10626,54 @@ var blockGrad = new ImageMat(gradSize,gradSize);
 			var g = grn[i];
 			var b = blu[i];
 			flat2D.push(r,g,b);
+			color.x += r;
+			color.y += g;
+			color.z += b;
+			var binR = Math.min(Math.floor(r*histogramFlatBinCount),histogramFlatBinCountM1);
+			var binG = Math.min(Math.floor(g*histogramFlatBinCount),histogramFlatBinCountM1);
+			var binB = Math.min(Math.floor(b*histogramFlatBinCount),histogramFlatBinCountM1);
+			var bin = binR+"-"+binG+"-"+binB;
+			var value = histogramFlat[bin];
+			if(!value){ value = 1; }else{ value += 1; }
+			histogramFlat[bin] = value;
+			++pixelCount;
 		}
-
-
-
-		// ...
-		
-		var grad = R3D._progressiveR3DSizing2(point, imageScales, blockGrad, size, matrix);
-		// console.log(grad);
-
-		var bins2D = [];
-		for(var i=0; i<gradBinSize; ++i){
-			bins2D[i] = Code.newArrayZeros(8);
+		var invPixelCount = 1.0/pixelCount;
+		color.scale(invPixelCount);
+		object["flatColor"] = [color.x,color.y,color.z];
+		object["flatHistogram"] = histogramFlat;
+		// 
+		// blockFlatBin
+		R3D._progressiveR3DSizing2(point, imageScales, blockFlatBin, flatFeatureSize, matrix);
+		var red = blockFlatBin.red();
+		var grn = blockFlatBin.grn();
+		var blu = blockFlatBin.blu();
+		var flatGroupHistogram = [];
+		for(var i=0; i<flatBinCount; ++i){
+			flatGroupHistogram[i] = {};
 		}
-
-		var bins3D = [];
-		for(var i=0; i<gradBinSize; ++i){
-			bins3D[i] = Code.newArrayZeros(8);
-		}
-
-		var com2D = new V2D();
-		var com3D = new V3D();
-		var cen = new V3D();
-		var val = new V3D();
-		var dir = new V2D();
-		var red = blockGrad.red();
-		var grn = blockGrad.grn();
-		var blu = blockGrad.blu();
-		for(var y=1; y<gradSizeM1; ++y){
-			for(var x=1; x<gradSizeM1; ++x){
-				var index = y*gradSize + x;
-				var binIndex = gradBinMask[index];
-				// console.log(binIndex);
-				if(binIndex<0){
-					continue;
-				}
-				cen.set(red[index],grn[index],blu[index]);
-				// console.log(cen+"");
-				com2D.set(0,0);
-				com3D.set(0,0,0);
-				for(var j=-1; j<=1; ++j){
-					for(var i=-1; i<=1; ++i){
-						if(i==0 && j==0){
-							continue;
-						}
-						var ind = (y+j)*gradSize + (x+i);
-						val.set(red[ind],grn[ind],blu[ind]);
-						val.sub(cen);
-						com3D.add(val);
-						var mag = val.length();
-						dir.set(i,j);
-						dir.length(mag);
-						com2D.add(dir);
-					}
-				}
-				// console.log(com2D+"");
-				// console.log(com3D+"");
-
-				var angle2D = V2D.angle(V2D.DIRX,com2D);
-				var binAngle2D = Math.min(  Math.floor( 8*(angle2D/(Math.PI*2)) ),8-1);
-				// console.log(binAngle2D, angle2D*180.0/Math.PI);
-				bins2D[binIndex][binAngle2D] += com2D.length();
-
-				binAngle3D = (com3D.x<0 ? 4 : 0) + (com3D.y<0 ? 2 : 0) + (com3D.z<0 ? 1 : 0);
-				// console.log(binAngle3D, com3D+"");
-				bins3D[binIndex][binAngle3D] += com3D.length();
-
-				// for each pixels (inset 1-2 pixels)
-				// get COV 2D
-				// get COV 3D
-				// throw x+","+y;
+		var pixelCount = 0;
+		for(var i=0; i<flatBinsList.length; ++i){
+			var bin = flatBinsList[i];
+			if(bin<0){
+				continue;
 			}
+			var r = red[i];
+			var g = grn[i];
+			var b = blu[i];
+			var histogram = flatGroupHistogram[bin];
+			var binR = Math.min(Math.floor(r*histogramFlatBinCount),histogramFlatBinCountM1);
+			var binG = Math.min(Math.floor(g*histogramFlatBinCount),histogramFlatBinCountM1);
+			var binB = Math.min(Math.floor(b*histogramFlatBinCount),histogramFlatBinCountM1);
+			var bin = binR+"-"+binG+"-"+binB;
+			var value = histogram[bin];
+			if(!value){ value = 1; }else{ value += 1; }
+			histogram[bin] = value;
+			++pixelCount;
 		}
-		// console.log(bins2D);
-		// console.log(bins3D);
-		// convert into 1D array
-		bins2D = Code.array2DasArray1D(bins2D);
-		bins3D = Code.array2DasArray1D(bins3D);
-		// console.log(bins2D);
-		// console.log(bins3D);
-		Code.normalArray01(bins2D);
-		Code.normalArray01(bins3D);
-		// console.log(bins2D);
-		// console.log(bins3D);
-
-		// normalize min = 0 & max = 1
-
-		// pow() operstions?
-
+		object["flatGroupHistogram"] = flatGroupHistogram;
 
 		// normalize image:
-		var sad = 0;
 		var count = flat2D.length;
 		var invCount = 1.0/count;
 		var v = new V3D();
@@ -10672,19 +10699,286 @@ var blockGrad = new ImageMat(gradSize,gradSize);
 			flat2D[i+1] = v.y;
 			flat2D[i+2] = v.z;
 		}
-// console.log(flat2D);
+		// scale importance (center falloff):
+		for(var i=0; i<flatImportance.length; ++i){
+			var scale = flatImportance[i];
+			var off0 = i*3;
+			var off1 = off0+1;
+			var off2 = off0+2;
+			flat2D[off0] = flat2D[off0]*scale;
+			flat2D[off1] = flat2D[off1]*scale;
+			flat2D[off2] = flat2D[off2]*scale;
+		}
+
+
+
+
+		var grad = R3D._progressiveR3DSizing2(point, imageScales, blockGrad, gradFeatureSize, matrix);
+
+		var bins3D = [];
+		for(var i=0; i<gradBinSize; ++i){
+			bins3D[i] = Code.newArrayZeros(8);
+		}
+
+		var binsGradGry2D = [];
+		var binsGradRGB2D = [];
+		for(var i=0; i<gradBinSize; ++i){
+			binsGradGry2D[i] = Code.newArrayZeros(8);
+			binsGradRGB2D[i] = [Code.newArrayZeros(8),Code.newArrayZeros(8),Code.newArrayZeros(8)];
+		}
+		// 
+		var cornerBinsGry2D = [];
+		var cornerBinsRGB2D = [];
+		for(var i=0; i<gradBinSize; ++i){
+			cornerBinsGry2D[i] = Code.newArrayZeros(8);
+			cornerBinsRGB2D[i] = [Code.newArrayZeros(8),Code.newArrayZeros(8),Code.newArrayZeros(8)];
+		}
+		// 
+		var com2D = new V2D();
+		var com3D = new V3D();
+		var cen = new V3D();
+		var val = new V3D();
+		var dir = new V2D();
+		var red = blockGrad.red();
+		var grn = blockGrad.grn();
+		var blu = blockGrad.blu();
+		var grad2D = new V2D();
+		var gradRed2D = new V2D();
+		var gradGrn2D = new V2D();
+		var gradBlu2D = new V2D();
+		var eigth = 1.0/8.0;
+var grad2DExact = Code.newArrayNulls(gradSize*gradSize);
+// var grad2DGry = Code.newArrayNulls(gradSize*gradSize);
+// var grad2DRGB = Code.newArrayNulls(gradSize*gradSize);
+		var pixelCount = 0;
+		var avgGradGry = 0;
+		for(var y=1; y<gradSizeM1; ++y){
+			for(var x=1; x<gradSizeM1; ++x){
+				var index = y*gradSize + x;
+				var binIndex = gradBinMask[index];
+// binIndex = 0;
+				if(binIndex<0){
+					continue;
+				}
+				++pixelCount;
+				cen.set(red[index],grn[index],blu[index]);
+				com2D.set(0,0);
+				com3D.set(0,0,0);
+				var b2D = 0;
+				for(var j=-1; j<=1; ++j){
+					for(var i=-1; i<=1; ++i){
+						if(i==0 && j==0){
+							continue;
+						}
+						var ind = (y+j)*gradSize + (x+i);
+						val.set(red[ind],grn[ind],blu[ind]);
+						val.sub(cen);
+// add 3D diff per pixel
+// var binAngle3D = (val.x<0 ? 4 : 0) + (val.y<0 ? 2 : 0) + (val.z<0 ? 1 : 0);
+// bins3D[binIndex][binAngle3D] += val.length();
+						com3D.add(val);
+						var mag = val.length();
+						dir.set(i,j);
+						dir.length(mag);
+						com2D.add(dir);
+// dirs.push(dir.copy().norm());
+// mags.push(mag);
+// bins2D[binIndex][b2D] += mag;
+
+						// importance scale corner
+						val.scale(blockSigmaGaussian[ind]);
+
+
+						cornerBinsGry2D[binIndex][b2D] += V3D.dot(val,dirWhite);
+						cornerBinsRGB2D[binIndex][0][b2D] += val.x;
+						cornerBinsRGB2D[binIndex][1][b2D] += val.y;
+						cornerBinsRGB2D[binIndex][2][b2D] += val.z;
+						++b2D;
+					}
+				}
+				var importance = blockSigmaGaussian[index];
+// importance = 1.0;
+
+				com2D.scale(eigth);
+				com3D.scale(eigth);
+				
+				// gradient 2D gry:
+				var third = 1.0/3.0;
+				// var ind;
+				var i0 = (y-1)*gradSize + (x-1);
+				var r0 = red[i0];
+				var g0 = grn[i0];
+				var b0 = red[i0];
+				var p0 = (r0+g0+b0)*third;
+
+				var i1 = (y-1)*gradSize + (x+0);
+				var r1 = red[i1];
+				var g1 = grn[i1];
+				var b1 = red[i1];
+				var p1 = (r1+g1+b1)*third;
+				
+				var i2 = (y-1)*gradSize + (x+1);
+				var r2 = red[i2];
+				var g2 = grn[i2];
+				var b2 = red[i2];
+				var p2 = (r2+g2+b2)*third;
+				
+				var i3 = (y+0)*gradSize + (x-1);
+				var r3 = red[i3];
+				var g3 = grn[i3];
+				var b3 = red[i3];
+				var p3 = (r3+g3+b3)*third;
+				
+				var i4 = (y+0)*gradSize + (x+0);
+				var r4 = red[i4];
+				var g4 = grn[i4];
+				var b4 = red[i4];
+				var p4 = (r4+g4+b4)*third;
+				
+				var i5 = (y+0)*gradSize + (x+1);
+				var r5 = red[i5];
+				var g5 = grn[i5];
+				var b5 = red[i5];
+				var p5 = (r5+g5+b5)*third;
+				
+				var i6 = (y+1)*gradSize + (x-1);
+				var r6 = red[i6];
+				var g6 = grn[i6];
+				var b6 = red[i6];
+				var p6 = (r6+g6+b6)*third;
+				
+				var i7 = (y+1)*gradSize + (x+0);
+				var r7 = red[i7];
+				var g7 = grn[i7];
+				var b7 = red[i7];
+				var p7 = (r7+g7+b7)*third;
+				
+				var i8 = (y+1)*gradSize + (x+1);
+				var r8 = red[i8];
+				var g8 = grn[i8];
+				var b8 = red[i8];
+				var p8 = (r8+g8+b8)*third;
+				//
+				// seems very noisy:
+				// var dx = (p5-p3)*0.5;
+				// var dy = (p7-p1)*0.5;
+				// com2D.set(dx,dy);
+				// 
+				var dx = (p2+p5+p8-p0-p3-p6)*0.5*third;
+				var dy = (p6+p7+p8-p0-p1-p2)*0.5*third;
+				grad2D.set(dx,dy);
+grad2D.scale(importance);
+
+				// grad2DGry[index] = grad2D.copy();
+				// grad2DExact[index] = grad2D.length();
+				grad2DExact[index] = grad2D.copy();
+				avgGradGry += grad2D.length();
+				// 
+				var binAngle2D = Math.min(  Math.floor( 8*( Code.angleZeroTwoPi( V2D.angleDirection(V2D.DIRX,grad2D) ) /pi2) ),8-1);
+				binsGradGry2D[binIndex][binAngle2D] += grad2D.length();
+
+				// 
+				// RGB
+				// var list = [];
+				dx = (r2+r5+r8-r0-r3-r6)*0.5*third;
+				dy = (r6+r7+r8-r0-r1-r2)*0.5*third;
+				gradRed2D.set(dx,dy);
+					// list.push(grad2D.copy());
+				dx = (g2+g5+g8-g0-g3-g6)*0.5*third;
+				dy = (g6+g7+g8-g0-g1-g2)*0.5*third;
+				gradGrn2D.set(dx,dy);
+					// list.push(grad2D.copy());
+				dx = (b2+b5+b8-b0-b3-b6)*0.5*third;
+				dy = (b6+b7+b8-b0-b1-b2)*0.5*third;
+				gradBlu2D.set(dx,dy);
+					// list.push(grad2D.copy());
+				// grad2DRGB[index] = list;
+gradRed2D.scale(importance);
+gradGrn2D.scale(importance);
+gradBlu2D.scale(importance);
+				// 
+				binAngle2D = Math.min(  Math.floor( 8*( Code.angleZeroTwoPi( V2D.angleDirection(V2D.DIRX,gradRed2D) ) /pi2) ),8-1);
+				binsGradRGB2D[binIndex][0][binAngle2D] += gradRed2D.length();
+				// 
+				binAngle2D = Math.min(  Math.floor( 8*( Code.angleZeroTwoPi( V2D.angleDirection(V2D.DIRX,gradGrn2D) ) /pi2) ),8-1);
+				binsGradRGB2D[binIndex][1][binAngle2D] += gradGrn2D.length();
+				// 
+				binAngle2D = Math.min(  Math.floor( 8*( Code.angleZeroTwoPi( V2D.angleDirection(V2D.DIRX,gradBlu2D) ) /pi2) ),8-1);
+				binsGradRGB2D[binIndex][2][binAngle2D] += gradBlu2D.length();
+				// 
+				// var angle2D = Code.angleZeroTwoPi( V2D.angleDirection(V2D.DIRX,com2D) );
+				// var binAngle2D = Math.min(  Math.floor( 8*(angle2D/pi2) ),8-1);
+				// binsGradGry2D[binIndex][binAngle2D] += com2D.length();
+				// 
+				// 
+				// 
+				// 2D
+				// var angle2D = Code.angleZeroTwoPi( V2D.angleDirection(V2D.DIRX,com2D) );
+				// var binAngle2D = Math.min(  Math.floor( 8*(angle2D/pi2) ),8-1);
+				// bins2D[binIndex][binAngle2D] += com2D.length();
+				// 3D
+				var binAngle3D = (com3D.x<0 ? 4 : 0) + (com3D.y<0 ? 2 : 0) + (com3D.z<0 ? 1 : 0);
+				bins3D[binIndex][binAngle3D] += com3D.length();
+// grad2DExact[index] = grad2D.length();
+				// grad2DExact[index] = com2D.copy();
+				// grad2DExact[index] = new V2D(0.01,0.01);
+			}
+		}
+		avgGradGry /= pixelCount;
+		// console.log(avgGradGry);
+		if(avgGradGry<0.01){ // 0.01 - 0.1
+			continue;
+		}
+		// convert into 1D array
+		// bins2D = Code.array2DasArray1D(bins2D);
+		bins3D = Code.array2DasArray1D(bins3D);
+		// inside 0-1
+		// Code.normalArray01(bins2D);
+		// Code.normalArray01(bins3D);
+		// lower intensity
+		// Code.arrayVectorPow(bins2D, 0.5);
+		// Code.arrayVectorPow(bins3D, 0.5);
+
+
+
+// console.log(cornerBinsRGB2D);
+// console.log( Code.array2DasArray1D(cornerBinsRGB2D) );
+// Code.array2DasArray1D( Code.array2DasArray1D(cornerBinsRGB2D) );
 // throw "?"
 
-		object["flat1D"] = null; // TODO ?
-		object["flat2D"] = flat2D;
-		object["grad2D"] = bins2D;
+		// debugging
+		object["image"] = blockFlat.copy();
+		object["grad2DExact"] = grad2DExact;
+		//
+		// object["grad"] = grad.copy();
+		// normalized image surface
+		object["flat2D"] = flat2D
+
+		// gradient
+		binsGradGry2D = Code.array2DasArray1D(binsGradGry2D);
+		Code.normalArray01(binsGradGry2D);
+		Code.arrayVectorPow(binsGradGry2D, 0.5);
+
+		binsGradRGB2D = Code.array2DasArray1D( Code.array2DasArray1D(binsGradRGB2D) );
+		Code.normalArray01(binsGradRGB2D);
+		Code.arrayVectorPow(binsGradRGB2D, 0.5);
+
+		object["gradGry2D"] = binsGradGry2D;
+		object["gradRGB2D"] = binsGradRGB2D;
+
+		// corner
+		cornerBinsGry2D = Code.array2DasArray1D(cornerBinsGry2D);
+		Code.normalArray01(cornerBinsGry2D);
+		// Code.arrayVectorPow(cornerBinsGry2D, 0.5);
+		cornerBinsRGB2D = Code.array2DasArray1D( Code.array2DasArray1D(cornerBinsRGB2D) );
+		Code.normalArray01(cornerBinsRGB2D);
+		// Code.arrayVectorPow(cornerBinsRGB2D, 0.5);
+
+		object["cornerGry2D"] = cornerBinsGry2D;
+		object["cornerRGB2D"] = cornerBinsRGB2D;
+		
+		// object["grad2D"] = bins2D;
 		object["grad3D"] = bins3D;
-
-
-		// console.log(object);
-// throw "?"
-
-
 		// var object = R3D.objectProgressiveR3D(point,imageScales, size, matrix);
 		// 	object["size"] = size;
 		// 	object["angle"] = angle;
@@ -10697,9 +10991,8 @@ var blockGrad = new ImageMat(gradSize,gradSize);
 
 R3D.compareProgressiveRIFTObjectsFull = function(objectsA, objectsB){
 	console.log('compareProgressiveRIFTObjectsFull');
-	console.log(objectsA);
-	console.log(objectsB);
-
+	// console.log(objectsA);
+	// console.log(objectsB);
 
 	R3D._progressiveMatchIndex(objectsA);
 	R3D._progressiveMatchIndex(objectsB);
@@ -10722,6 +11015,9 @@ R3D.compareProgressiveRIFTObjectsFull = function(objectsA, objectsB){
 
 	return {"what":null};
 }
+
+
+
 
 R3D.compareProgressiveRIFTObjectsMatches = function(objectsA, objectsB){ // find best objects B for A
 	var putativesB = objectsB;
@@ -10746,7 +11042,27 @@ R3D.compareProgressiveRIFTObjectsMatches = function(objectsA, objectsB){ // find
 		for(var b=0; b<putativesB.length; ++b){
 			var objectB = putativesB[b];
 			var bestB = objectB["best"];
-			var score = R3D.compareProgressiveRIFTObjectsFlat2D(objectA,objectB);
+			// var score = R3D.compareProgressiveRIFTObjectsHistogram2D(objectA,objectB); // flat 2D histogram
+			// var score = R3D.compareProgressiveRIFTObjectsGroupHistogram2D(objectA,objectB); // flat 2D histogram groups 
+			// var score = R3D.compareProgressiveRIFTObjectsFlat2D(objectA,objectB); // flat 2D (normalized)
+			// var score = R3D.compareProgressiveRIFTObjectsGradGry2D(objectA,objectB); // gradient gray
+			// var score = R3D.compareProgressiveRIFTObjectsGradRGB2D(objectA,objectB); // gradient color
+
+			// var score = R3D.compareProgressiveRIFTObjectsCornerGry2D(objectA,objectB); // corner gray
+			// var score = R3D.compareProgressiveRIFTObjectsCornerRGB2D(objectA,objectB); // corner color
+
+			// 
+			// var score = R3D.compareProgressiveRIFTObjectsGrad3D(objectA,objectB); // 3D color differences
+
+
+
+			// var score = R3D.compareProgressiveRIFTObjectsGrad2D(objectA,objectB); // ???????????
+			
+
+			
+
+			var score = R3D.compareProgressiveRIFTObjectsCombined(objectA,objectB);
+
 			var entry = {"A":objectA, "B":objectB, "score":score};
 			bestA.push(entry);
 			bestB.push(entry);
@@ -10762,6 +11078,10 @@ R3D.compareProgressiveRIFTObjectsMatches = function(objectsA, objectsB){ // find
 		}
 	}
 	// pick ..
+	// var ratioMinimum = 2.0;
+	// var ratioMinimum = 1.5;
+	var ratioMinimum = 1.1;
+	// var ratioMinimum = 1.0;
 	var matches = [];
 	for(var i=0; i<objectsA.length; ++i){
 		var objectA = objectsA[i];
@@ -10771,15 +11091,21 @@ R3D.compareProgressiveRIFTObjectsMatches = function(objectsA, objectsB){ // find
 		var bestB = objectB["best"];
 		var bestB0 = bestB[0];
 		var objectA2 = bestB0["A"];
-		if(objectA==objectA2 && objectB==objectB){
-			// same
-			matches.push(bestA0);
+		if(objectA==objectA2){// } && objectB==objectB){ // same
 			// check for next-best ratios
+			var ratioA = bestA[1]["score"]/bestA[0]["score"];
+			var ratioB = bestB[1]["score"]/bestB[0]["score"];
+			var ratio = Math.max(ratioA,ratioB);
+			// console.log(ratio);
+			if(ratio > ratioMinimum){
+				matches.push(bestA0);
+			}
 		}
 	}
-	console.log(objectsA);
-	console.log(objectsB);
-	console.log(matches);
+	matches.sort(sortBest);
+	// console.log(objectsA);
+	// console.log(objectsB);
+	// console.log(matches);
 	// throw "R3D.compareProgressiveRIFTObjectsMatches";
 	return {"matches":matches};
 }
@@ -10789,12 +11115,57 @@ R3D.compareProgressiveRIFTObjectsMatches = function(objectsA, objectsB){ // find
 // 	// get approximate F from sparse matches
 // 	info = R3D._progressiveSparseMatches(imageMatrixA,objectsA, imageMatrixB,objectsB);
 
+R3D.compareProgressiveRIFTObjectsCombined = function(objectA, objectB){ // color histogram
+	var scoreFlat2D = R3D.compareProgressiveRIFTObjectsFlat2D(objectA,objectB);
+ 	// var scoreGrad2D = R3D.compareProgressiveRIFTObjectsGradGry2D(objectA,objectB);
+ 	var scoreGrad2D = R3D.compareProgressiveRIFTObjectsGradRGB2D(objectA,objectB);
+ 	// var scoreGrad3D = R3D.compareProgressiveRIFTObjectsGrad3D(objectA,objectB);
+
+ 	
+ 	// var score = scoreFlat2D * scoreGrad3D;
+
+
+ 	var score = scoreFlat2D * scoreGrad2D;
+ 	// var score = (scoreFlat2D * scoreGrad2D) / (scoreFlat2D + scoreGrad2D);
+
+ 	// var score = scoreFlat2D;
+ 	// var score = scoreGrad2D;
+
+	return score;
+}
+
 R3D.compareProgressiveRIFTObjectsFlat1D = function(objectA, objectB){ // color histogram
 	throw "R3D.compareProgressiveRIFTObjectsFlat1D";
 	var score = 0;
 	return score;
 }
 
+R3D.compareProgressiveRIFTObjectsHistogram2D = function(objectA, objectB){ // 
+	var index = "flatHistogram";
+	var histA = objectA[index];
+	var histB = objectB[index];
+	var score = R3D._compareHistogramObjects(histA,histB);
+	return score;
+}
+
+R3D.compareProgressiveRIFTObjectsGroupHistogram2D = function(objectA, objectB){ // 
+	var index = "flatGroupHistogram";
+	var listA = objectA[index];
+	var listB = objectB[index];
+// console.log(histA);
+// console.log(histB);
+	var total = 0;
+	for(var i=0; i<listA.length; ++i){
+		var histA = listA[i];
+		var histB = listB[i];
+		var score = R3D._compareHistogramObjects(histA,histB);
+		// console.log(score);
+		total += score;
+	}
+	// console.log(total);
+	// throw "?"
+	return total;
+}
 R3D.compareProgressiveRIFTObjectsFlat2D = function(objectA, objectB){ // 
 	var flat2DA = objectA["flat2D"];
 	var flat2DB = objectB["flat2D"];
@@ -10844,37 +11215,179 @@ R3D.compareProgressiveRIFTObjectsFlat2D = function(objectA, objectB){ //
 }
 
 R3D.compareProgressiveRIFTObjectsGrad2D = function(objectA, objectB){
+	var grad2DA = objectA["grad2D"];
+	var grad2DB = objectB["grad2D"];
+	var count = grad2DA.length;
+	var sad = 0;
+	for(var i=0; i<count; ++i){
+		var diff = Math.abs(grad2DA[i]-grad2DB[i]);
+		sad += diff;
+	}
+	return sad;
+}
 
-	// 1D histogram - SAD
+R3D.compareProgressiveRIFTObjectsGradGry2D = function(objectA, objectB){
+	var index = "gradGry2D";
+	var grad2DA = objectA[index];
+	var grad2DB = objectB[index];
+// console.log(grad2DA);
+// console.log(grad2DB);
+// throw "HERE";
+	var count = grad2DA.length;
+	var sad = 0;
+	for(var i=0; i<count; ++i){
+		var diff = Math.abs(grad2DA[i]-grad2DB[i]);
+		sad += diff;
+	}
+	return sad;
+}
 
-	throw "R3D.compareProgressiveRIFTObjectsGrad2D";
+R3D.compareProgressiveRIFTObjectsGradRGB2D = function(objectA, objectB){
+	var index = "gradRGB2D";
+	var grad2DA = objectA[index];
+	var grad2DB = objectB[index];
+	var count = grad2DA.length;
+	var sad = 0;
+	// vector
+ /*
+	var bins = 8;
+	var sectionCount = bins*3;
+	var groups = grad2DA.length/sectionCount;
+	var aV = new V3D();
+	var bV = new V3D();
+	for(var g=0; g<groups; ++g){
+		var section = g*sectionCount;
+		for(var b=0; b<bins; ++b){
+			var index = section + b;
+			// console.log(index+" / "+grad2DA.length+" ("+g+")");
+			var indexR = index;
+			var indexG = indexR + bins;
+			var indexB = indexG + bins;
+			aV.set( grad2DA[indexR], grad2DA[indexG], grad2DA[indexB] );
+			bV.set( grad2DB[indexR], grad2DB[indexG], grad2DB[indexB] );
+			var d = V3D.distance(aV,bV);
+			// var d = V3D.distanceSquare(aV,bV);
+			sad += d;
+		}
+	}
+	*/
+
+///*
+	// independent:
+	for(var i=0; i<count; ++i){
+		var diff = Math.abs(grad2DA[i]-grad2DB[i]);
+		sad += diff;
+	}
+//*/
+	return sad;
+}
+
+R3D.compareProgressiveRIFTObjectsCornerGry2D = function(objectA, objectB){
+	var index = "cornerGry2D";
+	var grad2DA = objectA[index];
+	var grad2DB = objectB[index];
+	var count = grad2DA.length;
+	var sad = 0;
+	for(var i=0; i<count; ++i){
+		var diff = Math.abs(grad2DA[i]-grad2DB[i]);
+		sad += diff;
+	}
+	return sad;
+}
+R3D.compareProgressiveRIFTObjectsCornerRGB2D = function(objectA, objectB){
+	var index = "cornerRGB2D";
+	var grad2DA = objectA[index];
+	var grad2DB = objectB[index];
+// console.log(grad2DA);
+// console.log(grad2DB);
+// throw "HERE";
+	var count = grad2DA.length;
+	var sad = 0;
+	// independent
+	// for(var i=0; i<count; ++i){
+	// 	var diff = Math.abs(grad2DA[i]-grad2DB[i]);
+	// 	sad += diff;
+	// }
+	// vector:
+
+	var neighbors = 8;
+	var sectionCount = neighbors*3;
+	var groups = grad2DA.length/sectionCount;
+	var aV = new V3D();
+	var bV = new V3D();
+	for(var g=0; g<groups; ++g){
+		var section = g*sectionCount;
+		for(var n=0; n<neighbors; ++n){
+			var index = section + n;
+			var indexR = index;
+			var indexG = indexR + neighbors;
+			var indexB = indexG + neighbors;
+			aV.set( grad2DA[indexR], grad2DA[indexG], grad2DA[indexB] );
+			bV.set( grad2DB[indexR], grad2DB[indexG], grad2DB[indexB] );
+			// var d = V3D.distance(aV,bV);
+			var d = V3D.distanceSquare(aV,bV);
+			sad += d;
+		}
+	}
+// console.log(sad);
+// throw "HERE";
+	return sad;
 }
 
 R3D.compareProgressiveRIFTObjectsGrad3D = function(objectA, objectB){
-	// 1D histogram - SAD
-	throw "R3D.compareProgressiveRIFTObjects";
+	var grad3DA = objectA["grad3D"];
+	var grad3DB = objectB["grad3D"];
+	var count = grad3DA.length;
+	var sad = 0;
+	for(var i=0; i<count; ++i){
+		var diff = Math.abs(grad3DA[i]-grad3DB[i]);
+		sad += diff;
+	}
+	return sad;
 }
 
 R3D.compareProgressiveRIFTObjects = function(objectA, objectB){
 	throw "R3D.compareProgressiveRIFTObjects";
 }
 
+R3D._compareHistogramObjects = function(histA,histB){
+	//var keys = Code.keysUnion(histA,histB);
+	var sum = 0;
+	var seen = {};
+	var keys = Code.keys(histA);
+// console.log(histA);
+// console.log(histB);
+// console.log(keys);
+	for(var i=0; i<keys.length; ++i){
+		var key = keys[i];
+// console.log(key);
+		var a = histA[key];
+		var b = histB[key];
+			a = a ? a : 0;
+			b = b ? b : 0;
+		sum += Math.abs(a-b);
+		seen[key] = 1;
+	}
+	var keys = Code.keys(histB);
+	for(var i=0; i<keys.length; ++i){
+		var key = keys[i];
+// console.log(key);
+		if(seen[key]){
+			continue;
+		}
+		var a = histA[key];
+		var b = histB[key];
+			a = a ? a : 0;
+			b = b ? b : 0;
+		sum += Math.abs(a-b);
+	}
+	return sum;
+}
+
 var counting = 0;
 R3D._progressiveR3DSizing2 = function(point, imageMatrixScales, block, sourceSize, matrix){
 	var displaySize = block.width();
 	var scale = sourceSize/displaySize;
-
-// console.log(scale);
-	// var scale = displaySize/sourceSize;
-
-	// scale = 4.0*scale;
-	// scale = 0.25*scale;
-
-
-
-// scale = 100.0;
-// scale = 0.10;
-
 
 // var doShow = true;
 var doShow = false;
@@ -22604,6 +23117,7 @@ R3D.circularSIFTBinMask = function(r1,count){ // 2,2.5,3 @ 20,25,30
 	var mask = Code.newArrayConstant(count,-1);
 	var cx = width*0.5 - 0.5;
 	var cy = height*0.5 - 0.5;
+	var pi2 = Math.PI*2;
 	for(j=0; j<height; ++j){
 		for(i=0; i<width; ++i){
 			var index = j*width + i;
@@ -22613,7 +23127,7 @@ R3D.circularSIFTBinMask = function(r1,count){ // 2,2.5,3 @ 20,25,30
 			var r = p.length();
 			for(k=0; k<rs.length; ++k){
 				if(r<=rs[k]){
-					var angle = (Code.angleZeroTwoPi( V2D.angleDirection(p,V2D.DIRX) ) / (Math.PI*2));
+					var angle = (Code.angleZeroTwoPi( V2D.angleDirection(p,V2D.DIRX) ) / pi2);
 					var bin = bins[k] + Math.floor(angle*divs[k]);
 					mask[index] = bin;
 					break;

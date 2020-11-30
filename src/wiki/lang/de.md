@@ -1550,6 +1550,74 @@ Mein verlorenes Kind
 
 
 
+Oomph! - Augen auf 
+https://www.youtube.com/watch?v=fuLPJg2gwjQ
+
+
+Eckstein, Eckstein
+Alles muss versteckt sein
+Wieder lieg' ich auf der Lauer
+Denn wir spielen unser Spiel
+Wieder wart' ich an der Mauer
+Wieder steh' ich kurz vorm Ziel
+Und ich höre deinen Atem
+Und ich rieche deine Angst
+Ich kann nicht mehr länger warten
+Denn ich weiß, was du verlangst
+Eckstein, Eckstein
+Alles muss versteckt sein
+Eckstein, Eckstein
+Alles muss versteckt sein
+Eins, zwei, drei, vier,
+Fünf, sechs, sieben, acht, neun, zehn
+Augen auf, ich komme!
+Augen auf, ich komme!
+Augen auf, ich komme!
+Aufgepasst, ich komme!
+Zeig dich nicht
+Ständig ruf' ich deinen Namen
+Ständig such' ich dein Gesicht
+Wenn ich dich dann endlich habe
+Spielen wir Wahrheit oder Pflicht
+Eckstein, Eckstein
+Alles muss versteckt sein
+Eckstein, Eckstein
+Alles muss versteckt sein
+Eins, zwei, drei, vier,
+Fünf, sechs, sieben, acht, neun, zehn
+Augen auf, ich komme!
+Augen auf, ich komme!
+Augen auf, ich komme!
+Aufgepasst, ich komme!
+Zeig dich nicht
+Versteck dich
+Augen auf, ich komme! (versteck dich)
+Augen auf, ich komme! (versteck dich)
+Aufgepasst, ich komme!
+Zeig' dich nicht!
+Eins, zwei, drei, vier, Eckstein
+Alles muss versteckt sein
+Eckstein, Eckstein
+Alles muss versteckt sein
+Eckstein, Eckstein
+Alles muss versteckt sein
+Augen auf, ich - komme!
+Augen auf, ich komme!
+Augen auf, ich komme!
+Aufgepasst, ich komme!
+Zeig dich nicht
+Versteck dich
+Augen auf, ich komme! (versteck dich)
+Augen auf, ich komme! (versteck dich)
+Aufgepasst, ich komme!
+Zeig' dich nicht!
+
+
+
+
+
+
+
 
 
 
