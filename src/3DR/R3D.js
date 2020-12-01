@@ -10451,7 +10451,62 @@ R3D._matchestoPoints = function(matches){
 
 
 // ------------------------------------------------------------------------------ PROGRESSIVE MATCHING 2
-
+R3D._growBinList = function(binInfo){
+	var binCount = binInfo["bins"];
+	var binGroups = binInfo["value"];
+	var binWidth = binInfo["width"];
+	var binHeight = binInfo["height"];
+	var binWm1 = binWidth-1;
+	var binHm1 = binHeight-1;
+	// create containers
+	var lists = [];
+	for(var i=0; i<binCount; ++i){
+		lists[i] = {};
+	}
+	// console.log(lists);
+	for(var j=0; j<binHeight; ++j){
+		var jW = j*binWidth;
+		for(var i=0; i<binWidth; ++i){
+			var index = jW + i;
+			var binCenter = binGroups[index];
+			if(binCenter<0){
+				continue;
+			}
+// console.log(binCenter);
+			var minX = Math.max(i-1,0);
+			var maxX = Math.min(i+1,binWm1);
+			var minY = Math.max(j-1,0);
+			var maxY = Math.min(j+1,binHm1);
+			var list = lists[binCenter];
+// console.log(list);
+			for(var y=minY; y<=maxY; ++y){
+				for(var x=minX; x<=maxX; ++x){
+					var ind = y*binWidth + x;
+// console.log(index+" - "+ind);
+					var val = binGroups[ind];
+					if(val>=0){ // only expand to non-masked area
+						list[ind] = ind;
+					}
+				}
+			}
+		}
+	}
+	// console.log(lists);
+	for(var i=0; i<lists.length; ++i){
+		var list = lists[i];
+// 		var keys = Code.keys(list);
+// lists[i] = keys;
+// console.log(keys);
+		var vals = Code.values(list);
+		// console.log(vals);
+		lists[i] = vals;
+	}
+	console.log(lists);
+	console.log(binInfo);
+	
+	throw "here"
+	return {"lists":lists};
+}
 
 R3D.generateProgressiveRIFTObjects = function(features, imageScales){
 	if(!Code.isa(imageScales, ImageMatScaled)){
@@ -10465,6 +10520,14 @@ var flatBins = R3D.circularSIFTBinMask(3,2);
 var flatBinsList = flatBins["value"];
 var flatBinSize = flatBins["width"];
 var flatBinCount = flatBins["bins"];
+
+
+console.log(flatBins)
+
+var binLists = R3D._growBinList(flatBins);
+console.log(binLists);
+
+throw "here";
 // console.log(flatBins);
 // throw "?"
 // var str = Code.array1Das2DtoString(flatBins["value"],flatBins["width"],flatBins["height"], 4);
@@ -35405,6 +35468,7 @@ var OFFY = 0;
 			var dogImage = ImageMat.subFloat(imageA,imageB);
 			dogList.push(dogImage);
 		}
+/*
 if(false){
 // if(true){
 // if(o==0){
@@ -35428,7 +35492,7 @@ if(false){
 // throw "?"
 OFFY += octaveGrayImageHeight + 10;
 }
-
+*/
 
 		// find extrema in volume [mark max v min]
 		var extrema = Code.findExtrema3DVolume(dogList, octaveGrayImageWidth,octaveGrayImageHeight);
@@ -35448,13 +35512,10 @@ OFFY += octaveGrayImageHeight + 10;
 		// next loop:
 		if(o<octaveCount-1){
 			var referenceImage = blurList[ blurList.length/2 | 0];
-			// console.log(referenceImage);
 			var info = ImageMat.getScaledImage(referenceImage,octaveGrayImageWidth,octaveGrayImageHeight, 0.5, 1.0);
 			octaveGrayImageWidth = info["width"];
 			octaveGrayImageHeight = info["height"];
 			octaveGrayImage = info["value"];
-			// console.log(info);
-			// throw ""
 		}
 	}
 	var minValue = null;
@@ -35481,6 +35542,164 @@ console.log(features);
 	return features;
 }
 
+
+
+
+
+R3D.SIFTBlobsForImageTest = function(imageInput, idealSize){
+	if(!idealSize){ // maxium starting resolution
+		// idealSize = new V2D(600,400);
+		idealSize = new V2D(800,600);
+		// idealSize = new V2D(1000,800); // tiny things
+	}
+	// convert to scale image
+	var image = imageInput;
+	if(!Code.isa(image, ImageMatScaled)){
+		image = new ImageMatScaled(image);
+	}
+	var originalWidth = imageInput.width();
+	var originalHeight = imageInput.height();
+	// resize to usable dimension
+	var idealPixelCount = idealSize.x*idealSize.y;
+	var actualPixelCount = image.width()*image.height();
+	var idealScale = Math.sqrt(idealPixelCount/actualPixelCount);
+	var maxScale = 2.0;
+	idealScale = Math.min(idealScale,maxScale);
+	var startImage = image.getScaledImage(idealScale);
+	// settings
+	var octaveCount = 5; // SCALES : 3-5 -- really big
+	var dogCount = 4; // DIFFERENCES : MIN = 3 [to find extrema]
+	var blurCount = dogCount + 3;    // DOG + FIRST + LAST1 + LAST2
+	var k = Math.sqrt(dogCount/2);
+	var sigmaStart = 1.4;
+	var sigmaBlur = 1.6;
+	// separate into pyramid sections
+	var featurePoints = [];
+	var OFFY = 0;
+	// initial
+	var octaveImage = startImage;
+	var octaveGrayImage = octaveImage.gry();
+	var octaveGrayImageWidth = octaveImage.width();
+	var octaveGrayImageHeight = octaveImage.height();
+	// initial start blur
+	octaveGrayImage = ImageMat.getBlurredImage(octaveGrayImage,octaveGrayImageWidth,octaveGrayImageHeight, sigmaStart);
+	for(var o=0; o<octaveCount; ++o){
+		// find subdivision blurred images - progressively blurred:
+		var blurList = [];
+		for(var b=0; b<blurCount; ++b){
+			var img = octaveGrayImage;
+			if(b>0){
+				var sigma = Math.pow(k,b)*sigmaBlur;
+				img = ImageMat.getBlurredImage(octaveGrayImage,octaveGrayImageWidth,octaveGrayImageHeight, sigma);
+			} // else first, 0 blurr
+			blurList.push(img);
+		}
+		// create DoG list:
+		var dogList = [];
+		for(var b=1; b<blurCount; ++b){
+			var imageA = blurList[b];
+			var imageB = blurList[b-1];
+			var dogImage = ImageMat.subFloat(imageA,imageB);
+			dogList.push(dogImage);
+		}
+
+if(false){
+// if(true){
+// if(o==0){
+// if(o==1){
+// if(o==2){
+// if(o==3){
+// if(o==4){
+// if(o==5){
+var sss = 0.5;
+	for(var i=0; i<blurList.length; ++i){
+		var image = blurList[i];
+		var img = GLOBALSTAGE.getFloatRGBAsImage(image,image,image, octaveGrayImageWidth,octaveGrayImageHeight);
+		var d = new DOImage(img);
+		GLOBALSTAGE.addChild(d);
+		d.graphics().alpha(1.0);
+		d.matrix().scale(sss);
+		d.matrix().translate(10 + i*octaveGrayImageWidth*sss, 10 + OFFY*sss);
+	}
+console.log(dogList);
+	for(var i=0; i<dogList.length; ++i){
+		var image = dogList[i];
+		image = Code.copyArray(image);
+		image = ImageMat.getNormalFloat01(image);
+		var img = GLOBALSTAGE.getFloatRGBAsImage(image,image,image, octaveGrayImageWidth,octaveGrayImageHeight);
+		var d = new DOImage(img);
+		GLOBALSTAGE.addChild(d);
+		d.graphics().alpha(1.0);
+		d.matrix().scale(sss);
+		d.matrix().translate(10 + (i+0.5)*octaveGrayImageWidth*sss, 10 + (OFFY + octaveGrayImageHeight)*sss);
+	}
+
+// throw "?"
+OFFY += octaveGrayImageHeight*2 + 10;
+}
+
+
+
+		// find extrema in volume [mark max v min]
+		var extrema = Code.findExtrema3DVolume(dogList, octaveGrayImageWidth,octaveGrayImageHeight);
+		// console.log(extrema);
+		var scaleX = (originalWidth-1)/(octaveGrayImageWidth-1);
+		var scaleY = (originalHeight-1)/(octaveGrayImageHeight-1);
+		var blurSpaceTotal = dogCount+1;//-3;
+		var scaleMultiplier = Math.pow(2,o+1);
+		for(var i=0; i<extrema.length; ++i){
+			extrema[i].x *= scaleX;
+			extrema[i].y *= scaleY;
+			var z = extrema[i].z;
+			// var size = Math.pow(2, 1 + o + (z/lastDoG) ) * sigmaBlur;
+			var size = Math.pow(k, 0 + ((z+0.5)/blurSpaceTotal) ) * scaleMultiplier * sigmaBlur;
+			extrema[i].z = size;
+		}
+		Code.arrayPushArray(featurePoints,extrema);
+		console.log(" "+o+": "+extrema.length);
+		
+		// next loop:
+		if(o<octaveCount-1){
+			// var referenceImage = blurList[ blurList.length/2 | 0];
+			// console.log(blurList.length/2);
+			// throw "?"
+
+			var referenceImage = blurList[ blurList.length - 3]; // last - 2
+			var info = ImageMat.getScaledImage(referenceImage,octaveGrayImageWidth,octaveGrayImageHeight, 0.5, 1.0);
+			octaveGrayImageWidth = info["width"];
+			octaveGrayImageHeight = info["height"];
+			octaveGrayImage = info["value"];
+		}
+// if(o>1){
+// break;
+// }
+
+	}
+
+	// throw "RICHIE"
+	var minValue = null;
+	var maxValue = null;
+	// drop low contrast points
+		// 
+
+	// drop points along edges
+		// hessian
+	// 
+
+	// convert to feature
+	var features = [];
+	for(i=0; i<featurePoints.length; ++i){
+		var point = featurePoints[i];
+		var feature = {};
+		feature["point"] = new V2D(point.x,point.y);
+		// feature["size"] = point.z * 5.0;
+		feature["size"] = point.z;
+		feature["angle"] = 0;
+		features.push(feature);
+	}
+console.log(features);
+	return features;
+}
 
 
 

@@ -393,19 +393,16 @@ x distance importance
 	- group array = list of pixel indexes (x/y location)
 	- for each group in list
 		- if a neighbor pixel is not in group, add into group
-...
-
-x F RANSAC point tests
-	- how good is F based on metric (# & error & #/error)
 
 
 
+- what would make a very high confident match is if L/R/U/D neighbors also were good matches (assuming same local affine transform)
+-> dense F matching chould use angle/scale neighborhood before picking as a good match
 
 
-x flat histogram binning
-	- ~ 9 overlapping neighborhoods
-	- ~ 25 samples per neighborhood
-	- ~ 8x8x8 possible bins
+
+
+
 
 
 - initial fat (oblivious) feature matches => 20-50 matches @ 1-10 F error
@@ -413,6 +410,15 @@ x flat histogram binning
 - best matching neighbor searches => 100-1000 seed points @ 1-2px abs error
 
 
+- blob points rather than corner points may be better for image bag of words
+
+- SIFT BLOBS ARE NOT VERY EVENLY DISTRIBUTED IN SCALE SPACE ... PEAKS
+
+
+
+- normalized COLOR HISTOGRAM (take out intensity?)
+	- project onto plane perpendicular to 1,1,1 @ 0.5,0.5,0.5 ??
+	- HSV & ignore | make less important Value : (divide by sigma?) value
 
 
 - IMAGE CANDIDATE MATCHING
@@ -420,10 +426,38 @@ x flat histogram binning
 		- image:
 			- overall color histogram? [to limit top ~ 10 matches]
 		- corner:
-			- color histogram (undirectional)
-			- grouped color histogram
-			- flat histogram
-			- sift
+			- color histogram (undirectional) - ok to narrow, bad for compare
+			- grouped color histogram - good to keep non-specific
+			- flat histogram - may be too specific
+			- gradient binning - may be too specific
+	=> specific/exact matches are not so important
+		- gradient/corner
+	=> larger area-coverage important
+	=> perspective changes important
+	=> lighting changes important (lighter/darker)
+
+	=>>>>> PROCESS
+		- get image color 
+		- get 100-500 top corner points
+
+=> maybe don't care if has TOP matches, maybe just care if ANY good matches
+	=> repeated structure is OK
+=> histogram of top match scores (sum?)
+
+=> only care if parts of histogram are good?
+
+-> get corners
+-> get directions
+-> get expanded sized features (2-4 as big)
+-> extract features
+-> each image: compare histograms
+-> each image: choose up to top 10 opposite images for consideration
+-> each image: compare features with other
+-> each image: rank based on histogram of top scores (get sigma)
+
+
+
+
 
 
 x CORNER SIFT
@@ -434,61 +468,6 @@ x there's no +/- direction, only an absolute difference (vector)
 
 
 
-DIRECTIONAL-NEIGHBOR-DIFFERENCE-BINNING
-	- doesn't seem good
-
-SOME WAY TO INCORPORATE COLOR, NOT JUST MAGNITUDES ?
-
-
-
-
-- compare corner & gradient RGB together as vector
-	delta = vector distance || distnace square
-
-
-LIST OF FEATURE COMPARISON METHODS
-	x image average color
-	x image color histogram 1D
-
-	OVERLAP ?
-	x image color histogram 1D : 2D overlapping(x) groupings
-	x image flat color 2D : SAD/SSD/NCC
-
-	x image 2D 8-neighbor color difference histogram: gry/rgb (signed differences not absolute differences) : 8(gray) or 8x3(separate) or 8x8(combined)
-		[group][0-7 neighbor]
-	x image 2D gradient direction histogram: gry(8) or rgb(3x8)[separate/vector]
-	- image 3D rgb-color difference histogram (8 directional bins: x,y,z in 2|4|8)
-
-	- 3x2D gradient binning - <rx,ry>,<gx,gy>,<bx,by>
-		- (R/G/B +/-x,+/-y direction) : |2|4| 8|16| 32|64| = 64 bins > what value goes in here? average magnitude?
-		- (R/G/B angle binning) : 8|8|8 = 24 bins > what value goes in here? average magnitude?
-	- 3x?D rgb-neighbor-color difference:
-
-
-
-
-
-- need to ignore low-range corners
-
-
-generateProgressiveRIFTObjects
-
-compareProgressiveRIFTObjectsFull
-
-
-xA) location needle haystack : pick metric
-xB) optimum affine : pick metric
-xC) local neighborhood increase point matches sparse
-	- use expected/known orientation vs use corner orientation
-xD) initial features
-E) initial RIFT matching
-	- extract features
-	- COLOR METRIC?:
-		- SAD-OFFST-NORM metric
-	- GRADIENT METRIC?:
-		- ?
-	- COLOR-SPACE METRIC?
-		- 
 F) dense point matching using F - stereopsis
 
 

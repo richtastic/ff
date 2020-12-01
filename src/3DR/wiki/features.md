@@ -88,6 +88,29 @@
 
 
 
+LIST OF FEATURE COMPARISON METHODS
+	x image average color
+	x image color histogram 1D
+
+	OVERLAP ?
+	x image color histogram 1D : 2D overlapping(x) groupings
+	x image flat color 2D : SAD/SSD/NCC
+
+	x image 2D 8-neighbor color difference histogram: gry/rgb (signed differences not absolute differences) : 8(gray) or 8x3(separate) or 8x8(combined)
+		[group][0-7 neighbor]
+	x image 2D gradient direction histogram: gry(8) or rgb(3x8)[separate/vector]
+	- image 3D rgb-color difference histogram (8 directional bins: x,y,z in 2|4|8)
+
+	- 3x2D gradient binning - <rx,ry>,<gx,gy>,<bx,by>
+		- (R/G/B +/-x,+/-y direction) : |2|4| 8|16| 32|64| = 64 bins > what value goes in here? average magnitude?
+		- (R/G/B angle binning) : 8|8|8 = 24 bins > what value goes in here? average magnitude?
+	- 3x?D rgb-neighbor-color difference:
+
+
+
+
+
+
 
 ## Optimizing Matching Methods
 

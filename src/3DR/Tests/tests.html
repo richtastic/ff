@@ -19,6 +19,8 @@ function classesLoadedFxn(){
 
 	testRIFTMatches();
 
+	// testBagOfWordMatches();
+
 	
 	// testLocationNeighborsSparse();
 
@@ -44,6 +46,59 @@ this._stage.root().matrix().scale(2.0);
 	GLOBALSTAGE = this._stage;
 }
 
+function testBagOfWordMatches(){
+	setupDisplay();
+	var fxnImageLoaded = function(info){
+		console.log("fxnImageLoaded")
+		var images = info["images"];
+		var imageScalesList = [];
+		var objectsList = [];
+		var idealSize = new V2D(400,300);
+		// var idealSize = new V2D(600,400);
+		// var idealSize = new V2D(800,600);
+		for(var iii=0; iii<images.length; ++iii){
+			var image = images[iii];
+			var imageFloat = GLOBALSTAGE.getImageAsFloatRGB(image);
+			var imageMatrix = new ImageMat(imageFloat["width"],imageFloat["height"], imageFloat["red"], imageFloat["grn"], imageFloat["blu"]);
+
+			var imageScales = new ImageMatScaled(imageMatrix);
+			imageScalesList.push(imageScales);
+
+			image = imageScales.images()[0];
+			var img = GLOBALSTAGE.getFloatRGBAsImage(image.red(),image.grn(),image.blu(), image.width(),image.height());
+			var d = new DOImage(img);
+			d.matrix().scale(1.0);
+			d.matrix().translate(0 + iii*imageMatrix.width(), 0 + 0);
+			GLOBALSTAGE.addChild(d);
+
+			var blobs = R3D.SIFTBlobsForImageTest(imageScales, idealSize);
+			console.log(blobs);
+			var d = new DO();
+			d.graphics().setLine(1.0,0xFFFF0000);
+			for(var b=0; b<blobs.length; ++b){
+				var blob = blobs[b];
+				var point = blob["point"];
+				var size = blob["size"];
+				// console.log(blob)
+
+				d.graphics().beginPath();
+				d.graphics().drawCircle(point.x,point.y,size);
+				d.graphics().endPath();
+				d.graphics().strokeLine();
+			}
+			d.matrix().translate(iii*imageMatrix.width(),0);
+			GLOBALSTAGE.addChild(d);
+
+
+		}
+		// console.log(imageScales);
+	}
+	// new ImageLoader("../images/iowa/",["0.JPG","1.JPG"],this,fxnImageLoaded).load();
+	// new ImageLoader("../images/iowa/",["2.JPG","3.JPG"],this,fxnImageLoaded).load();
+	// new ImageLoader("../images/iowa/",["4.JPG","5.JPG"],this,fxnImageLoaded).load();
+	// new ImageLoader("../images/iowa/",["6.JPG","7.JPG"],this,fxnImageLoaded).load();
+	new ImageLoader("../images/iowa/",["8.JPG","9.JPG"],this,fxnImageLoaded).load();
+}
 
 
 function testRIFTMatches(){
@@ -323,6 +378,7 @@ for(var l=0; l<lll.length; ++l){
 // throw "ehre"
 		}
 
+		throw "before RANSAC"
 		// RANSAC MATCHES:
 
 		var imageMatrixA = imageScalesList[0];
@@ -378,9 +434,13 @@ for(var l=0; l<lll.length; ++l){
 
 
 	}
-	// new ImageLoader("../images/iowa/",["0.JPG","1.JPG"],this,fxnImageLoaded).load();
-	new ImageLoader("../images/iowa/",["0.JPG","2.JPG"],this,fxnImageLoaded).load();
+	new ImageLoader("../images/iowa/",["0.JPG","1.JPG"],this,fxnImageLoaded).load();
+	// new ImageLoader("../images/iowa/",["0.JPG","2.JPG"],this,fxnImageLoaded).load();
 	// new ImageLoader("../images/iowa/",["5.JPG","6.JPG"],this,fxnImageLoaded).load();
+	// new ImageLoader("../images/iowa/",["6.JPG","7.JPG"],this,fxnImageLoaded).load();
+	// new ImageLoader("../images/iowa/",["7.JPG","8.JPG"],this,fxnImageLoaded).load();
+	// new ImageLoader("../images/iowa/",["8.JPG","9.JPG"],this,fxnImageLoaded).load();
+
 	// new ImageLoader("../images/",["bench_A.png","bench_B.png"],this,fxnImageLoaded).load();
 	// new ImageLoader("../images/",["bench_E.png","bench_F.png"],this,fxnImageLoaded).load();
 	// new ImageLoader("../images/",["room0.png","room2.png"],this,fxnImageLoaded).load();

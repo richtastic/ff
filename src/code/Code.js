@@ -846,7 +846,12 @@ Code.keys = function keys(object){
 	}
 	return [];
 }
-
+Code.values = function values(object){
+	if(object){
+		return Object.values(object);
+	}
+	return [];
+}
 Code.keysUnion = function(a,b){
 	var hash = {}, keys;
 	keys = Code.keys(a);
