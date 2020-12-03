@@ -10458,10 +10458,15 @@ R3D._growBinList = function(binInfo){
 	var binHeight = binInfo["height"];
 	var binWm1 = binWidth-1;
 	var binHm1 = binHeight-1;
+	var pixels = binWidth*binHeight;
 	// create containers
 	var lists = [];
 	for(var i=0; i<binCount; ++i){
 		lists[i] = {};
+	}
+	var indexes = [];
+	for(var i=0; i<pixels; ++i){
+		indexes[i] = {};
 	}
 	// console.log(lists);
 	for(var j=0; j<binHeight; ++j){
@@ -10472,40 +10477,44 @@ R3D._growBinList = function(binInfo){
 			if(binCenter<0){
 				continue;
 			}
-// console.log(binCenter);
+			// 0 - test
+			// var minX = Math.max(i-0,0);
+			// var maxX = Math.min(i+0,binWm1);
+			// var minY = Math.max(j-0,0);
+			// var maxY = Math.min(j+0,binHm1);
+			// 1 - 
 			var minX = Math.max(i-1,0);
 			var maxX = Math.min(i+1,binWm1);
 			var minY = Math.max(j-1,0);
 			var maxY = Math.min(j+1,binHm1);
 			var list = lists[binCenter];
-// console.log(list);
 			for(var y=minY; y<=maxY; ++y){
 				for(var x=minX; x<=maxX; ++x){
 					var ind = y*binWidth + x;
-// console.log(index+" - "+ind);
 					var val = binGroups[ind];
 					if(val>=0){ // only expand to non-masked area
 						list[ind] = ind;
+						indexes[index][val] = val;
 					}
 				}
 			}
 		}
 	}
-	// console.log(lists);
+	// var count = 0;
 	for(var i=0; i<lists.length; ++i){
 		var list = lists[i];
-// 		var keys = Code.keys(list);
-// lists[i] = keys;
-// console.log(keys);
-		var vals = Code.values(list);
-		// console.log(vals);
-		lists[i] = vals;
+		lists[i] = Code.values(list);
+		// count += lists[i].length;
 	}
-	console.log(lists);
-	console.log(binInfo);
-	
-	throw "here"
-	return {"lists":lists};
+	// console.log(count);
+	// var count = 0;
+	for(var i=0; i<indexes.length; ++i){
+		var list = indexes[i];
+		indexes[i] = Code.values(list);
+		// count += indexes[i].length;
+	}
+	// console.log(count);
+	return {"lists":lists, "indexes":indexes};
 }
 
 R3D.generateProgressiveRIFTObjects = function(features, imageScales){
@@ -10521,13 +10530,7 @@ var flatBinsList = flatBins["value"];
 var flatBinSize = flatBins["width"];
 var flatBinCount = flatBins["bins"];
 
-
-console.log(flatBins)
-
-var binLists = R3D._growBinList(flatBins);
-console.log(binLists);
-
-throw "here";
+// throw "here";
 // console.log(flatBins);
 // throw "?"
 // var str = Code.array1Das2DtoString(flatBins["value"],flatBins["width"],flatBins["height"], 4);
@@ -10554,6 +10557,15 @@ Code.arrayVectorScale(blockFlatGaussian, blockFlatGaussian, 1.0/Code.max(blockFl
 //  ImageMat.gaussianMask(width,height, sigmaX, sigmaY, clearCircle, areRatios);
 // console.log(blockFlatGaussian);
 // throw "?";
+
+
+var binLists = R3D._growBinList(flatBins);
+console.log(binLists);
+var flatBinIndexes = binLists["indexes"];
+var flatBinLists = binLists["lists"];
+console.log(flatBinIndexes);
+console.log(flatBinLists);
+
 
 
 
@@ -10595,6 +10607,18 @@ Code.arrayVectorScale(blockSigmaGaussian, blockSigmaGaussian, 1.0/Code.max(block
 var gradSizeM1 = gradSize-1;
 var blockGrad = new ImageMat(gradSize,gradSize);
 // var gradMask = ImageMat.circleMask(gradSize,gradSize);
+
+
+
+
+var binLists = R3D._growBinList({"bins":gradBinCount, "width":gradSize, "height":gradSize, "value":gradBinMask});
+console.log(binLists);
+var gradBinIndexes = binLists["indexes"];
+var gradBinLists = binLists["lists"];
+console.log(gradBinIndexes);
+console.log(gradBinLists);
+
+// throw "?"
 
 
 // var flatSize = gradSize;
@@ -10701,6 +10725,7 @@ var gradFeatureSize = size*4;
 			histogramFlat[bin] = value;
 			++pixelCount;
 		}
+
 		var invPixelCount = 1.0/pixelCount;
 		color.scale(invPixelCount);
 		object["flatColor"] = [color.x,color.y,color.z];
@@ -10716,26 +10741,42 @@ var gradFeatureSize = size*4;
 			flatGroupHistogram[i] = {};
 		}
 		var pixelCount = 0;
-		for(var i=0; i<flatBinsList.length; ++i){
-			var bin = flatBinsList[i];
-			if(bin<0){
+
+		// SINGLE GROUP PER PIXEL
+		// for(var i=0; i<flatBinsList.length; ++i){
+		// 	var bin = flatBinsList[i];
+		// 	if(bin<0){
+		// 		continue;
+		// 	}
+		// ++pixelCount;
+		// LIST OF GROUPS PER PIXEL
+		for(var i=0; i<flatBinIndexes.length; ++i){
+			var list = flatBinIndexes[i];
+			if(list.length==0){
 				continue;
 			}
-			var r = red[i];
-			var g = grn[i];
-			var b = blu[i];
-			var histogram = flatGroupHistogram[bin];
-			var binR = Math.min(Math.floor(r*histogramFlatBinCount),histogramFlatBinCountM1);
-			var binG = Math.min(Math.floor(g*histogramFlatBinCount),histogramFlatBinCountM1);
-			var binB = Math.min(Math.floor(b*histogramFlatBinCount),histogramFlatBinCountM1);
-			var bin = binR+"-"+binG+"-"+binB;
-			var value = histogram[bin];
-			if(!value){ value = 1; }else{ value += 1; }
-			histogram[bin] = value;
 			++pixelCount;
+// console.log(list);
+			for(var m=0; m<list.length; ++m){
+				var bin = list[m];
+// console.log(bin);
+				var r = red[i];
+				var g = grn[i];
+				var b = blu[i];
+// console.log(r,g,b);
+				var histogram = flatGroupHistogram[bin];
+				var binR = Math.min(Math.floor(r*histogramFlatBinCount),histogramFlatBinCountM1);
+				var binG = Math.min(Math.floor(g*histogramFlatBinCount),histogramFlatBinCountM1);
+				var binB = Math.min(Math.floor(b*histogramFlatBinCount),histogramFlatBinCountM1);
+				var bin = binR+"-"+binG+"-"+binB;
+				var value = histogram[bin];
+				if(!value){ value = 1; }else{ value += 1; }
+				histogram[bin] = value;
+			}
 		}
 		object["flatGroupHistogram"] = flatGroupHistogram;
-
+// console.log(flatGroupHistogram);
+// throw "HERE";
 		// normalize image:
 		var count = flat2D.length;
 		var invCount = 1.0/count;
@@ -10818,12 +10859,21 @@ var grad2DExact = Code.newArrayNulls(gradSize*gradSize);
 		for(var y=1; y<gradSizeM1; ++y){
 			for(var x=1; x<gradSizeM1; ++x){
 				var index = y*gradSize + x;
-				var binIndex = gradBinMask[index];
-// binIndex = 0;
-				if(binIndex<0){
+				// var binIndex = gradBinMask[index];
+				// if(binIndex<0){
+				// 	continue;
+				// }
+
+var indexGroupList = gradBinIndexes[index];
+				if(indexGroupList.length==0){
 					continue;
 				}
 				++pixelCount;
+
+// console.log(indexGroupList);
+// throw "get a list of bin indexes"
+
+
 				cen.set(red[index],grn[index],blu[index]);
 				com2D.set(0,0);
 				com3D.set(0,0,0);
@@ -10850,12 +10900,14 @@ var grad2DExact = Code.newArrayNulls(gradSize*gradSize);
 
 						// importance scale corner
 						val.scale(blockSigmaGaussian[ind]);
-
-
-						cornerBinsGry2D[binIndex][b2D] += V3D.dot(val,dirWhite);
+						var dotWhite = V3D.dot(val,dirWhite);
+for(var g=0; g<indexGroupList.length; ++g){
+var binIndex = indexGroupList[g];
+						cornerBinsGry2D[binIndex][b2D] += dotWhite;
 						cornerBinsRGB2D[binIndex][0][b2D] += val.x;
 						cornerBinsRGB2D[binIndex][1][b2D] += val.y;
 						cornerBinsRGB2D[binIndex][2][b2D] += val.z;
+}
 						++b2D;
 					}
 				}
@@ -10937,8 +10989,15 @@ grad2D.scale(importance);
 				grad2DExact[index] = grad2D.copy();
 				avgGradGry += grad2D.length();
 				// 
+for(var g=0; g<indexGroupList.length; ++g){
+var binIndex = indexGroupList[g];
 				var binAngle2D = Math.min(  Math.floor( 8*( Code.angleZeroTwoPi( V2D.angleDirection(V2D.DIRX,grad2D) ) /pi2) ),8-1);
 				binsGradGry2D[binIndex][binAngle2D] += grad2D.length();
+}
+
+
+
+
 
 				// 
 				// RGB
@@ -10959,6 +11018,9 @@ grad2D.scale(importance);
 gradRed2D.scale(importance);
 gradGrn2D.scale(importance);
 gradBlu2D.scale(importance);
+
+for(var g=0; g<indexGroupList.length; ++g){
+var binIndex = indexGroupList[g];
 				// 
 				binAngle2D = Math.min(  Math.floor( 8*( Code.angleZeroTwoPi( V2D.angleDirection(V2D.DIRX,gradRed2D) ) /pi2) ),8-1);
 				binsGradRGB2D[binIndex][0][binAngle2D] += gradRed2D.length();
@@ -10982,9 +11044,11 @@ gradBlu2D.scale(importance);
 				// 3D
 				var binAngle3D = (com3D.x<0 ? 4 : 0) + (com3D.y<0 ? 2 : 0) + (com3D.z<0 ? 1 : 0);
 				bins3D[binIndex][binAngle3D] += com3D.length();
+}
 // grad2DExact[index] = grad2D.length();
 				// grad2DExact[index] = com2D.copy();
 				// grad2DExact[index] = new V2D(0.01,0.01);
+
 			}
 		}
 		avgGradGry /= pixelCount;

@@ -386,9 +386,7 @@ MISSING:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-x distance importance
-
-- overlapping groups:
+x overlapping groups:
 	- get original group mask (1:1)
 	- group array = list of pixel indexes (x/y location)
 	- for each group in list
@@ -401,24 +399,32 @@ x distance importance
 
 
 
-
-
-
-
 - initial fat (oblivious) feature matches => 20-50 matches @ 1-10 F error
 - f-aligned feature matches => 50-100 1-2 F error, 1-5px abs error
 - best matching neighbor searches => 100-1000 seed points @ 1-2px abs error
 
 
 - blob points rather than corner points may be better for image bag of words
+	- nonoriented
 
-- SIFT BLOBS ARE NOT VERY EVENLY DISTRIBUTED IN SCALE SPACE ... PEAKS
+x SIFT BLOBS ARE NOT VERY EVENLY DISTRIBUTED IN SCALE SPACE ... PEAKS
 
 
 
 - normalized COLOR HISTOGRAM (take out intensity?)
 	- project onto plane perpendicular to 1,1,1 @ 0.5,0.5,0.5 ??
 	- HSV & ignore | make less important Value : (divide by sigma?) value
+
+
+- IMAGE CANDIDATE STEPS:
+	- image histogram
+	- features
+		- decide on metric:
+			? ?
+			? ?
+			? ?
+			? ?
+	- scores
 
 
 - IMAGE CANDIDATE MATCHING

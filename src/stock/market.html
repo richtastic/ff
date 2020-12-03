@@ -1,0 +1,22 @@
+<html>
+<head>
+<title>Stock Market</title>
+<script src="../code/FF.js"></script>
+</head>
+<script type="text/javascript">
+function pageLoadedFxn(){
+	var ff = new FF("../code/",ffLoadedFxn);
+}
+function ffLoadedFxn(){
+	(new ScriptLoader("./",["StockMarket.js"],this,classesLoadedFxn)).load();
+}
+function classesLoadedFxn(){
+	var s = new StockMarket();
+	//
+}
+
+
+</script>
+<body onload="pageLoadedFxn();">
+</body>
+</html>

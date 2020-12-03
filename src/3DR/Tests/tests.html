@@ -17,9 +17,9 @@ function classesLoadedFxn(){
 	// testCorners();
 	// testLocationSeparate();
 
-	testRIFTMatches();
+	// testRIFTMatches();
 
-	// testBagOfWordMatches();
+	testBagOfWordMatches();
 
 	
 	// testLocationNeighborsSparse();
@@ -93,11 +93,11 @@ function testBagOfWordMatches(){
 		}
 		// console.log(imageScales);
 	}
-	// new ImageLoader("../images/iowa/",["0.JPG","1.JPG"],this,fxnImageLoaded).load();
+	new ImageLoader("../images/iowa/",["0.JPG","1.JPG"],this,fxnImageLoaded).load();
 	// new ImageLoader("../images/iowa/",["2.JPG","3.JPG"],this,fxnImageLoaded).load();
 	// new ImageLoader("../images/iowa/",["4.JPG","5.JPG"],this,fxnImageLoaded).load();
 	// new ImageLoader("../images/iowa/",["6.JPG","7.JPG"],this,fxnImageLoaded).load();
-	new ImageLoader("../images/iowa/",["8.JPG","9.JPG"],this,fxnImageLoaded).load();
+	// new ImageLoader("../images/iowa/",["8.JPG","9.JPG"],this,fxnImageLoaded).load();
 }
 
 
@@ -378,7 +378,7 @@ for(var l=0; l<lll.length; ++l){
 // throw "ehre"
 		}
 
-		throw "before RANSAC"
+		// throw "before RANSAC"
 		// RANSAC MATCHES:
 
 		var imageMatrixA = imageScalesList[0];
@@ -434,7 +434,7 @@ for(var l=0; l<lll.length; ++l){
 
 
 	}
-	new ImageLoader("../images/iowa/",["0.JPG","1.JPG"],this,fxnImageLoaded).load();
+	// new ImageLoader("../images/iowa/",["0.JPG","1.JPG"],this,fxnImageLoaded).load();
 	// new ImageLoader("../images/iowa/",["0.JPG","2.JPG"],this,fxnImageLoaded).load();
 	// new ImageLoader("../images/iowa/",["5.JPG","6.JPG"],this,fxnImageLoaded).load();
 	// new ImageLoader("../images/iowa/",["6.JPG","7.JPG"],this,fxnImageLoaded).load();
@@ -449,7 +449,7 @@ for(var l=0; l<lll.length; ++l){
 	// new ImageLoader("../images/",["caseStudy1-20.jpg","caseStudy1-24.jpg"],this,fxnImageLoaded).load();
 	// new ImageLoader("../images/",["zA_small.jpg","zB_small.jpg"],this,fxnImageLoaded).load();
 	// new ImageLoader("../images/",["temple_1.png","temple_2.png"],this,fxnImageLoaded).load();
-	// new ImageLoader("../images/",["castle.000.jpg","castle.009.jpg"],this,fxnImageLoaded).load();
+	new ImageLoader("../images/",["castle.000.jpg","castle.009.jpg"],this,fxnImageLoaded).load();
 	// new ImageLoader("../images/",["bt.000.png","bt.006.png"],this,fxnImageLoaded).load();
 
 	// new ImageLoader("../images/elephant/",["ele_1.JPG","ele_6.JPG"],this,fxnImageLoaded).load();
