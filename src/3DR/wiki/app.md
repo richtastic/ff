@@ -386,13 +386,6 @@ MISSING:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-x overlapping groups:
-	- get original group mask (1:1)
-	- group array = list of pixel indexes (x/y location)
-	- for each group in list
-		- if a neighbor pixel is not in group, add into group
-
-
 
 - what would make a very high confident match is if L/R/U/D neighbors also were good matches (assuming same local affine transform)
 -> dense F matching chould use angle/scale neighborhood before picking as a good match
@@ -407,10 +400,6 @@ x overlapping groups:
 - blob points rather than corner points may be better for image bag of words
 	- nonoriented
 
-x SIFT BLOBS ARE NOT VERY EVENLY DISTRIBUTED IN SCALE SPACE ... PEAKS
-
-
-
 - normalized COLOR HISTOGRAM (take out intensity?)
 	- project onto plane perpendicular to 1,1,1 @ 0.5,0.5,0.5 ??
 	- HSV & ignore | make less important Value : (divide by sigma?) value
@@ -418,13 +407,26 @@ x SIFT BLOBS ARE NOT VERY EVENLY DISTRIBUTED IN SCALE SPACE ... PEAKS
 
 - IMAGE CANDIDATE STEPS:
 	- image histogram
-	- features
+	- unoriented features
+		- BLOBs (@ 2x)
+			- extract rect @ 11x11=121 -> 31x31=961 (& circular mask)
+	- oriented features (@ 2x)
 		- decide on metric:
-			? ?
-			? ?
-			? ?
-			? ?
-	- scores
+			- un-normalized flat RGB image
+			- normalized flat RGB image
+			- groups of RGB histograms
+	- scores:
+		- histogram: SAD
+		- features: 
+			- image A features find best score in image B
+			- order scores & get sigma distribution
+			-> sigma/count = metric
+				-> abs-sigma metric ?
+			-> CDF metric ? (avg slope ?)
+	- choosing
+		- compare images to limit to ~ 25
+		- compare unoriented features to limit to ~ 10
+		- compare oriented features to pick top 5?
 
 
 - IMAGE CANDIDATE MATCHING
