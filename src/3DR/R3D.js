@@ -9889,6 +9889,183 @@ R3D.bagOfWords = function(imageMatrix, wordCount){
 	return {"features":allFeatures};
 }
 
+R3D.bagOfWordsFeaturesHistograms = function(imageScales, features, sizeScale){
+	sizeScale = Code.valueOrDefault(sizeScale,1.0);
+
+	// console.log(sizeScale);
+	// console.log(features);
+
+	// reusables:
+	var matrix = new Matrix2D();
+
+
+	// var flatSize = 9;
+	var flatSize = 11;
+	var blockFlat = new ImageMat(flatSize,flatSize);
+	var flatMask = ImageMat.circleMask(flatSize,flatSize);
+	var histogramFlatBinCount = 10; // 8=512 10=1000
+	var histogramFlatBinCountM1 = histogramFlatBinCount - 1;
+
+
+
+	// var flatImportance = [];
+	// for(var i=0; i<flatMask.length; ++i){
+	// 	var mask = flatMask[i];
+	// 	if(mask<=0){
+	// 		continue;
+	// 	}
+	// 	flatImportance.push(blockFlatGaussian[i]);
+	// }
+
+
+	var objects = [];
+	for(var i=0; i<features.length; ++i){
+		var feature = features[i];
+		var point = feature["point"];
+		var size = feature["size"];
+		var angle = feature["angle"];
+			angle = angle!==undefined ? angle : 0.0;
+
+		point = new V2D(point.x,point.y);
+		size = size * sizeScale;
+
+		var object = {};
+			object["point"] = point;
+			object["size"] = size;
+			object["angle"] = angle;
+
+			// console.log(feature);
+			// console.log(object);
+
+
+
+		var flatFeatureSize = size*2; // 1 - 4
+		// extract image around point
+		matrix.identity();
+		matrix.rotate(-angle);
+
+		R3D._progressiveR3DSizing2(point, imageScales, blockFlat, flatFeatureSize, matrix);
+		var red = blockFlat.red();
+		var grn = blockFlat.grn();
+		var blu = blockFlat.blu();
+
+		// unoriented circular histogram:
+		var histogramFlat = {};
+		var count = 0;
+		for(var j=0; j<flatMask.length; ++j){
+			var mask = flatMask[j];
+			if(mask==0){
+				continue;
+			}
+			// 
+			var r = red[j];
+			var g = grn[j];
+			var b = blu[j];
+			var binR = Math.min(Math.floor(r*histogramFlatBinCount),histogramFlatBinCountM1);
+			var binG = Math.min(Math.floor(g*histogramFlatBinCount),histogramFlatBinCountM1);
+			var binB = Math.min(Math.floor(b*histogramFlatBinCount),histogramFlatBinCountM1);
+			var bin = binR+"-"+binG+"-"+binB;
+			var value = histogramFlat[bin];
+			if(!value){ value = 1; }else{ value += 1; }
+			histogramFlat[bin] = value;
+			++count;
+		}
+// console.log("count: "+count);
+// console.log("histogram\n",histogramFlat);
+
+		object["histogramFlat"] = histogramFlat;
+
+
+		// flat circular histogram
+
+
+		// grouped flat histogram
+
+
+		// flat blurred circular image
+
+		// throw "here"
+
+
+		objects.push(object);
+
+	}
+	// console.log(objects);
+	// throw "?"
+	return objects;
+}
+
+
+R3D.bagOfWordsFeaturesCompare = function(featuresA,featuresB){
+	for(var i=0; i<featuresA.length; ++i){
+		var featureA = featuresA[i];
+		featureA["i"] = i;
+		featureA["best"] = null;
+	}
+	for(var i=0; i<featuresB.length; ++i){
+		var featureB = featuresB[i];
+		featureB["i"] = i;
+		featureB["best"] = null;
+	}
+	// compare
+	for(var i=0; i<featuresA.length; ++i){
+		var featureA = featuresA[i];
+		for(var j=0; j<featuresB.length; ++j){
+			var featureB = featuresB[j];
+			// console.log(featureA);
+			// console.log(featureB);
+			var score = R3D._bagOfWordsFeaturesCompareHistogramFlat(featureA,featureB);
+			var bestA = featureA["best"];
+			var bestB = featureB["best"];
+			if(bestA===null || score<bestA){
+				featureA["best"] = score;
+			}
+			if(bestB===null || score<bestB){
+				featureB["best"] = score;
+			}
+			// console.log(bestA);
+			// console.log(bestB);
+			// console.log(score);
+			// throw "?";
+		}
+	}
+
+	// console.log(featuresA);
+	// console.log(featuresB);
+
+	var scores = [];
+	for(var i=0; i<featuresA.length; ++i){
+		var featureA = featuresA[i];
+		var score = featureA["best"];
+		scores.push(score);
+	}
+	var sortFxn = function(a,b){
+		return a < b ? -1 : 1;
+	}
+	scores.sort(sortFxn);
+
+
+	var sigma = Code.stdDev(scores,0);
+	var score = sigma;
+	console.log("SCORE: "+score);
+	// console.log(scores);
+
+	// Code.printMatlabArray(scores);
+	// throw "?";
+}
+R3D._bagOfWordsFeaturesCompareHistogramFlat = function(featureA,featureB){
+	var index = "histogramFlat";
+	var histogramA = featureA[index];
+	var histogramB = featureB[index];
+	// console.log(histogramA);
+	// console.log(histogramB);
+	var score = R3D._compareHistogramObjects(histogramA,histogramB);
+	// console.log(score);
+	// throw "?";
+	return score;
+}
+
+
 R3D.calculateScaleCornerFeatures = function(imageMatrix, maxCount, limitPercent, single, nonMaximalPercent, imageScales){
 	maxCount = maxCount!==undefined && maxCount!==null ? maxCount : null;
 	single = single!==undefined && single!==null ? single : false;

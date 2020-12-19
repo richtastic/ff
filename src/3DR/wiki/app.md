@@ -386,6 +386,24 @@ MISSING:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+http://localhost/web/ff/3DR/tests/tests.html
+
+
+=> can 'cross' scores be used to help determine best candidates
+
+A has similar scores to both B & C => B & C have some similarity
+
+
+
+- 3D plot of histograms, sorted by colors/symbols (scattered)
+- 2D plots of sorted best-match scores
+
+- SCALE-BLOB-FEATURES : absolute color histograms
+- CORNER-FEATURES : absolute color histograms
+- CORNER-FEATURES : oriented grouped absolute color histogram
+- CORNER-FEATURES : oriented blurred normalized(offset-center & scaled-sigma) color surface
+
+
 
 - what would make a very high confident match is if L/R/U/D neighbors also were good matches (assuming same local affine transform)
 -> dense F matching chould use angle/scale neighborhood before picking as a good match
@@ -429,6 +447,22 @@ MISSING:
 		- compare oriented features to pick top 5?
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+.............................................
 - IMAGE CANDIDATE MATCHING
 	-> using bag of words to get best features
 		- image:
@@ -463,16 +497,6 @@ MISSING:
 -> each image: compare features with other
 -> each image: rank based on histogram of top scores (get sigma)
 
-
-
-
-
-
-x CORNER SIFT
-	- base colors aren't matched at all
-	- angle averaging vs vector averaging very different
-x there's no +/- direction, only an absolute difference (vector)
-	- a gradient has a black=-, white=+ direction
 
 
 
@@ -609,7 +633,13 @@ CORNERS
 		- converging line scores go down
 		- diverging line scores go up
 
+
+
 => pick maximums in this field 
+
+
+
+
 
 CORNER STEPS (used):
 - blur source image ~ 1 px to remove noise

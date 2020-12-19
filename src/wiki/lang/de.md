@@ -1483,11 +1483,15 @@ Mein verlorenes Kind
 | Dann werd' ich deine Sinne blenden |  |  |
 | Das Spiel kannst nur du selbst beenden |  |  |
 |  |  |  |
+|  | Refrain x3: |  |
 |  |  |  |
 |  |  |  |
-
-
-
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
 
 Klopf, klopf, lass' mich rein
 Lass' mich dein Geheimnis sein
