@@ -28,7 +28,7 @@ function classesLoadedFxn(){
 	// testLocationNeighborsDense();
 
 
-	throw "tests";
+	// throw "tests";
 }
 
 function setupDisplay(){
@@ -54,8 +54,8 @@ function testBagOfWordMatches(){
 		var images = info["images"];
 		var imageScalesList = [];
 		var objectsList = [];
-		var idealSize = new V2D(400,300);
-		// var idealSize = new V2D(600,400);
+		var idealSize = new V2D(400,300); // 350-400
+		// var idealSize = new V2D(600,400); // 650-700
 		// var idealSize = new V2D(800,600);
 console.log("images: "+images.length);
 		var featuresList = [];
@@ -67,7 +67,7 @@ console.log("images: "+images.length);
 
 			var imageScales = new ImageMatScaled(imageMatrix);
 			imageScalesList.push(imageScales);
-
+/*
 			image = imageScales.images()[0];
 			var img = GLOBALSTAGE.getFloatRGBAsImage(image.red(),image.grn(),image.blu(), image.width(),image.height());
 			var d = new DOImage(img);
@@ -90,9 +90,24 @@ console.log("images: "+images.length);
 
 			// SAMPLE WORDS:
 			var blobs = R3D.SIFTBlobsForImageTest(imageScales, idealSize);
-			console.log(blobs);
+			// console.log(blobs);
+
+
+			
+
+// var nonMaximalPercent = 0.03; // 0.02 [700] - 0.03 [350] - 0.05 [100]
+// var nonRepeatPercent = 0.010;
+// var corners = R3D.optimalCountFeaturesFromImageScales(imageScales, nonMaximalPercent, nonRepeatPercent);
+// // console.log(corners);
+// var features = R3D.colorGradientFeaturesFromPoints(corners,imageScales);
+// // console.log(features);
+// var blobs = features;
+// // console.log(blobs);
+
+
+
 			var d = new DO();
-			d.graphics().setLine(1.0,0xFFFF0000);
+			d.graphics().setLine(1.0,0xFFFF0000); 
 			for(var b=0; b<blobs.length; ++b){
 				var blob = blobs[b];
 				var point = blob["point"];
@@ -108,23 +123,65 @@ console.log("images: "+images.length);
 
 			var features = R3D.bagOfWordsFeaturesHistograms(imageScales,blobs,1.0);
 			featuresList.push(features);
-
+*/
 
 		}
 
-		console.log(histogramList);
-		console.log(featuresList);
+		var result = R3D.sequentialImageMatchingLexigramGenerate(imageScalesList);
+		console.log(result);
+		var histograms = result["histograms"];
+		var features = result["features"];
+		var result = R3D.sequentialImageMatchingLexigramEvaluate(histograms, features);
+		console.log(result);
+
+		var compareScores = result["matches"];
+
+		// throw "here"
+
+		// console.log(histogramList);
+		// console.log(featuresList);
 
 
-		var featuresA = featuresList[0];
-		var featuresB = featuresList[1];
-		var featuresC = featuresList[2];
+		// var featuresA = featuresList[0];
+		// var featuresB = featuresList[1];
+		// var featuresC = featuresList[2];
+		/*
 		for(var i=1; i<featuresList.length; ++i){
 			var featuresA = featuresList[0];
 			var featuresB = featuresList[i];
 			var result = R3D.bagOfWordsFeaturesCompare(featuresA,featuresB);
 			// console.log(result);
 		}
+		*/
+
+/*
+		var compareScores = [];
+		for(var i=0; i<featuresList.length; ++i){
+			compareScores[i] = Code.newArrayZeros(featuresList.length);
+		}
+		for(var i=0; i<featuresList.length; ++i){
+			var featuresA = featuresList[i];
+			for(var j=i+1; j<featuresList.length; ++j){
+				console.log(" : "+i+"-"+j)
+				var featuresB = featuresList[j];
+				var result = R3D.bagOfWordsFeaturesCompare(featuresA,featuresB);
+				// console.log(result);
+				var scoreA = result["scoreA"];
+				var scoreB = result["scoreB"];
+				compareScores[i][j] = scoreA;
+				compareScores[j][i] = scoreB;
+			}
+		}
+
+		console.log(compareScores);
+*/
+		// display relative scores in CIRCLE ...
+
+
+		R3D.debugDisplaySimilarities(imageScalesList,compareScores);
+
+
+
 
 		// var result = R3D.bagOfWordsFeaturesCompare(featuresA,featuresC);
 		// console.log(result);
@@ -142,8 +199,15 @@ console.log("images: "+images.length);
 	// new ImageLoader("../images/iowa/",["0.JPG","1.JPG","2.JPG"],this,fxnImageLoaded).load();
 	// new ImageLoader("../images/iowa/",["0.JPG","1.JPG","2.JPG","3.JPG"],this,fxnImageLoaded).load();
 	// new ImageLoader("../images/iowa/",["0.JPG","1.JPG","2.JPG","3.JPG","4.JPG","5.JPG"],this,fxnImageLoaded).load();
+	// new ImageLoader("../images/iowa/",["0.JPG","1.JPG","2.JPG","3.JPG","4.JPG","5.JPG","6.JPG","7.JPG","8.JPG","9.JPG"],this,fxnImageLoaded).load();
 
-	new ImageLoader("../images/iowa/",["8.JPG","9.JPG","5.JPG","0.JPG","2.JPG","6.JPG"],this,fxnImageLoaded).load();
+
+
+	// new ImageLoader("../images/rabbit/",["1.jpg","2.jpg","3.jpg","4.jpg","5.jpg"],this,fxnImageLoaded).load();
+	new ImageLoader("../images/rabbit/",["1.jpg","2.jpg","3.jpg","4.jpg","5.jpg","6.jpg","7.jpg","8.jpg","9.jpg","10.jpg","11.jpg"],this,fxnImageLoaded).load();
+
+
+	// new ImageLoader("../images/iowa/",["8.JPG","9.JPG","5.JPG","0.JPG","2.JPG","6.JPG"],this,fxnImageLoaded).load();
 
 	// new ImageLoader("../images/",["bench_A.png","bench_B.png","bench_C.png","bench_D.png","bench_E.png","bench_F.png"],this,fxnImageLoaded).load();
 
@@ -160,11 +224,15 @@ console.log("images: "+images.length);
 	 // new ImageLoader("../images/",["study1.png","study2.png","study3.png"],this,fxnImageLoaded).load();
 
 
-	 // new ImageLoader("../images/elephant/",["ele_1.JPG","ele_2.JPG","ele_3.JPG","ele_4.JPG","ele_5.JPG","ele_6.JPG"],this,fxnImageLoaded).load();
+	// new ImageLoader("../images/elephant/",["ele_1.JPG","ele_2.JPG","ele_3.JPG","ele_4.JPG","ele_5.JPG","ele_6.JPG"],this,fxnImageLoaded).load();
 
-	 // study1.png
 
-	
+
+	// new ImageLoader("../images/",["caseStudy1-0.jpg","caseStudy1-9.jpg","caseStudy1-12.jpg","caseStudy1-14.jpg","caseStudy1-20.jpg","caseStudy1-24.jpg","caseStudy1-26.jpg","caseStudy1-29.jpg"],this,fxnImageLoaded).load();
+
+	// new ImageLoader("../images/room01/",["small_01.JPG","small_02.JPG","small_03.JPG","small_04.JPG","small_05.JPG","small_06.JPG","small_07.JPG","small_08.JPG","small_09.JPG","small_10.JPG","small_11.JPG"],this,fxnImageLoaded).load();
+
+	// new ImageLoader("../images/flowers_1/",["7120.png","7127.png","7131.png","7133.png","7140.png","7141.png","7144.png"],this,fxnImageLoaded).load();
 
 	
 }

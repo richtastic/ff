@@ -1977,8 +1977,8 @@ Graph.prototype.getVertex = function(i){
 Graph.prototype.indexForVertex = function(v){
 	return Code.indexOfElement(this._vertexes,v);
 }
-Graph.prototype.addVertex = function(vertex){
-	vertex = vertex!==undefined ? vertex : new Graph.Vertex();
+Graph.prototype.addVertex = function(inVertex){
+	var vertex = (inVertex!==undefined) ? inVertex : new Graph.Vertex(); //  && Code.isa(inVertex,Graph.Vertex)
 	this._vertexes.push(vertex);
 	return vertex;
 }
@@ -2486,8 +2486,22 @@ console.log("BACK TO WEIGHT: "+allEdges.length);
 	// throw "skeletalSet"
 	return returnObject;
 }
+Graph.prototype.clear = function(){
+	var edges = this._edges;
+	var vertexes = this._vertexes;
+	for(var i=0; i<edges.length; ++i){
+		edges[i].kill();
+	}
+	for(var i=0; i<vertexes.length; ++i){
+		vertexes[i].kill();
+	}
+	this._edges = [];
+	this._vertexes = [];
+}
 Graph.prototype.kill = function(){
-	//
+	this.clear();
+	this._edges = null;
+	this._vertexes = null;
 }
 // ------------------------------------------------------------------------------------------------------------------------
 Graph.Vertex = function(d){
@@ -2586,6 +2600,16 @@ Graph.Vertex.prototype.removeEdge = function(e){
 }
 Graph.Vertex.prototype.edges = function(){
 	return this._edges;
+}
+Graph.Vertex.prototype.edge = function(opposite){
+	var edges = this._edges;
+	for(var i=0; i<edges.length; ++i){
+		var edge = edges[i];
+		if(edge.opposite(this)==opposite){
+			return edge;
+		}
+	}
+	return null;
 }
 Graph.Vertex.prototype.degree = function(){
 	return this._edges.length;

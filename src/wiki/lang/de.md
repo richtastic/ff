@@ -1031,6 +1031,34 @@ Rammstein - Rosenrot
 
 
 
+
+
+https://www.youtube.com/watch?v=z0wK6s-6cbo
+
+
+Rammstein - Benzin 
+
+| du | | en |
+|-|-|-|
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+
+
+
+
+
+
 Faun - Tanz mit mir
 
 

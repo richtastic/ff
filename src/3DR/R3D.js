@@ -9704,6 +9704,7 @@ R3D.imageHistogramSamples = function(imageMatrix, samples, bucketSize){
 R3D.compareImageHistogramsCC = function(histogramA,histogramB){
 	var sum = 0;
 	var keysA = Code.keys(histogramA);
+throw "this is missing indexes";
 	for(var i=0; i<keysA.length; ++i){
 		var key = keysA[i];
 		var valA = histogramA[key];
@@ -9717,7 +9718,7 @@ R3D.compareImageHistogramsCC = function(histogramA,histogramB){
 
 R3D.compareImageHistogramsSAD = function(histogramA,histogramB){
 	var sum = 0;
-	var keys = Code.keysUnion(histogramA);
+	var keys = Code.keysUnion(histogramA,histogramB);
 	for(var i=0; i<keys.length; ++i){
 		var key = keys[i];
 		var valA = histogramA[key];
@@ -9732,6 +9733,7 @@ R3D.compareImageHistogramsSAD = function(histogramA,histogramB){
 R3D.compareImageHistogramsSSD = function(histogramA,histogramB){
 	var sum = 0;
 	var keys = Code.keysUnion(histogramA);
+throw "this is missing indexes";
 	for(var i=0; i<keys.length; ++i){
 		var key = keys[i];
 		var valA = histogramA[key];
@@ -9747,6 +9749,7 @@ R3D.compareImageHistogramsSSD = function(histogramA,histogramB){
 R3D.compareImageHistogramsChiSquared = function(histogramA,histogramB){ // ~ percentage SSD
 	var sum = 0;
 	var keys = Code.keysUnion(histogramA);
+throw "this is missing indexes";
 	for(var i=0; i<keys.length; ++i){
 		var key = keys[i];
 		var valA = histogramA[key];
@@ -9766,6 +9769,7 @@ R3D.compareImageHistogramsChiSquared = function(histogramA,histogramB){ // ~ per
 R3D.compareImageHistogramsChiSAD = function(histogramA,histogramB){ // ~ percentage SAD
 	var sum = 0;
 	var keys = Code.keysUnion(histogramA);
+throw "this is missing indexes";
 	for(var i=0; i<keys.length; ++i){
 		var key = keys[i];
 		var valA = histogramA[key];
@@ -9786,6 +9790,7 @@ R3D.compareImageHistogramsChiSAD = function(histogramA,histogramB){ // ~ percent
 R3D.compareImageHistogramsMin = function(histogramA,histogramB){
 	var sum = 0;
 	var keys = Code.keysUnion(histogramA);
+throw "this is missing indexes";
 	for(var i=0; i<keys.length; ++i){
 		var key = keys[i];
 		var valA = histogramA[key];
@@ -9939,7 +9944,11 @@ R3D.bagOfWordsFeaturesHistograms = function(imageScales, features, sizeScale){
 
 
 
-		var flatFeatureSize = size*2; // 1 - 4
+		// var flatFeatureSize = size*4; // 1 - 4
+		var flatFeatureSize = size*4; // CORNERS
+		// var flatFeatureSize = size*2; // BLOBS
+
+
 		// extract image around point
 		matrix.identity();
 		matrix.rotate(-angle);
@@ -9949,6 +9958,7 @@ R3D.bagOfWordsFeaturesHistograms = function(imageScales, features, sizeScale){
 		var grn = blockFlat.grn();
 		var blu = blockFlat.blu();
 
+		var colorsFlat = [];
 		// unoriented circular histogram:
 		var histogramFlat = {};
 		var count = 0;
@@ -9961,6 +9971,10 @@ R3D.bagOfWordsFeaturesHistograms = function(imageScales, features, sizeScale){
 			var r = red[j];
 			var g = grn[j];
 			var b = blu[j];
+			// flat
+			var color = new V3D(r,g,b);
+				colorsFlat.push(color);
+			// hist
 			var binR = Math.min(Math.floor(r*histogramFlatBinCount),histogramFlatBinCountM1);
 			var binG = Math.min(Math.floor(g*histogramFlatBinCount),histogramFlatBinCountM1);
 			var binB = Math.min(Math.floor(b*histogramFlatBinCount),histogramFlatBinCountM1);
@@ -9974,6 +9988,8 @@ R3D.bagOfWordsFeaturesHistograms = function(imageScales, features, sizeScale){
 // console.log("histogram\n",histogramFlat);
 
 		object["histogramFlat"] = histogramFlat;
+		// 
+		object["colorsFlat"] = colorsFlat;
 
 
 		// flat circular histogram
@@ -9996,7 +10012,7 @@ R3D.bagOfWordsFeaturesHistograms = function(imageScales, features, sizeScale){
 }
 
 
-R3D.bagOfWordsFeaturesCompare = function(featuresA,featuresB){
+R3D.bagOfWordsFeaturesCompare = function(featuresA,featuresB, useBestCount){
 	for(var i=0; i<featuresA.length; ++i){
 		var featureA = featuresA[i];
 		featureA["i"] = i;
@@ -10015,13 +10031,24 @@ R3D.bagOfWordsFeaturesCompare = function(featuresA,featuresB){
 			// console.log(featureA);
 			// console.log(featureB);
 			var score = R3D._bagOfWordsFeaturesCompareHistogramFlat(featureA,featureB);
+// throw "?"
+			// var score = R3D._bagOfWordsFeaturesCompareColorFlat(featureA,featureB);
+
 			var bestA = featureA["best"];
 			var bestB = featureB["best"];
-			if(bestA===null || score<bestA){
-				featureA["best"] = score;
+			if(bestA===null){
+				bestA = {"index":j, "score":score};
+				featureA["best"] = bestA;
 			}
-			if(bestB===null || score<bestB){
-				featureB["best"] = score;
+			if(bestB===null){
+				bestB = {"index":i, "score":score};
+				featureB["best"] = bestB;
+			}
+			if(score<bestA["score"]){
+				featureA["best"] = {"index":j, "score":score};
+			}
+			if(score<bestB["score"]){
+				featureB["best"] = {"index":i, "score":score};
 			}
 			// console.log(bestA);
 			// console.log(bestB);
@@ -10032,26 +10059,68 @@ R3D.bagOfWordsFeaturesCompare = function(featuresA,featuresB){
 
 	// console.log(featuresA);
 	// console.log(featuresB);
+		if(useBestCount){
 
-	var scores = [];
-	for(var i=0; i<featuresA.length; ++i){
-		var featureA = featuresA[i];
-		var score = featureA["best"];
-		scores.push(score);
-	}
+			var count = 0;
+			for(var i=0; i<featuresA.length; ++i){
+				var featureA = featuresA[i];
+				var bestA = featureA["best"];
+				var indexB = bestA["index"];
+				var featureB = featuresB[indexB];
+				var bestB = featureB["best"];
+				var indexA = bestB["index"];
+				if(indexA==i){
+					++count;
+				}
+			}
+			return {"count":count};
+		}
+
 	var sortFxn = function(a,b){
 		return a < b ? -1 : 1;
 	}
-	scores.sort(sortFxn);
 
+	var scoresA = [];
+	for(var i=0; i<featuresA.length; ++i){
+		var featureA = featuresA[i];
+		var score = featureA["best"]["score"];
+		scoresA.push(score);
+	}
 
-	var sigma = Code.stdDev(scores,0);
-	var score = sigma;
-	console.log("SCORE: "+score);
+	var scoresB = [];
+	for(var i=0; i<featuresB.length; ++i){
+		var featureB = featuresB[i];
+		var score = featureB["best"]["score"];
+		scoresB.push(score);
+	}
+
+	var sigmaA = Code.stdDev(scoresA,0);
+	var scoreA = sigmaA;
+
+	var sigmaB = Code.stdDev(scoresB,0);
+	var scoreB = sigmaB;
+
+	// console.log("SCORE: "+score);
 	// console.log(scores);
 
 	// Code.printMatlabArray(scores);
-	// throw "?";
+	return {"scoreA":scoreA, "scoreB":scoreB};
+}
+R3D._bagOfWordsFeaturesCompareColorFlat = function(featureA,featureB){
+	var index = "colorsFlat";
+	var colorsA = featureA[index];
+	var colorsB = featureB[index];
+	var len = colorsA.length;
+	var score = 0;
+	for(var i=0; i<len; ++i){
+		//var d = V3D.distanceSquare();
+		// var d = V3D.distance(colorsA[i],colorsB[i]);
+		var d = V3D.distanceSquare(colorsA[i],colorsB[i]);
+		score += d;
+	}
+// console.log(score);
+	// throw "??";
+	return score;
 }
 R3D._bagOfWordsFeaturesCompareHistogramFlat = function(featureA,featureB){
 	var index = "histogramFlat";
@@ -10064,6 +10133,1127 @@ R3D._bagOfWordsFeaturesCompareHistogramFlat = function(featureA,featureB){
 	// throw "?";
 	return score;
 }
+
+
+R3D.sequentialImageMatchingLexigramGenerate = function(images){ // grelexigram
+	// features
+	var idealSize = new V2D(400,300); // 350-400
+	// var idealSize = new V2D(600,400); // 650-700
+	// var idealSize = new V2D(800,600);
+	var blobSizeScale = 2.0; // 1-4 ?
+	// histograms
+	var sampleDimension = 100; // ~ 100x100 = 1E4
+	var samplePixelCount = sampleDimension*sampleDimension;
+	// data
+	var features = [];
+	var histograms = [];
+	console.log(images);
+	for(var i=0; i<images.length; ++i){
+		var image = images[i];
+		// blobs
+		var blobs = R3D.SIFTBlobsForImageTest(image, idealSize);
+		// features.push(blobs);
+		var objects = R3D.bagOfWordsFeaturesHistograms(image,blobs,blobSizeScale);
+		features.push(objects);
+
+		// features	
+		var imagePixelCount = image.width()*image.height();
+		var sampleImageScale = Math.sqrt(samplePixelCount/imagePixelCount);
+		// console.log("sampleImageScale: "+sampleImageScale);
+		var sampleImage = image.getScaledImage(sampleImageScale,true);
+		// 10x10x10 = MAXIMUM of 1000 entries -- more like 10-100
+		var info = R3D.imageHistogramSamples(sampleImage);
+		// console.log(info);
+		var histogram = info["histogram"];
+		histograms.push(histogram);
+	}
+	return {"histograms":histograms, "features":features};
+}
+
+R3D.sequentialImageMatchingLexigramEvaluate = function(histograms,featureLists, maximumPairCount){ // lexigram
+	var maximumMatchPercentHistogram = 0.50;
+	var maximumMatchPercentHistogram = 0.10;
+	var maximumMatchPercentHistogram = 0.05;
+	// var maximumMatchesHistogram = 20;
+	// var maximumMatchesFeaturesBest = 10;
+	// var maximumMatchesFeaturePair = 5;
+	var maximumMatchesHistogram = 10;
+	var maximumMatchesFeaturesBest = 6;
+	// var maximumMatchesFeaturePair = 4;
+	// info
+	var sortHistogramsLowest = function(a,b){
+		return a["score"] < b["score"] ? -1 : 1;
+	}
+	var sortHistogramsHighest = function(a,b){
+		return a["score"] > b["score"] ? -1 : 1;
+	}
+	var imageCount = histograms.length;
+	maximumMatchesHistogram = Math.max(maximumMatchesHistogram, Math.round(imageCount*maximumMatchPercentHistogram));
+	maximumMatchesFeaturesBest = Math.max(maximumMatchesFeaturesBest, Math.round(imageCount*maximumMatchPercentHistogram));
+	// maximumMatchesFeaturePair = Math.max(maximumMatchesFeaturePair, Math.round(imageCount*maximumMatchPercentHistogram));
+// test 
+// maximumMatchesHistogram = 5;
+// maximumMatchesFeaturesBest = 4;
+// maximumMatchesFeaturePair = 3;
+// maximumMatchesHistogram = 10;
+// maximumMatchesFeaturesBest = 10;
+// maximumMatchesFeaturePair = 10;
+
+maximumMatchesHistogram = 10;
+// maximumMatchesFeaturesBest = 5;
+// maximumMatchesFeaturePair = 3;
+// maximumMatchesFeaturesBest = 4;
+maximumMatchesFeaturesBest = 6;
+// maximumMatchesFeaturePair = 4;
+// maximumMatchesFeaturesBest = 3;
+	
+	// histogram filter --------------------------------------------------------------------------
+	// histogram record comparison
+	var histogramScores = [];
+	for(var i=0; i<imageCount; ++i){
+		histogramScores[i] = [];
+	}
+	for(var i=0; i<imageCount; ++i){
+		console.log("image scores "+i);
+		var histogramI = histograms[i];
+		for(var j=i+1; j<imageCount; ++j){
+			var histogramJ = histograms[j];
+			var score = R3D.compareImageHistogramsSAD(histogramI,histogramJ);
+			histogramScores[i].push({"score":score, "index":j});
+			histogramScores[j].push({"score":score, "index":i});
+		}
+	}
+	// histogram keep best
+	for(var i=0; i<imageCount; ++i){
+		histogramScores[i].sort(sortHistogramsLowest);
+		Code.truncateArray(histogramScores[i], maximumMatchesHistogram);
+	}
+	console.log(histogramScores);
+
+	var finalScores = histogramScores;
+
+/*
+	// throw "?"
+	// feature best filter --------------------------------------------------------------------------
+	var featureBestScores = [];
+	for(var i=0; i<imageCount; ++i){
+		featureBestScores[i] = [];
+	}
+	var operations = {};
+	for(var i=0; i<imageCount; ++i){
+		var indexA = i;
+		var featuresA = featureLists[indexA];
+		var list = histogramScores[i];
+		console.log("best scores "+i+" = "+list.length);
+		for(var j=0; j<list.length; ++j){
+			var indexB = list[j]["index"];
+			var featuresB = featureLists[indexB];
+
+			var indexAB = Math.min(indexA,indexB)+"-"+Math.max(indexA,indexB);
+			if(operations[indexAB]){
+				// console.log("DONE - "+indexAB);
+				continue;
+			}
+			operations[indexAB] = true;
+console.log(indexAB);
+			var result = R3D.bagOfWordsFeaturesCompare(featuresA,featuresB, false);
+			var scoreA = result["scoreA"];
+			var scoreB = result["scoreB"];
+			featureBestScores[indexA].push({"score":scoreA,"index":indexB});
+			featureBestScores[indexB].push({"score":scoreB,"index":indexA});
+		}
+	}
+	for(var i=0; i<imageCount; ++i){
+		featureBestScores[i].sort(sortHistogramsLowest);
+		Code.truncateArray(featureBestScores[i], maximumMatchesFeaturesBest);
+	}
+	console.log(featureBestScores);
+
+	var finalScores = featureBestScores;
+*/
+
+/*
+	// feature match filter --------------------------------------------------------------------------
+	var featurePairScores = [];
+	for(var i=0; i<imageCount; ++i){
+		featurePairScores[i] = [];
+	}
+	operations = {};
+	for(var i=0; i<imageCount; ++i){
+		var indexA = i;
+		var featuresA = featureLists[indexA];
+		var list = featureBestScores[i];
+		console.log("pair scores "+i+" = "+list.length);
+		for(var j=0; j<list.length; ++j){
+			var indexB = list[j]["index"];
+			var featuresB = featureLists[indexB];
+			var indexAB = Math.min(indexA,indexB)+"-"+Math.max(indexA,indexB);
+			if(operations[indexAB]){
+				// console.log("DONE - "+indexAB);
+				continue;
+			}
+			operations[indexAB] = true;
+console.log(indexAB);
+
+			var result = R3D.bagOfWordsFeaturesCompare(featuresA,featuresB, true);
+			var scoreA = result["count"];
+			var scoreB = result["count"];
+
+			featurePairScores[indexA].push({"score":scoreA,"index":indexB});
+			featurePairScores[indexB].push({"score":scoreB,"index":indexA});
+		}
+	}
+	console.log(featurePairScores);
+	for(var i=0; i<imageCount; ++i){
+		featurePairScores[i].sort(sortHistogramsHighest);
+		Code.truncateArray(featurePairScores[i], maximumMatchesFeaturePair);
+	}
+	var finalScores = featurePairScores;
+*/
+
+	
+
+	// convert to index array list:
+	var matchLists = [];
+	for(var i=0; i<imageCount; ++i){
+		var matches = [];
+		var scores = finalScores[i];
+		for(var j=0; j<scores.length; ++j){
+			var index = scores[j]["index"];
+			var score = scores[j]["score"];
+			matches.push({"index":index, "value":score});
+		}
+		matchLists.push(matches);
+	}
+	console.log(matchLists);
+
+	// create ordered pair set:
+	var maximumLength = 0;
+	for(var i=0; i<matchLists.length; ++i){
+		maximumLength = Math.max(maximumLength,matchLists[i].length);
+	}
+// return {"matches":matchLists};
+	console.log("maximumLength: "+maximumLength)
+	// round-robin add edges from each group
+	var checked = {};
+	var orderedPairs = [];
+var sortValueSmaller = function(a,b){
+	return a["value"] < b["value"] ? -1 : 1;
+}
+	for(var j=0; j<maximumLength; ++j){
+		// console.log(j);
+		var rowList = [];
+		for(var i=0; i<matchLists.length; ++i){
+			var list = matchLists[i];
+// console.log(list.length);
+			if(list.length<j-1){
+				continue;
+			}
+			var info = list[j];
+			// console.log(info);
+			var indexA = i;
+			var indexB = info["index"];
+			var value = info["value"];
+			var indexAB = Math.min(indexA,indexB)+"-"+Math.max(indexA,indexB);
+			if(checked[indexAB]){
+				// console.log("DONE - "+indexAB);
+				continue;
+			}
+			checked[indexAB] = true;
+			var pair = {"A":indexA, "B":indexB, "value":value};
+			rowList.push(pair);
+		}
+// console.log(rowList.length);
+		rowList.sort(sortValueSmaller);
+		for(var i=0; i<rowList.length; ++i){
+			var pair = rowList[i];
+			orderedPairs.push(pair);
+		}
+	}
+	console.log(orderedPairs);
+	//
+	var rowCount = 1; // first 3 choices for each view
+	var initialPairs = [];
+	var initialCount = imageCount*rowCount;
+	for(var i=0; i<initialCount; ++i){
+		var pair = orderedPairs.shift();
+		initialPairs.push(pair);
+	}
+	// console.log(initialPairs);
+	// console.log(orderedPairs);
+	//
+	var graph = new ViewHyperGraph();
+		graph.setViewCount(matchLists.length);
+		graph.setInitialPairs(initialPairs);
+		graph.satisfyViewGraphParameters(orderedPairs);
+
+
+		// create match list from garph
+	var pairs = graph.generateMatchList();
+	console.log(pairs);
+	return {"matches":pairs};
+	
+}
+
+function ViewHyperGraph(viewCount){
+	this._init(viewCount);
+	// throw "ViewHyperGraph"
+}
+ViewHyperGraph.prototype._init = function(viewCount){
+	console.log("init");
+	this._viewGraph = new Graph();
+	this._tripleGraph = new Graph();
+	this.setViewCount(viewCount);
+}
+ViewHyperGraph.prototype.setViewCount = function(viewCount){
+	viewCount = Code.valueOrDefault(viewCount, 0);
+	console.log("viewCount");
+	console.log(viewCount);
+	// setup data structures
+	this._viewGraph.clear();
+	this._tripleGraph.clear();
+	var viewGraph = this._viewGraph;
+	var tripleGraph = this._tripleGraph;
+	// create view objects
+	for(var i=0; i<viewCount; ++i){
+		var vertexData = {};
+		// console.log(viewGraph);
+		var vertex = viewGraph.addVertex();
+			vertex.data(vertexData);
+		vertexData["index"] = i;
+		vertexData["vertex"] = vertex;
+		vertexData["triples"] = {};
+		vertexData["adjacent"] = {};
+	}
+	// init views to null;
+}
+ViewHyperGraph.prototype.setInitialPairs = function(initialPairs){
+	console.log("setInitialPairs");
+	// console.log(initialPairs);
+	var viewGraph = this._viewGraph;
+	var tripleGraph = this._tripleGraph;
+	var viewVertexes = viewGraph.vertexes();
+	var tripleVertexes = tripleGraph.vertexes();
+	for(var i=0; i<initialPairs.length; ++i){
+		var pair = initialPairs[i];
+		// console.log(pair);
+		var indexA = pair["A"];
+		var indexB = pair["B"];
+		this.addEdge(indexA,indexB);
+	}
+	console.log(tripleVertexes);
+	// throw "..."
+	//
+}
+ViewHyperGraph.prototype.generateMatchList = function(){
+	var viewGraph = this._viewGraph;
+	var edges = viewGraph.edges();
+	console.log(edges);
+	var pairs = [];
+	for(var i=0; i<edges.length; ++i){
+		var edge = edges[i];
+		var vertexA = edge.A();
+		var vertexB = edge.B();
+		var dataA = vertexA.data();
+		var dataB = vertexB.data();
+		var pair = {"A":dataA["index"],"B":dataB["index"],"value":0.0};
+		pairs.push(pair);
+	}
+	return pairs;
+}
+ViewHyperGraph.prototype.satisfyViewGraphParameters = function(orderedPairs){
+	// var minimumTripleCount = 3;
+	console.log("satisfyViewGraphParameters");
+	console.log(orderedPairs);
+	var viewGraph = this._viewGraph;
+	var tripleGraph = this._tripleGraph;
+	var viewVertexes = viewGraph.vertexes();
+	var tripleVertexes = tripleGraph.vertexes();
+	// remove all existing pairs from tracking list
+	orderedPairs = Code.copyArray(orderedPairs);
+	for(var i=0; i<orderedPairs.length; ++i){
+		var pair = orderedPairs[i];
+		var vertexA = viewVertexes[pair["A"]];
+		var vertexB = viewVertexes[pair["B"]];
+		var edge = vertexA.edge(vertexB);
+		if(edge){ // exists
+			Code.removeElementAt(orderedPairs,i);
+			--i;
+		}
+		// throw "..."
+	}
+	console.log("possible pairs: "+orderedPairs.length);
+	/*
+	// initialize view vertex deficits
+	for(var i=0; i<viewVertexes.length; ++i){
+		var vertex = viewVertexes[i];
+		var data = vertex.data();
+		// console.log(data);
+		data["hasInfinitePath"] = false;
+		data["tripleCount"] = Code.keys(data["triples"]).length;
+	}
+	for(var i=0; i<viewVertexes.length; ++i){
+		var vertex = viewVertexes[i];
+		var data = vertex.data();
+		// console.log(vertex);
+		console.log(data);
+		for(var j=i+1; j<viewVertexes.length; ++j){
+			var other = viewVertexes[j];
+			var paths = viewGraph.minPath(vertex, other);
+			console.log(paths);
+			if(paths["edges"].length==0){
+				var othr = other.data();
+				data["hasInfinitePath"] = true;
+				othr["hasInfinitePath"] = true;
+			}
+		}
+	}
+	console.log("TRIPLES");
+	// initialize triple path deficits
+	for(var i=0; i<tripleVertexes.length; ++i){
+		var vertex = tripleVertexes[i];
+		var data = vertex.data();
+		// reachable
+		for(var j=i+1; j<tripleVertexes.length; ++j){
+			var other = tripleVertexes[j];
+			var paths = tripleGraph.minPath(vertex, other);
+			console.log(paths);
+		}
+	}
+
+	throw "?";
+	*/
+	// loop till satisfied
+	var maxIterations = 100;
+	var nextEdgeIndex = 0;
+// maxIterations = 0;
+	for(var i=0; i<maxIterations; ++i){
+		console.log(i+" / "+maxIterations+" @ "+nextEdgeIndex+" ................................................................ ");
+		if(nextEdgeIndex>=orderedPairs.length){
+			console.log("no more edges "+nextEdgeIndex+" / "+orderedPairs.length)
+			break;
+		}
+		if(this._isConstraintsSatisfied()){
+			break;
+		}
+		var edge = orderedPairs[nextEdgeIndex];
+		var indexA = edge["A"];
+		var indexB = edge["B"];
+		var vertexA = viewVertexes[indexA];
+		var vertexB = viewVertexes[indexB];
+		var didAdd = this.didAddEdge(vertexA,vertexB);
+		if(didAdd){
+			console.log(" + ADDED EDGE");
+			Code.removeElementAt(orderedPairs,nextEdgeIndex);
+			nextEdgeIndex = 0;
+			continue;
+		}
+		++nextEdgeIndex;
+		// break;
+	}
+	//
+	// throw "..."
+}
+ViewHyperGraph.prototype.addEdge = function(indexA,indexB){
+	var viewGraph = this._viewGraph;
+	var viewVertexes = viewGraph.vertexes();
+	var vertexA = viewVertexes[indexA];
+	var vertexB = viewVertexes[indexB];
+	var edge = viewGraph.addEdgeDuplex(vertexA,vertexB);
+		vertexA.data()["adjacent"][indexB] = edge;
+		vertexB.data()["adjacent"][indexA] = edge;
+	// check if this creates a triple
+	var edgesA = vertexA.edges();
+	for(var i=0; i<edgesA.length; ++i){
+		var edge = edgesA[i];
+		var opposite = edge.opposite(vertexA);
+		if(opposite.data()["adjacent"][indexB]){
+			this._addTriple(vertexA,vertexB,opposite);
+		}
+	}
+}
+ViewHyperGraph.prototype._addTriple = function(vertexA,vertexB,vertexC){
+	var list = [vertexA.data(),vertexB.data(),vertexC.data()];
+	var tripleGraph = this._tripleGraph;
+	var tripleVertexes = tripleGraph.vertexes();
+	var tripleIndex = tripleVertexes.length;
+	var vertex = tripleGraph.addVertex();
+	var triple = {};
+		vertex.data(triple);
+	triple["vertex"] = vertex;
+	triple["index"] = tripleIndex;
+	triple["vertexes"] = list;
+	// console.log(list);
+	for(var i=0; i<3; ++i){
+		var vert = list[i];
+		// console.log(vert);
+		vert["triples"][tripleIndex] = triple;
+	}
+	// all the edges that connect any other triples should also be added
+	// a pair contained in both triples is an edge
+	// var edges = [[vertexA,vertexB],[vertexA,vertexC],[vertexB,vertexC]];
+	var lookup = {};
+		lookup[list[0]["index"]] = vertexA;
+		lookup[list[1]["index"]] = vertexB;
+		lookup[list[2]["index"]] = vertexC;
+	// for(var i=0; i<3; ++i){
+		// var edge = edges[i];
+	// check adjacent triples for possible edge
+	for(var i=0; i<3; ++i){
+		var vert = list[i];
+// console.log(vert);
+		var triples = vert["triples"];
+// console.log(triples);
+		triples = Code.objectToArray(triples);
+		for(var t=0; t<triples.length; ++t){
+			var tri = triples[t];
+			if(tri==triple){
+				continue;
+			}
+			var verts = tri["vertexes"];
+// console.log(verts);
+			var count = [];
+			for(var v=0; v<3; ++v){
+				var vert = verts[v];
+				var ind = vert["index"];
+				if(lookup[ind]){
+					count.push(vert);
+				}
+			}
+			if(count.length==0){
+				throw "0";
+			}else if(count.length==1){ // 1 = at least always the case
+				// throw "1";
+			}else if(count.length==2){ // 2 = valid edge
+				var edge = tripleGraph.addEdgeDuplex(triple["vertex"],tri["vertex"]);
+				var data = {};
+					data["vertexes"] = count;
+				edge.data(data);
+			}else{ // 3 - same tri
+				throw "3";
+			}
+		}
+	}
+	// if added, the paths may have changed
+	this._infiniteTriplePaths(true);
+}
+ViewHyperGraph.prototype._removeEdge = function(indexA,indexB){ // triples are removed from the array end only, 
+	// console.log(indexA,indexB);
+	var tripleGraph = this._tripleGraph;
+	var viewGraph = this._viewGraph;
+	var viewVertexes = viewGraph.vertexes();
+	var vertexA = viewVertexes[indexA];
+	var vertexB = viewVertexes[indexB];
+	var dataA = vertexA.data();
+	var dataB = vertexB.data();
+	// remove any triples that have both A & B
+	var triplesA = dataA["triples"];
+	var triplesB = dataB["triples"];
+	//console.log(triplesA);
+	//console.log(triplesB);
+	var keys, triples = [];
+	keys = Code.keys(triplesA);
+	for(var k=0; k<keys.length; ++k){
+		var key = keys[k];
+		var triple = triplesA[key];
+		var verts = triple["vertexes"];
+//		console.log(verts,indexA,indexB);
+		if(Code.elementExists(verts,dataA) && Code.elementExists(verts,dataB)){
+			triples.push(triple);
+		}
+	}
+	keys = Code.keys(triplesB);
+	for(var k=0; k<keys.length; ++k){
+		var key = keys[k];
+		var triple = triplesB[key];
+		var verts = triple["vertexes"];
+		// console.log(verts,indexA,indexB);
+		if(Code.elementExists(verts,dataA) && Code.elementExists(verts,dataB)){
+			triples.push(triple);
+		}
+	}
+	// console.log(triples);
+// throw "???"
+	if(triples.length==0){
+		// console.log("no triple with edge: "+indexA+"-"+indexB);
+		// do nothing
+	}
+	for(var i=0; i<triples.length; ++i){
+		var triple = triples[i];
+		var tripleIndex = triple["index"];
+		var verts = triple["vertexes"];
+		// console.log(triple);
+		// console.log(tripleIndex);
+		// console.log(verts);
+		for(var j=0; j<verts.length; ++j){
+			var vert = verts[j];
+			if(!vert){
+				console.log(vert);
+				console.log(triples);
+				console.log(triple);
+				console.log(tripleIndex);
+			}
+			delete vert["triples"][tripleIndex];
+		}
+	}
+	for(var i=0; i<triples.length; ++i){
+		var triple = triples[i];
+		var vertex = triple["vertex"];
+		tripleGraph.removeVertex(vertex); // remove vertex & edges
+			triple["index"] = null;
+			triple["vertex"] = null;
+			triple["vertexes"] = null;
+			// triple["adjacent"] = null;
+		// var edges = triple
+		// tripleGraph.removeEdge(???);
+	}
+	// console.log("..");
+	this._infiniteTriplePaths(true);
+
+	// actually remove edge:
+	delete dataA["adjacent"][indexB];
+	delete dataB["adjacent"][indexA];
+
+	var edge = vertexA.edge(vertexB);
+	// console.log(edge);
+	viewGraph.removeEdge(edge);
+
+	// throw "_removeEdge";
+}
+/*
+ViewHyperGraph.prototype._removeTriple = function(triple){
+	// remove triple edges
+	// remove triple vertex
+	// remove view references to triples
+	// ...
+
+	throw "_removeTriple";
+	// if removed, the paths may have changed
+	this._infiniteTriplePaths(true);
+}
+*/
+ViewHyperGraph.prototype._isConstraintsSatisfied = function(){
+	// no view infinite paths
+	var paths = this._infiniteViewPaths();
+	if(paths>0){
+		return false;
+	}
+
+	// no triple infinite paths
+	var paths = this._infiniteTriplePaths();
+	if(paths>0){
+		return false;
+	}
+	console.log("isConstraintsSatisfied");
+
+
+	// all view vertexes have 3+ triples
+
+	throw "?"
+	return true;
+}
+ViewHyperGraph.MINIMUM_TRIPLE_COUNT = 3;
+ViewHyperGraph.prototype.didAddEdge = function(vertexA,vertexB){
+	var dataA = vertexA.data();
+	var dataB = vertexB.data();
+	var indexA = dataA["index"];
+	var indexB = dataB["index"];
+	var mininumViewTripleCount = ViewHyperGraph.MINIMUM_TRIPLE_COUNT;
+	var viewGraph = this._viewGraph;
+	var infiniteViewPaths = this._infiniteViewPaths();
+	// console.log(infiniteViewPaths);
+	// does adding the edge change either vertex path down from infinity
+	if(infiniteViewPaths>0){
+		// simulate an edge add & remove
+		var edge = viewGraph.addEdgeDuplex(vertexA,vertexB);
+		var newCount = this._calculateInfiniteViewPathCount();
+		viewGraph.removeEdge(edge);
+		if(newCount<infiniteViewPaths){
+			console.log(infiniteViewPaths+" => "+newCount);
+			
+			this.addEdge(indexA,indexB);
+			this._infiniteViewPaths(true);
+			return true;
+		}
+	}
+	
+	// does adding the edge create a minimum triple for either vertex -- doesn't have to CREATE a triple, just aid in possibly adding a triple in the future
+	var tripleCountA = Code.keys(dataA["triples"]).length;
+	var tripleCountB = Code.keys(dataB["triples"]).length;
+	// console.log(tripleCountA,tripleCountB);
+	var tripleGraph = this._tripleGraph;
+var tripleVertexes = tripleGraph.vertexes();
+var prevTripLen = tripleVertexes.length;
+	var infiniteTriplePaths = this._infiniteTriplePaths();
+	var nextInfiniteTriplePaths = null;
+	var didAddEdge = false;
+	console.log(" trip inf?: "+infiniteTriplePaths);
+	if(tripleCountA<mininumViewTripleCount || tripleCountB<mininumViewTripleCount){
+		this.addEdge(indexA,indexB);
+		didAddEdge = true;
+		var nextTripleCountA = Code.keys(dataA["triples"]).length;
+		var nextTripleCountB = Code.keys(dataB["triples"]).length;
+		nextInfiniteTriplePaths = this._infiniteTriplePaths(true);
+		// ADD EDGE REGARDLESS OF TRIPLE CHANGE
+		// if( (nextTripleCountA>tripleCountA && tripleCountA<mininumViewTripleCount) 
+		// ||  (nextTripleCountB>tripleCountB && tripleCountB<mininumViewTripleCount) ){ // they would both increment
+//		if( (nextTripleCountA>tripleCountA && tripleCountA<mininumViewTripleCount) 
+//		||  (nextTripleCountB>tripleCountB && tripleCountB<mininumViewTripleCount) ){ // they would both increment
+			console.log("increased a triple count");
+			return true;
+//		}
+		// throw "added a tri ?";
+	}
+	// does adding the edge create a required triple connectivity
+	if(infiniteTriplePaths>0){
+		if(!didAddEdge){
+			this.addEdge(indexA,indexB);
+			didAddEdge = true;
+			nextInfiniteTriplePaths = this._infiniteTriplePaths(true);
+		}
+		if(nextInfiniteTriplePaths<infiniteTriplePaths){ // did infinite path reduce
+			console.log("reduced triple infinite path");
+			return true;
+		}
+	}
+var nextTripLen = tripleVertexes.length;
+	// REMOVE EDGE - WAS NOT USEFUL IN ANY METRIC
+	console.log("unused edge: "+indexA+"-"+indexB+" : "+infiniteTriplePaths+">"+nextInfiniteTriplePaths+"("+prevTripLen+"/"+nextTripLen+")");
+	this._removeEdge(indexA,indexB);
+	// throw "shouldAddEdge";
+	return false;
+}
+ViewHyperGraph.prototype._calculateInfiniteViewPathCount = function(){
+	var vertexes = this._viewGraph.vertexes();
+	if(vertexes.length<=1){
+		return 0;
+	}
+	var paths = this._viewGraph.minPaths(vertexes[0]);
+	var count = 0;
+	for(var i=1; i<paths.length; ++i){
+		var path = paths[i];
+		if(path["edges"].length==0){ // path["cost"]===null
+			count++;
+		}
+	}
+	return count;
+}
+ViewHyperGraph.prototype._calculateInfiniteTriplePathCount = function(){
+	var vertexes = this._tripleGraph.vertexes();
+	if(vertexes.length<=1){
+		return 0;
+	}
+	var paths = this._tripleGraph.minPaths(vertexes[0]);
+	var count = 0;
+	for(var i=1; i<paths.length; ++i){ // to self is always 0 
+		var path = paths[i];
+		if(path["edges"].length==0){ // path["cost"]===null
+			count++;
+		}
+	}
+	return count;
+}
+ViewHyperGraph.prototype._infiniteViewPaths = function(check){
+	if(this._infiniteViewPathCount===null || this._infiniteViewPathCount===undefined || check){
+		this._infiniteViewPathCount = this._calculateInfiniteViewPathCount();
+	}
+	return this._infiniteViewPathCount;
+}
+ViewHyperGraph.prototype._infiniteTriplePaths = function(check){
+	if(this._infiniteTriplePathCount===null || this._infiniteTriplePathCount===undefined || check){
+		this._infiniteTriplePathCount = this._calculateInfiniteTriplePathCount();
+	}
+	return this._infiniteTriplePathCount;
+}
+
+
+ViewHyperGraph.prototype._calculateMissingViewTripleCounts = function(){
+	var mininumViewTripleCount = ViewHyperGraph.MINIMUM_TRIPLE_COUNT;
+	var count = 0;
+	// go thru each view vertex, count 
+	var vertexes = this._viewGraph.vertexes();
+	for(var i=0; i<vertexes.length; ++i){
+		var vertex = vertexes[i];
+		var data = vertex.data();
+		var tripleCount = Code.keys(data["triples"]).length;
+		if(tripleCount<mininumViewTripleCount){
+			++count;
+		}
+	}
+	console.log(count);
+	// on create a triple, need to re-count
+
+	// new triple only affects the 3 view vertex in triple (would need to keep a lookup)
+
+	throw "..."
+	return count;
+}
+ViewHyperGraph.prototype._missingViewTripleCount = function(check){
+	if(this._missingViewTripleCountValue===null || this._missingViewTripleCountValue===undefined || check){
+		this._missingViewTripleCountValue = this._calculateMissingViewTripleCounts();
+	}
+	return this._missingViewTripleCountValue;
+}
+
+
+
+R3D.debugDisplaySimilarities = function(images,compareScores){
+	// console.log(images);
+	console.log(compareScores);
+	var imageCount = images.length;
+
+	// size of images can be offset by available space - calculate automatically
+
+	// var circleRadius = 300; // ~5
+	var circleRadius = 400; // ~10
+	// var circleRadius = 700; // ~20
+	var totalOffX = 100;
+	var totalOffY = 100;
+	// derived
+	var displayImageSize = Math.round(circleRadius*1.5*Math.PI/imageCount);
+	var circleCenter = new V2D(totalOffX + circleRadius,totalOffY + circleRadius);
+
+	var centers = [];
+	for(var i=0; i<imageCount; ++i){
+		var image = images[i];
+		var size = Code.sizeToFitInside(displayImageSize,displayImageSize, image.width(),image.height());
+		var imageScale = (size.x/image.width() + size.y/image.height())*0.5;
+
+		// TODO: EXTRACT IMAGE AT SCALE TO MINIMIZE SIZE NEEDED
+		var info = image.getImageSize(size);
+		// console.log(info);
+		var image0 = info["image"];
+		var scale0 = info["scale"];
+		// console.log(image0);
+		var img = GLOBALSTAGE.getFloatRGBAsImage(image0.red(),image0.grn(),image0.blu(), image0.width(),image0.height());
+		// ...
+		var d = new DOImage(img);
+		var angle = Math.PI * 2 * i/imageCount;
+		var offsetX = circleCenter.x + size.x*0.5 + circleRadius*Math.cos(angle);
+		var offsetY = circleCenter.y + size.y*0.5 + circleRadius*Math.sin(angle);
+		// d.matrix().scale(imageScale);
+		d.matrix().translate(offsetX - size.x*0.5, offsetY - size.y*0.5);
+		GLOBALSTAGE.addChild(d);
+
+		// var text = new DOText(""+viewIDs[i], 32, DOText.FONT_ARIAL, 0xFFCC0099, DOText.ALIGN_CENTER);
+		// d.addChild(text);
+		// text.matrix().translate(0,-10);
+		// text.matrix().translate(p2D.x, p2D.y-20.0);
+		// display.addChild(text);
+		// 
+		centers.push(new V2D(offsetX,offsetY));
+	}
+
+	// convert similarities to useable percentages
+	
+	var minScore = null;
+	var maxScore = null;
+	for(var i=0; i<imageCount; ++i){
+		var scores = compareScores[i];
+		if(!scores.length){
+			var info = scores;
+			console.log(info);
+			// var score = info["value"];
+			var score = info["value"];
+			minScore = Math.min(minScore,score);
+			maxScore = Math.max(maxScore,score);
+		}else{
+		for(var j=0; j<scores.length; ++j){
+			var info = scores[j];
+			var score = info["value"];
+			if(minScore===null){
+				minScore = score;
+				maxScore = score;
+			}
+			minScore = Math.min(minScore,score);
+			maxScore = Math.max(maxScore,score);
+		}
+		}
+	}
+	var rangeScore = (maxScore-minScore);
+	console.log("rangeScore: "+rangeScore);
+	if(rangeScore<=0){
+		rangeScore = 1.0;
+	}
+	var scoreList = [];
+	
+
+	// show lines
+	// var colors = [0xFF000000, 0xFF000099, 0xFFCC00CC, 0xFFFF0000, 0xFFFF9999];
+	var colors = [0xFF000000, 0xFF000099, 0xFFCC00CC, 0xFFFF0000];
+	for(var i=0; i<compareScores.length; ++i){
+		var scores = compareScores[i];
+// console.log(scores);
+		// individual score range:
+		/*
+		var minScore = null;
+		var maxScore = null;
+		for(var j=0; j<scores.length; ++j){
+			// if(i==j){
+			// 	continue;
+			// }
+			var info = scores[j];
+			var score = info["value"];
+			if(minScore===null){
+				minScore = score;
+				maxScore = score;
+			}
+			minScore = Math.min(minScore,score);
+			maxScore = Math.max(maxScore,score);
+		}
+		var rangeScore = (maxScore-minScore);
+		if(rangeScore<=0){
+			rangeScore = 1.0;
+		}
+		*/
+
+		// console.log(scores);
+		if(!scores.length){
+			var info = scores;
+//			console.log(info);
+			// var score = info["value"];
+			var score = info["value"];
+			var indexA = info["A"];
+			var indexB = info["B"];
+			
+			// var indexB = j;
+			var start = centers[indexA];
+			var ending = centers[indexB];
+
+				// start = start.copy().add(4.0,4.0);
+				var mag = 4.0;
+				start = start.copy().add((Math.random()-0.5)*mag,(Math.random()-0.5)*mag);
+				ending = ending.copy().add((Math.random()-0.5)*mag,(Math.random()-0.5)*mag);
+			var percent = 1.0;
+			if(score>0){
+				percent = (score-minScore)/rangeScore;
+			}
+//			console.log(percent);
+			var color = Code.interpolateColorGradientARGB(percent, colors);
+			var d = new DO();
+			d.graphics().setLine(2.0,color);
+			d.graphics().beginPath();
+			d.graphics().moveTo(start.x,start.y);
+			d.graphics().lineTo(ending.x,ending.y);
+			d.graphics().endPath();
+			d.graphics().strokeLine();
+			GLOBALSTAGE.addChild(d);
+		}else{
+		for(var j=0; j<scores.length; ++j){
+			// if(i==j){
+			// 	continue;
+			// }
+			// var similarity = sims2[i];
+			// var idA = similarity["A"];
+			// var idB = similarity["B"];
+			// var score = similarity["s"];
+			// // console.log(similarity);
+			// var indexA = viewIDToIndex[idA];
+			// var indexB = viewIDToIndex[idB];
+			// var score = scores[j];
+			var info = scores[j];
+			var score = info["value"];
+			var indexB = info["index"];
+
+			var indexA = i;
+			// var indexB = j;
+			var start = centers[indexA];
+			var ending = centers[indexB];
+
+				// start = start.copy().add(4.0,4.0);
+				var mag = 4.0;
+				start = start.copy().add((Math.random()-0.5)*mag,(Math.random()-0.5)*mag);
+				ending = ending.copy().add((Math.random()-0.5)*mag,(Math.random()-0.5)*mag);
+			var percent = 1.0;
+			if(score>0){
+				percent = (score-minScore)/rangeScore;
+			}
+			console.log(percent);
+			var color = Code.interpolateColorGradientARGB(percent, colors);
+			var d = new DO();
+			d.graphics().setLine(2.0,color);
+			d.graphics().beginPath();
+			d.graphics().moveTo(start.x,start.y);
+			d.graphics().lineTo(ending.x,ending.y);
+			d.graphics().endPath();
+			d.graphics().strokeLine();
+			GLOBALSTAGE.addChild(d);
+			// console.log(percent);
+		}
+		}
+	}
+
+	// throw "?";
+}
+/*
+App3DR.ProjectManager.prototype.showViewSimilarities = function(similarities){
+	var project = this;
+	// load lower-res versions of all views
+	var views = project._views;
+	var expectedViews = views.length;
+	var loadedViews = 0;
+	// var self = pr;
+	var fxnViewImageLoaded = function(){
+		++loadedViews;
+		if(loadedViews==expectedViews){
+			fxnShowSimilarity(similarities);
+		}
+	}
+	for(var i=0; i<views.length; ++i){
+		view = views[i];
+		view.loadIconImage(fxnViewImageLoaded, project);
+	}
+	var fxnShowSimilarity = function(similarities){
+		
+		
+// pick top 10 similarities ...
+var bestList = {};
+// var cacheCount = 3;
+// var cacheCount = 5;
+var cacheCount = 10; // too many
+for(var i=0; i<similarities.length; ++i){
+	var similarity = similarities[i];
+	var idA = similarity["A"];
+	var idB = similarity["B"];
+	var listA = bestList[idA];
+	var listB = bestList[idB];
+	if(!listA){
+		listA = [];
+		bestList[idA] = listA;
+	}
+	if(!listB){
+		listB = [];
+		bestList[idB] = listB;
+	}
+	var score = similarity["s"];
+	listA.push(score);
+	listB.push(score);
+}
+
+// var largerIsBetter = true;
+var largerIsBetter = false;
+
+var sortFxn = null;
+
+if(largerIsBetter){// larger is better
+	sortFxn = function(a,b){
+		return a>b ? -1 : 1;
+	}
+}else{ // smaller is better
+	sortFxn = function(a,b){
+		return a<b ? -1 : 1;
+	}
+}
+var keys = Code.keys(bestList);
+for(var i=0; i<keys.length; ++i){
+	var key = keys[i];
+	// console.log(key);
+	var list = bestList[key];
+	list.sort(sortFxn);
+	Code.truncateArray(list, cacheCount);
+console.log(list);
+	bestList[key] = list;
+}
+
+for(var i=0; i<similarities.length; ++i){
+	var similarity = similarities[i];
+	var idA = similarity["A"];
+	var idB = similarity["B"];
+	var listA = bestList[idA];
+	var listB = bestList[idB];
+	var valA = listA[listA.length-1];
+	var valB = listB[listB.length-1];
+	var max = Math.max(valA,valB);
+	var min = Math.min(valA,valB);
+	var score = similarity["s"];
+	// console.log(score,max);
+	if(largerIsBetter){
+		if(score<min){
+			Code.removeElementAt(similarities,i);
+			--i;
+		}
+	}else{
+		if(score>max){
+			console.log(score+" > "+max);
+			Code.removeElementAt(similarities,i);
+			--i;
+		}
+	}
+}
+
+console.log(similarities);
+
+		var sims2 = [];
+		// var sims1 = Code.objectToArray(similarities);
+		var floats = [];
+		for(var i=0; i<similarities.length; ++i){
+			var similarity = similarities[i];
+			sims2.push( {"A":similarity["A"],"B":similarity["B"],"s":similarity["s"]} );
+			floats.push(similarity["s"]);
+		}
+		// 
+		ImageMat.normalFloat01(floats);
+		// console.log(floats.length);
+		// for(var i=0; i<similarities.length; ++i){
+		// 	var similarity = similarities[i];
+		// 	// sims2.push( {"A":similarity["A"],"B":similarity["B"],"s":similarity["s"]} );
+		// 	// floats.push(similarity["s"]);
+		// }
+		// console.log("floats");
+		// console.log(floats.length);
+		// console.log(similarities.length);
+		// console.log(floats);
+		for(var i=0; i<sims2.length; ++i){
+			var similarity = sims2[i];
+			similarity["s"] = floats[i];
+		}
+		
+		// show lines
+		var colors = [0xFF000000, 0xFF000099, 0xFFCC00CC, 0xFFFF0000, 0xFFFF9999];
+		for(var i=0; i<sims2.length; ++i){
+			var similarity = sims2[i];
+			var idA = similarity["A"];
+			var idB = similarity["B"];
+			var score = similarity["s"];
+			// console.log(similarity);
+			var indexA = viewIDToIndex[idA];
+			var indexB = viewIDToIndex[idB];
+			var start = centers[indexA];
+			var ending = centers[indexB];
+			var color = Code.interpolateColorGradientARGB(score, colors);
+				var d = new DO();
+				d.graphics().setLine(2.0,color);
+				d.graphics().beginPath();
+				d.graphics().moveTo(start.x,start.y);
+				d.graphics().lineTo(ending.x,ending.y);
+				d.graphics().endPath();
+				d.graphics().strokeLine();
+				GLOBALSTAGE.addChild(d);
+
+		}
+
+		// titles over:
+		var textSize = 26;
+		for(var i=0; i<centers.length; ++i){
+			var center = centers[i];
+			var title = ""+viewIDs[i];
+			var textA = new DOText(title, textSize, DOText.FONT_ARIAL, 0xFF3366FF, DOText.ALIGN_CENTER);
+			var textB = new DOText(title, textSize, DOText.FONT_ARIAL, 0xFF000033, DOText.ALIGN_CENTER);
+
+				textA.matrix().translate(-1,-1);
+				textB.matrix().translate(1,1);
+			var textContainer = new DO();
+				textContainer.addChild(textB);
+				textContainer.addChild(textA);
+				
+			d.addChild(textContainer);
+			var dir = V2D.sub(center,circleCenter);
+			dir.length(textSize);
+			textContainer.matrix().translate(center.x + dir.x, center.y + dir.y);
+		}
+	}
+}
+*/
 
 
 R3D.calculateScaleCornerFeatures = function(imageMatrix, maxCount, limitPercent, single, nonMaximalPercent, imageScales){
@@ -35897,7 +37087,7 @@ OFFY += octaveGrayImageHeight*2 + 10;
 			extrema[i].z = size;
 		}
 		Code.arrayPushArray(featurePoints,extrema);
-		console.log(" "+o+": "+extrema.length);
+		// console.log(" "+o+": "+extrema.length);
 		
 		// next loop:
 		if(o<octaveCount-1){
@@ -35938,7 +37128,7 @@ OFFY += octaveGrayImageHeight*2 + 10;
 		feature["angle"] = 0;
 		features.push(feature);
 	}
-console.log(features);
+// console.log(features);
 	return features;
 }
 
