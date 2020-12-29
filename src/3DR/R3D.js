@@ -10400,224 +10400,254 @@ function ViewHyperGraph(viewCount){
 	// throw "ViewHyperGraph"
 }
 ViewHyperGraph.prototype._init = function(viewCount){
-	console.log("init");
 	this._viewGraph = new Graph();
 	this._tripleGraph = new Graph();
+	this._viewLookup = {};
+	this._tripleLookup = {};
 	this.setViewCount(viewCount);
 }
 ViewHyperGraph.prototype.setViewCount = function(viewCount){
 	viewCount = Code.valueOrDefault(viewCount, 0);
-	console.log("viewCount");
-	console.log(viewCount);
+	console.log("viewCount: "+viewCount);
 	// setup data structures
 	this._viewGraph.clear();
 	this._tripleGraph.clear();
+	// this._viewLookup = {};
+	// this._tripleLookup = {};
+	Code.emptyObject(this._viewLookup);
+	Code.emptyObject(this._tripleLookup);
+	var viewLookup = this._viewLookup;
+	var tripleLookup = this._tripleLookup;
 	var viewGraph = this._viewGraph;
 	var tripleGraph = this._tripleGraph;
+ 	this._nextTripleIndex = 0;
 	// create view objects
 	for(var i=0; i<viewCount; ++i){
 		var vertexData = {};
-		// console.log(viewGraph);
 		var vertex = viewGraph.addVertex();
 			vertex.data(vertexData);
 		vertexData["index"] = i;
 		vertexData["vertex"] = vertex;
 		vertexData["triples"] = {};
 		vertexData["adjacent"] = {};
+		viewLookup[i] = vertexData;
 	}
-	// init views to null;
 }
 ViewHyperGraph.prototype.setInitialPairs = function(initialPairs){
 	console.log("setInitialPairs");
 	// console.log(initialPairs);
 	var viewGraph = this._viewGraph;
 	var tripleGraph = this._tripleGraph;
-	var viewVertexes = viewGraph.vertexes();
-	var tripleVertexes = tripleGraph.vertexes();
 	for(var i=0; i<initialPairs.length; ++i){
 		var pair = initialPairs[i];
-		// console.log(pair);
 		var indexA = pair["A"];
 		var indexB = pair["B"];
-		this.addEdge(indexA,indexB);
+		var value = pair["value"];
+		this.addEdge(indexA,indexB, value);
 	}
-	console.log(tripleVertexes);
-	// throw "..."
-	//
 }
 ViewHyperGraph.prototype.generateMatchList = function(){
 	var viewGraph = this._viewGraph;
 	var edges = viewGraph.edges();
-	console.log(edges);
+	// console.log(edges);
 	var pairs = [];
 	for(var i=0; i<edges.length; ++i){
 		var edge = edges[i];
 		var vertexA = edge.A();
 		var vertexB = edge.B();
+		var value = edge.weight();
 		var dataA = vertexA.data();
 		var dataB = vertexB.data();
-		var pair = {"A":dataA["index"],"B":dataB["index"],"value":0.0};
+		var pair = {"A":dataA["index"],"B":dataB["index"],"value":value};
 		pairs.push(pair);
 	}
 	return pairs;
 }
 ViewHyperGraph.prototype.satisfyViewGraphParameters = function(orderedPairs){
-	// var minimumTripleCount = 3;
 	console.log("satisfyViewGraphParameters");
-	console.log(orderedPairs);
+	// console.log(orderedPairs);
 	var viewGraph = this._viewGraph;
 	var tripleGraph = this._tripleGraph;
-	var viewVertexes = viewGraph.vertexes();
-	var tripleVertexes = tripleGraph.vertexes();
+	var viewLookup = this._viewLookup;
+
 	// remove all existing pairs from tracking list
 	orderedPairs = Code.copyArray(orderedPairs);
 	for(var i=0; i<orderedPairs.length; ++i){
 		var pair = orderedPairs[i];
-		var vertexA = viewVertexes[pair["A"]];
-		var vertexB = viewVertexes[pair["B"]];
+		var dataA = viewLookup[pair["A"]];
+		var dataB = viewLookup[pair["B"]];
+		var vertexA = dataA["vertex"];
+		var vertexB = dataB["vertex"];
 		var edge = vertexA.edge(vertexB);
 		if(edge){ // exists
 			Code.removeElementAt(orderedPairs,i);
 			--i;
 		}
-		// throw "..."
 	}
 	console.log("possible pairs: "+orderedPairs.length);
-	/*
-	// initialize view vertex deficits
-	for(var i=0; i<viewVertexes.length; ++i){
-		var vertex = viewVertexes[i];
-		var data = vertex.data();
-		// console.log(data);
-		data["hasInfinitePath"] = false;
-		data["tripleCount"] = Code.keys(data["triples"]).length;
-	}
-	for(var i=0; i<viewVertexes.length; ++i){
-		var vertex = viewVertexes[i];
-		var data = vertex.data();
-		// console.log(vertex);
-		console.log(data);
-		for(var j=i+1; j<viewVertexes.length; ++j){
-			var other = viewVertexes[j];
-			var paths = viewGraph.minPath(vertex, other);
-			console.log(paths);
-			if(paths["edges"].length==0){
-				var othr = other.data();
-				data["hasInfinitePath"] = true;
-				othr["hasInfinitePath"] = true;
-			}
-		}
-	}
-	console.log("TRIPLES");
-	// initialize triple path deficits
-	for(var i=0; i<tripleVertexes.length; ++i){
-		var vertex = tripleVertexes[i];
-		var data = vertex.data();
-		// reachable
-		for(var j=i+1; j<tripleVertexes.length; ++j){
-			var other = tripleVertexes[j];
-			var paths = tripleGraph.minPath(vertex, other);
-			console.log(paths);
-		}
+	// add all edges
+	for(var i=0; i<orderedPairs.length; ++i){
+		var pair = orderedPairs[i];
+		var indexA = pair["A"];
+		var indexB = pair["B"];
+		var value = pair["value"];
+		// console.log(pair);
+// console.log("ADD EDGE: "+value);
+		this.addEdge(indexA,indexB,value);
 	}
 
-	throw "?";
-	*/
-	// loop till satisfied
-	var maxIterations = 100;
-	var nextEdgeIndex = 0;
-// maxIterations = 0;
-	for(var i=0; i<maxIterations; ++i){
-		console.log(i+" / "+maxIterations+" @ "+nextEdgeIndex+" ................................................................ ");
-		if(nextEdgeIndex>=orderedPairs.length){
-			console.log("no more edges "+nextEdgeIndex+" / "+orderedPairs.length)
-			break;
-		}
-		if(this._isConstraintsSatisfied()){
-			break;
-		}
-		var edge = orderedPairs[nextEdgeIndex];
-		var indexA = edge["A"];
-		var indexB = edge["B"];
-		var vertexA = viewVertexes[indexA];
-		var vertexB = viewVertexes[indexB];
-		var didAdd = this.didAddEdge(vertexA,vertexB);
-		if(didAdd){
-			console.log(" + ADDED EDGE");
-			Code.removeElementAt(orderedPairs,nextEdgeIndex);
-			nextEdgeIndex = 0;
-			continue;
-		}
-		++nextEdgeIndex;
-		// break;
+	// prune edges if possible - start at worst, work to best
+	for(var i=orderedPairs.length-1; i>=0; --i){
+		var pair = orderedPairs[i];
+		var indexA = pair["A"];
+		var indexB = pair["B"];
+		var removedEdge = this.tryRemoveEdge(indexA,indexB);
+		// console.log("removedEdge: "+removedEdge);
 	}
-	//
-	// throw "..."
 }
-ViewHyperGraph.prototype.addEdge = function(indexA,indexB){
+ViewHyperGraph.prototype.tryRemoveEdge = function(indexA,indexB){
+	var viewLookup = this._viewLookup;
+	var dataA = viewLookup[indexA];
+	var dataB = viewLookup[indexB];
+
+	var edge = dataA["vertex"].edge(dataB["vertex"]);
+	var wasValue = edge.weight();
+// console.log("wasValue: "+wasValue);
+	
+// console.log(" vertexes A: "+this._viewGraph.vertexes().length+" & "+this._tripleGraph.vertexes().length+" : "+Code.keys(this._tripleLookup).length );
+	var prevViewInfinitePaths = this._calculateInfiniteViewPathCount();
+	var prevTripleInfinitePaths = this._calculateInfiniteTriplePathCount();
+	var prevTripleMinimumCount = this._calculateMissingViewTripleCounts();
+
+	this.removeEdge(indexA,indexB);
+
+	var nextViewInfinitePaths = this._calculateInfiniteViewPathCount();
+	var nextTripleInfinitePaths = this._calculateInfiniteTriplePathCount();
+	var nextTripleMinimumCount = this._calculateMissingViewTripleCounts();
+
+	console.log(prevViewInfinitePaths+" -> "+nextViewInfinitePaths+"  "+prevTripleInfinitePaths+" -> "+nextTripleInfinitePaths+"  "+prevTripleMinimumCount+" -> "+nextTripleMinimumCount);
+
+// console.log(" vertexes B: "+this._viewGraph.vertexes().length+" & "+this._tripleGraph.vertexes().length+" : "+Code.keys(this._tripleLookup).length );
+
+	var canRemove = true;
+	// infinite view graph ?
+	if(nextViewInfinitePaths>prevViewInfinitePaths){
+		console.log("increase of view infinite paths: "+prevViewInfinitePaths+" > "+nextViewInfinitePaths);
+		canRemove = false;
+	// infinite triple graph ?
+	}else if(nextTripleInfinitePaths>prevTripleInfinitePaths){
+		console.log("increase of triple infinite paths: "+prevTripleInfinitePaths+" > "+nextTripleInfinitePaths);
+		canRemove = false;
+	// any views have not enough triples?
+	}else if(nextTripleMinimumCount>prevTripleMinimumCount){
+		console.log("increase of triple minimum count: "+prevTripleMinimumCount+" > "+nextTripleMinimumCount);
+		canRemove = false;
+	}
+
+	if(!canRemove){ // add back due to some constraint failure
+		this.addEdge(indexA,indexB, wasValue);
+		// console.log(" vertexes C: "+this._viewGraph.vertexes().length+" & "+this._tripleGraph.vertexes().length+" : "+Code.keys(this._tripleLookup).length );
+	}
+	// throw "?";
+
+	return canRemove;
+}
+ViewHyperGraph.prototype.addEdge = function(indexA,indexB, value){
+	value = value!==undefined ? value : 0.0;
 	var viewGraph = this._viewGraph;
-	var viewVertexes = viewGraph.vertexes();
-	var vertexA = viewVertexes[indexA];
-	var vertexB = viewVertexes[indexB];
-	var edge = viewGraph.addEdgeDuplex(vertexA,vertexB);
-		vertexA.data()["adjacent"][indexB] = edge;
-		vertexB.data()["adjacent"][indexA] = edge;
+	var viewLookup = this._viewLookup;
+	var dataA = viewLookup[indexA];
+	var dataB = viewLookup[indexB];
+	var vertexA = dataA["vertex"];
+	var vertexB = dataB["vertex"];
+// does this edge already exist?
+var edgeA = vertexA.edge(vertexB);
+var edgeB = vertexB.edge(vertexA);
+if(edgeA || edgeB){
+	console.log(indexA);
+	console.log(indexB);
+	console.log(dataA);
+	console.log(dataB);
+	// console.log(dataA);
+	console.log(edgeA,edgeB);
+	throw "edge already exists";
+}
+	var edge = viewGraph.addEdgeDuplex(vertexA,vertexB, value);
+		dataA["adjacent"][indexB] = edge;
+		dataB["adjacent"][indexA] = edge;
 	// check if this creates a triple
 	var edgesA = vertexA.edges();
 	for(var i=0; i<edgesA.length; ++i){
 		var edge = edgesA[i];
 		var opposite = edge.opposite(vertexA);
-		if(opposite.data()["adjacent"][indexB]){
-			this._addTriple(vertexA,vertexB,opposite);
+		var dataC = opposite.data();
+		if(dataC["adjacent"][indexB]){
+			this._addTriple(dataA,dataB,dataC);
 		}
 	}
 }
-ViewHyperGraph.prototype._addTriple = function(vertexA,vertexB,vertexC){
-	var list = [vertexA.data(),vertexB.data(),vertexC.data()];
+ViewHyperGraph.prototype._addTriple = function(viewA,viewB,viewC){
+	var list = [viewA,viewB,viewC];
 	var tripleGraph = this._tripleGraph;
-	var tripleVertexes = tripleGraph.vertexes();
-	var tripleIndex = tripleVertexes.length;
+	var tripleLookup = this._tripleLookup;
+	var tripleIndex = this._nextTripleIndex;
+
+// does this triple already exist?
+var allTriples = Code.objectToArray(this._tripleLookup);
+for(var i=0; i<allTriples.length; ++i){
+	var triple = allTriples[i];
+	var views = triple["views"];
+	var count = 0;
+	for(var j=0; j<views.length; ++j){
+		var view = views[j];
+		if(view==viewA || view==viewB || view==viewC){
+			++count;
+		}
+	}
+	if(count==3){
+		console.log(allTriples);
+		console.log(triple);
+		console.log(list);
+		throw "triple already exists ?";
+	}
+}
+
+
+	++this._nextTripleIndex;
 	var vertex = tripleGraph.addVertex();
 	var triple = {};
 		vertex.data(triple);
 	triple["vertex"] = vertex;
 	triple["index"] = tripleIndex;
-	triple["vertexes"] = list;
-	// console.log(list);
+	triple["views"] = list;
+	tripleLookup[tripleIndex] = triple;
 	for(var i=0; i<3; ++i){
-		var vert = list[i];
-		// console.log(vert);
-		vert["triples"][tripleIndex] = triple;
+		var data = list[i];
+		data["triples"][tripleIndex] = triple;
 	}
 	// all the edges that connect any other triples should also be added
 	// a pair contained in both triples is an edge
-	// var edges = [[vertexA,vertexB],[vertexA,vertexC],[vertexB,vertexC]];
 	var lookup = {};
-		lookup[list[0]["index"]] = vertexA;
-		lookup[list[1]["index"]] = vertexB;
-		lookup[list[2]["index"]] = vertexC;
-	// for(var i=0; i<3; ++i){
-		// var edge = edges[i];
+		lookup[viewA["index"]] = viewA;
+		lookup[viewB["index"]] = viewB;
+		lookup[viewC["index"]] = viewC;
 	// check adjacent triples for possible edge
 	for(var i=0; i<3; ++i){
-		var vert = list[i];
-// console.log(vert);
-		var triples = vert["triples"];
-// console.log(triples);
+		var data = list[i];
+		var triples = data["triples"];
 		triples = Code.objectToArray(triples);
 		for(var t=0; t<triples.length; ++t){
 			var tri = triples[t];
 			if(tri==triple){
 				continue;
 			}
-			var verts = tri["vertexes"];
-// console.log(verts);
+			var dats = tri["views"];
 			var count = [];
-			for(var v=0; v<3; ++v){
-				var vert = verts[v];
-				var ind = vert["index"];
+			for(var d=0; d<3; ++d){
+				var dat = dats[d];
+				var ind = dat["index"];
 				if(lookup[ind]){
-					count.push(vert);
+					count.push(dat);
 				}
 			}
 			if(count.length==0){
@@ -10625,204 +10655,101 @@ ViewHyperGraph.prototype._addTriple = function(vertexA,vertexB,vertexC){
 			}else if(count.length==1){ // 1 = at least always the case
 				// throw "1";
 			}else if(count.length==2){ // 2 = valid edge
-				var edge = tripleGraph.addEdgeDuplex(triple["vertex"],tri["vertex"]);
-				var data = {};
-					data["vertexes"] = count;
-				edge.data(data);
+				var vA = triple["vertex"];
+				var vB = tri["vertex"];
+				var edge = vA.edge(vB);
+				if(edge){
+					// throw "triple edge already exists?";
+				}else{
+					var edge = tripleGraph.addEdgeDuplex(vA,vB);
+					var data = {};
+						data["views"] = count;
+					edge.data(data);
+				}
 			}else{ // 3 - same tri
+				console.log(triple);
+				console.log(tri);
+				console.log(tri===triple);
+				console.log(count);
 				throw "3";
 			}
 		}
 	}
-	// if added, the paths may have changed
-	this._infiniteTriplePaths(true);
 }
-ViewHyperGraph.prototype._removeEdge = function(indexA,indexB){ // triples are removed from the array end only, 
-	// console.log(indexA,indexB);
+ViewHyperGraph.prototype.removeEdge = function(indexA,indexB){
 	var tripleGraph = this._tripleGraph;
 	var viewGraph = this._viewGraph;
-	var viewVertexes = viewGraph.vertexes();
-	var vertexA = viewVertexes[indexA];
-	var vertexB = viewVertexes[indexB];
-	var dataA = vertexA.data();
-	var dataB = vertexB.data();
+	var viewLookup = this._viewLookup;
+	var tripleLookup = this._tripleLookup;
+	var dataA = viewLookup[indexA];
+	var dataB = viewLookup[indexB];
+	var vertexA = dataA["vertex"];
+	var vertexB = dataB["vertex"];
 	// remove any triples that have both A & B
 	var triplesA = dataA["triples"];
 	var triplesB = dataB["triples"];
-	//console.log(triplesA);
-	//console.log(triplesB);
-	var keys, triples = [];
+	var keys, triples = {};
 	keys = Code.keys(triplesA);
 	for(var k=0; k<keys.length; ++k){
 		var key = keys[k];
 		var triple = triplesA[key];
-		var verts = triple["vertexes"];
-//		console.log(verts,indexA,indexB);
-		if(Code.elementExists(verts,dataA) && Code.elementExists(verts,dataB)){
-			triples.push(triple);
+		var views = triple["views"];
+		if(Code.elementExists(views,dataA) && Code.elementExists(views,dataB)){
+			triples[triple["index"]] = triple;
 		}
 	}
 	keys = Code.keys(triplesB);
 	for(var k=0; k<keys.length; ++k){
 		var key = keys[k];
 		var triple = triplesB[key];
-		var verts = triple["vertexes"];
-		// console.log(verts,indexA,indexB);
-		if(Code.elementExists(verts,dataA) && Code.elementExists(verts,dataB)){
-			triples.push(triple);
+		var views = triple["views"];
+		if(Code.elementExists(views,dataA) && Code.elementExists(views,dataB)){
+			triples[triple["index"]] = triple;
 		}
 	}
-	// console.log(triples);
-// throw "???"
-	if(triples.length==0){
-		// console.log("no triple with edge: "+indexA+"-"+indexB);
-		// do nothing
-	}
+	triples = Code.objectToArray(triples);
+	// console.log("REMOVE TRIPLES: "+triples.length);
+	// remove from each viewxs
 	for(var i=0; i<triples.length; ++i){
 		var triple = triples[i];
 		var tripleIndex = triple["index"];
-		var verts = triple["vertexes"];
-		// console.log(triple);
-		// console.log(tripleIndex);
-		// console.log(verts);
-		for(var j=0; j<verts.length; ++j){
-			var vert = verts[j];
-			if(!vert){
-				console.log(vert);
+		var datas = triple["views"];
+		for(var j=0; j<datas.length; ++j){
+			var data = datas[j];
+			if(!data){
+				console.log(data);
 				console.log(triples);
 				console.log(triple);
 				console.log(tripleIndex);
 			}
-			delete vert["triples"][tripleIndex];
+			delete data["triples"][tripleIndex];
 		}
 	}
+	// remove from global lookup
+	for(var i=0; i<triples.length; ++i){
+		var triple = triples[i];
+		var index = triple["index"];
+		delete tripleLookup[index];
+	}
+	
 	for(var i=0; i<triples.length; ++i){
 		var triple = triples[i];
 		var vertex = triple["vertex"];
 		tripleGraph.removeVertex(vertex); // remove vertex & edges
 			triple["index"] = null;
 			triple["vertex"] = null;
-			triple["vertexes"] = null;
-			// triple["adjacent"] = null;
-		// var edges = triple
-		// tripleGraph.removeEdge(???);
+			triple["views"] = null;
 	}
-	// console.log("..");
-	this._infiniteTriplePaths(true);
-
-	// actually remove edge:
+	// remove edge reference
 	delete dataA["adjacent"][indexB];
 	delete dataB["adjacent"][indexA];
 
+	// remove actual graph edge
 	var edge = vertexA.edge(vertexB);
-	// console.log(edge);
 	viewGraph.removeEdge(edge);
-
-	// throw "_removeEdge";
 }
-/*
-ViewHyperGraph.prototype._removeTriple = function(triple){
-	// remove triple edges
-	// remove triple vertex
-	// remove view references to triples
-	// ...
-
-	throw "_removeTriple";
-	// if removed, the paths may have changed
-	this._infiniteTriplePaths(true);
-}
-*/
-ViewHyperGraph.prototype._isConstraintsSatisfied = function(){
-	// no view infinite paths
-	var paths = this._infiniteViewPaths();
-	if(paths>0){
-		return false;
-	}
-
-	// no triple infinite paths
-	var paths = this._infiniteTriplePaths();
-	if(paths>0){
-		return false;
-	}
-	console.log("isConstraintsSatisfied");
-
-
-	// all view vertexes have 3+ triples
-
-	throw "?"
-	return true;
-}
-ViewHyperGraph.MINIMUM_TRIPLE_COUNT = 3;
-ViewHyperGraph.prototype.didAddEdge = function(vertexA,vertexB){
-	var dataA = vertexA.data();
-	var dataB = vertexB.data();
-	var indexA = dataA["index"];
-	var indexB = dataB["index"];
-	var mininumViewTripleCount = ViewHyperGraph.MINIMUM_TRIPLE_COUNT;
-	var viewGraph = this._viewGraph;
-	var infiniteViewPaths = this._infiniteViewPaths();
-	// console.log(infiniteViewPaths);
-	// does adding the edge change either vertex path down from infinity
-	if(infiniteViewPaths>0){
-		// simulate an edge add & remove
-		var edge = viewGraph.addEdgeDuplex(vertexA,vertexB);
-		var newCount = this._calculateInfiniteViewPathCount();
-		viewGraph.removeEdge(edge);
-		if(newCount<infiniteViewPaths){
-			console.log(infiniteViewPaths+" => "+newCount);
-			
-			this.addEdge(indexA,indexB);
-			this._infiniteViewPaths(true);
-			return true;
-		}
-	}
-	
-	// does adding the edge create a minimum triple for either vertex -- doesn't have to CREATE a triple, just aid in possibly adding a triple in the future
-	var tripleCountA = Code.keys(dataA["triples"]).length;
-	var tripleCountB = Code.keys(dataB["triples"]).length;
-	// console.log(tripleCountA,tripleCountB);
-	var tripleGraph = this._tripleGraph;
-var tripleVertexes = tripleGraph.vertexes();
-var prevTripLen = tripleVertexes.length;
-	var infiniteTriplePaths = this._infiniteTriplePaths();
-	var nextInfiniteTriplePaths = null;
-	var didAddEdge = false;
-	console.log(" trip inf?: "+infiniteTriplePaths);
-	if(tripleCountA<mininumViewTripleCount || tripleCountB<mininumViewTripleCount){
-		this.addEdge(indexA,indexB);
-		didAddEdge = true;
-		var nextTripleCountA = Code.keys(dataA["triples"]).length;
-		var nextTripleCountB = Code.keys(dataB["triples"]).length;
-		nextInfiniteTriplePaths = this._infiniteTriplePaths(true);
-		// ADD EDGE REGARDLESS OF TRIPLE CHANGE
-		// if( (nextTripleCountA>tripleCountA && tripleCountA<mininumViewTripleCount) 
-		// ||  (nextTripleCountB>tripleCountB && tripleCountB<mininumViewTripleCount) ){ // they would both increment
-//		if( (nextTripleCountA>tripleCountA && tripleCountA<mininumViewTripleCount) 
-//		||  (nextTripleCountB>tripleCountB && tripleCountB<mininumViewTripleCount) ){ // they would both increment
-			console.log("increased a triple count");
-			return true;
-//		}
-		// throw "added a tri ?";
-	}
-	// does adding the edge create a required triple connectivity
-	if(infiniteTriplePaths>0){
-		if(!didAddEdge){
-			this.addEdge(indexA,indexB);
-			didAddEdge = true;
-			nextInfiniteTriplePaths = this._infiniteTriplePaths(true);
-		}
-		if(nextInfiniteTriplePaths<infiniteTriplePaths){ // did infinite path reduce
-			console.log("reduced triple infinite path");
-			return true;
-		}
-	}
-var nextTripLen = tripleVertexes.length;
-	// REMOVE EDGE - WAS NOT USEFUL IN ANY METRIC
-	console.log("unused edge: "+indexA+"-"+indexB+" : "+infiniteTriplePaths+">"+nextInfiniteTriplePaths+"("+prevTripLen+"/"+nextTripLen+")");
-	this._removeEdge(indexA,indexB);
-	// throw "shouldAddEdge";
-	return false;
-}
+// ViewHyperGraph.MINIMUM_TRIPLE_COUNT = 3;
+ViewHyperGraph.MINIMUM_TRIPLE_COUNT = 2;
 ViewHyperGraph.prototype._calculateInfiniteViewPathCount = function(){
 	var vertexes = this._viewGraph.vertexes();
 	if(vertexes.length<=1){
@@ -10865,8 +10792,6 @@ ViewHyperGraph.prototype._infiniteTriplePaths = function(check){
 	}
 	return this._infiniteTriplePathCount;
 }
-
-
 ViewHyperGraph.prototype._calculateMissingViewTripleCounts = function(){
 	var mininumViewTripleCount = ViewHyperGraph.MINIMUM_TRIPLE_COUNT;
 	var count = 0;
@@ -10877,15 +10802,15 @@ ViewHyperGraph.prototype._calculateMissingViewTripleCounts = function(){
 		var data = vertex.data();
 		var tripleCount = Code.keys(data["triples"]).length;
 		if(tripleCount<mininumViewTripleCount){
+			// console.log(data);
+			// throw "????"
 			++count;
 		}
 	}
-	console.log(count);
+	// console.log(count);
 	// on create a triple, need to re-count
-
 	// new triple only affects the 3 view vertex in triple (would need to keep a lookup)
-
-	throw "..."
+	// throw "..."
 	return count;
 }
 ViewHyperGraph.prototype._missingViewTripleCount = function(check){
@@ -10894,8 +10819,6 @@ ViewHyperGraph.prototype._missingViewTripleCount = function(check){
 	}
 	return this._missingViewTripleCountValue;
 }
-
-
 
 R3D.debugDisplaySimilarities = function(images,compareScores){
 	// console.log(images);
@@ -10948,16 +10871,21 @@ R3D.debugDisplaySimilarities = function(images,compareScores){
 	
 	var minScore = null;
 	var maxScore = null;
-	for(var i=0; i<imageCount; ++i){
+	for(var i=0; i<compareScores.length; ++i){
 		var scores = compareScores[i];
 		if(!scores.length){
 			var info = scores;
-			console.log(info);
+			// console.log(info);
 			// var score = info["value"];
 			var score = info["value"];
+			if(minScore===null){
+				minScore = score;
+				maxScore = score;
+			}
 			minScore = Math.min(minScore,score);
 			maxScore = Math.max(maxScore,score);
 		}else{
+			// console.log("NO")
 		for(var j=0; j<scores.length; ++j){
 			var info = scores[j];
 			var score = info["value"];
@@ -10971,7 +10899,7 @@ R3D.debugDisplaySimilarities = function(images,compareScores){
 		}
 	}
 	var rangeScore = (maxScore-minScore);
-	console.log("rangeScore: "+rangeScore);
+	// console.log("rangeScore: "+rangeScore+" : "+minScore+"-"+maxScore);
 	if(rangeScore<=0){
 		rangeScore = 1.0;
 	}
@@ -11015,7 +10943,7 @@ R3D.debugDisplaySimilarities = function(images,compareScores){
 			var score = info["value"];
 			var indexA = info["A"];
 			var indexB = info["B"];
-			
+// console.log(score);
 			// var indexB = j;
 			var start = centers[indexA];
 			var ending = centers[indexB];
@@ -11025,11 +10953,13 @@ R3D.debugDisplaySimilarities = function(images,compareScores){
 				start = start.copy().add((Math.random()-0.5)*mag,(Math.random()-0.5)*mag);
 				ending = ending.copy().add((Math.random()-0.5)*mag,(Math.random()-0.5)*mag);
 			var percent = 1.0;
+
 			if(score>0){
 				percent = (score-minScore)/rangeScore;
 			}
-//			console.log(percent);
+			// console.log(score+" ->"+percent);
 			var color = Code.interpolateColorGradientARGB(percent, colors);
+// console.log(color);
 			var d = new DO();
 			d.graphics().setLine(2.0,color);
 			d.graphics().beginPath();

@@ -1855,6 +1855,14 @@ Code.copyArray = function(a,b,start,end){ // a = b
 	}
 	return a;
 };
+Code.emptyObject = function(o){
+	var keys = Code.keys(o);
+	for(var i=0; i<keys.length; ++i){
+		var key = keys[i];
+		delete o[key];
+	}
+	return o;
+};
 Code.copyObject = function(o){ // surface copy
 	var keys = Code.keys(o);
 	var n = {};
