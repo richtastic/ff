@@ -10174,6 +10174,8 @@ R3D.sequentialImageMatchingLexigramEvaluate = function(histograms,featureLists, 
 	var maximumMatchPercentHistogram = 0.50;
 	var maximumMatchPercentHistogram = 0.10;
 	var maximumMatchPercentHistogram = 0.05;
+	var graphMinimumTripleCount = 2; // 2-4
+	var graphTopChoiceMinimumCount = 2; // 1-3
 	// var maximumMatchesHistogram = 20;
 	// var maximumMatchesFeaturesBest = 10;
 	// var maximumMatchesFeaturePair = 5;
@@ -10230,9 +10232,9 @@ maximumMatchesFeaturesBest = 6;
 	}
 	console.log(histogramScores);
 
-	var finalScores = histogramScores;
+//	var finalScores = histogramScores;
 
-/*
+
 	// throw "?"
 	// feature best filter --------------------------------------------------------------------------
 	var featureBestScores = [];
@@ -10255,7 +10257,7 @@ maximumMatchesFeaturesBest = 6;
 				continue;
 			}
 			operations[indexAB] = true;
-console.log(indexAB);
+// console.log(indexAB);
 			var result = R3D.bagOfWordsFeaturesCompare(featuresA,featuresB, false);
 			var scoreA = result["scoreA"];
 			var scoreB = result["scoreB"];
@@ -10270,7 +10272,7 @@ console.log(indexAB);
 	console.log(featureBestScores);
 
 	var finalScores = featureBestScores;
-*/
+
 
 /*
 	// feature match filter --------------------------------------------------------------------------
@@ -10372,22 +10374,17 @@ var sortValueSmaller = function(a,b){
 	}
 	console.log(orderedPairs);
 	//
-	var rowCount = 1; // first 3 choices for each view
+	var rowCount = graphTopChoiceMinimumCount; // first 2-3 choices for each view
 	var initialPairs = [];
-	var initialCount = imageCount*rowCount;
+	var initialCount = Math.min(imageCount*rowCount,orderedPairs.length);
 	for(var i=0; i<initialCount; ++i){
 		var pair = orderedPairs.shift();
 		initialPairs.push(pair);
 	}
-	// console.log(initialPairs);
-	// console.log(orderedPairs);
-	//
 	var graph = new ViewHyperGraph();
 		graph.setViewCount(matchLists.length);
 		graph.setInitialPairs(initialPairs);
-		graph.satisfyViewGraphParameters(orderedPairs);
-
-
+		graph.satisfyViewGraphParameters(orderedPairs, graphMinimumTripleCount);
 		// create match list from garph
 	var pairs = graph.generateMatchList();
 	console.log(pairs);
@@ -10435,7 +10432,7 @@ ViewHyperGraph.prototype.setViewCount = function(viewCount){
 }
 ViewHyperGraph.prototype.setInitialPairs = function(initialPairs){
 	console.log("setInitialPairs");
-	// console.log(initialPairs);
+	console.log(initialPairs);
 	var viewGraph = this._viewGraph;
 	var tripleGraph = this._tripleGraph;
 	for(var i=0; i<initialPairs.length; ++i){
@@ -10463,9 +10460,10 @@ ViewHyperGraph.prototype.generateMatchList = function(){
 	}
 	return pairs;
 }
-ViewHyperGraph.prototype.satisfyViewGraphParameters = function(orderedPairs){
+ViewHyperGraph.prototype.satisfyViewGraphParameters = function(orderedPairs, minimumTripleCount){
+	minimumTripleCount = minimumTripleCount!==undefined ? minimumTripleCount : 3; // 2-4
 	console.log("satisfyViewGraphParameters");
-	// console.log(orderedPairs);
+	this._minimumTripleCount = minimumTripleCount;
 	var viewGraph = this._viewGraph;
 	var tripleGraph = this._tripleGraph;
 	var viewLookup = this._viewLookup;
@@ -10525,22 +10523,22 @@ ViewHyperGraph.prototype.tryRemoveEdge = function(indexA,indexB){
 	var nextTripleInfinitePaths = this._calculateInfiniteTriplePathCount();
 	var nextTripleMinimumCount = this._calculateMissingViewTripleCounts();
 
-	console.log(prevViewInfinitePaths+" -> "+nextViewInfinitePaths+"  "+prevTripleInfinitePaths+" -> "+nextTripleInfinitePaths+"  "+prevTripleMinimumCount+" -> "+nextTripleMinimumCount);
+	// console.log(prevViewInfinitePaths+" -> "+nextViewInfinitePaths+"  "+prevTripleInfinitePaths+" -> "+nextTripleInfinitePaths+"  "+prevTripleMinimumCount+" -> "+nextTripleMinimumCount);
 
 // console.log(" vertexes B: "+this._viewGraph.vertexes().length+" & "+this._tripleGraph.vertexes().length+" : "+Code.keys(this._tripleLookup).length );
 
 	var canRemove = true;
 	// infinite view graph ?
 	if(nextViewInfinitePaths>prevViewInfinitePaths){
-		console.log("increase of view infinite paths: "+prevViewInfinitePaths+" > "+nextViewInfinitePaths);
+		// console.log("increase of view infinite paths: "+prevViewInfinitePaths+" > "+nextViewInfinitePaths);
 		canRemove = false;
 	// infinite triple graph ?
 	}else if(nextTripleInfinitePaths>prevTripleInfinitePaths){
-		console.log("increase of triple infinite paths: "+prevTripleInfinitePaths+" > "+nextTripleInfinitePaths);
+		// console.log("increase of triple infinite paths: "+prevTripleInfinitePaths+" > "+nextTripleInfinitePaths);
 		canRemove = false;
 	// any views have not enough triples?
 	}else if(nextTripleMinimumCount>prevTripleMinimumCount){
-		console.log("increase of triple minimum count: "+prevTripleMinimumCount+" > "+nextTripleMinimumCount);
+		// console.log("increase of triple minimum count: "+prevTripleMinimumCount+" > "+nextTripleMinimumCount);
 		canRemove = false;
 	}
 
@@ -10749,7 +10747,7 @@ ViewHyperGraph.prototype.removeEdge = function(indexA,indexB){
 	viewGraph.removeEdge(edge);
 }
 // ViewHyperGraph.MINIMUM_TRIPLE_COUNT = 3;
-ViewHyperGraph.MINIMUM_TRIPLE_COUNT = 2;
+// ViewHyperGraph.MINIMUM_TRIPLE_COUNT = 2;
 ViewHyperGraph.prototype._calculateInfiniteViewPathCount = function(){
 	var vertexes = this._viewGraph.vertexes();
 	if(vertexes.length<=1){
@@ -10793,7 +10791,7 @@ ViewHyperGraph.prototype._infiniteTriplePaths = function(check){
 	return this._infiniteTriplePathCount;
 }
 ViewHyperGraph.prototype._calculateMissingViewTripleCounts = function(){
-	var mininumViewTripleCount = ViewHyperGraph.MINIMUM_TRIPLE_COUNT;
+	var mininumViewTripleCount = this._minimumTripleCount; // ViewHyperGraph.MINIMUM_TRIPLE_COUNT;
 	var count = 0;
 	// go thru each view vertex, count 
 	var vertexes = this._viewGraph.vertexes();

@@ -7716,7 +7716,7 @@ console.log("checkPerformNextTask");
 		this.calculateViewSimilarities();
 		return;
 	}
-// throw "........"
+throw "........"
 
 // console.log("cams");
 // throw "calculate cameras";
@@ -7765,14 +7765,14 @@ console.log("checkPerformNextTask");
 		return;
 	}
 
-// throw "task pair feature match";
+throw "task pair feature match";
 	// does a feature-match pair exist (even a bad match) between every (putative) view pair?
 	if(!project.checkHasSparseStarted()){
 		project.calculatePairPutatives();
 		return;
 	}
 	// throw "..."
-// throw "iterate sparse ?";
+throw "iterate sparse ?";
 	if(!project.checkHasSparseEnded()){
 		project.iterateSparseProcess();
 		return;
@@ -15097,8 +15097,32 @@ App3DR.ProjectManager.prototype._calculateFeaturesLoaded = function(view){
 	var imageMatrix = R3D.imageMatrixFromImage(image, this._stage);
 	var imageScales = new ImageMatScaled(imageMatrix);
 
+	var nonMaximalPercent = 0.010; // 0.001
+	var nonRepeatPercent = 0.005;
+	var corners = R3D.optimalCountFeaturesFromImageScales(imageScales, nonMaximalPercent, nonRepeatPercent);
+	console.log(corners);
+	var features = R3D.colorGradientFeaturesFromPoints(corners,imageScales);
+	console.log(features);
 
-throw "here --- features"
+	var result = R3D.sequentialImageMatchingLexigramGenerate([imageScales]);
+		var histograms = result["histograms"];
+		var words = result["features"];
+	var word = words[0];
+	var histogram = histograms[0];
+
+console.log(word);
+console.log(histogram);
+
+	var data = {};
+		data["features"] = features;
+		data["flatHistogram"] = histogram;
+		data["lexicon"] = word;
+	console.log(data);
+	// var str = YAML.parse(data);
+	// console.log(str);
+// throw "here --- features"
+	
+/*
 	var features = R3D.differentialCornersForImage(imageScales, new V2D(600,400));
 	var normalizedFeatures = R3D.normalizeSIFTObjects(features, imageMatrix.width(), imageMatrix.height());
 	console.log("FEATURES: "+normalizedFeatures.length);
@@ -15160,6 +15184,7 @@ console.log(sampleMatrix);
 	console.log(features.length+" | "+normalizedWords.length+" | "+Code.keys(normalizedHistogram).length);
 	R3D.showFeaturesForImage(imageMatrix, features);
 	// throw "features - now save ...";
+	*/
 
 	view.setFeatureData(data, this._calculateFeaturesComplete, this);
 }
@@ -15227,133 +15252,30 @@ App3DR.ProjectManager.prototype.calculateViewSimilarities = function(){
 		++loadedCount;
 		if(loadedCount==expectedCount){
 			console.log("completed loading ...");
+
 			console.log(histograms);
 			console.log(features);
 
-
-var scores = [];
-if(false){
-// var doWords = false;
-// var doWords = true;
-// if(doWords){
-// FEATURE WORDS:
-			var obj;
-			var wordScores = {};
-			for(var i=0; i<views.length; ++i){
-				var viewA = views[i];
-				var idA = viewA.id();
-				var featuresA = features[idA];
-				for(var j=i+1; j<views.length; ++j){
-					var viewB = views[j];
-					var idB = viewB.id();
-					var featuresB = features[idB];
-					// console.log(featuresA);
-					// console.log(featuresB);
-					var result = R3D.compareFeatureLexicons(featuresA,featuresB);
-					// console.log(result);
-					var score = result["score"];
-// score = 1.0/score;
-					// console.log(score);
-					// score = ;
-					// throw "?";
-					obj = {};
-					obj["A"] = idA;
-					obj["B"] = idB;
-					obj["s"] = score;
-					// wordScores.push(obj);
-					pairID = idA+"-"+idB;
-					obj["id"] = pairID;
-					wordScores[pairID] = obj;
-				}
-
-			}
-			console.log(wordScores);
-			// throw "????";
-			// wordScores.sort(function(a,b){
-			// 	return a["s"]>b["s"] ? -1 : 1; // NCC - larger better
-			// 	// return a["s"]<b["s"] ? -1 : 1; // SAD - smaller better
-			// });
-// }else{
-
-
-// HISTOGRAMS:
-			var obj;
-			// var scores = [];
-			var histogramScores = {};
-			// for every view, compare to every other view
-			for(var i=0; i<views.length; ++i){
-				var viewA = views[i];
-				var idA = viewA.id();
-				var histA = histograms[idA];
-				for(var j=i+1; j<views.length; ++j){
-					var viewB = views[j];
-					var idB = viewB.id();
-					var histB = histograms[idB];
-					var scoreMin = R3D.compareImageHistogramsMin(histA,histB); // BAD
-					var scoreCC = R3D.compareImageHistogramsCC(histA,histB); // POOD
-					var scoreSAD = R3D.compareImageHistogramsSAD(histA,histB); // POOR
-					var scoreSSD = R3D.compareImageHistogramsSSD(histA,histB); // POOR
-					var scoreChiSSD = R3D.compareImageHistogramsChiSquared(histA,histB); // OK : 2
-					var scoreChiSAD = R3D.compareImageHistogramsChiSAD(histA,histB); // OK  - BEST : 1
-					
-					// var score = scoreChi*scoreSAD;
-					//score = Math.pow(score,0.5);
-					// var score = scoreCC/scoreSAD;
-					// var score = scoreMin;
-					// var score = 1.0/scoreCC;
-					// var score = scoreSAD;
-					// var score = scoreSSD;
-					// var score = scoreChiSSD;
-					var score = scoreChiSAD;
-
-// var score = 1.0/scoreChiSAD;
-
-
-					// score = Math.pow(score,2.07);
-
-					// var score = scoreSAD*Math.sqrt(scoreSSD);
-					
-					obj = {};
-					obj["A"] = idA;
-					obj["B"] = idB;
-					obj["s"] = score;
-					pairID = idA+"-"+idB;
-					obj["id"] = pairID;
-					histogramScores[pairID] = obj;
-					// scores.push(obj);
-				}
+			var viewIDs = Code.keys(histograms);
+			var histogramArray = [];
+			var featureArray = [];
+			for(var i=0; i<viewIDs.length; ++i){
+				var viewID = viewIDs[i];
+				histogramArray.push(histograms[viewID]);
+				featureArray.push(features[viewID]);
 			}
 
+			console.log(histogramArray);
+			console.log(featureArray);
+			
+			var result = R3D.sequentialImageMatchingLexigramEvaluate(histogramArray, featureArray);
+			console.log(result);
+			var compareScores = result["matches"];
 
-			// scores.sort(function(a,b){
-			// 	return a["s"]>b["s"] ? -1 : 1; // NCC - larger better
-			// 	// return a["s"]<b["s"] ? -1 : 1; // SAD - smaller better
-			// });
-// }
+			project.showViewSimilarities(compareScores, viewIDs);
 
-
-
-	var pairIDs = Code.keys(histogramScores);
-	for(var i=0; i<pairIDs.length; ++i){
-		var pairID = pairIDs[i];
-		var hist = histogramScores[pairID];
-		var word = wordScores[pairID];
-		var finalScore = hist["s"]/word["s"];
-		var obj = {};
-		obj["A"] = hist["A"];
-		obj["B"] = hist["B"];
-		obj["id"] = hist["id"];
-		obj["s"] = finalScore;
-		scores.push(obj);
-	}
-
-	scores.sort(function(a,b){
-		return a["s"]<b["s"] ? -1 : 1; // smaller better
-	});
-
-}
-
-
+			throw "here";
+/*
 	// use 'frame' distance
 	// for every view, compare to every other view
 	var scores = [];
@@ -15401,7 +15323,7 @@ if(false){
 	scores.sort(function(a,b){
 		return a["s"]<b["s"] ? -1 : 1; // smaller better
 	});
-
+*/
 			console.log(scores);
 project.showViewSimilarities(scores);
 throw "BEFORE SAVE SIMILARITIES - now go save similarities";
@@ -15422,7 +15344,58 @@ throw "BEFORE SAVE SIMILARITIES - now go save similarities";
 		view.loadFeatureData(fxnViewFeatureDataLoaded, project);
 	}
 }
-App3DR.ProjectManager.prototype.showViewSimilarities = function(similarities){
+App3DR.ProjectManager.prototype.showViewSimilarities = function(similarities, viewIDList){
+	var project = this;
+	// load lower-res versions of all views
+	var views = project._views;
+	var expectedViews = views.length;
+	var loadedViews = 0;
+	// var self = pr;
+	var fxnViewImageLoaded = function(){
+		++loadedViews;
+		if(loadedViews==expectedViews){
+			fxnShowSimilarity();
+		}
+	}
+	for(var i=0; i<views.length; ++i){
+		view = views[i];
+		view.loadIconImage(fxnViewImageLoaded, project);
+	}
+	var fxnShowSimilarity = function(){
+		// var circleRadius = 700; // ~20
+		// var circleRadius = 400; // ~10
+		// var circleRadius = 50*imageCount;
+
+		console.log("fxnShowSimilarity");
+
+		// var images = [];
+		// var matrixes = [];
+		// var viewIDs = [];
+		var viewIDToIndex = {};
+		for(var i=0; i<views.length; ++i){
+			viewIDToIndex[viewIDList[i]] = i;
+		}
+		var imageScalesList = Code.newArrayNulls();
+		for(var i=0; i<views.length; ++i){
+			var view = views[i];
+			var viewID = view.id();
+			var image = view.anyLoadedImage();
+			var imageMatrix = R3D.imageMatrixFromImage(image, project._stage);
+			var imageScales = new ImageMatScaled(imageMatrix);
+			var index = viewIDToIndex[viewID];
+			imageScalesList[index] = imageScales;
+		}
+		// var imageSize = Math.round(circleRadius*1.5*Math.PI/views.length);
+		// var circleRadius = 50*views.length;
+		
+		console.log(imageScalesList);
+		console.log(similarities);
+
+
+		R3D.debugDisplaySimilarities(imageScalesList,similarities);
+	}
+}
+App3DR.ProjectManager.prototype.showViewSimilaritiesOld = function(similarities){
 	var project = this;
 	// load lower-res versions of all views
 	var views = project._views;

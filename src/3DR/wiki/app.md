@@ -386,88 +386,32 @@ MISSING:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-???
 
-(n)*(n-1)*(n-2)/6
+- start case study process again - using udpated/new algorithms
+	- upload rabbit sequence
+	- image histogram & lexicon
+	- generation of pair set from graph algorithm
+	- pair sparse matches
+		=> observe errors
+- generating dense pair set:
+	- use pair set from graph algorithm
+	- is more or less pairs better & how to estimate?
+		- direct vs indirect neighbor ... w/ or w/o similarity metric ?
+		- 
+		=> initial, compared first set might have some bad matches in it, and might have missed some good matches
+			- calculate minimum path to 2-3 neigbor vertexes
+			- effective score:
+				(total path cost error) x (indirectness)
+				-----------------
+				()
 
-@ 11 = 165
-
-- can't count on triple completeness working
-
-- need to add 2 lookup arrays for view & triple vertexes
-- need to prune tree until minimum is resolved
-
-	REMOVAL:
-		- fill tree up with 'initial' edges
-		- mark edges as 'required'
-		- fill tree up with all remaining edges
-		- sort optional edges in worst-to-best (reverse) order
-		- remove index = 0
-		- for each edge:
-			- can the edge at index be removed? (no disconnected set view or triple & min triple for views)
-			=> yes:
-				=> remove edge from graph
-
-
-
-- try removing the worst edges until minimum constraints are satisfied?
-
-
-- way to try to keep connectivity?
-- original graph is each view's score with eachother
-- if new edges cuts graph into pieces --- force keep some previous edges?
-	- which edges? lowest cost
-	- sort edges on cost, keep adding till connected set?
-		- want some min connectivity?
-		- minimum distance to other nodes ?
-
-- if N is tiny, theres still a lot of overlap
-	5 x 5 = 25
-	5 x 3 = 
-
-
-- get minimum 3-cross graph
-- increase cross-grouping edges until 1t least 2 triples can be made between groups
-	=> groups merge
+		- START WITH 1 - BEST MATCHES
+		- ADD UNTIL 3-triple minimum & continuous
+			=> how to handle possible disconnected graph?
 
 
 
 
-
-- cascading comparison:
-	- image histogram -> 10-20
-	- blob best histogram -> 5-10
-	- blob top-pair histogram -> 3-5
-
-
-- lighting change makes some sequences non-comparable
-	=> elephant
-
-
-CARPET:
-60x22
-24x48
-
-grelexigra
-
-
-
-
-
-
-
-- can 'cross' scores be used to help determine best candidates?
-	A has similar scores to both B & C => B & C have some similarity?
-
-
-
-- 3D plot of histograms, sorted by colors/symbols (scattered)
-- 2D plots of sorted best-match scores
-
-x SCALE-BLOB-FEATURES : absolute color histograms <--------- best visual test
-x CORNER-FEATURES : absolute color histograms
-- CORNER-FEATURES : oriented grouped absolute color histogram
-x CORNER-FEATURES : oriented blurred normalized(offset-center & scaled-sigma) color surface
 
 
 
