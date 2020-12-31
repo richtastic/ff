@@ -17,12 +17,11 @@ function classesLoadedFxn(){
 	// testCorners();
 	// testLocationSeparate();
 
-	// testRIFTMatches();
+	// testBagOfWordMatches();
 
-	testBagOfWordMatches();
+	testRIFTMatches(); // INITIAL F
 
-	
-	// testLocationNeighborsSparse();
+	// testLocationNeighborsSparse(); // get better F by using local affine matrix
 
 
 	// testLocationNeighborsDense();
@@ -230,6 +229,33 @@ console.log("images: "+images.length);
 	
 }
 
+
+function testLocationNeighborsSparse(){
+	setupDisplay();
+	var fxnImageLoaded = function(info){
+		console.log("fxnImageLoaded")
+		var images = info["images"];
+
+		// get inifial F as previous step
+
+		// use seed points as search locations
+
+		// use neighborhood to increase seed points
+
+		// compare neighborhoods to determine which are likely outliers / wrong
+// ???
+
+
+		var result = R3D.findLocalSupportingCornerMatches(imageScalesA,imageScalesB, pointsA,pointsB, null, affinesAB);
+		console.log(result);
+
+// R3D.findLocalSupportingCornerMatchNeighborhoods
+		// 
+
+
+	}
+	new ImageLoader("../images/",["bench_A.png","bench_B.png"],this,fxnImageLoaded).load();
+}
 
 function testRIFTMatches(){
 	// R3D.differentialCornersForImageSingle = function(imageMatrix, suppressDistancePercent){
@@ -560,6 +586,47 @@ for(var l=0; l<lll.length; ++l){
 		// R3D.fundamentalRANSACFromPoints = function(pointsAIn,pointsBIn, errorPosition, initialF, pOutlier, pDesired){
 		// R3D.fundamentalFromRansacImageMatches = function(imageMatrixA,imageMatrixB, matches){
 		// R3D.showRansac = function(pointsA, pointsB, matrixFfwd, matrixFrev, display, imageMatrixA,imageMatrixB){
+
+
+		console.log(bestA);
+		console.log(bestB);
+		console.log(matches);
+		// reverse lookup
+		var matchesLookup = {};
+		for(var i=0; i<matches.length; ++i){
+			var match = matches[i];
+			var A = match["A"];
+			var a = A["point"];
+			var index = a.x+"-"+a.y;
+			matchesLookup[index] = match;
+		}
+		var matchesAB = [];
+		var v = new V2D();
+		for(var i=0; i<bestA.length; ++i){
+			var a = bestA[i];
+			var index = a.x+"-"+a.y;
+			var match = matchesLookup[index];
+			// console.log(match);
+			var A = match["A"];
+			var B = match["B"];
+			var scale = B["size"]/A["size"];
+				v.set(1,0);
+				v.rotate(-A["angle"]);
+				v.rotate(B["angle"]);
+			var angle = V2D.angleDirection(V2D.DIRX,v);
+// console.log(Code.degrees(angle));
+			var affine = new Matrix2D();
+				affine.scale(scale);
+				affine.rotate(angle);
+			var matchAB = {};
+				matchAB["A"] = A["point"];
+				matchAB["B"] = B["point"];
+				matchAB["affine"] = affine;
+			matchesAB.push(match);
+		}
+
+		console.log(matchesAB);
+		R3D.findLocalSupportingCornerMatchNeighborhoods(imageMatrixA,imageMatrixB, matchesAB);
 
 
 

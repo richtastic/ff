@@ -7716,7 +7716,6 @@ console.log("checkPerformNextTask");
 		this.calculateViewSimilarities();
 		return;
 	}
-throw "........"
 
 // console.log("cams");
 // throw "calculate cameras";
@@ -7765,20 +7764,20 @@ throw "........"
 		return;
 	}
 
-throw "task pair feature match";
+// throw "task pair feature match";
 	// does a feature-match pair exist (even a bad match) between every (putative) view pair?
 	if(!project.checkHasSparseStarted()){
 		project.calculatePairPutatives();
 		return;
 	}
 	// throw "..."
-throw "iterate sparse ?";
+// throw "iterate sparse ?";
 	if(!project.checkHasSparseEnded()){
 		project.iterateSparseProcess();
 		return;
 	}
 
-// throw "start dense";
+throw "start dense";
 	if(!project.checkHasDenseStarted()){
 		project.calculateDensePairPutatives();
 		return;
@@ -8047,6 +8046,7 @@ console.log("GOT : relative: "+relativeCount);
 
 	console.log(inputData);
 
+
 	// LOAD EACH PAIR & DO MATCH | F | R | DENSE
 /*
 good = low error & visually accurate & cameras in correct location -- camera orientation + many points
@@ -8113,10 +8113,10 @@ if(!relativeAB && isDense){
 		relativeAB = extAB.toObject();
 	}
 }
-// throw "this is for dense"
+
 			if(relativeAB){ // dense
 				// console.logx(camAID,camBID,cameras);
-				// throw "..."
+throw "this is for dense"
 				console.log(relativeAB);
 // throw "?"
 				configuration = {};
@@ -8128,7 +8128,6 @@ if(!relativeAB && isDense){
 			// console.log(inputData);
 			// console.log(cameras);
 			// console.log(camAID, camBID)
-			// throw "here"
 			project.calculatePairMatchFromViewIDs(idA,idB, camAID,camBID,cameras, completePairFxn,project);
 			return;
 		}
@@ -8141,7 +8140,7 @@ if(!relativeAB && isDense){
 	}
 
 
-// throw ">triples";
+throw ">triples";
 
 	var triples = inputData["triples"];
 // var triples = null;
@@ -12005,9 +12004,12 @@ console.log("calculatePairMatchFromViewIDs")
 	var pairData = App3DR.ProjectManager.defaultPairFile(viewAID,viewBID);
 
 	var fxnReadyCheck = function(){
+// console.log(featureDataA,featureDataB);
+// console.log(imageA,imageB);
 		if(!(featureDataA && featureDataB && imageA && imageB)){
 			return;
 		}
+// throw "READY CHECK";
 GLOBALDISPLAY = GLOBALSTAGE;
 var DEBUG_SHOW = true;
 		var pairDoneSaveFxn = function(){
@@ -12059,7 +12061,8 @@ var maxErrorFTrackPixels = 20;
 var maxErrorRTrackPixels = 10;
 // SHOULD THESE BE PER-POINT ?
 // throw "HERE ^ LIMITS"
-
+		
+		/*
 		// drop features prioritized on cornerness score
 		Code.truncateArray(featuresA, maxFeatures);
 		Code.truncateArray(featuresB, maxFeatures);
@@ -12068,13 +12071,14 @@ var maxErrorRTrackPixels = 10;
 		featuresB = R3D.denormalizeSIFTObjects(featuresB, imageBWidth, imageBHeight);
 // featuresA = R3D.differentialCornersForImage(imageMatrixA);
 // featuresB = R3D.differentialCornersForImage(imageMatrixB);
-// console.log(featuresA);
-// console.log(featuresB);
+console.log(featuresA);
+console.log(featuresB);
 		// TO SIFT OBJECTS
 		var objectsA = R3D.generateProgressiveSIFTObjects(featuresA, imageMatrixA);
 		var objectsB = R3D.generateProgressiveSIFTObjects(featuresB, imageMatrixB);
 		console.log(objectsA);
 		console.log(objectsB);
+		*/
 
 		var goodEnoughMatches = true;
 		var F;
@@ -12083,6 +12087,36 @@ var maxErrorRTrackPixels = 10;
 		var pointsA;
 		var pointsB;
 
+
+		console.log(featuresA);
+		console.log(featuresB);
+
+		var imageScalesA = new ImageMatScaled(imageMatrixA);
+		var imageScalesB = new ImageMatScaled(imageMatrixB);
+		var features = [featuresA,featuresB];
+		var imageScales = [imageScalesA,imageScalesB];
+		var objectList = [];
+		for(var i=0; i<features.length; ++i){
+			var objects = R3D.generateProgressiveRIFTObjects(features[i], imageScales[i]);
+			objectList.push(objects);
+		}
+
+		var objectsA = objectList[0];
+		var objectsB = objectList[1];
+		console.log(objectsA);
+		console.log(objectsB);
+		console.log(imageScales);
+
+		var result = R3D.compareProgressiveRIFTObjectsFull(objectsA, objectsB);
+		var matches = result["matches"];
+
+
+
+
+
+		// var objects = R3D.generateProgressiveRIFTObjects(features, imageScales);
+		// var result = R3D.compareProgressiveRIFTObjectsFull(objectsA, objectsB);
+		// console.log(result);
 
 
 if(DEBUG_SHOW){
@@ -12102,6 +12136,81 @@ if(DEBUG_SHOW){
 	GLOBALSTAGE.addChild(d);
 }
 
+
+if(DEBUG_SHOW){
+	// original objects
+	// var list = [objectsA,objectsB];
+	// var images = [imageMatrixA,imageMatrixB];
+	// for(var i=0; i<list.length; ++i){
+	// 	var objects = list[i];
+	// }
+	// matches
+
+		var d = new DO();
+		// d.graphics().setFill(0xFFFFFFFF);
+		// d.graphics().setLine(1.0,0x993366FF);
+		// d.graphics().setLine(1.0,0xFFFF0000);
+//		var imageA = imageScalesA;
+		var color0 = new V3D(1,0,0);
+		var color1 = new V3D(0,1,0);
+		var color2 = new V3D(0,0,1);
+		// var color3 = new V3D(1,1,1);
+		var color3 = new V3D(0,0,0);
+		var colors = [color0,color1,color2,color3];
+		for(var i=0; i<matches.length; ++i){
+			var match = matches[i];
+			// console.log(match);
+			var a = match["A"];
+			var b = match["B"];
+			var pointA = a["point"];
+			var pointB = b["point"];
+			var size = 2.0;
+
+			var sizeA = a["size"];
+			var sizeB = b["size"];
+			// ...
+			var p = pointA.copy();
+			var q = pointB.copy();
+
+			var px = (p.x/imageScalesA.width());
+			var py = (p.y/imageScalesA.height());
+			var qx = 1 - px;
+			var qy = 1 - py;
+			var p0 = qx*qy;
+			var p1 = px*qy;
+			var p2 = qx*py;
+			var p3 = px*py;
+
+			// console.log(p0,p1,p2,p3, p0+p1+p2+p3);
+			var color = V3D.average(colors, [p0,p1,p2,p3]);
+			color = Code.getColARGBFromFloat(1.0,color.x,color.y,color.z);
+			
+			d.graphics().setLine(1.0,color);
+			// var point = feature["point"];
+			// var angle = feature["angle"];
+			// var size = feature["size"];
+			d.graphics().beginPath();
+			d.graphics().drawCircle(pointA.x,pointA.y,sizeA);
+			d.graphics().endPath();
+			d.graphics().strokeLine();
+
+			d.graphics().beginPath();
+			d.graphics().drawCircle(imageScalesA.width() + pointB.x,pointB.y,sizeB);
+			d.graphics().endPath();
+			d.graphics().strokeLine();
+			
+			// var dir = new V2D(size,0);
+			// dir.rotate(angle);
+			// d.graphics().beginPath();
+			// d.graphics().moveTo(point.x,point.y);
+			// d.graphics().lineTo(point.x+dir.x,point.y+dir.y);
+			// d.graphics().endPath();
+			// d.graphics().strokeLine();
+		}
+		d.matrix().translate(0,0);
+		GLOBALSTAGE.addChild(d);
+}
+
 // throw "before ..."
 
 	// var objectsA = R3D.generateProgressiveSIFTObjects(featuresA, imageMatrixA);
@@ -12110,6 +12219,67 @@ if(DEBUG_SHOW){
 	// console.log(objectsB);
 
 console.log("GET INITIAL F");
+
+		var pointsA = [];
+		var pointsB = [];
+		for(var i=0; i<matches.length; ++i){
+			var match = matches[i];
+			var a = match["A"];
+			var b = match["B"];
+			pointsA.push(a["point"]);
+			pointsB.push(b["point"]);
+		}
+		// console.log(pointsA);
+		// console.log(pointsB);
+		// console.log("SIZE: "+imageMatrixA.size()); // 504x378
+		var errorPixels = imageScalesA.size().length() * 0.01; // 5%=31.5px | 1%=6px  0.005=3px
+		// console.log("errorPixels: "+errorPixels);
+		var result = R3D.fundamentalRANSACFromPoints(pointsA,pointsB, errorPixels, null, 0.50, 0.99);
+		console.log(result);
+		var F = result["F"];
+		var best = result["matches"];
+		var bestA = best[0];
+		var bestB = best[1];
+		console.log(bestA,bestB);
+		F = R3D.fundamentalFromUnnormalized(bestA,bestB);
+
+
+		var Finv = R3D.fundamentalInverse(F);
+		console.log(F);
+		var info = R3D.fundamentalError(F,Finv,bestA,bestB);
+			var fMean = info["mean"];
+			var fSigma = info["sigma"];
+			var fError = fMean + fSigma;
+		console.log("F ERROR: "+fMean+" +/- "+fSigma);
+
+
+		// var FFwd = R3D.fundamentalFromUnnormalized(subsetPointsA,subsetPointsB);
+		// var FRev = R3D.fundamentalInverse(FFwd);
+
+
+
+		
+		//R3D.showRansac(pointsA,pointsB, F,Finv, null, imageMatrixA,imageMatrixB);
+		R3D.showRansac(bestA,bestB, F,Finv, null, imageScalesA,imageScalesB);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+throw "use new algs";
 	
 var F = null;
 var pointsA = null;
@@ -15259,73 +15429,52 @@ App3DR.ProjectManager.prototype.calculateViewSimilarities = function(){
 			var viewIDs = Code.keys(histograms);
 			var histogramArray = [];
 			var featureArray = [];
+			// var viewIDToIndex = {};
+			// var viewIndexToID = {};
 			for(var i=0; i<viewIDs.length; ++i){
 				var viewID = viewIDs[i];
 				histogramArray.push(histograms[viewID]);
 				featureArray.push(features[viewID]);
+				// viewIDToIndex[viewID] = i;
 			}
 
 			console.log(histogramArray);
 			console.log(featureArray);
-			
 			var result = R3D.sequentialImageMatchingLexigramEvaluate(histogramArray, featureArray);
 			console.log(result);
 			var compareScores = result["matches"];
 
+			// convert to score list
+			var existsList = {};
+			var scores = [];
+			for(var i=0; i<compareScores.length; ++i){
+				var item = compareScores[i];
+				var indexA = item["A"];
+				var indexB = item["B"];
+				var value = item["value"];
+				var idA = viewIDs[indexA];
+				var idB = viewIDs[indexB];
+				pairID = App3DR.ProjectManager.pairIDFromViewIDs(idA,idB);
+				if(existsList[pairID]){
+					console.log("already have pair: "+pairID);
+					continue;
+				}
+				existsList[pairID] = true;
+				// var score = Math.abs(i-index);
+				obj = {};
+				obj["A"] = idA;
+				obj["B"] = idB;
+				obj["s"] = value;
+				obj["id"] = pairID;
+				scores.push(obj);
+			}
+			scores.sort(function(a,b){
+				return a["s"]<b["s"] ? -1 : 1; // smaller better
+			});
+			console.log(scores);
+
 			project.showViewSimilarities(compareScores, viewIDs);
 
-			throw "here";
-/*
-	// use 'frame' distance
-	// for every view, compare to every other view
-	var scores = [];
-	var frameDistance = 3;
-	var existsList = {};
-	// var checkLength = views.length;
-	for(var i=0; i<views.length; ++i){
-		var viewA = views[i];
-		var idA = viewA.id();
-		var histA = histograms[idA];
-		var startJ = (i-frameDistance);
-		var endJ = (i+frameDistance);
-// console.log(i+" = "+startJ+" - "+endJ);
-		for(var j=startJ; j<=endJ; ++j){
-			var index = j;
-			while(index<0){
-				index += views.length;
-			}
-			while(index>=views.length){
-				index -= views.length;
-			}
-			if(i==index){
-				continue;
-			}
-			var viewB = views[index];
-			var idB = viewB.id();
-			pairID = App3DR.ProjectManager.pairIDFromViewIDs(idA,idB);
-			if(existsList[pairID]){
-				continue;
-			}
-			existsList[pairID] = true;
-			// var score = Math.abs(i-index);
-			var score = Math.abs(i-j);
-			obj = {};
-			obj["A"] = idA;
-			obj["B"] = idB;
-			obj["s"] = score;
-			
-			obj["id"] = pairID;
-			scores.push(obj);
-			// console.log(i+" "+index+" = "+score);
-		}
-	}
-
-	scores.sort(function(a,b){
-		return a["s"]<b["s"] ? -1 : 1; // smaller better
-	});
-*/
-			console.log(scores);
-project.showViewSimilarities(scores);
 throw "BEFORE SAVE SIMILARITIES - now go save similarities";
 			project.setViewSimilarity(scores);
 			project.setSparseFilename(null);
@@ -15362,15 +15511,6 @@ App3DR.ProjectManager.prototype.showViewSimilarities = function(similarities, vi
 		view.loadIconImage(fxnViewImageLoaded, project);
 	}
 	var fxnShowSimilarity = function(){
-		// var circleRadius = 700; // ~20
-		// var circleRadius = 400; // ~10
-		// var circleRadius = 50*imageCount;
-
-		console.log("fxnShowSimilarity");
-
-		// var images = [];
-		// var matrixes = [];
-		// var viewIDs = [];
 		var viewIDToIndex = {};
 		for(var i=0; i<views.length; ++i){
 			viewIDToIndex[viewIDList[i]] = i;
@@ -15729,6 +15869,11 @@ App3DR.ProjectManager.prototype.calculatePairPutatives = function(){
 	
 	var cappedMinimumPairCount = 3; // need at least 2 + 1 other views to try + error (~2) 3->4 -- for very similar scenes
 	var cappedMaximumPairCount = 10; // 3 + 100^0.5 => 10
+// keep all, already found in similarity extimation
+cappedMinimumPairCount = 999;
+cappedMaximumPairCount = 999;
+
+
 	var minimumPairCount = cappedMinimumPairCount;
 	// 4  -> 4
 	// 9  -> 5
@@ -15835,8 +15980,7 @@ console.log("keep: "+keys.length);
 	
 	var filename = Code.appendToPath(App3DR.ProjectManager.BUNDLE_SPARSE_DIRECTORY, App3DR.ProjectManager.BUNDLE_SPARSE_FILE_NAME);
 	console.log("filename: "+filename);
-		project.setSparseFilename(filename);
-
+	project.setSparseFilename(filename);
 
 	// only keep relevant views:
 	var sparseViews = [];
@@ -15891,7 +16035,7 @@ console.log("keep: "+keys.length);
 		project.saveProjectFile(fxnSavedProject, project);
 	}
 console.log(sparseData);
-// throw "BEFORE SAVE SPARSE"
+throw "BEFORE SAVE SPARSE"
 	project.saveSparseFromData(sparseData, fxnSavedSparse, project);
 	
 }

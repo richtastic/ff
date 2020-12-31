@@ -386,6 +386,29 @@ MISSING:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+- ALREADY HAVE NEIGHBORHOOD SEARCH?
+
+
+- HAVE INITIAL F / MATCHES SEEDS (ERROR)
+- INCREASE SUPPORT:
+	- neighborhood seed search
+		- use corner points -- original points (not necessarily size/rotation)
+		- for each seed point (= neighborhood):
+			- estimate best affine rotation/scale match
+			- find matches in opposite assuming affine transform & search window
+			- keep only matches that match fwd<->bak
+		- compare neighborhoods:
+			- neighborhood score = average match score * (successful match ratio)  (different windows may have different possible corner count & success)
+			- drop neighborhoods with >2sigma scores
+		- compare final points:
+			- drop scores > 2sigma
+		- update F
+			- drop points > 2-3sigma error
+		- update F
+- DENSE F:
+	- use world to explore / expand from seed points
+
+
 
 - start case study process again - using udpated/new algorithms
 	- upload rabbit sequence

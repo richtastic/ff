@@ -10170,7 +10170,7 @@ R3D.sequentialImageMatchingLexigramGenerate = function(images){ // grelexigram
 	return {"histograms":histograms, "features":features};
 }
 
-R3D.sequentialImageMatchingLexigramEvaluate = function(histograms,featureLists, maximumPairCount){ // lexigram
+R3D.sequentialImageMatchingLexigramEvaluate = function(histograms,featureLists, maximumPairCount, tripleCountTODO,choiceCountTODO){ // lexigram
 	var maximumMatchPercentHistogram = 0.50;
 	var maximumMatchPercentHistogram = 0.10;
 	var maximumMatchPercentHistogram = 0.05;
@@ -15296,6 +15296,38 @@ R3D._cornerListToFeatureList = function(corners, imageScale){
 		features[i] = {"point":point};
 	}
 	return features;
+}
+
+R3D.findLocalSupportingCornerMatchNeighborhoods = function(imageMatrixA,imageMatrixB, matchesAB, imageCornerDensityPercent){
+
+	console.log(imageMatrixA);
+	console.log(imageMatrixB);
+	console.log(matchesAB);
+
+	console.log("R3D.findLocalSupportingCornerMatchNeighborhoods");
+/*
+	get corners
+	give corners IDs
+	insert corners into quadtree
+
+	for each match
+		find optimal affine from initial + GD
+		get corners in neghborhood radius
+		make features for each corner in A & transformed in B
+		match local sample
+			- should they be limited by affine area ?
+		add neighborhood entry:
+			- list of f/b matching points
+			- average top score
+			- success ratio
+	plot neighborhood scores
+	drop worst neighborhoods
+	record best match for each A-B point
+	(each B has a best A & each A has a best B)
+
+*/
+
+	throw "..."
 }
 
 R3D.findLocalSupportingCornerMatches = function(imageMatrixA,imageMatrixB, pointsA,pointsB, imageCornerDensityPercent, affinesAB){ // 
@@ -32072,7 +32104,7 @@ R3D.showRansac = function(pointsA, pointsB, matrixFfwd, matrixFrev, display, ima
 		color = Code.setAlpARGB(color,0xFF);
 
 		var c = new DO();
-		c.graphics().setLine(2.0, color);
+		c.graphics().setLine(3.0, color);
 		c.graphics().beginPath();
 		c.graphics().drawCircle(pointA.x, pointA.y, 5);
 		c.graphics().strokeLine();
