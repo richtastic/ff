@@ -386,7 +386,77 @@ MISSING:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
+- matches in test are more dense than matches in app
+	FEATURES: 1291 & 1362 v 999 & 1093 ---- 75%-80%
+	MATCHES: 121 v 209
+
+
+
+
+- try neighborhood accuracy based on 8-neighbor guesses
+	- compare 1:1 x 8-9 scores
+	- filter nighborhoods on average score
+		-> poor:
+			- bad affine
+			- bad location in general
+			...
+- faster way to do compare of neighborhoods ...
+-> call comparing fxn once ?
+
+
+
+- try just getting top matches from neighborhoods ... - no filtering
+
+INCREASES:
+68 -> 189
+90 -> 356
+113 -> 389
+32 -> 97
+174 -> 303
+56 -> 234
+66 -> 260
+64 -> 181
+265 -> 535
+255 -> 521
+78 -> 170
+227 -> 515
+111 -> 229
+39 -> 53 (bad)
+150 -> 333
+38 -> 118
+217 -> 518
+26 -> 52
+61 -> 132
+233 -> 
+
+
+[1:2 -> 1:3]
+
+- getting affine match not very reliable ...
+	- try other methods?
+		- use F for rotation & do only iteritive scale?
+		- do iteritive angle/scale or vx,vy,ux,uy space?
+	- ...
+
+
+
+
+
 - ALREADY HAVE NEIGHBORHOOD SEARCH?
+
+
+- try previous neighborhood method
+
+
+
+
+
+
+
+
+
+
 
 
 - HAVE INITIAL F / MATCHES SEEDS (ERROR)

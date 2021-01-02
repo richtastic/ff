@@ -12315,6 +12315,7 @@ var Ferror = null;
 	// get 'affine' 2D transform from previous results
 	console.log("GET AFFINE LOCAL");
 			var info = R3D.average2DTranformForIndividualPoints(pointsA,pointsB, imageMatrixA,imageMatrixB, true);
+			
 			console.log(info);
 			var transforms = info["transforms"];
 

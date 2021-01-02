@@ -387,6 +387,7 @@ var color2 = new V3D(0,0,1);
 var color3 = new V3D(0,0,0);
 var colors = [color0,color1,color2,color3];
 		for(var i=0; i<matches.length; ++i){
+break;
 			var match = matches[i];
 			// console.log(match);
 			var a = match["A"];
@@ -466,14 +467,14 @@ color = Code.getColARGBFromFloat(1.0,color.x,color.y,color.z);
 			var img = GLOBALSTAGE.getFloatRGBAsImage(image.red(),image.grn(),image.blu(), image.width(),image.height());
 			var d = new DOImage(img);
 			d.matrix().scale(sss);
-			d.matrix().translate(0 + i*80, 0 + 400);
+			d.matrix().translate(0 + i*80, 0 + 800);
 			GLOBALSTAGE.addChild(d);
 
 			var image = imageB;
 			var img = GLOBALSTAGE.getFloatRGBAsImage(image.red(),image.grn(),image.blu(), image.width(),image.height());
 			var d = new DOImage(img);
 			d.matrix().scale(sss);
-			d.matrix().translate(0 + i*80, 0 + 400 + 80);
+			d.matrix().translate(0 + i*80, 0 + 800 + 80);
 			GLOBALSTAGE.addChild(d);
 
 			// show rift bins:
@@ -524,9 +525,9 @@ for(var l=0; l<lll.length; ++l){
 			d.graphics().strokeLine();
 			// d.matrix().scale(sss);
 			if(l==0){
-				d.matrix().translate(0 + i*80, 0 + 400 + 0);
+				d.matrix().translate(0 + i*80, 0 + 800 + 0);
 			}else{
-				d.matrix().translate(0 + i*80, 0 + 400 + 80);
+				d.matrix().translate(0 + i*80, 0 + 800 + 80);
 			}
 			GLOBALSTAGE.addChild(d);
 }
@@ -578,11 +579,11 @@ for(var l=0; l<lll.length; ++l){
 
 
 
+
+//		R3D.showRansac(bestA,bestB, F,Finv, null, imageMatrixA,imageMatrixB);
 		
-		//R3D.showRansac(pointsA,pointsB, F,Finv, null, imageMatrixA,imageMatrixB);
-		R3D.showRansac(bestA,bestB, F,Finv, null, imageMatrixA,imageMatrixB);
 		
-		// console.log
+
 		// R3D.fundamentalRANSACFromPoints = function(pointsAIn,pointsBIn, errorPosition, initialF, pOutlier, pDesired){
 		// R3D.fundamentalFromRansacImageMatches = function(imageMatrixA,imageMatrixB, matches){
 		// R3D.showRansac = function(pointsA, pointsB, matrixFfwd, matrixFrev, display, imageMatrixA,imageMatrixB){
@@ -622,10 +623,10 @@ for(var l=0; l<lll.length; ++l){
 				matchAB["A"] = A["point"];
 				matchAB["B"] = B["point"];
 				matchAB["affine"] = affine;
-			matchesAB.push(match);
+			matchesAB.push(matchAB);
 		}
 
-		console.log(matchesAB);
+		// console.log(matchesAB);
 		R3D.findLocalSupportingCornerMatchNeighborhoods(imageMatrixA,imageMatrixB, matchesAB);
 
 
@@ -635,24 +636,49 @@ for(var l=0; l<lll.length; ++l){
 	// new ImageLoader("../images/iowa/",["0.JPG","2.JPG"],this,fxnImageLoaded).load();
 	// new ImageLoader("../images/iowa/",["5.JPG","6.JPG"],this,fxnImageLoaded).load();
 	// new ImageLoader("../images/iowa/",["6.JPG","7.JPG"],this,fxnImageLoaded).load();
-	// new ImageLoader("../images/iowa/",["7.JPG","8.JPG"],this,fxnImageLoaded).load();
+	// new ImageLoader("../images/iowa/",["7.JPG","8.JPG"],this,fxnImageLoaded).load(); // hard
 	// new ImageLoader("../images/iowa/",["8.JPG","9.JPG"],this,fxnImageLoaded).load();
 
 	// new ImageLoader("../images/",["bench_A.png","bench_B.png"],this,fxnImageLoaded).load();
+	// new ImageLoader("../images/",["bench_B.png","bench_C.png"],this,fxnImageLoaded).load();
 	// new ImageLoader("../images/",["bench_E.png","bench_F.png"],this,fxnImageLoaded).load();
 	// new ImageLoader("../images/",["room0.png","room2.png"],this,fxnImageLoaded).load();
 	
 	// new ImageLoader("../images/",["caseStudy1-0.jpg","caseStudy1-9.jpg"],this,fxnImageLoaded).load();
 	// new ImageLoader("../images/",["caseStudy1-20.jpg","caseStudy1-24.jpg"],this,fxnImageLoaded).load();
+	// new ImageLoader("../images/",["caseStudy1-20.jpg","caseStudy1-26.jpg"],this,fxnImageLoaded).load();
+	// new ImageLoader("../images/",["caseStudy1-26.jpg","caseStudy1-29.jpg"],this,fxnImageLoaded).load();
+
 	// new ImageLoader("../images/",["zA_small.jpg","zB_small.jpg"],this,fxnImageLoaded).load();
 	// new ImageLoader("../images/",["temple_1.png","temple_2.png"],this,fxnImageLoaded).load();
-	new ImageLoader("../images/",["castle.000.jpg","castle.009.jpg"],this,fxnImageLoaded).load();
+	// new ImageLoader("../images/",["castle.000.jpg","castle.009.jpg"],this,fxnImageLoaded).load();
 	// new ImageLoader("../images/",["bt.000.png","bt.006.png"],this,fxnImageLoaded).load();
 
 	// new ImageLoader("../images/elephant/",["ele_1.JPG","ele_6.JPG"],this,fxnImageLoaded).load();
 	// new ImageLoader("../images/elephant/",["ele_1.JPG","ele_5.JPG"],this,fxnImageLoaded).load();
 	// new ImageLoader("../images/elephant/",["ele_1.JPG","ele_4.JPG"],this,fxnImageLoaded).load();
 
+	// new ImageLoader("../images/rabbit/",["1.jpg","2.jpg"],this,fxnImageLoaded).load();
+	// new ImageLoader("../images/rabbit/",["1.jpg","3.jpg"],this,fxnImageLoaded).load();
+	new ImageLoader("../images/rabbit/",["10.jpg","11.jpg"],this,fxnImageLoaded).load();
+	// new ImageLoader("../images/rabbit/",["6.jpg","9.jpg"],this,fxnImageLoaded).load();
+
+
+	// new ImageLoader("../images/flowers_1/",["7120.png","7127.png","7131.png","7133.png","7140.png","7141.png","7144.png"],this,fxnImageLoaded).load();
+	// new ImageLoader("../images/flowers_1/",["7120.png","7127.png"],this,fxnImageLoaded).load();
+	// new ImageLoader("../images/flowers_1/",["7131.png","7133.png"],this,fxnImageLoaded).load();
+
+	// new ImageLoader("../images/room01/",["small_01.JPG","small_02.JPG"],this,fxnImageLoaded).load();
+
+	// new ImageLoader("../images/pika_1/",["image-0.png","image-2.png"],this,fxnImageLoaded).load();
+	// new ImageLoader("../images/pika_1/",["image-0.png","image-5.png"],this,fxnImageLoaded).load();
+
+	// new ImageLoader("../images/",["F_S_1_1.jpg","F_S_1_2.jpg"],this,fxnImageLoaded).load();
+
+	// new ImageLoader("../images/",["graffiti_1.png","graffiti_2.png"],this,fxnImageLoaded).load();
+
+	// new ImageLoader("../images/",["medusa_1.png","medusa_2.png"],this,fxnImageLoaded).load();
+	// new ImageLoader("../images/",["medusa_1.png","medusa_3.png"],this,fxnImageLoaded).load();
 
 
 }
