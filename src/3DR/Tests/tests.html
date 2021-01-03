@@ -292,6 +292,9 @@ function testRIFTMatches(){
 			var features = R3D.colorGradientFeaturesFromPoints(corners,imageScales);
 			console.log(features);
 
+
+			console.log("STARTING FEATURES["+iii+"]: "+features.length);
+
 			// throw "???"
 
 			var points = corners;
@@ -324,6 +327,16 @@ break;
 			d.matrix().translate(iii*imageMatrix.width(),0);
 			GLOBALSTAGE.addChild(d);
 
+/*
+var sizes = [];
+for(var i=0; i<features.length; ++i){
+	var feature = features[i];
+	var size = feature["size"];
+	size = size/imageMatrix.size().length();
+	sizes.push(size);
+}
+Code.printMatlabArray(sizes);
+*/
 
 			// show finalized features:
 /*
@@ -368,8 +381,11 @@ break;
 			console.log(objects);
 			objectsList.push(objects);
 		}
+		
+
 		var objectsA = objectsList[0];
 		var objectsB = objectsList[1];
+		console.log("STARTING RIFT OBJECTS: "+objectsA.length+" & "+objectsB.length);
 		var result = R3D.compareProgressiveRIFTObjectsFull(objectsA, objectsB);
 		console.log(result);
 		// 
@@ -580,7 +596,7 @@ for(var l=0; l<lll.length; ++l){
 
 
 
-//		R3D.showRansac(bestA,bestB, F,Finv, null, imageMatrixA,imageMatrixB);
+		R3D.showRansac(bestA,bestB, F,Finv, null, imageMatrixA,imageMatrixB);
 		
 		
 
@@ -627,7 +643,21 @@ for(var l=0; l<lll.length; ++l){
 		}
 
 		// console.log(matchesAB);
-		R3D.findLocalSupportingCornerMatchNeighborhoods(imageMatrixA,imageMatrixB, matchesAB);
+		// R3D.findLocalSupportingCornerMatchNeighborhoods(imageMatrixA,imageMatrixB, matchesAB);
+
+
+		var result = R3D.keepExtendedMatchNeighborhoods(imageMatrixA,imageMatrixB, matchesAB);
+		console.log(result);
+		var matches = result["matches"];
+
+		var imageCornerDensityPercent = null;
+		var result = R3D.findLocalSupportingCornerMatchNeighborhoods(imageMatrixA,imageMatrixB, matchesAB, imageCornerDensityPercent);
+		console.log(result);
+
+
+		// R3D.findLocalSupportingCornerMatches = function(imageMatrixA,imageMatrixB, pointsA,pointsB, imageCornerDensityPercent, affinesAB){ // 
+
+		// R3D.findLocalSupportingCornerMatchNeighborhoods();
 
 
 
@@ -652,7 +682,7 @@ for(var l=0; l<lll.length; ++l){
 	// new ImageLoader("../images/",["zA_small.jpg","zB_small.jpg"],this,fxnImageLoaded).load();
 	// new ImageLoader("../images/",["temple_1.png","temple_2.png"],this,fxnImageLoaded).load();
 	// new ImageLoader("../images/",["castle.000.jpg","castle.009.jpg"],this,fxnImageLoaded).load();
-	// new ImageLoader("../images/",["bt.000.png","bt.006.png"],this,fxnImageLoaded).load();
+	new ImageLoader("../images/",["bt.000.png","bt.006.png"],this,fxnImageLoaded).load();
 
 	// new ImageLoader("../images/elephant/",["ele_1.JPG","ele_6.JPG"],this,fxnImageLoaded).load();
 	// new ImageLoader("../images/elephant/",["ele_1.JPG","ele_5.JPG"],this,fxnImageLoaded).load();
@@ -660,8 +690,11 @@ for(var l=0; l<lll.length; ++l){
 
 	// new ImageLoader("../images/rabbit/",["1.jpg","2.jpg"],this,fxnImageLoaded).load();
 	// new ImageLoader("../images/rabbit/",["1.jpg","3.jpg"],this,fxnImageLoaded).load();
-	new ImageLoader("../images/rabbit/",["10.jpg","11.jpg"],this,fxnImageLoaded).load();
+	// new ImageLoader("../images/rabbit/",["10.jpg","11.jpg"],this,fxnImageLoaded).load();
 	// new ImageLoader("../images/rabbit/",["6.jpg","9.jpg"],this,fxnImageLoaded).load();
+
+
+	// new ImageLoader("../images/rabbit/",["E.jpg","E.jpg"],this,fxnImageLoaded).load();
 
 
 	// new ImageLoader("../images/flowers_1/",["7120.png","7127.png","7131.png","7133.png","7140.png","7141.png","7144.png"],this,fxnImageLoaded).load();
@@ -670,6 +703,7 @@ for(var l=0; l<lll.length; ++l){
 
 	// new ImageLoader("../images/room01/",["small_01.JPG","small_02.JPG"],this,fxnImageLoaded).load();
 
+	// new ImageLoader("../images/pika_1/",["image-0.png","image-1.png"],this,fxnImageLoaded).load();
 	// new ImageLoader("../images/pika_1/",["image-0.png","image-2.png"],this,fxnImageLoaded).load();
 	// new ImageLoader("../images/pika_1/",["image-0.png","image-5.png"],this,fxnImageLoaded).load();
 

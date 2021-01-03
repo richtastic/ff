@@ -387,10 +387,23 @@ MISSING:
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
-- matches in test are more dense than matches in app
-	FEATURES: 1291 & 1362 v 999 & 1093 ---- 75%-80%
-	MATCHES: 121 v 209
+- STEPS F:
+	- FEATURE - SCALE + ROTATION UNKNOWN FULL MATCH [1k-2k] 		guess features [splotchy]
+	- RANSAC MATCHING FEATURES [100-500] 							guess F, best features
+	- CONSISTENT NEIGHBORHOOD FEATURES [100-400] 					best features
+	- NEIGHBORHOOD BEST MATCH FEATURES [200-600] 					increase features
+	=> from corner to PRECISE PIXEL LOCATION?
+	- RANSAC NEIGHBORHOOD FEATURES [100-500] 						better F, best features
+	- 
 
+
+- STEPS R:
+	- F-LINE MATCHES, GOOD AFFINE [1k-2k] 							good guess features [good spread]
+		- search neighborhood for exact location
+	- RANSAC MATCHING [500-1000] 									better F, best features
+	- CONSISTENT NEIGHBORHOOD [500-1000] 							best features
+	- NEIGHBORHOOD? [1k-2k]
+	- RANSAC NEIGHBORHOOD [500-1000]
 
 
 

@@ -12088,14 +12088,36 @@ console.log(featuresB);
 		var pointsB;
 
 
+		featuresA = R3D.denormalizeSIFTObjects(featuresA, imageAWidth, imageAHeight);
+		featuresB = R3D.denormalizeSIFTObjects(featuresB, imageBWidth, imageBHeight);
+
 		console.log(featuresA);
 		console.log(featuresB);
+// throw "???"
 
 		var imageScalesA = new ImageMatScaled(imageMatrixA);
 		var imageScalesB = new ImageMatScaled(imageMatrixB);
 		var features = [featuresA,featuresB];
 		var imageScales = [imageScalesA,imageScalesB];
 		var objectList = [];
+
+		console.log("STARTING FEATURES: "+featuresA.length+" & "+featuresB.length);
+
+/*
+for(var i=0; i<features.length; ++i){
+	var sizes = [];
+	var featureList = features[i];
+	for(var j=0; j<featureList.length; ++j){
+		var feature = featureList[j];
+		var size = feature["size"];
+		size = size/imageScalesA.size().length();
+		sizes.push(size);
+	}
+	Code.printMatlabArray(sizes);
+}
+*/
+
+
 		for(var i=0; i<features.length; ++i){
 			var objects = R3D.generateProgressiveRIFTObjects(features[i], imageScales[i]);
 			objectList.push(objects);
@@ -12105,7 +12127,10 @@ console.log(featuresB);
 		var objectsB = objectList[1];
 		console.log(objectsA);
 		console.log(objectsB);
-		console.log(imageScales);
+
+		console.log("STARTING RIFT OBJECTS: "+objectsA.length+" & "+objectsB.length);
+// throw "????????????????????"
+		// console.log(imageScales);
 
 		var result = R3D.compareProgressiveRIFTObjectsFull(objectsA, objectsB);
 		var matches = result["matches"];
@@ -12218,7 +12243,7 @@ if(DEBUG_SHOW){
 	// console.log(objectsA);
 	// console.log(objectsB);
 
-console.log("GET INITIAL F");
+console.log("GET INITIAL F: "+matches.length);
 
 		var pointsA = [];
 		var pointsB = [];
@@ -12315,7 +12340,7 @@ var Ferror = null;
 	// get 'affine' 2D transform from previous results
 	console.log("GET AFFINE LOCAL");
 			var info = R3D.average2DTranformForIndividualPoints(pointsA,pointsB, imageMatrixA,imageMatrixB, true);
-			
+
 			console.log(info);
 			var transforms = info["transforms"];
 
@@ -15275,6 +15300,9 @@ App3DR.ProjectManager.prototype._calculateFeaturesLoaded = function(view){
 	var features = R3D.colorGradientFeaturesFromPoints(corners,imageScales);
 	console.log(features);
 
+
+// throw "BEFORE"
+
 	var result = R3D.sequentialImageMatchingLexigramGenerate([imageScales]);
 		var histograms = result["histograms"];
 		var words = result["features"];
@@ -15284,11 +15312,32 @@ App3DR.ProjectManager.prototype._calculateFeaturesLoaded = function(view){
 console.log(word);
 console.log(histogram);
 
+
+	var normalizedFeatures = R3D.normalizeSIFTObjects(features, imageMatrix.width(), imageMatrix.height());
+
+
+console.log(features);
+console.log(normalizedFeatures);
+
 	var data = {};
-		data["features"] = features;
+		data["features"] = normalizedFeatures;
 		data["flatHistogram"] = histogram;
 		data["lexicon"] = word;
 	console.log(data);
+
+
+/*
+	var sizes = [];
+for(var i=0; i<features.length; ++i){
+	var feature = features[i];
+	var size = feature["size"];
+	size = size/imageMatrix.size().length();
+	sizes.push(size);
+}
+Code.printMatlabArray(sizes);
+*/
+
+	// throw "here"
 	// var str = YAML.parse(data);
 	// console.log(str);
 // throw "here --- features"
