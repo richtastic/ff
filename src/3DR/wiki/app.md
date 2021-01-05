@@ -387,6 +387,11 @@ MISSING:
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
+- semidense points missing initial mached points
+
+
+- sizes A & B are the same --- the extraction size in EITHER IMAGE after the transform (identity or affine match)
+
 - STEPS F:
 	- FEATURE - SCALE + ROTATION UNKNOWN FULL MATCH [1k-2k] 		guess features [splotchy]
 	- RANSAC MATCHING FEATURES [100-500] 							guess F, best features

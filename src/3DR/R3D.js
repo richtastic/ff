@@ -15440,7 +15440,8 @@ var bads = [];
 	}
 	console.log(goods);
 	console.log(bads);
-
+// if(false){
+if(true){
 	var d = new DO();
 	// d.graphics().setFill(0x99FFFFFF);
 	d.graphics().setFill(0x66FFFFFF);
@@ -15485,12 +15486,9 @@ var bads = [];
 			d.graphics().endPath();
 			d.matrix().translate(imageMatrixA.width(),0);
 			GLOBALSTAGE.addChild(d);
-
-			
-
-
 		}
 	}
+}
 
 	var matches = [];
 	for(var i=0; i<goods.length; ++i){
@@ -15505,27 +15503,433 @@ var bads = [];
 
 // R3D.findLocalSupportingCornerMatches = function(imageMatrixA,imageMatrixB, pointsA,pointsB, imageCornerDensityPercent, affinesAB){ // 
 R3D.findLocalSupportingCornerMatchNeighborhoods = function(imageMatrixA,imageMatrixB, matchesAB, imageCornerDensityPercent){
+	console.log("R3D.findLocalSupportingCornerMatchNeighborhoods");
 	imageCornerDensityPercent = Code.valueOrDefault(imageCornerDensityPercent, 0.015);
 	// var nonMaximalPercent = 0.015;
 	// var nonRepeatPercent = 0.005;
-	var nonMaximalPercent = imageCornerDensityPercent;
-	var nonRepeatPercent = imageCornerDensityPercent*3; // 2-4
+	// var nonMaximalPercent = imageCornerDensityPercent;
+	// var nonRepeatPercent = imageCornerDensityPercent*3; // 2-4
+	// AREAS
+	var neighborhoodRadius = 0.06; // 0.05 - 0.10
+	var featureSize = 0.05; // 0.04-0.06
+
+	var nonMaximalPercent = 0.015;
+	var nonRepeatPercent = 0.005;
+	// var nonMaximalPercent = 0.020;
+	// var nonRepeatPercent = 0.010;
 	var cornersA = R3D.optimalCountFeaturesFromImageScales(imageMatrixA, nonMaximalPercent, nonRepeatPercent);
 	var cornersB = R3D.optimalCountFeaturesFromImageScales(imageMatrixB, nonMaximalPercent, nonRepeatPercent);
+	console.log(cornersA);
+	console.log(cornersB);
+	var imageSizeA = imageMatrixA.size().length();
+	var imageSizeB = imageMatrixB.size().length();
+
+	var searchSizeRadiusA = imageSizeA * neighborhoodRadius;
+	var searchSizeRadiusB = imageSizeB * neighborhoodRadius;
+	var featureSizeA = imageSizeA * featureSize;
+	var featureSizeB = imageSizeB * featureSize;
+	var toPoint = function(a){
+		return a["point"];
+	}
+	var identity = new Matrix2D();
+		identity.identity();
+	var quadTreeA = new QuadTree(toPoint, V2D.ZERO, imageMatrixA.size());
+	var quadTreeB = new QuadTree(toPoint, V2D.ZERO, imageMatrixB.size());
+	var cornerList = [cornersA,cornersB];
+	var quadList = [quadTreeA,quadTreeB];
+	var objectsList = [];
+	// var globalObjectIndex = 0;
+	for(var i=0; i<cornerList.length; ++i){
+		var corners = cornerList[i];
+		var quadTree = quadList[i];
+		var cornerID = 0;
+		var objects = [];
+			objectsList.push(objects);
+		for(var j=0; j<corners.length; ++j){
+			var corner = corners[j];
+			var point = new V2D(corner.x,corner.y);
+			var object = {};
+				object["id"] = cornerID++;
+				object["point"] = point;
+				object["candidates"] = {};
+				object["variants"] = {};
+				object["best"];
+			if(i==0){ // A
+				object["variants"]["0"] = {"point":point, "affine":identity, "size":featureSizeA};
+			}
+			objects.push(object);
+			quadTree.insertObject(object);
+		}
+	}
+	var objectsA = objectsList[0];
+	var objectsB = objectsList[1];
+
+	// helpers
+	var maximumScaleDifference = 0.1; // 0.1 - 0.2
+	var maximumAngleDifference = 15; // 5-20 degrees : 10=> 36 | 12=>30 | 15=>24 | 18=>20 | 22.5=>16
+	var maximumTableEntries = Math.round(360.0/maximumAngleDifference);
+	var roundedScale = function(scale){
+		// scale = Math.log(scale/maximumScaleDifference);
+		scale = Math.log(scale);
+		// scale = Math.round(maximumTableEntries * scale/maximumScaleDifference);
+		// scale = Math.round(scale/maximumScaleDifference);
+		scale = Math.round(scale/maximumScaleDifference);
+		return scale;
+	};
+
+// console.log("...");
+// 	console.log(roundedScale(1.0));
+// 	console.log(roundedScale(1.1));
+// 	console.log(roundedScale(1.2));
+// 	console.log(roundedScale(1.3));
+// 	console.log(roundedScale(1.4));
+// 	console.log(roundedScale(1.5));
+// 	console.log(roundedScale(2.0));
+// 	console.log(roundedScale(0.90));
+// 	console.log(roundedScale(0.80));
+// 	console.log(roundedScale(0.70));
+// 	console.log(roundedScale(0.60));
+// 	console.log(roundedScale(0.50));
+	
+
+	// throw "?"
+
+	var roundedAngle = function(angle){
+		var indexAngle = Math.round(maximumTableEntries * Code.angleZeroTwoPi(angle)/Math.PI2 );
+		return indexAngle;
+	};
+
+// console.log("...");
+// 	console.log(roundedAngle(Code.radians(0.0)));
+// 	console.log(roundedAngle(Code.radians(-30.0)));
+// 	console.log(roundedAngle(Code.radians(45.0)));
+// 	console.log(roundedAngle(Code.radians(180.0)));
+
+	// throw "?"
+
+	var indexForAngleScale = function(angle, scale){//, justIndex){
+		angle = roundedAngle(angle);
+		scale = roundedScale(scale);
+		var index = angle+"."+scale;
+		return index;
+	}
+
 	// find all possibly needed feature variations
 
-	// extract features
-	// var objectA = R3D.generateProgressiveRIFTObjects([featureA], imageMatrixA, false);
-	// R3D._progressiveMatchIndex(objectsA);
-	// R3D._progressiveMatchIndex(objectsB);
+	for(var i=0; i<matchesAB.length; ++i){
+		var matchAB = matchesAB[i];
+		var pointA = matchAB["A"];
+		var pointB = matchAB["B"];
+		var affineAB = matchAB["affine"];
+		var inverse = affineAB.copy();
+			inverse.inverse(); // B to A
+		matchAB["inverse"] = inverse;
+	}
 
-	// do compare on each feature with only it's sub-group of matches
-	// var score = R3D.compareProgressiveRIFTObjectsCombined(objectA,objectB);
-	// R3D.compareProgressiveRIFTObjectsMatches = function(objectsA, objectsB) // does compare AND scoring
+	for(var i=0; i<matchesAB.length; ++i){
+		var matchAB = matchesAB[i];
+		var pointA = matchAB["A"];
+		var pointB = matchAB["B"];
+		var affineBA = matchAB["inverse"];
+
+		var info = R3D.infoFromAffine2D(affineBA);
+		var affineAngle = info["angle"];
+		var affineScale = info["scale"];
+		var affineIndex = indexForAngleScale(affineAngle,affineScale);
+
+		var candidatesA = quadTreeA.objectsInsideCircle(pointA,searchSizeRadiusA);
+		var candidatesB = quadTreeB.objectsInsideCircle(pointB,searchSizeRadiusB); // shrink or grow --  * affineScale
+/*
+// SHOW CANDIDATES
+if(false){
+for(var z=0; z<candidatesA.length; ++z){
+	var candidateA = candidatesA[z];
+	var p = candidateA["point"];
+	var size = 5;
+	var d = new DO();
+	d.graphics().setLine(1.0, 0xFFFF0000);
+	d.graphics().beginPath();
+	d.graphics().drawCircle(p.x, p.y, size);
+	d.graphics().strokeLine();
+	d.graphics().endPath();
+	d.matrix().translate(0,0);
+	GLOBALSTAGE.addChild(d);
+}
+for(var z=0; z<candidatesB.length; ++z){
+	var candidateB = candidatesB[z];
+	var p = candidateB["point"];
+	var size = 5;
+	var d = new DO();
+	d.graphics().setLine(1.0, 0xFF0000FF);
+	d.graphics().beginPath();
+	d.graphics().drawCircle(p.x, p.y, size);
+	d.graphics().strokeLine();
+	d.graphics().endPath();
+	d.matrix().translate(imageMatrixA.width(),0);
+	GLOBALSTAGE.addChild(d);
+}
+}
+*/
+		for(var a=0; a<candidatesA.length; ++a){
+			var candidateA = candidatesA[a];
+			var idA = candidateA["id"];
+			var putativesA = candidateA["candidates"];
+			for(var b=0; b<candidatesB.length; ++b){
+				var candidateB = candidatesB[b];
+				var idB = candidateB["id"];
+				var putativesB = candidateB["candidates"];
+				// add a to b and b to a
+				putativesA[idB] = candidateB;
+				putativesB[idA] = candidateA;
+				// record affine possibility
+				var variantsB = candidateB["variants"];
+				if(!variantsB[affineIndex]){
+					variantsB[affineIndex] = {"point":candidateB["point"], "affine":affineBA, "size":featureSizeA};
+				}
+			}
+		}
+	}
+console.log("review - here");
+	// CREATE OBJECTS FROM ALL VARIANTS
+	var objectsList = [objectsA,objectsB];
+	var allObjectsList = [];
+	for(var j=0; j<objectsList.length; ++j){
+		var objects = objectsList[j];
+		var allObjects = [];
+		allObjectsList.push(allObjects);
+		for(var i=0; i<objects.length; ++i){
+			var object = objects[i];
+			object["candidates"] = Code.objectToArray(object["candidates"]);
+			var variants = object["variants"];
+				variants = Code.objectToArray(variants);
+			object["variants"] = variants;
+			Code.arrayPushArray(allObjects,variants);
+		}
+	}
+	var allObjectsA = allObjectsList[0];
+	var allObjectsB = allObjectsList[1];
+
+	var allObjectsVariantsA = R3D.generateProgressiveRIFTObjects(allObjectsA, imageMatrixA, true);
+	var allObjectsVariantsB = R3D.generateProgressiveRIFTObjects(allObjectsB, imageMatrixB, true);
+
+	var allObjectsVariants = [allObjectsVariantsA,allObjectsVariantsB];
+	// reference all variants in original objects
+	for(var j=0; j<objectsList.length; ++j){
+		var objects = objectsList[j];
+		var allVariants = allObjectsVariants[j];
+		var index = 0;
+		for(var i=0; i<objects.length; ++i){
+			var object = objects[i];
+			var variants = object["variants"];
+			var objs = [];
+				object["objects"] = objs;
+			for(var k=0; k<variants.length; ++k){
+				objs[k] = allVariants[index];
+				++index;
+			}
+		}
+		// console.log(index+" / "+allVariants.length);
+	}
+
+	// do compares single A to many B
+	for(var i=0; i<objectsA.length; ++i){
+		var objectA = objectsA[i];
+		var riftObjectA = objectA["objects"][0];
+		var candidatesB = objectA["candidates"];
+		var bestScoreA = null;
+		var bestCandidateA = null;
+		for(var j=0; j<candidatesB.length; ++j){
+			var candidateB = candidatesB[j];
+			var riftObjectsB = candidateB["objects"];
+			var bestScore = null;
+			for(var k=0; k<riftObjectsB.length; ++k){
+				var riftObjectB = riftObjectsB[k];
+				var score = R3D.compareProgressiveRIFTObjectsCombined(riftObjectA,riftObjectB);
+				if(bestScore===null){
+					bestScore = score;
+				}else{
+					bestScore = Math.min(bestScore,score);
+				}
+			}
+			var bestB = candidateB["best"];
+			if(!bestB){
+				candidateB["best"] = {"object":objectA, "score":bestScore};
+			}else{
+				var otherScore = bestB["score"];
+				if(bestScore<otherScore){
+					bestB["object"] = objectA;
+					bestB["score"] = bestScore;
+				}
+			}
+			if(bestCandidateA===null || bestScore<bestScoreA){
+				bestScoreA = bestScore;
+				bestCandidateA = candidateB;
+			}
+		}
+		if(bestCandidateA){
+			objectA["best"] = {"object":bestCandidateA, "score":bestScoreA};
+		}
+	}
+
+	// pick best both ways
+	var bestMatches = [];
+	for(var i=0; i<objectsA.length; ++i){
+		var objectA = objectsA[i];
+		var bestA = objectA["best"];
+		if(bestA){
+			var objectB = bestA["object"];
+			var bestB = objectB["best"];
+			if(bestB){
+				var candidateA = bestB["object"];
+				if(objectA==candidateA){
+					var match = {"A":objectA["point"], "B":objectB["point"], "score":bestA["score"], "affine":null};
+					bestMatches.push(match);
+				}
+			}
+		}
+	}
+	console.log(bestMatches.length);
+
+
+
+/*
+	// drop based on score
+	
+	var scores = [];
+	for(var i=0; i<bestMatches.length; ++i){
+		var match = bestMatches[i];
+		var score = match["score"];
+		scores.push(score);
+	}
+	Code.printMatlabArray(scores);
+
+	var min = Code.min(scores);
+	var sigma = Code.stdDev(scores,min);
+	var limit = min + 2.0*sigma;
+	console.log(" "+min+" +/- "+sigma+" = "+limit)
+	for(var i=0; i<bestMatches.length; ++i){
+		var match = bestMatches[i];
+		var score = match["score"];
+		if(score>limit){
+			Code.removeElementAt(bestMatches,i);
+			--i;
+		}
+	}
+	console.log(bestMatches.length);
+	
+
+
+
+	var pointsA = [];
+	var pointsB = [];
+	for(var i=0; i<bestMatches.length; ++i){
+		var match = bestMatches[i];
+		pointsA.push(match["A"]);
+		pointsB.push(match["B"]);
+	}
+	
+	var errorPixels = imageMatrixA.size().length()*0.005; // 500x300 = 2.9 px    0.001 [1 px] - 0.01 [6 px]
+	console.log(errorPixels);
+	var result = R3D.fundamentalRANSACFromPoints(pointsA,pointsB, errorPixels, null, 0.50, 0.99);
+	var ms = result["matches"];
+	console.log(result);
+	var pointsA = ms[0];
+	var pointsB = ms[1];
+
+	bestMatches = [];
+	for(var i=0; i<pointsA.length; ++i){
+		bestMatches.push( {"A":pointsA[i], "B":pointsB[i]} );
+	}
+	console.log(bestMatches);
+
+*/
+
+
+if(true){
+	var d = new DO();
+	d.graphics().setFill(0x99FFFFFF);
+	// d.graphics().setFill(0x66FFFFFF);
+	d.graphics().beginPath();
+	d.graphics().drawRect(0,0, 2200,1200);
+	d.graphics().endPath();
+	d.graphics().fill();
+	d.matrix().translate(0,0);
+	GLOBALSTAGE.addChild(d);
+
+var d = new DO();
+var color0 = new V3D(1,0,0);
+var color1 = new V3D(0,1,0);
+var color2 = new V3D(0,0,1);
+// var color3 = new V3D(1,1,1);
+var color3 = new V3D(0,0,0);
+var colors = [color0,color1,color2,color3];
+	for(var i=0; i<bestMatches.length; ++i){
+		var match = bestMatches[i];
+		var pointA = match["A"];
+		var pointB = match["B"];
+		// if(!pointA || !pointB){
+		// 	console.log(match);
+		// 	continue;
+		// }
+
+		// var color = 0xFF0000FF;
+		var size = 5;
+		var line = 3.0;
+		/*
+		var d = new DO();
+		d.graphics().setLine(line, color);
+		d.graphics().beginPath();
+		d.graphics().drawCircle(pointA.x, pointA.y, size);
+		d.graphics().strokeLine();
+		d.graphics().endPath();
+		d.matrix().translate(0,0);
+		GLOBALSTAGE.addChild(d);
+
+		var d = new DO();
+		d.graphics().setLine(line, color);
+		d.graphics().beginPath();
+		d.graphics().drawCircle(pointB.x, pointB.y, size);
+		d.graphics().strokeLine();
+		d.graphics().endPath();
+		d.matrix().translate(imageMatrixA.width(),0);
+		GLOBALSTAGE.addChild(d);
+		*/
+			// var a = match["A"];
+			// var b = match["B"];
+			// var pointA = a["point"];
+			// var pointB = b["point"];
+			var size = 2.0;
+var p = pointA.copy();
+var q = pointB.copy();
+var px = (p.x/imageMatrixA.width());
+var py = (p.y/imageMatrixA.height());
+var qx = 1 - px;
+var qy = 1 - py;
+var p0 = qx*qy;
+var p1 = px*qy;
+var p2 = qx*py;
+var p3 = px*py;
+			var color = V3D.average(colors, [p0,p1,p2,p3]);
+			color = Code.getColARGBFromFloat(1.0,color.x,color.y,color.z);
+			d.graphics().setLine(line,color);
+			d.graphics().beginPath();
+			d.graphics().drawCircle(pointA.x,pointA.y,size);
+			d.graphics().endPath();
+			d.graphics().strokeLine();
+
+			d.graphics().beginPath();
+			d.graphics().drawCircle(imageMatrixA.width() + pointB.x,pointB.y,size);
+			d.graphics().endPath();
+			d.graphics().strokeLine();
+	}
+	d.matrix().translate(0,0);
+	GLOBALSTAGE.addChild(d);
+}
+
 
 	throw "findLocalSupportingCornerMatchNeighborhoods - mimic: findLocalSupportingCornerMatches"
 
-	return {};
+	return {"matches":null};
 }
 
 R3D.findLocalSupportingCornerMatchNeighborhoodsOLD = function(imageMatrixA,imageMatrixB, matchesAB, imageCornerDensityPercent){
