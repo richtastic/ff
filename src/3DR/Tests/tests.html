@@ -571,7 +571,7 @@ for(var l=0; l<lll.length; ++l){
 		// console.log("SIZE: "+imageMatrixA.size()); // 504x378
 		var errorPixels = imageMatrixA.size().length() * 0.01; // 5%=31.5px | 1%=6px  0.005=3px
 		// console.log("errorPixels: "+errorPixels);
-		var result = R3D.fundamentalRANSACFromPoints(pointsA,pointsB, errorPixels, null, 0.50, 0.99);
+		var result = R3D.fundamentalRANSACFromPoints(pointsA,pointsB, errorPixels, null, 0.50, 0.999);
 		console.log(result);
 		var F = result["F"];
 		var best = result["matches"];
@@ -642,18 +642,79 @@ for(var l=0; l<lll.length; ++l){
 			matchesAB.push(matchAB);
 		}
 
-		// console.log(matchesAB);
-		// R3D.findLocalSupportingCornerMatchNeighborhoods(imageMatrixA,imageMatrixB, matchesAB);
+		var matches = matchesAB;
 
-
-		var result = R3D.keepExtendedMatchNeighborhoods(imageMatrixA,imageMatrixB, matchesAB);
+		var result = R3D.keepExtendedMatchNeighborhoods(imageMatrixA,imageMatrixB, matches);
 		console.log(result);
 		var matches = result["matches"];
 
-		var imageCornerDensityPercent = null;
-		var result = R3D.findLocalSupportingCornerMatchNeighborhoods(imageMatrixA,imageMatrixB, matchesAB, imageCornerDensityPercent);
-		console.log(result);
 
+		var result = R3D.optimizeMatchLocations(imageMatrixA,imageMatrixB, matches);
+		console.log(result);
+		var matches = result["matches"];
+
+		// var pointsA = [];
+		// var pointsB = [];
+		// for(var i=0; i<matches.length; ++i){
+		// 	var match = matches[i];
+		// 	var pA = match["A"];
+		// 	var pB = match["B"];
+		// 	pointsA.push(pA);
+		// 	pointsB.push(pB);
+		// }
+		// F = R3D.fundamentalFromUnnormalized(pointsA,pointsB);
+		// var Finv = R3D.fundamentalInverse(F);
+		// var info = R3D.fundamentalError(F,Finv,pointsA,pointsB);
+		// 	var fMean = info["mean"];
+		// 	var fSigma = info["sigma"];
+		// 	var fError = fMean + fSigma;
+		// console.log("F ERROR: "+fMean+" +/- "+fSigma);
+		// var d = new DO();
+		// d.graphics().setFill(0x99FFFFFF);
+		// // d.graphics().setFill(0x66FFFFFF);
+		// d.graphics().beginPath();
+		// d.graphics().drawRect(0,0, 2200,1200);
+		// d.graphics().endPath();
+		// d.graphics().fill();
+		// d.matrix().translate(0,0);
+		// GLOBALSTAGE.addChild(d);
+		// R3D.showRansac(pointsA,pointsB, F,Finv, null, imageMatrixA,imageMatrixB);
+
+
+
+		var imageCornerDensityPercent = null;
+		var result = R3D.findLocalSupportingCornerMatchNeighborhoods(imageMatrixA,imageMatrixB, matches, imageCornerDensityPercent);
+		console.log(result);
+		var matches = result["matches"];
+
+/*
+		var pointsA = [];
+		var pointsB = [];
+		for(var i=0; i<matches.length; ++i){
+			var match = matches[i];
+			var pA = match["A"];
+			var pB = match["B"];
+			pointsA.push(pA);
+			pointsB.push(pB);
+		}
+		F = R3D.fundamentalFromUnnormalized(pointsA,pointsB);
+		var Finv = R3D.fundamentalInverse(F);
+		var info = R3D.fundamentalError(F,Finv,pointsA,pointsB);
+			var fMean = info["mean"];
+			var fSigma = info["sigma"];
+			var fError = fMean + fSigma;
+		console.log("F ERROR: "+fMean+" +/- "+fSigma);
+		var d = new DO();
+		d.graphics().setFill(0x99FFFFFF);
+		// d.graphics().setFill(0x66FFFFFF);
+		d.graphics().beginPath();
+		d.graphics().drawRect(0,0, 2200,1200);
+		d.graphics().endPath();
+		d.graphics().fill();
+		d.matrix().translate(0,0);
+		GLOBALSTAGE.addChild(d);
+		R3D.showRansac(pointsA,pointsB, F,Finv, null, imageMatrixA,imageMatrixB);
+*/
 
 		// R3D.findLocalSupportingCornerMatches = function(imageMatrixA,imageMatrixB, pointsA,pointsB, imageCornerDensityPercent, affinesAB){ // 
 
@@ -671,7 +732,7 @@ for(var l=0; l<lll.length; ++l){
 
 	// new ImageLoader("../images/",["bench_A.png","bench_B.png"],this,fxnImageLoaded).load();
 	// new ImageLoader("../images/",["bench_B.png","bench_C.png"],this,fxnImageLoaded).load();
-	// new ImageLoader("../images/",["bench_E.png","bench_F.png"],this,fxnImageLoaded).load();
+	new ImageLoader("../images/",["bench_E.png","bench_F.png"],this,fxnImageLoaded).load();
 	// new ImageLoader("../images/",["room0.png","room2.png"],this,fxnImageLoaded).load();
 	
 	// new ImageLoader("../images/",["caseStudy1-0.jpg","caseStudy1-9.jpg"],this,fxnImageLoaded).load();
@@ -689,7 +750,7 @@ for(var l=0; l<lll.length; ++l){
 	// new ImageLoader("../images/elephant/",["ele_1.JPG","ele_4.JPG"],this,fxnImageLoaded).load();
 
 	// new ImageLoader("../images/rabbit/",["1.jpg","2.jpg"],this,fxnImageLoaded).load();
-	new ImageLoader("../images/rabbit/",["1.jpg","3.jpg"],this,fxnImageLoaded).load();
+	// new ImageLoader("../images/rabbit/",["1.jpg","3.jpg"],this,fxnImageLoaded).load();
 	// new ImageLoader("../images/rabbit/",["10.jpg","11.jpg"],this,fxnImageLoaded).load();
 	// new ImageLoader("../images/rabbit/",["6.jpg","9.jpg"],this,fxnImageLoaded).load();
 

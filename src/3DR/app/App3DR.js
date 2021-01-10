@@ -1859,7 +1859,7 @@ App3DR.App.MatchCompare.prototype._render = function(){
 			var pointsA = triple["pointsA"];
 			var pointsB = triple["pointsB"];
 			var pointsC = triple["pointsC"];
-
+			// 
 			var d = new DO();
 			this._display.addChild(d);
 
@@ -1932,7 +1932,9 @@ App3DR.App.MatchCompare.prototype._render = function(){
 		// var averageError = error/pointsA.length;
 		var error = R3D.fundamentalMatrixError(F, pointsA,pointsB);
 		console.log("F AVG ERROR: "+error+" == "+(error/pointsA.length));
-		*/
+*/
+
+
 	}
 
 
@@ -11951,7 +11953,7 @@ console.log("calculatePairMatchFromViewIDs")
 		settings["maximumMatchFeatures"] = 1200;
 		settings["minimumMatchPoints"] = 16;
 		settings["incrementResolution"] = 0;
-		settings["minimumCountFInit"] = 12; // fwd-bak matches -- 25-50-100
+		settings["minimumCountFInit"] = 20; // fwd-bak matches -- 25-50-100
 		settings["maximumErrorFInit"] = 0.01; // 0.02 @ 500 = 10 -- initial F estimate [~100 features]
 		settings["maximumErrorFDense"] = 0.005; // 0.01 @ 500 = 5 -- dense F estimate [~500 features]
 		settings["maximumErrorTracksF"] = 0.004; // 0.01 @ 500 = 5 -- final stereopsis estimate F
@@ -12011,6 +12013,7 @@ console.log("calculatePairMatchFromViewIDs")
 		}
 // throw "READY CHECK";
 GLOBALDISPLAY = GLOBALSTAGE;
+// var DEBUG_SHOW = false;
 var DEBUG_SHOW = true;
 		var pairDoneSaveFxn = function(){
 			// SAVE DATA & SAVE SUMMARY & SAVE PROJECT ?
@@ -12132,12 +12135,50 @@ for(var i=0; i<features.length; ++i){
 // throw "????????????????????"
 		// console.log(imageScales);
 
+		// get initial matches
 		var result = R3D.compareProgressiveRIFTObjectsFull(objectsA, objectsB);
+		console.log(result);
 		var matches = result["matches"];
 
+		// convert to A, B, affine
+		var matchesAB = [];
+		var v = new V2D();
+		for(var i=0; i<matches.length; ++i){
+			var match = matches[i];
+			var A = match["A"];
+			var B = match["B"];
+			var scale = B["size"]/A["size"];
+				v.set(1,0);
+				v.rotate(-A["angle"]);
+				v.rotate(B["angle"]);
+			var angle = V2D.angleDirection(V2D.DIRX,v);
+			var affine = new Matrix2D();
+				affine.scale(scale);
+				affine.rotate(angle);
+			var matchAB = {};
+				matchAB["A"] = A["point"];
+				matchAB["B"] = B["point"];
+				matchAB["affine"] = affine;
+			matchesAB.push(matchAB);
+		}
+		matches = matchesAB;
+// console.log(matches);
+// throw "?"
 
+		// keep best neighborhoods
+		var result = R3D.keepExtendedMatchNeighborhoods(imageScalesA,imageScalesB, matches);
+		console.log(result);
+		var matches = result["matches"];
 
+		// change B locations to be optimally image-wize
+		var result = R3D.optimizeMatchLocations(imageScalesA,imageScalesB, matches);
+		console.log(result);
+		var matches = result["matches"];
 
+		// get best maching points near initial points - 2-4 times point count
+		var result = R3D.findLocalSupportingCornerMatchNeighborhoods(imageScalesA,imageScalesB, matches);
+		console.log(result);
+		var matches = result["matches"];
 
 		// var objects = R3D.generateProgressiveRIFTObjects(features, imageScales);
 		// var result = R3D.compareProgressiveRIFTObjectsFull(objectsA, objectsB);
@@ -12187,12 +12228,17 @@ if(DEBUG_SHOW){
 			// console.log(match);
 			var a = match["A"];
 			var b = match["B"];
-			var pointA = a["point"];
-			var pointB = b["point"];
+			// var pointA = a["point"];
+			// var pointB = b["point"];
+			var pointA = a;
+			var pointB = b;
 			var size = 2.0;
 
-			var sizeA = a["size"];
-			var sizeB = b["size"];
+			// var sizeA = a["size"];
+			// var sizeB = b["size"];
+
+			var sizeA = 4.0;
+			var sizeB = 4.0;
 			// ...
 			var p = pointA.copy();
 			var q = pointB.copy();
@@ -12251,8 +12297,10 @@ console.log("GET INITIAL F: "+matches.length);
 			var match = matches[i];
 			var a = match["A"];
 			var b = match["B"];
-			pointsA.push(a["point"]);
-			pointsB.push(b["point"]);
+			// pointsA.push(a["point"]);
+			// pointsB.push(b["point"]);
+			pointsA.push(a);
+			pointsB.push(b);
 		}
 		// console.log(pointsA);
 		// console.log(pointsB);
@@ -12266,46 +12314,90 @@ console.log("GET INITIAL F: "+matches.length);
 		var bestA = best[0];
 		var bestB = best[1];
 		console.log(bestA,bestB);
+
+// vars to keep in mind
+var F = null;
+var Finv = null;
+var Ferror = null;
+
+
 		F = R3D.fundamentalFromUnnormalized(bestA,bestB);
-
-
-		var Finv = R3D.fundamentalInverse(F);
 		console.log(F);
-		var info = R3D.fundamentalError(F,Finv,bestA,bestB);
-			var fMean = info["mean"];
-			var fSigma = info["sigma"];
-			var fError = fMean + fSigma;
-		console.log("F ERROR: "+fMean+" +/- "+fSigma);
-
-
+		if(F){
+			Finv = R3D.fundamentalInverse(F);
+			var info = R3D.fundamentalError(F,Finv,bestA,bestB);
+				var fMean = info["mean"];
+				var fSigma = info["sigma"];
+				var fError = fMean + fSigma;
+			console.log("F ERROR: "+fMean+" +/- "+fSigma);
+			Ferror = fSigma;
+		}
 		// var FFwd = R3D.fundamentalFromUnnormalized(subsetPointsA,subsetPointsB);
 		// var FRev = R3D.fundamentalInverse(FFwd);
 
-
-
-		
 		//R3D.showRansac(pointsA,pointsB, F,Finv, null, imageMatrixA,imageMatrixB);
 		R3D.showRansac(bestA,bestB, F,Finv, null, imageScalesA,imageScalesB);
 
 
+console.log("maxErrorFInitPixels: "+maxErrorFInitPixels);
+console.log("minimumCountFInit: "+minimumCountFInit);
 
+		if(!F || Ferror>maxErrorFInitPixels || pointsA.length<minimumCountFInit){
+			goodEnoughMatches = false;
+		}else{
+			console.log("START WORLD TO FIND DENSE F");
+			var info = R3D.average2DTranformForIndividualPoints(pointsA,pointsB, imageMatrixA,imageMatrixB, true);
+			console.log(info);
+			var transforms = info["transforms"];
+			
 
+			// throw "WORLD";
+			var cellCount = 40; // 40-80
+			var world = new Stereopsis.World();
+			// views
+			var projectViews = [viewA,viewB];
+			var images = [imageMatrixA,imageMatrixB];
+			var views = [];
+			for(var i=0; i<images.length; ++i){
+				var image = images[i];
+				var projectView = projectViews[i];
+				console.log();
+				var view = world.addView(image,null,projectView.id());
+				views.push(view);
+			}
+			world.setViewCellCounts(cellCount);
+			console.log(views);
+			var view0 = views[0];
+			var view1 = views[1];
+			// points
+			console.log(pointsA,pointsB);
+			world.resolveIntersectionByDefault();
+			for(var i=0; i<pointsA.length; ++i){
+				var pointA = pointsA[i];
+				var pointB = pointsB[i];
+				var affine = transforms[i];
+				var vs = [view0,view1];
+				var ps = [pointA,pointB];
+				var as = [affine];
+				var point3D = world.newPoint3DFromPieces(vs,ps,as, false);
+				var matches = point3D.toMatchArray();
+				for(var m=0; m<matches.length; ++m){
+					var match = matches[m];
+					world.updateMatchInfo(match);
+				}
+				world.embedPoint3D(point3D);
+			}
+			console.log("SOLVE PAIR F");
 
-
-
-
-
-
-
-
-
-
-
-
+			var result = world.solvePairF();
+			console.log(result);
+			throw "WORLD";
+		}
 
 
 throw "use new algs";
-	
+
+/*
 var F = null;
 var pointsA = null;
 var pointsB = null;
@@ -12326,11 +12418,15 @@ var Ferror = null;
 
 // R3D.showFundamental(pointsA, pointsB, F, Finv, GLOBALSTAGE, imageMatrixA,imageMatrixB);
 // throw "initial F matches"
-
+*/
 
 // throw "now what"
 // F error has to be less than some number < ~ 5px
 // match cound has to be at least some number > ~50-100
+
+
+
+/*
 	if(!F || Ferror>maxErrorFInitPixels || pointsA.length<minimumCountFInit){
 		goodEnoughMatches = false;
 
@@ -12451,11 +12547,11 @@ throw "here, after solvePair"
 			}
 // world.showForwardBackwardPair();
 		}
-
+*/
 		
 
 		// STEROPSIS TRACKS
-
+/*
 		if(goodEnoughMatches){
 
 			var info = R3D.fundamentalError(F,Finv,pointsA,pointsB);
@@ -12558,6 +12654,10 @@ console.log(pairData);
 // throw "before save pair  - not good enough to iterate on world"
 			pairDoneSaveFxn();
 		}
+*/
+		
+
+		throw "out bottom";
 	}
 	// load images & features
 	fxnA();

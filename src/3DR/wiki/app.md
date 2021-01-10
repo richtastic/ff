@@ -387,7 +387,31 @@ MISSING:
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
-- semidense points missing initial mached points
+- filter on initial / final F
+
+
+
+
+
+- semidense points missing initial matched points
+	- those corners are not involved in the samples
+
+
+- initial matches
+	- optimum location
+	- discard based on updated SAD scores
+	- discard based on F distances
+- neighborhood matches
+	- ""
+
+
+- affine matrixes are throwing off matches?
+
+- why are initial matches so much better than neighborhood matches ?
+
+
+
+
 
 
 - sizes A & B are the same --- the extraction size in EITHER IMAGE after the transform (identity or affine match)
@@ -396,9 +420,9 @@ MISSING:
 	- FEATURE - SCALE + ROTATION UNKNOWN FULL MATCH [1k-2k] 		guess features [splotchy]
 	- RANSAC MATCHING FEATURES [100-500] 							guess F, best features
 	- CONSISTENT NEIGHBORHOOD FEATURES [100-400] 					best features
-	- NEIGHBORHOOD BEST MATCH FEATURES [200-600] 					increase features
+	- NEIGHBORHOOD BEST MATCH FEATURES [100-200] 					increase features
 	=> from corner to PRECISE PIXEL LOCATION?
-	- RANSAC NEIGHBORHOOD FEATURES [100-500] 						better F, best features
+	- RANSAC NEIGHBORHOOD FEATURES [100-200] 						better F, best features
 	- 
 
 

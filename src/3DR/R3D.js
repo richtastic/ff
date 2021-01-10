@@ -14239,7 +14239,7 @@ R3D.optimumSADLocationSearchFlatRGB = function(pointA,pointB, imageScalesA,image
 	var halfHaystack = (haystackSize-1)*0.5;
 
 	var needle = reuseNeedle;
-	var haystack = reuseNeedle;
+	var haystack = reuseHaystack;
 	if(!needle){
 		needle = new ImageMat(needleSize,needleSize);
 	}
@@ -15199,8 +15199,15 @@ R3D.affineBasicFromPoints2D = function(pointsA,pointsB, sourceA,sourceB, affine,
 	for(var i=startIndex; i<pointsA.length; ++i){
 		var a = V2D.sub(pointsA[i],sourceA);
 		var b = V2D.sub(pointsB[i],sourceB);
-		var scale = Math.log( b.length()/a.length() );
-		var angle = V2D.angleDirection(a,b);
+		var aLen = a.length();
+		var bLen = b.length();
+		var scale = 0.0;
+		var angle = 0.0;
+		if(aLen!=0 && bLen !=0 ){
+			scale = Math.log( bLen/aLen );
+			angle = V2D.angleDirection(a,b);
+		}
+		
 		var vector = {"a":a, "b":b, "angle":angle, "scale":scale, "keep":true};
 		vectors.push(vector);
 	}
@@ -15440,8 +15447,8 @@ var bads = [];
 	}
 	console.log(goods);
 	console.log(bads);
-// if(false){
-if(true){
+if(false){
+// if(true){
 	var d = new DO();
 	// d.graphics().setFill(0x99FFFFFF);
 	d.graphics().setFill(0x66FFFFFF);
@@ -15500,34 +15507,65 @@ if(true){
 	return {"matches":matches};
 }
 
+R3D.optimizeMatchLocations = function(imageMatrixA,imageMatrixB, matchesAB){
+	var featureSize = 0.05; // 0.04-0.06
+	var imageSizeA = imageMatrixA.size().length();
+	var imageSizeB = imageMatrixB.size().length();
+
+	// var searchSizeRadiusA = imageSizeA * neighborhoodRadius;
+	// var searchSizeRadiusB = imageSizeB * neighborhoodRadius;
+
+	var featureSizeA = imageSizeA * featureSize;
+	// var featureSizeB = imageSizeB * featureSize;
+	console.log("FEATURE SIZE: "+featureSizeA);
+
+	// get optimum location
+	var needleSize = 11;
+	var haystackSize = 21;
+	var reuseNeedle = new ImageMat(needleSize,needleSize);
+	var reuseHaystack = new ImageMat(haystackSize,haystackSize);
+	// var reuseNeedle2 = new ImageMat(needleSize,needleSize);
+	for(var i=0; i<matchesAB.length; ++i){
+		var match = matchesAB[i];
+		// console.log(match);
+		var pointA = match["A"];
+		var pointB = match["B"];
+		var affineAB = match["affine"];
+			// affineAB = affineAB.copy();
+			// affineAB.inverse();
+		var result = R3D.optimumSADLocationSearchFlatRGB(pointA,pointB, imageMatrixA,imageMatrixB, featureSizeA, needleSize,haystackSize, affineAB, reuseNeedle,reuseHaystack);
+		// console.log(result);
+		// var score = result["score"];
+		var point = result["point"];
+		// console.log(pointB+"->"+point+" = "+(V2D.distance(pointB,point)));
+		match["B"] = point;
+		// match["SAD"] = score;
+	}
+	console.log(matchesAB.length);
+
+	return {"matches":matchesAB};
+}
 
 // R3D.findLocalSupportingCornerMatches = function(imageMatrixA,imageMatrixB, pointsA,pointsB, imageCornerDensityPercent, affinesAB){ // 
 R3D.findLocalSupportingCornerMatchNeighborhoods = function(imageMatrixA,imageMatrixB, matchesAB, imageCornerDensityPercent){
 	console.log("R3D.findLocalSupportingCornerMatchNeighborhoods");
 	imageCornerDensityPercent = Code.valueOrDefault(imageCornerDensityPercent, 0.015);
-	// var nonMaximalPercent = 0.015;
-	// var nonRepeatPercent = 0.005;
-	// var nonMaximalPercent = imageCornerDensityPercent;
-	// var nonRepeatPercent = imageCornerDensityPercent*3; // 2-4
 	// AREAS
 	var neighborhoodRadius = 0.06; // 0.05 - 0.10
 	var featureSize = 0.05; // 0.04-0.06
-
 	var nonMaximalPercent = 0.015;
-	var nonRepeatPercent = 0.005;
-	// var nonMaximalPercent = 0.020;
-	// var nonRepeatPercent = 0.010;
+	var nonRepeatPercent = featureSize*0.3; // 1/4 - 1/2 of feature size
 	var cornersA = R3D.optimalCountFeaturesFromImageScales(imageMatrixA, nonMaximalPercent, nonRepeatPercent);
 	var cornersB = R3D.optimalCountFeaturesFromImageScales(imageMatrixB, nonMaximalPercent, nonRepeatPercent);
-	console.log(cornersA);
-	console.log(cornersB);
 	var imageSizeA = imageMatrixA.size().length();
 	var imageSizeB = imageMatrixB.size().length();
 
 	var searchSizeRadiusA = imageSizeA * neighborhoodRadius;
 	var searchSizeRadiusB = imageSizeB * neighborhoodRadius;
+
 	var featureSizeA = imageSizeA * featureSize;
-	var featureSizeB = imageSizeB * featureSize;
+	// var featureSizeB = imageSizeB * featureSize;
+	console.log("FEATURE SIZE: "+featureSizeA);
 	var toPoint = function(a){
 		return a["point"];
 	}
@@ -15538,7 +15576,7 @@ R3D.findLocalSupportingCornerMatchNeighborhoods = function(imageMatrixA,imageMat
 	var cornerList = [cornersA,cornersB];
 	var quadList = [quadTreeA,quadTreeB];
 	var objectsList = [];
-	// var globalObjectIndex = 0;
+	// create objects & lookup space
 	for(var i=0; i<cornerList.length; ++i){
 		var corners = cornerList[i];
 		var quadTree = quadList[i];
@@ -15553,7 +15591,7 @@ R3D.findLocalSupportingCornerMatchNeighborhoods = function(imageMatrixA,imageMat
 				object["point"] = point;
 				object["candidates"] = {};
 				object["variants"] = {};
-				object["best"];
+				object["best"] = [];
 			if(i==0){ // A
 				object["variants"]["0"] = {"point":point, "affine":identity, "size":featureSizeA};
 			}
@@ -15564,6 +15602,47 @@ R3D.findLocalSupportingCornerMatchNeighborhoods = function(imageMatrixA,imageMat
 	var objectsA = objectsList[0];
 	var objectsB = objectsList[1];
 
+/*
+if(true){ // draw corners
+	var offx = 0;
+	for(var i=0; i<cornerList.length; ++i){
+		var corners = cornerList[i];
+		for(var j=0; j<corners.length; ++j){
+			var corner = corners[j];
+			var p = corner
+			var size = 2;
+			var d = new DO();
+			d.graphics().setLine(3.0, 0xFF0000FF);
+			d.graphics().beginPath();
+			d.graphics().drawCircle(p.x, p.y, size);
+			d.graphics().strokeLine();
+			d.graphics().endPath();
+			d.matrix().translate(offx,0);
+			GLOBALSTAGE.addChild(d);
+		}
+		offx += imageMatrixA.width();
+	}
+}
+
+throw "corners"
+*/
+
+	// GET INITIAL INPUT F
+	var pointsA = [];
+	var pointsB = [];
+	for(var i=0; i<matchesAB.length; ++i){
+		var match = matchesAB[i];
+		pointsA.push(match["A"]);
+		pointsB.push(match["B"]);
+	}
+	var Fab = R3D.fundamentalFromUnnormalized(pointsA,pointsB);
+	// console.log(Fab);
+	var Fba = R3D.fundamentalInverse(Fab);
+	var info = R3D.fundamentalError(Fab,Fba,pointsA,pointsB);
+	console.log(info);
+	var allowableFError = info["mean"] + 2.0*info["sigma"];
+	console.log("allowableFError: "+allowableFError);
+	
 	// helpers
 	var maximumScaleDifference = 0.1; // 0.1 - 0.2
 	var maximumAngleDifference = 15; // 5-20 degrees : 10=> 36 | 12=>30 | 15=>24 | 18=>20 | 22.5=>16
@@ -15590,7 +15669,6 @@ R3D.findLocalSupportingCornerMatchNeighborhoods = function(imageMatrixA,imageMat
 // 	console.log(roundedScale(0.70));
 // 	console.log(roundedScale(0.60));
 // 	console.log(roundedScale(0.50));
-	
 
 	// throw "?"
 
@@ -15615,11 +15693,70 @@ R3D.findLocalSupportingCornerMatchNeighborhoods = function(imageMatrixA,imageMat
 	}
 
 	// find all possibly needed feature variations
+	var toPointA = function(a){
+		return a["A"];
+	}
+	var matchSpaceA = new QuadTree(toPointA, V2D.ZERO, imageMatrixA.size());
+	for(var i=0; i<matchesAB.length; ++i){
+		var matchAB = matchesAB[i];
+		matchSpaceA.insertObject(matchAB);
+	}
+	var affineNeighborCount = 8; // 6-10 + 1
 
+	// get optimum location -- done previously
+	var needleSize = 11;
+	var haystackSize = 21;
+	var reuseNeedle = new ImageMat(needleSize,needleSize);
+	var reuseHaystack = new ImageMat(haystackSize,haystackSize);
+/*
+	// var reuseNeedle2 = new ImageMat(needleSize,needleSize);
+	for(var i=0; i<matchesAB.length; ++i){
+		var match = matchesAB[i];
+		console.log(match);
+		var pointA = match["A"];
+		var pointB = match["B"];
+		var affineAB = match["affine"];
+			// affineAB = affineAB.copy();
+			// affineAB.inverse();
+		var result = R3D.optimumSADLocationSearchFlatRGB(pointA,pointB, imageMatrixA,imageMatrixB, featureSizeA, needleSize,haystackSize, affineAB);
+		// console.log(result);
+		// var score = result["score"];
+		var point = result["point"];
+		console.log(pointB+"->"+point+" = "+(V2D.distance(pointB,point)));
+		match["B"] = point;
+		// match["SAD"] = score;
+	}
+	console.log(matchesAB.length);
+*/
+	
+	// set inverse affine / and affine
 	for(var i=0; i<matchesAB.length; ++i){
 		var matchAB = matchesAB[i];
 		var pointA = matchAB["A"];
 		var pointB = matchAB["B"];
+
+// use local neighborhood to average affine
+/*
+var neighborsA = matchSpaceA.kNN(pointA,affineNeighborCount);
+var ptsA = [];
+var ptsB = [];
+for(var n=0; n<neighborsA.length; ++n){
+	var nA = neighborsA[n];
+	if(nA==matchAB){
+		continue;
+	}
+	var pA = nA["A"];
+	var pB = nA["B"];
+	ptsA.push(pA);
+	ptsB.push(pB);
+}
+var affine2D = new Matrix2D();
+var info = R3D.affineBasicFromPoints2D(ptsA,ptsB, pointA,pointB, affine2D);
+// console.log(info);
+matchAB["affine"] = affine2D;
+*/
+
+
 		var affineAB = matchAB["affine"];
 		var inverse = affineAB.copy();
 			inverse.inverse(); // B to A
@@ -15631,6 +15768,8 @@ R3D.findLocalSupportingCornerMatchNeighborhoods = function(imageMatrixA,imageMat
 		var pointA = matchAB["A"];
 		var pointB = matchAB["B"];
 		var affineBA = matchAB["inverse"];
+		// var affineAB = matchAB["affine"];
+		// affineBA = identity;
 
 		var info = R3D.infoFromAffine2D(affineBA);
 		var affineAngle = info["angle"];
@@ -15639,6 +15778,73 @@ R3D.findLocalSupportingCornerMatchNeighborhoods = function(imageMatrixA,imageMat
 
 		var candidatesA = quadTreeA.objectsInsideCircle(pointA,searchSizeRadiusA);
 		var candidatesB = quadTreeB.objectsInsideCircle(pointB,searchSizeRadiusB); // shrink or grow --  * affineScale
+
+// show example set of candidates
+var indexCheck = 30;
+if(false){
+// if(true && i==indexCheck){
+	var affine = new Matrix2D();
+	var needleSize = 41;
+	var needleHalf = (needleSize-1)*0.5;
+	var needle = new ImageMat(needleSize,needleSize);
+	var sss = 1.0;
+	var cnt = 0;
+	// show candidates:
+	for(var z=0; z<candidatesA.length; ++z){
+		var candidateA = candidatesA[z];
+		var p = candidateA["point"];
+		var size = 5;
+		var d = new DO();
+		d.graphics().setLine(1.0, 0xFFFF0000);
+		d.graphics().beginPath();
+		d.graphics().drawCircle(p.x, p.y, size);
+		d.graphics().strokeLine();
+		d.graphics().endPath();
+		d.matrix().translate(0,0);
+		GLOBALSTAGE.addChild(d);
+
+		affine.identity();
+		affine.scale(featureSizeA/needleSize);
+		ImageMatScaled.affineToLocationTransform(affine, affine, needleHalf,needleHalf,p.x,p.y);
+		var averageScale = affine.averageScale();
+		imageMatrixA.extractRectCombineFast(needle, averageScale, affine);
+		var image = needle;
+			var img = GLOBALSTAGE.getFloatRGBAsImage(image.red(),image.grn(),image.blu(), image.width(),image.height());
+			var d = new DOImage(img);
+			d.matrix().scale(sss);
+			d.matrix().translate(10 + z*50, 10 + 400 + 0);
+			GLOBALSTAGE.addChild(d);
+
+	}
+	for(var z=0; z<candidatesB.length; ++z){
+		var candidateB = candidatesB[z];
+		var p = candidateB["point"];
+		var size = 5;
+		var d = new DO();
+		d.graphics().setLine(1.0, 0xFF0000FF);
+		d.graphics().beginPath();
+		d.graphics().drawCircle(p.x, p.y, size);
+		d.graphics().strokeLine();
+		d.graphics().endPath();
+		d.matrix().translate(imageMatrixA.width(),0);
+		GLOBALSTAGE.addChild(d);
+
+		affine.copy(affineBA);
+		affine.scale(featureSizeA/needleSize);
+		// apply
+		ImageMatScaled.affineToLocationTransform(affine, affine, needleHalf,needleHalf,p.x,p.y);
+		var averageScale = affine.averageScale();
+		imageMatrixB.extractRectCombineFast(needle, averageScale, affine);
+		var image = needle;
+			var img = GLOBALSTAGE.getFloatRGBAsImage(image.red(),image.grn(),image.blu(), image.width(),image.height());
+			var d = new DOImage(img);
+			d.matrix().scale(sss);
+			d.matrix().translate(10 + z*50, 10 + 400 + 50);
+			GLOBALSTAGE.addChild(d);
+
+	}
+}
+
 /*
 // SHOW CANDIDATES
 if(false){
@@ -15684,12 +15890,13 @@ for(var z=0; z<candidatesB.length; ++z){
 				// record affine possibility
 				var variantsB = candidateB["variants"];
 				if(!variantsB[affineIndex]){
-					variantsB[affineIndex] = {"point":candidateB["point"], "affine":affineBA, "size":featureSizeA};
+					variantsB[affineIndex] = {"point":candidateB["point"], "affine":affineBA, "size":featureSizeA, "candidates":{}};
 				}
+				variantsB[affineIndex]["candidates"][idA] = true;
 			}
 		}
 	}
-console.log("review - here");
+
 	// CREATE OBJECTS FROM ALL VARIANTS
 	var objectsList = [objectsA,objectsB];
 	var allObjectsList = [];
@@ -15724,85 +15931,157 @@ console.log("review - here");
 			var objs = [];
 				object["objects"] = objs;
 			for(var k=0; k<variants.length; ++k){
-				objs[k] = allVariants[index];
+				var source = variants[k];
+				var variant = allVariants[index];
+					variant["affine"] = source["affine"];
+				objs[k] = variant;
 				++index;
 			}
 		}
-		// console.log(index+" / "+allVariants.length);
 	}
 
 	// do compares single A to many B
+	var sortCandidates = function(a,b){
+		return a["score"] < b["score"] ? -1 : 1;
+	}
 	for(var i=0; i<objectsA.length; ++i){
 		var objectA = objectsA[i];
 		var riftObjectA = objectA["objects"][0];
+		var idA = objectA["id"];
 		var candidatesB = objectA["candidates"];
-		var bestScoreA = null;
-		var bestCandidateA = null;
 		for(var j=0; j<candidatesB.length; ++j){
 			var candidateB = candidatesB[j];
 			var riftObjectsB = candidateB["objects"];
-			var bestScore = null;
+			var variantsB = candidateB["variants"];
 			for(var k=0; k<riftObjectsB.length; ++k){
-				var riftObjectB = riftObjectsB[k];
-				var score = R3D.compareProgressiveRIFTObjectsCombined(riftObjectA,riftObjectB);
-				if(bestScore===null){
-					bestScore = score;
-				}else{
-					bestScore = Math.min(bestScore,score);
+				var variantB = variantsB[k];
+				if(variantB["candidates"][idA]){ // only test affines close enough
+					var riftObjectB = riftObjectsB[k];
+					var score = R3D.compareProgressiveRIFTObjectsCombined(riftObjectA,riftObjectB);
+					objectA["best"].push( {"object":candidateB, "score":score, "affine":identity} );
+					candidateB["best"].push( {"object":objectA, "score":score, "affine":riftObjectB["affine"]} );
 				}
-			}
-			var bestB = candidateB["best"];
-			if(!bestB){
-				candidateB["best"] = {"object":objectA, "score":bestScore};
-			}else{
-				var otherScore = bestB["score"];
-				if(bestScore<otherScore){
-					bestB["object"] = objectA;
-					bestB["score"] = bestScore;
-				}
-			}
-			if(bestCandidateA===null || bestScore<bestScoreA){
-				bestScoreA = bestScore;
-				bestCandidateA = candidateB;
 			}
 		}
-		if(bestCandidateA){
-			objectA["best"] = {"object":bestCandidateA, "score":bestScoreA};
+	}
+	// keep top 2 candidates for ranking
+	for(var j=0; j<objectsList.length; ++j){
+		var objects = objectsList[j];
+		for(var i=0; i<objects.length; ++i){
+			var object = objects[i];
+			object["best"].sort(sortCandidates);
 		}
 	}
 
 	// pick best both ways
+	var maximumBestSecondRatio = 0.90 // 0.70 - 0.90
 	var bestMatches = [];
 	for(var i=0; i<objectsA.length; ++i){
 		var objectA = objectsA[i];
-		var bestA = objectA["best"];
+		var bestA = objectA["best"][0];
 		if(bestA){
 			var objectB = bestA["object"];
-			var bestB = objectB["best"];
+			var bestB = objectB["best"][0];
 			if(bestB){
 				var candidateA = bestB["object"];
 				if(objectA==candidateA){
-					var match = {"A":objectA["point"], "B":objectB["point"], "score":bestA["score"], "affine":null};
-					bestMatches.push(match);
+					var ratio = 0;
+					var secondA = objectA["best"][1];
+					var secondB = objectB["best"][1];
+					if(secondA && secondB){
+						var ratioA = bestA["score"]/secondA["score"];
+						var ratioB = bestB["score"]/secondB["score"];
+						ratio = Math.min(ratioA,ratioB);
+						if(ratio<maximumBestSecondRatio){
+							// if(fError<allowableFError){ // filter on F
+								var pA = objectA["point"];
+								var pB = objectB["point"];
+								var affine = bestB["affine"]; // A-to-B
+									affine = affine.copy().inverse();
+								var match = {"A":pA, "B":pB, "score":bestA["score"], "affine":affine};
+								bestMatches.push(match);
+							// }
+						}
+					}
 				}
 			}
 		}
 	}
-	console.log(bestMatches.length);
 
+	console.log("find locally optimal location");
+	var affine = new Matrix2D();
+	var needleSize = 11;
+	var needleHalf = (needleSize-1)*0.5;
+	var haystackSize = 21;
+	var reuseNeedle = new ImageMat(needleSize,needleSize);
+	var reuseHaystack = new ImageMat(haystackSize,haystackSize);
+	var sss = 1.0;
+	var cnt = 0;
+	var fErrors = [];
+	for(var i=0; i<bestMatches.length; ++i){
+		var match = bestMatches[i];
+		var pointA = match["A"];
+		var pointB = match["B"];
+		var affineAB = match["affine"];
+		var result = R3D.optimumSADLocationSearchFlatRGB(pointA,pointB, imageMatrixA,imageMatrixB, featureSizeA, needleSize,haystackSize, affineAB, reuseNeedle,reuseHaystack);
+		var score = result["score"];
+		var point = result["point"];
+		match["B"] = point;
+		match["SAD"] = score;
+		// get F error:
+		var pA = match["A"];
+		var pB = match["B"];
+		var fError = R3D.fundamentalErrorSingle(Fab,Fba,pA,pB);
+			fError = fError["error"];
+		fErrors.push(fError);
+		match["errorF"] = fError;
+	}
+	console.log("after locally: "+bestMatches.length);
 
+	Code.printMatlabArray(fErrors,"F");
+	var min = Code.min(fErrors);
+	var sigma = Code.stdDev(fErrors,min);
+	var limit = min + 2.0*sigma;
+	console.log(" "+min+" +/- "+sigma+" = "+limit);
+	for(var i=0; i<bestMatches.length; ++i){
+		var match = bestMatches[i];
+		var score = match["errorF"];
+		if(score>limit){
+			Code.removeElementAt(bestMatches,i);
+			--i;
+		}
+	}
+	console.log(" AFTER F: "+bestMatches.length);
 
-/*
+	var scores = [];
+	for(var i=0; i<bestMatches.length; ++i){
+		var match = bestMatches[i];
+		var score = match["SAD"];
+		scores.push(score);
+	}
+	Code.printMatlabArray(scores,"SAD");
+	var min = Code.min(scores);
+	var sigma = Code.stdDev(scores,min);
+	var limit = min + 2.0*sigma;
+	console.log(" "+min+" +/- "+sigma+" = "+limit)
+	for(var i=0; i<bestMatches.length; ++i){
+		var match = bestMatches[i];
+		var score = match["SAD"];
+		if(score>limit){
+			Code.removeElementAt(bestMatches,i);
+			--i;
+		}
+	}
+	console.log(" AFTER SAD: "+bestMatches.length);
+
 	// drop based on score
-	
 	var scores = [];
 	for(var i=0; i<bestMatches.length; ++i){
 		var match = bestMatches[i];
 		var score = match["score"];
 		scores.push(score);
 	}
-	Code.printMatlabArray(scores);
-
+	Code.printMatlabArray(scores,"scores");
 	var min = Code.min(scores);
 	var sigma = Code.stdDev(scores,min);
 	var limit = min + 2.0*sigma;
@@ -15815,17 +16094,17 @@ console.log("review - here");
 			--i;
 		}
 	}
-	console.log(bestMatches.length);
+	console.log("after score "+bestMatches.length);
 	
 
 
-
+/*
 	var pointsA = [];
 	var pointsB = [];
 	for(var i=0; i<bestMatches.length; ++i){
 		var match = bestMatches[i];
-		pointsA.push(match["A"]);
-		pointsB.push(match["B"]);
+		pointsA.push(match["A"].copy());
+		pointsB.push(match["B"].copy());
 	}
 	
 	var errorPixels = imageMatrixA.size().length()*0.005; // 500x300 = 2.9 px    0.001 [1 px] - 0.01 [6 px]
@@ -15833,19 +16112,128 @@ console.log("review - here");
 	var result = R3D.fundamentalRANSACFromPoints(pointsA,pointsB, errorPixels, null, 0.50, 0.99);
 	var ms = result["matches"];
 	console.log(result);
-	var pointsA = ms[0];
-	var pointsB = ms[1];
+	// var pointsA = ms[0];
+	// var pointsB = ms[1];
 
+	var Fab = result["F"];
+	var Fba = R3D.fundamentalInverse(Fab);
+	var info = R3D.fundamentalError(Fab,Fba,pointsA,pointsB);
+	console.log(info);
+*/
+
+/*
 	bestMatches = [];
 	for(var i=0; i<pointsA.length; ++i){
 		bestMatches.push( {"A":pointsA[i], "B":pointsB[i]} );
 	}
-	console.log(bestMatches);
+	console.log("after F "+bestMatches.length);
+*/
+
+/*
+	// combine:
+	for(var i=0; i<matchesAB.length; ++i){
+		var matchAB = matchesAB[i];
+		var pointA = matchAB["A"];
+		var pointB = matchAB["B"];
+		// var affineBA = matchAB["inverse"];
+		// bestMatches.push(matchAB);
+	}
+*/
+
+/*
+	var pointsA = [];
+	var pointsB = [];
+	for(var i=0; i<matchesAB.length; ++i){
+		var match = matchesAB[i];
+		pointsA.push(match["A"]);
+		pointsB.push(match["B"]);
+	}
+	var Fab = R3D.fundamentalFromUnnormalized(pointsA,pointsB);
+	console.log(Fab);
+	var Fba = R3D.fundamentalInverse(Fab);
+	// var error = R3D.fundamentalMatrixError(F, pointsA,pointsB);
+	var info = R3D.fundamentalError(Fab,Fba,pointsA,pointsB);
+	console.log(info);
+*/
+
+/*
+affine = R3D._temp_matrix2D.copy(affine);
+	affine.inverse();
+	affine.scale(inScale);
+	var averageScale = affine.averageScale();
+		ImageMatScaled.affineToLocationTransform(affine,affine, halfNeedle,halfNeedle, pointA.x,pointA.y);
+		imageScalesA.extractRectFast(needle, averageScale, affine);
+
+	affine.identity();
+	affine.scale(inScale);
+	var averageScale = affine.averageScale();
+		ImageMatScaled.affineToLocationTransform(affine,affine, halfHaystack,halfHaystack, pointB.x,pointB.y);
+		imageScalesB.extractRectFast(haystack, averageScale, affine);
+
 
 */
 
+// SHOW BEST
+// if(true){
+if(false){
+	bestMatches.sort(function(a,b){
+		return a["score"] < b["score"] ? -1 : 1;
+	});
+	var affine = new Matrix2D();
+	var needleSize = 41;
+	var needleHalf = (needleSize-1)*0.5;
+	var needle = new ImageMat(needleSize,needleSize);
+	var sss = 1.0;
+	var cnt = 0;
+	// for(var i=0; i<bestMatches.length; ++i){
+	for(var i=bestMatches.length-1; i>=0; --i){
+		var match = bestMatches[i];
+		var pointA = match["A"];
+		var pointB = match["B"];
+		// var affineBA = match["affine"];
+		var affineAB = match["affine"];
+// console.log(match);
 
-if(true){
+		affine.identity();
+		affine.scale(featureSizeA/needleSize);
+		// apply
+		ImageMatScaled.affineToLocationTransform(affine, affine, needleHalf,needleHalf,pointA.x,pointA.y);
+		var averageScale = affine.averageScale();
+		imageMatrixA.extractRectCombineFast(needle, averageScale, affine);
+		var image = needle;
+			var img = GLOBALSTAGE.getFloatRGBAsImage(image.red(),image.grn(),image.blu(), image.width(),image.height());
+			var d = new DOImage(img);
+			d.matrix().scale(sss);
+			d.matrix().translate(10 + cnt*50, 10 + 500 + 0);
+			GLOBALSTAGE.addChild(d);
+
+// affine.identity();
+		// affine.copy(affineBA);
+		affine.copy(affineAB);
+		affine.inverse(); // B to A
+		affine.scale(featureSizeA/needleSize);
+		// apply
+		ImageMatScaled.affineToLocationTransform(affine, affine, needleHalf,needleHalf,pointB.x,pointB.y);
+		var averageScale = affine.averageScale();
+		imageMatrixB.extractRectCombineFast(needle, averageScale, affine);
+		var image = needle;
+			var img = GLOBALSTAGE.getFloatRGBAsImage(image.red(),image.grn(),image.blu(), image.width(),image.height());
+			var d = new DOImage(img);
+			d.matrix().scale(sss);
+			d.matrix().translate(10 + cnt*50, 10 + 500 + 100);
+			GLOBALSTAGE.addChild(d);
+
+		// if(i>50){
+		// if(bestMatches.length-i > 50){
+		if(cnt>50){
+			break;
+		}
+		++cnt;
+	}
+}
+
+if(false){
+// if(true){
 	var d = new DO();
 	d.graphics().setFill(0x99FFFFFF);
 	// d.graphics().setFill(0x66FFFFFF);
@@ -15873,32 +16261,10 @@ var colors = [color0,color1,color2,color3];
 		// }
 
 		// var color = 0xFF0000FF;
-		var size = 5;
+		var size = 3.0;
+		// var size = featureSizeA*0.5;
 		var line = 3.0;
-		/*
-		var d = new DO();
-		d.graphics().setLine(line, color);
-		d.graphics().beginPath();
-		d.graphics().drawCircle(pointA.x, pointA.y, size);
-		d.graphics().strokeLine();
-		d.graphics().endPath();
-		d.matrix().translate(0,0);
-		GLOBALSTAGE.addChild(d);
-
-		var d = new DO();
-		d.graphics().setLine(line, color);
-		d.graphics().beginPath();
-		d.graphics().drawCircle(pointB.x, pointB.y, size);
-		d.graphics().strokeLine();
-		d.graphics().endPath();
-		d.matrix().translate(imageMatrixA.width(),0);
-		GLOBALSTAGE.addChild(d);
-		*/
-			// var a = match["A"];
-			// var b = match["B"];
-			// var pointA = a["point"];
-			// var pointB = b["point"];
-			var size = 2.0;
+		
 var p = pointA.copy();
 var q = pointB.copy();
 var px = (p.x/imageMatrixA.width());
@@ -15924,12 +16290,135 @@ var p3 = px*py;
 	}
 	d.matrix().translate(0,0);
 	GLOBALSTAGE.addChild(d);
-}
+}	
+
+	// COMBINE:
+	for(var i=0; i<matchesAB.length; ++i){
+		var matchAB = matchesAB[i];
+		// var pointA = matchAB["A"];
+		// var pointB = matchAB["B"];
+		// var affineAB = matchAB["affine"];
+		// var inverse = affineAB.copy();
+		// 	inverse.inverse(); // B to A
+		// matchAB["inverse"] = inverse;
+		bestMatches.push(matchAB);
+	}
+	console.log(" AFTER COMBINE: "+bestMatches.length);
+	console.log(bestMatches);
+
+	// GET FINAL F
+	var maxIterations = 3;
+	var sigmaF = null;
+	for(var iteration=0; iteration<maxIterations; ++iteration){
+		var beforeLength = bestMatches.length;
+		var pointsA = [];
+		var pointsB = [];
+		for(var i=0; i<bestMatches.length; ++i){
+			var match = bestMatches[i];
+			pointsA.push(match["A"]);
+			pointsB.push(match["B"]);
+		}
+		Fab = R3D.fundamentalFromUnnormalized(pointsA,pointsB);
+		Fba = R3D.fundamentalInverse(Fab);
+		var info = R3D.fundamentalError(Fab,Fba,pointsA,pointsB);
+		console.log(info);
+		sigmaF = info["sigma"];
+		allowableFError = info["mean"] + 2.0*info["sigma"];
+		console.log("allowableFError: "+allowableFError);
+
+		// drop worst F errors
+		var fErrors = [];
+		for(var i=0; i<bestMatches.length; ++i){
+			var match = bestMatches[i];
+			var pointA = match["A"];
+			var pointB = match["B"];
+			var fError = R3D.fundamentalErrorSingle(Fab,Fba,pointA,pointB);
+				fError = fError["error"];
+			fErrors.push(fError);
+			match["errorF"] = fError;
+		}
+		Code.printMatlabArray(fErrors,"F");
+		var min = Code.min(fErrors);
+		var sigma = Code.stdDev(fErrors,min);
+		var limit = min + 2.0*sigma;
+		console.log(" "+min+" +/- "+sigma+" = "+limit);
+		for(var i=0; i<bestMatches.length; ++i){
+			var match = bestMatches[i];
+			var score = match["errorF"];
+			if(score>limit){
+				Code.removeElementAt(bestMatches,i);
+				--i;
+			}
+		}
+		console.log(" AFTER F2-"+iteration+": "+bestMatches.length);
+		if(beforeLength==bestMatches.length){
+			break;
+		}
+	}
 
 
-	throw "findLocalSupportingCornerMatchNeighborhoods - mimic: findLocalSupportingCornerMatches"
+if(false){
+// if(true){
+	var d = new DO();
+	d.graphics().setFill(0x99FFFFFF);
+	// d.graphics().setFill(0x66FFFFFF);
+	d.graphics().beginPath();
+	d.graphics().drawRect(0,0, 2200,1200);
+	d.graphics().endPath();
+	d.graphics().fill();
+	d.matrix().translate(0,0);
+	GLOBALSTAGE.addChild(d);
 
-	return {"matches":null};
+var d = new DO();
+var color0 = new V3D(1,0,0);
+var color1 = new V3D(0,1,0);
+var color2 = new V3D(0,0,1);
+// var color3 = new V3D(1,1,1);
+var color3 = new V3D(0,0,0);
+var colors = [color0,color1,color2,color3];
+	for(var i=0; i<bestMatches.length; ++i){
+		var match = bestMatches[i];
+		var pointA = match["A"];
+		var pointB = match["B"];
+		// if(!pointA || !pointB){
+		// 	console.log(match);
+		// 	continue;
+		// }
+
+		// var color = 0xFF0000FF;
+		var size = 3.0;
+		// var size = featureSizeA*0.5;
+		var line = 3.0;
+		
+var p = pointA.copy();
+var q = pointB.copy();
+var px = (p.x/imageMatrixA.width());
+var py = (p.y/imageMatrixA.height());
+var qx = 1 - px;
+var qy = 1 - py;
+var p0 = qx*qy;
+var p1 = px*qy;
+var p2 = qx*py;
+var p3 = px*py;
+			var color = V3D.average(colors, [p0,p1,p2,p3]);
+			color = Code.getColARGBFromFloat(1.0,color.x,color.y,color.z);
+			d.graphics().setLine(line,color);
+			d.graphics().beginPath();
+			d.graphics().drawCircle(pointA.x,pointA.y,size);
+			d.graphics().endPath();
+			d.graphics().strokeLine();
+
+			d.graphics().beginPath();
+			d.graphics().drawCircle(imageMatrixA.width() + pointB.x,pointB.y,size);
+			d.graphics().endPath();
+			d.graphics().strokeLine();
+	}
+	d.matrix().translate(0,0);
+	GLOBALSTAGE.addChild(d);
+}	
+
+
+	return {"matches":bestMatches, "F":Fab, "Finv":Fba, "Ferror":sigmaF};
 }
 
 R3D.findLocalSupportingCornerMatchNeighborhoodsOLD = function(imageMatrixA,imageMatrixB, matchesAB, imageCornerDensityPercent){
