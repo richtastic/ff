@@ -383,32 +383,84 @@ MISSING:
 	- curvature wrong
 - world-sphere projection & minimum mapping
 - affine matching (& to patches) can get bad
+- errors & magnitudes (eg F/R) should be in PERCENTS of image size (ratios)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
-- filter on initial / final F
+
+findConsistentLowErrorPairs
+
+
+
+triplesFromBestPairs -- which triples to include ?
+	- find a minimum set:
+		- may not have a triple-consistent view
+		- may not have a fully-connected set
+	=> want to return:
+		- any possibly connected graph-sets:
+			- 
+
+	STEPS:
+	- add all edges into graph
+	- break into separate connected sets:
+	- for each set:
+		- add minimum set of best edges for each (2-4)
+		- get list of all possible triples formable
+		- create list of 'pseudo' edges from possible triples:
+			- 1 of the 3 edges doesn't exist
+			- low imaginary error (~ sum of 2 other edges?)
+			- close rotationally (predicted rotation difference?) (LARGEST angle?)
+			- 
+		- add edges until complete as possible
+	- combine all edges from each set into final list of sets
+
+
+
+=> need to make sure 'removed' edges aren't loaded when loading triples
+
+	TRUPLE:
+		- id
+		- A
+		- B
+		- C
+		- pairs: list of IDs
+			-- the only existing pairs allowed to load
+	calculateTripleMatchFromViewIDs
+
+
+- work Stereopsis / F back
+
+- test Stereopsis pair results
+
+
+
+-- IS THIS TESTED/DONE?: optimizePatchNonlinearImages
+
+- pair sparse very slow
 
 
 
 
 
-- semidense points missing initial matched points
-	- those corners are not involved in the samples
+PROBLEMS:
+	- BACKWARDS:
+		A: "TD6NYI6O"
+		B: "R0HIACB5"
+		all 1000 points from F reversed R
+	- is rabbit sequence missing a triple (pair) for triple-connectivity completeness?
+		- R0HIACB5-TD6NYI6O
 
 
-- initial matches
-	- optimum location
-	- discard based on updated SAD scores
-	- discard based on F distances
-- neighborhood matches
-	- ""
 
 
-- affine matrixes are throwing off matches?
 
-- why are initial matches so much better than neighborhood matches ?
 
+App3DR.js:12068  maxErrorFInitPixels: 63
+App3DR.js:12068  maxErrorFDensePixels: 25.2
+App3DR.js:12069  maxErrorFTrackPixels: 12.6
+App3DR.js:12070  maxErrorRTrackPixels: 12.6
+App3DR.js:12071  minimumCountFInit: 20
 
 
 
@@ -448,29 +500,6 @@ MISSING:
 
 
 
-- try just getting top matches from neighborhoods ... - no filtering
-
-INCREASES:
-68 -> 189
-90 -> 356
-113 -> 389
-32 -> 97
-174 -> 303
-56 -> 234
-66 -> 260
-64 -> 181
-265 -> 535
-255 -> 521
-78 -> 170
-227 -> 515
-111 -> 229
-39 -> 53 (bad)
-150 -> 333
-38 -> 118
-217 -> 518
-26 -> 52
-61 -> 132
-233 -> 
 
 
 [1:2 -> 1:3]

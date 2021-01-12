@@ -6597,7 +6597,7 @@ errorListN.push(errorN);
 	console.log("dropF: "+dropF);
 	console.log("dropN: "+dropN);
 	console.log("dropS: "+dropS);
-	Code.printMatlabArray(errorListN,"n");
+	// Code.printMatlabArray(errorListN,"n");
 	// only keep P3Ds with ALL matches satisfying
 	var dropP3D = [];
 	for(var i=0; i<points3D.length; ++i){
@@ -7325,8 +7325,8 @@ var updateSize3D = size3D * 2.0; // affine more expanded
 
 
 	var result = R3D.optimizePatchNonlinearImages(location3D,updateSize3D,normal3D,up3D, ps2D,imageScales, extrinsics,Ks);
-console.log(result);
-throw "optimizePatchNonlinearImages"
+// console.log(result);
+// throw "optimizePatchNonlinearImages"
 
 	
 	var normal = result["normal"];
@@ -7840,7 +7840,7 @@ Stereopsis.World.prototype.recalculateMatchVisualErrors = function(){ // increas
 	// recalculateMatchVisualErrors
 }
 
-Stereopsis.World.prototype.reconstructionRelativeMetrics = function(){ // makes assumptions that only a single pair is present -- average distance between points
+Stereopsis.World.prototype.reconstructionRelativeMetrics = function(){ // makes assumptions that only a single pair is present -- average distance between points RELATIVE to point volume
 	var world = this;
 	var transforms = world.toTransformArray();
 	var metricList = [];
@@ -18777,7 +18777,7 @@ console.log("made new reuse haystack");
 	// var haystackSize = needleSize + 2;
 	// A
 	// needle & haystack both large
-	var result = R3D.optimumSADLocationSearchFlatRGB(existingA,predictedB, viewA.imageScales(),viewB.imageScales(), featureSize, needleSize,haystackSize, affineAB, reuseNeedle, haystackSize);
+	var result = R3D.optimumSADLocationSearchFlatRGB(existingA,predictedB, viewA.imageScales(),viewB.imageScales(), featureSize, needleSize,haystackSize, affineAB, reuseNeedle,reuseHaystack);
 
 // A
 // 11 & 22 extract (605)

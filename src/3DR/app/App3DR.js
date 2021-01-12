@@ -8120,16 +8120,12 @@ if(!relativeAB && isDense){
 				// console.logx(camAID,camBID,cameras);
 throw "this is for dense"
 				console.log(relativeAB);
-// throw "?"
 				configuration = {};
 				project.calculatePairMatchWithRFromViewIDs(idA,idB, relativeAB, camAID,camBID,cameras, completePairFxn,project, configuration);
 				return;
 			} // else: sparse = w/o known R
 			// throw "this is for sparse"
 			var cameras = inputData["cameras"];
-			// console.log(inputData);
-			// console.log(cameras);
-			// console.log(camAID, camBID)
 			project.calculatePairMatchFromViewIDs(idA,idB, camAID,camBID,cameras, completePairFxn,project);
 			return;
 		}
@@ -8141,8 +8137,10 @@ throw "this is for dense"
 		project._taskDoneCheckReloadURL();
 	}
 
+	console.log("pairs: ");
+	console.log(pairs);
 
-throw ">triples";
+// throw ">triples";
 
 	var triples = inputData["triples"];
 // var triples = null;
@@ -8150,16 +8148,13 @@ throw ">triples";
 
 
 // filter pairs & generate triples from remaining pairs
-
 var originalPairs = pairs;
-var info = project.visualizePairEdges(pairs);
-// console.log(info);
-// var pairs = info["pairs"];
-// console.log(pairs);
-// throw "PAIRS";
-
-
-		inputData["triples"] = project.triplesFromBestPairs(pairs, isDense);
+var info = project.findConsistentLowErrorPairs(pairs);
+console.log(info);
+var remainingPairs = info["pairs"];
+console.log(remainingPairs);
+// throw "???"
+		inputData["triples"] = project.triplesFromBestPairs(views, remainingPairs, isDense);
 		// console.log(inputData);
 		triples = inputData["triples"];
 console.log(triples);
@@ -8205,10 +8200,12 @@ console.log("inputFilename: "+inputFilename);
 		var idB = triple["B"];
 		var idC = triple["C"];
 		var gauge = triple["gauge"];
+		var triplePairs = triple["pairs"];
 		if(!gauge){
 			console.log(idA,idB,idC);
 			currentTriple = triple;
-			project.calculateTripleMatchFromViewIDs(inputData,inputFilename, idA,idB,idC, completeTripleFxn,project);
+throw "before triple ..."
+			project.calculateTripleMatchFromViewIDs(inputData,inputFilename, idA,idB,idC, triplePairs, completeTripleFxn,project);
 			return;
 		}
 	}
@@ -8848,7 +8845,7 @@ throw "."
 	throw "_visualizeTriples";
 }
 
-App3DR.ProjectManager.prototype.visualizePairEdges = function(pairs){
+App3DR.ProjectManager.prototype.findConsistentLowErrorPairs = function(pairs){ // A) remove inconsistent edges & B) remove worst loop-error causing edges
 	var project = this;
 	console.log(pairs);
 
@@ -8864,18 +8861,12 @@ App3DR.ProjectManager.prototype.visualizePairEdges = function(pairs){
 
 var removeList = {};
 
-// removeList["0GKXM13I-4U5WDZ5O"] = 1;
-// removeList["0GKXM13I-JE33IUST"] = 1;
-// removeList["2QPOD9MS-4U5WDZ5O"] = 1;
-// removeList["2QPOD9MS-JE33IUST"] = 1;
-// removeList["AAKDJLAM-T6MLWWUJ"] = 1;
-// removeList["JE33IUST-JZV0X8FW"] = 1;
-// removeList["JE33IUST-XXU13QWF"] = 1;
-
-
-
-
 // removeList[""] = 1;
+
+removeList["0QXBI80R-R0HIACB5"] = 1;
+removeList["0QXBI80R-NYD98Y62"] = 1;
+removeList["0QXBI80R-TD6NYI6O"] = 1;
+removeList["0QXBI80R-DWV0FA8T"] = 1;
 
 
 // INSERT TEST DATA HERE:
@@ -8990,6 +8981,8 @@ var removeList = {};
 		errors.push(error);
 	}
 
+	console.log("viewPairs START: "+viewPairs.length);
+
 	// exponential distribution:
 	//var dropPercent = 0.95; // 0.95 - 0.99  --- OR DO REPEATED DROPPING @ 0.99-0.999
 	var dropPercent = 0.99; // very worst
@@ -9001,9 +8994,13 @@ var removeList = {};
 	console.log("lambda: "+lambda);
 	var errorPairLimit = -Math.log(1.0 - dropPercent)/lambda;
 	console.log("errorPairLimit: "+errorPairLimit);
+console.log("viewPairs before: "+viewPairs.length);
+Code.printMatlabArray(errors,"rError");
 
-// throw "?"
+// drop very worst edges
 
+// if(false){
+if(true){
 	console.log("drop before: "+viewPairs.length);
 	var min = Code.min(errors);
 	var sigma = Code.stdDev(errors,min);
@@ -9024,9 +9021,7 @@ var removeList = {};
 	//
 	Code.printMatlabArray(errors,"rError");
 
-// throw "."
-
-
+}
 
 
 	// console.log(viewPairs);
@@ -9240,6 +9235,7 @@ for(var iterations=0; iterations<dropIterations; ++iterations){
 	console.log(info);
 
 	var limitB = Code.exponentialDistributionValueForPercent(info["min"],info["lambda"], 0.999);
+	// var limitB = Code.exponentialDistributionValueForPercent(info["min"],info["lambda"], 0.99);
 	console.log("limitB: "+limitB);
 
 
@@ -9249,8 +9245,8 @@ for(var iterations=0; iterations<dropIterations; ++iterations){
 		var loop = loops[i];
 		var loopError = loop["error"];
 		// if(loopError>limit90){ //
-		// if(loopError>limitA && loopError>limitB){ //
-		if(false){
+		if(loopError>limitA && loopError>limitB){ // drop worst inconsistently views
+		// if(false){
 			// console.log("bad loop: "+loopError);
 			var edges = loop["edges"];
 			var worstEdge = null;
@@ -9306,6 +9302,8 @@ for(var iterations=0; iterations<dropIterations; ++iterations){
 	// Code.printMatlabArray(next,"next");
 
 }
+
+console.log("viewGraph final edge count: "+viewGraph.edges().length);
 
 
 /*
@@ -9479,8 +9477,8 @@ var list = viewPairs;
 			var idA = pair["A"];
 			var idB = pair["B"];
 			var error = floats[i];
+
 			// var error = pair["error"];
-			// console.log(error);
 			var indexA = viewIDToIndex[idA];
 			var indexB = viewIDToIndex[idB];
 			var start = centers[indexA];
@@ -9489,14 +9487,16 @@ var list = viewPairs;
 			if(error<0){
 				color = 0xFFCCCCCC;
 			}else{
-				// color = Code.interpolateColorGradientARGB(error, colors);
-				color = 0xFF000033;
+				color = Code.interpolateColorGradientARGB(error, colors);
+				// color = 0xFF000033;
 			}
 			//
 			// color = 0xFF000033;
 			//
 // var line = 0.5 + error*10.0;
-var line = 1.0;
+// var line = 0.5 + error*10.0;
+// var line = 1.0;
+var line = 2.0;
 			var d = new DO();
 			// d.graphics().setLine(3.0,color);
 			d.graphics().setLine(line,color);
@@ -9548,23 +9548,442 @@ var line = 1.0;
 		view.loadIconImage(checkImagesLoaded, project);
 	}
 
+	// keep remainingEdges
+	// var remainingEdges = [];
+	// for(){
 
+	// }
 
-
-
-
-
-
-
-// throw "LOOP BEFORE RETURN ... -- show pairs"
-
-	// throw "visualizePairEdges";
+	return {"pairs":viewPairs};
 
 }
+App3DR.ProjectManager.connectedSets = function(views, pairs){
 
-App3DR.ProjectManager.prototype.triplesFromBestPairs = function(pairs, isDense){ // TODO: does this guarantee scale coverage for every pair ?
+	// add all views + pairs to a graph
+	var graph = new Graph();
+	var viewIDToVertex = {};
+	for(var i=0; i<views.length; ++i){
+		var view = views[i];
+		var viewID = view["id"];
+		var vertex = graph.addVertex();
+		vertex.data(view);
+		viewIDToVertex[viewID] = vertex;
+	}
 
-// console.log("triplesFromBestPairs: --- TODO: cap max amount of triples");
+	for(var i=0; i<pairs.length; ++i){
+		var pair = pairs[i];
+		var pairsID = pair["id"];
+		var vertexA = viewIDToVertex[pair["A"]];
+		var vertexB = viewIDToVertex[pair["B"]];
+		var edge = graph.addEdgeDuplex(vertexA,vertexB, 1.0);
+		// var vertex = graph.addVertex();
+		edge.data(pair);
+	}
+
+	var sets = graph.disjointSets();
+	// console.log(sets);
+	var setList = [];
+	for(var i=0; i<sets.length; ++i){
+		var set = sets[i];
+		var setViews = [];
+		var setPairs = {};
+		for(var j=0; j<set.length; ++j){
+			var vertex = set[j];
+			var view = vertex.data();
+			setViews.push(view);
+			var edges = vertex.edges();
+			for(var k=0; k<edges.length; ++k){
+				var edge = edges[k];
+				var pair = edge.data();
+				setPairs[pair["id"]] = pair;
+			}
+		} // Graph.reachableEdges = function(graph,source);
+		setPairs = Code.objectToArray(setPairs);
+		var setObject = {"views":setViews, "pairs":setPairs};
+		setList.push(setObject);
+	}
+	// console.log(setList);
+	return {"sets":setList};
+}
+App3DR.ProjectManager.prototype.triplesFromBestPairs = function(views, pairs, isDense){ // TODO: does this guarantee scale coverage for every pair ?
+	console.log("triplesFromBestPairs: --- TODO: cap max amount of triples");
+
+	// var graphTopChoiceMinimumCount = 3; // 2-4
+	// var graphDesiredMinimumTripleCount = 3; // 2-4
+
+	var graphTopChoiceMinimumCount = 1;
+	var graphDesiredMinimumTripleCount = 2;
+
+	console.log(views);
+	console.log(pairs);
+	console.log(isDense);
+
+	var indexError = "relativeError";
+	var indexCount = "relative";
+	var indexTransform = "relativeTransform";
+
+	var relAngleFxn = function(matrix){
+		var x = rotation.multV3DtoV3D(new V3D(1,0,0));
+		var y = rotation.multV3DtoV3D(new V3D(0,1,0));
+		var z = rotation.multV3DtoV3D(new V3D(0,0,1));
+		// var dx = V3D.distanceSquare(V3D.DIRX,x);
+		// var dy = V3D.distanceSquare(V3D.DIRY,y);
+		// var dz = V3D.distanceSquare(V3D.DIRZ,z);
+		var angle = 0;
+		angle += V3D.angle(V3D.DIRZ,z);
+		angle += V3D.angle(V3D.DIRY,y);
+		angle += V3D.angle(V3D.DIRX,x);
+		angle /= 3;
+		return angle;
+	}
+
+	var sortRelativeError = function(a,b){
+		return a["relativeError"] < b["relativeError"] ? -1 : 1;
+	}
+
+	// var sortRelativeError = function(a,b){
+	// 	return a["relativeError"] < b["relativeError"] ? -1 : 1;
+	// }
+
+
+	var pairRotations = {};
+	for(var i=0; i<pairs.length; ++i){
+		var pair = pairs[i];
+		var pairID = pair["id"];
+		var transform = pair[indexTransform];
+		var R = Matrix.fromObject(transform);
+			R.set(0,3, 0);
+			R.set(1,3, 0);
+			R.set(2,3, 0);
+		var forward = Matrix.inverse(R);
+		var reverse = Matrix.inverse(forward);
+		pairRotations[pairID] = {"forward":forward, "reverse":reverse};
+	}
+
+	// separate graph into connected sets
+	var connectivity = App3DR.ProjectManager.connectedSets(views, pairs);
+	// console.log(connectivity);
+	var sets = connectivity["sets"];
+
+	var cummulativeTripleList = [];
+	// for each set: views + pairs:
+	for(var i=0; i<sets.length; ++i){
+		var set = sets[i];
+		// console.log(set);
+		var setViews = set["views"];
+		var setPairs = set["pairs"];
+		console.log(setViews);
+		console.log(setPairs);
+		var pairIDToSetPair = {};
+		for(var j=0; j<setPairs.length; ++j){
+			var pair = setPairs[j];
+			var pairID = pair["id"];
+			pairIDToSetPair[pairID] = pair;
+		}
+		console.log(pairIDToSetPair);
+		// get list of all possible triples formable (triples with at least two edges)
+		var possibleTriples = {};
+		for(var a=0; a<setPairs.length; ++a){
+			var pairA = setPairs[a];
+			var idAA = pairA["A"];
+			var idAB = pairA["B"];
+			for(var b=a+1; b<setPairs.length; ++b){
+				var pairB = setPairs[b];
+				var idBA = pairB["A"];
+				var idBB = pairB["B"];
+				// any overlap:
+				if(idAA==idBA || idAA==idBB || idAB==idBA || idAB==idBB){
+					var uniqueStrings = Code.uniqueStrings([idAA,idAB,idBA,idBB]);
+					uniqueStrings.sort();
+					var idA = uniqueStrings[0];
+					var idB = uniqueStrings[1];
+					var idC = uniqueStrings[2];
+					var tripleID = idA+"-"+idB+"-"+idC;
+					if(possibleTriples[tripleID]){
+						continue;
+					}
+					var pairAB = idA+"-"+idB;
+					var pairAC = idA+"-"+idC;
+					var pairBC = idB+"-"+idC;
+						pairAB = pairIDToSetPair[pairAB];
+						pairAC = pairIDToSetPair[pairAC];
+						pairBC = pairIDToSetPair[pairBC];
+					var ps = [];
+					if(pairAB){
+						ps.push(pairAB);
+					}
+					if(pairAC){
+						ps.push(pairAC);
+					}
+					if(pairBC){
+						ps.push(pairBC);
+					}
+					// doesn't yet exit
+					var triple = {};
+					triple["id"] = tripleID;
+					triple["A"] = idA;
+					triple["B"] = idB;
+					triple["C"] = idC;
+					triple["pairs"] = ps;
+					possibleTriples[tripleID] = triple;
+				}
+			}
+		}
+
+		console.log(possibleTriples);
+		var tripleIndexes = Code.keys(possibleTriples);
+		// get list of triples with only single edge missing
+		var pseudoTriples = [];
+		for(var k=0; k<tripleIndexes.length; ++k){
+			var key = tripleIndexes[k];
+			var triple = possibleTriples[key];
+			var ps = triple["pairs"];
+			if(ps.length==2){  // 1 of the 3 edges doesn't exist
+				pseudoTriples.push(triple);
+			}
+		}
+		console.log(pseudoTriples);
+		// create list of 'pseudo' edges from possible triples:
+		var pseudoEdges = {};
+		var allPseudoEdges = [];
+		for(var k=0; k<pseudoTriples.length; ++k){
+			var triple = pseudoTriples[k];
+			var idA = triple["A"];
+			var idB = triple["B"];
+			var idC = triple["C"];
+			var pairAB = idA+"-"+idB;
+			var pairAC = idA+"-"+idC;
+			var pairBC = idB+"-"+idC;
+			var edgeID = null;
+			if(!pairIDToSetPair[pairAB]){
+				edgeID = pairAB;
+			}else if(!pairIDToSetPair[pairAC]){
+				edgeID = pairAC;
+			}else if(!pairIDToSetPair[pairBC]){
+				edgeID = pairBC;
+			}
+			var edge = {};
+				edge["id"] = edgeID;
+				edge["triple"] = triple;
+				
+			if(!pseudoEdges[edgeID]){
+				var pseudoEdge = {};
+				var ps = edgeID.split("-");
+					pseudoEdge["id"] = edgeID;
+					pseudoEdge["A"] = ps[0];
+					pseudoEdge["B"] = ps[1];
+					pseudoEdge["errorWeight"] = 0;
+					pseudoEdge["errorAngle"] = 0;
+					pseudoEdge["edges"] = [];
+				pseudoEdges[edgeID] = pseudoEdge;
+			}
+			pseudoEdges[edgeID]["edges"].push(edge);
+			allPseudoEdges.push(edge);
+		}
+		console.log(pseudoEdges);
+console.log("allPseudoEdges");
+		
+		for(var k=0; k<allPseudoEdges.length; ++k){ // record error = sum of 2 edge error & rotational error: predicted angle from A->B->C
+			var edge = allPseudoEdges[k];
+			var edgeID = edge["id"];
+			var triple = edge["triple"];
+			var idA = triple["A"];
+			var idB = triple["B"];
+			var idC = triple["C"];
+			var pairIDAB = idA+"-"+idB;
+			var pairIDAC = idA+"-"+idC;
+			var pairIDBC = idB+"-"+idC;
+				pairAB = pairIDToSetPair[pairIDAB];
+				pairAC = pairIDToSetPair[pairIDAC];
+				pairBC = pairIDToSetPair[pairIDBC];
+			var error = null;
+			var transform = null;
+			var pairA = null;
+			var pairB = null;
+			var transformA = null;
+			var transformB = null;
+			if(pairAB && pairBC){ // A->B->C
+				pairA = pairAB;
+				pairB = pairBC;
+				transformA = pairRotations[pairIDAB]["forward"];
+				transformB = pairRotations[pairIDBC]["forward"];
+			}else if(pairAC && pairBC){ // B->C->A
+				pairA = pairBC;
+				pairB = pairAC;
+				transformA = pairRotations[pairIDBC]["forward"];
+				transformB = pairRotations[pairIDAC]["reverse"];
+			}else if(pairAC && pairAB){ // C->A->B
+				pairA = pairAC;
+				pairB = pairAB;
+				transformA = pairRotations[pairIDAC]["reverse"];
+				transformB = pairRotations[pairIDAB]["forward"];
+			}
+			var errorA = pairA[indexError]/pairA[indexCount];
+			var errorB = pairB[indexError]/pairB[indexCount];
+			error = errorA + errorB;
+			// console.log(pairA[indexError],pairB[indexError]);
+			// console.log(error);
+			// 
+			var rotation = new Matrix(4,4);
+				rotation.identity();
+				rotation = Matrix.mult(rotation,transformA);
+				rotation = Matrix.mult(rotation,transformB);
+			var rotationError = relAngleFxn(rotation);
+			// console.log(transformA,transformB);
+			// console.log(rotationError);
+			
+			pseudoEdges[edgeID]["errorWeight"] += error;
+			pseudoEdges[edgeID]["errorAngle"] += rotationError;
+
+		}
+		// average all errors & angles
+		pseudoEdgeIndexes = Code.keys(pseudoEdges);
+		var pseudoEdgeList = [];
+		for(var k=0; k<pseudoEdgeIndexes.length; ++k){
+			var key = pseudoEdgeIndexes[k];
+			var pseudoEdge = pseudoEdges[key];
+			var count = pseudoEdge["edges"].length;
+			// total score = error * angle^P  P = 1 - 1/2
+			pseudoEdge["error"] = (pseudoEdge["errorWeight"]/count) * Math.pow(pseudoEdge["errorAngle"]/count, 1); // 1.0 -> 0.5
+			pseudoEdgeList.push(pseudoEdge);
+		}
+		pseudoEdgeList.sort(function(a,b){
+			return a["error"] < b["error"] ? -1 : 1;
+		});
+		console.log(pseudoEdgeList);
+		
+
+		// vertex index list for set
+		var setViewIndexFromViewID = {};
+		var setViewIDFromIndex = {};
+		for(var j=0; j<setViews.length; ++j){
+			var view = setViews[j];
+			var viewID = view["id"];
+			setViewIndexFromViewID[viewID] = j;
+			setViewIDFromIndex[j] = viewID;
+		}
+		// find each views top priority pairs
+		// var setViews = set["views"];
+		// var setPairs = set["pairs"];
+		var viewPairsList = Code.newArrayArrays(setViews.length);
+		for(var j=0; j<setPairs.length; ++j){
+			var pair = setPairs[j];
+			var idA = pair["A"];
+			var idB = pair["B"];
+			// add pair to view's list
+			var indexA = setViewIndexFromViewID[idA];
+			var indexB = setViewIndexFromViewID[idB];
+			viewPairsList[indexA].push(pair);
+			viewPairsList[indexB].push(pair);
+		}
+		console.log(viewPairsList);
+
+		// sort each view list by id
+		for(var j=0; j<viewPairsList.length; ++j){
+			viewPairsList[j].sort(sortRelativeError);
+		}
+		
+
+		var pairInitialList = [];
+		var pairAddedLookup = {};
+
+		for(var j=0; j<setViews.length; ++j){
+			var list = viewPairsList[j];
+			var maxCount = Math.min(list.length,graphTopChoiceMinimumCount);
+			for(var k=0; k<maxCount; ++k){
+				var pair = list[k];
+				var pairID = pair["id"];
+				if(pairAddedLookup[pairID]){
+					continue;
+				}
+				pairAddedLookup[pairID] = true;
+				pairInitialList.push(pair);
+			}
+		}
+		console.log(pairInitialList);
+
+		// find remaining edges
+		var pairRemainingList = [];
+		for(var j=0; j<setPairs.length; ++j){
+			var pair = setPairs[j];
+			var pairID = pair["id"];
+			if(pairAddedLookup[pairID]){
+				continue;
+			}
+			pairAddedLookup[pairID] = true;
+			pairRemainingList.push(pair);
+		}
+		console.log(pairRemainingList);
+
+		console.log("PSEUDO LIST");
+		// for each pseudo triple - sort triples by computed error
+		console.log(pseudoEdgeList);
+		for(var j=0; j<pseudoEdgeList.length; ++j){
+			var pseudoEdge = pseudoEdgeList[j];
+			console.log(pseudoEdge);
+			// create edge entry
+			var entry = [0,1];
+			// -> add to new list
+			pairRemainingList.push(entry);
+		}
+		
+		throw "here"
+
+
+
+
+		// create graph
+		/*
+		var rowCount = graphTopChoiceMinimumCount; // first 2-3 choices for each view
+		var initialPairs = [];
+		var initialCount = Math.min(imageCount*rowCount,orderedPairs.length);
+		for(var i=0; i<initialCount; ++i){
+			var pair = orderedPairs.shift();
+			initialPairs.push(pair);
+		}
+		var graph = new ViewHyperGraph();
+			graph.setViewCount(matchLists.length);
+			graph.setInitialPairs(initialPairs);
+			graph.satisfyViewGraphParameters(orderedPairs, graphDesiredMinimumTripleCount);
+			// create match list from garph
+		var pairs = graph.generateMatchList();
+		console.log(pairs);
+		*/
+
+		// add minimum set of best edges for each (2-4)
+
+		// add pseudo edges to priority edge list
+		
+		// add edges until complete as possible [existing algorithm]
+
+
+		// => list of all edges 
+		// every edge permutation, as long as all 3 edges exist AND 2 edges are non-pseudo
+		// => make a triple
+
+
+
+
+		// cummulativeTripleList
+	} // end sets
+
+	// combine all edges from each set into final list of sets
+
+	console.log(cummulativeTripleList);
+
+
+	throw "?";
+
+	return {"triples":cummulativeTripleList};
+
+
+
+
+
+
+
+
+
 
 	var minimumRelativeCount = 100; // tracks:  poor-avg-good  |  sparse =  100-200-500   |  dense = 1000-10k
 	// var maximumIndividualPairCount = 4; // 3 - 6 [at least 2 others to guarantee relative-ness, at least 4 for error]
@@ -11954,12 +12373,30 @@ console.log("calculatePairMatchFromViewIDs")
 		settings["minimumMatchPoints"] = 16;
 		settings["incrementResolution"] = 0;
 		settings["minimumCountFInit"] = 20; // fwd-bak matches -- 25-50-100
-		settings["maximumErrorFInit"] = 0.01; // 0.02 @ 500 = 10 -- initial F estimate [~100 features]
-		settings["maximumErrorFDense"] = 0.005; // 0.01 @ 500 = 5 -- dense F estimate [~500 features]
-		settings["maximumErrorTracksF"] = 0.004; // 0.01 @ 500 = 5 -- final stereopsis estimate F
-		settings["maximumErrorTracksR"] = 0.002; // 0.01 @ 500 = 5 -- final stereopsis estimate R
+		settings["maximumErrorFInit"] = 0.05; // 0.02 @ 500 = 10 -- initial F estimate [~100 features]
+		settings["maximumErrorFDense"] = 0.02; // 0.01 @ 500 = 5 -- dense F estimate [~500 features]
+		settings["maximumErrorTracksF"] = 0.01; // 0.01 @ 500 = 5 -- final stereopsis estimate F
+		settings["maximumErrorTracksR"] = 0.01; // 0.01 @ 500 = 5 -- final stereopsis estimate R
+		settings["minimumCountTrackFinal"] = 100; // 1k-10k REGULAR => 100-1k track
+
+		// settings["minimumCountFInit"] = 20; // fwd-bak matches -- 25-50-100
+		// settings["maximumErrorFInit"] = 0.01; // 0.02 @ 500 = 10 -- initial F estimate [~100 features]
+		// settings["maximumErrorFDense"] = 0.005; // 0.01 @ 500 = 5 -- dense F estimate [~500 features]
+		// settings["maximumErrorTracksF"] = 0.004; // 0.01 @ 500 = 5 -- final stereopsis estimate F
+		// settings["maximumErrorTracksR"] = 0.002; // 0.01 @ 500 = 5 -- final stereopsis estimate R
 	}
 	console.log("calculatePairMatchFromViewIDs: "+viewAID+" & "+viewBID);
+
+// // listed in percents:
+// var maxErrorFInitPixels = 0.10; // 10-20%
+// var maxErrorFDensePixels = 0.05; // 5-10%
+// var maxErrorFTrackPixels = 0.025; // 1-5%
+// var maxErrorRTrackPixels = 0.02; // 1-5%
+// maxErrorFInitPixels = maxErrorFInitPixels * hyp;
+// maxErrorFDensePixels = maxErrorFDensePixels * hyp;
+// maxErrorFTrackPixels = maxErrorFTrackPixels * hyp;
+// maxErrorRTrackPixels = maxErrorRTrackPixels * hyp;
+
 
 	var project = this;
 	var featureDataA = null;
@@ -12013,8 +12450,8 @@ console.log("calculatePairMatchFromViewIDs")
 		}
 // throw "READY CHECK";
 GLOBALDISPLAY = GLOBALSTAGE;
-// var DEBUG_SHOW = false;
-var DEBUG_SHOW = true;
+var DEBUG_SHOW = false;
+// var DEBUG_SHOW = true;
 		var pairDoneSaveFxn = function(){
 			// SAVE DATA & SAVE SUMMARY & SAVE PROJECT ?
 			console.log(pairData);
@@ -12028,7 +12465,7 @@ var DEBUG_SHOW = true;
 		var maxErrorFInitialPercent = settings["maximumErrorFInit"];
 		var maxErrorFDensePercent = settings["maximumErrorFDense"];
 		var minimumCountFInit = settings["minimumCountFInit"];
-
+		var minimumCountTrackFinal = settings["minimumCountTrackFinal"];
 
 		var imageMatrixA = R3D.imageMatrixFromImage(imageA, stage);
 		var imageMatrixB = R3D.imageMatrixFromImage(imageB, stage);
@@ -12051,17 +12488,10 @@ var DEBUG_SHOW = true;
 		console.log(" maxErrorFTrackPixels: "+maxErrorFTrackPixels);
 		console.log(" maxErrorRTrackPixels: "+maxErrorRTrackPixels);
 		console.log(" minimumCountFInit: "+minimumCountFInit);
+		console.log(" minimumCountTrackFinal: "+minimumCountTrackFinal);
+		
 
 
-//  maxErrorFInitPixels: 12.6
-//  maxErrorFDensePixels: 6.3 --- past 10 could still be good
-//  maxErrorFTrackPixels: 5.04
-//  maxErrorRTrackPixels: 2.52
-
-var maxErrorFInitPixels = 100;
-var maxErrorFDensePixels = 50;
-var maxErrorFTrackPixels = 20;
-var maxErrorRTrackPixels = 10;
 // SHOULD THESE BE PER-POINT ?
 // throw "HERE ^ LIMITS"
 		
@@ -12089,6 +12519,7 @@ console.log(featuresB);
 		var Ferror;
 		var pointsA;
 		var pointsB;
+		var initialMatchesAB;
 
 
 		featuresA = R3D.denormalizeSIFTObjects(featuresA, imageAWidth, imageAHeight);
@@ -12162,27 +12593,35 @@ for(var i=0; i<features.length; ++i){
 			matchesAB.push(matchAB);
 		}
 		matches = matchesAB;
-// console.log(matches);
-// throw "?"
+	// console.log(matches);
+		console.log("INITIAL F MATCHES: "+matches.length+" / "+minimumCountFInit);
 
-		// keep best neighborhoods
-		var result = R3D.keepExtendedMatchNeighborhoods(imageScalesA,imageScalesB, matches);
-		console.log(result);
-		var matches = result["matches"];
+		if(matches.length<minimumCountFInit){
+			goodEnoughMatches = false;
+			console.log("not enough initial matches");
+		}
+// UPGRADE INITIAL MATCHES COUNT & ERROR
+		if(goodEnoughMatches){
+			console.log();
+			// keep best neighborhoods
+			var result = R3D.keepExtendedMatchNeighborhoods(imageScalesA,imageScalesB, matches);
+			// console.log(result);
+			var matches = result["matches"];
 
-		// change B locations to be optimally image-wize
-		var result = R3D.optimizeMatchLocations(imageScalesA,imageScalesB, matches);
-		console.log(result);
-		var matches = result["matches"];
+			// change B locations to be optimally image-wize
+			var result = R3D.optimizeMatchLocations(imageScalesA,imageScalesB, matches);
+			// console.log(result);
+			var matches = result["matches"];
 
-		// get best maching points near initial points - 2-4 times point count
-		var result = R3D.findLocalSupportingCornerMatchNeighborhoods(imageScalesA,imageScalesB, matches);
-		console.log(result);
-		var matches = result["matches"];
+			// get best maching points near initial points - 2-4 times point count
+			var result = R3D.findLocalSupportingCornerMatchNeighborhoods(imageScalesA,imageScalesB, matches);
+			// console.log(result);
+			var matches = result["matches"];
+			initialMatchesAB = matches;
 
-		// var objects = R3D.generateProgressiveRIFTObjects(features, imageScales);
-		// var result = R3D.compareProgressiveRIFTObjectsFull(objectsA, objectsB);
-		// console.log(result);
+			// var objects = R3D.generateProgressiveRIFTObjects(features, imageScales);
+			// var result = R3D.compareProgressiveRIFTObjectsFull(objectsA, objectsB);
+			// console.log(result);
 
 
 if(DEBUG_SHOW){
@@ -12291,60 +12730,61 @@ if(DEBUG_SHOW){
 
 console.log("GET INITIAL F: "+matches.length);
 
-		var pointsA = [];
-		var pointsB = [];
-		for(var i=0; i<matches.length; ++i){
-			var match = matches[i];
-			var a = match["A"];
-			var b = match["B"];
-			// pointsA.push(a["point"]);
-			// pointsB.push(b["point"]);
-			pointsA.push(a);
-			pointsB.push(b);
+			pointsA = [];
+			pointsB = [];
+			for(var i=0; i<matches.length; ++i){
+				var match = matches[i];
+				var a = match["A"];
+				var b = match["B"];
+				pointsA.push(a);
+				pointsB.push(b);
+			}
+// var F;
+// var Finv;
+// var Ferror;
+// var pointsA;
+// var pointsB;
+			// console.log(pointsA);
+			// console.log(pointsB);
+			// console.log("SIZE: "+imageMatrixA.size()); // 504x378
+			var errorPixels = imageScalesA.size().length() * 0.01; // 5%=31.5px | 1%=6px  0.005=3px  TODO: GET THIS VALUE FROM ELSEWHERE
+			// console.log("errorPixels: "+errorPixels);
+			var result = R3D.fundamentalRANSACFromPoints(pointsA,pointsB, errorPixels, null, 0.50, 0.99);
+			// console.log(result);
+			var F = result["F"];
+			var best = result["matches"];
+			var bestA = best[0];
+			var bestB = best[1];
+			// console.log(bestA,bestB);
+			console.log("BEST F POINTS: "+bestA.length);
+
+			F = R3D.fundamentalFromUnnormalized(bestA,bestB);
+			// console.log(F);
+			if(F){
+				Finv = R3D.fundamentalInverse(F);
+				var info = R3D.fundamentalError(F,Finv,bestA,bestB);
+					var fMean = info["mean"];
+					var fSigma = info["sigma"];
+					var fError = fMean + fSigma;
+				console.log("F ERROR: "+fMean+" +/- "+fSigma);
+				Ferror = fSigma;
+			}
+			//R3D.showRansac(pointsA,pointsB, F,Finv, null, imageMatrixA,imageMatrixB);
+			// R3D.showRansac(bestA,bestB, F,Finv, null, imageScalesA,imageScalesB);
+
+	console.log("maxErrorFInitPixels: "+maxErrorFInitPixels+" vs "+Ferror);
+	console.log("minimumCountFInit: "+minimumCountFInit+" vs "+pointsA.length);
+
+			if(!F || Ferror>maxErrorFInitPixels || pointsA.length<minimumCountFInit){
+				goodEnoughMatches = false;
+			}
 		}
-		// console.log(pointsA);
-		// console.log(pointsB);
-		// console.log("SIZE: "+imageMatrixA.size()); // 504x378
-		var errorPixels = imageScalesA.size().length() * 0.01; // 5%=31.5px | 1%=6px  0.005=3px
-		// console.log("errorPixels: "+errorPixels);
-		var result = R3D.fundamentalRANSACFromPoints(pointsA,pointsB, errorPixels, null, 0.50, 0.99);
-		console.log(result);
-		var F = result["F"];
-		var best = result["matches"];
-		var bestA = best[0];
-		var bestB = best[1];
-		console.log(bestA,bestB);
 
-// vars to keep in mind
-var F = null;
-var Finv = null;
-var Ferror = null;
-
-
-		F = R3D.fundamentalFromUnnormalized(bestA,bestB);
-		console.log(F);
-		if(F){
-			Finv = R3D.fundamentalInverse(F);
-			var info = R3D.fundamentalError(F,Finv,bestA,bestB);
-				var fMean = info["mean"];
-				var fSigma = info["sigma"];
-				var fError = fMean + fSigma;
-			console.log("F ERROR: "+fMean+" +/- "+fSigma);
-			Ferror = fSigma;
-		}
-		// var FFwd = R3D.fundamentalFromUnnormalized(subsetPointsA,subsetPointsB);
-		// var FRev = R3D.fundamentalInverse(FFwd);
-
-		//R3D.showRansac(pointsA,pointsB, F,Finv, null, imageMatrixA,imageMatrixB);
-		R3D.showRansac(bestA,bestB, F,Finv, null, imageScalesA,imageScalesB);
-
-
-console.log("maxErrorFInitPixels: "+maxErrorFInitPixels);
-console.log("minimumCountFInit: "+minimumCountFInit);
-
-		if(!F || Ferror>maxErrorFInitPixels || pointsA.length<minimumCountFInit){
-			goodEnoughMatches = false;
-		}else{
+		var world = null;
+		var view0 = null;
+		var view1 = null;
+// F - DENSE - WORLD
+		if(goodEnoughMatches){
 			console.log("START WORLD TO FIND DENSE F");
 			var info = R3D.average2DTranformForIndividualPoints(pointsA,pointsB, imageMatrixA,imageMatrixB, true);
 			console.log(info);
@@ -12353,7 +12793,7 @@ console.log("minimumCountFInit: "+minimumCountFInit);
 
 			// throw "WORLD";
 			var cellCount = 40; // 40-80
-			var world = new Stereopsis.World();
+			world = new Stereopsis.World();
 			// views
 			var projectViews = [viewA,viewB];
 			var images = [imageMatrixA,imageMatrixB];
@@ -12367,8 +12807,8 @@ console.log("minimumCountFInit: "+minimumCountFInit);
 			}
 			world.setViewCellCounts(cellCount);
 			console.log(views);
-			var view0 = views[0];
-			var view1 = views[1];
+			view0 = views[0];
+			view1 = views[1];
 			// points
 			console.log(pointsA,pointsB);
 			world.resolveIntersectionByDefault();
@@ -12388,121 +12828,26 @@ console.log("minimumCountFInit: "+minimumCountFInit);
 				world.embedPoint3D(point3D);
 			}
 			console.log("SOLVE PAIR F");
-
 			var result = world.solvePairF();
-			console.log(result);
-			throw "WORLD";
-		}
+			// console.log(result);
 
+			// world.showForwardBackwardPair();
+			// throw "BEFORE NEXT F -> R"
 
-throw "use new algs";
+			var transform0 = world.transformFromViews(view0,view1);
+			var fErrorSigma = transform0.fSigma();
+			var fErrorMean = transform0.fSigma();
+			console.log("F PAIR RESULT ERROR MEAN: "+fErrorMean+" & SIGMA: "+fErrorMean+" / "+maxErrorFDensePixels);
 
-/*
-var F = null;
-var pointsA = null;
-var pointsB = null;
-var Finv = null;
-var Ferror = null;
-	var result = R3D.progressiveMatchingAllSteps(imageMatrixA,objectsA, imageMatrixB,objectsB);
-	console.log(result);
-	if(result){
-		F = result["F"];
-		pointsA = result["A"];
-		pointsB = result["B"];
-		Finv = result["Finv"];
-		Ferror = result["error"];
-	}
-
-	console.log("INITIAL F: "+Ferror+" (of "+maxErrorFInitPixels+"?) "+" & "+(pointsA?pointsA.length:0)+" (of "+minimumCountFInit+" ?)");
-
-
-// R3D.showFundamental(pointsA, pointsB, F, Finv, GLOBALSTAGE, imageMatrixA,imageMatrixB);
-// throw "initial F matches"
-*/
-
-// throw "now what"
-// F error has to be less than some number < ~ 5px
-// match cound has to be at least some number > ~50-100
-
-
-
-/*
-	if(!F || Ferror>maxErrorFInitPixels || pointsA.length<minimumCountFInit){
-		goodEnoughMatches = false;
-
-	}else{
-
-
-	// get 'affine' 2D transform from previous results
-	console.log("GET AFFINE LOCAL");
-			var info = R3D.average2DTranformForIndividualPoints(pointsA,pointsB, imageMatrixA,imageMatrixB, true);
-
-			console.log(info);
-			var transforms = info["transforms"];
-
-	console.log("START WORLD TO FIND DENSE F");
-
-
-
-		var cellCount = 40; // 40-80
-		var world = new Stereopsis.World();
-		// views
-		var projectViews = [viewA,viewB];
-		var images = [imageMatrixA,imageMatrixB];
-		var views = [];
-		for(var i=0; i<images.length; ++i){
-			var image = images[i];
-			var projectView = projectViews[i];
-			console.log();
-			var view = world.addView(image,null,projectView.id());
-			views.push(view);
-		}
-		world.setViewCellCounts(cellCount);
-		console.log(views);
-		var view0 = views[0];
-		var view1 = views[1];
-		// points
-	console.log(pointsA,pointsB);
-		world.resolveIntersectionByDefault();
-		for(var i=0; i<pointsA.length; ++i){
-			var pointA = pointsA[i];
-			var pointB = pointsB[i];
-			var affine = transforms[i];
-			var vs = [view0,view1];
-			var ps = [pointA,pointB];
-			var as = [affine];
-			var point3D = world.newPoint3DFromPieces(vs,ps,as, false);
-			var matches = point3D.toMatchArray();
-			for(var m=0; m<matches.length; ++m){
-				var match = matches[m];
-				world.updateMatchInfo(match);
+			if(fErrorSigma>maxErrorFDensePixels){
+				console.log("F ERROR TOO HIGH: "+fErrorMean+" > "+maxErrorFDensePixels);
+				// goodEnoughMatches = false;
 			}
-			world.embedPoint3D(point3D);
-		}
-	console.log("SOLVE PAIR F");
-
-		var result = world.solvePairF();
-		console.log(result);
-// world.showForwardBackwardPair();
-// throw "BEFORE NEXT F -> R"
-
-		// F error has to be less than some number < ~ 5px
-		// match cound has to be at least some number > ~500
-
-		var transform0 = world.transformFromViews(view0,view1);
-		var fErrorSigma = transform0.fSigma();
-		var fErrorMean = transform0.fSigma();
-		console.log("F PAIR RESULT ERROR MEAN: "+fErrorMean+" & SIGMA: "+fErrorMean);
-
-		if(fErrorSigma>maxErrorFDensePixels){
-			console.log("F ERROR TOO HIGH: "+fErrorMean+" > "+maxErrorFDensePixels);
-			goodEnoughMatches = false;
 		}
 
-
-
-
+// R - DENSE - WORLD
 		if(goodEnoughMatches){
+			console.log("START WORLD TO FIND DENSE R");
 			// add K for finding R
 			var worldCams = [];
 			for(var i=0; i<cameras.length; ++i){
@@ -12527,12 +12872,10 @@ var Ferror = null;
 			}
 
 			world.dropWorstParametersF();
-
 			console.log("SOLVE INITIAL R");
 			
 			// var cellCount = 40;
 			// world.setViewCellCounts(cellCount);
-
 			// KEEP PREVIOUS CELL SIZING
 
 			var result = world.solvePair(function(world){
@@ -12542,17 +12885,86 @@ var Ferror = null;
 			var str = world.toYAMLString();
 			console.log(str);
 
-world.showForwardBackwardPair();
-throw "here, after solvePair"
-			}
-// world.showForwardBackwardPair();
-		}
-*/
-		
+			// world.showForwardBackwardPair();
 
-		// STEROPSIS TRACKS
-/*
+
+			var transform0 = world.transformFromViews(view0,view1);
+			var fErrorSigma = transform0.fSigma();
+			var fErrorMean = transform0.fSigma();
+			console.log("F PAIR RESULT ERROR MEAN: "+fErrorMean+" & SIGMA: "+fErrorMean+" / "+maxErrorFDensePixels);
+			var rErrorSigma = transform0.rSigma();
+			var rErrorMean = transform0.rSigma();
+			console.log("R PAIR RESULT ERROR MEAN: "+rErrorMean+" & SIGMA: "+rErrorMean+" / "+"N/A");
+
+			goodEnoughMatches = true;
+		}
+
+		// R - TRACKS - WORLD
 		if(goodEnoughMatches){
+			console.log("START WORLD TO FIND TRACKS R");
+
+
+			var transform = world.transformFromViews(view0,view1);
+				var count = transform.matches().length; // doesn't count if P has 0 matches
+				var matches = transform.matches();
+				var errorRMean = transform.rMean();
+				var errorRSigma = transform.rSigma();
+			var fNorm = R3D.fundamentalNormalizeImageSizes(F, imageAWidth,imageAHeight, imageBWidth,imageBHeight);
+			var viewAverageWidth = (imageAWidth+imageBWidth)*0.5;
+
+			var info = R3D.fundamentalError(F,Finv,pointsA,pointsB);
+				var fMean = info["mean"];
+				var fSigma = info["sigma"];
+			
+			// original match data
+			var matchData = {};
+				matchData["F"] = fNorm;
+				matchData["errorFMean"] = fMean/viewAverageWidth;
+				matchData["errorFSigma"] = fSigma/viewAverageWidth;
+				matchData["points"] = initialMatchesAB;
+				matchData["count"] = initialMatchesAB.length;
+			pairData["matches"] = matchData;
+
+			var relative = world.toObject();
+			pairData["relative"] = relative;
+
+			var reconstructionMetric = world.reconstructionRelativeMetrics();
+			console.log(reconstructionMetric);
+
+			if(errorRMean>1.0){
+					console.log("errorRMean way too big, at most 1.0 px => likely wrong ordering in Z-depth");
+			}
+			var errorR = (transform.rSigma() + transform.rMean());
+			var errorF = (transform.fSigma() + transform.fMean());
+			console.log("REGULAR transform error R: "+errorR+" of "+maxErrorRTrackPixels);
+			console.log("REGULAR transform error F: "+errorF+" of "+maxErrorFTrackPixels);
+
+			// get only best track points ~ 25% of original points
+			// if(goodEnoughMatches){
+			console.log("do tracks");
+			world.solveForTracks();
+
+			var errorR = (transform.rSigma() + transform.rMean());
+			var errorF = (transform.fSigma() + transform.fMean());
+			console.log("TRACK transform error R: "+errorR+" of "+maxErrorRTrackPixels);
+			console.log("TRACK transform error F: "+errorF+" of "+maxErrorFTrackPixels);
+
+			var trackMatchCount = transform.matches().length;
+			console.log(" MIN TRACK COUNT: "+trackMatchCount+" / "+minimumCountTrackFinal);
+
+			if(errorR>maxErrorRTrackPixels || errorF>maxErrorFTrackPixels || trackMatchCount<minimumCountTrackFinal){
+				goodEnoughMatches = false;
+			}
+
+			if(goodEnoughMatches){
+				pairData["tracks"] = world.toObject();
+				pairData["metricNeighborsToWorld"] = reconstructionMetric;
+			}
+			
+			// throw "before save pair - world iterate";
+			// pairDoneSaveFxn();
+/*
+???
 
 			var info = R3D.fundamentalError(F,Finv,pointsA,pointsB);
 console.log(info);
@@ -12588,11 +13000,7 @@ console.log(info);
 			var reconstructionMetric = world.reconstructionRelativeMetrics();
 			console.log(reconstructionMetric);
 
-
-
-
 			var transform = world.transformFromViews(view0,view1);
-console.log(transform);
 				var count = transform.matches().length; // doesn't count if P has 0 matches
 				var matches = transform.matches();
 // 				var pAs = [];
@@ -12646,16 +13054,23 @@ console.log(transform);
 				}
 				// ...
 				console.log(pairData);
-// throw "before save pair - world iterate";
-				pairDoneSaveFxn();
-				// ...
-		}else{ // save without further operation
-console.log(pairData);
-// throw "before save pair  - not good enough to iterate on world"
+throw "before save pair - world iterate";
+				// pairDoneSaveFxn();
+
+*/
+		}
+
+		console.log(pairData);
+		console.log("goodEnoughMatches?: "+goodEnoughMatches);
+
+		if(!goodEnoughMatches){
+			console.log("END PAIR SEQUENCE POINT SEARCHING");
+			console.log("save not good enough matches");
+			pairDoneSaveFxn();
+		}else{
+			console.log("good enough matches - save");
 			pairDoneSaveFxn();
 		}
-*/
-		
 
 		throw "out bottom";
 	}
@@ -12667,10 +13082,13 @@ console.log(pairData);
 }
 
 
-App3DR.ProjectManager.prototype.calculateTripleMatchFromViewIDs = function(inputData,inputFilename, viewAID, viewBID, viewCID, completeFxn, completeCxt, settings){
+App3DR.ProjectManager.prototype.calculateTripleMatchFromViewIDs = function(inputData,inputFilename, viewAID, viewBID, viewCID, pairsIDsToLoad, completeFxn, completeCxt, settings){
 	console.log("calculateTripleMatchFromViewIDs");
 
 	console.log(inputData,inputFilename);
+
+	console.log("pairsIDsToLoad: "+pairsIDsToLoad);
+	throw "?"
 	// throw "this references sparse data ?"
 	var project = this;
 	if(!settings){
@@ -12718,6 +13136,10 @@ App3DR.ProjectManager.prototype.calculateTripleMatchFromViewIDs = function(input
 	}
 	console.log("includedPairs: "+viewAID+" | "+viewBID+" | "+viewCID);
 	console.log(includedPairs);
+
+console.log(pairsIDsToLoad);
+throw "compare with pairsIDsToLoad";
+
 	if(includedPairs.length<2){
 		throw "need at least 2 pairs: "+includedPairs.length;
 	}
