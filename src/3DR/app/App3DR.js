@@ -7779,7 +7779,7 @@ console.log("checkPerformNextTask");
 		return;
 	}
 
-throw "start dense";
+// throw "start dense";
 	if(!project.checkHasDenseStarted()){
 		project.calculateDensePairPutatives();
 		return;
@@ -7789,7 +7789,7 @@ throw "start dense";
 		project.iterateDenseProcess();
 		return;
 	}
-// throw ">start bundle";
+throw ">start bundle";
 	if(!project.checkHasBundleStarted()){
 		project.initializeBundleGroupsFromDense();
 		return;
@@ -8118,7 +8118,7 @@ if(!relativeAB && isDense){
 
 			if(relativeAB){ // dense
 				// console.logx(camAID,camBID,cameras);
-throw "this is for dense"
+// throw "this is for dense"
 				console.log(relativeAB);
 				configuration = {};
 				project.calculatePairMatchWithRFromViewIDs(idA,idB, relativeAB, camAID,camBID,cameras, completePairFxn,project, configuration);
@@ -8131,6 +8131,7 @@ throw "this is for dense"
 		}
 	}
 
+throw "before more ..."
 
 	var saveProjectFxn = function(){
 		console.log("saveProjectFxn");
@@ -8145,8 +8146,6 @@ throw "this is for dense"
 	var triples = inputData["triples"];
 // var triples = null;
 	if(!triples){
-
-
 // filter pairs & generate triples from remaining pairs
 var originalPairs = pairs;
 var info = project.findConsistentLowErrorPairs(pairs);
@@ -8154,13 +8153,12 @@ console.log(info);
 var remainingPairs = info["pairs"];
 console.log(remainingPairs);
 // throw "???"
-		inputData["triples"] = project.triplesFromBestPairs(views, remainingPairs, isDense);
-		// console.log(inputData);
-		triples = inputData["triples"];
+		var info = project.triplesFromBestPairs(views, remainingPairs, isDense);
+		var triples = info["triples"];
 console.log(triples);
-
+inputData["triples"] = triples;
 inputData["pairsRaw"] = originalPairs;
-inputData["pairs"] = pairs;
+inputData["pairs"] = remainingPairs;
 console.log(inputData);
 
 throw "BEFORE TRIPLES DONE"
@@ -8171,16 +8169,14 @@ throw "BEFORE TRIPLES DONE"
 	}
 
 
-// throw ">triples";
+
 
 	//
-console.log(triples);
-	//
-	// 
+	console.log(triples);
 	console.log("TRIPLE COUNT: "+inputData["triples"].length);
 	// 
 	// LOAD EACH POSSIBLE TRIPLE
-	
+// throw ">triples";
 	var completeTripleFxn = function(scales){
 		console.log("completeTripleFxn");
 		console.log(scales);
@@ -8190,7 +8186,7 @@ console.log(triples);
 		var bc = scales["BC"];
 		currentTriple["gauge"] = {"AB":ab, "AC":ac, "BC":bc};
 console.log("inputFilename: "+inputFilename);
-// throw "before save";
+// throw "before save triple";
 		project.saveFileFromData(inputData,inputFilename, saveProjectFxn,project);
 	}
 	var currentTriple = null;
@@ -8204,19 +8200,19 @@ console.log("inputFilename: "+inputFilename);
 		if(!gauge){
 			console.log(idA,idB,idC);
 			currentTriple = triple;
-throw "before triple ..."
+// throw "before triple ..."
 			project.calculateTripleMatchFromViewIDs(inputData,inputFilename, idA,idB,idC, triplePairs, completeTripleFxn,project);
 			return;
 		}
 	}
 	console.log("triples count: "+triples.length+" ............");
 
+// throw "before graph?"
 
 console.log(inputData);
-
 console.log(triples);
 
-// 	this._visualizeTriples(triples);
+// this._visualizeTriples(triples);
 // throw "visualize triples"
 
 
@@ -8863,10 +8859,10 @@ var removeList = {};
 
 // removeList[""] = 1;
 
-removeList["0QXBI80R-R0HIACB5"] = 1;
-removeList["0QXBI80R-NYD98Y62"] = 1;
-removeList["0QXBI80R-TD6NYI6O"] = 1;
-removeList["0QXBI80R-DWV0FA8T"] = 1;
+// removeList["0QXBI80R-R0HIACB5"] = 1;
+// removeList["0QXBI80R-NYD98Y62"] = 1;
+// removeList["0QXBI80R-TD6NYI6O"] = 1;
+// removeList["0QXBI80R-DWV0FA8T"] = 1;
 
 
 // INSERT TEST DATA HERE:
@@ -9605,14 +9601,18 @@ App3DR.ProjectManager.connectedSets = function(views, pairs){
 	// console.log(setList);
 	return {"sets":setList};
 }
-App3DR.ProjectManager.prototype.triplesFromBestPairs = function(views, pairs, isDense){ // TODO: does this guarantee scale coverage for every pair ?
-	console.log("triplesFromBestPairs: --- TODO: cap max amount of triples");
+App3DR.ProjectManager.prototype.triplesFromBestPairs = function(views, pairs, isDense){ // finds sets of triples: A) connected if possible B) only top-choices (not exhaustive)
+	var graphTopChoiceMinimumCount = 3; // 2-4
+	var graphDesiredMinimumTripleCount = 3; // 2-4
+	if(isDense){
+		throw "maybe need fewer?";
+		var graphTopChoiceMinimumCount = 2;
+		var graphDesiredMinimumTripleCount = 2;
+	}
 
-	// var graphTopChoiceMinimumCount = 3; // 2-4
-	// var graphDesiredMinimumTripleCount = 3; // 2-4
-
-	var graphTopChoiceMinimumCount = 1;
-	var graphDesiredMinimumTripleCount = 2;
+	// testing
+	// var graphTopChoiceMinimumCount = 1;
+	// var graphDesiredMinimumTripleCount = 2;
 
 	console.log(views);
 	console.log(pairs);
@@ -9844,7 +9844,10 @@ console.log("allPseudoEdges");
 			var pseudoEdge = pseudoEdges[key];
 			var count = pseudoEdge["edges"].length;
 			// total score = error * angle^P  P = 1 - 1/2
-			pseudoEdge["error"] = (pseudoEdge["errorWeight"]/count) * Math.pow(pseudoEdge["errorAngle"]/count, 1); // 1.0 -> 0.5
+			var errorEdges = (pseudoEdge["errorWeight"]/count);
+			var errorAngles = Math.pow(pseudoEdge["errorAngle"]/count, 1); // 1.0 -> 0.5
+			// pseudoEdge["error"] = errorEdges * errorAngles;
+			pseudoEdge["error"] = errorEdges;
 			pseudoEdgeList.push(pseudoEdge);
 		}
 		pseudoEdgeList.sort(function(a,b){
@@ -9920,65 +9923,135 @@ console.log("allPseudoEdges");
 		console.log(pseudoEdgeList);
 		for(var j=0; j<pseudoEdgeList.length; ++j){
 			var pseudoEdge = pseudoEdgeList[j];
-			console.log(pseudoEdge);
-			// create edge entry
-			var entry = [0,1];
-			// -> add to new list
-			pairRemainingList.push(entry);
+			pairRemainingList.push(pseudoEdge);
 		}
-		
-		throw "here"
 
+		console.log("STARTING: ");
+		// console.log();
+		console.log(pairInitialList);
+		console.log(pairRemainingList);
 
-
+		var pairLists = [pairInitialList,pairRemainingList];
+		for(var j=0; j<pairLists.length; ++j){
+			var pairList = pairLists[j];
+			for(var k=0; k<pairList.length; ++k){
+				var entry = pairList[k];
+				console.log(entry)
+				// convert to index pair:
+				var idA = entry["A"];
+				var idB = entry["B"];
+				var indexA = setViewIndexFromViewID[idA];
+				var indexB = setViewIndexFromViewID[idB];
+				// create edge entry
+				// var pair = [indexA,indexB];
+				var pair = {"A":indexA, "B":indexB, "value":entry};
+				pairList[k] = pair;
+			}
+		}
+		console.log(pairInitialList);
+		console.log(pairRemainingList);
 
 		// create graph
-		/*
-		var rowCount = graphTopChoiceMinimumCount; // first 2-3 choices for each view
-		var initialPairs = [];
-		var initialCount = Math.min(imageCount*rowCount,orderedPairs.length);
-		for(var i=0; i<initialCount; ++i){
-			var pair = orderedPairs.shift();
-			initialPairs.push(pair);
-		}
-		var graph = new ViewHyperGraph();
-			graph.setViewCount(matchLists.length);
-			graph.setInitialPairs(initialPairs);
-			graph.satisfyViewGraphParameters(orderedPairs, graphDesiredMinimumTripleCount);
+		var hyperGraph = new ViewHyperGraph();
+// console.log("A");
+			hyperGraph.setViewCount(setViews.length);
+// console.log("B");
+			hyperGraph.setInitialPairs(pairInitialList);
+// console.log("C");
+			hyperGraph.satisfyViewGraphParameters(pairRemainingList, graphDesiredMinimumTripleCount);
+// console.log("D");
 			// create match list from garph
-		var pairs = graph.generateMatchList();
-		console.log(pairs);
-		*/
-
-		// add minimum set of best edges for each (2-4)
-
-		// add pseudo edges to priority edge list
+		var hyperPairs = hyperGraph.generateMatchList();
+		console.log(hyperPairs);
 		
-		// add edges until complete as possible [existing algorithm]
+		// convert back to set pairs
+		var keepPairs = [];
+		for(var j=0; j<hyperPairs.length; ++j){
+			var hyperPair = hyperPairs[j];
+			var indexA = hyperPair["A"];
+			var indexB = hyperPair["B"];
+			var idA = setViewIDFromIndex[indexA];
+			var idB = setViewIDFromIndex[indexB];
+			// var min = idA < idB ? idA : idB;
+			// var max = idA > idB ? idA : idB;
+			// var pairID = min+"-"+max;
+			var pair = {"A":idA, "B":idB};//, "id":pairID}
+			keepPairs.push(pair);
+		}
+		console.log(keepPairs);
 
+		// create final keep triples - every edge permutation, as long as all 3 edges exist AND 2 edges are non-pseudo
+		var finalTriples = {};
+		for(var a=0; a<keepPairs.length; ++a){
+			var pairA = keepPairs[a];
+			// var pairIDA = pairA["id"];
+			var idAA = pairA["A"];
+			var idAB = pairA["B"];
+			for(var b=a+1; b<keepPairs.length; ++b){
+				var pairB = keepPairs[b];
+				// var pairIDB = pairB["id"];
+				var idBA = pairB["A"];
+				var idBB = pairB["B"];
+				//
+				// any overlap:
+				if(idAA==idBA || idAA==idBB || idAB==idBA || idAB==idBB){
+					var uniqueStrings = Code.uniqueStrings([idAA,idAB,idBA,idBB]);
+					uniqueStrings.sort();
+					var idA = uniqueStrings[0];
+					var idB = uniqueStrings[1];
+					var idC = uniqueStrings[2];
+					var tripleID = idA+"-"+idB+"-"+idC;
+					if(finalTriples[tripleID]){
+						continue;
+					}
+					var pairAB = idA+"-"+idB;
+					var pairAC = idA+"-"+idC;
+					var pairBC = idB+"-"+idC;
+					var pairABObject = pairIDToSetPair[pairAB];
+					var pairACObject = pairIDToSetPair[pairAC];
+					var pairBCObject = pairIDToSetPair[pairBC];
+					var ps = [];
+					if(pairABObject){
+						ps.push(pairAB);
+					}
+					if(pairACObject){
+						ps.push(pairAC);
+					}
+					if(pairBCObject){
+						ps.push(pairBC);
+					}
+					if(ps.length>=2){ // at least 2 pairs have to exist in input set
+						var triple = {};
+						triple["id"] = tripleID;
+						triple["A"] = idA;
+						triple["B"] = idB;
+						triple["C"] = idC;
+						triple["gauge"] = null;
+						triple["pairs"] = ps;
+						finalTriples[tripleID] = triple;
+					}
+				}
+			}
+		}
 
-		// => list of all edges 
-		// every edge permutation, as long as all 3 edges exist AND 2 edges are non-pseudo
-		// => make a triple
-
-
-
-
-		// cummulativeTripleList
+		console.log(finalTriples);
+		finalTriples = Code.objectToArray(finalTriples);
+		for(var j=0; j<finalTriples.length; ++j){
+			var triple = finalTriples[j];
+			cummulativeTripleList.push(triple);
+		}
 	} // end sets
 
 	// combine all edges from each set into final list of sets
-
 	console.log(cummulativeTripleList);
 
-
-	throw "?";
+	// throw "?";
 
 	return {"triples":cummulativeTripleList};
 
 
 
-
+	// OLD CODE:
 
 
 
@@ -10103,6 +10176,171 @@ if(uniqueStrings.length!=3){
 	return triples;
 }
 
+
+App3DR.ProjectManager.prototype.densePutativePairsFromPointList = function(views, points, viewMaximumTopPairCount, viewMinimumTripleCount){
+	viewMaximumTopPairCount = Code.valueOrDefault(viewMaximumTopPairCount, 3); // 2-3
+	viewMinimumTripleCount = Code.valueOrDefault(viewMinimumTripleCount, 3); // 2-3
+	// inheritly contains original pair info based on point counts from points originally shared in tracks
+	// inheritly contains geometric info based on how many points collided and are therefore (likely) visible 
+	var project = this;
+	console.log("densePutativePairsFromPointList");
+	console.log(points);
+	var pairIDFromViewIDs = function(a,b){
+		return a<b ? a+"-"+b : b+"-"+a;
+	}
+
+	var viewIDs = [];
+	var viewIDToIndex = {};
+	var viewIndexToID = {};
+	var viewAddedCounts = {};//Code.newArrayZeros(views.length);
+	for(var i=0; i<views.length; ++i){
+		var view = views[i];
+		console.log(view);
+		var viewID = view["id"];
+		viewIDs.push(viewID);
+		viewIDToIndex[viewID] = i;
+		viewIndexToID[i] = viewID;
+		viewAddedCounts[viewID] = 0;
+	}
+	var pairListing = {};
+
+	
+	for(var i=0; i<points.length; ++i){
+		var point = points[i];
+		var vs = point["v"];
+		// console.log(vs.length);
+		for(var j=0; j<vs.length; ++j){
+			var a = vs[j];
+			var idA = a["i"];
+			for(var k=j+1; k<vs.length; ++k){
+				var b = vs[k];
+				var idB = b["i"];
+				var pairID = pairIDFromViewIDs(idA,idB);
+				var pairInfo = pairListing[pairID];
+				if(!pairInfo){
+					pairInfo = {};
+						pairInfo["id"] = pairID;
+						pairInfo["count"] = 0;
+						pairInfo["A"] = idA < idB ? idA : idB;
+						pairInfo["B"] = idA > idB ? idA : idB;
+					pairListing[pairID] = pairInfo;
+				}
+				pairInfo["count"] += 1;
+			}
+		}
+	}
+	console.log(pairListing);
+	pairListing = Code.objectToArray(pairListing);
+	pairListing.sort(function(a,b){
+		return a["count"] > b["count"] ? -1 : 1;
+	});
+	console.log(pairListing);
+
+	// TODO: MAY NEED TO CHECK FOR FULL GRAPH CONNECTIVITY - SEPARATE INTO SETS
+	console.log("TODO: CHECK FULL GRAPH CONNECTIVITY");
+
+	// each view gets to pick top favorite edges
+	usedPairs = {};
+	var initialPairs = [];
+	var remainingPairs = [];
+	for(var i=0; i<pairListing.length; ++i){
+		var pair = pairListing[i];
+		var pairID = pair["id"];
+		var vs = [pair["A"],pair["B"]];
+		for(var j=0; j<vs.length; ++j){
+			var viewID = vs[j];
+			var viewCount = viewAddedCounts[viewID];
+			if(viewCount<viewMaximumTopPairCount){
+				viewAddedCounts[viewID] = viewCount + 1;
+				if(!usedPairs[pairID]){
+					usedPairs[pairID] = true;
+					initialPairs.push(pair);
+				}
+			}
+		}
+		if(!usedPairs[pairID]){
+			usedPairs[pairID] = true;
+			remainingPairs.push(pair);
+		}
+	}
+	console.log(initialPairs);
+	console.log(remainingPairs);
+
+	// convert to hypergraph input
+	var lists = [initialPairs,remainingPairs];
+	for(var i=0; i<lists.length; ++i){
+		var list = lists[i];
+		for(var j=0; j<list.length; ++j){
+			var pair = list[j];
+			var indexA = viewIDToIndex[pair["A"]];
+			var indexB = viewIDToIndex[pair["B"]];
+			var entry = {"A":indexA, "B":indexB, "value":pair};
+			list[j] = entry;
+		}
+	}
+	// console.log(initialPairs);
+	// console.log(remainingPairs);
+
+	// throw "?"
+
+
+	// 
+// var pair = {"A":indexA, "B":indexB, "value":entry};
+
+
+		// create graph
+		var hyperGraph = new ViewHyperGraph();
+			hyperGraph.setViewCount(views.length);
+			hyperGraph.setInitialPairs(initialPairs);
+			hyperGraph.satisfyViewGraphParameters(remainingPairs, viewMinimumTripleCount);
+			// create match list from graph
+		var hyperPairs = hyperGraph.generateMatchList();
+		console.log(hyperPairs);
+		// console.log("viewMinimumTripleCount: "+viewMinimumTripleCount);
+	// convert hyper pairs to pairs:
+	var minimalPairs = [];
+	for(var i=0; i<hyperPairs.length; ++i){
+		var pair = hyperPairs[i];
+		var info = pair["value"];
+		var idA = info["A"];
+		var idB = info["B"];
+		var count = info["count"];
+		var entry = {"A":idA, "B":idB, "s":count};
+		minimalPairs.push(entry);
+	}
+
+// DISPLAY:::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+	// MINIMAL GRAPH
+	var compareScores = [];
+	for(var i=0; i<hyperPairs.length; ++i){
+		var pair = hyperPairs[i];
+		var indexA = pair["A"];
+		var indexB = pair["B"];
+		var info = pair["value"];
+		var value = info["count"];
+			value = Math.pow(value,0.5);
+		var entry = {"A":indexA, "B":indexB, "value":value};
+		compareScores.push(entry);
+	}
+
+
+	// ORIGINAL
+	// var compareScores = [];
+	// for(var i=0; i<pairListing.length; ++i){
+	// 	var listing = pairListing[i];
+	// 	var indexA = viewIDToIndex[listing["A"]];
+	// 	var indexB = viewIDToIndex[listing["B"]];
+	// 	var value = listing["count"];
+	// 		value = Math.pow(value,0.5);
+	// 	var entry = {"A":indexA, "B":indexB, "value":value};
+	// 	compareScores.push(entry);
+	// }
+
+	project.showViewSimilarities(compareScores, viewIDs);
+
+	return {"pairs":minimalPairs};
+}
+
 App3DR.ProjectManager.prototype._iterateSparseTracks = function(sourceData, sourceFilename, isDense){
 	var project = this;
 	isDense = Code.valueOrDefault(isDense, false);
@@ -10211,7 +10449,9 @@ App3DR.ProjectManager.prototype._iterateSparseTracks = function(sourceData, sour
 				if(!fullData){
 					return;
 				}
-
+// console.log("fullData");
+// console.log(fullData);
+// throw "..."
 				var allViews = fullData["views"];
 				var allCameras = fullData["cameras"];
 				var allPoints = Code.valueOrDefault(fullData["points"], []);
@@ -10278,19 +10518,25 @@ for(var v=0; v<allTransforms.length; ++v){
 console.log(allTransforms);
 console.log(groupPairsPass);
 
-project.displayViewGraph(orderedAbsoluteTransforms,groupPairsPass, 0, groupIDs);
+// project.displayViewGraph(orderedAbsoluteTransforms,groupPairsPass, 0, groupIDs);
 
 // throw "done full BA"
 					
 					// get best putative pairs
 					
 					console.log(fullData);
+
+var allPoints = fullData["points"];
+var info = project.densePutativePairsFromPointList(allViews,allPoints);
+console.log(info);
+
 					console.log(allViews,allTransforms);
-					var info = project._putativePairsFromViewsAndTransforms(allViews,allTransforms);
-					console.log(info);
+					//var info = project._putativePairsFromViewsAndTransforms(allViews,allTransforms);
+					// console.log(info); // 22 V 30
 
 
-// throw "putative here ..."
+throw "putative here ..."
+
 					// var pairs = info["lookup"];
 					var pairs = info["pairs"];
 					// var pairs = info["lookup"];
@@ -10465,9 +10711,10 @@ console.log(allCameras);
 				// world.patchInitBasicSphere(true,points3DAdditional);
 				world.initAllP3DPatches(points3DAdditional);
 				world.initAffineFromP3DPatches(points3DAdditional);
-console.log("UNDO NO VALIDATION FOR TRACK POINTS 1");
-				// world.embedPoints3D(points3DAdditional);
-world.embedPoints3DNoValidation(points3DAdditional);
+
+// console.log("UNDO NO VALIDATION FOR TRACK POINTS 1");
+				world.embedPoints3D(points3DAdditional);
+// world.embedPoints3DNoValidation(points3DAdditional);
 
 				// get info ...
 				world.relativeFFromSamples();
@@ -11513,9 +11760,9 @@ console.log(points3DExisting);
 // world.initNullP3DPatches();
 				// add new points with intersection:
 				console.log("new");
-console.log("UNDO NO VALIDATION FOR TRACK POINTS 2");
-				// world.embedPoints3D(additionalPoints); // TODO: ADD THIS BACK
-world.embedPoints3DNoValidation(additionalPoints); // TODO: REMOVE THIS
+// console.log("UNDO NO VALIDATION FOR TRACK POINTS 2");
+				world.embedPoints3D(additionalPoints); // TODO: ADD THIS BACK
+// world.embedPoints3DNoValidation(additionalPoints); // TODO: REMOVE THIS
 
 
 
@@ -12301,6 +12548,7 @@ console.log(allCameras);
 		var world = info["world"];
 
 		console.log("solveDensePair");
+// console.log(info);
 // throw "before solveDensePair"
 		world.solveDensePair();
 
@@ -12350,7 +12598,7 @@ pairData["tracks"] = world.toObject();
 		// 	pairData["metricNeighborsToWorld"] = reconstructionMetric;
 		// }
 
-		// throw "before done with dense pair ?"
+		throw "before done with dense pair ?"
 		completeFxn.call(completeCxt, pairData);
 	}
 
@@ -13086,9 +13334,8 @@ App3DR.ProjectManager.prototype.calculateTripleMatchFromViewIDs = function(input
 	console.log("calculateTripleMatchFromViewIDs");
 
 	console.log(inputData,inputFilename);
-
-	console.log("pairsIDsToLoad: "+pairsIDsToLoad);
-	throw "?"
+	console.log("pairsIDsToLoad: "+pairsIDsToLoad.length);
+	// throw "?"
 	// throw "this references sparse data ?"
 	var project = this;
 	if(!settings){
@@ -13120,11 +13367,19 @@ App3DR.ProjectManager.prototype.calculateTripleMatchFromViewIDs = function(input
 		mapping[viewCID] = 1;
 	var includedViews = [viewA,viewB,viewC];
 	
-	// find all existing / expected pairs
-	var pairs = inputData["pairs"];
+	// find expected pairs
+	var allPairs = inputData["pairs"];
+	var pairLookup = {};
+	for(var i=0; i<allPairs.length; ++i){
+		var pair = allPairs[i];
+		var pairID = pair["id"];
+		pairLookup[pairID] = pair;
+	}
 	var includedPairs = [];
-	for(var i=0; i<pairs.length; ++i){
-		var pair = pairs[i];
+	for(var i=0; i<pairsIDsToLoad.length; ++i){
+		var pairID = pairsIDsToLoad[i];
+		var pair = pairLookup[pairID];
+		// var ids = pairID.split("-");
 		var idA = pair["A"];
 		var idB = pair["B"];
 		if(mapping[idA] && mapping[idB]){ // triple contains this pair
@@ -13136,9 +13391,6 @@ App3DR.ProjectManager.prototype.calculateTripleMatchFromViewIDs = function(input
 	}
 	console.log("includedPairs: "+viewAID+" | "+viewBID+" | "+viewCID);
 	console.log(includedPairs);
-
-console.log(pairsIDsToLoad);
-throw "compare with pairsIDsToLoad";
 
 	if(includedPairs.length<2){
 		throw "need at least 2 pairs: "+includedPairs.length;
@@ -16362,6 +16614,7 @@ App3DR.ProjectManager.prototype.calculateDensePairPutatives = function(){
 		}
 		var pairs = putativePairs["pairs"];
 // console.log(pairs);
+// throw "putativePairs"
 		var views = putativePairs["views"];
 		// convert views to lookup + transforms
 		var cameras = sparseData["cameras"];

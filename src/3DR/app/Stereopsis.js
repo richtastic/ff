@@ -1575,15 +1575,17 @@ Stereopsis.View.prototype.averageReprojectionError = function(){
 	return mean;
 }
 
-Stereopsis.View.prototype.track3AverageError = function(){
+Stereopsis.View.prototype.track3AverageError = function(only3){
 	var view = this;
 	var points2D = view.toPointArray();
 	var mean = 0;
 	var pointCount = points2D.length;
 	var includedCount = 0;
+// console.log(points2D)
 	for(var j=0; j<pointCount; ++j){
 		var point2D = points2D[j];
 		var point3D = point2D.point3D();
+// console.log(point3D.point2DCount());
 		if(point3D.point2DCount()<3){ // 3+ views
 			continue;
 		}
@@ -1591,10 +1593,12 @@ Stereopsis.View.prototype.track3AverageError = function(){
 		var info = point3D.estimated3D(true);
 		mean += info["error"];
 	}
+// console.log("includedCount: "+includedCount);
 	if(includedCount>0){
 		// console.log("est: "+includedCount+" @ "+mean);
 		mean /= includedCount;
 	}
+// throw "is this correct usage of track3AverageError?"
 	return mean;
 }
 Stereopsis.View.prototype.toPointArray = function(){
@@ -5897,6 +5901,8 @@ Stereopsis.World.prototype.solveOptimizeSingleView = function(viewSolve, loopIte
 	// var startingErrorR = viewSolve.averageReprojectionError();
 	var startingErrorR = viewSolve.track3AverageError();
 	console.log("startingErrorR: "+startingErrorR);
+
+// throw "HERE";
 	world.printPoint3DTrackCount();
 	var maxIterations = Code.valueOrDefault(loopIterations, 3);
 	var prevErrorR = startingErrorR;
@@ -5930,12 +5936,14 @@ Stereopsis.World.prototype.solveOptimizeSingleView = function(viewSolve, loopIte
 		// PATCHES - don't care
 		// world.initAllP3DPatches();
 		// world.patchInitBasicSphere(true);
-		
+			
+		// nextErrorR = viewSolve.averageReprojectionError();
 		nextErrorR = viewSolve.track3AverageError();
 		var delta = nextErrorR - prevErrorR;
 		prevErrorR = nextErrorR;
 		var ratio = startingErrorR!=0 ? Math.abs(delta/startingErrorR) : 0;
 		console.log("DELTA: "+delta+" @ "+ratio);
+// throw "HERE 2";
 		// if(ratio<0.00001){ // static
 		// 	console.log("break early");
 		// 	break;
@@ -8322,6 +8330,9 @@ var timeStart = Code.getTimeMilliseconds();
 		// console.log(transform);
 		var errorPixels = Math.max(errorR,1.0);
 		console.log("ALLOWABLE DENSE ERROR: "+errorR+" | "+errorPixels);
+
+console.log(imageScales, sizes, relativeAB, Ks, errorPixels);
+
 		var result = R3D.searchMatchPoints3D(imageScales, sizes, relativeAB, Ks, errorPixels);
 		console.log(result);
 		var P = result["P"];
@@ -8329,7 +8340,7 @@ var timeStart = Code.getTimeMilliseconds();
 		console.log(matches);
 
 console.log("P: \n "+P+"\n");
-// throw "before dense"
+throw "before dense"
 
 // P = Matrix.inverse(P);
 
@@ -9816,19 +9827,24 @@ ratios.sort(function(a,b){
 //
 var startIndex = 0;
 var endIndex = Math.ceil(percentCheck*ratios.length);
+	endIndex = Math.min(Math.max(endIndex,10),ratios.length-1);
 var smallestRange = null;
 // until endIndex reaches end:
+// var ranges = [];
 for(;endIndex<ratios.length; ++startIndex, ++endIndex){
-	var range = ratios[endIndex] - ratios[startIndex]
+	var range = ratios[endIndex] - ratios[startIndex];
+	// ranges.push(range);
 	// console.log(startIndex+" - "+endIndex+" = "+range+" / "+smallestRange);//+" ? "+ratios[endIndex]+" : "+ratios[startIndex]);
 	if(smallestRange===null || range < smallestRange){
+		// console.log("SET: "+smallestRange);
 		smallestRange = range;
 	}
 }
-console.log("smallestRange: "+smallestRange);
+// Code.printMatlabArray(ranges);
+// console.log("smallestRange: "+smallestRange);
 // throw "?"
 if(smallestRange>maximumAllowedRange){
-	console.log("best range too large: "+smallestRange);
+	console.log("best range too large: "+smallestRange+" / "+maximumAllowedRange);
 	// throw "..."
 	return null;
 }
@@ -9844,7 +9860,7 @@ if(smallestRange>maximumAllowedRange){
 		var mean = Code.mean(ratios);
 		var sigma = Code.stdDev(ratios,mean);
 lastSigma = sigma;
-console.log("SIGMA: "+s+" = "+sigma);
+console.log("SIGMA: "+s+" = "+sigma+" @ "+Math.exp(mean));
 		var limitMin = mean - lim*sigma;
 		var limitMax = mean + lim*sigma;
 		// console.log(s+" MEAN START: "+mean+" +/- "+sigma+" / "+ratios.length);

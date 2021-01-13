@@ -389,7 +389,43 @@ MISSING:
 
 
 
-findConsistentLowErrorPairs
+- DENSE MATCH SEARCHING
+	- use corners as starting points
+	- search along F-line
+	- affine is determined from projected 
+	- localize for higher accuracy after corners are found/compared
+
+	A->B & B->A best matches
+
+	- neighborhood validation?
+	
+
+x DENSE PAIR PUTATIVES (geometric & graph based)
+	- track point info (overlaps)
+
+	- display edges
+
+densePutativePairsFromPointList
+
+
+
+- PUTATIVE DENSE PAIR CANDIDATES (graph only)
+	- use 'final' sparse edges
+	- keep top 2-3 choices [from original sparse edge set]
+	- find 2-3 neighborhood pairs & order all remainder based on error
+	- keep remaining top 1-2 choices [from remaining original sparse PLUS putative set]
+	- use connectivity-enforcing algorithm with final remainder
+		- top 3-5 best view edges
+		- min 2-3 triples per view
+
+
+
+
+
+
+
+
+
 
 
 
@@ -442,7 +478,6 @@ triplesFromBestPairs -- which triples to include ?
 
 
 
-
 PROBLEMS:
 	- BACKWARDS:
 		A: "TD6NYI6O"
@@ -452,8 +487,22 @@ PROBLEMS:
 		- R0HIACB5-TD6NYI6O
 
 
+- SPARSE BA does SKELETON SET (eg 7 of 11 views & 7 pairs)
+-> THEN FULL SET: 11
 
+- SPARSE BA IS missing
+		id: "7G51V6GZ"
+		deltaErrorR: 0
+		errorR: 0
+		updated: 1610509740324
+		count: 1713
 
+		track3AverageError -- only works if tracks are merged
+		>>> O NO VALIDATION FOR TRACK P
+
+// console.log("UNDO NO VALIDATION FOR TRACK POINTS 2");
+				world.embedPoints3D(additionalPoints); // TODO: ADD THIS BACK
+// world.embedPoints3DNoValidation(additionalPoints); // TODO: REMOVE THIS
 
 
 App3DR.js:12068  maxErrorFInitPixels: 63

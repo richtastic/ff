@@ -27442,7 +27442,7 @@ R3D.projectivePatchAffine3D = function(point3D,normal3D, cameraNormals, cameraRi
 R3D_SMP3DCOUNT = -1;
 R3D.searchMatchPoints3D = function(images, cellSizes, relativeAB, Ks, errorPixels, showDebug){
 
-// showDebug = true;
+showDebug = true;
 
 	var SHOWOFFSETY = 0;
 	if(showDebug){
@@ -27548,6 +27548,9 @@ R3D.searchMatchPoints3D = function(images, cellSizes, relativeAB, Ks, errorPixel
 	};
 
 
+var identity2D = new Matrix2D();
+	identity2D.identity();
+
 	var spaces = [];
 	var actualScalesList = [];
 	var errors = [];
@@ -27637,8 +27640,13 @@ GLOBALSTAGE.addChild(d);
 			feature["size"] = cellSize;
 			feature["point"] = point;
 			feature["best"] = [];
-			var matrix = null;
+// var matrix = null;
+var matrix = identity2D;
 			var image  = R3D._progressiveR3DSizing(point, imageScales, 9, featureSize, matrix);
+
+
+// throw "after";
+
 			feature["image"] = image;
 			var hist = R3D._progressiveR3DColorHistogram(image);
 			feature["hist"] = hist;
@@ -28639,7 +28647,7 @@ for(var i=0; i<matches.length; ++i){
 } // for loop
 } // if false
 
-// throw "before return";
+throw "before return";
 
 	// console.log(matches);
 	var result = {"matches":matches, "P":cameraB};
