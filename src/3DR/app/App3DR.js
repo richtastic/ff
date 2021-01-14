@@ -12547,9 +12547,13 @@ console.log(allCameras);
 		var WORLDVIEWSLOOKUP = info["lookup"];
 		var world = info["world"];
 
+
+console.log(cellSize);
+console.log(world);
+
 		console.log("solveDensePair");
 // console.log(info);
-// throw "before solveDensePair"
+throw "before solveDensePair"
 		world.solveDensePair();
 
 		var transform = world.toTransformArray()[0];

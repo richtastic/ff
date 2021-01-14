@@ -27439,6 +27439,213 @@ R3D.projectivePatchAffine3D = function(point3D,normal3D, cameraNormals, cameraRi
 }
 // var affine2D = R3D.patchAffine2DFromPatch3D(point3D,normal3D,up3D,right3D,size3D, cameraA,Ka, cameraB,Kb, point2DA,point2DB, affineReuse);
 
+
+R3D.searchMatchPointsPair3D = function(imageScalesA,imageScalesB, relativeAB, Ka,Kb){
+
+	var errorPixels = 5.0;
+
+	// relativeAB = Matrix.inverse(relativeAB);
+
+	// local
+	var cameraA = new Matrix(4,4).identity();
+	var cameraB = relativeAB;
+	var KaInv = Matrix.inverse(Ka);
+	var KbInv = Matrix.inverse(Kb);
+	var Fab = R3D.fundamentalFromPose(relativeAB, Ka,Kb);
+	var Fba = R3D.fundamentalInverse(Fab);
+
+	// corners
+	var idealSize = 600*400;
+	// var nonMaximalPercent = 0.01;
+	var nonMaximalPercent = 0.010;
+	var nonRepeatPercent = 0.005;
+	var featureSize = 0.05;
+	var featureSizeA = imageScalesA.size().length()*featureSize;
+	var featureSizeB = imageScalesB.size().length()*featureSize;
+
+console.log("featureSizeA: "+featureSizeA);
+
+	var needleSize = 11;
+
+	var featureToNeedleScaleA = needleSize/featureSizeA;
+console.log("featureToNeedleScaleA: "+featureToNeedleScaleA);
+
+	var haystackWidth = needleSize*5; // do some section count
+	var haystackHeight = needleSize + Math.min(2*Math.ceil(featureToNeedleScaleA*errorPixels),needleSize);
+
+console.log("haystackHeight: "+haystackHeight);
+	
+
+
+	// nonMaximalPercent = Code.valueOrDefault(nonMaximalPercent,0.020); // 0.01 - 0.005
+	// nonRepeatPercent = Code.valueOrDefault(nonRepeatPercent, nonMaximalPercent*0.50); // 1.5;
+
+	var cornerList = [];
+	var imageList = [imageScalesA,imageScalesB];
+	for(var i=0; i<imageList.length; ++i){
+		var imageScales = imageList[i];
+		var actualSize = imageScales.width()*imageScales.height();
+		var idealScale = Math.sqrt(idealSize/actualSize);
+		if(idealScale>1.0){
+			idealScale = 1.0;
+		}
+		var idealImage = imageScales.getScaledImage(idealScale);
+		var corners = R3D.optimalCountFeaturesFromImageScales(imageScales, nonMaximalPercent, nonRepeatPercent);
+		cornerList.push(corners);
+	}
+	console.log(cornerList);
+	var cornersA = cornerList[0];
+	var cornersB = cornerList[1];
+
+// show images
+for(var i=0; i<imageList.length; ++i){
+	var imageScales = imageList[i];
+	var image = imageScales.images()[0];
+	var img = GLOBALSTAGE.getFloatRGBAsImage(image.red(),image.grn(),image.blu(), image.width(),image.height());
+	var d = new DOImage(img);
+	d.matrix().translate(0 + i*imageScales.width(), 0 );
+	GLOBALSTAGE.addChild(d);
+
+}
+
+// show corners
+for(var i=0; i<cornerList.length; ++i){
+	var corners = cornerList[i];
+	for(var j=0; j<corners.length; ++j){
+		var point = corners[j];
+		var d = new DO();
+		d.graphics().setFill(0xCCFF0000);
+		d.graphics().beginPath();
+		d.graphics().drawCircle(point.x,point.y,2.0);
+		d.graphics().endPath();
+		d.graphics().fill();
+		d.matrix().translate(0 + i*imageScalesA.width(), 0 );
+		GLOBALSTAGE.addChild(d);
+	}
+}
+
+	// create objects from corners
+	for(var i=0; i<cornerList.length; ++i){
+		var corners = cornerList[i];
+		for(var j=0; j<corners.length; ++j){
+			var corner = corners[j];
+			var object = {};
+				object["point"] = new V2D(corner.x,corner.y);
+				object["matches"] = [];
+			corners[j] = object;
+		}
+	}
+
+	var toPoint = function(a){
+		return a["point"];
+	}
+
+
+
+// var errSearch = Math.min(Math.max(2.0*errorPixels,minPix),maxPix); // todo percent
+// console.log("errSearch: "+errSearch);
+var dir = new V2D();
+var org = new V2D();
+var errorSearchB = 5;
+
+// var i = 400;
+// var i = 100;
+// var i = 910;
+// var i = 1000;
+var i = 1700;
+// var i = 1900;
+
+var object = cornersA[i];
+console.log(object);
+var point2DA = object["point"];
+console.log(point2DA);
+var lineB = R3D.lineFromF(Fab,point2DA, org,dir);
+console.log(lineB);
+console.log(org);
+console.log(dir);
+var x = 0;
+var y = 0;
+var w = imageScalesA.width()-1;
+var h = imageScalesA.height()-1;
+var intersections = Code.clipLine2DToRect(org,dir, x,y,w,h);
+console.log(intersections);
+
+var a = intersections[0];
+var b = intersections[1];
+
+
+// find expected P3D
+
+
+// find affine
+
+
+// draw point:
+var d = new DO();
+d.graphics().setFill(0xFF0000FF);
+d.graphics().beginPath();
+d.graphics().drawCircle(point2DA.x,point2DA.y,4.0);
+d.graphics().endPath();
+d.graphics().fill();
+GLOBALSTAGE.addChild(d);
+
+// draw rect
+var d = new DO();
+d.graphics().setLine(2.0, 0xFF0000FF);
+d.graphics().beginPath();
+d.graphics().drawRect(point2DA.x-featureSizeA*0.5,point2DA.y-featureSizeA*0.5, featureSizeA,featureSizeA);
+d.graphics().endPath();
+d.graphics().strokeLine();
+GLOBALSTAGE.addChild(d);
+
+// draw line
+var d = new DO();
+d.graphics().clear();
+d.graphics().setLine(2.0, 0xFF0000FF);
+d.graphics().beginPath();
+d.graphics().moveTo(a.x,a.y);
+d.graphics().lineTo(b.x,b.y);
+d.graphics().strokeLine();
+d.graphics().endPath();
+d.matrix().translate(0 + 1*imageScalesA.width(), 0 );
+GLOBALSTAGE.addChild(d);
+
+// draw affine
+
+	// var objsB = spaceB.objectsInsideRay(org,dir,errSearch,true);
+	// if(!objsB || objsB.length==0){ // no possible matches
+
+
+
+
+// extract line - haystack
+
+
+// extract point - needle
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	throw "searchMatchPointsPair3D";
+}
+
 R3D_SMP3DCOUNT = -1;
 R3D.searchMatchPoints3D = function(images, cellSizes, relativeAB, Ks, errorPixels, showDebug){
 
@@ -28647,7 +28854,7 @@ for(var i=0; i<matches.length; ++i){
 } // for loop
 } // if false
 
-throw "before return";
+// throw "before return";
 
 	// console.log(matches);
 	var result = {"matches":matches, "P":cameraB};

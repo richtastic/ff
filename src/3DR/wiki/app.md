@@ -394,11 +394,21 @@ MISSING:
 	- search along F-line
 	- affine is determined from projected 
 	- localize for higher accuracy after corners are found/compared
-
-	A->B & B->A best matches
+		- exact location may land closer to another point
+	- comparrison method?
+		- normalized RGB SAD
+	- compare tiering:
+		- low-quality (blurred) (eg 5x5 or 7x7) - ignore some 50% ?
+		- high-quality (eg 9x9 11x11) - choose top 2
+	- A->B & B->A best matches ?
+	- accurately localize final match points
 
 	- neighborhood validation?
-	
+
+
+- DENSE - LONG-HAYSTACK MATCHING
+	- 
+
 
 x DENSE PAIR PUTATIVES (geometric & graph based)
 	- track point info (overlaps)
@@ -423,51 +433,15 @@ densePutativePairsFromPointList
 
 
 
+- WHEN ARE LOW-CONTRAST AREAS EXPANDED INTO?
+	- allow to pick points near more-confident locations that are consistent with R & F w/ minimal (no) checks
 
 
 
 
 
 
-triplesFromBestPairs -- which triples to include ?
-	- find a minimum set:
-		- may not have a triple-consistent view
-		- may not have a fully-connected set
-	=> want to return:
-		- any possibly connected graph-sets:
-			- 
 
-	STEPS:
-	- add all edges into graph
-	- break into separate connected sets:
-	- for each set:
-		- add minimum set of best edges for each (2-4)
-		- get list of all possible triples formable
-		- create list of 'pseudo' edges from possible triples:
-			- 1 of the 3 edges doesn't exist
-			- low imaginary error (~ sum of 2 other edges?)
-			- close rotationally (predicted rotation difference?) (LARGEST angle?)
-			- 
-		- add edges until complete as possible
-	- combine all edges from each set into final list of sets
-
-
-
-=> need to make sure 'removed' edges aren't loaded when loading triples
-
-	TRUPLE:
-		- id
-		- A
-		- B
-		- C
-		- pairs: list of IDs
-			-- the only existing pairs allowed to load
-	calculateTripleMatchFromViewIDs
-
-
-- work Stereopsis / F back
-
-- test Stereopsis pair results
 
 
 

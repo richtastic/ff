@@ -867,6 +867,11 @@ Stereopsis.View.prototype.image = function(image){
 		}
 		this._imageScales = null; // need to repro for next time
 		// this.imageScales(); // auto load
+		if(Code.isa(image, ImageMatScaled)){
+			this._imageScales = image;
+			this._image = this._imageScales.images()[0];
+		}
+		
 	}
 	return this._image;
 }
@@ -1443,6 +1448,7 @@ Stereopsis.View.prototype.cellsForView = function(view){
 }
 Stereopsis.View.prototype.cellSize = function(cellSize){
 	if(cellSize!==undefined){
+		// cellSize = Math.max(cellSize,3); // never too small
 		var oldCell = this._cellSize;
 		if(cellSize!==oldCell){
 			this._cellSize = cellSize;
@@ -7585,6 +7591,7 @@ Stereopsis.World.prototype.subdivideViewGrids = function(scaleRatio, minCellSize
 		if(newSize%2==0){
 			newSize += 1;
 		}
+		// newSize = Math.max(newSize,3);
 		console.log("CHANGE CELL SIZE: "+size+" -> "+newSize);
 		if(size!=newSize){
 			view.cellSize(newSize);
@@ -8340,6 +8347,7 @@ console.log(imageScales, sizes, relativeAB, Ks, errorPixels);
 		console.log(matches);
 
 console.log("P: \n "+P+"\n");
+console.log("P: \n "+P.toArray()+"\n");
 throw "before dense"
 
 // P = Matrix.inverse(P);
@@ -8467,7 +8475,7 @@ console.log((timeStop-timeStart)/1000/60); // ~ 20 mins
 	console.log(str);
 
 
-// throw "set solveDensePair values out"
+throw "set solveDensePair values out"
 
 	return;
 }

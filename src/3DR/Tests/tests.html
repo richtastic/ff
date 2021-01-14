@@ -8,7 +8,7 @@ function pageLoadedFxn(){
 	var ff = new FF("../../code/",ffLoadedFxn);
 }
 function ffLoadedFxn(){
-	(new ScriptLoader("../",["R3D.js"],this,classesLoadedFxn)).load();
+	(new ScriptLoader("../",["R3D.js","app/Stereopsis.js"],this,classesLoadedFxn)).load();
 }
 function classesLoadedFxn(){
 	// 
@@ -19,7 +19,9 @@ function classesLoadedFxn(){
 
 	// testBagOfWordMatches();
 
-	testRIFTMatches(); // INITIAL F
+	// testRIFTMatches(); // INITIAL F
+
+	testRMatches();
 
 	// testLocationNeighborsSparse(); // get better F by using local affine matrix
 
@@ -44,6 +46,93 @@ this._stage.root().matrix().scale(1.0);
 // this._stage.root().matrix().scale(2.5);
 // this._stage.root().matrix().scale(4.0);
 	GLOBALSTAGE = this._stage;
+}
+
+
+function testRMatches(){
+	// R3D.differentialCornersForImageSingle = function(imageMatrix, suppressDistancePercent){
+		setupDisplay();
+	var fxnImageLoaded = function(info){
+		console.log("fxnImageLoaded")
+		var images = info["images"];
+		var imageScalesList = [];
+		var objectsList = [];
+		for(var iii=0; iii<images.length; ++iii){
+			var image = images[iii];
+			var imageFloat = GLOBALSTAGE.getImageAsFloatRGB(image);
+			var imageMatrix = new ImageMat(imageFloat["width"],imageFloat["height"], imageFloat["red"], imageFloat["grn"], imageFloat["blu"]);
+
+			var imageScales = new ImageMatScaled(imageMatrix);
+			imageScalesList.push(imageScales);
+
+			// image = imageScales.images()[0];
+			// var img = GLOBALSTAGE.getFloatRGBAsImage(image.red(),image.grn(),image.blu(), image.width(),image.height());
+			// var d = new DOImage(img);
+			// d.matrix().scale(1.0);
+			// d.matrix().translate(0 + iii*imageMatrix.width(), 0 + 0);
+			// GLOBALSTAGE.addChild(d);
+		}
+
+		var imageScalesA = imageScalesList[0];
+		var imageScalesB = imageScalesList[1];
+
+		console.log(imageScalesA);
+		console.log(imageScalesB);
+
+
+		var cellCount = 40;
+		var cellSize = R3D.cellSizingRoundWithDimensions(imageScalesA.width(),imageScalesA.height(),cellCount, false);
+		console.log("cellSize: "+cellSize);
+
+		
+		var I = new Matrix(4,4).identity();
+		var P = new Matrix(4,4).fromArray([0.9770374617683517,0.12151833684795876,-0.1750174051657801,0.38263828079058476,-0.10651704232675788,0.989977455761452,0.09272948170911947,-0.23235876684933934,0.18453161787405561,-0.07195784108621019,0.980188834414571,-0.03538447860527381,0,0,0,1]);
+		var K = new Matrix(3,3).fromArray([0.8416110193263069,-0.00037245040438613555,0.4987416183797266, 0,1.1206454954519742,0.49539092201719453, 0,0,1]);
+		var distortion = null;
+
+		/*
+		var world = new Stereopsis.World();
+		var camera = world.addCamera(K, distortion);
+		var viewA = world.addView(imageScalesA, camera);
+		var viewB = world.addView(imageScalesB, camera);
+		viewA.cellSize(cellSize);
+		viewA.cellSize(cellSize);
+
+		viewA.absoluteTransform(I);
+		viewB.absoluteTransform(P);
+		console.log(world);
+
+		world.solveDensePair();
+		*/
+
+		K = R3D.cameraFromScaledImageSize(K, imageScalesA.size());
+		var results = R3D.searchMatchPointsPair3D(imageScalesA,imageScalesB, P, K,K);
+		console.log(results);
+
+
+		// var imageSizeA = imageMatrixA.size();
+		// var views = [viewA,viewB,viewC];
+		// var images = [imageMatrixA,imageMatrixB,imageMatrixC];
+
+
+
+		/*
+
+		console.log("fillInWorldAll");
+console.log(allCameras);
+		var info = project.fillInWorldAll(allViews, cellSize, allCameras);
+		var WORLDCAMS = info["cameras"];
+		var WORLDVIEWS = info["views"];
+		var WORLDVIEWSLOOKUP = info["lookup"];
+		var world = info["world"];
+
+		console.log("solveDensePair");
+// console.log(info);
+// throw "before solveDensePair"
+		world.solveDensePair();
+		*/
+	}
+	new ImageLoader("../images/rabbit/",["7.jpg","9.jpg"],this,fxnImageLoaded).load();
 }
 
 function testBagOfWordMatches(){
