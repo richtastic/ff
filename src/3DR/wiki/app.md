@@ -388,6 +388,35 @@ MISSING:
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
+x pass along reprojection error sigma to dense pair candidates
+	x some pairs may not have the relative error to use
+	=> assume some low number, max tolerable, eg < 1% = 5px @ 500px
+
+
+- maximum suppression top points
+- make haystack only a few features wide (1/5 to 1/10 the hypotenuse)
+- iterate on haystacks to collect top points
+- get RIFT samples of top up-to-10 candidates
+- get initial RIFT samples of corners
+- compare candidates
+- keep top 2 matches & scores
+
+- do a->b & b->a loop
+
+- choose top matches:
+	- top score ratios > 0.7-0.9
+	- compare a&b points
+	- keep 
+ 
+ - filter on:
+ 	- match score
+ 	- F error
+ 	- R error
+
+
+
+
+
 
 - DENSE MATCH SEARCHING
 	- use corners as starting points
@@ -432,11 +461,43 @@ densePutativePairsFromPointList
 
 
 
+COMPARING 2 R-DENSE METHODS:
+	A) corner-corner
+		- 2000 pts A & 2000 pts B
+		- get F-line candidates
+		- F-line: 50 candidates
+			- 3D point
+			- affine
+			- extract
+			- compare
+		- top candidates: 10
+			- RIFT extract + compare + rank
+	B) corner-line-point
+		- 2000 pts A & 2000 pts B
+		- 5-10 checks > ~ 50 points
+			- 3D point
+			- affine
+			- extract (1 large 1 small)
+			- compare
+		- top candidates: 10
+			- RIFT extract + compare + rank
+		- F-line: 50 top points
+
+
+OPERATIONS:
+	A) 2000 * (50 + 10) = 120000
+	B) 2000 * (10 * (1.5) + 10) = 50000
+	=> expected about 2x as fast
+
+
+
+
+
+
 
 - WHEN ARE LOW-CONTRAST AREAS EXPANDED INTO?
 	- allow to pick points near more-confident locations that are consistent with R & F w/ minimal (no) checks
-
-
+	- DYNAMIC-SIZED-FEATURES
 
 
 

@@ -8131,7 +8131,7 @@ if(!relativeAB && isDense){
 		}
 	}
 
-throw "before more ..."
+// throw "before more ..."
 
 	var saveProjectFxn = function(){
 		console.log("saveProjectFxn");
@@ -10535,7 +10535,7 @@ console.log(info);
 					// console.log(info); // 22 V 30
 
 
-throw "putative here ..."
+// throw "putative here ..."
 
 					// var pairs = info["lookup"];
 					var pairs = info["pairs"];
@@ -10559,7 +10559,13 @@ throw "putative here ..."
 						putativeViews.push(v);
 					}
 					sourceData["putativePairs"] = putatives;
-					console.log(putatives);
+
+					// for(var i=0; i<putatives.length; ++i){
+					// 	var putative = putatives[i];
+					// 	console.log(putative);
+					// }
+					// console.log(sourceData);
+					
 					// save these putatives to sparse.yaml / dense.yaml -- as starting point
 
 
@@ -10593,7 +10599,8 @@ throw "putative here ..."
 					}
 
 					console.log(sourceData);
-					// throw "before saving full bundle done";
+
+					throw "before saving putatives";
 
 					project.saveFileFromData(sourceData, sourceFilename, savedDataComplete, project);
 					return;
@@ -16672,7 +16679,7 @@ App3DR.ProjectManager.prototype.calculateDensePairPutatives = function(){
 			densePairs.push(densePair);
 		}
 		console.log(denseData);
-		throw "before save dense start";
+		// throw "before save dense start";
 		project.saveFileFromData(denseData, denseFilename, fxnSaveDenseComplete, project);
 	}
 	var fxnSaveDenseComplete = function(data){

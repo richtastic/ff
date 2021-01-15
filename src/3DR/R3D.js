@@ -27440,9 +27440,11 @@ R3D.projectivePatchAffine3D = function(point3D,normal3D, cameraNormals, cameraRi
 // var affine2D = R3D.patchAffine2DFromPatch3D(point3D,normal3D,up3D,right3D,size3D, cameraA,Ka, cameraB,Kb, point2DA,point2DB, affineReuse);
 
 
-R3D.searchMatchPointsPair3D = function(imageScalesA,imageScalesB, relativeAB, Ka,Kb){
+R3D.searchMatchPointsPair3D = function(imageScalesA,imageScalesB, relativeAB, Ka,Kb, imageErrorPercent){
 
-	var errorPixels = 5.0;
+// 0.01 - 0.02
+	imageErrorPercent = Code.valueOrDefault(imageErrorPercent, 0.02); // @500x400 : 0.01 = 5px, 0.001 = 0.0px
+
 
 	// relativeAB = Matrix.inverse(relativeAB);
 
@@ -27453,27 +27455,40 @@ R3D.searchMatchPointsPair3D = function(imageScalesA,imageScalesB, relativeAB, Ka
 	var KbInv = Matrix.inverse(Kb);
 	var Fab = R3D.fundamentalFromPose(relativeAB, Ka,Kb);
 	var Fba = R3D.fundamentalInverse(Fab);
+	// derived
+	var cameraCenterA = new V3D(0,0,0);
+	var cameraCenterB = relativeAB.multV3DtoV3D(cameraCenterA);
+	var cameraNormalA = new V3D(0,0,1);
+	var cameraNormalB = relativeAB.multV3DtoV3D(cameraNormalA);
+		cameraNormalB.sub(cameraCenterB);
+	var cameraRightA = new V3D(1,0,0);
+	var cameraRightB = relativeAB.multV3DtoV3D(cameraRightA);
+		cameraRightB.sub(cameraCenterB);
 
 	// corners
 	var idealSize = 600*400;
 	// var nonMaximalPercent = 0.01;
 	var nonMaximalPercent = 0.010;
-	var nonRepeatPercent = 0.005;
+	// var nonRepeatPercent = 0.005; // very close --- 
+	var nonRepeatPercent = 0.01;
 	var featureSize = 0.05;
 	var featureSizeA = imageScalesA.size().length()*featureSize;
 	var featureSizeB = imageScalesB.size().length()*featureSize;
 
+	var errorPixelsB = imageScalesB.width()*imageErrorPercent;
+
 console.log("featureSizeA: "+featureSizeA);
+console.log("errorPixelsB: "+errorPixelsB);
 
 	var needleSize = 11;
 
 	var featureToNeedleScaleA = needleSize/featureSizeA;
 console.log("featureToNeedleScaleA: "+featureToNeedleScaleA);
 
-	var haystackWidth = needleSize*5; // do some section count
-	var haystackHeight = needleSize + Math.min(2*Math.ceil(featureToNeedleScaleA*errorPixels),needleSize);
+// 	var haystackWidth = needleSize*5; // do some section count
+// 	var haystackHeight = needleSize + Math.min(2*Math.ceil(featureToNeedleScaleA*errorPixelsB),needleSize);
 
-console.log("haystackHeight: "+haystackHeight);
+// console.log("haystackHeight: "+haystackHeight);
 	
 
 
@@ -27546,14 +27561,43 @@ for(var i=0; i<cornerList.length; ++i){
 // console.log("errSearch: "+errSearch);
 var dir = new V2D();
 var org = new V2D();
-var errorSearchB = 5;
 
 // var i = 400;
 // var i = 100;
 // var i = 910;
 // var i = 1000;
-var i = 1700;
+// var i = 1130; // bag corner
+// var i = 1275; // ear base left
+// var i = ;
+// var i = 1200; // BAG
+// var i = 1210;
+// var i = 1220;
+// var i = 1240;
+// var i = 1250;
+// var i = 1250; // EAR OUT CORNER -- bad
+// var i = 1300; // EAR IN CORNER
+// var i = 1305; // head 2
+// var i = 1310; // forehead
+// var i = 1320; // ear edge
+// var i = 1330; // eye top
+// var i = 1340; // ear mid
+// var i = 1390; // 
+	// var i = 1485; // GOOD TEST FOR AFFINES .........................
+	// var i = 1495;
+var i = 1695;
+// var i = 1700; // EYE
+// var i = 1710; // smirk
+// var i = 1740; // chin
+// var i = 1750; // 
+// var i = 1760; // waist
+// var i = 1770;
+// var i = 1799;
+// var i = 1820; // BAND
+// var i = 1850; // RIGHT TOE
+// var i = 1890; // 
 // var i = 1900;
+// var i = 2050; // 2286
+
 
 var object = cornersA[i];
 console.log(object);
@@ -27572,12 +27616,207 @@ console.log(intersections);
 
 var a = intersections[0];
 var b = intersections[1];
+if(b.x<a.x){ // flip for human readable
+	var temp = b;
+	b = a;
+	a = temp;
+}
 
+
+// pick a point on the line:
+var point2DB = V2D.midpoint(a,b);
+console.log(point2DB);
 
 // find expected P3D
+var point3D = R3D.triangulatePointDLT(point2DA,point2DB, cameraA,cameraB, KaInv, KbInv);
+console.log(point3D);
+var pointNormal3DA = V3D.sub(cameraCenterA,point3D).norm();
 
+// create points from A
+var top2DA = new V2D(point2DA.x,point2DA.y - featureSizeA*0.5);
+var bot2DA = new V2D(point2DA.x,point2DA.y + featureSizeA*0.5);
+var lef2DA = new V2D(point2DA.x - featureSizeA*0.5,point2DA.y);
+var rig2DA = new V2D(point2DA.x + featureSizeA*0.5,point2DA.y);
+console.log(top2DA);
+
+// project rays from A to P3D
+var rayTop3DA = R3D.projectPoint2DToCamera3DRay(top2DA, cameraA, KaInv)["d"];
+var rayBot3DA = R3D.projectPoint2DToCamera3DRay(bot2DA, cameraA, KaInv)["d"];
+var rayLef3DA = R3D.projectPoint2DToCamera3DRay(lef2DA, cameraA, KaInv)["d"];
+var rayRig3DA = R3D.projectPoint2DToCamera3DRay(rig2DA, cameraA, KaInv)["d"];
+console.log(rayTop3DA);
+
+// project points from A to P3D plane
+var pointTop3DA = Code.intersectRayPlane(cameraCenterA,rayTop3DA, point3D,pointNormal3DA);
+var pointBot3DA = Code.intersectRayPlane(cameraCenterA,rayBot3DA, point3D,pointNormal3DA);
+var pointLef3DA = Code.intersectRayPlane(cameraCenterA,rayLef3DA, point3D,pointNormal3DA);
+var pointRig3DA = Code.intersectRayPlane(cameraCenterA,rayRig3DA, point3D,pointNormal3DA);
+console.log(pointTop3DA);
+
+// project points from P3D plane to B
+var top2DB = R3D.projectPoint3DCamera2DDistortion(pointTop3DA, cameraB, Kb, null);
+var bot2DB = R3D.projectPoint3DCamera2DDistortion(pointBot3DA, cameraB, Kb, null);
+var lef2DB = R3D.projectPoint3DCamera2DDistortion(pointLef3DA, cameraB, Kb, null);
+var rig2DB = R3D.projectPoint3DCamera2DDistortion(pointRig3DA, cameraB, Kb, null);
+console.log(top2DB);
+
+
+// DO THESE NEED TO SUBTRACT CENTER POINT ?
+var t2DA = V2D.sub(top2DA,point2DA);
+var b2DA = V2D.sub(bot2DA,point2DA);
+var l2DA = V2D.sub(lef2DA,point2DA);
+var r2DA = V2D.sub(rig2DA,point2DA);
+
+var t2DA = V2D.sub(top2DA,point2DA);
+var b2DA = V2D.sub(bot2DA,point2DA);
+var l2DA = V2D.sub(lef2DA,point2DA);
+var r2DA = V2D.sub(rig2DA,point2DA);
 
 // find affine
+var affine2DAB = new Matrix2D();
+var p2DAs = [top2DA,bot2DA,lef2DA,rig2DA];
+var p2DBs = [top2DB,bot2DB,lef2DB,rig2DB];
+R3D.affineCornerMatrixLinear(p2DAs,p2DBs, affine2DAB);
+console.log(affine2DAB+"");
+
+
+// extract haystack
+var startP2DB = a;
+var endP2DB = b;
+var ray2DB = V2D.sub(endP2DB,startP2DB);
+var len2DB = ray2DB.length();
+	ray2DB.norm();
+var angleRayB = V2D.angleDirection(V2D.DIRX,ray2DB);
+console.log("len2DB: "+len2DB);
+console.log("angleRayB: "+Code.degrees(angleRayB));
+var haystackFeatureScale = featureSizeB/needleSize;
+
+
+var needleSize = 11;
+var needleHalfSize = needleSize*0.5 | 0;
+// var haystackHeight = 2*needleSize;
+var haystackErrorHeight = errorPixelsB/haystackFeatureScale;
+console.log("HAYSTACK haystackFeatureScale: "+haystackFeatureScale);
+console.log("HAYSTACK errorPixelsB: "+errorPixelsB);
+console.log("HAYSTACK HEIGHT FOR ERROR: "+haystackErrorHeight);
+console.log("HAYSTACK 2x ERROR: "+Math.ceil(2*haystackErrorHeight));
+
+
+var haystackHeight = needleSize + Math.max(Math.min(Math.ceil(2*haystackErrorHeight),needleSize),2);
+
+
+
+
+var haystackWidth = Math.ceil(len2DB/haystackFeatureScale);
+console.log("haystackWidth: "+haystackWidth);
+console.log("haystackHeight: "+haystackHeight);
+var haystackHalfWidth = haystackWidth*0.5 | 0;
+var haystackHalfHeight = haystackHeight*0.5 | 0;
+var reuseNeedle = new ImageMat(needleSize,needleSize);
+var reuseHaystack = new ImageMat(haystackWidth,haystackHeight);
+
+
+// extract needle/haystack
+var affineTotalB = new Matrix2D();
+	affineTotalB.identity();
+	affineTotalB.rotate(angleRayB);
+	affineTotalB.scale(haystackFeatureScale);
+var affineTotalA = new Matrix2D();
+	affineTotalA.copy(affine2DAB);
+	affineTotalA.inverse(); // B -> A
+	// affineTotalA.identity();
+	affineTotalA.mult(affineTotalB);
+console.log(affineTotalA+"?")
+
+
+var affine = new Matrix2D();
+var averageScale;
+
+// extract haystack
+	affine.copy(affineTotalB);
+	// affine.scale(haystackFeatureScale);
+	ImageMatScaled.affineToLocationTransform(affine, affine, haystackHalfWidth,haystackHalfHeight,point2DB.x,point2DB.y);
+	averageScale = affine.averageScale();
+	imageScalesB.extractRectCombineFast(reuseHaystack, averageScale, affine);
+
+// extract needle
+	affine.copy(affineTotalA);
+	// affine.scale(haystackFeatureScale);
+	ImageMatScaled.affineToLocationTransform(affine, affine, needleHalfSize,needleHalfSize,point2DA.x,point2DA.y);
+	averageScale = affine.averageScale();
+	imageScalesA.extractRectCombineFast(reuseNeedle, averageScale, affine);
+
+// compare needle / haystack
+	var compareScores = R3D.searchNeedleHaystackSADColorOffsetUnit(reuseNeedle,reuseHaystack);
+	console.log(compareScores);
+
+// get peaks
+	var compareValues = compareScores["value"];
+	var compareWidth = compareScores["width"];
+	var compareHeight = compareScores["height"];
+		// smooth scores to reduce maximua:
+		// compareValues = ImageMat.getBlurredImage(compareValues,compareWidth,compareHeight, 1.0);
+		// compareValues = ImageMat.meanFilter(compareValues,compareWidth,compareHeight);
+
+
+	var minimum = Code.findMinima2DFloat(compareValues, compareWidth,compareHeight);
+	minimum.sort(function(a,b){
+		return a.z<b.z ? -1 : 1;
+	});
+	console.log(minimum);
+
+// do local maximum supression to get rid of peaks very close to each other ~ 0.5 feature size
+
+	
+
+
+// get peak locations in image
+	// affine.translate(-haystackHalfWidth,-haystackHalfHeight); // to 0,0
+	// affine.copy(affineTotalB);
+	// affine.translate(-haystackHalfWidth,-haystackHalfHeight); // to 0,0
+	// affine.inverse();
+	affine.identity();
+
+// (widdth-1)*0.5
+// console.log("wid");
+// console.log(haystackWidth);
+// console.log(compareWidth);
+// console.log(haystackWidth-compareWidth);
+// console.log("hei");
+// console.log(haystackHeight);
+// console.log(compareHeight);
+// console.log(haystackHeight-compareHeight);
+	
+	affine.mult(affineTotalB);
+	affine.preTranslate((haystackWidth-compareWidth)*0.5,(haystackHeight-compareHeight)*0.5); // scores -> haystack
+	affine.preTranslate(-haystackHalfWidth,-haystackHalfHeight); // to 0,0
+	// affine.translate(-(haystackWidth-compareWidth)*0.5,-(haystackHeight-compareHeight)*0.5); // scores -> haystack
+	// affine.translate(-haystackHalfWidth,-haystackHalfHeight); // to 0,0
+	
+	// affine.preTranslate(haystackHalfWidth,haystackHalfHeight);
+	// affine.identity();
+	// affine.mult(affineTotalB.copy().inverse());
+	// affine.mult(affineTotalB);
+
+	affine.translate(point2DB.x,point2DB.y); // to around original point
+	var minimum2DB = [];
+	var minimumScoreB = [];
+	for(var i=0; i<minimum.length; ++i){
+		var point = minimum[i];
+		var location = affine.multV2DtoV2D(new V2D(),point);
+		minimum2DB.push(location);
+		minimumScoreB.push(point.z);
+	}
+
+
+// SHOW POINTS ON MAPPING
+
+
+
+
+
+
+// find 'up' in second image - from projected points
 
 
 // draw point:
@@ -27587,6 +27826,16 @@ d.graphics().beginPath();
 d.graphics().drawCircle(point2DA.x,point2DA.y,4.0);
 d.graphics().endPath();
 d.graphics().fill();
+GLOBALSTAGE.addChild(d);
+
+
+var d = new DO();
+d.graphics().setFill(0xFF0000FF);
+d.graphics().beginPath();
+d.graphics().drawCircle(point2DB.x,point2DB.y,4.0);
+d.graphics().endPath();
+d.graphics().fill();
+d.matrix().translate(0 + 1*imageScalesA.width(), 0 );
 GLOBALSTAGE.addChild(d);
 
 // draw rect
@@ -27610,6 +27859,33 @@ d.graphics().endPath();
 d.matrix().translate(0 + 1*imageScalesA.width(), 0 );
 GLOBALSTAGE.addChild(d);
 
+// draw affine points
+var ps = [top2DA,bot2DA,lef2DA,rig2DA];
+for(var j=0; j<ps.length; ++j){
+	var p = ps[j];
+	var d = new DO();
+	d.graphics().setFill(0xFF00FFFF);
+	d.graphics().beginPath();
+	d.graphics().drawCircle(p.x,p.y,3.0);
+	d.graphics().endPath();
+	d.graphics().fill();
+	GLOBALSTAGE.addChild(d);
+}
+var ps = [top2DB,bot2DB,lef2DB,rig2DB];
+for(var j=0; j<ps.length; ++j){
+	var p = ps[j];
+	var d = new DO();
+	
+	d.graphics().setFill(0x9900FFFF);
+	d.graphics().beginPath();
+	d.graphics().drawCircle(p.x,p.y,3.0);
+	d.graphics().endPath();
+	d.graphics().fill();
+	d.matrix().translate(0 + 1*imageScalesA.width(), 0 );
+	GLOBALSTAGE.addChild(d);
+}
+
+
 // draw affine
 
 	// var objsB = spaceB.objectsInsideRay(org,dir,errSearch,true);
@@ -27617,14 +27893,100 @@ GLOBALSTAGE.addChild(d);
 
 
 
+ var sss = 3.0;
+// show haystack
+	var image = reuseHaystack;
+	var img = GLOBALSTAGE.getFloatRGBAsImage(image.red(),image.grn(),image.blu(), image.width(),image.height());
+	var d = new DOImage(img);
+	d.matrix().scale(sss);
+	d.matrix().translate(10 + 100, 10 + 400);
+	GLOBALSTAGE.addChild(d);
 
-// extract line - haystack
+// show needle
+	var image = reuseNeedle;
+	var img = GLOBALSTAGE.getFloatRGBAsImage(image.red(),image.grn(),image.blu(), image.width(),image.height());
+	var d = new DOImage(img);
+	d.matrix().scale(sss);
+	d.matrix().translate(10 + 100, 10 + 500);
+	GLOBALSTAGE.addChild(d);
 
 
-// extract point - needle
+// show compare
 
 
+	var heat = compareScores["value"];
+	var wid = compareScores["width"];
+	var hei = compareScores["height"];
+	var colors = [0xFF000099, 0xFF0000FF, 0xFFCC00CC, 0xFFFF0000, 0xFF990000, 0xFFFFFFFF];
+	ImageMat.normalFloat01(heat);
+	heat = ImageMat.pow(heat,0.25);
 
+	heat = ImageMat.heatImage(heat, wid, hei, true, colors);
+	img = GLOBALSTAGE.getFloatRGBAsImage(heat.red(), heat.grn(), heat.blu(), wid, hei);
+	// img = GLOBALSTAGE.getFloatRGBAsImage(colorsA_r,colorsA_g,colorsA_b, wid, hei);
+	d = new DOImage(img);
+	GLOBALSTAGE.addChild(d);
+	d.matrix().scale(sss);
+	var o = (reuseHaystack.width()-wid)*sss*0.5; 
+	d.matrix().translate(10 + 100 + o, 10 + 400 + o);
+	d.graphics().alpha(0.50);
+
+// show peaks
+
+for(var j=0; j<minimum.length; ++j){
+	var p = minimum[j];
+	var d = new DO();
+	d.graphics().setFill(0x9900FF00);
+	d.graphics().beginPath();
+	d.graphics().drawCircle(p.x,p.y,1.0);
+	d.graphics().endPath();
+	d.graphics().fill();
+	d.matrix().scale(sss);
+	d.matrix().translate(10 + 100 + o, 10 + 400 + o);
+	GLOBALSTAGE.addChild(d);
+}
+
+
+console.log(minimumScoreB);
+ImageMat.normalFloat01(minimumScoreB);
+// ImageMat.pow(minimumScoreB,0.50);
+
+var colors = [0xFF000000, 0xFF000099, 0xFFCC00CC, 0xFFFF0000, 0xFFFF9999, 0xFFFFFFFF];
+
+for(var j=0; j<minimum2DB.length; ++j){
+	var p = minimum2DB[j];
+	var d = new DO();
+	var siz = 10;
+
+	var score = minimumScoreB[j];
+	var color = Code.interpolateColorGradientARGB(score, colors);
+
+	// get color from score amount
+
+
+	d.graphics().setFill(color);
+	d.graphics().beginPath();
+	d.graphics().drawCircle(p.x,p.y,5.0);
+	d.graphics().endPath();
+	d.graphics().fill();
+	
+	d.graphics().setLine(1.0, 0xFF000033);
+	d.graphics().beginPath();
+	d.graphics().moveTo(p.x-siz,p.y);
+	d.graphics().lineTo(p.x+siz,p.y);
+	d.graphics().moveTo(p.x,p.y-siz);
+	d.graphics().lineTo(p.x,p.y+siz);
+	d.graphics().strokeLine();
+	d.graphics().endPath();
+
+	d.graphics().setLine(1.0, 0xFF0000FF);
+	d.graphics().beginPath();
+	d.graphics().drawCircle(p.x,p.y,siz*0.5);
+	d.graphics().endPath();
+	d.graphics().strokeLine();
+	d.matrix().translate(0 + 1*imageScalesA.width(), 0 );
+	GLOBALSTAGE.addChild(d);
+}
 
 
 
