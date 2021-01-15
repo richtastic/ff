@@ -388,6 +388,10 @@ MISSING:
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
+- metrics for poor affine
+	- backwards affine? CCW vs CW X->Y direction?
+
+
 x pass along reprojection error sigma to dense pair candidates
 	x some pairs may not have the relative error to use
 	=> assume some low number, max tolerable, eg < 1% = 5px @ 500px

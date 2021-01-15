@@ -27480,15 +27480,55 @@ R3D.searchMatchPointsPair3D = function(imageScalesA,imageScalesB, relativeAB, Ka
 console.log("featureSizeA: "+featureSizeA);
 console.log("errorPixelsB: "+errorPixelsB);
 
-	var needleSize = 11;
-
 	var featureToNeedleScaleA = needleSize/featureSizeA;
-console.log("featureToNeedleScaleA: "+featureToNeedleScaleA);
+	// console.log("featureToNeedleScaleA: "+featureToNeedleScaleA);
+	
 
-// 	var haystackWidth = needleSize*5; // do some section count
-// 	var haystackHeight = needleSize + Math.min(2*Math.ceil(featureToNeedleScaleA*errorPixelsB),needleSize);
+var needleSize = 11;
+var needleHalfSize = needleSize*0.5 | 0;
 
-// console.log("haystackHeight: "+haystackHeight);
+// var haystackDivisionsMax = 3; // TOO small -- lots of error space, not enough affines
+var haystackDivisionsMax = 5; // OK - 
+// var haystackDivisionsMax = 7; // OK - enough affines
+// var haystackDivisionsMax = 10; // too big -- 
+
+
+var haystackFeatureScale = featureSizeB/needleSize;
+
+var haystackErrorHeight = errorPixelsB/haystackFeatureScale;
+console.log("haystackErrorHeight: "+haystackErrorHeight);
+
+
+
+console.log("HAYSTACK haystackFeatureScale: "+haystackFeatureScale);
+console.log("HAYSTACK errorPixelsB: "+errorPixelsB);
+console.log("HAYSTACK HEIGHT FOR ERROR: "+haystackErrorHeight);
+console.log("HAYSTACK 2x ERROR: "+Math.ceil(2*haystackErrorHeight));
+var haystackHeight = needleSize + Math.max(Math.min(Math.ceil(2*haystackErrorHeight),needleSize),2);
+var hypotenuseB = imageScalesB.size().length();
+console.log("haystackFeatureScale: "+haystackFeatureScale);
+console.log("hypotenuseB: "+hypotenuseB);
+console.log("haystackDivisionsMax: "+haystackDivisionsMax);
+var haystackWidth = Math.max( 2*needleSize, Math.ceil(hypotenuseB/haystackDivisionsMax / haystackFeatureScale) );
+var haystackCompareWidth = haystackWidth - needleSize - 1; // round down?
+
+console.log(hypotenuseB/haystackDivisionsMax / haystackFeatureScale);
+
+var haystackImageWidth = haystackFeatureScale*haystackWidth;
+var haystackCompareImageWidth = haystackFeatureScale*haystackCompareWidth;
+
+console.log("haystackWidth: "+haystackWidth);
+console.log("haystackCompareWidth: "+haystackCompareWidth);
+console.log("haystackHeight: "+haystackHeight);
+console.log("haystackImageWidth: "+haystackImageWidth);
+console.log("haystackCompareImageWidth: "+haystackCompareImageWidth);
+console.log("haystack-to-image: "+(haystackWidth*haystackFeatureScale*haystackDivisionsMax));
+
+var haystackHalfWidth = haystackWidth*0.5 | 0;
+var haystackHalfHeight = haystackHeight*0.5 | 0;
+var reuseNeedle = new ImageMat(needleSize,needleSize);
+var reuseHaystack = new ImageMat(haystackWidth,haystackHeight);
+
 	
 
 
@@ -27565,7 +27605,11 @@ var org = new V2D();
 // var i = 400;
 // var i = 100;
 // var i = 910;
+// var i = 935; // LEFT CHEEK
+// var i = 955; // LEFT PAW
+// var i = 975; // LEFT FOOT
 // var i = 1000;
+var i = 1234;
 // var i = 1130; // bag corner
 // var i = 1275; // ear base left
 // var i = ;
@@ -27584,7 +27628,7 @@ var org = new V2D();
 // var i = 1390; // 
 	// var i = 1485; // GOOD TEST FOR AFFINES .........................
 	// var i = 1495;
-var i = 1695;
+// var i = 1695;
 // var i = 1700; // EYE
 // var i = 1710; // smirk
 // var i = 1740; // chin
@@ -27622,10 +27666,49 @@ if(b.x<a.x){ // flip for human readable
 	a = temp;
 }
 
+var startP2DB = a;
+var endP2DB = b;
+var ray2DB = V2D.sub(endP2DB,startP2DB);
+var len2DB = ray2DB.length();
+	ray2DB.norm();
+var angleRayB = V2D.angleDirection(V2D.DIRX,ray2DB);
+console.log("len2DB: "+len2DB);
+console.log("angleRayB: "+Code.degrees(angleRayB));
+
+
+
+
+
+console.log("haystackImageWidth: "+haystackImageWidth);
+
+var haystackDivisionsPerLine = len2DB/haystackCompareImageWidth;
+console.log("haystackDivisionsPerLine: "+haystackDivisionsPerLine);
+
+
+var hayIterations = Math.ceil(haystackDivisionsPerLine);
+console.log("hayIterations: "+hayIterations);
+
+for(var hay=0; hay<hayIterations;++hay){
+
+
 
 // pick a point on the line:
-var point2DB = V2D.midpoint(a,b);
-console.log(point2DB);
+// var point2DB = V2D.midpoint(a,b);
+// console.log(point2DB);
+
+// haystackFeatureScale
+// haystackFeatureScale
+
+var dirEdge = ray2DB.copy().scale(haystackCompareImageWidth*hay);
+var dirCenter = ray2DB.copy().scale(haystackCompareImageWidth*0.5);
+var dirInner = ray2DB.copy().scale((haystackImageWidth-haystackCompareImageWidth)*0.5);
+
+var point2DB = dirEdge.copy().sub(dirInner).add(startP2DB).add(dirCenter);
+
+// console.log(hay+" - "+point2DB+"");
+
+
+
 
 // find expected P3D
 var point3D = R3D.triangulatePointDLT(point2DA,point2DB, cameraA,cameraB, KaInv, KbInv);
@@ -27680,40 +27763,7 @@ R3D.affineCornerMatrixLinear(p2DAs,p2DBs, affine2DAB);
 console.log(affine2DAB+"");
 
 
-// extract haystack
-var startP2DB = a;
-var endP2DB = b;
-var ray2DB = V2D.sub(endP2DB,startP2DB);
-var len2DB = ray2DB.length();
-	ray2DB.norm();
-var angleRayB = V2D.angleDirection(V2D.DIRX,ray2DB);
-console.log("len2DB: "+len2DB);
-console.log("angleRayB: "+Code.degrees(angleRayB));
-var haystackFeatureScale = featureSizeB/needleSize;
 
-
-var needleSize = 11;
-var needleHalfSize = needleSize*0.5 | 0;
-// var haystackHeight = 2*needleSize;
-var haystackErrorHeight = errorPixelsB/haystackFeatureScale;
-console.log("HAYSTACK haystackFeatureScale: "+haystackFeatureScale);
-console.log("HAYSTACK errorPixelsB: "+errorPixelsB);
-console.log("HAYSTACK HEIGHT FOR ERROR: "+haystackErrorHeight);
-console.log("HAYSTACK 2x ERROR: "+Math.ceil(2*haystackErrorHeight));
-
-
-var haystackHeight = needleSize + Math.max(Math.min(Math.ceil(2*haystackErrorHeight),needleSize),2);
-
-
-
-
-var haystackWidth = Math.ceil(len2DB/haystackFeatureScale);
-console.log("haystackWidth: "+haystackWidth);
-console.log("haystackHeight: "+haystackHeight);
-var haystackHalfWidth = haystackWidth*0.5 | 0;
-var haystackHalfHeight = haystackHeight*0.5 | 0;
-var reuseNeedle = new ImageMat(needleSize,needleSize);
-var reuseHaystack = new ImageMat(haystackWidth,haystackHeight);
 
 
 // extract needle/haystack
@@ -27732,19 +27782,20 @@ console.log(affineTotalA+"?")
 var affine = new Matrix2D();
 var averageScale;
 
-// extract haystack
-	affine.copy(affineTotalB);
-	// affine.scale(haystackFeatureScale);
-	ImageMatScaled.affineToLocationTransform(affine, affine, haystackHalfWidth,haystackHalfHeight,point2DB.x,point2DB.y);
-	averageScale = affine.averageScale();
-	imageScalesB.extractRectCombineFast(reuseHaystack, averageScale, affine);
-
 // extract needle
 	affine.copy(affineTotalA);
 	// affine.scale(haystackFeatureScale);
 	ImageMatScaled.affineToLocationTransform(affine, affine, needleHalfSize,needleHalfSize,point2DA.x,point2DA.y);
 	averageScale = affine.averageScale();
 	imageScalesA.extractRectCombineFast(reuseNeedle, averageScale, affine);
+
+
+// extract haystack
+	affine.copy(affineTotalB);
+	// affine.scale(haystackFeatureScale);
+	ImageMatScaled.affineToLocationTransform(affine, affine, haystackHalfWidth,haystackHalfHeight,point2DB.x,point2DB.y);
+	averageScale = affine.averageScale();
+	imageScalesB.extractRectCombineFast(reuseHaystack, averageScale, affine);
 
 // compare needle / haystack
 	var compareScores = R3D.searchNeedleHaystackSADColorOffsetUnit(reuseNeedle,reuseHaystack);
@@ -27893,13 +27944,15 @@ for(var j=0; j<ps.length; ++j){
 
 
 
+var offing = 10;
  var sss = 3.0;
+var spacing = haystackImageWidth*sss*0.5;
 // show haystack
 	var image = reuseHaystack;
 	var img = GLOBALSTAGE.getFloatRGBAsImage(image.red(),image.grn(),image.blu(), image.width(),image.height());
 	var d = new DOImage(img);
 	d.matrix().scale(sss);
-	d.matrix().translate(10 + 100, 10 + 400);
+	d.matrix().translate(offing + spacing*hay, 10 + 400);
 	GLOBALSTAGE.addChild(d);
 
 // show needle
@@ -27907,7 +27960,7 @@ for(var j=0; j<ps.length; ++j){
 	var img = GLOBALSTAGE.getFloatRGBAsImage(image.red(),image.grn(),image.blu(), image.width(),image.height());
 	var d = new DOImage(img);
 	d.matrix().scale(sss);
-	d.matrix().translate(10 + 100, 10 + 500);
+	d.matrix().translate(offing + spacing*hay, 10 + 500);
 	GLOBALSTAGE.addChild(d);
 
 
@@ -27928,7 +27981,7 @@ for(var j=0; j<ps.length; ++j){
 	GLOBALSTAGE.addChild(d);
 	d.matrix().scale(sss);
 	var o = (reuseHaystack.width()-wid)*sss*0.5; 
-	d.matrix().translate(10 + 100 + o, 10 + 400 + o);
+	d.matrix().translate(offing + o + spacing*hay, 10 + 400 + o);
 	d.graphics().alpha(0.50);
 
 // show peaks
@@ -27942,7 +27995,7 @@ for(var j=0; j<minimum.length; ++j){
 	d.graphics().endPath();
 	d.graphics().fill();
 	d.matrix().scale(sss);
-	d.matrix().translate(10 + 100 + o, 10 + 400 + o);
+	d.matrix().translate(offing + o + spacing*hay, 10 + 400 + o);
 	GLOBALSTAGE.addChild(d);
 }
 
@@ -27988,6 +28041,9 @@ for(var j=0; j<minimum2DB.length; ++j){
 	GLOBALSTAGE.addChild(d);
 }
 
+
+
+} // end for haystacks
 
 
 
