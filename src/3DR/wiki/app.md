@@ -395,20 +395,29 @@ MISSING:
 - RIFT scores are poorer than flat-SAD scores
 	=> is there some error in rfits?
 
+=> GO BACK AND CHECK PERFORMANCES FOR: generateProgressiveRIFTObjects
+	- check if default 4x scale for corners is optimum ...
+	- neighborhood
+
+
+28102
+
+27874
+
+
+
+generateProgressiveRIFTObjects
+
+	progressiveR3DSizing2
 
 
 
 
-	_progressiveR3DSizing2
 
 
 
 
 
-
-
-
-	
 
 
 x pass along reprojection error sigma to dense pair candidates

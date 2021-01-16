@@ -11989,7 +11989,7 @@ if(!forceScale){
 
 
 // 2-16 : 4-8
-
+// console.log("SOURCE SIZE:             "+flatFeatureSize);
 		
 		
 		if(angle===undefined){
@@ -12837,52 +12837,40 @@ R3D._compareHistogramObjects = function(histA,histB){
 }
 
 var counting = 0;
+R3D._progressiveR3DSizing2_matrix2D = null;
 R3D._progressiveR3DSizing2 = function(point, imageMatrixScales, block, sourceSize, matrix){
 	var displaySize = block.width();
-	var scale = sourceSize/displaySize;
+	var scale = sourceSize/displaySize; 
+// console.log(" scale: "+sourceSize+" => "+displaySize+" = "+scale);
+var doShow = true;
+// var doShow = false;
 
-// var doShow = true;
-var doShow = false;
-
-// ++counting;
-// if(counting==300){
-// if(counting==1E99){
-// doShow = true;
-// }
-//	var block = imageMatrixScales.extractRect(point,toScale,displaySize,displaySize, matrix);
-
-// if(doShow){
-// var image = block;
-// var img = GLOBALSTAGE.getFloatRGBAsImage(image.red(),image.grn(),image.blu(), image.width(),image.height());
-// var d = new DOImage(img);
-// d.matrix().scale(5.0);
-// d.matrix().translate(10 + 0, 10 + 200);
-// GLOBALSTAGE.addChild(d);
-// }
-
-// var affine = new Matrix2D();
-	
-	// var invScale = 1.0/scale;
+	// opposite transform goes FROM final output block TO original source block
 	var halfCenter = (displaySize-1)*0.5;
-	// var block = new ImageMat(displaySize,displaySize);
-	var affine = matrix.copy();
+	// spped up using static reference	
+	var affine = R3D._progressiveR3DSizing2_matrix2D;
+	if(!affine){
+		affine = new Matrix2D();
+		R3D._progressiveR3DSizing2_matrix2D = affine;
+	}
+	affine.copy(matrix);
 	affine.inverse();
 	affine.scale(scale);
 		var totalScale = affine.averageScale();
-		ImageMatScaled.affineToLocationTransform(affine,affine, halfCenter,halfCenter,point.x,point.y);
+		ImageMatScaled.affineToLocationTransform(affine,affine, halfCenter,halfCenter,point.x,point.y)
 		imageMatrixScales.extractRectFast(block, totalScale, affine);
 
-// if(doShow){
-console.log("SCALE: "+scale);
-console.log(block);
+if(doShow){
+// console.log("SCALE: "+scale);
+// console.log(block);
 var image = block;
 var img = GLOBALSTAGE.getFloatRGBAsImage(image.red(),image.grn(),image.blu(), image.width(),image.height());
 var d = new DOImage(img);
-d.matrix().scale(5.0);
-d.matrix().translate(10 + 100*counting, 10 + 0);
+d.matrix().scale(2.0);
+d.matrix().translate(10 + 40*counting, 10 + 0);
 GLOBALSTAGE.addChild(d);
 ++counting;
-// }
+}
 
 // if(doShow){
 // throw "before";
@@ -27478,7 +27466,7 @@ R3D.searchMatchPointsPair3D = function(imageScalesA,imageScalesB, relativeAB, Ka
 	// var nonRepeatPercent = 0.005; // very close --- 
 	var nonRepeatPercent = 0.01;
 	var featureSize = 0.05;
-	var featureCompareSizeScale = 1.5; // x featureSize
+	var featureCompareSizeScale = 1.0; // x featureSize
 	var featureSizeA = imageScalesA.size().length()*featureSize;
 	var featureSizeB = imageScalesB.size().length()*featureSize;
 	var featureSizeCompareA = featureSizeA * featureCompareSizeScale;
@@ -27787,15 +27775,18 @@ var b2DA = V2D.sub(bot2DA,point2DA);
 var l2DA = V2D.sub(lef2DA,point2DA);
 var r2DA = V2D.sub(rig2DA,point2DA);
 
-var t2DA = V2D.sub(top2DA,point2DA);
-var b2DA = V2D.sub(bot2DA,point2DA);
-var l2DA = V2D.sub(lef2DA,point2DA);
-var r2DA = V2D.sub(rig2DA,point2DA);
+var t2DB = V2D.sub(top2DB,point2DB);
+var b2DB = V2D.sub(bot2DB,point2DB);
+var l2DB = V2D.sub(lef2DB,point2DB);
+var r2DB = V2D.sub(rig2DB,point2DB);
 
 // find affine
 var affine2DAB = new Matrix2D();
-var p2DAs = [top2DA,bot2DA,lef2DA,rig2DA];
-var p2DBs = [top2DB,bot2DB,lef2DB,rig2DB];
+// var p2DAs = [top2DA,bot2DA,lef2DA,rig2DA];
+// var p2DBs = [top2DB,bot2DB,lef2DB,rig2DB];
+
+var p2DAs = [t2DA,b2DA,l2DA,r2DA];
+var p2DBs = [t2DB,b2DB,l2DB,r2DB];
 R3D.affineCornerMatrixLinear(p2DAs,p2DBs, affine2DAB);
 console.log(affine2DAB+"");
 
@@ -27865,6 +27856,8 @@ var averageScale;
 	affine.preTranslate(-haystackHalfWidth,-haystackHalfHeight); // to 0,0
 	affine.translate(point2DB.x,point2DB.y); // to around original point
 	var affineBAReference = affine2DAB.copy().inverse();
+
+	// affineBAReference = new Matrix2D().identity();
 	// var affineBAReference = affine2DAB.copy();
 	for(var i=0; i<minimum.length; ++i){
 		var point = minimum[i];
@@ -28096,8 +28089,11 @@ console.log("features: ");
 console.log(featuresA);
 console.log(featuresB);
 
-var objectsA = R3D.generateProgressiveRIFTObjects(featuresA, imageScalesA, true);
-var objectsB = R3D.generateProgressiveRIFTObjects(featuresB, imageScalesB, true);
+
+
+
+var objectsA = R3D.generateProgressiveRIFTObjects(featuresA, imageScalesA, true, true);
+var objectsB = R3D.generateProgressiveRIFTObjects(featuresB, imageScalesB, true, true);
 for(var j=0; j<objectsA.length; ++j){
 	var objectA = objectsA[j];
 	var featureA = featuresA[j];
@@ -28120,9 +28116,9 @@ var objectA = objectsA[0];
 console.log(objectA);
 for(var j=0; j<objectsB.length; ++j){
 	var objectB = objectsB[j];
-	// var score = R3D.compareProgressiveRIFTObjectsCombined(objectA,objectB);
+	var score = R3D.compareProgressiveRIFTObjectsCombined(objectA,objectB);
 
-	var score = R3D.compareProgressiveRIFTObjectsFlat2D(objectA,objectB);
+	// var score = R3D.compareProgressiveRIFTObjectsFlat2D(objectA,objectB);
 	
 	// var score = R3D.compareProgressiveRIFTObjectsHistogram2D(objectA,objectB);
 	// var score = R3D.compareProgressiveRIFTObjectsFlat2D(objectA,objectB);
@@ -28130,7 +28126,7 @@ for(var j=0; j<objectsB.length; ++j){
 
 	
 	
-	console.log(score);
+	// console.log(score);
 	objectB["compare"] = score;
 }
 
@@ -28193,9 +28189,13 @@ objectB["point"] = newPointB;
 
 // display final match:
 
+// console.log("DO SCALE: "+needleSize+" / "+objectA["size"]+" = "+(needleSize/objectA["size"]));
+
 // var needleSize = 11;
-		var needleSize = 21;
-		var needleHalf = needleSize*0.5 | 0;
+		// var needleSize = 21;
+		var needleSize = 18;
+		// var needleHalf = needleSize*0.5 | 0;
+		var needleHalf = (needleSize-1)*0.5;
 		var needle = new ImageMat(needleSize,needleSize);
 		var averageScale;
 		var image;
@@ -28204,6 +28204,7 @@ objectB["point"] = newPointB;
 		// A
 		affine.copy(objectA["affine"]);
 		affine.scale(needleSize/objectA["size"]);
+		affine.inverse();
 		ImageMatScaled.affineToLocationTransform(affine, affine, needleHalf,needleHalf,objectA["point"].x,objectA["point"].y);
 		averageScale = affine.averageScale();
 		imageScalesA.extractRectFast(needle, averageScale, affine);
@@ -28218,6 +28219,7 @@ objectB["point"] = newPointB;
 		// B
 		affine.copy(objectB["affine"]);
 		affine.scale(needleSize/objectB["size"]);
+		affine.inverse();
 		ImageMatScaled.affineToLocationTransform(affine, affine, needleHalf,needleHalf,objectB["point"].x,objectB["point"].y);
 		averageScale = affine.averageScale();
 		imageScalesB.extractRectFast(needle, averageScale, affine);
