@@ -1855,6 +1855,12 @@ Code.copyArray = function(a,b,start,end){ // a = b
 	}
 	return a;
 };
+Code.mapArray = function(a,fxn){ // a = b
+	for(var i=a.length-1; i>=0; --i){
+		a[i] = fxn(a[i]);
+	}
+	return a;
+};
 Code.emptyObject = function(o){
 	var keys = Code.keys(o);
 	for(var i=0; i<keys.length; ++i){

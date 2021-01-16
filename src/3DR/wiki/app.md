@@ -392,18 +392,37 @@ MISSING:
 	- backwards affine? CCW vs CW X->Y direction?
 
 
+- RIFT scores are poorer than flat-SAD scores
+	=> is there some error in rfits?
+
+
+
+
+
+	_progressiveR3DSizing2
+
+
+
+
+
+
+
+
+	
+
+
 x pass along reprojection error sigma to dense pair candidates
 	x some pairs may not have the relative error to use
 	=> assume some low number, max tolerable, eg < 1% = 5px @ 500px
 
 
-- maximum suppression top points
-- make haystack only a few features wide (1/5 to 1/10 the hypotenuse)
-- iterate on haystacks to collect top points
-- get RIFT samples of top up-to-10 candidates
+x maximum suppression top points
+x make haystack only a few features wide (1/5 to 1/10 the hypotenuse)
+x iterate on haystacks to collect top points
+x get RIFT samples of top up-to-10 candidates
 - get initial RIFT samples of corners
-- compare candidates
-- keep top 2 matches & scores
+x compare candidates
+x keep top 2 matches & scores
 
 - do a->b & b->a loop
 
