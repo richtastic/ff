@@ -388,6 +388,9 @@ MISSING:
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
+http://localhost/web/ff/3DR/tests/tests.html
+
+
 - metrics for poor affine
 	- backwards affine? CCW vs CW X->Y direction?
 

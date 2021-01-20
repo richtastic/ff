@@ -83,6 +83,12 @@ OctTree.prototype.insertObject = function(obj){
 		this.initWithObjects(objects, true);
 	} // else drop on floor
 }
+OctTree.prototype.insertObjects = function(list){
+	for(var i=0; i<list.length; ++i){
+		var o = list[i];
+		this.insertObject(o);
+	}
+}
 OctTree.prototype.removeObject = function(obj){
 	return this._root.removeObject(obj,this._toPoint);
 }

@@ -198,7 +198,12 @@ QuadTree.prototype.insertObject = function(obj){
 		this.initWithObjects(objects, true);
 	} // else drop on floor
 }
-
+QuadTree.prototype.insertObjects = function(list){
+	for(var i=0; i<list.length; ++i){
+		var o = list[i];
+		this.insertObject(o);
+	}
+}
 
 
 
