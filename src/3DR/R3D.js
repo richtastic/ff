@@ -27439,6 +27439,7 @@ R3D.searchMatchPointsPair3D = function(imageScalesA,imageScalesB, relativeAB, Ka
 var drawlings = false;
 
 var useSADScore = true;
+// var useSADScore = false;
 
 	// 0.01 - 0.02
 	imageErrorPercent = Code.valueOrDefault(imageErrorPercent, 0.02); // @500x400 : 0.01 = 5px, 0.001 = 0.0px
@@ -27600,6 +27601,7 @@ var useSADScore = true;
 	var imagesListJ = [imageScalesB,imageScalesA];
 	var sizeComparesI = [featureSizeCompareA,featureSizeCompareB];
 	var sizeComparesJ = [featureSizeCompareB,featureSizeCompareA];
+	var Fs = [Fab,Fba];
 
 	var t2DA = new V2D();
 	var b2DA = new V2D();
@@ -27676,13 +27678,14 @@ if(!useSADScore){
 
 	var candidateSpaces = [candidateSpaceA,candidateSpaceB];
 	for(var k=0; k<cornerListI.length; k++){ // 2
-k+=1; // skip 0
+// k+=1; // skip 0
 
 		var cornersI = cornerListI[k];
 		var cornersJ = cornerListJ[k];
 		var imageMatrixA = imagesListI[k];
 		var imageMatrixB = imagesListJ[k];
 		var candidateSpace = candidateSpaces[k];
+		var Ffwd = Fs[k];
 
 		// if(k%100==0){
 		console.log("k: "+k);
@@ -27747,7 +27750,7 @@ k+=1; // skip 0
 			var objectA = cornersI[i];
 			var point2DA = objectA["point"];
 			// console.log("point2DA: "+point2DA);
-			R3D.lineFromF(Fab,point2DA, org,dir);
+			R3D.lineFromF(Ffwd,point2DA, org,dir);
 			var intersections = Code.clipLine2DToRect(org,dir,0,0,imageMatrixWidthB-1,imageMatrixHeightB-1);
 			if(!intersections || intersections.length<2){
 				console.log("no intersections ... continue");
@@ -28251,10 +28254,96 @@ k+=1; // skip 0
 	var widB = imageScalesB.width();
 	var heiB = imageScalesB.height();
 	
-	var featureSpaceA = new QuadTree(featureToPointFxn, V2D.ZERO, new V2D(widA,heiA));
+	// var featureSpaceA = new QuadTree(featureToPointFxn, V2D.ZERO, new V2D(widA,heiA));
 	var featureSpaceB = new QuadTree(featureToPointFxn, V2D.ZERO, new V2D(widB,heiB));
-	featureSpaceA.insertObjects(cornersA);
+	// featureSpaceA.insertObjects(cornersA);
 	featureSpaceB.insertObjects(cornersB);
+
+
+
+
+	var keepsA = [];
+	var maxDiffA = featureSizeA * 0.5;
+	// var maxDiffA = featureSizeA * 1.0;
+	for(var i=0; i<cornersA.length; ++i){
+		var cornerA = cornersA[i];
+		var pointA = cornerA["point"];
+		var matchesA = cornerA["matches"];
+		if(matchesA.length>1){
+			var objectB = matchesA[0];
+			var pointB = objectB["point"];
+			var affineBA = objectB["affine"];
+			var closestB = featureSpaceB.closestObject(pointB);
+			// console.log(closestB);
+			var pointB2 = closestB["point"];
+			var matchesB = closestB["matches"];
+			if(matchesB.length>0){
+				var oppositeA = matchesB[0];
+				var pointA2 = oppositeA["point"];
+				
+				var relB = V2D.sub(pointB2,pointB);
+				
+
+				// WHICH OF THESE IS RIGHT?
+				// A
+				// affine.copy(affineBA);
+				// affine.inverse();
+				// var relA = affine.multV2DtoV2D(relB);
+				// B
+				var relA = affineBA.multV2DtoV2D(relB);
+				
+
+				var expA = V2D.add(relA,pointA);
+				var diffA = V2D.sub(expA,pointA2);
+				var diff = diffA.length();
+
+				if(diff<maxDiffA){
+					// ranking
+					var score0 = matchesA[0]["score"];
+					var score1 = matchesA[1]["score"];
+					var rank = score0/score1;
+					// console.log(rank);
+					if(rank<0.90){
+						keepsA.push(cornerA);
+						cornerA["score"] = score0;
+					}
+				}
+			}
+		}
+	}
+	cornersA = keepsA;
+	console.log("COUNT: "+corners.length);
+
+	// FILTER ON SCORE
+	var scores = Code.mapArray(Code.copyArray(cornersA), function(a){return a["score"];});
+	console.log(scores);
+	var min = Code.min(scores);
+	var sig = Code.stdDev(scores, min);
+	var limit = min + sig*1.5;
+	console.log(" S: "+min+" : "+sig+" = "+limit);
+	for(var i=0; i<cornersA.length; ++i){
+		var cornerA = cornersA[i];
+		var score = corner["score"];
+		if(score>limit){
+			console.log("OVER: "+limit+" - "+score)
+			Code.removeElementAt(corners,i);
+			--i;
+		}
+	}
+	console.log("COUNT: "+corners.length);
+
+
+
+	// FILTER ON F-ERROR
+
+
+	
+	// FILTER ON R-ERROR
+
+
+
+	// ...
+
 
 
 
@@ -28273,34 +28362,30 @@ k+=1; // skip 0
 
 	var pointsA = [];
 	var pointsB = [];
-	// for(var i=0; i<cornersA.length; ++i){
-	// 	var cornerA = cornersA[i];
-	// 	var pointA = cornerA["point"];
-	// 	var matches = cornerA["matches"];
-	// 	if(matches.length>0){
-	// 		var objectB = matches[0];
-	// 		var pointB = objectB["point"];
-	// 		pointsA.push(pointA);
-	// 		pointsB.push(pointB);
-	// 	}
-	// 	// for(var i=0; i<cornersA.length; ++i){
-	// 	// 	var cornerA = cornersA[i];
-	// 	// }
-	// }
-	for(var i=0; i<cornersB.length; ++i){
-		var cornerB = cornersB[i];
-		var pointB = cornerB["point"];
-		var matches = cornerB["matches"];
+	for(var i=0; i<cornersA.length; ++i){
+		var cornerA = cornersA[i];
+		var pointA = cornerA["point"];
+		var matches = cornerA["matches"];
 		if(matches.length>0){
-			var objectA = matches[0];
-			var pointA = objectA["point"];
+			var objectB = matches[0];
+			var pointB = objectB["point"];
 			pointsA.push(pointA);
 			pointsB.push(pointB);
 		}
-		// for(var i=0; i<cornersA.length; ++i){
-		// 	var cornerA = cornersA[i];
-		// }
 	}
+
+	// for(var i=0; i<cornersB.length; ++i){
+	// 	var cornerB = cornersB[i];
+	// 	var pointB = cornerB["point"];
+	// 	var matches = cornerB["matches"];
+	// 	if(matches.length>0){
+	// 		var objectA = matches[0];
+	// 		var pointA = objectA["point"];
+	// 		pointsA.push(pointA);
+	// 		pointsB.push(pointB);
+	// 	}
+	// }
+
 console.log(pointsA);
 console.log(pointsB);
 	// show fwd-bak mathes
@@ -28337,7 +28422,7 @@ console.log(pointsB);
 			// d.graphics().setLine(1.0,color);
 
 
-			d.graphics().setLine(4.0,color);
+			d.graphics().setLine(3.0,color);
 			// var point = feature["point"];
 			// var angle = feature["angle"];
 			// var size = feature["size"];

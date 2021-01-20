@@ -388,7 +388,7 @@ MISSING:
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
-http://localhost/web/ff/3DR/tests/tests.html
+- RIFT / affine may be wrong
 
 
 - metrics for poor affine
