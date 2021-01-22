@@ -1388,7 +1388,7 @@ Stereopsis.View.prototype.center = function(){
 	var center = this._center;
 	if(!center){
 		// var trans = this._absoluteTransform; // extrinsic
-		var trans = this._absoluteTransformInverse;
+		var trans = this._absoluteTransformInverse; // absolute
 		if(trans){
 			center = new V3D(0,0,0);
 			trans.multV3DtoV3D(center,center);
@@ -8261,7 +8261,7 @@ console.log(world.toYAMLString());
 
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-Stereopsis.World.prototype.solveDensePair = function(subdivisionScaleSize, subDivisionCounts){ // pairwise, start with R
+Stereopsis.World.prototype.solveDensePairOld = function(subdivisionScaleSize, subDivisionCounts){ // pairwise, start with R
 	// use R abs positions to get good initial points + iterate on expanding confident points
 // throw "set solveDensePair values"
 	console.log("solveDensePair");
@@ -8353,6 +8353,7 @@ throw "before dense"
 // P = Matrix.inverse(P);
 
 // SET P NOW ?
+// or just keep what it was previously?
 viewA.absoluteTransform(new Matrix(4,4).identity());
 viewB.absoluteTransform(P);
 world.copyRelativeTransformsFromAbsolute();
@@ -8481,6 +8482,133 @@ throw "set solveDensePair values out"
 }
 
 
+
+Stereopsis.World.prototype.solveDensePairNew = function(subdivisionScaleSize, subDivisionCounts){ // pairwise, start with R
+	console.log("solveDensePair");
+	var world = this;
+
+	// subdivisionScaleSize = Code.valueOrDefault(subdivisionScaleSize, 0.5); // 40 -> 80 -> 160
+	// subDivisionCounts = Code.valueOrDefault(subDivisionCounts, 2);
+	// iterationCounts = 3;
+	// 2 x 3 = 6
+	// 
+
+	// subdivisionScaleSize = Code.valueOrDefault(subdivisionScaleSize, 0.75); // 40 -> 53 -> 71 -> 94
+	// subDivisionCounts = Code.valueOrDefault(subDivisionCounts, 3);
+	// iterationCounts = 2;
+	// iterationCounts = 3;
+	// 3 x 2 = 6
+
+
+	subdivisionScaleSize = Code.valueOrDefault(subdivisionScaleSize, 0.666666666); // 40 -> 60 -> 90
+	subDivisionCounts = Code.valueOrDefault(subDivisionCounts, 2);
+	iterationCounts = 3;
+
+	var timeStart = Code.getTimeMilliseconds();
+	
+	var errorPercentage = 0.002; // 1% error + no wiggle room   --- 0.001 - 0.005  |  0.001=2.5px 0.005=12.5px
+	var cellFeatureScale = 1.0; // 1-2
+	var views = world.toViewArray();
+	var view0 = views[0];
+	var transforms = world.toTransformArray();
+	var transform0 = transforms[0];
+
+	// prep
+	world.relativeFFromSamples();
+	// world.estimate3DErrors(false);
+	world.estimate3DErrors(true);
+	world.printPoint3DTrackCount();
+
+
+	// throw "???? BEFORE LOOP"
+
+	// var subdivisions = 0; // ~1k
+	// var subdivisions = 1; // 5-10k
+	var subdivisions = subDivisionCounts; // ~40k  --- select - about 
+	// var subdivisions = 3; // ~100k
+	// var iterations = 3; // per grid size - 2-4
+	var iterations = iterationCounts;
+	// var iterations = 5;
+	// var iterations = 1;
+	var maxIterations = (subdivisions+1)*iterations;
+
+	var subdivision = 0;
+	for(var iteration=0; iteration<maxIterations; ++iteration){
+		console.log("all: ========================================================================================= "+iteration+" / "+maxIterations);
+		// 
+		// world.setResolutionProcessingModeFromCountP3D([5E3,10E3,20E3]); // 5 , 10 , 20
+		// world.setResolutionProcessingModeFromCountP3D([5E3,10E3]); // very hairy
+
+		world.estimate3DErrors(true);
+		
+		world.printPoint3DTrackCount();
+		
+		world.copyRelativeTransformsFromAbsolute();
+
+		world.initNullP3DPatches();
+
+
+		// subdivisions
+		if(iteration!==0 && iteration%iterations==0){
+			++subdivision;
+			console.log("subdivision: "+subdivision);
+			world.subdivideViewGridsR(subdivisionScaleSize);
+			world.subDivideUpdateMatchLocation();
+			if(subdivision>1){ // -0, -1, +2
+				world.shouldValidateMatchRange(false);
+			}
+		}
+		// expand - speedup
+		var compareSize = 9;
+		if(subdivision==1){
+			compareSize = 7;
+		}else if(subdivision==2){
+			compareSize = 5;
+		}
+		// world.probe2DCellsR(3.0,3.0);
+		world.probe2DCellsR(3.0,3.0, compareSize); // 9=>81 7=>49 5=>25
+
+		// optimize ?
+		world.refinePoint3DAbsoluteLocation();
+
+		// retract
+		world.filterGlobal3DR(3.0);
+		world.filterLocal2DR();
+		world.filterLocal3DR();
+
+		// refine
+		world.recordViewAbsoluteOrientationStart();
+		world.refineAllCameraMultiViewTriangulation(100);
+		world.copyRelativeTransformsFromAbsolute();
+		// 
+		world.updateP3DPatchesFromAbsoluteOrientationChange();
+
+		// retract 2
+		world.dropNegativeMatches3D();
+		world.dropNegativePoints3D();
+	}
+
+	// final output:
+	world.estimate3DErrors(true);
+
+	var timeStop = Code.getTimeMilliseconds();
+
+console.log(timeStart,timeStop);
+console.log((timeStop-timeStart)/1000);
+console.log((timeStop-timeStart)/1000/60); // ~ 20 mins
+
+	
+	// check it out
+	// var str = world.toYAMLString();
+	// console.log(str);
+
+
+	// world.showForwardBackwardPair();
+	// ???
+	
+	// throw "solveDensePair2";
+	return null;
+}
 Stereopsis.World.prototype.solveGroup = function(){ // multiwise BA full scene/group
 	console.log("solveGroup");
 	throw "where is this used?"

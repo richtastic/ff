@@ -388,7 +388,88 @@ MISSING:
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
-- RIFT / affine may be wrong
+
+searchMatchPointsPair3D
+
+solveDensePairNew
+
+
+- dense pair dropping - add back edges until triple exists: findConsistentLowErrorPairs / triplesFromBestPairs
+
+
+- group bundle processing left behind a lot of noise points
+	- local 3D group - drop points/matches from pairs (not entire point) that have higher Rerror than neighbors
+
+- can group-bundle optimize 3D point to help reprojection error (not use DLT location)?
+
+
+- silouetting of texture points
+	iterateSurfaceProcess
+
+	optimumTriangleTextureImageAssignment
+	UpdateTextureVertexFromViews
+
+	initAllowedViews
+
+
+
+texture point mapping:
+	- want to ignore views where vertex is blocked by triangle obstruction
+	- want to use SOME LAST RESORT VIEW if vertex/triangle is found to be impossible
+		=> tiered costs?
+		-> each vertex has a cost for each view
+		-> each tri is initted with lowest sum cost
+
+	- a cost of an intersection existing is x 1E-10 some tiny number multiplier
+	- a triangle cost is further multiplied by the triangle's geometry reletive to the view
+	- the feathering cost should be happy with feathering to remove poor triangles
+
+
+
+
+
+TEXTURE TRIANGLE/VERTEX ASSIGNMENT:
+	- each vertex: get prioritized list of possible view sources:
+		- normals within ~ 90 degrees
+		- direction within ~ 90 degrees
+		- projects to inside image
+		- score:
+			- distance to view
+			- normal angle
+			- triangle geometry intersection
+	- assign each vertex to the best score
+	- add each vertex to a queue based on delta-cost
+	- delta-cost: vertex
+		- max(0,current cost - next best cost (nbc))
+			- nbc = sum of all triangles costs at view assigment i
+	- while a vertex exists that can reduce cost:
+		- change vertex to new assignment
+		- add all connected triangle's into queue (& recalc nbc)
+
+		- triangle splitting:
+			...
+
+
+
+
+	- while a triangle exists that can reduce cost (reduce the most?):
+		- reduce the triangle's cost
+			- 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 - metrics for poor affine
@@ -403,9 +484,7 @@ MISSING:
 	- neighborhood
 
 
-28102
 
-27874
 
 
 

@@ -96,7 +96,7 @@ function testRMatches(){
 		var viewA = world.addView(imageScalesA, camera);
 		var viewB = world.addView(imageScalesB, camera);
 		viewA.cellSize(cellSize);
-		viewA.cellSize(cellSize);
+		viewB.cellSize(cellSize);
 
 		viewA.absoluteTransform(I);
 		viewB.absoluteTransform(P);
@@ -105,9 +105,55 @@ function testRMatches(){
 		world.solveDensePair();
 		*/
 
-		K = R3D.cameraFromScaledImageSize(K, imageScalesA.size());
-		var results = R3D.searchMatchPointsPair3D(imageScalesA,imageScalesB, P, K,K);
-		console.log(results);
+		var Kimage = R3D.cameraFromScaledImageSize(K, imageScalesA.size());
+		var result = R3D.searchMatchPointsPair3D(imageScalesA,imageScalesB, P, Kimage,Kimage); // forward
+		// var result = R3D.searchMatchPointsPair3D(imageScalesB,imageScalesA, Matrix.inverse(P), K,K); // inverse
+		console.log(result);
+		var pointsA = result["A"];
+		var pointsB = result["B"];
+		var affinesAB = result["affines"];
+
+
+		console.log(pointsA);
+		console.log(pointsB);
+
+
+		var world = new Stereopsis.World();
+		var camera = world.addCamera(K, distortion);
+		var viewA = world.addView(imageScalesA, camera);
+		var viewB = world.addView(imageScalesB, camera);
+		viewA.cellSize(cellSize);
+		viewB.cellSize(cellSize);
+
+		viewA.absoluteTransform(I);
+		viewB.absoluteTransform(P);
+		console.log(world);
+
+		// new points
+		var points3DAdd = [];
+		var errorsR = [];
+		for(var j=0; j<pointsA.length; ++j){
+			var p2DA = pointsA[j];
+			var p2DB = pointsB[j];
+			var affineAB = affinesAB[j];
+			var newMatch = world.newMatchFromInfo(viewA,p2DA.copy(),viewB,p2DB.copy(),affineAB);
+			points3DAdd.push(newMatch.point3D());
+		}
+		console.log(points3DAdd);
+
+		// create seed points:
+		world.setResolutionProcessingModeFromCountP3D([]); // currently 0
+		world.shouldValidateMatchRange(true);
+		world.copyRelativeTransformsFromAbsolute();
+
+		// add
+		world.initPoints3DLocation(points3DAdd);
+		world.initAllP3DPatches(points3DAdd);
+		world.initAffineFromP3DPatches(points3DAdd);
+		world.embedPoints3D(points3DAdd);
+
+		// solve
+		world.solveDensePairNew();
 
 
 		// var imageSizeA = imageMatrixA.size();

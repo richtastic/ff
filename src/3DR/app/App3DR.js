@@ -7789,7 +7789,7 @@ console.log("checkPerformNextTask");
 		project.iterateDenseProcess();
 		return;
 	}
-throw ">start bundle";
+// throw ">start bundle";
 	if(!project.checkHasBundleStarted()){
 		project.initializeBundleGroupsFromDense();
 		return;
@@ -7800,12 +7800,12 @@ throw ">start bundle";
 		return;
 	}
 
-throw ">start surface"; // copy point files & create surface.yaml
+// throw ">start surface"; // copy point files & create surface.yaml
 	if(!project.checkHasSurfaceStarted()){
 		project.initializeSurfaceFromBundle();
 		return;
 	}
-throw ">iterate surface"; // create triangles & textures
+// throw ">iterate surface"; // create triangles & textures
 	if(!project.checkHasSurfaceEnded()){
 		project.iterateSurfaceProcess();
 	}
@@ -8148,11 +8148,10 @@ if(!relativeAB && isDense){
 	if(!triples){
 // filter pairs & generate triples from remaining pairs
 var originalPairs = pairs;
-var info = project.findConsistentLowErrorPairs(pairs);
+var info = project.findConsistentLowErrorPairs(pairs, isDense);
 console.log(info);
 var remainingPairs = info["pairs"];
 console.log(remainingPairs);
-// throw "???"
 		var info = project.triplesFromBestPairs(views, remainingPairs, isDense);
 		var triples = info["triples"];
 console.log(triples);
@@ -8160,6 +8159,7 @@ inputData["triples"] = triples;
 inputData["pairsRaw"] = originalPairs;
 inputData["pairs"] = remainingPairs;
 console.log(inputData);
+
 
 throw "BEFORE TRIPLES DONE"
 		
@@ -8841,7 +8841,7 @@ throw "."
 	throw "_visualizeTriples";
 }
 
-App3DR.ProjectManager.prototype.findConsistentLowErrorPairs = function(pairs){ // A) remove inconsistent edges & B) remove worst loop-error causing edges
+App3DR.ProjectManager.prototype.findConsistentLowErrorPairs = function(pairs, isDense){ // A) remove inconsistent edges & B) remove worst loop-error causing edges
 	var project = this;
 	console.log(pairs);
 
@@ -9090,6 +9090,11 @@ var dropIterations = 10;
 // var dropIterations = 2;
 // var dropIterations = 3;
 // var dropIterations = 5;
+// 
+// TODO: find better way to keep minimally triple-connected graph (+ individual = 2 triples)
+if(isDense){ // need to keep the few edges have already
+	dropIterations = 0;
+}
 for(var iterations=0; iterations<dropIterations; ++iterations){
 
 	var errors = [];
@@ -9605,7 +9610,7 @@ App3DR.ProjectManager.prototype.triplesFromBestPairs = function(views, pairs, is
 	var graphTopChoiceMinimumCount = 3; // 2-4
 	var graphDesiredMinimumTripleCount = 3; // 2-4
 	if(isDense){
-		throw "maybe need fewer?";
+		// throw "maybe need fewer?";
 		var graphTopChoiceMinimumCount = 2;
 		var graphDesiredMinimumTripleCount = 2;
 	}
@@ -10352,11 +10357,12 @@ App3DR.ProjectManager.prototype._iterateSparseTracks = function(sourceData, sour
 	var cellCount = 40; // ???? from somewhere
 	// AVG CHANGE IN PIXEL ERROR : 0.001 = 1 pixel
 	var minimumGroupPixelDeltaErrorPerUnity = 0.00001; // 1/100 pixel
-	var minimumBundlePixelDeltaErrorPerUnity = 0.00001;
+	var minimumBundlePixelDeltaErrorPerUnity = 0.00001; // 1E-5
 	if(isDense){
 		cellCount = 60; // 60-80
 		minimumGroupPixelDeltaErrorPerUnity = 0.0000001; // 1/10000 pixel
-		minimumBundlePixelDeltaErrorPerUnity = 0.0000001;
+		minimumBundlePixelDeltaErrorPerUnity = 0.0000001; // 1E-7
+		//                                     0.0000003.673654286540467e-7
 	}
 
 	console.log(sourceData);
@@ -10466,6 +10472,9 @@ App3DR.ProjectManager.prototype._iterateSparseTracks = function(sourceData, sour
 				var baIterations = fullData["iteration"];
 					baIterations = Code.valueOrDefault(baIterations, 0);
 				var maxIterationsBA = 2*allViews.length; // MED
+				// if(isDense){
+				// 	maxIterationsBA = 3*allViews.length;
+				// }
 
 				// if the next error is very low, or max iterations reached => done
 				var isDone = false;
@@ -10490,6 +10499,7 @@ console.log("ITERATION NUMBER: "+baIterations+" / "+maxIterationsBA);
 
 
 console.log("isDone - FULL DONE")
+throw "BEFORE HANDLE DONE TRACK FULL BA "
 
 // show the graph:
 var orderedAbsoluteTransforms = [];
@@ -11307,6 +11317,9 @@ if(baViews.length<=1){
 				var minimumPixelErrorBA = minimumGroupPixelDeltaErrorPerUnity;
 				// var maxIterationsBA = 10*baViews.length; // HIGH
 				var maxIterationsBA = 2*baViews.length; // LOW
+				if(isDense){
+					maxIterationsBA = 3*baViews.length;
+				}
 				
 				console.log(baOptimizations);
 				var nextViewBA = baOptimizations.length>0 ? baOptimizations[0] : null; // pre-sorted on nulls
@@ -11337,6 +11350,7 @@ if(baViews.length<=1){
 
 				if(isDone){
 					console.log("track group isDone");
+// throw "before handle done tracks - skeleton - track_0";
 					graphData["bundleGroupIndex"] = bundleGroupIndex + 1;
 					// VIEWS
 					var graphTransforms = [];
@@ -12558,10 +12572,59 @@ console.log(allCameras);
 console.log(cellSize);
 console.log(world);
 
+		console.log("seed points");
+		// var Ka = view0.camera().K();
+		var viewA = WORLDVIEWS[0];
+		var viewB = WORLDVIEWS[1];
+		var KimageA = viewA.K();//view0.camera().K();//R3D.cameraFromScaledImageSize(K, imageScalesA.size());
+		var KimageB = viewB.K();//view1.camera().K();//R3D.cameraFromScaledImageSize(K, imageScalesA.size());
+		var imageScalesA = viewA.imageScales();
+		var imageScalesB = viewB.imageScales();
+		console.log(KimageA);
+		console.log(KimageB);
+		console.log(relativeAB);
+		var P = viewB.absoluteTransform();
+		console.log(P);
+		var result = R3D.searchMatchPointsPair3D(imageScalesA,imageScalesB, P, KimageA,KimageB); // forward
+		console.log(result);
+		var pointsA = result["A"];
+		var pointsB = result["B"];
+		var affinesAB = result["affines"];
+
+
+
+		// new points
+		var points3DAdd = [];
+		var errorsR = [];
+		for(var j=0; j<pointsA.length; ++j){
+			var p2DA = pointsA[j];
+			var p2DB = pointsB[j];
+			var affineAB = affinesAB[j];
+			var newMatch = world.newMatchFromInfo(viewA,p2DA.copy(),viewB,p2DB.copy(),affineAB);
+			points3DAdd.push(newMatch.point3D());
+		}
+		console.log(points3DAdd);
+
+		// create seed points:
+		world.setResolutionProcessingModeFromCountP3D([]); // currently 0
+		world.shouldValidateMatchRange(true);
+		world.copyRelativeTransformsFromAbsolute();
+
+		// add
+		world.initPoints3DLocation(points3DAdd);
+		world.initAllP3DPatches(points3DAdd);
+		world.initAffineFromP3DPatches(points3DAdd);
+		world.embedPoints3D(points3DAdd);
+
+
+
+
+
+
 		console.log("solveDensePair");
 // console.log(info);
-throw "before solveDensePair"
-		world.solveDensePair();
+// throw "before solveDensePair"
+		world.solveDensePairNew();
 
 		var transform = world.toTransformArray()[0];
 		var errorR = (transform.rSigma() + transform.rMean());
@@ -12569,18 +12632,21 @@ throw "before solveDensePair"
 		console.log("transform error R: "+errorR+" of "+maxErrorRDensePixels);
 		console.log("transform error F: "+errorF+" of "+maxErrorFDensePixels);
 
+// throw "after solve dense pair"
+
+
 var pairData = App3DR.ProjectManager.defaultPairFile(viewAID,viewBID);
 
 		pairData["relative"] = world.toObject();
 
-var str = world.toYAMLString();
-console.log(str);
-// throw "before tracks";
+		var str = world.toYAMLString();
+		console.log(str);
+		// throw "before tracks";
 
 		console.log("do tracks");
 		world.solveForTracks();
 
-pairData["tracks"] = world.toObject();
+		pairData["tracks"] = world.toObject();
 
 		console.log("TODO: decide if dense & tracks are good enough ?");
 
@@ -12609,7 +12675,7 @@ pairData["tracks"] = world.toObject();
 		// 	pairData["metricNeighborsToWorld"] = reconstructionMetric;
 		// }
 
-		throw "before done with dense pair ?"
+		// throw "before done with dense pair ?"
 		completeFxn.call(completeCxt, pairData);
 	}
 
@@ -15395,7 +15461,6 @@ App3DR.ProjectManager.prototype.iterateSurfaceProcess = function(){
 			return;
 		}
 		if(!textures){ // load triangles & map out textures
-			
 			var trianglesFilename = Code.appendToPath(surfaceDirectory, triangles);
 			var triangleData = null;
 			var viewData = null;
@@ -15541,7 +15606,7 @@ var resolutionScale = 1.0/4.0; // debuging scene texture quality
 			var tv = views[i];
 			var viewID = tv["id"]
 			var camID = tv["camera"];
-console.log(camID);
+// console.log(camID);
 			var K = cameraFromID[camID];
 if(!K){
 	console.log(tv);
@@ -15572,8 +15637,8 @@ if(!K){
 		var sources2D = info["sources2D"];
 		var views2D = info["views2D"];
 		var included2D = info["views"];
-// console.log(included2D);
-// throw "here???";
+console.log(info);
+throw "optimumTriangleTextureImageAssignment results";
 		// texture packing
 		var info = R3D.optimumTriangleTexturePacking(textureSize,triangles2D);
 		console.log(info);
