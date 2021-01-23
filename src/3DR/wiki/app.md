@@ -413,6 +413,11 @@ solveDensePairNew
 
 
 
+
+	
+
+
+
 texture point mapping:
 	- want to ignore views where vertex is blocked by triangle obstruction
 	- want to use SOME LAST RESORT VIEW if vertex/triangle is found to be impossible
@@ -457,7 +462,7 @@ TEXTURE TRIANGLE/VERTEX ASSIGNMENT:
 			- 
 
 
-
+UpdateTextureVertexFromViews
 
 
 

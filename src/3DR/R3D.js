@@ -36812,7 +36812,6 @@ R3D.TextureVertex = function(point){
 	// this._currentViewID = null;
 	// this._currentRank = null; // if a frontier edge, this is the maximum difference in score achievable
 	// this._viewsMaybe = null; // hash of next up alternatives
-
 	this._viewList = null;
 }
 R3D.TextureVertex.prototype.data = function(data){
@@ -36852,9 +36851,10 @@ R3D.TextureVertex.prototype.point = function(point){
 	return this._point;
 }
 R3D.TextureVertex.prototype.calculateRank = function(){
-	throw "?";
 	var info = this.bestCurrentCostDifference();
-	this._currentRank = info["cost"];
+	var cost = info["cost"];
+	this._currentRank = cost;
+	return cost > 0; // can reduce cost
 }
 R3D.TextureVertex.prototype.currentRank = function(){ // larger cost reduction is better
 	return this._currentRank;
@@ -36907,7 +36907,7 @@ R3D.TextureVertex.prototype.adjacentVertexes = function(){
 
 R3D.TextureVertex.prototype.setFromViewList = function(viewList){
 	this._viewList = viewList;
-	if(viewList.length>0){
+	if(viewList.length>0){ // automatically pick lowest cost view
 		this._currentViewListIndex = 0;
 	}else{
 		this._currentViewListIndex = null;
@@ -37039,26 +37039,33 @@ R3D.TextureVertex.prototype.changeViewCosts = function(){ // run thru possible p
 	return {"views":lowerCostViews, "costs":lowerCosts, "currentView":originalViewID, "currentCost":originalCost};
 }
 R3D.TextureVertex.prototype.bestCurrentCostDifference = function(){ 
-	var info = this.changeViewCosts();
-	var lowerCostViews = info["views"];
-	var maxDifferenceCost = null;
-	var maxDifferenceView = null;
-	if(lowerCostViews.length==0){
-		maxDifferenceCost = 0;
-		maxDifferenceView = this._currentViewID;
-	}else{
-		var lowerCostValues = info["costs"];
-		var currentCost = info["currentCost"];
-		for(var i=0; i<lowerCostValues.length; ++i){
-			var cost = lowerCostValues[i];
-			var diff = currentCost - cost;
-			if(maxDifferenceView===null || diff>maxDifferenceCost){
-				var view = lowerCostViews[i];
-				maxDifferenceCost = diff;
-				maxDifferenceView = view;
-			}
+	var previousViewIndex = this._currentViewListIndex;
+	var costs = [];
+	var viewList = this._viewList;
+	var triangles = this._triangles;
+	var minIndex = null;
+	var minCost = null;
+	var previousCost = null;
+	for(var i=0; i<viewList.length; ++i){
+		var info = viewList[i];
+		this._currentViewListIndex = i;
+		var cost = 0;
+		for(var i=0; i<triangles.length; ++i){
+			var triangle = triangles[i];
+			var triCost = triangle.currentCost();
+			cost += triCost;
+		}
+		if(i==previousViewIndex){
+			previousCost = cost;
+		}
+		if(minIndex===null || minCost>cost){
+			minIndex = i;
+			minCost = cost;
 		}
 	}
+	console.log(minIndex+":"+minCost+" - "+previousViewIndex+":"+previousCost);
+
+	throw "bestCurrentCostDifference";
 	return {"cost":maxDifferenceCost, "view":maxDifferenceView};
 	
 }
@@ -37281,40 +37288,52 @@ R3D.TextureTriangle.prototype.activeViews = function(){
 	return views;
 }
 R3D.TextureTriangle.featheringCost = function(a,b,c){
-	var oneThird = 1.0/3.0;
-	var twoThird = 2.0/3.0;
-	var thrThird = 1.0;
+	var one = 1.0;
+	var two = 2.0;
+	var thr = 3.0;
 	if(a==b){
 		if(b==c){
-			return thrThird;
+			return one;
 		}
-		return twoThird;
+		return two;
 	}else if(b==c){
-		return twoThird;
+		return two;
 	}
-	return oneThird;
+	return thr;
 }
 R3D.TextureTriangle.prototype.currentCost = function(){
-	// basic frontier cost:
-	// return this.isFrontier() ? 1 : 0;
-
-	// optimial view cost:
 	var vertexes = this._vertexes;
-	var A = vertexes[0];
-	var B = vertexes[1];
-	var C = vertexes[2];
-	var viewA = A.currentView();
-	var viewB = B.currentView();
-	var viewC = C.currentView();
-	var scoreA = A.currentScore();
-	var scoreB = B.currentScore();
-	var scoreC = C.currentScore();
-	var scoreCost = (scoreA+scoreB+scoreC)/3.0;
-	var featheringCost = R3D.TextureTriangle.featheringCost(viewA,viewB,viewC);
-	var cost = 1.0 - (featheringCost*scoreCost);
-	// good ex: 1.0 - (1.0 * 0.99) = 0.01
-	/// bad ex: 1.0 - (0.66 * 0.10) = 0.934
-	return cost;
+	var vertexCost = 0;
+	var views = [];
+	for(var i=0; i<vertexes.length; ++i){
+		var vertex = vertexes[i];
+		var cost = vertex.currentViewCost();
+		var view = vertex.currentViewID();
+		views.push(view);
+		totalCost += cost;
+	}
+	var featheringCost = R3D.TextureTriangle.featheringCost(views[0],views[1],views[2]);
+	var totalCost = vertexCost*featheringCost;
+	console.log(totalCost);
+
+	throw "TextureTriangle currentCost";
+	// optimial view cost:
+	// var vertexes = this._vertexes;
+	// var A = vertexes[0];
+	// var B = vertexes[1];
+	// var C = vertexes[2];
+	// var viewA = A.currentView();
+	// var viewB = B.currentView();
+	// var viewC = C.currentView();
+	// var scoreA = A.currentScore();
+	// var scoreB = B.currentScore();
+	// var scoreC = C.currentScore();
+	// var scoreCost = (scoreA+scoreB+scoreC)/3.0;
+	// var featheringCost = R3D.TextureTriangle.featheringCost(viewA,viewB,viewC);
+	// var cost = 1.0 - (featheringCost*scoreCost);
+	// // good ex: 1.0 - (1.0 * 0.99) = 0.01
+	// /// bad ex: 1.0 - (0.66 * 0.10) = 0.934
+	// return cost;
 }
 R3D.TextureTriangle.prototype.allowedView = function(viewID){
 	return Code.elementExists(this._views,viewID);
@@ -37416,14 +37435,6 @@ R3D.TextureTriangle.prototype.subDivide = function(extrinsics,viewCenters,viewNo
 	var keepTris = [];
 	for(var i=0; i<newTris.length; ++i){
 		var vertexes = newTris[i];
-// vA = vertexes[0];
-// vB = vertexes[1];
-// vC = vertexes[2];
-// var area = V3D.areaTri(vA.point(),vB.point(),vC.point());
-// // console.log(area);
-// if(area==0){
-// 	throw "no area A";
-// }
 		var newTri = new R3D.TextureTriangle(vertexes);
 		for(var j=0; j<vertexes.length; ++j){
 			var v = vertexes[j];
@@ -37435,9 +37446,8 @@ R3D.TextureTriangle.prototype.subDivide = function(extrinsics,viewCenters,viewNo
 			console.log(vertexes);
 			console.log(newTris);
 			console.log(newTri);
-
 			// newTri.removeFromAll();
-			// throw "double check handle false result"
+			throw "double check handle false result"
 		}else{
 			keepTris.push(newTri);
 		}
@@ -37462,39 +37472,14 @@ R3D.TextureTriangle.prototype.subDivide = function(extrinsics,viewCenters,viewNo
 	// console.log(newVerts);
 	return {"addedTris":newTris, "removedTris":oldTris, "addedVertexes":newVerts};
 }
-R3D.UpdateTextureVertexFromViews = function(vert, viewIndexes, extrinsics,viewCenters,viewNormals,resolutions,cameras, triangleSpace){
-// triangleSpace = null;
+R3D.pdateTextureVertexFromViews = function(vert, viewIndexes, extrinsics,viewCenters,viewNormals,resolutions,cameras, triangleSpace, distanceSigma){
+	// triangleSpace = null;
 	var costIntersectGeometry = 1E6;
 	var maximumVertexViewEntryCount = 10;
 	var intersectionCount = 0;
 	// var maxNormalAngle = Code.radians(90.0); // angle between view normal and vertex normal -- 
 	var maxViewAngle = Code.radians(90.0); // in front / behind camera  -- 60-90
 	var maxVertexAngle = Code.radians(90.0); // angle between vertex-to-view and vertex normal -- 60-90
-
-	var distanceSigma = 1.0;
-	if(triangleSpace){
-		var triangles = triangleSpace.toArray();
-		if(triangles.length>0){
-			var com = new V3D();
-			for(var i=0; i<triangles.length; ++i){
-				var tri = triangles[i];
-				var center = tri.center();
-				com.add(center);
-			}
-			com.scale(1.0/triangles.length);
-			console.log("COM: "+com+"");
-			distanceSigma = 0;
-			for(var i=0; i<triangles.length; ++i){
-				var tri = triangles[i];
-				var center = tri.center();
-				distanceSigma += V3D.distanceSquare(com,center);
-			}
-			distanceSigma = Math.sqrt(distanceSigma/triangles.length);
-			console.log("distanceSigma: "+distanceSigma);
-			// throw "??"
-			// ???
-		}
-	}
 
 	// angle between view->vertex and vertex normal
 	var ray = new V3D(); // reuse
@@ -37505,10 +37490,8 @@ R3D.UpdateTextureVertexFromViews = function(vert, viewIndexes, extrinsics,viewCe
 	}
 	var vertPoint = vert.point();
 	var vertNormal = vert.normal();
-	// var vertNormalInverse = vertNormal.copy().flip();
 	// get list of views acceptible to project to
 	var viewList = [];
-
 	var viewCount = null;
 	var useIndexes = true;
 	if(viewIndexes==null){
@@ -37525,7 +37508,6 @@ R3D.UpdateTextureVertexFromViews = function(vert, viewIndexes, extrinsics,viewCe
 		}else{
 			j = v;
 		}
-
 		var viewExtrinsic = extrinsics[j];
 		var viewCenter = viewCenters[j];
 		var viewNormal = viewNormals[j];
@@ -37600,8 +37582,8 @@ R3D.UpdateTextureVertexFromViews = function(vert, viewIndexes, extrinsics,viewCe
 		// var cosine = Math.cos(angleViewNormal);
 		// var cosine = Math.cos(angleViewNormalToVertexNormal);
 		// var score = cosine/distance;
-		var distanceCost = 1 + Math.pow(0 + distance/distanceSigma,0.5);
-console.log(distanceCost);
+		var distanceCost = 1 + Math.pow(0 + distance/distanceSigma,2);
+		// console.log(distanceCost); // ~ 1.0001
 		var angleCost = Math.cos(angleVertexNormal)
 		var intersectCost = (intersected ? costIntersectGeometry : 0)
 		var cost = distanceCost*angleCost  + intersectCost;
@@ -37612,31 +37594,7 @@ console.log(distanceCost);
 	if(viewList.length>maximumVertexViewEntryCount){
 		Code.truncateArray(viewList,maximumVertexViewEntryCount);
 	}
-	var vs = [];
-	var ss = [];
-	var ps = [];
-	var maybeViews = {};
-	var maybePoints = {};
-	for(var j=0; j<viewList.length; ++j){
-		var entry = viewList[j];
-		var intersect = entry["intersected"];
-		var view = entry["view"];
-		var point = entry["point"];
-		if(intersected){
-			maybeViews[view] = true;
-			maybePoints[view] = point;
-		}else{
-			vs.push(view);
-			ss.push(entry["score"]);
-			ps.push(point);
-		}
-	}
-
-	// vert.setFromViewInfo(vs,ps,ss, maybeViews,maybePoints);
 	vert.setFromViewList(viewList);
-
-	throw "here ";
-
 	return {"intersections":intersectionCount};
 }
 R3D.texturePaddingForTrianglesAtTextureSize = function(textureSize){
@@ -37793,13 +37751,13 @@ console.log("triangle space volume: "+size);
 		return a.toCuboid();
 	}
 	// Q
-	var sortRank = function(a,b){
-		if(a==b){
-			return 0;
-		}
-		return a.currentRank() > b.currentRank() ? -1 : 1;
-	}
-	var Q = new PriorityQueue(sortRank);
+	// var sortRank = function(a,b){
+	// 	if(a==b){
+	// 		return 0;
+	// 	}
+	// 	return a.currentRank() > b.currentRank() ? -1 : 1;
+	// }
+	// var Q = new PriorityQueue(sortRank);
 	// get view info
 	var viewCount = absolutes.length;
 	var viewNormals = [];
@@ -37828,38 +37786,87 @@ console.log("triangle space volume: "+size);
 	var useTriangleSpace = triangleSpace;
 	console.log("fill out vertexes");
 // useTriangleSpace = null; // dont do intersection test -- speed up
+
+
+
+
+	var distanceSigma = 1.0;
+	if(triangleSpace){
+		var triangles = triangleSpace.toArray();
+		if(triangles.length>0){
+			var com = new V3D();
+			for(var i=0; i<triangles.length; ++i){
+				var tri = triangles[i];
+				var center = tri.center();
+				com.add(center);
+			}
+			com.scale(1.0/triangles.length);
+			console.log("COM: "+com+"");
+			distanceSigma = 0;
+			for(var i=0; i<triangles.length; ++i){
+				var tri = triangles[i];
+				var center = tri.center();
+				distanceSigma += V3D.distanceSquare(com,center);
+			}
+			distanceSigma = Math.sqrt(distanceSigma/triangles.length);
+			console.log("distanceSigma: "+distanceSigma);
+		}
+	}
 	for(var i=0; i<verts.length; ++i){
 		if(i%1000==0){
 			console.log(i+"/"+verts.length);
 		}
 		var vert = verts[i];
-		var result = R3D.UpdateTextureVertexFromViews(vert, viewIndexes, extrinsics,viewCenters,viewNormals,resolutions,cameras, useTriangleSpace);
+		var result = R3D.updateTextureVertexFromViews(vert, viewIndexes, extrinsics,viewCenters,viewNormals,resolutions,cameras, useTriangleSpace,distanceSigma);
 		intersectionCount += result["intersections"];
 	}
 	console.log("INTERSECTIONS FOUND: intersectionCount:"+intersectionCount);
 	triangleSpace.kill(); // done
 
 
-throw "after intersection check"
+// throw "after intersection check"
 
-
-	// Expansion
-	// allow for view assignments to vertex not directly visible, but adjacent visible
-
-	/*
-	console.log("TODO: expansion step - only impossible tris");
-	for(var i=0; i<verts.length; ++i){
-		var vert = verts[i];
-		vert.expansionSetup();
-	}
-	for(var i=0; i<verts.length; ++i){
-		var vert = verts[i];
-		vert.expansionApply();
-	}
-	*/
+	// assign each vertex to it's lowest cost view
 	
-// console.log(verts);
-// throw "verts"
+	console.log(verts);
+
+	// add vertexes to queue based on highest cost reduction first
+	var sortVertexRank = function(a,b){
+		if(a==b){
+			return 0;
+		}
+		return a.currentRank() > b.currentRank() ? -1 : 1;
+	}
+	var vertexQueue = new PriorityQueue(sortVertexRank);
+	var impossibleTris = [];
+
+// drop impossible triangles & vertices
+
+	for(var i=0; i<verts.length; ++i){
+		var vert = verts[i];
+		console.log(vert);
+		if(vert.isImpossible()){
+			???
+			impossibleTris.push(tri);
+		}
+
+		var rank = vert.calculateRank();
+		throw "here";
+		if(rank>0){
+			vertexQueue.push(vert);
+		}
+	}
+	console.log(vertexQueue);
+
+
+
+
+
+
+
+
+
+throw "?"
 
 	// triangles init states - remove triangles with: no area, no consistent view possiblity
 	badTris = 0;
