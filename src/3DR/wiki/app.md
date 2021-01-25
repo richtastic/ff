@@ -414,7 +414,7 @@ solveDensePairNew
 
 
 
-	
+
 
 
 
@@ -434,7 +434,7 @@ texture point mapping:
 
 
 TEXTURE TRIANGLE/VERTEX ASSIGNMENT:
-	- each vertex: get prioritized list of possible view sources:
+	x each vertex: get prioritized list of possible view sources:
 		- normals within ~ 90 degrees
 		- direction within ~ 90 degrees
 		- projects to inside image
@@ -442,7 +442,7 @@ TEXTURE TRIANGLE/VERTEX ASSIGNMENT:
 			- distance to view
 			- normal angle
 			- triangle geometry intersection
-	- assign each vertex to the best score
+	x assign each vertex to the best score
 	- add each vertex to a queue based on delta-cost
 	- delta-cost: vertex
 		- max(0,current cost - next best cost (nbc))
