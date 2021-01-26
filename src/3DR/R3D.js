@@ -36810,8 +36810,8 @@ R3D.TextureVertex = function(point){
 	// this._viewScores = {};
 	// this._viewPoints = {};
 	// this._currentViewID = null;
-	// this._currentRank = null; // if a frontier edge, this is the maximum difference in score achievable
-	// this._viewsMaybe = null; // hash of next up alternatives
+	this._currentRankCost = null;
+	this._currentRankIndex = null;
 	this._viewList = null;
 }
 R3D.TextureVertex.prototype.data = function(data){
@@ -36851,16 +36851,21 @@ R3D.TextureVertex.prototype.point = function(point){
 	return this._point;
 }
 R3D.TextureVertex.prototype.calculateRank = function(){
-	var cost = this.bestCurrentCostDifference();
-	// console.log(info);
-	// var cost = info["cost"];
-	this._currentRank = cost;
-	// console.log("RANK: "+this._currentRank);
-	// throw "?"
-	return this._currentRank; // can reduce cost
+	var info = this.bestCurrentCostDifference();
+	var index = info["index"];
+	var cost = info["cost"];
+	this._currentRankCost = cost;
+	this._currentRankIndex = index;
+	return this._currentRankCost; // can reduce cost
 }
 R3D.TextureVertex.prototype.currentRank = function(){ // larger cost reduction is better
-	return this._currentRank;
+	return this._currentRankCost;
+}
+R3D.TextureVertex.prototype.switchToBestRank = function(){
+	var index = this._currentRankIndex;
+	this._currentRankCost = null
+	this._currentRankIndex = null
+	this._currentViewListIndex = index;
 }
 /*
 R3D.TextureVertex.prototype.rank = function(){
@@ -36900,7 +36905,7 @@ R3D.TextureVertex.prototype.adjacentVertexes = function(){
 		for(var j=0; j<verts.length; ++j){
 			var vert = verts[j];
 			if(vert!=this){
-				Code.addUnique(list,vert);
+				Code.addUnique(list,vert); // TODO: SPEEDUP
 			}
 		}
 	}
@@ -37099,8 +37104,7 @@ R3D.TextureVertex.prototype.bestCurrentCostDifference = function(){
 	var costDelta = previousCost-minCost;
 	// restore state:
 	this._currentViewListIndex = previousViewIndex;
-	// return;
-	return costDelta; // {"cost":costDelta, "view":minIndex};
+	return {"cost":costDelta, "index":minIndex};
 	
 }
 // R3D.TextureVertex.prototype.canFlipView = function(){ // check to see if the vertex can flip to another view wich will reduce frontier cost
@@ -37225,6 +37229,7 @@ R3D.TextureTriangle.prototype.hasImpossibleVertex = function(vertex){
 	for(var i=0; i<vertexes.length; ++i){
 		var vertex = vertexes[i];
 		if(vertex.isImpossible()){
+			console.log(vertex._viewList);
 			return true;
 		}
 	}
@@ -37870,14 +37875,14 @@ console.log(DROP_REASON_A+" | "+DROP_REASON_B+" | "+DROP_REASON_C+" | "+DROP_REA
 
 	// drop impossible triangles & vertices
 	var impossibleTris = [];
-	var imp = 0;
-	for(var i=0; i<verts.length; ++i){
-		var vert = verts[i];
-		if(vert.isImpossible()){
-			++imp;
-		}
-	}
-	console.log(imp+" / "+verts.length);
+	// var imp = 0;
+	// for(var i=0; i<verts.length; ++i){
+	// 	var vert = verts[i];
+	// 	if(vert.isImpossible()){
+	// 		++imp;
+	// 	}
+	// }
+	// console.log(imp+" / "+verts.length);
 
 	// 
 	console.log(tris);
@@ -37885,7 +37890,7 @@ console.log(DROP_REASON_A+" | "+DROP_REASON_B+" | "+DROP_REASON_C+" | "+DROP_REA
 	var impossibleCount = 0;
 	for(var i=0; i<tris.length; ++i){
 		var tri = tris[i];
-		if(tri.hasImpossibleVertex()){
+		if(tri.isImpossible()){
 			++impossibleCount;
 			tri.removeFromAll();
 			Code.removeElementAt(tris,i);
@@ -37895,18 +37900,22 @@ console.log(DROP_REASON_A+" | "+DROP_REASON_B+" | "+DROP_REASON_C+" | "+DROP_REA
 	console.log("impossible: "+impossibleCount);
 	console.log("triangles: "+tris.length);
 
-	// get remaining existing vertexes:
-	for(var i=0; i<verts.length; ++i){
-		var vert = verts[i];
-		if(vert.triangles().length==0){
-			console.log("no tris");
-			Code.removeElementAt(verts,i);
-			--i;
-		}
-	}
-	console.log("vertexes: "+verts.length);
 
 
+	// // get remaining existing vertexes:
+	// for(var i=0; i<verts.length; ++i){
+	// 	var vert = verts[i];
+	// 	if(vert.triangles().length==0){
+	// 		console.log("no tris");
+	// 		Code.removeElementAt(verts,i);
+	// 		--i;
+	// 	}
+	// }
+	// console.log("vertexes: "+verts.length);
+
+
+
+throw "guhhhh"
 
 
 	// add vertexes to queue based on highest cost reduction first
@@ -37923,8 +37932,6 @@ console.log(DROP_REASON_A+" | "+DROP_REASON_B+" | "+DROP_REASON_C+" | "+DROP_REA
 	for(var i=0; i<verts.length; ++i){
 		var vert = verts[i];
 		var rank = vert.calculateRank();
-		console.log(" "+i+" = "+rank+" @ "+vert.currentView());
-		// throw "here";
 		if(rank>0){
 			vertexQueue.push(vert);
 		}
@@ -37932,13 +37939,195 @@ console.log(DROP_REASON_A+" | "+DROP_REASON_B+" | "+DROP_REASON_C+" | "+DROP_REA
 	console.log(vertexQueue);
 
 	// loop till no more vertexes in queuq
+	var iteration = 0;
 	while(!vertexQueue.isEmpty()){
+		++iteration;
+		var len = vertexQueue.length();
 		var vertex = vertexQueue.pop();
-		console.log(vertex);
-
-
-		throw "..."
+		var rank = vertex.currentRank();
+		console.log(" -> "+len+" ... "+rank+" ("+iteration+")");
+		// console.log("        "+rank);
+		if(rank<=0){
+			// console.log("rank low");
+			continue;
+		}
+		// console.log(vertex);
+		// change current view
+		vertex.switchToBestRank();
+		// get all related vertexes
+		var neighbors = vertex.adjacentVertexes();
+		// remove all possibly affected vertexes
+		for(var i=0; i<neighbors.length; ++i){
+			var neighbor = neighbors[i];
+			vertexQueue.removeObject(neighbor);
+		}
+		// recalculate ranks & re insert any remaining frontier vertexes
+		neighbors.push(vertex);
+		for(var i=0; i<neighbors.length; ++i){
+			var neighbor = neighbors[i];
+			var rank = neighbor.calculateRank();
+			if(rank>0){
+				vertexQueue.push(neighbor);
+			}
+		}
 	}
+	// check resolutions:
+
+	console.log("size check");
+var sizeCheckTris = [];
+	var sizeCheckLoopCount = 1E6;
+	for(var i=0; i<sizeCheckTris.length; ++i){
+	--sizeCheckLoopCount;
+	if(sizeCheckLoopCount<=0){
+		break;
+	}
+		var tri = sizeCheckTris[i];
+		// CHECK TO SEE IF TRI IS STILL VALID (may have been removed previously)
+		if(tri._views.length==0){
+			// console.log("found dead tri");
+			continue;
+		}
+		// console.log(tri)
+		var vx = tri.vertexes();
+		var vs = tri.activeViews();
+		var overMax = false;
+		var x0 = vx[0];
+		var x1 = vx[1];
+		var x2 = vx[2];
+		var l01 = V3D.distance(x0.point(),x1.point());
+		var l02 = V3D.distance(x0.point(),x2.point());
+		var l12 = V3D.distance(x1.point(),x2.point());
+		// if triangle has an impossible vertex, use initial 
+		for(var k=0; k<vx.length; ++k){
+			var x = vx[k];
+			if(x._index===null){ // use triangle's set constant texture
+				var vs = tri.views();
+				// console.log("use these vs instead: "+vs+" @ ");
+				// console.log(vs);
+				vs = [vs[0]]; // first entry
+				break;
+			}
+		}
+		var maxScale = null;
+		for(var j=0; j<vs.length; ++j){
+			var v = vs[j];
+			var ps = [];
+			for(var k=0; k<vx.length; ++k){
+				var x = vx[k];
+				var p = x.projectedPointForView(v);
+				if(!p){
+					// possibly assigned from triangle where other vertexes ARE visibl
+					console.log("create missing view point (not visible)");
+					// throw "here";
+					// if(useIndexes){
+					// 	j = viewIndexes[v];
+					// }else{
+					// 	j = v;
+					// }
+					var viewExtrinsic = extrinsics[j];
+					// var viewCenter = viewCenters[j];
+					// var viewNormal = viewNormals[j];
+					// var viewSize = resolutions[j];
+					var K = cameras[j];
+					var distortion = null;
+					// projectedPointForView
+					var point3D = x.point();
+					var projected2D = R3D.projectPoint3DCamera2DDistortion(point3D, viewExtrinsic, K, distortion);
+					p = projected2D;
+
+					x.addViewProjection(v,p);
+
+					// console.log( x.projectedPointForView(v) );
+
+					// throw "don't have a p: "+i+":"+j+" = "+v;
+				}
+				ps.push(p);
+			}
+			if(ps[0] && ps[1] && ps[2]){
+				var d01 = V2D.distance(ps[0],ps[1]);
+				var d02 = V2D.distance(ps[0],ps[2]);
+				var d12 = V2D.distance(ps[1],ps[2]);
+				d01 *= resolutionScale;
+				d02 *= resolutionScale;
+				d12 *= resolutionScale;
+				// scale up into proportional size:
+				var r01 = d01/l01;
+				var r02 = d02/l02;
+				var r12 = d12/l12;
+				// projected-scaled lengths might be different
+				d01 = Math.max(l01*r02,l01*r12,d01);
+				d02 = Math.max(l02*r01,l02*r12,d02);
+				d12 = Math.max(l12*r01,l12*r02,d12);
+				// POSSIBLE VERY SKEWED TRIANGLE / PROJECTION => LIMIT ITERATIONS
+				var max = Math.max(d01,d02,d12);
+					if(maxEdgeLength===null){
+						maxEdgeLength = max;
+					}
+					maxEdgeLength = Math.max(maxEdgeLength,max);
+				// console.log(max/maxDimension);
+
+				var scale = Math.max(d01/l01,d02/l02,d12/l12);
+				if(scale<0.1){
+					// console.log(scale+" : very tiny scale, should this be discarded?");
+				}
+				if(maxScale===null || scale>maxScale){
+					maxScale = scale;
+				}
+				if(max>maxDimension){
+					console.log("too big: "+max+" / "+maxDimension);
+					overMax = true;
+					break;
+				}
+				
+			}else{
+				console.log("why no ps")
+			}
+		}
+		// if(!maxScale){
+		// 	console.log(tri)
+		// 	console.log(vs)
+		// 	console.log(vx)
+		// 	console.log(maxScale)
+		// 	throw "no scale ???????????? ?"
+		// }
+		tri.scale(maxScale);
+		// console.log(i+":"+maxScale)
+// overMax = false;
+		if(overMax){
+			
+			var ratio = maxScale/maxDimension;
+			if(ratio>4.0){
+				console.log("WAY TOO BIG: "+ratio);
+				tri.scale(null);
+				continue;
+			}
+
+			// --i; // recheck THIS index
+			var result = tri.subDivide( extrinsics,viewCenters,viewNormals,resolutions,cameras );
+			var removeTris = result["removedTris"];
+			var wasLength = tris.length;
+			for(var t=0; t<removeTris.length; ++t){
+				var removeTri = removeTris[t];
+				Code.removeElement(tris, removeTri);
+				// Code.removeElement(sizeCheckTris, removeTri); // CANT REMOVE BECAUSE THAT MAY INVALIDATE THE OTHER TRIS REFERENCES IN LOOP
+			}
+			console.log(wasLength+" => "+tris.length);
+			var addedTris = result["addedTris"];
+			for(var t=0; t<addedTris.length; ++t){
+				var addedTri = addedTris[t];
+				sizeCheckTris.push(addedTri);
+				// nextCheckTris.push(addedTri);
+			}
+			var addedVerts = result["addedVertexes"];
+			for(var v=0; v<addedVerts.length; ++v){
+				var addedVert = addedVerts[v];
+				verts.push(addedVert);
+				Q.push(addedVert);
+			}
+		}
+	}
+
+
 
 
 throw "?"

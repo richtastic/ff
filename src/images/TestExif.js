@@ -33,8 +33,8 @@ function TestExif(){
 	//ajax.();
 GLOBALSTAGE = this._stage;
 	
-	// var doPNG = false;
-	var doPNG = true;
+	var doPNG = false;
+	// var doPNG = true;
 	
 	var domBody = Code.getBody();
 	var domImage = Code.newImage(domBody);
@@ -45,6 +45,8 @@ GLOBALSTAGE = this._stage;
 	}else{
 		source = "./exif.jpg";
 	}
+
+// source = "";
 	Code.setImageSource(domImage, source, function(i){
 		console.log("loaded");
 		console.log(i)

@@ -388,6 +388,22 @@ MISSING:
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
+ - 
+ - find optimum choice triangles
+ - add triangles/vertexes for optimum choice size
+ 	-> need re-
+ 	-> may be invalid vertexes
+
+
+- possibly go back to triangle-focused algorithm that tries to limit cost including poor 'blocked' vertexes
+
+
+
+
+
+
+
+
 
 searchMatchPointsPair3D
 
