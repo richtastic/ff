@@ -15606,7 +15606,6 @@ var resolutionScale = 1.0/4.0; // debuging scene texture quality
 			var tv = views[i];
 			var viewID = tv["id"]
 			var camID = tv["camera"];
-// console.log(camID);
 			var K = cameraFromID[camID];
 if(!K){
 	console.log(tv);
@@ -15623,6 +15622,11 @@ if(!K){
 			transforms.push(transform);
 			cameras.push(K);
 		}
+
+		// console.log(resolutions);
+		// console.log(cameras);
+		// throw "??";
+		
 		// points+lists to triangles
 		var points = triangleData["points"];
 		var triangles = triangleData["triangles"];
@@ -15638,7 +15642,7 @@ if(!K){
 		var views2D = info["views2D"];
 		var included2D = info["views"];
 console.log(info);
-throw "optimumTriangleTextureImageAssignment results";
+// throw "optimumTriangleTextureImageAssignment results";
 		// texture packing
 		var info = R3D.optimumTriangleTexturePacking(textureSize,triangles2D);
 		console.log(info);

@@ -387,6 +387,31 @@ MISSING:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+- find list of views each vertex can use
+- each triangle uses 3 vertexes to find subset of vertex union views
+	=> drop impossible triangles
+- each vertex than finds a subset of views that can be used from each of its triangles
+	=>
+=> keep final useable set
+
+
+
+
+- texture assignment refined texture vertex assignment:
+	- small offsets in image point projection mean 2D alignment needs some nonlinear update
+	- frontier-triangles that need to do fading need to make sure 2D image projections match up nicely
+	- EXACT 2D point projection can be determined:
+		- after triangles are assigned
+		- before fading/merging
+	- need to load 2-3 textures at a time to do comparrison
+	- pick view that has best score as known 2D coordinates (most-aligns with triangle normal / distance /...)
+		- other 1-2 views search nearby area for optimum SAD match (1-2px or < 1 sigma R-error)
+		- save all vertexes as KNOWN
+		- for graph-cuts (med/low res):
+			- need a second set of images for merged (boundary) trianges
+			- assigned pixels of 1 triangle (edges) determine how pixels are assigned in adjacent triangles
+
+
 
  - 
  - find optimum choice triangles
@@ -396,6 +421,14 @@ MISSING:
 
 
 - possibly go back to triangle-focused algorithm that tries to limit cost including poor 'blocked' vertexes
+
+
+
+each vertex has a list of projectable views
+
+each tri has a list of possible view (union of 3 vertexes)
+
+each vertex is then limited based on the triangles it is inside
 
 
 
