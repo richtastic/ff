@@ -234,11 +234,20 @@ console.log(val);
 */
 	// faster way to do this for 2D
 	V = new Matrix(2,2).fromArray([this.a, this.b, this.c, this.d]);
-	var svd = Matrix.SVD(V);
+	var svd;
+	try{
+		svd = Matrix.SVD(V);
+	}catch(e){
+		console.log(this);
+		console.log(V);
+		console.log([this.a, this.b, this.c, this.d]);
+		console.log(e);
+		throw e;
+	}
 	var S = svd.S;
 	var sigma0 = S.get(0,0);
 	var sigma1 = S.get(1,1);
-	scale = (sigma0+sigma1)*0.5;
+	var scale = (sigma0+sigma1)*0.5;
 	return scale;
 }
 Matrix2D.prototype.toString = function(){

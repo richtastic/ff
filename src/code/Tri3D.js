@@ -251,9 +251,9 @@ console.log(unique);
 }
 
 Tri3D.generateTetrahedraSphereSides = function(mode){
-	mode = Code.valueOrDefault(mode,2); // default = 2 : octahedron
+	mode = Code.valueOrDefault(mode,0); // default = 5 : icosahedrom
 	var sides = null;
-	if(mode==0){ // regular tetrahera [3]
+	if(mode==0){ // regular tetrahera [4] -- good except 4 corners are bad
 		// create tetrahedra - side length = 1
 		var angle60 = Code.radians(60.0);
 		var l = 0.5/Math.cos(angle60*0.5);
@@ -283,16 +283,28 @@ Tri3D.generateTetrahedraSphereSides = function(mode){
 		var C = new Tri3D(b,c,d);
 		var D = new Tri3D(c,a,d);
 		sides = [A,B,C,D];
-	}else if(mode==1){ // trianglular bi-pyramid [6]
-		throw "todo";
-	}else if(mode==2){ // double square pyramid (octahedron): [8]
+	}else if(mode==1){ // trianglular bi-pyramid [6] -- oddly shaped
+		var dirZ = new V3D(0,0,1);
+		var angle120 = Code.radians(120.0);
+		var a = new V3D(1,0,0);
+		var b = V3D.rotateAngle(new V3D(),a,dirZ, angle120);
+		var c = V3D.rotateAngle(new V3D(),a,dirZ, -angle120);
+		var d = new V3D(0,0,1);
+		var e = new V3D(0,0,-1);
+		var A = new Tri3D(a,b,d);
+		var B = new Tri3D(b,c,d);
+		var C = new Tri3D(c,a,d);
+		var D = new Tri3D(e,b,a);
+		var E = new Tri3D(e,c,b);
+		var F = new Tri3D(e,a,c);
+		sides = [A,B,C,D,E,F];
+	}else if(mode==2){ // double square pyramid (octahedron): [8] -- OK 6 corners
 		var a = new V3D( 1, 0, 0);
 		var b = new V3D( 0, 1, 0);
 		var c = new V3D(-1, 0, 0);
 		var d = new V3D( 0,-1, 0);
 		var e = new V3D( 0, 0, 1);
 		var f = new V3D( 0, 0,-1);
-
 		var sides = [];
 		sides.push(new Tri3D(a,b,e)); // top
 		sides.push(new Tri3D(b,c,e));
@@ -324,8 +336,10 @@ Tri3D.generateTetrahedraSphereSides = function(mode){
 		sides.push(new Tri3D(f,b,g));
 		sides.push(new Tri3D(b,f,a)); // 4
 		sides.push(new Tri3D(e,a,f));
-	}else if(mode==4){ // icosahedron [20]
-		// ...
+	}else if(mode==4){ // icosahedron [16]
+		sides = Tri3D.squareBipyramid();
+	}else if(mode==5){ // icosahedron [20]
+		sides = Tri3D.icosahedron();
 	} // other
 
 	// console.log(sides);
@@ -357,7 +371,9 @@ Tri3D.generateTetrahedraSphere = function(radius, subdivisions, offset, invertNo
 	offset = offset!==undefined ? offset : V3D.ZERO;
 
 	var sides = Tri3D.generateTetrahedraSphereSides();
-
+// console.log(sides);
+// return {"triangles":sides};
+	
 	if(invertNormals){
 		console.log("invertNormals");
 		for(var i=0; i<sides.length; ++i){
@@ -370,8 +386,13 @@ Tri3D.generateTetrahedraSphere = function(radius, subdivisions, offset, invertNo
 		}
 	}
 
+console.log("subdivisions: "+subdivisions);
+
+
+// sides = [new Tri3D( new V3D(0,3,0), new V3D(0,0,0), new V3D(3,0,0) )];
 	// for each side: divide into separate triangles:
 	var triangles = [];
+	var subdivisionsPlusOne = subdivisions+1;
 	for(var i=0; i<sides.length; ++i){
 		var side = sides[i];
 		var a = side.A();
@@ -379,15 +400,27 @@ Tri3D.generateTetrahedraSphere = function(radius, subdivisions, offset, invertNo
 		var c = side.C();
 		var ab = V3D.sub(b,a);
 		var bc = V3D.sub(c,b);
-		var u = bc.copy().scale(1.0/(subdivisions+1));
+		var u = bc.copy().scale(1.0/subdivisionsPlusOne);
+// console.log(" A: "+a );
+// console.log(" B: "+b );
+// console.log(" C: "+c );
+// console.log(" ab: "+ab );
+// console.log(" bc: "+bc );
+// console.log("  u: "+u );
+// console.log(u+" ... "+(u.length()/bc.length()) );
+		// var u = bc.copy().unit();
 		// for each row (subdivision)
-		for(var r=0; r<subdivisions; ++r){
+		for(var r=0; r<=subdivisions; ++r){
+// console.log("ROW: "+r+" -----------------------------------");
 			var stripCount = r + 1;
 			var last = stripCount-1;
-			var o = ab.copy().scale((r+0)/stripCount).add(a);
-			var p = ab.copy().scale((r+1)/stripCount).add(a);
+			var o = ab.copy().scale((r+0)/subdivisionsPlusOne).add(a);
+			var p = ab.copy().scale((r+1)/subdivisionsPlusOne).add(a);
+// console.log(" O: "+o);
+// console.log(" P: "+p);
 			// for each strip
 			for(var s=0; s<stripCount; ++s){
+// console.log("  strip "+s);
 				// first:
 				var ta = u.copy().scale(s+0).add(o);
 				var tb = u.copy().scale(s+0).add(p);
@@ -404,7 +437,7 @@ Tri3D.generateTetrahedraSphere = function(radius, subdivisions, offset, invertNo
 			}
 		}
 	}
-	// project to circle center
+	// project to circle center & add circle offset
 	for(var i=0; i<triangles.length; ++i){
 		var triangle = triangles[i];
 		var a = triangle.A();
@@ -419,8 +452,6 @@ Tri3D.generateTetrahedraSphere = function(radius, subdivisions, offset, invertNo
 			c.add(offset);
 		}
 	}
-	// console.log(triangles);
-	// throw "..."
 	return {"triangles":triangles};
 }
 
@@ -482,7 +513,94 @@ Tri3D.generateSphere = function(radius, latNum, lonNum, offset){ // latitude=up/
 	}
 	return tris;
 }
+Tri3D.squareBipyramid = function(){  // 16 triangles - 
+	var list = [];
+	var lenA = 1.0;
+	var alt = lenA*Math.sqrt(2);
+	var sep = Math.sqrt(0.5)*0.5; // 0.707
+	var pek = lenA*Math.sqrt(2)*0.5;
+	// base
+	var a1 = new V3D(-lenA*0.5, lenA*0.5, sep);
+	var b1 = new V3D(-lenA*0.5,-lenA*0.5, sep);
+	var c1 = new V3D( lenA*0.5,-lenA*0.5, sep);
+	var d1 = new V3D( lenA*0.5, lenA*0.5, sep);
+	var a2 = new V3D( -alt*0.5,        0, -sep);
+	var b2 = new V3D(        0, -alt*0.5, -sep);
+	var c2 = new V3D(  alt*0.5,        0, -sep);
+	var d2 = new V3D(        0,  alt*0.5, -sep);
+	// ends
+	var e1 = new V3D(0,0,pek*0.5 + sep);
+	var e2 = new V3D(0,0,-pek*0.5 - sep);
+	// ends
+	list.push( new Tri3D(a1,b1,e1) );
+	list.push( new Tri3D(b1,c1,e1) );
+	list.push( new Tri3D(c1,d1,e1) );
+	list.push( new Tri3D(d1,a1,e1) );
+	list.push( new Tri3D(b2,a2,e2) );
+	list.push( new Tri3D(c2,b2,e2) );
+	list.push( new Tri3D(d2,c2,e2) );
+	list.push( new Tri3D(a2,d2,e2) );
+	// betweens
+	list.push( new Tri3D(a1,a2,b1) );
+	list.push( new Tri3D(a2,b2,b1) );
+	list.push( new Tri3D(b1,b2,c1) );
+	list.push( new Tri3D(b2,c2,c1) );
+	list.push( new Tri3D(c1,c2,d1) );
+	list.push( new Tri3D(c2,d2,d1) );
+	list.push( new Tri3D(d1,d2,a1) );
+	list.push( new Tri3D(d2,a2,a1) );
+	return list;
+}
 
+Tri3D.icosahedron = function(){ // 20-sided, centered at 0,0,0, radius 1
+	var i, j, x,y,z, rad, ang,tmp, arr, tri, list = [];
+	// points:
+	var points = [];
+	ang = Math.PI/6.5;//Math.PI/6.0; // Math.PI/3.0
+	rad = Math.cos(ang);
+	y = Math.sin(ang);
+	// top
+	points.push([new V3D(0,1,0)]);
+	// mid
+	for(j=0;j<2;++j){
+		arr = [];
+		points.push(arr);
+		for(i=0;i<5;++i){
+			tmp = (i/5.0)*2.0*Math.PI + (j/5.0)*Math.PI;
+			z = rad*Math.cos(tmp);
+			x = rad*Math.sin(tmp);
+			if(j==0){
+				arr.push( new V3D(x,y,z) );
+			}else{
+				arr.push( new V3D(x,-y,z) );
+			}
+		}
+	}
+	// bot
+	points.push([new V3D(0,-1,0)]);
+	// triangles:
+	// top
+	for(i=0;i<5;++i){
+		tri = new Tri3D(points[0][0], points[1][i], points[1][(i+1)%5]);
+		list.push(tri);
+	}
+	// mid-top
+	for(i=0;i<5;++i){
+		tri = new Tri3D(points[1][i], points[2][i], points[1][(i+1)%5]);
+		list.push(tri);
+	}
+	// mid-bot
+	for(i=0;i<5;++i){
+		tri = new Tri3D(points[2][i], points[2][(i+1)%5], points[1][(i+1)%5]);
+		list.push(tri);
+	}
+	// bot
+	for(i=0;i<5;++i){
+		tri = new Tri3D(points[3][0], points[2][(i+1)%5], points[2][i]);
+		list.push(tri);
+	}
+	return list;
+}
 
 Tri3D.applyTransform = function(list, matrix){
 	for(var i=0; i<list.length; ++i){

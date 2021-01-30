@@ -14266,6 +14266,16 @@ R3D.optimumSADLocationSearchFlatRGB = function(pointA,pointB, imageScalesA,image
 	var absoluteLocation = minimum["location"];
 	var absoluteScore = minimum["score"];
 
+
+	if(Code.isNaN(absoluteLocation.x) || Code.isNaN(absoluteLocation.y)){
+		console.log(pointB);
+		console.log(scores);
+		console.log(cellScale);
+		console.log(absoluteScore);
+		console.log(absoluteLocation);
+		throw "Code.isNaN(absoluteLocation)";
+	}
+
 if(false){
 // if(true){
 
@@ -14759,12 +14769,20 @@ R3D.optimizeSADAffineCorner = function(pointA,pointB, imageScalesA,imageScalesB,
 
 	// AFFINE
 	var xVals = [xIn.x,xIn.y,yIn.x,yIn.y];
+	// if(Code.isNaN(xVals[0])){
+	// 	throw "xvalues in NaN"
+	// }
 	// ROT | SCALE
 	// var xVals = [0.0, 1.0];
 	// ARGS
 	var args = [pointA,imageScalesA,imageA, pointB,imageScalesB,imageB, mask, featureScale, affine, compareSize, xIn, yIn, reuseImage, reuseMatrix];
 	var epsilon = 1E-3; // 1E-1 to 1E-3
 	var diff = 1E-4; // 1E-3 to 1E-6 ------------- depends on metric
+
+
+// console.log(args,xVals);
+
+
 	var result = Code.gradientDescent(R3D._gdOptimizeSADAffineCorner, args, xVals, null, maxIterations, diff, epsilon);
 	var x = result["x"];
 
@@ -14809,6 +14827,14 @@ R3D._gdOptimizeSADAffineCorner = function(args, x, isUpdate){
 	// affine.identity();
 	// affine.rotate(x[0]);
 	// affine.scale(x[1]);
+
+
+	if( Code.isNaN( xVector.x ) ){
+		console.log(args);
+		console.log(x);
+		console.log(affine);
+		throw "found NaN in point";
+	}
 	
 
 	// TODO: OR IS IT THIS?:
@@ -14832,6 +14858,18 @@ R3D._gdOptimizeSADAffineCorner = function(args, x, isUpdate){
 	var halfSize = (compareSize-1)*0.5;
 
 	var inScale = 1.0/featureScale;
+
+
+	if( affine && Code.isNaN( affine.get(0,0) ) ){
+		console.log(x);
+		console.log(args);
+		console.log(affine);
+		console.log(xVector);
+		console.log(yVector);
+		console.log(inScale);
+		console.log(featureScale);
+		throw "found NaN in match affine";
+	}
 
 	// A to B
 	matrix.copy(affine);
@@ -14860,6 +14898,17 @@ var b1 = sampleFlatB.copy();
 	// B to A
 	matrix.copy(affine);
 	matrix.inverse();
+
+	if( matrix && Code.isNaN( matrix.get(0,0) ) ){
+		console.log(affine);
+		console.log(matrix);
+		console.log(xVector);
+		console.log(yVector);
+		console.log(inScale);
+		console.log(featureScale);
+		throw "found NaN in match affine - inversion";
+	}
+
 	matrix.scale(inScale);
 	// matrix.scale(1.0/inScale);
 	var averageScale = matrix.averageScale();
@@ -14884,6 +14933,13 @@ var a1 = sampleFlatA.copy();
 
 
 	var totalError = diffSADFlatAB + diffSADFlatBA;
+
+	if(Code.isNaN(totalError)){
+		console.log(diffSADFlatAB);
+		console.log(diffSADFlatBA);
+		console.log(totalError);
+		throw "totalError";
+	}
 	
 	if(isUpdate){ // TESTING - // display
 		console.log(totalError);
@@ -15074,6 +15130,14 @@ R3D._gd_SAD_OFFSET_UNIT_IMAGES = function(imageA,imageB, mask){
 		}
 	}
 	if(maskCount>0){
+		if(sigmaA==0){
+			sigmaA = 1.0;
+			// throw "here A";
+		}
+		if(sigmaB==0){
+			sigmaB = 1.0;
+			// throw "here B";
+		}
 		sigmaA = Math.sqrt(sigmaA/maskCount);
 		sigmaB = Math.sqrt(sigmaB/maskCount);
 		sigmaA = 1.0/sigmaA;
@@ -15425,10 +15489,10 @@ Code.printMatlabArray(scores);
 
 	var info = Code.exponentialDistribution(scores);
 	// console.log(info);
-	var limit = info["min"] + 2.0*info["sigma"];
+	var limit = Code.exponentialDistributionValueForPercent(info["min"],info["lambda"], 0.95);
 
 // var limitA = Code.exponentialDistributionValueForPercent(info["min"],info["lambda"], 0.99);
-	throw "not used correctly"
+	// throw "not used correctly"
 
 	// var min = Code.min(scores);
 	// var sigma = Code.stdDev(scores,min);
@@ -15447,8 +15511,25 @@ var bads = [];
 	}
 	console.log(goods);
 	console.log(bads);
-if(false){
-// if(true){
+// if(false){
+if(true){
+	
+
+			var image = imageMatrixA.images()[0];
+			var img = GLOBALSTAGE.getFloatRGBAsImage(image.red(),image.grn(),image.blu(), image.width(),image.height());
+			var d = new DOImage(img);
+			d.matrix().translate(0,0);
+			GLOBALSTAGE.addChild(d);
+
+			var image = imageMatrixB.images()[0];
+			var img = GLOBALSTAGE.getFloatRGBAsImage(image.red(),image.grn(),image.blu(), image.width(),image.height());
+			var d = new DOImage(img);
+			d.matrix().translate(imageMatrixA.width(),0);
+			GLOBALSTAGE.addChild(d);
+
+
+
+
 	var d = new DO();
 	// d.graphics().setFill(0x99FFFFFF);
 	d.graphics().setFill(0x66FFFFFF);
@@ -15504,6 +15585,8 @@ if(false){
 		matches.push(match);
 	}
 
+
+// throw "before return keepExtendedMatchNeighborhoods"
 	return {"matches":matches};
 }
 
@@ -27550,6 +27633,7 @@ var useSADScore = false;
 	var cornersA = cornerList[0];
 	var cornersB = cornerList[1];
 
+if(drawlings){
 	// show images
 	for(var i=0; i<imageList.length; ++i){
 		var imageScales = imageList[i];
@@ -27558,8 +27642,8 @@ var useSADScore = false;
 		var d = new DOImage(img);
 		d.matrix().translate(0 + i*imageScales.width(), 0 );
 		GLOBALSTAGE.addChild(d);
-
 	}
+}
 
 	if(false){
 	// show corners
@@ -34105,6 +34189,15 @@ R3D._refinementGD = function(args, x, isUpdate){
 		matrix = Matrix.transform2DTranslate(matrix, pointB.x, pointB.y );
 	var needleB = imageB.extractRectFromMatrix(compareSize,compareSize, matrix);
 	var cost = R3D.sadRGBGradient(needleA.red(),needleA.grn(),needleA.blu(), needleB.red(),needleB.grn(),needleB.blu(), needleA.width(),needleA.height(), compareMask);
+
+
+	if(Code.isNaN(cost)){
+		console.log(cost);
+		console.log(compareMask);
+		
+		console.log(needleA);
+		throw "why cost NaN?"
+	}
 	//console.log(" _refinementGD: "+" | scaleA: "+scaleA+" | angle: "+angleA+" |  skew: "+skewXAToB+" | "+skewYAToB+" ("+scaleB+" | "+angleB+") = "+cost);
 	//console.log(cost);
 	return cost;
@@ -36580,11 +36673,26 @@ R3D.sadRGBGradient = function(aRed,aGrn,aBlu, bRed,bGrn,bBlu, wid,hei, m){ // su
 			maxB = b[i];
 		}
 	}
+	if(maskCount==0){
+		return 0;
+	}
 	aMean /= maskCount;
 	bMean /= maskCount;
 	var rangeA = maxA - minA;
 	var rangeB = maxB - minB;
-ab = 0.0;
+	if(rangeA==0){
+		rangeA = 1.0;
+		throw "zero range";
+	}else{
+		rangeA = 1.0/rangeA;
+	}
+	if(rangeB==0){
+		rangeB = 1.0;
+		throw "zero range";
+	}else{
+		rangeB = 1.0/rangeB;
+	}
+	ab = 0.0;
 	for(i=0; i<len; ++i){
 		if(m){ mask = m[i]; }
 		if(mask==0){ continue; }
@@ -36594,8 +36702,8 @@ ab = 0.0;
 
 		// ai = ai - aMean;
 		// bi = bi - bMean;
-		ai = ai.scale(1.0/rangeA);
-		bi = bi.scale(1.0/rangeB);
+		ai = ai.scale(rangeA);
+		bi = bi.scale(rangeB);
 		var d = V2D.sub(ai,bi).length();
 		ab += d;
 	}
@@ -37635,12 +37743,14 @@ DROP_REASON_C = 0;
 DROP_REASON_D = 0;
 R3D.updateTextureVertexFromViews = function(vert, viewIndexes, extrinsics,viewCenters,viewNormals,resolutions,cameras, triangleSpace, distanceSigma){
 	// triangleSpace = null;
-	var costIntersectGeometry = 1E6;
+	var costIntersectGeometry = 1E9; // needs to be much larger than distanceSigma
+	var costDirectionAway = 1E10;
 	var maximumVertexViewEntryCount = 100; // ...
 	var intersectionCount = 0;
 	// var maxNormalAngle = Code.radians(90.0); // angle between view normal and vertex normal -- 
 	var maxViewAngle = Code.radians(90.0); // in front / behind camera  -- 60-90
-	var maxVertexAngle = Code.radians(90.0); // angle between vertex-to-view and vertex normal -- 60-90
+	var maxVertexAngle = Code.radians(120.0); // angle between vertex-to-view and vertex normal -- 60-90 -- 120 is very forgiving
+	var deg90 = Code.radians(90.0);
 
 	// angle between view->vertex and vertex normal
 	var ray = new V3D(); // reuse
@@ -37744,11 +37854,15 @@ DROP_REASON_D++;
 		var intersected = intersection!==null;
 		// valid vertex-view match
 		var distance = V3D.distance(viewCenter,vertPoint);
-		var distanceCost = 1 + Math.pow(0 + distance/distanceSigma,2);
+		var distanceCost = 1 + Math.pow(distance/distanceSigma,2);
+		// var distanceCost = 1 + Math.pow(distance/distanceSigma,1);
+		// console.log(distance);
 		// console.log(distanceCost); // ~ 1.0001
-		var angleCost = Math.cos(angleVertexNormal)
-		var intersectCost = (intersected ? costIntersectGeometry : 0)
-		var cost = distanceCost*angleCost + intersectCost;
+		var facingAwayCost = angleVertexNormal>=deg90 ? costDirectionAway : 0;
+		var angleCost = 1.0 + 1.0/Math.max(Math.cos(angleVertexNormal),1E-16);
+			angleCost = Math.min(angleCost,1E3);
+		var intersectCost = intersected ? costIntersectGeometry : 0;
+		var cost = Math.min(distanceCost*angleCost, costIntersectGeometry) + intersectCost + facingAwayCost;
 		var entry = {"view":j, "cost":cost, "point":projected2D, "intersected":intersected};
 		viewList.push(entry);
 	}
@@ -37813,6 +37927,100 @@ R3D.texturePaddingForTrianglesAtTextureSize = function(textureSize){
 	return 0; // 2-32
 }
 
+R3D.generateTextureTriangles = function(triangles3D, existingSpace){ // 
+	var tris = [];
+	var verts = [];
+	var minSpace = null;
+	var maxSpace = null;
+	var vs = [];
+	var space;
+	var vEps = 1E-16; // 1/10,000,000,000,000,000
+	if(existingSpace){
+		space = existingSpace;
+	}else{
+		// unique vertexes -- only add a new vertex if one doesn't already exist
+		var toPoint = function(a){
+			return a.point();
+		}
+		// get size of space 
+		for(var i=0; i<triangles3D.length; ++i){
+			var triangle = triangles3D[i];
+			vs[0] = triangle.A();
+			vs[1] = triangle.B();
+			vs[2] = triangle.C();
+			for(var j=0; j<vs.length; ++j){
+				var v = vs[j];
+				if(!minSpace){
+					minSpace = v.copy();
+					maxSpace = v.copy();
+				}else{
+					V3D.max(maxSpace,maxSpace,v);
+					V3D.min(minSpace,minSpace,v);
+				}
+			}
+		}
+		var size = V3D.sub(maxSpace,minSpace);
+		console.log("triangle space volume: "+size);
+		// add padding to size
+		var epsilon = size.scale(0.001);
+		minSpace.sub(epsilon);
+		maxSpace.add(epsilon);
+		V3D.sub(size,maxSpace,minSpace);
+		space = new OctTree(toPoint);
+		space.initWithSize(minSpace,maxSpace);
+	}
+	var vertexEpsilon = vEps * space.size().length(); // based on world volume
+	// console.log("vertexEpsilon: "+vertexEpsilon);
+	for(var i=0; i<triangles3D.length; ++i){
+		var triangle = triangles3D[i];
+		vs[0] = triangle.A();
+		vs[1] = triangle.B();
+		vs[2] = triangle.C();
+		for(var j=0; j<vs.length; ++j){
+			var v = vs[j];
+			var existing = space.closestObject(v);
+			if(existing){
+				var distance = V3D.distanceSquare(v,existing.point());
+// if(existingSpace){
+// 	console.log("distance: "+distance+" >?> "+vertexEpsilon);
+// }
+				if(distance>vertexEpsilon){ // different
+					existing = null;
+				}
+			}
+			if(!existing){
+				existing = new R3D.TextureVertex(v);
+				space.insertObject(existing);
+				verts.push(existing);
+// if(existingSpace){
+// 	console.log("make new: "+v);
+// 	console.log(existing);
+// }
+			}
+			vs[j] = existing;
+		}
+		// var area = V3D.areaTri(tri.A(),tri.B(),tri.C());
+		var area = V3D.areaTri(vs[0].point(),vs[1].point(),vs[2].point());
+		if(area==0){
+			console.log("zero area triangle skipped");
+			console.log(triangle);
+			console.log(vs);
+			// console.log(vs);
+			throw "?"
+		}else{
+			var tri = new R3D.TextureTriangle(vs);
+			tris.push(tri);
+			for(var j=0; j<vs.length; ++j){
+				var v = vs[j];
+				v.addTriangle(tri);
+			}
+		}
+	} // done converting triangles & vertexes
+	vs = null;
+	// space.kill();
+	return {"triangles":tris, "vertexes":verts, "space":space};
+}
+
 R3D.optimumTriangleTextureImageAssignment = function(extrinsics,cameras,resolutions,triangles3D,textureSize,resolutionScale){ // can generate new triangles
 	console.log("optimumTriangleTextureImageAssignment");
 	resolutionScale = resolutionScale!==undefined ? resolutionScale : 1.0;
@@ -37839,78 +38047,15 @@ R3D.optimumTriangleTextureImageAssignment = function(extrinsics,cameras,resoluti
 		maxDimension = Math.floor(maxDimension*0.50 - 2*texturePadding);
 console.log("maxDimension: "+maxDimension);
 	// triangles are typically connected at the vertex -> make sure triangles are connected components
-	var tris = [];
-	var verts = [];
-	var minSpace = null;
-	var maxSpace = null;
-	// unique vertexes -- only add a new vertex if one doesn't already exist
-	var toPoint = function(a){
-		return a.point();
-	}
-	// get size of space 
-	var vs = [];
-	for(var i=0; i<triangles3D.length; ++i){
-		var triangle = triangles3D[i];
-		vs[0] = triangle.A();
-		vs[1] = triangle.B();
-		vs[2] = triangle.C();
-		for(var j=0; j<vs.length; ++j){
-			var v = vs[j];
-			if(!minSpace){
-				minSpace = v.copy();
-				maxSpace = v.copy();
-			}else{
-				V3D.max(maxSpace,maxSpace,v);
-				V3D.min(minSpace,minSpace,v);
-			}
-		}
-	}
-	// add padding to size
-	var size = V3D.sub(maxSpace,minSpace);
-console.log("triangle space volume: "+size);
-	var epsilon = size.scale(0.001);
-	minSpace.sub(epsilon);
-	maxSpace.add(epsilon);
-	V3D.sub(size,maxSpace,minSpace);
-	var vertexEpsilon = 1E-16; // 1/10,000,000,000,000,000
-		vertexEpsilon = vertexEpsilon * size.length(); // based on world volume
-	var space = new OctTree(toPoint);
-		space.initWithSize(minSpace,maxSpace);
-	for(var i=0; i<triangles3D.length; ++i){
-		var triangle = triangles3D[i];
-		vs[0] = triangle.A();
-		vs[1] = triangle.B();
-		vs[2] = triangle.C();
-		for(var j=0; j<vs.length; ++j){
-			var v = vs[j];
-			var existing = space.closestObject(v);
-			if(existing){
-				var distance = V3D.distanceSquare(v,existing.point());
-				if(distance>vertexEpsilon){ // different
-					existing = null;
-				}
-			}
-			if(!existing){
-				existing = new R3D.TextureVertex(v);
-				space.insertObject(existing);
-				verts.push(existing);
-			}
-			vs[j] = existing;
-		}
-		var tri = new R3D.TextureTriangle(vs);
-		tris.push(tri);
-		for(var j=0; j<vs.length; ++j){
-			var v = vs[j];
-			var area = V3D.areaTri(tri.A(),tri.B(),tri.C());
-			if(area==0){
-				console.log("zero area triangle skipped");
-			}else{
-				v.addTriangle(tri);
-			}
-		}
-	} // done converting triangles & vertexes
-	vs = null;
-	space.kill();
+	var info = R3D.generateTextureTriangles(triangles3D, null);
+	console.log(info);
+	var spaceVertexes = info["space"];
+	var tris = info["triangles"];
+	var verts = info["vertexes"];
+	console.log(spaceVertexes);
+	var minSpace = spaceVertexes.min();
+	var maxSpace = spaceVertexes.max();
+
 	// triangles
 	var toCuboid = function(a){
 		return a.toCuboid();
@@ -37956,27 +38101,41 @@ console.log("triangle space volume: "+size);
 
 
 	var distanceSigma = 1.0;
+	var worldCenter = new V3D();
 	if(triangleSpace){
 		var triangles = triangleSpace.toArray();
 		if(triangles.length>0){
-			var com = new V3D();
+			// maybe remove/ignore triangles with really big area ?
+			var centers = [];
 			for(var i=0; i<triangles.length; ++i){
 				var tri = triangles[i];
 				var center = tri.center();
+				centers.push(center);
+			}
+			console.log("CENTER COUNT: "+centers.length+" ");
+			var com = new V3D();
+			for(var i=0; i<centers.length; ++i){
+				var center = centers[i];
 				com.add(center);
 			}
-			com.scale(1.0/triangles.length);
-			console.log("COM: "+com+"");
+			com.scale(1.0/centers.length);
+			console.log("COM: "+com+" ");
 			distanceSigma = 0;
-			for(var i=0; i<triangles.length; ++i){
-				var tri = triangles[i];
-				var center = tri.center();
+			for(var i=0; i<centers.length; ++i){
+				var center = centers[i];
 				distanceSigma += V3D.distanceSquare(com,center);
 			}
-			distanceSigma = Math.sqrt(distanceSigma/triangles.length);
+			distanceSigma = Math.sqrt(distanceSigma/centers.length);
 			console.log("distanceSigma: "+distanceSigma);
+
+			// throw away outliers
+
+			worldCenter = com;
 		}
 	}
+
+
+
 	for(var i=0; i<verts.length; ++i){
 		if(i%1000==0){
 			console.log(i+"/"+verts.length);
@@ -37998,6 +38157,49 @@ console.log(DROP_REASON_A+" | "+DROP_REASON_B+" | "+DROP_REASON_C+" | "+DROP_REA
 
 
 
+
+
+// TODO: BG VERTS SHOULD NOT USE TRIANLGE SPACE IN SUB-DIVISIONS
+
+
+	// BACKGROUND TRIANGLES & VERTS:
+	var radius = distanceSigma * 5; // 5-10x size of world [2=95, 3=99]
+	var subdivisions = 5; //  want 100-1k  5=720
+	var invertNormals = true;
+	var sphere = Tri3D.generateTetrahedraSphere(radius, subdivisions, worldCenter, invertNormals);
+	// console.log(sphere);
+	var bgTriangles = sphere["triangles"];
+	console.log(bgTriangles);
+	var info = R3D.generateTextureTriangles(bgTriangles, spaceVertexes);
+	console.log(info);
+	var bgTris = info["triangles"];
+	var bgVerts = info["vertexes"];
+	// ASSUMING MUTUALLY EXCLUSIVE VERTEXES
+	for(var i=0; i<bgVerts.length; ++i){
+		var vert = bgVerts[i];
+		var result = R3D.updateTextureVertexFromViews(vert, viewIndexes, extrinsics,viewCenters,viewNormals,resolutions,cameras, null,distanceSigma);
+	}
+	Code.arrayPushArray(verts,bgVerts);
+	Code.arrayPushArray(tris,bgTris);
+
+	// var vs = [];
+	// for(var i=0; i<bgTriangles.length; ++i){
+	// 	var t = bgTriangles[i];
+	// 	v[0] = t.A();
+	// 	v[1] = t.B();
+	// 	v[2] = t.C();
+	// 	for(var j=0; j<vs.length; ++j){
+	// 		var v = vs[j];
+	// 	}
+	// }
+
+
+// 144 -> 74
+
+// throw "ADDING BG TRIS"
+
+
+// TODO: updateTextureVertexFromViews uses triangles and BG should not use triangles
 
 
 
@@ -50907,9 +51109,9 @@ R3D.searchNeedleHaystackSADColorOffsetUnit = function(needle,haystack,needleMask
 	}
 	sigmaN /= count;
 	sigmaN = Math.sqrt(sigmaN);
-// 
-// console.log(sigmaN);
-// throw "..."
+	if(sigmaN==0){
+		sigmaN = 1.0;
+	}
 	var averageH = new V3D();
 
 	var result = new Array();
@@ -50957,7 +51159,9 @@ R3D.searchNeedleHaystackSADColorOffsetUnit = function(needle,haystack,needleMask
 			}
 			sigmaH /= count;
 			sigmaH = Math.sqrt(sigmaH);
-			// console.log(sigmaH);
+			if(sigmaH==0){
+				sigmaH = 1.0;
+			}
 			// throw "..."
 
 			// SAD
@@ -51005,10 +51209,32 @@ R3D.searchNeedleHaystackSADColorOffsetUnit = function(needle,haystack,needleMask
 						sad += Math.sqrt(sq);
 					}
 					// sad += sq;
+					// if(Code.isNaN(sad)){
+					// 	console.log(sq);
+					// 	console.log(sigmaH);
+					// 	console.log(sigmaN);
+					// 	console.log(sad);
+					// 	throw "sad NaN";
+					// }
 				}
 			}
 			var resultIndex = jW + (i/spacingI);
-			result[resultIndex] = sad*inverseNeedleCount;
+			var val = sad*inverseNeedleCount;
+			// if(Code.isNaN(val)){
+			// 	console.log(needleR);
+			// 	console.log(needleG);
+			// 	console.log(needleB);
+			// 	console.log(haystackR);
+			// 	console.log(haystackG);
+			// 	console.log(haystackB);
+			// 	console.log(sad);
+			// 	console.log(inverseNeedleCount);
+			// 	console.log(val);
+			// 	console.log(resultIndex);
+			// 	console.log(result);
+			// 	throw "bad value - ";
+			// }
+			result[resultIndex] = val;
 		}
 	}
 	return {"value":result, "width":resultWidth, "height":resultHeight};
@@ -52417,16 +52643,34 @@ R3D.minimumFromValues = function(values, valueWidth, valueHeight, pointB, cellSc
 	var peak = new V3D(xLoc,yLoc,zLoc);
 	// sub-pixel interpolation
 	if(0<xLoc && xLoc<valueWidth-1 && 0<yLoc && yLoc<valueHeight-1){
-		var d0 = values[(yLoc-1)*valueWidth + (xLoc-1)];
-		var d1 = values[(yLoc-1)*valueWidth + (xLoc+0)];
-		var d2 = values[(yLoc-1)*valueWidth + (xLoc+1)];
-		var d3 = values[(yLoc+0)*valueWidth + (xLoc-1)];
-		var d4 = values[(yLoc+0)*valueWidth + (xLoc+0)];
-		var d5 = values[(yLoc+0)*valueWidth + (xLoc+1)];
-		var d6 = values[(yLoc+1)*valueWidth + (xLoc-1)];
-		var d7 = values[(yLoc+1)*valueWidth + (xLoc+0)];
-		var d8 = values[(yLoc+1)*valueWidth + (xLoc+1)];
+		var minX = Math.max(xLoc-1,0);
+		var midX = xLoc;
+		var maxX = Math.max(xLoc+1,0);
+		var minY = Math.max(yLoc-1,0)*valueWidth;
+		var midY = yLoc*valueWidth;
+		var maxY = Math.max(yLoc+1,0)*valueWidth;
+		var d0 = values[minY + minX];
+		var d1 = values[minY + midX];
+		var d2 = values[minY + maxX];
+		var d3 = values[midY + minX];
+		var d4 = values[midY + midX];
+		var d5 = values[midY + maxX];
+		var d6 = values[maxY + minX];
+		var d7 = values[maxY + midX];
+		var d8 = values[maxY + maxX];
+
+if(Code.isNaN(d0) || Code.isNaN(d1) ||Code.isNaN(d2) ||Code.isNaN(d3) ||Code.isNaN(d4) ||Code.isNaN(d5) ||Code.isNaN(d6) || Code.isNaN(d7) ||Code.isNaN(d8) ){
+	console.log(values);
+	console.log(d0,d1,d2,d3,d4,d5,d6,d7,d8);
+	throw "extrema in bad"
+}
+
 		Code.extrema2DFloatInterpolate(peak, d0,d1,d2,d3,d4,d5,d6,d7,d8);
+if(Code.isNaN(peak.x) || Code.isNaN(peak.y) || Code.isNaN(peak.z)){
+	console.log(peak);
+	console.log(d0,d1,d2,d3,d4,d5,d6,d7,d8);
+	throw "extrema out bad"
+}
 		peak.x += xLoc;
 		peak.y += yLoc;
 	}
@@ -52435,6 +52679,22 @@ R3D.minimumFromValues = function(values, valueWidth, valueHeight, pointB, cellSc
 	var centerX = (valueWidth-1)*0.5;
 	var centerY = (valueHeight-1)*0.5;
 	var p = new V2D(pointB.x + (peak.x - centerX)*cellScale, pointB.y + (peak.y - centerY)*cellScale);
+if(Code.isNaN(p.x) || Code.isNaN(p.y)){
+	console.log(values);
+	console.log(index);
+	console.log(xLoc);
+	console.log(yLoc);
+	console.log(zLoc);
+	// console.log();
+	console.log("....");
+	console.log(peak);
+	console.log(centerX);
+	console.log(centerY);
+	console.log(valueWidth);
+	console.log(valueHeight);
+	throw "Code.isNaN(absoluteLocation)";
+}
+
 	return {"location":p, "score":peak.z};
 }
 

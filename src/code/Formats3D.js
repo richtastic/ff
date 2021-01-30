@@ -228,9 +228,65 @@ Formats3D.prototype.readSTLToTriangles = function(array){
 	start += i*50; // end
 	return triangles;
 }
-Formats3D.prototype.writeTrianglesToSTL = function(triangles){
-	//
+Formats3D.writeTrianglesToSTL = function(triangles){
+	console.log("writeTrianglesToSTL");
+	
+	for(var i=0; i<triangles.length; ++i){
+		var tri = triangles[i];
+	}
+	throw "..."
 }
+
+
+Formats3D.writeTrianglesToPLY = function(triangles){
+	console.log("writeTrianglesToPLY");
+	var output = Formats3D.PLY_FILE_PREFIX+"\n"+Formats3D.PLY_FORMAT_ASCII+"\n";
+	output = output+"comment "+Code.getTimeStampZulu()+"\n";
+
+	var triangleCount = triangles.length;
+	var vertexCount = triangleCount * 3;
+
+	output = output+"element vertex "+vertexCount+"\n";
+	output = output+"property float x\n";
+	output = output+"property float y\n";
+	output = output+"property float z\n";
+//	output = output+"property float nx\n";
+//	output = output+"property float ny\n";
+//	output = output+"property float nz\n";
+	output = output+"element face "+triangleCount+"\n";
+	output = output+"property list uchar uint vertex_indices\n";
+
+	output = output+Formats3D.PLY_HEADER_END+"\n";
+
+
+	
+	// vertexes
+	for(var i=0; i<triangleCount; ++i){
+		var tri = triangles[i];
+		var A = tri.A();
+		var B = tri.B();
+		var C = tri.C();
+		var lineA = A.x+" "+A.y+" "+A.z;
+		var lineB = B.x+" "+B.y+" "+B.z;
+		var lineC = C.x+" "+C.y+" "+C.z;
+			output = output+lineA+"\n";
+			output = output+lineB+"\n";
+			output = output+lineC+"\n";
+	}
+
+	// faces
+	for(var i=0; i<triangleCount; ++i){
+		var line = "3 "+(i*3+0)+" "+(i*3+1)+" "+(i*3+2);
+		output = output+line+"\n";
+	}
+
+
+	return output;
+}
+Formats3D.PLY_FILE_PREFIX = "ply";
+Formats3D.PLY_FORMAT_ASCII = "format ascii 1.0";
+Formats3D.PLY_HEADER_END = "end_header";
+
 Formats3D.prototype.readPLYToTriangles = function(array){
 	// console.log(array);
 	// console.log(array.length);
@@ -248,14 +304,14 @@ Formats3D.prototype.readPLYToTriangles = function(array){
 	var value = Code.charStringFromByteArray(array, start, lineFeed);
 	start += value.count;
 	var filetype = value.value;
-	if(filetype!=="ply"){
+	if(filetype!==Formats3D.PLY_FILE_PREFIX){
 		return triangles;
 	}
 	// ascii format
 	var value = Code.charStringFromByteArray(array, start, lineFeed);
 	start += value.count;
 	var format = value.value;
-	if(format=="format ascii 1.0"){
+	if(format==Formats3D.PLY_FORMAT_ASCII){
 		// do
 	}else if(format=="format binary_little_endian 1.0"){
 		console.log("TODO");
@@ -300,7 +356,7 @@ Formats3D.prototype.readPLYToTriangles = function(array){
 						property["name"] = words[2];
 					}
 					properties.push(property);
-				}else if(words[0]=="end_header"){
+				}else if(words[0]==Formats3D.PLY_HEADER_END){
 					break;
 				}
 			}

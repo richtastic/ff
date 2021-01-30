@@ -2959,12 +2959,24 @@ Code.gradientDescent = function(fxn, args, x, dx, iter, diff, epsilon, lambda){
 			Code.copyArray(tx,prevX);
 			tx[i] += dx[i];
 			c = fxn(args, tx, false, i);
+if(Code.isNaN(c)){
+	console.log(c);
+	console.log(cost);
+	throw "cost?";
+}
 			dy[i] = c - cost;
 			tx[i] = 0;
 		}
 		// initial best guess:
 		for(i=0; i<sizeX; ++i){
 			nextX[i] = prevX[i] - lambda*dy[i];
+// if(Code.isNaN(nextX[i])){
+// 	console.log(prevX);
+// 	console.log(lambda);
+// 	console.log(dy);
+// 	console.log(dx);
+// 	throw "why?";
+// }
 		}
 		var newCost = fxn(args, nextX, false, -1);
 		// scale down lambda as necessary:
@@ -9147,6 +9159,10 @@ Code.extrema2DFloatInterpolate = function(loc, d0,d1,d2,d3,d4,d5,d6,d7,d8){ // w
 	var dxdx = (d5-2.0*d4+d3);
 	var dydy = (d7-2.0*d4+d1);
 	var dxdy = (d8-d6-d2+d0)*0.25;
+// if(Code.isNaN(dx) || Code.isNaN(dy) || Code.isNaN(dxdx) || Code.isNaN(dxdy) || Code.isNaN(dydy) ){
+// 	console.log(d0,d1,d2,d3,d4,d5,d6,d7,d8);
+// 	throw "extrema2DFloatInterpolate input";
+// }
 	var Hinv = Code.inverse2x2(Code._tempMatrixArray4, dxdx,dxdy, dxdy,dydy);
 		//var H = new Matrix(2,2, [dxdx,dxdy, dxdy,dydy]);
 		//var Hinv = Matrix.inverse(H);
@@ -9156,7 +9172,7 @@ Code.extrema2DFloatInterpolate = function(loc, d0,d1,d2,d3,d4,d5,d6,d7,d8){ // w
 	Code.mult2x2by2x1toV2D(loc, Hinv,dD);
 	loc.x = -loc.x; loc.y = -loc.y;
 	loc.z = d4 + 0.5*(dx*loc.x + dy*loc.y);
-	// if(Code.isNaN(loc.x) || Code.isNaN(loc.y)){
+	// if(Code.isNaN(loc.x) || Code.isNaN(loc.y) || Code.isNaN(loc.z)){
 	// 	console.log(dx);
 	// 	console.log(dy);
 	// 	console.log(dxdx);
@@ -9164,7 +9180,7 @@ Code.extrema2DFloatInterpolate = function(loc, d0,d1,d2,d3,d4,d5,d6,d7,d8){ // w
 	// 	console.log(dydy);
 	// 	console.log(dD);
 	// 	console.log(loc);
-	// 	console.log(d0,d1,d2,d3,d4,d5,d6,d7,d8)
+	// 	console.log(d0,d1,d2,d3,d4,d5,d6,d7,d8);
 	// 	throw "?";
 	// }
 	return loc;

@@ -358,7 +358,12 @@ function classesLoadedFxn(){
 // 0=>0  1=>1  2=>4  3=>9  4=>16
 
 var radius = 1.0;
-var subdivisions = 11;
+// var subdivisions = 11;
+var subdivisions = 10;
+// var subdivisions = 5;
+// var subdivisions = 2;
+// var subdivisions = 1;
+// var subdivisions = 0;
 var offset = new V3D(0,0,0);
 // var invert = true;
 var invert = false;
@@ -378,9 +383,19 @@ for(var i=0; i<tris.length; ++i){
 	max = Math.max(max,area);
 	// console.log(tri.area());
 }
+
+console.log(tris);
+
+// var stl = Formats3D.writeTrianglesToSTL();
+// console.log(stl);
+var ply = Formats3D.writeTrianglesToPLY(tris);
+console.log(ply);
+
+
 console.log("MAX RATIO: "+(max/min));
 throw "..."
 */
+
 
 
 

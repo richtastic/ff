@@ -387,6 +387,161 @@ MISSING:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
+
+Tri3D.generateTetrahedraSphere -- has empty triangles
+
+- make example app in unity
+	- VR learnings
+	- sketch scenes
+
+	x how to make a triangle display at runtime?
+	- generate a circular mesh with desired colors
+	- generate a circular UI with hexigons
+	- interact in 3D with buttons on tap
+
+
+
+- IMPLEMENT BACKGROUND SPHERE (after the fact even?)
+	- which view to use ? most orthogonal ?
+
+
+Tri3D.generateTetrahedraSphere
+=> should connect the shared vertexes
+
+
+- why is right-side of texture triangles square and left is rounded?
+
+
+
+
+- next solving problems:::::::::::::::::::::::::::::::::::::::::::::::
+	- point clouds are still fairly noisy
+		=> ?
+		=> are the final group points optimized 3D location to improve 3D projection?
+		=> usual methods:
+			- filtering out obstructions
+			- 
+		=> higher resolution?
+		=> predicted validity by projection to other views?
+		- neighbors that are not where they are predicted to be are removed?
+		- removing entire P3D vs removing a match?
+		- enforce some 2D-3D regularization
+		- P3D depth-only optimizing (3D point moves along ray to cameras?) ?=> DoF inside plane tho?
+	- triangulations are missing some triangles
+		=> ?
+		... need to allow for more lenient assignment
+			=> allow for triangle to face away?
+				- add another penalty order of magnitude
+				(is this even why points are dropped?)
+	- textures from bad parts of images are being used (eg no intersection)
+		=> ?
+		- assigning view images to vertexes has problems, alternatives?
+			- loading the individual optional images -- what is the best MEDIAN average image & make sure to drop outlier images / colors
+				- candidate step where many images have to be loaded to check against (even at low res)
+		- how to keep view data on the points ?
+			- get point cloud of triangle size radius & get histogram of all views included
+				- keep top
+
+
+
+
+
+
+
+
+revisit keepExtendedMatchNeighborhoods
+
+"remove too many negative"
+
+optimizeSADAffineCorner
+
+
+- if 2 views are ~ 180 deg apart -> probably a bad orientation
+
+
+
+- test a large open-area scene (park)
+- test BG-sphere
+	-> output to PLY to test geometry
+- 
+
+- adding in phase to update camera parameters 
+	- sparse group?
+	- during separate dense
+	-> how to combine?
+		- average from separate dense pairs (averaged by error?)
+			- cx, cy, s, fx, fy
+			- does something need to be held constant (so that metrics don't float around)
+				- eg: assume fx is best mapping
+					-> scale all other values to keep this true
+					-> don't touch fx
+
+generateBackgroundSphere
+
+- optimumTriangleTextureImageAssignment
+	-> distance metric ?
+		- sample the 3D space?
+
+	-> average distance of a camera to it's content ?
+	-> 
+
+
+
+- world sigma size 
+	- where are these triangles off in obivion
+
+
+MOST RECENT TEXTURING PROBLEMS:
+	- cost metrics might be bad?
+	- poor geometry is ignoring some would-be intersections?
+	- long triangles might not be intersecting geometry on the vertexes, but are intersecting in the triangle
+
+
+- theres a couple of really big triangles????????????
+=> are these off at infinity?
+
+
+
+
+		// var textureDimension = 4096;
+		var textureDimension = 2048;
+		// var textureDimension = 1024;
+		// var textureDimension = 512;
+		// var resolutionScale = 0.50; // of maximum possible source input
+		// var resolutionScale = 0.25;
+// var resolutionScale = 1.0/8.0; // basic geometry test
+var resolutionScale = 1.0/4.0; // debuging scene texture quality
+// var resolutionScale = 1.0/2.0; // VR OK density
+// var resolutionScale = 1.0; // release quality
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+triangle space volume: <3753931466.3444076,3753931466.3444076,3753931466.3444076>
+R3D.js:37970 COM: <-0.667352050794305,-0.3881733462510339,2.6144062595238906>
+655332390.6703029
+
+
+655332390/3753931466 = 0.17
+
+
+R3D.js:37749 1876965733.489034
+
+
+
+
 - find list of views each vertex can use
 - each triangle uses 3 vertexes to find subset of vertex union views
 	=> drop impossible triangles

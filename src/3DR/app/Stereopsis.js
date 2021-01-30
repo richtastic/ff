@@ -2576,7 +2576,6 @@ Stereopsis.P3D.prototype.calculateAbsoluteLocation = function(world, dontInsert)
 			console.log("dontInsert "+location);
 			throw "NANNN";
 		}
-
 		world.updatePoint3DLocation(point3D,location);
 	}else{
 		return location;
@@ -6368,13 +6367,17 @@ Stereopsis.World.prototype.solvePairF = function(completeFxn, completeContext){ 
 // break;
 		console.log("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ iteration "+iteration+" / "+maxIterations);
 		// estimate current error
+world.checkValidateMatches();
 		world.relativeFFromSamples();
+world.checkValidateMatches();
 		world.estimate3DErrors(false);
+// TODO: REMOVE DEBUG:
+world.checkValidateMatches();
 		// expand good points:
 		// world.probe2DCellsF(    3.0, 3.0  );
 		world.probe2DCellsF(2.0,2.0);
 		// world.estimate3DErrors(false);
-		
+world.checkValidateMatches();
 		// subdivide
 		var subdivide = iteration==(maxIterations*0.5 | 0);
 		if(subdivide){
@@ -6908,10 +6911,23 @@ Stereopsis.World.prototype._resolutionProcessingModeAffineFromVisual2D = functio
 	var compareSize = Math.min(Math.max(affineSize,3),7); // 5 - 9
 	var maxIterations = 15;
 	var affine = newMatch.affine();
+	if(affine){
+		if( Code.isNaN( affine.get(0,0) ) ){
+			console.log(newMatch);
+			console.log(newMatch.point2DA().point2D());
+			console.log(newMatch.point2DB().point2D());
+			console.log(viewA.imageScales());
+			console.log(viewB.imageScales());
+			throw "found NaN in match affine";
+		}
+	}
 	var result = R3D.optimizeSADAffineCorner(newMatch.point2DA().point2D(),newMatch.point2DB().point2D(),
 		viewA.imageScales(),viewB.imageScales(),
 		featureSize, compareSize, affine, maxIterations);
 	var affine = result["affine"];
+
+
+
 	newMatch.affine(affine);
 }
 
@@ -10445,8 +10461,8 @@ var totalMatchListCount = 0;
 	if(ratio>0.5){
 		var str = world.toYAMLString();
 		console.log(str);
-		world.showForwardBackwardPair();
-		throw "remove too many negative";
+		// world.showForwardBackwardPair();
+		// throw "remove too many negative";
 		console.log("remove too many negative");
 	}
 	var matches = dropList;
@@ -12106,6 +12122,14 @@ Stereopsis.updateErrorForMatch = function(match){
 	var Frev = transform.F(viewB,viewA);
 	var pA = pointA.point2D();
 	var pB = pointB.point2D();
+
+
+	if(Code.isNaN(pA.x) || Code.isNaN(pA.y) || Code.isNaN(pB.x) || Code.isNaN(pB.y)){
+		console.log(match);
+		console.log(pA);
+		console.log(pB);
+		throw "why point";
+	}
 	// F
 	if(Ffwd && Frev){
 		var info = R3D.fError(Ffwd, Frev, pA, pB);
@@ -12131,7 +12155,17 @@ Stereopsis.updateErrorForMatch = function(match){
 		var Kb = viewB.K();
 		var KaInv = viewA.Kinv();
 		var KbInv = viewB.Kinv();
-		var location3D = R3D.triangulatePointDLT(pA,pB, cameraA,cameraB, KaInv, KbInv);
+		try{
+			var location3D = R3D.triangulatePointDLT(pA,pB, cameraA,cameraB, KaInv, KbInv);
+		}catch(e){
+			console.log(pA);
+			console.log(pB);
+			console.log(cameraA);
+			console.log(cameraB);
+			console.log(KaInv);
+			console.log(KbInv);
+			throw "why";
+		}
 		if(location3D){ // estimated3D may need updating?
 			match.estimated3D(location3D); // relative
 			var info = R3D.reprojectionError(location3D, pA,pB, cameraA, cameraB, Ka, Kb);
@@ -13505,6 +13539,42 @@ throw "OLD";
 		}
 	}
 }
+
+Stereopsis.World.prototype.checkValidateMatches = function(){ 
+	var count = 0;
+	var world = this;
+	var transforms = world.toTransformArray();
+	for(var i=0; i<transforms.length; ++i){
+		var transform = transforms[i];
+		var matches = transform.matches();
+		for(var m=0; m<matches.length; ++m){
+			var match = matches[m];
+			var affine = match.affine();
+			++count;
+			if(affine){
+				if( Code.isNaN( affine.get(0,0) ) ){
+					console.log(centerA);
+					console.log(centerB);
+					console.log(newPointA);
+					console.log(newMatch);
+					throw "found NaN in match affine";
+				}
+			}
+			var affine = match.affineReverse();
+			if(affine){
+				if( Code.isNaN( affine.get(0,0) ) ){
+					console.log(centerA);
+					console.log(centerB);
+					console.log(newPointA);
+					console.log(newMatch);
+					throw "found NaN in match affine";
+				}
+			}
+		}
+	}
+	console.log("checkValidateMatches: "+count);
+}
+
 Stereopsis.World.prototype.probe2DCellsR = function(sigmaMaximumSelect, sigmaMaximumNew, compareSize){ 
 	return this.probe2DCellsRF(sigmaMaximumSelect, sigmaMaximumNew, true, compareSize);
 }
@@ -13632,9 +13702,28 @@ Stereopsis.World.prototype.probe2DCellsRF = function(sigmaMaximumSelect, sigmaMa
 					var centerA = point2DA.point2D();
 					var centerB = point2DB.point2D();
 					var newPointA = empty.center();
+
+					if( Code.isNaN( newPointA.x ) || Code.isNaN( newPointA.y )  ){
+						console.log(empty);
+						throw "newPointA NaN"
+					}
+
 					// 
 					var newMatch = world.bestNeedleHaystackMatchFromLocation(centerA,centerB, newPointA, affine, viewA,viewB);
 					if(newMatch){
+
+
+
+						var affine = newMatch.affine();
+						if( Code.isNaN( affine.get(0,0) ) || Code.isNaN( centerA.x ) || Code.isNaN( centerA.y ) || Code.isNaN( centerB.x ) || Code.isNaN( centerB.y ) || Code.isNaN( newPointA.x ) || Code.isNaN( newPointA.y ) ){
+							console.log(newPointA);
+							console.log(centerA);
+							console.log(centerB);
+							console.log(newPointA);
+							console.log(newMatch);
+							throw "found NaN in match affine";
+						}
+
 						Stereopsis.updateErrorForMatch(newMatch);
 						// console
 						var fError = newMatch.errorF();
@@ -13659,6 +13748,15 @@ Stereopsis.World.prototype.probe2DCellsRF = function(sigmaMaximumSelect, sigmaMa
 								var pointB = point2DB.point2D();
 								// update affine
 								newMatch.affine(affine); // start with best match neighbor
+								// console.log(affine);
+								// console.log(newMatch);
+								if( Code.isNaN( affine.get(0,0) ) ){
+									console.log(centerA);
+									console.log(centerB);
+									console.log(newPointA);
+									console.log(newMatch);
+									throw "found NaN in match affine";
+								}
 								if(isR){
 									var point3D = newMatch.point3D();
 									var location3D = point3D.estimated3D();
@@ -18896,6 +18994,15 @@ Stereopsis.World.prototype.bestNeedleHaystackMatchFromLocation = function(center
 	var world = this;
 	var result = world.bestNeedleHaystackFromLocation(centerA,centerB, existingA, affineAB, viewA,viewB);
 	var pointB = result["point"];
+if(Code.isNaN(existingA.x) || Code.isNaN(existingA.y) || Code.isNaN(centerA.x) || Code.isNaN(centerA.y) || Code.isNaN(centerB.x) || Code.isNaN(centerB.y) || Code.isNaN(pointB.x) || Code.isNaN(pointB.y)){
+	console.log(centerA);
+	console.log(centerB);
+	console.log(existingA);
+	console.log(result);
+	console.log(affineAB);
+	throw "bad inside bestNeedleHaystackMatchFromLocation";
+}
+
 	var match = world.newMatchFromInfo(viewA,existingA,viewB,pointB,affineAB);
 	return match;
 }
@@ -18906,6 +19013,9 @@ Stereopsis.World.prototype.bestNeedleHaystackFromLocation = function(centerA,cen
 	// var haystackSize = needleSize * 2; // 2-4 --- if F/R error is low, can limit this more towards ~ 2
 
 	// var result = R3D.optimumNeedleHaystackAtLocation(viewA.imageScales(),existingA, viewB.imageScales(),predictedB, needleSize,haystackSize, affineAB, Stereopsis.COMPARE_HAYSTACK_NEEDLE_SIZE);
+
+
+
 
 
 	var featureSize = Stereopsis.compareSizeForViews2D(viewA,centerA,viewB,centerB);
@@ -18929,6 +19039,16 @@ console.log("made new reuse haystack");
 	// var haystackSize = needleSize + 2;
 	// A
 	// needle & haystack both large
+
+// if(Code.isNaN(existingA.x) || Code.isNaN(existingA.y) || Code.isNaN(predictedB.x) || Code.isNaN(predictedB.y) ){
+// 	console.log(existingA);
+// 	console.log(predictedB);
+// 	console.log(affineAB);
+// 	throw "bad inside bestNeedleHaystackMatchFromLocation";
+// }
+
+
+
 	var result = R3D.optimumSADLocationSearchFlatRGB(existingA,predictedB, viewA.imageScales(),viewB.imageScales(), featureSize, needleSize,haystackSize, affineAB, reuseNeedle,reuseHaystack);
 
 // A

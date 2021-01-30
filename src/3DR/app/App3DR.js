@@ -7799,7 +7799,6 @@ console.log("checkPerformNextTask");
 		project.iterateBundleProcess(); // sets up dense groups
 		return;
 	}
-
 // throw ">start surface"; // copy point files & create surface.yaml
 	if(!project.checkHasSurfaceStarted()){
 		project.initializeSurfaceFromBundle();
@@ -8158,7 +8157,39 @@ console.log(triples);
 inputData["triples"] = triples;
 inputData["pairsRaw"] = originalPairs;
 inputData["pairs"] = remainingPairs;
-console.log(inputData);
+//console.log(inputData);
+
+	var pairLookup = {};
+	for(var i=0; i<remainingPairs.length; ++i){
+		var pair = remainingPairs[i];
+		var pairID = pair["id"];
+		pairLookup[pairID] = pair;
+	}
+var tripleRemoved = 0;
+	for(var i=0; i<triples.length; ++i){
+		var triple = triples[i];
+		var triplePairs = triple["pairs"];
+		// console.log(triple);
+		for(var j=0; j<triplePairs.length; ++j){
+			var pairID = triplePairs[j];
+			if(pairLookup[pairID] && pairLookup[pairID]["tracks"]>0){
+				// keep
+			}else{
+				console.log("missing pair / traicks "+pairID);
+				Code.removeElementAt(triplePairs,j);
+				--j;
+			}
+		}
+		if(triplePairs.length<2){
+			Code.removeElementAt(triples,i);
+			++tripleRemoved;
+			--i;
+		}
+	}
+console.log("tripleRemoved: "+tripleRemoved);
+// console.log(inputData);
+// console.log(triples.length);
+// throw "does each triple have 2+ pairs?"
 
 
 throw "BEFORE TRIPLES DONE"
@@ -12203,7 +12234,9 @@ App3DR.ProjectManager.pairIDFromViewIDs = function(idA,idB){
 	return idA < idB ? (idA+"-"+idB) : (idB+"-"+idA);
 }
 App3DR.ProjectManager.prototype._absoluteViewsFromDatas = function(views, pairs, triples){
-
+	if(triples.length<0){
+		throw "no triples, can't continue";
+	}
 /*
 console.log(triples.length+" < BEFORE");
 for(var i=0; i<triples.length; ++i){
@@ -12359,7 +12392,11 @@ console.log("pairs");
 	var result = Code.graphAbsoluteFromObjectLookup3D(views, pairs, triples, viewToID,pairToIDs,tripleToIDs, pairToError,pairToTransform, tripleToScales);
 console.log(result);
 // throw "whaaa"
-	var first = result["groups"][0];
+	var groups = result["groups"];
+	if(groups.length==0){
+		throw "no groups, can't continue";
+	}
+	var first = groups[0];
 	var groupTransforms = first["transforms"];
 	var groupPairs = first["pairs"];
 	var groupViews = first["views"];
@@ -12591,7 +12628,7 @@ console.log(world);
 		var pointsB = result["B"];
 		var affinesAB = result["affines"];
 
-
+// throw "AFTER searchMatchPointsPair3D"
 
 		// new points
 		var points3DAdd = [];
@@ -12625,6 +12662,9 @@ console.log(world);
 // console.log(info);
 // throw "before solveDensePair"
 		world.solveDensePairNew();
+
+
+// throw "AFTER NEW"
 
 		var transform = world.toTransformArray()[0];
 		var errorR = (transform.rSigma() + transform.rMean());
@@ -13397,7 +13437,7 @@ throw "before save pair - world iterate";
 			pairDoneSaveFxn();
 		}
 
-		throw "out bottom";
+		// throw "out bottom";
 	}
 	// load images & features
 	fxnA();
@@ -15538,17 +15578,17 @@ console.log(viewsAll);
 
 
 
-var triangles = [];
-var bgTriangles = project.generateBackgroundSphere(viewsAll,camerasAll, triangles);
-console.log(bgTriangles);
-// var bgTriangles = [];
+// var triangles = [];
+// var bgTriangles = project.generateBackgroundSphere(viewsAll,camerasAll, triangles);
+// console.log(bgTriangles);
+var bgTriangles = [];
 
 // throw "NEED TO DO BG-SPHERE"
 		var mesh = new Mesh3D(points,normals);
 		var triangles = mesh.generateSurfaces();
 console.log("triangles");
 console.log(triangles);
-		Code.arrayPushArray(triangles, bgTriangles);
+		// Code.arrayPushArray(triangles, bgTriangles);
 // throw "HERE"
 		var triangleCount = triangles.length;
 		var pointList = Tri3D.arrayToUniquePointList(triangles);
@@ -15573,6 +15613,7 @@ console.log(triangles);
 
 	// create triangle-view best-vertex mapping
 	var loadedTrianglesFxn = function(viewData,triangleData){
+		// var textureDimension = 4096;
 		var textureDimension = 2048;
 		// var textureDimension = 1024;
 		// var textureDimension = 512;
@@ -15626,7 +15667,7 @@ if(!K){
 		// console.log(resolutions);
 		// console.log(cameras);
 		// throw "??";
-		
+
 		// points+lists to triangles
 		var points = triangleData["points"];
 		var triangles = triangleData["triangles"];
@@ -16166,9 +16207,25 @@ App3DR.ProjectManager.prototype._calculateFeaturesLoaded = function(view){
 console.log(word);
 console.log(histogram);
 
+	// var normalizedWords = R3D.normalizeSIFTObjects(word, imageMatrix.width(), imageMatrix.height());
+	// var normalizedWords = word;
+	var normalizedFeatures = R3D.normalizeSIFTObjects(features, imageMatrix.width(), imageMatrix.height()); // this drops contents
+	
 
-	var normalizedFeatures = R3D.normalizeSIFTObjects(features, imageMatrix.width(), imageMatrix.height());
+	normalizedWords = word;
+	var oW = 1.0/imageMatrix.width();
+	var oH = 1.0/imageMatrix.height();
+	for(var i=0; i<normalizedWords.length; ++i){
+		var w = normalizedWords[i];
+		var p = w["point"];
+		p.scale(oW, oH);
+		w["size"] = w["size"]*oW;
+	}
 
+// these are the same now
+console.log(word);
+console.log(normalizedWords);
+// throw "???";
 
 console.log(features);
 console.log(normalizedFeatures);
@@ -16176,10 +16233,85 @@ console.log(normalizedFeatures);
 	var data = {};
 		data["features"] = normalizedFeatures;
 		data["flatHistogram"] = histogram;
-		data["lexicon"] = word;
+		data["lexicon"] = normalizedWords;
 	console.log(data);
 
 
+
+
+var showDebug = true;
+
+if(showDebug){
+	console.log("SHOW FEATURES");
+	var OFFX = 0;
+	var OFFY = 0;
+	var displaySize = new V2D(600,400);
+	var maxScale = 10;
+	var displayInfo = imageScales.getImageSize(displaySize, maxScale);
+	var displayScale = displayInfo["scale"];
+	var displayImage = displayInfo["image"];
+
+	var image = displayImage
+	var img = GLOBALSTAGE.getFloatRGBAsImage(image.red(),image.grn(),image.blu(), image.width(),image.height());
+		var d = new DOImage(img);
+		d.matrix().translate(OFFX, OFFY);
+		GLOBALSTAGE.addChild(d);
+	var scaleRatioX = displayImage.width();
+	var scaleRatioY = displayImage.height();
+	for(var i=0; i<normalizedFeatures.length; ++i){
+		var feature = normalizedFeatures[i];
+		// console.log(feature);
+			var p = feature["point"];
+			var angle = feature["angle"];
+			p = p.copy();
+			p.x *= scaleRatioX;
+			p.y *= scaleRatioY;
+			var circleSize = feature["size"]*scaleRatioX;
+				circleSize = Math.sqrt(circleSize);
+			var d = new DO();
+			d.graphics().setLine(2.0,0xFFFF00FF);
+			d.graphics().beginPath();
+			d.graphics().moveTo(0,0);
+			d.graphics().lineTo(Math.cos(angle)*circleSize,Math.sin(angle)*circleSize);
+			d.graphics().drawCircle(0,0, circleSize);
+			d.graphics().endPath();
+			// d.graphics().strokeLine();
+			// d.graphics().setFill(0xFFFF00FF);
+			// d.graphics().fill();
+			d.graphics().strokeLine();
+			d.matrix().translate(p.x, p.y);
+			GLOBALSTAGE.addChild(d);
+	}
+
+	
+	for(var i=0; i<normalizedWords.length; ++i){
+		var feature = normalizedWords[i];
+		// console.log(feature);
+		var p = feature["point"];
+			p = p.copy();
+			p.x *= scaleRatioX;
+			p.y *= scaleRatioY;
+		// var angle = feature["angle"];
+		var circleSize = feature["size"]*scaleRatioX;
+			// circleSize = Math.sqrt(circleSize);
+			var d = new DO();
+			d.graphics().setLine(3.0,0xFF0000FF);
+			d.graphics().beginPath();
+			d.graphics().drawCircle(0,0, circleSize);
+			d.graphics().endPath();
+			d.graphics().strokeLine();
+			d.graphics().setLine(1.0,0xFFFF0000);
+			d.graphics().beginPath();
+			d.graphics().drawCircle(0,0, circleSize);
+			d.graphics().endPath();
+			d.graphics().strokeLine();
+			d.matrix().translate(p.x, p.y);
+			GLOBALSTAGE.addChild(d);
+	}
+}
+
+
+// throw "SHOW FEATURES & LEXIGRAM:"
 /*
 	var sizes = [];
 for(var i=0; i<features.length; ++i){
@@ -22375,10 +22507,12 @@ App3DR.ProjectManager.prototype.trianglesTexturize = function(){ // find uv sour
 		// get view resolutions
 		// var textureSize = new V2D(512,512);
 		// var textureSize = new V2D(1024,1024);
-		var textureSize = new V2D(2048,2048);
+		// var textureSize = new V2D(2048,2048);
+		var textureSize = new V2D(4096,4096);
+throw "is this reached?"
 		// var resolutionScale = 1.0;
-		var resolutionScale = 0.5;
-		// var resolutionScale = 0.25;
+		// var resolutionScale = 0.5;
+		var resolutionScale = 0.25;
 		// var resolutionScale = 0.15;
 		// var resolutionScale = 0.125;
 		var resolutions = [];
