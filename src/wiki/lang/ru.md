@@ -403,6 +403,105 @@ https://www.youtube.com/watch?v=0r83o6g6RAQ
 
 
 
+
+
+
+https://www.youtube.com/watch?v=z0wK6s-6cbo
+
+Rammstein - Benzin
+
+
+
+
+
+Ich brauche Zeit, kein Heroin
+Kein Alkohol, kein Nikotin
+Brauch' keine Hilfe, kein Koffein
+Doch Dynamit und Terpentin
+Ich brauche Öl für Gasolin
+Explosiv wie Kerosin
+Mit viel Oktan und frei von Blei
+Einen Kraftstoff wie Benzin
+Benzin
+Benzin
+Benzin
+Ja
+Brauch' keinen Freund, kein Kokain
+Brauch' weder Arzt noch Medizin
+Brauch' keine Frau, nur Vaselin
+Etwas Nitroglyzerin
+Ich brauche Geld für Gasolin
+Explosiv wie Kerosin
+Mit viel Oktan und frei von Blei
+Einen Kraftstoff wie Benzin
+Benzin
+Benzin
+Benzin
+Gib mir Benzin
+Es fließt durch meine Venen
+Es schläft in meinen Tränen
+Es läuft mir aus den Ohren
+Herz und Nieren sind Motoren, ja
+Benzin
+Willst du dich von etwas trennen
+Dann musst du es verbrennen
+Willst du es nie wieder sehen
+Lass es schwimmen in Benzin
+Benzin
+Benzin
+Benzin
+Ich brauch Benzin
+Benzin
+Ja, Benzin
+Gib mir Benzin
+Ja
+
+
+I need time, not heroin
+No alcohol, no nicotine
+Don't need any help, no caffeine
+But dynamite and turpentine
+I need oil for gasoline
+Explosive like kerosene
+High octane and lead free
+A fuel like gasoline
+petrol
+petrol
+petrol
+Yes
+Don't need a friend, no cocaine
+I don't need a doctor or medicine
+I don't need a woman, just petroleum jelly
+Some nitroglycerin
+I need money for gasoline
+Explosive like kerosene
+High octane and lead free
+A fuel like gasoline
+petrol
+petrol
+petrol
+Give me gasoline
+It flows through my veins
+It sleeps in my tears
+It's running out of my ears
+The heart and kidneys are engines, yes
+petrol
+Do you want to part with something
+Then you have to burn it
+Don't you ever want to see it again
+Float it in gasoline
+petrol
+petrol
+petrol
+I need Petrol
+petrol
+Yes, gasoline
+Give me gasoline
+Yes
+
+
+
+
 https://www.youtube.com/watch?v=7RI6fFw0QVc
 
 ? - ?

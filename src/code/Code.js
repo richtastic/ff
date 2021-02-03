@@ -10278,6 +10278,23 @@ Code.pointFromSpheresAlgebraic = function(spheres){
 	return new V3D(x,y,z);
 }
 
+Code.boundingSphere3D = function(points){
+	// TODO: near-minimal sphere: Ritter's bounding sphere
+	// TODO: minimum sphere: Fischer's exact solver
+	console.log("Code.boundingSphere3D");
+	// get COM
+	var com = V3D.average(points);
+	var maxDistance = 0;
+	for(var i=0; i<points.length; ++i){
+		var point = points[i];
+		var d = V3D.distanceSquare(point,com);
+		if(d>maxDistance){
+			maxDistance = d;
+		}
+	}
+	maxDistance = Math.sqrt(maxDistance);
+	return {"center":com, "radius":maxDistance};
+}
 
 
 Code.sphereFromPoints = function(a,b,c,d){ // ~95+s% accurate

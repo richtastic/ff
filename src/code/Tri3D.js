@@ -251,7 +251,7 @@ console.log(unique);
 }
 
 Tri3D.generateTetrahedraSphereSides = function(mode){
-	mode = Code.valueOrDefault(mode,0); // default = 5 : icosahedrom
+	mode = Code.valueOrDefault(mode,5); // default = 5 : icosahedrom
 	var sides = null;
 	if(mode==0){ // regular tetrahera [4] -- good except 4 corners are bad
 		// create tetrahedra - side length = 1

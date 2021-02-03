@@ -389,20 +389,48 @@ MISSING:
 
 
 
-Tri3D.generateTetrahedraSphere -- has empty triangles
+
 
 - make example app in unity
-	- VR learnings
 	- sketch scenes
-
 	x how to make a triangle display at runtime?
-	- generate a circular mesh with desired colors
-	- generate a circular UI with hexigons
-	- interact in 3D with buttons on tap
+	x mesh to use colors from an image
+	x mesh rendered using lines
+		- line renderer for single lines
+		- opengl.lines for constant thickness lines
+		- use triangle rendering to make flat/cylindrical lines
+	x interact in 3D with buttons on tap
+	x generate a circular mesh with desired colors
+	x generate a circular UI with hexigons
+	x generate spheres for intersecting 
+	x color change ?
+	x update visuals for when button click or whatnot
+	- animation fade in/out colors
+	- move 3D menu with player
+	x render menu OVERLAY on top of world
+		x new shader ?
+	- show/hide screen
+	- active vs inactive
+	- event passed outward & show item at touch site
+	- hook up event system to VR player controller
+	- particle effects
+	- shaders?
+	- normal map?
+
+	
+
+
+- ARCHITECTURE MAKEUP: unity interface -> C# interface
+	- overarching game object
+		- input event system object -> relay to C# input system
+		- 
 
 
 
-- IMPLEMENT BACKGROUND SPHERE (after the fact even?)
+
+
+
+x IMPLEMENT BACKGROUND SPHERE (after the fact even?)
 	- which view to use ? most orthogonal ?
 
 
