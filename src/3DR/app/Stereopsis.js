@@ -8158,18 +8158,20 @@ Stereopsis.World.prototype.solveDenseGroup = function(completeSolveFxn){ // mult
 	var world = this;
 
 
-console.log("START STRING:");
-console.log(world.toYAMLString());
+// console.log("START STRING:");
+// console.log(world.toYAMLString());
 
 // world.setResolutionProcessingModeFromCountP3D([]); // currently 0
 // world.shouldValidateMatchRange(true);
-world.shouldValidateMatchRange(false);
+world.shouldValidateMatchRange(false); // ALLOW LOW CONTRAST AREAS
 
 var timeStart = Code.getTimeMilliseconds();
 	var subdivisionMultiplier = 0.75;
 	var subdivisions = 1; // 0-1
 	var iterations = 3; // 2-3
-subdivisions = 0;
+// subdivisions = 0;
+// subdivisions = 1;
+subdivisions = 2;
 // iterations = 2;
 iterations = 3;
 	var maxIterations = (subdivisions+1)*iterations;
@@ -8200,12 +8202,20 @@ world.printPoint3DTrackCount();
 		}
 		// expand - speedup
 		var compareSize = 7;
+		var sigmaProbe3DR = 2.0;
+		var sigmaProbe2DR = 2.0;
+		var sigmaFilter3DR = 2.0;
+		var sigmaFilterPatch3D = 2.0;
 		if(subdivision>0){
 			compareSize = 5;
+			sigmaProbe3DR = 1.0;
+			sigmaProbe2DR = 1.0;
+			// sigmaFilter3DR = 1.0;
+			// sigmaFilterPatch3D = 1.0;
 		}
 
 		// expand 3D
-		world.probe3DR(3.0,2.0);
+		world.probe3DR(3.0,sigmaProbe3DR);
 console.log("after probe 3D");
 world.printPoint3DTrackCount();
 		// expand 2D
@@ -8220,7 +8230,7 @@ world.printPoint3DTrackCount();
 		world.refinePoint3DAbsoluteLocation();
 
 		// retract
-		world.filterGlobal3DR(2.0); // 2 - 3
+		world.filterGlobal3DR(sigmaFilter3DR); // 2 - 3
 console.log("after global 3D filter");
 world.printPoint3DTrackCount();
 // world.checkTransformMatches();
@@ -8231,7 +8241,7 @@ world.printPoint3DTrackCount();
 // world.checkTransformMatches();
 
 		// world.filterLocal3DR(3.0); // sphere: 1-2
-world.filterGlobalPatchSphere3D(2.0);
+world.filterGlobalPatchSphere3D(sigmaFilterPatch3D);
 console.log("after local 3D filter");
 world.printPoint3DTrackCount();
 // world.checkTransformMatches();
@@ -8239,7 +8249,7 @@ world.printPoint3DTrackCount();
 
 
 
-		// refine cameras --- no 
+		// refine cameras --- no : camara position is assumed fixed
 		// world.recordViewAbsoluteOrientationStart();
 		// world.refineAllCameraMultiViewTriangulation(100);
 		// world.copyRelativeTransformsFromAbsolute();
@@ -8258,7 +8268,10 @@ world.printPoint3DTrackCount();
 
 	
 	// optimize points
-	world.refinePoint3DAbsoluteLocation();
+	world.refinePoint3DAbsoluteLocation(100);
+
+
+	//refinePoint3DAbsoluteLocation
 	// final output:
 	world.estimate3DErrors(true);
 

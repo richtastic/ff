@@ -387,6 +387,44 @@ MISSING:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+- NOISY POINT CLOUDS
+	- test in group in current test
+	- review stereopsis doc
+
+
+
+
+- next solving problems:::::::::::::::::::::::::::::::::::::::::::::::
+	- point clouds are still fairly noisy
+		=> ?
+		=> are the final group points optimized 3D location to improve 3D projection?
+		=> usual methods:
+			- filtering out obstructions
+			- 
+		=> higher resolution inages?
+		=> more dense points ?
+		=> predicted validity by projection to other views?
+		- neighbors that are not where they are predicted to be are removed?
+		- removing entire P3D vs removing a match?
+		- enforce some 2D-3D regularization
+		- P3D depth-only optimizing (3D point moves along ray to cameras?) ?=> DoF inside plane tho?
+	- triangulations are missing some triangles
+		=> ?
+		... need to allow for more lenient assignment
+			=> allow for triangle to face away?
+				- add another penalty order of magnitude
+				(is this even why points are dropped?)
+	- textures from bad parts of images are being used (eg no intersection)
+		=> ?
+		- assigning view images to vertexes has problems, alternatives?
+			- loading the individual optional images -- what is the best MEDIAN average image & make sure to drop outlier images / colors
+				- candidate step where many images have to be loaded to check against (even at low res)
+		- how to keep view data on the points ?
+			- get point cloud of triangle size radius & get histogram of all views included
+				- keep top
+
+
+
 
 
 
@@ -439,39 +477,6 @@ Tri3D.generateTetrahedraSphere
 
 
 - why is right-side of texture triangles square and left is rounded?
-
-
-
-
-- next solving problems:::::::::::::::::::::::::::::::::::::::::::::::
-	- point clouds are still fairly noisy
-		=> ?
-		=> are the final group points optimized 3D location to improve 3D projection?
-		=> usual methods:
-			- filtering out obstructions
-			- 
-		=> higher resolution?
-		=> predicted validity by projection to other views?
-		- neighbors that are not where they are predicted to be are removed?
-		- removing entire P3D vs removing a match?
-		- enforce some 2D-3D regularization
-		- P3D depth-only optimizing (3D point moves along ray to cameras?) ?=> DoF inside plane tho?
-	- triangulations are missing some triangles
-		=> ?
-		... need to allow for more lenient assignment
-			=> allow for triangle to face away?
-				- add another penalty order of magnitude
-				(is this even why points are dropped?)
-	- textures from bad parts of images are being used (eg no intersection)
-		=> ?
-		- assigning view images to vertexes has problems, alternatives?
-			- loading the individual optional images -- what is the best MEDIAN average image & make sure to drop outlier images / colors
-				- candidate step where many images have to be loaded to check against (even at low res)
-		- how to keep view data on the points ?
-			- get point cloud of triangle size radius & get histogram of all views included
-				- keep top
-
-
 
 
 

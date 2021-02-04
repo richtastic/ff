@@ -13879,6 +13879,7 @@ App3DR.ProjectManager.prototype._doDenseGroupsStereopsis = function(infoData, co
 		// 	comparePairs.push([viewA,viewB]);
 		// }
 
+// throw "HERE START"
 
 		// set view cell density
 console.log("SET CELLS");
@@ -13960,6 +13961,12 @@ console.log("DELTA INIT: "+((timeB-timeA)/1000)); // 4-5 seconds
 			world.solveDenseGroup(solveDenseGroupComplete);
 			console.log("?????????????????????????????");
 
+
+
+			// TESTING
+			var str = world.toYAMLString();
+			console.log(str);
+throw "solveDenseGroup end"
 
 			var errorCount = worldViews.length + 1;
 			var errorCounts = Code.newArrayArrays(errorCount);
@@ -15004,7 +15011,7 @@ throw "before save basic";
 
 App3DR.ProjectManager.prototype.iterateBundleProcess = function(){
 	var project = this;
-	console.log("iterateBundleProcess");
+	console.log("iterateBundleProcess...");
 	var bundleData = null;
 	var selectedGroup = null;
 	var groupData = null;
@@ -15073,14 +15080,14 @@ App3DR.ProjectManager.prototype.iterateBundleProcess = function(){
 					var viewID = worldView["id"];
 					var view = project.viewFromID(viewID);
 					// view.loadBundleAdjustImage(completeLoadGroupViewImage, project); // 4032 x 3024
-					view.loadDenseHiImage(completeLoadGroupViewImage, project); // ...
+					view.loadDenseHiImage(completeLoadGroupViewImage, project); // ... 
 					// view.loadIconImage(completeLoadGroupViewImage, project);
 				}
 				return;
 			}
 		}
 
-// throw "aggregate views";
+throw "aggregate views";
 		// aggregate views
 		var viewsFileName = bundleData["viewsFile"];
 		if(!viewsFileName){
@@ -15108,7 +15115,7 @@ App3DR.ProjectManager.prototype.iterateBundleProcess = function(){
 			return;
 		}
 
-// throw "aggregate points";
+throw "aggregate points";
 		var pointsFileName = bundleData["pointsFile"];
 		if(!pointsFileName){
 			var pointsFileName = "points.yaml";
