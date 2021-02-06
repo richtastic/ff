@@ -7835,9 +7835,9 @@ console.log("AFTER FILTER GLOBAL");
 	// this.filterLocal2D(); // ....... DOES THIS MAKE MUCH OF A DIFFERENCE ? --- NEEEED THIS FOR SINGLE PAIR
 
 	// should wait till point density is very high
-	this.filterLocal3Dto2DSize();
+//	this.filterLocal3Dto2DSize();
 
-	this.filterLocal3Dto2DProjection();
+	// this.filterLocal3Dto2DProjection();
 
 	world.filterNeighborConsistency();
 
@@ -8169,9 +8169,9 @@ var timeStart = Code.getTimeMilliseconds();
 	var subdivisionMultiplier = 0.75;
 	var subdivisions = 1; // 0-1
 	var iterations = 3; // 2-3
-// subdivisions = 0;
+subdivisions = 0;
 // subdivisions = 1;
-subdivisions = 2;
+// subdivisions = 2;
 // iterations = 2;
 iterations = 3;
 	var maxIterations = (subdivisions+1)*iterations;
@@ -8207,11 +8207,11 @@ world.printPoint3DTrackCount();
 		var sigmaFilter3DR = 2.0;
 		var sigmaFilterPatch3D = 2.0;
 		if(subdivision>0){
-			compareSize = 5;
+			// compareSize = 5;
 			sigmaProbe3DR = 1.0;
 			sigmaProbe2DR = 1.0;
-			// sigmaFilter3DR = 1.0;
-			// sigmaFilterPatch3D = 1.0;
+			// sigmaFilter3DR = 1.5; // 
+			sigmaFilterPatch3D = 1.0; // not a big diff
 		}
 
 		// expand 3D
@@ -8225,7 +8225,6 @@ console.log("after probe 2D");
 world.printPoint3DTrackCount();
 // world.checkTransformMatches();
 	
-
 		// optimize points
 		world.refinePoint3DAbsoluteLocation();
 
@@ -8235,10 +8234,43 @@ console.log("after global 3D filter");
 world.printPoint3DTrackCount();
 // world.checkTransformMatches();
 
+
+// world.filterLocal2Dto3DSize();
+
+// world.filterNeighborConsistency();
+
+// world.filterLocal3Dto2DSize();
+
+// world.filterLocal3Dto2DProjection();
+
+
+world.filterCriteria2DNnot3DN();
+
+world.filterCriteria2DNnotDepth();
+
+world.filterCriteria2DN3DNregularization();
+
+
+/*
+world.filterLocal2Dto3DSize();
+
+world.filterLocal3Dto2DSize();
+
+world.filterLocal3Dto2DProjection();
+
+world.filterNeighborConsistency();
+*/
+
 		// world.filterLocal2DR();
 console.log("after local 2D filter");
 world.printPoint3DTrackCount();
 // world.checkTransformMatches();
+
+
+
+
+
+
 
 		// world.filterLocal3DR(3.0); // sphere: 1-2
 world.filterGlobalPatchSphere3D(sigmaFilterPatch3D);
@@ -8855,7 +8887,7 @@ world.sampleErrorsDebug();
 		// drop poor tracks
 		world.dropNegativePoints3D();
 		world.dropFurthest();
-		world.filterLocal3Dto2DSize();
+//		world.filterLocal3Dto2DSize();
 		// world.filterLocal3D(); // ...
 		world.filterPairwiseSphere3D(3.0); // 2-3
 // ?: start more rigid, allow for more error, finish rigid
@@ -9765,7 +9797,7 @@ break;
 		// intersection
 		this.filterPairwiseSphere3D(3.0);
 		// local 3d to 2d
-		this.filterLocal3Dto2DSize();
+//this.filterLocal3Dto2DSize();
 	}
 	this.estimate3DErrors(true);
 	// TODO: BA ?
@@ -11042,6 +11074,93 @@ throw "average error is going up ...."
 
 	*/
 }
+
+
+// conventional filtering ------------------------------------------------------------
+
+
+Stereopsis.World.prototype.filterCriteria2DNnot3DN = function(){ // p is removed if the average of inconsistent-neighbor NCC (or SAD) score is much better than
+	console.log("filterCriteria2DNnot3DN");
+	/*
+
+TODO:
+	for each P3D:
+		for each view of P
+			get all 2D neighbors of P [minus a little extra]
+		get all 3D neighbors of P [plus a little extra]
+		save ratio |N3D|/|N2D| (should never be more than 1)
+
+		-> NCC score should somehow also be in this
+
+P3D is an outlier if:
+	- inconsistent
+	- p is in a few number of images
+	- p is has a poor overall NCC score (large)
+
+
+	perfect ratio = 1.0
+	calculate sigma
+	drop P3D with value > ~ 2sigma or some minimum (eg 0.25)
+
+
+
+	=> opposite way too: if they ARE 3D neighbors but NOT 2D neighbors ?
+
+	*/
+}
+
+
+Stereopsis.World.prototype.filterCriteria2DNnotDepth = function(){ // if visible (depth test) count of images with a good NCC score is low => remove
+	// average consistent view NCC score is poor: drop image
+	console.log("filterCriteria2DNnotDepth");
+	/*
+	for each P3D:
+		behind count = 0
+		get all views of P
+			get all 2D neighbors of P
+			if P is behind neighbor:
+				++behind
+		score = average of match NCC score of remaining infront view matches
+		if the score of the remaining visible views 
+
+
+		if behind/views.total > 
+
+	could get a 
+
+	*/
+}
+
+
+Stereopsis.World.prototype.filterCriteria2DN3DNregularization = function(){
+	console.log("filterCriteria2DNnot3DN");
+	/*
+	for each P3D:
+		for each view of P
+			get all 2D neighbors of P [minus a little extra]
+		get all 3D neighbors of P [plus a little extra]
+		if |N3D|/|N2D| < 0.25 => drop
+
+		COULD ALSO:
+		save ratio |N3D|/|N2D| (should never be more than 1)
+		calculate sigma
+		 ??? drop P3D with value > ~ 2sigma or some minimum (eg 0.25)
+
+
+
+		 is there a way to do a PER-VIEW 2D-3D neighbor check & just drop MATCHES, not P3D?
+		 	- get all 2D points from single view
+		 	- if there aren't at least 25% of those single view points => drop the match
+
+
+		 => differences between popultion of view-2d-neighbors and all-2d-neighbors ?
+	*/
+}
+
+
+// experimental filtering ------------------------------------------------------------
+
+
 Stereopsis.World.prototype.filterTransform2D3D = function(sigmaDrop2D,sigmaDrop3D){ // remove sporadically far points from each transform/pair
 	// points whos 3D/2D ratio is abnormally large
 	// points whos 3D/2D ratio range is abnormally large
@@ -11436,12 +11555,12 @@ Stereopsis.World.prototype.filterLocal3Dto2DSize_NEW = function(){ // get 3D nei
 
 	return;
 }
-Stereopsis.World.prototype.filterLocal3Dto2DSize = function(){
+Stereopsis.World.prototype.filterLocal3Dto2DSize = function(){ // find 3D neighborhood size, in 2D vote one outlier, drop high outlier count
 	console.log("filterLocal3Dto2DSize");
-return;
+// return;
 
 	var world = this;
-	var neighborCount = 6; // 6-10
+	var neighborCount = 8; // 6-10
 	// limit criteria
 	var space3D = world.pointSpace();
 	if(space3D.count()<neighborCount){
@@ -11529,7 +11648,7 @@ percents.push(percent);
 }
 Stereopsis.World.prototype.filterLocal3Dto2DProjection = function(){ // drop 3D outlier noise - projected 3D points missing may be outliers
 	console.log("filterLocal3Dto2DProjection");
-return;
+// return;
 
 /*
 if this gets the outlier --- then most all points will be outside
@@ -11607,9 +11726,9 @@ if this gets the outlier --- then most all points will be outside
 			// }
 			// throw "...";
 		}
-		throw "...";
+		// throw "...";
 	}
-	throw "..."
+	// throw "..."
 	// vote
 	// drop P3D if very likely outlier
 	var dropList = [];

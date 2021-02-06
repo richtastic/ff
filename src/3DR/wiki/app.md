@@ -389,9 +389,85 @@ MISSING:
 
 - NOISY POINT CLOUDS
 	- test in group in current test
-	- review stereopsis doc
+	--- review stereopsis doc
+		- double check filter algorithms
+		- try out different methods
+		- check out if dense pair is any different ?
+
+- try a new set 360
 
 
+
+=> FASTEST WAY TO CALCULATE A POINT'S 'SIZE' FROM SINGLE IMAGE
+	- ray thru pixel p to P
+	- ray thru pixel q
+	- Q ~ closest point on ray q to P
+	- know angle between 2 rays thru p & q & distance from camera to P => 
+
+Accurate-Dense-and-Robust-Multi-View-Stereopsis.pdf
+
+
+http://vision.ia.ac.cn/zh/senimar/reports/Accurate,%20Dense,%20and%20Robust.pdf
+
+https://www.researchgate.net/profile/Yasutaka_Furukawa/publication/221364612_Accurate_Dense_and_Robust_Multi-View_Stereopsis/links/09e4150b67b605f515000000/Accurate-Dense-and-Robust-Multi-View-Stereopsis.pdf
+
+
+
+
+
+
+photo-consistency
+
+plane-sweep: for each depth plane : for each pixel : compute variance => pick depth for each pixel with lowest variance
+
+
+
+NOTES:
+
+occlusion: projected point from world to view-i may be obscured by another world point closer to view-i
+
+on-expansion: find all other supporting views immediately?
+
+
+- what are the differences/implications when considering ALL INCONSISTENT NEIGHBORS vs ALL NEIGHRBORS (2D) ? 
+
+
+
+
+main papers:
+https://www.di.ens.fr/willow/pdfscurrent/pami09a.pdf = http://openrs.whu.edu.cn/photogrammetry/2015/2008%20PAMI%20-%20Accurate,%20Dense,%20and%20Robust%20Multi-View%20Stereopsis.PDF
+https://carlos-hernandez.org/papers/fnt_mvs_2015.pdf
+https://www.researchgate.net/profile/Yasutaka_Furukawa/publication/221364612_Accurate_Dense_and_Robust_Multi-View_Stereopsis/links/09e4150b67b605f515000000/Accurate-Dense-and-Robust-Multi-View-Stereopsis.pdf
+
+explainer:
+http://vision.ia.ac.cn/zh/senimar/reports/Accurate,%20Dense,%20and%20Robust.pdf
+
+visitied:
+https://cs.brown.edu/courses/csci1430/2013/lectures/13.pdf
+/Downloads/9781601988379-summary.pdf
+https://courses.cs.washington.edu/courses/cse455/10wi/lectures/multiview.pdf
+https://cs.nyu.edu/~fergus/teaching/vision_2012/6_Multiview_SfM.pdf
+https://grail.cs.washington.edu/wp-content/uploads/2015/08/furukawa2010tim.pdf
+https://www.cs.unc.edu/~lazebnik/spring11/lec16_multiview_stereo.pdf
+
+
+
+todo:
+
+
+- how to calculate the size of a 3D neighborhood?
+	- neighborhood size for a single view is more accurate than:
+	- neighborhood size average over many neighborhoods
+	- when calculating a P3D patch size, save the 2D patch size = 4 projections L/R/U/D in the patch
+
+
+
+
+- is updating K worth a try durning DENSE set ?
+- how to average found Ks?
+
+
+-
 
 
 - next solving problems:::::::::::::::::::::::::::::::::::::::::::::::
