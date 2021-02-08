@@ -387,6 +387,38 @@ MISSING:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+- if the cameras are a little off, how can the filtering/positioning be forgiving?
+	- use error% for volumes?
+
+
+- TRY ALLOWING CAMERAS TO MOVE IN GROUP TO SEE IF THAT HELPS
+	-> if it does help, how could groups be combined after an update?
+		=> re-compute most likely average (rotation + scale + translation -> position)
+		...
+		
+
+
+
+
+2nd filter:
+	- for each P3D
+		- for each P2D
+			- for each 2D neighbor
+				- if P3D is behind N3D for any view:
+				mark view as not visible
+		- if view count <=1
+			=> mark P3D for delete
+
+
+
+
+- 2DN not 3DN
+	- what does opposit situation mean? - 3DN not 2DN?
+
+	=> filterCriteria2DNnot3DN is removing a lot of points
+
+
+
 - NOISY POINT CLOUDS
 	- test in group in current test
 	--- review stereopsis doc

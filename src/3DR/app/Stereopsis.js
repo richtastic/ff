@@ -2890,6 +2890,16 @@ Stereopsis.P2D.prototype.averageRError = function(){
 		return match.errorR();
 	});
 }
+Stereopsis.P2D.prototype.neighborhood3DSize = function(){
+	var p3D = this._point3D.point();
+	if(!p3D){
+		throw "no valid p3d point"
+	}
+	var p2D = this._point2D;
+	var view = this._view;
+	var size3D = Stereopsis.World.neighborhood3DSize(view,p2D,p3D);
+	return size3D;
+}
 Stereopsis.P2D.prototype.resetVotes = function(){
 	this._votes = {};
 	this._metrics = {};
@@ -8169,14 +8179,68 @@ var timeStart = Code.getTimeMilliseconds();
 	var subdivisionMultiplier = 0.75;
 	var subdivisions = 1; // 0-1
 	var iterations = 3; // 2-3
-subdivisions = 0;
-// subdivisions = 1;
+// subdivisions = 0;
+subdivisions = 1;
 // subdivisions = 2;
 // iterations = 2;
 iterations = 3;
 	var maxIterations = (subdivisions+1)*iterations;
 	var subdivision = 0;
 	// world.setResolutionProcessingModeFromCountP3D([0,0,0]); // to highest
+/*
+console.log("    ...   ");
+
+var points3D = world.toPointArray();
+
+console.log("       "+points3D.length);
+
+
+
+var point3D = points3D[0];
+
+console.log(point3D);
+
+var points2D = point3D.toPointArray();
+
+console.log(points2D);
+
+// var point2D = points2D[0];
+var point2D = points2D[1];
+
+console.log(point2D);
+
+var view = point2D.view();
+
+console.log(view);
+
+var p2D = point2D.point2D();
+
+console.log(p2D);
+
+var p3D = point3D.point();
+
+console.log(p3D);
+
+console.log("current size1: "+point3D.size());
+
+world.initP3DPatchFromGeometry3D(point3D);
+
+console.log("current size2: "+point3D.size());
+
+
+var size3D = Stereopsis.World.neighborhood3DSize(view,p2D,p3D);
+console.log(size3D);
+
+
+var size3D = point2D.neighborhood3DSize();
+console.log(size3D);
+
+
+	world.generateAllViewNeighborhoodSizes();
+
+
+throw "???"
+*/
 	world.setResolutionProcessingModeFromCountP3D([0,0]); // neighbor avg
 	for(var iteration=0; iteration<maxIterations; ++iteration){
 		console.log("all: ========================================================================================= "+iteration+" / "+maxIterations);
@@ -8235,6 +8299,12 @@ world.printPoint3DTrackCount();
 // world.checkTransformMatches();
 
 
+
+
+
+
+
+
 // world.filterLocal2Dto3DSize();
 
 // world.filterNeighborConsistency();
@@ -8244,11 +8314,21 @@ world.printPoint3DTrackCount();
 // world.filterLocal3Dto2DProjection();
 
 
+
+
+// NEW:
+// world.filterCriteria2DNnot3DN();
+// world.filterCriteria2DNnotDepth();
+// world.filterCriteria2DN3DNregularization();
+/*
 world.filterCriteria2DNnot3DN();
 
 world.filterCriteria2DNnotDepth();
 
 world.filterCriteria2DN3DNregularization();
+*/
+
+
 
 
 /*
@@ -8274,7 +8354,7 @@ world.printPoint3DTrackCount();
 
 		// world.filterLocal3DR(3.0); // sphere: 1-2
 world.filterGlobalPatchSphere3D(sigmaFilterPatch3D);
-console.log("after local 3D filter");
+console.log("after patch 3D filter");
 world.printPoint3DTrackCount();
 // world.checkTransformMatches();
 
@@ -8286,6 +8366,13 @@ world.printPoint3DTrackCount();
 		// world.refineAllCameraMultiViewTriangulation(100);
 		// world.copyRelativeTransformsFromAbsolute();
 		// world.updateP3DPatchesFromAbsoluteOrientationChange();
+
+		// world.recordViewAbsoluteOrientationStart();
+		// world.refineAllCameraMultiViewTriangulation(50); // 100 is high for ~10 views
+		// world.copyRelativeTransformsFromAbsolute();
+		// world.updateP3DPatchesFromAbsoluteOrientationChange();
+
+
 
 		// retract 2
 		world.dropNegativeMatches3D();
@@ -11081,6 +11168,88 @@ throw "average error is going up ...."
 
 Stereopsis.World.prototype.filterCriteria2DNnot3DN = function(){ // p is removed if the average of inconsistent-neighbor NCC (or SAD) score is much better than
 	console.log("filterCriteria2DNnot3DN");
+	var neighborhoodScale2D = 1.0; // radius muliplier - smaller is more forgiving
+	var neighborhoodScale3D = 1.25; // radius muliplier - larger more forgiving space
+neighborhoodScale2D = Math.sqrt(2);
+neighborhoodScale3D = neighborhoodScale2D * 1.25;
+	var scoreP2DMultiplier = 0.75; // smaller number is more forgiving
+	var world = this;
+	var points3D = world.toPointArray();
+	var space3D = world.pointSpace();
+	var removeListP2D = [];
+console.log("start size: "+points3D.length);
+var timeStart = Code.getTimeMilliseconds();
+	for(var i=0; i<points3D.length; ++i){
+		var point3D = points3D[i];
+		var p3D = point3D.point();
+		var points2D = point3D.toPointArray();
+		for(var j=0; j<points2D.length; ++j){
+			var point2D = points2D[j];
+				var p2D = point2D.point2D();
+			var view = point2D.view();
+			var cellSize2D = view.cellSize();
+			var cellSize3D = point2D.neighborhood3DSize();
+				var searchRadius2D = cellSize2D*neighborhoodScale2D;
+				var searchRadius3D = cellSize3D*neighborhoodScale3D;
+			var space2D = view.pointSpace();
+			var neighbors2D = space2D.objectsInsideCircle(p2D, searchRadius2D);
+			var neighbors3D = space3D.objectsInsideSphere(p3D, searchRadius3D);
+			var inconsistent = [];
+			for(var k=0; k<neighbors2D.length; ++k){ // TODO: this processes point2D (but correctly doesn't include it)
+				var neighbor2D = neighbors2D[k];
+				if(neighbor2D==point2D){
+					continue;
+				}
+				var neighbor3D = neighbor2D.point3D();
+				if(!Code.elementExists(neighbor3D, neighbors3D)){
+					// if(neighbor3D.hasView(view)){ // should also be in view too  --- this is always true?
+						inconsistent.push(neighbor2D);
+					// }
+				}
+			}
+			if(inconsistent.length>0){
+				// get average inconsistent score: NCC / SAD
+				var scoreInc = 0;
+				for(var k=0; k<inconsistent.length; ++k){
+					var neighbor2D = inconsistent[k];
+					scoreInc += neighbor2D.averageNCCError(); // only matches
+				}
+				scoreInc /= inconsistent.length;
+				// get average P2D NCC / SAD score
+				var scoreP2D = point2D.averageNCCError();
+				// console.log(scoreInc,scoreP2D);
+					scoreP2D = scoreP2D*scoreP2DMultiplier;
+				if(scoreInc < scoreP2D){ // this point is worse than the inconsistent (other) group(s) -> remove
+					removeListP2D.push(point2D);
+				}
+			}
+		}
+		// throw "???"
+	}
+console.log("removeListP2D: "+removeListP2D.length+" ... / ... "+points3D.length);
+	var removed = 0;
+	var kept = 0;
+	for(var i=0; i<removeListP2D.length; ++i){
+		var point2D = removeListP2D[i];
+		var point3D = point2D.point3D();
+		if(point3D && point3D.matchCount()>0){ // may be removed more than once
+			world.removePoint2DAndMatchesFromPoint3D(point2D);
+			++kept;
+		}else{
+			// console.log("removed already");
+			++removed;
+		}
+	}
+	console.log("kept: "+kept);
+	console.log("removed: "+removed);
+var timeEnd = Code.getTimeMilliseconds();
+var timeDelta = timeEnd-timeStart;
+	console.log("new size: "+world.toPointArray().length);
+console.log("generateAllViewNeighborhoodSizes time: "+timeDelta);
+
+// throw "here";
+	// TODO: CHECK IF POINT STILL EXISTS?
+
 	/*
 
 TODO:
@@ -11111,8 +11280,7 @@ P3D is an outlier if:
 
 
 Stereopsis.World.prototype.filterCriteria2DNnotDepth = function(){ // if visible (depth test) count of images with a good NCC score is low => remove
-	// average consistent view NCC score is poor: drop image
-	console.log("filterCriteria2DNnotDepth");
+
 	/*
 	for each P3D:
 		behind count = 0
@@ -11126,14 +11294,187 @@ Stereopsis.World.prototype.filterCriteria2DNnotDepth = function(){ // if visible
 
 		if behind/views.total > 
 
+
+
+
+
+	2nd filter:
+	- for each P3D
+		- for each P2D
+			- for each 2D neighbor
+				- if P3D is behind N3D for any view:
+				mark view as not visible
+		- if view count <=1
+			=> mark P3D for delete
+
 	could get a 
 
 	*/
+
+	var neighborhoodScale2D = 1.0; // radius cell size muliplier
+neighborhoodScale2D = Math.sqrt(2.0); // 1.414
+var error3DScale = 0.5; // % of 3D cell size
+	var world = this;
+	var points3D = world.toPointArray();
+	var space3D = world.pointSpace();
+	var removeListP2D = [];
+	// console.log("start size: "+points3D.length);
+	var timeStart = Code.getTimeMilliseconds();
+	var checked = 0;
+console.log("filterCriteria2DNnotDepth: "+points3D.length);
+	for(var i=0; i<points3D.length; ++i){
+		var point3D = points3D[i];
+		var p3D = point3D.point();
+		var points2D = point3D.toPointArray();
+		var visibleViews = [];
+		for(var j=0; j<points2D.length; ++j){
+			var point2D = points2D[j];
+				var p2D = point2D.point2D();
+			var view = point2D.view();
+			var viewCenter = view.center();
+			var cellSize2D = view.cellSize();
+			var cellSize3D = point2D.neighborhood3DSize();
+				var searchRadius2D = cellSize2D*neighborhoodScale2D;
+			var errorMargin3D = cellSize3D*error3DScale;
+			var space2D = view.pointSpace();
+			var neighbors2D = space2D.objectsInsideCircle(p2D, searchRadius2D);
+			var isVisible = true;
+			var distancePoint2D = V3D.distance(p3D,viewCenter);
+			//
+			++checked;
+			//
+			for(var k=0; k<neighbors2D.length; ++k){
+				var neighbor2D = neighbors2D[k];
+				if(neighbor2D==point2D){
+					continue;
+				}
+				var neighbor3D = neighbor2D.point3D();
+				var n3D = neighbor3D.point();
+				var d2 = V3D.distance(n3D,viewCenter) + errorMargin3D;
+				if(distancePoint2D>d2){
+					isVisible = false;
+					break;
+				}
+			}
+			if(isVisible){
+				visibleViews.push(view);
+			}
+		}
+		if(visibleViews.length<=1){
+			removeListP2D.push(point2D);
+		}
+		// console.log(removeListP2D);
+		// throw "here";
+	}
+	console.log("checked: "+checked);
+	console.log("removeListP2D: "+removeListP2D.length);
+
+	var removed = 0;
+	var kept = 0;
+	for(var i=0; i<removeListP2D.length; ++i){
+		var point2D = removeListP2D[i];
+		var point3D = point2D.point3D();
+		if(point3D && point3D.matchCount()>0){ // may be removed more than once
+			world.removePoint2DAndMatchesFromPoint3D(point2D);
+			++kept;
+		}else{
+			++removed;
+		}
+	}
+	//
+	console.log("kept: "+kept);
+	console.log("removed: "+removed);
+	//
+	var timeEnd = Code.getTimeMilliseconds();
+	var timeDelta = timeEnd-timeStart;
+	console.log("new size: "+world.toPointArray().length);
+	console.log("filterCriteria2DNnotDepth time: "+timeDelta);
+
+	// throw "here";
 }
 
 
 Stereopsis.World.prototype.filterCriteria2DN3DNregularization = function(){
-	console.log("filterCriteria2DNnot3DN");
+	console.log("filterCriteria2DN3DNregularization");
+
+	/*
+
+	???
+
+	// average consistent view NCC score is poor: drop image
+
+	var neighborhoodScale2D = 1.0; // radius muliplier - smaller is more forgiving
+	var neighborhoodScale3D = 1.25; // radius muliplier - larger more forgiving space
+neighborhoodScale2D = Math.sqrt(2);
+neighborhoodScale3D = neighborhoodScale2D * 1.25;
+	var scoreP2DMultiplier = 0.75; // smaller number is more forgiving
+	var world = this;
+	var points3D = world.toPointArray();
+	var space3D = world.pointSpace();
+	var removeListP2D = [];
+console.log("start size: "+points3D.length);
+var timeStart = Code.getTimeMilliseconds();
+	for(var i=0; i<points3D.length; ++i){
+		var point3D = points3D[i];
+		var p3D = point3D.point();
+		var points2D = point3D.toPointArray();
+		for(var j=0; j<points2D.length; ++j){
+			var point2D = points2D[j];
+				var p2D = point2D.point2D();
+			var view = point2D.view();
+			var cellSize2D = view.cellSize();
+			var cellSize3D = point2D.neighborhood3DSize();
+				var searchRadius2D = cellSize2D*neighborhoodScale2D;
+				var searchRadius3D = cellSize3D*neighborhoodScale3D;
+			var space2D = view.pointSpace();
+			var neighbors2D = space2D.objectsInsideCircle(p2D, searchRadius2D);
+			var neighbors3D = space3D.objectsInsideSphere(p3D, searchRadius3D);
+			var inconsistent = [];
+			for(var k=0; k<neighbors2D.length; ++k){ // TODO: this processes point2D (but correctly doesn't include it)
+				var neighbor2D = neighbors2D[k];
+				if(neighbor2D==point2D){
+					continue;
+				}
+				var neighbor3D = neighbor2D.point3D();
+				if(!Code.elementExists(neighbor3D, neighbors3D)){
+					// if(neighbor3D.hasView(view)){ // should also be in view too  --- this is always true?
+						inconsistent.push(neighbor2D);
+					// }
+				}
+			}
+
+var percent = ?/?;
+
+			if(?){
+				removeListP2D.push(point2D);
+			}
+			
+		}
+		// throw "???"
+	}
+	console.log("removeListP2D: "+removeListP2D.length+" ... / ... "+points3D.length);
+	var removed = 0;
+	var kept = 0;
+	for(var i=0; i<removeListP2D.length; ++i){
+		var point2D = removeListP2D[i];
+		var point3D = point2D.point3D();
+		if(point3D && point3D.matchCount()>0){ // may be removed more than once
+			world.removePoint2DAndMatchesFromPoint3D(point2D);
+			++kept;
+		}else{
+			// console.log("removed already");
+			++removed;
+		}
+	}
+	console.log("kept: "+kept);
+	console.log("removed: "+removed);
+var timeEnd = Code.getTimeMilliseconds();
+var timeDelta = timeEnd-timeStart;
+	console.log("new size: "+world.toPointArray().length);
+console.log("generateAllViewNeighborhoodSizes time: "+timeDelta);
+	*/
+
+
 	/*
 	for each P3D:
 		for each view of P
@@ -11156,7 +11497,72 @@ Stereopsis.World.prototype.filterCriteria2DN3DNregularization = function(){
 		 => differences between popultion of view-2d-neighbors and all-2d-neighbors ?
 	*/
 }
+Stereopsis.World.prototype.generateAllViewNeighborhoodSizes = function(){
+	var world = this;
+	var points3D = world.toPointArray();
+var timeStart = Code.getTimeMilliseconds();
+	for(var i=0; i<points3D.length; ++i){
+		var point3D = points3D[i];
+		var points2D = point3D.toPointArray();
+		if(i%10000==0){
+			console.log(i+" / "+points3D.length);
+		}
+		for(var j=0; j<points2D.length; ++j){
+			var point2D = points2D[j];
+			var size3D = point2D.neighborhood3DSize();
+			point2D._neighborhood3DSize = size3D;
+		}
+	}
+	var timeEnd = Code.getTimeMilliseconds();
+	var timeDelta = timeEnd-timeStart;
+	console.log("generateAllViewNeighborhoodSizes: "+timeDelta);
 
+}
+Stereopsis.World.neighborhood3DSize = function(view,p2D,p3D){
+	// console.log("p2D: "+p2D);
+	// console.log("p3D: "+p3D);
+	var Kinv = view.Kinv();
+	var cellSize = view.cellSize();
+	/*
+	var identity = Stereopsis.World._neighborhood3DSize_M4D;
+	if(!identity){
+		identity = new Matrix(4,4).identity();
+		Stereopsis.World._neighborhood3DSize_M4D = identity;
+	}
+	*/
+	var viewCenter = view.center();
+	var absolute = view.absoluteTransform();
+	// console.log("viewCenter: "+viewCenter);
+	var ray3DA = R3D.projectPoint2DToCamera3DRay(p2D, absolute, Kinv, null);
+	// console.log("ray3DA: "+ray3DA);
+	// console.log(ray3DA);
+	var q2D = new V2D(p2D.x-cellSize*0.5,p2D.y);
+	// var q2D = new V2D(p2D.x+cellSize,p2D.y);
+	// var q2D = new V2D(p2D.x,p2D.y+cellSize);
+	// console.log("q2D: "+q2D);
+	var ray3DB = R3D.projectPoint2DToCamera3DRay(q2D, absolute, Kinv, null);
+	// console.log(ray3DB);
+	//console.log("ray3DB: "+ray3DB);
+	var dirA = ray3DA["d"];
+	var dirB = ray3DB["d"];
+	// console.log(dirA);
+	// console.log(dirB);
+	var angle3D = V3D.angle(dirA,dirB);
+	// console.log("ANGLE: "+Code.degrees(angle3D));
+
+	var distanceCP = V3D.distance(p3D,viewCenter);
+	// console.log("D: "+distanceCP);
+	var size = 2 * distanceCP * Math.sin(angle3D*0.5);
+	// console.log("size1: "+size);
+//	var size =  distanceCP * Math.tan(angle3D);
+	// console.log("size2: "+size);
+
+
+	//var ray3D = R3D.projectPoint2DToCamera3DRay(p2D, absolute, Kinv, null);
+
+	// throw "? neighborhood3DSize ";
+	return size;
+}
 
 // experimental filtering ------------------------------------------------------------
 
