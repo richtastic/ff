@@ -4006,6 +4006,19 @@ Stereopsis.World.prototype.copyPoint3DToMatchEstimates = function(points){
 		point.copyAbsoluteLocationToMatches();
 	}
 }
+Stereopsis.World.prototype.updatePoints3DErrors = function(points3D){ // set match errors to allow P3D aggregation of average error
+	var world = this;
+	points3D = points3D!==undefined ? points3D : world.toPointArray();
+	for(var i=0; i<points3D.length; ++i){
+		var point3D = points3D[i];
+		var matches = point3D.toMatchArray();
+		for(var j=0; j<matches.length; ++j){
+			var match = matches[j];
+			Stereopsis.updateErrorForMatch(match);
+		}
+		point3D.calculateAbsoluteLocationDLT(world);
+	}
+}
 Stereopsis.World.prototype.updatePoints3DNullLocations = function(points3D){
 	var world = this;
 	points3D = points3D!==undefined ? points3D : world.toPointArray();
@@ -8182,66 +8195,14 @@ var timeStart = Code.getTimeMilliseconds();
 // subdivisions = 0;
 subdivisions = 1;
 // subdivisions = 2;
+// subdivisions = 3;
 // iterations = 2;
 iterations = 3;
 	var maxIterations = (subdivisions+1)*iterations;
 	var subdivision = 0;
-	// world.setResolutionProcessingModeFromCountP3D([0,0,0]); // to highest
-/*
-console.log("    ...   ");
+	world.setResolutionProcessingModeFromCountP3D([0,0,0]); // to highest
+	// world.setResolutionProcessingModeFromCountP3D([0,0]); // neighbor avg
 
-var points3D = world.toPointArray();
-
-console.log("       "+points3D.length);
-
-
-
-var point3D = points3D[0];
-
-console.log(point3D);
-
-var points2D = point3D.toPointArray();
-
-console.log(points2D);
-
-// var point2D = points2D[0];
-var point2D = points2D[1];
-
-console.log(point2D);
-
-var view = point2D.view();
-
-console.log(view);
-
-var p2D = point2D.point2D();
-
-console.log(p2D);
-
-var p3D = point3D.point();
-
-console.log(p3D);
-
-console.log("current size1: "+point3D.size());
-
-world.initP3DPatchFromGeometry3D(point3D);
-
-console.log("current size2: "+point3D.size());
-
-
-var size3D = Stereopsis.World.neighborhood3DSize(view,p2D,p3D);
-console.log(size3D);
-
-
-var size3D = point2D.neighborhood3DSize();
-console.log(size3D);
-
-
-	world.generateAllViewNeighborhoodSizes();
-
-
-throw "???"
-*/
-	world.setResolutionProcessingModeFromCountP3D([0,0]); // neighbor avg
 	for(var iteration=0; iteration<maxIterations; ++iteration){
 		console.log("all: ========================================================================================= "+iteration+" / "+maxIterations);
 
@@ -8272,16 +8233,18 @@ world.printPoint3DTrackCount();
 		var sigmaFilterPatch3D = 2.0;
 		if(subdivision>0){
 			// compareSize = 5;
-			sigmaProbe3DR = 1.0;
-			sigmaProbe2DR = 1.0;
+			// sigmaProbe3DR = 1.0;
+			// sigmaProbe2DR = 1.0;
+			// sigmaProbe3DR = 1.5;
+			// sigmaProbe2DR = 1.5;
 			// sigmaFilter3DR = 1.5; // 
-			sigmaFilterPatch3D = 1.0; // not a big diff
+			// sigmaFilterPatch3D = 1.0; // not a big diff
 		}
 
 		// expand 3D
 		world.probe3DR(3.0,sigmaProbe3DR);
 console.log("after probe 3D");
-world.printPoint3DTrackCount();
+// world.printPoint3DTrackCount();
 		// expand 2D
 		// var compareSize = 5;
 		world.probe2DCellsR(3.0,2.0, compareSize); // 9=>81 7=>49 5=>25
@@ -8304,7 +8267,6 @@ world.printPoint3DTrackCount();
 
 
 
-
 // world.filterLocal2Dto3DSize();
 
 // world.filterNeighborConsistency();
@@ -8317,9 +8279,9 @@ world.printPoint3DTrackCount();
 
 
 // NEW:
-// world.filterCriteria2DNnot3DN();
+world.filterCriteria2DNnot3DN();
 // world.filterCriteria2DNnotDepth();
-// world.filterCriteria2DN3DNregularization();
+world.filterCriteria2DN3DNregularization();
 /*
 world.filterCriteria2DNnot3DN();
 
@@ -11360,7 +11322,7 @@ console.log("filterCriteria2DNnotDepth: "+points3D.length);
 				visibleViews.push(view);
 			}
 		}
-		if(visibleViews.length<=1){
+		if(visibleViews.length<=1){ // == 0 ?
 			removeListP2D.push(point2D);
 		}
 		// console.log(removeListP2D);
@@ -14609,7 +14571,6 @@ var cnt = 0;
 	}
 	console.log("probe3D addMatches: "+insertCount+" | "+nullPoints);
 
-	console.log("AFTER PROBE 3D: ");
 	world.printPoint3DTrackCount();
 }
 
@@ -14695,24 +14656,35 @@ Stereopsis.World.prototype.setMatchAffineFromNeighborhood = function(){ // updat
 
 
 Stereopsis.World.prototype.subDivideUpdateMatchLocation = function(){ // 2D update, matches+affine change in position | assume change in 3D location does not warrant patch update
-	// console.log("subDivideUpdateMatchLocation");
 	var world = this;
 	// each P3D's matches (arbitrary starting match)
-	var needleSize = 11;
+	var needleSize = 11; // 7-11
 	var haystackSize = needleSize + 2; // maximum movement 1 px
+
+	var needle = world._subDivideUpdateMatchLocation_TEMP_NEEDLE;
+	var haystack = world._subDivideUpdateMatchLocation_TEMP_HAYSTACK;
+	if(!needle){
+		needle = new ImageMat(needleSize,needleSize);
+		haystack = new ImageMat(haystackSize,haystackSize);
+		world._subDivideUpdateMatchLocation_TEMP_NEEDLE = needle;
+		world._subDivideUpdateMatchLocation_TEMP_HAYSTACK = haystack;
+	}
 	var points3D = world.toPointArray();
-var averagePointDistance = 0;
-var averagePointCount = 0;
+	var averagePointDistance = 0;
+	var averagePointCount = 0;
 	for(var i=0; i<points3D.length; ++i){
 		var point3D = points3D[i];
 		var points2D = point3D.toPointArray();
 		if(points2D.length>1){
-// console.log("POINT 3D SHOULD BE REMOVED COMPLETELY & READDED");
-// REMOVE
-// world.removePoint3D(point3D); // this is only in WORLD SPACE
-world.disconnectPoint3D(point3D);
-
+			// REMOVE
+			world.disconnectPoint3D(point3D);
+			// maybe best corner score?
+			// lowest error?
 			var referenceIndex = 0; // arbitrary base point to compare -- TODO: now to pick best ?
+			// averageRError
+			// averageFError
+			// averageNCCError
+			// ... corner score?
 			var point2DA = points2D[referenceIndex];
 			var viewA = point2DA.view();
 			for(var j=0; j<points2D.length; ++j){
@@ -14729,33 +14701,28 @@ world.disconnectPoint3D(point3D);
 				var compareSize = viewA.compareSize();
 				var pointA = point2DA.point2D();
 				var pointB = point2DB.point2D();
-				var result = R3D.optimumSADLocationSearchFlatRGB(pointA,pointB, imageScalesA,imageScalesB, compareSize, needleSize,haystackSize, affineAB);
-				// console.log(result);
+				var result = R3D.optimumSADLocationSearchFlatRGB(pointA,pointB, imageScalesA,imageScalesB, compareSize, needleSize,haystackSize, affineAB, needle,haystack);
 				var best = result["point"];
-
 				var dist = V2D.distance(best,pointB);
 				// console.log(" "+dist+" "+pointB+" -> "+best);
 				averagePointDistance += dist;
 				averagePointCount += 1;
-
 				// disconnect & re-connect point to update location
-				// viewB.removePoint2D(point2DB);
 				point2DB.point2D(best);
-				// viewB.insertPoint2D(point2DB);
-				// update match info @ new scale:
 				// Stereopsis.setMatchInfoFromParamerers(match, viewA,pointA,viewB,pointB,affine);
 			}
-// READD
-world.embedPoint3D(point3D); // calls connect after intersection resolution
+			// update error for intersecting:
+			world.updatePoints3DErrors([point3D]);
+			// READD
+			world.embedPoint3D(point3D); // calls connect after intersection resolution
 			// update all match infos
 			world.calculatePoint3DMatchErrors(point3D);
 		}else{
 			console.log("point3D has "+points2D.length+" points2D ?");
 		}
-		// hasPatch
+		// hasPatch operations
 		if(point3D.hasPatch()){
 			world.updateP3DPatchFromMode(point3D);
-			// throw "update patch"
 		}
 	}
 	if(averagePointCount>0){
@@ -16930,7 +16897,7 @@ Stereopsis.World.prototype._resolveIntersectionDefaultOLD = function(point3DA,po
 
 Stereopsis.World.prototype._resolveIntersectionLayered = function(point3DA,point3DB){
 	var world = this;
-	var maxErrorRatioStart = 2.0;
+	var maxErrorRatioStart = 4.0; // 2-4
 	var doPatch = point3DA.hasPatch() && point3DB.hasPatch(); // should init pointC with a patch
 	var doLocation = point3DA.point() && point3DB.point();
 	// remove from world
@@ -16961,26 +16928,28 @@ Stereopsis.World.prototype._resolveIntersectionLayered = function(point3DA,point
 			}
 		}
 	}
-if(!isErrorNone){
-	var best = errA<errB ? point3DA : point3DB;
-	if(best!=point3DA){
-		var temp = point3DB;
-		point3DB = point3DA;
-		point3DA = temp;
+	// no metric to choose
+	if(!isErrorNone){
+		var best = errA<errB ? point3DA : point3DB;
+		if(best!=point3DA){
+			var temp = point3DB;
+			point3DB = point3DA;
+			point3DA = temp;
+		}
+		// drop worst point if error is too high:
+		var errMax = Math.max(errA,errB);
+		var errMin = Math.min(errA,errB);
+		if(errMin>0 && errMax/errMin > maxErrorRatioStart){ // point B is much worse than point A
+			// console.log("drop worst: "+errMin+" < "+errMax+" @ "+(errMax/errMin));
+			world.killPoint3D(point3DB);
+			return world.embedPoint3D(point3DA);
+		}
+	}else{ // no error to choose from .. just pick one ?
+		console.log("no error to choose from?");
+		console.log(point3DA);
+		console.log(point3DB);
+		throw "?"
 	}
-
-	// drop worst point if error is too high:
-	var errMax = Math.max(errA,errB);
-	var errMin = Math.min(errA,errB);
-	if(errMin>0 && errMax/errMin > maxErrorRatioStart){ // point B is much worse than point A
-		// console.log("drop worst: "+errMin+" < "+errMax+" @ "+(errMax/errMin));
-		world.killPoint3D(point3DB);
-		return world.embedPoint3D(point3DA);
-	}
-}else{
-	// console.log(point3DA,point3DB);
-	// throw "..."
-}
 	// find view statuses
 	var points2DA = point3DA.toPointArray();
 	var points2DB = point3DB.toPointArray();
@@ -17013,14 +16982,19 @@ if(!isErrorNone){
 		throw "no intersection"
 	}
 	if(viewsIntersectList.length==viewsAllAList.length || viewsIntersectList.length==viewsAllBList.length){
-// console.log(viewsAllAList,viewsAllBList,viewsIntersectList);
+
+		// kill works always:
+		world.killPoint3D(point3DB);
+		return world.embedPoint3D(point3DA);
+		/*
+		// kill item with fewer points:
 		if(viewsAllAList.length>=viewsAllBList.length){
 			world.killPoint3D(point3DB);
 			return world.embedPoint3D(point3DA);
 		}
 		world.killPoint3D(point3DA);
 		return world.embedPoint3D(point3DB);
-		// throw "subsumed - drop minimal";
+		*/
 	}
 
 	// best overlapping view = closest point distance (should this be distance in cell units)
@@ -17042,7 +17016,7 @@ if(!isErrorNone){
 			relateView = view;
 		}
 	}
-// console.log(relatePoint2DA,relatePoint2DB,relateView);
+
 	// predict new locations, thru relative point
 	var newPoint2DAs = [];
 	for(var i=0; i<viewsAllList.length; ++i){
@@ -17050,21 +17024,18 @@ if(!isErrorNone){
 		var viewID = view.id();
 		if(viewsAllA[viewID]){ // exists in A already
 			var point2DA = point3DA.pointForView(view);
-// console.log(point2DA);
 			var p2DA = point2DA.point2D();
 			newPoint2DAs.push(p2DA);
 		}else{ // get relation thru related view
 			var matchB = point3DB.matchForViews(relateView,view);
-// console.log(matchB);
 			var affineAB = matchB.affineForViews(relateView,view);
-			var pointB = matchB.pointForView(view);
+			var pointB = matchB.pointForView(view); // UNKNOWN VIEW
 			var point = V2D.sub(relatePoint2DA.point2D(),relatePoint2DB.point2D()); // remove offset B(a)->A
 			affineAB.multV2DtoV2D(point,point);
 			point.add(pointB.point2D()); // add offset to B(b)
 			newPoint2DAs.push(point);
 		}
 	}
-// console.log(newPoint2DAs);
 // TODO: is there a case affines wont exists?
 	// get new affine matches
 	var affines = [];
@@ -17089,47 +17060,46 @@ if(!isErrorNone){
 					affineA = matchA.affineForViews(viewA,relateView);
 					var matchB = point3DB.matchForViews(relateView,viewB);
 					affineB = matchB.affineForViews(relateView,viewB);
-// console.log("A");
-// console.log(matchA);
-// console.log(matchB);
-// console.log(affineA);
-// console.log(affineB);
 				}else{ // a is in pointB
 					var matchA = point3DB.matchForViews(viewA,relateView);
 					affineA = matchA.affineForViews(viewA,relateView);
 					var matchB = point3DA.matchForViews(relateView,viewB);
 					affineB = matchB.affineForViews(relateView,viewB);
-// console.log("...");
-// console.log(viewsAllA[viewIDA]);
-// console.log(viewsAllA[viewIDB]);
-// console.log(viewsAllB[viewIDA]);
-// console.log(viewsAllB[viewIDB]);
-// console.log("B");
-// console.log(matchA);
-// console.log(matchB);
-// console.log(affineA);
-// console.log(affineB);
 				}
 				// relate thru middle
-				// affine = Matrix2D.mult(affineA,affineB);
-// console.log(viewsAllA[viewIDA]);
-// console.log(viewsAllB[viewIDA]);
-// console.log(affineA,affineB);
 				affine = Matrix2D.mult(affineB,affineA); // A then B
 			}
 			affines.push(affine);
 		}
 	}
-// console.log(affines);
 	// create new point 3d from pieces:
 	var point3DC = world.newPoint3DFromPieces(viewsAllList,newPoint2DAs,affines, false);
-// console.log(point3DC);
 	// get needle-haystack for loaded views
 		// each loaded view A gets a chance to predict location in B-only view
 	// console.log("needle - haystack");
-	// var shouldUseNeedleHaystackIfImagesPresent = true;
-	var shouldUseNeedleHaystackIfImagesPresent = false;
+
+	// TODO: THIS VALUE TO GET FROM SOMEWHERE ITERNAL - OR ALWAYS USE IT?
+	var shouldUseNeedleHaystackIfImagesPresent = true;
+	// var shouldUseNeedleHaystackIfImagesPresent = false;
+
+
 	if(shouldUseNeedleHaystackIfImagesPresent){
+		// var needleSize = Stereopsis.COMPARE_HAYSTACK_NEEDLE_SIZE;
+		// var needleSize = 7; // 5 - 11
+		// var needleSize = 5;
+		var needleSize = 5;
+		var haystackSize = needleSize + 2; // left or right 1 unit
+		var needle = world._resolveIntersectionLayered_TEMP_NEEDLE;
+		var haystack = world._resolveIntersectionLayered_TEMP_HAYSTACK;
+		if(!needle){
+			needle = new ImageMat(needleSize,needleSize);
+			haystack = new ImageMat(haystackSize,haystackSize);
+			world._resolveIntersectionLayered_TEMP_NEEDLE = needle;
+			world._resolveIntersectionLayered_TEMP_HAYSTACK = haystack;
+		}
+
+		// var haystackSize = needleSize + 4;
+		// var haystackSize = needleSize + 2;
 		for(var i=0; i<viewsAllBList.length; ++i){
 			var viewB = viewsAllBList[i];
 			var viewBID = viewB.id();
@@ -17148,31 +17118,25 @@ if(!isErrorNone){
 							var centerA = point2DA.point2D();
 							var centerB = point2DB.point2D();
 							var featureSize = Stereopsis.compareSizeForViews2D(viewA,centerA,viewB,centerB);
-							// var needleSize = Stereopsis.COMPARE_HAYSTACK_NEEDLE_SIZE;
-							var needleSize = 7; // 5 - 11
-							var haystackSize = needleSize + 2; // left or right 1 unit
-							// var haystackSize = needleSize + 2;
-							var result = R3D.optimumSADLocationSearchFlatRGB(centerA,centerB, imageA,imageB, featureSize, needleSize,haystackSize, affineAB);
-	// console.log(result);
+							// TODO: needleSize,haystackSize - can be reused
+							// bestNeedleHaystackFromLocation
+							var result = R3D.optimumSADLocationSearchFlatRGB(centerA,centerB, imageA,imageB, featureSize, needleSize,haystackSize, affineAB, needle, haystack);
 							var locationB2D = result["point"];
-							console.log(locationB2D);
-							console.log(V2D.distance(centerB,locationB2D),viewA.cellSize(),viewB.cellSize());
-							
 							locationsB2D.push(locationB2D);
-							console.log(locationsB2D);
-							throw "?"
 						}
 					}
 					if(locationsB2D.length>0){ // average predicted locations
 						var locationB2D = V2D.average(locationsB2D);
 						var point2DB = point3DC.pointForView(viewB);
-						console.log(V2D.distance(point2DB.point2D(),locationB2D));
+						// console.log(V2D.distance(point2DB.point2D(),locationB2D));
 						point2DB.point2D(locationB2D);
-						throw "NEW POINT";
 					}
 				}
 			}
 		}
+		// update scores:
+		// point3DC.???
+		// updateMatchInfo
 	}
 
 	// is this necessary ?
@@ -17180,6 +17144,8 @@ if(!isErrorNone){
 	for(var i=0; i<matches.length; ++i){
 		var match = matches[i];
 		world.updateMatchInfo(match);
+		// TODO: is this OK?
+		Stereopsis.updateErrorForMatch(match);
 	}
 	// Stereopsis.setMatchInfoFromParamerers(match, viewA,pointA,viewB,pointB,affine);
 
@@ -17191,38 +17157,15 @@ if(!isErrorNone){
 		// COULD AVERAGE PATCH, THEN UPDATE ONLY ?
 		world.initP3DPatchFromMode(point3DC);
 	}
-// console.log("POINT 3DC:")
-// console.log(point3DC);
-// 	throw "..."
+
+
+	// ... should this always be done? -- error needs to be updated if possible for next intersection
+	// world.updatePoints3DErrors([point3DC]);
+
+
 	world.killPoint3D(point3DA);
 	world.killPoint3D(point3DB);
 	return world.embedPoint3D(point3DC);
-
-
-	/*
-
-_resolveIntersectionPatch(point3DA,point3DB);
-_resolveIntersectionFlat
-
-x find overlapping views
-	- if disjoint => error
-	- if A or B doesnt have independent -> readd P3D w/ more views
-x find 'better' P3D
-	- SAD scores?
-	- R scores?
-	- F scores?
-- if worse P3D is too bad -> ignore (or drop P3DB intersection) & readd P3DA
-	- average score > 2 x better's score
-	- average score > 2 x sigma of 
-- predict new locations in P3DB
-	- affine mapping for SAME
-	- affine mapping + additional transform for INDEPENDENT
-- if at least 1 image in A: for each image: get precise needle haystack location for each image in B
-	- average final locations
-- if 
-
-	*/
-	throw "resolve"
 }
 Stereopsis.World.prototype._resolveIntersectionGeometry = function(point3DA,point3DB){ // merge only knowing relative R error and affine transforms
 	this.disconnectPoint3D(point3DA);

@@ -387,6 +387,69 @@ MISSING:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
+- 
+
+- reassess combinling logic given images?
+	- ok
+	- does error need to be calculated / how to tell?
+- reassess subdivision logic
+	subDivideUpdateMatchLocation
+
+
+visual combine:
+	0 div: 43k
+	1 div: 35k -- results are a bit clumpy together (R clipping?)
+	2 div: 60k -- seems clumpy
+
+no reductsions on division+
+	1 div: 54k
+
+keeping out depth-dropper
+	1 div:??
+	2 div:58k
+
+- filterCriteria2DNnotDepth - REMOVES A LOT & DOESNT ADD BACK
+
+
+
+- problems with fuzzy points may not necessarily be just filtering
+	- look at all steps & list out & summarize possible influence
+
+solveDenseGroup...............
+
+		- combining point logic (using images & best local location)
+
+		world.setResolutionProcessingModeNonVisual();
+		world.copyRelativeTransformsFromAbsolute();
+
+			var points3DNew = App3DR.ProjectManager._worldPointFromSaves(world, groupPoints, WORLDVIEWSLOOKUP, true);
+			world.initPoints3DLocation(points3DNew);
+			world.initAllP3DPatches(points3DNew);
+			world.initAffineFromP3DPatches(points3DNew);
+
+		OPTIONS:
+			setResolutionProcessingModeNonVisual
+
+			x resolveIntersectionByPatchVisuals
+
+			resolveIntersection
+				_resolveIntersectionDefault
+
+				_resolveIntersectionLayered
+
+shouldUseNeedleHaystackIfImagesPresent
+updatePoints3DErrors
+
+				---- var shouldUseNeedleHaystackIfImagesPresent = false;
+
+	=> NOT USING IMAGES TO RESOLVE POINT LOCATION ....
+
+
+
+	..............................
+
+
 - if the cameras are a little off, how can the filtering/positioning be forgiving?
 	- use error% for volumes?
 
@@ -395,7 +458,7 @@ MISSING:
 	-> if it does help, how could groups be combined after an update?
 		=> re-compute most likely average (rotation + scale + translation -> position)
 		...
-		
+
 
 
 
@@ -499,7 +562,9 @@ todo:
 - how to average found Ks?
 
 
--
+- TEXTURES
+	- if certain parts of images are not used, they should not be considered for texture at all ()
+	- store view data with points ?
 
 
 - next solving problems:::::::::::::::::::::::::::::::::::::::::::::::

@@ -13897,7 +13897,8 @@ console.log("SET CELLS");
 
 		// ADD POINTS
 console.log("INIT POINTS ...");
-		world.setResolutionProcessingModeNonVisual();
+		// world.setResolutionProcessingModeNonVisual();
+world.resolutionProcessingModeLow(); // does this have a visual component?
 		world.copyRelativeTransformsFromAbsolute();
 
 		var points3DNew = App3DR.ProjectManager._worldPointFromSaves(world, groupPoints, WORLDVIEWSLOOKUP, true);
@@ -13926,6 +13927,13 @@ console.log("DELTA INIT: "+((timeB-timeA)/1000)); // 4-5 seconds
 					var p = points3DNew.shift(); // drop 1
 					nextSet.push(p);
 				}
+
+				// udpate ?
+
+				//updatePoints3DNullLocations
+				world.updatePoints3DErrors(nextSet);
+				// updateErrorForMatch
+
 				world.embedPoints3D(nextSet);
 				Code.functionAfterDelay(loadPoints,project, 1);
 			}else{
@@ -13966,6 +13974,7 @@ console.log("DELTA INIT: "+((timeB-timeA)/1000)); // 4-5 seconds
 			// TESTING
 			var str = world.toYAMLString();
 			console.log(str);
+
 throw "solveDenseGroup end"
 
 			var errorCount = worldViews.length + 1;
