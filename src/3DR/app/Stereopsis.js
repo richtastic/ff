@@ -11131,7 +11131,7 @@ throw "average error is going up ...."
 Stereopsis.World.prototype.filterCriteria2DNnot3DN = function(){ // p is removed if the average of inconsistent-neighbor NCC (or SAD) score is much better than
 	console.log("filterCriteria2DNnot3DN");
 	var neighborhoodScale2D = 1.0; // radius muliplier - smaller is more forgiving
-	var neighborhoodScale3D = 1.25; // radius muliplier - larger more forgiving space
+	var neighborhoodScale3D = 1.50; // radius muliplier - larger more forgiving space
 neighborhoodScale2D = Math.sqrt(2);
 neighborhoodScale3D = neighborhoodScale2D * 1.25;
 	var scoreP2DMultiplier = 0.75; // smaller number is more forgiving
@@ -11185,10 +11185,14 @@ var timeStart = Code.getTimeMilliseconds();
 					removeListP2D.push(point2D);
 				}
 			}
+			// console.log(" sizes: "+neighbors2D.length+" | "+neighbors3D.length+" | "+inconsistent.length+" size: "+cellSize3D+" ... ");
 		}
-		// throw "???"
+		// if(i>1000){
+		// 	throw "???"
+		// }
 	}
 console.log("removeListP2D: "+removeListP2D.length+" ... / ... "+points3D.length);
+// throw "out";
 	var removed = 0;
 	var kept = 0;
 	for(var i=0; i<removeListP2D.length; ++i){
@@ -11356,30 +11360,24 @@ console.log("filterCriteria2DNnotDepth: "+points3D.length);
 }
 
 
-Stereopsis.World.prototype.filterCriteria2DN3DNregularization = function(){
-	console.log("filterCriteria2DN3DNregularization");
-
-	/*
-
-	???
-
-	// average consistent view NCC score is poor: drop image
-
-	var neighborhoodScale2D = 1.0; // radius muliplier - smaller is more forgiving
-	var neighborhoodScale3D = 1.25; // radius muliplier - larger more forgiving space
-neighborhoodScale2D = Math.sqrt(2);
-neighborhoodScale3D = neighborhoodScale2D * 1.25;
-	var scoreP2DMultiplier = 0.75; // smaller number is more forgiving
+Stereopsis.World.prototype.filterCriteria2DN3DNregularization = function(){ // get 2D & 3D neighbors of points & if ratio 3D/2D < 0.25 then P3D is likely in wrong location
+	var minimumRatio2Dto3D = 0.25; // 0.1 - 0.5
+	var neighborhoodScale2D = 1.0; // radius mulitplier - smaller is more forgiving
+	var neighborhoodScale3D = 1.50; // radius multiplier - larger more forgiving space
+	neighborhoodScale2D = Math.sqrt(2);
+	// neighborhoodScale3D = neighborhoodScale2D * 1.25;
+	neighborhoodScale3D = neighborhoodScale2D * 2.0;
 	var world = this;
 	var points3D = world.toPointArray();
 	var space3D = world.pointSpace();
 	var removeListP2D = [];
-console.log("start size: "+points3D.length);
+console.log("filterCriteria2DN3DNregularization - start size: "+points3D.length);
 var timeStart = Code.getTimeMilliseconds();
 	for(var i=0; i<points3D.length; ++i){
 		var point3D = points3D[i];
 		var p3D = point3D.point();
 		var points2D = point3D.toPointArray();
+// TODO: this should get all neighbors in all images at same time?
 		for(var j=0; j<points2D.length; ++j){
 			var point2D = points2D[j];
 				var p2D = point2D.point2D();
@@ -11390,29 +11388,34 @@ var timeStart = Code.getTimeMilliseconds();
 				var searchRadius3D = cellSize3D*neighborhoodScale3D;
 			var space2D = view.pointSpace();
 			var neighbors2D = space2D.objectsInsideCircle(p2D, searchRadius2D);
-			var neighbors3D = space3D.objectsInsideSphere(p3D, searchRadius3D);
-			var inconsistent = [];
-			for(var k=0; k<neighbors2D.length; ++k){ // TODO: this processes point2D (but correctly doesn't include it)
-				var neighbor2D = neighbors2D[k];
-				if(neighbor2D==point2D){
-					continue;
+			var neighbors2DCount = neighbors2D.length;
+			if(neighbors2DCount>1){
+				var neighbors3D = space3D.objectsInsideSphere(p3D, searchRadius3D);
+				var foundCount = 0;
+				for(var k=0; k<neighbors2DCount; ++k){
+					var neighbor2D = neighbors2D[k];
+					if(neighbor2D==point2D){
+						continue;
+					}
+					var neighbor3D = neighbor2D.point3D();
+					if(Code.elementExists(neighbor3D, neighbors3D)){ // TODO: faster lookup
+						++foundCount;
+					}
 				}
-				var neighbor3D = neighbor2D.point3D();
-				if(!Code.elementExists(neighbor3D, neighbors3D)){
-					// if(neighbor3D.hasView(view)){ // should also be in view too  --- this is always true?
-						inconsistent.push(neighbor2D);
-					// }
+
+				var percent = foundCount/(neighbors2DCount-1);
+				if(i%1000==0){
+					console.log(percent+" : "+foundCount+" / "+neighbors2D.length+" - "+neighbors3D.length+" @ "+p3D+" ... ");
 				}
-			}
+				if(percent<minimumRatio2Dto3D){
+					removeListP2D.push(point2D);
+				}
 
-var percent = ?/?;
-
-			if(?){
-				removeListP2D.push(point2D);
 			}
-			
 		}
-		// throw "???"
+		// if(i>1000){
+		// 	throw "???"
+		// }
 	}
 	console.log("removeListP2D: "+removeListP2D.length+" ... / ... "+points3D.length);
 	var removed = 0;
@@ -11434,7 +11437,9 @@ var timeEnd = Code.getTimeMilliseconds();
 var timeDelta = timeEnd-timeStart;
 	console.log("new size: "+world.toPointArray().length);
 console.log("generateAllViewNeighborhoodSizes time: "+timeDelta);
-	*/
+
+
+throw "yup";
 
 
 	/*
@@ -11481,8 +11486,6 @@ var timeStart = Code.getTimeMilliseconds();
 
 }
 Stereopsis.World.neighborhood3DSize = function(view,p2D,p3D){
-	// console.log("p2D: "+p2D);
-	// console.log("p3D: "+p3D);
 	var Kinv = view.Kinv();
 	var cellSize = view.cellSize();
 	/*
@@ -11493,37 +11496,33 @@ Stereopsis.World.neighborhood3DSize = function(view,p2D,p3D){
 	}
 	*/
 	var viewCenter = view.center();
-	var absolute = view.absoluteTransform();
+	// var absolute = view.absoluteTransform();
+	var absolute = view.absoluteTransformInverse();
 	// console.log("viewCenter: "+viewCenter);
 	var ray3DA = R3D.projectPoint2DToCamera3DRay(p2D, absolute, Kinv, null);
 	// console.log("ray3DA: "+ray3DA);
 	// console.log(ray3DA);
-	var q2D = new V2D(p2D.x-cellSize*0.5,p2D.y);
+	var q2D = new V2D(p2D.x-cellSize*0.5,p2D.y); // TODO: more samples
 	// var q2D = new V2D(p2D.x+cellSize,p2D.y);
 	// var q2D = new V2D(p2D.x,p2D.y+cellSize);
 	// console.log("q2D: "+q2D);
 	var ray3DB = R3D.projectPoint2DToCamera3DRay(q2D, absolute, Kinv, null);
-	// console.log(ray3DB);
-	//console.log("ray3DB: "+ray3DB);
 	var dirA = ray3DA["d"];
 	var dirB = ray3DB["d"];
-	// console.log(dirA);
-	// console.log(dirB);
 	var angle3D = V3D.angle(dirA,dirB);
-	// console.log("ANGLE: "+Code.degrees(angle3D));
-
 	var distanceCP = V3D.distance(p3D,viewCenter);
-	// console.log("D: "+distanceCP);
-	var size = 2 * distanceCP * Math.sin(angle3D*0.5);
-	// console.log("size1: "+size);
-//	var size =  distanceCP * Math.tan(angle3D);
-	// console.log("size2: "+size);
+	var sizeA = 2 * distanceCP * Math.sin(angle3D*0.5);
+	var sizeB =  distanceCP * Math.tan(angle3D);
 
+// TODOL do averaging of 3-4 samples
+
+	var size = Math.max(sizeA,sizeB);
 
 	//var ray3D = R3D.projectPoint2DToCamera3DRay(p2D, absolute, Kinv, null);
 
 	// throw "? neighborhood3DSize ";
-	return size;
+	var cellSize3D = size*2.0; // size is just radius
+	return cellSize3D; 
 }
 
 // experimental filtering ------------------------------------------------------------

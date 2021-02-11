@@ -387,27 +387,22 @@ MISSING:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+- display 2D & 3D cell size?
 
-- 
+- f3d/bak filter of paper
 
-- reassess combinling logic given images?
-	- ok
-	- does error need to be calculated / how to tell?
+
+
+neighborhood3DSize
+
+
+
+- go thru same sequence and see if issues arrise from changes
+
 - reassess subdivision logic
 	subDivideUpdateMatchLocation
 
 
-visual combine:
-	0 div: 43k
-	1 div: 35k -- results are a bit clumpy together (R clipping?)
-	2 div: 60k -- seems clumpy
-
-no reductsions on division+
-	1 div: 54k
-
-keeping out depth-dropper
-	1 div:??
-	2 div:58k
 
 - filterCriteria2DNnotDepth - REMOVES A LOT & DOESNT ADD BACK
 
