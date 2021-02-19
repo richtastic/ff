@@ -503,9 +503,9 @@ R3D.optimizeAllCameraExtrinsicDLTNonlinear = function(listP, listK, listKinv, li
 	return {"matrixes":listM, "error":cost};
 }
 R3D._transformCameraAllExtrinsicDLTNonlinearGD = function(args, x, isUpdate){
-	// if(isUpdate){
-	// 	return;
-	// }
+	if(isUpdate){
+		return;
+	}
 	var listP = args[0];
 	var listK = args[1];
 	var listKinv = args[2];
@@ -14262,7 +14262,7 @@ R3D.optimumSADLocationSearchFlatRGB = function(pointA,pointB, imageScalesA,image
 	var scores = R3D.searchNeedleHaystackSADColorOffsetUnit(needle,haystack);
 
 	var finalSize = scores["width"];
-	var minimum = R3D.minimumFromValues(scores["value"], finalSize, finalSize, pointB, 1.0/cellScale);
+	var minimum = R3D.minimumFromValues(scores["value"], finalSize, finalSize, pointB, inScale);
 	var absoluteLocation = minimum["location"];
 	var absoluteScore = minimum["score"];
 
@@ -36923,6 +36923,14 @@ R3D.TextureVertex = function(point){
 	this._viewList = null;
 	this._possibleViews = null;
 	this._currentView = null;
+	//
+	this._useWorldGeometryInteresection = true;
+}
+R3D.TextureVertex.prototype.useWorldGeometryIntersection = function(use){
+	if(use!==undefined){
+		this._useWorldGeometryInteresection = use;
+	}
+	return this._useWorldGeometryInteresection;
 }
 R3D.TextureVertex.prototype.data = function(data){
 	if(data!==undefined){
@@ -37829,7 +37837,7 @@ DROP_REASON_D++;
 		}
 
 		var intersection = null;
-		if(triangleSpace){ // only do view checking if exists
+		if(triangleSpace && vert.useWorldGeometryIntersection()){ // only do view checking if exists
 			// triangle occlusions - intersections [view to point]
 			var org = viewCenter;
 			var dir = viewToPoint;
@@ -38097,9 +38105,6 @@ console.log("maxDimension: "+maxDimension);
 	console.log("fill out vertexes");
 // useTriangleSpace = null; // dont do intersection test -- speed up
 
-
-
-
 	var distanceSigma = 1.0;
 	var worldCenter = new V3D();
 	if(triangleSpace){
@@ -38141,6 +38146,7 @@ console.log("maxDimension: "+maxDimension);
 			console.log(i+"/"+verts.length);
 		}
 		var vert = verts[i];
+		vert.useWorldGeometryIntersection(true);
 		var result = R3D.updateTextureVertexFromViews(vert, viewIndexes, extrinsics,viewCenters,viewNormals,resolutions,cameras, useTriangleSpace,distanceSigma);
 		intersectionCount += result["intersections"];
 	}
@@ -38164,23 +38170,29 @@ console.log(DROP_REASON_A+" | "+DROP_REASON_B+" | "+DROP_REASON_C+" | "+DROP_REA
 
 	// BACKGROUND TRIANGLES & VERTS:
 	var radius = distanceSigma * 5; // 5-10x size of world [2=95, 3=99]
-	var subdivisions = 5; //  want 100-1k  5=720
+	var subdivisions = 6; //  want 100-1k  5=720 6=980
 	var invertNormals = true;
 	var sphere = Tri3D.generateTetrahedraSphere(radius, subdivisions, worldCenter, invertNormals);
 	// console.log(sphere);
 	var bgTriangles = sphere["triangles"];
-	console.log(bgTriangles);
+	// console.log(bgTriangles);
 	var info = R3D.generateTextureTriangles(bgTriangles, spaceVertexes);
-	console.log(info);
+	// console.log(info);
 	var bgTris = info["triangles"];
 	var bgVerts = info["vertexes"];
 	// ASSUMING MUTUALLY EXCLUSIVE VERTEXES
 	for(var i=0; i<bgVerts.length; ++i){
 		var vert = bgVerts[i];
+		vert.useWorldGeometryIntersection(false);
 		var result = R3D.updateTextureVertexFromViews(vert, viewIndexes, extrinsics,viewCenters,viewNormals,resolutions,cameras, null,distanceSigma);
 	}
 	Code.arrayPushArray(verts,bgVerts);
 	Code.arrayPushArray(tris,bgTris);
+
+
+
+// throw "here"
+
 
 	// var vs = [];
 	// for(var i=0; i<bgTriangles.length; ++i){
@@ -52635,20 +52647,25 @@ R3D.optimumScoresAtLocation = function(imageA,pointA, imageB,pointB, needleSize,
 */
 	return scores;
 }
-R3D.minimumFromValues = function(values, valueWidth, valueHeight, pointB, cellScale){
+R3D.minimumFromValues = function(values, valueWidth, valueHeight, pointB, cellScale){ // cellScale = FROM [SAMPLE SIZE] TO [WORLD SIZE] , eg: [needle size] to [pixel size]
+cellScale = 1.0/cellScale;
+???
 	var index = Code.minIndex(values);
 	var zLoc = values[index];
 	var xLoc = index % valueWidth;
 	var yLoc = (index/valueWidth) | 0;
 	var peak = new V3D(xLoc,yLoc,zLoc);
-	// sub-pixel interpolation
-	if(0<xLoc && xLoc<valueWidth-1 && 0<yLoc && yLoc<valueHeight-1){
+	var wm1 = valueWidth-1;
+	var hm1 = valueHeight-1;
+	// if(false){ // @ center: // -- 1.9
+	// if(0<=xLoc && xLoc<=wm1 && 0<=yLoc && yLoc<=hm1){ // edge or interrior
+	if(0<xLoc && xLoc<wm1 && 0<yLoc && yLoc<hm1){ // entirely contained
 		var minX = Math.max(xLoc-1,0);
 		var midX = xLoc;
-		var maxX = Math.max(xLoc+1,0);
+		var maxX = Math.min(xLoc+1,wm1);
 		var minY = Math.max(yLoc-1,0)*valueWidth;
 		var midY = yLoc*valueWidth;
-		var maxY = Math.max(yLoc+1,0)*valueWidth;
+		var maxY = Math.min(yLoc+1,hm1)*valueWidth;
 		var d0 = values[minY + minX];
 		var d1 = values[minY + midX];
 		var d2 = values[minY + maxX];
@@ -52658,42 +52675,26 @@ R3D.minimumFromValues = function(values, valueWidth, valueHeight, pointB, cellSc
 		var d6 = values[maxY + minX];
 		var d7 = values[maxY + midX];
 		var d8 = values[maxY + maxX];
-
-if(Code.isNaN(d0) || Code.isNaN(d1) ||Code.isNaN(d2) ||Code.isNaN(d3) ||Code.isNaN(d4) ||Code.isNaN(d5) ||Code.isNaN(d6) || Code.isNaN(d7) ||Code.isNaN(d8) ){
-	console.log(values);
-	console.log(d0,d1,d2,d3,d4,d5,d6,d7,d8);
-	throw "extrema in bad"
-}
-
+// if(Code.isNaN(d0) || Code.isNaN(d1) ||Code.isNaN(d2) ||Code.isNaN(d3) ||Code.isNaN(d4) ||Code.isNaN(d5) ||Code.isNaN(d6) || Code.isNaN(d7) ||Code.isNaN(d8) ){
+// 	console.log(values);
+// 	console.log(d0,d1,d2,d3,d4,d5,d6,d7,d8);
+// 	throw "extrema in bad"
+// }
 		Code.extrema2DFloatInterpolate(peak, d0,d1,d2,d3,d4,d5,d6,d7,d8);
-if(Code.isNaN(peak.x) || Code.isNaN(peak.y) || Code.isNaN(peak.z)){
-	console.log(peak);
-	console.log(d0,d1,d2,d3,d4,d5,d6,d7,d8);
-	throw "extrema out bad"
-}
+// if(Code.isNaN(peak.x) || Code.isNaN(peak.y) || Code.isNaN(peak.z)){
+// 	console.log(peak);
+// 	console.log(d0,d1,d2,d3,d4,d5,d6,d7,d8);
+// 	throw "extrema out bad"
+// }
 		peak.x += xLoc;
 		peak.y += yLoc;
 	}
-	// var centerX = (valueWidth*0.5);
-	// var centerY = (valueHeight*0.5);
 	var centerX = (valueWidth-1)*0.5;
 	var centerY = (valueHeight-1)*0.5;
-	var p = new V2D(pointB.x + (peak.x - centerX)*cellScale, pointB.y + (peak.y - centerY)*cellScale);
-if(Code.isNaN(p.x) || Code.isNaN(p.y)){
-	console.log(values);
-	console.log(index);
-	console.log(xLoc);
-	console.log(yLoc);
-	console.log(zLoc);
-	// console.log();
-	console.log("....");
-	console.log(peak);
-	console.log(centerX);
-	console.log(centerY);
-	console.log(valueWidth);
-	console.log(valueHeight);
-	throw "Code.isNaN(absoluteLocation)";
-}
+	var p = new V2D(pointB.x + (peak.x - centerX)*cellScale, pointB.y + (peak.y - centerY)*cellScale); // 1.7
+
+	// var p = new V2D(pointB.x + (peak.x - 0.5 - centerX)*cellScale, pointB.y + (peak.y - 0.5 - centerY)*cellScale); // 2.6
+	// var p = new V2D(pointB.x + (peak.x + 0.5 - centerX)*cellScale, pointB.y + (peak.y + 0.5 - centerY)*cellScale); // 2.3
 
 	return {"location":p, "score":peak.z};
 }
@@ -52991,7 +52992,6 @@ R3D.BundleAdjustPoint3D = function(point3D, points2D, intrinsics, inverses, extr
 	x = result["x"];
 	var cost = result["cost"];
 	var point = new V3D(x[0],x[1],x[2]);
-	// console.log("COST: "+cost);
 	return {"point":point, "error":cost};
 }
 R3D._gd_BAPointV3D = new V3D();
@@ -53013,7 +53013,6 @@ R3D._gd_BAPointExtrinsic = function(args, x, isUpdate){
 		var K = intrinsics[i];
 		var distanceSquare = R3D.reprojectionErrorSingle(p3D,p2D,extrinsic,K);
 		totalError += distanceSquare;
-		// var distance = Math.sqrt( distanceSquare );
 	}
 	return totalError;
 }

@@ -4021,8 +4021,9 @@ App3DR.App.Model3D.prototype.setPoints = function(input3D, input2D, hasImages, n
 var useErrors = false;
 // var useErrors = true;
 // var errorType = 0; // F
-// var errorType = 1; // R
-var errorType = 2; // NCC
+var errorType = 1; // R
+// var errorType = 2; // NCC
+// var errorType = 3; // DEPTH
 // var errorType = 0;
 	useErrors = useErrors && hasImages;
 	if(useErrors){
@@ -4033,8 +4034,7 @@ var errorType = 2; // NCC
 		var pointsA = input2D[0];
 		var pointsB = input2D[1];
 		var points3D = input3D;
-		var F = R3D.fundamentalFromLargeDataset(pointsA,pointsB,1000);
-		var Finv = R3D.fundamentalInverse(F);
+		
 		// var fError = R3D.fErrorList(F, Finv, pointsA, pointsB);
 		var extrinsicA = viewA["transform"];
 		var extrinsicB = viewB["transform"];
@@ -4045,17 +4045,39 @@ var errorType = 2; // NCC
 		var imageB = viewB["matrix"];
 		var imageSizeA = imageA.size().copy();
 		var imageSizeB = imageB.size().copy();
-
 		var featureSizeA = imageSizeA.length()*0.01; // 1% of image
 		var featureSizeB = imageSizeB.length()*0.01; // 1% of image
+
+// imageSizeA = new V2D(2016,1512);
+// imageSizeB = new V2D(2016,1512);
 
 		var imageScalesA = new ImageMatScaled(imageA);
 		var imageScalesB = new ImageMatScaled(imageB);
 		var compareSize = 7; // 11
-		var needleSize = featureSizeA; // feature/scale size
-		var haystackRelativeSize = needleSize;
+		// var needleSize = featureSizeA; // feature/scale size
+		// var haystackRelativeSize = needleSize;
 		var matrix2D = new Matrix2D();
 			matrix2D.identity();
+
+
+
+
+var psA = [];
+var psB = [];
+for(var i=0; i<pointsA.length; ++i){
+	var pointA = pointsA[i];
+	var pointB = pointsB[i];
+		pointA = new V2D(pointA.x,pointA.y);
+		pointB = new V2D(pointB.x,pointB.y);
+		pointA = pointA.copy().scale(imageSizeA.x,imageSizeA.y);
+		pointB = pointB.copy().scale(imageSizeB.x,imageSizeB.y);
+	psA[i] = pointA;
+	psB[i] = pointB;
+}
+
+var F = R3D.fundamentalFromLargeDataset(psA,psB,1000);
+var Finv = R3D.fundamentalInverse(F);
+
 
 		var cameraCenterA = extrinsicA.multV3DtoV3D(new V3D(0,0,0));
 		var cameraCenterB = extrinsicB.multV3DtoV3D(new V3D(0,0,0));
@@ -4094,29 +4116,29 @@ var errorType = 2; // NCC
 
 		var affineReuse = new Matrix2D();
 		var errors = [];
-		// console.log(pointsA);
-		// throw "?";
 		for(var i=0; i<pointsA.length; ++i){
-			var pointA = pointsA[i];
-			var pointB = pointsB[i];
-				pointA = new V2D(pointA.x,pointA.y);
-				pointB = new V2D(pointB.x,pointB.y);
-				pointA = pointA.copy().scale(imageSizeA.x,imageSizeA.y);
-				pointB = pointB.copy().scale(imageSizeB.x,imageSizeB.y);
+			var pointA = psA[i];
+			var pointB = psB[i];
 			var point3D = points3D[i];
+
 			
 			if(errorType==0){
 				var error = R3D.fError(F, Finv, pointA, pointB);
 					error = error["error"];
+// console.log("ERROR IN PIXELS: "+error+" / "+imageSizeA.x+" = "+(error/imageSizeA.x))
+// throw "?"
 				// error = error/point3D.z;
 				errors.push(error);
 				// errors.push(error["error"]);
 			}else if(errorType==1){
-				var error = R3D.reprojectionError(point3D, pointA,pointB, extrinsicA, extrinsicB, Ka, Kb);
+				// var error = R3D.reprojectionError(point3D, pointA,pointB, extrinsicA, extrinsicB, Ka, Kb);
+				var error = R3D.reprojectionError(point3D, pointA,pointB, absoluteA, absoluteB, Ka, Kb); // these are wrong from somewhere
 					error = error["error"];
+// console.log("ERROR IN PIXELS: "+error+" / "+imageSizeA.x+" = "+(error/imageSizeA.x))
 // console.log(point3D);
 // error = error/point3D.z;
 // console.log(error);
+// throw "here";
 				errors.push(error);
 			}else if(errorType==2){
 
@@ -4165,13 +4187,19 @@ var errorType = 2; // NCC
 				var matrix2D = result["affine"];
 
 
-				var result = R3D.optimumNeedleHaystackAtLocation(imageScalesA,pointA, imageScalesB,pointB, needleSize,haystackRelativeSize, matrix2D, compareSize);
+// console.log(pointA,pointB, imageScalesA,imageScalesB, compareSize, needleSize,haystackRelativeSize, matrix2D)
+																 // pointA,pointB, imageScalesA,imageScalesB, featureSize,needleSize,haystackSize, affine, reuseNeedle, reuseHaystack){
+				var result = R3D.optimumSADLocationSearchFlatRGB(pointA,pointB, imageScalesA,imageScalesB, featureSizeA, compareSize,compareSize, matrix2D);
+// console.log(result);
+				// var result = R3D.optimumSADLocationSearchFlatRGB(pointA,pointB, imageScaleA,imageScaleB, featureSize, needleSize,haystackSize, affineAB);
+				// var result = R3D.optimumNeedleHaystackAtLocation(imageScalesA,pointA, imageScalesB,pointB, needleSize,haystackRelativeSize, matrix2D, compareSize);
 				var error = result["score"];
 
 				// error = Math.pow(error,0.5);
 
 				errors.push(error);
 
+// throw "?"
 
 
 
@@ -4181,6 +4209,9 @@ var errorType = 2; // NCC
 				if(i%100 == 0){
 					console.log(i+"/"+pointsA.length);
 				}
+			}else if(errorType==3){
+					error = point3D.z;
+					errors.push(error);
 			}else{
 				throw "unknown error type "+errorType;
 			}
@@ -7765,7 +7796,7 @@ console.log("checkPerformNextTask");
 		});
 		return;
 	}
-
+// throw "stop"
 // throw "task pair feature match";
 	// does a feature-match pair exist (even a bad match) between every (putative) view pair?
 	if(!project.checkHasSparseStarted()){
@@ -10530,7 +10561,7 @@ console.log("ITERATION NUMBER: "+baIterations+" / "+maxIterationsBA);
 
 
 console.log("isDone - FULL DONE")
-throw "BEFORE HANDLE DONE TRACK FULL BA "
+// throw "BEFORE HANDLE DONE TRACK FULL BA "
 
 // show the graph:
 var orderedAbsoluteTransforms = [];
@@ -11287,7 +11318,7 @@ console.log(str);
 				project.saveFileFromData(graphData, graphFile, savedGraphComplete);
 			}
 console.log(fullBundlePath);
-throw "before saving initial bundle full";
+// throw "before saving initial bundle full";
 			project.saveFileFromData(bundleData, fullBundlePath, savedBundleComplete);
 			console.log("all group BA complete -- generate initial viewgraph from skeleton + groups");
 			return;// load all tracks from pairs into full track file
@@ -12605,7 +12636,6 @@ console.log(allCameras);
 		var WORLDVIEWSLOOKUP = info["lookup"];
 		var world = info["world"];
 
-
 console.log(cellSize);
 console.log(world);
 
@@ -12654,17 +12684,23 @@ console.log(world);
 		world.embedPoints3D(points3DAdd);
 
 
-
-
-
-
 		console.log("solveDensePair");
 // console.log(info);
 // throw "before solveDensePair"
+
 		world.solveDensePairNew();
 
+		// GLOBALSTAGE.root().matrix().scale(0.25);
+		// world.showForwardBackwardPair();
 
-// throw "AFTER NEW"
+
+
+		var str = world.toYAMLString();
+		console.log(str);
+
+throw "???"
+
+		// throw "AFTER DENSE - NEW PAIR DONE"
 
 		var transform = world.toTransformArray()[0];
 		var errorR = (transform.rSigma() + transform.rMean());
@@ -12679,8 +12715,8 @@ var pairData = App3DR.ProjectManager.defaultPairFile(viewAID,viewBID);
 
 		pairData["relative"] = world.toObject();
 
-		var str = world.toYAMLString();
-		console.log(str);
+		// var str = world.toYAMLString();
+		// console.log(str);
 		// throw "before tracks";
 
 		console.log("do tracks");
@@ -12725,6 +12761,7 @@ var pairData = App3DR.ProjectManager.defaultPairFile(viewAID,viewBID);
 		var viewID = view["id"];
 		view = project.viewFromID(viewID);
 		view.loadDenseHiImage(checkLoadedAllImages, project);
+		// view.loadBundleAdjustImage(checkLoadedAllImages, project);
 	}
 }
 
@@ -13176,7 +13213,11 @@ console.log("GET INITIAL F: "+matches.length);
 			view1 = views[1];
 			// points
 			console.log(pointsA,pointsB);
+			
+
 			world.resolveIntersectionByDefault();
+
+
 			for(var i=0; i<pointsA.length; ++i){
 				var pointA = pointsA[i];
 				var pointB = pointsB[i];
@@ -13238,6 +13279,8 @@ console.log("GET INITIAL F: "+matches.length);
 
 			world.dropWorstParametersF();
 			console.log("SOLVE INITIAL R");
+
+			// throw "here"
 			
 			// var cellCount = 40;
 			// world.setViewCellCounts(cellCount);
@@ -13974,8 +14017,7 @@ console.log("DELTA INIT: "+((timeB-timeA)/1000)); // 4-5 seconds
 			// TESTING
 			var str = world.toYAMLString();
 			console.log(str);
-
-throw "solveDenseGroup end"
+			// throw "solveDenseGroup end"
 
 			var errorCount = worldViews.length + 1;
 			var errorCounts = Code.newArrayArrays(errorCount);
@@ -15699,7 +15741,7 @@ if(!K){
 		var views2D = info["views2D"];
 		var included2D = info["views"];
 console.log(info);
-// throw "optimumTriangleTextureImageAssignment results";
+throw "optimumTriangleTextureImageAssignment results";
 		// texture packing
 		var info = R3D.optimumTriangleTexturePacking(textureSize,triangles2D);
 		console.log(info);

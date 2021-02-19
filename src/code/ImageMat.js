@@ -5905,21 +5905,6 @@ ImageMatScaled.affineToLocationTransform = function(outMatrix, inMatrix, destX,d
 		outMatrix.postmult(inMatrix);
 		outMatrix.translate(sourceX,sourceY);
 	}
-
-
-/*
-	outMatrix.identity();
-	outMatrix.translate(-sourceX,-sourceY);
-	// outMatrix.postmult(inMatrix);
-	// outMatrix.translate(destX,destY);
-	// outMatrix.translate(-sourceX,-sourceY);
-	// outMatrix.premult(inMatrix);
-	outMatrix.postmult(inMatrix);
-	// outMatrix.translate(destX,destY);
-	// outMatrix.translate(-sourceX,-sourceY);
-*/
-
-
 	return outMatrix;
 }
 

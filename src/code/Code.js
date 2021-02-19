@@ -996,6 +996,15 @@ Code.binarySearchArray = function(arr,fxn,needle){ // Code.binarySearchArray([0,
 	return [middle];
 }
 */
+Code.toHash = function(array, hashFxn){
+	var object = {};
+	for(var i=0; i<array.length; ++i){
+		var o = array[i];
+		var j = hashFxn(o);
+		object[j] = o;
+	}
+	return object;
+}
 Code.objectToArray = function(object){
 	return Object.values(object);
 	// var arr = [];
@@ -9153,16 +9162,16 @@ Code.contourTreeExtrema = function(d, wid,hei){
 https://www.quora.com/What-is-the-Hessian-matrix
 Code._tempMatrixArray2 = [0,0];
 Code._tempMatrixArray4 = [0,0,0,0];
-Code.extrema2DFloatInterpolate = function(loc, d0,d1,d2,d3,d4,d5,d6,d7,d8){ // want to know where dx and dy are simultaneously equal to zero
+Code.extrema2DFloatInterpolate = function(loc, d0,d1,d2,d3,d4,d5,d6,d7,d8){ // want to know where dx and dy are simultaneously equal to zero - min or max
 	var dx = (d5-d3)*0.5;
 	var dy = (d7-d1)*0.5;
 	var dxdx = (d5-2.0*d4+d3);
 	var dydy = (d7-2.0*d4+d1);
 	var dxdy = (d8-d6-d2+d0)*0.25;
-// if(Code.isNaN(dx) || Code.isNaN(dy) || Code.isNaN(dxdx) || Code.isNaN(dxdy) || Code.isNaN(dydy) ){
-// 	console.log(d0,d1,d2,d3,d4,d5,d6,d7,d8);
-// 	throw "extrema2DFloatInterpolate input";
-// }
+if(Code.isNaN(dx) || Code.isNaN(dy) || Code.isNaN(dxdx) || Code.isNaN(dxdy) || Code.isNaN(dydy) ){
+	console.log(d0,d1,d2,d3,d4,d5,d6,d7,d8);
+	throw "extrema2DFloatInterpolate input";
+}
 	var Hinv = Code.inverse2x2(Code._tempMatrixArray4, dxdx,dxdy, dxdy,dydy);
 		//var H = new Matrix(2,2, [dxdx,dxdy, dxdy,dydy]);
 		//var Hinv = Matrix.inverse(H);
@@ -9172,17 +9181,17 @@ Code.extrema2DFloatInterpolate = function(loc, d0,d1,d2,d3,d4,d5,d6,d7,d8){ // w
 	Code.mult2x2by2x1toV2D(loc, Hinv,dD);
 	loc.x = -loc.x; loc.y = -loc.y;
 	loc.z = d4 + 0.5*(dx*loc.x + dy*loc.y);
-	// if(Code.isNaN(loc.x) || Code.isNaN(loc.y) || Code.isNaN(loc.z)){
-	// 	console.log(dx);
-	// 	console.log(dy);
-	// 	console.log(dxdx);
-	// 	console.log(dxdy);
-	// 	console.log(dydy);
-	// 	console.log(dD);
-	// 	console.log(loc);
-	// 	console.log(d0,d1,d2,d3,d4,d5,d6,d7,d8);
-	// 	throw "?";
-	// }
+	if(Code.isNaN(loc.x) || Code.isNaN(loc.y) || Code.isNaN(loc.z)){
+		console.log(dx);
+		console.log(dy);
+		console.log(dxdx);
+		console.log(dxdy);
+		console.log(dydy);
+		console.log(dD);
+		console.log(loc);
+		console.log(d0,d1,d2,d3,d4,d5,d6,d7,d8);
+		throw "?";
+	}
 	return loc;
 }
 //------------------------------------------------------------------------------------------------------------------------------------------------- interpolation - 3D

@@ -387,9 +387,216 @@ MISSING:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-- display 2D & 3D cell size?
 
-- f3d/bak filter of paper
+- larger image source
+
+- invert scale
+
+- 
+
+- walk thru all steps of localizing a point
+
+- try to get matches in featureless area
+
+
+- F & R error don't seem correlated with actual points, instead locations IN IMAGE
+
+
+
+- better filtering of points along depth discontinuities
+
+
+
+
+ 2d-3d & 3d-2d neighborhood consistency ?
+ 	- spherical consistency
+ 	- 3D location consistency
+
+
+- re-check logic for probe3d dropping
+	(pick/compare using NCC?)
+
+- empty cell 3DR probing fxn ?
+	- find empty cell (not next to any other cell)?
+	- search for 2D point along F-line (in segments)
+	- pick best score 2D point
+	- if 2D point is far enough away from any other points (0.5-1.0 cell size distance)
+		=> make as match & add
+
+
+
+
+
+
+
+- what alg is used for SAD search?
+	???
+
+
+	optimumSADLocationSearchFlatRGB
+
+
+
+- are there any off-by-one errors (eg on subdivide? / needle/haystack ?)
+	optimumSADLocationSearchFlatRGB
+		R3D.searchNeedleHaystackSADColor(needle,haystack);
+		R3D.searchNeedleHaystackSADColorOffsetUnit(needle,haystack);
+		R3D.minimumFromValues
+			Code.extrema2DFloatInterpolate(peak, d0,d1,d2,d3,d4,d5,d6,d7,d8);
+
+
+R3D.minimumFromValues - is scale correct in all cases
+
+
+
+var scoreNCC = R3D.searchNeedleHaystackNCCColor(needle,haystack);
+		scoreNCC = scoreNCC["value"][0];
+	var scoreSAD = R3D.searchNeedleHaystackSADColor(needle,haystack);
+		scoreSAD = scoreSAD["value"][0];
+	var range = needle.range()["y"];
+
+
+
+
+subdivideViewGridsR
+	subdivideViewGrids
+		cellSize
+			initCells
+
+				addViewProbePoint ???
+
+probe2DCellsR
+	probe2DCellsRF
+
+		matchNeighborConsistentResolveAdd
+	?????
+
+
+
+optimumTriangleTextureImageAssignment
+updateTextureVertexFromViews
+
+ R3D.TextureVertex
+
+useWorldGeometryIntersection
+
+- check probe3d logic
+
+- check refinePoint3DAbsoluteLocation logic
+
+
+- add 'new' filtering to:
+	solvePairF - sparse
+		triple ?
+	solvePair - dense
+		triple ?
+	solveGroup
+
+	- tracks
+		- can't load images
+		- don't have error metric
+		- 
+
+solveDensePairNew
+
+
+Stereopsis.js:1119 error 2 : 0.000016887081906093456 +/- 0.5977864870675872   (24104)
+Stereopsis.js:3318 error 3 : 0.008574103650741953 +/- 0.545012130660828   (10563)
+Stereopsis.js:3318 error 4 : 0.02533385677799459 +/- 0.5141729091648469   (5805)
+Stereopsis.js:3318 error 5 : 0.05947135497365086 +/- 0.45182690452283936   (4089)
+Stereopsis.js:3318 error 6 : 0.09636331132100047 +/- 0.37191773023396857   (3359)
+Stereopsis.js:3318 error 7 : 0.06788098581934476 +/- 0.33864683515446503   (4149)
+Stereopsis.js:11194 
+
+
+
+- texturing triangles logic cleanup
+
+
+
+- what else could increase accuracy of points ?
+	- how bout DON'T optimize individual point locations?
+	=> should all be accessible in GROUP logic
+
+- maybe camera positions aren't quite right?
+	- check by letting cameras move around
+
+- maybe P3D location are optimized wrong?
+	- check by not using point optimizer: refinePoint3DAbsoluteLocation
+
+
+
+
+
+- go thru same sequence and see if issues arrise from changes
+	- make sure visuals are used for intersection resolution
+		- how does this work for sparse?
+		- tracks?
+		- dense?
+		- groups?
+	-use most expensive patch updating for pairs - soare & dense
+
+
+
+
+
+
+solvePairF -=----------- inconsistent  compare
+
+
+
+filterLocal2DF 
+
+
+
+resolveIntersectionByDefault
+	_resolveIntersectionDefault
+		_resolveIntersectionLayered
+		_resolveIntersectionLayered
+
+pairs don't use visual combining - they only choose the best of the 2 options
+
+
+
+
+
+
+SHOULD solvePairF === use R filtering ?
+
+
+
+world.filterCriteria2DNnot3DN();
+
+world.filterCriteria2DNnotDepth();
+
+world.filterCriteria2DN3DNregularization();
+
+
+
+
+
+
+
+filterCriteria2DNnot3DN still removes a LOT
+
+- any algorithm that uses 3D neighbors needs to consider a CONE of neighbors
+
+- plan algorithm for:
+	- inconsistent neighbor (2DN but not 3DN) ---- find points that are in the wrong 3D location
+		- drop this if worse than group average NCC
+	- neighbor consistency (2D-3D & 3D-2D) ---- find points that are in the wrong 3D location
+	- visibility - behind
+
+- a spherical radius does not catch neighbors equally
+	- surfaces normal to camera will be included
+	- surfaces skew to camera will be too spread out
+
+	- a neighbor can be anywhere within the cone of the ray to the pixel
+		[possibly limited in depth to 0.5 to 2.0]
+
+x f3d/bak filter of paper
+
+
 
 
 
@@ -397,7 +604,7 @@ neighborhood3DSize
 
 
 
-- go thru same sequence and see if issues arrise from changes
+
 
 - reassess subdivision logic
 	subDivideUpdateMatchLocation
