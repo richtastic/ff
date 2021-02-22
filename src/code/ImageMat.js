@@ -400,6 +400,16 @@ ImageMat.subImage = function(image,width,height, offX,offY,wid,hei){ // include
 	}
 	return sub;
 }
+ImageMat.setSubImage = function(image,width,height, offX,offY, sub,wid,hei){ // include
+	var i, j;
+	for(j=0; j<hei; ++j){
+		for(i=0; i<wid; ++i){
+			image[(offY+j)*width + (offX+i)] = sub[j*wid+i];
+		}
+	}
+	return image;
+}
+
 ImageMat.prototype.subImage = function(offX,offY,wid,hei){ // exact-pixel imaging
 	var image = new ImageMat(wid,hei);
 	var width = this.width();
@@ -412,6 +422,42 @@ ImageMat.prototype.subImage = function(offX,offY,wid,hei){ // exact-pixel imagin
 	image.blu(blu);
 	return image;
 }
+
+
+ImageMat.prototype.setSubImage = function(offX,offY, block){ // exact-pixel imaging
+	var width = this.width();
+	var height = this.height();
+	var bw = block.width();
+	var bh = block.height();
+	var red = ImageMat.setSubImage(this.red(),width,height, offX,offY, block.red(),bw,bh);
+	var grn = ImageMat.setSubImage(this.grn(),width,height, offX,offY, block.grn(),bw,bh);
+	var blu = ImageMat.setSubImage(this.blu(),width,height, offX,offY, block.blu(),bw,bh);
+	return this;
+}
+
+
+ImageMat.prototype.insetPerimeter = function(){
+	???;
+}
+ImageMat.insetPerimeter = function(array,width,height, pixels, value){
+	var maxPerWid = Math.max(width-pixels,0);
+	var maxPerHei = Math.max(pixels,height-pixels);
+	var minPerHei = Math.min(height-pixels,height-1);
+	var index;
+	// top
+	for(var i=0; i<wid; ++i){
+		for(var j=0; j<maxPerHei; ++j){
+			array[j*width + i] = value;
+		}
+	}
+	// bot
+	for(var i=0; i<wid; ++i){
+		for(var j=maxPerHei; j<height; ++j){
+			array[j*width + i] = value;
+		}
+	}
+}
+
 ImageMat.prototype.insert = function(imageB, offX,offY){
 	return this._insertAdd(imageB, offX,offY, true);
 }

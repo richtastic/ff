@@ -4021,8 +4021,8 @@ App3DR.App.Model3D.prototype.setPoints = function(input3D, input2D, hasImages, n
 var useErrors = false;
 // var useErrors = true;
 // var errorType = 0; // F
-var errorType = 1; // R
-// var errorType = 2; // NCC
+// var errorType = 1; // R
+var errorType = 2; // NCC
 // var errorType = 3; // DEPTH
 // var errorType = 0;
 	useErrors = useErrors && hasImages;
@@ -12698,7 +12698,7 @@ console.log(world);
 		var str = world.toYAMLString();
 		console.log(str);
 
-throw "???"
+// throw "???"
 
 		// throw "AFTER DENSE - NEW PAIR DONE"
 
@@ -15138,10 +15138,10 @@ App3DR.ProjectManager.prototype.iterateBundleProcess = function(){
 			}
 		}
 
-throw "aggregate views";
 		// aggregate views
 		var viewsFileName = bundleData["viewsFile"];
 		if(!viewsFileName){
+			throw "aggregate views";
 			var views = bundleData["views"];
 			var viewsData = {};
 				viewsData["views"] = views;
@@ -15162,13 +15162,14 @@ throw "aggregate views";
 			console.log(bundlePathBase,viewsFileName);
 			var viewsDataPath = Code.appendToPath(bundlePathBase,viewsFileName);
 			console.log("viewsDataPath: "+viewsDataPath);
+			
 			project.saveFileFromData(viewsData, viewsDataPath, savedViewsCompleteFxn, project);
 			return;
 		}
 
-throw "aggregate points";
 		var pointsFileName = bundleData["pointsFile"];
 		if(!pointsFileName){
+			throw "aggregate points";
 			var pointsFileName = "points.yaml";
 			bundleData["pointsFile"] = pointsFileName;
 			pointsDataPath = Code.appendToPath(bundlePathBase,pointsFileName);
@@ -15741,7 +15742,7 @@ if(!K){
 		var views2D = info["views2D"];
 		var included2D = info["views"];
 console.log(info);
-throw "optimumTriangleTextureImageAssignment results";
+// throw "optimumTriangleTextureImageAssignment results";
 		// texture packing
 		var info = R3D.optimumTriangleTexturePacking(textureSize,triangles2D);
 		console.log(info);

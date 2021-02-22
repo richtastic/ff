@@ -387,12 +387,31 @@ MISSING:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+- synthetic image tests of localizing methods
+	- what is average & best sub-pixel accuracy
 
-- larger image source
 
-- invert scale
 
+- need better coverage in low texture areas
+	- 2D propagation must be failing in some capacity
+		- visualize problem?
+		- try using all (up to ~ 5 closest?) neighbors
+- need better filter of bad seeds
+	- depth discontinuities
+	- non-regularization points
 - 
+
+
+
+filterCriteria2DNnot3DN - not filter much (~ 0.1%)
+
+
+
+
+
+- could do 'sub pixel' by getting features at double size after search ?
+
+
 
 - walk thru all steps of localizing a point
 
@@ -445,7 +464,7 @@ MISSING:
 			Code.extrema2DFloatInterpolate(peak, d0,d1,d2,d3,d4,d5,d6,d7,d8);
 
 
-R3D.minimumFromValues - is scale correct in all cases
+R3D.minimumFromValues - is scale correct in all cases : 
 
 
 

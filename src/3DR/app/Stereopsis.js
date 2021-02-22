@@ -8195,8 +8195,8 @@ var timeStart = Code.getTimeMilliseconds();
 	var subdivisions = 1; // 0-1
 	var iterations = 3; // 2-3
 // subdivisions = 0;
-subdivisions = 1;
-// subdivisions = 2;
+subdivisions = 1; // ~ 50k
+// subdivisions = 2; // 100-200k
 // subdivisions = 3;
 // iterations = 2;
 iterations = 3;
@@ -8668,6 +8668,7 @@ var sigmaGlobal3DR = 3.0;
 
 			// sigmaGlobal3DR = 3.0 - subdivision*0.50; // 3.0 , 2.5 , 2.0 , 1.5
 			sigmaGlobal3DR = 3.0 - subdivision*0.3333333; // 3.0 , 2.6 , 2.3 , 2.0
+			sigmaGlobal3DR = Math.max(sigmaGlobal3DR,1.0);
 		}
 
 
@@ -8683,8 +8684,8 @@ var sigmaGlobal3DR = 3.0;
 		// }
 		// compareSize
 		// world.probe2DCellsR(3.0,3.0);
-		// world.probe2DCellsR(3.0,3.0); // 9=>81 7=>49 5=>25
-		world.probe2DCellsR(99.0,99.0);
+		world.probe2DCellsR(5.0,5.0);
+		// world.probe2DCellsR(99.0,99.0);
 
 		// optimize ?
 		// world.refinePoint3DAbsoluteLocation();
@@ -8701,8 +8702,9 @@ var sigmaGlobal3DR = 3.0;
 		// world.filterLocal2DR();
 		// world.filterLocal3DR();
 
-		// world.filterGlobalPatchSphere3D(2.0);
-		world.filterGlobalPatchSphere3D(1.0);
+		// world.filterGlobalPatchSphere3D(3.0);
+		world.filterGlobalPatchSphere3D(2.0);
+		// world.filterGlobalPatchSphere3D(1.0);
 
 		// refine
 		world.recordViewAbsoluteOrientationStart();
@@ -14692,7 +14694,12 @@ Stereopsis.World.prototype.setMatchAffineFromNeighborhood = function(){ // updat
 Stereopsis.World.prototype.subDivideUpdateMatchLocation = function(){ // 2D update, matches+affine change in position | assume change in 3D location does not warrant patch update
 	var world = this;
 	// each P3D's matches (arbitrary starting match)
+	// high def:
+	// var needleSize = 21;
+	// low def:
 	var needleSize = 11; // 7-11
+
+	// var haystackSize = needleSize + 2; // maximum movement 1 px
 	var haystackSize = needleSize + 2; // maximum movement 1 px
 
 	var needle = world._subDivideUpdateMatchLocation_TEMP_NEEDLE;
@@ -19615,11 +19622,41 @@ Stereopsis.World.prototype.bestMatch2DFromLocation = function(affine,centerA,cen
 }
 // Stereopsis.World.Probe2DCompareSize = 11; // 7-11
 Stereopsis.World.prototype.bestMatch2DFromExisting = function(affine,centerA,centerB, existingA, viewA,viewB){
+	throw "is this used - bestMatch2DFromExisting"
 	var imageA = viewA.image();
 	var imageB = viewB.image();
-	var needleSize = viewB.compareSize(); // smaller size would be more accurate | larger size allows for more initial error
+
+	var needleSize = 11;
 	var haystackSize = 2*needleSize;
-	var locationB = R3D.bestAffineLocationFromLocation(affine,centerA,centerB, existingA, imageA,imageB,needleSize, haystackSize);
+	// var needleSize = viewB.compareSize(); // smaller size would be more accurate | larger size allows for more initial error
+	// var haystackSize = 2*needleSize;
+
+	var reuseNeedle = this.bestMatch2DFromExisting_needle;
+	if(!reuseNeedle){
+		reuseNeedle = new ImageMat(needleSize,needleSize);
+		this.bestMatch2DFromExisting_needle = reuseNeedle;
+	}
+
+	var reuseHaystack = this.bestMatch2DFromExisting_haystack;
+	if(!reuseHaystack){
+		reuseHaystack = new ImageMat(haystackSize,haystackSize);
+		this.bestMatch2DFromExisting_haystack = reuseHaystack;
+	}
+
+	var featureSize = viewB.compareSize();
+
+	var deltaA = V2D.sub(existingA,centerA); // A to B
+	var deltaB = affine.multV2DtoV2D(deltaA);
+	var predictedB = deltaB.add(centerB);
+
+	// var locationB = R3D.bestAffineLocationFromLocation(affine,centerA,centerB, existingA, imageA,imageB,needleSize, haystackSize);
+
+	var result = R3D.optimumSADLocationSearchFlatRGB(existingA,predictedB, viewA.imageScales(),viewB.imageScales(), featureSize, needleSize,haystackSize, affine, reuseNeedle,reuseHaystack);
+	var locationB = result["point"];
+	console.log(locationB);
+	throw "HERE";
+
+
 	// var compareWindow = Stereopsis.compareSizeForViews2D(viewA,centerA,viewB,locationB);
 	var compareWindow = viewB.compareSize();
 
@@ -19706,55 +19743,6 @@ Stereopsis.averageCornerness = function(view,point){
 // 		// uniqueness = 1.0;
 // 	}
 // 	return uniqueness;
-// }
-
-
-
-// // Stereopsis.X = 0;
-// Stereopsis.optimumScoresAtLocation = function(imageA,pointA, imageB,pointB, needleSize,haystackRelativeSize, matrix){ // search needle/haystack at points
-// 	var compareSize = Stereopsis.COMPARE_SIZE;
-// 	var cellScale = (needleSize/compareSize);
-// 	var haystackSize = Math.ceil((haystackRelativeSize/needleSize)*compareSize);
-// 	var haystackSize = Math.max(haystackSize,compareSize);
-// 	var needle = imageA.extractRectFromFloatImage(pointA.x,pointA.y,cellScale,null,compareSize,compareSize, matrix);
-// 	var haystack = imageB.extractRectFromFloatImage(pointB.x,pointB.y,cellScale,null,haystackSize,haystackSize, null);
-// 	// var scoresSAD = R3D.searchNeedleHaystackImageFlat(needle, null, haystack);
-// 	var scoresNCC = R3D.normalizedCrossCorrelation(needle,null, haystack, true);
-// 	var scores = {
-// 		// "width": scoresSAD["width"],
-// 		// "height": scoresSAD["height"],
-// 		// "value": scoresSAD["value"]
-// 		"width": scoresNCC["width"],
-// 		"height": scoresNCC["height"],
-// 		"value": scoresNCC["value"]
-// 	}
-// 	return scores;
-// }
-// Stereopsis.minimumFromValues = function(values, valueWidth, valueHeight, pointB, cellScale){
-// 	var info = Code.infoArray(values);
-// 	var index = info["indexMin"];
-// 	var zLoc = values[index];
-// 	var xLoc = index % valueWidth;
-// 	var yLoc = (index/valueWidth) | 0;
-// 	var peak = new V3D(xLoc,yLoc,zLoc);
-// 	// sub-pixel interpolation
-// 	if(0<xLoc && xLoc<valueWidth-1 && 0<yLoc && yLoc<valueHeight-1){
-// 		var d0 = values[(yLoc-1)*valueWidth + (xLoc-1)];
-// 		var d1 = values[(yLoc-1)*valueWidth + (xLoc+0)];
-// 		var d2 = values[(yLoc-1)*valueWidth + (xLoc+1)];
-// 		var d3 = values[(yLoc+0)*valueWidth + (xLoc-1)];
-// 		var d4 = values[(yLoc+0)*valueWidth + (xLoc+0)];
-// 		var d5 = values[(yLoc+0)*valueWidth + (xLoc+1)];
-// 		var d6 = values[(yLoc+1)*valueWidth + (xLoc-1)];
-// 		var d7 = values[(yLoc+1)*valueWidth + (xLoc+0)];
-// 		var d8 = values[(yLoc+1)*valueWidth + (xLoc+1)];
-// 		var result = Code.extrema2DFloatInterpolate(new V3D(), d0,d1,d2,d3,d4,d5,d6,d7,d8);
-// 		result.x += xLoc;
-// 		result.y += yLoc;
-// 		peak = result;
-// 	}
-// 	var p = new V2D(pointB.x + (-valueWidth*0.5 + peak.x)*cellScale, pointB.y + (-valueHeight*0.5 + peak.y)*cellScale);
-// 	return {"location":p, "score":peak.z};
 // }
 
 

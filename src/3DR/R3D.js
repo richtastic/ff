@@ -14229,9 +14229,7 @@ R3D.testOptimumLocationHelperDebug = function(needle,haystack, scores, offx,offy
 R3D.DEBUG_SS_A=0;
 R3D._temp_matrix2D = new Matrix2D();
 R3D.optimumSADLocationSearchFlatRGB = function(pointA,pointB, imageScalesA,imageScalesB, featureSize,needleSize,haystackSize, affine, reuseNeedle, reuseHaystack){
-	var cellScale = (needleSize/featureSize);
-
-	var inScale = 1.0/cellScale;
+	var inScale = (featureSize/needleSize);
 	var halfNeedle = (needleSize-1)*0.5;
 	var halfHaystack = (haystackSize-1)*0.5;
 
@@ -14258,14 +14256,12 @@ R3D.optimumSADLocationSearchFlatRGB = function(pointA,pointB, imageScalesA,image
 		imageScalesB.extractRectFast(haystack, averageScale, affine);
 
 	// var scores = R3D.searchNeedleHaystackSADColor(needle,haystack);
-
 	var scores = R3D.searchNeedleHaystackSADColorOffsetUnit(needle,haystack);
 
 	var finalSize = scores["width"];
 	var minimum = R3D.minimumFromValues(scores["value"], finalSize, finalSize, pointB, inScale);
 	var absoluteLocation = minimum["location"];
 	var absoluteScore = minimum["score"];
-
 
 	if(Code.isNaN(absoluteLocation.x) || Code.isNaN(absoluteLocation.y)){
 		console.log(pointB);
@@ -14367,7 +14363,7 @@ d.graphics().alpha(0.50);
 
 R3D.optimizeMatchingFlatGradient = function(pointA,pointB, imageScalesA,imageScalesB,gradientA,gradientB, featureSize,compareSize,    matrixIn){
 
-	
+throw "optimizeMatchingFlatGradient ???"
 	var needleSize = featureSize;
 	var matrix = matrixIn;
 	matrix = null;
@@ -14433,7 +14429,8 @@ console.log(scores);
 	var scores = scoresSAD;
 
 	var finalSize = scores["width"];
-	var minimum = R3D.minimumFromValues(scores["value"], finalSize, finalSize, pointB, 1.0/cellScale);
+throw "check minimumFromValues"
+	var minimum = R3D.minimumFromValues(scores["value"], finalSize, finalSize, pointB, cellScale);
 	var absoluteLocation = minimum["location"];
 	var absoluteScore = minimum["score"];
 	
@@ -29919,206 +29916,6 @@ R3D.optimumNeedleHaystackImagesScore = function(needle,haystack){ //
 	var lowest = Code.min(scoreSAD["value"]);
 	return lowest;
 }
-
-R3D.optimumNeedleHaystackAtLocation = function(imageScalesA,pointA, imageScalesB,pointB, needleSize,haystackRelativeSize, matrix, compareSize, debug){ // search needle/haystack at points
-
-throw "use optimumSADLocationSearchFlatRGB"
-
-	compareSize = compareSize!==undefined ? compareSize : 11;
-	// compareSize = 11;
-	// compareSize = 9;
-	// compareSize = 7;
-	//
-
-
-var siz = 4.0;
-needleSize *= siz;
-haystackRelativeSize *= siz;
-compareSize = 21;
-	// WAS
-	// var cellScale = (compareSize/needleSize);
-	// var cellScale = (needleSize/compareSize);
-// NOT SURE WHICH SCALE IS CORRECT
-
-throw "is this compare backwards for IMAGE SCALES ?"
-	var haystackSize = Math.ceil((haystackRelativeSize/needleSize)*compareSize);
-		haystackSize = Math.max(haystackSize,compareSize);
-
-	var needle = imageScalesA.extractRect(pointA,cellScale,compareSize,compareSize, matrix);
-	var haystack = imageScalesB.extractRect(pointB,cellScale,haystackSize,haystackSize, null);
-
-
-
-var scale = 4.0;
-var img = GLOBALSTAGE.getFloatRGBAsImage(needle.red(), needle.grn(), needle.blu(), needle.width(), needle.height());
-var d = new DOImage(img);
-d.matrix().scale(scale);
-d.matrix().translate(100,100);
-GLOBALSTAGE.addChild(d);
-
-var img = GLOBALSTAGE.getFloatRGBAsImage(haystack.red(), haystack.grn(), haystack.blu(), haystack.width(), haystack.height());
-var d = new DOImage(img);
-d.matrix().scale(scale);
-d.matrix().translate(300,100);
-GLOBALSTAGE.addChild(d);
-
-
-
-
-	console.log(imageScalesA);
-	console.log(compareSize);
-	console.log(needleSize);
-	console.log(cellScale);
-	throw "imageScalesA"
-
-
-
-
-
-// 	return R3D.optimumNeedleHaystackSAD(needleA,haystackB, needleSize,haystackRelativeSize, matrix, compareSize, debug);
-// }
-// R3D.optimumNeedleHaystackSAD = function(needleA,haystackB, needleSize,haystackRelativeSize, matrix, compareSize, debug){ // search needle/haystack at points
-	
-	// ...
-	// var imageA = imageScalesA._images[0];
-	// var imageB = imageScalesB._images[0];
-	// var needle = imageA.extractRectFromFloatImage(pointA.x,pointA.y,1.0/cellScale,null,compareSize,compareSize, matrix);
-	// var haystack = imageB.extractRectFromFloatImage(pointB.x,pointB.y,1.0/cellScale,null,haystackSize,haystackSize, null);
-
-
-	var scoreSAD = R3D.searchNeedleHaystackSADColor(needle,haystack);
-	// var scoreNCC = R3D.searchNeedleHaystackNCCColor(needle,haystack);
-	// var scoreMul = Code.arrayVectorMul(scoreSAD["value"],scoreNCC["value"]);
-
-	var scores = {
-		"width": scoreSAD["width"],
-		"height": scoreSAD["height"],
-		"value": scoreSAD["value"]
-
-		// "width": scoreNCC["width"],
-		// "height": scoreNCC["height"],
-		// "value": scoreNCC["value"]
-
-		// "value": scoreMul
-	}
-
-
-
-
-	// get peak location:
-	var finalSize = scores["width"];
-	// var cellScale = (needleSize/compareSize);
-// console.log("inside size: "+finalSize+"x"+finalSize)
-	// cellScale
-
-	var minimum = R3D.minimumFromValues(scores["value"], finalSize, finalSize, pointB, 1.0/cellScale);
-	var absoluteLocation = minimum["location"];
-	var absoluteScore = minimum["score"];
-
-	// console.log(minimum);
-
-	
-if(debug){
-// if(false){
-// if(true){
-
-var sca = 3.0;
-var image = needle;
-img = GLOBALSTAGE.getFloatRGBAsImage(image.red(), image.grn(), image.blu(), image.width(),image.height());
-var d = new DOImage(img);
-d.matrix().scale(sca);
-d.matrix().translate(10, 10);
-GLOBALSTAGE.addChild(d);
-
-var image = haystack;
-img = GLOBALSTAGE.getFloatRGBAsImage(image.red(), image.grn(), image.blu(), image.width(),image.height());
-var d = new DOImage(img);
-d.matrix().scale(sca);
-d.matrix().translate(10 + 200, 10);
-GLOBALSTAGE.addChild(d);
-
-var heat = scores["value"];
-var wid = scores["width"];
-var hei = scores["height"];
-var colors = [0xFF000099, 0xFF0000FF, 0xFFCC00CC, 0xFFFF0000, 0xFF990000, 0xFFFFFFFF];
-ImageMat.normalFloat01(heat);
-// ImageMat.normalFloat01(heat);
-
-// heat = ImageMat.pow(heat,2.0);
-// heat = ImageMat.pow(heat,0.50);
-heat = ImageMat.pow(heat,0.25);
-
-heat = ImageMat.heatImage(heat, wid, hei, true, colors);
-img = GLOBALSTAGE.getFloatRGBAsImage(heat.red(), heat.grn(), heat.blu(), wid, hei);
-// img = GLOBALSTAGE.getFloatRGBAsImage(colorsA_r,colorsA_g,colorsA_b, wid, hei);
-d = new DOImage(img);
-GLOBALSTAGE.addChild(d);
-d.matrix().scale(sca);
-var o = (haystackSize-wid)*sca*0.5; 
-d.matrix().translate(10 + 200 + o, 10 + o);
-d.graphics().alpha(0.50);
-// d.graphics().alpha(0.20);
-// d.graphics().alpha(0.0);
-
-
-// show best point:
-
-
-
-var d = new DO();
-GLOBALSTAGE.addChild(d);
-// d.matrix().scale(sca);
-var o = (haystackSize)*sca*0.5; 
-var u = (absoluteLocation.x - pointB.x)*sca*cellScale;
-var v = (absoluteLocation.y - pointB.y)*sca*cellScale;
-console.log(u,v);
-// u = 0;
-// v = 0;
-d.matrix().translate(10 + 200 + o + u, 10 + o + v);
-d.graphics().setLine(2.0,0xFF00FF00);
-d.graphics().beginPath();
-d.graphics().drawCircle(0,0, 5);
-d.graphics().strokeLine();
-d.graphics().endPath();
-
-
-// pointB: <731.2814148306309,499.2908081841577>
-// Stereopsis.js:13676 absoluteLocation: <690.1848294825783,541.3924858471086>
-
-// compare with raw extraction
-
-var imageA = imageScalesA._images[0];
-var imageB = imageScalesB._images[0];
-cellScale = 1.0/cellScale;
-
-var needle = imageA.extractRectFromFloatImage(pointA.x,pointA.y,cellScale,null,compareSize,compareSize, matrix);
-var haystack = imageB.extractRectFromFloatImage(pointB.x,pointB.y,cellScale,null,haystackSize,haystackSize, null);
-
-var image = needle;
-img = GLOBALSTAGE.getFloatRGBAsImage(image.red(), image.grn(), image.blu(), image.width(),image.height());
-var d = new DOImage(img);
-d.matrix().scale(sca);
-d.matrix().translate(600 + 0, 10);
-GLOBALSTAGE.addChild(d);
-
-var image = haystack;
-img = GLOBALSTAGE.getFloatRGBAsImage(image.red(), image.grn(), image.blu(), image.width(),image.height());
-var d = new DOImage(img);
-d.matrix().scale(sca);
-d.matrix().translate(600 + 200, 10);
-GLOBALSTAGE.addChild(d);
-
-
-
-// throw "shown"
-
-}
-
-
-	
-	return {"point":absoluteLocation, "score":absoluteScore};
-}
-
 
 
 
@@ -52572,30 +52369,31 @@ R3D.bestAffine2DFromExisting = function(affine,imageA,centerA,imageB,centerB, ex
 	return {"A":existingA, "B":locationB, "affine":optimum};
 }
 
-R3D.optimumAffineCornerTransform = function(imageA,pointA, imageB,pointB, affine, size, maxIterations, compareSize){
-	throw "is this used?"
-	var result = R3D._affineCornerTransformNonlinearGD(imageA,pointA, imageB,pointB, affine, size, maxIterations, compareSize);
-	return result;
-}
+/*
+R3D.bestAffineLocationFromLocation = function(affine,centerA,centerB, existingA,  imageA,imageB, needleFeatureSize, haystackFeatureSize){
 
-R3D.bestAffineLocationFromLocation = function(affine,centerA,centerB, existingA,  imageA,imageB, needleSize, haystackSize){
-	var compareSize = 11;
+	throw "use optimumSADLocationSearchFlatRGB ?"
+	var compareSize = 11; // from R3D.optimumScoresAtLocation
 	var deltaA = V2D.sub(existingA,centerA); // A to B
 	var deltaB = affine.multV2DtoV2D(deltaA);
 	var predictedB = deltaB.add(centerB);
 	// get scores
-	haystackSize = haystackSize!==undefined ? haystackSize : needleSize*3; // 2-3
-	var scores = R3D.optimumScoresAtLocation(imageA,existingA, imageB,predictedB, needleSize,haystackSize,affine);
+	haystackFeatureSize = haystackFeatureSize!==undefined ? haystackFeatureSize : needleFeatureSize*3; // 2-3
+	var scores = R3D.optimumScoresAtLocation(imageA,existingA, imageB,predictedB, needleFeatureSize,haystackFeatureSize,affine);
 	var finalSize = scores["width"];
-	var cellScale = (needleSize/compareSize);
-	var minimum = R3D.minimumFromValues(scores["value"], finalSize, finalSize, predictedB, cellScale);
+	var cellScale = (needleFeatureSize/compareSize);
+	var minimum = R3D.minimumFromValues(scores["value"], finalSize, finalSize, predictedB, cellScale); // CORRECT ?
 	var absoluteLocation = minimum["location"];
 	return absoluteLocation;
 }
-
+*/
 
 // Stereopsis.X = 0;
 R3D.optimumScoresAtLocation = function(imageA,pointA, imageB,pointB, needleSize,haystackRelativeSize, matrix){ // search needle/haystack at points
+
+	throw "where is this used ?"
+// TODO: SPEED UP ?
+
 	var compareSize = 11;
 	var cellScale = (needleSize/compareSize);
 	var haystackSize = Math.ceil((haystackRelativeSize/needleSize)*compareSize);
@@ -52612,44 +52410,9 @@ R3D.optimumScoresAtLocation = function(imageA,pointA, imageB,pointB, needleSize,
 		"height": scoreNCC["height"],
 		"value": scoreNCC["value"]
 	}
-/*
-
-	var sca = 2.0;
-	var image = needle;
-	img = GLOBALSTAGE.getFloatRGBAsImage(image.red(), image.grn(), image.blu(), image.width(),image.height());
-	var d = new DOImage(img);
-	d.matrix().scale(sca);
-	d.matrix().translate(10, 10);
-	GLOBALSTAGE.addChild(d);
-
-	var image = haystack;
-	img = GLOBALSTAGE.getFloatRGBAsImage(image.red(), image.grn(), image.blu(), image.width(),image.height());
-	var d = new DOImage(img);
-	d.matrix().scale(sca);
-	d.matrix().translate(10 + 100, 10);
-	GLOBALSTAGE.addChild(d);
-
-	var heat = scores["value"];
-	var wid = scores["width"];
-	var hei = scores["height"];
-	var colors = [0xFF000099, 0xFF0000FF, 0xFFCC00CC, 0xFFFF0000, 0xFF990000, 0xFFFFFFFF];
-	ImageMat.normalFloat01(heat);
-	heat = ImageMat.heatImage(heat, wid, hei, true, colors);
-	img = GLOBALSTAGE.getFloatRGBAsImage(heat.red(), heat.grn(), heat.blu(), wid, hei);
-	// img = GLOBALSTAGE.getFloatRGBAsImage(colorsA_r,colorsA_g,colorsA_b, wid, hei);
-	d = new DOImage(img);
-	GLOBALSTAGE.addChild(d);
-	d.matrix().scale(sca);
-	var o = 10;
-	d.matrix().translate(10 + 100 + o, 10 + o);
-	// d.graphics().alpha(0.50);
-
-*/
 	return scores;
 }
 R3D.minimumFromValues = function(values, valueWidth, valueHeight, pointB, cellScale){ // cellScale = FROM [SAMPLE SIZE] TO [WORLD SIZE] , eg: [needle size] to [pixel size]
-cellScale = 1.0/cellScale;
-???
 	var index = Code.minIndex(values);
 	var zLoc = values[index];
 	var xLoc = index % valueWidth;
@@ -52689,13 +52452,12 @@ cellScale = 1.0/cellScale;
 		peak.x += xLoc;
 		peak.y += yLoc;
 	}
+
 	var centerX = (valueWidth-1)*0.5;
 	var centerY = (valueHeight-1)*0.5;
 	var p = new V2D(pointB.x + (peak.x - centerX)*cellScale, pointB.y + (peak.y - centerY)*cellScale); // 1.7
-
 	// var p = new V2D(pointB.x + (peak.x - 0.5 - centerX)*cellScale, pointB.y + (peak.y - 0.5 - centerY)*cellScale); // 2.6
 	// var p = new V2D(pointB.x + (peak.x + 0.5 - centerX)*cellScale, pointB.y + (peak.y + 0.5 - centerY)*cellScale); // 2.3
-
 	return {"location":p, "score":peak.z};
 }
 

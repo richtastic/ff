@@ -2260,9 +2260,9 @@ var maxIter = 50000; // default
 		// var maxIter = 3000;
 		// var maxIter = 4000;
 		// var maxIter = 5000;
-		var maxIter = 10000;
+		// var maxIter = 10000;
 		// var maxIter = 15000;
-		// var maxIter = 20000;
+		var maxIter = 20000;
 		// var maxIter = 40000;
 
 		// var maxIter = 60000;
@@ -2402,7 +2402,7 @@ console.log(closeInfo);
 			this.growTriangle(front, edge, point);
 			continue;
 		}
-
+		console.log("DONE GROUP: "+groupIndex);
 
 ++groupIndex;
 // if(groupIndex>=200){
@@ -2414,7 +2414,7 @@ if(groupIndex>=10){
 	break;
 }
 	}
-console.log(" -------------------------------------- ");
+console.log(" -------------------------------------- OUT");
 	// this.consistentTriangleOrientationsFromPoints();
 	this._pickTriangleNormals();
 
