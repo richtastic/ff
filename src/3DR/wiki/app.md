@@ -391,6 +391,12 @@ MISSING:
 	- what is average & best sub-pixel accuracy
 
 
+minimumFromValues
+
+
+ImageMat.getProgressiveScaledImage = function(imageA, scaleMult, maxScales){
+
+
 
 - need better coverage in low texture areas
 	- 2D propagation must be failing in some capacity

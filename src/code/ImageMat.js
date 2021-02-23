@@ -437,25 +437,39 @@ ImageMat.prototype.setSubImage = function(offX,offY, block){ // exact-pixel imag
 
 
 ImageMat.prototype.insetPerimeter = function(){
-	???;
+	throw "todo";
 }
 ImageMat.insetPerimeter = function(array,width,height, pixels, value){
-	var maxPerWid = Math.max(width-pixels,0);
-	var maxPerHei = Math.max(pixels,height-pixels);
-	var minPerHei = Math.min(height-pixels,height-1);
+	var maxPerWid = Math.min(pixels,width-pixels);
+	var minPerWid = Math.max(0,width-pixels-1);
+	var maxPerHei = Math.min(pixels,height-pixels);
+	var minPerHei = Math.max(0,height-pixels-1);
 	var index;
 	// top
-	for(var i=0; i<wid; ++i){
-		for(var j=0; j<maxPerHei; ++j){
+	for(var j=0; j<maxPerHei; ++j){
+		for(var i=0; i<width; ++i){
 			array[j*width + i] = value;
 		}
 	}
 	// bot
-	for(var i=0; i<wid; ++i){
-		for(var j=maxPerHei; j<height; ++j){
+	for(var j=minPerHei; j<height; ++j){
+		for(var i=0; i<width; ++i){
 			array[j*width + i] = value;
 		}
 	}
+	// lef
+	for(var j=0; j<height; ++j){
+		for(var i=0; i<maxPerWid; ++i){
+			array[j*width + i] = value;
+		}
+	}
+	// rig
+	for(var j=0; j<height; ++j){
+		for(var i=minPerWid; i<width; ++i){
+			array[j*width + i] = value;
+		}
+	}
+	return array;
 }
 
 ImageMat.prototype.insert = function(imageB, offX,offY){
@@ -3493,15 +3507,31 @@ ImageMat.getPointInterpolateCubic = function(array, wid,hei, x,y){
 	var colN = array[maaY*wid + minX];
 	var colO = array[maaY*wid + maxX];
 	var colP = array[maaY*wid + maaX];
-	minX = x - minX;
-	minY = y - minY;
-	var val = Code.cubic2D(minX,minY, colA,colB,colC,colD,colE,colF,colG,colH,colI,colJ,colK,colL,colM,colN,colO,colP);
+	var pX = x - minX;
+	var pY = y - minY;
+	var val = Code.cubic2D(pX,pY, colA,colB,colC,colD,colE,colF,colG,colH,colI,colJ,colK,colL,colM,colN,colO,colP);
 	if(isNaN(val)){
-		//if(isNaN(x))
-		throw("Image Mat NaN "+wid+" "+hei+" "+x+" "+y);
+		console.log(array);
+
+		console.log(maaY*wid + maaX);
+		console.log(array[maaY*wid + maaX]);
+
+		console.log(" x "+miiX);
+		console.log(" x "+minX);
+		console.log(" x "+maxX);
+		console.log(" x "+maaX);
+		console.log(" y "+miiY);
+		console.log(" y "+minY);
+		console.log(" y "+maxY);
+		console.log(" y "+maaY);
+		console.log(" - "+pX);
+		console.log(" - "+pY);
+		// O & P & K & L
 		console.log("PT",wid,hei,x,y);
 		console.log("IN                ",colA,colB,colC,colD,colE,colF,colG,colH,colI,colJ,colK,colL,colM,colN,colO,colP );
 		//console.log("colN "+colN+" => "+wasA+","+wasB+"    "+x+","+y);
+
+		throw("Image Mat NaN "+wid+" "+hei+" "+x+" "+y+" = "+val);
 		return 0;
 	}
 	val = Math.min(Math.max(val,0.0),1.0);
@@ -4482,29 +4512,37 @@ ImageMat.prototype.getScaledImage = function(scale, sigmaIn, doCeil){
 	var image = new ImageMat(newWidth,newHeight, red,grn,blu);
 	return image;
 }
-ImageMat.prototype.getProgressiveScaledImage = function(){
-	return ImageMat.getProgressiveScaledImage(this);
+ImageMat.prototype.getProgressiveScaledImage = function(scaler){
+	return ImageMat.getProgressiveScaledImage(this, scaler);
 }
-ImageMat.getProgressiveScaledImage = function(imageA){
+ImageMat.getProgressiveScaledImage = function(imageA, scaleMult, maxScales){
+	scaleMult = Code.valueOrDefault(scaleMult, 0.5);
+	maxScales = Code.valueOrDefault(maxScales, 10);
 	var widthA = imageA.width();
 	var heightA = imageA.height();
 	var scalesA = [1.0];
 	var imagesA = [imageA];
-	var maxScales = 10; // 2^10 = 1024 x 0.5 ...
+	// var maxScales = 10; // 2^10 = 1024 x 0.5 ...
 	var scale = 1.0;
 	var minSize = 4;
-	var scaleMult = 0.5;
+	// var sigma = 0.5;
+	var sigma = 1.0/scaleMult;
 	// var scaleMult = 0.75;
 	for(var i=0; i<maxScales; ++i){
+		// console.log(i+" / "+maxScales);
 		scale = scale * scaleMult;
 		var nextWidth = Math.round(scale*widthA);
 		var nextHeight = Math.round(scale*heightA);
-		// console.log(" "+i+": "+scale+" = "+nextWidth+" x "+nextHeight);
 		if(nextWidth<=minSize || nextHeight<=minSize){
 			break;
 		}
 		var imgA = imagesA[i];
-		var halfA = imgA.getScaledImage(scaleMult,0.5, false); // #2 - blurrier
+		var halfA = imgA.getScaledImage(scaleMult,sigma, true); // #2 - blurrier
+
+
+		// ???
+
+
 		// var halfA = imgA.getScaledImage(scaleMult, null, false); // #1 - crisper - aliasing
 		var avgScale = (halfA.width()/widthA + halfA.height()/heightA)*0.5; // actual efective scale
 		imagesA.push(halfA);
@@ -4601,6 +4639,7 @@ ImageMat.getScaledImage = function(source,wid,hei, scale, sigma, forceWidth,forc
 	if(sigma){
 		source = ImageMat.getBlurredImage(source, wid,hei, sigma);
 	}
+// console.log(wid+" x "+hei+" -> "+newWid+" x "+newHei);
 	var newImg = ImageMat.extractRectSimple(source,wid,hei, 0,0,wid-1,hei-1, newWid,newHei);
 	return {"width":newWid, "height":newHei, "value":newImg};
 }
@@ -5323,8 +5362,8 @@ ImageMat.colorFilter = function(srcR,srcG,srcB, wid, hei, colorTarget, colorDist
 
 
 
-function ImageMatScaled(image){
-	var images = ImageMat.getProgressiveScaledImage(image);
+function ImageMatScaled(image, scaler){
+	var images = ImageMat.getProgressiveScaledImage(image, scaler);
 	this._container = images;
 	this._images = images["images"];
 	this._scales = images["scales"];
@@ -5401,7 +5440,7 @@ ImageMatScaled.prototype.effectiveIndexFromScale = function(scale){
 		effectiveIndex = Math.min(Math.max(effectiveIndex,0),this._images.length-1); // keep inside available range
 	return effectiveIndex;
 }
-
+/*
 ImageMatScaled.prototype.getScaledImage = function(scale, doCeil){
 	var wid = this.width();
 	var hei = this.height();
@@ -5427,6 +5466,7 @@ ImageMatScaled.prototype.getScaledImage = function(scale, doCeil){
 	// var image = this.extractRect(center, resultScale, resultWidth,resultHeight);
 	return image;
 }
+*/
 
 ImageMatScaled.prototype.getImageSize = function(idealSize, maxScale, minScale){ // V2D
 	var image = this;

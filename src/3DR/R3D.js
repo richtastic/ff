@@ -51043,6 +51043,7 @@ R3D.searchNeedleHaystackSADColorOffsetUnit = function(needle,haystack,needleMask
 			// 	console.log(result);
 			// 	throw "bad value - ";
 			// }
+// val = Math.sqrt(val);
 			result[resultIndex] = val;
 		}
 	}
@@ -52420,9 +52421,10 @@ R3D.minimumFromValues = function(values, valueWidth, valueHeight, pointB, cellSc
 	var peak = new V3D(xLoc,yLoc,zLoc);
 	var wm1 = valueWidth-1;
 	var hm1 = valueHeight-1;
+console.log("minimumFromValues out: "+xLoc+","+yLoc);
 	// if(false){ // @ center: // -- 1.9
-	// if(0<=xLoc && xLoc<=wm1 && 0<=yLoc && yLoc<=hm1){ // edge or interrior
-	if(0<xLoc && xLoc<wm1 && 0<yLoc && yLoc<hm1){ // entirely contained
+	if(0<=xLoc && xLoc<=wm1 && 0<=yLoc && yLoc<=hm1){ // edge or interrior
+	// if(0<xLoc && xLoc<wm1 && 0<yLoc && yLoc<hm1){ // entirely contained
 		var minX = Math.max(xLoc-1,0);
 		var midX = xLoc;
 		var maxX = Math.min(xLoc+1,wm1);
@@ -52449,10 +52451,12 @@ R3D.minimumFromValues = function(values, valueWidth, valueHeight, pointB, cellSc
 // 	console.log(d0,d1,d2,d3,d4,d5,d6,d7,d8);
 // 	throw "extrema out bad"
 // }
+console.log("minimumFromValues in: "+peak);
 		peak.x += xLoc;
 		peak.y += yLoc;
 	}
-
+// cellScale = 1.0/cellScale;
+// cellScale = 1.0;
 	var centerX = (valueWidth-1)*0.5;
 	var centerY = (valueHeight-1)*0.5;
 	var p = new V2D(pointB.x + (peak.x - centerX)*cellScale, pointB.y + (peak.y - centerY)*cellScale); // 1.7

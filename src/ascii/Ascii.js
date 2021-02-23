@@ -20,14 +20,14 @@ function Ascii(){
 	this._stage.addFunction(Stage.EVENT_ON_ENTER_FRAME,this.handleEnterFrame,this);
 	
 
-	// var images = ["large.png"];
+	var images = ["large.png"];
 	// var images = ["bt.000.png"];
 	// var images = ["castle.018.jpg"];
 	// var images = ["catHat.jpg"];
 	// var images = ["medusa_3.png"];
 	// var images = ["snow1.png"];
 	// var images = ["yB_small.jpg"];
-	var images = ["zA_small.jpg"];
+	// var images = ["zA_small.jpg"];
 	
 	
 	// var images = ["bench_C.png"];
@@ -89,22 +89,35 @@ Ascii.prototype.handleImageLoaded = function(imageInfo){
 		var grad = ImageMat.gradientMagnitude(gry,wid,hei);
 			grad = grad["value"];
 		ImageMat.normalFloat01(grad);
-
-ImageMat.insetPerimeter(grad, 1, 0.0);
+		ImageMat.insetPerimeter(grad,wid,hei, 2, 0.0);
 
 
 		// var siz = 25;
 		// grad = ImageMat.historizeLocalFloat01(grad,wid,hei, 25,25);
-		var sigma = 2.0;
-		// var sigma = 3.0;
+
+		// var sigma = 1.0;
+		// // var sigma = 2.0;
 		// grad = ImageMat.getBlurredImage(grad,wid,hei, sigma);
-		ImageMat.normalFloat01(grad);
+		// ImageMat.normalFloat01(grad);
+		// grad = blur;
+
+
+		var sigma = 1.0;
+		// var sigma = 2.0;
 		var blur = ImageMat.getBlurredImage(grad,wid,hei, sigma);
-			grad = blur;
+
+		grad = blur;
+
 		// var sum = ImageMat.addFloat(grad,blur);
-			// grad = sum;
+		// 	grad = sum;
 
 		ImageMat.normalFloat01(grad);
+		// ImageMat.pow(grad,0.10);
+		// ImageMat.pow(grad,0.25); // more positive
+		// ImageMat.pow(grad,0.33);
+		ImageMat.pow(grad,0.50);
+		// ImageMat.pow(grad,0.75);
+		// ImageMat.pow(grad,1.00);
 
 		grad = new ImageMat(matrix.width(),matrix.height(),grad,grad,grad);
 		matrix = grad;
@@ -389,7 +402,7 @@ Ascii.alphabet = function(onlyTheseChars){
 	a["%"]  = "*   *    *   *   *   *   *    *   *";
 
 	// ?
-	a["*"]  = "* * * *** ***** *** * * *          ";
+	a["*"]  = "  *  * * * *** * * *  *            ";
 	//         00000111112222233333444445555566666
 	a[" "]  = "                                   ";
 	a[" "]  = "                                   ";
@@ -412,6 +425,8 @@ Ascii.alphabet = function(onlyTheseChars){
 	// integral	
 	
 	// symbols
+	//         00000111112222233333444445555566666
+	a["--"] = "               *****               "; // long dash
 	a["_"]  = "                              *****";
 	a["$"]  = "  *   ***** *   ***   * *****   *  ";
 	a["@"]  = " *** *   ** **** * ** ** *     ****";
@@ -436,7 +451,6 @@ Ascii.alphabet = function(onlyTheseChars){
 	a[":"]  = "            *         *            ";
 	a[","]  = "                           *   **  ";
 	a["?"]  = " *** *   *    *   *   *         *  ";
-
 	//         00000111112222233333444445555566666
 	a[" "]  = "                                   ";
 	a[" "]  = "                                   ";
@@ -458,9 +472,11 @@ Ascii.alphabet = function(onlyTheseChars){
 		}
 		b.push(list);
 	}
-
-
-	return {"spacing":1, "lines":1, "alphabet":b, "width":blockSizeWidth, "height":blockSizeHeight};
+	// var lineSpacing = 0;
+	// var letterSpacing = 0;
+	var lineSpacing = 1;
+	var letterSpacing = 1;
+	return {"spacing":letterSpacing, "lines":lineSpacing, "alphabet":b, "width":blockSizeWidth, "height":blockSizeHeight};
 }
 
 
