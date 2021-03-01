@@ -7810,7 +7810,7 @@ console.log("checkPerformNextTask");
 		return;
 	}
 
-// throw "start dense";
+throw "start dense";
 	if(!project.checkHasDenseStarted()){
 		project.calculateDensePairPutatives();
 		return;
@@ -10403,7 +10403,8 @@ App3DR.ProjectManager.prototype.densePutativePairsFromPointList = function(views
 	// 	compareScores.push(entry);
 	// }
 
-	project.showViewSimilarities(compareScores, viewIDs);
+throw "here: showViewSimilarities?"
+	project.showViewSimilarities(compareScores, viewIDs, 700);
 
 	return {"pairs":minimalPairs};
 }
@@ -16568,7 +16569,7 @@ App3DR.ProjectManager.prototype.calculateViewSimilarities = function(){
 			});
 			console.log(scores);
 
-			project.showViewSimilarities(compareScores, viewIDs);
+			project.showViewSimilarities(compareScores, viewIDs, 700);
 
 throw "BEFORE SAVE SIMILARITIES - now go save similarities";
 			project.setViewSimilarity(scores);
@@ -16588,7 +16589,7 @@ throw "BEFORE SAVE SIMILARITIES - now go save similarities";
 		view.loadFeatureData(fxnViewFeatureDataLoaded, project);
 	}
 }
-App3DR.ProjectManager.prototype.showViewSimilarities = function(similarities, viewIDList){
+App3DR.ProjectManager.prototype.showViewSimilarities = function(similarities, viewIDList, displayRadius){
 	var project = this;
 	// load lower-res versions of all views
 	var views = project._views;
@@ -16627,7 +16628,7 @@ App3DR.ProjectManager.prototype.showViewSimilarities = function(similarities, vi
 		console.log(similarities);
 
 
-		R3D.debugDisplaySimilarities(imageScalesList,similarities);
+		R3D.debugDisplaySimilarities(imageScalesList,similarities, displayRadius);
 	}
 }
 App3DR.ProjectManager.prototype.showViewSimilaritiesOld = function(similarities){

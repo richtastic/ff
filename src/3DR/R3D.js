@@ -8457,7 +8457,15 @@ R3D.affineCornerDLT = function(pointsFr,pointsTo, reuse){
 		A.set(i*2+1,3, fr.y);
 		A.set(i*2+1,4, -to.y);
 	}
+try{
 	var svd = Matrix.SVD(A);
+}catch(e){
+	console.log(A+"");
+	console.log(pointsFr);
+	console.log(pointsTo);
+	console.log(reuse);
+	throw "?";
+}
 	var coeff = svd.V.colToArray(4);
 	coeff = [ coeff[0]/coeff[4], coeff[1]/coeff[4], 0, coeff[2]/coeff[4], coeff[3]/coeff[4], 0, 0,0,1];
 	var H;
@@ -10208,6 +10216,12 @@ maximumMatchesHistogram = 10;
 maximumMatchesFeaturesBest = 6;
 // maximumMatchesFeaturePair = 4;
 // maximumMatchesFeaturesBest = 3;
+
+
+// do nothing:
+// maximumMatchesHistogram = 2;
+// maximumMatchesFeaturesBest = 1;
+
 	
 	// histogram filter --------------------------------------------------------------------------
 	// histogram record comparison
@@ -10232,7 +10246,8 @@ maximumMatchesFeaturesBest = 6;
 	}
 	console.log(histogramScores);
 
-//	var finalScores = histogramScores;
+	var finalScores = histogramScores;
+
 
 
 	// throw "?"
@@ -10272,6 +10287,8 @@ maximumMatchesFeaturesBest = 6;
 	console.log(featureBestScores);
 
 	var finalScores = featureBestScores;
+
+
 
 
 /*
@@ -10818,15 +10835,17 @@ ViewHyperGraph.prototype._missingViewTripleCount = function(check){
 	return this._missingViewTripleCountValue;
 }
 
-R3D.debugDisplaySimilarities = function(images,compareScores){
+R3D.debugDisplaySimilarities = function(images,compareScores, circleRadius){
 	// console.log(images);
 	console.log(compareScores);
 	var imageCount = images.length;
 
 	// size of images can be offset by available space - calculate automatically
 
+	circleRadius = Code.valueOrDefault(circleRadius, 400);
+	console.log("circleRadius: "+circleRadius);
 	// var circleRadius = 300; // ~5
-	var circleRadius = 400; // ~10
+	// var circleRadius = 400; // ~10
 	// var circleRadius = 700; // ~20
 	var totalOffX = 100;
 	var totalOffY = 100;
@@ -27266,7 +27285,22 @@ R3D._optimizePatchNonlinearImagesGD = function(args, x, isUpdate){
 			p.sub(center2D);
 			pointsB.push(p);
 		}
-		var affine = R3D.affineCornerMatrixLinear(pointsB,pointsA, matrix2D);
+		var affine;
+		try{
+			affine = R3D.affineCornerMatrixLinear(pointsB,pointsA, matrix2D);
+		}catch(e){
+			console.log(extrinsic);
+			console.log(point3D)
+			console.log(center2D);
+			console.log(K);
+			console.log(size3D);
+			console.log("..................");
+			console.log(pointsB);
+			console.log(pointsA);
+			console.log(matrix2D);
+			console.log(e);
+			throw "";
+		}
 //		var averageScale = affine.averageScale();
 			// affine.scale(1.0/averageScale);
 		var point2D = points2D[i];
@@ -27379,6 +27413,14 @@ R3D.projectivePatch3DToAffineList = function(point3D, size3D, normal3D, up3D, ex
 			var pointsB = points2D[j];
 			var matrix2D = new Matrix2D();
 			var affine = R3D.affineCornerMatrixLinear(pointsA,pointsB, matrix2D);
+if(Code.isNaN(affine.a) || affine.determinant()==0){ // a poor set of numbers
+	return null;
+	// console.log(pointsA);
+	// console.log(pointsB);
+	// console.log(matrix2D);
+	// console.log(affine);
+	// throw "made bad affine";
+}
 			affines.push(affine);
 		}
 	}
@@ -52421,7 +52463,7 @@ R3D.minimumFromValues = function(values, valueWidth, valueHeight, pointB, cellSc
 	var peak = new V3D(xLoc,yLoc,zLoc);
 	var wm1 = valueWidth-1;
 	var hm1 = valueHeight-1;
-console.log("minimumFromValues out: "+xLoc+","+yLoc);
+// console.log("minimumFromValues out: "+xLoc+","+yLoc);
 	// if(false){ // @ center: // -- 1.9
 	if(0<=xLoc && xLoc<=wm1 && 0<=yLoc && yLoc<=hm1){ // edge or interrior
 	// if(0<xLoc && xLoc<wm1 && 0<yLoc && yLoc<hm1){ // entirely contained
@@ -52451,7 +52493,7 @@ console.log("minimumFromValues out: "+xLoc+","+yLoc);
 // 	console.log(d0,d1,d2,d3,d4,d5,d6,d7,d8);
 // 	throw "extrema out bad"
 // }
-console.log("minimumFromValues in: "+peak);
+// console.log("minimumFromValues in: "+peak);
 		peak.x += xLoc;
 		peak.y += yLoc;
 	}

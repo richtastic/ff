@@ -4523,11 +4523,19 @@ ImageMat.getProgressiveScaledImage = function(imageA, scaleMult, maxScales){
 	var scalesA = [1.0];
 	var imagesA = [imageA];
 	// var maxScales = 10; // 2^10 = 1024 x 0.5 ...
-	var scale = 1.0;
-	var minSize = 4;
+	
+	
 	// var sigma = 0.5;
-	var sigma = 1.0/scaleMult;
-	// var scaleMult = 0.75;
+	// var sigma = 1.0;
+	// var sigma = -Math.log(scaleMult); // 0.69
+	// var sigma = Math.sqrt(-Math.log(scaleMult)); // 0.83
+	//
+	var sigma = (0.5 * 1.0/scaleMult) * 0.68269; // pixel radius * window at 1 sigma -- current best guess
+	//
+
+	// 0.5 - 1.0 ------ 0.66-0.75 ?
+	var minSize = 4;
+	var scale = 1.0;
 	for(var i=0; i<maxScales; ++i){
 		// console.log(i+" / "+maxScales);
 		scale = scale * scaleMult;
@@ -4684,10 +4692,11 @@ ImageMat.getScaledImageInteger = function(src,wid,hei, scale, forceWidth,forceHe
 ImageMat.getBlurredImage = function(source,wid,hei, sigma){ // does auto padding and unpadding to avoid shadow on image edges
 	// var x = (wid-1)*0.5;
 	// var y = (hei-1)*0.5;
-	// gaussSize = Math.round(5.0 + sigma*2.0)*2+1;
-	gaussSize = Math.round(5.0 + sigma*3.0)*2+1;
+	gaussSize = Math.round(4.0 + sigma*2.0)*2+1;
+	// gaussSize = Math.round(5.0 + sigma*3.0)*2+1; // maybe too much? (5E-1/1E-12)
 	//gauss1D = ImageMat.getGaussianWindow(gaussSize,1, sigma);
 	gauss1D = ImageMat.getGaussianWindow(gaussSize,1, sigma,null,   false, false);
+	// console.log(gauss1D);
 	padding = Math.ceil(gaussSize/2.0);
 	var totWid = wid+2*padding;
 	var totHei = hei+2*padding;
@@ -5440,7 +5449,6 @@ ImageMatScaled.prototype.effectiveIndexFromScale = function(scale){
 		effectiveIndex = Math.min(Math.max(effectiveIndex,0),this._images.length-1); // keep inside available range
 	return effectiveIndex;
 }
-/*
 ImageMatScaled.prototype.getScaledImage = function(scale, doCeil){
 	var wid = this.width();
 	var hei = this.height();
@@ -5454,7 +5462,6 @@ ImageMatScaled.prototype.getScaledImage = function(scale, doCeil){
 		resultHeight = Math.ceil(scale*hei);
 	}
 	var resultScale = (resultWidth/wid + resultHeight/hei)*0.5;
-// console.log(resultScale+" = "+resultWidth+"x"+resultHeight);
 	// inverse scale from new to old
 	resultScale = 1.0/resultScale;
 	var affine = new Matrix2D();
@@ -5466,7 +5473,7 @@ ImageMatScaled.prototype.getScaledImage = function(scale, doCeil){
 	// var image = this.extractRect(center, resultScale, resultWidth,resultHeight);
 	return image;
 }
-*/
+
 
 ImageMatScaled.prototype.getImageSize = function(idealSize, maxScale, minScale){ // V2D
 	var image = this;

@@ -3081,10 +3081,9 @@ Stereopsis.Match2D.prototype.affine = function(affine){
 				this._affine = Matrix2D.fromMatrix(affine);
 			}
 			this._inverse = this._affine.copy().inverse();
-
-
-
 			if(this._affine.a===undefined  || Code.isNaN(this._affine.a) || this._inverse.a===undefined  || Code.isNaN(this._inverse.a) ){
+				console.log(this._affine);
+				console.log(this._inverse);
 				console.log(this);
 				throw "bad affine";
 			}
@@ -6975,20 +6974,39 @@ Stereopsis.World.prototype._resolutionProcessingModeAffineFromPatch3D = function
 		Ks.push(K);
 	}
 	// console.log(location3D, size3D, normal3D, up3D, extrinsics, Ks);
+	var affines = null;
 	var result = R3D.projectivePatch3DToAffineList(location3D, size3D, normal3D, up3D, extrinsics, Ks);
+	if(result){
+		affines = result["affines"];
+	}else{ // throw "bad result"
+		console.log("projectivePatch3DToAffineList - null result");
+	}
 	// console.log(result);
-	var affines = result["affines"];
+try{
+	
 	var index = 0;
 	for(i=0; i<points2D.length; ++i){
 		var viewA = points2D[i].view();
 		for(j=i+1; j<points2D.length; ++j){
 			var viewB = points2D[j].view();
 			var match = point3D.matchForViews(viewA,viewB);
-			var affine = affines[index];
+			var affine = null;
+			if(affines){
+				affine = affines[index];
+			}else{
+				affine = new Matrix2D().identity();
+			}
 			match.affineForViews(viewA,viewB, affine);
 			++index;
 		}
 	}
+}catch(e){
+	console.log(location3D, size3D, normal3D, up3D, extrinsics, Ks);
+	console.log(result);
+	console.log(affines);
+	console.log(e);
+	throw "bad again";
+}
 }
 
 Stereopsis.World.prototype.resolutionProcessingModeAffineFromNeighbors2D = function(newMatch){ // average 2D neighbors to get affine average
@@ -7133,6 +7151,7 @@ Stereopsis.World.prototype.initP3DPatchFromMatchAffine = function(point3D){
 	}catch(e){
 		console.log(point3D);
 		console.log(p3D, p2Ds, a2Ds, sizes, exts, Ks, Kinvs, centers, rights);
+		console.log(e);
 		throw "why?";
 	}
 }
@@ -12709,7 +12728,9 @@ Stereopsis.checkPoints3D = function(extrinsicA,extrinsicB, KaInv,KbInv, pointsA,
 		var pointA = pointsA[i];
 		var pointB = pointsB[i];
 		var point3D = R3D.triangulatePointDLT(pointA,pointB, extrinsicA,extrinsicB, KaInv, KbInv);
-		points3D.push(point3D);
+		if(point3D != null){
+			points3D.push(point3D);
+		}
 	}
 	return points3D;
 }
@@ -12721,6 +12742,9 @@ Stereopsis.checkPointsLocation = function(extrinsicA, extrinsicB, KaInv,KbInv, p
 
 	var points3D = Stereopsis.checkPoints3D(extrinsicA,extrinsicB, KaInv,KbInv, pointsA,pointsB);
 	// console.log(points3D);
+	if(points3D.length==0){
+		return 0;
+	}
 
 	// var centerA = absA.multV3DtoV3D(new V3D(0,0,0));
 	// var centerB = absB.multV3DtoV3D(new V3D(0,0,0));
@@ -12737,9 +12761,18 @@ Stereopsis.checkPointsLocation = function(extrinsicA, extrinsicB, KaInv,KbInv, p
 
 	var distanceAB = V3D.distance(locationA,locationB);
 
+	
+
 	var averageDistance = 0;
 	for(var i=0; i<points3D.length; ++i){
 		var point3D = points3D[i];
+		if(!point3D || !locationA || !locationB){
+			console.log(point3D);
+			console.log(locationA);
+			console.log(locationB);
+			console.log(distanceAB);
+			throw "no point?"
+		}
 		var relativeA = V3D.sub(point3D,locationA);
 		var dotA = V3D.dot(relativeA,directionA);
 

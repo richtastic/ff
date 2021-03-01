@@ -390,6 +390,88 @@ MISSING:
 - synthetic image tests of localizing methods
 	- what is average & best sub-pixel accuracy
 
+x check that sum of gaussian image sum to 1
+
+
+
+
+
+- with error the affine transform accuracy is > 1px [10 deg + 1.1 scale -> 2-3px]
+
+	=> check what the affine accuracy is on patches
+		-> visualize in-process example
+
+
+
+
+
+function ImageMatScaled(image, scaler){
+var images = ImageMat.getProgressiveScaledImage(image, scaler);
+
+
+var halfA = imgA.getScaledImage(scaleMult,sigma, true); // #2 - blurrier
+
+
+ImageMat.getBlurredImage = function(source,wid,hei, sigma){
+
+gaussSize = Math.round(5.0 + sigma*3.0)*2+1;
+	//gauss1D = ImageMat.getGaussianWindow(gaussSize,1, sigma);
+	gauss1D = ImageMat.getGaussianWindow(gaussSize,1, sigma,null,   false, false);
+
+
+gauss1D = ImageMat.getGaussianWindow(gaussSize,1, sigma,null,   false, false);
+
+console.log(gauss1D);
+console.log(Code.sum(gauss1D));
+
+
+
+
+
+http://localhost/web/ff/fourier/fourier.html
+
+
+
+
+- find out what time blockers are (sections of code, etc)
+
+
+- theres some optimizing code in ImageMat where 3 colors could reuse many of the same variables
+	- ImageMat.getBlurredImage
+
+
+
+
+- 1D fourier series / synthesis
+- 2D fourier series / synthesis
+- fft
+- fft 2D
+
+
+
+http://localhost/web/ff/images/localizing.html
+
+
+CUBIC:
+0.16479184999427923 : pixels
+LINEAR:
+0.19223651128433522 : pixels
+
+
+
+distance = 1/scale
+	4.0 = 1/0.25;
+	2.0 = 1/0.5;
+	1.3 = 1/0.75;
+
+...
+
+what should sigma be for a scale of 0.25, 0.5, 0.75 ?
+log()
+
+
+sigma = exp(-x/d)
+
 
 minimumFromValues
 

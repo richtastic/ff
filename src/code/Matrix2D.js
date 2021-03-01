@@ -58,6 +58,18 @@ Matrix2D.prototype.translate = function(tx,ty){
 	this.mult(mat,this);
 	return this;
 }
+// Matrix2D.prototype.determinantCorner = function(){
+// 	return this.a*this.d - this.b*this.c;
+// }
+Matrix2D.prototype.determinant = function(){
+	return this.a*this.d - this.b*this.c; // reduces to this anyway
+	// return this.determinantCorner(); //
+	// var one = this.d;
+	// var two = this.c;
+	// var thr = 0;
+	// return this.a*one - this.b*two + this.c*thr;
+	// return this.a*this.d - this.b*this.c;
+}
 Matrix2D.prototype.translateX = function(tx){
 	if(tx!==undefined){
 		this.translate(tx,0);

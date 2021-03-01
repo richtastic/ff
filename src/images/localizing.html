@@ -40,21 +40,99 @@ function LocalizeTest(){
 
 	
 GLOBALSTAGE = this._stage;
-	this.testSyntheticA();
+
+	
+	this.testExampleA();
+	// this.testSyntheticA();
+	// this.testScaling();
+}
+LocalizeTest.prototype.testScaling = function(imageInfo){
+
+	var display = this._root;
+
+	var loadedImageFxn = function(imageInfo){
+		console.log(images);
+		var images = imageInfo["images"];
+
+		var image = images[0];
+		console.log(image);
+
+		var imageFloat = GLOBALSTAGE.getImageAsFloatRGB(image);
+		var imageMatrix = new ImageMat(imageFloat["width"],imageFloat["height"], imageFloat["red"], imageFloat["grn"], imageFloat["blu"]);
+		
+		console.log(imageMatrix);
+		var imageScales = new ImageMatScaled(imageMatrix);
+		console.log(imageScales);
+
+
+			// var sca = 2.0;
+			var sca = 1.0;
+			// show scaling
+			var images = imageScales.images();
+			console.log(images);
+			var offX = 0;
+			for(var i=0; i<images.length; ++i){
+				var image = images[i];
+				var img = image;
+					img = GLOBALSTAGE.getFloatRGBAsImage(img.red(),img.grn(),img.blu(), img.width(),img.height());
+				var d = new DOImage(img);
+				d.matrix().scale(sca);
+				d.matrix().translate(10 + offX*sca, 10 );
+				display.addChild(d);
+				offX += image.width();
+
+			}
+
+
+	}
+	var imageLoader = new ImageLoader("../3DR/images/",["bench_A.png"], this,loadedImageFxn,null);
+	imageLoader.load();
+}
+
+LocalizeTest.prototype.testExampleA = function(){
+	var loadedImageFxn = function(imageInfo){
+		console.log(imageInfo);
+		var images = imageInfo["images"];
+		var image = images[0];
+		var imageFloat = GLOBALSTAGE.getImageAsFloatRGB(image);
+		var imageMatrix = new ImageMat(imageFloat["width"],imageFloat["height"], imageFloat["red"], imageFloat["grn"], imageFloat["blu"]);
+// console.log(imageMatrix);
+		this.testSyntheticA(imageMatrix);
+	}
+
+	var imageLoader = new ImageLoader("../3DR/images/",["bench_A.png"], this,loadedImageFxn,null);
+	imageLoader.load();
 
 }
-LocalizeTest.prototype.testSyntheticA = function(imageInfo){
+LocalizeTest.prototype.testSyntheticA = function(imageMatrix){
+
+
+
+
+
+	var imageA;
 	var imageAWidth = 500;
 	var imageAHeight = 350;
 	// var pointA = new V2D(10,100);
-	var pointA = new V2D(100,101);
+	// var pointA = new V2D(100,101);
+
+	var pointA = new V2D(150,121);
 	// var pointA = new V2D(450,100);
 	var pointB = new V2D(200,200);
+	// var pointB = new V2D(200.5,200.5);
 	var col = new V3D();
-	var imageA = new ImageMat(imageAWidth,imageAHeight);
+	// var imageA = new ImageMat(imageAWidth,imageAHeight);
+	if(imageMatrix){
+		imageA = imageMatrix;
+		imageAWidth = imageA.width();
+		imageAHeight = imageA.height();
+	}else{
+		imageA = new ImageMat(imageAWidth,imageAHeight);
+		col.set(1,1,1);
+		imageA.setPoint(pointA.x,pointA.y, col);
+	}
 	// make a dot / random image
-	col.set(1,1,1);
-	imageA.setPoint(pointA.x,pointA.y, col);
+	
 
 
 // var scaler = 0.75;
@@ -110,14 +188,19 @@ var display = this._root;
 	var featureSize = 25;
 	// var featureSize = 11;
 	var needleSize = 11;
-	var haystackSize = 21;
+	// var haystackSize = 21;
+	var haystackSize = 41;
 	var centerA = pointA.copy();
 	var centerB = pointB.copy();
 	// centerB.x += (Math.random()-0.5)*1.0;
 	// centerB.y += (Math.random()-0.5)*1.0;
 
-	centerB.x += 0.25;
-	centerB.y += 0.50;
+	// centerB.x += 0.25;
+	// centerB.y += 0.50;
+	centerB.x += 2.25;
+	centerB.y += 4.50;
+	// centerB.x += 6.25;
+	// centerB.y += 6.50;
 
 	// var affineAB = affine.copy();
 	var affineAB = new Matrix2D();
@@ -129,6 +212,9 @@ var display = this._root;
 	console.log(bestPointB+"");
 
 
+	console.log(V2D.distance(pointB,bestPointB)+" : pixels (A)");
+
+
 	// bestPointB.x -= 0.5;
 	// bestPointB.y -= 0.5;
 
@@ -136,18 +222,46 @@ var display = this._root;
 	// search smaller space
 	// var featureSize = 3;
 	// var featureSize = 21;
-	var featureSize = 5;
+	// var featureSize = 5;
 	// var needleSize = 11;
-	var needleSize = 21;
-	// var featureSize = 51;
+
+	// make size 1:1
+	// var featureSize = 11; // 0.5
+	// var featureSize = 21; // 1.0
+	// var featureSize = 35; // 1.5
+	var featureSize = 41; // 2.0
+
+	var needleSize = 11;
+	// var needleSize = 21;
+	// var needleSize = 21;
 	// var needleSize = 51;
-	var haystackSize = needleSize + 2; // left/right 1 pixel
+	// var needleSize = 101;
+	// var haystackSize = needleSize; 
+	var haystackSize = needleSize + 4; // left/right 1 pixel
+
+
+// to find image at sub-pixel accuracy: feature size & needle size need to be comparable (1-2 x ):
+// var featureSize = 11; // 0.152
+// var needleSize = 11;
+// var featureSize = 21; // 0.11
+// var needleSize = 21;
+var featureSize = 41; // 0.098
+var needleSize = 41;
+
+// var featureSize = 101; // 0.0911
+// var needleSize = 101;
+
+var haystackSize = needleSize + 4; // 2-4
+
+
 
 	var reuseNeedle = new ImageMat(needleSize,needleSize);
 	var reuseHaystack = new ImageMat(haystackSize,haystackSize);
 
 	// var affineAB = affine.copy();
 		affineAB.identity();
+		affineAB.scale(1.1);
+		affineAB.rotate(Code.radians(10.0));
 	var result = R3D.optimumSADLocationSearchFlatRGB(centerA,bestPointB, imageScalesA,imageScalesB, featureSize, needleSize,haystackSize, affineAB, reuseNeedle, reuseHaystack);
 	// console.log(result);
 	var closerPointB = result["point"];
@@ -160,18 +274,35 @@ var display = this._root;
 		img = GLOBALSTAGE.getFloatRGBAsImage(img.red(),img.grn(),img.blu(), img.width(),img.height());
 	var d = new DOImage(img);
 	d.matrix().scale(sca);
-	d.matrix().translate(10 + 0, 10 + 400);
+	d.matrix().translate(10 + 0, 10 + 500);
 	display.addChild(d);
 
 	var img = reuseHaystack;
 		img = GLOBALSTAGE.getFloatRGBAsImage(img.red(),img.grn(),img.blu(), img.width(),img.height());
 	var d = new DOImage(img);
 	d.matrix().scale(sca);
-	d.matrix().translate(10 + 100, 10 + 400);
+	d.matrix().translate(10 + 300, 10 + 500);
 	display.addChild(d);
 
 
-	console.log(V2D.distance(pointB,closerPointB)+" : pixels");
+	console.log(V2D.distance(pointB,closerPointB)+" : pixels (B)");
+
+
+
+	// // show scaling
+	// var images = imageScalesA.images();
+	// console.log(images);
+	// var offX = 0;
+	// for(var i=0; i<images.length; ++i){
+	// 	var image = images[i];
+	// 	var img = image;
+	// 		img = GLOBALSTAGE.getFloatRGBAsImage(img.red(),img.grn(),img.blu(), img.width(),img.height());
+	// 	var d = new DOImage(img);
+	// 	d.matrix().scale(sca);
+	// 	d.matrix().translate(1000 + offX, 10 );
+	// 	display.addChild(d);
+	// 	offX += image.width();
+	// }
 
 
 	console.log("here");

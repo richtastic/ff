@@ -1,0 +1,88 @@
+<html>
+<head>
+<title>Fourier</title>
+<script src="../code/FF.js"></script>
+</head>
+<script type="text/javascript">
+function pageLoadedFxn(){
+	var ff = new FF("../code/",ffLoadedFxn);
+}
+function ffLoadedFxn(){
+	(new ScriptLoader("./",[],this,classesLoadedFxn)).load();
+}
+function setupDisplay(){
+	this._canvas = new Canvas(null,0,0,Canvas.STAGE_FIT_FILL, false,false, true);
+	this._stage = new Stage(this._canvas, 1000/20);
+	this._root = new DO();
+	this._stage.addChild(this._root);
+	GLOBALSTAGE = this._stage;
+	this._canvas.addListeners();
+	this._stage.addListeners();
+	this._stage.start();
+}
+
+
+function classesLoadedFxn(){
+	setupDisplay();
+	console.log("classesLoadedFxn");
+
+	var samples = 100;
+	var x = Code.divSpace(0,10, samples);
+	var y = [];
+	for(var i=0; i<samples; ++i){
+		var val = Math.cos(  );
+		y = val;
+
+	}
+
+	console.log(values);
+
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</script>
+<body onload="pageLoadedFxn();">
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
