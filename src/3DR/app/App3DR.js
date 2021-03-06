@@ -8148,7 +8148,7 @@ if(!relativeAB && isDense){
 
 			if(relativeAB){ // dense
 				// console.logx(camAID,camBID,cameras);
-// throw "this is for dense"
+throw "this is for dense"
 				console.log(relativeAB);
 				configuration = {};
 				project.calculatePairMatchWithRFromViewIDs(idA,idB, relativeAB, camAID,camBID,cameras, completePairFxn,project, configuration);
@@ -12912,8 +12912,8 @@ console.log("calculatePairMatchFromViewIDs")
 		}
 // throw "READY CHECK";
 GLOBALDISPLAY = GLOBALSTAGE;
-var DEBUG_SHOW = false;
-// var DEBUG_SHOW = true;
+// var DEBUG_SHOW = false;
+var DEBUG_SHOW = true;
 		var pairDoneSaveFxn = function(){
 			// SAVE DATA & SAVE SUMMARY & SAVE PROJECT ?
 			console.log(pairData);
@@ -13067,7 +13067,8 @@ for(var i=0; i<features.length; ++i){
 		}
 // UPGRADE INITIAL MATCHES COUNT & ERROR
 		if(goodEnoughMatches){
-			console.log();
+			console.log(matches);
+/*
 			// keep best neighborhoods
 			var result = R3D.keepExtendedMatchNeighborhoods(imageScalesA,imageScalesB, matches);
 			// console.log(result);
@@ -13078,19 +13079,35 @@ for(var i=0; i<features.length; ++i){
 			// console.log(result);
 			var matches = result["matches"];
 
+
+console.log("DOES THIS WORK RIGHT?:")
+
+
 			// get best maching points near initial points - 2-4 times point count
 			var result = R3D.findLocalSupportingCornerMatchNeighborhoods(imageScalesA,imageScalesB, matches);
 			// console.log(result);
 			var matches = result["matches"];
 			initialMatchesAB = matches;
+*/
 
 			// var objects = R3D.generateProgressiveRIFTObjects(features, imageScales);
 			// var result = R3D.compareProgressiveRIFTObjectsFull(objectsA, objectsB);
 			// console.log(result);
 
+initialMatchesAB = matches;
+
+
+
+
+
+
+
 
 if(DEBUG_SHOW){
-	var alp = 0.25;
+	// var alp = 1.0;
+	// var alp = 0.75;
+	var alp = 0.50;
+	// var alp = 0.25;
 	var img = imageMatrixA;
 		img = GLOBALSTAGE.getFloatRGBAsImage(img.red(),img.grn(),img.blu(), img.width(),img.height());
 	var d = new DOImage(img);
@@ -13105,6 +13122,44 @@ if(DEBUG_SHOW){
 	d.matrix().translate(imageMatrixA.width(),0);
 	GLOBALSTAGE.addChild(d);
 }
+
+
+var samplesA = [];
+var samplesB = [];
+var affines = [];
+for(var i=0; i<matches.length; ++i){
+	var match = matches[i];
+	// console.log(match);
+	var pA = match["A"];
+	var pB = match["B"];
+	var aff = match["affine"];
+	samplesA[i] = pA;
+	samplesB[i] = pB;
+	affines[i] = aff;
+}
+
+
+var cellSizePercent = 0.05;
+
+var imageA = imageScalesA.images()[0];
+var imageB = imageScalesB.images()[0];
+
+var cellSize = imageA.size().length()*cellSizePercent;
+console.log("cellSize: "+cellSize);
+
+
+
+// try optimizing the patch affines using visual matching
+
+
+R3D.showForwardBackwardCells(samplesA, samplesB, affines, imageA,imageB, GLOBALSTAGE, cellSize);
+
+
+throw "..."
+
+
+
+
 
 
 if(DEBUG_SHOW){
@@ -13186,7 +13241,7 @@ if(DEBUG_SHOW){
 		GLOBALSTAGE.addChild(d);
 }
 
-// throw "before ..."
+throw "initial fat matches ... next: use stereopsis & F"
 
 	// var objectsA = R3D.generateProgressiveSIFTObjects(featuresA, imageMatrixA);
 	// var objectsB = R3D.generateProgressiveSIFTObjects(featuresB, imageMatrixB);
@@ -13256,6 +13311,8 @@ console.log("GET INITIAL F: "+matches.length);
 			var transforms = info["transforms"];
 			
 
+throw "are these affines any good?"
+
 			// throw "WORLD";
 			var cellCount = 40; // 40-80
 			world = new Stereopsis.World();
@@ -13300,7 +13357,7 @@ console.log("GET INITIAL F: "+matches.length);
 			var result = world.solvePairF();
 			// console.log(result);
 
-			// world.showForwardBackwardPair();
+			world.showForwardBackwardPair();
 			// throw "BEFORE NEXT F -> R"
 
 			var transform0 = world.transformFromViews(view0,view1);
@@ -13313,6 +13370,8 @@ console.log("GET INITIAL F: "+matches.length);
 				goodEnoughMatches = false;
 			}
 		}
+
+		throw "next: solve R"
 
 // R - DENSE - WORLD
 		if(goodEnoughMatches){
@@ -13437,104 +13496,10 @@ console.log("GET INITIAL F: "+matches.length);
 				pairData["metricNeighborsToWorld"] = reconstructionMetric;
 			}
 			
-			// throw "before save pair - world iterate";
 			// pairDoneSaveFxn();
-/*
-???
-
-			var info = R3D.fundamentalError(F,Finv,pointsA,pointsB);
-console.log(info);
-			var fMean = info["mean"];
-			var fSigma = info["sigma"];
-			var fError = fMean + fSigma;
-
-			// normalize -- prepare for insertion
-			var matchesAB = [];
-			for(var i=0; i<pointsA.length; ++i){
-				var a = pointsA[i].copy();
-				var b = pointsB[i].copy();
-				a.scale(1.0/imageAWidth,1.0/imageAHeight);
-				b.scale(1.0/imageBWidth,1.0/imageBHeight);
-				a = {"x":a.x,"y":a.y,"s":1.0,"a":0};
-				b = {"x":b.x,"y":b.y,"s":1.0,"a":0};
-				matchesAB.push({"A":a, "B":b});
-			}
-			var fNorm = R3D.fundamentalNormalizeImageSizes(F, imageAWidth,imageAHeight, imageBWidth,imageBHeight);
-			var viewAverageWidth = (imageAWidth+imageBWidth)*0.5;
-			var matchData = {};
-				matchData["F"] = fNorm;
-				matchData["errorFMean"] = fMean/viewAverageWidth;
-				matchData["errorFSigma"] = fSigma/viewAverageWidth;
-				matchData["points"] = matchesAB;
-				matchData["count"] = matchesAB.length;
-			pairData["matches"] = matchData;
-
-
-			var relative = world.toObject();
-			pairData["relative"] = relative;
-
-			var reconstructionMetric = world.reconstructionRelativeMetrics();
-			console.log(reconstructionMetric);
-
-			var transform = world.transformFromViews(view0,view1);
-				var count = transform.matches().length; // doesn't count if P has 0 matches
-				var matches = transform.matches();
-// 				var pAs = [];
-// 				var pBs = [];
-// 				for(var i=0; i<matches.length; ++i){
-// 					var match = matches[i];
-// 					var pA = match.pointForView(vA).point2D();
-// 					var pB = match.pointForView(vB).point2D();
-// 					pAs.push(pA);
-// 					pBs.push(pB);
-// 				}
-// // draw some of the matches
-// matches = [pAs,pBs];
-// Code.randomPopParallelArrays(matches, 500);
-// R3D.drawMatches(matches, 0,0, imageMatrixA.width(),0, GLOBALSTAGE, 0x9900FFFF);
-
-				var errorRMean = transform.rMean();
-				var errorRSigma = transform.rSigma();
-
-
-
-				console.log("MEAN TRANSFORM ERROR: "+errorRMean+" & SIGMA: "+errorRSigma);
-
-				if(errorRMean>1.0){
-					console.log("errorRMean way too big, at most 1.0 px => likely wrong ordering in Z-depth");
-				}
-				var errorR = (transform.rSigma() + transform.rMean());
-				var errorF = (transform.fSigma() + transform.fMean());
-				console.log("REGULAR transform error R: "+errorR+" of "+maxErrorRTrackPixels);
-				console.log("REGULAR transform error F: "+errorF+" of "+maxErrorFTrackPixels);
-
-				
-				// get only best track points ~ 25% of original points
-				// if(goodEnoughMatches){
-				console.log("do tracks");
-				world.solveForTracks();
-				// }
-
-				var errorR = (transform.rSigma() + transform.rMean());
-				var errorF = (transform.fSigma() + transform.fMean());
-				console.log("TRACK transform error R: "+errorR+" of "+maxErrorRTrackPixels);
-				console.log("TRACK transform error F: "+errorF+" of "+maxErrorFTrackPixels);
-
-				if(errorR>maxErrorRTrackPixels || errorF>maxErrorFTrackPixels){
-					goodEnoughMatches = false;
-				}
-
-				if(goodEnoughMatches){
-					pairData["tracks"] = world.toObject();
-					pairData["metricNeighborsToWorld"] = reconstructionMetric;
-				}
-				// ...
-				console.log(pairData);
-throw "before save pair - world iterate";
-				// pairDoneSaveFxn();
-
-*/
 		}
+
+		throw "before save pair - world iterate";
 
 		console.log(pairData);
 		console.log("goodEnoughMatches?: "+goodEnoughMatches);

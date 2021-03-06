@@ -2815,6 +2815,166 @@ Code.combineErrorMeasurementsV3D = function(points,errors){
 	// var percents = [];
 	return {"value":estimate, "error":error};
 }
+
+
+// ------------------------------------------------------------------------------------------ fourier transform
+Code.fourierTransform1D = function(valuesReal, valuesImag){ // return: real & imaginary components
+	console.log("fourerTransform1D");
+	var count = valuesReal.length;
+	var coefficientsReal = [];
+	var coefficientsImag = [];
+	var pi2 = Math.PI*2;
+	// var sines = [];
+	// var coses = [];
+	// for(var i=0; i<count; ++i){ // nth sample
+	// 	var angle = pi2 * i * 1/count;
+	// 	sines[i] = Math.sin(angle);
+	// 	coses[i] = Math.cos(angle);
+	// }
+	var mul = 1.0/count;
+	for(var i=0; i<count; ++i){ // ith component
+		var real = 0;
+		var imag = 0;
+		for(var n=0; n<count; ++n){ // nth sample
+			var sampleReal = valuesReal[n];
+			var sampleImag = 0;
+			if(valuesImag){
+				sampleImag = valuesImag[n];
+			}
+			var angle = pi2 * i * n/count;
+			var cos = Math.cos(angle);
+			var sin = Math.sin(angle);
+			real +=  sampleReal*cos + sampleImag*sin;
+			imag += -sampleReal*sin + sampleImag*cos;
+		}
+		// this seems to be needed in both cases?
+		// real *= mul;
+		// imag *= mul;
+		coefficientsReal[i] = real;
+		coefficientsImag[i] = imag;
+	}
+	return {"real":coefficientsReal, "imag":coefficientsImag};
+}
+Code.fourierInverse1D = function(reals,imags){ // TODO: if all thats needed is the original signal, then only part of this needs to be done
+	// var values = [];
+	var count = reals.length;
+	// flip real & imag to get negative 
+	var info = Code.fourierTransform1D(imags,reals);
+	// need to do scaling by 1/N
+	var reals = info["real"];
+	var imags = info["imag"];
+	var mul = 1.0/count;
+	for(var i=0; i<count; ++i){
+		reals[i] *= mul;
+		imags[i] *= mul;
+	}
+	// flip back to get original value
+	return {"real":imags, "imag":reals};
+/*
+
+% reproduce original signal:
+
+
+s = linspace(0,1/T,count);
+for n = 0:count-1
+	value = 0;
+	for k = 0:count-1
+		c = coefficients(1,k+1);
+		value = value + c * exp(2*pi*j * k * n/count); % * T;
+	endfor
+	value = value * 1/count;
+	s(1,n+1) = value;
+endfor
+
+*/
+}
+Code.fourierTransform2D = function(values, width,height){ 
+	//
+	throw "TODO: FT 2D";
+}
+Code.fft1D = function(values){ 
+	//
+	throw "TODO: FFT 1D";
+}
+Code.fft2D = function(values, width,height){ 
+	//
+	throw "TODO: FFT 2D";
+}
+Code.fft = function(values, width,height){ 
+	if(height===undefined){
+		return fft1D(values);
+	}else{
+		return fft2D(values, width,height);
+	}
+}
+
+
+/*
+x = linspace(0,0.5,500);
+y = sin(40 * 2 * pi .* x) + 0.5 * sin(90 * 2 * pi .* x) + 0.50;
+
+count = size(x,2);
+
+% coefficients
+T = x(1,2) - x(1,1); % sample spacing
+k = [1:count];
+coefficients = zeros(1,count);
+
+for k = 0:count-1 % frequency
+	coefficient = 0;
+	for n = 0:count-1 % sample
+		sample = y(1,n+1);
+		coefficient = coefficient + sample * exp(-2*pi*j * k * n/count );
+	endfor
+	coefficients(1,k+1) = coefficient;
+endfor
+
+hold off;
+
+
+% coefficients are scaled by count -- should be scaled by 1/count
+
+% coefficients = fft(y);
+
+
+% stem(coefficients.*coefficients);
+% stem( abs(coefficients) );
+f = linspace(0,1/T,count);
+bar(f(1:count/2) , abs(coefficients)(1:count/2) * 1/count );
+xlabel('Frequencies (units?)');
+ylabel('Amplitude');
+title('Frequency components');
+
+
+% reproduce original signal:
+
+
+s = linspace(0,1/T,count);
+for n = 0:count-1
+	value = 0;
+	for k = 0:count-1
+		c = coefficients(1,k+1);
+		value = value + c * exp(2*pi*j * k * n/count); % * T;
+	endfor
+	value = value * 1/count;
+	s(1,n+1) = value;
+endfor
+
+
+% 0.0025
+
+
+hold off;
+% plot( abs(s) );
+plot( real(s) );
+xlabel('Time (s)');
+ylabel('Amplitude');
+title('reproduced signal');
+
+*/
+
+
+
 // ------------------------------------------------------------------------------------------
 Code.isUnique = function(val){ // val, ...array
 	for(i=1;i<arguments.length;++i){

@@ -74,28 +74,24 @@ sin(x) = &Sigma;<sub>n &isin; [1,&infin;]</sub> (-1)<sup>n-1</sup>&middot;x<sup>
 
 
 <sup>i</sup>
-
+theory:
 https://mathworld.wolfram.com/EulerFormula.html
-
 https://betterexplained.com/articles/imaginary-multiplication-exponents/
-
 https://betterexplained.com/articles/intuitive-understanding-of-eulers-formula/
-
+https://betterexplained.com/articles/an-interactive-guide-to-the-fourier-transform/
 https://math.stackexchange.com/questions/225896/why-eulers-formula-is-true
+
+
+diagarams:
+https://chem.libretexts.org/Bookshelves/Physical_and_Theoretical_Chemistry_Textbook_Maps/Map%3A_Physical_Chemistry_(McQuarrie_and_Simon)/32%3A_Math_Chapters/32.10%3A_Fourier_Analysis/32.10.01%3A_Fourier_Analysis_in_Matlab
+https://www.nti-audio.com/en/support/know-how/fast-fourier-transform-fft
 
 
 ---
 
-
-
-
-
-https://betterexplained.com/articles/an-interactive-guide-to-the-fourier-transform/
+...
 https://www.princeton.edu/~cuff/ele201/kulkarni_text/frequency.pdf
 https://towardsdatascience.com/fourier-transformation-and-its-mathematics-fff54a6f6659
-
-
-
 
 
 
@@ -112,17 +108,16 @@ Fourier Synthesis: reconstruct signal from frequency/phase
 
 
 http://www.ee.cityu.edu.hk/~hcso/ee3202_7.pdf
-
 https://www.robots.ox.ac.uk/~sjrob/Teaching/SP/l7.pdf
 
+
+code:
 https://www.nayuki.io/page/how-to-implement-the-discrete-fourier-transform
-
 https://www.tutorialspoint.com/cplusplus-program-to-compute-discrete-fourier-transform-using-naive-approach
-
 https://followtutorials.com/2013/05/calculation-of-discrete-fourier-transformdft-in-c-c-using-naive-and-fast-fourier-transform-fft-method.html
 
+usage:
 https://www.mathworks.com/help/signal/ug/discrete-fourier-transform.html
-
 https://www.bogotobogo.com/Matlab/Matlab_Tutorial_DFT_Discrete_Fourier_Transform.php
 
 

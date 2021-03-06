@@ -2558,9 +2558,9 @@ Stereopsis.P3D.prototype.calculateAbsoluteLocationDLT = function(world, dontInse
 			console.log("dontInsert "+location);
 			throw "NANNN";
 		}
-		if(location===null){
-			console.log("calculateAbsoluteLocationDLT => "+null);
-		}
+		// if(location===null){
+		// 	console.log("calculateAbsoluteLocationDLT => "+null);
+		// }
 		world.updatePoint3DLocation(point3D,location);
 	}else{
 		return location;
@@ -6383,17 +6383,33 @@ Stereopsis.World.prototype.solvePairF = function(completeFxn, completeContext){ 
 	// var maxIterations = 8;
 	// var maxIterations = 10;
 
-
+var timeA = Code.getTimeMilliseconds();
+var timeB = Code.getTimeMilliseconds();
 	// 5 - 8
 	var maxIterations = 6;
 	for(var iteration=0; iteration<maxIterations; ++iteration){
 // break;
 		console.log("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ iteration "+iteration+" / "+maxIterations);
 		// estimate current error
+
+
+timeA = Code.getTimeMilliseconds();
+
+
 world.checkValidateMatches();
 		world.relativeFFromSamples();
 world.checkValidateMatches();
 		world.estimate3DErrors(false);
+
+
+break; // exit
+
+
+timeB = Code.getTimeMilliseconds();
+console.log("DELTA A: " + (timeB-timeA) );
+timeA = Code.getTimeMilliseconds();
+
+
 // TODO: REMOVE DEBUG:
 world.checkValidateMatches();
 		// expand good points:
@@ -6401,6 +6417,13 @@ world.checkValidateMatches();
 		world.probe2DCellsF(2.0,2.0);
 		// world.estimate3DErrors(false);
 world.checkValidateMatches();
+
+
+timeB = Code.getTimeMilliseconds();
+console.log("DELTA B: " + (timeB-timeA) );
+timeA = Code.getTimeMilliseconds();
+
+
 		// subdivide
 		var subdivide = iteration==(maxIterations*0.5 | 0);
 		if(subdivide){
@@ -6409,15 +6432,26 @@ world.checkValidateMatches();
 			world.subDivideUpdateMatchLocation();
 			// SET MATCH AFFINES BASED ON LOCAL 2D NEIGHBORHOODS
 		}
-		
+
+
+timeB = Code.getTimeMilliseconds();
+console.log("DELTA C: " + (timeB-timeA) );
+timeA = Code.getTimeMilliseconds();
+
+
 		// retract bad points locally:
 		world.filterLocal2DF();
 
 		// global bad points
 		world.filterGlobal2DF(3.0);
 		// prune non-unique neighborhoods ?
-
 		// world.setMatchAffineFromNeighborhood(); // not really seemingly helpful
+
+
+timeB = Code.getTimeMilliseconds();
+console.log("DELTA D: " + (timeB-timeA) );
+
+
 	}
 	// world.estimate3DErrors(false);
 	// world.dropWorstParametersF();

@@ -10,6 +10,7 @@
 ### Chapters
 
 0) [Summary](#SUMMARY)
+0) [Algorithms](#ALGORITHMS)
 0) [Picture Acquisition](#PHOTOS)
 0) [Camera Calibration](#CALIBRATION)
 0) [Feature Matching](#MATCHING)
@@ -92,6 +93,74 @@ The output can simply be the camera geometry (orientations), world geometry (poi
 
 <br/>
 <br/>
+
+
+
+
+
+<a name="ALGORITHMS"></a>
+### Algorithms
+
+
+- feature acquizition
+	- corners good for localizing
+	- corner peaks
+	- scale space good for scale estimates
+	- entropy?
+- feature compare
+	- start with raw feature angle & scale estimation
+	- compare features
+		- flat color histogram
+		- flat SAD | SSD | NCC | BEST-neighborhood
+		- flat color binning
+		- gradient
+		- gradient binning
+- match choosing
+	- F error
+	- matching score error
+	- 1st to 2nd score ratio
+	- 
+	- discard local neighborhood inclusion/exclusion (loose regularization)
+
+=> SHOW FAT-MATCH RESULTS
+
+- local affine 
+	- rotation estimate
+		- use intial feature relative estimate
+		- use F angle between 2 points
+		- use local neighborhood
+	- scale estimate
+		- use intial feature relative estimate
+		- use local neighborhood
+	- update
+		- use image transform / compare
+- sparse
+	- seeds spread to neighborhood
+		- use 8-cell neighbors without matches
+		- guess opposite location & orientation given local affine estimate
+		- pick best matching needle - haystack location
+		- update affine based on:
+			- image A-B best score
+			- local neighborhood
+		- update location using higher resolution needle & slightly larger haystack (needle + 2-4 pixels)
+
+- estimate R (coarse)
+	- F + K
+	- use Ferror, match error, R error to drop outliers
+	-
+
+- cued sparse matching
+	- R (& F) is known to some pixel error amount
+	- match along F-line
+	- affine is defined entirely based off match 3D patch estimate
+	- match choosing
+		- match & F & R errors to drop outliers
+
+- dense
+	- seed spread to neighborhood
+
+
+
 
 
 <a name="PHOTOS"></a>

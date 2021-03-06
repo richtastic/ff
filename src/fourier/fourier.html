@@ -29,13 +29,72 @@ function classesLoadedFxn(){
 	var samples = 100;
 	var x = Code.divSpace(0,10, samples);
 	var y = [];
+	var f0 = 0.5;
+	var phi = Math.PI * 0.25;
 	for(var i=0; i<samples; ++i){
-		var val = Math.cos(  );
-		y = val;
-
+		var t = x[i];
+		var val = Math.sin( 2*Math.PI*f0*t + phi);
+		y[i] = val;
 	}
+	console.log(x);
+	console.log(y);
+	var transform = Code.fourierTransform1D(y);
+	console.log(transform);
 
-	console.log(values);
+	var reals = transform["real"];
+	var imags = transform["imag"];
+
+	var magnitudes = [];
+	var phases = [];
+	for(var i=0; i<reals.length; ++i){
+		var real = reals[i];
+		var imag = imags[i];
+		var phase = Math.atan2(imag,real);
+		var magnitude = Math.sqrt(real*real + imag*imag);
+			// magnitude = magnitude * 1.0/reals.length; // scale by 1/N for display ?
+		phases[i] = phase;
+		magnitudes[i] = magnitude;
+	}
+	console.log("phases:");
+	console.log(phases);
+	console.log("magnitudes:");
+	console.log(magnitudes);
+
+
+
+	// magnitudes need to be scaled by 1/N to display in normalized format
+	// the index of the coefficient (i) is the value for the frequency  i * dt, where dt is time spacing between x samples
+	// dt = 
+	// if dt is unknown, the frequency is a scaling of the fundamental frequency (minimum) 1/N
+	// , the frequency is a normalized: 
+
+
+
+	throw "..."
+
+	var info = Code.fourierInverse1D(reals,imags);
+	console.log(info);
+	var reals = info["real"];
+	var imags = info["imag"];
+	console.log("signal:");
+	console.log(reals);
+	console.log(imags);
+
+	var diffs = [];
+	for(var i=0; i<y.length; ++i){
+		var vY = y[i];
+		var vS = reals[i];
+		var vI = imags[i];
+		console.log(vY,vS,vI);
+		var delta = Math.abs(vY-vS);
+		diffs[i] = delta;
+	}
+	console.log("diffs:");
+	console.log(diffs);
+
+
+	// var values = y;
+	// console.log(values);
 
 
 

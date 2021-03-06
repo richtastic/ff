@@ -387,8 +387,25 @@ MISSING:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-- gauge is 0 ?
-	- were sparse groups ignored?
+
+- new dataset --- & test stuff along the way
+
+	- find places that take a long time
+	- find places with poor accuracy
+
+
+solvePairF: 
+	- a lot of really bad affines (visually)
+
+DELTA A: 113 191 182 186 10996 17697    0 
+DELTA B: 2917 1117 876 827 4106 1409    1 
+DELTA C: 0  0  0  0  1564  0  0         3 
+DELTA D: 397 432 392 632 704 653        2 
+
+...............
+
+
+
 
 
 
