@@ -7810,7 +7810,7 @@ console.log("checkPerformNextTask");
 		return;
 	}
 
-throw "start dense";
+// throw "start dense";
 	if(!project.checkHasDenseStarted()){
 		project.calculateDensePairPutatives();
 		return;
@@ -8206,7 +8206,7 @@ var tripleRemoved = 0;
 			if(pairLookup[pairID] && pairLookup[pairID]["tracks"]>0){
 				// keep
 			}else{
-				console.log("missing pair / traicks "+pairID);
+				console.log("missing pair / tracks "+pairID);
 				Code.removeElementAt(triplePairs,j);
 				--j;
 			}
@@ -8996,13 +8996,14 @@ var removeList = {};
 	var viewPairs = [];
 	var viewPairsIDToPair = {};
 	for(var i=0; i<pairs.length; ++i){
+		console.log(pairs[i]);
 		var pair = pairs[i];
 			viewPairsIDToPair[pair["id"]] = pair;
 		var relativeCount = pair["relative"];
 		var relativeError = pair["relativeError"];
-		if(pair["relative"]>0 && !removeList[pair["id"]]){
+		var R = pair["relativeTransform"]; // extrinsic
+		if(pair["relative"]>0 && !removeList[pair["id"]] && R){
 			var reprojectionError = relativeError/relativeCount;
-			var R = pair["relativeTransform"]; // extrinsic
 				R = Matrix.fromObject(R);
 				R.set(0,3, 0);
 				R.set(1,3, 0);
@@ -10003,7 +10004,7 @@ console.log("allPseudoEdges");
 			var pairList = pairLists[j];
 			for(var k=0; k<pairList.length; ++k){
 				var entry = pairList[k];
-				console.log(entry)
+				// console.log(entry);
 				// convert to index pair:
 				var idA = entry["A"];
 				var idB = entry["B"];
@@ -11371,7 +11372,8 @@ if(baViews.length<=1){
 	baViews = [];
 	baPoints = [];
 	deltaErrorR = 0;
-	throw "single vertex skeleton?"
+	console.log("single vertex skeleton?")
+	// throw "single vertex skeleton?"
 }
 				// var baOptimizations = data["ba"];
 				var baIterations = data["iteration"];
@@ -11496,30 +11498,34 @@ console.log(graphGroup);
 				world.printPoint3DTrackCount();
 
 				// pick view to optimize:
-				
-				var nextViewID = nextViewBA["id"];
-				var worldView = world.viewFromData(nextViewID);
+				if(nextViewBA){
+					var nextViewID = nextViewBA["id"];
+					var worldView = world.viewFromData(nextViewID);
 
-				console.log("optimize with view:");
-				console.log(worldView);
+					console.log("optimize with view:");
+					console.log(worldView);
 
-				// optimize view orientation
-// throw "BEFORE OPTIMIZE SINGLE VIEW?"
-				var info = world.solveOptimizeSingleView(worldView);
-				console.log(info);
-// throw "AFTER OPTIMIZE"
-				nextViewBA["deltaErrorR"] = Math.abs(info["deltaR"]); // expected always negative
-				nextViewBA["errorR"] = info["errorR"];
-				nextViewBA["updated"] = Code.getTimeMilliseconds();//Code.getTimeStampFromMilliseconds();
-				nextViewBA["count"] = worldView.pointCount();
+					// optimize view orientation
+	// throw "BEFORE OPTIMIZE SINGLE VIEW?"
+					var info = world.solveOptimizeSingleView(worldView);
+					console.log(info);
+	// throw "AFTER OPTIMIZE"
+					nextViewBA["deltaErrorR"] = Math.abs(info["deltaR"]); // expected always negative
+					nextViewBA["errorR"] = info["errorR"];
+					nextViewBA["updated"] = Code.getTimeMilliseconds();//Code.getTimeStampFromMilliseconds();
+					nextViewBA["count"] = worldView.pointCount();
 
-				// update views:
-				var worldObject = world.toObject();
-				console.log(worldObject);
-				data["cameras"] = worldObject["cameras"];
-				data["views"] = worldObject["views"];
-				data["transforms"] = worldObject["transforms"];
-				data["points"] = worldObject["points"];
+					// update views:
+					var worldObject = world.toObject();
+					console.log(worldObject);
+					data["cameras"] = worldObject["cameras"];
+					data["views"] = worldObject["views"];
+					data["transforms"] = worldObject["transforms"];
+					data["points"] = worldObject["points"];
+					// data["iteration"] = baIterations + 1;
+				}else{
+					// none to do
+				}
 				data["iteration"] = baIterations + 1;
 
 				console.log("fullTrackPath: "+fullTrackPath);
@@ -12420,9 +12426,16 @@ console.log(newTriples);
 // this.displayOriginalViewGraph(views, pairs, triples, viewToID,pairToIDs,tripleToIDs, pairToError,pairToTransform,tripleToScales);
 console.log(pairs);
 console.log("pairs");
+
+console.log(triples);
+console.log("triples");
+
+console.log(views);
+console.log("views");
 // throw "?"
 	var result = Code.graphAbsoluteFromObjectLookup3D(views, pairs, triples, viewToID,pairToIDs,tripleToIDs, pairToError,pairToTransform, tripleToScales);
 console.log(result);
+console.log("result");
 // throw "whaaa"
 	var groups = result["groups"];
 	if(groups.length==0){
@@ -12562,10 +12575,21 @@ App3DR.ProjectManager.prototype.calculatePairMatchWithRFromViewIDs = function(vi
 	settings[SETTING_MAX_ERR_R] = Code.valueOrDefault(settings[SETTING_MAX_ERR_R], 0.002);
 	settings[SETTING_CEL_SIZ] = Code.valueOrDefault(settings[SETTING_CEL_SIZ], 40);
 
-	var maxErrorRDensePixels = 10;
+
+
+
+	console.log("TODO: THESE NUMBERS FROM HYPOTENUSE ?");
+
+	var maxErrorRDensePixels = 10; // 2-5 on 1024
 	var maxErrorFDensePixels = 10;
-	var maxErrorRTrackPixels = 5;
+	var maxErrorRTrackPixels = 5; // 0-1 åon 1024
 	var maxErrorFTrackPixels = 5;
+
+
+	var maxErrorRDensePercent = 0.004; // 4 on 1024
+	var maxErrorFDensePercent = 0.004 * 1.5;
+	var maxErrorRTrackPercent = 0.001; // 1 on 1024
+	var maxErrorFTrackPercent = 0.001 * 1.5;
 
 	// dense needs more strict standards - maybe half ?
 
@@ -12631,6 +12655,8 @@ console.log(relativeAB);
 		// build world
 console.log("fillInWorldAll");
 console.log(allCameras);
+console.log(allViews);
+
 		var info = project.fillInWorldAll(allViews, cellSize, allCameras);
 		var WORLDCAMS = info["cameras"];
 		var WORLDVIEWS = info["views"];
@@ -12648,6 +12674,23 @@ console.log(world);
 		var KimageB = viewB.K();//view1.camera().K();//R3D.cameraFromScaledImageSize(K, imageScalesA.size());
 		var imageScalesA = viewA.imageScales();
 		var imageScalesB = viewB.imageScales();
+
+		console.log("calculate pixel error limits ");
+		console.log(imageScalesA);
+		console.log(imageScalesB);
+		var hypA = imageScalesA.size().length();
+		var hypB = imageScalesB.size().length()
+		var hyp = (hypA+hypA)*0.5;
+		maxErrorRDensePixels = hyp*maxErrorRDensePercent;
+		maxErrorFDensePixels = hyp*maxErrorFDensePercent;
+		maxErrorRTrackPixels = hyp*maxErrorRTrackPercent;
+		maxErrorFTrackPixels = hyp*maxErrorFTrackPercent;
+		console.log(" maxErrorRDensePixels: "+maxErrorRDensePixels);
+		console.log(" maxErrorFDensePixels: "+maxErrorFDensePixels);
+		console.log(" maxErrorRTrackPixels: "+maxErrorRTrackPixels);
+		console.log(" maxErrorFTrackPixels: "+maxErrorFTrackPixels);
+// throw "HERE";
+
 		console.log(KimageA);
 		console.log(KimageB);
 		console.log(relativeAB);
@@ -12701,6 +12744,10 @@ console.log(world);
 
 // throw "???"
 
+		var goodEnoughMatches = true;
+
+		var pairData = App3DR.ProjectManager.defaultPairFile(viewAID,viewBID);
+
 		// throw "AFTER DENSE - NEW PAIR DONE"
 
 		var transform = world.toTransformArray()[0];
@@ -12709,28 +12756,37 @@ console.log(world);
 		console.log("transform error R: "+errorR+" of "+maxErrorRDensePixels);
 		console.log("transform error F: "+errorF+" of "+maxErrorFDensePixels);
 
-// throw "after solve dense pair"
+		if(errorR>maxErrorRDensePixels || errorF>maxErrorFDensePixels){
+			console.log(" ERROR FOUND TOO HIGH - DENSE REGULAR");
+			goodEnoughMatches = false;
+		}
 
+	
 
-var pairData = App3DR.ProjectManager.defaultPairFile(viewAID,viewBID);
+		if(goodEnoughMatches){
+			pairData["relative"] = world.toObject();
 
-		pairData["relative"] = world.toObject();
+			// var str = world.toYAMLString();
+			// console.log(str);
+			// throw "before tracks";
 
-		// var str = world.toYAMLString();
-		// console.log(str);
-		// throw "before tracks";
+			console.log("do tracks");
+			world.solveForTracks();
 
-		console.log("do tracks");
-		world.solveForTracks();
+			var errorR = (transform.rSigma() + transform.rMean());
+			var errorF = (transform.fSigma() + transform.fMean());
+			console.log("transform error R: "+errorR+" of "+maxErrorRTrackPixels);
+			console.log("transform error F: "+errorF+" of "+maxErrorFTrackPixels);
 
-		pairData["tracks"] = world.toObject();
+			if(errorR>maxErrorRTrackPixels || errorF>maxErrorFTrackPixels){
+				console.log(" ERROR FOUND TOO HIGH - DENSE TRACKS");
+				goodEnoughMatches = false;
+			}
 
-		console.log("TODO: decide if dense & tracks are good enough ?");
-
-		var errorR = (transform.rSigma() + transform.rMean());
-		var errorF = (transform.fSigma() + transform.fMean());
-		console.log("transform error R: "+errorR+" of "+maxErrorRTrackPixels);
-		console.log("transform error F: "+errorF+" of "+maxErrorFTrackPixels);
+			if(goodEnoughMatches){
+				pairData["tracks"] = world.toObject();
+			}
+		}
 
 // var str = world.toYAMLString();
 // console.log(str);
@@ -12751,6 +12807,8 @@ var pairData = App3DR.ProjectManager.defaultPairFile(viewAID,viewBID);
 		// if(errorR<maximumRErrorTracks && errorF<maximumFErrorTracks){
 		// 	pairData["metricNeighborsToWorld"] = reconstructionMetric;
 		// }
+
+		console.log(pairData);
 
 		// throw "before done with dense pair ?"
 		completeFxn.call(completeCxt, pairData);
@@ -12776,8 +12834,9 @@ console.log("calculatePairMatchFromViewIDs")
 		settings["minimumMatchPoints"] = 16;
 		settings["incrementResolution"] = 0;
 		settings["minimumCountFInit"] = 20; // fwd-bak matches -- 25-50-100
-		settings["maximumErrorFInit"] = 0.05; // 0.02 @ 500 = 10 -- initial F estimate [~100 features]
+		settings["maximumErrorFInit"] = 0.04; // 0.02 @ 500 = 10 -- initial F estimate [~100 features]
 		settings["maximumErrorFDense"] = 0.02; // 0.01 @ 500 = 5 -- dense F estimate [~500 features]
+		settings["maximumErrorRDense"] = 0.015; // ?
 		settings["maximumErrorTracksF"] = 0.01; // 0.01 @ 500 = 5 -- final stereopsis estimate F
 		settings["maximumErrorTracksR"] = 0.01; // 0.01 @ 500 = 5 -- final stereopsis estimate R
 		settings["minimumCountTrackFinal"] = 100; // 1k-10k REGULAR => 100-1k track
@@ -12867,6 +12926,7 @@ var DEBUG_SHOW = false;
 		var maximumFErrorTracks = settings["maximumErrorTracksF"];
 		var maxErrorFInitialPercent = settings["maximumErrorFInit"];
 		var maxErrorFDensePercent = settings["maximumErrorFDense"];
+		var maxErrorRDensePercent = settings["maximumErrorRDense"];
 		var minimumCountFInit = settings["minimumCountFInit"];
 		var minimumCountTrackFinal = settings["minimumCountTrackFinal"];
 
@@ -12884,10 +12944,12 @@ var DEBUG_SHOW = false;
 		// relative to absolute measurements
 		var maxErrorFInitPixels = hyp*maxErrorFInitialPercent;
 		var maxErrorFDensePixels = hyp*maxErrorFDensePercent;
+		var maxErrorRDensePixels = hyp*maxErrorRDensePercent;
 		var maxErrorFTrackPixels = hyp*maximumFErrorTracks;
 		var maxErrorRTrackPixels = hyp*maximumRErrorTracks;
 		console.log(" maxErrorFInitPixels: "+maxErrorFInitPixels);
 		console.log(" maxErrorFDensePixels: "+maxErrorFDensePixels);
+		console.log(" maxErrorRDensePixels: "+maxErrorRDensePixels);
 		console.log(" maxErrorFTrackPixels: "+maxErrorFTrackPixels);
 		console.log(" maxErrorRTrackPixels: "+maxErrorRTrackPixels);
 		console.log(" minimumCountFInit: "+minimumCountFInit);
@@ -13247,8 +13309,8 @@ console.log("GET INITIAL F: "+matches.length);
 			console.log("F PAIR RESULT ERROR MEAN: "+fErrorMean+" & SIGMA: "+fErrorMean+" / "+maxErrorFDensePixels);
 
 			if(fErrorSigma>maxErrorFDensePixels){
-				console.log("F ERROR TOO HIGH: "+fErrorMean+" > "+maxErrorFDensePixels);
-				// goodEnoughMatches = false;
+				console.log("F ERROR TOO HIGH1 : "+fErrorMean+" > "+maxErrorFDensePixels);
+				goodEnoughMatches = false;
 			}
 		}
 
@@ -13303,9 +13365,14 @@ console.log("GET INITIAL F: "+matches.length);
 			console.log("F PAIR RESULT ERROR MEAN: "+fErrorMean+" & SIGMA: "+fErrorMean+" / "+maxErrorFDensePixels);
 			var rErrorSigma = transform0.rSigma();
 			var rErrorMean = transform0.rSigma();
-			console.log("R PAIR RESULT ERROR MEAN: "+rErrorMean+" & SIGMA: "+rErrorMean+" / "+"N/A");
+			console.log("R PAIR RESULT ERROR MEAN: "+rErrorMean+" & SIGMA: "+rErrorMean+" / "+maxErrorRDensePixels);
 
-			goodEnoughMatches = true;
+			// goodEnoughMatches = true; // already the case
+			if(rErrorSigma>maxErrorFDensePixels || rErrorSigma>maxErrorRDensePixels){
+				console.log("F ERROR TOO HIGH 2: "+fErrorMean+" > "+maxErrorFDensePixels);
+				console.log("R ERROR TOO HIGH 2: "+rErrorMean+" > "+maxErrorRDensePixels);
+				goodEnoughMatches = false;
+			}
 		}
 
 		// R - TRACKS - WORLD

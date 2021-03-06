@@ -565,6 +565,8 @@ Formats3D._daeListObjectToXMLValue = function(xml,object, sid){
 		xml.setValue(value);
 	}
 }
+// https://www.khronos.org/collada/
+// https://www.khronos.org/files/collada_spec_1_5.pdf
 Formats3D.worldToDAE = function(world){
 	var worldImages = Code.valueOrDefault(world["images"], []);
 	var worldEffects = Code.valueOrDefault(world["effects"], []);
@@ -677,9 +679,13 @@ Formats3D.worldToDAE = function(world){
 					xml.endChildren();
 
 					var phong = effect["phong"];
+					var lambert = effect["lambert"];
+					var blinn = effect["blinn"];
+					var constant = effect["constant"];
 					xml.startElement("technique");
 					xml.setAttribute("sid","common");
 					xml.startChildren();
+					if(phong){
 						xml.startElement("phong");
 						xml.startChildren();
 							xml.startElement("emission");
@@ -690,6 +696,9 @@ Formats3D.worldToDAE = function(world){
 							xml.startChildren();
 								Formats3D._daeListObjectToXMLValue(xml, phong["ambient"], "ambient");
 							xml.endChildren();
+
+							// ambient color ?
+
 							xml.startElement("diffuse");
 							xml.startChildren();
 								Formats3D._daeListObjectToXMLValue(xml, phong["diffuse"], "texture");
@@ -708,6 +717,48 @@ Formats3D.worldToDAE = function(world){
 							xml.endChildren();
 
 						xml.endChildren();
+					}else if(lambert){
+						xml.startElement("lambert");
+						xml.startChildren();
+							/*
+							xml.startElement("emission");
+							xml.startChildren();
+								Formats3D._daeListObjectToXMLValue(xml, lambert["emission"], "emission");
+							xml.endChildren();
+							xml.startElement("ambient");
+							xml.startChildren();
+								Formats3D._daeListObjectToXMLValue(xml, lambert["ambient"], "ambient");
+							xml.endChildren();
+							*/
+							xml.startElement("diffuse");
+							xml.startChildren();
+								Formats3D._daeListObjectToXMLValue(xml, lambert["diffuse"], "texture");
+							xml.endChildren();
+							/*
+							xml.startElement("reflective");
+							xml.startChildren();
+								Formats3D._daeListObjectToXMLValue(xml, lambert["reflective"], "reflective");
+							xml.endChildren();
+							xml.startElement("reflectivity");
+							xml.startChildren();
+								Formats3D._daeListObjectToXMLValue(xml, lambert["reflectivity"], "reflectivity");
+							xml.endChildren();
+							xml.startElement("transparent");
+							xml.startChildren();
+								Formats3D._daeListObjectToXMLValue(xml, lambert["transparent"], "transparent");
+							xml.endChildren();
+							xml.startElement("transparency");
+							xml.startChildren();
+								Formats3D._daeListObjectToXMLValue(xml, lambert["transparency"], "transparency");
+							xml.endChildren();
+							xml.startElement("index_of_refraction");
+							xml.startChildren();
+								Formats3D._daeListObjectToXMLValue(xml, lambert["ior"], "index_of_refraction");
+							xml.endChildren();
+							*/
+
+						xml.endChildren();
+					}
 					xml.endChildren();
 
 				xml.endChildren();
@@ -1070,16 +1121,61 @@ Formats3D.daeWorldAddMaterialFromImage = function(world, image){
 		"id":materialID,
 		"instances":[],
 		"surface": surface,
+		// "phong": {
+		// 	"emission":
+		// 	{
+		// 		"type":"color",
+		// 		"value":[0, 0, 0, 1],
+		// 	},
+		// 	"ambient":
+		// 	{
+		// 		"type":"color",
+		// 		"value":[0, 0, 0, 1],
+		// 	},
+		// 	"diffuse":
+		// 	{
+		// 		"type":"texture",
+		// 		"value":surface,
+		// 	},
+		// 	"specular":
+		// 	{
+		// 		"type":"color",
+		// 		"value":[0.5, 0.5, 0.5, 1.0],
+		// 	},
+		// 	"shininess":{
+		// 		"type":"number",
+		// 		"value":50,
+		// 	},
+		// 	"ior":{
+		// 		"type":"number",
+		// 		"value":1,
+		// 	},
+		// },
+		// totally ambient:
+
+// phong, lambert, blinn, constant
+//
+// https://www.okino.com/conv/exp_collada_materials_panel.htm
+
+/*
 		"phong": {
 			"emission":
 			{
-				"type":"color",
-				"value":[0, 0, 0, 1],
+				// "type":"color",
+				// "value":[0, 0, 0, 1],
+				"type":"number",
+				"value":0,
 			},
 			"ambient":
 			{
-				"type":"color",
-				"value":[0, 0, 0, 1],
+				//"type":"color",
+				// "value":[0, 0, 0, 1],
+
+				// "type":"texture",
+				// "value":surface,
+
+				"type":"number",
+				"value":0,
 			},
 			"diffuse":
 			{
@@ -1088,17 +1184,66 @@ Formats3D.daeWorldAddMaterialFromImage = function(world, image){
 			},
 			"specular":
 			{
-				"type":"color",
-				"value":[0.5, 0.5, 0.5, 1.0],
+				// "type":"color",
+				// "value":[0.0, 0.0, 0.0, 1.0],
+				
+				// "type":"texture",
+				// "value":surface,
+
+				// "type":"number",
+				// "value":1,
+
+				"type":"number",
+				"value":0,
 			},
 			"shininess":{
 				"type":"number",
-				"value":50,
+				"value":0,
+			},
+			"ior":{
+				"type":"number",
+				"value":0,
+			},
+*/
+		"lambert":{
+			"emission":
+			{
+				"type":"number",
+				"value":0.0,
+			},
+			"ambient":
+			{
+				"type":"number",
+				"value":1.0,
+			},
+			"diffuse":
+			{
+				"type":"texture",
+				"value":surface,
+			},
+			"reflective":
+			{
+				"type":"number",
+				"value":0.0,
+			},
+			"reflectivity":
+			{
+				"type":"number",
+				"value":0.0,
+			},
+			"transparent":{
+				"type":"number",
+				"value":1.0,
+			},
+			"transparency":{
+				"type":"number",
+				"value":1.0,
 			},
 			"ior":{
 				"type":"number",
 				"value":1,
 			},
+
 		},
 	};
 	materials.push(material);

@@ -17705,7 +17705,7 @@ Code.graphAbsoluteFromObjectLookup3D = function(views, pairs, triples,  viewToID
 	for(var i=0; i<views.length; ++i){
 		var view = views[i];
 		var viewID = viewToID(view);
-		console.log(" "+i+" - "+viewID);
+		// console.log(" "+i+" - "+viewID);
 		viewIDToViewIndex[viewID] = i;
 	}
 	// find connected/separate graphs
@@ -17721,6 +17721,7 @@ Code.graphAbsoluteFromObjectLookup3D = function(views, pairs, triples,  viewToID
 	console.log(pairIDToVertex);
 	var pairIDsToEdge = {};
 	var checkAddEdge = function(pairA,pairB, scaleAB){
+		console.log("checkAddEdge",pairA,pairB)
 		var doublePair = minimumStringFirst(pairA,pairB);
 		var vertexA = pairIDToVertex[pairA];
 		var vertexB = pairIDToVertex[pairB];
@@ -17742,6 +17743,7 @@ Code.graphAbsoluteFromObjectLookup3D = function(views, pairs, triples,  viewToID
 				edge.data()["list"].push( [scaleAB, weight] );
 			}
 		}else{
+			console.log("ADD EDGE: "+weight);
 			var edge = pairGraph.addEdgeDuplex(vertexA,vertexB, weight);
 				// edge.data({ "data":null, "list":[ [scaleAB, weight] ] });
 				edge.data({ "data":null, "scale":scaleAB, "error":weight });

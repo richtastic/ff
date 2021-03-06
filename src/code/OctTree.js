@@ -153,6 +153,11 @@ OctTree.prototype.initWithSize = function(min,max, force){
 		eps = eps * dif;
 	}
 	if(eps==0){
+		console.log(min,max, force);
+		console.log(diff+"");
+		console.log(eps);
+		// just pick an eps
+		eps = 1.0;
 		throw "too small";
 	}
 	min.add(-eps,-eps,-eps);

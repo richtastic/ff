@@ -387,22 +387,37 @@ MISSING:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+- gauge is 0 ?
+	- were sparse groups ignored?
+
+
+
 - synthetic image tests of localizing methods
 	- what is average & best sub-pixel accuracy
 
-x check that sum of gaussian image sum to 1
+- allowing too many very poor F/R matches to continue into very poor tracks
+	-> what metrics are allowing this to continue?
+	(sparse)
 
 
+- if 3D world is much bigger than image spacing ...
+	- points at infinity will be very far away
+	-> project everything beyond some ~ 1E9 distance from center (or camera location average center) to a sphere?
 
+- 
+
+
+http://localhost/web/ff/fourier/fourier.html
+
+http://localhost/web/ff/images/localizing.html
+http://localhost/web/ff/3DR/app/app.html?iterations=1
+http://localhost/web/ff/3DR/app/app.html?mode=model
 
 
 - with error the affine transform accuracy is > 1px [10 deg + 1.1 scale -> 2-3px]
 
 	=> check what the affine accuracy is on patches
 		-> visualize in-process example
-
-
-
 
 
 function ImageMatScaled(image, scaler){
