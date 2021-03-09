@@ -394,15 +394,73 @@ MISSING:
 	- find places with poor accuracy
 
 
+- try 2x location update on subdivision
+	- 21 search pixels
+	- 1/2 feature size search size 
+
+	subDivideUpdateMatchLocation
+
+
+solvePairF:
+	- a lot of really bad point matches
+		> why are bad ones being added?
+
+
 solvePairF: 
-	- a lot of really bad affines (visually)
+	x a lot of really bad affines (visually)
+	- some poor refined affines ?
+
 
 DELTA A: 113 191 182 186 10996 17697    0 
 DELTA B: 2917 1117 876 827 4106 1409    1 
 DELTA C: 0  0  0  0  1564  0  0         3 
 DELTA D: 397 432 392 632 704 653        2 
 
-...............
+
+
+FEATURE SIZE | WINDOW SIZE | WINDOW MASK | WINDOW BLUR | AFFINE MODEL | ITERATION | SOURCE
+
+.............................................
+affine initialization:
+	- permutations:
+		- INITIAL AFFINE
+			- initial match estimate
+			- neighborhood points - rotation & affine
+			- F rotation + initial scale estimate
+		- FEATURE SIZE
+			- effective average of features
+			- 0.02
+			- 0.05
+		- REFINEMENT
+			- visual 5x5
+			- visual 7x7
+			- visual 9x9
+		- WINDOW BLURRING
+			- none
+			- 1 px
+		- WINDOW (MASK)
+			- square
+			- circle
+		- REFINMENT ALGORITHM
+			- SAD (abs)
+			- SAD normalized
+			- SSD (abs)
+			- SSD normalized
+			- NCC
+		- AFFINE MODEL
+			- x+y directions (4 vars)
+			- scale + rotation (2 vars)
+		- IMPROVEMENT METHOD:
+			- gradient descent
+			- coordinated variable coverage with decreasing ranges ~ bisection
+				- makes more sense w/ scale & rotation
+		- IMAGE SOURCE
+			- flat
+			- gradient
+			- other metric? (corners)?
+.............................................
+
+- 
 
 
 

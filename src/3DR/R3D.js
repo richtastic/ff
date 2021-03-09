@@ -34982,6 +34982,296 @@ R3D.approximateScaleRotationFromTransform2D = function(matrix, origin){
 }
 
 
+
+R3D.experimentLocationRefine = function(samplesA,samplesB,affinesAB, imageScalesA,imageScalesB){
+	var len = samplesA.length;
+	// var pointsA = [];
+	// var pointsB = [];
+	var newsB = [];
+	// var affines = [];
+	var scores = [];
+	// console.log("LENGTH: "+samplesA.length);
+
+	var featureSize = imageScalesA.size().length() * 0.05;
+
+	var needleSize = 11;
+	var haystackSize = needleSize*2 + 1;
+
+	
+	var needle = new ImageMat(needleSize,needleSize);
+	var haystack = new ImageMat(haystackSize,haystackSize);
+
+	for(var i=0; i<len; ++i){
+		var pointA = samplesA[i];
+		var pointB = samplesB[i];
+		var affineAB = affinesAB[i];
+		var result = R3D.optimumSADLocationSearchFlatRGB(pointA,pointB, imageScalesA,imageScalesB, featureSize, needleSize,haystackSize, affineAB, needle,haystack);
+		var newB = result["point"];
+		var score = result["score"];
+		var d = V2D.distance(pointB,newB);
+		// console.log(d+"");
+		newsB.push(newB);
+		scores.push(score);
+	}
+
+	return {"A":samplesA, "B":newsB, "affines":affinesAB, "scores":scores};
+}
+
+R3D.experimentAffineRefine = function(samplesA,samplesB,affinesAB, imageScalesA,imageScalesB){
+	var len = samplesA.length;
+	var pointsA = [];
+	var pointsB = [];
+	var affines = [];
+	var scores = [];
+	// console.log("LENGTH: "+samplesA.length);
+	for(var i=0; i<len; ++i){
+// i = 0;
+// i = 10;
+// i = 20;
+// i = 30;
+// i = 40;
+// i = 50;
+// i = 60;
+// i = 70;
+// i = 80;
+// i = 100; // wrong match
+// i = 110;
+// i = 120;
+// i = 130;
+// i = 140;
+		var pointA = samplesA[i];
+		var pointB = samplesB[i];
+		var affine = affinesAB[i];
+		var result = R3D.experimentAffineRefineSingle(pointA,pointB,affine, imageScalesA,imageScalesB);
+		// console.log(result);
+		pointsA.push(result["A"]);
+		pointsB.push(result["B"]);
+		affines.push(result["affine"]);
+		scores.push(result["score"]);
+		// throw "?"
+	}
+
+
+
+
+	// throw "here";
+	return {"A":pointsA, "B":pointsB, "affines":affines, "scores":scores};
+}
+
+R3D.experimentAffineRefineSingle = function(pointA,pointB,affineAB, imageScalesA,imageScalesB, featureSize,rangeAngle,rangeScale,rangeIterations){
+	// FEATURE SIZE | WINDOW SIZE | WINDOW MASK | WINDOW BLUR | AFFINE MODEL | ITERATION | SOURCE
+
+	//  ,featureSize, rangeAngle,rangeScale,maxIterations
+
+	// visual refinement
+	var info = R3D.experimentAffineRefineSingle_A(pointA,pointB,affineAB, imageScalesA,imageScalesB, featureSize,rangeAngle,rangeScale,rangeIterations);
+	// console.log(info);
+	var score = info["score"];
+	var scale = info["scale"];
+	var angle = info["angle"];
+	var affine = new Matrix2D();
+		affine.identity();
+		affine.scale(scale);
+		affine.rotate(angle);
+	// R3D.optimizeMatchingAffineCorner(pointA,pointB, imageScalesA,imageScalesB, featureSize,compareSize,    matrixIn, maxIterations, gradientA,gradientB);
+	// throw "?";
+	return {"score":score, "affine":affine, "A":pointA, "B":pointB};
+}
+// rotation + scale | SAD | range sweep / reducing | 
+R3D.experimentAffineRefineSingle_A = function(pointA,pointB,affineAB, imageScalesA,imageScalesB, featureSize,rangeAngle,rangeScale,rangeIterations){
+	var startingScaleRange = rangeAngle!==undefined ? Math.log(rangeAngle) : 0.5; // ln([0.25 0.5 1.0]) = [1.28,1.64,2.7] /// 0.25-0.5
+	var startingAngleRange = rangeScale!==undefined ? rangeScale : Code.radians(30); // 30-60
+
+	// console.log(pointA,pointB,affineAB, imageScalesA,imageScalesB);
+	var info = R3D.infoFromAffine2D(affineAB);
+	var scale = info["scale"];
+	var angle = info["angle"];
+	var currentAngle = angle;
+	var currentScale = Math.log(scale);
+
+
+// currentAngle = Code.radians(25);
+// currentAngle = Math.log(1.5);
+
+	var currentAngleRange = startingAngleRange;
+	var currentScaleRange = startingScaleRange;
+	var maxIterations = 5;
+	// var maxIterations = 7;
+	var sampleSize = featureSize!=undefined ? featureSize : imageScalesA.size().length() * 0.05;
+	var needleSize = 11;
+	var halfCenter = needleSize*0.5 | 0;
+	// console.log("sampleSize: "+sampleSize+" @ "+halfCenter);
+	// A & B static images
+	var needleA = new ImageMat(needleSize,needleSize);
+	var needleB = new ImageMat(needleSize,needleSize);
+	var needleAB = new ImageMat(needleSize,needleSize);
+	var needleBA = new ImageMat(needleSize,needleSize);
+	// var mask = null;
+	var mask = ImageMat.circleMask(needleSize);
+	// 
+	var totalScale;
+	var affine = new Matrix2D();
+	var needleToFeatureSize = sampleSize/needleSize;
+	// matrix.copy(affine);
+	// affine.inverse();
+	// affine.scale(scale);
+	// A
+	affine.identity();
+		affine.scale(needleToFeatureSize);
+		totalScale = affine.averageScale();
+		ImageMatScaled.affineToLocationTransform(affine,affine, halfCenter,halfCenter,pointA.x,pointA.y);
+		imageScalesA.extractRectFast(needleA, totalScale, affine);
+	// B
+	affine.identity();
+		affine.scale(needleToFeatureSize);
+		totalScale = affine.averageScale();
+		ImageMatScaled.affineToLocationTransform(affine,affine, halfCenter,halfCenter,pointB.x,pointB.y);
+		imageScalesB.extractRectFast(needleB, totalScale, affine);
+
+if(false){
+var offX = 10;
+var offY = 10;
+var sss = 3.0;
+var img = GLOBALSTAGE.getFloatRGBAsImage(needleA.red(),needleA.grn(),needleA.blu(), needleA.width(),needleA.height());
+	var d = new DOImage(img);
+	GLOBALSTAGE.addChild(d);
+	d.graphics().alpha(1.0);
+	d.matrix().scale(sss);
+	d.matrix().translate(offX + 0, offY + 0);
+var img = GLOBALSTAGE.getFloatRGBAsImage(needleB.red(),needleB.grn(),needleB.blu(), needleB.width(),needleB.height());
+	var d = new DOImage(img);
+	GLOBALSTAGE.addChild(d);
+	d.graphics().alpha(1.0);
+	d.matrix().scale(sss);
+	d.matrix().translate(offX + 0, offY + 100);
+}
+	// TODO: can use lookup for scales & angles that are already chosen
+var xxx = 0;
+var yyy = 0;
+	for(var iteration=0; iteration<maxIterations; ++iteration){
+		var bestScore = null;
+		var bestAngle = null;
+		var bestScale = null;
+		for(var s=0; s<3; ++s){
+			var logScale = currentScale + (s-1)*currentScaleRange;
+			var scale = Math.exp(logScale);
+				// console.log("scale: "+s+" = "+scale);
+			for(var a=0; a<3; ++a){
+				var angle = currentAngle + (a-1)*currentAngleRange;
+					// console.log("angle: "+a+" = "+Code.degrees(angle));
+				// A->B
+				affine.identity();
+					affine.rotate(angle);
+					affine.scale(scale);
+					affine.scale(needleToFeatureSize);
+					totalScale = affine.averageScale();
+					ImageMatScaled.affineToLocationTransform(affine,affine, halfCenter,halfCenter,pointB.x,pointB.y);
+					imageScalesB.extractRectFast(needleAB, totalScale, affine);
+				// B->A
+				affine.identity();
+					affine.rotate(-angle);
+					affine.scale(1.0/scale);
+					affine.scale(needleToFeatureSize);
+					totalScale = affine.averageScale();
+					ImageMatScaled.affineToLocationTransform(affine,affine, halfCenter,halfCenter,pointA.x,pointA.y);
+					imageScalesA.extractRectFast(needleBA, totalScale, affine);
+				// score A
+				var scoreA = R3D._gd_SAD_OFFSET_UNIT_IMAGES(needleB,needleAB, mask);
+				// score B
+				var scoreB = R3D._gd_SAD_OFFSET_UNIT_IMAGES(needleA,needleBA, mask);
+				var score = scoreA+scoreB;
+				// console.log("             = "+score)
+				if(bestScore==null || score<bestScore){
+					bestScore = score;
+					bestScale = logScale;
+					bestAngle = angle;
+				}
+
+
+
+
+//18?
+				// DISPLAY THESE
+if(false){
+var offX = 10 + 100 + yyy*150;
+var offY = 10 + xxx*2*50;
+var sss = 3.0;
+var img = GLOBALSTAGE.getFloatRGBAsImage(needleAB.red(),needleAB.grn(),needleAB.blu(), needleAB.width(),needleAB.height());
+	var d = new DOImage(img);
+	GLOBALSTAGE.addChild(d);
+	d.graphics().alpha(1.0);
+	d.matrix().scale(sss);
+	d.matrix().translate(offX + 0, offY + 0);
+var img = GLOBALSTAGE.getFloatRGBAsImage(needleBA.red(),needleBA.grn(),needleBA.blu(), needleBA.width(),needleBA.height());
+	var d = new DOImage(img);
+	GLOBALSTAGE.addChild(d);
+	d.graphics().alpha(1.0);
+	d.matrix().scale(sss);
+	d.matrix().translate(offX + 0, offY + 50);
+var t = Code.scientificNotation(score,5);
+var d = new DOText(" "+t+" ", 12, DOText.FONT_ARIAL, 0xFFFF0000, DOText.ALIGN_LEFT);
+	d.matrix().translate(offX + 50, offY + 12);
+	GLOBALSTAGE.addChild(d);
+}
+
+				++xxx; // for each possible score
+			}
+		}
+		// console.log("best score: "+bestScore+" @ "+Math.exp(bestScale)+" "+Code.degrees(bestAngle));
+		currentScale = bestScale;
+		currentAngle = bestAngle;
+		// next
+		currentAngleRange = currentAngleRange * 0.5;
+		currentScaleRange = currentScaleRange * 0.5;
+
+		xxx = 0;
+		++yyy;
+		// break;
+	}
+
+
+	// console.log("   = final best score: "+bestScore+" @ "+Math.exp(bestScale)+" "+Code.degrees(bestAngle));
+
+	// throw "..."
+	return {"score":bestScore, "scale":Math.exp(bestScale), "angle":bestAngle};
+}
+
+/*
+.............................................
+affine initialization:
+	- permutations:
+		- INITIAL AFFINE
+			- initial match estimate
+			- neighborhood points - rotation & affine
+			- F rotation + initial scale estimate
+		- FEATURE SIZE
+			- effective average of features
+			- 0.02
+			- 0.05
+		- REFINEMENT
+			- visual 5x5
+			- visual 7x7
+			- visual 9x9
+		- WINDOW BLURRING
+			- none
+			- 1 px
+		- WINDOW (MASK)
+			- square
+			- circle
+		- REFINMENT ALGORITHM
+			- SAD (abs)
+			- SAD normalized
+			- SSD (abs)
+			- SSD normalized
+			- NCC
+		- AFFINE MODEL
+			- x+y directions (4 vars)
+			- scale + rotation (2 vars)
+		- 
+.............................................
+*/
+
+
 R3D.bestTransformationFromPoints = function(imageA,pointA, imageB,pointB, cellSize, inputScales, inputRotations, inputSkewScales, inputSkewRotations){
 	var imageARed = imageA.red();
 	var imageAGrn = imageA.grn();

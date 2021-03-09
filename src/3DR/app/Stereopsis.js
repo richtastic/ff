@@ -6402,7 +6402,7 @@ world.checkValidateMatches();
 		world.estimate3DErrors(false);
 
 
-break; // exit
+// break; // exit
 
 
 timeB = Code.getTimeMilliseconds();
@@ -6414,7 +6414,8 @@ timeA = Code.getTimeMilliseconds();
 world.checkValidateMatches();
 		// expand good points:
 		// world.probe2DCellsF(    3.0, 3.0  );
-		world.probe2DCellsF(2.0,2.0);
+		// world.probe2DCellsF(2.0,2.0);
+		world.probe2DCellsF(999.0,999.0);
 		// world.estimate3DErrors(false);
 world.checkValidateMatches();
 
@@ -6451,6 +6452,8 @@ timeA = Code.getTimeMilliseconds();
 timeB = Code.getTimeMilliseconds();
 console.log("DELTA D: " + (timeB-timeA) );
 
+
+// break; // exit
 
 	}
 	// world.estimate3DErrors(false);
@@ -6987,9 +6990,11 @@ Stereopsis.World.prototype._resolutionProcessingModeAffineFromVisual2D = functio
 	// TODO: Add reuse images & mask
 	// console.log("_resolutionProcessingModeAffineFromVisual2D "+newMatch.point2DA().point2D()+" - "+newMatch.point2DB().point2D());
 
+
+// throw "resolve here ?"
 	var viewA = newMatch.viewA();
 	var viewB = newMatch.viewB();
-	var featureSize = (viewA.compareSize()+viewB.compareSize())*0.5;
+	var featureSize = viewA.compareSize(); //(viewA.compareSize()+viewB.compareSize())*0.5;
 	var affineSize = featureSize * 2.0; // bigger area is more stable ....
 	var compareSize = Math.min(Math.max(affineSize,3),7); // 5 - 9
 	var maxIterations = 15;
@@ -7004,12 +7009,20 @@ Stereopsis.World.prototype._resolutionProcessingModeAffineFromVisual2D = functio
 			throw "found NaN in match affine";
 		}
 	}
-	var result = R3D.optimizeSADAffineCorner(newMatch.point2DA().point2D(),newMatch.point2DB().point2D(),
-		viewA.imageScales(),viewB.imageScales(),
-		featureSize, compareSize, affine, maxIterations);
+
+	var maxIterations = 3;
+	var rangeScale = 1.25;
+	var rangeAngle = Code.radians(15); // TODO: this depends on the division percent : feature size to source size
+	var result = R3D.experimentAffineRefineSingle(newMatch.point2DA().point2D(),newMatch.point2DB().point2D(),affine, viewA.imageScales(),viewB.imageScales(),featureSize, rangeAngle,rangeScale,maxIterations);
 	var affine = result["affine"];
+// console.log(result);
+// throw "result";
 
-
+// console.log("here  ................ affine");
+	// var result = R3D.optimizeSADAffineCorner(newMatch.point2DA().point2D(),newMatch.point2DB().point2D(),
+	// 	viewA.imageScales(),viewB.imageScales(),
+	// 	featureSize, compareSize, affine, maxIterations);
+	// var affine = result["affine"];
 
 	newMatch.affine(affine);
 }
@@ -13428,7 +13441,8 @@ Stereopsis.World.prototype.probe3DGlobal = function(errorSigmaCheck, errorSigmaK
 					// var needleSize = Stereopsis.compareSizeForViews2D(viewB,centerB, viewA,centerA);
 					// var haystackRelativeSize = needleSize * 2;
 					// var result = R3D.optimumNeedleHaystackAtLocation(imageScalesCurrent,current2D, imageScalesNew,center2D, needleSize,haystackRelativeSize, affine2D, compareSize);
-					var result = Stereopsis.World.prototype.bestNeedleHaystackFromLocation(centerA,centerB, existingA, affineAB, viewA,viewB);
+throw "here ?"
+					var result = Stereopsis.World.prototype.bestNeedleHaystackFromLocation(centerA,centerB, existingA, affineAB, viewA,viewB, isR);
 					newScores.push(result["score"])
 					newPoints.push(result["point"]);
 				}
@@ -14162,7 +14176,8 @@ throw "OLD";
 					var affine = match.affineForViews(viewA,viewB);
 					var centerA = point2DA;
 					var centerB = pointB.point2D();
-					var newMatch = world.bestNeedleHaystackMatchFromLocation(centerA,centerB, centerA, affine, viewA,viewB);
+					throw "old?";
+					var newMatch = world.bestNeedleHaystackMatchFromLocation(centerA,centerB, centerA, affine, viewA,viewB, old);
 					if(newMatch){
 						Stereopsis.updateErrorForMatch(newMatch);
 						var fError = newMatch.errorF();
@@ -14377,7 +14392,7 @@ Stereopsis.World.prototype.probe2DCellsRF = function(sigmaMaximumSelect, sigmaMa
 					}
 
 					// 
-					var newMatch = world.bestNeedleHaystackMatchFromLocation(centerA,centerB, newPointA, affine, viewA,viewB);
+					var newMatch = world.bestNeedleHaystackMatchFromLocation(centerA,centerB, newPointA, affine, viewA,viewB, isR);
 					if(newMatch){
 						// console.log("got newMatch IN "+e);
 						var affine = newMatch.affine();
@@ -14845,18 +14860,33 @@ Stereopsis.World.prototype.subDivideUpdateMatchLocation = function(){ // 2D upda
 	// var needleSize = 21;
 	// low def:
 	var needleSize = 11; // 7-11
-
-	// var haystackSize = needleSize + 2; // maximum movement 1 px
 	var haystackSize = needleSize + 2; // maximum movement 1 px
+
+	var needleRefineSize = 21;
+	var haystackRefineSize = needleRefineSize + 2; // 2-4 ?
+
 
 	var needle = world._subDivideUpdateMatchLocation_TEMP_NEEDLE;
 	var haystack = world._subDivideUpdateMatchLocation_TEMP_HAYSTACK;
+
+	var needleRefine = world._subDivideUpdateMatchLocation_TEMP_NEEDLE_REFINE;
+	var haystackRefine = world._subDivideUpdateMatchLocation_TEMP_HAYSTACK_REFINE;
 	if(!needle){
 		needle = new ImageMat(needleSize,needleSize);
 		haystack = new ImageMat(haystackSize,haystackSize);
 		world._subDivideUpdateMatchLocation_TEMP_NEEDLE = needle;
 		world._subDivideUpdateMatchLocation_TEMP_HAYSTACK = haystack;
+
+		needleRefine = new ImageMat(needleRefineSize,needleRefineSize);
+		haystackRefine = new ImageMat(haystackRefineSize,haystackRefineSize);
+		world._subDivideUpdateMatchLocation_TEMP_NEEDLE_REFINE = needleRefine;
+		world._subDivideUpdateMatchLocation_TEMP_HAYSTACK_REFINE = haystackRefine;
 	}
+
+
+
+
+
 	var points3D = world.toPointArray();
 	var averagePointDistance = 0;
 	var averagePointCount = 0;
@@ -14891,7 +14921,19 @@ Stereopsis.World.prototype.subDivideUpdateMatchLocation = function(){ // 2D upda
 				var pointB = point2DB.point2D();
 				var result = R3D.optimumSADLocationSearchFlatRGB(pointA,pointB, imageScalesA,imageScalesB, compareSize, needleSize,haystackSize, affineAB, needle,haystack);
 				var best = result["point"];
+				// var dist = V2D.distance(best,pointB);
+
+
+				// using this new location, use 2x needle size & half area to get sub-pixel accuracy
+
+				var halfCompareSize = compareSize * 0.5;
+				var result = R3D.optimumSADLocationSearchFlatRGB(best,pointB, imageScalesA,imageScalesB, halfCompareSize, needleRefineSize,haystackRefineSize, affineAB, needleRefine,haystackRefine);
+				var best = result["point"];
 				var dist = V2D.distance(best,pointB);
+
+				
+
+
 				// console.log(" "+dist+" "+pointB+" -> "+best);
 				averagePointDistance += dist;
 				averagePointCount += 1;
@@ -17311,7 +17353,8 @@ Stereopsis.World.prototype._resolveIntersectionLayered = function(point3DA,point
 							var featureSize = Stereopsis.compareSizeForViews2D(viewA,centerA,viewB,centerB);
 							// TODO: needleSize,haystackSize - can be reused
 							// bestNeedleHaystackFromLocation
-							var result = R3D.optimumSADLocationSearchFlatRGB(centerA,centerB, imageA,imageB, featureSize, needleSize,haystackSize, affineAB, needle, haystack);
+							throw "here?"
+							var result = R3D.optimumSADLocationSearchFlatRGB(centerA,centerB, imageA,imageB, featureSize, needleSize,haystackSize, affineAB, needle, haystack, isR);
 							var locationB2D = result["point"];
 							locationsB2D.push(locationB2D);
 						}
@@ -19662,9 +19705,9 @@ throw "this is not done"
 }
 
 Stereopsis.COMPARE_HAYSTACK_NEEDLE_SIZE = 11;
-Stereopsis.World.prototype.bestNeedleHaystackMatchFromLocation = function(centerA,centerB, existingA, affineAB, viewA,viewB){
+Stereopsis.World.prototype.bestNeedleHaystackMatchFromLocation = function(centerA,centerB, existingA, affineAB, viewA,viewB, isR){
 	var world = this;
-	var result = world.bestNeedleHaystackFromLocation(centerA,centerB, existingA, affineAB, viewA,viewB);
+	var result = world.bestNeedleHaystackFromLocation(centerA,centerB, existingA, affineAB, viewA,viewB, isR);
 	var pointB = result["point"];
 if(Code.isNaN(existingA.x) || Code.isNaN(existingA.y) || Code.isNaN(centerA.x) || Code.isNaN(centerA.y) || Code.isNaN(centerB.x) || Code.isNaN(centerB.y) || Code.isNaN(pointB.x) || Code.isNaN(pointB.y)){
 	console.log(centerA);
@@ -19678,7 +19721,7 @@ if(Code.isNaN(existingA.x) || Code.isNaN(existingA.y) || Code.isNaN(centerA.x) |
 	var match = world.newMatchFromInfo(viewA,existingA,viewB,pointB,affineAB);
 	return match;
 }
-Stereopsis.World.prototype.bestNeedleHaystackFromLocation = function(centerA,centerB, existingA, affineAB, viewA,viewB){
+Stereopsis.World.prototype.bestNeedleHaystackFromLocation = function(centerA,centerB, existingA, affineAB, viewA,viewB, isR){
 	var world = this;
 	var featureSize = Stereopsis.compareSizeForViews2D(viewA,centerA,viewB,centerB);
 	var predictedB = affineAB.multV2D( V2D.sub(existingA,centerA) ).add(centerB);
@@ -19689,21 +19732,18 @@ var actualSizePerPixel = featureSize/needleSize;
 
 var transform = world.transformFromViews(viewA,viewB)
 // console.log(transform);
-
-var rMean = transform.rMean();
-var rSigma = transform.rSigma();
-// var errorR = rMean + 1.0*rSigma; // no wiggle
-var errorR = rMean + 2.0*rSigma; // 2-3 sigma
-// var errorR = rMean + 3.0*rSigma; // much wiggle
-
-// console.log(errorR);
-
-var haystackMargin = Math.ceil(errorR/actualSizePerPixel);
-
+var haystackSizeMax = needleSize * 2 + 1;
+var haystackMargin = haystackSizeMax;
+if(isR){
+	var rMean = transform.rMean();
+	var rSigma = transform.rSigma();
+	// var errorR = rMean + 1.0*rSigma; // no wiggle
+	var errorR = rMean + 2.0*rSigma; // 2-3 sigma
+	// var errorR = rMean + 3.0*rSigma; // much wiggle
+	// console.log(errorR);
+	haystackMargin = Math.ceil(errorR/actualSizePerPixel);
+}
 // console.log(haystackMargin);
-	
-	var haystackSizeMax = needleSize * 2;
-
 	var haystackSize = Math.min(needleSize + 2*haystackMargin, haystackSizeMax);
 
 // console.log(haystackSize);
