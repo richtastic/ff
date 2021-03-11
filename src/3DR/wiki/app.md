@@ -387,11 +387,196 @@ MISSING:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+x some kinda stall in loop
+
+- interpolating minimum IN PRACTICE is worse than just finding the lowest pixel?
+	- maybe some other step is wrong?
+	- zoom/scale?
+	=> keep testing localizing, using real images / scores
+
+	... are pixel positions off by 0.5 anywhere?
+	- ImageMat pixel color interpolation
+	- subDivideUpdateMatchLocation / optimumSADLocationSearchFlatRGB / R3D.minimumFromValues
+	=> i,j IS CENTER OF COLOR/VALUE
+
+
+- how are affines updated for patches when R is known?
+
+- when optimizing P2D+P2D+P3D - reprojection error:
+	- can move one of the P2D?
+	- can move just the P3D?
+		- look at estimates before & after ?
+
+...
+
+- try to trim down time costs in main loop
+
+
+
+subDivideUpdateMatchLocation - averagePointDistance:
+..... reg+2:
+1.318
+0.898
+0.608
+..... BLUR+2 (same as reg+2?):
+1.314
+0.936
+0.626
+.....
+1.412
+0.908
+0.609
+.....
+1.353
+1.033
+0.648
+
+..... BLUR+4 v reg+2
+2.286 v 1.315
+1.449 v 0.967
+0.956 v 0.598
+
+
+DENSE:
+R : 0.00011859111814159077 +/- 1.5088402384724857
+TRACKS:
+R : 0.00020309462622313242 +/- 0.34478687037140776
+
+v
+
+DENSE:
+R : 0.00008185975972068265 +/- 1.419965857447991
+TRACKS:
+R : 0.00016873502458451792 +/- 0.3318345924641713
+.....
+
+.....
+
+subDivideUpdateMatchLocation - averagePointDistance:
+
+
+(1832*1920)/(1440*1600) = 1.5 x
+
+- what to do about areas that have large lighting changes
+	- windows reflection is very different from view to view
+	- ... a correct point will still have a bad NCC score
+
+
+- test by using only 1-5 very correct pairs and seeing if the seeds are all that matters?
+	(don't subdivide till late)
+
+
+
+- a way for propagated points to test to see if other groups are valid?
+- a way for points to retry neighbors (non-empty neighbor scenario) to check?
+
+
+=> need to 'eat away' at the bad seed's propagated points
+
+
+=> want to retry cells even if there is already an item there
+
+- GROUP PROPAGATION:
+- propagated point (or seed point) has a group ID
+	- when two points from different groups meet up:
+		- propagate into new area
+		- if current inhabitant is better than possible new point
+			=> set to 'mute'
+		- else
+			=> add propagation point
+
+	- only care about perimeter?
+
+- GP2:
+	- each cell is assigned to the best NCC score match group ID
+
+- complicates MERGES of P3D ....
+
+- how to 'choose' which is 'better'
+- ncc?
+
+- each group has:
+	- id
+	- perimeter cells
+	- 
+	- groups do not merge ... they only disappear when all seeds become extinct
+
+- propagation by group only needs to happen at the most sparse level
+
+
+
+
+- test moving some matches by 1 pixel and seeing what the differente wrt the camera base length is
+
+debugInvestigationA
+
+1 pixel difference:
+0.01667
+0.02620
+0.02162
+0.02116
+0.0237
+
+-> move one of the 2D positions until it is as close to the 3D neighborhood average as possible?
+	- or average distance from camera at least ?
+
+
+
+SUBDIVISION TESTS: subDivideUpdateMatchLocation - averagePointDistance:
+-----------------
+21@2 x1:
+3.555
+2.437
+2.141
+-----------------
+41@2 x1:
+1.664
+1.263
+1.005
+-----------------
+41@2 x2:
+0.807
+0.608
+0.552
+-----------------
+41@4 x2:
+1.306
+0.946
+0.777
+-> 0.769
+-----------------
+
+
+
+- use higher resolution image
+- have some poor matches -- big z-delta 
+	=> need to try to drop those points
+	- not necessarily OBSTRUCTING, but not near other points on surface (distance from camera is quite different)
+
+
+--- nonlinear location best estimate is not very good 
+
+- test with a made up altitude function & see if that helps?
+- maybe do sqrt(f(x)) ?
+
+
+
+was this part of it?:
+
+world.setResolutionProcessingModeFromCountP3D([0,0,0]); // to highest
+
+
+
 
 - new dataset --- & test stuff along the way
 
 	- find places that take a long time
 	- find places with poor accuracy
+
+- why are final 3D results so fuzzy?
+- way to do regularization?
+	- average scale/rotation ?
+		- after dropping outliers?
 
 
 - try 2x location update on subdivision

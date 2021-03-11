@@ -8148,13 +8148,13 @@ if(!relativeAB && isDense){
 
 			if(relativeAB){ // dense
 				// console.logx(camAID,camBID,cameras);
-throw "this is for dense"
+				// throw "this is for dense"
 				console.log(relativeAB);
 				configuration = {};
 				project.calculatePairMatchWithRFromViewIDs(idA,idB, relativeAB, camAID,camBID,cameras, completePairFxn,project, configuration);
 				return;
 			} // else: sparse = w/o known R
-			// throw "this is for sparse"
+			throw "this is for sparse"
 			var cameras = inputData["cameras"];
 			project.calculatePairMatchFromViewIDs(idA,idB, camAID,camBID,cameras, completePairFxn,project);
 			return;
@@ -10404,7 +10404,7 @@ App3DR.ProjectManager.prototype.densePutativePairsFromPointList = function(views
 	// 	compareScores.push(entry);
 	// }
 
-throw "here: showViewSimilarities?"
+// throw "here: showViewSimilarities?"
 	project.showViewSimilarities(compareScores, viewIDs, 700);
 
 	return {"pairs":minimalPairs};
@@ -12577,13 +12577,7 @@ App3DR.ProjectManager.prototype.calculatePairMatchWithRFromViewIDs = function(vi
 
 
 
-
-	console.log("TODO: THESE NUMBERS FROM HYPOTENUSE ?");
-
-	var maxErrorRDensePixels = 10; // 2-5 on 1024
-	var maxErrorFDensePixels = 10;
-	var maxErrorRTrackPixels = 5; // 0-1 åon 1024
-	var maxErrorFTrackPixels = 5;
+	var errorSearchRMaximumPercent = 0.02; // 0.01 - 0.02
 
 
 	var maxErrorRDensePercent = 0.004; // 4 on 1024
@@ -12696,11 +12690,17 @@ console.log(world);
 		console.log(relativeAB);
 		var P = viewB.absoluteTransform();
 		console.log(P);
-		var result = R3D.searchMatchPointsPair3D(imageScalesA,imageScalesB, P, KimageA,KimageB); // forward
+GLOBALSTAGE.root().matrix().scale(0.50);
+		var result = R3D.searchMatchPointsPair3D(imageScalesA,imageScalesB, P, KimageA,KimageB, errorSearchRMaximumPercent); // forward
 		console.log(result);
 		var pointsA = result["A"];
 		var pointsB = result["B"];
 		var affinesAB = result["affines"];
+		console.log("GOT: R3D.searchMatchPointsPair3D : "+pointsA.length);
+		
+		// var error = R3D.reprojectionErrorList(estimated3D, reprojected2DA, reprojected2DB, camIdentity,camAtoB, K,K);
+
+		// var rError = R3D.reprojectionError(???);
 
 // throw "AFTER searchMatchPointsPair3D"
 
@@ -12739,10 +12739,10 @@ console.log(world);
 
 
 
-		var str = world.toYAMLString();
-		console.log(str);
+		// var str = world.toYAMLString();
+		// console.log(str);
 
-// throw "???"
+// throw "before save solveDensePairNew"
 
 		var goodEnoughMatches = true;
 
@@ -12886,14 +12886,18 @@ console.log("calculatePairMatchFromViewIDs")
 		}, self);
 	}
 	var fxnC = function(){ // load matching Image A
-		viewA.loadMatchingImage(function(){
-			imageA = viewA.matchingImage();
+		// viewA.loadMatchingImage(function(){
+		viewA.loadDenseHiImage(function(){
+			// imageA = viewA.matchingImage();
+			imageA = viewA.anyLoadedImage();
 			fxnReadyCheck();
 		}, self);
 	}
 	var fxnD = function(){// load matching Image B
-		viewB.loadMatchingImage(function(){
-			imageB = viewB.matchingImage();
+		// viewB.loadMatchingImage(function(){
+		viewB.loadDenseHiImage(function(){
+			// imageB = viewB.matchingImage();
+			imageB = viewB.anyLoadedImage();
 			fxnReadyCheck();
 		}, self);
 	}
@@ -13515,7 +13519,7 @@ console.log("GET INITIAL F: "+matches.length);
 			var str = world.toYAMLString();
 			console.log(str);
 
-			world.showForwardBackwardPair();
+			// world.showForwardBackwardPair();
 
 
 			var transform0 = world.transformFromViews(view0,view1);
@@ -13599,7 +13603,7 @@ console.log("GET INITIAL F: "+matches.length);
 			// pairDoneSaveFxn();
 		}
 
-		throw "before save pair - world iterate";
+		// throw "before save pair - world iterate";
 
 		console.log(pairData);
 		console.log("goodEnoughMatches?: "+goodEnoughMatches);
@@ -25385,7 +25389,7 @@ App3DR.ProjectManager.View.prototype.matchingImage = function(){
 	return this.featuresImage();
 }
 App3DR.ProjectManager.View.prototype.loadMatchingImage = function(callback, context){
-	this.loadFeaturesImage(callback, context);
+	return this.loadFeaturesImage(callback, context);
 }
 
 

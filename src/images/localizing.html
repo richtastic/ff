@@ -42,9 +42,117 @@ function LocalizeTest(){
 GLOBALSTAGE = this._stage;
 
 	
-	this.testExampleA();
+	// this.testExampleA();
 	// this.testSyntheticA();
 	// this.testScaling();
+
+
+	this.testSubpixel();
+}
+LocalizeTest.prototype.testSubpixel = function(imageInfo){
+
+	var display = this._root;
+
+
+	var scalarFxn = function(x,y){
+		var ox = 0.0;
+		var oy = 0.0;
+		x = x + ox;
+		ys = y + oy;
+		var height = x*x*2.5 + y*y*0.5 + Math.abs(x)*0.5 + Math.abs(y)*1.5;
+		// height = height*height;
+		// height = Math.pow(height,4.0);
+		// height = Math.pow(height,2.0);
+		// height = Math.pow(height,1.0);
+		// height = Math.pow(height,0.5);
+		// height = Math.pow(height,0.1);
+		return height;
+	}
+
+	var needleSize = 11;
+	var haystackSize = needleSize + 4*2;
+	var needleHalf = needleSize*0.5 | 0;
+	var haystackHalf = haystackSize*0.5 | 0;
+	var needle = new ImageMat(needleSize,needleSize);
+	var haystack = new ImageMat(haystackSize,haystackSize);
+
+
+	// var offX = 0.5;
+	// var offY = 1.5;
+	// var off = new V2D(0.25, 1.50);
+	// var off = new V2D(1.0, 2.0);
+	// var off = new V2D(1.5, 2.5);
+	var off = new V2D(1.25, 2.25);
+	// var off = new V2D(1.25, 2.75);
+	// var col = new V3D();
+
+	var gray = new Array(needleSize*needleSize);
+	// var scale = 0.5;
+	for(var y=0; y<needleSize; ++y){
+		for(var x=0; x<needleSize; ++x){
+			var value = scalarFxn( x - needleHalf - off.x ,y - needleHalf - off.y);
+			var index = y*needleSize + x;
+			gray[index] = value;
+			// col.set(value,value,value);
+			// needle.set(x,y, col);
+		}
+	}
+	// ImageMat.normalFloat01(gray);
+
+
+	var blurSigma = 1.0;
+	// var blurSigma = 0.68;
+	var gray = ImageMat.getBlurredImage(gray,needleSize,needleSize, blurSigma);
+
+
+	var scale = 1.0;
+	var point = new V2D(0,0);
+	var info = R3D.minimumFromValues(gray, needleSize, needleSize, point, scale);
+	// console.log(info);
+	var location = info["location"];
+	var score = info["score"];
+	console.log(location+" : "+score+" ["+V2D.distance(location,off)+"]");
+
+	var heat = gray;
+	var wid = needleSize;
+	var hei = needleSize;
+	var colors = [0xFF000099, 0xFF0000FF, 0xFFCC00CC, 0xFFFF0000, 0xFF990000, 0xFFFFFFFF];
+	// var colors = [0xFF000099, 0xFF0000FF, 0xFFCC00CC, 0xFFFF0000, 0xFF990000, 0xFFFFFFFF];
+	ImageMat.normalFloat01(heat);
+	// heat = ImageMat.pow(heat,0.25);
+	// heat = ImageMat.pow(heat,0.5);
+
+
+	var sca = 5.0;
+
+	var heat = ImageMat.heatImage(heat, wid, hei, true, colors);
+	var img = GLOBALSTAGE.getFloatRGBAsImage(heat.red(), heat.grn(), heat.blu(), wid, hei);
+	var d = new DOImage(img);
+		d.matrix().scale(sca);
+		d.matrix().translate(10 + 0, 10 + 0);
+	display.addChild(d);
+	
+
+	/*
+	for(var y=0; y<needleSize; ++y){
+		for(var x=0; x<needleSize; ++x){
+			var value = scalarFxn(x - needleHalf,y - needleHalf);
+			col.set(value,value,value);
+			needle.set(x,y, col);
+		}
+	}
+
+	var sca = 5.0;
+	var img = needle;
+		img = GLOBALSTAGE.getFloatRGBAsImage(img.red(),img.grn(),img.blu(), img.width(),img.height());
+	var d = new DOImage(img);
+	d.matrix().scale(sca);
+	d.matrix().translate(10 + 0, 10 + 0);
+	display.addChild(d);
+	offX += image.width();
+	*/
+
+
 }
 LocalizeTest.prototype.testScaling = function(imageInfo){
 

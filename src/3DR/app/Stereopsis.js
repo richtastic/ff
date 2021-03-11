@@ -6430,6 +6430,7 @@ timeA = Code.getTimeMilliseconds();
 		if(subdivide){
 			world.subdivideViewGridsF(subdivisionScaleSize);
 			// update location match at new higher resolution
+			console.log("RICHIE F - subDivideUpdateMatchLocation");
 			world.subDivideUpdateMatchLocation();
 			// SET MATCH AFFINES BASED ON LOCAL 2D NEIGHBORHOODS
 		}
@@ -6746,7 +6747,11 @@ Stereopsis.World.prototype.solvePair = function(completeFxn, completeContext){ /
 // data["splits"] = [4]; // 0 ... 4 .... 9
 
 var maxIterations = 6;
-data["splits"] = [3]; // 0 1 2 [3] 4 5
+// data["splits"] = [3]; // 0 1 2 [3] 4 5
+data["splits"] = [2,4];
+
+// var maxIterations = 7;
+// data["splits"] = [1,3,5];
 	for(var i=0; i<maxIterations; ++i){
 		var shouldQuit = world.iteration(i, maxIterations, data);
 		if(shouldQuit){
@@ -6771,6 +6776,7 @@ Stereopsis.World.prototype.iteration = function(iterationIndex, maxIterations, d
 	var isFirst = iterationIndex == 0;
 	var isLast = iterationIndex == maxIterations-1;
 	console.log("-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+ "+iterationIndex+"/"+maxIterations+" ( "+isFirst+" & "+isLast+" ) ");
+	console.log(data);
 	var world = this;
 	var transforms = world.toTransformArray();
 	var views = world.toViewArray();
@@ -6779,11 +6785,13 @@ Stereopsis.World.prototype.iteration = function(iterationIndex, maxIterations, d
 	// var subdivideRatio = 0.50; // 40 -> 80
 	var subdivideRatio = 0.75; // 40 -> 60
 
-	if(isFirst){ // need to guarantee a loop has passed with at least some set
-		world.setResolutionProcessingModeFromCountP3D([2E3]);
-	}else{
-		world.setResolutionProcessingModeFromCountP3D([2E3,5E3,10E3]);
-	}
+	world.setResolutionProcessingModeFromCountP3D([9E9,9E10,9E11]); // high
+
+	// if(isFirst){ // need to guarantee a loop has passed with at least some set
+	// 	world.setResolutionProcessingModeFromCountP3D([2E3]);
+	// }else{
+	// 	world.setResolutionProcessingModeFromCountP3D([2E3,5E3,10E3]);
+	// }
 	var viewA = views[0];
 	var viewB = views[1];
 	var transAB = world.transformFromViews(viewA,viewB);
@@ -6858,10 +6866,11 @@ world.dropNegativeMatches3D();
 	// subdivide - increase resolution
 	var shouldSubdivide = false;
 	var splits = data["splits"];
+console.log("splits: "+splits);
 	if(splits && splits.length>0){
 		var splitIndex = splits[0];
 		if(iterationIndex==splitIndex){
-			data["splits"].pop();
+			data["splits"].shift();
 			shouldSubdivide = true;
 		}
 	}
@@ -6869,11 +6878,13 @@ world.dropNegativeMatches3D();
 		// increase cell grid resolution & update patches with smaller view angle
 		world.subdivideViewGridsR(subdivideRatio);
 		// update 2D point location precision locally using smaller cell size
+		console.log("RICHIE R-sparse - subDivideUpdateMatchLocation");
 		world.subDivideUpdateMatchLocation();
 	}
 
 	// probe 2D - search empty neighbors for more matches
 	// world.probe2DCellsR(2.0,3.0); // not very daring
+	// world.probe2DCellsR(999.0,999.0);
 	world.probe2DCellsR(3.0,3.0);
 	// world.probe2DCellsR(3.0,4.0); // maybe too daring
 	// world.probe2DCellsR(4.0,4.0);
@@ -6918,7 +6929,14 @@ world.removeNullPoints3D();
 
 	// update patches from change in view orientations
 	world.updateP3DPatchesFromAbsoluteOrientationChange();
-// HERE ?????????
+
+
+
+
+world.debugInvestigationA();
+
+
+
 
 	// update patches now that camera locations/orientations has changed
 	// world.initAllP3DPatches();
@@ -6930,6 +6948,18 @@ console.log("CHECK B");
 		world.dropNegativeMatches3D();
 		world.dropNegativePoints3D();
 	// }
+
+
+	if(isLast){
+		console.log("IS LAST -- UPDATE")
+		world.subDivideUpdateMatchLocation();
+		world.recordViewAbsoluteOrientationStart();
+		world.updateP3DPatchesFromAbsoluteOrientationChange();
+
+		// refinePoint3DAbsoluteLocation
+		// world.refinePoint3DAbsoluteLocation();
+		// world.estimate3DErrors(true);
+	}
 
 }
 
@@ -6947,6 +6977,57 @@ console.log("CHECK B");
 // 	}
 // }
 
+
+
+Stereopsis.World.prototype.debugInvestigationA = function(){
+	var world = this;
+	var distanceRatio = 0;
+	var distancCount = 0;
+	var points3D = world.toPointArray();
+	for(var i=0; i<points3D.length; ++i){
+		var point3D = points3D[i];
+		var locationA = point3D.point();
+		if(locationA){
+			var views = point3D.toViewArray();
+			var points2D = [];
+			var extrinsics = [];
+			var invsK = [];
+			for(var j=0; j<views.length; ++j){
+				var view = views[j];
+				var point2D = point3D.pointForView(view);
+				var p2D = point2D.point2D();
+				var ext = view.absoluteTransform();
+				var inv = view.Kinv();
+				if(j==0){
+					p2D = p2D.copy();
+					p2D.x += 1;
+				}
+				points2D.push(p2D);
+				extrinsics.push(ext);
+				invsK.push(inv);
+			}
+			var locationB = R3D.triangulatePointDLTList(points2D, extrinsics, invsK);
+			if(locationB){
+				for(var j=0; j<views.length; ++j){
+					var view = views[j];
+					var center = view.center();
+					var distanceA = V3D.distance(center,locationA);
+					var distanceB = V3D.distance(center,locationB);
+					var diff = V3D.distance(locationA,locationB);
+					if(distanceA>0){
+						var ratio = diff/distanceA;
+						distanceRatio += ratio;
+						distancCount++;
+					}
+				}
+			}
+		}
+	}
+	if(distancCount>0){
+		distanceRatio /= distancCount;
+	}
+	console.log("debugInvestigationA - average distance with 1px change in 1 P2D: "+distanceRatio+" ("+distancCount+")");
+}
 Stereopsis.World.prototype.initAllP3DPatches = function(points3D){
 	var world = this;
 	if(!points3D){
@@ -7010,10 +7091,11 @@ Stereopsis.World.prototype._resolutionProcessingModeAffineFromVisual2D = functio
 		}
 	}
 
+	var affineSize = featureSize * 2.0;
 	var maxIterations = 3;
 	var rangeScale = 1.25;
 	var rangeAngle = Code.radians(15); // TODO: this depends on the division percent : feature size to source size
-	var result = R3D.experimentAffineRefineSingle(newMatch.point2DA().point2D(),newMatch.point2DB().point2D(),affine, viewA.imageScales(),viewB.imageScales(),featureSize, rangeAngle,rangeScale,maxIterations);
+	var result = R3D.experimentAffineRefineSingle(newMatch.point2DA().point2D(),newMatch.point2DB().point2D(),affine, viewA.imageScales(),viewB.imageScales(),affineSize, rangeAngle,rangeScale,maxIterations);
 	var affine = result["affine"];
 // console.log(result);
 // throw "result";
@@ -7337,10 +7419,6 @@ Stereopsis.World.prototype.initP3DPatchFromGeometry3D = function(point3D){
 		radii.push(radius);
 	}
 	var radius = Code.averageNumbers(radii);
-	// console.log("accurate radius: "+radius);
-// console.log(normal3D);
-// console.log(up3D);
-// console.log(radius);
 	point3D.normal(normal3D);
 	point3D.up(up3D);
 	point3D.size(radius);
@@ -8334,6 +8412,7 @@ world.printPoint3DTrackCount();
 			++subdivision;
 			console.log("subdivision: "+subdivision);
 			world.subdivideViewGridsR(subdivisionMultiplier);
+			console.log("RICHIE R-densegroup - subDivideUpdateMatchLocation");
 			world.subDivideUpdateMatchLocation();
 			// if(subdivision>1){ // -0, -1, +2
 			// 	world.shouldValidateMatchRange(false);
@@ -8720,8 +8799,8 @@ Stereopsis.World.prototype.solveDensePairNew = function(subdivisionScaleSize, su
 
 	var timeStart = Code.getTimeMilliseconds();
 	
-	var errorPercentage = 0.002; // 1% error + no wiggle room   --- 0.001 - 0.005  |  0.001=2.5px 0.005=12.5px
-	var cellFeatureScale = 1.0; // 1-2
+	// var errorPercentage = 0.002; // 1% error + no wiggle room   --- 0.001 - 0.005  |  0.001=2.5px 0.005=12.5px
+	// var cellFeatureScale = 1.0; // 1-2
 	var views = world.toViewArray();
 	var view0 = views[0];
 	var transforms = world.toTransformArray();
@@ -8773,6 +8852,7 @@ var sigmaGlobal3DR = 3.0;
 			++subdivision;
 			console.log("subdivision: "+subdivision);
 			world.subdivideViewGridsR(subdivisionScaleSize);
+			console.log("RICHIE R-dense - subDivideUpdateMatchLocation");
 			world.subDivideUpdateMatchLocation();
 			if(subdivision>1){ // -0, -1, +2
 				world.shouldValidateMatchRange(false);
@@ -14328,9 +14408,16 @@ Stereopsis.World.prototype.probe2DCellsRF = function(sigmaMaximumSelect, sigmaMa
 			var empties = viewA.emptyNeighborCellsForView(viewB);
 			console.log("  "+v+" empties: "+empties.length);
 			var matchesAddList = [];
+
+			// something here leads to an infinite wait
 			for(var e=0; e<empties.length; ++e){
 				var empty = empties[e];
 				var neighbors = empty.neighbors();
+
+
+					neighbors = Code.copyArray(neighbors);
+
+
 				var emptyCenter = empty.center();
 				var bestPoint = null;
 				var bestDistance = null;
@@ -14339,6 +14426,11 @@ Stereopsis.World.prototype.probe2DCellsRF = function(sigmaMaximumSelect, sigmaMa
 				for(var n=0; n<neighbors.length; ++n){
 					var neighbor = neighbors[n];
 					var objects = neighbor.objects();
+
+
+						objects = Code.copyArray(objects);
+
+
 					for(var o=0; o<objects.length; ++o){
 						var object = objects[o];
 						var match = object.matchForView(viewB);
@@ -14370,6 +14462,7 @@ Stereopsis.World.prototype.probe2DCellsRF = function(sigmaMaximumSelect, sigmaMa
 						}
 					}
 				}
+				// console.log("  bestMatch: "+(bestMatch==null));
 				// local possible match to use as seed source
 				if(bestMatch){
 					//console.log("got bestMatch IN "+e);
@@ -14435,6 +14528,7 @@ keep = true;
 								// console.log("got newMatch CREATE "+e);
 
 // problem after here ?
+								
 								if( Code.isNaN( affine.get(0,0) ) ){
 									console.log(centerA);
 									console.log(centerB);
@@ -14443,21 +14537,25 @@ keep = true;
 									throw "found NaN in match affine";
 								}
 								try{
+									// console.log("  uniquenessScore A ");
+									// console.log("  uniquenessScore C1 ");
 									if(isR){
 										// console.log("got newMatch INIT "+e);
 										var point3D = newMatch.point3D();
 										var location3D = point3D.estimated3D();
 										point3D.point(location3D); // not in world yet.
+
+										// console.log("  uniquenessScore IN ");
 										world.initP3DPatchFromMode(point3D);
+										// console.log("  uniquenessScore OUT ");
 										// console.log("got newMatch OUT "+e);
 									}
+									// console.log("  uniquenessScore C2 ");
+									// console.log("  uniquenessScore A ");
 									// console.log("got affineP2DFromMode "+e);
 									world.affineP2DFromMode(newMatch);
-
-
+									// console.log("  uniquenessScore B ");
 									// ???
-
-
 									matchesAddList.push(newMatch);
 									// console.log("got newMatch END "+e);
 								}catch(e){
@@ -14862,8 +14960,16 @@ Stereopsis.World.prototype.subDivideUpdateMatchLocation = function(){ // 2D upda
 	var needleSize = 11; // 7-11
 	var haystackSize = needleSize + 2; // maximum movement 1 px
 
-	var needleRefineSize = 21;
+	// var needleRefineSize = 21;
+	// var doBlur = true;
+	var doBlur = false;
+	var needleRefineSize = 41;
 	var haystackRefineSize = needleRefineSize + 2; // 2-4 ?
+	if(doBlur){
+		haystackRefineSize = needleRefineSize + 4;
+	}
+
+	// TODO: TRY +4 & blurring
 
 
 	var needle = world._subDivideUpdateMatchLocation_TEMP_NEEDLE;
@@ -14927,7 +15033,8 @@ Stereopsis.World.prototype.subDivideUpdateMatchLocation = function(){ // 2D upda
 				// using this new location, use 2x needle size & half area to get sub-pixel accuracy
 
 				var halfCompareSize = compareSize * 0.5;
-				var result = R3D.optimumSADLocationSearchFlatRGB(best,pointB, imageScalesA,imageScalesB, halfCompareSize, needleRefineSize,haystackRefineSize, affineAB, needleRefine,haystackRefine);
+				// var halfCompareSize = compareSize;
+				var result = R3D.optimumSADLocationSearchFlatRGB(best,pointB, imageScalesA,imageScalesB, halfCompareSize, needleRefineSize,haystackRefineSize, affineAB, needleRefine,haystackRefine, doBlur);
 				var best = result["point"];
 				var dist = V2D.distance(best,pointB);
 
@@ -19725,7 +19832,7 @@ Stereopsis.World.prototype.bestNeedleHaystackFromLocation = function(centerA,cen
 	var world = this;
 	var featureSize = Stereopsis.compareSizeForViews2D(viewA,centerA,viewB,centerB);
 	var predictedB = affineAB.multV2D( V2D.sub(existingA,centerA) ).add(centerB);
-	var needleSize = Stereopsis.COMPARE_HAYSTACK_NEEDLE_SIZE;
+	var needleSize = 11;//Stereopsis.COMPARE_HAYSTACK_NEEDLE_SIZE;
 
 var actualSizePerPixel = featureSize/needleSize;
 // console.log(actualSizePerPixel);
@@ -19782,6 +19889,11 @@ if(isR){
 	}
 
 	var result = R3D.optimumSADLocationSearchFlatRGB(existingA,predictedB, viewA.imageScales(),viewB.imageScales(), featureSize, needleSize,haystackSize, affineAB, reuseNeedle,reuseHaystack);
+
+	// TODO: maybe more sub-pixel accuracy increasing?
+
+
+
 	return result;
 }
 Stereopsis.World.prototype.bestAffine2DFromLocation = function(affine,centerA,centerB, existingA, viewA,viewB, forwardBackwardCheck, skipOptimum){

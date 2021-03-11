@@ -14247,7 +14247,7 @@ R3D.testOptimumLocationHelperDebug = function(needle,haystack, scores, offx,offy
 
 R3D.DEBUG_SS_A=0;
 R3D._temp_matrix2D = new Matrix2D();
-R3D.optimumSADLocationSearchFlatRGB = function(pointA,pointB, imageScalesA,imageScalesB, featureSize,needleSize,haystackSize, affine, reuseNeedle, reuseHaystack){
+R3D.optimumSADLocationSearchFlatRGB = function(pointA,pointB, imageScalesA,imageScalesB, featureSize,needleSize,haystackSize, affine, reuseNeedle, reuseHaystack, doBlurring){
 	var inScale = (featureSize/needleSize);
 	var halfNeedle = (needleSize-1)*0.5;
 	var halfHaystack = (haystackSize-1)*0.5;
@@ -14278,7 +14278,13 @@ R3D.optimumSADLocationSearchFlatRGB = function(pointA,pointB, imageScalesA,image
 	var scores = R3D.searchNeedleHaystackSADColorOffsetUnit(needle,haystack);
 
 	var finalSize = scores["width"];
-	var minimum = R3D.minimumFromValues(scores["value"], finalSize, finalSize, pointB, inScale);
+	var values = scores["value"];
+	// do bluring to get more accurate minimum
+	if(doBlurring){
+		var blurSigma = 1.0;
+		values = ImageMat.getBlurredImage(values,finalSize,finalSize, blurSigma);
+	}
+	var minimum = R3D.minimumFromValues(values, finalSize, finalSize, pointB, inScale);
 	var absoluteLocation = minimum["location"];
 	var absoluteScore = minimum["score"];
 
@@ -27142,6 +27148,7 @@ R3D.optimizePatchSizeProjected = function(point3D,size3D,normal3D,up3D, points2D
 	var v = new V3D();
 	var pi2 = Math.PI*2.0;
 	while(sizeChange>=sizeChangeMinimum){
+		count++;
 		var ratios = [];
 		for(var i=0; i<points2D.length; ++i){
 			var distance = 0;
@@ -27672,7 +27679,8 @@ var useSADScore = false;
 	var cornersA = cornerList[0];
 	var cornersB = cornerList[1];
 
-if(drawlings){
+if(true){
+// if(drawlings){
 	// show images
 	for(var i=0; i<imageList.length; ++i){
 		var imageScales = imageList[i];
@@ -27685,6 +27693,7 @@ if(drawlings){
 }
 
 	if(false){
+	// if(true){
 	// show corners
 	for(var i=0; i<cornerList.length; ++i){
 		var corners = cornerList[i];
@@ -28090,8 +28099,9 @@ var drawlingOffsetB = k==1 ? 0 : imageMatrixWidthA;
 						allCandidateFeatures.push(feature);
 					}
 
-					if(drawlings){ // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+					// if(drawlings){ // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 					// if(true){ //
+					if(false){ //
 					var d = new DO();
 					d.graphics().setFill(0xFF0000FF);
 					d.graphics().beginPath();
@@ -28224,8 +28234,9 @@ var drawlingOffsetB = k==1 ? 0 : imageMatrixWidthA;
 					// console.log(passingFeatures);
 
 
-					if(drawlings){ // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+					// if(drawlings){ // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 					// if(true){
+					if(false){
 					var minimumScoreB = Code.mapArray(Code.copyArray(passingFeatures), function(a){return a["score"];});
 					ImageMat.normalFloat01(minimumScoreB);
 					// ImageMat.pow(minimumScoreB,0.50);
@@ -28343,7 +28354,8 @@ var drawlingOffsetB = k==1 ? 0 : imageMatrixWidthA;
 
 					objectA["matches"] = objectsB;
 
-					if(drawlings){ // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
+					if(false){
+					// if(drawlings){ // vvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvvv
 					// if(true){
 
 						var objB = objectsB[0];
@@ -28581,7 +28593,8 @@ console.log(pointsA);
 console.log(pointsB);
 	// show fwd-bak mathes
 // if(drawlings){
-if(false){
+// if(false){
+if(true){
 	var imageA = imageScalesA;
 	var color0 = new V3D(1,0,0);
 	var color1 = new V3D(0,1,0);
@@ -28594,7 +28607,8 @@ if(false){
 // break;
 			var pointA = pointsA[i];
 			var pointB = pointsB[i];
-			var size = 2.0;
+			// var size = 2.0;
+			var size = 4.0;
 			var p = pointA.copy();
 			var q = pointB.copy();
 
@@ -28640,6 +28654,9 @@ if(false){
 		GLOBALSTAGE.addChild(d);
 }
 
+if(drawlings){
+	throw "out - drawlings"
+}
 	return {"A":pointsA, "B":pointsB, "affines":affinesAB};
 }
 
