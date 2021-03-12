@@ -321,6 +321,25 @@ Graphics.prototype.drawEllipse = function(x,y, w,h, ang){
 	// this._graphics.push( Code.newArray(Graphics.canvasQuadraticCurveTo,Code.newArray(cn4X,cn4Y,staX,staY)) );
 }
 // ------------------------------------------------------------------------------------------------------------------------ IMAGES
+Graphics.prototype.drawPixelImage = function(image, scale){ // imagemat, TODO: also a r,g,b(,a) option ? -- 1/2, 3/4, 4/5
+	scale = scale!==undefined ? scale : 1.0;
+	var graphics = this;
+	var wid = image.width();
+	var hei = image.height();
+	var color = new V3D();
+	for(var j=0; j<hei; ++j){
+		for(var i=0; i<wid; ++i){
+			graphics.beginPath();
+			image.get(i,j, color);
+			var col = Code.getColARGBFromFloat(1.0,color.x,color.y,color.z);
+			graphics.setFill(col);
+			graphics.drawRect(i*scale,j*scale, scale,scale);
+			graphics.endPath();
+			graphics.fill();
+		}
+	}
+}
+
 Graphics.prototype.drawImage = function(img,aX,aY,bX,bY,cX,cY,dX,dY){ // stretch to fit
 	if(dY!==undefined){
 		this._graphics.push( Code.newArray(Graphics.canvasDrawImage8,Code.newArray(img,aX,aY,bX,bY,cX,cY,dX,dY)) );

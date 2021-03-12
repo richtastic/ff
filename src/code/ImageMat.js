@@ -4518,6 +4518,10 @@ ImageMat.prototype.getProgressiveScaledImage = function(scaler){
 ImageMat.getProgressiveScaledImage = function(imageA, scaleMult, maxScales){
 	scaleMult = Code.valueOrDefault(scaleMult, 0.5);
 	maxScales = Code.valueOrDefault(maxScales, 10);
+
+// scaleMult = 0.75;
+// maxScales = 20;
+
 	var widthA = imageA.width();
 	var heightA = imageA.height();
 	var scalesA = [1.0];
@@ -4531,7 +4535,9 @@ ImageMat.getProgressiveScaledImage = function(imageA, scaleMult, maxScales){
 	// var sigma = Math.sqrt(-Math.log(scaleMult)); // 0.83
 	//
 	var sigma = (0.5 * 1.0/scaleMult) * 0.68269; // pixel radius * window at 1 sigma -- current best guess
-	//
+	
+
+	// var sigma = (1.0 * 1.0/scaleMult) * 1.0;
 
 	// 0.5 - 1.0 ------ 0.66-0.75 ?
 	var minSize = 4;
@@ -5553,11 +5559,11 @@ ImageMatScaled.prototype.extractRectFast = function(reuseImage, scale, matrix, i
 // console.log("scale: "+scale+" => "+imageMatrix.size());
 // console.log("effScale: "+effScale);
 // console.log("actScale: "+actScale);
+
+// console.log(" :ERF: "+scale+" => "+imageMatrix.size()+" -eff: "+effScale+" @act: "+actScale);
 	var red = imageMatrix.red();
 	var grn = imageMatrix.grn();
 	var blu = imageMatrix.blu();
-	// var wm1 = wid-1;
-	// var hm1 = hei-1;
 	var wm1 = imageWidth-1;
 	var hm1 = imageHeight-1;
 	// use matrix
@@ -5602,7 +5608,9 @@ var i;
 			// Code.parallelArrayInterpolateLinear(listTo,listFr, index, p.x,p.y, imageWidth,imageHeight);
 			// 
 
+
 			// linear-local: 160
+			
 			var x2 = p.x;
 			var y2 = p.y;
 			var minX = Math.min( Math.max(Math.floor(x2), 0), wm1);
@@ -5632,8 +5640,9 @@ var i;
 			
 			// cubic: 520
 			// Code.parallelArrayInterpolateCubic(listTo,listFr, index, p.x,p.y, imageWidth,imageHeight);
+			// TODO - parallelArrayInterpolateCubic - odd behavior outside image
 
-			/*
+		/*
 			// cubic-local: 430
 			var x2 = p.x;
 			var y2 = p.y;
@@ -5667,11 +5676,8 @@ var i;
 			var indexN = maaYwid + minX;
 			var indexO = maaYwid + maxX;
 			var indexP = maaYwid + maaX;
-			minX = x2 - minX;
-			minY = y2 - minY;
-			// .
-			x2 = minX;
-			y2 = minY;
+			x2 = Math.min(Math.max(x2 - minX,0.0),1.0);
+			y2 = Math.min(Math.max(y2 - minY,0.0),1.0);
 			var xx = x2*x2; var xxx = xx*x2;
 			var yy = y2*y2; var yyy = yy*y2;
 			// .
@@ -5730,12 +5736,13 @@ var i;
 				d = 1.5*(B-C) + 0.5*(D-A);
 				var value = a + b*y2 + c*yy + d*yyy;
 				// out
-				value = Math.max(0, Math.min(1, value));
+				value = Math.max(0.0, Math.min(1.0, value));
 				listTo[i][index] = value;
 			}
 			*/
 		}
 	}
+	
 	
 
 

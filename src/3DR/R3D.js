@@ -27621,7 +27621,7 @@ var useSADScore = false;
 
 	// console.log("featureSizeA: "+featureSizeA);
 	// console.log("featureSizeCompareA: "+featureSizeCompareA);
-	// console.log("errorPixelsB: "+errorPixelsB);
+	console.log("errorPixels: "+imageScalesA.width()+" : "+errorPixelsA+" | "+errorPixelsB);
 
 	var featureToNeedleScaleA = needleSize/featureSizeA;
 	// console.log("featureToNeedleScaleA: "+featureToNeedleScaleA);
@@ -27679,7 +27679,8 @@ var useSADScore = false;
 	var cornersA = cornerList[0];
 	var cornersB = cornerList[1];
 
-if(true){
+if(false){
+// if(true){
 // if(drawlings){
 	// show images
 	for(var i=0; i<imageList.length; ++i){
@@ -28591,10 +28592,10 @@ var drawlingOffsetB = k==1 ? 0 : imageMatrixWidthA;
 
 console.log(pointsA);
 console.log(pointsB);
-	// show fwd-bak mathes
+	// show fwd-bak matches
 // if(drawlings){
-// if(false){
-if(true){
+if(false){
+// if(true){
 	var imageA = imageScalesA;
 	var color0 = new V3D(1,0,0);
 	var color1 = new V3D(0,1,0);

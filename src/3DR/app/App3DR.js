@@ -4021,8 +4021,8 @@ App3DR.App.Model3D.prototype.setPoints = function(input3D, input2D, hasImages, n
 var useErrors = false;
 // var useErrors = true;
 // var errorType = 0; // F
-// var errorType = 1; // R
-var errorType = 2; // NCC
+var errorType = 1; // R
+// var errorType = 2; // NCC
 // var errorType = 3; // DEPTH
 // var errorType = 0;
 	useErrors = useErrors && hasImages;
@@ -12577,7 +12577,7 @@ App3DR.ProjectManager.prototype.calculatePairMatchWithRFromViewIDs = function(vi
 
 
 
-	var errorSearchRMaximumPercent = 0.02; // 0.01 - 0.02
+	var errorSearchRMaximumPercent = 0.005; // 0.001 - 0.010
 
 
 	var maxErrorRDensePercent = 0.004; // 4 on 1024
@@ -12674,7 +12674,7 @@ console.log(world);
 		console.log(imageScalesB);
 		var hypA = imageScalesA.size().length();
 		var hypB = imageScalesB.size().length()
-		var hyp = (hypA+hypA)*0.5;
+		var hyp = (hypA+hypB)*0.5;
 		maxErrorRDensePixels = hyp*maxErrorRDensePercent;
 		maxErrorFDensePixels = hyp*maxErrorFDensePercent;
 		maxErrorRTrackPixels = hyp*maxErrorRTrackPercent;
@@ -12691,6 +12691,7 @@ console.log(world);
 		var P = viewB.absoluteTransform();
 		console.log(P);
 GLOBALSTAGE.root().matrix().scale(0.50);
+
 		var result = R3D.searchMatchPointsPair3D(imageScalesA,imageScalesB, P, KimageA,KimageB, errorSearchRMaximumPercent); // forward
 		console.log(result);
 		var pointsA = result["A"];
@@ -12700,7 +12701,76 @@ GLOBALSTAGE.root().matrix().scale(0.50);
 		
 		// var error = R3D.reprojectionErrorList(estimated3D, reprojected2DA, reprojected2DB, camIdentity,camAtoB, K,K);
 
-		// var rError = R3D.reprojectionError(???);
+
+
+
+
+	// var pointsA = [];
+	// var pointsB = [];
+	// var affinesAB = [];
+	// var rError = R3D.reprojectionError(???);
+	// GLOBALSTAGE.root().matrix().scale(0.5);
+	var imageA = imageScalesA.images()[0];
+	var imageB = imageScalesB.images()[0];
+	var cellSize = imageA.size().length() * 0.02;
+	console.log("cellSize: "+cellSize);
+
+
+		var needleRefineSize = 41;
+		var haystackRefineSize = needleRefineSize + (needleRefineSize*0.5 | 0) + 2;
+		var needleRefine = new ImageMat(needleRefineSize,needleRefineSize);
+		var haystackRefine = new ImageMat(haystackRefineSize,haystackRefineSize);
+		var compareSize = imageA.size().length() * 0.02;
+		var doBlur = false;
+		// var doBlur = true;
+		// var halfCompareSize = compareSize;
+		
+
+// show matches & closest point:
+	var distances = [];
+	for(var i=0; i<pointsA.length; ++i){
+		var pointA = pointsA[i];
+		var pointB = pointsB[i];
+		var affineAB = affinesAB[i];
+		var result = R3D.optimumSADLocationSearchFlatRGB(pointA,pointB, imageScalesA,imageScalesB, compareSize, needleRefineSize,haystackRefineSize, affineAB, needleRefine,haystackRefine, doBlur);
+		var best = result["point"];
+		var dist = V2D.distance(best,pointB);
+		distances.push(dist);
+		if(dist>cellSize){
+			Code.removeElementAt(pointsA,i);
+			Code.removeElementAt(pointsB,i);
+			Code.removeElementAt(affinesAB,i);
+			// set to best point
+			pointB.x = best.x;
+			pointB.y = best.y;
+		}
+	}
+	console.log("distances: ");
+	Code.printMatlabArray(distances);
+
+
+
+// if(DEBUG_SHOW){
+	// var alp = 1.0;
+	// var alp = 0.75;
+	var alp = 0.50;
+	// var alp = 0.25;
+	var img = imageA;
+		img = GLOBALSTAGE.getFloatRGBAsImage(img.red(),img.grn(),img.blu(), img.width(),img.height());
+	var d = new DOImage(img);
+	d.graphics().alpha(alp);
+	d.matrix().translate(0,0);
+	GLOBALSTAGE.addChild(d);
+
+	var img = imageB;
+		img = GLOBALSTAGE.getFloatRGBAsImage(img.red(),img.grn(),img.blu(), img.width(),img.height());
+	var d = new DOImage(img);
+	d.graphics().alpha(alp);
+	d.matrix().translate(imageA.width(),0);
+	GLOBALSTAGE.addChild(d);
+// }
+		
+		R3D.showForwardBackwardCells(pointsA, pointsB, affinesAB, imageA,imageB, GLOBALSTAGE, cellSize);
 
 // throw "AFTER searchMatchPointsPair3D"
 
@@ -12739,10 +12809,10 @@ GLOBALSTAGE.root().matrix().scale(0.50);
 
 
 
-		// var str = world.toYAMLString();
-		// console.log(str);
+		var str = world.toYAMLString();
+		console.log(str);
 
-// throw "before save solveDensePairNew"
+throw "before save solveDensePairNew"
 
 		var goodEnoughMatches = true;
 
@@ -12788,10 +12858,14 @@ GLOBALSTAGE.root().matrix().scale(0.50);
 			}
 		}
 
+
+
+console.log("TEST 2")
+// world.solveDensePairNew();
 // var str = world.toYAMLString();
 // console.log(str);
 
-// throw "after solve"
+throw "after solve"
 
 		// if good enough, record matches
 
@@ -12810,7 +12884,7 @@ GLOBALSTAGE.root().matrix().scale(0.50);
 
 		console.log(pairData);
 
-		// throw "before done with dense pair ?"
+		throw "before done with dense pair ?"
 		completeFxn.call(completeCxt, pairData);
 	}
 
@@ -15809,8 +15883,8 @@ console.log(triangles);
 
 	// create triangle-view best-vertex mapping
 	var loadedTrianglesFxn = function(viewData,triangleData){
-		// var textureDimension = 4096;
-		var textureDimension = 2048;
+		var textureDimension = 4096;
+		// var textureDimension = 2048;
 		// var textureDimension = 1024;
 		// var textureDimension = 512;
 		// var resolutionScale = 0.50; // of maximum possible source input

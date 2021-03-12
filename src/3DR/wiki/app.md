@@ -387,7 +387,73 @@ MISSING:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-x some kinda stall in loop
+
+
+- in-process - test how close the features are to the final location:
+	- after initial set of matches
+	- during world pair loop with patches
+
+
+- why are some initial points so far away from each other 
+
+
+
+
+21:35:57.504 Stereopsis.js:7142 null
+21:35:57.504 Stereopsis.js:7143 TypeError: Cannot read property 'x' of null
+    at V3D.set (V3D.js:289)
+    at Function.R3D.projectivePatch3DToAffineList (R3D.js:27405)
+    at Stereopsis.World._resolutionProcessingModeAffineFromPatch3D (Stereopsis.js:7133)
+    at Stereopsis.World.affineP2DFromMode (Stereopsis.js:7067)
+    at Stereopsis.World.probe2DCellsRF (Stereopsis.js:14558)
+    at Stereopsis.World.probe2DCellsR (Stereopsis.js:14332)
+    at Stereopsis.World.solveDensePairNew (Stereopsis.js:8880)
+    at solveWorld (App3DR.js:12797)
+    at App3DR.ProjectManager.checkLoadedAllImages (App3DR.js:12639)
+    at Image.image.onload (App3DR.js:25594)
+21:35:57.505 Stereopsis.js:14564 bad again A ... inside probe 2D
+
+
+
+- show extractRectFast @ different scales
+
+https://www.cambridgeincolour.com/tutorials/image-resize-for-web.htm
+https://www.fxguide.com/fxfeatured/keeping_your_renders_clean/
+https://legacy.imagemagick.org/Usage/filter/
+https://people.inf.ethz.ch/~cengizo/Files/Sig15PerceptualDownscaling.pdf
+https://johanneskopf.de/publications/downscaling/paper/downscaling.pdf
+
+- SINC
+https://clouard.users.greyc.fr/Pantheon/experiments/rescaling/index-en.html
+
+
+- cubic for full image rescaling
+
+Lanczos3
+lanczos
+perceptual
+
+
+https://www.dpreview.com/forums/thread/4036161
+
+
+
+- dense matching problems:
+	- repeated structure is wrongly matching (likely good NCC score)
+
+
+
+imageScalesA.extractRectFast(needle, averageScale, affine);
+
+	- is effective scale: wA/wB or (wA-1)/(wB-1) ?
+
+
+
+
+Code.parallelArrayInterpolateCubic(listTo,listFr, index, p.x,p.y, imageWidth,imageHeight);
+TODO - parallelArrayInterpolateCubic - odd behavior outside image
+
+
 
 - interpolating minimum IN PRACTICE is worse than just finding the lowest pixel?
 	- maybe some other step is wrong?
@@ -464,6 +530,24 @@ subDivideUpdateMatchLocation - averagePointDistance:
 
 - test by using only 1-5 very correct pairs and seeing if the seeds are all that matters?
 	(don't subdivide till late)
+
+
+
+
+
+resolve intersection isn't using this?: --- only needed for groups ? pairs are always chosen A or B
+_resolveIntersectionLayered
+
+
+
+- groups: a lot of still floating points that would expect to be removed as obstructions
+...
+
+
+
+
+
+
 
 
 

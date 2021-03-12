@@ -8434,11 +8434,8 @@ Code.parallelArrayInterpolateCubic = function(listTo,listFr, indexTo, x,y, wid,h
 	var indexN = maaYwid + minX;
 	var indexO = maaYwid + maxX;
 	var indexP = maaYwid + maaX;
-	minX = x - minX;
-	minY = y - minY;
-
-	x = minX;
-	y = minY;
+	x2 = Math.min(Math.max(x2 - minX,0.0),1.0);
+	y2 = Math.min(Math.max(y2 - minY,0.0),1.0);
 	var xx = x*x; var xxx = xx*x;
 	var yy = y*y; var yyy = yy*y;
 

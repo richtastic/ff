@@ -8795,7 +8795,8 @@ Stereopsis.World.prototype.solveDensePairNew = function(subdivisionScaleSize, su
 
 	subdivisionScaleSize = Code.valueOrDefault(subdivisionScaleSize, 0.666666666); // 40 -> 60 -> 90
 	subDivisionCounts = Code.valueOrDefault(subDivisionCounts, 2);
-	iterationCounts = 3;
+	// iterationCounts = 3;
+	iterationCounts = 2;
 
 	var timeStart = Code.getTimeMilliseconds();
 	
@@ -8819,8 +8820,9 @@ Stereopsis.World.prototype.solveDensePairNew = function(subdivisionScaleSize, su
 	// var subdivisions = 1; // 5-10k
 	// var subdivisions = 2; // ~40k
 	var subdivisions = subDivisionCounts; // ~40k  --- select - about 
-// subdivisions = 2; // 10k
-subdivisions = 3; // 25k
+// subdivisions = 1; // 25k
+subdivisions = 2; // 10k
+// subdivisions = 3; // 25k
 // subdivisions = 4; // 50k
 // console.log("subdivisions: "+subdivisions);
 // throw "??"
@@ -8863,6 +8865,8 @@ var sigmaGlobal3DR = 3.0;
 			sigmaGlobal3DR = Math.max(sigmaGlobal3DR,1.0);
 		}
 
+		sigmaGlobal3DR = 2.0;
+
 
 // world.refinePoint3DAbsoluteLocation();
 
@@ -8875,8 +8879,8 @@ var sigmaGlobal3DR = 3.0;
 		// 	compareSize = 7;
 		// }
 		// compareSize
-		// world.probe2DCellsR(3.0,3.0);
-		world.probe2DCellsR(5.0,5.0);
+		world.probe2DCellsR(2.0,2.0);
+		// world.probe2DCellsR(5.0,5.0);
 		// world.probe2DCellsR(99.0,99.0);
 
 		// optimize ?
@@ -8893,6 +8897,11 @@ var sigmaGlobal3DR = 3.0;
 		// ???????????????????????????????????????????
 		// world.filterLocal2DR();
 		// world.filterLocal3DR();
+
+
+		world.filterLocal3DNeighborhoodSize();
+
+
 
 		// world.filterGlobalPatchSphere3D(3.0);
 		world.filterGlobalPatchSphere3D(2.0);
@@ -8933,6 +8942,95 @@ console.log((timeStop-timeStart)/1000/60); // ~ 20 mins
 	// throw "solveDensePair2";
 	return null;
 }
+
+
+Stereopsis.World.prototype.filterLocal3DNeighborhoodSize = function(){
+	console.log("filterLocal3DNeighborhoodSize ...");
+	var world = this;
+	var views = world.toViewArray();
+	// var sigmaDrop = 1.0;
+	var sigmaDrop = 1.5;
+	var removedP2DCountTotal = 0;
+	var neighborCountMax = 8 + 1;
+	for(var i=0; i<views.length; ++i){
+		var view = views[i];
+		var pointSpace = view.pointSpace();
+		var points2D = view.toPointArray();
+		var neighborsLookup = {};
+		for(var j=0; j<points2D.length; ++j){
+			var point2D = points2D[j];
+			var point3D = point2D.point3D();
+			var p2D = point2D.point2D();
+			var i2D = point3D.id(); // different inside single view
+			var p3D = point3D.point();
+			var neighbors2D = pointSpace.kNN(p2D, neighborCountMax);
+			// console.log(neighbors2D);
+			var distances = [];
+			// get average 3D distance & sigma
+			for(var k=0; k<neighbors2D.length; ++k){
+				var neighbor2D = neighbors2D[k];
+				if(neighbor2D==point2D){
+					continue;
+				}
+				var n3D = neighbor2D.point3D().point();
+				var distance = V3D.distance(p3D,n3D);
+				distances.push(distance);
+			}
+			// console.log(distances);
+			var mean = Code.mean(distances);
+			var sigma = Code.stdDev(distances,mean);
+			var limit = mean + sigma*sigmaDrop;
+			// console.log(mean+" +/- "+sigma+" = "+limit);
+			// throw "here";
+			neighborsLookup[i2D+""] = {"neighbors":neighbors2D, "mean":mean, "sigma":sigma, "limit":limit};
+		}
+		// console.log(neighborsLookup);
+		// throw "?";
+		var removeListP2D = [];
+		for(var j=0; j<points2D.length; ++j){
+			var point2D = points2D[j];
+			var point3D = point2D.point3D();
+			var p2D = point2D.point2D();
+			var i2D = point3D.id(); // different inside single view
+			var lookup = neighborsLookup[i2D+""];
+			var neighbors2D = lookup["neighbors"];
+			var percent;
+			if(neighbors2D.length>0){
+				var mean = lookup["mean"];
+				// get average neighbor sigmas
+				var overLimitCount = 0;
+				for(var k=0; k<neighbors2D.length; ++k){
+					var neighbor2D = neighbors2D[k];
+					if(neighbor2D==point2D){
+						continue;
+					}
+					var neighbor3D = neighbor2D.point3D();
+					var neighborID = neighbor3D.id();
+					var entry = neighborsLookup[neighborID+""];
+					var limit = entry["limit"];
+					if(limit<mean){
+						overLimitCount++;
+					}
+				}
+				percent = overLimitCount/neighbors2D.length;
+				if(percent>0.50){
+					removeListP2D.push(point2D);
+				}
+			}
+			// console.log(neighbors2D.length+" @ "+percent);
+			// if THIS POINT'S AVERAGE > 90% of all neighbors cutoff radius (average + sigma) -> outlier & delete
+		}
+		console.log("got: "+removeListP2D.length);
+		for(var j=0; j<removeListP2D.length; ++j){
+			var point2D = removeListP2D[j];
+			world.removeP2DFromP3D(point2D);
+			++removedP2DCountTotal;
+		}
+	}
+	console.log("removedP2DCountTotal: "+removedP2DCountTotal);
+}
+
+
 Stereopsis.World.prototype.solveGroup = function(){ // multiwise BA full scene/group
 	console.log("solveGroup");
 	throw "where is this used?"
@@ -11596,7 +11694,7 @@ Stereopsis.World.prototype.filterCriteria2DN3DNregularization = function(){ // g
 	var neighborhoodScale2D = 1.00; // radius mulitplier - smaller is more forgiving
 	var neighborhoodScale3D = 1.50; // radius multiplier - larger more forgiving space
 	neighborhoodScale2D = Math.sqrt(2);
-	neighborhoodScale3D = neighborhoodScale2D * 3.0; // 1.5 - 2.0
+	neighborhoodScale3D = neighborhoodScale2D * 2.0; // 1.5 - 2.0
 	// neighborhoodScale3D = neighborhoodScale2D * 1.5;
 	var world = this;
 	var points3D = world.toPointArray();
@@ -14964,10 +15062,12 @@ Stereopsis.World.prototype.subDivideUpdateMatchLocation = function(){ // 2D upda
 	// var doBlur = true;
 	var doBlur = false;
 	var needleRefineSize = 41;
-	var haystackRefineSize = needleRefineSize + 2; // 2-4 ?
-	if(doBlur){
-		haystackRefineSize = needleRefineSize + 4;
-	}
+	// var haystackRefineSize = needleRefineSize + 2; // 2-4 ?
+	// if(doBlur){
+	// 	haystackRefineSize = needleRefineSize + 4;
+	// }
+	haystackRefineSize = needleRefineSize + 4;
+
 
 	// TODO: TRY +4 & blurring
 
@@ -15034,7 +15134,7 @@ Stereopsis.World.prototype.subDivideUpdateMatchLocation = function(){ // 2D upda
 
 				var halfCompareSize = compareSize * 0.5;
 				// var halfCompareSize = compareSize;
-				var result = R3D.optimumSADLocationSearchFlatRGB(best,pointB, imageScalesA,imageScalesB, halfCompareSize, needleRefineSize,haystackRefineSize, affineAB, needleRefine,haystackRefine, doBlur);
+				var result = R3D.optimumSADLocationSearchFlatRGB(pointA,best, imageScalesA,imageScalesB, halfCompareSize, needleRefineSize,haystackRefineSize, affineAB, needleRefine,haystackRefine, doBlur);
 				var best = result["point"];
 				var dist = V2D.distance(best,pointB);
 
@@ -17233,6 +17333,7 @@ Stereopsis.World.prototype._resolveIntersectionDefaultOLD = function(point3DA,po
 
 
 Stereopsis.World.prototype._resolveIntersectionLayered = function(point3DA,point3DB){
+	var isR = true; // where to get this ?
 	// console.log("_resolveIntersectionLayered");
 	var world = this;
 	var maxErrorRatioStart = 4.0; // 2-4
@@ -17425,9 +17526,10 @@ Stereopsis.World.prototype._resolveIntersectionLayered = function(point3DA,point
 	if(shouldUseNeedleHaystackIfImagesPresent){
 // throw "inside  shouldUseNeedleHaystackIfImagesPresent"
 		// var needleSize = Stereopsis.COMPARE_HAYSTACK_NEEDLE_SIZE;
+		var needleSize = 11;
 		// var needleSize = 7; // 5 - 11
 		// var needleSize = 5;
-		var needleSize = 5;
+		// var needleSize = 5;
 		var haystackSize = needleSize + 2; // left or right 1 unit
 		var needle = world._resolveIntersectionLayered_TEMP_NEEDLE;
 		var haystack = world._resolveIntersectionLayered_TEMP_HAYSTACK;
@@ -17460,7 +17562,8 @@ Stereopsis.World.prototype._resolveIntersectionLayered = function(point3DA,point
 							var featureSize = Stereopsis.compareSizeForViews2D(viewA,centerA,viewB,centerB);
 							// TODO: needleSize,haystackSize - can be reused
 							// bestNeedleHaystackFromLocation
-							throw "here?"
+							// throw "here?"
+
 							var result = R3D.optimumSADLocationSearchFlatRGB(centerA,centerB, imageA,imageB, featureSize, needleSize,haystackSize, affineAB, needle, haystack, isR);
 							var locationB2D = result["point"];
 							locationsB2D.push(locationB2D);

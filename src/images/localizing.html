@@ -47,8 +47,152 @@ GLOBALSTAGE = this._stage;
 	// this.testScaling();
 
 
-	this.testSubpixel();
+	// this.testSubpixel();
+
+
+	this.testNeedleScale();
+
+
 }
+
+// Code.getColARGBFromFloat
+LocalizeTest.drawPixelImage = function(d,image, scale){
+	scale = scale!==undefined ? scale : 1.0;
+	var wid = image.width();
+	var hei = image.height();
+	// var d = new DO();
+	var color = new V3D();
+	// d.graphics().clear();
+	for(var j=0; j<hei; ++j){
+		for(var i=0; i<wid; ++i){
+			d.graphics().beginPath();
+			image.get(i,j, color);
+			var col = Code.getColARGBFromFloat(1.0,color.x,color.y,color.z);
+			d.graphics().setFill(col);
+			// 0xFFFF0000
+			d.graphics().drawRect(i*scale,j*scale, scale,scale);
+			d.graphics().endPath();
+			d.graphics().fill();
+		}
+	}
+}
+
+LocalizeTest.prototype.testNeedleScale = function(imageInfo){
+
+	var display = this._root;
+
+	var loadedImageFxn = function(imageInfo){
+		console.log(images);
+		var images = imageInfo["images"];
+
+		var image = images[0];
+		console.log(image);
+
+		var imageFloat = GLOBALSTAGE.getImageAsFloatRGB(image);
+		var imageMatrix = new ImageMat(imageFloat["width"],imageFloat["height"], imageFloat["red"], imageFloat["grn"], imageFloat["blu"]);
+		
+		console.log(imageMatrix);
+		var imageScales = new ImageMatScaled(imageMatrix);
+		console.log(imageScales);
+
+		// // var sca = 2.0;
+		// var sca = 1.0;
+		// // show scaling
+		// var images = imageScales.images();
+		// console.log(images);
+		// var offX = 0;
+		// for(var i=0; i<images.length; ++i){
+		// 	var image = images[i];
+		// 	var img = image;
+		// 		img = GLOBALSTAGE.getFloatRGBAsImage(img.red(),img.grn(),img.blu(), img.width(),img.height());
+		// 	var d = new DOImage(img);
+		// 	d.matrix().scale(sca);
+		// 	d.matrix().translate(10 + offX*sca, 10 );
+		// 	display.addChild(d);
+		// 	offX += image.width();
+		// }
+
+		var needleSizeX = 21;
+		var needleSizeY = 81;
+		// var needleHalf = needleSize*0.5 | 0;
+		var needleHalfX = needleSizeX*0.5;
+		var needleHalfY = needleSizeY*0.5;
+		var reuseNeedle = new ImageMat(needleSizeX,needleSizeY);
+
+		// var featureSize = 41.0;
+		var featureSize = 200.0;
+
+		// var point = new V2D(100.0, 150.0);
+
+		var point = new V2D(110.0, 110.0);
+		// var point = new V2D(110.0, 109.0);
+		// var point = new V2D(110.0, 108.0);
+
+		// var point = new V2D(63.0, 164.0); // light
+
+		var affine = new Matrix2D();
+		var averageScale = 0;
+
+		var sca = 10.0;
+		var spacing = 250;
+		for(var i=0; i<12; ++i){
+		// for(var i=0; i<1; ++i){
+			var scale = featureSize/needleSizeX;
+				// scale *= Math.pow(2.0,-i);
+				scale *= Math.pow(2.0,-i*0.5);
+			// console.log(scale);
+			affine.identity();
+			affine.scale(scale);
+			averageScale = affine.averageScale();
+			ImageMatScaled.affineToLocationTransform(affine,affine, needleHalfX,needleHalfY, point.x,point.y);
+			imageScales.extractRectFast(reuseNeedle, averageScale, affine);
+			//
+			//
+			var img = reuseNeedle;
+			img = GLOBALSTAGE.getFloatRGBAsImage(img.red(),img.grn(),img.blu(), img.width(),img.height());
+			// var d = new DOImage(img);
+			var d = new DO();
+				// LocalizeTest.drawPixelImage(d,reuseNeedle,1.0);
+				d.graphics().drawPixelImage(reuseNeedle,1.0);
+				d.matrix().scale(sca);
+				d.matrix().translate(10, 10);
+				d.matrix().translate(i*spacing, 0);
+			display.addChild(d);
+
+			var d = new DO();
+				d.graphics().clear();
+				d.graphics().setLine(1.0,0xFFFF0000);
+				d.graphics().beginPath();
+				d.graphics().drawRect(0,0, sca*needleSizeX, sca*needleSizeY);
+
+				d.graphics().moveTo(sca*needleSizeX*0.5, 0.0);
+				d.graphics().lineTo(sca*needleSizeX*0.5, sca*needleSizeY);
+
+				d.graphics().moveTo(0.0, sca*needleSizeY*0.5);
+				d.graphics().lineTo(sca*needleSizeX, sca*needleSizeY*0.5);
+
+				d.graphics().endPath();
+				d.graphics().strokeLine();
+				d.matrix().translate(10, 10);
+				d.matrix().translate(i*spacing, 0);
+			display.addChild(d);
+
+			/*
+			// display.graphics().setLine(2.0,0xFF000000);
+	// display.graphics().beginPath();
+	// display.graphics().drawRect(0,0,displaySize,displaySize);
+	// display.graphics().endPath();
+	// display.graphics().strokeLine();
+			*/
+		}
+
+		//..
+	}
+	var imageLoader = new ImageLoader("../3DR/images/",["bench_A.png"], this,loadedImageFxn,null);
+	imageLoader.load();
+}
+
+
 LocalizeTest.prototype.testSubpixel = function(imageInfo){
 
 	var display = this._root;
