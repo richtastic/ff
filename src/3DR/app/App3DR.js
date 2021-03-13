@@ -3981,7 +3981,11 @@ App3DR.App.Model3D.prototype.setLines = function(input){
 // NEGATIVE Z:
 // points.push(v.x,v.y,-v.z);
 
-colors.push(0.0,0.0,1.0,0.25);
+// colors.push(0.0,0.0,1.0,0.25); // blue
+
+colors.push(0.50,0.0,0.50,0.50); //magenta
+
+
 		// colors.push(1.0,1.0,1.0,0.05);
 		// colors.push(0.1,0.1,0.1,0.02);
 		// colors.push(0.1,0.1,0.1,0.005);
@@ -4245,7 +4249,8 @@ if(showNormals && normals3D){
 
 	
 	// var normalSize = 0.1; // scale by scene size
-	var normalSize = 0.01;
+	// var normalSize = 0.01;
+	var normalSize = 0.05;
 	var s = normalSize;
 	for(var i=0; i<normals3D.length; ++i){
 		var p = input3D[i];
@@ -4319,7 +4324,7 @@ this.setLines(lines);
 console.log("PTS FILE:");
 
 
-if(this._points3D && this._normals3D){
+if(false && this._points3D && this._normals3D){
 		var pts3D = [];
 		var nms3D = [];
 		for(var i=0; i<this._points3D.length; ++i){
@@ -10674,7 +10679,7 @@ console.log(info);
 
 					console.log(sourceData);
 
-					throw "before saving putatives";
+					// throw "before saving putatives";
 
 					project.saveFileFromData(sourceData, sourceFilename, savedDataComplete, project);
 					return;
@@ -12690,7 +12695,8 @@ console.log(world);
 		console.log(relativeAB);
 		var P = viewB.absoluteTransform();
 		console.log(P);
-GLOBALSTAGE.root().matrix().scale(0.50);
+GLOBALSTAGE.root().matrix().scale(0.50); // dense
+// GLOBALSTAGE.root().matrix().scale(0.25); // BA
 
 		var result = R3D.searchMatchPointsPair3D(imageScalesA,imageScalesB, P, KimageA,KimageB, errorSearchRMaximumPercent); // forward
 		console.log(result);
@@ -12749,7 +12755,7 @@ GLOBALSTAGE.root().matrix().scale(0.50);
 	Code.printMatlabArray(distances);
 
 
-
+/*
 // if(DEBUG_SHOW){
 	// var alp = 1.0;
 	// var alp = 0.75;
@@ -12772,6 +12778,7 @@ GLOBALSTAGE.root().matrix().scale(0.50);
 		
 		R3D.showForwardBackwardCells(pointsA, pointsB, affinesAB, imageA,imageB, GLOBALSTAGE, cellSize);
 
+*/
 // throw "AFTER searchMatchPointsPair3D"
 
 		// new points
@@ -12809,10 +12816,10 @@ GLOBALSTAGE.root().matrix().scale(0.50);
 
 
 
-		var str = world.toYAMLString();
-		console.log(str);
+		// var str = world.toYAMLString();
+		// console.log(str);
 
-throw "before save solveDensePairNew"
+// throw "before save solveDensePairNew"
 
 		var goodEnoughMatches = true;
 
@@ -12860,12 +12867,12 @@ throw "before save solveDensePairNew"
 
 
 
-console.log("TEST 2")
+// console.log("TEST 2")
 // world.solveDensePairNew();
 // var str = world.toYAMLString();
 // console.log(str);
 
-throw "after solve"
+// throw "after solve"
 
 		// if good enough, record matches
 
@@ -12884,7 +12891,7 @@ throw "after solve"
 
 		console.log(pairData);
 
-		throw "before done with dense pair ?"
+		// throw "before done with dense pair ?"
 		completeFxn.call(completeCxt, pairData);
 	}
 
@@ -12894,7 +12901,7 @@ throw "after solve"
 		var viewID = view["id"];
 		view = project.viewFromID(viewID);
 		view.loadDenseHiImage(checkLoadedAllImages, project);
-		// view.loadBundleAdjustImage(checkLoadedAllImages, project);
+		// view.loadBundleAdjustImage(checkLoadedAllImages, project); // not shown to be better
 	}
 }
 

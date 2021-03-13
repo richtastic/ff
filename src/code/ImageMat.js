@@ -3441,7 +3441,20 @@ ImageMat.pow = function(data,power){
 	}
 	return data;
 }
-
+ImageMat.abs = function(a){
+	var i, len = a.length;
+	for(i=0;i<len;++i){
+		a[i] = Math.abs(a[i]);
+	}
+	return a;
+}
+ImageMat.clipRange = function(a, min,max){
+	var i, len = a.length;
+	for(i=0;i<len;++i){
+		a[i] = Math.min(Math.max(a[i],min),max);
+	}
+	return a;
+}
 ImageMat.nonZero = function(data){
 	var i, len = data.length;
 	var result = [];

@@ -2888,9 +2888,119 @@ endfor
 
 */
 }
-Code.fourierTransform2D = function(values, width,height){ 
-	//
-	throw "TODO: FT 2D";
+
+Code.complexToMagnitudePhase = function(reals, imags){
+	var mags = [];
+	var phases = [];
+	var output = Code.newArrayZeros();
+	var count = reals.length;
+	for(var i=0; i<count; ++i){
+		var real = reals[i];
+		var imag = imags[i];
+		var mag = Math.sqrt(real*real + imag*imag);
+		var phi = Math.atan2(imag,real);
+		mags[i] = mag;
+		phases[i] = phi;
+	}
+	return {"magnitude":mags, "phase":phases};
+}
+Code.shiftFourier = function(values, width,height){
+	var count = width*height;
+	var halfWidth = width*0.5 | 0;
+	var halfHeight = height*0.5 | 0;
+	// var halfWidth = (width-1)*0.5 | 0;
+	// var halfHeight = (height-1)*0.5 | 0;
+	var output = Code.newArrayZeros();
+	for(var j=0; j<height; ++j){
+		for(var i=0; i<width; ++i){
+			var index = ( (j+halfHeight)%height )*width + ( (i+halfWidth)%width );
+			var value = values[index];
+			index = j*width + i;
+			output[index] = value;
+		}
+	}
+	return output;
+}
+Code.fourierTransform2D = function(valuesReal, width,height, valuesImag){  // grayscale // r,i,w,h
+	if(valuesImag){
+		// console.log(valuesReal, width,height, valuesImag);
+		// console.log(" ... ")
+		var temp = valuesImag;
+		valuesImag = width;
+		width = height;
+		height = temp;
+		// console.log(valuesReal,valuesImag,width,height);
+		// console.log(valuesReal);
+		// console.log(valuesImag);
+		// console.log(width,height);
+		// throw "imaginary too";
+	}
+	var pi2 = Math.PI*2;
+	// var countTotal = width*height;
+	var coefficientsImag = [];
+	var coefficientsReal = [];
+	for(var j=0; j<height; ++j){
+		for(var i=0; i<width; ++i){
+			var real = 0;
+			var imag = 0;
+			for(var m=0; m<height; ++m){
+				for(var n=0; n<width; ++n){
+					var index = m*width + n;
+					var valueReal = valuesReal[index];
+					var valueImag = 0;
+					if(valuesImag){
+						valueImag = valuesImag[index];
+					}
+					var angle = pi2 * ( (i*n/width) + (j*m/height) ); // this piece is separable
+					var cos = Math.cos(angle);
+					var sin = Math.sin(angle);
+					real +=  valueReal*cos + valueImag*sin;
+					imag += -valueReal*sin + valueImag*cos;
+				}
+			}
+			var index = j*width + i;
+			coefficientsReal[index] = real;
+			coefficientsImag[index] = imag;
+		}
+	}
+	return {"real":coefficientsReal, "imag":coefficientsImag};
+}
+Code.fourierInverse2D = function(reals,imags, width,height){
+	// var result = Code.fourierTransform2D(reals,imags, width,height);
+	// var info = Code.fourierTransform2D(imags,reals, height,width);
+	var info = Code.fourierTransform2D(imags,reals, width,height);
+	console.log(info);
+	// need to do scaling by 1/N
+	var reals = info["real"];
+	var imags = info["imag"];
+	var count = (width*height);
+	var mul = 1.0/count;
+	for(var i=0; i<count; ++i){
+		reals[i] *= mul;
+		imags[i] *= mul;
+	}
+	// flip back to get original value
+	return {"real":imags, "imag":reals};
+
+
+	/*
+
+	var count = reals.length;
+	// flip real & imag to get negative 
+	var info = Code.fourierTransform1D(imags,reals);
+	// need to do scaling by 1/N
+	var reals = info["real"];
+	var imags = info["imag"];
+	var mul = 1.0/count;
+	for(var i=0; i<count; ++i){
+		reals[i] *= mul;
+		imags[i] *= mul;
+	}
+	// flip back to get original value
+	return {"real":imags, "imag":reals};
+
+	*/
+	// throw "?";
 }
 Code.fft1D = function(values){ 
 	//

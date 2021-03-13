@@ -388,15 +388,29 @@ MISSING:
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
+x new P3D (create/insert) optimize location closer - helps very mildly
+
+
+- if pairs can't remove globs of garbage, maybe groups can?
+	- obstruction tests
+	-> how is current sphere-obstruction working
+
 
 - in-process - test how close the features are to the final location:
 	- after initial set of matches
 	- during world pair loop with patches
+	---- display a few random points
 
 
-- why are some initial points so far away from each other 
+- why are some initial points so far away from each other IN 3D ???????
 
 
+
+- HYPOTHESIS: seed points are root of a lot of the poor noisy points
+
+
+- aggressive adding & aggressive removing
+	(good points will be re-added)
 
 
 21:35:57.504 Stereopsis.js:7142 null

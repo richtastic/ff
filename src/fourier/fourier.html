@@ -21,8 +21,120 @@ function setupDisplay(){
 	this._stage.start();
 }
 
-
 function classesLoadedFxn(){
+	setupDisplay();
+	console.log("classesLoadedFxn");
+	testFourier2D();
+}
+function testFourier2D(){
+	setupDisplay();
+	var imageLoaded = function(data){
+		console.log(data);
+		var images = data["images"];
+		var imageSource = images[0];
+		var imageFloat = GLOBALSTAGE.getImageAsFloatRGB(imageSource);
+		var imageMatrix = new ImageMat(imageFloat["width"],imageFloat["height"], imageFloat["red"], imageFloat["grn"], imageFloat["blu"]);
+		console.log(imageMatrix);
+
+		var imageScales = new ImageMatScaled(imageMatrix);
+
+		// var info = imageScales.getImageSize(new V2D(10,10));
+		// var info = imageScales.getImageSize(new V2D(20,20));
+		// var info = imageScales.getImageSize(new V2D(50,50));
+		var info = imageScales.getImageSize(new V2D(64,64), 1.0, 0.10);
+		// var info = imageScales.getImageSize(new V2D(100,100));
+		// var info = imageScales.getImageSize(new V2D(150,150), 1.0, 0.10);
+		var image = info["image"];
+		console.log(image);
+
+		var gry = image.gry();
+		// console.log(gry);
+
+		var wid = image.width();
+		var hei = image.height();
+		var result = Code.fourierTransform2D(gry, image.width(), image.height());
+		console.log(result);
+		var reals = result["real"];
+		var imags = result["imag"];
+		var info = Code.complexToMagnitudePhase(reals,imags);
+		console.log(info);
+
+		var magnitudes = info["magnitude"];
+		var phases = info["phase"];
+		console.log(magnitudes);
+
+
+		// INVERSE
+		var result = Code.fourierInverse2D(reals,imags, image.width(), image.height());
+		console.log("INVERSE");
+		console.log(result);
+		var reproduced = result["real"];
+		console.log(reproduced);
+
+		ImageMat.clipRange(reproduced, 0,1);
+
+
+
+
+		var realsNorm = Code.copyArray(magnitudes);
+		// console.log(realsNorm);
+		realsNorm = Code.shiftFourier(realsNorm, wid,hei);
+		// ImageMat.abs(realsNorm);
+		ImageMat.add(realsNorm, 1);
+		ImageMat.log(realsNorm);
+		// ImageMat.pow(realsNorm, 0.1);
+		ImageMat.normalFloat01(realsNorm);
+
+
+		
+
+
+		var sca = 3.0;
+
+		var img = image;
+		img = GLOBALSTAGE.getFloatRGBAsImage(img.red(),img.grn(),img.blu(), img.width(),img.height());
+		var d = new DOImage(img);
+		// d.graphics().alpha(alp);
+		d.matrix().scale(sca);
+		d.matrix().translate(10,10);
+		GLOBALSTAGE.addChild(d);
+
+
+		var img = image;
+		img = GLOBALSTAGE.getFloatRGBAsImage(gry,gry,gry, img.width(),img.height());
+		var d = new DOImage(img);
+		// d.graphics().alpha(alp);
+		d.matrix().scale(sca);
+		d.matrix().translate(10 + 400,10);
+		GLOBALSTAGE.addChild(d);
+
+
+		var img = image;
+		img = GLOBALSTAGE.getFloatRGBAsImage(realsNorm,realsNorm,realsNorm, img.width(),img.height());
+		var d = new DOImage(img);
+		// d.graphics().alpha(alp);
+		d.matrix().scale(sca);
+		d.matrix().translate(10 + 800,10);
+		GLOBALSTAGE.addChild(d);
+
+
+		var img = image;
+		img = GLOBALSTAGE.getFloatRGBAsImage(reproduced,reproduced,reproduced, img.width(),img.height());
+		// img = GLOBALSTAGE.getFloatRGBAsImage(reproduced,reproduced,reproduced, img.height(),img.width());
+		var d = new DOImage(img);
+		d.matrix().scale(sca);
+		d.matrix().translate(10,300);
+		GLOBALSTAGE.addChild(d);
+
+
+
+	}
+	var imageLoader = new ImageLoader("../images/", ["image.png"], this,imageLoaded,null);
+	// var imageLoader = new ImageLoader("../images/", ["clown.png"], this,imageLoaded,null);
+	// var imageLoader = new ImageLoader("../images/", ["nuts.png"], this,imageLoaded,null);
+	imageLoader.load();
+}
+function testFourier1D(){
 	setupDisplay();
 	console.log("classesLoadedFxn");
 
