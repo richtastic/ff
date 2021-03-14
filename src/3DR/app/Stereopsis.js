@@ -2217,6 +2217,11 @@ Stereopsis.Transform3D.prototype.calculateErrorF = function(F){
 		var match = matches[i];
 		var pointA = match.pointForView(viewA);
 		var pointB = match.pointForView(viewB);
+if(!pointA){
+	console.log(match);
+
+	throw "no pointA ?"
+}
 		var pA = pointA.point2D();
 		var pB = pointB.point2D();
 		var error = R3D.fError(FFwd, FRev, pA, pB);
@@ -2319,6 +2324,7 @@ Stereopsis.P3D = function(point,normal,size){
 	this._matches = {};
 	this._temp = null;
 	this._hysteresis = null;
+	this._ancestor = null; // point this propagated from, or somehow merged from
 	this.point(point);
 	this.normal(normal);
 	this.size(size);
@@ -2339,6 +2345,12 @@ Stereopsis.P3D.prototype.data = function(data){
 		this._data = data;
 	}
 	return this._data;
+}
+Stereopsis.P3D.prototype.ancestor = function(point3D){
+	if(point3D!==undefined){
+		this._ancestor = point3D;
+	}
+	return this._ancestor;
 }
 Stereopsis.P3D.prototype.point = function(point){
 	if(point!==undefined){
@@ -2746,6 +2758,7 @@ Stereopsis.P2D.prototype.voteClear = function(){
 }
 this._votes = [];
 Stereopsis.P2D.prototype.kill = function(){
+	this._id = null;
 	this._view = null;
 	this._point2D = null;
 	this._point3D = null;
@@ -8827,8 +8840,8 @@ Stereopsis.World.prototype.solveDensePairNew = function(subdivisionScaleSize, su
 	// var subdivisions = 2; // ~40k
 	var subdivisions = subDivisionCounts; // ~40k  --- select - about 
 // subdivisions = 1; // 25k
-// subdivisions = 2; // 10k
-subdivisions = 3; // 25k
+subdivisions = 2; // 10k ............... testing
+// subdivisions = 3; // 25k ................. current default
 // subdivisions = 4; // 50k
 // console.log("subdivisions: "+subdivisions);
 // throw "??"
@@ -14583,6 +14596,7 @@ Stereopsis.World.prototype.probe2DCellsRF = function(sigmaMaximumSelect, sigmaMa
 
 		var viewsA = [viewA,viewB];
 		var viewsB = [viewB,viewA];
+		var matchesAddList = [];
 		for(var v=0; v<viewsA.length; ++v){
 			var viewA = viewsA[v];
 			var viewB = viewsB[v];
@@ -14590,7 +14604,7 @@ Stereopsis.World.prototype.probe2DCellsRF = function(sigmaMaximumSelect, sigmaMa
 			var imageB = viewB.imageScales();
 			var empties = viewA.emptyNeighborCellsForView(viewB);
 			console.log("  "+v+" empties: "+empties.length);
-			var matchesAddList = [];
+			
 
 			// something here leads to an infinite wait
 			for(var e=0; e<empties.length; ++e){
@@ -14740,6 +14754,10 @@ var keep = true;
 									// console.log("  uniquenessScore B ");
 									// ???
 									matchesAddList.push(newMatch);
+
+									// ADD ANCESTOR:
+									newMatch.point3D().ancestor(bestMatch.point3D());
+
 									// console.log("got newMatch END "+e);
 								}catch(e){
 									console.log(e+" ... inside probe 2D");
@@ -14752,14 +14770,15 @@ var keep = true;
 					} // end new match
 				} // end best match
 			} //  end empties
-			console.log(" ADD LIST "+i+" : "+matchesAddList.length);
+		} // end view A-B
+		// add mathes AFTER ALL VIEWS, so that each view has a chance to nominate suggestions (compete for best match, not just first come first serve)
+		console.log(" ADD LIST "+i+" : "+matchesAddList.length);
 			for(var j=0; j<matchesAddList.length; ++j){
 				++addeds;
 				var match = matchesAddList[j];
 				var shouldAdd = world.matchNeighborConsistentResolveAdd(match); // 
 			}
 			// throw "matchesAddList";
-		} // end view A-B
 	} // end transforms
 	console.log("possibles: "+possibles+" v added: "+addeds);
 }
@@ -17466,6 +17485,7 @@ Stereopsis.World.prototype._resolveIntersectionLayered = function(point3DA,point
 		var errMin = Math.min(errA,errB);
 		if(errMin>0 && errMax/errMin > maxErrorRatioStart){ // point B is much worse than point A
 			// console.log("drop worst: "+errMin+" < "+errMax+" @ "+(errMax/errMin));
+			world.disposePoint3DAncestor(point3DB);
 			world.killPoint3D(point3DB);
 			return world.embedPoint3D(point3DA);
 		}
@@ -17510,6 +17530,7 @@ Stereopsis.World.prototype._resolveIntersectionLayered = function(point3DA,point
 	if(viewsIntersectList.length==viewsAllAList.length || viewsIntersectList.length==viewsAllBList.length){
 // console.log("same point count: "+errMin+" - "+errMax);
 		// kill works always:
+		world.disposePoint3DAncestor(point3DB);
 		world.killPoint3D(point3DB);
 		return world.embedPoint3D(point3DA);
 		/*
@@ -17691,6 +17712,8 @@ Stereopsis.World.prototype._resolveIntersectionLayered = function(point3DA,point
 	// ... should this always be done? -- error needs to be updated if possible for next intersection
 	// world.updatePoints3DErrors([point3DC]);
 
+	// USE WORSE ANCESTOR, PREVIOUSLY FOUND TO BE B ["contaminated"]
+	point3DC.ancestor(point3DB.ancestor());
 
 	world.killPoint3D(point3DA);
 	world.killPoint3D(point3DB);
@@ -18894,6 +18917,18 @@ Stereopsis.World.prototype.disconnectPoint3D = function(point3D){
 	}
 	// point3D
 	world.removePoint3D(point3D);
+}
+Stereopsis.World.prototype.disposePoint3DAncestor = function(point3D){ // remove & kill point3D
+	// return;
+	var world = this;
+	var ancestor = point3D.ancestor();
+	if(ancestor && ancestor.id()!==null){ //ancestor may already be disposed
+		// console.log("disposePoint3DAncestor "+ancestor);
+		// console.log("disposePoint3DAncestor");
+		world.disconnectPoint3D(ancestor);
+		// world.removePoint3D(ancestor);
+		world.killPoint3D(ancestor);
+	}
 }
 Stereopsis.World.prototype.killPoint3D = function(point3D){ // free memory
 	var matches = point3D.toMatchArray();

@@ -388,6 +388,41 @@ MISSING:
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
+- address similar error but wrong seed point / propagation
+	A) multi-view:
+		- check that obstruction voting (fwd & bak) is finding & voting & weighting appropriately
+	B) check that all propagation happens AFTER all sources have a chance to find a best guess
+x		- symmetric & only preferential to better result (NCC?)
+		=> didn't seem to help
+	C) add ancestor parameter:
+		- on propagate: new P3D ancestor references source P3D
+		- on collision:
+			- (subsumed [eg pair replacement]) winning P3D deletes losing P3D & ancestor [if exists?]
+			- other collision: set ancestor as 
+				- array of both? -- could get big
+				- worst NCC score P3D? -- make sure to remove the worse score not the better score origin
+				- best NCC score P3D? 
+		- on other filtering do anything?
+			- R / F / N / S ?
+			- 
+x 	=> doesn't seem to help
+
+
+
+
+probe2DCellsR
+
+filterGlobalPatchSphere3D
+
+resolveIntersectionLayered
+
+world.killPoint3DAncestor(point3DB);
+
+
+
+
+
+
 x new P3D (create/insert) optimize location closer - helps very mildly
 
 

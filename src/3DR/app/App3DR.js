@@ -12808,25 +12808,25 @@ GLOBALSTAGE.root().matrix().scale(0.50); // dense
 		console.log("solveDensePair");
 // console.log(info);
 // throw "before solveDensePair"
-
+		// //
 		world.solveDensePairNew();
-
+		// //
 		// GLOBALSTAGE.root().matrix().scale(0.25);
 		// world.showForwardBackwardPair();
-
-
-
-		// var str = world.toYAMLString();
-		// console.log(str);
-
-// throw "before save solveDensePairNew"
-
+		// //
+		// //
+		// //
+		var str = world.toYAMLString();
+		console.log(str);
+		// //
+throw "before save solveDensePairNew"
+		// //
 		var goodEnoughMatches = true;
-
+		// //
 		var pairData = App3DR.ProjectManager.defaultPairFile(viewAID,viewBID);
-
+		// //
 		// throw "AFTER DENSE - NEW PAIR DONE"
-
+		// //
 		var transform = world.toTransformArray()[0];
 		var errorR = (transform.rSigma() + transform.rMean());
 		var errorF = (transform.fSigma() + transform.fMean());
