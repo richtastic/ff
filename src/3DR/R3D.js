@@ -1034,6 +1034,7 @@ console.log(allStr);
 	var forwardRays = [];
 	var originV3Ds = [];
 	var limitAngle90 = Math.PI*0.5;
+	var maxLimitAngle = Code.radians(120.0); // how low can this be? -- with position & angle this can be reduced a lot?
 	var viewAngles = [];
 	for(var i=0; i<possibles.length; ++i){
 		var P = possibles[i];
@@ -1045,8 +1046,9 @@ console.log(allStr);
 		var angle = V3D.angle(V3D.DIRZ, dirZ);
 		viewAngles[i] = Code.degrees(angle);
 		// console.log("ANGLE: "+Code.degrees(angle));
-		if(false && angle>=limitAngle90){
+		if(true && angle>=maxLimitAngle){
 			Code.removeElementAt(possibles,i);
+			Code.removeElementAt(viewAngles,i);
 			--i;
 		}else{
 			forwardRays[i] = dirZ;
@@ -1101,6 +1103,20 @@ console.log(allStr);
 	console.log("bakwardCounts: "+bakwardCounts);
 	console.log("       angles: "+viewAngles);
 	console.log("       errors: "+errorCounts);
+
+	// var maxAngle = Code.radians(120.0); // likely bad -- should be less than 90
+	// for(var i=0; i<viewAngles.length; ++i){
+	// 	var angle = viewAngles[i];
+	// 	if(angle>maxAngle){
+	// 		console.log("removed angle: "+Code.degrees(angle));
+	// 		Code.removeElementAt(forwardCounts,i);
+	// 		Code.removeElementAt(possibles,i);
+	// 		Code.removeElementAt(bakwardCounts,i);
+	// 		Code.removeElementAt(viewAngles,i);
+	// 		Code.removeElementAt(errorCounts,i);
+	// 		--i;
+	// 	}
+	// }
 
 	// errors are about identical
 	// other / nonlinear way to tell which is better (top best ~50% ?)

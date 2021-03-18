@@ -24,7 +24,8 @@ function setupDisplay(){
 function classesLoadedFxn(){
 	setupDisplay();
 	console.log("classesLoadedFxn");
-	testFourier2D();
+	testFourier1D();
+	// testFourier2D();
 }
 function testFourier2D(){
 	setupDisplay();
@@ -152,6 +153,11 @@ function testFourier1D(){
 	console.log(y);
 	var transform = Code.fourierTransform1D(y);
 	console.log(transform);
+
+	var result = Code.fft1D(y);
+	console.log(result);
+
+throw "here";
 
 	var reals = transform["real"];
 	var imags = transform["imag"];

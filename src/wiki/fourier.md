@@ -257,6 +257,8 @@ http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.712.2180&rep=rep1&type=
 
 
 TUT:
+
+
 http://apps.usd.edu/coglab/schieber/psyc707/pdf/2D-FFT.pdf
 
 https://stackoverflow.com/questions/49922458/matlab-octave-2d-discrete-fourier-transform
@@ -316,6 +318,25 @@ https://www.codeproject.com/Articles/44166/2D-FFT-of-an-Image-in-C
 
 # FFT
 2&middot;N<sup>2</sup> &Rarr; 2&middot;N&middot;lg(N) 
+
+
+- split into even/odd
+- symmetry repeating every 2 pi, sub-problem N/2
+- repeat
+
+- pad with 0s to get more fine freq sampling
+
+
+https://www.youtube.com/watch?v=htCj9exbGo0
+	"frequency bins"
+https://www.drdobbs.com/cpp/a-simple-and-efficient-fft-implementatio/199500857
+- 
+https://www.drdobbs.com/cpp/a-simple-and-efficient-fft-implementatio/199500857
+-
+
+
+
+
 
 
 https://towardsdatascience.com/fast-fourier-transform-937926e591cb

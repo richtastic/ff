@@ -3002,10 +3002,18 @@ Code.fourierInverse2D = function(reals,imags, width,height){
 	*/
 	// throw "?";
 }
-Code.fft1D = function(values){ 
+
+// https://cp-algorithms.com/algebra/fft.html
+// https://rosettacode.org/wiki/Fast_Fourier_transform
+Code.fft1D = function(values){
 	//
 	throw "TODO: FFT 1D";
 }
+Code._fft1D = function(values){
+	throw "?"
+}
+
+
 Code.fft2D = function(values, width,height){ 
 	//
 	throw "TODO: FFT 2D";

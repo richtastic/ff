@@ -387,6 +387,25 @@ MISSING:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+- pairs & groups have poor points all over (clouds)
+	=> is the clouds a result of poor seeds?
+	=> 3D patch filtering?
+
+- go over each alg & see if logic or speed can be improved
+
+
+
+
+
+
+
+
+- some bandaids:
+	eg: 
+		- delete a p2d/match in a view if it is the worst NCC score of its 8 kNN (or do a radius?)
+
+- how full-blown seed/grouping would/could work
+
 
 - address similar error but wrong seed point / propagation
 	A) multi-view:
@@ -421,6 +440,14 @@ world.killPoint3DAncestor(point3DB);
 
 
 
+- what to do when point is much further than the camera point spacing
+	=> global sphere R = lambda * sphere centered on views @ average center
+	- step that checks P3D distances & caps it R, in direction of average v vector? or in direction of radius
+
+
+
+- some affine-visual optimization somewhere (patches) to replace with rot+scale
+- some visual rect extraction somewhere to replace with reusable needle/affine
 
 
 x new P3D (create/insert) optimize location closer - helps very mildly
@@ -528,49 +555,6 @@ TODO - parallelArrayInterpolateCubic - odd behavior outside image
 
 
 
-subDivideUpdateMatchLocation - averagePointDistance:
-..... reg+2:
-1.318
-0.898
-0.608
-..... BLUR+2 (same as reg+2?):
-1.314
-0.936
-0.626
-.....
-1.412
-0.908
-0.609
-.....
-1.353
-1.033
-0.648
-
-..... BLUR+4 v reg+2
-2.286 v 1.315
-1.449 v 0.967
-0.956 v 0.598
-
-
-DENSE:
-R : 0.00011859111814159077 +/- 1.5088402384724857
-TRACKS:
-R : 0.00020309462622313242 +/- 0.34478687037140776
-
-v
-
-DENSE:
-R : 0.00008185975972068265 +/- 1.419965857447991
-TRACKS:
-R : 0.00016873502458451792 +/- 0.3318345924641713
-.....
-
-.....
-
-subDivideUpdateMatchLocation - averagePointDistance:
-
-
-(1832*1920)/(1440*1600) = 1.5 x
 
 - what to do about areas that have large lighting changes
 	- windows reflection is very different from view to view

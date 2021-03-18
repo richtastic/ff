@@ -8159,7 +8159,7 @@ if(!relativeAB && isDense){
 				project.calculatePairMatchWithRFromViewIDs(idA,idB, relativeAB, camAID,camBID,cameras, completePairFxn,project, configuration);
 				return;
 			} // else: sparse = w/o known R
-			throw "this is for sparse"
+			// throw "this is for sparse"
 			var cameras = inputData["cameras"];
 			project.calculatePairMatchFromViewIDs(idA,idB, camAID,camBID,cameras, completePairFxn,project);
 			return;
@@ -12819,7 +12819,7 @@ GLOBALSTAGE.root().matrix().scale(0.50); // dense
 		var str = world.toYAMLString();
 		console.log(str);
 		// //
-throw "before save solveDensePairNew"
+// throw "before save solveDensePairNew"
 		// //
 		var goodEnoughMatches = true;
 		// //
@@ -13186,6 +13186,10 @@ initialMatchesAB = matches;
 
 
 
+GLOBALSTAGE.root().matrix().scale(0.50);
+
+
+
 
 
 if(DEBUG_SHOW){
@@ -13336,10 +13340,6 @@ console.log(matches);
 // R3D.showForwardBackwardCells(samplesA, samplesB, affines, imgA,imgB, GLOBALSTAGE, cellSize);
 
 
-// throw "..."
-
-
-
 
 
 
@@ -13421,6 +13421,15 @@ if(DEBUG_SHOW){
 		d.matrix().translate(0,0);
 		GLOBALSTAGE.addChild(d);
 }
+
+
+
+
+// 
+// throw "AFTER FULL SPARSE INITIAL"
+
+
+
 
 // throw "initial fat matches ... next: use stereopsis & F"
 
@@ -13596,11 +13605,13 @@ console.log("GET INITIAL F: "+matches.length);
 			var result = world.solvePair(function(world){
 				console.log("async");
 			}, this);
-			// console.log(result);
+
 			var str = world.toYAMLString();
 			console.log(str);
 
-			// world.showForwardBackwardPair();
+// console.log(result);
+// world.showForwardBackwardPair();
+// throw "BEFORE NEXT R -> T"
 
 
 			var transform0 = world.transformFromViews(view0,view1);
@@ -13663,6 +13674,7 @@ console.log("GET INITIAL F: "+matches.length);
 			// if(goodEnoughMatches){
 			console.log("do tracks");
 			world.solveForTracks();
+
 
 			var errorR = (transform.rSigma() + transform.rMean());
 			var errorF = (transform.fSigma() + transform.fMean());
@@ -14962,7 +14974,7 @@ throw "calculateGraphFxn?"
 		
 		console.log(bundleData);
 		console.log(fullBundleDataPath);
-		throw "BEFORE SAVE BUNDLE";
+		// throw "BEFORE SAVE BUNDLE";
 		project.saveFileFromData(bundleData, fullBundleDataPath, saveBundleFileFxn, project);
 	}
 /*
@@ -15359,7 +15371,7 @@ App3DR.ProjectManager.prototype.iterateBundleProcess = function(){
 		// aggregate views
 		var viewsFileName = bundleData["viewsFile"];
 		if(!viewsFileName){
-			throw "aggregate views";
+			// throw "aggregate views";
 			var views = bundleData["views"];
 			var viewsData = {};
 				viewsData["views"] = views;
@@ -15387,7 +15399,7 @@ App3DR.ProjectManager.prototype.iterateBundleProcess = function(){
 
 		var pointsFileName = bundleData["pointsFile"];
 		if(!pointsFileName){
-			throw "aggregate points";
+			// throw "aggregate points";
 			var pointsFileName = "points.yaml";
 			bundleData["pointsFile"] = pointsFileName;
 			pointsDataPath = Code.appendToPath(bundlePathBase,pointsFileName);

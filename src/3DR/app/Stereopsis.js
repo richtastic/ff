@@ -7356,7 +7356,10 @@ Stereopsis.World.prototype.initP3DPatchFromGeometry3D = function(point3D){
 	// console.log("LOCATION: "+location3D);
 	// console.log("MIDPOINT: "+midpoint3D);
 	// console.log("       D: "+V3D.distance(location3D,midpoint3D));
-
+if(points2D.length==0){
+	console.log("nothing in array points2D");
+	return;
+}
 	// NORMAL & RIGHT:
 	var normals = [];
 	var rights = [];
@@ -7378,6 +7381,7 @@ Stereopsis.World.prototype.initP3DPatchFromGeometry3D = function(point3D){
 		}
 		rights.push(right);
 	}
+
 // console.log(point3D);
 // console.log(points2D);
 // console.log(normals);
@@ -7386,6 +7390,12 @@ Stereopsis.World.prototype.initP3DPatchFromGeometry3D = function(point3D){
 // console.log(right3D);
 	var normal3D = Code.averageAngleVector3D(normals);
 	var right3D = Code.averageAngleVector3D(rights);
+	if(!normal3D || !right3D){
+
+		console.log(normals);
+		console.log(rights);
+		throw "no normal or right?"
+	}
 	var up3D = V3D.cross(normal3D,right3D); // or opposite
 	// SIZE : METHOD A - similar triangles: less accurate further away from primary point (can possibly get angle ?) (~10% diff) -- FASTER
 	/*
@@ -14986,6 +14996,9 @@ var cnt = 0;
 // console.log(extrinsics);
 // console.log(Ks);
 			var result = R3D.projectivePatch3DToAffineList(location3D, size3D, normal3D, up3D, extrinsics, Ks);
+			if(!result){
+				continue;
+			}
 // console.log(result);
 			var affineAB = result["affines"][0];
 // console.log(centerA);
@@ -20457,7 +20470,8 @@ console.log("SCALE THIS?")
 				if(points2D.length==0){
 					console.log(point3D);
 					this.removeCheckP3D(point3D);
-					throw "no points 2d ? ";
+					// throw "no points 2d ? ";
+					continue;
 				}
 				var objectPoint = {};
 				objectPointList.push(objectPoint);
