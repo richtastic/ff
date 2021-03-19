@@ -10216,7 +10216,7 @@ R3D.sequentialImageMatchingLexigramGenerate = function(images){ // grelexigram
 	return {"histograms":histograms, "features":features};
 }
 
-R3D.sequentialImageMatchingLexigramEvaluate = function(histograms,featureLists){//, maximumPairCount, tripleCountTODO,choiceCountTODO){ // lexigram
+R3D.sequentialImageMatchingLexigramEvaluate = function(histograms,featureLists, maximumPairCount, tripleCountTODO,choiceCountTODO){ // lexigram
 	var maximumMatchPercentHistogram = 0.50;
 	var maximumMatchPercentHistogram = 0.10;
 	var maximumMatchPercentHistogram = 0.05;

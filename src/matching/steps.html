@@ -1,0 +1,164 @@
+<html>
+<head>
+<title>FF Matching Steps</title>
+<script src="../code/FF.js"></script>
+<script src="../code/Code.js"></script>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<script type="text/javascript">
+function pageLoadedFxn(){
+	ff = new FF("../code/",defaultClassesLoadedFxn,null);
+}
+function defaultClassesLoadedFxn(){
+	var list = [];
+	scriptLoader = new ScriptLoader("../3DR/",list,this,customClassesLoadedFxn);
+	scriptLoader.load();
+}
+function customClassesLoadedFxn(){
+	Code.setPageTitle("customClassesLoadedFxn");
+
+	setupDisplay()
+
+	// matching multiple images coarse
+	testMatchingDatabase();
+
+	// matching features across 2 images
+
+	// refining features & affines
+
+	// F semidense
+
+	// R semidense
+
+	// ...
+
+}
+function setupDisplay(){
+	this._canvas = new Canvas(null,0,0,Canvas.STAGE_FIT_FILL, false,false);
+	this._stage = new Stage(this._canvas, 1000/20);
+	this._root = new DO();
+	this._keyboard = new Keyboard();
+	this._stage.addChild(this._root);
+	this._canvas.addListeners();
+	this._stage.addListeners();
+	this._stage.start();
+	this._canvas.addFunction(Canvas.EVENT_MOUSE_CLICK,this.handleMouseClickFxn,this);
+	// this._stage.addFunction(Stage.EVENT_ON_ENTER_FRAME,this.handleEnterFrame,this);
+	// this._keyboard.addFunction(Keyboard.EVENT_KEY_DOWN,this.handleKeyboardDownFxn,this);
+	this._keyboard.addListeners();
+	GLOBALSTAGE = this._stage;
+}
+function testMatchingDatabase(){
+	console.log("testMatchingDatabase");
+
+	var imagesLoadedFxn = function(imageInfo){
+		console.log("imagesLoadedFxn");
+
+		console.log(images);
+		var images = imageInfo["images"];
+		var offX = 0;
+		var imageScales = [];
+		var dScale = 0.25;
+		for(var i=0; i<images.length; ++i){
+			var image = images[i];
+			// console.log(image);
+
+			// 	var image = images[i];
+			// var img = image;
+				// img = GLOBALSTAGE.getFloatRGBAsImage(img.red(),img.grn(),img.blu(), img.width(),img.height());
+			var d = new DOImage(image);
+			d.matrix().scale(dScale);
+			d.matrix().translate(offX, 0);
+			GLOBALSTAGE.addChild(d);
+
+
+			var imageFloat = GLOBALSTAGE.getImageAsFloatRGB(image);
+			var imageMatrix = new ImageMat(imageFloat["width"],imageFloat["height"], imageFloat["red"], imageFloat["grn"], imageFloat["blu"]);
+			
+			// console.log(imageMatrix);
+			var imageScaled = new ImageMatScaled(imageMatrix);
+			
+			imageScales.push(imageScaled);
+			offX += imageMatrix.width()*dScale;
+		}
+
+		// create histograms & features
+
+		var histogramList = [];
+		var wordsList = [];
+		for(var i=0; i<imageScales.length; ++i){
+			var imageScale = imageScales[i];
+
+			// actual features:
+			// var nonMaximalPercent = 0.010; // 0.001
+			// var nonRepeatPercent = 0.005;
+			// var corners = R3D.optimalCountFeaturesFromImageScales(imageScales, nonMaximalPercent, nonRepeatPercent);
+			// console.log(corners);
+			// var features = R3D.colorGradientFeaturesFromPoints(corners,imageScales);
+			// console.log(features);
+
+			// lexigram:
+			var result = R3D.sequentialImageMatchingLexigramGenerate([imageScale]);
+			var histograms = result["histograms"];
+			var features = result["features"];
+			var words = features[0];
+			var histogram = histograms[0];
+			var normalizedWords = R3D.normalizePointSizeObjects(words, imageScale.width(), imageScale.height()); 
+			histogramList.push(histogram);
+			wordsList.push(normalizedWords);
+		}
+
+		console.log(histogramList);
+		console.log(wordsList);
+
+		var result = R3D.sequentialImageMatchingLexigramEvaluate(histogramList, wordsList);
+		console.log(result);
+		var similarities = result["matches"];
+		var displayRadius = 300;
+		R3D.debugDisplaySimilarities(imageScales,similarities, displayRadius);
+
+		// match with features/histograms
+
+		// display
+
+	}
+	// imageList = ["bench_A.png"];
+	var baseLocation = "../3DR/images/";
+	// var imageList = ["snow2.png","snow1.png"];
+
+	var imageList = ["bench_A.png","bench_B.png","bench_C.png","bench_D.png","bench_E.png","bench_F.png", "snow2.png","snow1.png"];
+
+	
+
+	imageLoader = new ImageLoader(baseLocation,imageList, this, imagesLoadedFxn,null);
+	imageLoader.load();
+
+	// load images
+}
+
+
+function testMatchingFeatures(){
+	console.log("testMatchingFeatures");
+}
+
+
+function testAffineFeatures(){
+	console.log("testAffineFeatures");
+}
+
+
+function testFSemidense(){
+	console.log("testFSemidense");
+}
+
+
+function testRSemidense(){
+	console.log("testRSemidense");
+}
+
+
+</script>
+</head>
+<body onload="pageLoadedFxn();" style="">
+</body>
+</html>
+

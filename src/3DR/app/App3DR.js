@@ -16501,15 +16501,17 @@ console.log(histogram);
 	var normalizedFeatures = R3D.normalizeSIFTObjects(features, imageMatrix.width(), imageMatrix.height()); // this drops contents
 	
 
-	normalizedWords = word;
-	var oW = 1.0/imageMatrix.width();
-	var oH = 1.0/imageMatrix.height();
-	for(var i=0; i<normalizedWords.length; ++i){
-		var w = normalizedWords[i];
-		var p = w["point"];
-		p.scale(oW, oH);
-		w["size"] = w["size"]*oW;
-	}
+
+	var normalizedWords = R3D.normalizePointSizeObjects(word, imageMatrix.width(), imageMatrix.height()); 
+	// normalizedWords = word;
+	// var oW = 1.0/imageMatrix.width();
+	// var oH = 1.0/imageMatrix.height();
+	// for(var i=0; i<normalizedWords.length; ++i){
+	// 	var w = normalizedWords[i];
+	// 	var p = w["point"];
+	// 	p.scale(oW, oH);
+	// 	w["size"] = w["size"]*oW;
+	// }
 
 // these are the same now
 console.log(word);

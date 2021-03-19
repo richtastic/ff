@@ -391,7 +391,11 @@ MISSING:
 	=> is the clouds a result of poor seeds?
 	=> 3D patch filtering?
 
+- back to neghborhood keeping to verify seeds
+
 - go over each alg & see if logic or speed can be improved
+
+
 
 
 

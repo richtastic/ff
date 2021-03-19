@@ -601,6 +601,7 @@ Rammstein - Ich Will
 
 
 Rammstein - Sonne
+https://www.youtube.com/watch?v=StZcUAPRRac
 
 | du | | en |
 |-|-|-|
@@ -689,7 +690,7 @@ Rammstein - Du Hast
 
 
 Rammstein - Radio
-https://www.youtube.com/watch?v=z0NfI2NeDHI&has_verified=1
+https://www.youtube.com/watch?v=z0NfI2NeDHI
 
 | du | | en |
 |-|-|-|
@@ -735,6 +736,7 @@ https://www.youtube.com/watch?v=z0NfI2NeDHI&has_verified=1
 
 
 Rammstein - Ausländer
+https://www.youtube.com/watch?v=pat2c33sbog
 
 | Ich reise viel, ich reise gern |  | I travel a lot, I like to travel |
 | Fern und nah und nah und fern |  | Far and near and near and far |
@@ -1009,6 +1011,7 @@ https://www.youtube.com/watch?v=l3QNCrl6EqQ
 
 
 Rammstein - Rosenrot 
+https://www.youtube.com/watch?v=af59U2BRRAU
 
 | du | | en |
 |-|-|-|
@@ -1026,7 +1029,46 @@ Rammstein - Rosenrot
 |  |  |  |
 |  |  |  |
 
-
+Sah ein Mädchen ein Röslein stehen
+Blühte dort in lichten Höhen
+Sprach sie ihren Liebsten an
+Ob er es ihr steigen kann
+Sie will es und so ist es fein
+So war es und so wird es immer sein
+Sie will es und so ist es Brauch
+Was sie will bekommt sie auch
+Tiefe Brunnen muss man graben
+Wenn man klares Wasser will
+Rosenrot oh Rosenrot
+Tiefe Wasser sind nicht still
+Der Jüngling steigt den Berg mit Qual
+Die Aussicht ist ihm sehr egal
+Hat das Röslein nur im Sinn
+Bringt es seiner Liebsten hin
+Sie will es und so ist es fein
+So war es und so wird es immer sein
+Sie will es und so ist es Brauch
+Was sie will bekommt sie auch
+Tiefe Brunnen muss man graben
+Wenn man klares Wasser will
+Rosenrot oh Rosenrot
+Tiefe Wasser sind nicht still
+An seinen Stiefeln bricht ein Stein
+Will nicht mehr am Felsen sein
+Und ein Schrei tut jedem kund
+Beide fallen in den Grund
+Sie will es und so ist es fein
+So war es und so wird es immer sein
+Sie will es und so ist es Brauch
+Was sie will bekommt sie auch
+Tiefe Brunnen muss man graben
+Wenn man klares Wasser will
+Rosenrot oh Rosenrot
+Tiefe Wasser sind nicht still
+Tiefe Brunnen muss man graben
+Wenn man klares Wasser will
+Rosenrot oh Rosenrot
+Tiefe Wasser sind nicht still
 
 
 
@@ -1056,6 +1098,88 @@ Rammstein - Benzin
 
 
 
+Mo-Do - Eins Zwei Polizei
+https://www.youtube.com/watch?v=dSy2DcATYUo
+
+Eins, zwei, Polizei
+Drei, vier, Grenadier
+Fünf, sechs, alte Hex
+Sieben, acht, gute Nacht
+Eins, zwei, Polizei
+Drei, vier, Grenadier
+Fünf, sechs, alte Hex
+Sieben, acht, gute Nacht
+Eins, zwei, Polizei
+Drei, vier, Grenadier
+Fünf, sechs, alte Hex
+Sieben, acht, gute Nacht
+Eins, zwei, Polizei
+Drei, vier, Grenadier
+Fünf, sechs, alte Hex
+Sieben, acht, gute Nacht
+Ja, ja, ja, was ist los? Was ist das?
+Ja, ja, ja, was ist los? Was ist das?
+Ja, ja, ja, was ist los? Was ist das?
+Ja, ja, ja, was ist los? Was ist das?
+Ja, ja, ja, was ist los?
+Ja, ja, ja, was ist das?
+Ja, ja, ja, was ist los?
+Ja, ja, ja, was ist los? Was ist das?
+Eins, zwei, Polizei
+Drei, vier, Grenadier
+Fünf, sechs, alte Hex
+Sieben, acht, gute Nacht
+Eins, zwei, Polizei
+Drei, vier, Grenadier
+Fünf, sechs, alte Hex
+Sieben, acht, gute Nacht
+Eins, zwei, Polizei
+Drei, vier, Grenadier
+Fünf, sechs, alte Hex
+Sieben, acht, gute Nacht
+Eins, zwei, Polizei
+Drei, vier, Grenadier
+Fünf, sechs, alte Hex
+Sieben, acht, gute Nacht
+Ja, ja, ja, was ist los? Was ist das?
+Ja, ja, ja, was ist los? Was ist das?
+Ja, ja, ja, was ist los? Was ist das?
+Ja, ja, ja, was ist los? Was ist das?
+Ja, ja, ja, was ist los?
+Ja, ja, ja, was ist das?
+Ja, ja, ja, was ist los?
+Ja, ja, ja, was ist los? Was ist das?
+Eins, zwei, Polizei
+Drei, vier, Grenadier
+Fünf, sechs, alte Hex
+Sieben, acht, gute Nacht
+Ja, ja, ja, was ist los? Was ist das?
+Ja, ja, ja, was ist los? Was ist das?
+Ja, ja, ja, was ist los? Was ist das?
+Ja, ja, ja, was ist los?
+Ja, ja, ja, was ist das?
+Ja, ja, ja, was ist los?
+Ja, ja, ja, was ist los? Was ist das?
+Eins, zwei, Polizei
+Drei, vier, Grenadier
+Fünf, sechs, alte Hex
+Sieben, acht, gute Nacht
+Eins, zwei, Polizei
+Drei, vier, Grenadier
+Fünf, sechs, alte Hex
+Sieben, acht, gute Nacht
+Eins, zwei, Polizei
+Drei, vier, Grenadier
+Fünf, sechs, alte Hex
+Sieben, acht, gute Nacht
+Eins, zwei, Polizei
+Drei, vier, Grenadier
+Fünf, sechs, alte Hex
+Sieben, acht, gute Nacht
+Eins, zwei, Polizei
+Drei, vier, Grenadier
+Fünf, sechs, alte Hex
+Sieben, acht, gute Nacht
 
 
 
@@ -1272,6 +1396,7 @@ Mein Herz ist leer das darf nicht geschehen
 
 Eisbrecher - Vergissmeinnicht
 Eisbrecher- Antikorper- Vergissmeinnicht
+https://www.youtube.com/watch?v=PvuICQf-Zb8
 
 
 | du | | en |
@@ -1541,8 +1666,10 @@ Du bist im Labyrinth
 (Links, rechts, geradeaus)
 (Links, rechts, geradeaus)
 Keiner kann dir sagen, wer die Guten und die Bösen sind
-Du bist im Labyrinth (du bist im Labyrinth, du bist im Labyrinth)
-Du bist im Labyrinth (du bist im Labyrinth, du bist im Labyrinth)
+
+Du bist im Labyrinth (du bist im Labyrinth, du bist im Labyrinth) x2
+
+
 Klopf, klopf, lass' mich rein
 Lass' mich dein Geheimnis sein
 Klopf, klopf
@@ -1657,6 +1784,201 @@ Zeig' dich nicht!
 Eisbrecher - Zwischen uns
 
 https://www.youtube.com/watch?v=RVTvrzjQAGY
+
+
+
+Zwischen uns die Welten
+Ich werf' sie aus der Bahn
+Zwischen uns die Wüste
+Ich werde sie durchfahren
+Zwischen uns der Dschungel
+Ich lade mein Gewehr
+Zwischen uns das Meer
+Ich trink' es einfach leer
+Zwischen uns die Zweifel
+Ich räum' sie alle aus
+Zwischen uns die Wände
+Ich hab' 'ne harte Faust
+Zwischen uns die Wälder
+Ich hab' 'ne Kettensäge
+Und such' mir meine Wege
+Ich renn' für dich
+Ich verbrenn' für dich
+Ich geh' keinem Ärger aus dem Weg
+Da ist noch mehr zwischen uns
+Ich lauf' für dich
+Ich häng' mich auf für dich
+Ich will, dass dein Herz nur noch für mich schlägt
+Da ist noch mehr zwischen uns
+Da ist noch mehr
+Zwischen uns die Berge
+Ich werd' sie alle sprengen
+Zwischen uns die Sterne
+Ich lass' sie tiefer hängen
+Zwischen uns die Zukunft
+Ich mach' sie für dich sicher
+Zwischen uns die Dramen
+Ich such' mir 'nen neuen Dichter
+Zwischen uns die Eltern
+Ich werde sie entzücken
+Zwischen uns die Laufbahn
+Ich fülle alle Lücken
+Zwischen uns die Steine
+Ich bringe sie ins Rollen
+Und dann geh' ich in die vollen
+Ich renn' für dich
+Ich verbrenn' für dich
+Ich geh' keinem Ärger aus dem Weg
+Da ist noch mehr zwischen uns
+Ich lauf' für dich
+Ich häng' mich auf für dich
+Ich will, dass dein Herz nur noch für mich schlägt
+Da ist noch mehr zwischen uns
+Da ist noch mehr
+Zwischen uns der Türsteher
+Ich lass' mich selber rein
+Zwischen uns die Tische
+Ich hack' sie kurz und klein
+Zwischen uns der Typ da
+Der muss jetzt leider gehen
+Zwischen uns der Zeitpunkt
+Werd' ihn auf richtig drehen
+Zwischen uns das Eis
+Ich werd' es durchbrechen
+Zwischen uns die Worte
+Ich höre auf zu sprechen
+Zwischen uns drei Schritte
+Ich komme bei dir an
+Und zieh' dich an mich ran
+Bis nichts, nichts, nichts mehr
+Zwischen uns steht
+Und ich endlich spür', wie dein Herz schlägt
+Ich renn' für dich
+Ich verbrenn' für dich
+Ich geh' keinem Ärger aus dem Weg
+Da ist noch mehr zwischen uns
+Ich lauf' für dich
+Ich häng' mich auf für dich
+Ich will, dass dein Herz nur noch für mich schlägt
+Da ist noch mehr zwischen uns
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+NENA 99 Luftballons
+https://www.youtube.com/watch?v=7aLiT3wXko0
+Liv https://www.youtube.com/watch?v=hIIVK0NgK38
+En https://www.youtube.com/watch?v=L2IYUehYj0I
+
+Hast du etwas Zeit für mich?
+Dann singe ich ein Lied für dich
+Von neunundneunzig Luftballons
+Auf ihrem Weg zum Horizont
+Denkst du vielleicht grad an mich?
+Dann singe ich ein Lied für dich
+Von neunundneunzig Luftballons
+Und dass sowas von sowas kommt
+
+Neunundneunzig Luftballons
+Auf ihrem Weg zum Horizont
+Hielt man für Ufos aus dem All
+Darum schickte ein General
+'Ne Fliegerstaffel hinterher
+Alarm zu geben, wenn's so wär'
+Dabei war'n dort am Horizont
+Nur neunundneunzig Luftballons
+
+Neunundneunzig Düsenflieger
+Jeder war ein großer Krieger
+Hielten sich für Captain Kirk
+Das gab ein großes Feuerwerk
+Die Nachbarn haben nichts gerafft
+Und fühlten sich gleich angemacht
+Dabei schoss man am Horizont
+Auf neunundneunzig Luftballons
+
+Neunundneunzig Kriegsminister
+Streichholz und Benzinkanister
+Hielten sich für schlaue Leute
+Witterten schon fette Beute
+Riefen: "Krieg!" und wollten Macht
+
+Mann, wer hätte das gedacht
+Dass es einmal so weit kommt
+Wegen neunundneunzig Luftballons
+Wegen neunundneunzig Luftballons
+Neunundneunzig Luftballons
+
+Neunundneunzig Jahre Krieg
+Ließen keinen Platz für Sieger
+Kriegsminister gibt's nicht mehr
+Und auch keine Düsenflieger
+Heute zieh' ich meine Runden
+Seh' die Welt in Trümmern liegen
+Hab' 'n Luftballon gefunden
+Denk' an dich und lass' ihn fliegen
+...
+
+Do you have some time for me?
+Then I'll sing a song for you
+From ninety-nine balloons
+On their way to the horizon
+Maybe you're thinking about me just now?
+Then I'll sing a song for you
+From ninety-nine balloons
+And that something like that comes
+
+Ninety nine balloons
+On their way to the horizon
+Was thought to be UFOs from space
+So sent a general
+'A squadron behind
+To give the alarm if it were so
+And there were on the horizon
+Only ninety-nine balloons
+
+Ninety-nine jet planes
+Everyone was a great warrior
+Thought they were Captain Krik
+That gave a great fireworks display
+the neighbours did not get this
+And immediately felt turned on
+You shot on the horizon
+On ninety-nine balloons
+
+Ninety-nine ministers of war
+Matchstick and jerrycans
+Believed themselves to be smart people
+smelled a big hunt
+Shouted: "War!" and wanted power
+
+Man, who would have thought
+That it will come to this one day
+Because of ninety-nine balloons
+Because of ninety-nine balloons
+Ninety nine balloons
+
+Ninety-nine years of war
+Left no room for winners
+There is no longer a war minister
+And no jet planes either
+Today I do my laps
+See the world in ruins
+Found a balloon
+Think of yourself and let it fly
+
+
 
 
 
