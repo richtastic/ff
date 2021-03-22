@@ -10216,7 +10216,7 @@ R3D.sequentialImageMatchingLexigramGenerate = function(images){ // grelexigram
 	return {"histograms":histograms, "features":features};
 }
 
-R3D.sequentialImageMatchingLexigramEvaluate = function(histograms,featureLists, maximumPairCount, tripleCountTODO,choiceCountTODO){ // lexigram
+R3D.sequentialImageMatchingLexigramEvaluate = function(histograms,featureLists){//, maximumPairCount, tripleCountTODO,choiceCountTODO){ // lexigram
 	var maximumMatchPercentHistogram = 0.50;
 	var maximumMatchPercentHistogram = 0.10;
 	var maximumMatchPercentHistogram = 0.05;
@@ -12522,6 +12522,33 @@ R3D.compareProgressiveRIFTObjectsFull = function(objectsA, objectsB){
 	throw "R3D.compareProgressiveRIFTObjectsFull";
 
 	return {"what":null};
+}
+
+R3D.relativeRIFTFromFeatureMatches = function(matches){	
+	// convert to A, B, affine
+	var matchesAB = [];
+	var v = new V2D();
+	for(var i=0; i<matches.length; ++i){
+		var match = matches[i];
+		var A = match["A"];
+		var B = match["B"];
+		var scale = B["size"]/A["size"];
+			v.set(1,0);
+			v.rotate(-A["angle"]);
+			v.rotate(B["angle"]);
+		var angle = V2D.angleDirection(V2D.DIRX,v);
+		var affine = new Matrix2D();
+			affine.scale(scale);
+			affine.rotate(angle);
+		var matchAB = {};
+			matchAB["A"] = A["point"];
+			matchAB["B"] = B["point"];
+			matchAB["affine"] = affine;
+		matchesAB.push(matchAB);
+	}
+	matches = matchesAB;
+	console.log("INITIAL F MATCHES: "+matches.length+" / "+minimumCountFInit);
+	return matchesAB;
 }
 
 
