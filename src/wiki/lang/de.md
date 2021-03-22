@@ -1348,6 +1348,7 @@ What's this?
 
 
 Vanessa Mai - Und wenn ich träum 
+https://www.youtube.com/watch?v=7hxrPINkkZA
 
 Ich kann es nicht verstehen, was du mir sagen willst
 Mein Kopf, er dröhnt, mein Traum zerschmilzt
@@ -1881,104 +1882,75 @@ https://www.youtube.com/watch?v=7aLiT3wXko0
 Liv https://www.youtube.com/watch?v=hIIVK0NgK38
 En https://www.youtube.com/watch?v=L2IYUehYj0I
 
-Hast du etwas Zeit für mich?
-Dann singe ich ein Lied für dich
-Von neunundneunzig Luftballons
-Auf ihrem Weg zum Horizont
-Denkst du vielleicht grad an mich?
-Dann singe ich ein Lied für dich
-Von neunundneunzig Luftballons
-Und dass sowas von sowas kommt
-
-Neunundneunzig Luftballons
-Auf ihrem Weg zum Horizont
-Hielt man für Ufos aus dem All
-Darum schickte ein General
-'Ne Fliegerstaffel hinterher
-Alarm zu geben, wenn's so wär'
-Dabei war'n dort am Horizont
-Nur neunundneunzig Luftballons
-
-Neunundneunzig Düsenflieger
-Jeder war ein großer Krieger
-Hielten sich für Captain Kirk
-Das gab ein großes Feuerwerk
-Die Nachbarn haben nichts gerafft
-Und fühlten sich gleich angemacht
-Dabei schoss man am Horizont
-Auf neunundneunzig Luftballons
-
-Neunundneunzig Kriegsminister
-Streichholz und Benzinkanister
-Hielten sich für schlaue Leute
-Witterten schon fette Beute
-Riefen: "Krieg!" und wollten Macht
-
-Mann, wer hätte das gedacht
-Dass es einmal so weit kommt
-Wegen neunundneunzig Luftballons
-Wegen neunundneunzig Luftballons
-Neunundneunzig Luftballons
-
-Neunundneunzig Jahre Krieg
-Ließen keinen Platz für Sieger
-Kriegsminister gibt's nicht mehr
-Und auch keine Düsenflieger
-Heute zieh' ich meine Runden
-Seh' die Welt in Trümmern liegen
-Hab' 'n Luftballon gefunden
-Denk' an dich und lass' ihn fliegen
-...
-
-Do you have some time for me?
-Then I'll sing a song for you
-From ninety-nine balloons
-On their way to the horizon
-Maybe you're thinking about me just now?
-Then I'll sing a song for you
-From ninety-nine balloons
-And that something like that comes
-
-Ninety nine balloons
-On their way to the horizon
-Was thought to be UFOs from space
-So sent a general
-'A squadron behind
-To give the alarm if it were so
-And there were on the horizon
-Only ninety-nine balloons
-
-Ninety-nine jet planes
-Everyone was a great warrior
-Thought they were Captain Krik
-That gave a great fireworks display
-the neighbours did not get this
-And immediately felt turned on
-You shot on the horizon
-On ninety-nine balloons
-
-Ninety-nine ministers of war
-Matchstick and jerrycans
-Believed themselves to be smart people
-smelled a big hunt
-Shouted: "War!" and wanted power
-
-Man, who would have thought
-That it will come to this one day
-Because of ninety-nine balloons
-Because of ninety-nine balloons
-Ninety nine balloons
-
-Ninety-nine years of war
-Left no room for winners
-There is no longer a war minister
-And no jet planes either
-Today I do my laps
-See the world in ruins
-Found a balloon
-Think of yourself and let it fly
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+| du | | en |
+|-|-|-|
+| Hast du etwas Zeit für mich? |  | Do you have some time for me? |
+| Dann singe ich ein Lied für dich |  | Then I'll sing a song for you |
+| Von neunundneunzig Luftballons |  | From ninety-nine balloons |
+| Auf ihrem Weg zum Horizont |  | On their way to the horizon |
+| Denkst du vielleicht grad an mich? |  | Maybe you're thinking about me just now? |
+| Dann singe ich ein Lied für dich |  | Then I'll sing a song for you |
+| Von neunundneunzig Luftballons |  | From ninety-nine balloons |
+| Und dass sowas von sowas kommt |  | And that something like that comes |
+|  |  |  |
+| Neunundneunzig Luftballons |  | Ninety nine balloons |
+| Auf ihrem Weg zum Horizont |  | On their way to the horizon |
+| Hielt man für Ufos aus dem All |  | Was thought to be UFOs from space |
+| Darum schickte ein General |  | So sent a general |
+| 'Ne Fliegerstaffel hinterher |  | 'A squadron behind |
+| Alarm zu geben, wenn's so wär' |  | To give the alarm if it were so |
+| Dabei war'n dort am Horizont |  | And there were on the horizon |
+| Nur neunundneunzig Luftballons |  | Only ninety-nine balloons |
+|  |  |  |
+| Neunundneunzig Düsenflieger |  | Ninety-nine jet planes |
+| Jeder war ein großer Krieger |  | Everyone was a great warrior |
+| Hielten sich für Captain Kirk |  | Thought they were Captain Krik |
+| Das gab ein großes Feuerwerk |  | That gave a great fireworks display |
+| Die Nachbarn haben nichts gerafft |  | the neighbours did not get this |
+| Und fühlten sich gleich angemacht |  | And immediately felt turned on |
+| Dabei schoss man am Horizont |  | You shot on the horizon |
+| Auf neunundneunzig Luftballons |  | On ninety-nine balloons |
+|  |  |  |
+| Neunundneunzig Kriegsminister |  | Ninety-nine ministers of war |
+| Streichholz und Benzinkanister |  | Matchstick and jerrycans |
+| Hielten sich für schlaue Leute |  |  Believed themselves to be smart people|
+| Witterten schon fette Beute |  | smelled a big hunt |
+| Riefen: "Krieg!" und wollten Macht |  | Shouted: "War!" and wanted power |
+|  |  |  |
+| Mann, wer hätte das gedacht |  | Man, who would have thought |
+| Dass es einmal so weit kommt |  | That it will come to this one day |
+| Wegen neunundneunzig Luftballons |  | Because of ninety-nine balloons |
+| Wegen neunundneunzig Luftballons |  | Because of ninety-nine balloons |
+| Neunundneunzig Luftballons |  | Ninety nine balloons |
+|  |  |  |
+| Neunundneunzig Jahre Krieg |  | Ninety-nine years of war |
+| Ließen keinen Platz für Sieger |  | Left no room for winners |
+| Kriegsminister gibt's nicht mehr |  | There is no longer a war minister |
+| Und auch keine Düsenflieger |  | And no jet planes either |
+| Heute zieh' ich meine Runden |  | Today I do my laps |
+| Seh' die Welt in Trümmern liegen |  | See the world in ruins |
+| Hab' 'n Luftballon gefunden |  | Found a balloon |
+| Denk' an dich und lass' ihn fliegen |  | Think of yourself and let it fly |
+|  |  |  |
 
 
 

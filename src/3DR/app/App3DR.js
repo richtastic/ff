@@ -7972,7 +7972,6 @@ App3DR.ProjectManager.prototype._iterateSparseDenseLoaded = function(inputFilena
 	var currentPair = null;
 	var completePairFxn = function(data){
 		console.log("completePairFxn");
-// throw "completePairFxn";
 		var idA = currentPair["A"];
 		var idB = currentPair["B"];
 		var uniqueStrings = [idA,idB];
@@ -7992,7 +7991,7 @@ App3DR.ProjectManager.prototype._iterateSparseDenseLoaded = function(inputFilena
 			matches["A"] = data["A"];
 			matches["B"] = data["B"];
 			matchCount = matches["points"].length;
-console.log("GOT : matchCount: "+matchCount);
+			console.log("GOT : matchCount: "+matchCount);
 		}
 		// SAVE RELATIVE
 		var relative = data["relative"];
@@ -13120,31 +13119,35 @@ for(var i=0; i<features.length; ++i){
 		var result = R3D.compareProgressiveRIFTObjectsFull(objectsA, objectsB);
 		console.log(result);
 		var matches = result["matches"];
+		
+		var matchesAB = R3D.relativeRIFTFromFeatureMatches(matches);
 
-		// convert to A, B, affine
-		var matchesAB = [];
-		var v = new V2D();
-		for(var i=0; i<matches.length; ++i){
-			var match = matches[i];
-			var A = match["A"];
-			var B = match["B"];
-			var scale = B["size"]/A["size"];
-				v.set(1,0);
-				v.rotate(-A["angle"]);
-				v.rotate(B["angle"]);
-			var angle = V2D.angleDirection(V2D.DIRX,v);
-			var affine = new Matrix2D();
-				affine.scale(scale);
-				affine.rotate(angle);
-			var matchAB = {};
-				matchAB["A"] = A["point"];
-				matchAB["B"] = B["point"];
-				matchAB["affine"] = affine;
-			matchesAB.push(matchAB);
-		}
-		matches = matchesAB;
-	// console.log(matches);
-		console.log("INITIAL F MATCHES: "+matches.length+" / "+minimumCountFInit);
+		matches = matchesAB
+
+	// 	// convert to A, B, affine
+	// 	var matchesAB = [];
+	// 	var v = new V2D();
+	// 	for(var i=0; i<matches.length; ++i){
+	// 		var match = matches[i];
+	// 		var A = match["A"];
+	// 		var B = match["B"];
+	// 		var scale = B["size"]/A["size"];
+	// 			v.set(1,0);
+	// 			v.rotate(-A["angle"]);
+	// 			v.rotate(B["angle"]);
+	// 		var angle = V2D.angleDirection(V2D.DIRX,v);
+	// 		var affine = new Matrix2D();
+	// 			affine.scale(scale);
+	// 			affine.rotate(angle);
+	// 		var matchAB = {};
+	// 			matchAB["A"] = A["point"];
+	// 			matchAB["B"] = B["point"];
+	// 			matchAB["affine"] = affine;
+	// 		matchesAB.push(matchAB);
+	// 	}
+	// 	matches = matchesAB;
+	// // console.log(matches);
+	// 	console.log("INITIAL F MATCHES: "+matches.length+" / "+minimumCountFInit);
 
 		if(matches.length<minimumCountFInit){
 			goodEnoughMatches = false;
