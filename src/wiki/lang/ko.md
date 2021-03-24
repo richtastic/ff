@@ -1,6 +1,50 @@
 ## korean
 
 
+### alphabet
+
+
+24 basic letters
+14 consonants (ㄱ ㄴ ㄷ ㄹ ㅁ ㅂ ㅅ ㅇ ㅈ ㅊ ㅋ ㅌ ㅍ ㅎ)
+10 vowels (ㅏ ㅑ ㅓ ㅕ ㅗ ㅛ ㅜ ㅠ ㅡ ㅣ).
+19 complex letters:
+	- 5 tense consonants (ㄲ ㄸ ㅃ ㅉ ㅆ)
+	- 11 complex vowels (ㅢ ㅚ ㅐ ㅟ ㅔ ㅒ ㅖ ㅘ ㅝ ㅙ ㅞ) formed by combining the basic letters.
+
+| korean | pronounce | meaning |
+| --- | --- | --- |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+
+https://www.mondly.com/blog/2020/05/25/hangul-korean-alphabet-pronunciation/
+
+
+
+
+
+
+
 ### table
 
 | korean | pronounce | meaning |

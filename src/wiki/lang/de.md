@@ -67,19 +67,32 @@
 |  |  |  |
 
 
+
+masculine: der
+feminine: die
+neuter: das ein
+
+
 #### greetings
 
 | german | pronounce | meaning |
 | --- | --- | --- |
 | Hallo | hah-low | hello |
-| Auf Wiedersehen | auf vweedersen | bye |
+| Auf Wiedersehen | auf vweedersen | bye (fml) |
+| Tschüss | tshoosh | bye |
+| bis bald |  bees bald | bye / see you soon |
+| Bis später |  | see you later |
 | Bitte | bit-eh | please |
 | Danke dir | danke deer | thank you |
 | ich | ichk | I |
 | Sie / Du | zsie / doo | You |
 |  |  | You (formal) |
 |  |  | You (casual) |
+| Prost! |  | cheers |
+| Wie geht's? |  | how are you |
 |  |  |  |
+| es geht |  | I'm all right |
+| Es tut mir leid |  | I am sorry |
 |  |  |  |
 |  |  |  |
 | Schönen Tag |  | good-day |
@@ -91,7 +104,7 @@
 | morgen |  | tomorrow / in the morning / morning |
 | gestern |  | yesterday |
 |  |  |  |
-|  |  |  |
+| Gerne |  | with pleasure |
 |  |  |  |
 |  |  |  |
 |  |  |  |
@@ -140,6 +153,7 @@
 | siebzig |  | 70 |
 | achtzig |  | 80 |
 | neunzig |  | 90 |
+| neun-und-neunzig |  | 99 |
 | einhundret / hundret|  | 100 |
 | zweihundret |  | 200 |
 | dreihundret |  | 300 |
@@ -269,10 +283,45 @@
 | wie |  | how |
 |  |  |  |
 |  |  |  |
+| nicht |  | not |
+| hier |  | here |
+| na ja |  | well / actually |
 |  |  |  |
 |  |  |  |
 |  |  |  |
 |  |  |  |
+| nur |  | only |
+| ist |  | is |
+| auf |  | at |
+|  |  |  |
+| nach |  | to |
+| zum |  |  to the|
+|  |  |  |
+|  |  |  |
+| ja |  | yes |
+| nein |  | no |
+| oder |  | or |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+| heiß |  | hot |
+| kalt |  | cold |
+| zu |  | too |
+| groß |  | big |
+|  |  |  |
+| einfach |  | easy |
+|  |  |  |
+|  |  |  |
+| traurig |  | sad |
+|  |  |  |
+| Freundin |  | friend |
+|  |  |  |
+|  |  |  |
+| Wirklich |  | really? |
+|  |  |  |
+| wichtig |  | important |
+|  |  |  |
+| lecker |  | delicious |
 |  |  |  |
 |  |  |  |
 |  |  |  |
@@ -288,7 +337,13 @@
 | rabbit |  | hase |
 | pferd |  | horse |
 | caterpillar |  | raupe |
+| maus |  | mouse |
+| Bär |  | bear |
 | ratte |  | rat |
+| elefant |  | elephant |
+| eule |  | owl |
+|  |  |  |
+|  |  |  |
 |  |  |  |
 |  |  |  |
 |  |  |  |
@@ -299,35 +354,47 @@
 | de | ph | en |
 | --- | --- | --- |
 |  |  |  |
+| Familie |  | family |
 |  |  |  |
 | kind/kinder |  | child/kid/s |
 | bruder |  | brother |
 | schwester |  | sister |
 | mutter |  | mother |
-| vader |  | father |
-| Großmutter/oma |  | grandma |
-| Großvater |  | grandpa |
-|  |  | daughter |
-|  |  | son |
+| vater |  | father |
+| Großmutter/oma |  | grandmother/grandma |
+| Großvater/opa |  | grandfather/grandpa |
+| Tochter |  | daughter |
+| Sohn |  | son |
 | ehefrau |  | wife |
 | mann |  | husband |
 |  |  |  |
-|  |  | nose |
-|  |  | head |
-|  |  | mouth |
-|  |  | eye/s |
-|  |  | eyebrow/s |
-|  |  | ear/s |
-|  |  | finger/s |
-|  |  | hand/s |
-|  |  | arm/s |
-|  |  | foot/feet |
+| der mann |  | man |
+| die frau |  | woman |
+| junge |  | boy |
+|  |  |  |
+| Student/en |  | student/s |
+| Medizinstudenten |  | medical student |
+| der Kellner |  | waiter |
+| die Speisekarte |  | menu |
+| das restaurant |  | restaurant |
+|  |  |  |
+|  |  |  |
+| fuß/Füße |  | foot/feet |
+| hand/hände |  | hand/s |
+| kopf |  | head |
+| nase |  | nose |
+| mund |  | mouth |
+| auge/n |  | eye/s |
+| augenbrau/en |  | eyebrow/s |
+| ohr/en |  | ear/s |
+| Finger |  | finger/s |
+| Zehe/n |  | toe/s |
+| arm |  | arm/s |
+| bein/e |  | leg |
+| hintern |  | butt |
 |  |  |  |
 |  |  |  |
 |  |  |  |
-|  |  |  |
-
-
 
 
 
@@ -337,6 +404,10 @@
 
 | de | ph | en |
 | --- | --- | --- |
+| das essen |  | food |
+|  |  |  |
+|  |  |  |
+| die  Schnitzel |  | breaded-chicken |
 |  |  |  |
 | käse |  | cheese |
 |  |  |  |
@@ -346,7 +417,7 @@
 |  |  |  |
 | tomate |  | tomate |
 |  |  |  |
-| sandwich |  | sandwich |
+| das sandwich |  | sandwich |
 | brot |  | bread |
 | karotte |  | carrot |
 |  |  |  |
@@ -354,7 +425,7 @@
 | senf |  | mustard |
 | ketchup |  | ketchup |
 | pfeffer |  | pepper |
-| salz |  | salt |
+| das salz |  | salt |
 | zucker |  | sugar |
 | zwiebel |  | onion |
 | salat |  | salad |
@@ -363,13 +434,21 @@
 | ei |  | egg |
 | mehl |  | flour |
 |  |  |  |
+| der Salat |  | salad |
+| die Pizza |  | pizza |
+| der Käse |  | cheese |
+| die wurst |  | sausage |
 |  |  |  |
 |  |  |  |
+| wasser |  | water |
+| Mineralwasser |  | mineral water |
+|  |  |  |
+| tee |  | tea |
+| Wein |  | wine |
+| bier |  | beer |
 |  |  |  |
 |  |  |  |
-|  |  |  |
-|  |  |  |
-|  |  |  |
+| Musik |  | music |
 |  |  |  |
 |  |  |  |
 |  |  |  |
@@ -388,9 +467,12 @@
 |  |  |  |
 | bereit | bear(ch)-iet | ready |
 |  |  |  |
-|  |  |  |
-|  |  |  |
+| sind |  | are |
+| im |  | in / in the|
 | für | foo-uhr | for |
+| aus |  | from |
+|  |  |  |
+|  |  |  |
 |  |  |  |
 | jede |  | each |
 |  |  |  |
@@ -406,7 +488,7 @@
 |  |  |  |
 |  |  |  |
 |  |  |  |
-|  |  |  |
+| personen |  | people |
 |  |  |  |
 |  |  |  |
 | hören | whore-in | hear |
@@ -420,12 +502,21 @@
 | hören |  | hear/ing |
 | sehen |  | see/ing |
 | schmecken |  | taste/ing |
+| learnen |  | learn |
+| hören |  | hear |
+
+|  |  |  |
+| Schau |  | look |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+
 |  |  |  |
 | leben |  | life/alive/to live |
 |  |  |  |
-|  |  |  |
-|  |  |  |
-|  |  |  |
+| schwimmen |  | swim |
+| Kochen |  | to cook |
+| Koch/Köchin |  | a cook |
 | tanz | tdahnse | dance |
 |  |  |  |
 | Lebensmittel | leibensmittle | food |
@@ -435,7 +526,9 @@
 | Abendessen | abbend-essen | dinner |
 |  |  |  |
 |  |  |  |
-| Fuß |  | foot |
+|  |  |  |
+|  |  |  |
+| Überraschung |  | surprise |
 |  |  |  |
 | lacht |  | laugh/laughs |
 | vorteil |  | advantage |
@@ -443,19 +536,57 @@
 |  |  |  |
 |  |  |  |
 | Sachen |  | stuff/things |
+| auch |  | also |
 |  |  |  |
 |  |  |  |
-|  |  |  |
-|  |  |  |
+| toll |  | great (cool) |
 |  |  |  |
 | geld |  | money |
+| tisch |  | table |
+|  |  |  |
+|  |  |  |
+| jung |  | young |
+|  |  |  |
+| sehr |  | very |
+|  |  |  |
+| Dumm |  | dumb |
+| klug |  | smart |
+| nett |  | nice |
+| schön |  | beautiful |
+| klein |  | small |
+| kurz |  | short |
+| groß / hoch |  | tall / big |
+| jung |  | young |
+
+| wunderbar |  | wonderful |
+| aufregend |  | exciting |
+| laut |  | loud / noisy |
+| teuer |  | expensive |
+|  |  |  |
+| natürlich |  | Naturally |
+|  |  |  |
+|  |  |  |
+| die stadt |  | city / town |
+|  |  |  |
+| die Rechnung |  | bill (check) |
+|  |  |  |
+|  |  |  |
+| Hochzeitsreise |  | honeymoon |
+| Bahnhof |  | train station |
+| Urlaub |  | vacation |
+|  |  |  |
+| Reise |  | trip/travels |
 |  |  |  |
 |  |  |  |
 |  |  |  |
 |  |  |  |
-|  |  |  |
-|  |  |  |
-|  |  |  |
+
+
+# phrases
+
+
+| Was machst du gerade |  | what are you doing |
+| wie spät ist es? |  | what time is it? |
 |  |  |  |
 |  |  |  |
 |  |  |  |
@@ -470,6 +601,40 @@
 |  |  |  |
 
 
+
+
+### VERBS
+
+eat : essen
+
+i / he / she / it / we / they / you / you formal
+
+
+ich esse
+er isst
+sie isst
+es isst
+wir essen
+Sie essen
+du isst
+??
+
+
+| heißt heiße |  | is called / named |
+
+| verb | i/ich | he/she/it er/sie/es | we/wir | you(fam)/you(form) | they/Sie | en |
+|-|-|-|
+
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
 
 
 
@@ -1886,21 +2051,6 @@ En https://www.youtube.com/watch?v=L2IYUehYj0I
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 | du | | en |
 |-|-|-|
 | Hast du etwas Zeit für mich? |  | Do you have some time for me? |
@@ -1955,30 +2105,108 @@ En https://www.youtube.com/watch?v=L2IYUehYj0I
 
 
 
-### VERBS
 
-eat : essen
+EISBRECHER - Supermodel
+https://www.youtube.com/watch?v=9LvvdChLBzM
 
-i / he / she / it / we / they / you / you formal
-
-
-ich esse
-er isst
-sie isst
-es isst
-wir essen
-Sie essen
-du isst
-??
-
-
-
-
-| verb | i/ich | he/she/it er/sie/es | we/wir | you(fam)/you(form) | they/Sie | en |
+| du | | en |
 |-|-|-|
+| Blaue Augen, blondes Haar |  | Blue eyes, blond hair |
+| Samt und seidig wunderbar |  | Velvet and silky wonderful |
+| Luxuskörper, hart gestählt |  | Luxury body, hard steel |
+| Mit dem Eisen durchgequält |  | Tormented with the iron |
+| Zart gebräunt, ein bisschen Speck |  | Lightly browned, a little bacon |
+| Was noch da ist muss noch weg |  | What is still there has to go |
+| Amphetamin, Testosteron |  | Amphetamine, testosterone |
+| Hier kommt die Supermodel Kraftmaschine Hirnruine mit |  | Here comes the supermodel power machine brain ruin |
+| Passion! |  | Passion! |
 |  |  |  |
+| Nichts bleibt, nur ein schöner Leib |  | Nothing remains, just a beautiful body |
+| Du glaubst dir selbst, dass du perfekt bist |  | You believe yourself that you are perfect |
+| Glaubst, dass der Dank der Welt Respekt ist |  | Believe the world's thanks is respect |
+| Nichts bleibt! |  | Nothing remains! |
 |  |  |  |
+| Lange Beine, glatt und schön |  | Long legs, smooth and beautiful |
+| Du kannst sogar auf ihnen stehn |  | You can even stand on them |
+| Schwarze Haut wird wieder hell |  | Black skin becomes light again |
+| Und zur Not hilft das Skalpell |  | And if necessary, the scalpel will help |
+| Ein tiefer Blick ins Dekolleté |  | A deep look into the cleavage |
+| Ein kleines Stelldichein im Separée |  | A little rendezvous in the Separée |
+| Mädchenträume, Endstation |  | Girls' dreams, the end of the line |
+| Hier kommt die Supermodel Kraftmaschine Hirnruine mit |  | Here comes the supermodel power machine brain ruin |
+| Passion! |  | Passion! |
 |  |  |  |
+| Nichts bleibt, nur ein schöner Leib |  | Nothing remains, just a beautiful body |
+| Du glaubst dir selbst, dass du perfekt bist |  | You believe yourself that you are perfect |
+| Glaubst, dass der Dank der Welt Respekt ist |  | Believe the world's thanks is respect |
+| Nichts bleibt! |  | Nothing remains! |
+|  |  |  |
+| Supermodel, Kraftmaschine, Hirnruine |  | Supermodel, power machine, brain ruin |
+| Supermodel, Kraftmaschine, Hirnruine |  | Supermodel, power machine, brain ruin |
+| Supermodel, Kraftmaschine, Hirnruine, Konkubine |  | Supermodel, power machine, brain ruin, concubine |
+| Supermodel, Volkslatrine Sexmaschine der Nation |  | Supermodel, the nation's popular latrine sex machine |
+|  |  |  |
+| Nichts bleibt! x3 |  | Nothing remains! |
+| Nur ein schöner Leib |  | Just a beautiful body |
+| Nichts bleibt! x2 |  | Nothing remains! |
+|  |  |  |
+
+
+
+
+
+
+
+
+
+Major Tom-Völlig losgelöst (Lyrics)
+https://www.youtube.com/watch?v=yidDeWFhK1Q
+
+
+CRO - Traum
+https://www.youtube.com/watch?v=8WQMBv2deYQ
+
+Wir sind Helden - Guten Tag
+https://www.youtube.com/watch?v=Ruf032HDDCI
+
+
+
+Seeed - Augenbling
+https://www.youtube.com/watch?v=mfLuuur6r8w
+
+
+Polarkreis 18 - Allein Allein
+https://www.youtube.com/watch?v=-SHwn6O25CY
+
+
+Blümchen - Nur geträumt
+https://www.youtube.com/watch?v=kcIvOH6f1js
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

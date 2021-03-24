@@ -12546,8 +12546,6 @@ R3D.relativeRIFTFromFeatureMatches = function(matches){
 			matchAB["affine"] = affine;
 		matchesAB.push(matchAB);
 	}
-	matches = matchesAB;
-	console.log("INITIAL F MATCHES: "+matches.length+" / "+minimumCountFInit);
 	return matchesAB;
 }
 
@@ -39402,14 +39400,12 @@ R3D.textureAddSourceTriangles = function(destinationImage, destinationTri2D, sou
 		p.y = j+min.y;
 		for(var i=0; i<dW; ++i){
 			p.x = i+min.x;
-
 			var index = destWidth*p.y + p.x;
-
+			// obvious visit coloring
 			// destR[index] = 1.0;
 			// destG[index] = 0.0;
-			// destB[index] = 0.5;
+			// destB[index] = 1.0;
 			// continue;
-			
 			var inside = Code.distancePointTri2D(p, dA,dB,dC) <= padding;
 			// var inside = true; // rectangles
 			if(inside){

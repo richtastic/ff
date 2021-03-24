@@ -1,6 +1,46 @@
 ## japanese
 
 
+https://www.wanikani.com/
+
+https://www.fluentin3months.com/japanese-alphabet/
+https://freejapaneselessons.com/japanese-alphabet-hiragana/
+
+
+
+### alphabet
+
+| japanese | pronounce | meaning | kanji |
+| --- | --- | --- | --- |
+|  |  |  |  |
+|  |  |  |  |
+|  |  |  |  |
+|  |  |  |  |
+|  |  |  |  |
+|  |  |  |  |
+|  |  |  |  |
+|  |  |  |  |
+|  |  |  |  |
+|  |  |  |  |
+|  |  |  |  |
+|  |  |  |  |
+|  |  |  |  |
+|  |  |  |  |
+|  |  |  |  |
+|  |  |  |  |
+|  |  |  |  |
+|  |  |  |  |
+
+ 	 	k	s	t	n	h	m	y	r	w	 
+a	ア (a)	カ (ka)	サ (sa)	タ (ta)	ナ (na)	ハ (ha)	マ (ma)	ヤ (ya)	ラ (ra)	ワ (wa)	ン (n)
+i	イ (i)	キ (ki)	シ (shi)	チ (chi)	ニ (ni)	ヒ (hi)	ミ (mi)	 	リ (ri)	 	 
+u	ウ (u)	ク (ku)	ス (su)	ツ (tsu)	ヌ (nu)	フ (fu)	ム (mu)	ユ (yu)	ル (ru)	 	 
+e	エ (e)	ケ (ke)	セ (se)	テ (te)	ネ (ne)	ヘ (he)	メ (me)	 	レ (re)	 	 
+o	オ (o)	コ (ko)	ソ (so)	ト (to)	ノ (no)	ホ (ho)	モ (mo)	ヨ (yo)	ロ (ro)	ヲ (wo)	 
+The katakana
+
+
+
 ### table
 
 | japanese | pronounce | meaning | kanji |
@@ -93,6 +133,16 @@ https://www.fluentin3months.com/japanese-numbers/
 
 
 
+
+### table
+
+| japanese | pronounce | meaning | kanji |
+| --- | --- | --- | --- |
+|  |  |  |  |
+|  |  |  |  |
+|  |  |  |  |
+|  |  |  |  |
+|  |  |  |  |
 
 
 

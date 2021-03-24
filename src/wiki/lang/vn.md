@@ -17,7 +17,7 @@
 | house |  | nhà |
 | phòng vệ sinh |  | bathroom |
 | đang làm gì đấy |  | what are you doing |
-| that's ok |  | không sao |
+| that's ok (dont worry) |  | không sao |
 |  |  |  |
 |  |  |  |
 |  |  |  |
@@ -30,7 +30,18 @@
 | ăn | angh | eat |
 | đọc | douh | reading |
 |  |  |  |
-
+|  |  |  |
+|  |  |  |
+|  |  |  |
+| ly | lee | glass |
+| cái ca |  | mug |
+|  |  |  |
+|  |  |  |
+| cắn |  | bite |
+|  |  |  |
+| dơ |  | dirty |
+|  |  |  |
+|  |  |  |
 | sách |  | book |
 |  |  | pen |
 |  |  | pencil |
@@ -41,9 +52,16 @@
 |  |  |  |
 |  |  |  |
 |  |  |  |
+| ở |  | at |
+| và |  | and |
 |  |  |  |
 |  |  |  |
-
+|  |  |  |
+| ca |  | mug |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
 
 tiền bạc
 
@@ -72,6 +90,7 @@ tiền bạc
 |  |  |  |
 |  |  |  |
 |  |  |  |
+đứa trẻ
 |  |  |  |
 |  |  |  |
 |  |  |  |
@@ -97,7 +116,10 @@ tiền bạc
 | nước |  | water |
 | nước đá |  | ice |
 | đá |  | rock |
+| nước ép |  | juics |
 |  |  |  |
+|  |  |  |
+| đứa trẻ |  | kid |
 | con gái |  | girl |
 | con trai |  | boy |
 |  |  |  |
@@ -106,6 +128,12 @@ tiền bạc
 | cà (chua) |  | tomato |
 |  |  |  |
 | cỏ |  | grass |
+|  |  |  |
+| đu đủ |  | papaya |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
 |  |  |  |
 |  |  |  |
 |  |  |  |
@@ -133,6 +161,12 @@ tiền bạc
 |  |  |  |
 | chân |  | leg/foot |
 |  |  |  |
+|  |  |  |
+|  |  |  |
+| găng tay |  | glove |
+|  |  |  |
+|  |  |  |
+|  |  |  |
 
 
 cái đầu | kai dow |  head
@@ -152,7 +186,7 @@ ngón chân | ngon chan | toe
 |  |  |  |
 |  |  |  |
 |  |  |  |
-|  |  |  |
+| Đu quay |  | ferris wheel |
 |  |  |  |
 |  |  |  |
 |  |  |  |
@@ -164,7 +198,7 @@ ngón chân | ngon chan | toe
 |  |  |  |
 |  |  |  |
 |  |  |  |
-|  |  |  |
+| Nhà ga |  | train station |
 |  |  |  |
 |  |  |  |
 |  |  |  |
@@ -282,7 +316,7 @@ WEATHER
 |  |  |  |
 |  |  |  |
 |  |  |  |
-|  |  |  |
+| ô |  | umbrella |
 |  |  |  |
 |  |  |  |
 |  |  |  |
@@ -299,6 +333,7 @@ WEATHER
 | con ngựa | nguah | horse |
 |  |  | pig |
 |  |  | cow |
+| dê |  | goat |
 | cá |  | fish |
 |  |  | bear |
 |  |  | bird |
@@ -313,15 +348,17 @@ WEATHER
 |  |  | tiger |
 |  |  | goat |
 |  |  | snake |
-|  |  |  |
-|  |  |  |
+| ong |  | bee |
+| dơi |  | bat |
 |  |  | camel |
 |  |  |  |
 |  |  |  |
 |  |  |  |
 |  |  |  |
 |  |  |  |
-
+|  |  |  |
+|  |  |  |
+|  |  |  |
 
 
 #### ?

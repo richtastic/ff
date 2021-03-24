@@ -414,7 +414,6 @@ calculatePairMatchFromViewIDs
 
 
 
-
 - some bandaids:
 	eg: 
 		- delete a p2d/match in a view if it is the worst NCC score of its 8 kNN (or do a radius?)
