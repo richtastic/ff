@@ -387,6 +387,23 @@ MISSING:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
+
+- TESTING ALGORITHMS
+	- display matches as colors
+	- 
+	- neighborhood consistency
+		- look at neighbors
+	- drop outliers again:
+		- F
+		- score
+		- 
+
+
+
+
+
+
 - pairs & groups have poor points all over (clouds)
 	=> is the clouds a result of poor seeds?
 	=> 3D patch filtering?
@@ -400,6 +417,15 @@ MISSING:
 
 
 calculatePairMatchFromViewIDs
+
+
+
+
+
+
+
+
+
 
 
 

@@ -12524,6 +12524,23 @@ R3D.compareProgressiveRIFTObjectsFull = function(objectsA, objectsB){
 	return {"what":null};
 }
 
+R3D.separateMatchesIntoPieces = function(matches){
+	var pointsA = [];
+	var pointsB = [];
+	var affinesAB = [];
+	var count = matches.length;
+	for(var i=0; i<count;++i){
+		var match = matches[i];
+		var a = match["A"];
+		var b = match["B"];
+		var affine = match["affine"];
+		pointsA.push(a);
+		pointsB.push(b);
+		affinesAB.push(affine);
+	}
+	return {"A":pointsA,"B":pointsB,"affines":affinesAB,"matches":matches};
+}
+
 R3D.relativeRIFTFromFeatureMatches = function(matches){	
 	// convert to A, B, affine
 	var matchesAB = [];
@@ -15475,7 +15492,218 @@ R3D._cornerListToFeatureList = function(corners, imageScale){
 	return features;
 }
 
-R3D.keepExtendedMatchNeighborhoods = function(imageMatrixA,imageMatrixB, matchesAB){ // filter out neighborhoods that have poor sub-space matching
+R3D.keepExtendedMatchNeighborhoods = function(matchesAB, imageMatrixA,imageMatrixB){ // filter out neighborhoods that have poor sub-space matching
+	var featureSize = 0.04; // 0.3 - 0.5 (size / 3)
+	var featureSpacing = 0.04; // 0.2 - 0.10
+	var compareSize = 7; // 5 - 9
+	console.log(matchesAB);
+// throw "JERE"
+	// derived
+	var imageSizeA = imageMatrixA.size().length();
+	var imageSizeB = imageMatrixB.size().length();
+	var featureSizeA = imageSizeA * featureSize;
+	var featureSizeB = imageSizeB * featureSize;
+	var featureSpacingA = imageSizeA * featureSpacing;
+	var featureSpacingB = imageSizeB * featureSpacing;
+	// collections
+	var identity = new Matrix2D();
+		identity.identity();
+	var neighborhoods = [];
+	var allFeaturesA = [];
+	var allFeaturesB = [];
+	var affine = new Matrix2D();
+	for(var i=0; i<matchesAB.length; ++i){
+		var matchAB = matchesAB[i];
+		var pointA = matchAB["A"];
+		var pointB = matchAB["B"];
+		var affineAB = matchAB["affine"];
+		affine.copy(affineAB);
+		affine.inverse(); // B to A
+		// get neighborhood of features in A & B
+		for(var y=-1; y<=1; ++y){
+			for(var x=-1; x<=1; ++x){
+				var p = new V2D();
+				var q = new V2D();
+				p.set(x*featureSpacingA, y*featureSpacingA);
+				affine.multV2DtoV2D(q,p);
+				p.add(pointA);
+				q.add(pointB);
+				var featureA = {};
+					featureA["affine"] = identity;
+					featureA["size"] = featureSizeA;
+					featureA["point"] = p;
+				var featureB = {};
+					featureB["affine"] = affine.copy();
+					featureB["size"] = featureSizeB;
+					featureB["point"] = q;
+				allFeaturesA.push(featureA);
+				allFeaturesB.push(featureB);
+			}
+		}
+		var neighborhood = {};
+			neighborhood["match"] = matchAB;
+			neighborhoods.push(neighborhood);
+	}
+	var scoreTotal = 0;
+	// console.log(allFeaturesA);
+	// console.log(allFeaturesB);
+	var allObjectsA = R3D.generateProgressiveRIFTObjects(allFeaturesA, imageMatrixA, true);
+	var allObjectsB = R3D.generateProgressiveRIFTObjects(allFeaturesB, imageMatrixB, true);
+	// console.log(allObjectsA);
+	// console.log(allObjectsB);
+	var scores = [];
+	var absoluteIndex = 0;
+	for(var i=0; i<neighborhoods.length; ++i){
+		var neighborhood = neighborhoods[i];
+		var totalScore = 0;
+		for(var j=0; j<9; ++j){
+			var objectA = allObjectsA[absoluteIndex];
+			var objectB = allObjectsB[absoluteIndex];
+			var score = R3D.compareProgressiveRIFTObjectsCombined(objectA,objectB);
+			totalScore += score;
+			++absoluteIndex;
+		}
+		neighborhood["score"] = totalScore;
+		scores.push(totalScore);
+	}
+	// Code.printMatlabArray(scores);
+	// console.log(neighborhoods);
+
+	// drop outliers scores
+	var fxnUpdate = function(matches){
+		//
+	}
+	var fxnValue = function(object){
+		return object["score"];
+	}
+	var fxnLimit = function(values){
+		var info = Code.exponentialDistribution(scores);
+		var limit = Code.exponentialDistributionValueForPercent(info["min"],info["lambda"], 0.95);
+		// var min = Code.min(values);
+		// var std = Code.stdDev(values,min);
+		// var limit = min + std * 2.0;
+		// console.log("SCORE LIMIT: "+scores.length+" = "+limit);
+		return limit;
+	}
+	var keepList = Code.repeatedDropOutliers(neighborhoods, fxnValue, fxnLimit, 10, 5, fxnUpdate);
+	console.log(keepList);
+	neighborhoods = keepList;
+
+	// throw "wurklich 1"
+
+	// limit - exponential distribution
+	// var min = Code.min(scores);
+	// var sigma = Code.stdDev(scores,min);
+	// var limit = min + 2.0*sigma;
+
+	// var info = Code.exponentialDistribution(scores);
+	// console.log(info);
+	// var limit = Code.exponentialDistributionValueForPercent(info["min"],info["lambda"], 0.95);
+
+// var limitA = Code.exponentialDistributionValueForPercent(info["min"],info["lambda"], 0.99);
+	// throw "not used correctly"
+
+	// var min = Code.min(scores);
+	// var sigma = Code.stdDev(scores,min);
+	// var limit = min + 2.0*sigma;
+
+/*
+var goods = [];
+var bads = [];
+	for(var i=0; i<neighborhoods.length; ++i){
+		var neighborhood = neighborhoods[i];
+		if(neighborhood["score"]>limit){
+			bads.push(neighborhood);
+		}else{
+			goods.push(neighborhood);
+		}
+	}
+	console.log(goods);
+	console.log(bads);
+*/
+var goods = neighborhoods;
+var bads = [];
+// if(false){
+if(true){
+	
+
+			var image = imageMatrixA.images()[0];
+			var img = GLOBALSTAGE.getFloatRGBAsImage(image.red(),image.grn(),image.blu(), image.width(),image.height());
+			var d = new DOImage(img);
+			d.matrix().translate(0,0);
+			GLOBALSTAGE.addChild(d);
+
+			var image = imageMatrixB.images()[0];
+			var img = GLOBALSTAGE.getFloatRGBAsImage(image.red(),image.grn(),image.blu(), image.width(),image.height());
+			var d = new DOImage(img);
+			d.matrix().translate(imageMatrixA.width(),0);
+			GLOBALSTAGE.addChild(d);
+
+
+
+
+	var d = new DO();
+	// d.graphics().setFill(0x99FFFFFF);
+	d.graphics().setFill(0x66FFFFFF);
+	d.graphics().beginPath();
+	d.graphics().drawRect(0,0, 2200,1200);
+	d.graphics().endPath();
+	d.graphics().fill();
+	d.matrix().translate(0,0);
+	GLOBALSTAGE.addChild(d);
+
+	var lists = [goods,bads];
+	var colors = [0xFF0000CC, 0xFFFF0000];
+
+// show BAD MATCHES vs GOOD MATCHES to see if good dropping
+	for(var i=0; i<lists.length; ++i){
+// break;
+		var neighs = lists[i];
+		var color = colors[i];
+		for(var n=0; n<neighs.length; ++n){
+			var neigh = neighs[n];
+			var match = neigh["match"];
+			var pointA = match["A"];
+			var pointB = match["B"];
+
+			var size = 3;
+			var line = 3.0;
+
+			var d = new DO();
+			d.graphics().setLine(line, color);
+			d.graphics().beginPath();
+			d.graphics().drawCircle(pointA.x, pointA.y, size);
+			d.graphics().strokeLine();
+			d.graphics().endPath();
+			d.matrix().translate(0,0);
+			GLOBALSTAGE.addChild(d);
+
+			var d = new DO();
+			d.graphics().setLine(line, color);
+			d.graphics().beginPath();
+			d.graphics().drawCircle(pointB.x, pointB.y, size);
+			d.graphics().strokeLine();
+			d.graphics().endPath();
+			d.matrix().translate(imageMatrixA.width(),0);
+			GLOBALSTAGE.addChild(d);
+		}
+	}
+}
+
+	var matches = [];
+	for(var i=0; i<goods.length; ++i){
+		var neighborhood = goods[i];
+		var match = neighborhood["match"];//
+		matches.push(match);
+	}
+// throw "wurklich 2"
+
+// throw "before return keepExtendedMatchNeighborhoods"
+	return {"matches":matches};
+}
+
+
+R3D.keepExtendedMatchNeighborhoodsOLD = function(imageMatrixA,imageMatrixB, matchesAB){ // filter out neighborhoods that have poor sub-space matching
 	var featureSize = 0.04; // 0.3 - 0.5 (size / 3)
 	var featureSpacing = 0.04; // 0.2 - 0.10
 	var compareSize = 7; // 5 - 9
@@ -34998,7 +35226,76 @@ R3D.showRansac = function(pointsA, pointsB, matrixFfwd, matrixFrev, display, ima
 		display.addChild(d);
 	}
 }
+R3D.showCoverAlpha = function(imageMatrixA,imageMatrixB, display, alpha){
+	var c = new DO();
+	var color = Code.getColARGBFromFloat(alpha,1.0,1.0,1.0);
+	c.graphics().setFill(color);
+	c.graphics().beginPath();
+	c.graphics().drawRect(0,0, imageMatrixA.width()+imageMatrixB.width(), imageMatrixA.height()+imageMatrixB.height() );
+	c.graphics().fill();
+	c.graphics().endPath();
+	c.matrix().translate(0, 0);
+	display.addChild(c);
+}
+R3D.showForwardBackwardPointsColor = function(pointsA, pointsB, affines, imageMatrixA,imageMatrixB, display, cellSize){
+/*
+	var d = new DO();
+	d.graphics().setFill(0x99FFFFFF);
+	// d.graphics().setFill(0x66FFFFFF);
+	d.graphics().beginPath();
+	d.graphics().drawRect(0,0, 2200,1200);
+	d.graphics().endPath();
+	d.graphics().fill();
+	d.matrix().translate(0,0);
+	GLOBALSTAGE.addChild(d);
+*/
+var d = new DO();
+var color0 = new V3D(1,0,0);
+var color1 = new V3D(0,1,0);
+var color2 = new V3D(0,0,1);
+// var color3 = new V3D(1,1,1);
+var color3 = new V3D(0,0,0);
+var colors = [color0,color1,color2,color3];
+	for(var i=0; i<pointsA.length; ++i){
+		// var match = bestMatches[i];
+		var pointA = pointsA[i];
+		var pointB = pointsB[i];
+		// if(!pointA || !pointB){
+		// 	console.log(match);
+		// 	continue;
+		// }
+		// var color = 0xFF0000FF;
+		var size = 3.0;
+		// var size = featureSizeA*0.5;
+		var line = 3.0;
+		
+var p = pointA.copy();
+var q = pointB.copy();
+var px = (p.x/imageMatrixA.width());
+var py = (p.y/imageMatrixA.height());
+var qx = 1 - px;
+var qy = 1 - py;
+var p0 = qx*qy;
+var p1 = px*qy;
+var p2 = qx*py;
+var p3 = px*py;
+			var color = V3D.average(colors, [p0,p1,p2,p3]);
+			color = Code.getColARGBFromFloat(1.0,color.x,color.y,color.z);
+			d.graphics().setLine(line,color);
+			d.graphics().beginPath();
+			d.graphics().drawCircle(pointA.x,pointA.y,size);
+			d.graphics().endPath();
+			d.graphics().strokeLine();
 
+			d.graphics().beginPath();
+			d.graphics().drawCircle(imageMatrixA.width() + pointB.x,pointB.y,size);
+			d.graphics().endPath();
+			d.graphics().strokeLine();
+	}
+	d.matrix().translate(0,0);
+	GLOBALSTAGE.addChild(d);
+
+}
 R3D.showForwardBackwardCells = function(pointsA, pointsB, affines, imageMatrixA,imageMatrixB, display, cellSize){
 	console.log("R3D.showForwardBackwardCells");
 	// console.log(pointsA, pointsB, affines, imageMatrixA,imageMatrixB, display, cellSize)
@@ -35107,6 +35404,125 @@ R3D.experimentLocationRefine = function(samplesA,samplesB,affinesAB, imageScales
 	}
 
 	return {"A":samplesA, "B":newsB, "affines":affinesAB, "scores":scores};
+}
+
+R3D.groupMatchesFromParallelArrays = function(info, imageScalesA,imageScalesB){
+	var scores = info["scores"];
+	samplesA = info["A"];
+	samplesB = info["B"];
+	affines = info["affines"];
+
+	var countFxn = function(item){
+		return item["scores"].length;
+	}
+	var groupFxn = function(index,info){
+		var scores = info["scores"];
+		var As  = info["A"];
+		var Bs = info["B"];
+		var affines = info["affines"];
+		var o = {};
+			o["score"] = scores[index];
+			o["A"] = As[index];
+			o["B"] = Bs[index];
+			o["affine"] = affines[index];
+		return o;
+	}
+	var groups = Code.mapObject(countFxn, groupFxn, info);
+	// console.log(groups);
+	return {"matches":groups};
+}
+
+
+R3D.dropOutliersSparseMatches = function(matches, imageScalesA,imageScalesB){
+
+	var info = R3D.separateMatchesIntoPieces(matches);
+	console.log(info);
+	var pointsA = info["A"];
+	var pointsB = info["B"];
+	var affinesAB = info["affines"];
+	var matchesAB;
+	// refine affine match:
+	var info = R3D.experimentAffineRefine(pointsA,pointsB,affinesAB, imageScales[0],imageScales[1]);
+
+	var info = R3D.groupMatchesFromParallelArrays(info, imageScales[0],imageScales[1]);
+	matchesAB = info["matches"];
+	console.log("START MATCHES: "+matchesAB.length);
+
+	// score
+	var info = R3D.repeatedDropOutliersScore(matchesAB, imageScales[0],imageScales[1]);
+	matchesAB = info["matches"];
+	console.log("KEPT SCORES: "+matchesAB.length);
+
+	// extended neighborhood
+	var info = R3D.keepExtendedMatchNeighborhoods(matchesAB, imageScales[0],imageScales[1]);
+	matchesAB = info["matches"];
+	console.log("KEPT NEIGHBORHOOD: "+matchesAB.length);
+
+	// F
+	var info = R3D.repeatedDropOutliersFundamental(matchesAB, imageScales[0],imageScales[1]);
+	matchesAB = info["matches"];
+	console.log("KEPT F: "+matchesAB.length);
+
+	// scores 2
+	var info = R3D.repeatedDropOutliersScore(matchesAB, imageScales[0],imageScales[1]);
+	matchesAB = info["matches"];
+	console.log("KEPT SCORE: "+matchesAB.length);
+
+	return {"matches":matchesAB};
+
+}
+
+R3D.repeatedDropOutliersFundamental = function(matches, imageScalesA,imageScalesB){
+	// drop outliers F
+	var fxnUpdate = function(matches){ // recalculate F
+		var info = R3D.separateMatchesIntoPieces(matches);
+		var pointsA = info["A"];
+		var pointsB = info["B"];
+		var F = R3D.fundamentalFromUnnormalized(pointsA,pointsB);
+		var Finv = R3D.fundamentalInverse(F);
+		var count = pointsA.length;
+		var errorTotal = 0;
+		for(var i=0; i<count; ++i){
+			var pointA = pointsA[i];
+			var pointB = pointsB[i];
+			var error = R3D.fundamentalErrorSingle(F,Finv,pointA,pointB);
+				error = error["error"];
+			matches[i]["ferror"] = error;
+			errorTotal += error;
+		}
+		// console.log("avg F error: "+(errorTotal/count));
+	}
+	var fxnValue = function(object){
+		return object["ferror"];
+	}
+	var fxnLimit = function(values){
+		var min = Code.min(values);
+		var std = Code.stdDev(values,min);
+		var limit = min + std * 2.0;
+		console.log("F-LIMIT: "+limit+" ("+values.length+") ");
+		return limit;
+	}
+	var keepList = Code.repeatedDropOutliers(matchesAB, fxnValue, fxnLimit, 10, 10, fxnUpdate);
+	console.log("F KEPT: "+keepList.length+" / "+matchesAB.length);
+	return {"matches":keepList};
+}
+
+R3D.repeatedDropOutliersScore = function(matchesAB, imageScalesA,imageScalesB){
+	// filter on scores:
+	var fxnValue = function(object){
+		return object["score"];
+	}
+	var fxnLimit = function(values){
+		var min = Code.min(values);
+		var std = Code.stdDev(values,min);
+		var limit = min + std * 2.0;
+		return limit;
+	}
+
+	// Code.repeatedDropOutliers = function(inList, toValueFxn, toLimitFxn, minCount, maxIterations){
+	var keepList = Code.repeatedDropOutliers(matchesAB, fxnValue, fxnLimit, 10, 25);
+	console.log("SCORE KEPT: "+keepList.length+" / "+matchesAB.length);
+	return {"matches":keepList};
 }
 
 R3D.experimentAffineRefine = function(samplesA,samplesB,affinesAB, imageScalesA,imageScalesB){

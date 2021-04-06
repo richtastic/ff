@@ -30,7 +30,7 @@ function customClassesLoadedFxn(){
 
 	// R semidense
 
-	// ...
+	// R 3+ group
 
 	// ...
 
@@ -142,7 +142,8 @@ function testMatchingFeatures(){
 		var images = imageInfo["images"];
 		var offX = 0;
 		var imageScales = [];
-		var dScale = 0.25;
+		var dScale = 1.0;
+		// var dScale = 0.50;
 		for(var i=0; i<images.length; ++i){
 			var image = images[i];
 			// console.log(image);
@@ -185,31 +186,233 @@ function testMatchingFeatures(){
 		console.log("normalizedFeatureList:");
 		console.log(normalizedFeatureList);
 		var objectsList = [];
+		var featuresList = [];
 		for(var i=0; i<normalizedFeatureList.length; ++i){
 			var normalizedFeatures = normalizedFeatureList[i];
 			var imageScale = imageScales[i];
 			var features = R3D.denormalizeSIFTObjects(normalizedFeatures, imageScale.width(), imageScale.height());
 			var objects = R3D.generateProgressiveRIFTObjects(features, imageScale);
 			objectsList.push(objects);
+			featuresList.push(features);
 		}
 		console.log("objectsList:");
 		console.log(objectsList);
 		var objectsA = objectsList[0];
 		var objectsB = objectsList[1];
-		// 
+		// best match list
 		var result = R3D.compareProgressiveRIFTObjectsFull(objectsA, objectsB);
 		console.log(result);
 		var matches = result["matches"];
-		
-
+		// best affine matching:
 		matches = R3D.relativeRIFTFromFeatureMatches(matches);
 		console.log(matches);
+
+var info = R3D.separateMatchesIntoPieces(matches);
+console.log(info);
+var pointsA = info["A"];
+var pointsB = info["B"];
+var affinesAB = info["affines"];
+
+// console.log(matches);
+
+// refine affine match:
+var info = R3D.experimentAffineRefine(pointsA,pointsB,affinesAB, imageScales[0],imageScales[1]);
+console.log(info);
+
+var info = R3D.groupMatchesFromParallelArrays(info, imageScales[0],imageScales[1]);
+console.log(info);
+
+matchesAB = info["matches"];
+
+// // console.log(info);
+// var scores = info["scores"];
+// samplesA = info["A"];
+// samplesB = info["B"];
+// affines = info["affines"];
+
+
+// var countFxn = function(item){
+// 	return item["scores"].length;
+// }
+// var groupFxn = function(index,info){
+// 	var scores = info["scores"];
+// 	var As  = info["A"];
+// 	var Bs = info["B"];
+// 	var affines = info["affines"];
+// 	var o = {};
+// 		o["score"] = scores[index];
+// 		o["A"] = As[index];
+// 		o["B"] = Bs[index];
+// 		o["affine"] = affines[index];
+// 	return o;
+// }
+// var groups = Code.mapObject(countFxn, groupFxn, info);
+// console.log(groups);
+
+
+var info = R3D.repeatedDropOutliersScore(matchesAB, imageScales[0],imageScales[1]);
+console.log(info);
+matchesAB = info["matches"];
+/*
+// filter on scores:
+var fxnValue = function(object){
+	return object["score"];
+}
+var fxnLimit = function(values){
+	var min = Code.min(values);
+	var std = Code.stdDev(values,min);
+	var limit = min + std * 2.0;
+	return limit;
+}
+
+// Code.repeatedDropOutliers = function(inList, toValueFxn, toLimitFxn, minCount, maxIterations){
+var keepList = Code.repeatedDropOutliers(groups, fxnValue, fxnLimit, 10, 25);
+matchesAB = keepList;
+console.log("KEPT: "+matchesAB.length);
+console.log(matchesAB);
+*/
+
+
+var info = R3D.keepExtendedMatchNeighborhoods(matchesAB, imageScales[0],imageScales[1]);
+console.log(info);
+// matchesAB = keepList;
+// var info = Code.repeatedDropOutliers(groups, fxnValue, fxnLimit, 10, 25);
+matchesAB = info["matches"];
+console.log("KEPT: "+matchesAB.length);
+
+
+var info = R3D.repeatedDropOutliersFundamental(matchesAB, imageScales[0],imageScales[1]);
+matchesAB = info["matches"];
+console.log("KEPT: "+matchesAB.length);
+
+/*
+
+// drop outliers F
+var fxnUpdate = function(matches){
+	// recalculate F
+	// console.log(matches);
+	var info = R3D.separateMatchesIntoPieces(matches);
+	var pointsA = info["A"];
+	var pointsB = info["B"];
+	var F = R3D.fundamentalFromUnnormalized(pointsA,pointsB);
+	// console.log(F);
+	var Finv = R3D.fundamentalInverse(F);
+	var count = pointsA.length;
+	var errorTotal = 0;
+	for(var i=0; i<count; ++i){
+		var pointA = pointsA[i];
+		var pointB = pointsB[i];
+		var error = R3D.fundamentalErrorSingle(F,Finv,pointA,pointB);
+			error = error["error"];
+		matches[i]["ferror"] = error;
+		errorTotal += error;
+	}
+	// console.log("avg F error: "+(errorTotal/count));
+}
+var fxnValue = function(object){
+	return object["ferror"];
+}
+var fxnLimit = function(values){
+	var min = Code.min(values);
+	var std = Code.stdDev(values,min);
+	var limit = min + std * 2.0;
+	console.log("LIMIT: "+limit+" ("+values.length+") ");
+	return limit;
+}
+var keepList = Code.repeatedDropOutliers(matchesAB, fxnValue, fxnLimit, 10, 10, fxnUpdate);
+console.log(keepList);
+*/
+
+// R3D.dropOutliersIteritively(matches, sigmaRatio, maxIterations, Fin);
+// var F = R3D.fundamentalFromUnnormalized(pointsA,pointsB);
+// var Finv = R3D.fundamentalInverse(F);
+// var error = R3D.fundamentalError(F,Finv,pointsA,pointsB);
+
+// R3D.keepExtendedMatchNeighborhoods = function(imageMatrixA,imageMatrixB, matchesAB)
+
+// console.log(matchesAB);
+// var scores = [];
+// for(var i=0; i<matchesAB.length; ++i){
+// 	var score = matchesAB[i]["score"];
+// 	scores.push(score);
+// }
+// Code.printMatlabArray(scores);
+
+var info = R3D.repeatedDropOutliersScore(matchesAB, imageScales[0],imageScales[1]);
+// console.log(info);
+matchesAB = info["matches"];
+
+
+
+
+// ALL-IN-ONE:
+
+// var info =  R3D.dropOutliersSparseMatches(matches, imageScales[0],imageScales[1]);
+// var matchesAB = info["matches"];
+
+var info = R3D.separateMatchesIntoPieces(matchesAB);
+var pointsA = info["A"];
+var pointsB = info["B"];
+var affinesAB = info["affines"];
+
+
+
+var imageMatrixA = imageScales[0].images()[0];
+var imageMatrixB = imageScales[1].images()[0];
+var cellSize = 0.05 * imageMatrixA.size().length();
+// show features:
+R3D.showFeaturesForImage(imageScales[0].images()[0], featuresList[0], 0);
+R3D.showFeaturesForImage(imageScales[1].images()[0], featuresList[1], imageScales[0].width());
+
+R3D.showCoverAlpha(imageMatrixA,imageMatrixB, GLOBALSTAGE, 0.50);
+
+// show matches:
+// R3D.showRansac = function(pointsA, pointsB, matrixFfwd, matrixFrev, display, imageMatrixA,imageMatrixB){
+// R3D.displayMatches();
+// R3D.showForwardBackwardCells(pointsA, pointsB, affinesAB, imageMatrixA,imageMatrixB, GLOBALSTAGE, cellSize);
+// R3D.showForwardBackwardCells(pointsA, pointsB, affinesAB, imageMatrixA,imageMatrixB, GLOBALSTAGE, cellSize);
+R3D.showForwardBackwardPointsColor(pointsA, pointsB, affinesAB, imageMatrixA,imageMatrixB, GLOBALSTAGE, cellSize);
+
+		// neighborhood consistency
+		// R3D.*neighbor.*\= fun
+		// R3D.keepExtendedMatchNeighborhoods = function(imageMatrixA,imageMatrixB, matchesAB){ /
+		// R3D.findLocalSupportingCornerMatchNeighborhoods = function(imageMatrixA,imageMatrixB, matchesAB, imageCornerDensityPercent){
+	
+		// filter F & M again ?		
 
 	}
 	var baseLocation = "../3DR/images/";
 	// var imageList = ["snow2.png","snow1.png"];
+	// var imageList = ["caseStudy1-20.jpg","caseStudy1-24.jpg"];
+	// var imageList = ["caseStudy1-24.jpg","caseStudy1-26.jpg"];
+	// var imageList = ["caseStudy1-26.jpg","caseStudy1-29.jpg"];
 
 	var imageList = ["bench_A.png","bench_B.png"];
+	// var imageList = ["bench_A.png","bench_C.png"];
+	// var imageList = ["bench_A.png","bench_D.png"];
+	// var imageList = ["bench_A.png","bench_E.png"];
+	// var imageList = ["bench_A.png","bench_F.png"];
+
+	// var imageList = ["room0.png","room2.png"];
+
+	// var imageList = ["user/beach_pillar/0_50.jpg","user/beach_pillar/1_50.jpg"];
+	// var imageList = ["user/beach_pillar/1_50.jpg","user/beach_pillar/2_50.jpg"];
+	// var imageList = ["user/beach_pillar/2_50.jpg","user/beach_pillar/3_50.jpg"];
+
+	// var imageList = ["pika_1/image-0.png","pika_1/image-1.png"];
+	// var imageList = ["pika_1/image-0.png","pika_1/image-2.png"];
+	// var imageList = ["pika_1/image-0.png","pika_1/image-3.png"];
+
+	// var imageList = ["graffiti_1.png","graffiti_2.png"];
+
+
+	// var imageList = ["xA_small.jpg","xB_small.jpg"];
+
+	// var imageList = ["yA_small.jpg","yB_small.jpg"];
+
+	// var imageList = ["zA_small.jpg","zB_small.jpg"];
+
+
 	imageLoader = new ImageLoader(baseLocation,imageList, this, imagesLoadedFxn,null);
 	imageLoader.load();
 

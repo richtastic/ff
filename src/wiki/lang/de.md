@@ -63,14 +63,38 @@
 | seins / seiner / seins |  | his |
 | ihre / ihres |  | hers |
 |  |  |  |
+| unserer |  | our |
 |  |  |  |
-|  |  |  |
 
 
 
+
+ rote
 masculine: der
 feminine: die
 neuter: das ein
+
+
+| de | ph | en |
+| --- | --- | --- |
+| schwarze |  | black |
+|  |  | white |
+|  |  | grey |
+| rote |  | red |
+|  |  | blue |
+|  |  | green |
+|  |  | brown |
+|  |  | purple |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
 
 
 #### greetings
@@ -103,12 +127,27 @@ neuter: das ein
 | heute |  | today |
 | morgen |  | tomorrow / in the morning / morning |
 | gestern |  | yesterday |
-|  |  |  |
+| Nachmittag |  | afternoon |
 | Gerne |  | with pleasure |
 |  |  |  |
+| morgen |  | tomorrow |
+|  |  |  |
+| Ordnung |  | all right |
+|  |  |  |
+| Richtig |  | correct |
+|  |  |  |
+|  |  |  |
+| um X   | at X o-clock (time) |
 |  |  |  |
 |  |  |  |
 |  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+
 
 #### numbers
 
@@ -263,10 +302,20 @@ neuter: das ein
 | buch |  | book |
 | auto / wagon | out-oh / vahgahn | car |
 | haus |  | house |
+| Wohnung |  | apartment |
+| nach Hause |  | home |
+|  |  |  |
+|  |  |  |
 | Schreibstift / stift |  | pen |
 | Bleistift / stift |  | pencil |
 |  |  |  |
+| Hemd |  | shirt |
+| Jacke |  | jacket |
+| Geburtstag |  | birthday |
+| Schuhe |  | show |
 |  |  |  |
+|  |  |  |
+| Fernseher |  | TV |
 |  |  |  |
 |  |  |  |
 | Schatz |  | sweetheart |
@@ -282,7 +331,10 @@ neuter: das ein
 | warum |  | why |
 | wie |  | how |
 |  |  |  |
+| welche |  | which |
 |  |  |  |
+|  |  |  |
+| jetzt |  | now |
 | nicht |  | not |
 | hier |  | here |
 | na ja |  | well / actually |
@@ -295,7 +347,9 @@ neuter: das ein
 | auf |  | at |
 |  |  |  |
 | nach |  | to |
-| zum |  |  to the|
+| zum |  |  to the |
+| am |  | on the |
+| ins |  | to the |
 |  |  |  |
 |  |  |  |
 | ja |  | yes |
@@ -303,19 +357,46 @@ neuter: das ein
 | oder |  | or |
 |  |  |  |
 |  |  |  |
+| links |  | left |
+| rechts |  | right (direction) |
+|  |  |  |
+|  |  |  |
+| genug |  | enough |
+|  |  |  |
+| genau |  | (thats) right |
+| jeden |  | every |
+| immer |  | always |
+| nie |  | never |
+| manchmal |  | sometimes |
+| später |  | later |
+| oft |  | often |
+| bereit |  | ready |
+|  |  |  |
+|  |  |  |
+| Schnell |  | quick/ly |
+| Komm! |  | come on |
+|  |  |  |
+|  |  |  |
+|  |  |  |
 |  |  |  |
 | heiß |  | hot |
 | kalt |  | cold |
 | zu |  | too |
 | groß |  | big |
-|  |  |  |
+| schwer |  | hard/difficult |
 | einfach |  | easy |
 |  |  |  |
 |  |  |  |
 | traurig |  | sad |
+| langweilig |  | boring |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
 |  |  |  |
 | Freundin |  | friend |
-|  |  |  |
+| Freund |  | boyfriend? |
 |  |  |  |
 | Wirklich |  | really? |
 |  |  |  |
@@ -323,9 +404,35 @@ neuter: das ein
 |  |  |  |
 | lecker |  | delicious |
 |  |  |  |
+| elegant |  | elegant/stylish |
+|  |  |  |
+| krank |  | sick |
+|  |  |  |
+| Toiletten |  | restrooms |
+|  |  |  |
+| Zeit |  | time |
 |  |  |  |
 |  |  |  |
 |  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+
+
 
 
 #### animals
@@ -349,6 +456,54 @@ neuter: das ein
 |  |  |  |
 |  |  |  |
 
+
+
+
+#### places?
+
+| de | ph | en |
+| --- | --- | --- |
+|  |  |  |
+| der Park |  | park |
+| der Markt |  | market |
+| der Supermarkt |  |  |
+|  |  |  |
+| das Kino |  | theater |
+| das Café? |  | coffee shop |
+| Apotheke |  | pharmacy |
+| die Kirche |  | church |
+| das Bibliothek |  | library |
+| das Hotel |  | hotel |
+| das museum |  | museum |
+| die Bäckerei |  | bakery |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+| Taxistand |  | taxi stand |
+| U-Bahnstation |  | subway (underground railway) |
+| Bahnhof |  | train (railway) station |
+| zum / Bahn |  | train / railways |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+
+
+
+
+
 #### people
 
 | de | ph | en |
@@ -367,6 +522,18 @@ neuter: das ein
 | Sohn |  | son |
 | ehefrau |  | wife |
 | mann |  | husband |
+| tante |  | aunt |
+| onkel |  | uncle |
+| Partnerin |  | partner |
+| Mitbewohner |  | roommate |
+| Eltern |  | parents |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
 |  |  |  |
 | der mann |  | man |
 | die frau |  | woman |
@@ -374,7 +541,26 @@ neuter: das ein
 |  |  |  |
 | Student/en |  | student/s |
 | Medizinstudenten |  | medical student |
-| der Kellner |  | waiter |
+| der Kellner / die kellnerin |  | waiter / waitress |
+| der Professor / die professorin |  | professor |
+| Schauspieler / Schauspielerin |  | actor |
+| Arzt / Ärztin |  | doctor |
+| Student / Studentin |  | student (college age) |
+| Lehrer / Lehrerin |  | teacher |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+| Freundin |  | friend |
+|  |  |  |
+| Beruf |  | profession (job) |
+| Arbeit |  | work |
+|  |  |  |
+|  |  |  |
+| Unterricht |  | class |
+|  |  |  |
 | die Speisekarte |  | menu |
 | das restaurant |  | restaurant |
 |  |  |  |
@@ -420,6 +606,14 @@ neuter: das ein
 | das sandwich |  | sandwich |
 | brot |  | bread |
 | karotte |  | carrot |
+| der Fisch |  | fish |
+| die Schnecke |  | snail |
+| hund |  | dog |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
 |  |  |  |
 |  |  |  |
 | senf |  | mustard |
@@ -465,28 +659,74 @@ neuter: das ein
 |  |  |  |
 |  |  |  |
 |  |  |  |
+|  |  |  |
+|  |  |  |
+| turkish |  | Türkisch |
+| Polnisch |  | polish |
+| Englisch |  | english |
+| Französisch |  | french |
+|  |  |  |
+|  |  |  |
 | bereit | bear(ch)-iet | ready |
 |  |  |  |
 | sind |  | are |
 | im |  | in / in the|
+| ins |  | to the |
 | für | foo-uhr | for |
 | aus |  | from |
+| hat |  | has |
+|  |  |  |
+|  |  |  |
+| wieder |  |  again |
+| auch |  | also |
+| aber |  | but |
+| musst |  | must |
+| in der Nähe |  | nearby |
+| weit weg |  | far away |
+| von |  | from |
 |  |  |  |
 |  |  |  |
 |  |  |  |
+|  |  |  |
+| vor dem |  | in front of |
+|  |  |  |
+| mit dem |  | by (means of) |
+|  |  |  |
+|  |  |  |
+| da drüben |  | over there |
+| da |  | there (here) |
+| diese |  | this |
+| keinen |  | no |
+|  |  |  |
+|  |  |  |
+| für |  | for |
+| bald  |  | soon |
+|  |  |  |
+| nur |  | only |
 | jede |  | each |
-|  |  |  |
-| offen |  | open |
+| viele |  | many |
+| offen / geöffnet |  | open |
 | geschlossen |  | close/d |
 | nah |  | near/close |
 | fern |  | far |
+| bis |  | until |
+| ein bisschen |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
 |  |  |  |
 | Badezimmer | bad-eh-zimmer | bathroom |
 | Schlafzimmer | schlaf-zimmer | bedroom |
 |  |  | kitchen |
 |  |  | office |
 |  |  |  |
+| der Film |  | movie |
 |  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+| das Klavier |  | piano |
+| Auto |  | car |
 |  |  |  |
 | personen |  | people |
 |  |  |  |
@@ -502,13 +742,28 @@ neuter: das ein
 | hören |  | hear/ing |
 | sehen |  | see/ing |
 | schmecken |  | taste/ing |
-| learnen |  | learn |
+| learnen |  | learn | lernst
 | hören |  | hear |
-
+| malen |  | to paint | malt
+| brauche |  | need |
+| gehen |  | to go |
+| kauf |  | to buy |
+| nehme ? |  | i take |
+|  fahren ? |  | ride |
+| joggen |  | to jog |
+| nehmen |  | to take |
+| singe |  | to sing |
+| fotografiere |  | to take photos |
+| nimmtis ? |  | to take (taxi) |
+| fährt ? |  | to drive |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
 |  |  |  |
 | Schau |  | look |
-|  |  |  |
-|  |  |  |
+| spiele spielt |  | play (instrument, game) |
+| Spiel  |  | game |
 |  |  |  |
 
 |  |  |  |
@@ -518,6 +773,9 @@ neuter: das ein
 | Kochen |  | to cook |
 | Koch/Köchin |  | a cook |
 | tanz | tdahnse | dance |
+|  |  |  |
+|  |  |  |
+| bestellen? |  | to order |
 |  |  |  |
 | Lebensmittel | leibensmittle | food |
 |  |  |  |
@@ -536,18 +794,23 @@ neuter: das ein
 |  |  |  |
 |  |  |  |
 | Sachen |  | stuff/things |
-| auch |  | also |
-|  |  |  |
-|  |  |  |
+| interessant |  | interesting |
 | toll |  | great (cool) |
+| total |  | really |
 |  |  |  |
-| geld |  | money |
+|  |  |  |
+|  |  |  |
+| das geld |  | money |
 | tisch |  | table |
 |  |  |  |
+| perfekt |  | perfect |
 |  |  |  |
 | jung |  | young |
+| alt |  | old |
+| neu |  | new |
 |  |  |  |
-| sehr |  | very |
+|  |  |  |
+|  |  |  |
 |  |  |  |
 | Dumm |  | dumb |
 | klug |  | smart |
@@ -555,13 +818,53 @@ neuter: das ein
 | schön |  | beautiful |
 | klein |  | small |
 | kurz |  | short |
-| groß / hoch |  | tall / big |
+| groß / hoch |  | tall / big |    großen 
 | jung |  | young |
-
+|  |  |  |
+| toll |  | great |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+| stressig |  | stressful |
+| bereit |  | ready |
+|  |  |  |
+|  |  |  |
+| sehr |  | very |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+| alles |  | everything |
+|  |  |  |
+|  |  |  |
+| Test |  | test |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+| Universität |  | university |
+|  |  |  |
+|  |  |  |
+| Schach |  | chess |
+|  |  |  |
+|  |  |  |
+| Geldautomat |  | ATM |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
 | wunderbar |  | wonderful |
 | aufregend |  | exciting |
 | laut |  | loud / noisy |
 | teuer |  | expensive |
+| billige |  | cheap |
+| reich |  | righ |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
 |  |  |  |
 | natürlich |  | Naturally |
 |  |  |  |
@@ -570,7 +873,7 @@ neuter: das ein
 |  |  |  |
 | die Rechnung |  | bill (check) |
 |  |  |  |
-|  |  |  |
+| Laden |  | store |
 | Hochzeitsreise |  | honeymoon |
 | Bahnhof |  | train station |
 | Urlaub |  | vacation |
@@ -588,12 +891,11 @@ neuter: das ein
 | Was machst du gerade |  | what are you doing |
 | wie spät ist es? |  | what time is it? |
 |  |  |  |
+| ich freue mich |  | i look forward |
+| Schade |  | too bad |
 |  |  |  |
-|  |  |  |
-|  |  |  |
-|  |  |  |
-|  |  |  |
-|  |  |  |
+| Wie alt bist du? |  | how old are you |
+| Ich bin X Jahre alt! |  | i am X years old |
 |  |  |  |
 |  |  |  |
 |  |  |  |
@@ -601,11 +903,22 @@ neuter: das ein
 |  |  |  |
 
 
+
+ich koche
+ich schwimme
 
 
 ### VERBS
 
 eat : essen
+
+like : mögen : mag
+
+cost : ? : kostet
+
+to go : ? : gehen
+
+lo give : ? :  schenkst
 
 i / he / she / it / we / they / you / you formal
 
@@ -618,6 +931,8 @@ wir essen
 Sie essen
 du isst
 ??
+
+
 
 
 | heißt heiße |  | is called / named |
@@ -675,6 +990,238 @@ volksgemeinschaft -  people's community : propaganda - created - community
 
 
 
+
+#### todo
+
+Schrebergarten - 
+
+Samstagabend - saturday evening
+
+Wochenende - weekend
+
+Konzertkarten concert tickets
+
+Eintrittskarte - admission tickets
+
+Flugtickets - plane tickets
+
+Schwestern - sisters
+
+Sprachen - languages
+
+biem - at the
+
+fertig - finished
+
+Überraschung - 
+
+Kanzlerin - chancelor
+
+Ich heiße - my name is
+ 
+Fußgängerzonen
+
+Schwimmbad - swimming pool
+
+Konzert - concert
+
+Schalter - counter
+
+
+geöffnet - is open
+
+
+Der Tanzkurs - dance class
+
+Kurs - class
+
+Tanzen - dancing
+
+Tür - door
+
+
+
+
+
+
+Herr - mr
+
+Frau - ms
+
+Freut mich - good to meet you
+
+wie heißen - what is your name
+
+Fußballspiel- soccer game
+
+Fernseher - TV
+
+das Videospiel - video game
+
+die Polizistin - police/woman
+
+
+Die Vegetarierin - vegetarian (person)
+vegetarisches - vegetarian (adj)
+Fleisch - meat
+Hähnchen - chicken (meat)
+Pommes - french fries
+
+
+Muttersprache - mother tounge (native language)
+
+
+Wanderlust - joy of hiking
+
+Kleidung - clothes
+Kleid - dress
+Schuhe - shoes
+Hut - hat
+Sakko - suit jacket
+Hemd - shirt
+
+Urlaubskleidung - vacation clothes
+
+
+Bist du Schüler, Max? - student
+
+
+der Künstler - artist
+
+sie Anwalt / Anwältin - lawyer
+
+Schweden - sweden
+
+Russland - russia
+
+
+
+Reservierung - reservation
+
+libe - live
+suche - to look for
+joggen - to jog
+nimmt - to take out
+frühstücke - eating breakfast
+Schau - look
+surfst - to surf
+
+
+
+
+
+kostet - costs
+
+Marktplatz - market place / square
+
+ Orangen - oranges
+Tomaten - tomatoes
+Erdbeeren - strawberries
+
+Griechen - greek restaurant
+
+
+habe Hunger - hungry
+Durst - thursty
+
+die Frage - question
+die Antwort - answer
+
+
+
+Dollar - dollar
+euro - euros
+-
+
+Wie viel? - how much (cost)?
+
+
+Döner - kebab
+
+Kilo 0 kilogram
+
+Kartoffeln - potatoes
+die Wasserflasche - water bottle (flask)
+
+
+gern geschehen - youre welcome
+vielen Dank - thanks a lot
+
+das Wetter - weather
+
+heute - today
+windig - windy
+regnet - rainy
+sonnig - sonny
+bewölkt - cloudy
+schneit - snowing
+neblig - foggy
+warm - warm
+
+Der Pass - passport
+Regenschirm - umbrella
+Sonnencreme - sunscreen
+Taschebag - bag
+Jacke - jacket
+Kasse - cash register (place to pay)
+Ahnung - idea
+
+
+Wanderst / wandern - hiking
+läuft - runs
+
+
+Flughafen - airpot
+
+Herbst - fall(autum)
+der Winter - winter
+der Frühling - spring
+der Sommer- summer
+
+
+der Schal - scarf
+Kaufhaus - department store
+
+Hilfe - help
+
+
+zu - to
+zum - to the
+
+jetzt - now
+
+stark - hard/strong
+schlecht - bad/ly
+
+
+nicht mehr hier - not here anymore
+
+
+You're welcome - gern geschehen
+vielen Dank - thank you very much
+
+
+neue - new
+Jacke - jacket
+
+
+
+
+
+
+https://www.youtube.com/watch?v=gW8fi7LJg6U
+
+
+
+
+
+
+
+
+
+
+
+
 <br/>
 
 | de | Song Pt 1 | en |
@@ -696,11 +1243,11 @@ volksgemeinschaft -  people's community : propaganda - created - community
 
 | de | Song Pt 2 | en |
 | - | - | - |
-| Backe, backe Kuchen, |  |  |
-| der Bäcker hat gerufen, |  |  |
-| hat gerufen die ganze Nacht, |  |  |
-| (Name des Kindes) hat keinen Teig (...sachen) gebracht, |  | (things) |
-| kriegt er auch kein' Kuchen. |  |  |
+| Backe, backe Kuchen, |  | Bake, bake a cake |
+| der Bäcker hat gerufen, |  | The baker has called |
+| hat gerufen die ganze Nacht, |  | he has been calling all night |
+| (Name des Kindes) hat keinen Teig (...sachen) gebracht, |  | (kid) did not bring: x (things) |
+| kriegt er auch kein' Kuchen. |  | he doesn't get a cake either |
 
 
 <br/>
@@ -867,7 +1414,7 @@ https://www.youtube.com/watch?v=z0NfI2NeDHI
 | Mein Ohr ganz nah am Weltempfänger |  | My ear very close to the world receiver |
 |  |  |  |
 |  | Refrain: |  |
-| Radio, mein Radio |  | Radio, my radio |
+| Radio, mein Radio |  | Radio, my radio |    .
 | Ich lass' mich in den Äther saugen |  | I let myself be sucked into the ether |
 | Meine Ohren werden Augen |  | My ears become eyes |
 | Radio, mein Radio |  | Radio, my radio |
@@ -879,7 +1426,7 @@ https://www.youtube.com/watch?v=z0NfI2NeDHI
 | Jedes Liedgut war verboten |  | Every song was forbidden |
 | So gefährlich fremde Noten |  | So dangerous foreign notes |
 | Doch jede Nacht ein wenig froh |  | But a little happy every night |
-| Mein Ohr ganz nah am Weltempfänger |  | My ear very close to the world receiver |
+| Mein Ohr ganz na...fgh am Weltempfänger |  | My ear very close to the world receiver |
 |  |  |  |
 |  | (Refrain) |  |
 |  |  |  |
@@ -1592,8 +2139,7 @@ https://www.youtube.com/watch?v=PvuICQf-Zb8
 | ins nachtrot |  | into the night red |
 | ich reiss mich los |  | I tear myself away |
 | mit letzter kraft |  | with the last strength |
-| so grausam |  | so cruel |
-| so heilig |  | so sacred |
+| so grausam so heilig  |  | so cruel so sacred |
 | liegst du vor mir |  | you lie in front of me |
 | es ist vollbracht |  | it is finished |
 | ich lass dich los |  | i let you go |
@@ -2185,12 +2731,280 @@ https://www.youtube.com/watch?v=kcIvOH6f1js
 
 
 
+Apache 207 - KEIN PROBLEM
+https://www.youtube.com/watch?v=6Wm4c4N1zm0
+Du Bastard, du Schwätzer
+Du kannst viel, aber Mann sein nicht
+Apache, der Gangster
+Der ab und an sein Tanzbein schwingt
+Ihr Schlampen, ihr Huren
+Ihr wollt Stress, doch kennt Mannheim nicht
+S-Klassen am Cruisen
+Durch Ludwigshafen wenn Nacht anbricht
+Lauf' mit meiner Bella allein durch die Stadt
+Den Status hab' ich mir erarbeitet
+Mir ist egal, was du grade machst
+Du blendest, deine Story langweilt mich
+Ich bin auf Alk, ich bin auf Alk
+Drei Promille und ich schreib' grad Hits
+Du bleibst gerade, was du nicht sagst
+Zum Eins gegen Eins hast du Hayvans mit
+Aber kein Problem
+Aber kein Problem
+Denn ich kann des regeln
+Ganz normal in meiner Gegend
+Mein Sohn, was ist gescheh'n?
+Mein Sohn, was ist gescheh'n?
+Keine Sorge, Mama, ganz normal
+So wollt' dein Sohn doch leben
+Aber kein Problem
+Aber kein Problem
+Denn ich kann des regeln
+Ganz normal in meiner Gegend
+Mein Sohn, was ist gescheh'n?
+Mein Sohn, was ist gescheh'n?
+Keine Sorge, Mama, ganz normal
+So wollt' dein Sohn doch leben
+Indianer, Apache
+Den Bitches gefällt, was ich auf Insta poste
+Indianer, Apache
+Oberkörperfrei auf Insta posen
+Indianer, Apache
+Ich stehe hier mit meinem Hemd in der Hose
+Denn ich bin Indianer, Apache
+Deutschraps Miroslav Klose
+Ich scheiß' auf dich, weil ich nichts von ADS-Bitches halt
+Sie will meine Nummer
+Aber folgt mir nicht auf Instagram
+Gib "Apache 207" ein
+Und du findest dann
+Kontaktdaten für Businessanfragen
+Stell dich hinten an
+Aber kein Problem
+Aber kein Problem
+Denn ich kann des regeln
+Ganz normal in meiner Gegend
+Mein Sohn, was ist gescheh'n?
+Mein Sohn, was ist gescheh'n?
+Keine Sorge, Mama, ganz normal
+So wollt' dein Sohn doch leben
+Aber kein Problem
+Aber kein Problem
+Denn ich kann des regeln
+Ganz normal in meiner Gegend
+Mein Sohn, was ist gescheh'n?
+Mein Sohn, was ist gescheh'n?
+Keine Sorge, Mama, ganz normal
+So wollt' dein Sohn doch leben
+
+
+
+
+Tim Bendzko - Hoch
+https://www.youtube.com/watch?v=auq7gzZlKBE
+| du | | en |
+|-|-|-|
+| Die Leute fragen „Wie viel Extrameter gehst du?“ |  | People ask "How many extra meters do you go?" |
+| Ich fang' erst an zu zählen, wenn es weh tut |  | I only start counting when it hurts |
+| Fehler prägen mich, mach' mehr als genug |  | Mistakes shape me, do more than enough |
+| Bin zu müde für Pausen, komm' nicht dazu |  | I'm too tired for breaks, don't come |
+| Und wenn ich glaube, meine Beine sind zu schwer |  | And when I think my legs are too heavy |
+| Dann geh' ich nochmal tausend Schritte mehr |  | Then I'll take another thousand steps |
+|  |  |  |
+| Auch wenn wir schon weit gekommen sind |  | Even if we have come a long way |
+| Wir gehen immer weiter – hoch hinaus |  | We always go further - high up |
+| Egal, wie hoch die Hürden auch sind |  | No matter how high the hurdles are |
+| Sie sehen so viel kleiner von hier oben aus |  | You look so much smaller from up here |
+| Wenn dir die Luft ausgeht |  | When you run out of air |
+| Nur nicht nach unten sehen |  | Just don't look down |
+| Wir gehen immer weiter hoch hinaus |  | We go higher and higher |
+| Immer, immer weiter hoch hinaus |  | Always, always higher up |
+|  |  |  |
+| Kann das nächste Level nicht erwarten |  | Can't wait for the next level |
+| Auch, wenn ich dann wieder keinen Schlaf krieg' |  | Even if I don't get any sleep again |
+| Meine Ausreden sind hartnäckig |  | My excuses are persistent |
+| Aber aufgeben darf ich nicht |  | But I can't give up |
+| Manchmal löst ein Abgrund in mir Angst aus |  | Sometimes an abyss triggers fear in me |
+| Doch ich geh' nicht zurück, ich nehm' nur Anlauf |  |  |
+|  |  |  |
+| Auch wenn wir schon weit gekommen sind |  | But I'm not going back, I'm just making a run-up |
+| Wir gehen immer weiter hoch hinaus |  | Even if we have come a long way |
+| Egal, wie hoch die Hürden auch sind |  | We go higher and higher |
+| Sie sehen so viel kleiner von hier oben aus |  | No matter how high the hurdles are |
+| Wenn dir die Luft ausgeht |  | You look so much smaller from up here |
+| Nur nicht nach unten sehen |  | When you run out of air |
+| Wir gehen immer weiter hoch hinaus |  | Just don't look down |
+| Immer, immer weiter hoch hinaus |  | Always, always higher up |
+|  |  |  |
+| Auch wenn wir schon weit gekommen sind |  | Even if we have come a long way |
+| Wir gehen immer weiter hoch hinaus |  | We go higher and higher |
+| Egal, wie hoch die Hürden auch sind |  | No matter how high the hurdles are |
+| Wenn dir die Luft ausgeht |  | When you run out of air |
+| Nur nicht nach unten sehen |  | Just don't look down |
+| Wir gehen immer weiter hoch hinaus |  | We go higher and higher |
+| Immer, immer weiter hoch hinaus |  | Always, always higher up |
+|  |  |  |
 
 
 
 
 
+https://www.youtube.com/watch?v=Dx0MGYe4jR4
 
+KRAFTKLUB - Schüsse in die Luft
+
+
+
+
+Meine Mutter sagt
+Junge, geh' ma' schlafen
+Fahr mal in Urlaub!
+Aber ich soll auf die Straße
+Sagt Farin Urlaub
+Ja okay, jetzt steh' ich hier
+Doch bin allein vor einer Wand
+Da bin nur ich und sonst nichts
+Nur dieser Stein in meiner Hand
+Es ist ein einsamer Krieg
+Gegen den Dreck, der mich umgibt
+Den verfickten Dreck
+Den scheinbar keiner außer mir sieht
+Aber wie auch?
+Wenn niemand rausschaut?
+Lieber auf der Couch mit
+Frauentausch oder Bauer sucht Frau
+Und ja natürlich nur ironisch und nur so nebenbei
+Aber im Vergleich mit den Opfern da ist das eigene Leben schon geil
+Ein Hund beißt nicht, wenn er bellt und alles ist gut
+Solange die auf RTL noch 'n bisschen dümmer sind als du
+Und ich schieße in die Luft (Bang Bang Bang)
+Ich ziehe in den Krieg, aber keiner zieht mit
+Drei Schüsse in die Luft (Bang Bang Bang)
+Der Einzige hier draußen bin leider wieder ich
+Und ich schieße in die Luft (Bang Bang Bang)
+Doch keine Reaktion, nur Beschwerden über Krach
+Drei Schüsse in die Luft (Bang Bang Bang)
+Die Revolution oder Berlin Tag & Nacht
+Du wirst nicht enttäuscht
+Wenn du nie etwas erwartest
+Und bevor du etwas falsch machst
+Dann mach mal lieber gar nichts
+Irgendjemand sagt schon irgendwann mal irgendwas
+Ansonsten musst du halt zufrieden sein mit dem, was du hast
+Und selbst wenn alles scheiße ist, du pleite bist und sonst nix kannst
+Dann sei doch einfach Stolz auf dein Land
+Oder gib die Schuld ein paar ander'n armen Schweinen
+Hey, wie wär's denn mit den Leuten im Asylbewerberheim
+Und nein, ich war nie anti-alles, ich war immer anti-ihr
+Doch hab' schon lange angefangen mich mit Dingen zu arrangieren
+Und genau das wollt' ich nie, ich bin schon viel zu lange hier
+Ich muss hier weg, denn ansonsten werd' ich irgendwann wie ihr
+Und ich schieße in die Luft (Bang Bang Bang)
+Ich ziehe in den Krieg, aber keiner zieht mit
+Drei Schüsse in die Luft (Bang Bang Bang)
+Der Einzige hier draußen bin leider wieder ich
+Und ich schieße in die Luft (Bang Bang Bang)
+Doch keine Reaktion, nur Beschwerden über Krach
+Drei Schüsse in die Luft (Bang Bang Bang)
+Die Revolution oder Berlin Tag & Nacht
+Allen ist alles egal, außer der Handyvertrag
+Und ich male alles schwarz
+Mit 390 Euro Hartz kommt man nicht weit im Bio-Markt
+Und ich male alles schwarz
+Dein verkackter Kommentar war natürlich nur ein Spaß, alles klar
+Und ich male alles schwarz
+Die ganze Nacht besoffene Vollidioten bedienen an der Bar
+Für sieben Euro die Stunde, aber schwarz
+Und ich schieße in die Luft (Bang Bang Bang)
+Ich ziehe in den Krieg, aber keiner zieht mit
+Drei Schüsse in die Luft (Bang Bang Bang)
+Der Einzige hier draußen bin leider wieder ich
+Und ich schieße in die Luft (Bang Bang Bang)
+Doch keine Reaktion, nur Beschwerden über Krach
+Drei Schüsse in die Luft (Bang Bang Bang)
+Die Revolution oder Berlin Tag & Nacht
+Ich schieße in die Luft (Bang Bang Bang)
+Drei Schüsse in die Luft (Bang Bang Bang)
+Und ich schieße in die Luft (Bang Bang Bang)
+Drei Schüsse in die Luft (Bang Bang Bang)
+
+My mother says
+Boy, go to sleep
+Go on vacation!
+But I'm supposed to be on the street
+Says Farin Urlaub
+Yeah okay, now I'm standing here
+But I am alone in front of a wall
+There is just me and nothing else
+Just this stone in my hand
+It's a lonely war
+Against the dirt that surrounds me
+The fucking shit
+Apparently nobody but me sees it
+But how?
+When nobody looks out?
+Better to be on the couch
+Wife swap or farmer looking for a wife
+And yes, of course, only ironically and just incidentally
+But compared to the victims there, your own life is awesome
+A dog does not bite when it barks and all is well
+As long as they are a little dumber than you on RTL
+And I shoot in the air (bang bang bang)
+I'm going to war, but nobody goes with me
+Three shots in the air (Bang Bang Bang)
+Unfortunately, the only one out here is me again
+And I shoot in the air (bang bang bang)
+But no reaction, just complaints about noise
+Three shots in the air (Bang Bang Bang)
+The revolution or Berlin day & night
+You will not be disappointed
+When you never expect anything
+And before you do anything wrong
+Then you'd better do nothing
+Somebody says something at some point
+Otherwise you just have to be satisfied with what you have
+And even if everything sucks, you're broke and can't do anything else
+Then just be proud of your country
+Or blame a few other poor pigs
+Hey, how about the people in the asylum seekers home
+And no, I was never anti-everything, I was always anti-her
+But I started to come to terms with things a long time ago
+And that's exactly what I never wanted, I've been here too long
+I have to get out of here, otherwise I'll be like you at some point
+And I shoot in the air (bang bang bang)
+I'm going to war, but nobody goes with me
+Three shots in the air (Bang Bang Bang)
+Unfortunately, the only one out here is me again
+And I shoot in the air (bang bang bang)
+But no reaction, just complaints about noise
+Three shots in the air (Bang Bang Bang)
+The revolution or Berlin day & night
+Nothing matters to anyone except the cell phone contract
+And I paint everything black
+With 390 euros Hartz you won't get very far in the organic market
+And I paint everything black
+Your fucking comment was just joking, of course, all right
+And I paint everything black
+All night drunk idiots serve at the bar
+For seven euros an hour, but black
+And I shoot in the air (bang bang bang)
+I'm going to war, but nobody goes with me
+Three shots in the air (Bang Bang Bang)
+Unfortunately, the only one out here is me again
+And I shoot in the air (bang bang bang)
+But no reaction, just complaints about noise
+Three shots in the air (Bang Bang Bang)
+The revolution or Berlin day & night
+I shoot in the air (bang bang bang)
+Three shots in the air (Bang Bang Bang)
+And I shoot in the air (bang bang bang)
+Three shots in the air (Bang Bang Bang)
+
+
+
+
+https://www.youtube.com/watch?v=Yi5_fSv7qXk
+die ärzte - M&F
 
 
 

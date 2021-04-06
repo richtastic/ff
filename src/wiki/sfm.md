@@ -107,6 +107,7 @@ The output can simply be the camera geometry (orientations), world geometry (poi
 	- corner peaks
 	- scale space good for scale estimates
 	- entropy?
+	- color range?
 - feature compare
 	- start with raw feature angle & scale estimation
 	- compare features
@@ -143,7 +144,14 @@ The output can simply be the camera geometry (orientations), world geometry (poi
 			- image A-B best score
 			- local neighborhood
 		- update location using higher resolution needle & slightly larger haystack (needle + 2-4 pixels)
-
+- estimate K
+	- calibrate from 2D grid algorithm
+	- initially estimate as fx=fy=1; principle point = image center; skew = 0
+	- fx = 1 ; fy = 1; s = 0; cx = 0.5; cy = 0.5;
+	- fx is always 1; update fy & cx & cy & s in own loop (EX: fx:0.841 fy:1.120 s:0.001 cx:0.498 cy:0.495)
+	- remove K outliers (all together, center location + fy location + s angle/location)
+	- average over all best (lowest R-error) top sparse R matches to get estimate K
+	- 
 - estimate R (coarse)
 	- F + K
 	- use Ferror, match error, R error to drop outliers

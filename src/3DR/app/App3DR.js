@@ -13122,7 +13122,20 @@ for(var i=0; i<features.length; ++i){
 		
 		var matchesAB = R3D.relativeRIFTFromFeatureMatches(matches);
 
-		matches = matchesAB
+		matches = matchesAB;
+
+
+		throw "neighborhood";
+
+
+		throw "re score compare";
+
+
+		throw "expand neighborhood?";
+
+
+		throw "re filter: score, F-error";
+		
 
 	// 	// convert to A, B, affine
 	// 	var matchesAB = [];

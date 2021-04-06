@@ -19,7 +19,7 @@
 | đang làm gì đấy |  | what are you doing |
 | that's ok (dont worry) |  | không sao |
 |  |  |  |
-|  |  |  |
+| ghi âm |  | record |
 |  |  |  |
 |  |  |  |
 | nói | noiee | speak |
@@ -51,8 +51,11 @@
 |  |  |  |
 |  |  |  |
 |  |  |  |
+
+Đứa trẻ học, anh ấy uống nước.
+
 |  |  |  |
-| ở |  | at |
+| ở |  | is at |
 | và |  | and |
 |  |  |  |
 |  |  |  |
@@ -68,8 +71,8 @@ tiền bạc
 |  |  |  |
 | giờ | yuhh | o'clock |
 |  |  |  |
-|  |  |  |
-|  |  |  |
+| Phòng |  | room |
+| ghét |  | hate |
 |  |  |  |
 
 | tiếng | tee-eng | language |
@@ -84,14 +87,29 @@ tiền bạc
 |  |  |  |
 |  |  |  |
 |  |  |  |
-|  |  |  |
-|  |  |  |
-|  |  |  |
-|  |  |  |
-|  |  |  |
+| mây |  | cloud |
+| sấm sét |  | thunder |
+| ghế |  | chair |
+| Phường |  | ward ? |
+| Phà |  |  |
 |  |  |  |
 đứa trẻ
+| thư |  |  |
+| tờ giấy |  | paper sheet |
+| sợi dây |  | string |
+| giấu |  | hide/s |
+| giàu |  | rich |
 |  |  |  |
+| Mẫu giáo |  | kindergarten |
+| ngã |  | fall |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+| Vĩnh viễn |  | forever |
+|  |  |  |
+|  |  |  |
+| dũng cảm |  | brave |
+| vẽ |  | draw |
 |  |  |  |
 |  |  |  |
 |  |  |  |
@@ -130,8 +148,8 @@ tiền bạc
 | cỏ |  | grass |
 |  |  |  |
 | đu đủ |  | papaya |
-|  |  |  |
-|  |  |  |
+| me |  | tamarind |
+| táo |  | apple |
 |  |  |  |
 |  |  |  |
 |  |  |  |
@@ -167,8 +185,6 @@ tiền bạc
 |  |  |  |
 |  |  |  |
 |  |  |  |
-
-
 cái đầu | kai dow |  head
 vai | vie | shoulder
 đầu gối | dow goy | knee
@@ -209,7 +225,7 @@ ngón chân | ngon chan | toe
 |  |  |  |
 |  |  |  |
 |  |  |  |
-|  |  |  |
+| Cây tre |  | bamboo tree |
 |  |  |  |
 |  |  |  |
 |  |  |  |
@@ -266,7 +282,6 @@ ngón chân | ngon chan | toe
 | vui vẻ |  | fun |
 | buồn |  | sad |
 | điên |  | mad |
-|  |  |  |
 |  |  |  |
 |  |  |  |
 |  |  |  |
@@ -336,7 +351,8 @@ WEATHER
 | dê |  | goat |
 | cá |  | fish |
 |  |  | bear |
-|  |  | bird |
+| chim |  | bird |
+| chim sẻ |  | sparrow |
 |  |  | squirrel |
 |  |  | rat |
 |  |  | mouse |
@@ -352,7 +368,7 @@ WEATHER
 | dơi |  | bat |
 |  |  | camel |
 |  |  |  |
-|  |  |  |
+| đom đóm |  | firefly |
 |  |  |  |
 |  |  |  |
 |  |  |  |
@@ -375,6 +391,60 @@ WEATHER
 |  |  |  |
 |  |  |  |
 |  |  |  |
+
+
+
+
+đây
+| this/these |  | này(after noun????) / đây | ? + là
+| that/those |  | kia / đó (before???) | ? + là    + kia?
+| that |  |  |
+|  |  |  |
+|  |  |  |
+| là |  | is |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+| chia sẻ |  | share |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+
+
+
+
+plurarl indicative: (những or các)
+	những / các 
+
+
+has: co'
+
+
+Đứa trẻ - kid
+phụ nữ - woman
+cô gái - girl
+
+
+
+
+
 
 
 poems:

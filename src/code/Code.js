@@ -1870,6 +1870,16 @@ Code.mapArray = function(a,fxn){ // a = b
 	}
 	return a;
 };
+
+Code.mapObject = function(countFxn, groupFxn, args){
+	var count = countFxn(args);
+	var list = [];
+	for(var i=0; i<count; ++i){
+		var group = groupFxn(i,args);
+		list.push(group);
+	}
+	return list;
+}
 Code.emptyObject = function(o){
 	var keys = Code.keys(o);
 	for(var i=0; i<keys.length; ++i){
@@ -13813,6 +13823,33 @@ Code.fuzzyRound = function(a,b){
 }
 Code.fuzzyTruncate = function(a,b){
 	return (a>b)?a:0;
+}
+Code.repeatedDropOutliers = function(inList, toValueFxn, toLimitFxn, minCount, maxIterations, updateFxn){
+	maxIterations = maxIterations!==undefined ? maxIterations : 20;
+	var list = Code.copyArray(inList);
+	for(var iteration=0; iteration<maxIterations; ++iteration){
+		if(updateFxn){
+			updateFxn(list);
+		}
+		var values = [];
+		for(var i=0; i<list.length; ++i){
+			var value = toValueFxn(list[i]);
+			values.push(value);
+		}
+		var limit = toLimitFxn(values);
+		var keep = [];
+		for(var i=0; i<list.length; ++i){
+			var value = values[i];
+			if(value<=limit){
+				keep.push(list[i]);
+			}
+		}
+		if(keep.length<minCount || keep.length==list.length){ // same as previous iteration | or | less than minimum
+			break;
+		}
+		list = keep;
+	}
+	return list;
 }
 Code.repeatedDropOutliersMean = function(list, sigmaLimit, fxnMean, fxnError, minCount){
 	minCount = minCount!==undefined ? minCount : 1; // number of items needed in list
