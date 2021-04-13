@@ -65,7 +65,10 @@
 |  |  |  |
 | unserer |  | our |
 |  |  |  |
-
+|  |  |  |
+| guten appetit |  | enjoy (your meal) |
+|  |  |  |
+|  |  |  |
 
 
 
@@ -87,7 +90,7 @@ neuter: das ein
 |  |  | purple |
 |  |  |  |
 |  |  |  |
-|  |  |  |
+| dunkle |  | dark |
 |  |  |  |
 |  |  |  |
 |  |  |  |
@@ -349,8 +352,8 @@ neuter: das ein
 | nach |  | to |
 | zum |  |  to the |
 | am |  | on the |
-| ins |  | to the |
-|  |  |  |
+| ins (in das) |  | to the |
+| ins (in das) |  | in the |
 |  |  |  |
 | ja |  | yes |
 | nein |  | no |
@@ -375,6 +378,12 @@ neuter: das ein
 |  |  |  |
 | Schnell |  | quick/ly |
 | Komm! |  | come on |
+|  |  |  |
+| zusammen |  | together |
+|  |  |  |
+|  |  |  |
+| Namen |  | name |
+|  |  |  |
 |  |  |  |
 |  |  |  |
 |  |  |  |
@@ -413,7 +422,7 @@ neuter: das ein
 | Zeit |  | time |
 |  |  |  |
 |  |  |  |
-|  |  |  |
+| etwas |  | something |
 |  |  |  |
 |  |  |  |
 |  |  |  |
@@ -449,7 +458,7 @@ neuter: das ein
 | ratte |  | rat |
 | elefant |  | elephant |
 | eule |  | owl |
-|  |  |  |
+| Papagei |  | parrot |
 |  |  |  |
 |  |  |  |
 |  |  |  |
@@ -578,7 +587,7 @@ neuter: das ein
 | arm |  | arm/s |
 | bein/e |  | leg |
 | hintern |  | butt |
-|  |  |  |
+| Haare |  | hair |
 |  |  |  |
 |  |  |  |
 
@@ -601,6 +610,11 @@ neuter: das ein
 | kaffee |  | coffee |
 |  |  |  |
 |  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
 | tomate |  | tomate |
 |  |  |  |
 | das sandwich |  | sandwich |
@@ -620,7 +634,15 @@ neuter: das ein
 | ketchup |  | ketchup |
 | pfeffer |  | pepper |
 | das salz |  | salt |
-| zucker |  | sugar |
+| der zucker |  | sugar |
+| das eis |  | ice cream |
+| Apfelkuchen |  | apple cake |
+| Obstsalat |  | fruit salad |
+| Nachtisch |  | dessert |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
 | zwiebel |  | onion |
 | salat |  | salad |
 | grüner salat |  | lettuce |
@@ -639,7 +661,20 @@ neuter: das ein
 |  |  |  |
 | tee |  | tea |
 | Wein |  | wine |
+| rotwein |  | red wine |
 | bier |  | beer |
+| Apfelschorle |  | sparkling apple juice |
+| die Suppe |  | soup |
+| das fleisch |  | meat |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+| süß |  | sweet |
+|  |  |  |
+| bestellen |  | order |
 |  |  |  |
 |  |  |  |
 | Musik |  | music |
@@ -647,6 +682,11 @@ neuter: das ein
 |  |  |  |
 |  |  |  |
 
+
+| trinken |  | to / drink/ing |
+| Glas |  | glass (drinking) |
+|  |  |  |
+|  |  |  |
 
 #### more
 
@@ -676,6 +716,10 @@ neuter: das ein
 | aus |  | from |
 | hat |  | has |
 |  |  |  |
+| ohne |  | without |
+| zusammen |  | together |
+| getrennt |  | seperately |
+|  |  |  |
 |  |  |  |
 | wieder |  |  again |
 | auch |  | also |
@@ -701,7 +745,7 @@ neuter: das ein
 |  |  |  |
 | für |  | for |
 | bald  |  | soon |
-|  |  |  |
+| vielleicht |  | maybe |
 | nur |  | only |
 | jede |  | each |
 | viele |  | many |
@@ -710,16 +754,17 @@ neuter: das ein
 | nah |  | near/close |
 | fern |  | far |
 | bis |  | until |
-| ein bisschen |  |  |
+| ein bisschen |  | a little |
 |  |  |  |
-|  |  |  |
+| frei |  | free |
 |  |  |  |
 |  |  |  |
 | Badezimmer | bad-eh-zimmer | bathroom |
 | Schlafzimmer | schlaf-zimmer | bedroom |
 |  |  | kitchen |
 |  |  | office |
-|  |  |  |
+| wohnzimmer |  | living room |
+| die Toiletten |  | the lavatory / restrooms |
 | der Film |  | movie |
 |  |  |  |
 |  |  |  |
@@ -756,7 +801,7 @@ neuter: das ein
 | fotografiere |  | to take photos |
 | nimmtis ? |  | to take (taxi) |
 | fährt ? |  | to drive |
-|  |  |  |
+| sitzen ? |  | to sit |
 |  |  |  |
 |  |  |  |
 |  |  |  |
@@ -796,9 +841,9 @@ neuter: das ein
 | Sachen |  | stuff/things |
 | interessant |  | interesting |
 | toll |  | great (cool) |
-| total |  | really |
-|  |  |  |
-|  |  |  |
+| total |  | really (very) |
+| über |  | everything |
+| viel |  | much |
 |  |  |  |
 | das geld |  | money |
 | tisch |  | table |
@@ -877,7 +922,7 @@ neuter: das ein
 | Hochzeitsreise |  | honeymoon |
 | Bahnhof |  | train station |
 | Urlaub |  | vacation |
-|  |  |  |
+| Besuch |  | visit |
 | Reise |  | trip/travels |
 |  |  |  |
 |  |  |  |
@@ -999,11 +1044,15 @@ Samstagabend - saturday evening
 
 Wochenende - weekend
 
+Fahrkarten - tickets
+
 Konzertkarten concert tickets
 
 Eintrittskarte - admission tickets
 
 Flugtickets - plane tickets
+
+Flugzeug - plane
 
 Schwestern - sisters
 
@@ -1039,10 +1088,20 @@ Tanzen - dancing
 
 Tür - door
 
+Schrank - closet / standing wardrobe
+
+Dienstag - job interview
 
 
 
 
+französisches (eg: Brot) - french (eg: bread)
+griechisch - greek 
+italienisch - italian
+
+
+
+Es gibt eine - there is a ...
 
 Herr - mr
 
@@ -1059,6 +1118,28 @@ Fernseher - TV
 das Videospiel - video game
 
 die Polizistin - police/woman
+
+Aufzug - elevator
+Abfahrt - departure
+zug - train
+Speisewagen - dining car (on train)
+Verspätung - delayed
+Achtung - attention
+auf Gleis - on track
+Gleis - track
+die Hin- und Rückfahrt - round trip ticket
+Reisezentrum - travel center (information)
+fällt aus - cancelled
+Sitz - seat
+nächste - next 
+Zugtür - train door
+hinten - in the back
+
+halb - half
+
+Kreditkarte - credit card
+
+stornieren - cancel
 
 
 Die Vegetarierin - vegetarian (person)
@@ -1079,6 +1160,10 @@ Schuhe - shoes
 Hut - hat
 Sakko - suit jacket
 Hemd - shirt
+T-shirt - shirt
+Pullover - sweater
+Bluse - blous
+Jeans - jeans/pants
 
 Urlaubskleidung - vacation clothes
 
@@ -1103,11 +1188,17 @@ suche - to look for
 joggen - to jog
 nimmt - to take out
 frühstücke - eating breakfast
-Schau - look
+sucht / Schau - to look (for)
 surfst - to surf
+brauche Brauchst - to need
+mag - to like
+passt - to fit
+verlässt ? - leave
+
+to zahlen zahlst - pay
 
 
-
+Größe - size
 
 
 kostet - costs
@@ -1123,6 +1214,12 @@ Griechen - greek restaurant
 
 habe Hunger - hungry
 Durst - thursty
+nervös - nervous
+aufgeregt - excited
+genau - exactly
+spät - late
+? - early
+
 
 die Frage - question
 die Antwort - answer
@@ -1132,6 +1229,7 @@ die Antwort - answer
 Dollar - dollar
 euro - euros
 -
+bar - cash
 
 Wie viel? - how much (cost)?
 
@@ -1203,6 +1301,50 @@ vielen Dank - thank you very much
 
 neue - new
 Jacke - jacket
+
+der Stuhl - stool
+der Tisch - table
+der Teppich - carpet (rug)
+die Couch - couch
+die Lampe - lamp
+der Schreibtisch - desk
+das Bett - bed
+das Bücherregal - bookshelf/bookcase
+
+das Schlafzimmer - bedroom
+das Badezimmer
+
+
+modern - modern / fashionable
+hässlich - ugly
+bequem - comfortable
+hell - bright
+sauber - clean
+
+fantastisch - fantastic
+
+
+
+
+
+-----------------------------------------------
+
+MASCULINE: der
+FEMININE: ?
+NEUTER: ?
+
+der / die / das
+ein eine einen
+
+
+der / den (when noun is at end of verb?)
+
+
+
+
+
+
+
 
 
 

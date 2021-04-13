@@ -12844,7 +12844,7 @@ GLOBALSTAGE.root().matrix().scale(0.50); // dense
 
 			// var str = world.toYAMLString();
 			// console.log(str);
-			// throw "before tracks";
+			throw "before tracks";
 
 			console.log("do tracks");
 			world.solveForTracks();
@@ -12871,7 +12871,7 @@ GLOBALSTAGE.root().matrix().scale(0.50); // dense
 // var str = world.toYAMLString();
 // console.log(str);
 
-// throw "after solve"
+throw "after solve - before save dense pair iteration"
 
 		// if good enough, record matches
 
@@ -13068,7 +13068,8 @@ console.log(featuresB);
 		var Ferror;
 		var pointsA;
 		var pointsB;
-		var initialMatchesAB;
+		var matchesAB;
+		var initialMatchesAB = [];
 
 
 		featuresA = R3D.denormalizeSIFTObjects(featuresA, imageAWidth, imageAHeight);
@@ -13118,23 +13119,26 @@ for(var i=0; i<features.length; ++i){
 		// get initial matches
 		var result = R3D.compareProgressiveRIFTObjectsFull(objectsA, objectsB);
 		console.log(result);
-		var matches = result["matches"];
+		matchesAB = result["matches"];
 		
-		var matchesAB = R3D.relativeRIFTFromFeatureMatches(matches);
+		matchesAB = R3D.relativeRIFTFromFeatureMatches(matchesAB);
 
-		matches = matchesAB;
+		var info = R3D.dropOutliersSparseMatches(matchesAB, imageScales[0],imageScales[1]);
+		matchesAB = info["matches"];
+		console.log(matchesAB);
 
+		// matches = matchesAB;
 
-		throw "neighborhood";
-
-
-		throw "re score compare";
-
-
-		throw "expand neighborhood?";
+		// throw "neighborhood";
 
 
-		throw "re filter: score, F-error";
+		// throw "re score compare";
+
+
+		// throw "expand neighborhood?";
+
+
+		// throw "re filter: score, F-error";
 		
 
 	// 	// convert to A, B, affine
@@ -13162,13 +13166,13 @@ for(var i=0; i<features.length; ++i){
 	// // console.log(matches);
 	// 	console.log("INITIAL F MATCHES: "+matches.length+" / "+minimumCountFInit);
 
-		if(matches.length<minimumCountFInit){
+		if(matchesAB.length<minimumCountFInit){
 			goodEnoughMatches = false;
 			console.log("not enough initial matches");
 		}
 // UPGRADE INITIAL MATCHES COUNT & ERROR
 		if(goodEnoughMatches){
-			console.log(matches);
+			console.log(matchesAB);
 /*
 			// keep best neighborhoods
 			var result = R3D.keepExtendedMatchNeighborhoods(imageScalesA,imageScalesB, matches);
@@ -13195,284 +13199,41 @@ console.log("DOES THIS WORK RIGHT?:")
 			// var result = R3D.compareProgressiveRIFTObjectsFull(objectsA, objectsB);
 			// console.log(result);
 
-initialMatchesAB = matches;
+			// initialMatchesAB = matchesAB;
 
 
+// console.log(matchesAB);
 
 
+// throw "here ????????? - repackage as A/B/C"
 
 
-GLOBALSTAGE.root().matrix().scale(0.50);
+// GLOBALSTAGE.root().matrix().scale(0.50);
+GLOBALSTAGE.root().matrix().scale(0.250);
 
 
+	var cellSizePercent = 0.04;
+	var imgA = imageScalesA.images()[0];
+	var imgB = imageScalesB.images()[0];
+	var cellSize = imgA.size().length()*cellSizePercent;
+	console.log("cellSize: "+cellSize);
+
+	var info = R3D.separateMatchesIntoPieces(matchesAB);
+		pointsA = info["A"];
+		pointsB = info["B"];
+		affinesAB = info["affines"];
 
 
-
-if(DEBUG_SHOW){
-	// var alp = 1.0;
-	// var alp = 0.75;
-	var alp = 0.50;
-	// var alp = 0.25;
-	var img = imageMatrixA;
-		img = GLOBALSTAGE.getFloatRGBAsImage(img.red(),img.grn(),img.blu(), img.width(),img.height());
-	var d = new DOImage(img);
-	d.graphics().alpha(alp);
-	d.matrix().translate(0,0);
-	GLOBALSTAGE.addChild(d);
-
-	var img = imageMatrixB;
-		img = GLOBALSTAGE.getFloatRGBAsImage(img.red(),img.grn(),img.blu(), img.width(),img.height());
-	var d = new DOImage(img);
-	d.graphics().alpha(alp);
-	d.matrix().translate(imageMatrixA.width(),0);
-	GLOBALSTAGE.addChild(d);
-}
-
-
-var samplesA = [];
-var samplesB = [];
-var affines = [];
-for(var i=0; i<matches.length; ++i){
-	var match = matches[i];
-	// console.log(match);
-	var pA = match["A"];
-	var pB = match["B"];
-	var aff = match["affine"];
-	samplesA[i] = pA;
-	samplesB[i] = pB;
-	affines[i] = aff;
-}
-
-
-var cellSizePercent = 0.04;
-
-var imgA = imageScalesA.images()[0];
-var imgB = imageScalesB.images()[0];
-
-var cellSize = imgA.size().length()*cellSizePercent;
-console.log("cellSize: "+cellSize);
-
-
-
-// try optimizing the patch affines using visual matching
-
-// try optimizing the patch affines using neighborhood points
-
-// try optimizing the patch affines using F rotation + original affine scale ?
-
-
-
-var info = R3D.experimentAffineRefine(samplesA,samplesB,affines, imageScalesA,imageScalesB);
-console.log(info);
-var scores = info["scores"];
-samplesA = info["A"];
-samplesB = info["B"];
-affines = info["affines"];
-
-// FILTER ON SORES:
-for(var iter=0; iter<10; ++iter){
-	Code.printMatlabArray(scores);
-	var min = Code.min(scores);
-	var sigma = Code.stdDev(scores,min);
-	var limitScore = min + sigma*2.0;
-	console.log("SCORES: "+min+" +/- "+sigma);
-	console.log("COUNT A: "+scores.length);
-	var startCount = scores.length;
-	for(var i=0; i<scores.length; ++i){
-		var score = scores[i];
-		if(score>limitScore){
-			Code.removeElementAt(samplesA,i);
-			Code.removeElementAt(samplesB,i);
-			Code.removeElementAt(scores,i);
-			Code.removeElementAt(affines,i);
-			--i;
+		if(DEBUG_SHOW){
+			var cellSizeShow = imageMatrixA.size().length()*0.05;
+			// R3D.showForwardBackwardCells(pointsA, pointsB, affinesAB, imageMatrixA,imageMatrixB, GLOBALSTAGE, cellSize);
+			R3D.showForwardBackwardPointsColor(pointsA, pointsB, affinesAB, imageMatrixA,imageMatrixB, GLOBALSTAGE, cellSizeShow);
 		}
-	}
-	console.log("COUNT B: "+scores.length);
-	if(startCount==scores.length){
-		break;
-	}
-}
-// update optimum locations?
-
-var info = R3D.experimentLocationRefine(samplesA,samplesB,affines, imageScalesA,imageScalesB);
-console.log(info);
-scores = info["scores"];
-samplesA = info["A"];
-samplesB = info["B"];
-affines = info["affines"];
 
 
+console.log("GET INITIAL F: "+matchesAB.length);
 
 
-
-// Code.printMatlabArray(scores);
-
-
-
-// filter again ?
-for(var iter=0; iter<10; ++iter){
-	Code.printMatlabArray(scores);
-	var min = Code.min(scores);
-	var sigma = Code.stdDev(scores,min);
-	var limitScore = min + sigma*2.0;
-	console.log("SCORES: "+min+" +/- "+sigma);
-	console.log("COUNT A: "+scores.length);
-	var startCount = scores.length;
-	for(var i=0; i<scores.length; ++i){
-		var score = scores[i];
-		if(score>limitScore){
-			Code.removeElementAt(samplesA,i);
-			Code.removeElementAt(samplesB,i);
-			Code.removeElementAt(scores,i);
-			Code.removeElementAt(affines,i);
-			--i;
-		}
-	}
-	console.log("COUNT B: "+scores.length);
-	if(startCount==scores.length){
-		break;
-	}
-}
-
-
-
-console.log("HERE ,,");
-
-
-var matches = [];
-	for(var i=0; i<samplesA.length; ++i){
-		var pointA = samplesA[i];
-		var pointB = samplesB[i];
-		var affine = affines[i];
-		var match = {"A":pointA,"B":pointB,"affine":affine};
-		matches[i] = match;
-	}
-// extract ...
-console.log("CHECKED MATCHES:");
-console.log(matches);
-
-
-// R3D.showForwardBackwardCells(samplesA, samplesB, affines, imgA,imgB, GLOBALSTAGE, cellSize);
-
-
-
-
-
-if(DEBUG_SHOW){
-	// original objects
-	// var list = [objectsA,objectsB];
-	// var images = [imageMatrixA,imageMatrixB];
-	// for(var i=0; i<list.length; ++i){
-	// 	var objects = list[i];
-	// }
-	// matches
-
-		var d = new DO();
-		// d.graphics().setFill(0xFFFFFFFF);
-		// d.graphics().setLine(1.0,0x993366FF);
-		// d.graphics().setLine(1.0,0xFFFF0000);
-//		var imageA = imageScalesA;
-		var color0 = new V3D(1,0,0);
-		var color1 = new V3D(0,1,0);
-		var color2 = new V3D(0,0,1);
-		// var color3 = new V3D(1,1,1);
-		var color3 = new V3D(0,0,0);
-		var colors = [color0,color1,color2,color3];
-		for(var i=0; i<matches.length; ++i){
-			var match = matches[i];
-			// console.log(match);
-			var a = match["A"];
-			var b = match["B"];
-			// var pointA = a["point"];
-			// var pointB = b["point"];
-			var pointA = a;
-			var pointB = b;
-			var size = 2.0;
-
-			// var sizeA = a["size"];
-			// var sizeB = b["size"];
-
-			var sizeA = 4.0;
-			var sizeB = 4.0;
-			// ...
-			var p = pointA.copy();
-			var q = pointB.copy();
-
-			var px = (p.x/imageScalesA.width());
-			var py = (p.y/imageScalesA.height());
-			var qx = 1 - px;
-			var qy = 1 - py;
-			var p0 = qx*qy;
-			var p1 = px*qy;
-			var p2 = qx*py;
-			var p3 = px*py;
-
-			// console.log(p0,p1,p2,p3, p0+p1+p2+p3);
-			var color = V3D.average(colors, [p0,p1,p2,p3]);
-			color = Code.getColARGBFromFloat(1.0,color.x,color.y,color.z);
-			
-			d.graphics().setLine(1.0,color);
-			// var point = feature["point"];
-			// var angle = feature["angle"];
-			// var size = feature["size"];
-			d.graphics().beginPath();
-			d.graphics().drawCircle(pointA.x,pointA.y,sizeA);
-			d.graphics().endPath();
-			d.graphics().strokeLine();
-
-			d.graphics().beginPath();
-			d.graphics().drawCircle(imageScalesA.width() + pointB.x,pointB.y,sizeB);
-			d.graphics().endPath();
-			d.graphics().strokeLine();
-			
-			// var dir = new V2D(size,0);
-			// dir.rotate(angle);
-			// d.graphics().beginPath();
-			// d.graphics().moveTo(point.x,point.y);
-			// d.graphics().lineTo(point.x+dir.x,point.y+dir.y);
-			// d.graphics().endPath();
-			// d.graphics().strokeLine();
-		}
-		d.matrix().translate(0,0);
-		GLOBALSTAGE.addChild(d);
-}
-
-
-
-
-// 
-// throw "AFTER FULL SPARSE INITIAL"
-
-
-
-
-// throw "initial fat matches ... next: use stereopsis & F"
-
-	// var objectsA = R3D.generateProgressiveSIFTObjects(featuresA, imageMatrixA);
-	// var objectsB = R3D.generateProgressiveSIFTObjects(featuresB, imageMatrixB);
-	// console.log(objectsA);
-	// console.log(objectsB);
-
-console.log("GET INITIAL F: "+matches.length);
-
-			pointsA = [];
-			pointsB = [];
-			affines = [];
-			for(var i=0; i<matches.length; ++i){
-				var match = matches[i];
-				var a = match["A"];
-				var b = match["B"];
-				var affine = match["affine"];
-				pointsA.push(a);
-				pointsB.push(b);
-				affines.push(affine);
-			}
-// var F;
-// var Finv;
-// var Ferror;
-// var pointsA;
-// var pointsB;
 			// console.log(pointsA);
 			// console.log(pointsB);
 			// console.log("SIZE: "+imageMatrixA.size()); // 504x378
@@ -13498,6 +13259,10 @@ console.log("GET INITIAL F: "+matches.length);
 				console.log("F ERROR: "+fMean+" +/- "+fSigma);
 				Ferror = fSigma;
 			}
+
+
+// throw "HERE"
+
 			//R3D.showRansac(pointsA,pointsB, F,Finv, null, imageMatrixA,imageMatrixB);
 			// R3D.showRansac(bestA,bestB, F,Finv, null, imageScalesA,imageScalesB);
 
@@ -13509,18 +13274,30 @@ console.log("GET INITIAL F: "+matches.length);
 			}
 		}
 
+		
+		//
+		initialMatchesAB = [];
+		for(var i=0; i<matchesAB.length; ++i){
+			var m = matchesAB[i];
+			var match = {};
+				match["A"] = m["A"];
+				match["B"] = m["B"];
+				match["affine"] = m["affine"];
+			initialMatchesAB.push(match);
+		}
+
 		var world = null;
 		var view0 = null;
 		var view1 = null;
-// F - DENSE - WORLD
+		// F - DENSE - WORLD
 		if(goodEnoughMatches){
 			console.log("START WORLD TO FIND DENSE F");
 			// var info = R3D.average2DTranformForIndividualPoints(pointsA,pointsB, imageMatrixA,imageMatrixB, true);
 			// console.log(info);
 			// var transforms = info["transforms"];
-			
 
-// throw "are these affines any good?"
+			// keep original
+			
 
 			// throw "WORLD";
 			var cellCount = 40; // 40-80
@@ -13550,8 +13327,7 @@ console.log("GET INITIAL F: "+matches.length);
 			for(var i=0; i<pointsA.length; ++i){
 				var pointA = pointsA[i];
 				var pointB = pointsB[i];
-				// var affine = transforms[i];
-				var affine = affines[i];
+				var affine = affinesAB[i];
 				var vs = [view0,view1];
 				var ps = [pointA,pointB];
 				var as = [affine];

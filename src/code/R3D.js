@@ -15496,7 +15496,7 @@ R3D.keepExtendedMatchNeighborhoods = function(matchesAB, imageMatrixA,imageMatri
 	var featureSize = 0.04; // 0.3 - 0.5 (size / 3)
 	var featureSpacing = 0.04; // 0.2 - 0.10
 	var compareSize = 7; // 5 - 9
-	console.log(matchesAB);
+	// console.log(matchesAB);
 // throw "JERE"
 	// derived
 	var imageSizeA = imageMatrixA.size().length();
@@ -15586,7 +15586,7 @@ R3D.keepExtendedMatchNeighborhoods = function(matchesAB, imageMatrixA,imageMatri
 		return limit;
 	}
 	var keepList = Code.repeatedDropOutliers(neighborhoods, fxnValue, fxnLimit, 10, 5, fxnUpdate);
-	console.log(keepList);
+	// console.log(keepList);
 	neighborhoods = keepList;
 
 	// throw "wurklich 1"
@@ -35440,39 +35440,78 @@ R3D.dropOutliersSparseMatches = function(matches, imageScalesA,imageScalesB){
 	var pointsA = info["A"];
 	var pointsB = info["B"];
 	var affinesAB = info["affines"];
-	var matchesAB;
-	// refine affine match:
-	var info = R3D.experimentAffineRefine(pointsA,pointsB,affinesAB, imageScales[0],imageScales[1]);
 
-	var info = R3D.groupMatchesFromParallelArrays(info, imageScales[0],imageScales[1]);
+	var matchesAB, info;
+	// refine affine match:
+	info = R3D.experimentAffineRefine(pointsA,pointsB,affinesAB, imageScalesA,imageScalesB);
+	scores = info["scores"];
+	pointsA = info["A"];
+	pointsB = info["B"];
+	affinesAB = info["affines"];
+
+	// possibly filter scores here too to limit next step?
+
+	// refine location:
+	info = R3D.experimentLocationRefine(pointsA,pointsB,affinesAB, imageScalesA,imageScalesB);
+		
+	// group
+	info = R3D.groupMatchesFromParallelArrays(info, imageScalesA,imageScalesB);
 	matchesAB = info["matches"];
 	console.log("START MATCHES: "+matchesAB.length);
 
 	// score
-	var info = R3D.repeatedDropOutliersScore(matchesAB, imageScales[0],imageScales[1]);
+	info = R3D.repeatedDropOutliersScore(matchesAB, imageScalesA,imageScalesB);
 	matchesAB = info["matches"];
 	console.log("KEPT SCORES: "+matchesAB.length);
 
 	// extended neighborhood
-	var info = R3D.keepExtendedMatchNeighborhoods(matchesAB, imageScales[0],imageScales[1]);
+	info = R3D.keepExtendedMatchNeighborhoods(matchesAB, imageScalesA,imageScalesB);
 	matchesAB = info["matches"];
 	console.log("KEPT NEIGHBORHOOD: "+matchesAB.length);
 
 	// F
-	var info = R3D.repeatedDropOutliersFundamental(matchesAB, imageScales[0],imageScales[1]);
+	info = R3D.repeatedDropOutliersFundamental(matchesAB, imageScalesA,imageScalesB);
 	matchesAB = info["matches"];
 	console.log("KEPT F: "+matchesAB.length);
 
 	// scores 2
-	var info = R3D.repeatedDropOutliersScore(matchesAB, imageScales[0],imageScales[1]);
+	info = R3D.repeatedDropOutliersScore(matchesAB, imageScalesA,imageScalesB);
 	matchesAB = info["matches"];
 	console.log("KEPT SCORE: "+matchesAB.length);
+
+
+/*
+	console.log(matchesAB);
+
+	var info = R3D.separateMatchesIntoPieces(matchesAB);
+	var pointsA = info["A"];
+	var pointsB = info["B"];
+	var affinesAB = info["affines"];
+
+	// better location:
+	var info = R3D.experimentLocationRefine(pointsA,pointsB,affinesAB, imageScalesA,imageScalesB);
+	console.log(info);
+	scores = info["scores"];
+	samplesA = info["A"];
+	samplesB = info["B"];
+	affines = info["affines"];
+
+	var info = R3D.groupMatchesFromParallelArrays(info, imageScalesA,imageScalesB);
+	matchesAB = info["matches"];
+	console.log(matchesAB);
+	console.log("RE-MATCHES: "+matchesAB.length);
+*/
+
+	// // scores 3
+	// var info = R3D.repeatedDropOutliersScore(matchesAB, imageScalesA,imageScalesB);
+	// matchesAB = info["matches"];
+	// console.log("KEPT SCORE: "+matchesAB.length);
 
 	return {"matches":matchesAB};
 
 }
 
-R3D.repeatedDropOutliersFundamental = function(matches, imageScalesA,imageScalesB){
+R3D.repeatedDropOutliersFundamental = function(matchesAB, imageScalesA,imageScalesB){
 	// drop outliers F
 	var fxnUpdate = function(matches){ // recalculate F
 		var info = R3D.separateMatchesIntoPieces(matches);
@@ -35496,10 +35535,11 @@ R3D.repeatedDropOutliersFundamental = function(matches, imageScalesA,imageScales
 		return object["ferror"];
 	}
 	var fxnLimit = function(values){
+		// Code.printMatlabArray(values);
 		var min = Code.min(values);
 		var std = Code.stdDev(values,min);
 		var limit = min + std * 2.0;
-		console.log("F-LIMIT: "+limit+" ("+values.length+") ");
+		// console.log("F-LIMIT: "+limit+" ("+values.length+") ");
 		return limit;
 	}
 	var keepList = Code.repeatedDropOutliers(matchesAB, fxnValue, fxnLimit, 10, 10, fxnUpdate);
@@ -35513,6 +35553,7 @@ R3D.repeatedDropOutliersScore = function(matchesAB, imageScalesA,imageScalesB){
 		return object["score"];
 	}
 	var fxnLimit = function(values){
+		// Code.printMatlabArray(values);
 		var min = Code.min(values);
 		var std = Code.stdDev(values,min);
 		var limit = min + std * 2.0;

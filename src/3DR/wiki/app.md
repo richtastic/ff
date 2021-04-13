@@ -388,6 +388,24 @@ MISSING:
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
+DENSE IS STILL BAD:
+
+calculatePairMatchWithRFromViewIDs
+
+
+
+
+
+
+
+
+var info = R3D.experimentLocationRefine(samplesA,samplesB,affines, imageScalesA,imageScalesB);
+console.log(info);
+scores = info["scores"];
+samplesA = info["A"];
+samplesB = info["B"];
+affines = info["affines"];
+
 
 - TESTING ALGORITHMS
 	- display matches as colors

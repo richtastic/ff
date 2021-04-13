@@ -207,6 +207,7 @@ function testMatchingFeatures(){
 		matches = R3D.relativeRIFTFromFeatureMatches(matches);
 		console.log(matches);
 
+/*
 var info = R3D.separateMatchesIntoPieces(matches);
 console.log(info);
 var pointsA = info["A"];
@@ -223,137 +224,19 @@ var info = R3D.groupMatchesFromParallelArrays(info, imageScales[0],imageScales[1
 console.log(info);
 
 matchesAB = info["matches"];
-
-// // console.log(info);
-// var scores = info["scores"];
-// samplesA = info["A"];
-// samplesB = info["B"];
-// affines = info["affines"];
-
-
-// var countFxn = function(item){
-// 	return item["scores"].length;
-// }
-// var groupFxn = function(index,info){
-// 	var scores = info["scores"];
-// 	var As  = info["A"];
-// 	var Bs = info["B"];
-// 	var affines = info["affines"];
-// 	var o = {};
-// 		o["score"] = scores[index];
-// 		o["A"] = As[index];
-// 		o["B"] = Bs[index];
-// 		o["affine"] = affines[index];
-// 	return o;
-// }
-// var groups = Code.mapObject(countFxn, groupFxn, info);
-// console.log(groups);
-
-
-var info = R3D.repeatedDropOutliersScore(matchesAB, imageScales[0],imageScales[1]);
-console.log(info);
-matchesAB = info["matches"];
-/*
-// filter on scores:
-var fxnValue = function(object){
-	return object["score"];
-}
-var fxnLimit = function(values){
-	var min = Code.min(values);
-	var std = Code.stdDev(values,min);
-	var limit = min + std * 2.0;
-	return limit;
-}
-
-// Code.repeatedDropOutliers = function(inList, toValueFxn, toLimitFxn, minCount, maxIterations){
-var keepList = Code.repeatedDropOutliers(groups, fxnValue, fxnLimit, 10, 25);
-matchesAB = keepList;
-console.log("KEPT: "+matchesAB.length);
-console.log(matchesAB);
 */
-
-
-var info = R3D.keepExtendedMatchNeighborhoods(matchesAB, imageScales[0],imageScales[1]);
-console.log(info);
-// matchesAB = keepList;
-// var info = Code.repeatedDropOutliers(groups, fxnValue, fxnLimit, 10, 25);
-matchesAB = info["matches"];
-console.log("KEPT: "+matchesAB.length);
-
-
-var info = R3D.repeatedDropOutliersFundamental(matchesAB, imageScales[0],imageScales[1]);
-matchesAB = info["matches"];
-console.log("KEPT: "+matchesAB.length);
-
-/*
-
-// drop outliers F
-var fxnUpdate = function(matches){
-	// recalculate F
-	// console.log(matches);
-	var info = R3D.separateMatchesIntoPieces(matches);
-	var pointsA = info["A"];
-	var pointsB = info["B"];
-	var F = R3D.fundamentalFromUnnormalized(pointsA,pointsB);
-	// console.log(F);
-	var Finv = R3D.fundamentalInverse(F);
-	var count = pointsA.length;
-	var errorTotal = 0;
-	for(var i=0; i<count; ++i){
-		var pointA = pointsA[i];
-		var pointB = pointsB[i];
-		var error = R3D.fundamentalErrorSingle(F,Finv,pointA,pointB);
-			error = error["error"];
-		matches[i]["ferror"] = error;
-		errorTotal += error;
-	}
-	// console.log("avg F error: "+(errorTotal/count));
-}
-var fxnValue = function(object){
-	return object["ferror"];
-}
-var fxnLimit = function(values){
-	var min = Code.min(values);
-	var std = Code.stdDev(values,min);
-	var limit = min + std * 2.0;
-	console.log("LIMIT: "+limit+" ("+values.length+") ");
-	return limit;
-}
-var keepList = Code.repeatedDropOutliers(matchesAB, fxnValue, fxnLimit, 10, 10, fxnUpdate);
-console.log(keepList);
-*/
-
-// R3D.dropOutliersIteritively(matches, sigmaRatio, maxIterations, Fin);
-// var F = R3D.fundamentalFromUnnormalized(pointsA,pointsB);
-// var Finv = R3D.fundamentalInverse(F);
-// var error = R3D.fundamentalError(F,Finv,pointsA,pointsB);
-
-// R3D.keepExtendedMatchNeighborhoods = function(imageMatrixA,imageMatrixB, matchesAB)
-
-// console.log(matchesAB);
-// var scores = [];
-// for(var i=0; i<matchesAB.length; ++i){
-// 	var score = matchesAB[i]["score"];
-// 	scores.push(score);
-// }
-// Code.printMatlabArray(scores);
-
-var info = R3D.repeatedDropOutliersScore(matchesAB, imageScales[0],imageScales[1]);
-// console.log(info);
-matchesAB = info["matches"];
-
-
-
 
 // ALL-IN-ONE:
-
-// var info =  R3D.dropOutliersSparseMatches(matches, imageScales[0],imageScales[1]);
-// var matchesAB = info["matches"];
+var info = R3D.dropOutliersSparseMatches(matches, imageScales[0],imageScales[1]);
+var matchesAB = info["matches"];
 
 var info = R3D.separateMatchesIntoPieces(matchesAB);
 var pointsA = info["A"];
 var pointsB = info["B"];
 var affinesAB = info["affines"];
+
+console.log(matches);
+console.log(pointsA);
 
 
 
