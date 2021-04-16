@@ -8849,8 +8849,8 @@ Stereopsis.World.prototype.solveDensePairNew = function(subdivisionScaleSize, su
 	// var subdivisions = 1; // 5-10k
 	// var subdivisions = 2; // ~40k
 	var subdivisions = subDivisionCounts; // ~40k  --- select - about 
-// subdivisions = 1; // 25k
-subdivisions = 2; // 10k ............... testing
+subdivisions = 1; // 5k
+// subdivisions = 2; // 10k ............... testing
 // subdivisions = 3; // 25k ................. current default
 // subdivisions = 4; // 50k
 // console.log("subdivisions: "+subdivisions);
@@ -8861,6 +8861,8 @@ subdivisions = 2; // 10k ............... testing
 // iterations = 3;
 	// var iterations = 5;
 	// var iterations = 1;
+
+throw "ere eh";
 	var maxIterations = (subdivisions+1)*iterations;
 
 world.shouldValidateMatchRange(false);

@@ -96,7 +96,7 @@ neuter: das ein
 |  |  |  |
 |  |  |  |
 |  |  |  |
-|  |  |  |
+| Lieblingsfarbe |  | favorite color |
 |  |  |  |
 
 
@@ -121,6 +121,12 @@ neuter: das ein
 | es geht |  | I'm all right |
 | Es tut mir leid |  | I am sorry |
 |  |  |  |
+| gute Besserung |  | feel better (sick) |
+|  |  |  |
+|  |  |  |
+|Hurra |  | hooray |
+|  |  |  |
+|  |  |  |
 |  |  |  |
 | Schönen Tag |  | good-day |
 | guten morgen |  | good morning |
@@ -136,6 +142,10 @@ neuter: das ein
 | morgen |  | tomorrow |
 |  |  |  |
 | Ordnung |  | all right |
+| alles klar |  | all right (ok?) |
+| klar |  | of course |
+|  |  |  |
+|  |  |  |
 |  |  |  |
 | Richtig |  | correct |
 |  |  |  |
@@ -297,16 +307,25 @@ neuter: das ein
 | minute | min-oot-eh | minute |
 | stunde |  | hour |
 | tag | tayg | day |
-| monat |  | month |
+| monat/Monate |  | month/months |
 | jahr |  | year |
 |  |  |  |
 | uhr | oohr | clock |
 |  |  |  |
 | buch |  | book |
 | auto / wagon | out-oh / vahgahn | car |
+| Motorrad |  | motorbike |
+| Bus |  | bus |
+|  |  |  |
+|  |  |  |
 | haus |  | house |
 | Wohnung |  | apartment |
 | nach Hause |  | home |
+| Fenster |  | window |
+| Garten |  | garden |
+| stock |  | floor (level) |
+|  |  |  |
+|  |  |  |
 |  |  |  |
 |  |  |  |
 | Schreibstift / stift |  | pen |
@@ -319,6 +338,10 @@ neuter: das ein
 |  |  |  |
 |  |  |  |
 | Fernseher |  | TV |
+|  |  |  |
+| Nummer |  | number |
+|  |  |  |
+|  |  |  |
 |  |  |  |
 |  |  |  |
 | Schatz |  | sweetheart |
@@ -360,12 +383,18 @@ neuter: das ein
 | oder |  | or |
 |  |  |  |
 |  |  |  |
+| schon |  | already |
+| fast |  | almost/nearly |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
 | links |  | left |
 | rechts |  | right (direction) |
 |  |  |  |
 |  |  |  |
 | genug |  | enough |
-|  |  |  |
+| lustig |  | funny |
 | genau |  | (thats) right |
 | jeden |  | every |
 | immer |  | always |
@@ -374,18 +403,22 @@ neuter: das ein
 | später |  | later |
 | oft |  | often |
 | bereit |  | ready |
-|  |  |  |
+| rein |  | inside |
 |  |  |  |
 | Schnell |  | quick/ly |
 | Komm! |  | come on |
 |  |  |  |
 | zusammen |  | together |
+| noch |  | another |
+| anderes |  | else |
+| dann |  | then |
+| mehr |  | more |
 |  |  |  |
 |  |  |  |
 | Namen |  | name |
 |  |  |  |
 |  |  |  |
-|  |  |  |
+| Geschenk |  | gift |
 |  |  |  |
 |  |  |  |
 | heiß |  | hot |
@@ -398,10 +431,15 @@ neuter: das ein
 |  |  |  |
 | traurig |  | sad |
 | langweilig |  | boring |
+| müde |  | tired |
+|  |  |  |
+| glücklich |  | happy |
+| lustig |  | funny |
 |  |  |  |
 |  |  |  |
 |  |  |  |
 |  |  |  |
+| Lust |  | desire (feel like it) |
 |  |  |  |
 |  |  |  |
 | Freundin |  | friend |
@@ -415,19 +453,21 @@ neuter: das ein
 |  |  |  |
 | elegant |  | elegant/stylish |
 |  |  |  |
+| gesund |  | healthy |
 | krank |  | sick |
 |  |  |  |
 | Toiletten |  | restrooms |
 |  |  |  |
 | Zeit |  | time |
 |  |  |  |
-|  |  |  |
+
 | etwas |  | something |
 |  |  |  |
 |  |  |  |
 |  |  |  |
 |  |  |  |
 |  |  |  |
+| Büro |  | office |
 |  |  |  |
 |  |  |  |
 |  |  |  |
@@ -439,7 +479,9 @@ neuter: das ein
 |  |  |  |
 |  |  |  |
 |  |  |  |
-|  |  |  |
+
+
+alles Gute zum Geburtstag - (bad luck?)
 
 
 
@@ -493,12 +535,12 @@ neuter: das ein
 | Bahnhof |  | train (railway) station |
 | zum / Bahn |  | train / railways |
 |  |  |  |
+| Bushaltestelle |  | bus stop |
 |  |  |  |
 |  |  |  |
 |  |  |  |
 |  |  |  |
-|  |  |  |
-|  |  |  |
+| Picknick |  | picnic |
 |  |  |  |
 |  |  |  |
 |  |  |  |
@@ -537,16 +579,16 @@ neuter: das ein
 | Mitbewohner |  | roommate |
 | Eltern |  | parents |
 |  |  |  |
-|  |  |  |
-|  |  |  |
-|  |  |  |
-|  |  |  |
-|  |  |  |
-|  |  |  |
-|  |  |  |
+| das Baby |  | baby |
+| das Mädchen |  | girl |
+| junge |  | boy |
 | der mann |  | man |
 | die frau |  | woman |
-| junge |  | boy |
+|  |  |  |
+| die Eltern |  | parents |
+|  |  |  |
+|  |  |  |
+|  |  |  |
 |  |  |  |
 | Student/en |  | student/s |
 | Medizinstudenten |  | medical student |
@@ -680,13 +722,33 @@ neuter: das ein
 | Musik |  | music |
 |  |  |  |
 |  |  |  |
+| Chefin |  | boss |
+| alle |  | everyone |
 |  |  |  |
-
-
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
 | trinken |  | to / drink/ing |
 | Glas |  | glass (drinking) |
+| telefoniert ? |  | to talk on phone |
+| kenneknow ?  |  | to know |
+| rufe ? |  | call |
 |  |  |  |
 |  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+
+
+
+Fieber - fever
+Kopfschmerzen -  headache
+Bauchschmerzen - stomach ache
+Zahnschmerzen - toothache
 
 #### more
 
@@ -705,6 +767,16 @@ neuter: das ein
 | Polnisch |  | polish |
 | Englisch |  | english |
 | Französisch |  | french |
+|  |  |  |
+|  |  |  |
+| Deutsche |  | german |
+| Amerikaner |  | american |
+| Berliner |  | berlin person ? |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+| Großbritannien |  | Great Britain |
+|  |  |  |
 |  |  |  |
 |  |  |  |
 | bereit | bear(ch)-iet | ready |
@@ -726,6 +798,8 @@ neuter: das ein
 | aber |  | but |
 | musst |  | must |
 | in der Nähe |  | nearby |
+| circa |  | around |
+| weit |  | far |
 | weit weg |  | far away |
 | von |  | from |
 |  |  |  |
@@ -739,7 +813,7 @@ neuter: das ein
 |  |  |  |
 | da drüben |  | over there |
 | da |  | there (here) |
-| diese |  | this |
+| diese / dieses |  | this |
 | keinen |  | no |
 |  |  |  |
 |  |  |  |
@@ -767,12 +841,12 @@ neuter: das ein
 | die Toiletten |  | the lavatory / restrooms |
 | der Film |  | movie |
 |  |  |  |
-|  |  |  |
+| (macht) Sport |  | excercise(s) |
 |  |  |  |
 |  |  |  |
 | das Klavier |  | piano |
 | Auto |  | car |
-|  |  |  |
+| Straße |  | street |
 | personen |  | people |
 |  |  |  |
 |  |  |  |
@@ -802,10 +876,30 @@ neuter: das ein
 | nimmtis ? |  | to take (taxi) |
 | fährt ? |  | to drive |
 | sitzen ? |  | to sit |
+| fahren ? |  | to drive |
+| liest ? |  | to read |
+| Gibst ? |  | to give |
+| beschützen ? |  | to protect |
+| holen ? |  | to get |
+| sage ? |  | to say |
+| Warten ? |  | to wait |
+| Wiederholen ? |  | to repeat |
+| hört ? |  | to listen/hear |
+| bleiben ? |  | to stay |
 |  |  |  |
 |  |  |  |
 |  |  |  |
 |  |  |  |
+|  |  |  |
+|  |  |  |
+| Studieren ? |  | to study (a subject) |
+| lernen |  | to study (for a test - learn) |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+| dauert |  | lasts |
+| lange |  | long (duration) |
 | Schau |  | look |
 | spiele spielt |  | play (instrument, game) |
 | Spiel  |  | game |
@@ -831,6 +925,23 @@ neuter: das ein
 |  |  |  |
 |  |  |  |
 |  |  |  |
+|  |  |  |
+| Gitarre |  | Guitar |
+| Hobbys |  | hobbies |
+|  |  |  |
+| die Geige |  | violin |
+| der film |  | movie |
+| Instrument |  | instrument |
+| Tennis |  | tennis |
+| Podcasts |  | podcasts |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
 | Überraschung |  | surprise |
 |  |  |  |
 | lacht |  | laugh/laughs |
@@ -847,14 +958,19 @@ neuter: das ein
 |  |  |  |
 | das geld |  | money |
 | tisch |  | table |
-|  |  |  |
+| Schlüssel |  | key |
 | perfekt |  | perfect |
+| süß |  | cute |
+|  |  |  |
+|  |  |  |
+|  |  |  |
 |  |  |  |
 | jung |  | young |
 | alt |  | old |
 | neu |  | new |
 |  |  |  |
 |  |  |  |
+| leider |  | unfortunately |
 |  |  |  |
 |  |  |  |
 | Dumm |  | dumb |
@@ -865,7 +981,7 @@ neuter: das ein
 | kurz |  | short |
 | groß / hoch |  | tall / big |    großen 
 | jung |  | young |
-|  |  |  |
+| freundlich |  | friendly |
 | toll |  | great |
 |  |  |  |
 |  |  |  |
@@ -890,9 +1006,11 @@ neuter: das ein
 |  |  |  |
 |  |  |  |
 | Schach |  | chess |
-|  |  |  |
+| Tüte |  | bag |
 |  |  |  |
 | Geldautomat |  | ATM |
+|  |  |  |
+|  |  |  |
 |  |  |  |
 |  |  |  |
 |  |  |  |
@@ -924,6 +1042,10 @@ neuter: das ein
 | Urlaub |  | vacation |
 | Besuch |  | visit |
 | Reise |  | trip/travels |
+| Adresse |  | address |
+| Taxifahrt |  | taxi ride |
+|  |  |  |
+| der tourist |  | tourist |
 |  |  |  |
 |  |  |  |
 |  |  |  |
@@ -1076,6 +1198,19 @@ Konzert - concert
 
 Schalter - counter
 
+Stadtzentrum - city center
+
+Fluss - river
+
+besuchen - visit
+
+Zoo - zoo
+
+Kunstmuseum - atr museum
+
+Stadtmuseum - city museum
+
+
 
 geöffnet - is open
 
@@ -1101,6 +1236,11 @@ italienisch - italian
 
 
 
+Psychologie - psychology
+Geschichte - history
+
+
+
 Es gibt eine - there is a ...
 
 Herr - mr
@@ -1118,6 +1258,8 @@ Fernseher - TV
 das Videospiel - video game
 
 die Polizistin - police/woman
+
+Pläne - plans
 
 Aufzug - elevator
 Abfahrt - departure
@@ -1180,6 +1322,12 @@ Schweden - sweden
 Russland - russia
 
 
+der Wald - forest
+
+die Hexe - witch
+
+Schlager - german pop music
+
 
 Reservierung - reservation
 
@@ -1194,6 +1342,9 @@ brauche Brauchst - to need
 mag - to like
 passt - to fit
 verlässt ? - leave
+feiert ? - to celebrate
+campe ? - to camp
+grillen ? - to grill
 
 to zahlen zahlst - pay
 
@@ -1211,7 +1362,7 @@ Erdbeeren - strawberries
 
 Griechen - greek restaurant
 
-
+Durst - thursty
 habe Hunger - hungry
 Durst - thursty
 nervös - nervous
@@ -1265,6 +1416,9 @@ Kasse - cash register (place to pay)
 Ahnung - idea
 
 
+Einladung - invitation
+
+
 Wanderst / wandern - hiking
 läuft - runs
 
@@ -1279,6 +1433,16 @@ der Sommer- summer
 
 der Schal - scarf
 Kaufhaus - department store
+Einkaufszentrum - mall
+
+das Krankenhaus - hospital
+
+Termin - appointment
+Tablette - pill (illness)
+
+Zeitung - newspaper
+
+das Geschenk - gift/present
 
 Hilfe - help
 
@@ -1293,6 +1457,7 @@ schlecht - bad/ly
 
 
 nicht mehr hier - not here anymore
+auf jeden Fall - definitely / absolutely
 
 
 You're welcome - gern geschehen
@@ -2993,8 +3158,7 @@ https://www.youtube.com/watch?v=auq7gzZlKBE
 
 https://www.youtube.com/watch?v=Dx0MGYe4jR4
 
-KRAFTKLUB - Schüsse in die Luft
-
+KRAFTKLUB - Schüsse in die Luft - Shots in the air
 
 
 

@@ -393,6 +393,12 @@ DENSE IS STILL BAD:
 calculatePairMatchWithRFromViewIDs
 
 
+R3D.searchMatchPointsPair3D
+
+
+
+dense R search print matches
+
 
 
 

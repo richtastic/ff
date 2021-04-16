@@ -15623,8 +15623,8 @@ var bads = [];
 */
 var goods = neighborhoods;
 var bads = [];
-// if(false){
-if(true){
+if(false){
+// if(true){
 	
 
 			var image = imageMatrixA.images()[0];
@@ -27970,8 +27970,8 @@ var useSADScore = false;
 	var cornersA = cornerList[0];
 	var cornersB = cornerList[1];
 
-if(false){
-// if(true){
+// if(false){
+if(true){
 // if(drawlings){
 	// show images
 	for(var i=0; i<imageList.length; ++i){
@@ -27982,10 +27982,21 @@ if(false){
 		d.matrix().translate(0 + i*imageScales.width(), 0 );
 		GLOBALSTAGE.addChild(d);
 	}
+	// cover
+	var d = new DO();
+	d.graphics().setFill(0x99FFFFFF);
+	d.graphics().beginPath();
+	d.graphics().drawRect(0,0, imageList[0].width()*2, imageList[0].height());
+	d.graphics().endPath();
+	d.graphics().fill();
+	d.matrix().translate(0, 0);
+	GLOBALSTAGE.addChild(d);
+
+
 }
 
-	if(false){
-	// if(true){
+	// if(false){
+	if(true){
 	// show corners
 	for(var i=0; i<cornerList.length; ++i){
 		var corners = cornerList[i];
@@ -28002,7 +28013,7 @@ if(false){
 		}
 	}
 	}
-
+// throw "after corners";
 	// create objects from corners
 	for(var i=0; i<cornerList.length; ++i){
 		var corners = cornerList[i];
@@ -28136,7 +28147,7 @@ if(false){
 		var heiBm1 = imageMatrixHeightB-1;
 
 var drawlingOffsetA = k==0 ? 0 : imageMatrixWidthA;
-var drawlingOffsetB = k==1 ? 0 : imageMatrixWidthA;
+var drawlingOffsetB = k==1 ? 0 : imageMatrixWidthB;
 
 
 		for(var i=0; i<cornersI.length; i++){
@@ -28802,36 +28813,131 @@ var drawlingOffsetB = k==1 ? 0 : imageMatrixWidthA;
 		}
 	}
 	cornersA = keepsA;
-	console.log("COUNT: "+cornersA.length);
+	console.log("COUNT 1: "+cornersA.length);
+console.log(cornersA);
 
-	// FILTER ON SCORE
-	var scores = Code.mapArray(Code.copyArray(cornersA), function(a){return a["score"];});
-	console.log(scores);
-	Code.printMatlabArray(scores);
-	// exponential distribution?
-	var info = Code.exponentialDistribution(scores);
-	var min = info["min"];
-	var sig = info["sigma"];
-	var limit = Code.exponentialDistributionValueForPercent(info["min"],info["lambda"], 0.95);
-	// var min = Code.min(scores);
-	// var sig = Code.stdDev(scores, min);
-	// var limit = min + sig*1.5;
-	console.log(" S: "+min+" : "+sig+" = "+limit);
+
+// // show matches
+// var pointsA = [];
+// var pointsB = [];
+// var affines = null;
+// var imageMatrixA = imageScalesA;
+// var imageMatrixB = imageScalesB;
+// var cellSize = 0.001 * imageMatrixA.size().length();
+// for(var i=0; i<cornersA.length; ++i){
+// 	var pointA = cornersA[i]["point"];
+// 	var pointB = cornersA[i]["matches"][0]["point"];
+// 	pointsA.push(pointA);
+// 	pointsB.push(pointB);
+// }
+// R3D.showForwardBackwardPointsColor(pointsA, pointsB, affines, imageMatrixA,imageMatrixB, GLOBALSTAGE, cellSize);
+
+
+
+
+	console.log("REFORMAT DATA");
+	var pointsA = [];
+	var pointsB = [];
+	var affinesAB = [];
+	var imageMatrixA = imageScalesA;
+	var imageMatrixB = imageScalesB;
+	var cellSize = 0.001 * imageMatrixA.size().length();
+	var matchesAB = [];
 	for(var i=0; i<cornersA.length; ++i){
-
-		var cornerA = cornersA[i];
-		var score = cornerA["score"];
-		// console.log(i+"="+score+" >?> "+limit);
-		if(score>limit){
-			// console.log("OVER: "+limit+" - "+score)
-			Code.removeElementAt(cornersA,i);
-			--i;
-		}
+		var itemA = cornersA[i];
+		var itemB = itemA["matches"][0];
+		var pointA = itemA["point"];
+		var score = itemA["score"];
+		var pointB = itemB["point"];
+		var affineA = itemA["object"]["affine"]; // identity 
+		var affineB = itemB["affine"];
+		// var affineAB = Matrix
+		var affineAB = affineB.copy().inverse();
+		pointsA.push(pointA);
+		pointsB.push(pointB);
+		affinesAB.push(affineAB);
+		var match = {};
+			match["A"] = pointA;
+			match["B"] = pointB;
+			match["affine"] = affineAB;
+			match["score"] = score;
+		matchesAB.push(match);
 	}
-	console.log("COUNT: "+cornersA.length);
+
+// REPEATED DROP INITIAL SCORE ---------------------------------------------------------------------------------------
+/*
+console.log("DROP INITIAL SCORE");
+	
+	var fxnValue = function(object){
+		return object["score"];
+	}
+	var fxnLimit = function(values){ // exponential initial scores
+		var info = Code.exponentialDistribution(values);
+		var limit = Code.exponentialDistributionValueForPercent(info["min"],info["lambda"], 0.95);
+		return limit;
+		
+	}
+	var keepList = Code.repeatedDropOutliers(matchesAB, fxnValue, fxnLimit, 10, 25);
+	// console.log(keepList);
+	matchesAB = keepList;
+	console.log("KEPT INITIAL SCORES: "+matchesAB.length);
+
+*/
+// REPEATED DROP INITIAL SCORE ---------------------------------------------------------------------------------------
+console.log("RELOCATE POINTS");
+	var info = R3D.separateMatchesIntoPieces(matchesAB);
+	// console.log(info);
+	var pointsA = info["A"];
+	var pointsB = info["B"];
+	var affinesAB = info["affines"];
+	var info = R3D.experimentLocationRefine(pointsA,pointsB,affinesAB, imageScalesA,imageScalesB);
+	// console.log(info);
+	info = R3D.groupMatchesFromParallelArrays(info, imageScalesA,imageScalesB);
+	matchesAB = info["matches"];
+	// console.log(matchesAB);
+
+// REPEATED DROP INITIAL SCORE ---------------------------------------------------------------------------------------
+	console.log("DROP RELOCATED SCORES");
+	
+	var fxnValue = function(object){
+		return object["score"];
+	}
+	var fxnLimit = function(values){
+// Code.printMatlabArray(values);
+		var min = Code.min(values);
+		var std = Code.stdDev(values,min);
+		var limit = min + std * 2.0;
+		// var info = Code.exponentialDistribution(values);
+		// var limit = Code.exponentialDistributionValueForPercent(info["min"],info["lambda"], 0.95);
+// console.log("LIMIT: "+limit+" @ "+values.length);
+		return limit;
+		
+	}
+
+	// Code.repeatedDropOutliers = function(inList, toValueFxn, toLimitFxn, minCount, maxIterations){
+	var keepList = Code.repeatedDropOutliers(matchesAB, fxnValue, fxnLimit, 10, 25);
+	// console.log(keepList);
+	matchesAB = keepList;
+	console.log("KEPT RELOCATED SCORES: "+matchesAB.length);
 
 
+	info = R3D.keepExtendedMatchNeighborhoods(matchesAB, imageScalesA,imageScalesB);
+	matchesAB = info["matches"];
+	console.log("KEPT NEIGHBORHOOD: "+matchesAB.length);
 
+
+/*
+
+	// F
+	info = R3D.repeatedDropOutliersFundamental(matchesAB, imageScalesA,imageScalesB);
+	matchesAB = info["matches"];
+	console.log("KEPT F: "+matchesAB.length);
+
+	// scores 2
+	info = R3D.repeatedDropOutliersScore(matchesAB, imageScalesA,imageScalesB);
+	matchesAB = info["matches"];
+	console.log("KEPT SCORE: "+matchesAB.length);
+*/
 
 
 	// FILTER ON F-ERROR
@@ -28842,113 +28948,39 @@ var drawlingOffsetB = k==1 ? 0 : imageMatrixWidthA;
 
 
 
+// DISPLAY RESULTS
+var info = R3D.separateMatchesIntoPieces(matchesAB);
+console.log(info);
+var pointsA = info["A"];
+var pointsB = info["B"];
+var affinesAB = info["affines"];
+
+var cellSize = 0.002 * imageScalesA.size().length();
+
+R3D.showForwardBackwardPointsColor(pointsA, pointsB, affinesAB, imageScalesA,imageScalesB, GLOBALSTAGE, cellSize);
+
+
+
+
+// info = R3D.experimentLocationRefine(pointsA,pointsB,affinesAB, imageScalesA,imageScalesB);
+
+
+
+
+
+
+
+throw "ere"
+
+
+
+
 	// ...
 
 
 
 
-
-
-	var pointsA = [];
-	var pointsB = [];
-	var affinesAB = [];
-	// A->B
-	for(var i=0; i<cornersA.length; ++i){
-		var cornerA = cornersA[i];
-		var pointA = cornerA["point"];
-		var matches = cornerA["matches"];
-		if(matches.length>0){
-			var objectB = matches[0];
-			var pointB = objectB["point"];
-			var affineBA = objectB["affine"];
-			var affineAB = affineBA.copy().inverse();
-			pointsA.push(pointA);
-			pointsB.push(pointB);
-			affinesAB.push(affineAB);
-		}
-	}
-
-	// B -> A
-	// for(var i=0; i<cornersB.length; ++i){
-	// 	var cornerB = cornersB[i];
-	// 	var pointB = cornerB["point"];
-	// 	var matches = cornerB["matches"];
-	// 	if(matches.length>0){
-	// 		var objectA = matches[0];
-	// 		var pointA = objectA["point"];
-	// 		pointsA.push(pointA);
-	// 		pointsB.push(pointB);
-	// 	}
-	// }
-
-console.log(pointsA);
-console.log(pointsB);
-	// show fwd-bak matches
-// if(drawlings){
-if(false){
-// if(true){
-	var imageA = imageScalesA;
-	var color0 = new V3D(1,0,0);
-	var color1 = new V3D(0,1,0);
-	var color2 = new V3D(0,0,1);
-	// var color3 = new V3D(1,1,1);
-	var color3 = new V3D(0,0,0);
-	var colors = [color0,color1,color2,color3];
-		var d = new DO();
-		for(var i=0; i<pointsA.length; ++i){
-// break;
-			var pointA = pointsA[i];
-			var pointB = pointsB[i];
-			// var size = 2.0;
-			var size = 4.0;
-			var p = pointA.copy();
-			var q = pointB.copy();
-
-			var px = (p.x/imageA.width());
-			var py = (p.y/imageA.height());
-			var qx = 1 - px;
-			var qy = 1 - py;
-			var p0 = qx*qy;
-			var p1 = px*qy;
-			var p2 = qx*py;
-			var p3 = px*py;
-
-			// console.log(p0,p1,p2,p3, p0+p1+p2+p3);
-			var color = V3D.average(colors, [p0,p1,p2,p3]);
-			color = Code.getColARGBFromFloat(1.0,color.x,color.y,color.z);
-			
-			// d.graphics().setLine(1.0,color);
-
-
-			d.graphics().setLine(3.0,color);
-			// var point = feature["point"];
-			// var angle = feature["angle"];
-			// var size = feature["size"];
-			d.graphics().beginPath();
-			d.graphics().drawCircle(pointA.x,pointA.y,size);
-			d.graphics().endPath();
-			d.graphics().strokeLine();
-
-			d.graphics().beginPath();
-			d.graphics().drawCircle(imageA.width() + pointB.x,pointB.y,size);
-			d.graphics().endPath();
-			d.graphics().strokeLine();
-			
-			// var dir = new V2D(size,0);
-			// dir.rotate(angle);
-			// d.graphics().beginPath();
-			// d.graphics().moveTo(point.x,point.y);
-			// d.graphics().lineTo(point.x+dir.x,point.y+dir.y);
-			// d.graphics().endPath();
-			// d.graphics().strokeLine();
-		}
-		d.matrix().translate(0,0);
-		GLOBALSTAGE.addChild(d);
-}
-
-if(drawlings){
-	throw "out - drawlings"
-}
+throw "before release"
 	return {"A":pointsA, "B":pointsB, "affines":affinesAB};
 }
 
@@ -35238,6 +35270,7 @@ R3D.showCoverAlpha = function(imageMatrixA,imageMatrixB, display, alpha){
 	display.addChild(c);
 }
 R3D.showForwardBackwardPointsColor = function(pointsA, pointsB, affines, imageMatrixA,imageMatrixB, display, cellSize){
+	cellSize = Code.valueOrDefault(cellSize,3.0);
 /*
 	var d = new DO();
 	d.graphics().setFill(0x99FFFFFF);
@@ -35265,7 +35298,8 @@ var colors = [color0,color1,color2,color3];
 		// 	continue;
 		// }
 		// var color = 0xFF0000FF;
-		var size = 3.0;
+		// var size = 3.0;
+		var size = cellSize;
 		// var size = featureSizeA*0.5;
 		var line = 3.0;
 		
