@@ -183,6 +183,28 @@ hangu?
 
 
 
+songs:
+
+G-dragon Crooked
+https://www.youtube.com/watch?v=h5PpfloQSIU
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

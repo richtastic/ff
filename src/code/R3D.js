@@ -28959,9 +28959,6 @@ var cellSize = 0.002 * imageScalesA.size().length();
 
 R3D.showForwardBackwardPointsColor(pointsA, pointsB, affinesAB, imageScalesA,imageScalesB, GLOBALSTAGE, cellSize);
 
-
-
-
 // info = R3D.experimentLocationRefine(pointsA,pointsB,affinesAB, imageScalesA,imageScalesB);
 
 
@@ -28970,7 +28967,7 @@ R3D.showForwardBackwardPointsColor(pointsA, pointsB, affinesAB, imageScalesA,ima
 
 
 
-throw "ere"
+// throw "ere"
 
 
 
@@ -28980,7 +28977,7 @@ throw "ere"
 
 
 
-throw "before release"
+// throw "before release"
 	return {"A":pointsA, "B":pointsB, "affines":affinesAB};
 }
 

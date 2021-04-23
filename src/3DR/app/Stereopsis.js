@@ -8849,9 +8849,9 @@ Stereopsis.World.prototype.solveDensePairNew = function(subdivisionScaleSize, su
 	// var subdivisions = 1; // 5-10k
 	// var subdivisions = 2; // ~40k
 	var subdivisions = subDivisionCounts; // ~40k  --- select - about 
-subdivisions = 1; // 5k
+// subdivisions = 1; // 5k
 // subdivisions = 2; // 10k ............... testing
-// subdivisions = 3; // 25k ................. current default
+subdivisions = 3; // 25k ................. current default
 // subdivisions = 4; // 50k
 // console.log("subdivisions: "+subdivisions);
 // throw "??"
@@ -8862,7 +8862,7 @@ subdivisions = 1; // 5k
 	// var iterations = 5;
 	// var iterations = 1;
 
-throw "ere eh";
+// throw "before loop";
 	var maxIterations = (subdivisions+1)*iterations;
 
 world.shouldValidateMatchRange(false);
@@ -8888,6 +8888,14 @@ timeA = Code.getTimeMilliseconds();
 // timeA = Code.getTimeMilliseconds();
 
 		world.initNullP3DPatches();
+
+
+// TEST BORDERS
+if(iteration==3){
+	world.resolveBorderDisputes();
+	throw "testing borders"
+}
+
 
 
 		// subdivisions
@@ -9004,14 +9012,14 @@ console.log((timeStop-timeStart)/1000/60); // ~ 20 mins
 
 	
 	// check it out
-	// var str = world.toYAMLString();
-	// console.log(str);
+	var str = world.toYAMLString();
+	console.log(str);
 
 
 	// world.showForwardBackwardPair();
 	// ???
 	
-	// throw "solveDensePair2";
+	throw "solveDensePair2";
 	return null;
 }
 
@@ -9389,8 +9397,149 @@ world.sampleErrorsDebug();
 	
 }
 
+Stereopsis.World.prototype.resolveBorderDisputes = function(){ //
+	var world = this;
+	var transforms = world.toTransformArray();
+	var space3D = world.pointSpace();
+
+	var neighborhoodScale2D = 2.0; // 1.414 - 2.0
+	var neighborhoodScale3D = 2.0; // more than 2D
+
+	var P3DtoIndex = function(p){
+		return p.id();
+	}
+	var P2DtoIndex = function(p){
+		return p.point3D().id();
+	}
+
+	var borderP3Ds = {};
+
+	for(var i=0; i<transforms.length; ++i){
+		var transform = transforms[i];
+		var viewA = transform.viewA();
+		var viewB = transform.viewB();
+		var views = [viewA,viewB];
+		for(var j=0; j<views.length; ++j){
+			var view = views[j];
+			var space2D = view.pointSpace();
+			var points2D = view.toPointArray();
+			var cellSize2D = view.cellSize();
+			for(var k=0; k<points2D.length; ++k){
+				var point2D = points2D[k];
+				var point3D = point2D.point3D();
+				var p2D = point2D.point2D();
+				var p3D = point3D.point();
+				// get 2D neighbors:
+				var searchRadius2D = cellSize2D*neighborhoodScale2D;
+				var neighbors2D = space2D.objectsInsideCircle(p2D, searchRadius2D);
+				var hash2D = Code.toHash(neighbors2D,P2DtoIndex);
+console.log(hash2D);
+				// get putative 3D neighbors
+				var cellSize3D = point2D.neighborhood3DSize();
+				var searchRadius3D = cellSize3D*neighborhoodScale3D;
+				var neighbors3D = space3D.objectsInsideSphere(p3D, searchRadius3D);
+				// var hash3D = Code.toHash(neighbors3D,P3DtoIndex);
+console.log(neighbors3D);
+// console.log(hash3D);
+				// neighborhood size = remaining
+				var trueNeighbors3D = [];
+				var distances2D = [];
+				var distances3D = [];
+				for(var n=0; n<neighbors3D.length; ++n){
+					var n3D = neighbors3D[n];
+					if(n3D==point3D){
+						continue;
+					}
+					var index = n3D.id();
+					var val2D = hash2D[index];
+					if(val2D){
+						trueNeighbors3D.push(n3D);
+						distances2D.push(V2D.distance(val2D.point2D(),p2D));
+						distances3D.push(V3D.distance(n3D.point(),p3D));
+						// trueNeighbors.push(val2D);
+					}
+				}
+// console.log(trueNeighbors3D);
+				// get estimated neighborhood size
+// console.log(distances2D);
+// console.log(distances3D);
+
+if(trueNeighbors3D.length<=1){
+	// console.log("not enough real neighbors");
+	continue;
+}
+				var mean2D = Code.mean(distances2D);
+				var sigma2D = Code.stdDev(distances2D,mean2D);
+				var mean3D = Code.mean(distances3D);
+				var sigma3D = Code.stdDev(distances3D,mean3D);
+				var max3D = mean3D + 3.0*sigma3D;
+// console.log(mean2D+" +/- "+sigma2D);
+// console.log(mean3D+" +/- "+sigma3D+" = "+max3D);
+
+				
+
+				// mark if too far  
+				for(var n=0; n<neighbors2D.length; ++n){
+					var neighbor2D = neighbors2D[n];
+					var neighbor3D = neighbor2D.point3D();
+					var neighborP3D = neighbor3D.point();
+					var d3D = V3D.distance(p3D,neighborP3D);
+					if(d3D>max3D){ // too far away in 3D [but close in 2D]
+						borderP3Ds[neighbor3D.id()] = neighbor3D;
+						borderP3Ds[point3D.id()] = point3D;
+					}else{
+						// ..
+					}
+				}
+				//
+// throw "here";
+			}
+		}
+	}
+
+	var list3D = Code.objectToArray(borderP3Ds);
+	console.log(list3D);
+	console.log(world.toPointArray().length+" = total");
+
+	// display these in the world
+	var views = world.toViewArray();
+	var viewA = views[0];
+	var viewB = views[1];
+	var imageA = viewA.imageScales();
+	var imageB = viewB.imageScales();
+	var cellSizeA = viewA.cellSize();
+	var cellSizeB = viewB.cellSize();
+
+	var widthA = imageA.width();
+
+	var d = new DO();
+		d.graphics().setLine(1.0,0x99CC0000);
+		d.graphics().setFill(0x66FF00FF);
+		d.matrix().translate(0,0);
+		GLOBALSTAGE.addChild(d);
+	for(var i=0; i<list3D.length; ++i){
+		var point3D = list3D[i];
+		var point2DA = point3D.pointForView(viewA);
+		var point2DB = point3D.pointForView(viewB);
+
+		var pointA = point2DA.point2D();
+		var pointB = point2DB.point2D();
+		d.graphics().beginPath();
+		d.graphics().drawCircle(pointA.x+0,pointA.y+0, cellSizeA*0.5);
+		d.graphics().strokeLine();
+		d.graphics().endPath();
+		d.graphics().fill();
+
+		d.graphics().beginPath();
+		d.graphics().drawCircle(pointB.x+widthA,pointB.y, cellSizeB*0.5);
+		d.graphics().strokeLine();
+		d.graphics().endPath();
+		d.graphics().fill();
+	}
 
 
+	throw "resolveBorderDisputes"
+}
 Stereopsis.World.prototype.visualizePatches = function(){ //
 	var world = this;
 

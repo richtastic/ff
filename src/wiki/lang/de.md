@@ -1,5 +1,7 @@
 ## german
 
+Bronze, Silver, Gold, Sapphire, Ruby, Emerald, Amethyst, Pearl, Obsidian, Diamond - 10
+
 
 ### table
 
@@ -313,6 +315,7 @@ neuter: das ein
 | uhr | oohr | clock |
 |  |  |  |
 | buch |  | book |
+| die Bücher |  | books |
 | auto / wagon | out-oh / vahgahn | car |
 | Motorrad |  | motorbike |
 | Bus |  | bus |
@@ -324,7 +327,10 @@ neuter: das ein
 | Fenster |  | window |
 | Garten |  | garden |
 | stock |  | floor (level) |
+| Wohngemeinschaft (WG) |  | shared apartment |
+| Mehrfamilienhaus |  | apartment building |
 |  |  |  |
+| Treppe |  | staircase |
 |  |  |  |
 |  |  |  |
 |  |  |  |
@@ -334,6 +340,7 @@ neuter: das ein
 | Hemd |  | shirt |
 | Jacke |  | jacket |
 | Geburtstag |  | birthday |
+| Alles Gute zum Geburtstag |  | Happy Birthday |
 | Schuhe |  | show |
 |  |  |  |
 |  |  |  |
@@ -385,7 +392,7 @@ neuter: das ein
 |  |  |  |
 | schon |  | already |
 | fast |  | almost/nearly |
-|  |  |  |
+| also |  | therefore |
 |  |  |  |
 |  |  |  |
 |  |  |  |
@@ -404,6 +411,10 @@ neuter: das ein
 | oft |  | often |
 | bereit |  | ready |
 | rein |  | inside |
+| draußen |  | outside |
+| bei |  | by |
+|  |  |  |
+|  |  |  |
 |  |  |  |
 | Schnell |  | quick/ly |
 | Komm! |  | come on |
@@ -413,7 +424,7 @@ neuter: das ein
 | anderes |  | else |
 | dann |  | then |
 | mehr |  | more |
-|  |  |  |
+| allein |  | alone |
 |  |  |  |
 | Namen |  | name |
 |  |  |  |
@@ -428,6 +439,9 @@ neuter: das ein
 | schwer |  | hard/difficult |
 | einfach |  | easy |
 |  |  |  |
+| weich |  | soft (feel) |
+|  |  |  |
+|  |  |  |
 |  |  |  |
 | traurig |  | sad |
 | langweilig |  | boring |
@@ -435,8 +449,8 @@ neuter: das ein
 |  |  |  |
 | glücklich |  | happy |
 | lustig |  | funny |
-|  |  |  |
-|  |  |  |
+| zufrieden |  | content (mood) |
+| nervt |  | annoys |
 |  |  |  |
 |  |  |  |
 | Lust |  | desire (feel like it) |
@@ -446,8 +460,11 @@ neuter: das ein
 | Freund |  | boyfriend? |
 |  |  |  |
 | Wirklich |  | really? |
-|  |  |  |
 | wichtig |  | important |
+|  |  |  |
+|  |  |  |
+| zurzeit |  | currently |
+|  |  |  |
 |  |  |  |
 | lecker |  | delicious |
 |  |  |  |
@@ -467,7 +484,6 @@ neuter: das ein
 |  |  |  |
 |  |  |  |
 |  |  |  |
-| Büro |  | office |
 |  |  |  |
 |  |  |  |
 |  |  |  |
@@ -480,6 +496,10 @@ neuter: das ein
 |  |  |  |
 |  |  |  |
 
+
+time:
+um Viertel vor  - a quarter before ...
+X vor Y - X minutes before Y hour
 
 alles Gute zum Geburtstag - (bad luck?)
 
@@ -503,7 +523,7 @@ alles Gute zum Geburtstag - (bad luck?)
 | Papagei |  | parrot |
 |  |  |  |
 |  |  |  |
-|  |  |  |
+| Dinosaurier |  | dinosaurs |
 |  |  |  |
 |  |  |  |
 
@@ -578,7 +598,7 @@ alles Gute zum Geburtstag - (bad luck?)
 | Partnerin |  | partner |
 | Mitbewohner |  | roommate |
 | Eltern |  | parents |
-|  |  |  |
+| der Nachbar |  | neighbor |
 | das Baby |  | baby |
 | das Mädchen |  | girl |
 | junge |  | boy |
@@ -598,9 +618,12 @@ alles Gute zum Geburtstag - (bad luck?)
 | Arzt / Ärztin |  | doctor |
 | Student / Studentin |  | student (college age) |
 | Lehrer / Lehrerin |  | teacher |
+| Kunstlehrer |  | art teacher |
 |  |  |  |
+| Aufseher |  | attendant (museum) |
 |  |  |  |
-|  |  |  |
+| Automechanikerin |  | car mechanic |
+| Das Modell |  | Model |
 |  |  |  |
 |  |  |  |
 |  |  |  |
@@ -652,10 +675,10 @@ alles Gute zum Geburtstag - (bad luck?)
 | kaffee |  | coffee |
 |  |  |  |
 |  |  |  |
+| Brötchen |  | roll |
 |  |  |  |
-|  |  |  |
-|  |  |  |
-|  |  |  |
+| Schinken |  | ham |
+| Hähnchen |  | chicken |
 |  |  |  |
 | tomate |  | tomate |
 |  |  |  |
@@ -666,12 +689,12 @@ alles Gute zum Geburtstag - (bad luck?)
 | die Schnecke |  | snail |
 | hund |  | dog |
 |  |  |  |
+| die Banane |  | banana |
+| Joghurt |  | yogurn |
 |  |  |  |
 |  |  |  |
-|  |  |  |
-|  |  |  |
-|  |  |  |
-|  |  |  |
+| die Nudeln |  | noodles |
+| der Reis |  | rice |
 | senf |  | mustard |
 | ketchup |  | ketchup |
 | pfeffer |  | pepper |
@@ -679,6 +702,7 @@ alles Gute zum Geburtstag - (bad luck?)
 | der zucker |  | sugar |
 | das eis |  | ice cream |
 | Apfelkuchen |  | apple cake |
+| Schokoladenkuchen |  | chocolate cake |
 | Obstsalat |  | fruit salad |
 | Nachtisch |  | dessert |
 |  |  |  |
@@ -704,7 +728,14 @@ alles Gute zum Geburtstag - (bad luck?)
 | tee |  | tea |
 | Wein |  | wine |
 | rotwein |  | red wine |
+| Bioweinorganic |  | organic wine |
 | bier |  | beer |
+| Weißbier |  | wheat beer |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
 | Apfelschorle |  | sparkling apple juice |
 | die Suppe |  | soup |
 | das fleisch |  | meat |
@@ -813,7 +844,9 @@ Zahnschmerzen - toothache
 |  |  |  |
 | da drüben |  | over there |
 | da |  | there (here) |
-| diese / dieses |  | this |
+| diese / dieses |  | this / these / that |
+|  |  |  |
+|  |  |  |
 | keinen |  | no |
 |  |  |  |
 |  |  |  |
@@ -835,14 +868,23 @@ Zahnschmerzen - toothache
 |  |  |  |
 | Badezimmer | bad-eh-zimmer | bathroom |
 | Schlafzimmer | schlaf-zimmer | bedroom |
-|  |  | kitchen |
-|  |  | office |
+|  |  |  |
+| Wohnzimmer |  | living room |
+| Esszimmer |  | dining room |
+|  |  |  |
+| Küche |  | kitchen |
+| das Büro |  | office |
 | wohnzimmer |  | living room |
 | die Toiletten |  | the lavatory / restrooms |
 | der Film |  | movie |
 |  |  |  |
 | (macht) Sport |  | excercise(s) |
+| Ballsport |  | ball games |
 |  |  |  |
+| Ballett |  | ballet |
+|  |  |  |
+|  |  |  |
+
 |  |  |  |
 | das Klavier |  | piano |
 | Auto |  | car |
@@ -904,8 +946,8 @@ Zahnschmerzen - toothache
 | spiele spielt |  | play (instrument, game) |
 | Spiel  |  | game |
 |  |  |  |
-
 |  |  |  |
+| Wohnst |  | reside (live at) |
 | leben |  | life/alive/to live |
 |  |  |  |
 | schwimmen |  | swim |
@@ -922,8 +964,8 @@ Zahnschmerzen - toothache
 | Mittagessen | mee-tahg-essen | lunch |
 | Abendessen | abbend-essen | dinner |
 |  |  |  |
-|  |  |  |
-|  |  |  |
+| Kühlschrank |  | fridge |
+| Mikrowelle |  | microwave |
 |  |  |  |
 |  |  |  |
 | Gitarre |  | Guitar |
@@ -942,7 +984,7 @@ Zahnschmerzen - toothache
 |  |  |  |
 |  |  |  |
 |  |  |  |
-| Überraschung |  | surprise |
+| Überraschung / überraschend |  | surprise / surprising |
 |  |  |  |
 | lacht |  | laugh/laughs |
 | vorteil |  | advantage |
@@ -958,16 +1000,21 @@ Zahnschmerzen - toothache
 |  |  |  |
 | das geld |  | money |
 | tisch |  | table |
+| Kaffeetisch |  | coffee table |
+|  |  |  |
+|  |  |  |
 | Schlüssel |  | key |
 | perfekt |  | perfect |
 | süß |  | cute |
 |  |  |  |
-|  |  |  |
+| komisch |  | strange |
 |  |  |  |
 |  |  |  |
 | jung |  | young |
 | alt |  | old |
 | neu |  | new |
+| genie |  | genius |
+|  |  |  |
 |  |  |  |
 |  |  |  |
 | leider |  | unfortunately |
@@ -983,8 +1030,8 @@ Zahnschmerzen - toothache
 | jung |  | young |
 | freundlich |  | friendly |
 | toll |  | great |
-|  |  |  |
-|  |  |  |
+| endet |  | ends |
+| beginnt |  | begins |
 |  |  |  |
 | stressig |  | stressful |
 | bereit |  | ready |
@@ -992,9 +1039,9 @@ Zahnschmerzen - toothache
 |  |  |  |
 | sehr |  | very |
 |  |  |  |
+| beliebt |  | popular |
 |  |  |  |
-|  |  |  |
-|  |  |  |
+| (macht) Spaß |  | (is) fun |
 | alles |  | everything |
 |  |  |  |
 |  |  |  |
@@ -1020,6 +1067,7 @@ Zahnschmerzen - toothache
 | wunderbar |  | wonderful |
 | aufregend |  | exciting |
 | laut |  | loud / noisy |
+| leise |  | quiet |
 | teuer |  | expensive |
 | billige |  | cheap |
 | reich |  | righ |
@@ -1210,7 +1258,7 @@ Kunstmuseum - atr museum
 
 Stadtmuseum - city museum
 
-
+Riesenrad - ferris wheel
 
 geöffnet - is open
 
@@ -1227,6 +1275,25 @@ Schrank - closet / standing wardrobe
 
 Dienstag - job interview
 
+Wiesn-Herz - heart cookie
+
+das handy - cell phone
+
+die music - music
+
+Leute - people
+
+Pommes - fries
+
+früh - early
+
+noch - still
+
+Brötchen - bread roll (colt cuts)
+
+Müsli - cereal ?
+
+einmal pro .. - once a ...
 
 
 
@@ -1255,11 +1322,23 @@ Fußballspiel- soccer game
 
 Fernseher - TV
 
+Hausaufgaben - homework
+
 das Videospiel - video game
 
 die Polizistin - police/woman
 
+Kollegen - colleague
+
+Chef - boss
+
+Bild - painting
+Kunstwerk - art work / work of art
+
 Pläne - plans
+
+Schlüssel - keys
+Autoschlüssel - car keys
 
 Aufzug - elevator
 Abfahrt - departure
@@ -1309,9 +1388,13 @@ Jeans - jeans/pants
 
 Urlaubskleidung - vacation clothes
 
+Rucksack - backpack
+
+
 
 Bist du Schüler, Max? - student
 
+an komischen Orten - strange places
 
 der Künstler - artist
 
@@ -1345,7 +1428,7 @@ verlässt ? - leave
 feiert ? - to celebrate
 campe ? - to camp
 grillen ? - to grill
-
+Triffst treffe ? - to meet
 to zahlen zahlst - pay
 
 
@@ -1364,6 +1447,7 @@ Griechen - greek restaurant
 
 Durst - thursty
 habe Hunger - hungry
+ich bin hungrig - hungry 2
 Durst - thursty
 nervös - nervous
 aufgeregt - excited
@@ -1371,11 +1455,26 @@ genau - exactly
 spät - late
 ? - early
 
+langweilig - boring
 
+schwierig - difficult
+
+die Tasse - cup
+
+draußen - outside
+
+paar - couple (a few, some)
+
+Pflanzen - plants
+Blumen - flowers
+
+
+ganze/n - whole / entire
 die Frage - question
 die Antwort - answer
 
-
+Stück - piece
+Flaschen - bottles
 
 Dollar - dollar
 euro - euros
@@ -1419,11 +1518,15 @@ Ahnung - idea
 Einladung - invitation
 
 
-Wanderst / wandern - hiking
+Wanderst / wandern - to hike / hiking
+spazieren - to walk
 läuft - runs
+läuft - walks ?
 
+Flughafen - airport
 
-Flughafen - airpot
+entlang - along
+neben - next to
 
 Herbst - fall(autum)
 der Winter - winter
@@ -1431,11 +1534,15 @@ der Frühling - spring
 der Sommer- summer
 
 
+Igitt - yuck
+
 der Schal - scarf
 Kaufhaus - department store
 Einkaufszentrum - mall
 
 das Krankenhaus - hospital
+
+die Werkstatt - repair shop
 
 Termin - appointment
 Tablette - pill (illness)
@@ -1471,10 +1578,16 @@ der Stuhl - stool
 der Tisch - table
 der Teppich - carpet (rug)
 die Couch - couch
+das Sofa - sofa (love-seat)
 die Lampe - lamp
+die Vase - vase
 der Schreibtisch - desk
 das Bett - bed
+die Bettdecke - bedspread (sheets?)
+ Kopfkissen - pillow
 das Bücherregal - bookshelf/bookcase
+das Regal - shelf
+
 
 das Schlafzimmer - bedroom
 das Badezimmer
@@ -1485,10 +1598,13 @@ hässlich - ugly
 bequem - comfortable
 hell - bright
 sauber - clean
+schmutzig - dirty
+unordentlich - messy
 
 fantastisch - fantastic
 
 
+der Strand - beach
 
 
 

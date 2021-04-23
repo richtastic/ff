@@ -400,6 +400,10 @@ R3D.searchMatchPointsPair3D
 dense R search print matches
 
 
+- need a way for incorrect matches to be overtaken by correct 2D neighbors
+
+ - is it better to use get points in SPHERE or KNN ~ 9-18 ?
+
 
 
 
