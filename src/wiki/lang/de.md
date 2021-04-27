@@ -155,8 +155,8 @@ neuter: das ein
 | um X   | at X o-clock (time) |
 |  |  |  |
 |  |  |  |
-|  |  |  |
-|  |  |  |
+| tag/e |  | day/s |
+| nacht/Nächte |  | nights |
 |  |  |  |
 |  |  |  |
 |  |  |  |
@@ -321,7 +321,7 @@ neuter: das ein
 | Bus |  | bus |
 |  |  |  |
 |  |  |  |
-| haus |  | house |
+| das haus |  | house |
 | Wohnung |  | apartment |
 | nach Hause |  | home |
 | Fenster |  | window |
@@ -344,7 +344,7 @@ neuter: das ein
 | Schuhe |  | show |
 |  |  |  |
 |  |  |  |
-| Fernseher |  | TV |
+| der Fernseher |  | TV |
 |  |  |  |
 | Nummer |  | number |
 |  |  |  |
@@ -420,7 +420,7 @@ neuter: das ein
 | Komm! |  | come on |
 |  |  |  |
 | zusammen |  | together |
-| noch |  | another |
+| noch |  | another / still |
 | anderes |  | else |
 | dann |  | then |
 | mehr |  | more |
@@ -449,7 +449,7 @@ neuter: das ein
 |  |  |  |
 | glücklich |  | happy |
 | lustig |  | funny |
-| zufrieden |  | content (mood) |
+| zufrieden |  | content/happy (mood) |
 | nervt |  | annoys |
 |  |  |  |
 |  |  |  |
@@ -472,7 +472,11 @@ neuter: das ein
 |  |  |  |
 | gesund |  | healthy |
 | krank |  | sick |
+| weh |  | sore |
 |  |  |  |
+|  |  |  |
+| Einzelzimmer |  | single room |
+| Doppelzimmer |  | double room |
 | Toiletten |  | restrooms |
 |  |  |  |
 | Zeit |  | time |
@@ -522,12 +526,18 @@ alles Gute zum Geburtstag - (bad luck?)
 | eule |  | owl |
 | Papagei |  | parrot |
 |  |  |  |
-|  |  |  |
+| die Schildkröte |  | turtle |
 | Dinosaurier |  | dinosaurs |
 |  |  |  |
 |  |  |  |
-
-
+|  |  |  |
+|  |  |  |
+| Haustiere |  | pets |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
 
 
 #### places?
@@ -567,7 +577,7 @@ alles Gute zum Geburtstag - (bad luck?)
 |  |  |  |
 |  |  |  |
 |  |  |  |
-|  |  |  |
+| der Pass |  | passport |
 |  |  |  |
 |  |  |  |
 
@@ -606,6 +616,10 @@ alles Gute zum Geburtstag - (bad luck?)
 | die frau |  | woman |
 |  |  |  |
 | die Eltern |  | parents |
+| Geschwister |  | siblings |
+| die Großeltern |  | the grand-parents |
+| Enkelin |  | grand-daughter |
+| Enkel |  | grand-son |
 |  |  |  |
 |  |  |  |
 |  |  |  |
@@ -630,8 +644,8 @@ alles Gute zum Geburtstag - (bad luck?)
 | Freundin |  | friend |
 |  |  |  |
 | Beruf |  | profession (job) |
-| Arbeit |  | work |
-|  |  |  |
+| Arbeit |  | work (people) |
+| funktionieren |  | work (objects) |
 |  |  |  |
 | Unterricht |  | class |
 |  |  |  |
@@ -642,9 +656,11 @@ alles Gute zum Geburtstag - (bad luck?)
 | fuß/Füße |  | foot/feet |
 | hand/hände |  | hand/s |
 | kopf |  | head |
+| Stirn |  | forehead |
+|  |  |  |
 | nase |  | nose |
 | mund |  | mouth |
-| auge/n |  | eye/s |
+| das auge/n |  | eye/s |
 | augenbrau/en |  | eyebrow/s |
 | ohr/en |  | ear/s |
 | Finger |  | finger/s |
@@ -655,7 +671,12 @@ alles Gute zum Geburtstag - (bad luck?)
 | Haare |  | hair |
 |  |  |  |
 |  |  |  |
-
+|  |  |  |
+|  |  |  |
+|  |  |  |
+| Beamter/Beamtin |  | civil servant |
+|  |  |  |
+|  |  |  |
 
 
 
@@ -665,6 +686,12 @@ alles Gute zum Geburtstag - (bad luck?)
 | de | ph | en |
 | --- | --- | --- |
 | das essen |  | food |
+| Lieblingsessen |  | favorite food |
+| Nussallergie |  | nut allergy |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
 |  |  |  |
 |  |  |  |
 | die  Schnitzel |  | breaded-chicken |
@@ -673,7 +700,7 @@ alles Gute zum Geburtstag - (bad luck?)
 |  |  |  |
 |  |  |  |
 | kaffee |  | coffee |
-|  |  |  |
+| Eiskaffee |  | ice coffee |
 |  |  |  |
 | Brötchen |  | roll |
 |  |  |  |
@@ -700,20 +727,31 @@ alles Gute zum Geburtstag - (bad luck?)
 | pfeffer |  | pepper |
 | das salz |  | salt |
 | der zucker |  | sugar |
+|  |  |  |
+| Senf |  | mustard |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
 | das eis |  | ice cream |
 | Apfelkuchen |  | apple cake |
 | Schokoladenkuchen |  | chocolate cake |
+| das Obst |  | fruits |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+| Kartoffelsalat |  | potatoe salad |
 | Obstsalat |  | fruit salad |
 | Nachtisch |  | dessert |
 |  |  |  |
-|  |  |  |
+| Schokolade |  | chocolate |
 |  |  |  |
 |  |  |  |
 | zwiebel |  | onion |
 | salat |  | salad |
 | grüner salat |  | lettuce |
 | milch |  | milk |
-| ei |  | egg |
+| ei / Eier |  | egg/s |
 | mehl |  | flour |
 |  |  |  |
 | der Salat |  | salad |
@@ -780,6 +818,7 @@ Fieber - fever
 Kopfschmerzen -  headache
 Bauchschmerzen - stomach ache
 Zahnschmerzen - toothache
+Ohrenschmerzen - ear ache
 
 #### more
 
@@ -884,10 +923,11 @@ Zahnschmerzen - toothache
 | Ballett |  | ballet |
 |  |  |  |
 |  |  |  |
-
 |  |  |  |
 | das Klavier |  | piano |
-| Auto |  | car |
+| das Auto |  | car |
+| das Motorrad |  | motorbike |
+|  |  |  |
 | Straße |  | street |
 | personen |  | people |
 |  |  |  |
@@ -928,7 +968,7 @@ Zahnschmerzen - toothache
 | Wiederholen ? |  | to repeat |
 | hört ? |  | to listen/hear |
 | bleiben ? |  | to stay |
-|  |  |  |
+| nehmen ? |  | to take |
 |  |  |  |
 |  |  |  |
 |  |  |  |
@@ -939,10 +979,12 @@ Zahnschmerzen - toothache
 |  |  |  |
 |  |  |  |
 |  |  |  |
-|  |  |  |
+| besten |  | the best |
 | dauert |  | lasts |
 | lange |  | long (duration) |
 | Schau |  | look |
+| untersucht |  | examines |
+|  |  |  |
 | spiele spielt |  | play (instrument, game) |
 | Spiel  |  | game |
 |  |  |  |
@@ -960,13 +1002,13 @@ Zahnschmerzen - toothache
 |  |  |  |
 | Lebensmittel | leibensmittle | food |
 |  |  |  |
-| Frühstück | froo-stook | breakfast |
+| das Frühstück | froo-stook | breakfast |
 | Mittagessen | mee-tahg-essen | lunch |
 | Abendessen | abbend-essen | dinner |
 |  |  |  |
 | Kühlschrank |  | fridge |
 | Mikrowelle |  | microwave |
-|  |  |  |
+| Computer |  | computer |
 |  |  |  |
 | Gitarre |  | Guitar |
 | Hobbys |  | hobbies |
@@ -1003,7 +1045,7 @@ Zahnschmerzen - toothache
 | Kaffeetisch |  | coffee table |
 |  |  |  |
 |  |  |  |
-| Schlüssel |  | key |
+| der Schlüssel |  | key |
 | perfekt |  | perfect |
 | süß |  | cute |
 |  |  |  |
@@ -1023,6 +1065,8 @@ Zahnschmerzen - toothache
 | Dumm |  | dumb |
 | klug |  | smart |
 | nett |  | nice |
+|  |  |  |
+| brav |  | well behaved |
 | schön |  | beautiful |
 | klein |  | small |
 | kurz |  | short |
@@ -1068,6 +1112,7 @@ Zahnschmerzen - toothache
 | aufregend |  | exciting |
 | laut |  | loud / noisy |
 | leise |  | quiet |
+| ruhig |  | quiet / calm |
 | teuer |  | expensive |
 | billige |  | cheap |
 | reich |  | righ |
@@ -1081,7 +1126,7 @@ Zahnschmerzen - toothache
 |  |  |  |
 |  |  |  |
 | die stadt |  | city / town |
-|  |  |  |
+| Dorf |  | village |
 | die Rechnung |  | bill (check) |
 |  |  |  |
 | Laden |  | store |
@@ -1269,11 +1314,15 @@ Kurs - class
 
 Tanzen - dancing
 
-Tür - door
+die Tür - door
 
 Schrank - closet / standing wardrobe
 
 Dienstag - job interview
+
+Praktikum - internship
+
+arbeitslos - unemployed
 
 Wiesn-Herz - heart cookie
 
@@ -1294,6 +1343,11 @@ Brötchen - bread roll (colt cuts)
 Müsli - cereal ?
 
 einmal pro .. - once a ...
+
+Uhr - clock
+
+
+Freizeit - free time (leisure)
 
 
 
@@ -1574,10 +1628,12 @@ vielen Dank - thank you very much
 neue - new
 Jacke - jacket
 
-der Stuhl - stool
+der Stuhl - chair(stool)
+Sessel - armchair
 der Tisch - table
 der Teppich - carpet (rug)
 die Couch - couch
+
 das Sofa - sofa (love-seat)
 die Lampe - lamp
 die Vase - vase
@@ -1587,10 +1643,19 @@ die Bettdecke - bedspread (sheets?)
  Kopfkissen - pillow
 das Bücherregal - bookshelf/bookcase
 das Regal - shelf
+Buchladen - book store
+Balkon - balcony
+
+Dusche - shower
+
+das Fenster - window
+
 
 
 das Schlafzimmer - bedroom
 das Badezimmer
+Fitnessstudio - gym (fitness studio)
+Rezeption - reception (desk)
 
 
 modern - modern / fashionable
@@ -1605,6 +1670,8 @@ fantastisch - fantastic
 
 
 der Strand - beach
+
+Ausflug - excursion (trip/journey)
 
 
 

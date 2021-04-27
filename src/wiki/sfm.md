@@ -31,6 +31,11 @@
 0) [References](#REFERENCES)
 
 
+![Medium](./images/sfm/cover_medium.png "Medium")
+<br/>
+*Structure From Motion - Semi Accurate Bench Scene*
+<br/>
+
 <a name="SUMMARY"></a>
 ### Summary
 

@@ -920,7 +920,8 @@ App3DR.prototype._setupModel3DProjectManager = function(projectManager){
 				var view = views[i];
 				//view.loadDenseHiImage(fxnImageLoaded, self);
 				// view.loadFeaturesImage(fxnImageLoaded, self); // only needs to be good enough to get some distinction in color
-				view.loadIconImage(fxnImageLoaded, self);
+				// view.loadIconImage(fxnImageLoaded, self);
+				view.loadPreviewImage(fxnImageLoaded, self);
 			}
 		}
 		var fxnImageLoaded = function(){
@@ -1178,6 +1179,7 @@ console.log(" possible: "+i+" = "+dot+" @ "+Code.degrees(angle)+" : "+o1+"/"+o2)
 			var file = texture["file"];
 			// App3DR.ProjectManager.prototype.loadTriangleTextureFromFilename = function(filename, callback, context, object){
 			manager.loadTriangleTextureFromFilename(file, fxnLoadedImage, manager, i);
+throw "triangle texture"
 		}
 		// throw "LOAD TEXTURES";
 	}
@@ -8097,7 +8099,9 @@ var views = inputData["views"];
 	// }
 var cameras = inputData["cameras"];
 if(!cameras || !views){
-	throw "data needs cameras in file";
+	console.log("inputData");
+	console.log(inputData);
+	throw "data needs cameras & views in file";
 }
 var viewIDsToObject = {};
 for(var i=0; i<views.length; ++i){
@@ -8165,7 +8169,7 @@ if(!relativeAB && isDense){
 		}
 	}
 
-// throw "before more ..."
+throw "before more ... dense"
 
 	var saveProjectFxn = function(){
 		console.log("saveProjectFxn");
@@ -8489,7 +8493,7 @@ console.log(data);
 // pass along cameras
 data["cameras"] = inputData["cameras"];
 
-throw "BEFORE SAVE GRAPH";
+// throw "BEFORE SAVE GRAPH";
 
 		// save graph & reference it
 		inputData["graph"] = graphFilename;
@@ -10540,9 +10544,9 @@ App3DR.ProjectManager.prototype._iterateSparseTracks = function(sourceData, sour
 				var baIterations = fullData["iteration"];
 					baIterations = Code.valueOrDefault(baIterations, 0);
 				var maxIterationsBA = 2*allViews.length; // MED
-				// if(isDense){
-				// 	maxIterationsBA = 3*allViews.length;
-				// }
+				if(isDense){
+					maxIterationsBA = 3*allViews.length;
+				}
 
 				// if the next error is very low, or max iterations reached => done
 				var isDone = false;
@@ -12818,7 +12822,7 @@ GLOBALSTAGE.root().matrix().scale(0.50); // dense
 		var str = world.toYAMLString();
 		console.log(str);
 		// //
-// throw "before save solveDensePairNew"
+throw "before save solveDensePairNew"
 		// //
 		var goodEnoughMatches = true;
 		// //
@@ -12844,7 +12848,7 @@ GLOBALSTAGE.root().matrix().scale(0.50); // dense
 
 			// var str = world.toYAMLString();
 			// console.log(str);
-			throw "before tracks";
+			// throw "before tracks";
 
 			console.log("do tracks");
 			world.solveForTracks();
@@ -12871,7 +12875,7 @@ GLOBALSTAGE.root().matrix().scale(0.50); // dense
 // var str = world.toYAMLString();
 // console.log(str);
 
-throw "after solve - before save dense pair iteration"
+// throw "after solve - before save dense pair iteration"
 
 		// if good enough, record matches
 
@@ -12900,7 +12904,7 @@ throw "after solve - before save dense pair iteration"
 		var viewID = view["id"];
 		view = project.viewFromID(viewID);
 		view.loadDenseHiImage(checkLoadedAllImages, project);
-		// view.loadBundleAdjustImage(checkLoadedAllImages, project); // not shown to be better
+		// view.loadBundleAdjustImage(checkLoadedAllImages, project); // not shown to be much better (5%)
 	}
 }
 
@@ -13513,7 +13517,7 @@ console.log("GET INITIAL F: "+matchesAB.length);
 
 
 App3DR.ProjectManager.prototype.calculateTripleMatchFromViewIDs = function(inputData,inputFilename, viewAID, viewBID, viewCID, pairsIDsToLoad, completeFxn, completeCxt, settings){
-	console.log("calculateTripleMatchFromViewIDs");
+	console.log("calculateTripleMatchFromViewIDs: "+viewAID+"+"+viewBID+"+"+viewCID);
 
 	console.log(inputData,inputFilename);
 	console.log("pairsIDsToLoad: "+pairsIDsToLoad.length);
@@ -13590,6 +13594,8 @@ App3DR.ProjectManager.prototype.calculateTripleMatchFromViewIDs = function(input
 		var idA = data["A"];
 		var idB = data["B"];
 if(idA===undefined || idB===undefined){
+	console.log(idA);
+	console.log(idB);
 	console.log(data);
 	throw "bad data for triples";
 }
@@ -13639,7 +13645,7 @@ console.log(pairData)
 		var pairID = pair["id"];
 		var pairBase = Code.appendToPath(basePath, App3DR.ProjectManager.PAIRS_DIRECTORY, pairID);
 		var relativeFilename = Code.appendToPath(pairBase, App3DR.ProjectManager.PAIR_RELATIVE_FILE_NAME);
-		console.log(" "+i+" : "+relativeFilename);
+		console.log("PAIR FILE "+i+" : "+relativeFilename);
 		project.loadDataFromFile(relativeFilename, fxnRelativeDataComplete, project);
 	}
 
@@ -13715,6 +13721,8 @@ App3DR.ProjectManager.prototype.calculateTripleInfo = function(imageMatrixA,imag
 	}
 
 	world.printPoint3DTrackCount();
+
+throw "triple include relative scaling error"
 
 console.log("before ?");
 	var worldTripleCompleted = function(payload){
@@ -13959,7 +13967,6 @@ console.log("SET CELLS");
 			var size = R3D.cellSizingRoundWithDimensions(wid,hei,cellCount, false);
 			view.cellSize(size);
 		}
-
 		// ADD POINTS
 console.log("INIT POINTS ...");
 		// world.setResolutionProcessingModeNonVisual();
@@ -13982,9 +13989,10 @@ console.log("DELTA INIT: "+((timeB-timeA)/1000)); // 4-5 seconds
 		var timeA = null;
 		var timeB = null;
 		
-		var loadPoints = function(){
+		var loadPoints = function(what){
+			console.log(what);
 			var counterPerIteration = 10E3; // 10k-50k
-			console.log("LOAD POINTS: "+points3DNew.length);
+			console.log("LOAD POINTS: "+points3DNew.length+' - ');
 			if(points3DNew.length>0){
 				var nextSet = [];
 				var maxCount = Math.min(points3DNew.length,counterPerIteration);
@@ -25242,6 +25250,10 @@ App3DR.ProjectManager.View.prototype.maxImage = function(){
 }
 App3DR.ProjectManager.View.prototype.loadIconImage = function(callback, context){
 	this._loadImage(App3DR.ProjectManager.View.IMAGE_LOAD_TYPE_ICON, callback, context);
+}
+App3DR.ProjectManager.View.prototype.loadPreviewImage = function(callback, context){ // for model
+	this._loadImage(App3DR.ProjectManager.View.IMAGE_LOAD_TYPE_FEATURES, callback, context);
+	// this._loadImage(App3DR.ProjectManager.View.IMAGE_LOAD_TYPE_DENSE_LO, callback, context);
 }
 App3DR.ProjectManager.View.prototype.loadDenseLoImage = function(callback, context){
 	this._loadImage(App3DR.ProjectManager.View.IMAGE_LOAD_TYPE_DENSE_LO, callback, context);

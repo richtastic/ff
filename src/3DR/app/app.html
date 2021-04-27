@@ -602,10 +602,66 @@ console.log(" "+i+" DIFF: "+orgDiff.length()+" @ "+Code.degrees(dirDiff));
 
 function classesLoadedFxn(){
 	var app = new App3DR();
-	return;
+	// return;
 
 
-	testAbs();
+	// testAbs();
+	// testDistances();
+}
+
+function testDistances(){ // points in a 2D circle are distributed more out (linearly-perimeter) ; points in a 3D sphere are distriubuted more out (squared-area)
+	console.log("testDistances");
+
+	// return;
+
+	// 2D:
+	var points2D = new V2D();
+	var count = 10000;
+	var size = 1.0;
+	for(var i=0; i<count; ++i){
+		var x = Math.random()*size;
+		var y = Math.random()*size;
+		var p = new V2D(x,y);
+		points2D[i] = p;
+	}
+	var center = new V2D(size*0.5,size*0.5);
+	var radius = size*0.5;
+	var distances = [];
+	for(var i=0; i<count; ++i){
+		var p = points2D[i];
+		var d = V2D.distance(p,center);
+		if(d<=radius){
+			distances.push(d);
+		}
+	}
+	console.log(distances);
+	Code.printMatlabArray(distances);
+
+	// 3D
+	var points3D = new V3D();
+	var count = 10000;
+	var size = 1.0;
+	for(var i=0; i<count; ++i){
+		var x = Math.random()*size;
+		var y = Math.random()*size;
+		var z = Math.random()*size;
+		var p = new V3D(x,y,z);
+		points3D[i] = p;
+	}
+	var center = new V3D(size*0.5,size*0.5,size*0.5);
+	var radius = size*0.5;
+	var distances = [];
+	for(var i=0; i<count; ++i){
+		var p = points3D[i];
+		var d = V3D.distance(p,center);
+		if(d<=radius){
+			distances.push(d);
+		}
+	}
+	console.log(distances);
+	Code.printMatlabArray(distances);
+
+
 }
 
 

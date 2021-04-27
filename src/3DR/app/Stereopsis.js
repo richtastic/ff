@@ -1219,6 +1219,8 @@ Stereopsis.View._cellOrdering = function(a,b){
 	}
 	return 0; // a.x==b.x && a.y==b.y
 }
+
+// TODO: are these probe point queues used anymore?
 Stereopsis.View.prototype._resetQueues = function(){
 	// TODO: clear?
 	this._probe2DQueue = null;
@@ -1242,6 +1244,7 @@ Stereopsis.View.prototype._probe2DQueues = function(index, value){
 	return queues;
 }
 Stereopsis.View.prototype.addQueue = function(oppositeView, value){
+	return;
 	var queues = this._probe2DQueues(oppositeView.id()+"", value);
 	var addQueue = queues["add"];
 	return addQueue;
@@ -1250,6 +1253,7 @@ Stereopsis.View.prototype.removeViewProbePoint = function(myPoint, oppositeView)
 	throw "?"
 }
 Stereopsis.View.prototype.addViewProbePoint = function(myPoint, oppositeView){
+	return;
 	var addQueue = this.addQueue(oppositeView);
 	var cell = this.cellForPoint(myPoint);
 	if(!cell){
@@ -1257,6 +1261,7 @@ Stereopsis.View.prototype.addViewProbePoint = function(myPoint, oppositeView){
 		console.log(cell);
 		console.log(this.size());
 		console.log(myPoint);
+		throw "???";
 	}
 	// console.log(addQueue);
 	// console.log(cell);
@@ -1268,6 +1273,8 @@ Stereopsis.View.prototype.popAddQueue = function(oppositeView){
 	this.addQueue(oppositeView,{});
 	return list;
 }
+
+
 Stereopsis.View.prototype._updateInternalParams = function(){
 	var size = this.size();
 	var camera = this._camera;
@@ -8851,8 +8858,9 @@ Stereopsis.World.prototype.solveDensePairNew = function(subdivisionScaleSize, su
 	var subdivisions = subDivisionCounts; // ~40k  --- select - about 
 // subdivisions = 1; // 5k
 // subdivisions = 2; // 10k ............... testing
-subdivisions = 3; // 25k ................. current default
-// subdivisions = 4; // 50k
+// subdivisions = 3; // 25k ................. current default
+subdivisions = 4; // 50k
+// subdivisions = 5; // 100k
 // console.log("subdivisions: "+subdivisions);
 // throw "??"
 	// var subdivisions = 3; // ~100k
@@ -8890,12 +8898,21 @@ timeA = Code.getTimeMilliseconds();
 		world.initNullP3DPatches();
 
 
+/*
+// 2 + 4 + 6
 // TEST BORDERS
-if(iteration==3){
+// if(iteration==3 || iteration==6){
+if(iteration==3 || iteration==5){
+// if(iteration==5){
+// if(iteration==3){
 	world.resolveBorderDisputes();
-	throw "testing borders"
+	// throw "testing borders"
 }
-
+*/
+if(iteration!==1 && iteration%iterations==1){
+	console.log("RICHIE SOLVE BORDER DISPUTE: "+iteration);
+	world.resolveBorderDisputes();
+}
 
 
 		// subdivisions
@@ -9012,14 +9029,14 @@ console.log((timeStop-timeStart)/1000/60); // ~ 20 mins
 
 	
 	// check it out
-	var str = world.toYAMLString();
-	console.log(str);
+	// var str = world.toYAMLString();
+	// console.log(str);
 
 
 	// world.showForwardBackwardPair();
 	// ???
 	
-	throw "solveDensePair2";
+	// throw "solveDensePair2";
 	return null;
 }
 
@@ -9398,12 +9415,17 @@ world.sampleErrorsDebug();
 }
 
 Stereopsis.World.prototype.resolveBorderDisputes = function(){ //
+	console.log("resolveBorderDisputes");
 	var world = this;
 	var transforms = world.toTransformArray();
 	var space3D = world.pointSpace();
 
 	var neighborhoodScale2D = 2.0; // 1.414 - 2.0
-	var neighborhoodScale3D = 2.0; // more than 2D
+	var neighborhoodScale3D = 4.0; // more than 2D : 2-4
+
+	var neighborhood2DK = 8 + 1;
+	// var neighborhood3DK = 16 + 1; // more than 2D
+	var neighborhood3DK = 20 + 1; // sphere growth = linear + error + padding
 
 	var P3DtoIndex = function(p){
 		return p.id();
@@ -9413,34 +9435,48 @@ Stereopsis.World.prototype.resolveBorderDisputes = function(){ //
 	}
 
 	var borderP3Ds = {};
+	var borderPairs = {};
 
 	for(var i=0; i<transforms.length; ++i){
 		var transform = transforms[i];
 		var viewA = transform.viewA();
 		var viewB = transform.viewB();
 		var views = [viewA,viewB];
+		var opps = [viewB,viewA]
 		for(var j=0; j<views.length; ++j){
 			var view = views[j];
+			var opp = opps[j];
 			var space2D = view.pointSpace();
 			var points2D = view.toPointArray();
 			var cellSize2D = view.cellSize();
+			// TODO: there needs to be a viewA & a viewB
 			for(var k=0; k<points2D.length; ++k){
 				var point2D = points2D[k];
 				var point3D = point2D.point3D();
 				var p2D = point2D.point2D();
 				var p3D = point3D.point();
 				// get 2D neighbors:
-				var searchRadius2D = cellSize2D*neighborhoodScale2D;
-				var neighbors2D = space2D.objectsInsideCircle(p2D, searchRadius2D);
+				// DISTANCE
+					var searchRadius2D = cellSize2D*neighborhoodScale2D;
+					var neighbors2D = space2D.objectsInsideCircle(p2D, searchRadius2D);
+				// COUNT
+					// var neighbors2D = space2D.kNN(p2D, neighborhood2DK);
+				// ?
+// console.log(neighbors2D.length);
 				var hash2D = Code.toHash(neighbors2D,P2DtoIndex);
-console.log(hash2D);
+// console.log(hash2D);
 				// get putative 3D neighbors
-				var cellSize3D = point2D.neighborhood3DSize();
-				var searchRadius3D = cellSize3D*neighborhoodScale3D;
-				var neighbors3D = space3D.objectsInsideSphere(p3D, searchRadius3D);
-				// var hash3D = Code.toHash(neighbors3D,P3DtoIndex);
-console.log(neighbors3D);
-// console.log(hash3D);
+				// DISTANCE
+					var cellSize3D = point2D.neighborhood3DSize();
+					var searchRadius3D = cellSize3D*neighborhoodScale3D;
+					var neighbors3D = space3D.objectsInsideSphere(p3D, searchRadius3D); // TODO: this needs to check for viewA & viewB
+				// COUNT
+					// var neighbors3D = space3D.kNN(p3D, neighborhood3DK);
+// console.log(neighbors3D.length);
+				// ?
+				var hash3D = Code.toHash(neighbors3D,P3DtoIndex);
+
+
 				// neighborhood size = remaining
 				var trueNeighbors3D = [];
 				var distances2D = [];
@@ -9450,20 +9486,29 @@ console.log(neighbors3D);
 					if(n3D==point3D){
 						continue;
 					}
-					var index = n3D.id();
-					var val2D = hash2D[index];
-					if(val2D){
-						trueNeighbors3D.push(n3D);
-						distances2D.push(V2D.distance(val2D.point2D(),p2D));
-						distances3D.push(V3D.distance(n3D.point(),p3D));
-						// trueNeighbors.push(val2D);
-					}
-				}
-// console.log(trueNeighbors3D);
-				// get estimated neighborhood size
-// console.log(distances2D);
-// console.log(distances3D);
 
+					// trueNeighbors3D.push(n3D);
+
+					var n2D = n3D.pointForView(view);
+if(!n2D){
+	// throw "missing n2D";
+	console.log("missing n2D");
+}
+					trueNeighbors3D.push(n3D);
+
+					distances2D.push(V2D.distance(n2D.point2D(),p2D));
+					distances3D.push(V3D.distance(n3D.point(),p3D));
+
+
+					// var index = n3D.id();
+					// var val2D = hash2D[index];
+					// if(val2D){
+						// trueNeighbors3D.push(n3D);
+						// distances2D.push(V2D.distance(val2D.point2D(),p2D));
+						// distances3D.push(V3D.distance(n3D.point(),p3D));
+						// trueNeighbors.push(val2D);
+					// }
+				}
 if(trueNeighbors3D.length<=1){
 	// console.log("not enough real neighbors");
 	continue;
@@ -9471,36 +9516,81 @@ if(trueNeighbors3D.length<=1){
 				var mean2D = Code.mean(distances2D);
 				var sigma2D = Code.stdDev(distances2D,mean2D);
 				var mean3D = Code.mean(distances3D);
+				var max3D = Code.max(distances3D);
 				var sigma3D = Code.stdDev(distances3D,mean3D);
-				var max3D = mean3D + 3.0*sigma3D;
+				// ...
+				// var limit3D = mean3D + 3.0*sigma3D;
+
+				// var limit3D = Math.max(mean3D + 4.0*sigma3D, max3D + 1.0*sigma3D);
+
+				var limit3D = 2*max3D;
+
 // console.log(mean2D+" +/- "+sigma2D);
-// console.log(mean3D+" +/- "+sigma3D+" = "+max3D);
+// console.log(mean3D+" +/- "+sigma3D+" = "+limit3D);
 
 				
-
+				
 				// mark if too far  
 				for(var n=0; n<neighbors2D.length; ++n){
 					var neighbor2D = neighbors2D[n];
 					var neighbor3D = neighbor2D.point3D();
 					var neighborP3D = neighbor3D.point();
 					var d3D = V3D.distance(p3D,neighborP3D);
-					if(d3D>max3D){ // too far away in 3D [but close in 2D]
+					if(d3D>limit3D){ // too far away in 3D [but close in 2D]
+						borderP3Ds[neighbor3D.id()] = neighbor3D;
+						borderP3Ds[point3D.id()] = point3D;
+						var idA = point3D.id();
+						var idB = neighbor3D.id();
+						// var index = idA<idB ? (idA+"-"+idB) : (idB+"-"+idA);
+						var index = idA+"-"+idB;
+						borderPairs[index] = [point2D,neighbor2D, view,opp];
+					}else{
+						// ..
+					}
+				}
+				
+				/*
+				// is 3D neighbor but not 2D neighbor
+				for(var n=0; n<neighbors3D.length; ++n){
+					var neighbor3D = neighbors3D[n];
+					if(neighbor3D==point3D){
+						continue; // ignore self
+					}
+					var index = neighbor3D.id();
+					var neighbor2D = hash2D[index];
+					if(!neighbor2D){ // not 2D neighbor
 						borderP3Ds[neighbor3D.id()] = neighbor3D;
 						borderP3Ds[point3D.id()] = point3D;
 					}else{
 						// ..
 					}
 				}
-				//
+				*/
+
 // throw "here";
 			}
 		}
 	}
 
 	var list3D = Code.objectToArray(borderP3Ds);
-	console.log(list3D);
-	console.log(world.toPointArray().length+" = total");
 
+	// create new putative matches at each of these new points:
+
+
+/*
+	// delete ...
+	for(var i=0; i<list3D.length; ++i){
+		var point3D = list3D[i];
+			world.disconnectPoint3D(point3D);
+			world.killPoint3D(point3D);
+	}
+*/
+
+
+	
+	console.log(list3D.length);
+	console.log(world.toPointArray().length+" = total");
+/*
 	// display these in the world
 	var views = world.toViewArray();
 	var viewA = views[0];
@@ -9536,9 +9626,76 @@ if(trueNeighbors3D.length<=1){
 		d.graphics().endPath();
 		d.graphics().fill();
 	}
+*/
+
+	var list = Code.objectToArray(borderPairs);
+	var newMatches = [];
+	for(var i=0; i<list.length; ++i){
+		var pair = list[i];
+// console.log(pair);
+		var aPoint2DA = pair[0];
+		var bPoint2DA = pair[1];
+		var viewA = pair[2];
+		var viewB = pair[3];
+// console.log(aPoint2DA);
+		var aPoint3D = aPoint2DA.point3D();
+		var bPoint3D = bPoint2DA.point3D();
+		var aPoint2DB = aPoint3D.pointForView(viewB);
+		// reference points
+		var aP2DA = aPoint2DA.point2D();
+		var aP2DB = aPoint2DB.point2D();
+		var matchA = aPoint3D.matchForViews(viewA,viewB);
+		var affineAB = matchA.affineForViews(viewA,viewB);
+		// objective point
+		var bP2DA = bPoint2DA.point2D();
+
+		
+		// var newMatch = world.bestNeedleHaystackMatchFromLocation(centerA,centerB, newPointA, affine, viewA,viewB, isR);
+
+		// console.log(aP2DA);
+		// console.log(aP2DB);
+		// console.log(bP2DA);
+		// console.log(affineAB);
+
+		var newMatch = world.bestNeedleHaystackMatchFromLocation(aP2DA,aP2DB, bP2DA, affineAB, viewA,viewB, true);
+		// var predictedB = ;
+		newMatches.push(newMatch);
+		//var currentB2D = bPoint2DA.point2D();
+	}
 
 
-	throw "resolveBorderDisputes"
+	var count = 0;
+	var averageErrorB = 0;
+	for(var i=0; i<newMatches.length; ++i){
+		var match = newMatches[i];
+
+		// assume 3D : isR
+		var point3D = match.point3D();
+		var location3D = point3D.estimated3D();
+		point3D.point(location3D); // not in world yet.
+		world.initP3DPatchFromMode(point3D);
+
+		// var point3D = match.point3D();
+		point3D = world.embedPoint3D(point3D);
+		if(point3D){
+			var matches = point3D.toMatchArray();
+			for(var m=0; m<matches.length; ++m){
+				var match = matches[m];
+				Stereopsis.updateErrorForMatch(match);
+			}
+			point3D.calculateAbsoluteLocationDLT(world);
+			// var p = point3D.point();
+			averageErrorB += newMatch.errorR();
+			++count;
+		}
+	}
+	averageErrorB /= count;
+	console.log("added "+count);
+	console.log("averageErrorB: "+averageErrorB);
+
+
+	// throw "resolveBorderDisputes"
+
 }
 Stereopsis.World.prototype.visualizePatches = function(){ //
 	var world = this;
@@ -16031,6 +16188,7 @@ Stereopsis.World.prototype.filterGlobalMetrics = function(sigmaMaximumDrop, isR)
 			listMatchR = [];
 		}
 		// estimate
+var listMulti = [];
 		for(var j=0; j<matches.length; ++j){
 			var match = matches[j];
 			var errorF = match.errorF();
@@ -16051,16 +16209,31 @@ Stereopsis.World.prototype.filterGlobalMetrics = function(sigmaMaximumDrop, isR)
 					listMatchR.push(errorR);
 				}
 			}
+			if(isR && errorR!=null && errorF!=null && errorN!=null && errorS!=null){
+				var metric = errorR*errorF*errorN*errorS;
+					metric = Math.log(1+metric); // linear-ish
+				listMulti.push(metric);
+				match._temp = metric;
+			}
 		}
+listMulti.sort();
+console.log("RICHIE - listMulti:")
+Code.printMatlabArray(listMulti);
 		var limitR = null;
 		var limitF = null;
 		var limitN = null;
 		var limitS = null;
+var limitM = null;
 		if(isR){
 			var min = Code.min(listMatchR);
 			var sig = Code.stdDev(listMatchR, min);
 			console.log("R: "+min+" +/- "+sig);
 			limitR = min + sig*limitMatchSigmaR;
+
+			var min = Code.min(listMulti);
+			var sig = Code.stdDev(listMulti, min);
+			console.log("M: "+min+" +/- "+sig);
+			limitM = min + sig*limitMatchSigmaR;
 		}
 
 		var min = Code.min(listMatchF);
@@ -16147,11 +16320,14 @@ console.log("LIMITS: "+limitF+" | "+" | "+limitN+" | "+limitS);
 			var errorF = match.errorF();
 			var errorN = match.errorNCC()
 			var errorS = match.errorSAD();
+var errorM = match._temp;
+var dropM = R && errorM!==undefined && limitM && errorM>limitM;
 			var dropR = R ? (limitR && errorR>limitR) : false;
 			var dropF = F ? (limitF && errorF>limitF) : false;
 			var dropN = N ? (limitN && errorN>limitN) : false;
 			var dropS = S ? (limitS && errorS>limitS) : false;
-			if(dropR || dropF || dropN || dropS){
+			if(dropR || dropF || dropN || dropS
+				|| dropM){
 				dropList.push(match);
 				var point3D = match.point3D();
 				var matchCount = point3D.matchCount();

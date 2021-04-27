@@ -388,9 +388,70 @@ MISSING:
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
+- other methods of pruning points?
+	2D
+	3D
+	2D-3D
+	multi-metric
+		- R x F x N x S - maybe a little ?
+
+
+
 DENSE IS STILL BAD:
 
+
+	- look over process and find possible points of contention / improvement
+		- location metric:
+			SAD relative
+			SAD absolute
+			NCC rel/abs
+			gaussian window falloff
+			circular window
+		- border dispute retraction
+			- design propagation around seed point definition
+		- combining
+			- use relative error for pairings points into group
+			- use relative error of scalings - in abs combining [final scale range / sigma]
+				- add/multiply scale error to the absolute transforms
+			- 'pruning' in final combined group
+				- isolated points (neighborhood distance/count ? relative to camera distance ?)
+		- 
+
+
+
 calculatePairMatchWithRFromViewIDs
+	solveDensePairNew
+
+	subDivideUpdateMatchLocation
+
+
+	R3D.optimumSADLocationSearchFlatRGB
+		// 
+
+
+
+var scores = R3D.searchNeedleHaystackSADColor(needle,haystack); 				- R : 0.000009360217525096162 +/- 2.5126658894379714
+var scores = R3D.searchNeedleHaystackSADColorOffsetUnit(needle,haystack); 		- R : 0.000029171387879161067 +/- 1.4733003176743598
+var scores = R3D.searchNeedleHaystackNCCColorOffsetUnit(needle,haystack);		--- need to make this  smaller is better ? (negative ?)
+searchNeedleHaystackSADColorOffsetUnit - SAD -								 	- R : 0.00003548522545991383 +/- 1.6004984398999957
+			
+
+SSD
+
+
+circular flat:
+
+gaussian 1:
+ T 0 0->1  R : 0.000008958243591265803 +/- 1.4611134092259292
+ gaussian 0.5:
+ T 0 0->1  R : 0.000016489749943791584 +/- 1.5260758436965476
+...
+
+
+
+
+
+
 
 
 R3D.searchMatchPointsPair3D
@@ -402,7 +463,13 @@ dense R search print matches
 
 - need a way for incorrect matches to be overtaken by correct 2D neighbors
 
- - is it better to use get points in SPHERE or KNN ~ 9-18 ?
+- is it better to use get points in SPHERE or KNN ~ 9-18 ?
+
+- when combining points from dense pair into group -- maybe only the better pairs / points should be used? -- 1.0 vs 3.0 R error average pairs
+
+- combined group is not exactly aligned
+	- combined dense pair points are noisy
+	-> does the combined group do any king of noise reduction?
 
 
 

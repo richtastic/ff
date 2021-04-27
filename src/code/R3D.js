@@ -14354,8 +14354,40 @@ R3D.optimumSADLocationSearchFlatRGB = function(pointA,pointB, imageScalesA,image
 		ImageMatScaled.affineToLocationTransform(affine,affine, halfHaystack,halfHaystack, pointB.x,pointB.y);
 		imageScalesB.extractRectFast(haystack, averageScale, affine);
 
+	
+
+
 	// var scores = R3D.searchNeedleHaystackSADColor(needle,haystack);
-	var scores = R3D.searchNeedleHaystackSADColorOffsetUnit(needle,haystack);
+	var scores = R3D.searchNeedleHaystackSADColorOffsetUnit(needle,haystack); // best
+	// var scores = R3D.searchNeedleHaystackSADColorOffsetUnit(needle,haystack,null, 1,1, true); // SSD
+	// var scores = R3D.searchNeedleHaystackNCCColorOffsetUnit(needle,haystack);
+
+	/*
+	
+	if(!R3D.optimumSADLocationSearchFlatRGB_LOOKUP){
+		R3D.optimumSADLocationSearchFlatRGB_LOOKUP = {};
+	}
+	var needleMask = R3D.optimumSADLocationSearchFlatRGB_LOOKUP[needleSize+""];
+	if(!needleMask){
+		// circle mask
+		// needleMask = ImageMat.circleMask(needleSize,needleSize);
+		// gaussian circle mask
+		var sigma = needleSize*0.5;
+		needleMask = ImageMat.gaussianMask(needleSize,needleSize, sigma);
+		// add to 1 ?
+		// console.log(needleMask);
+		// throw "????"
+		R3D.optimumSADLocationSearchFlatRGB_LOOKUP[needleSize+""] = needleMask;
+	}
+	var scores = R3D.searchNeedleHaystackSADColorOffsetUnit(needle,haystack,needleMask);
+	*/
+	
+
+
+	// WINDOW FALLOFF  FROM CENTER ?
+
+
+
 
 	var finalSize = scores["width"];
 	var values = scores["value"];
@@ -51742,11 +51774,13 @@ R3D.searchNeedleHaystackSADColorOffset = function(needle,haystack,needleMask, sp
 					var dG = nG - hG;
 					var dB = nB - hB;
 					var sq = dR*dR + dG*dG + dB*dB;
+					var add = 0;
 					if(doSSD){
-						sad += sq;
+						add = sq;
 					}else{
-						sad += Math.sqrt(sq);
+						add = Math.sqrt(sq);
 					}
+					sad += add*mask;
 				}
 			}
 			var resultIndex = jW + (i/spacingI);
@@ -51922,11 +51956,13 @@ R3D.searchNeedleHaystackSADColorOffsetUnit = function(needle,haystack,needleMask
 					var dG = nG - hG;
 					var dB = nB - hB;
 					var sq = dR*dR + dG*dG + dB*dB;
+					var add = 0;
 					if(doSSD){
-						sad += sq;
+						add = sq;
 					}else{
-						sad += Math.sqrt(sq);
+						add = Math.sqrt(sq);
 					}
+					sad += add * mask;
 					// sad += sq;
 					// if(Code.isNaN(sad)){
 					// 	console.log(sq);
@@ -52121,7 +52157,7 @@ R3D.searchNeedleHaystackNCCColorOffsetUnit = function(needle,haystack,needleMask
 					var unit = nR*hR + nG*hG + nB*hB;
 // console.log(unit)
 // throw "?"
-					sad += unit;
+					sad += unit*mask;
 
 					// SAD - color
 					// var dR = nR - hR;
@@ -52134,11 +52170,24 @@ R3D.searchNeedleHaystackNCCColorOffsetUnit = function(needle,haystack,needleMask
 
 				}
 			}
-// console.log(sad)
+
+			// change to inverse:
+			// NEGATIVE
+			// 1/DIV
+			// LOG 1/DIV
+			sad = -sad; // 'less' is better 
+// console.log("SAD:" +sad);
+// 			if(sad!==0){
+// 				sad = Math.log(1+1.0/sad);
+// 			}
+// console.log("LOG:" +sad);
 			var resultIndex = jW + (i/spacingI);
 			result[resultIndex] = sad*inverseNeedleCount;
 		}
 	}
+	
+	// console.log(inverseNeedleCount);
+	// throw "?"
 	return {"value":result, "width":resultWidth, "height":resultHeight};
 }
 
