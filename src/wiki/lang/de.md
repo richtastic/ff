@@ -3,6 +3,13 @@
 Bronze, Silver, Gold, Sapphire, Ruby, Emerald, Amethyst, Pearl, Obsidian, Diamond - 10
 
 
+https://www.germanwithantrim.com/du-vs-ihr-vs-sie-beginner-german-with-herr-antrim-lesson-4/
+https://courses.dcs.wisc.edu/wp/readinggerman/verbs-haben-and-sein/
+https://www.thoughtco.com/german-present-tense-verbs-4074838
+
+
+
+
 ### table
 
 
@@ -43,6 +50,13 @@ Bronze, Silver, Gold, Sapphire, Ruby, Emerald, Amethyst, Pearl, Obsidian, Diamon
 | ß |  | es-zed (double s) |
 
 
+
+
+Tag der Deutschen Einheit - October 3, 1990 united east & west germany
+
+Ostsee - Baltic Sea
+
+
 #### daily
 
 | de | ph | en |
@@ -80,27 +94,6 @@ feminine: die
 neuter: das ein
 
 
-| de | ph | en |
-| --- | --- | --- |
-| schwarze |  | black |
-|  |  | white |
-|  |  | grey |
-| rote |  | red |
-|  |  | blue |
-|  |  | green |
-|  |  | brown |
-|  |  | purple |
-|  |  |  |
-|  |  |  |
-| dunkle |  | dark |
-|  |  |  |
-|  |  |  |
-|  |  |  |
-|  |  |  |
-|  |  |  |
-| Lieblingsfarbe |  | favorite color |
-|  |  |  |
-
 
 #### greetings
 
@@ -126,9 +119,9 @@ neuter: das ein
 | gute Besserung |  | feel better (sick) |
 |  |  |  |
 |  |  |  |
-|Hurra |  | hooray |
+| Hurra |  | hooray |
 |  |  |  |
-|  |  |  |
+| Keine Angst |  | don't worry |
 |  |  |  |
 | Schönen Tag |  | good-day |
 | guten morgen |  | good morning |
@@ -147,7 +140,7 @@ neuter: das ein
 | alles klar |  | all right (ok?) |
 | klar |  | of course |
 |  |  |  |
-|  |  |  |
+| Viel Spaß |  | have fun |
 |  |  |  |
 | Richtig |  | correct |
 |  |  |  |
@@ -257,19 +250,32 @@ neuter: das ein
 
 | de | ph | en |
 | --- | --- | --- |
-| rot | roat | red |
+|  |  |  |
+| Farbe |  | color |
+|  |  |  |
+
+| rot / rote | roat | red |
 | Grün | ghroon | green |
 | Blau | blaow | blue |
 | lila | lee-lah | purple |
 | orange | orhangg | orange |
 | gelb | gaylb | yellow |
 | weiß | weiss | white |
-| schwarz | shwartz | black |
+| schwarz / schwarze | shwartz | black |
 | grau | graow | grey |
 |  |  |  |
+| rosa |  | pink |
+|  |  |  |
+|  |  |  |
+| dunkle |  | dark |
 |  |  |  |
 |  |  |  |
 |  |  |  |
+|  |  |  |
+|  |  |  |
+| Lieblingsfarbe |  | favorite color |
+|  |  |  |
+
 
 #### daily
 
@@ -287,9 +293,9 @@ neuter: das ein
 | Freitag | fry-tag(ch) | fri |
 | Samstag | Zahms-tag(ch) | sat |
 | Sonntag | Zun-tag(ch) | sun |
-| woche |  | week |
-| Wochentag |  | weekday |
-| Wochenende |  | weekend |
+| die woche |  | week |
+| der Wochentag |  | weekday |
+| das Wochenende |  | weekend |
 |  |  |  |
 | januar | yeah-n-war | january |
 | febuar | feeb-r-war | february |
@@ -316,6 +322,9 @@ neuter: das ein
 |  |  |  |
 | buch |  | book |
 | die Bücher |  | books |
+| das Tagebuch |  | diary |
+|  |  |  |
+|  |  |  |
 | auto / wagon | out-oh / vahgahn | car |
 | Motorrad |  | motorbike |
 | Bus |  | bus |
@@ -372,7 +381,7 @@ neuter: das ein
 | hier |  | here |
 | na ja |  | well / actually |
 |  |  |  |
-|  |  |  |
+| Moment |  | a moment (time) |
 |  |  |  |
 |  |  |  |
 | nur |  | only |
@@ -393,7 +402,7 @@ neuter: das ein
 | schon |  | already |
 | fast |  | almost/nearly |
 | also |  | therefore |
-|  |  |  |
+| langsam |  | slowly |
 |  |  |  |
 |  |  |  |
 | links |  | left |
@@ -438,7 +447,7 @@ neuter: das ein
 | groß |  | big |
 | schwer |  | hard/difficult |
 | einfach |  | easy |
-|  |  |  |
+| frisch |  | fresh |
 | weich |  | soft (feel) |
 |  |  |  |
 |  |  |  |
@@ -548,7 +557,7 @@ alles Gute zum Geburtstag - (bad luck?)
 | der Park |  | park |
 | der Markt |  | market |
 | der Supermarkt |  |  |
-|  |  |  |
+| Geschäfte |  | stores |
 | das Kino |  | theater |
 | das Café? |  | coffee shop |
 | Apotheke |  | pharmacy |
@@ -578,7 +587,7 @@ alles Gute zum Geburtstag - (bad luck?)
 |  |  |  |
 |  |  |  |
 | der Pass |  | passport |
-|  |  |  |
+| Ausweis |  | ID card |
 |  |  |  |
 
 
@@ -590,9 +599,10 @@ alles Gute zum Geburtstag - (bad luck?)
 | de | ph | en |
 | --- | --- | --- |
 |  |  |  |
-| Familie |  | family |
-|  |  |  |
+| die Familie |  | family |
+| Verwandten |  | relatives |
 | kind/kinder |  | child/kid/s |
+| Erwachsene |  | adults |
 | bruder |  | brother |
 | schwester |  | sister |
 | mutter |  | mother |
@@ -622,7 +632,7 @@ alles Gute zum Geburtstag - (bad luck?)
 | Enkel |  | grand-son |
 |  |  |  |
 |  |  |  |
-|  |  |  |
+| Arbeitskollegen |  | coworker |
 |  |  |  |
 | Student/en |  | student/s |
 | Medizinstudenten |  | medical student |
@@ -640,7 +650,7 @@ alles Gute zum Geburtstag - (bad luck?)
 | Das Modell |  | Model |
 |  |  |  |
 |  |  |  |
-|  |  |  |
+| Touristen |  | tourists |
 | Freundin |  | friend |
 |  |  |  |
 | Beruf |  | profession (job) |
@@ -728,24 +738,23 @@ alles Gute zum Geburtstag - (bad luck?)
 | das salz |  | salt |
 | der zucker |  | sugar |
 |  |  |  |
-| Senf |  | mustard |
+| Mayo |  | mayo |
 |  |  |  |
 |  |  |  |
-|  |  |  |
-|  |  |  |
+| Knödel |  | dumplings |
 | das eis |  | ice cream |
 | Apfelkuchen |  | apple cake |
 | Schokoladenkuchen |  | chocolate cake |
 | das Obst |  | fruits |
+| das Gemüse |  | vegetables |
 |  |  |  |
-|  |  |  |
-|  |  |  |
+| Currywurst |  | curry sausage |
 | Kartoffelsalat |  | potatoe salad |
 | Obstsalat |  | fruit salad |
 | Nachtisch |  | dessert |
 |  |  |  |
-| Schokolade |  | chocolate |
-|  |  |  |
+| die Schokolade |  | chocolate |
+| Kekse |  | cookie/s |
 |  |  |  |
 | zwiebel |  | onion |
 | salat |  | salad |
@@ -758,10 +767,14 @@ alles Gute zum Geburtstag - (bad luck?)
 | die Pizza |  | pizza |
 | der Käse |  | cheese |
 | die wurst |  | sausage |
-|  |  |  |
+| Spinat |  | spinach |
 |  |  |  |
 | wasser |  | water |
 | Mineralwasser |  | mineral water |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+| Getränke |  | drinks/beverages |
 |  |  |  |
 | tee |  | tea |
 | Wein |  | wine |
@@ -770,8 +783,8 @@ alles Gute zum Geburtstag - (bad luck?)
 | bier |  | beer |
 | Weißbier |  | wheat beer |
 |  |  |  |
-|  |  |  |
-|  |  |  |
+| Brezel |  | pretzel |
+| Sauerkraut |  | sourkrout |
 |  |  |  |
 |  |  |  |
 | Apfelschorle |  | sparkling apple juice |
@@ -784,7 +797,7 @@ alles Gute zum Geburtstag - (bad luck?)
 |  |  |  |
 |  |  |  |
 | süß |  | sweet |
-|  |  |  |
+| scharf |  | spicy |
 | bestellen |  | order |
 |  |  |  |
 |  |  |  |
@@ -793,7 +806,6 @@ alles Gute zum Geburtstag - (bad luck?)
 |  |  |  |
 | Chefin |  | boss |
 | alle |  | everyone |
-|  |  |  |
 |  |  |  |
 |  |  |  |
 |  |  |  |
@@ -830,7 +842,7 @@ Ohrenschmerzen - ear ache
 |  |  |  |
 |  |  |  |
 |  |  |  |
-|  |  |  |
+| Mexiko |  | mexico |
 |  |  |  |
 |  |  |  |
 | turkish |  | Türkisch |
@@ -842,6 +854,11 @@ Ohrenschmerzen - ear ache
 | Deutsche |  | german |
 | Amerikaner |  | american |
 | Berliner |  | berlin person ? |
+|  |  |  |
+|  |  |  |
+| Neuschwanstein |  | Neuschwanstein castle |
+Brandenburger - Brandenburg Gate
+|  |  |  |
 |  |  |  |
 |  |  |  |
 |  |  |  |
@@ -874,6 +891,7 @@ Ohrenschmerzen - ear ache
 | von |  | from |
 |  |  |  |
 |  |  |  |
+| schwer |  | heavy |
 |  |  |  |
 |  |  |  |
 | vor dem |  | in front of |
@@ -896,6 +914,8 @@ Ohrenschmerzen - ear ache
 | jede |  | each |
 | viele |  | many |
 | offen / geöffnet |  | open |
+| schließt |  | closed |
+|  |  |  |
 | geschlossen |  | close/d |
 | nah |  | near/close |
 | fern |  | far |
@@ -931,7 +951,6 @@ Ohrenschmerzen - ear ache
 | Straße |  | street |
 | personen |  | people |
 |  |  |  |
-|  |  |  |
 | hören | whore-in | hear |
 |  |  |  |
 |  |  |  |
@@ -942,6 +961,7 @@ Ohrenschmerzen - ear ache
 | fühlen |  | feel/ing |
 | hören |  | hear/ing |
 | sehen |  | see/ing |
+| finden |  | find/ing |
 | schmecken |  | taste/ing |
 | learnen |  | learn | lernst
 | hören |  | hear |
@@ -969,8 +989,8 @@ Ohrenschmerzen - ear ache
 | hört ? |  | to listen/hear |
 | bleiben ? |  | to stay |
 | nehmen ? |  | to take |
-|  |  |  |
-|  |  |  |
+| bekommt ? |  | to get |
+| trägt ? |  | to carry |
 |  |  |  |
 |  |  |  |
 |  |  |  |
@@ -1015,13 +1035,15 @@ Ohrenschmerzen - ear ache
 |  |  |  |
 | die Geige |  | violin |
 | der film |  | movie |
+| Horrorfilm |  | horror film |
+|  |  |  |
 | Instrument |  | instrument |
 | Tennis |  | tennis |
 | Podcasts |  | podcasts |
 |  |  |  |
 |  |  |  |
 |  |  |  |
-|  |  |  |
+| das Gras |  | grass |
 |  |  |  |
 |  |  |  |
 |  |  |  |
@@ -1035,15 +1057,24 @@ Ohrenschmerzen - ear ache
 |  |  |  |
 | Sachen |  | stuff/things |
 | interessant |  | interesting |
+| langweilig |  | boring |
+|  |  |  |
 | toll |  | great (cool) |
 | total |  | really (very) |
 | über |  | everything |
 | viel |  | much |
+| alles |  | all/everything |
+| überall |  | everywhere |
+|  |  |  |
 |  |  |  |
 | das geld |  | money |
 | tisch |  | table |
 | Kaffeetisch |  | coffee table |
+| nichts |  | nothing |
 |  |  |  |
+|  |  |  |
+|  |  |  |
+| weniger |  | less / little / few |
 |  |  |  |
 | der Schlüssel |  | key |
 | perfekt |  | perfect |
@@ -1102,7 +1133,7 @@ Ohrenschmerzen - ear ache
 | Geldautomat |  | ATM |
 |  |  |  |
 |  |  |  |
-|  |  |  |
+| Liter |  | liter |
 |  |  |  |
 |  |  |  |
 |  |  |  |
@@ -1115,10 +1146,10 @@ Ohrenschmerzen - ear ache
 | ruhig |  | quiet / calm |
 | teuer |  | expensive |
 | billige |  | cheap |
-| reich |  | righ |
+| reich |  | rich |
 |  |  |  |
 |  |  |  |
-|  |  |  |
+| Hausaufgaben |  | homework |
 |  |  |  |
 |  |  |  |
 |  |  |  |
@@ -1134,13 +1165,15 @@ Ohrenschmerzen - ear ache
 | Bahnhof |  | train station |
 | Urlaub |  | vacation |
 | Besuch |  | visit |
+| besichtigen |  | tour/visit |
+
 | Reise |  | trip/travels |
 | Adresse |  | address |
 | Taxifahrt |  | taxi ride |
 |  |  |  |
 | der tourist |  | tourist |
 |  |  |  |
-|  |  |  |
+| Feiertag |  | holiday |
 |  |  |  |
 |  |  |  |
 
@@ -1269,6 +1302,8 @@ Flugtickets - plane tickets
 
 Flugzeug - plane
 
+Flugnummer - flight number
+
 Schwestern - sisters
 
 Sprachen - languages
@@ -1349,13 +1384,15 @@ Uhr - clock
 
 Freizeit - free time (leisure)
 
+niesen - sneeze
+
 
 
 französisches (eg: Brot) - french (eg: bread)
 griechisch - greek 
 italienisch - italian
 
-
+Handschrift - handwriting
 
 Psychologie - psychology
 Geschichte - history
@@ -1439,12 +1476,19 @@ T-shirt - shirt
 Pullover - sweater
 Bluse - blous
 Jeans - jeans/pants
+die Brille  - glasses (face)
 
 Urlaubskleidung - vacation clothes
 
 Rucksack - backpack
 
+der Koffer - suitcase
 
+der Laptop - laptop
+
+die Kamera - camera
+
+Wörterbuch - dictionary
 
 Bist du Schüler, Max? - student
 
@@ -1465,6 +1509,12 @@ die Hexe - witch
 
 Schlager - german pop music
 
+Formular - form (paper)
+
+die Schloss - castle
+
+Stück - piece
+
 
 Reservierung - reservation
 
@@ -1483,8 +1533,8 @@ feiert ? - to celebrate
 campe ? - to camp
 grillen ? - to grill
 Triffst treffe ? - to meet
-to zahlen zahlst - pay
-
+zahlen zahlst - to pay
+unterschreiben - to sign
 
 Größe - size
 
@@ -1561,12 +1611,14 @@ neblig - foggy
 warm - warm
 
 Der Pass - passport
+Visum - visa
 Regenschirm - umbrella
 Sonnencreme - sunscreen
 Taschebag - bag
 Jacke - jacket
 Kasse - cash register (place to pay)
 Ahnung - idea
+| Zoll |  | customs (airport) |
 
 
 Einladung - invitation
@@ -1638,6 +1690,7 @@ das Sofa - sofa (love-seat)
 die Lampe - lamp
 die Vase - vase
 der Schreibtisch - desk
+der Kugelschreiber - pen
 das Bett - bed
 die Bettdecke - bedspread (sheets?)
  Kopfkissen - pillow
@@ -1657,6 +1710,8 @@ das Badezimmer
 Fitnessstudio - gym (fitness studio)
 Rezeption - reception (desk)
 
+
+verboten - fobidden/not allowed
 
 modern - modern / fashionable
 hässlich - ugly

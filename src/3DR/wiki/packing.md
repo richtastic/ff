@@ -76,14 +76,15 @@ QPTAS - ?
 
 references best first:
 
+A Thousand Ways to Pack the Bin - A Practical Approach to Two-Dimensional Rectangle Bin Packing
 http://pds25.egloos.com/pds/201504/21/98/RectangleBinPack.pdf
-
+Approximation Algorithms for Rectangle Packing Problems
 https://arxiv.org/pdf/1711.07851.pdf
-
+PaunPacker - Texture Atlas Generator
 https://smartech.gatech.edu/bitstream/handle/1853/54371/KHAN-DISSERTATION-2015.pdf
-
+APPROXIMATION ALGORITHMS FOR MULTIDIMENSIONAL BIN PACKING
 BPTX_2018_2_11320_0_511580_0_213747.pdf
-
+GEOMETRIC BIN PACKING ALGORITHM FOR ARBITRARY SHAPES
 http://etd.fcla.edu/UF/UFE0000907/pasha_a.pdf?fbclid=IwAR2E6OPgFO8VW81rMDllQEl-sT-kn20wuGJ-OXOgU4Van6cUyy8vtbaKP0U
 
 

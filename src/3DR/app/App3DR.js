@@ -920,8 +920,8 @@ App3DR.prototype._setupModel3DProjectManager = function(projectManager){
 				var view = views[i];
 				//view.loadDenseHiImage(fxnImageLoaded, self);
 				// view.loadFeaturesImage(fxnImageLoaded, self); // only needs to be good enough to get some distinction in color
-				// view.loadIconImage(fxnImageLoaded, self);
-				view.loadPreviewImage(fxnImageLoaded, self);
+				view.loadIconImage(fxnImageLoaded, self);
+				// view.loadPreviewImage(fxnImageLoaded, self);
 			}
 		}
 		var fxnImageLoaded = function(){

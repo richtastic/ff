@@ -8101,6 +8101,29 @@ Code.clipString = function(val,max){
 	return val;
 }
 // ------------------------------------------------------------------------------------------------------------------------------------------------- MATHS
+
+
+Code.fastSin = function(radians){
+	throw "TODO"; // lookup or poly
+}
+Code.fastCos = function(radians){
+	throw "TODO"; // lookup or poly
+}
+Code.fastTan = function(radians){
+	throw "TODO"; // lookup or poly
+}
+Code.fastASin = function(radians){
+	throw "TODO"; // lookup or poly
+}
+Code.fastACos = function(radians){
+	throw "TODO"; // lookup or poly
+}
+Code.fastATan = function(radians){
+	throw "TODO"; // lookup or poly
+}
+
+
+
 Code.rangeForceMinMax = function(value, min, max){
 	return Math.min(Math.max(value,min),max);
 }

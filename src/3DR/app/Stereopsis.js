@@ -9008,6 +9008,14 @@ timeA = Code.getTimeMilliseconds();
 		world.dropNegativeMatches3D();
 		world.dropNegativePoints3D();
 
+
+
+		// smoothing?
+		// console.log("refinePoint3DAbsoluteLocation");
+		world.refinePoint3DAbsoluteLocation();
+		// 
+		// 
+
 // timeB = Code.getTimeMilliseconds();
 // console.log("DELTA J: " + (timeB-timeA) );
 // timeA = Code.getTimeMilliseconds();
@@ -9016,7 +9024,7 @@ timeA = Code.getTimeMilliseconds();
 
 
 
-world.refinePoint3DAbsoluteLocation();
+	world.refinePoint3DAbsoluteLocation();
 
 	// final output:
 	world.estimate3DErrors(true);

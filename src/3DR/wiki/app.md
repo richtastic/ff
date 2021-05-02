@@ -388,6 +388,49 @@ MISSING:
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
+ADDITIONAL ALGS TO TRY:
+	SMOOTHING LOCALLY:
+		- get all 2D & 3D neighbors
+		- A)
+			- approximate plane from neighbors
+			- set next location = projected planar location
+		- B)
+			- get average location of all neighbors
+			- set next location = average location
+		- move all points to next location
+	PRUNING BAD LOCALLY:
+		- for each transform
+			- get transform-wide errors for R & F & S & N
+			- transform limit = 
+			- for each point:
+				- get 2DA+2DB+3D neighbors
+				- get average of neighbor errors
+				- limit for each error =   ~ 2 x neighbor
+				- if this match's error (R | F | S | N ) is  >  limit local
+					- mark delete of this match
+				- if the entire group's error > limit global
+					- mark delete of this match (or entire group?)
+			- delete marked outliers
+	=> single outlier
+	=> group outliers
+
+
+
+
+- how are patch normals calculated?
+	=> mostly just pointing to source views
+		- recheck this
+	...
+
+
+R: 1.5... with refine p3D in loop
+R: 1.5... w/o refine p3D in loop
+
+
+
+
+
+
 - other methods of pruning points?
 	2D
 	3D
@@ -395,6 +438,19 @@ MISSING:
 	multi-metric
 		- R x F x N x S - maybe a little ?
 
+	PRUNE:
+		- if me & my group are all over X error -> mark self for drop
+			- slightly less forgiving than general population?
+		=> if global R-error is 3.0
+		=> local window is 3.0 * [0.66,0.75] = [2.0, 2.26] => if self AND KNN AVERAG are below this -> drop self
+		=> 2.0 * [0.66,0.75]  = [1.333,1.5]
+- start at large error window & progressively make more strict (3.0 sigma -> 2.0)
+
+
+
+- smoothing:
+	- in 2D+3D point neighborhood move point along normal / along view direction to plane average depth (gaussian falloff?)
+	- 
 
 
 DENSE IS STILL BAD:
