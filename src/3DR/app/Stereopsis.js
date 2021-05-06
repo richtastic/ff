@@ -8858,8 +8858,8 @@ Stereopsis.World.prototype.solveDensePairNew = function(subdivisionScaleSize, su
 	var subdivisions = subDivisionCounts; // ~40k  --- select - about 
 // subdivisions = 1; // 5k
 // subdivisions = 2; // 10k ............... testing
-// subdivisions = 3; // 25k ................. current default
-subdivisions = 4; // 50k
+subdivisions = 3; // 25k ................. current default
+// subdivisions = 4; // 50k
 // subdivisions = 5; // 100k
 // console.log("subdivisions: "+subdivisions);
 // throw "??"
@@ -8963,6 +8963,8 @@ timeA = Code.getTimeMilliseconds();
 		world.filterCriteria2DNnot3DN();
 		world.filterCriteria2DNnotDepth();
 		world.filterCriteria2DN3DNregularization();
+
+		world.filterNeighborhoodError();
 
 timeB = Code.getTimeMilliseconds();
 console.log("DELTA E: " + (timeB-timeA) );
@@ -11864,6 +11866,163 @@ throw "average error is going up ...."
 	*/
 }
 
+
+
+Stereopsis.World.prototype.filterNeighborhoodError = function(){
+	console.log("filterNeighborhoodError ENTER");
+	var world = this;
+	var transforms = world.toTransformArray();
+	var space3D = world.pointSpace();
+
+	var P3DtoIndex = function(p){
+		return p.id();
+	}
+	var P2DtoIndex = function(p){
+		return p.point3D().id();
+	}
+
+	var minIntersectionCount = 6; // 
+	var neighborhoodScale2D = 1.0;
+	var neighborhoodScale3D = 1.25;
+	// neighborhoodScale2D = Math.sqrt(2);
+	neighborhoodScale2D = 2.0;
+	neighborhoodScale3D = neighborhoodScale2D * 2.0;
+
+	// var factorErrorLimitGlobal = 2.0;
+	// var factorErrorLimitLocal = 2.0;
+	// var factorErrorLimitGlobal = 2.5;
+	// var factorErrorLimitLocal = 2.5;
+	var factorErrorLimitGlobal = 3.0;
+	var factorErrorLimitLocal = 3.0;
+
+	for(var i=0; i<transforms.length; ++i){
+		var transform = transforms[i];
+		var viewA = transform.viewA();
+		var viewB = transform.viewB();
+		var space2DA = viewA.pointSpace();
+		var space2DB = viewB.pointSpace();
+		var cellSize2DA = viewA.cellSize();
+		var cellSize2DB = viewB.cellSize();
+		var searchRadius2DA = cellSize2DA*neighborhoodScale2D;
+		var searchRadius2DB = cellSize2DB*neighborhoodScale2D;
+
+		var dropMatches = [];
+
+		var errorTransformLimitN = transform.nccMean() + factorErrorLimitGlobal*transform.nccSigma();
+		var errorTransformLimitS = transform.sadMean() + factorErrorLimitGlobal*transform.sadSigma();
+		var errorTransformLimitF = transform.fMean() + factorErrorLimitGlobal*transform.fSigma();
+		var errorTransformLimitR = transform.rMean() + factorErrorLimitGlobal*transform.rSigma();
+
+		var centerA = viewA.center();
+		var centerB = viewB.center();
+		var matches = transform.matches();
+		console.log("TRANSFORM: "+i+" - matches: "+matches.length);
+		console.log("ERROR LIMITS: \n  N:"+errorTransformLimitN+"\n  S:"+errorTransformLimitS+"\n  F:"+errorTransformLimitF+"\n  R:"+errorTransformLimitR+"\n ");
+		for(var j=0; j<matches.length; ++j){
+			var match = matches[j];
+			var point3D = match.point3D();
+			var point2DA = match.pointForView(viewA);
+			var point2DB = match.pointForView(viewB);
+			var p2DA = point2DA.point2D();
+			var p2DB = point2DB.point2D();
+			var p3D = point3D.point();
+			// 2D & 3D neighbors
+			var cellSize3D = Math.max( point2DA.neighborhood3DSize(), point2DB.neighborhood3DSize() );
+			var searchRadius3D = cellSize3D*neighborhoodScale3D;
+			var neighbors2DA = space2DA.objectsInsideCircle(p2DA, searchRadius2DA);
+			var neighbors2DB = space2DB.objectsInsideCircle(p2DB, searchRadius2DB);
+			var neighbors3D = space3D.objectsInsideSphere(p3D, searchRadius3D);
+
+			// to lookup:
+			// neighbors2DA = Code.toHash(neighbors2DA,P3DtoIndex);
+			// neighbors2DB = Code.toHash(neighbors2DB,P3DtoIndex);
+			// neighbors3D = Code.toHash(neighbors3D,P3DtoIndex);
+			var hashA = Code.toHash(neighbors2DA,P2DtoIndex);
+			var hashB = Code.toHash(neighbors2DB,P2DtoIndex);
+			var hash3 = Code.toHash(neighbors3D,P3DtoIndex);
+
+			var intersectionIndexes = Code.objectIntersectKeys([hashA,hashB,hash3]);
+
+			// console.log("sizes: "+neighbors2DA.length+" | "+neighbors2DB.length+" | "+neighbors3D.length+"  ==  "+intersectionIndexes.length);
+			if(intersectionIndexes.length<minIntersectionCount){
+				continue;
+			}
+			// get errors
+			var errorsS = [];
+			var errorsN = [];
+			var errorsF = [];
+			var errorsR = [];
+			for(var k=0; k<intersectionIndexes.length; ++k){
+				var index = intersectionIndexes[k];
+				// var n2DA = hashA[index];
+				// var n2DB = hashB[index];
+				var n3D = hash3[index];
+				var mAB = n3D.matchForViews(viewA,viewB);
+				if(mAB==match){
+					continue;
+				}
+				var s = mAB.errorSAD();
+				var n = mAB.errorNCC();
+				var f = mAB.errorF();
+				var r = mAB.errorR();
+				errorsS.push(s);
+				errorsN.push(n);
+				errorsF.push(f);
+				errorsR.push(r);
+			}
+			
+			// var minN2 = Code.min(errorN2);
+			// var meanN2 = Code.mean(errorN2);
+			// var sigmaN2 = Code.stdDev(errorN2,minN2);
+			// var minN2 = Code.min(errorN2);
+			var minN = Code.min(errorsN);
+			var minS = Code.min(errorsS);
+			var minF = Code.min(errorsF);
+			var minR = Code.min(errorsR);
+			//
+			var meanN = Code.mean(errorsN);
+			var meanS = Code.mean(errorsS);
+			var meanF = Code.mean(errorsF);
+			var meanR = Code.mean(errorsR);
+			// 
+			var s = match.errorSAD();
+			var n = match.errorNCC();
+			var f = match.errorF();
+			var r = match.errorR();
+
+			var sigmaN = Code.stdDev(errorsN,meanN);
+			var sigmaS = Code.stdDev(errorsS,meanS);
+			var sigmaF = Code.stdDev(errorsF,meanF);
+			var sigmaR = Code.stdDev(errorsR,meanR);
+
+			// var sigmaN = Code.stdDev(errorsN,minN);
+			// var sigmaS = Code.stdDev(errorsS,minS);
+			// var sigmaF = Code.stdDev(errorsF,minF);
+			// var sigmaR = Code.stdDev(errorsR,minR);
+
+			var limitGroupN = meanN + factorErrorLimitLocal*sigmaN;
+			var limitGroupS = meanS + factorErrorLimitLocal*sigmaS;
+			var limitGroupF = meanF + factorErrorLimitLocal*sigmaF;
+			var limitGroupR = meanR + factorErrorLimitLocal*sigmaR;
+
+			if(meanN>errorTransformLimitN || meanS>errorTransformLimitS || meanF>errorTransformLimitF || meanR>errorTransformLimitR || 
+				n>limitGroupN || s>limitGroupS || f>limitGroupF || r>limitGroupR){
+			// if(meanN>errorTransformLimitN || meanS>errorTransformLimitS || meanF>errorTransformLimitF || meanR>errorTransformLimitR){
+			// if(n>limitGroupN || s>limitGroupS || f>limitGroupF || r>limitGroupR){
+				dropMatches.push(match);
+			}
+			// global ~ ?200
+			// local ~ 661
+			// both ~ 881
+
+		}
+
+		console.log("DROP COUNT: "+dropMatches.length+" / "+matches.length);
+
+	}
+	console.log("filterNeighborhoodError EXIT");
+	// throw "..."
+}
 
 // conventional filtering ------------------------------------------------------------
 

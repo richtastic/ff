@@ -2034,6 +2034,28 @@ Code.arrayUnion = function(c,a,b){ // c = a || b
 	}
 	return c;
 };
+Code.objectIntersectKeys = function(list){
+	var zero = list[0];
+	var keys = Code.keys(zero);
+	var keyCount = keys.length;
+	var listCount = list.length;
+	var common = [];
+	for(var i=0; i<keyCount; ++i){
+		var key = keys[i];
+		var found = true;
+		for(j=1; j<listCount; ++j){
+			var next = list[j];
+			if(!next[key]){ // null || undefined
+				found = false;
+				break;
+			}
+		}
+		if(found){
+			common.push(key);
+		}
+	}
+	return common;
+}
 Code.arrayIntersect = function(c,a,b, equalFxn, combineFxn){
 	if(b===undefined){
 		b = a;

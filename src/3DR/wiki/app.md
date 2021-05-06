@@ -401,30 +401,42 @@ ADDITIONAL ALGS TO TRY:
 	PRUNING BAD LOCALLY:
 		- for each transform
 			- get transform-wide errors for R & F & S & N
-			- transform limit = 
+			- transform global limit = actual mean + 1 actual sigma
 			- for each point:
-				- get 2DA+2DB+3D neighbors
+				- get 2DA+2DB+3D (intersection) neighbors
 				- get average of neighbor errors
 				- limit for each error =   ~ 2 x neighbor
 				- if this match's error (R | F | S | N ) is  >  limit local
 					- mark delete of this match
-				- if the entire group's error > limit global
+				- if the entire group's error > limit transform global
 					- mark delete of this match (or entire group?)
-			- delete marked outliers
+			- delete marked outlier matches
 	=> single outlier
 	=> group outliers
 
+individual is way worse than neighbors or group is way worse than global
 
 
 
 - how are patch normals calculated?
 	=> mostly just pointing to source views
 		- recheck this
-	...
+	=> CHOOSE BEST METHOD
+		- list possibilities
 
 
 R: 1.5... with refine p3D in loop
 R: 1.5... w/o refine p3D in loop
+
+
+
+CHANGE 2D/3D CODE FOR NEIGHBOR INCLUSION
+	= instersection of 2DA + 2DB + 3D
+
+
+
+
+
 
 
 
