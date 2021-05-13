@@ -28002,8 +28002,8 @@ var useSADScore = false;
 	var cornersA = cornerList[0];
 	var cornersB = cornerList[1];
 
-// if(false){
-if(true){
+if(false){
+// if(true){
 // if(drawlings){
 	// show images
 	for(var i=0; i<imageList.length; ++i){
@@ -28027,8 +28027,8 @@ if(true){
 
 }
 
-	// if(false){
-	if(true){
+	if(false){
+	// if(true){
 	// show corners
 	for(var i=0; i<cornerList.length; ++i){
 		var corners = cornerList[i];
@@ -28987,9 +28987,12 @@ var pointsA = info["A"];
 var pointsB = info["B"];
 var affinesAB = info["affines"];
 
-var cellSize = 0.002 * imageScalesA.size().length();
 
+if(false){
+var cellSize = 0.002 * imageScalesA.size().length();
 R3D.showForwardBackwardPointsColor(pointsA, pointsB, affinesAB, imageScalesA,imageScalesB, GLOBALSTAGE, cellSize);
+}
+
 
 // info = R3D.experimentLocationRefine(pointsA,pointsB,affinesAB, imageScalesA,imageScalesB);
 

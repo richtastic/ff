@@ -384,7 +384,7 @@ https://www.youtube.com/watch?v=0r83o6g6RAQ
 |  |  |  |
 |  | Refrain 2: |  |
 |  |  |  |
-| Давай бейби, давай бейби (x 2) | dahbye babee | Lets go baby (x2) (x2) |
+| Давай бейби, давай бейби (x2) | dahbye babee | Lets go baby (x2) |
 | Несись как злобный пёс | Nesis' kak zlobnyy pyos | Ride like a wicked dog |
 |  |  |  |
 | Скрип на моих зубах, твой обгорелый прах | Skrip na moikh zubakh, tvoy obgorelee prakh | Creak on my teeth, your charred ashes |

@@ -7546,6 +7546,7 @@ Stereopsis.World.prototype.updateP3DPatchFromNone = function(point3D){
 }
 
 Stereopsis.World.prototype.initP3DPatchFromVisual = function(point3D){
+	console.log("initP3DPatchFromVisual");
 	this.initP3DPatchFromGeometry3D(point3D);
 	this.updateP3DPatchFromVisual(point3D);
 }
@@ -8856,9 +8857,12 @@ Stereopsis.World.prototype.solveDensePairNew = function(subdivisionScaleSize, su
 	// var subdivisions = 1; // 5-10k
 	// var subdivisions = 2; // ~40k
 	var subdivisions = subDivisionCounts; // ~40k  --- select - about 
+
+
+subdivisions = 0; // show seeds
 // subdivisions = 1; // 5k
 // subdivisions = 2; // 10k ............... testing
-subdivisions = 3; // 25k ................. current default
+// subdivisions = 3; // 25k ................. current default
 // subdivisions = 4; // 50k
 // subdivisions = 5; // 100k
 // console.log("subdivisions: "+subdivisions);
@@ -9023,6 +9027,10 @@ timeA = Code.getTimeMilliseconds();
 // timeA = Code.getTimeMilliseconds();
 	}
 
+
+
+
+	world.filterGlobal3DR(2.0); // some lower threshold
 
 
 
@@ -10249,6 +10257,7 @@ Stereopsis.World.prototype.solveTriple = function(completeFxn, completeContext, 
 	// triple relative scaling based on point match overlaps
 	var tripleScale = null;
 	console.log("relative scale using random ratios");
+	var result
 	for(var i=0; i<views.length; ++i){
 		var viewA = views[i];
 		for(var j=i+1; j<views.length; ++j){
@@ -10268,42 +10277,48 @@ Stereopsis.World.prototype.solveTriple = function(completeFxn, completeContext, 
 				var scaleABtoAC = 0;
 				var scaleACtoBC = 0;
 				var scaleBCtoAB = 0;
+				var errorABtoAC = 0;
+				var errorACtoBC = 0;
+				var errorBCtoAB = 0;
 				console.log(transformAB,transformAC,transformBC);
 
 				if(transformAB.R() && transformAC.R()){
-					scaleABtoAC = world.relativeScaleFromSampleRatios(viewA,viewB,viewC); // AC/AB
-					console.log(" 1 = "+scaleABtoAC);
-					if(scaleABtoAC===null){
-						scaleABtoAC = 0;
-					}
+					result = world.relativeScaleFromSampleRatios(viewA,viewB,viewC); // AC/AB
+					// console.log(" 1 = "+scaleABtoAC);
+					if(result!==null){
+						scaleABtoAC = result["scale"];
+						errorABtoAC = result["error"];
+					}else{}
 				}
 				if(transformAC.R() && transformBC.R()){
-					scaleACtoBC = world.relativeScaleFromSampleRatios(viewC,viewA,viewB); // CB/CA
-					console.log(" 2 = "+scaleACtoBC);
-					if(scaleACtoBC===null){
-						scaleACtoBC = 0;
+					result = world.relativeScaleFromSampleRatios(viewC,viewA,viewB); // CB/CA
+					// console.log(" 2 = "+scaleACtoBC);
+					if(result!==null){
+						scaleACtoBC = result["scale"];
+						errorACtoBC = result["error"];
 					}
 				}
 				if(transformAB.R() && transformBC.R()){
-					scaleBCtoAB = world.relativeScaleFromSampleRatios(viewB,viewC,viewA); // BA/BC
-					console.log(" 3 = "+scaleBCtoAB);
-					if(scaleBCtoAB===null){
-						scaleBCtoAB = 0;
+					result = world.relativeScaleFromSampleRatios(viewB,viewC,viewA); // BA/BC
+					// console.log(" 3 = "+scaleBCtoAB);
+					if(result==null){
+						scaleBCtoAB = result["scale"];
+						errorBCtoAB = result["error"];
 					}
 				}
-				console.log(scaleABtoAC); // AC/AB
-				console.log(scaleACtoBC); // BC/AC
-				console.log(scaleBCtoAB); // AB/BC
+				console.log(scaleABtoAC+" @ "+errorABtoAC+" = "+Math.exp(errorABtoAC)); // AC/AB
+				console.log(scaleACtoBC+" @ "+errorACtoBC+" = "+Math.exp(errorACtoBC)); // BC/AC
+				console.log(scaleBCtoAB+" @ "+errorBCtoAB+" = "+Math.exp(errorBCtoAB)); // AB/BC
 				// create semi-consistent scaling:
 				var edges = [];
 				if(scaleABtoAC>0){
-					edges.push([0,1, scaleABtoAC, errorAB + errorAC]); // AB -> AC  : AC/AB
+					edges.push([0,1, scaleABtoAC, (errorAB+errorAC)*errorABtoAC ]); // AB -> AC  : AC/AB
 				}
 				if(scaleACtoBC>0){
-					edges.push([1,2, scaleACtoBC, errorAC + errorBC]); // AC -> BC  : BC/AC
+					edges.push([1,2, scaleACtoBC, (errorAC+errorBC)*errorACtoBC ]); // AC -> BC  : BC/AC
 				}
 				if(scaleBCtoAB>0){
-					edges.push([2,0, scaleBCtoAB, errorBC + errorAB]); // BC -> AB  : AB/BC
+					edges.push([2,0, scaleBCtoAB, (errorBC+errorAB)*errorBCtoAB ]); // BC -> AB  : AB/BC
 				}
 				console.log("edges");
 				console.log(edges);
@@ -10333,14 +10348,17 @@ Stereopsis.World.prototype.solveTriple = function(completeFxn, completeContext, 
 						abs0 = 1.0; // AB
 						abs1 = scaleABtoAC; // AC
 						abs2 = scaleABtoAC * scaleACtoBC; // BC first
+						errorBCtoAB = (errorABtoAC+errorACtoBC); // interpreted error
 					}else if(scaleACtoBC>0 && scaleBCtoAB>0){ // AC first
 						abs0 = scaleACtoBC * scaleBCtoAB; // AB
 						abs1 = 1.0; // AC
 						abs2 = scaleACtoBC; // BC
+						errorABtoAC = (errorACtoBC+errorBCtoAB); // interpreted error
 					}else if(scaleABtoAC>0 && scaleBCtoAB>0){
 						abs0 = scaleBCtoAB; // AB
 						abs1 = scaleBCtoAB * scaleABtoAC; // AC
 						abs2 = 1.0; // BC
+						errorACtoBC = (errorABtoAC+errorBCtoAB); // interpreted error
 					}
 					console.log(abs0+" | "+abs1+" | "+abs2);
 					// throw "???????? edge length 2 ???????"
@@ -10352,13 +10370,15 @@ Stereopsis.World.prototype.solveTriple = function(completeFxn, completeContext, 
 					abs2 = abs[2];
 					console.log(abs0,abs1,abs2);
 				}// save scales somewhere
-				tripleScale = {"AB":abs0,"AC":abs1,"BC":abs2, "A":viewA, "B":viewB, "C":viewC};
+				tripleScale = {"AB":abs0,"AC":abs1,"BC":abs2,
+								"A":viewA, "B":viewB, "C":viewC,
+								"AB-AC":errorABtoAC, "AB-BC":errorBCtoAB, "AC-BC":errorACtoBC};
 			}
 		}
 	}
 
 	if(!doTFT){ // just want scale ratios of pairs
-		var payload = {"scales":tripleScale};
+		var payload = {"metrics":tripleScale};
 		if(completeFxn){
 			completeFxn.call(completeContext, payload);
 		}
@@ -10618,7 +10638,7 @@ break;
 
 	// this.averagePoints3DFromMatches(true);
 	// this.estimate3DErrors(true);
-	var payload = {"scales":tripleScale, "T":TFT, "errorTMean":TFTmean, "errorTSigma":TFTsigma};
+	var payload = {"metrics":tripleScale, "T":TFT, "errorTMean":TFTmean, "errorTSigma":TFTsigma};
 
 
 console.log(payload);
@@ -10802,9 +10822,11 @@ ratios = Code.arrayVectorLn(ratios);
 // flat region check
 //  @ 0.10=0.02  @ 0.25=0.05
 // var maximumAllowedRange = 0.025; //  scale difference ... 0.1 - 0.01   ... good ~ 0.01 : TODO: LOWER THIS TO ~ 0.01-0.02
-var maximumAllowedRangeInitial = 0.25; // 0.50
 
-var maximumAllowedRangeFinal = 0.020;
+
+// var maximumAllowedRangeInitial = 0.25; // 0.50
+// 2.0 => 0.693 | 1.5 => 0.405 | 1.33 => 0.287 | 1.25 => 0.225
+var maximumAllowedRangeInitial = Math.log(1.3333); // 0.287
 
 var percentCheck = 0.10; // 0.1 - 0.25
 // sort sample
@@ -10828,8 +10850,9 @@ for(;endIndex<ratios.length; ++startIndex, ++endIndex){
 		smallestRange = range;
 	}
 }
+
 // Code.printMatlabArray(ranges);
-// console.log("smallestRange: "+smallestRange);
+console.log("smallestRange: "+smallestRange+"    => scale: "+Math.exp(smallestRange));
 // throw "?"
 if(smallestRange>maximumAllowedRangeInitial){
 	console.log("best range too large: "+smallestRange+" / "+maximumAllowedRangeInitial);
@@ -10891,7 +10914,11 @@ console.log("SIGMA: "+s+" = "+sigma+" @ "+Math.exp(mean));
 	}
 	ratios = Code.arrayVectorExp(ratios);
 	var scale = Code.mean(ratios);
-	return scale;
+
+	var result = {};
+		result["scale"] = scale;
+		result["error"] = smallestRange; // log scale error full window
+	return result;
 }
 
 Stereopsis.World.prototype.showReprojectionError = function(){
@@ -11888,12 +11915,12 @@ Stereopsis.World.prototype.filterNeighborhoodError = function(){
 	neighborhoodScale2D = 2.0;
 	neighborhoodScale3D = neighborhoodScale2D * 2.0;
 
-	// var factorErrorLimitGlobal = 2.0;
-	// var factorErrorLimitLocal = 2.0;
+	var factorErrorLimitGlobal = 2.0;
+	var factorErrorLimitLocal = 2.0;
 	// var factorErrorLimitGlobal = 2.5;
 	// var factorErrorLimitLocal = 2.5;
-	var factorErrorLimitGlobal = 3.0;
-	var factorErrorLimitLocal = 3.0;
+	// var factorErrorLimitGlobal = 3.0;
+	// var factorErrorLimitLocal = 3.0;
 
 	for(var i=0; i<transforms.length; ++i){
 		var transform = transforms[i];
@@ -11990,25 +12017,25 @@ Stereopsis.World.prototype.filterNeighborhoodError = function(){
 			var f = match.errorF();
 			var r = match.errorR();
 
-			var sigmaN = Code.stdDev(errorsN,meanN);
-			var sigmaS = Code.stdDev(errorsS,meanS);
-			var sigmaF = Code.stdDev(errorsF,meanF);
-			var sigmaR = Code.stdDev(errorsR,meanR);
+			// var sigmaN = Code.stdDev(errorsN,meanN);
+			// var sigmaS = Code.stdDev(errorsS,meanS);
+			// var sigmaF = Code.stdDev(errorsF,meanF);
+			// var sigmaR = Code.stdDev(errorsR,meanR);
 
-			// var sigmaN = Code.stdDev(errorsN,minN);
-			// var sigmaS = Code.stdDev(errorsS,minS);
-			// var sigmaF = Code.stdDev(errorsF,minF);
-			// var sigmaR = Code.stdDev(errorsR,minR);
+			var sigmaN = Code.stdDev(errorsN,minN);
+			var sigmaS = Code.stdDev(errorsS,minS);
+			var sigmaF = Code.stdDev(errorsF,minF);
+			var sigmaR = Code.stdDev(errorsR,minR);
 
 			var limitGroupN = meanN + factorErrorLimitLocal*sigmaN;
 			var limitGroupS = meanS + factorErrorLimitLocal*sigmaS;
 			var limitGroupF = meanF + factorErrorLimitLocal*sigmaF;
 			var limitGroupR = meanR + factorErrorLimitLocal*sigmaR;
 
-			if(meanN>errorTransformLimitN || meanS>errorTransformLimitS || meanF>errorTransformLimitF || meanR>errorTransformLimitR || 
-				n>limitGroupN || s>limitGroupS || f>limitGroupF || r>limitGroupR){
+			// if(meanN>errorTransformLimitN || meanS>errorTransformLimitS || meanF>errorTransformLimitF || meanR>errorTransformLimitR || 
+				// n>limitGroupN || s>limitGroupS || f>limitGroupF || r>limitGroupR){
 			// if(meanN>errorTransformLimitN || meanS>errorTransformLimitS || meanF>errorTransformLimitF || meanR>errorTransformLimitR){
-			// if(n>limitGroupN || s>limitGroupS || f>limitGroupF || r>limitGroupR){
+			if(n>limitGroupN || s>limitGroupS || f>limitGroupF || r>limitGroupR){
 				dropMatches.push(match);
 			}
 			// global ~ ?200
@@ -12018,6 +12045,12 @@ Stereopsis.World.prototype.filterNeighborhoodError = function(){
 		}
 
 		console.log("DROP COUNT: "+dropMatches.length+" / "+matches.length);
+
+		// DRP THEM NOW
+		for(var k=0; k<dropMatches.length; ++k){
+			var match = dropMatches[k];
+			world.removeMatchFromPoint3D(match);
+		}
 
 	}
 	console.log("filterNeighborhoodError EXIT");
@@ -16384,8 +16417,10 @@ var listMulti = [];
 			}
 		}
 listMulti.sort();
+/*
 console.log("RICHIE - listMulti:")
 Code.printMatlabArray(listMulti);
+*/
 		var limitR = null;
 		var limitF = null;
 		var limitN = null;

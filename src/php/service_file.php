@@ -7,6 +7,9 @@ require "./fw/functions.php";
 require_once_directory("./fw");
 
 
+// error_log("opened service_file");
+logToConsole(" >>>>>>>>>>>>>>>>>> opened service_file");
+
 $FILESYSTEM_LOCAL = "filesystem";
 
 
@@ -130,10 +133,10 @@ if($PARAM_OPERATION==$OPERATION_TYPE_HELLO){
 // $processUser = posix_getpwuid(posix_geteuid());
 // echo($processUser['name']);
 
-
 	$absolutePath = appendToPath($FILESYSTEM_PATH, $PARAM_PATH);
 	$fileExists = file_exists($absolutePath);
 	$path = trimDirectoryPrefix($FILESYSTEM_PATH,$absolutePath);
+logToConsole(" > write: ".$path." (".$fileExists.")"); // .$absolutePath." = "
 	if($PARAM_OFFSET!=null && $PARAM_COUNT!=null){
 		$payload["path"] = $path;
 		if($PARAM_DATA!=null){
@@ -145,26 +148,33 @@ if($PARAM_OPERATION==$OPERATION_TYPE_HELLO){
 				$payload["info"] = "append";
 				$handle = null;
 				if($PARAM_OFFSET==0){
+					logToConsole("   > first");
 					//$removed = removeFileAtLocation($absolutePath);
 					$handle = fopen($absolutePath, 'wb'); // OVERWRITE with binary
 				}else{
+					logToConsole("   > subsequent");
 					$handle = fopen($absolutePath, 'ab'); // append with binary
 				}
 				if($handle){
+					logToConsole("   got handle");
 					$moved = fseek($handle, $PARAM_OFFSET);
 					if($moved==0){
 						$written = fwrite($handle, $dataBinary);
 						$payload["count"] = $written;
 						if($written==$PARAM_COUNT){
+							logToConsole("   wrote file: ".$written." of "); // strlen($dataBinary) // count($dataBinary)
 							$success = true;
 						}else{
+							logToConsole("   write error file: ".$written);//." of ".count($dataBinary)." (".$count.") ");
 							$payload["error"] = "write count not match: ".$count." ".$written."";
 						}
 					}else{
+						logToConsole("   error - no seek");
 						$payload["error"] = "could not seek";
 					}
 					fclose($handle);
 				}else{
+					logToConsole("   error - not open");
 					$payload["error"] = "not open";
 				}
 			}else{
@@ -275,6 +285,11 @@ $response["payload"] = $payload;
 header("Content-Type: application/json");
 
 echo json_encode($response);
+
+logToConsole(" success: ".$success);
+logToConsole(" response: ".$response);
+
+logToConsole(" <<<<<<<<<<<<<<<<<<<<<< closed service_file");
 
 /*
 

@@ -1,11 +1,13 @@
 <?php
 // admin_input.php
 
-error_log("ADMIN INPUT");
+// error_log("ADMIN INPUT");
 
 
 global $wpdb;
-error_log("wpdb: ".print_r($wpdb));
+// error_log("wpdb: ".print_r($wpdb));
+
+
 
 //header("Location: ");
 

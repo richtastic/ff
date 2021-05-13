@@ -1,6 +1,9 @@
 ## german
 
 Bronze, Silver, Gold, Sapphire, Ruby, Emerald, Amethyst, Pearl, Obsidian, Diamond - 10
+Amethyst 10 place ~ 1100
+pearl 10th place ~ 1200
+Obsidian 10th place ~ ?1500?
 
 
 https://www.germanwithantrim.com/du-vs-ihr-vs-sie-beginner-german-with-herr-antrim-lesson-4/
@@ -275,7 +278,8 @@ neuter: das ein
 |  |  |  |
 | Lieblingsfarbe |  | favorite color |
 |  |  |  |
-
+Lieblingspizza - favorite pizza
+LieblingsX --- favorite X
 
 #### daily
 
@@ -460,7 +464,7 @@ neuter: das ein
 | lustig |  | funny |
 | zufrieden |  | content/happy (mood) |
 | nervt |  | annoys |
-|  |  |  |
+| motiviert |  | motivated |
 |  |  |  |
 | Lust |  | desire (feel like it) |
 |  |  |  |
@@ -558,6 +562,7 @@ alles Gute zum Geburtstag - (bad luck?)
 | der Markt |  | market |
 | der Supermarkt |  |  |
 | Geschäfte |  | stores |
+| Theater |  |  |
 | das Kino |  | theater |
 | das Café? |  | coffee shop |
 | Apotheke |  | pharmacy |
@@ -588,8 +593,13 @@ alles Gute zum Geburtstag - (bad luck?)
 |  |  |  |
 | der Pass |  | passport |
 | Ausweis |  | ID card |
+| Führerschein |  | driver license |
+|  |  |  |
+|  |  |  |
 |  |  |  |
 
+Brandenburger Gate 
+Neuschwanstein Castle
 
 
 
@@ -913,8 +923,9 @@ Brandenburger - Brandenburg Gate
 | nur |  | only |
 | jede |  | each |
 | viele |  | many |
-| offen / geöffnet |  | open |
-| schließt |  | closed |
+| offen / geöffnet |  | to be open |
+| geschlossen |  | to be closed |
+
 |  |  |  |
 | geschlossen |  | close/d |
 | nah |  | near/close |
@@ -979,7 +990,7 @@ Brandenburger - Brandenburg Gate
 | fährt ? |  | to drive |
 | sitzen ? |  | to sit |
 | fahren ? |  | to drive |
-| liest ? |  | to read |
+| liest ? lesen ? |  | to read |
 | Gibst ? |  | to give |
 | beschützen ? |  | to protect |
 | holen ? |  | to get |
@@ -991,7 +1002,7 @@ Brandenburger - Brandenburg Gate
 | nehmen ? |  | to take |
 | bekommt ? |  | to get |
 | trägt ? |  | to carry |
-|  |  |  |
+| Raucht ? |  | to smoke (cig) |
 |  |  |  |
 |  |  |  |
 | Studieren ? |  | to study (a subject) |
@@ -1001,7 +1012,7 @@ Brandenburger - Brandenburg Gate
 |  |  |  |
 | besten |  | the best |
 | dauert |  | lasts |
-| lange |  | long (duration) |
+| lang / lange |  | long (duration) |
 | Schau |  | look |
 | untersucht |  | examines |
 |  |  |  |
@@ -1100,13 +1111,14 @@ Brandenburger - Brandenburg Gate
 | brav |  | well behaved |
 | schön |  | beautiful |
 | klein |  | small |
-| kurz |  | short |
+| kurz |  | short (time) |
 | groß / hoch |  | tall / big |    großen 
 | jung |  | young |
 | freundlich |  | friendly |
 | toll |  | great |
 | endet |  | ends |
 | beginnt |  | begins |
+| endlich |  | finally |
 |  |  |  |
 | stressig |  | stressful |
 | bereit |  | ready |
@@ -1174,7 +1186,7 @@ Brandenburger - Brandenburg Gate
 | der tourist |  | tourist |
 |  |  |  |
 | Feiertag |  | holiday |
-|  |  |  |
+| Feierabend |  | end of work day |
 |  |  |  |
 
 
@@ -1292,6 +1304,8 @@ Samstagabend - saturday evening
 
 Wochenende - weekend
 
+lass - let
+
 Fahrkarten - tickets
 
 Konzertkarten concert tickets
@@ -1342,6 +1356,7 @@ Riesenrad - ferris wheel
 
 geöffnet - is open
 
+Pause - break
 
 Der Tanzkurs - dance class
 
@@ -1350,6 +1365,8 @@ Kurs - class
 Tanzen - dancing
 
 die Tür - door
+
+das Tor - gate
 
 Schrank - closet / standing wardrobe
 
@@ -1362,6 +1379,10 @@ arbeitslos - unemployed
 Wiesn-Herz - heart cookie
 
 das handy - cell phone
+
+die brille - glasses (eyes)
+
+der laptop - laptop
 
 die music - music
 
@@ -1382,11 +1403,21 @@ einmal pro .. - once a ...
 Uhr - clock
 
 
+Lebenslauf - resume
+Vorname - first name
+Nachname - last name (family name)
+pünktlich - punctual
+Handynummer - cell phone number
+
+Wem? - (for) whom?
+
 Freizeit - free time (leisure)
 
 niesen - sneeze
 
+tieg - dough
 
+mehl - flour
 
 französisches (eg: Brot) - french (eg: bread)
 griechisch - greek 
@@ -1443,7 +1474,8 @@ die Hin- und Rückfahrt - round trip ticket
 Reisezentrum - travel center (information)
 fällt aus - cancelled
 Sitz - seat
-nächste - next 
+nächste - next (months?)
+nächsten - next (days?)
 Zugtür - train door
 hinten - in the back
 
@@ -1532,9 +1564,16 @@ verlässt ? - leave
 feiert ? - to celebrate
 campe ? - to camp
 grillen ? - to grill
-Triffst treffe ? - to meet
+Triffst xfe ? - to meet
 zahlen zahlst - to pay
 unterschreiben - to sign
+warten? - to wait
+Öffnen ? - to open
+schließen ? - to close
+besichtigen - to tour
+abholen - to pick up / collect
+
+
 
 Größe - size
 
@@ -1576,6 +1615,10 @@ Blumen - flowers
 ganze/n - whole / entire
 die Frage - question
 die Antwort - answer
+
+Wort - word
+Wörterbuch - dictionary
+
 
 Stück - piece
 Flaschen - bottles
@@ -1659,6 +1702,8 @@ das Geschenk - gift/present
 
 Hilfe - help
 
+leer - leahr - empty
+
 
 zu - to
 zum - to the
@@ -1728,6 +1773,26 @@ der Strand - beach
 
 Ausflug - excursion (trip/journey)
 
+
+Kunstunterricht - art class
+
+besser - better
+
+Hausaufgaben - homework
+stimms - to agree?
+denn - because
+putzen. - to clean?
+bald - soon
+Fertig - finished
+sauber - clean
+
+
+
+du diene
+er seine 
+sie ihre
+ich meine
+ihr ?
 
 
 -----------------------------------------------

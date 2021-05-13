@@ -8070,6 +8070,8 @@ console.log("GOT : relative: "+relativeCount);
 		}
 		var saveSparseFxn = function(){
 			console.log("saveSparseFxn");
+
+// throw "BEFORE SAVE SPARSE FXN (OR DENSE)";
 			// project.saveSparseFromData(inputData, saveProjectFxn,project);
 			console.log(inputData);
 			project.saveFileFromData(inputData,inputFilename, saveProjectFxn,project);
@@ -8169,7 +8171,7 @@ if(!relativeAB && isDense){
 		}
 	}
 
-throw "before more ... dense"
+// throw "before more ... dense"
 
 	var saveProjectFxn = function(){
 		console.log("saveProjectFxn");
@@ -8231,7 +8233,7 @@ console.log("tripleRemoved: "+tripleRemoved);
 // throw "does each triple have 2+ pairs?"
 
 
-throw "BEFORE TRIPLES DONE"
+// throw "BEFORE TRIPLES DONE"
 		
 		project.saveFileFromData(inputData,inputFilename, saveProjectFxn,project);
 
@@ -8247,14 +8249,17 @@ throw "BEFORE TRIPLES DONE"
 	// 
 	// LOAD EACH POSSIBLE TRIPLE
 // throw ">triples";
-	var completeTripleFxn = function(scales){
+	var completeTripleFxn = function(metrics){
 		console.log("completeTripleFxn");
-		console.log(scales);
+		console.log(metrics);
 		console.log(currentTriple);
-		var ab = scales["AB"];
-		var ac = scales["AC"];
-		var bc = scales["BC"];
-		currentTriple["gauge"] = {"AB":ab, "AC":ac, "BC":bc};
+		var sAB = metrics["AB"];
+		var sAC = metrics["AC"];
+		var sBC = metrics["BC"];
+		var eABAC = metrics["AB-AC"];
+		var eACBC = metrics["AC-BC"];
+		var eABBC = metrics["AB-BC"];
+		currentTriple["gauge"] = {"AB":sAB, "AC":sAC, "BC":sBC, "AB-AC":eABAC, "AC-BC":eACBC, "AB-BC":eABBC};
 console.log("inputFilename: "+inputFilename);
 // throw "before save triple";
 		project.saveFileFromData(inputData,inputFilename, saveProjectFxn,project);
@@ -8554,6 +8559,9 @@ App3DR.ProjectManager.prototype._visualizeTriples = function(triples){
 			lookup[key] = 1;
 		}
 	}
+
+throw "where to get errors ?"
+
 	for(var i=0; i<triples.length; ++i){
 		var triple = triples[i];
 		var gauge = triple["gauge"];
@@ -11827,6 +11835,9 @@ console.log(graphGroupViews);
 				console.log("embed points ?");
 // throw "EMBED TRACK POINTS"
 world.setResolutionProcessingModeNonVisual();
+
+
+
 				//project._embedTrackPoints(world, existingPoints, worldViewLookup);
 				var additionalPoints = [];
 				for(var i=0; i<loadPairs.length; ++i){
@@ -11855,6 +11866,11 @@ console.log(points3DExisting);
 				// patches should already be set from previous steps?
 				console.log("old");
 				world.embedPoints3DNoValidation(points3DExisting);
+
+
+// throw "how to combine track points ?"
+
+
 // world.initNullP3DPatches();
 				// add new points with intersection:
 				console.log("new");
@@ -11890,7 +11906,7 @@ graphData["loadPairIndex"] = -1;
 				console.log(trackData);
 				console.log(fullTrackPath);
 				console.log(fullGraphPath);
-// throw "before save track group: "+trackFilename;
+throw "before save track group: "+trackFilename;
 				var savedFiles = 0;
 				var savedTrackComplete = function(){
 					console.log("savedTrackComplete: "+trackFilename);
@@ -12427,8 +12443,15 @@ console.log(newTriples);
 	};
 	var tripleToScales = function(triple){
 		var gauge = triple["gauge"];
-		var list = [gauge["AB"],gauge["AC"],gauge["BC"]];
-		return list;
+		console.log(gauge);
+		var scales = [gauge["AB"],gauge["AC"],gauge["BC"]];
+		var errors = [gauge["AB-AC"],gauge["AB-BC"],gauge["AC-BC"]];
+		for(var i=0; i<errors.length; ++i){
+			errors[i] = Math.exp(errors[i]); // from log to scale
+		}
+		return {"scales":scales, "errors":errors};
+		// var list = [gauge["AB"],gauge["AC"],gauge["BC"]];
+		// return list;
 	};
 
 // this.displayOriginalViewGraph(views, pairs, triples, viewToID,pairToIDs,tripleToIDs, pairToError,pairToTransform,tripleToScales);
@@ -12444,7 +12467,7 @@ console.log("views");
 	var result = Code.graphAbsoluteFromObjectLookup3D(views, pairs, triples, viewToID,pairToIDs,tripleToIDs, pairToError,pairToTransform, tripleToScales);
 console.log(result);
 console.log("result");
-// throw "whaaa"
+// throw "does this have gauge errors?"
 	var groups = result["groups"];
 	if(groups.length==0){
 		throw "no groups, can't continue";
@@ -12584,6 +12607,63 @@ App3DR.ProjectManager.prototype.calculatePairMatchWithRFromViewIDs = function(vi
 	settings[SETTING_CEL_SIZ] = Code.valueOrDefault(settings[SETTING_CEL_SIZ], 40);
 
 
+
+
+
+
+
+
+
+/*
+var readFile = "dense/pairs/PPJ1TEVI-VHGZSV82/relative_bad.yaml"
+
+var saveFile = "dense/pairs/PPJ1TEVI-VHGZSV82/relative.yaml";
+
+var loadedFile = function(a){
+	console.log("loadedFile");
+	// console.log(a);
+	// var y = YAML.parse(a); // object -> string
+	// console.log(y);
+	//var data = y;
+	// saveFileFromData
+	var data = a;
+	project.saveFileFromData(data,saveFile, savedFile,project);
+	// project.saveFileFromData(data,saveFile, savedFile,project);
+}
+
+var savedFile = function(a,b,c){
+	console.log(a);
+	console.log(b);
+	console.log(c);
+};
+var cxt = project;
+
+project.loadDataFromFile(readFile, loadedFile);
+
+throw "reading"
+*/
+
+
+
+/*
+var data = "1234567890\n";
+for(var i=0; i<18; ++i){
+	data = data+""+data;
+}
+console.log("string size: "+data.length);
+// var filename = "dense/pairs/BGXIJVBF-PPJ1TEVI/relative.yaml";
+var filename = "dense/pairs/PPJ1TEVI-VHGZSV82/relative.yaml";
+var fxn = function(a,b,c){
+	console.log(a);
+	console.log(b);
+	console.log(c);
+};
+var cxt = project;
+project.saveFileFromData(data,filename, fxn,cxt);
+
+throw "no more";
+
+*/
 
 	var errorSearchRMaximumPercent = 0.005; // 0.001 - 0.010
 
@@ -12812,7 +12892,8 @@ GLOBALSTAGE.root().matrix().scale(0.50); // dense
 // console.log(info);
 // throw "before solveDensePair"
 		// //
-		world.solveDensePairNew();
+console.log("LOOK AT SEED PATCHES FIRST")
+		// world.solveDensePairNew();
 		// //
 		// GLOBALSTAGE.root().matrix().scale(0.25);
 		// world.showForwardBackwardPair();
@@ -12822,7 +12903,7 @@ GLOBALSTAGE.root().matrix().scale(0.50); // dense
 		var str = world.toYAMLString();
 		console.log(str);
 		// //
-throw "before save solveDensePairNew"
+// throw "before save solveDensePairNew"
 		// //
 		var goodEnoughMatches = true;
 		// //
@@ -12872,10 +12953,10 @@ throw "before save solveDensePairNew"
 
 // console.log("TEST 2")
 // world.solveDensePairNew();
-// var str = world.toYAMLString();
-// console.log(str);
+var str = world.toYAMLString();
+console.log(str);
 
-// throw "after solve - before save dense pair iteration"
+throw "after solve - before save dense pair iteration"
 
 		// if good enough, record matches
 
@@ -13652,6 +13733,9 @@ console.log(pairData)
 }
 
 App3DR.ProjectManager.prototype.calculateTripleInfo = function(imageMatrixA,imageMatrixB,imageMatrixC, viewA,viewB,viewC, matchAB,matchAC,matchBC, cellCount, inputCompleteFxn){
+
+	// throw "calculateTripleInfo";
+
 	// console.log(imageMatrixA,imageMatrixB,imageMatrixC, viewA,viewB,viewC, matchAB,matchAC,matchBC);
 	var project = this;
 	var world = new Stereopsis.World();
@@ -13722,19 +13806,24 @@ App3DR.ProjectManager.prototype.calculateTripleInfo = function(imageMatrixA,imag
 
 	world.printPoint3DTrackCount();
 
-throw "triple include relative scaling error"
+// throw "triple include relative scaling error"
 
 console.log("before ?");
 	var worldTripleCompleted = function(payload){
 		console.log("worldTripleCompleted");
 		console.log(payload);
-		var scales = payload["scales"]
-		console.log(scales);
-		var sAB = scales["AB"];
-		var sAC = scales["AC"];
-		var sBC = scales["BC"];
+		var metrics = payload["metrics"]
+		console.log(metrics);
+		// var errors = payload["errors"]
+		// console.log(errors);
+		// var sAB = scales["AB"];
+		// var sAC = scales["AC"];
+		// var sBC = scales["BC"];
+		// var eAB = errors["AB"];
+		// var eAC = errors["AC"];
+		// var eBC = errors["BC"];
 // throw "HEREEEEEE SCALES SCALE";
-		inputCompleteFxn(scales);
+		inputCompleteFxn(metrics);
 	}
 	world.solveTriple(worldTripleCompleted, project, null);
 }
@@ -20739,12 +20828,16 @@ throw "before save triples";
 
 		var handleScaleInfoCompleted = function(info){
 			console.log(info);
-			console.log(info);
+			throw "is error in this?"
 			var scales = info;
 			var sAB = scales["AB"];
 			var sAC = scales["AC"];
 			var sBC = scales["BC"];
+			var eAB = error["AB"];
+			var eAC = error["AC"];
+			var eBC = error["BC"];
 			triple["gauge"] = {"AB":sAB, "AC":sAC, "BC":sBC};
+			triple["error"] = {"AB":eAB, "AC":eAC, "BC":eBC};
 			denseData["currentTriple"] = currentTriple;
 			console.log(denseData);
 			project.saveDenseFromData(denseData, fxnSavedDense, this);
@@ -22394,7 +22487,7 @@ App3DR.ProjectManager.prototype._updateGraphViewsFromWorld = function(world, gra
 	return updatedViews;
 }
 App3DR.ProjectManager.prototype.saveFileFromData = function(data, relativePath, fxn, ctx){ // data is json object
-	console.log(data);
+	// console.log(data);
 	var yaml = new YAML();
 		yaml.writeObjectLiteral(data);
 	var string = yaml.toString();

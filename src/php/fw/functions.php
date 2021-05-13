@@ -1,26 +1,32 @@
 <?php
 // functions.php
 
+
+function logToConsole($message){
+	error_log("".$message);
+}
+
+
 function require_once_directory($directory){
-	error_log("require_once_directory: '".$directory."'");
+//	error_log("require_once_directory: '".$directory."'");
 	$phpEnding = ".php";
 	$phpEndingStringLength = strlen($phpEnding);
-	error_log("YEP: '".$directory."'");
+//	error_log("YEP: '".$directory."'");
 	if($directory){
 
 		$directoryExists = file_exists($directory);
-		error_log("directoryExists: '".$directoryExists."'");
+//		logToConsole("directoryExists: '".$directoryExists."'");
 		if($directoryExists){
 			$fileList = scandir($directory);
 			foreach($fileList as $fileKey => $fileValue){
-				error_log($fileKey." = ".$fileValue);
+//				logToConsole($fileKey." = ".$fileValue);
 				$fileName = $fileValue;
 				$fileStringLength = strlen($fileName);
 				if( $fileStringLength > $phpEndingStringLength && substr($fileName, $fileStringLength-$phpEndingStringLength, $phpEndingStringLength) == $phpEnding ) {
 					$fileName = $directory."/".$fileName.""; // need full file path
-					error_log("require: '".$fileName."'");
+//					logToConsole("require: '".$fileName."'");
 					$exists = file_exists($fileName);
-					error_log("exists: ".$exists);
+//					logToConsole("exists: ".$exists);
 					require_once $fileName;
 				}
 			}

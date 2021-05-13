@@ -355,14 +355,19 @@ https://cloud.google.com/appengine/docs/nodejs/
 
 TIMELINES:
 
-
-10/10 - 360 object scene ~ 20 images
-	- optimize some of the algorithms
-	
-10/20 - test set of ~ 50 images
+- fix pairwise points to have low error & correctness
+	- patch normals?
+	- filer out poor seeds?
+- fix group to keep only best points
+	- resolution logic
+- fix texture packer to be much more efficient
+	- packer algorithm
+07/01 - 360 object scene ~ 20 images
+- optimize some of the algorithms
+	- half time of eg: dense
 	- (this will require 10-100 x speed ups)
-	- what to do about points at infinity
-		=> 
+09/01 - set of ~ 50 images	
+- what to do about points at infinity
 
 11/01 - MVP
 
@@ -371,7 +376,8 @@ MISSING:
 	- logistics [2d]
 	- reading chunks of a file ? (separate into 10-100MB of file?)
 - hole filling
-	- ?
+	- invisible areas
+	- featureless areas
 - BA identify/remove view if it's position is very bad???? [outliers]
 	- inconsistent / contrary / high error
 - triangle - texture loading groups at a time to get local approx blending
@@ -386,6 +392,50 @@ MISSING:
 - errors & magnitudes (eg F/R) should be in PERCENTS of image size (ratios)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+- re-evalute various alogirhtms for dense pair matching (from seeds)
+	- patch/normal
+	- combining track points (blind)
+	- combining group points (images)
+	- smoothing of points after group combine
+
+
+Stereopsis.World.prototype.initP3DPatchFromVisual
+	this.initP3DPatchFromGeometry3D(point3D); --- just average of view normals
+	this.updateP3DPatchFromVisual(point3D);
+		var result = R3D.optimizePatchSizeProjected(location3D,size3D,normal3D,up3D, ps2D,sizes2D, extrinsics,Ks); --- may need to be re-estimated to minimize error
+		var result = R3D.optimizePatchNonlinearImages(location3D,updateSize3D,normal3D,up3D, ps2D,imageScales, extrinsics,Ks);
+			var error = R3D._gd_SAD_IMAGES(needleA,needleB, mask2D); --- double check sizing & steps
+
+
+
+how to calculate patches in dense
+	- patch size/normal ?
+
+
+"how to combine track points ?" (blind)
+	- want reprojection error to have a say (too high == ignore)
+	- patch size/normal ?
+
+- how to combine group points (dense, non-blind)
+	- patch size/normal ?
+	- 
+- 
+
+- do smoothing at end of group combining?
+
+
+
+
+
+
+combinging in group:
+	- resolve collision by error (ignore error ~ 2x that of self)
+	-> or if resulting new P3D is much worse (average) R,F,N,S -> just keep original best point
+
+combining tracks (w/o images):
+	- pairwise only?
+	- 
 
 
 ADDITIONAL ALGS TO TRY:
@@ -464,7 +514,7 @@ CHANGE 2D/3D CODE FOR NEIGHBOR INCLUSION
 	- in 2D+3D point neighborhood move point along normal / along view direction to plane average depth (gaussian falloff?)
 	- 
 
-
+6
 DENSE IS STILL BAD:
 
 

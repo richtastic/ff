@@ -18077,15 +18077,18 @@ Code.graphAbsoluteFromObjectLookup3D = function(views, pairs, triples,  viewToID
 	}
 	console.log(pairIDToVertex);
 	var pairIDsToEdge = {};
-	var checkAddEdge = function(pairA,pairB, scaleAB){
+	var checkAddEdge = function(pairA,pairB, scaleAB, errorAB){
 		console.log("checkAddEdge",pairA,pairB)
 		var doublePair = minimumStringFirst(pairA,pairB);
 		var vertexA = pairIDToVertex[pairA];
 		var vertexB = pairIDToVertex[pairB];
 		var errorA = pairToError(vertexA.data()["pair"]);
 		var errorB = pairToError(vertexB.data()["pair"]);
-		var weight = errorA + errorB;
+		var weight = (errorA + errorB)*errorAB;
 		var edge = pairIDsToEdge[doublePair];
+
+		console.log(errorA,errorB,errorAB," = "+weight);
+		// throw "total error is a scaling + relative errors";
 		if(edge){
 			console.log("ratio exists -- ignoring: "+scaleAB+" / "+edge.data()["scale"]);
 			throw "exists ?";
@@ -18112,7 +18115,10 @@ console.log("TRIPLES: "+triples.length);
 	for(var i=0; i<triples.length; ++i){
 		var triple = triples[i];
 		var viewIDs = tripleToIDs(triple);
-		var scales = tripleToScales(triple);
+		var scaleInfo = tripleToScales(triple);
+		console.log(scaleInfo);
+		var scales = scaleInfo["scales"];
+		var errors = scaleInfo["errors"];
 		var viewA = viewIDs[0];
 		var viewB = viewIDs[1];
 		var viewC = viewIDs[2];
@@ -18122,14 +18128,20 @@ console.log("TRIPLES: "+triples.length);
 		var scaleA = scales[0];
 		var scaleB = scales[1];
 		var scaleC = scales[2];
+		// var errorABAC = errors[0];
+		// var errorABBC = errors[1];
+		// var errorACBC = errors[2];
+		var errorAB = errors[0];
+		var errorAC = errors[1];
+		var errorBC = errors[2];
 		if(scaleA>0 && scaleB>0){
-			checkAddEdge(pairA,pairB, scaleB/scaleA);
+			checkAddEdge(pairA,pairB, scaleB/scaleA, errorAB);
 		}
 		if(scaleA>0 && scaleC>0){
-			checkAddEdge(pairA,pairC, scaleC/scaleA);
+			checkAddEdge(pairA,pairC, scaleC/scaleA, errorAC);
 		}
 		if(scaleB>0 && scaleC>0){
-			checkAddEdge(pairB,pairC, scaleC/scaleB);
+			checkAddEdge(pairB,pairC, scaleC/scaleB, errorBC);
 		}
 	}
 	console.log(pairIDsToEdge);

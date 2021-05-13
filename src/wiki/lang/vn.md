@@ -50,7 +50,7 @@
 | làm vườn | lahm vu-ahn | gardening |
 |  |  |  |
 |  |  |  |
-|  |  |  |
+| bóp | bahp | purse |
 
 Đứa trẻ học, anh ấy uống nước.
 
@@ -313,7 +313,7 @@ ngón chân | ngon chan | toe
 |  |  |  |
 |  |  |  |
 |  |  |  |
-|  |  |  |
+| ma | mah | ghost |
 |  |  |  |
 WEATHER
 | gió | yaaw | wind |
@@ -391,6 +391,31 @@ WEATHER
 |  |  |  |
 |  |  |  |
 |  |  |  |
+
+
+
+
+#### ?
+
+| vi | pr | en |
+| - | - | - |
+|  |  |  |
+|  |  |  |
+| bắp | bahp | corn |
+|  |  |  |
+|  |  |  |
+| cơm | kuhm | rice |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+| goi cuong ? |  | spring rolls |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+
 
 
 

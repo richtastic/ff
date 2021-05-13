@@ -9,7 +9,8 @@ function ClientFile(url, path){
 	this._operations = [];
 	this._chunkSize = null;
 	// this.chunkSize(1E6); // 1MB
-	this.chunkSize(1E7); // 10MB
+	this.chunkSize(2E6);
+	// this.chunkSize(1E7); // 10MB
 }
 Code.inheritClass(ClientFile,Dispatchable);
 
@@ -59,6 +60,11 @@ ClientFile.prototype._handleClientCompleteMov = function(operation){
 ClientFile.prototype.get = function(filePath){
 	console.log("get: "+filePath);
 	var operation = new ClientFile.Operation(this._serverURL);
+
+	console.log("this is where to update chunk size: "+this.chunkSize()+" / "+operation.pageSize());
+	// pass along size to operation
+	operation.pageSize(this.chunkSize());
+
 	operation.addFunction(ClientFile.EVENT_GET_COMPLETE, this._handleClientCompleteGet, this);
 	this._operations.push(operation);
 	var fullPath = this._workingPath+""+filePath;
@@ -98,6 +104,12 @@ ClientFile.Operation = function(serviceURL){
 	this._relativePath = null;
 }
 Code.inheritClass(ClientFile.Operation,Dispatchable);
+ClientFile.Operation.prototype.pageSize = function(size){
+	if(size!==undefined){
+		this._pageSize = size;
+	}
+	return this._pageSize;
+}
 ClientFile.Operation.prototype.buffer = function(){
 	return this._buffer;
 }
@@ -171,8 +183,12 @@ ClientFile.Operation.prototype._handleCompleteRead = function(result){
 		this._doneRead();
 	}
 }
-ClientFile.Operation.prototype._handleCompleteWrite = function(result){
-//	console.log(result);
+ClientFile.Operation.prototype._handleCompleteWrite = function(result,second,third){
+	// console.log(result);
+// console.log("_handleCompleteWrite");
+// console.log(result);
+// console.log(second);
+// console.log(third);
 	var success = false;
 	var isDone = false;
 	var json = null;
@@ -182,8 +198,13 @@ ClientFile.Operation.prototype._handleCompleteWrite = function(result){
 			success = json["result"] == "success";
 		}
 	}
+if(!result){
+	console.log(result);
+	throw "no result?"
+}
 	if(success){
 		var payload = json["payload"];
+// console.log(payload);
 		var isDirectory = payload["isDirectory"];
 		if(isDirectory){
 			//console.log("CREATED DIRECTORY");
@@ -191,6 +212,10 @@ ClientFile.Operation.prototype._handleCompleteWrite = function(result){
 		}else{
 			//console.log("CREATED FILE");
 			var written = parseInt(payload["count"]);
+console.log(" "+this._offset+" | "+written+" / "+this._buffer.length);
+// console.log("written: "+written);
+// console.log("offset: "+this._offset);
+// console.log("buffer: "+this._buffer.length);
 			this._offset += written;
 			if(this._offset<this._buffer.length){
 				this._writeNextPage();
@@ -200,9 +225,12 @@ ClientFile.Operation.prototype._handleCompleteWrite = function(result){
 			}
 		}
 	}else{
+		console.log(json);
+		throw "no success?";
 		isDone = true;
 	}
 	if(isDone){
+// console.log("isDone");
 		this._doneWrite();
 	}
 }
@@ -227,7 +255,8 @@ ClientFile.Operation.prototype._setupAjax = function(){
 	this._ajax = new Ajax();
 	this._ajax.url(this._serviceURL);
 	this._ajax.method(Ajax.METHOD_TYPE_POST);
-	this._ajax.timeout(10000); // 10 seconds
+	// this._ajax.timeout(10000); // 10 seconds
+	this._ajax.timeout(30000);
 	this._ajax.context(this);
 }
 
@@ -252,12 +281,14 @@ ClientFile.Operation.prototype.readFileOrDirectory = function(relativePath){
 }
 // CREATE / UPDATE / EDIT
 ClientFile.Operation.prototype.writeFileOrDirectory = function(relativePath, data){
+	console.log("writeFileOrDirectory: "+relativePath);
 	this._relativePath = relativePath;
 	this._buffer = data;
 	this._offset = 0;
 	this._writeNextPage();
 }
 ClientFile.Operation.prototype._writeNextPage = function(){
+	console.log("_writeNextPage: "+this._pageSize+" , "+this._buffer.length+" , "+this._offset);
 	this._setupAjax();
 	this._ajax.callback(this._handleCompleteWrite);
 	var count = 0;
