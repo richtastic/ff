@@ -1,10 +1,10 @@
 ## german
 
 Bronze, Silver, Gold, Sapphire, Ruby, Emerald, Amethyst, Pearl, Obsidian, Diamond - 10
-Amethyst 10 place ~ 1100
-pearl 10th place ~ 1200
-Obsidian 10th place ~ ?1500?
-
+Amethyst 10 place ~ 1100 | 1st ~ 3-4k
+pearl 10th place ~ 1200 | 1st ~ 4~5k
+Obsidian 10th place ~ 1400 | 1st ~ 6k
+Diamond - 10th place ~ ?1500? | 1st ~ 8k
 
 https://www.germanwithantrim.com/du-vs-ihr-vs-sie-beginner-german-with-herr-antrim-lesson-4/
 https://courses.dcs.wisc.edu/wp/readinggerman/verbs-haben-and-sein/
@@ -136,6 +136,7 @@ neuter: das ein
 | gestern |  | yesterday |
 | Nachmittag |  | afternoon |
 | Gerne |  | with pleasure |
+Einen schönen Tag noch = have a nice day
 |  |  |  |
 | morgen |  | tomorrow |
 |  |  |  |
@@ -154,8 +155,8 @@ neuter: das ein
 | tag/e |  | day/s |
 | nacht/Nächte |  | nights |
 |  |  |  |
-|  |  |  |
-|  |  |  |
+| Mittag |  | noon / mid-day |
+| Mitternacht |  | midnight |
 |  |  |  |
 |  |  |  |
 
@@ -332,6 +333,9 @@ LieblingsX --- favorite X
 | auto / wagon | out-oh / vahgahn | car |
 | Motorrad |  | motorbike |
 | Bus |  | bus |
+| das Fahrrad |  | bike / bicycle |
+|  |  |  |
+|  |  |  |
 |  |  |  |
 |  |  |  |
 | das haus |  | house |
@@ -352,6 +356,49 @@ LieblingsX --- favorite X
 |  |  |  |
 | Hemd |  | shirt |
 | Jacke |  | jacket |
+| der Badeanzug |  | swimsuit |
+| der hut |  | hat |
+| die Socken |  | socks |
+|  |  |  |
+|  |  |  |
+| Schuhe |  | shoes |
+| die Turnschuhe |  | gym shoes /sneakers / tennis shoes |
+|  |  |  |
+| Sandalen |  | sandals (shoes) |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+die Kleidung - clothes
+Kleid - dress
+
+
+Hut - hat
+Sakko - suit jacket
+Hemd - shirt
+T-shirt - shirt
+Pullover - sweater
+Bluse - blous
+Jeans - jeans/pants
+die Brille  - glasses (face)
+
+Urlaubskleidung - vacation clothes
+
+Rucksack - backpack
+
+der Koffer - suitcase
+
+der Laptop - laptop
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+
+
 | Geburtstag |  | birthday |
 | Alles Gute zum Geburtstag |  | Happy Birthday |
 | Schuhe |  | show |
@@ -409,6 +456,8 @@ LieblingsX --- favorite X
 | langsam |  | slowly |
 |  |  |  |
 |  |  |  |
+| schneller |  | faster |
+|  |  |  |
 | links |  | left |
 | rechts |  | right (direction) |
 |  |  |  |
@@ -426,9 +475,9 @@ LieblingsX --- favorite X
 | rein |  | inside |
 | draußen |  | outside |
 | bei |  | by |
+| ganzen |  | whole/entire |
 |  |  |  |
-|  |  |  |
-|  |  |  |
+| gleich |  | shortly/soon |
 | Schnell |  | quick/ly |
 | Komm! |  | come on |
 |  |  |  |
@@ -499,9 +548,9 @@ LieblingsX --- favorite X
 |  |  |  |
 |  |  |  |
 |  |  |  |
-|  |  |  |
-|  |  |  |
-|  |  |  |
+| der mond |  | moon |
+| die sonne |  | sun |
+| das meer |  | sea |
 |  |  |  |
 |  |  |  |
 |  |  |  |
@@ -571,7 +620,7 @@ alles Gute zum Geburtstag - (bad luck?)
 | das Hotel |  | hotel |
 | das museum |  | museum |
 | die Bäckerei |  | bakery |
-|  |  |  |
+| Konditorei |  |  pastery shop |
 |  |  |  |
 |  |  |  |
 | Taxistand |  | taxi stand |
@@ -628,7 +677,7 @@ Neuschwanstein Castle
 | Partnerin |  | partner |
 | Mitbewohner |  | roommate |
 | Eltern |  | parents |
-| der Nachbar |  | neighbor |
+| der Nachbar / Nachbarn |  | neighbor |
 | das Baby |  | baby |
 | das Mädchen |  | girl |
 | junge |  | boy |
@@ -658,6 +707,13 @@ Neuschwanstein Castle
 |  |  |  |
 | Automechanikerin |  | car mechanic |
 | Das Modell |  | Model |
+| Blumenladen |  | florist |
+| Bioladen |  | health/food store |
+| Metzgerei |  | butcher shop |
+|  |  |  |
+| Biogurken |  | organic cucumbers |
+|  |  |  |
+|  |  |  |
 |  |  |  |
 |  |  |  |
 | Touristen |  | tourists |
@@ -711,6 +767,8 @@ Neuschwanstein Castle
 |  |  |  |
 |  |  |  |
 |  |  |  |
+| Orangensaft |  | orange juice |
+| Apfelsaft |  | apple juice |
 |  |  |  |
 |  |  |  |
 |  |  |  |
@@ -731,14 +789,17 @@ Neuschwanstein Castle
 |  |  |  |
 | das sandwich |  | sandwich |
 | brot |  | bread |
+| Brötchenbread |  | bread rolls |
+|  |  |  |
+|  |  |  |
 | karotte |  | carrot |
 | der Fisch |  | fish |
 | die Schnecke |  | snail |
 | hund |  | dog |
 |  |  |  |
 | die Banane |  | banana |
-| Joghurt |  | yogurn |
-|  |  |  |
+| Joghurt |  | yogurt |
+| Gurke/n |  | cucumber |
 |  |  |  |
 | die Nudeln |  | noodles |
 | der Reis |  | rice |
@@ -750,10 +811,11 @@ Neuschwanstein Castle
 |  |  |  |
 | Mayo |  | mayo |
 |  |  |  |
-|  |  |  |
+| Nüsse |  | nuts |
 | Knödel |  | dumplings |
 | das eis |  | ice cream |
 | Apfelkuchen |  | apple cake |
+| Bananenkuchen |  | banana cake |
 | Schokoladenkuchen |  | chocolate cake |
 | das Obst |  | fruits |
 | das Gemüse |  | vegetables |
@@ -789,6 +851,8 @@ Neuschwanstein Castle
 | tee |  | tea |
 | Wein |  | wine |
 | rotwein |  | red wine |
+| Weißwein |  | white wine |
+|  |  |  |
 | Bioweinorganic |  | organic wine |
 | bier |  | beer |
 | Weißbier |  | wheat beer |
@@ -866,6 +930,10 @@ Ohrenschmerzen - ear ache
 | Berliner |  | berlin person ? |
 |  |  |  |
 |  |  |  |
+|  |  |  |
+|  |  |  |
+| Mallorca |  | island east of spain |
+|  |  |  |
 | Neuschwanstein |  | Neuschwanstein castle |
 Brandenburger - Brandenburg Gate
 |  |  |  |
@@ -899,7 +967,7 @@ Brandenburger - Brandenburg Gate
 | weit |  | far |
 | weit weg |  | far away |
 | von |  | from |
-|  |  |  |
+| als |  | than (as, when, compared to) |
 |  |  |  |
 | schwer |  | heavy |
 |  |  |  |
@@ -908,7 +976,7 @@ Brandenburger - Brandenburg Gate
 |  |  |  |
 | mit dem |  | by (means of) |
 |  |  |  |
-|  |  |  |
+| dort |  | there / over there |
 | da drüben |  | over there |
 | da |  | there (here) |
 | diese / dieses |  | this / these / that |
@@ -916,7 +984,7 @@ Brandenburger - Brandenburg Gate
 |  |  |  |
 | keinen |  | no |
 |  |  |  |
-|  |  |  |
+| wieder |  | again |
 | für |  | for |
 | bald  |  | soon |
 | vielleicht |  | maybe |
@@ -959,7 +1027,7 @@ Brandenburger - Brandenburg Gate
 | das Auto |  | car |
 | das Motorrad |  | motorbike |
 |  |  |  |
-| Straße |  | street |
+| Straße/Straßen |  | street |
 | personen |  | people |
 |  |  |  |
 | hören | whore-in | hear |
@@ -981,7 +1049,7 @@ Brandenburger - Brandenburg Gate
 | gehen |  | to go |
 | kauf |  | to buy |
 | nehme ? |  | i take |
-|  fahren ? |  | ride |
+| Fährst ? fahren ? |  | ride |
 | joggen |  | to jog |
 | nehmen |  | to take |
 | singe |  | to sing |
@@ -1003,13 +1071,36 @@ Brandenburger - Brandenburg Gate
 | bekommt ? |  | to get |
 | trägt ? |  | to carry |
 | Raucht ? |  | to smoke (cig) |
+| scheint ?  |  | to shine |
+| einpacken ? |  | to pack |
+| trage ? |  | to wear |
+| waschen ? |  | to wash |
+| trägtis ? |  | to carry |
+| Sagtell ? |  | to tell (say) |
+| Zeig ? |  | to show |
+| glaube ? |  | to think |
+| holt ? |  | to pick |
+| gießen ? |  | to water *eg plants) |
+| Kochen |  | to cook |
+| Koch/Köchin |  | a cook |
+| tanz | tdahnse | dance |
+| bestellen? |  | to order / order |
+| leben |  | life/alive/to live |
+| kauf ? |  | to buy |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
 |  |  |  |
 |  |  |  |
 | Studieren ? |  | to study (a subject) |
 | lernen |  | to study (for a test - learn) |
 |  |  |  |
 |  |  |  |
-|  |  |  |
+| weg |  | gone |
 | besten |  | the best |
 | dauert |  | lasts |
 | lang / lange |  | long (duration) |
@@ -1021,15 +1112,12 @@ Brandenburger - Brandenburg Gate
 |  |  |  |
 |  |  |  |
 | Wohnst |  | reside (live at) |
-| leben |  | life/alive/to live |
+|  |  |  |
 |  |  |  |
 | schwimmen |  | swim |
-| Kochen |  | to cook |
-| Koch/Köchin |  | a cook |
-| tanz | tdahnse | dance |
+|  Komisch|  | strange |
 |  |  |  |
 |  |  |  |
-| bestellen? |  | to order |
 |  |  |  |
 | Lebensmittel | leibensmittle | food |
 |  |  |  |
@@ -1077,6 +1165,10 @@ Brandenburger - Brandenburg Gate
 | alles |  | all/everything |
 | überall |  | everywhere |
 |  |  |  |
+| genug |  | enough |
+| also |  | so,well, ... |
+|  |  |  |
+|  |  |  |
 |  |  |  |
 | das geld |  | money |
 | tisch |  | table |
@@ -1084,7 +1176,7 @@ Brandenburger - Brandenburg Gate
 | nichts |  | nothing |
 |  |  |  |
 |  |  |  |
-|  |  |  |
+| wenig |  | little |
 | weniger |  | less / little / few |
 |  |  |  |
 | der Schlüssel |  | key |
@@ -1092,7 +1184,7 @@ Brandenburger - Brandenburg Gate
 | süß |  | cute |
 |  |  |  |
 | komisch |  | strange |
-|  |  |  |
+| streng |  | strict |
 |  |  |  |
 | jung |  | young |
 | alt |  | old |
@@ -1122,7 +1214,7 @@ Brandenburger - Brandenburg Gate
 |  |  |  |
 | stressig |  | stressful |
 | bereit |  | ready |
-|  |  |  |
+| sportlich |  | sporty/athletic |
 |  |  |  |
 | sehr |  | very |
 |  |  |  |
@@ -1171,6 +1263,10 @@ Brandenburger - Brandenburg Gate
 | die stadt |  | city / town |
 | Dorf |  | village |
 | die Rechnung |  | bill (check) |
+| der Kassenzettel |  | receipt |
+| die Kasse |  | cash register (checkout) |
+|  |  |  |
+|  |  |  |
 |  |  |  |
 | Laden |  | store |
 | Hochzeitsreise |  | honeymoon |
@@ -1335,8 +1431,15 @@ Ich heiße - my name is
 Fußgängerzonen
 
 Schwimmbad - swimming pool
+Bademeisterin - lifeguard
+
+marathon - marathon
 
 Konzert - concert
+
+Notfäll/en - emergency /ies
+
+Handtuch - towel
 
 Schalter - counter
 
@@ -1372,6 +1475,8 @@ Schrank - closet / standing wardrobe
 
 Dienstag - job interview
 
+die Beförderung - promotion
+
 Praktikum - internship
 
 arbeitslos - unemployed
@@ -1402,6 +1507,12 @@ einmal pro .. - once a ...
 
 Uhr - clock
 
+nass - wet
+trocken - dry
+
+Liebesbrief - love letter
+
+
 
 Lebenslauf - resume
 Vorname - first name
@@ -1418,6 +1529,8 @@ niesen - sneeze
 tieg - dough
 
 mehl - flour
+
+sofort - immediately
 
 französisches (eg: Brot) - french (eg: bread)
 griechisch - greek 
@@ -1442,6 +1555,10 @@ wie heißen - what is your name
 
 Fußballspiel- soccer game
 
+Hockey - hockey
+
+yoga - yoga
+
 Fernseher - TV
 
 Hausaufgaben - homework
@@ -1461,6 +1578,7 @@ Pläne - plans
 
 Schlüssel - keys
 Autoschlüssel - car keys
+Kofferraum - trunk
 
 Aufzug - elevator
 Abfahrt - departure
@@ -1476,6 +1594,7 @@ fällt aus - cancelled
 Sitz - seat
 nächste - next (months?)
 nächsten - next (days?)
+Letzte - last (week?)
 Zugtür - train door
 hinten - in the back
 
@@ -1485,6 +1604,7 @@ Kreditkarte - credit card
 
 stornieren - cancel
 
+spinnt - going crazy
 
 Die Vegetarierin - vegetarian (person)
 vegetarisches - vegetarian (adj)
@@ -1498,25 +1618,6 @@ Muttersprache - mother tounge (native language)
 
 Wanderlust - joy of hiking
 
-Kleidung - clothes
-Kleid - dress
-Schuhe - shoes
-Hut - hat
-Sakko - suit jacket
-Hemd - shirt
-T-shirt - shirt
-Pullover - sweater
-Bluse - blous
-Jeans - jeans/pants
-die Brille  - glasses (face)
-
-Urlaubskleidung - vacation clothes
-
-Rucksack - backpack
-
-der Koffer - suitcase
-
-der Laptop - laptop
 
 die Kamera - camera
 
@@ -1546,7 +1647,8 @@ Formular - form (paper)
 die Schloss - castle
 
 Stück - piece
-
+Packungen - packages / pack / grouping
+Tüten - bags
 
 Reservierung - reservation
 
@@ -1602,7 +1704,7 @@ langweilig - boring
 
 schwierig - difficult
 
-die Tasse - cup
+die Tasse / Tassen - cup
 
 draußen - outside
 
@@ -1625,6 +1727,7 @@ Flaschen - bottles
 
 Dollar - dollar
 euro - euros
+Cent - cents
 -
 bar - cash
 
@@ -1669,7 +1772,7 @@ Einladung - invitation
 
 Wanderst / wandern - to hike / hiking
 spazieren - to walk
-läuft - runs
+läuft ? laufe ? - runs
 läuft - walks ?
 
 Flughafen - airport
@@ -1703,7 +1806,7 @@ das Geschenk - gift/present
 Hilfe - help
 
 leer - leahr - empty
-
+voll - full / crowded
 
 zu - to
 zum - to the
@@ -1712,7 +1815,7 @@ jetzt - now
 
 stark - hard/strong
 schlecht - bad/ly
-
+furchtbar - awful
 
 nicht mehr hier - not here anymore
 auf jeden Fall - definitely / absolutely
@@ -1748,7 +1851,7 @@ Dusche - shower
 
 das Fenster - window
 
-
+Witz - joke
 
 das Schlafzimmer - bedroom
 das Badezimmer

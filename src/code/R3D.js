@@ -8899,7 +8899,7 @@ R3D.triangulatePointDLTList = function(points2D, extrinsics, Kinvs, pointOut, re
 	return pointOut;
 }
 
-R3D.triangulatePointDLT = function(fr,to, cameraA,cameraB, KaInv, KbInv){ // get 3D point from extrinsic camera
+R3D.triangulatePointDLT = function(fr,to, cameraA,cameraB, KaInv, KbInv, pointReuse){ // get 3D point from extrinsic camera
 	var rows = 4, cols = 4;
 	var A = new Matrix(rows,cols);
 	fr = new V3D(fr.x,fr.y,1.0);
@@ -8950,7 +8950,6 @@ R3D.triangulatePointDLT = function(fr,to, cameraA,cameraB, KaInv, KbInv){ // get
 	A.set(3,3, to.y*B23 - B13 ); // W
 	var svd = Matrix.SVD(A);
 	var coeff = svd.V.colToArray(3);
-	var point = new V3D(coeff[0],coeff[1],coeff[2]);
 	var den = coeff[3];
 	if(Math.abs(den)<1E-20){ // too close numerically
 		// console.log("den: "+den); eg: den: -9.960308109223141e-11
@@ -8958,6 +8957,13 @@ R3D.triangulatePointDLT = function(fr,to, cameraA,cameraB, KaInv, KbInv){ // get
 		console.log("den: "+coeff);
 		return null;
 	}
+	var point = pointReuse;
+	if(!pointReuse){
+		point = new V3D(coeff[0],coeff[1],coeff[2]);
+	}else{
+		point.set(coeff[0],coeff[1],coeff[2]);
+	}
+	
 	point.scale(1.0/den);
 	return point;
 }

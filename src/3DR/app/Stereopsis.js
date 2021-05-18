@@ -7344,8 +7344,147 @@ Stereopsis.World.prototype.initP3DPatchFromMatchAffine = function(point3D){
 		throw "why?";
 	}
 }
-
 Stereopsis.World.prototype.initP3DPatchFromGeometry3D = function(point3D){
+	console.log(point3D);
+
+	var points2D = point3D.toPointArray();
+	var location3D = point3D.point();
+	// project 2D points via affine
+	var twoPi = 2*Math.PI;
+	var pointsPerView = 4; // 
+	// var angleIteration = 2*Math.PI/pointsPerView;
+	// console.log(points2D);
+	var pointsA = [];
+	var pointsB = [];
+	var p = new V2D();
+	var q = new V2D();
+	var p3D = new V3D();
+	var p2Din3DList = [];
+	for(var i=0; i<points2D.length; ++i){
+		var point2DA = points2D[i];
+		var p2DA = point2DA.point2D();
+		var viewA = point2DA.view();
+		var cellSizeA = viewA.cellSize();
+		var cameraA = viewA.absoluteTransform();
+		var KaInv = viewA.Kinv();
+		for(var j=i+1; j<points2D.length; ++j){
+			var point2DB = points2D[j];
+			var p2DB = point2DB.point2D();
+			var viewB = point2DB.view();
+			var cellSizeB = viewB.cellSize();
+			var cameraB = viewB.absoluteTransform();
+			var KbInv = viewB.Kinv();
+			var match = point3D.matchForViews(viewA,viewB);
+			var affineAB = match.affineForViews(viewA,viewB);
+			var affineBA = match.affineForViews(viewB,viewA);
+			for(var k=0; k<pointsPerView; ++k){
+				p.set(1,0);
+				p.rotate( (k/pointsPerView)*twoPi );
+				p.scale(cellSizeA);
+				affineAB.multV2DtoV2D(q,p);
+				p.add(p2DA);
+				q.add(p2DB);
+				R3D.triangulatePointDLT(p,q, cameraA,cameraB, KaInv, KbInv,  p3D);
+				// var p3D = R3D.triangulatePointDLT(pA,pB, A,B, KaInv, KbInv);
+				// R3D.triangulatePointDLT = function(fr,to, cameraA,cameraB, KaInv, KbInv, pointReuse){ 
+				p2Din3DList.push(p3D.copy());
+			}
+		}
+	}
+	console.log(p2Din3DList);
+	// var plane = Code.planeFromPoints3D(location3D, p2Din3DList);
+	var plane = Code.planeFromPoints3D(p2Din3DList);
+	console.log(plane);
+	var normal3D = plane["normal"];
+	var center3D = plane["point"];
+	console.log(center3D+" v "+location3D+" = "+V3D.distance(location3D,center3D));
+	point3D.normal(normal3D);
+
+	var radii = [];
+	for(var i=0; i<p2Din3DList.length; ++i){
+		var p = p2Din3DList[i];
+		// console.log(p);
+		p = p.copy().sub(center3D);
+		var d = V3D.perpendicularComponent(normal3D,p);
+		var r = d.length();
+		radii.push(r);
+	}
+	var radius3D = Code.averageNumbers(radii);
+	console.log(radii);
+	console.log("radii: "+radius3D);
+	
+	// get up = average view ups:
+	var ups = [];
+	for(var i=0; i<points2D.length; ++i){
+		var point2D = points2D[i];
+		var view = point2D.view();
+		var up = view.up().copy();
+		if( i>0 && V3D.dot(up,ups[0])<0 ){
+			up.scale(-1);
+		}
+		ups.push(up);
+	}
+	console.log(ups);
+	var up3D = Code.averageAngleVector3D(ups);
+	// console.log(up3D+"");
+
+	var patchUp = Code.projectPointToPlane3D(up3D, V3D.ZERO,normal3D);
+	patchUp.norm();
+	// console.log(patchUp+"");
+point3D.up(patchUp);
+
+	// get size = projected minimum error
+	var maxIterations = 10;
+	var size3D = radius3D;
+	var pointsPerView = 4;
+	for(var i=0; i<maxIterations; ++i){
+		// console.log(" size: "+size);
+		var distanceError = 0; // sum of percentage
+		var totalCount = 0;
+		for(var j=0; j<points2D.length; ++j){
+			var point2D = points2D[j];
+			var p2D = point2D.point2D();
+			var view = point2D.view();
+			var cellSize = view.cellSize();
+			// project into each view
+			//
+			var center2D = view.projectPoint3D(center2D, p3D); // get actual center point reprojection
+			for(var k=0; k<pointsPerView; ++k){
+				var v = patchUp.copy();
+				v.rotate(normal3D, (k/pointsPerView)*twoPi );
+				v.add(p3D);
+					// p.set(1,0);
+					// p.
+					// p.scale(size);
+				// get error
+				var p = view.projectPoint3D(v);
+				var d = V2D.distance(center2D,v);
+				console.log(p+" @ "+d+" / "+cellSize+" = "+(d/cellSize));
+					d = d/cellSize;
+				// var error = d;
+				distanceError += d;
+				++totalCount;
+			}
+		}
+		distanceError/=totalCount;
+		console.log("distanceError: "+distanceError);
+		break;
+	}
+
+
+	// var radius = Code.averageNumbers(radii);
+	// point3D.normal(normal3D);
+	// point3D.up(up3D);
+	// point3D.size(size3D);
+
+	// 			// var affine = R3D.affineCornerMatrixLinear(ptsA,ptsB, new Matrix2D());
+
+	console.log(point3D);
+	// get plane from point average
+
+	throw "..."
+}
+Stereopsis.World.prototype.initP3DPatchFromGeometry3DAveraging = function(point3D){
 	// init patch using :
 	var location3D = point3D.point();
 	if(!location3D){
@@ -7546,11 +7685,17 @@ Stereopsis.World.prototype.updateP3DPatchFromNone = function(point3D){
 }
 
 Stereopsis.World.prototype.initP3DPatchFromVisual = function(point3D){
-	console.log("initP3DPatchFromVisual");
 	this.initP3DPatchFromGeometry3D(point3D);
 	this.updateP3DPatchFromVisual(point3D);
 }
 Stereopsis.World.prototype.updateP3DPatchFromVisual = function(point3D){
+
+// TODO: remove
+throw "remove this";
+return;
+
+
+
 	var points2D = point3D.toPointArray();
 	var sizes2D = [];
 	var imageScales = [];
