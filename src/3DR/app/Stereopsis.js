@@ -7351,8 +7351,7 @@ Stereopsis.World.prototype.initP3DPatchFromGeometry3D = function(point3D){
 	var location3D = point3D.point();
 	// project 2D points via affine
 	var twoPi = 2*Math.PI;
-	var pointsPerView = 4; // 
-	// var angleIteration = 2*Math.PI/pointsPerView;
+	var pointsPerView = 4;
 	// console.log(points2D);
 	var pointsA = [];
 	var pointsB = [];
@@ -7378,15 +7377,12 @@ Stereopsis.World.prototype.initP3DPatchFromGeometry3D = function(point3D){
 			var affineAB = match.affineForViews(viewA,viewB);
 			var affineBA = match.affineForViews(viewB,viewA);
 			for(var k=0; k<pointsPerView; ++k){
-				p.set(1,0);
+				p.set(0.5*cellSizeA,0);
 				p.rotate( (k/pointsPerView)*twoPi );
-				p.scale(cellSizeA);
 				affineAB.multV2DtoV2D(q,p);
 				p.add(p2DA);
 				q.add(p2DB);
 				R3D.triangulatePointDLT(p,q, cameraA,cameraB, KaInv, KbInv,  p3D);
-				// var p3D = R3D.triangulatePointDLT(pA,pB, A,B, KaInv, KbInv);
-				// R3D.triangulatePointDLT = function(fr,to, cameraA,cameraB, KaInv, KbInv, pointReuse){ 
 				p2Din3DList.push(p3D.copy());
 			}
 		}
@@ -7403,7 +7399,6 @@ Stereopsis.World.prototype.initP3DPatchFromGeometry3D = function(point3D){
 	var radii = [];
 	for(var i=0; i<p2Din3DList.length; ++i){
 		var p = p2Din3DList[i];
-		// console.log(p);
 		p = p.copy().sub(center3D);
 		var d = V3D.perpendicularComponent(normal3D,p);
 		var r = d.length();
@@ -7412,7 +7407,7 @@ Stereopsis.World.prototype.initP3DPatchFromGeometry3D = function(point3D){
 	var radius3D = Code.averageNumbers(radii);
 	console.log(radii);
 	console.log("radii: "+radius3D);
-	
+
 	// get up = average view ups:
 	var ups = [];
 	for(var i=0; i<points2D.length; ++i){
@@ -7426,19 +7421,23 @@ Stereopsis.World.prototype.initP3DPatchFromGeometry3D = function(point3D){
 	}
 	console.log(ups);
 	var up3D = Code.averageAngleVector3D(ups);
-	// console.log(up3D+"");
+	console.log("UP3D: "+up3D);
 
 	var patchUp = Code.projectPointToPlane3D(up3D, V3D.ZERO,normal3D);
 	patchUp.norm();
-	// console.log(patchUp+"");
+	console.log("patchUp: "+patchUp+"");
 point3D.up(patchUp);
 
 	// get size = projected minimum error
-	var maxIterations = 10;
+	// var maxIterations = 10;
+	var maxIterations = 5;
 	var size3D = radius3D;
 	var pointsPerView = 4;
+	var center2D = new V2D();
+	var limitMin = null;
+	var limitMax = null;
 	for(var i=0; i<maxIterations; ++i){
-		// console.log(" size: "+size);
+		// console.log(" size3D: "+size3D+"        @@@@@@@@@@@@@@@@@@@@@@@@ "+i+" .............. @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@");
 		var distanceError = 0; // sum of percentage
 		var totalCount = 0;
 		for(var j=0; j<points2D.length; ++j){
@@ -7446,29 +7445,60 @@ point3D.up(patchUp);
 			var p2D = point2D.point2D();
 			var view = point2D.view();
 			var cellSize = view.cellSize();
+			var radSize = 0.5*cellSize;
 			// project into each view
-			//
-			var center2D = view.projectPoint3D(center2D, p3D); // get actual center point reprojection
+			view.projectPoint3D(center2D, location3D); // get actual center point reprojection
 			for(var k=0; k<pointsPerView; ++k){
 				var v = patchUp.copy();
+				v.scale(size3D);
 				v.rotate(normal3D, (k/pointsPerView)*twoPi );
-				v.add(p3D);
-					// p.set(1,0);
-					// p.
-					// p.scale(size);
+				// var v = new V3D();
+				v.add(location3D);
 				// get error
 				var p = view.projectPoint3D(v);
-				var d = V2D.distance(center2D,v);
-				console.log(p+" @ "+d+" / "+cellSize+" = "+(d/cellSize));
-					d = d/cellSize;
-				// var error = d;
+				var d = V2D.distance(center2D,p);
+				console.log(center2D+" - "+p+" @ "+d+" / "+cellSize+" = "+(d/cellSize));
+					d = d/radSize;
 				distanceError += d;
 				++totalCount;
 			}
 		}
 		distanceError/=totalCount;
 		console.log("distanceError: "+distanceError);
-		break;
+		// update size:
+		var nextSize = size3D / distanceError;
+		// 
+		if(distanceError>1.0){
+			if(limitMax==null){
+				limitMax = size3D;
+			}else{
+				limitMax = Math.min(limitMax,size3D);
+			}
+			nextSize = Math.min(nextSize,limitMax);
+		}else{
+			if(limitMin==null){
+				limitMin = size3D;
+			}else{
+				limitMin = Math.max(limitMin,nextSize);
+			}
+			nextSize = Math.max(nextSize,limitMin);
+		}
+		console.log("LIMITS: "+limitMin+" - "+limitMax);
+		if(limitMin!==null && limitMax!==null){
+			var maybe = limitMin + (limitMax-limitMin)*0.5;
+			console.log("try : "+maybe);
+		}
+		// this is faster ?
+		// size3D = nextSize;
+		//
+		var ratio = nextSize>size3D ? nextSize/size3D : size3D/nextSize;
+		size3D = nextSize;
+		// console.log("   NEXT size3D: "+size3D);
+		// if(ratio<1.00000000000001){
+		// if(ratio<1.00001){ /// 1/10k
+		// 	console.log("   out early ");
+		// 	break;
+		// }
 	}
 
 
