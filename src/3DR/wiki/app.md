@@ -393,6 +393,17 @@ MISSING:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+- display the patches (circularly) projected onto the views
+
+
+- approximate a point's normal from neighborhood (8 ~ 16 kNN)
+
+
+
+
+
+
+
 - re-evalute various alogirhtms for dense pair matching (from seeds)
 	- patch/normal
 	- combining track points (blind)

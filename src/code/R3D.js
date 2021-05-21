@@ -27532,10 +27532,13 @@ R3D.optimizePatchNonlinearImages = function(point3D,size3D,normal3D,up3D, points
 
 	// throw "why optimizePatchNonlinearImages, not optimizeSADAffineCorner"
 	// console.log("optimizePatchNonlinearImages");
-	compareSize = Code.valueOrDefault(compareSize, 5); // 5 - 9
+	// compareSize = Code.valueOrDefault(compareSize, 5); // 5 - 9
+	compareSize = Code.valueOrDefault(compareSize, 9);
 	var mask2D = ImageMat.circleMask(compareSize);
 	var xVals = [0, 0];
-	var maxIterations = 25;
+	// var maxIterations = 25;
+	// var maxIterations = 15;
+	var maxIterations = 10;
 	var matrix3D = new Matrix3D();
 	var matrix2D = new Matrix2D();
 	var right3D = V3D.cross(normal3D,up3D);
@@ -27543,12 +27546,15 @@ R3D.optimizePatchNonlinearImages = function(point3D,size3D,normal3D,up3D, points
 	var args = [point3D,size3D,normal3D,up3D,right3D, points2D,imageScales,extrinsics,Ks, compareSize,mask2D, matrix2D, matrix3D];
 	// fxn, args, x, dx, iter, diff, epsilon, lambda
 	var dx = 1E-6; // starting x change: radians
-	var maxErrorDiff = 1E-6; // 1E-3 to 1E-7
+	var maxErrorDiff = 1E-7; // 1E-3 to 1E-7
+DEBUGOFFX=0;
 	result = Code.gradientDescent(R3D._optimizePatchNonlinearImagesGD, args, xVals, null, maxIterations, maxErrorDiff, dx);
+DEBUGOFFY++;
 	// Code.gradientDescent = function(fxn, args, x, dx, iter, diff, epsilon, lambda){
 	var x = result["x"];
 	var angleRight = x[0];
 	var angleUp = x[1];
+console.log("change: "+Code.degrees(angleUp)+" & "+Code.degrees(angleRight));
 	matrix3D.identity();
 	matrix3D.rotateVector(normal3D,angleRight);
 	matrix3D.rotateVector(up3D,angleUp);
@@ -27560,10 +27566,11 @@ R3D.optimizePatchNonlinearImages = function(point3D,size3D,normal3D,up3D, points
 	// console.log(up);
 	var right = V3D.cross(normal,up);
 		right.norm();
-	// throw ""
+// throw "out optimizePatchNonlinearImages"
 	return {"up":up,"normal":normal,"right":right};
 }
 DEBUGOFFX = 0;
+DEBUGOFFY = 0;
 R3D._optimizePatchNonlinearImagesGD = function(args, x, isUpdate){
 	if(isUpdate){
 		return;
@@ -27584,6 +27591,12 @@ R3D._optimizePatchNonlinearImagesGD = function(args, x, isUpdate){
 	var mask2D = args[10];
 	var matrix2D = args[11];
 	var matrix3D = args[12];
+
+// size3D = size3D*2.0;
+// size3D = size3D*4.0;
+// size3D = size3D*8.0;
+
+// compareSize = compareSize * 2.0;
 
 	var halfSize = compareSize*0.5;
 
@@ -27684,35 +27697,42 @@ R3D._optimizePatchNonlinearImagesGD = function(args, x, isUpdate){
 	for(var i=0; i<needles.length; ++i){
 		var needleA = needles[i];
 		for(var j = i+1; j<needles.length; ++j){
-		var needleB = needles[j];
-		var error = R3D._gd_SAD_IMAGES(needleA,needleB, mask2D);
-		totalError += error;
+			var needleB = needles[j];
+			var error = R3D._gd_SAD_IMAGES(needleA,needleB, mask2D);
+			totalError += error;
 		}
 	}
 
+
+var sss = 100;
 // console.log(totalError);
 	// DISPLAY IMAGES
-// console.log("DEBUGOFFX: "+DEBUGOFFX);
+	if(isUpdate){
+		if(DEBUGOFFX<50){
+		// if(DEBUGOFFY<30){
+			var mod = 15;
+			var col = DEBUGOFFY/mod | 0;
+			// SHOW NEEDLES
+			for(var i=0; i<needles.length; ++i){
+				var needle = needles[i];
+				var img = needle;
+					img = GLOBALSTAGE.getFloatRGBAsImage(img.red(),img.grn(),img.blu(), img.width(),img.height());
+				var d = new DOImage(img);
+				// d.graphics().alpha(0.2);
+				d.matrix().scale(10.0);
+				// d.matrix().scale(5.0);
+				// d.matrix().scale(4.0);
+				d.matrix().translate(10 + DEBUGOFFX*sss + col*sss*11, 10 + i*sss + (DEBUGOFFY-col*mod)*sss*2);
+				GLOBALSTAGE.addChild(d);
+			}
+			++DEBUGOFFX;
+		}
+	}
+// console.log("e: "+totalError);
 	// if(isUpdate){
-	// 	// SHOW NEEDLES
-	// 	for(var i=0; i<needles.length; ++i){
-	// 		var needle = needles[i];
-	// 		var img = needle;
-	// 			img = GLOBALSTAGE.getFloatRGBAsImage(img.red(),img.grn(),img.blu(), img.width(),img.height());
-	// 		var d = new DOImage(img);
-	// 		// d.graphics().alpha(0.2);
-	// 		d.matrix().scale(10.0);
-	// 		d.matrix().translate(10 + DEBUGOFFX*50, 10 + i*50);
-	// 		GLOBALSTAGE.addChild(d);
-	// 	}
-	// 	++DEBUGOFFX;
+	// 	console.log("error: "+totalError);
 	// }
 
-// console.log(totalError);
-
-	// if(isUpdate){
-	// 	console.log(totalError);
-	// }
 	return totalError;
 }
 

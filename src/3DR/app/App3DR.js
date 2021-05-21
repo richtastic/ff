@@ -12903,7 +12903,10 @@ console.log("LOOK AT SEED PATCHES FIRST")
 		var str = world.toYAMLString();
 		console.log(str);
 		// //
-// throw "before save solveDensePairNew"
+
+
+		world.showProjectedPatches();
+throw "before save solveDensePairNew"
 		// //
 		var goodEnoughMatches = true;
 		// //
