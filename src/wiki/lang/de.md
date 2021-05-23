@@ -1087,7 +1087,7 @@ Brandenburger - Brandenburg Gate
 | bestellen? |  | to order / order |
 | leben |  | life/alive/to live |
 | kauf ? |  | to buy |
-|  |  |  |
+| weintis ?  |  | to cry |
 |  |  |  |
 |  |  |  |
 |  |  |  |
@@ -1117,7 +1117,7 @@ Brandenburger - Brandenburg Gate
 | schwimmen |  | swim |
 |  Komisch|  | strange |
 |  |  |  |
-|  |  |  |
+| tot |  | dead |
 |  |  |  |
 | Lebensmittel | leibensmittle | food |
 |  |  |  |
@@ -1161,6 +1161,9 @@ Brandenburger - Brandenburg Gate
 | toll |  | great (cool) |
 | total |  | really (very) |
 | über |  | everything |
+| über |  | about? |
+|  |  |  |
+
 | viel |  | much |
 | alles |  | all/everything |
 | überall |  | everywhere |
@@ -1225,8 +1228,8 @@ Brandenburger - Brandenburg Gate
 |  |  |  |
 |  |  |  |
 | Test |  | test |
-|  |  |  |
-|  |  |  |
+| Bestattungen |  | burials |
+| Meerbestattung |  | burial at sea |
 |  |  |  |
 | Universität |  | university |
 |  |  |  |
@@ -1851,7 +1854,9 @@ Dusche - shower
 
 das Fenster - window
 
-Witz - joke
+Witz/e - joke/s
+
+plötzlich - suddently
 
 das Schlafzimmer - bedroom
 das Badezimmer

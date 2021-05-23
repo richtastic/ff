@@ -12887,6 +12887,9 @@ GLOBALSTAGE.root().matrix().scale(0.50); // dense
 		world.initAffineFromP3DPatches(points3DAdd);
 		world.embedPoints3D(points3DAdd);
 
+		// update the points
+		world.updatePatchesPoints3DFromNeighborhood(points3DAdd);
+
 
 		console.log("solveDensePair");
 // console.log(info);

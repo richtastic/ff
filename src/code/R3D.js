@@ -27528,17 +27528,15 @@ R3D.optimizePatchSizeProjected = function(point3D,size3D,normal3D,up3D, points2D
 }
 
 R3D.optimizePatchNonlinearImages = function(point3D,size3D,normal3D,up3D, points2D,imageScales,extrinsics,Ks, compareSize){ // position normal to minimize SAD error in reprojected cells
-
-
 	// throw "why optimizePatchNonlinearImages, not optimizeSADAffineCorner"
 	// console.log("optimizePatchNonlinearImages");
-	// compareSize = Code.valueOrDefault(compareSize, 5); // 5 - 9
-	compareSize = Code.valueOrDefault(compareSize, 9);
+	compareSize = Code.valueOrDefault(compareSize, 5); // 5 - 9
+	// compareSize = Code.valueOrDefault(compareSize, 9);
 	var mask2D = ImageMat.circleMask(compareSize);
 	var xVals = [0, 0];
 	// var maxIterations = 25;
-	// var maxIterations = 15;
-	var maxIterations = 10;
+	var maxIterations = 15;
+	// var maxIterations = 10;
 	var matrix3D = new Matrix3D();
 	var matrix2D = new Matrix2D();
 	var right3D = V3D.cross(normal3D,up3D);
@@ -27554,16 +27552,35 @@ DEBUGOFFY++;
 	var x = result["x"];
 	var angleRight = x[0];
 	var angleUp = x[1];
-console.log("change: "+Code.degrees(angleUp)+" & "+Code.degrees(angleRight));
+// console.log("change: "+Code.degrees(angleUp)+" & "+Code.degrees(angleRight));
 	matrix3D.identity();
 	matrix3D.rotateVector(normal3D,angleRight);
 	matrix3D.rotateVector(up3D,angleUp);
-	// console.log(normal3D);
-	// console.log(up3D);
 	var normal = matrix3D.multV3DtoV3D(normal3D);
 	var up = matrix3D.multV3DtoV3D(up3D);
-	// console.log(normal);
-	// console.log(up);
+	// check if algorithm flipped normal to point away from views:
+	var dotExtrinsics = 0;
+	for(var i=0; i<extrinsics.length; ++i){
+		var ext = extrinsics[i];
+		var fwd = new V3D(0,0,1);
+			fwd = ext.multV3DtoV3D(fwd);
+		var dot = V3D.dot(fwd,normal);
+		if(dot>=0){
+			dotExtrinsics += 1;
+		}else{
+			dotExtrinsics -= 1;
+		}
+	}
+	// if(dotExtrinsics>0){ // pointing in same direction
+		// matrix3D.rotateVector(up3D, Math.PI);
+		// console.log("flip = change: "+Code.degrees(angleUp)+" & "+Code.degrees(angleRight)+" => "+dotExtrinsics);
+	// }
+	// console.log("change: "+Code.degrees(angleUp)+" & "+Code.degrees(angleRight)+" => "+dotExtrinsics);
+
+	if(dotExtrinsics>0){
+		normal.flip();
+		up.flip(); // ?
+	}
 	var right = V3D.cross(normal,up);
 		right.norm();
 // throw "out optimizePatchNonlinearImages"

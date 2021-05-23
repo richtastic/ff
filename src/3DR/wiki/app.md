@@ -393,12 +393,79 @@ MISSING:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+11
+->12
+9
+->12
+7
+<32 wide>
+32/12 = 2.6
+32/10 = 3.2
+
+
+
+PATCH STEPS:
+
+
+- initial steps: < 1k
+	- init patches from view geometry
+		- refine patch visually
+- medium dense 1k-10k
+	- init patches from neighborhood plane
+	- update patches from neighborhood plane
+		- refine patch visually
+- dense > 10k
+	- init patches from neighborhood average
+	- update patches from neighborhood average
+		- refine patch visually
+	- 
+
+...
+
+
+
+???
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 - display the patches (circularly) projected onto the views
 
 
 - approximate a point's normal from neighborhood (8 ~ 16 kNN)
 
 
+
+- points not in the world can't use 
 
 
 

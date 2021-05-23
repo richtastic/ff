@@ -7408,18 +7408,26 @@ Stereopsis.World.prototype.initP3DPatchFromGeometry3D = function(point3D){
 
 	// get up = average view ups:
 	var ups = [];
+	var nms = [];
 	for(var i=0; i<points2D.length; ++i){
 		var point2D = points2D[i];
 		var view = point2D.view();
 		var up = view.up().copy();
+		var nm = view.normal().copy();
 		if( i>0 && V3D.dot(up,ups[0])<0 ){
 			up.scale(-1);
 		}
+		if( i>0 && V3D.dot(nm,nms[0])<0 ){
+			nm.scale(-1);
+		}
 		ups.push(up);
+		nms.push(nm);
 	}
-	// console.log(ups);
 	var up3D = Code.averageAngleVector3D(ups);
-	// console.log("UP3D: "+up3D);
+	var nm3D = Code.averageAngleVector3D(nms);
+	if(V3D.dot(nm3D,normal3D)>0){
+		normal3D.flip();
+	}
 	var patchUp = Code.projectPointToPlane3D(up3D, V3D.ZERO,normal3D);
 	patchUp.norm();
 	// console.log("patchUp: "+patchUp+"");
@@ -7715,7 +7723,7 @@ Stereopsis.World.prototype.initP3DPatchFromVisual = function(point3D){
 	this.updateP3DPatchFromVisual(point3D);
 }
 Stereopsis.World.prototype.updateP3DPatchFromVisual = function(point3D){
-
+	var world = this;
 // TODO: remove
 // throw "remove this - here";
 // return;
@@ -7775,29 +7783,160 @@ Stereopsis.World.prototype.updateP3DPatchFromVisual = function(point3D){
 		return;
 	}
 */
+
+
+	// point3D.size(size3D);
+	// point3D.normal(normal3D);
+	// point3D.up(up3D);
+	// return;
 	// get normal more accurate
 var updateSize3D = size3D * 2.0; // affine more expanded
-
-
-
-// ????
-
-
-	var result = R3D.optimizePatchNonlinearImages(location3D,updateSize3D,normal3D,up3D, ps2D,imageScales, extrinsics,Ks);
-// console.log(result);
-// throw "optimizePatchNonlinearImages"
 	
+	var result = R3D.optimizePatchSizeProjected(location3D,size3D,normal3D,up3D, ps2D,sizes2D, extrinsics,Ks);
 	var normal = result["normal"];
 	var up = result["up"];
 	point3D.size(size3D);
 	point3D.normal(normal);
 	point3D.up(up);
+	
+// 	var result = world.patchFromNeighborhood(point3D);
+// // console.log(result);
+// // throw "?"
+// 	if(result){ // can update
+// 		throw "..."
+// 	}
+
+
+	// var result = R3D.optimizePatchNonlinearImages(location3D,updateSize3D,normal3D,up3D, ps2D,imageScales, extrinsics,Ks);
+
+// console.log(result);
+// throw "optimizePatchNonlinearImages"
+	
+	
 
 
 // TODO: remove
 // throw "remove this - updateP3DPatchFromVisual";
 // return;
 }
+Stereopsis.World.prototype.updatePatchesPoints3DFromNeighborhood = function(points3D){
+	// return;
+	var world = this;
+	if(!points3D){
+		points3D = world.toPointArray();
+	}
+	for(var j=0; j<points3D.length; ++j){
+		var point3D = points3D[j];
+		var result = world.patchFromNeighborhood(point3D);
+		if(result){
+			var normal = result["normal"];
+			// set
+			point3D.normal(normal);
+			world.directionNormalPoint3DToViewsOpposite(point3D);
+			var up = V3D.perpendicularComponent(normal,point3D.up()).norm();
+			point3D.up(up);
+			world.updateP3DPatchFromVisual(point3D);
+			
+		}
+	}
+
+}
+Stereopsis.World.prototype.directionNormalPoint3DToViewsOpposite = function(point3D){
+	var dotExtrinsics = 0;
+	var views = point3D.toViewArray();
+	var normal = point3D.normal();
+	for(var i=0; i<views.length; ++i){
+		// var ext = views[i].absoluteTransform();
+		var fwd = views[i].normal();
+		var dot = V3D.dot(fwd,normal);
+		if(dot>=0){
+			dotExtrinsics += 1;
+		}else{
+			dotExtrinsics -= 1;
+		}
+	}
+	if(dotExtrinsics>0){ // pointing in same direction
+		normal.flip();
+	}
+}
+Stereopsis.World.prototype.patchFromNeighborhood = function(point3D){
+	var world = this;
+	// var location3D = point3D.point();
+	var neighborhood = world.neighborhood2D3DForPoint3D(point3D, 6);
+	if(!neighborhood){
+		return null;
+	}
+	// find local plane
+	// console.log(neighborhood);
+	for(var i=0; i<neighborhood.length; ++i){
+		neighborhood[i] = neighborhood[i].point();
+	}
+	// console.log(neighborhood);
+	var plane = Code.planeFromPoints3D(neighborhood);
+	// console.log(plane);
+// throw "..."
+	var result = {};
+		result["normal"] = plane["normal"];
+		// result["up"] = null;
+	return result;
+}
+
+Stereopsis.World.prototype.neighborhood2D3DForPoint3D = function(point3D, minimumNeighborhoodCount){
+	var world = this;
+	minimumNeighborhoodCount = minimumNeighborhoodCount!==undefined ? minimumNeighborhoodCount : 4;
+	// var minimumNeighborhoodCount = 4; // 2D OR 3D should be at least this dense [3x3 grid would have 9] : 4-8 + 1
+	var neighborhoodSizeScale = 2.0; // 1.0-2.0
+	var neighbors3D = world.neighborhoodFor3DPointPatch(point3D,neighborhoodSizeScale);
+	// console.log(point3D);
+// console.log(neighbors3D);
+// throw "why zero"
+	if(neighbors3D.length<minimumNeighborhoodCount){
+		return null;
+	}
+	var hash3D = {};
+	var value3D = {};
+	for(var j=0; j<neighbors3D.length; ++j){
+		var p3D = neighbors3D[j];
+		var index = p3D.id();
+		hash3D[index] = 0;
+		value3D[index] = p3D;
+	}
+	// get 2D list
+	var points2D = point3D.toPointArray();
+	var point2DCount = points2D.length;
+	for(var j=0; j<point2DCount; ++j){
+		var point2D = points2D[j];
+		var neighbors2D = world.neighborhoodFor2DPoint(point2D,neighborhoodSizeScale);
+		if(neighbors2D.length<minimumNeighborhoodCount){
+			return null;
+		}
+		for(var k=0; k<neighbors2D.length; ++k){
+			var p3D = neighbors2D[k].point3D();
+			var index = p3D.id();
+			var value = hash3D[index];
+			if(value!==undefined){
+				hash3D[index] = value + 1;
+			}
+		}
+	}
+	// TODO: desired gaussian window falloff?
+	// collect all 
+	var neighborhood = [];
+	var keys = Code.keys(hash3D);
+	for(var j=0; j<keys.length; ++j){
+		var key = keys[j];
+		if(hash3D[key] == point2DCount){
+			neighborhood.push(value3D[key]);
+		}
+	}
+	// console.log(hash3D);
+	// console.log(neighborhood);
+	if(neighborhood.length<minimumNeighborhoodCount){
+		return null;
+	}
+	return neighborhood;
+}
+
 Stereopsis.World.prototype.showProjectedPatches = function(){
 	var world = this;
 	var points3D = world.toPointArray();
@@ -7845,6 +7984,7 @@ console.log(scale);
 		var normal3D = point3D.normal();
 		var up3D = point3D.up();
 		var size3D = point3D.size();
+var color = Code.getColARGBFromFloat(1.0, Math.random(),Math.random(),Math.random());
 		for(var j=0; j<views.length; ++j){
 			var view = views[j];
 			var displayScale = scales[j];//displayImages[j].width()/view.imageScales().width()
@@ -7853,10 +7993,11 @@ console.log(scale);
 				// var cellSize = view.cellSize();
 				// var halfSize = cellSize*0.5;
 				// 
-				var projectCount = 4;
+				// var projectCount = 4;
+				var projectCount = 8;
 				var pi2 = Math.PI*2.0;
 
-var color = Code.getColARGBFromFloat(1.0, Math.random(),Math.random(),Math.random());
+
 
 var d = new DO();
 d.graphics().setLine(2.0,color);
