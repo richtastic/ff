@@ -12891,12 +12891,23 @@ GLOBALSTAGE.root().matrix().scale(0.50); // dense
 		world.updatePatchesPoints3DFromNeighborhood(points3DAdd);
 
 
+
+		// world._resolutionProcessingModePatchInit = world.initP3DPatchFromVisual;
+		// world._resolutionProcessingModePatchUpdate = world.updateP3DPatchFromVisual;
+		// world._resolutionProcessingModeAffineSet = world._resolutionProcessingModeAffineFromPatch3D;
+
+		world._resolutionProcessingModePatchInit = world.initP3DPatchFromNeighborhoodVisual;
+		// world._resolutionProcessingModePatchUpdate = world.updateP3DPatchFromVisual;
+		world._resolutionProcessingModePatchUpdate = world.initP3DPatchFromNeighborhoodVisual; // full redo
+		world._resolutionProcessingModeAffineSet = world._resolutionProcessingModeAffineFromPatch3D;
+
+
 		console.log("solveDensePair");
 // console.log(info);
 // throw "before solveDensePair"
 		// //
 console.log("LOOK AT SEED PATCHES FIRST")
-		// world.solveDensePairNew();
+		world.solveDensePairNew();
 		// //
 		// GLOBALSTAGE.root().matrix().scale(0.25);
 		// world.showForwardBackwardPair();
@@ -12905,10 +12916,7 @@ console.log("LOOK AT SEED PATCHES FIRST")
 		// //
 		var str = world.toYAMLString();
 		console.log(str);
-		// //
-
-
-		world.showProjectedPatches();
+		// world.showProjectedPatches();
 throw "before save solveDensePairNew"
 		// //
 		var goodEnoughMatches = true;

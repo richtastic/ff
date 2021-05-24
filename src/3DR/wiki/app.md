@@ -393,14 +393,13 @@ MISSING:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-11
-->12
-9
-->12
-7
-<32 wide>
-32/12 = 2.6
-32/10 = 3.2
+
+
+
+NEIGHBORHOOD SMOOTHING ?
+- move P3Ds along normal toward COM of neighborhood ?
+
+
 
 
 
@@ -424,11 +423,18 @@ PATCH STEPS:
 
 
 
+- INITIAL:
+	world.setResolutionProcessingModeFromCountP3D([]);
+	... embed
+	world.updatePatchesPoints3DFromNeighborhood(points3DAdd);
+
+
+
+			this._resolutionProcessingModePatchInit = this.initP3DPatchFromVisual;
+			this._resolutionProcessingModePatchUpdate = this.updateP3DPatchFromVisual;
+			this._resolutionProcessingModeAffineSet = this._resolutionProcessingModeAffineFromPatch3D;
+
 ???
-
-
-
-
 
 
 

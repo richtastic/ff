@@ -7386,6 +7386,12 @@ Stereopsis.World.prototype.initP3DPatchFromGeometry3D = function(point3D){
 			}
 		}
 	}
+
+	// HERE: is points2D length zero ?
+	
+if(p2Din3DList.length<=3){
+	return;
+}
 	// console.log(p2Din3DList);
 	// var plane = Code.planeFromPoints3D(location3D, p2Din3DList);
 	var plane = Code.planeFromPoints3D(p2Din3DList);
@@ -7394,6 +7400,13 @@ Stereopsis.World.prototype.initP3DPatchFromGeometry3D = function(point3D){
 	var center3D = plane["point"];
 	// console.log(center3D+" v "+location3D+" = "+V3D.distance(location3D,center3D));
 	point3D.normal(normal3D);
+if(!normal3D){
+	console.log(point3D);
+	console.log(plane);
+	console.log(normal3D);
+	console.log(center3D);
+	throw "no normal3D";
+}
 	var radii = [];
 	for(var i=0; i<p2Din3DList.length; ++i){
 		var p = p2Din3DList[i];
@@ -7425,6 +7438,16 @@ Stereopsis.World.prototype.initP3DPatchFromGeometry3D = function(point3D){
 	}
 	var up3D = Code.averageAngleVector3D(ups);
 	var nm3D = Code.averageAngleVector3D(nms);
+if(!nm3D || !up3D){
+	console.log(point3D);
+	console.log(radius3D);
+	console.log(plane);
+	console.log(p2Din3DList);
+	console.log(nm3D);
+	console.log(up3D);
+	console.log("...");
+	throw "no value";
+}
 	if(V3D.dot(nm3D,normal3D)>0){
 		normal3D.flip();
 	}
@@ -7722,14 +7745,14 @@ Stereopsis.World.prototype.initP3DPatchFromVisual = function(point3D){
 	this.initP3DPatchFromGeometry3D(point3D);
 	this.updateP3DPatchFromVisual(point3D);
 }
+
+Stereopsis.World.prototype.initP3DPatchFromNeighborhoodVisual = function(point3D){ // init toward camera, update based on neighborhood, update based on images
+	this.initP3DPatchFromGeometry3D(point3D); // view geometry
+	this.updatePatchesPoint3DFromNeighborhood(point3D); // neighborhood normal + images
+}
+
 Stereopsis.World.prototype.updateP3DPatchFromVisual = function(point3D){
 	var world = this;
-// TODO: remove
-// throw "remove this - here";
-// return;
-
-
-
 	var points2D = point3D.toPointArray();
 	var sizes2D = [];
 	var imageScales = [];
@@ -7741,6 +7764,10 @@ Stereopsis.World.prototype.updateP3DPatchFromVisual = function(point3D){
 		var view = point2D.view();
 		var size = view.cellSize();
 		var imageScale = view.imageScales();
+		if(!imageScale){
+			console.log("no image - updateP3DPatchFromVisual");
+			return;
+		}
 		var K = view.K();
 		var extrinsic = view.absoluteTransform();
 		sizes2D.push(size);
@@ -7819,27 +7846,30 @@ var updateSize3D = size3D * 2.0; // affine more expanded
 // throw "remove this - updateP3DPatchFromVisual";
 // return;
 }
-Stereopsis.World.prototype.updatePatchesPoints3DFromNeighborhood = function(points3D){
-	// return;
+Stereopsis.World.prototype.updatePatchesPoints3DFromNeighborhood = function(points3D){ // update normal by average plane in point neighborhood
 	var world = this;
 	if(!points3D){
 		points3D = world.toPointArray();
 	}
 	for(var j=0; j<points3D.length; ++j){
 		var point3D = points3D[j];
-		var result = world.patchFromNeighborhood(point3D);
-		if(result){
-			var normal = result["normal"];
-			// set
-			point3D.normal(normal);
-			world.directionNormalPoint3DToViewsOpposite(point3D);
-			var up = V3D.perpendicularComponent(normal,point3D.up()).norm();
-			point3D.up(up);
-			world.updateP3DPatchFromVisual(point3D);
-			
-		}
+		world.updatePatchesPoint3DFromNeighborhood(point3D);
 	}
 
+}
+Stereopsis.World.prototype.updatePatchesPoint3DFromNeighborhood = function(point3D){
+	var world = this;
+	var result = world.patchFromNeighborhood(point3D);
+	if(result){
+		var normal = result["normal"];
+		// set
+		point3D.normal(normal);
+		world.directionNormalPoint3DToViewsOpposite(point3D);
+		var up = V3D.perpendicularComponent(normal,point3D.up()).norm();
+		point3D.up(up);
+		// refine visually
+		world.updateP3DPatchFromVisual(point3D);
+	}
 }
 Stereopsis.World.prototype.directionNormalPoint3DToViewsOpposite = function(point3D){
 	var dotExtrinsics = 0;
@@ -9265,11 +9295,11 @@ Stereopsis.World.prototype.solveDensePairNew = function(subdivisionScaleSize, su
 	var subdivisions = subDivisionCounts; // ~40k  --- select - about 
 
 
-subdivisions = 0; // show seeds
+// subdivisions = 0; // show seeds
 // subdivisions = 1; // 5k
 // subdivisions = 2; // 10k ............... testing
 // subdivisions = 3; // 25k ................. current default
-// subdivisions = 4; // 50k
+subdivisions = 4; // 50k
 // subdivisions = 5; // 100k
 // console.log("subdivisions: "+subdivisions);
 // throw "??"
@@ -9306,8 +9336,6 @@ timeA = Code.getTimeMilliseconds();
 // timeA = Code.getTimeMilliseconds();
 
 		world.initNullP3DPatches();
-
-
 /*
 // 2 + 4 + 6
 // TEST BORDERS
@@ -9453,15 +9481,15 @@ console.log((timeStop-timeStart)/1000/60); // ~ 20 mins
 
 	
 	// check it out
-	var str = world.toYAMLString();
-	console.log(str);
+	// var str = world.toYAMLString();
+	// console.log(str);
 
 
 	// world.showForwardBackwardPair();
 	// ???
 	
-	throw "solveDensePair2";
-	return null;
+	// throw "solveDensePair2";
+	// return null;
 }
 
 
