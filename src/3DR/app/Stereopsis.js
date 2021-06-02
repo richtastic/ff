@@ -7388,7 +7388,7 @@ Stereopsis.World.prototype.initP3DPatchFromGeometry3D = function(point3D){
 	}
 
 	// HERE: is points2D length zero ?
-	
+
 if(p2Din3DList.length<=3){
 	return;
 }
@@ -9298,8 +9298,8 @@ Stereopsis.World.prototype.solveDensePairNew = function(subdivisionScaleSize, su
 // subdivisions = 0; // show seeds
 // subdivisions = 1; // 5k
 // subdivisions = 2; // 10k ............... testing
-// subdivisions = 3; // 25k ................. current default
-subdivisions = 4; // 50k
+subdivisions = 3; // 25k ................. current default
+// subdivisions = 4; // 50k
 // subdivisions = 5; // 100k
 // console.log("subdivisions: "+subdivisions);
 // throw "??"
@@ -9453,6 +9453,10 @@ timeA = Code.getTimeMilliseconds();
 		// smoothing?
 		// console.log("refinePoint3DAbsoluteLocation");
 		world.refinePoint3DAbsoluteLocation();
+
+		// SMOOTHING?
+		world.smoothP3DPatchesNeighborhood();
+
 		// 
 		// 
 
@@ -9492,6 +9496,43 @@ console.log((timeStop-timeStart)/1000/60); // ~ 20 mins
 	// return null;
 }
 
+Stereopsis.World.prototype.smoothP3DPatchesNeighborhood = function(){
+	var world = this;
+	var points3D = world.toPointArray();
+	var minimumNeighborhoodCount = 6; // 6 - 12
+	for(var i=0; i<points3D.length; ++i){
+		var point3D = points3D[i];
+		point3D._temp = null;
+		var p3D = point3D.point();
+		var neighborhood = world.neighborhood2D3DForPoint3D(point3D, minimumNeighborhoodCount);
+		if(!neighborhood){
+			continue;
+		}
+
+		point3D._temp = newLocation;
+	}
+
+	for(var i=0; i<points3D.length; ++i){
+		var point3D = points3D[i];
+		var newLocation = point3D._temp;
+		if(newLocation){
+			point3D._temp = null;
+			world.updatePoint3DLocation(point3D,newLocation);
+		}
+		
+	}
+	/*
+SMOOTH:
+	- for all P3D:
+		- get 2D-3D-N & get 8 ~ 10 kNN 
+		- get sigma distance
+		- window / weights = exp^ - d^2/s^2
+		- get local plane using weights
+		- get new location = ray from Vavg to P3D => projected onto plane
+	- set all P3D locations to new locations
+*/
+throw "smoothP3DPatchesNeighborhood";
+}
 
 Stereopsis.World.prototype.filterLocal3DNeighborhoodSize = function(){
 	console.log("filterLocal3DNeighborhoodSize ...");

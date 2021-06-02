@@ -19,6 +19,8 @@ if (typeof module !== 'undefined' && module.exports) { isNode = true; }
 if (typeof window !== 'undefined' && window.navigator) { isBrowser = true; }
 if(isNode){
 	var Code = require("./Code.js");
+	Code._IS_NODE = isNode;
+	Code._IS_BROWSER = isBrowser;
 }
 
 
@@ -168,6 +170,12 @@ Code.daysOfWeekLong = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "
 // ------------------------------------------------------------------------------------------
 function Code(){
 	throw "this is a library";
+}
+Code.isBrowser = function(){
+	return Code._IS_BROWSER;
+}
+Code.isNode = function(){
+	return Code._IS_NODE;
 }
 Code.getType = function(obj){
 	return (typeof obj);
@@ -1648,6 +1656,19 @@ Code.arrayFromHash = function(hash, nonnull){
 	}
 	return arr;
 }
+Code.arrayEqual = function(a,b){
+	var i, lenA = a.length, lenB = b.length;
+	if(lenA!=lenB){
+		return false;
+	}
+	for(i=0;i<lenA;++i){
+		if(a[i]!=b[i]){
+			console.log("diff at: "+i)
+			return false;
+		}
+	}
+	return true;
+}
 Code.newArray = function(){
 	var arr = new Array();
 	var i, len = arguments.length;
@@ -1851,9 +1872,10 @@ Code.copyArray = function(a,b,start,end){ // a = b
 	}else if(arguments.length==2){
 		start=0; end=b.length - 1;
 	}else if(arguments.length==3){
+		// throw "this is vague behavior"
 		end=start; start=b; b=a; a=new Array();
 	}else if(arguments.length==4){
-		//
+		// throw "4 - set"
 	}
 	//end = Math.min(b.length-1,end);
 	//if(b===undefined){ b=a; a=new Array(); }
@@ -18553,6 +18575,54 @@ Code.rotationEulerRodriguezToMatrix = function(mat, v){ // http://www.sciencedir
 	mat.set(2,1, h);
 	mat.set(2,2, i);
 	return mat;
+}
+
+
+
+
+Code.parseCommandLineArguments = function(argString, mappings){ // mappings will pre-filter to only these listed components
+	if(!argString){
+		return {};
+	}
+	// separate into s
+	// console.log(argString);
+	// var regex = "[ |\t|\n]--?";
+	var regex = /[ |\t|\n]--?/g;
+	var locations = [];
+	var match = regex.exec(argString);
+	while(match != null){
+		// console.log(match);
+		locations.push(match["index"]);
+		match = regex.exec(argString);
+	}
+	// console.log(locations);
+
+	// convert into chunks:
+	var spacing = /([ |\t|\n])+/g;
+
+	var pairs = {};
+	for(var i=0; i<locations.length; ++i){
+		var start = locations[i];
+		var end = (i==locations.length-1) ? argString.length : locations[i+1];
+		// console.log(start,end);
+		var chunk = argString.substr(start,end-start);
+			chunk = chunk.replace(regex,"");
+		// console.log(chunk);
+		var key = "";
+		var val = "";
+		var center = chunk.search(spacing);
+		// console.log(center);
+		if(center==-1){
+			key = chunk.trim();
+			val = null;
+			// val = true;
+		}else{
+			key = chunk.substr(0,center).trim();
+			val = chunk.substr(center,chunk.length-center).trim();
+		}
+		pairs[key] = val;
+	}
+	return pairs;
 }
 
 

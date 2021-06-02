@@ -396,8 +396,19 @@ MISSING:
 
 
 
+
 NEIGHBORHOOD SMOOTHING ?
 - move P3Ds along normal toward COM of neighborhood ?
+
+SMOOTH:
+	- for all P3D:
+		- get 2D-3D-N & get 8 ~ 10 kNN 
+		- get sigma distance
+		- window / weights = exp^ - d^2/s^2
+		- get local plane using weights
+		- get new location = ray from Vavg to P3D => projected onto plane
+	- set all P3D locations to new locations
+
 
 
 

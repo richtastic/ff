@@ -7,7 +7,15 @@ if (typeof module !== 'undefined' && module.exports) { isNode = true; }
 if (typeof window !== 'undefined' && window.navigator) { isBrowser = true; }
 if(isNode){
 	var Code = require("./Code.js");
+	// var BinInt = require("./BinInt.js");
 }
+
+// NODE JS INCLUSION:
+// if(Code.isNode()){
+// 	module.exports = ByteData;
+// }
+
+
 
 
 
@@ -19,6 +27,7 @@ ByteData.CRC_32_B = 0xEDB88320;
 ByteData.CRC_32_C = 0x82608EDB;
 ByteData.MAX_SUB_INDEX = ByteData.BITS_PER_INT - 1;
 ByteData.STRING_64_ARRAY = ['A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z','a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z','0','1','2','3','4','5','6','7','8','9','+','/'];
+ByteData.HEX_LOOKUP = ["0","1","2","3","4","5","6","7","8","9","A","B","C","D","E","F"];
 /*
 |<--------------- length ----------------------->V (bits)
 |<--- position --->V (bits)
@@ -36,16 +45,22 @@ function ByteData(){
 	this._subIndex = 0; // bit index on chunk-level
 	this._ander = 0; // subIndex-masking
 }
-ByteData.prototype.copy = function(b){ // this = b
-	var i, len = this._data.length, lenB = b._data.length;
+ByteData.data = function(){
+	return this._data;
+}
+ByteData.copy = function(a,b){
+	var i, len = a._data.length, lenB = b._data.length;
 	for(i=0;i<lenB;++i){ // match all of b's elements
-		this._data[i] = b._data[i];
+		a._data[i] = b._data[i];
 	}
 	for(;i<len;++i){ // remove unused end
-		this._data.pop();
+		a._data.pop();
 	}
-	this._length = b._length;
-	this._position = b._position;
+	a._length = b._length;
+	a._position = b._position;
+}
+ByteData.prototype.copy = function(b){ // this = b
+	ByteData.copy(this,b);
 }
 ByteData.prototype._setup_position = function(p){ // set reading params based on p (bits)
 	this._index = Math.floor(p / ByteData.BITS_PER_INT);
@@ -82,7 +97,7 @@ ByteData.prototype.length = function(l){ // total bits
 	return this._length;
 }
 ByteData.prototype.read = function(){ // start read at _position
-	if(this._position >=this._length){ return 0; } // -1?
+	if(this._position >=this._length){ /*console.log("over");*/ return 0; } // -1?
 	this._setup_position(this._position);
 	++this._position; // goto next position for next read
 	return (this._data[this._index] & this._ander)!=0?1:0;
@@ -100,6 +115,37 @@ ByteData.prototype.write = function(d){ // write at position
 		this._length = this._position;
 	}
 	return d;
+}
+ByteData.prototype.reverse = function(){ 
+	//
+	var first = 0;
+	var last = this._length-1;
+	if(last<0){
+		console.log("no data");
+		return;
+	}
+	var was = this.position();
+	this.position(0);
+	var itr = 0;
+	while(first<last){
+		// console.log(" "+itr+" : "+first+" - "+last);
+		// read
+		this.position(first);
+		var f = this.read();
+		this.position(last);
+		var l = this.read();
+		// write
+		this.position(first);
+		this.write(l);
+		this.position(last);
+		this.write(f);
+		// ...
+		++first;
+		--last;
+		++itr;
+	}
+	this.position(was);
+	// throw "flip positions"
 }
 // -------------------------------------------------------------------------------------------------------------- ByteData
 ByteData.prototype.readByteData = function(ba, len, rev){
@@ -203,8 +249,44 @@ ByteData.prototype.readUint32 = function(){
 ByteData.prototype.writeUint32 = function(n){
 	this.writeUintN(n,32);
 }
+ByteData.prototype.writeUint8Array = function(array){
+	var len = array.length;
+	for(var i=0; i<len; ++i){
+		var v = array[i];
+		this.writeUint8(v);
+	}
+}
+ByteData.prototype.writeStringHex = function(str){
+	var i, len = Math.min(str.length);
+	var table = {};
+		table["0"] = 0x00;
+		table["1"] = 0x01;
+		table["2"] = 0x02;
+		table["3"] = 0x03;
+		table["4"] = 0x04;
+		table["5"] = 0x05;
+		table["6"] = 0x06;
+		table["7"] = 0x07;
+		table["8"] = 0x08;
+		table["9"] = 0x09;
+		table["A"] = 0x0A;
+		table["B"] = 0x0B;
+		table["C"] = 0x0C;
+		table["D"] = 0x0D;
+		table["E"] = 0x0E;
+		table["F"] = 0x0F;
+	for(i=0;i<len;++i){
+		var val = table[str.charAt(i).toUpperCase()];
+		this.writeUint4( val);
+	}
+}
+
+
+
+
 // -------------------------------------------------------------------------------------------------------------- toString
 ByteData.prototype.toStringBin = function(){
+	// console.log("ByteData.prototype.toStringBin");
 	var str = "", i, len = this.length(), was = this.position();
 	this.position(0);
 	for(i=0;i<len;++i){
@@ -216,7 +298,28 @@ ByteData.prototype.toStringBin = function(){
 	this.position(was);
 	return str;
 }
+ByteData.prototype.toHex = function(){
+	var str = "", i, len = Math.ceil( this.length()/4.0 ) , was = this.position();
+	this.position(0);
+	for(i=0;i<len;++i){
+		str = str+this.readUint4().toString(16).toUpperCase();
+	}
+	this.position(was);
+	return str;
+}
 ByteData.prototype.toStringHex = function(){
+	var str = "", i, len = Math.ceil( this.length()/4.0 ) , was = this.position();
+	this.position(0);
+	for(i=0;i<len;++i){
+		if ( i%8==0 && i>0){
+			str = str + "|"
+		}
+		str = str+this.readUint4().toString(16).toUpperCase();
+	}
+	this.position(was);
+	return str;
+}
+ByteData.prototype.inverseHex = function(){
 	var str = "", i, len = Math.ceil( this.length()/4.0 ) , was = this.position();
 	this.position(0);
 	for(i=0;i<len;++i){
@@ -462,128 +565,177 @@ ByteData.prototype.decompressedRice = function(){
 }
 
 // -------------------------------------------------------------------------------------------------------------- crypto
-ByteData.SHA1 = function(message){
-	var mCopy = new ByteData();//0, false);
-	ByteData.copy(mCopy,message);
-	var originalLen = mCopy.length();
-	// STEP 1) EXTENDIFY - EXTEND MESSAGE TO: MESSAGE|1|0...0|LENGTH -----------------------------------------
-	mCopy.position( originalLen );
-	mCopy.write(1);
-	console.log("MESSAGE:");
-	console.log(mCopy.toString());
-	// COPY TO TEMP MESSAGE
-	var messageLen = mCopy.length();
-	var remainder = 512 - (messageLen % 512);
-	var len64 = new BinInt(64);
-	len64.setFromInt(originalLen);
-	if(remainder < 64){
-		remainder += 512;
-	}
-	for(;remainder>64;--remainder){
-		mCopy.write(0);
-	}
-	for(i=64-1;i>=0;--i){
-		len64.position(i);
-		mCopy.write( len64.read() );
-	}
-	var messageLen = mCopy.length();
-	// INIT HASHING
-	var H0 = new BinInt(32); H0.setFromInt( 0x67452301 );
-	var H1 = new BinInt(32); H1.setFromInt( 0xEFCDAB89 );
-	var H2 = new BinInt(32); H2.setFromInt( 0x98BADCFE );
-	var H3 = new BinInt(32); H3.setFromInt( 0x10325476 );
-	var H4 = new BinInt(32); H4.setFromInt( 0xC3D2E1F0 );
-	var A = new BinInt(32), B = new BinInt(32), C = new BinInt(32), D = new BinInt(32), E = new BinInt(32);
-	var F = new BinInt(32), K = new BinInt(32), X = new BinInt(32), Y = new BinInt(32), Z = new BinInt(32), TEMP, chunk;
-	var chunk512 = new BinInt(512);
-	// INIT CHUNKS
-	var chunkList = new Array();
-	for(i=0;i<16;++i){
-		chunkList.push( new BinInt(32) );
-	}
-	var chunkCount = Math.ceil(messageLen/512);
-	console.log("TOTAL LEN: "+messageLen);
-	// LOOP
-	for(i=0;i<chunkCount;++i){
-		// STEP 2) CHUNKIFY - SPLIT 512-CHUNK INTO 16+64=80 32-BIT SUB-CHUNKS
-		mCopy.position(i*512);
-		for(j=0;j<16;++j){
-			chunk = chunkList[j];
-			for(k=0;k<32;++k){
-				chunk._position = 31-k;
-				chunk.write( mCopy.read() );
-			}
-		}
-		// CONTINUE HASH
-		BinInt.copy(A,H0); BinInt.copy(B,H1); BinInt.copy(C,H2); BinInt.copy(D,H3); BinInt.copy(E,H4);
-		for(j=0;j<80;++j){
-			chunk = chunkList[j%16];
-			// STEP 3) DEFINE KEY AND FUNCTION:
-			if(j<20){ // F = (B & C) | (!B & D)
-				K.setFromInt(0x5A827999);
-				BinInt.andFast(X,B,C);
-				BinInt.notFast(Y,B);
-				BinInt.andFast(Y,Y,D);
-				BinInt.orFast(F,X,Y);
-			}else if(j<40){ // F = B ^ C ^ D
-				K.setFromInt(0x6ED9EBA1);
-				BinInt.xorFast(X,B,C);
-				BinInt.xorFast(F,X,D);
-			}else if(j<60){ // F = (B & C) | (B & D) | (C & D)
-				K.setFromInt(0x8F1BBCDC);
-				BinInt.andFast(X,B,C);
-				BinInt.andFast(Y,B,D);
-				BinInt.andFast(Z,C,D);
-				BinInt.orFast(Y,X,Y);
-				BinInt.orFast(F,Y,Z);
-			}else{ // F = B ^ C ^ D
-				K.setFromInt(0xCA62C1D6);
-				BinInt.xorFast(X,B,C);
-				BinInt.xorFast(F,X,D);
-			}
-			// STEP 4) MIXIFY
-			// NEXT A = LC(A,5) + F + K + E + chunk
-			BinInt.leftCircular(X,A,5);
-			BinInt.add(Y,F,K);
-			BinInt.add(Z,E,chunk);
-			BinInt.add(Y,X,Y);
-			BinInt.add(Z,Y,Z);
-			// E = D  |  D = C  |  C = LR(B,30)  |  B = A
-			BinInt.copy(E,D);
-			BinInt.copy(D,C);
-			BinInt.leftCircular(C,B,30);
-			BinInt.copy(B,A);
-			BinInt.copy(A,Z);
-			// update chunk list
-			BinInt.xorFast(X,chunkList[(j+13)%16],chunkList[(j+8)%16]);
-			BinInt.xorFast(Y,chunkList[(j+2)%16],chunkList[(j+0)%16]);
-			BinInt.xorFast(Z,X,Y);
-			BinInt.leftCircular(Z,Z,1);
-			BinInt.copy(chunk,Z);
-		}
-		// STEP 5) SUM HASH
-		BinInt.add(H0,H0,A);
-		BinInt.add(H1,H1,B);
-		BinInt.add(H2,H2,C);
-		BinInt.add(H3,H3,D);
-		BinInt.add(H4,H4,E);
-	}
-	// RETURN
-	var sha1 = new BinInt(160);
-	sha1.position(0);
-	sha1.writeByteData(H4);
-	sha1.writeByteData(H3);
-	sha1.writeByteData(H2);
-	sha1.writeByteData(H1);
-	sha1.writeByteData(H0);
-	return sha1;
-}
-ByteData.SHA256 = function(message){
-	return null;
-}
-ByteData.SHA512 = function(message){
-	return null;
-}
+// ByteData.SHA1 = function(message){
+// 	var mCopy = new ByteData();
+// 		mCopy.writeUint8Array(message);
+// 	var originalLen = mCopy.length();
+// console.log("SHA1 ----------------------------------------------------------------------");
+// console.log(mCopy.toStringHex());
+// // throw "."
+// 	// STEP 1) EXTENDIFY - EXTEND MESSAGE TO: MESSAGE|1|0...0|LENGTH -----------------------------------------
+// 	mCopy.position( originalLen );
+// 	mCopy.write(1);
+// 	console.log("MESSAGE: "+mCopy.length());
+// 	console.log(mCopy.toStringBin());
+// 	// console.log(mCopy.toStringHex());
+// // throw("...");
+// 	// COPY TO TEMP MESSAGE
+// 	var messageLen = mCopy.length();
+// 	var remainder = 512 - (messageLen % 512);
+// console.log("remainder: "+remainder);
+// 	var len64 = new BinInt(64);
+// 	len64.setFromInt(originalLen);
+// 	if(remainder < 64){
+// 		remainder += 512;
+// 	}
+// 	for(;remainder>64;--remainder){
+// 		mCopy.write(0);
+// 	}
+// 	for(i=64-1;i>=0;--i){
+// 		len64.position(i);
+// 		mCopy.write( len64.read() );
+// 	}
+// 	var messageLen = mCopy.length();
+// console.log("MESSAGE: "+mCopy.length());
+// console.log(mCopy.toStringBin());
+
+// 	// INIT HASHING
+// 	var H0 = new BinInt(32); H0.setFromInt( 0x67452301 );
+// 	var H1 = new BinInt(32); H1.setFromInt( 0xEFCDAB89 );
+// 	var H2 = new BinInt(32); H2.setFromInt( 0x98BADCFE );
+// 	var H3 = new BinInt(32); H3.setFromInt( 0x10325476 );
+// 	var H4 = new BinInt(32); H4.setFromInt( 0xC3D2E1F0 );
+// // H0.reverse();
+// // H1.reverse();
+// // H2.reverse();
+// // H3.reverse();
+// // H4.reverse();
+	
+// 	console.log( " H0: "+H0.toStringBin()+" = "+H0.toString10()+" = "+H0.toStringHex() );
+
+
+
+// throw "...."
+// 	var A = new BinInt(32), B = new BinInt(32), C = new BinInt(32), D = new BinInt(32), E = new BinInt(32);
+// 	var F = new BinInt(32), K = new BinInt(32), X = new BinInt(32), Y = new BinInt(32), Z = new BinInt(32);
+// 	var TEMP, chunk;
+// 	var chunk512 = new BinInt(512);
+// 	// INIT CHUNKS
+// 	var chunkList = new Array();
+// 	for(i=0;i<16;++i){
+// 		chunkList.push( new BinInt(32) );
+// 	}
+// 	var chunkCount = Math.ceil(messageLen/512);
+// 	console.log("TOTAL LEN: "+messageLen+" = "+chunkCount+" CHUNKS");
+// 	// LOOP
+// 	for(i=0;i<chunkCount;++i){
+// 		// STEP 2) CHUNKIFY - SPLIT 512-CHUNK INTO 16+64=80 32-BIT SUB-CHUNKS
+// 		mCopy.position(i*512);
+// 		for(j=0;j<16;++j){
+// 			chunk = chunkList[j];
+// 			for(k=0;k<32;++k){ // TODO: CAN SPEED UP USING FAST-32 COPIES ON LINES
+// 				chunk._position = 31-k;
+// 				// chunk._position = k;
+// 				chunk.write( mCopy.read() );
+// 			}
+// 			// chunk.setFromIntForward( mCopy.readUint32() );
+// 			// console.log("CHUNK "+j+" : "+chunk.toStringBin());
+// 			console.log("CHUNK "+j+" : "+chunk.toStringHex());
+// 		}
+// 		// CONTINUE HASH
+// 		A.copy(H0); B.copy(H1); C.copy(H2); D.copy(H3); E.copy(H4);
+// 		// console.log("H0 "+H0.toStringHex());
+// 		// console.log("H1 "+H1.toStringHex());
+// 		// console.log("H2 "+H2.toStringHex());
+// 		// console.log("H3 "+H3.toStringHex());
+// 		// console.log("H4 "+H4.toStringHex());
+// 		for(j=0;j<80;++j){
+// // console.log("A "+A.toStringHex());
+// // console.log("B "+B.toStringHex());
+// // console.log("C "+C.toStringHex());
+// // console.log("D "+D.toStringHex());
+// // console.log("E "+E.toStringHex());
+// 			chunk = chunkList[j%16];
+// 			// STEP 3) DEFINE KEY AND FUNCTION:
+// 			if(j<20){ // F = (B & C) | (!B & D)
+// 				// K.setFromIntForward(0x5A827999);
+// 				K.setFromInt(0x5A827999);
+// 				BinInt.andFast(X,B,C);
+// 				BinInt.notFast(Y,B);
+// 				BinInt.andFast(Y,Y,D);
+// 				BinInt.orFast(F,X,Y);
+// 			}else if(j<40){ // F = B ^ C ^ D
+// 				// K.setFromIntForward(0x6ED9EBA1);
+// 				K.setFromInt(0x6ED9EBA1);
+// 				BinInt.xorFast(X,B,C);
+// 				BinInt.xorFast(F,X,D);
+// 			}else if(j<60){ // F = (B & C) | (B & D) | (C & D)
+// 				// K.setFromIntForward(0x8F1BBCDC);
+// 				K.setFromInt(0x8F1BBCDC);
+// 				BinInt.andFast(X,B,C);
+// 				BinInt.andFast(Y,B,D);
+// 				BinInt.andFast(Z,C,D);
+// 				BinInt.orFast(Y,X,Y);
+// 				BinInt.orFast(F,Y,Z);
+// 			}else{ // F = B ^ C ^ D
+// 				// K.setFromIntForward(0xCA62C1D6);
+// 				K.setFromInt(0xCA62C1D6);
+// 				BinInt.xorFast(X,B,C);
+// 				BinInt.xorFast(F,X,D);
+// 			}
+// // console.log("K "+K.toStringHex());
+// 			// STEP 4) MIXIFY
+// 			// NEXT A = LC(A,5) + F + K + E + chunk
+// 			BinInt.leftCircular(X,A,5);
+// 			BinInt.add(Y,F,K);
+// 			BinInt.add(Z,E,chunk);
+// 			BinInt.add(Y,X,Y);
+// 			BinInt.add(Z,Y,Z);
+// 			// E = D  |  D = C  |  C = LR(B,30)  |  B = A
+// 			BinInt.copy(E,D);
+// 			BinInt.copy(D,C);
+// 			BinInt.leftCircular(C,B,30);
+// 			BinInt.copy(B,A);
+// 			BinInt.copy(A,Z);
+// 			// update chunk list
+// 			BinInt.xorFast(X,chunkList[(j+13)%16],chunkList[(j+8)%16]);
+// 			BinInt.xorFast(Y,chunkList[(j+2)%16],chunkList[(j+0)%16]);
+// 			BinInt.xorFast(Z,X,Y);
+// 			BinInt.leftCircular(Z,Z,1);
+// 			BinInt.copy(chunk,Z);
+// // if(j>=1){
+// // 	throw "end early";
+// // }
+// 		}
+// 		// STEP 5) SUM HASH
+// 		BinInt.add(H0,H0,A);
+// 		BinInt.add(H1,H1,B);
+// 		BinInt.add(H2,H2,C);
+// 		BinInt.add(H3,H3,D);
+// 		BinInt.add(H4,H4,E);
+// 	}
+// 	// RETURN
+// 	// var sha1 = new BinInt(160);
+// 	var sha1 = new ByteData(160);
+// 	sha1.position(0);
+// 	// sha1.writeByteData(H4);
+// 	// sha1.writeByteData(H3);
+// 	// sha1.writeByteData(H2);
+// 	// sha1.writeByteData(H1);
+// 	// sha1.writeByteData(H0);
+// 	sha1.writeByteData(H0);
+// 	sha1.writeByteData(H1);
+// 	sha1.writeByteData(H2);
+// 	sha1.writeByteData(H3);
+// 	sha1.writeByteData(H4);
+// 	return sha1;
+// }
+// ByteData.SHA256 = function(message){
+// 	return null;
+// }
+// ByteData.SHA512 = function(message){
+// 	return null;
+// }
 
 // AES > BLOW > DESX > RC4 > DES   | RSA / DH
 /*
@@ -662,32 +814,25 @@ ByteData.AES_RCON = [ // key scheduler ... AES uses few of these | can also gene
 ]
 
 // expects operations in byte arrays
-ByteData.AESencrypt = function(key, message, type, size, useSalting, isDecrypt){ // TODO: how SSL does salting, TODO: pass initVector
-// TODO:
-// SALTING is 2 items:
-// 1) salt the key (xor?) before usage
-// 2) initialization vector
-
-
+ByteData.AESencrypt = function(key, message, type, size, inputIV, isDecrypt){ // TODO: how SSL does salting, TODO: pass initVector
 	var outputArray = [];
 	isDecrypt = isDecrypt!==null && isDecrypt!==undefined ? isDecrypt : false;
 	type = type!==undefined ? type : ByteData.AES_TYPE_CBC;
 	size = size!==undefined ? size : ByteData.AES_SIZE_256;
 	var roundCount; // N_r
-	var blockLengthBytes;
 	var expansionSize;
-	var blockLength = 128;
 	var stateColumns = 4;// N_b
-	var blockLength = 16;
-
+	var blockLength = 16; // bytes
 	if(size==ByteData.AES_SIZE_128){
 		roundCount = 10;
 		keyLengthBytes = 16;
 		expansionSize = 176; // (10 + 1)*16
+		throw "blockLength ?";
 	}else if(size==ByteData.AES_SIZE_192){
 		roundCount = 12;
 		keyLengthBytes = 24;
 		expansionSize = 208; // (12 + 1)*16
+		throw "blockLength ?";
 	}else if(size==ByteData.AES_SIZE_256){
 		roundCount = 14;
 		keyLengthBytes = 32;
@@ -715,10 +860,11 @@ ByteData.AESencrypt = function(key, message, type, size, useSalting, isDecrypt){
 	var salt = null;
 	if(!isDecrypt){
 
-		if(useSalting){
-			salt = Code.randomIntArray(16, 0,0xFF);
+		if(inputIV){
+//			salt = Code.randomIntArray(16, 0,0xFF);
+ // console.log("salt: "+Code.printArrayHex(salt,2));
 			for(var i=0; i<initVector.length; ++i){
-				initVector[i] = salt[i];
+				initVector[i] = inputIV[i];
 			}
 		}
 
@@ -751,30 +897,33 @@ ByteData.AESencrypt = function(key, message, type, size, useSalting, isDecrypt){
 			Code.arrayPushArray(outputArray,block);
 		}
 
-		if(useSalting){
-			// Code.truncateArray(outputArray,outputArray.length-block.length);
-			// var salt = Code.copyArray(state);
-			// var salt = Code.copyArray(initVector);
-			header = ByteData._AESgenerateSaltHeader(salt);
-			// console.log("   outp   : "+Code.printArrayHex(outputArray,2));
-			// console.log("   salt   : "+Code.printArrayHex(salt,2));
-			for(var i=0; i<header.length; ++i){
-				// outputArray.unshift(header[i]);
-				outputArray.unshift(header[header.length-1-i]);
-			}
-		}
+		// if(useSalting){
+		// 	throw "wat";
+		// 	// Code.truncateArray(outputArray,outputArray.length-block.length);
+		// 	// var salt = Code.copyArray(state);
+		// 	// var salt = Code.copyArray(initVector);
+		// 	header = ByteData._AESgenerateSaltHeader(salt);
+		// 	// console.log("   outp   : "+Code.printArrayHex(outputArray,2));
+		// 	// console.log("   salt   : "+Code.printArrayHex(salt,2));
+		// 	for(var i=0; i<header.length; ++i){
+		// 		// outputArray.unshift(header[i]);
+		// 		outputArray.unshift(header[header.length-1-i]);
+		// 	}
+		// }
 
 	}else{
-		if(useSalting){
-			var header = ByteData._AESgetSaltHeader(message);
-			var salt = ByteData._AESgetSalt(message);
-			for(var i=0; i<initVector.length; ++i){
-				initVector[i] = salt[i];
+		// if(useSalting){
+		if(inputIV){
+			// throw "wat";
+			// var header = ByteData._AESgetSaltHeader(message);
+			// var salt = ByteData._AESgetSalt(message);
+			for(var i=0; i<inputIV.length; ++i){
+				initVector[i] = inputIV[i];
 			}
 			// console.log(" initVect : "+Code.printArrayHex(initVector,2));
-			for(var i=0; i<header.length; ++i){
-				message.shift();
-			}
+			// for(var i=0; i<header.length; ++i){
+			// 	message.shift();
+			// }
 			// console.log(" message  : "+Code.printArrayHex(message,2));
 		}
 
@@ -803,9 +952,13 @@ ByteData.AESencrypt = function(key, message, type, size, useSalting, isDecrypt){
 				}
 				Code.copyArray(initVector, input);
 			}
-			// if(!useSalting || (useSalting && i<iterations-1) ){
-				Code.arrayPushArray(outputArray,output);
+
+			// ?????????????
+			// if(!inputIV || (inputIV && i<iterations-1) ){
+console.log("outputArray: "+outputArray.length);
+Code.arrayPushArray(outputArray,output);
 			// }
+// console.log("initVector: "+Code.printArrayHex(initVector,2));
 		}
 	}
 	// return {"cyphertext":outputArray, "salt":header};
@@ -1466,6 +1619,30 @@ ByteData.RSA = function(pub,pri){
 
 
 // NODE JS INCLUSION:
-if(isNode){
+// if(isNode){
+// 	module.exports = ByteData;
+// }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+if(Code.isNode()){
 	module.exports = ByteData;
 }

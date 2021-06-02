@@ -1,0 +1,104 @@
+aes
+
+ encrypt file.txt to file.enc using 256-bit AES in CBC mode
+openssl enc -aes-256-cbc -salt -in file.txt -out file.enc
+
+# the same, only the output is base64 encoded for, e.g., e-mail
+openssl enc -aes-256-cbc -a -salt -in file.txt -out file.enc
+
+# decrypt binary file.enc
+openssl enc -d -aes-256-cbc -in file.enc -out file.txt
+
+# decrypt base64-encoded version
+openssl enc -d -aes-256-cbc -a -in file.enc -out file.txt
+
+
+openssl enc -aes-256-cbc -salt -in plaintext.txt -out file.enc -pass password.txt
+
+ -o output/ -k password.txt
+
+
+
+
+
+STEPS:
+
+forward:::::::::::::::::::::::::
+
+- input: password
+- input: cleartext
+- generate: passwordSalt
+- generate: intitialization vector IV
+- process: key = password (extended) xor passwordSalt (extended)
+- process: cleartext extended to multiple of block length
+- output: encrypted
+	+ passwordSalt
+	+ IV (beginning or end?)
+	+ origional length
+reverse:::::::::::::::::::::::::
+
+
+
+
+a9993e364706816aba3e25717850c26c9cd0d89d
+
+
+
+00000000|00010010|00111010|10111100 = 1029457920 = 00123ABC
+00000000|01000101|01100111|10001001 = 2447811072 = 00456789
+....................................................
+00111101|01011100|01001000|00000000 = 1194684 = 3D5C4800
+10010001|11100110|10100010|00000000 = 4548489 = 91E6A200
+10100010|01000101|11101010|00000000 = 5743173 = A245EA00
+00000000|01010111|10100010|01000101 = 2722490880 = 0057A245
+
+
+
+
+67452301
+
+
+
+node app/hash.js -i plaintext.txt -o output/ -k password.txt
+shasum ./plaintext.txt
+
+sha1
+D63DEEB0360BFC9B71870D4D12FD72935450E24B
+661686f2da6e7b0cc537142faa7c78302ea4d249
+shasum ./plaintext.txt 
+
+
+node app/hash.js -i simple.txt -o output/ -k password.txt
+
+shasum ./simple.txt 
+0f7d0d088b6ea936fb25b477722d734706fe8b40  ./simple.txt
+
+
+D = 0
+
+
+
+
+
+661686F2DA6E7B0CC537142FAA7C78302EA4D249
+661686f2da6e7b0cc537142faa7c78302ea4d249
+
+
+
+
+
+
+
+AES: https://csrc.nist.gov/csrc/media/publications/fips/197/final/documents/fips-197.pdf
+
+
+SHA: https://csrc.nist.gov/csrc/media/publications/fips/180/2/archive/2002-08-01/documents/fips180-2.pdf
+
+
+RSA: ?
+
+
+
+
+..
+.

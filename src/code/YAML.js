@@ -1,4 +1,15 @@
 // YAML.js
+// NODEJS INCLUSION
+isBrowser = false;
+isNode = false;
+if (typeof module !== 'undefined' && module.exports) { isNode = true; }
+if (typeof window !== 'undefined' && window.navigator) { isBrowser = true; }
+if(isNode){
+	var Code = require("./Code.js");
+}
+
+
+
 // documental
 YAML.DECLARATION="%";
 YAML.COMMENT="#";
@@ -625,6 +636,17 @@ YAML.prototype.toString = function(){
 	}
 	return str;
 }
+
+
+
+
+
+
+// NODE JS INCLUSION:
+if(isNode){
+	module.exports = YAML;
+}
+
 
 
 

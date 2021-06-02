@@ -280,6 +280,7 @@ Einen schönen Tag noch = have a nice day
 | Lieblingsfarbe |  | favorite color |
 |  |  |  |
 Lieblingspizza - favorite pizza
+Lieblingsband - favorite band
 LieblingsX --- favorite X
 
 #### daily
@@ -887,7 +888,7 @@ Neuschwanstein Castle
 | trinken |  | to / drink/ing |
 | Glas |  | glass (drinking) |
 | telefoniert ? |  | to talk on phone |
-| kenneknow ?  |  | to know |
+| kenne ?  |  | to know |
 | rufe ? |  | call |
 |  |  |  |
 |  |  |  |
@@ -1062,7 +1063,7 @@ Brandenburger - Brandenburg Gate
 | Gibst ? |  | to give |
 | beschützen ? |  | to protect |
 | holen ? |  | to get |
-| sage ? |  | to say |
+| sage / sagen ? |  | to say |
 | Warten ? |  | to wait |
 | Wiederholen ? |  | to repeat |
 | hört ? |  | to listen/hear |
@@ -1088,7 +1089,7 @@ Brandenburger - Brandenburg Gate
 | leben |  | life/alive/to live |
 | kauf ? |  | to buy |
 | weintis ?  |  | to cry |
-|  |  |  |
+| lügen ? |  | to lie |
 |  |  |  |
 |  |  |  |
 |  |  |  |
@@ -1498,6 +1499,8 @@ Leute - people
 
 Pommes - fries
 
+Ausrede - excuse
+
 früh - early
 
 noch - still
@@ -1515,7 +1518,7 @@ trocken - dry
 
 Liebesbrief - love letter
 
-
+komisches - strange
 
 Lebenslauf - resume
 Vorname - first name
@@ -1663,7 +1666,7 @@ frühstücke - eating breakfast
 sucht / Schau - to look (for)
 surfst - to surf
 brauche Brauchst - to need
-mag - to like
+mag / mögen ? - to like
 passt - to fit
 verlässt ? - leave
 feiert ? - to celebrate
@@ -1675,9 +1678,11 @@ unterschreiben - to sign
 warten? - to wait
 Öffnen ? - to open
 schließen ? - to close
-besichtigen - to tour
-abholen - to pick up / collect
+besichtigen ? - to tour
+abholen ? - to pick up / collect
+liegenare ? - to lay
 
+zeigt ? - to show
 
 
 Größe - size
@@ -1790,12 +1795,17 @@ der Sommer- summer
 
 
 Igitt - yuck
+furchtbar - terrible / horrible (bad)
 
 der Schal - scarf
 Kaufhaus - department store
 Einkaufszentrum - mall
 
+egal - no matter (no big deal)
+
 das Krankenhaus - hospital
+
+Attest - sick note (doctors note)
 
 die Werkstatt - repair shop
 
@@ -1858,6 +1868,8 @@ Witz/e - joke/s
 
 plötzlich - suddently
 
+Handschrift - handwriting
+
 das Schlafzimmer - bedroom
 das Badezimmer
 Fitnessstudio - gym (fitness studio)
@@ -1894,6 +1906,17 @@ bald - soon
 Fertig - finished
 sauber - clean
 
+zuerst - first
+letzte - last
+
+
+anstrengend - exhausting
+
+spiegel - mirror
+wahrscheinlich - probably
+weil - because
+
+älter - older
 
 
 du diene
