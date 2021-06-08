@@ -10,7 +10,7 @@ https://www.germanwithantrim.com/du-vs-ihr-vs-sie-beginner-german-with-herr-antr
 https://courses.dcs.wisc.edu/wp/readinggerman/verbs-haben-and-sein/
 https://www.thoughtco.com/german-present-tense-verbs-4074838
 
-
+https://duolingo.fandom.com/wiki/Achievements
 
 
 ### table
@@ -107,7 +107,8 @@ neuter: das ein
 | Tschüss | tshoosh | bye |
 | bis bald |  bees bald | bye / see you soon |
 | Bis später |  | see you later |
-| Bitte | bit-eh | please |
+| Bitte | bit-eh | please / request(favor) |
+|  |  |  |
 | Danke dir | danke deer | thank you |
 | ich | ichk | I |
 | Sie / Du | zsie / doo | You |
@@ -149,8 +150,8 @@ Einen schönen Tag noch = have a nice day
 | Richtig |  | correct |
 |  |  |  |
 |  |  |  |
-| um X   | at X o-clock (time) |
-|  |  |  |
+| um X  | at X o-clock (time) |
+| nächstes Mal  |  | next time |
 |  |  |  |
 | tag/e |  | day/s |
 | nacht/Nächte |  | nights |
@@ -471,6 +472,7 @@ der Laptop - laptop
 | nie |  | never |
 | manchmal |  | sometimes |
 | später |  | later |
+| früher |  | earlier |
 | oft |  | often |
 | bereit |  | ready |
 | rein |  | inside |
@@ -515,15 +517,16 @@ der Laptop - laptop
 | zufrieden |  | content/happy (mood) |
 | nervt |  | annoys |
 | motiviert |  | motivated |
-|  |  |  |
+| verärgert |  | angry |
 | Lust |  | desire (feel like it) |
-|  |  |  |
-|  |  |  |
-| Freundin |  | friend |
+| unordentlich |  | messy (unordered) |
+| ordentlich |  | tidy (ordered) |
+| Freundin |  | friend (girl?) |
 | Freund |  | boyfriend? |
+| Date |  | date (person) |
 |  |  |  |
 | Wirklich |  | really? |
-| wichtig |  | important |
+| wichtig / wichtiger |  | important |
 |  |  |  |
 |  |  |  |
 | zurzeit |  | currently |
@@ -537,7 +540,7 @@ der Laptop - laptop
 | krank |  | sick |
 | weh |  | sore |
 |  |  |  |
-|  |  |  |
+| Zimmer |  | room |
 | Einzelzimmer |  | single room |
 | Doppelzimmer |  | double room |
 | Toiletten |  | restrooms |
@@ -715,7 +718,7 @@ Neuschwanstein Castle
 | Biogurken |  | organic cucumbers |
 |  |  |  |
 |  |  |  |
-|  |  |  |
+| Mensch |  | person |
 |  |  |  |
 | Touristen |  | tourists |
 | Freundin |  | friend |
@@ -792,8 +795,11 @@ Neuschwanstein Castle
 | brot |  | bread |
 | Brötchenbread |  | bread rolls |
 |  |  |  |
+| Äpfel |  | apple |
+| karotte/n |  | carrot/s |
+| Kartoffeln |  | potatoes |
 |  |  |  |
-| karotte |  | carrot |
+|  |  |  |
 | der Fisch |  | fish |
 | die Schnecke |  | snail |
 | hund |  | dog |
@@ -809,6 +815,8 @@ Neuschwanstein Castle
 | pfeffer |  | pepper |
 | das salz |  | salt |
 | der zucker |  | sugar |
+|  |  |  |
+| salzig |  | salty |
 |  |  |  |
 | Mayo |  | mayo |
 |  |  |  |
@@ -892,8 +900,8 @@ Neuschwanstein Castle
 | rufe ? |  | call |
 |  |  |  |
 |  |  |  |
-|  |  |  |
-|  |  |  |
+| Miete |  | rent (pay) |
+| vermietent |  | ren |
 |  |  |  |
 |  |  |  |
 |  |  |  |
@@ -1003,6 +1011,8 @@ Brandenburger - Brandenburg Gate
 | ein bisschen |  | a little |
 |  |  |  |
 | frei |  | free |
+| freie |  | spare |
+|  |  |  |
 |  |  |  |
 |  |  |  |
 | Badezimmer | bad-eh-zimmer | bathroom |
@@ -1090,8 +1100,8 @@ Brandenburger - Brandenburg Gate
 | kauf ? |  | to buy |
 | weintis ?  |  | to cry |
 | lügen ? |  | to lie |
-|  |  |  |
-|  |  |  |
+| retten ? |  | to save |
+| klopft ? |  | to knock |
 |  |  |  |
 |  |  |  |
 |  |  |  |
@@ -1120,7 +1130,7 @@ Brandenburger - Brandenburg Gate
 |  |  |  |
 | tot |  | dead |
 |  |  |  |
-| Lebensmittel | leibensmittle | food |
+| die Lebensmittel | leibensmittle | food / groceries |
 |  |  |  |
 | das Frühstück | froo-stook | breakfast |
 | Mittagessen | mee-tahg-essen | lunch |
@@ -1141,7 +1151,7 @@ Brandenburger - Brandenburg Gate
 | Tennis |  | tennis |
 | Podcasts |  | podcasts |
 |  |  |  |
-|  |  |  |
+| Geburtstagskarte |  | birthday card |
 |  |  |  |
 | das Gras |  | grass |
 |  |  |  |
@@ -1215,11 +1225,11 @@ Brandenburger - Brandenburg Gate
 | endet |  | ends |
 | beginnt |  | begins |
 | endlich |  | finally |
-|  |  |  |
+| unhöflich |  | rude |
 | stressig |  | stressful |
 | bereit |  | ready |
 | sportlich |  | sporty/athletic |
-|  |  |  |
+| hilfreich |  | helpful |
 | sehr |  | very |
 |  |  |  |
 | beliebt |  | popular |
@@ -1266,7 +1276,7 @@ Brandenburger - Brandenburg Gate
 |  |  |  |
 | die stadt |  | city / town |
 | Dorf |  | village |
-| die Rechnung |  | bill (check) |
+| die Rechnung/en |  | bill (check) / bills |
 | der Kassenzettel |  | receipt |
 | die Kasse |  | cash register (checkout) |
 |  |  |  |
@@ -1485,6 +1495,8 @@ Praktikum - internship
 
 arbeitslos - unemployed
 
+Hausarbeit - chores (house work)
+
 Wiesn-Herz - heart cookie
 
 das handy - cell phone
@@ -1496,6 +1508,8 @@ der laptop - laptop
 die music - music
 
 Leute - people
+
+Erde - earth
 
 Pommes - fries
 
@@ -1681,12 +1695,20 @@ schließen ? - to close
 besichtigen ? - to tour
 abholen ? - to pick up / collect
 liegenare ? - to lay
-
+plane ? - to plan
 zeigt ? - to show
-
+hoffe ? - to hope
+bringst ? - to bring (along)
+mitbringen ?  - bring with / bring (along)
+putzen ? - to clean?
+leiser ? - to quiet down / be quieter
+gießt ? - to pour - gegossen - poured
 
 Größe - size
 
+
+
+Luftballons - balloons
 
 kostet - costs
 
@@ -1707,6 +1729,7 @@ aufgeregt - excited
 genau - exactly
 spät - late
 ? - early
+faul - lazy
 
 langweilig - boring
 
@@ -1732,6 +1755,7 @@ Wörterbuch - dictionary
 
 Stück - piece
 Flaschen - bottles
+Plastikflaschen - plastic bottles
 
 Dollar - dollar
 euro - euros
@@ -1746,7 +1770,7 @@ Döner - kebab
 
 Kilo 0 kilogram
 
-Kartoffeln - potatoes
+
 die Wasserflasche - water bottle (flask)
 
 
@@ -1832,7 +1856,7 @@ furchtbar - awful
 
 nicht mehr hier - not here anymore
 auf jeden Fall - definitely / absolutely
-
+ganz bestimmt - definitely
 
 You're welcome - gern geschehen
 vielen Dank - thank you very much
@@ -1888,7 +1912,7 @@ unordentlich - messy
 
 fantastisch - fantastic
 
-
+Boden - ground
 der Strand - beach
 
 Ausflug - excursion (trip/journey)
@@ -1901,7 +1925,6 @@ besser - better
 Hausaufgaben - homework
 stimms - to agree?
 denn - because
-putzen. - to clean?
 bald - soon
 Fertig - finished
 sauber - clean

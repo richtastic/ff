@@ -681,7 +681,8 @@ https://www.baocalitoday.com/
 
 
 
-
+mi li [cup noodle ]
+mi goi [noodle package - korean]
 
 
 

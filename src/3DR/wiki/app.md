@@ -394,6 +394,9 @@ MISSING:
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
+https://arxiv.org/pdf/1805.10941.pdf
+https://github.com/openbsd/src/blob/master/lib/libc/crypt/arc4random_uniform.c
+https://github.com/libevent/libevent/blob/master/arc4random.c
 
 
 

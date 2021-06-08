@@ -1,0 +1,95 @@
+<html>
+<head>
+<title>FSM Test</title>
+<script src="../code/FF.js"></script>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<script type="text/javascript">
+function pageLoadedFxn(){
+	var ff = new FF("../code/",defaultClassesLoadedFxn,defaultClassesProgressFxn);
+}
+function defaultClassesProgressFxn(o){}
+function defaultClassesLoadedFxn(){
+	scriptLoader = new ScriptLoader("./",[],this,customClassesLoadedFxn,customClassesProgressFxn);
+	scriptLoader.load();
+}
+function customClassesProgressFxn(o){}
+function customClassesLoadedFxn(){
+	var fsm = new FSM();
+
+	var handleDeeplink = function(url){
+		console.log("handleDeeplink: "+url);
+	}
+
+
+	// var stateLogin = fsm.addState("EXPO SITE",
+	// function(){
+	// 	console.log("ENTER");
+	// },
+	// function(){
+	// 	console.log("EXIT");
+	// });
+
+	var listenerStateStart = function(a,b){
+		console.log("STATE START");
+		console.log(a);
+	}
+
+	var listenerStateEnter = function(a,b){
+		console.log("STATE ENTERED");
+		console.log(a);
+	}
+
+	var fxnDefaultEnter = function(a,b){console.log("ENTER"); console.log(a); console.log(b);}
+	var fxnDefaultExit = function(a,b){console.log("EXIT"); console.log(a); console.log(b);}
+
+
+	var stateLogin = fsm.addState("LOGIN",fxnDefaultEnter,fxnDefaultExit);
+	var stateLoadSite = fsm.addState("LOAD SITE",fxnDefaultEnter,fxnDefaultExit);
+	var stateSite = fsm.addState("SITE",fxnDefaultEnter,fxnDefaultExit);
+	var stateLoadAvatar = fsm.addState("LOAD AVATAR",fxnDefaultEnter,fxnDefaultExit);
+	var stateAvatar = fsm.addState("AVATAR",fxnDefaultEnter,fxnDefaultExit);
+
+
+	// console.log(FSM.EVENT_ENTER_STATE, listenerStateEnter)
+	fsm.addFunction(FSM.EVENT_ENTER_STATE, listenerStateEnter, this);
+	fsm.addFunction(FSM.EVENT_START_STATE, listenerStateStart, this);
+	//
+	console.log("start");
+	fsm.start();
+
+
+	// deep link
+
+	// ... transition to start
+
+	/*
+state has a context
+when a state goes to exiting:
+	it decides AT EXIT where to go next
+	it passes along the context at that point
+
+OR the fsm keeps track of it ?
+
+
+
+
+	on entering a state, a context object is included
+	when a state chooses to exit, it will:
+		- decide which next state to go to 
+		- pass along a context to the next state
+
+	when a deeplink event happens -- the active state should be listening for it already
+		- state can wrap up its stuff and exit to a DESIRED NEXT STATE
+
+
+
+
+
+	*/
+
+}
+</script>
+</head>
+<body onload="pageLoadedFxn();" style="border:0px;margin:0px;border:0px;">
+</body>
+</html>

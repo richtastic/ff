@@ -955,7 +955,7 @@ ByteData.AESencrypt = function(key, message, type, size, inputIV, isDecrypt){ //
 
 			// ?????????????
 			// if(!inputIV || (inputIV && i<iterations-1) ){
-console.log("outputArray: "+outputArray.length);
+// console.log("outputArray: "+outputArray.length);
 Code.arrayPushArray(outputArray,output);
 			// }
 // console.log("initVector: "+Code.printArrayHex(initVector,2));

@@ -246,8 +246,18 @@ Crypto._AESplaintextRestore = function(plaintext, plaintextInfo){
 		plaintext.pop();
 	}
 }
+
+Crypto.getEncryptedData = function(encrypted){ // enc | salt | iv
+	var countSalt = 256/8;
+	var countIV = 256/8;
+	var info = {};
+		info["iv"] = Code.subArray([], encrypted, encrypted.length-countIV-0,countIV);
+		info["salt"] = Code.subArray([], encrypted, encrypted.length-countSalt-countIV-0,countSalt);
+	return info;
+}
+
 // var encrypted = ByteData.AESencrypt(key, plaintext, type, size, useSalting);
-Crypto.encryptAES = function(secret, plaintext){ // implementation utilizing AES-256
+Crypto.encryptAES = function(secret, plaintext, inputSalt, inputIV){ // implementation utilizing AES-256
 	// append secret as needed
 	var secretInfo = Crypto._AESsecretPrepare(secret);
 	
@@ -257,7 +267,7 @@ Crypto.encryptAES = function(secret, plaintext){ // implementation utilizing AES
 	console.log(plaintext);
 
 	// create password salt
-	var passwordSalt = Crypto.randomBytes(256/8);
+	var passwordSalt = inputSalt!==undefined ? inputSalt : Crypto.randomBytes(256/8);
 	// console.log("passwordSalt: "+passwordSalt);
 
 	// password xoring
@@ -266,7 +276,7 @@ Crypto.encryptAES = function(secret, plaintext){ // implementation utilizing AES
 	console.log("secretSalted: "+secretSalted.length);
 
 	// create IV
-	var intitializationVector = Crypto.randomBytes(256/8);
+	var intitializationVector = inputIV!==undefined ? inputIV : Crypto.randomBytes(256/8);
 	console.log("intitializationVector: "+intitializationVector);
 	console.log(" iv: "+intitializationVector.length);
 
@@ -284,15 +294,14 @@ Crypto.encryptAES = function(secret, plaintext){ // implementation utilizing AES
 	Crypto._AESsecretRestore(secret, secretInfo);
 	Crypto._AESplaintextRestore(plaintext, plaintextInfo);
 
-	// throw "encryptAES";
-	// var result = {};
-	// result["encrypted"] = encrypted;
 	return encrypted; // ciphertext
 	
 }
 Crypto.decryptAES = function(secret, ciphertext){
 	// append secret by repeating
 	var secretInfo = Crypto._AESsecretPrepare(secret);
+
+var originalSize = ciphertext.length;
 
 	// extract IV
 	var ivLength = 256/8;
@@ -310,6 +319,7 @@ Crypto.decryptAES = function(secret, ciphertext){
 	end = start-1;
 	start -= saltLength;
 	var passwordSalt = Code.copyArray([], ciphertext, start, end);
+	console.log("passwordSalt: "+passwordSalt);
 	var secretSalted = Crypto.xor(secret,passwordSalt);
 	console.log("secretSalted: "+secretSalted);
 	console.log("secretSalted: "+secretSalted.length);
@@ -334,16 +344,21 @@ Crypto.decryptAES = function(secret, ciphertext){
 	// remove N bytes from end
 	for(var i=decrypted.length-1; i>=0; --i){
 		var val = decrypted.pop();
-		console.log("val: "+val);
 		if(val!=0){
 			break;
 		}
 	}
-
 	// undo any padding or whatnot & return to original state
 	Crypto._AESsecretRestore(secret, secretInfo);
 
+	// restore cyphertext:
+	Code.arrayPushArray(ciphertext,passwordSalt);
+	Code.arrayPushArray(ciphertext,intitializationVector);
 
+var finalSize = ciphertext.length;
+if(originalSize!=finalSize){
+	throw "didnt restore"
+}
 	// throw "decryptAES";
 
 	return decrypted; // plaintext
