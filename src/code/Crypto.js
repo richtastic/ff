@@ -224,9 +224,9 @@ Crypto._AESplaintextPrepare = function(plaintext){
 	// force a byte for length info
 	plaintext.push(0x080);
 	var plaintextLength = plaintext.length;
-	console.log("plaintextLength+1: "+plaintextLength);
+	// console.log("plaintextLength+1: "+plaintextLength);
 	var plaintextRemainder = plaintextLength % lengthMultiple;
-	console.log("plaintextRemainder: "+plaintextRemainder);
+	// console.log("plaintextRemainder: "+plaintextRemainder);
 	//console.log(plaintext);
 	var appendCount = 0;
 	if(plaintextRemainder>0){
@@ -263,8 +263,8 @@ Crypto.encryptAES = function(secret, plaintext, inputSalt, inputIV){ // implemen
 	
 	// append plaintext as needed
 	var plaintextInfo = Crypto._AESplaintextPrepare(plaintext);
-	console.log("plaintext: "+plaintext.length);
-	console.log(plaintext);
+	// console.log("plaintext: "+plaintext.length);
+	// console.log(plaintext);
 
 	// create password salt
 	var passwordSalt = inputSalt!==undefined ? inputSalt : Crypto.randomBytes(256/8);
@@ -272,18 +272,18 @@ Crypto.encryptAES = function(secret, plaintext, inputSalt, inputIV){ // implemen
 
 	// password xoring
 	var secretSalted = Crypto.xor(secret,passwordSalt);
-	console.log("secretSalted: "+secretSalted);
-	console.log("secretSalted: "+secretSalted.length);
+	// console.log("secretSalted: "+secretSalted);
+	// console.log("secretSalted: "+secretSalted.length);
 
 	// create IV
 	var intitializationVector = inputIV!==undefined ? inputIV : Crypto.randomBytes(256/8);
-	console.log("intitializationVector: "+intitializationVector);
-	console.log(" iv: "+intitializationVector.length);
+	// console.log("intitializationVector: "+intitializationVector);
+	// console.log(" iv: "+intitializationVector.length);
 
 	// encryption
 	var type = ByteData.AES_TYPE_CBC;
 	var size = ByteData.AES_SIZE_256;
-	console.log("plaintext length: "+plaintext.length);
+	// console.log("plaintext length: "+plaintext.length);
 	var encrypted = ByteData.AESencrypt(secretSalted, plaintext, type, size, intitializationVector);
 
 	// append salt & IV 
@@ -305,12 +305,12 @@ var originalSize = ciphertext.length;
 
 	// extract IV
 	var ivLength = 256/8;
-	console.log(" ivLength: "+ivLength);
+	// console.log(" ivLength: "+ivLength);
 	var start = ciphertext.length-ivLength;
 	var end = ciphertext.length;
 	var intitializationVector = Code.copyArray([], ciphertext, start, end);
-	console.log(" iv: "+intitializationVector);
-	console.log(" iv: "+intitializationVector.length);
+	// console.log(" iv: "+intitializationVector);
+	// console.log(" iv: "+intitializationVector.length);
 	// console.log(" a: "+intitializationVector[intitializationVector.length-1]);
 	// console.log(" b: "+ciphertext[ciphertext.length-1]);
 
@@ -319,13 +319,13 @@ var originalSize = ciphertext.length;
 	end = start-1;
 	start -= saltLength;
 	var passwordSalt = Code.copyArray([], ciphertext, start, end);
-	console.log("passwordSalt: "+passwordSalt);
+	// console.log("passwordSalt: "+passwordSalt);
 	var secretSalted = Crypto.xor(secret,passwordSalt);
-	console.log("secretSalted: "+secretSalted);
-	console.log("secretSalted: "+secretSalted.length);
-
+	// console.log("secretSalted: "+secretSalted);
+	// console.log("secretSalted: "+secretSalted.length);
+	
 	Code.truncateArray(ciphertext,start);
-	console.log("cipher length: "+ciphertext.length+" : "+start);
+	// console.log("cipher length: "+ciphertext.length+" : "+start);
 	
 	// var restored = ByteData.AESdecrypt(key, encrypted, type, size, useSalting);
 	// decrypt

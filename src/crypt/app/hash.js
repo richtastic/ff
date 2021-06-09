@@ -89,15 +89,14 @@ var outputPath = argumentValues[ARG_KEY_PATH_OUTPUT];
 var manifestName = argumentValues[ARG_KEY_MAINFEST];
 var overwriteExisting = ARG_VAL_DEFAULT_OVERWRITE;
 
-
-
 var hasDecrypt = Code.hasKey(argumentValues,ARG_KEY_DECRYPT);
 var hasEncrypt = Code.hasKey(argumentValues,ARG_KEY_ENCRYPT);
-
-var hasManifest = argumentValues[ARG_KEY_MAINFEST];
+var hasManifest = Code.hasKey(argumentValues,ARG_KEY_MAINFEST);
 
 if(hasEncrypt && hasDecrypt){
 	throw "cant encrypt and decrypt"
+}else if(!hasEncrypt && !hasDecrypt){
+	throw "missing encrypt or decrypt"
 }
 
 // get full paths
@@ -120,200 +119,117 @@ var createDefaultManifest = function(){
 var encryptManifestFiles = function(encryptCompletionFxn, encryptCompletionCxt){
 	return processManifestFiles(encryptCompletionFxn, encryptCompletionCxt, true);
 }
-
 var decryptManifestFiles = function(decryptCompletionFxn, decryptCompletionCxt){
-	// var entries = manifest["files"];
-	// console.log("entries X:"+entries);
-	// var currentEntry = manifest["count"];
 	return processManifestFiles(decryptCompletionFxn, decryptCompletionCxt, false);
 }
 var processManifestFiles = function(encryptCompletionFxn, encryptCompletionCxt, isEncrypt){
 	var entries = manifest["files"];
-	console.log("entries X:"+entries);
+	// console.log("entries X:"+entries);
 	var currentEntry = manifest["count"];
-	
-	console.log(entries.length);
-	console.log(currentEntry);
+	// console.log(entries.length);
+	// console.log(currentEntry);
 	if(currentEntry<entries.length){
-		console.log("IN");
+		// console.log("IN");
 		var entry = entries[currentEntry];
-		// var relSource = entry["source"];
-		// var relTarget = entry["target"];
-		// var absSource = path.join(inputPath,relSource);
-		// var absTarget = path.join(inputPath,relTarget);
-		// var relSource = entry["source"];
-		// var relTarget = entry["target"];
 		var absSource = entry["source"];
 		var absTarget = entry["target"];
-		// console.log(relSource+" .. ");
-		// console.log(relTarget+" .. ");
-		console.log(absSource+" .. ");
-		console.log(absTarget+" .. ");
-
+		// console.log(absSource+" .. ");
+		// console.log(absTarget+" .. ");
 		if(isEncrypt){
 			readFile(absSource,function(data){
-				console.log("READ FILE");
+				console.log("READ FILE: "+absSource);
 				var sourceData = Code.copyArray(data); // need writeable / non-Buffer object
 				var encrypted = Crypto.encryptAES(password, sourceData);
-				console.log(" encrypted: "+encrypted.length);
-				console.log(encrypted);
-
-var copyEncrypted = Code.copyArray(encrypted);
-
+				// console.log(" encrypted: "+encrypted.length);
+				// console.log(encrypted);
+				// check
 				var decrypted = Crypto.decryptAES(password, encrypted);
-				// console.log(" decrypted: "+decrypted.length);
-				console.log(encrypted);
-				console.log(encrypted.length+" NOW ?");
-
-				// throw "... ?"
-				console.log(decrypted);
-				console.log(decrypted.length);
-				console.log(sourceData);
-				console.log(sourceData.length);
-
 				var validateEqual = Code.arrayEqual(sourceData,decrypted);
 				if(!validateEqual){
 					throw "before and after are not equal"
 				}
 
-				if(!Code.arrayEqual(copyEncrypted,encrypted)){
-					throw "didnt restore encrypted"
+				// SHA ?
+				if(hasManifest){
+					var sourceSHA1 = Crypto.SHA1(sourceData).toHex();
+					var targetSHA1 = Crypto.SHA1(encrypted).toHex();
+					entry["sourceSHA1"] = sourceSHA1;
+					entry["targetSHA1"] = targetSHA1;
 				}
-
-				// var str="";
-				// for(var i=0; i<decrypted.length; ++i){
-				// 	str = str+""+ String.fromCharCode( decrypted[i] & 255 );
-				// }
-				// console.log(str);
-
-				// var len = plaintext.length;
-				// for(var i=0; i<len; ++i){
-				// 	var a = plaintext[i];
-				// 	var b = restored[i];
-				// 	if(a!==b){
-				// 		throw "different at byte"+i;
-				// 	}
-				// }
-				
-				// console.log(encrypted);
-				// console.log(restored);
-
-				// var sha1 = Crypto.SHA1(sourceData);
-				// console.log("sha1: "+sha1.toHex());
-				// encrypted = new Uint8Array(Buffer.from('Hello Node.js'));
-				
-
-				var sourceSHA1 = Crypto.SHA1(sourceData).toHex();
-				var targetSHA1 = Crypto.SHA1(encrypted).toHex();
-				entry["sourceSHA1"] = sourceSHA1;
-				entry["targetSHA1"] = targetSHA1;
 
 				// save target file
-				// console.log("WRITE START");
-				// console.log("BEFORE SIZE: "+encrypted.length);
 				encrypted = new Uint8Array(encrypted);
-				// console.log("SAVING SIZE: "+encrypted.length);
-				fs.writeFile(absTarget, encrypted, function(error){
-				console.log("SAVED TO: "+absTarget);
-					if(error){
-						throw "failed to write file: "+absTarget;
-					}
-				});
-
-				// var yaml = YAML.parse(manifest);
-				// printLn(yaml+"");
-				// throw "here";
-				// done -- do next
-				manifest["count"] = currentEntry+1;
-				encryptManifestFiles(encryptCompletionFxn, encryptCompletionCxt);
-				console.log(manifest["count"]);
-			});
-		}else{
-			readFile(absTarget,function(data){
-				console.log("READ FILE: "+absTarget);
-				var sourceData = Code.copyArray(data); // need writeable / non-Buffer object
-				console.log("ORIGINAL SIZE : "+data.length);
-				// console.log("ORIGINAL SIZE : "+sourceData.length);
-				// console.log(sourceData);
-				// console.log("password: "+password);
 
 
-				var infoEncrypted = Crypto.getEncryptedData(sourceData);
-
-				console.log(infoEncrypted);
-				console.log(sourceData[sourceData.length-1]);
-				console.log(infoEncrypted["salt"].length);
-				console.log(infoEncrypted["iv"].length);
-				// throw "?"
-
-				var decrypted = Crypto.decryptAES(password, sourceData);
-				var encrypted = Crypto.encryptAES(password, decrypted, infoEncrypted["salt"], infoEncrypted["iv"]); /// THIS WILL ONLY BE THE SAME IF THE VARS ARE THE SAME
-
-				console.log("sourceData");
-				console.log(sourceData);
-				console.log(sourceData.length);
-				console.log("decrypted");
-				console.log(decrypted);
-				console.log(decrypted.length);
-				console.log("encrypted");
-				console.log(encrypted);
-				console.log(encrypted.length);
-
-				
-
-				var validateEqual = Code.arrayEqual(sourceData,encrypted);
-				if(!validateEqual){
-					throw "before and after are not equal"
-				}
-
-
-				decrypted = new Uint8Array(decrypted);
-				fs.writeFile(absSource, decrypted, function(error){
+				// fs.writeFile(absTarget, encrypted, function(error){
+				writeFileCreateParentDirectories(absTarget, encrypted, function(error){
+					console.log("SAVED TO: "+absTarget);
 					if(error){
 						throw "failed to write file: "+absTarget;
 					}else{
 						console.log("saved : "+absSource);
 					}
+					manifest["count"] = currentEntry+1;
+					processManifestFiles(encryptCompletionFxn, encryptCompletionCxt, isEncrypt);
 				});
-
-/*
-				var encrypted = Crypto.encryptAES(password, sourceData);
-
+				
+			});
+		}else{
+			readFile(absTarget,function(data){
+				// console.log("READ FILE: "+absTarget);
 				var sourceData = Code.copyArray(data); // need writeable / non-Buffer object
-				var encrypted = Crypto.encryptAES(password, sourceData);
-				console.log(" encrypted: "+encrypted.length);
-				console.log(encrypted);
-				var decrypted = Crypto.decryptAES(password, encrypted);
-				console.log(" decrypted: "+decrypted.length);
-				console.log(encrypted);
-				console.log(encrypted.length);
-				console.log(decrypted);
-				console.log(decrypted.length);
-				console.log(sourceData);
-				console.log(sourceData.length);
-
-				var validateEqual = Code.arrayEqual(sourceData,decrypted);
+				var infoEncrypted = Crypto.getEncryptedData(sourceData);
+				var decrypted = Crypto.decryptAES(password, sourceData);
+				// check:
+				var encrypted = Crypto.encryptAES(password, decrypted, infoEncrypted["salt"], infoEncrypted["iv"]); /// THIS WILL ONLY BE THE SAME IF THE VARS ARE THE SAME
+				var validateEqual = Code.arrayEqual(sourceData,encrypted);
 				if(!validateEqual){
 					throw "before and after are not equal"
 				}
-*/
 
-				// throw "is decrypt"
+				// SHA1 verify
+				if(hasManifest){
+					// console.log("verify sha hashes")
+					var sourceSHA1 = entry["sourceSHA1"];
+					var targetSHA1 = entry["targetSHA1"];
+					if(sourceSHA1 && targetSHA1){
+						var localSourceSHA1 = Crypto.SHA1(decrypted).toHex();
+						var localTargetSHA1 = Crypto.SHA1(sourceData).toHex();
+						// console.log(sourceSHA1+" =?="+localSourceSHA1);
+						// console.log(targetSHA1+" =?="+localTargetSHA1);
+						if( sourceSHA1!=localSourceSHA1 || targetSHA1!=localTargetSHA1 ){
+							throw "SHA1 MISMATCH SOURCE OR TARGET";
+						}
+					}
+				}
+				// throw "before save";
+				// save to source file
+				decrypted = new Uint8Array(decrypted);
+				writeFileCreateParentDirectories(absSource, decrypted, function(error){
+				// fs.writeFile(absSource, decrypted, function(error){
+					if(error){
+						throw "failed to write file: "+absTarget;
+					}else{
+						console.log("saved : "+absSource);
+					}
+					manifest["count"] = currentEntry+1;
+					processManifestFiles(encryptCompletionFxn, encryptCompletionCxt, isEncrypt);
+				});
+
 			});
 		}
 	}else{
-		// console.log("done");
+		// console.log("done with processing files");
 		if(encryptCompletionFxn && encryptCompletionCxt){
 			encryptCompletionFxn.call(encryptCompletionCxt);
 		}
 	}
 }
 
-var saveManifestFile = function (){
-	var relativePath = path.relative(process.cwd(), someFilePath);
-
-	throw "make paths relative from absolute"
-}
+// var saveManifestFile = function (){
+// 	var relativePath = path.relative(process.cwd(), someFilePath);
+// 	throw "make paths relative from absolute"
+// }
 
 var readSourceFiles = function(){
 	printLn("readSourceFiles");
@@ -329,143 +245,365 @@ var readFile = function(path,completeFxn){
 	fs.readFile(path, function(err, data){
 		// printLn("read in: "+err);
 		if(err){
-			throw "error";
+			throw "error reading file";
 		}
 		printLn(" read: "+path+" : "+data.length);
-		// for(var i=0; i<data.length; ++i){
-		// 	var byte = data[i];
-		// 	printLn( String.fromCharCode(byte & 255) );
-		// }
-		// password = data;
 		completeFxn(data);
 	});
 };
-
-
-var readPasswordComplete = function(){
-	console.log("read password");
-	// console.log("password: "+password);
-	// console.log("main B: "+manifest);
-// 	console.log("main B: "+Code.keys(manifest));
-// var yaml = YAML.parse(manifest);
-// printLn(yaml+"");
-// 	console.log("entries B: "+manifest["files"]);
-	encryptManifestFiles(function(){
-		console.log("done encryptManifestFiles");
-	}, this);
+var createParentDirectories = function(directory, completeFxn){
+	console.log("directory: "+directory);
+	var split = directory.split("/"); // this is platform dependent
+	var count = 100;
+	var path = "";
+	while(split.length>0){
+		var path = path+split.shift()+"/";
+		var exists = fs.existsSync(path); // TODO: check if dir or file
+		if(!exists){
+			fs.mkdirSync(path);
+		}
+		--count;
+		if(count<0){
+			break;
+		}
+	}
 }
-
-// MAIN ---------------------------------------------------------------------------------------------------------------------------------------------
-
-if(hasEncrypt){
-	if(hasManifest){
-		// use manifest name
-		throw "do manifest"
-	}else{
-		// dont save a manifest
+var writeFileCreateParentDirectories = function(location, content, completeFxn){
+	var dir = path.dirname(location);
+	// console.log("write to containing dir: "+dir);
+	var exists = fs.existsSync(dir);
+	// console.log(" exists: "+exists);
+	if(!exists){
+		createParentDirectories(dir);
 	}
-	// var rel = path.relative(inputPath,abs);
-	console.log(inputPath);
-	var stats = fs.lstatSync(inputPath);
-	var inputIsDirectory = stats.isDirectory();
-	console.log(outputPath);
-	var outputExists = fs.existsSync(outputPath);
-	var outputStats = null;
-	if(outputExists){
-		outputStats = fs.lstatSync(outputPath);
+	fs.writeFile(location, content, completeFxn);
+}
+var getRecursiveListing = function(directory, completionFxn){
+	var directories = [directory];
+	recursiveDirectories(directories, [], [], completionFxn);
+}
+var recursiveDirectories = function(directories, allFiles, allDirectories, completionFxn){
+	if(directories.length==0){
+		completionFxn(allFiles, allDirectories);
+		return;
 	}
-	if(outputExists && outputStats.isDirectory()){
-		
-		console.log("...");
-		// var outputIsDirectory = stats.isDirectory();
-		if( inputIsDirectory !== outputIsDirectory ){
-			throw "both need to be dirs or files"
+	var directory = directories.shift();
+	allDirectories.push(directory);
+	fs.readdir(directory, function(err,files){
+		if(err){
+			throw "error";
 		}
-		throw "dir/file -> dir/file"
-	}else{
-		console.log("output will match whatever input is");
-		if(inputIsDirectory){
-			// mapping is dir -> dir
-			// -> get listing & append filnames to the dirs ?
-			throw "dir -> dir"
-		}else{
-			// mapping is file -> file
-console.log("SINGLE FILE SINGLE FILE SINGLE FILE SINGLE FILE SINGLE FILE SINGLE FILE SINGLE FILE SINGLE FILE SINGLE FILE SINGLE FILE SINGLE FILE SINGLE FILE ")
-			var entries = [];
-				var entry = {};
-				entry["source"] = inputPath;
-				entry["target"] = outputPath;
-			entries.push(entry);
-			console.log(entries);
-
-			manifest = createDefaultManifest();
-			manifest["files"] = entries;
-			// need key
-			readPasswordFile(readPasswordComplete);
-		}
-	}
-	
-
-}else if(hasDecrypt){
-	console.log("hasDecrypt");
-
-	if(hasManifest){
-		// use manifest as source
-		throw "do manifest"
-	}else{
-		// use input as source to decrypt
-		console.log(inputPath);
-		var stats = fs.lstatSync(inputPath);
-		var inputIsDirectory = stats.isDirectory();
-		console.log(outputPath);
-		var outputExists = fs.existsSync(outputPath);
-		var outputStats = null;
-		if(outputExists){
-			outputStats = fs.lstatSync(outputPath);
-		}
-		if(outputExists && outputStats.isDirectory()){
-			throw "directory"
-		}else{
-
-			if(inputIsDirectory){
-				// mapping is dir -> dir
-				// -> get listing & append filnames to the dirs ?
-				throw "dir -> dir"
+		for(var i=0; i<files.length; ++i){
+			var file = files[i];
+			var abs = path.join(directory,file);
+			var stats = fs.lstatSync(abs);
+			if(stats.isDirectory()){
+				directories.push(abs);
 			}else{
-				var entries = [];
-				var entry = {};
-// source === plaintext
-// target === encrypted
-				entry["source"] = outputPath;
-				entry["target"] = inputPath;
-			entries.push(entry);
-			console.log(entries);
-
-			manifest = createDefaultManifest();
-			manifest["files"] = entries;
-			// need key
-			readPasswordFile(
-				function(){
-					console.log("done readPasswordFile");
-					decryptManifestFiles(
-						function(){
-							console.log("done encryptManifestFiles");
-						}
-					)
-				}
-			);
-				// throw "file -> file"
+				allFiles.push(abs);
 			}
 		}
-		
-
+		recursiveDirectories(directories, allFiles, allDirectories, completionFxn);
+	});
+}
+var getFilesRelativeToPath = function(allFiles, existingDirectory, newLocation){
+	var allRelative = [];
+	for(var i=0; i<allFiles.length; ++i){
+		var file = allFiles[i];
+		var relative = path.relative(existingDirectory, file);
+		if(newLocation){
+			relative = path.join(newLocation,relative);
+		}
+		// console.log(relative);
+		allRelative.push(relative);
 	}
+	return allRelative;
+}
+var stringToBinaryArray = function(str){ // todo find cross-platform / unicode + ascii way to do this
+	var myBuffer = [];
+	var buffer = new Buffer(str, 'utf16le');
+	// var buffer = Buffer.alloc(str, 'utf16le');
+	for (var i = 0; i < buffer.length; i++) {
+	    myBuffer.push(buffer[i]);
+	}
+	return myBuffer;
+}
+var saveManifestIfApplicable = function() {
+	console.log("saveManifestIfApplicable: "+hasManifest+" -> "+manifestPath);
+	if(hasManifest){
+		// change manifest target locations to RELATIVE PATHS
+		var files = manifest["files"];
+		for(var i=0; i<files.length; ++i){
+			var file = files[i];
+			var source = file["source"];
+				source = path.relative(inputPath, source);
+			file["source"] = source;
+			var target = file["target"];
+				target = path.relative(outputPath, target);
+			file["target"] = target;
+		}
+		// convert to binary
+		var yaml = YAML.parse(manifest);
+		// console.log("yaml manifest:");
+		// console.log("..............................................................");
+		// console.log(yaml);
+		// console.log("..............................................................");
+		// printLn(yaml+"");
+		// throw "... before"
+		var binary = stringToBinaryArray(yaml);
+		// console.log(binary);
+		// ENCRYPT
+		// var encrypted = binary;
+		var encrypted = Crypto.encryptAES(password, binary);
+		// console.log("encrypted manifest:");
+		// console.log(encrypted);
+
+		// save to final location
+		encrypted = new Uint8Array(encrypted);
+		// console.log(encrypted);
+		writeFileCreateParentDirectories(manifestPath, encrypted, function(error){
+			console.log("SAVED TO: "+manifestPath);
+			if(error){
+				throw "failed to write file: "+manifestPath;
+			}else{
+				console.log("saved : "+manifestPath);
+			}
+		});
+	}
+}
+var startManifestFileListEncryption = function() {
+	readPasswordFile(
+		function(){
+			encryptManifestFiles(
+				function(){
+					console.log("done encryptManifestFiles");
+					saveManifestIfApplicable();
+			}, this)
+		}
+	);
+}
+var startManifestFileListDecryption = function() {
+	readPasswordFile(
+		function(){
+			console.log("done readPasswordFile");
+			decryptManifestFiles(
+				function(){
+					console.log("done encryptManifestFiles");
+				}
+			)
+		}
+	);
+}
+var obscureManifestNames = function(outputPath){ // TODO: could randomize filenames with some count, eg: ABCDEFGH|IJKLMNOP|QRSTUVWX|YZ0123456|
+	var entries = manifest["files"];
+	var filenamePrefix = "FILE_";
+	for(var i=0; i<entries.length; ++i){
+		var entry = entries[i];
+		var target = entry["target"];
+			target = path.join(outputPath,filenamePrefix+""+(i+1)); // leave FILE_0 for manifest if desired
+		entry["target"] = target;
+	}
+}
+// MAIN ---------------------------------------------------------------------------------------------------------------------------------------------
+
+// input info
+var inputStats = fs.lstatSync(inputPath);
+var inputIsDirectory = inputStats.isDirectory();
+// output info
+var outputExists = fs.existsSync(outputPath);
+var outputStats = null;
+var outputIsDirectory = null;
+if(outputExists){
+	outputStats = fs.lstatSync(outputPath);
+	outputIsDirectory = outputStats.isDirectory();
+}
+var manifestPath = null;
+// ...
 
 
-	// decryptManifestFiles();
+/*
 
-}else{
-	throw "missing encrypt or decrypt"
+ENCRYPT: .....................................................
+input   |  output
+- file 		N/A -> assume a file
+- file 		file -> file
+- file 		dir -> assume <DIR>/file -- OR ERROR
+- dir 		N/A -> assume a dir
+- dir 		file -> ERROR
+- dir 		dir -> dir
+
+-m specified  w/ input| evaluated output
+- file 					 file -> go into parent directory of file
+- file 					 dir -> go into dir
+- dir 					 dir -> go into dir
+
+*/
+
+
+if(hasEncrypt){
+	var fileList = [];
+	manifest = createDefaultManifest();
+	manifest["files"] = fileList;
+	if(hasManifest){
+		// everything else is the same BUT PLUS: save the manafest file alongside the output
+		// manifest is encrypted
+		// manifest output file names are rewritten (if a directory)
+		if(!manifestName){
+			console.log("no name");
+			manifestName = "manifest.yaml";
+		}
+		manifestPath = path.join(outputPath,manifestName);
+		console.log(manifestPath);
+	}
+	// }else{
+		if(inputIsDirectory){
+			if(outputExists && !outputIsDirectory){
+				throw "output can not be a file"
+			} // else assume output is a directory
+			console.log("do directory: "+inputPath);
+			getRecursiveListing(inputPath, function(allFiles,allDirs){
+				var relativeFiles = getFilesRelativeToPath(allFiles, inputPath, outputPath);
+				for(var i=0; i<allFiles.length; ++i){
+					var sourcePath = allFiles[i];
+					var targetPath = relativeFiles[i];
+					var entry = {};
+						entry["source"] = sourcePath;
+						entry["target"] = targetPath;
+					fileList.push(entry);
+				}
+				if(hasManifest){
+					obscureManifestNames(outputPath);
+				}
+				startManifestFileListEncryption();
+			});
+			// throw "do directory"
+		}else{ // input is a file
+			if(outputExists){
+				if(outputIsDirectory){
+					throw "output cannot be a directory when input is a file";
+				}
+			} // else: assume it will be a file
+			var entry = {};
+			entry["source"] = inputPath;
+			entry["target"] = outputPath;
+			fileList.push(entry);
+			if(hasManifest){
+				throw "what now? - dont obscure the name ..."
+			}
+			startManifestFileListEncryption();
+		}
+	// }
+
+}else if(hasDecrypt){
+	// console.log("hasDecrypt");
+/*
+
+DECRYPT: .....................................................
+input   |  output
+- file 		N/A -> assume a file
+- file 		file -> file
+- file 		dir -> assume <DIR>/file
+- dir 		N/A -> assume a dir
+- dir 		file -> ERROR
+- dir 		dir -> dir
+
+-m specified  w/ input| evaluated output
+- manifest is the file pointing to
+MUST BE A FILE
+		dir -> destination is dir
+		file -> ERROR
+
+*/
+
+	var fileList = [];
+	manifest = createDefaultManifest();
+	manifest["files"] = fileList;
+
+	if(hasManifest){
+		if(outputExists && !outputIsDirectory){
+			throw "output must be a directory, not existing file"
+		}
+		// use manifest as source
+		manifestPath = path.resolve(inputPath);
+		var manifestDirectory = path.dirname(manifestPath);
+		console.log("do manifest: "+manifestPath);
+		readFile(manifestPath, function(data){
+			console.log("data: ");
+			console.log(data);
+			readPasswordFile(
+				function(){
+					// console.log("password: ");
+					// console.log(password);
+				
+					// decrypt
+					var encrypted = Code.copyArray(data);
+					var decrypted = Crypto.decryptAES(password, encrypted);
+					// console.log("decrypted: ");
+					// console.log(decrypted);
+					data = new Buffer(decrypted);
+					// console.log("data: ");
+					// console.log(data);
+
+					var string = data.toString(); // Buffer
+					// console.log("string: ");
+					// console.log(".....................................................................");
+					// console.log(string);
+					// console.log(".....................................................................");
+					var yaml = YAML.parse(string);
+					if(Code.isArray(yaml)){
+						yaml = yaml[0];
+					}
+					// console.log("yaml: ");
+					// console.log(yaml);
+					manifest = yaml;
+
+					// expand all files relative to:
+					// TARGET: manifest location
+					// SOURCE: output location
+
+					var entries = manifest["files"];
+					for(var i=0; i<entries.length; ++i){
+						var entry = entries[i];
+						var source = entry["source"]; // plaintext
+						var target = entry["target"]; // encrypted
+							source = path.join(outputPath,source);
+							target = path.join(manifestDirectory,target);
+						entry["source"] = source;
+						entry["target"] = target;
+					}
+					manifest["count"] = 0; // start decrypting at index 0
+					console.log(manifest);
+					// throw "here ..."
+					startManifestFileListDecryption();
+				}
+			);
+		});
+	}else{
+		if(inputIsDirectory){
+			getRecursiveListing(inputPath, function(allFiles,allDirs){
+				var relativeFiles = getFilesRelativeToPath(allFiles, inputPath, outputPath);
+				for(var i=0; i<allFiles.length; ++i){
+					var sourcePath = allFiles[i];
+					var targetPath = relativeFiles[i];
+					var entry = {};
+						entry["source"] = targetPath;
+						entry["target"] = sourcePath;
+					fileList.push(entry);
+				}
+				startManifestFileListDecryption();
+			});
+			
+		}else{ // input is file
+			if(outputIsDirectory){
+				throw "output cannot be a directory when input is a file";
+			} // else assume is a file
+			var entry = {};
+				entry["source"] = outputPath; // decrypted location
+				entry["target"] = inputPath; // encrypted location
+			fileList.push(entry);
+			startManifestFileListDecryption();
+		}
+	}
 }
 
 
@@ -590,14 +728,6 @@ var continueManifest = function(fileList){
 	}
 	// ByteData.SHA1
 	manifest["files"] = entries;
-	// var yaml = YAML.parse(manifest);
-	// printLn(yaml+"");
-
-	// turn into absolute paths:
-//	var absSource = path.join(inputPath,relSource);
-//	var absTarget = path.join(inputPath,relTarget);
-
-		// also want relative paths for manifest ???
 
 	console.log("do encryption or decryption ?")
 
@@ -618,48 +748,6 @@ var continueManifest = function(fileList){
 // throw "???"
 	encryptManifestFiles();
 }
-
-var getRecursiveListing = function(directory, completionFxn){
-	var directories = [directory];
-	recursiveDirectories(directories, [], [], completionFxn);
-}
-var recursiveDirectories = function(directories, allFiles, allDirectories, completionFxn){
-	if(directories.length==0){
-		completionFxn(allFiles, allDirectories);
-		return;
-	}
-	var directory = directories.shift();
-	allDirectories.push(directory);
-	fs.readdir(directory, function(err,files){
-		if(err){
-			throw "error";
-		}
-		for(var i=0; i<files.length; ++i){
-			var file = files[i];
-			var abs = path.join(directory,file);
-			var stats = fs.lstatSync(abs);
-			if(stats.isDirectory()){
-				directories.push(abs);
-			}else{
-				allFiles.push(abs);
-			}
-		}
-		recursiveDirectories(directories, allFiles, allDirectories, completionFxn);
-	});
-}
-
-
-
-/*
-	A) use for encrypting set of files => create a manifest
-	B) decrypting a set of files from a manifest
-
-	C) use for encrypting a single file
-	D) use for decrypting a single file
-
-*/
-	
-
 
 
 /*
@@ -696,22 +784,6 @@ files:
 
 
 
-// get complete list of files
-
-
-// create manifest
-
-
-// for each file => convert to 
-
-
-// if at any point a destination file exists AND overwrite is false => abort
-
-
-
-
-// node app/hash.js -i plaintext.txt -o output/ -k password.txt
-
 
 // node crypt/app/hash.js -f FUNCTION_NAME DIRECTORY_OR_FILE --file PATH_TO_KEY_TEXT OTHER_PARAMETER  -after-tab value --novalue --item  -here	-other value \
 
@@ -719,14 +791,6 @@ files:
 
 
 //console.log(" > "+argumentValues);
-
-
-// TODO: hashing data
-
-
-// ..
-
-
 /*
 
 - path to: file | directory
@@ -787,18 +851,6 @@ hash fxn rev:
 
 /*
 
-ENCRYPTION:
-	use a manifest to keep track of history?
-	just encrypt blindly to files
-	
-
-DECRYPT:
-	use a manifest file as a reference?
-	just decrypt blindly?
-	
-	
-
-
 # diectory - manifest
 node app/hash.js -i ./tests -o output/ -k password.txt -m manifest -e
 node app/hash.js -o decrypted/ -k password.txt -m manifest -d
@@ -833,11 +885,36 @@ branch:
 
 # ENCRYPT SINGLE FILE
 node app/hash.js -i plaintext.txt -o encrypted.txt -k password.txt -e
+# ENCRYPT SINGLE FILE TO A FILE IN NON-EXISITNG DIRECTORY
+node app/hash.js -i plaintext.txt -o output/dne/now/it/does/encrypted.txt -k password.txt -e
+
+x # ENCRYPT SINGLE FILE TO A DIRECTORY
+node app/hash.js -i plaintext.txt -o output/ -k password.txt -e
+
+# ENCRYPT DIRECTORY TO A DIRECTORY
+node app/hash.js -i files -o dirs -k password.txt -e
+
+# ENCRYPT DIRECTORY TO A DIRECTORY -- MANIFEST
+node app/hash.js -i files -o dirs -k password.txt -e -m manifest
+
+------------------
+
 # DECRYPT SINGLE FILE
 node app/hash.js -i encrypted.txt -o decrypted.txt -k password.txt -d
 
-*/
+x # DECRYPT SINGLE FILE TO A DIRECTORY
+node app/hash.js -i encrypted.txt -o output/ -k password.txt -d
 
+
+# DECRYPT DIRECTORY TO A DIRECTORY
+node app/hash.js -i dirs -o files_dec -k password.txt -d
+
+node app/hash.js -i files -o dirs -k password.txt -e
+
+# DECRYPT FROM MANIFEST TO A DIRECTORY
+node app/hash.js -i dirs/manifest.yaml -o manifest_dec -k password.txt -d -m
+
+*/
 
 
 

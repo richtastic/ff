@@ -27,6 +27,7 @@ YAML.STRING_QUOTE="\"";
 YAML.NULL="null";
 YAML.TRUE="true";
 YAML.FALSE="false";
+YAML.NULL_CHARACTER=String.fromCharCode(0);
 YAML.REFERENCE_SUFFIX="ref";
 // functional
 YAML.STACK_UNKNOWN=0;
@@ -136,7 +137,12 @@ YAML.prototype._lookupReferenceFromObject = function(object){
 YAML.prototype.parse = function(inputString){
 	this._documents = new Array();
 	this._references = new Object();
-	this._lines = inputString.split(YAML.NEWLINE);
+	var lines = inputString.split(YAML.NEWLINE);
+	// cleanup nulls - seems to be a result of binary type conversion between strings
+	for(var i=0; i<lines.length; ++i){
+		lines[i] = lines[i].replace(/\0/g, ''); // remove null
+	}
+	this._lines = lines;
 	this._lineNumber = 0;
 	this._indent = 0;
 	// go to first non-empty line

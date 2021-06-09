@@ -1102,8 +1102,8 @@ Brandenburger - Brandenburg Gate
 | lügen ? |  | to lie |
 | retten ? |  | to save |
 | klopft ? |  | to knock |
-|  |  |  |
-|  |  |  |
+| fernsehen ?  |  | to watch TV |
+| ausschlafen ? |  | to sleep in |
 |  |  |  |
 |  |  |  |
 |  |  |  |
@@ -1561,6 +1561,11 @@ Handschrift - handwriting
 Psychologie - psychology
 Geschichte - history
 
+Semesterende - end of the semester
+
+Ferien - break / holiday / vacation
+
+Ausland - abroad (foreign country)
 
 
 Es gibt eine - there is a ...
@@ -1703,7 +1708,7 @@ mitbringen ?  - bring with / bring (along)
 putzen ? - to clean?
 leiser ? - to quiet down / be quieter
 gießt ? - to pour - gegossen - poured
-
+fischen ? - to go fishing / to fish
 Größe - size
 
 
