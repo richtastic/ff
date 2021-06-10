@@ -6060,6 +6060,68 @@ Stereopsis.World.prototype.resolveNegativeTransforms = function(){
 	}
 }
 
+
+Stereopsis.World.prototype.refineAllCameraKMatrixes = function(maxIterations, onlyLongTracks, maximumPoints3D){
+	var world = this;
+
+	var views = world.toViewArray();
+	var cameras = world.toCameraArray();
+	var points3D = world.toPointArray();
+
+	// get all view image dimensions
+	for(var i=0; i<views.length; ++i){
+		var view = views[i];
+		console.log(view);
+	}
+
+	// get all cameras
+	for(var i=0; i<cameras.length; ++i){
+		var camera = cameras[i];
+		console.log(camera);
+	}
+	
+	// get subset of all points3D
+	for(var i=0; i<points3D.length; ++i){
+		var point3D = points3D[i];
+		// var points2D = point3D.toPointArray();
+	}
+
+	// construct data structures
+
+	// pass to R3D algorithm
+
+	// 
+	throw "refineAllCameraKMatrixes";
+/*
+OPTIMIZING ON CAMERA PARAMETERS ?
+[fx  s  cx]
+[0  fy  cy]
+[0   0   1]
+
+ALL TOGETHER:
+	fx stays constant -> 4 variables
+
+SEPARATELY:
+	- centerpoint: -> 2 variables [2]
+		cx & cy
+	- focal: -> 2 variables
+		fy & s
+		fx stays constant
+
+- get some sub-sample of P3D points [100-1k]
+	- gradient descent iterate on:
+		- total error = sum of P3D reprojection errors:
+		- set normalized K from parameters [fx, fy, s, cx, cy]
+		- get image-sized K by multiplying by image dimensions for each view
+		- recompute each P3D location & error:
+			- P3D = P2D_i,j,k.. * view_i * K_i
+			- reprojection = 
+			total += error
+
+*/
+}
+
+
 Stereopsis.World.prototype.refineAllCameraMultiViewTriangulation = function(maxIterations, onlyLongTracks, maximumPoints3D){
 	// TODO: PRIORITIZE LONGER TRACKS REGARDLESS
 	onlyLongTracks = Code.valueOrDefault(onlyLongTracks, false);
@@ -9297,8 +9359,8 @@ Stereopsis.World.prototype.solveDensePairNew = function(subdivisionScaleSize, su
 
 // subdivisions = 0; // show seeds
 // subdivisions = 1; // 5k
-// subdivisions = 2; // 10k ............... testing
-subdivisions = 3; // 25k ................. current default
+subdivisions = 2; // 10k ............... testing
+// subdivisions = 3; // 25k ................. current default
 // subdivisions = 4; // 50k
 // subdivisions = 5; // 100k
 // console.log("subdivisions: "+subdivisions);
@@ -9438,6 +9500,9 @@ timeA = Code.getTimeMilliseconds();
 		world.refineAllCameraMultiViewTriangulation(100);
 		world.copyRelativeTransformsFromAbsolute();
 
+		world.refineAllCameraKMatrixes();
+
+
 timeB = Code.getTimeMilliseconds();
 console.log("DELTA I: " + (timeB-timeA) );
 timeA = Code.getTimeMilliseconds();
@@ -9495,6 +9560,7 @@ console.log((timeStop-timeStart)/1000/60); // ~ 20 mins
 	// throw "solveDensePair2";
 	// return null;
 }
+
 
 Stereopsis.World.prototype.smoothP3DPatchesNeighborhood = function(){
 	var world = this;

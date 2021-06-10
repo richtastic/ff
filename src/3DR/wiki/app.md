@@ -394,17 +394,12 @@ MISSING:
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
-https://arxiv.org/pdf/1805.10941.pdf
-https://github.com/openbsd/src/blob/master/lib/libc/crypt/arc4random_uniform.c
-https://github.com/libevent/libevent/blob/master/arc4random.c
-
-- get forward & reverse for files working nicely
-- start forward & reverse for directories working
-- next forward & reverse for manifests
-
+ENCRYPTION:
 - dont allow overwrite unless listed in input list as -f
+- skip sha1 & fwd/bak checking
 
-- smoothing patches
+
+
 
 
 NEIGHBORHOOD SMOOTHING ?
@@ -418,6 +413,50 @@ SMOOTH:
 		- get local plane using weights
 		- get new location = ray from Vavg to P3D => projected onto plane
 	- set all P3D locations to new locations
+
+
+
+
+PATCH NORMAL FILTERING:
+	- per view:
+		- drop normals who's angle away from view is over:
+			A) maximum threshold (eg 90 degrees)
+			B) much higher than average (mean + sigma)
+	- per point
+		- drop points whos average normal from all relevant views is over 
+			A) threshold ~ 90
+			B) mean + sigma
+
+
+
+
+
+
+OPTIMIZING ON CAMERA PARAMETERS ?
+[fx  s  cx]
+[0  fy  cy]
+[0   0   1]
+
+ALL TOGETHER:
+	fx stays constant -> 4 variables
+
+SEPARATELY:
+	- centerpoint: -> 2 variables [2]
+		cx & cy
+	- focal: -> 2 variables
+		fy & s
+		fx stays constant
+
+- get some sub-sample of P3D points [100-1k]
+	- gradient descent iterate on:
+		- total error = sum of P3D reprojection errors:
+		- set normalized K from parameters [fx, fy, s, cx, cy]
+		- get image-sized K by multiplying by image dimensions for each view
+		- recompute each P3D location & error:
+			- P3D = P2D_i,j,k.. * view_i * K_i
+			- reprojection = 
+			total += error
+
 
 
 

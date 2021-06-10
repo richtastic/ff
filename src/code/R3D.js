@@ -43976,6 +43976,102 @@ R3D._visitBoxes = function(boxes, boxGroups, grouping){
 		}
 	}
 }
+
+
+R3D.optimizeCameraKIntrinsicNonlinear = function(normalizedKs, viewCameras, extrinsics, imageSizes, pointGroups3D, pointGroups2D, maxIterations){ // basic K only, no distortion parameters
+	maxIterations = Code.valueOrDefault(maxIterations, 1000);
+
+	// just cx,cy
+	// just fy,s
+	// all cx,cy,fy,s
+
+	// R3D.optimizeAllCameraExtrinsicDLTNonlinear = function(listP, listK, listKinv, listPoints2D, maxIterations, negativeIsBad, onlyErrorZ){
+	
+	var x = [];
+	for(var i=0; i<normalizedKs.length; ++i){
+		var K = normalizedKs[i];
+		console.log(K);
+		x.push(K.get(0,2)); // cx,cy,fy,s
+		x.push(K.get(1,2));
+		x.push(K.get(1,1));
+		x.push(K.get(0,1));
+	}
+	console.log(x);
+	console.log("throw GD");
+
+	var minError = 1E-10;
+	var result = Code.gradientDescent(R3D._gdOptimizeCameraK, args, x, null, maxIterations, minError);
+	var x = result["x"];
+	var cost = result["cost"];
+
+
+throw "optimizeCameraKIntrinsicNonlinear";
+
+}
+
+
+R3D._gdOptimizeCameraK = function(args, x, isUpdate){
+	// if(isUpdate){
+	// 	return;
+	// }
+	// var pointGroups3D = args[0];
+	// var pointGroups2D = args[1];
+	// var listH = args[2];
+
+	// var fx = x[0];
+	// var s  = x[1];
+	// var cx = x[2];
+	// var fy = x[3];
+	// var cy = x[4];
+	// var k1 = x[5];
+	// var k2 = x[6];
+	// var k3 = x[7];
+	// var p1 = x[8];
+	// var p2 = x[9];
+	// var distortions = {"k1":k1,"k2":k2,"k3":k3,"p1":p1,"p2":p2};
+	// var K = new Matrix(3,3).fromArray([fx,s,cx, 0,fy,cy, 0,0,1]);
+	// var Kinv = Matrix.inverse(K);
+
+	// var totalPoints3D = [];
+	// var totalPoints2D = [];
+	// var estimatedPoints2D = [];
+
+	var totalError = 0;
+
+// 	var listM = R3D.extrinsicCalibratedMatrixFromGroups(pointGroups2D, pointGroups3D, listH, K, Kinv);
+// 	for(var k=0; k<pointGroups2D.length; ++k){
+// 		var points2D = pointGroups2D[k];
+// 		var points3D = pointGroups3D[k];
+// 		Code.arrayPushArray(totalPoints2D, points2D);
+// 		Code.arrayPushArray(totalPoints3D, points3D);
+// 		var P = listM[k];
+// 		for(var i=0; i<points3D.length; ++i){
+// 			var point3D = points3D[i];
+// 			var point = R3D.projectedPoint3DFromPoint3D(point3D, P, K, null);
+// 			estimatedPoints2D.push(point);
+// 		}
+// 	}
+
+// 	var pointsFrom = totalPoints2D;
+// 	var pointsTo = estimatedPoints2D;
+
+// 	var appliedP2D = new V2D();
+// 	var i, len = pointsFrom.length;
+// 	var error = 0;
+// 	for(i=0;i<len;++i){
+// 		var fromP2D = pointsFrom[i];
+// 		var toP2D = pointsTo[i];
+// 		//appliedP2D = R3D.applyDistortionParameters(appliedP2D, fromP2D, K, distortions);
+// // ignore distortion
+// appliedP2D.set(fromP2D.x,fromP2D.y);
+// 		var dist = V2D.distance(toP2D,appliedP2D);
+// 		error += dist*dist;
+// 	}
+
+throw "totalError: "+totalError;
+	return error;
+}
+
 R3D.calibrateCameraKIteritive = function(pointGroups3D, pointGroups2D){
 	throw "no"
 	// get initial K & initial distortion

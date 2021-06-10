@@ -323,7 +323,7 @@ var originalSize = ciphertext.length;
 	var secretSalted = Crypto.xor(secret,passwordSalt);
 	// console.log("secretSalted: "+secretSalted);
 	// console.log("secretSalted: "+secretSalted.length);
-	
+
 	Code.truncateArray(ciphertext,start);
 	// console.log("cipher length: "+ciphertext.length+" : "+start);
 	
@@ -384,7 +384,13 @@ Crypto.RSA = function(pub,pri){
 }
 
 
+/*
 
+https://arxiv.org/pdf/1805.10941.pdf
+https://github.com/openbsd/src/blob/master/lib/libc/crypt/arc4random_uniform.c
+https://github.com/libevent/libevent/blob/master/arc4random.c
+
+*/
 
 
 Crypto.randomBytes = function(count){ // TODO: more secure than Math.random()

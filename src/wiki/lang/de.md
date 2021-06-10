@@ -60,6 +60,8 @@ Tag der Deutschen Einheit - October 3, 1990 united east & west germany
 Ostsee - Baltic Sea
 
 
+
+
 #### daily
 
 | de | ph | en |
@@ -138,7 +140,7 @@ neuter: das ein
 | Nachmittag |  | afternoon |
 | Gerne |  | with pleasure |
 Einen schönen Tag noch = have a nice day
-|  |  |  |
+| Gute Reise |  | have a good trip |
 | morgen |  | tomorrow |
 |  |  |  |
 | Ordnung |  | all right |
@@ -330,7 +332,7 @@ LieblingsX --- favorite X
 | buch |  | book |
 | die Bücher |  | books |
 | das Tagebuch |  | diary |
-|  |  |  |
+| Kinderbuch |  | childrens book |
 |  |  |  |
 | auto / wagon | out-oh / vahgahn | car |
 | Motorrad |  | motorbike |
@@ -393,6 +395,8 @@ Urlaubskleidung - vacation clothes
 Rucksack - backpack
 
 der Koffer - suitcase
+die Gepäck - luggage
+
 
 der Laptop - laptop
 |  |  |  |
@@ -407,6 +411,10 @@ der Laptop - laptop
 |  |  |  |
 |  |  |  |
 | der Fernseher |  | TV |
+| die Zeitung |  | newspaper |
+| Komödie |  | comedy (movie/show) |
+|  |  |  |
+|  |  |  |
 |  |  |  |
 | Nummer |  | number |
 |  |  |  |
@@ -422,6 +430,7 @@ der Laptop - laptop
 | wohin |  | where-to |
 | was |  | what |
 | wer |  | who |
+| wem |  | whom |
 | wann |  | when |
 | warum |  | why |
 | wie |  | how |
@@ -555,7 +564,7 @@ der Laptop - laptop
 | der mond |  | moon |
 | die sonne |  | sun |
 | das meer |  | sea |
-|  |  |  |
+| see |  | lake? |
 |  |  |  |
 |  |  |  |
 |  |  |  |
@@ -687,7 +696,7 @@ Neuschwanstein Castle
 | junge |  | boy |
 | der mann |  | man |
 | die frau |  | woman |
-|  |  |  |
+| Nichte |  | neice |
 | die Eltern |  | parents |
 | Geschwister |  | siblings |
 | die Großeltern |  | the grand-parents |
@@ -722,7 +731,7 @@ Neuschwanstein Castle
 |  |  |  |
 | Touristen |  | tourists |
 | Freundin |  | friend |
-|  |  |  |
+| jemand |  | somebody / someone / anyone |
 | Beruf |  | profession (job) |
 | Arbeit |  | work (people) |
 | funktionieren |  | work (objects) |
@@ -875,7 +884,7 @@ Neuschwanstein Castle
 | das fleisch |  | meat |
 |  |  |  |
 |  |  |  |
-|  |  |  |
+| Grillparty |  | barbeque |
 |  |  |  |
 |  |  |  |
 |  |  |  |
@@ -1059,6 +1068,7 @@ Brandenburger - Brandenburg Gate
 | brauche |  | need |
 | gehen |  | to go |
 | kauf |  | to buy |
+| einkaufen ? |  | to shop |
 | nehme ? |  | i take |
 | Fährst ? fahren ? |  | ride |
 | joggen |  | to jog |
@@ -1104,7 +1114,7 @@ Brandenburger - Brandenburg Gate
 | klopft ? |  | to knock |
 | fernsehen ?  |  | to watch TV |
 | ausschlafen ? |  | to sleep in |
-|  |  |  |
+| wiederkommen ? |  | to come back |
 |  |  |  |
 |  |  |  |
 | Studieren ? |  | to study (a subject) |
@@ -1425,6 +1435,7 @@ Eintrittskarte - admission tickets
 Flugtickets - plane tickets
 
 Flugzeug - plane
+der Abflug - departure (plane)
 
 Flugnummer - flight number
 

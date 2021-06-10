@@ -876,7 +876,7 @@ ByteData.AESencrypt = function(key, message, type, size, inputIV, isDecrypt){ //
 				for(var j=0; j<blockLength; ++j){
 					state[j] = state[j] ^ initVector[j];
 				}
-			}
+			}x
 			// encrypt loop
 			for(var round=0; round<=roundCount; ++round){
 				if(round>0){
@@ -1164,15 +1164,6 @@ ByteData._AESinverseMixColumns = function(state){
 		state[i*4 + 3] = ByteData._AESmultGF256(col[3],0x0e) ^ ByteData._AESmultGF256(col[0],0x0b) ^ ByteData._AESmultGF256(col[1],0x0d) ^ ByteData._AESmultGF256(col[2],0x09);
 	}
 	return state;
-}
-
-
-ByteData.RSA = function(pub,pri){
-	// p,q = random prime
-	// n = p*q
-	// f = (p-1)*(q-1)
-	// pub = [2,f-1] && gcd(pub,f)==1
-	// pri = d*e = 1 % f
 }
 
 // // ByteData.js

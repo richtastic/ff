@@ -6,22 +6,11 @@
 // process.argv
 
 
-// https://nodejs.org/api/path.html
-
 var path = require("path");
 var fs = require("fs");
 
-
-// node app/hash.js -i plaintext.txt -o output/ -k password.txt
-// node app/hash.js -i tests/ -o output/ -k password.txt
-// node app/hash.js -i ./tests -o output/ -k password.txt -d
-// 
-
-
 // TODO: allow to pass regular expression to ignore(exclude) or restrict(include) files by name
-// TODO: allow to pass a list of files explicitely
-
-
+// TODO: allow to pass a list of files explicitly
 
 var codeLocationRelative = "../../code/";
 // FF:
@@ -35,14 +24,10 @@ var YAML = require(codeLocationRelative+"YAML.js");
 var printLn = function(str){
 	console.log(str);
 }
-// console.log(process.argv);
+
 var argv = process.argv.join(" ");
 
-
-
-
 var currentTime = Code.getTimeStampFromMilliseconds();
-// console.log(" > "+currentTime);
 
 var argumentList = null;
 var argumentValues = Code.parseCommandLineArguments(argv, argumentList);
@@ -449,7 +434,7 @@ if(hasEncrypt){
 		// manifest is encrypted
 		// manifest output file names are rewritten (if a directory)
 		if(!manifestName){
-			console.log("no name");
+			console.log("no manifest name");
 			manifestName = "manifest.yaml";
 		}
 		manifestPath = path.join(outputPath,manifestName);
@@ -528,8 +513,8 @@ MUST BE A FILE
 		var manifestDirectory = path.dirname(manifestPath);
 		console.log("do manifest: "+manifestPath);
 		readFile(manifestPath, function(data){
-			console.log("data: ");
-			console.log(data);
+			// console.log("data: ");
+			// console.log(data);
 			readPasswordFile(
 				function(){
 					// console.log("password: ");
@@ -553,14 +538,7 @@ MUST BE A FILE
 					if(Code.isArray(yaml)){
 						yaml = yaml[0];
 					}
-					// console.log("yaml: ");
-					// console.log(yaml);
 					manifest = yaml;
-
-					// expand all files relative to:
-					// TARGET: manifest location
-					// SOURCE: output location
-
 					var entries = manifest["files"];
 					for(var i=0; i<entries.length; ++i){
 						var entry = entries[i];
@@ -572,8 +550,6 @@ MUST BE A FILE
 						entry["target"] = target;
 					}
 					manifest["count"] = 0; // start decrypting at index 0
-					console.log(manifest);
-					// throw "here ..."
 					startManifestFileListDecryption();
 				}
 			);
@@ -647,36 +623,7 @@ if(!inputPath){
 	return;
 }
 
-
-if(!outputPath){
-	outputPath = "./";
-}
-
 */
-
-
-
-
-/*
-branch:
-	ENCRYPT
-		- is "-i" present
-			=> input is single file or directory
-		- else is "-m" present
-			=> input is manifest w/ data
-	DECRYPT
-		- is "-i" present
-			=> input is single file
-		- else is "-m" present
-			=> input is manifest w/ data
-*/
-
-
-
-
-
-// manifestName = path.resolve(manifestName);
-
 
 printLn(" in: "+inputPath);
 printLn("out: "+outputPath);
@@ -686,127 +633,7 @@ printLn("ovr: "+overwriteExisting);
 
 
 
-// read in key
-// var manifest = {};
-
-var createManifest = function(){
-	// console.log("inputPath: "+inputPath);
-	manifest = createDefaultManifest();
-	var stats = fs.lstatSync(inputPath);
-	// printLn("dir: "+stats.isDirectory());
-	// printLn("fil: "+stats.isFile());
-	
-	if(stats.isDirectory()){
-		printLn("get list ...");
-		getRecursiveListing(inputPath, function(allFiles,allDirs){
-			continueManifest(allFiles);
-		});
-	}else{
-		printLn("single file");
-		var fileList = [inputPath];
-		inputPath = path.dirname(inputPath);
-		continueManifest(fileList);
-	}
-
-}
-
-
-var continueManifest = function(fileList){
-	printLn("ALL FILES: .............. "+fileList.length);
-	var fileOutputPrefix = "FILE_";
-	var fileOutputCount = 0;
-	var entries = [];
-	for(var i=0; i<fileList.length; ++i){
-		var abs = fileList[i];
-		var rel = path.relative(inputPath,abs);
-		printLn("abs: "+abs);
-		printLn("rel: "+rel);
-		var entry = {};
-			entry["source"] = rel;
-			entry["target"] = fileOutputPrefix+fileOutputCount;
-		entries.push(entry);
-	}
-	// ByteData.SHA1
-	manifest["files"] = entries;
-
-	console.log("do encryption or decryption ?")
-
-// console.log("fileList: "+fileList)
-
-// if(isEncryption){
-// 	console.log("DO ENCRYPTION");
-// }else{
-// 	console.log("DO DECRYPTION");
-// 	/*
-// 		- input:
-// 			A) file
-// 			B) directory
-// 			C) manifest
-// 		want a list of all 
-// 	*/
-// }
-// throw "???"
-	encryptManifestFiles();
-}
-
-
 /*
-manifest:
-
-created: TIMESTAMP
-
-files:
-	- 
-		source: ORIGINAL/PATH/NAME.txt
-		target: FINAL/LOCATION/123
-		shaSource: 1231231312
-		shaTarget: 1231231212
-
-*/
-
-	// console.log("key       : "+Code.printArrayHex(key,2));
-	// console.log("plaintext : "+Code.printArrayHex(plaintext,2));
-	// var type = ByteData.AES_TYPE_CBC;
-	// // var type = ByteData.AES_TYPE_EBC;
-	// var size = ByteData.AES_SIZE_256;
-	// var useSalting = true;
-	// // var useSalting = false;
-	// var result = ByteData.AESencrypt(key, plaintext, type, size, useSalting);
-	// 	var cyphertext = result;
-	// 	// var cyphertext = result["cyphertext"];
-	// 	// var salt = result["salt"];
-	// console.log("cyphertext: "+Code.printArrayHex(cyphertext,2));
-	// var restored = ByteData.AESdecrypt(key, cyphertext, type, size, useSalting);
-	// console.log("check     : "+Code.printArrayHex(restored,2));
-
-	// ByteData.AESencrypt(key, message, type, size, useSalting, isDecrypt);
-	// ByteData.AESdecrypt(key, cyphertext, type, size, useSalting);
-
-
-
-
-// node crypt/app/hash.js -f FUNCTION_NAME DIRECTORY_OR_FILE --file PATH_TO_KEY_TEXT OTHER_PARAMETER  -after-tab value --novalue --item  -here	-other value \
-
-// items / defaults
-
-
-//console.log(" > "+argumentValues);
-/*
-
-- path to: file | directory
-
-- create a manifest / info / dictionary / database file
-
-
-
-node hash.js FUNCTION_NAME DIRECTORY_OR_FILE PATH_TO_KEY_TEXT OTHER_PARAMETERS:(key/hash size)
-
-
-- convert key ascii text into binary array & extend to fill full N(eg 1024) bits
-- get a full list of all files needing to be hashed (if dir, else just 1)
-- create output file/directory (random name - time / seed)
-- do hash fxn
-- check fwd/bak validation
 
 if directory: can split into a bunch of individual directories, mod 100-100 files in some number order:
 ABCDEFGHIJKLMNOP/
@@ -817,32 +644,6 @@ ABCDEFGHIJKLMNOP/
 		GHIJKL
 		...
 	...
-
-
-eg manifest (yaml?):
-
-date: 2021-02-31 23:59:01.1234
-manifest:
-	- 
-		source: ORIGINAL/FILE/PATH.png
-		sha256: SHA_HASH
-		destination: FINAL/PATH/NAME
-	...
-
-
-
-hash fxn fwd:
-	- xor with key
-	- AES-256
-	- invert bits
-	- AES-256
-	- xor with key
-	- remainder truncating ?
-	
-
-hash fxn rev:
-	- inverse
-
 
 */
 
@@ -913,6 +714,21 @@ node app/hash.js -i files -o dirs -k password.txt -e
 
 # DECRYPT FROM MANIFEST TO A DIRECTORY
 node app/hash.js -i dirs/manifest.yaml -o manifest_dec -k password.txt -d -m
+
+
+
+
+
+
+
+
+EXAMPLES:
+
+
+node app/hash.js -i ../images -o test -k password.txt -e -m
+node app/hash.js -i test/manifest.yaml -o test_dec -k password.txt -d -m
+node app/hash.js -i test/manifest.yaml -o manifest.yaml -k password.txt -d
+
 
 */
 
