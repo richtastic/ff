@@ -74,5 +74,46 @@ var sigma = Code.stdDev(a,min);
 
 
 
+## Sampling metrics
+
+
+### How confident is sampling approximating population?
+
+- take N samples from population of M total samples (N << M)
+- how precise / confident is the sample
+
+- eg: N=10 & M=1000 -> minimally accurate?
+- eg: N=100 & M=1000 -> fairly accurate?
+- eg: N=500 & M=1000 -> very accurate?
+
+
+mu = pop mean
+
+x = sample mean
+
+
+
+
+
+
+
+
+
+
+
+
+
+..
+
+
+
+
+
+
+
+
+
+
+
 
 

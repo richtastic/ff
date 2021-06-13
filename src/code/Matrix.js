@@ -265,8 +265,11 @@ Matrix.prototype.closeToIdentity = function(thresh){
 	}
 	return true;
 }
-Matrix.prototype.getSubMatrix = function(offRow,offCol, rows,cols){
-	var i,j, m = new Matrix(rows,cols);
+Matrix.prototype.getSubMatrix = function(offRow,offCol, rows,cols, reuseMatrix){
+	var i,j, m = reuseMatrix;
+	if(!reuseMatrix){
+		m = new Matrix(rows,cols);
+	}
 	for(j=0;j<rows;++j){
 		for(i=0;i<cols;++i){
 			m._rows[j][i] = this._rows[j+offRow][i+offCol];
@@ -1032,7 +1035,14 @@ Matrix.normInfinite = function(x){ // x is a vector
 	}
 	return maxAbs; // return max;
 }
-Matrix.inverse = function(A){ // assumed square
+// Matrix.inverse = function(reuseMatrix,inputMatrix){ // assumed square
+Matrix.inverse = function(A){ 
+	// var A = inputMatrix;
+	// if(!A){
+	// 	// throw "not sure how to reuse?"
+	// 	A = reuseMatrix;
+	// 	reuseMatrix = new Matrix(A._rowCount,A._colCount);
+	// }
 	//return new Matrix(A.rows(),A.cols()).fromArrayMatrix( numeric.inv(A._rows) );
 	C = Matrix.augment(A,(new Matrix(A._rowCount,A._colCount)).identity());
 	Matrix.RREF(C,C);

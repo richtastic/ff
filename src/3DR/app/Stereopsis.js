@@ -1644,7 +1644,7 @@ Stereopsis.View.prototype.closestPoint2D = function(point2D){
 	}
 	return null;
 }
-Stereopsis.View.prototype.absoluteTransform = function(camera){
+Stereopsis.View.prototype.absoluteTransform = function(camera){ // extrinsic
 	if(camera){
 		this._absoluteTransform = camera.copy();
 		this._absoluteTransformInverse = Matrix.inverse(camera);
@@ -1652,7 +1652,7 @@ Stereopsis.View.prototype.absoluteTransform = function(camera){
 	}
 	return this._absoluteTransform;
 }
-Stereopsis.View.prototype.absoluteTransformInverse = function(){
+Stereopsis.View.prototype.absoluteTransformInverse = function(){ // absolute
 	return this._absoluteTransformInverse;
 }
 // Stereopsis.View.prototype.extrinsicTransform = function(extrinsic){
@@ -6063,62 +6063,82 @@ Stereopsis.World.prototype.resolveNegativeTransforms = function(){
 
 Stereopsis.World.prototype.refineAllCameraKMatrixes = function(maxIterations, onlyLongTracks, maximumPoints3D){
 	var world = this;
-
+	console.log("refineAllCameraKMatrixes .......................... ");
 	var views = world.toViewArray();
 	var cameras = world.toCameraArray();
 	var points3D = world.toPointArray();
 
-	// get all view image dimensions
-	for(var i=0; i<views.length; ++i){
-		var view = views[i];
-		console.log(view);
-	}
-
-	// get all cameras
+	// get all cameras K
+	var normalizedKs = [];
+	var cameraIDToIndex = {};
 	for(var i=0; i<cameras.length; ++i){
 		var camera = cameras[i];
-		console.log(camera);
+		normalizedKs.push(camera.K());
+		cameraIDToIndex[camera.id()] = i;
 	}
-	
+
+	// get all view info
+	var viewCameraIndexes = [];
+	var viewExtrinsics = [];
+	var viewImageSizes = [];
+	var viewIDToIndex = {};
+	for(var i=0; i<views.length; ++i){
+		var view = views[i];
+		viewCameraIndexes.push( cameraIDToIndex[view.camera().id()] );
+		viewExtrinsics.push( view.absoluteTransform() );
+		viewImageSizes.push( view.size() );
+		viewIDToIndex[view.id()] = i;
+	}
+
 	// get subset of all points3D
+	var desiredP3DCount = Math.max(250,cameras.length*100); // 100 - 1000 points
+	if(points3D.length>desiredP3DCount){
+		var minSizeForRepeat = desiredP3DCount*10; // 10% repeats
+		if(points3D.length>minSizeForRepeat){
+			points3D = Code.randomSampleRepeats(points3D, desiredP3DCount);
+		}else{
+			Code.randomPopArray(points3D, desiredP3DCount);
+		}
+	}
+	console.log("points3D count: "+points3D.length);
+
+	var pointGroups2D = [];
+	var pointGroupsViewIndexes = [];
 	for(var i=0; i<points3D.length; ++i){
 		var point3D = points3D[i];
-		// var points2D = point3D.toPointArray();
+		var points2D = point3D.toPointArray();
+		var pointList = [];
+		var indexList = [];
+		for(var j=0; j<points2D.length; ++j){
+			var point2D = points2D[j];
+			var view = point2D.view();
+			var viewIndex = viewIDToIndex[view.id()];
+			pointList.push(point2D.point2D());
+			indexList.push(viewIndex);
+		}
+		pointGroups2D.push(pointList);
+		pointGroupsViewIndexes.push(indexList);
 	}
-
+console.log(pointGroups2D);
 	// construct data structures
+	// console.log(normalizedKs, viewCameraIndexes, viewExtrinsics, viewImageSizes, pointGroups2D, pointGroupsViewIndexes, maxIterations)
 
 	// pass to R3D algorithm
-
-	// 
-	throw "refineAllCameraKMatrixes";
-/*
-OPTIMIZING ON CAMERA PARAMETERS ?
-[fx  s  cx]
-[0  fy  cy]
-[0   0   1]
-
-ALL TOGETHER:
-	fx stays constant -> 4 variables
-
-SEPARATELY:
-	- centerpoint: -> 2 variables [2]
-		cx & cy
-	- focal: -> 2 variables
-		fy & s
-		fx stays constant
-
-- get some sub-sample of P3D points [100-1k]
-	- gradient descent iterate on:
-		- total error = sum of P3D reprojection errors:
-		- set normalized K from parameters [fx, fy, s, cx, cy]
-		- get image-sized K by multiplying by image dimensions for each view
-		- recompute each P3D location & error:
-			- P3D = P2D_i,j,k.. * view_i * K_i
-			- reprojection = 
-			total += error
-
-*/
+	var result = R3D.optimizeCameraKIntrinsicNonlinear(normalizedKs, viewCameraIndexes, viewExtrinsics, viewImageSizes, pointGroups2D, pointGroupsViewIndexes, maxIterations);
+	var output = result["K"];
+	console.log(result);
+	console.log(cameras[0].K().toArray());
+	console.log(output[0].toArray());
+	
+	// throw "refineAllCameraKMatrixes";
+	for(var i=0; i<cameras.length; ++i){
+		var camera = cameras[i];
+		camera.K( output[i] );
+	}
+	for(var i=0; i<views.length; ++i){
+		var view = views[i];
+		view.camera( view.camera() ); // update internal params
+	}
 }
 
 
@@ -9495,12 +9515,10 @@ timeB = Code.getTimeMilliseconds();
 console.log("DELTA H: " + (timeB-timeA) );
 timeA = Code.getTimeMilliseconds();
 
-		// refine
+		// refine extrinsic matrixes
 		world.recordViewAbsoluteOrientationStart();
 		world.refineAllCameraMultiViewTriangulation(100);
 		world.copyRelativeTransformsFromAbsolute();
-
-		world.refineAllCameraKMatrixes();
 
 
 timeB = Code.getTimeMilliseconds();
@@ -9508,6 +9526,12 @@ console.log("DELTA I: " + (timeB-timeA) );
 timeA = Code.getTimeMilliseconds();
 
 		world.updateP3DPatchesFromAbsoluteOrientationChange();
+
+
+		// refine K
+		world.refineAllCameraKMatrixes(100);
+		console.log("update points using new camera matrixes");
+		// throw "update points using new camera matrixes"
 
 		// retract 2
 		world.dropNegativeMatches3D();
@@ -9520,7 +9544,7 @@ timeA = Code.getTimeMilliseconds();
 		world.refinePoint3DAbsoluteLocation();
 
 		// SMOOTHING?
-		world.smoothP3DPatchesNeighborhood();
+		// world.smoothP3DPatchesNeighborhood();
 
 		// 
 		// 

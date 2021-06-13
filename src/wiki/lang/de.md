@@ -343,7 +343,7 @@ LieblingsX --- favorite X
 |  |  |  |
 |  |  |  |
 | das haus |  | house |
-| Wohnung |  | apartment |
+| Wohnung / Wohnungen |  | apartment |
 | nach Hause |  | home |
 | Fenster |  | window |
 | Garten |  | garden |
@@ -363,6 +363,10 @@ LieblingsX --- favorite X
 | der Badeanzug |  | swimsuit |
 | der hut |  | hat |
 | die Socken |  | socks |
+| Jackett |  | blazer (suit jacket) |
+| Krawatte |  | tie |
+|  |  |  |
+|  |  |  |
 |  |  |  |
 |  |  |  |
 | Schuhe |  | shoes |
@@ -413,7 +417,7 @@ der Laptop - laptop
 | der Fernseher |  | TV |
 | die Zeitung |  | newspaper |
 | Komödie |  | comedy (movie/show) |
-|  |  |  |
+| Actionfilme |  | action film |
 |  |  |  |
 |  |  |  |
 | Nummer |  | number |
@@ -527,6 +531,9 @@ der Laptop - laptop
 | nervt |  | annoys |
 | motiviert |  | motivated |
 | verärgert |  | angry |
+| gefährlich |  | dangerous |
+|  |  |  |
+|  |  |  |
 | Lust |  | desire (feel like it) |
 | unordentlich |  | messy (unordered) |
 | ordentlich |  | tidy (ordered) |
@@ -595,7 +602,7 @@ alles Gute zum Geburtstag - (bad luck?)
 | pferd |  | horse |
 | caterpillar |  | raupe |
 | maus |  | mouse |
-| Bär |  | bear |
+| Bär/en |  | bear |
 | ratte |  | rat |
 | elefant |  | elephant |
 | eule |  | owl |
@@ -683,14 +690,18 @@ Neuschwanstein Castle
 | Großvater/opa |  | grandfather/grandpa |
 | Tochter |  | daughter |
 | Sohn |  | son |
-| ehefrau |  | wife |
-| mann |  | husband |
+| die Ehefrau |  | wife |
+| der Ehemann / mann |  | husband |
 | tante |  | aunt |
 | onkel |  | uncle |
 | Partnerin |  | partner |
 | Mitbewohner |  | roommate |
 | Eltern |  | parents |
 | der Nachbar / Nachbarn |  | neighbor |
+| Stadtviertel |  | neighborhood |
+|  |  |  |
+|  |  |  |
+|  |  |  |
 | das Baby |  | baby |
 | das Mädchen |  | girl |
 | junge |  | boy |
@@ -720,9 +731,23 @@ Neuschwanstein Castle
 |  |  |  |
 | Automechanikerin |  | car mechanic |
 | Das Modell |  | Model |
+|  |  |  |
+|  |  |  |
+| Männer |  | men |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
 | Blumenladen |  | florist |
 | Bioladen |  | health/food store |
 | Metzgerei |  | butcher shop |
+|  |  |  |
+| Teller |  | plates (food) |
+| Gläser |  | glasses (drink) |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
 |  |  |  |
 | Biogurken |  | organic cucumbers |
 |  |  |  |
@@ -737,6 +762,10 @@ Neuschwanstein Castle
 | funktionieren |  | work (objects) |
 |  |  |  |
 | Unterricht |  | class |
+| Zeichenkurs |  | drawing class |
+|  |  |  |
+|  |  |  |
+|  |  |  |
 |  |  |  |
 | die Speisekarte |  | menu |
 | das restaurant |  | restaurant |
@@ -861,7 +890,6 @@ Neuschwanstein Castle
 |  |  |  |
 | wasser |  | water |
 | Mineralwasser |  | mineral water |
-|  |  |  |
 |  |  |  |
 |  |  |  |
 | Getränke |  | drinks/beverages |
@@ -999,7 +1027,7 @@ Brandenburger - Brandenburg Gate
 | da |  | there (here) |
 | diese / dieses |  | this / these / that |
 |  |  |  |
-|  |  |  |
+| Neugier |  | curiosity |
 | keinen |  | no |
 |  |  |  |
 | wieder |  | again |
@@ -1011,7 +1039,7 @@ Brandenburger - Brandenburg Gate
 | viele |  | many |
 | offen / geöffnet |  | to be open |
 | geschlossen |  | to be closed |
-
+| Raten |  | guessing |
 |  |  |  |
 | geschlossen |  | close/d |
 | nah |  | near/close |
@@ -1135,6 +1163,10 @@ Brandenburger - Brandenburg Gate
 | Wohnst |  | reside (live at) |
 |  |  |  |
 |  |  |  |
+|  |  |  |
+| gebrochen |  | broken |
+|  |  |  |
+| aufhören |  | stop |
 | schwimmen |  | swim |
 |  Komisch|  | strange |
 |  |  |  |
@@ -1730,6 +1762,10 @@ kostet - costs
 
 Marktplatz - market place / square
 
+Platz - room / space (available)
+
+Gäste - guest
+
  Orangen - oranges
 Tomaten - tomatoes
 Erdbeeren - strawberries
@@ -1877,6 +1913,9 @@ ganz bestimmt - definitely
 You're welcome - gern geschehen
 vielen Dank - thank you very much
 
+geheimnisvolles - mysterious
+
+paar - couple (pair, few)
 
 neue - new
 Jacke - jacket

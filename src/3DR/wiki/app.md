@@ -394,12 +394,61 @@ MISSING:
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
+
+lots of steps have a non-linear piece to go from LINEAR ESTIMATE to more accurate setting
+	- P3D are reset every time
+	=> do P3Ds need to run the nonlinear step after linear step each time?
+
+- is patch-size/normal all figured out yet?
+
+
+HOLE FILLING
+	- what hole should be filled [planar & distance between points ]
+	- what holes should not be filled []
+
+
+
+- is group-combining logic good at finding/removing outliers
+	- EG: BENCH-ROCK IN-BETWEEN bad points?
+
+
+
+
+
+
+
+
+add step in global aggregation to combine separate camera updates from sparse/dense
+	- average each component (weighted by R error?): fx, fy, s, cx, cy [in normalized coordinates]
+	=> how to use updated camera ? 
+		- only after dense -> use it in graph / bundle / etc ?
+- how to use unknown camera & refinement thru 3DR steps (sparse dense graph bundle ...)
+- assume [1 0 0.5 ; 0 1 0.5; 0 0 1] normalized camera to start -- absolute scale is only missing param
+
+- steps:
+	- INITIAL - use either an assigned camera or default to the default standard guess
+	- SPARSE
+		- CAMERAS are saved initially
+		- PAIRS have cameras & optimize separately
+		- GRAPH can combine globally from pairs [weighted average]
+		- TRACKS (skeletal & full) can keep as-is or also optimize
+	- DENSE - same as sparse
+	- BUNDLE - has cameras for group iterations (optimizing here might not have much benefit -- view extrinsic locations are fixed)
+	- SURFACE - cameras are saved in VIEWS
+
+=>?=> external pairwise matrixes will change if camera changes ???
+
+
+
+
+
+
 ENCRYPTION:
 - dont allow overwrite unless listed in input list as -f
 - skip sha1 & fwd/bak checking
 
 
-
+OPTIMIZE Matrix.inverse .... with REUSE matrix output
 
 
 NEIGHBORHOOD SMOOTHING ?
