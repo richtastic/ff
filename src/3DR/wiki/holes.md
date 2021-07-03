@@ -6,7 +6,7 @@
 
 
 x https://xiaoyuanguo.github.io/website/A%20Survey%20on%20Algorithms%20of%20Hole%20Filling%20in%203D%20Surface%20Reconstruction.pdf
-
+survey - 
 
 x https://www.inf.ufrgs.br/~oliveira/pubs_files/FHPC/Wang_Oliveira_Filling%20Holes%20on%20Locally%20Smooth%20Surfaces_Imavis_2007_Pre-print.pdf
 MLS
@@ -58,8 +58,27 @@ planar - poor
 
 
 
+http://www.cad.zju.edu.cn/home/hwlin/pdf_files/A-robust-hole-filling-algorithm-for-triangular-mesh.pdf
+- has to be a full edge-loop
+- implicit surface
 
 
+
+
+
+
+
+
+
+
+
+
+
+SURVEY:
+https://www.graphics.rwth-aachen.de/media/papers/eg2012_tutorial_meshrepair_021.pdf
+
+SURVEY:
+https://diglib.eg.org/bitstream/handle/10.2312/conf.EG2012.tutorials.t4/t4.pdf?sequence=1
 
 
 

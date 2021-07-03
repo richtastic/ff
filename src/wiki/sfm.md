@@ -93,7 +93,15 @@ The output can simply be the camera geometry (orientations), world geometry (poi
 
 
 
-
+Initial Ideal camera assumption:
+<br/>
+fx = 1;
+fy = 1;
+s = 0;
+cx = 0.5;
+cy = 0.5;
+<br/>
+fx is fixed at 1, while all other value are iterated on (fy,s, cx,cy)
 
 
 <br/>

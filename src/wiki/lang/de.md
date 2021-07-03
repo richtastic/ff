@@ -91,12 +91,55 @@ Ostsee - Baltic Sea
 |  |  |  |
 |  |  |  |
 
-
+mir - to me
+dir - to you
 
  rote
 masculine: der
 feminine: die
 neuter: das ein
+
+
+
+
+pronoun
+ - i / me
+ - you
+sie - you resp
+ihr - you plural
+er - he / him
+sie - she / her
+sie - they / them
+ihn/ - it
+ 
+are
+ - i am
+ - you are
+ - you resp are
+ - you plural
+ - he is
+ - she is
+sind - they are
+ - we are
+
+
+own
+ - my / mine
+diene / dienen - your / s
+ - you resp
+euer - your plural
+ihre / ihren - her
+seine / seinen / seiner / seinem - his
+ihr / ihren - their
+unser/unsere - our
+
+
+
+
+
+...
+
+
 
 
 
@@ -338,7 +381,7 @@ LieblingsX --- favorite X
 | Motorrad |  | motorbike |
 | Bus |  | bus |
 | das Fahrrad |  | bike / bicycle |
-|  |  |  |
+| Fahrradhelm |  | bike helmet |
 |  |  |  |
 |  |  |  |
 |  |  |  |
@@ -365,7 +408,7 @@ LieblingsX --- favorite X
 | die Socken |  | socks |
 | Jackett |  | blazer (suit jacket) |
 | Krawatte |  | tie |
-|  |  |  |
+| der Anzug |  | suit |
 |  |  |  |
 |  |  |  |
 |  |  |  |
@@ -415,11 +458,11 @@ der Laptop - laptop
 |  |  |  |
 |  |  |  |
 | der Fernseher |  | TV |
-| die Zeitung |  | newspaper |
+| die Zeitung/en |  | newspaper/s |
 | Komödie |  | comedy (movie/show) |
 | Actionfilme |  | action film |
-|  |  |  |
-|  |  |  |
+| Dokufilme |  | documentary |
+| Fernsehserien |  | TV shows |
 | Nummer |  | number |
 |  |  |  |
 |  |  |  |
@@ -492,6 +535,17 @@ der Laptop - laptop
 | draußen |  | outside |
 | bei |  | by |
 | ganzen |  | whole/entire |
+| nachher |  | after / afterwards / later |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
 |  |  |  |
 | gleich |  | shortly/soon |
 | Schnell |  | quick/ly |
@@ -509,7 +563,7 @@ der Laptop - laptop
 |  |  |  |
 | Geschenk |  | gift |
 |  |  |  |
-|  |  |  |
+| wärmer |  | hotter / warmer |
 | heiß |  | hot |
 | kalt |  | cold |
 | zu |  | too |
@@ -519,7 +573,7 @@ der Laptop - laptop
 | frisch |  | fresh |
 | weich |  | soft (feel) |
 |  |  |  |
-|  |  |  |
+| verheiratet |  | married |
 |  |  |  |
 | traurig |  | sad |
 | langweilig |  | boring |
@@ -543,7 +597,7 @@ der Laptop - laptop
 |  |  |  |
 | Wirklich |  | really? |
 | wichtig / wichtiger |  | important |
-|  |  |  |
+| praktisch |  | practical |
 |  |  |  |
 | zurzeit |  | currently |
 |  |  |  |
@@ -641,7 +695,7 @@ alles Gute zum Geburtstag - (bad luck?)
 | das museum |  | museum |
 | die Bäckerei |  | bakery |
 | Konditorei |  |  pastery shop |
-|  |  |  |
+| Botschaft |  | embassy |
 |  |  |  |
 | Taxistand |  | taxi stand |
 | U-Bahnstation |  | subway (underground railway) |
@@ -694,6 +748,9 @@ Neuschwanstein Castle
 | der Ehemann / mann |  | husband |
 | tante |  | aunt |
 | onkel |  | uncle |
+|  |  |  |
+|  |  |  |
+|  |  |  |
 | Partnerin |  | partner |
 | Mitbewohner |  | roommate |
 | Eltern |  | parents |
@@ -708,6 +765,7 @@ Neuschwanstein Castle
 | der mann |  | man |
 | die frau |  | woman |
 | Nichte |  | neice |
+| Neffe |  | nephew |
 | die Eltern |  | parents |
 | Geschwister |  | siblings |
 | die Großeltern |  | the grand-parents |
@@ -746,7 +804,7 @@ Neuschwanstein Castle
 | Gläser |  | glasses (drink) |
 |  |  |  |
 |  |  |  |
-|  |  |  |
+| unten |  | downstairs |
 |  |  |  |
 |  |  |  |
 | Biogurken |  | organic cucumbers |
@@ -764,7 +822,7 @@ Neuschwanstein Castle
 | Unterricht |  | class |
 | Zeichenkurs |  | drawing class |
 |  |  |  |
-|  |  |  |
+| Oper |  | opera |
 |  |  |  |
 |  |  |  |
 | die Speisekarte |  | menu |
@@ -864,6 +922,9 @@ Neuschwanstein Castle
 | Apfelkuchen |  | apple cake |
 | Bananenkuchen |  | banana cake |
 | Schokoladenkuchen |  | chocolate cake |
+| Torte |  | tort / layerd cake |
+|  |  |  |
+|  |  |  |
 | das Obst |  | fruits |
 | das Gemüse |  | vegetables |
 |  |  |  |
@@ -898,7 +959,7 @@ Neuschwanstein Castle
 | Wein |  | wine |
 | rotwein |  | red wine |
 | Weißwein |  | white wine |
-|  |  |  |
+| Sekt |  | champaign |
 | Bioweinorganic |  | organic wine |
 | bier |  | beer |
 | Weißbier |  | wheat beer |
@@ -913,7 +974,7 @@ Neuschwanstein Castle
 |  |  |  |
 |  |  |  |
 | Grillparty |  | barbeque |
-|  |  |  |
+| die Bäume |  | tree |
 |  |  |  |
 |  |  |  |
 | süß |  | sweet |
@@ -922,12 +983,12 @@ Neuschwanstein Castle
 |  |  |  |
 |  |  |  |
 | Musik |  | music |
-|  |  |  |
+| klassische musik |  | classical music |
 |  |  |  |
 | Chefin |  | boss |
 | alle |  | everyone |
 |  |  |  |
-|  |  |  |
+| Verhältnis |  | affair |
 |  |  |  |
 |  |  |  |
 | trinken |  | to / drink/ing |
@@ -935,13 +996,14 @@ Neuschwanstein Castle
 | telefoniert ? |  | to talk on phone |
 | kenne ?  |  | to know |
 | rufe ? |  | call |
-|  |  |  |
+| reden ? |  | to talk |
+| Folge ? |  | to follow |
 |  |  |  |
 | Miete |  | rent (pay) |
 | vermietent |  | ren |
 |  |  |  |
 |  |  |  |
-|  |  |  |
+| Lied |  | song |
 |  |  |  |
 
 
@@ -960,12 +1022,17 @@ Ohrenschmerzen - ear ache
 | Germany | doytchland | Deutschland |
 | German | doycheh | Deutsche |
 |  |  |  |
-|  |  |  |
+| Die Schweiz |  | Switerland |
 |  |  |  |
 | Mexiko |  | mexico |
 |  |  |  |
+| Türkei |  | turkey |
 |  |  |  |
-| turkish |  | Türkisch |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+| Türkisch |  | turkish |
 | Polnisch |  | polish |
 | Englisch |  | english |
 | Französisch |  | french |
@@ -974,6 +1041,8 @@ Ohrenschmerzen - ear ache
 | Deutsche |  | german |
 | Amerikaner |  | american |
 | Berliner |  | berlin person ? |
+|  |  |  |
+|  |  |  |
 |  |  |  |
 |  |  |  |
 |  |  |  |
@@ -1034,6 +1103,7 @@ Brandenburger - Brandenburg Gate
 | für |  | for |
 | bald  |  | soon |
 | vielleicht |  | maybe |
+| meistens |  | usually / most of the time |
 | nur |  | only |
 | jede |  | each |
 | viele |  | many |
@@ -1074,6 +1144,9 @@ Brandenburger - Brandenburg Gate
 | das Klavier |  | piano |
 | das Auto |  | car |
 | das Motorrad |  | motorbike |
+| Straßenbahn |  | street car |
+|  |  |  |
+|  |  |  |
 |  |  |  |
 | Straße/Straßen |  | street |
 | personen |  | people |
@@ -1108,10 +1181,10 @@ Brandenburger - Brandenburg Gate
 | sitzen ? |  | to sit |
 | fahren ? |  | to drive |
 | liest ? lesen ? |  | to read |
-| Gibst ? |  | to give |
+| Gibst / gebe ? |  | to give |
 | beschützen ? |  | to protect |
 | holen ? |  | to get |
-| sage / sagen ? |  | to say |
+| sag / sage / sagen ? |  | to say |
 | Warten ? |  | to wait |
 | Wiederholen ? |  | to repeat |
 | hört ? |  | to listen/hear |
@@ -1143,7 +1216,12 @@ Brandenburger - Brandenburg Gate
 | fernsehen ?  |  | to watch TV |
 | ausschlafen ? |  | to sleep in |
 | wiederkommen ? |  | to come back |
+| Benutzt benutzt ? |  | to use |
+| schickt ? |  | to send |
+| schreibt ? |  | to write |
+| liegen ? |  | to lay (down) |
 |  |  |  |
+| sieht...fern ? |  | to watch ... tv |
 |  |  |  |
 | Studieren ? |  | to study (a subject) |
 | lernen |  | to study (for a test - learn) |
@@ -1162,8 +1240,8 @@ Brandenburger - Brandenburg Gate
 |  |  |  |
 | Wohnst |  | reside (live at) |
 |  |  |  |
-|  |  |  |
-|  |  |  |
+| Kette |  | necklace |
+| Ohrringe |  | earrings |
 | gebrochen |  | broken |
 |  |  |  |
 | aufhören |  | stop |
@@ -1354,7 +1432,7 @@ Brandenburger - Brandenburg Gate
 | Wie alt bist du? |  | how old are you |
 | Ich bin X Jahre alt! |  | i am X years old |
 |  |  |  |
-|  |  |  |
+| Herzlichen Glückwunsch |  | congratulations |
 |  |  |  |
 |  |  |  |
 |  |  |  |
@@ -1479,9 +1557,11 @@ biem - at the
 
 fertig - finished
 
-Überraschung - 
+Überraschung - surprise
 
 Kanzlerin - chancelor
+
+Kaffeemaschine - coffee machine
 
 Ich heiße - my name is
  
@@ -1518,6 +1598,8 @@ geöffnet - is open
 
 Pause - break
 
+Jahrestag - anniversarty
+
 Der Tanzkurs - dance class
 
 Kurs - class
@@ -1527,6 +1609,12 @@ Tanzen - dancing
 die Tür - door
 
 das Tor - gate
+
+die Bank - bank
+
+das Gebäude - building
+
+die Post - post office
 
 Schrank - closet / standing wardrobe
 
@@ -1550,6 +1638,8 @@ der laptop - laptop
 
 die music - music
 
+Pfeilen - arrows
+
 Leute - people
 
 Erde - earth
@@ -1572,6 +1662,8 @@ Uhr - clock
 
 nass - wet
 trocken - dry
+
+bei schönem Wetter - during nice weather / in nice weather
 
 Liebesbrief - love letter
 
@@ -1622,6 +1714,8 @@ Freut mich - good to meet you
 wie heißen - what is your name
 
 Fußballspiel- soccer game
+
+Karten - cards (game)
 
 Hockey - hockey
 
@@ -1752,8 +1846,52 @@ putzen ? - to clean?
 leiser ? - to quiet down / be quieter
 gießt ? - to pour - gegossen - poured
 fischen ? - to go fishing / to fish
+anrufen ? - to call (phone, shout)
+ruf...an ? - to call 
+singen ? - to sing
+spazieren ? - to go for a walk / stroll (to go on a)
+verlängert ? = to renew
+beantworte ? - to answer
+eröffnen ? - to open
+aufpasst ? - to take care
+weggeflogen ? - flown away (bird)
+
+Bankkauffrau / Bankkaufmann - banker
+
+Vogelsitting - bird sitting
+
+überweisen - transfer (to?)
+
+Konto - account
+
+EC-Karte - debit card
+
+bedeutet - meaning
+
+Nachricht - news
+
+Käfig - cage
+
+Parkplatz - parking space
+
+Kerzen - candles
+
+Zeh toe
+
+Stimmt - right (correct, sure
+
+Fensterplatz - window seat
+
+nur so - nbd just wondering
+
+Passfoto - passport photo
+
+seit - since
+
+
 Größe - size
 
+Geburtsort - birth place
 
 
 Luftballons - balloons
@@ -1795,7 +1933,7 @@ paar - couple (a few, some)
 
 Pflanzen - plants
 Blumen - flowers
-
+Rosen - roses
 
 ganze/n - whole / entire
 die Frage - question
@@ -1972,6 +2110,7 @@ der Strand - beach
 
 Ausflug - excursion (trip/journey)
 
+Handball - handball
 
 Kunstunterricht - art class
 
@@ -1981,11 +2120,20 @@ Hausaufgaben - homework
 stimms - to agree?
 denn - because
 bald - soon
+gerade - right now
 Fertig - finished
 sauber - clean
 
 zuerst - first
 letzte - last
+
+ausverkauft - sold out
+
+Stadion - stadium
+
+
+anfangen / fängt...an - start
+
 
 
 anstrengend - exhausting

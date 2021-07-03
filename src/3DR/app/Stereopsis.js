@@ -6890,11 +6890,13 @@ Stereopsis.World.prototype.iteration = function(iterationIndex, maxIterations, d
 	var transforms = world.toTransformArray();
 	var views = world.toViewArray();
 
+// ???????????????
 
 	// var subdivideRatio = 0.50; // 40 -> 80
 	var subdivideRatio = 0.75; // 40 -> 60
 
-	world.setResolutionProcessingModeFromCountP3D([9E9,9E10,9E11]); // high
+	// world.setResolutionProcessingModeFromCountP3D([9E9,9E10,9E11]); // high
+	world.setResolutionProcessingModeFromCountP3D([]); // high
 
 	// if(isFirst){ // need to guarantee a loop has passed with at least some set
 	// 	world.setResolutionProcessingModeFromCountP3D([2E3]);
@@ -6905,14 +6907,19 @@ Stereopsis.World.prototype.iteration = function(iterationIndex, maxIterations, d
 	var viewB = views[1];
 	var transAB = world.transformFromViews(viewA,viewB);
 
+	var viewSize = viewA.size();
+	var pixelMinimum = viewSize.length() * 0.001; // 0.01 = 25.2, 0.001 = 2.5
+
 	if(transAB.matchCount()<8){
 		return;
 	}
+	var existingError = transAB.rMean() + transAB.rSigma();
+	var highEnoughError = existingError > pixelMinimum;
 
-	var highEnoughError = transAB.rMean() + transAB.rSigma() > 2.0;
+	console.log("pixelMinimum: "+existingError+" >?> "+pixelMinimum);
 
 	if(isFirst || highEnoughError){ // SET INITIAL VIEW CAMERA EXTRINSICS
-console.log(highEnoughError);
+
 console.log("FIRST TIME - CHECK");
 		world.estimate3DErrors(false); // find initial F, P, estimate all errors from this
 		// var transform0 = transforms[0];
@@ -7035,6 +7042,10 @@ world.removeNullPoints3D();
 	// refine camera location
 	world.refineAllCameraMultiViewTriangulation(100); // pair not so much needed 10-100
 	world.copyRelativeTransformsFromAbsolute();
+
+	//
+	world.refineAllCameraKMatrixes(100);
+		console.log("update points using new camera matrixes");
 
 	// update patches from change in view orientations
 	world.updateP3DPatchesFromAbsoluteOrientationChange();
@@ -7457,6 +7468,14 @@ Stereopsis.World.prototype.initP3DPatchFromGeometry3D = function(point3D){
 			var match = point3D.matchForViews(viewA,viewB);
 			var affineAB = match.affineForViews(viewA,viewB);
 			var affineBA = match.affineForViews(viewB,viewA);
+if(!affineAB || !affineBA){
+	console.log(match);
+	console.log(point2DA);
+	console.log(point2DB);
+	console.log(KaInv);
+	console.log(KbInv);
+	throw "???";
+}
 			for(var k=0; k<pointsPerView; ++k){
 				p.set(0.5*cellSizeA,0);
 				p.rotate( (k/pointsPerView)*twoPi );
@@ -9383,6 +9402,7 @@ subdivisions = 2; // 10k ............... testing
 // subdivisions = 3; // 25k ................. current default
 // subdivisions = 4; // 50k
 // subdivisions = 5; // 100k
+// subdivisions = 6; // too much
 // console.log("subdivisions: "+subdivisions);
 // throw "??"
 	// var subdivisions = 3; // ~100k
@@ -9544,7 +9564,7 @@ timeA = Code.getTimeMilliseconds();
 		world.refinePoint3DAbsoluteLocation();
 
 		// SMOOTHING?
-		// world.smoothP3DPatchesNeighborhood();
+		world.smoothP3DPatchesNeighborhood();
 
 		// 
 		// 
@@ -9590,16 +9610,55 @@ Stereopsis.World.prototype.smoothP3DPatchesNeighborhood = function(){
 	var world = this;
 	var points3D = world.toPointArray();
 	var minimumNeighborhoodCount = 6; // 6 - 12
+	
+	// estimate best place
+	var foundPoints = 0;
 	for(var i=0; i<points3D.length; ++i){
 		var point3D = points3D[i];
 		point3D._temp = null;
 		var p3D = point3D.point();
 		var neighborhood = world.neighborhood2D3DForPoint3D(point3D, minimumNeighborhoodCount);
-		if(!neighborhood){
+		if(!neighborhood || neighborhood.length<minimumNeighborhoodCount){
 			continue;
 		}
-
-		point3D._temp = newLocation;
+		// console.log(neighborhood);
+		var pList = [];
+		for(var j=0; j<neighborhood.length; ++j){
+			var p = neighborhood[j];
+			pList.push(p.point());
+		}
+		// console.log(pList);
+		// average points
+		// average normals
+		// average sizes
+		var plane = Code.planeFromPoints3D(pList);
+		if(!plane){
+			continue;
+		}
+		// console.log(plane);
+		var projected = Code.projectPointToPlane3D(p3D, plane["point"],plane["normal"]);
+		if(!projected){
+			console.log("no projected point?");
+			continue;
+		}
+		if(Code.isNaN(projected.x)){
+			console.log(neighborhood);
+			console.log(projected);
+			console.log(p3D);
+			console.log(plane);
+			console.log(pList);
+			console.log(projected);
+			throw "NaN";
+		}
+		// console.log(projected);
+		point3D._temp = projected;
+		// throw "estimate curvature or normal ?";
+		// estimate local plane from points
+		// A: move point along normal toward plane
+		// ...
+		// B: move point along average view direction toward plane
+		// ...
+		// point3D._temp = newLocation;
 	}
 
 	for(var i=0; i<points3D.length; ++i){
@@ -9608,9 +9667,21 @@ Stereopsis.World.prototype.smoothP3DPatchesNeighborhood = function(){
 		if(newLocation){
 			point3D._temp = null;
 			world.updatePoint3DLocation(point3D,newLocation);
+			++foundPoints;
 		}
 		
 	}
+
+	// // update to best place
+	// for(var i=0; i<points3D.length; ++i){
+	// 	var point3D = points3D[i];
+	// 	var newLocation = point3D._temp;
+	// 	if(!newLocation){
+	// 		continue;
+	// 	}
+	// 	world.updatePoint3DLocation(point3D,newLocation);
+	// 	point3D._temp = null;
+	// }
 	/*
 SMOOTH:
 	- for all P3D:
@@ -9621,7 +9692,8 @@ SMOOTH:
 		- get new location = ray from Vavg to P3D => projected onto plane
 	- set all P3D locations to new locations
 */
-throw "smoothP3DPatchesNeighborhood";
+	console.log("smoothP3DPatchesNeighborhood: "+foundPoints+" / "+points3D.length);
+// throw "smoothP3DPatchesNeighborhood";
 }
 
 Stereopsis.World.prototype.filterLocal3DNeighborhoodSize = function(){
@@ -10768,6 +10840,18 @@ Stereopsis.World.prototype.solveTriple = function(completeFxn, completeContext, 
 	// IS THIS NEEDED ?
 	// world.relativeFFromSamples();
 	// world.estimate3DErrors(true);
+
+
+	// need to reposition points based on view extrinsic matrix because camere intrinsic matrix may have changed
+
+	// world.???()
+	// console.log("updatePoint3DLocations...");
+	// console.log(world.toViewArray());
+	// world.updatePoint3DLocations();
+
+
+
+	// throw "..."
 
 	world.printPoint3DTrackCount();
 
@@ -20065,10 +20149,17 @@ Stereopsis.World.prototype.killPoint3D = function(point3D){ // free memory
 	// point3D
 	// world.removePoint3D(point3D); // assumed called before kill
 }
-Stereopsis.World.prototype.updatePoint3DLocations = function(){
+Stereopsis.World.prototype.updatePoint3DLocations = function(points3D){
 	var world = this;
-	var points3D = world.toPointArray();
+	if(!points3D){
+		points3D = world.toPointArray();
+	}
+	// console.log(points3D.length)
+	// console.log(points3D)
 	for(var i=0; i<points3D.length; ++i){
+		// if(i%100==0){
+		// 	console.log("i: "+i);
+		// }
 		var point3D = points3D[i];
 		var location3D = point3D.estimated3D();
 		world.updatePoint3DLocation(point3D,location3D);

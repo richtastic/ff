@@ -288,7 +288,7 @@ ClientFile.Operation.prototype.writeFileOrDirectory = function(relativePath, dat
 	this._writeNextPage();
 }
 ClientFile.Operation.prototype._writeNextPage = function(){
-	console.log("_writeNextPage: "+this._pageSize+" , "+this._buffer.length+" , "+this._offset);
+	console.log("_writeNextPage: "+this._pageSize+" , "+(this._buffer?this._buffer.length:null)+" , "+this._offset);
 	this._setupAjax();
 	this._ajax.callback(this._handleCompleteWrite);
 	var count = 0;

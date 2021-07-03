@@ -394,10 +394,75 @@ MISSING:
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
+WHO IS FIRST?
+
+world.initAllP3DPatches(additionalPoints);
+
+world.initAffineFromP3DPatches(additionalPoints);
+
+
+
+
+
+
+
+
+triples:
+- each point needs to be updated using the new K matrix
+-> calculate & update it before inserted into world
+
+
+
+
+
+
+why are points still noisy / even with sub-pixel reprojection error
+
+
+- how to use different Ks when calculating triples ?
+	- for each camera with the same ID:
+		- average the K matrix equally / based on some error
+			...
+
+- sparse patch udpating same as dense?
+- update patches after K update?
+x saving cameras to pairs
+-
+- 
+
+
+
+
+
+3DR
+	- new simple set
+	- use the camera in the correct locations
+	- use a 'default' camera 
+	- do camera optimizing & averaging
+	- check each of various algorithms
+	- check how patch algorithms work
+
+
+
+
+
+- what happens with a camera intrinsic matrix is changed?:
+	-> the estimated DLT 3D location changes
+	-> the projected 2D location changes
+
+
+
+
+
+
+
+
+
 
 lots of steps have a non-linear piece to go from LINEAR ESTIMATE to more accurate setting
 	- P3D are reset every time
 	=> do P3Ds need to run the nonlinear step after linear step each time?
+		- does normal & size need to be updated?
 
 - is patch-size/normal all figured out yet?
 

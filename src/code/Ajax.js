@@ -184,13 +184,14 @@ Ajax.prototype.clearHeader = function(){
 Ajax.prototype.setHeader = function(param,value){
 	this._header[param] = value;
 }
-
 Ajax.prototype.send = function(url,meth,cmp,params){
 	this.url(url);
 	this.method(meth);
 	this.callback(cmp);
 	this.params(params);
-
+	this.go();
+}
+Ajax.prototype.go = function(){
 	var hasParameters = this._params && this._params.length>0;
 	var url = this._url;
 	if (hasParameters && this._method==Ajax.METHOD_TYPE_GET) { // append parameters to URL

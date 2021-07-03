@@ -3637,6 +3637,9 @@ Code.getTimeStampFromMilliseconds = function(milliseconds){
 	milliseconds = milliseconds!==undefined ? milliseconds : Code.getTimeMilliseconds();
 	var d = new Date(milliseconds);
 //	console.log(d+" == DATE");
+	return Code.getTimeStampFromDate(d);
+}
+Code.getTimeStampFromDate = function(d){
 	return Code.getTimeStamp(d.getFullYear(), d.getMonth()+1, d.getDate(), d.getHours(), d.getMinutes(), d.getSeconds(), d.getMilliseconds());
 }
 Code.stringRemovePrefix = function(str,prefix){
@@ -3648,7 +3651,6 @@ Code.stringFilterNumbersOnly = function(str){ // [0-9]+[.[0-9]+][(E|e)[+.-][0-9]
 	if(!str){ return ""; }
 	return str.replace(/[^0-9]/g,""); // remove non-digits
 }
-
 Code.getTimeStampZulu = function(){
 	var str = "";
     var d = Code.getTimeMilliseconds(true);
@@ -3741,6 +3743,9 @@ Code.getHourStringFromDate = function(date){
 	}
 	return Code.prependFixed(hour+"","0",1)+":"+Code.prependFixed(date.getMinutes()+"","0",2)+""+Code.getAMPMFromDate(date);
 }
+Code.getSimpleDateStringFromDate = function(d){ // YYYY-MM-DD
+	return year = Code.prependFixed(""+d.getFullYear(),"0",4)+"-"+Code.prependFixed(""+(d.getMonth()+1),"0",2)+"-"+Code.prependFixed(""+d.getDate(),"0",2);
+}
 Code.getDuration = function(years,days, hours,minutes,seconds, milliseconds){ // ms
 	var y = years*365*24*60*60*1000;
 	var d = days*24*60*60*1000;
@@ -3749,6 +3754,10 @@ Code.getDuration = function(years,days, hours,minutes,seconds, milliseconds){ //
 	var s = seconds*1000;
 	var u = milliseconds;
 	return y + d + h + m + s + u;
+}
+Code.getIsWeekendFromDate = function(date){
+	var day = date.getDay();
+	return day==0 || day==6; // sunday || saturday
 }
 // ------------------------------------------------------------------------------------------ BINARY REPRESENTATIONS
 Code.intToBinaryString = function(num,cnt){
@@ -4338,6 +4347,41 @@ Code.averageTransforms3D = function(transforms, percents){
 		matrix.appendColFromArray(avgTra.toArray());
 		matrix.appendRowFromArray([0,0,0,1]);
 	return matrix;
+}
+
+Code.averageCameraKMatrixes = function(Ks, percents){ // Ks are of Matrix2D or Matrix
+	var i, count = Ks.length;
+	var fxs = [];
+	var fys = [];
+	var ss = [];
+	var cxs = [];
+	var cys = [];
+	for(i=0; i<count; ++i){
+		var K = Ks[i];
+		var fx = K.get(0,0);
+		var fy = K.get(1,1);
+		var s = K.get(0,1);
+		var cx = K.get(0,2);
+		var cy = K.get(1,2);
+		fxs.push(fx);
+		fys.push(fy);
+		ss.push(s);
+		cxs.push(cx);
+		cys.push(cy);
+	}
+	var fx = Code.averageNumbers(fxs,percents);
+	var fy = Code.averageNumbers(fys,percents);
+	var s = Code.averageNumbers(ss,percents);
+	var cx = Code.averageNumbers(cxs,percents);
+	var cy = Code.averageNumbers(cys,percents);
+	// console.log(" % ="+percents);
+	// console.log(fxs+" = "+fx);
+	// console.log(fys+" = "+fy);
+	// console.log(ss+" = "+s);
+	// console.log(cx+" = "+cx);
+	// console.log(cy+" = "+cy);
+	var Kaverage = new Matrix(3,3).fromArray([fx,s,cx, 0,fy,cy, 0,0,1]);
+	return Kaverage;
 }
 
 
@@ -18062,7 +18106,7 @@ Code.relativeComponentsFromMatrixes3D = function(mA,mB){
 	
 	return {"A":{"offset":tAB, "rotation":rotAB}, "B":{"offset":tBA, "rotation":rotBA}};
 }
-Code.graphAbsoluteFromObjectLookup3D = function(views, pairs, triples,  viewToID,pairToIDs,tripleToIDs, pairToError,pairToTransform, tripleToScales, absolutes){
+Code.graphAbsoluteFromObjectLookup3D = function(views, pairs, triples,  viewToID,pairToIDs,tripleToIDs, pairToError,pairToTransform, tripleToScales, absolute, viewToCameraID,pairToCameras,cameraToID,cameraToK){
 	
 	// helpers
 	var minimumStringFirst = function(a,b){
@@ -18176,6 +18220,53 @@ console.log("TRIPLES: "+triples.length);
 	console.log(groups)
 	// groups = [groups[0]];
 
+
+
+	// do thru all pairs & add camera entries to list
+	var allCameras = {};
+	for(var i=0; i<pairs.length; ++i){
+		var pair = pairs[i];
+		console.log(pair);
+		var cameras = pairToCameras(pair);
+		console.log(cameras);
+		for(var j=0; j<cameras.length; ++j){
+			var camera = cameras[j];
+			console.log(camera);
+			var cameraID = cameraToID(camera);
+			console.log(cameraID);
+			var camK = cameraToK(camera);
+			console.log(camK);
+			var existing = allCameras[cameraID];
+			// throw ".........."
+			if(existing){
+				existing.push(camK)
+			}else{
+				allCameras[cameraID] = [camK];
+			}
+
+		}
+	}
+	// do averages:
+	console.log("DO AVERAGES");
+	console.log(allCameras);
+	var cameraIDs = Code.keys(allCameras);
+	for(var i=0; i<cameraIDs.length; ++i){
+		var cameraID = cameraIDs[i];
+		var kList = allCameras[cameraID];
+		// console.log(kList)
+		for(var j=0; j<kList.length; ++j){
+			console.log(kList[j].toArray());
+		}
+		var result = Code.averageCameraKMatrixes(kList);
+		// console.log(result);
+		console.log(result.toArray());
+		allCameras[cameraID] = result;
+	}
+	console.log(allCameras);
+	// 
+	// throw "average pair camera results"
+	//
+	// 
 	var groupResults = [];
 	// solve for relative scales for groups
 	for(var i=0; i<groups.length; ++i){
@@ -18314,8 +18405,23 @@ groupTransforms = result["values"];
 	} // for each grup
 	console.log("groups?");
 	console.log(groupResults);
+
+	// only keep cameras that are in the groups?
+
+// console.log(allCameras);
+var allCameraKeys = Code.keys(allCameras);
+var allCamerasList = [];
+for(var i=0; i<allCameraKeys.length; ++i){
+	var cameraID = allCameraKeys[i];
+	var cameraK = allCameras[cameraID];
+	var entry = {"id":cameraID, "K":cameraK, "distortion":null};
+	allCamerasList.push(entry);
+}
+// throw "allCameras -> to array ?"
+
+
 // throw "wrong indexes likely here"
-	return {"groups":groupResults};
+	return {"groups":groupResults, "cameras":allCamerasList};
 
 
 

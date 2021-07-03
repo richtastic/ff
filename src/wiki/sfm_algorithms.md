@@ -1,11 +1,6 @@
 ## Structure From Motion: (SFM) Algorithms
 
 
-![SFM](./images/sfm/cover.png "SFM")
-<br/>
-*Structure From Motion - Bench Scene*
-<br/>
-
 
 ### Chapters
 
