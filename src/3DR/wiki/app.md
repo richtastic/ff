@@ -394,11 +394,73 @@ MISSING:
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
+_iterateSparseTracks
+
+
+
+- how tracks should be setting the P3D patches
+	- everything 3D needs to be recalculated
+	- only P2D points are the same
+
+- 
+
+
+
+- combining tracks using images ?
+	- all images
+	- some good subset?
+
+- test by loading all images & running algorithms per usual
+
+
+_resolveIntersectionLayered
+
+
+
+
+
+
+
+
+
+
+
+
+????
+
+BUNDLE
+
+// world.initAllP3DPatches(additionalPoints);
+// world.initAffineFromP3DPatches(additionalPoints);
+
+
+.................
+
+
+
+
+
+HOW BEST TO COMBINE TRACKS (w/o images ...)
+	- try with images ?
+		- N images at a time or some such ...
+
+
+
+
+
 WHO IS FIRST?
-
 world.initAllP3DPatches(additionalPoints);
-
 world.initAffineFromP3DPatches(additionalPoints);
+
+world.initAffineFromP3DPatches(points3DExisting);
+world.initAllP3DPatches(points3DExisting);
+
+
+
+
+
+ARE TRACKS CALCULATIONS USING CAMERAS FROM GRAPH ????
+
 
 
 

@@ -380,7 +380,7 @@ LieblingsX --- favorite X
 | auto / wagon | out-oh / vahgahn | car |
 | Motorrad |  | motorbike |
 | Bus |  | bus |
-| das Fahrrad |  | bike / bicycle |
+| das Fahrrad / Fahrräder |  | bike / bicycle |
 | Fahrradhelm |  | bike helmet |
 |  |  |  |
 |  |  |  |
@@ -607,6 +607,8 @@ der Laptop - laptop
 | elegant |  | elegant/stylish |
 |  |  |  |
 | gesund |  | healthy |
+| gesünder |  | healthier |
+|  |  |  |
 | krank |  | sick |
 | weh |  | sore |
 |  |  |  |
@@ -903,6 +905,9 @@ Neuschwanstein Castle
 | die Banane |  | banana |
 | Joghurt |  | yogurt |
 | Gurke/n |  | cucumber |
+| Ananas |  | pineapple |
+|  |  |  |
+|  |  |  |
 |  |  |  |
 | die Nudeln |  | noodles |
 | der Reis |  | rice |
@@ -911,6 +916,8 @@ Neuschwanstein Castle
 | pfeffer |  | pepper |
 | das salz |  | salt |
 | der zucker |  | sugar |
+| Gummibärchen |  | Gummy bears |
+|  |  |  |
 |  |  |  |
 | salzig |  | salty |
 |  |  |  |
@@ -1220,6 +1227,11 @@ Brandenburger - Brandenburg Gate
 | schickt ? |  | to send |
 | schreibt ? |  | to write |
 | liegen ? |  | to lay (down) |
+| zustimmen ? |  | to agree |
+|  |  |  |
+| stimmst ? |  | to agree |
+|  |  |  |
+|  |  |  |
 |  |  |  |
 | sieht...fern ? |  | to watch ... tv |
 |  |  |  |

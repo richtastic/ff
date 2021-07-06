@@ -105,6 +105,11 @@ Stereopsis.World.prototype.setResolutionProcessingModeF = function(){
 	// 
 	// ...
 }
+Stereopsis.World.prototype.setResolutionProcessingModeFromOnly2D = function(){
+	this._resolutionProcessingModePatchInit = this.initP3DPatchFromOnly2D;
+	this._resolutionProcessingModePatchUpdate = this.updateP3DPatchFromNone;
+	this._resolutionProcessingModeAffineSet = null;
+}
 Stereopsis.World.prototype.setResolutionProcessingModeNonVisual = function(){
 	console.log("setResolutionProcessingModeNonVisual");
 	this._resolutionProcessingModePatchInit = this.initP3DPatchFromGeometry3D;
@@ -7437,7 +7442,70 @@ Stereopsis.World.prototype.initP3DPatchFromMatchAffine = function(point3D){
 		throw "why?";
 	}
 }
-Stereopsis.World.prototype.initP3DPatchFromGeometry3D = function(point3D){
+Stereopsis.World.prototype.initP3DPatchFromOnly2D = function(point3D){ // only assumes 2D locations & views are set
+	var world = this;
+	console.log(point3D);
+	var views = point3D.toViewArray();
+	// estimate 3D params
+
+	// P3D
+	var newLocation3D = point3D.estimated3D();
+	console.log(newLocation3D);
+
+	// N3D = average of point-to-view directions
+	var normals = [];
+	var ups = [];
+	for(var i=0; i<views.length; ++i){
+		var view = views[i];
+		var pToC = V3D.sub(view.center(),newLocation3D);
+			pToC.norm();
+		var up = view.up();
+		if(ups.length>0){
+			var up0 = ups[0];
+			if(V3D.dot(up0,up)<1){
+				up = up.copy();
+				up.flip();
+			}
+		}
+		normals.push(pToC);
+		ups.push(up);
+	}
+	// up-3D
+	console.log(normals);
+	console.log(ups);
+	var newNormal = Code.averageAngleVector3D(normals);
+	var newUp = Code.averageAngleVector3D(ups);
+	console.log(newNormal,newUp.length());
+	console.log(newUp,newUp.length());
+	// size-3D
+	var currentSize = 0; // initial estimate = project N points onto plane
+	var twoPi = 2*Math.PI;
+	var pointsPerView = 4;
+	var dir2D = new V2D();
+	for(var i=0; i<views.length; ++i){
+		// project point backwards
+		var view = views[i];
+		var point2D = point3D.pointForView(view);
+		var p2D = point2D.point2D();
+		for(var j=0; j<pointsPerView ++j){
+			dir2D.set(1,0);
+			dir2D.rotate(twoPi*j/projectionCount);
+			dir2D.add(p2D);
+			// ...
+		}
+	}
+	currentSize /= ()
+	console.log(currentSize);
+	// iterate to find optimal size
+
+	// .. 
+
+	// var patchUp = Code.projectPointToPlane3D(up3D, V3D.ZERO,normal3D);
+
+
+	throw "..."
+}
+Stereopsis.World.prototype.initP3DPatchFromGeometry3D = function(point3D){ // assumes affine already exists
 	// console.log(point3D);
 	var points2D = point3D.toPointArray();
 	var location3D = point3D.point();
