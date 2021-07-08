@@ -504,9 +504,9 @@ R3D.optimizeAllCameraExtrinsicDLTNonlinear = function(listP, listK, listKinv, li
 }
 R3D._transformCameraAllExtrinsicDLTNonlinearGD_TEMP_A = null;
 R3D._transformCameraAllExtrinsicDLTNonlinearGD = function(args, x, isUpdate){
-	if(isUpdate){
-		return;
-	}
+	// if(isUpdate){
+	// 	return;
+	// }
 
 	var listP = args[0];
 	var listK = args[1];
@@ -526,17 +526,17 @@ R3D._transformCameraAllExtrinsicDLTNonlinearGD = function(args, x, isUpdate){
 
 	var forwardRays = [];
 	var originV3Ds = [];
-if(onlyErrorZ){
-for(var i=0; i<listP.length; ++i){
-	var P = listP[i];
-	var A = Matrix.inverse(P);
-	var dirO = A.multV3DtoV3D(new V3D(0,0,0));
-	var dirZ = A.multV3DtoV3D(new V3D(0,0,1));
-		dirZ.sub(dirO);
-	forwardRays[i] = dirZ;
-	originV3Ds[i] = dirO;
-}
-}
+	if(onlyErrorZ){
+		for(var i=0; i<listP.length; ++i){
+			var P = listP[i];
+			var A = Matrix.inverse(P);
+			var dirO = A.multV3DtoV3D(new V3D(0,0,0));
+			var dirZ = A.multV3DtoV3D(new V3D(0,0,1));
+				dirZ.sub(dirO);
+			forwardRays[i] = dirZ;
+			originV3Ds[i] = dirO;
+		}
+	}
 
 
 	// 
@@ -567,8 +567,6 @@ for(var i=0; i<listP.length; ++i){
 		}
 		
 		
-
-
 		var point3D = R3D.triangulatePointDLTList(points2D, extrinsics, invKs, tempP3D2, reuseA);
 		if(!point3D){
 			console.log("null point3D");
@@ -669,10 +667,10 @@ throw "negative";
 		totalError += error;
 
 	} // track list
-	// if(isUpdate){
-	// 	console.log(totalError);
-	// 	// throw "? total error"
-	// }
+	if(isUpdate){
+		console.log(totalError);
+		// throw "? total error"
+	}
 	return totalError;
 }
 

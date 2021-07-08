@@ -393,8 +393,95 @@ MISSING:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+WAS filterGlobalMatches SUPPOSSED TO BE LINEARLY ?
 
-_iterateSparseTracks
+
+solveOptimizeSingleView => says error is reallllly low
+	- image sizes
+	- K
+	- 
+
+
+worldPointFromSaves
+
+
+
+[0, 0, 10805, 2109, 483, 177, 26, 15, 2, 0, 0]
+
+
+
+HOW TO SPEED UP BUNDLE ADJUST:
+	- extrapolate final destination: location / orientation
+		- abs vs rel
+
+	x more iterations with fewer points ?
+
+	- 
+
+	- other metric / method?
+
+
+
+
+
+
+
+
+solveDenseGroup
+
+
+solveOptimizeSingleView
+
+PAIR:
+	world.refineAllCameraMultiViewTriangulation(100);
+TRACK_FULL:
+	world.refineAllCameraMultiViewTriangulation(iterationsAll, false);
+
+
+
+- tracks still fuzzy -> want them to look like the dense pairs
+
+	-> try not intersection resolving [dont combine points more than original 2]
+
+	-> try lower resolution cells to force more intersections
+
+	x> try nonlinear P3D estimate
+
+	-> look at metrics used to optimize camera location
+
+	x> camera ALL AT ONCE vs camera SINGLE ?
+
+	-> only 3+ tracks
+
+	-> filter out highest-error points (3D reprojection error)
+
+
+- deciding which images to load for track bundle should be based on graph and not DIRECT intersections
+
+
+
+-> R ERROR IS LOW, BUT STILL LOOKS FUZZY
+-> in bundle group the R error is high
+
+	-> show same error metric ?
+
+-> make whatever the failing cases are more important ?
+
+-> is it rotation related?
+
+
+
+
+
+refineAllCameraMultiViewTriangulation
+var result = R3D.optimizeAllCameraExtrinsicDLTNonlinear(listExts, listKs, listKinvs, listPoints2D, maxIterations, true, onlyZError); // negative bad?
+
+
+
+
+
+bestImagesToLoadForViewPair
+iterateSparseTracks
 
 
 
@@ -413,7 +500,7 @@ _iterateSparseTracks
 - test by loading all images & running algorithms per usual
 
 
-_resolveIntersectionLayered
+resolveIntersectionLayered
 
 
 

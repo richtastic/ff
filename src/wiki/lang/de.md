@@ -929,7 +929,7 @@ Neuschwanstein Castle
 | Apfelkuchen |  | apple cake |
 | Bananenkuchen |  | banana cake |
 | Schokoladenkuchen |  | chocolate cake |
-| Torte |  | tort / layerd cake |
+| Torte |  | tort / layer cake |
 |  |  |  |
 |  |  |  |
 | das Obst |  | fruits |
@@ -1229,7 +1229,7 @@ Brandenburger - Brandenburg Gate
 | liegen ? |  | to lay (down) |
 | zustimmen ? |  | to agree |
 |  |  |  |
-| stimmst ? |  | to agree |
+| stimmst ? |  | to agree ? |
 |  |  |  |
 |  |  |  |
 |  |  |  |
@@ -1792,6 +1792,7 @@ Muttersprache - mother tounge (native language)
 
 Wanderlust - joy of hiking
 
+spinnst - crazy
 
 die Kamera - camera
 
