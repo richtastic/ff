@@ -3293,7 +3293,10 @@ Code.gradientDescent = function(fxn, args, x, dx, iter, diff, epsilon, lambda){
 		for(i=0; i<sizeX; ++i){
 			dx[i] = epsilon;
 		}
-	}
+	}/*else{
+		console.log(dx);
+		throw "got dx";
+	}*/
 	for(k=0; k<maxIterations; ++k){
 		// console.log("dx: "+dx+"  @  "+lambda+" = "+k);
 		for(i=0; i<sizeX; ++i){
@@ -3421,6 +3424,26 @@ Code.gradientDescent2 = function(fxn, args, x, iter, diff, eps){
 
 
 
+
+Code.levenbergMarquardt = function(minimizeFxn, minimizeArgs, x, xEpsilon, initialLambda){
+	var lambda = Code.valueOrDefault(initialLambda, 1E-3);
+	var xLength = x.length;
+	if(!xEpsilon){ // should be based on domain, eg: degrees, 
+		var epsilon = 1E-4;
+		xEpsilon = []; // fill in array
+		for(var i=0; i<xLength; ++i){
+			xEpsilon[i] = epsilon;
+		}
+	}
+
+	// 
+
+	throw "todo";
+}
+
+Code.LM = function(a,b,c,d,e){
+	return Code.levenbergMarquardt(a,b,c,d,e);
+}
 
 
 // https://www.topcoder.com/community/data-science/data-science-tutorials/assignment-problem-and-hungarian-algorithm/

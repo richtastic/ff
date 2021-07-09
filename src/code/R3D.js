@@ -472,10 +472,37 @@ R3D._transformCameraExtrinsicDLTNonlinearGD = function(args, x, isUpdate){
 	}
 	return totalError;
 }
-R3D.optimizeAllCameraExtrinsicDLTNonlinear = function(listP, listK, listKinv, listPoints2D, maxIterations, negativeIsBad, onlyErrorZ){
+
+R3D.optimizeAllExtrinsicLM = function(listP, listK, listKinv, listPoints2D, maxIterations){
+
+
+	// Code.levenbergMarquardt = function(minimizeFxn, minimizeArgs, x, xEpsilon, initialLambda){
+
+	throw "todo";
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+R3D.optimizeAllCameraExtrinsicDLTNonlinear = function(listP, listK, listKinv, listPoints2D, maxIterations, negativeIsBad, onlyErrorZ, positionAccuracy, rotationAccuracy){
 	maxIterations = Code.valueOrDefault(maxIterations, 1000);
 	negativeIsBad = Code.valueOrDefault(negativeIsBad, false);
 	onlyErrorZ = Code.valueOrDefault(onlyErrorZ, false);
+
+	positionAccuracy = Code.valueOrDefault(positionAccuracy, 1E-6);
+	rotationAccuracy = Code.valueOrDefault(rotationAccuracy, 1E-6);
+
 	console.log("R3D.optimizeAllCameraExtrinsicDLTNonlinear: "+listP.length+" views  & "+listPoints2D.length+" points  & "+maxIterations+" iterations");
 	// make a set of matrixes for iterating on & passing back
 	var listM = [];
@@ -486,14 +513,31 @@ R3D.optimizeAllCameraExtrinsicDLTNonlinear = function(listP, listK, listKinv, li
 	console.log("onlyErrorZ: "+onlyErrorZ);
 	var args = [listM, listK, listKinv, listPoints2D, negativeIsBad, onlyErrorZ, new V3D(), new V3D()];
 	var x = [];
+	var planarEpsilon = [];
+	var singleEpsilon = [positionAccuracy,positionAccuracy,positionAccuracy,rotationAccuracy,rotationAccuracy,rotationAccuracy];
 	for(var i=0; i<listP.length; ++i){
 		var M = listM[i];
 		var y = R3D.transformMatrixToComponentArray(M);
 		Code.arrayPushArray(x,y);
+		Code.arrayPushArray(planarEpsilon,singleEpsilon);
 	}
+// console.log(x);
+// console.log(planarEpsilon);
+// throw "..."
+	// epsilon for x/y/z should be volume * 1E-10
+	// epsilon for angles should be Code.radians(1.0)*1E-6
+
+
 	// var minError = 1E-10;
+	// Code.gradientDescent = function(fxn, args, x, dx, iter, diff, epsilon, lambda){
 	var minError = 1E-16;
-	var result = Code.gradientDescent(R3D._transformCameraAllExtrinsicDLTNonlinearGD, args, x, null, maxIterations, minError);
+			// var epsilon = 1E-16;
+			// var epsilon = 1E-10;
+			// var epsilon = 1E-6; // default is 1E-6
+			// var epsilon = 1E-3;
+	// var result = Code.gradientDescent(R3D._transformCameraAllExtrinsicDLTNonlinearGD, args, x, null, maxIterations, minError, epsilon);
+
+	var result = Code.gradientDescent(R3D._transformCameraAllExtrinsicDLTNonlinearGD, args, x, planarEpsilon, maxIterations, minError);
 	var x = result["x"];
 	var cost = result["cost"];
 	for(var i=0; i<listM.length; ++i){

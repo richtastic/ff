@@ -6035,7 +6035,8 @@ console.log("doWorldOptimization: "+doWorldOptimization);
 		world.setResolutionProcessingModeFromOnly2D();
 
 
-iterationsAll = 100;
+// iterationsAll = 100;
+iterationsAll = 10;
 
 		var worldIterations = 3;
 		for(var i=0; i<worldIterations; ++i){
@@ -6228,9 +6229,12 @@ Stereopsis.World.prototype.refineAllCameraMultiViewTriangulation = function(maxI
 	//  50 = 8    8k    =  160 / v
 	// 100 = 10   10k   =  100 / v
 	//1000 = 32   32k   =   32 / v
-	maximumPoints3D = Code.valueOrDefault(maximumPoints3D, Math.round(200 * multiplierView) ); // 100-1000 per view
+
+	// 200 - 500
+	maximumPoints3D = Code.valueOrDefault(maximumPoints3D, Math.round(500 * multiplierView) ); // 100-1000 per view
 
 	// maximumPoints3D = 1000;
+	// maximumPoints3D = 20000;
 
 	var points3D = world.toPointArray();
 
@@ -6253,6 +6257,25 @@ Stereopsis.World.prototype.refineAllCameraMultiViewTriangulation = function(maxI
 	}
 	var listPoints2D = [];
 
+	// get camera volume:
+	var centers3D = [];
+	for(var i=0; i<views.length; ++i){
+		var view = views[i];
+		var center = view.center();
+		centers3D.push(center);
+	}
+	var center3D = V3D.average(centers3D);
+	for(var i=0; i<centers3D.length; ++i){
+		var center = centers3D[i];
+		centers3D[i] = V3D.distance(center3D,centers3D[i]);
+	}
+	var volumeSigma = Code.averageNumbers(centers3D);
+
+	console.log("volumeSigma: "+volumeSigma);
+
+	var positionAccuracy = volumeSigma*1E-10;
+	var rotationAccuracy = Code.radians(1.0)*1E-4;
+	console.log("accuracy: "+positionAccuracy+" & "+rotationAccuracy);
 	
 	console.log(" points total : "+points3D.length+" / "+maximumPoints3D);
 	// trim out non-long tracks
@@ -6291,7 +6314,7 @@ Stereopsis.World.prototype.refineAllCameraMultiViewTriangulation = function(maxI
 var timeA = Code.getTimeMilliseconds();
 	// var negativeIsBad = true;
 	var negativeIsBad = false;
-	var result = R3D.optimizeAllCameraExtrinsicDLTNonlinear(listExts, listKs, listKinvs, listPoints2D, maxIterations, negativeIsBad, onlyZError); // negative bad?
+	var result = R3D.optimizeAllCameraExtrinsicDLTNonlinear(listExts, listKs, listKinvs, listPoints2D, maxIterations, negativeIsBad, onlyZError,  positionAccuracy, rotationAccuracy); // negative bad?
 var timeB = Code.getTimeMilliseconds();
 console.log("TIME optimizeAllCameraExtrinsicDLTNonlinear: " + (timeB-timeA) );
 

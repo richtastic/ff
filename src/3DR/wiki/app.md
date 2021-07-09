@@ -393,20 +393,65 @@ MISSING:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+iteration error minimization assessment:
+	gradient descent:
+		- maps the 6n camera parameters into a single error value [6n times to get a jacobian]
+		- provides a coarse direction for parameter improvement
+	lm:
+		- maps the 6n camera parameters into a vector of the 2m 2D-projection-points
+		- operates on each individual point to provide a more detailed directional improvement
+			[matrixes are huge]
+
+
+
+
+
+
+
+
+
+
 WAS filterGlobalMatches SUPPOSSED TO BE LINEARLY ?
 
 
-solveOptimizeSingleView => says error is reallllly low
-	- image sizes
-	- K
-	- 
 
+- change some values in the GD method
 
-worldPointFromSaves
+- GD epsilon may need to get smaller as the changed x values decrease
 
 
 
-[0, 0, 10805, 2109, 483, 177, 26, 15, 2, 0, 0]
+bundle adjust is not converging
+	- too noisy around solution?
+		- convexorize / smooth the error fxn
+		- 
+	- check the gradient descent algorithm / steps
+
+	- RANSAC ??
+
+	- adding cameras one at a time ?
+
+	- exhaustive paramater space testing ?
+
+	- monte carlo ?
+
+	- TFT & triples ?
+
+	- normalization ?
+
+	- levengerg marquart algorithm
+
+
+CAMERA RESECTIONING - get P from X & x (eg from other cameras)
+	- ...
+
+
+
+
+
+
+
+
 
 
 
