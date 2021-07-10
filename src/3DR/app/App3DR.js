@@ -7737,7 +7737,9 @@ console.log("checkPerformNextTask");
 	var i, j, k, len;
 	console.log("next task?");
 
-	// throw "........."
+Code.testLM();
+
+	throw "........."
 	var views = this._views;
 	var project = this;
 	// assumed all views already have entry & images

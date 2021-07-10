@@ -473,6 +473,10 @@ R3D._transformCameraExtrinsicDLTNonlinearGD = function(args, x, isUpdate){
 	return totalError;
 }
 
+
+
+
+
 R3D.optimizeAllExtrinsicLM = function(listP, listK, listKinv, listPoints2D, maxIterations){
 
 

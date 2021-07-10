@@ -3424,19 +3424,194 @@ Code.gradientDescent2 = function(fxn, args, x, iter, diff, eps){
 
 
 
+Code.testLM = function(){
 
-Code.levenbergMarquardt = function(minimizeFxn, minimizeArgs, x, xEpsilon, initialLambda){
-	var lambda = Code.valueOrDefault(initialLambda, 1E-3);
-	var xLength = x.length;
-	if(!xEpsilon){ // should be based on domain, eg: degrees, 
-		var epsilon = 1E-4;
-		xEpsilon = []; // fill in array
-		for(var i=0; i<xLength; ++i){
-			xEpsilon[i] = epsilon;
-		}
+
+	var modelFxn = function(a,b,c, x){
+		var y = a*x*x + b*x + c;
+		return y;
 	}
 
-	// 
+	var A = -2;
+	var B = 50;
+	var C = 10;
+	var rangeMin = -10;
+	var rangeMax = 35;
+	var initialParameters = [0, 0, 0];
+	var epsilonParameters = null;
+	var initialLambda = null;
+
+
+	var sampleCount = 10;
+	var xs = [];
+	var ys = [];
+	for(var i=0; i<sampleCount; ++i){
+		var x = ((rangeMax-rangeMin)*i/(sampleCount-1)) + rangeMin;
+		var y = modelFxn(A,B,C, x);
+		xs[i] = x;
+		ys[i] = y;
+	}
+
+	
+	var errorCount = xs.length;
+	// var errorVector = Code.newArrayZeros(errorCount);
+	var errorFxn = function(parameters,errors, args, changeParameterIndex){
+		// console.log(parameters);
+		var a = parameters[0];
+		var b = parameters[1];
+		var c = parameters[2];
+		for(var i=0; i<errorCount; ++i){
+			var error = ys[i] - modelFxn(a,b,c, xs[i]);
+			// console.log(ys[i]+" vs "+modelFxn(a,b,c, xs[i]))
+			errors[i] = error;
+		}
+		return errors;
+	};
+
+	var jacobianFxn = function(){
+		throw "jacobianFxn";
+	}
+
+
+	var result = Code.levenbergMarquardt(errorFxn, errorCount, initialParameters, epsilonParameters, jacobianFxn, initialLambda);
+	console.log(result);
+
+	throw "...testLM";
+}
+
+
+// parameters - to find optimal values
+// values - optimal to check against - observed / measured / measurement
+// generation function - 
+// error vector
+// 
+// Code.levenbergMarquardt = function(modelFxn, initialParameters, observedValues, errorFxn, epsilonParameters, initialLambda){
+Code.levenbergMarquardt = function(errorFxn, errorCount, initialParameters, epsilonParameters, jacobianFxn, initialLambda){
+	var nParameterCount = initialParameters.length; // inputs
+	var mErrorCount = errorCount;//errorVector.length; // values
+	// default values
+	if(!epsilonParameters){
+		epsilonParameters = [];
+		var defaultEpsilon = 1E-4; // 1E-3 - 1E-6
+		for(var i=0; i<nParameterCount; ++i){
+			epsilonParameters[i] = defaultEpsilon;
+		}
+	}
+	initialLambda = Code.valueOrDefault(initialLambda, 1E-3);
+
+	var jacobianRows = mErrorCount;
+	var jacobianCols = nParameterCount;
+	var jacobian = new Matrix(jacobianRows,jacobianCols);
+	var errorMatrix = new Matrix(mErrorCount,1);
+
+
+	var vectorMagnitudeSquared = function(v){
+		var len = v.length;
+		var sum = 0;
+		for(var i=len-1; i>=0; --i){
+			var u = v[i];
+			sum += u*u;
+		}
+		return sum;
+	}
+
+	// var xLength = x.length;
+	// if(!xEpsilon){ // should be based on domain, eg: degrees, 
+	// 	var epsilon = 1E-4;
+	// 	xEpsilon = []; // fill in array
+	// 	for(var i=0; i<xLength; ++i){
+	// 		xEpsilon[i] = epsilon;
+	// 	}
+	// }
+
+	// init
+	var lambda = initialLambda;
+	var oml = (1.0 - lambda);
+	var errorVector = Code.newArrayZeros(mErrorCount);
+	var parameters = Code.copyArray(initialParameters);
+
+	errorFxn(parameters,errorVector); // initially populate errorVector
+	// console.log(errorVector);
+	// console.log(epsilonParameters);
+	var errorMagnitude = vectorMagnitudeSquared(errorVector);
+
+	var tempParameters = Code.copyArray(parameters);
+	var tempErrors = Code.newArrayZeros(errorVector);
+	for(var par=0; par<nParameterCount; ++par){
+		var parameter = parameters[par];
+		var epsilon = epsilonParameters[par];
+			parameter += epsilon;
+		tempParameters[par] = parameter;
+		// get new errors for single parameter update
+		for(var err=0; err<mErrorCount; ++err){
+			errorFxn(tempParameters,tempErrors);
+			// update jacobian
+			for(var i=0; i<mErrorCount; ++i){
+				// var delta = tempErrors[i] - errorVector[i];
+				var delta = errorVector[i] - tempErrors[i];
+				var entry = delta / epsilon;
+				jacobian.set(i,par, entry);
+			}
+
+		}
+		tempParameters[par] = parameters[par]; // restore
+	}
+	console.log("jacobian: ");
+	console.log(jacobian.toString());
+
+	errorMatrix.fromArray(errorVector);
+	console.log("errorMatrix: ");
+	console.log(errorMatrix.toString());
+
+	// var jacobianTranspose = Matrix.transpose(jacobian);
+	// console.log(jacobianTranspose.toString());
+
+	// var jacobianPseudoInverse = Matrix.pseudoInverse(jacobian); // why is this wront dimensions?
+	var jacobianPseudoInverse = Matrix.pseudoInverseSimple(jacobian);
+	console.log("jacobianPseudoInverse: ");
+	console.log(jacobianPseudoInverse.toString());
+
+	var deltaParameters = Matrix.mult(jacobianPseudoInverse,errorMatrix);
+	console.log("deltaParameters: ");
+	console.log(deltaParameters.toString());
+
+	var delta = deltaParameters.toArray();
+	for(var i=0; i<nParameterCount; ++i){
+		tempParameters[i] = parameters[i] + delta[i];
+	}
+	console.log("new parameters: ");
+	console.log(tempParameters);
+
+	errorFxn(tempParameters,tempErrors);
+
+	console.log("new error: ");
+	console.log(tempErrors);
+
+	var nextError = vectorMagnitudeSquared(tempErrors);
+	console.log("compare errors: "+errorMagnitude+" -> "+nextError);
+	
+
+
+	// if error is better -> keep
+
+	// else -> use 
+
+
+// Matrix.pseudoInverse = function(cin, ain){
+// Matrix.pseudoInverseSimple = function(cin, ain){ // c = aa^at non-square
+	/*
+	Matrix.pseudoInverseSimple = function(cin, ain){ // c = aa^at non-square
+		var a = ain;
+		if(ain===undefined){
+			a = cin;
+		}
+		var at = Matrix.transpose(a);
+		var c = Matrix.mult(at,a);
+		c = Matrix.inverse(c);
+		c = Matrix.mult(c,at);
+		return cin.copy(c);
+	}
+	*/
 
 	throw "todo";
 }

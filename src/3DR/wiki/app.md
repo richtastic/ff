@@ -627,6 +627,13 @@ x saving cameras to pairs
 
 
 
+=>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> POSSIBLY UPDATE OTHER AGLORITHMS TO USE LM ITERATION
+	- F
+	- P
+	- ...
+
+
+
 
 3DR
 	- new simple set

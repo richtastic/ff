@@ -545,7 +545,7 @@ der Laptop - laptop
 |  |  |  |
 |  |  |  |
 |  |  |  |
-|  |  |  |
+| beide |  | both (two) |
 |  |  |  |
 | gleich |  | shortly/soon |
 | Schnell |  | quick/ly |
@@ -2053,7 +2053,7 @@ zum - to the
 
 jetzt - now
 
-stark - hard/strong
+stark - hard/strong | stärker - stronger
 schlecht - bad/ly
 furchtbar - awful
 

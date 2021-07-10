@@ -6311,6 +6311,43 @@ Stereopsis.World.prototype.refineAllCameraMultiViewTriangulation = function(maxI
 		listPoints2D.push(entryP3D);
 	}
 
+
+
+console.log("start LM");
+
+	// var modelFxn = null;
+	var initialParameters = null;
+	var observedValues = null;
+	var epsilonParameters = null;
+	var initialLambda = null;
+
+	// Code.levenbergMarquardt(modelFxn, initialParameters, observedValues, errorFxn, epsilonParameters, initialLambda);
+
+	var errorVector = Code.newArrayZeros(5);
+
+
+	var errorFxn = function(parameteres){
+		//
+	};
+
+	Code.levenbergMarquardt(errorFxn, errorVector, initialParameters, epsilonParameters, initialLambda);
+
+
+
+
+	// Code.levenbergMarquardt = function(errorFxn, errorVector, initialParameters, epsilonParameters, jacobianFxn, initialLambda){
+
+
+
+
+
+
+
+
+throw "LM"
+//
+
+
 var timeA = Code.getTimeMilliseconds();
 	// var negativeIsBad = true;
 	var negativeIsBad = false;
