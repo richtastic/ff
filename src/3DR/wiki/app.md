@@ -630,6 +630,7 @@ x saving cameras to pairs
 =>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> POSSIBLY UPDATE OTHER AGLORITHMS TO USE LM ITERATION
 	- F
 	- P
+	- camera K components
 	- ...
 
 

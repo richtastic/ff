@@ -44,7 +44,7 @@ The input to the algorithm is:
 - **P**<sub>0</sub> : initial estimate of parameters for model
 - One of:
 	- **X** : Observed values & **f(&theta;)** : Function model
-	- **E(&theta;)** : Error function - internalizes values & model ; allows for more gerneral error estimation
+	- **E(&theta;)** : Error function - internalizes values & model ; allows for more general error estimation
 
 _Init_
 <br/>
@@ -123,7 +123,33 @@ A<sup>+</sup> = A<sup>T</sup> &middot; (A &middot; A<sup>T</sup>)<sup>-1</sup>
 
 
 
+## References
 
+docs
+
+https://people.duke.edu/~hpgavin/ce281/lm.pdf
+
+http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.135.865&rep=rep1&type=pdf
+
+
+
+code
+
+https://cdn.jsdelivr.net/npm/ml-levenberg-marquardt@3.1.1/lib/index.js
+
+http://scribblethink.org/Computer/Javanumeric/index.html
+
+https://jugit.fz-juelich.de/mlz/lmfit
+
+
+?
+
+http://users.ics.forth.gr/~lourakis/levmar/
+
+
+SFM
+
+https://engineering.purdue.edu/kak/courses-i-teach/ECE661.08/homework/HW5_LM_handout.pdf
 
 
 

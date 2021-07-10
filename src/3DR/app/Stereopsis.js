@@ -6231,7 +6231,7 @@ Stereopsis.World.prototype.refineAllCameraMultiViewTriangulation = function(maxI
 	//1000 = 32   32k   =   32 / v
 
 	// 200 - 500
-	maximumPoints3D = Code.valueOrDefault(maximumPoints3D, Math.round(500 * multiplierView) ); // 100-1000 per view
+	maximumPoints3D = Code.valueOrDefault(maximumPoints3D, Math.round(100 * multiplierView) ); // 100-1000 per view
 
 	// maximumPoints3D = 1000;
 	// maximumPoints3D = 20000;
@@ -6326,11 +6326,19 @@ console.log("start LM");
 	var errorVector = Code.newArrayZeros(5);
 
 
-	var errorFxn = function(parameteres){
-		//
+	var errorFxn = function(parameters,errors, args, changeParameterIndex){
+		// setup cameras
+		// for each P2D
+		// project P3D to view
+		// error = d(data, predicted)
+		// ..
 	};
 
-	Code.levenbergMarquardt(errorFxn, errorVector, initialParameters, epsilonParameters, initialLambda);
+	// 1 or 2 x 2D points
+	var errorCount = 0;
+
+	
+	var result = Code.levenbergMarquardt(errorFxn, errorCount, initialParameters, epsilonParameters, jacobianFxn, maxIterations);
 
 
 
