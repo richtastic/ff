@@ -3596,7 +3596,7 @@ Code.levenbergMarquardt = function(errorFxn, errorCount, initialParameters, epsi
 
 		
 
-		// var jacobianPseudoInverse = Matrix.pseudoInverse(jacobian); // why is this wront dimensions?
+		// var jacobianPseudoInverse = Matrix.pseudoInverse(jacobian); // why is this wrong dimensions?
 		// var jacobianPseudoInverse = Matrix.pseudoInverseSimple(jacobian);
 		// console.log("jacobianPseudoInverse: ");
 		// console.log(jacobianPseudoInverse.toString());
@@ -3633,6 +3633,7 @@ Code.levenbergMarquardt = function(errorFxn, errorCount, initialParameters, epsi
 		}
 
 		// estimate value changes
+		console.log("error: "+nextError+" -> "+errorMagnitude);
 		if(nextError<errorMagnitude){ // toward Newton
 			// console.log("lower");
 			lambda = lambda * 0.1;
@@ -3651,11 +3652,13 @@ Code.levenbergMarquardt = function(errorFxn, errorCount, initialParameters, epsi
 		
 		// stop if lambda is too large (/too small)
 		if(lambda>1E20){
+			console.log("exit lambda too large: "+lambda);
 			break;
 		}
 		
 		// stop if converging on parameters
 		if(parametersAllUnderLimit){
+			console.log("exit parameters not changing");
 			break
 		}
 	

@@ -393,6 +393,174 @@ MISSING:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
+- use close 2D points to push cameras toward matching areas
+	- group of vectors for each nearby pair
+		- try to find an optimum euclidean transform for the 3D points
+		- 
+	- use 'half' of the transformationf for A & inverse-half for B
+- combine 3D matrixes in some % based method ?
+
+
+-> DLT + nonlinear step?
+
+
+http://nghiaho.com/?page_id=671
+(R * A) + t = B
+H = (A-cenA) * (B-cenB)^T
+SVD(H)
+R = V * U^T
+R x A + t = B
+t = cenB - R x cenB
+(follow with nonlinear parameter estimation step)
+
+https://medium.com/machine-learning-world/linear-algebra-points-matching-with-svd-in-3d-space-2553173e8fed
+https://colab.research.google.com/drive/1pZPV5GuR7ZPW6vyoG8DnawJx13k6zHmD
+
+
+MATCHING UP TRANSFORMS TO OTHER TRANSFORMS
+	EG: A+B to B+C [map A to C thru B]
+
+	for each view B:
+		for each cell
+			for each point
+				find a neighboring points
+				put into grouped arrays, eg:
+					- A-B-C
+					- A-B-D
+					- C-B-D
+					- ...
+				-> keep only closest point in each grouping
+				-> keep top up to ~ 3 points & average the expected 3D location ?
+
+		for all groups (with enough point matches)
+			calculate 3D transform
+
+matching up a list of pairs:
+	- get all top transforms for pairs with some sigma-valued number of points
+	- get list of 3D point matches
+		- for each cell:
+			- get all matches within radius w/ matches A->B
+			- 
+		- need some minimum number of point matches
+	- estimate 3D euclidean transformation between transform views A & B
+		- get 'half' of transform
+		- add half of A->B to A
+		- add half of B->A to B
+	- each view averages together list of matrixes (based on error? inverse error?)
+	- each list appends this delta matrix to current absolute matrix
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+=> SIMULATED ANNEALING / RANDOMIZING SOME ROTATION / LOCATIONS
+
+
+- how to deal with local minima
+	-> start at some degree of variability and taper off
+		-> change camera locations
+			- don't move more than nearest neighbor (maintain directional orientation)
+				- get a vector to each & find limit of half-plane movements [views with substantial match correspondences]
+		-> change camera rotations
+			- don't rotate 'too far away' from neighbors
+				- not AT eachother
+				- not AWAY from eachother
+		-> reprojection-error based?
+			- does a pixel error translate to a rotation / offset ?
+				- ROTATION:
+					- project from center 0,0 & eps,eps rays -> get angle from these rays
+					=> these movements can all be done independently
+				- TRANSLATION
+					- projected ray -> move focal length (average of fx & fy)
+					- half-plane limits
+						- new position of camera has to stay in half-plane side of original location
+					=> these movements need to be done sequentially
+
+
+
+GLOBAL / LOCAL / OPTIMIZATION
+
+Strategies for Global Optimization
+
+https://towardsdatascience.com/strategies-for-global-optimization-79fca001c8bb
+
+Simulated Annealing
+
+https://en.wikipedia.org/wiki/Simulated_annealing
+
+
+Perturbation / Agitation
+
+
+
+
+
+
+
+https://web.maths.unsw.edu.au/~rsw/lgopt.pdf
+ Optimization Problems
+. Variables
+. Objective functions
+. Constraints
+. Discrete vs Continuous
+. Available information
+. Optimality
+. Problem size
+• Local Methods
+. Steepest Descent
+. Newton
+. Quasi-Newton
+. Conjugate Gradient
+. Simplex
+
+Local vs Global minima
+. Continuous examples
+. Travelling Salesman Problem (TSP)
+. Minimum Energy Problems
+• Exact methods
+. Enumeration
+. Branch and Bound
+. Interval Methods
+• Monte-Carlo Methods
+. Random points
+. Random starting points
+. Quasi-Monte Carlo methods
+. Sparse Grids
+• Simulated Annealing
+. Accept larger functions values with certain probability
+. Annealing schedule
+
+Evolutionary (Genetic) Algorithms
+. Population of individuals (variables)
+. Survival depends on fitness of individual
+. New individuals from genetic operators: crossover, mutation
+
+Quasi Monte-Carlo (QMC) Methods
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 iteration error minimization assessment:
 	gradient descent:
 		- maps the 6n camera parameters into a single error value [6n times to get a jacobian]
@@ -631,7 +799,8 @@ x saving cameras to pairs
 	- F
 	- P
 	- camera K components
-	- ...
+	- 3D points ?
+		- this only needs to be done a point at a time
 
 
 

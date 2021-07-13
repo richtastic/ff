@@ -7737,9 +7737,9 @@ console.log("checkPerformNextTask");
 	var i, j, k, len;
 	console.log("next task?");
 
-Code.testLM();
+// Code.testLM();
 
-	throw "........."
+	// throw "........."
 	var views = this._views;
 	var project = this;
 	// assumed all views already have entry & images
@@ -10705,14 +10705,14 @@ console.log("ITERATION NUMBER: "+baIterations+" / "+maxIterationsBA);
 					console.log("max iterations reached");
 					isDone = true;
 				}
-
+// throw "???????????? : "+baIterations;
 				// isDone = true;
 				if(isDone){ // BA is done -> find best putatives for dense
 
 					var allTransforms = fullData["transforms"];
 
 
-console.log("isDone - FULL DONE")
+console.log("isDone - FULL DONE");
 // throw "BEFORE HANDLE DONE TRACK FULL BA "
 
 // show the graph:

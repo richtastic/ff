@@ -6036,11 +6036,34 @@ console.log("doWorldOptimization: "+doWorldOptimization);
 
 
 // iterationsAll = 100;
-iterationsAll = 10;
+// iterationsAll = 10;
+iterationsAll = 25;
 
-		var worldIterations = 3;
+		var worldIterations = 5;
+		// var worldIterations = 1;
 		for(var i=0; i<worldIterations; ++i){
-			var result = world.refineAllCameraMultiViewTriangulation(iterationsAll, false);
+			
+
+
+			console.log("use relative point transforms to move cameras toward average location");
+
+
+throw "..."
+			// // perturb cameras somewhat to get them moving around to allow gradient descent to help
+			// if(i==0){
+			// 	// simulated annealing - to keep away from local minima => & reach global minima
+			// 	console.log("simulated annealing");
+			// 	world.agitateViewCamerasFromError();
+			// 	// after cameras change absolute/relative location, patches change too:
+			// 	world.initAllP3DPatches();
+			// }
+
+
+			// var result = world.refineAllCameraMultiViewTriangulation(iterationsAll, false);
+			// var result = world.refineAllCameraMultiViewTriangulationLM(iterationsAll, false);
+			var result = world.refineAllCameraMultiViewTriangulationGD(iterationsAll, false);
+
+
 			world.copyRelativeTransformsFromAbsolute();
 
 
@@ -6052,6 +6075,8 @@ iterationsAll = 10;
 			world.setResolutionProcessingModeFromOnly2D();
 			world.initAllP3DPatches();
 			world.initAffineFromP3DPatches();
+
+			
 
 		}
 		// do patches need to be updated ?
@@ -6081,6 +6106,128 @@ nextErrorR = viewSolve.track3AverageError();
 	// throw "before exit solveOptimizeSingleView"
 	
 	return {"deltaR":differenceErrorR, "errorR":endingErrorR};
+}
+
+Stereopsis.World.prototype.agitateViewCamerasFromError = function(views){
+	var world = this;
+	if(!views){
+		views = world.toViewArray();
+	}
+
+	var cameraErrors = [];
+	// for each camera
+	var newExtrinsics = [];
+	for(var i=0; i<views.length; ++i){
+		var view = views[i];
+		var absolute = view.absoluteTransformInverse();
+		var errorR = view.averageReprojectionError();
+		var Kinv = view.Kinv();
+		// console.log("errorR: "+errorR);
+		cameraErrors[i] = errorR;
+		var pointSpace = view.pointSpace();
+		// get all P3Ds
+		var points2D = pointSpace.toArray();
+		// find average COM of P3Ds
+		// console.log(points2D);
+		var p3Ds = [];
+		for(var j=0; j<points2D.length; ++j){
+			var point2D = points2D[j];
+			var p3D = point2D.point3D();
+			p3D = p3D.point();
+			p3Ds.push(p3D);
+		}
+		// get ray to P3D
+		// console.log(p3Ds);
+		var com3D = V3D.average(p3Ds);
+		// console.log("com3D: "+com3D);
+		// project to P2D
+		var com2D = view.projectPoint3D(com3D);
+		// console.log("com2D "+com2D);
+		// add error offset @ +x,+y
+		var errorX = errorR*1.0;
+		var errorY = errorR*1.0;
+		// console.log("error "+errorX+","+errorY);
+		var error2D = com2D.copy().add(errorX,errorY);
+		// get ray to P3D
+		var ray3D = R3D.projectPoint2DToCamera3DRay(com2D, absolute, Kinv, null);
+		var dir3DCOM = ray3D["d"];
+		ray3D = R3D.projectPoint2DToCamera3DRay(error2D, absolute, Kinv, null);
+		var dir3DERR = ray3D["d"];
+// console.log(error2D+" - "+com2D);
+		var angle3D = V3D.angle(dir3DCOM,dir3DERR);
+		console.log("errorR: "+errorR+" - ANGLE 3D: "+Code.degrees(angle3D));
+		// var intersection = Code.intersectRayPlane(o3D,d3D, newLocation3D,newNormal3D); // PLANAR INTERSECTION -- requires normals first
+		// var distance = V3D.distance(intersection,newLocation3D);
+		// project ray
+
+		// get ray angle
+// var ray3D = R3D.projectPoint2DToCamera3DRay(dir2D, absolute, Kinv, null);
+// var o3D = ray3D["o"];
+// var d3D = ray3D["d"];
+// var intersection = Code.intersectRayPlane(o3D,d3D, newLocation3D,newNormal3D); // PLANAR INTERSECTION -- requires normals first
+// var distance = V3D.distance(intersection,newLocation3D);
+		// get X,Y,Z random angles & updata extrinsic with rotation offset
+
+		// ...
+
+		// angle3D *= 0.5;
+		angle3D *= 0.25;
+
+		var rotateAngle = 0;
+		var matrixRandomRotation = new Matrix(4,4).identity();
+			// X
+			rotateAngle = (Math.random()-0.5)*angle3D;
+			matrixRandomRotation = Matrix.transform3DRotateX(matrixRandomRotation,rotateAngle);
+			// Y
+			rotateAngle = (Math.random()-0.5)*angle3D;
+			matrixRandomRotation = Matrix.transform3DRotateY(matrixRandomRotation,rotateAngle);
+			// Z
+			rotateAngle = (Math.random()-0.5)*angle3D;
+			matrixRandomRotation = Matrix.transform3DRotateZ(matrixRandomRotation,rotateAngle);
+
+// 			Matrix.transform3DRotateX = function(a,angle){
+// 	var c = Math.cos(angle), s = Math.sin(angle);
+// 	var b = Matrix._transformTemp3D.fromArray([1.0,0.0,0.0,0.0, 0.0,c,-s,0.0, 0.0,s,c,0.0, 0.0,0.0,0.0,1.0]);
+// 	return Matrix.mult(b,a);
+// }
+// Matrix.transform3DRotateY = function(a,angle){
+// 	var c = Math.cos(angle), s = Math.sin(angle);
+// 	var b = Matrix._transformTemp3D.fromArray([c,0.0,s,0.0, 0.0,1.0,0.0,0.0, -s,0.0,c,0.0, 0.0,0.0,0.0,1.0]);
+// 	return Matrix.mult(b,a);
+// }
+// Matrix.transform3DRotateZ = function(a,angle){
+		var newAbsolute = Matrix.mult(matrixRandomRotation,absolute);
+		// console.log(newAbsolute+"");
+		var newExtrinsic = Matrix.inverse(newAbsolute);
+		newExtrinsics.push(newExtrinsic);
+
+		// HOW TO DO TRANSLATION?
+	}
+
+	// set now with changes all at once
+	for(var i=0; i<views.length; ++i){
+		var newExtrinsic = newExtrinsics[i];
+		var view = views[i];
+		view.absoluteTransform(newExtrinsic);
+	}
+
+	world.copyRelativeTransformsFromAbsolute();
+	// world.updateP3DPatchesFromAbsoluteOrientationChange();
+
+	// get cammera error
+
+	// for each camera
+
+	// rotate some random angle (X,Y,Z) based on average error
+		// average P3D location ?
+		// ray thru center
+		// ray thru + pixel error
+		// get angle
+	// move some random direction (X,Y,Z) based on average error
+		//
+		// limit = half-planes
+
+	// throw "agitateViewCamerasFromError";
 }
 
 
@@ -6204,7 +6351,280 @@ console.log(pointGroups2D);
 }
 
 
-Stereopsis.World.prototype.refineAllCameraMultiViewTriangulation = function(maxIterations, onlyLongTracks, maximumPoints3D){
+Stereopsis.World.prototype.refineAllCameraMultiViewTriangulationLM = function(maxIterations, onlyLongTracks, maximumPoints3D){
+	onlyLongTracks = Code.valueOrDefault(onlyLongTracks, false);
+	var onlyZError = false;
+	var world = this;
+
+	var views = world.toViewArray();
+	var points3D = world.toPointArray();
+
+	var multiplierView = Math.sqrt(views.length);
+	maximumPoints3D = Code.valueOrDefault(maximumPoints3D, Math.round(100 * multiplierView) ); // 100-1000 per view
+
+	var listViewExts = [];
+	var listViewKs = [];
+	var listViewKinvs = [];
+	var listViewCenters3D = [];
+	
+maximumPoints3D = 200;
+
+	if(!maxIterations){
+		maxIterations = 100*views.length;
+		maxIterations = Math.min(maxIterations, 100);
+	}
+
+	console.log("refineAllCameraMultiViewTriangulation: "+maxIterations+" MAX POINTS: "+maximumPoints3D+" / "+points3D.length);
+
+	// populate view related arrays
+	var viewIDToIndexHash = {};
+	for(var i=0; i<views.length; ++i){
+		var view = views[i];
+		var P = view.absoluteTransform();
+		var K = view.K();
+		var Kinv = view.Kinv();
+		var center = view.center();
+		listViewExts.push(P);
+		listViewKs.push(K);
+		listViewKinvs.push(Kinv);
+		listViewCenters3D.push(center);
+		viewIDToIndexHash[view.id()] = i;
+	}
+
+	// get camera volume:
+	var center3D = V3D.average(listViewCenters3D);
+	var distances3D = [];
+	for(var i=0; i<listViewCenters3D.length; ++i){
+		var center = listViewCenters3D[i];
+		distances3D[i] = V3D.distance(center3D,listViewCenters3D[i]);
+	}
+	var volumeSigma = Code.averageNumbers(distances3D);
+	console.log("volumeSigma: "+volumeSigma);
+	var positionAccuracy = volumeSigma*1E-10;
+	var rotationAccuracy = Code.radians(1.0)*1E-4;
+	console.log("accuracy: "+positionAccuracy+" & "+rotationAccuracy);
+	// 
+	// console.log(" points total : "+points3D.length+" / "+maximumPoints3D);
+	// // trim out non-long tracks
+	// if(onlyLongTracks){
+	// 	for(var i=0; i<points3D.length; ++i){
+	// 		var point3D = points3D[i];
+	// 		var points2D = point3D.toPointArray();
+	// 		if(points2D.length<=2){ // want more than 1 match (2 views)
+	// 			Code.removeElementAt(points3D,i);
+	// 			--i; // redo
+	// 		}
+	// 	}
+	// 	console.log(" tracks total : "+points3D.length+" / "+maximumPoints3D);
+	// }
+	// trim down sample
+	if(points3D.length>maximumPoints3D){
+		console.log("SUBSAMPLE "+points3D.length+" -> "+maximumPoints3D);
+		Code.randomPopArray(points3D,maximumPoints3D);
+	}
+	
+	// populate P3D entries - including P2Ds
+	var listPoints3D = [];
+	
+	for(var i=0; i<points3D.length; ++i){
+		var point3D = points3D[i];
+		var points2D = point3D.toPointArray();
+		var entryP3D = [];
+		for(var j=0; j<points2D.length; ++j){
+			var p2D = points2D[j];
+			var view = p2D.view();
+			var viewID = view.id();
+			var viewIndex = viewIDToIndexHash[viewID];
+			var entryP2D = [p2D.point2D(),viewIndex];
+			entryP3D.push(entryP2D);
+		}
+		listPoints3D.push(entryP3D);
+	}
+
+/*
+
+list of P2D [known quantities]
+list of index: mapping P2D to view P matrix
+list of index: mapping P2D to P3D
+list of view P matrixes [calculated from params]
+list of P3D points [temp: calculated from P]
+list of indexes: mapping P3D to N P2Ds
+
+constructing error estimates:
+	restimate P3Ds based on camera params:
+		for each P3D
+			get P2D indexes
+			for each P2D
+			put into array
+			triangulate P3D
+	estimate error:
+		for each P2D
+			get P3D
+			get view index
+			project to view
+			error = x-x,y-y or distance
+
+*/
+
+
+
+	// reusable structures for LM iteration:
+	var listM = [];
+	for(var i=0; i<listViewExts.length; ++i){
+		var P = listViewExts[i];
+		listM[i] = P.copy();
+	}
+	console.log("listM:");
+	console.log(listM);
+	// console.log("onlyErrorZ: "+onlyErrorZ);
+	// var args = [listM, listK, listKinv, listPoints2D, negativeIsBad, onlyErrorZ, new V3D(), new V3D()];
+	// var x = [];
+	// var planarEpsilon = [];
+	// var singleEpsilon = [positionAccuracy,positionAccuracy,positionAccuracy,rotationAccuracy,rotationAccuracy,rotationAccuracy];
+	var initialParameters = [];
+	for(var i=0; i<listM.length; ++i){
+		var M = listM[i];
+		var y = R3D.transformMatrixToComponentArray(M);
+		Code.arrayPushArray(initialParameters,y);
+	}
+	console.log("initialParameters:");
+	console.log(initialParameters);
+
+
+/*
+		// SPEEDUP - REUSE MATRIX
+		var cols = 4;
+		var rows = 2*points2D.length;
+		var reuseA = R3D._transformCameraAllExtrinsicDLTNonlinearGD_TEMP_A;
+		if(!reuseA || reuseA.rows()!=rows || reuseA.cols()!=cols){
+			reuseA = new Matrix(rows,cols);
+			R3D._transformCameraAllExtrinsicDLTNonlinearGD_TEMP_A = reuseA;
+		}
+
+*/
+
+	var errorFxn = function(parameters,errors, args, changeParameterIndex){
+		var viewCount = listM.length;
+		var points3DCount = listPoints3D.length;
+		var reusePoint3DTriangulate = new V3D();
+		var tempPoint3D = new V3D();
+		var reuseMatrix = null;
+		// console.log("VIEWS: "+viewCount);
+		// setup camera matrixes from parameters
+		for(var i=0; i<viewCount; ++i){
+			R3D.transform3DFromComponentArray(listM[i], parameters, i*6);
+		}
+		// estimate P3D & project to P2D at same time:
+		var errorIndex = 0;
+		for(var i=0; i<points3DCount; ++i){
+			var entryP3D = listPoints3D[i];
+			// console.log(entryP3D);
+			// triangulate
+			var points2D = [];
+			var extrinsics = [];
+			var invKs = [];
+			var extrinsics = [];
+			for(var j=0; j<entryP3D.length; ++j){
+				var entry = entryP3D[j];
+					points2D[j] = entry[0];
+				var indexView = entry[1];
+				extrinsics[j] = listViewExts[indexView];
+				invKs[j] = listViewKinvs[indexView];
+			}
+
+			var point3D = R3D.triangulatePointDLTList(points2D, extrinsics, invKs, reusePoint3DTriangulate, reuseMatrix);
+			// console.log(point3D);
+
+			// project
+			for(var j=0; j<entryP3D.length; ++j){
+				var entry = entryP3D[j];
+				var point2D = entry[0];
+				var indexView = entry[1];
+				var P = listM[indexView];
+				var K = listViewKs[indexView];
+				//
+				P.multV3DtoV3D(tempPoint3D,point3D);
+				K.multV3DtoV3D(tempPoint3D,tempPoint3D);
+				// isBehind |= (tempPoint3D.z<=0 || tempPoint3D.z<=0);
+				// isBehind |= (tempPoint3D.z<=0);
+				tempPoint3D.homo();
+				// var errorDistance = V2D.distance(tempPoint3D, point2D);
+				var errorX = tempPoint3D.x - point2D.x;
+				var errorY = tempPoint3D.y - point2D.y;
+
+				errors[errorIndex+0] = errorX;
+				errors[errorIndex+1] = errorY;
+				errorIndex += 2;
+				
+				// errors[errorIndex] = ...;
+				// errorIndex += 1;
+			}
+
+
+// throw "..."
+
+			// errors[errorIndex] = ...;
+		}
+		// project P3D to view
+		// error = d(data, predicted)
+		// console.log(errors);
+		// console.log(errors.length);
+		// throw "errorFxn"
+		return errors;
+	};
+
+	// 1 or 2 x 2D points
+	var errorCount = 0;
+	for(var i=0; i<listPoints3D.length; ++i){
+		var entries = listPoints3D[i];
+		errorCount += entries.length;
+	}
+	// console.log("errorCount [per point]: "+errorCount);
+
+	// x2 for X & Y
+	errorCount *= 2;
+	console.log("errorCount: "+errorCount);
+
+
+	// var observedValues = null;
+	var epsilonParameters = null;
+	// var initialLambda = null;
+	// var maxIterations = 3;
+	var jacobianFxn = null;
+
+
+	console.log("start LM");
+
+	
+	var result = Code.levenbergMarquardt(errorFxn, errorCount, initialParameters, epsilonParameters, jacobianFxn, maxIterations);
+	console.log(result);
+	var finalParameters = result["parameters"];
+	var cost = result["cost"];
+
+	console.log("finalParameters:");
+	console.log(finalParameters);
+
+	for(var i=0; i<listM.length; ++i){
+		var M = listM[i];
+		R3D.transform3DFromComponentArray(M, finalParameters, i*6);
+	}
+	return {"matrixes":listM, "error":cost};
+
+
+	// Code.levenbergMarquardt = function(errorFxn, errorVector, initialParameters, epsilonParameters, jacobianFxn, initialLambda){
+
+}
+
+
+
+
+
+
+
+
+
+
+Stereopsis.World.prototype.refineAllCameraMultiViewTriangulationGD = function(maxIterations, onlyLongTracks, maximumPoints3D){
 // onlyLongTracks = true;
 
 	// TODO: PRIORITIZE LONGER TRACKS REGARDLESS
@@ -6231,7 +6651,7 @@ Stereopsis.World.prototype.refineAllCameraMultiViewTriangulation = function(maxI
 	//1000 = 32   32k   =   32 / v
 
 	// 200 - 500
-	maximumPoints3D = Code.valueOrDefault(maximumPoints3D, Math.round(100 * multiplierView) ); // 100-1000 per view
+	maximumPoints3D = Code.valueOrDefault(maximumPoints3D, Math.round(500 * multiplierView) ); // 100-1000 per view
 
 	// maximumPoints3D = 1000;
 	// maximumPoints3D = 20000;
@@ -6311,49 +6731,6 @@ Stereopsis.World.prototype.refineAllCameraMultiViewTriangulation = function(maxI
 		listPoints2D.push(entryP3D);
 	}
 
-
-
-console.log("start LM");
-
-	// var modelFxn = null;
-	var initialParameters = null;
-	var observedValues = null;
-	var epsilonParameters = null;
-	var initialLambda = null;
-
-	// Code.levenbergMarquardt(modelFxn, initialParameters, observedValues, errorFxn, epsilonParameters, initialLambda);
-
-	var errorVector = Code.newArrayZeros(5);
-
-
-	var errorFxn = function(parameters,errors, args, changeParameterIndex){
-		// setup cameras
-		// for each P2D
-		// project P3D to view
-		// error = d(data, predicted)
-		// ..
-	};
-
-	// 1 or 2 x 2D points
-	var errorCount = 0;
-
-	
-	var result = Code.levenbergMarquardt(errorFxn, errorCount, initialParameters, epsilonParameters, jacobianFxn, maxIterations);
-
-
-
-
-	// Code.levenbergMarquardt = function(errorFxn, errorVector, initialParameters, epsilonParameters, jacobianFxn, initialLambda){
-
-
-
-
-
-
-
-
-throw "LM"
-//
 
 
 var timeA = Code.getTimeMilliseconds();
