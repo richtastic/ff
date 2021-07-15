@@ -393,6 +393,113 @@ MISSING:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+- DLT CAMERA INIT FROM P3D-P2D KNOWNS
+
+
+
+optimizePairTransformsFromMappingP3D + refineAllCameraMultiViewTriangulationGD
+	-- error goes high up?
+	=> pick lowest error points?
+	=> check for outliers?
+
+- any assumptions / fallacies in new algs?
+
+- if there are scale changes, the euclidean half-way transform may not be best?
+	- try point averaging? [this allows more non-linear-ness]
+
+- try DLT initting cameras from new P3Ds?
+
+- do other typical loop things:
+	x drop negative
+	x drop based on error
+	- ...
+
+
+
+- OTHER TYPES OF METRICS THAT CAN BE USED TO HELP ITERATE TOWARD OPTIMUM SOLUTION ?
+
+
+- nonlinear fxn that optimizes with a metric of distance between mapped points [surfaces]?
+	-> move surfaces toward each other
+
+
+
+
+
+=> 'pushing' views toward each other all at the same time may be an issue?
+
+
+
+- try figuring out new camera location via half-way points
+	[rather than just moving the camera frame]
+
+
+-> try moving ALL P3D to new locations, then iterating on individual cameras to update location
+
+
+	LOOP: MOVE CAMERAS-TO-POINTS & MOVE-POINTS-TO-MEDIAN
+
+		-> P3D calculated from camera parameters
+
+		A) optimize camera parameters from 3D projection
+		-> recalculate P3D locations
+		-> update P3D to be median locations from neighboring view-pairs
+		B) optimize camera parameters from 3D projection
+		-> recalculate P3D locations
+		=> goto start
+
+			HOW TO DO THIS PRACTICALLY:
+				A) keep track of all the temporary changes & reuse the global iterator
+					go thru each connected pair
+						each P2D that is changed gets it's temp set to the 'new' location
+				B) keep track locally of the views & P2Ds & P3Ds that are changed
+					each pair estimate new P3Ds given P2D locations
+					store in outer loop
+					do subsample of all these new 3D points
+					DO GLOBAL ITERATION INSIDE FXN
+
+
+
+		-> SAVE POINTS AT HALF-WAY THRU PROCESS TO SEE WHAT IT ENDS UP LOOKING LIKE?
+
+
+=> DO CAMERA MATRIX PARAMS NEED TO BE DETERMINED FROM SCRATCH, OR CAN THEIR PARAMS BE UPDATED THRU NONLINEAR STEPS?
+
+
+
+
+
+
+=> graph expand:
+	- minimize error on a single edge -> then expand outward on graph in some order
+
+
+
+
+- if ALL possible triples estimated using top pairs is run: is everything averaged out?
+	=> focus on a single view at a time -> bring all adj views to line up with this view
+
+
+- FINDING 3D MATCHES:
+	- for a set of 2 pairs matched via nexus view (a triple)
+	- filter only top 50% of P2D from transform matches pairAB & pair BC
+	- place pairBC points into pointspace
+	- for each point in pairAB:
+		- find closest pairBC point & add to found matches (if distance < 0.5 * cellSize)
+	- filter only top 50% of P2D matches on error = (Rab+Rbc)
+- ESTIMATING NEXT ABSOLUTE CAMERA MATRIXES:
+	- find world 3D mapping for P3D: Pab -> Pbc
+	- calculate half-mapping location for A & C
+	- add predicted new absolute matrix to A & C lists
+- 
+
+
+
+https://math.stackexchange.com/questions/3767691/exactly-half-of-a-3d-transformation-matrix
+https://www.geometrictools.com/Documentation/InterpolationRigidMotions.pdf
+
+
+
 
 - use close 2D points to push cameras toward matching areas
 	- group of vectors for each nearby pair
@@ -416,6 +523,36 @@ t = cenB - R x cenB
 
 https://medium.com/machine-learning-world/linear-algebra-points-matching-with-svd-in-3d-space-2553173e8fed
 https://colab.research.google.com/drive/1pZPV5GuR7ZPW6vyoG8DnawJx13k6zHmD
+
+http://graphics.stanford.edu/~smr/ICP/comparison/eggert_comparison_mva97.pdf
+
+https://arxiv.org/pdf/1812.11307.pdf
+
+
+
+
+
+
+
+
+
+
+
+
+Code.averageTransforms3D = function(transforms, percents){
+
+Code.transform3DFromPointMatches(pointsA, pointsB);
+
+
+R3D.euclieanTransform3D = function(pointsFr,pointsTo){ // find euclid matrix [3x4] : from->to
+
+
+
+
+
+
+
+
 
 
 MATCHING UP TRANSFORMS TO OTHER TRANSFORMS

@@ -723,7 +723,81 @@ throw "negative";
 }
 
 
+R3D.optimizeAllCameraExtrinsicDLTNonlinearKnown3D = function(listP, listK, listKinv, listPoints2D, listPoints3D, maxIterations){ // P3D are assumed known, not re-calculated
+	console.log("R3D.optimizeAllCameraExtrinsicDLTNonlinear: "+listP.length+" views  & "+listPoints2D.length+" points  & "+maxIterations+" iterations");
+	// make a set of matrixes for iterating on & passing back
+	
+	var listM = [];
+	for(var i=0; i<listP.length; ++i){
+		var P = listP[i];
+		listM[i] = P.copy();
+	}
+	var args = [listM, listK, listKinv, listPoints2D, listPoints3D];
+	var x = [];
+	// var planarEpsilon = [];
+	// var singleEpsilon = [positionAccuracy,positionAccuracy,positionAccuracy,rotationAccuracy,rotationAccuracy,rotationAccuracy];
+	for(var i=0; i<listP.length; ++i){
+		var M = listM[i];
+		var y = R3D.transformMatrixToComponentArray(M);
+		Code.arrayPushArray(x,y);
+		// Code.arrayPushArray(planarEpsilon,singleEpsilon);
+	}
+	// Code.gradientDescent = function(fxn, args, x, dx, iter, diff, epsilon, lambda){
+	var planarEpsilon = null;
 
+	var minError = 1E-16;
+	var result = Code.gradientDescent(R3D._optimizeAllCameraExtrinsicDLTNonlinearKnown3DGD, args, x, planarEpsilon, maxIterations, minError);
+	var x = result["x"];
+	var cost = result["cost"];
+	for(var i=0; i<listM.length; ++i){
+		var M = listM[i];
+		R3D.transform3DFromComponentArray(M, x, i*6);
+	}
+	return {"matrixes":listM, "error":cost};
+}
+R3D._optimizeAllCameraExtrinsicDLTNonlinearKnown3DGD = function(args, x, isUpdate){
+	if(isUpdate){
+		// return;
+	}
+	var listP = args[0];
+	var listK = args[1];
+	var listKinv = args[2];
+	var listPoints2D = args[3];
+	var listPoints3D = args[4];
+	// local
+	var viewCount = listP.length;
+	var tempP3D = new V3D();
+
+	// TODO: DON'T RECALCULATE IF NOT NEEDED
+	for(var i=0; i<listP.length; ++i){
+		R3D.transform3DFromComponentArray(listP[i], x, i*6);
+	}
+
+	// total reprojection error
+	var totalError = 0;
+	for(var i=0; i<viewCount; ++i){
+		var P = listP[i];
+		var K = listK[i];
+		var points3D = listPoints3D[i];
+		var points2D = listPoints2D[i];
+		var pointCount = points3D.length;
+		for(var j=0; j<pointCount; ++j){
+			var point2D = points2D[j];
+			var point3D = points3D[j];
+			P.multV3DtoV3D(tempP3D,point3D);
+			K.multV3DtoV3D(tempP3D,tempP3D);
+			tempP3D.homo();
+				var x = (point2D.x-tempP3D.x);
+				var y = (point2D.y-tempP3D.y);
+				var distanceSquare = x*x + y*y;
+			totalError += distanceSquare;
+		}
+	}
+	if(isUpdate){
+		console.log(totalError);
+	}
+	return totalError;
+}
 
 
 
@@ -8685,11 +8759,15 @@ R3D._projectiveDLT_A = function(pointsFr,pointsTo){ // 2D or 3D points  --- find
 }
 
 
-R3D.euclieanTransform3D = function(pointsFr,pointsTo){ // find euclid matrix [3x4] : from->to
+R3D.euclieanTransform3D = function(pointsFr,pointsTo, noScale){ // find euclid matrix [3x4] : from->to
+	noScale = Code.valueOrDefault(noScale, false);
 	var centroidFr = R3D.centroid3D(pointsFr);
 	var centroidTo = R3D.centroid3D(pointsTo);
-	var scale = R3D.uniformScale3D(pointsFr,pointsTo, centroidFr,centroidTo);
-		//nonUniform scaling
+	var scale = 1.0;
+	if(!noScale){
+		scale = R3D.uniformScale3D(pointsFr,pointsTo, centroidFr,centroidTo);
+		// nonUniform scaling ?
+	}
 	var cov = R3D.covariance3D(pointsFr,pointsTo, centroidFr,centroidTo);
 	var svd = Matrix.SVD(cov);
 	var U = svd.U;
@@ -8702,8 +8780,7 @@ R3D.euclieanTransform3D = function(pointsFr,pointsTo){ // find euclid matrix [3x
 		R.set(1,2, -R.get(1,2));
 		R.set(2,2, -R.get(2,2));
 	}
-	console.log("cov:\n"+cov.toString());
-//scale = 1.0;
+	// console.log("cov:\n"+cov.toString());
 	var S = new Matrix(3,3).fromArray([scale,0,0, 0,scale,0, 0,0,scale]);
 	R = Matrix.mult(R,S);
 	var t = R.multV3DtoV3D(new V3D(), centroidFr).scale(-1).add(centroidTo); // -R*Fr + To

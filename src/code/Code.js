@@ -4583,6 +4583,278 @@ Code.averageAngleVector2D_2 = function(vectors, percents){ // vectors assumed no
 	return avg;
 }
 
+Code.linearInterpolateTransformsDecomposed3D = function(transformC, transformA, transformB, percent){
+	if(percent===undefined){
+		percent = transformB;
+		transformB = transformA;
+		transformA = transformC;
+		transformC = new Matrix(4,4);
+	}
+	// get A->B:
+	var relativeAB = Matrix.relativeWorld(transformA,transformB);
+	// console.log("relativeAB:")
+	// console.log(relativeAB+"");
+
+	var twist  = Code.vectorTwistFromMatrix3D(relativeAB);
+	// console.log(twist);
+
+	var twistDirection = twist["direction"];
+	var twistCurlAngle = twist["angle"];
+	var twistOffset = twist["offset"];
+
+	var sphereAngle = V3D.angle(V3D.DIRZ,twistDirection);
+	var sphereCrossNormal = V3D.cross(V3D.DIRZ,twistDirection);
+		sphereCrossNormal.norm();
+
+
+	var percentCurlAngle = twistCurlAngle * percent;
+	var percentSphereAngle = sphereAngle * percent;
+	var percentDirection = V3D.rotateAngle(new V3D(0,0,1), sphereCrossNormal, percentSphereAngle);
+	var percentOffset = twistOffset.copy().scale(percent);
+
+
+	// console.log(percentCurlAngle);
+	// console.log(percentDirection);
+	// console.log(percentOffset);
+
+	var percentTwist = {};
+	percentTwist["direction"] = percentDirection;
+	percentTwist["angle"] = percentCurlAngle;
+	percentTwist["offset"] = percentOffset;
+	// console.log(percentTwist);
+
+	var percentTransform = Code.Matrix3DFromVectorTwist(percentTwist);
+	// console.log(percentTransform+"");
+
+	// rotation on sphere
+	// rotation about axis
+	// translation
+
+	// throw "..."
+	return percentTransform;
+}
+
+Code.linearInterpolateTransforms3D = function(transformC, transformA, transformB, percent){
+	if(percent===undefined){
+		percent = transformB;
+		transformB = transformA;
+		transformA = transformC;
+		transformC = new Matrix(4,4);
+	}
+	console.log("Code.linearInterpolateTransforms3D");
+	var offcent = 1.0 - percent;
+	// convert into two 3-vectors:
+	var tA = transformA.transform3DLocation();
+	var qA = V4D.qFromMatrix(transformA);
+	var tB = transformB.transform3DLocation();
+	var qB = V4D.qFromMatrix(transformB);
+
+	// var tC = new V3D(offcent*tA.x + percent*tB.x, offcent*tA.y + percent*tB.y, offcent*tA.z + percent*tB.z);
+	var tC = new V3D(tA.x + percent*(tB.x-tA.x), tA.y + percent*(tB.y-tA.y), tA.z + percent*(tB.z-tA.z));
+	var qC = Code.averageQuaternions(quaternions, weights);
+	// return
+	V4D.qMatrix(qC, transformC);
+	transformC.set(0,3, tC.x);
+	transformC.set(1,3, tC.y);
+	transformC.set(2,3, tC.z);
+	// var location = transform.transform3DLocation();
+	// var quaternion = V4D.qFromMatrix(transform);
+	// Vr = Va + t .(Vb - Va )
+
+	throw "..."
+}
+
+
+
+// another form of interpolation -- not done
+
+// https://www.geometrictools.com/Documentation/InterpolationRigidMotions.pdf
+
+
+
+Code._geodesicPath = function(transformC, transformA, transformB, percent){
+	var inverseA = Matrix.inverse(transformA); // Code._geodesicInverseEuclidean(transformA);
+	var relativeAB = Matrix.mult(transformB,inverseA); // Matrix.relativeWorld = B * inv(A)
+	var S = Code._geodesicPathLog(relativeAB);
+	var s0 = S.get(2,1);
+	var s1 = S.get(0,2);
+	var s2 = S.get(1,0);
+
+console.log("REACH - A");
+	var theta = Math.sqrt(s0*s0 + s1*s1 + s2*s2);
+	var invV1 = Code._geodeseicPathInverseV1(theta, S);
+console.log("REACH - B");
+	var trans = new V3D(H.get(0,3), H.get(1,3), H.get(2,3));
+	var U = invV1.multV3DtoV3D(trans);
+console.log("REACH - C");
+	var interpR = Code._geodeseicPathExp(percent, theta, S);
+	var interpTtimesV = Code._geodeseicPathTV(percent, theta, S);
+console.log("REACH - D");
+	// transformC.identity();
+	// transformC.
+	var rot = Matrix.mult(interpR,relativeAB.rotation);
+	var tra = Matrix.mult(interpR,relativeAB.translation) + Matrix.mult(interpTtimesV, U);
+console.log("REACH - E");
+	var mat = combineRotAndTra(huh);
+
+	throw "out - Code._geodesicPath";
+}
+
+
+Code._geodesicInverseEuclidean = function(B,A){ // inverse matrix assuming it is a euclidean transformation 4x4 matrix
+	if(!A){
+		A = B;
+		B = new Matrix(4,4);
+	}
+	// R = R^T
+	B.set(0,0, A.get(0,0));
+	B.set(0,1, A.get(1,0));
+	B.set(0,2, A.get(2,0));
+	B.set(1,0, A.get(0,1));
+	B.set(1,1, A.get(1,1));
+	B.set(1,2, A.get(2,1));
+	B.set(2,0, A.get(0,2));
+	B.set(2,1, A.get(1,2));
+	B.set(2,2, A.get(2,2));
+	B.set(3,0, 0);
+	B.set(3,1, 0);
+	B.set(3,2, 0);
+	B.set(3,3, 1);
+	// t = - invR * A.t
+	var t = new V3D(A.get(0,3), A.get(1,3), A.get(2,3));
+	B.multV3DtoV3D(t,t);
+	t.scale(-1);
+	B.set(0,3, t.x);
+	B.set(1,3, t.y);
+	B.set(2,3, t.z);
+	return B;
+}
+Code._geodesicPathLog = function(S,R){ // rotation logging ?
+	if(!R){
+		R = S;
+		S = new Matrix(3,3);
+	}
+	var r00 = R.get(0,0);
+	var r11 = R.get(1,1);
+	var r22 = R.get(2,2);
+	var arg = 0.5*(r00+r11+r22 - 1); // [-1,1]
+	if(arg>-1){
+		if(arg<1){
+			var angle = Math.acos(arg);
+			var sinAngle = Math.sin(angle);
+			var c = 0.5*angle/sinAngle;
+			S.set(c*(R-Rtranspose));
+		}else{ // arg = 1, angle = 0; => R = I, S = 0
+			S.set(0,0, 0);
+			S.set(0,1, 0);
+			S.set(0,2, 0);
+			S.set(1,0, 0);
+			S.set(1,1, 0);
+			S.set(1,2, 0);
+			S.set(2,0, 0);
+			S.set(2,1, 0);
+			S.set(2,2, 0);
+		}
+	}else{ // arg = -1
+		var s = new V3D();
+		var r01 = R.get(0,1);
+		var r02 = R.get(0,2);
+		var r10 = R.get(1,0);
+		var r20 = R.get(2,0);
+		var r21 = R.get(2,1);
+		var r12 = R.get(1,2);
+		if(r00>=r11){
+			if(r00>=r22){ // r00 is maxium diagonal
+				s.x = r00 + 1;
+				s.y = 0.5*(r01 + r10);
+				s.z = 0.5*(r02 + r20);
+			}else{ // r22 is maxium diagonal
+				s.x = 0.5*(r20 + r02);
+				s.y = 0.5*(r21 + r12);
+				s.z = r22 + 1;
+			}
+		}else{
+			if(r11>=r22){ // r11 is maxium diagonal
+				s.x = 0.5*(r10 + r01);
+				s.y = r11 + 1;
+				s.z = 0.5*(r12 + r21);
+			}else{ // r22 is maxium diagonal
+				s.x = 0.5*(r20 + r02);
+				s.y = 0.5*(r21 + r12);
+				s.z = r22 + 1;
+			}
+		}
+		var len = s.length();
+		if(len>0){
+			var adjust = Math.PI*Math.sqrt(0.5)/len;
+			s.scale(adjust);
+		}else{ // this is already the case ?
+			s.x = 0;
+			s.y = 0;
+			s.z = 0;
+		}
+		S.set(0,0, -s.z);
+		S.set(0,1, 0);
+		S.set(0,2, s.y);
+		S.set(1,0, s.z);
+		S.set(1,1, 0);
+		S.set(1,2, s.x);
+		S.set(2,0, -s.y);
+		S.set(2,1, s.x);
+		S.set(2,2, 0);
+	}
+	return S;
+}
+Code._geodeseicPathInverseV1 = function(theta, S){
+	if(theta>0){
+		var thetaSquared = theta*theta;
+		var c = (1.0 - (theta*Math.sin(theta)))/(2*(1-Math.cos(theta)))/thetaSquared;
+		var V = new Matrix(3,3);
+			V.identity();
+			V.add(-0.5*S);
+			V.add(c*S*S);
+	}else{
+		var V = new Matrix(3,3);
+			V.identity();
+		return V;
+	}
+}
+Code._geodeseicPathExp = function(t, theta, S){
+	var angle = t*theta;
+	var thetaSquared = theta*theta;
+	var scaleA = Math.sin(angle)/theta;
+	var scaleB = (1-Math.cos(angle))/thetaSquared;
+	var result = I + scaleA*S + scaleB*S*S;
+}
+Code._geodeseicPathTV = function(t, theta, S){
+	if(theta>0){
+		var angle = t*theta;
+		var thetaSquared = theta*theta;
+		var thetaCubed = theta*thetaSquared;
+		var c0 = (1 - Math.cos(angle))/thetaSquared;
+		var c1 = (angle - Math.sin(angle))/thetaCubed;
+		var T = new Matrix(3,3);
+			T.identity();
+			T.scale(t);
+		T.add(c0*S);
+		T.add(c1*S*S);
+		return T;
+	}else{
+		var T = new Matrix(3,3);
+			T.identity();
+			T.scale(t);
+		return T;
+	}
+}
+
+
+
+
+
+
+
+
+
 Code.averageTransforms3D = function(transforms, percents){
 	// separate
 	var locations3D = [];
@@ -18872,8 +19144,286 @@ Code.referenceTransform3DFromPoints = function(o0,o1,o2, v0,v1,v2){ // quick way
 	return transformWorld;
 }
 
+Code.testPointMatches = function(){
+	console.log("Code.testPointMatches");
+
+	var pointCount = 10;
+	// var pointCount = 100;
+	var pointRange = 10.0;
+	var errorD = 0.0;
+	// var errorD = 0.01;
+	// var errorD = 0.1;
+	// var errorD = 1.0;
+	var points = [];
+	var offset = new V3D(1,-2,2);
+	for(var i=0; i<pointCount; ++i){
+		var point = new V3D();
+		point.x = (Math.random()-0.5)*pointRange;
+		point.y = (Math.random()-0.5)*pointRange;
+		point.z = (Math.random()-0.5)*pointRange;
+		point.add(offset);
+		points.push(point);
+	}
+	console.log(points);
+	// known transform:
+	var transformAB = new Matrix(4,4);
+		transformAB.identity();
+		transformAB = Matrix.transform3DRotateX(transformAB,Code.radians(10.0));
+		transformAB = Matrix.transform3DRotateY(transformAB,Code.radians(15.0));
+		transformAB = Matrix.transform3DRotateZ(transformAB,Code.radians(30.0));
+		transformAB = Matrix.transform3DTranslate(transformAB, 1,2,3);
+console.log(transformAB+"")
+	// samples
+	var pointsA = [];
+	var pointsB = [];
+	for(var i=0; i<pointCount; ++i){
+		var point = points[i];
+		var pointA = point.copy();
+
+		pointsA.push(pointA);
+		var pointB = transformAB.multV3DtoV3D(point);
+
+			pointA.x += (Math.random()-0.5)*errorD;
+			pointA.y += (Math.random()-0.5)*errorD;
+			pointA.z += (Math.random()-0.5)*errorD;
+
+			pointB.x += (Math.random()-0.5)*errorD;
+			pointB.y += (Math.random()-0.5)*errorD;
+			pointB.z += (Math.random()-0.5)*errorD;
+
+		pointsB.push(pointB);
+	}
+	// console.log(pointsA);
+	// console.log(pointsB);
+	var info = Code.transform3DFromPointMatches(pointsA, pointsB);
+	// console.log(info);
+
+	var matrixAB = info["transform"];
+	console.log("matrixAB:\n"+matrixAB);
+	var matrixBA = Matrix.inverse(matrixAB);
+	var mAB = info["nonlinear"];
+	console.log("mAB:\n"+mAB);
+
+	// test error:
+	var totalError = 0;
+	var tE = 0;
+	for(var i=0; i<pointCount; ++i){
+		var pointA = pointsA[i];
+		var pointB = pointsB[i];
+		var pB = matrixAB.multV3DtoV3D(pointA);
+		var d = V3D.distance(pointB,pB);
+			// console.log(d);
+		// var pA = matrixBA.multV3DtoV3D(pointB);
+		// var d = V3D.distance(pointA,pA);
+		// 	console.log(d);
+
+		totalError += d;
 
 
+		var pB = mAB.multV3DtoV3D(pointA);
+		var d = V3D.distance(pointB,pB);
+		tE += d;
+		
+	}
+	var averageError = totalError/pointCount;
+	console.log("averageError: "+averageError);
+	console.log("          aE: "+(tE/pointCount));
+
+
+
+	// calculate half of transform
+	var identity = new Matrix(4,4).identity();
+	// var matrixAB
+	// var halfAB = Code.linearInterpolateTransformsDecomposed3D(identity, matrixAB, 0.5);
+	// console.log(halfAB);
+
+
+	// NO
+	// var halfBA = Code.linearInterpolateTransformsDecomposed3D(matrixAB, identity, 0.5);
+	
+	// NO
+	// var halfBA = Matrix.inverse(halfAB);
+
+	// YES ?
+	// var halfBA = Matrix.relativeWorld(matrixAB, halfAB);
+
+
+	var halfAB = Code.linearInterpolateTransformsDecomposed3D(identity, matrixAB, 0.5);
+	var halfBA = Matrix.relativeWorld(matrixAB, halfAB);
+
+
+	// camera matrixes need something like: Matrix.relativeReference(originalCamera, ???)
+
+
+// ???
+
+	/*
+	// attempt B:
+	var transforms = [identity, matrixAB];
+	var percents = [0.5, 0.5];
+	console.log(transforms);
+	console.log(percents);
+	var halfAB = Code.averageTransforms3D(transforms, percents);
+	console.log(halfAB);
+	var halfBA = Matrix.relativeWorld(matrixAB, halfAB);
+	
+	*/
+
+
+	// console.log(halfBA);
+
+	// throw "here"
+
+/*
+	// calculate half of transform inverse
+	// see if points meet up in middle
+
+	var identity = new Matrix(4,4).identity();
+
+	var transforms = [];
+		transforms.push(identity, matrixAB);
+	var percents = [0.5, 0.5];
+	var halfMatrixAB = Code.averageTransforms3D(transforms, percents);
+	console.log("halfMatrixAB: \n"+halfMatrixAB);
+
+
+	var transforms = [];
+		transforms.push(identity, matrixBA);
+	var percents = [0.5, 0.5];
+	var halfMatrixBA = Code.averageTransforms3D(transforms, percents);
+	console.log("halfMatrixBA: \n"+halfMatrixBA);
+
+
+	// augment A & B
+	var matA = new Matrix(4,4).identity();
+	var matB = transformAB.copy();
+
+	// var relA = Matrix.relativeWorld( matA ,matB);
+	// var relB = Matrix.relativeWorld( matB ,matA);
+
+	var matC = new Matrix(4,4).identity();
+	Code.linearInterpolateTransforms3D(matC, matA,matB, 0.5);
+	console.log(matC);
+*/
+
+
+// linearly interpolate a 3D transform matrix
+/*
+https://stackoverflow.com/questions/3093455/3d-geometry-how-to-interpolate-a-matrix
+	https://docs.google.com/viewer?url=http://www.cs.wisc.edu/graphics/Courses/838-s2002/Papers/polar-decomp.pdf
+
+
+https://robotacademy.net.au/lesson/interpolating-pose-in-3d/
+
+https://j3d.org/matrix_faq/matrfaq_latest.html
+
+
+
+
+*/
+
+
+	var pointsMA = [];
+	var pointsMB = [];
+
+
+	for(var i=0; i<pointCount; ++i){
+		var pointA = pointsA[i];
+		var pointB = pointsB[i];
+
+		// var mpA = halfMatrixAB.multV3DtoV3D(pointA);
+		// var mpB = halfMatrixBA.multV3DtoV3D(pointB);
+
+		var mpA = halfAB.multV3DtoV3D(pointA);
+		var mpB = halfBA.multV3DtoV3D(pointB);
+		
+		
+
+		// var mpA = relA.multV3DtoV3D(pointA);
+		// var mpB = relB.multV3DtoV3D(pointB);
+
+		var d = V3D.distance(mpA,mpB);
+		console.log(d);
+	}
+
+
+
+	// var relativeAtoB = R3D.relativeTransformMatrixInvAAbsB(inverseA,absoluteB);
+
+
+
+throw "out"
+	
+}
+
+Code.transform3DFromPointMatches = function(pointsA, pointsB, doNonlinear){
+	doNonlinear = Code.valueOrDefault(doNonlinear, true);
+	// var doNonlinear = false;
+	var noScale = true;
+	// var noScale = false;
+	var transformAB = R3D.euclieanTransform3D(pointsA, pointsB, noScale);
+	// console.log(transformAB);
+	// nonlinear:
+	var matrixAB = null;
+	if(doNonlinear){
+		matrixAB = Code._nonlinearTransform3DEuclidean(transformAB, pointsA, pointsB)["transform"];
+	}
+
+	return {"transform":transformAB, "nonlinear":matrixAB};
+}
+
+
+Code._nonlinearTransform3DEuclidean = function(initialTransform, pointsA, pointsB){
+	// convert matrix to params
+	var x = R3D.transformMatrixToComponentArray(initialTransform);
+	// nonlinear 3D
+	console.log(x);
+	var transformAB = new Matrix(4,4);
+	var tempBA = new Matrix(4,4);
+	var maxIterations = 25;
+	var args = [pointsA,pointsB, transformAB,tempBA];
+	// TODO: Error should be based on points volume
+	var result = Code.gradientDescent(Code._nonlinearTransform3DEuclideanGD, args, x, null, maxIterations, 1E-10);
+	var y = result["x"];
+		// transformAB.identity();
+	R3D.transform3DFromComponentArray(transformAB, y);
+	console.log(transformAB+"");
+	return {"transform":transformAB};
+
+
+}
+Code._nonlinearTransform3DEuclideanGD = function(args, x, isUpdate){
+	// console.log("Code._nonlinearTransform3DEuclideanGD");
+	// if(isUpdate){
+	// 	return;
+	// }
+	var pointsA = args[0];
+	var pointsB = args[1];
+	var matrixAB = args[2];
+	var matrixBA = args[3];
+	// console.log(x.length);
+	R3D.transform3DFromComponentArray(matrixAB, x);
+	Matrix.inverse(matrixBA, matrixAB);
+	var tmp = new V3D();
+	// do FWD-BAK
+	var totalError = 0;
+	for(var i=0; i<pointsA.length; ++i){
+		var pointA = pointsA[i];
+		var pointB = pointsB[i];
+		var pB = matrixAB.multV3DtoV3D(tmp, pointA);
+		var dB2 = V3D.distanceSquare(pointB,pB);
+		// console.log("D: "+Math.sqrt(dB2));
+		var pA = matrixBA.multV3DtoV3D(tmp, pointB);
+		var dA2 = V3D.distanceSquare(pointA,pA);
+		// dA2 = 0;
+		totalError += dB2 + dA2;
+	}
+	console.log("totalError: "+totalError);
+	if(isUpdate){
+		console.log("update ---------- : "+totalError);
+	}
+	return totalError;
+}
 
 Code.rotationMatrixToEulerRodriguez = function(R){
 	var p = new V3D(R.get(2,1)-R.get(1,2), R.get(0,2)-R.get(2,0), R.get(1,0)-R.get(0,1) ); // cross

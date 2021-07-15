@@ -4507,7 +4507,7 @@ App3DR.App.Model3D.prototype.onMouseWheelFxn3D = function(e){
 
 Code.eventPreventDefault(e);
 
-
+// console.log("onMouseWheelFxn3D");
 
 if(this._keyboard.isKeyDown(Keyboard.KEY_LET_O)){ // left/right
 	if(!this._XXX){
@@ -4518,6 +4518,8 @@ if(this._keyboard.isKeyDown(Keyboard.KEY_LET_O)){ // left/right
 
 	var scroll = e["scroll"];
 	var orientation = this._camera.orientation();
+
+// console.log(orientation);
 
 	var x = orientation["x"];
 	var y = orientation["y"];
@@ -4538,6 +4540,7 @@ if(this._keyboard.isKeyDown(Keyboard.KEY_LET_O)){ // left/right
 		scaleAngle *= 0.01;
 	}
 
+// console.log(this._distanceRange);
 
 // ROTATIONS
 	if(this._keyboard.isKeyDown(Keyboard.KEY_LET_Z)){ // left/right
@@ -4590,15 +4593,15 @@ App3DR.App.Model3D.prototype.onKeyboardDown = function(e){
 	// console.log(key);
 	if(key==Keyboard.KEY_LET_P){
 		this._modelRenderCameraViews = !Code.valueOrDefault(this._modelRenderCameraViews, true);
-		console.log("TOGGLE CAMERA VIEWS");
+		console.log("TOGGLE CAMERA VIEWS: "+this._modelRenderCameraViews);
 	}
 	if(key==Keyboard.KEY_LET_O){
 		this._modelRenderPoints = !Code.valueOrDefault(this._modelRenderPoints, true);
-		console.log("TOGGLE POINTS");
+		console.log("TOGGLE POINTS: "+this._modelRenderPoints);
 	}
 	if(key==Keyboard.KEY_LET_I){
 		this._modelRenderNormals = !Code.valueOrDefault(this._modelRenderNormals, true);
-		console.log("TOGGLE NORMALS");
+		console.log("TOGGLE NORMALS: "+this._modelRenderNormals);
 	}
 }
 App3DR.App.Model3D.prototype._eff = function(){
@@ -7737,6 +7740,7 @@ console.log("checkPerformNextTask");
 	var i, j, k, len;
 	console.log("next task?");
 
+// Code.testPointMatches();
 // Code.testLM();
 
 	// throw "........."
@@ -10896,7 +10900,7 @@ for(var i=0; i<allViews.length; ++i){
 				nextViewBA["updated"] = Code.getTimeMilliseconds();
 var str = world.toYAMLString();
 console.log(str);
-// throw "before save optimizing full track";
+throw "before save optimizing full track full ..............";
 				
 				// update views:
 				var worldObject = world.toObject();

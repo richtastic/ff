@@ -86,11 +86,29 @@ V4D.qMatrix = function (q,m){
 	var zz  = q.z*q.z;
 	var zt2 = q.z*q.t*2.0;
 	var tt  = q.t*q.t;
-	var array = [ (tt+xx-yy-zz), (xy2-zt2), (xz2+yt2),  (xy2+zt2), (tt-xx+yy-zz), (yz2-xt2),  (xz2-yt2), (yz2+xt2), (tt-xx-yy+zz)];
-	m.fromArray(array);
+	if(Code.isa(m,Matrix3D)){
+		var array = [ (tt+xx-yy-zz), (xy2-zt2), (xz2+yt2),  (xy2+zt2), (tt-xx+yy-zz), (yz2-xt2),  (xz2-yt2), (yz2+xt2), (tt-xx-yy+zz)];
+		m.fromArray(array);
+		return m;
+	}
+	// ELSE: MATRIX
+	// allows for Matrix(4,4), Matrix3D both:
 	// m.set( (tt+xx-yy-zz), (xy2-zt2), (xz2+yt2), 0,
 	// 	   (xy2+zt2), (tt-xx+yy-zz), (yz2-xt2), 0,
 	// 	   (xz2-yt2), (yz2+xt2), (tt-xx-yy+zz), 0 );
+
+	m.set(0,0, (tt+xx-yy-zz));
+	m.set(0,1, (xy2-zt2));
+	m.set(0,2, (xz2+yt2));
+
+	m.set(1,0, (xy2+zt2));
+	m.set(1,1, (tt-xx+yy-zz));
+	m.set(1,2, (yz2-xt2));
+
+	m.set(2,0, (xz2-yt2));
+	m.set(2,1, (yz2+xt2));
+	m.set(2,2, (tt-xx-yy+zz));
+
 	return m;
 }
 // V4D.prototype.qMatrix = function(m){
