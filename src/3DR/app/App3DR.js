@@ -7740,6 +7740,8 @@ console.log("checkPerformNextTask");
 	var i, j, k, len;
 	console.log("next task?");
 
+// Matrix.testQR();
+// throw "..."
 // Code.testPointMatches();
 // Code.testLM();
 

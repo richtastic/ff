@@ -394,6 +394,51 @@ MISSING:
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 - DLT CAMERA INIT FROM P3D-P2D KNOWNS
+=> QR DECOMPOSITION?
+
+
+- nonlinear way to optimize surface distances
+
+
+
+
+
+
+
+optimizePairTransformsFromMappingP3D
+	optimizeCameraExtrinsicDLTKnown3D
+
+
+- detect 'midpoint' errors via displacement direction error ?
+
+.................................>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> the multi-camera reprojection error is not a useful metric when looking at the visuals
+
+
+- reprojection error going up from 2.0 to 2.2...2.4 still looks better with the views aligned by surface
+
+
+
+- are there odd situations for midpoints / surface nudging that should be avoided?
+
+
+- does LM help? - ?
+
+- OUTLIERS
+
+- OTHER METRICS?
+	- currently:
+		- r-error
+		- pairwise surface-distance
+
+- better ways to push surfaces toward eachother --- & what biases might there be?
+	- midpoint is proving better than the euclidean transform approx
+
+
+
+TOGGLE THESE ?:
+	optimize all cameras & keep points static ?
+	optimize points & keep cameras static?
+
 
 
 

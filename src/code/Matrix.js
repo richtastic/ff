@@ -1294,7 +1294,7 @@ Matrix.QRCore = function(){ //
 	// OR householder (more precise - and time)
 
 }
-Matrix.QR = function(A){ // rows >= cols
+Matrix.QR_X = function(A){ // rows >= cols
 	var rowsA = A.rows(), colsA = A.cols();
 	var i, j, k, t;
 	var maxT = Math.min(rowsA-1,colsA);
@@ -1321,6 +1321,132 @@ Matrix.eig = function(A){
 	// nulspace
 		// eigenvectors = nul(A - l*I)  && multiplicity=orthogonality
 }
+
+
+Matrix.QR = function(A){ // rows >= cols
+	// console.log("A:\n"+A);
+	// var H = A._rows;
+	// var maxiter = 100*Math.max(A.rows(),A.cols());
+	// var result = numeric.QRFrancis(H,maxiter); // Q & B ?
+	// console.log(result);
+if(rows!=cols){
+	throw "only tested on square";
+}
+	// col vectors of A
+	var cols = A.cols();
+	var rows = A.rows();
+	var vA = [];
+	for(var i=0; i<cols; ++i){
+		var vi = [];
+		for(var j=0; j<rows; ++j){
+			var val = A.get(j,i);
+			vi.push(val);
+		}
+		vA.push(vi);
+	}
+	// console.log("vA");
+	// console.log(vA);
+	// generate e & u
+	var vE = [];
+	var temp = Code.newArrayZeros(cols);
+	for(var i=0; i<cols; ++i){
+		var a = vA[i];
+		var u = Code.copyArray(a);
+		for(var j=i-1; j>=0; --j){
+			var e = vE[j];
+			Code.copyArray(temp,e);
+			var dot = Code.arrayVectorDot(a,e);
+			Code.arrayVectorScale(temp, temp, -dot);
+			Code.arrayVectorAdd(u, u, temp);
+		}
+		var e = Code.arrayVectorNorm(u);
+		vE[i] = e;
+	}
+	// console.log("vE");
+	// console.log(vE);
+	//
+	var Q = new Matrix(rows,cols);
+	var R = new Matrix(cols,cols);
+	// fill in Q & R
+	for(var i=0; i<cols; ++i){
+		Q.setColFromArray(i, vE[i]);
+		for(var j=0; j<=i; ++j){
+			var dot = Code.arrayVectorDot(vA[i],vE[j]);
+			R.set(j,i, dot);
+		}
+	}
+
+	return {"Q":Q, "R":R};
+}
+Matrix.testQR = function(A){
+	var array = [0.2024762331246806,0.06186589737573585,0.19244678642487287,0.10872647124413526,0.02654663754415456,0.15445787514938691,0.0001633288623069729,0.00005235182094319139,0.000146795657198133];
+	var H = new Matrix(3,3).fromArray(array);
+	console.log("A:\n"+H);
+
+	var QR = Matrix.QR(H);
+	console.log(QR);
+	var Q = QR["Q"];
+	var R = QR["R"];
+	console.log(Q);
+	console.log(R);
+
+
+	console.log("Q:\n"+Q);
+	console.log("R:\n"+R);
+
+	var B = Matrix.mult(Q,R);
+	console.log("B:\n"+B);
+
+	var Qinv = Matrix.transpose(Q);
+	var QQ = Matrix.mult(Qinv,Q);
+	console.log("QQ:\n"+QQ);
+
+
+	console.log("NOW CAMERA ....... ...");
+
+
+	var H = new Matrix(3,3).fromArray(array);
+	var Hinv = Matrix.inverse(H);
+	var QR = Matrix.QR(Hinv);
+	var Rinv = QR["Q"]; // orthonormal
+	var Kinv = QR["R"]; // upper-right triangular
+
+	var K = Matrix.inverse(Kinv);
+	var R = Matrix.inverse(Rinv);
+console.log(K.get(2,2));
+	K.scale(K.get(2,2)); // normalize
+	console.log("K:\n"+K);
+	console.log("R:\n"+R);
+	Kinv = Matrix.inverse(K);
+	
+	var Rpi = new Matrix(3,3).fromArray([-1,0,0, 0,-1,0, 0,0,1]);
+	// get 'negative' elements
+	K = Matrix.mult(K,Rpi);
+	console.log("K:\n"+K);
+	R = Matrix.mult(Rpi, R);
+	console.log("R:\n"+R);
+
+
+	console.log("Kinv:\n"+Kinv);
+
+	var t = 0;
+	console.log("t:\n"+t);
+
+
+	console.log("NOW K ...");
+
+
+
+	throw "?";
+
+}
+
+
+
+
+
+
+
 Matrix.nonShittySVD = function(A){
 	var rows = A.rows(), cols = A.cols();
 /*

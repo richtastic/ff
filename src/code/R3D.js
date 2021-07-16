@@ -721,7 +721,304 @@ throw "negative";
 	}
 	return totalError;
 }
+R3D.optimizeCameraExtrinsicDLTKnown3D = function(P, K, Kinv, points2D, points3D, maxIterations){
+	var pointCount = points2D.length;
+	// var norms2D = [];
+	// var temp3D = new V3D();
+	// for(var i=0; i<pointCount; ++i){
+	// 	var point2D = points2D[i];
+	// 	temp3D.set(point2D.x,point2D.y, 1.0)
+	// 	Kinv.multV3DtoV3D(temp3D, temp3D);
+	// 	// console.log(point2D+" > "+temp3D+"");
+	// 	temp3D.homo();
+	// 	var norm2D = new V2D(temp3D.x,temp3D.y);
+	// 	norms2D.push(norm2D);
+	// }
+	var cols = 12;
+	var rows = 2*pointCount;
+	var A = new Matrix(rows,cols); // a b c | d e f | g h i | tx ty tz
 
+// console.log(points3D);
+// console.log(points2D);
+// console.log(norms2D);
+
+// throw "..."
+
+	for(var i=0; i<pointCount; ++i){
+		// var norm2D = norms2D[i];
+		var point2D = points2D[i];
+		var point3D = points3D[i];
+		var x = point2D.x;
+		var y = point2D.y;
+		var X = point3D.x;
+		var Y = point3D.y;
+		var Z = point3D.z;
+		var i0 = i*2 + 0;
+		var i1 = i*2 + 1;
+		// A.set(i0,0, -X); // a
+		// A.set(i0,1, -Y); // b
+		// A.set(i0,2, -Z); // c
+		// A.set(i0,6, X*x); // g
+		// A.set(i0,7, Y*x); // h
+		// A.set(i0,8, Z*x); // i
+		// A.set(i0,9, -1); // tx
+		// A.set(i0,11, 1*x); // tz
+		// //
+		// A.set(i1,3, -X); // d
+		// A.set(i1,4, -Y); // e
+		// A.set(i1,5, -Z); // f
+		// A.set(i1,6, X*y); // g
+		// A.set(i1,7, Y*y); // h
+		// A.set(i1,8, Z*y); // i
+		// A.set(i1,10, -1); // ty
+		// A.set(i1,11, 1*y); // tz
+		// A.set(i0,0, X); // a
+		// A.set(i0,1, Y); // b
+		// A.set(i0,2, Z); // c
+		// A.set(i0,3, 0); // d
+		// A.set(i0,4, 0); // e
+		// A.set(i0,5, 0); // f
+		// A.set(i0,6, -X*x); // g
+		// A.set(i0,7, -Y*x); // h
+		// A.set(i0,8, -Z*x); // i
+		// A.set(i0,9, 1); // tx
+		// A.set(i0,10, 0); // ty
+		// A.set(i0,11, -1*x); // tz
+		// //
+		// A.set(i1,0, 0); // a
+		// A.set(i1,1, 0); // b
+		// A.set(i1,2, 0); // c
+		// A.set(i1,3, X); // d
+		// A.set(i1,4, Y); // e
+		// A.set(i1,5, Z); // f
+		// A.set(i1,6, -X*y); // g
+		// A.set(i1,7, -Y*y); // h
+		// A.set(i1,8, -Z*y); // i
+		// A.set(i0,9, 0); // tx
+		// A.set(i1,10, 1); // ty
+		// A.set(i1,11, -1*y); // tz
+
+		A.set(i0,0, X); // a
+		A.set(i0,1, Y); // b
+		A.set(i0,2, Z); // c
+		A.set(i0,3, 1); // tx
+		A.set(i0,4, 0); // d
+		A.set(i0,5, 0); // e
+		A.set(i0,6, 0); // f
+		A.set(i0,7, 0); // ty
+		A.set(i0,8, -X*x); // g
+		A.set(i0,9, -Y*x); // h
+		A.set(i0,10, -Z*x); // i
+		A.set(i0,11, -1*x); // tz
+		//
+		A.set(i1,0, 0); // a
+		A.set(i1,1, 0); // b
+		A.set(i1,2, 0); // c
+		A.set(i1,3, 0); // tx
+		A.set(i1,4, X); // d
+		A.set(i1,5, Y); // e
+		A.set(i1,6, Z); // f
+		A.set(i1,7, 1); // ty
+		A.set(i1,8, -X*y); // g
+		A.set(i1,9, -Y*y); // h
+		A.set(i1,10, -Z*y); // i
+		A.set(i1,11, -1*y); // tz
+	}
+	// console.log("A: "+A);
+	var svd = Matrix.SVD(A);
+	var coeff = svd.V.colToArray(cols-1);
+	// console.log(coeff);
+	// var a = coeff[0];
+	// var b = coeff[1];
+	// var c = coeff[2];
+	// var d = coeff[3];
+	// var e = coeff[4];
+	// var f = coeff[5];
+	// var g = coeff[6];
+	// var h = coeff[7];
+	// var i = coeff[8];
+	// var tx = coeff[9];
+	// var ty = coeff[10];
+	// var tz = coeff[11];
+
+	// var a = coeff[0];
+	// var b = coeff[1];
+	// var c = coeff[2];
+	// var tx = coeff[3];
+	// var d = coeff[4];
+	// var e = coeff[5];
+	// var f = coeff[6];
+	// var ty = coeff[7];
+	// var g = coeff[8];
+	// var h = coeff[9];
+	// var i = coeff[10];
+	// var tz = coeff[11];
+
+	var M = new Matrix(3,4).identity().fromArray(coeff);
+console.log("  M: \n"+P);
+	var H = M.getSubMatrix(0,0, 3,3);
+console.log("  H: \n"+H);
+console.log(H.toArray()+"");
+	// var QR = Matrix.QR(H);
+	// console.log(QR);
+	// var Rinv = QR["Q"]; // orthonormal
+	// var Kinv = QR["R"]; // upper-right triangular
+	
+
+	
+
+	throw "QR factorization M = K*P";
+
+
+
+	// R = K^-1 * M_3x3
+	// t = R^-1 * K^-1 * -1 * m_3x1
+
+// ???
+
+
+	// https://www.math.ucla.edu/~yanovsky/Teaching/Math151B/handouts/GramSchmidt.pdf
+
+
+
+// console.log("  M: \n"+M);
+	var P = Matrix.mult(Kinv,M);
+// console.log("  Kinv: \n"+Kinv);
+// console.log("  P: \n"+P);
+	P.appendRowFromArray([0,0,0,1]);
+// console.log("  P: \n"+P);
+	// var b = bX;
+	// var inv = Matrix.pseudoInverse(A);
+	// var x = Matrix.mult(inv,b);
+
+var euclideanScaleP = R3D.euclieanScaleFromMatrix(P);
+euclideanScaleP.scale(-1); /// WHAT?!?!
+// console.log("   => euclideanScaleP: "+euclideanScaleP);
+P = Matrix.transform3DScalePoints(P,1.0/euclideanScaleP.x,1.0/euclideanScaleP.y,1.0/euclideanScaleP.z);
+// console.log("  P: \n"+P);
+// throw "heyyyyyy"
+
+// var calculatedA = new Matrix(4,4).identity().fromArray([a,b,c, tx, d,e,f, ty, g,h,i, tz, 0,0,0,1]);
+// console.log("   => calculatedA: \n"+calculatedA);
+// var euclideanScaleA = R3D.euclieanScaleFromMatrix(calculatedA);
+// // euclideanScaleA.scale(-1); /// WHAT?!?!
+// console.log("   => euclideanScaleA: "+euclideanScaleA);
+// calculatedA = Matrix.transform3DScalePoints(calculatedA,1.0/euclideanScaleA.x,1.0/euclideanScaleA.y,1.0/euclideanScaleA.z);
+
+// console.log("   => calculatedA: \n"+calculatedA);
+
+
+var a  = P.get(0,0);
+var b  = P.get(0,1);
+var c  = P.get(0,2);
+var tx = P.get(0,3);
+var d  = P.get(1,0);
+var e  = P.get(1,1);
+var f  = P.get(1,2);
+var ty = P.get(1,3);
+var g  = P.get(2,0);
+var h  = P.get(2,1);
+var i  = P.get(2,2);
+var tz = P.get(2,3);
+
+	var Q = new Matrix(3,3);
+	Q.fromArray([a,b,c,d,e,f,g,h,i]);
+	// console.log("Q:\n"+Q);
+	var R = R3D.rotationFromApproximate(Q);
+	// console.log("R:\n"+R);
+	R.appendColFromArray([tx,ty,tz]);
+	R.appendRowFromArray([0,0,0,1]);
+	// console.log("P:\n"+R);
+	// throw "...."
+
+
+// // actual geometry may need to be updated, this is iffy
+// var r00 = calculatedA.get(0,0);
+// var r01 = calculatedA.get(0,1);
+// var r02 = calculatedA.get(0,2);
+// var tx  = calculatedA.get(0,3);
+// var r10 = calculatedA.get(1,0);
+// var r11 = calculatedA.get(1,1);
+// var r12 = calculatedA.get(1,2);
+// var ty  = calculatedA.get(1,3);
+// var r20 = calculatedA.get(2,0);
+// var r21 = calculatedA.get(2,1);
+// var r22 = calculatedA.get(2,2);
+// var tz  = calculatedA.get(2,3);
+// cam.fromArray([r00,r01,r02,tx, r10,r11,r12,ty, r20,r21,r22,tz, 0.0,0.0,0.0,1.0]);
+
+
+
+
+// throw ".............................."
+
+
+	// // reconstruct from parameters
+	// var Q = new Matrix(3,3);
+	// Q.fromArray([a,b,c,d,e,f,g,h,i]);
+	// // console.log("Q:\n"+Q);
+	// var R = R3D.rotationFromApproximate(Q);
+	// // console.log("R:\n"+R);
+	// R.appendColFromArray([tx,ty,tz]);
+	// R.appendRowFromArray([0,0,0,1]);
+	// console.log("P:\n"+R);
+	// throw "...."
+
+
+	return {"matrix":R};
+
+	/*
+	maxIterations = Code.valueOrDefault(maxIterations, 100);
+	var M = P.copy();
+	var x = R3D.transformMatrixToComponentArray(M);
+	var args = [M, K,Kinv, points2D, points3D];
+	// var planarEpsilon = [positionAccuracy,positionAccuracy,positionAccuracy,rotationAccuracy,rotationAccuracy,rotationAccuracy];
+	var planarEpsilon = null;
+	var minError = 1E-16;
+	var result = Code.gradientDescent(R3D._optimizeCameraExtrinsicDLTKnown3DGD, args, x, planarEpsilon, maxIterations, minError);
+	var x = result["x"];
+	var cost = result["cost"];
+	R3D.transform3DFromComponentArray(M, x);
+	// throw "optimizeCameraExtrinsicDLTKnown3D";
+	return {"matrix":M, "error":cost};
+	*/
+}
+
+R3D._optimizeCameraExtrinsicDLTKnown3DGD = function(args, x, isUpdate){
+	// if(isUpdate){
+	// 	// return;
+	// }
+	var P = args[0];
+	var K = args[1];
+	var Kinv = args[2];
+	var points2D = args[3];
+	var points3D = args[4];
+	// local
+	var pointCount = points3D.length;
+	var tempP3D = new V3D();
+
+	// TODO: DON'T RECALCULATE IF NOT NEEDED
+	R3D.transform3DFromComponentArray(P, x);
+// console.log(P+"");
+	// total reprojection error
+	var totalError = 0;
+	for(var j=0; j<pointCount; ++j){
+		var point2D = points2D[j];
+		var point3D = points3D[j];
+		P.multV3DtoV3D(tempP3D,point3D);
+		K.multV3DtoV3D(tempP3D,tempP3D);
+		tempP3D.homo();
+			var x = (point2D.x-tempP3D.x);
+			var y = (point2D.y-tempP3D.y);
+			var distanceSquare = x*x + y*y;
+		totalError += distanceSquare;
+	}
+	if(isUpdate){
+		console.log(totalError);
+	}
+	// throw "..."
+	return totalError;
+}
 
 R3D.optimizeAllCameraExtrinsicDLTNonlinearKnown3D = function(listP, listK, listKinv, listPoints2D, listPoints3D, maxIterations){ // P3D are assumed known, not re-calculated
 	console.log("R3D.optimizeAllCameraExtrinsicDLTNonlinear: "+listP.length+" views  & "+listPoints2D.length+" points  & "+maxIterations+" iterations");
@@ -1909,8 +2206,8 @@ R3D.fundamentalMatrix8 = function(pointsA,pointsB){
 		// A.setRowFromArray(i,[a.x*b.x, a.x*b.y, a.x*bz, a.y*b.x, a.y*b.y, a.y*bz, az*b.x, az*b.y, az*bz]);
 	}
 	svd = Matrix.SVD(A);
-	U = svd.U;
-	S = svd.S;
+	// U = svd.U;
+	// S = svd.S;
 	V = svd.V;
 	F.fromArray( V.colToArray(8) );
 	F = R3D.forceRank2F(F);

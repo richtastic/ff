@@ -1644,6 +1644,8 @@ Wiesn-Herz - heart cookie
 
 das handy - cell phone
 
+akku - battery
+
 die brille - glasses (eyes)
 
 der laptop - laptop

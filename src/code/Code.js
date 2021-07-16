@@ -6934,6 +6934,13 @@ Code.arrayVectorAdd = function(c,a,b){ // c = a + b
 	}
 	return c;
 }
+Code.arrayVectorDot = function(a,b){ // dot
+	var d = 0;
+	for(var i=a.length; i--; ){
+		d += a[i] * b[i];
+	}
+	return d;
+}
 Code.arrayVectorMul = function(c,a,b){
 	if(b===undefined){
 		b = a;
@@ -6962,6 +6969,13 @@ Code.arrayVectorLength = function(a){
 		s += a[i]*a[i];
 	}
 	return Math.sqrt(s);
+}
+Code.arrayVectorNorm = function(a){
+	var len = Code.arrayVectorLength(a);
+	if(len>0){
+		Code.arrayVectorScale(a,a, 1.0/len);
+	}
+	return a;
 }
 Code.arrayVectorScale = function(c, a, s){
 	if(s===undefined){
