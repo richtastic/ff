@@ -865,7 +865,7 @@ console.log(H.toArray()+"");
 	// var Kinv = QR["R"]; // upper-right triangular
 	
 
-	
+
 
 	throw "QR factorization M = K*P";
 
@@ -1093,6 +1093,91 @@ R3D._optimizeAllCameraExtrinsicDLTNonlinearKnown3DGD = function(args, x, isUpdat
 	if(isUpdate){
 		console.log(totalError);
 	}
+	return totalError;
+}
+
+
+R3D.optimizeAllCameraExtrinsicSurfaceDistances3D = function(listP, listK, listKinv, listGroupPoints2D, maxIterations){ // P3D are assumed known, not re-calculated
+	console.log("R3D.optimizeAllCameraExtrinsicSurfaceDistances3D: "+listP.length+" views  & "+listGroupPoints2D.length+" points  & "+maxIterations+" iterations");
+	// make a set of matrixes for iterating on & passing back
+	var listM = [];
+	for(var i=0; i<listP.length; ++i){
+		var P = listP[i];
+		listM[i] = P.copy();
+	}
+	var args = [listM, listK, listKinv, listGroupPoints2D];
+	var x = [];
+	var planarEpsilon = [];
+	// var positionAccuracy = 
+	// var singleEpsilon = [positionAccuracy,positionAccuracy,positionAccuracy,rotationAccuracy,rotationAccuracy,rotationAccuracy];
+	for(var i=0; i<listP.length; ++i){
+		var M = listM[i];
+		var y = R3D.transformMatrixToComponentArray(M);
+		Code.arrayPushArray(x,y);
+		// Code.arrayPushArray(planarEpsilon,singleEpsilon);
+	}
+	var planarEpsilon = null;
+	var minError = 1E-16;
+	var result = Code.gradientDescent(R3D._optimizeAllCameraExtrinsicSurfaceDistances3DGD, args, x, planarEpsilon, maxIterations, minError);
+	var x = result["x"];
+	var cost = result["cost"];
+	for(var i=0; i<listM.length; ++i){
+		var M = listM[i];
+		R3D.transform3DFromComponentArray(M, x, i*6);
+	}
+	return {"matrixes":listM, "error":cost};
+}
+R3D._optimizeAllCameraExtrinsicSurfaceDistances3DGD = function(args, x, isUpdate){
+	// if(isUpdate){
+	// 	// return;
+	// }
+	var listP = args[0];
+	var listK = args[1];
+	var listKinv = args[2];
+	var listGroupPoints2D = args[3];
+	// TODO: DON'T RECALCULATE IF NOT NEEDED
+	for(var i=0; i<listP.length; ++i){
+		R3D.transform3DFromComponentArray(listP[i], x, i*6);
+	}
+	// local
+	var viewCount = listP.length;
+	var groupCount = listGroupPoints2D.length;
+	var tempP3D1 = new V3D();
+	var tempP3D2 = new V3D();
+	// accumulate error
+	var totalError = 0;
+	for(var i=0; i<groupCount; ++i){
+		var group = listGroupPoints2D[i];
+		var viewIndexA = group[0];
+		var viewIndexB = group[1];
+		var viewIndexC = group[2];
+		var pointAB2DA = group[3];
+		var pointAB2DB = group[4];
+		var pointBC2DB = group[5];
+		var pointBC2DC = group[6];
+		// 
+		var cameraA = listP[viewIndexA];
+		var cameraB = listP[viewIndexB];
+		var cameraC = listP[viewIndexC];
+		// 
+		var KinvA = listKinv[viewIndexA];
+		var KinvB = listKinv[viewIndexB];
+		var KinvC = listKinv[viewIndexC];
+		// var point3DA = R3D.triangulatePointDLTList(points2D, extrinsics, invKs, tempP3D2, reuseA);
+		var point3DA = R3D.triangulatePointDLT(pointAB2DA,pointAB2DB, cameraA,cameraB, KinvA, KinvB, tempP3D1);
+		var point3DC = R3D.triangulatePointDLT(pointBC2DB,pointBC2DC, cameraB,cameraC, KinvB, KinvC, tempP3D2);
+		if(!point3DA || !point3DC){
+			continue;
+		}
+		// distance error:
+		// var error = V3D.distanceSquare(point3DA,point3DC);
+		var error = V3D.distance(point3DA,point3DC);
+		totalError += error;
+	}
+	if(isUpdate){
+		console.log(totalError);
+	}
+	// throw "optimizeAllCameraExtrinsicSurfaceDistances3DGD";
 	return totalError;
 }
 

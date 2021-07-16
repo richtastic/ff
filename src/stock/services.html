@@ -55,7 +55,7 @@ function classesLoadedFxn(){
 	"CAKE":{"b":45.00, "s":64.00},
 	"CAT":{"b":209.00, "s":240.00},
 	"CBRL":{"b":140.00, "s":170.00},
-	"CCL":{"b":23.00, "s":32.00},
+	"CCL":{"b":21.00, "s":32.00},
 	"CHEF":{"b":28.50, "s":36.00},
 	"CHPT":{"b":22.00, "s":41.00},
 	"CHWY":{"b":67.00, "s":105.00},
@@ -142,8 +142,8 @@ function classesLoadedFxn(){
 	"PLTR":{"b":20.00, "s":27.00},
 	"PLYA":{"b":6.50, "s":8.20},
 	"PSFE":{"b":0.00, "s":15.00},
-	"QSR":{"b":63.00, "s":71.00},
-	"RBLX":{"b":81.00, "s":99.00},
+	"QSR":{"b":60.00, "s":71.00},
+	"RBLX":{"b":75.00, "s":99.00},
 	"RCII":{"b":51.00, "s":64.00},
 	"RCL":{"b":77.00, "s":96.00},
 	"RGI":{"b":181.00, "s":191.00},
@@ -179,7 +179,7 @@ function classesLoadedFxn(){
 	"U":{"b":93.00, "s":145.00},
 	"UAA":{"b":19.50, "s":25.00},
 	"UAL":{"b":48.50, "s":62.00},
-	"UPST":{"b":116.00, "s":170.0},
+	"UPST":{"b":114.00, "s":170.0},
 	"USFD":{"b":34.50, "s":41.50},
 	"VBK":{"b":270.00, "s":299.00},
 	"VCR":{"b":292.00, "s":315.00},
@@ -306,7 +306,7 @@ var totalRequestCountTotal = 10;
 
 
 	var getReleventDataFxn = function(object){
-		// console.log(object);
+		console.log(object);
 		var list = object["results"];
 		if(!list){
 			// throw "no results";
@@ -469,9 +469,9 @@ setTimeout(function() {
 		// var dateStart = Code.getTimeStamp(2021, 3, 1, 0, 0, 0, 0);
 		// var dateStart = Code.getTimeStamp(2021, 4, 1, 0, 0, 0, 0);
 		// var dateStart = Code.getTimeStamp(2021, 5, 1, 0, 0, 0, 0);
-		var dateStart = Code.getTimeStamp(2021, 7, 1, 0, 0, 0, 0);
+		var dateStart = Code.getTimeStamp(2021, 7, 10, 0, 0, 0, 0);
 		// var dateEnd = Code.getTimeStamp(2021, 7, 3, 0, 0, 0, 0);
-		var dateEnd = Code.getTimeStamp(2021, 7, 14, 0, 0, 0, 0);
+		var dateEnd = Code.getTimeStamp(2021, 7, 15, 0, 0, 0, 0);
 		var dateList = dateListInRange(dateStart,dateEnd);
 		continueAggregationList(dateList, totalRequestCountTotal);
 	}
@@ -511,10 +511,10 @@ setTimeout(function() {
 		// var dateStart = Code.getTimeStamp(2021, 6, 20, 0, 0, 0, 0);
 		// var dateStart = Code.getTimeStamp(2021, 6, 23, 0, 0, 0, 0);
 		// var dateStart = Code.getTimeStamp(2021, 6, 25, 0, 0, 0, 0);
-		var dateStart = Code.getTimeStamp(2021, 7, 4, 0, 0, 0, 0)
+		var dateStart = Code.getTimeStamp(2021, 7, 10, 0, 0, 0, 0)
 		// var dateEnd = Code.getTimeStamp(2021, 6, 29, 0, 0, 0, 0);
 		// var dateStart = Code.getTimeStamp(2021, 7, 1, 0, 0, 0, 0)
-		var dateEnd = Code.getTimeStamp(2021, 7, 14, 0, 0, 0, 0);
+		var dateEnd = Code.getTimeStamp(2021, 7, 15, 0, 0, 0, 0);
 
 
 		// var dateEnd = Code.getTimeStamp(2021, 6, 1, 0, 0, 0, 0);

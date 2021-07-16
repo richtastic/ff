@@ -6044,10 +6044,10 @@ console.log("doWorldOptimization: "+doWorldOptimization);
 // iterationsAll = 25;
 iterationsReprojectionAll = 5;
 		
-		var worldIterations = 20;
+		// var worldIterations = 20;
 		// var worldIterations = 15;
 		// var worldIterations = 10;
-		// var worldIterations = 5;
+		var worldIterations = 5;
 		// var worldIterations = 3;
 		// var worldIterations = 2;
 		// var worldIterations = 1;
@@ -6065,13 +6065,9 @@ iterationsReprojectionAll = 5;
 
 
 			// RE-INITIALIZE POINT ABSOLUTE LOCATIONS:
-// console.log("done A");
 			world.setResolutionProcessingModeFromOnly2D();
-// console.log("done B");
 			world.initAllP3DPatches();
-// console.log("done C");
 			world.initAffineFromP3DPatches();
-
 
 			world.estimate3DErrors(true);
 
@@ -6084,8 +6080,25 @@ iterationsReprojectionAll = 5;
 
 
 
+
+			world.optimizeCamerasFromSurfaceDistanceMapping3D();
+			
+
+			world.setResolutionProcessingModeFromOnly2D();
+			world.initAllP3DPatches();
+			world.initAffineFromP3DPatches();
+
+			world.estimate3DErrors(true);
+
+			// world.dropNegativePoints3D();
+			// world.dropNegativeMatches3D();
+			world.filterGlobalMatches(false, 0, 3.0,5.0,9.0,9.0, false);
+
+			console.log("STEP A-2:");
+			world.printPoint3DTrackCount();
+
 // break;
-			// continue;
+			continue;
 
 // }
 
@@ -7076,6 +7089,197 @@ Stereopsis.World.prototype.refineSelectCameraAbsoluteOrientationTriangulate = fu
 
 
 
+Stereopsis.World.prototype.optimizeCamerasFromSurfaceDistanceMapping3D = function(views){
+	var world = this;
+	if(!views){
+		views = world.toViewArray();
+	}
+	var searchCellDistance = 0.25; // 0.1 - 0.5
+	var minimumTransformMatchCount = 16; // minimum overlap for view triple
+	var maximumMappingPoints3D = 1000; // 100 - 1000 - per view triple
+	var point2DToPoint = function(p){
+		return p.point2D();
+	}
+	var pointSpace = new QuadTree(point2DToPoint);
+	var identity = new Matrix(4,4).identity();
+	// init all views temp to empty array:
+	// var viewToPointList = {};
+	var viewIDToIndex = {};
+	for(var i=0; i<views.length; ++i){
+		var view = views[i];
+		var viewID = view.id();
+		viewIDToIndex[viewID] = i;
+		// viewToPointList[viewID] = [];
+	}
+	var allPointGroupEntries = [];
+
+	for(var i=0; i<views.length; ++i){
+		var view = views[i];
+		var viewSize = view.size();
+		var cellSize = view.cellSize();
+		var radiusSearchLimit = cellSize*searchCellDistance;
+		// find all views worth contemplating
+		var transforms = world.transformsWithOverlapForView(view);
+		pointSpace.clear();
+		pointSpace.initWithMinMax(V2D.ZERO, viewSize);
+		var viewIDB = view.id();
+		for(var j=0; j<transforms.length; ++j){ // viewA+viewB - viewB+viewC
+			var transformAB = transforms[j];
+			var viewA = transformAB.viewA();
+			var viewB = view;
+			if(viewA==view){
+				viewA = transformAB.viewB();
+			}
+			var viewIDA = viewA.id();
+			pointSpace.clear();
+			var matchesAB = transformAB.matches();
+			// TODO: FILTER ON R-ERROR TO LIMIT TOTAL MATCHES TO USE
+			for(var k=0; k<matchesAB.length; ++k){
+				var matchAB = matchesAB[k];
+				var point2DB = matchAB.pointForView(viewB);
+				pointSpace.insertObject(point2DB);
+			}
+			for(var k=j+1; k<transforms.length; ++k){
+				var transformBC = transforms[k];
+				var viewC = transformBC.viewA();
+				if(viewC==view){
+					viewC = transformBC.viewB();
+				}
+				var viewIDC = viewC.id();
+				var matchesBC = transformBC.matches();
+				// TODO: FILTER ON R-ERROR TO LIMIT TOTAL MATCHES TO USE ?
+				// console.log("MATCH VIEWS: "+viewA.id()+"-"+viewB.id()+" & "+viewB.id()+"-"+viewC.id());
+				var pairedPointsAB = [];
+					var pairedPointsAB_A = [];
+					var pairedPointsAB_B = [];
+				var pairedPointsBC = [];
+					var pairedPointsBC_B = [];
+					var pairedPointsBC_C = [];
+				var pairedPointError = [];
+				for(var m=0; m<matchesBC.length; ++m){
+					var matchBC = matchesBC[m];
+					var point2DB = matchBC.pointForView(viewB);
+					var p2DB = point2DB.point2D()
+					var closest = pointSpace.closestObject(p2DB); // CLOSEST is MATCH-AB
+					var closest2D = closest.point2D();
+					var distance = V2D.distance(closest2D, p2DB);
+					if(distance<radiusSearchLimit){
+						var matchAB = closest.point3D().matchForViews(viewA,viewB);
+						pairedPointsAB.push(closest.point3D().point());
+							pairedPointsAB_A.push(matchAB.pointForView(viewA).point2D());
+							pairedPointsAB_B.push(closest2D);
+						pairedPointsBC.push(point2DB.point3D().point());
+							pairedPointsBC_B.push(p2DB);
+							pairedPointsBC_C.push(matchBC.pointForView(viewC).point2D());
+						var error = closest.averageRError() + point2DB.averageRError();
+						pairedPointError.push(error);
+					}
+				}
+				if(pairedPointsAB.length<minimumTransformMatchCount){
+					continue;
+				}
+				// remove high pair errors:
+				var errorMin = Code.min(pairedPointError);
+				var errorSigma = Code.stdDev(pairedPointError,errorMin);
+				var errorLimit = errorMin+2.0*errorSigma;
+				for(var e=0; e<pairedPointError.length; ++e){
+					var error = pairedPointError[e];
+					if(error>errorLimit){
+						Code.removeElementAt(pairedPointsAB,e);
+						Code.removeElementAt(pairedPointsBC,e);
+						Code.removeElementAt(pairedPointsAB_A,e);
+						Code.removeElementAt(pairedPointsAB_B,e);
+						Code.removeElementAt(pairedPointsBC_B,e);
+						Code.removeElementAt(pairedPointsBC_C,e);
+						Code.removeElementAt(pairedPointError,e);
+						--e;
+					}
+				}
+				// console.log("MATCHING VIEWS: "+viewA.id()+"-"+viewB.id()+" & "+viewB.id()+"-"+viewC.id()+" - matches: "+origLen+" -> "+pairedPointsAB.length);
+				if(pairedPointsAB.length<minimumTransformMatchCount){
+					continue;
+				}
+
+				if(pairedPointsAB.length>maximumMappingPoints3D){
+					// TODO: FILTER ON SUMMED R-ERROR TO LIMIT TOTAL MATCHES TO USE
+					console.log("filter on lowest summed reprojection error");
+					// already error metric -> sort & truncate
+					Code.randomPopParallelArrays([pairedPointsAB,pairedPointsBC, pairedPointsAB_A,pairedPointsAB_B, pairedPointsBC_B,pairedPointsBC_C, pairedPointError], maximumMappingPoints3D);
+				}
+				// var entriesA = viewToPointList[viewIDA];
+				// var entriesB = viewToPointList[viewIDB];
+				// var entriesC = viewToPointList[viewIDC];
+				// TODO: is there an error worth filtering on?
+
+				var viewIndexA = viewIDToIndex[viewIDA];
+				var viewIndexB = viewIDToIndex[viewIDB];
+				var viewIndexC = viewIDToIndex[viewIDC];
+
+				for(t=0; t<pairedPointsAB.length; ++t){
+					// var error = errors[t];
+					// if(error>errorLimit){
+					// 	continue;
+					// }
+					var pA = pairedPointsAB[t];
+					var pC = pairedPointsBC[t];
+
+					// entriesA.push([pAHalf, pairedPointsAB_A[t]]);
+		// entriesB.push([pAHalf, pairedPointsAB_B[t]]); // these don't seem to help or hinder the results?
+		// entriesB.push([pCHalf, pairedPointsBC_B[t]]); // 
+					// entriesC.push([pCHalf, pairedPointsBC_C[t]]);
+					var pointAB2DA = pairedPointsAB_A[t];
+					var pointAB2DB = pairedPointsAB_B[t];
+					var pointBC2DB = pairedPointsBC_B[t];
+					var pointBC2DC = pairedPointsBC_C[t];
+// var viewIndexA = group[0];
+// var viewIndexB = group[1];
+// var viewIndexC = group[2];
+// var pointAB2DA = group[3];
+// var pointAB2DB = group[4];
+// var pointBC2DB = group[5];
+// var pointBC2DC = group[6];
+					var entry = [viewIndexA,viewIndexB,viewIndexC, pointAB2DA,pointAB2DB, pointBC2DB,pointBC2DC];
+					allPointGroupEntries.push(entry);
+				}
+				
+			}
+		}
+	}
+
+
+var maximumGroupEntriesCount = 200*views.length;
+// 100-1000
+console.log("allPointGroupEntries: "+allPointGroupEntries.length);
+if(allPointGroupEntries.length>maximumGroupEntriesCount){
+	Code.randomPopArray(allPointGroupEntries,maximumGroupEntriesCount);
+}
+console.log(allPointGroupEntries);
+	// create index lookup & values:
+	var listExts = [];
+	var listKs = [];
+	var listKinvs = [];
+	for(var i=0; i<views.length; ++i){
+		var view = views[i];
+		listExts[i] = view.absoluteTransform();
+		listKs[i] = view.K();
+		listKinvs[i] = view.Kinv();
+	}
+// console.log(listExts, listKs, listKinvs, allPointGroupEntries, maxIterations);
+	// var maxIterations = 100;
+	var maxIterations = 10; // 10-100
+	var result = R3D.optimizeAllCameraExtrinsicSurfaceDistances3D(listExts, listKs, listKinvs, allPointGroupEntries, maxIterations);
+	var listP = result["matrixes"];
+	for(var i=0; i<views.length; ++i){
+		var P = listP[i];
+		var view = views[i];
+		view.absoluteTransform(P);
+	}
+	world.copyRelativeTransformsFromAbsolute();
+
+	// throw "optimizeCamerasFromSurfaceDistanceMapping3D"
+}
+
+
 Stereopsis.World.prototype.optimizePairTransformsFromMappingP3D = function(views){
 	var world = this;
 	if(!views){
@@ -7188,7 +7392,7 @@ for(var e=0; e<pairedPointError.length; ++e){
 		--e;
 	}
 }
-				console.log("MATCHING VIEWS: "+viewA.id()+"-"+viewB.id()+" & "+viewB.id()+"-"+viewC.id()+" - matches: "+origLen+" -> "+pairedPointsAB.length);
+				// console.log("MATCHING VIEWS: "+viewA.id()+"-"+viewB.id()+" & "+viewB.id()+"-"+viewC.id()+" - matches: "+origLen+" -> "+pairedPointsAB.length);
 				if(pairedPointsAB.length<minimumTransformMatchCount){
 					continue;
 				}
@@ -7252,6 +7456,9 @@ console.log("filter on lowest summed reprojection error");
 // Code.printMatlabArray(errorDir,"errors");
 
 
+// error based on distance away A & C?
+
+
 				for(t=0; t<pairedPointsAB.length; ++t){
 					var error = errorDir[t];
 					if(error>errorDirLimit){
@@ -7311,7 +7518,7 @@ var maxEntriesPerView = 10000;
 		var Kinv = view.Kinv();
 		var list2D = [];
 		var list3D = [];
-		console.log("VIEW "+i+" : ENTRIES+ "+entries.length);
+		// console.log("VIEW "+i+" : ENTRIES+ "+entries.length);
 		if(entries.length>maxEntriesPerView){
 			Code.randomPopArray(entries,maxEntriesPerView);
 		}

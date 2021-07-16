@@ -400,6 +400,11 @@ MISSING:
 - nonlinear way to optimize surface distances
 
 
+optimizeCamerasFromSurfaceDistanceMapping3D
+
+
+- only ever want the same triple once
+	- idA-idB-idC-pAID-pCID ? lookup hash?
 
 
 
