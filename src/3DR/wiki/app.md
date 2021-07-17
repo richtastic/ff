@@ -362,7 +362,7 @@ TIMELINES:
 	- resolution logic
 - fix texture packer to be much more efficient
 	- packer algorithm
-07/01 - 360 object scene ~ 20 images
+08/01 - 360 object scene ~ 20 images
 - optimize some of the algorithms
 	- half time of eg: dense
 	- (this will require 10-100 x speed ups)
@@ -393,28 +393,128 @@ MISSING:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+- walk thru process with another data set
+
+- not enough pairs found during sparse ..... 
+	- maybe needs to be more forgiving ?
+	- maybe needs to try more of the top pairs?
+
+
+R5O3VSIP-WC1YFNBS
+
+
+
+- if sparse is unable to include all views -> make sure only the final group continues to be used in subsequent app steps
+
+
+
+
+- other pairwise metrics than reprojection error?
+
+- finish out the current test case with whatever current best methods are
+
+- not sure which of the metrics are useful/not
+	- may be fighting eachother ?
+
+x try d^2 & d metrics to see what is better?
+
+- 3D location drifting ? (smaller scale has less error)
+
+- decide how to use nonlinear surface & R-error algorithms 
+	- sparse
+		- individual view optimize reprojection GD
+		- world iteration projection error GD
+		- world iteration static P3D GD
+		- individual views do surface error GD
+	- dense
+		- individual view optimize reprojection GD
+		- world iteration projection error GD
+		- world iteration static P3D GD
+		- all views surface error GD
+
+- need a metric for the world to iterate on to know if done or not
+	- R is only useful initially
+	- R is ~ useless in dense
+	- 
+
+
+
+- try removing outliers in groups via surface error/distance
+	- identify/ignore points/aread with no adjacent surface mapping (not useful for algorithm)
+
+- EX:
+	- each P3D records [temp()] a list of other points it has been found to 'share' 2D space with
+	- globally drop the P3D with highest average 3D distance ?
+
+
+
+- GROUP - BUNDLE OPTIMIZING ??????????????????????????????????
+	solveDenseGroup
+		- some really high pixel errors - exponential looking graph
+
+
+- does K need optimizing in tracks / group?
+
+
+
+
+- some BA metric related to surface distances
+	- raw distance metric needs to be in some reference space [eg point or view volume]
+
+- try algorithm with connected tracks
+
+- try verifying only a seingle triple-surface-group is ever created at a time
+
+
+
+- probably don't need quite so many points / resolution for the dense / group stages (can drop more of the worse points)
+- 
+
+- surface blending is bad - has a lot of fading between different texture points that don't line up
+
+- groups can do a process that moves the structure toward eachother - various midpoint pushing
+	- NOT THE CAMERAS
+	- JUST THE POINTS
+	- an additional step at the end that iterates the points toward their counterparts
+	- points without counterparts can be dropped? [a support of only 2 views]
+	- points keep their original point
+	- their computed point is a median of all the neighbor points
+		- nonlinear step?
+			- want to minimize distance from ORIGINAL POINTS
+			- want to minimize distance to AVERAGED POINTS ?
+		- iteritive steps?
+			- after points are all updated, do the same thing again, using the updated points?
+			- need to 'anchor' points around original location -- so maybe only this value never changes?
+
+
+
+
+
 - DLT CAMERA INIT FROM P3D-P2D KNOWNS
 => QR DECOMPOSITION?
+https://www.ipb.uni-bonn.de/html/teaching/msr2-2020/sse2-13-DLT.pdf
+http://www.cs.ucf.edu/~mtappen/cap5415/lecs/lec19.pdf
+https://www.ipb.uni-bonn.de/html/teaching/msr2-2020/sse2-12-camera-params.pdf
+https://www.math.ucla.edu/~yanovsky/Teaching/Math151B/handouts/GramSchmidt.pdf
+http://www.seas.ucla.edu/~vandenbe/133A/lectures/qr.pdf
+
+http://people.scs.carleton.ca/~c_shu/Courses/comp4900d/notes/camera_calibration.pdf
+https://www.cs.cmu.edu/~16385/s17/Slides/11.3_Pose_Estimation.pdf
+
+
+
+
 
 
 - nonlinear way to optimize surface distances
 
 
 optimizeCamerasFromSurfaceDistanceMapping3D
-
-
 - only ever want the same triple once
 	- idA-idB-idC-pAID-pCID ? lookup hash?
 
 
 
-
-
-optimizePairTransformsFromMappingP3D
-	optimizeCameraExtrinsicDLTKnown3D
-
-
-- detect 'midpoint' errors via displacement direction error ?
 
 .................................>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>> the multi-camera reprojection error is not a useful metric when looking at the visuals
 

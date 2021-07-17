@@ -7819,7 +7819,7 @@ console.log("checkPerformNextTask");
 		});
 		return;
 	}
-// throw "stop"
+
 // throw "task pair feature match";
 	// does a feature-match pair exist (even a bad match) between every (putative) view pair?
 	if(!project.checkHasSparseStarted()){
@@ -7833,7 +7833,7 @@ console.log("checkPerformNextTask");
 		return;
 	}
 
-// throw "start dense";
+throw "start dense";
 	if(!project.checkHasDenseStarted()){
 		project.calculateDensePairPutatives();
 		return;
@@ -8284,7 +8284,7 @@ console.log("inputFilename: "+inputFilename);
 		if(!gauge){
 			console.log(idA,idB,idC);
 			currentTriple = triple;
-// throw "before triple ..."
+throw "before triple ..."
 			project.calculateTripleMatchFromViewIDs(inputData,inputFilename, idA,idB,idC, triplePairs, completeTripleFxn,project);
 			return;
 		}
@@ -9133,7 +9133,33 @@ if(true){
 		viewPair["loops"] = [];
 		edge.data(viewPair);
 	}
-	// console.log(viewGraph);
+	console.log(viewGraph);
+
+	var groups = viewGraph.subgraphVertexes();
+	groups.sort(function(a,b){
+		return a.length>b.length ? -1 : 1;
+	});
+	console.log(groups);
+	if(groups.length>0){
+		// remove all vertexes & edges from smaller groups:
+		var keepGroup = groups.shift();
+		console.log("more than 1 group, keeping: "+keepGroup.length);
+		for(var i=0; i<groups.length; ++i){
+			var group = groups[i];
+			console.log(" >> remove: "+group.length);
+			for(var v=0; v<group.length; ++v){
+				var vertex = group[v];
+				// vertex.removeEdge
+				viewGraph.removeVertex(vertex);
+			}
+		}
+	}
+
+	// var groups = viewGraph.subgraphVertexes();
+	// console.log(groups);
+
+
+	// throw "???"
 	// find all loops in graph
 	// var root = viewGraph.vertexes()[0];
 	// var result = viewGraph.loopsForVertex(root, 3);
@@ -9177,226 +9203,233 @@ var relAngleFxn = function(matrix){
 	return angle;
 }
 
-var dropIterations = 10;
-// var dropIterations = 1;
-// var dropIterations = 2;
-// var dropIterations = 3;
-// var dropIterations = 5;
-// 
-// TODO: find better way to keep minimally triple-connected graph (+ individual = 2 triples)
-if(isDense){ // need to keep the few edges have already
-	dropIterations = 0;
-}
-for(var iterations=0; iterations<dropIterations; ++iterations){
-
-	var errors = [];
-
-	// clear all errors:
-	var allEdges = viewGraph.edges();
-	for(var j=0; j<allEdges.length; ++j){
-		var edge = allEdges[j];
-		var data = edge.data();
-		data["errors"] = [];
+	var dropIterations = 10;
+	// var dropIterations = 1;
+	// var dropIterations = 2;
+	// var dropIterations = 3;
+	// var dropIterations = 5;
+	// 
+	// TODO: find better way to keep minimally triple-connected graph (+ individual = 2 triples)
+	if(isDense){ // need to keep the few edges have already
+		dropIterations = 0;
 	}
-	
-	for(var i=0; i<loops.length; ++i){
-		var loop = loops[i];
-		var edges = loop["edges"];
+	for(var iterations=0; iterations<dropIterations; ++iterations){
 
-		// A needs to be the common value between:
-		var a0 = edges[0].A();
-		var b0 = edges[0].B();
-		var a1 = edges[1].A();
-		var b1 = edges[1].B();
-		var vertex = null;
-		if(a0==a1 || a0==b1){
-			vertex = b0;
-		}else{
-			vertex = a0;
-		}
-		var rotation = new Matrix(4,4).identity();
-		var str = "";
-		var relError = 0;
-		for(var j=0; j<edges.length; ++j){
-			var edge = edges[j];
+		var errors = [];
+
+		// clear all errors:
+		var allEdges = viewGraph.edges();
+		for(var j=0; j<allEdges.length; ++j){
+			var edge = allEdges[j];
 			var data = edge.data();
-			var next = edge.opposite(vertex);
-			var transform = null;
-			if(vertex==edge.A()){ // forward
-				transform = data["forward"];
-				// transform = data["reverse"];
-			}else{ //reverse
-				transform = data["reverse"];
-				// transform = data["forward"];
-			}
-			relError += relAngleFxn(transform);
-			// rotation = Matrix.mult(transform, rotation);
-			rotation = Matrix.mult(rotation,transform);
-
-			str = str + "" + (vertex.data()["view"]+" -> "+next.data()["view"]+"("+data["INFO"]+")"+"   ");
-			
-			vertex = next;
+			data["errors"] = [];
 		}
-
-		// console.log(rotation+"");
-		// console.log(rotation);
-		// calculate error
-		var x = rotation.multV3DtoV3D(new V3D(1,0,0));
-		var y = rotation.multV3DtoV3D(new V3D(0,1,0));
-		var z = rotation.multV3DtoV3D(new V3D(0,0,1));
-		var dx = V3D.distanceSquare(V3D.DIRX,x);
-		var dy = V3D.distanceSquare(V3D.DIRY,y);
-		var dz = V3D.distanceSquare(V3D.DIRZ,z);
 		
-		// AXIS - DISTANCE - ERROR - SQARED
-		var error = dx + dy + dz;
-			// error = Math.sqrt(error);
-		// console.log(error);
-
-		// add angles x & y & z ?
-		
-		// error = Code.degrees(V3D.angle(V3D.DIRZ,z));
-// console.log(relError);
-	
-		// ANGLE ERROR
-		// error = 0;
-		// error += V3D.angle(V3D.DIRZ,z);
-		// error += V3D.angle(V3D.DIRY,y);
-		// error += V3D.angle(V3D.DIRX,x);
-		// error /= 3;
-
-		// console.log( Code.degrees(error) );
-		// error /= relError;
-
-		// error = error/edges.length;
-
-// error = Code.degrees(error);
-
-		// console.log( Code.degrees(error) );
-
-		loop["error"] = error;
-		errors.push(error);
-
-		// send error to edges:
-		for(var j=0; j<edges.length; ++j){
-			var edge = edges[j];
-			var data = edge.data();
-			data["errors"].push(error);
-		}
-		// console.log(str+" = "+error);
-		// console.log("....................");
-	}
-	// console.log(errors);
-	Code.printMatlabArray(errors,"errors");
-
-	// average each edge's errors:
-	var graphEdges = viewGraph.edges();
-	for(var i=0; i<graphEdges.length; ++i){
-		var edge = graphEdges[i];
-		var data = edge.data();
-		var edgeErrors = data["errors"];
-		var mean = Code.averageNumbers(edgeErrors);
-		data["error"] = mean;
-	}
-
-	// calculate outlier dropping:
-	var info = Code.exponentialDistribution(errors);
-	console.log(info);
-
-	var limitA = Code.exponentialDistributionValueForPercent(info["min"],info["lambda"], 0.99);
-	console.log("limitA: "+limitA);
-
-
-// limitA = 999999;
-
-	var count = 0;
-	var next = [];
-	var missed = [];
-	for(var i=0; i<errors.length; ++i){
-		var error = errors[i];
-		if(error<=limitA){
-			next.push(error);
-		}else{
-			missed.push(error);
-		}
-	}
-	// console.log(next);
-	// console.log(missed);
-
-
-	var info = Code.exponentialDistribution(next);
-	console.log(info);
-
-	var limitB = Code.exponentialDistributionValueForPercent(info["min"],info["lambda"], 0.999);
-	// var limitB = Code.exponentialDistributionValueForPercent(info["min"],info["lambda"], 0.99);
-	console.log("limitB: "+limitB);
-
-
-	// mark bad edges
-	var dropEdges = [];
-	for(var i=0; i<loops.length; ++i){
-		var loop = loops[i];
-		var loopError = loop["error"];
-		// if(loopError>limit90){ //
-		if(loopError>limitA && loopError>limitB){ // drop worst inconsistently views
-		// if(false){
-			// console.log("bad loop: "+loopError);
+		for(var i=0; i<loops.length; ++i){
+			var loop = loops[i];
 			var edges = loop["edges"];
-			var worstEdge = null;
-			var worstError = null;
-			for(var e=0; e<edges.length; ++e){
-				var edge = edges[e];
+
+			// A needs to be the common value between:
+			var a0 = edges[0].A();
+			var b0 = edges[0].B();
+			var a1 = edges[1].A();
+			var b1 = edges[1].B();
+			var vertex = null;
+			if(a0==a1 || a0==b1){
+				vertex = b0;
+			}else{
+				vertex = a0;
+			}
+			var rotation = new Matrix(4,4).identity();
+			var str = "";
+			var relError = 0;
+			for(var j=0; j<edges.length; ++j){
+				var edge = edges[j];
 				var data = edge.data();
-				var edgeError = data["error"];
-				if(worstEdge===null || worstError<edgeError){
-					worstEdge = edge;
-					worstError = edgeError;
+				var next = edge.opposite(vertex);
+				var transform = null;
+				if(vertex==edge.A()){ // forward
+					transform = data["forward"];
+					// transform = data["reverse"];
+				}else{ //reverse
+					transform = data["reverse"];
+					// transform = data["forward"];
+				}
+				relError += relAngleFxn(transform);
+				// rotation = Matrix.mult(transform, rotation);
+				rotation = Matrix.mult(rotation,transform);
+
+				str = str + "" + (vertex.data()["view"]+" -> "+next.data()["view"]+"("+data["INFO"]+")"+"   ");
+				
+				vertex = next;
+			}
+
+			// console.log(rotation+"");
+			// console.log(rotation);
+			// calculate error
+			var x = rotation.multV3DtoV3D(new V3D(1,0,0));
+			var y = rotation.multV3DtoV3D(new V3D(0,1,0));
+			var z = rotation.multV3DtoV3D(new V3D(0,0,1));
+			var dx = V3D.distanceSquare(V3D.DIRX,x);
+			var dy = V3D.distanceSquare(V3D.DIRY,y);
+			var dz = V3D.distanceSquare(V3D.DIRZ,z);
+			
+			// AXIS - DISTANCE - ERROR - SQARED
+			var error = dx + dy + dz;
+				// error = Math.sqrt(error);
+			// console.log(error);
+
+			// add angles x & y & z ?
+			
+			// error = Code.degrees(V3D.angle(V3D.DIRZ,z));
+	// console.log(relError);
+		
+			// ANGLE ERROR
+			// error = 0;
+			// error += V3D.angle(V3D.DIRZ,z);
+			// error += V3D.angle(V3D.DIRY,y);
+			// error += V3D.angle(V3D.DIRX,x);
+			// error /= 3;
+
+			// console.log( Code.degrees(error) );
+			// error /= relError;
+
+			// error = error/edges.length;
+
+	// error = Code.degrees(error);
+
+			// console.log( Code.degrees(error) );
+
+			loop["error"] = error;
+			errors.push(error);
+
+			// send error to edges:
+			for(var j=0; j<edges.length; ++j){
+				var edge = edges[j];
+				var data = edge.data();
+				data["errors"].push(error);
+			}
+			// console.log(str+" = "+error);
+			// console.log("....................");
+		}
+		// console.log(errors);
+		Code.printMatlabArray(errors,"errors");
+
+		// average each edge's errors:
+		var graphEdges = viewGraph.edges();
+		for(var i=0; i<graphEdges.length; ++i){
+			var edge = graphEdges[i];
+			var data = edge.data();
+			var edgeErrors = data["errors"];
+			var mean = Code.averageNumbers(edgeErrors);
+			data["error"] = mean;
+		}
+
+		// calculate outlier dropping:
+		var info = Code.exponentialDistribution(errors);
+		console.log(info);
+		if(info==null){
+			console.log(info);
+			console.log("not enough samples to drop any");
+			break;
+			// throw "not enough samples?"
+		}else{
+
+			var limitA = Code.exponentialDistributionValueForPercent(info["min"],info["lambda"], 0.99);
+			console.log("limitA: "+limitA);
+
+
+		// limitA = 999999;
+
+			var count = 0;
+			var next = [];
+			var missed = [];
+			for(var i=0; i<errors.length; ++i){
+				var error = errors[i];
+				if(error<=limitA){
+					next.push(error);
+				}else{
+					missed.push(error);
 				}
 			}
-			dropEdges[worstEdge.id()] = worstEdge;
-		}
-		// console.log();
-	}
-	var dropEdgesList = Code.objectToArray(dropEdges);
-	if(dropEdgesList.length==0){
-		console.log("dropEdgesList none");
-		break;
-	}else{
-		console.log("dropEdgesList : "+dropEdgesList.length);
-	}
-	// console.log(dropEdgesList);
-	// remove all loops containing bad edges
-	var dropLoops = [];
-	for(var i=0; i<loops.length; ++i){
-		var loop = loops[i];
-		var drop = false;
-		var edges = loop["edges"];
-		for(var j=0; j<edges.length; ++j){
-			var edge = edges[j];
-			// console.log(edge);
-			if(dropEdges[edge.id()]){
-				drop = true;
-				break;
+			// console.log(next);
+			// console.log(missed);
+
+
+			var info = Code.exponentialDistribution(next);
+			console.log(info);
+
+			var limitB = Code.exponentialDistributionValueForPercent(info["min"],info["lambda"], 0.999);
+			// var limitB = Code.exponentialDistributionValueForPercent(info["min"],info["lambda"], 0.99);
+			console.log("limitB: "+limitB);
+
+
+			// mark bad edges
+			var dropEdges = [];
+			for(var i=0; i<loops.length; ++i){
+				var loop = loops[i];
+				var loopError = loop["error"];
+				// if(loopError>limit90){ //
+				if(loopError>limitA && loopError>limitB){ // drop worst inconsistently views
+				// if(false){
+					// console.log("bad loop: "+loopError);
+					var edges = loop["edges"];
+					var worstEdge = null;
+					var worstError = null;
+					for(var e=0; e<edges.length; ++e){
+						var edge = edges[e];
+						var data = edge.data();
+						var edgeError = data["error"];
+						if(worstEdge===null || worstError<edgeError){
+							worstEdge = edge;
+							worstError = edgeError;
+						}
+					}
+					dropEdges[worstEdge.id()] = worstEdge;
+				}
+				// console.log();
 			}
-		}
-		if(drop){
-			Code.removeElementAt(loops,i);
-			--i;
-		}
+			var dropEdgesList = Code.objectToArray(dropEdges);
+			if(dropEdgesList.length==0){
+				console.log("dropEdgesList none");
+				break;
+			}else{
+				console.log("dropEdgesList : "+dropEdgesList.length);
+			}
+			// console.log(dropEdgesList);
+			// remove all loops containing bad edges
+			var dropLoops = [];
+			for(var i=0; i<loops.length; ++i){
+				var loop = loops[i];
+				var drop = false;
+				var edges = loop["edges"];
+				for(var j=0; j<edges.length; ++j){
+					var edge = edges[j];
+					// console.log(edge);
+					if(dropEdges[edge.id()]){
+						drop = true;
+						break;
+					}
+				}
+				if(drop){
+					Code.removeElementAt(loops,i);
+					--i;
+				}
+			}
+
+			// remove worst edges from graph
+			for(var i=0; i<dropEdgesList.length; ++i){
+				var edge = dropEdgesList[i];
+				var data = edge.data();
+				console.log("DROPPING EDGE "+data["id"]);
+				viewGraph.removeEdge(edge);
+			}
+			// Code.printMatlabArray(next,"next");
+		} // check distribution 
+
 	}
 
-	// remove worst edges from graph
-	for(var i=0; i<dropEdgesList.length; ++i){
-		var edge = dropEdgesList[i];
-		var data = edge.data();
-		console.log("DROPPING EDGE "+data["id"]);
-		viewGraph.removeEdge(edge);
-	}
-	// Code.printMatlabArray(next,"next");
-
-}
-
-console.log("viewGraph final edge count: "+viewGraph.edges().length);
+	console.log("viewGraph final edge count: "+viewGraph.edges().length);
 
 
 /*
@@ -10836,6 +10869,9 @@ console.log(info);
 					return;
 				} // else: not done:
 
+
+
+throw "not done"
 console.log(allViews);
 console.log("TODO: REMOVE")
 // force image sizes that seems coherient:
@@ -10844,7 +10880,7 @@ for(var i=0; i<allViews.length; ++i){
 	view["imageSize"] = {"x": 2016, "y":1512};
 }
 
-// throw "..."
+throw "before world full track full solve"
 				var info = project.fillInWorldAll(allViews, null, allCameras); // cellsize, cameras
 				console.log(info);
 				//
@@ -10902,7 +10938,7 @@ for(var i=0; i<allViews.length; ++i){
 				nextViewBA["updated"] = Code.getTimeMilliseconds();
 var str = world.toYAMLString();
 console.log(str);
-throw "before save optimizing full track full ..............";
+// throw "before save optimizing full track full ..............";
 				
 				// update views:
 				var worldObject = world.toObject();
@@ -14088,6 +14124,7 @@ if(idA===undefined || idB===undefined){
 			return;
 		}
 		console.log("SOLVE TRIPLE");
+throw "before solve triple"
 
 		// get all of camera's values & average:
 		var foundCameras = {};
@@ -14945,7 +14982,7 @@ App3DR.ProjectManager.prototype._initializeAbsoluteViewsFromGroups = function(vi
 throw "? is this used ?"
 	return {"views":viewsFinal};
 }
-
+/*
 App3DR.ProjectManager.prototype._doDenseGroupsStereopsisOLD = function(data){
 	console.log(data);
 	var project = this;
@@ -15061,7 +15098,7 @@ console.log(i+": "+viewID);
 		view.loadBundleAdjustImage(checkAllViewImagesLoaded, project); // 2016 x 1512
 	}
 }
-
+*/
 
 App3DR.ProjectManager.prototype.initializeBundleGroupsFromDense = function(){
 	var project = this;
@@ -17241,7 +17278,7 @@ App3DR.ProjectManager.prototype.calculateViewSimilarities = function(){
 
 			project.showViewSimilarities(compareScores, viewIDs, 700);
 
-throw "BEFORE SAVE SIMILARITIES - now go save similarities";
+// throw "BEFORE SAVE SIMILARITIES - now go save similarities";
 			project.setViewSimilarity(scores);
 			project.setSparseFilename(null);
 			//project.setPairPutative(null); // unset to recalculate
@@ -17802,7 +17839,7 @@ console.log("keep: "+keys.length);
 		project.saveProjectFile(fxnSavedProject, project);
 	}
 console.log(sparseData);
-throw "BEFORE SAVE SPARSE"
+// throw "BEFORE SAVE SPARSE"
 	project.saveSparseFromData(sparseData, fxnSavedSparse, project);
 	
 }

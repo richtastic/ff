@@ -6080,7 +6080,13 @@ iterationsReprojectionAll = 5;
 
 
 
+			// 
 
+			// var allViews = world.toViewArray();
+			// var viewA = allViews[3];
+			// var viewB = allViews[6];
+			// console.log(viewA,viewB);
+			// world.optimizeCamerasFromSurfaceDistanceMapping3D([viewA,viewB]);
 			world.optimizeCamerasFromSurfaceDistanceMapping3D();
 			
 
@@ -6098,7 +6104,7 @@ iterationsReprojectionAll = 5;
 			world.printPoint3DTrackCount();
 
 // break;
-			continue;
+			// continue;
 
 // }
 
@@ -6715,7 +6721,10 @@ constructing error estimates:
 
 
 
-
+Stereopsis.World.prototype.refineAllCameraMultiViewTriangulation = function(maxIterations, onlyLongTracks, maximumPoints3D){
+	// TODO: REPLACE ALL USAGES OF THIS FXN NAME W/O "GD"
+	return this.refineAllCameraMultiViewTriangulationGD(maxIterations, onlyLongTracks, maximumPoints3D);
+}
 
 
 
@@ -7089,10 +7098,11 @@ Stereopsis.World.prototype.refineSelectCameraAbsoluteOrientationTriangulate = fu
 
 
 
-Stereopsis.World.prototype.optimizeCamerasFromSurfaceDistanceMapping3D = function(views){
+Stereopsis.World.prototype.optimizeCamerasFromSurfaceDistanceMapping3D = function(updateViews){
 	var world = this;
-	if(!views){
-		views = world.toViewArray();
+	var allViews = world.toViewArray();
+	if(!updateViews){
+		updateViews = allViews;
 	}
 	var searchCellDistance = 0.25; // 0.1 - 0.5
 	var minimumTransformMatchCount = 16; // minimum overlap for view triple
@@ -7103,18 +7113,16 @@ Stereopsis.World.prototype.optimizeCamerasFromSurfaceDistanceMapping3D = functio
 	var pointSpace = new QuadTree(point2DToPoint);
 	var identity = new Matrix(4,4).identity();
 	// init all views temp to empty array:
-	// var viewToPointList = {};
 	var viewIDToIndex = {};
-	for(var i=0; i<views.length; ++i){
-		var view = views[i];
+	for(var i=0; i<allViews.length; ++i){
+		var view = allViews[i];
 		var viewID = view.id();
 		viewIDToIndex[viewID] = i;
-		// viewToPointList[viewID] = [];
 	}
 	var allPointGroupEntries = [];
 
-	for(var i=0; i<views.length; ++i){
-		var view = views[i];
+	for(var i=0; i<updateViews.length; ++i){
+		var view = updateViews[i];
 		var viewSize = view.size();
 		var cellSize = view.cellSize();
 		var radiusSearchLimit = cellSize*searchCellDistance;
@@ -7206,9 +7214,6 @@ Stereopsis.World.prototype.optimizeCamerasFromSurfaceDistanceMapping3D = functio
 					// already error metric -> sort & truncate
 					Code.randomPopParallelArrays([pairedPointsAB,pairedPointsBC, pairedPointsAB_A,pairedPointsAB_B, pairedPointsBC_B,pairedPointsBC_C, pairedPointError], maximumMappingPoints3D);
 				}
-				// var entriesA = viewToPointList[viewIDA];
-				// var entriesB = viewToPointList[viewIDB];
-				// var entriesC = viewToPointList[viewIDC];
 				// TODO: is there an error worth filtering on?
 
 				var viewIndexA = viewIDToIndex[viewIDA];
@@ -7220,13 +7225,9 @@ Stereopsis.World.prototype.optimizeCamerasFromSurfaceDistanceMapping3D = functio
 					// if(error>errorLimit){
 					// 	continue;
 					// }
-					var pA = pairedPointsAB[t];
-					var pC = pairedPointsBC[t];
+					// var pA = pairedPointsAB[t];
+					// var pC = pairedPointsBC[t];
 
-					// entriesA.push([pAHalf, pairedPointsAB_A[t]]);
-		// entriesB.push([pAHalf, pairedPointsAB_B[t]]); // these don't seem to help or hinder the results?
-		// entriesB.push([pCHalf, pairedPointsBC_B[t]]); // 
-					// entriesC.push([pCHalf, pairedPointsBC_C[t]]);
 					var pointAB2DA = pairedPointsAB_A[t];
 					var pointAB2DB = pairedPointsAB_B[t];
 					var pointBC2DB = pairedPointsBC_B[t];
@@ -7247,7 +7248,7 @@ Stereopsis.World.prototype.optimizeCamerasFromSurfaceDistanceMapping3D = functio
 	}
 
 
-var maximumGroupEntriesCount = 200*views.length;
+var maximumGroupEntriesCount = 200*updateViews.length;
 // 100-1000
 console.log("allPointGroupEntries: "+allPointGroupEntries.length);
 if(allPointGroupEntries.length>maximumGroupEntriesCount){
@@ -7255,25 +7256,39 @@ if(allPointGroupEntries.length>maximumGroupEntriesCount){
 }
 console.log(allPointGroupEntries);
 	// create index lookup & values:
+	var viewUpdateList = {};
+	for(var i=0; i<updateViews.length; ++i){
+		var view = updateViews[i];
+		viewUpdateList[view.id()] = true;
+	}
 	var listExts = [];
 	var listKs = [];
 	var listKinvs = [];
-	for(var i=0; i<views.length; ++i){
-		var view = views[i];
+	var listOptimize = [];
+	for(var i=0; i<allViews.length; ++i){
+		var view = allViews[i];
+		var viewID = view.id();
 		listExts[i] = view.absoluteTransform();
 		listKs[i] = view.K();
 		listKinvs[i] = view.Kinv();
+		listOptimize[i] = viewUpdateList[viewID] == true ? true : false;
 	}
+
 // console.log(listExts, listKs, listKinvs, allPointGroupEntries, maxIterations);
+// console.log(listOptimize);
+	// throw "separate single view to optimze on from ALL views that need to be present"
+
 	// var maxIterations = 100;
 	var maxIterations = 10; // 10-100
-	var result = R3D.optimizeAllCameraExtrinsicSurfaceDistances3D(listExts, listKs, listKinvs, allPointGroupEntries, maxIterations);
+	var result = R3D.optimizeAllCameraExtrinsicSurfaceDistances3D(listExts, listKs, listKinvs, listOptimize, allPointGroupEntries, maxIterations);
+	console.log(result);
 	var listP = result["matrixes"];
-	for(var i=0; i<views.length; ++i){
-		var P = listP[i];
-		var view = views[i];
-		view.absoluteTransform(P);
+	for(var i=0; i<updateViews.length; ++i){
+			var P = listP[i];
+			var view = updateViews[i];
+			view.absoluteTransform(P);
 	}
+	
 	world.copyRelativeTransformsFromAbsolute();
 
 	// throw "optimizeCamerasFromSurfaceDistanceMapping3D"
@@ -7561,10 +7576,15 @@ continue;
 			points3D = Code.copyArray(points3D);
 			Code.randomPopParallelArrays([points2D,points3D],maxLinearStepPoints);
 		}
+
+
 		var result = R3D.optimizeCameraExtrinsicDLTKnown3D(P, K, Kinv, points2D, points3D);
 		// console.log(result);
 		var newP = result["matrix"];
 		listP[i] = newP;
+
+		throw "THIS LINEAR STEP ISNT WORKING - DLT / QR / K / ..."
+
 		// console.log("newP 1: \n"+newP);
 		// NONLINEAR STEP - use full set of points
 		// P = newP;
