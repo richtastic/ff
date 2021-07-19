@@ -1348,6 +1348,8 @@ Brandenburger - Brandenburg Gate
 |  |  |  |
 | brav |  | well behaved |
 | schön |  | beautiful |
+| hübsch |  | pretty |
+|  |  |  |
 | klein |  | small |
 | kurz |  | short (time) |
 | groß / hoch |  | tall / big |    großen 
@@ -1369,7 +1371,7 @@ Brandenburger - Brandenburg Gate
 | (macht) Spaß |  | (is) fun |
 | alles |  | everything |
 |  |  |  |
-|  |  |  |
+| Prüfung |  | exam |
 | Test |  | test |
 | Bestattungen |  | burials |
 | Meerbestattung |  | burial at sea |
@@ -1385,7 +1387,7 @@ Brandenburger - Brandenburg Gate
 |  |  |  |
 | Liter |  | liter |
 |  |  |  |
-|  |  |  |
+| medizin |  | medicine |
 |  |  |  |
 |  |  |  |
 |  |  |  |
@@ -1780,7 +1782,9 @@ Kreditkarte - credit card
 
 stornieren - cancel
 
-spinnt - going crazy
+spinnt - (going) crazy
+spinnst - crazy
+
 
 Die Vegetarierin - vegetarian (person)
 vegetarisches - vegetarian (adj)
@@ -1870,6 +1874,10 @@ beantworte ? - to answer
 eröffnen ? - to open
 aufpasst ? - to take care
 weggeflogen ? - flown away (bird)
+
+
+
+zeichnet - draws
 
 Bankkauffrau / Bankkaufmann - banker
 
@@ -2117,6 +2125,7 @@ hell - bright
 sauber - clean
 schmutzig - dirty
 unordentlich - messy
+angst - scared
 
 fantastisch - fantastic
 

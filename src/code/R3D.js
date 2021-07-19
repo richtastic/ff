@@ -35871,8 +35871,11 @@ R3D.showCoverAlpha = function(imageMatrixA,imageMatrixB, display, alpha){
 	c.matrix().translate(0, 0);
 	display.addChild(c);
 }
-R3D.showForwardBackwardPointsColor = function(pointsA, pointsB, affines, imageMatrixA,imageMatrixB, display, cellSize){
+CALCULATIONTHINGY = null;
+R3D.showForwardBackwardPointsColor = function(pointsA, pointsB, affines, imageMatrixA,imageMatrixB, display, cellSize, showAngles, matchesAB,parameterUse){
+console.log(pointsA, pointsB, affines, imageMatrixA,imageMatrixB, display, cellSize, showAngles, matchesAB,parameterUse)
 	cellSize = Code.valueOrDefault(cellSize,3.0);
+	showAngles = Code.valueOrDefault(showAngles,false);
 /*
 	var d = new DO();
 	d.graphics().setFill(0x99FFFFFF);
@@ -35891,6 +35894,11 @@ var color2 = new V3D(0,0,1);
 // var color3 = new V3D(1,1,1);
 var color3 = new V3D(0,0,0);
 var colors = [color0,color1,color2,color3];
+
+// var heatColors = [0xFFFFFFFF, 0xFFFF9900, 0xFFFF0000, 0xFF00FF00, 0xFF3399FF, 0xFF0000FF, 0xFF330066, 0xFF000000];
+// var heatColors = [0xFFFFFFFF, 0xFF000000];
+var heatColors = [0xFFFFFFFF, 0xFFFF0000, 0xFF00FF00, 0xFF000000];
+
 	for(var i=0; i<pointsA.length; ++i){
 		// var match = bestMatches[i];
 		var pointA = pointsA[i];
@@ -35903,7 +35911,8 @@ var colors = [color0,color1,color2,color3];
 		// var size = 3.0;
 		var size = cellSize;
 		// var size = featureSizeA*0.5;
-		var line = 3.0;
+		// var line = 3.0;
+		var line = 4.0;
 		
 var p = pointA.copy();
 var q = pointB.copy();
@@ -35915,8 +35924,83 @@ var p0 = qx*qy;
 var p1 = px*qy;
 var p2 = qx*py;
 var p3 = px*py;
-			var color = V3D.average(colors, [p0,p1,p2,p3]);
-			color = Code.getColARGBFromFloat(1.0,color.x,color.y,color.z);
+			
+			// BEHIND:
+			color = 0xCC000000;
+			d.graphics().setLine(line*3.0,color);
+			d.graphics().beginPath();
+			d.graphics().drawCircle(pointA.x,pointA.y,size);
+			d.graphics().endPath();
+			d.graphics().strokeLine();
+
+			d.graphics().beginPath();
+			d.graphics().drawCircle(imageMatrixA.width() + pointB.x,pointB.y,size);
+			d.graphics().endPath();
+			d.graphics().strokeLine();
+
+			// IN FRONT
+			var color;
+
+			if(showAngles){
+				/*
+				var affine = affines[i];
+
+				
+				var x = new V2D(1,0);
+				var y = new V2D(0,1);
+				var u = affine.multV2DtoV2D(x);
+				var v = affine.multV2DtoV2D(y);
+
+				// ANGLE
+				var angleX = V2D.angleDirection(x,u);
+				var angleY = V2D.angleDirection(y,v);
+				var angle = Code.averageAngles([angleX,angleY]);
+				// var percent = Code.angleZeroTwoPi(angle)/(2.0*Math.PI);
+				var percent = Math.abs(Code.angleNegativePiToPi(angle)) /(Math.PI);
+				// console.log(Code.degrees(angle)+" = "+percent);
+
+				// SCALE
+				var scaleX = V2D.dot(x,u);
+				var scaleY = V2D.dot(y,v);
+				var scale = (scaleX+scaleY)*0.5;
+					scale = scale>1.0 ? scale : 1.0/scale;
+				var percent = (scale-1.0)/1.0; // limit to 200% scale change vis
+					percent = Math.max(0,Math.min(1.0,percent));
+
+
+				var color = Code.interpolateColorGradientARGB(percent, heatColors);
+				*/
+if(!CALCULATIONTHINGY){
+	var datas = [];
+	console.log(matchesAB);
+	for(var i=0; i<matchesAB.length; ++i){
+		var match = matchesAB[i];
+		datas.push(match[parameterUse]);
+		// console.log(match);
+	}
+	console.log(datas);
+	var min = Code.min(datas);
+	var max = Code.max(datas);
+	CALCULATIONTHINGY = {};
+	CALCULATIONTHINGY["min"] = min;
+	CALCULATIONTHINGY["range"] = max-min;
+	console.log(CALCULATIONTHINGY);
+}
+				console.log(matchesAB);
+				var match = matchesAB[i];
+				console.log(match);
+				console.log(i);
+				var param = match[parameterUse];
+				console.log(param);
+				var perent = (param - CALCULATIONTHINGY["min"])/CALCULATIONTHINGY["range"];
+				console.log(percent);
+				var color = Code.interpolateColorGradientARGB(param, heatColors);
+				// 
+
+			}else{
+				color = V3D.average(colors, [p0,p1,p2,p3]);
+				color = Code.getColARGBFromFloat(1.0,color.x,color.y,color.z);
+			}
 			d.graphics().setLine(line,color);
 			d.graphics().beginPath();
 			d.graphics().drawCircle(pointA.x,pointA.y,size);
@@ -35927,6 +36011,8 @@ var p3 = px*py;
 			d.graphics().drawCircle(imageMatrixA.width() + pointB.x,pointB.y,size);
 			d.graphics().endPath();
 			d.graphics().strokeLine();
+
+
 	}
 	d.matrix().translate(0,0);
 	GLOBALSTAGE.addChild(d);
@@ -38085,6 +38171,158 @@ R3D.refineFromFeatures = function(pointA,sizeA,angleA, pointB,sizeB,angleB, imag
 	//var scoreNCC = Dense.ncc(imageA.red(),imageA.grn(),imageA.blu(), imageB.red(),imageB.grn(),imageB.blu(), compareMask);
 	//result["score"] = scoreNCC;
 	return result;
+}
+
+R3D.filterMatchesOnLocalAffineDifference = function(matchesAB, other){
+	console.log(matchesAB);
+	var kNNNeighbors = 6+1; // 6-10 neighbor samples to get good inlier / outlier distribution
+	var matchCount = matchesAB.length;
+
+	var toPointFxnA = function(object){
+		return object["match"]["A"];
+	}
+	var toPointFxnB = function(object){
+		return object["match"]["B"];
+	}
+	// assemble into container objects
+	var objects = [];
+	for(var i=0; i<matchCount; ++i){
+		var match = matchesAB[i];
+		var object = {};
+			object["match"] = match;
+			object["distances"] = [];
+		objects.push(object);
+	}
+
+	// put points in point spaces
+	var pointSpaceA = new QuadTree(toPointFxnA);
+	var pointSpaceB = new QuadTree(toPointFxnB);
+	pointSpaceA.initWithObjects(objects);
+	pointSpaceB.initWithObjects(objects);
+	var pointSpaces = [pointSpaceA,pointSpaceB];
+	// .
+	// console.log(pointSpaceA);
+	// console.log(pointSpaceB);
+	// 2 loops
+	var p2D = new V2D();
+	for(var i=0; i<2; ++i){
+		var space = pointSpaces[i];
+		for(var j=0; j<matchCount; ++j){
+			var object = objects[j];
+			var pointA = object["match"]["A"];
+			var pointB = object["match"]["B"];
+			var affineAB = object["match"]["affine"];
+			var affineBA = null;
+			var neighbors = null;
+			// console.log(object);
+			// console.log(pointA,kNNNeighbors);
+			if(i==0){
+				// console.log("i==0");
+				neighbors = space.kNN(pointA,kNNNeighbors);
+			}else{ // i==1
+				neighbors = space.kNN(pointB,kNNNeighbors);
+				affineBA = Matrix2D.inverse(affineAB);
+			}
+			// console.log(neighbors);
+			for(var k=0; k<neighbors.length; ++k){
+				var neighbor = neighbors[k];
+				if(neighbor==object){
+					continue;
+				}
+				// predicted vs actual location
+				var pA = neighbor["match"]["A"];
+				var pB = neighbor["match"]["B"];
+				var distance = null;
+				if(i==0){
+					p2D.set(pA.x-pointA.x,pA.y-pointA.y);
+					affineAB.multV2DtoV2D(p2D,p2D);
+					p2D.add(pointB);
+					distance = V2D.distance(pB,p2D);
+				}else{ // i==1
+					p2D.set(pB.x-pointB.x,pB.y-pointB.y);
+					affineBA.multV2DtoV2D(p2D,p2D);
+					p2D.add(pointA);
+					distance = V2D.distance(pA,p2D);
+					// throw "i=1";
+				}
+				neighbor["distances"].push(distance);
+			}
+			// throw "//..."
+		}
+		// var spaceB = pointSpaces[i];
+	}
+	// calcualte average affine discrepancy
+	for(var i=0; i<matchCount; ++i){
+		var object = objects[i];
+		var distances = object["distances"];
+			var min = Code.min(distances);
+			var sigma = Code.stdDev(distances,min);
+			var limit = min + sigma*2.0;
+			// var limit = min + 2.
+		// console.log(min+" +/- "+sigma);
+		// Code.printMatlabArray(distances,"errors");
+		// drop local outlier:
+		var average = 0;
+		var count = 0;
+		for(var d=0; d<distances.length; ++d){
+			var distance = distances[d];
+			if(distance<=limit){
+				average += distance;
+				count += 1;
+			}
+		}
+		if(count==0){
+			console.log(distances);
+			console.log("all counts are above limit?");
+			average = 99E9;
+		}else{
+			average /= count;
+		}
+		object["average"] = average;
+	}
+	// drop outliers
+	var localNeighborsKNN = 6+1; // 
+	var localNeighborhoodSigmaKeep = 2.0; // 2-3
+	for(var i=0; i<matchCount; ++i){
+		var object = objects[i];
+		var pointA = object["match"]["A"];
+		var pointB = object["match"]["B"];
+		var average = object["average"];
+		// get local area in A & local area in B & see if it is an outlier or not
+		var neighborsA = pointSpaceA.kNN(pointA,localNeighborsKNN);
+		var neighborsB = pointSpaceB.kNN(pointB,localNeighborsKNN);
+		var averages = [];
+		for(var j=0; j<neighborsA.length; ++j){
+			averages.push(neighborsA[j]["average"]);
+		}
+		for(var j=0; j<neighborsB.length; ++j){
+			averages.push(neighborsB[j]["average"]);
+		}
+		var min = Code.min(averages);
+		var sigma = Code.stdDev(averages,min);
+		var limit = min + sigma*localNeighborhoodSigmaKeep;
+		if(average>limit){
+			console.log("FOUND OUTLIER");
+			objects["outlier"] = true;
+		}
+		// TEMPORARY
+		var data = average;
+			object["data"] = data;
+
+	}
+	// convert back to array
+	var keepMatches = [];
+	for(var i=0; i<matchCount; ++i){
+		var object = objects[i];
+		if(!object["outlier"]){
+			var match = object["match"];
+			keepMatches.push(match);
+			// TEMPORARY TESTING:
+			match["sigma"] = object["data"];
+		}
+	}
+	// throw "filterMatchesOnLocalAffineDifference"
+	return keepMatches;
 }
 
 R3D.FILTER_TYPE_NONE = 0;

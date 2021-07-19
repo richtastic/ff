@@ -13617,12 +13617,17 @@ for(var i=0; i<features.length; ++i){
 		var result = R3D.compareProgressiveRIFTObjectsFull(objectsA, objectsB);
 		console.log(result);
 		matchesAB = result["matches"];
-		
+		console.log("after full RIFT match: "+matchesAB.length);
 		matchesAB = R3D.relativeRIFTFromFeatureMatches(matchesAB);
-
+		console.log("after relative RIFT match: "+matchesAB.length);
 		var info = R3D.dropOutliersSparseMatches(matchesAB, imageScales[0],imageScales[1]);
 		matchesAB = info["matches"];
+		console.log("after outlier sparse drop: "+matchesAB.length);
 		console.log(matchesAB);
+
+
+		matchesAB = R3D.filterMatchesOnLocalAffineDifference(matchesAB);
+		console.log("after affine difference drop: "+matchesAB.length);
 
 		// matches = matchesAB;
 
@@ -13661,7 +13666,30 @@ for(var i=0; i<features.length; ++i){
 	// 	}
 	// 	matches = matchesAB;
 	// // console.log(matches);
-	// 	console.log("INITIAL F MATCHES: "+matches.length+" / "+minimumCountFInit);
+		console.log("INITIAL F MATCHES: "+matchesAB.length+" / "+minimumCountFInit);
+
+// GLOBALSTAGE.root().matrix().scale(0.250);
+// GLOBALSTAGE.root().matrix().scale(0.333);
+GLOBALSTAGE.root().matrix().scale(0.50);
+
+		var img = GLOBALSTAGE.getFloatRGBAsImage(imageMatrixA.red(),imageMatrixA.grn(),imageMatrixA.blu(), imageMatrixA.width(),imageMatrixA.height());
+		var d = new DOImage(img);
+		d.matrix().translate(0,0);
+		GLOBALSTAGE.addChild(d);
+		var img = GLOBALSTAGE.getFloatRGBAsImage(imageMatrixB.red(),imageMatrixB.grn(),imageMatrixB.blu(), imageMatrixB.width(),imageMatrixB.height());
+		var d = new DOImage(img);
+		d.matrix().translate(imageMatrixA.width(),0);
+		GLOBALSTAGE.addChild(d);
+		// DEBUG SHOW:
+		var info = R3D.separateMatchesIntoPieces(matchesAB);
+		pointsA = info["A"];
+		pointsB = info["B"];
+		affinesAB = info["affines"];
+		var cellSizeShow = imageMatrixA.size().length()*0.01;
+		var showAngles = true;
+		R3D.showForwardBackwardPointsColor(pointsA, pointsB, affinesAB, imageMatrixA,imageMatrixB, GLOBALSTAGE, cellSizeShow, showAngles, matchesAB,"sigma");
+
+throw "HEREX";
 
 		if(matchesAB.length<minimumCountFInit){
 			goodEnoughMatches = false;
@@ -13721,11 +13749,11 @@ GLOBALSTAGE.root().matrix().scale(0.250);
 		affinesAB = info["affines"];
 
 
-		if(DEBUG_SHOW){
-			var cellSizeShow = imageMatrixA.size().length()*0.01;
-			// R3D.showForwardBackwardCells(pointsA, pointsB, affinesAB, imageMatrixA,imageMatrixB, GLOBALSTAGE, cellSize);
-			R3D.showForwardBackwardPointsColor(pointsA, pointsB, affinesAB, imageMatrixA,imageMatrixB, GLOBALSTAGE, cellSizeShow);
-		}
+		// if(DEBUG_SHOW){
+		// 	var cellSizeShow = imageMatrixA.size().length()*0.01;
+		// 	// R3D.showForwardBackwardCells(pointsA, pointsB, affinesAB, imageMatrixA,imageMatrixB, GLOBALSTAGE, cellSize);
+		// 	R3D.showForwardBackwardPointsColor(pointsA, pointsB, affinesAB, imageMatrixA,imageMatrixB, GLOBALSTAGE, cellSizeShow);
+		// }
 
 
 console.log("GET INITIAL F: "+matchesAB.length);

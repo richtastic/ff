@@ -18,6 +18,7 @@ QuadTree.objectEquality = function(a,b){
 	return a==b;
 }
 QuadTree.roundedPoint = function(p){
+	throw "????????????"
 	var x;
 	return x;
 }

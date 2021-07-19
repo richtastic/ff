@@ -395,12 +395,64 @@ MISSING:
 
 - walk thru process with another data set
 
-- not enough pairs found during sparse ..... 
-	- maybe needs to be more forgiving ?
-	- maybe needs to try more of the top pairs?
+
+
+- clustered points (eg 4-8 neighbors) need to have the same overall affine rotation/scale
+	-> find outliers?
+- visualize the angles & see if this is useful ?
+
+- local average angle? => YES
+- local average scale? => YES
+
+- local average affine displacement?
+	- look at where all neighbors are vs where they are predicted to be thru affine
+	- each match averages it's displacements
+
+
+- local average score ?
+	- local distribution of scores
+
+
+- MORE MATHING FILTERING ?
+
+
+
+
+
+
+R3D.filterMatchesOnLocalAffineDifference
+
+showForwardBackwardPointsColor
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 R5O3VSIP-WC1YFNBS
+- should be an easy to get pair, very wrong orientation
+	
+	- recheck steps of algorithm
+
+- 3D R ransacing?
+	- 
+
+
+
+
+- not enough pairs found during sparse ..... 
+	- maybe needs to be more forgiving ?
+	- maybe needs to try more of the top pairs?
 
 
 

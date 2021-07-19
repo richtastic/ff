@@ -5542,7 +5542,17 @@ Code.minAngle = function(a,b){ // [0,2pi] => [-pi,pi]
 	}
 	return -nB;
 }
-
+Code.angleNegativePiToPi = function(ang){ // [-inf,inf] => [-pi,pi]
+	var pi = Math.PI;
+	var pi2 = Math.PI*2;
+	while(ang>pi){
+		ang -= pi2;
+	}
+	while(ang<-pi){
+		ang += pi2;
+	}
+	return ang;
+}
 Code.angleZeroTwoPi = function(ang){ // [-inf,inf] => [0,2pi]
 	var pi2 = Math.PI*2;
 	while(ang>=pi2){
@@ -5553,19 +5563,18 @@ Code.angleZeroTwoPi = function(ang){ // [-inf,inf] => [0,2pi]
 	}
 	return ang;
 }
-Code.anglePi = function(ang){ // [-inf,inf] => [0,2pi]
-	throw "is this used ?"
-	var pi = Math.PI;
-	var pi2 = Math.PI*2;
-	while(ang>=pi){
-		ang -= pi2;
-	}
-	while(ang<-pi){
-		ang += pi2;
-	}
-	return ang;
-}
-
+// Code.anglePi = function(ang){ // [-inf,inf] => [,2pi]
+// 	throw "is this used ?"
+// 	var pi = Math.PI;
+// 	var pi2 = Math.PI*2;
+// 	while(ang>=pi){
+// 		ang -= pi2;
+// 	}
+// 	while(ang<-pi){
+// 		ang += pi2;
+// 	}
+// 	return ang;
+// }
 Code.angleTwoPi = function(ang){ // [-inf,inf] => [-2pi,2pi]
 	throw "is this used ?"
 	var pi2 = Math.PI*2;
