@@ -395,25 +395,49 @@ MISSING:
 
 - walk thru process with another data set
 
-
-
-- clustered points (eg 4-8 neighbors) need to have the same overall affine rotation/scale
+x clustered points (eg 4-8 neighbors) need to have the same overall affine rotation/scale
 	-> find outliers?
-- visualize the angles & see if this is useful ?
+x visualize the angles & see if this is useful ?
 
-- local average angle? => YES
-- local average scale? => YES
+x local average angle? => YES
+x local average scale? => YES
 
-- local average affine displacement?
+x local average affine displacement?
 	- look at where all neighbors are vs where they are predicted to be thru affine
 	- each match averages it's displacements
 
+- REDO ALL THE FILTERING STEPS ITERITIVELY ?
+	- get F rough
+	-> initial calc F
+		REPEAT?: [max 10 interations or match cound change is <1-5%]
+		- get/increase local neighborhood F 
+		-> recalc F
+		- filter on F error
+		- filter on N error
+		- filter on S error
+		-> recalc F
+		- filter on affine displacement
+		- filter on angle difference
+		- filter on scale difference
+		- filter on neighbor fwd/bak consistency counts
+		-> recalc F
+
+- related neighbors counts
+	- each match FWD/BAK neighbor count percent that exist?
+	- local OR global?
+	- hard cutoffs at like less than 25% ?
 
 - local average score ?
 	- local distribution of scores
 
 
-- MORE MATHING FILTERING ?
+- MORE MATCHING FILTERING ?
+	- affine local expected displacement distribution
+	- local average angle distribution 
+	- local average scale distribution
+	- neighbor matching count distributions
+
+	...........
 
 
 
@@ -423,6 +447,25 @@ MISSING:
 R3D.filterMatchesOnLocalAffineDifference
 
 showForwardBackwardPointsColor
+
+
+
+
+
+
+- FULL COMPARE ALL A TO ALL B:
+	R3D.compareProgressiveRIFTObjectsFull = function(objectsA, objectsB){
+	- KEEP ONLY MATCHES WITH BEST RATIO
+		R3D.compareProgressiveRIFTObjectsMatches(objectsA,objectsB);
+- ADD AFFINE MATRIX TO MATCHES
+	R3D.relativeRIFTFromFeatureMatches
+	
+
+
+
+
+
+
 
 
 

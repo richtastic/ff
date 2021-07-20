@@ -13618,6 +13618,8 @@ for(var i=0; i<features.length; ++i){
 		console.log(result);
 		matchesAB = result["matches"];
 		console.log("after full RIFT match: "+matchesAB.length);
+		// ...
+
 		matchesAB = R3D.relativeRIFTFromFeatureMatches(matchesAB);
 		console.log("after relative RIFT match: "+matchesAB.length);
 		var info = R3D.dropOutliersSparseMatches(matchesAB, imageScales[0],imageScales[1]);
@@ -13625,9 +13627,18 @@ for(var i=0; i<features.length; ++i){
 		console.log("after outlier sparse drop: "+matchesAB.length);
 		console.log(matchesAB);
 
-
-		matchesAB = R3D.filterMatchesOnLocalAffineDifference(matchesAB);
-		console.log("after affine difference drop: "+matchesAB.length);
+// var originalMatchCount;
+// originalMatchCount = matchesAB.length * 2;
+var maxIter = 10; // 5-10 @ 100-200 pts
+for(var iter=0; iter<maxIter; ++iter){
+	var originalMatchCount = matchesAB.length;
+	matchesAB = R3D.filterMatchesOnLocalAffineDifference(matchesAB);
+	console.log("after affine difference drop: "+matchesAB.length+" / "+originalMatchCount);
+	if(originalMatchCount==matchesAB.length){ // no change
+		console.log("unchanged break");
+		break;
+	}
+}
 
 		// matches = matchesAB;
 
@@ -13687,6 +13698,8 @@ GLOBALSTAGE.root().matrix().scale(0.50);
 		affinesAB = info["affines"];
 		var cellSizeShow = imageMatrixA.size().length()*0.01;
 		var showAngles = true;
+		console.log(pointsA.length);
+		console.log(matchesAB.length);
 		R3D.showForwardBackwardPointsColor(pointsA, pointsB, affinesAB, imageMatrixA,imageMatrixB, GLOBALSTAGE, cellSizeShow, showAngles, matchesAB,"sigma");
 
 throw "HEREX";

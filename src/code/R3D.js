@@ -35944,7 +35944,6 @@ var p3 = px*py;
 			if(showAngles){
 				/*
 				var affine = affines[i];
-
 				
 				var x = new V2D(1,0);
 				var y = new V2D(0,1);
@@ -35970,11 +35969,16 @@ var p3 = px*py;
 
 				var color = Code.interpolateColorGradientARGB(percent, heatColors);
 				*/
+
+
+				// if(i>matchesA.length){
+
+				// }
 if(!CALCULATIONTHINGY){
 	var datas = [];
 	console.log(matchesAB);
-	for(var i=0; i<matchesAB.length; ++i){
-		var match = matchesAB[i];
+	for(var j=0; j<matchesAB.length; ++j){
+		var match = matchesAB[j];
 		datas.push(match[parameterUse]);
 		// console.log(match);
 	}
@@ -35986,15 +35990,15 @@ if(!CALCULATIONTHINGY){
 	CALCULATIONTHINGY["range"] = max-min;
 	console.log(CALCULATIONTHINGY);
 }
-				console.log(matchesAB);
+				// console.log(matchesAB);
 				var match = matchesAB[i];
-				console.log(match);
-				console.log(i);
+				// console.log(match);
+				// console.log(i);
 				var param = match[parameterUse];
-				console.log(param);
-				var perent = (param - CALCULATIONTHINGY["min"])/CALCULATIONTHINGY["range"];
-				console.log(percent);
-				var color = Code.interpolateColorGradientARGB(param, heatColors);
+				// console.log(param);
+				var percent = (param - CALCULATIONTHINGY["min"])/CALCULATIONTHINGY["range"];
+				// console.log(percent);
+				var color = Code.interpolateColorGradientARGB(percent, heatColors);
 				// 
 
 			}else{
@@ -38191,6 +38195,11 @@ R3D.filterMatchesOnLocalAffineDifference = function(matchesAB, other){
 		var object = {};
 			object["match"] = match;
 			object["distances"] = [];
+		// RECORD ANGLES
+
+		// RECORD SCALES
+
+		// ...
 		objects.push(object);
 	}
 
@@ -38200,9 +38209,6 @@ R3D.filterMatchesOnLocalAffineDifference = function(matchesAB, other){
 	pointSpaceA.initWithObjects(objects);
 	pointSpaceB.initWithObjects(objects);
 	var pointSpaces = [pointSpaceA,pointSpaceB];
-	// .
-	// console.log(pointSpaceA);
-	// console.log(pointSpaceB);
 	// 2 loops
 	var p2D = new V2D();
 	for(var i=0; i<2; ++i){
@@ -38214,10 +38220,7 @@ R3D.filterMatchesOnLocalAffineDifference = function(matchesAB, other){
 			var affineAB = object["match"]["affine"];
 			var affineBA = null;
 			var neighbors = null;
-			// console.log(object);
-			// console.log(pointA,kNNNeighbors);
 			if(i==0){
-				// console.log("i==0");
 				neighbors = space.kNN(pointA,kNNNeighbors);
 			}else{ // i==1
 				neighbors = space.kNN(pointB,kNNNeighbors);
@@ -38258,7 +38261,6 @@ R3D.filterMatchesOnLocalAffineDifference = function(matchesAB, other){
 			var min = Code.min(distances);
 			var sigma = Code.stdDev(distances,min);
 			var limit = min + sigma*2.0;
-			// var limit = min + 2.
 		// console.log(min+" +/- "+sigma);
 		// Code.printMatlabArray(distances,"errors");
 		// drop local outlier:
@@ -38271,10 +38273,13 @@ R3D.filterMatchesOnLocalAffineDifference = function(matchesAB, other){
 				count += 1;
 			}
 		}
-		if(count==0){
+		if(count==0){ // somehow an isolated piont
+			console.log(i);
+			console.log(i);
 			console.log(distances);
 			console.log("all counts are above limit?");
-			average = 99E9;
+			// average = 99E9;
+			averge = 0; // ??????????????????????????????????? no support
 		}else{
 			average /= count;
 		}
@@ -38293,9 +38298,15 @@ R3D.filterMatchesOnLocalAffineDifference = function(matchesAB, other){
 		var neighborsB = pointSpaceB.kNN(pointB,localNeighborsKNN);
 		var averages = [];
 		for(var j=0; j<neighborsA.length; ++j){
+			if(neighborsA[j]==object){
+				continue;
+			}
 			averages.push(neighborsA[j]["average"]);
 		}
 		for(var j=0; j<neighborsB.length; ++j){
+			if(neighborsB[j]==object){
+				continue;
+			}
 			averages.push(neighborsB[j]["average"]);
 		}
 		var min = Code.min(averages);
@@ -38303,7 +38314,7 @@ R3D.filterMatchesOnLocalAffineDifference = function(matchesAB, other){
 		var limit = min + sigma*localNeighborhoodSigmaKeep;
 		if(average>limit){
 			console.log("FOUND OUTLIER");
-			objects["outlier"] = true;
+			object["outlier"] = true;
 		}
 		// TEMPORARY
 		var data = average;
@@ -38314,7 +38325,9 @@ R3D.filterMatchesOnLocalAffineDifference = function(matchesAB, other){
 	var keepMatches = [];
 	for(var i=0; i<matchCount; ++i){
 		var object = objects[i];
-		if(!object["outlier"]){
+		if(object["outlier"]==true){
+			console.log("skipping: "+i);
+		}else{
 			var match = object["match"];
 			keepMatches.push(match);
 			// TEMPORARY TESTING:

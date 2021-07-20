@@ -593,6 +593,9 @@ der Laptop - laptop
 | ordentlich |  | tidy (ordered) |
 | Freundin |  | friend (girl?) |
 | Freund |  | boyfriend? |
+| Exfreundin |  | ex-girlfriend |
+|  |  |  |
+|  |  |  |
 | Date |  | date (person) |
 |  |  |  |
 | Wirklich |  | really? |
@@ -1228,7 +1231,7 @@ Brandenburger - Brandenburg Gate
 | schreibt ? |  | to write |
 | liegen ? |  | to lay (down) |
 | zustimmen ? |  | to agree |
-|  |  |  |
+| winke / winkt ? |  | to wave |
 | stimmst ? |  | to agree ? |
 |  |  |  |
 |  |  |  |
