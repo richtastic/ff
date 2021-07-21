@@ -427,7 +427,7 @@ x local average affine displacement?
 	- local OR global?
 	- hard cutoffs at like less than 25% ?
 
-- local average score ?
+- local average SAD score ?
 	- local distribution of scores
 
 
@@ -436,12 +436,30 @@ x local average affine displacement?
 	- local average angle distribution 
 	- local average scale distribution
 	- neighbor matching count distributions
-
+	- global match SAD scores
+	- global F error
+	- local F error?
 	...........
 
+- MORE MATCHING OPERATIONS
+	- refine match locations
+	- search around neighborhood for matches
 
 
-
+- SEQUENCE:
+	- raw features
+	- raw all-features matching
+	- raw affine approximation from neighborhood
+	- LOOP: 
+		- refine affine matrix [nonlinear optimize SAD score]
+		- refine location [nonlinear optimize SAD score] - reposition B location
+		- filter global F [drop worst F error matches]
+		- filter global match SAD / RIFT score [drop worst SAD scores]
+		- filter global neighborhood forward/backward consistency [drop worst neighbor counts]
+		- filter local rotation [drop worst consistent rotation angle difference]
+		- filter local scale [drop worst consistent scale difference]
+		- filter local affine predicted location fwd/bak difference [drop worst predicted/actual location]
+		- extend neighborhood [find/add local matches from best inliers]
 
 
 R3D.filterMatchesOnLocalAffineDifference
@@ -450,16 +468,103 @@ showForwardBackwardPointsColor
 
 
 
-
-
-
 - FULL COMPARE ALL A TO ALL B:
 	R3D.compareProgressiveRIFTObjectsFull = function(objectsA, objectsB){
-	- KEEP ONLY MATCHES WITH BEST RATIO
-		R3D.compareProgressiveRIFTObjectsMatches(objectsA,objectsB);
+- KEEP ONLY MATCHES WITH BEST RATIO
+	R3D.compareProgressiveRIFTObjectsMatches(objectsA,objectsB);
 - ADD AFFINE MATRIX TO MATCHES
 	R3D.relativeRIFTFromFeatureMatches
-	
+- VARIOUS REFINE:
+	R3D.dropOutliersSparseMatches
+			var info = R3D.separateMatchesIntoPieces(matches);
+			
+			info = R3D.experimentAffineRefine(pointsA,pointsB,affinesAB, imageScalesA,imageScalesB);
+			
+			// possibly filter scores here too to limit next step?
+
+			// refine location:
+			info = R3D.experimentLocationRefine(pointsA,pointsB,affinesAB, imageScalesA,imageScalesB);
+				
+			// group
+			info = R3D.groupMatchesFromParallelArrays(info, imageScalesA,imageScalesB);
+			matchesAB = info["matches"];
+			console.log("START MATCHES: "+matchesAB.length);
+
+			// score
+			info = R3D.repeatedDropOutliersScore(matchesAB, imageScalesA,imageScalesB);
+			matchesAB = info["matches"];
+			console.log("KEPT SCORES: "+matchesAB.length);
+
+			// extended neighborhood
+			info = R3D.keepExtendedMatchNeighborhoods(matchesAB, imageScalesA,imageScalesB);
+			matchesAB = info["matches"];
+			console.log("KEPT NEIGHBORHOOD: "+matchesAB.length);
+
+			// F
+			info = R3D.repeatedDropOutliersFundamental(matchesAB, imageScalesA,imageScalesB);
+			matchesAB = info["matches"];
+			console.log("KEPT F: "+matchesAB.length);
+
+			// scores 2
+			info = R3D.repeatedDropOutliersScore(matchesAB, imageScalesA,imageScalesB);
+			matchesAB = info["matches"];
+			console.log("KEPT SCORE: "+matchesAB.length);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

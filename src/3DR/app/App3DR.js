@@ -13622,6 +13622,16 @@ for(var i=0; i<features.length; ++i){
 
 		matchesAB = R3D.relativeRIFTFromFeatureMatches(matchesAB);
 		console.log("after relative RIFT match: "+matchesAB.length);
+
+		var info = R3D.repeatFilterExtendMatches(matchesAB, imageScales[0],imageScales[1]);
+		console.log(info);
+
+throw "HERE"
+		
+
+
+
+
 		var info = R3D.dropOutliersSparseMatches(matchesAB, imageScales[0],imageScales[1]);
 		matchesAB = info["matches"];
 		console.log("after outlier sparse drop: "+matchesAB.length);

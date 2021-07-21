@@ -5420,6 +5420,30 @@ ImageMatScaled.prototype.size = function(){
 	}
 	return null;
 }
+ImageMatScaled.prototype.red = function(){
+	var image = this._images;
+	if(image){
+		image = image[0];
+		return image.red();
+	}
+	return null;
+}
+ImageMatScaled.prototype.grn = function(){
+	var image = this._images;
+	if(image){
+		image = image[0];
+		return image.grn();
+	}
+	return null;
+}
+ImageMatScaled.prototype.blu = function(){
+	var image = this._images;
+	if(image){
+		image = image[0];
+		return image.blu();
+	}
+	return null;
+}
 ImageMatScaled.prototype.infoForScale = function(scale){
 	var images = this._images;
 	var scales = this._scales;

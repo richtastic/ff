@@ -36098,6 +36098,35 @@ R3D.approximateScaleRotationFromTransform2D = function(matrix, origin){
 
 
 
+R3D.matchesLocationRefine = function(matches, imageScalesA,imageScalesB){
+	var len = matches.length;
+	var featureSize = imageScalesA.size().length() * 0.05;
+
+	var needleSize = 11;
+	var haystackSize = needleSize*2 + 1;
+	
+	var needle = new ImageMat(needleSize,needleSize);
+	var haystack = new ImageMat(haystackSize,haystackSize);
+
+	for(var i=0; i<len; ++i){
+		var match = matches[i];
+		var pointA = match["A"];
+		var pointB = match["B"];
+		var affineAB = match["affine"];
+		var result = R3D.optimumSADLocationSearchFlatRGB(pointA,pointB, imageScalesA,imageScalesB, featureSize, needleSize,haystackSize, affineAB, needle,haystack);
+		var newB = result["point"];
+		var score = result["score"];
+		// var d = V2D.distance(pointB,newB);
+		// console.log(d+"");
+		// newsB.push(newB);
+		// scores.push(score);
+		match["B"] = newB;
+		match["sad"] = score;
+	}
+	return matches;
+}
+
+
 R3D.experimentLocationRefine = function(samplesA,samplesB,affinesAB, imageScalesA,imageScalesB){
 	var len = samplesA.length;
 	// var pointsA = [];
@@ -36157,7 +36186,110 @@ R3D.groupMatchesFromParallelArrays = function(info, imageScalesA,imageScalesB){
 	// console.log(groups);
 	return {"matches":groups};
 }
+R3D.repeatFilterExtendMatches = function(matches, imageScalesA,imageScalesB){
+	// console.log(matches);
+	// throw ".."
+	// copy matches locally 
+		// ...
+	var maxIterations = 10;
+	for(var iteration=0; iteration<maxIterations; ++iteration){
+		console.log(",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,, "+iteration+" / "+maxIterations);
+			console.log("drop outside");
+			var result = R3D.matchesDropOutside(matches, imageScalesA,imageScalesB);
+			matchesAB = result["matches"];
+			console.log("               >"+matches.length);
+		// refine affine matrix 
+			console.log("refine affine")
+			R3D.matchesAffineRefineLocal(matches, imageScalesA,imageScalesB);
+				// filter sad score
+		// refine location
+			console.log("refine location")
+			R3D.matchesLocationRefine(matches, imageScalesA,imageScalesB);
+				// filter sad score
 
+		// filter global F
+			console.log("filter global F")
+			var result = R3D.matchesFilterFundamental(matches, imageScalesA,imageScalesB);
+			matchesAB = result["matches"];
+			console.log("               >"+matches.length);
+			// info = R3D.repeatedDropOutliersFundamental(matchesAB, imageScalesA,imageScalesB);
+
+		// filter global sad score
+			// console.log("filter global SAD")
+			// info = R3D.repeatedDropOutliersScore(matchesAB, imageScalesA,imageScalesB);
+
+		// filter global neighborhood consistency
+			// console.log("filter global A->B & B->A consistency")
+
+		// local rotation
+
+		// local scale
+
+		// local affine predicted location
+
+		// local ?
+
+		// extend neighborhood
+			// info = R3D.keepExtendedMatchNeighborhoods(matchesAB, imageScalesA,imageScalesB);
+
+		break;
+	}
+	console.log(matches);
+
+	var matchesAB = matches;
+	var imageMatrixA = imageScalesA;
+	var imageMatrixB = imageScalesB;
+	console.log(imageMatrixA);
+	console.log(imageMatrixB);
+
+	GLOBALSTAGE.root().matrix().scale(0.50);
+
+		var img = GLOBALSTAGE.getFloatRGBAsImage(imageMatrixA.red(),imageMatrixA.grn(),imageMatrixA.blu(), imageMatrixA.width(),imageMatrixA.height());
+		var d = new DOImage(img);
+		d.matrix().translate(0,0);
+		GLOBALSTAGE.addChild(d);
+		var img = GLOBALSTAGE.getFloatRGBAsImage(imageMatrixB.red(),imageMatrixB.grn(),imageMatrixB.blu(), imageMatrixB.width(),imageMatrixB.height());
+		var d = new DOImage(img);
+		d.matrix().translate(imageMatrixA.width(),0);
+		GLOBALSTAGE.addChild(d);
+		// DEBUG SHOW:
+		var info = R3D.separateMatchesIntoPieces(matchesAB);
+		pointsA = info["A"];
+		pointsB = info["B"];
+		affinesAB = info["affines"];
+		var cellSizeShow = imageMatrixA.size().length()*0.01;
+		var showAngles = true;
+		console.log(pointsA.length);
+		console.log(matchesAB.length);
+		// R3D.showForwardBackwardPointsColor(pointsA, pointsB, affinesAB, imageMatrixA,imageMatrixB, GLOBALSTAGE, cellSizeShow, showAngles, matchesAB,"sigma");
+		R3D.showForwardBackwardPointsColor(pointsA, pointsB, affinesAB, imageMatrixA,imageMatrixB, GLOBALSTAGE, cellSizeShow);
+
+
+	throw "repeatFilterExtendMatches";
+	/*
+
+
+	info = R3D.experimentAffineRefine(pointsA,pointsB,affinesAB, imageScalesA,imageScalesB);
+	scores = info["scores"];
+	pointsA = info["A"];
+	pointsB = info["B"];
+	affinesAB = info["affines"];
+
+
+
+	- LOOP: 
+		- refine affine matrix [nonlinear optimize SAD score]
+		- refine location [nonlinear optimize SAD score] - reposition B location
+		- filter global F [drop worst F error matches]
+		- filter global match SAD / RIFT score [drop worst SAD scores]
+		- filter global neighborhood forward/backward consistency [drop worst neighbor counts]
+		- filter local rotation [drop worst consistent rotation angle difference]
+		- filter local scale [drop worst consistent scale difference]
+		- filter local affine predicted location fwd/bak difference [drop worst predicted/actual location]
+		- extend neighborhood [find/add local matches from best inliers]
+
+	*/
+}
 
 R3D.dropOutliersSparseMatches = function(matches, imageScalesA,imageScalesB){
 
@@ -36237,6 +36369,43 @@ R3D.dropOutliersSparseMatches = function(matches, imageScalesA,imageScalesB){
 
 }
 
+R3D.matchesFilterFundamental = function(matchesAB, imageScalesA,imageScalesB){
+	// drop outliers F
+	var fxnUpdate = function(matches){ // recalculate F
+		var info = R3D.separateMatchesIntoPieces(matches);
+		var pointsA = info["A"];
+		var pointsB = info["B"];
+		var F = R3D.fundamentalFromUnnormalized(pointsA,pointsB);
+		var Finv = R3D.fundamentalInverse(F);
+		var count = pointsA.length;
+		var errorTotal = 0;
+		for(var i=0; i<count; ++i){
+			var pointA = pointsA[i];
+			var pointB = pointsB[i];
+			var error = R3D.fundamentalErrorSingle(F,Finv,pointA,pointB);
+				error = error["error"];
+			matches[i]["ferror"] = error;
+			errorTotal += error;
+		}
+		// console.log("avg F error: "+(errorTotal/count));
+	}
+	var fxnValue = function(object){
+		return object["ferror"];
+	}
+	var fxnLimit = function(values){
+		// Code.printMatlabArray(values);
+		var min = Code.min(values);
+		var std = Code.stdDev(values,min);
+		var limit = min + std * 2.0;
+		// console.log("F-LIMIT: "+limit+" ("+values.length+") ");
+		return limit;
+	}
+	var keepList = Code.repeatedDropOutliers(matchesAB, fxnValue, fxnLimit, 10, 10, fxnUpdate);
+	console.log("F KEPT: "+keepList.length+" / "+matchesAB.length);
+	return {"matches":keepList};
+}
+
+
 R3D.repeatedDropOutliersFundamental = function(matchesAB, imageScalesA,imageScalesB){
 	// drop outliers F
 	var fxnUpdate = function(matches){ // recalculate F
@@ -36291,7 +36460,58 @@ R3D.repeatedDropOutliersScore = function(matchesAB, imageScalesA,imageScalesB){
 	console.log("SCORE KEPT: "+keepList.length+" / "+matchesAB.length);
 	return {"matches":keepList};
 }
-
+R3D.matchesDropOutside = function(matchesAB, imageScalesA,imageScalesB){
+	var limitBorder = 0.05;
+	var sizeA = imageScalesA.size();
+	var sizeB = imageScalesB.size();
+	var limitAX = sizeA.x * limitBorder;
+	var limitAY = sizeA.x * limitBorder;
+	var limitBX = sizeB.y * limitBorder;
+	var limitBY = sizeB.y * limitBorder;
+	var keepList = [];
+	for(var i=0; i<matchesAB.length; ++i){
+		var match = matchesAB[i];
+		var pointA = match["A"];
+		var pointB = match["B"];
+		var remove = false;
+		if(pointA.x<limitAX){
+			remove = true;
+		}else if(sizeA.x-pointA.x>limitAX){
+			remove = true;
+		}else if(pointA.y<limitAY){
+			remove = true;
+		}else if(sizeA.y-pointA.y>limitAY){
+			remove = true;
+		}else if(pointB.x<limitBX){
+			remove = true;
+		}else if(sizeB.x-pointB.x>limitBX){
+			remove = true;
+		}else if(pointB.y<limitBY){
+			remove = true;
+		}else if(sizeB.y-pointB.y>limitBY){
+			remove = true;
+		}
+		if(!remove){
+			keepList.push(matchesAB);
+			// Code.removeElementAt(matchesAB);
+		}
+	}
+	return {"matches":keepList};
+}
+R3D.matchesAffineRefineLocal = function(matchesAB, imageScalesA,imageScalesB){
+	var len = matchesAB.length;
+	for(var i=0; i<len; ++i){
+		var match = matchesAB[i];
+		var pointA = match["A"];
+		var pointB = match["B"];
+		var affine = match["affine"];
+		var result = R3D.experimentAffineRefineSingle(pointA,pointB,affine, imageScalesA,imageScalesB);
+		matchesAB["A"] = result["A"];
+		matchesAB["B"] = result["B"];
+		matchesAB["affine"] = result["affine"];
+		matchesAB["sad"] = result["score"];
+	}
+}
 R3D.experimentAffineRefine = function(samplesA,samplesB,affinesAB, imageScalesA,imageScalesB){
 	var len = samplesA.length;
 	var pointsA = [];
@@ -36340,6 +36560,9 @@ R3D.experimentAffineRefineSingle = function(pointA,pointB,affineAB, imageScalesA
 
 	// visual refinement
 	var info = R3D.experimentAffineRefineSingle_A(pointA,pointB,affineAB, imageScalesA,imageScalesB, featureSize,rangeAngle,rangeScale,rangeIterations);
+
+	// could find B->A & reverse & average
+
 	// console.log(info);
 	var score = info["score"];
 	var scale = info["scale"];
