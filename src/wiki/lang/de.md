@@ -573,6 +573,8 @@ der Laptop - laptop
 | frisch |  | fresh |
 | weich |  | soft (feel) |
 |  |  |  |
+| anstrengend |  | exhausting |
+|  |  |  |
 | verheiratet |  | married |
 |  |  |  |
 | traurig |  | sad |
@@ -985,6 +987,9 @@ Neuschwanstein Castle
 |  |  |  |
 | Grillparty |  | barbeque |
 | die Bäume |  | tree |
+| reinfeiern |  | day-before party |
+|  |  |  |
+|  |  |  |
 |  |  |  |
 |  |  |  |
 | süß |  | sweet |
@@ -1305,6 +1310,8 @@ Brandenburger - Brandenburg Gate
 | langweilig |  | boring |
 |  |  |  |
 | toll |  | great (cool) |
+| großartige |  | great |
+|  |  |  |
 | total |  | really (very) |
 | über |  | everything |
 | über |  | about? |
@@ -1571,6 +1578,8 @@ Schwestern - sisters
 Sprachen - languages
 
 biem - at the
+
+Schuldirektorin - principle (school)
 
 fertig - finished
 

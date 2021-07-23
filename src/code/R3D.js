@@ -16057,6 +16057,273 @@ R3D._cornerListToFeatureList = function(corners, imageScale){
 	return features;
 }
 
+R3D.matchesFindNeighborhoodMatches = function(matchesAB, imageMatrixA,imageMatrixB, featureSizeRelative){ // find more matches in known areas
+	featureSizeRelative = Code.valueOrDefault(featureSizeRelative, 0.05); // 1/20th image size : 0.02 - 0.05
+	
+	// find all corners in A & B @ some resolution - spaced 
+	var imageWidthA = imageMatrixA.width();
+	var imageHeightA = imageMatrixA.height();
+	var imageWidthB = imageMatrixB.width();
+	var imageHeightB = imageMatrixB.height();
+	var idealPixelSize = new V2D(400,600);
+	var featureSizeA = imageMatrixA.size().length()*featureSizeRelative;
+	var featureSizeB = imageMatrixB.size().length()*featureSizeRelative;
+	var radiusSearchRelative = 1.5; // 1 - 2
+	var radiusSearchA = featureSizeA*radiusSearchRelative;
+	var radiusSearchB = featureSizeB*radiusSearchRelative;
+	var radiusMatchLimitRelative = 0.50; // as close as putative matches can be
+	var radiusMatchLimitA = featureSizeA*radiusMatchLimitRelative;
+	var radiusMatchLimitB = featureSizeB*radiusMatchLimitRelative;
+	var radiusMatchFinalLimitRelative = 0.25; // as close as final matches can be
+	var radiusMatchFinalLimitA = featureSizeA*radiusMatchFinalLimitRelative;
+	var radiusMatchFinalLimitB = featureSizeB*radiusMatchFinalLimitRelative;
+	console.log("featureSizes: "+featureSizeA+" & "+featureSizeB+" - "+featureSizeRelative);
+	console.log("liits: "+radiusSearchA+" & "+radiusMatchLimitA+" ... ");
+	
+	var cornerSpacingRelative = featureSizeRelative * 0.2; // 0.1 - 0.5
+	var nonMaximalPercent = 0.015;
+	var cornersA = R3D.optimalCountFeaturesFromImageScales(imageMatrixA, nonMaximalPercent, cornerSpacingRelative, idealPixelSize);
+	var cornersB = R3D.optimalCountFeaturesFromImageScales(imageMatrixB, nonMaximalPercent, cornerSpacingRelative, idealPixelSize);
+	console.log(cornersA);
+	console.log(cornersB);
+/*
+		// SHOW CORNERS
+		GLOBALSTAGE.root().matrix().scale(0.5);
+		var imageList = [imageMatrixA,imageMatrixB];
+		var cornerList = [cornersA,cornersB];
+		for(var i=0; i<imageList.length; ++i){
+			var imageScales = imageList[i];
+			var image = imageScales.images()[0];
+			var img = GLOBALSTAGE.getFloatRGBAsImage(image.red(),image.grn(),image.blu(), image.width(),image.height());
+			var d = new DOImage(img);
+			d.matrix().translate(0 + i*imageScales.width(), 0 );
+			GLOBALSTAGE.addChild(d);
+		}
+		// cover
+		var d = new DO();
+		d.graphics().setFill(0x99FFFFFF);
+		d.graphics().beginPath();
+		d.graphics().drawRect(0,0, imageList[0].width()*2, imageList[0].height());
+		d.graphics().endPath();
+		d.graphics().fill();
+		d.matrix().translate(0, 0);
+		GLOBALSTAGE.addChild(d);
+
+		for(var i=0; i<cornerList.length; ++i){
+			var corners = cornerList[i];
+			for(var j=0; j<corners.length; ++j){
+				var point = corners[j];
+				var d = new DO();
+				d.graphics().setFill(0xCCFF0000);
+				d.graphics().beginPath();
+				d.graphics().drawCircle(point.x,point.y,5.0);
+				d.graphics().endPath();
+				d.graphics().fill();
+				d.matrix().translate(0 + i*imageMatrixA.width(), 0 );
+				GLOBALSTAGE.addChild(d);
+			}
+		}
+*/
+	var toPoint = function(a){
+		return a;
+	}
+	var identity = new Matrix2D();
+		identity.identity();
+	var cornerSpaceA = new QuadTree(toPoint, V2D.ZERO, imageMatrixA.size());
+	var cornerSpaceB = new QuadTree(toPoint, V2D.ZERO, imageMatrixB.size());
+		cornerSpaceA.insertObjects(cornersA);
+		cornerSpaceB.insertObjects(cornersB);
+	// for each match in point A & B
+	var cornersList = [cornersA,cornersB];
+	// var matchesList = [];
+	var spacesList = [cornerSpaceA,cornerSpaceB];
+	var affineBA = new Matrix2D();
+var putativeMatches = [];
+
+// var needleSize = 7;
+// var haystackSize = 15;
+var needleSize = 11;
+var haystackSize = 21;
+var reuseNeedle = new ImageMat(needleSize,needleSize);
+var reuseHaystack = new ImageMat(haystackSize,haystackSize);
+
+	for(var i=0; i<matchesAB.length; ++i){
+		var match = matchesAB[i];
+		// console.log(match);
+		var pointA = match["A"];
+		var pointB = match["B"];
+		var affineAB = match["affine"];
+			affineBA.copy(affineAB);
+			affineBA.inverse();
+		// get nearby corners (1-2 feature size radius)
+		var neighborsA = cornerSpaceA.objectsInsideCircle(pointA,radiusSearchA);
+		// var neighborsB = cornerSpaceB.objectsInsideCircle(pointB,radiusSearchB);
+// console.log(neighborsA);
+// console.log(neighborsB);
+		// use affine & get best match in opposite image
+		for(var j=0; j<neighborsA.length; ++j){
+			var cornerA = neighborsA[j];
+			var rel2DA = V2D.sub(cornerA,pointA);
+			var centerB = affineBA.multV2DtoV2D(rel2DA);
+				centerB.add(pointB);
+			// R3D.matchesLocationRefine(matchesAB, imageScalesA,imageScalesB);
+			// var result = R3D.experimentAffineRefineSingle(cornerA,centerB,affineAB, imageMatrixA,imageMatrixB);
+			// var result = R3D.experimentAffineRefineSingle(cornerA,centerB,affineAB, imageMatrixA,imageMatrixB);
+			var result = R3D.optimumSADLocationSearchFlatRGB(cornerA,centerB, imageMatrixA,imageMatrixB, featureSizeA, needleSize,haystackSize, affineAB, reuseNeedle,reuseHaystack);
+			// console.log(result);
+			// add putative match to list
+			var putative = {};
+				putative["A"] = new V2D(cornerA.x,cornerA.y);
+				putative["B"] = result["point"];
+				putative["affine"] = affineAB.copy();
+				putative["sad"] = result["score"];
+			putativeMatches.push(putative);
+			// throw "...";
+		}
+		// throw "...";
+	}
+	// sort putative matches on SAD score
+	var sortSADFxn = function(a,b){
+		return a["sad"] < b["sad"] ? -1 : 1;
+	}
+	var toMatchPointA = function(m){
+		return m["A"];
+	}
+	var toMatchPointB = function(m){
+		return m["B"];
+	}
+	putativeMatches.sort(sortSADFxn);
+	// console.log(putativeMatches);
+
+	var putativeSpaceA = new QuadTree(toMatchPointA, V2D.ZERO, imageMatrixA.size());
+	// var putativeSpaceB = new QuadTree(toMatchPointB, V2D.ZERO, imageMatrixB.size());
+	
+	// for each new putative match
+	for(var i=0; i<putativeMatches.length; ++i){
+		var match = putativeMatches[i];
+		// console.log(match);
+		var pointA = match["A"];
+		var pointB = match["B"];
+		if(0>pointA.x || pointA.x>imageWidthA || 0>pointA.y || pointA.y>imageHeightA || 0>pointB.x || pointB.x>imageWidthB || 0>pointB.y || pointB.y>imageHeightB){
+			continue;
+		}
+		var nearest = putativeSpaceA.kNN(pointA);
+		if(nearest.length==0){
+			putativeSpaceA.insertObject(match);
+		}else{
+			nearest = nearest[0];
+			// console.log(nearest);
+			var d = V2D.distance(nearest["A"],pointA);
+			if(d>radiusMatchLimitA){
+				putativeSpaceA.insertObject(match);
+			}
+		}
+	}
+	var finalListA = putativeSpaceA.toArray();
+	// console.log(finalListA);
+	// add to a match point space, limited by 0.25-0.5 feature size
+/*
+	// SHOW
+		var cornerList = [finalListA];
+		for(var i=0; i<cornerList.length; ++i){
+			var corners = cornerList[i];
+			for(var j=0; j<corners.length; ++j){
+				// var point = corners[j];
+				var pointA = corners[j]["A"];
+				var pointB = corners[j]["B"];
+				var d = new DO();
+				d.graphics().setFill(0xCC009900);
+				d.graphics().beginPath();
+				d.graphics().drawCircle(pointA.x,pointA.y,7.0);
+				d.graphics().endPath();
+				d.graphics().fill();
+				d.matrix().translate(0 + 0, 0);
+				GLOBALSTAGE.addChild(d);
+
+				
+				var d = new DO();
+				d.graphics().setFill(0xCC009900);
+				d.graphics().beginPath();
+				d.graphics().drawCircle(pointB.x,pointB.y,7.0);
+				d.graphics().endPath();
+				d.graphics().fill();
+				d.matrix().translate(0 + imageMatrixA.width(), 0);
+				GLOBALSTAGE.addChild(d);
+
+
+				var d = new DO();
+				d.graphics().setLine(2.0,0xCC0000CC);
+				d.graphics().beginPath();
+				d.graphics().moveTo(pointA.x, pointA.y);
+				d.graphics().lineTo(pointB.x + imageMatrixA.width(),pointB.y);
+				d.graphics().endPath();
+				d.graphics().strokeLine();
+				d.matrix().translate(0, 0);
+				GLOBALSTAGE.addChild(d);
+
+			}
+		}
+*/
+
+
+	// filter on which putative match won count
+	// - keep track of which source matches resulted in which final matches
+	// discard all putative matches that were sourced from original matches w/ low success rate
+
+	// filter on F ?
+
+	// fitler on SAD ?
+
+
+	// IS THERE A WAY TO DO A GOOD FWD-BAK CHECK?
+	// EACH CORNER SPACE DOES MATCHIN
+
+
+	// TODO: THE SAD SCORES HAVE NEGATIVE VALUES ?
+	console.log("PUT MATCHES: "+finalListA.length);
+
+	var result = R3D.matchesFilterFundamental(finalListA, imageMatrixA,imageMatrixB);
+	var finalList = result["matches"];
+	console.log("NEW MATCHES: "+finalList.length);
+
+	Code.arrayPushArray(finalList, matchesAB);
+	console.log("TOT MATCHES: "+finalList.length);
+
+	// now with both
+	finalList.sort(sortSADFxn);
+
+	// limit final matches by distance:
+
+	putativeSpaceA.clear();
+	for(var i=0; i<finalList.length; ++i){
+		var match = finalList[i];
+		// var pointA = match["A"];
+		// var pointB = match["B"];
+		// if(0>pointA.x || pointA.x>imageWidthA || 0>pointA.y || pointA.y>imageHeightA || 0>pointB.x || pointB.x>imageWidthB || 0>pointB.y || pointB.y>imageHeightB){
+		// 	continue;
+		// }
+		var nearest = putativeSpaceA.kNN(pointA);
+		if(nearest.length==0){
+			putativeSpaceA.insertObject(match);
+		}else{
+			nearest = nearest[0];
+			// console.log(nearest);
+			var d = V2D.distance(nearest["A"],pointA);
+			if(d>radiusMatchFinalLimitA){
+				putativeSpaceA.insertObject(match);
+			}
+		}
+	}
+
+	finalList = putativeSpaceA.toArray();
+	console.log("OUT MATCHES: "+finalList.length);
+
+
+
+	// throw "matchesFindNeighborhoodMatches"
+	return {"matches":finalList};
+}
+
 R3D.keepExtendedMatchNeighborhoods = function(matchesAB, imageMatrixA,imageMatrixB){ // filter out neighborhoods that have poor sub-space matching
 	var featureSize = 0.04; // 0.3 - 0.5 (size / 3)
 	var featureSpacing = 0.04; // 0.2 - 0.10
@@ -35873,7 +36140,7 @@ R3D.showCoverAlpha = function(imageMatrixA,imageMatrixB, display, alpha){
 }
 CALCULATIONTHINGY = null;
 R3D.showForwardBackwardPointsColor = function(pointsA, pointsB, affines, imageMatrixA,imageMatrixB, display, cellSize, showAngles, matchesAB,parameterUse){
-console.log(pointsA, pointsB, affines, imageMatrixA,imageMatrixB, display, cellSize, showAngles, matchesAB,parameterUse)
+// console.log(pointsA, pointsB, affines, imageMatrixA,imageMatrixB, display, cellSize, showAngles, matchesAB,parameterUse)
 	cellSize = Code.valueOrDefault(cellSize,3.0);
 	showAngles = Code.valueOrDefault(showAngles,false);
 /*
@@ -36191,57 +36458,137 @@ R3D.repeatFilterExtendMatches = function(matches, imageScalesA,imageScalesB){
 	// throw ".."
 	// copy matches locally 
 		// ...
-	var maxIterations = 10;
+	// var maxIterations = 10;
+	// var maxIterations = 2;
+	var maxIterations = 1;
+	var matchesAB = matches;
+	console.log("      start");
+	console.log("               >"+matchesAB.length);
 	for(var iteration=0; iteration<maxIterations; ++iteration){
 		console.log(",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,, "+iteration+" / "+maxIterations);
+			console.log("               >"+matchesAB.length);
+
 			console.log("drop outside");
-			var result = R3D.matchesDropOutside(matches, imageScalesA,imageScalesB);
+			var result = R3D.matchesDropOutside(matchesAB, imageScalesA,imageScalesB);
 			matchesAB = result["matches"];
-			console.log("               >"+matches.length);
+			console.log("               >"+matchesAB.length);
+
+		// remove points that have very close overlaps
+			// prioritize on sad / F ?
+			// console.log("drop close");
+			// console.log(matchesAB);
+			// throw "..."
+			// var result = R3D.matchesDropClose(matchesAB, imageScalesA,imageScalesB);
+			// matchesAB = result["matches"];
+			// console.log("               >"+matchesAB.length);
+
 		// refine affine matrix 
 			console.log("refine affine")
-			R3D.matchesAffineRefineLocal(matches, imageScalesA,imageScalesB);
+			R3D.matchesAffineRefineLocal(matchesAB, imageScalesA,imageScalesB);
 				// filter sad score
+
 		// refine location
 			console.log("refine location")
-			R3D.matchesLocationRefine(matches, imageScalesA,imageScalesB);
+			R3D.matchesLocationRefine(matchesAB, imageScalesA,imageScalesB);
 				// filter sad score
 
 		// filter global F
-			console.log("filter global F")
-			var result = R3D.matchesFilterFundamental(matches, imageScalesA,imageScalesB);
+			console.log("filter global F 1")
+			var result = R3D.matchesFilterFundamental(matchesAB, imageScalesA,imageScalesB);
 			matchesAB = result["matches"];
-			console.log("               >"+matches.length);
-			// info = R3D.repeatedDropOutliersFundamental(matchesAB, imageScalesA,imageScalesB);
+			console.log("               >"+matchesAB.length);
+			info = R3D.repeatedDropOutliersFundamental(matchesAB, imageScalesA,imageScalesB);
 
 		// filter global sad score
-			// console.log("filter global SAD")
-			// info = R3D.repeatedDropOutliersScore(matchesAB, imageScalesA,imageScalesB);
+			console.log("filter global SAD")
+			// var result = R3D.repeatedDropOutliersScore(matchesAB, imageScalesA,imageScalesB);
+			var result = R3D.matchesDropOutliersSAD(matchesAB, imageScalesA,imageScalesB);
+			matchesAB = result["matches"];
+			console.log("               >"+matchesAB.length);
+
+
+// console.log("matchesAB:");
+// console.log(matchesAB);
+
+// console.log("append good neighborhood matches");
+// var result = R3D.matchesFindNeighborhoodMatches(matchesAB, imageScalesA,imageScalesB);
+// console.log(result);
+// matchesAB = result["matches"];
+// console.log("               >"+matchesAB.length);
+// throw "..."
+
 
 		// filter global neighborhood consistency
-			// console.log("filter global A->B & B->A consistency")
+			console.log("filter global A->B & B->A consistency");
+			var result = R3D.matchesFilterNeighborhoodConsistency(matchesAB, imageScalesA,imageScalesB);
+			matchesAB = result["matches"];
+			console.log("               >"+matchesAB.length);
+/*
+		// filter local rotation
+				console.log("filter local rotation");
+			var result = R3D.filterMatchesOnLocalRotation(matchesAB, imageScalesA,imageScalesB);
+			matchesAB = result["matches"];
+			console.log("               >"+matchesAB.length);
 
-		// local rotation
+		// filter local scale
+			console.log("filter local scale");
+			var result = R3D.filterMatchesOnLocalScale(matchesAB, imageScalesA,imageScalesB);
+			matchesAB = result["matches"];
+			console.log("               >"+matchesAB.length);
+*/
+		// filter local affine predicted location
+			console.log("filter local affine difference");
+			var result = R3D.filterMatchesOnLocalAffineDifference(matchesAB, imageScalesA,imageScalesB);
+			matchesAB = result["matches"];
+			console.log("               >"+matchesAB.length);
 
-		// local scale
+			// console.log("filter global F 2")
+			// var result = R3D.matchesFilterFundamental(matchesAB, imageScalesA,imageScalesB);
+			// matchesAB = result["matches"];
 
-		// local affine predicted location
+		// filter on neighborhood SAD scores
+			console.log("filter local neighborhood scores");
+			var result = R3D.keepExtendedMatchNeighborhoods(matchesAB, imageScalesA,imageScalesB);
+			console.log(result);
+			matchesAB = result["matches"];
+			console.log("               >"+matchesAB.length);
 
+		
 		// local ?
 
+		// RANSAC F ?
+
 		// extend neighborhood
-			// info = R3D.keepExtendedMatchNeighborhoods(matchesAB, imageScalesA,imageScalesB);
+			console.log("append good neighborhood matches");
+			var result = R3D.matchesFindNeighborhoodMatches(matchesAB, imageScalesA,imageScalesB);
+			console.log(result);
+			matchesAB = result["matches"];
+			console.log("               >"+matchesAB.length);
+			// ...
+			// use top / all ? % matches
+			
 
-		break;
+
+			// filter global F
+			console.log("filter global F 3")
+			var result = R3D.matchesFilterFundamental(matchesAB, imageScalesA,imageScalesB);
+			matchesAB = result["matches"];
+			console.log("               >"+matchesAB.length);
+			info = R3D.repeatedDropOutliersFundamental(matchesAB, imageScalesA,imageScalesB);
+
+
+
+		// console.log("filter global F 2")
+		// 	var result = R3D.matchesFilterFundamental(matchesAB, imageScalesA,imageScalesB);
+		// 	matchesAB = result["matches"];
+		// break;
 	}
-	console.log(matches);
+	// console.log(matches);
+	// var matchesAB = matches;
 
-	var matchesAB = matches;
+	// DISPLAY
 	var imageMatrixA = imageScalesA;
 	var imageMatrixB = imageScalesB;
-	console.log(imageMatrixA);
-	console.log(imageMatrixB);
-
 	GLOBALSTAGE.root().matrix().scale(0.50);
 
 		var img = GLOBALSTAGE.getFloatRGBAsImage(imageMatrixA.red(),imageMatrixA.grn(),imageMatrixA.blu(), imageMatrixA.width(),imageMatrixA.height());
@@ -36369,7 +36716,54 @@ R3D.dropOutliersSparseMatches = function(matches, imageScalesA,imageScalesB){
 
 }
 
+
+R3D.matchesFilterNeighborhoodConsistency = function(matchesAB, imageScalesA,imageScalesB){
+	// put into spaces 
+
+	var toPointFxnA = function(object){
+		return object["match"]["A"];
+	}
+	var toPointFxnB = function(object){
+		return object["match"]["B"];
+	}
+	// assemble into container objects
+	var objects = [];
+	for(var i=0; i<matchCount; ++i){
+		var match = matchesAB[i];
+		var object = {};
+			object["match"] = match;
+			// object["distances"] = [];
+		objects.push(object);
+	}
+
+	// put points in point spaces
+	var pointSpaceA = new QuadTree(toPointFxnA, V2D.ZERO, imageA.size());
+	var pointSpaceB = new QuadTree(toPointFxnB, V2D.ZERO, imageB.size());
+	pointSpaceA.initWithObjects(objects);
+	pointSpaceB.initWithObjects(objects);
+	var pointSpaces = [pointSpaceA,pointSpaceB];
+
+	// find A->B matches & B->A
+	for(var i=0; i<objects.length; ++i){
+		var object = objects[i];
+		var match = object["match"];
+
+		throw ""
+	}
+	
+
+
+	// get global limits [>25%]
+	// get local limits [sigma]
+
+	// 
+
+
+	throw "matchesFilterNeighborhoodConsistency";
+}
+
 R3D.matchesFilterFundamental = function(matchesAB, imageScalesA,imageScalesB){
+	console.log(matchesAB);
 	// drop outliers F
 	var fxnUpdate = function(matches){ // recalculate F
 		var info = R3D.separateMatchesIntoPieces(matches);
@@ -36378,6 +36772,7 @@ R3D.matchesFilterFundamental = function(matchesAB, imageScalesA,imageScalesB){
 		var F = R3D.fundamentalFromUnnormalized(pointsA,pointsB);
 		var Finv = R3D.fundamentalInverse(F);
 		var count = pointsA.length;
+// console.log("COUNT: "+count);
 		var errorTotal = 0;
 		for(var i=0; i<count; ++i){
 			var pointA = pointsA[i];
@@ -36387,7 +36782,7 @@ R3D.matchesFilterFundamental = function(matchesAB, imageScalesA,imageScalesB){
 			matches[i]["ferror"] = error;
 			errorTotal += error;
 		}
-		// console.log("avg F error: "+(errorTotal/count));
+		console.log("avg F error: "+(errorTotal/count)+" ("+count+") ");
 	}
 	var fxnValue = function(object){
 		return object["ferror"];
@@ -36441,6 +36836,26 @@ R3D.repeatedDropOutliersFundamental = function(matchesAB, imageScalesA,imageScal
 	console.log("F KEPT: "+keepList.length+" / "+matchesAB.length);
 	return {"matches":keepList};
 }
+R3D.matchesDropOutliersSAD = function(matchesAB, imageScalesA,imageScalesB){
+// filter on scores:
+	var fxnValue = function(object){
+		return object["sad"];
+	}
+	var fxnLimit = function(values){
+		// Code.printMatlabArray(values);
+		var min = Code.min(values);
+		var std = Code.stdDev(values,min);
+		var limit = min + std * 2.0;
+		return limit;
+	}
+
+	// Code.repeatedDropOutliers = function(inList, toValueFxn, toLimitFxn, minCount, maxIterations){
+	var keepList = Code.repeatedDropOutliers(matchesAB, fxnValue, fxnLimit, 10, 25);
+	console.log("SCORE KEPT: "+keepList.length+" / "+matchesAB.length);
+	return {"matches":keepList};
+
+	// throw "matchesDropOutliersSAD"
+}
 
 R3D.repeatedDropOutliersScore = function(matchesAB, imageScalesA,imageScalesB){
 	// filter on scores:
@@ -36460,40 +36875,49 @@ R3D.repeatedDropOutliersScore = function(matchesAB, imageScalesA,imageScalesB){
 	console.log("SCORE KEPT: "+keepList.length+" / "+matchesAB.length);
 	return {"matches":keepList};
 }
+R3D.matchesDropClose = function(matchesAB, imageScalesA,imageScalesB){
+	throw "R3D.matchesDropClose";
+}
+
 R3D.matchesDropOutside = function(matchesAB, imageScalesA,imageScalesB){
-	var limitBorder = 0.05;
+	var limitBorder = 0.01; // 0.01 - 0.05
 	var sizeA = imageScalesA.size();
 	var sizeB = imageScalesB.size();
 	var limitAX = sizeA.x * limitBorder;
-	var limitAY = sizeA.x * limitBorder;
-	var limitBX = sizeB.y * limitBorder;
+	var limitAY = sizeA.y * limitBorder;
+	var limitBX = sizeB.x * limitBorder;
 	var limitBY = sizeB.y * limitBorder;
+	// console.log("SIZE: "+sizeA+" * "+sizeB)
 	var keepList = [];
 	for(var i=0; i<matchesAB.length; ++i){
 		var match = matchesAB[i];
 		var pointA = match["A"];
 		var pointB = match["B"];
+		// console.log(pointA+" & "+pointB+" / "+sizeA+" & "+sizeB)
 		var remove = false;
 		if(pointA.x<limitAX){
 			remove = true;
-		}else if(sizeA.x-pointA.x>limitAX){
+		}else if(sizeA.x-pointA.x<limitAX){
+			// console.log("drop B: "+sizeA.x+" - "+pointA.x+" > "+limitAX);
 			remove = true;
 		}else if(pointA.y<limitAY){
 			remove = true;
-		}else if(sizeA.y-pointA.y>limitAY){
+		}else if(sizeA.y-pointA.y<limitAY){
+			// console.log("drop D");
 			remove = true;
 		}else if(pointB.x<limitBX){
 			remove = true;
-		}else if(sizeB.x-pointB.x>limitBX){
+		}else if(sizeB.x-pointB.x<limitBX){
+			// console.log("drop X 2");
 			remove = true;
 		}else if(pointB.y<limitBY){
 			remove = true;
-		}else if(sizeB.y-pointB.y>limitBY){
+		}else if(sizeB.y-pointB.y<limitBY){
 			remove = true;
+			// console.log("drop Y 2");
 		}
 		if(!remove){
-			keepList.push(matchesAB);
-			// Code.removeElementAt(matchesAB);
+			keepList.push(match);
 		}
 	}
 	return {"matches":keepList};
@@ -36506,10 +36930,10 @@ R3D.matchesAffineRefineLocal = function(matchesAB, imageScalesA,imageScalesB){
 		var pointB = match["B"];
 		var affine = match["affine"];
 		var result = R3D.experimentAffineRefineSingle(pointA,pointB,affine, imageScalesA,imageScalesB);
-		matchesAB["A"] = result["A"];
-		matchesAB["B"] = result["B"];
-		matchesAB["affine"] = result["affine"];
-		matchesAB["sad"] = result["score"];
+		match["A"] = result["A"];
+		match["B"] = result["B"];
+		match["affine"] = result["affine"];
+		match["sad"] = result["score"];
 	}
 }
 R3D.experimentAffineRefine = function(samplesA,samplesB,affinesAB, imageScalesA,imageScalesB){
@@ -38400,8 +38824,8 @@ R3D.refineFromFeatures = function(pointA,sizeA,angleA, pointB,sizeB,angleB, imag
 	return result;
 }
 
-R3D.filterMatchesOnLocalAffineDifference = function(matchesAB, other){
-	console.log(matchesAB);
+R3D.filterMatchesOnLocalScale = function(matchesAB, imageA, imageB){
+	throw "R3D.filterMatchesOnLocalScale";
 	var kNNNeighbors = 6+1; // 6-10 neighbor samples to get good inlier / outlier distribution
 	var matchCount = matchesAB.length;
 
@@ -38427,8 +38851,8 @@ R3D.filterMatchesOnLocalAffineDifference = function(matchesAB, other){
 	}
 
 	// put points in point spaces
-	var pointSpaceA = new QuadTree(toPointFxnA);
-	var pointSpaceB = new QuadTree(toPointFxnB);
+	var pointSpaceA = new QuadTree(toPointFxnA, V2D.ZERO, imageA.size());
+	var pointSpaceB = new QuadTree(toPointFxnB, V2D.ZERO, imageB.size());
 	pointSpaceA.initWithObjects(objects);
 	pointSpaceB.initWithObjects(objects);
 	var pointSpaces = [pointSpaceA,pointSpaceB];
@@ -38498,10 +38922,8 @@ R3D.filterMatchesOnLocalAffineDifference = function(matchesAB, other){
 		}
 		if(count==0){ // somehow an isolated piont
 			console.log(i);
-			console.log(i);
 			console.log(distances);
 			console.log("all counts are above limit?");
-			// average = 99E9;
 			averge = 0; // ??????????????????????????????????? no support
 		}else{
 			average /= count;
@@ -38536,7 +38958,7 @@ R3D.filterMatchesOnLocalAffineDifference = function(matchesAB, other){
 		var sigma = Code.stdDev(averages,min);
 		var limit = min + sigma*localNeighborhoodSigmaKeep;
 		if(average>limit){
-			console.log("FOUND OUTLIER");
+			// console.log("FOUND OUTLIER");
 			object["outlier"] = true;
 		}
 		// TEMPORARY
@@ -38549,7 +38971,7 @@ R3D.filterMatchesOnLocalAffineDifference = function(matchesAB, other){
 	for(var i=0; i<matchCount; ++i){
 		var object = objects[i];
 		if(object["outlier"]==true){
-			console.log("skipping: "+i);
+			// console.log("skipping: "+i);
 		}else{
 			var match = object["match"];
 			keepMatches.push(match);
@@ -38558,7 +38980,165 @@ R3D.filterMatchesOnLocalAffineDifference = function(matchesAB, other){
 		}
 	}
 	// throw "filterMatchesOnLocalAffineDifference"
-	return keepMatches;
+	return {"matches":keepMatches};
+}
+
+R3D.filterMatchesOnLocalAffineDifference = function(matchesAB, imageA, imageB){
+	var kNNNeighbors = 6+1; // 6-10 neighbor samples to get good inlier / outlier distribution
+	var matchCount = matchesAB.length;
+
+	var toPointFxnA = function(object){
+		return object["match"]["A"];
+	}
+	var toPointFxnB = function(object){
+		return object["match"]["B"];
+	}
+	// assemble into container objects
+	var objects = [];
+	for(var i=0; i<matchCount; ++i){
+		var match = matchesAB[i];
+		var object = {};
+			object["match"] = match;
+			object["distances"] = [];
+		// RECORD ANGLES
+
+		// RECORD SCALES
+
+		// ...
+		objects.push(object);
+	}
+
+	// put points in point spaces
+	var pointSpaceA = new QuadTree(toPointFxnA, V2D.ZERO, imageA.size());
+	var pointSpaceB = new QuadTree(toPointFxnB, V2D.ZERO, imageB.size());
+	pointSpaceA.initWithObjects(objects);
+	pointSpaceB.initWithObjects(objects);
+	var pointSpaces = [pointSpaceA,pointSpaceB];
+	// 2 loops
+	var p2D = new V2D();
+	for(var i=0; i<2; ++i){
+		var space = pointSpaces[i];
+		for(var j=0; j<matchCount; ++j){
+			var object = objects[j];
+			var pointA = object["match"]["A"];
+			var pointB = object["match"]["B"];
+			var affineAB = object["match"]["affine"];
+			var affineBA = null;
+			var neighbors = null;
+			if(i==0){
+				neighbors = space.kNN(pointA,kNNNeighbors);
+			}else{ // i==1
+				neighbors = space.kNN(pointB,kNNNeighbors);
+				affineBA = Matrix2D.inverse(affineAB);
+			}
+			// console.log(neighbors);
+			for(var k=0; k<neighbors.length; ++k){
+				var neighbor = neighbors[k];
+				if(neighbor==object){
+					continue;
+				}
+				// predicted vs actual location
+				var pA = neighbor["match"]["A"];
+				var pB = neighbor["match"]["B"];
+				var distance = null;
+				if(i==0){
+					p2D.set(pA.x-pointA.x,pA.y-pointA.y);
+					affineAB.multV2DtoV2D(p2D,p2D);
+					p2D.add(pointB);
+					distance = V2D.distance(pB,p2D);
+				}else{ // i==1
+					p2D.set(pB.x-pointB.x,pB.y-pointB.y);
+					affineBA.multV2DtoV2D(p2D,p2D);
+					p2D.add(pointA);
+					distance = V2D.distance(pA,p2D);
+					// throw "i=1";
+				}
+				neighbor["distances"].push(distance);
+			}
+			// throw "//..."
+		}
+		// var spaceB = pointSpaces[i];
+	}
+	// calcualte average affine discrepancy
+	for(var i=0; i<matchCount; ++i){
+		var object = objects[i];
+		var distances = object["distances"];
+			var min = Code.min(distances);
+			var sigma = Code.stdDev(distances,min);
+			var limit = min + sigma*2.0;
+		// console.log(min+" +/- "+sigma);
+		// Code.printMatlabArray(distances,"errors");
+		// drop local outlier:
+		var average = 0;
+		var count = 0;
+		for(var d=0; d<distances.length; ++d){
+			var distance = distances[d];
+			if(distance<=limit){
+				average += distance;
+				count += 1;
+			}
+		}
+		if(count==0){ // somehow an isolated piont
+			console.log(i);
+			console.log(distances);
+			console.log("all counts are above limit?");
+			averge = 0; // ??????????????????????????????????? no support
+		}else{
+			average /= count;
+		}
+		object["average"] = average;
+	}
+	// drop outliers
+	var localNeighborsKNN = 6+1; // 
+	var localNeighborhoodSigmaKeep = 2.0; // 2-3
+	for(var i=0; i<matchCount; ++i){
+		var object = objects[i];
+		var pointA = object["match"]["A"];
+		var pointB = object["match"]["B"];
+		var average = object["average"];
+		// get local area in A & local area in B & see if it is an outlier or not
+		var neighborsA = pointSpaceA.kNN(pointA,localNeighborsKNN);
+		var neighborsB = pointSpaceB.kNN(pointB,localNeighborsKNN);
+		var averages = [];
+		for(var j=0; j<neighborsA.length; ++j){
+			if(neighborsA[j]==object){
+				continue;
+			}
+			averages.push(neighborsA[j]["average"]);
+		}
+		for(var j=0; j<neighborsB.length; ++j){
+			if(neighborsB[j]==object){
+				continue;
+			}
+			averages.push(neighborsB[j]["average"]);
+		}
+		var min = Code.min(averages);
+		var sigma = Code.stdDev(averages,min);
+		var limit = min + sigma*localNeighborhoodSigmaKeep;
+		if(average>limit){
+			// console.log("FOUND OUTLIER");
+			object["outlier"] = true;
+		}
+		// TEMPORARY
+		var data = average;
+			object["data"] = data;
+
+	}
+	// convert back to array
+	var keepMatches = [];
+	for(var i=0; i<matchCount; ++i){
+		var object = objects[i];
+		if(object["outlier"]==true){
+			// console.log("skipping: "+i);
+		}else{
+			var match = object["match"];
+			keepMatches.push(match);
+			// TEMPORARY TESTING:
+			match["sigma"] = object["data"];
+		}
+	}
+	// throw "filterMatchesOnLocalAffineDifference"
+	return {"matches":keepMatches};
 }
 
 R3D.FILTER_TYPE_NONE = 0;

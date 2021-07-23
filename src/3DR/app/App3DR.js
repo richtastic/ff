@@ -13618,8 +13618,8 @@ for(var i=0; i<features.length; ++i){
 		console.log(result);
 		matchesAB = result["matches"];
 		console.log("after full RIFT match: "+matchesAB.length);
-		// ...
-
+		
+		// generate affine matrixes for each match based on neighborhood
 		matchesAB = R3D.relativeRIFTFromFeatureMatches(matchesAB);
 		console.log("after relative RIFT match: "+matchesAB.length);
 
@@ -13643,6 +13643,7 @@ var maxIter = 10; // 5-10 @ 100-200 pts
 for(var iter=0; iter<maxIter; ++iter){
 	var originalMatchCount = matchesAB.length;
 	matchesAB = R3D.filterMatchesOnLocalAffineDifference(matchesAB);
+		matchesAB = matchesAB["matches"];
 	console.log("after affine difference drop: "+matchesAB.length+" / "+originalMatchCount);
 	if(originalMatchCount==matchesAB.length){ // no change
 		console.log("unchanged break");

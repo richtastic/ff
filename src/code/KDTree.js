@@ -53,7 +53,7 @@ KDTree.prototype.insertObjects = function(objects){
     // insert to left & right
     throw "...";
 }
-QuadTree.prototype.insertObject = function(object){
+KDTree.prototype.insertObject = function(object){
     var toDA = this._toDimensionalArray(object);
     var location = toDA(object);
     var dimensions = this.dimensions();

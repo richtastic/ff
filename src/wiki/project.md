@@ -14,7 +14,10 @@
 - data flow / data structures / diagrams
 - systems
 - features
-- entirety of app thought out before pieces are put together in 
+- entirety of app thought out before pieces are put together in final source project
+	- all main and edge cases need to be defined
+		- things like:
+			- connection failure, server failure, client failure, ...
 
 
 ## Prototyping Design
