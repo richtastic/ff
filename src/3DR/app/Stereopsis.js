@@ -8281,8 +8281,8 @@ Stereopsis.World.prototype.solvePair = function(completeFxn, completeContext){ /
 // data["splits"] = [4]; // 0 ... 4 .... 9
 
 var maxIterations = 6;
-// data["splits"] = [3]; // 0 1 2 [3] 4 5
-data["splits"] = [2,4];
+data["splits"] = [3]; // 0 1 2 [3] 4 5
+// data["splits"] = [2,4];
 
 // var maxIterations = 7;
 // data["splits"] = [1,3,5];
@@ -8426,12 +8426,13 @@ console.log("splits: "+splits);
 	// probe 2D - search empty neighbors for more matches
 	// world.probe2DCellsR(2.0,3.0); // not very daring
 	// world.probe2DCellsR(999.0,999.0);
-	world.probe2DCellsR(3.0,3.0);
+	world.probe2DCellsR(2.0,2.0);
 	// world.probe2DCellsR(3.0,4.0); // maybe too daring
 	// world.probe2DCellsR(4.0,4.0);
 
 	// filter global error
-	world.filterGlobal3DR(3.0);
+	// world.filterGlobal3DR(3.0);
+	world.filterGlobal3DR(2.0);
 
 
 	// only do this if error is low enough & most points are mostly in front already

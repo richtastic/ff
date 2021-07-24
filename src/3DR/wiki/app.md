@@ -406,6 +406,44 @@ x local average affine displacement?
 	- look at where all neighbors are vs where they are predicted to be thru affine
 	- each match averages it's displacements
 
+
+- initial database matches have a lot of incorrect results
+	- is it worth doing more direct compares?
+		- hist
+		- feature
+	- adding different metric?
+		- image 'icon' 10x10 = 100 (79) ->  21x21 = 441(347) oriented pixels
+			- CIRCULAR CENTER CUTOUT: ratio: pi/4 = 0.78...
+		- compare at ~ 5 scales, ~ 30 angles = 150 compares
+		- compare:
+			- RGB vector distance [SAD]
+			- SSD
+			- RIFT-SAD
+		- use best compare
+
+
+- fat-match sequence ends with poor initial results
+
+
+
+
+Stereopsis.js:525 REMOVING NULL POINTS3D: 0
+09:42:51.082 Stereopsis.js:13497  - dropNegative3D: 0 / 601
+
+
+
+
+
+
+
+
+TAKES A LONG TIME:
+	var result = R3D.matchesFilterFundamental(matchesAB, imageScalesA,imageScalesB);
+
+
+repeatFilterExtendMatches
+
+
 - REDO ALL THE FILTERING STEPS ITERITIVELY ?
 	- get F rough
 	-> initial calc F

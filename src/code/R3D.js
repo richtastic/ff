@@ -16057,9 +16057,10 @@ R3D._cornerListToFeatureList = function(corners, imageScale){
 	return features;
 }
 
-R3D.matchesFindNeighborhoodMatches = function(matchesAB, imageMatrixA,imageMatrixB, featureSizeRelative){ // find more matches in known areas
+R3D.matchesFindNeighborhoodMatches = function(matchesAB, imageMatrixA,imageMatrixB, featureSizeRelative, topSigmaUse){ // find more matches in known areas
 	featureSizeRelative = Code.valueOrDefault(featureSizeRelative, 0.05); // 1/20th image size : 0.02 - 0.05
-	
+	topSigmaUse = Code.valueOrDefault(topSigmaUse, 2.0);
+
 	// find all corners in A & B @ some resolution - spaced 
 	var imageWidthA = imageMatrixA.width();
 	var imageHeightA = imageMatrixA.height();
@@ -16282,9 +16283,7 @@ var reuseHaystack = new ImageMat(haystackSize,haystackSize);
 	// TODO: THE SAD SCORES HAVE NEGATIVE VALUES ?
 	console.log("PUT MATCHES: "+finalListA.length);
 
-	var result = R3D.matchesFilterFundamental(finalListA, imageMatrixA,imageMatrixB);
-	var finalList = result["matches"];
-	console.log("NEW MATCHES: "+finalList.length);
+	var finalList = finalListA;
 
 	Code.arrayPushArray(finalList, matchesAB);
 	console.log("TOT MATCHES: "+finalList.length);
@@ -16297,18 +16296,15 @@ var reuseHaystack = new ImageMat(haystackSize,haystackSize);
 	putativeSpaceA.clear();
 	for(var i=0; i<finalList.length; ++i){
 		var match = finalList[i];
-		// var pointA = match["A"];
-		// var pointB = match["B"];
-		// if(0>pointA.x || pointA.x>imageWidthA || 0>pointA.y || pointA.y>imageHeightA || 0>pointB.x || pointB.x>imageWidthB || 0>pointB.y || pointB.y>imageHeightB){
-		// 	continue;
-		// }
-		var nearest = putativeSpaceA.kNN(pointA);
+		var pointA = match["A"];
+		var pointB = match["B"];
+		var nearest = putativeSpaceA.kNN(pointA, 1);
 		if(nearest.length==0){
 			putativeSpaceA.insertObject(match);
 		}else{
 			nearest = nearest[0];
-			// console.log(nearest);
 			var d = V2D.distance(nearest["A"],pointA);
+			// console.log("nearest: "+nearest["A"]+" - "+pointA+" = "+d+" / "+radiusMatchFinalLimitA+" : "+imageWidthA+"x"+imageHeightA+" : "+putativeSpaceA.count());
 			if(d>radiusMatchFinalLimitA){
 				putativeSpaceA.insertObject(match);
 			}
@@ -16317,6 +16313,10 @@ var reuseHaystack = new ImageMat(haystackSize,haystackSize);
 
 	finalList = putativeSpaceA.toArray();
 	console.log("OUT MATCHES: "+finalList.length);
+
+	// var result = R3D.matchesFilterFundamental(finalListA, imageMatrixA,imageMatrixB);
+	// var finalList = result["matches"];
+	// console.log("NEW MATCHES: "+finalList.length);
 
 
 
@@ -36459,11 +36459,13 @@ R3D.repeatFilterExtendMatches = function(matches, imageScalesA,imageScalesB){
 	// copy matches locally 
 		// ...
 	// var maxIterations = 10;
-	// var maxIterations = 2;
-	var maxIterations = 1;
+	var maxIterations = 2;
+	// var maxIterations = 1;
 	var matchesAB = matches;
+	var previousCount = 0;
 	console.log("      start");
 	console.log("               >"+matchesAB.length);
+	var minimumTotalMatchesRequired = 25;
 	for(var iteration=0; iteration<maxIterations; ++iteration){
 		console.log(",,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,, "+iteration+" / "+maxIterations);
 			console.log("               >"+matchesAB.length);
@@ -36517,12 +36519,13 @@ R3D.repeatFilterExtendMatches = function(matches, imageScalesA,imageScalesB){
 // console.log("               >"+matchesAB.length);
 // throw "..."
 
-
+		
 		// filter global neighborhood consistency
 			console.log("filter global A->B & B->A consistency");
 			var result = R3D.matchesFilterNeighborhoodConsistency(matchesAB, imageScalesA,imageScalesB);
 			matchesAB = result["matches"];
 			console.log("               >"+matchesAB.length);
+
 /*
 		// filter local rotation
 				console.log("filter local rotation");
@@ -36537,9 +36540,22 @@ R3D.repeatFilterExtendMatches = function(matches, imageScalesA,imageScalesB){
 			console.log("               >"+matchesAB.length);
 */
 		// filter local affine predicted location
+
 			console.log("filter local affine difference");
-			var result = R3D.filterMatchesOnLocalAffineDifference(matchesAB, imageScalesA,imageScalesB);
-			matchesAB = result["matches"];
+			var maxIter = 10; // 5-10 @ 100-200 pts
+			var maxRatio = 0.99;
+			for(var sub=0; sub<maxIter; ++sub){
+				previousCount = matchesAB.length;
+				if(previousCount==0){
+					break;
+				}
+				var result = R3D.filterMatchesOnLocalAffineDifference(matchesAB, imageScalesA,imageScalesB);
+				matchesAB = result["matches"];
+				console.log(" >>> affine difference drop: "+matchesAB.length+" / "+previousCount);
+				if(matchesAB.length/previousCount>=maxRatio){
+					break;
+				}
+			}
 			console.log("               >"+matchesAB.length);
 
 			// console.log("filter global F 2")
@@ -36553,30 +36569,39 @@ R3D.repeatFilterExtendMatches = function(matches, imageScalesA,imageScalesB){
 			matchesAB = result["matches"];
 			console.log("               >"+matchesAB.length);
 
-		
-		// local ?
-
-		// RANSAC F ?
-
+		var afterNeighborhoodRansacSigma = 1.5; // lenient 1=68, 1.5=86 2=95
 		// extend neighborhood
-			console.log("append good neighborhood matches");
-			var result = R3D.matchesFindNeighborhoodMatches(matchesAB, imageScalesA,imageScalesB);
-			console.log(result);
+			if(iteration==0){ // only expand first time
+				afterNeighborhoodRansacSigma = 1.0;
+				console.log("append good neighborhood matches");
+				var result = R3D.matchesFindNeighborhoodMatches(matchesAB, imageScalesA,imageScalesB);
+				console.log(result);
+				matchesAB = result["matches"];
+				console.log("               >"+matchesAB.length);
+			}
+
+		// filter F - RANSAC
+			console.log("filter RANSAC F");
+			var result = R3D.matchesFilterRANSACF(matchesAB, imageScalesA,imageScalesB, afterNeighborhoodRansacSigma);
 			matchesAB = result["matches"];
 			console.log("               >"+matchesAB.length);
-			// ...
-			// use top / all ? % matches
-			
+
+		// throw "..."
 
 
 			// filter global F
 			console.log("filter global F 3")
 			var result = R3D.matchesFilterFundamental(matchesAB, imageScalesA,imageScalesB);
-			matchesAB = result["matches"];
+			var nextAB = result["matches"];
+			console.log("       next ? > "+nextAB.length);
+			if(nextAB.length>=minimumTotalMatchesRequired){
+				matchesAB = nextAB;
+			}
 			console.log("               >"+matchesAB.length);
 			info = R3D.repeatedDropOutliersFundamental(matchesAB, imageScalesA,imageScalesB);
 
-
+		// OTHER?
+		// local filter
 
 		// console.log("filter global F 2")
 		// 	var result = R3D.matchesFilterFundamental(matchesAB, imageScalesA,imageScalesB);
@@ -36586,6 +36611,7 @@ R3D.repeatFilterExtendMatches = function(matches, imageScalesA,imageScalesB){
 	// console.log(matches);
 	// var matchesAB = matches;
 
+/*
 	// DISPLAY
 	var imageMatrixA = imageScalesA;
 	var imageMatrixB = imageScalesB;
@@ -36611,8 +36637,14 @@ R3D.repeatFilterExtendMatches = function(matches, imageScalesA,imageScalesB){
 		// R3D.showForwardBackwardPointsColor(pointsA, pointsB, affinesAB, imageMatrixA,imageMatrixB, GLOBALSTAGE, cellSizeShow, showAngles, matchesAB,"sigma");
 		R3D.showForwardBackwardPointsColor(pointsA, pointsB, affinesAB, imageMatrixA,imageMatrixB, GLOBALSTAGE, cellSizeShow);
 
+*/
+	// throw "repeatFilterExtendMatches";
 
-	throw "repeatFilterExtendMatches";
+
+	return {"matches":matchesAB};
+
+
+
 	/*
 
 
@@ -36715,10 +36747,74 @@ R3D.dropOutliersSparseMatches = function(matches, imageScalesA,imageScalesB){
 	return {"matches":matchesAB};
 
 }
-
+R3D.matchesFilterRANSACF = function(matchesAB, imageScalesA,imageScalesB, filterSigma){
+	filterSigma = Code.valueOrDefault(filterSigma, 1.0);
+	// var fErrors = [];
+	var pointsA = [];
+	var pointsB = [];
+	// calculate F error too
+	for(var i=0; i<matchesAB.length; ++i){
+		var match = matchesAB[i];
+		var pointA = match["A"];
+		var pointB = match["B"];
+		// var fError = match["ferror"];
+		// fErrors.push(fError);
+		pointsA.push(pointA);
+		pointsB.push(pointB);
+	}
+	// console.log(fErrors);
+	console.log(pointsA);
+	console.log(pointsB);
+	var F = R3D.fundamentalFromUnnormalized(pointsA,pointsB);
+	console.log(F);
+	var Finv = R3D.fundamentalInverse(F);
+	var info = R3D.fundamentalError(F,Finv,pointsA,pointsB);
+	console.log(info);
+	var min = info["mean"];
+	var sig = info["sigma"];
+// Code.printMatlabArray(fErrors);
+	// var min = Code.min(fErrors);
+	// var sig = Code.stdDev(fErrors,min);
+	var lim = min + sig * filterSigma; // 1 - 2
+	var initialAveragePixelError = lim;
+	console.log("      RANSAC LIMITS: "+min+" +/- "+sig+" = "+lim+" ... ");
+	// console.log("initialAveragePixelError: "+initialAveragePixelError);
+	// var info = R3D.fundamentalRANSACFromPoints(pointsA,pointsB, initialAveragePixelError, null, 0.50, 0.99);
+	// var info = R3D.fundamentalRANSACFromPoints(pointsA,pointsB, initialAveragePixelError, null, 0.6666, 0.99);
+	var info = R3D.fundamentalRANSACFromPoints(pointsA,pointsB, initialAveragePixelError, null, 0.90, 0.99);
+	console.log(info);
+	if(!info){
+		console.log("NO RANSAC RESULTS");
+		return {"matches":matchesAB};
+	}
+	var passA = info["matches"][0];
+	var passB = info["matches"][1];
+	var F = info["F"];
+	var Finv = R3D.fundamentalInverse(F);
+	// keep low error estimates
+	// var fErrors = [];
+	var keepMatches = [];
+	for(var i=0; i<matchesAB.length; ++i){
+		var match = matchesAB[i];
+		var pointA = match["A"];
+		var pointB = match["B"];
+		var info = R3D.fundamentalErrorSingle(F,Finv,pointA,pointB);
+		var fError = info["error"];
+		match["ferror"] = fError;
+		// fErrors.push(fError);
+		if(fError < initialAveragePixelError){
+			keepMatches.push(match);
+		}
+	}
+// Code.printMatlabArray(fErrors);
+	// console.log(keepMatches);
+	// throw "R3D.matchesFilterRANSACF";
+	return {"matches":keepMatches};
+}
 
 R3D.matchesFilterNeighborhoodConsistency = function(matchesAB, imageScalesA,imageScalesB){
-	// put into spaces 
+	var checkKNN = 10; // 8-16
+	var globalOverlapMinimum = 0.25; // at least 2/10
 
 	var toPointFxnA = function(object){
 		return object["match"]["A"];
@@ -36727,43 +36823,133 @@ R3D.matchesFilterNeighborhoodConsistency = function(matchesAB, imageScalesA,imag
 		return object["match"]["B"];
 	}
 	// assemble into container objects
+	var matchCount = matchesAB.length;
 	var objects = [];
+	var errors = [];
 	for(var i=0; i<matchCount; ++i){
 		var match = matchesAB[i];
 		var object = {};
+			object["index"] = i;
 			object["match"] = match;
-			// object["distances"] = [];
+			object["overlap"] = 0;
+			errors.push(match["ferror"]);
 		objects.push(object);
 	}
 
+// ONLY EXPAND AT TOP 1-2 SIGMA POINTS`
+console.log(errors);
+var minFerror = Code.min(errors);
+var sigFerror = Code.stdDev(errors,minFerror);
+var limitFerror = minFerror + sigFerror*2.0;
+
 	// put points in point spaces
-	var pointSpaceA = new QuadTree(toPointFxnA, V2D.ZERO, imageA.size());
-	var pointSpaceB = new QuadTree(toPointFxnB, V2D.ZERO, imageB.size());
+	var pointSpaceA = new QuadTree(toPointFxnA, V2D.ZERO, imageScalesA.size());
+	var pointSpaceB = new QuadTree(toPointFxnB, V2D.ZERO, imageScalesB.size());
 	pointSpaceA.initWithObjects(objects);
 	pointSpaceB.initWithObjects(objects);
 	var pointSpaces = [pointSpaceA,pointSpaceB];
 
 	// find A->B matches & B->A
+var datas = [];
 	for(var i=0; i<objects.length; ++i){
 		var object = objects[i];
 		var match = object["match"];
-
-		throw ""
+		var ferror = match["ferror"];
+		if(ferror>limitFerror){
+			continue;
+		}
+// console.log(objects);
+// console.log(match);
+// 		throw "..."
+		var pointA = match["A"];
+		var pointB = match["B"];
+		var neighborsA = pointSpaceA.kNN(pointA,checkKNN);
+		var neighborsB = pointSpaceB.kNN(pointB,checkKNN);
+		var lookupA = {};
+		var existCount = neighborsA.length;
+		for(var n=0; n<neighborsA.length; ++n){
+			var neighborA = neighborsA[n];
+			var index = neighborA["index"];
+			lookupA[index] = neighborA;
+		}
+		var foundCount = 0;
+		for(var n=0; n<neighborsB.length; ++n){
+			var neighborB = neighborsB[n];
+			var index = neighborB["index"];
+			if(lookupA[index]){
+				foundCount++;
+			}
+		}
+		var percent = 0;
+		if(existCount>0){
+			percent = foundCount/existCount;
+		}
+		// console.log("OVERLAP: "+foundCount+" = "+percent);
+		object["overlap"] = percent;
+datas.push(percent);
 	}
-	
+Code.printMatlabArray(datas,"overlap");
 
+	// drop in local limits
+	for(var i=0; i<objects.length; ++i){
+		var object = objects[i];
+		var match = object["match"];
+		var pointA = match["A"];
+		var pointB = match["B"];
+		var neighborsA = pointSpaceA.kNN(pointA);
+		var neighborsB = pointSpaceB.kNN(pointB);
+		var countsA = [];
+		var countsB = [];
+		for(var n=0; n<neighborsA.length; ++n){
+			var neighborA = neighborsA[n];
+			var percent = neighborA["overlap"];
+			countsA.push(percent);
+		}
+		for(var n=0; n<neighborsB.length; ++n){
+			var neighborB = neighborsB[n];
+			var percent = neighborB["overlap"];
+			countsB.push(percent);
+		}
+		// LOCAL DROP
+		var max = Code.max(countsA);
+		var sig = Code.stdDev(countsA,max);
+		var lim = max - sig*2.0;
+		if(object["overlap"]<lim){
+			object["remove"] = true;
+		}
 
+		max = Code.max(countsB);
+		sig = Code.stdDev(countsB,max);
+		lim = max - sig*2.0;
+		if(object["overlap"]<lim){
+			object["remove"] = true;
+		}
+
+		// GLOBAL DROP:
+		if(object["overlap"]<globalOverlapMinimum){
+			object["remove"] = true;
+		}
+	}
 	// get global limits [>25%]
 	// get local limits [sigma]
 
-	// 
+	// assembleinto 
+	var matches = [];
+	for(var i=0; i<objects.length; ++i){
+		var object = objects[i];
+		var match = object["match"];
+		if(!object["remove"]){
+			matches.push(match);
+		}
+	}
 
-
-	throw "matchesFilterNeighborhoodConsistency";
+	// console.log("consistent matches: "+matches.length);
+	// throw "matchesFilterNeighborhoodConsistency";
+	return {"matches":matches};
 }
 
 R3D.matchesFilterFundamental = function(matchesAB, imageScalesA,imageScalesB){
-	console.log(matchesAB);
+	// console.log(matchesAB);
 	// drop outliers F
 	var fxnUpdate = function(matches){ // recalculate F
 		var info = R3D.separateMatchesIntoPieces(matches);

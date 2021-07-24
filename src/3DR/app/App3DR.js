@@ -13486,8 +13486,6 @@ App3DR.ProjectManager.prototype.calculatePairMatchFromViewIDs = function(viewAID
 	var pairData = App3DR.ProjectManager.defaultPairFile(viewAID,viewBID);
 
 	var fxnReadyCheck = function(){
-// console.log(featureDataA,featureDataB);
-// console.log(imageA,imageB);
 		if(!(featureDataA && featureDataB && imageA && imageB)){
 			return;
 		}
@@ -13626,30 +13624,32 @@ for(var i=0; i<features.length; ++i){
 		var info = R3D.repeatFilterExtendMatches(matchesAB, imageScales[0],imageScales[1]);
 		console.log(info);
 
-throw "HERE"
+		matchesAB = info["matches"];
+
+// throw "HERE"
 		
 
 
 
-
-		var info = R3D.dropOutliersSparseMatches(matchesAB, imageScales[0],imageScales[1]);
-		matchesAB = info["matches"];
-		console.log("after outlier sparse drop: "+matchesAB.length);
-		console.log(matchesAB);
+		// REPLACED
+		// var info = R3D.dropOutliersSparseMatches(matchesAB, imageScales[0],imageScales[1]);
+		// matchesAB = info["matches"];
+		// console.log("after outlier sparse drop: "+matchesAB.length);
+		// console.log(matchesAB);
 
 // var originalMatchCount;
 // originalMatchCount = matchesAB.length * 2;
-var maxIter = 10; // 5-10 @ 100-200 pts
-for(var iter=0; iter<maxIter; ++iter){
-	var originalMatchCount = matchesAB.length;
-	matchesAB = R3D.filterMatchesOnLocalAffineDifference(matchesAB);
-		matchesAB = matchesAB["matches"];
-	console.log("after affine difference drop: "+matchesAB.length+" / "+originalMatchCount);
-	if(originalMatchCount==matchesAB.length){ // no change
-		console.log("unchanged break");
-		break;
-	}
-}
+// var maxIter = 10; // 5-10 @ 100-200 pts
+// for(var iter=0; iter<maxIter; ++iter){
+// 	var originalMatchCount = matchesAB.length;
+// 	matchesAB = R3D.filterMatchesOnLocalAffineDifference(matchesAB);
+// 		matchesAB = matchesAB["matches"];
+// 	console.log("after affine difference drop: "+matchesAB.length+" / "+originalMatchCount);
+// 	if(originalMatchCount==matchesAB.length){ // no change
+// 		console.log("unchanged break");
+// 		break;
+// 	}
+// }
 
 		// matches = matchesAB;
 
@@ -13709,11 +13709,11 @@ GLOBALSTAGE.root().matrix().scale(0.50);
 		affinesAB = info["affines"];
 		var cellSizeShow = imageMatrixA.size().length()*0.01;
 		var showAngles = true;
-		console.log(pointsA.length);
+		// console.log(pointsA.length);
 		console.log(matchesAB.length);
-		R3D.showForwardBackwardPointsColor(pointsA, pointsB, affinesAB, imageMatrixA,imageMatrixB, GLOBALSTAGE, cellSizeShow, showAngles, matchesAB,"sigma");
+		R3D.showForwardBackwardPointsColor(pointsA, pointsB, affinesAB, imageMatrixA,imageMatrixB, GLOBALSTAGE, cellSizeShow);//, showAngles, matchesAB,"sigma");
 
-throw "HEREX";
+// throw "HEREX";
 
 		if(matchesAB.length<minimumCountFInit){
 			goodEnoughMatches = false;
@@ -13757,8 +13757,8 @@ console.log("DOES THIS WORK RIGHT?:")
 // throw "here ????????? - repackage as A/B/C"
 
 
-// GLOBALSTAGE.root().matrix().scale(0.50);
-GLOBALSTAGE.root().matrix().scale(0.250);
+GLOBALSTAGE.root().matrix().scale(0.50);
+// GLOBALSTAGE.root().matrix().scale(0.250);
 
 
 	var cellSizePercent = 0.04;
