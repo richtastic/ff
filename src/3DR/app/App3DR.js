@@ -7833,7 +7833,7 @@ console.log("checkPerformNextTask");
 		return;
 	}
 
-throw "start dense";
+// throw "start dense";
 	if(!project.checkHasDenseStarted()){
 		project.calculateDensePairPutatives();
 		return;
@@ -7843,7 +7843,7 @@ throw "start dense";
 		project.iterateDenseProcess();
 		return;
 	}
-// throw ">start bundle";
+throw ">start bundle";
 	if(!project.checkHasBundleStarted()){
 		project.initializeBundleGroupsFromDense();
 		return;
@@ -8200,6 +8200,7 @@ var originalPairs = pairs;
 var info = project.findConsistentLowErrorPairs(pairs, isDense);
 console.log(info);
 var remainingPairs = info["pairs"];
+console.log("remainingPairs:");
 console.log(remainingPairs);
 		var info = project.triplesFromBestPairs(views, remainingPairs, isDense);
 		var triples = info["triples"];
@@ -8242,7 +8243,7 @@ console.log("tripleRemoved: "+tripleRemoved);
 // throw "does each triple have 2+ pairs?"
 
 
-// throw "BEFORE TRIPLES DONE"
+throw "BEFORE TRIPLES DONE"
 		
 		project.saveFileFromData(inputData,inputFilename, saveProjectFxn,project);
 
@@ -8284,14 +8285,14 @@ console.log("inputFilename: "+inputFilename);
 		if(!gauge){
 			console.log(idA,idB,idC);
 			currentTriple = triple;
-throw "before triple ..."
+// throw "before triple ..."
 			project.calculateTripleMatchFromViewIDs(inputData,inputFilename, idA,idB,idC, triplePairs, completeTripleFxn,project);
 			return;
 		}
 	}
 	console.log("triples count: "+triples.length+" ............");
 
-// throw "before graph?"
+// throw "before start graph?"
 
 console.log(inputData);
 console.log(triples);
@@ -10871,7 +10872,7 @@ console.log(info);
 
 
 
-throw "not done"
+// throw "not done"
 console.log(allViews);
 console.log("TODO: REMOVE")
 // force image sizes that seems coherient:
@@ -10880,7 +10881,7 @@ for(var i=0; i<allViews.length; ++i){
 	view["imageSize"] = {"x": 2016, "y":1512};
 }
 
-throw "before world full track full solve"
+// throw "before world full track full solve"
 				var info = project.fillInWorldAll(allViews, null, allCameras); // cellsize, cameras
 				console.log(info);
 				//
@@ -10927,9 +10928,11 @@ throw "before world full track full solve"
 				var worldView = world.viewFromData(nextViewID);
 				console.log("optimize with view:");
 				console.log(worldView);
+// console.log("before solveOptimizeSingleView - TRACK FULL");
 // throw "before solveOptimizeSingleView - TRACK FULL";
 				// optimize view orientation
 				var doWorldViewSolve = isDense;
+				// var doWorldViewSolve = true;
 				var info = world.solveOptimizeSingleView(worldView, 3, doWorldViewSolve); // ONLY LOCAL OPTIMIZING, NO GLOBAL
 				console.log(info);
 				nextViewBA["deltaErrorR"] = Math.abs(info["deltaR"]); // expected always negative
@@ -11613,6 +11616,8 @@ console.log(fullBundlePath);
 		}
 
 		// special case for full yaml: views & pairs are from graph
+
+// throw "tracks - 0 ?"
 // console.log(graphGroups.length,loadGroupIndex)
 // throw "here ?"
 		if(graphGroups.length==loadGroupIndex){
@@ -11798,8 +11803,11 @@ console.log(graphGroup);
 					console.log(worldView);
 
 					// optimize view orientation
-	throw "BEFORE OPTIMIZE SINGLE VIEW - group 0"
+	// throw "BEFORE OPTIMIZE SINGLE VIEW - group 0"
 					var info = world.solveOptimizeSingleView(worldView);
+
+var str = world.toYAMLString();
+console.log(str);
 					console.log(info);
 	// throw "AFTER OPTIMIZE"
 					nextViewBA["deltaErrorR"] = Math.abs(info["deltaR"]); // expected always negative
@@ -13132,14 +13140,15 @@ console.log(relativeAB);
 console.log("fillInWorldAll");
 console.log(allCameras);
 console.log(allViews);
-
+console.log(cellSize);
+console.log(" ^^^^^^^^^^^^^ IS CELL SIZE UNDEFINED?");
 		var info = project.fillInWorldAll(allViews, cellSize, allCameras);
 		var WORLDCAMS = info["cameras"];
 		var WORLDVIEWS = info["views"];
 		var WORLDVIEWSLOOKUP = info["lookup"];
 		var world = info["world"];
 
-console.log(cellSize);
+
 console.log(world);
 
 		console.log("seed points");
@@ -13796,8 +13805,9 @@ console.log("GET INITIAL F: "+matchesAB.length);
 			var bestB = best[1];
 			// console.log(bestA,bestB);
 			console.log("BEST F POINTS: "+bestA.length);
-
-			F = R3D.fundamentalFromUnnormalized(bestA,bestB);
+			var maxPointsNonlinear = 200;
+			var info = R3D.fundamentalFromUnnormalizedMaxCheck(bestA,bestB, maxPointsNonlinear);
+			var F = info["F"];
 			// console.log(F);
 			if(F){
 				Finv = R3D.fundamentalInverse(F);
@@ -14176,7 +14186,7 @@ if(idA===undefined || idB===undefined){
 			return;
 		}
 		console.log("SOLVE TRIPLE");
-throw "before solve triple"
+// throw "before solve triple"
 
 		// get all of camera's values & average:
 		var foundCameras = {};
@@ -17330,7 +17340,7 @@ App3DR.ProjectManager.prototype.calculateViewSimilarities = function(){
 
 			project.showViewSimilarities(compareScores, viewIDs, 700);
 
-// throw "BEFORE SAVE SIMILARITIES - now go save similarities";
+throw "BEFORE SAVE SIMILARITIES - now go save similarities";
 			project.setViewSimilarity(scores);
 			project.setSparseFilename(null);
 			//project.setPairPutative(null); // unset to recalculate

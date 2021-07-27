@@ -79,7 +79,7 @@ Ostsee - Baltic Sea
 |  |  |  |
 | meine / meines / meiner / ... | my-neh | my / mine |
 | dein / deiner |  | your / yours - single |
-|  |  | your / yours - plural |
+| euer / ? |  | your / yours - plural |
 | ihr |  | their / theirs |
 | seins / seiner / seins |  | his |
 | ihre / ihres |  | hers |
@@ -1145,6 +1145,8 @@ Brandenburger - Brandenburg Gate
 |  |  |  |
 | Küche |  | kitchen |
 | das Büro |  | office |
+| Bürogebäude |  | office building |
+|  |  |  |
 | wohnzimmer |  | living room |
 | die Toiletten |  | the lavatory / restrooms |
 | der Film |  | movie |
@@ -1311,6 +1313,8 @@ Brandenburger - Brandenburg Gate
 |  |  |  |
 | toll |  | great (cool) |
 | großartige |  | great |
+| spitze |  | excellent / super |
+|  |  |  |
 |  |  |  |
 | total |  | really (very) |
 | über |  | everything |
@@ -1591,6 +1595,8 @@ Kaffeemaschine - coffee machine
 
 Ich heiße - my name is
  
+Stimmung - atmosphere / feeling in an area
+
 Fußgängerzonen
 
 Schwimmbad - swimming pool
@@ -1679,6 +1685,10 @@ Ausrede - excuse
 früh - early
 
 noch - still
+
+noch ein - another
+
+Firma - company (business)
 
 Brötchen - bread roll (colt cuts)
 
@@ -1877,6 +1887,7 @@ putzen ? - to clean?
 leiser ? - to quiet down / be quieter
 gießt ? - to pour - gegossen - poured
 fischen ? - to go fishing / to fish
+angeln ? - fishing
 anrufen ? - to call (phone, shout)
 ruf...an ? - to call 
 singen ? - to sing
@@ -1886,6 +1897,7 @@ beantworte ? - to answer
 eröffnen ? - to open
 aufpasst ? - to take care
 weggeflogen ? - flown away (bird)
+umgezogen ? - to move
 
 
 

@@ -1343,15 +1343,12 @@ R3D._transformCameraExtrinsicNonlinearGD = function(args, x, isUpdate){
 	var pointCount = pointsA2D.length;
 	var totalError = 0;
 
-
 // try using normal ?
 
 	for(var i=0; i<pointCount; ++i){
 		var pA = pointsA2D[i];
 		var pB = pointsB2D[i];
 		var p3D = R3D.triangulatePointDLT(pA,pB, extrinsicA,extrinsicB, KaInv, KbInv);
-
-
 		if(!p3D){ // very far away ... or at 0 ?
 			// totalError += 1E9; // remove ?
 			continue;
@@ -1379,9 +1376,9 @@ R3D._transformCameraExtrinsicNonlinearGD = function(args, x, isUpdate){
 		}
 		totalError += error;
 	}
-	// if(isUpdate){
-	// 	console.log(totalError);
-	// }
+	if(isUpdate){
+		console.log(totalError);
+	}
 	return totalError;
 }
 R3D.transformFromFundamental = function(pointsA, pointsB, F, Ka,KaInv, Kb,KbInv, M1, forceSolution, log){ // find relative transformation matrix  // points use F
@@ -8106,15 +8103,38 @@ pointB = pntB;
 }
 R3D.fundamentalMatrixNonlinearGD = function(fundamental,pointsA,pointsB){ // nonlinearLeastSquares : input normalized points
 	var xVals = fundamental.toArray();
-	var args = [pointsA,pointsB];
 	try{ // for practical purposes, this number should scale down as the point count increases -- for 100 its long | for 1000 is too long
-		var maxIterations = 10000;
-			maxIterations = 10 * maxIterations/Math.pow(pointsA.length, 0.5); // 100 cancelled out
-			maxIterations = Math.ceil(maxIterations);
-// console.log("maxIterations: "+maxIterations);
-		result = Code.gradientDescent(R3D._gdFun, args, xVals, null, maxIterations, 1E-8);
-		// result = Code.gradientDescent(R3D._gdFun, args, xVals, null, 100000, 1E-10, 1E-6, 1.0);
-		// result = Code.gradientDescent(R3D._gdFun, args, result["x"], null, 100, 1E-10, 1E-10, 1.0);
+		// var maxIterations = 10000;
+		// 	maxIterations = 10 * maxIterations/Math.pow(pointsA.length, 0.5); // 100 cancelled out
+		// 	maxIterations = Math.ceil(maxIterations);
+		// subsample for too many
+		var originalCount = pointsA.length;
+		// var args = null;
+		// if(originalCount>1000){
+		// 	pointsA = Code.copyArray(pointsA);
+		// 	pointsB = Code.copyArray(pointsB);
+		// 	args = [pointsA,pointsB];
+		// 	Code.randomPopParallelArrays(args,1000);
+		// 	// throw "subsample"
+		// }else{
+		// 	args = [pointsA,pointsB];
+		// }
+		var args = [pointsA,pointsB];
+		var maxIterations = Math.ceil( 1000 / Math.max(1,Math.pow(originalCount, 0.25)) );
+		
+		// maxError depends on points size distribution
+		var maxError = 1E-8;
+		
+		// var sigma = 
+		// var maxError = sigma * 1E-6;
+
+		
+
+console.log("fundamentalMatrixNonlinearGD - maxIterations: "+maxIterations+" : "+pointsA.length+" ("+originalCount+") ");
+
+// throw "subsample";
+
+		result = Code.gradientDescent(R3D._gdFun, args, xVals, null, maxIterations, maxError);
 	}catch(e){
 		throw "got e: "+e;
 	}
@@ -8145,7 +8165,7 @@ R3D.fundamentalMatrixNonlinearLM = function(fundamental,pointsA,pointsB){ // non
 }
 //R3D.fundamentalMatrixNonlinear = R3D.fundamentalMatrixNonlinearLM;
 R3D.fundamentalMatrixNonlinear = function(fundamental,pointsA,pointsB){
-	// console.log("R3D.fundamentalMatrixNonlinear");
+	// throw ("R3D.fundamentalMatrixNonlinear - where is this used?");
 	try{
 		fundamental = R3D.fundamentalMatrixNonlinearGD(fundamental,pointsA,pointsB);
 	}catch(e){
@@ -8159,18 +8179,24 @@ R3D.fundamentalMatrixNonlinear = function(fundamental,pointsA,pointsB){
 
 // F nonlinear
 R3D.fundamentalFromUnnormalizedMaxCheck = function(pointsA,pointsB, maxCount, skipNonlinear){
-	var maxTest = 500;
+	maxCount = Code.valueOrDefault(maxCount,200); // 200 - 1000
 	var ptsA = pointsA;
 	var ptsB = pointsB;
 	if(pointsA.length>maxCount){
-		var result = Code.randomSampleRepeatsParallelArrays([ptsA,ptsB], maxTest);
-		ptsA = result[0];
-		ptsB = result[1];
+		ptsA = Code.copyArray(ptsA);
+		ptsB = Code.copyArray(ptsB);
+		Code.randomPopParallelArrays([ptsA,ptsB], maxCount);
+		// var result = Code.randomSampleRepeatsParallelArrays([ptsA,ptsB], maxCount);
+		// ptsA = result[0];
+		// ptsB = result[1];
 	}
-	var F = R3D.fundamentalFromUnnormalized(ptsA,ptsB, skipNonlinear);
+	var F = R3D.fundamentalFromUnnormalizedTempName(ptsA,ptsB, skipNonlinear);
 	return {"F":F, "A":ptsA, "B":ptsB};
 }
 R3D.fundamentalFromUnnormalized = function(pointsA,pointsB, skipNonlinear){
+	throw "use R3D.fundamentalFromUnnormalizedMaxCheck";
+}
+R3D.fundamentalFromUnnormalizedTempName = function(pointsA,pointsB, skipNonlinear){
 	skipNonlinear = skipNonlinear!==undefined ? skipNonlinear : false;
 	var pointsANorm = Code.normalizedPoints2D(pointsA);
 	var pointsBNorm = Code.normalizedPoints2D(pointsB);
@@ -8249,6 +8275,7 @@ R3D.fundamentalRANSACFromPoints = function(pointsAIn,pointsBIn, errorPosition, i
 	pDesired = pDesired!==undefined ? pDesired : 0.999; // to have selected a valid subset
 	var pointsA = pointsAIn;
 	var pointsB = pointsBIn;
+	var maxPointsNonlinearF = 200;
 	// TODO: use initial F estimate in some capacity
 	if(!pointsA || !pointsB || pointsA.length<7 || pointsB.length<7){
 		return null;
@@ -8350,7 +8377,8 @@ R3D.fundamentalRANSACFromPoints = function(pointsAIn,pointsBIn, errorPosition, i
 		return null;
 	}
 	// f using all inliers
-	var FFwd = R3D.fundamentalFromUnnormalized(subsetPointsA,subsetPointsB);
+	var info = R3D.fundamentalFromUnnormalizedMaxCheck(subsetPointsA,subsetPointsB, maxPointsNonlinearF);
+	var FFwd = info["F"];
 	var FRev = R3D.fundamentalInverse(FFwd);
 	var pointsKeepA = [];
 	var pointsKeepB = [];
@@ -36752,6 +36780,7 @@ R3D.matchesFilterRANSACF = function(matchesAB, imageScalesA,imageScalesB, filter
 	// var fErrors = [];
 	var pointsA = [];
 	var pointsB = [];
+	var pointsForF = 200;
 	// calculate F error too
 	for(var i=0; i<matchesAB.length; ++i){
 		var match = matchesAB[i];
@@ -36765,7 +36794,9 @@ R3D.matchesFilterRANSACF = function(matchesAB, imageScalesA,imageScalesB, filter
 	// console.log(fErrors);
 	console.log(pointsA);
 	console.log(pointsB);
-	var F = R3D.fundamentalFromUnnormalized(pointsA,pointsB);
+	// var F = R3D.fundamentalFromUnnormalized(pointsA,pointsB);
+	var info = R3D.fundamentalFromUnnormalizedMaxCheck(pointsA,pointsB, pointsForF);
+	var F = info["F"];
 	console.log(F);
 	var Finv = R3D.fundamentalInverse(F);
 	var info = R3D.fundamentalError(F,Finv,pointsA,pointsB);
@@ -36951,11 +36982,14 @@ Code.printMatlabArray(datas,"overlap");
 R3D.matchesFilterFundamental = function(matchesAB, imageScalesA,imageScalesB){
 	// console.log(matchesAB);
 	// drop outliers F
+	var maxPointsF = 200;
 	var fxnUpdate = function(matches){ // recalculate F
 		var info = R3D.separateMatchesIntoPieces(matches);
 		var pointsA = info["A"];
 		var pointsB = info["B"];
-		var F = R3D.fundamentalFromUnnormalized(pointsA,pointsB);
+		// var F = R3D.fundamentalFromUnnormalized(pointsA,pointsB);
+		var info = R3D.fundamentalFromUnnormalizedMaxCheck(pointsA,pointsB,maxPointsF);
+		var F = info["F"];
 		var Finv = R3D.fundamentalInverse(F);
 		var count = pointsA.length;
 // console.log("COUNT: "+count);
@@ -36988,12 +37022,17 @@ R3D.matchesFilterFundamental = function(matchesAB, imageScalesA,imageScalesB){
 
 
 R3D.repeatedDropOutliersFundamental = function(matchesAB, imageScalesA,imageScalesB){
+	return R3D.matchesFilterFundamental(matchesAB, imageScalesA,imageScalesB);
+	/*
 	// drop outliers F
+	var maxPointsF = 200;
 	var fxnUpdate = function(matches){ // recalculate F
 		var info = R3D.separateMatchesIntoPieces(matches);
 		var pointsA = info["A"];
 		var pointsB = info["B"];
-		var F = R3D.fundamentalFromUnnormalized(pointsA,pointsB);
+		// var F = R3D.fundamentalFromUnnormalized(pointsA,pointsB);
+		var info = R3D.fundamentalFromUnnormalizedMaxCheck(pointsA,pointsB, );
+		var F = info["F"];
 		var Finv = R3D.fundamentalInverse(F);
 		var count = pointsA.length;
 		var errorTotal = 0;
@@ -37021,6 +37060,7 @@ R3D.repeatedDropOutliersFundamental = function(matchesAB, imageScalesA,imageScal
 	var keepList = Code.repeatedDropOutliers(matchesAB, fxnValue, fxnLimit, 10, 10, fxnUpdate);
 	console.log("F KEPT: "+keepList.length+" / "+matchesAB.length);
 	return {"matches":keepList};
+	*/
 }
 R3D.matchesDropOutliersSAD = function(matchesAB, imageScalesA,imageScalesB){
 // filter on scores:
@@ -38176,6 +38216,7 @@ R3D.output3dModel = function(points3D, others){ // imageA,imageB transforms, mat
 	return yaml.toString();
 }
 R3D.fundamentalRefineFromPoints = function(pointsAin,pointsBin, F, refine){
+	throw "R3D.fundamentalRefineFromPoints - where is this used"
 	refine = refine!==undefined ? refine : true;
 	var i;
 	var pointsA = [];

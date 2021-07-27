@@ -5983,8 +5983,12 @@ Stereopsis.World.prototype.solveOptimizeSingleView = function(viewSolve, loopIte
 	var maxIterations = Code.valueOrDefault(loopIterations, 3);
 	var prevErrorR = startingErrorR;
 	var nextErrorR = startingErrorR;
+console.log("RICHIE - maxIterations: "+maxIterations+" @ world: "+doWorldOptimization);
 	for(var i=0; i<maxIterations; ++i){
+if(doWorldOptimization){
+	console.log("SKIP - doWorldOptimization")
 break; // don't do single
+}
 		console.log(" iteration: :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: "+i+"/"+maxIterations+" ("+viewSolve.id()+") ");
 		
 		// self
@@ -12475,7 +12479,7 @@ Stereopsis.World.prototype.solveTriple = function(completeFxn, completeContext, 
 				if(transformAB.R() && transformBC.R()){
 					result = world.relativeScaleFromSampleRatios(viewB,viewC,viewA); // BA/BC
 					// console.log(" 3 = "+scaleBCtoAB);
-					if(result==null){
+					if(result!==null){
 						scaleBCtoAB = result["scale"];
 						errorBCtoAB = result["error"];
 					}
@@ -15871,6 +15875,8 @@ Stereopsis.checkPointsLocation = function(extrinsicA, extrinsicB, KaInv,KbInv, p
 Stereopsis.ransacTransformF = function(transform, maximumSamples, skipP, onlyBest){ // F & P
 	skipP = skipP!==undefined && skipP!==null ? skipP : false;
 	maximumSamples = maximumSamples!==undefined && maximumSamples!==null ? maximumSamples : 1000; // 200~1000
+	var maximumSamplesNonlinearP = 500; // 200-500
+	var maxIterationsSingleCameraNonlinearP = 500; // 1000?
 	onlyBest = onlyBest!==undefined && onlyBest!==null ? onlyBest : false;
 	var minimumTransformMatchCountF = 12;
 	var minimumTransformMatchCountR = 16;
@@ -15930,8 +15936,9 @@ console.log("CALCULATE F -> P : "+pointsA.length+" points");
 		// for(var i=0; i<pointsA.length; ++i){
 		// 	console.log(" "+i+" : "+pointsA[i]+" & "+pointsB[i]);
 		// }
-
-		F = R3D.fundamentalFromUnnormalized(pointsA,pointsB);
+		var maxPointsF = 200;
+		var info = R3D.fundamentalFromUnnormalizedMaxCheck(pointsA,pointsB, maxPointsF);
+		var F = info["F"];
 		console.log("   RESULTING F : "+F);
 
 		var bestPointsA = pointsA;
@@ -16012,7 +16019,7 @@ console.log("P ANGLE: "+Code.degrees(angle));
 
 				// if(false && P){
 				if(P){
-					console.log("nonlinear P");
+					console.log("nonlinear P : "+bestPointsA.length);
 					// WAS:
 					// var result = R3D.transformCameraExtrinsicNonlinear(P, bestPointsA, bestPointsB, Ka,KaInv, Kb,KbInv);
 
@@ -16114,18 +16121,19 @@ bestPointsB = bestPointListB;
 console.log(bestPointsA);
 console.log(bestPointsB);
 
-// F = R3D.fundamentalFromUnnormalized(bestPointsA,bestPointsB);
+// F = R3D.fundamentalFromUnnormalized X X X (bestPointsA,bestPointsB);
 // P = R3D.transformFromFundamental(bestPointsA, bestPointsB, F, Ka,KaInv, Kb,KbInv, null, force, true);
 
 */
-
-
-					var result = R3D.transformCameraExtrinsicNonlinear(P, bestPointsA, bestPointsB, Ka,KaInv, Kb,KbInv, null, true);
-
+					var testPointsA = bestPointsA;
+					var testPointsB = bestPointsB;
+					if(testPointsA.length>maximumSamplesNonlinearP){
+						Code.randomPopParallelArrays([testPointsA,testPointsB],maximumSamplesNonlinearP);
+					}
+					var result = R3D.transformCameraExtrinsicNonlinear(P, bestPointsA, bestPointsB, Ka,KaInv, Kb,KbInv, maxIterationsSingleCameraNonlinearP, true);
 					// R3D.transformCameraExtrinsicNonlinear = function(P, pointsA2D,pointsB2D, Ka,KaInv, Kb,KbInv, maxIterations, negativeIsBad){
-					console.log(result);
+					// console.log(result);
 					P = result["P"];
-
 
 					console.log("NONLINEAR P: ");
 					var A = new Matrix(4,4).identity();

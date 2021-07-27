@@ -5764,6 +5764,7 @@ Code.randomPopParallelArrays = function(arrays,count){
 			}
 		}
 	}
+	return arrays;
 }
 Code.randomIndexArray = function(array){
 	var index = Math.floor(Math.random()*array.length);

@@ -372,6 +372,14 @@ TIMELINES:
 11/01 - MVP
 
 MISSING:
+- initial broad view matching - better 
+	- 'icon' 21x21 blurred circle matching as part of filtering to best match set
+		- A) histogram to top ~ 25
+		- B) icon @ rot & sca to top ~ 10
+		- C) feature match to top ~ 6
+- bundle moving surface points toward eachother
+	- how to estimate progress ? [R-ERROR, average surface distance error ? (wrt: ?)]
+
 - mass-dense point aggregation via merging separate P3D files
 	- logistics [2d]
 	- reading chunks of a file ? (separate into 10-100MB of file?)
@@ -393,7 +401,24 @@ MISSING:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-- walk thru process with another data set
+OPTIMIZING SINGLE VIEW AT A TIME:
+	solveOptimizeSingleView
+
+
+- sparse bundle adjustment going poorly
+	- maybe can't do surface stuff if there are a lot of bad points (maybe 0.2-0.5 of points are wrong)
+
+optimizeAllCameraExtrinsicSurfaceDistances3D
+	-> lots of 0 denominators
+
+
+- lost of bad pairs in DENSE process
+	- possibly due to bad camera initialization in sparse
+
+
+- maybe not quite enough tracks for dense bundles
+
+
 
 x clustered points (eg 4-8 neighbors) need to have the same overall affine rotation/scale
 	-> find outliers?
@@ -423,8 +448,14 @@ x local average affine displacement?
 
 
 - fat-match sequence ends with poor initial results
+- fat-match sequence slow
+	var F = R3D.fundamentalFromUnnormalized(pointsA,pointsB);
+		? F = R3D.fundamentalMatrixNonlinear(F, pointsA, pointsB);
+			? R3D._gdFun = function(args, x, isUpdate, descriptive)
 
 
+
+- visually had good F-pairs, but F-error & R-error were very high & alg quit
 
 
 Stereopsis.js:525 REMOVING NULL POINTS3D: 0
@@ -432,7 +463,37 @@ Stereopsis.js:525 REMOVING NULL POINTS3D: 0
 
 
 
+R3D.fundamentalFromUnnormalizedMaxCheck
 
+
+transformCameraExtrinsicNonlinear
+
+
+
+5OCFU1R9-86JIWIDQ
+
+
+	- EXISTS
+		A: "5OCFU1R9"
+		B: "86JIWIDQ"
+	-
+		A: "PO602P48"
+		B: "0W5L2FV4"
+	-
+		A: "PO602P48"
+		B: "PM16KV07"
+	-
+		A: "86JIWIDQ"
+		B: "NYG9ME6E"
+	-
+		A: "Q1XFS93F"
+		B: "PO602P48"
+	-
+		A: "8AII8KZ2"
+		B: "DPE3KTGS"
+	-
+		A: "0W5L2FV4"
+		B: "DPE3KTGS"
 
 
 
