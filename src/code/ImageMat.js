@@ -741,6 +741,15 @@ ImageMat.colorArrayFxnARGB_ARGB = function(data, fxnA, fxnR, fxnG, fxnB){
 		data[i] = Code.getColARGB(fxnA(a),fxnR(r),fxnG(g),fxnB(b));
 	}
 }
+ImageMat.fromComponents = function(object){
+	var wid = object["width"];
+	var hei = object["height"];
+	var red = object["red"];
+	var grn = object["grn"];
+	var blu = object["blu"];
+	var image = new ImageMat(wid,hei,red,grn,blu);
+	return image;
+}
 // ------------------------------------------------------------------------------------------------------------------------ interpolations
 ImageMat.rotateImage = function(){
 	// ?

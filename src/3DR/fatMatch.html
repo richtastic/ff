@@ -1,0 +1,105 @@
+<html>
+<head>
+<title>Fundamental Matrix</title>
+<script src="../code/FF.js"></script>
+</head>
+<script type="text/javascript">
+function pageLoadedFxn(){
+	var ff = new FF("../code/",ffLoadedFxn);
+}
+function ffLoadedFxn(){
+	(new ScriptLoader("./",[],this,funLoadedFxn)).load();
+}
+function funLoadedFxn(){
+	console.log("start the matching");
+	var test = new TestIcon();
+
+}
+
+function TestIcon(){
+	this.setupDisplay();
+	this.testImageIcons();
+
+}
+TestIcon.prototype.setupDisplay = function(){
+	this._canvas = new Canvas(null,1,1,Canvas.STAGE_FIT_FILL);
+	this._stage = new Stage(this._canvas, (1/5)*1000);
+	this._canvas.addListeners();
+	this._stage.addListeners();
+	this._stage.start();
+	this._root = new DO();
+	this._stage.root().addChild(this._root);
+	GLOBALSTAGE = this._stage;
+}
+TestIcon.prototype.testImageIcons = function(){
+	console.log("testImageIcons");
+	var imageList = ["couch01.jpg","couch02.jpg"];
+	new ImageLoader("./images/house_couch/",imageList,this,this.testImagesLoaded).load();
+}
+TestIcon.prototype.testImagesLoaded = function(info){
+	console.log("testImagesLoaded");
+	var images = info["images"];
+	console.log(images);
+	var matrixes = [];
+	for(var i=0; i<images.length; ++i){
+		var image = images[i];
+		// console.log(image)
+		var source = this._stage.getImageAsFloatRGB(image);
+		// console.log(source)
+		var matrix = ImageMat.fromComponents(source);
+		var scales = new ImageMatScaled(matrix);
+		// console.log(scales);
+		matrixes.push(scales);
+			// matrixes.push(matrix);
+		// console.log(matrix);
+	}
+	// 
+	var iconSize = 21;
+	var iconHalf = iconSize*0.5 | 0;
+	var reuseImage = new ImageMat(iconSize,iconSize);
+	var affine = new Matrix2D();
+	// 
+	var imageIcons = [];
+	for(var i=0; i<matrixes.length; ++i){
+		var scales = matrixes[i];
+		var scale = Math.min(matrix.width(),matrix.height())/iconSize;
+		var centerX = (scales.width()-1)*0.5;
+		var centerY = (scales.height()-1)*0.5;
+			affine.identity();
+			affine.scale(scale);
+		var averageScale = affine.averageScale();
+			ImageMatScaled.affineToLocationTransform(affine,affine, iconHalf,iconHalf, centerX,centerY);
+		scales.extractRectFast(reuseImage, averageScale, affine);
+		//
+		var img = reuseImage;
+		img = GLOBALSTAGE.getFloatRGBAsImage(img.red(),img.grn(),img.blu(), img.width(),img.height());
+		var d = new DOImage(img);
+		d.matrix().scale(4.0);
+		d.matrix().translate(10 + i*200, 10 + 0);
+		GLOBALSTAGE.addChild(d);
+		//
+		imageIcons.push(reuseImage.copy());
+	}
+
+	console.log(imageIcons);
+
+	// marshall into 1D array
+
+	// unmarshall into 2D image again
+
+	// can the 2D size be figured out directly from the 1D count ? (or need mask?)
+
+	// auto-fill outer blank area (expand fill)
+
+	// do compares
+	for(var i=0; i<matrixes.length; ++i){
+		for(var j=i+1; j<matrixes.length; ++j){
+			console.log("compare: "+i+" - "+j);
+		}
+	}
+
+}
+</script>
+<body onload="pageLoadedFxn();">
+</body>
+</html>

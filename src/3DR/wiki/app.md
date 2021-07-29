@@ -401,6 +401,33 @@ MISSING:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
+- TEST INITIAL DATABASE MATCHING AGAIN
+	- ICON
+		- 'best' pixel in area error
+
+
+	* load all N images
+	* get 'icons'
+	* do icon testing
+
+
+
+
+
+- TEST FAT FEATURE -> F
+	- show each step in process to know where failures reside
+
+
+
+
+
+
+
+
+
+
+
 OPTIMIZING SINGLE VIEW AT A TIME:
 	solveOptimizeSingleView
 
