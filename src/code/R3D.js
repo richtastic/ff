@@ -19948,6 +19948,113 @@ console.log("R3D._progressiveMediumMatches");
 
 	return {"F":F, "inv":Finv, "error":Ferror, "A":pointsA, "B":pointsB};
 }
+
+R3D.compareCircularBestImage = function(imageA,imageB, maskAB){ // compare circular region @ different angles & scales 
+	var size = imageA.width();
+	var sizeHalf = size*0.5 | 0;
+	var angleCount = 24;
+	var scaleCount = 5; // 0.70, 0.84, 1, 1.19, 1.41
+	var scaleCountHalf = scaleCount*0.5 | 0;
+	// var scaleOffsetMultiplier = 0.5; // 0.5 -> 2.0
+	var scaleOffsetMultiplier = 0.25;
+	var bestScore = null;
+	var bestAngle = null;
+	var bestScale = null;
+	var point = new V2D();
+	var imgA = null;
+	var imgB = null;
+	var colA = new V3D();
+	var colB = new V3D();
+	var pixels = Code.sum(maskAB);
+	// console.log("pixels: "+pixels+" / "+maskAB.length);
+	// for each angle
+	for(var angleIndex=0; angleIndex<angleCount; ++angleIndex){
+		var angle = (angleIndex/angleCount)*2*Math.PI;
+		// console.log("angle: "+Code.degrees(angle));
+		// for each scale
+		for(var scaleIndex=0; scaleIndex<scaleCount; ++scaleIndex){
+			var scale = Math.pow(2, (scaleIndex-scaleCountHalf)*scaleOffsetMultiplier );
+			var isReversed = false;
+			// console.log("scale: "+scale);
+			// for each pixel in A [or B if scale is larger than 1]
+			imgA = imageA;
+			imgB = imageB;
+			if(scale>1.0){ // flip compares
+				isReversed = true;
+				imgA = imageB;
+				imgB = imageA;
+				scale = 1.0/scale;
+			}
+			var compareAB = 0;
+
+			// TODO: could add shift sx & sy for a 3x3 = 9 more iterations ?
+
+			for(var y=0; y<size; ++y){
+				for(var x=0; x<size; ++x){
+					var indexA = y*size + x;
+					if(maskAB[indexA]==0){
+						continue;
+					}
+					colA.set( imgA.red()[indexA], imgA.grn()[indexA], imgA.blu()[indexA] );
+					point.x = (x-sizeHalf);
+					point.y = (y-sizeHalf);
+					point.rotate(angle);
+					point.scale(scale);
+					point.x += sizeHalf;
+					point.y += sizeHalf;
+					var u = Math.round(point.x);
+					var v = Math.round(point.y);
+					// console.log(point+" ? "+u+","+v);
+					// search up to 8 neighbor values, [which are also inside mask]
+					var comparePixel = null;
+					for(var j=-1; j<=1; ++j){
+						for(var i=-1; i<=1; ++i){
+							var a = u+i;
+							var b = v+j;
+							if(a<0 || a>=size || b<0 || b>=size){
+								continue;
+							}
+							var indexB = b*size + a;
+							if(maskAB[indexB]==0){
+								continue;
+							}
+							colB.set( imgB.red()[indexB], imgB.grn()[indexB], imgB.blu()[indexB] );
+							var diff = V3D.distance(colA,colB);
+							// console.log(" => "+a+","+b+" = "+diff);
+							if(comparePixel===null || comparePixel>diff){
+								comparePixel = diff;
+							}
+						}
+					}
+					// find corresponding pixel x,y in opposite image
+					if(comparePixel===null){
+						throw "compare pixel was always null"
+					}
+					
+					// console.log("best compare: "+comparePixel);
+					compareAB += comparePixel;
+					// throw "yup"
+				}
+			}
+			// console.log(compareAB);
+			if(bestScore===null || bestScore>compareAB){
+				bestScore = compareAB;
+				bestAngle = isReversed ? -angle : angle;
+				bestScale = isReversed ? 1.0/scale : scale ;
+			}
+			// throw "..."
+		}
+		// throw "done scale"
+		// console.log(bestScore);
+		// throw "..."
+	}
+	bestScore /= pixels;
+	// throw "done angle"
+	// console.log("best: "+bestScore+" @ "+bestScale+" < "+Code.degrees(bestAngle));
+	// throw ""
+	return {"score":bestScore, "angle":bestAngle, "scale":bestScale};
+}
+
 R3D._progressiveStationaryFeatures = function(imageA,imageB,F,Finv,fError,  ptsA,ptsB, existingA,  display,offsetX){
 	var angleAB = 0;
 	var epipoles = R3D.getEpipolesFromF(F);

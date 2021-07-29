@@ -402,6 +402,14 @@ MISSING:
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
+
+
+- ImageMatScaled.affineToLocationTransform(affine,affine, iconHalf,iconHalf, centerX,centerY);
+	- iconHalf needs to be EXACLY HALF, NOT TRUNCATED
+
+
+
+
 - TEST INITIAL DATABASE MATCHING AGAIN
 	- ICON
 		- 'best' pixel in area error

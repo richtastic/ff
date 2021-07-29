@@ -1,6 +1,6 @@
 <html>
 <head>
-<title>Fundamental Matrix</title>
+<title>Database Matching</title>
 <script src="../code/FF.js"></script>
 </head>
 <script type="text/javascript">
@@ -33,7 +33,13 @@ TestIcon.prototype.setupDisplay = function(){
 }
 TestIcon.prototype.testImageIcons = function(){
 	console.log("testImageIcons");
-	var imageList = ["couch01.jpg","couch02.jpg"];
+	// var imageList = ["couch01.jpg","couch02.jpg"];
+	// var imageList = ["couch01.jpg","couch02.jpg","couch03.jpg"];
+	// var imageList = ["couch01.jpg","couch02.jpg","couch03.jpg","couch04.jpg","couch05.jpg"];
+	// var imageList = ["couch01.jpg","couch02.jpg","couch03.jpg","couch04.jpg","couch05.jpg","couch06.jpg","couch07.jpg","couch08.jpg","couch09.jpg","couch10.jpg"];
+	var imageList = 
+		["couch01.jpg","couch02.jpg","couch03.jpg","couch04.jpg","couch05.jpg","couch06.jpg","couch07.jpg","couch08.jpg","couch09.jpg","couch10.jpg",
+		 "couch11.jpg","couch12.jpg","couch13.jpg","couch14.jpg","couch15.jpg","couch16.jpg","couch17.jpg","couch18.jpg"];
 	new ImageLoader("./images/house_couch/",imageList,this,this.testImagesLoaded).load();
 }
 TestIcon.prototype.testImagesLoaded = function(info){
@@ -53,18 +59,24 @@ TestIcon.prototype.testImagesLoaded = function(info){
 			// matrixes.push(matrix);
 		// console.log(matrix);
 	}
-	// 
-	var iconSize = 21;
-	var iconHalf = iconSize*0.5 | 0;
+	// var iconSize = 51;
+	// var iconSize = 21;
+	var iconSize = 11;
+	// var iconHalf = iconSize*0.5 | 0;
+	var iconHalf = iconSize*0.5;
+		// console.log("iconHalf: "+iconHalf);
 	var reuseImage = new ImageMat(iconSize,iconSize);
 	var affine = new Matrix2D();
 	// 
 	var imageIcons = [];
 	for(var i=0; i<matrixes.length; ++i){
 		var scales = matrixes[i];
-		var scale = Math.min(matrix.width(),matrix.height())/iconSize;
-		var centerX = (scales.width()-1)*0.5;
-		var centerY = (scales.height()-1)*0.5;
+		// var scale = (Math.min(matrix.width(),matrix.height())-1) / (iconSize-1);
+		var scale = (Math.min(matrix.width(),matrix.height())-0) / (iconSize-0);
+		// var centerX = (scales.width()-1)*0.5;
+		// var centerY = (scales.height()-1)*0.5;
+		var centerX = (scales.width()-0)*0.5;
+		var centerY = (scales.height()-0)*0.5;
 			affine.identity();
 			affine.scale(scale);
 		var averageScale = affine.averageScale();
@@ -74,8 +86,9 @@ TestIcon.prototype.testImagesLoaded = function(info){
 		var img = reuseImage;
 		img = GLOBALSTAGE.getFloatRGBAsImage(img.red(),img.grn(),img.blu(), img.width(),img.height());
 		var d = new DOImage(img);
-		d.matrix().scale(4.0);
-		d.matrix().translate(10 + i*200, 10 + 0);
+		// d.matrix().scale(4.0);
+		d.matrix().scale(0.90 * 150/iconSize);
+		d.matrix().translate(10 + i*150, 10 + 0);
 		GLOBALSTAGE.addChild(d);
 		//
 		imageIcons.push(reuseImage.copy());
@@ -91,15 +104,49 @@ TestIcon.prototype.testImagesLoaded = function(info){
 
 	// auto-fill outer blank area (expand fill)
 
+
+
+	var imageMask = ImageMat.circleMask(iconSize,iconSize);
+	// console.log(imageMask);
 	// do compares
-	for(var i=0; i<matrixes.length; ++i){
-		for(var j=i+1; j<matrixes.length; ++j){
-			console.log("compare: "+i+" - "+j);
+	for(var i=0; i<imageIcons.length; ++i){
+		var imageA = imageIcons[i];
+		for(var j=i+1; j<imageIcons.length; ++j){
+			var imageB = imageIcons[j];
+			var result = R3D.compareCircularBestImage(imageA,imageB, imageMask);
+			var score = result["score"];
+			var angle = result["angle"];
+			var scale = result["scale"];
+			console.log("compare: "+i+" - "+j+"  :  "+score+"  |  "+" @ "+scale+" < "+Code.degrees(angle)+" == ");
 		}
 	}
+
+
+	// SHOW BEST MATCHES IN CIRCLE
 
 }
 </script>
 <body onload="pageLoadedFxn();">
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- ... -->
