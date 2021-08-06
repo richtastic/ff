@@ -4534,10 +4534,11 @@ ImageMat.prototype.getScaledImage = function(scale, sigmaIn, doCeil){
 	var image = new ImageMat(newWidth,newHeight, red,grn,blu);
 	return image;
 }
-ImageMat.prototype.getProgressiveScaledImage = function(scaler){
-	return ImageMat.getProgressiveScaledImage(this, scaler);
+ImageMat.prototype.getProgressiveScaledImage = function(scaleMult, maxScales){
+	return ImageMat.getProgressiveScaledImage(this, scaleMult, maxScales);
 }
 ImageMat.getProgressiveScaledImage = function(imageA, scaleMult, maxScales){
+	// scaleMult = Code.valueOrDefault(scaleMult, 0.75);
 	scaleMult = Code.valueOrDefault(scaleMult, 0.5);
 	maxScales = Code.valueOrDefault(maxScales, 10);
 
@@ -4556,14 +4557,31 @@ ImageMat.getProgressiveScaledImage = function(imageA, scaleMult, maxScales){
 	// var sigma = -Math.log(scaleMult); // 0.69
 	// var sigma = Math.sqrt(-Math.log(scaleMult)); // 0.83
 	//
-	var sigma = (0.5 * 1.0/scaleMult) * 0.68269; // pixel radius * window at 1 sigma -- current best guess
+	// var sigma = (0.5 * 1.0/scaleMult) * 0.68269; // pixel radius * window at 1 sigma -- current best guess
+
+	var sigma = (0.5 * 1.0/scaleMult) * 0.68269;
+
+	// var sigma = 2.0; // too blurry
+	var sigma = 1.0; // more blended
+	// var sigma = 0.68269;
+	// var sigma = 0.50; // crisper
+
+	// 0.25 | 0.50 | 0.75 | 1.0
+	// 2.00 | 1.00 | 0.50 | 0.0
+
+	// console.log("sigma: "+sigma);
 	
 
 	// var sigma = (1.0 * 1.0/scaleMult) * 1.0;
 
+
+	// console.log("getProgressiveScaledImage: "+sigma);
+
 	// 0.5 - 1.0 ------ 0.66-0.75 ?
 	var minSize = 4;
 	var scale = 1.0;
+var dxxx = 0;
+// console.log(maxScales);
 	for(var i=0; i<maxScales; ++i){
 		// console.log(i+" / "+maxScales);
 		scale = scale * scaleMult;
@@ -4576,14 +4594,24 @@ ImageMat.getProgressiveScaledImage = function(imageA, scaleMult, maxScales){
 		var halfA = imgA.getScaledImage(scaleMult,sigma, true); // #2 - blurrier
 
 
-		// ???
+
+
+/*
+img = GLOBALSTAGE.getImageMatAsImage(imgA);
+var d = new DOImage(img);
+d.matrix().translate(10 + dxxx, 10 + 0);
+GLOBALSTAGE.addChild(d);
+dxxx += imgA.width();// widthA*scale;
+*/
 
 
 		// var halfA = imgA.getScaledImage(scaleMult, null, false); // #1 - crisper - aliasing
 		var avgScale = (halfA.width()/widthA + halfA.height()/heightA)*0.5; // actual efective scale
+		// var avgScale = halfA.width()/widthA;
 		imagesA.push(halfA);
 		scalesA.push(avgScale);
 	}
+	// console.log(imagesA)
 	return {"scales":scalesA,"images":imagesA};
 }
 ImageMat.effectiveIndexFromImageScales = function(images,scale){
@@ -5400,7 +5428,10 @@ ImageMat.colorFilter = function(srcR,srcG,srcB, wid, hei, colorTarget, colorDist
 
 
 function ImageMatScaled(image, scaler){
-	var images = ImageMat.getProgressiveScaledImage(image, scaler);
+	scaler = scaler!==undefined ? scaler : 0.5;
+	// scaler = scaler!==undefined ? scaler : 0.75;
+	this._exponent = scaler;
+	var images = ImageMat.getProgressiveScaledImage(image, this._exponent);
 	this._container = images;
 	this._images = images["images"];
 	this._scales = images["scales"];
@@ -5456,8 +5487,10 @@ ImageMatScaled.prototype.blu = function(){
 ImageMatScaled.prototype.infoForScale = function(scale){
 	var images = this._images;
 	var scales = this._scales;
-	// var scaleIndex = this.effectiveIndexFromScale(scale);
-	var scaleIndex =  Math.min(Math.max( Math.floor(-Math.log2(scale)) ,0),images.length-1); // inline
+	// var scaleIndex =  Math.min(Math.max( Math.floor(-Math.log2(scale)) ,0),images.length-1); // inline
+	var exp = this._exponent;
+	var scaleIndex =  Math.min(Math.max( Math.floor( -Math.log(scale)/Math.log(exp) ) ,0),images.length-1); // inline
+	// console.log("scale: "+scale+" -> "+scaleIndex)
 	var actualScale = scales[scaleIndex];
 	var effectiveImage = images[scaleIndex];
 	var effectiveScale = scale/actualScale;
@@ -5506,7 +5539,8 @@ ImageMatScaled.prototype.getScaledImage = function(scale, doCeil){
 	var hei = this.height();
 	var wm1 = wid-1;
 	var hm1 = hei-1;
-	var center = new V2D(wm1*0.5,hm1*0.5);
+		// var center = new V2D(wm1*0.5,hm1*0.5);
+		// var center = new V2D(wid*0.5,hei*0.5);
 	var resultWidth = Math.round(scale*wid);
 	var resultHeight = Math.round(scale*hei);
 	if(doCeil){
@@ -5520,6 +5554,7 @@ ImageMatScaled.prototype.getScaledImage = function(scale, doCeil){
 	affine.identity();
 	affine.scale(resultScale);
 	ImageMatScaled.affineToLocationTransform(affine, affine, (resultWidth-1)*0.5,(resultHeight-1)*0.5,wm1*0.5,hm1*0.5);
+		// ImageMatScaled.affineToLocationTransform(affine, affine, (resultWidth)*0.5,(resultHeight)*0.5,wid*0.5,hei*0.5);
 	var image = new ImageMat(resultWidth,resultHeight);
 	this.extractRectFast(image, resultScale, affine);
 	// var image = this.extractRect(center, resultScale, resultWidth,resultHeight);
@@ -5629,7 +5664,7 @@ ImageMatScaled.prototype.extractRectFast = function(reuseImage, scale, matrix, i
 var hm1 = imageHeight-1, wm1 = imageWidth-1;
 var i;
 
-// local cumic constants:
+// local cubic constants:
 
 
 	for(var y=0; y<hei; ++y){

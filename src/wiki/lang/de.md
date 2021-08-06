@@ -1781,6 +1781,7 @@ Autoschlüssel - car keys
 Kofferraum - trunk
 
 Aufzug - elevator
+Fahrstuhl - elevator
 Abfahrt - departure
 zug - train
 Speisewagen - dining car (on train)
@@ -1807,6 +1808,8 @@ stornieren - cancel
 spinnt - (going) crazy
 spinnst - crazy
 
+Plötzlich - suddenly
+Geräusch - noise / sound
 
 Die Vegetarierin - vegetarian (person)
 vegetarisches - vegetarian (adj)

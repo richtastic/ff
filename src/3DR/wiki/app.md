@@ -403,6 +403,64 @@ MISSING:
 
 
 
+https://www.statisticshowto.com/probability-and-statistics/chi-square/
+
+- low-res image flow given overall starting angle & scale [5x5 - 7x7]
+- hierarchical image flow:
+
+- 
+
+
+
+
+
+
+- histogram: each image limit to best 1-sigma or up to 50 [1k-100k samples put in histogram boxes]
+- low res icon matching: each image limit to best 1-sigma or up to 25 [5x5-7x7 = 20-39 points] 7
+- med res icon matching: each image limit to best 1-sigma or up to 10 [9x9-11x11 = 64-96 points, can use previously estimated angle & scale]
+- feature matching: each image limit to best 1-sigma or up to 6 [100-1K features]
+
+
+- histogram limit to top ~ 50
+- icon matching limit to top ~ 10
+	- 7x7/9x9 to top 25
+		- get best angle & scale
+			- 7*7*(pi/4) = 39
+			- 9*9*(pi/4) = 64
+	- 11x11 to top 10
+		- use best angle & scale & ~ 45deg & 1.1 scale tolerance
+			- 11*11*(pi/4) = 95
+			- 21*21*(pi/4) = 347
+- feature matching limit to top ~ 6
+
+
+
+still some shifting somewhere in display logic ?
+
+
+infoForScale
+
+getProgressiveScaledImage
+
+
+
+
+compareCircularBestImage
+
+
+
+
+
+- find best affine transform for a given image
+	- low res ~ 7
+	- do exhaustive search
+	- limit range at each next step
+		- 11, 21, 41, .. 
+		- 15 deg, 10 deg, 5 deg, .... 0
+		- 1.25 scale, 1.1 scale, 1.01 scale, ...
+	=> the 'center' of each would change ....
+
+
 
 - ImageMatScaled.affineToLocationTransform(affine,affine, iconHalf,iconHalf, centerX,centerY);
 	- iconHalf needs to be EXACLY HALF, NOT TRUNCATED

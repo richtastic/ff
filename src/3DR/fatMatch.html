@@ -37,15 +37,22 @@ TestIcon.prototype.testImageIcons = function(){
 	// var imageList = ["couch01.jpg","couch02.jpg","couch03.jpg"];
 	// var imageList = ["couch01.jpg","couch02.jpg","couch03.jpg","couch04.jpg","couch05.jpg"];
 	// var imageList = ["couch01.jpg","couch02.jpg","couch03.jpg","couch04.jpg","couch05.jpg","couch06.jpg","couch07.jpg","couch08.jpg","couch09.jpg","couch10.jpg"];
+	// var imageDir = "./images/house_couch/";
+	// var imageList = 
+	// 	["couch01.jpg","couch02.jpg","couch03.jpg","couch04.jpg","couch05.jpg","couch06.jpg","couch07.jpg","couch08.jpg","couch09.jpg","couch10.jpg",
+	// 	 "couch11.jpg","couch12.jpg","couch13.jpg","couch14.jpg","couch15.jpg","couch16.jpg","couch17.jpg","couch18.jpg"];
+	var imageDir = "./images/house_couch/";
 	var imageList = 
-		["couch01.jpg","couch02.jpg","couch03.jpg","couch04.jpg","couch05.jpg","couch06.jpg","couch07.jpg","couch08.jpg","couch09.jpg","couch10.jpg",
-		 "couch11.jpg","couch12.jpg","couch13.jpg","couch14.jpg","couch15.jpg","couch16.jpg","couch17.jpg","couch18.jpg"];
-	new ImageLoader("./images/house_couch/",imageList,this,this.testImagesLoaded).load();
+		["couch09.jpg","couch18.jpg"];
+	// var imageDir = "./images/rabbit/";
+	// var imageList = ["1.jpg","2.jpg","3.jpg","4.jpg","5.jpg","6.jpg","7.jpg","8.jpg","9.jpg","10.jpg","11.jpg"];
+
+	new ImageLoader(imageDir,imageList,this,this.testImagesLoaded).load();
 }
 TestIcon.prototype.testImagesLoaded = function(info){
 	console.log("testImagesLoaded");
 	var images = info["images"];
-	console.log(images);
+	// console.log(images);
 	var matrixes = [];
 	for(var i=0; i<images.length; ++i){
 		var image = images[i];
@@ -56,31 +63,57 @@ TestIcon.prototype.testImagesLoaded = function(info){
 		var scales = new ImageMatScaled(matrix);
 		// console.log(scales);
 		matrixes.push(scales);
+
+// throw "gotta scale"
 			// matrixes.push(matrix);
 		// console.log(matrix);
 	}
-	// var iconSize = 51;
-	// var iconSize = 21;
-	var iconSize = 11;
+	// var iconSize = 101;
+	// var iconSize = 51; // way too big
+	var iconSize = 21; // big
+	// var iconSize = 15; // 
+	// var iconSize = 11; // near ideal
+	// var iconSize = 9;
+	// var iconSize = 7; // not discriminating enough
+	// var iconSize = 5;
+	// var iconHalf = Math.ceil(iconSize*0.5);
 	// var iconHalf = iconSize*0.5 | 0;
-	var iconHalf = iconSize*0.5;
+	// var iconHalf = (iconSize+1)*0.5;
+	// var iconHalf = iconSize*0.5;
+	// var iconHalf = (iconSize-0.5)*0.5; /// ... seems better for smaller icons
+	// var iconHalf = (iconSize-1)*0.5;
+	var iconCenterX = (iconSize-1)*0.5;
+	var iconCenterY = iconCenterX;
 		// console.log("iconHalf: "+iconHalf);
+
+// console.log("icon: "+iconSize+" - "+iconHalf);
 	var reuseImage = new ImageMat(iconSize,iconSize);
 	var affine = new Matrix2D();
 	// 
 	var imageIcons = [];
 	for(var i=0; i<matrixes.length; ++i){
 		var scales = matrixes[i];
-		// var scale = (Math.min(matrix.width(),matrix.height())-1) / (iconSize-1);
 		var scale = (Math.min(matrix.width(),matrix.height())-0) / (iconSize-0);
-		// var centerX = (scales.width()-1)*0.5;
-		// var centerY = (scales.height()-1)*0.5;
-		var centerX = (scales.width()-0)*0.5;
-		var centerY = (scales.height()-0)*0.5;
+		// var scale = (Math.min(matrix.width(),matrix.height())-1) / (iconSize-1);
+		// var centerX = (scales.width()-0)*0.5;
+		// var centerY = (scales.height()-0)*0.5;
+		var centerX = (scales.width()-1)*0.5;
+		var centerY = (scales.height()-1)*0.5;
+
+// scale = 1.0;
+// scale = 2.0;
+// scale = 4.0;
+// scale = 8.0;
+// scale = 16.0;
+// scale = matrix.height() / iconSize;
+// scale = 1.0/scale;
+// console.log("SCALE: "+scale);
+
 			affine.identity();
 			affine.scale(scale);
 		var averageScale = affine.averageScale();
-			ImageMatScaled.affineToLocationTransform(affine,affine, iconHalf,iconHalf, centerX,centerY);
+			ImageMatScaled.affineToLocationTransform(affine,affine, iconCenterX,iconCenterY, centerX,centerY);
+			averageScale = 1.0/averageScale;
 		scales.extractRectFast(reuseImage, averageScale, affine);
 		//
 		var img = reuseImage;
@@ -94,7 +127,7 @@ TestIcon.prototype.testImagesLoaded = function(info){
 		imageIcons.push(reuseImage.copy());
 	}
 
-	console.log(imageIcons);
+	// console.log(imageIcons);
 
 	// marshall into 1D array
 
@@ -105,25 +138,133 @@ TestIcon.prototype.testImagesLoaded = function(info){
 	// auto-fill outer blank area (expand fill)
 
 
+// throw "?"
 
 	var imageMask = ImageMat.circleMask(iconSize,iconSize);
 	// console.log(imageMask);
 	// do compares
+var edges = [];
+var timeA = Code.getTimeMilliseconds();
 	for(var i=0; i<imageIcons.length; ++i){
 		var imageA = imageIcons[i];
 		for(var j=i+1; j<imageIcons.length; ++j){
 			var imageB = imageIcons[j];
 			var result = R3D.compareCircularBestImage(imageA,imageB, imageMask);
+
+
+
+			R3D.hierarchicalAffineImageMatch(imageA,imageB);
+
+console.log(result);
+throw "..."
+
 			var score = result["score"];
 			var angle = result["angle"];
 			var scale = result["scale"];
-			console.log("compare: "+i+" - "+j+"  :  "+score+"  |  "+" @ "+scale+" < "+Code.degrees(angle)+" == ");
+			// console.log("compare: "+i+" - "+j+"  :  "+score+"  |  "+" @ "+scale+" < "+Code.degrees(angle)+" == ");
+			var edge = {};
+				edge["A"] = i;
+				edge["B"] = j;
+				edge["value"] = score;
+			edges.push(edge);
 		}
 	}
-
+var timeB = Code.getTimeMilliseconds();
+var elapsed = timeB - timeA;
+console.log("ELAPSED: "+elapsed);
 
 	// SHOW BEST MATCHES IN CIRCLE
+	showImageEdges(matrixes, edges);
 
+
+
+}
+
+var showImageEdges = function(imageList,edgeList){
+	var idealPadding = 100;
+	var idealImageSize = 100;
+	var idealRadius = 600;
+	var imageCount = imageList.length;
+	// location for images:
+	var centers = [];
+
+var display = new DO();
+GLOBALSTAGE.addChild(display);
+
+var displayImages = new DO();
+display.addChild(displayImages);
+
+	for(var i=0; i<imageCount; ++i){
+		var image = imageList[i];
+		var size = image.size().length()*0.5;
+		var scale = idealImageSize/size;
+		// var radius = idealRadiusl
+		var radius = idealRadius-idealImageSize;
+		var angle = (i/imageCount)*Math.PI*2;
+		var center = new V2D(radius,0);
+			center.rotate(angle);
+		center.x += idealPadding + idealRadius;
+		center.y += idealPadding + idealRadius;
+		centers.push(center);
+		// put image
+			var scaled = image.getScaledImage(scale);
+			// console.log(img);
+			img = GLOBALSTAGE.getImageMatAsImage(scaled);
+			// throw "?"
+			var d = new DOImage(img);
+			// d.graphics().alpha(alp);
+			d.matrix().translate(center.x - scaled.width()*0.5, center.y - scaled.height()*0.5);
+			displayImages.addChild(d);
+	}
+console.log(centers);
+	// show edges
+	// find min & max of edges
+	var values = Code.copyArray(edgeList);
+	Code.mapArray(values, function(a){
+		//console.log(a);
+		return a["value"];
+	});
+	// console.log(values);
+	var info = Code.infoArray(values);
+	// console.log(info);
+	var valueMax = info["max"];
+	var valueMin = info["min"];
+	var valueRan = info["range"];
+
+
+var lines = new DO();
+display.addChild(lines);
+
+// var colors = [0xFFFF0000,0xFF009900,0xFF0000FF,0xFFCCCC00,0xFFCC00CC,0xFF00CCCC,0xFFCCCCCC];
+// var colors = [0xFFFF0000,0xFF0000CC];
+var colors = [0xFFFF0000,0xFFCC0033,0x99990099,0x330000CC,0x00000000];
+var colLines = [5.0,3.0,2.0,1.0];
+	for(var i=0; i<edgeList.length; ++i){
+		var edge = edgeList[i];
+		// console.log(edge)
+		var indexA = edge["A"];
+		var indexB = edge["B"];
+		var value = edge["value"];
+		var centerA = centers[indexA];
+		var centerB = centers[indexB];
+		// console.log(indexA,indexB);
+		// console.log(centerA,centerB);
+		var percent = (value-valueMin)/valueRan;
+		var color = Code.interpolateColorGradientARGB(percent, colors);
+		var line = Code.interpolateColorGradientARGB(percent, colLines);
+			var d = new DO();
+			// d.graphics().setLine(3.0,0xFFFF0000);
+			d.graphics().setLine(line,color);
+			d.graphics().beginPath();
+			d.graphics().moveTo(centerA.x,centerA.y);
+			d.graphics().lineTo(centerB.x,centerB.y);
+			d.graphics().endPath();
+			d.graphics().strokeLine();
+			lines.addChild(d);
+			
+	}
+
+	// throw "showImageEdges"
 }
 </script>
 <body onload="pageLoadedFxn();">

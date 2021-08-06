@@ -19948,12 +19948,20 @@ console.log("R3D._progressiveMediumMatches");
 
 	return {"F":F, "inv":Finv, "error":Ferror, "A":pointsA, "B":pointsB};
 }
+R3D.hierarchicalAffineImageMatch = function(imageA,imageB, needleSize,haystackSize){
+	needleSize = Code.valueOrDefault(needleSize, 5);
+	haystackSize = Code.valueOrDefault(haystackSize, needleSize+2);
 
+	console.log("R3D.hierarchicalAffineImageMatch");
+	
+	throw "..."
+}
 R3D.compareCircularBestImage = function(imageA,imageB, maskAB){ // compare circular region @ different angles & scales 
 	var size = imageA.width();
 	var sizeHalf = size*0.5 | 0;
 	var angleCount = 24;
-	var scaleCount = 5; // 0.70, 0.84, 1, 1.19, 1.41
+	// var scaleCount = 5; // 0.70, 0.84, 1, 1.19, 1.41
+	var scaleCount = 7; // ???
 	var scaleCountHalf = scaleCount*0.5 | 0;
 	// var scaleOffsetMultiplier = 0.5; // 0.5 -> 2.0
 	var scaleOffsetMultiplier = 0.25;
@@ -19965,7 +19973,7 @@ R3D.compareCircularBestImage = function(imageA,imageB, maskAB){ // compare circu
 	var imgB = null;
 	var colA = new V3D();
 	var colB = new V3D();
-	var pixels = Code.sum(maskAB);
+	// var pixels = Code.sum(maskAB);
 	// console.log("pixels: "+pixels+" / "+maskAB.length);
 	// for each angle
 	for(var angleIndex=0; angleIndex<angleCount; ++angleIndex){
@@ -19989,58 +19997,80 @@ R3D.compareCircularBestImage = function(imageA,imageB, maskAB){ // compare circu
 
 			// TODO: could add shift sx & sy for a 3x3 = 9 more iterations ?
 
-			for(var y=0; y<size; ++y){
-				for(var x=0; x<size; ++x){
-					var indexA = y*size + x;
-					if(maskAB[indexA]==0){
-						continue;
-					}
-					colA.set( imgA.red()[indexA], imgA.grn()[indexA], imgA.blu()[indexA] );
-					point.x = (x-sizeHalf);
-					point.y = (y-sizeHalf);
-					point.rotate(angle);
-					point.scale(scale);
-					point.x += sizeHalf;
-					point.y += sizeHalf;
-					var u = Math.round(point.x);
-					var v = Math.round(point.y);
-					// console.log(point+" ? "+u+","+v);
-					// search up to 8 neighbor values, [which are also inside mask]
-					var comparePixel = null;
-					for(var j=-1; j<=1; ++j){
-						for(var i=-1; i<=1; ++i){
-							var a = u+i;
-							var b = v+j;
-							if(a<0 || a>=size || b<0 || b>=size){
-								continue;
-							}
-							var indexB = b*size + a;
-							if(maskAB[indexB]==0){
-								continue;
-							}
-							colB.set( imgB.red()[indexB], imgB.grn()[indexB], imgB.blu()[indexB] );
-							var diff = V3D.distance(colA,colB);
-							// console.log(" => "+a+","+b+" = "+diff);
-							if(comparePixel===null || comparePixel>diff){
-								comparePixel = diff;
-							}
-						}
-					}
-					// find corresponding pixel x,y in opposite image
-					if(comparePixel===null){
-						throw "compare pixel was always null"
-					}
-					
-					// console.log("best compare: "+comparePixel);
-					compareAB += comparePixel;
-					// throw "yup"
+			for(var sx=-1; sx<=1; ++sx){
+				for(var sy=-1; sy<=1; ++sy){
+			// for(var sx=0; sx<=0; ++sx){
+			// 	for(var sy=0; sy<=0; ++sy){
+
+									var pixels = 0;
+
+									// for(var y=0; y<size; ++y){
+									// 	for(var x=0; x<size; ++x){
+									for(var yy=0; yy<size; ++yy){
+										for(var xx=0; xx<size; ++xx){
+
+											var x = xx+sx;
+											var y = yy+sy;
+											if(x<0 || x>=size || y<0 || y>=size){
+												continue;
+											}
+
+											var indexA = y*size + x;
+											if(maskAB[indexA]==0){
+												continue;
+											}
+											colA.set( imgA.red()[indexA], imgA.grn()[indexA], imgA.blu()[indexA] );
+											point.x = (x-sizeHalf);
+											point.y = (y-sizeHalf);
+											point.rotate(angle);
+											point.scale(scale);
+											point.x += sizeHalf;
+											point.y += sizeHalf;
+											var u = Math.round(point.x);
+											var v = Math.round(point.y);
+											// console.log(point+" ? "+u+","+v);
+											// search up to 8 neighbor values, [which are also inside mask]
+											var comparePixel = null;
+											for(var j=-1; j<=1; ++j){
+												for(var i=-1; i<=1; ++i){
+													var a = u+i;
+													var b = v+j;
+													if(a<0 || a>=size || b<0 || b>=size){
+														continue;
+													}
+													var indexB = b*size + a;
+													if(maskAB[indexB]==0){
+														continue;
+													}
+													++pixels;
+													colB.set( imgB.red()[indexB], imgB.grn()[indexB], imgB.blu()[indexB] );
+													var diff = V3D.distance(colA,colB);
+													// console.log(" => "+a+","+b+" = "+diff);
+													if(comparePixel===null || comparePixel>diff){
+														comparePixel = diff;
+													}
+												}
+											}
+											// find corresponding pixel x,y in opposite image
+											if(comparePixel===null){
+												throw "compare pixel was always null"
+											}
+											
+											// console.log("best compare: "+comparePixel);
+											compareAB += comparePixel;
+											// throw "yup"
+										}
+									}
+									compareAB /= pixels;
+// console.log(pixels);
+									// console.log(compareAB);
+									if(bestScore===null || bestScore>compareAB){
+										bestScore = compareAB;
+										bestAngle = isReversed ? -angle : angle;
+										bestScale = isReversed ? 1.0/scale : scale ;
+									}
+
 				}
-			}
-			// console.log(compareAB);
-			if(bestScore===null || bestScore>compareAB){
-				bestScore = compareAB;
-				bestAngle = isReversed ? -angle : angle;
-				bestScale = isReversed ? 1.0/scale : scale ;
 			}
 			// throw "..."
 		}
@@ -20048,7 +20078,7 @@ R3D.compareCircularBestImage = function(imageA,imageB, maskAB){ // compare circu
 		// console.log(bestScore);
 		// throw "..."
 	}
-	bestScore /= pixels;
+	// bestScore /= pixels;
 	// throw "done angle"
 	// console.log("best: "+bestScore+" @ "+bestScale+" < "+Code.degrees(bestAngle));
 	// throw ""
