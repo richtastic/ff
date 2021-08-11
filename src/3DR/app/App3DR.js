@@ -2207,7 +2207,8 @@ App3DR.App.UploadAdapterToPictures.prototype._processCurrentFile = function(){
 			image.onload = function(e){
 				var originalWidth = image.width;
 				var originalHeight = image.height;
-				var minimumPixelCount = 100*100;
+				// var minimumPixelCount = 100*100 // 10000 | 126x95 = 11970
+				var minimumPixelCount = 25*25; // 625
 				var sizes = [];
 				var i;
 				var scale = 1.0;

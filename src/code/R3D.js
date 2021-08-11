@@ -19948,9 +19948,240 @@ console.log("R3D._progressiveMediumMatches");
 
 	return {"F":F, "inv":Finv, "error":Ferror, "A":pointsA, "B":pointsB};
 }
-R3D.hierarchicalAffineImageMatch = function(imageA,imageB, needleSize,haystackSize){
+R3D.flatAffineImageMatch = function(imageA,imageB, needleSize,haystackSize){
+	console.log("R3D.flatAffineImageMatch");
+	needleSize = Code.valueOrDefault(needleSize, 9);
+	haystackSize = Code.valueOrDefault(haystackSize, needleSize+2);
+	// helpers
+	var haystackHalfSize = (haystackSize-1)*0.5 | 0;
+	var needleHalfSize = (needleSize-1)*0.5 | 0;
+	console.log("needleHalfSize: "+needleHalfSize);
+	console.log("haystackHalfSize: "+haystackHalfSize);
+	var reuseNeedle = new ImageMat(needleSize,needleSize);
+	var reuseHaystack = new ImageMat(haystackSize,haystackSize);
+	
+	// initial orientation estimate:
+
+	var needleScale = Math.min(imageA.width(),imageA.height())/needleSize;
+	// var needleScale = needleSize/Math.min(imageA.width(),imageA.height());
+console.log("needleScale: "+needleScale);
+
+	var angleCount = 24;
+	var scaleCount = 5; // 0.70, 0.84, 1, 1.19, 1.41
+	// var scaleCount = 7; // ???
+
+// angleCount = 10;
+// scaleCount = 5;
+	var scaleCountHalf = (scaleCount-1)*0.5;
+	// var scaleOffsetMultiplier = 0.5; // 0.5 -> 2.0
+	var scaleOffsetMultiplier = 0.25;
+
+	console.log("ANGLE ACCURACY: "+(360/angleCount)+" degrees");
+	console.log("SCALE ACCURACY: "+(Math.pow(2, (scaleCountHalf)*scaleOffsetMultiplier ))+" ");
+
+
+	var currentLocationA = new V2D( (imageA.width()-1)*0.5, (imageA.height()-1)*0.5);
+	var currentLocationB = new V2D( (imageB.width()-1)*0.5, (imageB.height()-1)*0.5);
+	console.log("currentLocation: "+currentLocationB);
+
+	var averageScale;
+	var affine = new Matrix2D();
+	// extract haystack
+	affine.identity();
+	affine.scale(needleScale);
+	ImageMatScaled.affineToLocationTransform(affine, affine, haystackHalfSize,haystackHalfSize, currentLocationB.x,currentLocationB.y);
+	averageScale = affine.averageScale();
+console.log("AVERAGE SCALE: "+averageScale);
+	imageB.extractRectCombineFast(reuseHaystack, averageScale, affine);
+
+var img = GLOBALSTAGE.getImageMatAsImage(reuseHaystack);
+var d = new DOImage(img);
+d.matrix().scale(10);
+d.matrix().translate(10 + 0, 10 + 200);
+GLOBALSTAGE.addChild(d);
+console.log("DHOW");
+
+	var needleMask = null;
+	// try all orientations & scales
+	var bestScore = null;
+	var bestAngle = null;
+	var bestScale = null;
+	var bestLocation = null;
+	for(var angleIndex=0; angleIndex<angleCount; ++angleIndex){
+		var angle = (angleIndex/angleCount)*2*Math.PI;
+		// console.log("angle: "+Code.degrees(angle));
+		// for each scale
+		for(var scaleIndex=0; scaleIndex<scaleCount; ++scaleIndex){
+			var scale = Math.pow(2, (scaleIndex-scaleCountHalf)*scaleOffsetMultiplier );
+			// extract patch
+			affine.identity();
+			affine.rotate(angle);
+			affine.scale(needleScale*scale);
+			ImageMatScaled.affineToLocationTransform(affine, affine, needleHalfSize,needleHalfSize, currentLocationA.x,currentLocationA.y);
+			averageScale = affine.averageScale();
+		// console.log("AVERAGE SCALE: "+averageScale);
+			imageA.extractRectCombineFast(reuseNeedle, averageScale, affine);
+
+
+			// var scores = R3D.searchNeedleHaystackSADColor(reuseNeedle,patchJ,needleMask);
+			var scores = R3D.searchNeedleHaystackSADColorOffsetUnit(reuseNeedle,reuseHaystack);
+			// console.log(scores);
+			var finalSize = scores["width"];
+			var values = scores["value"];
+			// do bluring to get more accurate minimum
+			// if(doBlurring){
+			// 	var blurSigma = 1.0;
+			// 	values = ImageMat.getBlurredImage(values,finalSize,finalSize, blurSigma);
+			// }
+			var inScale = 1.0/needleScale;
+			var minimum = R3D.minimumFromValues(values, finalSize, finalSize, currentLocationB, inScale);
+			var absoluteLocation = minimum["location"];
+			var absoluteScore = minimum["score"];
+			// console.log(minimum)
+			if(bestScore===null || absoluteScore<bestScore){
+				bestScore = absoluteScore;
+				bestScale = scale;
+				bestAngle = angle;
+				// bestAngle = angleIndex;
+				// bestScale = scaleIndex;
+				bestLocation = absoluteLocation;
+			}
+
+// throw "..."
+var img = GLOBALSTAGE.getImageMatAsImage(reuseNeedle);
+var d = new DOImage(img);
+d.matrix().scale(10);
+d.matrix().translate(10 + 0 + 100*angleIndex, 10 + 350 + 100*scaleIndex);
+GLOBALSTAGE.addChild(d);
+
+		}
+	}
+	// console.log(bestScore+" @ "+bestLocation+" & angle: "+(bestAngle)+"   scale: "+(bestScale)+"  ");
+	console.log(bestScore+" @ "+bestLocation+" & "+Code.degrees(bestAngle)+" deg & "+(bestScale)+" sca ");
+
+	// do sub-search at best location:
+	var maxIterations = 3;
+	var currentScale = bestScale;
+	var currentAngle = bestAngle;
+	var currentLocationB = bestLocation;
+	var currentDiffAngle = Code.radians(360/angleCount)*0.5;
+	var currentDiffScale = scaleOffsetMultiplier*0.5;
+
+	for(var iteration=0; iteration<maxIterations; ++iteration){
+
+
+		affine.identity();
+		affine.scale(needleScale);
+		ImageMatScaled.affineToLocationTransform(affine, affine, haystackHalfSize,haystackHalfSize, currentLocationB.x,currentLocationB.y);
+		averageScale = affine.averageScale();
+		imageB.extractRectCombineFast(reuseHaystack, averageScale, affine);
+
+
+
+
+
+		var nextScore = null;
+		var nextAngle = null;
+		var nextScale = null;
+		var nextLocation = null;
+		console.log("diff angle: "+Code.degrees(currentDiffAngle));
+		console.log("diff scale: "+(currentDiffScale));
+		for(var angleIndex=0; angleIndex<3; ++angleIndex){
+			var angle = currentDiffAngle*(angleIndex-1);
+				angle += currentAngle;
+			for(var scaleIndex=0; scaleIndex<3; ++scaleIndex){
+				// var scale = currentDiffScale*(scaleIndex-1);
+				var scale = Math.pow(2, currentDiffScale*(scaleIndex-1) );
+				// search around current location
+					scale *= currentScale;
+
+				affine.identity();
+				affine.rotate(angle);
+				affine.scale(needleScale*scale);
+				ImageMatScaled.affineToLocationTransform(affine, affine, needleHalfSize,needleHalfSize, currentLocationA.x,currentLocationA.y);
+				averageScale = affine.averageScale();
+				imageA.extractRectCombineFast(reuseNeedle, averageScale, affine);
+
+				var scores = R3D.searchNeedleHaystackSADColorOffsetUnit(reuseNeedle,reuseHaystack);
+				var finalSize = scores["width"];
+				var values = scores["value"];
+				var inScale = 1.0/needleScale;
+				var minimum = R3D.minimumFromValues(values, finalSize, finalSize, currentLocationB, inScale);
+				var absoluteLocation = minimum["location"];
+				var absoluteScore = minimum["score"];
+
+				if(nextScore===null || absoluteScore<nextScore){
+					nextScore = absoluteScore;
+					nextAngle = angle;
+					nextScale = scale;
+					nextLocation = absoluteLocation;
+				}
+
+var img = GLOBALSTAGE.getImageMatAsImage(reuseNeedle);
+var d = new DOImage(img);
+d.matrix().scale(10);
+d.matrix().translate(10 + 0 + 100*angleIndex, 10 + 350 + 100*scaleCount + 100*scaleIndex);
+GLOBALSTAGE.addChild(d);
+
+			}
+		}
+		console.log(" => "+nextScore+" @ "+nextLocation+" & "+Code.degrees(nextAngle)+" deg & "+(nextScale)+" sca ");
+		currentLocation = nextLocation;
+		currentScale = nextScale;
+		currentAngle = nextAngle;
+		currentDiffAngle *= 0.5;
+		currentDiffScale *= 0.5;
+	}
+
+	// best v current location
+
+	// var currentRangeAngle = Code.radians(15.0); // +/- angle
+	// var currentRangeScale = 0.25; // exponent -> 2^(+/- range)
+
+	return {"angle":bestAngle, "scale":bestScale, "position":bestLocation, "score":bestScore};
+}
+
+R3D.hierarchicalAffineImageMatch = function(imageA,imageB, startAngle,startScale,startPosition, needleSize,haystackSize){
+	startAngle = Code.valueOrDefault(startAngle, 0);
+	startScale = Code.valueOrDefault(needleSize, 1.0);
 	needleSize = Code.valueOrDefault(needleSize, 5);
 	haystackSize = Code.valueOrDefault(haystackSize, needleSize+2);
+	if(!startPosition){
+		startPosition = new V2D(imageB.width(),imageB.height()).scale(0.5);
+	}
+
+	var currentRangeAngle = Code.radians(15.0); // +/- angle
+	var currentRangeScale = 0.25; // exponent -> 2^(+/- range)
+
+	var root = {};
+		root["center"] = new V2D(imageA.width(),imageA.height()).scale(0.5);
+		root["size"] = Math.min(imageA.width(),imageA.height());
+		root["parent"] = null;
+		root["children"] = [];
+		root["pos"] = startPosition;
+		root["ang"] = startAngle;
+		root["sca"] = startScale;
+
+	console.log(root);
+	var layers = [[root]];
+
+	var maxLayers = 4;
+
+	for(var layer=0; layer<maxLayers; ++layer){
+		var elements = layers[layer];
+		console.log(elements);
+		// find best orientation
+
+		if(layer<maxLayers-1){
+				// subdivide layer into grid elements
+
+				// assign all elements to rounded parent
+
+				// predict/assign location based on affine location
+		}
+		throw "..."
+	}
+	// create root square that is 1x1 grid @ input angle & 
 
 	console.log("R3D.hierarchicalAffineImageMatch");
 	
