@@ -154,9 +154,9 @@ var timeA = Code.getTimeMilliseconds();
 // 			var imageB = imageIcons[j];
 // 			var result = R3D.compareCircularBestImage(imageA,imageB, imageMask);
 // console.log(result);
-// 			var score = result["score"];
-// 			var angle = result["angle"];
-// 			var scale = result["scale"];
+			// var score = result["score"];
+			// var angle = result["angle"];
+			// var scale = result["scale"];
 			// R3D.hierarchicalAffineImageMatch(imageA,imageB, angle,scale,null);
 
 
@@ -164,6 +164,13 @@ var timeA = Code.getTimeMilliseconds();
 			var imageB = matrixes[j];
 
 			var result = R3D.flatAffineImageMatch(imageA,imageB);
+			console.log(result);
+			var score = result["score"];
+			var angle = result["angle"];
+			var scale = result["scale"];
+			var position = result["position"];
+
+			R3D.hierarchicalAffineImageMatch(imageA,imageB, angle,scale,position,null);
 			
 
 

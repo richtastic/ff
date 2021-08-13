@@ -19969,7 +19969,6 @@ console.log("needleScale: "+needleScale);
 	var angleCount = 24;
 	var scaleCount = 5; // 0.70, 0.84, 1, 1.19, 1.41
 	// var scaleCount = 7; // ???
-
 // angleCount = 10;
 // scaleCount = 5;
 	var scaleCountHalf = (scaleCount-1)*0.5;
@@ -20064,6 +20063,7 @@ GLOBALSTAGE.addChild(d);
 	var currentScale = bestScale;
 	var currentAngle = bestAngle;
 	var currentLocationB = bestLocation;
+	var currentScore = bestScore;
 	var currentDiffAngle = Code.radians(360/angleCount)*0.5;
 	var currentDiffScale = scaleOffsetMultiplier*0.5;
 
@@ -20129,9 +20129,14 @@ GLOBALSTAGE.addChild(d);
 		currentLocation = nextLocation;
 		currentScale = nextScale;
 		currentAngle = nextAngle;
+		currentScore = nextScore;
 		currentDiffAngle *= 0.5;
 		currentDiffScale *= 0.5;
 	}
+	bestAngle = currentAngle;
+	bestScale = currentScale;
+	bestLocation = currentLocation;
+	bestScore = currentScore;
 
 	// best v current location
 
@@ -20143,7 +20148,7 @@ GLOBALSTAGE.addChild(d);
 
 R3D.hierarchicalAffineImageMatch = function(imageA,imageB, startAngle,startScale,startPosition, needleSize,haystackSize){
 	startAngle = Code.valueOrDefault(startAngle, 0);
-	startScale = Code.valueOrDefault(needleSize, 1.0);
+	startScale = Code.valueOrDefault(startScale, 1.0);
 	needleSize = Code.valueOrDefault(needleSize, 5);
 	haystackSize = Code.valueOrDefault(haystackSize, needleSize+2);
 	if(!startPosition){
@@ -20153,9 +20158,13 @@ R3D.hierarchicalAffineImageMatch = function(imageA,imageB, startAngle,startScale
 	var currentRangeAngle = Code.radians(15.0); // +/- angle
 	var currentRangeScale = 0.25; // exponent -> 2^(+/- range)
 
+	var imageWidth = imageA.width();
+	var imageHeight = imageA.height();
+	var rootSize = Math.min(imageWidth,imageHeight);
+
 	var root = {};
 		root["center"] = new V2D(imageA.width(),imageA.height()).scale(0.5);
-		root["size"] = Math.min(imageA.width(),imageA.height());
+		root["size"] = rootSize;
 		root["parent"] = null;
 		root["children"] = [];
 		root["pos"] = startPosition;
@@ -20165,21 +20174,73 @@ R3D.hierarchicalAffineImageMatch = function(imageA,imageB, startAngle,startScale
 	console.log(root);
 	var layers = [[root]];
 
-	var maxLayers = 4;
+	// var maxLayers = 4;
+	var maxLayers = 5;
 
+
+	var needleScale = root["size"]/needleSize;
+	console.log("NEEDLE SCALE "+needleSize);
+
+	// var currentSize = 0;
+	var parentCountWidth = 1;
+	var parentCountHeight = 1;
 	for(var layer=0; layer<maxLayers; ++layer){
 		var elements = layers[layer];
-		console.log(elements);
+		// console.log(elements);
 		// find best orientation
 
+		// ...
+
+
 		if(layer<maxLayers-1){
+			console.log("subdivide");
+			// next layer
+			var layerCount = Math.pow(2,layer+1);
+			var layerSize = rootSize/layerCount;
+			
+			var countWidth = Math.floor(imageWidth/layerSize);
+			var countHeight = Math.floor(imageHeight/layerSize);
+				countWidth = countWidth%2==1 ? countWidth-1 : countWidth;
+				countHeight = countHeight%2==1 ? countHeight-1 : countHeight;
+
+			console.log(layerSize, countWidth+"x"+countHeight+" from: "+parentCountWidth+"x"+parentCountHeight);
+			for(var row=0; row<countHeight; ++row){
+					// var parentRow = row-parentCountHeight;
+					// console.log(parentRow);
+				for(var col=0; col<countWidth; ++col){
+					var parentCol = (col-(countWidth/2) + 0.5);
+					parentCol /= 2;
+					// var parentCol = col-(countWidth/2) + 0;
+					var isNegative = parentCol<0;
+						parentCol = Math.abs(parentCol);
+						// parentCol /= parentCountWidth/2;
+						// parentCol /= 2;
+						// parentCol += parentCountWidth/2 - 1;
+						// parentCol *=  parentCountWidth/countWidth;
+						parentCol = Math.floor(parentCol);
+						parentCol = Math.min(parentCol,parentCountWidth/2-1);
+						if(isNegative){
+							// parentCol = parentCol + parentCountWidth/2;
+							parentCol = parentCountWidth/2 - parentCol - 1;
+						}else{
+							parentCol = parentCountWidth/2 + parentCol;
+						}
+
+					console.log(col+" -> "+parentCol);
+					// 
+					// var parentIndex = ?;
+				}
+				break;
+			}
+			parentCountWidth = countWidth;
+			parentCountHeight = countHeight;
 				// subdivide layer into grid elements
 
 				// assign all elements to rounded parent
 
 				// predict/assign location based on affine location
 		}
-		throw "..."
+		// throw "..."
 	}
 	// create root square that is 1x1 grid @ input angle & 
 
