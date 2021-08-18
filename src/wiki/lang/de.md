@@ -2042,6 +2042,7 @@ Ahnung - idea
 Einladung - invitation
 
 
+zelten - to camp
 Wanderst / wandern - to hike / hiking
 spazieren - to walk
 läuft ? laufe ? - runs
@@ -2153,6 +2154,33 @@ sauber - clean
 schmutzig - dirty
 unordentlich - messy
 angst - scared
+
+
+
+
+gutaussehenden - good looking
+
+darf - may (can, please, with your permission)
+
+hatte - I had
+
+schüchtern - shy
+
+Hochzeit - wedding
+
+falschen - wrong
+
+berge - mountains
+
+komisch - strange
+
+ziemlich - fairly/somewhat
+
+heft - notebook
+
+Zelt - tent
+
+
 
 fantastisch - fantastic
 

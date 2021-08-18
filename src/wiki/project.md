@@ -5,7 +5,10 @@
 
 
 ## Proposal
-- application goals, purpose, audience, metrics for success defined to 
+- application goals
+- purpose
+- audience
+- metrics for success
 
 
 ## Initial Design
@@ -13,7 +16,8 @@
 - UI, UX, sequences
 - data flow / data structures / diagrams
 - systems
-- features
+	- design modularly (/generically?)
+- individual features
 - entirety of app thought out before pieces are put together in final source project
 	- all main and edge cases need to be defined
 		- things like:
@@ -38,31 +42,35 @@
 	- design
 	- implement
 	- test / find deltas = difference in definition & product
-	- update expectations
+	- update definitions (& expectations)
 - systems & features need to be mostly completed before including in application code base
 
 
 ## Communication
 
 - available to everyone:
-	- calendar with key dates
+	- calendar
+		- simple with key dates
+		- detailed with agreements / expectations
 	- UI/UX diagrams
 	- Data Flow diagrams
-	- System communication diagrams
+	- System communication
+		- simple diagrams [interfaces]
+		- detailed interface definitions
 	- delivery definitions
 	- tasks database
 	- standup meetings
 	- design meetings
 	- action items
 	- individual daily/weekly summaries
+		- keep track of current priorities
 	- aggregated project daily/weekly summaries
-
-
+		- keep track of project progress
 
 ## Time Management
 
 - stages of feature development:
-	- task completion date
+	- task completion date (development)
 	- QA testing time [week]
 	- fixing time [days]
 	- delivery dates [cutoff]
