@@ -2106,6 +2106,8 @@ geheimnisvolles - mysterious
 
 paar - couple (pair, few)
 
+Kapitel - chapter
+
 neue - new
 Jacke - jacket
 
@@ -2213,6 +2215,8 @@ Stadion - stadium
 
 anfangen / fängt...an - start
 
+
+furchtbares - terrible
 
 
 anstrengend - exhausting
@@ -3362,6 +3366,8 @@ https://www.youtube.com/watch?v=CJ2u3pRpCjc
 | Dein Spiegelbild hat sich entstellt |  | Your reflection has become distorted |
 | Niemand ist hier, der zu dir hält |  | Nobody is here to stand by you |
 |  |  |  |
+|  | Refrain x1: |  |
+|  |  |  |
 | Klopf, klopf, lass' mich rein |  | Knock, knock, let me in |
 | Lass' mich dein Geheimnis sein |  | Let me be your secret |
 | Klopf, klopf  (x3) |  | Knock Knock |
@@ -3379,9 +3385,9 @@ https://www.youtube.com/watch?v=CJ2u3pRpCjc
 | Mein verlorenes Kind |  | My lost child |
 | Links, rechts, geradeaus |  | Left, right, straight ahead |
 | Du bist im Labyrinth |  | You are in the labyrinth |
-| (Links, rechts, geradeaus) x2 |  | ... |
-Keiner kann dir sagen, wer die Guten und die Bösen sind
-Mein verlorenes Kind
+| (Links, rechts, geradeaus) x2 |  | ... |  }
+| Keiner kann dir sagen, wer die Guten und die Bösen sind |  |
+| Mein verlorenes Kind | 
 
 |  |  |  |
 | Du hast mich oft aus dir verbannt |  | You have banished me from you many times |

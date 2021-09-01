@@ -42,12 +42,49 @@ TestIcon.prototype.testImageIcons = function(){
 	// 	["couch01.jpg","couch02.jpg","couch03.jpg","couch04.jpg","couch05.jpg","couch06.jpg","couch07.jpg","couch08.jpg","couch09.jpg","couch10.jpg",
 	// 	 "couch11.jpg","couch12.jpg","couch13.jpg","couch14.jpg","couch15.jpg","couch16.jpg","couch17.jpg","couch18.jpg"];
 	var imageDir = "./images/house_couch/";
-	var imageList = ["couch01.jpg","couch02.jpg"];
+	// var imageList = ["couch01.jpg","couch01.jpg"];
+	// var imageList = ["couch01.jpg","couch02.jpg"];
+	// var imageList = ["couch01.jpg","couch03.jpg"];
 	// var imageList = ["couch01.jpg","couch04.jpg"];
+	// var imageList = ["couch02.jpg","couch03.jpg"];
+	// var imageList = ["couch03.jpg","couch04.jpg"];
+	// var imageList = ["couch04.jpg","couch05.jpg"];
+	// var imageList = ["couch05.jpg","couch06.jpg"];
+	
+	// var imageList = ["couch06.jpg","couch07.jpg"]; // BAD
+		// var imageList = ["couch07.jpg","couch06.jpg"]; // OK
+
+	// var imageList = ["couch07.jpg","couch08.jpg"];
+	// var imageList = ["couch08.jpg","couch09.jpg"];
+	// var imageList = ["couch09.jpg","couch10.jpg"];
+	// var imageList = ["couch10.jpg","couch11.jpg"];
+	// var imageList = ["couch11.jpg","couch12.jpg"];
+	
+	// var imageList = ["couch12.jpg","couch13.jpg"]; // BAD
+		// var imageList = ["couch13.jpg","couch12.jpg"]; // BAD
+
+	// var imageList = ["couch13.jpg","couch14.jpg"]; // BAD
+		// var imageList = ["couch14.jpg","couch13.jpg"]; // BAD
+
+	// var imageList = ["couch14.jpg","couch15.jpg"]; // BAD
+		// var imageList = ["couch15.jpg","couch14.jpg"]; // BAD
+
+	// var imageList = ["couch15.jpg","couch16.jpg"];
+
+	// var imageList = ["couch16.jpg","couch17.jpg"];
+	// var imageList = ["couch17.jpg","couch18.jpg"];
+	var imageList = ["couch18.jpg","couch19.jpg"];
+
+
 	// var imageList = ["couch09.jpg","couch18.jpg"];
 	// var imageList = ["couch18.jpg","couch09.jpg"];
 	// var imageList = ["couch07.jpg","couch10.jpg"];
 	// var imageList = ["couch05.jpg","couch06.jpg"];
+	// var imageList = ["couch08.jpg","couch18.jpg"];
+	// var imageList = ["couch13.jpg","couch18.jpg"];
+	// var imageList = ["couch10.jpg","couch11.jpg"];
+	// var imageList = ["couch10.jpg","couch12.jpg"];
+
 	// var imageDir = "./images/rabbit/";
 	// var imageList = ["1.jpg","2.jpg","3.jpg","4.jpg","5.jpg","6.jpg","7.jpg","8.jpg","9.jpg","10.jpg","11.jpg"];
 
@@ -67,6 +104,14 @@ TestIcon.prototype.testImagesLoaded = function(info){
 		var scales = new ImageMatScaled(matrix);
 		// console.log(scales);
 		matrixes.push(scales);
+
+
+
+
+		var img = GLOBALSTAGE.getImageMatAsImage(scales);
+		var d = new DOImage(img);
+		d.matrix().translate(10 + 700 + i*600, 10 + 0);
+		GLOBALSTAGE.addChild(d);
 
 // throw "gotta scale"
 			// matrixes.push(matrix);
@@ -119,7 +164,7 @@ TestIcon.prototype.testImagesLoaded = function(info){
 			ImageMatScaled.affineToLocationTransform(affine,affine, iconCenterX,iconCenterY, centerX,centerY);
 			averageScale = 1.0/averageScale;
 		scales.extractRectFast(reuseImage, averageScale, affine);
-		//
+		/*
 		var img = reuseImage;
 		img = GLOBALSTAGE.getFloatRGBAsImage(img.red(),img.grn(),img.blu(), img.width(),img.height());
 		var d = new DOImage(img);
@@ -127,6 +172,7 @@ TestIcon.prototype.testImagesLoaded = function(info){
 		d.matrix().scale(0.90 * 150/iconSize);
 		d.matrix().translate(10 + i*150, 10 + 0);
 		GLOBALSTAGE.addChild(d);
+		*/
 		//
 		imageIcons.push(reuseImage.copy());
 	}

@@ -402,6 +402,29 @@ MISSING:
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
+NEXT STEPS?
+	- hierarchical not working so well
+		- issues
+	- .. get back to flow
+
+
+- get scores from hierarchical
+	- both directions
+- see what example scores end up being?
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 https://www.statisticshowto.com/probability-and-statistics/chi-square/
 
@@ -411,6 +434,12 @@ https://www.statisticshowto.com/probability-and-statistics/chi-square/
 - 
 
 
+- to score a match:
+	- % of matches inside valid area
+	- average score of valid matches
+	=> (1/percent) * (averageScore)
+
+3/4 + 0.5
 
 
 
@@ -560,34 +589,6 @@ R3D.fundamentalFromUnnormalizedMaxCheck
 
 
 transformCameraExtrinsicNonlinear
-
-
-
-5OCFU1R9-86JIWIDQ
-
-
-	- EXISTS
-		A: "5OCFU1R9"
-		B: "86JIWIDQ"
-	-
-		A: "PO602P48"
-		B: "0W5L2FV4"
-	-
-		A: "PO602P48"
-		B: "PM16KV07"
-	-
-		A: "86JIWIDQ"
-		B: "NYG9ME6E"
-	-
-		A: "Q1XFS93F"
-		B: "PO602P48"
-	-
-		A: "8AII8KZ2"
-		B: "DPE3KTGS"
-	-
-		A: "0W5L2FV4"
-		B: "DPE3KTGS"
-
 
 
 
