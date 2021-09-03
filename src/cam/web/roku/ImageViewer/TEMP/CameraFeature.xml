@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8" ?>
+
+<component name="camera_poster_group" extends="Group" >
+
+<script type="text/brightscript" >
+<![CDATA[
+sub init()
+  m.top.setFocus(true)
+end sub
+]]>
+</script>
+
+<Poster
+  id="camera_poster"
+  uri="pkg:/images/posterCameraFeaturePlaceholder.png"
+  width="0.0"
+  height="0.0"
+  translation="[160,8]" />
+
+</component>
+
+
+

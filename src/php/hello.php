@@ -10,6 +10,14 @@ sudo vi /etc/apache2/httpd.conf and make sure the line:
 sudo apachectl restart
 
 
+
+
+
+
+sudo lsof -i:80
+/etc/apache2/httpd.conf
+sudo launchctl unload -w /System/Library/LaunchDaemons/org.apache.httpd.plist
+
 */
 
 echo "HELLO";

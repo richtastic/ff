@@ -1,7 +1,29 @@
 <html>
+<head>
+<title>Camera App</title>
+<script src="../../../code/FF.js"></script>
+</head>
+<script type="text/javascript">
+function pageLoadedFxn(){
+	var ff = new FF("../../../code/",ffLoadedFxn);
+}
+function ffLoadedFxn(){
+	console.log("ffLoadedFxn");
+	(new ScriptLoader("./",["index.js"],this,classesLoadedFxn)).load();
+}
+function classesLoadedFxn(){
+	console.log("classesLoadedFxn");
+	var app = new CameraApp();
 
-<!-- include Code -->	
-	
-	
-	
+	app._client.getCameraImage();
+}
+// https://localhost/web/ff/cam/web/webClient/index.html
+// http://localhost/web/ff/cam/web/distributionServer/index.php?path=%2Fcamera%2F1%2Fimage
+
+// 192.168.0.140 
+// curl http://192.168.0.140/web/ff/cam/web/distributionServer/index.php?path=%2Fcamera%2F1%2Fimage
+// curl -vL http://192.168.0.140/web/ff/cam/web/distributionServer/index.php
+</script>
+<body onload="pageLoadedFxn();">
+</body>
 </html>

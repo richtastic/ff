@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- LandingScene.xml -->
+<component name="LandingScene" extends="Scene">
+	<children>
+
+<!-- -->
+		<Poster
+			id="CameraPoster"
+			uri="pkg:/images/temp_hd.png"
+			width="200.0"
+			height="200.0"
+			translation="[10,10]"
+			loadDisplayMode="scaleToFit"
+		/>
+<!-- uri="http://192.168.0.140/web/ff/cam/web/distributionServer/images/test.jpg" -->
+		
+	</children>
+</component>
+

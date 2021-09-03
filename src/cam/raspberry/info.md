@@ -184,7 +184,16 @@ https://help.ubuntu.com/community/Webcam
 MVP:
 	- raspberry service that:
 		- /camera/0/image - returns current image
-		- /camera/0/update - takes new picture & becomes current image & returns current image
+		x /camera/0/update - takes new picture & becomes current image & returns current image
+	- FASTER METHOD TO GET IMAGES
+		- call shell
+	- MORE COMPRESSED IMAGES
+		- https://www.tecmint.com/optimize-and-compress-jpeg-or-png-batch-images-linux-commandline/
+		- https://linuxhint.com/image-compression-apps-linux/
+		- lossless:
+			- jpegoptim [10%]
+		- lossy 
+			- convert
 	- raspberry automated process that:
 		- repeatidly uploads image data to internet service host
 	- inernet service that:

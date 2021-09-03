@@ -17,7 +17,7 @@ node-webcam
 {
 	"clientID":"...",
 	"clientKey":"...",
-	"request":"...",
+	"requestID":"...",
 	// other params
 }
 ```
@@ -27,7 +27,7 @@ node-webcam
 ```
 {
 	"result":"success", // string: success | failure
-	"request":"...", // user-defined or generated nonce
+	"requestID":"...", // user-defined or generated nonce
 	"data": {
 		...
 	}
@@ -54,6 +54,7 @@ response:
 ```
 {
 	"cameraID": "..." // camera ID
+	"modified": "..." // TIMESTAMP ?
 	"base64": "..." // base64 encoded binary image data
 }
 ```
@@ -69,6 +70,7 @@ response:
 ```
 {
 	"cameraID": "..." // camera ID
+	"modified": "..." // TIMESTAMP ?
 	"base64": "..." // base64 encoded binary image data
 }
 ```
