@@ -24,7 +24,7 @@ const NodeWebCam = require("node-webcam");
 
 
 var options = {};
-options["output"] = "png";
+options["output"] = "jpeg";
 
 var camera = NodeWebCam.create(options);
 
@@ -47,11 +47,12 @@ var savePicture0 = function(){
 }
 
 
-var savePicture = function(){
+var savePicture = function(completeFxn){
 	console.log("savePicture ...");
 	camera.capture("test", function(error, data){
 		console.log("ERR: "+error);
 		console.log("DAT: "+data);
+		completeFxn(data);
 	});
 }
 
@@ -68,9 +69,44 @@ const requestListener = function(request, response){
 	//console.log("query: "+query);
 	console.log("param "+paramName+" = "+paramValue);
 
-	savePicture();
-	response.writeHead(200);
-	response.end("hello world\n");
+	savePicture(function(imagePath){
+		console.log("load: "+imagePath);
+		
+var encoding = "base64";
+//var encoding = null; // binary
+		fs.readFile(imagePath, encoding, function(error, file){
+			// console.log(file);
+			var base64Data = file;
+			
+			var data = {};
+			data["status"] = "success";
+			data["requestID"] = "123";
+			data["data"] = {
+				"modified":"2021-08-03:14:15:16.1234",
+				"type":"jpg",
+				"base64":base64Data,
+			};
+
+				
+			// last modified ...
+			// ...
+
+			console.log("SEND RESPONSE");
+
+			response.setHeader("Access-Control-Allow-Origin", "*");
+
+			response.setHeader("Content-Type", "application/json");
+			response.statusCode = 200;
+			response.write(JSON.stringify(data));
+			response.end();
+
+		});
+
+	});
+	//response.writeHead(200);
+	//response.end("hello world\n");
+
+
 };
 
 const server = http.createServer(requestListener);
