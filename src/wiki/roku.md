@@ -18,7 +18,7 @@ http://devtools.web.roku.com/RokuRemote/
 
 
 
-
+egrep -nirI "timer" ./
 
 
 
@@ -127,14 +127,59 @@ ROKU STEPS:
 - debugger:
 - telnet 192.168.0.137 8085
 
+- packager: https://developer.roku.com/docs/developer-program/publishing/packaging-channels.md
+- telnet 192.168.0.137 8080
+- telnet 192.168.1.73 8080
+- genkey
+	................+++++
+	...............................................................+++++
+	Password: ...
+	DevID: ...
 
 
+Error 500: Internal Server Error
+CGI program sent malformed or too big (>16384 bytes) HTTP headers: [init_ca_bundle_stat: stat /common/certs/ca-bundle.crt: No such file or directory
+plugin_package: /build/work/f8886cd74a16a2f0/os/RokuOS/Device/Source/Crypto/Random.cpp:47: void Roku::Random::initialize_mainapp(): Assertion `len == (int)sizeof(rint)' failed.
+]
 
 
+https://community.roku.com/t5/Roku-Developer-Program/CGI-program-sent-malformed-or-too-big-gt-16384-bytes-HTTP-headers-init-ca-bundle-stat/m-p/711494
+
+
+ROKU PUBLISHING PROCESS:
+
+https://ottball.com/publishing-a-roku-channel/
 
 
 
 brew install telnet
+
+
+EXLIPSE ROKU EXTENSION
+
+https://devtools.web.roku.com/ide/eclipse/plugin
+
+https://sdkdocs-archive.roku.com/Roku-Plugin-for-Eclipse-IDE_4265458.html
+
+
+
+https://stackoverflow.com/questions/20002854/brightscript-eclipse-plugin-not-showing-up-after-install-on-osx
+
+https://www.youtube.com/watch?v=96s6aofHmnc
+
+
+
+
+
+
+Name: DLTK
+Location: http://download.eclipse.org/technology/dltk/updates-dev/5.6/
+
+Name: Roku Plugin
+Location: https://devtools.web.roku.com/ide/eclipse/plugin
+
+
+
 
 
 
@@ -154,9 +199,36 @@ fhd 540x405 [also uploaded to roku web]
 
 
 
+https://developer.roku.com/docs/references/scenegraph/scene.md
+
+https://developer.roku.com/docs/references/brightscript/language/expressions-variables-types.md
+
+https://developer.roku.com/docs/references/scenegraph/typographic-nodes/font.md
+
+http://www.brightsign.es/sites/www.brightsign.es/files/BrightScript%20Reference%20Manual%20%28ver%207.1%29.pdf
+
+
+ Device = CreateObject(  "roDeviceInfo" )
+ RokuModel   = Device.GetModel()
+ RokuVersion = Device.GetVersion()
+
+ ti = createObject("roTimeSpan")
+
+
+
+
+## brightscript - BS
+
+
+
+print "text: " + number.ToStr() + " ... "
+
+"10".ToInt()
+
+?type(textstr)
 
 
 
 
 
-...
+
