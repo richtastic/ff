@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!-- LandingScene.xml -->
+<component name="LandingScene" extends="Scene">
+	<script type="text/brightscript">
+		<![CDATA[
+		sub init()
+			print("init - xml")
+			timer = CreateObject("roSGNode","Timer")
+			'scene.appendChild(timer)
+			'timer.SetMessagePort(m.port)
+			timer.repeat = true
+			timer.duration = 2.0
+			timer.ObserveField("fire", "TimerEventFxn")
+'			timer.control = "start"
+'			m.timer = timer
+			timer.SetFocus(true)
+		end sub
+
+		sub TimerEventFxn()
+			print("TimerEventFxn - xml")
+		end sub
+		]]>
+	</script>
+
+	<children>
+
+<!-- -->
+
+		<Poster
+			id="CameraPoster"
+			uri="pkg:/images/temp_hd.png"
+			width="200.0"
+			height="200.0"
+			translation="[10,10]"
+			loadDisplayMode="scaleToZoom"
+		/>
+<!-- scaleToFit scaleToZoom scaleToFill -->
+
+
+<!-- uri="http://192.168.0.140/web/ff/cam/web/distributionServer/images/test.jpg" -->
+	</children>
+
+
+</component>
+

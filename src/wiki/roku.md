@@ -143,6 +143,11 @@ plugin_package: /build/work/f8886cd74a16a2f0/os/RokuOS/Device/Source/Crypto/Rand
 ]
 
 
+PASSWORD FOR ECLIPSE IS server login, not base64-binary
+400 error is because main.brs is missing
+other errors: related to zip file not having contents updated
+
+
 https://community.roku.com/t5/Roku-Developer-Program/CGI-program-sent-malformed-or-too-big-gt-16384-bytes-HTTP-headers-init-ca-bundle-stat/m-p/711494
 
 
@@ -168,7 +173,7 @@ https://stackoverflow.com/questions/20002854/brightscript-eclipse-plugin-not-sho
 https://www.youtube.com/watch?v=96s6aofHmnc
 
 
-
+https://marco.dev/change-the-jre-jdk-in-eclipse-on-mac-os-x-and-access-the-sources
 
 
 

@@ -1,0 +1,24 @@
+# channel details
+title=John & Richie
+major_version=1
+minor_version=0
+build_version=1
+
+# channel assets
+mm_icon_focus_fhd=pkg:/images/roku_channel_poster_540x405.png
+mm_icon_focus_hd=pkg:/images/roku_channel_poster_291x218.png
+mm_icon_focus_sd=pkg:/images/roku_channel_poster_214x144.png
+
+# splash sceen
+splash_screen_fhd=pkg:/images/roku_splash_screen_1920x1080.png
+splash_screen_hd=pkg:/images/roku_splash_screen_1280x720.png
+splash_screen_sd=pkg:/images/roku_splash_screen_720x480.png
+splash_color=#CC0011
+splash_min_time=1
+# ? splash_rsg_optimization=1
+
+# 
+ui_resolutions=hd
+
+
+

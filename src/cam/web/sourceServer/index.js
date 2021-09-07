@@ -5,6 +5,9 @@ const fs = require("fs");
 const path = require("path");
 
 
+const Code = require("../../../code/Code.js");
+
+
 // const express = require("express");
 var utilities = require("./utilities.js");
 // var CameraManager = utilities.CameraManager;
@@ -18,10 +21,10 @@ os.setPriority(-20);
 console.log("    new priority "+os.getPriority());
 
 
+
+
 // node webcam
 const NodeWebCam = require("node-webcam");
-
-
 
 var options = {};
 options["output"] = "jpeg";
@@ -32,14 +35,13 @@ camera.list(function(list){
 	console.log("LIST: "+list);
 });
 
+
 /*
 camera.capture("test", function(error, data){
 	console.log("ERR: "+error);
 	console.log("DAT: "+data);
 });
 */
-
-
 
 
 var savePicture0 = function(){
@@ -114,6 +116,18 @@ server.listen(8000);
 
 
 console.log("SERVER STARTED");
+
+
+
+
+console.log("STARTING PERIODIC UPLOADER:");
+var periodicImageUploadToPublic = function(args){
+	console.log("periodicImageUploadToPublic tick");
+}
+Code.functionAfterDelay(periodicImageUploadToPublic,this, [], 10*1000);
+
+
+
 
 
 
