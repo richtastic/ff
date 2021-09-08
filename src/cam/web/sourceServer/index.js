@@ -4,7 +4,7 @@ const url = require("url");
 const fs = require("fs");
 const path = require("path");
 
-
+const requestLibary = require("request");
 const Code = require("../../../code/Code.js");
 
 
@@ -123,10 +123,99 @@ console.log("SERVER STARTED");
 console.log("STARTING PERIODIC UPLOADER:");
 var periodicImageUploadToPublic = function(args){
 	console.log("periodicImageUploadToPublic tick");
+
+	var imagePath = "test.jpg";
+	// var imagePath = "test.jpeg";
+	var encoding = "base64";
+	var serverDomain = "192.168.0.140";
+	var serverPath = "web/ff/cam/web/distributionServer/index.php";
+	var serverAddress = "http://"+serverDomain+"/"+serverPath;
+	fs.readFile(imagePath, encoding, function(error, file){
+		console.log("READ FILE");
+		var base64Data = file;
+		
+		var cameraID = 0;
+
+// generate payload
+		var data = {
+			"camera":cameraID,
+			"base64":base64Data,
+		};
+// upload to server
+		var paramPath = "camera/"+cameraID+"/upload";
+		var paramData = Code.StringFromJSON(data);
+var urlGetPath = Code.escapeURI(paramPath);
+var urlGetData = Code.escapeURI(paramData);
+	//	var params = {};
+	//	params["path"] = paramPath;
+	//	params["data"] = paramData;
+			var options = {
+				// protocol: "http",
+				// domain: serverDomain,
+				// hostname: "http://192.168.0.140",
+// hostname: "http://www.google.com",
+// domain: "www.google.com",
+				// host: "192.168.0.140",
+				// domain: "192.168.0.140",
+				//path: "/"+serverPath,
+				// query: params,
+				// search: "path="+urlGetPath+"&data="+urlGetData,
+				// search: "?path="+urlGetPath,
+				//method: "GET",
+
+// url: "http://192.168.0.140",
+port: 80,
+method: "POST",
+//timeout: 30000,
+path: "/web/ff/cam/web/distributionServer/index.php?path="+urlGetPath+"&data="+urlGetData,
+//headers: {
+//	"Content-Type":"application/x-www-form-urlencoded"
+//}
+			};
+
+//doAjax();
+
+
+var options = {
+"method": "POST",
+};
+
+//console.log("options: "+Code.StringFromJSON(options));
+console.log("chars: "+urlGetData.length);
+console.log("MAKE REQUEST");
+		//var request = http.request(options, function(result){
+		// var request = http.get("http://192.168.0.140/web/ff/cam/web/distributionServer/index.php?path=%2Fcamera%2F0%2Fupload&data="+urlGetData, function(result){
+		//var request = http.get("http://192.168.0.140/web/ff/cam/web/distributionServer/index.php", options, function(result){
+		//var request = http.request("http://192.168.0.140", options, function(result){
+// var request = http.get("http://192.168.0.140/web/ff/cam/web/distributionServer/index.php?path="+urlGetPath+"&data="+urlGetData, function(result){
+// var request = http.request("http://192.168.0.140/web/ff/cam/web/distributionServer/index.php?path="+urlGetPath+"&data="+urlGetData, options, function(result){
+var request = requestLibary.post( {"url":"http://192.168.0.140/web/ff/cam/web/distributionServer/index.php",
+"form":{"path":paramPath, "data":paramData}},
+function(error, response, body){
+			console.log(" error: "+error);
+			console.log(" body: "+body);
+			console.log(" response: "+response.js);
+/*
+			console.log("upload result: "+result.statusCode);
+			console.log(" headers: "+result.headers);
+			console.log(" body: "+result.body);
+			console.log(" json: "+result.json);
+
+			result.on("data", function(data){
+				console.log("data: "+data);
+			});
+
+			result.on("end", function(what){
+				console.log("end...");
+			});
+*/
+		});
+request.on("error", function(error){
+	console.log("request error: "+error);
+});
+	});		
 }
-Code.functionAfterDelay(periodicImageUploadToPublic,this, [], 10*1000);
-
-
+Code.functionAfterDelay(periodicImageUploadToPublic,this, [], 2*1000);
 
 
 

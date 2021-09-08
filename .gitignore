@@ -11,12 +11,12 @@ src/3DR/wiki/octave/output/
 src/cam/web/distributionServer/**
 
 
-
+# roku output directory
 **/roku/**/out/**
 
 
-
-
+# nodejs modules
+**/node_modules/**
 
 
 
