@@ -40,6 +40,15 @@
 <!-- uri="http://192.168.0.140/web/ff/cam/web/distributionServer/images/test.jpg" -->
 	</children>
 
+<script type="text/brightscript">
+    <![CDATA[
 
+    function onKeyEvent(key as String, press as Boolean) as Boolean
+      print "inside LandingScene.xml onKeyEvent"
+      return false
+    end function
+
+    ]]>
+</script>
 </component>
 

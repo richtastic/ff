@@ -176,6 +176,10 @@ https://www.youtube.com/watch?v=96s6aofHmnc
 https://marco.dev/change-the-jre-jdk-in-eclipse-on-mac-os-x-and-access-the-sources
 
 
+File > Export > BrightScript Deployment
+
+
+
 
 Name: DLTK
 Location: http://download.eclipse.org/technology/dltk/updates-dev/5.6/
@@ -213,12 +217,25 @@ https://developer.roku.com/docs/references/scenegraph/typographic-nodes/font.md
 http://www.brightsign.es/sites/www.brightsign.es/files/BrightScript%20Reference%20Manual%20%28ver%207.1%29.pdf
 
 
- Device = CreateObject(  "roDeviceInfo" )
- RokuModel   = Device.GetModel()
- RokuVersion = Device.GetVersion()
+Device = CreateObject(  "roDeviceInfo" )
+RokuModel   = Device.GetModel()
+RokuVersion = Device.GetVersion()
 
- ti = createObject("roTimeSpan")
+ti = createObject("roTimeSpan")
 
+
+
+
+
+
+
+https://developer.roku.com/en-gb/docs/developer-program/debugging/external-control-api.md
+
+
+
+### HTTP
+
+https://rokulikeahurricane.io/everything_about_http
 
 
 

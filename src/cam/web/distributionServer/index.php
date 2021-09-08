@@ -2,6 +2,15 @@
 
 include "../../../php/fw/files.php";
 
+error_log("ENTER index.php");
+// tail -f /var/log/apache2/error_log
+
+// error_log
+
+
+// error_log("Error message\n", 3, "/var/log/apache2/error_log");
+// error_log("Error message\n", 3, "/Users/richard.zirbes/Desktop/php.log");
+
 
 
 /*
@@ -23,6 +32,16 @@ https://www.php.net/manual/en/function.base64-decode.php
 
 */
 
+
+/*
+
+header("Expires: Mon, 26 Jul 1997 05:00:00 GMT");
+header("Cache-Control: no-cache");
+header("Pragma: no-cache");
+
+*/
+
+header("Access-Control-Allow-Origin: *");
 
 
 
@@ -82,12 +101,15 @@ function returnFailureToClient($reason){
 	if(!isset($reason)){
 		$reason = "";
 	}
+
 	$object = [
 		"result" => "failure",
 		"reason" => $reason,
 		"requestID" => "123",
 	];
 	$jsonObject = json_encode($object);
+
+	// $jsonObject = '{"bl":"eh"}';
 	header('Content-Type: application/json; charset=utf-8');
 	echo "".$jsonObject;
 }
@@ -102,9 +124,7 @@ function isBinaryImageJPG($binary){
 	return false; // ?
 }
 function isBinaryImagePNG($binary){
-
 	echo "not work with binary string";
-
 	echo "gettype: ".gettype($binary)."\n";
 	echo "strlen: ".strlen($binary)."\n";
 	// if(sizeof($binary)<4){
@@ -129,6 +149,8 @@ function isBinaryImagePNG($binary){
 
 
 if( count($pathList)>0 && $pathList[0]=="camera" ){
+
+	error_log("start request at camera: ".$path);
 //	echo "<br/>camera path";
 	$cameraID = $pathList[1];
 	$cameraID = sanitizeDataString($cameraID);
@@ -162,17 +184,17 @@ if( count($pathList)>0 && $pathList[0]=="camera" ){
 
 
 		header('Content-Type: application/json; charset=utf-8');
-		echo "".$jsonObject;
+		// echo "".$jsonObject;
 	}else if($cameraOperation=="upload"){ // upload image
+// returnFailureToClient("before ... A");
+// return;
 		$data = null;
 		if(isset($_POST["data"])){
 			$data = $_POST["data"];
-			echo $data;
+			// echo $data;
 		}else if(isset($_GET["data"])){
 			$data = $_GET["data"];
 		}
-
-
 		if($data!=null){
 			// echo"got data\n";
 			// echo $data;
@@ -186,7 +208,8 @@ if( count($pathList)>0 && $pathList[0]=="camera" ){
 				returnFailureToClient("image upload with no base64 data");
 				return;
 			}
-
+// returnFailureToClient("before ... X");
+// return;
 			$base64ImageData = $object[$payloadBase64Key];
 			// echo"base64ImageData: \n".$base64ImageData;
 			$binaryImageData = base64_decode($base64ImageData);
@@ -217,7 +240,11 @@ if( count($pathList)>0 && $pathList[0]=="camera" ){
 		    // how to tell if success ?
 			// echo"\n result: ".$result."\n";
 
+
+//$result = 0;
+
 			if($result>0){ // todo: get length of result matching length of string
+				
 				$object = [
 					"result" => "success",
 					"requestID" => "123",
@@ -230,8 +257,12 @@ if( count($pathList)>0 && $pathList[0]=="camera" ){
 				$jsonObject = json_encode($object);
 				header('Content-Type: application/json; charset=utf-8');
 				echo "".$jsonObject;
+				
+				// returnFailureToClient("success ... ");
+				return;
 			}else{
-				returnFailureToClient("could not write data to path: ".$$imageFilePath);
+				returnFailureToClient("could not write data to path: ".$imageFilePath);
+				return;
 			}
 
 		}else{
@@ -287,8 +318,10 @@ iVBORw0KGgoAAAANSUhEUgAAAAoAAAAICAMAAAD3JJ6EAAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6
 
 
 # upload camera image data:
-curl "http://192.168.1.69/web/ff/cam/web/distributionServer/index.php?path=%2Fcamera%2F1%2Fupload&data=%7B%22camera%22%3A%220%22%2C%22base64%22%3A%22iVBORw0KGgoAAAANSUhEUgAAAAoAAAAICAMAAAD3JJ6EAAAABGdBTUEAALGPC%2FxhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAAh1BMVEUAAAAcHNQnJ8MeHssVFb0UhhQtjC04tTgzM8YmJqIxMaUfH9Q4mjgueC4nlCdHu0dAQNpLS7VGMpyfMWeaOSQxVBYbdhsZjxlaWvKnHy6UMjKYQ0OkSzEcjByzMzOHGxmQLiu5OjqsUiuTMxu2Xjy7URuzsz%2BPjy%2BMjCqiojmVlRmRkRj%2F%2F%2F8z%2FxahAAAALHRSTlMABXmJBAFhR3by71Zh5uQhQPHxxMvg7TU80enkyjGR7vK5OOn1PgbAyA8AADUqQYUAAAABYktHRCy63XGrAAAAB3RJTUUH4AQXEQMUzs02PQAAAEZJREFUCNdjYGBkYmZhZWNnAAIOTi5uHl4%2BfiBTQFBIWERUTBwkLCEpJS0jywAGcvIKihAWg5KyiiqUqaauoQllMmhpg0gAlGADs5tyhogAAAAldEVYdGRhdGU6Y3JlYXRlADIwMTYtMDQtMjNUMTc6MDM6MzktMDc6MDBHxukhAAAAJXRFWHRkYXRlOm1vZGlmeQAyMDE2LTA0LTIzVDE3OjAzOjIwLTA3OjAwb6kU0AAAAABJRU5ErkJggg%3D%3D%22%7D"
+curl "http://192.168.0.140/web/ff/cam/web/distributionServer/index.php?path=%2Fcamera%2F1%2Fupload&data=%7B%22camera%22%3A%220%22%2C%22base64%22%3A%22iVBORw0KGgoAAAANSUhEUgAAAAoAAAAICAMAAAD3JJ6EAAAABGdBTUEAALGPC%2FxhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAAh1BMVEUAAAAcHNQnJ8MeHssVFb0UhhQtjC04tTgzM8YmJqIxMaUfH9Q4mjgueC4nlCdHu0dAQNpLS7VGMpyfMWeaOSQxVBYbdhsZjxlaWvKnHy6UMjKYQ0OkSzEcjByzMzOHGxmQLiu5OjqsUiuTMxu2Xjy7URuzsz%2BPjy%2BMjCqiojmVlRmRkRj%2F%2F%2F8z%2FxahAAAALHRSTlMABXmJBAFhR3by71Zh5uQhQPHxxMvg7TU80enkyjGR7vK5OOn1PgbAyA8AADUqQYUAAAABYktHRCy63XGrAAAAB3RJTUUH4AQXEQMUzs02PQAAAEZJREFUCNdjYGBkYmZhZWNnAAIOTi5uHl4%2BfiBTQFBIWERUTBwkLCEpJS0jywAGcvIKihAWg5KyiiqUqaauoQllMmhpg0gAlGADs5tyhogAAAAldEVYdGRhdGU6Y3JlYXRlADIwMTYtMDQtMjNUMTc6MDM6MzktMDc6MDBHxukhAAAAJXRFWHRkYXRlOm1vZGlmeQAyMDE2LTA0LTIzVDE3OjAzOjIwLTA3OjAwb6kU0AAAAABJRU5ErkJggg%3D%3D%22%7D"
 
+
+curl -X POST "http://192.168.0.140/web/ff/cam/web/distributionServer/index.php?path=%2Fcamera%2F1%2Fupload&data=%7B%22camera%22%3A%220%22%2C%22base64%22%3A%22iVBORw0KGgoAAAANSUhEUgAAAAoAAAAICAMAAAD3JJ6EAAAABGdBTUEAALGPC%2FxhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAAh1BMVEUAAAAcHNQnJ8MeHssVFb0UhhQtjC04tTgzM8YmJqIxMaUfH9Q4mjgueC4nlCdHu0dAQNpLS7VGMpyfMWeaOSQxVBYbdhsZjxlaWvKnHy6UMjKYQ0OkSzEcjByzMzOHGxmQLiu5OjqsUiuTMxu2Xjy7URuzsz%2BPjy%2BMjCqiojmVlRmRkRj%2F%2F%2F8z%2FxahAAAALHRSTlMABXmJBAFhR3by71Zh5uQhQPHxxMvg7TU80enkyjGR7vK5OOn1PgbAyA8AADUqQYUAAAABYktHRCy63XGrAAAAB3RJTUUH4AQXEQMUzs02PQAAAEZJREFUCNdjYGBkYmZhZWNnAAIOTi5uHl4%2BfiBTQFBIWERUTBwkLCEpJS0jywAGcvIKihAWg5KyiiqUqaauoQllMmhpg0gAlGADs5tyhogAAAAldEVYdGRhdGU6Y3JlYXRlADIwMTYtMDQtMjNUMTc6MDM6MzktMDc6MDBHxukhAAAAJXRFWHRkYXRlOm1vZGlmeQAyMDE2LTA0LTIzVDE3OjAzOjIwLTA3OjAwb6kU0AAAAABJRU5ErkJggg%3D%3D%22%7D"
 
 
 

@@ -544,6 +544,10 @@ Code.parseJSON = function(str){
 	return obj;
 }
 Code.StringFromJSON = function(obj){
+	// TODO: remove uppercase camel version^
+	return Code.stringFromJSON(obj);
+}
+Code.stringFromJSON = function(obj){
 	var str = JSON.stringify(obj);
 	return str;
 }

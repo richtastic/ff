@@ -13,6 +13,8 @@ sudo apachectl restart
 
 
 
+sudo cp /private/etc/php.ini.default /private/etc/php.ini
+
 
 sudo lsof -i:80
 /etc/apache2/httpd.conf
