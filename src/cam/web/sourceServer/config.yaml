@@ -2,18 +2,17 @@
 
 
 config:
-    publicCameraService:
-        scheme: "http"
-        domain: "192.168.0.140"
-        path: "web/ff/cam/web/distributionServer/index.php"
-    localService:
-        id: "rasp_1"
-        serviceName: "raspberry 1"
-        cameraName: "camera "
-        cameraID: "cam_"
-        serviceCameraJoin: "_"
+	publicCameraService:
+		scheme: "http"
+		domain: "192.168.0.140"
+		path: "web/ff/cam/web/distributionServer/index.php"
+	localService:
+		id: "rasp_1"
+		serviceName: "raspberry 1"
+		cameraName: "camera "
+		cameraID: "cam_"
+		serviceCameraJoin: "_"
 
 
-
----
+...
 # ...
