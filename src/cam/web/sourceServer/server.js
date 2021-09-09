@@ -5,8 +5,8 @@ const fs = require("fs");
 const path = require("path");
 const requestLibary = require("request");
 
-const Code = require("../../../code/Code.js");
-const YAML = require("../../../code/YAML.js");
+const Code = require("./src/Code.js");
+const YAML = require("./src/YAML.js");
 
 var utilities = require("./utilities.js");
 
