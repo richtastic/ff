@@ -227,9 +227,13 @@ ti = createObject("roTimeSpan")
 
 
 
-
+https://developer.roku.com/docs/developer-program/core-concepts/handling-application-events.md
 
 https://developer.roku.com/en-gb/docs/developer-program/debugging/external-control-api.md
+
+
+
+https://developer.roku.com/en-ca/docs/references/scenegraph/control-nodes/timer.md
 
 
 
@@ -240,6 +244,14 @@ https://rokulikeahurricane.io/everything_about_http
 
 
 ## brightscript - BS
+
+http://www.brightsign.es/sites/www.brightsign.es/files/BrightScript%20Reference%20Manual%20%28ver%207.1%29.pdf
+
+http://brightsignbiz.s3.amazonaws.com/documents/website/BrightSignObjectReferenceManual.pdf
+
+http://www.brightsign.es/sites/www.brightsign.es/files/HDCompact_ObjectReferenceManualv3.1-1.pdf
+
+
 
 
 

@@ -112,7 +112,17 @@ function returnFailureToClient($reason){
 	// $jsonObject = '{"bl":"eh"}';
 	header('Content-Type: application/json; charset=utf-8');
 	echo "".$jsonObject;
+	http_response_code(200);
+	exit();
 }
+
+
+
+// returnFailureToClient("NEVER START");
+// return;
+
+
+
 
 function sanitizeDataString($string){
 	$string = str_replace("/","",$string);

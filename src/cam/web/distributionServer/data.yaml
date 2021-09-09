@@ -1,0 +1,14 @@
+# data.yaml
+
+data:
+    cameras:
+        -
+            id: raspberry_1_camera_0
+            modified: "2021_11_04_04:25:13.1234"
+
+# images go inside: filesystem/cameras/<CAMERA ID>/image.jpg
+imageName: "image.jpg"
+lockName: "service.lock"
+
+---
+# ...

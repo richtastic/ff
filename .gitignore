@@ -8,7 +8,8 @@
 src/3DR/wiki/octave/output/
 # src/3DR/wiki/octave/output/
 
-src/cam/web/distributionServer/**
+src/cam/web/distributionServer/filesystem/**
+src/cam/web/distributionServer/images/**
 
 
 # roku output directory
