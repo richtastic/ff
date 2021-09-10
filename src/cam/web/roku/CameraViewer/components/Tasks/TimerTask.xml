@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<component name="TimerTask" extends="Task">
+	<script type="text/brightscript" uri="pkg:/components/Tasks/TimerTask.brs" />
+  <interface>
+	<field id="status" type="string" />
+	<field id="time" type="int" />
+  </interface>
+</component>
+
