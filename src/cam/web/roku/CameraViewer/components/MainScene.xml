@@ -3,6 +3,7 @@
 <component name="MainScene" extends="Scene">
 	<script type="text/brightscript" uri="pkg:/components/MainScene.brs" />
 	<children>
+	<!--
 		<Poster
 			id="CameraPoster"
 			uri="pkg:/images/temp_hd.png"
@@ -11,6 +12,7 @@
 			translation="[10,10]"
 			loadDisplayMode="scaleToZoom"
 		/>
+	-->
 	</children>
 	
 </component>
