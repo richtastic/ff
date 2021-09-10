@@ -77,7 +77,8 @@ console.log("no cameras - set a timer to recheck ...");
 	if(this._currentCameraIndex>=this._cameraList.length){
 console.log("get new camera list?"); // only do this every other minute or so (at most) & only update if there are not changes
 		this._currentCameraIndex = -1;
-		setTimeout(function(){self._periodicCheck();}, 5*1000);
+		// setTimeout(function(){self._periodicCheck();}, 1*1000);
+		setTimeout(function(){self._periodicCheck();}, 1);
 		return;
 	}
 	// else save picture - next
@@ -148,7 +149,7 @@ CameraCentralService.prototype._uploadPictureAtIndex = function(fileLocation){
 	fs.readFile(fileLocation, encoding, function(error, file){
 		console.log("read complete: "+fileLocation);
 		if(error){
-			console.log("error:");
+			console.log("read error:");
 			console.log(error);
 console.log("skip upload this round - B");
 			self._periodicCheck();
@@ -160,7 +161,7 @@ console.log("skip upload this round - B");
 			fs.unlink(fileLocation, function(error){
 				console.log("unlinked file: "+fileLocation);
 				if(error){
-					console.log("error:");
+					console.log("delete error:");
 					console.log(error);
 				}else{
 					self._uploadToPublic(fullCameraID, base64Data);
@@ -211,7 +212,7 @@ console.log(paramPath);
 		},
 		function(error, response, body){
 			//console.log(" error: "+error);
-			//console.log(" body: "+body);
+			console.log(" body: "+body);
 			//console.log("_periodicCheck");
 			self._periodicCheck();
 		

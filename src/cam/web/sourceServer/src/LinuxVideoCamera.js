@@ -275,13 +275,20 @@ LinuxVideoCamera.prototype.saveCameraPicture = function(videoDev, imageLocation,
 	var command = "ffmpeg   -v error -y  -s "+size+"  -i "+videoDev+"  "+imageLocation+" ";
 	console.log(command);
 	LinuxVideoCamera._exec(command, function(err,sto,ste){
-		if(err){
-			console.log(err);
+
+console.log(err);
+console.log(sto);
+console.log(ste);
+
+
+
+		if(err && err.killed===true){ // error exists with ffmpeg poor API
+			console.log(err); // err.signal = TERM for killed
 			console.log(sto);
 			console.log(ste);
 		console.log("save error");
 			if(callbackFxn){
-				callbackFxn(true);
+				callbackFxn(false);
 			}
 		}else{
 			console.log("saved: "+imageLocation);
@@ -292,7 +299,8 @@ LinuxVideoCamera.prototype.saveCameraPicture = function(videoDev, imageLocation,
 				callbackFxn(true);
 			}
 		}
-	}, {"timeout":5000});
+	//});
+	}, {"timeout":30000}); // regular images take 5-10 seconds
 }
 
 
