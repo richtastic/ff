@@ -318,11 +318,8 @@ if( count($pathList)>1 && $pathList[0]=="cameras" && $pathList[1]=="list" ){
 			$imageFilePath = $parentDirectory."/".$CONFIG_CAMERA_IMAGE_FILENAME; // TODO: IMAGE TYPE ? jpg / png / ... ?
 
 			// echo " imageFilePath: ".$imageFilePath."\n";
-
-
-
+			
 			// TODO : write to temp file & move to final location
-
 			$ifp = fopen($imageFilePath, "wb");
 			$result = fwrite($ifp, $binaryImageData);
 			fclose($ifp);
@@ -330,77 +327,46 @@ if( count($pathList)>1 && $pathList[0]=="cameras" && $pathList[1]=="list" ){
 		    // how to tell if success ?
 			// echo"\n result: ".$result."\n";
 
-
-//$result = 0;
-
 			if($result>0){ // todo: get length of result matching length of string
+				// get table & update
+				$dataContent = readCameraDataFile();
+				$dataRoot = &$dataContent["data"];
+				$dataCameras = &$dataRoot["cameras"];
+				$cameraCount = count($dataCameras);
 
 
-
-$dataContent = readCameraDataFile();
-
-// $dataContent["test"] = 1.0;
-
-$dataRoot = &$dataContent["data"];
-
-
-$dataCameras = &$dataRoot["cameras"];
-$cameraCount = count($dataCameras);
-
-
-$cameraEntry = null;
-for($i=0; $i<$cameraCount; $i++){
-	$camera = $dataCameras[$i];
-	if($camera["id"]==$cameraID){
-		echo " found \n";
-		$cameraEntry = &$camera;
-		break;
-	}
-}
-if(!$cameraEntry){
-	echo "not found - append \n";
-	$cameraEntry = [];
-	$cameraEntry["id"] = $cameraID;
-	// $cameraEntry["modified"] = microtime(true);
-//	$copy = &$cameraEntry;
-//	array_push($dataCameras, $copy);
-	$dataCameras[] = &$cameraEntry;
-}
-
-//$cameraEntry->"modified" = microtime(true);
-
-$cameraEntry["modified"] = microtime(true);
-writeCameraDataFile($dataContent);
-
-/*
-var_dump($dataContent);
-echo "\n";
-var_dump($dataCameras);
-echo "\n";
-var_dump($cameraEntry);
-
-
-
-// var_dump($dataContent);
-// var_dump($dataRoot);
-// var_dump($dataCameras);
-
-// var_dump($dataContent);
-echo "\n";
-echo "\n";
-echo "\n";
-
-*/
+				$cameraEntry = null;
+				for($i=0; $i<$cameraCount; $i++){
+					$camera = &$dataCameras[$i];
+					if($camera["id"]==$cameraID){
+						echo " found \n";
+						$cameraEntry = &$camera;
+						break;
+					}
+				}
+				if(!$cameraEntry){
+					echo "not found - append \n";
+					$cameraEntry = [];
+					$cameraEntry["id"] = $cameraID;
+					$dataCameras[] = &$cameraEntry;
+				}
+				// update from now:
+				$cameraEntry["modified"] = microtime(true);
+				writeCameraDataFile($dataContent);
 				$object = [
 					"result" => "success",
 					"requestID" => "123",
+					"richie" => "yes",
 					/*
 					"data" => [
 						"id" => $cameraID,
 						"modified" => "...",
 						// "base64" => $base64,
 					]*/
-					"data" => $cameraEntry
+					"data" => [
+						"id" => $cameraEntry["id"],
+						"modified" => $cameraEntry["modified"],
+					]
 				];
 				$jsonObject = json_encode($object);
 				header('Content-Type: application/json; charset=utf-8');
