@@ -119,6 +119,15 @@ v4l2-ctl --list-devices
 
 v4l2-ctl -D -d /dev/video1
 
+v4l2-ctl --list-formats-ext -d /dev/video2
+ffmpeg -f v4l2 -list_formats all -i  /dev/video0
+
+v4l2-ctl --device /dev/video0 --all
+
+
+udevadm info --name=/dev/video0
+
+
 
 lsusb
 

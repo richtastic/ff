@@ -7,6 +7,7 @@ const fs = require("fs");
 const path = require("path");
 const requestLibary = require("request");
 
+const Code = require("./Code.js");
 const LinuxVideoCamera = require("./LinuxVideoCamera.js");
 
 
@@ -22,6 +23,7 @@ console.log(this._baseURL);
 	this._isStopping = false;
 	this._cameraSource = new LinuxVideoCamera();
 	this._cameraList = null;
+this._requestCount = 0;
 }
 CameraCentralService.prototype.setIDPrefix = function(prefix){
 	this._cameraIDPrefix = prefix;
@@ -33,6 +35,7 @@ CameraCentralService.prototype.startPeriodicUpload = function(){
 	this._isStopping = false;
 	this._isPeriodicUploading = true;
 	console.log("startPeriodicUpload");
+	this._periodicCheck();
 }
 CameraCentralService.prototype.stopPeriodicUpload = function(){
 	if(!this._isPeriodicUploading || this._isStopping){
@@ -49,113 +52,172 @@ CameraCentralService.prototype.stopPeriodicUpload = function(){
 
 
 CameraCentralService.prototype._periodicCheck = function(){
+	var self = this;
 	// get camera list
+	//console.log("_periodicCheck");
 	if(!this._cameraSource){
+console.log("create source");
 		this._cameraSource = new LinuxVideoCamera();
 	}
 	// get camera list if none
 	if(!this._cameraList){
+console.log("get first camera list");
 		this._updateCameraList();
+		return;
+	}
+	if(this._cameraList.length==0){
+console.log("no cameras - set a timer to recheck ...");
+		this._currentCameraIndex = -1;
+		this._cameraList = null;
+		setTimeout(function(){self._periodicCheck();}, 10*1000);
 		return;
 	}
 	// update camera list if reach the end
 	++this._currentCameraIndex;
-	if(this._currentCameraIndex>this._cameraList.length){
-
+	if(this._currentCameraIndex>=this._cameraList.length){
+console.log("get new camera list?"); // only do this every other minute or so (at most) & only update if there are not changes
+		this._currentCameraIndex = -1;
+		setTimeout(function(){self._periodicCheck();}, 5*1000);
 		return;
 	}
-	// else save picture
-	this._savePictureAtIndex();
+	// else save picture - next
+console.log("save picture: "+this._currentCameraIndex);
+	this._savePictureAtIndex(function(){
+		console.log("saved image");
+	});
 }
-CameraCentralService.prototype._updateCameraList = function(){
+CameraCentralService.prototype._updateCameraList = function(completeFxn){
 	var cameraManager = this._cameraSource;
+	var self = this;``
 	cameraManager.getCameraList(function(list){
-		console.log(list);
-
-		// GET DETAILS OF CAMERA ....
-		/*
-			cameras:
-				- 
-					id: ?
-					device: video0
-
-		*/
-
+		//console.log(list);
+		if(list.length==0){
+			console.log("no cameras");
+			throw "no cams";
+		}
+console.log("get details");
 		this._currentCameraIndex = -1;
-
-		var item = list[0];
-		cameraManager.saveCameraPicture(item, "./temp.jpg", function(result){
-			console.log(result);
+		cameraManager.getCameraListDetails(list, function(details){
+			console.log("got details");
+			//console.log(details);
+			self._cameraList = details;
+			self._periodicCheck();
 		});
+		
 
 		// if list length is 0 ... set timeout to re-check later
 
 		// .... this._periodicCheck();
 	});
 }
-CameraCentralService.prototype._savePictureAtIndex = function(){
+CameraCentralService.prototype._savePictureAtIndex = function(callbackFxn){
 	var index = this._currentCameraIndex;
 	var camera = this._cameraList[index];
-	console.log(camera);
-
+	//console.log(camera);
 	var cameraManager = this._cameraSource;
-	
-	var videoDev = "/dev/"+camera["device"];
+	var videoDev = camera["device"];
 	console.log(videoDev);
 	var self = this;
-	cameraManager.saveCameraPicture(videoDev, "./temp.jpg", function(result){
+	var tempImageLocation = "./temp.jpg";
+	cameraManager.saveCameraPicture(videoDev, tempImageLocation, function(result){
 		console.log(result);
-		self._uploadPictureAtIndex();
+		if(!result){
+			console.log("skip upload this round - A");
+			fs.unlink(tempImageLocation, function(error){
+				console.log("unlinked file: "+tempImageLocation);
+				self._periodicCheck();
+			});
+		}else{
+			self._uploadPictureAtIndex(tempImageLocation);
+		}
 	});
 }
-CameraCentralService.prototype._uploadPictureAtIndex = function(){
+CameraCentralService.prototype._uploadPictureAtIndex = function(fileLocation){
 	var index = this._currentCameraIndex;
 	var camera = this._cameraList[index];
-	console.log(camera);
-
+	//console.log(camera);
+	var self = this;
 	var cameraManager = this._cameraSource;
 
-	var cameraID = camera["id"];
-	var fullCameraID = "serverID"+"joiner"+"camera prefix"+cameraID;
+	//var cameraID = camera["id"];
+	//var fullCameraID = "serverID"+"joiner"+"camera prefix"+cameraID;
+	var fullCameraID = 	this._cameraIDPrefix+""+index;
+		console.log("fullCameraID: '"+fullCameraID+"'");
+	
+	var encoding = "base64";
+	fs.readFile(fileLocation, encoding, function(error, file){
+		console.log("read complete: "+fileLocation);
+		if(error){
+			console.log("error:");
+			console.log(error);
+console.log("skip upload this round - B");
+			self._periodicCheck();
+		}else{
+			var base64Data = file;
+			console.log(base64Data.length);
+
+			// delete file
+			fs.unlink(fileLocation, function(error){
+				console.log("unlinked file: "+fileLocation);
+				if(error){
+					console.log("error:");
+					console.log(error);
+				}else{
+					self._uploadToPublic(fullCameraID, base64Data);
+				}
+			});
+		}
+	});
+
+	// do upload call
 }
 
-CameraCentralService.UploadToPublic = function(cameraID, filePath, ){
-	console.log("periodicImageUploadToPublic tick");
+CameraCentralService.prototype._uploadToPublic = function(cameraID, base64Data){
+	//console.log("UploadToPublic");
+	var self = this;
+	//var serverDomain = "192.168.0.140";
+	//var serverPath = "web/ff/cam/web/distributionServer/index.php";
+	//var serverAddress = "http://"+serverDomain+"/"+serverPath;
+	
 
-	var imagePath = "test.jpg";
-	// var imagePath = "test.jpeg";
-	var encoding = "base64";
-	var serverDomain = "192.168.0.140";
-	var serverPath = "web/ff/cam/web/distributionServer/index.php";
-	var serverAddress = "http://"+serverDomain+"/"+serverPath;
-	fs.readFile(imagePath, encoding, function(error, file){
-		console.log("READ FILE");
-		var base64Data = file;
-		
-		var cameraID = 0;
+var serverAddress = this._baseURL;
+	//console.log("serverAddress: "+serverAddress);
+
 
 // generate payload
 		var data = {
 			"camera":cameraID,
 			"base64":base64Data,
 		};
+//console.log(data);
+
 // upload to server
 		var paramPath = "camera/"+cameraID+"/upload";
 		var paramData = Code.StringFromJSON(data);
 		var urlGetPath = Code.escapeURI(paramPath);
 		var urlGetData = Code.escapeURI(paramData);
-
-		console.log("chars: "+urlGetData.length);
-		console.log("MAKE REQUEST");
-		var request = requestLibary.post( {"url":"http://192.168.0.140/web/ff/cam/web/distributionServer/index.php",
-		"form":{"path":paramPath, "data":paramData}},
+console.log(paramPath);
+		//console.log("chars: "+urlGetData.length);
+		console.log("MAKE REQUEST: "+this._requestCount);
+		
+// make request
+++this._requestCount;
+		var request = requestLibary.post({
+			"url":serverAddress,
+			"form":{
+				"path":paramPath,
+				"data":paramData
+			}
+		},
 		function(error, response, body){
-			console.log(" error: "+error);
-			console.log(" body: "+body);
-			console.log(" response: "+response.js);
+			//console.log(" error: "+error);
+			//console.log(" body: "+body);
+			//console.log("_periodicCheck");
+			self._periodicCheck();
+		
 		});
-	});		
 }
+
 
 // update check for new / changed / cameras
 // after every ? time

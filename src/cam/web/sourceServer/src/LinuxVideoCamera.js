@@ -1,14 +1,23 @@
 // LinuxVideoCamera.js
+const http = require("http");
+const os = require("os");
+const url = require("url");
+const fs = require("fs");
+const path = require("path");
+const requestLibary = require("request");
+const {exec} = require("child_process");
 
+const Code = require("./Code.js");
 
 function LinuxVideoCamera(){
 	console.log("LinuxVideoCamera");
 }
-LinuxVideoCamera._exec = function(command, callbackFxn){
-	exec(command, callbackFxn);
+LinuxVideoCamera._exec = function(command, callbackFxn, options){
+	options = Code.valueOrDefault(options,{});
+	exec(command, options, callbackFxn);
 }
 LinuxVideoCamera.prototype.getCameraList = function(callbackFxn){
-	console.log("getCameraList");
+	//console.log("getCameraList");
 	var command = "ls /dev/video**";
 var self = this;
 	LinuxVideoCamera._exec(command,function(err,sto,ste){
@@ -46,8 +55,10 @@ var self = this;
 					checkCapture();
 				});
 			}else{
-				console.log("done");
-				callbackFxn(captureList);
+				//console.log("done");
+				if(callbackFxn){
+					callbackFxn(captureList);
+				}
 			}
 		}
 		// initiate:
@@ -104,27 +115,185 @@ LinuxVideoCamera.prototype._isVideoCaptureDevice = function(videoPath, callbackF
 		return;
 	});
 }
-LinuxVideoCamera.prototype.getCameraDetails = function(videoDev, callbackFxn){
+LinuxVideoCamera.prototype.getCameraListDetails = function(list, callbackFxn){
 	console.log("getCameraList");
+	// var command = "ls /dev/video**";
+var self = this;
+	var currentIndex = -1;
+	var cameras = [];
+	var checkFxn = function(){
+		++currentIndex;
+		if(currentIndex>=list.length){
+//			console.log("DONE");
+//			console.log(cameras);
+			if(callbackFxn){
+				callbackFxn(cameras);
+			}
+		}else{
+			var videoDev = list[currentIndex];
+		console.log(videoDev);
+			self._getCameraDetails(videoDev, function(entry){
+				cameras.push(entry);
+				checkFxn();
+			});
+		}
+	}
+	checkFxn();
+}
+LinuxVideoCamera.prototype._getCameraDetails = function(videoDev, callbackFxn){
+// var videoName = videoDev.match(/\/?dev\/(video[0-9]*)\/?/g);
+var videoName = videoDev.match(/(video[0-9]*)/g);
+//console.log(videoName);
+	videoName = videoName[0];
+//console.log(videoName);
+	
+/*
+var dataID = null;
+var dataName = null; // cat /sys/class/video4linux/video0/name -- USB2.0 Camera: USB2.0 Camera
+// cat /sys/class/video4linux/video2/device/input/input50/name
+var dataResolutions = null; // v4l2-ctl --list-formats-ext -d /dev/video2 -- Size: Discrete 640x480
+var dataVendor = null; // cat /sys/class/video4linux/video2/device/input/input50/id/vendor -- 1903
+var dataProduct = null; // cat /sys/class/video4linux/video2/device/input/input50/id/product -- 8328
+var dataVersion = null; // cat /sys/class/video4linux/video2/device/input/input50/id/version -- 0100
+
 	var command = "cat /sys/class/video4linux/video0/device/input/input???/id/vendor";
+*/
 
-
-// var command = "cat /sys/class/video4linux/video0/device/input/input???/name";
-// var command = "cat /sys/class/video4linux/video0/device/input/input???/id/vendor";
-// var command = "cat /sys/class/video4linux/video0/device/input/input???/id/product";
-// name
-// vendor
+// "/sys/class/video4linux/"+videoName+"/name";
+	var cleanupText = function(dir){
+		dir = dir.replace(/^[ ]+/g,"");
+		dir = dir.replace(/[ ]+$/g,"");
+		dir = dir.replace(/\n/g,"");
+		dir = dir.replace(/\r/g,"");
+		return dir;
+	}
 
 var self = this;
+var startInputPath = "/sys/class/video4linux/"+videoName+"/device/input";
+	var command = "ls "+startInputPath;
+var fullInputPath = null;
+
+
+var entry = {};
+var expectedCount = 5;
+var currentCount = 0;
+
+	var checkAllFxn = function(){
+		++currentCount;
+		//console.log("checkAllFxn: "+currentCount+"/"+expectedCount);
+		if(currentCount==expectedCount){
+			console.log(entry);
+			if(callbackFxn){
+				callbackFxn(entry);
+			}
+		}
+	}
+
 	LinuxVideoCamera._exec(command,function(err,sto,ste){
-		console.log(sto);
+		//console.log(sto);
+		var dir = cleanupText(sto);
+
+		//console.log("'"+dir+"'");
+		fullInputPath = startInputPath+"/"+dir+"/";
+		
+		var pathID = "";
+		var commandName = "cat "+fullInputPath+"name";
+		var commandVendor = "cat "+fullInputPath+"id/vendor";
+		var commandProduct = "cat "+fullInputPath+"id/product";
+		var commandVersion = "cat "+fullInputPath+"id/version";
+		var commandResolution = "v4l2-ctl --list-formats-ext -d "+videoDev;
+//console.log(commandName);
+//console.log(commandVendor);
+//console.log(commandProduct);
+//console.log(commandVersion);
+//console.log(commandResolution);
+
+
+entry["id"] = null;
+entry["device"] = videoDev;
+entry["video"] = videoName;
+		
+		LinuxVideoCamera._exec(commandName,function(err,sto,ste){
+			sto = cleanupText(sto);
+			//console.log("name: "+sto);
+entry["name"] = sto;
+			checkAllFxn();
+		});
+		LinuxVideoCamera._exec(commandVendor,function(err,sto,ste){
+			sto = cleanupText(sto);
+			//console.log("vend: "+sto);
+entry["vendor"] = sto;
+			checkAllFxn();
+		});
+		LinuxVideoCamera._exec(commandProduct,function(err,sto,ste){
+			sto = cleanupText(sto);
+			//console.log("prod: "+sto);
+entry["product"] = sto;
+			checkAllFxn();
+		});
+		LinuxVideoCamera._exec(commandVersion,function(err,sto,ste){
+			sto = cleanupText(sto);
+			//console.log("vers: "+sto);
+entry["version"] = sto;
+			checkAllFxn();
+		});
+		LinuxVideoCamera._exec(commandResolution,function(err,sto,ste){
+			//console.log("reso: "+sto);
+			var lines = Code.arrayFromStringSeparatedString(sto,"\n");
+			var resolutions = [];
+//console.log(lines);
+			var regexSize = /Size\:/g;
+			var regexDims = /([0-9]+x[0-9]+)/g;
+			for(var i=0; i<lines.length; ++i){
+				var line = lines[i];
+				if(line.match(regexSize)){
+					//console.log(line);
+					var dims = line.match(regexDims);
+					if(dims && dims.length>0){
+						dims = dims[0];
+						//console.log(dims);
+						dims = Code.arrayFromStringSeparatedString(dims,"x");
+						var width = dims[0];
+						var height = dims[1];
+						var res = {};
+							res["width"] = width;
+							res["height"] = height;
+						resolutions.push(res);
+					}
+				}
+			}
+			//console.log(resolutions);
+entry["sizes"] = resolutions;
+			checkAllFxn();
+		});
 	});
 }
 
 LinuxVideoCamera.prototype.saveCameraPicture = function(videoDev, imageLocation, callbackFxn){
-	//
+	console.log("saveCameraPicture to: "+imageLocation);
+	var size = "640x480";
+	var command = "ffmpeg   -v error -y  -s "+size+"  -i "+videoDev+"  "+imageLocation+" ";
+	console.log(command);
+	LinuxVideoCamera._exec(command, function(err,sto,ste){
+		if(err){
+			console.log(err);
+			console.log(sto);
+			console.log(ste);
+		console.log("save error");
+			if(callbackFxn){
+				callbackFxn(true);
+			}
+		}else{
+			console.log("saved: "+imageLocation);
+			//console.log(err);
+			//console.log(sto);
+			//console.log(ste);
+			if(callbackFxn){
+				callbackFxn(true);
+			}
+		}
+	}, {"timeout":5000});
 }
-
 
 
 
