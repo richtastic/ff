@@ -44,6 +44,39 @@ header("Pragma: no-cache");
 header("Access-Control-Allow-Origin: *");
 
 
+$CONFIG_CAMERA_LIST_FILE = "./filesystem/data.json";
+$CONFIG_CAMERA_IMAGE_FILENAME = "image.jpg";
+
+function readCameraDataFile(){
+	global $CONFIG_CAMERA_LIST_FILE;
+	$exists = file_exists($CONFIG_CAMERA_LIST_FILE);
+	//echo "exists: '".$exists."' ... ";
+	//echo "\n";
+	if($exists!=true){ // create default
+		$object = ["data" =>
+			["cameras" => []],
+		];
+		return $object;
+	}
+	$size = filesize($CONFIG_CAMERA_LIST_FILE);
+	$fp = fopen($CONFIG_CAMERA_LIST_FILE, "r");
+	$data = fread($fp, $size);
+	fclose($fp);
+	$json = json_decode($data, true);
+	// var_dump($json);
+	//echo $json["data"]["cameras"][0]["id"];
+	return $json;
+}
+function writeCameraDataFile($object){
+	global $CONFIG_CAMERA_LIST_FILE;
+	$data = json_encode($object, JSON_PRETTY_PRINT);
+	// echo $data;
+	// echo "\n";
+	$fp = fopen($CONFIG_CAMERA_LIST_FILE, "w");
+	$data = fwrite($fp, $data);
+	fclose($fp);
+
+}
 
 
 // camera public cdn / distribution service
@@ -158,7 +191,35 @@ function isBinaryImagePNG($binary){
 }
 
 
-if( count($pathList)>0 && $pathList[0]=="camera" ){
+
+if( count($pathList)>1 && $pathList[0]=="cameras" && $pathList[1]=="list" ){
+	// echo "get a list\n";
+	
+
+	$data = readCameraDataFile();
+	// var_dump($data);
+//	writeCameraDataFile($data);
+
+	$data = $data["data"]; // root
+
+
+	$cameras = $data["cameras"];
+
+	$object = [];
+	$object["result"] = "success";
+	$object["requestID"] = "123";
+	$object["data"] = [
+		"cameras" => $cameras
+	];
+
+	$jsonObject = json_encode($object);
+
+
+	header('Content-Type: application/json; charset=utf-8');
+	echo $jsonObject;
+	echo "\n";
+	
+}else if( count($pathList)>0 && $pathList[0]=="camera" ){
 
 	error_log("start request at camera: ".$path);
 //	echo "<br/>camera path";
@@ -174,27 +235,42 @@ if( count($pathList)>0 && $pathList[0]=="camera" ){
 
 
 	if($cameraOperation=="image"){ // get image
-		$imagePath = './images/test.jpg';
-		$fileType = pathinfo($path, PATHINFO_EXTENSION);
+		$data = readCameraDataFile();
+		$dataRoot = $data["data"];
+		$cameras = $dataRoot["cameras"];
+		$cameraCount = count($cameras);
+		$camera = null;
+		for($i=0; $i<$cameraCount; $i++){
+			$cam = &$cameras[$i];
+			$camID = $cam["id"];
+			if($camID==$cameraID){
+				$camera = &$cam;
+			}
+		}
+		// var_dump($camera);
+		if(!$camera){
+			returnFailureToClient("camera not found");
+			return;
+		}
+		
+		$imagePath = "./filesystem/cameras/".$cameraID."/".$CONFIG_CAMERA_IMAGE_FILENAME;
+		// $fileType = pathinfo($path, PATHINFO_EXTENSION);
 		$imageData = file_get_contents($imagePath);
-		// $base64 = 'data:image/' . $type . ';base64,' . base64_encode($data);
 		$base64 = base64_encode($imageData);
-
-	//	echo " ".$base64;
 
 		$object = [];
 			$object["result"] = "success";
 			$object["requestID"] = "123";
 			$object["data"] = [
-				"cameraID" => $cameraID,
-				"modified" => "...",
+				"id" => $camera["id"],
+				"modified" => $camera["modified"],
 				"base64" => $base64,
 			];
 		$jsonObject = json_encode($object);
-
-
 		header('Content-Type: application/json; charset=utf-8');
-		// echo "".$jsonObject;
+		echo "".$jsonObject;
+		echo "\n";
+		return;
 	}else if($cameraOperation=="upload"){ // upload image
 // returnFailureToClient("before ... A");
 // return;
@@ -231,17 +307,21 @@ if( count($pathList)>0 && $pathList[0]=="camera" ){
 			// echo"\nisPNG: ".$isPNG."\n";
 
 			$baseFilesystemLocation = "filesystem/";
-			$imageExtension = "jpg";
-			$imageName = "image.".$imageExtension;
+			//$imageExtension = "jpg";
+			//$imageName = "image.".$imageExtension;
 			$parentDirectory = $baseFilesystemLocation."cameras/".$cameraID;
 
 			// echo " parentDirectory: ".$parentDirectory."\n";
-			// createDirectoryAtLocation($parentDirectory, true);
+			createDirectoryAtLocation($parentDirectory, true);
 
 			// this path needs to be constant
-			$imageFilePath = $parentDirectory."/".$imageName; // TODO: IMAGE TYPE ? jpg / png / ... ?
+			$imageFilePath = $parentDirectory."/".$CONFIG_CAMERA_IMAGE_FILENAME; // TODO: IMAGE TYPE ? jpg / png / ... ?
 
 			// echo " imageFilePath: ".$imageFilePath."\n";
+
+
+
+			// TODO : write to temp file & move to final location
 
 			$ifp = fopen($imageFilePath, "wb");
 			$result = fwrite($ifp, $binaryImageData);
@@ -254,20 +334,78 @@ if( count($pathList)>0 && $pathList[0]=="camera" ){
 //$result = 0;
 
 			if($result>0){ // todo: get length of result matching length of string
-				
+
+
+
+$dataContent = readCameraDataFile();
+
+// $dataContent["test"] = 1.0;
+
+$dataRoot = &$dataContent["data"];
+
+
+$dataCameras = &$dataRoot["cameras"];
+$cameraCount = count($dataCameras);
+
+
+$cameraEntry = null;
+for($i=0; $i<$cameraCount; $i++){
+	$camera = $dataCameras[$i];
+	if($camera["id"]==$cameraID){
+		echo " found \n";
+		$cameraEntry = &$camera;
+		break;
+	}
+}
+if(!$cameraEntry){
+	echo "not found - append \n";
+	$cameraEntry = [];
+	$cameraEntry["id"] = $cameraID;
+	// $cameraEntry["modified"] = microtime(true);
+//	$copy = &$cameraEntry;
+//	array_push($dataCameras, $copy);
+	$dataCameras[] = &$cameraEntry;
+}
+
+//$cameraEntry->"modified" = microtime(true);
+
+$cameraEntry["modified"] = microtime(true);
+writeCameraDataFile($dataContent);
+
+/*
+var_dump($dataContent);
+echo "\n";
+var_dump($dataCameras);
+echo "\n";
+var_dump($cameraEntry);
+
+
+
+// var_dump($dataContent);
+// var_dump($dataRoot);
+// var_dump($dataCameras);
+
+// var_dump($dataContent);
+echo "\n";
+echo "\n";
+echo "\n";
+
+*/
 				$object = [
 					"result" => "success",
 					"requestID" => "123",
+					/*
 					"data" => [
-						"cameraID" => $cameraID,
+						"id" => $cameraID,
 						"modified" => "...",
 						// "base64" => $base64,
-					]
+					]*/
+					"data" => $cameraEntry
 				];
 				$jsonObject = json_encode($object);
 				header('Content-Type: application/json; charset=utf-8');
 				echo "".$jsonObject;
-				
+				echo "\n";
 				// returnFailureToClient("success ... ");
 				return;
 			}else{
@@ -279,20 +417,8 @@ if( count($pathList)>0 && $pathList[0]=="camera" ){
 			returnFailureToClient("image upload with no data");
 			return;
 		}
-		/*
-		$object = [
-			"result" => "success",
-			"requestID" => "123",
-			"data" => [
-				"cameraID" => $cameraID,
-				"modified" => "...",
-				// "base64" => $base64,
-			]
-		];
-		header('Content-Type: application/json; charset=utf-8');
-		echo "".$jsonObject;
-		*/
-
+		returnFailureToClient("no data");
+		return;
 	}else{
 		returnFailureToClient("unknown operation");
 	}
@@ -337,6 +463,7 @@ curl -X POST "http://192.168.0.140/web/ff/cam/web/distributionServer/index.php?p
 
 
 
+curl -X POST "http://192.168.0.140/web/ff/cam/web/distributionServer/index.php?path=%2Fcamera%2Fx%2Fupload&data=%7B%22camera%22%3A%220%22%2C%22base64%22%3A%22iVBORw0KGgoAAAANSUhEUgAAAAoAAAAICAMAAAD3JJ6EAAAABGdBTUEAALGPC%2FxhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAAh1BMVEUAAAAcHNQnJ8MeHssVFb0UhhQtjC04tTgzM8YmJqIxMaUfH9Q4mjgueC4nlCdHu0dAQNpLS7VGMpyfMWeaOSQxVBYbdhsZjxlaWvKnHy6UMjKYQ0OkSzEcjByzMzOHGxmQLiu5OjqsUiuTMxu2Xjy7URuzsz%2BPjy%2BMjCqiojmVlRmRkRj%2F%2F%2F8z%2FxahAAAALHRSTlMABXmJBAFhR3by71Zh5uQhQPHxxMvg7TU80enkyjGR7vK5OOn1PgbAyA8AADUqQYUAAAABYktHRCy63XGrAAAAB3RJTUUH4AQXEQMUzs02PQAAAEZJREFUCNdjYGBkYmZhZWNnAAIOTi5uHl4%2BfiBTQFBIWERUTBwkLCEpJS0jywAGcvIKihAWg5KyiiqUqaauoQllMmhpg0gAlGADs5tyhogAAAAldEVYdGRhdGU6Y3JlYXRlADIwMTYtMDQtMjNUMTc6MDM6MzktMDc6MDBHxukhAAAAJXRFWHRkYXRlOm1vZGlmeQAyMDE2LTA0LTIzVDE3OjAzOjIwLTA3OjAwb6kU0AAAAABJRU5ErkJggg%3D%3D%22%7D"
 
 
 
