@@ -168,6 +168,32 @@ https://help.ubuntu.com/community/Webcam
 
 
 
+### video / image streaming:
+
+
+video streaming
+	VLC
+	https://www.xmodulo.com/live-stream-video-webcam-linux.html
+
+	http://www.vslcreations.com/2017/10/how-to-capture-ip-camera-http-stream.html
+	https://askubuntu.com/questions/881305/is-there-any-way-ffmpeg-send-video-to-dev-video0-on-ubuntu
+
+	PIPING
+	https://unix.stackexchange.com/questions/2302/can-i-pipe-dev-video-over-ssh
+
+
+
+### FASTER IMAGE TAKING
+
+https://stackoverflow.com/questions/40336363/fastest-way-to-capture-from-webcams-linux
+
+https://raspberrypi.stackexchange.com/questions/23953/webcam-capture-into-mp4-or-mov-ffmpeg-is-very-slow-at-this
+
+
+sudo streamer -q -c /dev/video0 -s 640x480 -f jpeg -t 60 -r 12 -j 75 -w 0 -o /mnt/ramdisk/tmp.avi
+
+
+
 
 
 ### NEXT STEPS
@@ -277,9 +303,6 @@ ad-hoc video format ....
 		- just grab most recent (modulo ###)
 			- need to keep a 'window' of minimum & maximum
 	- 
-
-
-
 
 
 

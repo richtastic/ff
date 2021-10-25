@@ -88,6 +88,13 @@ curl http://192.168.0.188:8000/
 
 
 
+### TODO
+
+- faster image taking
+- video feed
+
+
+
 
 
 

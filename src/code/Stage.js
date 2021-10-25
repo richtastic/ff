@@ -185,6 +185,16 @@ Stage.prototype.getImageAsIntRGBA = function(originalImage){
 	dat = this.getDOAsARGB(doImage, wid,hei);
 	return dat;
 }
+Stage.prototype.getImageAsImageMat = function(originalImage, expand){ // this is done somewhere else
+	var info = this.getImageAsFloatRGB(originalImage, expand);
+	var matrix = new ImageMat(info["width"], info["height"]);
+		matrix.red(info["red"]);
+		matrix.grn(info["grn"]);
+		matrix.blu(info["blu"]);
+	return matrix;
+}
+
+
 Stage.prototype.getImageAsFloatRGBA = function(originalImage, expand){
 	var i, j, dat, img, wid = originalImage.width, hei = originalImage.height;
 	var doImage = new DOImage(originalImage);

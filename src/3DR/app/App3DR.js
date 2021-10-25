@@ -8244,7 +8244,7 @@ console.log("tripleRemoved: "+tripleRemoved);
 // throw "does each triple have 2+ pairs?"
 
 
-throw "BEFORE TRIPLES DONE"
+// throw "BEFORE TRIPLES DONE"
 		
 		project.saveFileFromData(inputData,inputFilename, saveProjectFxn,project);
 
@@ -8513,7 +8513,7 @@ console.log(group);
 		console.log("GRAPH DATA TO SAVE:");
 		console.log(data);
 
-throw "BEFORE SAVE GRAPH";
+// throw "BEFORE SAVE GRAPH";
 
 		// save graph & reference it
 		inputData["graph"] = graphFilename;
@@ -17024,16 +17024,11 @@ App3DR.ProjectManager.prototype._calculateFeaturesLoaded = function(view){
 	console.log(features);
 
 
-// throw "BEFORE"
-
 	var result = R3D.sequentialImageMatchingLexigramGenerate([imageScales]);
 		var histograms = result["histograms"];
 		var words = result["features"];
 	var word = words[0];
 	var histogram = histograms[0];
-
-console.log(word);
-console.log(histogram);
 
 	// var normalizedWords = R3D.normalizeSIFTObjects(word, imageMatrix.width(), imageMatrix.height());
 	// var normalizedWords = word;
@@ -17065,9 +17060,6 @@ console.log(normalizedFeatures);
 		data["flatHistogram"] = histogram;
 		data["lexicon"] = normalizedWords;
 	console.log(data);
-
-
-
 
 var showDebug = true;
 
@@ -17221,6 +17213,10 @@ console.log(sampleMatrix);
 	R3D.showFeaturesForImage(imageMatrix, features);
 	// throw "features - now save ...";
 	*/
+
+// 
+// console.log(data);
+//throw "is size & scale & rot ... saved too ?" -- these are SIFT BLOBS = no angle
 
 	view.setFeatureData(data, this._calculateFeaturesComplete, this);
 }

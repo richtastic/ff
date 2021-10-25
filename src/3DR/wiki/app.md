@@ -402,6 +402,75 @@ MISSING:
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
+
+
+QR
+
+
+
+
+- when triples is done: is trying to make triple tracks worth it?
+- when combining pairwise tracks into dense (/ track_full step) is doing visual point optimizing worth it?
+- 
+
+
+
+
+- back to walking thru sample ...
+
+- could assume ordered set of images and use that to get initial matches ?
+
+
+
+- initial hierarchical location can be off by a lot
+
+
+
+flatAffineImageMatch
+
+hierarchicalAffineImageMatch
+
+
+- is using the blob matching a better way to find initial match?
+	- blobs need to keep:
+		- pos OK
+		- size OK
+		- angle  <= this is not being stored x
+
+
+- initial affine mapping is not very good
+	- more exhaustive attempts?
+		- position ?
+		- separate chunks of the image
+			- 9x9 ?
+		- use most common (average sigma drop) values: offset, scale, angle
+
+
+some metrics :
+	- coverage area (need to use a finite method to count areas)
+	- average matching scores
+	- 
+
+
+
+histogram
+	- try nearest neighbor binning too
+	- 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 NEXT STEPS?
 	- hierarchical not working so well
 		- issues
@@ -414,7 +483,8 @@ NEXT STEPS?
 
 
 
-
+flatAffineImageMatch
+hierarchicalAffineImageMatch
 
 
 

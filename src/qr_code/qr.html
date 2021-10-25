@@ -1,0 +1,19 @@
+<html>
+<head>
+<title>QR Code Testing</title>
+<script src="../code/FF.js"></script>
+</head>
+<script type="text/javascript">
+function pageLoadedFxn(){
+	var ff = new FF("../code/",ffLoadedFxn);
+}
+function ffLoadedFxn(){
+	(new ScriptLoader("./",["QRTest.js"],this,classesLoadedFxn)).load();
+}
+function classesLoadedFxn(){
+	var test = new QRTest();
+}
+</script>
+<body onload="pageLoadedFxn();">
+</body>
+</html>

@@ -286,10 +286,10 @@ header("Content-Type: application/json");
 
 echo json_encode($response);
 
-logToConsole(" success: ".$success);
-logToConsole(" response: ".$response);
+//logToConsole(" success: ".$success);
+//logToConsole(" response: ".$response);
 
-logToConsole(" <<<<<<<<<<<<<<<<<<<<<< closed service_file");
+// logToConsole(" <<<<<<<<<<<<<<<<<<<<<< closed service_file");
 
 /*
 

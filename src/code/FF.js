@@ -4,7 +4,7 @@ FF.FILENAMES = ["numeric-1.2.6.js","glMatrix-0.9.5.min.js", "Code.js","Err.js","
 				"ByteData.js","BinInt.js","Crypto.js",
 				"SerialString.js",
 				"LinkedList.js","Queue.js","RedBlackTree.js","LLRBT.js","IntervalTree.js","PriorityQueue.js","Tree.js","FragArray.js","Hash.js",
-				"AudioManager.js","Compress.js","PNG.js","JPEG.js",
+				"AudioManager.js","Compress.js","PNG.js","JPEG.js","QRCode.js",
 				"V2D.js","V3D.js","V4D.js","V5D.js","Rect.js","Cuboid.js","Tri2D.js","Tri3D.js","QuadTree.js","OctTree.js","QuadSpace.js","OctSpace.js","KDTree.js",
 				"Bivector.js",
 				"Matrix.js","Tensor.js","Matrix2D.js","Matrix3D.js","Dispatch.js","Dispatchable.js","Ticker.js","JSDispatch.js","Ajax.js","ImageMat.js","Gesticulator.js","MessageBus.js",
@@ -26,7 +26,8 @@ FF.FILENAMES = ["numeric-1.2.6.js","glMatrix-0.9.5.min.js", "Code.js","Err.js","
 				"ImageMapper.js",
 				"DenseMatchF.js",
 				"ClientFile.js",
-				"R3D.js"
+				"R3D.js",
+				
 				]; // "Node.js"
 FF.LOCATION = "";
 /* this is a match */

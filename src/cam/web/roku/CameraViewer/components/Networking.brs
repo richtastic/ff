@@ -6,15 +6,25 @@
 
 sub init()
     print("init - Networking")
-    m.top.functionName = "getContent"
+    m.top.functionName = "doMainTask"
     m.top.status = "waiting"
 end sub
 
-sub getContentX()
-    print("getContent")
-    print(m.top.poster)
-    print(m.top.cameraID)
-end sub
+
+
+sub doMainTask()
+    cameraID = m.top.cameraID
+    poster = m.top.poster
+    
+    print "what"+cameraID.ToStr()
+    
+    ' if cameraID = invalid
+    if cameraID = ""
+        getContentList()
+    else
+        getContent()
+    end if
+   end sub
 
 sub getContent()
     cameraID = m.top.cameraID
@@ -36,7 +46,7 @@ sub getContent()
     request.SetURL(requestURL)
     
     response = request.GetToString()
-'     print ("response: " + response)
+     print ("response: " + response)
     
     jsonObject = ParseJson(response)
     
@@ -86,3 +96,31 @@ sub RequestJsonImageX(component)
     
     
 end sub
+
+
+
+
+function getContentList()
+    print "getContentList - list of avail camera feeds"
+    'cameraID = m.top.cameraID
+    'poster = m.top.poster
+
+    date = CreateObject("roDateTime")
+    time = date.AsSeconds()
+    print time
+    
+    baseURL = "http://192.168.0.140/web/ff/cam/web/distributionServer/index.php"
+    requestURL = baseURL+"?path=%2Fcameras%2Flist"+"&nonce="+time.ToStr()
+    print(requestURL)
+    request = CreateObject("roUrlTransfer")
+    request.SetURL(requestURL)
+    response = request.GetToString()
+    print ("response: " + response)
+    
+'    jsonObject = ParseJson(response)
+end function
+
+
+
+
+

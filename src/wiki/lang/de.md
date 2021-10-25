@@ -3574,7 +3574,9 @@ Ich lauf' für dich
 Ich häng' mich auf für dich
 Ich will, dass dein Herz nur noch für mich schlägt
 Da ist noch mehr zwischen uns
+
 Da ist noch mehr
+
 Zwischen uns die Berge
 Ich werd' sie alle sprengen
 Zwischen uns die Sterne
@@ -3590,15 +3592,20 @@ Ich fülle alle Lücken
 Zwischen uns die Steine
 Ich bringe sie ins Rollen
 Und dann geh' ich in die vollen
+
 Ich renn' für dich
 Ich verbrenn' für dich
 Ich geh' keinem Ärger aus dem Weg
+
 Da ist noch mehr zwischen uns
+
 Ich lauf' für dich
 Ich häng' mich auf für dich
 Ich will, dass dein Herz nur noch für mich schlägt
 Da ist noch mehr zwischen uns
+
 Da ist noch mehr
+
 Zwischen uns der Türsteher
 Ich lass' mich selber rein
 Zwischen uns die Tische
@@ -3614,6 +3621,7 @@ Ich höre auf zu sprechen
 Zwischen uns drei Schritte
 Ich komme bei dir an
 Und zieh' dich an mich ran
+
 Bis nichts, nichts, nichts mehr
 Zwischen uns steht
 Und ich endlich spür', wie dein Herz schlägt

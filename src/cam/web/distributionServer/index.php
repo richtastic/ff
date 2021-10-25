@@ -219,7 +219,7 @@ if( count($pathList)>1 && $pathList[0]=="cameras" && $pathList[1]=="list" ){
 	echo $jsonObject;
 	echo "\n";
 	
-}else if( count($pathList)>0 && $pathList[0]=="camera" ){
+}else if( count($pathList)>2 && $pathList[0]=="camera" ){
 
 	error_log("start request at camera: ".$path);
 //	echo "<br/>camera path";
@@ -386,7 +386,7 @@ if( count($pathList)>1 && $pathList[0]=="cameras" && $pathList[1]=="list" ){
 		returnFailureToClient("no data");
 		return;
 	}else{
-		returnFailureToClient("unknown operation");
+		returnFailureToClient("unknown operation: "+$path);
 	}
 
 	/*

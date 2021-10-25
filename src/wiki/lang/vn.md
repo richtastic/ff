@@ -552,6 +552,7 @@ dare - dám
 
 
 Sài Gòn Cafe Sữa Đá 
+https://www.youtube.com/watch?v=4czwmlxqRbY
 https://www.youtube.com/watch?v=PZw1_6IB7c4
 |  |  |  |
 | reh- da da da da |  |  |
