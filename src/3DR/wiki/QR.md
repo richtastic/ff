@@ -291,9 +291,20 @@ RECOGNITION IDEAS:
 	- inverted color such that the 'black' is the same color as the position pattern
 	- 
 
+NEXT STEPS:
+	- how to determine alignment pattern
+	- read data
+	- read version
+	- read format
+	- do error correction methods
+	- print out data as examples
+	- ...
+	- 
 
 
 
+30-32" wide ~ 2.5'
+66" tall ~ 5.5'
 
 
 https://www.degruyter.com/document/doi/10.1515/jisys-2020-0143/html

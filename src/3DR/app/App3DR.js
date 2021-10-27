@@ -7844,7 +7844,7 @@ console.log("checkPerformNextTask");
 		project.iterateDenseProcess();
 		return;
 	}
-throw ">start bundle";
+// throw ">start bundle";
 	if(!project.checkHasBundleStarted()){
 		project.initializeBundleGroupsFromDense();
 		return;
@@ -7854,7 +7854,7 @@ throw ">start bundle";
 		project.iterateBundleProcess(); // sets up dense groups
 		return;
 	}
-// throw ">start surface"; // copy point files & create surface.yaml
+throw ">start surface"; // copy point files & create surface.yaml
 	if(!project.checkHasSurfaceStarted()){
 		project.initializeSurfaceFromBundle();
 		return;
@@ -8526,7 +8526,7 @@ console.log(group);
 		project.saveFileFromData(data, graphFilename, saveSparseFxn,project);
 		return;
 	}
-// throw ">aggregate";
+throw ">aggregate";
 console.log("aggregate ...")
 	// AGGREGATE TRACKS INTO POINT FILE
 	var trackCount = inputData["trackCount"]; // number of loaded tracks
@@ -10731,6 +10731,8 @@ App3DR.ProjectManager.prototype._iterateSparseTracks = function(sourceData, sour
 					maxIterationsBA = 3*allViews.length;
 				}
 
+// maxIterationsBA = allViews.length;
+
 				// if the next error is very low, or max iterations reached => done
 				var isDone = false;
 				var deltaErrorR = nextViewBA["deltaErrorR"];
@@ -10873,6 +10875,9 @@ console.log(info);
 
 
 
+
+
+
 // throw "not done"
 console.log(allViews);
 console.log("TODO: REMOVE")
@@ -10909,10 +10914,6 @@ for(var i=0; i<allViews.length; ++i){
 // 		p.y *= 1512;
 // 	}
 // }
-
-
-
-
 
 
 // throw "iterate - init patches ... only 2D data is assumed correct after graph/view updates"
@@ -11120,8 +11121,9 @@ console.log(allCameras);
 
 			loadViews = App3DR.ProjectManager.bestImagesToLoadForViewPair(viewIDA,viewIDB, graphPairs, graphGroupEdges,  15, 0.25);
 
+			console.log("loadViews:");
 			console.log(loadViews);
-
+throw "bestImagesToLoadForViewPair:"
 			expectedImages = loadViews.length;
 			loadedImages = 0;
 			// console.log("load images");
@@ -11987,6 +11989,7 @@ console.log("RICHIE - bestNextViews: "+bestNextViews.length);
 // throw "... loading?";
 			// don't care about images for the moment:
 			// loadViews = [];
+			console.log("loadViews:");
 			console.log(loadViews);
 			// start async loading
 			var expectedImages = loadViews.length; // TODO: VIEW'S AREN'T USED
@@ -11994,7 +11997,7 @@ console.log("RICHIE - bestNextViews: "+bestNextViews.length);
 			var loadedImages = 0;
 			var loadedTracks = 0;
 
-// throw "HERE"
+throw "HERE - combine ? ---- LOAD AT LEAST 2 PAIR IMAGES ?"
 
 			// handlers
 			var loadedReadyCheck = function(){
@@ -12041,6 +12044,9 @@ console.log("RICHIE - bestNextViews: "+bestNextViews.length);
 			// insert original track points
 			console.log(loadPairs);
 // throw "??????????"
+
+// throw "combine points into tracks better ... ???????????"
+
 			console.log("load merging tracks: pair");
 			for(var i=0; i<loadPairs.length; ++i){
 				var pair = loadPairs[i];
@@ -12054,8 +12060,9 @@ console.log("RICHIE - bestNextViews: "+bestNextViews.length);
 			}
 			
 			var doWorldTrackAdd = function(){
-				console.log("doWorldTrackAdd");
+				console.log("doWorldTrackAdd START");
 				console.log(sourceData);
+throw ".... doWorldTrackAdd before"
 				var graphDataViews = graphData["views"];
 				var graphViewIDToTransform = {};
 				for(var i=0; i<graphDataViews.length; ++i){
@@ -12284,7 +12291,7 @@ graphData["loadPairIndex"] = -1;
 				console.log(trackData);
 				console.log(fullTrackPath);
 				console.log(fullGraphPath);
-// throw "before save track group: "+trackFilename;
+throw "before save track group: "+trackFilename;
 				var savedFiles = 0;
 				var savedTrackComplete = function(){
 					console.log("savedTrackComplete: "+trackFilename);
@@ -12308,7 +12315,7 @@ graphData["loadPairIndex"] = -1;
 				console.log("TRACK");
 				project.saveFileFromData(trackData, fullTrackPath, savedTrackComplete);
 
-				console.log(" end  doWorldTrackAdd");
+				console.log(" end  doWorldTrackAdd END");
 				return;
 			}
 

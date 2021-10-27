@@ -404,7 +404,51 @@ MISSING:
 
 
 
-QR
+- pairwise seems fine, groups / tracks seems bad
+	- IS IT CURRENTLY USING PAIRS OR COMBINING VIA TRACKS?
+	- is only pairs ok?
+	- try using tracks?
+	- should tracks be combined via images ?
+
+	-> add step to do track merging based on required image combinations
+		- get exact list of all intersections that will happen
+			- after points are loaded (pending list or new list)
+			- add method that will only return all existing+additional point intersection combinations
+			EX:
+				- existing point
+				- additional point
+				- overlapping views [multi-way intersection w/ existing?]
+				- additional views
+			- resolve what 3+ images should be loaded
+
+		- only resolve points that have images loaded?
+			-> guaranteed 2 ?
+				- use affine relation for non-loaded images
+			-> all images?
+				- can throw away obviously bad track matches?
+			-> most images?
+				- combination ^ ... no guarantees
+
+	- double check resolution logic
+		- 
+
+	- ...
+
+- are groups combining points based on images?
+	- update intersection resolution to use images ?
+
+
+
+=> TEST CASE: do point loading & optimizing & print out world & view results
+	=> first 2 separate pairs (3 max tracks)
+	=> print out some example point image match locations
+
+
+
+
+
+
+.........
 
 
 

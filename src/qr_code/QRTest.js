@@ -42,6 +42,7 @@ QRTest.a = function(){
 };
 QRTest.prototype.loadTestImageA = function(){
 	var imageLoader = new ImageLoader("./images/",["wiki_a.png"], this,this.handleImageLoaded,null);
+	// var imageLoader = new ImageLoader("./images/",["ex_house.jpg"], this,this.handleImageLoaded,null);
 	imageLoader.load();
 }
 QRTest.prototype.handleImageLoaded = function(data){
@@ -54,7 +55,15 @@ QRTest.prototype.handleImageLoaded = function(data){
 		var matrix = GLOBALSTAGE.getImageAsImageMat(image);
 		// console.log(matrix);
 		// var imageData = this._stage;
-		QRCode.fromImage(matrix);
+		var grid = QRCode.fromImage(matrix);
+		console.log(grid);
+		var data = grid["grid"];
+		var size = grid["size"];
+
+		var data = QRCode.fromGrid(data, size);
+		console.log(data);
+
+		throw "..."
 		// 
 		// 
 
