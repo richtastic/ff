@@ -441,7 +441,9 @@ MISSING:
 
 => TEST CASE: do point loading & optimizing & print out world & view results
 	=> first 2 separate pairs (3 max tracks)
-	=> print out some example point image match locations
+	=> print out some example point image match location
+
+
 
 
 
