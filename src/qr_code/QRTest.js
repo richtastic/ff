@@ -41,11 +41,20 @@ QRTest.a = function(){
 	//
 };
 QRTest.prototype.loadTestImageA = function(){
-	var imageLoader = new ImageLoader("./images/",["wiki_a.png"], this,this.handleImageLoaded,null);
+	// var imageLoader = new ImageLoader("./images/",["wiki_a.png"], this,this.handleImageLoaded,null);
+	var imageLoader = new ImageLoader("./images/",["generated_a.png"], this,this.handleImageLoaded,null);
+	
 	// var imageLoader = new ImageLoader("./images/",["ex_house.jpg"], this,this.handleImageLoaded,null);
 	imageLoader.load();
 }
 QRTest.prototype.handleImageLoaded = function(data){
+
+
+	// var result = QRCode.from("This is a test message to be encoded inside of a qr code. Some characters won't be able to translate.");
+	// console.log(result);
+	// throw "..."
+
+
 	var images = data["images"];
 	for(var i=0; i<images.length; ++i){
 		

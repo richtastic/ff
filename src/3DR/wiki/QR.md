@@ -292,10 +292,10 @@ RECOGNITION IDEAS:
 	- 
 
 NEXT STEPS:
-	- how to determine alignment pattern
-	- read data
-	- read version
-	- read format
+	x how to determine alignment pattern
+	x read data
+	x read version
+	x read format
 	- do error correction methods
 	- print out data as examples
 	- ...
@@ -310,11 +310,29 @@ NEXT STEPS:
 https://www.degruyter.com/document/doi/10.1515/jisys-2020-0143/html
 
 
+#ERROR CORRECTION CODES (ECC):
 
 
+##BCH (Bose, Chaudhuri, Hocquenghem)
+	- error correcting syclic code
+	- generalization of hamming code for multiple errors
+	- GF = Galois Field (finite field)
+	- polynomial -> matrix math
+	- decoder = syndrome
+
+https://web.ntpu.edu.tw/~yshan/BCH_code.pdf
 
 
+## Reed Solomon (RS)
+	- block-based ECC
+	- non-binary BCH
+	- DATA + PARITY sections of data
+		- RS(255,223) = 255 code word bytes # 223 are data and 32 bytes are parity
+	- parity bit count: 2*t can correct up to t errors
 
+
+https://www.cs.cmu.edu/~guyb/realworld/reedsolomon/reed_solomon_codes.html
+https://en.wikiversity.org/wiki/Reed%E2%80%93Solomon_codes_for_coders
 
 
 
