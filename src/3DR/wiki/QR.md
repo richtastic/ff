@@ -335,6 +335,39 @@ https://www.cs.cmu.edu/~guyb/realworld/reedsolomon/reed_solomon_codes.html
 https://en.wikiversity.org/wiki/Reed%E2%80%93Solomon_codes_for_coders
 
 
+#MICRO QR CODE:
+
+M1-M4
+7x7 corner + 1 sp white + timing on edges + 9x9 format data
+
+http://www.onbarcode.com/micro_qr_code/micro_qr_code_size_setting.html
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

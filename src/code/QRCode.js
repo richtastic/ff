@@ -528,20 +528,12 @@ return {"grid":dataMatrix, "size":count};
 	// -> OUTPUT: QR PATTERN
 
 	//
-
-
-
-
-
-
-
-
 	throw "fromImage";
 
 }
 
 
-QRCode.fromGrid = function(dataMatrix, size){ // QR data matrix -> data
+QRCode.fromGrid = function(dataMatrix, size){ // QR data matrix -> data [p 59]
 	// STEP 1 - GET IMAGE W/ DARK=0 LIGHT=1
 	
 	// STEP 2 - READ FORMAT
@@ -557,23 +549,16 @@ QRCode.fromGrid = function(dataMatrix, size){ // QR data matrix -> data
 
 // throw "..."
 
-	// TODO: check to see if calculated version matches the read version
+
+// QRCode._bitCapacityTest();
+
+	var info = QRCode.bitCapacityFromSize(size);
+	console.log(info);
+	// var remainderBits = QRCode.bitRemainderFromSize(size);
 
 	// STEP 4 - XOR MASK
 	var dataUnmasked = Code.copyArray(dataMatrix);
 	QRCode._applyGridMasking(dataUnmasked,size, dataMask);
-
-
-	// var dataUnmasked = Code.newArrayZeros(size*size);
-	// QRCode._applyGridMasking(dataUnmasked,size, 0);
-	// QRCode._applyGridMasking(dataUnmasked,size, 1);
-	// QRCode._applyGridMasking(dataUnmasked,size, 2);
-	// QRCode._applyGridMasking(dataUnmasked,size, 3);
-	// QRCode._applyGridMasking(dataUnmasked,size, 4);
-	// QRCode._applyGridMasking(dataUnmasked,size, 5);
-	// QRCode._applyGridMasking(dataUnmasked,size, 6);
-	// QRCode._applyGridMasking(dataUnmasked,size, 7);
-
 
 var img = GLOBALSTAGE.getFloatRGBAsImage(dataUnmasked,dataUnmasked,dataUnmasked, size,size);
 var d = new DOImage(img);
@@ -582,21 +567,20 @@ d.matrix().translate(10 + 1600 , 10 + 0);
 GLOBALSTAGE.addChild(d);
 
 
-	// STEP 5 - READ CHARACTERS & "RESTORE" DATA & ERROR CORRECTION CODEWORDS
-	// var info = QRCode._readDataFromGrid(dataMatrix);
+	// STEP 5 - READ CHARACTERS
 	var info = QRCode._readDataFromGrid(dataUnmasked);
 	console.log(info);
 	var bytes = info["data"];
 
-	// STEP ?
-	var info = QRCode._revertOrderDataBlocks(bytes, versionData);
+	// STEP 5 - "RESTORE" DATA & ERROR CORRECTION CODEWORDS
+	var info = QRCode._revertOrderDataBlocks(bytes, versionData, dataECL);
 	console.log(info);
 
 throw "..."
 
 
 	// STEP 6 + 7 - ERROR DETECTION + CORRECTING
-	var info = QRCode._errorCorrectData(bytes, versionData);
+	var info = QRCode._errorCorrectData(bytes, versionData, dataECL);
 	console.log(info);
 	var bytes = info["data"];
 	console.log(bytes);
@@ -646,6 +630,75 @@ throw "..."
 	throw "fromGrid";
 }
 
+// ------------------------------------------------------------------------
+// QRCode.bitRemainderFromVersion = function(version){
+// 	var size = QRCode._sizeFromVersion(version);
+// 	return QRCode.bitCapacityFromSize(size);
+// }
+QRCode.bitCapacityFromVersion = function(version){
+	var size = QRCode._sizeFromVersion(version);
+	return QRCode.bitCapacityFromSize(size);
+}
+// QRCode.bitRemainderFromSize = function(size){
+// 	var available = QRCode.bitCapacityFromSize;
+// 	var remainder = available%8;
+// 	return remainder;
+// }
+QRCode.bitCapacityFromSize = function(size){ // data table 1
+	// console.log("++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+	// console.log("size: "+size);
+	var version = QRCode._versionFromSize(size);
+	// console.log("version: "+version);
+	var totalBits = size*size;
+	// console.log("totalBits: "+totalBits);
+	var sizeFinderPattern = 8*8; // including white spacing
+	var sizeAlignmentPattern = 5*5;
+	var sizeTimingPattern = size - 8*2;
+	var sizeVersionPattern = 6*2 + 3 + 8*2; // 16 + 15 ?
+	var sizeFormatPattern = 6*3;
+
+	// console.log("totalBits: "totalBits);
+	var countAlignmentInRow = QRCode._alignmentCountForSize(size);
+	var countAlignmentPattern = QRCode._alignmentCountExistingForSize(size);
+	var countFormatPattern = 0;
+
+	if(version==0){ // micro
+		throw "do micro";
+	}else if(version==1){
+		// 
+	}
+	if(version>=7){
+		countFormatPattern = 2;
+		sizeTimingPattern -= Math.max(5*(countAlignmentInRow-2),0); // alignment patterns inside
+	}
+	// console.log("sizeFinderPattern: "+sizeFinderPattern);
+	// console.log("sizeTimingPattern: "+sizeTimingPattern);
+	// console.log("sizeAlignmentPattern: "+sizeAlignmentPattern);
+	// console.log("countAlignmentInRow: "+countAlignmentInRow);
+	// console.log("countAlignmentPattern: "+countAlignmentPattern);
+	var sizeFunctional = 3*sizeFinderPattern + 2*sizeTimingPattern + countAlignmentPattern*sizeAlignmentPattern;
+	var sizeInformation = sizeVersionPattern + countFormatPattern*sizeFormatPattern;
+	// console.log("sizeFunctional: "+sizeFunctional);
+	// console.log("sizeInformation: "+sizeInformation);
+
+	var sizeTotalUnused =sizeFunctional + sizeInformation;
+
+	// console.log("sizeTotalUnused: "+sizeTotalUnused);
+
+	var sizeTotalAvailable = totalBits - sizeTotalUnused;
+
+	// console.log("sizeTotalAvailable: "+sizeTotalAvailable);
+
+	var bytesTotalAvailable = sizeTotalAvailable/8 | 0;
+
+	var bitsRemainder = sizeTotalAvailable % 8;
+
+	// console.log("bytesTotalAvailable: "+bytesTotalAvailable);
+	// console.log("bitsRemainder: "+bitsRemainder);
+
+	// throw "bitCapacityFromSize";
+	return {"bits":sizeTotalAvailable, "bytes":bytesTotalAvailable, "remainder":bitsRemainder};
+}
 QRCode._errorCorrectData = function(data, version){
 	
 
@@ -903,7 +956,7 @@ throw "here ?"
 throw "..."
 	return null;
 }
-QRCode._versonFromSize = function(size){
+QRCode._versionFromSize = function(size){
 	if(size==15){
 		return 0;
 	}
@@ -928,20 +981,30 @@ QRCode._alignmentCountForSize = function(size,version){ // [from bottom-left ?]
 		return 3;
 	}else if(size<=97){ // 14-20 	73-97 		13 [16(4)]
 		return 4;
-	}else if(size<=0){ // 21-27 	101-? 		22 [25(5)]
+	}else if(size<=125){ // 21-27 	101-? 		22 [25(5)]
 		return 5;
-	}else if(size<=0){ // 28-34     ?-? 		33 [36(6)]
+	}else if(size<=153){ // 28-34     ?-? 		33 [36(6)]
 		return 6;
 	}else if(size<=177){ // 35-40   -177 	46 [49(7)]
 		return 7;
 	}
 	throw "?"
 }
+QRCode._alignmentCountExistingForSize = function(size,version){
+	var count = QRCode._alignmentCountForSize(size,version);
+	// 0 = 0
+	// 1 = 1
+	if(count>=2){
+		var square = count*count;
+		count = square - 3;
+	}
+	return count;
+}
 QRCode._alignmentMask = function(size,version){
 // QRCode._alignmentPatternLocationsTest();
 	version = null;
 	if(!version){
-		version = QRCode._versonFromSize(size);
+		version = QRCode._versionFromSize(size);
 	}
 	var mask = Code.newArrayZeros(size*size);
 	// size / 2;
@@ -1003,74 +1066,6 @@ QRCode._alignmentPatternLocations = function(size,version){
 	return locations;
 }
 
-QRCode._alignmentPatternLocationsTest = function(){
-	
-var table = [];
-	table.push([]); // 0
-	table.push([]); // 1
-	table.push([6,18]);
-	table.push([6,22]);
-	table.push([6,26]);
-	table.push([6,30]);
-	table.push([6,34]);
-	table.push([6,22,38]); // 7
-	table.push([6,24,42]);
-	table.push([6,26,46]);
-	table.push([6,28,50]);
-	table.push([6,30,54]);
-	table.push([6,32,58]);
-	table.push([6,34,62]);
-	table.push([6,26,46,66]); // 14
-	table.push([6,26,48,70]);
-	table.push([6,26,50,74]);
-	table.push([6,30,54,78]);
-	table.push([6,30,56,82]);
-	table.push([6,30,58,86]);
-	table.push([6,34,62,90]);
-	table.push([6,28,50,72,94]); // 21
-	table.push([6,26,50,74,98]);
-	table.push([6,30,54,78,102]);
-	table.push([6,28,54,80,106]);
-	table.push([6,32,58,84,110]);
-	table.push([6,30,58,86,114]);
-	table.push([6,34,62,90,118]);
-	table.push([6,26,50,74,98,122]); // 28
-	table.push([6,30,54,78,102,126]);
-	table.push([6,26,52,78,104,130]);
-	table.push([6,30,56,82,108,134]);
-	table.push([6,34,60,86,112,138]);
-	table.push([6,30,58,86,114,142]);
-	table.push([6,34,62,90,118,146]);
-	table.push([6,30,54,78,102,126,150]); // 35
-	table.push([6,24,50,76,102,128,154]);
-	table.push([6,28,54,80,106,132,158]);
-	table.push([6,32,58,84,110,136,162]);
-	table.push([6,26,54,82,110,138,166]);
-	table.push([6,30,58,86,114,142,170]); // 40
-
-	// TEST
-
-	for(var v=0; v<=40; ++v){
-		var version = v;
-		var size = QRCode._sizeFromVersion(version);
-		var locations = QRCode._alignmentPatternLocations(size,version);
-		console.log(locations);
-		var list = table[v];
-		if(list.length!=locations.length){
-			console.log(list);
-			throw "mismatch dimension";
-		}
-		for(var i=0; i<list.length; ++i){
-			if(list[i]!=locations[i]){
-				console.log(list);
-				throw "mismatch value";
-			}
-		}
-	}
-
-	throw "testing completed"
-}
-
 
 QRCode._errorCorrectionFromData = function(data){
 	throw "QRCode._errorCorrectionFromData";
@@ -1082,7 +1077,7 @@ QRCode._dataFromFormattedData = function(formatted){
 	throw "_dataFromFormattedData";
 }
 
-QRCode._formattedDataFromdata = function(data){
+QRCode._formattedDataFromData = function(data){
 	// 
 	throw "_formattedDataFromdata";
 }
@@ -1090,7 +1085,7 @@ QRCode._formattedDataFromdata = function(data){
 QRCode._readVersionFromGrid = function(dataMatrix){ // 2 x 18-bits -- MASKING NOT APPLIED TO VERSION INFO
 	var size = Math.round( Math.sqrt(dataMatrix.length) );
 	// 6 version | BCH(18-6) 12 bits  = 18
-	var version = QRCode._versonFromSize(size);
+	var version = QRCode._versionFromSize(size);
 	if(version<7){ // no version data inside of matrix, just return derived value
 		return {"version":version};
 	}
@@ -1275,7 +1270,7 @@ console.log("MASK: "+mask)
 QRCode._readDataFromGrid = function(dataMatrix, todoValidAreaMatrix){
 
 	var size = Math.round( Math.sqrt(dataMatrix.length) );
-	var version = QRCode._versonFromSize(size);
+	var version = QRCode._versionFromSize(size);
 	console.log("v "+version+" = "+size+"x"+size);
 
 	// version 7+ are different? version is inside of data ?
@@ -1323,7 +1318,8 @@ GLOBALSTAGE.addChild(d);
 	// for(var i=0; i<660; ++i){
 	// for(var i=0; i<700; ++i){
 	// for(var i=0; i<750; ++i){
-	for(var i=0; i<850; ++i){
+	// for(var i=0; i<850; ++i){
+	for(var i=0; i<1E99; ++i){
 		// console.log("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++: "+i+" @ "+position.x+","+position.y);
 		var isInside = QRCode._insideFunctionalPattern(size,version, position.x,position.y, mask);
 		// console.log("isInside: "+isInside);
@@ -1544,30 +1540,6 @@ QRCode.fromData = function(data, errorCorrectionSetting){ // create QR code from
 	// 
 
 	throw "fromData";
-}
-// ------------------------------------------------------------------------
-QRCode.dataLengthMaxForVersion = function(version){
-	var size = QRCode._sizeFromVersion(version);
-	var totalSize = size*size;
-	var sizeAlignment = 8*8;
-	var sizeTiming = 0;
-
-	var available = totalSize;
-	available -= sizeAlignment*3;
-	available -= sizeTiming*2;
-	// version
-	// format
-	// ...
-
-	if(version==0){ // micro
-		//
-	}else if(version==1){
-		//
-	}
-	if(version>=7){
-		//..
-	}
-	throw "dataLengthMaxForVersion"
 }
 // ------------------------------------------------------------------------
 QRCode._BCHCorrect_15_5 = function(value){ // Bose-Chaudhuri-Hocquenghem (15,5)
@@ -1839,6 +1811,142 @@ QRCode.ECL_Q = 0x03; // 25%
 QRCode.ECL_H = 0x02; // 30%
 
 QRCode.TABLE_ALPHA_NUMERIC = ["0","1","2","3","4","5","6","7","8","9","A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"," ","$","%","*","+","-",".","/",":", "","","","","",""]; // 6 unused characters
+
+
+
+QRCode._alignmentPatternLocationsTest = function(){
+	
+var table = [];
+	table.push([]); // 0
+	table.push([]); // 1
+	table.push([6,18]);
+	table.push([6,22]);
+	table.push([6,26]);
+	table.push([6,30]);
+	table.push([6,34]);
+	table.push([6,22,38]); // 7
+	table.push([6,24,42]);
+	table.push([6,26,46]);
+	table.push([6,28,50]);
+	table.push([6,30,54]);
+	table.push([6,32,58]);
+	table.push([6,34,62]);
+	table.push([6,26,46,66]); // 14
+	table.push([6,26,48,70]);
+	table.push([6,26,50,74]);
+	table.push([6,30,54,78]);
+	table.push([6,30,56,82]);
+	table.push([6,30,58,86]);
+	table.push([6,34,62,90]);
+	table.push([6,28,50,72,94]); // 21
+	table.push([6,26,50,74,98]);
+	table.push([6,30,54,78,102]);
+	table.push([6,28,54,80,106]);
+	table.push([6,32,58,84,110]);
+	table.push([6,30,58,86,114]);
+	table.push([6,34,62,90,118]);
+	table.push([6,26,50,74,98,122]); // 28
+	table.push([6,30,54,78,102,126]);
+	table.push([6,26,52,78,104,130]);
+	table.push([6,30,56,82,108,134]);
+	table.push([6,34,60,86,112,138]);
+	table.push([6,30,58,86,114,142]);
+	table.push([6,34,62,90,118,146]);
+	table.push([6,30,54,78,102,126,150]); // 35
+	table.push([6,24,50,76,102,128,154]);
+	table.push([6,28,54,80,106,132,158]);
+	table.push([6,32,58,84,110,136,162]);
+	table.push([6,26,54,82,110,138,166]);
+	table.push([6,30,58,86,114,142,170]); // 40
+
+	// TEST
+
+	for(var v=0; v<=40; ++v){
+		var version = v;
+		var size = QRCode._sizeFromVersion(version);
+		var locations = QRCode._alignmentPatternLocations(size,version);
+		console.log(locations);
+		var list = table[v];
+		if(list.length!=locations.length){
+			console.log(list);
+			throw "mismatch dimension";
+		}
+		for(var i=0; i<list.length; ++i){
+			if(list[i]!=locations[i]){
+				console.log(list);
+				throw "mismatch value";
+			}
+		}
+	}
+
+	throw "testing completed"
+}
+
+
+QRCode._bitCapacityTest = function(){
+	var list = [];
+		list.push( [0, 0, 0] ); // 0
+		list.push( [208, 26, 0] ); // 1
+		list.push( [359, 44, 7] ); // 2
+		list.push( [567, 70, 7] );
+		list.push( [807, 100, 7] );
+		list.push( [1079, 134, 7] );
+		list.push( [1383, 172, 7] ); // 6
+
+		list.push( [1568, 196, 0] ); // 7
+		list.push( [1936, 242, 0] );
+		list.push( [2336, 292, 0] );
+		list.push( [2768, 346, 0] ); // 10
+		list.push( [3232, 404, 0] ); 
+		list.push( [3728, 466, 0] ); 
+		list.push( [4256, 532, 0] );
+		list.push( [4651, 581, 3] ); // 14
+		list.push( [5243, 655, 3] );
+		list.push( [5867, 733, 3] );
+		list.push( [6523, 815, 3] ); // 17
+		list.push( [7211, 901, 3] );
+		list.push( [7931, 991, 3] );
+		list.push( [8683, 1085, 3] ); // 20
+		list.push( [9252, 1156, 4] ); // 21
+		list.push( [10068, 1258, 4] );
+		list.push( [10916, 1364, 4] );
+		list.push( [11796, 1474, 4] );
+		list.push( [12708, 1588, 4] );
+		list.push( [13652, 1706, 4] );
+		list.push( [14628, 1828, 4] ); // 27
+		list.push( [15371, 1921, 3] ); // 28
+		list.push( [16411, 2051, 3] );
+		list.push( [17483, 2185, 3] );
+		list.push( [18587, 2323, 3] );
+		list.push( [19723, 2465, 3] );
+		list.push( [20891, 2611, 3] );
+		list.push( [22091, 2761, 3] ); // 34
+		list.push( [23008, 2876, 0] ); // 35
+		list.push( [24272, 3034, 0] );
+		list.push( [25568, 3196, 0] );
+		list.push( [26896, 3362, 0] );
+		list.push( [28256, 3532, 0] );
+		list.push( [29648, 3706, 0] ); // 40
+		
+	
+	// skip micro ...
+
+	for(var i=1; i<=40; ++i){
+		var item = list[i];
+		var info = QRCode.bitCapacityFromVersion(i);
+		// var info = QRCode.bitCapacityFromSize(size);
+		// console.log(info);
+		var bits = info["bits"];
+		var bytes = info["bytes"];
+		var rem = info["remainder"];
+		if(item[0]!==bits || item[1]!==bytes || item[2]!==rem){
+			console.log(info);
+			throw "wrong size @ "+i;
+		}
+	}
+
+}
+
 
 /*
 
