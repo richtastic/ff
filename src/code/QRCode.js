@@ -27,6 +27,9 @@ QRCode.fromImage = function(imageData){ // find in image & return data
 
 	// scale to manageable size
 
+
+	// scale up / down based on needed resolution for large/smaller versions
+
 	// get grayscale
 	var wid = matrix.width();
 	var hei = matrix.height();
@@ -45,12 +48,14 @@ QRCode.fromImage = function(imageData){ // find in image & return data
 	gray = result["value"];
 		// console.log(result);
 
+	// retract/expand ?
 
-var img = GLOBALSTAGE.getFloatRGBAsImage(gray,gray,gray, wid,hei);
-var d = new DOImage(img);
-// d.matrix().scale(10.0);
-d.matrix().translate(OFFX + 500 + 0, OFFY + 0);
-GLOBALSTAGE.addChild(d);
+// throw "..."
+// var img = GLOBALSTAGE.getFloatRGBAsImage(gray,gray,gray, wid,hei);
+// var d = new DOImage(img);
+// // d.matrix().scale(10.0);
+// d.matrix().translate(OFFX + 600 + 0, OFFY + 0);
+// GLOBALSTAGE.addChild(d);
 
 
 		// throw "?";
@@ -94,8 +99,8 @@ GLOBALSTAGE.addChild(d);
 		blob["color"] = "white";
 		blob["point"] = new V2D(blob["x"],blob["y"]);
 	}
-
-
+	// .
+	// 
 	console.log(blobs);
 
 	// show
@@ -547,10 +552,8 @@ QRCode.fromGrid = function(dataMatrix, size){ // QR data matrix -> data [p 59]
 	var info = QRCode._readVersionFromGrid(dataMatrix);
 	var versionData = info["version"];
 
-// throw "..."
-
-
-// QRCode._bitCapacityTest();
+	// throw "..."
+	// QRCode._bitCapacityTest();
 
 	var info = QRCode.bitCapacityFromSize(size);
 	console.log(info);
@@ -559,6 +562,9 @@ QRCode.fromGrid = function(dataMatrix, size){ // QR data matrix -> data [p 59]
 	// STEP 4 - XOR MASK
 	var dataUnmasked = Code.copyArray(dataMatrix);
 	QRCode._applyGridMasking(dataUnmasked,size, dataMask);
+
+	// QRCode._applyGridMasking(dataUnmasked,size, dataMask);
+
 
 var img = GLOBALSTAGE.getFloatRGBAsImage(dataUnmasked,dataUnmasked,dataUnmasked, size,size);
 var d = new DOImage(img);
@@ -572,18 +578,19 @@ GLOBALSTAGE.addChild(d);
 	console.log(info);
 	var bytes = info["data"];
 
-	// STEP 5 - "RESTORE" DATA & ERROR CORRECTION CODEWORDS
+	// // STEP 5 - "RESTORE" DATA & ERROR CORRECTION CODEWORDS
 	var info = QRCode._revertOrderDataBlocks(bytes, versionData, dataECL);
 	console.log(info);
+		bytes = info["data"];
 
 throw "..."
 
 
-	// STEP 6 + 7 - ERROR DETECTION + CORRECTING
-	var info = QRCode._errorCorrectData(bytes, versionData, dataECL);
-	console.log(info);
-	var bytes = info["data"];
-	console.log(bytes);
+	// // STEP 6 + 7 - ERROR DETECTION + CORRECTING
+	// var info = QRCode._errorCorrectData(bytes, versionData, dataECL);
+	// console.log(info);
+	// var bytes = info["data"];
+	// console.log(bytes);
 
 
 // throw "..."
@@ -592,6 +599,7 @@ throw "..."
 	var datum = QRCode._readStringFromMode(bytes, versionData, dataECL);
 	console.log(datum);
 
+throw "..."
 	/*
 	var str = "";
 	for(var i=0; i<bytes.length; ++i){
@@ -727,6 +735,50 @@ QRCode._revertOrderDataBlocks = function(data, version, ecl){
 	var matrixErrorCols = 0;
 	var matrixErrorRemainder = 0;
 
+	/*
+	L  7%
+	M 15%
+	Q 25%
+	H 30%
+	...
+	*/
+
+	// M, L, Q, H
+	var eclPercents = [0.07, 0.15, 0.25, 0.30];
+
+	var percent = eclPercents[ecl];
+
+	console.log("version : "+version);
+	console.log("ecl : "+ecl);
+	console.log(data);
+
+	// table 13:
+		var info = QRCode.bitCapacityFromVersion(i);
+	var totalCodewords =  info["bytes"] ;
+	console.log("totalCodewords: "+totalCodewords);;
+	// these have to come from a table:
+	var countECC = 0;
+	var countECB = 0;
+	var eccPerBlock = 0;
+	
+
+	// d >= e + 2t + p
+
+
+/*
+26 -> 1
+36 -> 2
+
+48 -> 2
+60->2
+64->4
+
+
+
+INCREMENTS OF 32 ?
+
+
+*/
 	// p 46
 
 	// place data into matrixes in order
@@ -832,22 +884,6 @@ console.log(ecl);
 		throw "."
 	}
 
-	// [MODE][VERSION_INDEX]
-	var dataLengthTable = {};
-		dataLengthTable[QRCode.MODE_INDICATOR_NUMERIC] = [10,12,14];
-		dataLengthTable[QRCode.MODE_INDICATOR_ALPHANUMERIC] = [9,11,13];
-		dataLengthTable[QRCode.MODE_INDICATOR_BYTE] = [8,16,16];
-		dataLengthTable[QRCode.MODE_INDICATOR_KANJI] = [8,10,12];
-// VERSIONS
-// 000001 1
-// 001001 9
-// 001010 10
-// 011010 26
-// 011011 27
-// 101000 40
-// 1-9
-// 10-26
-// 27-40
 		var versionToIndex = function(version){
 			if(1<=version && version <=9){
 				return 0;
@@ -872,6 +908,24 @@ console.log(ecl);
 			throw "unknown mode: "+mode;
 		};
 
+
+	// [MODE][VERSION_INDEX]
+	var dataLengthTable = [];
+		dataLengthTable[modeToIndex(QRCode.MODE_INDICATOR_NUMERIC)] = [10,12,14];
+		dataLengthTable[modeToIndex(QRCode.MODE_INDICATOR_ALPHANUMERIC)] = [9,11,13];
+		dataLengthTable[modeToIndex(QRCode.MODE_INDICATOR_BYTE)] = [8,16,16];
+		dataLengthTable[modeToIndex(QRCode.MODE_INDICATOR_KANJI)] = [8,10,12];
+// VERSIONS
+// 000001 1
+// 001001 9
+// 001010 10
+// 011010 26
+// 011011 27
+// 101000 40
+// 1-9
+// 10-26
+// 27-40
+
 		console.log("VERSION: "+version);
 
 
@@ -888,6 +942,7 @@ console.log(ecl);
 	var indexMode = modeToIndex(mode); /// .... could use bits too
 console.log(indexVersion);
 console.log(indexMode);
+// console.log(dataLengthTable);
 	var length = dataLengthTable[indexMode][indexVersion];
 
 	console.log("length: "+length);
@@ -896,12 +951,16 @@ console.log(indexMode);
 	// ECI DESIGNATOR ?
 	// 8, 16, 24
 
-throw "..."
+// throw "..."
 
 	var characterCodeCount = 11;
 
 	if(mode==QRCode.MODE_INDICATOR_NUMERIC){
 		console.log("MODE NUMBER");
+		// 
+
+	}else if(mode==QRCode.MODE_INDICATOR_ALPHANUMERIC){
+		console.log("MODE ALPHANUMERIC");
 
 		var characterCodeCount = 11;
 		var info = readNBits(data,ind,sub, characterCodeCount);
@@ -911,9 +970,8 @@ throw "..."
 		var charA = value/45 | 0;
 		var charB = value%45;
 
+		console.log("-> "+charA+" "+charB);
 
-	}else if(mode==QRCode.MODE_INDICATOR_ALPHANUMERIC){
-		console.log("MODE ALPHANUMERIC");
 	}else if(mode==QRCode.MODE_INDICATOR_BYTE){
 		console.log("MODE BYTE");
 	}else if(mode==QRCode.MODE_INDICATOR_KANJI){
@@ -1137,7 +1195,7 @@ QRCode._readFormatFromGrid = function(dataMatrix){ // 2 x 15-bits
 	var size = Math.round( Math.sqrt(dataMatrix.length) );
 	// | 5 data (2 ECL) (3 MASK) | 10 bits (BCH)| 
 	// xored w/ 101010000010010
-	var xoring = 0x05412; // 0x5412
+	var xoring = 0x05412; // 0x5412 = 0b 0101 0100 0001 0010
 	// read TL
 	var formatTL = 0x0;
 	var bit = 0x01;
@@ -1192,16 +1250,26 @@ QRCode._readFormatFromGrid = function(dataMatrix){ // 2 x 15-bits
 	
 	console.log("formatTB: "+formatTB);
 	console.log(Code.intToBinaryString(formatTB));
-
+	//
 	// unmask?
 	formatTL ^= xoring;
 	formatTB ^= xoring;
+	//
+	if(formatTL!=formatTB){
+		throw "unequal formats";
+	}
+	//
+
+	console.log("xoring: "+Code.intToBinaryString(xoring));
 
 	// error correct ?
 	console.log("error correcting ...");
 // (15, 5) BCH code
-	console.log("formatTL: "+Code.intToBinaryString(formatTL));
-	console.log("formatTB: "+Code.intToBinaryString(formatTB));
+	console.log("formatTL: "+Code.intToBinaryString(formatTL, 15));
+	console.log("formatTB: "+Code.intToBinaryString(formatTB, 15));
+
+
+	// error correcting
 	/*
 	formatTL = QRCode._BCHCorrect_15_5(formatTL);
 	formatTB = QRCode._BCHCorrect_15_5(formatTB);
@@ -1219,51 +1287,96 @@ QRCode._readFormatFromGrid = function(dataMatrix){ // 2 x 15-bits
 // console.log("format: "+Code.intToBinaryString(format));
 	var dataMask = (format >> 10) & 0x07;
 	var dataECL = (format >> 13) & 0x03;
-
+	// ...
+	console.log("dataMask: "+Code.intToBinaryString(dataMask,3)+" ("+dataMask+")");
+	console.log("dataECL: "+Code.intToBinaryString(dataECL,2)+" ("+dataECL+")");
+	// ...
 	// throw "_readFormatFromGrid";
 	return {"formatA":formatTL, "formatB":formatTB, "format":format, "ecl":dataECL, "mask":dataMask};
 }
 QRCode._applyGridMasking = function(dataMatrix, size, mask){
-console.log("MASK: "+mask)
-	var index = 0;
-	for(var j=0; j<size; ++j){
-		for(var i=0; i<size; ++i){
-			var value = 0;
-			if(mask==0){ // 000
-				value = (i+j)%2 == 0 ? 1 : 0;
-			}else if(mask==1){ // 001
-				value = (j)%2 == 0 ? 1 : 0;
-			}else if(mask==2){ // 010
-				value = (j)%3 == 0 ? 1 : 0;
-			}else if(mask==3){ // 011
-				value = (i+j)%3 == 0 ? 1 : 0;
-			}else if(mask==4){ // 100
-				value = ( ((i/3)|0) + ((j/2)|0) )%2 == 0 ? 1 : 0;
-			}else if(mask==5){ // 101
-				value = ((i*j)%2) + ((i*j)%3) == 0 ? 1 : 0;
-			}else if(mask==6){ // 110
-				value = ( ((i*j)%2) + ((i*j)%3) )%2 == 0 ? 1 : 0;
-			}else if(mask==7){ // 111
-				value = ( ((i+j)%2) + ((i*j)%3) )%2 == 0 ? 1 : 0;
-			}
+	// mask = 0;
+	// mask = 1;
+	// mask = 2;
+	// mask = 3;
+	// mask = 4;
+	// mask = 5;
+	// mask = 6;
+	// mask = 7;
+console.log("MASK: "+mask);
+// throw "..."
+	
 
-			var was = dataMatrix[index];
-			var now = 0;
-			if(was==0 && value==0){
-				now = 1;
-			}else if(was==1 && value==0){
-				now = 0;
-			}else if(was==0 && value==1){
-				now = 0;
-			}else{ // was==1 && value==1
-				now = 1;
+	var version = QRCode._versionFromSize(size);
+	var info = QRCode._alignmentMask(size,version);
+	
+	var alignMask = info["value"];
+
+
+var mmm = Code.newArrayZeros(size*size);
+	var index = 0;
+	for(var i=0; i<size; ++i){ // QR code definition is reversed
+		for(var j=0; j<size; ++j){
+			
+			// TODO: skip if in functional pattern
+			var isInside = QRCode._insideFunctionalPattern(size,version, i,j, alignMask); // TODO: for decoding this doesn't matter
+			if(!isInside){
+				var masking = 0;
+				if(mask==0){ // 000
+					masking = (i+j)%2 == 0 ? 1 : 0;
+				}else if(mask==1){ // 001
+					masking = i%2 == 0 ? 1 : 0;
+				}else if(mask==2){ // 010
+					masking = (j)%3 == 0 ? 1 : 0;
+				}else if(mask==3){ // 011
+					masking = (i+j)%3 == 0 ? 1 : 0;
+				}else if(mask==4){ // 100
+					masking = ( ((i/2)|0) + ((j/3)|0) )%2 == 0 ? 1 : 0;
+				}else if(mask==5){ // 101
+					masking = ((i*j)%2) + ((i*j)%3) == 0 ? 1 : 0;
+				}else if(mask==6){ // 110
+					masking = ( ((i*j)%2) + ((i*j)%3) )%2 == 0 ? 1 : 0;
+				}else if(mask==7){ // 111
+					masking = ( ((i*j)%3) + ((i+j)%2) )%2 == 0 ? 1 : 0;
+				}else{
+					throw "unknown mask: "+mask;
+				}
+				// ...
+				masking = (masking==0 ? 1 : 0); // a DARK MODULE as the satisfy (true) condition
+	mmm[index] = masking;
+
+				// xor
+				// var value = dataMatrix[index];
+				// if(value!=masking){ // reverse xor w/ dark modules
+				// 	value = 1;
+				// }else{
+				// 	value = 0;
+				// }
+
+				// REVERSE: REVERSE MODULES WHICH CORRESPOND TO DARK MODULES IN THE MASKING PATTERN
+				var value = dataMatrix[index];
+				if(masking==0){ //  a dark module is a flip  
+					if(value==0){
+						value = 1;
+					}else{
+						value = 0;
+					}
+				}
+
+				dataMatrix[index] = value;
 			}
-			dataMatrix[index] = now;
 			//
 			++index;
 		}
 	}
 
+console.log(mmm);
+var img = GLOBALSTAGE.getFloatRGBAsImage(mmm,mmm,mmm, size,size);
+var d = new DOImage(img);
+d.matrix().scale(10);
+d.matrix().translate(0 + 1400 , 500 + 0);
+GLOBALSTAGE.addChild(d);
+// throw "masked";
 
 	return dataMatrix;
 }
@@ -1332,16 +1445,26 @@ read[index] = 1;
 // var color = 0xFF000000;
 var color = 0xFFFF0000;
 // var sca = 10.55;
-var sca = 11.1;
+
 var text = new DOText(""+(7-bit), 11, DOText.FONT_ARIAL, color, DOText.ALIGN_CENTER);
 // text.matrix().translate(600,400);
-text.matrix().translate(551,45);
+
+//A
+var sca = 11.9;
+text.matrix().translate(554,65);
 text.matrix().translate(position.x*sca, position.y*sca);
+
+// B
+// var sca = 11.1;
+// text.matrix().translate(551,45);
+// text.matrix().translate(position.x*sca, position.y*sca);
+
+
 // text.matrix().translate(0*sca, 0*sca);
 // text.matrix().translate( (size-1)*sca, (size-1)*sca);
 GLOBALSTAGE.addChild(text);
 
-			// console.log("read bit: "+value+" ");
+			// console.log("read bit: "+value+"  @ "+position.x+","+position.y+" ... ");
 			if(value!=0){
 				codeword |= (1 << (7-bit) );
 			}
@@ -1407,6 +1530,8 @@ GLOBALSTAGE.addChild(text);
 	
 		// throw "..."
 	}
+
+// throw "eeeeh"
 
 var img = GLOBALSTAGE.getFloatRGBAsImage(read,read,read, size,size);
 var d = new DOImage(img);

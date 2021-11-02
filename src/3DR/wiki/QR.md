@@ -335,6 +335,12 @@ https://www.cs.cmu.edu/~guyb/realworld/reedsolomon/reed_solomon_codes.html
 https://en.wikiversity.org/wiki/Reed%E2%80%93Solomon_codes_for_coders
 
 
+8.2 EC:
+	erasures + 2*num_of_errors <= num_ec_codewords - num_miscoded_protection_codewords
+	p45: generating error correction codewords
+	...
+
+
 #MICRO QR CODE:
 
 M1-M4
@@ -352,11 +358,13 @@ http://www.onbarcode.com/micro_qr_code/micro_qr_code_size_setting.html
 
 
 
+GENERATOR:
+? https://www.qrcode-monkey.com/
 
 
 
-
-
+BAD GENERATOR:
+https://www.beaconstac.com/qr-code-generator
 
 
 

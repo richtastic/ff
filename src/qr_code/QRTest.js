@@ -41,8 +41,15 @@ QRTest.a = function(){
 	//
 };
 QRTest.prototype.loadTestImageA = function(){
-	// var imageLoader = new ImageLoader("./images/",["wiki_a.png"], this,this.handleImageLoaded,null);
-	var imageLoader = new ImageLoader("./images/",["generated_a.png"], this,this.handleImageLoaded,null);
+	var imageLoader = new ImageLoader("./images/",["wiki_a.png"], this,this.handleImageLoaded,null); // https://en.m.wikipedia.org/
+
+	// var imageLoader = new ImageLoader("./images/",["generated_a.png"], this,this.handleImageLoaded,null);
+
+	// var imageLoader = new ImageLoader("./images/",["definition_p55_a.png"], this,this.handleImageLoaded,null);
+	// var imageLoader = new ImageLoader("./images/",["rando_b.png"], this,this.handleImageLoaded,null);
+	// var imageLoader = new ImageLoader("./images/",["expo2020_salama_qr_code.png"], this,this.handleImageLoaded,null);
+	
+	
 	
 	// var imageLoader = new ImageLoader("./images/",["ex_house.jpg"], this,this.handleImageLoaded,null);
 	imageLoader.load();
@@ -68,10 +75,10 @@ QRTest.prototype.handleImageLoaded = function(data){
 		console.log(grid);
 		var data = grid["grid"];
 		var size = grid["size"];
-
+		// throw "..."
 		var data = QRCode.fromGrid(data, size);
 		console.log(data);
-
+		// 
 		throw "..."
 		// 
 		// 
@@ -79,7 +86,8 @@ QRTest.prototype.handleImageLoaded = function(data){
 
 		//QRCode.fromImage(matrix);
 	}
-
+// TB: 1110010 | 1110011
+// TL: 1110111   1110011
 
 
 	// img = GLOBALSTAGE.getImageMatAsImage(imgA);
