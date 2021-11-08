@@ -41,11 +41,14 @@ QRTest.a = function(){
 	//
 };
 QRTest.prototype.loadTestImageA = function(){
-	// var imageLoader = new ImageLoader("./images/",["wiki_a.png"], this,this.handleImageLoaded,null); // https://en.m.wikipedia.org/
-	var imageLoader = new ImageLoader("./images/",["generated_a.png"], this,this.handleImageLoaded,null);
-	// var imageLoader = new ImageLoader("./images/",["definition_p55_a.png"], this,this.handleImageLoaded,null);
-	// var imageLoader = new ImageLoader("./images/",["rando_b.png"], this,this.handleImageLoaded,null);
-	// var imageLoader = new ImageLoader("./images/",["expo2020_salama_qr_code.png"], this,this.handleImageLoaded,null);
+	// var imageLoader = new ImageLoader("./images/",["hello_world.png"], this,this.handleImageLoaded,null); // HELLO WORLD, alpha numeric
+	var imageLoader = new ImageLoader("./images/",["wiki_a.png"], this,this.handleImageLoaded,null); // http://en.m.wikipedia.org
+	// var imageLoader = new ImageLoader("./images/",["generated_a.png"], this,this.handleImageLoaded,null); // ECI
+	// var imageLoader = new ImageLoader("./images/",["definition_p55_a.png"], this,this.handleImageLoaded,null); // A...Z x2
+	// var imageLoader = new ImageLoader("./images/",["rando_b.png"], this,this.handleImageLoaded,null); // https://www.qrcode-monkey.com
+	// var imageLoader = new ImageLoader("./images/",["expo2020_salama_qr_code.png"], this,this.handleImageLoaded,null); // ?
+
+	// var imageLoader = new ImageLoader("./images/",["ZZZ_BAD_rando_a.png"], this,this.handleImageLoaded,null); // unequal format tags
 	
 	
 	
@@ -55,9 +58,9 @@ QRTest.prototype.loadTestImageA = function(){
 QRTest.prototype.handleImageLoaded = function(data){
 
 
-	// var result = QRCode.from("This is a test message to be encoded inside of a qr code. Some characters won't be able to translate.");
-	// console.log(result);
-	// throw "..."
+	var result = QRCode.fromString("This is a test message to be encoded inside of a qr code. Some characters won't be able to translate.");
+	console.log(result);
+	throw "..."
 
 
 	var images = data["images"];

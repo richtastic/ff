@@ -335,6 +335,8 @@ https://www.cs.cmu.edu/~guyb/realworld/reedsolomon/reed_solomon_codes.html
 https://en.wikiversity.org/wiki/Reed%E2%80%93Solomon_codes_for_coders
 
 
+
+PAGE 4 - DARK is 1, LIGHT is 0
 8.2 EC:
 	erasures + 2*num_of_errors <= num_ec_codewords - num_miscoded_protection_codewords
 	p45: generating error correction codewords
@@ -369,6 +371,15 @@ https://www.beaconstac.com/qr-code-generator
 
 
 
+
+STEPS
+https://scanova.io/blog/blog/2015/02/19/how-qr-codes-work/
+
+https://www.thonky.com/qr-code-tutorial/module-placement-matrix
+https://www.thonky.com/qr-code-tutorial/format-version-information
+https://www.thonky.com/qr-code-tutorial/mask-patterns
+
+https://en.wikipedia.org/wiki/Reed%E2%80%93Solomon_error_correction
 
 
 

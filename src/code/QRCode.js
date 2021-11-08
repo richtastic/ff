@@ -536,10 +536,28 @@ return {"grid":dataMatrix, "size":count};
 	throw "fromImage";
 
 }
-
+QRCode.flip01 = function(data){
+	// console.log("data");
+	// console.log(data);
+	for(var i=0; i<data.length; ++i){
+		var value = data[i];
+		if(value!=0){
+			value = 0;
+		}else{
+			value = 1;
+		}
+		data[i] = value;
+	}
+	return data;
+	// throw "???"
+}
 
 QRCode.fromGrid = function(dataMatrix, size){ // QR data matrix -> data [p 59]
 	// STEP 1 - GET IMAGE W/ DARK=0 LIGHT=1
+
+	// FLIP ALL THE BITS
+	dataMatrix = Code.copyArray(dataMatrix); // local usage, flipped logical colors
+	QRCode.flip01(dataMatrix);
 	
 	// STEP 2 - READ FORMAT
 	var info = QRCode._readFormatFromGrid(dataMatrix);
@@ -571,18 +589,21 @@ d.matrix().translate(10 + 1600 , 10 + 0);
 GLOBALSTAGE.addChild(d);
 
 
+
+// throw "..."
+
 	// STEP 5 - READ CHARACTERS
 	var info = QRCode._readDataFromGrid(dataUnmasked);
 	console.log(info);
 	var bytes = info["data"];
-/*
-	// // STEP 5 - "RESTORE" DATA & ERROR CORRECTION CODEWORDS
+
+	// STEP 5 - "RESTORE" DATA & ERROR CORRECTION CODEWORDS
 	var info = QRCode._revertOrderDataBlocks(bytes, versionData, dataECL);
 	console.log(info);
 		bytes = info["data"];
+		console.log(bytes);
+	// throw "..."s
 
-throw "..."
-*/
 
 
 	// // STEP 6 + 7 - ERROR DETECTION + CORRECTING
@@ -721,7 +742,7 @@ QRCode._errorCorrectData = function(data, version){
 	var errorCount = 0;
 	var bytes = [];
 
-	throw "_readStringFromMode";
+	throw "_errorCorrectData";
 	return {"errors":errorCount, "data":bytes};
 }
 
@@ -733,11 +754,6 @@ QRCode._revertOrderDataBlocks = function(data, version, ecl){
 	var matrixErrorRows = 0;
 	var matrixErrorCols = 0;
 	var matrixErrorRemainder = 0;
-
-// QRCode.ECL_L = 0x01; // 7%
-// QRCode.ECL_M = 0x00; // 15%
-// QRCode.ECL_Q = 0x03; // 25%
-// QRCode.ECL_H = 0x02; // 30%
 
 	var eclToIndex = function(e){
 		if(e==QRCode.ECL_L){
@@ -836,7 +852,7 @@ QRCode._revertOrderDataBlocks = function(data, version, ecl){
 	console.log(data);
 
 	// table 13:
-		var info = QRCode.bitCapacityFromVersion(i);
+		var info = QRCode.bitCapacityFromVersion(version);
 	var totalCodewords =  info["bytes"] ;
 	console.log("totalCodewords: "+totalCodewords);
 	// these have to come from a table:
@@ -849,22 +865,71 @@ QRCode._revertOrderDataBlocks = function(data, version, ecl){
 	console.log("countECC: "+countECC);
 	console.log("countECB: "+countECB);
 	
+	var countBlockTypeLong = totalCodewords % countECB;
+	var countBlockTypeShort = countECB - countBlockTypeLong;
+	console.log("->countBlockTypeLong: "+countBlockTypeShort);
+	console.log("->countBlockTypeShort: "+countBlockTypeLong);
+	if(countBlockTypeLong!==0){
+		throw "different block types ?"
+	}
 
 	// d >= e + 2t + p
 
+	var countData = totalCodewords - countECC;
+	console.log("->countData: "+countData);
+
 	// p 46
+	var errorsPerRowLong = countECC/countECB | 0; // TODO: LONG
+	var errorsPerRowShort = 0;
+
+	var dataPerRowLong = countData/countECB | 0; // TODO: LONG
+	var dataPerRowShort = 0;
+
+
+	console.log("  dataPerRowLong: "+dataPerRowLong);
+	console.log("  dataPerRowShort: "+dataPerRowShort);
+	console.log("  errorsPerRowLong: "+errorsPerRowLong);
+	console.log("  errorsPerRowShort: "+errorsPerRowShort);
 
 	// place data into matrixes in order
-	var matrixData = [];
+	var matrixData = Code.newArrayNulls(countECB*dataPerRowLong);
 	var matrixError = [];
+	// var dataRowsFull = ;
+	var dataIndex = 0;
+	var matrixIndex = 0;
+	
+	for(var col=0; col<dataPerRowLong; ++col){
+		// console.log("ROW: "+row);
+		console.log("COL: "+col);
+			for(var row=0; row<countECB; ++row){
+				
+			matrixIndex = row*dataPerRowLong + col;
+			console.log(" -> "+dataIndex+" / "+data.length);
+			// if == 
+			var item = data[dataIndex];
+			matrixData[matrixIndex] = item;
+			//
+			//
+			++dataIndex;
+			// 
+		}
+	}
+	// DO ERRORS
+
+
+	console.log(matrixData);
+	console.log(matrixError);
+
+	// TODO: matrixData could have empty entries
+
 
 	// TODO: do error correcting
 
 	// read out data from matrixes in order
 
-	var orderedData = data;
+	var orderedData = matrixData;
 
-	throw "_revertOrderDataBlocks";
+	// throw "_revertOrderDataBlocks";
 	return {"data":orderedData};
 }
 
@@ -918,7 +983,7 @@ console.log(i+" : "+Code.intToBinaryString(data[i], 8));
 				break;
 			}
 		}
-		console.log(" "+Code.intToBinaryString(value, totalReadCount));
+		// console.log(" "+Code.intToBinaryString(value, totalReadCount));
 		// console.log(" -> "+index+" & "+subIndex);
 		return {"value":value, "index":index, "subdex":subIndex};
 	}
@@ -1030,6 +1095,7 @@ console.log("indexMode: "+indexMode);
 	console.log("chunkLength: "+chunkLength);
 
 
+var outputString = "";
 	// ECI DESIGNATOR ?
 	// 8, 16, 24
 
@@ -1063,7 +1129,7 @@ console.log("indexMode: "+indexMode);
 	}else if(mode==QRCode.MODE_INDICATOR_ALPHANUMERIC){
 		console.log("MODE ALPHANUMERIC");
 
-		var charterLength = 0;
+		var characterLength = 0;
 
 // V1 = 9 bits length
 		var info = readNBits(data,ind,sub, chunkLength);
@@ -1073,27 +1139,76 @@ console.log("indexMode: "+indexMode);
 
 		characterLength = value;
 console.log(" > characterLength: "+characterLength+"   ("+Code.intToBinaryString(characterLength, chunkLength)+")");
+characterLength = Math.min(characterLength, 100);
+		var characterCodeCountTwo = 11; // 2 characters
+		var characterCodeCountOne = 6; // 1 characters
+for(var x=0; x<characterLength; x+=2){
+		
+		if(x==characterLength-1){ // read 1 char
+			var info = readNBits(data,ind,sub, characterCodeCountOne);
+			var value = info["value"];
+				ind = info["index"];
+				sub = info["subdex"];
 
-		var characterCodeCount = 11; // 2 characters
+			var charIndex = value%45 | 0;
+			var charA = QRCode.TABLE_ALPHA_NUMERIC[charIndex];
+			console.log("-> "+charA+" ");
+			outputString = outputString+""+charA;
+		}else{ // read 2 chars
+			var info = readNBits(data,ind,sub, characterCodeCount);
+			var value = info["value"];
+				ind = info["index"];
+				sub = info["subdex"];
+			var charAIndex = value/45 | 0;
+			var charBIndex = value%45 | 0;
+			var charA = QRCode.TABLE_ALPHA_NUMERIC[charAIndex];
+			var charB = QRCode.TABLE_ALPHA_NUMERIC[charBIndex];
+			console.log("-> "+charA+" "+charB);
+			outputString = outputString+""+charA+charB;
+		}
+}
+
+	}else if(mode==QRCode.MODE_INDICATOR_BYTE){
+		console.log("MODE BYTE");
+
+		var characterLength = 0;
+
+		var info = readNBits(data,ind,sub, chunkLength);
+		var value = info["value"];
+			ind = info["index"];
+			sub = info["subdex"];
+
+		characterLength = value;
+console.log(" > characterLength: "+characterLength+"   ("+Code.intToBinaryString(characterLength, chunkLength)+")");
+
+
+characterLength = Math.min(characterLength, 100);
+var characterCodeCount = 8; // 1 char = byte
+for(var x=0; x<characterLength; ++x){
+		
 		var info = readNBits(data,ind,sub, characterCodeCount);
 		var value = info["value"];
 			ind = info["index"];
 			sub = info["subdex"];
-		var charAIndex = value/45 | 0;
-		var charBIndex = value%45 | 0;
-		var charA = QRCode.TABLE_ALPHA_NUMERIC[charAIndex];
-		var charB = QRCode.TABLE_ALPHA_NUMERIC[charBIndex];
+		var charAIndex = value;
 
-		console.log("-> "+charA+" "+charB);
+		var charA = QRCode.TABLE_BYTE[charAIndex];
+		// console.log(""+charAIndex+" = 0x"+Code.getHexNumber(charAIndex,2));
+		console.log("-> "+charA);
+		outputString = outputString+""+charA;
+}
 
-	}else if(mode==QRCode.MODE_INDICATOR_BYTE){
-		console.log("MODE BYTE");
+
+
 	}else if(mode==QRCode.MODE_INDICATOR_KANJI){
 		console.log("MODE KANJI");
 	}else{
 		console.log("MODE UNKNOWN");
 		throw "?";
 	}
+
+
+console.log("outputString: '"+outputString+"'");
 
 throw "here ?"
 
@@ -1401,9 +1516,20 @@ QRCode._readFormatFromGrid = function(dataMatrix){ // 2 x 15-bits
 // console.log("format: "+Code.intToBinaryString(format));
 	var dataMask = (format >> 10) & 0x07;
 	var dataECL = (format >> 13) & 0x03;
-	// ...
+	var eclToLetter = function(ecl){
+		if(ecl==QRCode.ECL_L){
+			return "L";
+		}else if(ecl==QRCode.ECL_M){
+			return "M";
+		}else if(ecl==QRCode.ECL_Q){
+			return "Q";
+		}else if(ecl==QRCode.ECL_H){
+			return "H";
+		}
+		throw "unknown";
+	}
 	console.log("dataMask: "+Code.intToBinaryString(dataMask,3)+" ("+dataMask+")");
-	console.log("dataECL: "+Code.intToBinaryString(dataECL,2)+" ("+dataECL+")");
+	console.log("dataECL: "+Code.intToBinaryString(dataECL,2)+" ("+dataECL+")"+" ["+eclToLetter(dataECL)+"] ");
 	// ...
 	// throw "_readFormatFromGrid";
 	return {"formatA":formatTL, "formatB":formatTB, "format":format, "ecl":dataECL, "mask":dataMask};
@@ -1427,16 +1553,12 @@ var mmm = Code.newArrayZeros(size*size);
 	for(var i=0; i<size; ++i){ // QR code definition is reversed
 		for(var j=0; j<size; ++j){
 
-	// for(var j=0; j<size; ++j){
-	// 	for(var i=0; i<size; ++i){
-		
-			
-			// TODO: skip if in functional pattern
-			// var isInside = QRCode._insideFunctionalPattern(size,version, i,j, alignMask); // TODO: for decoding this doesn't matter
+			// don't mask functional pattern
+			var isInside = QRCode._insideFunctionalPattern(size,version, i,j, alignMask); // TODO: for decoding this doesn't matter
 
-// index = i*size + j;
-index = j*size + i;
-			var isInside = false;
+			index = i*size + j;
+
+			// var isInside = false;
 			if(!isInside){
 				var masking = 0;
 				if(mask==0){ // 000
@@ -1718,9 +1840,10 @@ QRCode._insideFunctionalPattern = function(size,version, x,y, alignmentMask){
 
 	return false;
 }
-QRCode.fromString = function(str, errorCorrectionSetting){
+QRCode.fromString = function(str, errorCorrectionSetting){ // 
 	// decide from modex:
-
+	errorCorrectionSetting = Code.valueOrDefault(errorCorrectionSetting, QRCode.ECL_M);
+	console.log("QRCode.fromString: "+str);
 
 	var table = QRCode.TABLE_ALPHA_NUMERIC;
 	var lookup = {};
@@ -2051,9 +2174,36 @@ QRCode.ECL_M = 0x00; // 15%
 QRCode.ECL_Q = 0x03; // 25%
 QRCode.ECL_H = 0x02; // 30%
 
+QRCode.TABLE_NUMERIC = ["0","1","2","3","4","5","6","7","8","9"];
 QRCode.TABLE_ALPHA_NUMERIC = ["0","1","2","3","4","5","6","7","8","9","A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"," ","$","%","*","+","-",".","/",":", "","","","","",""]; // 6 unused characters
-
-
+QRCode.TABLE_BYTE = [ // http://www.rikai.com/library/kanjitables/kanji_codes.unicode.shtml
+						"","","","","","","","","","","","","","","","",  // 00-0F
+						"","","","","","","","","","","","","","","","",  // 10-1F
+						"","!","\"","#","$","%","&","'","(",")","*","+",",","-",".","/",  // 20-2F
+						"0","1","2","3","4","5","6","7","8","9",":",";","<","=",">","?",  // 30-3F
+						"@","A","B","C","D","E","F","G","H","I","J","K","L","M","N","O",  // 40-4F
+						"P","Q","R","S","T","U","V","W","X","Y","Z","[","¥","]","^","_",  // 50-5F
+						"`","a","b","c","d","e","f","g","h","i","j","k","l","m","n","o",  // 60-6F
+						"p","q","r","s","t","u","v","w","x","y","z","{","|","}","-","DEL",  // 70-7F
+						"","","","","","","","","","","","","","","","",  // 80-8F -- empty
+						"","","","","","","","","","","","","","","","",  // 90-9F -- empty
+						"｠","｡","｢","｣","､","･","ｦ","ｧ","ｨ","ｩ","ｪ","ｫ","ｬ","ｭ","ｮ","ｯ",  // A0-AF
+						"ｰ","ｱ","ｲ","ｳ","ｴ","ｵ","ｶ","ｷ","ｸ","ｹ","ｺ","ｻ","ｼ","ｽ","ｾ","ｿ",  // B0-BF
+						"ﾀ","ﾁ","ﾂ","ﾃ","ﾄ","ﾅ","ﾆ","ﾇ","ﾈ","ﾉ","ﾊ","ﾋ","ﾌ","ﾍ","ﾎ","ﾏ",  // C0-CF
+						"ﾐ","ﾑ","ﾒ","ﾓ","ﾔ","ﾕ","ﾖ","ﾗ","ﾘ","ﾙ","ﾚ","ﾛ","ﾜ","ﾝ","ﾞ","ﾟ",  // D0-DF
+						"","","","","","","","","","","","","","","","",  // E0-EF -- empty
+						"","","","","","","","","","","","","","","","",  // F0-FF -- empty
+					];
+QRCode.TABLE_KANJI = [
+/*
+  30a0   ゠  ァ  ア  ィ  イ  ゥ  ウ  ェ  エ  ォ  オ  カ  ガ  キ  ギ  ク 
+  30b0   グ  ケ  ゲ  コ  ゴ  サ  ザ  シ  ジ  ス  ズ  セ  ゼ  ソ  ゾ  タ 
+  30c0   ダ  チ  ヂ  ッ  ツ  ヅ  テ  デ  ト  ド  ナ  ニ  ヌ  ネ  ノ  ハ 
+  30d0   バ  パ  ヒ  ビ  ピ  フ  ブ  プ  ヘ  ベ  ペ  ホ  ボ  ポ  マ  ミ 
+  30e0   ム  メ  モ  ャ  ヤ  ュ  ユ  ョ  ヨ  ラ  リ  ル  レ  ロ  ヮ  ワ 
+  30f0   ヰ  ヱ  ヲ  ン  ヴ  ヵ  ヶ  ヷ  ヸ  ヹ  ヺ  ・  ー  ヽ  ヾ  ヿ 
+*/
+					];
 
 QRCode._alignmentPatternLocationsTest = function(){
 	

@@ -20160,6 +20160,9 @@ Stereopsis.World.prototype._resolveIntersectionDefaultOLD = function(point3DA,po
 }
 
 
+HASCOUNT = 0;
+
+
 Stereopsis.World.prototype._resolveIntersectionLayered = function(point3DA,point3DB){
 	var isR = true; // where to get this ?
 	// console.log("_resolveIntersectionLayered");
@@ -20197,6 +20200,7 @@ Stereopsis.World.prototype._resolveIntersectionLayered = function(point3DA,point
 	}
 // console.log("this far 0: "+isErrorR+" | "+isErrorF+" | "+isErrorN+" | "+isErrorNone+" | ");
 	// no metric to choose
+	var useOnlyImageLocationPredictions = true;
 	if(!isErrorNone){
 		var best = errA<errB ? point3DA : point3DB;
 		if(best!=point3DA){
@@ -20215,10 +20219,54 @@ Stereopsis.World.prototype._resolveIntersectionLayered = function(point3DA,point
 		}
 	}else{ // no error to choose from .. just pick one ? --- tracks
 		// console.log("no error to choose from?");
+		var points2DA = point3DA.toPointArray();
+		var points2DB = point3DB.toPointArray();
+		// var allViewsA = [];
+		// var allViewsB = [];
+		var countLoadedImagesA = 0;
+		var countLoadedImagesB = 0;
+		for(var i=0; i<points2DA.length; ++i){
+			var view = points2DA[i].view();
+				// allViewsA.push(view);
+			var image = view.image();
+			// console.log(image);
+			if(image){
+				countLoadedImagesA += 1;
+			}
+		}
+		for(var i=0; i<points2DB.length; ++i){
+			var view = points2DB[i].view();
+			var image = view.image();
+			// console.log(image);
+			if(image){
+				countLoadedImagesB += 1;
+			}
+		}
+		var percentA = countLoadedImagesA/points2DA.length;
+		var percentB = countLoadedImagesB/points2DB.length;
+		// console.log(percentA+" v "+percentB);
+		// use BASE as point with fewer images loaded
+		if(percentB<percentA){
+			var temp = point3DB;
+			point3DB = point3DA;
+			point3DA = temp;
+		}
+		useOnlyImageLocationPredictions = true;
+		if(percentB==0 || percentA==0){
+			// console.log(percentA);
+			// console.log(percentB);
+			// console.log(point3DA);
+			// console.log(point3DB);
+			// throw "no images loaded ... cant choose what to do ?";
+			console.log("no images loaded ... cant choose what to do ?");
+		}
+		// choose A = point with fewer views loaded (or fewer % of images loaded) = BASE
+		// => B = more images loaded (adjustable)
 		// console.log(point3DA);
 		// console.log(point3DB);
 		// throw "?"
 	}
+// throw "solve intersectioning"
 	// find view statuses
 	var points2DA = point3DA.toPointArray();
 	var points2DB = point3DB.toPointArray();
@@ -20370,49 +20418,210 @@ Stereopsis.World.prototype._resolveIntersectionLayered = function(point3DA,point
 			world._resolveIntersectionLayered_TEMP_HAYSTACK = haystack;
 		}
 
-		// var haystackSize = needleSize + 4;
-		// var haystackSize = needleSize + 2;
-		for(var i=0; i<viewsAllBList.length; ++i){
-			var viewB = viewsAllBList[i];
-			var viewBID = viewB.id();
-			if(!viewsAllA[viewBID]){ // not already known A location
-				var imageB = viewB.imageScales();
-				if(imageB){
-					var locationsB2D = [];
-					for(var j=0; j<viewsAllAList.length; ++j){
-						var viewA = viewsAllAList[j];
-						var imageA = viewA.imageScales();
-						if(imageA){
-							var match = point3DC.matchForViews(viewA,viewB);
-							var affineAB = match.affineForViews(viewA,viewB);
-							var point2DA = match.pointForView(viewA);
-							var point2DB = match.pointForView(viewB);
-							var centerA = point2DA.point2D();
-							var centerB = point2DB.point2D();
-							var featureSize = Stereopsis.compareSizeForViews2D(viewA,centerA,viewB,centerB);
-							// TODO: needleSize,haystackSize - can be reused
-							// bestNeedleHaystackFromLocation
-							// throw "here?"
 
-							var result = R3D.optimumSADLocationSearchFlatRGB(centerA,centerB, imageA,imageB, featureSize, needleSize,haystackSize, affineAB, needle, haystack, isR);
-							var locationB2D = result["point"];
-							locationsB2D.push(locationB2D);
+// throw "if images are loaded, only use image-estimated 2D location"
+/*
+		if(useOnlyImageLocationPredictions){
+			// 
+
+			// var viewsAllBList = Code.objectToArray(viewsAllB);
+			// var viewsIntersectList = Code.objectToArray(viewsIntersect);
+			console.log(point3DC);
+			console.log(viewsIntersectList);
+			console.log(viewsAllBList);
+
+			// for each new point that B brings along [must have an image]
+				// for each intersection point in A [with image]
+
+
+			throw "... useOnlyImageLocationPredictions";
+
+
+
+			throw "..."
+		}else{
+*/
+			// var haystackSize = needleSize + 4;
+			// var haystackSize = needleSize + 2;
+			var ignoreNewPoint = false;
+			for(var i=0; i<viewsAllBList.length; ++i){
+				var viewB = viewsAllBList[i];
+				var viewBID = viewB.id();
+				if(!viewsAllA[viewBID]){ // not already known A location
+					var imageB = viewB.imageScales();
+					if(imageB){
+						var locationsB2D = [];
+						var featureSizeAny = 0; // TODO .... will want percents rather than absolute sizes
+						for(var j=0; j<viewsAllAList.length; ++j){
+							var viewA = viewsAllAList[j];
+							var imageA = viewA.imageScales();
+							if(imageA){
+								// console.log(" PREDICTING LOCATION FOR A: "+viewA.data()+" -> B: "+viewB.data()+"");
+								var match = point3DC.matchForViews(viewA,viewB);
+								var affineAB = match.affineForViews(viewA,viewB);
+								var point2DA = match.pointForView(viewA);
+								var point2DB = match.pointForView(viewB);
+								var centerA = point2DA.point2D();
+								var centerB = point2DB.point2D();
+								var featureSize = Stereopsis.compareSizeForViews2D(viewA,centerA,viewB,centerB);
+								featureSizeAny = featureSize;
+								// TODO: needleSize,haystackSize - can be reused
+								// bestNeedleHaystackFromLocation
+								// throw "here?"
+
+								// var result = R3D.optimumSADLocationSearchFlatRGB(centerA,centerB, imageA,imageB, featureSize, needleSize,haystackSize, affineAB, needle, haystack, isR);
+								// var locationB2D = result["point"];
+								// locationsB2D.push(locationB2D);
+
+// try again @ better resolution
+								var locationB2D = centerB;
+								var featureSetSize = featureSize;
+								for(var r=0; r<3; ++r){ // increase resolution 
+									var result = R3D.optimumSADLocationSearchFlatRGB(centerA,locationB2D, imageA,imageB, featureSetSize, needleSize,haystackSize, affineAB, needle, haystack, isR);
+									var newPoint2D = result["point"];
+									var locationB2D = newPoint2D;
+									featureSetSize = featureSetSize*0.5;
+									if(featureSetSize<needleSize){
+										break;
+									}
+								}
+
+								locationsB2D.push(locationB2D);
+
+// throw "calc new spot"
+var OFFX = 0;
+// var OFFX = 40;
+// if(HASCOUNT>40){
+if((OFFX)<=HASCOUNT && HASCOUNT<(OFFX+40)){
+// if(0<=HASCOUNT && HASCOUNT<80){
+// if(40<HASCOUNT && HASCOUNT<80){
+
+// show original poor spot
+// locationB2D = centerB;
+
+var sca = 4.0;
+// var spa = 90;
+var spa = 70;
+// var spa = 60;
+
+
+var iii = needle;
+var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
+var d = new DOImage(img);
+d.matrix().scale(sca);
+d.matrix().translate(10 + spa*(HASCOUNT-OFFX), 0 + 10 + 300);
+GLOBALSTAGE.addChild(d);
+
+var iii = haystack;
+var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
+var d = new DOImage(img);
+d.matrix().scale(sca);
+d.matrix().translate(10 + spa*(HASCOUNT-OFFX), 0 + 10 + 400);
+GLOBALSTAGE.addChild(d);
+
+
+// console.log("featureSize: "+featureSize);
+
+// var xSize  = 41;
+var xSize  = 31;
+var xStack = new ImageMat(xSize,xSize);
+var halfCenter = (xSize-1)*0.5;
+
+// var iScale = 0.25; // see less of image
+// var iScale = 0.5;
+var iScale = 1.0;
+// var iScale = 2.0;
+//var iScale = 4.0; // see more of image
+var matrix = new Matrix2D();
+var sca = 2.0;
+
+
+// A
+matrix.identity();
+	matrix = Matrix2D.mult(matrix, affineAB);
+matrix.scale(iScale);
+var scale = matrix.averageScale();
+ImageMatScaled.affineToLocationTransform(matrix,matrix, halfCenter,halfCenter, centerA.x,centerA.y);
+imageA.extractRectFast(xStack, scale, matrix);
+
+var iii = xStack;
+var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
+var d = new DOImage(img);
+d.matrix().scale(sca);
+d.matrix().translate(10 + spa*(HASCOUNT-OFFX), 0 + 10);
+GLOBALSTAGE.addChild(d);
+
+
+// B
+matrix.identity();
+	// matrix = Matrix2D.mult(matrix, affineAB);
+matrix.scale(iScale);
+var scale = matrix.averageScale();
+ImageMatScaled.affineToLocationTransform(matrix,matrix, halfCenter,halfCenter, locationB2D.x,locationB2D.y); // centerB
+imageB.extractRectFast(xStack, scale, matrix);
+
+var iii = xStack;
+var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
+var d = new DOImage(img);
+d.matrix().scale(sca);
+d.matrix().translate(10 + spa*(HASCOUNT-OFFX), 0 + 10 + 150);
+GLOBALSTAGE.addChild(d);
+
+}
+
+++HASCOUNT;
+
+// if(HASCOUNT>10){
+// if(HASCOUNT>25){
+// if(HASCOUNT>40){
+// 	throw "HASCOUNT limit";
+// }
+
+							}
 						}
-					}
-					if(locationsB2D.length>0){ // average predicted locations
-						var locationB2D = V2D.average(locationsB2D);
-						var point2DB = point3DC.pointForView(viewB);
-						// console.log(V2D.distance(point2DB.point2D(),locationB2D));
-						// console.log("LOOK FOR OPTIMUM LOCATION: "+ (V2D.distance(point2DB.point2D(),locationB2D)) +"  ... ");
-						point2DB.point2D(locationB2D);
+						if(locationsB2D.length>0){ // average predicted locations
+							var locationB2D = V2D.average(locationsB2D);
+							var distance = V2D.distance(point2DB.point2D(),locationB2D);
+							console.log("LOOK FOR OPTIMUM LOCATION DISTANCE: "+distance+"  ... "+viewB.data()+" "+HASCOUNT);
+
+
+
+// throw "show these points & evaluate performance ..."
+
+
+
+
+							// var maxDistance = 0.05 * imageB.size().length();
+							var maxDistance = featureSizeAny*0.5;
+							if(distance<maxDistance){
+								var point2DB = point3DC.pointForView(viewB);
+								point2DB.point2D(locationB2D);
+							}else{
+								console.log("erronious ... PRINT THIS OUT");
+								ignoreNewPoint = true;
+							}
+						}
 					}
 				}
 			}
+/*
 		}
+*/
 		// update scores:
 		// point3DC.???
 		// updateMatchInfo
 	}
+
+	if(ignoreNewPoint){
+		console.log("ignoreNewPoint ...");
+		// point3DC.ancestor(point3DB.ancestor());
+		world.killPoint3D(point3DB);
+		world.killPoint3D(point3DC);
+		// keep original point:
+		return world.embedPoint3D(point3DA);
+	}
+
+// throw "before continue";
 
 	// is this necessary ?
 	var matches = point3DC.toMatchArray();

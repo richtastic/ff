@@ -401,6 +401,88 @@ MISSING:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+- does the camera K matrix need to be iterated on?
+
+-> fair amount of points are in a wrong spot
+	WAY WRONG: 10%
+		-> intital point estimate is wrong
+	somewhat off: 20%
+		-> initial point estimate is off
+		-> affine mapping is off
+
+-> could add final step that after updating the patch location
+	ASSUMING: better point estimate
+	===> better affine estimate
+	====> 
+
+-> refining all cameras at same time does not seem to adjust the surfaces correctly
+
+
+=> try doing the +1 camera at a time method?
+	- use initial camera relative positions as starting point for +1 iteritive method
+	- aquire points in process
+	-steps:
+		- start with most connected pair
+			- metric: rerror/points
+		- VIEW ADDITION:
+			- add in new view
+				- R initial = relative estimate offset averaged with current absolute location
+			- load top connected views (that are also currently in the graph)
+			- SEEDING:
+				- choose best corner points [1k-10k per view]
+				- for each other view (with top connectivity:
+					- find pairs of points to add
+						- F/R probe w/ low tolerance/error
+				- insert all new points
+				- for each other view
+					- probe3D point projection
+			- iterate [3-5 times]:
+				- probe2D
+				- probe3D
+				- optimize camera location wrt others [up to top 5-10 most connected views]
+				- drop higest error
+			- drop worst: error F, error R, corner score for newest view
+	- ...
+
+
+_iterateGraphSequential
+
+
+SEQUENTIAL:
+	- graph
+		- cameras [all cameras]
+		- points [all CURRENTLY COMPLETED 3D points]
+		- views [all CURRENTLY COMPLETED VIEWS]
+	- putative - [initial view graph]
+		- views: absolute view matrixes
+		- transforms: pairwise matrixes [need: count, errorR, errorF, idA, idB]
+	- sequence [sequence of views to load]
+		- views:
+			- id [id of view to load]
+			- images/adjacent: [array of all view IDs to load - including self]
+			- 
+
+
+- determining view load sequence:
+	- first view = best connectivity:
+		- eg: SUM( edge/error )
+	- incrementally add a new view to the new graph based on connectivity to edges in new graph
+		- eg: SUM( edge/error )
+		-> prefer views w/ more edges but weaker weights rather than fewer edges but stronger weights [want more images to load]
+		- images to load:
+			- A) first connection - ordered on weights
+			- B) next connections - ordered on weights
+			-> up to min( ~ 6 images, images in new graph + 1)
+
+
+
+
+
+
+
+...
+
+
 
 
 
@@ -442,6 +524,7 @@ MISSING:
 => TEST CASE: do point loading & optimizing & print out world & view results
 	=> first 2 separate pairs (3 max tracks)
 	=> print out some example point image match location
+
 
 
 
