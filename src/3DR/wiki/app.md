@@ -401,6 +401,43 @@ MISSING:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
+
+
+_iterateGraphSequential
+
+
+SEQUENTIAL:
+	- graph
+		- cameras [all cameras]
+		- points [all CURRENTLY COMPLETED 3D points]
+		- views [all CURRENTLY COMPLETED VIEWS]
+	- putative - [initial view graph]
+		- views: absolute view matrixes
+		- transforms: pairwise matrixes [need: count, errorR, errorF, idA, idB]
+	- sequence [sequence of views to load]
+		- views:
+			- id [id of view to load]
+			- images/adjacent: [array of all view IDs to load - including self]
+			- 
+
+
+- determining view load sequence:
+	- first view = best connectivity:
+		- eg: SUM( edge/error )
+	- incrementally add a new view to the new graph based on connectivity to edges in new graph
+		- eg: SUM( edge/error )
+		-> prefer views w/ more edges but weaker weights rather than fewer edges but stronger weights [want more images to load]
+		- images to load:
+			- A) first connection - ordered on weights
+			- B) next connections - ordered on weights
+			-> up to min( ~ 6 images, images in new graph + 1)
+
+
+
+
+
+
 - does the camera K matrix need to be iterated on?
 
 -> fair amount of points are in a wrong spot
@@ -443,38 +480,6 @@ MISSING:
 				- drop higest error
 			- drop worst: error F, error R, corner score for newest view
 	- ...
-
-
-_iterateGraphSequential
-
-
-SEQUENTIAL:
-	- graph
-		- cameras [all cameras]
-		- points [all CURRENTLY COMPLETED 3D points]
-		- views [all CURRENTLY COMPLETED VIEWS]
-	- putative - [initial view graph]
-		- views: absolute view matrixes
-		- transforms: pairwise matrixes [need: count, errorR, errorF, idA, idB]
-	- sequence [sequence of views to load]
-		- views:
-			- id [id of view to load]
-			- images/adjacent: [array of all view IDs to load - including self]
-			- 
-
-
-- determining view load sequence:
-	- first view = best connectivity:
-		- eg: SUM( edge/error )
-	- incrementally add a new view to the new graph based on connectivity to edges in new graph
-		- eg: SUM( edge/error )
-		-> prefer views w/ more edges but weaker weights rather than fewer edges but stronger weights [want more images to load]
-		- images to load:
-			- A) first connection - ordered on weights
-			- B) next connections - ordered on weights
-			-> up to min( ~ 6 images, images in new graph + 1)
-
-
 
 
 

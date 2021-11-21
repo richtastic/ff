@@ -1031,47 +1031,14 @@ console.log(i+" : "+Code.intToBinaryString(data[i], 8));
 		throw "."
 	}
 
-		var versionToIndex = function(version){
-			if(1<=version && version <=9){
-				return 0;
-			}else if(10<=version && version <=26){
-				return 1;
-			}else if(27<=version && version <=40){
-				return 2;
-			}
-			throw "unknown version: "+version;
-		};
+		// var versionToIndex = ???;
 
-		var modeToIndex = function(mode){
-			if(mode==QRCode.MODE_INDICATOR_NUMERIC){
-				return 0;
-			}else if(mode==QRCode.MODE_INDICATOR_ALPHANUMERIC){
-				return 1;
-			}else if(mode==QRCode.MODE_INDICATOR_BYTE){
-				return 2;
-			}else if(mode==QRCode.MODE_INDICATOR_KANJI){
-				return 3;
-			}
-			throw "unknown mode: "+mode;
-		};
+		// var modeToIndex = ???
 
 
 	// [MODE][VERSION_INDEX]
-	var dataLengthTable = [];
-		dataLengthTable[modeToIndex(QRCode.MODE_INDICATOR_NUMERIC)] = [10,12,14];
-		dataLengthTable[modeToIndex(QRCode.MODE_INDICATOR_ALPHANUMERIC)] = [9,11,13];
-		dataLengthTable[modeToIndex(QRCode.MODE_INDICATOR_BYTE)] = [8,16,16];
-		dataLengthTable[modeToIndex(QRCode.MODE_INDICATOR_KANJI)] = [8,10,12];
-// VERSIONS
-// 000001 1
-// 001001 9
-// 001010 10
-// 011010 26
-// 011011 27
-// 101000 40
-// 1-9
-// 10-26
-// 27-40
+	// var dataLengthTable = ???
+
 
 		console.log("VERSION: "+version);
 
@@ -1085,12 +1052,12 @@ console.log(i+" : "+Code.intToBinaryString(data[i], 8));
 	var lengthBits = dataLengthTable[mode][index];
 	*/
 
-	var indexVersion = versionToIndex(version);
-	var indexMode = modeToIndex(mode); /// .... could use bits too
-console.log("indexVersion: "+indexVersion);
-console.log("indexMode: "+indexMode);
+// 	var indexVersion = versionToIndex(version);
+// 	var indexMode = modeToIndex(mode); /// .... could use bits too
+// console.log("indexVersion: "+indexVersion);
+// console.log("indexMode: "+indexMode);
 // console.log(dataLengthTable);
-	var chunkLength = dataLengthTable[indexMode][indexVersion];
+	var chunkLength = QRCode.versionModeToCharacterCountBits(version,mode); /// dataLengthTable[indexMode][indexVersion];
 
 	console.log("chunkLength: "+chunkLength);
 
@@ -1841,19 +1808,157 @@ QRCode._insideFunctionalPattern = function(size,version, x,y, alignmentMask){
 	return false;
 }
 QRCode.fromString = function(str, errorCorrectionSetting){ // 
-	// decide from modex:
+/*
+go thru each hash to determine if there are any characters NOT in the list
+*/
+	// decide from modes:
 	errorCorrectionSetting = Code.valueOrDefault(errorCorrectionSetting, QRCode.ECL_M);
 	console.log("QRCode.fromString: "+str);
+	var characterCount = str.length;
 
-	var table = QRCode.TABLE_ALPHA_NUMERIC;
-	var lookup = {};
-	for(var i=0; i<table.length; ++i){
-		var key = table[i];
-		if(key!==""){
-			lookup[key] = true;
-		}
+	// choose which alphabet to use
+	var table = QRCode.TABLE_NUMERIC;
+	var contained = QRCode.areAllCharactersInArray(str, table);
+	console.log(contained);
+	if(!contained){
+		table = QRCode.TABLE_ALPHA_NUMERIC;
+		contained = QRCode.areAllCharactersInArray(str, table);
+		console.log(contained);
+	}
+	if(!contained){
+		table = QRCode.TABLE_BYTE;
+		contained = QRCode.areAllCharactersInArray(str, table);
+		console.log(contained);
+	}
+	if(!contained){
+		table = QRCode.TABLE_KANJI;
+		contained = QRCode.areAllCharactersInArray(str, table);
+		console.log(contained);
+	}
+	if(!contained){
+		throw "cannot fit string into character sets"
 	}
 
+// p 14
+
+	// convert into sequence of bits
+	console.log(characterCount);
+	var byteData = null;
+	var version = null;
+	var mode = null;
+	if(table == QRCode.TABLE_NUMERIC){
+		console.log("numeric");
+	}else if(table == QRCode.TABLE_ALPHA_NUMERIC){
+		console.log("alpha - numeric");
+	}else if(table == QRCode.TABLE_BYTE){
+		console.log("byte");
+		mode = QRCode.MODE_INDICATOR_BYTE;
+		// var count = characterCount;
+		var lookup = Code.arrayToReverseLookup(table);
+		console.log(table);
+		console.log(lookup);
+
+		// binary or linear search to find lowest capacity version to use:
+		var capacity = null;
+		for(var i=0; i<=40; ++i){
+			if(i==0){ // ignore micro qr
+				continue;
+			}
+			// var info = QRCode.capacityInfoFromVersionECLMode(i,QRCode.ECL_H,QRCode.MODE_INDICATOR_BYTE);
+			var info = QRCode.capacityInfoFromVersionECLMode(i,errorCorrectionSetting,mode);
+			var maxCharacters = info["chars"];
+			// console.log(info);
+			if(maxCharacters>=characterCount){
+				console.log("found @ "+i+" "+maxCharacters+" >= "+characterCount);
+				capacity = info;
+				break;
+			}
+		}
+		if(!capacity){
+			throw "no version found to fit";
+		}
+		var bitsSize = capacity["bitsSize"];
+
+		// start writing the bits:
+		var data = new ByteData();
+		// console.log(data);
+		data.writeUint4(mode);
+
+		data.writeUintN(characterCount, bitsSize);
+
+
+		for(var i=0; i<characterCount; ++i){
+			data.writeUint8(mode);
+		}
+
+		// fill in last bits with 0s
+		console.log(data.length());
+		console.log(data.length()/8);
+
+
+		
+
+
+
+		console.log(data);
+
+		console.log(data.toString());
+
+		// console.log( Code.intToBinaryString(num,cnt) );
+		console.log( "mode: "+mode );
+		console.log( Code.intToBinaryString(mode,4) );
+		console.log( "characterCount: "+characterCount );
+		console.log( Code.intToBinaryString(characterCount,bitsSize) );
+
+
+
+// var bitCapacity = QRCode.bitCapacityFromVersion(8);
+// console.log("bitCapacity: "+bitCapacity);
+// console.log(bitCapacity);
+// var info = QRCode.capacityInfoFromVersionECLMode(40,QRCode.ECL_M,QRCode.MODE_INDICATOR_ALPHANUMERIC);
+// var info = QRCode.capacityInfoFromVersionECLMode(40,QRCode.ECL_M,QRCode.MODE_INDICATOR_KANJI);
+// var info = QRCode.capacityInfoFromVersionECLMode(40,QRCode.ECL_H,QRCode.MODE_INDICATOR_BYTE);
+// var info = QRCode.capacityInfoFromVersionECLMode(5,errorCorrectionSetting,mode);
+// console.log("info: ");
+// console.log(info);
+
+throw "..."
+
+
+		/*
+		var neededBitsData = 8*characterCount;
+		console.log("neededBitsData: "+neededBitsData);
+		var neededBitsError = 0; // something with errorCorrectionSetting
+		var neededBytesTotal = neededBytesData + neededBytesError;
+
+
+		version = -1;
+		// Mode Indicator
+		// Character Count Indicator
+		var charCountSize = QRCode.versionModeToCharacterCountBits(version,mode);
+		for(var i=0; i<characterCount; ++i){
+			var char = str.charAt(i);
+			var value = lookup[char];
+			// write value as 8-bit
+		}
+		*/
+	}else if(table == QRCode.TABLE_KANJI){
+		console.log("kanji");
+	}
+
+	// figure out minimum total bits/bytes needed
+
+	// determine size/version to use
+
+	// 
+
+
+	throw "..."
+	// 
+	
+	// 
+	// 
+	// 
 	var bytes = [];
 	var count = str.length;
 	var byte = 0x0;
@@ -1875,6 +1980,33 @@ QRCode.fromString = function(str, errorCorrectionSetting){ //
 	// TODO: append any remaining [subindex > 0]
 
 	return QRCode.fromData(bytes);
+}
+
+QRCode.areAllCharactersInArray = function(str, array){
+	// var table = QRCode.TABLE_ALPHA_NUMERIC;
+	// make key lookup
+	//var keys = Code.keys(array);
+	var lookup = {};
+	for(var i=0; i<array.length; ++i){
+		var key = array[i];
+		if(key!==""){
+			lookup[key] = true;
+		}
+	}
+	console.log("keys:");
+	console.log(lookup);
+	// 
+	var count = str.length;
+	for(var i=0; i<count; ++i){
+		var key = str.charAt(i);
+		var exists = lookup[key];
+		if(!exists){
+			console.log("missing: '"+key+"' ");
+			console.log(lookup);
+			return false;
+		}
+	}
+	return true;
 }
 QRCode.fromData = function(data, errorCorrectionSetting){ // create QR code from data
 
@@ -2152,22 +2284,6 @@ QRCode.MODE_INDICATOR_TERMINATOR = 0x000;
 QRCode.MODE_INDICATOR_EXTENDED_CHANNEL_INTERPRETATION = 0x07;
 
 
-// LENGTHS OF CHARACTERS:
-QRCode.MODE_NUMERIC_COUNT_01_09 = 10;
-QRCode.MODE_NUMERIC_COUNT_10_26 = 12;
-QRCode.MODE_NUMERIC_COUNT_27_40 = 14;
-
-QRCode.MODE_ALPHANUMERIC_COUNT_01_09 = 9;
-QRCode.MODE_ALPHANUMERIC_COUNT_10_26 = 11;
-QRCode.MODE_ALPHANUMERIC_COUNT_27_40 = 13;
-
-QRCode.MODE_BYTE_COUNT_01_09 = 8;
-QRCode.MODE_BYTE_COUNT_10_26 = 16;
-QRCode.MODE_BYTE_COUNT_27_40 = 16;
-
-QRCode.MODE_KANJI_COUNT_01_09 = 8;
-QRCode.MODE_KANJI_COUNT_10_26 = 10;
-QRCode.MODE_KANJI_COUNT_27_40 = 12;
 
 QRCode.ECL_L = 0x01; // 7%
 QRCode.ECL_M = 0x00; // 15%
@@ -2179,7 +2295,7 @@ QRCode.TABLE_ALPHA_NUMERIC = ["0","1","2","3","4","5","6","7","8","9","A","B","C
 QRCode.TABLE_BYTE = [ // http://www.rikai.com/library/kanjitables/kanji_codes.unicode.shtml
 						"","","","","","","","","","","","","","","","",  // 00-0F
 						"","","","","","","","","","","","","","","","",  // 10-1F
-						"","!","\"","#","$","%","&","'","(",")","*","+",",","-",".","/",  // 20-2F
+						" ","!","\"","#","$","%","&","'","(",")","*","+",",","-",".","/",  // 20-2F
 						"0","1","2","3","4","5","6","7","8","9",":",";","<","=",">","?",  // 30-3F
 						"@","A","B","C","D","E","F","G","H","I","J","K","L","M","N","O",  // 40-4F
 						"P","Q","R","S","T","U","V","W","X","Y","Z","[","¥","]","^","_",  // 50-5F
@@ -2204,6 +2320,208 @@ QRCode.TABLE_KANJI = [
   30f0   ヰ  ヱ  ヲ  ン  ヴ  ヵ  ヶ  ヷ  ヸ  ヹ  ヺ  ・  ー  ヽ  ヾ  ヿ 
 */
 					];
+
+
+
+
+// LENGTHS OF CHARACTERS: --- use table instead...
+QRCode.MODE_NUMERIC_COUNT_01_09 = 10;
+QRCode.MODE_NUMERIC_COUNT_10_26 = 12;
+QRCode.MODE_NUMERIC_COUNT_27_40 = 14;
+
+QRCode.MODE_ALPHANUMERIC_COUNT_01_09 = 9;
+QRCode.MODE_ALPHANUMERIC_COUNT_10_26 = 11;
+QRCode.MODE_ALPHANUMERIC_COUNT_27_40 = 13;
+
+QRCode.MODE_BYTE_COUNT_01_09 = 8;
+QRCode.MODE_BYTE_COUNT_10_26 = 16;
+QRCode.MODE_BYTE_COUNT_27_40 = 16;
+
+QRCode.MODE_KANJI_COUNT_01_09 = 8;
+QRCode.MODE_KANJI_COUNT_10_26 = 10;
+QRCode.MODE_KANJI_COUNT_27_40 = 12;
+
+QRCode._eclToIndex = function(ecl){ // match standard tables
+	if(ecl==QRCode.ECL_L){
+		return 0;
+	}else if(ecl==QRCode.ECL_M){
+		return 1;
+	}else if(ecl==QRCode.ECL_Q){
+		return 2;
+	}else if(ecl==QRCode.ECL_H){
+		return 3;
+	}
+	throw "unknown ecl: "+ecl;
+};
+
+QRCode._versionToIndex = function(version){
+	if(1<=version && version <=9){
+		return 0;
+	}else if(10<=version && version <=26){
+		return 1;
+	}else if(27<=version && version <=40){
+		return 2;
+	}
+	throw "unknown version: "+version;
+};
+
+QRCode._modeToIndex = function(mode){
+	if(mode==QRCode.MODE_INDICATOR_NUMERIC){
+		return 0;
+	}else if(mode==QRCode.MODE_INDICATOR_ALPHANUMERIC){
+		return 1;
+	}else if(mode==QRCode.MODE_INDICATOR_BYTE){
+		return 2;
+	}else if(mode==QRCode.MODE_INDICATOR_KANJI){
+		return 3;
+	}
+	throw "unknown mode: "+mode;
+}
+
+QRCode.dataLengthTable = function(){
+	if(!QRCode._dataLengthTable){
+	 	var dataLengthTable = [];
+		dataLengthTable[QRCode._modeToIndex(QRCode.MODE_INDICATOR_NUMERIC)] = [10,12,14];
+		dataLengthTable[QRCode._modeToIndex(QRCode.MODE_INDICATOR_ALPHANUMERIC)] = [9,11,13];
+		dataLengthTable[QRCode._modeToIndex(QRCode.MODE_INDICATOR_BYTE)] = [8,16,16];
+		dataLengthTable[QRCode._modeToIndex(QRCode.MODE_INDICATOR_KANJI)] = [8,10,12];
+		QRCode._dataLengthTable = dataLengthTable;
+	}
+	return QRCode._dataLengthTable;
+}
+QRCode.versionModeToCharacterCountBits = function(version,mode){
+	var dataLengthTable = QRCode.dataLengthTable();
+	console.log(dataLengthTable);
+	var indexVersion = QRCode._versionToIndex(version);
+	var indexMode = QRCode._modeToIndex(mode); /// .... could use bits too
+	console.log("indexVersion: "+indexVersion);
+	console.log("indexMode: "+indexMode);
+	
+	var chunkLength = dataLengthTable[indexMode][indexVersion];
+	return chunkLength;
+}
+
+// VERSIONS
+// 000001 1
+// 001001 9
+// 001010 10
+// 011010 26
+// 011011 27
+// 101000 40
+// 1-9
+// 10-26
+// 27-40
+
+
+QRCode._capacityDataBitsTable = [ // [version][ecl] -- L,M,Q,H
+	[0,0,0,0], // 0
+	[152,128,104,72], // 1 - p1
+	[272,224,176,128], // 2
+	[440,352,272,208], // 3
+	[640,512,384,288], // 4
+	[864,688,496,368], // 5
+	[1088,864,608,480], // 6
+	[1248,992,704,528], // 7
+	[1552,1232,880,688], // 8
+	[1856,1456,1056,800], // 9 - p2
+	[2192,1728,1232,976], // 10
+	[2592,2032,1440,1120], // 11
+	[2960,2320,1648,1264], // 12
+	[3424,2672,1952,1440], // 13
+	[3688,2920,2088,1576], // 14
+	[4184,3320,2360,1784], // 15
+	[4712,3624,2600,2024], // 16
+	[5176,4056,2936,2264], // 17 - p3
+	[5768,4504,3176,2504], // 18
+	[6360,5016,3560,2728], // 19
+	[6888,5352,3880,3080], // 20
+	[7456,5712,4096,3248], // 21
+	[8048,6256,4544,3536], // 22
+	[8752,6880,4912,3712], // 23
+	[9392,7312,5312,4112], // 24
+	[10208,8000,5744,4304], // 25 - p4
+	[10960,8496,6032,4768], // 26
+	[11744,9024,6464,5024], // 27
+	[12248,9544,6968,5288], // 28
+	[13048,10136,7288,5608], // 29
+	[13880,10984,7880,5960], // 30
+	[14744,11640,8264,6344], // 31
+	[15640,12328,8920,6760], // 32
+	[16568,13048,9368,7208], // 33 - p5
+	[17528,13800,9848,7688], // 34
+	[18448,14496,10288,7888], // 35
+	[19472,15312,10832,8432], // 36
+	[20528,15936,11408,8768], // 37
+	[21616,16816,12016,9136], // 38
+	[22496,17728,12656,9776], // 39
+	[23648,18672,13328,10208], // 40
+];
+
+
+QRCode.capacityInfoFromVersionECLMode = function(version,ecl,mode){
+	// console.log("QRCode.capacityInfoFromVersionECLMode");
+	// console.log("version: "+version);
+	// console.log("ecl: "+ecl);
+	// console.log("mode: "+mode);
+	var versionIndex = QRCode._versionToIndex(version);
+	var eclIndex = QRCode._eclToIndex(ecl);
+	var modeIndex = QRCode._modeToIndex(mode);
+	// console.log("versionIndex: "+versionIndex);
+	// console.log("eclIndex: "+eclIndex);
+	var maximumBits = QRCode._capacityDataBitsTable[version][eclIndex];
+	// console.log("maximumBits: "+maximumBits);
+	var maximumBytes = maximumBits/8 | 0;
+	var sizeBits = QRCode.versionModeToCharacterCountBits(version,mode);
+	// console.log("sizeBits: "+sizeBits);
+	var availableBits = maximumBits - (4 + sizeBits);
+
+	var maximumChars = 0;
+	if(mode==QRCode.MODE_INDICATOR_NUMERIC){ // 3 chars per 10 bits
+		// var full = availableBits/10 | 0;
+		// var remainder = availableBits - full*10;
+		// maximumChars = full*3 + remainder ???;
+		maximumChars = (availableBits*3/10) | 0; // rounded down
+	}else if(mode==QRCode.MODE_INDICATOR_ALPHANUMERIC){ // 2 chars per 11 bits
+		maximumChars = (availableBits*2/11) | 0; // rounded down
+	}else if(mode==QRCode.MODE_INDICATOR_BYTE){ // 1 char per 8 bits
+		maximumChars = availableBits/8 | 0; // rounded down
+	}else if(mode==QRCode.MODE_INDICATOR_KANJI){ // 1 char per 13 bits ?
+		maximumChars = availableBits/13 | 0; // rounded down
+	}
+	// from flooring ...
+/*
+
+((152-4-10)/10 | 0)*3
+
+NUMERIC:
+((152-4-10) * 3/10 ) | 0
+ALPHA:
+((152-4-9) * 2/11 ) | 0
+8-BIT:
+((152-4-8) * 1/8 ) | 0
+KANJI:
+((152-4-8) * 1/13 ) | 0
+
+NUMERIC:
+((1728-4-12) * 3/10 ) | 0
+ALPHA:
+((1728-4-11) * 2/11 ) | 0
+8-BIT:
+((1728-4-16) * 1/8 ) | 0
+KANJI:
+((1728-4-10) * 1/13 ) | 0
+
+
+
+*/
+
+	// console.log("maximumChars: "+maximumChars);
+
+	// throw "..."
+	return {"bytes":maximumBytes, "bits":maximumBits, "chars":maximumChars, "mode":mode, "version":version, "ecl":ecl, "bitsSize":sizeBits};
+}
+
+
 
 QRCode._alignmentPatternLocationsTest = function(){
 	

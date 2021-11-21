@@ -1028,6 +1028,16 @@ Code.objectToArray = function(object){
 	// }
 	// return arr;
 }
+Code.arrayToReverseLookup = function(array){ // reverse lookup
+	var obj = {};
+	for(var i=0; i<array.length; ++i){
+		var value = array[i];
+		obj[value] = i;
+	}
+	return obj;
+}
+
+
 Code.forEach = function(object, fxn){
 	if(Code.isArray(object)){
 		return Code._forEachArray(object,fxn);
