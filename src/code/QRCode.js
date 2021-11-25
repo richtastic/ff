@@ -767,82 +767,12 @@ QRCode._revertOrderDataBlocks = function(data, version, ecl){
 		}
 		throw "unknown ecl: "+e;
 	}
-	// p.35 - table for ECC characteristics
-	var tableECC = []; // error correction codewords [bytes used for error correction]
-		tableECC.push([0,0,0,0]); // 0 ?
-		tableECC.push([7,10,13,17]); // 1
-		tableECC.push([10,16,22,28]);
-		tableECC.push([15,26,36,44]); // 3
-		tableECC.push([20,36,52,64]);
-		tableECC.push([26,48,72,88]); // 5
-		tableECC.push([36,64,96,112]); // 6
-		tableECC.push([40,72,108,130]); // 7
-		tableECC.push([48,88,132,156]);
-		tableECC.push([60,110,160,192]);
-		tableECC.push([72,130,192,224]); // 10
-		tableECC.push([80,150,224,264]); // 11
-		// tableECC.push([,,,]);
-		// tableECC.push([,,,]);
-		// tableECC.push([,,,]);
-		// tableECC.push([,,,]);
-		// tableECC.push([,,,]);
-		// tableECC.push([,,,]);
-		// tableECC.push([,,,]);
-		// tableECC.push([,,,]);
-		// tableECC.push([,,,]);
-		// tableECC.push([,,,]);
-		// tableECC.push([,,,]);
-		// tableECC.push([,,,]);
-		// tableECC.push([,,,]);
-		// tableECC.push([,,,]);
-		// tableECC.push([,,,]);
-		// tableECC.push([,,,]);
-		// tableECC.push([,,,]);
-		// tableECC.push([,,,]);
-		// tableECC.push([,,,]);
-		// tableECC.push([,,,]);
-		// tableECC.push([,,,]);
-		// tableECC.push([,,,]);
-		// tableECC.push([,,,]);
-		// tableECC.push([,,,]);
-		// tableECC.push([,,,]);
-		// tableECC.push([,,,]);
-	var tableECB = []; // error correction blocks [row-groupings of data+ecc]
-		tableECB.push([0,0,0,0]); // 0 ?
-		tableECB.push([1,1,1,1]); // 1
-		tableECB.push([1,1,1,1]);
-		tableECB.push([1,1,2,2]); // 3
-		tableECB.push([1,2,2,4]);
-		tableECB.push([1,2,2,2]); // 5
-		tableECB.push([2,4,4,4]);
-		// tableECB.push([2,4,2,4]); // 7 -- starts double-table
-			tableECB.push([2,4,6,5]); // TOTALS
-		// tableECB.push([,,,]);
-		// tableECB.push([,,,]);
-		// tableECB.push([,,,]);
-		// tableECB.push([,,,]);
-		// tableECB.push([,,,]);
-		// tableECB.push([,,,]);
-		// tableECB.push([,,,]);
-		// tableECB.push([,,,]);
-		// tableECB.push([,,,]);
-		// tableECB.push([,,,]);
-		// tableECB.push([,,,]);
-		// tableECB.push([,,,]);
-		// tableECB.push([,,,]);
-		// tableECB.push([,,,]);
-		// tableECB.push([,,,]);
-		// tableECB.push([,,,]);
-		// tableECB.push([,,,]);
-		// tableECB.push([,,,]);
-		// tableECB.push([,,,]);
-		// tableECB.push([,,,]);
-		// tableECB.push([,,,]);
-		// tableECB.push([,,,]);
-		// tableECB.push([,,,]);
-		// tableECB.push([,,,]);
-		// tableECB.push([,,,]);
 
+	// p.35 - table for ECC characteristics
+	var tableECC = QRCode._tableECC;
+	var tableECB = QRCode._tableECB;
+
+throw "lookup .. "
 	// M, L, Q, H
 	// var eclPercents = [0.07, 0.15, 0.25, 0.30];
 	// var percent = eclPercents[ecl];
@@ -1874,6 +1804,8 @@ go thru each hash to determine if there are any characters NOT in the list
 				break;
 			}
 		}
+		console.log(capacity);
+		var version = capacity["version"];
 		if(!capacity){
 			throw "no version found to fit";
 		}
@@ -1888,20 +1820,23 @@ go thru each hash to determine if there are any characters NOT in the list
 
 
 		for(var i=0; i<characterCount; ++i){
-			data.writeUint8(mode);
+			var char = str.charAt(i);
+			var val = lookup[char];
+			data.writeUint8(val);
 		}
+		var bits = data.length();
+		var remainder = 8 - (bits - (bits/8 | 0)*8);
+		console.log("remainder:"+remainder);
+		// data.writeUintN(remainder, 0x0);
+		data.writeUintN(0x0, remainder);
+
+		// fill up to total bytes with 0s?:
+		console.log("SIZE: ",data.length()/8,"of",maxCharacters)
 
 		// fill in last bits with 0s
 		console.log(data.length());
-		console.log(data.length()/8);
-
-
-		
-
-
-
+		console.log("bytes:",data.length()/8);
 		console.log(data);
-
 		console.log(data.toString());
 
 		// console.log( Code.intToBinaryString(num,cnt) );
@@ -1909,6 +1844,33 @@ go thru each hash to determine if there are any characters NOT in the list
 		console.log( Code.intToBinaryString(mode,4) );
 		console.log( "characterCount: "+characterCount );
 		console.log( Code.intToBinaryString(characterCount,bitsSize) );
+
+
+// QRCode.ECL_M
+
+		// error correction words
+
+		// version
+		console.log("version: "+version);
+// p 35 - 44
+		QRCode._tableECC;
+		QRCode._tableECB;
+
+		var errorCorrectionRows = 0; // could have 2
+		var errorCorrectionBlocksTotal = 0;
+		var errorCorrectionBlocksSmall = 0;
+		var errorCorrectionBlocksBig = 0;
+/*
+172 | 64 + 108(data) = total
+separate into N rows
+27 (data) + 16 (error) = 43 = 
+(CODEWORDS, DATA, CAPACITY)
+
+*/
+
+		// form data table
+
+		// calculate error table
 
 
 
@@ -2520,7 +2482,89 @@ KANJI:
 	// throw "..."
 	return {"bytes":maximumBytes, "bits":maximumBits, "chars":maximumChars, "mode":mode, "version":version, "ecl":ecl, "bitsSize":sizeBits};
 }
-
+QRCode._tableECC = [ // L M Q H
+	[0,0,0,0], // 0 ?
+	[7,10,13,17], // 1
+	[10,16,22,28], // 2
+	[15,26,36,44], // 3
+	[20,36,52,64], // 4
+	[26,48,72,88], // 5
+	[36,64,96,112], // 6
+	[40,72,108,130], // 7
+	[48,88,132,156], // 8
+	[60,110,160,192], // 9
+	[72,130,192,224], // 10
+	[80,150,224,264], // 11
+	[], // 
+	[], // 
+	[], // 
+	[], // 
+	[], // 
+	[], // 
+	[], // 
+	[], // 
+	[], // 
+	[], // 
+	[], // 
+	[], // 
+	[], // 
+	[], // 
+	[], // 
+	[], // 
+	[], // 
+	[], // 
+	[], // 
+	[], // 
+	[], // 
+	[], // 
+	[], // 
+	[], // 
+	[], // 
+	[], // 
+	[], // 
+	[], // 
+	[], // 
+	[], // 
+];
+QRCode._tableECB = [ // L M Q H
+	[0,0,0,0], // 0
+	[1,1,1,1], // 1
+	[1,1,1,1], // 2
+	[1,1,2,2], // 3
+	[1,2,2,4], // 4
+	[1,2,2,2], // 5
+	[2,4,4,4], // 6
+	[2,4,2,4], // 7 -- starts double-table
+		// [2,4,6,5], // TOTALS
+	[], // 
+	[], // 
+	[], // 
+	[], // 
+	[], // 
+	[], // 
+	[], // 
+	[], // 
+	[], // 
+	[], // 
+	[], // 
+	[], // 
+	[], // 
+	[], // 
+	[], // 
+	[], // 
+	[], // 
+	[], // 
+	[], // 
+	[], // 
+	[], // 
+	[], // 
+	[], // 
+	[], // 
+	[], // 
+	[], // 
+	[], // 
+	[], // 
+];
 
 
 QRCode._alignmentPatternLocationsTest = function(){

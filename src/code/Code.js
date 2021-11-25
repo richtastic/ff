@@ -16395,7 +16395,7 @@ GLOBALSTAGE.addChild(c);
 	if(cut.length==0){
 		cut = [onlyGroup];
 	}
-
+ 
 	// convert hierarchy to group sets:
 	for(var i=0; i<cut.length; ++i){
 		var q = [];

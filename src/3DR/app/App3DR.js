@@ -10784,12 +10784,12 @@ App3DR.ProjectManager.prototype._iterateSparseTracks = function(sourceData, sour
 		var bundleFullIndex = graphData["bundleFullIndex"];
 			bundleFullIndex = Code.valueOrDefault(bundleFullIndex, -1);
 			bundleFullIndex = Math.max(bundleFullIndex,0);
-		var bundleFullError = graphData["bundleFullError"];
-			bundleFullError = Code.valueOrDefault(bundleFullError, null);
+		// var bundleFullError = graphData["bundleFullError"];
+		// 	bundleFullError = Code.valueOrDefault(bundleFullError, null);
 
-	var bundleSequentialFile = graphData["bundleSequentialFile"];
+	var bundleSequentialFile = sourceData["bundleSequentialFile"];
 		bundleSequentialFile = Code.valueOrDefault(bundleSequentialFile, null);
-	var bundleSequentialError = graphData["bundleSequentialError"];
+	var bundleSequentialError = sourceData["bundleSequentialError"];
 		bundleSequentialError = Code.valueOrDefault(bundleSequentialError, null);
 
 	console.log("bundleSequentialFile: "+bundleSequentialFile);
@@ -10807,13 +10807,16 @@ App3DR.ProjectManager.prototype._iterateSparseTracks = function(sourceData, sour
 		}
 
 		if(bundleSequentialFile!==null){
-			throw "bundleSequentialFile - iterate on sequential file"
+			// throw "bundleSequentialFile - iterate on sequential file"
+			var filename = "" + (isDense ? "dense" : "sparse") + "/" + bundleSequentialFile;
+			project._iterateGraphSequential(sourceData, sourceFilename, filename);
+			return;
 		}
 
-		if(bundleFullError!==null){
-			throw "bundleFullError set -> create/init the sequential file"
-			// throw "already done .. should have putatives saved into main info.yaml"
-		}
+		// if(bundleFullError!==null){
+		// 	throw "bundleFullError set -> create/init the sequential file"
+		// 	// throw "already done .. should have putatives saved into main info.yaml"
+		// }
 
 		if(bundleFullIndex>=graphPairs.length){ // done loading all pairs into track full file
 			console.log("bundle adjust full file ...");
@@ -10953,7 +10956,7 @@ console.log(info);
 					// save these putatives to sparse.yaml / dense.yaml -- as starting point
 
 
-
+					var allCameras = fullData["cameras"];
 					sourceData["cameras"] = fullData["cameras"];
 					console.log(sourceData["cameras"]);
 					// throw "is this correct camera ^";
@@ -10986,7 +10989,40 @@ SEQUENTIAL:
 
 */
 
-				project._initGraphSequential(allViews,allPoints, allTransforms, info);
+				var sequentialData = project._initGraphSequential(allViews,allPoints, allTransforms, allCameras); // info
+				console.log(sequentialData);
+
+				var sequentialFile = "sequential.yaml";
+				
+
+				var savedDataComplete = function(){
+					console.log("saved data (sparse/dense)");
+					project.saveProjectFile(savedProjectComplete, project);
+				}
+
+				var savedSubjectDataComplete = function(){
+					console.log("saved data (sparse/dense)");
+					// project.saveProjectFile(savedProjectComplete, project);
+					// project.saveFileFromData(sourceData, sourceFilename, savedDataComplete, project);
+				}
+
+				var savedSequentialDataComplete = function(){
+					console.log("saved sequential data (sparse/dense)");
+					// project.saveProjectFile(savedSubjectDataComplete, project);
+					project.saveFileFromData(sourceData, sourceFilename, savedDataComplete, project);
+				}
+
+				sourceData["bundleSequentialFile"] = sequentialFile;
+
+				// abs location:
+				if(isDense){
+					sequentialFile = "dense/"+sequentialFile;
+				}else{
+					sequentialFile = "sparse/"+sequentialFile;
+				}
+				project.saveFileFromData(sequentialData, sequentialFile, savedSequentialDataComplete, project);
+
+				
 
 
 
@@ -11002,7 +11038,6 @@ SEQUENTIAL:
 					var savedDataComplete = function(){
 						console.log("saved data (sparse/dense)");
 						project.saveProjectFile(savedProjectComplete, project);
-						
 					}
 					var savedProjectComplete = function(){
 						console.log("saved project");
@@ -20599,30 +20634,382 @@ App3DR.ProjectManager.prototype.iterateGraphTracks = function(){ // aggregate / 
 	// load graph file
 	project.loadGraph(fxnGraphLoaded, project);
 }
-App3DR.ProjectManager.prototype._initGraphSequential = function(allViews,allPoints, allTransforms, info){
-	console.log(allViews);
-	console.log(allPoints);
-	console.log(allTransforms);
-	console.log(info);
-/*
-	create graph
-	...
+App3DR.ProjectManager.prototype._initGraphSequential = function(allViews,allPoints, allTransforms, allCameras){
+	console.log("_initGraphSequential");
+	// console.log(allViews);
+	// console.log(allPoints);
+	// console.log(allTransforms);
+	// console.log(allCameras);
+	// throw "out"
+	// console.log(info);
 
+	// create graph
+	var graph = new Graph();
+	console.log(graph);
+
+	var viewIDToVertex = {};
+	for(var i=0; i<allViews.length; ++i){
+		var view = allViews[i];
+		var viewID = view["id"];
+		// console.log(view);
+		var vertex = graph.addVertex();
+		vertex.data(view);
+		viewIDToVertex[viewID] = vertex;
+	}
+	var vertexes = graph.vertexes();
+	console.log(vertexes);
+
+
+	for(var i=0; i<allTransforms.length; ++i){
+		var transform = allTransforms[i];
+		// console.log(transform);
+		var idA = transform["A"];
+		var idB = transform["B"];
+		var matchCount = transform["matches"];
+		var matchError = transform["errorRMean"];
+		var edgeWeight = matchCount/matchError;
+		// console.log(matchCount,matchError,edgeWeight);
+		var vertexA = viewIDToVertex[idA];
+		var vertexB = viewIDToVertex[idB];
+		// console.log(vertexA,vertexB);
+		var edge = graph.addEdgeDuplex(vertexA,vertexB,edgeWeight); ///, Graph.Edge.DIRECTION_DUPLEX);
+		edge.data(transform);
+	}
+	var edges = graph.edges();
+	console.log(edges);
+
+
+	// VISUALIZE ?:
+
+	//
+
+	var infoHash = {};
+	var insideHash = {};
+	var outsideHash = {};
+	var sortFxn = function(a,b){
+		var scoreA = a.data()["score"];
+		var scoreB = b.data()["score"];
+		//console.log(scoreA,scoreB);
+		// SOME METRIC OF TOTAL CONNECTIVITY
+		// throw "return vertex with higher connectivity to inside set"
+		if(a==b){
+			return 0;
+		}
+		return scoreA > scoreB ? -1 : 1;
+	}
+	
+	var vertexQueue = new PriorityQueue(sortFxn);
+
+	// first view = highest connected vertex
+	var updateScoresFxn = function(onlyCrossInside){
+
+		for(var i=0; i<vertexes.length; ++i){
+			var vertex = vertexes[i];
+			var data = vertex.data();
+			var edgeList = vertex.edges();
+
+			if(onlyCrossInside){
+				if(!data["inside"]){
+					var sum = 0;
+					for(var j=0; j<edgeList.length; ++j){
+						var edge = edgeList[j];
+						// only include weights of vertexes on inside
+						// console.log(vertex,edge.opposite(vertex),edge);
+						// console.log(edge.opposite(vertex).data()["id"])//Y9FK4HBT
+						if(edge.opposite(vertex).data()["inside"]){
+							// console.log("found opposite inside: ",edge.opposite(vertex));
+							var weight = edge.weight();
+							sum += weight;
+						}
+					}
+					// console.log(sum);
+					data["score"] = sum;
+					vertexQueue.push(vertex);
+				}
+			}else{
+				// console.log(edgeList);
+				// sum of all edges = best?
+				var sum = 0;
+				for(var j=0; j<edgeList.length; ++j){
+					var edge = edgeList[j];
+					var weight = edge.weight();
+					sum += weight;
+					// console.log(edge.weight());
+				}
+				// console.log(sum);
+				data["score"] = sum;
+				data["inside"] = false;
+				vertexQueue.push(vertex);
+			}
+			
+		}
+	}
+	updateScoresFxn(false);
+	// start with most connected view inside 
+
+	// var array
+	// onlyInside
+
+
+	var bestVertex = vertexQueue.pop();
+	// console.log(bestVertex);
+	console.log("bestVertex: "+bestVertex.data()["id"]);
+	vertexQueue.clear();
+
+	bestVertex.data()["inside"] = true;
+	// insideHash[bestVertex.data()["id"]] = bestVertex;
+
+	
+	var sortAdjFxn = function(a,b){
+		return a["score"] > b["score"] ? -1 : 1;
+	};
+	// initial step as default
+	var steps = [];
+		var step = {};
+		step["view"] = bestVertex.data()["id"];
+		step["pairs"] = null;
+		steps.push(step);
+
+	// iteritive joining of vertexes
+	for(var i=0; i<999; ++i){
+		updateScoresFxn(true);
+		// console.log(" ....................... "+i+" = "+vertexQueue.length());
+		var bestVertex = vertexQueue.pop();
+		if(!bestVertex){ // empty
+			break;
+		}
+		vertexQueue.clear();
+		// console.log(bestVertex);
+		var score = bestVertex.data()["score"];
+		if(score==0){
+			console.log(bestVertex);
+			throw "0 score";
+		}
+
+		var step = {};
+		var pairs = [];
+		step["view"] = bestVertex.data()["id"];
+		step["pairs"] = pairs;
+		steps.push(step);
+		// get top scores of adjacent interrior 
+		var edgeList = bestVertex.edges();
+		for(var j=0; j<edgeList.length; ++j){
+			var edge = edgeList[j];
+			var oppo = edge.opposite(bestVertex).data();
+			if(oppo["inside"]){
+				var weight = edge.weight();
+				pairs.push( { "id":oppo["id"], "score":weight });
+			}
+		}
+		pairs.sort(sortAdjFxn);
+
+
+		bestVertex.data()["inside"] = true;
+		insideHash[bestVertex.data()["id"]] = bestVertex;
+
+		// remove all / resort ?
+		// throw "..."
+	}
+
+// console.log(steps);
+
+
+	var sequentialData = {};
+	sequentialData["initial"] = {
+		"views": allViews, // absolute
+		"pairs": allTransforms, // relative w/ error info
+	};
+	sequentialData["graph"] = {
+		"cameras":allCameras, // cameras
+		"views":null, // id,R,...
+		"points":null, // points or point filenames ?
+	};
+	sequentialData["sequence"] = steps;
+
+	return sequentialData;
+
+/*
+	- graph
+		- cameras [all cameras]
+		- points [all CURRENTLY COMPLETED 3D points]
+		- views [all CURRENTLY COMPLETED VIEWS]
+	- putative - [initial view graph]
+		- views: absolute view matrixes
+		- transforms: pairwise matrixes [need: count, errorR, errorF, idA, idB]
+*/
+
+	// 
+	// 
+/*
+
+	iteritively add next-best connected view to join set
+
+	pick which pairs (other views) to include as part of process
+		- already inside
+
+
+	PROCESS:
+
+	- pick out next step in list:
+		- single view to focus transform on
+		- adjacent views 
+			- load images from
+			- transforms to relate
+		- 
+
+
+	- adjust for scale changes
+		- current baseline distance / original baseline distance
+		-> average where possible
+	- adjust for drift?
+		- only consider relative transforms between view pairs
+	
+	- points saved in separate files - STEP files [stage in process]
+		- no 'tracks' accumulating outside of the individual step
+
+	- focused view
+	- established views
+	- initial view pair transforms
+	- current view pair transforms
+
+
+	INITIAL VIEW ('most connected') of the best connected pair ?
 
 */
+	
+	//
+
+	// come up with step by step list of views to load in order for sequence
+	// 
+
+	// does iterating process start from scratch each time?
+
+	//
 
 
 	throw "_initGraphSequential";
-	var info = {};
-	return info;
+	// var info = {};
+	// return info;
+/*
+	
+*/
 }
-App3DR.ProjectManager.prototype._iterateGraphSequential = function(graphData){
+App3DR.ProjectManager.prototype._iterateGraphSequential = function(sourceData,sourceFilename,sequenceFilename){
 	console.log("_iterateGraphSequential");
-	console.log(graphData);
+	console.log(sourceData);
+	console.log(sourceFilename);
+	console.log(sequenceFilename);
+	var project = this;
+	var sequenceData = null;
 
-	// if file is null, create it
+	var maximumPairImages = 6; // [3, 10] ~ 6
 
-	// steps:
+	var fxnSequenceLoaded = function(data){
+		console.log("fxnSequenceLoaded");
+		console.log(data);
+		sequenceData = data;
+		var steps = sequenceData["sequence"];
+		var initialGraph = sequenceData["initial"];
+		var currentGraph = sequenceData["graph"];
+		var currentStep = sequenceData["sequenceIndex"];
+		if(currentStep==null || currentStep==undefined){
+			currentStep = 0;
+		}
+		if(currentStep>=steps.length){
+			throw "past last step";
+		}
+		// for next time
+		sequenceData["sequenceIndex"] = currentStep+1;
+
+		var step = steps[currentStep];
+		console.log(step);
+		var stepViewID = step["view"];
+		var stepPairs = step["pairs"];
+
+		graphViews = currentGraph["views"];
+		graphPoints = currentGraph["points"];
+
+
+		var stepViewInitial = null;
+		var initialGraphViews = initialGraph["views"];
+		var initialGraphViewLookup = {};
+		for(var i=0; i<initialGraphViews.length; ++i){
+			var view = initialGraphViews[i];
+			var viewID = view["id"];
+			initialGraphViewLookup[viewID] = view;
+		}
+		stepViewInitial = initialGraphViewLookup[stepViewID];
+
+		// estimate view initial location
+		if(stepPairs==null){
+			if(currentStep!==0){
+				throw "null pairs on non-first step"
+			}
+			var transformIdentity = new Matrix(4,4).identity();
+			// console.log(transformIdentity);
+
+			graphViews = [];
+			graphPoints = [];
+			currentGraph["views"] = graphViews;
+			currentGraph["points"] = graphPoints;
+
+			var view = {};
+			view["id"] = stepViewID;
+			view["transform"] = transformIdentity;
+			graphViews.push(view);
+			// .
+			console.log(stepViewInitial);
+			// .
+			/*
+			id: "LBOD71MS"
+			camera: "OISAO2RY"
+			imageSize:
+				x: 2016
+				y: 1512
+			cellSize: 0.01875
+			transform:
+				row: 4
+				col: 4
+				data:
+					- 0.970332196889654
+					- 0.039011840574948414
+					- -0.2386074264859597
+					- 0.10927078898246906
+					- -0.044192616773973806
+					- 0.9988884166496911
+					- -0.01639950321631096
+					- 0.008901017511877489
+					- 0.23770241963843478
+					- 0.026457652541900096
+					- 0.9709776270954988
+					- -0.03761138905862096
+					- 0
+					- 0
+					- 0
+					- 1
+			score: 3756813383.152735
+			inside: true
+			*/
+
+
+			throw "first step stuff"
+		}else{
+						// relative scales
+			// .
+
+		// load pair images
+
+		// do blind-ish World solving
+
+		// save points to a point file:
+
+		// sequential/points_0.yaml
+			throw "do step non-first"
+		}
+
+		throw "do step stuff"
+
+	}
 
 	// original absolute view locations
 
@@ -20636,7 +21023,7 @@ App3DR.ProjectManager.prototype._iterateGraphSequential = function(graphData){
 
 	//
 
-	throw "out";
+	project.loadDataFromFile(sequenceFilename, fxnSequenceLoaded, project);
 }
 App3DR.ProjectManager.prototype._iterateGraphTracksStart = function(){
 	console.log("_iterateGraphTracksStart");

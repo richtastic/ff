@@ -402,7 +402,7 @@ MISSING:
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
-
+initGraphSequential
 
 _iterateGraphSequential
 
@@ -412,14 +412,14 @@ SEQUENTIAL:
 		- cameras [all cameras]
 		- points [all CURRENTLY COMPLETED 3D points]
 		- views [all CURRENTLY COMPLETED VIEWS]
-	- putative - [initial view graph]
+			- id
+			- transform
+	- initial - putative - [initial view graph]
 		- views: absolute view matrixes
 		- transforms: pairwise matrixes [need: count, errorR, errorF, idA, idB]
 	- sequence [sequence of views to load]
-		- views:
-			- id [id of view to load]
-			- images/adjacent: [array of all view IDs to load - including self]
-			- 
+			- view id [id of view to load]
+			- pairs: images/adjacent: [array of all view IDs to load - including self]
 
 
 - determining view load sequence:
