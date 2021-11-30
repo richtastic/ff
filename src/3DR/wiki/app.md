@@ -404,7 +404,14 @@ MISSING:
 
 initGraphSequential
 
-_iterateGraphSequential
+
+- R-searching is too slow
+- R-searching matches is poor & dense
+
+
+	searchMatchPointsPair3D
+		experimentLocationRefine
+
 
 
 SEQUENTIAL:

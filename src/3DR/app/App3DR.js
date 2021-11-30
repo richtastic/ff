@@ -13405,8 +13405,8 @@ console.log(world);
 		console.log(P);
 GLOBALSTAGE.root().matrix().scale(0.50); // dense
 // GLOBALSTAGE.root().matrix().scale(0.25); // BA
-
-		var result = R3D.searchMatchPointsPair3D(imageScalesA,imageScalesB, P, KimageA,KimageB, errorSearchRMaximumPercent); // forward
+		var doRelocation = true;
+		var result = R3D.searchMatchPointsPair3D(imageScalesA,imageScalesB, P, KimageA,KimageB, errorSearchRMaximumPercent, doRelocation); // forward
 		console.log(result);
 		var pointsA = result["A"];
 		var pointsB = result["B"];
@@ -20915,7 +20915,8 @@ App3DR.ProjectManager.prototype._iterateGraphSequential = function(sourceData,so
 		if(currentStep==null || currentStep==undefined){
 			currentStep = 0;
 		}
-		if(currentStep>=steps.length){
+		if(currentStep>=steps.length){ // done
+			// ...
 			throw "past last step";
 		}
 		// for next time
@@ -20926,10 +20927,11 @@ App3DR.ProjectManager.prototype._iterateGraphSequential = function(sourceData,so
 		var stepViewID = step["view"];
 		var stepPairs = step["pairs"];
 
-		graphViews = currentGraph["views"];
-		graphPoints = currentGraph["points"];
+		var graphViews = currentGraph["views"];
+		var graphPoints = currentGraph["points"];
+		var graphCameras = currentGraph["cameras"];
 
-
+		// initial info
 		var stepViewInitial = null;
 		var initialGraphViews = initialGraph["views"];
 		var initialGraphViewLookup = {};
@@ -20939,6 +20941,14 @@ App3DR.ProjectManager.prototype._iterateGraphSequential = function(sourceData,so
 			initialGraphViewLookup[viewID] = view;
 		}
 		stepViewInitial = initialGraphViewLookup[stepViewID];
+
+		// current info
+		var currentGraphViewLookup = {};
+		for(var i=0; i<graphViews.length; ++i){
+			var view = graphViews[i];
+			var viewID = view["id"];
+			currentGraphViewLookup[viewID] = view;
+		}
 
 		// estimate view initial location
 		if(stepPairs==null){
@@ -20956,59 +20966,321 @@ App3DR.ProjectManager.prototype._iterateGraphSequential = function(sourceData,so
 			var view = {};
 			view["id"] = stepViewID;
 			view["transform"] = transformIdentity;
-			graphViews.push(view);
-			// .
-			console.log(stepViewInitial);
-			// .
-			/*
-			id: "LBOD71MS"
-			camera: "OISAO2RY"
-			imageSize:
-				x: 2016
-				y: 1512
-			cellSize: 0.01875
-			transform:
-				row: 4
-				col: 4
-				data:
-					- 0.970332196889654
-					- 0.039011840574948414
-					- -0.2386074264859597
-					- 0.10927078898246906
-					- -0.044192616773973806
-					- 0.9988884166496911
-					- -0.01639950321631096
-					- 0.008901017511877489
-					- 0.23770241963843478
-					- 0.026457652541900096
-					- 0.9709776270954988
-					- -0.03761138905862096
-					- 0
-					- 0
-					- 0
-					- 1
-			score: 3756813383.152735
-			inside: true
-			*/
+			view["imageSize"] = stepViewInitial["imageSize"];
+			view["cellSize"] = stepViewInitial["cellSize"];
 
+			graphViews.push(view);
+			// 
+			// save sequence
+
+			console.log(sequenceData);
+
+			var saveSequenceFxn = function(a){
+				console.log("saveSequenceFxn");
+				project._taskDoneCheckReloadURL();
+			}
+
+			project.saveFileFromData(sequenceData,sequenceFilename, saveSequenceFxn,project);
 
 			throw "first step stuff"
 		}else{
-						// relative scales
-			// .
 
-		// load pair images
+			// second view ==== initial relative transform + (normalized baseline length set to 1 ?)
 
-		// do blind-ish World solving
+			// third (n) view === 
 
-		// save points to a point file:
+			//
 
-		// sequential/points_0.yaml
-			throw "do step non-first"
+/*
+
+}
+				var groupViews = group["views"];
+				var worldViews = [];
+				for(var j=0; j<groupViews.length; ++j){
+					var groupViewID = groupViews[j];
+					var view = allViewsLookup[groupViewID];
+					worldViews.push(view);
+				}
+				var groupPairs = group["pairs"];
+				// PASSING DATA:
+				selectedGroup = i;
+				// groupData = group; // ?
+				groupsInfo = {};
+					groupsInfo["cameras"] = allCameras;
+					groupsInfo["views"] = worldViews;
+					groupsInfo["pairs"] = groupPairs;
+					groupsInfo["points"] = [];
+				console.log("start loading");
+				// load points
+				expectedPairsCount = groupPairs.length;
+				for(var j=0; j<groupPairs.length; ++j){
+					var groupPair = groupPairs[j];
+					var groupID = groupPair["id"];
+					var groupPairFilename = Code.appendToPath(densePathBase, "pairs", groupID, "relative.yaml");
+					project.loadDataFromFile(groupPairFilename, completeLoadGroupPair, project);
+				}
+				// load images:
+				expectedImagesCount = worldViews.length;
+				for(var j=0; j<worldViews.length; ++j){
+					var worldView = worldViews[j];
+					var viewID = worldView["id"];
+					var view = project.viewFromID(viewID);
+					// view.loadBundleAdjustImage(completeLoadGroupViewImage, project); // 4032 x 3024
+					view.loadDenseHiImage(completeLoadGroupViewImage, project); // ... 
+					// view.loadIconImage(completeLoadGroupViewImage, project);
+				}
+
+*/
+
+			// get current transforms
+
+			var doWorldViewSolve = function(a){
+				// do blind-ish World solving
+				// relative scales
+
+			// get initial transforms
+
+
+			// for(var i=0; i<stepPairs.length; ++i){
+			// 	var pairInfo = stepPairs[i];
+			// 	var oppositeID = pairInfo["id"];
+			// 	console.log(pairInfo);
+
+			// 	var oppositeInitialInfo = initialGraphViewLookup[oppositeID];
+			// 	console.log(oppositeInitialInfo);
+
+			// 	var oppositeCurrentInfo = currentGraphViewLookup[oppositeID];
+			// 	console.log(oppositeCurrentInfo);
+			// }
+			// 
+			var scaleInitialToCurrent = 1.0;
+			//
+			var transformInitial = null;
+
+
+			// scale = average of: all PAIRS_i-PAIRS_j (weighted by score?): current distance / initial distance
+			console.log(stepPairs);
+			var scaleAmounts = [];
+			var scalePercents = [];
+			for(var i=0; i<stepPairs.length; ++i){
+				var pairInfoA = stepPairs[i];
+				var oppositeIDA = pairInfoA["id"];
+				for(var j=i+1; j<stepPairs.length; ++j){
+					var pairInfoB = stepPairs[j];
+					var oppositeIDB = pairInfoB["id"];
+					console.log("get scale for "+oppositeIDA+"-"+oppositeIDB);
+					throw "...";
+				}
+			}
+			if(scaleAmounts.length>0){
+				var result = Code.averageNumbersLog(scaleAmounts, scalePercents);
+				console.log(result);
+				throw "do scale averaging";
+
+				console.log("scaleInitialToCurrent: "+scaleInitialToCurrent);
+
+				// Code.optimumScaling1D();
+
+
+			}
+
+
+			console.log("scaleInitialToCurrent: "+scaleInitialToCurrent);
+
+			// transform = (relative of all PAIRS-VIEW) * 1/scale
+			var transformAbsolutes = [];
+			var transformPercents = [];
+			var stepTransformInitial = stepViewInitial["transform"];
+			// var extA = new Matrix(4,4);
+			// var extB = new Matrix(4,4);
+			// var absA = new Matrix(4,4);
+			// var absB = new Matrix(4,4);
+			var relAB = new Matrix(4,4);
+			for(var i=0; i<stepPairs.length; ++i){
+				var pairInfo = stepPairs[i];
+				var oppositeID = pairInfo["id"];
+				var oppositeTransformInitial = initialGraphViewLookup[oppositeID]["transform"];
+				var oppositeTransformCurrent = currentGraphViewLookup[oppositeID]["transform"];
+				// console.log(oppositeTransformInitial);
+				// console.log(stepTransformInitial);
+				// console.log(oppositeTransformCurrent);
+				// ...
+				var extA = new Matrix(4,4);
+				var extB = new Matrix(4,4);
+				// 
+				extA.fromObject(oppositeTransformInitial);
+				extB.fromObject(stepTransformInitial);
+console.log("extA:");
+console.log(extA+"");
+console.log("extB:");
+console.log(extB+"");
+				// console.log(extB);
+				absA = Matrix.inverse(extA);
+				absB = Matrix.inverse(extB);
+				// console.log(absA);
+				// console.log(absB);
+				// relAB = Matrix.relativeWorld(absA,absB); // ?
+				relAB = Matrix.relativeReference(absA,absB); // ?
+
+				// scale from old size to new size
+				relAB = Matrix.transform3DScaleMatrix(relAB, scaleInitialToCurrent);
+
+				// throw "scale ?"
+				//
+
+				// console.log(relAB+"");
+				// APPEND NOW:
+				extA.fromObject(oppositeTransformCurrent);
+				absA = Matrix.inverse(extA);
+
+				var absNew = Matrix.mult(relAB,absA);
+				console.log(absNew+"");
+// throw "here"
+				// transformAbsolutes.push(relAB);
+				transformAbsolutes.push(absNew);
+				// transformAbsolutes.push(relAB);
+				transformPercents.push(pairInfo["score"]);
+				// throw "..."
+			}
+
+			if(transformAbsolutes.length==0){
+				throw "cant do transfrorm averaging";
+			}
+			transformPercents = Code.countsToPercents(transformPercents);
+			console.log(transformAbsolutes);
+			console.log(transformPercents);
+
+			var averageTransform = Code.averageTransforms3D(transformAbsolutes, transformPercents);
+			// console.log(averageTransform);
+
+			console.log("averageTransform: ");
+			console.log(averageTransform);
+
+			// TO EXTRINSIG:
+			var averageExtrinsic = Matrix.inverse(averageTransform);
+			console.log("averageExtrinsic: ");
+			console.log(averageExtrinsic);
+// throw "..."
+
+			// create world
+			console.log(graphViews);
+			var currentViews = [];
+			for(var i=0; i<graphViews.length; ++i){
+				var gv = graphViews[i];
+				// var v = {};
+				// v["id"] = gv["id"];
+				// v["cellSize"] = gv["id"];
+				// v["imageSize"] = gv["id"];
+				// v["transform"] = gv["id"];
+				// 
+				currentViews.push(gv);
+			}
+			var thisView = {};
+				thisView["id"] = stepViewID;
+				// thisView["cellSize"] = ;
+				thisView["cellSize"] = stepViewInitial["cellSize"];
+				thisView["imageSize"] = stepViewInitial["imageSize"];
+				thisView["transform"] = averageExtrinsic.toObject(); // needs to be objet for fill-in-world-views
+			currentViews.push(thisView);
+console.log("graphCameras");
+console.log(graphCameras);
+console.log("currentViews");
+console.log(currentViews);
+			var info = project.fillInWorldViews(graphCameras, currentViews);
+			var views = info["views"];
+			var images = info["images"];
+			var cellSizes = info["cellSizes"];
+			var transforms = info["transforms"];
+			var cameras = graphCameras;
+
+console.log("info:");
+console.log(info);
+// throw "....";
+				// create world
+// console.log(views, images, cellSizes, transforms);
+// throw "///"
+				var world = new Stereopsis.World();
+				var WORLDCAMS = App3DR.ProjectManager.addCamerasToWorld(world, cameras);
+				console.log("WORLDCAMS");
+				console.log(WORLDCAMS);
+				var WORLDVIEWS = project.createWorldViewsForViews(world, views, images, cellSizes, transforms);
+				console.log("WORLDVIEWS");
+				console.log(WORLDVIEWS);
+				var WORLDVIEWSLOOKUP = project.createWorldViewLookup(world);
+				console.log("WORLDVIEWSLOOKUP");
+				console.log(WORLDVIEWSLOOKUP);
+
+
+			var worldViewLast = WORLDVIEWSLOOKUP[stepViewID];//views[views.length-1];
+			var worldViewsAdjacent = []; // all image-connected views
+			for(var i=0; i<WORLDVIEWS.length; ++i){
+				var v = WORLDVIEWS[i];
+				if(v!=worldViewLast){
+					if(v.image()){
+						worldViewsAdjacent.push(v);
+					}
+				}
+			}
+
+			console.log("world solve");
+			console.log(worldViewLast);
+			console.log(worldViewsAdjacent);
+			
+			
+			world.solveSequentialView(worldViewLast, worldViewsAdjacent);
+
+			throw "..."
+
+
+				
+				// 
+				// save points to a point file:
+				// 
+				// sequential/points_0.yaml
+				// 
+			}
+
+			// pick view images to load
+			console.log(stepPairs);
+			var pairLimitCount = Math.min(stepPairs.length,maximumPairImages);
+			var viewsToLoadImages = [];
+			viewsToLoadImages.push(stepViewID);
+			for(var i=0; i<pairLimitCount; ++i){
+				var pairInfo = stepPairs[i];
+				var oppositeID = pairInfo["id"];
+				viewsToLoadImages.push(oppositeID);
+			}
+			console.log(viewsToLoadImages);
+			for(var i=0; i<viewsToLoadImages.length; ++i){
+				var viewID = viewsToLoadImages[i];
+				var view = project.viewFromID(viewID);
+				viewsToLoadImages[i] = view;
+			}
+			console.log(viewsToLoadImages);
+
+			// load pair images
+			var expectedImageCount = viewsToLoadImages.length;
+			var loadedImageCount = 0;
+
+			// ...
+			var imagesLoadedFxn = function(a){
+				++loadedImageCount;
+				console.log(loadedImageCount+" / "+expectedImageCount)
+				if(loadedImageCount == expectedImageCount){
+					doWorldViewSolve();
+				}
+			}
+			// ...
+			console.log("load pair images");
+			for(i=0; i<viewsToLoadImages.length; ++i){
+				view = viewsToLoadImages[i];
+				view.loadDenseHiImage(imagesLoadedFxn, this);
+			}
+			
+			// throw "do step non-first"
 		}
 
-		throw "do step stuff"
-
+		// throw "do step stuff"
 	}
 
 	// original absolute view locations

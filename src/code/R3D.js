@@ -29668,12 +29668,14 @@ R3D.projectivePatchAffine3D = function(point3D,normal3D, cameraNormals, cameraRi
 // var affine2D = R3D.patchAffine2DFromPatch3D(point3D,normal3D,up3D,right3D,size3D, cameraA,Ka, cameraB,Kb, point2DA,point2DB, affineReuse);
 
 
-R3D.searchMatchPointsPair3D = function(imageScalesA,imageScalesB, relativeAB, Ka,Kb, imageErrorPercent){
+R3D.searchMatchPointsPair3D = function(imageScalesA,imageScalesB, relativeAB, Ka,Kb, imageErrorPercent, doRelocation){
 // var drawlings = true;
 var drawlings = false;
 
 // var useSADScore = true; // faster 
 var useSADScore = false;
+	
+	doRelocation = Code.valueOrDefault(doRelocation, true);
 
 	// 0.01 - 0.02
 	imageErrorPercent = Code.valueOrDefault(imageErrorPercent, 0.02); // @500x400 : 0.01 = 5px, 0.001 = 0.0px
@@ -30692,6 +30694,7 @@ console.log("DROP INITIAL SCORE");
 
 */
 // REPEATED DROP INITIAL SCORE ---------------------------------------------------------------------------------------
+if(doRelocation){
 console.log("RELOCATE POINTS");
 	var info = R3D.separateMatchesIntoPieces(matchesAB);
 	// console.log(info);
@@ -30699,9 +30702,14 @@ console.log("RELOCATE POINTS");
 	var pointsB = info["B"];
 	var affinesAB = info["affines"];
 	var info = R3D.experimentLocationRefine(pointsA,pointsB,affinesAB, imageScalesA,imageScalesB);
+
+// groupMatchesFromParallelArrays
+
 	// console.log(info);
 	info = R3D.groupMatchesFromParallelArrays(info, imageScalesA,imageScalesB);
 	matchesAB = info["matches"];
+
+}
 	// console.log(matchesAB);
 
 // REPEATED DROP INITIAL SCORE ---------------------------------------------------------------------------------------
@@ -37333,7 +37341,8 @@ R3D.matchesLocationRefine = function(matches, imageScalesA,imageScalesB){
 }
 
 
-R3D.experimentLocationRefine = function(samplesA,samplesB,affinesAB, imageScalesA,imageScalesB){
+R3D.experimentLocationRefine = function(samplesA,samplesB,affinesAB, imageScalesA,imageScalesB, sizePercent){
+	sizePercent = Code.valueOrDefault(sizePercent, 0.05);
 	var len = samplesA.length;
 	// var pointsA = [];
 	// var pointsB = [];
@@ -37342,7 +37351,7 @@ R3D.experimentLocationRefine = function(samplesA,samplesB,affinesAB, imageScales
 	var scores = [];
 	// console.log("LENGTH: "+samplesA.length);
 
-	var featureSize = imageScalesA.size().length() * 0.05;
+	var featureSize = imageScalesA.size().length() * sizePercent;
 
 	var needleSize = 11;
 	var haystackSize = needleSize*2 + 1;
