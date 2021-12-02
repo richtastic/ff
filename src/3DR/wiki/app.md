@@ -405,8 +405,16 @@ MISSING:
 initGraphSequential
 
 
+- still gaps between multi-view scene points ...
+	=> project / 3D tracks ?
+
+- 
+
+
 - R-searching is too slow
-- R-searching matches is poor & dense
+
+
+- what about N/S range == 0 [infinite error]
 
 
 	searchMatchPointsPair3D

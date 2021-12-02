@@ -30708,7 +30708,6 @@ console.log("RELOCATE POINTS");
 	// console.log(info);
 	info = R3D.groupMatchesFromParallelArrays(info, imageScalesA,imageScalesB);
 	matchesAB = info["matches"];
-
 }
 	// console.log(matchesAB);
 

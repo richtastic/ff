@@ -10638,23 +10638,36 @@ console.log("RELATIVE R: \n"+R+"")
 	// world.relativeFFromSamples(); // R ?
 	// world.estimate3DErrors(true);
 	// world.printPoint3DTrackCount();
-	world.shouldValidateMatchRange(false);
+	// world.shouldValidateMatchRange(false);
+	world.shouldValidateMatchRange(true);
 
 	console.log("STARTING PROGRESS LOOP .........  .........  .........  .........  .........  .........  .........  ......... ");
 
 	// expand/retract looping
+
+	// TEST - MINIMAL
+	var expandCount = 1;
+	var subdivideIndexes = [];
+
 	// var expandCount = 5; // 3-5
 	// var subdivideIndexes = [2];
 
-	var expandCount = 8;
-	var subdivideIndexes = [2,5];
+	// var expandCount = 8;
+	// var subdivideIndexes = [2,5];
+
+	// var expandCount = 10;
+	// var subdivideIndexes = [2,5,7];
 
 
 	var subdivideIndex = 0;
 	for(var i=0; i<expandCount; ++i){
 		console.log("all: ========================================================================================= "+i+" / "+expandCount);
-// break;
+break;
 		// INFO
+
+		if(i>=5){
+			world.shouldValidateMatchRange(false);
+		}
 
 		world.relativeFFromSamples();
 		// world.relativeFfromR();
@@ -10669,10 +10682,24 @@ console.log("RELATIVE R: \n"+R+"")
 		// console.log("after init loop");
 		// world.printPoint3DTrackCount();
 
+
+		// SUBDIVIDE
+			if(subdivideIndexes.length>0 && subdivideIndexes[subdivideIndex]==i){
+				// var subdivisionMultiplier = 0.75;
+				var subdivisionMultiplier = 0.5;
+				console.log("subdivision: "+subdivideIndex);
+				world.subdivideViewGridsR(subdivisionMultiplier);
+				console.log("subDivideUpdateMatchLocation");
+				world.subDivideUpdateMatchLocation();
+				++subdivideIndex;
+			}
+			// 
+
+
 		// EXPANSION
 			// expand from local 2D
-			var sigmaMaximumUse3DR = 2.0;
-			var sigmaProbe3DR = 3.0;
+			var sigmaMaximumUse3DR = 1.0;
+			var sigmaProbe3DR = 2.0;
 			world.probe3DR(sigmaMaximumUse3DR,sigmaProbe3DR);
 // console.log("after probe 3D");
 // world.printPoint3DTrackCount();
@@ -10704,6 +10731,7 @@ console.log("RELATIVE R: \n"+R+"")
 			
 
 			// var sigmaFilter3DR = 3.0;
+			// var sigmaFilter3DR = 2.5;
 			var sigmaFilter3DR = 2.0;
 			world.filterGlobal3DR(sigmaFilter3DR);
 			// world.filterGlobalMatches(false, 0, 2.0,2.0,2.0,2.0, false);
@@ -10717,6 +10745,10 @@ console.log("RELATIVE R: \n"+R+"")
 			world.dropNegativeMatches3D();
 			world.dropNegativePoints3D();
 
+			world.filterGlobalPatchSphere3D();
+
+			// world.smoothP3DPatchesNeighborhood();
+
 		// OPTIMIZING VIEW TRANSFORM
 			// optimize only single view location
 			var iterationsUpdateViewSingle = 50;
@@ -10724,18 +10756,6 @@ console.log("RELATIVE R: \n"+R+"")
 			world.refineSelectCameraMultiViewTriangulation(viewFocus, iterationsUpdateViewSingle);
 				world.copyRelativeTransformsFromAbsolute();
 				world.updateP3DPatchesFromAbsoluteOrientationChange();
-
-		// SUBDIVIDE
-			if(subdivideIndexes.length>0 && subdivideIndexes[subdivideIndex]==i){
-				// var subdivisionMultiplier = 0.75;
-				var subdivisionMultiplier = 0.5;
-				console.log("subdivision: "+subdivideIndex);
-				world.subdivideViewGridsR(subdivisionMultiplier);
-				console.log("subDivideUpdateMatchLocation");
-				world.subDivideUpdateMatchLocation();
-				++subdivideIndex;
-			}
-			// 
 
 			// if(iteration!==1 && iteration%iterations==1){
 			// 	console.log("RICHIE SOLVE BORDER DISPUTE: "+iteration);
@@ -10747,9 +10767,16 @@ console.log("RELATIVE R: \n"+R+"")
 
 	}
 
-	console.log(world.toYAMLString());
+	// world.smoothP3DPatchesNeighborhood();
+
+
+	world.filterGlobal3DR(2.0); // some lower threshold
+	world.refinePoint3DAbsoluteLocation();
+
+
+	// console.log(world.toYAMLString());
 	
-	throw "solveSequentialView";
+	// throw "solveSequentialView";
 }
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 Stereopsis.World.prototype.solveDenseGroup = function(completeSolveFxn){ // multiple (3+)

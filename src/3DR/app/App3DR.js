@@ -20985,6 +20985,13 @@ App3DR.ProjectManager.prototype._iterateGraphSequential = function(sourceData,so
 			throw "first step stuff"
 		}else{
 
+			graphPoints = currentGraph["points"];
+			if(!graphPoints){
+				graphPoints = [];
+				currentGraph["points"] = graphPoints;
+			}
+			
+
 			// second view ==== initial relative transform + (normalized baseline length set to 1 ?)
 
 			// third (n) view === 
@@ -21068,20 +21075,63 @@ App3DR.ProjectManager.prototype._iterateGraphSequential = function(sourceData,so
 				for(var j=i+1; j<stepPairs.length; ++j){
 					var pairInfoB = stepPairs[j];
 					var oppositeIDB = pairInfoB["id"];
+					// console.log(pairInfoA);
+					// console.log(pairInfoB);
 					console.log("get scale for "+oppositeIDA+"-"+oppositeIDB);
-					throw "...";
+
+					var initA = initialGraphViewLookup[oppositeIDA]["transform"];
+					var initB = initialGraphViewLookup[oppositeIDB]["transform"];
+						initA = Matrix.fromObject(initA);
+						initB = Matrix.fromObject(initB);
+						// abs
+						initA = Matrix.inverse(initA);
+						initB = Matrix.inverse(initB);
+					var initAB = Matrix.relativeReference(initA,initB);
+
+					// console.log(initA);
+					// console.log(initB);
+					// console.log(initAB);
+
+					var currA = currentGraphViewLookup[oppositeIDA]["transform"];
+					var currB = currentGraphViewLookup[oppositeIDB]["transform"];
+						currA = Matrix.fromObject(currA);
+						currB = Matrix.fromObject(currB);
+						// abs
+						currA = Matrix.inverse(currA);
+						currB = Matrix.inverse(currB);
+					var currAB = Matrix.relativeReference(currA,currB);
+
+					// console.log(currA);
+					// console.log(currB);
+					// console.log(currAB);
+
+					var baselineA = initAB.transform3DLocation();
+					var baselineB = currAB.transform3DLocation();
+					// console.log(baselineA.length());
+					// console.log(baselineB.length());
+					var ratioOldToNew = baselineB.length()/baselineA.length();
+					console.log("ratioOldToNew: "+ratioOldToNew);
+
+					var value = pairInfoA["score"] + pairInfoB["score"];
+					// console.log(value);
+					scalePercents.push(value);
+					scaleAmounts.push(ratioOldToNew);
+					// throw "...";
 				}
 			}
 			if(scaleAmounts.length>0){
-				var result = Code.averageNumbersLog(scaleAmounts, scalePercents);
-				console.log(result);
-				throw "do scale averaging";
+				scalePercents = Code.countsToPercents(scalePercents);
+				console.log(scaleAmounts);
+				console.log(scalePercents);
+				scaleInitialToCurrent = Code.averageNumbersLog(scaleAmounts, scalePercents);
+				// console.log(result);
+				
 
-				console.log("scaleInitialToCurrent: "+scaleInitialToCurrent);
+				// console.log("scaleInitialToCurrent: "+scaleInitialToCurrent);
 
 				// Code.optimumScaling1D();
 
-
+				// throw "do scale averaging";
 			}
 
 
@@ -21160,6 +21210,7 @@ console.log(extB+"");
 			var averageExtrinsic = Matrix.inverse(averageTransform);
 			console.log("averageExtrinsic: ");
 			console.log(averageExtrinsic);
+
 // throw "..."
 
 			// create world
@@ -21228,6 +21279,77 @@ console.log(info);
 			
 			
 			world.solveSequentialView(worldViewLast, worldViewsAdjacent);
+
+
+			var worldData = world.toObject();
+			var worldPoints = worldData["points"];
+			var worldViews = worldData["views"];
+			console.log(worldData);
+
+			console.log(world.toYAMLString());
+
+			throw "naow";
+
+			// yaml.writeObjectLiteral(world.toObject());
+
+
+
+
+			// SAVE THE POINTS TO A FILE
+
+			var parentDirectory = Code.pathRemoveLastComponent(sequenceFilename);
+
+			var pointsFilename = "points_"+currentStep+".yaml";
+				pointsFilename = Code.appendToPath(parentDirectory,"sequence",pointsFilename);
+			graphPoints.push(pointsFilename);
+
+
+				// var yaml = new YAML();
+					// var timestampNow = Code.getTimeStamp();
+					// yaml.writeComment("BA model");
+					// yaml.writeComment("created: "+timestampNow);
+					// yaml.writeBlank();
+					// yaml.writeObjectLiteral({"points":worldPoints});
+					// throw "here";
+					// yaml.writeDocument();
+					// var str = yaml.toString();
+			// var pointsYAML = yaml.toString();
+			var pointsData = {"points":worldPoints};
+			console.log(pointsData);
+			console.log(sequenceData);
+			console.log(sequenceFilename);
+			console.log(pointsFilename);
+
+
+			currentGraph["views"] = worldViews;
+
+			// var yaml = new YAML();
+				// yaml.writeObjectLiteral(graphData);
+			// var graphYAML = yaml.toString();
+			// currentGraph
+			// var graphYAML = yaml.toString();
+
+			var saveSequenceGraphFxn = function(){
+				console.log("saveSequenceGraphFxn");
+				project._taskDoneCheckReloadURL();
+			}
+
+			var saveSequencePointsFxn = function(){
+				console.log("saveSequencePointsFxn");
+				project.saveFileFromData(sequenceData,sequenceFilename, saveSequenceGraphFxn,project);
+			}
+
+			project.saveFileFromData(pointsData,pointsFilename, saveSequencePointsFxn,project);
+
+			// console.log(graphYAML);
+			// console.log(pointsData);
+			// console.log(sequenceData);
+
+			// UPDATE THE GRAPH VIEWS
+
+			// SAVE THE UPDATED SEQUENTIAL DATA
+
+			// RECHECK
 
 			throw "..."
 
