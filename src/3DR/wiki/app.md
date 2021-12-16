@@ -402,12 +402,21 @@ MISSING:
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
+
+- are P3Ds in the global reference frame ?
+
 initGraphSequential
 
 
 - still gaps between multi-view scene points ...
 	=> project / 3D tracks ?
 
+		=> probe3DGlobal ?
+		
+	=> any metrics used to reduce error should be global
+		-> R can be done globally
+		-> F/S/N can be estimated on a pair-basis, but discarded only in global population?
+	=> TFT ?
 - 
 
 

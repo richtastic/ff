@@ -20917,7 +20917,7 @@ App3DR.ProjectManager.prototype._iterateGraphSequential = function(sourceData,so
 		}
 		if(currentStep>=steps.length){ // done
 			// ...
-			throw "past last step";
+			throw "past last step of sequential";
 		}
 		// for next time
 		sequenceData["sequenceIndex"] = currentStep+1;
@@ -21276,7 +21276,7 @@ console.log(info);
 			console.log("world solve");
 			console.log(worldViewLast);
 			console.log(worldViewsAdjacent);
-			
+
 			
 			world.solveSequentialView(worldViewLast, worldViewsAdjacent);
 
@@ -21288,7 +21288,7 @@ console.log(info);
 
 			console.log(world.toYAMLString());
 
-			throw "naow";
+			// throw "naow";
 
 			// yaml.writeObjectLiteral(world.toObject());
 

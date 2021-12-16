@@ -58,7 +58,8 @@ QRTest.prototype.loadTestImageA = function(){
 QRTest.prototype.handleImageLoaded = function(data){
 
 
-	var result = QRCode.fromString("This is a test message to be encoded inside of a qr code. Some characters won't be able to translate.");
+	// var result = QRCode.fromString("This is a test message to be encoded inside of a qr code. Some characters won't be able to translate.");
+	var result = QRCode.fromString("This is a test message to be qr - v 5", QRCode.ECL_H);
 	console.log(result);
 	throw "..."
 

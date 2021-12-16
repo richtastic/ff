@@ -598,7 +598,7 @@ GLOBALSTAGE.addChild(d);
 	var bytes = info["data"];
 
 	// STEP 5 - "RESTORE" DATA & ERROR CORRECTION CODEWORDS
-	var info = QRCode._revertOrderDataBlocks(bytes, versionData, dataECL);
+	var info = QRCode._reverseOrderDataBlocks(bytes, versionData, dataECL);
 	console.log(info);
 		bytes = info["data"];
 		console.log(bytes);
@@ -746,7 +746,131 @@ QRCode._errorCorrectData = function(data, version){
 	return {"errors":errorCount, "data":bytes};
 }
 
-QRCode._revertOrderDataBlocks = function(data, version, ecl){
+
+QRCode._forwardOrderDataBlocks = function(data, info){//, version, ecl){
+	console.log("_forwardOrderDataBlocks");
+	console.log("info: ");
+	console.log(info);
+	var version = info["version"];
+	var mode = info["mode"];
+	var ecl = info["ecl"];
+	console.log("version: "+version);
+	console.log("ecl: "+ecl);
+	// console.log("data: "+data.length);
+	// console.log("charCount: "+charCount);
+	
+
+	// ~ 447
+
+	var tableECC = QRCode._tableECC;
+	var tableECB = QRCode._tableECB;
+
+	var eclIndex = QRCode._eclToIndex(ecl);
+	var versionIndex = QRCode._versionToIndex(version);
+
+	var codeWordsError = tableECC[version][eclIndex];
+	console.log("codeWordsError: "+codeWordsError);
+
+	//var eccCountPerRow = tableECC[version][eclIndex];
+	//console.log("eccCountPerRow: "+eccCountPerRow);
+	var eccRows = tableECB[version][eclIndex];
+	console.log("eccRows: "+eccRows);
+
+
+	var codeWordsData = info["bytes"];
+	// var codeWordsError = eccCountPerRow/eccRowsMax;
+	var totalCodewords = codeWordsData + codeWordsError;
+
+	console.log("total codewords: "+totalCodewords);
+
+	// p 46
+	var rowCapacityError = codeWordsError/eccRows | 0; // should always divide by total ?
+	var rowCapacityShort = codeWordsData/eccRows | 0;
+	var rowCapacityLong = rowCapacityShort+1;
+	console.log(codeWordsData, rowCapacityShort, eccRows);
+	var rowCountLong = codeWordsData - rowCapacityShort*eccRows;
+	var rowCountShort = eccRows - rowCountLong;
+	// var remainder = eccRows * (rowCountShort*rowCapacityShort);
+	
+	
+
+	console.log("rowCapacityShort: "+rowCapacityShort);
+	console.log("rowCapacityLong: "+rowCapacityLong);
+	console.log("rowCapacityError: "+rowCapacityError);
+	console.log("rowCountShort: "+rowCountShort);
+	console.log("rowCountLong: "+rowCountLong);
+
+	// fill in data rows
+	// var rowCountShort = 0;
+	// var rowCountLong = 0;
+
+
+	// to do for both long and short
+
+	// var blockCapacity = ;
+
+	var matrixFull = [];
+	for(var row=0; row<eccRows; ++row){
+		var rowCapacityData = rowCapacityShort;
+		if(row>=rowCountShort){
+			rowCapacityData = rowCapacityLong;
+		}
+		var blockError = rowCapacityError;
+		var blockData = rowCapacityData;
+		var blockTotal = blockError+blockData;
+		var blockECC = blockError/2 | 0;
+		//
+		//
+		console.log("ECC BLOCK: (tot:"+blockTotal+", dat:"+blockData+", ecc:"+blockECC+")   [err:"+blockError+"]");
+		// prep error rows
+
+		var codewordsData = null;
+
+		// calculate error values
+		var codewordsError = QRCode._createErrorCorrectionBlocks(what);
+
+		// add to matrixFull
+	}
+
+	console.log(matrixFull);
+
+
+	// mix up for 
+
+
+	
+
+/*
+
+5-H
+
+D1-D11 & E1-E22
+
+2 short rows
+2 long rows
+
+
+
+*/
+
+	throw "..."
+}
+QRCode._createErrorCorrectionBlocks = function(dataBytes){
+
+	// p 45
+	// 100011101
+	// error correction codewords = remainder after GF(256) math
+	// 
+
+	// k = error block count ?
+	// n = input block count (data?)
+
+	var generator = QRCode._generatorPolynomials[x];
+
+	throw "?"
+}
+
+QRCode._reverseOrderDataBlocks = function(data, version, ecl){
 	// assemble into 2 separate matrixes
 	var matrixDataRows = 0;
 	var matrixDataCols = 0;
@@ -755,6 +879,7 @@ QRCode._revertOrderDataBlocks = function(data, version, ecl){
 	var matrixErrorCols = 0;
 	var matrixErrorRemainder = 0;
 
+throw "QRCode._eclToIndex";
 	var eclToIndex = function(e){
 		if(e==QRCode.ECL_L){
 			return 0;
@@ -859,7 +984,7 @@ throw "lookup .. "
 
 	var orderedData = matrixData;
 
-	// throw "_revertOrderDataBlocks";
+	// throw "_reverseOrderDataBlocks";
 	return {"data":orderedData};
 }
 
@@ -1791,7 +1916,7 @@ go thru each hash to determine if there are any characters NOT in the list
 		// binary or linear search to find lowest capacity version to use:
 		var capacity = null;
 		for(var i=0; i<=40; ++i){
-			if(i==0){ // ignore micro qr
+			if(i==0){ //  TODO: ignore micro qr
 				continue;
 			}
 			// var info = QRCode.capacityInfoFromVersionECLMode(i,QRCode.ECL_H,QRCode.MODE_INDICATOR_BYTE);
@@ -1853,8 +1978,8 @@ go thru each hash to determine if there are any characters NOT in the list
 		// version
 		console.log("version: "+version);
 // p 35 - 44
-		QRCode._tableECC;
-		QRCode._tableECB;
+		console.log(QRCode._tableECC);
+		console.log(QRCode._tableECB);
 
 		var errorCorrectionRows = 0; // could have 2
 		var errorCorrectionBlocksTotal = 0;
@@ -1871,6 +1996,8 @@ separate into N rows
 		// form data table
 
 		// calculate error table
+
+		QRCode._forwardOrderDataBlocks(data, capacity);//, version, errorCorrectionSetting); // , mode
 
 
 
@@ -2532,9 +2659,9 @@ QRCode._tableECB = [ // L M Q H
 	[1,1,1,1], // 2
 	[1,1,2,2], // 3
 	[1,2,2,4], // 4
-	[1,2,2,2], // 5
+	[1,2,4,4],// [1,2,2,2], // 5  -- starts double-table
 	[2,4,4,4], // 6
-	[2,4,2,4], // 7 -- starts double-table
+	[2,4,6,5], //[2,4,2,4], // 7
 		// [2,4,6,5], // TOTALS
 	[], // 
 	[], // 
@@ -2565,6 +2692,15 @@ QRCode._tableECB = [ // L M Q H
 	[], // 
 	[], // 
 ];
+// p67
+QRCode._generatorPolynomialPrimitive = 0xFFFF; // 285 ? 0x = 0b100011101
+QRCode._generatorPolynomials = {
+	"7":[],
+	"10":[],
+	"13":[],
+	"15":[],
+	// ...
+};
 
 
 QRCode._alignmentPatternLocationsTest = function(){
