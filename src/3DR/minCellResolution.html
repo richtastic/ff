@@ -1,0 +1,388 @@
+<html>
+<head>
+<title>Minimum Cell Resolution (Range, Cornerness, ...)</title>
+<script src="../code/FF.js"></script>
+</head>
+<script type="text/javascript">
+function pageLoadedFxn(){
+	console.log("pageLoadedFxn");
+	var ff = new FF("../code/",ffLoadedFxn);
+}
+function ffLoadedFxn(){
+	(new ScriptLoader("./",[],this,classesLoadedFxn)).load();
+}
+function classesLoadedFxn(){
+	console.log("classesLoadedFxn");
+	var test = new CellResolutionTest();
+}
+</script>
+<body onload="pageLoadedFxn();">
+</body>
+</html>
+<script type="text/javascript">
+function CellResolutionTest(){
+	// setup display
+	this._canvas = new Canvas(null,1,1,Canvas.STAGE_FIT_FILL);
+	this._stage = new Stage(this._canvas, (1/10)*1000);
+	this._canvas.addListeners();
+	this._stage.addListeners();
+	this._stage.start();
+	this._root = new DO();
+	this._stage.root().addChild(this._root);
+	GLOBALSTAGE = this._stage;
+
+// this._stage.root().scale(2.0);
+this._root.matrix().scale(2.0);
+	// load images
+	// var imageList = ["caseStudy1-24.jpg","caseStudy1-26.jpg"];
+// var imageList = ["caseStudy1-24.jpg"];
+// var imageList = ["bench_A.png","bench_B.png"];
+// var imageList = ["bench_D.png","bench_F.png"];
+// var imageList = ["bt.000.png","bt.002.png"];
+// var imageList = ["castle.000.jpg","castle.009.jpg"];
+// var imageList = ["rabbit/1.jpg","rabbit/2.jpg"];
+// var imageList = ["graffiti_1.png","graffiti_2.png"];
+// var imageList = ["room1.png","room2.png"];
+var imageList = ["chapel00.png","chapel01.png"];
+
+
+	imageLoader = new ImageLoader("./images/",imageList, this,this.imagesLoadComplete,null);
+	imageLoader.load();
+}
+CellResolutionTest.prototype.imagesLoadComplete = function(imageInfo){
+	console.log("imageInfo")
+
+	var imageList = imageInfo.images;
+
+	// var imageSourceA = imageList[0];
+	// var imageFloatA = GLOBALSTAGE.getImageAsFloatRGB(imageSourceA);
+	// var imageMatrixA = new ImageMat(imageFloatA["width"],imageFloatA["height"], imageFloatA["red"], imageFloatA["grn"], imageFloatA["blu"]);
+
+	// var imageSourceB = imageList[1];
+	// var imageFloatB = GLOBALSTAGE.getImageAsFloatRGB(imageSourceB);
+	// var imageMatrixB = new ImageMat(imageFloatB["width"],imageFloatB["height"], imageFloatB["red"], imageFloatB["grn"], imageFloatB["blu"]);
+	var matrixList = [];
+	var i, j, list = [], d, x=0, y=0;
+
+
+	x += 50;
+	y += 50;
+	for(i=0;i<imageList.length;++i){
+		var img = imageList[i];
+		var matrix = this._stage.getImageAsImageMat(img);
+		matrixList[i] = matrix;
+
+		//list[i] = img;
+		d = new DOImage(img);
+		//d.enableDragging();
+		this._root.addChild(d);
+		d.matrix().identity();
+		d.matrix().translate(x,y);
+		d.graphics().setLine(1.0,0xFFFF0000);
+		d.graphics().beginPath();
+		d.graphics().endPath();
+		d.graphics().strokeLine();
+		
+
+		console.log(matrix);
+
+		var gry = matrix.gry();
+		var corners = R3D.harrisCornerDetection(gry, matrix.width(), matrix.height());
+
+		// normalize to 01
+		ImageMat.normalFloat01(corners);
+		var info = Code.infoArray(corners);
+		console.log(info);
+		var min = info["min"];
+		var max = info["max"];
+		var mean = info["mean"];
+
+
+		// var minimumScoreCorner = 0.001;
+		// var minimumScoreCorner = mean; // too restrictive
+		var minimumScoreCorner = mean*0.5;
+		// var minimumScoreCorner = mean*0.1;
+
+		// console.log(corners);
+
+		// get distribution of corners ...
+
+
+		// throw "...";
+
+		var SDF = function(rect, data, cell){
+			// console.log("SDF");
+
+			var minimumRangeGray = 0.01;
+			// var minimumRangeGray = 0.05;
+			// var minimumRangeGray = 0.10;
+			// var minimumRangeGray = 0.25;
+
+
+			// var minimumScoreCorner = 0.001;
+			
+			var wid = matrix.width();
+			var hei = matrix.height();
+			var min = rect.min();
+			var max = rect.max();
+			// console.log(min+" - "+max);
+			var staX = Math.ceil(min.x);
+			var staY = Math.ceil(min.y);
+			var endX = Math.floor(max.x);
+			var endY = Math.floor(max.y);
+				staX = Math.max(0,staX);
+				staY = Math.max(0,staY);
+				endX = Math.min(wid-1,endX);
+				endY = Math.min(hei-1,endY);
+			var countX = endX-staX;
+			var countY = endY-staY;
+			if(countX<=0 || countY<=0){
+				return false;
+			}
+
+
+			// calculate gray range:
+			var colMinY = null;
+			var colMaxY = null;
+			for(var i=staX;i<=endX; ++i){
+				for(var j=staY;j<=endY; ++j){
+					var index = j*wid + i;
+					var color = gry[index];
+					if(colMinY===null){
+						colMinY = color;
+						colMaxY = color;
+					}
+					colMinY = Math.min(colMinY, color);
+					colMaxY = Math.max(colMaxY, color);
+					// console.log(color);
+					// throw "...";
+				}
+			}
+			var rangeY = colMaxY - colMinY;
+			// console.log("RANGE: "+rangeY);
+			if(rangeY<minimumRangeGray){
+				return false;
+			}
+
+
+			// calculate cornerness max
+			var cornerMax = null;
+			for(var i=staX;i<=endX; ++i){
+				for(var j=staY;j<=endY; ++j){
+					var index = j*wid + i;
+					var value = corners[index];
+					if(cornerMax===null){
+						cornerMax = value;
+					}
+					cornerMax = Math.max(cornerMax, value);
+					// console.log(color);
+					// throw "...";
+				}
+			}
+			if(cornerMax<minimumScoreCorner){
+				return false;
+			}
+
+
+			return true;
+			// throw "...";
+		}
+
+		var setWid = matrix.width();
+		var setHei = matrix.height();
+		var setX = 0;
+		var setY = 0;
+		if(setWid>setHei){
+			setY -= (setWid-setHei)*0.5;
+			setHei = setWid;
+		}else{
+			setX -= (setHei-setWid)*0.5;
+			setWid = setHei;
+		}
+		var quad = new QuadLimit(SDF, setX,setY, setWid,setHei, 2);
+
+		// quad.subDivide(4);
+		quad.subDivide(5);
+
+
+		d = new DO();
+		d.matrix().translate(x,y);
+		this._root.addChild(d);
+		quad.debugDraw(d);
+
+
+		//NEXT: 
+		x += img.width;
+		y += 0;
+	}
+
+}
+
+
+function QuadLimit(shouldDivideFxn, locationX, locationY, width, height, initialSubdivisions){
+	this._shouldDivideFxn = shouldDivideFxn; // x,y,w,h rect
+	this._root = new QuadLimit.Cell();
+	this.setSize(width, height);
+	this.setLocation(locationX, locationY);
+	if(initialSubdivisions){
+		console.log("subdivide");
+		this.subDivide(initialSubdivisions, false);
+	}
+}
+QuadLimit.prototype.setSize = function(width, height){
+	this._root.size(width, height);
+}
+QuadLimit.prototype.setLocation = function(x, y){
+	this._root.location(x, y);
+}
+QuadLimit.prototype.subDivide = function(count, check){
+	count = Code.valueOrDefault(count, 1);
+	check = Code.valueOrDefault(check, true);
+	console.log("subDivide: "+count);
+	var shouldSplit = true;
+	for(var k=0; k<count; ++k){
+		var leaves = this._root.leaves();
+		console.log(leaves);
+		for(var i=0; i<leaves.length; ++i){
+			var leaf = leaves[i];
+			if(check){
+				// console.log(leaf);
+				shouldSplit = this._shouldDivideFxn(leaf.rect(), leaf.data(), leaf);
+				// console.log("shouldSplit: "+shouldSplit);
+				// throw "..."
+			}
+			if(shouldSplit){
+				var newLeaves = leaf.split();
+			}
+		}
+	}
+}
+
+QuadLimit.prototype.debugDraw = function(d){
+	console.log("debugDraw");
+	d.graphics().clear();
+	this._root.debugDraw(d);
+}
+
+QuadLimit.Cell = function(x,y, width, height){
+	this._x = x;
+	this._y = y;
+	this._width = width;
+	this._height = height;
+	this._children = [];
+	this._data = null;
+	this.data({});
+}
+QuadLimit.Cell.prototype.rect = function(){
+	var rect = new Rect(this._x,this._y,this._width,this._height);
+	return rect;
+}
+QuadLimit.Cell.prototype.data = function(data){
+	if(data!==undefined){
+		this._data = data;
+	}
+	return this._data;
+}
+QuadLimit.Cell.prototype.leaves = function(array){
+	if(!array){
+		array = [];
+	}
+	if(this.isLeaf()){
+		array.push(this);
+	}else{
+		var children = this._children;
+		for(var i=0; i<children.length; ++i){
+			var child = children[i];
+			child.leaves(array);
+		}
+	}
+	return array;
+}
+QuadLimit.Cell.prototype.isLeaf = function(){
+	return this._children.length == 0;
+}
+QuadLimit.Cell.prototype.location = function(x, y){
+	this.clear();
+	this._x = x;
+	this._y = y;
+}
+QuadLimit.Cell.prototype.size = function(width, height){
+	this.clear();
+	this._width = width;
+	this._height = height;
+}
+QuadLimit.Cell.prototype.split = function(array){
+	if(!array){
+		array = [];
+	}
+	if(this.isLeaf()){
+		var wid = this._width*0.5;
+		var hei = this._height*0.5;
+		for(var j=0; j<2; ++j){
+			var y = this._y + hei*j;
+			for(var i=0; i<2; ++i){
+				var x = this._x + wid*i;
+				var child = new QuadLimit.Cell(x,y,wid,hei);
+				this._children.push(child);
+				array.push(child);
+			}
+		}
+		return array;
+	}
+	return null;
+}
+QuadLimit.Cell.prototype.clear = function(){
+	var children = this._children;
+	for(var i=0; i<children.length; ++i){
+		var child = children[i];
+		child.clear();
+		child.kill();
+	}
+	Code.emptyArray(children);
+}
+QuadLimit.Cell.prototype.kill = function(){
+	this._x = null;
+	this._y = null;
+	this._width = null;
+	this._height = null;
+	this._children = null;
+}
+QuadLimit.Cell.prototype.debugDraw = function(d){
+	// console.log("debugDraw",this._x,this._y, this._width, this._height);
+	d.graphics().setLine(1.0,0xCCFF0000);
+	d.graphics().beginPath();
+	d.graphics().drawRect(this._x,this._y, this._width, this._height);
+	d.graphics().strokeLine();
+	d.graphics().endPath();
+	// and repeat for kids
+	var children = this._children;
+	for(var i=0; i<children.length; ++i){
+		var child = children[i];
+		child.debugDraw(d);
+	}
+}
+
+</script>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- ... -->

@@ -9453,7 +9453,6 @@ R3D.triangulatePointDLTList = function(points2D, extrinsics, Kinvs, pointOut, re
 	pointOut.z = coeff[2]/den;
 	return pointOut;
 }
-
 R3D.triangulatePointDLT = function(fr,to, cameraA,cameraB, KaInv, KbInv, pointReuse){ // get 3D point from extrinsic camera
 	var rows = 4, cols = 4;
 	var A = new Matrix(rows,cols);

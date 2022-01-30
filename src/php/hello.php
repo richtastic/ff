@@ -20,6 +20,16 @@ sudo lsof -i:80
 /etc/apache2/httpd.conf
 sudo launchctl unload -w /System/Library/LaunchDaemons/org.apache.httpd.plist
 
+
+
+# NOT FOUND: /usr/local/opt/libffi/lib/libffi.7.dylib
+brew update
+brew upgrade
+sudo apachectl -k restart
+
+
+
+
 */
 
 echo "HELLO";

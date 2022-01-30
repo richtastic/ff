@@ -2695,6 +2695,10 @@ Stereopsis.P3D.prototype.estimated3D = function(calculateError){
 		console.log(invsK);
 		throw e;
 	}
+	
+	// TODO: nonlinear step ?
+	// UPDATE: location3D
+
 	// error
 	if(calculateError){
 		var totalError = 0;
@@ -10751,6 +10755,39 @@ console.log("RELATIVE R: \n"+R+"")
 	// var subdivideIndexes = [2,5,7];
 
 
+
+	- a point's patch size can only be so small before it doesn't have enough feature (color range ?)
+		- a 3D patch point's size has to account for ideal size for each image
+
+
+	- initialize all pairwise putative points
+		- 3d location
+			- linear estimate via geometry
+			- nonlinear update via IMAGES ?
+		- 3d patch size
+		- 3d patch orientation
+			- simple geometry estimate
+			- nonlinear via images
+
+	- move single camera into updated location
+		- nonlinear via ~100 points projecting into 
+
+	- update point patches nonlinearly
+
+	- expand via best 2D point neighbors
+	- expand via best 3D point projecting
+
+	- filtering
+		- global 3D reprojection error
+		- pairwise N / S error
+
+
+
+
+
+
+????????????????
+
 	var subdivideIndex = 0;
 	for(var i=0; i<expandCount; ++i){
 		console.log("all: ========================================================================================= "+i+" / "+expandCount);
@@ -10773,7 +10810,7 @@ console.log("SEQ BEFORE initNullP3DPatches");
 		world.initNullP3DPatches();
 		// console.log("after init loop");
 		// world.printPoint3DTrackCount();
-
+?
 		// SUBDIVIDE
 			if(subdivideIndexes.length>0 && subdivideIndexes[subdivideIndex]==i){
 console.log("SEQ subdivide");

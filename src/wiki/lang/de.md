@@ -3782,13 +3782,81 @@ https://www.youtube.com/watch?v=mfLuuur6r8w
 
 
 Polarkreis 18 - Allein Allein
+https://www.youtube.com/watch?v=gW8fi7LJg6U
 https://www.youtube.com/watch?v=-SHwn6O25CY
 
 
+| du | | en |
+|-|-|-|
+|  |  | He's living in a universe |
+|  |  | A heart away |
+|  |  | Inside of him there's no one else |
+|  |  | Just a heart away |
+|  |  | The time will come to be blessed |
+|  |  | A heart away |
+|  |  | To celebrate his loneliness |
+|  |  |  |
+| Wir sind allein |  |  |
+| Allein allein (x4) |  |  |
+|  |  |  |
+|  |  | We look into faces |
+| (allein allein) |  |  |
+|  |  | Wait for a sign |
+|  |  |  |
+| Wir sind allein |  |  |
+| Allein allein (x2) |  |  |
+|  |  |  |
+|  |  | A prisoner behind the walls |
+|  |  | A heart away |
+|  |  | Wants to lead his universe |
+|  |  | Just a heart away |
+|  |  | The time has come for us to love |
+|  |  | A heart away |
+|  |  | To celebrate our loneliness |
+|  |  |  |
+| Wir sind allein |  |  |
+| Allein allein (x4) |  |  |
+|  |  |  |
+|  |  | We look into faces |
+| (allein allein) |  |  |
+|  |  | Wait for a sign |
+|  |  |  |
+| Wir sind allein |  |  |
+| Allein allein (x2) |  |  |
+| Oh |  |  |
+| Allein allein (x4) |  |  |
+|  |  |  |
+| Sind wir allein |  |  |
+| Allein allein (x2) |  |  |
+|  |  |  |
+| Sind wir allein |  |  |
+| Allein allein (x2) |  |  |
+|  |  |  |
+
+
+X
 Blümchen - Nur geträumt
 https://www.youtube.com/watch?v=kcIvOH6f1js
 
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
 
+
+
+
+
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
 
 
 Apache 207 - KEIN PROBLEM

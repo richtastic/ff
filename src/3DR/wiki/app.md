@@ -402,6 +402,127 @@ MISSING:
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
 
+=> visually display what hierarchical 'min resolution' cells look like (starting at some subdivision count)
+	- cornerness - avg, max
+	- range rgb - avg, max
+=> nearest neighbor 'cell size'
+
+-> how to get all adjacent NEIGHBORS in a non-uniform hierarchy?
+	- is uniform cells still OK?
+
+
+- if first views are 'certain' of absolute position -> then 3D point 'HAS TO' lay along the ray thru the image
+	=> does the DLT already put the point along this line ? [with 2 views]
+	=> why isn't the DLT exact? what is the error?
+		(2D point location )
+?
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+RE-EVALUATE STEPS TO GET LAST COMBINED VIEWS WORKING:
+INPUT:
+	- views in near-correct absolute positions
+OUTPUT:
+	- 3D points in correct absolute positions
+
+
+
+
+
+
+- for each new view (image is loaded):
+	- for each existing view (with image loaded):
+		- get best point pair initial putative matches
+
+	- a P3D's 2D 'cell size':
+		- should include:
+			- some minimum amount of range
+			- some minimum corner value
+	
+	- a view's cell grid/hierarchy
+		- subdividing a cell is useless if featureless
+		- 
+
+	- loop to convergence:
+		- initialize new 3D patches
+			- linear initialize 3D patch [X,Y,Z, s, N]
+			- nonlinear update 3D position
+			- nonlinear update orientation & size
+		- add new patches to world:
+			- 2D collision resolving
+				- if points are closer than some minimum size (0.1-0.25 of cell size) => assumed to be same point
+				- merged point is initialized fresh or using average of prior points
+				-> re inserted to world
+		- expand [points with lowest error]:
+			- 2D neighborhood
+				- find emtpy/ worth neighbored cells
+				- use 2D offset to find best geometrically likely location in opposite image
+				- add to 'new queue' 
+					- HOW TO INITIALIZE?
+
+			- 3D projection (track expansion)
+				- of all image-loaded view-pairs:
+					- find best projected geometric location candidate
+					- add to 'new queue'
+					- HOW TO INITIALIZE?
+		- filter:
+			- 3D average reprojection error
+			- 2D N score
+			- 2D S score
+			- 
+		- nonliner update new view location
+			- 3D reprojection error minimizing
+			- 'surface distance' minimizing
+		- nonlinear update 3D points/patches
+			- 3D reprojection error minimizing
+		- nonlinear view + point location?
+			- 3D reprojection error minimizing
+		- increase resolution
+			- divide cell/hierarchy up
+			- for each 3D point:
+				- P2D with best corner score (highest / average?) is base [image must already be loaded by assumptions]
+				- update all other P2D locations using affine local search
+		- 
+
+	=> update: 
+
+
+
+
+PIECES ..............
+	- 3D point optimizing:
+		- move P3D in world until reprojection error is minimized
+		- initial movement & min final movement needs to be calculated geometrically for each point
+			- use patch size as basis:
+				- start at 0.1 patch size
+				- limit at 0.01 - 0.001 patch size (or so) [1/10 to 1/100]
+
+
+
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+- how to calculate the minimum size a pixel can be given a minimum range area
+	- initial largest resolution for an image, eg: 4x3
+	- each cell extracts 5x5 & estimates range/sigma -> maximum 3D sphere
+	- if max is reached, all children 
+	- each cell divides into 4 
+
+	-> repeat until highest resolution
+
+
+
+- check 3D location estimation: linear & nonlinear
+solveSequentialView
+
+
+
+
+
+
+
+
+
+
 
 - are P3Ds in the global reference frame ?
 
