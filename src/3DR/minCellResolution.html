@@ -89,6 +89,12 @@ CellResolutionTest.prototype.imagesLoadComplete = function(imageInfo){
 		var gry = matrix.gry();
 		var corners = R3D.harrisCornerDetection(gry, matrix.width(), matrix.height());
 
+
+		// blur corner scopre
+		var blurSigma = 1.0;
+		corners = ImageMat.getBlurredImage(corners,matrix.width(), matrix.height(), blurSigma);
+
+
 		// normalize to 01
 		ImageMat.normalFloat01(corners);
 		var info = Code.infoArray(corners);

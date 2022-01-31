@@ -401,6 +401,32 @@ MISSING:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+=> understand how the P3D DLT is only an approx & how to nonlinearly make it better & what that means
+
+
+
+MAKE TEST APP TO VISUALIZE:
+	- views/cameras
+	- perfect 3D & 2D locations
+	- gaussian error 2D locations
+	- 3D linearized location
+	- midpoint
+	- rays to various 3D locations
+	- 3D nonliner estimated location
+	- what the image features look like
+	=> SYNTHETIC IMAGES
+	=> REAL IMAGES
+
+=> - visualize the points & projections & ... in 3D to understand
+	- midpoint
+	- exact Ax=b
+	- linear least squares SVD
+	- 'optimal' 6 degree polynomial
+	- nonlinear?:
+		- move P3D to minimize geometric reprojection squared distances
+		- move P3D to minimize 2D image projection visual comparison (NCC, SAD, diff)
+=>
+
 
 => visually display what hierarchical 'min resolution' cells look like (starting at some subdivision count)
 	- cornerness - avg, max
@@ -409,6 +435,17 @@ MISSING:
 
 -> how to get all adjacent NEIGHBORS in a non-uniform hierarchy?
 	- is uniform cells still OK?
+
+
+
+=> what does it mean to be a neighbor, what context does it matter?
+	=> expanding in 2D
+		- 
+	=> knowing how close an intersection is
+
+=> cell size is not necessarily / exactly resolution dependent - tho highly correlated
+
+
 
 
 - if first views are 'certain' of absolute position -> then 3D point 'HAS TO' lay along the ray thru the image
@@ -428,6 +465,9 @@ OUTPUT:
 
 
 
+
+
+
 - for each new view (image is loaded):
 	- for each existing view (with image loaded):
 		- get best point pair initial putative matches
@@ -439,11 +479,13 @@ OUTPUT:
 	
 	- a view's cell grid/hierarchy
 		- subdividing a cell is useless if featureless
-		- 
+		=> if zoomed out and not featureless, this is still OK
 
 	- loop to convergence:
 		- initialize new 3D patches
 			- linear initialize 3D patch [X,Y,Z, s, N]
+				- MIDPOINT
+				- DLT 
 			- nonlinear update 3D position
 			- nonlinear update orientation & size
 		- add new patches to world:
