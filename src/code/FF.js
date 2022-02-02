@@ -26,6 +26,8 @@ FF.FILENAMES = ["numeric-1.2.6.js","glMatrix-0.9.5.min.js", "Code.js","Err.js","
 				"ImageMapper.js",
 				"DenseMatchF.js",
 				"ClientFile.js",
+				"Geometry3D.js",
+				// "Cam3D.js","Geometry3D.js",// 3D world stuff
 				"R3D.js",
 				
 				]; // "Node.js"

@@ -18687,6 +18687,27 @@ Code.relativeComponentsFromMatrixes3D = function(mA,mB){
 	
 	return {"A":{"offset":tAB, "rotation":rotAB}, "B":{"offset":tBA, "rotation":rotBA}};
 }
+
+
+
+Code.projectPixelCameraRay = function(extrinsic, Kinv, pixelX,pixelY){
+	console.log(Kinv);
+	var pixel = new V3D(pixelX,pixelY, 1.0);
+console.log("pixel: "+pixel);
+	var point = Kinv.multV3DtoV3D(pixel);
+console.log("point: "+point);
+	// var pose = matrix.orientation();
+	// var o = pose["o"];
+	// var x = pose["x"];
+	// var y = pose["y"];
+	// var z = pose["z"];
+	var o = extrinsic.multV3DtoV3D(V3D.ZERO);
+	var d = extrinsic.multV3DtoV3D(point);
+	d.sub(o);
+	var ray = {"o":o, "d":d};
+	return ray;
+}
+
 Code.graphAbsoluteFromObjectLookup3D = function(views, pairs, triples,  viewToID,pairToIDs,tripleToIDs, pairToError,pairToTransform, tripleToScales, absolute, viewToCameraID,pairToCameras,cameraToID,cameraToK){
 	
 	// helpers

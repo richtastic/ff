@@ -174,8 +174,11 @@ Matrix2D.prototype.multV3D = function(aV,bV){ // a = trans(b)
 	var ax = this.a*bV.x + this.b*bV.y + this.x*bV.z;
 	aV.y =   this.c*bV.x + this.d*bV.y + this.y*bV.z;
 	aV.x = ax;
+	aV.z = bV.z;
 	return aV;
 }
+Matrix2D.prototype.multV3DtoV3D = Matrix2D.prototype.multV3D;
+
 Matrix2D.prototype.copy = function(m){
 	if(m===undefined){ return new Matrix2D().copy(this); }
 	this.set(m.a,m.b,m.c,m.d,m.x,m.y);
@@ -186,6 +189,7 @@ Matrix2D.inverse = function(a,b){
 		b = a;
 		a = new Matrix2D();
 	}
+	// console.log("Matrix2D.inverse");
 	a.inverse(b);
 	return a;
 }
@@ -193,6 +197,7 @@ Matrix2D.prototype.inverse = function(m){ // http://www.dr-lex.be/random/matrix_
 	if(m===undefined){
 		m = this;
 	}
+	console.log("Matrix2D  - inverse");
 	var det = 1.0/(m.a*m.d - m.b*m.c);
 	var a = m.d*det;
 	var b = -m.b*det;

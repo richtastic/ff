@@ -405,8 +405,46 @@ MISSING:
 
 
 
+solveSequentialView
+
+
+-> MAYBE the discrepancy needs to be focues on lining up frames and not minimizing reprojection error:
+	-> IE: move & rotate the camera to get the separate pairwise-points to line up in 3D
+
+	-> want to minimize the distance between the point neighborhoods
+
+	A) udpate camera translation & rotation iteritively in direction that minimizes the error
+	B) set the points to the new positions & derive what the camera translation & rotation should be
+		=> how to get camera matrix from known 2d/3d points ?
+
+		https://www.cs.cmu.edu/~16385/s17/Slides/11.3_Pose_Estimation.pdf
+		- pose estimation
+			-> SVD for 3 rows of matrix
+			P = K[R|t]
+
+		https://www.uio.no/studier/emner/matnat/its/nedlagte-emner/UNIK4690/v16/forelesninger/lecture_5_2_pose_from_known_3d_points.pdf
+			Pose from known 3D points
+			– Decomposition of P matrix
+			– PnP
+			P3P
+
+
+	- need to keep all of the pairwise points separate initially to keep sets independent
+	- need to get the distribution of the population and discard high-error outliers
+
+	-> after the points are aligned, then combining can begin
+
+https://courses.cs.washington.edu/courses/cse577/11au/notes/Z12.pdf
+MESH ALIGNMENT PROBLEM:
+	- iteritive closest point
+	- 
+	- Procrustes
+
+
+
 MAKE TEST APP TO VISUALIZE:
-	- views/cameras
+	x views/cameras
+		- use 2+ example images
 	- perfect 3D & 2D locations
 	- gaussian error 2D locations
 	- 3D linearized location
@@ -462,7 +500,7 @@ OUTPUT:
 
 
 
-
+solveSequentialView
 
 
 
@@ -471,6 +509,33 @@ OUTPUT:
 - for each new view (image is loaded):
 	- for each existing view (with image loaded):
 		- get best point pair initial putative matches
+
+	- iterate on pairs separately [expanding & filtering]
+
+
+
+	ALIGNING VIEW POINTS:
+	- align new view with existing views
+		-> for each pair:
+			- get overlapping 2D areas
+				[each 'new' pairwise point that has 3 ~ 6 neighbors within 1 cell distance find global distance to neighbors]
+				[get local population (of deltas), and iteritively ignore/drop neighbors with large distances]
+				[get total population (of deltas), and iteritively drop large ones]
+				[use final set of up to ~ 50-100 points for matrix initial point estimation]
+			- derive the extrinsic matrix assuming these NEW mapped point locations 
+				- SVD for 3x4=12 unkowns
+				- estimate R & t from approximate
+			=> CHECK IF MATRIX PARAMETERS ARE WAY DIFFERENT THAN ASSUMED INITIAL VIEW ORIENTATION
+			- iterate 6 camera parameters by minimizing deltas PAIRWISE [determine initial variable tolerance for R angles & t distances]
+		- average all of these rotations / translations to obtain final 'initial' location
+		- iterate 6 params by minimizing deltas GLOBALLY [N cameras/points]
+
+	INITIAL GLOBAL POINTS:
+	- initialize all new pairwise point patches
+	- turn on intersection resolution & combine points into tracks
+
+
+
 
 	- a P3D's 2D 'cell size':
 		- should include:
@@ -512,11 +577,13 @@ OUTPUT:
 			- 
 		- nonliner update new view location
 			- 3D reprojection error minimizing
-			- 'surface distance' minimizing
+		- nonliner update new view location
+			- 'surface distance' minimizing []
 		- nonlinear update 3D points/patches
 			- 3D reprojection error minimizing
 		- nonlinear view + point location?
 			- 3D reprojection error minimizing
+
 		- increase resolution
 			- divide cell/hierarchy up
 			- for each 3D point:

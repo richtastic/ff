@@ -38,7 +38,7 @@ Stage.prototype.root = function(r){
 	}
 	return this._root;
 }
-Stage.prototype.canvas = function(canvas){
+Stage.prototype.canvas = function(canvas){ // TODO: should this be the RENDER CANVAS ?
 	if(canvas!==undefined){
 		this._canvas = canvas;
 	}

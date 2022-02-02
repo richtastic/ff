@@ -169,7 +169,11 @@ Matrix3D.prototype.set = function(tA,tB,tC,tD,tE,tF,tG,tH,tI,tJ,tK,tL){
 }
 Matrix3D.prototype.translate = function(tx,ty,tz){
 	var mat = Matrix3D.temp;
-	mat.set(1,0,0,tx, 0,1,0,ty, 0,0,1,tz);
+	if(Code.isa(tx,V3D)){
+		mat.set(1,0,0,tx.x, 0,1,0,tx.y, 0,0,1,tx.z);
+	}else{
+		mat.set(1,0,0,tx, 0,1,0,ty, 0,0,1,tz);
+	}
 	this.mult(mat,this);
 	return this;
 }
@@ -444,4 +448,23 @@ Matrix3D.fromMatrix = function(mat){
 }
 Matrix3D.matrixFromMatrix3D = function(mat){
 	return new Matrix(4,4).fromArray([mat.a,mat.b,mat.c,mat.d, mat.e,mat.f,mat.g,mat.h, mat.i,mat.j,mat.k,mat.l, 0,0,0,1]);
+}
+
+Matrix3D.prototype.orientation = function(){
+	var x = new V3D(1,0,0);
+	var y = new V3D(0,1,0);
+	var z = new V3D(0,0,1);
+	var o = new V3D(0,0,0);
+	// var matrix = ;
+	x = this.multV3D(x); // rotation offset
+	y = this.multV3D(y);
+	z = this.multV3D(z);
+	o = this.multV3D(o);
+	x.sub(o); // translation offset
+	y.sub(o);
+	z.sub(o);
+	x.norm(); // scale offset
+	y.norm();
+	z.norm();
+	return {"x":x,"y":y,"z":z,"o":o};
 }

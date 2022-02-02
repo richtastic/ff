@@ -34,8 +34,8 @@ function CellResolutionTest(){
 // this._stage.root().scale(2.0);
 this._root.matrix().scale(2.0);
 	// load images
-	// var imageList = ["caseStudy1-24.jpg","caseStudy1-26.jpg"];
-// var imageList = ["caseStudy1-24.jpg"];
+	// var imageList = ["caseStudy1-24.jpg"];
+var imageList = ["caseStudy1-24.jpg","caseStudy1-26.jpg"];
 // var imageList = ["bench_A.png","bench_B.png"];
 // var imageList = ["bench_D.png","bench_F.png"];
 // var imageList = ["bt.000.png","bt.002.png"];
@@ -43,7 +43,7 @@ this._root.matrix().scale(2.0);
 // var imageList = ["rabbit/1.jpg","rabbit/2.jpg"];
 // var imageList = ["graffiti_1.png","graffiti_2.png"];
 // var imageList = ["room1.png","room2.png"];
-var imageList = ["chapel00.png","chapel01.png"];
+// var imageList = ["chapel00.png","chapel01.png"];
 
 
 	imageLoader = new ImageLoader("./images/",imageList, this,this.imagesLoadComplete,null);
@@ -107,7 +107,7 @@ CellResolutionTest.prototype.imagesLoadComplete = function(imageInfo){
 		// var minimumScoreCorner = 0.001;
 		// var minimumScoreCorner = mean; // too restrictive
 		var minimumScoreCorner = mean*0.5;
-		// var minimumScoreCorner = mean*0.1;
+		// var minimumScoreCorner = mean*0.1; // too loose
 
 		// console.log(corners);
 

@@ -770,8 +770,8 @@ Canvas.prototype.getMouseButton = function(e){
 }
 Canvas.prototype.getMouseObjectFromEvent = function(e){
 	var pos = Code.getMousePosition(e);
-	var delta = this.getMouseDelta(e);
 	pos = new V3D(pos.x,pos.y,0);
+	var delta = this.getMouseDelta(e);
 	pos.scale(this._browserContextScale);
 	var but = this.getMouseButton(e);
 	var obj = {};

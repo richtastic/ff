@@ -637,6 +637,26 @@ Matrix.transform3DRotate = function(a,v,t){ // vector, theta
 
 	return Matrix.mult(b,a);
 }
+
+
+Matrix.prototype.orientation3D = function(){
+	var x = new V3D(1,0,0);
+	var y = new V3D(0,1,0);
+	var z = new V3D(0,0,1);
+	var o = new V3D(0,0,0);
+	// var matrix = ;
+	x = this.multV3DtoV3D(x); // rotation offset
+	y = this.multV3DtoV3D(y);
+	z = this.multV3DtoV3D(z);
+	o = this.multV3DtoV3D(o);
+	x.sub(o); // translation offset
+	y.sub(o);
+	z.sub(o);
+	x.norm(); // scale offset
+	y.norm();
+	z.norm();
+	return {"x":x,"y":y,"z":z,"o":o};
+}
 /*
 Matrix3D.prototype.rotateVector = function(v,t){ // vector, theta
 	var mat = Matrix3D.temp;
