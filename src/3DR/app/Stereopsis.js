@@ -10572,6 +10572,34 @@ Stereopsis.World.prototype.solveSequentialView = function(viewFocus, viewsAdjace
 	var world = this;
 	var views = world.toViewArray();
 
+
+
+	console.log("outline new process")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+throw "end solveSequentialView";
+
+}
+
+Stereopsis.World.prototype.solveSequentialViewOld = function(viewFocus, viewsAdjacent){ // optimum single view to all other views
+	var world = this;
+	var views = world.toViewArray();
+
+
+	throw "old";
 	// setup
 	world.copyRelativeTransformsFromAbsolute();
 	world.setResolutionProcessingModeBest();
@@ -10755,7 +10783,7 @@ console.log("RELATIVE R: \n"+R+"")
 	// var subdivideIndexes = [2,5,7];
 
 
-
+/*
 	- a point's patch size can only be so small before it doesn't have enough feature (color range ?)
 		- a 3D patch point's size has to account for ideal size for each image
 
@@ -10784,9 +10812,9 @@ console.log("RELATIVE R: \n"+R+"")
 
 
 
+*/
 
-
-????????????????
+throw "????????????????";
 
 	var subdivideIndex = 0;
 	for(var i=0; i<expandCount; ++i){
@@ -10810,7 +10838,7 @@ console.log("SEQ BEFORE initNullP3DPatches");
 		world.initNullP3DPatches();
 		// console.log("after init loop");
 		// world.printPoint3DTrackCount();
-?
+throw "?";
 		// SUBDIVIDE
 			if(subdivideIndexes.length>0 && subdivideIndexes[subdivideIndex]==i){
 console.log("SEQ subdivide");

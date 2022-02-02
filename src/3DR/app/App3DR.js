@@ -21248,7 +21248,7 @@ console.log("info:");
 console.log(info);
 // throw "....";
 				// create world
-// console.log(views, images, cellSizes, transforms);
+console.log(views, images, cellSizes, transforms);
 // throw "///"
 				var world = new Stereopsis.World();
 				var WORLDCAMS = App3DR.ProjectManager.addCamerasToWorld(world, cameras);
@@ -21280,6 +21280,9 @@ console.log(info);
 			
 			world.solveSequentialView(worldViewLast, worldViewsAdjacent);
 
+
+console.log(world.toYAMLString());
+throw "after solveSequentialView"
 
 			var worldData = world.toObject();
 			var worldPoints = worldData["points"];
