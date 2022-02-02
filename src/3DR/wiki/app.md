@@ -509,12 +509,19 @@ solveSequentialView
 - for each new view (image is loaded):
 	- for each existing view (with image loaded):
 		- get best point pair initial putative matches
+			- use estimated global R for pairwise relative R
 
-	- iterate on pairs separately [expanding & filtering]
+	INCREASE PUTATIVE P3D ACCURACY & DENSITY
+	- iterate on pairs separately
+		- expanding
+			- pairwise 2D neighbors
+		- filtering
+			- pairwise: N / S / F / R error
+		- subdivide resolution [low to med]
+			- 
 
 
-
-	ALIGNING VIEW POINTS:
+	ALIGNING VIEW [MOTION] POINTS:
 	- align new view with existing views
 		-> for each pair:
 			- get overlapping 2D areas
@@ -535,8 +542,6 @@ solveSequentialView
 	- turn on intersection resolution & combine points into tracks
 
 
-
-
 	- a P3D's 2D 'cell size':
 		- should include:
 			- some minimum amount of range
@@ -545,6 +550,10 @@ solveSequentialView
 	- a view's cell grid/hierarchy
 		- subdividing a cell is useless if featureless
 		=> if zoomed out and not featureless, this is still OK
+
+
+
+	INCREASE VIEW & O3D ACCURACY & TRACK COUNT
 
 	- loop to convergence:
 		- initialize new 3D patches

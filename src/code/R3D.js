@@ -721,7 +721,11 @@ throw "negative";
 	}
 	return totalError;
 }
-R3D.optimizeCameraExtrinsicDLTKnown3D = function(P, K, Kinv, points2D, points3D, maxIterations){
+R3D.optimizeCameraExtrinsicDLTKnown3DK = function(P, K, Kinv, points2D, points3D, maxIterations){
+
+	throw "?"
+}
+R3D.optimizeCameraExtrinsicDLTKnown3D_OLD = function(P, K, Kinv, points2D, points3D, maxIterations){
 	var pointCount = points2D.length;
 	// var norms2D = [];
 	// var temp3D = new V3D();

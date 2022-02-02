@@ -10574,14 +10574,30 @@ Stereopsis.World.prototype.solveSequentialView = function(viewFocus, viewsAdjace
 
 
 
-	console.log("outline new process")
+	console.log("outline new process");
+
+	// best pairwise putative points
+	// - do these need to be patches ?
+
+
+	// itertate on putatives to good medium dense pairwise matches
+
+
+	// move surfaces to existing
+
+
+	// init patches
+
+
+
+	// iterate on patches
 
 
 
 
 
 
-
+	R3D.optimizeCameraExtrinsicDLTKnown3DK(P, K, Kinv, points2D, points3D, maxIterations);
 
 
 
