@@ -197,7 +197,6 @@ Matrix2D.prototype.inverse = function(m){ // http://www.dr-lex.be/random/matrix_
 	if(m===undefined){
 		m = this;
 	}
-	console.log("Matrix2D  - inverse");
 	var det = 1.0/(m.a*m.d - m.b*m.c);
 	var a = m.d*det;
 	var b = -m.b*det;

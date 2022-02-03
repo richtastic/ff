@@ -502,6 +502,9 @@ OUTPUT:
 
 solveSequentialView
 
+-> can this be down without the prior points existing ?
+-> currently: points are only acquired for the new view
+
 
 
 

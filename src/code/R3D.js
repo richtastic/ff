@@ -60533,6 +60533,395 @@ R3D.transformMatrixFromRodriguesElement = function(transform, rx,ry,rz, tx,ty,tz
 }
 
 
+
+R3D.ResolutionCompareSizeFinder = function(matrix, cornerness, minimumDivisions){
+	// this._scales = null;
+	// this._width = null;
+	// this._height = null;
+	var blurSigma = 1.0;
+	cornerness = ImageMat.getBlurredImage(cornerness,matrix.width(), matrix.height(), blurSigma);
+	ImageMat.normalFloat01(cornerness);
+	this.image(matrix,cornerness,minimumDivisions);
+}
+R3D.ResolutionCompareSizeFinder.prototype.quad = function(){
+	return this._quad;
+}
+R3D.ResolutionCompareSizeFinder.prototype.space = function(){
+	return this._space;
+}
+R3D.ResolutionCompareSizeFinder.prototype.image = function(image,corners,divisions){
+	this._image = image;
+	this._corners = corners;
+	
+	var info = Code.infoArray(corners);
+	var min = info["min"];
+	var max = info["max"];
+	var mean = info["mean"];
+
+	// var minimumScoreCorner = mean; // too restrictive
+	this._minimumScoreCorner = mean*0.5;
+	// this._minimumScoreCorner = mean*0.1;
+
+	this._minimumSize = 3;
+	// this._minimumSize = 10;
+
+	// 1/256 = 0.00390625
+	// 5/256 = 0.01953125
+	// 10/256 = 0.0390625
+	this._minimumRangeGray = 0.05;
+	this._minimumRangeColor = 0.025;
+	// other?
+
+
+	// setup quad:
+	var setWid = image.width();
+	var setHei = image.height();
+	var wm1 = setWid - 1;
+	var hm1 = setHei - 1;
+	var setX = 0;
+	var setY = 0;
+	if(setWid>setHei){
+		setY -= (setWid-setHei)*0.5;
+		setHei = setWid;
+	}else{
+		setX -= (setHei-setWid)*0.5;
+		setWid = setHei;
+	}
+
+	// CONTEXT:
+	var self = this;
+	var SDF = function(rect, data, cell){
+		return self.SDF(rect, data, cell);
+	}
+
+	var quad = new R3D.QuadLimit(SDF, setX,setY, setWid,setHei, 0);
+	quad.subDivide(divisions);
+
+	this._quad = quad;
+
+	// closest point quad space
+	var cellToPoint = function(c){
+		return c.rect().center();
+	};
+	var space = new QuadTree(cellToPoint);
+	console.log(quad.min(), quad.max());
+	space.initWithMinMax(quad.min(), quad.max());
+	var leaves = quad.leaves();
+	// console.log(leaves);
+	for(var i=0; i<leaves.length; ++i){
+		var cell = leaves[i];
+		var center = cellToPoint(cell);
+		if(center.x<0 || center.x>wm1 || center.y<0 || center.y>hm1){
+			continue;
+		}
+		space.insertObject(cell);
+	}
+
+	this._space = space;
+
+	// d = new DO();
+	// d.matrix().translate(x,y);
+	// this._root.addChild(d);
+	// quad.debugDraw(d);
+}
+R3D.ResolutionCompareSizeFinder.prototype.sizeForPoint = function(point){
+	var cell = this._space.closestObject(point);
+	return cell.radius();
+}
+
+R3D.ResolutionCompareSizeFinder.prototype.SDF = function(rect, data, cell){ // default: is valid range
+	// console.log(this);
+	var matrix = this._image;
+	var corners = this._corners;
+	// console.log(matrix);
+	var gry = matrix.gry();
+	var red = matrix.red();
+	var grn = matrix.grn();
+	var blu = matrix.blu();
+	var wid = matrix.width();
+	var hei = matrix.height();
+
+	var minimumRangeGray = this._minimumRangeGray;
+	var minimumRangeColor = this._minimumRangeColor;
+	var minimumScoreCorner = this._minimumScoreCorner;
+	var minimumSize = this._minimumSize;
+	
+	var min = rect.min();
+	var max = rect.max();
+
+	// console.log(min+" - "+max);
+	var staX = Math.ceil(min.x);
+	var staY = Math.ceil(min.y);
+	var endX = Math.floor(max.x);
+	var endY = Math.floor(max.y);
+		staX = Math.max(0,staX);
+		staY = Math.max(0,staY);
+		endX = Math.min(wid-1,endX);
+		endY = Math.min(hei-1,endY);
+	var countX = endX-staX;
+	var countY = endY-staY;
+	if(countX<=minimumSize || countY<=minimumSize){
+		return false;
+	}
+
+
+	// calculate gray range:
+	var colMinR = null;
+	var colMaxR = null;
+	var colMinG = null;
+	var colMaxG = null;
+	var colMinB = null;
+	var colMaxB = null;
+	var colMinY = null;
+	var colMaxY = null;
+	for(var i=staX;i<=endX; ++i){
+		for(var j=staY;j<=endY; ++j){
+			var index = j*wid + i;
+			var r = red[index];
+			var g = grn[index];
+			var b = blu[index];
+			var y = gry[index];
+			if(colMinY===null){
+				colMinR = r;
+				colMaxR = r;
+				colMinG = g;
+				colMaxG = g;
+				colMinB = b;
+				colMaxB = b;
+				colMinY = y;
+				colMaxY = y;
+			}
+			colMinR = Math.min(colMinY, r);
+			colMaxR = Math.max(colMaxY, r);
+			colMinG = Math.min(colMinY, g);
+			colMaxG = Math.max(colMaxY, g);
+			colMinB = Math.min(colMinY, b);
+			colMaxB = Math.max(colMaxY, b);
+			colMinY = Math.min(colMinY, y);
+			colMaxY = Math.max(colMaxY, y);
+		}
+	}
+	var rangeR = colMaxR - colMinR;
+	var rangeG = colMaxG - colMinG;
+	var rangeB = colMaxB - colMinB;
+	var rangeY = colMaxY - colMinY;
+	// console.log("RANGE: "+rangeY);
+	if(rangeR<minimumRangeColor || rangeG<minimumRangeColor || rangeB<minimumRangeColor || rangeY<minimumRangeGray){
+		return false;
+	}
+
+	// calculate cornerness max
+	var cornerMax = null;
+	for(var i=staX;i<=endX; ++i){
+		for(var j=staY;j<=endY; ++j){
+			var index = j*wid + i;
+			var value = corners[index];
+			if(cornerMax===null){
+				cornerMax = value;
+			}
+			cornerMax = Math.max(cornerMax, value);
+		}
+	}
+	if(cornerMax<minimumScoreCorner){
+		return false;
+	}
+
+	return true;
+};
+
+
+
+
+
+R3D.QuadLimit = function(shouldDivideFxn, locationX, locationY, width, height, initialSubdivisions){
+	this._shouldDivideFxn = shouldDivideFxn; // x,y,w,h rect
+	this._root = new R3D.QuadLimit.Cell();
+	this.setSize(width, height);
+	this.setLocation(locationX, locationY);
+	if(initialSubdivisions){
+		console.log("subdivide");
+		this.subDivide(initialSubdivisions, false);
+	}
+}
+R3D.QuadLimit.prototype.leaves = function(){
+	return this._root.leaves();
+}
+R3D.QuadLimit.prototype.min = function(){
+	return this._root.rect().min();
+}
+R3D.QuadLimit.prototype.max = function(){
+	return this._root.rect().max();
+}
+R3D.QuadLimit.prototype.setSize = function(width, height){
+	this._root.size(width, height);
+}
+R3D.QuadLimit.prototype.setLocation = function(x, y){
+	this._root.location(x, y);
+}
+R3D.QuadLimit.prototype.subDivide = function(count, check){
+	count = Code.valueOrDefault(count, 1);
+	check = Code.valueOrDefault(check, true);
+	// console.log("subDivide: "+count);
+	var shouldSplit = true;
+	for(var k=0; k<count; ++k){
+		var leaves = this._root.leaves();
+		for(var i=0; i<leaves.length; ++i){
+			var leaf = leaves[i];
+			if(check){
+				// console.log(leaf);
+				shouldSplit = this._shouldDivideFxn(leaf.rect(), leaf.data(), leaf);
+				// console.log("shouldSplit: "+shouldSplit);
+				// throw "..."
+			}
+			if(shouldSplit){
+				var newLeaves = leaf.split();
+			}
+		}
+	}
+}
+R3D.QuadLimit.prototype.debugDraw = function(d){
+	console.log("debugDraw");
+	d.graphics().clear();
+	this._root.debugDraw(d);
+}
+R3D.QuadLimit.Cell = function(x,y, width, height){
+	this._x = x;
+	this._y = y;
+	this._width = width;
+	this._height = height;
+	this._children = [];
+	this._data = null;
+	this.data({});
+}
+R3D.QuadLimit.Cell.prototype.rect = function(){
+	var rect = new Rect(this._x,this._y,this._width,this._height);
+	return rect;
+}
+R3D.QuadLimit.Cell.prototype.data = function(data){
+	if(data!==undefined){
+		this._data = data;
+	}
+	return this._data;
+}
+R3D.QuadLimit.Cell.prototype.leaves = function(array){
+	if(!array){
+		array = [];
+	}
+	if(this.isLeaf()){
+		array.push(this);
+	}else{
+		var children = this._children;
+		for(var i=0; i<children.length; ++i){
+			var child = children[i];
+			child.leaves(array);
+		}
+	}
+	return array;
+}
+R3D.QuadLimit.Cell.prototype.isLeaf = function(){
+	return this._children.length == 0;
+}
+R3D.QuadLimit.Cell.prototype.location = function(x, y){
+	this.clear();
+	if(x!==undefined && y!==undefined){
+		this.clear();
+		this._x = x;
+		this._y = y;
+	}else{
+		return new V2D(this._x,this._x);
+	}
+}
+R3D.QuadLimit.Cell.prototype.radius = function(){
+	throw "radius";
+	return Math.min(this._width,this._height)*0.5;
+}
+R3D.QuadLimit.Cell.prototype.radius = function(width, height){
+	return this._radius;
+}
+R3D.QuadLimit.Cell.prototype.size = function(width, height){
+	if(width!==undefined && height!==undefined){
+		this.clear();
+		this._width = width;
+		this._height = height;
+		this._radius = Math.sqrt(width*width + height*height) * 0.5;
+	}else{
+		return new V2D(this._width,this._height);
+	}
+}
+R3D.QuadLimit.Cell.prototype.split = function(array){
+	if(!array){
+		array = [];
+	}
+	if(this.isLeaf()){
+		var wid = this._width*0.5;
+		var hei = this._height*0.5;
+		for(var j=0; j<2; ++j){
+			var y = this._y + hei*j;
+			for(var i=0; i<2; ++i){
+				var x = this._x + wid*i;
+				var child = new R3D.QuadLimit.Cell(x,y,wid,hei);
+				this._children.push(child);
+				array.push(child);
+			}
+		}
+		return array;
+	}
+	return null;
+}
+R3D.QuadLimit.Cell.prototype.clear = function(){
+	var children = this._children;
+	for(var i=0; i<children.length; ++i){
+		var child = children[i];
+		child.clear();
+		child.kill();
+	}
+	Code.emptyArray(children);
+}
+R3D.QuadLimit.Cell.prototype.kill = function(){
+	this._x = null;
+	this._y = null;
+	this._width = null;
+	this._height = null;
+	this._children = null;
+}
+R3D.QuadLimit.Cell.prototype.debugDraw = function(d){
+	// console.log("debugDraw",this._x,this._y, this._width, this._height);
+	d.graphics().setLine(1.0,0xCCFF0000);
+	d.graphics().beginPath();
+	d.graphics().drawRect(this._x,this._y, this._width, this._height);
+	d.graphics().strokeLine();
+	d.graphics().endPath();
+	// and repeat for kids
+	var children = this._children;
+	for(var i=0; i<children.length; ++i){
+		var child = children[i];
+		child.debugDraw(d);
+	}
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // find minimum size of point that includes at least one other pixel of cornerness value >= threshold
 R3D.CompareSizeFinder = function(image, cornerness){
 	this._scales = null;

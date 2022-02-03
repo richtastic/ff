@@ -65,6 +65,8 @@ CellResolutionTest.prototype.imagesLoadComplete = function(imageInfo){
 	var i, j, list = [], d, x=0, y=0;
 
 
+
+
 	x += 50;
 	y += 50;
 	for(i=0;i<imageList.length;++i){
@@ -82,14 +84,20 @@ CellResolutionTest.prototype.imagesLoadComplete = function(imageInfo){
 		d.graphics().beginPath();
 		d.graphics().endPath();
 		d.graphics().strokeLine();
+
+
+
+		// var finder = new R3D.CompareSizeFinder(matrix, 0.50); // 0.5-0.75
+		// console.log(finder);
+		// continue;
 		
-
+		
 		console.log(matrix);
-
 		var gry = matrix.gry();
 		var corners = R3D.harrisCornerDetection(gry, matrix.width(), matrix.height());
 
 
+		/*
 		// blur corner scopre
 		var blurSigma = 1.0;
 		corners = ImageMat.getBlurredImage(corners,matrix.width(), matrix.height(), blurSigma);
@@ -193,6 +201,36 @@ CellResolutionTest.prototype.imagesLoadComplete = function(imageInfo){
 			return true;
 			// throw "...";
 		}
+		*/
+
+		var finder = new R3D.ResolutionCompareSizeFinder(matrix, corners, 10); // 2^5 = 32
+
+		d = new DO();
+		d.matrix().translate(x,y);
+		this._root.addChild(d);
+		finder.quad().debugDraw(d);
+
+		var space = finder.space();
+		var array = space.toArray();
+		// console.log(array);
+
+		for(var i=0; i<array.length; ++i){
+			var cell = array[i];
+			var center = cell.rect().center();
+			// console.log(cell.size());
+			d.graphics().setFill(0xFF00CC00);
+			d.graphics().beginPath();
+			d.graphics().drawCircle(center.x,center.y, 1);
+			d.graphics().endPath();
+			d.graphics().fill();
+		// d.matrix().translate(0,0);
+
+		}
+
+
+		console.log( finder.sizeForPoint(new V2D(100,100)).length()*0.5 );
+
+		/*
 
 		var setWid = matrix.width();
 		var setHei = matrix.height();
@@ -205,6 +243,7 @@ CellResolutionTest.prototype.imagesLoadComplete = function(imageInfo){
 			setX -= (setHei-setWid)*0.5;
 			setWid = setHei;
 		}
+
 		var quad = new QuadLimit(SDF, setX,setY, setWid,setHei, 2);
 
 		// quad.subDivide(4);
@@ -215,6 +254,7 @@ CellResolutionTest.prototype.imagesLoadComplete = function(imageInfo){
 		d.matrix().translate(x,y);
 		this._root.addChild(d);
 		quad.debugDraw(d);
+		*/
 
 
 		//NEXT: 
@@ -225,6 +265,8 @@ CellResolutionTest.prototype.imagesLoadComplete = function(imageInfo){
 }
 
 
+
+/*
 function QuadLimit(shouldDivideFxn, locationX, locationY, width, height, initialSubdivisions){
 	this._shouldDivideFxn = shouldDivideFxn; // x,y,w,h rect
 	this._root = new QuadLimit.Cell();
@@ -367,7 +409,7 @@ QuadLimit.Cell.prototype.debugDraw = function(d){
 		child.debugDraw(d);
 	}
 }
-
+*/
 </script>
 
 
