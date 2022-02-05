@@ -62,6 +62,95 @@ INHOMOGENEOUS: [over-determined]
 
 
 
+..........................
+
+
+patch initialization
+
+- A: geometry - 3D --- use 
+	- size is init using distances
+	- size is refined by sphere projection
+	- normal is average of view normal - inversed
+
+
+- AFFINE INITIALIZATION:
+	- B) from coarse estimate of patch sphere
+		- project 3-6 points between 2 views & assume affine relationship
+
+	- A) from neighborhood of points
+		- filter on fitting scale & rotation
+		- upgrade to affine (3-5 points)
+	
+
+- B: geometry - 2D --- use affine matching
+	- size same as 3D
+	- normal set using affine relative ?
+
+patch update nonlinear
+
+- A: image projection / compare
+	- 
+	- rotating normal <2 DoF>
+	- moving point <1 or 3 DoF>
+	-- 
+
+
+- when 3D/2D point density is high:
+	- can get average of 3-6 neighbors to init patch
+
+
+
+### POINT PATCH SETUP
+- assumed 2 view Rs are setup already
+
+x (R) 3D point is determined from simple DLT 
+- (O) 3D point can be updated to reduce 3D reprojection error
+=> have P3D
+x (R) patch normal and up are initialized as average of view normals & ups
+=> have normal (coarse)
+=> have up (coarse)
+x (R) patch size is initialized by averaging nearest rays to center point --- OR BY doing some scaling math
+x (R) patch size is updated iteritively by projecting plane points to 2D & minimizing desired size distances
+=> have size
+- (R) P3D relative affine are calculated by projecting plane points to 2D
+=> have match affines
+
+- (O) patch normal (& up) iteritively updated minimizing image difference scores
+
+
+
+### when point location is re-estimated:
+- if point has moved far, then the patch should be entirely re-innited
+- if point is fairly close (relative location from cameras' previous place ~ 1E6) -> angle difference can be recalculated, normal & size can be nonlinearly updated
+
+
+### when view orientation changes (1 or more)
+- point location needs to be re-initted
+
+
+
+
+### FROM ASSUMED PERFECT POINT 3D + PATCH:
+	- affine derived from plane projection
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+...
 
 
 

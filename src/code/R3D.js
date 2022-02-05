@@ -60558,9 +60558,13 @@ R3D.ResolutionCompareSizeFinder.prototype.image = function(image,corners,divisio
 	var max = info["max"];
 	var mean = info["mean"];
 
-	// var minimumScoreCorner = mean; // too restrictive
-	this._minimumScoreCorner = mean*0.5;
-	// this._minimumScoreCorner = mean*0.1;
+	// may want statistical sigma ?
+	// [0.5 <-> 0.25] < best range
+	// var minimumScoreCorner = mean; // too restrictive --- 
+	// this._minimumScoreCorner = mean*0.5;
+	this._minimumScoreCorner = mean*0.333333;//*(1.0/3.0);
+	// this._minimumScoreCorner = mean*0.25;
+	// this._minimumScoreCorner = mean*0.1; // too lenient
 
 	this._minimumSize = 3;
 	// this._minimumSize = 10;
@@ -60568,8 +60572,12 @@ R3D.ResolutionCompareSizeFinder.prototype.image = function(image,corners,divisio
 	// 1/256 = 0.00390625
 	// 5/256 = 0.01953125
 	// 10/256 = 0.0390625
-	this._minimumRangeGray = 0.05;
-	this._minimumRangeColor = 0.025;
+	// this._minimumRangeGray = 0.05; // 13+
+	// this._minimumRangeColor = 0.025; // 7+
+	this._minimumRangeGray = 0.03; // 8+
+	this._minimumRangeColor = 0.02; //  6+
+	// TODO: if only single channel of color this will always fail
+
 	// other?
 
 
@@ -60626,6 +60634,7 @@ R3D.ResolutionCompareSizeFinder.prototype.image = function(image,corners,divisio
 }
 R3D.ResolutionCompareSizeFinder.prototype.sizeForPoint = function(point){
 	var cell = this._space.closestObject(point);
+	// console.log(cell);
 	return cell.radius();
 }
 
@@ -60785,13 +60794,15 @@ R3D.QuadLimit.prototype.debugDraw = function(d){
 	this._root.debugDraw(d);
 }
 R3D.QuadLimit.Cell = function(x,y, width, height){
-	this._x = x;
-	this._y = y;
-	this._width = width;
-	this._height = height;
+	this._x = 0;//x;
+	this._y = 0;//y;
+	this._width = 0;//width;
+	this._height = 0;//height;
 	this._children = [];
 	this._data = null;
 	this.data({});
+	this.location(x,y);
+	this.size(width,height);
 }
 R3D.QuadLimit.Cell.prototype.rect = function(){
 	var rect = new Rect(this._x,this._y,this._width,this._height);
@@ -60831,10 +60842,10 @@ R3D.QuadLimit.Cell.prototype.location = function(x, y){
 		return new V2D(this._x,this._x);
 	}
 }
-R3D.QuadLimit.Cell.prototype.radius = function(){
-	throw "radius";
-	return Math.min(this._width,this._height)*0.5;
-}
+// R3D.QuadLimit.Cell.prototype.radius = function(){
+// 	throw "radius";
+// 	return Math.min(this._width,this._height)*0.5;
+// }
 R3D.QuadLimit.Cell.prototype.radius = function(width, height){
 	return this._radius;
 }
@@ -60843,7 +60854,7 @@ R3D.QuadLimit.Cell.prototype.size = function(width, height){
 		this.clear();
 		this._width = width;
 		this._height = height;
-		this._radius = Math.sqrt(width*width + height*height) * 0.5;
+		this._radius = Math.sqrt(width*width + height*height); // * 0.5; // hypotenuse maximum 
 	}else{
 		return new V2D(this._width,this._height);
 	}

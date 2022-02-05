@@ -498,15 +498,48 @@ INPUT:
 OUTPUT:
 	- 3D points in correct absolute positions
 
-
+solveSequentialView
 
 solveSequentialView
 
--> can this be down without the prior points existing ?
--> currently: points are only acquired for the new view
+solveSequentialView
+
+solveSequentialView
+
+solveSequentialView
+
+putativePairsForViews
 
 
+ - initially: the new view can be pushed into the direction of the old points
+ - when the points start to be merged: how to differentiate 'old' and 'new' points?
+ 	- prevent merging 'old' pairs with new pairs
+ - some final step however needs to 
 
+
+ 3 PHASES:
+ 	1 PHASE: gather & increase reliablity and density of single pair points
+ 		- move new points to old point direction to get view towards correct direction
+ 	2 PHASE: increase reliability & density & track count of new points
+ 		- merge only new points together
+ 			-> to keep old & new separate:
+ 			- need N quad-tree-point lookups to find kNN
+ 		- continue to move new tracks toward old point direction
+ 	3 PHASE: increase track count of all points
+ 		- merge all points together (old & new)
+ 			- can't decipher old and new groupings
+ 		- rely on error minimization techniques
+
+PHASE 1:
+	- typical expand & filter
+	=> each point: get kNN, estimate camera matrix
+	=> average camera matrix into final initial camera matrix
+PHASE 2:
+	- typical expand & filter
+	=> step to move points to their 'old' neighbors & re-calculate camera location
+PHASE 3:
+	- typical expand & filter
+	=> step to move view camera location to minimize total reprojection error
 
 
 - for each new view (image is loaded):
@@ -615,6 +648,19 @@ PIECES ..............
 			- use patch size as basis:
 				- start at 0.1 patch size
 				- limit at 0.01 - 0.001 patch size (or so) [1/10 to 1/100]
+
+
+
+
+EVENTUALLY GET BACK TO USING 'MODES' for point & patch initializing & updating (based on point count / density)
+3 STAGES:
+	1) low point count: 0 - 10k
+		- init & update all uniquely
+	2) med count: 10k-50k
+		- 
+	3) hi count: 50k-500k
+		- new points: average patch from 2D neighbors in N views
+		- don't use image to update ?
 
 
 

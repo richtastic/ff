@@ -21041,6 +21041,33 @@ App3DR.ProjectManager.prototype._iterateGraphSequential = function(sourceData,so
 
 			// get current transforms
 
+			var currentStepPoints = [];
+			var doPointLoading = function(a){
+				console.log("doPointLoading @ "+currentStep);
+
+				if(currentStep<=1){ // N/A
+					console.log("don't load any points");
+					pointsDidLoad(null);
+				}else{
+					var parentDirectory = Code.pathRemoveLastComponent(sequenceFilename);
+					var previousStep = currentStep - 1;
+					var previousPointsFileName = "points_"+previousStep+".yaml";
+					// var previousPointsFileName = "points_1.yaml";
+					var previousPointsPath = Code.appendToPath(parentDirectory,"sequence",previousPointsFileName);
+					console.log("prev path: "+previousPointsPath);
+					project.loadDataFromFile(previousPointsPath, pointsDidLoad, project);
+				}
+			}
+
+			var pointsDidLoad = function(points){
+				console.log(points);
+				console.log("pointsDidLoad @ "+currentStep);
+				if(points && points["points"]){
+					currentStepPoints = points["points"];
+				}
+				doWorldViewSolve();
+			}
+
 			var doWorldViewSolve = function(a){
 				// do blind-ish World solving
 				// relative scales
@@ -21278,7 +21305,7 @@ console.log(views, images, cellSizes, transforms);
 			console.log(worldViewsAdjacent);
 
 			
-			world.solveSequentialView(worldViewLast, worldViewsAdjacent);
+			world.solveSequentialView(worldViewLast, worldViewsAdjacent, currentStepPoints);
 
 
 console.log(world.toYAMLString());
@@ -21392,7 +21419,8 @@ throw "after solveSequentialView"
 				++loadedImageCount;
 				console.log(loadedImageCount+" / "+expectedImageCount)
 				if(loadedImageCount == expectedImageCount){
-					doWorldViewSolve();
+					// doWorldViewSolve();
+					doPointLoading();
 				}
 			}
 			// ...
