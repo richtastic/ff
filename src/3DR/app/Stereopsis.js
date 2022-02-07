@@ -9473,6 +9473,9 @@ Stereopsis.World.prototype.initP3DPatchFromNeighborhoodVisual = function(point3D
 }
 
 Stereopsis.World.prototype.updateP3DPatchFromVisual = function(point3D){
+
+	throw "when?";
+
 	var world = this;
 	var points2D = point3D.toPointArray();
 	var sizes2D = [];
@@ -9555,7 +9558,15 @@ var updateSize3D = size3D * 2.0; // affine more expanded
 // 	}
 
 
+
+	// 
+
+
 	// var result = R3D.optimizePatchNonlinearImages(location3D,updateSize3D,normal3D,up3D, ps2D,imageScales, extrinsics,Ks);
+
+	console.log(result);
+
+	throw "result";
 
 // console.log(result);
 // throw "optimizePatchNonlinearImages"
@@ -11031,7 +11042,7 @@ Stereopsis.World.prototype.initPoint3DAffineFromPatch = function(point3D){
 Stereopsis.World.prototype.updatePoint3DPatchNormalFromImages = function(point3D){
 
 	var needleSize = 21;
-	var haystack = needleSize*2+1;
+	var haystackSize = needleSize*2+1;
 	// extract the view images & compare
 
 	console.log(point3D);
@@ -11059,16 +11070,22 @@ Stereopsis.World.prototype.updatePoint3DPatchNormalFromImages = function(point3D
 	var pointA = point2DA.point2D();
 	var pointB = point2DB.point2D();
 
-	var match = P3D.matchForViews(viewA,viewB);
+	var match = point3D.matchForViews(viewA,viewB);
 	var affineAB = match.affineForViews(viewA,viewB);
 
-	var scale = 1.0;
-	var sizeCompare = 41;
 
-	var imgA = imageA.extractRectFromFloatImage(pointA.x,pointA.y,scale,null,sizeCompare,sizeCompare, matrix);
+
+	// ORIGINAL POINTS AS IS
+	// var scale = 0.5;
+	var scale = 1.0;
+	//var sizeCompare = 61;
+
+	var sizeCompare = viewA.cellSize();
+	var imgA = imageA.extractRectFromFloatImage(pointA.x,pointA.y,scale,null,sizeCompare,sizeCompare, null);
+	var sizeCompare = viewB.cellSize();
 	var imgB = imageB.extractRectFromFloatImage(pointB.x,pointB.y,scale,null,sizeCompare,sizeCompare, null);
 
-	var sca = 2.0;
+	var sca = 4.0;
 
 	var iii = imgA;
 	var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
@@ -11082,12 +11099,68 @@ Stereopsis.World.prototype.updatePoint3DPatchNormalFromImages = function(point3D
 	var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
 	var d = new DOImage(img);
 	d.matrix().scale(sca);
-	d.matrix().translate(10 + 0, 10 + 100);
+	d.matrix().translate(10 + 0, 10 + 250);
+	// d.matrix().translate(10 + spa*(HASCOUNT-OFFX), 0 + 10 + 400);
+	GLOBALSTAGE.addChild(d);
+
+
+
+
+	var scale = 2.0;
+	var sizeCompare = 41;
+
+	var imgA = imageA.extractRectFromFloatImage(pointA.x,pointA.y,scale,null,sizeCompare,sizeCompare, affineAB);
+	var imgB = imageB.extractRectFromFloatImage(pointB.x,pointB.y,scale,null,sizeCompare,sizeCompare, null);
+
+	var sca = 4.0;
+
+	var iii = imgA;
+	var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
+	var d = new DOImage(img);
+	d.matrix().scale(sca);
+	d.matrix().translate(10 + 0, 10 + 600);
+	// d.matrix().translate(10 + spa*(HASCOUNT-OFFX), 0 + 10 + 300);
+	GLOBALSTAGE.addChild(d);
+
+	var iii = imgB;
+	var img = GLOBALSTAGE.getFloatRGBAsImage(iii.red(),iii.grn(),iii.blu(), iii.width(),iii.height());
+	var d = new DOImage(img);
+	d.matrix().scale(sca);
+	d.matrix().translate(10 + 0, 10 + 900);
 	// d.matrix().translate(10 + spa*(HASCOUNT-OFFX), 0 + 10 + 400);
 	GLOBALSTAGE.addChild(d);
 
 
 	/// 
+	var location3D = point3D.point();
+	var size3D = point3D.size();
+	var normal3D = point3D.normal();
+	var up3D = point3D.up();
+	var points2D = point3D.toPointArray();
+	// .
+	var imageScales = [];
+	var extrinsics = [];
+	var Ks = [];
+	var pts2D = [];
+	for(var i=0; i<points2D.length; ++i){
+		var point2D = points2D[i];
+		var pt2D = point2D.point2D();
+		var view = point2D.view();
+		var ext = view.absoluteTransform();
+		var K = view.K();
+		var imageScale = view.imageScales();
+		imageScales.push(imageScale);
+		extrinsics.push(ext);
+		pts2D.push(pt2D);
+		Ks.push(K);
+	}
+	
+	console.log(location3D,size3D,normal3D,up3D, pts2D,imageScales, extrinsics,Ks)
+	// (point3D,size3D,normal3D,up3D, points2D,imageScales,extrinsics,Ks, compareSize,  startAngle)
+	var result = R3D.optimizePatchNormalImages(location3D,size3D,normal3D,up3D, pts2D,imageScales, extrinsics,Ks);
+	console.log(result);
+
+	// s(location3D,updateSize3D,normal3D,up3D, ps2D,imageScales, extrinsics,Ks);
 
 
 	throw "updatePoint3DPatchNormalFromImages";
@@ -11213,8 +11286,12 @@ console.log("TODO: remember viewA's original extrinsic/absolute");
 			var point3D = pairPointPutatives[i];
 			world.initPoint3DPatchSphere(point3D);
 			world.initPoint3DAffineFromPatch(point3D);
-			world.updatePoint3DPatchNormalFromImages(point3D);
-			world.updatePoint3DAffineFromPatch(point3D);
+			// if(i==1){
+			// if(i==2){
+			if(i==3){
+				world.updatePoint3DPatchNormalFromImages(point3D);
+				world.updatePoint3DAffineFromPatch(point3D);
+			}
 			// add now
 			var isValid = world.isValidPoint3DAndPatch3D(point3D);
 			if(isValid){

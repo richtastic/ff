@@ -3305,7 +3305,11 @@ Code.gradientDescent = function(fxn, args, x, dx, iter, diff, epsilon, lambda){
 	if(!dx){
 		dx = Code.newArrayZeros(sizeX);
 		for(i=0; i<sizeX; ++i){
-			dx[i] = epsilon;
+			if(Code.isArray(epsilon)){
+				dx[i] = epsilon[i]; // input
+			}else{
+				dx[i] = epsilon;
+			}
 		}
 	}/*else{
 		console.log(dx);
@@ -3316,6 +3320,8 @@ Code.gradientDescent = function(fxn, args, x, dx, iter, diff, epsilon, lambda){
 		for(i=0; i<sizeX; ++i){
 			Code.copyArray(tx,prevX);
 			tx[i] += dx[i];
+// console.log(tx);
+// console.log(tx[i]);
 			c = fxn(args, tx, false, i);
 if(Code.isNaN(c)){
 	console.log(c);
@@ -3361,7 +3367,7 @@ if(Code.isNaN(c)){
 			lambda /= scaler;
 		}
 		if(diffCost<minDifference){
-			//  console.log("exit 1: "+diffCost+" "+dx+" #@ "+lambda+" ... "+dy);
+			 // console.log("exit 1: "+diffCost+" "+dx+" #@ "+lambda+" ... "+dy);
 			break;
 		}
 	}

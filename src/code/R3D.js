@@ -15790,6 +15790,27 @@ R3D._gd_SAD_IMAGES = function(imageA,imageB, mask){
 	}
 	return sum;
 }
+R3D._gd_SSD_IMAGES = function(imageA,imageB, mask){
+	var aR = imageA.red();
+	var aG = imageA.grn();
+	var aB = imageA.blu();
+	var bR = imageB.red();
+	var bG = imageB.grn();
+	var bB = imageB.blu();
+	var count = aR.length;
+	var sum = 0;
+	var a = new V3D();
+	var b = new V3D();
+	for(var i=count-1; i>=0; --i){
+		if(!mask || mask[i]!=0){
+			a.set(aR[i],aG[i],aB[i]);
+			b.set(bR[i],bG[i],bB[i]);
+			// sum += V3D.distance(a,b);
+			sum += V3D.distanceSquare(a,b);
+		}
+	}
+	return sum;
+}
 R3D._gd_SAD_OFFSET_UNIT_IMAGES = function(imageA,imageB, mask){
 	// throw "sigma & unit"
 	var aR = imageA.red();
@@ -29262,6 +29283,181 @@ R3D.optimizePatchSizeProjected = function(point3D,size3D,normal3D,up3D, points2D
 	*/
 	return {"size":currentSize};
 }
+
+R3D.optimizePatchNormalImages = function(point3D,size3D,normal3D,up3D, points2D,imageScales,extrinsics,Ks,  startAngle){
+	// compareSize
+	startAngle = Code.valueOrDefault(startAngle, Code.radians(1.0));
+	// default
+	var needleSize = 11;
+	// derived
+	var right3D = V3D.cross(normal3D,up3D).norm();
+	// reuse
+	var matrix3D = new Matrix3D();
+	var matrix2D = new Matrix2D();
+	
+	var mask2D = ImageMat.circleMask(needleSize);
+	// var invScale = 1.0/???;
+	// var invScale = 1.0; // SCALE IS DONE FROM RELATIVE SIZING ?
+	// var halfCenter = (compareSize-1)*0.5;
+
+	var needles = [];
+	for(var i=0; i<points2D.length; ++i){
+		var needle = new ImageMat(needleSize,needleSize);
+		needles[i] = needle;
+	}
+
+
+	var maxIterations = 15;
+	var xVals = [0,0];
+	var args = [point3D,size3D,normal3D,up3D,right3D, points2D,imageScales,extrinsics,Ks, needles,mask2D,matrix2D,matrix3D];
+	var dx = [startAngle,startAngle];
+	var maxErrorDiff = 1E-10; // 1E-3 to 1E-7
+
+	DEBUGOFFX=0;
+	result = Code.gradientDescent(R3D._optimizePatchNormalNonlinearImagesGD, args, xVals, null, maxIterations, maxErrorDiff, dx);
+	DEBUGOFFY++;
+
+	throw "R3D.optimizePatchNormalImages";
+}
+R3D._optimizePatchNormalNonlinearImagesGD = function(args, x, isUpdate){
+	// console.log(x);
+	// console.log("IN X: "+x);
+	// if(isUpdate){
+	// 	return;
+	// }
+	var angleRight = x[0];
+	var angleUp = x[1];
+
+	var point3D = args[0];
+	var size3D = args[1];
+	var normal3D = args[2];
+	var up3D = args[3];
+	var right3D = args[4];
+	var points2D = args[5];
+	var imageScales = args[6];
+	var extrinsics = args[7];
+	var Ks = args[8];
+	// var compareSize = args[9];
+	var needles = args[9];
+	var mask2D = args[10];
+	var matrix2D = args[11];
+	var matrix3D = args[12];
+	//
+	var needleSize = needles[0].width();
+	var halfSize = needleSize*0.5;
+	var halfCenter = (halfSize-1)*0.5;
+	matrix3D.identity();
+	matrix3D.rotateVector(right3D,angleRight);
+	matrix3D.rotateVector(up3D,angleUp);
+	var normal = matrix3D.multV3DtoV3D(normal3D);
+	var up = matrix3D.multV3DtoV3D(up3D);
+	var totalError = 0;
+
+	// ideal points in 2D
+	var pointsA = [];
+	var projectCount = 4; // 3-6
+	var pi2 = Math.PI*2.0;
+	for(var j=0; j<projectCount; ++j){
+		var p = new V2D(halfSize,0);
+		p.rotate(pi2*j/projectCount);
+		pointsA.push(p);
+	}
+	//
+	// throw "..."
+	var v = new V3D();
+	for(var i=0; i<points2D.length; ++i){
+		var K = Ks[i];
+		var extrinsic = extrinsics[i];
+		var center2D = R3D.projectPoint3DCamera2DDistortion(point3D, extrinsic, K, new V2D(), false);
+		var pointsB = [];
+		var imageScale = imageScales[i];
+		for(var j=0; j<projectCount; ++j){
+			v.set(up);
+			// console.log("v 0: "+v);
+			v.scale(size3D);
+			// console.log("v 1: "+v);
+			V3D.rotateAngle(v,v, normal,pi2*j/projectCount);
+			v.add(point3D);
+			// console.log("v 2: "+v);
+			var p = R3D.projectPoint3DCamera2DDistortion(v, extrinsic, K, new V2D(), false);
+			// console.log("p 1: "+p);
+			p.sub(center2D);
+			// console.log("p 2: "+p);
+			pointsB.push(p);
+		}
+		var affine;
+		try{
+			affine = R3D.affineCornerMatrixLinear(pointsB,pointsA, matrix2D);
+		}catch(e){
+			console.log(extrinsic);
+			console.log(point3D)
+			console.log(center2D);
+			console.log(K);
+			console.log(size3D);
+			console.log("..................");
+			console.log(pointsB);
+			console.log(pointsA);
+			console.log(matrix2D);
+			console.log(e);
+			throw "";
+		}
+
+		var point2D = points2D[i];
+
+		var invScale = 1.0; // SCALE IS DONE FROM RELATIVE SIZING ?
+		
+		//var block = new ImageMat(displaySize,displaySize);
+		// var affine = matrix.copy();
+		affine.inverse();
+		affine.scale(invScale);
+			var totalScale = affine.averageScale();
+			ImageMatScaled.affineToLocationTransform(affine,affine, halfCenter,halfCenter,point2D.x,point2D.y);
+			needle = needles[i];
+			imageScale.extractRectFast(needle, totalScale, affine);
+			// needles.push(needle);
+		}
+		var totalError = 0;
+		for(var i=0; i<needles.length; ++i){
+			var needleA = needles[i];
+			for(var j = i+1; j<needles.length; ++j){
+				var needleB = needles[j];
+				var error = R3D._gd_SAD_IMAGES(needleA,needleB, mask2D);
+				// var error = R3D._gd_SSD_IMAGES(needleA,needleB, mask2D);
+				totalError += error;
+			}
+		}
+
+
+var sss = 200;
+// console.log(totalError);
+	// DISPLAY IMAGES
+	if(isUpdate){
+		console.log("totalError: "+totalError);
+		// if(DEBUGOFFX<50){
+		// if(DEBUGOFFY<30){
+			var mod = 15;
+			var col = DEBUGOFFY/mod | 0;
+			// SHOW NEEDLES
+			for(var i=0; i<needles.length; ++i){
+				var needle = needles[i];
+				var img = needle;
+					img = GLOBALSTAGE.getFloatRGBAsImage(img.red(),img.grn(),img.blu(), img.width(),img.height());
+				var d = new DOImage(img);
+				d.matrix().scale(10.0);
+				d.matrix().translate(200 + DEBUGOFFX*sss + col*sss*11, 10 + i*sss + (DEBUGOFFY-col*mod)*sss*2);
+				GLOBALSTAGE.addChild(d);
+			}
+			++DEBUGOFFX;
+		// }
+	}
+
+	return totalError;
+}
+
+
+
+
+
 
 R3D.optimizePatchNonlinearImages = function(point3D,size3D,normal3D,up3D, points2D,imageScales,extrinsics,Ks, compareSize){ // position normal to minimize SAD error in reprojected cells
 	// throw "why optimizePatchNonlinearImages, not optimizeSADAffineCorner"
