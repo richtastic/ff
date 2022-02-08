@@ -8190,9 +8190,6 @@ R3D.fundamentalFromUnnormalizedMaxCheck = function(pointsA,pointsB, maxCount, sk
 		ptsA = Code.copyArray(ptsA);
 		ptsB = Code.copyArray(ptsB);
 		Code.randomPopParallelArrays([ptsA,ptsB], maxCount);
-		// var result = Code.randomSampleRepeatsParallelArrays([ptsA,ptsB], maxCount);
-		// ptsA = result[0];
-		// ptsB = result[1];
 	}
 	var F = R3D.fundamentalFromUnnormalizedTempName(ptsA,ptsB, skipNonlinear);
 	return {"F":F, "A":ptsA, "B":ptsB};
@@ -29288,7 +29285,9 @@ R3D.optimizePatchNormalImages = function(point3D,size3D,normal3D,up3D, points2D,
 	// compareSize
 	startAngle = Code.valueOrDefault(startAngle, Code.radians(1.0));
 	// default
-	var needleSize = 11;
+	var needleSize = 9; // 5 - 11
+
+// var needleSize = 15;
 	// derived
 	var right3D = V3D.cross(normal3D,up3D).norm();
 	// reuse
@@ -29296,35 +29295,40 @@ R3D.optimizePatchNormalImages = function(point3D,size3D,normal3D,up3D, points2D,
 	var matrix2D = new Matrix2D();
 	
 	var mask2D = ImageMat.circleMask(needleSize);
-	// var invScale = 1.0/???;
-	// var invScale = 1.0; // SCALE IS DONE FROM RELATIVE SIZING ?
-	// var halfCenter = (compareSize-1)*0.5;
-
 	var needles = [];
 	for(var i=0; i<points2D.length; ++i){
 		var needle = new ImageMat(needleSize,needleSize);
 		needles[i] = needle;
 	}
 
-
 	var maxIterations = 15;
 	var xVals = [0,0];
 	var args = [point3D,size3D,normal3D,up3D,right3D, points2D,imageScales,extrinsics,Ks, needles,mask2D,matrix2D,matrix3D];
 	var dx = [startAngle,startAngle];
-	var maxErrorDiff = 1E-10; // 1E-3 to 1E-7
+	// var maxErrorDiff = 1E-5; // 1E-3 to 1E-7
+	var maxErrorDiff = 1E-4;
+	// var maxErrorDiff = 1E-10; // ad infinitum
 
 	DEBUGOFFX=0;
-	result = Code.gradientDescent(R3D._optimizePatchNormalNonlinearImagesGD, args, xVals, null, maxIterations, maxErrorDiff, dx);
+	var result = Code.gradientDescent(R3D._optimizePatchNormalNonlinearImagesGD, args, xVals, null, maxIterations, maxErrorDiff, dx);
 	DEBUGOFFY++;
+	var x = result["x"];
+	var angleRight = x[0];
+	var angleUp = x[1];
 
-	throw "R3D.optimizePatchNormalImages";
+	matrix3D.identity();
+	matrix3D.rotateVector(right3D,angleRight);
+	matrix3D.rotateVector(up3D,angleUp);
+	var normal = matrix3D.multV3DtoV3D(normal3D);
+	var up = matrix3D.multV3DtoV3D(up3D);
+
+	// throw "R3D.optimizePatchNormalImages";
+	return {"normal":normal, "up":up};
 }
 R3D._optimizePatchNormalNonlinearImagesGD = function(args, x, isUpdate){
-	// console.log(x);
-	// console.log("IN X: "+x);
-	// if(isUpdate){
-	// 	return;
-	// }
+	if(isUpdate){
+		return;
+	}
 	var angleRight = x[0];
 	var angleUp = x[1];
 
@@ -29363,7 +29367,7 @@ R3D._optimizePatchNormalNonlinearImagesGD = function(args, x, isUpdate){
 		pointsA.push(p);
 	}
 	//
-	// throw "..."
+
 	var v = new V3D();
 	for(var i=0; i<points2D.length; ++i){
 		var K = Ks[i];
@@ -29373,16 +29377,12 @@ R3D._optimizePatchNormalNonlinearImagesGD = function(args, x, isUpdate){
 		var imageScale = imageScales[i];
 		for(var j=0; j<projectCount; ++j){
 			v.set(up);
-			// console.log("v 0: "+v);
 			v.scale(size3D);
-			// console.log("v 1: "+v);
-			V3D.rotateAngle(v,v, normal,pi2*j/projectCount);
+			// V3D.rotateAngle(v,v, normal,pi2*j/projectCount);
+			V3D.rotateAngle(v,v, normal,-pi2*j/projectCount); // negative rotation: camera right & patch right are opposite
 			v.add(point3D);
-			// console.log("v 2: "+v);
 			var p = R3D.projectPoint3DCamera2DDistortion(v, extrinsic, K, new V2D(), false);
-			// console.log("p 1: "+p);
 			p.sub(center2D);
-			// console.log("p 2: "+p);
 			pointsB.push(p);
 		}
 		var affine;
@@ -29401,20 +29401,19 @@ R3D._optimizePatchNormalNonlinearImagesGD = function(args, x, isUpdate){
 			console.log(e);
 			throw "";
 		}
-
 		var point2D = points2D[i];
 
 		var invScale = 1.0; // SCALE IS DONE FROM RELATIVE SIZING ?
-		
-		//var block = new ImageMat(displaySize,displaySize);
-		// var affine = matrix.copy();
+
+invScale = 2.0;
+
 		affine.inverse();
 		affine.scale(invScale);
 			var totalScale = affine.averageScale();
-			ImageMatScaled.affineToLocationTransform(affine,affine, halfCenter,halfCenter,point2D.x,point2D.y);
+			ImageMatScaled.affineToLocationTransform(affine,affine, halfCenter,halfCenter,point2D.x,point2D.y); // USE SAMPLE LOCATION?
+			// ImageMatScaled.affineToLocationTransform(affine,affine, halfCenter,halfCenter,center2D.x,center2D.y); // USE ACTUAL PROJECTED CENTER?
 			needle = needles[i];
 			imageScale.extractRectFast(needle, totalScale, affine);
-			// needles.push(needle);
 		}
 		var totalError = 0;
 		for(var i=0; i<needles.length; ++i){
@@ -29426,15 +29425,14 @@ R3D._optimizePatchNormalNonlinearImagesGD = function(args, x, isUpdate){
 				totalError += error;
 			}
 		}
-
-
-var sss = 200;
-// console.log(totalError);
 	// DISPLAY IMAGES
 	if(isUpdate){
+		var sss = 200;
 		console.log("totalError: "+totalError);
 		// if(DEBUGOFFX<50){
 		// if(DEBUGOFFY<30){
+		if(false){
+		// if(true){
 			var mod = 15;
 			var col = DEBUGOFFY/mod | 0;
 			// SHOW NEEDLES
@@ -29448,7 +29446,7 @@ var sss = 200;
 				GLOBALSTAGE.addChild(d);
 			}
 			++DEBUGOFFX;
-		// }
+		}
 	}
 
 	return totalError;
@@ -29461,6 +29459,7 @@ var sss = 200;
 
 R3D.optimizePatchNonlinearImages = function(point3D,size3D,normal3D,up3D, points2D,imageScales,extrinsics,Ks, compareSize){ // position normal to minimize SAD error in reprojected cells
 	// throw "why optimizePatchNonlinearImages, not optimizeSADAffineCorner"
+	throw " use optimizePatchNormalImages";
 	// console.log("optimizePatchNonlinearImages");
 	compareSize = Code.valueOrDefault(compareSize, 5); // 5 - 9
 	// compareSize = Code.valueOrDefault(compareSize, 9);

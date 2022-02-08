@@ -4243,7 +4243,6 @@ Stereopsis.World.prototype.relativeFFromSamples = function(transform){
 	for(var i=0; i<transforms.length; ++i){
 		console.log("relativeFFromSamples : "+i+" / "+transforms.length);
 		var transform = transforms[i];
-		// var matches = transform.matches(); // these are non-putative matches
 		var viewA = transform.viewA();
 		var viewB = transform.viewB();
 		var info = Stereopsis.ransacTransformF(transform,null,true, true);
@@ -11041,24 +11040,15 @@ Stereopsis.World.prototype.initPoint3DAffineFromPatch = function(point3D){
 
 Stereopsis.World.prototype.updatePoint3DPatchNormalFromImages = function(point3D){
 
-	var needleSize = 21;
-	var haystackSize = needleSize*2+1;
-	// extract the view images & compare
-
-	console.log(point3D);
-
-	// display A
-
-	var needle = new ImageMat(needleSize,needleSize);
-	var haystack = new ImageMat(haystackSize,haystackSize);
-
-
-	var HASCOUNT = 0;
-	var OFFX = 0;
-
-
 
 	var points2D = point3D.toPointArray();
+
+
+
+var doDisplay = false;
+// var doDisplay = true;
+if(doDisplay){
+
 
 	var point2DA = points2D[0];
 	var point2DB = points2D[1];
@@ -11073,6 +11063,20 @@ Stereopsis.World.prototype.updatePoint3DPatchNormalFromImages = function(point3D
 	var match = point3D.matchForViews(viewA,viewB);
 	var affineAB = match.affineForViews(viewA,viewB);
 
+
+
+
+	var needleSize = 21;
+	var haystackSize = needleSize*2+1;
+	// extract the view images & compare
+
+	// display A
+
+	var needle = new ImageMat(needleSize,needleSize);
+	var haystack = new ImageMat(haystackSize,haystackSize);
+
+	var HASCOUNT = 0;
+	var OFFX = 0;
 
 
 	// ORIGINAL POINTS AS IS
@@ -11129,7 +11133,7 @@ Stereopsis.World.prototype.updatePoint3DPatchNormalFromImages = function(point3D
 	d.matrix().translate(10 + 0, 10 + 900);
 	// d.matrix().translate(10 + spa*(HASCOUNT-OFFX), 0 + 10 + 400);
 	GLOBALSTAGE.addChild(d);
-
+}
 
 	/// 
 	var location3D = point3D.point();
@@ -11155,15 +11159,15 @@ Stereopsis.World.prototype.updatePoint3DPatchNormalFromImages = function(point3D
 		Ks.push(K);
 	}
 	
-	console.log(location3D,size3D,normal3D,up3D, pts2D,imageScales, extrinsics,Ks)
+	// console.log(location3D,size3D,normal3D,up3D, pts2D,imageScales, extrinsics,Ks)
 	// (point3D,size3D,normal3D,up3D, points2D,imageScales,extrinsics,Ks, compareSize,  startAngle)
 	var result = R3D.optimizePatchNormalImages(location3D,size3D,normal3D,up3D, pts2D,imageScales, extrinsics,Ks);
-	console.log(result);
+	// console.log(result);
+	var newNormal = result["normal"];
+	var newUp = result["up"];
 
-	// s(location3D,updateSize3D,normal3D,up3D, ps2D,imageScales, extrinsics,Ks);
-
-
-	throw "updatePoint3DPatchNormalFromImages";
+	var normal3D = point3D.normal(newNormal);
+	var up3D = point3D.up(newUp);
 }
 Stereopsis.World.prototype.isValidPoint3DAndPatch3D = function(point3D){
 	var p3D = point3D.point();
@@ -11288,22 +11292,38 @@ console.log("TODO: remember viewA's original extrinsic/absolute");
 			world.initPoint3DAffineFromPatch(point3D);
 			// if(i==1){
 			// if(i==2){
-			if(i==3){
+			// if(i==3){
+			// if(i==4){
+				// if(i==50){
+					// if(i==5){
+			// if(i==6){
+			// if(i==10){
+			// if(i==20){
+			//if(i==30){
+			// if(i==40){
+			// if(i==50){
+			// if(i==100){
+			// if(i==200){
+			// if(i==300){
+			// if(i==50){
+			// if(i==289){
+			// if(i==304){
+			// if(i==315){
+			// if(i==366){
+			// if(i==369){
+				// console.log("CALC NORMAL .................................................. "+i);
 				world.updatePoint3DPatchNormalFromImages(point3D);
-				world.updatePoint3DAffineFromPatch(point3D);
-			}
+				// world.updatePoint3DAffineFromPatch(point3D); // UPDATE IS SAME AS INIT ?
+				world.initPoint3DAffineFromPatch(point3D);
+			// }
 			// add now
 			var isValid = world.isValidPoint3DAndPatch3D(point3D);
 			if(isValid){
 				world.recursiveEmbedPoint3D(point3D);
 			}
 		}
-
-
 // ????
-throw "here ..........."
-
-		
+// throw "here ..........."
 
 		// TODO: control how embedding works
 		//	- cell sizing
@@ -11315,11 +11335,14 @@ throw "here ..........."
 
 			// set F for error filtering
 			world.relativeFFromSamples(transformAB); // TODO: decouple calcuation & error | use local affine to validate ?
+
+// throw "after relativeFFromSamples"
 			// get current error
 			// world.estimatePairwiseErrors(transformAB); // estimate3DErrors
 
 			world.estimateGlobalErrors();
 
+throw "after estimateGlobalErrors"
 			// ...
 
 			// 
@@ -16873,9 +16896,14 @@ Stereopsis.World.prototype.estimatePairwiseErrors = function(){
 }
 Stereopsis.World.prototype.estimateGlobalErrors = function(){
 	var world = this;
-
-
 	// for F: 3D point transformed by inverse of transform view A absolute
+	var points3D = world.toPointArray();
+	var views = world.toViewArray();
+
+	var maximumCountPoint3D = 1000;
+	if(points3D.length>maximumCountPoint3D){
+		Code.randomPopArray(points3D, maximumCountPoint3D);
+	}
 
 	errorFMean = 0;
 	errorFSigma = 0;
@@ -16892,7 +16920,13 @@ Stereopsis.World.prototype.estimateGlobalErrors = function(){
 	otherErrors = 0;
 
 
-	throw ""
+	for(var i=0; i<points3D.length; ++i){
+		point3D = points3D[i];
+		console.log(points3D);
+	}
+
+
+	throw "estimateGlobalErrors"
 }
 GOLBAL_WORLD = null;
 Stereopsis.World.prototype.estimate3DErrors = function(skipCalc, shouldLog){ // triangulate locations for matches (P3D) & get errors from this
@@ -17245,7 +17279,7 @@ Stereopsis.checkPointsLocation = function(extrinsicA, extrinsicB, KaInv,KbInv, p
 }
 Stereopsis.ransacTransformF = function(transform, maximumSamples, skipP, onlyBest){ // F & P
 	skipP = skipP!==undefined && skipP!==null ? skipP : false;
-	maximumSamples = maximumSamples!==undefined && maximumSamples!==null ? maximumSamples : 1000; // 200~1000
+	maximumSamples = maximumSamples!==undefined && maximumSamples!==null ? maximumSamples : 500; // 200~1000
 	var maximumSamplesNonlinearP = 500; // 200-500
 	var maxIterationsSingleCameraNonlinearP = 500; // 1000?
 	onlyBest = onlyBest!==undefined && onlyBest!==null ? onlyBest : false;
@@ -17281,9 +17315,7 @@ Stereopsis.ransacTransformF = function(transform, maximumSamples, skipP, onlyBes
 	if(points3D.length>maximumSamples){
 		// console.log("NEED TO DO SOME SUBSET OF SAMPLES: "+points3D.length+"/"+maximumSamples);
 		var intervals = Code.randomIndexes(maximumSamples, points3D.length);
-
 		// TODO: do random pop
-
 		var p3D = [];
 		var pA = [];
 		var pB = [];
@@ -17299,19 +17331,14 @@ Stereopsis.ransacTransformF = function(transform, maximumSamples, skipP, onlyBes
 	}
 	var F = null;
 	var P = null;
-console.log("CALCULATE F -> P : "+pointsA.length+" points");
-	// console.log("ransacTransformF:   "+points3D.length+" / "+minimumTransformMatchCountF);
+	console.log("CALCULATE F -> P : "+pointsA.length+" points");
 	if(points3D.length>minimumTransformMatchCountF){
 		// get initial F
 		console.log("   INITIAL F : "+F);
-		// for(var i=0; i<pointsA.length; ++i){
-		// 	console.log(" "+i+" : "+pointsA[i]+" & "+pointsB[i]);
-		// }
 		var maxPointsF = 200;
 		var info = R3D.fundamentalFromUnnormalizedMaxCheck(pointsA,pointsB, maxPointsF);
 		var F = info["F"];
 		console.log("   RESULTING F : "+F);
-
 		var bestPointsA = pointsA;
 		var bestPointsB = pointsB;
 		if(!skipP && bestPointsA.length>minimumTransformMatchCountR){
@@ -17328,11 +17355,11 @@ console.log("CALCULATE F -> P : "+pointsA.length+" points");
 				var B = P;
 
 
-var centerB = B.multV3DtoV3D(new V3D(0,0,0));
-var normalB = B.multV3DtoV3D(new V3D(0,0,1));
-	normalB.sub(centerB);
-	var angle = V3D.angle(V3D.DIRZ, normalB);
-console.log("P ANGLE: "+Code.degrees(angle));
+				var centerB = B.multV3DtoV3D(new V3D(0,0,0));
+				var normalB = B.multV3DtoV3D(new V3D(0,0,1));
+					normalB.sub(centerB);
+					var angle = V3D.angle(V3D.DIRZ, normalB);
+				console.log("P ANGLE: "+Code.degrees(angle));
 
 
 				console.log("LINEAR P: ");
@@ -17392,16 +17419,13 @@ console.log("P ANGLE: "+Code.degrees(angle));
 				if(P){
 					console.log("nonlinear P : "+bestPointsA.length);
 					// WAS:
-					// var result = R3D.transformCameraExtrinsicNonlinear(P, bestPointsA, bestPointsB, Ka,KaInv, Kb,KbInv);
-
+					// var result = R3D.transformCameraExtrinsicNonlinear(P, bestPointsA, bestPointsB, Ka,KaInv, Kb,KbInv);x
 					// UPDATE? :
-
-
-var centerB = B.multV3DtoV3D(new V3D(0,0,0));
-var normalB = B.multV3DtoV3D(new V3D(0,0,1));
-	normalB.sub(centerB);
-	var angle = V3D.angle(V3D.DIRZ, normalB);
-console.log("P ANGLE: "+Code.degrees(angle));
+					var centerB = B.multV3DtoV3D(new V3D(0,0,0));
+					var normalB = B.multV3DtoV3D(new V3D(0,0,1));
+						normalB.sub(centerB);
+						var angle = V3D.angle(V3D.DIRZ, normalB);
+					console.log("P ANGLE: "+Code.degrees(angle));
 
 // R3D.showRelativeCameras(A,B, KaInv,KbInv, bestPointsA,bestPointsB, 1000);
 
@@ -17505,27 +17529,15 @@ console.log(bestPointsB);
 					// R3D.transformCameraExtrinsicNonlinear = function(P, pointsA2D,pointsB2D, Ka,KaInv, Kb,KbInv, maxIterations, negativeIsBad){
 					// console.log(result);
 					P = result["P"];
-
 					console.log("NONLINEAR P: ");
 					var A = new Matrix(4,4).identity();
 					var B = P;
 					var percentInFront = Stereopsis.checkPointsLocation(A, B, KaInv,KbInv, bestPointsA,bestPointsB);
 					console.log("%: "+percentInFront);
-
-
-// R3D.showRelativeCameras(A,B, KaInv,KbInv, bestPointsA,bestPointsB, 1000);
-
-
-// R3D.showRelativeCameras(A,B, KaInv,KbInv, bestPointsA,bestPointsB, 1000);
-// throw "R3D.showRelativeCameras END";
-// world.showForwardBackwardPair();
 				}
 			}
 		}
 	}
-
-
-
 	/*
 	// does this help w/ camera minimizing squared reprojection errors?
 	// var ransacP = true;

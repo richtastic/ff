@@ -498,6 +498,11 @@ INPUT:
 OUTPUT:
 	- 3D points in correct absolute positions
 
+
+
+- is init affine from patch same as update affine from patch ?
+
+
 solveSequentialView
 
 solveSequentialView
