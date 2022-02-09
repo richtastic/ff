@@ -8202,8 +8202,10 @@ R3D.fundamentalFromUnnormalizedTempName = function(pointsA,pointsB, skipNonlinea
 	var pointsANorm = Code.normalizedPoints2D(pointsA);
 	var pointsBNorm = Code.normalizedPoints2D(pointsB);
 	var F = R3D.fundamentalMatrix(pointsANorm["normalized"],pointsBNorm["normalized"]);
-	if(!skipNonlinear){
-		// F = R3D.fundamentalMatrixNonlinear(F, pointsANorm["normalized"],pointsBNorm["normalized"]);
+	if(!skipNonlinear){ // TODO: ALL NONLINEAR ????????????????
+		// throw "is someone expecting nonlinear?"
+		console.log("running fundamentalMatrixNonlinear");
+		F = R3D.fundamentalMatrixNonlinear(F, pointsANorm["normalized"],pointsBNorm["normalized"]);
 	}
 	F = Matrix.mult(F, pointsANorm["forward"]);
 	F = Matrix.mult(Matrix.transpose(pointsBNorm["forward"]), F); // FORWARD ?
@@ -14891,8 +14893,8 @@ R3D.testOptimumLocationHelperDebug = function(needle,haystack, scores, offx,offy
 
 R3D.DEBUG_SS_A=0;
 R3D._temp_matrix2D = new Matrix2D();
-R3D.optimumSADLocationSearchFlatRGB = function(pointA,pointB, imageScalesA,imageScalesB, featureSize,needleSize,haystackSize, affine, reuseNeedle, reuseHaystack, doBlurring){
-	var inScale = (featureSize/needleSize);
+R3D.optimumSADLocationSearchFlatRGB = function(pointA,pointB, imageScalesA,imageScalesB, featureSizeA,needleSize,haystackSize, affine, reuseNeedle, reuseHaystack, doBlurring){
+	var inScale = (featureSizeA/needleSize);
 	var halfNeedle = (needleSize-1)*0.5;
 	var halfHaystack = (haystackSize-1)*0.5;
 
@@ -31920,7 +31922,8 @@ console.log("skipped: "+skipped+" / matchingCount: "+matchingCount);
 
 var needleSize = 11; // 5 - 11
 var haystackSize = 2*needleSize+1;
-var featureSize = cellSizeA;
+var featureSize = 0;
+throw "what is size?"
 
 var limitNewDistance = cellSizeA*0.5;
 
@@ -31939,7 +31942,7 @@ var limitNewDistance = cellSizeA*0.5;
 		// var result = R3D.optimumNeedleHaystackAtLocation(imageScaleA,pointA, imageScaleB,pointB, needleSize,haystackSize, affineAB);
 		// console.log(result);
 		
-		var result = R3D.optimumSADLocationSearchFlatRGB(pointA,pointB, imageScaleA,imageScaleB, featureSize, needleSize,haystackSize, affineAB);
+		var result = R3D.optimumSADLocationSearchFlatRGB(pointA,pointB, imageScaleA,imageScaleB, featureSizeA, needleSize,haystackSize, affineAB);
 		// console.log(result);
 		// throw "?"
 
@@ -36212,6 +36215,28 @@ R3D.fPointClosest = function(FFwd,pA,pB){
 		Code.lineOriginAndDirection2DFromEquation(org,dir, lineB.x,lineB.y,lineB.z);
 	var closestB = Code.closestPointLine2D(org,dir, pB);
 	return closestB;
+}
+R3D._fErrorReuseA = new V3D();
+R3D._fErrorReuseB = new V3D();
+R3D._fErrorReuseLineA = new V3D();
+R3D._fErrorReuseLineB = new V3D();
+R3D._fErrorReuseDir = new V2D();
+R3D._fErrorReuseOrg = new V2D();
+R3D.fErrorReuse = function(FFwd, FRev, pA, pB){
+	var a = R3D._fErrorReuseA;
+	var b = R3D._fErrorReuseB;
+	var dir = R3D._fErrorReuseDir;
+	var org = R3D._fErrorReuseOrg;
+	a.set(pA.x,pA.y,1.0);
+	b.set(pB.x,pB.y,1.0);
+	var lineB = FFwd.multV3DtoV3D(R3D._fErrorReuseLineB, a);
+		Code.lineOriginAndDirection2DFromEquation(org,dir, lineB.x,lineB.y,lineB.z);
+	var distanceB = Code.distancePointRay2D(org,dir, b);
+	var lineA = FRev.multV3DtoV3D(R3D._fErrorReuseLineA, b);
+		Code.lineOriginAndDirection2DFromEquation(org,dir, lineA.x,lineA.y,lineA.z);
+	var distanceA = Code.distancePointRay2D(org,dir, a);
+	var distance = Math.sqrt( distanceA*distanceA + distanceB*distanceB );
+	return distance;
 }
 R3D.fError = function(FFwd, FRev, pA, pB){
 	if(!FFwd || !FRev){

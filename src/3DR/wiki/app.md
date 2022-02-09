@@ -503,6 +503,15 @@ OUTPUT:
 - is init affine from patch same as update affine from patch ?
 
 
+
+
+WHAT TO DO ABOUT IMACE EXTRACTION / COMPARE WITH DIFFERENT FEATURE SIZES ???
+
+R3D.optimumSADLocationSearchFlatRGB
+
+
+
+
 solveSequentialView
 
 solveSequentialView

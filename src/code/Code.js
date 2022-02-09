@@ -3163,7 +3163,10 @@ title('reproduced signal');
 
 // ------------------------------------------------------------------------------------------
 Code.isUnique = function(val){ // val, ...array
-	for(i=1;i<arguments.length;++i){
+	if(val.length==0){
+		return true;
+	}
+	for(i=0;i<arguments.length;++i){
 		if(val==arguments[i]){
 			return false;
 		}
@@ -3171,6 +3174,9 @@ Code.isUnique = function(val){ // val, ...array
 	return true;
 }
 Code.secondMax = function(){
+	if(a.length<=1){
+		return null;
+	}
 	var a;
 	var max = Math.max.apply(this,arguments);
 	var nextMax = Math.min.apply(this,arguments);
@@ -3183,6 +3189,9 @@ Code.secondMax = function(){
 	return nextMax;
 }
 Code.max = Code.maxArray = function(a){
+	if(a.length==0){
+		return null;
+	}
 	var max = a[0];
 	for(var i=a.length; i--; ){
 		max = Math.max(max,a[i]);
@@ -3190,6 +3199,9 @@ Code.max = Code.maxArray = function(a){
 	return max;
 }
 Code.min = Code.minArray = function(a){
+	if(a.length==0){
+		return null;
+	}
 	var min = a[0];
 	for(var i=a.length; i--; ){
 		min = Math.min(min,a[i]);
@@ -3197,6 +3209,9 @@ Code.min = Code.minArray = function(a){
 	return min;
 }
 Code.minIndex = function(a){
+	if(a.length==0){
+		return null;
+	}
 	var min = a[0];
 	var index = 0;
 	for(var i=a.length; i--; ){
@@ -3208,6 +3223,9 @@ Code.minIndex = function(a){
 	return index;
 }
 Code.maxIndex = function(a){
+	if(a.length==0){
+		return null;
+	}
 	var max = a[0];
 	var index = 0;
 	for(var i=a.length; i--; ){
