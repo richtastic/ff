@@ -11346,25 +11346,18 @@ console.log("TODO: remember viewA's original extrinsic/absolute");
 				world.probe2DCellsExpandR(sigmaMaximumSelect, sigmaMaximumKeep);
 				
 
-				// throw "after expand"
+			// throw "after expand"
+
 			// filter
-
-
-			????
-
-
-// var sigmaFilter3DR = 2.0;
-// world.filterGlobal3DR(sigmaFilter3DR);
-// world.filterLocal2DR();
-// world.filterLocal3DR();
-
-// world.filterCriteria2DNnot3DN();
-// world.filterCriteria2DNnotDepth();
-// world.filterCriteria2DN3DNregularization();
-
-// world.dropNegativeMatches3D();
-// world.dropNegativePoints3D();
-
+			world.filterPairwiseErrors(2.0);
+			world.filterGlobalErrors(2.0);
+			world.filterNeighborConsistency2D3D(2.0);
+			world.filterNeighborConsistency2DViews(2.0);
+			world.filterPatchVisibilityConsistency();
+			world.filterLocalError2D();
+			world.filterLocalError3D();
+			world.filterGlobalNegativeDepth();
+			// affine consistent Orientation - regularization 
 // world.filterGlobalPatchSphere3D();
 
 			throw "after filter"
@@ -18961,12 +18954,9 @@ Stereopsis.World.prototype.probe2DCellsExpandR = function(sigmaMaximumSelect, si
 						console.log(empty);
 						throw "newPointA NaN"
 					}
-console.log("bestNeedleHaystackMatchFromLocation ...");
+// console.log("bestNeedleHaystackMatchFromLocation ...");
 					var isR = true;
 					var newMatch = world.bestNeedleHaystackMatchFromLocation(centerA,centerB, newPointA, affine, viewA,viewB,   isR);
-
-// bestNeedleHaystackMatchFromLocation
-
 					if(newMatch){
 						var point3D = newMatch.point3D();
 						world.initNewPointPatch3D(point3D);
@@ -20319,6 +20309,251 @@ if(!pointA){ // possibly removed in process
 		} // end view pairs
 	} // end transforms
 }
+
+Stereopsis.World.prototype.filterPairwiseErrors = function(sigmaMaximumDrop){ // drop from transform population on: F | N | S 
+	sigmaMaximumDrop = Code.valueOrDefault(sigmaMaximumDrop, 2.0);
+	console.log("filterPairwiseErrors: F / N / S: "+sigmaMaximumDrop);
+	var world = this;
+	var limitMatchSigmaF = sigmaMaximumDrop;
+	var limitMatchSigmaN = sigmaMaximumDrop;
+	var limitMatchSigmaS = sigmaMaximumDrop;
+	var transforms = world.toTransformArray();
+	var minCountTransform = 16;
+	for(var t=0; t<transforms.length; ++t){
+		var transform = transforms[t];
+		// skip transforms with few matches
+		var matches = transform.matches();
+		if(matches.length<minCountTransform){
+			continue;
+		}
+		var dropList = [];
+		var limitF = transform.fMean() + transform.fSigma()*limitMatchSigmaF;
+		var limitS = transform.sadMean()!==null ? (transform.sadMean() + transform.sadSigma()*limitMatchSigmaS) : 0;
+		var limitN = transform.nccMean()!==null ? (transform.nccMean() + transform.nccSigma()*limitMatchSigmaN) : 0;
+		for(var j=0; j<matches.length; ++j){
+			var match = matches[j];
+			var errorF = match.errorF();
+			var errorN = match.errorNCC()
+			var errorS = match.errorSAD();
+			if( (errorF!=null && errorF>limitF) || (errorS!=null && errorS>limitS) || (errorN!=null && errorN>limitN) ){
+				dropList.push(match);
+			}
+		}
+		console.log("filterPairwiseErrors: DROPPING: "+dropList.length);
+		for(var j=0; j<dropList.length; ++j){
+			var match = dropList[j];
+			var p3D = match.point3D();
+			world.removeMatchFromPoint3D(match);
+			world.removeCheckP3D(p3D);
+		}
+	}
+
+	// throw "filterPairwiseErrors";
+}
+
+Stereopsis.World.prototype.filterGlobalErrors = function(sigmaMaximumDrop){ // drop from world population on: R
+	sigmaMaximumDrop = Code.valueOrDefault(sigmaMaximumDrop, 2.0);
+	var world = this;
+	var limitMatchSigmaR = sigmaMaximumDrop;
+	var transforms = world.toTransformArray();
+	var minCountPoints = 16;
+	var points3D = world.toPointArray();
+	if(points3D.length<minCountPoints){
+		return;
+	}
+	var limitR = world.globalErrorRMean() + world.globalErrorRSigma()*limitMatchSigmaR;
+	// globalErrorFMean
+	// globalErrorNMean
+	// globalErrorSMean
+	var dropList = [];
+	for(var p=0; p<points3D.length; ++p){
+		var point3D = points3D[p];
+		var errorR = point3D.globalErrorR();
+		if( (errorR!=null && errorR>limitR) ){
+			dropList.push(point3D);
+		}
+	}
+	console.log("filterGlobalErrors: DROPPING: "+dropList.length);
+	for(var p=0; p<dropList.length; ++p){
+		var point3D = dropList[p];
+		world.disconnectPoint3D(point3D);
+		world.killPoint3D(point3D);
+	}
+
+	// throw "filterGlobalErrors";
+}
+
+Stereopsis.World.prototype.filterNeighborConsistency2D3D = function(){ // drop if 2D<->3D neighborhood cover is low [for each view & 3D point]
+	var world = this;
+	var points3D = world.toPointArray();
+	var neighborhood3DScale = 4.0; // over-compensate
+	var neighborhood2DScale = 2.0;
+	var minimumNeighborhoodRatio = 0.10; // 
+	var minNeighborCount = 6;
+	var dropList = [];
+	var space3D = world.pointSpace();
+// select 3D -> check 2D
+	for(var i=0; i<points3D.length; ++i){
+		var point3D = points3D[i];
+		if(!point3D.hasPatch()){
+			throw "no patch exists";
+		}
+		var location3D = point3D.point();
+		var size3D = point3D.size();
+		var neighborhoodRadius3D = size3D*neighborhood3DScale;
+		var neighbors3D = space3D.objectsInsideSphere(location3D,neighborhoodRadius3D);
+		// console.log("n3D:"+neighbors3D.length);
+		if(neighbors3D.length<minNeighborCount){
+			continue;
+		}
+		var neighbors3DLookup = {};
+		for(var j=0; j<neighbors3D.length; ++j){
+			var neighbor3D = neighbors3D[j];
+			var pointID = neighbor3D.id();
+			neighbors3DLookup[pointID] = neighbor3D;
+		}
+		//
+		// var shouldContinue = false;
+		var points2D = point3D.toPointArray();
+		for(var j=0; j<points2D.length; ++j){
+			var point2D = points2D[j];
+			var location2D = point2D.point2D();
+			var view = point2D.view();
+			var space2D = view.pointSpace();
+			var size2D = view.compareSizeForPoint(location2D);
+			var neighborhoodRadius3D = size2D*neighborhood3DScale;
+			var neighbors2D = space2D.objectsInsideCircle(location2D,neighborhoodRadius3D);
+			if(neighbors2D.length<minNeighborCount){
+				continue;
+			}
+			// console.log("n2D:"+neighbors2D.length);
+			var overlapCount = 0;
+			for(var k=0; k<neighbors2D.length; ++k){
+				var neighbor2D = neighbors2D[k];
+				var neighbor2DPoint3D = neighbor2D.point3D();
+				var neighborID = neighbor2DPoint3D.id();
+				if(neighbors3DLookup[neighborID]){
+					overlapCount++;
+				}
+			}
+			// var ratio2D = overlapCount/neighbors3D.length;
+			var ratio2D = overlapCount/neighbors2D.length;
+			console.log(" => shared ratio: "+ratio2D+" : ("+neighbors3D.length+" v "+neighbors2D.length+") ");
+			if(ratio2D<minimumNeighborhoodRatio){
+				dropList.push(point3D);
+				// shouldContinue = true;
+				break;
+			}
+		}
+	}
+// select 2D -> check 3D ?
+	console.log("filterNeighborConsistency2D3D: DROPPING: "+dropList.length+" / "+points3D.length);
+	for(var p=0; p<dropList.length; ++p){
+break; // skip drop
+		var point3D = dropList[p];
+		world.disconnectPoint3D(point3D);
+		world.killPoint3D(point3D);
+	}
+
+
+	// throw "filterNeighborConsistency2D3D";
+}
+
+Stereopsis.World.prototype.filterNeighborConsistency2DViews = function(){ // drop if 2D<->2D neighborhood cover is low [for each view pair]
+	var world = this;
+	var points3D = world.toPointArray();
+	var neighborhood2DScaleSource = 4.0; // over-compensate
+	var neighborhood2DScaleDestination = 2.0;
+	var minimumNeighborhoodRatio = 0.25; // 
+	var minNeighborCount = 6;
+	var dropList = [];
+	var space3D = world.pointSpace();
+// select 3D -> check 2D
+	for(var i=0; i<points3D.length; ++i){
+		var point3D = points3D[i];
+		var shouldContinue = false;
+		var points2D = point3D.toPointArray();
+		for(var j=0; j<points2D.length; ++j){
+			var point2DA = points2D[j];
+			var location2DA = point2DA.point2D();
+			var viewA = point2DA.view();
+			var space2DA = viewA.pointSpace();
+			var size2DA = viewA.compareSizeForPoint(location2DA);
+			var neighborhoodRadiusA = size2DA*neighborhood2DScaleSource;
+			var neighborsA = space2DA.objectsInsideCircle(location2DA,neighborhoodRadiusA);
+			if(neighborsA.length<minNeighborCount){
+				continue;
+			}
+			var neighborsALookup = {};
+			for(var k=0; k<neighborsA.length; ++k){
+				var neighborA = neighborsA[k];
+				var pointID = neighborA.point3D().id();
+				neighborsALookup[pointID] = neighborA;
+			}
+			// for(var k=j+1; k<points2D.length; ++k){
+			for(var k=0; k<points2D.length; ++k){
+				if(k==j){ // skip same one
+					continue;
+				}
+				var point2DB = points2D[k];
+				var location2DB = point2DB.point2D();
+				var viewB = point2DB.view();
+				var space2DB = viewB.pointSpace();
+				var size2DB = viewB.compareSizeForPoint(location2DB);
+				var neighborhoodRadiusB = size2DB*neighborhood2DScaleDestination;
+				var neighborsB = space2DB.objectsInsideCircle(location2DB,neighborhoodRadiusB);
+				if(neighborsB.length<minNeighborCount){
+					continue;
+				}
+				// console.log("n2D:"+neighbors2D.length);
+				var overlapCount = 0;
+				for(var l=0; l<neighborsB.length; ++l){
+					var neighborB = neighborsB[l];
+					var pointID = neighborB.point3D().id();
+					if(neighborsALookup[pointID]){
+						overlapCount++;
+					}
+				}
+				var ratio = overlapCount/neighborsB.length;
+				console.log(" => shared ratio: "+ratio);
+				if(ratio<minimumNeighborhoodRatio){
+					dropList.push(point3D);
+					shouldContinue = false;
+					break;
+				}
+			}
+			if(!shouldContinue){
+				break;
+			}
+		}
+	}
+// select 2D -> check 3D ?
+	console.log("filterNeighborConsistency2DViews: DROPPING: "+dropList.length+" / "+points3D.length);
+	for(var p=0; p<dropList.length; ++p){
+		var point3D = dropList[p];
+		world.disconnectPoint3D(point3D);
+		world.killPoint3D(point3D);
+	}
+
+}
+
+Stereopsis.World.prototype.filterPatchVisibilityConsistency = function(sigmaMaximumDrop){ // drop if behind or in front of a lot of other points
+	throw "filterPatchVisibilityConsistency";
+}
+
+Stereopsis.World.prototype.filterGlobalNegativeDepth = function(sigmaMaximumDrop){ // drop if behind any of the views P3D appears in
+	throw "filterGlobalNegativeDepth";
+}
+
+Stereopsis.World.prototype.filterLocalError2D = function(sigmaMaximumDrop){ // drop if: F | N | S : scores are much worse than neighborhood
+	throw "filterLocalError2D";
+}
+
+Stereopsis.World.prototype.filterLocalError3D = function(sigmaMaximumDrop){ // drop if: R : scores are much worse than neighborhood
+	throw "filterLocalError3D";
+}
+
+
 Stereopsis.World.prototype.filterGlobal3DR = function(sigmaMaximumDrop){
 	this.filterGlobalMetrics(sigmaMaximumDrop, true);
 }
