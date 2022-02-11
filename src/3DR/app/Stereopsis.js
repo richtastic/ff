@@ -11351,12 +11351,14 @@ console.log("TODO: remember viewA's original extrinsic/absolute");
 			// filter
 			world.filterPairwiseErrors(2.0);
 			world.filterGlobalErrors(2.0);
-			world.filterNeighborConsistency2D3D(2.0);
-			world.filterNeighborConsistency2DViews(2.0);
-			world.filterPatchVisibilityConsistency();
+			world.filterNeighborConsistency2D3D();
+			world.filterNeighborConsistency2DViews();
+			world.filterGlobalNegativeDepth();
+			world.filterGlobalPatchVisibilityConsistency();
+
 			world.filterLocalError2D();
 			world.filterLocalError3D();
-			world.filterGlobalNegativeDepth();
+			
 			// affine consistent Orientation - regularization 
 // world.filterGlobalPatchSphere3D();
 
@@ -20386,9 +20388,9 @@ Stereopsis.World.prototype.filterGlobalErrors = function(sigmaMaximumDrop){ // d
 Stereopsis.World.prototype.filterNeighborConsistency2D3D = function(){ // drop if 2D<->3D neighborhood cover is low [for each view & 3D point]
 	var world = this;
 	var points3D = world.toPointArray();
-	var neighborhood3DScale = 4.0; // over-compensate
+	var neighborhood3DScale = 8.0; // over-compensate [4-8]
 	var neighborhood2DScale = 2.0;
-	var minimumNeighborhoodRatio = 0.10; // 
+	var minimumNeighborhoodRatio = 0.25; // 
 	var minNeighborCount = 6;
 	var dropList = [];
 	var space3D = world.pointSpace();
@@ -20400,7 +20402,7 @@ Stereopsis.World.prototype.filterNeighborConsistency2D3D = function(){ // drop i
 		}
 		var location3D = point3D.point();
 		var size3D = point3D.size();
-		var neighborhoodRadius3D = size3D*neighborhood3DScale;
+		var neighborhoodRadius3D = size3D*2*neighborhood3DScale; // 3D size is a RADIUS, 2D size is a diameter
 		var neighbors3D = space3D.objectsInsideSphere(location3D,neighborhoodRadius3D);
 		// console.log("n3D:"+neighbors3D.length);
 		if(neighbors3D.length<minNeighborCount){
@@ -20412,8 +20414,6 @@ Stereopsis.World.prototype.filterNeighborConsistency2D3D = function(){ // drop i
 			var pointID = neighbor3D.id();
 			neighbors3DLookup[pointID] = neighbor3D;
 		}
-		//
-		// var shouldContinue = false;
 		var points2D = point3D.toPointArray();
 		for(var j=0; j<points2D.length; ++j){
 			var point2D = points2D[j];
@@ -20438,10 +20438,9 @@ Stereopsis.World.prototype.filterNeighborConsistency2D3D = function(){ // drop i
 			}
 			// var ratio2D = overlapCount/neighbors3D.length;
 			var ratio2D = overlapCount/neighbors2D.length;
-			console.log(" => shared ratio: "+ratio2D+" : ("+neighbors3D.length+" v "+neighbors2D.length+") ");
+			// console.log(" => shared ratio: "+ratio2D+" : ("+neighbors3D.length+" v "+neighbors2D.length+") ");
 			if(ratio2D<minimumNeighborhoodRatio){
 				dropList.push(point3D);
-				// shouldContinue = true;
 				break;
 			}
 		}
@@ -20464,14 +20463,14 @@ Stereopsis.World.prototype.filterNeighborConsistency2DViews = function(){ // dro
 	var points3D = world.toPointArray();
 	var neighborhood2DScaleSource = 4.0; // over-compensate
 	var neighborhood2DScaleDestination = 2.0;
-	var minimumNeighborhoodRatio = 0.25; // 
+	var minimumNeighborhoodRatio = 0.50; // 
 	var minNeighborCount = 6;
 	var dropList = [];
 	var space3D = world.pointSpace();
 // select 3D -> check 2D
 	for(var i=0; i<points3D.length; ++i){
 		var point3D = points3D[i];
-		var shouldContinue = false;
+		var shouldBreak = false;
 		var points2D = point3D.toPointArray();
 		for(var j=0; j<points2D.length; ++j){
 			var point2DA = points2D[j];
@@ -20515,14 +20514,14 @@ Stereopsis.World.prototype.filterNeighborConsistency2DViews = function(){ // dro
 					}
 				}
 				var ratio = overlapCount/neighborsB.length;
-				console.log(" => shared ratio: "+ratio);
+				// console.log(" => shared ratio: "+ratio);
 				if(ratio<minimumNeighborhoodRatio){
 					dropList.push(point3D);
-					shouldContinue = false;
+					shouldContinue = true;
 					break;
 				}
 			}
-			if(!shouldContinue){
+			if(shouldBreak){
 				break;
 			}
 		}
@@ -20537,19 +20536,248 @@ Stereopsis.World.prototype.filterNeighborConsistency2DViews = function(){ // dro
 
 }
 
-Stereopsis.World.prototype.filterPatchVisibilityConsistency = function(sigmaMaximumDrop){ // drop if behind or in front of a lot of other points
-	throw "filterPatchVisibilityConsistency";
+Stereopsis.World.prototype.filterGlobalPatchVisibilityConsistency = function(sigmaMaximumDrop){ // drop if behind or in front of a lot of other points
+	// each point has a cone to source views
+	// points in front / behind are conflicts
+
+	// the patch with a better score wins & other patch gets an inconsistency counted against it
+/*
+
+
+OUTLIERS:
+-> keep an average of infront & behind ncc scores
+-> keep a count of front & behind 
+
+if average is better (by some amount?) -> outlier
+- only throw away the points with the most front/behind counts
+
+
+
+*/
+	var world = this;
+	sigmaMaximumDrop = sigmaMaximumDrop!==undefined ? sigmaMaximumDrop : 2.0;
+	var limitAngleNormalsMax = Code.radians(90.0); // if facing more than this away -> ignore [45-90 degrees]
+	var points3D = world.toPointArray();
+	// initialize counting
+	for(var i=0; i<points3D.length; ++i){
+		var point3D = points3D[i];
+		if(point3D.hasPatch()){
+			point3D.temp({"behind":[],"front":[]});
+		}
+	}
+	//
+	var space = world.pointSpace();
+	var size = space.size();
+	var distanceConeLengthInfinity = size.length()*2.0; // distance to infinity
+	// TODO: should infinity be used? or just maximum of view distance ? [how to calc this?]
+	var scaleConeSearchSize = 2.0;
+	var distancePaddingScale = 2.0; // points too close to eachother should not be considered
+
+	// reuse
+	var coneDirection = new V3D();
+	var coneCenter = new V3D();
+	// loop all patches
+	for(var i=0; i<points3D.length; ++i){
+		var point3DA = points3D[i];
+		if(i%1000==0){
+			console.log(" "+i+" / "+points3D.length);
+		}
+		if(point3DA.hasPatch()){
+			// world.findGlobalPatchConeOverlap3D(point3DA);
+			var pointSizeA = point3DA.size();
+			var pointCenterA = point3DA.point();
+			var pointNormalA = point3DA.normal();
+			var viewsA = point3DA.toViewArray();
+			for(var j=0; j<viewsA.length; ++j){
+				var view = viewsA[j];
+				var viewCenter = view.center();
+				// seach a cone @ radius = 2 x sizeA
+				V3D.sub(coneDirection,  pointCenterA,viewCenter);
+				var distanceA = coneDirection.length();
+				coneCenter.copy(viewCenter);
+				var coneRatio = scaleConeSearchSize*pointSizeA/distanceA;
+				
+				// TODO: expand cone ?
+				// Code.expandConeCenterToBaseRadius(coneCenter,coneDirection,coneRatio, scaleConeSearchSize*pointSizeA/distanceA;);
+
+				coneDirection.length(distanceConeLengthInfinity);
+
+				// throw "Code.expandConeToBaseRadius";
+
+// console.log(coneCenter,coneDirection,coneRatio);
+
+				var searchPoints = space.objectsInsideCone(coneCenter,coneDirection,coneRatio);
+
+// console.log(searchPoints);
+
+				for(var k=0; k<searchPoints.length;++k){
+					var point3DB = searchPoints[k];
+					if(point3DA==point3DB){
+						continue;
+					}
+					if(point3DB.hasPatch()){
+
+						// TODO: should they have THIS view in common ?
+
+						var pointNormalB = point3DB.normal();
+						// only care about patches pointing toward eachother
+						var angleAB = V3D.angle(pointNormalA,pointNormalB);
+						if(angleAB<limitAngleNormalsMax){
+							var pointCenterB = point3DB.point();
+							var pointSizeB = point3DB.size();
+							// ignore points that start off very close to eachother to begin with:
+							var distAB = V3D.distance(pointCenterA,pointCenterB);
+							var combinedRadius = (pointSizeA+pointSizeB)*distancePaddingScale; // should there be padding ?
+							if(distAB<=combinedRadius){
+								continue;
+							}
+							var closestB = Code.closestPointLine3D(coneCenter,coneDirection, pointCenterB);
+							// find expected radius along cone
+							var distanceB = V3D.distance(viewCenter,closestB);
+							var localSizeB = (distanceB/distanceA)*pointSizeA; // similar triangles
+							// if distance between center & line point < rad1 + rad2 == intersection
+							var distance = V3D.distance(closestB, pointCenterB);
+							combinedRadius = (localSizeB+pointSizeB);//*distancePaddingScale; // should there be padding ?
+							// combinedRadius *= 0.5; // lenient - conservative
+							if(distance < combinedRadius){ // A VISUAL OCCLUSION IS FOUND ..........................
+								var nccA = point3DA.averageNCCError();
+								var nccB = point3DB.averageNCCError();
+								// var sadA = point3DA.averageNCCError();
+								// var sadB = point3DB.averageNCCError();
+								if(distanceB>distanceA){ // pointB is behind pointA
+									point3DB.temp()["behind"].push(nccA);
+									point3DA.temp()["front"].push(nccB);
+								}else{ // pointB is in front of pointA
+									point3DB.temp()["front"].push(nccA);
+									point3DA.temp()["behind"].push(nccB);
+								}
+								// 
+								// SHOULD POINTS WITH MORE TRACKS HAVE HIGHER PRIORITY?
+								// var trackCountA = point3DA.point2DCount();
+								// var trackCountB = point3DB.point2DCount();
+
+								
+								// if(nccA!==null & nccB!==null){
+								// 	// RATIO, DIFFERENCE, COUNT
+								// 	if(nccA<nccB){
+								// 		// var diff = nccB-nccA;
+								// 		var diff = 1;
+								// 		point3DB.temp()["ncc"] += diff;
+								// 	}else{
+								// 		// var diff = nccA-nccB;
+								// 		var diff = 1;
+								// 		point3DA.temp()["ncc"] += diff;
+								// 	}
+								// } // else: do R / F ?
+								
+								// if(sadA!==null & sadB!==null){
+								// 	// RATIO, DIFFERENCE, COUNT
+								// 	if(sadA<sadB){
+								// 		// var diff = sadB-sadA;
+								// 		var diff = 1;
+								// 		point3DB.temp()["sad"] += diff;
+								// 	}else{
+								// 		// var diff = sadA-sadB;
+								// 		var diff = 1;
+								// 		point3DA.temp()["sad"] += diff;
+								// 	}
+								// }
+
+								// ++intersectionsFound;
+							} // end intersection/occlusion
+						} // end angle check
+					} // end patch B
+				} // end search possibles B
+			} // end views
+
+			// throw "..."
+		} // end patch A
+	} // end all points
+
+	// accumulate
+
+
+	for(var i=0; i<points3D.length; ++i){
+		var point3D = points3D[i];
+		if(point3D.hasPatch()){
+			var temp = point3D.temp();
+			 var behind = temp["behind"];
+			 var front = temp["front"];
+			console.log(behind);
+			console.log(front);
+		}
+	}
+
+	// cleanup initialiation
+	for(var i=0; i<points3D.length; ++i){
+		var point3D = points3D[i];
+		if(point3D.hasPatch()){
+			point3D.temp(null);
+		}
+	}
+
+	throw "filterGlobalPatchVisibilityConsistency";
+}
+
+Stereopsis.World.prototype.findGlobalPatchConeOverlap3D = function(point3DA){
+
+	throw ".."
 }
 
 Stereopsis.World.prototype.filterGlobalNegativeDepth = function(sigmaMaximumDrop){ // drop if behind any of the views P3D appears in
-	throw "filterGlobalNegativeDepth";
+	var world = this;
+	var points3D = world.toPointArray();
+	var vToP = new V3D();
+	var dropList = [];
+	for(var i=0; i<points3D.length; ++i){
+		var point3D = points3D[i];
+		var location3D = point3D.point();
+		var views = point3D.toViewArray();
+		for(var j=0; j<views.length; ++j){
+			var view = views[j];
+			var center = view.center();
+			var normal = view.normal();
+			V3D.sub(vToP, location3D, center);
+			var dot = V3D.dot(normal,vToP);
+			if(dot<=0){
+				dropList.push(point3D);
+				break;
+			}
+		}
+	}
+	console.log("filterGlobalNegativeDepth: DROPPING: "+dropList.length+" / "+points3D.length);
+	for(var p=0; p<dropList.length; ++p){
+		var point3D = dropList[p];
+		world.disconnectPoint3D(point3D);
+		world.killPoint3D(point3D);
+	}
+	// throw "filterGlobalNegativeDepth";
 }
 
 Stereopsis.World.prototype.filterLocalError2D = function(sigmaMaximumDrop){ // drop if: F | N | S : scores are much worse than neighborhood
+	var world = this;
+	var points3D = world.toPointArray();
+	var dropList = [];
+	for(var i=0; i<points3D.length; ++i){
+		var point3D = points3D[i];
+		var points2D = point3D.toPointArray();
+		var dropList = [];
+		for(var j=0; j<points2D.length; ++j){
+			var point2D = points2D[j];
+			//
+		}
+	}
 	throw "filterLocalError2D";
 }
 
 Stereopsis.World.prototype.filterLocalError3D = function(sigmaMaximumDrop){ // drop if: R : scores are much worse than neighborhood
+	var world = this;
+	var points3D = world.toPointArray();
+	var dropList = [];
+	for(var i=0; i<points3D.length; ++i){
+		var point3D = points3D[i];
+		// 
+	}
 	throw "filterLocalError3D";
 }
 
@@ -22346,6 +22574,7 @@ Stereopsis.World.prototype.combineIntersectionPoints3D = function(point3DA,point
 							var centerA = point2DA.point2D();
 							var centerB = point2DB.point2D();
 							var featureSize = Stereopsis.compareSizeForViews2D(viewA,centerA,viewB,centerB);
+							throw "dont use this ^ "
 							featureSizeAny = featureSize;
 							// TODO: needleSize,haystackSize - can be reused
 							// bestNeedleHaystackFromLocation

@@ -60854,8 +60854,7 @@ R3D.ResolutionCompareSizeFinder.prototype.image = function(image,corners,divisio
 }
 R3D.ResolutionCompareSizeFinder.prototype.sizeForPoint = function(point){
 	var cell = this._space.closestObject(point);
-	// console.log(cell);
-	return cell.radius();
+	return cell.diameter();
 }
 
 R3D.ResolutionCompareSizeFinder.prototype.SDF = function(rect, data, cell){ // default: is valid range
@@ -61066,15 +61065,15 @@ R3D.QuadLimit.Cell.prototype.location = function(x, y){
 // 	throw "radius";
 // 	return Math.min(this._width,this._height)*0.5;
 // }
-R3D.QuadLimit.Cell.prototype.radius = function(width, height){
-	return this._radius;
+R3D.QuadLimit.Cell.prototype.diameter = function(width, height){
+	return this._diameter;
 }
 R3D.QuadLimit.Cell.prototype.size = function(width, height){
 	if(width!==undefined && height!==undefined){
 		this.clear();
 		this._width = width;
 		this._height = height;
-		this._radius = Math.sqrt(width*width + height*height); // * 0.5; // hypotenuse maximum 
+		this._diameter = Math.sqrt(width*width + height*height); // * 0.5; // hypotenuse maximum 
 	}else{
 		return new V2D(this._width,this._height);
 	}

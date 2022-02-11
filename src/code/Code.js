@@ -11793,7 +11793,16 @@ Code.intersectRaySphere3D = function(org,dir, cen,rad){ // infinite ray & sphere
 	}
 	return r;
 }
-
+Code.expandConeCenterToBaseRadius = function(cen,dir,baseToLengthRatio, newBaseRadius){ // move the center closer/further so that the new base radius
+	var oldLength = dir.length();
+	var newLength = newBaseRadius/baseToLengthRatio;
+	var lengthDiff = newLength - oldLength;
+		lengthDiff /= oldLength; // 
+	cen.x += lengthDiff*dir.x;
+	cen.y += lengthDiff*dir.y;
+	cen.z += lengthDiff*dir.z;
+	dir.length(newLength);
+}
 Code.pointInsideCone3DBoolean = function(cen,dir,ratio, point){ // ratio = opposite / adjacent
 	var c = Code.closestPointLine3D(cen,dir,point);
 	var cToC = V3D.sub(c,cen);
