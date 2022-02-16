@@ -60832,7 +60832,7 @@ R3D.ResolutionCompareSizeFinder.prototype.image = function(image,corners,divisio
 		return c.rect().center();
 	};
 	var space = new QuadTree(cellToPoint);
-	console.log(quad.min(), quad.max());
+	// console.log(quad.min(), quad.max());
 	space.initWithMinMax(quad.min(), quad.max());
 	var leaves = quad.leaves();
 	// console.log(leaves);
@@ -60854,6 +60854,11 @@ R3D.ResolutionCompareSizeFinder.prototype.image = function(image,corners,divisio
 }
 R3D.ResolutionCompareSizeFinder.prototype.sizeForPoint = function(point){
 	var cell = this._space.closestObject(point);
+	if(!cell){
+		console.log(point);
+		console.log(this._space);
+		console.log(cell);
+	}
 	return cell.diameter();
 }
 

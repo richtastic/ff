@@ -500,7 +500,29 @@ OUTPUT:
 
 
 
+- COMBINING tracks with images loaded to tracks w/o images loaded?
+
+
+- subDivideUpdateMatchLocation
+	- how does subdivision work if some or none of images are loaded?
+	- how to choose a 'reference image'
+	=>
+		- at least 2 images need to be loaded
+		- reference image has best corner score
+		- views w/o image aren't changed
+
+
+
 - is init affine from patch same as update affine from patch ?
+
+
+-
+
+
+- HOW SHOULD EXPAND 3D PROJECTION WORK
+	- only into views w/ images loaded
+- PROBE?
+- BLIND?
 
 
 
@@ -509,10 +531,11 @@ WHY IS THIS FILTER BAD?:
 filterNeighborConsistency2D3D
 
 
+updatePatchSizeFromViewCellSizeChange
 
 
 
-WHAT TO DO ABOUT IMACE EXTRACTION / COMPARE WITH DIFFERENT FEATURE SIZES ???
+WHAT TO DO ABOUT IMAGE EXTRACTION / COMPARE WITH DIFFERENT FEATURE SIZES ???
 
 R3D.optimumSADLocationSearchFlatRGB
 

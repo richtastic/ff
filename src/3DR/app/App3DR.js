@@ -21069,319 +21069,318 @@ App3DR.ProjectManager.prototype._iterateGraphSequential = function(sourceData,so
 			}
 
 			var doWorldViewSolve = function(a){
-				// do blind-ish World solving
-				// relative scales
+					// do blind-ish World solving
+					// relative scales
 
-			// get initial transforms
-
-
-			// for(var i=0; i<stepPairs.length; ++i){
-			// 	var pairInfo = stepPairs[i];
-			// 	var oppositeID = pairInfo["id"];
-			// 	console.log(pairInfo);
-
-			// 	var oppositeInitialInfo = initialGraphViewLookup[oppositeID];
-			// 	console.log(oppositeInitialInfo);
-
-			// 	var oppositeCurrentInfo = currentGraphViewLookup[oppositeID];
-			// 	console.log(oppositeCurrentInfo);
-			// }
-			// 
-			var scaleInitialToCurrent = 1.0;
-			//
-			var transformInitial = null;
+				// get initial transforms
 
 
-			// scale = average of: all PAIRS_i-PAIRS_j (weighted by score?): current distance / initial distance
-			console.log(stepPairs);
-			var scaleAmounts = [];
-			var scalePercents = [];
-			for(var i=0; i<stepPairs.length; ++i){
-				var pairInfoA = stepPairs[i];
-				var oppositeIDA = pairInfoA["id"];
-				for(var j=i+1; j<stepPairs.length; ++j){
-					var pairInfoB = stepPairs[j];
-					var oppositeIDB = pairInfoB["id"];
-					// console.log(pairInfoA);
-					// console.log(pairInfoB);
-					console.log("get scale for "+oppositeIDA+"-"+oppositeIDB);
+				// for(var i=0; i<stepPairs.length; ++i){
+				// 	var pairInfo = stepPairs[i];
+				// 	var oppositeID = pairInfo["id"];
+				// 	console.log(pairInfo);
 
-					var initA = initialGraphViewLookup[oppositeIDA]["transform"];
-					var initB = initialGraphViewLookup[oppositeIDB]["transform"];
-						initA = Matrix.fromObject(initA);
-						initB = Matrix.fromObject(initB);
-						// abs
-						initA = Matrix.inverse(initA);
-						initB = Matrix.inverse(initB);
-					var initAB = Matrix.relativeReference(initA,initB);
+				// 	var oppositeInitialInfo = initialGraphViewLookup[oppositeID];
+				// 	console.log(oppositeInitialInfo);
 
-					// console.log(initA);
-					// console.log(initB);
-					// console.log(initAB);
-
-					var currA = currentGraphViewLookup[oppositeIDA]["transform"];
-					var currB = currentGraphViewLookup[oppositeIDB]["transform"];
-						currA = Matrix.fromObject(currA);
-						currB = Matrix.fromObject(currB);
-						// abs
-						currA = Matrix.inverse(currA);
-						currB = Matrix.inverse(currB);
-					var currAB = Matrix.relativeReference(currA,currB);
-
-					// console.log(currA);
-					// console.log(currB);
-					// console.log(currAB);
-
-					var baselineA = initAB.transform3DLocation();
-					var baselineB = currAB.transform3DLocation();
-					// console.log(baselineA.length());
-					// console.log(baselineB.length());
-					var ratioOldToNew = baselineB.length()/baselineA.length();
-					console.log("ratioOldToNew: "+ratioOldToNew);
-
-					var value = pairInfoA["score"] + pairInfoB["score"];
-					// console.log(value);
-					scalePercents.push(value);
-					scaleAmounts.push(ratioOldToNew);
-					// throw "...";
-				}
-			}
-			if(scaleAmounts.length>0){
-				scalePercents = Code.countsToPercents(scalePercents);
-				console.log(scaleAmounts);
-				console.log(scalePercents);
-				scaleInitialToCurrent = Code.averageNumbersLog(scaleAmounts, scalePercents);
-				// console.log(result);
-				
-
-				// console.log("scaleInitialToCurrent: "+scaleInitialToCurrent);
-
-				// Code.optimumScaling1D();
-
-				// throw "do scale averaging";
-			}
-
-
-			console.log("scaleInitialToCurrent: "+scaleInitialToCurrent);
-
-			// transform = (relative of all PAIRS-VIEW) * 1/scale
-			var transformAbsolutes = [];
-			var transformPercents = [];
-			var stepTransformInitial = stepViewInitial["transform"];
-			// var extA = new Matrix(4,4);
-			// var extB = new Matrix(4,4);
-			// var absA = new Matrix(4,4);
-			// var absB = new Matrix(4,4);
-			var relAB = new Matrix(4,4);
-			for(var i=0; i<stepPairs.length; ++i){
-				var pairInfo = stepPairs[i];
-				var oppositeID = pairInfo["id"];
-				var oppositeTransformInitial = initialGraphViewLookup[oppositeID]["transform"];
-				var oppositeTransformCurrent = currentGraphViewLookup[oppositeID]["transform"];
-				// console.log(oppositeTransformInitial);
-				// console.log(stepTransformInitial);
-				// console.log(oppositeTransformCurrent);
-				// ...
-				var extA = new Matrix(4,4);
-				var extB = new Matrix(4,4);
+				// 	var oppositeCurrentInfo = currentGraphViewLookup[oppositeID];
+				// 	console.log(oppositeCurrentInfo);
+				// }
 				// 
-				extA.fromObject(oppositeTransformInitial);
-				extB.fromObject(stepTransformInitial);
-console.log("extA:");
-console.log(extA+"");
-console.log("extB:");
-console.log(extB+"");
-				// console.log(extB);
-				absA = Matrix.inverse(extA);
-				absB = Matrix.inverse(extB);
-				// console.log(absA);
-				// console.log(absB);
-				// relAB = Matrix.relativeWorld(absA,absB); // ?
-				relAB = Matrix.relativeReference(absA,absB); // ?
-
-				// scale from old size to new size
-				relAB = Matrix.transform3DScaleMatrix(relAB, scaleInitialToCurrent);
-
-				// throw "scale ?"
+				var scaleInitialToCurrent = 1.0;
 				//
-
-				// console.log(relAB+"");
-				// APPEND NOW:
-				extA.fromObject(oppositeTransformCurrent);
-				absA = Matrix.inverse(extA);
-
-				var absNew = Matrix.mult(relAB,absA);
-				console.log(absNew+"");
-// throw "here"
-				// transformAbsolutes.push(relAB);
-				transformAbsolutes.push(absNew);
-				// transformAbsolutes.push(relAB);
-				transformPercents.push(pairInfo["score"]);
-				// throw "..."
-			}
-
-			if(transformAbsolutes.length==0){
-				throw "cant do transfrorm averaging";
-			}
-			transformPercents = Code.countsToPercents(transformPercents);
-			console.log(transformAbsolutes);
-			console.log(transformPercents);
-
-			var averageTransform = Code.averageTransforms3D(transformAbsolutes, transformPercents);
-			// console.log(averageTransform);
-
-			console.log("averageTransform: ");
-			console.log(averageTransform);
-
-			// TO EXTRINSIG:
-			var averageExtrinsic = Matrix.inverse(averageTransform);
-			console.log("averageExtrinsic: ");
-			console.log(averageExtrinsic);
-
-// throw "..."
-
-			// create world
-			console.log(graphViews);
-			var currentViews = [];
-			for(var i=0; i<graphViews.length; ++i){
-				var gv = graphViews[i];
-				// var v = {};
-				// v["id"] = gv["id"];
-				// v["cellSize"] = gv["id"];
-				// v["imageSize"] = gv["id"];
-				// v["transform"] = gv["id"];
-				// 
-				currentViews.push(gv);
-			}
-			var thisView = {};
-				thisView["id"] = stepViewID;
-				// thisView["cellSize"] = ;
-				thisView["cellSize"] = stepViewInitial["cellSize"];
-				thisView["imageSize"] = stepViewInitial["imageSize"];
-				thisView["transform"] = averageExtrinsic.toObject(); // needs to be objet for fill-in-world-views
-			currentViews.push(thisView);
-console.log("graphCameras");
-console.log(graphCameras);
-console.log("currentViews");
-console.log(currentViews);
-			var info = project.fillInWorldViews(graphCameras, currentViews);
-			var views = info["views"];
-			var images = info["images"];
-			var cellSizes = info["cellSizes"];
-			var transforms = info["transforms"];
-			var cameras = graphCameras;
-
-console.log("info:");
-console.log(info);
-// throw "....";
-				// create world
-console.log(views, images, cellSizes, transforms);
-// throw "///"
-				var world = new Stereopsis.World();
-				var WORLDCAMS = App3DR.ProjectManager.addCamerasToWorld(world, cameras);
-				console.log("WORLDCAMS");
-				console.log(WORLDCAMS);
-				var WORLDVIEWS = project.createWorldViewsForViews(world, views, images, cellSizes, transforms);
-				console.log("WORLDVIEWS");
-				console.log(WORLDVIEWS);
-				var WORLDVIEWSLOOKUP = project.createWorldViewLookup(world);
-				console.log("WORLDVIEWSLOOKUP");
-				console.log(WORLDVIEWSLOOKUP);
+				var transformInitial = null;
 
 
-			var worldViewLast = WORLDVIEWSLOOKUP[stepViewID];//views[views.length-1];
-			var worldViewsAdjacent = []; // all image-connected views
-			for(var i=0; i<WORLDVIEWS.length; ++i){
-				var v = WORLDVIEWS[i];
-				if(v!=worldViewLast){
-					if(v.image()){
-						worldViewsAdjacent.push(v);
+				// scale = average of: all PAIRS_i-PAIRS_j (weighted by score?): current distance / initial distance
+				console.log(stepPairs);
+				var scaleAmounts = [];
+				var scalePercents = [];
+				for(var i=0; i<stepPairs.length; ++i){
+					var pairInfoA = stepPairs[i];
+					var oppositeIDA = pairInfoA["id"];
+					for(var j=i+1; j<stepPairs.length; ++j){
+						var pairInfoB = stepPairs[j];
+						var oppositeIDB = pairInfoB["id"];
+						// console.log(pairInfoA);
+						// console.log(pairInfoB);
+						console.log("get scale for "+oppositeIDA+"-"+oppositeIDB);
+
+						var initA = initialGraphViewLookup[oppositeIDA]["transform"];
+						var initB = initialGraphViewLookup[oppositeIDB]["transform"];
+							initA = Matrix.fromObject(initA);
+							initB = Matrix.fromObject(initB);
+							// abs
+							initA = Matrix.inverse(initA);
+							initB = Matrix.inverse(initB);
+						var initAB = Matrix.relativeReference(initA,initB);
+
+						// console.log(initA);
+						// console.log(initB);
+						// console.log(initAB);
+
+						var currA = currentGraphViewLookup[oppositeIDA]["transform"];
+						var currB = currentGraphViewLookup[oppositeIDB]["transform"];
+							currA = Matrix.fromObject(currA);
+							currB = Matrix.fromObject(currB);
+							// abs
+							currA = Matrix.inverse(currA);
+							currB = Matrix.inverse(currB);
+						var currAB = Matrix.relativeReference(currA,currB);
+
+						// console.log(currA);
+						// console.log(currB);
+						// console.log(currAB);
+
+						var baselineA = initAB.transform3DLocation();
+						var baselineB = currAB.transform3DLocation();
+						// console.log(baselineA.length());
+						// console.log(baselineB.length());
+						var ratioOldToNew = baselineB.length()/baselineA.length();
+						console.log("ratioOldToNew: "+ratioOldToNew);
+
+						var value = pairInfoA["score"] + pairInfoB["score"];
+						// console.log(value);
+						scalePercents.push(value);
+						scaleAmounts.push(ratioOldToNew);
+						// throw "...";
 					}
 				}
-			}
+				if(scaleAmounts.length>0){
+					scalePercents = Code.countsToPercents(scalePercents);
+					console.log(scaleAmounts);
+					console.log(scalePercents);
+					scaleInitialToCurrent = Code.averageNumbersLog(scaleAmounts, scalePercents);
+					// console.log(result);
+					
 
-			console.log("world solve");
-			console.log(worldViewLast);
-			console.log(worldViewsAdjacent);
+					// console.log("scaleInitialToCurrent: "+scaleInitialToCurrent);
 
-			
-			world.solveSequentialView(worldViewLast, worldViewsAdjacent, currentStepPoints);
+					// Code.optimumScaling1D();
 
-
-console.log(world.toYAMLString());
-throw "after solveSequentialView"
-
-			var worldData = world.toObject();
-			var worldPoints = worldData["points"];
-			var worldViews = worldData["views"];
-			console.log(worldData);
-
-			console.log(world.toYAMLString());
-
-			// throw "naow";
-
-			// yaml.writeObjectLiteral(world.toObject());
+					// throw "do scale averaging";
+				}
 
 
+				console.log("scaleInitialToCurrent: "+scaleInitialToCurrent);
+
+				// transform = (relative of all PAIRS-VIEW) * 1/scale
+				var transformAbsolutes = [];
+				var transformPercents = [];
+				var stepTransformInitial = stepViewInitial["transform"];
+				// var extA = new Matrix(4,4);
+				// var extB = new Matrix(4,4);
+				// var absA = new Matrix(4,4);
+				// var absB = new Matrix(4,4);
+				var relAB = new Matrix(4,4);
+				for(var i=0; i<stepPairs.length; ++i){
+					var pairInfo = stepPairs[i];
+					var oppositeID = pairInfo["id"];
+					var oppositeTransformInitial = initialGraphViewLookup[oppositeID]["transform"];
+					var oppositeTransformCurrent = currentGraphViewLookup[oppositeID]["transform"];
+					// console.log(oppositeTransformInitial);
+					// console.log(stepTransformInitial);
+					// console.log(oppositeTransformCurrent);
+					// ...
+					var extA = new Matrix(4,4);
+					var extB = new Matrix(4,4);
+					// 
+					extA.fromObject(oppositeTransformInitial);
+					extB.fromObject(stepTransformInitial);
+	console.log("extA:");
+	console.log(extA+"");
+	console.log("extB:");
+	console.log(extB+"");
+					// console.log(extB);
+					absA = Matrix.inverse(extA);
+					absB = Matrix.inverse(extB);
+					// console.log(absA);
+					// console.log(absB);
+					// relAB = Matrix.relativeWorld(absA,absB); // ?
+					relAB = Matrix.relativeReference(absA,absB); // ?
+
+					// scale from old size to new size
+					relAB = Matrix.transform3DScaleMatrix(relAB, scaleInitialToCurrent);
+
+					// throw "scale ?"
+					//
+
+					// console.log(relAB+"");
+					// APPEND NOW:
+					extA.fromObject(oppositeTransformCurrent);
+					absA = Matrix.inverse(extA);
+
+					var absNew = Matrix.mult(relAB,absA);
+					console.log(absNew+"");
+	// throw "here"
+					// transformAbsolutes.push(relAB);
+					transformAbsolutes.push(absNew);
+					// transformAbsolutes.push(relAB);
+					transformPercents.push(pairInfo["score"]);
+					// throw "..."
+				}
+
+				if(transformAbsolutes.length==0){
+					throw "cant do transfrorm averaging";
+				}
+				transformPercents = Code.countsToPercents(transformPercents);
+				console.log(transformAbsolutes);
+				console.log(transformPercents);
+
+				var averageTransform = Code.averageTransforms3D(transformAbsolutes, transformPercents);
+				// console.log(averageTransform);
+
+				console.log("averageTransform: ");
+				console.log(averageTransform);
+
+				// TO EXTRINSIG:
+				var averageExtrinsic = Matrix.inverse(averageTransform);
+				console.log("averageExtrinsic: ");
+				console.log(averageExtrinsic);
+
+	// throw "..."
+
+				// create world
+				console.log(graphViews);
+				var currentViews = [];
+				for(var i=0; i<graphViews.length; ++i){
+					var gv = graphViews[i];
+					// var v = {};
+					// v["id"] = gv["id"];
+					// v["cellSize"] = gv["id"];
+					// v["imageSize"] = gv["id"];
+					// v["transform"] = gv["id"];
+					// 
+					currentViews.push(gv);
+				}
+				var thisView = {};
+					thisView["id"] = stepViewID;
+					// thisView["cellSize"] = ;
+					thisView["cellSize"] = stepViewInitial["cellSize"];
+					thisView["imageSize"] = stepViewInitial["imageSize"];
+					thisView["transform"] = averageExtrinsic.toObject(); // needs to be objet for fill-in-world-views
+				currentViews.push(thisView);
+	console.log("graphCameras");
+	console.log(graphCameras);
+	console.log("currentViews");
+	console.log(currentViews);
+				var info = project.fillInWorldViews(graphCameras, currentViews);
+				var views = info["views"];
+				var images = info["images"];
+				var cellSizes = info["cellSizes"];
+				var transforms = info["transforms"];
+				var cameras = graphCameras;
+
+	console.log("info:");
+	console.log(info);
+	// throw "....";
+					// create world
+	console.log(views, images, cellSizes, transforms);
+	// throw "///"
+					var world = new Stereopsis.World();
+					var WORLDCAMS = App3DR.ProjectManager.addCamerasToWorld(world, cameras);
+					console.log("WORLDCAMS");
+					console.log(WORLDCAMS);
+					var WORLDVIEWS = project.createWorldViewsForViews(world, views, images, cellSizes, transforms);
+					console.log("WORLDVIEWS");
+					console.log(WORLDVIEWS);
+					var WORLDVIEWSLOOKUP = project.createWorldViewLookup(world);
+					console.log("WORLDVIEWSLOOKUP");
+					console.log(WORLDVIEWSLOOKUP);
 
 
-			// SAVE THE POINTS TO A FILE
+				var worldViewLast = WORLDVIEWSLOOKUP[stepViewID];//views[views.length-1];
+				var worldViewsAdjacent = []; // all image-connected views
+				for(var i=0; i<WORLDVIEWS.length; ++i){
+					var v = WORLDVIEWS[i];
+					if(v!=worldViewLast){
+						if(v.image()){
+							worldViewsAdjacent.push(v);
+						}
+					}
+				}
 
-			var parentDirectory = Code.pathRemoveLastComponent(sequenceFilename);
+				console.log("world solve");
+				console.log(worldViewLast);
+				console.log(worldViewsAdjacent);
 
-			var pointsFilename = "points_"+currentStep+".yaml";
-				pointsFilename = Code.appendToPath(parentDirectory,"sequence",pointsFilename);
-			graphPoints.push(pointsFilename);
+				
+				world.solveSequentialView(worldViewLast, worldViewsAdjacent, currentStepPoints);
+	// console.log(world.toYAMLString());
 
+
+				var worldData = world.toObject();
+				var worldPoints = worldData["points"];
+				var worldViews = worldData["views"];
+				console.log(worldData);
+
+				console.log(world.toYAMLString());
+
+	// throw "after solveSequentialView"
+
+				// throw "naow";
+
+				// yaml.writeObjectLiteral(world.toObject());
+
+
+
+
+				// SAVE THE POINTS TO A FILE
+
+				var parentDirectory = Code.pathRemoveLastComponent(sequenceFilename);
+
+				var pointsFilename = "points_"+currentStep+".yaml";
+					pointsFilename = Code.appendToPath(parentDirectory,"sequence",pointsFilename);
+				graphPoints.push(pointsFilename);
+
+
+					// var yaml = new YAML();
+						// var timestampNow = Code.getTimeStamp();
+						// yaml.writeComment("BA model");
+						// yaml.writeComment("created: "+timestampNow);
+						// yaml.writeBlank();
+						// yaml.writeObjectLiteral({"points":worldPoints});
+						// throw "here";
+						// yaml.writeDocument();
+						// var str = yaml.toString();
+				// var pointsYAML = yaml.toString();
+				var pointsData = {"points":worldPoints};
+				console.log(pointsData);
+				console.log(sequenceData);
+				console.log(sequenceFilename);
+				console.log(pointsFilename);
+
+				currentGraph["views"] = worldViews;
 
 				// var yaml = new YAML();
-					// var timestampNow = Code.getTimeStamp();
-					// yaml.writeComment("BA model");
-					// yaml.writeComment("created: "+timestampNow);
-					// yaml.writeBlank();
-					// yaml.writeObjectLiteral({"points":worldPoints});
-					// throw "here";
-					// yaml.writeDocument();
-					// var str = yaml.toString();
-			// var pointsYAML = yaml.toString();
-			var pointsData = {"points":worldPoints};
-			console.log(pointsData);
-			console.log(sequenceData);
-			console.log(sequenceFilename);
-			console.log(pointsFilename);
+					// yaml.writeObjectLiteral(graphData);
+				// var graphYAML = yaml.toString();
+				// currentGraph
+				// var graphYAML = yaml.toString();
 
+				var saveSequenceGraphFxn = function(){
+					console.log("saveSequenceGraphFxn");
+					project._taskDoneCheckReloadURL();
+				}
 
-			currentGraph["views"] = worldViews;
+				var saveSequencePointsFxn = function(){
+					console.log("saveSequencePointsFxn");
+					project.saveFileFromData(sequenceData,sequenceFilename, saveSequenceGraphFxn,project);
+				}
+	throw "before saving point data"
+				project.saveFileFromData(pointsData,pointsFilename, saveSequencePointsFxn,project);
 
-			// var yaml = new YAML();
-				// yaml.writeObjectLiteral(graphData);
-			// var graphYAML = yaml.toString();
-			// currentGraph
-			// var graphYAML = yaml.toString();
+				// console.log(graphYAML);
+				// console.log(pointsData);
+				// console.log(sequenceData);
 
-			var saveSequenceGraphFxn = function(){
-				console.log("saveSequenceGraphFxn");
-				project._taskDoneCheckReloadURL();
-			}
+				// UPDATE THE GRAPH VIEWS
 
-			var saveSequencePointsFxn = function(){
-				console.log("saveSequencePointsFxn");
-				project.saveFileFromData(sequenceData,sequenceFilename, saveSequenceGraphFxn,project);
-			}
+				// SAVE THE UPDATED SEQUENTIAL DATA
 
-			project.saveFileFromData(pointsData,pointsFilename, saveSequencePointsFxn,project);
+				// RECHECK
 
-			// console.log(graphYAML);
-			// console.log(pointsData);
-			// console.log(sequenceData);
-
-			// UPDATE THE GRAPH VIEWS
-
-			// SAVE THE UPDATED SEQUENTIAL DATA
-
-			// RECHECK
-
-			throw "..."
+				throw "...END doWorldViewSolve"
 
 
 				
@@ -21390,7 +21389,7 @@ throw "after solveSequentialView"
 				// 
 				// sequential/points_0.yaml
 				// 
-			}
+			} // END doWorldViewSolve
 
 			// pick view images to load
 			console.log(stepPairs);
