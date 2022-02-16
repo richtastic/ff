@@ -668,7 +668,6 @@ Stereopsis.World.prototype.toTransformArray = function(){
 }
 Stereopsis.World.prototype.toPointArray = function(){
 	var array = this._pointSpace.toArray();
-	console.log(" total null points 3D: "+this._points3DNull.length)
 	Code.arrayPushArray(array, this._points3DNull);
 	return array;
 }
@@ -2424,8 +2423,9 @@ Stereopsis.P3D.prototype.nonLinearPatch = function(value){
 Stereopsis.P3D.prototype.hasPatch = function(){
 	return this._normal!=null; // && this._up!=null
 }
-Stereopsis.P3D.prototype.isValid = function(){
-	return this._id >= 0;
+Stereopsis.P3D.prototype.isValid = function(){ // hasbeenkilledyet
+	// return this._id >== 0;
+	return this._id !== null;
 }
 Stereopsis.P3D.prototype.hasPatchResolvedAffine = function(){
 	return false;
@@ -10805,6 +10805,7 @@ console.log("RELATIVE R: \n"+R+"")
 			var location3D = point3D.globalPoint3DLinear();
 			world.updatePoint3DLocation(point3D,location3D);
 			putativePoints.push(point3D);
+			world.disconnectPoint3D(point3D);
 		}
 		 putativePointsList.push(putativePoints);
 	}
@@ -11243,8 +11244,6 @@ Stereopsis.World.prototype.point3DFromData = function(data){
 		pP2Ds.push(new V2D(viewX,viewY));
 		pViews.push(view);
 	}
-console.log(pViews);
-console.log(pP2Ds);
 	var normalized = true;
 	var affines = null;
 	var point3D = world.newPoint3DFromPieces(pViews,pP2Ds,affines, normalized);
@@ -11267,12 +11266,12 @@ console.log(pP2Ds);
 			}
 			ups.push(u);
 		}
-		console.log(ups);
+		// console.log(ups);
 		var averageUp = Code.averageAngleVector3D(ups);
-		console.log(averageUp+"");
-		var right = V3D.cross(normal,averageUp).normal();
-		var up = V3D.cross(right,normal).normal();
-		console.log("=> "+up);
+		// console.log(averageUp+"");
+		var right = V3D.cross(normal,averageUp).norm();
+		var up = V3D.cross(right,normal).norm();
+		// console.log("=> "+up);
 		point3D.up(up);
 	}
 
@@ -11289,22 +11288,23 @@ GLOBALSTAGE.root().matrix().scale(0.5);
 	if(!existingPoints){
 		existingPoints = [];
 	}
-
 	// turn existing points into points
 	if(existingPoints.length>0){
 
 		for(var i=0; i<existingPoints.length; ++i){
 			var existingPoint = existingPoints[i];
-			console.log(existingPoint);
+			// console.log(existingPoint);
 			var point3D = world.point3DFromData(existingPoint);
-			console.log(point3D);
-			throw "...";
+			// set affine:
+			world.initPoint3DAffineFromPatch(point3D);
+			// throw "...";
+			existingPoints[i] = point3D;
 		}
-		throw "turn existing points into actual points & "
+		// throw "turn existing points into actual points & "
 	}
+	console.log("turned existing points into actual points &")
 	// all adjacent views need parallel quadtrees for point lookup
 	var viewsAdjacentLookup = {};
-
 	for(var i=0; i<viewsAdjacent.length; ++i){
 		var view = viewsAdjacent[i];
 		var viewID = view.id();
@@ -11321,7 +11321,6 @@ GLOBALSTAGE.root().matrix().scale(0.5);
 		var pointSpace = new QuadTree(Stereopsis._point2DToPoint, min, max);
 		parallelViewPoint2DSpaces[viewID] = pointSpace;
 	}
-
 	for(var i=0; i<existingPoints.length; ++i){
 		var point3D = existingPoints[i];
 		var views = point3D.toViewArray();
@@ -11330,45 +11329,38 @@ GLOBALSTAGE.root().matrix().scale(0.5);
 			var viewID = view.id();
 			var exists = viewsAdjacentLookup[viewID];
 			if(exists){
-				var pointSpace = parallelViewPoint2DSpaces();
+				var pointSpace = parallelViewPoint2DSpaces[viewID];
 				var point2D = point3D.pointForView(view);
 				pointSpace.insertObject(point2D);
 			}
 		}
 	}
+	console.log("parallelViewPoint2DSpaces");
+	console.log(parallelViewPoint2DSpaces);
 
 
 	var minimumPointPairCount = 24;
 	// throw "..";
-
 	
 	var views = world.toViewArray();
-
 // sparse: 60 -> 90 -> 120
 // dense: 80 -> 120 -> 160
 // seq: 80 -> 120
-
 // 80 -> 120
-// 
-
 	// defaults
-	var viewCellCountLow = 40;
-	var viewCellCountMedium = 60;
-	var viewCellCountHigh = 80;
-	var viewCellCountDense = 120;
-
+	var viewCellCountLow = 40; // 1600
+	var viewCellCountMedium = 60; // 3600
+	var viewCellCountHigh = 80; // 6400
+	var viewCellCountDense = 120; // 14400
 	// prep pairwise
 	world.copyRelativeTransformsFromAbsolute();
 	world.setViewCellCounts(viewCellCountMedium);
-		
 	// PAIRWISE PUTATIVE POINTS ---------------------------------------------------------------------------------------------
 	console.log("phase 1 - acquire putative pairs & refine into medium dense high confidence set");
 	var putatives = world.putativePairsForViews(viewFocus,viewsAdjacent);
 	console.log(putatives);
-
-console.log("TODO: remember viewA's original extrinsic/absolute");
 	var originalViewFocusExtrinsic = viewFocus.absoluteTransform();
-	
+
 	// PAIRWISE POINT ACCURACY & DENSITY ---------------------------------------------------------------------------------------------
 	// itertate on putatives to good medium dense pairwise matches
 
@@ -11379,7 +11371,8 @@ console.log("TODO: remember viewA's original extrinsic/absolute");
 		var viewB = viewsAdjacent[i];
 		var transformAB = world.transformFromViews(viewA,viewB);
 		var pairPointPutatives = putatives[i];
-
+console.log("Z");
+world.checkVerifyPatches();
 		if(pairPointPutatives.length<minimumPointPairCount){
 			throw "not enough to do much?"
 		}
@@ -11390,12 +11383,18 @@ console.log("TODO: remember viewA's original extrinsic/absolute");
 			world.initNewPointPatch3D(point3D);
 			var isValid = world.isValidPoint3DAndPatch3D(point3D);
 			if(isValid){
+				if(!point3D.hasPatch()){
+					console.log(point3D);
+					throw "INIT NEW PATCH DID NOT WORK";
+				}
 				world.recursiveEmbedPoint3D(point3D);
 			}else{
 				world.disconnectPoint3D(point3D);
 				world.killPoint3D(point3D);
 			}
 		}
+console.log("0");
+world.checkVerifyPatches();
 		// TODO: control how embedding works
 		//	- cell sizing
 		// 	- on/off collision checking
@@ -11404,6 +11403,8 @@ console.log("TODO: remember viewA's original extrinsic/absolute");
 		var maxIterations = 4;
 		for(var iteration=0; iteration<maxIterations; ++iteration){
 console.log("PHASE 1 ITERATION: +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"+iteration);
+console.log("A");
+world.checkVerifyPatches();
 			// set F for error filtering
 			world.relativeFFromSamples(transformAB); // TODO: decouple calcuation & error | use local affine to validate ?
 
@@ -11415,7 +11416,8 @@ console.log("PHASE 1 ITERATION: ++++++++++++++++++++++++++++++++++++++++++++++++
 
 
 //throw "after estimateGlobalErrors"
-			// ...
+console.log("C");
+world.checkVerifyPatches();
 
 			// expand
 				// compareSize = ?;
@@ -11426,18 +11428,21 @@ console.log("PHASE 1 ITERATION: ++++++++++++++++++++++++++++++++++++++++++++++++
 				
 
 			// throw "after expand"
+console.log("D");
+world.checkVerifyPatches();
 
 			// filter
-			world.filterPairwiseErrors(2.0);
-			world.filterGlobalErrors(2.0);
-			world.filterNeighborConsistency2D3D();
-			world.filterNeighborConsistency2DViews();
-			world.filterGlobalNegativeDepth();
-			world.filterGlobalPatchVisibilityConsistency();
-			world.filterLocalError2D();
-			world.filterLocalError3D();
-			// throw "after filter"
-			
+				world.filterPairwiseErrors(2.0);
+				world.filterGlobalErrors(2.0);
+				world.filterNeighborConsistency2D3D();
+				world.filterNeighborConsistency2DViews();
+				world.filterGlobalNegativeDepth();
+				world.filterGlobalPatchVisibilityConsistency();
+				world.filterLocalError2D();
+				world.filterLocalError3D();
+				// throw "after filter"
+console.log("E");
+world.checkVerifyPatches();
 
 			// refine - camera position
 			var iterationsUpdateViewSingle = 50;
@@ -11445,7 +11450,8 @@ console.log("PHASE 1 ITERATION: ++++++++++++++++++++++++++++++++++++++++++++++++
 			world.copyRelativeTransformsFromAbsolute();
 
 			world.reInitPoint3DLocationPatches();
-
+console.log("F");
+world.checkVerifyPatches();
 			if(iteration==1){
 				console.log("SUBDIVIDING");
 // break;
@@ -11455,7 +11461,8 @@ console.log("PHASE 1 ITERATION: ++++++++++++++++++++++++++++++++++++++++++++++++
 				world.subDivideUpdateMatchLocation();
 				// world.reInitPoint3DLocationPatches(); // done as part of subDivideUpdateMatchLocation
 			}
-			// 
+console.log("G");
+world.checkVerifyPatches();
 		}
 
 		console.log("TODO: restore original viewA extrinsic/absolute")
@@ -11476,19 +11483,173 @@ console.log("PHASE 1 ITERATION: ++++++++++++++++++++++++++++++++++++++++++++++++
 	console.log("phase 2 - move new view to existing model location");
 	// if this is not the 'first' view pair, then there should be some existing overlap?
 	// existingPoints
-	var allViews = world.toViewArray();
-	if(allViews.length<=2){
-		
-		// TODO: what are all the criteria here?
 
-		console.log("no averaging able -> use existing");
+	var initialAbsoluteMatrixValues = [];
+	var initialAbsoluteMatrixErrors = [];
+
+
+	var allViews = world.toViewArray();
+	
+	if(allViews.length>2){
+		console.log("averaging start");
+		// LINEAR INITIALIZATION STEP
+		var minNeighborCount = 3;
+		var maxNeighborCount = 6;
+		var searchScale = 2.0;
+		var maxPointLinearCount = 100;
+
+		world.setViewCellCounts(viewCellCountHigh);
+		var sortDistanceFxn = function(a,b){
+			return a[1]<b[1] ? -1 : 1;
+		}
+		
+		for(var i=0; i<viewsAdjacent.length; ++i){
+			var viewAdjacent = viewsAdjacent[i];
+			var viewID = viewAdjacent.id();
+			// var imageScales = view.imageScales();
+			var newPoints3D = initialAdjacentPoints3D[i];
+			// TODO: use some smaller maximum newPoints3D size
+			var oldPointSpace = parallelViewPoint2DSpaces[viewID];
+			if(oldPointSpace.count()==0){
+				continue;
+			}
+
+
+			var knownPoints2D = [];
+			var knownPoints3D = [];
+
+			for(var n=0; n<newPoints3D.length; ++n){
+				var point3D = newPoints3D[n];
+				var point2D = point3D.pointForView(viewAdjacent);
+				var p2D = point2D.point2D();
+				var size2D = viewAdjacent.compareSizeForPoint(p2D);
+				if(!point2D){
+					throw "point should exist";
+				}
+				var searchRadius = size2D*searchScale;
+				var neighbors = oldPointSpace.objectsInsideCircle(p2D, searchRadius);
+				// console.log(neighbors);
+				if(neighbors.length<minNeighborCount){
+					continue;
+				}
+				// console.log(neighbors);
+				for(var k=0; k<neighbors.length; ++k){
+					var neighbor = neighbors[k];
+					var d = V2D.distanceSquare(p2D, neighbor.point2D());
+					neighbors[k] = [neighbor,d];
+				}
+				neighbors.sort();
+				Code.truncateArray(neighbors,maxNeighborCount);
+				var locations3D = [];
+				for(var k=0; k<neighbors.length; ++k){
+					var neighbor = neighbors[k][0];
+					var p3d = neighbor.point3D().point();
+					locations3D.push(p3d);
+				}
+				var center3D = V3D.average(locations3D);
+				console.log(" center3D: "+center3D);
+				
+				knownPoints2D.push(p2D);
+				knownPoints3D.push(center3D);
+
+			}
+			if(knownPoints2D.length<6){ // what is the min?
+				console.log("unknown");
+				continue;
+			}
+console.log("CALCULATORIUM ................... "+knownPoints2D.length);
+			console.log(knownPoints2D);
+			console.log(knownPoints3D);
+			if(knownPoints2D.length>maxPointLinearCount){
+				Code.randomPopParallelArrays([knownPoints2D,knownPoints2D],maxPointLinearCount);
+			}
+			
+			var K = viewFocus.K();
+			var Kinv = viewFocus.Kinv();
+			// var P = viewFocus.absoluteTransform(); // est
+			
+			// ?
+			var info = R3D.optimizeCameraExtrinsicDLTKnown3DK(K, Kinv, knownPoints2D, knownPoints3D);
+			console.log(info);
+
+			// nonlinear step :
+
+			var maxIterations = 100;
+			console.log(maxIterations);
+			var info = R3D.optimizeCameraExtrinsicNonlinear(K, Kinv, knownPoints2D, knownPoints3D, maxIterations);
+			console.log(info);
+
+
+			initialAbsoluteMatrixValues.push(newP);
+			// error is average reprojection error of 
+			initialAbsoluteMatrixErrors.push(errorWhat);
+
+			throw "... K"
+		}
+	} // first time check
+
+
+	if(initialAbsoluteMatrixValues.length>0){
+			console.log(initialAbsoluteMatrixValues);
+			console.log(initialAbsoluteMatrixErrors);
+
+			
+			throw "average N separate 3D matrixes to get initial value ?"
+			viewFocus.absoluteTransform(averageExtrinsic);
+
+
+			// nonlinear -> optimize tracks & move camera
+			world.setViewCellCounts(viewCellCountHigh);
+			for(var i=0; i<initialAdjacentPoints3D.length; ++i){
+				var points3D = initialAdjacentPoints3D[i];
+				world.recursiveEmbedPoints3D(points3D);
+			}
+			
+			throw "nonlinear optimize view location using mapped geometry"
+
+			var maxIterations = 4;
+			for(var iteration=0; iteration<maxIterations; ++iteration){
+				console.log("PHASE 2 ITERATION: +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"+iteration);
+
+
+				throw "set points to existing geometry"
+			}
+/*
+	
+	parallelViewPoint2DSpaces
+
+
+	want to init the camera based on existing points
+
+	for 10-100 random points in 2D for each view:
+		- search 
+		- get 3-6 closest neghbors
+		- average their 3D points
+		- add 2D-3D entry
+	R3D.optimizeCameraExtrinsicDLTKnown3DK(P, K, Kinv, points2D, points3D, maxIterations);
+
+
+	- calc errors
+	- expand 2D & 3D
+	- filter 2D & 3D
+	- refine:
+		- B: move view, using OLD point locations
+			[re-estimate point locations]
+		- A: move view, minimizing actual 3D reprojection errors
+		
+
+	-> NO SUBDIVISION
+*/
+
+
+	}else{ // end initial averaging & nonlinear optimizing
+		console.log("use original extrinsic matrix")
 		console.log(originalViewFocusExtrinsic);
 		viewFocus.absoluteTransform(originalViewFocusExtrinsic);
 
 		// 'combined' points is just first set:
 		for(var i=0; i<viewsAdjacent.length; ++i){
 			var viewAdjacent = viewsAdjacent[i];
-			// var viewID = viewAdjacent.id();
 			var listPoints3D = initialAdjacentPoints3D[i];
 			for(var j=0; j<listPoints3D.length; ++j){
 				var point3D = listPoints3D[j];
@@ -11503,141 +11664,10 @@ console.log("PHASE 1 ITERATION: ++++++++++++++++++++++++++++++++++++++++++++++++
 			}
 		}
 
-	}else{
-		console.log("averaging start");
-		// LINEAR INITIALIZATION STEP
-		var minNeighborCount = 3;
-		var maxNeighborCount = 6;
-		var searchScale = 2.0;
+	}
 
-		world.setViewCellCounts(viewCellCountHigh);
-
-
-		var initialAbsoluteMatrixValues = [];
-		var initialAbsoluteMatrixErrors = [];
-		for(var i=0; i<viewsAdjacent.length; ++i){
-			var viewAdjacent = viewsAdjacent[i];
-			var viewID = viewAdjacent.id();
-			// var imageScales = view.imageScales();
-
-			var newPoints3D = initialAdjacentPoints3D[i];
-			
-
-			// TODO: use some smaller maximum newPoints3D size
-
-			// var min = new V2D(0,0);
-			// var max = new V2D(image.width(),image.height());
-			// var pointSpace = new QuadTree(Stereopsis._point2DToPoint, min, max);
-			var oldPointSpace = parallelViewPoint2DSpaces[viewID];
-			if(oldPointSpace.count()==0){
-				continue;
-			}
-			for(var n=0; n<newPoints3D.length; ++n){
-				var point3D = newPoints3D[n];
-				var point2D = point3D.pointForView(viewAdjacent);
-				var p2D = point2D.point2D();
-				var size2D = viewAdjacent.compareSizeForPoint(p2D);
-				if(!point2D){
-					throw "point should exist";
-				}
-				var searchRadius = size2D*searchScale;
-				var neighbors = oldPointSpace.objectsInsideCircle(p2D, searchRadius);
-				console.log(neighbors);
-				if(neighbors.length<minNeighborCount){
-					continue;
-				}
-
-
-				// viewFocus
-
-			}
-			var knownPoints2D = [];
-			var knownPoints3D = [];
-			var K = viewFocus.K();
-			var Kinv = viewFocus.Kinv();
-			var P = viewFocus.absoluteTransform(); // est
-			
-			// ?
-			var maxIterations = 100;
-			var info = R3D.optimizeCameraExtrinsicDLTKnown3DK(P, K, Kinv, knownPoints2D, knownPoints3D, maxIterations);
-			console.log(info);
-
-
-			initialAbsoluteMatrixValues.push(newP);
-
-			throw "..."
-
-		}
-
-		console.log(initialAbsoluteMatrixValues);
-		console.log(initialAbsoluteMatrixErrors);
-		
-		throw "average N separate 3D matrixes to get initial value ?"
-		viewFocus.absoluteTransform(averageExtrinsic);
-
-
-
-		// nonlinear -> optimize tracks & move camera
-		world.setViewCellCounts(viewCellCountHigh);
-		for(var i=0; i<initialAdjacentPoints3D.length; ++i){
-			var points3D = initialAdjacentPoints3D[i];
-			world.recursiveEmbedPoints3D(points3D);
-		}
-		
-		throw "nonlinear optimize view location using mapped geometry"
-
-		var maxIterations = 4;
-		for(var iteration=0; iteration<maxIterations; ++iteration){
-			console.log("PHASE 2 ITERATION: +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"+iteration);
-
-
-			throw "set points to existing geometry"
-
-
-		}
-
-
-/*
-	
-	parallelViewPoint2DSpaces
-
-
-	want to init the camera based on existing points
-
-	for 10-100 random points in 2D for each view:
-		- search 
-		- get 3-6 closest neghbors
-		- average their 3D points
-		- add 2D-3D entry
-
-
-	R3D.optimizeCameraExtrinsicDLTKnown3DK(P, K, Kinv, points2D, points3D, maxIterations);
-
-
-
-*/
-
-
-/*
-	- calc errors
-	- expand 2D & 3D
-	- filter 2D & 3D
-	- refine:
-		- B: move view, using OLD point locations
-			[re-estimate point locations]
-		- A: move view, minimizing actual 3D reprojection errors
-		
-
-	-> NO SUBDIVISION
-*/
-
-
-	} // end initial averaging & nonlinear optimizing
 
 	
-
-
-
 
 	// throw "phase 3 - combine OLD + NEW points & optimize nonlinearly"
 
@@ -11702,6 +11732,19 @@ console.log("PHASE 1 ITERATION: ++++++++++++++++++++++++++++++++++++++++++++++++
 console.log("end solveSequentialView");
 }
 
+Stereopsis.World.prototype.checkVerifyPatches = function(){
+	var world = this;
+	var points3D = world.toPointArray();
+	for(var i=0; i<points3D.length; ++i){
+		var point3D = points3D[i];
+		if(!point3D.hasPatch()){
+			console.log(points3D);
+			console.log(i);
+			console.log(point3D);
+			throw "missing patch";
+		}
+	}
+}
 
 
 Stereopsis.World.prototype.reInitPoint3DLocationPatches = function(){
@@ -19952,6 +19995,7 @@ Stereopsis.World.prototype.subDivideUpdateMatchLocation = function(){ // 2D upda
 		if(!point3D.hasPatch()){
 			console.log(i);
 			console.log(point3D);
+			console.log(point3D.isValid());
 			throw "point doesn't have patch"
 		}
 		var points2D = point3D.toPointArray();
@@ -20671,7 +20715,13 @@ Stereopsis.World.prototype.filterNeighborConsistency2D3D = function(){ // drop i
 // select 3D -> check 2D
 	for(var i=0; i<points3D.length; ++i){
 		var point3D = points3D[i];
+		if(!point3D.isValid()){ // may have been removed in process ? ???????
+			continue;
+		}
 		if(!point3D.hasPatch()){
+			console.log(points3D);
+			console.log(i);
+			console.log(point3D);
 			throw "no patch exists";
 		}
 		var location3D = point3D.point();
@@ -22806,6 +22856,10 @@ Stereopsis.World.prototype.bestBasePointOfTwo = function(point3DA,point3DB){
 	return {"best":bestPoint, "worst":worstPoint, "keep":keepWorst};
 }
 Stereopsis.World.prototype.combineIntersectionPoints3D = function(point3DA,point3DB){
+// THIS SHOULD ALREADY BE DONE
+this.disconnectPoint3D(point3DA);
+this.disconnectPoint3D(point3DB);
+
 	var world = this;
 	var best = world.bestBasePointOfTwo(point3DA,point3DB);
 	point3DA = best["best"];
@@ -23142,6 +23196,8 @@ GLOBALSTAGE.addChild(d);
 		// world.initPoint3DPatchSphere(point3D);
 		// world.initPoint3DAffineFromPatch(point3D);
 		world.initNewPointPatch3D(point3D);
+	}else{
+		throw "set as doPatch = false";
 	}
 	world.killPoint3D(point3DA);
 	world.killPoint3D(point3DB);
@@ -23149,18 +23205,27 @@ GLOBALSTAGE.addChild(d);
 }
 
 Stereopsis.World.prototype.recursiveEmbedPoint3D = function(point3D){
-	// this.disconnectPoint3D(point3DA);
-	// this.disconnectPoint3D(point3DB);
+// is this necessary?
+this.disconnectPoint3D(point3D);
+// this.disconnectPoint3D(point3DB);
 	var overlap2D = point3D.checkOverlapPoints2D();
 	if(overlap2D){
 		var opposite3D = overlap2D.point3D();
 		this.disconnectPoint3D(opposite3D);
 		var combined3D = this.combineIntersectionPoints3D(point3D,opposite3D);
 		if(combined3D){
+			if(!combined3D.hasPatch()){
+				console.log(combined3D);
+				throw "combined doesn't have patch";
+			}
 			return this.recursiveEmbedPoint3D(combined3D);
 		}
 		return null;
 	}else{
+		if(!point3D.hasPatch()){
+			console.log(point3D);
+			throw "input point3D doesn't have patch";
+		}
 		this.connectPoint3D(point3D);
 		return point3D;
 	}
