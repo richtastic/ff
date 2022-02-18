@@ -55,6 +55,7 @@ ImageMat.prototype.to3Array = function(){
 ImageMat.prototype.unset = function(){
 	this._width = undefined;
 	this._height = undefined;
+	this._size = null;
 	this._y = null;
 	this._r = null;
 	this._g = null;
@@ -5432,9 +5433,18 @@ function ImageMatScaled(image, scaler){
 	// scaler = scaler!==undefined ? scaler : 0.75;
 	this._exponent = scaler;
 	var images = ImageMat.getProgressiveScaledImage(image, this._exponent);
-	this._container = images;
 	this._images = images["images"];
 	this._scales = images["scales"];
+}
+ImageMatScaled.prototype.kill = function(){
+	if(this._images){
+		for(var i=0; i<this._images.length; ++i){
+			this._images[i].kill();
+		}
+	}
+	this._images = null;
+	this._scales = null;
+	this._exponent = null;
 }
 ImageMatScaled.prototype.width = function(){
 	var image = this._images;

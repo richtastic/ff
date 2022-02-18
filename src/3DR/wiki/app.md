@@ -500,23 +500,100 @@ OUTPUT:
 
 
 
-- COMBINING tracks with images loaded to tracks w/o images loaded?
 
 
-- subDivideUpdateMatchLocation
-	- how does subdivision work if some or none of images are loaded?
-	- how to choose a 'reference image'
-	=>
-		- at least 2 images need to be loaded
-		- reference image has best corner score
-		- views w/o image aren't changed
+solveSequentialView - crashing to taking up to much memory or processing too long ????????
+
+- delay doesn't seem to help => memory ?
+
+
+memory inefficiencies -> reuse & call kill() more
+OPTIMIZE:
+ _initCompareSizes
+22:21:58.469 Stereopsis.js:1012 divisionsByTwo: 7 -> 0.012566137566137565 & 0.00781
+de.unpadArray2DLinear = function(src,wid,hei, le
+
+
+
+ImageMat.ARGBFromFloats = function(rF,gF,bF){
+
+
+
+- additional views are still having some blurryness in 
+	=> optimization of geometry step:
+		- move view in location that minimizes 3D error
+		- dynamic points all have a P2D from focusView
+		- 
+
+
+		
+
+is this bad?:
+refineSelectCameraByLocalGeometryMatching3D
+
+
+
+
+
+
+
+
+
+
+
+
+
+- move the geometry closer together geometrically
+	- doesn't require images to be loaded ..
+=> how to do this en masse ?
+
+
+
+
+- way to move points together (via point or view optimization)?
+	- move 3D points toward 2D neighbors?
+		- do this at the very end & only affect points?
+
+
+
+
+- what are all the update types needed?
+	- P3D change 3D location
+		- update patch from location change
+	- a P2D changes 2D location
+
+
+
+
+DIFFERENCES:
+	- image  v  some images  v  no image
+	- point count low (1k) med (10k) hi (100k+)
+	- view orientation changes
+	- brand new point vs updated point
+
+PATCH RESPONSE TO:
+	- view changes orientation significant (eg 30 degrees)
+		=> completely reinit
+	- view changes orientation slightly (eg 1 degree)
+		=> update from visuals (what if no visuals?)
+	- point3d combining - adds additional p2d
+		=>
+	- point2d changes location slightly (eg cell subdivision 10%-25%)
+		=>
+	- 
+
+
+
+
+
+
+
+
+
 
 
 
 - is init affine from patch same as update affine from patch ?
-
-
--
 
 
 - HOW SHOULD EXPAND 3D PROJECTION WORK
@@ -527,109 +604,7 @@ OUTPUT:
 
 
 
-WHY IS THIS FILTER BAD?:
-filterNeighborConsistency2D3D
 
-
-updatePatchSizeFromViewCellSizeChange
-
-
-
-WHAT TO DO ABOUT IMAGE EXTRACTION / COMPARE WITH DIFFERENT FEATURE SIZES ???
-
-R3D.optimumSADLocationSearchFlatRGB
-
-
-
-
-solveSequentialView
-
-solveSequentialView
-
-solveSequentialView
-
-solveSequentialView
-
-solveSequentialView
-
-putativePairsForViews
-
-
- - initially: the new view can be pushed into the direction of the old points
- - when the points start to be merged: how to differentiate 'old' and 'new' points?
- 	- prevent merging 'old' pairs with new pairs
- - some final step however needs to 
-
-
- 3 PHASES:
- 	1 PHASE: gather & increase reliablity and density of single pair points
- 		- move new points to old point direction to get view towards correct direction
- 	2 PHASE: increase reliability & density & track count of new points
- 		- merge only new points together
- 			-> to keep old & new separate:
- 			- need N quad-tree-point lookups to find kNN
- 		- continue to move new tracks toward old point direction
- 	3 PHASE: increase track count of all points
- 		- merge all points together (old & new)
- 			- can't decipher old and new groupings
- 		- rely on error minimization techniques
-
-PHASE 1:
-	- typical expand & filter
-	=> each point: get kNN, estimate camera matrix
-	=> average camera matrix into final initial camera matrix
-PHASE 2:
-	- typical expand & filter
-	=> step to move points to their 'old' neighbors & re-calculate camera location
-PHASE 3:
-	- typical expand & filter
-	=> step to move view camera location to minimize total reprojection error
-
-
-- for each new view (image is loaded):
-	- for each existing view (with image loaded):
-		- get best point pair initial putative matches
-			- use estimated global R for pairwise relative R
-
-	INCREASE PUTATIVE P3D ACCURACY & DENSITY
-	- iterate on pairs separately
-		- expanding
-			- pairwise 2D neighbors
-		- filtering
-			- pairwise: N / S / F / R error
-		- subdivide resolution [low to med]
-			- 
-
-
-	ALIGNING VIEW [MOTION] POINTS:
-	- align new view with existing views
-		-> for each pair:
-			- get overlapping 2D areas
-				[each 'new' pairwise point that has 3 ~ 6 neighbors within 1 cell distance find global distance to neighbors]
-				[get local population (of deltas), and iteritively ignore/drop neighbors with large distances]
-				[get total population (of deltas), and iteritively drop large ones]
-				[use final set of up to ~ 50-100 points for matrix initial point estimation]
-			- derive the extrinsic matrix assuming these NEW mapped point locations 
-				- SVD for 3x4=12 unkowns
-				- estimate R & t from approximate
-			=> CHECK IF MATRIX PARAMETERS ARE WAY DIFFERENT THAN ASSUMED INITIAL VIEW ORIENTATION
-			- iterate 6 camera parameters by minimizing deltas PAIRWISE [determine initial variable tolerance for R angles & t distances]
-		- average all of these rotations / translations to obtain final 'initial' location
-		- iterate 6 params by minimizing deltas GLOBALLY [N cameras/points]
-
-	INITIAL GLOBAL POINTS:
-	- initialize all new pairwise point patches
-	- turn on intersection resolution & combine points into tracks
-
-
-	- a P3D's 2D 'cell size':
-		- should include:
-			- some minimum amount of range
-			- some minimum corner value
-	
-	- a view's cell grid/hierarchy
-		- subdividing a cell is useless if featureless
-		=> if zoomed out and not featureless, this is still OK
 
 
 

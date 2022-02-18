@@ -494,6 +494,19 @@ Code.printHistogram = function(bins, displayMax){
 	str += "\n";
 	console.log(str);
 }
+Code.deleteObjectKeys = function(object){
+	var keys = Code.keys(object);
+	for(var i=0; i<keys.length; ++i){
+		var key = keys[i];
+		delete object[key];
+	}
+}
+Code.deleteArrayObjectKeys = function(array){
+	for(var i=0; i<array.length; ++i){
+		Code.deleteObjectKeys(array[i]);
+	}
+}
+
 Code._appendParameter = function(container, key, value){ //
 	//console.log("ASSIGN: "+key+"="+value);
 	var regeExArrayPush = new RegExp("\\[\\]$","g");
@@ -5788,6 +5801,16 @@ Code.randomIndexes = function(count, range){
 // 	return set;
 // }
 // Code.randomIntervalSet(5, 0, 10);
+Code.randomPop = function(array){
+	if(array.length==0){
+		return null;
+	}
+	var index = Code.randomIndexArray(array);
+	var value = array[index];
+	array.splice(index,1);
+	return value;
+}
+
 Code.randomPopArray = function(array,count){
 	return Code.randomPopParallelArrays([array], count);
 }

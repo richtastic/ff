@@ -20902,7 +20902,10 @@ App3DR.ProjectManager.prototype._iterateGraphSequential = function(sourceData,so
 	var project = this;
 	var sequenceData = null;
 
-	var maximumPairImages = 6; // [3, 10] ~ 6
+	// var maximumPairImages = 6; // [3, 10] ~ 6
+	var maximumPairImages = 4; // current JS memory/processing problems
+
+	//
 
 	var fxnSequenceLoaded = function(data){
 		console.log("fxnSequenceLoaded");
@@ -21044,7 +21047,7 @@ App3DR.ProjectManager.prototype._iterateGraphSequential = function(sourceData,so
 			var currentStepPoints = [];
 			var doPointLoading = function(a){
 				console.log("doPointLoading @ "+currentStep);
-
+// throw "???"
 				if(currentStep<=1){ // N/A
 					console.log("don't load any points");
 					pointsDidLoad(null);
@@ -21288,27 +21291,34 @@ App3DR.ProjectManager.prototype._iterateGraphSequential = function(sourceData,so
 					console.log("WORLDVIEWSLOOKUP");
 					console.log(WORLDVIEWSLOOKUP);
 
-
+console.log("stepViewID: "+stepViewID);
 				var worldViewLast = WORLDVIEWSLOOKUP[stepViewID];//views[views.length-1];
 				var worldViewsAdjacent = []; // all image-connected views
 				for(var i=0; i<WORLDVIEWS.length; ++i){
 					var v = WORLDVIEWS[i];
 					if(v!=worldViewLast){
 						if(v.image()){
+							// console.log("v:");
+							// console.log(v);
+							// console.log("last:");
+							// console.log(worldViewLast);
 							worldViewsAdjacent.push(v);
 						}
-					}
+					}/*else{
+						console.log("found same");
+					}*/
 				}
 
 				console.log("world solve");
 				console.log(worldViewLast);
 				console.log(worldViewsAdjacent);
-
+				console.log(WORLDVIEWSLOOKUP);
 				
-				world.solveSequentialView(worldViewLast, worldViewsAdjacent, currentStepPoints);
+				
+
 	// console.log(world.toYAMLString());
-
-
+			var worldCompletedFxn = function(){
+				console.log("worldCompletedFxn");
 				var worldData = world.toObject();
 				var worldPoints = worldData["points"];
 				var worldViews = worldData["views"];
@@ -21367,8 +21377,14 @@ App3DR.ProjectManager.prototype._iterateGraphSequential = function(sourceData,so
 					console.log("saveSequencePointsFxn");
 					project.saveFileFromData(sequenceData,sequenceFilename, saveSequenceGraphFxn,project);
 				}
-	throw "before saving point data"
+	// throw "before saving point data"
 				project.saveFileFromData(pointsData,pointsFilename, saveSequencePointsFxn,project);
+
+			}
+			console.log(worldViewsAdjacent);
+			// throw "worldViewsAdjacent"
+			world.solveSequentialView(worldViewLast, worldViewsAdjacent, currentStepPoints,  worldCompletedFxn);
+
 
 				// console.log(graphYAML);
 				// console.log(pointsData);
@@ -21380,7 +21396,7 @@ App3DR.ProjectManager.prototype._iterateGraphSequential = function(sourceData,so
 
 				// RECHECK
 
-				throw "...END doWorldViewSolve"
+				// throw "...END doWorldViewSolve"
 
 
 				
@@ -21417,6 +21433,7 @@ App3DR.ProjectManager.prototype._iterateGraphSequential = function(sourceData,so
 			var imagesLoadedFxn = function(a){
 				++loadedImageCount;
 				console.log(loadedImageCount+" / "+expectedImageCount)
+				// throw  "doPointLoading"
 				if(loadedImageCount == expectedImageCount){
 					// doWorldViewSolve();
 					doPointLoading();
