@@ -501,29 +501,107 @@ OUTPUT:
 
 
 
-
-solveSequentialView - crashing to taking up to much memory or processing too long ????????
-
-- delay doesn't seem to help => memory ?
+CAN REMOVING MATCHES FROM TRANSFORM BE SPED UP?
 
 
-memory inefficiencies -> reuse & call kill() more
-OPTIMIZE:
- _initCompareSizes
-22:21:58.469 Stereopsis.js:1012 divisionsByTwo: 7 -> 0.012566137566137565 & 0.00781
-de.unpadArray2DLinear = function(src,wid,hei, le
+point/patch consistency/updates
+
+
+- initial spares
+	- no 3D location
+	- no patch
+	- affine comes from the initial match
+	- affine update comes from seed point (average)
+- rough sparse
+	- no patch
+	- affine comes from seed point (average)
+
+- dense
+	- affine from patch
+
+
+- WHEN ARE THINGS CHANGED:
+	- INITIAL:
+		- intitial putatives are given as a result of some previous matching or point generating (at least 2D points, maybe: point3D, patch)
+	- PROBE NEW POINTS:
+		- patch
+			- lo
+				- init patch from scratch
+					- sphere size projection
+					- affine projection
+					- normal/plane estimation
+						- images
+							- nonlinear normal update
+					- match affine from patch
+
+			- med
+				- init patch from 2D-3D neighborhood
+					- images:
+						- nonlinear normal update
+					- match affine from patch
+			- hi
+				- init patch from single source patch
+				- images:
+					- nonlinear normal update
+		- location3D
+			- lo/me/hi
+				- init point from DLT
+				- match affine ???????????????????????????????????
+		- else
+			- lo/me/hi
+				- affine from neighborhood?
+				- nonlinear update from image?
+	- 2D POINT MERGE:
+		- patch
+			- lo
+				-> SEE NEW
+			- me
+				-> SEE NEW
+			- hi
+				-> SEE NEW (but average from 2)
+		- location3D
+			- lo/me/hi
+		- else
+			- 
+	- VIEW ORIENTATION CHANGE (LARGE)
+		- patch
+			- SEE NEW 
+		- location3D
+			- DLT
+		- else
+			- N/A
+	- VIEW ORIENTATION CHANGE (SMALL)
+		- patch
+			-> update location
+			-> update normal
+		- else point3D
+			-> update location
+		- else:
+			-> 
 
 
 
-ImageMat.ARGBFromFloats = function(rF,gF,bF){
+solvePairF
+
+probe2DCellsExpandR
+
+
+low/med/hi point count (density)
 
 
 
-- additional views are still having some blurryness in 
-	=> optimization of geometry step:
-		- move view in location that minimizes 3D error
-		- dynamic points all have a P2D from focusView
-		- 
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 		
@@ -532,6 +610,35 @@ is this bad?:
 refineSelectCameraByLocalGeometryMatching3D
 
 
+
+- local errors should include R
+- global errors should include R / F / N / S
+- patches should be smartly updated/initted
+- first sparse naive should be able to ignore R
+
+
+- SOMEWHERE AROUND 7-9 : TWO SCENES SHOWED UP
+
+
+
+
+- dense optimizing steps could also be primarily geometry matching ?
+
+=> after dense:
+	Want to move geometry towards eachother
+	=> load all the views (transforms)
+	=> just want to move the POINTS toward eachother
+		-> don't need to create new points
+		-> reuse overlapping existing points
+
+	repeat for each new view:
+		- load the dense overlapping pair points [if exist?]
+		- move the nearby points toward eachother
+	=> nothing merges, nothing overlaps, nothing intersects, ...
+		-> keep in separate 2D spaces tho for lookup
+
+
+=> use dense points as seeds  (pre filter on R / F / N / S) for later steps ? (group dense?)
 
 
 

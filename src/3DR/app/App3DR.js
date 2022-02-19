@@ -7828,13 +7828,13 @@ console.log("checkPerformNextTask");
 		return;
 	}
 	// throw "..."
-// throw "iterate sparse ?";
+// throw "iterate sparse";
 	if(!project.checkHasSparseEnded()){
 		project.iterateSparseProcess();
 		return;
 	}
 
-// throw "start dense";
+throw "start dense";
 	if(!project.checkHasDenseStarted()){
 		project.calculateDensePairPutatives();
 		return;
@@ -14102,7 +14102,7 @@ console.log("GET INITIAL F: "+matchesAB.length);
 			console.log(pointsA,pointsB);
 			
 
-			world.resolveIntersectionByDefault();
+			// world.resolveIntersectionByDefault();
 
 
 			for(var i=0; i<pointsA.length; ++i){
@@ -14116,20 +14116,22 @@ console.log("GET INITIAL F: "+matchesAB.length);
 				var matches = point3D.toMatchArray();
 				for(var m=0; m<matches.length; ++m){
 					var match = matches[m];
-					world.updateMatchInfo(match);
 				}
-				world.embedPoint3D(point3D);
+				world.recursiveEmbedPoint3D(point3D);
 			}
+
+
 			console.log("SOLVE PAIR F");
+// throw "before pair solve world"
 			var result = world.solvePairF();
-			// console.log(result);
+			console.log(result);
 
 			// world.showForwardBackwardPair();
 			// throw "BEFORE NEXT F -> R"
 
 			var transform0 = world.transformFromViews(view0,view1);
 			var fErrorSigma = transform0.fSigma();
-			var fErrorMean = transform0.fSigma();
+			var fErrorMean = transform0.fMean();
 			console.log("F PAIR RESULT ERROR MEAN: "+fErrorMean+" & SIGMA: "+fErrorMean+" / "+maxErrorFDensePixels);
 
 			if(fErrorSigma>maxErrorFDensePixels){
@@ -14156,26 +14158,21 @@ console.log("GET INITIAL F: "+matchesAB.length);
 			}
 			for(var i=0; i<projectViews.length; ++i){
 				var projectView = projectViews[i];
-		// console.log(projectView);
 				var projectCamera = project.cameraFromID(projectView.cameraID());
-		// console.log(projectCamera);
 				var view = world.viewFromData(projectView.id());
-				// console.log(view);
 				var cam = world.cameraFromData(projectCamera.id());
-				// console.log(cam);
 				view.camera(cam);
 			}
-
+			// 
 			world.dropWorstParametersF();
 			console.log("SOLVE INITIAL R");
+			// RESET CELL SIZE:
 
-			// throw "here"
-			
 			// var cellCount = 40;
 			// world.setViewCellCounts(cellCount);
 			// KEEP PREVIOUS CELL SIZING
-
-			var result = world.solvePair(function(world){
+// throw "before pair solve solvePair"
+			var result = world.solvePairR(function(world){
 				console.log("async");
 			}, this);
 
@@ -14183,16 +14180,16 @@ console.log("GET INITIAL F: "+matchesAB.length);
 			console.log(str);
 
 // console.log(result);
-// world.showForwardBackwardPair();
+world.showForwardBackwardPair();
 // throw "BEFORE NEXT R -> T"
 
 
 			var transform0 = world.transformFromViews(view0,view1);
 			var fErrorSigma = transform0.fSigma();
-			var fErrorMean = transform0.fSigma();
+			var fErrorMean = transform0.fMean();
 			console.log("F PAIR RESULT ERROR MEAN: "+fErrorMean+" & SIGMA: "+fErrorMean+" / "+maxErrorFDensePixels);
 			var rErrorSigma = transform0.rSigma();
-			var rErrorMean = transform0.rSigma();
+			var rErrorMean = transform0.rMean();
 			console.log("R PAIR RESULT ERROR MEAN: "+rErrorMean+" & SIGMA: "+rErrorMean+" / "+maxErrorRDensePixels);
 
 			// goodEnoughMatches = true; // already the case
@@ -14206,7 +14203,7 @@ console.log("GET INITIAL F: "+matchesAB.length);
 		// R - TRACKS - WORLD
 		if(goodEnoughMatches){
 			console.log("START WORLD TO FIND TRACKS R");
-
+throw "find tracks"
 
 			var transform = world.transformFromViews(view0,view1);
 				var count = transform.matches().length; // doesn't count if P has 0 matches
@@ -18119,7 +18116,7 @@ console.log("keep: "+keys.length);
 		project.saveProjectFile(fxnSavedProject, project);
 	}
 console.log(sparseData);
-// throw "BEFORE SAVE SPARSE"
+throw "BEFORE SAVE SPARSE"
 	project.saveSparseFromData(sparseData, fxnSavedSparse, project);
 	
 }
@@ -21382,7 +21379,7 @@ console.log("stepViewID: "+stepViewID);
 
 			}
 			console.log(worldViewsAdjacent);
-			// throw "worldViewsAdjacent"
+			throw "solveSequentialView ---- load pair points ... dont need images"
 			world.solveSequentialView(worldViewLast, worldViewsAdjacent, currentStepPoints,  worldCompletedFxn);
 
 

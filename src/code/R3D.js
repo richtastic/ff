@@ -38627,7 +38627,7 @@ R3D.experimentAffineRefine = function(samplesA,samplesB,affinesAB, imageScalesA,
 	return {"A":pointsA, "B":pointsB, "affines":affines, "scores":scores};
 }
 
-R3D.experimentAffineRefineSingle = function(pointA,pointB,affineAB, imageScalesA,imageScalesB, featureSize,rangeAngle,rangeScale,rangeIterations){
+R3D.experimentAffineRefineSingle = function(pointA,pointB,affineAB, imageScalesA,imageScalesB, featureSize,rangeAngle,rangeScale,rangeIterations, reuseNeedleA,reuseNeedleB,reuseNeedleAB,reuseNeedleBA){
 	// FEATURE SIZE | WINDOW SIZE | WINDOW MASK | WINDOW BLUR | AFFINE MODEL | ITERATION | SOURCE
 
 	//  ,featureSize, rangeAngle,rangeScale,maxIterations
@@ -38650,7 +38650,7 @@ R3D.experimentAffineRefineSingle = function(pointA,pointB,affineAB, imageScalesA
 	return {"score":score, "affine":affine, "A":pointA, "B":pointB};
 }
 // rotation + scale | SAD | range sweep / reducing | 
-R3D.experimentAffineRefineSingle_A = function(pointA,pointB,affineAB, imageScalesA,imageScalesB, featureSize,rangeAngle,rangeScale,rangeIterations){
+R3D.experimentAffineRefineSingle_A = function(pointA,pointB,affineAB, imageScalesA,imageScalesB, featureSize,rangeAngle,rangeScale,rangeIterations, reuseNeedleA,reuseNeedleB,reuseNeedleAB,reuseNeedleBA){
 	var startingScaleRange = rangeAngle!==undefined ? Math.log(rangeAngle) : 0.5; // ln([0.25 0.5 1.0]) = [1.28,1.64,2.7] /// 0.25-0.5
 	var startingAngleRange = rangeScale!==undefined ? rangeScale : Code.radians(30); // 30-60
 
