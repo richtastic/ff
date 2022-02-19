@@ -14105,6 +14105,8 @@ console.log("GET INITIAL F: "+matchesAB.length);
 			// world.resolveIntersectionByDefault();
 
 
+
+world.debugCheckPairPointMatchCounts();
 			for(var i=0; i<pointsA.length; ++i){
 				var pointA = pointsA[i];
 				var pointB = pointsB[i];
@@ -14113,13 +14115,15 @@ console.log("GET INITIAL F: "+matchesAB.length);
 				var ps = [pointA,pointB];
 				var as = [affine];
 				var point3D = world.newPoint3DFromPieces(vs,ps,as, false);
-				var matches = point3D.toMatchArray();
-				for(var m=0; m<matches.length; ++m){
-					var match = matches[m];
-				}
+				// var matches = point3D.toMatchArray();
+				// for(var m=0; m<matches.length; ++m){
+				// 	var match = matches[m];
+				// }
+				console.log("insert: "+i);
 				world.recursiveEmbedPoint3D(point3D);
+world.debugCheckPairPointMatchCounts();
 			}
-
+world.debugCheckPairPointMatchCounts();
 
 			console.log("SOLVE PAIR F");
 // throw "before pair solve world"
@@ -14203,7 +14207,7 @@ world.showForwardBackwardPair();
 		// R - TRACKS - WORLD
 		if(goodEnoughMatches){
 			console.log("START WORLD TO FIND TRACKS R");
-throw "find tracks"
+
 
 			var transform = world.transformFromViews(view0,view1);
 				var count = transform.matches().length; // doesn't count if P has 0 matches
@@ -14252,6 +14256,28 @@ throw "find tracks"
 			console.log("TRACK transform error F: "+errorF+" of "+maxErrorFTrackPixels);
 
 			var trackMatchCount = transform.matches().length;
+			console.log("SAME?:");
+			console.log(transform.matchCount());
+			console.log(world.toPointArray());
+			console.log("R: "+world.globalErrorRMean()+" +/- "+world.globalErrorRSigma());
+			console.log("F: "+world.globalErrorFMean()+" +/- "+world.globalErrorFSigma());
+			console.log("N: "+world.globalErrorNMean()+" +/- "+world.globalErrorNSigma());
+			console.log("S: "+world.globalErrorSMean()+" +/- "+world.globalErrorSSigma());
+
+
+			// var points3D = world.toPointArray();
+			// for(var i=0; i<points3D.length; ++i){
+			// 	var point3D = points3D[i];
+			// 	var matches = point3D.toMatchArray();
+			// 	for(var j=0; j<matches.length; ++j){
+			// 		var match = matches[j];
+			// 		var index = match.id();
+			// 		// this._matches[index]
+			// 		var exists = transform[index];
+			// 		console.log("match: "+index+" = "+(exists!==undefined && exists!==null));
+			// 	}
+			// }
+			
 			console.log(" MIN TRACK COUNT: "+trackMatchCount+" / "+minimumCountTrackFinal);
 
 			if(errorR>maxErrorRTrackPixels || errorF>maxErrorFTrackPixels || trackMatchCount<minimumCountTrackFinal){
@@ -14264,6 +14290,8 @@ throw "find tracks"
 			}
 			
 			// pairDoneSaveFxn();
+		}else{
+			console.log("no track finding");
 		}
 
 		// var worldCams = world.toCameraArray();
@@ -14287,7 +14315,7 @@ throw "find tracks"
 
 		console.log(pairData);
 		console.log("goodEnoughMatches?: "+goodEnoughMatches);
-
+throw "before find tracks OUT"
 		if(!goodEnoughMatches){
 			console.log("END PAIR SEQUENCE POINT SEARCHING");
 			console.log("save not good enough matches");

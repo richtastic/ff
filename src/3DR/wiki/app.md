@@ -501,7 +501,21 @@ OUTPUT:
 
 
 
-CAN REMOVING MATCHES FROM TRANSFORM BE SPED UP?
+- match & point counts different ........
+
+connectPoint3D
+
+initNewPointPatch3D
+
+
+- point to keep track if it is embedded or not
+
+
+
+
+- tracks F /R / .. errors seem to be too lenient ?
+
+- transform & world errors are different ?
 
 
 point/patch consistency/updates
