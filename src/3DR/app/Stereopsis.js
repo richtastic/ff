@@ -3483,7 +3483,9 @@ Stereopsis.World.prototype.printPoint3DTrackCount = function(){
 		var pointCount = point3D.toPointArray().length;
 		countList[pointCount]++;
 		var error = point3D.globalErrorR();
-		errors[pointCount].push(error);
+		if(error!==undefined && error!==NaN){
+			errors[pointCount].push(error);
+		}
 	}
 	console.log(countList);
 	for(var i=0; i<errors.length; ++i){
@@ -6136,6 +6138,76 @@ Stereopsis.World.prototype.solveDropWorstViewNeighbors = function(){ // move vie
 }
 
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Stereopsis.World.prototype.solveOptimizeSingleViewReprojection = function(viewSolve, pairInfo, loopIterations){
+	loopIterations = Code.valueOrDefault(loopIterations, 10);
+
+	var world = this;
+
+	console.log(pairInfo);
+
+	console.log(viewSolve);
+
+	console.log(world);
+
+	// init patches
+	world.createAllPoints3DPatches();
+	world.relativeFFromSamples();
+	world.estimateGlobalErrors();
+	
+	var maxIterations = 4;
+	for(var iteration=0; iteration<maxIterations; ++iteration){
+		console.log("LOOP: "+iteration+" / "+maxIterations+" ......... - . - . - . - . - . - . - . - . - . - . - . - . - . - . - . - . - . - . - . - . - . - . - . - . - . - . - . - . - ");
+
+
+		// filter worst
+
+		var sigmaDropping = 5.0;
+		
+		world.filterPairwiseErrors(sigmaDropping);
+		world.filterGlobalErrors(sigmaDropping);
+		// world.filterNeighborConsistency2D3D();
+		// world.filterNeighborConsistency2DViews();
+		// world.filterGlobalNegativeDepth();
+		var sigmaDroppingPatches = 3.0;
+		world.filterGlobalPatchVisibilityConsistency(sigmaDroppingPatches);
+		world.filterLocalError2D(sigmaDropping);
+		world.filterLocalError3D(sigmaDropping);
+
+
+		// optimize reprojection error
+		var iterationsUpdateViewSingle = 100;
+		world.refineSelectCameraMultiViewTriangulation(viewSolve, iterationsUpdateViewSingle);
+
+
+		// optimize structure difference
+		// var iterationsUpdateViewSingle = 100;
+		// world.refineSelectCameraByLocalGeometryMatching3D(viewSolve, iterationsUpdateViewSingle);
+
+
+
+		world.copyRelativeTransformsFromAbsolute();
+
+		// reset point patches
+		world.createAllPoints3DPatches();
+
+
+
+// initNewPointPatch3D
+
+		
+
+	}
+
+	
+}
+Stereopsis.World.prototype.solveOptimizeSingleViewStructure = function(viewSolve, loopIterations){
+	loopIterations = Code.valueOrDefault(loopIterations, 10);
+
+	throw "solveOptimizeSingleViewStructure"
+}
+
+
+
 Stereopsis.World.prototype.solveOptimizeSingleView = function(viewSolve, loopIterations, doWorldOptimization){ // move view to a more optimal position - no point3D updates
 	console.log("solveOptimizeSingleView");
 	doWorldOptimization = Code.valueOrDefault(doWorldOptimization, true);
@@ -8126,8 +8198,10 @@ Stereopsis.World.prototype.pointCountOperationCategory = function(value){
 	}
 	return this._pointCountOperationCategory;
 }
-Stereopsis.World.prototype.createAllPoints3DPatches = function(){
-	var points3D = this.toPointArray();
+Stereopsis.World.prototype.createAllPoints3DPatches = function(points3D){
+	if(!points3D){
+		points3D = this.toPointArray();
+	}
 	console.log("createAllPoints3DPatches for "+points3D.length);
 	for(var i=0; i<points3D.length; ++i){
 		var point3D = points3D[i];
@@ -8251,14 +8325,6 @@ world.debugCheckPairPointMatchCounts();
 	// var subdivisionScaleSize = 0.75; // 40 -> 60
 	var subdivisionMultiplier = 0.75;
 
-	// var maxIterations = 1;
-	// var maxIterations = 2;
-	// var maxIterations = 3;
-	// var maxIterations = 5;
-	// var maxIterations = 6;
-	// var maxIterations = 8;
-	// var maxIterations = 10;
-
 var timeA = Code.getTimeMilliseconds();
 var timeB = Code.getTimeMilliseconds();
 	// 5 - 8
@@ -8270,18 +8336,9 @@ var timeB = Code.getTimeMilliseconds();
 
 
 timeA = Code.getTimeMilliseconds();
-
-
-// world.checkValidateMatches();
 		
 		world.relativeFFromSamples();
 		world.estimateGlobalErrors();
-
-// world.checkValidateMatches();
-// 		world.estimate3DErrors(false);
-
-
-// break; // exit
 
 
 timeB = Code.getTimeMilliseconds();
@@ -8314,13 +8371,6 @@ world.debugCheckPairPointMatchCounts();
 
 
 world.debugCheckPairPointMatchCounts();
-
-
-
-		// throw ".... probe 2d"
-		// world.probe2DCellsF(999.0,999.0);
-		// world.estimate3DErrors(false);
-
 world.checkValidateMatches();
 
 
@@ -8333,19 +8383,10 @@ timeA = Code.getTimeMilliseconds();
 		var subdivide = iteration==(maxIterations*0.5 | 0);
 		if(subdivide){
 
-
+			console.log("SUBDIVIDING - PAIR-F")
 
 			world.subdivideViewGridsR(subdivisionMultiplier);
 			world.subDivideUpdateMatchLocation();
-
-			// throw "done subdivide"
-
-
-			// world.subdivideViewGridsF(subdivisionScaleSize);
-			// // update location match at new higher resolution
-			// console.log("RICHIE F - subDivideUpdateMatchLocation");
-			// world.subDivideUpdateMatchLocation();
-			// // SET MATCH AFFINES BASED ON LOCAL 2D NEIGHBORHOODS
 		}
 
 
@@ -8353,35 +8394,11 @@ timeB = Code.getTimeMilliseconds();
 console.log("DELTA C: " + (timeB-timeA) );
 timeA = Code.getTimeMilliseconds();
 
-
-		// retract bad points locally:
-		// world.filterLocal2DF();
-
-		// global bad points
-		// world.filterGlobal2DF(3.0);
-		// prune non-unique neighborhoods ?
-		// world.setMatchAffineFromNeighborhood(); // not really seemingly helpful
-
-
-// timeB = Code.getTimeMilliseconds();
-// console.log("DELTA D: " + (timeB-timeA) );
-
-
-break; // exit early
-
 	}
 
 
-	world.debugCheckPairPointMatchCounts();
+world.debugCheckPairPointMatchCounts();
 
-
-
-	// world.estimate3DErrors(false);
-	// world.dropWorstParametersF();
-	// throw "solvePairF";
-	// if(completeFxn){
-	// 	completeFxn.call(completeContext);
-	// }
 }
 
 
@@ -8536,8 +8553,8 @@ Stereopsis.World.prototype.dropWorstParametersF = function(sigma){ // ..
 		// var limitC = min + sigma*sigmaKeepC;
 		// var limitPercent = Code.percentile(scores,limitPercent);
 		var p = 1.0-percentKeepC;
-		console.log("percent KEEP: "+percentKeepC);
-		console.log("percent REMOVE: "+p);
+		// console.log("percent KEEP: "+percentKeepC);
+		// console.log("percent REMOVE: "+p);
 		var limitC = Code.percentile(values,p);
 		// console.log(limitC);
 		Code.printMatlabArray(values);
@@ -8638,51 +8655,26 @@ errorListN.push(errorN);
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 Stereopsis.World.prototype.solvePairR = function(completeFxn, completeContext){ // pairwise
 	var world = this;
-	console.log("SOLVEPAIR");
+	console.log("SOLVEPAIRR");
 
-	// throw "solvePair"
-
-	// world.shouldValidateMatchRange(true);
 	world._completeFxn = completeFxn;
 	world._completeContext = completeContext;
-	// var maxIterations = 1;
-	// var maxIterations = 2;
-	// var maxIterations = 3;
-	// var maxIterations = 4;
-	// var maxIterations = 5;
-	// var maxIterations = 6;
-	// var maxIterations = 7;
-	// var maxIterations = 8;
-	// var maxIterations = 9;
-	// var maxIterations = 10;
 
 	var data = {};
 	data["errors"] = [];
 	data["splits"] = [5,15,25];
 	data["previousError"] = -1;
 
-
-// TESTING:
-// data["splits"] = [2]; // 0 1 2 3 4
-
-// var maxIterations = 8;
-// data["splits"] = [4]; // 0 ... 4 .... 9
-
-// var maxIterations = 6;
-// data["splits"] = [3]; // 0 1 2 [3] 4 5
-// data["splits"] = [2,4];
-
-// var maxIterations = 7;
-// data["splits"] = [1,3,5];
-
-
 var maxIterations = 4;
 data["splits"] = [1];
 
 world.printPoint3DTrackCount();
 
-
 world.debugCheckPairPointMatchCounts();
+
+
+world._retryCount = 0;
+world._maxIterationsR = maxIterations;
 
 	for(var i=0; i<maxIterations; ++i){
 		var shouldQuit = world.iterationR(i, maxIterations, data);
@@ -8714,6 +8706,8 @@ Stereopsis.World.prototype.iterationR = function(iterationIndex, maxIterations, 
 	var views = world.toViewArray();
 
 
+var maxRetriesP = 2;
+
 	var viewA = views[0];
 	var viewB = views[1];
 	var transAB = world.transformFromViews(viewA,viewB);
@@ -8741,14 +8735,14 @@ Stereopsis.World.prototype.iterationR = function(iterationIndex, maxIterations, 
 
 console.log("FIRST TIME - CHECK");
 		// world.estimate3DErrors(false); // find initial F, P, estimate all errors from this
-
+console.log("BEFORE A")
 // TODO: will existing R errors throw things off if this is not the first time ?
 
 		world.relativeFFromSamples(); // calculate F
 		world.estimateGlobalErrors();
 
 
-console.log("BEFORE B")
+
 
 
 		// var viewA = views[0];
@@ -8758,32 +8752,40 @@ console.log("BEFORE B")
 		console.log("estimateRForTransform:");
 		console.log(hasResult);
 		if(!hasResult){
-			throw "no R ..."
+			console.log( "no R ... -----------------------------------------------------------------------------------------------");
+			if(world._retryCount<maxRetriesP){
+				++world._maxIterationsR;
+				++world._retryCount;
+			}
+			viewA.absoluteTransform(new Matrix(4,4).identity());
+			viewB.absoluteTransform(new Matrix(4,4).identity());
+
+		}else{
+			console.log("SETTING 2 VIEW TRANSFORMS AS RELATIVE");
+			var R =  transAB.R(viewA,viewB);
+			viewA.absoluteTransform( new Matrix(4,4).identity() );
+			viewB.absoluteTransform( R );
+
+
+			var points3D = world.toPointArray();
+			for(var i=0; i<points3D.length; ++i){
+				var point3D = points3D[i];
+				var isValid = point3D.isValid();
+				if(!isValid){
+					console.log(points3D)
+					console.log(i)
+					console.log(point3D)
+					throw "invalid point3D Q";
+				}
+			}
+
+
+
+			world.createAllPoints3DPatches();
+
+			// now have R errors
+			world.estimateGlobalErrors();
 		}
-		console.log("SETTING 2 VIEW TRANSFORMS AS RELATIVE");
-		var R =  transAB.R(viewA,viewB);
-		viewA.absoluteTransform( new Matrix(4,4).identity() );
-		viewB.absoluteTransform( R );
-
-
-var points3D = world.toPointArray();
-for(var i=0; i<points3D.length; ++i){
-	var point3D = points3D[i];
-	var isValid = point3D.isValid();
-	if(!isValid){
-		console.log(points3D)
-		console.log(i)
-		console.log(point3D)
-		throw "invalid point3D Q";
-	}
-}
-
-
-
-		world.createAllPoints3DPatches();
-
-		// now have R errors
-		world.estimateGlobalErrors();
 
 
 	}else{
@@ -8793,14 +8795,13 @@ console.log("BEFORE B")
 		world.estimateGlobalErrors();
 
 	}
-	// absolute-relative consistency
-	world.copyRelativeTransformsFromAbsolute();
 
 
 
-world.debugCheckPairPointMatchCounts();
+var hasR = true;
 
 var points3D = world.toPointArray();
+var countHasPatch = 0;
 for(var i=0; i<points3D.length; ++i){
 	var point3D = points3D[i];
 	var isValid = point3D.isValid();
@@ -8808,22 +8809,58 @@ for(var i=0; i<points3D.length; ++i){
 		console.log(points3D)
 		console.log(i)
 		console.log(point3D)
-		world.isValidPoint3DAndPatch3D(point3D);
-		throw "invalid point3D A";
+		world.isValidPoint3DAndPatch3D(point3D, true);
+		throw "invalid point3D B";
 	}
-	if(!point3D.hasPatch()){
-		console.log(points3D);
-		console.log(i);
-		console.log(point3D);
-		throw "point not have patch A";
+	if(point3D.hasPatch()){
+		++countHasPatch;
 	}
+}
+if( !(countHasPatch==points3D.length || countHasPatch==0) ){
+	console.log(points3D)
+	// console.log();
+	console.log(countHasPatch)
+	throw "different patch counts:"
+}
+if(countHasPatch==0){
+	hasR = false;
 }
 
 
+console.log("hasR: "+hasR);
 
 
-var str = world.toYAMLString();
-console.log(str);
+	// absolute-relative consistency
+	world.copyRelativeTransformsFromAbsolute();
+
+
+
+world.debugCheckPairPointMatchCounts();
+
+// var points3D = world.toPointArray();
+// for(var i=0; i<points3D.length; ++i){
+// 	var point3D = points3D[i];
+// 	var isValid = point3D.isValid();
+// 	if(!isValid){
+// 		console.log(points3D)
+// 		console.log(i)
+// 		console.log(point3D)
+// 		world.isValidPoint3DAndPatch3D(point3D);
+// 		throw "invalid point3D A";
+// 	}
+// 	if(!point3D.hasPatch()){
+// 		console.log(points3D);
+// 		console.log(i);
+// 		console.log(point3D);
+// 		throw "point not have patch A";
+// 	}
+// }
+
+
+
+
+// var str = world.toYAMLString();
+// console.log(str);
 // throw "AFTER P";
 
 
@@ -8839,120 +8876,58 @@ world.debugCheckPairPointMatchCounts();
 		world.probe2DCellsExpandR(sigmaMaximumSelect, sigmaMaximumKeep);
 world.debugCheckPairPointMatchCounts();
 
-var points3D = world.toPointArray();
-for(var i=0; i<points3D.length; ++i){
-	var point3D = points3D[i];
-	var isValid = point3D.isValid();
-	if(!isValid){
-		console.log(points3D)
-		console.log(i)
-		console.log(point3D)
-		world.isValidPoint3DAndPatch3D(point3D, true);
-		throw "invalid point3D B";
-	}
-	if(!point3D.hasPatch()){
-		console.log(points3D);
-		console.log(i);
-		console.log(point3D);
-		throw "point not have patch B";
-	}
-}	
+// var points3D = world.toPointArray();
+// for(var i=0; i<points3D.length; ++i){
+// 	var point3D = points3D[i];
+// 	var isValid = point3D.isValid();
+// 	if(!isValid){
+// 		console.log(points3D)
+// 		console.log(i)
+// 		console.log(point3D)
+// 		world.isValidPoint3DAndPatch3D(point3D, true);
+// 		throw "invalid point3D B";
+// 	}
+// 	if(!point3D.hasPatch()){
+// 		console.log(points3D);
+// 		console.log(i);
+// 		console.log(point3D);
+// 		throw "point not have patch B";
+// 	}
+// }	
 console.log("after expand");
 		// filter
-world.debugCheckPairPointMatchCounts();
-			world.filterPairwiseErrors(2.0);
-var points3D = world.toPointArray();
-for(var i=0; i<points3D.length; ++i){
-	var point3D = points3D[i];
-	var isValid = point3D.isValid();
-	if(!isValid){
-		console.log(points3D)
-		console.log(i)
-		console.log(point3D)
-		throw "invalid point3D B1";
-	}
-	if(!point3D.hasPatch()){
-		console.log(points3D);
-		console.log(i);
-		console.log(point3D);
-		console.log( world.isValidPoint3DAndPatch3D(point3D) );
+// world.debugCheckPairPointMatchCounts();
+// 			world.filterPairwiseErrors(2.0);
+// var points3D = world.toPointArray();
+// for(var i=0; i<points3D.length; ++i){
+// 	var point3D = points3D[i];
+// 	var isValid = point3D.isValid();
+// 	if(!isValid){
+// 		console.log(points3D)
+// 		console.log(i)
+// 		console.log(point3D)
+// 		throw "invalid point3D B1";
+// 	}
+// 	if(!point3D.hasPatch()){
+// 		console.log(points3D);
+// 		console.log(i);
+// 		console.log(point3D);
+// 		console.log( world.isValidPoint3DAndPatch3D(point3D) );
 		
-		throw "point not have patch B1";
-	}
-}
-world.debugCheckPairPointMatchCounts();
+// 		throw "point not have patch B1";
+// 	}
+// }
 			world.filterGlobalErrors(2.0);
-var points3D = world.toPointArray();
-for(var i=0; i<points3D.length; ++i){
-	var point3D = points3D[i];
-	var isValid = point3D.isValid();
-	if(!isValid){
-		console.log(points3D)
-		console.log(i)
-		console.log(point3D)
-		throw "invalid point3D";
-	}
-	if(!point3D.hasPatch()){
-		console.log(points3D);
-		console.log(i);
-		console.log(point3D);
-		throw "point not have patch B2";
-	}
-}
-world.debugCheckPairPointMatchCounts();
 			world.filterNeighborConsistency2D3D();
-world.debugCheckPairPointMatchCounts();
 			world.filterNeighborConsistency2DViews();
-
-var points3D = world.toPointArray();
-for(var i=0; i<points3D.length; ++i){
-	var point3D = points3D[i];
-	var isValid = point3D.isValid();
-	if(!isValid){
-		console.log(points3D)
-		console.log(i)
-		console.log(point3D)
-		throw "invalid point3D";
-	}
-	if(!point3D.hasPatch()){
-		console.log(points3D);
-		console.log(i);
-		console.log(point3D);
-		throw "point not have patch C";
-	}
-}
-
-world.debugCheckPairPointMatchCounts();
-
 			world.filterGlobalNegativeDepth();
 			world.filterGlobalPatchVisibilityConsistency();
 			world.filterLocalError2D();
 			world.filterLocalError3D();
 			// throw "after filter"
-console.log("after filter");
-
-var points3D = world.toPointArray();
-for(var i=0; i<points3D.length; ++i){
-	var point3D = points3D[i];
-	var isValid = point3D.isValid();
-	if(!isValid){
-		console.log(points3D)
-		console.log(i)
-		console.log(point3D)
-		throw "invalid point3D";
-	}
-	if(!point3D.hasPatch()){
-		console.log(points3D);
-		console.log(i);
-		console.log(point3D);
-		throw "point not have patch D";
-	}
-}
-
-world.debugCheckPairPointMatchCounts();
 			
 			if(iterationIndex==1){
-				console.log("SUBDIVIDING");
+				console.log("SUBDIVIDING PAIR-R");
 				// subdivide
 				var subdivisionMultiplier = 0.75;
 				world.subdivideViewGridsR(subdivisionMultiplier);
@@ -8960,25 +8935,25 @@ world.debugCheckPairPointMatchCounts();
 			}
 
 
-world.debugCheckPairPointMatchCounts();
+// world.debugCheckPairPointMatchCounts();
 
-var points3D = world.toPointArray();
-for(var i=0; i<points3D.length; ++i){
-	var point3D = points3D[i];
-	var isValid = point3D.isValid();
-	if(!isValid){
-		console.log(points3D)
-		console.log(i)
-		console.log(point3D)
-		throw "invalid point3D";
-	}
-	if(!point3D.hasPatch()){
-		console.log(points3D);
-		console.log(i);
-		console.log(point3D);
-		throw "point not have patch E";
-	}
-}
+// var points3D = world.toPointArray();
+// for(var i=0; i<points3D.length; ++i){
+// 	var point3D = points3D[i];
+// 	var isValid = point3D.isValid();
+// 	if(!isValid){
+// 		console.log(points3D)
+// 		console.log(i)
+// 		console.log(point3D)
+// 		throw "invalid point3D";
+// 	}
+// 	if(!point3D.hasPatch()){
+// 		console.log(points3D);
+// 		console.log(i);
+// 		console.log(point3D);
+// 		throw "point not have patch E";
+// 	}
+// }
 
 		// refine camera location:
 
@@ -8989,135 +8964,8 @@ for(var i=0; i<points3D.length; ++i){
 
 
 
-var str = world.toYAMLString();
-console.log(str);
-
-
-
-
-// throw "process"
-
-/*
-
-	// subdivide - increase resolution
-	var shouldSubdivide = false;
-	var splits = data["splits"];
-console.log("splits: "+splits);
-	if(splits && splits.length>0){
-		var splitIndex = splits[0];
-		if(iterationIndex==splitIndex){
-			data["splits"].shift();
-			shouldSubdivide = true;
-		}
-	}
-	if(shouldSubdivide){
-		// increase cell grid resolution & update patches with smaller view angle
-		world.subdivideViewGridsR(subdivideRatio);
-		// update 2D point location precision locally using smaller cell size
-		console.log("RICHIE R-sparse - subDivideUpdateMatchLocation");
-		world.subDivideUpdateMatchLocation();
-	}
-
-	// probe 2D - search empty neighbors for more matches
-	// world.probe2DCellsR(2.0,3.0); // not very daring
-	// world.probe2DCellsR(999.0,999.0);
-	world.probe2DCellsR(2.0,2.0);
-	// world.probe2DCellsR(3.0,4.0); // maybe too daring
-	// world.probe2DCellsR(4.0,4.0);
-
-	// filter global error
-	// world.filterGlobal3DR(3.0);
-	world.filterGlobal3DR(2.0);
-
-
-	// only do this if error is low enough & most points are mostly in front already
-	// world.dropNegativePoints3D();
-
-
-	// filter locally 2D with various metrics
-	// world.filterLocal2DR();
-	// filter locally 3D with various metrics
-	// world.filterLocal3DR();
-
-
-// world.filterNullP3D();
-world.removeNullPoints3D();
-
-	world.filterCriteria2DNnot3DN();
-	world.filterCriteria2DNnotDepth();
-	world.filterCriteria2DN3DNregularization();
-
-
-	// update match affines to use neighborhood, instead of local optimized values
-	// world.setMatchAffineFromNeighborhood();
-	// world.setMatchAffineFromPatch();
-	
-	// remember previous orientations - for patch change
-	world.recordViewAbsoluteOrientationStart();
-
-	// refine camera 3D world orientations
-	// world.refineCameraPairRelativeToAbsolute(transform0, 100, true);
-	// world.copyRelativeTransformsFromAbsolute();
-	// world.relativeFFromSamples();
-	
-	// refine camera location
-	world.refineAllCameraMultiViewTriangulation(100); // pair not so much needed 10-100
-	world.copyRelativeTransformsFromAbsolute();
-
-	//
-	world.refineAllCameraKMatrixes(100);
-		console.log("update points using new camera matrixes");
-
-	// update patches from change in view orientations
-	world.updateP3DPatchesFromAbsoluteOrientationChange();
-
-
-
-
-world.debugInvestigationA();
-
-
-
-
-	// update patches now that camera locations/orientations has changed
-	// world.initAllP3DPatches();
-	
-	// ...
-	// if(isFirst){
-console.log("CHECK B");
-		world.removeNullPoints3D();
-		world.dropNegativeMatches3D();
-		world.dropNegativePoints3D();
-	// }
-
-
-	if(isLast){
-		console.log("IS LAST -- UPDATE")
-		world.subDivideUpdateMatchLocation();
-		world.recordViewAbsoluteOrientationStart();
-		world.updateP3DPatchesFromAbsoluteOrientationChange();
-
-		// refinePoint3DAbsoluteLocation
-		// world.refinePoint3DAbsoluteLocation();
-		// world.estimate3DErrors(true);
-	}
-	*/
-
 }
 
-
-// Stereopsis.World.prototype.filterNullP3D = function(points3D){
-// 	var world = this;
-// 	if(!points3D){
-// 		points3D = world.toPointArray();
-// 	}
-// 	for(var i=0; i<points3D.length; ++i){
-// 		var point3D = points3D[i];
-// 		if(!point3D.point()){
-// 			world.removePoint3D();
-// 		}
-// 	}
-// }
 
 
 
@@ -10806,6 +10654,10 @@ Stereopsis.World.prototype.reconstructionRelativeMetrics = function(){ // makes 
 		return m!==null;
 	};
 	
+
+
+
+
 	for(var i=0; i<transforms.length; ++i){
 		var transform = transforms[i];
 		var relativeAB = transform.R();
@@ -10829,6 +10681,9 @@ Stereopsis.World.prototype.reconstructionRelativeMetrics = function(){ // makes 
 			var distance = 0;
 			var point3D = match.point3D();
 			var location3D = point3D.point();
+// if(point3D.hasPatch()){
+// 	console.log("no patch - skip reconstructionRelativeMetrics - ")
+// }
 			if(!location3D){
 				console.log(match);
 				console.log(point3D);
@@ -12022,6 +11877,7 @@ var parallelViewPoint2DSpaces = context["parallelViewPoint2DSpaces"];
 				// refine - camera position
 				var iterationsUpdateViewSingle = 50;
 				world.refineSelectCameraMultiViewTriangulation(viewFocus, iterationsUpdateViewSingle);
+
 				world.copyRelativeTransformsFromAbsolute();
 
 				world.reInitPoint3DLocationPatches();
@@ -12450,16 +12306,17 @@ Stereopsis.World.prototype.checkVerifyPatches = function(){
 }
 
 
-Stereopsis.World.prototype.reInitPoint3DLocationPatches = function(){
-	var world = this;
-	var points3D = world.toPointArray();
-	for(var i=0; i<points3D.length; ++i){
-		var point3D = points3D[i];
-		var location3D = point3D.globalPoint3DLinear();
-		world.updatePoint3DLocation(point3D,location3D);
-		world.initNewPointPatch3D(point3D);
-	}
-}
+// Stereopsis.World.prototype.reInitPoint3DLocationPatches = function(){
+// SAME AS : initNewPointPatch3D
+// 	var world = this;
+// 	var points3D = world.toPointArray();
+// 	for(var i=0; i<points3D.length; ++i){
+// 		var point3D = points3D[i];
+// 		var location3D = point3D.globalPoint3DLinear(); ////////////////////////
+// 		world.updatePoint3DLocation(point3D,location3D); /////////////
+// 		world.initNewPointPatch3D(point3D);
+// 	}
+// }
 
 
 Stereopsis.World.prototype.mapCurrentViewsToOptimizationLocationGeometry = function(viewFocus, viewsAdjacent, knownViewIDs,knownPoints2D,knownPoints3D){
@@ -14573,9 +14430,9 @@ for each point & view
 Stereopsis.World.prototype.debugCheckPairPointMatchCounts = function(){
 	var world = this;
 	var transforms = world.toTransformArray();
-	console.log(transforms);
+	// console.log(transforms);
 	var transform = transforms[0];
-	console.log(transform);
+	// console.log(transform);
 	var points3D = world.toPointArray();
 	var existCount = 0;
 	for(var i=0; i<points3D.length; ++i){
@@ -14601,13 +14458,14 @@ Stereopsis.World.prototype.debugCheckPairPointMatchCounts = function(){
 Stereopsis.World.prototype.solveForTracks = function(completeFxn, completeContext){ // tracks (pairwise tested)
 	console.log("solveForTracks");
 /*
-	input: assumed semi-dense (10k-50k) matching points per image
+	input: assumed semi-dense (5k-10k) matching points per image
 	output: reduced set @ highest-calibar
 		reduces total count by filering:
-		A) highest 50% cornerness value
-		B) lowest 50% each F error
-		C) lowest 50% R error
-		D) only dominant corners in area
+		A) highest 66% cornerness value
+		B) lowest 66% each F error
+		C) lowest 66% R error
+		x D) only dominant corners in area
+		count ~ input * (0.66^3)
 		=> count ~ input * (2^-4)
 */
 
@@ -14636,16 +14494,22 @@ world.debugCheckPairPointMatchCounts();
 		}
 	}
 
-	// world.updateAbsoluteLocationsPoint3D();
+	var percentileKeepCorner = 0.75; // each point has a chance to fail -> n^2 [0.75 -> 0.56]
+	var percentileKeepR = 0.50;
+	var percentileKeepF = 0.50;
+	// var percentileKeep = 0.90;
 
 	// this.estimate3DErrors(true);
 	var desiredSamples = 1000;
-	var maxSampleSize = 1500;
+	var maxSampleSize = 1000;
 	var randomSampleSize = 1000;
 	var distanceMinimumRelative = 0.005; // 500x300 ~3
 	var limitPointsKeepMax = 1000;
-	var fxnSortNumeric = function(a,b){
+	var fxnSortSmallerFirst = function(a,b){
 		return a<b ? -1 : 1
+	};
+	var fxnSortLargerFirst = function(a,b){
+		return a>b ? -1 : 1
 	};
 	var fxnMatchToR = function(match){
 		// return match.errorR();
@@ -14654,22 +14518,38 @@ world.debugCheckPairPointMatchCounts();
 	var fxnMatchToF = function(match){
 		return match.errorF();
 	};
-	var fxnSortArray0Corner = function(a,b){
-		return a[0]>b[0] ? -1 : 1 ; // largest corner scores first
-	}
+	// var fxnSortArray0Corner = function(a,b){
+	// 	return a[0]>b[0] ? -1 : 1 ; // largest corner scores first
+	// }
 
 	// remove worst based on corner scores
 	var views = world.toViewArray();
 	for(var i=0; i<views.length; ++i){
 		var view = views[i];
+		var points = view.toPointArray();
 		var corners = view.corners();
 		var image = view.image();
 		var imageWidth = image.width();
 		var imageHeight = image.height();
-		var cornerSample = Code.randomSampleRepeatsMaximum(corners,maxSampleSize,randomSampleSize);
-			cornerSample.sort(fxnSortNumeric);
-		var limitCornerValue = Code.percentile(cornerSample, 0.5);
-		var points = view.toPointArray();
+
+		// entire image 
+		// var cornerSample = Code.randomSampleRepeatsMaximum(corners,maxSampleSize,randomSampleSize);
+
+		
+		// actual population
+		cornerSample = Code.randomSampleRepeatsMaximum(points,maxSampleSize,randomSampleSize);
+		for(var j=0; j<cornerSample.length; ++j){
+			var point = cornerSample[j];
+			var p2D = point.point2D();
+			var corner = corners[ Math.floor(p2D.y)*imageWidth + Math.floor(p2D.x) ];
+			cornerSample[j] = corner;
+		}
+			cornerSample.sort(fxnSortLargerFirst);
+// console.log(cornerSample);
+// throw "???"
+		var limitCornerValue = Code.percentile(cornerSample, percentileKeepCorner);
+// console.log("limitCornerValue: "+limitCornerValue+" @ "+percentileKeepCorner);
+		
 		// drop on low corner score
 		var dropPoints = [];
 		for(var j=0; j<points.length; ++j){
@@ -14699,12 +14579,12 @@ console.log("POINT COUNT CORNER: "+world.toPointArray().length);
 		// sample R / F
 		var samplesR = Code.randomSampleRepeatsMaximum(matches,maxSampleSize,randomSampleSize);
 			samplesR = Code.transformArray(samplesR,fxnMatchToR);
-			samplesR.sort(fxnSortNumeric);
+			samplesR.sort(fxnSortSmallerFirst);
 		var samplesF = Code.randomSampleRepeatsMaximum(matches,maxSampleSize,randomSampleSize);
 			samplesF = Code.transformArray(samplesF,fxnMatchToF);
-			samplesF.sort(fxnSortNumeric);
-		var limitR = Code.percentile(samplesR,0.50);
-		var limitF = Code.percentile(samplesF,0.50);
+			samplesF.sort(fxnSortSmallerFirst);
+		var limitR = Code.percentile(samplesR,percentileKeepR);
+		var limitF = Code.percentile(samplesF,percentileKeepF);
 		limitsF.push(limitF);
 		limitsR.push(limitR);
 	}
@@ -14740,6 +14620,10 @@ console.log("POINT COUNT CORNER: "+world.toPointArray().length);
 console.log("POINT COUNT F/R ERROR: "+world.toPointArray().length);
 	// console.log("REMAINING POINTS: "+points3D.length);
 
+	// TODO: FILTER ON N/S SCORE ?
+
+
+/*
 	// remove all points from each view & readd as long as far enough away from existing points
 	var views = this.toViewArray();
 	for(var i=0; i<views.length; ++i){
@@ -14795,7 +14679,7 @@ console.log("POINT COUNT F/R ERROR: "+world.toPointArray().length);
 		}
 	}
 	console.log("POINT COUNT END: "+world.toPointArray().length);
-
+*/
 
 	// TODO: only need 3D locations, not patches
 	world.createAllPoints3DPatches();
@@ -18255,7 +18139,15 @@ Stereopsis.World.prototype.estimateGlobalErrors = function(){
 		var errorF = point3D.averageFError();
 		var errorN = point3D.averageNCCError();
 		var errorS = point3D.averageSADError();
-		errorsR.push(errorR);
+		if(!point3D.isValid()){
+			console.log(points3D);
+			console.log(i);
+			console.log(point3D);
+			throw "point not valid";
+		}
+		if(errorR!==undefined){
+			errorsR.push(errorR);
+		}
 		errorsF.push(errorF);
 		// TODO: if image is mssing: errors N & S wont exist (0) & skew results
 		if(errorN){
@@ -18266,11 +18158,21 @@ Stereopsis.World.prototype.estimateGlobalErrors = function(){
 		}
 	}
 	// summary statistics
-
+// console.log("errorsR length: "+errorsR.length);
+// console.log(errorsR);
 	var rMean = Code.mean(errorsR);
 	var rMin = Code.min(errorsR);
 	var rSigma = Code.stdDev(errorsR, rMin);
 	// console.log(rMean,rSigma);
+
+if(Code.isNaN(rSigma)){
+	console.log(points3D);
+	console.log(errorsR);
+	console.log(rMin);
+	console.log(rMean);
+	console.log(rSigma);
+	throw " why NaN";
+}
 
 	var fMean = Code.mean(errorsF);
 	var fMin = Code.min(errorsF);
@@ -18301,7 +18203,7 @@ Stereopsis.World.prototype.estimateGlobalErrors = function(){
 
 
 	console.log("GLOBAL ERRORS: ");
-	console.log("               R: "+world.globalErrorRMean()+" +/- "+world.globalErrorRMean()+" ... ");
+	console.log("               R: "+world.globalErrorRMean()+" +/- "+world.globalErrorRSigma()+" ... ");
 	console.log("               F: "+world.globalErrorFMean()+" +/- "+world.globalErrorFSigma()+" ... ");
 	console.log("               N: "+world.globalErrorNMean()+" +/- "+world.globalErrorNSigma()+" ... ");
 	console.log("               S: "+world.globalErrorSMean()+" +/- "+world.globalErrorSSigma()+" ... ");
@@ -18785,7 +18687,7 @@ Stereopsis.ransacTransformR = function(transform){
 
 	if(!P){
 		console.log("no P = try again ?");
-		throw "..."
+		// throw "..."
 		return null;
 	}
 
@@ -18800,10 +18702,10 @@ Stereopsis.ransacTransformR = function(transform){
 	console.log("LINEAR P: ");
 	var percentInFront = Stereopsis.checkPointsLocation(A, B, KaInv,KbInv, bestPointsA,bestPointsB);
 	console.log("%1: "+percentInFront);
-	// var minPercentInFront = 0.5;
-	var minPercentInFront = 0.75;
+	var minPercentInFront = 0.5;
+	// var minPercentInFront = 0.75;
 	if(percentInFront<minPercentInFront){ // try F again
-		throw "not enough in front 1 "+percentInFront;
+		console.log("not enough in front 1 "+percentInFront);
 		return null;
 	}
 
@@ -18828,7 +18730,7 @@ Stereopsis.ransacTransformR = function(transform){
 	var percentInFront = Stereopsis.checkPointsLocation(A, B, KaInv,KbInv, bestPointsA,bestPointsB);
 	console.log("%: "+percentInFront);
 	if(percentInFront<minPercentInFront){ // try F again
-		throw "not enough in front 2 "+percentInFront;
+		console.log("not enough in front 2 "+percentInFront);
 		return null;
 	}
 	return P;
@@ -18898,11 +18800,11 @@ Stereopsis.ransacTransformF = function(transform, maximumSamples, skipP, onlyBes
 	console.log("CALCULATE F -> P : "+pointsA.length+" points");
 	if(points3D.length>minimumTransformMatchCountF){
 		// get initial F
-		console.log("   INITIAL F : "+F);
+		// console.log("   INITIAL F : "+F);
 		var maxPointsF = 200;
 		var info = R3D.fundamentalFromUnnormalizedMaxCheck(pointsA,pointsB, maxPointsF);
 		var F = info["F"];
-		console.log("   RESULTING F : "+F);
+		// console.log("   RESULTING F : "+F);
 		var bestPointsA = pointsA;
 		var bestPointsB = pointsB;
 		if(!skipP && bestPointsA.length>minimumTransformMatchCountR){
@@ -20233,6 +20135,8 @@ Stereopsis.World.prototype.probe2DCellsExpandR = function(sigmaMaximumSelect, si
 		var doR = true;
 		if(!errorRmean || !errorRsigma){
 			doR = false;
+			errorRmean = 0;
+			errorRsigma = 0;
 		}
 
 		maxCheckErrorR = errorRmean + sigmaMaximumSelect*errorRsigma;
@@ -20245,6 +20149,7 @@ Stereopsis.World.prototype.probe2DCellsExpandR = function(sigmaMaximumSelect, si
 		maxNewErrorS = errorSmean + sigmaMaximumNew*errorSsigma;
 		
 		console.log("allowed max errors: R: "+maxCheckErrorR+" F: "+maxCheckErrorF+" | N: "+maxCheckErrorN+" | S: "+maxCheckErrorS+" ("+matchCount+") ");
+		console.log(" doR: "+doR);
 
 		var viewsA = [viewA,viewB];
 		var viewsB = [viewB,viewA];
@@ -21756,7 +21661,7 @@ Stereopsis.World.prototype.filterPairwiseErrors = function(sigmaMaximumDrop){ //
 		var limitR = meanR!==null ? (meanR + sigmaR*limitMatchSigmaR) : 0;
 		var doR = meanR!==null;
 
-console.log("doR: "+doR);
+// console.log("doR: "+doR);
 		for(var j=0; j<matches.length; ++j){
 			var match = matches[j];
 			var errorF = match.errorF();
@@ -21799,9 +21704,6 @@ Stereopsis.World.prototype.filterGlobalErrors = function(sigmaMaximumDrop){ // d
 		}
 	}
 	console.log("filterGlobalErrors: DROPPING: "+dropList.length);
-
-	// ...
-console.log("RICHIE")
 	for(var p=0; p<dropList.length; ++p){
 		var point3D = dropList[p];
 		world.disconnectPoint3D(point3D, true);
@@ -21827,10 +21729,12 @@ Stereopsis.World.prototype.filterNeighborConsistency2D3D = function(){ // drop i
 			continue;
 		}
 		if(!point3D.hasPatch()){
-			console.log(points3D);
-			console.log(i);
-			console.log(point3D);
-			throw "no patch exists";
+			console.log("no patch exists - skip");
+			break;
+			// console.log(points3D);
+			// console.log(i);
+			// console.log(point3D);
+			// throw "no patch exists";
 		}
 		var location3D = point3D.point();
 		var size3D = point3D.size();
@@ -22201,6 +22105,10 @@ Stereopsis.World.prototype.filterGlobalNegativeDepth = function(sigmaMaximumDrop
 	var dropList = [];
 	for(var i=0; i<points3D.length; ++i){
 		var point3D = points3D[i];
+		if(!point3D.hasPatch()){
+			console.log("no patch - skip filterGlobalNegativeDepth");
+			break;
+		}
 		var location3D = point3D.point();
 		var views = point3D.toViewArray();
 		for(var j=0; j<views.length; ++j){
@@ -23854,12 +23762,6 @@ Stereopsis.World.prototype.embedPoints3DNoValidation = function(points3D){
 		this.embedPoint3DNoValidation(point3D);
 	}
 }
-// Stereopsis.World.prototype.embedPoints3DNoValidation = function(points3D){
-// 	for(var i=0; i<points3D.length; ++i){
-// 		var point3D = points3D[i];
-// 		this.embedPoint3DNoValidation(point3D);
-// 	}
-// }
 Stereopsis.World.prototype.embedPoint3DNoValidation = function(point3D){
 	// throw "this is connect point"
 	this.connectPoint3D(point3D);
@@ -26190,7 +26092,8 @@ Stereopsis.World.prototype.disposePoint3DAncestor = function(point3D){ // remove
 }
 Stereopsis.World.prototype.killPoint3D = function(point3D){ // free memory
 	if(point3D._killed){
-		throw "point was already killed";
+		// throw "point was already killed";
+		console.log("point was already killed");
 	}
 	var matches = point3D.toMatchArray();
 	var points2D = point3D.toPointArray();
@@ -27723,7 +27626,13 @@ console.log("SCALE THIS?")
 					var viewB = relativeTransform.viewB();
 					objectTransform["A"] = viewA.data();
 					objectTransform["B"] = viewB.data();
-					objectTransform["transform"] = Matrix.relativeWorld(viewA.absoluteTransform(),viewB.absoluteTransform());
+					var absA = viewA.absoluteTransform();
+					var absB = viewB.absoluteTransform();
+					trans = null;
+					if(absA && absB){
+						trans = Matrix.relativeWorld(absA,absB);
+					}
+					objectTransform["transform"] = trans;
 					// objectTransform["transform"] = R3D.relativeTransformMatrix2(viewA.absoluteTransform(),viewB.absoluteTransform());
 					objectTransforms.push(objectTransform);
 				}

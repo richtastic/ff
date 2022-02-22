@@ -500,6 +500,117 @@ OUTPUT:
 
 
 
+=> go back to why final graph didn't have all 10 images & why a bunch of pairs were not included
+
+
+
+=> connected graph: sequential/graph.yaml -> did not have enough connectivity to include all images
+
+
+=> what are the pairs used ?
+	=> are the point matches good?
+	=> are the track matches good?
+
+
+- for structure optimizing on point location differences:
+	=> add outlier (3D distance sigma dropping)
+
+
+
+TRACK [5] STARTING POINTS: 1151
+
+
+
+
+groups:
+	-
+		views:
+			- "2W6ECNGK"
+			- "WB5ZRG8U"
+			- "F7VU2LIQ"
+			- "LJHF328H"
+			- "YSV6VXF3"
+		edges:
+			-
+				A: "F7VU2LIQ"
+				B: "LJHF328H"
+			-
+				A: "2W6ECNGK"
+				B: "WB5ZRG8U"
+			-
+				A: "WB5ZRG8U"
+				B: "YSV6VXF3"
+			-
+				A: "LJHF328H"
+				B: "2W6ECNGK"
+		filename: "track_0.yaml"
+
+
+NOT INCLUDED:
+	-
+		id: "2W6ECNGK-F7VU2LIQ"
+		A: "F7VU2LIQ"
+		B: "2W6ECNGK"
+		error: 0.005773549603548021
+		count: 897
+	-
+		id: "F7VU2LIQ-WB5ZRG8U"
+		A: "WB5ZRG8U"
+		B: "F7VU2LIQ"
+		error: 0.0012879566242573752
+		count: 1125
+	-
+		id: "LJHF328H-WB5ZRG8U"
+		A: "LJHF328H"
+		B: "WB5ZRG8U"
+		error: 0.0019552429222714
+		count: 1190
+	-
+		id: "WB5ZRG8U-YSV6VXF3"
+		A: "WB5ZRG8U"
+		B: "YSV6VXF3"
+		error: 0.014127948430625105
+		count: 1536
+
+
+- incorporate an error (per pair source) when optimizing reprojection error ?
+- save the pair data in tracks
+
+
+_iterateSparseDenseLoaded
+_iterateSparseTracks
+
+
+
+- use dense/sparse process still
+- tracks
+- use graph data for track pair error values
+- do we still want sequential at some point ?
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+- tracks F /R / .. errors seem to be too lenient ?
+
+- transform & world errors are different ?
+=> WHICH TO USE?
+
+=> ALLOW MORE POINTS TO BECOME TRACKS
+
+=> CORNER DROP COUNT IS REMOVING A LOT
+
+
+
 
 - match & point counts different ........
 
@@ -511,11 +622,68 @@ initNewPointPatch3D
 - point to keep track if it is embedded or not
 
 
+sparse track count:
+	200 @ 0.1
+	38,43 @ 0.9
+	72 @ 1.5
+	70 @ 0.8
+	69 @.3
+	... half size
+	107 @ 0.05
+	68 @ 0.02
+	106 @ 0.8
+	104 @ 1.3
+	109 @ 0.06
+	106 @ .12
+
+.......... NEW:
+	1636 -> 244 @ 0.02
 
 
-- tracks F /R / .. errors seem to be too lenient ?
+only get a small section of the image: 1k-5k points
+300 - 1500
 
-- transform & world errors are different ?
+=> 200 - 500 points sounds OK
+
+10 views = 33 sparse pairs, @ 100 each => 3.3k
+
+10 x 3 x N, 200-500 sample
+
+
+
+
+- sparse tracks can't be optimized in groups by geometry optimizing [100-500 per pair]
+	=> keep the point pairs separate
+	=> optimize on reprojection error
+
+- dense tracks can somewhat use geometry optimizing [1k-2k per pair]
+
+
+- WHEN IS THE CAMERA CALIBRATED?
+
+
+
+
+
+
+- SUMMARY & FEATURE EXTRACTION
+- ROUGH DATABASE MATCHING -> POTENTIAL PAIRS (+ERROR)
+- SPARSE PAIRS -> TRACKS + COARSE VIEW PAIRS
+- SPARSE BUNDLE -> COARSE ABSOLUTE ALL VIEWS [reproj]
+- DENSE PAIRS -> TRACKS + DENSE PUTATIVES
+- DENSE BUNDLE -> ABSOLUTE ALL GEOMETRY CONSISTENCY [reproj + geo]
+	-> hoping this makes the geometry really good
+- SEQUENCE -> ANOTHER ATTEMPT AT GEOMETRY CONSISTENCY
+- GROUPS -> DENSE POINT CLOUDS
+
+
+
+
+
+
+
+
+
 
 
 point/patch consistency/updates

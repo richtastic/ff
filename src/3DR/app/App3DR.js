@@ -8168,7 +8168,7 @@ console.log("GOT : relative: "+relativeCount);
 
 			if(relativeAB){ // dense
 				// console.logx(camAID,camBID,cameras);
-				// throw "this is for dense"
+				throw "this is for dense"
 				console.log(relativeAB);
 				configuration = {};
 				project.calculatePairMatchWithRFromViewIDs(idA,idB, relativeAB, camAID,camBID,cameras, completePairFxn,project, configuration);
@@ -10707,6 +10707,8 @@ App3DR.ProjectManager.prototype._iterateSparseTracks = function(sourceData, sour
 	}
 
 
+// throw "_iterateSparseTracks";
+
 // make higher rates of intersection:
 // cellCount = 20;
 
@@ -10795,8 +10797,11 @@ App3DR.ProjectManager.prototype._iterateSparseTracks = function(sourceData, sour
 	console.log("bundleSequentialFile: "+bundleSequentialFile);
 	console.log("bundleSequentialError: "+bundleSequentialError);
 
+console.log("isDense: "+isDense);
 
-// throw "here ... LAST STEP IS NOW sequential";
+if(isDense){
+//throw "here ... LAST STEP IS NOW sequential";
+//}
 
 		console.log(loadPairIndex,loadGroupIndex,bundleGroupIndex,bundleFullIndex);
 
@@ -10805,19 +10810,19 @@ App3DR.ProjectManager.prototype._iterateSparseTracks = function(sourceData, sour
 		if(bundleSequentialError!==null){
 			throw "bundleSequentialError - new dense is done -> project start surfaces"
 		}
-
+//???
 		if(bundleSequentialFile!==null){
 			// throw "bundleSequentialFile - iterate on sequential file"
 			var filename = "" + (isDense ? "dense" : "sparse") + "/" + bundleSequentialFile;
 			project._iterateGraphSequential(sourceData, sourceFilename, filename);
 			return;
 		}
-
+}
 		// if(bundleFullError!==null){
 		// 	throw "bundleFullError set -> create/init the sequential file"
 		// 	// throw "already done .. should have putatives saved into main info.yaml"
 		// }
-
+// throw "bundle things?"
 		if(bundleFullIndex>=graphPairs.length){ // done loading all pairs into track full file
 			console.log("bundle adjust full file ...");
 			// - bundle-adjust
@@ -10873,7 +10878,7 @@ console.log("ITERATION NUMBER: "+baIterations+" / "+maxIterationsBA);
 
 
 console.log("isDone - FULL DONE");
-// throw "BEFORE HANDLE DONE TRACK FULL BA "
+throw "BEFORE HANDLE DONE TRACK FULL BA "
 
 // show the graph:
 var orderedAbsoluteTransforms = [];
@@ -11027,7 +11032,7 @@ SEQUENTIAL:
 
 
 
-					throw "start sequential sequence"
+					throw "start sequential sequence???"
 					// if(!isDense){
 					// 	project.setSparseCount(solutionPairCount);
 					// }else{
@@ -11114,7 +11119,13 @@ console.log(allViews);
 				// optimize view orientation
 				var doWorldViewSolve = isDense;
 				// var doWorldViewSolve = true;
-				var info = world.solveOptimizeSingleView(worldView, 3, doWorldViewSolve); // ONLY LOCAL OPTIMIZING, NO GLOBAL
+
+
+console.log("sourceData");
+console.log(sourceData);
+
+throw "before solveOptimizeSingleView????"
+				var info = world.solveOptimizeSingleViewWhat(worldView);
 				console.log(info);
 				nextViewBA["deltaErrorR"] = Math.abs(info["deltaR"]); // expected always negative
 				nextViewBA["errorR"] = info["errorR"];
@@ -11122,7 +11133,7 @@ console.log(allViews);
 				nextViewBA["updated"] = Code.getTimeMilliseconds();
 var str = world.toYAMLString();
 console.log(str);
-// throw "before save optimizing full track full ..............";
+throw "before save optimizing full track full ..............";
 				
 				// update views:
 				var worldObject = world.toObject();
@@ -11902,7 +11913,7 @@ var maxIterationsBA = 1*baViews.length;
 
 				if(isDone){
 					console.log("track group isDone");
-// throw "before handle done tracks - skeleton - track_0";
+throw "before handle done tracks - skeleton - track_0";
 					graphData["bundleGroupIndex"] = bundleGroupIndex + 1;
 					// VIEWS
 					var graphTransforms = [];
@@ -11972,23 +11983,23 @@ console.log(graphGroup);
 
 // throw "here B";
 				// world.setResolutionProcessingModeNonVisual();
-				world.setResolutionProcessingModeBest();
-				world.copyRelativeTransformsFromAbsolute();
+				// world.setResolutionProcessingModeBest();
+				// world.copyRelativeTransformsFromAbsolute();
 				// world.resolveIntersectionByPatchGeometry();
 				// add points
 				console.log(baPoints);
 				var points3DExisting = App3DR.ProjectManager._worldPointFromSaves(world, baPoints, WORLDVIEWSLOOKUP);
 				console.log(points3DExisting);
-				
+// throw "here C";
 				// set points from existing P3D data - already loaded & calculated before
-				world.initAffineFromP3DPatches(points3DExisting);
-				world.initAllP3DPatches(points3DExisting);
+				// world.initAffineFromP3DPatches(points3DExisting);
+				// world.initAllP3DPatches(points3DExisting);
 				world.embedPoints3DNoValidation(points3DExisting);
 				// world.embedPoints3D(additionalPoints);
 
-				world.relativeFFromSamples();
-				world.estimate3DErrors(true);
-				world.printPoint3DTrackCount();
+				// world.relativeFFromSamples();
+				// world.estimate3DErrors(true);
+				// world.printPoint3DTrackCount();
 
 				// pick view to optimize:
 				if(nextViewBA){
@@ -12000,12 +12011,33 @@ console.log(graphGroup);
 
 					// optimize view orientation
 	// throw "BEFORE OPTIMIZE SINGLE VIEW - group 0"
-					var info = world.solveOptimizeSingleView(worldView);
+
+
+	console.log(graphData);
+
+
+	var pairInfo = graphData["pair"];
+
+	// throw "before solveOptimizeSingleViewReprojection"
+
+				for(var its=0; its<5; ++its){
+
+					var views = world.toViewArray();
+					for(var v=0; v<views.length; ++v){
+						console.log(" ...................................................................................................... "+v)
+						var view = views[v];
+						world.solveOptimizeSingleViewReprojection(view, pairInfo);
+					}
+				}
+
+
+
+				// var info = world.solveOptimizeSingleViewReprojection(worldView, pairInfo);
 
 var str = world.toYAMLString();
 console.log(str);
-					console.log(info);
-	// throw "AFTER OPTIMIZE"
+
+	throw "AFTER OPTIMIZE"
 					nextViewBA["deltaErrorR"] = Math.abs(info["deltaR"]); // expected always negative
 					nextViewBA["errorR"] = info["errorR"];
 					nextViewBA["updated"] = Code.getTimeMilliseconds();//Code.getTimeStampFromMilliseconds();
@@ -12042,8 +12074,8 @@ console.log(str);
 			throw " more than ?"
 		}
 // 
-		console.log("here for what reason?")
-throw "..."
+		// console.log("here for what reason?")
+// throw "..."
 		var graphGroup = graphGroups[loadGroupIndex];
 		console.log("graphGroup");
 		console.log(graphGroup);
@@ -12188,19 +12220,16 @@ console.log("RICHIE - bestNextViews: "+bestNextViews.length);
 			console.log("loadViews:");
 			console.log(loadViews);
 			// start async loading
-			var expectedImages = loadViews.length; // TODO: VIEW'S AREN'T USED
+			// var expectedImages = loadViews.length; // TODO: VIEW'S AREN'T USED
+			var expectedImages = 0;
 			var expectedTracks = loadPairs.length;
 			var loadedImages = 0;
 			var loadedTracks = 0;
-
-// throw "HERE - combine ? ---- LOAD AT LEAST 2 PAIR IMAGES ?"
-
 			// handlers
 			var loadedReadyCheck = function(){
 				console.log("loadedReadyCheck: "+loadedImages+"/"+expectedImages+" && "+loadedTracks+"/"+expectedTracks);
 				if(loadedImages==expectedImages && loadedTracks==expectedTracks){
 					console.log("combine the point tracks: "+loadedImages+"/"+expectedImages+" && "+loadedTracks+"/"+expectedTracks);
-// throw "do track point add"
 					doWorldTrackAdd();
 				}
 			}
@@ -12230,6 +12259,7 @@ console.log("RICHIE - bestNextViews: "+bestNextViews.length);
 			}
 			
 			// load images
+			/*
 			console.log("load images");
 			for(var i=0; i<loadViews.length; ++i){
 				var viewID = loadViews[i];
@@ -12237,10 +12267,11 @@ console.log("RICHIE - bestNextViews: "+bestNextViews.length);
 				view.loadTrackImage(loadedImageComplete, project);
 				// view.loadDenseLoImage(loadedImageComplete, project);
 			}
+			*/
+
 			// insert original track points
 			console.log(loadPairs);
 
-throw "combine points into tracks better ... ???????????"
 
 			console.log("load merging tracks: pair");
 			for(var i=0; i<loadPairs.length; ++i){
@@ -12288,8 +12319,6 @@ for(var i=0; i<graphGroupViews.length; ++i){
 // console.log(graphGroupViews.length);
 // console.log(graphGroupViews);
 // throw "..."
-
-
 				var views = [];
 				var images = [];
 				var cellSizes = [];
@@ -12346,11 +12375,6 @@ for(var i=0; i<graphGroupViews.length; ++i){
 				console.log("copyRelativeTransformsFromAbsolute");
 				world.copyRelativeTransformsFromAbsolute();
 
-				// world.resolveIntersectionByPatchVisuals();
-				// console.log("resolveIntersectionByPatchGeometry");
-				// world.resolveIntersectionByPatchGeometry();
-				
-
 				// insert current points
 				console.log(trackData);
 				var existingPoints = Code.valueOrDefault(trackData["points"], []);
@@ -12360,12 +12384,12 @@ for(var i=0; i<graphGroupViews.length; ++i){
 
 
 
-throw "EMBED TRACK POINTS ? 0 is this for FULL TRACK ?"
+// throw "EMBED TRACK POINTS ? 0 is this for FULL TRACK ?"
 // world.setResolutionProcessingModeNonVisual();
 
 
 // defaults to geometry & uses images where possible
-world.resolveIntersectionByDefault();
+// world.resolveIntersectionByDefault();
 
 				// 
 
@@ -12385,104 +12409,21 @@ world.resolveIntersectionByDefault();
 				// ADDITIONAL POINTS NEED ALL 3D VARS RECALCULATED
 console.log("add additional points");
 console.log(additionalPoints);
+				
 
-
-
-// world.setResolutionProcessingModeNonVisual();
-// world.setResolutionProcessingModeNonVisual();
-
-// world.initP3DPatchFromVisual();
-//	this.initP3DPatchFromGeometry3D(point3D);
-// 	this.updateP3DPatchFromVisual(point3D);
-
-
-				// create basic naive patches
-				world.setResolutionProcessingModeFromOnly2D();
-				world.initAllP3DPatches(additionalPoints);
-				world.initAffineFromP3DPatches(additionalPoints);
-
-
-				// world.initAffineFromP3DPatches(additionalPoints);
-
-
-// Stereopsis.World.prototype.initP3DPatchFromGeometry3D = function(point3D){
-
-// world.initMatchAffinesFromP3D(additionalPoints); /// ......
-
-
-// throw "??????????"
-// throw "matches need to have affine created before patches can be created"
-// use normal for direction
-// use size for projection
-
-// initAllP3DPatches
-				// world.initAllP3DPatches(additionalPoints);
-// console.log("set initAffineFromP3DPatches from patches");
-				// world.initAffineFromP3DPatches(additionalPoints);
-				// console.log(additionalPoints);
-
-// console.log(existingPoints);
+				world.createAllPoints3DPatches(additionalPoints);
+				// world.embedPoints3D(additionalPoints); // TODO: COMBINED TRACKS -- should have images loaded?
+				world.embedPoints3DNoValidation(additionalPoints); // TODO: ONLY PAIRWISE TRACKS
 				// add original points no intersection:
 				var points3DExisting = App3DR.ProjectManager._worldPointFromSaves(world, existingPoints, worldViewLookup);
-
 				// EXISTING POINTS HAVE ALREADY BEEN CALCULATED
-
 				console.log(points3DExisting);
 
-				// throw "is patch data existing ^";
-
-				// have patch, but need to regenerate affine:
-				// world.setResolutionProcessingModeNonVisual();
-				// world.setResolutionProcessingModeFromCountP3D([]);
-				world.setResolutionProcessingModeBest();
-				world.initAffineFromP3DPatches(points3DExisting);
-
-
-				// world.initAllP3DPatches(points3DExisting); // SHOULD ALREADY BE SET?
 				
-				// console.log(points3DExisting);
-
-				// throw "huh?";
-
-				// patches should already be set from previous steps?
-				console.log("old");
+				
+				// include for aggregation
 				world.embedPoints3DNoValidation(points3DExisting);
 
-
-// throw "how to combine track points ............"
-				// add new points with intersection:
-				console.log("new");
-// console.log("UNDO NO VALIDATION FOR TRACK POINTS 2");
-				
-
-
-// throw "HERE - BEFORE ADDING NEW POINTS";
-
-				world.setResolutionProcessingModeBest(); // this was selected earlier
-
-// A) only 2 images loaded -> OLD POINTS = BASE, NEW POINTS = FIND LOCATION OF
-// B) 4-6 images [including 2 for new points], OLD POINTS ARE STILL BASE, BUT NEW LOCATION IS NOW AVERAGE
-
-				world.embedPoints3D(additionalPoints); // TODO: ADD THIS BACK
-// world.embedPoints3DNoValidation(additionalPoints); // TODO: REMOVE THIS
-
-/*
-setResolutionProcessingModeBest
-	setResolutionProcessingModeFromCountP3D
-		resolutionProcessingModeLow
-			this._resolutionProcessingModePatchInit = this.initP3DPatchFromVisual;
-			this._resolutionProcessingModePatchUpdate = this.updateP3DPatchFromVisual;
-			this._resolutionProcessingModeAffineSet = this._resolutionProcessingModeAffineFromPatch3D;
-
-this.resolveIntersection = this._resolveIntersectionDefault;
-	_resolveIntersectionLayered
-*/
-
-// throw " done setResolutionProcessingModeBest ..."
-				world.relativeFFromSamples();
-				
-				world.estimate3DErrors(true);
-				world.printPoint3DTrackCount();
 
 				var worldObject = world.toObject();
 				trackData["points"] = worldObject["points"];
@@ -13645,9 +13586,9 @@ App3DR.ProjectManager.prototype.calculatePairMatchFromViewIDs = function(viewAID
 		settings["maximumErrorFInit"] = 0.04; // 0.02 @ 500 = 10 -- initial F estimate [~100 features]
 		settings["maximumErrorFDense"] = 0.02; // 0.01 @ 500 = 5 -- dense F estimate [~500 features]
 		settings["maximumErrorRDense"] = 0.015; // ?
-		settings["maximumErrorTracksF"] = 0.01; // 0.01 @ 500 = 5 -- final stereopsis estimate F
-		settings["maximumErrorTracksR"] = 0.01; // 0.01 @ 500 = 5 -- final stereopsis estimate R
-		settings["minimumCountTrackFinal"] = 100; // 1k-10k REGULAR => 100-1k track
+		settings["maximumErrorTracksF"] = 0.005; // 0.01 @ 500 = 5 -- final stereopsis estimate F
+		settings["maximumErrorTracksR"] = 0.005; // 0.01 @ 500 = 5 -- final stereopsis estimate R
+		settings["minimumCountTrackFinal"] = 50; // 1k-10k REGULAR => 100-1k track
 
 		// settings["minimumCountFInit"] = 20; // fwd-bak matches -- 25-50-100
 		// settings["maximumErrorFInit"] = 0.01; // 0.02 @ 500 = 10 -- initial F estimate [~100 features]
@@ -13695,7 +13636,8 @@ App3DR.ProjectManager.prototype.calculatePairMatchFromViewIDs = function(viewAID
 	}
 	var fxnC = function(){ // load matching Image A
 		// viewA.loadMatchingImage(function(){
-		viewA.loadDenseHiImage(function(){
+		viewA.loadDenseLoImage(function(){
+		// viewA.loadDenseHiImage(function(){
 			// imageA = viewA.matchingImage();
 			imageA = viewA.anyLoadedImage();
 			fxnReadyCheck();
@@ -13703,7 +13645,8 @@ App3DR.ProjectManager.prototype.calculatePairMatchFromViewIDs = function(viewAID
 	}
 	var fxnD = function(){// load matching Image B
 		// viewB.loadMatchingImage(function(){
-		viewB.loadDenseHiImage(function(){
+		viewB.loadDenseLoImage(function(){
+		// viewB.loadDenseHiImage(function(){
 			// imageB = viewB.matchingImage();
 			imageB = viewB.anyLoadedImage();
 			fxnReadyCheck();
@@ -13987,8 +13930,8 @@ console.log("DOES THIS WORK RIGHT?:")
 
 // throw "here ????????? - repackage as A/B/C"
 
-
-GLOBALSTAGE.root().matrix().scale(0.50);
+GLOBALSTAGE.root().matrix().scale(1.0);
+// GLOBALSTAGE.root().matrix().scale(0.50);
 // GLOBALSTAGE.root().matrix().scale(0.250);
 
 
@@ -14119,7 +14062,7 @@ world.debugCheckPairPointMatchCounts();
 				// for(var m=0; m<matches.length; ++m){
 				// 	var match = matches[m];
 				// }
-				console.log("insert: "+i);
+				// console.log("insert: "+i);
 				world.recursiveEmbedPoint3D(point3D);
 world.debugCheckPairPointMatchCounts();
 			}
@@ -14130,16 +14073,17 @@ world.debugCheckPairPointMatchCounts();
 			var result = world.solvePairF();
 			console.log(result);
 
-			// world.showForwardBackwardPair();
-			// throw "BEFORE NEXT F -> R"
+// world.showForwardBackwardPair();
+// throw "BEFORE NEXT F -> R"
 
 			var transform0 = world.transformFromViews(view0,view1);
 			var fErrorSigma = transform0.fSigma();
 			var fErrorMean = transform0.fMean();
-			console.log("F PAIR RESULT ERROR MEAN: "+fErrorMean+" & SIGMA: "+fErrorMean+" / "+maxErrorFDensePixels);
+			var fErrorLimit = fErrorMean + fErrorSigma;
+			console.log("F PAIR RESULT ERROR MEAN: "+fErrorMean+" & SIGMA: "+fErrorSigma+" / "+maxErrorFDensePixels);
 
-			if(fErrorSigma>maxErrorFDensePixels){
-				console.log("F ERROR TOO HIGH1 : "+fErrorMean+" > "+maxErrorFDensePixels);
+			if(fErrorLimit>maxErrorFDensePixels){
+				console.log("F ERROR TOO HIGH1 : "+fErrorLimit+" - "+" > "+maxErrorFDensePixels);
 				goodEnoughMatches = false;
 			}
 		}
@@ -14191,15 +14135,22 @@ world.showForwardBackwardPair();
 			var transform0 = world.transformFromViews(view0,view1);
 			var fErrorSigma = transform0.fSigma();
 			var fErrorMean = transform0.fMean();
-			console.log("F PAIR RESULT ERROR MEAN: "+fErrorMean+" & SIGMA: "+fErrorMean+" / "+maxErrorFDensePixels);
+			var fErrorLimit = fErrorMean + fErrorSigma;
+			console.log("F PAIR RESULT ERROR MEAN: "+fErrorMean+" & SIGMA: "+fErrorSigma+" / "+maxErrorFDensePixels);
 			var rErrorSigma = transform0.rSigma();
 			var rErrorMean = transform0.rMean();
-			console.log("R PAIR RESULT ERROR MEAN: "+rErrorMean+" & SIGMA: "+rErrorMean+" / "+maxErrorRDensePixels);
+			var rErrorLimit = rErrorMean + rErrorSigma;
+			if(Code.isNaN(rErrorSigma)){
+				rErrorSigma = 0;
+				rErrorMean = 0;
+				rErrorLimit = maxErrorRDensePixels+1;
+			}
+			console.log("R PAIR RESULT ERROR MEAN: "+rErrorMean+" & SIGMA: "+rErrorSigma+" / "+maxErrorRDensePixels);
 
 			// goodEnoughMatches = true; // already the case
-			if(rErrorSigma>maxErrorFDensePixels || rErrorSigma>maxErrorRDensePixels){
-				console.log("F ERROR TOO HIGH 2: "+fErrorMean+" > "+maxErrorFDensePixels);
-				console.log("R ERROR TOO HIGH 2: "+rErrorMean+" > "+maxErrorRDensePixels);
+			if(fErrorSigma>maxErrorFDensePixels || rErrorSigma>maxErrorRDensePixels){
+				console.log("F ERROR TOO HIGH 2: "+fErrorLimit+" > "+maxErrorFDensePixels);
+				console.log("R ERROR TOO HIGH 2: "+rErrorLimit+" > "+maxErrorRDensePixels);
 				goodEnoughMatches = false;
 			}
 		}
@@ -14207,8 +14158,6 @@ world.showForwardBackwardPair();
 		// R - TRACKS - WORLD
 		if(goodEnoughMatches){
 			console.log("START WORLD TO FIND TRACKS R");
-
-
 			var transform = world.transformFromViews(view0,view1);
 				var count = transform.matches().length; // doesn't count if P has 0 matches
 				var matches = transform.matches();
@@ -14237,7 +14186,7 @@ world.showForwardBackwardPair();
 			console.log(reconstructionMetric);
 
 			if(errorRMean>1.0){
-					console.log("errorRMean way too big, at most 1.0 px => likely wrong ordering in Z-depth");
+				console.log("errorRMean way too big, at most 1.0 px => likely wrong ordering in Z-depth");
 			}
 			var errorR = (transform.rSigma() + transform.rMean());
 			var errorF = (transform.fSigma() + transform.fMean());
@@ -14263,21 +14212,6 @@ world.showForwardBackwardPair();
 			console.log("F: "+world.globalErrorFMean()+" +/- "+world.globalErrorFSigma());
 			console.log("N: "+world.globalErrorNMean()+" +/- "+world.globalErrorNSigma());
 			console.log("S: "+world.globalErrorSMean()+" +/- "+world.globalErrorSSigma());
-
-
-			// var points3D = world.toPointArray();
-			// for(var i=0; i<points3D.length; ++i){
-			// 	var point3D = points3D[i];
-			// 	var matches = point3D.toMatchArray();
-			// 	for(var j=0; j<matches.length; ++j){
-			// 		var match = matches[j];
-			// 		var index = match.id();
-			// 		// this._matches[index]
-			// 		var exists = transform[index];
-			// 		console.log("match: "+index+" = "+(exists!==undefined && exists!==null));
-			// 	}
-			// }
-			
 			console.log(" MIN TRACK COUNT: "+trackMatchCount+" / "+minimumCountTrackFinal);
 
 			if(errorR>maxErrorRTrackPixels || errorF>maxErrorFTrackPixels || trackMatchCount<minimumCountTrackFinal){
@@ -14315,7 +14249,9 @@ world.showForwardBackwardPair();
 
 		console.log(pairData);
 		console.log("goodEnoughMatches?: "+goodEnoughMatches);
-throw "before find tracks OUT"
+
+// world.showForwardBackwardPair();
+// throw "before find tracks OUT"
 		if(!goodEnoughMatches){
 			console.log("END PAIR SEQUENCE POINT SEARCHING");
 			console.log("save not good enough matches");
@@ -14630,7 +14566,15 @@ console.log(camerasLookup);
 
 		// throw "recalculate points location using new averaged camera data"
 		world.embedPoints3DNoValidation(points3D);
+
+
+// embedPoints3DNoValidation
+console.log("ADDED ....")
+
+
 		console.log(" "+i+" = "+points3D.length);
+// console.log(points3D);
+// throw ".???"
 		var R = pair["R"];
 		if(!R){
 			var t = pair["transforms"];
@@ -14647,9 +14591,12 @@ console.log(camerasLookup);
 
 		viewA.absoluteTransform(transformA);
 		viewB.absoluteTransform(transformB);
-		// console.log(points3D);
-		// console.log("NOW UPDATE:");
-		world.updatePoint3DLocations(points3D);
+
+		console.log("NOW UPDATE / SET PATCHES ????");
+		// world.createAllPoints3DPatches();
+
+
+
 		// throw "recalculated"
 		viewA.absoluteTransform(null);
 		viewB.absoluteTransform(null);
@@ -14676,6 +14623,7 @@ console.log("before ?");
 // throw "HEREEEEEE SCALES SCALE";
 		inputCompleteFxn(metrics);
 	}
+// throw "before saveE";
 	world.solveTriple(worldTripleCompleted, project, null);
 }
 
@@ -20926,7 +20874,7 @@ App3DR.ProjectManager.prototype._iterateGraphSequential = function(sourceData,so
 	console.log(sequenceFilename);
 	var project = this;
 	var sequenceData = null;
-
+throw "_iterateGraphSequential"
 	// var maximumPairImages = 6; // [3, 10] ~ 6
 	var maximumPairImages = 4; // current JS memory/processing problems
 
@@ -27123,6 +27071,9 @@ App3DR.ProjectManager.View.prototype.loadDenseLoImage = function(callback, conte
 App3DR.ProjectManager.View.prototype.loadFeaturesImage = function(callback, context){
 	this._loadImage(App3DR.ProjectManager.View.IMAGE_LOAD_TYPE_FEATURES, callback, context);
 }
+// App3DR.ProjectManager.View.prototype.loadSparseImage = function(callback, context){
+// 	this._loadImage(App3DR.ProjectManager.View.IMAGE_LOAD_TYPE_DENSE_LO, callback, context);
+// }
 App3DR.ProjectManager.View.prototype.loadDenseHiImage = function(callback, context){
 	this._loadImage(App3DR.ProjectManager.View.IMAGE_LOAD_TYPE_DENSE_HI, callback, context);
 }
@@ -27155,8 +27106,8 @@ App3DR.ProjectManager.View.prototype.loadMatchingImage = function(callback, cont
 
 
 App3DR.ProjectManager.View.IMAGE_LOAD_TYPE_ICON = 0;
-App3DR.ProjectManager.View.IMAGE_LOAD_TYPE_DENSE_LO = 1;
-App3DR.ProjectManager.View.IMAGE_LOAD_TYPE_FEATURES = 2;
+App3DR.ProjectManager.View.IMAGE_LOAD_TYPE_FEATURES = 1;
+App3DR.ProjectManager.View.IMAGE_LOAD_TYPE_DENSE_LO = 2;
 App3DR.ProjectManager.View.IMAGE_LOAD_TYPE_DENSE_HI = 3;
 App3DR.ProjectManager.View.IMAGE_LOAD_TYPE_BUNDLE_ADJUST = 4;
 App3DR.ProjectManager.View.IMAGE_LOAD_TYPE_TEXTURE = 5;
@@ -27164,18 +27115,21 @@ App3DR.ProjectManager.View.IMAGE_LOAD_TYPE_MAX = 6;
 App3DR.ProjectManager.View.IMAGE_LOAD_TYPE_MASK = 100;
 App3DR.ProjectManager.View.prototype._loadImage = function(type, callback, context){
 	// average : size of / space between : feature
-	var cellSize = 21;
-	var cellCountSparse = 40;
-	var cellCountDense = 80;
-	var cellCountDetails = 120;
+	var cellSize = 11; // 11-21
+	var cellCountSparse = 75; // 40 -> 75
+	var cellCountDenseLo = 100; // 60 -> 110
+	var cellCountDenseHi = 140; // 80 -> 140
+	var cellCountDetails = 200; // 120 -> 210
 	var pixelCountSparseLinear = cellSize*cellCountSparse;
-	var pixelCountDenseLinear = cellSize*cellCountDense;
+	var pixelCountDenseLoLinear = cellSize*cellCountDenseLo;
+	var pixelCountDenseHiLinear = cellSize*cellCountDenseHi;
 	var pixelCountDetailLinear = cellSize*cellCountDetails;
 	// console.log("sparse size: "+pixelCountSparseLinear);
 	// console.log("dense size: "+pixelCountDenseLinear);
 	// console.log("detail size: "+pixelCountDetailLinear);
 	var pixelCountSparse = pixelCountSparseLinear*pixelCountSparseLinear;
-	var pixelCountDense = pixelCountDenseLinear*pixelCountDenseLinear;
+	var pixelCountDenseLo = pixelCountDenseLoLinear*pixelCountDenseLoLinear;
+	var pixelCountDenseHi = pixelCountDenseHiLinear*pixelCountDenseHiLinear;
 	var pixelCountDetail = pixelCountDetailLinear*pixelCountDetailLinear;
 	// var maxRatio = 1.5;
 	var maxRatio = 2.0;
@@ -27187,12 +27141,15 @@ App3DR.ProjectManager.View.prototype._loadImage = function(type, callback, conte
 	if(type==App3DR.ProjectManager.View.IMAGE_LOAD_TYPE_ICON){
 		desiredPixelCount = 300*200;
 		maximumPixelCount = 400*550;
-	}else if(type==App3DR.ProjectManager.View.IMAGE_LOAD_TYPE_FEATURES){ // SPARSE
+	}else if(type==App3DR.ProjectManager.View.IMAGE_LOAD_TYPE_FEATURES){ // FEATURES ~ SPARSE
 		desiredPixelCount = pixelCountSparse;
 		maximumPixelCount = pixelCountSparse*maxRatio;
-	}else if(type==App3DR.ProjectManager.View.IMAGE_LOAD_TYPE_DENSE_HI){ // DENSE & SPARSE-TRACKS
-		desiredPixelCount = pixelCountDense;
-		maximumPixelCount = pixelCountDense*maxRatio;
+	}else if(type==App3DR.ProjectManager.View.IMAGE_LOAD_TYPE_DENSE_LO){ // SPARSE TRACKS
+		desiredPixelCount = pixelCountDenseLo;
+		maximumPixelCount = pixelCountDenseLo*maxRatio;
+	}else if(type==App3DR.ProjectManager.View.IMAGE_LOAD_TYPE_DENSE_HI){ // DENSE TRACKS
+		desiredPixelCount = pixelCountDenseHi;
+		maximumPixelCount = pixelCountDenseHi*maxRatio;
 	}else if(type==App3DR.ProjectManager.View.IMAGE_LOAD_TYPE_BUNDLE_ADJUST){ // DENSE BA
 		desiredPixelCount = pixelCountDetail;
 		maximumPixelCount = pixelCountDetail*maxRatio;
@@ -27269,10 +27226,10 @@ App3DR.ProjectManager.View.prototype._loadImageComplete = function(object, data)
 	image.onload = function(e){
 		if(loadType==App3DR.ProjectManager.View.IMAGE_LOAD_TYPE_ICON){
 			self._pictureSourceIcon = image;
-		}else if(loadType==App3DR.ProjectManager.View.IMAGE_LOAD_TYPE_DENSE_LO){
-			self._pictureSourceDenseLo = image;
 		}else if(loadType==App3DR.ProjectManager.View.IMAGE_LOAD_TYPE_FEATURES){
 			self._pictureSourceFeatures = image;
+		}else if(loadType==App3DR.ProjectManager.View.IMAGE_LOAD_TYPE_DENSE_LO){
+			self._pictureSourceDenseLo = image;
 		}else if(loadType==App3DR.ProjectManager.View.IMAGE_LOAD_TYPE_DENSE_HI){
 			self._pictureSourceDenseHi = image;
 		}else if(loadType==App3DR.ProjectManager.View.IMAGE_LOAD_TYPE_TEXTURE){

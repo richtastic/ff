@@ -390,7 +390,7 @@ R3D.PFromKRT = function(K,R,t){
 R3D.optimizeMultipleCameraExtrinsicDLTNonlinear = function(listP, listK, listKinv, variablePIndex, listPoints2D, maxIterations, negativeIsBad){
 	maxIterations = Code.valueOrDefault(maxIterations, 1000);
 	negativeIsBad = Code.valueOrDefault(negativeIsBad, false);
-	console.log("??? R3D.optimizeMultipleCameraExtrinsicDLTNonlinear: "+listP.length+" views  & "+listPoints2D.length+" points @ "+variablePIndex);
+	// console.log("??? R3D.optimizeMultipleCameraExtrinsicDLTNonlinear: "+listP.length+" views  & "+listPoints2D.length+" points @ "+variablePIndex);
 	var args = [listP, listK, listKinv, variablePIndex, listPoints2D, negativeIsBad];
 	// make a temporary matrix for iterating on
 	var O = listP[variablePIndex];
@@ -8368,7 +8368,7 @@ R3D.fundamentalMatrixNonlinearGD = function(fundamental,pointsA,pointsB){ // non
 		// 	pointsA = Code.copyArray(pointsA);
 		// 	pointsB = Code.copyArray(pointsB);
 		// 	args = [pointsA,pointsB];
-		// 	Code.randomPopParallelArrays(args,1000);
+		// 	Code.randomPopParallelArrays(args,1000);ƒ
 		// 	// throw "subsample"
 		// }else{
 		// 	args = [pointsA,pointsB];
@@ -8384,7 +8384,7 @@ R3D.fundamentalMatrixNonlinearGD = function(fundamental,pointsA,pointsB){ // non
 
 		
 
-console.log("fundamentalMatrixNonlinearGD - maxIterations: "+maxIterations+" : "+pointsA.length+" ("+originalCount+") ");
+// console.log("fundamentalMatrixNonlinearGD - maxIterations: "+maxIterations+" : "+pointsA.length+" ("+originalCount+") ");
 
 // throw "subsample";
 

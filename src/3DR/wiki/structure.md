@@ -137,9 +137,37 @@ x (R) patch size is updated iteritively by projecting plane points to 2D & minim
 
 
 
+learnings from sequential:
+	- point difference is good way to line up the structure of the scene
+	-> should use existing matches & not re-generate in the process
 
 
 
+### ALGORITHM / PROCESS UPDATE:
+	- SUMMARY & FEATURE EXTRACTION
+	- DICTIONARY MATCHING [rough list of prioritized likely matches]
+	- SPARSE [accurate view positions (motion)]
+		- pairwise R & track discovery [calculate pair R & quantify error]
+		- triples [cacluate pair relative baseline scales]
+		- initial absolute global orientation estimate
+		- tracks: iteritive view location adjustment [move single/multiple views to minimize reprojection error, possibly remove the 3-5 sigma (very) worst tracks]
+		-> pair 
+	- DENSE [accurate structure locations (line up across view pairs)]
+		- pairwise R & track
+		- triples
+		- initial global orientation
+		- tracks: iteritive view location adjustment [move single view to minimize structure point distances]
+		- ? sequential: load view - by - view ?
+	- BUNDLE
+		- dense groups ?
+		- 
+	- SURFACE
+		- 
+
+
+
+		- 
+		
 
 
 
