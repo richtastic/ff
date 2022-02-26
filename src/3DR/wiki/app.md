@@ -517,9 +517,43 @@ OUTPUT:
 
 
 
+
+=> don't want the optimization on geometry to be equal to a STATIC point, but to an AVERAGE of N reprojected points
+	=> what does optimizing on this look like ?
+
+=> structure matching only works with a REFERENCE structure
+=> simultaneous matching of all points sounds unstable?
+
+=> sequential updating of views / structure 
+
+
+=>	NEW ALG: .................................................................. iteritive sequential view matrix optimizing
+	- pick transform with most connected points / per / error
+	- continue to pick views in priority (this should alreay exist) --- initGraphSequential
+		- prioritized on connectivity
+	- organize track pairs by order views are added
+	- save list of 'initial' view transforms
+	REPEAT: # ITERITIVE
+		- set first view @ identity
+		for each remaining view: # SEQUENTIAL
+			- estimate starting orientation by offsetting from currently set views [drifting: scale, rotation, location]
+			x add any new pair points that come along with this view
+			- optimize view via reprojection error [to get to stable orientation state]
+			x remove all pair points from view
+			- (if more than 2 views) optimize view via structure matching [to get point pairs to line up]
+			- add all new pair points for view
+		- remove all points
+		- save new view transforms as initial list
+	
+
+
+
+
+
+Stereopsis.World.prototype.solveOptimizeSingleViewReprojection
+
+
 TRACK [5] STARTING POINTS: 1151
-
-
 
 
 groups:

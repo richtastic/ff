@@ -10855,6 +10855,8 @@ if(isDense){
 // STOP early for testing
 maxIterationsBA = allViews.length;
 
+maxIterationsBA = 1;
+
 				// if the next error is very low, or max iterations reached => done
 				var isDone = false;
 				var deltaErrorR = nextViewBA["deltaErrorR"];
@@ -11080,13 +11082,10 @@ console.log(allViews);
 				var WORLDVIEWSLOOKUP = info["lookup"];
 				var world = info["world"];
 				// world.setResolutionProcessingModeNonVisual();
-				world.setResolutionProcessingModeBest();
-				world.copyRelativeTransformsFromAbsolute();
+				// world.setResolutionProcessingModeBest();
+				// world.copyRelativeTransformsFromAbsolute();
 				var points3DExisting = App3DR.ProjectManager._worldPointFromSaves(world, allPoints, WORLDVIEWSLOOKUP);
 				world.embedPoints3DNoValidation(points3DExisting);
-
-
-
 
 // for(var i=0; i<points3DExisting.length; ++i){
 // 	var p3D = points3DExisting[];
@@ -11102,12 +11101,11 @@ console.log(allViews);
 
 // throw "iterate - init patches ... only 2D data is assumed correct after graph/view updates"
 				// exiting patches have already been calculated
-				world.initAffineFromP3DPatches(points3DExisting);
-				world.initAllP3DPatches(points3DExisting);
-				
-				world.relativeFFromSamples();
-				world.estimate3DErrors(true);
-				world.printPoint3DTrackCount();
+				// world.initAffineFromP3DPatches(points3DExisting);
+				// world.initAllP3DPatches(points3DExisting);
+				// world.relativeFFromSamples();
+				// world.estimate3DErrors(true);
+				// world.printPoint3DTrackCount();
 
 				var nextViewID = nextViewBA["id"];
 				console.log("nextViewID: "+nextViewID);
@@ -11124,16 +11122,51 @@ console.log(allViews);
 console.log("sourceData");
 console.log(sourceData);
 
-throw "before solveOptimizeSingleView????"
-				var info = world.solveOptimizeSingleViewWhat(worldView);
+// throw "before solveOptimizeSingleView????"
+				// var info = world.solveOptimizeSingleViewWhat(worldView);
+
+
+				var pairInfo = sourceData["pairs"];
+// console.log(fullData);
+// console.log(pairInfo);
+// console.log("...");
+// throw "pairInfo";
+				// var info = world.solveOptimizeSingleViewReprojection(worldView, pairInfo);
+
+
+
+
+var info = world.solveOptimizeSequential(pairInfo);
+console.log(info);
+throw "..."
+
+				// var maxIts = 3;
+				var maxIts = 1;
+				for(var its=0; its<maxIts; ++its){
+
+					var views = world.toViewArray();
+					for(var v=0; v<views.length; ++v){
+						console.log(" ...................................................................................................... "+v)
+						var view = views[v];
+						var info = world.solveOptimizeSingleViewReprojection(view, pairInfo);
+						console.log(info);
+// break;
+					}
+break;
+				}
+
+
+				
+var str = world.toYAMLString();
+console.log(str);
+throw "before save optimizing full track full ..............";
+
+
 				console.log(info);
 				nextViewBA["deltaErrorR"] = Math.abs(info["deltaR"]); // expected always negative
 				nextViewBA["errorR"] = info["errorR"];
 				nextViewBA["count"] = worldView.pointCount();
 				nextViewBA["updated"] = Code.getTimeMilliseconds();
-var str = world.toYAMLString();
-console.log(str);
-throw "before save optimizing full track full ..............";
 				
 				// update views:
 				var worldObject = world.toObject();
@@ -11202,22 +11235,29 @@ console.log(allCameras);
 				var world = info["world"];
 // console.log(world);
 // console.log(WORLDVIEWS);
-for(var v=0; v<WORLDVIEWS.length; ++v){
-	console.log(WORLDVIEWS[v].image());
-}
+// for(var v=0; v<WORLDVIEWS.length; ++v){
+// 	console.log(WORLDVIEWS[v].image());
+// }
 // throw "before add track - world - track_full bundle";
+
+
+
+
+
+
+
 				// world.setResolutionProcessingModeNonVisual();
 				// throw "what ?"
-				world.setResolutionProcessingModeBest();
-				world.copyRelativeTransformsFromAbsolute();
+				// world.setResolutionProcessingModeBest();
+				// world.copyRelativeTransformsFromAbsolute();
 				
 				// existing
 				var points3DExisting = App3DR.ProjectManager._worldPointFromSaves(world, fullPoints, WORLDVIEWSLOOKUP);
 				console.log(points3DExisting);
-				console.log("old");
+				// console.log("old");
 				// existing patches 
-				world.initAffineFromP3DPatches(points3DExisting);
-				world.initAllP3DPatches(points3DExisting);
+				// world.initAffineFromP3DPatches(points3DExisting);
+				// world.initAllP3DPatches(points3DExisting);
 				world.embedPoints3DNoValidation(points3DExisting);
 
 				// new
@@ -11228,28 +11268,26 @@ for(var v=0; v<WORLDVIEWS.length; ++v){
 				// world.initAllP3DPatches(points3DAdditional);
 
 				// 
-				world.setResolutionProcessingModeFromOnly2D();
-				world.initAllP3DPatches(points3DAdditional);
-				world.initAffineFromP3DPatches(points3DAdditional);
+				// world.setResolutionProcessingModeFromOnly2D();
+				// world.initAllP3DPatches(points3DAdditional);
+				// world.initAffineFromP3DPatches(points3DAdditional);
 
 				// add new points w/ good intersecting
-				world.setResolutionProcessingModeBest();
-
-				console.log("new: "+points3DAdditional.length);
+				// world.setResolutionProcessingModeBest();
+				// console.log("new: "+points3DAdditional.length);
 				// 
 				// IF WANT INTERSECT:
-				world.embedPoints3D(points3DAdditional);
+				// world.embedPoints3D(points3DAdditional);
 				// IF WANT NO INTERSECTIONS:
-				// world.embedPoints3DNoValidation(points3DAdditional);
-
-
+				world.createAllPoints3DPatches(points3DAdditional);
+				world.embedPoints3DNoValidation(points3DAdditional);
 
 // throw "before done tracks - full";
 
 
 				// get info ...
-				world.relativeFFromSamples();
-				world.estimate3DErrors(true);
+				// world.relativeFFromSamples();
+				// world.estimate3DErrors(true);
 				world.printPoint3DTrackCount();
 
 				// object
@@ -11323,8 +11361,16 @@ for(var v=0; v<WORLDVIEWS.length; ++v){
 			console.log("loadViews:");
 			console.log(loadViews);
 // throw "bestImagesToLoadForViewPair:"
-			expectedImages = loadViews.length;
+
+			
+			
 			loadedImages = 0;
+
+			// don't load images
+			expectedImages = 0;
+
+			/*
+			expectedImages = loadViews.length;
 			// console.log("load images");
 			for(var i=0; i<loadViews.length; ++i){
 				var viewID = loadViews[i];
@@ -11332,7 +11378,7 @@ for(var v=0; v<WORLDVIEWS.length; ++v){
 				view.loadTrackImage(loadedImageComplete, project);
 				// view.loadDenseLoImage(loadedImageComplete, project);
 			}
-
+			*/
 			// throw "loadViews";
 
 
@@ -11882,6 +11928,11 @@ if(baViews.length<=1){
 
 // override baIterations max
 var maxIterationsBA = 1*baViews.length;
+
+
+// DEBUGGING:
+maxIterationsBA = 1;
+
 				
 				
 				console.log(baOptimizations);
@@ -12016,11 +12067,14 @@ console.log(graphGroup);
 	console.log(graphData);
 
 
-	var pairInfo = graphData["pair"];
+	var pairInfo = graphData["pairs"];
 
 	// throw "before solveOptimizeSingleViewReprojection"
 
-				for(var its=0; its<5; ++its){
+				// var maxIts = 1;
+				// var maxIts = 5;
+				var maxIts = 3;
+				for(var its=0; its<maxIts; ++its){
 
 					var views = world.toViewArray();
 					for(var v=0; v<views.length; ++v){
@@ -12037,7 +12091,7 @@ console.log(graphGroup);
 var str = world.toYAMLString();
 console.log(str);
 
-	throw "AFTER OPTIMIZE"
+	// throw "AFTER OPTIMIZE"
 					nextViewBA["deltaErrorR"] = Math.abs(info["deltaR"]); // expected always negative
 					nextViewBA["errorR"] = info["errorR"];
 					nextViewBA["updated"] = Code.getTimeMilliseconds();//Code.getTimeStampFromMilliseconds();
@@ -12446,7 +12500,7 @@ graphData["loadPairIndex"] = -1;
 				console.log(trackData);
 				console.log(fullTrackPath);
 				console.log(fullGraphPath);
-throw "before save track group: "+trackFilename;
+// throw "before save track group: "+trackFilename;
 				var savedFiles = 0;
 				var savedTrackComplete = function(){
 					console.log("savedTrackComplete: "+trackFilename);
@@ -13471,7 +13525,7 @@ GLOBALSTAGE.root().matrix().scale(0.50); // dense
 
 		console.log("solveDensePair");
 // console.log(info);
-// throw "before solveDensePair"
+throw "before solveDensePair"
 		// //
 console.log("LOOK AT SEED PATCHES FIRST")
 		world.solveDensePairNew();
@@ -14789,7 +14843,7 @@ App3DR.ProjectManager.prototype.loadDenseGroupsStereopsis = function(){
 	var worldFilename = "dense/tracks/track_full.yaml";
 	var dataLoadedFxn = function(data){
 		console.log("track world loaded");
-		project._doDenseGroupsStereopsisOLD(data);
+		project._doDenseGroupsStereopsis(data);
 	}
 	project.loadDataFromFile(worldFilename, dataLoadedFxn, project, {});
 }
@@ -14830,6 +14884,9 @@ App3DR.ProjectManager.prototype._doDenseGroupsStereopsis = function(infoData, co
 		console.log(str);
 		completeFxn(world.toObject());
 	}
+
+
+	throw "_doDenseGroupsStereopsis ???"
 
 
 	console.log("create world");

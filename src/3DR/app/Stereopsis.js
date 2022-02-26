@@ -6136,7 +6136,19 @@ Stereopsis.World.prototype.solveDropWorstViewNeighbors = function(){ // move vie
 
 	return {"removed":viewsToRemove};
 }
+// ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Stereopsis.World.prototype.solveOptimizeSequential = function(pairInfo){
+	var world = this;
+	console.log(world);
 
+	console.log(pairInfo);
+
+	??
+
+
+
+	throw "solveOptimizeSequential";
+}
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 Stereopsis.World.prototype.solveOptimizeSingleViewReprojection = function(viewSolve, pairInfo, loopIterations){
 	loopIterations = Code.valueOrDefault(loopIterations, 10);
@@ -6160,7 +6172,7 @@ Stereopsis.World.prototype.solveOptimizeSingleViewReprojection = function(viewSo
 
 
 		// filter worst
-
+/*
 		var sigmaDropping = 5.0;
 		
 		world.filterPairwiseErrors(sigmaDropping);
@@ -6172,16 +6184,16 @@ Stereopsis.World.prototype.solveOptimizeSingleViewReprojection = function(viewSo
 		world.filterGlobalPatchVisibilityConsistency(sigmaDroppingPatches);
 		world.filterLocalError2D(sigmaDropping);
 		world.filterLocalError3D(sigmaDropping);
-
+*/
 
 		// optimize reprojection error
-		var iterationsUpdateViewSingle = 100;
-		world.refineSelectCameraMultiViewTriangulation(viewSolve, iterationsUpdateViewSingle);
+		// var iterationsUpdateViewSingle = 100;
+		// world.refineSelectCameraMultiViewTriangulation(viewSolve, iterationsUpdateViewSingle);
 
 
 		// optimize structure difference
-		// var iterationsUpdateViewSingle = 100;
-		// world.refineSelectCameraByLocalGeometryMatching3D(viewSolve, iterationsUpdateViewSingle);
+		var iterationsUpdateViewSingle = 100;
+		world.refineSelectCameraByLocalGeometryMatching3D(viewSolve, iterationsUpdateViewSingle);
 
 
 
@@ -6191,8 +6203,7 @@ Stereopsis.World.prototype.solveOptimizeSingleViewReprojection = function(viewSo
 		world.createAllPoints3DPatches();
 
 
-
-// initNewPointPatch3D
+		world.estimateGlobalErrors();
 
 		
 
@@ -7121,7 +7132,7 @@ console.log("TIME optimizeAllCameraExtrinsicDLTNonlinear: " + (timeB-timeA) );
 	world.copyRelativeTransformsFromAbsolute();
 }
 
-Stereopsis.World.prototype.refineSelectCameraMultiViewTriangulation = function(selectView, maxIterations, onlyLongTracks){ 
+Stereopsis.World.prototype.refineSelectCameraMultiViewTriangulation = function(selectView, maxIterations, onlyLongTracks, points2D){ 
 	console.log("refineSelectCameraMultiViewTriangulation");
 	onlyLongTracks = false;
 
@@ -7134,13 +7145,15 @@ Stereopsis.World.prototype.refineSelectCameraMultiViewTriangulation = function(s
 	// get all P2D in P3D with more than 1 match
 	var viewPointHash = {};
 	var pointKeepList = [];
-	var points2D = selectView.toPointArray();
+	if(!points2D){
+		points2D = selectView.toPointArray();
+	}
 console.log(selectView.data()+" : "+points2D.length);
 	for(var i=0; i<points2D.length; ++i){
 		var point2D = points2D[i];
 		var point3D = point2D.point3D();
 		var pointsP3DP2D = point3D.toPointArray();
-		if( (onlyLongTracks && pointsP3DP2D.length>2) || (!onlyLongTracks) ){ // more than 1 match -- TODO: IS THIS NEEDED FOR TRACKS OPTIMIZING ?
+		if( (!onlyLongTracks) || (onlyLongTracks && pointsP3DP2D.length>2) ){ // more than 1 match -- TODO: IS THIS NEEDED FOR TRACKS OPTIMIZING ?
 		// if(true){ // ... any number of matches
 			for(var j=0; j<pointsP3DP2D.length; ++j){
 				var pt2D = pointsP3DP2D[j];
@@ -12481,12 +12494,16 @@ Stereopsis.World.prototype.refineSelectCameraByLocalGeometryMatching3D = functio
 	// console.log(points2DFocus);
 	var points3DStatic = [];
 	var listPoints3DInfo = [];
+var dSigs = [];
+var dSigs2 = [];
 	for(var i=0; i<maximumPointAttempts; ++i){
 		if(points2DFocus.length==0){
 			break;
 		}
 		var point2DFocus = Code.randomPop(points2DFocus);
 		var p2DF = point2DFocus.point2D();
+		var point3DF = point2DFocus.point3D();
+		var p3DF = point3DF.point();
 		var featureSize = viewFocus.compareSizeForPoint(p2DF);
 		var searchRadius = searchScale*featureSize;
 		var neighbors = pointSpaceFocus.objectsInsideCircle(p2DF,searchRadius);
@@ -12510,13 +12527,64 @@ Stereopsis.World.prototype.refineSelectCameraByLocalGeometryMatching3D = functio
 		// var point3DF = point2DFocus.point3D();
 		// var center3DF = point3DF.point();
 		var points = [];
+		var distances = [];
+var entries = [];
 		for(var n=0; n<neighbors.length; ++n){
 			var neighbor = neighbors[n];
 			var point3D = neighbor.point3D();
 			var center3D = point3D.point();
 			points.push(center3D);
+
+			var d = V3D.distance(p3DF,center3D);
+			distances.push(d);
+entries.push([d, center3D]);
 		}
-		var center3D = V3D.average(points);
+
+// TODO: check stddev & throw if discrepancy
+var dMin = 0;
+var dSig = Code.stdDev(distances,dMin);
+// console.log(dSig);
+dSigs.push(dSig);
+
+
+var toValueFxn = function(a){
+	// console.log(a[0]);
+	return a[0];
+};
+var toLimitFxn = function(values){
+	var std = Code.stdDev(values, 0);
+	var lim = std*2.0;
+	return lim;
+};
+var minCount = 3;
+var maxIterations = 3;
+var updateFxn = function(list){
+	//
+}
+var list = Code.repeatedDropOutliers(entries, toValueFxn, toLimitFxn, minCount, maxIterations, updateFxn);
+// console.log(list.length,entries.length);
+
+var list0 = Code.copyArray(list);
+var list1 = Code.copyArray(list);
+Code.arrayMap(list0, function(item){
+	return item[0];
+});
+Code.arrayMap(list1, function(item){
+	return item[1];
+});
+var dSig2 = Code.stdDev(list0,0);
+// console.log(dSig);
+dSigs2.push(dSig2);
+
+
+
+
+
+		// var center3D = V3D.average(points);
+
+		var center3D = V3D.average(list1);
+// console.log("center3D: "+center3D);
+
 		//
 		points3DStatic.push(center3D);
 		listPoints3DInfo.push(point2DFocus);
@@ -12530,6 +12598,13 @@ Stereopsis.World.prototype.refineSelectCameraByLocalGeometryMatching3D = functio
 		console.log("not enough points");
 		return;
 	}
+// dSigs.sort();
+// Code.printMatlabArray(dSigs,"distances");
+// dSigs2.sort();
+// Code.printMatlabArray(dSigs2,"distances2");
+// throw "before point static do thing"
+
+
 	// transform data into dneded
 	console.log(points3DStatic);
 	var touchedViews = {};
@@ -14457,20 +14532,6 @@ Stereopsis.World.prototype.debugCheckPairPointMatchCounts = function(){
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 Stereopsis.World.prototype.solveForTracks = function(completeFxn, completeContext){ // tracks (pairwise tested)
 	console.log("solveForTracks");
-/*
-	input: assumed semi-dense (5k-10k) matching points per image
-	output: reduced set @ highest-calibar
-		reduces total count by filering:
-		A) highest 66% cornerness value
-		B) lowest 66% each F error
-		C) lowest 66% R error
-		x D) only dominant corners in area
-		count ~ input * (0.66^3)
-		=> count ~ input * (2^-4)
-*/
-
-
-
 	var world = this;
 
 world.debugCheckPairPointMatchCounts();
