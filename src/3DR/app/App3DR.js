@@ -10995,8 +10995,12 @@ SEQUENTIAL:
 			- 
 
 */
+				
+				throw "was initGraphSequential"
 
 				var sequentialData = project._initGraphSequential(allViews,allPoints, allTransforms, allCameras); // info
+
+
 				console.log(sequentialData);
 
 				var sequentialFile = "sequential.yaml";
@@ -11084,6 +11088,8 @@ console.log(allViews);
 				// world.setResolutionProcessingModeNonVisual();
 				// world.setResolutionProcessingModeBest();
 				// world.copyRelativeTransformsFromAbsolute();
+// console.log(allPoints);
+// throw "...allPoints"
 				var points3DExisting = App3DR.ProjectManager._worldPointFromSaves(world, allPoints, WORLDVIEWSLOOKUP);
 				world.embedPoints3DNoValidation(points3DExisting);
 

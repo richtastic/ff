@@ -500,7 +500,10 @@ OUTPUT:
 
 
 
-=> go back to why final graph didn't have all 10 images & why a bunch of pairs were not included
+
+
+solveOptimizeSequential
+
 
 
 
@@ -528,13 +531,13 @@ OUTPUT:
 
 
 =>	NEW ALG: .................................................................. iteritive sequential view matrix optimizing
-	- pick transform with most connected points / per / error
-	- continue to pick views in priority (this should alreay exist) --- initGraphSequential
-		- prioritized on connectivity
-	- organize track pairs by order views are added
-	- save list of 'initial' view transforms
+	x pick transform with most connected points / per / error
+	x continue to pick views in priority (this should alreay exist) --- initGraphSequential
+		x prioritized on connectivity
+	x organize track pairs by order views are added
+	x save list of 'initial' view transforms
 	REPEAT: # ITERITIVE
-		- set first view @ identity
+		x set first view @ identity
 		for each remaining view: # SEQUENTIAL
 			- estimate starting orientation by offsetting from currently set views [drifting: scale, rotation, location]
 			x add any new pair points that come along with this view

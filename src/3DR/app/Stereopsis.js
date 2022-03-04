@@ -6141,14 +6141,309 @@ Stereopsis.World.prototype.solveOptimizeSequential = function(pairInfo){
 	var world = this;
 	console.log(world);
 
+	console.log("pairInfo");
 	console.log(pairInfo);
 
-	??
+
+	var sequenceData = this.initGraphOptimizeSequential(pairInfo);
+	console.log(sequenceData);
 
 
+
+	var views = world.toViewArray();
+
+	// save initial:
+	var initialTransforms = [];
+	var viewFromData = {};
+	for(var i=0; i<views.length; ++i){
+		var view = views[i];
+		viewFromData[view.data()] = view;
+		var ext = view.absoluteTransform();
+		initialTransforms[i] = ext.copy();
+	}
+
+	var steps = sequenceData["sequence"];
+
+
+	var viewsResolved = {};
+	for(var i=0; i<steps.length; ++i){
+		console.log(" ................................................................... step: "+i);
+		var step = steps[i];
+		var viewID = step["view"];
+
+
+
+		console.log(step);
+		var view = viewFromData[viewID];
+		// console.log(view);
+
+		if(i==0){ // set view to identity:
+			console.log(view);
+			view.absoluteTransform( new Matrix(4,4).identity() );
+		}else{
+			// calculate current best guess orientation from original offsets
+
+			view.absoluteTransform( ??? );
+/*
+for each remaining view: # SEQUENTIAL
+			- estimate starting orientation by offsetting from currently set views [drifting: scale, rotation, location]
+			x add any new pair points that come along with this view
+			- optimize view via reprojection error [to get to stable orientation state]
+			x remove all pair points from view
+			- (if more than 2 views) optimize view via structure matching [to get point pairs to line up]
+			- add all new pair points for view
+*/
+		}
+
+		viewsResolved[viewID] = true;
+	}
+
+	console.log(world);
+
+
+	// ??
+
+// initGraphSequential
 
 	throw "solveOptimizeSequential";
 }
+
+
+Stereopsis.World.prototype.initGraphOptimizeSequential = function(pairInfo){
+	var world = this;
+	var allViews = world.toViewArray();
+	var allPoints = world.toPointArray();
+	var allTransforms = world.toTransformArray();
+	var allCameras = world.toCameraArray();
+
+
+	console.log("_initGraphSequential");
+	console.log(allViews);
+	console.log(allPoints);
+	console.log(allTransforms);
+	console.log(allCameras);
+	// throw "out"
+	// console.log(info);
+
+	// create graph
+	var graph = new Graph();
+	console.log(graph);
+
+	var viewIDToVertex = {};
+	for(var i=0; i<allViews.length; ++i){
+		var view = allViews[i];
+		// var viewID = view["id"];
+		var viewID = view.data(); // TODO ...
+		// console.log(view);/
+		var vertex = graph.addVertex();
+		var data = {};
+		data["view"] = view;
+		data["id"] = viewID;
+		// data["view"] = view;
+		// data["view"] = view;
+		vertex.data(data);
+		viewIDToVertex[viewID] = vertex;
+	}
+	var vertexes = graph.vertexes();
+console.log("vertexes");
+	console.log(vertexes);
+
+/*
+	for(var i=0; i<allTransforms.length; ++i){
+		var transform = allTransforms[i];
+		// console.log(transform);
+		var idA = transform["A"];
+		var idB = transform["B"];
+		var matchCount = transform["matches"];
+		var matchError = transform["errorRMean"];
+		var edgeWeight = matchCount/matchError;
+		// console.log(matchCount,matchError,edgeWeight);
+		var vertexA = viewIDToVertex[idA];
+		var vertexB = viewIDToVertex[idB];
+		// console.log(vertexA,vertexB);
+		var edge = graph.addEdgeDuplex(vertexA,vertexB,edgeWeight); ///, Graph.Edge.DIRECTION_DUPLEX);
+		edge.data(transform);
+	}
+*/
+
+// console.log(viewIDToVertex);
+for(var i=0; i<pairInfo.length; ++i){
+	var info = pairInfo[i];
+	// console.log(info);
+	var idA = info["A"];
+	var idB = info["B"];
+	// var matchCount = info["matches"];
+	var matchCount = info["tracks"];
+	if(matchCount==0){
+		continue;
+	}
+	var matchError = info["relativeError"];
+	var edgeWeight = matchCount/matchError;
+	var vertexA = viewIDToVertex[idA];
+	var vertexB = viewIDToVertex[idB];
+	// console.log(vertexA,vertexB);
+	var edge = graph.addEdgeDuplex(vertexA,vertexB,edgeWeight); ///, Graph.Edge.DIRECTION_DUPLEX);
+	edge.data(info);
+}
+
+	var edges = graph.edges();
+console.log("edges");
+	console.log(edges);
+// throw "..."
+
+	// VISUALIZE ?:
+
+	//
+
+	var infoHash = {};
+	var insideHash = {};
+	var outsideHash = {};
+	var sortFxn = function(a,b){
+		var scoreA = a.data()["score"];
+		var scoreB = b.data()["score"];
+		//console.log(scoreA,scoreB);
+		// SOME METRIC OF TOTAL CONNECTIVITY
+		// throw "return vertex with higher connectivity to inside set"
+		if(a==b){
+			return 0;
+		}
+		return scoreA > scoreB ? -1 : 1;
+	}
+	
+	var vertexQueue = new PriorityQueue(sortFxn);
+
+	// first view = highest connected vertex
+	var updateScoresFxn = function(onlyCrossInside){
+
+		for(var i=0; i<vertexes.length; ++i){
+			var vertex = vertexes[i];
+			var data = vertex.data();
+			var edgeList = vertex.edges();
+
+			if(onlyCrossInside){
+				if(!data["inside"]){
+					var sum = 0;
+					for(var j=0; j<edgeList.length; ++j){
+						var edge = edgeList[j];
+						// only include weights of vertexes on inside=
+						if(edge.opposite(vertex).data()["inside"]){
+							// console.log("found opposite inside: ",edge.opposite(vertex));
+							// var weight = edge.weight();
+							var weight = 1;
+							sum += weight;
+						}
+					}
+					// console.log(sum);
+					data["score"] = sum;
+					vertexQueue.push(vertex);
+				}
+			}else{
+				// console.log(edgeList);
+				// sum of all edges = best?
+				var sum = 0;
+				for(var j=0; j<edgeList.length; ++j){
+					var edge = edgeList[j];
+					var weight = edge.weight();
+					sum += weight;
+					// console.log(edge.weight());
+				}
+				// console.log(sum);
+				data["score"] = sum;
+				data["inside"] = false;
+				vertexQueue.push(vertex);
+			}
+			
+		}
+	}
+	updateScoresFxn(false);
+	// start with most connected view inside 
+
+	// var array
+	// onlyInside
+
+
+	var bestVertex = vertexQueue.pop();
+	console.log(bestVertex);
+	// throw "...."
+	console.log("bestVertex: "+bestVertex.data()["id"]);
+	vertexQueue.clear();
+	bestVertex.data()["inside"] = true;
+	// insideHash[bestVertex.data()["id"]] = bestVertex;
+	
+	var sortAdjFxn = function(a,b){
+		return a["score"] > b["score"] ? -1 : 1;
+	};
+	// initial step as default
+	var steps = [];
+		var step = {};
+		step["view"] = bestVertex.data()["id"];
+		step["pairs"] = null;
+		steps.push(step);
+
+	// iteritive joining of vertexes
+	for(var i=0; i<9999; ++i){
+		updateScoresFxn(true);
+		// console.log(" ....................... "+i+" = "+vertexQueue.length());
+		var bestVertex = vertexQueue.pop();
+		if(!bestVertex){ // empty
+			break;
+		}
+		vertexQueue.clear();
+		// console.log(bestVertex);
+		var score = bestVertex.data()["score"];
+		if(score==0){
+			console.log(bestVertex);
+			throw "0 score";
+		}
+
+		var step = {};
+		var pairs = [];
+		step["view"] = bestVertex.data()["id"];
+		step["pairs"] = pairs;
+		steps.push(step);
+		// get top scores of adjacent interrior 
+		var edgeList = bestVertex.edges();
+		for(var j=0; j<edgeList.length; ++j){
+			var edge = edgeList[j];
+			var oppo = edge.opposite(bestVertex).data();
+			if(oppo["inside"]){
+				var weight = edge.weight();
+				pairs.push( { "id":oppo["id"], "score":weight });
+			}
+		}
+		pairs.sort(sortAdjFxn);
+
+
+		bestVertex.data()["inside"] = true;
+		insideHash[bestVertex.data()["id"]] = bestVertex;
+
+		// remove all / resort ?
+		// throw "..."
+	}
+
+
+	var sequentialData = {};
+	sequentialData["initial"] = {
+		"views": allViews, // absolute
+		"pairs": allTransforms, // relative w/ error info
+	};
+	sequentialData["graph"] = {
+		"cameras":allCameras, // cameras
+		"views":null, // id,R,...
+		"points":null, // points or point filenames ?
+	};
+	sequentialData["sequence"] = steps;
+
+	console.log(steps);
+
+	return sequentialData;
+
+
+	// throw "sequentialData";
+}
+
+
+
 // ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 Stereopsis.World.prototype.solveOptimizeSingleViewReprojection = function(viewSolve, pairInfo, loopIterations){
 	loopIterations = Code.valueOrDefault(loopIterations, 10);
