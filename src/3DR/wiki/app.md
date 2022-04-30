@@ -149,6 +149,11 @@
 		- take several photos from various angles
 		- you put the model up on the museum website
 
+	- you're a 3D printing geek
+		- you want to create a fix for a part (eg fridge foot, ...)
+		- you put the model in the printer
+		- you fix your broken appliance
+
 	- social sharing
 
 	- measure something?
@@ -159,6 +164,27 @@
 
 
 
+### PRESENTATION
+	- I went on a trip to chichinitza a few years ago and took some pictures of some features i liked
+		- i can upload from my phone or on my vr magnopus scenes app
+		- i can quickly generate a texture mesh with only a few images
+		- i also recorded some audio / video listening to a subject matter expert emmerse me in the
+			- drop it in the scene
+		- there were a lot of people there but because they were moving around the algorithm is able to remove them from the enviroment
+		- it was daytime but I'd like to add some filters to make it look like nighttime
+		- or maybe i want to make it seem comic-booky with a spiderverse filter
+		- I publish my scene with a geotag for a real-world locaiton [it is picked up by a curation team and made available to everyone]
+		- i can then share the space my friends or other random people can go in and copy the space and do with it what they want
+
+	- I'm painting my room but i want to get a real feel for what a good color would be
+		- using some pictures of my room i generate the scene, look at it in vr
+		- i do some simple selection editing and apply some tinting
+		- i can see what it might look like in a bright day or a dark night
+		- i find my favorite color and paint the room
+	
+	- I'm a 3D printer geek and i want to print a replacement piece for something that broke
+	- I'm a 3D modeler and i want to get a quick start on a 3D scene from reality
+	- I see a really cool flower and I take some pictures, generate the world, scale it up, and look at it from the perspective of a bug
 
 
 
@@ -401,7 +427,70 @@ MISSING:
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
+
+- 2D camera estimate from matches???
+- linear & nonlinear
+
+
+- see what estimating camera linearly from points gets
+
+
+
+
+
+SOME RELATIONSHIP BETWEEN POINT TRANSFORMING (metric/euclidean) & VIEW/CAMERA ABSOLUTE TRANSFORMING
+	=> don't want to use some R-re-estimation
+	=> do want to use some geometric moving constraint
+
+		=> projective points fixed on a plane
+			=> where is this plane ?
+
+
+=> 2D linear estimation isn't doing well with some projections
+=> try progressive:
+	- translate
+	- scale
+	- rotate
+	-> repeat
+
+
+- try synthetic geometry matching
+
+A) just the geometry
+B) with view projection
+	- 2D & 3D
+
+
+
 => understand how the P3D DLT is only an approx & how to nonlinearly make it better & what that means
+
+
+
+
+TO ALIGN GEOMETRY:
+	- linear step to put geometry close
+	=> set the camera to a new position
+	- how to calculate a % of a transform
+	(linear position)
+	(linear angle [2D] -> minAngle direction)
+	(linear quaternion [3D])
+
+
+
+GUESS A)
+	- find linear estimation to map geometry
+	- binary intersect on [0,1] of transform
+		- placing camera at interpolated orientation
+		- error = distance between goal & subject points
+			- GOAL:
+				- A: transformed SUBJECT points
+				- B: existing GOAL points
+	- nonlinear step to update camera extrinsic to minimize distance error
+
+
+
+
+- full actual sequential method process
 
 
 
@@ -497,6 +586,16 @@ INPUT:
 	- views in near-correct absolute positions
 OUTPUT:
 	- 3D points in correct absolute positions
+
+
+
+
+- points that are far away from their goal OR their counterparts are bad
+
+
+- discard points that are very isolated (kNN is very large ?)
+
+
 
 
 

@@ -156,7 +156,7 @@ learnings from sequential:
 		- pairwise R & track
 		- triples
 		- initial global orientation
-		- tracks: iteritive view location adjustment [move single view to minimize structure point distances]
+		- tracks: iteritive view location adjustment [move single view to minimize structure point distances, possibly remove worst tracks, possibly also reprojection error optimizing?]
 		- ? sequential: load view - by - view ?
 	- BUNDLE
 		- dense groups ?

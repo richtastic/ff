@@ -1126,7 +1126,469 @@ var tz = P.get(2,3);
 	return {"matrix":M, "error":cost};
 	*/
 }
+R3D._testOptimizeGeometryProjection3D = function(){
 
+	// generate 3D points
+
+	// create cameras
+
+	// project points to cameras
+
+	// display cameras & points
+
+	// add error
+
+	// display errored cameras/points 
+
+	// optimize / correction iteration
+
+	// display optimized cameras/points
+
+	throw "R3D._testOptimizeGeometryProjection3D"
+}
+R3D._testOptimizeGeometryProjection2D = function(){
+
+	var worldPoints2D = [];
+
+	// 2 planes:
+	for(var i=0; i<15; ++i){
+		var p2D = new V2D(i,0);
+		worldPoints2D.push(p2D);
+	}
+	for(var i=1; i<10; ++i){
+		var p2D = new V2D(0,i);
+		worldPoints2D.push(p2D);
+	}
+	// move to location
+	var worldTransform = new Matrix(3,3).identity();
+		worldTransform = Matrix.transform2DRotate(worldTransform, Code.radians(40));
+		worldTransform = Matrix.transform2DTranslate(worldTransform, 2,9);
+	for(var i=0; i<worldPoints2D.length; ++i){
+		var p2D = worldPoints2D[i];
+		p2D = worldTransform.multV2DtoV2D(p2D);
+		worldPoints2D[i] = p2D;
+	}
+	console.log(worldPoints2D);
+
+	// throw "..."
+
+	// place cameras:
+	var cameraAbsoluteA = new Matrix(3,3).identity();
+	var cameraAbsoluteB = new Matrix(3,3).identity();
+		cameraAbsoluteB = Matrix.transform2DRotate(cameraAbsoluteB, Code.radians(15));
+		cameraAbsoluteB = Matrix.transform2DTranslate(cameraAbsoluteB, 4,0);
+		// cameraAbsoluteB = Matrix.transform2DRotate(cameraAbsoluteB, Code.radians(15));
+
+	var cameraExtrinsicA = Matrix.inverse(cameraAbsoluteA);
+	var cameraExtrinsicB = Matrix.inverse(cameraAbsoluteB);
+console.log(cameraExtrinsicA+"");
+console.log(cameraExtrinsicB+"");
+	// throw "?"
+	// var K2D = new Matrix(2,2);
+	var K_f = 1.0;
+	var K_c = 0.0;
+	var K = {"f":K_f,"c":K_c};
+
+var project2DFxn = R3D.projectPoint2Dto1D;
+
+	var matches = [];
+	for(var i=0; i<worldPoints2D.length; ++i){
+		var p2D = worldPoints2D[i];
+		// var p3D = new V3D(p2D.x,p2D.y,1.0);
+		// console.log(p3D+"");
+		var p2DA = cameraExtrinsicA.multV2DtoV2D(p2D);
+		// var p2DA = cameraExtrinsicA.multV3DtoV3D(p3D);
+		var x_a = project2DFxn(p2DA, K);
+		var p2DB = cameraExtrinsicB.multV2DtoV2D(p2D);
+		// var p2DB = cameraExtrinsicB.multV3DtoV3D(p3D);
+		var x_b = project2DFxn(p2DB, K);
+		matches.push({"a":x_a,"b":x_b});
+	}
+	console.log(matches);
+
+	// display:
+	var displayScale = 20.0;
+
+
+	var stage = GLOBALSTAGE;
+	var d = new DO();
+		stage.addChild(d);
+		// d.matrix().translate(500, 200);
+		d.matrix().scale(1, -1);
+		d.matrix().translate(400, 500);
+
+	var drawCamFxn = function(ext, colLine){
+		colLine = Code.valueOrDefault(colLine, 0xFF000099);
+		var thiLine = 2.0;
+		var o = ext.multV2DtoV2D(new V2D(0,0));
+		var x = ext.multV2DtoV2D(new V2D(1,0));
+		var y = ext.multV2DtoV2D(new V2D(0,1));
+			x.sub(o);
+			y.sub(o);
+o.scale(displayScale);
+x.scale(displayScale);
+y.scale(displayScale);
+// console.log(o+"")
+// console.log(x+"")
+// console.log(y+"")
+		d.graphics().setLine(thiLine, colLine );
+		d.graphics().beginPath();
+		//d.graphics().setFill(0x0000FF00);
+		d.graphics().moveTo(o.x,o.y);
+		//d.graphics().drawEllipse(pX,pY, rad,rad, 0.0);
+		d.graphics().lineTo(o.x + x.x + y.x, o.y + x.y + y.y);
+		d.graphics().lineTo(o.x - x.x + y.x, o.y - x.y + y.y);
+		d.graphics().endPath();
+		d.graphics().moveTo(o.x,o.y);
+		d.graphics().lineTo(o.x + y.x*2, o.y + y.y*2);
+		// d.graphics().fill();
+		d.graphics().strokeLine();
+	}
+
+// ALTER SLIGHTLY - ERROR
+//cameraAbsoluteB = Matrix.transform2DRotate(cameraAbsoluteB, Code.radians(1));
+var originalCamAbsB = cameraAbsoluteB.copy();
+// cameraAbsoluteB = Matrix.transform2DTranslate(cameraAbsoluteB, 0, 1);
+// cameraAbsoluteB = Matrix.transform2DTranslate(cameraAbsoluteB, 1, 0);
+// cameraAbsoluteB = Matrix.transform2DTranslate(cameraAbsoluteB, 1, 1);
+
+// cameraAbsoluteB = Matrix.transform2DTranslate(cameraAbsoluteB, 4, 0);
+// cameraAbsoluteB = Matrix.transform2DTranslate(cameraAbsoluteB, -2, 0);
+// cameraAbsoluteB = Matrix.transform2DTranslate(cameraAbsoluteB, 1, -1);
+
+// cameraAbsoluteB = Matrix.transform2DTranslate(cameraAbsoluteB, 0, 2);
+// cameraAbsoluteB = Matrix.transform2DTranslate(cameraAbsoluteB, 0, -2);
+
+// cameraAbsoluteB = Matrix.transform2DRotate(cameraAbsoluteB, Code.radians(3));
+// cameraAbsoluteB = Matrix.transform2DRotate(cameraAbsoluteB, Code.radians(5));
+// cameraAbsoluteB = Matrix.transform2DRotate(cameraAbsoluteB, Code.radians(10));
+cameraAbsoluteB = Matrix.transform2DRotate(cameraAbsoluteB, Code.radians(-3));
+
+
+
+	// estimate depth:
+	var oA = cameraAbsoluteA.multV2DtoV2D(new V2D(0,0));
+	var xA = cameraAbsoluteA.multV2DtoV2D(new V2D(1,0));
+	var yA = cameraAbsoluteA.multV2DtoV2D(new V2D(0,1));
+		xA.sub(oA);
+		yA.sub(oA);
+	var oB = cameraAbsoluteB.multV2DtoV2D(new V2D(0,0));
+	var xB = cameraAbsoluteB.multV2DtoV2D(new V2D(1,0));
+	var yB = cameraAbsoluteB.multV2DtoV2D(new V2D(0,1));
+		xB.sub(oB);
+		yB.sub(oB);
+
+	var estimatedPoints2D = [];
+	for(var i=0; i<matches.length; ++i){
+		var match = matches[i];
+		var sA = match["a"];
+		var sB = match["b"];
+		// midpoint of rays:
+			sA = sA - K_c;
+			sB = sB - K_c;
+		var rA = new V2D( K_f*yA.x + sA*xA.x, K_f*yA.y + sA*xA.y );
+		var rB = new V2D( K_f*yB.x + sB*xB.x, K_f*yB.y + sB*xB.y );
+		var e2D = Code.rayInfiniteIntersect2D(oA,rA, oB,rB);
+		estimatedPoints2D[i] = e2D;
+	}
+
+
+	// FIND MISSING TRANSFORM:
+	// var transform2D = R3D.DLT2D(estimatedPoints2D,worldPoints2D);
+	var transform2D = R3D.iteritive2DEuclidean(estimatedPoints2D,worldPoints2D);
+
+	
+
+
+	// iteritive2DEuclidean
+	// var transform2D = R3D.iteritive2DEuclidean(estimatedPoints2D,worldPoints2D, false);
+
+// transform2D = Matrix.inverse(transform2D); // just sometimes ?
+
+	console.log("transform2D:");
+	console.log(transform2D+"");
+	console.log(transform2D);
+
+
+// cameraAbsoluteGuessB = Matrix.mult(cameraAbsoluteB,transform2D);
+cameraAbsoluteGuessB = Matrix.mult(transform2D,cameraAbsoluteB);
+
+
+
+// transform points:
+var points1DB = [];
+var bestFitPoints2DB = [];
+for(var i=0; i<matches.length; ++i){
+	var match = matches[i];
+	var b = match["b"];
+	points1DB.push(b);
+	var p = estimatedPoints2D[i]
+	p = transform2D.multV2DtoV2D(p);
+	bestFitPoints2DB.push(p);
+}
+console.log(bestFitPoints2DB);
+console.log(points1DB);
+console.log(K);
+var cameraAbsoluteGuessB = R3D.estimate2DCameraFromPoints(bestFitPoints2DB, points1DB, K);
+console.log(cameraAbsoluteGuessB);
+
+throw "..."
+
+	drawCamFxn(cameraAbsoluteA, 0xFF000000);
+	drawCamFxn(originalCamAbsB, 0xFF000099);
+	drawCamFxn(cameraAbsoluteB, 0x99009900);
+	drawCamFxn(cameraAbsoluteGuessB, 0x99FF0000);
+
+	d.graphics().setLine(1.0, 0xFF000099);
+	d.graphics().setFill(0xFF0000FF);
+		
+	for(var i=0; i<worldPoints2D.length; ++i){
+		var p2D = worldPoints2D[i];
+		d.graphics().beginPath();
+		d.graphics().drawCircle(p2D.x*displayScale,p2D.y*displayScale, 3.0);
+		d.graphics().endPath();
+		d.graphics().fill();
+		d.graphics().strokeLine();
+	}
+
+	d.graphics().setLine(1.0, 0x99009900);
+	d.graphics().setFill(0x6600FF00);
+
+	for(var i=0; i<estimatedPoints2D.length; ++i){
+		var p2D = estimatedPoints2D[i];
+		d.graphics().beginPath();
+		d.graphics().drawCircle(p2D.x*displayScale,p2D.y*displayScale, 6.0);
+		d.graphics().endPath();
+		d.graphics().fill();
+		d.graphics().strokeLine();
+	}
+
+	d.graphics().setLine(1.0, 0x99990000);
+	d.graphics().setFill(0x66990000);
+
+	for(var i=0; i<estimatedPoints2D.length; ++i){
+		var p2D = estimatedPoints2D[i];
+			p2D = transform2D.multV2DtoV2D(p2D);
+		d.graphics().beginPath();
+		d.graphics().drawCircle(p2D.x*displayScale,p2D.y*displayScale, 8.0);
+		d.graphics().endPath();
+		d.graphics().fill();
+		d.graphics().strokeLine();
+	}
+
+	
+
+
+	//
+	throw "_testOptimizeGeometryProjection2D";
+}
+
+
+
+
+R3D.projectPoint2Dto1D = function(p2D, K){
+	var K_f = K["f"];
+	var K_c = K["c"];
+	var x = p2D.x;
+	var y = p2D.y;
+	var projX = K_f*(x/y) + K_c;
+	return projX;
+}
+
+R3D.estimate2DCameraFromPoints = function(points2D,  points1D, K2Dinv){
+// R3D.estimate2DCameraFromPoints = function(points2DA, points2DB, points1D, K, Pa){
+// R3D.optimizeCameraExtrinsicDLTKnown3DK = function(K, Kinv, points2D, points3D){
+	//
+	console.log(points2D,  points1D, K2Dinv);
+	var pointCount = points2D.length;
+	console.log(pointCount);
+
+	var cols = 6;
+	var rows = pointCount;
+	var A = new Matrix(rows,cols); 
+	var p2D = new V3D();
+
+	for(var i=0; i<pointCount; ++i){
+		var point2D = points2D[i];
+		var point1D = points1D[i];
+		// get normalized 2D coordinates:
+		p2D.x = point1D;
+		p2D.y = 1;
+
+		Kinv.multV1DtoV1D(p2D,p2D);
+		var x = p2D.x;
+		var X = point2D.x;
+		var Y = point2D.y;
+		var i0 = i*3 + 0;
+throw "here"
+		A.set(i0,0,  X); // a
+		A.set(i0,1,  Y); // b
+		A.set(i0,2,  1); // c
+		A.set(i0,4,  -X*x); // d
+		A.set(i0,5,  -Y*x); // e
+		A.set(i0,6,  -x); // f
+	}
+	// console.log("A: "+A);
+	var svd = Matrix.SVD(A);
+	var coeff = svd.V.colToArray(cols-1);
+	// console.log(svd);
+	console.log(coeff+"");
+	Code.arrayPushArray(coeff,[0,0,1]);
+	var P = new Matrix(3,3).fromArray(coeff);
+	console.log("P:\n"+P);
+	var P = R3D.euclidean2DFromApproximate(P);
+	console.log("P:\n"+P);
+	console.log(P);
+
+
+
+	// R3D.projectPoint2Dto1D
+
+	throw "estimate2DCameraFromPoints"
+}
+
+R3D._testOptimizeGeometryEuclidean = function(){
+
+	var sourcePoints = [];
+	var pointCount = 10;
+	var range = 1.0;
+	var noise = 0.1;
+	for(var i=0; i<pointCount; ++i){
+		var point = new V2D( (Math.random()-0.5)*2*range, (Math.random()-0.5)*2*range );
+		sourcePoints.push(point);
+	}
+
+	var transform2D = new Matrix2D();
+		transform2D.translate( 0.10, 0.20);
+		transform2D.rotate( Code.radians(15.0) );
+
+	var objectPoints = [];
+	for(var i=0; i<sourcePoints.length; ++i){
+		var point = sourcePoints[i];
+			point = transform2D.multV2DtoV2D(point);
+			point.x += (Math.random()-0.5)*2*noise;
+			point.y += (Math.random()-0.5)*2*noise;
+		objectPoints.push(point);
+	}
+
+
+	// DISPLAY:
+	var stage = GLOBALSTAGE;
+	var d = new DO();
+		stage.addChild(d);
+		d.matrix().translate(500, 200);
+	
+	var displayScale = 200.0;
+
+	// source:
+	d.graphics().setFill(0xFF000099);
+	for(var i=0; i<sourcePoints.length; ++i){
+		var point = sourcePoints[i];
+		d.graphics().beginPath();
+		d.graphics().drawCircle(point.x*displayScale, point.y*displayScale, 5.0);
+		d.graphics().endPath();
+		d.graphics().fill();
+	}
+
+	d.graphics().setFill(0xFF990000);
+	for(var i=0; i<sourcePoints.length; ++i){
+		var point = objectPoints[i];
+		d.graphics().beginPath();
+		d.graphics().drawCircle(point.x*displayScale, point.y*displayScale, 5.0);
+		d.graphics().endPath();
+		d.graphics().fill();
+	}
+
+
+
+	// var info = R3D.optimizeGeometryTransform2D(sourcePoints, objectPoints);
+	// console.log(info);
+	// var transform2D = info["transform"];
+
+	var transform2D = R3D.DLT2D(objectPoints,sourcePoints);
+	console.log(transform2D);
+
+
+
+	// throw "";
+
+	d.graphics().setFill(0xFF009900);
+	for(var i=0; i<sourcePoints.length; ++i){
+		var point = objectPoints[i];
+			point = transform2D.multV2DtoV2D(point);
+		d.graphics().beginPath();
+		d.graphics().drawCircle(point.x*displayScale, point.y*displayScale, 3.0);
+		d.graphics().endPath();
+		d.graphics().fill();
+	}
+
+	throw "_testOptimizeGeometryEuclidean"
+}
+
+
+R3D.optimizeGeometryTransform2D = function(staticPoints2D, dynamicPoints2D){
+
+
+	var transform2D = new Matrix2D().identity();
+	var args = [staticPoints2D, dynamicPoints2D, transform2D];
+	var epsP = 1E-6; // todo: get range size
+	var epsA = Code.radians(1.0);
+	var epsilon = [epsP, epsP, epsA];
+	var x = [0,0,0]; // px, py, angle
+	var maxIterations = 100;
+	var minError = 1E-16;
+	var result = Code.gradientDescent(R3D._optimizeGeometryTransform2DGD, args, x, epsilon, maxIterations, minError);
+	var x = result["x"];
+console.log("X: "+x);
+	var tx = x[0];
+	var ty = x[1];
+	var angle = x[2];
+	// init
+	transform2D.identity();
+	transform2D.rotate(angle);
+	transform2D.translate(tx,ty);
+	
+	
+
+	// throw "optimizeGeometryTransform2D"
+	return {"transform":transform2D};
+}
+R3D._optimizeGeometryTransform2DGD = function(args, x, isUpdate){
+	// if(isUpdate){
+	// 	return;
+	// }
+	// console.log("x: "+x);
+	var goalPoints = args[0];
+	var movePoints = args[1];
+	var transform2D = args[2];
+	var tx = x[0];
+	var ty = x[1];
+	var angle = x[2];
+	// init
+	transform2D.identity();
+	transform2D.rotate(angle);
+	transform2D.translate(tx,ty);
+	
+	var p = new V2D();
+	var totalError = 0;
+	for(var i=0; i<goalPoints.length; ++i){
+		var goal = goalPoints[i];
+		var move = movePoints[i];
+		transform2D.multV2DtoV2D(p, move);
+		// console.log("d: "+V2D.distance(move,p)+" - "+move+" : "+p);
+		var error = V2D.distance(goal,p);
+		totalError += error;
+	}
+	if(isUpdate){
+		console.log("totalError: "+totalError);
+	}
+	// throw "_optimizeGeometryTransform2DGD"
+	return totalError;
+}
+
+R3D.optimizeGeometryTransform3D = function(){
+	throw "optimizeGeometryTransform3D"
+}
 
 
 
@@ -1143,7 +1605,8 @@ R3D.optimizeCameraExtrinsicByGeometryMatching3D = function(listP, listK, listKin
 	var x = [];
 
 	var positionAccuracy = 1E-9; // todo: size * 1E-9
-	var rotationAccuracy = Code.radians(1E-3); // 360/.1 ~ 
+	// var rotationAccuracy = Code.radians(1E-3); // 360/.1 ~ 
+	var rotationAccuracy = Code.radians(1E-6);
 	var planarEpsilon = [];
 	var singleEpsilon = [positionAccuracy,positionAccuracy,positionAccuracy,rotationAccuracy,rotationAccuracy,rotationAccuracy];
 	for(var i=0; i<listP.length; ++i){
@@ -1228,7 +1691,8 @@ R3D._optimizeCameraExtrinsicByGeometryMatching3DGD = function(args, x, isUpdate)
 		var location3D = R3D.triangulatePointDLTList(points2D, extrinsics, invsK, tempP3D);
 		var distanceSquare3D = V3D.distanceSquare(location3D,point3DStatic);
 		// console.log(distanceSquare3D);
-		totalError += distanceSquare3D;
+		// totalError += distanceSquare3D;
+		totalError += Math.sqrt(distanceSquare3D);
 	}
 	if(isUpdate){
 		console.log("optimizeCameraExtrinsicByGeometryMatching3DGD - totalError: "+totalError);
@@ -9201,6 +9665,99 @@ R3D.infoFromAffineMatrix2D = function(affine){
 }
 
 
+R3D.iteritive2DEuclidean = function(pointsFr,pointsTo, doScale){
+	doScale = Code.valueOrDefault(doScale, true);
+	var transform2D = new Matrix(3,3).identity();
+	var maxIterations = 10;
+	var from = [];
+	var pointCount = pointsFr.length;
+	var comT = new V2D();
+	for(var i=0; i<pointCount; ++i){
+		from[i] = pointsFr[i].copy();
+		comT.x += pointsTo[i].x;
+		comT.y += pointsTo[i].y;
+	}
+	comT.scale(1/pointCount);
+	for(var iteration=0; iteration<maxIterations; ++iteration){
+		// translate:
+		var delta = new V2D();
+		for(var i=0; i<pointCount; ++i){
+			var f = from[i];
+			var t = pointsTo[i];
+			delta.x += t.x-f.x;
+			delta.y += t.y-f.y;
+		}
+		delta.scale(1/pointCount);
+		console.log("delta: "+delta.length());
+		transform2D = Matrix.transform2DTranslate(transform2D, delta.x, delta.y);
+		var comF = new V2D();
+		for(var i=0; i<pointCount; ++i){
+			var f = from[i];
+			f.x += delta.x;
+			f.y += delta.y;
+			comF.x += f.x;
+			comF.y += f.y;
+		}
+		comF.scale(1/pointCount);
+		
+		// rotate:
+		var angles = [];
+		var v = new V2D();
+		for(var i=0; i<pointCount; ++i){
+			var f = from[i];
+			var t = pointsTo[i];
+			var angle = V2D.angleDirection( V2D.sub(f,comF), V2D.sub(t,comT) );
+			angles.push(angle);
+		}
+		var angle = Code.averageAngles(angles);
+		console.log("angle: "+Code.degrees(angle));
+			transform2D = Matrix.transform2DTranslate(transform2D, -comF.x, -comF.y);
+				transform2D = Matrix.transform2DRotate(transform2D, angle);
+			transform2D = Matrix.transform2DTranslate(transform2D, comF.x, comF.y);
+		for(var i=0; i<pointCount; ++i){
+			var f = from[i];
+			f.sub(comF);
+			f.rotate(angle);
+			f.add(comF);
+		}
+if(doScale){
+		// scale:
+		var scales = [];
+		var v = new V2D();
+		for(var i=0; i<pointCount; ++i){
+			var f = from[i];
+			var t = pointsTo[i];
+				f = V2D.sub(f,comF);
+				t = V2D.sub(t,comT);
+			var lf = f.length();
+			var lt = t.length();
+			if(lf>0 && lt>0){
+				var scale = lt/lf;
+				scale = Math.log(scale);
+				scales.push(scale);
+			}
+			
+		}
+		var scale = Code.averageNumbers(scales);
+			scale = Math.exp(scale);
+// console.log(scales);
+		console.log("scale: "+scale);
+// throw "?"
+			transform2D = Matrix.transform2DTranslate(transform2D, -comF.x, -comF.y);
+				transform2D = Matrix.transform2DScalePoints(transform2D, scale);
+			transform2D = Matrix.transform2DTranslate(transform2D, comF.x, comF.y);
+		for(var i=0; i<pointCount; ++i){
+			var f = from[i];
+			f.sub(comF);
+			f.scale(scale);
+			f.add(comF);
+		}
+}
+	}
+	// throw "..."
+	return transform2D;
+}
+
 
 R3D.DLT2D = function(pointsFr,pointsTo){
 	var i, j, fr, to, len = pointsFr.length;
@@ -9236,7 +9793,28 @@ R3D.DLT2D = function(pointsFr,pointsTo){
 	var svd = Matrix.SVD(A);
 	var coeff = svd.V.colToArray(8);
 	var H = new Matrix(3,3).fromArray(coeff);
-	H.scale( 1.0/H.get(2,2) );
+	var last = H.get(2,2);
+	// console.log(last);
+	// if(last<0){ // TODO: is this right?
+		// last = -last;
+	// }
+	//
+	
+	// var det = H.det();
+	// console.log("determinant: "+det);
+
+	H.scale( 1.0/last );
+	// if(det<0){
+	// 	H.scale(-1);
+	// }
+	// if(last<0){ // TODO: is this right?
+		// H = Matrix.inverse(H);
+	// }
+	// if(det<0){
+	// 	H = Matrix.inverse(H);
+	// }
+
+	// TODO: sometimes this is the inverse action ?
 	return H;
 }
 
@@ -48573,6 +49151,10 @@ Code.rotationMatrixToEulerRodriguez2 = function(R){
 	return r;
 }
 */
+
+R3D.euclidean2DFromApproximate = function(P){
+	throw "..."
+}
 
 R3D.euclideanFromApproximate = function(P){
 	var scale = R3D.euclideanScaleFromMatrix(P);

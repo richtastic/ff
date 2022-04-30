@@ -876,7 +876,7 @@ ByteData.AESencrypt = function(key, message, type, size, inputIV, isDecrypt){ //
 				for(var j=0; j<blockLength; ++j){
 					state[j] = state[j] ^ initVector[j];
 				}
-			}x
+			}
 			// encrypt loop
 			for(var round=0; round<=roundCount; ++round){
 				if(round>0){

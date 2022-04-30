@@ -7741,8 +7741,13 @@ console.log("checkPerformNextTask");
 	var i, j, k, len;
 	console.log("next task?");
 
+
+// R3D._testOptimizeGeometryEuclidean();
+
+// R3D._testOptimizeGeometryProjection2D();
+R3D._testOptimizeGeometryProjection3D();
 // Matrix.testQR();
-// throw "..."
+throw "..."
 // Code.testPointMatches();
 // Code.testLM();
 
@@ -7834,7 +7839,7 @@ console.log("checkPerformNextTask");
 		return;
 	}
 
-throw "start dense";
+// throw "start dense";
 	if(!project.checkHasDenseStarted()){
 		project.calculateDensePairPutatives();
 		return;
@@ -8168,7 +8173,7 @@ console.log("GOT : relative: "+relativeCount);
 
 			if(relativeAB){ // dense
 				// console.logx(camAID,camBID,cameras);
-				throw "this is for dense"
+				// throw "this is for dense"
 				console.log(relativeAB);
 				configuration = {};
 				project.calculatePairMatchWithRFromViewIDs(idA,idB, relativeAB, camAID,camBID,cameras, completePairFxn,project, configuration);
@@ -10880,7 +10885,7 @@ console.log("ITERATION NUMBER: "+baIterations+" / "+maxIterationsBA);
 
 
 console.log("isDone - FULL DONE");
-throw "BEFORE HANDLE DONE TRACK FULL BA "
+// throw "BEFORE HANDLE DONE TRACK FULL BA "
 
 // show the graph:
 var orderedAbsoluteTransforms = [];
@@ -10996,7 +11001,10 @@ SEQUENTIAL:
 
 */
 				
-				throw "was initGraphSequential"
+
+/*
+
+// 				throw "was initGraphSequential"
 
 				var sequentialData = project._initGraphSequential(allViews,allPoints, allTransforms, allCameras); // info
 
@@ -11039,11 +11047,18 @@ SEQUENTIAL:
 
 
 					throw "start sequential sequence???"
-					// if(!isDense){
-					// 	project.setSparseCount(solutionPairCount);
-					// }else{
-					// 	project.setDenseCount(solutionPairCount);
-					// }
+
+*/
+
+
+
+// if done after bundle:
+
+					if(!isDense){
+						project.setSparseCount(solutionPairCount);
+					}else{
+						project.setDenseCount(solutionPairCount);
+					}
 
 					// save project
 					var savedDataComplete = function(){
@@ -11058,6 +11073,7 @@ SEQUENTIAL:
 					console.log(sourceData);
 
 					// throw "before saving putatives";
+					console.log("sourceFilename: "+sourceFilename);
 
 					project.saveFileFromData(sourceData, sourceFilename, savedDataComplete, project);
 					return;
@@ -11088,7 +11104,7 @@ console.log(allViews);
 				// world.setResolutionProcessingModeNonVisual();
 				// world.setResolutionProcessingModeBest();
 				// world.copyRelativeTransformsFromAbsolute();
-// console.log(allPoints);
+console.log(allPoints);
 // throw "...allPoints"
 				var points3DExisting = App3DR.ProjectManager._worldPointFromSaves(world, allPoints, WORLDVIEWSLOOKUP);
 				world.embedPoints3DNoValidation(points3DExisting);
@@ -11137,15 +11153,18 @@ console.log(sourceData);
 // console.log(pairInfo);
 // console.log("...");
 // throw "pairInfo";
-				// var info = world.solveOptimizeSingleViewReprojection(worldView, pairInfo);
 
+
+				// var info = world.solveOptimizeSingleViewReprojection(worldView, pairInfo);
+				// console.log(info);
 
 
 
 var info = world.solveOptimizeSequential(pairInfo);
 console.log(info);
-throw "..."
 
+// throw "..."
+/*
 				// var maxIts = 3;
 				var maxIts = 1;
 				for(var its=0; its<maxIts; ++its){
@@ -11154,26 +11173,28 @@ throw "..."
 					for(var v=0; v<views.length; ++v){
 						console.log(" ...................................................................................................... "+v)
 						var view = views[v];
+						// var info = world.solveOptimizeSingleViewReprojection(view, pairInfo);
 						var info = world.solveOptimizeSingleViewReprojection(view, pairInfo);
 						console.log(info);
 // break;
 					}
-break;
+// break;
 				}
 
+*/
 
 				
 var str = world.toYAMLString();
 console.log(str);
 throw "before save optimizing full track full ..............";
 
-
+/*
 				console.log(info);
 				nextViewBA["deltaErrorR"] = Math.abs(info["deltaR"]); // expected always negative
 				nextViewBA["errorR"] = info["errorR"];
 				nextViewBA["count"] = worldView.pointCount();
 				nextViewBA["updated"] = Code.getTimeMilliseconds();
-				
+*/
 				// update views:
 				var worldObject = world.toObject();
 				fullData["points"] = worldObject["points"];
@@ -11970,7 +11991,7 @@ maxIterationsBA = 1;
 
 				if(isDone){
 					console.log("track group isDone");
-throw "before handle done tracks - skeleton - track_0";
+// throw "before handle done tracks - skeleton - track_0";
 					graphData["bundleGroupIndex"] = bundleGroupIndex + 1;
 					// VIEWS
 					var graphTransforms = [];
@@ -12097,7 +12118,7 @@ console.log(graphGroup);
 var str = world.toYAMLString();
 console.log(str);
 
-	// throw "AFTER OPTIMIZE"
+	throw "AFTER OPTIMIZE"
 					nextViewBA["deltaErrorR"] = Math.abs(info["deltaR"]); // expected always negative
 					nextViewBA["errorR"] = info["errorR"];
 					nextViewBA["updated"] = Code.getTimeMilliseconds();//Code.getTimeStampFromMilliseconds();
@@ -13290,13 +13311,19 @@ throw "no more";
 
 */
 
-	var errorSearchRMaximumPercent = 0.005; // 0.001 - 0.010
+	var errorSearchRMaximumPercent = 0.005; // 0.001 - 0.010 // 5 on 1025
 
 
-	var maxErrorRDensePercent = 0.004; // 4 on 1024
-	var maxErrorFDensePercent = 0.004 * 1.5;
-	var maxErrorRTrackPercent = 0.001; // 1 on 1024
-	var maxErrorFTrackPercent = 0.001 * 1.5;
+	// var maxErrorRDensePercent = 0.004; // 4 on 1024
+	// var maxErrorFDensePercent = 0.004 * 1.5;
+	// var maxErrorRTrackPercent = 0.001; // 1 on 1024
+	// var maxErrorFTrackPercent = 0.001 * 1.5;
+
+
+	var maxErrorRDensePercent = 0.004; // 4 @ 1024
+	var maxErrorFDensePercent = 0.0075; // 7 @ 1024
+	var maxErrorRTrackPercent = 0.002; // 2 @ 1024
+	var maxErrorFTrackPercent = 0.003; // 3 @ 1024
 
 	// dense needs more strict standards - maybe half ?
 
@@ -13500,7 +13527,10 @@ GLOBALSTAGE.root().matrix().scale(0.50); // dense
 			var newMatch = world.newMatchFromInfo(viewA,p2DA.copy(),viewB,p2DB.copy(),affineAB);
 			points3DAdd.push(newMatch.point3D());
 		}
+		console.log("points3DAdd:");
 		console.log(points3DAdd);
+
+/*
 
 		// create seed points:
 		// world.setResolutionProcessingModeFromCountP3D([]); // currently 0
@@ -13528,13 +13558,14 @@ GLOBALSTAGE.root().matrix().scale(0.50); // dense
 		world._resolutionProcessingModePatchUpdate = world.initP3DPatchFromNeighborhoodVisual; // full redo
 		world._resolutionProcessingModeAffineSet = world._resolutionProcessingModeAffineFromPatch3D;
 
-
+*/
 		console.log("solveDensePair");
+		world.solveDensePair(points3DAdd);
 // console.log(info);
-throw "before solveDensePair"
+// throw "before solveDensePair"
 		// //
-console.log("LOOK AT SEED PATCHES FIRST")
-		world.solveDensePairNew();
+// console.log("LOOK AT SEED PATCHES FIRST")
+		// world.solveDensePairNew();
 		// //
 		// GLOBALSTAGE.root().matrix().scale(0.25);
 		// world.showForwardBackwardPair();
@@ -13553,8 +13584,10 @@ console.log("LOOK AT SEED PATCHES FIRST")
 		// throw "AFTER DENSE - NEW PAIR DONE"
 		// //
 		var transform = world.toTransformArray()[0];
-		var errorR = (transform.rSigma() + transform.rMean());
-		var errorF = (transform.fSigma() + transform.fMean());
+		var errorR = (transform.rSigma() + transform.rMean()) * 0.5;
+		var errorF = (transform.fSigma() + transform.fMean()) * 0.5;
+		console.log("transform error R: "+transform.rMean()+" +/- "+transform.rSigma());
+		console.log("transform error F: "+transform.fMean()+" +/- "+transform.fSigma());
 		console.log("transform error R: "+errorR+" of "+maxErrorRDensePixels);
 		console.log("transform error F: "+errorF+" of "+maxErrorFDensePixels);
 
@@ -13575,8 +13608,13 @@ console.log("LOOK AT SEED PATCHES FIRST")
 			console.log("do tracks");
 			world.solveForTracks();
 
-			var errorR = (transform.rSigma() + transform.rMean());
-			var errorF = (transform.fSigma() + transform.fMean());
+			// var errorR = (transform.rSigma() + transform.rMean());
+			// var errorF = (transform.fSigma() + transform.fMean());
+			var errorR = (transform.rSigma() + transform.rMean()) * 0.5;
+			var errorF = (transform.fSigma() + transform.fMean()) * 0.5;
+
+			console.log("transform error R: "+transform.rMean()+" +/- "+transform.rSigma());
+			console.log("transform error F: "+transform.fMean()+" +/- "+transform.fSigma());
 			console.log("transform error R: "+errorR+" of "+maxErrorRTrackPixels);
 			console.log("transform error F: "+errorF+" of "+maxErrorFTrackPixels);
 
@@ -13591,9 +13629,6 @@ console.log("LOOK AT SEED PATCHES FIRST")
 		}
 
 
-
-// console.log("TEST 2")
-// world.solveDensePairNew();
 var str = world.toYAMLString();
 console.log(str);
 

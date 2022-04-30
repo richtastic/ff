@@ -2860,6 +2860,35 @@ Rammstein - Benzin
 
 
 
+
+https://www.youtube.com/watch?v=hBTNyJ33LWI
+
+
+
+Rammstein - Zick Zack 
+
+| du | | en |
+|-|-|-|
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+
+
+
+
+
+
+
 Mo-Do - Eins Zwei Polizei
 https://www.youtube.com/watch?v=dSy2DcATYUo
 

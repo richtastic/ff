@@ -499,10 +499,12 @@ Matrix._transformTemp2D = new Matrix(3,3);
 Matrix.transform2DIdentity = function(){
 	return new Matrix(3,3).identity();
 }
+/*
 Matrix.transform2DTranslate = function(a,tX,tY){
 	var b = Matrix._transformTemp2D.fromArray([1.0,0.0,tX, 0.0,1.0,tY, 0.0,0.0,1.0]);
 	return Matrix.mult(b,a);
 }
+*/
 // Matrix.transform2DScale = function(a,sX,sY){
 // 	throw "this should only scale the translational components?"
 // 	sY = sY!==undefined?sY:sX;
@@ -514,10 +516,12 @@ Matrix.transform2DScalePoints = function(a,sX,sY){
 	var b = Matrix._transformTemp2D.fromArray([sX,0.0,0.0, 0.0,sY,0.0, 0.0,0.0,1.0]);
 	return Matrix.mult(b,a);
 }
+/*
 Matrix.transform2DRotate = function(a,ang){
 	var b = Matrix._transformTemp2D.fromArray([Math.cos(ang),-Math.sin(ang),0.0, Math.sin(ang),Math.cos(ang),0.0, 0.0,0.0,1.0]);
 	return Matrix.mult(b,a);
 }
+*/
 Matrix.transform2DSkewX = function(a,ang, isAngle){ // give an angle
 	if(isAngle){
 		ang = Math.tan(ang);
@@ -608,7 +612,7 @@ Matrix.transform3DScalePoints = function(a,x,y,z){
 Matrix._transformTemp2D = new Matrix(3,3);
 Matrix.transform2DRotate = function(a,angle){
 	var c = Math.cos(angle), s = Math.sin(angle);
-	var b = Matrix._transformTemp2D.fromArray([c,-s,0.0, s,c,0.0,0.0, 0.0,0.0,1.0]);
+	var b = Matrix._transformTemp2D.fromArray([c,-s,0.0, s,c,0.0, 0.0,0.0,1.0]);
 	return Matrix.mult(b,a);
 }
 Matrix.transform2DTranslate = function(a,tX,tY){

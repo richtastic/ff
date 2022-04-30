@@ -16,6 +16,21 @@ function Crypto(){
 	throw "this is a static library";
 }
 
+Crypto.encryptString = function(secret, message){
+	var secretBytes = Code.stringToByteArray(secret);
+	var messageBytes = Code.stringToByteArray(message);
+	var encrypted = Crypto.encryptAES(secretBytes, messageBytes);
+	return encrypted;
+}
+
+Crypto.decryptString = function(secret, encrypted){
+	var secretBytes = Code.stringToByteArray(secret);
+	var decrypted = Crypto.decryptAES(secretBytes, encrypted);
+	var decryptedString = Code.byteArrayToString(decrypted);
+	return decryptedString;
+}
+
+
 Crypto.SHA1 = function(message){
 	var mCopy = new ByteData();
 		mCopy.writeUint8Array(message);

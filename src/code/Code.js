@@ -4082,6 +4082,31 @@ Code.getIsWeekendFromDate = function(date){
 	return day==0 || day==6; // sunday || saturday
 }
 // ------------------------------------------------------------------------------------------ BINARY REPRESENTATIONS
+// UTF 16 ?
+Code.stringToByteArray = function(str){
+	var len = str.length;
+	var array = [];
+	for(var i=0; i<len; ++i){
+		var code = str.charCodeAt(i);
+		array.push( (code>>0) & 0xFF );
+		array.push( (code>>8) & 0xFF );
+	}
+	return array;
+}
+
+Code.byteArrayToString = function(array){
+	var len = array.length;
+	var str = "";
+	for(var i=0; i<len; i+=2){
+		var codeA = array[i+0];
+		var codeB = array[i+1];
+		var code = (codeB<<8) | (codeA|0);
+		var char = String.fromCharCode(code);
+		str += char;
+	}
+	return str;
+}
+
 Code.intToBinaryString = function(num,cnt){
 	var i, len = (cnt!=null)?cnt:32, ander = 1;
 	var str = "";

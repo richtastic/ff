@@ -27,9 +27,50 @@ function customClassesProgressFxn(){
 
 function customClassesLoadedFxn(){
 	console.log("loading complete");
-	testAES();
+	// testAES();
 	//testA();
+	testString();
 }
+function testString(){
+	console.log("testString");
+
+
+	
+
+	var source = "this is my test string - kitty: キティ | mèo con | Китти | Kätzchen | 고양이 새끼 | ...";
+
+var source =
+'{\
+	"var": "string",\
+	"number": 64,\
+	"base64": 3.141,\
+	"list": [1, 2, 3, 4, 5, 99.001],\
+	"object": {\
+		"name": "sub",\
+		"index": 5,\
+		"float": 12.34567\
+	}\
+}';
+
+	console.log(source);
+	var secret = "this is my secret";
+
+	var bytes = Code.stringToByteArray(source);
+	console.log(bytes);
+	var result = Code.byteArrayToString(bytes);
+	console.log(result);
+
+
+
+	console.log(source);
+	var encrypted = Crypto.encryptString(secret, source);
+	console.log(encrypted);
+	var decrypted = Crypto.decryptString(secret, encrypted);
+	console.log(decrypted);
+	throw "testString";
+
+}
+
 function testAES(data){
 	if(!data){
 		var fileLoader = new FileLoader();
