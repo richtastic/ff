@@ -14,6 +14,69 @@ CameraApp.prototype.setupDisplay = function(){
 	this._stage.addListeners();
 	this._stage.start();
 }
+
+
+
+
+
+
+
+CameraApp.prototype.testServerData = function(){
+	//var requestURL = "http://localhost:8000/";
+	//var requestURL = "http://localhost:8000/service/registry/";
+	// var requestURL = "http://192.168.1.11:8000/service/registry/";
+
+	var requestURL = "http://localhost:8000/service/registry/";
+
+	// 
+
+	var ajax = new Ajax();
+	ajax.method(Ajax.METHOD_TYPE_POST);
+	ajax.timeout(30000);
+	ajax.context(this);
+	ajax.url(requestURL);
+	//ajax.setHeader("Access-Control-Allow-Origin","*");
+
+	ajax.callback(function(response){
+		console.log("ajax callback");
+		console.log(response);
+		// var object = Code.parseJSON(response);
+		// console.log(object);
+	});
+	
+	//var params = {};
+		//params["path"] = "/camera/0/upload";
+		//params["data"] = jsonString;
+//		params["data"] = base64;
+	//params["data"] = "this is where the data go";
+
+	var secret = "unique";
+
+	var data = {};
+	data["test"] = 3.141;
+	data["operation"] = "cam_list";
+	var json = Code.objectToJSON(data);
+	console.log(json);
+	// var binary = Code.stringToByteArray("to a binary string");
+
+
+	//console.log(source);
+	var encrypted = Crypto.encryptString(secret, json);
+	console.log(encrypted);
+	//var decrypted = Crypto.decryptString(secret, encrypted);
+	//console.log(decrypted);
+
+	// var binary = Code.stringToByteArray("to a binary string");
+	//ajax.params(params);
+
+	ajax.binaryParams(encrypted);
+
+
+	ajax.send();
+}
+
+
+
 CameraApp.prototype.testServerDLUP = function(){
 	this._client.getCameraImage(this.uploadImage);
 	// this.uploadImage("iVBORw0KGgoAAAANSUhEUgAAAAoAAAAICAMAAAD3JJ6EAAAABGdBTUEAALGPC/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3CculE8AAAAh1BMVEUAAAAcHNQnJ8MeHssVFb0UhhQtjC04tTgzM8YmJqIxMaUfH9Q4mjgueC4nlCdHu0dAQNpLS7VGMpyfMWeaOSQxVBYbdhsZjxlaWvKnHy6UMjKYQ0OkSzEcjByzMzOHGxmQLiu5OjqsUiuTMxu2Xjy7URuzsz+Pjy+MjCqiojmVlRmRkRj///8z/xahAAAALHRSTlMABXmJBAFhR3by71Zh5uQhQPHxxMvg7TU80enkyjGR7vK5OOn1PgbAyA8AADUqQYUAAAABYktHRCy63XGrAAAAB3RJTUUH4AQXEQMUzs02PQAAAEZJREFUCNdjYGBkYmZhZWNnAAIOTi5uHl4+fiBTQFBIWERUTBwkLCEpJS0jywAGcvIKihAWg5KyiiqUqaauoQllMmhpg0gAlGADs5tyhogAAAAldEVYdGRhdGU6Y3JlYXRlADIwMTYtMDQtMjNUMTc6MDM6MzktMDc6MDBHxukhAAAAJXRFWHRkYXRlOm1vZGlmeQAyMDE2LTA0LTIzVDE3OjAzOjIwLTA3OjAwb6kU0AAAAABJRU5ErkJggg==");
@@ -114,6 +177,66 @@ CameraClient.prototype.getCameraImage = function(callbackBase64){
 		params["requestID"] = "123";
 	// ajax.method(Ajax.METHOD_TYPE_GET);
 	ajax.params(params);
+	ajax.send();
+}
+
+CameraClient.prototype.requestPing = function(){
+	this._request("ping", false, null, function(response){
+		console.log(response);
+	});
+}
+
+CameraClient.prototype.requestList = function(offset,count){
+	this._request("list", false, null, function(response){
+		console.log(response);
+	});
+}
+
+CameraClient.prototype.requestDetails = function(){
+	this._request("details", false, null, function(response){
+		console.log(response);
+	});
+}
+
+CameraClient.prototype.requestUpdate = function(){
+	this._request("update", false, null, function(response){
+		console.log(response);
+	});
+}
+
+CameraClient.prototype._request = function(operation, isEncrypted, payload, responseFxn){
+	isEncrypted = Code.valueOrDefault(isEncrypted,false);
+	var requestBaseURL = "http://localhost:8000/service/registry/";
+	var requestTimeout = 10000;
+	var requestEncryptionSecret = "unique";
+
+	var requestURL = Code.appendToPath(requestBaseURL,operation);
+	console.log(requestURL);
+
+	var ajax = new Ajax();
+	ajax.method(Ajax.METHOD_TYPE_POST);
+	ajax.timeout(requestTimeout);
+	ajax.context(this);
+	ajax.url(requestURL);
+	ajax.callback(function(response){
+		console.log("ajax callback");
+		console.log(response);
+		if(responseFxn){
+			responseFxn(response);
+		}
+	});
+	
+	var data = {};
+	data["id"] = Code.getTimeMilliseconds();
+	data["op"] = operation;
+	var json = Code.objectToJSON(data);
+	console.log(json);
+	if(isEncrypted){
+		var encrypted = Crypto.encryptString(requestEncryptionSecret, json);
+		ajax.binaryParams(encrypted);
+	}else{
+		ajax.stringParams(json);
+	}
 	ajax.send();
 }
 

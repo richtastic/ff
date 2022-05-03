@@ -1,0 +1,20 @@
+# config.yaml
+
+
+webserver:
+	root: "web/root/"
+
+encryption:
+	requestEncryptionKey: "unique" # shared by all clients that connect to secure endpoints
+	filesystemEncryptionKey: "secret key" # read/write data to storage
+
+registry:
+	dataPath: "services/registry/data"
+	sourcesDirectory: "sources"
+	fileNameList: "list.yaml"
+	encryptionKey: "unique"
+
+
+
+---
+

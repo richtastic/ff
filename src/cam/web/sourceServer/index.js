@@ -141,14 +141,19 @@ var periodicImageUploadToPublic = function(args){
 			"camera":cameraID,
 			"base64":base64Data,
 		};
+
+
+
 // upload to server
 		var paramPath = "camera/"+cameraID+"/upload";
 		var paramData = Code.StringFromJSON(data);
+		
 var urlGetPath = Code.escapeURI(paramPath);
 var urlGetData = Code.escapeURI(paramData);
 	//	var params = {};
 	//	params["path"] = paramPath;
 	//	params["data"] = paramData;
+/*
 			var options = {
 				// protocol: "http",
 				// domain: serverDomain,
@@ -172,7 +177,7 @@ path: "/web/ff/cam/web/distributionServer/index.php?path="+urlGetPath+"&data="+u
 //	"Content-Type":"application/x-www-form-urlencoded"
 //}
 			};
-
+*/
 //doAjax();
 
 
@@ -183,33 +188,56 @@ var options = {
 //console.log("options: "+Code.StringFromJSON(options));
 console.log("chars: "+urlGetData.length);
 console.log("MAKE REQUEST");
-		//var request = http.request(options, function(result){
-		// var request = http.get("http://192.168.0.140/web/ff/cam/web/distributionServer/index.php?path=%2Fcamera%2F0%2Fupload&data="+urlGetData, function(result){
-		//var request = http.get("http://192.168.0.140/web/ff/cam/web/distributionServer/index.php", options, function(result){
-		//var request = http.request("http://192.168.0.140", options, function(result){
-// var request = http.get("http://192.168.0.140/web/ff/cam/web/distributionServer/index.php?path="+urlGetPath+"&data="+urlGetData, function(result){
-// var request = http.request("http://192.168.0.140/web/ff/cam/web/distributionServer/index.php?path="+urlGetPath+"&data="+urlGetData, options, function(result){
-var request = requestLibary.post( {"url":"http://192.168.0.140/web/ff/cam/web/distributionServer/index.php",
-"form":{"path":paramPath, "data":paramData}},
-function(error, response, body){
+
+
+
+var server = "192.168.1.11";
+var requestPath = "web/ff/cam/web/distributionServer/index.php";
+var path = "";
+
+var path = Code.appendToPath(server,requestPath);
+var url = "http://"+path;
+console.log(url);
+		/*
+		var request = requestLibary.post(
+		{
+			"url":url, // "http://192.168.0.140/web/ff/cam/web/distributionServer/index.php"
+			"form":{
+				"path":paramPath,
+				"data":paramData
+			}
+		},
+		function(error, response, body){
 			console.log(" error: "+error);
 			console.log(" body: "+body);
 			console.log(" response: "+response.js);
-/*
-			console.log("upload result: "+result.statusCode);
-			console.log(" headers: "+result.headers);
-			console.log(" body: "+result.body);
-			console.log(" json: "+result.json);
-
-			result.on("data", function(data){
-				console.log("data: "+data);
-			});
-
-			result.on("end", function(what){
-				console.log("end...");
-			});
-*/
 		});
+		*/
+
+		var form = {
+				"path":paramPath,
+				"data":paramData
+			};
+		form = Code.StringFromJSON(form);
+		console.log(form);
+
+	var secret = "this is my secret";
+	var encrypted = Crypto.encryptString(secret, source);
+
+		// binary
+		var request = requestLibary.post(
+		{
+			"url":url,
+			"encoding": null,
+			"form":encrypted
+		},
+		function(error, response, body){
+			console.log(" error: "+error);
+			console.log(" body: "+body);
+			console.log(" response: "+response.js);
+		});
+
+
 request.on("error", function(error){
 	console.log("request error: "+error);
 });

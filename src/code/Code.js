@@ -771,7 +771,7 @@ Code.arrayToJSON = function(array){
 Code.objectToJSON = function(object){
 	var json = "{";
 	var keys = Code.keys(object);
-	var i, j, key, val, len;
+	var i, key, val, len, lm1;
 	len = keys.length;
 	lm1 = len - 1;
 	var needsComma = false;
@@ -780,13 +780,13 @@ Code.objectToJSON = function(object){
 		val = object[key];
 		key = Code._evaluateJSONElementToString(key);
 		val = Code._evaluateJSONElementToString(val);
-		if(key && val){
+		if(key && val){ // TODO: val===null ?
 			if(needsComma){
 				json += ",";
 			}
 			json += key+":"+val;
 			needsComma = true;
-		}
+		} // missing: '"+key+"' = '"+val+"'");
 	}
 	json += "}";
 	return json;

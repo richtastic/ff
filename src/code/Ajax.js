@@ -105,6 +105,13 @@ Ajax.prototype.appendList = function(values){
 		}
 	}
 }
+Ajax.prototype.binaryParams = function(b){
+	var bytesArray = new Uint8Array(b);
+	this._params = bytesArray;
+}
+Ajax.prototype.stringParams = function(str){
+	this._params = str;
+}
 Ajax.prototype.params = function(p){
 	if(p!==undefined && p!==null){
 		//console.log(p);
@@ -200,9 +207,11 @@ Ajax.prototype.go = function(){
 	// begin request
 	this._request.open(this._method,url,true);
 	// set request headers
-	this.clearHeader();
+	// this.clearHeader();
 	for(o in this._header){
-		this._request.setRequestHeader(o,this._header[o]);
+		var v = this._header[o];
+		//console.log("SET HEADER : "+o+" = "+v);
+		this._request.setRequestHeader(o,v);
 	}
 	hasParameters = this._params!==null;
 	if(this._formData){
@@ -212,6 +221,8 @@ Ajax.prototype.go = function(){
 			this._request.send();
 		}else if(this._method==Ajax.METHOD_TYPE_POST) { // POST PARAMS
 			this._setPostHeaderParameters();
+console.log("THIS IS A POST");
+console.log(this._params);
 //this._request.setRequestHeader(Ajax.HEADER_CONTENT_TYPE,"multipart/form-data");
 //			console.log(this._params);
 			this._request.send(this._params);
