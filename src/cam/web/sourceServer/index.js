@@ -5,7 +5,8 @@ const fs = require("fs");
 const path = require("path");
 
 const requestLibary = require("request");
-const Code = require("../../../code/Code.js");
+const Code = require("../libraries/src/Code.js");
+const Crypto = require("../libraries/src/Crypto.js");
 
 
 // const express = require("express");
@@ -127,11 +128,17 @@ var periodicImageUploadToPublic = function(args){
 	var encoding = "base64";
 	fs.readFile(imagePath, encoding, function(error, file){
 		console.log("READ FILE");
-		var base64Data = file;
-		var data = {
+console.log(file);
+if(!file){
+return;
+}
+file = new Buffer(file);
+console.log(file);
+		var base64Data = file.toString("base64");
+		/*var data = {
 			"camera":cameraID,
 			"base64":base64Data,
-		};
+		};*/
 		var options = {
 			"method": "POST",
 		};
@@ -146,16 +153,17 @@ var periodicImageUploadToPublic = function(args){
 		var clientID = "rasp_01";
 		var stationID = "cam_01";
 		var requestURLUpdate = url+"/"+"update"+"/"+clientID;
-
+/*
 		var form = {
 			"path":paramPath,
 			"data":paramData
 		};
 		form = Code.StringFromJSON(form);
 		console.log(form);
+*/
 
 		var source = {};
-		source["id"] = Code.timestampMilliseconds();
+		source["id"] = Code.getTimeMilliseconds();
 		source["op"] = "update";
 		source["data"] = {
 			"id":stationID,
@@ -175,7 +183,7 @@ var periodicImageUploadToPublic = function(args){
 		// binary
 		var request = requestLibary.post(
 		{
-			"url":url,
+			"url":requestURLUpdate,
 			"encoding": null,
 			"form":encrypted
 		},
