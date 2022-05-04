@@ -45,9 +45,9 @@ camera.capture("test", function(error, data){
 */
 
 
-var savePicture0 = function(){
-	console.log("savePicture ...");
-}
+// var savePicture0 = function(){
+// 	console.log("savePicture ...");
+// }
 
 
 var savePicture = function(completeFxn){
@@ -58,7 +58,7 @@ var savePicture = function(completeFxn){
 		completeFxn(data);
 	});
 }
-
+/*
 const requestListener = function(request, response){
 	var requestURL = request.url;
 	var parameters = url.parse(requestURL, true);
@@ -115,7 +115,7 @@ var encoding = "base64";
 //const server = http.createServer(requestListener);
 //server.listen(8000);
 //console.log("SERVER STARTED");
-
+*/
 
 
 
@@ -126,17 +126,11 @@ var periodicImageUploadToPublic = function(args){
 	var encoding = "base64";
 	fs.readFile(imagePath, encoding, function(error, file){
 		console.log("READ FILE");
-console.log(file);
-if(!file){
-return;
-}
-//file = new Buffer(file);
-console.log(file);
+		if(!file){
+			console.log("no file: "+imagePath);
+			return;
+		}
 		var base64Data = file.toString("base64");
-		/*var data = {
-			"camera":cameraID,
-			"base64":base64Data,
-		};*/
 		var options = {
 			"method": "POST",
 		};
@@ -145,20 +139,12 @@ console.log(file);
 		var domain = "192.168.1.13";
 		var port = "8000";
 		var path = "service/registry";
-		var url = scheme+"://"+domain+":"+port+"/"+path;
-		console.log(url);
+		var baseURL = scheme+"://"+domain+":"+port+"/"+path;
+		console.log(baseURL);
 		
 		var clientID = "rasp_01";
 		var stationID = "cam_01";
-		var requestURLUpdate = url+"/"+"update"+"/"+clientID;
-/*
-		var form = {
-			"path":paramPath,
-			"data":paramData
-		};
-		form = Code.StringFromJSON(form);
-		console.log(form);
-*/
+		var requestURLUpdate = baseURL+"/"+"update"+"/"+clientID;
 
 		var source = {};
 		source["id"] = Code.getTimeMilliseconds();
@@ -170,28 +156,19 @@ console.log(file);
 			"description":"Camera in the wild",
 			"image":base64Data
 		};
-		console.log(source);
 		source = Code.StringFromJSON(source);
-		console.log(source);
 
 		var secret = "unique";
 		var encrypted = Crypto.encryptString(secret, source);
-		console.log(encrypted);
-
 		encrypted = Buffer.from(encrypted);
-
-
 
 		var options = urlLibrary.parse(requestURLUpdate);
 		console.log(options)
 		options.method = "POST";
 		options["headers"] = {
-		    'Content-Type': 'application/octet-stream',
-		    //'Content-Length': Buffer.byteLength(postData)
-		    'Content-Length': encrypted.length
-		  }
-		// options.body = encrypted;
-
+			'Content-Type': 'application/octet-stream',
+			'Content-Length': encrypted.length
+		}
 		var chunks = [];
 		var request = http.request(options, function(response){
 			response.on("data", function(chunk){
@@ -209,30 +186,22 @@ console.log(file);
 		request.write(encrypted);
 		request.end();
 		
-
-		/*
-
-		// binary
-		var request = requestLibary.post(
-		{
-			"url":requestURLUpdate,
-			"encoding": null,
-			"form":encrypted
-		},
-		function(error, response, body){
-			console.log(" error: "+error);
-			console.log(" body: "+body);
-			console.log(" response: "+response);
-		});
-		request.on("error", function(error){
-			console.log("request error: "+error);
-		});
-
-		*/
 	});		
 }
 Code.functionAfterDelay(periodicImageUploadToPublic,this, [], 2*1000);
 
+
+
+var savePicturePeriodic = function(){
+	console.log("savePicture ...");
+	camera.capture("test", function(error, data){
+		console.log("ERR: "+error);
+		console.log("DAT: "+data);
+	});
+	Code.functionAfterDelay(savePicturePeriodic,this, [], 10*1000);
+}
+
+savePicturePeriodic();
 
 
 
