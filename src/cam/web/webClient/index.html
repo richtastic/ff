@@ -21,6 +21,33 @@ function classesLoadedFxn(){
 	// app.testServerData();
 	// app._client.requestPing();
 	app._client.requestList();
+	// app._client.requestDetails();
+
+	/*
+	var imageLoader = new ImageLoader("../../../images/",["iso_gnd_stone.png"], this,
+	function(info){
+		var image = info["images"][0];
+		// console.log(image);
+		var d = new DOImage(image);
+		var source = GLOBALSTAGE.renderImage(image.width,image.height,d,);
+		// console.log(source);
+		var base64 = source.src;
+		//var matrix = GLOBALSTAGE.getImageAsFloatRGB(image);
+		// console.log(matrix);
+		//var base64Data = image.src;
+
+		//var base64Data = image.src;
+		// var binaryData = Code.base64StringToBinary(base64Data);
+		// console.log(binaryData);
+
+		app._client.requestUpdate({"image":base64});
+
+		//app._client.requestUpdate();
+	});
+	imageLoader.load();
+	*/
+	
+	//app._client.requestUpdate();
 }
 // https://localhost/web/ff/cam/web/webClient/index.html
 // http://localhost/web/ff/cam/web/distributionServer/index.php?path=%2Fcamera%2F1%2Fimage

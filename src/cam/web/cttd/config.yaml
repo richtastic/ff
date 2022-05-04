@@ -13,6 +13,12 @@ registry:
 	sourcesDirectory: "sources"
 	fileNameList: "list.yaml"
 	encryptionKey: "unique"
+	clients:
+		- 
+			id: "rasp_01"
+			key: "unique"
+			stations:
+				- "cam_01"
 
 
 

@@ -199,4 +199,37 @@ If an item hasnt been updated in ~ 24 hours, it will be removed from the data / 
 
 
 
+
+## internals
+
+
+listing yaml file:
+```
+registry:
+	list:
+		- 
+			id: "cam_01"
+			modified: ""
+			type: "image"
+			name: "Camera 1"
+			description: "Bird Nest"
+			image: "image.jpg"
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ...

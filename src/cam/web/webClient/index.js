@@ -189,28 +189,46 @@ CameraClient.prototype.requestPing = function(){
 CameraClient.prototype.requestList = function(offset,count){
 	this._request("list", false, null, function(response){
 		console.log(response);
+		var object = Code.parseJSON(response);
+		console.log(object);
 	});
 }
 
 CameraClient.prototype.requestDetails = function(){
-	this._request("details", false, null, function(response){
-		console.log(response);
+	this._request("details", false, {"id":"cam_01"}, function(response){
+		// console.log(response);
+		var object = Code.parseJSON(response);
+		// console.log(object);
+		var base64 = object["data"]["image"];
+		// console.log(base64);
+		base64 = Code.appendHeaderBase64(base64, "png");
+		// console.log(base64);
+		var image = new Image();
+		image.src = base64;
+		Code.addChild(Code.getBody(),image);
 	});
 }
 
-CameraClient.prototype.requestUpdate = function(){
-	this._request("update", false, null, function(response){
+CameraClient.prototype.requestUpdate = function(info){
+	var base64 = info["image"];
+
+	this._request("update", true, {"id":"cam_01", "image":base64, "type":"image", "name":"Raspberry Example Camera", "description":"Somewhere Camera"}, function(response){
 		console.log(response);
-	});
+	}, "update/rasp_01");
 }
 
-CameraClient.prototype._request = function(operation, isEncrypted, payload, responseFxn){
+CameraClient.prototype._request = function(operation, isEncrypted, payload, responseFxn, otherURL){
 	isEncrypted = Code.valueOrDefault(isEncrypted,false);
 	var requestBaseURL = "http://localhost:8000/service/registry/";
 	var requestTimeout = 10000;
 	var requestEncryptionSecret = "unique";
-
-	var requestURL = Code.appendToPath(requestBaseURL,operation);
+	var requestURL = requestBaseURL;
+	if(otherURL){
+		requestURL = Code.appendToPath(requestURL,otherURL);
+	}else{
+		requestURL = Code.appendToPath(requestURL,operation);
+	}
+	
 	console.log(requestURL);
 
 	var ajax = new Ajax();
@@ -219,14 +237,17 @@ CameraClient.prototype._request = function(operation, isEncrypted, payload, resp
 	ajax.context(this);
 	ajax.url(requestURL);
 	ajax.callback(function(response){
-		console.log("ajax callback");
-		console.log(response);
+		// console.log("ajax callback");
+		// console.log(response);
 		if(responseFxn){
 			responseFxn(response);
 		}
 	});
 	
 	var data = {};
+	if(payload){
+		data["data"] = payload;
+	}
 	data["id"] = Code.getTimeMilliseconds();
 	data["op"] = operation;
 	var json = Code.objectToJSON(data);

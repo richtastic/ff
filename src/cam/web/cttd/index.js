@@ -7,11 +7,10 @@ const fs = require("fs");
 const path = require("path");
 // const requestLibary = require("request");
 
-const Code = require("./src/Code.js");
-const Crypto = require("./src/Crypto.js");
-const YAML = require("./src/YAML.js")
-//const Code = require("../../../code/Code.js");
-const Registry = require("./src/Registry.js")
+const Code = require("../libraries/src/Code.js");
+const Crypto = require("../libraries/src/Crypto.js");
+const YAML = require("../libraries/src/YAML.js")
+const Registry = require("../libraries/src/Registry.js")
 
 
 
@@ -42,12 +41,10 @@ fs.readFile(SETTINGS_SERVER_CONFIG, null, function(error, file){
 
 	// cam listing, browsing, lookup, table, registry
 	var registrySettings = object["registry"];
+	// overwight
 	var registryDataPath = Code.appendToPath(SETTINGS_SERVER_DIRECTORY,registrySettings["dataPath"]);
-	var registrySourcesDirectory = registrySettings["sourcesDirectory"];
-	var registryFileNameList = registrySettings["fileNameList"];
-	var registryEncryptionKey = registrySettings["encryptionKey"];
-	
-	var registry = new Registry(registryDataPath, registrySourcesDirectory, registryFileNameList, registryEncryptionKey);
+		registrySettings["dataPath"] = registryDataPath;
+	var registry = new Registry(registrySettings);
 	SERVER_SERVICES["registry"] = function(request, response, remaining){
 		//response.write("remaining: "+remaining+"\n");
 		registry.handleRequest(request, response, remaining);

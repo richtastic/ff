@@ -509,6 +509,7 @@ YAML.prototype.writeObjectLiteral = function(name,value){
 	}else{ // already at write location
 		value = name;
 		var keys = Code.keys(value);
+//console.log(keys);
 		for(var i=0; i<keys.length; ++i){
 			var key = keys[i];
 			var val = value[key];

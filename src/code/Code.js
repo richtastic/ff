@@ -455,6 +455,22 @@ Code.pathRemoveLastComponent = function(path){ //
 	}
 	return "";
 }
+Code.pathLastComponent = function(path){ // 
+	console.log(path);
+	if(!path){
+		return "";
+	}
+	var index = path.lastIndexOf("/");
+	console.log(index);
+	while(path.length>0 && index == path.length-1){
+		path = path.substr(0,path.length-1);
+		index = path.lastIndexOf("/");
+	}
+	if(index>=0){
+		return path.substr(index+1);
+	}
+	return "";
+}
 Code.printMatlabArray = function(array,name, ret){
 	name = name!==undefined ? name : "x";
 	var str = name+" = [";
