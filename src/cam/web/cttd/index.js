@@ -9,8 +9,8 @@ const path = require("path");
 
 const Code = require("../libraries/src/Code.js");
 const Crypto = require("../libraries/src/Crypto.js");
-const YAML = require("../libraries/src/YAML.js")
-const Registry = require("../libraries/src/Registry.js")
+const YAML = require("../libraries/src/YAML.js");
+const Registry = require("../libraries/src/Registry.js");
 
 
 

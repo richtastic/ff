@@ -1,6 +1,6 @@
 const http = require("http");
 const os = require("os");
-const url = require("url");
+const urlLibrary = require("url");
 const fs = require("fs");
 const path = require("path");
 
@@ -17,9 +17,9 @@ var CameraServer = utilities.CameraServer;
 // const Captures = require("camera-capture");
 // var VideoCapture = Captures.VideoCapture;
 
-console.log("current priority "+os.getPriority());
-os.setPriority(-20);
-console.log("    new priority "+os.getPriority());
+//console.log("current priority "+os.getPriority());
+//os.setPriority(-20);
+//console.log("    new priority "+os.getPriority());
 
 
 
@@ -112,11 +112,9 @@ var encoding = "base64";
 
 };
 
-const server = http.createServer(requestListener);
-server.listen(8000);
-
-
-console.log("SERVER STARTED");
+//const server = http.createServer(requestListener);
+//server.listen(8000);
+//console.log("SERVER STARTED");
 
 
 
@@ -132,7 +130,7 @@ console.log(file);
 if(!file){
 return;
 }
-file = new Buffer(file);
+//file = new Buffer(file);
 console.log(file);
 		var base64Data = file.toString("base64");
 		/*var data = {
@@ -180,6 +178,40 @@ console.log(file);
 		var encrypted = Crypto.encryptString(secret, source);
 		console.log(encrypted);
 
+		encrypted = Buffer.from(encrypted);
+
+
+
+		var options = urlLibrary.parse(requestURLUpdate);
+		console.log(options)
+		options.method = "POST";
+		options["headers"] = {
+		    'Content-Type': 'application/octet-stream',
+		    //'Content-Length': Buffer.byteLength(postData)
+		    'Content-Length': encrypted.length
+		  }
+		// options.body = encrypted;
+
+		var chunks = [];
+		var request = http.request(options, function(response){
+			response.on("data", function(chunk){
+				chunks.push(chunk);
+			});
+			response.on("end", function(){
+				var data = Buffer.concat(chunks);
+				console.log(data);
+				var string = data.toString();
+				console.log(string);
+			});
+			
+			//console.log(result.body);
+		});
+		request.write(encrypted);
+		request.end();
+		
+
+		/*
+
 		// binary
 		var request = requestLibary.post(
 		{
@@ -195,6 +227,8 @@ console.log(file);
 		request.on("error", function(error){
 			console.log("request error: "+error);
 		});
+
+		*/
 	});		
 }
 Code.functionAfterDelay(periodicImageUploadToPublic,this, [], 2*1000);

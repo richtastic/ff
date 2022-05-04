@@ -466,7 +466,7 @@ Registry.prototype._saveImageForEntry = function(entry, imageData64, completeFxn
 Registry.prototype._handleOperationUpdate = function(request,response, requestData, token){
 	console.log(token);
 	var client = this._clientTable[token];
-	console.log(client);
+	console.log("client: "+client);
 	if(!client){
 		responseData[Registry.OPERATION_KEY_REASON] = Registry.OPERATION_VAL_REASON_CLIENT_EXIST;
 		responseData[Registry.OPERATION_KEY_RESULT] = Registry.OPERATION_VAL_RESULT_FAILURE;
@@ -478,10 +478,18 @@ Registry.prototype._handleOperationUpdate = function(request,response, requestDa
 		var clientID = token;
 		// console.log("found client");
 		var clientEncryptionKey = client["key"];
+		console.log("clientEncryptionKey: "+clientEncryptionKey);
+		console.log("requestData: ");
+		console.log(requestData);
+		
 		// console.log(clientEncryptionKey);
 		// console.log(requestData);
 		var objectData = this._binaryToObject(requestData, clientEncryptionKey);
-		// console.log(objectData);
+
+		////var objectData = this._binaryToObject(requestData, null);
+
+
+		console.log(objectData);
 		var responseData = this._prepResponse(objectData, response, Registry.OPERATION_CAMERA_UPDATE);
 		
 		if(responseData){
