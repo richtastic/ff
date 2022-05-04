@@ -9,10 +9,33 @@ const Code = require("../libraries/src/Code.js");
 const Crypto = require("../libraries/src/Crypto.js");
 
 
+const LinuxVideoCamera = require("../libraries/src/LinuxVideoCamera.js");
+
+
+
+
+
+var linuxCamera = new LinuxVideoCamera();
+linuxCamera.getCameraList(function(captureList){
+	console.log(captureList);
+});
+
+
+linuxCamera.getCameraList(function(getCameraListDetails){
+	console.log(getCameraListDetails);
+});
+
+
+linuxCamera.saveCameraPicture("/dev/video19", "linux.jpg", function(result){
+	console.log("callback: "+result);
+})
+
+
+
 // const express = require("express");
 var utilities = require("./utilities.js");
 // var CameraManager = utilities.CameraManager;
-var CameraServer = utilities.CameraServer;
+//var CameraServer = utilities.CameraServer;
 // const puppeteer = require("puppeteer");
 // const Captures = require("camera-capture");
 // var VideoCapture = Captures.VideoCapture;
@@ -23,7 +46,7 @@ var CameraServer = utilities.CameraServer;
 
 
 
-
+/*
 // node webcam
 const NodeWebCam = require("node-webcam");
 
@@ -36,13 +59,6 @@ camera.list(function(list){
 	console.log("LIST: "+list);
 });
 
-
-/*
-camera.capture("test", function(error, data){
-	console.log("ERR: "+error);
-	console.log("DAT: "+data);
-});
-*/
 
 
 // var savePicture0 = function(){
@@ -57,6 +73,16 @@ var savePicture = function(completeFxn){
 		console.log("DAT: "+data);
 		completeFxn(data);
 	});
+}
+*/
+
+
+var savePicture = function(completeFxn){
+	console.log("savePicture ... "+Code.getTimeMilliseconds());
+	if(completeFxn){
+		var data = null;
+		completeFxn(data);
+	}
 }
 /*
 const requestListener = function(request, response){
