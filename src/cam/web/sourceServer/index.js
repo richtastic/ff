@@ -123,106 +123,54 @@ console.log("SERVER STARTED");
 console.log("STARTING PERIODIC UPLOADER:");
 var periodicImageUploadToPublic = function(args){
 	console.log("periodicImageUploadToPublic tick");
-
 	var imagePath = "test.jpg";
-	// var imagePath = "test.jpeg";
 	var encoding = "base64";
-	var serverDomain = "192.168.0.140";
-	var serverPath = "web/ff/cam/web/distributionServer/index.php";
-	var serverAddress = "http://"+serverDomain+"/"+serverPath;
 	fs.readFile(imagePath, encoding, function(error, file){
 		console.log("READ FILE");
 		var base64Data = file;
-		
-		var cameraID = 0;
-
-// generate payload
 		var data = {
 			"camera":cameraID,
 			"base64":base64Data,
 		};
+		var options = {
+			"method": "POST",
+		};
 
-
-
-// upload to server
-		var paramPath = "camera/"+cameraID+"/upload";
-		var paramData = Code.StringFromJSON(data);
+		var scheme = "http";
+		var domain = "192.168.1.13";
+		var port = "8000";
+		var path = "service/registry";
+		var url = scheme+"://"+domain+":"+port+"/"+path;
+		console.log(url);
 		
-var urlGetPath = Code.escapeURI(paramPath);
-var urlGetData = Code.escapeURI(paramData);
-	//	var params = {};
-	//	params["path"] = paramPath;
-	//	params["data"] = paramData;
-/*
-			var options = {
-				// protocol: "http",
-				// domain: serverDomain,
-				// hostname: "http://192.168.0.140",
-// hostname: "http://www.google.com",
-// domain: "www.google.com",
-				// host: "192.168.0.140",
-				// domain: "192.168.0.140",
-				//path: "/"+serverPath,
-				// query: params,
-				// search: "path="+urlGetPath+"&data="+urlGetData,
-				// search: "?path="+urlGetPath,
-				//method: "GET",
-
-// url: "http://192.168.0.140",
-port: 80,
-method: "POST",
-//timeout: 30000,
-path: "/web/ff/cam/web/distributionServer/index.php?path="+urlGetPath+"&data="+urlGetData,
-//headers: {
-//	"Content-Type":"application/x-www-form-urlencoded"
-//}
-			};
-*/
-//doAjax();
-
-
-var options = {
-"method": "POST",
-};
-
-//console.log("options: "+Code.StringFromJSON(options));
-console.log("chars: "+urlGetData.length);
-console.log("MAKE REQUEST");
-
-
-
-var server = "192.168.1.11";
-var requestPath = "web/ff/cam/web/distributionServer/index.php";
-var path = "";
-
-var path = Code.appendToPath(server,requestPath);
-var url = "http://"+path;
-console.log(url);
-		/*
-		var request = requestLibary.post(
-		{
-			"url":url, // "http://192.168.0.140/web/ff/cam/web/distributionServer/index.php"
-			"form":{
-				"path":paramPath,
-				"data":paramData
-			}
-		},
-		function(error, response, body){
-			console.log(" error: "+error);
-			console.log(" body: "+body);
-			console.log(" response: "+response.js);
-		});
-		*/
+		var clientID = "rasp_01";
+		var stationID = "cam_01";
+		var requestURLUpdate = url+"/"+"update"+"/"+clientID;
 
 		var form = {
-				"path":paramPath,
-				"data":paramData
-			};
+			"path":paramPath,
+			"data":paramData
+		};
 		form = Code.StringFromJSON(form);
 		console.log(form);
 
-	var secret = "this is my secret";
-	var encrypted = Crypto.encryptString(secret, source);
+		var source = {};
+		source["id"] = Code.timestampMilliseconds();
+		source["op"] = "update";
+		source["data"] = {
+			"id":stationID,
+			"type":"image",
+			"name":"Raspberry Camera 01",
+			"description":"Camera in the wild",
+			"image":base64Data
+		};
+		console.log(source);
+		source = Code.StringFromJSON(source);
+		console.log(source);
+
+		var secret = "unique";
+		var encrypted = Crypto.encryptString(secret, source);
+		console.log(encrypted);
 
 		// binary
 		var request = requestLibary.post(
@@ -234,13 +182,11 @@ console.log(url);
 		function(error, response, body){
 			console.log(" error: "+error);
 			console.log(" body: "+body);
-			console.log(" response: "+response.js);
+			console.log(" response: "+response);
 		});
-
-
-request.on("error", function(error){
-	console.log("request error: "+error);
-});
+		request.on("error", function(error){
+			console.log("request error: "+error);
+		});
 	});		
 }
 Code.functionAfterDelay(periodicImageUploadToPublic,this, [], 2*1000);

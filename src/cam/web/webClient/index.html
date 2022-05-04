@@ -9,7 +9,7 @@ function pageLoadedFxn(){
 }
 function ffLoadedFxn(){
 	console.log("ffLoadedFxn");
-	(new ScriptLoader("./",["index.js"],this,classesLoadedFxn)).load();
+	(new ScriptLoader("./",["index.js","../libraries/src/CameraClient.js"],this,classesLoadedFxn)).load();
 }
 function classesLoadedFxn(){
 	console.log("classesLoadedFxn");

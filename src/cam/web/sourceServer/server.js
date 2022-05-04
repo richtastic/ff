@@ -11,15 +11,9 @@ const YAML = require("./src/YAML.js");
 var utilities = require("./utilities.js");
 
 // const LinuxVideoCamera = require("./src/LinuxVideoCamera.js");
-const CameraCentralService = require("./src/CameraCentralService.js");
-
-
+const CameraCentralService = require("../libraries/src/CameraCentralService.js");
 
 var serverConfigLocation = "./config.yaml";
-
-
-
-
 
 
 
@@ -31,19 +25,15 @@ var loadConfigData = function(filePath){
 	var encoding = "utf8";
 	fs.readFile(filePath, encoding, function(error, file){
 		console.log(file);
-		// base64Data = file;
 		var object = YAML.parse(file);
 		if(Code.isArray(object)){
 			object = object[0];
 		}
-		// console.log(object);
-		// 
+		
 		var config = object["config"];
 		var publicData = config["publicCameraService"];
 		var localData = config["localService"];
-		// .
-
-		//
+		
 		cameraManager = new CameraCentralService(publicData["scheme"],publicData["domain"],publicData["path"]);
 		cameraManager.setIDPrefix(localData["id"]+""+localData["serviceCameraJoin"]+""+localData["cameraID"]);
 		startPeriodicUpload();

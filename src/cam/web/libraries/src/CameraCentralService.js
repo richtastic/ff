@@ -9,13 +9,13 @@ const requestLibary = require("request");
 
 const Code = require("./Code.js");
 const LinuxVideoCamera = require("./LinuxVideoCamera.js");
-
+const CameraClient = require("./CameraClient.js");
 
 
 
 CameraCentralService = function(scheme,domain,path){
 	this._baseURL = scheme+"://"+domain+"/"+path;
-console.log(this._baseURL);
+	console.log(this._baseURL);
 	this._uploadWaitTime = 10 * 1000; // 10 seconds between image upload
 	this._currentCameraIndex = -1;
 	this._isPeriodicUploading = false;
@@ -105,7 +105,6 @@ console.log("get details");
 			self._periodicCheck();
 		});
 		
-
 		// if list length is 0 ... set timeout to re-check later
 
 		// .... this._periodicCheck();
@@ -139,7 +138,6 @@ CameraCentralService.prototype._uploadPictureAtIndex = function(fileLocation){
 	//console.log(camera);
 	var self = this;
 	var cameraManager = this._cameraSource;
-
 	//var cameraID = camera["id"];
 	//var fullCameraID = "serverID"+"joiner"+"camera prefix"+cameraID;
 	var fullCameraID = 	this._cameraIDPrefix+""+index;
@@ -156,7 +154,6 @@ console.log("skip upload this round - B");
 		}else{
 			var base64Data = file;
 			console.log(base64Data.length);
-
 			// delete file
 			fs.unlink(fileLocation, function(error){
 				console.log("unlinked file: "+fileLocation);
