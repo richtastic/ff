@@ -16,17 +16,22 @@ const LinuxVideoCamera = require("../libraries/src/LinuxVideoCamera.js");
 
 
 var linuxCamera = new LinuxVideoCamera();
+/*
 linuxCamera.getCameraList(function(captureList){
 	console.log(captureList);
 });
+*/
 
 
-linuxCamera.getCameraList(function(getCameraListDetails){
-	console.log(getCameraListDetails);
+linuxCamera.getCameraList(function(list){
+	linuxCamera.getCameraListDetails(list, function(result){
+		console.log("getCameraListDetails");
+		console.log(result);
+	});
 });
 
 
-linuxCamera.saveCameraPicture("/dev/video19", "linux.jpg", function(result){
+linuxCamera.saveCameraPicture("/dev/video0", "richie.jpg", function(result){
 	console.log("callback: "+result);
 })
 
@@ -219,11 +224,8 @@ Code.functionAfterDelay(periodicImageUploadToPublic,this, [], 2*1000);
 
 
 var savePicturePeriodic = function(){
-	console.log("savePicture ...");
-	camera.capture("test", function(error, data){
-		console.log("ERR: "+error);
-		console.log("DAT: "+data);
-	});
+	console.log("savePicture ... "+Code.getTimeMilliseconds());
+	
 	Code.functionAfterDelay(savePicturePeriodic,this, [], 10*1000);
 }
 

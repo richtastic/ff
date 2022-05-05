@@ -116,22 +116,19 @@ LinuxVideoCamera.prototype._isVideoCaptureDevice = function(videoPath, callbackF
 	});
 }
 LinuxVideoCamera.prototype.getCameraListDetails = function(list, callbackFxn){
-	console.log("getCameraList");
-	// var command = "ls /dev/video**";
-var self = this;
+	console.log("getCameraListDetails");
+	var self = this;
 	var currentIndex = -1;
 	var cameras = [];
 	var checkFxn = function(){
 		++currentIndex;
 		if(currentIndex>=list.length){
-//			console.log("DONE");
-//			console.log(cameras);
 			if(callbackFxn){
 				callbackFxn(cameras);
 			}
 		}else{
 			var videoDev = list[currentIndex];
-		console.log(videoDev);
+			console.log(videoDev);
 			self._getCameraDetails(videoDev, function(entry){
 				cameras.push(entry);
 				checkFxn();
@@ -272,7 +269,11 @@ entry["sizes"] = resolutions;
 LinuxVideoCamera.prototype.saveCameraPicture = function(videoDev, imageLocation, callbackFxn){
 	console.log("saveCameraPicture to: "+imageLocation);
 	var size = "640x480";
-	var command = "ffmpeg   -v error -y  -s "+size+"  -i "+videoDev+"  "+imageLocation+" ";
+	//var command = "ffmpeg   -v error -y  -s "+size+"  -i "+videoDev+"  "+imageLocation+" ";
+var command = "ffmpeg   -v error -y  -s "+size+"  -i "+videoDev+"  -vframes 1 -update 1  "+imageLocation+" ";
+
+//  ffmpeg   -v error -y  -s 640x480  -i /dev/video0 -vframes 1 -update 1 linux.jpg 
+
 	console.log(command);
 	LinuxVideoCamera._exec(command, function(err,sto,ste){
 
