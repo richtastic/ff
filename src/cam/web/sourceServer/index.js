@@ -22,6 +22,7 @@ linuxCamera.getCameraList(function(captureList){
 });
 */
 
+/*
 
 linuxCamera.getCameraList(function(list){
 	linuxCamera.getCameraListDetails(list, function(result){
@@ -31,10 +32,62 @@ linuxCamera.getCameraList(function(list){
 });
 
 
-linuxCamera.saveCameraPicture("/dev/video0", "richie.jpg", function(result){
+linuxCamera.saveCameraPicture("/dev/video0", "richie.jpg", null, function(result){
 	console.log("callback: "+result);
 })
+*/
 
+
+var savePictureFromAvailableVideoDevice = function(callbackFxn){
+	var destinationFileName = "source.jpg";
+	var targetResolutionPixels = 300*400;
+	linuxCamera.getCameraList(function(list){
+		linuxCamera.getCameraListDetails(list, function(details){
+			console.log("getCameraListDetails");
+			console.log(details);
+			if(details.length==0){
+				if(callbackFxn){
+					callbackFxn(null);
+				}
+				return;
+			}
+			for(var i=0; i<details.length; ++i){
+				var selectedDevice = details[i];
+				var deviceName = selectedDevice["device"];
+				var deviceSizes = selectedDevice["sizes"];
+				if(deviceSizes.length==0){
+					continue;
+				}
+				var deviceSize = null;
+				var resolutionError = null;
+				for(var j=1; j<deviceSizes.length; ++j){
+					var size = deviceSizes[0];
+					var res = size["width"]*size["height"];
+					var resError = targetResolutionPixels/res;
+					resError = resError>1.0 ? resError : (1.0/resError);
+					console.log("resolution error: "+resError);
+					if(deviceSize===null || resError<resolutionError){
+						deviceSize = size;
+						resolutionError = resError;
+					}
+				}
+				console.log(deviceSize);
+				linuxCamera.saveCameraPicture(deviceName, destinationFileName, deviceSize, function(result){
+					console.log("saveCameraPicture: ");
+					console.log(result);
+					if(callbackFxn){
+						callbackFxn(deviceName);
+					}
+					return;
+				});
+				break;
+			}
+		});
+	});
+
+
+
+}
 
 
 // const express = require("express");

@@ -266,23 +266,22 @@ entry["sizes"] = resolutions;
 	});
 }
 
-LinuxVideoCamera.prototype.saveCameraPicture = function(videoDev, imageLocation, callbackFxn){
+LinuxVideoCamera.prototype.saveCameraPicture = function(videoDev, imageLocation, size, callbackFxn){
 	console.log("saveCameraPicture to: "+imageLocation);
-	var size = "640x480";
+	if(size){
+		size = size["width"]+"x"+size["height"];
+	}else{
+		size = "640x480";
+	}
+	
 	//var command = "ffmpeg   -v error -y  -s "+size+"  -i "+videoDev+"  "+imageLocation+" ";
-var command = "ffmpeg   -v error -y  -s "+size+"  -i "+videoDev+"  -vframes 1 -update 1  "+imageLocation+" ";
-
-//  ffmpeg   -v error -y  -s 640x480  -i /dev/video0 -vframes 1 -update 1 linux.jpg 
-
+	var command = "ffmpeg   -v error -y  -s "+size+"  -i "+videoDev+"  -vframes 1 -update 1  "+imageLocation+" ";
+	//  ffmpeg   -v error -y  -s 640x480  -i /dev/video0 -vframes 1 -update 1 linux.jpg 
 	console.log(command);
 	LinuxVideoCamera._exec(command, function(err,sto,ste){
-
-console.log(err);
-console.log(sto);
-console.log(ste);
-
-
-
+// console.log(err);
+// console.log(sto);
+// console.log(ste);
 		if(err && err.killed===true){ // error exists with ffmpeg poor API
 			console.log(err); // err.signal = TERM for killed
 			console.log(sto);
@@ -293,9 +292,6 @@ console.log(ste);
 			}
 		}else{
 			console.log("saved: "+imageLocation);
-			//console.log(err);
-			//console.log(sto);
-			//console.log(ste);
 			if(callbackFxn){
 				callbackFxn(true);
 			}
