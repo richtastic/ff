@@ -21,7 +21,7 @@ LinuxVideoCamera.prototype.getCameraList = function(callbackFxn){
 	var command = "ls /dev/video**";
 var self = this;
 	LinuxVideoCamera._exec(command,function(err,sto,ste){
-		console.log(sto);
+		//console.log(sto);
 		// turn into array list : replace all newlines & returns to spaces, replace all spacings with 
 		var list = sto;
 //console.log(list);
@@ -89,9 +89,9 @@ LinuxVideoCamera.prototype._isVideoCaptureDevice = function(videoPath, callbackF
 				break;
 			}
 		}
-		console.log(".........................   " +videoPath);
-		console.log(deviceCapabilityLine);
-		console.log(busInfoLine);
+		//console.log(".........................   " +videoPath);
+		//console.log(deviceCapabilityLine);
+		//console.log(busInfoLine);
 		if(deviceCapabilityLine && busInfoLine){
 			var matches = deviceCapabilityLine.match(regexHex);
 			//console.log(matches);
@@ -116,7 +116,7 @@ LinuxVideoCamera.prototype._isVideoCaptureDevice = function(videoPath, callbackF
 	});
 }
 LinuxVideoCamera.prototype.getCameraListDetails = function(list, callbackFxn){
-	console.log("getCameraListDetails");
+	//console.log("getCameraListDetails");
 	var self = this;
 	var currentIndex = -1;
 	var cameras = [];
@@ -128,7 +128,7 @@ LinuxVideoCamera.prototype.getCameraListDetails = function(list, callbackFxn){
 			}
 		}else{
 			var videoDev = list[currentIndex];
-			console.log(videoDev);
+			//console.log(videoDev);
 			self._getCameraDetails(videoDev, function(entry){
 				cameras.push(entry);
 				checkFxn();
@@ -179,7 +179,7 @@ var currentCount = 0;
 		++currentCount;
 		//console.log("checkAllFxn: "+currentCount+"/"+expectedCount);
 		if(currentCount==expectedCount){
-			console.log(entry);
+			//console.log(entry);
 			if(callbackFxn){
 				callbackFxn(entry);
 			}
@@ -204,8 +204,6 @@ var currentCount = 0;
 //console.log(commandProduct);
 //console.log(commandVersion);
 //console.log(commandResolution);
-
-
 entry["id"] = null;
 entry["device"] = videoDev;
 entry["video"] = videoName;
@@ -267,7 +265,7 @@ entry["sizes"] = resolutions;
 }
 
 LinuxVideoCamera.prototype.saveCameraPicture = function(videoDev, imageLocation, size, callbackFxn){
-	console.log("saveCameraPicture to: "+imageLocation);
+	//console.log("saveCameraPicture to: "+imageLocation);
 	if(size){
 		size = size["width"]+"x"+size["height"];
 	}else{
@@ -277,7 +275,7 @@ LinuxVideoCamera.prototype.saveCameraPicture = function(videoDev, imageLocation,
 	//var command = "ffmpeg   -v error -y  -s "+size+"  -i "+videoDev+"  "+imageLocation+" ";
 	var command = "ffmpeg   -v error -y  -s "+size+"  -i "+videoDev+"  -vframes 1 -update 1  "+imageLocation+" ";
 	//  ffmpeg   -v error -y  -s 640x480  -i /dev/video0 -vframes 1 -update 1 linux.jpg 
-	console.log(command);
+	//console.log(command);
 	LinuxVideoCamera._exec(command, function(err,sto,ste){
 // console.log(err);
 // console.log(sto);
@@ -286,12 +284,12 @@ LinuxVideoCamera.prototype.saveCameraPicture = function(videoDev, imageLocation,
 			console.log(err); // err.signal = TERM for killed
 			console.log(sto);
 			console.log(ste);
-		console.log("save error");
+			console.log("save error");
 			if(callbackFxn){
 				callbackFxn(false);
 			}
 		}else{
-			console.log("saved: "+imageLocation);
+			//console.log("saved: "+imageLocation);
 			if(callbackFxn){
 				callbackFxn(true);
 			}

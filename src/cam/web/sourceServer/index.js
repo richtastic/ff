@@ -38,12 +38,13 @@ linuxCamera.saveCameraPicture("/dev/video0", "richie.jpg", null, function(result
 */
 
 
-var savePictureFromAvailableVideoDevice = function(callbackFxn){
-	var destinationFileName = "source.jpg";
-	var targetResolutionPixels = 300*400;
+var savePictureFromAvailableVideoDevice = function(destinationFileName, callbackFxn){
+	//var destinationFileName = "source.jpg";
+	//var targetResolutionPixels = 300*400;
+	var targetResolutionPixels = 600*400;
 	linuxCamera.getCameraList(function(list){
 		linuxCamera.getCameraListDetails(list, function(details){
-			console.log("getCameraListDetails");
+			//console.log("getCameraListDetails");
 			console.log(details);
 			if(details.length==0){
 				if(callbackFxn){
@@ -60,23 +61,27 @@ var savePictureFromAvailableVideoDevice = function(callbackFxn){
 				}
 				var deviceSize = null;
 				var resolutionError = null;
-				for(var j=1; j<deviceSizes.length; ++j){
-					var size = deviceSizes[0];
+				for(var j=0; j<deviceSizes.length; ++j){
+					var size = deviceSizes[j];
 					var res = size["width"]*size["height"];
 					var resError = targetResolutionPixels/res;
 					resError = resError>1.0 ? resError : (1.0/resError);
-					console.log("resolution error: "+resError);
+					//console.log("resolution error: "+resError);
 					if(deviceSize===null || resError<resolutionError){
 						deviceSize = size;
 						resolutionError = resError;
 					}
 				}
-				console.log(deviceSize);
+				//console.log(deviceSize);
 				linuxCamera.saveCameraPicture(deviceName, destinationFileName, deviceSize, function(result){
-					console.log("saveCameraPicture: ");
-					console.log(result);
+					//console.log("saveCameraPicture: ");
+					//console.log(result);
 					if(callbackFxn){
-						callbackFxn(deviceName);
+if(result){
+						callbackFxn(destinationFileName, deviceName);
+}else{
+						callbackFxn(null);
+}
 					}
 					return;
 				});
@@ -90,49 +95,14 @@ var savePictureFromAvailableVideoDevice = function(callbackFxn){
 }
 
 
-// const express = require("express");
+
 var utilities = require("./utilities.js");
-// var CameraManager = utilities.CameraManager;
-//var CameraServer = utilities.CameraServer;
-// const puppeteer = require("puppeteer");
-// const Captures = require("camera-capture");
-// var VideoCapture = Captures.VideoCapture;
 
 //console.log("current priority "+os.getPriority());
 //os.setPriority(-20);
 //console.log("    new priority "+os.getPriority());
 
 
-
-/*
-// node webcam
-const NodeWebCam = require("node-webcam");
-
-var options = {};
-options["output"] = "jpeg";
-
-var camera = NodeWebCam.create(options);
-
-camera.list(function(list){
-	console.log("LIST: "+list);
-});
-
-
-
-// var savePicture0 = function(){
-// 	console.log("savePicture ...");
-// }
-
-
-var savePicture = function(completeFxn){
-	console.log("savePicture ...");
-	camera.capture("test", function(error, data){
-		console.log("ERR: "+error);
-		console.log("DAT: "+data);
-		completeFxn(data);
-	});
-}
-*/
 
 
 var savePicture = function(completeFxn){
@@ -203,10 +173,9 @@ var encoding = "base64";
 
 
 
-console.log("STARTING PERIODIC UPLOADER:");
-var periodicImageUploadToPublic = function(args){
-	console.log("periodicImageUploadToPublic tick");
-	var imagePath = "test.jpg";
+var uploadImageToPublic = function(imagePath, uploadCompleteFxn){
+	console.log("uploadImageToPublic \\: "+imagePath);
+	//var imagePath = "test.jpg";
 	var encoding = "base64";
 	fs.readFile(imagePath, encoding, function(error, file){
 		console.log("READ FILE");
@@ -247,7 +216,7 @@ var periodicImageUploadToPublic = function(args){
 		encrypted = Buffer.from(encrypted);
 
 		var options = urlLibrary.parse(requestURLUpdate);
-		console.log(options)
+		//console.log(options)
 		options.method = "POST";
 		options["headers"] = {
 			'Content-Type': 'application/octet-stream',
@@ -260,29 +229,41 @@ var periodicImageUploadToPublic = function(args){
 			});
 			response.on("end", function(){
 				var data = Buffer.concat(chunks);
-				console.log(data);
+				//console.log(data);
 				var string = data.toString();
 				console.log(string);
+				if(uploadCompleteFxn){
+					uploadCompleteFxn();
+				}
 			});
-			
-			//console.log(result.body);
 		});
 		request.write(encrypted);
 		request.end();
 		
 	});		
 }
-Code.functionAfterDelay(periodicImageUploadToPublic,this, [], 2*1000);
+//Code.functionAfterDelay(periodicImageUploadToPublic,this, [], 2*1000);
 
 
 
 var savePicturePeriodic = function(){
+var imageName = "source.jpg";
 	console.log("savePicture ... "+Code.getTimeMilliseconds());
-	
-	Code.functionAfterDelay(savePicturePeriodic,this, [], 10*1000);
+	savePictureFromAvailableVideoDevice(imageName, function(){
+		uploadImageToPublic(imageName, function(){
+			Code.functionAfterDelay(savePicturePeriodic,this, [], 1*1000);
+		});
+	});
 }
 
+
+
+
+console.log("STARTING PERIODIC UPLOADER:");
 savePicturePeriodic();
+
+
+// savePictureFromAvailableVideoDevice();
 
 
 
