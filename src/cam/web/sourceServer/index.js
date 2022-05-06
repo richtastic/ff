@@ -11,10 +11,6 @@ const Crypto = require("../libraries/src/Crypto.js");
 
 const LinuxVideoCamera = require("../libraries/src/LinuxVideoCamera.js");
 
-
-
-
-
 var linuxCamera = new LinuxVideoCamera();
 
 
@@ -208,6 +204,7 @@ var uploadImageToPublic = function(imagePath, uploadCompleteFxn){
 			'Content-Length': encrypted.length
 		}
 		var chunks = [];
+try{
 		var request = http.request(options, function(response){
 			response.on("data", function(chunk){
 				chunks.push(chunk);
@@ -224,7 +221,7 @@ var uploadImageToPublic = function(imagePath, uploadCompleteFxn){
 		});
 		request.write(encrypted);
 console.log("END");
-try{
+
 		request.end();
 }catch(e){
 	console.log("ERROR: "+e);
@@ -233,7 +230,6 @@ try{
 		
 	});		
 }
-//Code.functionAfterDelay(periodicImageUploadToPublic,this, [], 2*1000);
 
 
 
@@ -242,41 +238,26 @@ var imageName = "source.jpg";
 	console.log("savePicture ... "+Code.getTimeMilliseconds());
 	savePictureFromAvailableVideoDevice(imageName, function(){
 		uploadImageToPublic(imageName, function(){
-			Code.functionAfterDelay(savePicturePeriodic,this, [], 1*1000);
+			mainTask();
 		});
 	});
 }
 
+var mainTask = function(){
+	Code.functionAfterDelay(savePicturePeriodic,this, [], 1*1000);
+};
 
 
+
+// nodejs - ECONNREFUSED
+process.on('uncaughtException', function(err){
+	console.log(err);
+	console.log("RETRY MAIN TASK:");
+	mainTask();
+});
 
 console.log("STARTING PERIODIC UPLOADER:");
-savePicturePeriodic();
-
-
-// savePictureFromAvailableVideoDevice();
+mainTask();
 
 
 
-// ...
-// sudo node server.js
-// curl localhost:8000
-// curl 192.168.0.188:8000
-// 
-//
-
-
-/*
-streamer -f jpeg -o test.jpeg
-ffmpeg -i /dev/video0 -s 640x480 out.jpg
-
-
-1920x1080
-
-
-not work:
-fswebcam --save webcam.jpg --no-banner --no-overlay --no-info --device /dev/video0 --verbose
-
-
-
-*/
