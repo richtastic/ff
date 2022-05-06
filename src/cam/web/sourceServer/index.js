@@ -16,33 +16,15 @@ const LinuxVideoCamera = require("../libraries/src/LinuxVideoCamera.js");
 
 
 var linuxCamera = new LinuxVideoCamera();
-/*
-linuxCamera.getCameraList(function(captureList){
-	console.log(captureList);
-});
-*/
-
-/*
-
-linuxCamera.getCameraList(function(list){
-	linuxCamera.getCameraListDetails(list, function(result){
-		console.log("getCameraListDetails");
-		console.log(result);
-	});
-});
-
-
-linuxCamera.saveCameraPicture("/dev/video0", "richie.jpg", null, function(result){
-	console.log("callback: "+result);
-})
-*/
 
 
 var savePictureFromAvailableVideoDevice = function(destinationFileName, callbackFxn){
 	//var destinationFileName = "source.jpg";
 	//var targetResolutionPixels = 300*400;
-	var targetResolutionPixels = 600*400;
+	//var targetResolutionPixels = 600*400;
+var targetResolutionPixels = 800*600;
 	linuxCamera.getCameraList(function(list){
+console.log(list);
 		linuxCamera.getCameraListDetails(list, function(details){
 			//console.log("getCameraListDetails");
 			console.log(details);
@@ -63,6 +45,9 @@ var savePictureFromAvailableVideoDevice = function(destinationFileName, callback
 				var resolutionError = null;
 				for(var j=0; j<deviceSizes.length; ++j){
 					var size = deviceSizes[j];
+
+
+console.log("size: "+size["width"]+"x"+size["height"]);
 					var res = size["width"]*size["height"];
 					var resError = targetResolutionPixels/res;
 					resError = resError>1.0 ? resError : (1.0/resError);
@@ -238,7 +223,13 @@ var uploadImageToPublic = function(imagePath, uploadCompleteFxn){
 			});
 		});
 		request.write(encrypted);
+console.log("END");
+try{
 		request.end();
+}catch(e){
+	console.log("ERROR: "+e);
+}
+
 		
 	});		
 }

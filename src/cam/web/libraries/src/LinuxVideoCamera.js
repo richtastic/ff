@@ -21,7 +21,7 @@ LinuxVideoCamera.prototype.getCameraList = function(callbackFxn){
 	var command = "ls /dev/video**";
 var self = this;
 	LinuxVideoCamera._exec(command,function(err,sto,ste){
-		//console.log(sto);
+		console.log(sto);
 		// turn into array list : replace all newlines & returns to spaces, replace all spacings with 
 		var list = sto;
 //console.log(list);
@@ -48,7 +48,7 @@ var self = this;
 			if(index<list.length){
 				var videoDev = list[index];
 				self._isVideoCaptureDevice(videoDev, function(isCapture){
-					//console.log(isCapture);
+					console.log(index+" - "+videoDev+" = "+isCapture);
 					if(isCapture){
 						captureList.push(videoDev);
 					}
@@ -71,7 +71,7 @@ LinuxVideoCamera.prototype._isVideoCaptureDevice = function(videoPath, callbackF
 	LinuxVideoCamera._exec(command,function(err,sto,ste){
 		//console.log(sto);
 		var lines = Code.arrayFromStringSeparatedString(sto,"\n");
-		//console.log(lines);
+		console.log(lines);
 		var deviceCapabilityLine = null;
 		var busInfoLine = null;
 		var regexDC = /Device Caps/g;
@@ -92,6 +92,7 @@ LinuxVideoCamera.prototype._isVideoCaptureDevice = function(videoPath, callbackF
 		//console.log(".........................   " +videoPath);
 		//console.log(deviceCapabilityLine);
 		//console.log(busInfoLine);
+var hasCapture = false;
 		if(deviceCapabilityLine && busInfoLine){
 			var matches = deviceCapabilityLine.match(regexHex);
 			//console.log(matches);
@@ -105,7 +106,7 @@ LinuxVideoCamera.prototype._isVideoCaptureDevice = function(videoPath, callbackF
 				//console.log(hexValue);
 				var hex = parseInt(hexValue,16);
 				//console.log(hex);
-				var hasCapture = (hex & V4L2_CAP_VIDEO_CAPTURE) > 0;
+				hasCapture = (hex & V4L2_CAP_VIDEO_CAPTURE) > 0;
 				//console.log("hasCapture: "+hasCapture);
 				callbackFxn(hasCapture);
 				return;
