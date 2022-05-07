@@ -3962,9 +3962,17 @@ Code.getTimeMilliseconds = function(utc){
     var d = new Date();
     var t = d.getTime();
     if(utc){
-    	t += Code.getTimeZone()*360000;
+    	t -= Code.getTimeZone()*3600 * 1000;
     }
     return t;
+}
+Code.getTimeLocalFromZulu = function(zuluMilliseconds){
+	var milliseconds = zuluMilliseconds + (Code.getTimeZone()*3600 * 1000);
+	return milliseconds;
+}
+Code.getTimeZuluFromLocal = function(localMilliseconds){
+	var milliseconds = localMilliseconds - (Code.getTimeZone()*3600 * 1000);
+	return milliseconds;
 }
 Code.getTimeZone = function(){
 	var d = new Date();
@@ -7949,6 +7957,9 @@ Code.getWindowSize = function(){ // viewport
 	return {"width":width,"height":height};
 }
 
+Code.setStyle = function(ele,style){
+	ele.setAttribute("style",style);
+};
 Code.getPageSize = function(){ // actual content
 	var doc = Code.getDocumentHTML();
 	var width = Code.getElementWidth(doc);

@@ -221,8 +221,8 @@ Ajax.prototype.go = function(){
 			this._request.send();
 		}else if(this._method==Ajax.METHOD_TYPE_POST) { // POST PARAMS
 			this._setPostHeaderParameters();
-console.log("THIS IS A POST");
-console.log(this._params);
+// console.log("THIS IS A POST");
+// console.log(this._params);
 //this._request.setRequestHeader(Ajax.HEADER_CONTENT_TYPE,"multipart/form-data");
 //			console.log(this._params);
 			this._request.send(this._params);

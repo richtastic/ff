@@ -82,26 +82,41 @@ CameraClient.prototype.requestPing = function(){
 	});
 }
 
-CameraClient.prototype.requestList = function(offset,count){
+CameraClient.prototype.requestList = function(offset,count, completeFxn){
 	this._request("list", false, null, function(response){
-		console.log(response);
+		if(!response){
+			console.log("no response");
+			completeFxn(null);
+			return;
+		}
 		var object = Code.parseJSON(response);
-		console.log(object);
+		// console.log(object);
+		var list = null;
+		var result = object["result"];
+		// console.log(result)
+		if(result=="success"){
+			list = object["data"]["list"];
+		}
+		if(completeFxn){
+			completeFxn(list);
+		}
 	});
 }
 
-CameraClient.prototype.requestDetails = function(){
-	this._request("details", false, {"id":"cam_01"}, function(response){
-		// console.log(response);
+CameraClient.prototype.requestDetails = function(stationID, completeFxn){
+	this._request("details", false, {"id":stationID}, function(response){
+		if(!response){
+			completeFxn(null);
+			return;
+		}
 		var object = Code.parseJSON(response);
-		// console.log(object);
-		var base64 = object["data"]["image"];
-		// console.log(base64);
-		base64 = Code.appendHeaderBase64(base64, "png");
-		// console.log(base64);
-		var image = new Image();
-		image.src = base64;
-		Code.addChild(Code.getBody(),image);
+		var item = null;
+		if(object && object["result"]=="success"){
+			item = object["data"];
+		}
+		if(completeFxn){
+			completeFxn(item);
+		}
 	});
 }
 
@@ -115,7 +130,8 @@ CameraClient.prototype.requestUpdate = function(info){
 
 CameraClient.prototype._request = function(operation, isEncrypted, payload, responseFxn, otherURL){
 	isEncrypted = Code.valueOrDefault(isEncrypted,false);
-	var requestBaseURL = "http://localhost:8000/service/registry/";
+	//var requestBaseURL = "http://localhost:8000/service/registry/";
+	var requestBaseURL = "http://192.168.1.13:8000/service/registry/";
 	var requestTimeout = 10000;
 	var requestEncryptionSecret = "unique";
 	var requestURL = requestBaseURL;
@@ -125,7 +141,7 @@ CameraClient.prototype._request = function(operation, isEncrypted, payload, resp
 		requestURL = Code.appendToPath(requestURL,operation);
 	}
 	
-	console.log(requestURL);
+	// console.log(requestURL);
 
 	var ajax = new Ajax();
 	ajax.method(Ajax.METHOD_TYPE_POST);
@@ -133,8 +149,6 @@ CameraClient.prototype._request = function(operation, isEncrypted, payload, resp
 	ajax.context(this);
 	ajax.url(requestURL);
 	ajax.callback(function(response){
-		// console.log("ajax callback");
-		// console.log(response);
 		if(responseFxn){
 			responseFxn(response);
 		}
@@ -147,7 +161,7 @@ CameraClient.prototype._request = function(operation, isEncrypted, payload, resp
 	data["id"] = Code.getTimeMilliseconds();
 	data["op"] = operation;
 	var json = Code.objectToJSON(data);
-	console.log(json);
+	// console.log(json);
 	if(isEncrypted){
 		var encrypted = Crypto.encryptString(requestEncryptionSecret, json);
 		ajax.binaryParams(encrypted);

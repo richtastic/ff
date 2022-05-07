@@ -426,7 +426,7 @@ Registry.prototype._readImageForEntry = function(entry, completeFxn){
 	var entryID = entry["id"];
 	var entryImage = entry["image"];
 	var imageFilePath = Code.appendToPath(this._dataPath, this._sourcesPath, entryID, entryImage);
-	console.log(imageFilePath);
+	// console.log(imageFilePath);
 	fs.readFile(imageFilePath, function(error, file){
 		if(error){
 			if(completeFxn){
@@ -434,7 +434,7 @@ Registry.prototype._readImageForEntry = function(entry, completeFxn){
 			}
 		}else{
 			var base64 = file.toString('base64');
-			console.log(base64);
+			// console.log(base64);
 			if(completeFxn){
 				completeFxn(base64);
 			}
@@ -464,7 +464,7 @@ Registry.prototype._saveImageForEntry = function(entry, imageData64, completeFxn
 }
 
 Registry.prototype._handleOperationUpdate = function(request,response, requestData, token){
-	console.log(token);
+	// console.log(token);
 	var client = this._clientTable[token];
 	console.log("client: "+client);
 	if(!client){
@@ -479,8 +479,8 @@ Registry.prototype._handleOperationUpdate = function(request,response, requestDa
 		// console.log("found client");
 		var clientEncryptionKey = client["key"];
 		console.log("clientEncryptionKey: "+clientEncryptionKey);
-		console.log("requestData: ");
-		console.log(requestData);
+		// console.log("requestData: ");
+		// console.log(requestData);
 		
 		// console.log(clientEncryptionKey);
 		// console.log(requestData);
@@ -489,7 +489,7 @@ Registry.prototype._handleOperationUpdate = function(request,response, requestDa
 		////var objectData = this._binaryToObject(requestData, null);
 
 
-		console.log(objectData);
+		// console.log(objectData);
 		var responseData = this._prepResponse(objectData, response, Registry.OPERATION_CAMERA_UPDATE);
 		
 		if(responseData){
@@ -525,9 +525,10 @@ Registry.prototype._handleOperationUpdate = function(request,response, requestDa
 				}else{ // stationID is listed under client's stations
 					
 					// var modifiedTimestamp = Code.getTimeStampFromMilliseconds();
-					var modifiedTimestamp = Code.getTimeStampZulu();
+					//var modifiedTimestamp = Code.getTimeStampZulu();
+					var modifiedTimestamp = Code.getTimeStampFromMilliseconds();
 					console.log(modifiedTimestamp);
-				var registry = this;
+					var registry = this;
 					// need all: id secret type
 					// need at least 1: name, description, image
 					this._readListFile( function(registryFile){

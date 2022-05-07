@@ -12,15 +12,18 @@ function ffLoadedFxn(){
 	(new ScriptLoader("./",["index.js","../libraries/src/CameraClient.js"],this,classesLoadedFxn)).load();
 }
 function classesLoadedFxn(){
-	console.log("classesLoadedFxn");
+	//console.log("classesLoadedFxn");
+	//Code.setContent(Code.getBody(), "classesLoadedFxn");
 	var app = new CameraApp();
+		app.start();
+	//Code.setContent(Code.getBody(), "after start");
 
 	// app._client.getCameraImage();
 
 	//app.testServerDLUP();
 	// app.testServerData();
 	// app._client.requestPing();
-	app._client.requestList();
+	// app._client.requestList();
 	// app._client.requestDetails();
 
 	/*
@@ -56,6 +59,5 @@ function classesLoadedFxn(){
 // curl http://192.168.0.140/web/ff/cam/web/distributionServer/index.php?path=%2Fcamera%2F1%2Fimage
 // curl -vL http://192.168.0.140/web/ff/cam/web/distributionServer/index.php
 </script>
-<body onload="pageLoadedFxn();">
-</body>
+<body onload="pageLoadedFxn();" style="border:0;margin:0;padding:0;background-color:#000000"></body>
 </html>

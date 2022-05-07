@@ -3,19 +3,131 @@
 function CameraApp(){
 	this.setupDisplay();
 	this._client = new CameraClient();
+	this._mainImage = null;
+	this._mainName = null;
+	this._mainModified = null;
+	this._mainDescription = null;
 }
 CameraApp.prototype.setupDisplay = function(){
-	this._canvas = new Canvas(null,0,0,Canvas.STAGE_FIT_FILL, false,false, true);
-	this._stage = new Stage(this._canvas, 1000/20);
-	this._root = new DO();
-	this._stage.addChild(this._root);
-	GLOBALSTAGE = this._stage;
-	this._canvas.addListeners();
-	this._stage.addListeners();
-	this._stage.start();
+	// this._canvas = new Canvas(null,0,0,Canvas.STAGE_FIT_FILL, false,false, true);
+	// this._stage = new Stage(this._canvas, 1000/20);
+	// this._root = new DO();
+	// this._stage.addChild(this._root);
+	// GLOBALSTAGE = this._stage;
+	// this._canvas.addListeners();
+	// this._stage.addListeners();
+	// this._stage.start();
 }
+CameraApp.prototype.start = function(){
+	var self = this;
+	this._client.requestList(0, 100, function(list){
+		if(list!==null){
+			self._updateList(list);
+		}else{
+			self.restart();
+		}
+	});
+}
+CameraApp.prototype.restart = function(){
+	var self = this;
+	Code.functionAfterDelay(function(){
+		self.start();
+	}, self, [], 2*1000);
+}
+CameraApp.prototype._updateList = function(list){
+	// Code.setContent(Code.getBody(), "_updateList");
+	var self = this;
+	if(list && list.length>0){
+		var station = list[0];
+		var stationID = station["id"];
+		// Code.setContent(Code.getBody(), "stationID: "+stationID);
+		this._client.requestDetails(stationID, function(details){
+			if(details){
+				console.log(details);
+				var stationName = details["name"];
+				var stationDescription = details["description"];
+				var stationModified = details["modified"];
+				var base64 = details["image"];
+				// console.log(base64);
 
 
+				// console.log(stationModified);
+				var zuluMilliseconds = Code.getTimeFromTimeStamp(stationModified);
+				// console.log(zuluMilliseconds);
+				var localMilliseconds = Code.getTimeLocalFromZulu(zuluMilliseconds);
+				// console.log(localMilliseconds);
+				stationModified = Code.getTimeStampFromMilliseconds(localMilliseconds);
+				// console.log(stationModified);
+
+
+				base64 = Code.appendHeaderBase64(base64, "png");
+				var image;
+				var name;
+				var modified;
+				var description;
+				if(this._mainImage){
+					image = this._mainImage;
+					name = this._mainName;
+					modified = this._mainModified;
+					description = this._mainDescription;
+					
+				}else{
+
+					var body = Code.getBody();
+					var bodyWidth = Code.getElementWidth(body);
+					var bodyHeight = Code.getElementHeight(body);
+
+					var textSizeLarge = Math.round(bodyHeight*0.06);
+					var textSizeMedium = Math.round(bodyHeight*0.04);
+					var textSizeSmall = Math.round(bodyHeight*0.02);
+
+					// Code.setContent(Code.getBody(), "");
+
+					image = new Image();
+						
+					Code.addChild(body,image);
+					Code.setStyle(image, "position:relative; left:0; top:0; width:100%;height:100%;object-fit:contain;"); // cover / contain
+
+					var textContainer = Code.newDiv();
+					Code.setStyle(textContainer, "position:absolute; left:0; top:0; right:0; bottom:0px");
+					Code.addChild(body,textContainer);
+
+					name = Code.newDiv();
+					Code.addChild(textContainer,name);
+					
+					Code.setStyle(name, "position:relative; left:0; top:0; right:0; color:#FFFFFF; background-color:#00000099; font-family:arial; font-size:"+textSizeLarge+"px;");
+
+					modified = Code.newDiv();
+					Code.addChild(textContainer,modified);
+					
+					Code.setStyle(modified, "position:relative; left:0; top:0; right:0; color:#FFFFFF; background-color:#00000066; font-family:arial; font-size:"+textSizeSmall+"px;");
+
+					description = Code.newDiv();
+					Code.addChild(textContainer,description);
+					
+					Code.setStyle(description, "position:absolute; left:0; bottom:0; right:0; color:#FFFFFF; background-color:#00000066; font-family:arial; font-size:"+textSizeMedium+"px;");
+
+					this._mainImage = image;
+					this._mainName = name;
+					this._mainModified = modified;
+					this._mainDescription = description;
+				}
+				image.src = base64;
+				Code.setContent(name, stationName);
+				Code.setContent(modified, stationModified);
+				Code.setContent(description, stationDescription);
+			}
+
+			self.restart();
+
+
+		});
+	}else{
+		// Code.setContent(Code.getBody(), "no list");
+	}
+}
+CameraApp.prototype._x = function(list){
+}
 
 
 
