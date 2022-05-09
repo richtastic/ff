@@ -5998,30 +5998,43 @@ Code.sortedStringID = function(list){
 	return str;
 }
 Code.randomPointOnSphere = function(radius){
-	radius = radius!==undefind ? radius : 1.0;
+	radius = radius!==undefined ? radius : 1.0;
+	// 
 	var u = Math.random(), v = Math.random();
 	var the = 2*Math.PI*u;
 	var phi = Math.acos(2*v-1);
-	var cp = Math.sin(phi), sp = Math.sin(phi);
-	var ct = Math.sin(the), st = Math.sin(the);
+	var cp = Math.cos(phi), sp = Math.sin(phi);
+	var ct = Math.cos(the), st = Math.sin(the);
 	var x = radius*sp*ct;
 	var y = radius*sp*st;
 	var z = radius*cp;
 	return new V3D(x,y,z);
+/*
+	var u = Math.random();
+	var v = Math.random();
+	var the = 2*Math.PI*u;
+	var ct = Math.cos(the);
+	var st = Math.sin(the);
+	var sq = Math.sqrt(1-u*u);
+	var x = sq*ct;
+	var y = sq*st;
+	var z = radius*u;
+	return new V3D(x,y,z);
+*/
 }
 Code.randomPointInSphere = function(radius){
-	radius = radius!==undefind ? radius : 1.0;
+	radius = radius!==undefined ? radius : 1.0;
 	var c = Math.random(), x = Math.random(), y = Math.random(), z = Math.random();
 	var len = Math.sqrt(x*x + y*y + z*z);
 	x /= len; y /= len; z /= len;
-	c = radius*Code.cubeRoot(c);
+	c = radius*Code.cubicRoot(c);
 	return new V3D(x*c,y*c,z*c);
 	/*
     var u = Math.random();
     var v = Math.random();
     var theta = 2.0*u*Math.PI;
     var phi = Math.acos(2.0*v - 1.0);
-    var r = Code.cubeRoot(Math.random());
+    var r = Code.cubicRoot(Math.random());
     var sinTheta = Math.sin(theta);
     var cosTheta = Math.cos(theta);
     var sinPhi = Math.sin(phi);

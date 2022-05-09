@@ -1128,13 +1128,189 @@ var tz = P.get(2,3);
 }
 R3D._testOptimizeGeometryProjection3D = function(){
 
-	// generate 3D points
+	// generate 3D points:
+	var sphereRadius = 1.0;
+	var worldPointCount = 100;
+	var worldPoints3D = [];
+	for(var i=0; i<worldPointCount; ++i){
+		var point3D = Code.randomPointOnSphere(sphereRadius);
+		console.log(point3D);
+		// var point3D = Code.randomPointInSphere(sphereRadius);
+		worldPoints3D.push(point3D);
+	}
+	// move to location
+	var worldTransform = new Matrix(4,4).identity();
+		// worldTransform = Matrix.transform3DRotate???(worldTransform, Code.radians(40));
+		worldTransform = Matrix.transform3DTranslate(worldTransform, 2,1,8);
+	for(var i=0; i<worldPoints3D.length; ++i){
+		var p3D = worldPoints3D[i];
+			p3D = worldTransform.multV3DtoV3D(p3D);
+		worldPoints3D[i] = p3D;
+	}
+	console.log(worldPoints3D);
 
 	// create cameras
+	var cameraAbsoluteA = new Matrix(4,4).identity();
+	var cameraAbsoluteB = new Matrix(4,4).identity();
+		// cameraAbsoluteB = Matrix.transform3DRotateX(cameraAbsoluteB, Code.radians(15));
+		cameraAbsoluteB = Matrix.transform3DRotateZ(cameraAbsoluteB, Code.radians(15));
+		cameraAbsoluteB = Matrix.transform3DTranslate(cameraAbsoluteB, 1,1,0);
+		// cameraAbsoluteB = Matrix.transform2DRotate(cameraAbsoluteB, Code.radians(15));
+	var cameraExtrinsicA = Matrix.inverse(cameraAbsoluteA);
+	var cameraExtrinsicB = Matrix.inverse(cameraAbsoluteB);
+console.log("A: \n"+cameraExtrinsicA+"");
+console.log("B: \n"+cameraExtrinsicB+"");
+
+	// define projection
+	var K_fx = 1.0;
+	var K_fy = 1.0;
+	var K_cx = 0.50;
+	var K_cy = 0.50;
+	var K_s = 0.0;
+	var K = new Matrix(3,3).fromArray([K_fx, K_s, K_cx,  0, K_fy, K_cy,  0,0,1]);
+	var imageSize = new V2D(400,300);
+console.log("K: \n"+K+"");
+
+
+var projectFxn = function(point3D, extrinsic, K){
+	var distortion = null;
+	var point2D = new V2D();
+	var projected2D = R3D.projectPoint3DCamera2DDistortion(point3D, extrinsic, K, distortion, point2D, false);
+	return projected2D;
+}
 
 	// project points to cameras
+	var cameras = [ {"ext":cameraExtrinsicA, "K":K, "pts2D":[], "size":imageSize} , {"ext":cameraExtrinsicB, "K":K, "pts2D":[], "size":imageSize} ];
+
+	for(var i=0; i<cameras.length; ++i){
+		var camera = cameras[i];
+		var camExt = camera["ext"];
+		var camK = camera["K"];
+		var camSize = camera["size"];
+		var camP2Ds = camera["pts2D"];
+		camK = R3D.cameraFromScaledImageSize(camK, camSize);
+		console.log(camK+"...");
+		for(var j=0; j<worldPoints3D.length; ++j){
+			var point3D = worldPoints3D[j];
+			var point2D = projectFxn(point3D, camExt, camK);
+			// console.log(point2D);
+			camP2Ds.push(point2D);
+		}
+	}
+	console.log(cameras);
+
+	// display settings
+var displayScale = 25.0;
+var stage = GLOBALSTAGE;
+var d = new DO();
+	stage.addChild(d);
+	// d.matrix().translate(500, 200);
+	d.matrix().scale(1, -1);
+	d.matrix().translate(10, 10+500);
+
+	// display projected points
+	var currX = 0;
+	for(var i=0; i<cameras.length; ++i){
+		var camera = cameras[i];
+		var camExt = camera["ext"];
+		var camK = camera["K"];
+		var camSize = camera["size"];
+		var camP2Ds = camera["pts2D"];
+			d.graphics().setLine(1.0, 0xFF000000 );
+			d.graphics().beginPath();
+			//d.graphics().setFill(0x0000FF00);
+			d.graphics().moveTo(currX,0);
+			//d.graphics().drawEllipse(pX,pY, rad,rad, 0.0);
+			d.graphics().lineTo(currX+camSize.x,0);
+			d.graphics().lineTo(currX+camSize.x,camSize.y);
+			d.graphics().lineTo(currX,camSize.y);
+			d.graphics().endPath();
+			// d.graphics().moveTo(o.x,o.y);
+			// d.graphics().lineTo(o.x + y.x*2, o.y + y.y*2);
+			// d.graphics().fill();
+			d.graphics().strokeLine();
+
+		d.graphics().setLine(1.0, 0xCCFF0000 );
+		d.graphics().setFill(0x99FF0000 );
+		for(var j=0; j<camP2Ds.length; ++j){
+			var point2D = camP2Ds[j];
+			
+			d.graphics().beginPath();
+			//d.graphics().setFill(0x0000FF00);
+			d.graphics().drawCircle(currX+point2D.x, point2D.y, 3);
+			//d.graphics().drawEllipse(pX,pY, rad,rad, 0.0);
+			d.graphics().fill();
+			d.graphics().endPath();
+		}
+		currX += camSize.x;
+	}
 
 	// display cameras & points
+	var currX = 0;
+	var offX = 1000;
+	var offY = 100;
+	for(var i=0; i<cameras.length; ++i){
+		var camera = cameras[i];
+		var camExt = camera["ext"];
+		var camK = camera["K"];
+		var camSize = camera["size"];
+		var camP2Ds = camera["pts2D"];
+
+		var camAbs = Matrix.inverse(camExt);
+		var pos = camAbs.multV3DtoV3D(V3D.ZERO);
+		var dX = camAbs.multV3DtoV3D(V3D.DIRX);
+		var dY = camAbs.multV3DtoV3D(V3D.DIRY);
+		var dZ = camAbs.multV3DtoV3D(V3D.DIRZ);
+		console.log(pos);
+		console.log(dX);
+		console.log(dY);
+		console.log(dZ);
+		// displayScale;
+
+		d.graphics().setLine(2.0, 0xFFFF0000 );
+		d.graphics().beginPath();
+
+		d.graphics().drawCircle(pos.x*displayScale + offX, pos.z*displayScale + offY, 10.0);
+
+		d.graphics().endPath();
+		d.graphics().strokeLine();
+
+
+		/*
+			d.graphics().setLine(1.0, 0xFF000000 );
+			d.graphics().beginPath();
+			//d.graphics().setFill(0x0000FF00);
+			d.graphics().moveTo(currX,0);
+			//d.graphics().drawEllipse(pX,pY, rad,rad, 0.0);
+			d.graphics().lineTo(currX+camSize.x,0);
+			d.graphics().lineTo(currX+camSize.x,camSize.y);
+			d.graphics().lineTo(currX,camSize.y);
+			d.graphics().endPath();
+			// d.graphics().moveTo(o.x,o.y);
+			// d.graphics().lineTo(o.x + y.x*2, o.y + y.y*2);
+			// d.graphics().fill();
+			d.graphics().strokeLine();
+
+		d.graphics().setLine(1.0, 0xCCFF0000 );
+		d.graphics().setFill(0x99FF0000 );
+		for(var j=0; j<camP2Ds.length; ++j){
+			var point2D = camP2Ds[j];
+			
+			d.graphics().beginPath();
+			//d.graphics().setFill(0x0000FF00);
+			d.graphics().drawCircle(currX+point2D.x, point2D.y, 3);
+			//d.graphics().drawEllipse(pX,pY, rad,rad, 0.0);
+			d.graphics().fill();
+			d.graphics().endPath();
+		}
+		currX += camSize.x;
+		*/
+	}
+	// top - down:
+
+
+
+
 
 	// add error
 
@@ -1144,7 +1320,7 @@ R3D._testOptimizeGeometryProjection3D = function(){
 
 	// display optimized cameras/points
 
-	throw "R3D._testOptimizeGeometryProjection3D"
+	throw "R3D._testOptimizeGeometryProjection3D x"
 }
 R3D._testOptimizeGeometryProjection2D = function(){
 
