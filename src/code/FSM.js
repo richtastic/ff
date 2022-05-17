@@ -38,18 +38,24 @@ FSM.prototype.addState = function(data, enter, exit){
 	}
 	return state;
 }
-FSM.prototype.set = function(state, context){ // no transition
-	if(this._currentState!=null){
-		this._currentState._didExitEvent(context);
-	}
-	if(state){
-		this._currentState = state;
-	}else{
-		this._currentState = null;
-	}
+FSM.prototype.state = function(){
+	return this._currentState;
 }
-FSM.prototype.start = function(){ // send start events
+// FSM.prototype.set = function(state, context){ // no transition
+// 	if(this._currentState!=null){
+// 		this._currentState._didExitEvent(context);
+// 	}
+// 	if(state){
+// 		this._currentState = state;
+// 	}else{
+// 		this._currentState = null;
+// 	}
+// }
+FSM.prototype.start = function(startState){ // send start events
 	var state = this._currentState;
+	if(startState){
+		state = startState;
+	}
 	var context = null;
 	console.log(state);
 	if(state!=null){
@@ -79,7 +85,7 @@ FSM.prototype.goto = function(state, context){ // set desired(goal,request,desti
 // 		console.log("no next state");
 // 	}
 // }
-FSM.prototype._next = function(nextState, context){ // A->B
+FSM.prototype.next = function(nextState, context){ // A->B
 	var currentState = this._currentState;
 	if(!context){
 		context = new FSM.Context(nextState);
@@ -112,6 +118,12 @@ FSM.State = function(fsm, id, data, fxnEnter, fxnExit){ // fxn(context, data, fr
 }
 FSM.State.prototype.id = function(){
 	return this._id;
+}
+FSM.State.prototype.data = function(){
+	return this._data;
+}
+FSM.State.prototype.fsm = function(){
+	return this._fsm;
 }
 // FSM.State.prototype.next = function(edgeID, context){
 // 	var edge = this._edges[edgeID];
@@ -156,9 +168,11 @@ FSM.Edge.prototype.next = function(context, target, targetContext){ // determine
 	return this._nextFxn(context, target, targetContext);
 }
 */
-FSM.Context = function(target){
+FSM.Context = function(target, data){
 	this._targetState = null;
+	this._data = null;
 	this.targetState(target);
+	this.data(data);
 }
 
 FSM.Context.prototype.targetState = function(target){
@@ -166,6 +180,12 @@ FSM.Context.prototype.targetState = function(target){
 		this._targetState = target;
 	}
 	return this._targetState;
+}
+FSM.Context.prototype.data = function(data){
+	if(data!==undefined){
+		this._data = data;
+	}
+	return this._data;
 }
 
 

@@ -1153,8 +1153,10 @@ R3D._testOptimizeGeometryProjection3D = function(){
 	var cameraAbsoluteA = new Matrix(4,4).identity();
 	var cameraAbsoluteB = new Matrix(4,4).identity();
 		// cameraAbsoluteB = Matrix.transform3DRotateX(cameraAbsoluteB, Code.radians(15));
-		cameraAbsoluteB = Matrix.transform3DRotateZ(cameraAbsoluteB, Code.radians(15));
-		cameraAbsoluteB = Matrix.transform3DTranslate(cameraAbsoluteB, 1,1,0);
+		// cameraAbsoluteB = Matrix.transform3DRotateZ(cameraAbsoluteB, Code.radians(15));
+		cameraAbsoluteB = Matrix.transform3DRotateY(cameraAbsoluteB, Code.radians(-15));
+		// cameraAbsoluteB = Matrix.transform3DTranslate(cameraAbsoluteB, 2,1,1);
+		cameraAbsoluteB = Matrix.transform3DTranslate(cameraAbsoluteB, 5,1,1);
 		// cameraAbsoluteB = Matrix.transform2DRotate(cameraAbsoluteB, Code.radians(15));
 	var cameraExtrinsicA = Matrix.inverse(cameraAbsoluteA);
 	var cameraExtrinsicB = Matrix.inverse(cameraAbsoluteB);
@@ -1261,19 +1263,46 @@ var d = new DO();
 		var dX = camAbs.multV3DtoV3D(V3D.DIRX);
 		var dY = camAbs.multV3DtoV3D(V3D.DIRY);
 		var dZ = camAbs.multV3DtoV3D(V3D.DIRZ);
-		console.log(pos);
-		console.log(dX);
-		console.log(dY);
-		console.log(dZ);
+		// console.log(pos);
+		// console.log(dX);
+		// console.log(dY);
+		// console.log(dZ);
 		// displayScale;
+		dX.sub(pos).length(1.0);
+		dY.sub(pos).length(1.0);
+		dZ.sub(pos).length(1.0);
 
+var size = 10.0;
 		d.graphics().setLine(2.0, 0xFFFF0000 );
 		d.graphics().beginPath();
 
-		d.graphics().drawCircle(pos.x*displayScale + offX, pos.z*displayScale + offY, 10.0);
+		d.graphics().drawCircle(pos.x*displayScale + offX, pos.z*displayScale + offY, size);
 
 		d.graphics().endPath();
 		d.graphics().strokeLine();
+
+
+		// top - down:
+console.log("dX: "+dX+" ");
+console.log("dY: "+dY+" ");
+console.log("dZ: "+dZ+" ");
+		var size = 20.0;
+		
+		d.graphics().setLine(1.0, 0xFFFF0000 );
+		d.graphics().beginPath();
+		d.graphics().moveTo(pos.x*displayScale + 0 + offX, pos.z*displayScale + 0 + offY, 10.0);
+		d.graphics().lineTo(pos.x*displayScale + dX.x*size + offX, pos.z*displayScale + dX.z*size + offY);
+		d.graphics().endPath();
+		d.graphics().strokeLine();
+
+		d.graphics().setLine(1.0, 0xFF00FF00 );
+		d.graphics().beginPath();
+		d.graphics().moveTo(pos.x*displayScale + 0 + offX, pos.z*displayScale + 0 + offY, 10.0);
+		d.graphics().lineTo(pos.x*displayScale + dZ.x*size + offX, pos.z*displayScale + dZ.z*size + offY);
+		d.graphics().endPath();
+		d.graphics().strokeLine();
+
+
 
 
 		/*
@@ -1308,6 +1337,15 @@ var d = new DO();
 	}
 	// top - down:
 
+	d.graphics().setLine(2.0, 0xCCFF0000);
+	d.graphics().setFill(0x99FF0000);
+	for(var j=0; j<worldPoints3D.length; ++j){
+		var point3D = worldPoints3D[j];
+		d.graphics().beginPath();
+		d.graphics().drawCircle(point3D.x*displayScale + offX, point3D.z*displayScale + offY, 3);
+		d.graphics().fill();
+		d.graphics().endPath();
+	}
 
 
 

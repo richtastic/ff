@@ -16,47 +16,176 @@ function customClassesProgressFxn(o){}
 function customClassesLoadedFxn(){
 	var fsm = new FSM();
 
-	var handleDeeplink = function(url){
-		console.log("handleDeeplink: "+url);
+	// var handleDeeplink = function(url){
+	// 	console.log("handleDeeplink: "+url);
+	// }
+
+	var fxnDefaultEnter = null;
+	var fxnDefaultExit = null;
+	// var fxnDefaultEnter = function(a,b){console.log(a,b);}
+	// var fxnDefaultExit =  function(a,b){console.log(a,b);}
+	// var fxnDefaultEnter = function(a,b){console.log(" ....enter: "+a.targetState().data());}
+	// var fxnDefaultExit =  function(a,b){console.log(" ....exit:  "+a.targetState().data());}
+	// var fxnDefaultEnter = function(a,b){console.log("ENTER: "); console.log(a); console.log(b);}
+	// var fxnDefaultExit = function(a,b){console.log("EXIT: "); console.log(a); console.log(b);}
+
+	var stateStartScreen = fsm.addState("HELLO",fxnDefaultEnter,fxnDefaultExit);
+
+	var stateStartAppSystems = fsm.addState("APP SYSTEMS",fxnDefaultEnter,fxnDefaultExit);
+
+	var stateUserSystems = fsm.addState("USER SYSTEMS",fxnDefaultEnter,fxnDefaultExit);
+
+	var stateMultiplayerSystems = fsm.addState("MULTIPLAYER SYSTEMS",fxnDefaultEnter,fxnDefaultExit);
+
+	var stateLoginScreenScreen = fsm.addState("LOGIN",fxnDefaultEnter,fxnDefaultExit);
+
+	var stateDeepLinkRouter = fsm.addState("ROUTER",fxnDefaultEnter,fxnDefaultExit);
+
+	//var stateLoadSite = fsm.addState("LOAD SITE",fxnDefaultEnter,fxnDefaultExit);
+	//var stateSite = fsm.addState("SITE",fxnDefaultEnter,fxnDefaultExit);
+	//var stateLoadAvatar = fsm.addState("LOAD AVATAR",fxnDefaultEnter,fxnDefaultExit);
+	//var stateAvatar = fsm.addState("AVATAR",fxnDefaultEnter,fxnDefaultExit);
+
+
+	var stateSpacesListScreen = fsm.addState("SPACES LIST",fxnDefaultEnter,fxnDefaultExit);
+	var stateSpaceScreen = fsm.addState("SPACE",fxnDefaultEnter,fxnDefaultExit);
+	var stateShareScreen = fsm.addState("SHARE",fxnDefaultEnter,fxnDefaultExit);
+
+
+// MIMIC
+	var commonDelay = 100;
+
+// ACTIONS TO PERFORM
+	var listenerStateStart = function(e){
+		var state = e["state"];
+		console.log(" +++ STATE START: "+state.data());
+		// console.log(e);
+	}
+	var listenerStateExit = function(e){
+		var state = e["state"];
+		var context = e["context"];
+		console.log(" --- STATE EXITED: "+state.data());
 	}
 
-
-	// var stateLogin = fsm.addState("EXPO SITE",
-	// function(){
-	// 	console.log("ENTER");
-	// },
-	// function(){
-	// 	console.log("EXIT");
-	// });
-
-	var listenerStateStart = function(a,b){
-		console.log("STATE START");
-		console.log(a);
+	var listenerStateEnter = function(e){
+		var state = e["state"];
+		var context = e["context"];
+		console.log(" +++ STATE ENTERED: "+state.data(), context);
+		// console.log(e);
+		if(state==stateStartScreen){
+			Code.functionAfterDelay(function(args){
+				console.log("... loaded screen");
+				fsm.goto(stateStartAppSystems);
+			},this, [], commonDelay);
+		}else if(state==stateStartAppSystems){
+			Code.functionAfterDelay(function(args){
+				console.log("... started app systems");
+				fsm.goto(stateUserSystems);
+			},this, [], commonDelay);
+		}else if(state==stateUserSystems){
+			Code.functionAfterDelay(function(args){
+				console.log("... started user systems");
+				//fsm.goto(stateLoginScreenScreen);
+				fsm.goto(stateSpacesListScreen);
+			},this, [], commonDelay);
+		}else if(state==stateLoginScreenScreen){
+			Code.functionAfterDelay(function(args){
+				stateLoginScreenScreen["userData"] = "yes";
+				var targetState = context.targetState();
+				console.log("... user logged in .. target: "+targetState.data()+"");
+				// if(targetState==)
+				//fsm.goto(stateLoginScreenScreen);
+				fsm.goto(targetState);
+			},this, [], commonDelay);
+		}else if(state==stateSpacesListScreen){
+			console.log("in stateSpacesListScreen");
+		}else if(state==stateShareScreen){
+			console.log("in stateShareScreen");
+			Code.functionAfterDelay(function(args){
+				console.log("... user completed share");
+				// if(targetState==)
+				fsm.goto(stateSpacesListScreen);
+				// fsm.goto(targetState);
+			},this, [], commonDelay);
+		}else{
+			console.log("other state");
+		}
 	}
 
-	var listenerStateEnter = function(a,b){
-		console.log("STATE ENTERED");
-		console.log(a);
+	var listenerStateTarget = function(e){
+		var target = e["state"];
+		var context = e["context"];
+		var current = fsm.state();
+		console.log("STATE TARGET: "+target.data()+" ["+current.data()+"]");
+
+		if(target==stateStartAppSystems || target==stateUserSystems){
+			fsm.next(target,context);
+			return;
+		}else if(target==stateLoginScreenScreen){
+			fsm.next(target,context);
+			return;
+		}else if(target==stateSpacesListScreen){
+			console.log("spaces list -> ensure login ...")
+			var isUserLoggedIn = stateLoginScreenScreen["userData"];
+			console.log("isUserLoggedIn: "+isUserLoggedIn);
+			if(isUserLoggedIn){
+				fsm.next(stateSpacesListScreen, context);
+			}else{
+				var newContext = new FSM.Context(target, {"key":"value"});
+				fsm.next(stateLoginScreenScreen, newContext);
+			}
+			return;
+		}else if(target==stateShareScreen){
+			console.log("share screen -> ensure login ...");
+			fsm.next(stateShareScreen, context);
+			return;
+		}
+
+		// console.log(e);
+		// if(state==stateStartAppSystems){
+		// 	Code.functionAfterDelay(function(args){
+		// 		console.log("... loaded app systems");
+		// 		// fsm.goto(stateStartAppSystems);
+		// 	},this, [], commonDelay);
+		// }
 	}
 
-	var fxnDefaultEnter = function(a,b){console.log("ENTER"); console.log(a); console.log(b);}
-	var fxnDefaultExit = function(a,b){console.log("EXIT"); console.log(a); console.log(b);}
-
-
-	var stateLogin = fsm.addState("LOGIN",fxnDefaultEnter,fxnDefaultExit);
-	var stateLoadSite = fsm.addState("LOAD SITE",fxnDefaultEnter,fxnDefaultExit);
-	var stateSite = fsm.addState("SITE",fxnDefaultEnter,fxnDefaultExit);
-	var stateLoadAvatar = fsm.addState("LOAD AVATAR",fxnDefaultEnter,fxnDefaultExit);
-	var stateAvatar = fsm.addState("AVATAR",fxnDefaultEnter,fxnDefaultExit);
-
+/*
+Code.functionAfterDelay(function(args){
+	console.log("... loaded screen");
+},this, [], commonDelay);
+*/
 
 	// console.log(FSM.EVENT_ENTER_STATE, listenerStateEnter)
 	fsm.addFunction(FSM.EVENT_ENTER_STATE, listenerStateEnter, this);
+	fsm.addFunction(FSM.EVENT_EXIT_STATE, listenerStateExit, this);
 	fsm.addFunction(FSM.EVENT_START_STATE, listenerStateStart, this);
-	//
-	console.log("start");
-	fsm.start();
+	fsm.addFunction(FSM.EVENT_SET_TARGET_STATE, listenerStateTarget, this);
 
+	//
+
+console.log(">>> start");
+	fsm.start(stateStartScreen);
+
+
+
+
+Code.functionAfterDelay(function(args){
+console.log(">>> target: stare screen");
+	fsm.goto(stateShareScreen, new FSM.Context(stateShareScreen, {"url":"file://...image.png"}));
+},this, [], 3000);
+
+
+
+
+/*
+	- single context at a time -> used to reach a target state & set it up
+	- deciding next state to go to is outside of the state -> in the container logic
+	- 
+
+
+
+*/
 
 	// deep link
 
