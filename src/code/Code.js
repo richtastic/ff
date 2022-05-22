@@ -3350,11 +3350,14 @@ Code.gradientDescent = function(fxn, args, x, dx, iter, diff, epsilon, lambda){
 // console.log("epsilon: "+epsilon)
 	// TODO: individual epsilon for each variable
 	if(!dx){
+// console.log("no dx")
 		dx = Code.newArrayZeros(sizeX);
 		for(i=0; i<sizeX; ++i){
 			if(Code.isArray(epsilon)){
+				// console.log("arr");
 				dx[i] = epsilon[i]; // input
 			}else{
+				// console.log("epsilon: "+epsilon);
 				dx[i] = epsilon;
 			}
 		}
@@ -3362,6 +3365,8 @@ Code.gradientDescent = function(fxn, args, x, dx, iter, diff, epsilon, lambda){
 		console.log(dx);
 		throw "got dx";
 	}*/
+// console.log(dx+"");
+// throw "?"
 	for(k=0; k<maxIterations; ++k){
 		// console.log("dx: "+dx+"  @  "+lambda+" = "+k);
 		for(i=0; i<sizeX; ++i){

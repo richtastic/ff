@@ -1112,6 +1112,40 @@ EVENTUALLY GET BACK TO USING 'MODES' for point & patch initializing & updating (
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
+
+BundleAdjustCameraExtrinsic -- ?
+
+optimizeCameraExtrinsicDLTKnown3DK
+
+????????????
+
+https://3d.bk.tudelft.nl/courses/geo1016/slides/Lecture_03_Calibration.pdf
+
+
+=> ALGEBRAIC SOLUTION, NOT NECESSARILY CLOSE TO A GEOMETRIC (EUCLIDEAN) SOLUTION
+
+
+
+
+ITREITVE STEPS:
+	- calculate 3D poiints
+	- nonlinear optimize 3D points
+	- extimate camera from 3D points
+
+how to calculate extrinsic matrix from known 3D points ?
+
+
+
+
+
+
+
+
+
+
+
+
+
 - how to calculate the minimum size a pixel can be given a minimum range area
 	- initial largest resolution for an image, eg: 4x3
 	- each cell extracts 5x5 & estimates range/sigma -> maximum 3D sphere
