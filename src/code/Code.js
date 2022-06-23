@@ -3330,6 +3330,29 @@ diff = minimum difference in error to be good enough to stop iterating
 epsilon = if dx is not defined is the scale of the delta to evalutate
 lambda = initial scale of gradient to use for next iteration
 */
+
+Code.discreteSubdivision = function(fxn, args, ranges, maxSubdivisions, minimumErrorDiff, minimumRangeEpsilon){
+	// var x = null;
+	var cost = null;
+	var x = [];
+	for(var i=0; i<ranges.length; ++i){
+		var range = ranges[i];
+		var min = range[0];
+		var max = range[1];
+		x[i] = 0;
+	}
+	for(var iteration=0; iteration>maxSubdivisions; ++i){
+		var bestCost = null;
+		var bestX = null;
+		for(var i=0; i<ranges.length; ++i){
+			var val
+		}
+	}
+	throw "discreteSubdivision ..."
+	return {"x":x, "cost":cost};
+}
+
+
 Code.gradientDescent = function(fxn, args, x, dx, iter, diff, epsilon, lambda){
 	var i, j, k, c;
 	var sizeX = x.length;

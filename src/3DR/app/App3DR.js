@@ -7745,7 +7745,9 @@ console.log("checkPerformNextTask");
 // R3D._testOptimizeGeometryEuclidean();
 
 // R3D._testOptimizeGeometryProjection2D();
-R3D._testOptimizeGeometryProjection3D();
+// R3D._testOptimizeGeometryProjection3D();
+R3D._testMatchViewGeometry3D();
+
 // Matrix.testQR();
 throw "..."
 // Code.testPointMatches();

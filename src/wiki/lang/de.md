@@ -2889,6 +2889,132 @@ Rammstein - Zick Zack
 
 
 
+
+
+
+https://www.youtube.com/watch?v=thJgU9jkdU4
+
+
+Rammstein - Dicke Titten
+
+| du | | en |
+|-|-|-|
+| Ich leb' alleine schon viele Jahre |  | I've lived alone for many years |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+|  |  |  |
+
+
+Life is dull, everyday life is grey
+Lose patience, sanity and hair
+I would like a wife
+And I lose hope
+to find a partner
+who is my equal
+No, there is no luck in sight
+She doesn't have to be beautiful
+She doesn't have to be smart
+no
+She doesn't have to be rich
+Not a model with long strides
+But big boobs
+Like a constantly open wound
+Blood drips from the soul
+Only consolation are small dogs
+A fine miss would be good
+A fine rot would be great
+I'm not demanding at all
+I'm not picky at all
+At the end of the story
+Doesn't she have to be beautiful
+She doesn't have to be smart
+no
+She doesn't have to be rich
+But I would like to ask one thing
+big boobs
+I'm not demanding at all
+But big boobs would be great
+She doesn't have to be beautiful
+She doesn't have to be smart
+She just has to be rich
+Fat tissue please, please
+You won't miss anything from me
+She doesn't even have to kiss me
+Don't refresh me with grapes
+She just has to have huge tits
+big boobs
+
+
+
+
+Das Leben stumpf, der Alltag grau
+Verlier' Geduld, Verstand und Haare
+Ich hätte gerne eine Frau
+Und die Hoffnung will mir schwinden
+Eine Partnerin zu finden
+Die mir ebenbürtig ist
+Nein, da ist kein Glück in Sicht
+Sie muss nicht schön sein
+Sie muss nicht klug sein
+Nein
+Sie muss nicht reich sein
+Kein Model mit langen Schritten
+Doch dicken Titten
+Wie eine stetig offene Wunde
+Aus der Seele tropft das Blut
+Einzig Trost sind kleine Hunde
+Ein feines Fräulein wäre gut
+Ein feines Fäulein wäre toll
+Ich bin auch gar nicht anspruchsvoll
+Ich bin auch gar nicht wählerisch
+Am Ende der Geschicht'
+Muss sie nicht schön sein
+Sie muss nicht klug sein
+Nein
+Sie muss nicht reich sein
+Doch um eines möchte ich bitten
+Dicke Titten
+Ich bin auch gar nicht anspruchsvoll
+Doch große Brüste wären toll
+Sie muss nicht schön sein
+Sie muss nicht klug sein
+Sie muss nur reich sein
+An Fettgewebe bitte, bitte
+Sie wird nichts bei mir vermissen
+Sie braucht mich auch gar nicht küssen
+Braucht mich nicht mit Trauben laben
+Sie muss nur Riesentitten haben
+Dicke Titten
+
+
+
+
+
 Mo-Do - Eins Zwei Polizei
 https://www.youtube.com/watch?v=dSy2DcATYUo
 

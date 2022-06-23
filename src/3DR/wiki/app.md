@@ -598,6 +598,35 @@ OUTPUT:
 
 
 
+**********************simulate getting 2 cameras (in 3 images) aligned from separate frames of reference
+
+**********************can a 3D transform from points be applied to the camera ?
+	current points locations to another frame's point locations:
+		- average translation
+		- average plane of rotations
+			-> average angle about normal direction
+
+		- start with some central view/pair & extend outward
+
+		- 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -1123,6 +1152,19 @@ https://3d.bk.tudelft.nl/courses/geo1016/slides/Lecture_03_Calibration.pdf
 
 
 => ALGEBRAIC SOLUTION, NOT NECESSARILY CLOSE TO A GEOMETRIC (EUCLIDEAN) SOLUTION
+
+=> NORMALIZE POINTS ????
+
+https://3d.bk.tudelft.nl/courses/geo1016/slides/Lecture_03_Calibration.pdf
+
+https://github.com/cybertk/opencv/blob/master/opencv/src/opencv2/calib3d/calibration.cpp
+
+
+https://www.pythonpool.com/opencv-solvepnp/
+
+
+https://docs.opencv.org/3.0-beta/modules/calib3d/doc/camera_calibration_and_3d_reconstruction.html#bool%20solvePnP(InputArray%20objectPoints,%20InputArray%20imagePoints,%20InputArray%20cameraMatrix,%20InputArray%20distCoeffs,%20OutputArray%20rvec,%20OutputArray%20tvec,%20bool%20useExtrinsicGuess,%20int%20flags)
+
 
 
 

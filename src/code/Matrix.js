@@ -123,9 +123,10 @@ Matrix.prototype.get = function(row,col){
 // }
 Matrix.prototype.scale = function(c){
 	var row, rows = this._rowCount, cols = this._colCount;
+	var _rows = this._rows;
 	var i, j;
 	for(j=0;j<rows;++j){
-		row = this._rows[j];
+		row = _rows[j];
 		for(i=0;i<cols;++i){
 			row[i] = row[i]*c;
 		}
@@ -1024,7 +1025,32 @@ Matrix.backPropagate = function(A,b){ // A*b = b0 => start with bottom-most vari
 	}
 	return b;
 }
-Matrix.norm2D = function(A){ // frobenius
+Matrix.norm0D = function(A){ // max
+	var rows = A.rows(), cols = A.cols(), u, t;
+	var i, n = 0;
+	for(j=0;j<rows;++j){
+		row = A._rows[j];
+		for(i=0;i<cols;++i){
+			x = row[i];
+			throw "MAX VALUE";
+		}
+	}
+	return n;
+}
+Matrix.norm1D = function(A){ // L1
+	var rows = A.rows(), cols = A.cols(), u, t;
+	var i, n = 0;
+	for(j=0;j<rows;++j){
+		row = A._rows[j];
+		for(i=0;i<cols;++i){
+			x = row[i];
+			n += Math.abs(x);
+		}
+	}
+	return n;
+}
+
+Matrix.norm2D = function(A){ // L2 = frobenius
 	var rows = A.rows(), cols = A.cols(), u, t;
 	var i, n = 0;
 	for(j=0;j<rows;++j){
